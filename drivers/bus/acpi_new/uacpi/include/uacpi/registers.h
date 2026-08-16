@@ -1,6 +1,6 @@
 #include <uacpi/types.h>
 
-/*
+/**
  * BEFORE YOU USE THIS API:
  * uACPI manages FADT registers on its own entirely, you should only use this
  * API directly if there's absolutely no other way for your use case, e.g.
@@ -26,14 +26,14 @@ typedef enum uacpi_register {
     UACPI_REGISTER_MAX = UACPI_REGISTER_SMI_CMD,
 } uacpi_register;
 
-/*
+/**
  * Read a register from FADT
  *
  * NOTE: write-only bits (if any) are cleared automatically
  */
 uacpi_status uacpi_read_register(uacpi_register, uacpi_u64*);
 
-/*
+/**
  * Write a register from FADT
  *
  * NOTE:
@@ -43,7 +43,7 @@ uacpi_status uacpi_read_register(uacpi_register, uacpi_u64*);
  */
 uacpi_status uacpi_write_register(uacpi_register, uacpi_u64);
 
-/*
+/**
  * Write a register from FADT
  *
  * NOTE:
@@ -80,7 +80,7 @@ typedef enum uacpi_register_field {
     UACPI_REGISTER_FIELD_MAX = UACPI_REGISTER_FIELD_ARB_DIS,
 } uacpi_register_field;
 
-/*
+/**
  * Read a field from a FADT register
  *
  * NOTE: The value is automatically masked and shifted down as appropriate,
@@ -89,7 +89,7 @@ typedef enum uacpi_register_field {
  */
 uacpi_status uacpi_read_register_field(uacpi_register_field, uacpi_u64*);
 
-/*
+/**
  * Write to a field of a FADT register
  *
  * NOTE: The value is automatically masked and shifted up as appropriate,

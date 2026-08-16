@@ -249,18 +249,18 @@ struct uacpi_resource_convert_instruction {
     union {
         uacpi_u8 aml_offset;
         uacpi_u8 arg0;
-    };
+    } f1;
 
     union {
         uacpi_u8 native_offset;
         uacpi_u8 arg1;
-    };
+    } f2;
 
     union {
         uacpi_u8 imm;
         uacpi_u8 bit_index;
         uacpi_u8 arg2;
-    };
+    } f3;
 };
 
 struct uacpi_resource_spec {

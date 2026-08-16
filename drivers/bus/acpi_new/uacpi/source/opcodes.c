@@ -2,13 +2,13 @@
 
 #ifndef UACPI_BAREBONES_MODE
 
-#define UACPI_OP(opname, opcode, ...) \
-    { #opname, .decode_ops = __VA_ARGS__, .code = opcode },
+#define UACPI_OP(opname, opcode, props, ...) \
+    { #opname, { .decode_ops = __VA_ARGS__ }, .properties = props, .code = opcode },
 
 #define UACPI_OUT_OF_LINE_OP(opname, opcode, out_of_line_buf, props) \
     {                                                                \
       .name = #opname,                                               \
-      .indirect_decode_ops = out_of_line_buf,                        \
+      { .indirect_decode_ops = out_of_line_buf },                    \
       .properties = props,                                           \
       .code = opcode,                                                \
     },
@@ -124,6 +124,9 @@ uacpi_u8 uacpi_load_op_decode_ops[] = {
     // Storage for the scope pointer, this is left as 0 in case of errors
     UACPI_PARSE_OP_LOAD_ZERO_IMM,
     UACPI_PARSE_OP_OBJECT_ALLOC_TYPED, UACPI_OBJECT_METHOD,
+    // Index of the table we are going to be loading to unref it later
+    UACPI_PARSE_OP_LOAD_ZERO_IMM,
+
     UACPI_PARSE_OP_TERM_ARG_UNWRAP_INTERNAL,
     UACPI_PARSE_OP_TARGET,
 
@@ -135,7 +138,7 @@ uacpi_u8 uacpi_load_op_decode_ops[] = {
     UACPI_PARSE_OP_INVOKE_HANDLER,
     UACPI_PARSE_OP_IF_NULL, 0, 3,
         UACPI_PARSE_OP_LOAD_FALSE_OBJECT,
-        UACPI_PARSE_OP_JMP, 15,
+        UACPI_PARSE_OP_JMP, 16,
 
     UACPI_PARSE_OP_LOAD_TRUE_OBJECT,
     UACPI_PARSE_OP_DISPATCH_TABLE_LOAD,
@@ -145,7 +148,7 @@ uacpi_u8 uacpi_load_op_decode_ops[] = {
      * might've been loaded from this table.
      */
     UACPI_PARSE_OP_INVOKE_HANDLER,
-    UACPI_PARSE_OP_STORE_TO_TARGET, 3,
+    UACPI_PARSE_OP_STORE_TO_TARGET, 4,
     UACPI_PARSE_OP_OBJECT_TRANSFER_TO_PREV,
     UACPI_PARSE_OP_END,
 };
@@ -154,7 +157,7 @@ uacpi_u8 uacpi_load_table_op_decode_ops[] = {
     // Storage for the scope pointer, this is left as 0 in case of errors
     UACPI_PARSE_OP_LOAD_ZERO_IMM,
     UACPI_PARSE_OP_OBJECT_ALLOC_TYPED, UACPI_OBJECT_METHOD,
-    // Index of the table we are going to be loaded to unref it later
+    // Index of the table we are going to be loading to unref it later
     UACPI_PARSE_OP_LOAD_ZERO_IMM,
     // Storage for the target pointer, this is left as 0 if none was requested
     UACPI_PARSE_OP_LOAD_ZERO_IMM,
@@ -166,17 +169,7 @@ uacpi_u8 uacpi_load_table_op_decode_ops[] = {
         UACPI_PARSE_OP_JMP, 8,
     UACPI_PARSE_OP_TERM_ARG_UNWRAP_INTERNAL,
 
-    /*
-     * Invoke the handler here to initialize the table. If this fails, it's
-     * expected to keep the item 0 as NULL, which is checked below to return
-     * false to the caller of Load.
-     */
     UACPI_PARSE_OP_INVOKE_HANDLER,
-    UACPI_PARSE_OP_IF_NULL, 0, 3,
-        UACPI_PARSE_OP_LOAD_FALSE_OBJECT,
-        UACPI_PARSE_OP_OBJECT_TRANSFER_TO_PREV,
-        UACPI_PARSE_OP_END,
-
     UACPI_PARSE_OP_LOAD_TRUE_OBJECT,
     UACPI_PARSE_OP_DISPATCH_TABLE_LOAD,
 
@@ -235,13 +228,12 @@ const uacpi_char *const pop_names[UACPI_PARSE_OP_MAX + 1] = {
     [POP(LOAD_TRUE_OBJECT)] = "LOAD_TRUE_OBJECT",
     [POP(TRUNCATE_NUMBER)] = "TRUNCATE_NUMBER",
     [POP(TYPECHECK)] = "TYPECHECK",
+    [POP(TYPECHECK_ONE_OF)] = "TYPECHECK_ONE_OF",
     [POP(INSTALL_NAMESPACE_NODE)] = "INSTALL_NAMESPACE_NODE",
     [POP(OBJECT_TRANSFER_TO_PREV)] = "OBJECT_TRANSFER_TO_PREV",
     [POP(OBJECT_COPY_TO_PREV)] = "OBJECT_COPY_TO_PREV",
     [POP(STORE_TO_TARGET)] = "STORE_TO_TARGET",
     [POP(STORE_TO_TARGET_INDIRECT)] = "STORE_TO_TARGET_INDIRECT",
-    [POP(UNREACHABLE)] = "UNREACHABLE",
-    [POP(BAD_OPCODE)] = "BAD_OPCODE",
     [POP(AML_PC_DECREMENT)] = "AML_PC_DECREMENT",
     [POP(IMM_DECREMENT)] = "IMM_DECREMENT",
     [POP(ITEM_POP)] = "ITEM_POP",

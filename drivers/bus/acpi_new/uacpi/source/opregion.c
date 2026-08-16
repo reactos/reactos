@@ -38,7 +38,7 @@ void uacpi_trace_region_error(
         space_string = uacpi_address_space_to_string(obj->op_region->space);
 
     uacpi_error(
-        "%s (%s) operation region %s: %s\n",
+        "%s (%s) operation region %s: %s",
         message, space_string, path, uacpi_status_to_string(ret)
     );
     uacpi_free_dynamic_string(path);
@@ -74,7 +74,7 @@ static void trace_region_io(
     case UACPI_ADDRESS_SPACE_FFIXEDHW:
         uacpi_trace(
             "write-then-read from [%s] %s[0x%016"UACPI_PRIX64"] = "
-            "<buffer of %zu bytes>\n", path,
+            "<buffer of %zu bytes>", path,
             uacpi_address_space_to_string(space),
             UACPI_FMT64(offset), data.buffer.length
         );
@@ -83,14 +83,14 @@ static void trace_region_io(
     case UACPI_ADDRESS_SPACE_GENERIC_SERIAL_BUS:
         uacpi_trace(
             "%s [%s] %s[0x%016"UACPI_PRIX64"] = "
-            "<buffer of %zu bytes>\n", type_str, path,
+            "<buffer of %zu bytes>", type_str, path,
             uacpi_address_space_to_string(space),
             UACPI_FMT64(offset), data.buffer.length
         );
         break;
     case UACPI_ADDRESS_SPACE_GENERAL_PURPOSE_IO:
         uacpi_trace(
-            "%s [%s] %s pins[%u..%u] = 0x%"UACPI_PRIX64"\n",
+            "%s [%s] %s pins[%u..%u] = 0x%"UACPI_PRIX64,
             type_str, path, uacpi_address_space_to_string(space),
             field->pin_offset, (field->pin_offset + field->bit_length) - 1,
             UACPI_FMT64(*data.integer)
@@ -98,7 +98,7 @@ static void trace_region_io(
         break;
     default:
         uacpi_trace(
-            "%s [%s] (%d bytes) %s[0x%016"UACPI_PRIX64"] = 0x%"UACPI_PRIX64"\n",
+            "%s [%s] (%d bytes) %s[0x%016"UACPI_PRIX64"] = 0x%"UACPI_PRIX64,
             type_str, path, field->access_width_bytes,
             uacpi_address_space_to_string(space),
             UACPI_FMT64(offset), UACPI_FMT64(*data.integer)
@@ -336,7 +336,7 @@ static void region_uninstall_handler(
 
     link = find_previous_region_link(region);
     if (uacpi_unlikely(link == UACPI_NULL)) {
-        uacpi_error("operation region @%p not in the handler@%p list(?)\n",
+        uacpi_error("operation region @%p not in the handler@%p list(?)",
                     region, handler);
         goto out;
     } else if (link == region) {
@@ -348,11 +348,11 @@ static void region_uninstall_handler(
 
 out:
     if (region->state_flags & UACPI_OP_REGION_STATE_ATTACHED) {
-        uacpi_region_detach_data detach_data = {
-            .region_node = node,
-            .region_context = region->user_context,
-            .handler_context = handler->user_context,
-        };
+        uacpi_region_detach_data detach_data = { 0 };
+
+        detach_data.region_node = node;
+        detach_data.region_context = region->user_context;
+        detach_data.handler_context = handler->user_context;
 
         uacpi_shareable_ref(node);
         uacpi_namespace_write_unlock();
@@ -380,7 +380,7 @@ out:
     region->state_flags &= ~UACPI_OP_REGION_STATE_ATTACHED;
 }
 
-static uacpi_status upgrade_to_opregion_lock(void)
+uacpi_status uacpi_upgrade_to_opregion_lock(void)
 {
     uacpi_status ret;
 
@@ -395,9 +395,14 @@ static uacpi_status upgrade_to_opregion_lock(void)
     return ret;
 }
 
+void uacpi_release_opregion_lock(void)
+{
+    uacpi_recursive_lock_release(&g_opregion_lock);
+}
+
 void uacpi_opregion_uninstall_handler(uacpi_namespace_node *node)
 {
-    if (uacpi_unlikely_error(upgrade_to_opregion_lock()))
+    if (uacpi_unlikely_error(uacpi_upgrade_to_opregion_lock()))
         return;
 
     region_uninstall_handler(node, UNREG_YES);
@@ -525,10 +530,10 @@ static uacpi_status reg_or_unreg_all_opregions(
     uacpi_address_space_handlers *handlers;
     uacpi_bool is_connect;
     enum uacpi_permanent_only perm_only;
-    struct reg_run_ctx ctx = {
-        .space = space,
-        .connection_code = connection_code,
-    };
+    struct reg_run_ctx ctx = { 0 };
+
+    ctx.space = space;
+    ctx.connection_code = connection_code;
 
     handlers = uacpi_node_get_address_space_handlers(device_node);
     if (uacpi_unlikely(handlers == UACPI_NULL))
@@ -554,7 +559,7 @@ static uacpi_status reg_or_unreg_all_opregions(
 
     uacpi_trace(
         "%sactivated all '%s' opregions controlled by '%.4s', "
-        "%zu _REG() calls (%zu errors)\n",
+        "%zu _REG() calls (%zu errors)",
         connection_code == ACPI_REG_CONNECT ? "" : "de",
         uacpi_address_space_to_string(space),
         device_node->name.text, ctx.reg_executed, ctx.reg_errors
@@ -788,7 +793,7 @@ uacpi_status uacpi_initialize_opregion_node(uacpi_namespace_node *node)
     uacpi_address_space_handlers *handlers;
     uacpi_address_space_handler *handler;
 
-    ret = upgrade_to_opregion_lock();
+    ret = uacpi_upgrade_to_opregion_lock();
     if (uacpi_unlikely_error(ret))
         return ret;
 
@@ -869,25 +874,19 @@ uacpi_status uacpi_dispatch_opregion_io(
         uacpi_region_serial_rw_data serial;
     } handler_data;
 
-    ret = upgrade_to_opregion_lock();
-    if (uacpi_unlikely_error(ret))
-        return ret;
-
     ret = uacpi_opregion_attach(field->region);
     if (uacpi_unlikely_error(ret)) {
         uacpi_trace_region_error(
             field->region, "unable to attach", ret
         );
-        goto out;
+        return ret;
     }
 
     obj = uacpi_namespace_node_get_object_typed(
         field->region, UACPI_OBJECT_OPERATION_REGION_BIT
     );
-    if (uacpi_unlikely(obj == UACPI_NULL)) {
-        ret = UACPI_STATUS_INVALID_ARGUMENT;
-        goto out;
-    }
+    if (uacpi_unlikely(obj == UACPI_NULL))
+        return UACPI_STATUS_INVALID_ARGUMENT;
 
     region = obj->op_region;
     space = region->space;
@@ -904,14 +903,13 @@ uacpi_status uacpi_dispatch_opregion_io(
         path = uacpi_namespace_node_generate_absolute_path(field->region);
         uacpi_error(
             "out-of-bounds access to opregion %s[0x%"UACPI_PRIX64"->"
-            "0x%"UACPI_PRIX64"] at 0x%"UACPI_PRIX64" (idx=%u, width=%d)\n",
+            "0x%"UACPI_PRIX64"] at 0x%"UACPI_PRIX64" (idx=%u, width=%d)",
             path, UACPI_FMT64(region->offset),
             UACPI_FMT64(region->offset + region->length),
             UACPI_FMT64(abs_offset), offset, field->access_width_bytes
         );
         uacpi_free_dynamic_string(path);
-        ret = UACPI_STATUS_AML_OUT_OF_BOUNDS_INDEX;
-        goto out;
+        return UACPI_STATUS_AML_OUT_OF_BOUNDS_INDEX;
     }
 
     handler_data.rw.region_context = region->user_context;
@@ -943,10 +941,9 @@ uacpi_status uacpi_dispatch_opregion_io(
          * ACPI 6.5: 14.3. Extended PCC Subspace Shared Memory Region
          */
         if (offset >= 12 && offset < 16) {
-            handler_data.pcc.buffer = (uacpi_data_view){
-                .bytes = region->internal_buffer,
-                .length = region->length,
-            };
+            uacpi_memzero(&handler_data.pcc.buffer, sizeof(handler_data.pcc.buffer));
+            handler_data.pcc.buffer.bytes = region->internal_buffer;
+            handler_data.pcc.buffer.length = region->length;
 
             op = UACPI_REGION_OP_PCC_SEND;
             break;
@@ -1026,7 +1023,7 @@ uacpi_status uacpi_dispatch_opregion_io(
 io_done:
     if (uacpi_unlikely_error(ret)) {
         uacpi_trace_region_error(field->region, "unable to perform IO", ret);
-        goto out;
+        return ret;
     }
 
     if (orig_op == UACPI_REGION_OP_READ) {
@@ -1048,9 +1045,6 @@ io_done:
     }
 
     trace_region_io(field, space, abs_offset, orig_op, data);
-
-out:
-    uacpi_recursive_lock_release(&g_opregion_lock);
     return ret;
 }
 
