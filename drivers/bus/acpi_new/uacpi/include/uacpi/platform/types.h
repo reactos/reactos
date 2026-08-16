@@ -46,10 +46,10 @@ typedef char uacpi_char;
 #define uacpi_offsetof offsetof
 
 /*
- * We use unsignd long long for 64-bit number formatting because 64-bit types
+ * We use unsigned long long for 64-bit number formatting because 64-bit types
  * don't have a standard way to format them. The inttypes.h header is not
  * freestanding therefore it's not practical to force the user to define the
- * corresponding PRI macros. Moreover, unsignd long long  is required to be
+ * corresponding PRI macros. Moreover, unsigned long long is required to be
  * at least 64-bits as per C99.
  */
 UACPI_BUILD_BUG_ON_WITH_MSG(

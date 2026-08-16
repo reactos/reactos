@@ -64,7 +64,7 @@ typedef struct uacpi_resource_source {
     uacpi_char *string;
 } uacpi_resource_source;
 
-/*
+/**
  * This applies to IRQ & StartDependent resources only. The DONT_CARE value is
  * used for deserialization into the AML format to signify that the serializer
  * is allowed to optimize the length down if possible. Note that this is
@@ -211,7 +211,7 @@ typedef struct uacpi_resource_fixed_io {
 #define UACPI_CONSUMER 1
 
 // decode_type
-#define UACPI_POISITIVE_DECODE 0
+#define UACPI_POSITIVE_DECODE 0
 #define UACPI_SUBTRACTIVE_DECODE 1
 
 // fixed_min_address & fixed_max_address
@@ -374,7 +374,7 @@ typedef struct uacpi_resource_gpio_connection {
     uacpi_u8 direction;
 
     union {
-        uacpi_interrupt_connection_flags interrupt;
+        uacpi_interrupt_connection_flags intr;
         uacpi_io_connection_flags io;
         uacpi_u16 type_specific;
     };
@@ -642,7 +642,20 @@ typedef struct uacpi_resource {
     ((uacpi_resource*)((uacpi_u8*)(cur) + (cur)->length))
 
 typedef struct uacpi_resources {
+    /**
+     * Length of the 'entries' array in BYTES (NOT the count of resources),
+     * see comment above 'entries' for more information.
+     */
     uacpi_size length;
+
+    /**
+     * Resources are variable length! See UACPI_NEXT_RESOURCE to see how to
+     * retrieve the next resource. You can alternatively use
+     * uacpi_for_each_resource instead of iterating manually.
+     *
+     * Resources are guaranteed to be naturally aligned and are always
+     * terminated by a resource of type UACPI_RESOURCE_TYPE_END_TAG.
+     */
     uacpi_resource *entries;
 } uacpi_resources;
 void uacpi_free_resources(uacpi_resources*);
@@ -650,38 +663,50 @@ void uacpi_free_resources(uacpi_resources*);
 typedef uacpi_iteration_decision (*uacpi_resource_iteration_callback)
     (void *user, uacpi_resource *resource);
 
-/*
+/**
  * Evaluate the _CRS method for a 'device' and get the returned resource list
  * via 'out_resources'.
  *
- * NOTE: the returned buffer must be released via a uacpi_free_resources()
+ * NOTE: the returned buffer must be released via uacpi_free_resources()
+ *
+ * If you don't need to keep the resource array for later use you can
+ * uacpi_for_each_device_resource(device, "_CRS", ...) instead, which takes
+ * care of iteration & memory management on its own.
  */
 uacpi_status uacpi_get_current_resources(
     uacpi_namespace_node *device, uacpi_resources **out_resources
 );
 
-/*
+/**
  * Evaluate the _PRS method for a 'device' and get the returned resource list
  * via 'out_resources'.
  *
  * NOTE: the returned buffer must be released via uacpi_free_resources()
+ *
+ * If you don't need to keep the resource array for later use you can
+ * uacpi_for_each_device_resource(device, "_PRS", ...) instead, which takes
+ * care of iteration & memory management on its own.
  */
 uacpi_status uacpi_get_possible_resources(
     uacpi_namespace_node *device, uacpi_resources **out_resources
 );
 
-/*
+/**
  * Evaluate an arbitrary method that is expected to return an AML resource
  * buffer for a 'device' and get the returned resource list via 'out_resources'.
  *
  * NOTE: the returned buffer must be released via uacpi_free_resources()
+ *
+ * If you don't need to keep the resource array for later use you can
+ * uacpi_for_each_device_resource(device, method, ...) instead, which takes
+ * care of iteration & memory management on its own.
  */
 uacpi_status uacpi_get_device_resources(
     uacpi_namespace_node *device, const uacpi_char *method,
     uacpi_resources **out_resources
 );
 
-/*
+/**
  * Set the configuration to be used by the 'device' by calling its _SRS method.
  *
  * Note that this expects 'resources' in the normal 'uacpi_resources' format,
@@ -693,7 +718,7 @@ uacpi_status uacpi_set_resources(
     uacpi_namespace_node *device, uacpi_resources *resources
 );
 
-/*
+/**
  * A convenience helper for iterating over the resource list returned by any
  * of the uacpi_get_*_resources functions.
  */
@@ -701,7 +726,7 @@ uacpi_status uacpi_for_each_resource(
     uacpi_resources *resources, uacpi_resource_iteration_callback cb, void *user
 );
 
-/*
+/**
  * A shorthand for uacpi_get_device_resources() + uacpi_for_each_resource().
  *
  * Use if you don't actually want to save the 'resources' list, but simply want
@@ -713,7 +738,7 @@ uacpi_status uacpi_for_each_device_resource(
     uacpi_resource_iteration_callback cb, void *user
 );
 
-/*
+/**
  * Convert a single AML-encoded resource to native format.
  *
  * This should be used for converting Connection() fields (passed during IO on

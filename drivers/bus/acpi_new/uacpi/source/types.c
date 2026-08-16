@@ -116,7 +116,7 @@ static uacpi_bool buffer_alloc(uacpi_object *obj, uacpi_size initial_size)
     return UACPI_TRUE;
 }
 
-static uacpi_bool empty_buffer_or_string_alloc(uacpi_object *object)
+static uacpi_bool empty_string_or_buffer_alloc(uacpi_object *object)
 {
     return buffer_alloc(object, 0);
 }
@@ -311,8 +311,8 @@ static uacpi_bool thermal_zone_alloc(uacpi_object *obj)
 typedef uacpi_bool (*object_ctor)(uacpi_object *obj);
 
 static object_ctor object_constructor_table[UACPI_OBJECT_MAX_TYPE_VALUE + 1] = {
-    [UACPI_OBJECT_STRING] = empty_buffer_or_string_alloc,
-    [UACPI_OBJECT_BUFFER] = empty_buffer_or_string_alloc,
+    [UACPI_OBJECT_STRING] = empty_string_or_buffer_alloc,
+    [UACPI_OBJECT_BUFFER] = empty_string_or_buffer_alloc,
     [UACPI_OBJECT_PACKAGE] = empty_package_alloc,
     [UACPI_OBJECT_FIELD_UNIT] = field_unit_alloc,
     [UACPI_OBJECT_MUTEX] = mutex_alloc,
@@ -391,7 +391,7 @@ static void free_plain_no_recurse(uacpi_object *obj, struct free_queue *queue)
         if (uacpi_unlikely(!free_queue_push(queue,
                                             obj->package))) {
             uacpi_warn(
-                "unable to free nested package @%p: not enough memory\n",
+                "unable to free nested package @%p: not enough memory",
                 obj->package
             );
         }
@@ -468,6 +468,9 @@ static void free_package(uacpi_handle handle)
          */
         for (i = 0; i < pkg->count; ++i) {
             obj = pkg->objects[i];
+            if (uacpi_unlikely(obj == UACPI_NULL))
+                continue;
+
             unref_object_no_recurse(obj, &queue);
         }
 
@@ -558,7 +561,7 @@ static void free_op_region(uacpi_handle handle)
 
     if (uacpi_unlikely(op_region->handler != UACPI_NULL)) {
         uacpi_warn(
-            "BUG: attempting to free an opregion@%p with a handler attached\n",
+            "BUG: attempting to free an opregion@%p with a handler attached",
             op_region
         );
     }
@@ -567,11 +570,15 @@ static void free_op_region(uacpi_handle handle)
     case UACPI_ADDRESS_SPACE_PCC:
         uacpi_free(op_region->internal_buffer, op_region->length);
         break;
-    case UACPI_ADDRESS_SPACE_TABLE_DATA:
+    case UACPI_ADDRESS_SPACE_TABLE_DATA: {
+        struct uacpi_table table = { 0 };
+
+        table.index = op_region->table_idx;
         uacpi_table_unref(
-            &(struct uacpi_table) { .index = op_region->table_idx }
+            &table
         );
         break;
+    }
     default:
         break;
     }
@@ -712,7 +719,7 @@ static void free_object(uacpi_object *obj)
 
 static void make_chain_bugged(uacpi_object *obj)
 {
-    uacpi_warn("object refcount bug, marking chain @%p as bugged\n", obj);
+    uacpi_warn("object refcount bug, marking chain @%p as bugged", obj);
 
     while (obj) {
         uacpi_make_shareable_bugged(obj);
@@ -1023,12 +1030,14 @@ uacpi_status uacpi_object_get_integer(uacpi_object *obj, uacpi_u64 *out)
 
 uacpi_status uacpi_object_assign_integer(uacpi_object *obj, uacpi_u64 value)
 {
+    uacpi_object object = { 0 };
+
     ENSURE_VALID_USER_OBJ(obj);
 
-    return uacpi_object_assign(obj, &(uacpi_object) {
-        .type = UACPI_OBJECT_INTEGER,
-        .integer = value,
-    }, UACPI_ASSIGN_BEHAVIOR_DEEP_COPY);
+    object.type = UACPI_OBJECT_INTEGER;
+    object.integer = value;
+
+    return uacpi_object_assign(obj, &object, UACPI_ASSIGN_BEHAVIOR_DEEP_COPY);
 }
 
 void uacpi_buffer_to_view(uacpi_buffer *buf, uacpi_data_view *out_view)
@@ -1100,10 +1109,10 @@ static uacpi_status uacpi_object_do_assign_buffer(
 )
 {
     uacpi_status ret;
-    uacpi_object tmp_obj = {
-        .type = type,
-    };
+    uacpi_object tmp_obj = { 0 };
     uacpi_size dst_buf_size = in.length;
+
+    tmp_obj.type = type;
 
     ENSURE_VALID_USER_OBJ(obj);
 
@@ -1218,10 +1227,11 @@ uacpi_object *uacpi_object_create_buffer(uacpi_data_view view)
 
 uacpi_object *uacpi_object_create_cstring(const uacpi_char *str)
 {
-    return uacpi_object_create_string((uacpi_data_view) {
-        .const_text = str,
-        .length = uacpi_strlen(str) + 1,
-    });
+    uacpi_data_view data_view = { 0 };
+
+    data_view.const_text = str;
+    data_view.length = uacpi_strlen(str) + 1;
+    return uacpi_object_create_string(data_view);
 }
 
 uacpi_status uacpi_object_get_package(
@@ -1256,13 +1266,15 @@ uacpi_status uacpi_object_assign_reference(
 )
 {
     uacpi_status ret;
+    uacpi_object object = { 0 };
 
     ENSURE_VALID_USER_OBJ(obj);
     ENSURE_VALID_USER_OBJ(child);
 
     // First clear out the object
+    object.type = UACPI_OBJECT_UNINITIALIZED;
     ret = uacpi_object_assign(
-        obj, &(uacpi_object) { .type = UACPI_OBJECT_UNINITIALIZED },
+        obj, &object,
         UACPI_ASSIGN_BEHAVIOR_DEEP_COPY
     );
     if (uacpi_unlikely_error(ret))
@@ -1439,6 +1451,12 @@ uacpi_status uacpi_object_assign(uacpi_object *dst, uacpi_object *src,
     case UACPI_OBJECT_THERMAL_ZONE:
         dst->thermal_zone = src->thermal_zone;
         uacpi_shareable_ref(dst->thermal_zone);
+        break;
+    case UACPI_OBJECT_POWER_RESOURCE:
+        uacpi_memcpy(
+            &dst->power_resource, &src->power_resource,
+            sizeof(dst->power_resource)
+        );
         break;
     default:
         ret = UACPI_STATUS_UNIMPLEMENTED;

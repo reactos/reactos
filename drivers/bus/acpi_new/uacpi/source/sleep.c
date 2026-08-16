@@ -47,6 +47,7 @@ uacpi_status uacpi_set_waking_vector(
 static uacpi_status enter_sleep_state_hw_full(uacpi_u8 state)
 {
     uacpi_status ret;
+    uacpi_interrupt_state int_state;
     uacpi_u64 wake_status, pm1a, pm1b;
 
     ret = uacpi_write_register_field(
@@ -77,13 +78,15 @@ static uacpi_status enter_sleep_state_hw_full(uacpi_u8 state)
     pm1a |= g_uacpi_rt_ctx.last_sleep_typ_a << ACPI_PM1_CNT_SLP_TYP_IDX;
     pm1b |= g_uacpi_rt_ctx.last_sleep_typ_b << ACPI_PM1_CNT_SLP_TYP_IDX;
 
+    int_state = uacpi_kernel_disable_interrupts();
+
     /*
      * Just like ACPICA, split writing SLP_TYP and SLP_EN to work around
      * buggy firmware that can't handle both written at the same time.
      */
     ret = uacpi_write_registers(UACPI_REGISTER_PM1_CNT, pm1a, pm1b);
     if (uacpi_unlikely_error(ret))
-        return ret;
+        goto out;
 
     pm1a |= ACPI_PM1_CNT_SLP_EN_MASK;
     pm1b |= ACPI_PM1_CNT_SLP_EN_MASK;
@@ -93,7 +96,7 @@ static uacpi_status enter_sleep_state_hw_full(uacpi_u8 state)
 
     ret = uacpi_write_registers(UACPI_REGISTER_PM1_CNT, pm1a, pm1b);
     if (uacpi_unlikely_error(ret))
-        return ret;
+        goto out;
 
     if (state > UACPI_SLEEP_STATE_S3) {
         /*
@@ -111,10 +114,11 @@ static uacpi_status enter_sleep_state_hw_full(uacpi_u8 state)
         // Try one more time
         ret = uacpi_write_registers(UACPI_REGISTER_PM1_CNT, pm1a, pm1b);
         if (uacpi_unlikely_error(ret))
-            return ret;
+            goto out;
 
         // Nothing we can do here, give up
-        return UACPI_STATUS_HARDWARE_TIMEOUT;
+        ret = UACPI_STATUS_HARDWARE_TIMEOUT;
+        goto out;
     }
 
     do {
@@ -122,10 +126,12 @@ static uacpi_status enter_sleep_state_hw_full(uacpi_u8 state)
             UACPI_REGISTER_FIELD_WAK_STS, &wake_status
         );
         if (uacpi_unlikely_error(ret))
-            return ret;
+            goto out;
     } while (wake_status != 1);
 
-    return UACPI_STATUS_OK;
+out:
+    uacpi_kernel_restore_interrupts(int_state);
+    return ret;
 }
 
 static uacpi_status prepare_for_wake_from_sleep_state_hw_full(uacpi_u8 state)
@@ -205,10 +211,10 @@ static uacpi_status get_slp_type_for_state(
     );
     if (ret != UACPI_STATUS_OK) {
         if (uacpi_unlikely(ret != UACPI_STATUS_NOT_FOUND)) {
-            uacpi_warn("error while evaluating %s: %s\n", path,
+            uacpi_warn("error while evaluating %s: %s", path,
                        uacpi_status_to_string(ret));
         } else {
-            uacpi_trace("sleep state %d is not supported as %s was not found\n",
+            uacpi_trace("sleep state %d is not supported as %s was not found",
                         state, path);
         }
         goto out;
@@ -216,7 +222,7 @@ static uacpi_status get_slp_type_for_state(
 
     switch (ret_obj->package->count) {
     case 0:
-        uacpi_error("empty package while evaluating %s!\n", path);
+        uacpi_error("empty package while evaluating %s!", path);
         ret = UACPI_STATUS_AML_INCOMPATIBLE_OBJECT_TYPE;
         goto out;
 
@@ -224,7 +230,7 @@ static uacpi_status get_slp_type_for_state(
         obj0 = ret_obj->package->objects[0];
         if (uacpi_unlikely(obj0->type != UACPI_OBJECT_INTEGER)) {
             uacpi_error(
-                "invalid object type at pkg[0] => %s when evaluating %s\n",
+                "invalid object type at pkg[0] => %s when evaluating %s",
                 uacpi_object_type_to_string(obj0->type), path
             );
             goto out;
@@ -242,7 +248,7 @@ static uacpi_status get_slp_type_for_state(
                            obj1->type != UACPI_OBJECT_INTEGER)) {
             uacpi_error(
                 "invalid object type when evaluating %s: "
-                "pkg[0] => %s, pkg[1] => %s\n", path,
+                "pkg[0] => %s, pkg[1] => %s", path,
                 uacpi_object_type_to_string(obj0->type),
                 uacpi_object_type_to_string(obj1->type)
             );
@@ -289,7 +295,7 @@ static uacpi_status eval_sleep_helper(
         ret = UACPI_STATUS_OK;
         break;
     default:
-        uacpi_error("error while evaluating %s: %s\n",
+        uacpi_error("error while evaluating %s: %s",
                     path, uacpi_status_to_string(ret));
         break;
     }
@@ -401,17 +407,20 @@ static uacpi_status enter_sleep_state_hw_reduced(uacpi_u8 state)
     uacpi_status ret;
     uacpi_u8 sleep_control;
     uacpi_u64 wake_status;
+    uacpi_interrupt_state int_state;
     struct acpi_fadt *fadt = &g_uacpi_rt_ctx.fadt;
 
     if (!fadt->sleep_control_reg.address || !fadt->sleep_status_reg.address)
         return UACPI_STATUS_NOT_FOUND;
+
+    int_state = uacpi_kernel_disable_interrupts();
 
     ret = uacpi_write_register_field(
         UACPI_REGISTER_FIELD_HWR_WAK_STS,
         ACPI_SLP_STS_CLEAR
     );
     if (uacpi_unlikely_error(ret))
-        return ret;
+        goto out;
 
     sleep_control = make_hw_reduced_sleep_control(
         g_uacpi_rt_ctx.last_sleep_typ_a
@@ -427,7 +436,7 @@ static uacpi_status enter_sleep_state_hw_reduced(uacpi_u8 state)
      */
     ret = uacpi_write_register(UACPI_REGISTER_SLP_CNT, sleep_control);
     if (uacpi_unlikely_error(ret))
-        return ret;
+        goto out;
 
     /*
      * The OSPM then polls the WAK_STS bit of the SLEEP_STATUS_REG waiting for
@@ -439,10 +448,12 @@ static uacpi_status enter_sleep_state_hw_reduced(uacpi_u8 state)
             UACPI_REGISTER_FIELD_HWR_WAK_STS, &wake_status
         );
         if (uacpi_unlikely_error(ret))
-            return ret;
+            goto out;
     } while (wake_status != 1);
 
-    return UACPI_STATUS_OK;
+out:
+    uacpi_kernel_restore_interrupts(int_state);
+    return ret;
 }
 
 static uacpi_status prepare_for_wake_from_sleep_state_hw_reduced(uacpi_u8 state)
@@ -494,13 +505,24 @@ uacpi_status uacpi_enter_sleep_state(enum uacpi_sleep_state state_enum)
 
     if (uacpi_unlikely(g_uacpi_rt_ctx.last_sleep_typ_a > ACPI_SLP_TYP_MAX ||
                        g_uacpi_rt_ctx.last_sleep_typ_b > ACPI_SLP_TYP_MAX)) {
-        uacpi_error("invalid SLP_TYP values: 0x%02X:0x%02X\n",
+        uacpi_error("invalid SLP_TYP values: 0x%02X:0x%02X",
                     g_uacpi_rt_ctx.last_sleep_typ_a,
                     g_uacpi_rt_ctx.last_sleep_typ_b);
         return UACPI_STATUS_AML_BAD_ENCODING;
     }
 
     return CALL_SLEEP_FN(enter_sleep_state, state);
+}
+
+uacpi_status uacpi_enter_sleep_state_simple(uacpi_sleep_state state)
+{
+    uacpi_status ret;
+
+    ret = uacpi_prepare_for_sleep_state(state);
+    if (uacpi_unlikely_error(ret))
+        return ret;
+
+    return uacpi_enter_sleep_state(state);
 }
 
 uacpi_status uacpi_prepare_for_wake_from_sleep_state(
@@ -563,13 +585,13 @@ uacpi_status uacpi_reboot(void)
         ret = uacpi_write_register(UACPI_REGISTER_RESET, fadt->reset_value);
         break;
     case UACPI_ADDRESS_SPACE_PCI_CONFIG: {
+        uacpi_pci_address address = { 0 };
+
         // Bus is assumed to be 0 here
-        uacpi_pci_address address = {
-            .segment = 0,
-            .bus = 0,
-            .device = (reset_reg->address >> 32) & 0xFF,
-            .function = (reset_reg->address >> 16) & 0xFF,
-        };
+        address.segment = 0;
+        address.bus = 0;
+        address.device = (reset_reg->address >> 32) & 0xFF;
+        address.function = (reset_reg->address >> 16) & 0xFF;
 
         ret = uacpi_kernel_pci_device_open(address, &pci_dev);
         if (uacpi_unlikely_error(ret))
@@ -582,7 +604,7 @@ uacpi_status uacpi_reboot(void)
     }
     default:
         uacpi_warn(
-            "unable to perform a reset: unsupported address space '%s' (%d)\n",
+            "unable to perform a reset: unsupported address space '%s' (%d)",
             uacpi_address_space_to_string(reset_reg->address_space_id),
             reset_reg->address_space_id
         );
@@ -601,7 +623,7 @@ uacpi_status uacpi_reboot(void)
             stalled_time += 100;
         }
 
-        uacpi_error("reset timeout\n");
+        uacpi_error("reset timeout");
         ret = UACPI_STATUS_HARDWARE_TIMEOUT;
     }
 

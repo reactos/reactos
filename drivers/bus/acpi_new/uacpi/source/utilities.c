@@ -285,7 +285,7 @@ uacpi_status uacpi_string_to_integer(
 
 out:
     if (negative)
-        value = -((uacpi_i64)value);
+        value = 0 - value;
 
     *out_value = value;
     if (max_chars == 0 || c == '\0')
@@ -391,9 +391,11 @@ uacpi_status uacpi_eval_hid(uacpi_namespace_node *node, uacpi_id_string **out_id
 
         size += buf->size;
         if (uacpi_unlikely(buf->size == 0 || size < buf->size)) {
+            uacpi_object_name name = uacpi_namespace_node_name(node);
+
             uacpi_error(
-                "%.4s._HID: empty/invalid EISA ID string (%zu bytes)\n",
-                uacpi_namespace_node_name(node).text, buf->size
+                "%.4s._HID: empty/invalid EISA ID string (%zu bytes)",
+                name.text, buf->size
             );
             ret = UACPI_STATUS_AML_BAD_ENCODING;
             break;
@@ -485,18 +487,22 @@ uacpi_status uacpi_eval_cid(
             uacpi_size buf_size = object->buffer->size;
 
             if (uacpi_unlikely(buf_size == 0)) {
+                uacpi_object_name name = uacpi_namespace_node_name(node);
+
                 uacpi_error(
-                    "%.4s._CID: empty EISA ID string (sub-object %zu)\n",
-                    uacpi_namespace_node_name(node).text, i
+                    "%.4s._CID: empty EISA ID string (sub-object %zu)",
+                    name.text, i
                 );
                 return UACPI_STATUS_AML_INCOMPATIBLE_OBJECT_TYPE;
             }
 
             size += buf_size;
             if (uacpi_unlikely(size < buf_size)) {
+                uacpi_object_name name = uacpi_namespace_node_name(node);
+
                 uacpi_error(
-                    "%.4s._CID: buffer size overflow (+ %zu)\n",
-                    uacpi_namespace_node_name(node).text, buf_size
+                    "%.4s._CID: buffer size overflow (+ %zu)",
+                    name.text, buf_size
                 );
                 return UACPI_STATUS_AML_BAD_ENCODING;
             }
@@ -507,13 +513,16 @@ uacpi_status uacpi_eval_cid(
         case UACPI_OBJECT_INTEGER:
             size += PNP_ID_LENGTH;
             break;
-        default:
+        default: {
+            uacpi_object_name name = uacpi_namespace_node_name(node);
+
             uacpi_error(
-                "%.4s._CID: invalid package sub-object %zu type: %s\n",
-                uacpi_namespace_node_name(node).text, i,
+                "%.4s._CID: invalid package sub-object %zu type: %s",
+                name.text, i,
                 uacpi_object_type_to_string(object->type)
             );
             return UACPI_STATUS_AML_INCOMPATIBLE_OBJECT_TYPE;
+        }
         }
     }
 
@@ -672,9 +681,11 @@ uacpi_status uacpi_eval_uid(
     if (obj->type == UACPI_OBJECT_STRING) {
         size = obj->buffer->size;
         if (uacpi_unlikely(size == 0 || size > 0xE0000000)) {
+            uacpi_object_name name = uacpi_namespace_node_name(node);
+
             uacpi_error(
-                "invalid %.4s._UID string size: %u\n",
-                uacpi_namespace_node_name(node).text, size
+                "invalid %.4s._UID string size: %u",
+                name.text, size
             );
             ret = UACPI_STATUS_AML_BAD_ENCODING;
             goto out;
@@ -753,7 +764,7 @@ static uacpi_status uacpi_eval_dstate_method_template(
 
             path = uacpi_namespace_node_generate_absolute_path(parent);
             uacpi_warn(
-                "failed to evaluate %s.%s: %s\n",
+                "failed to evaluate %s.%s: %s",
                 path, template, uacpi_status_to_string(eval_ret)
             );
             uacpi_free_dynamic_string(path);
@@ -958,13 +969,13 @@ uacpi_status uacpi_find_devices_at(
     uacpi_iteration_callback cb, void *user
 )
 {
+    struct device_find_ctx ctx = { 0 };
+
     UACPI_ENSURE_INIT_LEVEL_AT_LEAST(UACPI_INIT_LEVEL_NAMESPACE_LOADED);
 
-    struct device_find_ctx ctx = {
-        .target_hids = hids,
-        .user = user,
-        .cb = cb,
-    };
+    ctx.target_hids = hids;
+    ctx.user = user;
+    ctx.cb = cb;
 
     return uacpi_namespace_for_each_child(
         parent, find_one_device, UACPI_NULL, UACPI_OBJECT_DEVICE_BIT,
@@ -976,9 +987,11 @@ uacpi_status uacpi_find_devices(
     const uacpi_char *hid, uacpi_iteration_callback cb, void *user
 )
 {
-    const uacpi_char *hids[] = {
-        hid, UACPI_NULL
+    const uacpi_char *hids[2] = {
+        UACPI_NULL, UACPI_NULL
     };
+
+    hids[0] = hid;
 
     return uacpi_find_devices_at(uacpi_namespace_root(), hids, cb, user);
 }
@@ -1033,7 +1046,7 @@ uacpi_status uacpi_get_pci_routing_table(
 
     table_pkg = obj->package;
     if (uacpi_unlikely(table_pkg->count == 0 || table_pkg->count > 1024)) {
-        uacpi_error("invalid number of _PRT entries: %zu\n", table_pkg->count);
+        uacpi_error("invalid number of _PRT entries: %zu", table_pkg->count);
         uacpi_object_unref(obj);
         return UACPI_STATUS_AML_BAD_ENCODING;
     }
@@ -1050,14 +1063,14 @@ uacpi_status uacpi_get_pci_routing_table(
         entry_obj = table_pkg->objects[i];
 
         if (uacpi_unlikely(entry_obj->type != UACPI_OBJECT_PACKAGE)) {
-            uacpi_error("_PRT sub-object %zu is not a package: %s\n",
+            uacpi_error("_PRT sub-object %zu is not a package: %s",
                         i, uacpi_object_type_to_string(entry_obj->type));
             goto out_bad_encoding;
         }
 
         entry_pkg = entry_obj->package;
         if (uacpi_unlikely(entry_pkg->count != 4)) {
-            uacpi_error("invalid _PRT sub-package entry count %zu\n",
+            uacpi_error("invalid _PRT sub-package entry count %zu",
                         entry_pkg->count);
             goto out_bad_encoding;
         }
@@ -1066,7 +1079,7 @@ uacpi_status uacpi_get_pci_routing_table(
 
         elem_obj = entry_pkg->objects[0];
         if (uacpi_unlikely(elem_obj->type != UACPI_OBJECT_INTEGER)) {
-            uacpi_error("invalid _PRT sub-package %zu address type: %s\n",
+            uacpi_error("invalid _PRT sub-package %zu address type: %s",
                         i, uacpi_object_type_to_string(elem_obj->type));
             goto out_bad_encoding;
         }
@@ -1074,7 +1087,7 @@ uacpi_status uacpi_get_pci_routing_table(
 
         elem_obj = entry_pkg->objects[1];
         if (uacpi_unlikely(elem_obj->type != UACPI_OBJECT_INTEGER)) {
-            uacpi_error("invalid _PRT sub-package %zu pin type: %s\n",
+            uacpi_error("invalid _PRT sub-package %zu pin type: %s",
                         i, uacpi_object_type_to_string(elem_obj->type));
             goto out_bad_encoding;
         }
@@ -1087,7 +1100,7 @@ uacpi_status uacpi_get_pci_routing_table(
                 elem_obj, parent, &entry->source
             );
             if (uacpi_unlikely_error(ret)) {
-                uacpi_error("unable to lookup _PRT source %s: %s\n",
+                uacpi_error("unable to lookup _PRT source %s: %s",
                             elem_obj->buffer->text, uacpi_status_to_string(ret));
                 goto out_bad_encoding;
             }
@@ -1096,14 +1109,14 @@ uacpi_status uacpi_get_pci_routing_table(
             entry->source = UACPI_NULL;
             break;
         default:
-            uacpi_error("invalid _PRT sub-package %zu source type: %s\n",
+            uacpi_error("invalid _PRT sub-package %zu source type: %s",
                         i, uacpi_object_type_to_string(elem_obj->type));
             goto out_bad_encoding;
         }
 
         elem_obj = entry_pkg->objects[3];
         if (uacpi_unlikely(elem_obj->type != UACPI_OBJECT_INTEGER)) {
-            uacpi_error("invalid _PRT sub-package %zu source index type: %s\n",
+            uacpi_error("invalid _PRT sub-package %zu source index type: %s",
                         i, uacpi_object_type_to_string(elem_obj->type));
             goto out_bad_encoding;
         }

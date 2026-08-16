@@ -30,14 +30,14 @@ uacpi_namespace_node *uacpi_namespace_get_predefined(
     uacpi_predefined_namespace
 );
 
-/*
+/**
  * Returns UACPI_TRUE if the provided 'node' is an alias.
  */
 uacpi_bool uacpi_namespace_node_is_alias(uacpi_namespace_node *node);
 
 uacpi_object_name uacpi_namespace_node_name(const uacpi_namespace_node *node);
 
-/*
+/**
  * Returns the type of object stored at the namespace node.
  *
  * NOTE: due to the existance of the CopyObject operator in AML, the
@@ -47,7 +47,7 @@ uacpi_status uacpi_namespace_node_type(
     const uacpi_namespace_node *node, uacpi_object_type *out_type
 );
 
-/*
+/**
  * Returns UACPI_TRUE via 'out' if the type of the object stored at the
  * namespace node matches the provided value, UACPI_FALSE otherwise.
  *
@@ -58,7 +58,7 @@ uacpi_status uacpi_namespace_node_is(
     const uacpi_namespace_node *node, uacpi_object_type type, uacpi_bool *out
 );
 
-/*
+/**
  * Returns UACPI_TRUE via 'out' if the type of the object stored at the
  * namespace node matches any of the type bits in the provided value,
  * UACPI_FALSE otherwise.
@@ -83,7 +83,7 @@ uacpi_status uacpi_namespace_node_find(
     uacpi_namespace_node **out_node
 );
 
-/*
+/**
  * Same as uacpi_namespace_node_find, except the search recurses upwards when
  * the namepath consists of only a single nameseg. Usually, this behavior is
  * only desired if resolving a namepath specified in an aml-provided object,
@@ -101,14 +101,14 @@ typedef uacpi_iteration_decision (*uacpi_iteration_callback) (
 
 #define UACPI_MAX_DEPTH_ANY 0xFFFFFFFF
 
-/*
+/**
  * Depth-first iterate the namespace starting at the first child of 'parent'.
  */
 uacpi_status uacpi_namespace_for_each_child_simple(
     uacpi_namespace_node *parent, uacpi_iteration_callback callback, void *user
 );
 
-/*
+/**
  * Depth-first iterate the namespace starting at the first child of 'parent'.
  *
  * 'descending_callback' is invoked the first time a node is visited when
@@ -128,7 +128,7 @@ uacpi_status uacpi_namespace_for_each_child(
     uacpi_object_type_bits type_mask, uacpi_u32 max_depth, void *user
 );
 
-/*
+/**
  * Retrieve the next peer namespace node of '*iter', or, if '*iter' is
  * UACPI_NULL, retrieve the first child of 'parent' instead. The resulting
  * namespace node is stored at '*iter'.
@@ -157,7 +157,7 @@ uacpi_status uacpi_namespace_node_next(
     uacpi_namespace_node *parent, uacpi_namespace_node **iter
 );
 
-/*
+/**
  * Retrieve the next peer namespace node of '*iter', or, if '*iter' is
  * UACPI_NULL, retrieve the first child of 'parent' instead. The resulting
  * namespace node is stored at '*iter'. Only nodes which type matches one

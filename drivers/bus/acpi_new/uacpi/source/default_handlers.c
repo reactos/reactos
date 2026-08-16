@@ -24,7 +24,7 @@ static uacpi_namespace_node *find_pci_root(uacpi_namespace_node *node)
     while (parent != uacpi_namespace_root()) {
         if (uacpi_device_matches_pnp_id(parent, pci_root_ids)) {
             uacpi_trace(
-                "found a PCI root node %.4s controlling region %.4s\n",
+                "found a PCI root node %.4s controlling region %.4s",
                 parent->name.text, node->name.text
             );
             return parent;
@@ -40,9 +40,15 @@ static uacpi_namespace_node *find_pci_root(uacpi_namespace_node *node)
     return node;
 }
 
+struct pci_region_ctx {
+    uacpi_handle device_handle;
+    uacpi_bool handle_is_valid;
+};
+
 static uacpi_status pci_region_attach(uacpi_region_attach_data *data)
 {
     uacpi_namespace_node *node, *pci_root, *device;
+    struct pci_region_ctx *ctx;
     uacpi_pci_address address = { 0 };
     uacpi_u64 value;
     uacpi_status ret;
@@ -91,17 +97,34 @@ static uacpi_status pci_region_attach(uacpi_region_attach_data *data)
         address.bus = value;
 
     uacpi_trace(
-        "detected PCI device %.4s@%04X:%02X:%02X:%01X\n",
+        "detected PCI device %.4s@%04X:%02X:%02X:%01X",
         device->name.text, address.segment, address.bus,
         address.device, address.function
     );
 
-    return uacpi_kernel_pci_device_open(address, &data->out_region_context);
+    ctx = uacpi_kernel_alloc_zeroed(sizeof(*ctx));
+    if (uacpi_unlikely(ctx == UACPI_NULL))
+        return UACPI_STATUS_OUT_OF_MEMORY;
+
+    data->out_region_context = ctx;
+
+    ret = uacpi_kernel_pci_device_open(address, &ctx->device_handle);
+    if (ret == UACPI_STATUS_NOT_FOUND)
+        return UACPI_STATUS_OK;
+
+    ctx->handle_is_valid = UACPI_TRUE;
+    return UACPI_STATUS_OK;
 }
 
 static uacpi_status pci_region_detach(uacpi_region_detach_data *data)
 {
-    uacpi_kernel_pci_device_close(data->region_context);
+    struct pci_region_ctx *ctx = data->region_context;
+
+    if (ctx->handle_is_valid)
+        uacpi_kernel_pci_device_close(ctx->device_handle);
+
+    uacpi_free(ctx, sizeof(*ctx));
+
     return UACPI_STATUS_OK;
 }
 
@@ -109,16 +132,30 @@ static uacpi_status pci_region_do_rw(
     uacpi_region_op op, uacpi_region_rw_data *data
 )
 {
-    uacpi_handle dev = data->region_context;
     uacpi_u8 width;
     uacpi_size offset;
+    struct pci_region_ctx *ctx = data->region_context;
 
     offset = data->offset;
     width = data->byte_width;
 
+    if (!ctx->handle_is_valid) {
+        uacpi_trace(
+            "faking a PCI device %s access",
+            op == UACPI_REGION_OP_READ ? "read" : "write"
+        );
+
+        if (op == UACPI_REGION_OP_READ) {
+            static uacpi_u64 ffs = 0xFFFFFFFFFFFFFFFF;
+            uacpi_memcpy(&data->value, &ffs, width);
+        }
+
+        return UACPI_STATUS_OK;
+    }
+
     return op == UACPI_REGION_OP_READ ?
-        uacpi_pci_read(dev, offset, width, &data->value) :
-        uacpi_pci_write(dev, offset, width, data->value);
+        uacpi_pci_read(ctx->device_handle, offset, width, &data->value) :
+        uacpi_pci_write(ctx->device_handle, offset, width, data->value);
 }
 
 static uacpi_status handle_pci_region(uacpi_region_op op, uacpi_handle op_data)
@@ -157,7 +194,7 @@ static uacpi_status memory_region_attach(uacpi_region_attach_data *data)
     ctx->phys = data->generic_info.base;
     ctx->virt = uacpi_kernel_map(ctx->phys, ctx->size);
 
-    if (uacpi_unlikely(ctx->virt == UACPI_NULL)) {
+    if (uacpi_unlikely(ctx->virt == UACPI_MAP_FAILED)) {
         ret = UACPI_STATUS_MAPPING_FAILED;
         uacpi_trace_region_error(data->region_node, "unable to map", ret);
         uacpi_free(ctx, sizeof(*ctx));

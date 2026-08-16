@@ -7,7 +7,7 @@
 extern "C" {
 #endif
 
-/*
+/**
  * Set the minimum log level to be accepted by the logging facilities. Any logs
  * below this level are discarded and not passed to uacpi_kernel_log, etc.
  *
@@ -22,7 +22,7 @@ extern "C" {
  */
 void uacpi_context_set_log_level(uacpi_log_level);
 
-/*
+/**
  * Enables table checksum validation at installation time instead of first use.
  * Note that this makes uACPI map the entire table at once, which not all
  * hosts are able to handle at early init.
@@ -30,7 +30,7 @@ void uacpi_context_set_log_level(uacpi_log_level);
 void uacpi_context_set_proactive_table_checksum(uacpi_bool);
 
 #ifndef UACPI_BAREBONES_MODE
-/*
+/**
  * Set the maximum number of seconds a While loop is allowed to run for before
  * getting timed out.
  *
@@ -38,7 +38,7 @@ void uacpi_context_set_proactive_table_checksum(uacpi_bool);
  */
 void uacpi_context_set_loop_timeout(uacpi_u32 seconds);
 
-/*
+/**
  * Set the maximum call stack depth AML can reach before getting aborted.
  *
  * 0 is treated as a special value that resets the setting to the default value.

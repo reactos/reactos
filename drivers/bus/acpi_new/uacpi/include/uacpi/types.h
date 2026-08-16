@@ -29,7 +29,13 @@ typedef enum uacpi_iteration_decision {
     UACPI_ITERATION_DECISION_CONTINUE = 0,
     UACPI_ITERATION_DECISION_BREAK,
 
-    // Only applicable for uacpi_namespace_for_each_child
+    /**
+     * Ignore all of the children of the current node and proceed directly to
+     * its peer nodes.
+     *
+     * Only applicable for API that interacts with the AML namespace such as
+     * uacpi_namespace_for_each_child, uacpi_find_deivces, etc.
+     */
     UACPI_ITERATION_DECISION_NEXT_PEER,
 } uacpi_iteration_decision;
 
@@ -59,19 +65,19 @@ typedef enum uacpi_init_level {
     // Reboot state, nothing is available
     UACPI_INIT_LEVEL_EARLY = 0,
 
-    /*
+    /**
      * State after a successfull call to uacpi_initialize. Table API and
      * other helpers that don't depend on the ACPI namespace may be used.
      */
     UACPI_INIT_LEVEL_SUBSYSTEM_INITIALIZED = 1,
 
-    /*
+    /**
      * State after a successfull call to uacpi_namespace_load. Most API may be
      * used, namespace can be iterated, etc.
      */
     UACPI_INIT_LEVEL_NAMESPACE_LOADED = 2,
 
-    /*
+    /**
      * The final initialization stage, this is entered after the call to
      * uacpi_namespace_initialize. All API is available to use.
      */
@@ -154,12 +160,12 @@ void uacpi_object_unref(uacpi_object *obj);
 uacpi_object_type uacpi_object_get_type(uacpi_object*);
 uacpi_object_type_bits uacpi_object_get_type_bit(uacpi_object*);
 
-/*
+/**
  * Returns UACPI_TRUE if the provided object's type matches this type.
  */
 uacpi_bool uacpi_object_is(uacpi_object*, uacpi_object_type);
 
-/*
+/**
  * Returns UACPI_TRUE if the provided object's type is one of the values
  * specified in the 'type_mask' of UACPI_OBJECT_*_BIT.
  */
@@ -169,13 +175,13 @@ uacpi_bool uacpi_object_is_one_of(
 
 const uacpi_char *uacpi_object_type_to_string(uacpi_object_type);
 
-/*
+/**
  * Create an uninitialized object. The object can be further overwritten via
  * uacpi_object_assign_* to anything.
  */
 uacpi_object *uacpi_object_create_uninitialized(void);
 
-/*
+/**
  * Create an integer object with the value provided.
  */
 uacpi_object *uacpi_object_create_integer(uacpi_u64);
@@ -186,7 +192,7 @@ typedef enum uacpi_overflow_behavior {
     UACPI_OVERFLOW_DISALLOW,
 } uacpi_overflow_behavior;
 
-/*
+/**
  * Same as uacpi_object_create_integer, but introduces additional ways to
  * control what happens if the provided integer is larger than 32-bits, and the
  * AML code expects 32-bit integers.
@@ -205,7 +211,7 @@ uacpi_status uacpi_object_create_integer_safe(
 uacpi_status uacpi_object_assign_integer(uacpi_object*, uacpi_u64 value);
 uacpi_status uacpi_object_get_integer(uacpi_object*, uacpi_u64 *out);
 
-/*
+/**
  * Create a string/buffer object. Takes in a constant view of the data.
  *
  * NOTE: The data is copied to a separately allocated buffer and is not taken
@@ -215,7 +221,7 @@ uacpi_object *uacpi_object_create_string(uacpi_data_view);
 uacpi_object *uacpi_object_create_cstring(const uacpi_char*);
 uacpi_object *uacpi_object_create_buffer(uacpi_data_view);
 
-/*
+/**
  * Returns a writable view of the data stored in the string or buffer type
  * object.
  */
@@ -225,7 +231,7 @@ uacpi_status uacpi_object_get_string_or_buffer(
 uacpi_status uacpi_object_get_string(uacpi_object*, uacpi_data_view *out);
 uacpi_status uacpi_object_get_buffer(uacpi_object*, uacpi_data_view *out);
 
-/*
+/**
  * Returns UACPI_TRUE if the provided string object is actually an AML namepath.
  *
  * This can only be the case for package elements. If a package element is
@@ -251,7 +257,7 @@ uacpi_status uacpi_object_get_buffer(uacpi_object*, uacpi_data_view *out);
  */
 uacpi_bool uacpi_object_is_aml_namepath(uacpi_object*);
 
-/*
+/**
  * Resolve an AML namepath contained in a string object.
  *
  * This is only applicable to objects that are package elements. See an
@@ -270,7 +276,7 @@ uacpi_status uacpi_object_resolve_as_aml_namepath(
     uacpi_object*, uacpi_namespace_node *scope, uacpi_namespace_node **out_node
 );
 
-/*
+/**
  * Make the provided object a string/buffer.
  * Takes in a constant view of the data to be stored in the object.
  *
@@ -285,7 +291,7 @@ typedef struct uacpi_object_array {
     uacpi_size count;
 } uacpi_object_array;
 
-/*
+/**
  * Create a package object and store all of the objects in the array inside.
  * The array is allowed to be empty.
  *
@@ -295,7 +301,7 @@ typedef struct uacpi_object_array {
  */
 uacpi_object *uacpi_object_create_package(uacpi_object_array in);
 
-/*
+/**
  * Returns the list of objects stored in a package object.
  *
  * NOTE: the reference count of the objects stored inside is not incremented,
@@ -305,7 +311,7 @@ uacpi_object *uacpi_object_create_package(uacpi_object_array in);
  */
 uacpi_status uacpi_object_get_package(uacpi_object*, uacpi_object_array *out);
 
-/*
+/**
  * Make the provided object a package and store all of the objects in the array
  * inside. The array is allowed to be empty.
  *
@@ -315,7 +321,7 @@ uacpi_status uacpi_object_get_package(uacpi_object*, uacpi_object_array *out);
  */
 uacpi_status uacpi_object_assign_package(uacpi_object*, uacpi_object_array in);
 
-/*
+/**
  * Create a reference object and make it point to 'child'.
  *
  * NOTE: child's reference count is incremented by one. Client code must remove
@@ -323,7 +329,7 @@ uacpi_status uacpi_object_assign_package(uacpi_object*, uacpi_object_array in);
  */
 uacpi_object *uacpi_object_create_reference(uacpi_object *child);
 
-/*
+/**
  * Make the provided object a reference and make it point to 'child'.
  *
  * NOTE: child's reference count is incremented by one. Client code must remove
@@ -331,7 +337,7 @@ uacpi_object *uacpi_object_create_reference(uacpi_object *child);
  */
 uacpi_status uacpi_object_assign_reference(uacpi_object*, uacpi_object *child);
 
-/*
+/**
  * Retrieve the object pointed to by a reference object.
  *
  * NOTE: the reference count of the returned object is incremented by one and
@@ -345,7 +351,7 @@ typedef struct uacpi_processor_info {
     uacpi_u8 block_length;
 } uacpi_processor_info;
 
-/*
+/**
  * Returns the information about the provided processor object.
  */
 uacpi_status uacpi_object_get_processor_info(
@@ -357,7 +363,7 @@ typedef struct uacpi_power_resource_info {
     uacpi_u16 resource_order;
 } uacpi_power_resource_info;
 
-/*
+/**
  * Returns the information about the provided power resource object.
  */
 uacpi_status uacpi_object_get_power_resource_info(
@@ -486,7 +492,7 @@ typedef struct uacpi_region_serial_rw_data {
     uacpi_data_view in_out_buffer;
     uacpi_access_attribute access_attribute;
 
-    /*
+    /**
      * Applicable if access_attribute is one of:
      * - UACPI_ACCESS_ATTRIBUTE_BYTES
      * - UACPI_ACCESS_ATTRIBUTE_RAW_BYTES
