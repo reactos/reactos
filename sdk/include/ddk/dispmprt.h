@@ -1,6 +1,6 @@
 /*
  * PROJECT:     ReactOS Display Driver Model
- * LICENSE:     MIT (https://spdx.org/licenses/MIT)
+ * LICENSE:     Public Domain
  * PURPOSE:     Header file for WDDM style driver exports
  * COPYRIGHT:   Copyright 2024 Justin Miller <justin.miller@reactos.org>
  */
@@ -37,11 +37,11 @@ typedef struct _EMULATOR_ACCESS_ENTRY {
 
 typedef
 VOID
-(*PBANKED_SECTION_ROUTINE)(
+(NTAPI *PBANKED_SECTION_ROUTINE)(
     _In_ ULONG ReadBank,
     _In_ ULONG WriteBank,
     _In_ PVOID Context
-    );
+);
 
 #include <ntddvdeo.h>
 #include <video.h>
@@ -109,7 +109,7 @@ typedef struct _DXGK_VIDEO_OUTPUT_CAPABILITIES {
 
 typedef struct _DXGK_INTEGRATED_DISPLAY_CHILD {
     D3DKMDT_VIDEO_OUTPUT_TECHNOLOGY InterfaceTechnology;
-    USHORT                          DescriptorLength;
+    USHORT DescriptorLength;
 } DXGK_INTEGRATED_DISPLAY_CHILD, *PDXGK_INTEGRATED_DISPLAY_CHILD;
 
 typedef enum _DXGK_CHILD_DEVICE_TYPE {
@@ -120,7 +120,6 @@ typedef enum _DXGK_CHILD_DEVICE_TYPE {
 } DXGK_CHILD_DEVICE_TYPE, *PDXGK_CHILD_DEVICE_TYPE;
 
 typedef struct _DXGK_CHILD_CAPABILITIES {
-
     union
     {
         DXGK_VIDEO_OUTPUT_CAPABILITIES  VideoOutput;
@@ -209,11 +208,12 @@ typedef
 _Function_class_DXGK_(DXGKDDI_PROTECTED_CALLBACK)
 _IRQL_requires_DXGK_(PASSIVE_LEVEL)
 VOID
+NTAPI
 (*DXGKDDI_PROTECTED_CALLBACK)(
     _In_ CONST PVOID MiniportDeviceContext,
     _In_ PVOID ProtectedCallbackContext,
     _In_ NTSTATUS ProtectionStatus
-    );
+);
 
 /* Device interface GUIDs */
 DEFINE_GUID(GUID_DEVINTERFACE_I2C, 0x2564AA4F, 0xDDDB, 0x4495, 0xB4, 0x97, 0x6A, 0xD4, 0xA8, 0x41, 0x63, 0xD7);
@@ -238,18 +238,20 @@ typedef
 _Function_class_DXGK_(DXGKDDI_I2C_TRANSMIT_DATA_TO_DISPLAY)
 _IRQL_requires_DXGK_(PASSIVE_LEVEL)
 NTSTATUS
+NTAPI
 (*DXGKDDI_I2C_TRANSMIT_DATA_TO_DISPLAY)(
     _In_ PVOID MiniportDeviceContext,
     _In_ D3DDDI_VIDEO_PRESENT_TARGET_ID VidPnTargetId,
     _In_ ULONG SevenBitI2CAddress,
     _In_ ULONG DataLength,
     _In_reads_bytes_(DataLength) CONST PVOID Data
-    );
+);
 
 typedef
 _Function_class_DXGK_(DXGKDDI_I2C_RECEIVE_DATA_FROM_DISPLAY)
 _IRQL_requires_DXGK_(PASSIVE_LEVEL)
 NTSTATUS
+NTAPI
 (*DXGKDDI_I2C_RECEIVE_DATA_FROM_DISPLAY)(
     _In_ PVOID MiniportDeviceContext,
     _In_ D3DDDI_VIDEO_PRESENT_TARGET_ID VidPnTargetId,
@@ -257,7 +259,7 @@ NTSTATUS
     _In_ ULONG Flags,
     _In_ ULONG DataLength,
     _Out_writes_bytes_(DataLength) PVOID Data
-    );
+);
 
 typedef struct _DXGK_I2C_INTERFACE {
     USHORT Size;
@@ -276,96 +278,105 @@ typedef
 _Function_class_DXGK_(DXGKDDI_OPM_GET_CERTIFICATE_SIZE)
 _IRQL_requires_DXGK_(PASSIVE_LEVEL)
 NTSTATUS
+NTAPI
 (*DXGKDDI_OPM_GET_CERTIFICATE_SIZE)(
     _In_ PVOID MiniportDeviceContext,
     _In_ DXGKMDT_CERTIFICATE_TYPE CertificateType,
     _Out_ PULONG CertificateSize
-    );
+);
 
 typedef
 _Function_class_DXGK_(DXGKDDI_OPM_GET_CERTIFICATE)
 _IRQL_requires_DXGK_(PASSIVE_LEVEL)
 NTSTATUS
+NTAPI
 (*DXGKDDI_OPM_GET_CERTIFICATE)(
     _In_ PVOID MiniportDeviceContext,
     _In_ DXGKMDT_CERTIFICATE_TYPE CertificateType,
     _In_ ULONG CertificateSize,
     _Out_writes_bytes_(CertificateSize) PVOID CertificateBuffer
-    );
+);
 
 typedef
 _Function_class_DXGK_(DXGKDDI_OPM_CREATE_PROTECTED_OUTPUT)
 _IRQL_requires_DXGK_(PASSIVE_LEVEL)
 NTSTATUS
+NTAPI
 (*DXGKDDI_OPM_CREATE_PROTECTED_OUTPUT)(
     _In_ PVOID MiniportDeviceContext,
     _In_ D3DDDI_VIDEO_PRESENT_TARGET_ID VidPnTargetId,
     _In_ DXGKMDT_OPM_VIDEO_OUTPUT_SEMANTICS NewVideoOutputSemantics,
     _Out_ PHANDLE NewProtectedOutputHandle
-    );
+);
 
 typedef
 _Function_class_DXGK_(DXGKDDI_OPM_GET_RANDOM_NUMBER)
 _IRQL_requires_DXGK_(PASSIVE_LEVEL)
 NTSTATUS
+NTAPI
 (*DXGKDDI_OPM_GET_RANDOM_NUMBER)(
     _In_ PVOID MiniportDeviceContext,
     _In_ HANDLE ProtectedOutputHandle,
     _Out_ PDXGKMDT_OPM_RANDOM_NUMBER RandomNumber
-    );
+);
 
 typedef
 _Function_class_DXGK_(DXGKDDI_OPM_SET_SIGNING_KEY_AND_SEQUENCE_NUMBERS)
 _IRQL_requires_DXGK_(PASSIVE_LEVEL)
 NTSTATUS
+NTAPI
 (*DXGKDDI_OPM_SET_SIGNING_KEY_AND_SEQUENCE_NUMBERS)(
     _In_ PVOID MiniportDeviceContext,
     _In_ HANDLE ProtectedOutputHandle,
     _In_ CONST PDXGKMDT_OPM_ENCRYPTED_PARAMETERS EncryptedParameters
-    );
+);
 
 typedef
 _Function_class_DXGK_(DXGKDDI_OPM_GET_INFORMATION)
 _IRQL_requires_DXGK_(PASSIVE_LEVEL)
 NTSTATUS
+NTAPI
 (*DXGKDDI_OPM_GET_INFORMATION)(
     _In_ PVOID MiniportDeviceContext,
     _In_ HANDLE ProtectedOutputHandle,
     _In_ CONST PDXGKMDT_OPM_GET_INFO_PARAMETERS Parameters,
     _Out_ PDXGKMDT_OPM_REQUESTED_INFORMATION RequestedInformation
-    );
+);
 
 typedef
 _Function_class_DXGK_(DXGKDDI_OPM_GET_COPP_COMPATIBLE_INFORMATION)
 _IRQL_requires_DXGK_(PASSIVE_LEVEL)
 NTSTATUS
+NTAPI
 (*DXGKDDI_OPM_GET_COPP_COMPATIBLE_INFORMATION)(
     _In_ PVOID MiniportDeviceContext,
     _In_ HANDLE ProtectedOutputHandle,
     _In_ CONST PDXGKMDT_OPM_COPP_COMPATIBLE_GET_INFO_PARAMETERS Parameters,
     _Out_ PDXGKMDT_OPM_REQUESTED_INFORMATION RequestedInformation
-    );
+);
 
 typedef
 _Function_class_DXGK_(DXGKDDI_OPM_CONFIGURE_PROTECTED_OUTPUT)
 _IRQL_requires_DXGK_(PASSIVE_LEVEL)
 NTSTATUS
+NTAPI
 (*DXGKDDI_OPM_CONFIGURE_PROTECTED_OUTPUT)(
     _In_ PVOID MiniportDeviceContext,
     _In_ HANDLE ProtectedOutputHandle,
     _In_ CONST PDXGKMDT_OPM_CONFIGURE_PARAMETERS Parameters,
     _In_ ULONG AdditionalParametersSize,
     _In_reads_bytes_(AdditionalParametersSize) CONST PVOID AdditionalParameters
-    );
+);
 
 typedef
 _Function_class_DXGK_(DXGKDDI_OPM_DESTROY_PROTECTED_OUTPUT)
 _IRQL_requires_DXGK_(PASSIVE_LEVEL)
 NTSTATUS
+NTAPI
 (*DXGKDDI_OPM_DESTROY_PROTECTED_OUTPUT)(
     _In_ PVOID MiniportDeviceContext,
     _In_ HANDLE ProtectedOutputHandle
-    );
+);
 
 typedef struct _DXGK_OPM_INTERFACE {
     USHORT Size;
@@ -391,6 +402,7 @@ typedef
 _Function_class_DXGK_(DXGKDDI_OPM_CREATE_PROTECTED_OUTPUT_NONLOCAL_DISPLAY_JTP)
 _IRQL_requires_DXGK_(PASSIVE_LEVEL)
 NTSTATUS
+NTAPI
 (*DXGKDDI_OPM_CREATE_PROTECTED_OUTPUT_NONLOCAL_DISPLAY_JTP)(
     _In_ PVOID MiniportDeviceContext,
     _In_ DXGKMDT_OPM_VIDEO_OUTPUT_SEMANTICS NewVideoOutputSemantics,
@@ -398,19 +410,20 @@ NTSTATUS
     _In_ DXGKMDT_OPM_ACTUAL_OUTPUT_FORMAT *pActualOutputFormat,
     _In_ D3DDDI_VIDEO_PRESENT_TARGET_ID NonLocalOutputId,
     _Out_ PHANDLE NewProtectedOutputHandle
-    );
+);
 
 typedef
 _Function_class_DXGK_(DXGKDDI_OPM_CREATE_PROTECTED_OUTPUT_VIRTUAL_MODE_JTP)
 _IRQL_requires_DXGK_(PASSIVE_LEVEL)
 NTSTATUS
+NTAPI
 (*DXGKDDI_OPM_CREATE_PROTECTED_OUTPUT_VIRTUAL_MODE_JTP)(
     _In_ PVOID MiniportDeviceContext,
     _In_ D3DDDI_VIDEO_PRESENT_TARGET_ID VidPnTargetId,
     _In_ DXGKMDT_OPM_VIDEO_OUTPUT_SEMANTICS NewVideoOutputSemantics,
     _In_ DXGKMDT_OPM_ACTUAL_OUTPUT_FORMAT *pActualOutputFormat,
     _Out_ PHANDLE NewProtectedOutputHandle
-    );
+);
 
 typedef struct _DXGK_OPM_INTERFACE_2_JTP {
     USHORT Size;
@@ -437,6 +450,7 @@ typedef
 _Function_class_DXGK_(DXGKDDI_OPM_CREATE_PROTECTED_OUTPUT_NONLOCAL_DISPLAY)
 _IRQL_requires_DXGK_(PASSIVE_LEVEL)
 NTSTATUS
+NTAPI
 (*DXGKDDI_OPM_CREATE_PROTECTED_OUTPUT_NONLOCAL_DISPLAY)(
     _In_ PVOID MiniportDeviceContext,
     _In_ DXGKMDT_OPM_VIDEO_OUTPUT_SEMANTICS NewVideoOutputSemantics,
@@ -445,7 +459,7 @@ NTSTATUS
     _In_ UINT64 NonLocalOutputId,
     _In_ DXGKMDT_OPM_CONNECTOR_TYPE NonLocalConnectorType,
     _Out_ PHANDLE NewProtectedOutputHandle
-    );
+);
 
 typedef struct _DXGK_OPM_INTERFACE_2 {
     USHORT Size;
@@ -498,30 +512,33 @@ typedef
 _Function_class_DXGK_(DXGK_BRIGHTNESS_GET_POSSIBLE)
 _IRQL_requires_DXGK_(PASSIVE_LEVEL)
 NTSTATUS
+NTAPI
 (*DXGK_BRIGHTNESS_GET_POSSIBLE)(
     _In_  PVOID Context,
     _In_  ULONG BufferSize,
     _Out_ PUCHAR LevelCount,
     _Out_writes_bytes_to_(BufferSize, *LevelCount) PUCHAR BrightnessLevels
-    );
+);
 
 typedef
 _Function_class_DXGK_(DXGK_BRIGHTNESS_SET)
 _IRQL_requires_DXGK_(PASSIVE_LEVEL)
 NTSTATUS
+NTAPI
 (*DXGK_BRIGHTNESS_SET)(
     _In_  PVOID Context,
     _In_  UCHAR Brightness
-    );
+);
 
 typedef
 _Function_class_DXGK_(DXGK_BRIGHTNESS_GET)
 _IRQL_requires_DXGK_(PASSIVE_LEVEL)
 NTSTATUS
+NTAPI
 (*DXGK_BRIGHTNESS_GET)(
     _In_  PVOID Context,
     _Out_ PUCHAR Brightness
-    );
+);
 
 typedef struct {
     USHORT                        Size;
@@ -540,37 +557,41 @@ typedef
 _Function_class_DXGK_(DXGK_BRIGHTNESS_GET_CAPS)
 _IRQL_requires_DXGK_(PASSIVE_LEVEL)
 NTSTATUS
+NTAPI
 (*DXGK_BRIGHTNESS_GET_CAPS)(
     _In_  PVOID Context,
     _Out_ DXGK_BRIGHTNESS_CAPS *BrightnessCaps
-    );
+);
 
 typedef
 _Function_class_DXGK_(DXGK_BRIGHTNESS_SET_STATE)
 _IRQL_requires_DXGK_(PASSIVE_LEVEL)
 NTSTATUS
+NTAPI
 (*DXGK_BRIGHTNESS_SET_STATE)(
     _In_  PVOID Context,
     _In_  DXGK_BRIGHTNESS_STATE *BrightnessState
-    );
+);
 
 typedef
 _Function_class_DXGK_(DXGK_BRIGHTNESS_SET_BACKLIGHT_OPTIMIZATION)
 _IRQL_requires_DXGK_(PASSIVE_LEVEL)
 NTSTATUS
+NTAPI
 (*DXGK_BRIGHTNESS_SET_BACKLIGHT_OPTIMIZATION)(
     _In_  PVOID Context,
     _In_  DXGK_BACKLIGHT_OPTIMIZATION_LEVEL OptimizationLevel
-    );
+);
 
 typedef
 _Function_class_DXGK_(DXGK_BRIGHTNESS_GET_BACKLIGHT_REDUCTION)
 _IRQL_requires_DXGK_(PASSIVE_LEVEL)
 NTSTATUS
+NTAPI
 (*DXGK_BRIGHTNESS_GET_BACKLIGHT_REDUCTION)(
     _In_  PVOID                Context,
     _Out_ DXGK_BACKLIGHT_INFO *BacklightInfo
-    );
+);
 
 typedef struct {
     USHORT                                    Size;
@@ -606,25 +627,28 @@ typedef
 _Function_class_DXGK_(DXGKDDI_MIRACAST_QUERY_CAPS)
 _IRQL_requires_DXGK_(PASSIVE_LEVEL)
 NTSTATUS
+NTAPI
 (*DXGKDDI_MIRACAST_QUERY_CAPS)(
     _In_ PVOID DriverContext,
     _In_ ULONG MiracastCapsSize,
     _Out_ DXGK_MIRACAST_CAPS *MiracastCaps
-    );
+);
 
 typedef
 _Function_class_DXGK_(DXGKCB_MIRACAST_SEND_MESSAGE_CALLBACK)
 _IRQL_requires_DXGK_(PASSIVE_LEVEL)
 VOID
+NTAPI
 (*DXGKCB_MIRACAST_SEND_MESSAGE_CALLBACK)(
     _In_ PVOID CallbackContext,
     _In_ PIO_STATUS_BLOCK IoStatusBlock
-    );
+);
 
 typedef
 _Function_class_DXGK_(DXGKCB_MIRACAST_SEND_MESSAGE)
 _IRQL_requires_DXGK_(PASSIVE_LEVEL)
 NTSTATUS
+NTAPI
 (*DXGKCB_MIRACAST_SEND_MESSAGE)(
     _In_ HANDLE MiracastHandle,
     _In_ ULONG InputBufferSize,
@@ -633,18 +657,19 @@ NTSTATUS
     _Out_writes_bytes_(OutputBufferSize) VOID *OutputBuffer,
     _In_opt_ DXGKCB_MIRACAST_SEND_MESSAGE_CALLBACK Callback,
     _In_opt_ PVOID CallbackContext
-    );
+);
 
 typedef
 _Function_class_DXGK_(DXGKCB_MIRACAST_REPORT_CHUNK_INFO)
 _IRQL_requires_DXGK_(DISPATCH_LEVEL)
 NTSTATUS
+NTAPI
 (*DXGKCB_MIRACAST_REPORT_CHUNK_INFO)(
     _In_ HANDLE MiracastHandle,
     _In_ DXGK_MIRACAST_CHUNK_INFO *ChunkInfo,
     _In_ PVOID PrivateDriverData,
     _In_ UINT PrivateDataDriverSize
-    );
+);
 
 typedef struct _DXGK_MIRACAST_DISPLAY_CALLBACKS {
     HANDLE MiracastHandle;
@@ -656,26 +681,29 @@ typedef
 _Function_class_DXGK_(DXGKDDI_MIRACAST_CREATE_CONTEXT)
 _IRQL_requires_DXGK_(PASSIVE_LEVEL)
 NTSTATUS
+NTAPI
 (*DXGKDDI_MIRACAST_CREATE_CONTEXT)(
     _In_ PVOID DriverContext,
     _In_ DXGK_MIRACAST_DISPLAY_CALLBACKS *MiracastCallbacks,
     _Out_ PVOID *MiracastContext,
     _Out_ ULONG *TargetId
-    );
+);
 
 typedef
 _Function_class_DXGK_(DXGKDDI_MIRACAST_DESTROY_CONTEXT)
 _IRQL_requires_DXGK_(PASSIVE_LEVEL)
 VOID
+NTAPI
 (*DXGKDDI_MIRACAST_DESTROY_CONTEXT)(
     _In_ PVOID DriverContext,
     _In_ PVOID MiracastContext
-    );
+);
 
 typedef
 _Function_class_DXGK_(DXGKDDI_MIRACAST_HANDLE_IO_CONTROL)
 _IRQL_requires_DXGK_(PASSIVE_LEVEL)
 NTSTATUS
+NTAPI
 (*DXGKDDI_MIRACAST_HANDLE_IO_CONTROL)(
     _In_ PVOID DriverContext,
     _In_ PVOID MiracastContext,
@@ -684,7 +712,7 @@ NTSTATUS
     _In_ ULONG OutputBufferSize,
     _Out_writes_bytes_(OutputBufferSize) VOID *OutputBuffer,
     _Out_ ULONG *BytesReturned
-    );
+);
 
 typedef struct _DXGK_MIRACAST_INTERFACE {
     USHORT Size;
@@ -729,7 +757,7 @@ NTSTATUS
     _In_ MEMORY_CACHING_TYPE CacheType,
     _Out_ PPHYSICAL_ADDRESS PhysicalAddress,
     _Out_ PVOID *VirtualAddress
-    );
+);
 
 typedef
 _Function_class_DXGK_(DXGKCB_AGP_FREE_POOL)
@@ -738,7 +766,7 @@ NTSTATUS
 (APIENTRY *DXGKCB_AGP_FREE_POOL)(
     _In_ HANDLE Context,
     _In_ PVOID VirtualAddress
-    );
+);
 
 typedef
 _Function_class_DXGK_(DXGKCB_AGP_SET_COMMAND)
@@ -747,7 +775,7 @@ NTSTATUS
 (APIENTRY *DXGKCB_AGP_SET_COMMAND)(
     _In_ HANDLE Context,
     _In_ ULONG Command
-    );
+);
 
 typedef struct _DXGK_AGP_INTERFACE {
     USHORT Size;
@@ -771,26 +799,30 @@ typedef struct _DXGK_DEBUG_REPORT_INTERFACE {
     PVOID Context;
     PINTERFACE_REFERENCE InterfaceReference;
     PINTERFACE_DEREFERENCE InterfaceDereference;
+
     _IRQL_requires_DXGK_(PASSIVE_LEVEL)
-    DXGK_DEBUG_REPORT_HANDLE (*DbgReportCreate)(
+    DXGK_DEBUG_REPORT_HANDLE (NTAPI *DbgReportCreate)(
         _In_ HANDLE DeviceHandle,
         _In_ ULONG Code,
         _In_ ULONG_PTR Arg1,
         _In_ ULONG_PTR Arg2,
         _In_ ULONG_PTR Arg3,
         _In_ ULONG_PTR Arg4
-        );
+    );
+
     _IRQL_requires_DXGK_(PASSIVE_LEVEL)
     _Success_(return != 0)
-    BOOLEAN (*DbgReportSecondaryData)(
+    BOOLEAN (NTAPI *DbgReportSecondaryData)(
         _Inout_ DXGK_DEBUG_REPORT_HANDLE Report,
         _In_reads_bytes_(DataSize) PVOID Data,
         _In_ ULONG DataSize
-        );
+    );
+
     _IRQL_requires_DXGK_(PASSIVE_LEVEL)
-    VOID (*DbgReportComplete)(
+    VOID (NTAPI *DbgReportComplete)(
         _Inout_ DXGK_DEBUG_REPORT_HANDLE Report
-        );
+    );
+
 } DXGK_DEBUG_REPORT_INTERFACE, *PDXGK_DEBUG_REPORT_INTERFACE;
 
 /* Timed operation interface */
@@ -812,28 +844,32 @@ typedef struct _DXGK_TIMED_OPERATION_INTERFACE {
     PVOID Context;
     PINTERFACE_REFERENCE InterfaceReference;
     PINTERFACE_DEREFERENCE InterfaceDereference;
+
     _IRQL_requires_DXGK_(PASSIVE_LEVEL)
-    NTSTATUS (*TimedOperationStart)(
+    NTSTATUS (NTAPI *TimedOperationStart)(
         _Out_ DXGK_TIMED_OPERATION *Op,
         _In_ const LARGE_INTEGER *Timeout,
         _In_ BOOLEAN OsHandled
-        );
+    );
+
     _IRQL_requires_DXGK_(PASSIVE_LEVEL)
-    NTSTATUS (*TimedOperationDelay)(
+    NTSTATUS (NTAPI *TimedOperationDelay)(
         _Inout_ DXGK_TIMED_OPERATION *Op,
         _In_ KPROCESSOR_MODE WaitMode,
         _In_ BOOLEAN Alertable,
         _In_opt_ const LARGE_INTEGER *Interval
-        );
+    );
+
     _IRQL_requires_DXGK_(PASSIVE_LEVEL)
-    NTSTATUS (*TimedOperationWaitForSingleObject)(
+    NTSTATUS (NTAPI *TimedOperationWaitForSingleObject)(
         _Inout_ DXGK_TIMED_OPERATION *Op,
         _In_ PVOID Object,
         _In_ KWAIT_REASON WaitReason,
         _In_ KPROCESSOR_MODE WaitMode,
         _In_ BOOLEAN Alertable,
         _In_opt_ const LARGE_INTEGER *Timeout
-        );
+    );
+
 } DXGK_TIMED_OPERATION_INTERFACE, *PDXGK_TIMED_OPERATION_INTERFACE;
 
 /* Serial Peripheral Bus (SPB) services */
@@ -845,8 +881,9 @@ typedef struct _DXGK_SPB_INTERFACE {
     PVOID Context;
     PINTERFACE_REFERENCE InterfaceReference;
     PINTERFACE_DEREFERENCE InterfaceDereference;
+
     _IRQL_requires_DXGK_(PASSIVE_LEVEL)
-    NTSTATUS (*OpenSpbResource)(
+    NTSTATUS (NTAPI *OpenSpbResource)(
         _In_ HANDLE DeviceHandle,
         _In_ LARGE_INTEGER SpbReourceId,
         _In_opt_ UNICODE_STRING *SpbResourceSubName,
@@ -854,14 +891,16 @@ typedef struct _DXGK_SPB_INTERFACE {
         _In_ ULONG ShareAccess,
         _In_ ULONG OpenOptions,
         _Outptr_ VOID **SpbResource
-        );
+    );
+
     _IRQL_requires_DXGK_(PASSIVE_LEVEL)
-    NTSTATUS (*CloseSpbResource)(
+    NTSTATUS (NTAPI *CloseSpbResource)(
         _In_ HANDLE DeviceHandle,
         _In_ VOID *SpbResource
-        );
+    );
+
     _IRQL_requires_DXGK_(PASSIVE_LEVEL)
-    NTSTATUS (*ReadSpbResource)(
+    NTSTATUS (NTAPI *ReadSpbResource)(
         _In_ HANDLE DeviceHandle,
         _In_ VOID *SpbResource,
         _In_ ULONG Length,
@@ -869,9 +908,10 @@ typedef struct _DXGK_SPB_INTERFACE {
         _In_opt_ LARGE_INTEGER *ByteOffset,
         _In_opt_ HANDLE EventHandle,
         _Out_ IO_STATUS_BLOCK *IoStatusBlock
-        );
+    );
+
     _IRQL_requires_DXGK_(PASSIVE_LEVEL)
-    NTSTATUS (*WriteSpbResource)(
+    NTSTATUS (NTAPI *WriteSpbResource)(
         _In_ HANDLE DeviceHandle,
         _In_ VOID *SpbResource,
         _In_ ULONG Length,
@@ -879,9 +919,10 @@ typedef struct _DXGK_SPB_INTERFACE {
         _In_opt_ LARGE_INTEGER *ByteOffset,
         _In_opt_ HANDLE EventHandle,
         _Out_ IO_STATUS_BLOCK *IoStatusBlock
-        );
+    );
+
     _IRQL_requires_DXGK_(PASSIVE_LEVEL)
-    NTSTATUS (*SpbResourceIoControl)(
+    NTSTATUS (NTAPI *SpbResourceIoControl)(
         _In_ HANDLE DeviceHandle,
         _In_ VOID *SpbResource,
         _In_ ULONG IoControlCode,
@@ -891,7 +932,8 @@ typedef struct _DXGK_SPB_INTERFACE {
         _Out_writes_bytes_(OutBufferSize) VOID *OutputBuffer,
         _In_opt_ HANDLE EventHandle,
         _Out_ IO_STATUS_BLOCK *IoStatusBlock
-        );
+    );
+
 } DXGK_SPB_INTERFACE, *PDXGK_SPB_INTERFACE;
 
 /* System firmware table interface */
@@ -903,9 +945,10 @@ typedef struct _DXGK_FIRMWARE_TABLE_INTERFACE {
     PVOID Context;
     PINTERFACE_REFERENCE InterfaceReference;
     PINTERFACE_DEREFERENCE InterfaceDereference;
+
     _IRQL_requires_DXGK_(PASSIVE_LEVEL)
     _Success_(return >= 0 || return == STATUS_BUFFER_TOO_SMALL)
-    NTSTATUS (*EnumSystemFirmwareTables)(
+    NTSTATUS (NTAPI *EnumSystemFirmwareTables)(
         _In_ VOID *Context,
         _In_ ULONG ProviderSignature,
         _In_ ULONG BufferSize,
@@ -914,11 +957,12 @@ typedef struct _DXGK_FIRMWARE_TABLE_INTERFACE {
          _When_(return != STATUS_BUFFER_TOO_SMALL, _Post_valid_)
          VOID *Buffer,
         _Out_ ULONG *RequiredSize
-        );
+    );
+
     _IRQL_requires_DXGK_(PASSIVE_LEVEL)
     _Success_(return >= 0 || return == STATUS_BUFFER_TOO_SMALL)
     _When_(Buffer == NULL, _At_(BufferSize, _In_range_(==, 0)))
-    NTSTATUS (*ReadSystemFirmwareTable)(
+    NTSTATUS (NTAPI *ReadSystemFirmwareTable)(
         _In_ VOID *Context,
         _In_ ULONG ProviderSignature,
         _In_ ULONG TableId,
@@ -928,7 +972,8 @@ typedef struct _DXGK_FIRMWARE_TABLE_INTERFACE {
          _When_(return != STATUS_BUFFER_TOO_SMALL, _Post_valid_)
          VOID *Buffer,
         _Out_ ULONG *RequiredSize
-        );
+    );
+
 } DXGK_FIRMWARE_TABLE_INTERFACE, *PDXGK_FIRMWARE_TABLE_INTERFACE;
 
 
@@ -937,10 +982,10 @@ typedef struct _DXGK_FIRMWARE_TABLE_INTERFACE {
  * Implemented by enumeration of the device.
  */
 typedef struct _DXGK_START_INFO {
-    ULONG                          RequiredDmaQueueEntry;
-    GUID                           AdapterGuid;
+    ULONG RequiredDmaQueueEntry;
+    GUID  AdapterGuid;
 #if (DXGKDDI_INTERFACE_VERSION >= DXGKDDI_INTERFACE_VERSION_WIN8)
-    LUID                           AdapterLuid;
+    LUID  AdapterLuid;
 #endif // DXGKDDI_INTERFACE_VERSION_WIN8
 } DXGK_START_INFO, *PDXGK_START_INFO;
 
@@ -953,7 +998,7 @@ NTSTATUS
 (APIENTRY *DXGKCB_ACQUIRE_POST_DISPLAY_OWNERSHIP)(
     _In_ HANDLE DeviceHandle,
     _Out_ PDXGK_DISPLAY_INFORMATION DisplayInfo
-    );
+);
 
 #endif // DXGKDDI_INTERFACE_VERSION_WIN8
 
@@ -982,12 +1027,13 @@ NTSTATUS
     _In_ HANDLE DeviceHandle,
     _Out_ PDXGK_DISPLAY_INFORMATION DisplayInfo,
     _Out_ PDXGK_DISPLAY_OWNERSHIP_FLAGS Flags
-    );
+);
 
 #endif // DXGKDDI_INTERFACE_VERSION_WDDM2_2
 
 typedef
 VOID
+NTAPI
 (*DXGKDDI_PROTECTED_CALLBACK)(
     _In_ const PVOID MiniportDeviceContext,
     _In_ PVOID ProtectedCallbackContext,
@@ -1089,7 +1135,7 @@ VOID
     _In_ UCHAR Type,
     _In_ USHORT EventBufferSize,
     _In_reads_bytes_(EventBufferSize) PVOID EventBuffer
-    );
+);
 
 typedef
 _Function_class_DXGK_(DXGKCB_EXCLUDE_ADAPTER_ACCESS)
@@ -1100,7 +1146,7 @@ NTSTATUS
     _In_ ULONG Attributes,
     _In_ DXGKDDI_PROTECTED_CALLBACK DxgkProtectedCallback,
     _In_ PVOID ProtectedCallbackContext
-    );
+);
 
 #if (DXGKDDI_INTERFACE_VERSION >= DXGKDDI_INTERFACE_VERSION_WIN8)
 
@@ -1181,7 +1227,7 @@ APIENTRY
 DXGKDDI_ADD_DEVICE(
     _In_ CONST PDEVICE_OBJECT PhysicalDeviceObject,
     _Out_ PVOID *MiniportDeviceContext
-    );
+);
 
 typedef
     _Check_return_
@@ -1195,7 +1241,7 @@ DXGKDDI_START_DEVICE(
     _In_ PDXGKRNL_INTERFACE DxgkInterface,
     _Out_ PULONG NumberOfVideoPresentSources,
     _Out_ PULONG NumberOfChildren
-    );
+);
 
 typedef
     _Check_return_
@@ -1205,7 +1251,7 @@ NTSTATUS
 APIENTRY
 DXGKDDI_STOP_DEVICE(
     _In_ CONST PVOID MiniportDeviceContext
-    );
+);
 
 typedef
     _Check_return_
@@ -1215,7 +1261,7 @@ NTSTATUS
 APIENTRY
 DXGKDDI_REMOVE_DEVICE(
     _In_ CONST PVOID MiniportDeviceContext
-    );
+);
 
 typedef
     _Check_return_
@@ -1227,7 +1273,7 @@ DXGKDDI_DISPATCH_IO_REQUEST(
     _In_ CONST PVOID MiniportDeviceContext,
     _In_ ULONG VidPnSourceId,
     _In_ PVIDEO_REQUEST_PACKET VideoRequestPacket
-    );
+);
 
 typedef
     _Check_return_
@@ -1239,7 +1285,7 @@ DXGKDDI_QUERY_CHILD_RELATIONS(
     _In_ CONST PVOID                                                  MiniportDeviceContext,
     _Inout_updates_bytes_(ChildRelationsSize) PDXGK_CHILD_DESCRIPTOR  ChildRelations,
     _In_ ULONG                                                        ChildRelationsSize
-    );
+);
 
 typedef
     _Check_return_
@@ -1251,7 +1297,7 @@ DXGKDDI_QUERY_CHILD_STATUS(
     _In_ CONST PVOID MiniportDeviceContext,
     _Inout_ PDXGK_CHILD_STATUS ChildStatus,
     _In_ BOOLEAN NonDestructiveOnly
-    );
+);
 
 typedef
     _Check_return_
@@ -1262,7 +1308,7 @@ APIENTRY
 DXGKDDI_INTERRUPT_ROUTINE(
     _In_ CONST PVOID MiniportDeviceContext,
     _In_ ULONG MessageNumber
-    );
+);
 
 typedef
 _Function_class_DXGK_(DXGKDDI_DPC_ROUTINE)
@@ -1271,7 +1317,7 @@ VOID
 APIENTRY
 DXGKDDI_DPC_ROUTINE(
     _In_ CONST PVOID MiniportDeviceContext
-    );
+);
 
 typedef
     _Check_return_
@@ -1283,7 +1329,7 @@ DXGKDDI_QUERY_DEVICE_DESCRIPTOR(
     _In_ CONST PVOID MiniportDeviceContext,
     _In_ ULONG ChildUid,
     _Inout_ PDXGK_DEVICE_DESCRIPTOR DeviceDescriptor
-    );
+);
 
 typedef
     _Check_return_
@@ -1296,7 +1342,7 @@ DXGKDDI_SET_POWER_STATE(
     _In_ ULONG DeviceUid,
     _In_ DEVICE_POWER_STATE DevicePowerState,
     _In_ POWER_ACTION ActionType
-    );
+);
 
 typedef
     _Check_return_
@@ -1310,7 +1356,7 @@ DXGKDDI_NOTIFY_ACPI_EVENT(
     _In_ ULONG Event,
     _In_ PVOID Argument,
     _Out_ PULONG AcpiFlags
-    );
+);
 
 typedef
 _Function_class_DXGK_(DXGKDDI_RESET_DEVICE)
@@ -1318,7 +1364,7 @@ VOID
 APIENTRY
 DXGKDDI_RESET_DEVICE(
     _In_ CONST PVOID MiniportDeviceContext
-    );
+);
 
 typedef
 _Function_class_DXGK_(DXGKDDI_UNLOAD)
@@ -1327,7 +1373,7 @@ VOID
 APIENTRY
 DXGKDDI_UNLOAD(
     VOID
-    );
+);
 
 typedef
     _Check_return_
@@ -1338,7 +1384,7 @@ APIENTRY
 DXGKDDI_QUERY_INTERFACE(
     _In_ CONST PVOID MiniportDeviceContext,
     _In_ PQUERY_INTERFACE QueryInterface
-    );
+);
 
 typedef
 _Function_class_DXGK_(DXGKDDI_CONTROL_ETW_LOGGING)
@@ -1349,7 +1395,7 @@ DXGKDDI_CONTROL_ETW_LOGGING(
     _In_ BOOLEAN Enable,
     _In_ ULONG Flags,
     _In_ UCHAR Level
-    );
+);
 
 typedef
     _Check_return_
@@ -1361,7 +1407,7 @@ DXGKDDI_LINK_DEVICE(
     _In_ CONST PDEVICE_OBJECT PhysicalDeviceObject,
     _In_ CONST PVOID MiniportDeviceContext,
     _Inout_ PLINKED_DEVICE LinkedDevice
-    );
+);
 
 #if (DXGKDDI_INTERFACE_VERSION >= DXGKDDI_INTERFACE_VERSION_WDDM2_2)
 
@@ -1391,7 +1437,7 @@ APIENTRY
 DXGKDDI_EXCHANGEPRESTARTINFO(
     _In_ CONST HANDLE hAdapter,
     _Inout_ PDXGK_PRE_START_INFO pPreStartInfo
-    );
+);
 
 typedef
     _Check_return_
@@ -1403,7 +1449,7 @@ DXGKDDI_SETTARGETADJUSTEDCOLORIMETRY(
     _In_ CONST HANDLE hAdapter,
     _In_ D3DDDI_VIDEO_PRESENT_TARGET_ID TargetId,
     _In_ DXGK_COLORIMETRY AdjustedColorimetry
-    );
+);
 
 #endif // (DXGKDDI_INTERFACE_VERSION >= DXGKDDI_INTERFACE_VERSION_WDDM2_2)
 
@@ -1505,7 +1551,7 @@ DXGKDDI_GET_CHILD_CONTAINER_ID(
     _In_ PVOID MiniportDeviceContext,
     _In_ ULONG ChildUid,
     _Inout_ PDXGK_CHILD_CONTAINER_ID ContainerId
-    );
+);
 
 typedef enum _DXGK_SURPRISE_REMOVAL_TYPE
 {
@@ -1522,7 +1568,7 @@ APIENTRY
 DXGKDDI_NOTIFY_SURPRISE_REMOVAL(
     _In_ PVOID MiniportDeviceContext,
     _In_ DXGK_SURPRISE_REMOVAL_TYPE RemovalType
-    );
+);
 
 /* Function pointer typedefs (Win8+) */
 typedef DXGKDDI_STOP_DEVICE_AND_RELEASE_POST_DISPLAY_OWNERSHIP  *PDXGKDDI_STOP_DEVICE_AND_RELEASE_POST_DISPLAY_OWNERSHIP;
@@ -1754,7 +1800,7 @@ DxgkInitialize(
     _In_ PDRIVER_OBJECT DriverObject,
     _In_ PUNICODE_STRING RegistryPath,
     _In_ PDRIVER_INITIALIZATION_DATA DriverInitializationData
-    );
+);
 
 #if (DXGKDDI_INTERFACE_VERSION >= DXGKDDI_INTERFACE_VERSION_WIN8)
 
@@ -1763,7 +1809,7 @@ DxgkInitializeDisplayOnlyDriver(
     _In_ PDRIVER_OBJECT DriverObject,
     _In_ PUNICODE_STRING RegistryPath,
     _In_ PKMDDOD_INITIALIZATION_DATA KmdDodInitializationData
-    );
+);
 
 #endif // (DXGKDDI_INTERFACE_VERSION >= DXGKDDI_INTERFACE_VERSION_WIN8)
 
@@ -1772,7 +1818,7 @@ DxgkInitializeDisplayOnlyDriver(
 NTSTATUS
 DxgkUnInitialize(
     _In_ PDRIVER_OBJECT DriverObject
-    );
+);
 
 #endif // (DXGKDDI_INTERFACE_VERSION >= DXGKDDI_INTERFACE_VERSION_WDDM2_0)
 
