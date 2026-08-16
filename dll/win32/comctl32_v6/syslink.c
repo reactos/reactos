@@ -1167,9 +1167,9 @@ static VOID SYSLINK_Render (const SYSLINK_INFO *infoPtr, HDC hdc, PRECT pRect)
     rc.right -= SL_RIGHTMARGIN;
     rc.bottom -= SL_BOTTOMMARGIN;
 
-    if(rc.right - SL_LEFTMARGIN < 0)
+    if(rc.right - SL_LEFTMARGIN <= 0)
         rc.right = MAXLONG;
-    if (rc.bottom - SL_TOPMARGIN < 0)
+    if (rc.bottom - SL_TOPMARGIN <= 0)
         rc.bottom = MAXLONG;
     
     hOldFont = SelectObject(hdc, infoPtr->Font);
