@@ -14,10 +14,9 @@
 
 /* DATA **********************************************************************/
 
-/* Number of worker threads for each Queue */
-#define EX_HYPERCRITICAL_WORK_THREADS               1
-#define EX_DELAYED_WORK_THREADS                     3
-#define EX_CRITICAL_WORK_THREADS                    5
+/* Number of worker threads for Delayed and Critical queues */
+#define EX_DELAYED_WORK_THREADS                     12
+#define EX_CRITICAL_WORK_THREADS                    8
 
 /* Magic flag for dynamic worker threads */
 #define EX_DYNAMIC_WORK_THREAD                      0x80000000
@@ -533,15 +532,20 @@ ExpInitializeWorkerThreads(VOID)
     InitializeListHead(&ExpWorkerListHead);
     ExpWorkersCanSwap = TRUE;
 
-    /* Set the number of critical and delayed threads. We shouldn't hardcode */
-    DelayedThreads = EX_DELAYED_WORK_THREADS;
-    CriticalThreads = EX_CRITICAL_WORK_THREADS;
+    /* Default the number of worker threads to be created */
+    DelayedThreads = EX_DELAYED_WORKER_THREADS;
+    CriticalThreads = EX_CRITICAL_WORKER_THREADS;
 
-    /* Protect against greedy registry modifications */
+    /*
+     * Get an additional number of worker threads from the Registry
+     * but make sure to NOT exceed the limit of 100. Windows XP
+     * and Server 2003 systems have a limit of 16, later versions
+     * of Windows like 7 and 8.1 have a limit of 100.
+     */
     ExpAdditionalDelayedWorkerThreads =
-        min(ExpAdditionalDelayedWorkerThreads, 16);
+        min(ExpAdditionalDelayedWorkerThreads, 100);
     ExpAdditionalCriticalWorkerThreads =
-        min(ExpAdditionalCriticalWorkerThreads, 16);
+        min(ExpAdditionalCriticalWorkerThreads, 100);
 
     /* Calculate final count */
     DelayedThreads += ExpAdditionalDelayedWorkerThreads;
