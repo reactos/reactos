@@ -517,6 +517,55 @@ TREEVIEW_SendRealNotify(const TREEVIEW_INFO *infoPtr, UINT code, NMHDR *hdr)
     return SendMessageW(infoPtr->hwndNotify, WM_NOTIFY, hdr->idFrom, (LPARAM)hdr);
 }
 
+static BOOL TREEVIEW_SendItemChanging(const TREEVIEW_INFO *infoPtr, TREEVIEW_ITEM *item, UINT uChanged, UINT uStateOld, UINT uStateNew)
+{
+#if __WINE_COMCTL32_VERSION == 6
+    NMTVITEMCHANGE change;
+    change.uChanged = uChanged;
+    change.hItem = item;
+    change.uStateOld = uStateOld;
+    change.uStateNew = uStateNew;
+    change.lParam = item->lParam;
+    return TREEVIEW_SendRealNotify(infoPtr, TVN_ITEMCHANGINGW, &change.hdr);
+#endif
+    return FALSE;
+}
+
+static BOOL TREEVIEW_SendItemChanged(const TREEVIEW_INFO *infoPtr, TREEVIEW_ITEM *item, UINT uChanged, UINT uStateOld, UINT uStateNew)
+{
+#if __WINE_COMCTL32_VERSION == 6
+    NMTVITEMCHANGE change;
+    change.uChanged = uChanged;
+    change.hItem = item;
+    change.uStateOld = uStateOld;
+    change.uStateNew = uStateNew;
+    change.lParam = item->lParam;
+    return TREEVIEW_SendRealNotify(infoPtr, TVN_ITEMCHANGEDW, &change.hdr);
+#endif
+    return FALSE;
+}
+
+/*
+ * Change state helper
+ * Returns a boolean value indicating whether the change was accepted (always TRUE for legacy commoncontrols)
+ */
+static BOOL TREEVIEW_ChangeItemState(const TREEVIEW_INFO *infoPtr, TREEVIEW_ITEM *item, UINT stateNew)
+{
+    UINT state = item->state;
+    if (state != stateNew)
+    {
+        if (TREEVIEW_SendItemChanging(infoPtr, item, TVIF_STATE, state, stateNew)) return FALSE;
+        item->state = stateNew;
+        if (TREEVIEW_SendItemChanged(infoPtr, item, TVIF_STATE, state, stateNew))
+        {
+            /* roll back */
+            item->state = state;
+            return FALSE;
+        }
+    }
+    return TRUE;
+}
+
 /*
  * Returns TRUE if the TREEVIEW is still valid after the notify.
  * The notification result is stored in *result if non-NULL.
@@ -1212,10 +1261,11 @@ TREEVIEW_DoSetItemT(const TREEVIEW_INFO *infoPtr, TREEVIEW_ITEM *item,
 
     if (tvItem->mask & TVIF_STATE)
     {
-	TRACE("prevstate 0x%x, state 0x%x, mask 0x%x\n", item->state, tvItem->state,
+        UINT stateNew;
+        TRACE("prevstate 0x%x, state 0x%x, mask 0x%x\n", item->state, tvItem->state,
 	      tvItem->stateMask);
-	item->state &= ~tvItem->stateMask;
-	item->state |= (tvItem->state & tvItem->stateMask);
+        stateNew = (item->state & ~tvItem->stateMask) | (tvItem->state & tvItem->stateMask);
+        TREEVIEW_ChangeItemState(infoPtr, item, stateNew);
     }
 
     if (tvItem->mask & TVIF_STATEEX)
@@ -2374,11 +2424,13 @@ TREEVIEW_ToggleItemState(const TREEVIEW_INFO *infoPtr, TREEVIEW_ITEM *item)
 
         TRACE("stateImage: 0x%x\n", stateImage);
 
-        item->state = state;
+        if (state != item->state && TREEVIEW_ChangeItemState(infoPtr, item, state))
+        {
 #ifdef __REACTOS__
-	TREEVIEW_SelectItem(infoPtr, TVGN_CARET, item);
+	        TREEVIEW_SelectItem(infoPtr, TVGN_CARET, item);
 #endif
-        TREEVIEW_Invalidate(infoPtr, item);
+            TREEVIEW_Invalidate(infoPtr, item);
+        }
     }
 }
 
@@ -4618,10 +4670,11 @@ TREEVIEW_DoSelectItem(TREEVIEW_INFO *infoPtr, INT action, HTREEITEM newSelect,
 					newSelect))
 	    return FALSE;
 
-	if (prevSelect)
-	    prevSelect->state &= ~TVIS_SELECTED;
-	if (newSelect)
-	    newSelect->state |= TVIS_SELECTED;
+	if (prevSelect == NULL || TREEVIEW_ChangeItemState( infoPtr, prevSelect, prevSelect->state & ~TVIS_SELECTED))
+    {
+        /* deselected previous */
+        if (newSelect != NULL) TREEVIEW_ChangeItemState( infoPtr, newSelect, newSelect->state | TVIS_SELECTED);
+    }
 
 	infoPtr->selectedItem = newSelect;
 
