@@ -246,7 +246,7 @@ static void rbsize_add_band(rbsize_result_t *rbsr, int left, int top, int right,
 
 static rbsize_result_t *rbsize_results;
 
-#define rbsize_results_num 27
+#define rbsize_results_num 28
 
 static void rbsize_results_init(void)
 {
@@ -430,6 +430,10 @@ static void rbsize_results_init(void)
     rbsize_add_band(&rbsize_results[26], 0, 0, 90, 65, 0x40, 90);
     rbsize_add_band(&rbsize_results[26], 90, 0, 163, 65, 0x40, 90);
     rbsize_add_band(&rbsize_results[26], 163, 0, 226, 65, 0x40, 90);
+
+    rbsize_results[27] = rbsize_init(0, 0, 672, 65, 56, 1, 1);
+    rbsize_add_row(&rbsize_results[27], 65);
+    rbsize_add_band(&rbsize_results[27], 0, 0, 672, 65, 0x40, 90);
 }
 
 static void rbsize_results_free(void)
@@ -681,6 +685,43 @@ static void test_layout(void)
     SendMessageA(hRebar, RB_INSERTBANDA, -1, (LPARAM)&rbi);
     count = SendMessageA(hRebar, RB_GETROWCOUNT, 0, 0);
     ok(!count, "Unexpected row count %d.\n", count);
+
+    DestroyWindow(hRebar);
+
+    /* VARHEIGHT resizing test with cyIntegral == 0 on a horizontal rebar */
+    hRebar = create_rebar_control(0);
+    SetWindowLongA(hRebar, GWL_STYLE, GetWindowLongA(hRebar, GWL_STYLE) | RBS_AUTOSIZE);
+    rbi.fMask = RBBIM_CHILD | RBBIM_CHILDSIZE | RBBIM_SIZE | RBBIM_STYLE;
+    rbi.fStyle = RBBS_VARIABLEHEIGHT;
+    rbi.cx = 90;
+    rbi.cyMinChild = 40;
+    rbi.cyMaxChild = 65;
+    rbi.cyIntegral = 0;
+    rbi.cyChild = 111;
+    rbi.hwndChild = build_toolbar(0, hRebar);
+    SendMessageA(hRebar, RB_INSERTBANDA, -1, (LPARAM)&rbi);
+    check_sizes();
+
+    DestroyWindow(hRebar);
+
+    /* VARHEIGHT with cyIntegral == 0 and cyChild == 0 */
+    hRebar = create_rebar_control(0);
+    SetWindowLongA(hRebar, GWL_STYLE, GetWindowLongA(hRebar, GWL_STYLE) | RBS_AUTOSIZE);
+    rbi.cbSize = REBARBANDINFOA_V6_SIZE;
+    rbi.fMask = RBBIM_CHILD | RBBIM_CHILDSIZE | RBBIM_SIZE | RBBIM_STYLE;
+    rbi.fStyle = RBBS_VARIABLEHEIGHT;
+    rbi.cx = 90;
+    rbi.cxMinChild = 50;
+    rbi.cyMinChild = 10;
+    rbi.cyMaxChild = 200;
+    rbi.cyIntegral = 0;
+    rbi.cyChild = 0;
+    rbi.hwndChild = build_toolbar(0, hRebar);
+    SendMessageA(hRebar, RB_INSERTBANDA, -1, (LPARAM)&rbi);
+
+    rbi.fMask = RBBIM_CHILDSIZE;
+    ok(SendMessageA(hRebar, RB_GETBANDINFOA, 0, (LPARAM)&rbi), "RB_GETBANDINFOA failed\n");
+    compare(rbi.cyChild, 10, "%d");
 
     DestroyWindow(hRebar);
 

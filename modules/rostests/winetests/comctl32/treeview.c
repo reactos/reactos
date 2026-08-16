@@ -423,9 +423,67 @@ static const struct message parent_right_click_seq[] = {
     { 0 }
 };
 
+static const struct message parent_itemchange[] = {
+    { WM_NOTIFY, sent|id, 0, 0, TVN_SELCHANGINGA },
+    { WM_NOTIFY, sent|id, 0, 0, TVN_SELCHANGEDA },
+    { WM_CTLCOLOREDIT, sent|optional },
+    { WM_CTLCOLOREDIT, sent|optional },
+    { WM_NOTIFY, sent|id|optional, 0, 0, NM_CUSTOMDRAW },
+    { WM_NOTIFY, sent|id|optional, 0, 0, NM_CUSTOMDRAW },
+    { WM_NOTIFY, sent|id|optional, 0, 0, NM_CUSTOMDRAW },
+    { WM_NOTIFY, sent|id|optional, 0, 0, NM_CUSTOMDRAW },
+    { WM_NOTIFY, sent|id, 0, 0, TVN_SELCHANGINGA },
+    { WM_NOTIFY, sent|id, 0, 0, TVN_ITEMEXPANDINGA },
+    { WM_NOTIFY, sent|id, 0, 0, TVN_ITEMEXPANDEDA },
+    { WM_NOTIFY, sent|id, 0, 0, TVN_SELCHANGEDA },
+    { WM_CTLCOLOREDIT, sent|optional },
+    { WM_CTLCOLOREDIT, sent|optional },
+    { WM_NOTIFY, sent|id|optional, 0, 0, NM_CUSTOMDRAW },
+    { WM_NOTIFY, sent|id|optional, 0, 0, NM_CUSTOMDRAW },
+    { WM_NOTIFY, sent|id|optional, 0, 0, NM_CUSTOMDRAW },
+    { WM_NOTIFY, sent|id|optional, 0, 0, NM_CUSTOMDRAW },
+    { WM_NOTIFY, sent|id|optional, 0, 0, NM_CUSTOMDRAW },
+    { WM_NOTIFY, sent|id|optional, 0, 0, NM_CUSTOMDRAW },
+    { 0 }
+};
+
+/*
+* TVN_ITEMCHANGINGW and TVN_ITEMCHANGEDW intended.
+* TVN_ITEMCHANGINGA and TVN_ITEMCHANGEDA are never actually sent.
+*/
+static const struct message parent_itemchange_v6[] = {
+    { WM_NOTIFY, sent|id, 0, 0, TVN_SELCHANGINGA },
+    { WM_NOTIFY, sent|id, 0, 0, TVN_ITEMCHANGINGW },
+    { WM_NOTIFY, sent|id, 0, 0, TVN_ITEMCHANGEDW },
+    { WM_NOTIFY, sent|id, 0, 0, TVN_SELCHANGEDA },
+    { WM_NOTIFY, sent|id|optional, 0, 0, NM_CUSTOMDRAW },
+    { WM_NOTIFY, sent|id|optional, 0, 0, NM_CUSTOMDRAW },
+    { WM_NOTIFY, sent|id|optional, 0, 0, NM_CUSTOMDRAW },
+    { WM_NOTIFY, sent|id|optional, 0, 0, NM_CUSTOMDRAW },
+    { WM_NOTIFY, sent|id, 0, 0, TVN_SELCHANGINGA },
+    { WM_NOTIFY, sent|id, 0, 0, TVN_ITEMCHANGINGW },
+    { WM_NOTIFY, sent|id, 0, 0, TVN_ITEMCHANGEDW },
+    { WM_NOTIFY, sent|id, 0, 0, TVN_ITEMCHANGINGW },
+    { WM_NOTIFY, sent|id, 0, 0, TVN_ITEMCHANGEDW },
+    { WM_NOTIFY, sent|id, 0, 0, TVN_ITEMEXPANDINGA },
+    { WM_NOTIFY, sent|id|optional, 0, 0, NM_CUSTOMDRAW },
+    { WM_NOTIFY, sent|id|optional, 0, 0, NM_CUSTOMDRAW },
+    { WM_NOTIFY, sent|id|optional, 0, 0, NM_CUSTOMDRAW },
+    { WM_NOTIFY, sent|id|optional, 0, 0, NM_CUSTOMDRAW },
+    { WM_NOTIFY, sent|id, 0, 0, TVN_ITEMEXPANDEDA },
+    { WM_NOTIFY, sent|id, 0, 0, TVN_SELCHANGEDA },
+    { WM_NOTIFY, sent|id|optional, 0, 0, NM_CUSTOMDRAW },
+    { WM_NOTIFY, sent|id|optional, 0, 0, NM_CUSTOMDRAW },
+    { WM_NOTIFY, sent|id|optional, 0, 0, NM_CUSTOMDRAW },
+    { WM_NOTIFY, sent|id|optional, 0, 0, NM_CUSTOMDRAW },
+    { WM_NOTIFY, sent|id|optional, 0, 0, NM_CUSTOMDRAW },
+    { WM_NOTIFY, sent|id|optional, 0, 0, NM_CUSTOMDRAW },
+    { 0 }
+};
+
 static HWND hMainWnd;
 
-static HTREEITEM hRoot, hChild;
+static HTREEITEM hRoot, hChild, hBlockChange;
 
 static int pos = 0;
 static char sequence[256];
@@ -741,6 +799,55 @@ static void test_select(void)
     ok(!strcmp(sequence, "1(nR)nR23(RC)RC45(CR)CR."), "root-child select test\n");
     ok_sequence(sequences, TREEVIEW_SEQ_INDEX, rootchild_select_seq,
                 "root-child select seq", FALSE);
+
+    DestroyWindow(hTree);
+}
+
+static void test_itemchanging(void)
+{
+    BOOL r;
+    HWND hTree;
+
+    hTree = create_treeview_control(0);
+    fill_tree(hTree);
+
+    /* Verify that TVN_ITEMCHANGINGW and TVN_ITEMCHANGEDW are sent if v6 and not sent otherwise. */
+    flush_sequences(sequences, NUM_MSG_SEQUENCES);
+    SendMessageA(hTree, TVM_SELECTITEM, TVGN_CARET, (LPARAM)hRoot);
+    SendMessageA(hTree, TVM_SELECTITEM, TVGN_CARET, (LPARAM)hChild);
+
+    if (g_v6) {
+        ok_sequence(sequences, PARENT_SEQ_INDEX, parent_itemchange_v6, "select item parent sequence v6", FALSE);
+    } else {
+        ok_sequence(sequences, PARENT_SEQ_INDEX, parent_itemchange, "select item parent sequence", FALSE);
+    }
+
+    /* Test if we can prevent item being selected; TVN_ITEMCHANGING logic only in v6 */
+    r = SendMessageA(hTree, TVM_SELECTITEM, TVGN_CARET, (LPARAM)hRoot);
+    expect(TRUE, r);
+    r = SendMessageA(hTree, TVM_GETITEMSTATE, (WPARAM)hRoot, TVIS_SELECTED) & TVIS_SELECTED;
+    expect(TVIS_SELECTED, r);
+    hBlockChange = hChild;
+    r = SendMessageA(hTree, TVM_SELECTITEM, TVGN_CARET, (LPARAM)hChild);
+    expect(TRUE, r);
+    r = SendMessageA(hTree, TVM_GETITEMSTATE, (WPARAM)hChild, TVIS_SELECTED) & TVIS_SELECTED;
+    if (g_v6)
+        expect(0, r);
+    else
+        expect(TVIS_SELECTED, r);
+
+    r = SendMessageA(hTree, TVM_GETITEMSTATE, (WPARAM)hRoot, TVIS_SELECTED) & TVIS_SELECTED;
+    expect(0, r);
+    hBlockChange = NULL;
+    r = SendMessageA(hTree, TVM_SELECTITEM, TVGN_CARET, (LPARAM)hChild);
+    expect(TRUE, r);
+    r = SendMessageA(hTree, TVM_GETITEMSTATE, (WPARAM)hChild, TVIS_SELECTED) & TVIS_SELECTED;
+    if (g_v6)
+        expect(0, r);
+    else
+        expect(TVIS_SELECTED, r);
+    r = SendMessageA(hTree, TVM_GETITEMSTATE, (WPARAM)hRoot, TVIS_SELECTED) & TVIS_SELECTED;
+    expect(0, r);
 
     DestroyWindow(hTree);
 }
@@ -1318,6 +1425,17 @@ static LRESULT CALLBACK parent_wnd_proc(HWND hWnd, UINT message, WPARAM wParam, 
             NMTREEVIEWA *pTreeView = (LPNMTREEVIEWA) lParam;
             switch(pHdr->code)
             {
+                /*
+                 * TVN_ITEMCHANGINGW (not TVN_ITEMCHANGINGA) intended.
+                 * MS implementation appears to send TVN_ITEMCHANGINGW only.
+                 * Available only in comctl32 v6.
+                 */
+            case TVN_ITEMCHANGINGW:
+                {
+                    NMTVITEMCHANGE * pChange = (NMTVITEMCHANGE*) lParam;
+                    if (pChange->hItem == hBlockChange) return TRUE;
+                }
+                break;
             case TVN_SELCHANGINGA:
                 AddItem('(');
                 IdentifyItem(pTreeView->itemOld.hItem);
@@ -3411,6 +3529,7 @@ START_TEST(treeview)
     test_TVM_SORTCHILDREN();
     test_right_click();
     test_treeview_delete_midclick();
+    test_itemchanging();
 
     if (!load_v6_module(&ctx_cookie, &hCtx))
     {
@@ -3447,6 +3566,7 @@ START_TEST(treeview)
     test_TVS_FULLROWSELECT();
     test_TVM_SORTCHILDREN();
     test_treeview_delete_midclick();
+    test_itemchanging();
 
     unload_v6_module(ctx_cookie, hCtx);
 }
