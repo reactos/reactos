@@ -451,14 +451,14 @@ CsrCreateSessionObjectDirectory(IN ULONG Session)
     }
 
     /* Now add the Session ID */
-    _swprintf(SessionBuffer, L"%ld", Session);
+    _swprintf(SessionBuffer, L"%lu", Session);
     RtlInitUnicodeString(&SessionString, SessionBuffer);
 
     /* Check if this is the first Session */
     if (Session)
     {
         /* Not the first, so the name will be slighly more complex */
-        _swprintf(BnoBuffer, L"%ws\\%ld\\BaseNamedObjects", SESSION_ROOT, Session);
+        _swprintf(BnoBuffer, L"%ws\\%lu\\BaseNamedObjects", SESSION_ROOT, Session);
         RtlInitUnicodeString(&BnoString, BnoBuffer);
     }
     else
@@ -489,7 +489,7 @@ CsrCreateSessionObjectDirectory(IN ULONG Session)
     if (!NT_SUCCESS(Status)) return Status;
 
     /* Now create a directory for this session */
-    _swprintf(SessionBuffer, L"%ws\\%ld", SESSION_ROOT, Session);
+    _swprintf(SessionBuffer, L"%ws\\%lu", SESSION_ROOT, Session);
     RtlInitUnicodeString(&SessionString, SessionBuffer);
 
     /* Create the directory */

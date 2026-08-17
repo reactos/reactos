@@ -129,7 +129,7 @@ DllMain(HANDLE hDll,
             {
                 /* Use the session path */
                 _swprintf(SessionDir,
-                          L"%ws\\%ld%ws",
+                          L"%ws\\%lu%ws",
                           SESSION_DIR,
                           SessionId,
                           WIN_OBJ_DIR);
