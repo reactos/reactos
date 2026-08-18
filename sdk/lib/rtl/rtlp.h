@@ -262,13 +262,6 @@ typedef struct _RTL_BITMAP_RUN64
 #define TAG_OSTR        'RTSO'
 
 /* nls.c */
-WCHAR
-NTAPI
-RtlpUpcaseUnicodeChar(IN WCHAR Source);
-
-WCHAR
-NTAPI
-RtlpDowncaseUnicodeChar(IN WCHAR Source);
 
 #ifndef _BLDR_
 
