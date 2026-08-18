@@ -4,7 +4,7 @@
  * PURPOSE:     Chinese (Traditional) resource file
  * TRANSLATORS: Copyright 2011 Elton Chung aka MfldElton <elton328@gmail.com>
  *              Copyright 2019 Luke Luo <njlyf2011@hotmail.com>
- *              Copyright 2021 Chan Chilung <eason066@gmail.com>
+ *              Copyright 2021-2026 Chan Chilung <eason066@gmail.com>
  */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
@@ -60,8 +60,8 @@ BEGIN
     MENUITEM "貼上(&P)\tCtrl+V", FCIDM_SHVIEW_INSERT
     MENUITEM "貼上捷徑(&S)", FCIDM_SHVIEW_INSERTLINK
     MENUITEM SEPARATOR
-    MENUITEM "複製到資料夾...(&F)", FCIDM_SHVIEW_COPYTO
-    MENUITEM "移動到資料夾...(&V)", FCIDM_SHVIEW_MOVETO
+    MENUITEM "複製到資料夾(&F)...", FCIDM_SHVIEW_COPYTO
+    MENUITEM "移動到資料夾(&V)...", FCIDM_SHVIEW_MOVETO
     MENUITEM SEPARATOR
     MENUITEM "全選(&A)\tCtrl+A", FCIDM_SHVIEW_SELECTALL
     MENUITEM "反選(&I)", FCIDM_SHVIEW_INVERTSELECTION
@@ -101,7 +101,7 @@ IDM_DVSELECT MENU
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "Se&lect", 0
+        MENUITEM "選擇(&L)", 0
     END
 END
 
@@ -354,15 +354,15 @@ BEGIN
     GROUPBOX "檢查錯誤", -1, 5, 5, 230, 60
     ICON IDI_SHELL_TOOLS_CHKDSK, IDC_STATIC, 13, 25, 21, 20
     LTEXT "這個選項將會檢查磁碟區上的錯誤。", -1, 40, 25, 160, 20
-    PUSHBUTTON "現在檢查...", 14000, 130, 45, 90, 15
+    PUSHBUTTON "立即檢查...", 14000, 130, 45, 90, 15
     GROUPBOX "磁碟重組", -1, 5, 65, 230, 60
     ICON IDI_SHELL_TOOLS_DEFRAG, IDC_STATIC, 13, 85, 21, 20
     LTEXT "這個選項將會重組磁碟上的檔案。", -1, 40, 85, 160, 20
-    PUSHBUTTON "現在重組...", 14001, 130, 105, 90, 15
+    PUSHBUTTON "立即重組...", 14001, 130, 105, 90, 15
     GROUPBOX "備份", -1, 5, 130, 230, 60
     ICON IDI_SHELL_TOOLS_BACKUP, IDC_STATIC, 13, 150, 21, 20
     LTEXT "這個選項可以備份磁碟區上的數據", -1, 40, 150, 160, 20
-    PUSHBUTTON "現在備份...", 14002, 130, 170, 90, 15
+    PUSHBUTTON "立即備份...", 14002, 130, 170, 90, 15
 END
 
 IDD_DRIVE_HARDWARE DIALOGEX 0, 0, 240, 220
@@ -379,13 +379,13 @@ FONT 9, "新細明體", 0, 0, 0x0
 BEGIN
     ICON IDI_SHELL_SECURITY, -1, 7, 7, 21, 20
     LTEXT "您要使用哪個使用者帳戶來執行這個程式？", -1, 32, 12, 200, 16
-    AUTORADIOBUTTON "目前使用者為 %s", IDC_RUNAS_CURRENT, 7, 35, 226, 10, WS_GROUP
-    AUTOCHECKBOX "&Protect my computer and data from unauthorized program activity\n\nThis option can prevent computer viruses from harming your computer or personal data, but selecting it might cause the program to function improperly.", IDC_RUNAS_SAFER, 18, 50, 210, 62, WS_DISABLED | WS_TABSTOP | BS_MULTILINE | BS_TOP
-    AUTORADIOBUTTON "以下使用者:", IDC_RUNAS_OTHER, 7, 110, 226, 10
-    LTEXT "使用者名稱:", -1, 18, 124, 54, 10
+    AUTORADIOBUTTON "目前的使用者 %s (&C)", IDC_RUNAS_CURRENT, 7, 35, 226, 10, WS_GROUP
+    AUTOCHECKBOX "保護我的電腦和資料，不受未經授權程式損害(&P)\n\n這個選項可以預防惡意程式損害您的電腦或個人資料，但是選取了它可能導致程式運作失常。", IDC_RUNAS_SAFER, 18, 50, 210, 62, WS_DISABLED | WS_TABSTOP | BS_MULTILINE | BS_TOP
+    AUTORADIOBUTTON "以下使用者：", IDC_RUNAS_OTHER, 7, 110, 226, 10
+    LTEXT "使用者名稱(&U)：", -1, 18, 124, 54, 10
     COMBOBOX IDC_RUNAS_NAME, 75, 122, 134, 40, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
     PUSHBUTTON "...", IDC_RUNAS_BROWSE, 213, 122, 20, 14, WS_TABSTOP
-    LTEXT "密碼:", -1, 18, 142, 53, 10
+    LTEXT "密碼(&P)：", -1, 18, 142, 53, 10
     EDITTEXT IDC_RUNAS_PWD, 75, 140, 134, 14, ES_LEFT | ES_PASSWORD | WS_BORDER | WS_TABSTOP
     DEFPUSHBUTTON "確定", IDOK, 129, 161, 50, 14, WS_TABSTOP
     PUSHBUTTON "取消", IDCANCEL, 183, 161, 50, 14, WS_TABSTOP
@@ -812,7 +812,7 @@ BEGIN
     IDS_DISCONNECT "中斷"
     IDS_OPENFILELOCATION "開啟檔案位置(&I)"
     IDS_SENDTO_MENU "傳送到(&N)"
-    IDS_COPYASPATHMENU "Copy as path"
+    IDS_COPYASPATHMENU "複製路徑"
 
     IDS_MOVEERRORTITLE "移動檔案或資料夾發生錯誤"
     IDS_COPYERRORTITLE "複製檔案或資料夾發生錯誤"
@@ -824,8 +824,8 @@ BEGIN
     IDS_MOVEERROR "無法移動「%s」：%s"
     IDS_COPYERROR "無法複製「%s」：%s"
 
-    IDS_CREATEFILE_DENIED "Could not create file %1"
-    IDS_CREATEFILE_CAPTION "Error creating file"
+    IDS_CREATEFILE_DENIED "無法建立檔案「%1」"
+    IDS_CREATEFILE_CAPTION "無法建立檔案"
     IDS_CREATEFOLDER_DENIED "無法建立資料夾「%1」"
     IDS_CREATEFOLDER_CAPTION "無法建立資料夾"
     IDS_DELETEITEM_CAPTION "確認刪除檔案"
@@ -870,9 +870,9 @@ BEGIN
     IDS_RUNDLG_BROWSE_FILTER "可執行檔 (*.exe)\0*.exe\0所有檔案 (*.*)\0*.*\0"
 
     /* Shortcut property sheet */
-    IDS_SHORTCUT_RUN_NORMAL "Normal window"
-    IDS_SHORTCUT_RUN_MIN "Minimized"
-    IDS_SHORTCUT_RUN_MAX "Maximized"
+    IDS_SHORTCUT_RUN_NORMAL "標準視窗"
+    IDS_SHORTCUT_RUN_MIN "最小化"
+    IDS_SHORTCUT_RUN_MAX "最大化"
 
     /* ATTENTION: DO NOT change English folder names into Chinese unless necessary,
      * or it may cause problems in the system. */
@@ -907,7 +907,7 @@ BEGIN
     IDS_NETWORKPLACE "網路上的芳鄰"
 
     IDS_NEWFOLDER "新資料夾"
-    IDS_NEWITEMFORMAT "New %s"
+    IDS_NEWITEMFORMAT "新增 %s"
 
     IDS_DRIVE_FIXED "本機磁碟"
     IDS_DRIVE_CDROM "CD 光碟機"
@@ -919,8 +919,8 @@ BEGIN
     /* Open With */
     IDS_OPEN_WITH "開啟檔案"
     IDS_OPEN_WITH_CHOOSE "選擇程式..."
-    IDS_OPEN_WITH_RECOMMENDED "推薦的程式:"
-    IDS_OPEN_WITH_OTHER "其它程式:"
+    IDS_OPEN_WITH_RECOMMENDED "推薦的程式："
+    IDS_OPEN_WITH_OTHER "其它程式："
 
     IDS_SHELL_ABOUT_AUTHORS "作者(&A)"
     IDS_SHELL_ABOUT_BACK "< 上一步(&B)"
@@ -928,8 +928,8 @@ BEGIN
     FCIDM_SHVIEW_NEWFOLDER "新增資料夾(&F)"
     FCIDM_SHVIEW_NEWLINK "新增捷徑(&L)"
     IDS_FOLDER_OPTIONS "資料夾選項"
-    IDS_TASKBAR_OPTIONS "Taskbar and Start Menu"
-    IDS_TASKBAR_OPTIONS_INFOTIP "Customize the Start Menu and the taskbar, such as the types of items to be displayed and how they should appear."
+    IDS_TASKBAR_OPTIONS "工作列及開始功能表"
+    IDS_TASKBAR_OPTIONS_INFOTIP "自訂開始功能表和工作列，例如要顯示的項目類型及顯示方式。"
     IDS_RECYCLEBIN_LOCATION "資源回收筒位置"
     IDS_RECYCLEBIN_DISKSPACE "可用空間"
     IDS_EMPTY_BITBUCKET "清空資源回收筒"
@@ -937,15 +937,15 @@ BEGIN
     IDS_PICK_ICON_FILTER "圖示檔案 (*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0All Files (*.*)\0*.*\0"
     IDS_OPEN_WITH_FILTER "可執行檔 (*.exe)\0*.exe\0所有檔案 (*.*)\0*.*\0"
 
-    IDS_CANTLOCKVOLUME "無法鎖定磁碟區。（錯誤碼：%lu）"
-    IDS_CANTDISMOUNTVOLUME "無法卸載磁碟區。（錯誤碼：%lu）"
-    IDS_CANTEJECTMEDIA "無法退出媒體。（錯誤碼：%lu）"
-    IDS_CANTSHOWPROPERTIES "無法顯示內容。（錯誤碼：%lu）"
-    IDS_CANTDISCONNECT "無法中斷。（錯誤碼：%lu）"
-    IDS_NONE "(None)"
+    IDS_CANTLOCKVOLUME "無法鎖定磁碟區。 (錯誤碼：%lu)"
+    IDS_CANTDISMOUNTVOLUME "無法卸載磁碟區。 (錯誤碼：%lu)"
+    IDS_CANTEJECTMEDIA "無法退出媒體。 (錯誤碼：%lu)"
+    IDS_CANTSHOWPROPERTIES "無法顯示內容。 (錯誤碼：%lu)"
+    IDS_CANTDISCONNECT "無法中斷。 (錯誤碼：%lu)"
+    IDS_NONE "(無)"
 
-    IDS_EXPAND "Exp&and"
-    IDS_COLLAPSE "Coll&apse"
+    IDS_EXPAND "展開(&X)"
+    IDS_COLLAPSE "摺疊(&A)"
 
     /* Friendly File Type Names */
     IDS_DIRECTORY "資料夾"
@@ -961,7 +961,7 @@ BEGIN
     IDS_EXE_FILE "應用程式"
     IDS_NLS_FILE "National Language Support File"
     IDS_OCX_FILE "ActiveX 控制項"
-    IDS_TLB_FILE "Type Library"
+    IDS_TLB_FILE "類別程式庫"
     IDS_FON_FILE "字型檔案"
     IDS_TTF_FILE "TrueType 字型檔案"
     IDS_OTF_FILE "OpenType 字型檔案"
@@ -985,8 +985,8 @@ BEGIN
     IDS_CMD_VERB "在這裡開啟命令提示字元"
 
 
-    IDS_MULTIPLETYPES   "Multiple Types"
-    IDS_VARIOUSFOLDERS  "Various Folders"
+    IDS_MULTIPLETYPES   "多種類型"
+    IDS_VARIOUSFOLDERS  "各種資料夾"
     IDS_FILE_FOLDER "%u 個檔案，%u 個資料夾"
 
     IDS_PRINTERS "印表機"
@@ -1013,14 +1013,14 @@ BEGIN
 
     IDS_SEARCH_BROWSEITEM "瀏覽..."
 
-    IDS_RECYCLE_CLEANER_DISPLAYNAME "Recycle Bin"
-    IDS_RECYCLE_CLEANER_DESCRIPTION "The Recycle Bin contains files you have deleted from your computer. These files are not permanently removed until you empty the Recycle Bin."
-    IDS_RECYCLE_CLEANER_BUTTON_TEXT "&View Files"
+    IDS_RECYCLE_CLEANER_DISPLAYNAME "資源回收筒"
+    IDS_RECYCLE_CLEANER_DESCRIPTION "資源回收筒包含您從電腦刪除的檔案。除非您清空資源回收筒，否則檔案不會永久移除。"
+    IDS_RECYCLE_CLEANER_BUTTON_TEXT "檢視檔案(&V)"
 
     IDS_TITLE_MYCOMP "我的電腦"
     IDS_TITLE_MYNET "網路上的芳鄰"
-    IDS_TITLE_BIN_1 "Recycle Bin (full)"
-    IDS_TITLE_BIN_0 "Recycle Bin (empty)"
+    IDS_TITLE_BIN_1 "資源回收筒 (滿)"
+    IDS_TITLE_BIN_0 "資源回收筒 (空)"
 
     IDS_ADVANCED_FOLDER "檔案和資料夾"
     IDS_ADVANCED_NET_CRAWLER "自動搜尋網路資料夾和印表機"
@@ -1034,27 +1034,27 @@ BEGIN
     IDS_ADVANCED_DONT_SHOW_HIDDEN "不要顯示隱藏的檔案和資料夾"
     IDS_ADVANCED_SHOW_HIDDEN "顯示隱藏的檔案和資料夾"
     IDS_ADVANCED_HIDE_FILE_EXT "隱藏已知檔案類型的副檔名"
-    IDS_ADVANCED_SUPER_HIDDEN "隱藏受保護的作業系統檔案（建議選項）"
+    IDS_ADVANCED_SUPER_HIDDEN "隱藏受保護的作業系統檔案 (建議選項)"
     IDS_ADVANCED_DESKTOP_PROCESS "在個別的處理程序中開啟資料夾視窗"
     IDS_ADVANCED_CLASSIC_VIEW_STATE "記住每個資料夾的檢視設定"
     IDS_ADVANCED_PERSIST_BROWSERS "在登入時還原先前的資料夾視窗"
     IDS_ADVANCED_CONTROL_PANEL_IN_MY_COMPUTER "在我的電腦顯示控制台"
     IDS_ADVANCED_SHOW_COMP_COLOR "使用色彩來顯示加密或壓縮的 NTFS 檔案"
     IDS_ADVANCED_SHOW_INFO_TIP "顯示資料夾和桌面項目的快顯描述"
-    IDS_ADVANCED_DISPLAY_FAVORITES "Display Favorites"
-    IDS_ADVANCED_DISPLAY_LOG_OFF "Display Log Off"
-    IDS_ADVANCED_EXPAND_CONTROL_PANEL "Expand Control Panel"
-    IDS_ADVANCED_EXPAND_MY_DOCUMENTS "Expand My Documents"
-    IDS_ADVANCED_EXPAND_PRINTERS "Expand Printers"
-    IDS_ADVANCED_EXPAND_MY_PICTURES "Expand My Pictures"
-    IDS_ADVANCED_EXPAND_NET_CONNECTIONS "Expand Network Connections"
-    IDS_ADVANCED_DISPLAY_RUN "Display Run"
-    IDS_ADVANCED_DISPLAY_ADMINTOOLS "Display Administrative Tools"
-    IDS_ADVANCED_SMALL_START_MENU "Show Small Icons in Start menu"
+    IDS_ADVANCED_DISPLAY_FAVORITES "顯示我的最愛"
+    IDS_ADVANCED_DISPLAY_LOG_OFF "顯示登出"
+    IDS_ADVANCED_EXPAND_CONTROL_PANEL "展開控制台"
+    IDS_ADVANCED_EXPAND_MY_DOCUMENTS "展開我的文件"
+    IDS_ADVANCED_EXPAND_PRINTERS "展開印表機"
+    IDS_ADVANCED_EXPAND_MY_PICTURES "展開我的圖片"
+    IDS_ADVANCED_EXPAND_NET_CONNECTIONS "展開網路連線"
+    IDS_ADVANCED_DISPLAY_RUN "顯示執行"
+    IDS_ADVANCED_DISPLAY_ADMINTOOLS "顯示管理工具"
+    IDS_ADVANCED_SMALL_START_MENU "在開始功能表顯示小圖示"
 
-    IDS_VISEFFECT_DRAGFULL "Show window contents while dragging"
-    IDS_VISEFFECT_FONTSMOOTHING "Smooth edges of screen fonts"
-    IDS_VISEFFECT_LISTVIEWSHADOW "Use drop shadows for icon labels on the desktop"
+    IDS_VISEFFECT_DRAGFULL "拖動時時顯示視窗內容"
+    IDS_VISEFFECT_FONTSMOOTHING "去除螢幕字型毛邊"
+    IDS_VISEFFECT_LISTVIEWSHADOW "對桌面上的圖示標籤使用下拉式陰影"
 
     IDS_NEWEXT_ADVANCED_LEFT "<< 進階(&V)"
     IDS_NEWEXT_ADVANCED_RIGHT "進階(&V) >>"

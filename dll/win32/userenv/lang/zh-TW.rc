@@ -1,4 +1,10 @@
-/* Translation has been created by Luke Luo <njlyf2011@hotmail.com> */
+/*
+ * PROJECT:     ReactOS Win32 User Environment
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Chinese (Traditional) resource file
+ * TRANSLATORS: Copyright 2018 Luke Luo <njlyf2011@hotmail.com>
+ *              Copyright 2026 Chan Chilung <eason066@gmail.com>
+ */
 
 /* ATTENTION: If there is no special situation, please DO NOT change
 English folder names into Chinese, or it may cause problems in the system. */
@@ -7,13 +13,13 @@ LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
 
 IDD_ERRORDLG DIALOGEX 0, 0, 250, 95
 STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION
-CAPTION "User Profile"
-FONT 8, "MS Shell Dlg"
+CAPTION "使用者設定檔"
+FONT 9, "新細明體"
 BEGIN
     ICON IDI_USERENV, IDC_STATIC, 6, 10, 18, 20
-    DEFPUSHBUTTON "OK", IDOK, 190, 10, 50, 14, BS_NOTIFY | WS_TABSTOP
+    DEFPUSHBUTTON "確定", IDOK, 190, 10, 50, 14, BS_NOTIFY | WS_TABSTOP
     EDITTEXT IDC_ERRORDESC, 37, 10, 145, 66, ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | WS_VSCROLL | WS_BORDER | WS_TABSTOP
-    RTEXT "Time remaining:", IDC_TIMEOUTSTATIC, 172, 80, 54, 8
+    RTEXT "剩餘時間︰", IDC_TIMEOUTSTATIC, 172, 80, 54, 8
     LTEXT "", IDC_TIMEOUT, 230, 80, 12, 8
 END
 
