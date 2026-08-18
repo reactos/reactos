@@ -193,6 +193,22 @@ typedef struct _UUID_CACHED_VALUES_STRUCT
 
 C_ASSERT(RTL_FIELD_SIZE(UUID_CACHED_VALUES_STRUCT, GuidInit) == RTL_FIELD_SIZE(UUID, Data4));
 
+typedef enum _NLS_SELECTION_TYPE
+{
+    NLS_SECTION_SORTKEYS = 9,
+    NLS_SECTION_CASEMAP = 10,
+    NLS_SECTION_CODEPAGE = 11,
+    NLS_SECTION_NORMALIZE = 12
+} NLS_SELECTION_TYPE;
+
+typedef enum _NORM_FORM {
+    NormalizationOther  = 0,
+    NormalizationC      = 0x1,
+    NormalizationD      = 0x2,
+    NormalizationKC     = 0x5,
+    NormalizationKD     = 0x6
+} NORM_FORM;
+
 /* INITIALIZATION FUNCTIONS *************************************************/
 
 CODE_SEG("INIT")
