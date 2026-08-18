@@ -2,6 +2,8 @@
 @ stdcall LdrUnregisterDllNotification(ptr)
 
 @ stdcall NtGetCurrentProcessorNumberEx(ptr)
+@ stdcall NtGetNlsSectionPtr(long long ptr ptr ptr)
+@ stdcall NtInitializeNlsFiles(ptr ptr ptr ptr)
 
 @ stdcall RtlGetProductInfo(long long long long ptr)
 @ stdcall RtlInitializeConditionVariable(ptr)
