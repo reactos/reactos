@@ -82,13 +82,13 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON4, IDC_STATIC, 21, 7, 20, 20
     LTEXT "Язык системы устанавливается и действует во всех приложениях. Можно выбрать систему исчисления, формат чисел и даты.", IDC_STATIC, 53, 7, 253, 20
-    LTEXT "%s", IDC_LOCALETEXT, 53, 29, 250, 16
-    LTEXT "Для изменения языка системы нажмите ""Настроить"".", IDC_STATIC, 53, 60, 197, 8
+    LTEXT "", IDC_LOCALETEXT, 53, 29, 250, 16
+    LTEXT "Для изменения языка системы нажмите ""Настроить"".", IDC_STATIC, 53, 60, 190, 8
     PUSHBUTTON "&Настроить...", IDC_CUSTOMLOCALE, 245, 57, 55, 14
     LTEXT "", IDC_STATIC, 53, 79, 246, 1, SS_ETCHEDHORZ
     LTEXT "Выбрав раскладку вы сможете вводить символы на вашем языке.", IDC_STATIC, 53, 86, 253, 8
-    LTEXT "%s", IDC_LAYOUTTEXT, 53, 100, 250, 16
-    LTEXT "Для изменения раскладки нажмите ""Настроить"".", IDC_STATIC, 53, 126, 184, 8
+    LTEXT "", IDC_LAYOUTTEXT, 53, 100, 250, 16
+    LTEXT "Для изменения раскладки нажмите ""Настроить"".", IDC_STATIC, 53, 126, 190, 8
     PUSHBUTTON "Н&астроить...", IDC_CUSTOMLAYOUT, 245, 122, 55, 14
 END
 

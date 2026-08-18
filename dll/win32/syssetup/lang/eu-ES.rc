@@ -82,11 +82,12 @@ BEGIN
     ICON IDI_ICON4, IDC_STATIC, 21, 7, 20, 20
     LTEXT "Eskualde eta hizkuntza aukerek datak, zenbakiak, monetak eta orduak irudikatzeko modua konfiguratzeko aukera ematen dute. Gainera, beste hizkuntza batzuk onartzen ditu eta kokapen-ezarpenak alda ditzakezu.", IDC_STATIC, 53, 6, 253, 30
     LTEXT "", IDC_LOCALETEXT, 53, 34, 250, 16
-    LTEXT "Ezarpen hauek aldatzeko, sakatu Aldatu.", IDC_STATIC, 53, 60, 184, 8
+    LTEXT "Ezarpen hauek aldatzeko, sakatu Aldatu.", IDC_STATIC, 53, 60, 190, 8
     PUSHBUTTON "&Aldatu...", IDC_CUSTOMLOCALE, 245, 57, 50, 14
+    LTEXT "", IDC_STATIC, 53, 79, 246, 1, SS_ETCHEDHORZ
     LTEXT "Teklatuaren distribuzioa mugatu du zer karakter idazten zertarako tekla.", IDC_STATIC, 53, 86, 253, 32
     LTEXT "", IDC_LAYOUTTEXT, 53, 109, 250, 16
-    LTEXT "Teklatuaren diseinua aldatzeko, sakatu Aldatu.", IDC_STATIC, 53, 126, 184, 8
+    LTEXT "Teklatuaren diseinua aldatzeko, sakatu Aldatu.", IDC_STATIC, 53, 126, 190, 8
     PUSHBUTTON "&Aldatu...", IDC_CUSTOMLAYOUT, 245, 122, 50, 14
 END
 
@@ -190,6 +191,8 @@ BEGIN
     IDS_COMPUTERSUBTITLE "Administratzaile izena eta pasahitza eman diezazkiokezu ordenagailuari."
     IDS_LOCALETITLE "Eskualdeko aukerak"
     IDS_LOCALESUBTITLE "ReactOS pertsonaliza dezakezu eskualde eta hizkuntza desberdinetarako."
+    IDS_LOCALETEXT "The Standards and formats are set to %s, and the location is set to %s."
+    IDS_LAYOUTTEXT "Your default text input language and method is: %s keyboard layout"
     IDS_DATETIMETITLE "Data eta ordua"
     IDS_DATETIMESUBTITLE "Ezarri zure ordenagailurako data eta ordu egokiak."
     IDS_PROCESSTITLE "Finishing the Installation"

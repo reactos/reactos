@@ -74,14 +74,14 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON4, IDC_STATIC, 21, 7, 20, 20
     LTEXT "A localidade do sistema deve coincidir com o idioma das aplicações que você quer utilizar. A localidade de usuário controla como números, moeda e datas aparecem.", IDC_STATIC, 53, 7, 253, 25
-    LTEXT "%s", IDC_LOCALETEXT, 53, 36, 250, 16
-    LTEXT "Para alterar a localidade de sistema ou usuário, clique Personalizar.", IDC_STATIC, 53, 60, 196, 8
-    PUSHBUTTON "&Personalizar...", IDC_CUSTOMLOCALE, 250, 57, 50, 14
+    LTEXT "", IDC_LOCALETEXT, 53, 36, 250, 16
+    LTEXT "Para alterar a localidade de sistema ou usuário, clique Personalizar.", IDC_STATIC, 53, 56, 190, 16
+    PUSHBUTTON "&Personalizar...", IDC_CUSTOMLOCALE, 245, 57, 55, 14
     LTEXT "", IDC_STATIC, 53, 79, 246, 1, SS_ETCHEDHORZ
     LTEXT "O layout do teclado controla os caracteres que aparecem quando você digita.", IDC_STATIC, 53, 86, 253, 8
-    LTEXT "%s", IDC_LAYOUTTEXT, 53, 100, 250, 16
-    LTEXT "Para alterar o layout do teclado, clique Personalizar.", IDC_STATIC, 53, 126, 184, 8
-    PUSHBUTTON "P&ersonalizar...", IDC_CUSTOMLAYOUT, 250, 122, 50, 14
+    LTEXT "", IDC_LAYOUTTEXT, 53, 100, 250, 16
+    LTEXT "Para alterar o layout do teclado, clique Personalizar.", IDC_STATIC, 53, 126, 190, 8
+    PUSHBUTTON "P&ersonalizar...", IDC_CUSTOMLAYOUT, 245, 122, 55, 14
 END
 
 IDD_DATETIMEPAGE DIALOGEX 0, 0, 317, 143

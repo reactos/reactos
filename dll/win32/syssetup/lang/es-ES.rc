@@ -83,13 +83,13 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON4, IDC_STATIC, 21, 7, 20, 20
     LTEXT "Las opciones regionales y de idioma permiten configurar la forma en la que se representan fechas, números, monedas y horas. También permite compatibilizar con otros idiomas y cambiar los ajustes de ubicación.", IDC_STATIC, 53, 6, 253, 30
-    LTEXT "%s", IDC_LOCALETEXT, 53, 34, 250, 16
-    LTEXT "Para modificar esta configuración, pulse Modificar.", IDC_STATIC, 53, 60, 184, 8
+    LTEXT "", IDC_LOCALETEXT, 53, 34, 250, 16
+    LTEXT "Para modificar esta configuración, pulse Modificar.", IDC_STATIC, 53, 60, 190, 8
     PUSHBUTTON "&Modificar...", IDC_CUSTOMLOCALE, 245, 57, 50, 14
     LTEXT "", IDC_STATIC, 53, 79, 241, 1, SS_ETCHEDHORZ
     LTEXT "La distribución del teclado determina el caracter que se muestra al presionar cada tecla.", IDC_STATIC, 53, 86, 253, 32
-    LTEXT "%s", IDC_LAYOUTTEXT, 53, 109, 250, 16
-    LTEXT "Para cambiar la distribución del teclado, pulse Modificar.", IDC_STATIC, 53, 126, 184, 8
+    LTEXT "", IDC_LAYOUTTEXT, 53, 109, 250, 16
+    LTEXT "Para cambiar la distribución del teclado, pulse Modificar.", IDC_STATIC, 53, 126, 190, 8
     PUSHBUTTON "&Modificar...", IDC_CUSTOMLAYOUT, 245, 122, 50, 14
 END
 

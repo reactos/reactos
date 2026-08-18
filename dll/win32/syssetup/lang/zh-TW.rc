@@ -83,13 +83,13 @@ FONT 9, "新細明體"
 BEGIN
     ICON IDI_ICON4, IDC_STATIC, 21, 7, 20, 20
     LTEXT "系統地區設定應符合您要使用的應用程式的語言。使用者地區設定可控制數字，貨幣和日期的顯示方式。", IDC_STATIC, 53, 7, 253, 20
-    LTEXT "%s", IDC_LOCALETEXT, 53, 29, 250, 16
-    LTEXT "若要變更系統和使用者的地區設定, 請按［自訂］。", IDC_STATIC, 53, 60, 196, 8
+    LTEXT "", IDC_LOCALETEXT, 53, 29, 250, 16
+    LTEXT "若要變更系統和使用者的地區設定, 請按［自訂］。", IDC_STATIC, 53, 60, 190, 8
     PUSHBUTTON "自訂(&C)...", IDC_CUSTOMLOCALE, 250, 57, 50, 14
     LTEXT "", IDC_STATIC, 53, 79, 246, 1, SS_ETCHEDHORZ
     LTEXT "鍵盤配置控制鍵入時出現的字元。", IDC_STATIC, 53, 86, 253, 8
-    LTEXT "%s", IDC_LAYOUTTEXT, 53, 100, 250, 16
-    LTEXT "要查看或變更目前設定，請按［自訂］。", IDC_STATIC, 53, 126, 184, 8
+    LTEXT "", IDC_LAYOUTTEXT, 53, 100, 250, 16
+    LTEXT "要查看或變更目前設定，請按［自訂］。", IDC_STATIC, 53, 126, 190, 8
     PUSHBUTTON "自訂(&U)...", IDC_CUSTOMLAYOUT, 250, 122, 50, 14
 END
 

@@ -82,13 +82,13 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON4, IDC_STATIC, 21, 7, 20, 20
     LTEXT "Lokalizace systému by měla souhlasit s jazykem aplikací, které chcete používat. Localizace určí, jak budou zobrazena čísla, měny a kalendářní data.", IDC_STATIC, 53, 7, 253, 20
-    LTEXT "%s", IDC_LOCALETEXT, 53, 29, 250, 16
-    LTEXT "Pro změnu lokalizace systému klikněte na Změnit.", IDC_STATIC, 53, 60, 184, 8
+    LTEXT "", IDC_LOCALETEXT, 53, 29, 250, 16
+    LTEXT "Pro změnu lokalizace systému klikněte na Změnit.", IDC_STATIC, 53, 60, 190, 8
     PUSHBUTTON "&Změnit...", IDC_CUSTOMLOCALE, 245, 57, 50, 14
     LTEXT "", IDC_STATIC, 53, 79, 241, 1, SS_ETCHEDHORZ
     LTEXT "Rozložení kláves určí znaky, které se zobrazí, když píšete.", IDC_STATIC, 53, 86, 253, 8
-    LTEXT "%s", IDC_LAYOUTTEXT, 53, 100, 250, 16
-    LTEXT "Pro změnu rozložení kláves, klikněte na Změnit.", IDC_STATIC, 53, 126, 184, 8
+    LTEXT "", IDC_LAYOUTTEXT, 53, 100, 250, 16
+    LTEXT "Pro změnu rozložení kláves, klikněte na Změnit.", IDC_STATIC, 53, 126, 190, 8
     PUSHBUTTON "Z&měnit...", IDC_CUSTOMLAYOUT, 245, 122, 50, 14
 END
 

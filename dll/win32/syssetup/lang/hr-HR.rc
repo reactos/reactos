@@ -81,13 +81,13 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON4, IDC_STATIC, 21, 7, 20, 20
     LTEXT "Lokalizacija sustava trebala bi odgovarati jeziku aplikacija koje želite koristiti. Lokalizacija korisnika kontrolira kako se pojavljuju brojevi, valute i datumi.", IDC_STATIC, 53, 7, 253, 20
-    LTEXT "%s", IDC_LOCALETEXT, 53, 29, 250, 16
-    LTEXT "Za promjenu postavki sustava ili korisničkog jezika kliknite Prilagodi.", IDC_STATIC, 53, 60, 196, 8
+    LTEXT "", IDC_LOCALETEXT, 53, 29, 250, 16
+    LTEXT "Za promjenu postavki sustava ili korisničkog jezika kliknite Prilagodi.", IDC_STATIC, 53, 56, 190, 16
     PUSHBUTTON "&Prilagodi...", IDC_CUSTOMLOCALE, 250, 57, 50, 14
     LTEXT "", IDC_STATIC, 53, 79, 246, 1, SS_ETCHEDHORZ
     LTEXT "Raspored tipkovnice kontrolira znakove koji se pojavljuju kada tipkate.", IDC_STATIC, 53, 86, 253, 8
-    LTEXT "%s", IDC_LAYOUTTEXT, 53, 100, 250, 16
-    LTEXT "Za promjenu rasporeda tipkovnice kliknite Prilagodi.", IDC_STATIC, 53, 126, 184, 8
+    LTEXT "", IDC_LAYOUTTEXT, 53, 100, 250, 16
+    LTEXT "Za promjenu rasporeda tipkovnice kliknite Prilagodi.", IDC_STATIC, 53, 126, 190, 8
     PUSHBUTTON "Pri&lagodi...", IDC_CUSTOMLAYOUT, 250, 122, 50, 14
 END
 

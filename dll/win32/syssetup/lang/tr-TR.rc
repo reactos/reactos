@@ -84,13 +84,13 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON4, IDC_STATIC, 21, 7, 20, 20
     LTEXT "Sistem yerel ayarı, kullanmak istediğiniz uygulamaların diliyle eşleşmelidir. Kullanıcı yerel ayarı; sayıların, para birimlerinin ve zamanların nasıl görüneceğini denetler.", IDC_STATIC, 53, 7, 253, 60
-    LTEXT "%s", IDC_LOCALETEXT, 53, 34, 250, 16
-    LTEXT "Sistem veya kullanıcı yerel ayarlarını değiştirmek için Özelleştir'e tıklayınız.", IDC_STATIC, 53, 60, 196, 30
+    LTEXT "", IDC_LOCALETEXT, 53, 34, 250, 16
+    LTEXT "Sistem veya kullanıcı yerel ayarlarını değiştirmek için Özelleştir'e tıklayınız.", IDC_STATIC, 53, 56, 190, 16
     PUSHBUTTON "Ö&zelleştir...", IDC_CUSTOMLOCALE, 250, 57, 50, 14
-    LTEXT "", IDC_STATIC, 53, 81, 246, 1, SS_ETCHEDHORZ
+    LTEXT "", IDC_STATIC, 53, 79, 246, 1, SS_ETCHEDHORZ
     LTEXT "Klavye düzeni, yazdığınızda gözüken karakterleri denetler.", IDC_STATIC, 53, 86, 253, 8
-    LTEXT "%s", IDC_LAYOUTTEXT, 53, 100, 250, 16
-    LTEXT "Klavye düzenini değiştirmek için Özelleştir'e tıklayınız.", IDC_STATIC, 53, 126, 184, 8
+    LTEXT "", IDC_LAYOUTTEXT, 53, 100, 250, 16
+    LTEXT "Klavye düzenini değiştirmek için Özelleştir'e tıklayınız.", IDC_STATIC, 53, 126, 190, 8
     PUSHBUTTON "Öz&elleştir...", IDC_CUSTOMLAYOUT, 250, 122, 50, 14
 END
 
