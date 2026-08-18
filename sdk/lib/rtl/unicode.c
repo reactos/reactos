@@ -43,43 +43,6 @@ RtlMultiAppendUnicodeStringBuffer(OUT PRTL_UNICODE_STRING_BUFFER StringBuffer,
 }
 
 /*
-* @implemented
-*/
-WCHAR
-NTAPI
-RtlAnsiCharToUnicodeChar(IN OUT PUCHAR *AnsiChar)
-{
-    ULONG Size;
-    NTSTATUS Status;
-    WCHAR UnicodeChar = L' ';
-    PAGED_CODE_RTL();
-
-    if (NlsLeadByteInfo)
-    {
-        Size = (NlsLeadByteInfo[**AnsiChar] == 0) ? 1 : 2;
-    }
-    else
-    {
-        DPRINT("HACK::Shouldn't have happened! Consider fixing Usetup and registry entries it creates on install\n");
-        Size = 1;
-    }
-
-    Status = RtlMultiByteToUnicodeN(&UnicodeChar,
-                                    sizeof(WCHAR),
-                                    NULL,
-                                    (PCHAR)*AnsiChar,
-                                    Size);
-
-    if (!NT_SUCCESS(Status))
-    {
-        UnicodeChar = L' ';
-    }
-
-    *AnsiChar += Size;
-    return UnicodeChar;
-}
-
-/*
  * @implemented
  *
  * NOTES
@@ -536,7 +499,7 @@ RtlIsValidOemCharacter(IN PWCHAR Char)
         }
 
         /* Upcase */
-        UnicodeChar = RtlpUpcaseUnicodeChar(UnicodeChar);
+        UnicodeChar = RtlUpcaseUnicodeChar(UnicodeChar);
 
         /* Receive OEM character from the table */
         OemChar = NlsUnicodeToMbOemTable[UnicodeChar];
@@ -544,7 +507,7 @@ RtlIsValidOemCharacter(IN PWCHAR Char)
     else
     {
         /* Receive Unicode character from the table */
-        UnicodeChar = RtlpUpcaseUnicodeChar(NlsOemToUnicodeTable[(UCHAR)NlsUnicodeToOemTable[*Char]]);
+        UnicodeChar = RtlUpcaseUnicodeChar(NlsOemToUnicodeTable[(UCHAR)NlsUnicodeToOemTable[*Char]]);
 
         /* Receive OEM character from the table */
         OemChar = NlsUnicodeToOemTable[UnicodeChar];
@@ -926,56 +889,6 @@ RtlPrefixString(
 
 /*
  * @implemented
- *
- * RETURNS
- *  TRUE if String2 contains String1 as a prefix.
- */
-BOOLEAN
-NTAPI
-RtlPrefixUnicodeString(
-    PCUNICODE_STRING String1,
-    PCUNICODE_STRING String2,
-    BOOLEAN CaseInsensitive)
-{
-    PWCHAR pc1;
-    PWCHAR pc2;
-    ULONG  NumChars;
-
-    if (String2->Length < String1->Length)
-        return FALSE;
-
-    NumChars = String1->Length / sizeof(WCHAR);
-    pc1 = String1->Buffer;
-    pc2 = String2->Buffer;
-
-    if (pc1 && pc2)
-    {
-        if (CaseInsensitive)
-        {
-            while (NumChars--)
-            {
-                if (RtlpUpcaseUnicodeChar(*pc1++) !=
-                    RtlpUpcaseUnicodeChar(*pc2++))
-                    return FALSE;
-            }
-        }
-        else
-        {
-            while (NumChars--)
-            {
-                if (*pc1++ != *pc2++)
-                    return FALSE;
-            }
-        }
-
-        return TRUE;
-    }
-
-    return FALSE;
-}
-
-/*
- * @implemented
  */
 NTSTATUS
 NTAPI
@@ -1078,27 +991,6 @@ RtlUnicodeStringToInteger(
 
     *value = bMinus ? (0 - RunningTotal) : RunningTotal;
     return STATUS_SUCCESS;
-}
-
-/*
- * @implemented
- *
- * RETURNS
- *  Bytes necessary for the conversion including nullterm.
- */
-ULONG
-NTAPI
-RtlxUnicodeStringToOemSize(IN PCUNICODE_STRING UnicodeString)
-{
-    ULONG Size;
-
-    /* Convert the Unicode String to Mb Size */
-    RtlUnicodeToMultiByteSize(&Size,
-                              UnicodeString->Buffer,
-                              UnicodeString->Length);
-
-    /* Return the size + the null char */
-    return (Size + sizeof(CHAR));
 }
 
 /*
@@ -1730,55 +1622,6 @@ RtlEraseUnicodeString(
 }
 
 /*
-* @implemented
-*/
-NTSTATUS
-NTAPI
-RtlHashUnicodeString(
-    IN CONST UNICODE_STRING *String,
-    IN BOOLEAN CaseInSensitive,
-    IN ULONG HashAlgorithm,
-    OUT PULONG HashValue)
-{
-    if (String != NULL && HashValue != NULL)
-    {
-        switch (HashAlgorithm)
-        {
-            case HASH_STRING_ALGORITHM_DEFAULT:
-            case HASH_STRING_ALGORITHM_X65599:
-            {
-                WCHAR *c, *end;
-
-                *HashValue = 0;
-                end = String->Buffer + (String->Length / sizeof(WCHAR));
-
-                if (CaseInSensitive)
-                {
-                    for (c = String->Buffer; c != end; c++)
-                    {
-                        /* only uppercase characters if they are 'a' ... 'z'! */
-                        *HashValue = ((65599 * (*HashValue)) +
-                                      (ULONG)(((*c) >= L'a' && (*c) <= L'z') ?
-                                              (*c) - L'a' + L'A' : (*c)));
-                    }
-                }
-                else
-                {
-                    for (c = String->Buffer; c != end; c++)
-                    {
-                        *HashValue = ((65599 * (*HashValue)) + (ULONG)(*c));
-                    }
-                }
-
-                return STATUS_SUCCESS;
-            }
-        }
-    }
-
-    return STATUS_INVALID_PARAMETER;
-}
-
-/*
  * @implemented
  *
  * NOTES
@@ -1903,46 +1746,6 @@ RtlLargeIntegerToChar(
 
     /* Copy the string to the target using SEH */
     return RtlpSafeCopyMemory(String, Pos, Len);
-}
-
-/*
- * @implemented
- *
- * NOTES
- *  dest is never '\0' terminated because it may be equal to src, and src
- *  might not be '\0' terminated. dest->Length is only set upon success.
- */
-NTSTATUS
-NTAPI
-RtlUpcaseUnicodeString(
-    IN OUT PUNICODE_STRING UniDest,
-    IN PCUNICODE_STRING UniSource,
-    IN BOOLEAN  AllocateDestinationString)
-{
-    ULONG i, j;
-
-    PAGED_CODE_RTL();
-
-    if (AllocateDestinationString)
-    {
-        UniDest->MaximumLength = UniSource->Length;
-        UniDest->Buffer = RtlpAllocateStringMemory(UniDest->MaximumLength, TAG_USTR);
-        if (UniDest->Buffer == NULL) return STATUS_NO_MEMORY;
-    }
-    else if (UniSource->Length > UniDest->MaximumLength)
-    {
-        return STATUS_BUFFER_OVERFLOW;
-    }
-
-    j = UniSource->Length / sizeof(WCHAR);
-
-    for (i = 0; i < j; i++)
-    {
-        UniDest->Buffer[i] = RtlpUpcaseUnicodeChar(UniSource->Buffer[i]);
-    }
-
-    UniDest->Length = UniSource->Length;
-    return STATUS_SUCCESS;
 }
 
 /*
@@ -2115,27 +1918,6 @@ RtlUpcaseUnicodeStringToOemString (
 
 /*
  * @implemented
- *
- * RETURNS
- *  Bytes calculated including nullterm
- */
-ULONG
-NTAPI
-RtlxOemStringToUnicodeSize(IN PCOEM_STRING OemString)
-{
-    ULONG Size;
-
-    /* Convert the Mb String to Unicode Size */
-    RtlMultiByteToUnicodeSize(&Size,
-                              OemString->Buffer,
-                              OemString->Length);
-
-    /* Return the size + null-char */
-    return (Size + sizeof(WCHAR));
-}
-
-/*
- * @implemented
  */
 NTSTATUS
 NTAPI
@@ -2210,7 +1992,7 @@ RtlCompareUnicodeString(
 
     if (CaseInsensitive)
     {
-        while (!ret && len--) ret = RtlpUpcaseUnicodeChar(*p1++) - RtlpUpcaseUnicodeChar(*p2++);
+        while (!ret && len--) ret = RtlUpcaseUnicodeChar(*p1++) - RtlUpcaseUnicodeChar(*p2++);
     }
     else
     {
@@ -2343,58 +2125,6 @@ RtlCreateUnicodeStringFromAsciiz(
                                           TRUE);
 
     return NT_SUCCESS(Status);
-}
-
-/*
- * @implemented
- *
- * NOTES
- *  Dest is never '\0' terminated because it may be equal to src, and src
- *  might not be '\0' terminated.
- *  Dest->Length is only set upon success.
- */
-NTSTATUS
-NTAPI
-RtlDowncaseUnicodeString(
-    IN OUT PUNICODE_STRING UniDest,
-    IN PCUNICODE_STRING UniSource,
-    IN BOOLEAN AllocateDestinationString)
-{
-    ULONG i;
-    ULONG StopGap;
-    PAGED_CODE_RTL();
-
-    if (AllocateDestinationString)
-    {
-        UniDest->MaximumLength = UniSource->Length;
-        UniDest->Buffer = RtlpAllocateStringMemory(UniSource->Length, TAG_USTR);
-        if (UniDest->Buffer == NULL) return STATUS_NO_MEMORY;
-    }
-    else if (UniSource->Length > UniDest->MaximumLength)
-    {
-        return STATUS_BUFFER_OVERFLOW;
-    }
-
-    UniDest->Length = UniSource->Length;
-    StopGap = UniSource->Length / sizeof(WCHAR);
-
-    for (i = 0 ; i < StopGap; i++)
-    {
-        if (UniSource->Buffer[i] < L'A')
-        {
-            UniDest->Buffer[i] = UniSource->Buffer[i];
-        }
-        else if (UniSource->Buffer[i] <= L'Z')
-        {
-            UniDest->Buffer[i] = (UniSource->Buffer[i] + (L'a' - L'A'));
-        }
-        else
-        {
-            UniDest->Buffer[i] = RtlpDowncaseUnicodeChar(UniSource->Buffer[i]);
-        }
-    }
-
-    return STATUS_SUCCESS;
 }
 
 /*
@@ -2656,13 +2386,13 @@ RtlpIsCharInUnicodeString(
     USHORT i;
 
     if (CaseInSensitive)
-        Char = RtlpUpcaseUnicodeChar(Char);
+        Char = RtlUpcaseUnicodeChar(Char);
 
     for (i = 0; i < MatchString->Length / sizeof(WCHAR); i++)
     {
         WCHAR OtherChar = MatchString->Buffer[i];
         if (CaseInSensitive)
-            OtherChar = RtlpUpcaseUnicodeChar(OtherChar);
+            OtherChar = RtlUpcaseUnicodeChar(OtherChar);
 
         if (Char == OtherChar)
             return TRUE;
