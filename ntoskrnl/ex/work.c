@@ -533,8 +533,8 @@ ExpInitializeWorkerThreads(VOID)
     ExpWorkersCanSwap = TRUE;
 
     /* Default the number of worker threads to be created */
-    DelayedThreads = EX_DELAYED_WORKER_THREADS;
-    CriticalThreads = EX_CRITICAL_WORKER_THREADS;
+    DelayedThreads = EX_DELAYED_WORK_THREADS;
+    CriticalThreads = EX_CRITICAL_WORK_THREADS;
 
     /*
      * Get an additional number of worker threads from the Registry
