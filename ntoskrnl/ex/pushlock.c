@@ -652,21 +652,17 @@ ExfAcquirePushLockShared(PEX_PUSH_LOCK PushLock)
     /* Start main loop */
     for (;;)
     {
-        /* Check if it's unlocked or if it's waiting without any sharers */
-        if (!(OldValue.Locked) || (!(OldValue.Waiting) && (OldValue.Shared > 0)))
+        /*
+         * Check if shared ownership can be acquired directly.
+         * We don't let a shared acquirer steal a contended but unlocked
+         * push lock, since such an acquisition is represented only by
+         * setting Locked and would exclude other shared acquirers.
+         */
+        if (!OldValue.Waiting && (!OldValue.Locked || OldValue.Shared > 0))
         {
-            /* Check if anyone is waiting on it */
-            if (!OldValue.Waiting)
-            {
-                /* Increase the share count and lock it */
-                NewValue.Value = OldValue.Value | EX_PUSH_LOCK_LOCK;
-                NewValue.Shared++;
-            }
-            else
-            {
-                /* Simply set the lock bit */
-                NewValue.Value = OldValue.Value | EX_PUSH_LOCK_LOCK;
-            }
+            /* Acquire shared ownership */
+            NewValue.Value = OldValue.Value | EX_PUSH_LOCK_LOCK;
+            NewValue.Shared++;
 
             /* Sanity check */
             ASSERT(NewValue.Locked);
