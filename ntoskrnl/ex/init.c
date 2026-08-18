@@ -225,6 +225,9 @@ ExpInitNls(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     PLIST_ENTRY ListHead, NextEntry;
     PMEMORY_ALLOCATION_DESCRIPTOR MdBlock;
     ULONG NlsTablesEncountered = 0;
+    UNICODE_STRING Name;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    HANDLE Handle;
     SIZE_T NlsTableSizes[3] = {0, 0, 0}; /* 3 NLS tables */
 
     /* Check if this is boot-time phase 0 initialization */
@@ -385,6 +388,25 @@ ExpInitNls(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     /* Copy the table into the system process and set this as the base */
     RtlCopyMemory(SectionBase, ExpNlsTableBase, ExpNlsTableSize);
     ExpNlsTableBase = SectionBase;
+
+    /* Create the NLS directory object */
+    RtlInitUnicodeString(&Name, L"\\NLS");
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &Name,
+                               OBJ_CASE_INSENSITIVE | OBJ_PERMANENT,
+                               NULL,
+                               NULL);
+
+    Status = NtCreateDirectoryObject(&Handle,
+                                     DIRECTORY_ALL_ACCESS,
+                                     &ObjectAttributes);
+    if (!NT_SUCCESS(Status))
+    {
+        KeBugCheckEx(PHASE1_INITIALIZATION_FAILED, Status, 6, 0, 0);
+    }
+
+    /* Close the extra handle */
+    Status = NtClose(Handle);
 }
 
 CODE_SEG("INIT")
@@ -1694,9 +1716,6 @@ Phase1InitializationDiscard(IN PVOID Context)
     /* Create NLS section */
     ExpInitNls(LoaderBlock);
 
-    /* Initialize the Rtl locale table */
-    RtlpInitializeLocaleTable();
-
     /* Initialize Cache Views */
     if (!CcInitializeCacheManager()) KeBugCheck(CACHE_INITIALIZATION_FAILED);
 
@@ -1733,6 +1752,9 @@ Phase1InitializationDiscard(IN PVOID Context)
 
     /* Initialize the File System Runtime Library */
     if (!FsRtlInitSystem()) KeBugCheck(FILE_INITIALIZATION_FAILED);
+
+    /* Initialize the Rtl locale table */
+    RtlpInitializeLocaleTable();
 
     /* Initialize range lists */
     RtlInitializeRangeListPackage();
