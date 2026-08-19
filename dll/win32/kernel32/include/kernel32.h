@@ -305,7 +305,7 @@ NTSTATUS
 WINAPI
 BasepMapFile(IN LPCWSTR lpApplicationName,
              OUT PHANDLE hSection,
-             IN PUNICODE_STRING ApplicationName);
+             OUT PUNICODE_STRING ApplicationName);
 
 PCODEPAGE_ENTRY FASTCALL
 IntGetCodePageEntry(UINT CodePage);
