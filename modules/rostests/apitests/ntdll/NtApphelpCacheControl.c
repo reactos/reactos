@@ -117,6 +117,10 @@ static void RunApphelpCacheControlTests(SC_HANDLE service_handle)
     if (!InitEnv(&ntPath))
     {
         skip("NtApphelpCacheControl expects a different structure layout\n");
+        if (Result)
+        {
+            RtlFreeHeap(RtlGetProcessHeap(), 0, ntPath.Buffer);
+        }
         return;
     }
     /* At this point we have made sure that our binary is not present in the cache,
