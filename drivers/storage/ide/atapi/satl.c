@@ -34,7 +34,67 @@ static const UCHAR AtapReadWriteCommandMap[12][2] =
     { 0,                                  0                             }, // DMA
 };
 
+#define ATA_DSM_TRIM_FEATURE             0x01
+#define ATA_DSM_BLOCK_SIZE               512
+#define ATA_DSM_RANGE_SIZE               8
+#define ATA_DSM_RANGES_PER_BLOCK         (ATA_DSM_BLOCK_SIZE / ATA_DSM_RANGE_SIZE)
+#define ATA_DSM_MAX_RANGE_SECTORS        0xFFFFUL
+#define ATA_DSM_MAX_UNMAP_LBA_COUNT      (ATA_DSM_RANGES_PER_BLOCK * ATA_DSM_MAX_RANGE_SECTORS)
+
 /* FUNCTIONS ******************************************************************/
+
+BOOLEAN
+AtaDevCanUseDsmTrim(
+    _In_ PATAPORT_DEVICE_EXTENSION DevExt)
+{
+    return AtaDevHasTrimFunction(&DevExt->IdentifyDeviceData) &&
+           (DevExt->Device.DeviceFlags & DEVICE_LBA48) &&
+           !(DevExt->Device.DeviceFlags & (DEVICE_PIO_ONLY |
+                                           DEVICE_PIO_FOR_LBA48_XFER));
+}
+
+static
+USHORT
+AtaReqReadBe16(
+    _In_reads_(2) const UCHAR *Buffer)
+{
+    return ((USHORT)Buffer[0] << 8) | Buffer[1];
+}
+
+static
+ULONG
+AtaReqReadBe32(
+    _In_reads_(4) const UCHAR *Buffer)
+{
+    return ((ULONG)Buffer[0] << 24) |
+           ((ULONG)Buffer[1] << 16) |
+           ((ULONG)Buffer[2] << 8) |
+           Buffer[3];
+}
+
+static
+ULONG64
+AtaReqReadBe64(
+    _In_reads_(8) const UCHAR *Buffer)
+{
+    return ((ULONG64)AtaReqReadBe32(Buffer) << 32) |
+           AtaReqReadBe32(Buffer + 4);
+}
+
+static
+VOID
+AtaReqWriteLe64(
+    _Out_writes_(8) UCHAR *Buffer,
+    _In_ ULONG64 Value)
+{
+    ULONG i;
+
+    for (i = 0; i < 8; ++i)
+    {
+        Buffer[i] = (UCHAR)Value;
+        Value >>= 8;
+    }
+}
 
 static
 inline
@@ -816,15 +876,12 @@ AtaReqCompleteReadCapacity(
         CapacityData->LowestAlignedBlock_MSB = (UCHAR)(LowestAlignedBlock >> 8);
         CapacityData->LowestAlignedBlock_LSB = (UCHAR)LowestAlignedBlock;
 
-        if (AtaDevHasTrimFunction(&DevExt->IdentifyDeviceData))
+        if (AtaDevCanUseDsmTrim(DevExt))
         {
-            if (AtaDevHasDratFunction(&DevExt->IdentifyDeviceData))
-            {
-                CapacityData->LBPME = 1;
+            CapacityData->LBPME = 1;
 
-                if (AtaDevHasRzatFunction(&DevExt->IdentifyDeviceData))
-                    CapacityData->LBPRZ = 1;
-            }
+            if (AtaDevHasRzatFunction(&DevExt->IdentifyDeviceData))
+                CapacityData->LBPRZ = 1;
         }
 
         Length = CdbGetAllocationLength16((PCDB)Srb->Cdb);
@@ -1436,21 +1493,21 @@ AtaReqScsiInquiryBlockLimits(
     BlockLimitsPage->PageLength[0] = (UCHAR)(PageLength >> 8);
     BlockLimitsPage->PageLength[1] = (UCHAR)PageLength;
 
-    // TODO: Implement
-#if 0
-    if (AtaDevHasTrimFunction(&DevExt->IdentifyDeviceData))
+    if (AtaDevCanUseDsmTrim(DevExt))
     {
-        BlockLimitsPage->MaximumUnmapLBACount[0] = 0;
-        BlockLimitsPage->MaximumUnmapLBACount[1] = 0;
-        BlockLimitsPage->MaximumUnmapLBACount[2] = 0;
-        BlockLimitsPage->MaximumUnmapLBACount[4] = 0;
+        BlockLimitsPage->MaximumUnmapLBACount[0] =
+            (UCHAR)(ATA_DSM_MAX_UNMAP_LBA_COUNT >> 24);
+        BlockLimitsPage->MaximumUnmapLBACount[1] =
+            (UCHAR)(ATA_DSM_MAX_UNMAP_LBA_COUNT >> 16);
+        BlockLimitsPage->MaximumUnmapLBACount[2] =
+            (UCHAR)(ATA_DSM_MAX_UNMAP_LBA_COUNT >> 8);
+        BlockLimitsPage->MaximumUnmapLBACount[3] =
+            (UCHAR)ATA_DSM_MAX_UNMAP_LBA_COUNT;
 
-        BlockLimitsPage->MaximumUnmapBlockDescriptorCount[0] = 0;
-        BlockLimitsPage->MaximumUnmapBlockDescriptorCount[1] = 0;
-        BlockLimitsPage->MaximumUnmapBlockDescriptorCount[2] = 0;
-        BlockLimitsPage->MaximumUnmapBlockDescriptorCount[3] = 0;
+        /* One SCSI descriptor can expand to at most one 512-byte DSM block. */
+        BlockLimitsPage->MaximumUnmapBlockDescriptorCount[3] = 1;
+        BlockLimitsPage->OptimalUnmapGranularity[3] = 1;
     }
-#endif
 
     return sizeof(*BlockLimitsPage);
 }
@@ -1489,14 +1546,9 @@ AtaReqScsiInquiryLogicalBlockProvisioning(
         FIELD_OFFSET(VPD_LOGICAL_BLOCK_PROVISIONING_PAGE, ProvisioningGroupDescr) -
         RTL_SIZEOF_THROUGH_FIELD(VPD_LOGICAL_BLOCK_PROVISIONING_PAGE, PageLength);
 
-    if (AtaDevHasTrimFunction(&DevExt->IdentifyDeviceData))
+    if (AtaDevCanUseDsmTrim(DevExt))
     {
-        // TODO: Implement
-#if 0
         LogicalBlockProvisioningPage->LBPU = 1; // UNMAP
-        LogicalBlockProvisioningPage->LBPWS = 1; // WRITE SAME (16) + UNMAP
-        LogicalBlockProvisioningPage->LBPWS10 = 1; // WRITE SAME (10) + UNMAP
-#endif
 
         if (AtaDevHasDratFunction(&DevExt->IdentifyDeviceData))
             LogicalBlockProvisioningPage->ANC_SUP = 1;
@@ -1907,6 +1959,233 @@ AtaReqScsiAtaPassThrough(
 }
 
 static
+NTSTATUS
+AtaReqMapSrbDataBuffer(
+    _In_ PATA_DEVICE_REQUEST Request,
+    _Out_ PVOID *DataBuffer,
+    _Out_ PULONG DataLength)
+{
+    PMDL Mdl;
+    PVOID BaseAddress;
+    PVOID MdlAddress;
+    ULONG MdlLength;
+    ULONG_PTR BufferOffset;
+
+    *DataBuffer = NULL;
+    *DataLength = 0;
+
+    if (Request->Irp == NULL ||
+        Request->Srb == NULL ||
+        Request->Srb->DataBuffer == NULL)
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    Mdl = Request->Irp->MdlAddress;
+    if (Mdl == NULL)
+        return STATUS_INVALID_PARAMETER;
+
+    MdlAddress = MmGetMdlVirtualAddress(Mdl);
+    if ((ULONG_PTR)Request->Srb->DataBuffer < (ULONG_PTR)MdlAddress)
+        return STATUS_INVALID_PARAMETER;
+
+    BufferOffset = (ULONG_PTR)Request->Srb->DataBuffer -
+                   (ULONG_PTR)MdlAddress;
+    MdlLength = MmGetMdlByteCount(Mdl);
+    if (BufferOffset > MdlLength)
+        return STATUS_INVALID_PARAMETER;
+
+    BaseAddress = MmGetSystemAddressForMdlSafe(Mdl, HighPagePriority);
+    if (BaseAddress == NULL)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
+    *DataBuffer = (PUCHAR)BaseAddress + BufferOffset;
+    *DataLength = MdlLength - (ULONG)BufferOffset;
+    return STATUS_SUCCESS;
+}
+
+static
+ATA_COMPLETION_ACTION
+AtaReqCompleteUnmap(
+    _In_ PATA_DEVICE_REQUEST Request)
+{
+    if (SRB_STATUS(Request->SrbStatus) == SRB_STATUS_SUCCESS)
+    {
+        Request->DataTransferLength =
+            AtaReqReadBe16(((PCDB)Request->Srb->Cdb)->UNMAP.AllocationLength);
+    }
+    else
+    {
+        Request->DataTransferLength = 0;
+    }
+
+    return COMPLETE_IRP;
+}
+
+static
+UCHAR
+AtaReqScsiUnmap(
+    _In_ PATAPORT_DEVICE_EXTENSION DevExt,
+    _In_ PATA_DEVICE_REQUEST Request,
+    _In_ PSCSI_REQUEST_BLOCK Srb)
+{
+    PCDB Cdb = (PCDB)Srb->Cdb;
+    PUNMAP_LIST_HEADER Header;
+    PUNMAP_BLOCK_DESCRIPTOR Descriptor;
+    PATA_TASKFILE TaskFile = &Request->TaskFile;
+    PUCHAR SourceBuffer;
+    PUCHAR DsmBuffer;
+    ULONG DescriptorBytes;
+    ULONG DescriptorCount;
+    ULONG EntryCount = 0;
+    ULONG SourceBufferLength;
+    ULONG i;
+    USHORT ParameterLength;
+    USHORT DataLength;
+    NTSTATUS Status;
+
+    if (!AtaDevCanUseDsmTrim(DevExt))
+        return AtaReqTerminateInvalidOpCode(Srb);
+
+    if (Cdb->UNMAP.Anchor || Cdb->UNMAP.GroupNumber != 0)
+        return AtaReqTerminateInvalidField(Srb);
+
+    if (!(Srb->SrbFlags & SRB_FLAGS_DATA_OUT) ||
+        (Srb->SrbFlags & SRB_FLAGS_DATA_IN))
+    {
+        return AtaReqTerminateInvalidField(Srb);
+    }
+
+    ParameterLength = AtaReqReadBe16(Cdb->UNMAP.AllocationLength);
+    if (ParameterLength == 0)
+    {
+        Request->DataTransferLength = 0;
+        return SRB_STATUS_SUCCESS;
+    }
+
+    if (ParameterLength < sizeof(UNMAP_LIST_HEADER) ||
+        ParameterLength > Srb->DataTransferLength)
+    {
+        return AtaReqTerminateInvalidFieldParameter(Srb);
+    }
+
+    Status = AtaReqMapSrbDataBuffer(Request,
+                                    (PVOID *)&SourceBuffer,
+                                    &SourceBufferLength);
+    if (!NT_SUCCESS(Status))
+    {
+        if (Status == STATUS_INVALID_PARAMETER)
+            return AtaReqTerminateInvalidFieldParameter(Srb);
+
+        return SRB_STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    if (ParameterLength > SourceBufferLength)
+        return AtaReqTerminateInvalidFieldParameter(Srb);
+
+    Header = (PUNMAP_LIST_HEADER)SourceBuffer;
+    DataLength = AtaReqReadBe16(Header->DataLength);
+    DescriptorBytes = AtaReqReadBe16(Header->BlockDescrDataLength);
+
+    if (DataLength < 6 ||
+        DataLength + FIELD_OFFSET(UNMAP_LIST_HEADER, BlockDescrDataLength) != ParameterLength ||
+        DescriptorBytes != DataLength - 6 ||
+        (DescriptorBytes % sizeof(UNMAP_BLOCK_DESCRIPTOR)) != 0 ||
+        FIELD_OFFSET(UNMAP_LIST_HEADER, Descriptors) + DescriptorBytes > ParameterLength)
+    {
+        return AtaReqTerminateInvalidFieldParameter(Srb);
+    }
+
+    DescriptorCount = DescriptorBytes / sizeof(UNMAP_BLOCK_DESCRIPTOR);
+    Descriptor = &Header->Descriptors[0];
+
+    /* Validate the complete SCSI parameter list before allocating ATA state. */
+    for (i = 0; i < DescriptorCount; ++i)
+    {
+        ULONG64 Lba;
+        ULONG SectorCount;
+        ULONG RequiredEntries;
+
+        Lba = AtaReqReadBe64(Descriptor[i].StartingLba);
+        SectorCount = AtaReqReadBe32(Descriptor[i].LbaCount);
+
+        if (SectorCount == 0)
+            continue;
+
+        if (Lba >= ATA_MAX_LBA_48 ||
+            SectorCount > ATA_MAX_LBA_48 - Lba ||
+            Lba + SectorCount > DevExt->Device.TotalSectors)
+        {
+            return AtaReqTerminateInvalidFieldParameter(Srb);
+        }
+
+        RequiredEntries = ((SectorCount - 1) / ATA_DSM_MAX_RANGE_SECTORS) + 1;
+        if (RequiredEntries > ATA_DSM_RANGES_PER_BLOCK - EntryCount)
+            return AtaReqTerminateInvalidFieldParameter(Srb);
+
+        EntryCount += RequiredEntries;
+    }
+
+    if (EntryCount == 0)
+    {
+        Request->DataTransferLength = ParameterLength;
+        return SRB_STATUS_SUCCESS;
+    }
+
+    DsmBuffer = ExAllocatePoolZero(NonPagedPool, ATA_DSM_BLOCK_SIZE, ATAPORT_TAG);
+    if (DsmBuffer == NULL)
+        return SRB_STATUS_INSUFFICIENT_RESOURCES;
+
+    Request->DataBuffer = DsmBuffer;
+    Request->DataTransferLength = ATA_DSM_BLOCK_SIZE;
+    Request->Flags = REQUEST_FLAG_OWNS_DATA_BUFFER;
+
+    EntryCount = 0;
+    for (i = 0; i < DescriptorCount; ++i)
+    {
+        ULONG64 Lba;
+        ULONG SectorCount;
+
+        Lba = AtaReqReadBe64(Descriptor[i].StartingLba);
+        SectorCount = AtaReqReadBe32(Descriptor[i].LbaCount);
+
+        while (SectorCount != 0)
+        {
+            ULONG Chunk;
+            ULONG64 Entry;
+
+            Chunk = min(SectorCount, ATA_DSM_MAX_RANGE_SECTORS);
+            Entry = Lba | ((ULONG64)Chunk << 48);
+            AtaReqWriteLe64(&DsmBuffer[EntryCount * ATA_DSM_RANGE_SIZE], Entry);
+
+            ++EntryCount;
+            Lba += Chunk;
+            SectorCount -= Chunk;
+        }
+    }
+
+    if (!AtaReqAllocateMdl(Request))
+    {
+        Request->DataTransferLength = 0;
+        return SRB_STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    Request->Flags |= REQUEST_DMA_FLAGS |
+                      REQUEST_FLAG_DATA_OUT |
+                      REQUEST_FLAG_LBA48 |
+                      REQUEST_FLAG_SET_DEVICE_REGISTER;
+
+    RtlZeroMemory(TaskFile, sizeof(*TaskFile));
+    TaskFile->Command = IDE_COMMAND_DATA_SET_MANAGEMENT;
+    TaskFile->Feature = ATA_DSM_TRIM_FEATURE;
+    TaskFile->SectorCount = 1;
+    TaskFile->DriveSelect = DevExt->Device.DeviceSelect | IDE_LBA_MODE;
+
+    Request->Complete = AtaReqCompleteUnmap;
+    return SRB_STATUS_PENDING;
+}
+
+static
 UCHAR
 AtaReqExecuteScsiAta(
     _In_ PATAPORT_DEVICE_EXTENSION DevExt,
@@ -1977,6 +2256,9 @@ AtaReqExecuteScsiAta(
         case SCSIOP_VERIFY12:
         case SCSIOP_VERIFY16:
             return AtaReqScsiVerify(DevExt, Request, Srb);
+
+        case SCSIOP_UNMAP:
+            return AtaReqScsiUnmap(DevExt, Request, Srb);
 
         case SCSIOP_ATA_PASSTHROUGH12:
         case SCSIOP_ATA_PASSTHROUGH16:
