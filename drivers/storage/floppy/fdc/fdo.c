@@ -75,6 +75,9 @@ FdcFdoStartDevice(
         return STATUS_REVISION_MISMATCH;
     }
 
+    DeviceExtension->ControllerInfo.PortAddressValid = FALSE;
+    DeviceExtension->ControllerInfo.PortAddress.QuadPart = 0;
+
     for (i = 0; i < ResourceList->List[0].PartialResourceList.Count; i++)
     {
         PartialDescriptor = &ResourceList->List[0].PartialResourceList.PartialDescriptors[i];
@@ -86,8 +89,12 @@ FdcFdoStartDevice(
                 DPRINT("Port: 0x%lx (%lu)\n",
                         PartialDescriptor->u.Port.Start.u.LowPart,
                         PartialDescriptor->u.Port.Length);
-                if (PartialDescriptor->u.Port.Length >= 6)
-                    DeviceExtension->ControllerInfo.BaseAddress = (PUCHAR)(ULONG_PTR)PartialDescriptor->u.Port.Start.QuadPart;
+                if (!DeviceExtension->ControllerInfo.PortAddressValid ||
+                    PartialDescriptor->u.Port.Start.QuadPart < DeviceExtension->ControllerInfo.PortAddress.QuadPart)
+                {
+                    DeviceExtension->ControllerInfo.PortAddress = PartialDescriptor->u.Port.Start;
+                    DeviceExtension->ControllerInfo.PortAddressValid = TRUE;
+                }
                 break;
 
             case CmResourceTypeInterrupt:
@@ -142,6 +149,8 @@ FdcFdoConfigCallback(
     PFDO_DEVICE_EXTENSION DeviceExtension;
     PDRIVE_INFO DriveInfo;
     BOOLEAN ControllerFound = FALSE;
+    ULONG64 PortAddress;
+    ULONG64 PortRangeStart;
     ULONG i;
 
     DPRINT("FdcFdoConfigCallback() called\n");
@@ -149,6 +158,14 @@ FdcFdoConfigCallback(
     DeviceExtension = (PFDO_DEVICE_EXTENSION)Context;
 
     /* Get the controller resources */
+    if (ControllerInformation == NULL ||
+        ControllerInformation[IoQueryDeviceConfigurationData] == NULL)
+    {
+        DPRINT1("Ignoring controller %lu: no configuration data\n",
+                ControllerNumber);
+        return STATUS_SUCCESS;
+    }
+
     ControllerFullDescriptor = ControllerInformation[IoQueryDeviceConfigurationData];
     ControllerResourceDescriptor = (PCM_FULL_RESOURCE_DESCRIPTOR)((PCHAR)ControllerFullDescriptor +
                                                                   ControllerFullDescriptor->DataOffset);
@@ -157,11 +174,23 @@ FdcFdoConfigCallback(
     {
         PartialDescriptor = &ControllerResourceDescriptor->PartialResourceList.PartialDescriptors[i];
 
-        if (PartialDescriptor->Type == CmResourceTypePort)
+        if (PartialDescriptor->Type != CmResourceTypePort ||
+            !DeviceExtension->ControllerInfo.PortAddressValid)
         {
-            if ((PUCHAR)(ULONG_PTR)PartialDescriptor->u.Port.Start.QuadPart == DeviceExtension->ControllerInfo.BaseAddress)
-                ControllerFound = TRUE;
+            continue;
         }
+
+        PortAddress = DeviceExtension->ControllerInfo.PortAddress.QuadPart;
+        PortRangeStart = PartialDescriptor->u.Port.Start.QuadPart;
+
+        if (PortAddress < PortRangeStart ||
+            PortAddress - PortRangeStart >= PartialDescriptor->u.Port.Length)
+        {
+            continue;
+        }
+
+        ControllerFound = TRUE;
+        break;
     }
 
     /* Leave, if the enumerated controller is not the one represented by the FDO */
@@ -169,6 +198,14 @@ FdcFdoConfigCallback(
         return STATUS_SUCCESS;
 
     /* Get the peripheral resources */
+    if (PeripheralInformation == NULL ||
+        PeripheralInformation[IoQueryDeviceConfigurationData] == NULL)
+    {
+        DPRINT1("Ignoring floppy drive %lu: no configuration data\n",
+                PeripheralNumber);
+        return STATUS_SUCCESS;
+    }
+
     PeripheralFullDescriptor = PeripheralInformation[IoQueryDeviceConfigurationData];
     PeripheralResourceDescriptor = (PCM_FULL_RESOURCE_DESCRIPTOR)((PCHAR)PeripheralFullDescriptor +
                                                                   PeripheralFullDescriptor->DataOffset);
@@ -180,6 +217,22 @@ FdcFdoConfigCallback(
 
         if (PartialDescriptor->Type != CmResourceTypeDeviceSpecific)
             continue;
+
+        if (PartialDescriptor->u.DeviceSpecificData.DataSize < sizeof(CM_FLOPPY_DEVICE_DATA))
+        {
+            DPRINT1("Ignoring floppy drive %lu: device-specific data is too small (%lu bytes)\n",
+                    PeripheralNumber,
+                    PartialDescriptor->u.DeviceSpecificData.DataSize);
+            continue;
+        }
+
+        if (DeviceExtension->ControllerInfo.NumberOfDrives >= MAX_DRIVES_PER_CONTROLLER)
+        {
+            DPRINT1("Ignoring floppy drive %lu: controller supports at most %u drives\n",
+                    PeripheralNumber,
+                    MAX_DRIVES_PER_CONTROLLER);
+            continue;
+        }
 
         FloppyDeviceData = (PCM_FLOPPY_DEVICE_DATA)(PartialDescriptor + 1);
 
@@ -275,9 +328,31 @@ PciCreateInstanceIDString(PUNICODE_STRING InstanceID,
 
 
 static
+BOOLEAN
+FdcRelationsContainDeviceObject(
+    IN PDEVICE_RELATIONS Relations,
+    IN PDEVICE_OBJECT DeviceObject)
+{
+    ULONG i;
+
+    if (Relations == NULL)
+        return FALSE;
+
+    for (i = 0; i < Relations->Count; i++)
+    {
+        if (Relations->Objects[i] == DeviceObject)
+            return TRUE;
+    }
+
+    return FALSE;
+}
+
+
+static
 NTSTATUS
 FdcFdoQueryBusRelations(
     IN PDEVICE_OBJECT DeviceObject,
+    IN PDEVICE_RELATIONS ExistingRelations,
     OUT PDEVICE_RELATIONS *DeviceRelations)
 {
     PFDO_DEVICE_EXTENSION FdoDeviceExtension;
@@ -291,34 +366,101 @@ FdcFdoQueryBusRelations(
     WCHAR DeviceNameBuffer[80];
     UNICODE_STRING DeviceName;
     ULONG DeviceNumber = 0;
-    ULONG Size;
+    ULONG ExistingCount;
+    ULONG MissingCount = 0;
+    ULONG AddedCount = 0;
+    ULONG TotalCount;
+    SIZE_T Size;
     ULONG i;
     NTSTATUS Status;
 
     DPRINT("FdcFdoQueryBusRelations() called\n");
 
     FdoDeviceExtension = (PFDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+    *DeviceRelations = ExistingRelations;
 
-    Status = IoQueryDeviceDescription(&InterfaceType,
-                                      NULL,
-                                      &ControllerType,
-                                      NULL,
-                                      &PeripheralType,
-                                      NULL,
-                                      FdcFdoConfigCallback,
-                                      FdoDeviceExtension);
-    if (!NT_SUCCESS(Status) && (Status != STATUS_NO_MORE_ENTRIES))
-        return Status;
+    if (!FdoDeviceExtension->ControllerInfo.Populated)
+    {
+        FdoDeviceExtension->ControllerInfo.NumberOfDrives = 0;
 
-    Size = sizeof(DEVICE_RELATIONS) +
-           sizeof(Relations->Objects) * (FdoDeviceExtension->ControllerInfo.NumberOfDrives - 1);
-    Relations = (PDEVICE_RELATIONS)ExAllocatePool(PagedPool, Size);
+        Status = IoQueryDeviceDescription(&InterfaceType,
+                                          NULL,
+                                          &ControllerType,
+                                          NULL,
+                                          &PeripheralType,
+                                          NULL,
+                                          FdcFdoConfigCallback,
+                                          FdoDeviceExtension);
+        if (!NT_SUCCESS(Status) && (Status != STATUS_NO_MORE_ENTRIES))
+            return Status;
+
+        FdoDeviceExtension->ControllerInfo.Populated = TRUE;
+    }
+
+    ExistingCount = (ExistingRelations != NULL) ? ExistingRelations->Count : 0;
+
+    for (i = 0; i < FdoDeviceExtension->ControllerInfo.NumberOfDrives; i++)
+    {
+        DriveInfo = &FdoDeviceExtension->ControllerInfo.DriveInfo[i];
+        if (DriveInfo->DeviceObject == NULL ||
+            !FdcRelationsContainDeviceObject(ExistingRelations, DriveInfo->DeviceObject))
+        {
+            MissingCount++;
+        }
+    }
+
+    if (MissingCount == 0)
+    {
+        if (ExistingRelations != NULL)
+        {
+            for (i = 0; i < FdoDeviceExtension->ControllerInfo.NumberOfDrives; i++)
+            {
+                DriveInfo = &FdoDeviceExtension->ControllerInfo.DriveInfo[i];
+                if (DriveInfo->DeviceObject != NULL)
+                {
+                    PdoDeviceExtension = (PPDO_DEVICE_EXTENSION)DriveInfo->DeviceObject->DeviceExtension;
+                    PdoDeviceExtension->ReportedPresent = TRUE;
+                }
+            }
+
+            return STATUS_SUCCESS;
+        }
+
+        Relations = ExAllocatePoolWithTag(PagedPool,
+                                          FIELD_OFFSET(DEVICE_RELATIONS, Objects),
+                                          FDC_TAG);
+        if (Relations == NULL)
+            return STATUS_INSUFFICIENT_RESOURCES;
+
+        Relations->Count = 0;
+        *DeviceRelations = Relations;
+        return STATUS_SUCCESS;
+    }
+
+    if (ExistingCount > MAXULONG - MissingCount)
+        return STATUS_INTEGER_OVERFLOW;
+
+    TotalCount = ExistingCount + MissingCount;
+    if (TotalCount > ((MAXULONG - FIELD_OFFSET(DEVICE_RELATIONS, Objects)) /
+                      sizeof(PDEVICE_OBJECT)))
+    {
+        return STATUS_INTEGER_OVERFLOW;
+    }
+
+    Size = FIELD_OFFSET(DEVICE_RELATIONS, Objects) +
+           ((SIZE_T)TotalCount * sizeof(PDEVICE_OBJECT));
+    Relations = ExAllocatePoolWithTag(PagedPool, Size, FDC_TAG);
     if (Relations == NULL)
     {
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-    Relations->Count = FdoDeviceExtension->ControllerInfo.NumberOfDrives;
+    if (ExistingCount != 0)
+    {
+        RtlCopyMemory(Relations->Objects,
+                      ExistingRelations->Objects,
+                      ExistingCount * sizeof(PDEVICE_OBJECT));
+    }
 
     for (i = 0; i < FdoDeviceExtension->ControllerInfo.NumberOfDrives; i++)
     {
@@ -326,6 +468,8 @@ FdcFdoQueryBusRelations(
 
         if (DriveInfo->DeviceObject == NULL)
         {
+            Pdo = NULL;
+
             do
             {
                 _swprintf(DeviceNameBuffer, L"\\Device\\FloppyPDO%lu", DeviceNumber++);
@@ -351,8 +495,6 @@ FdcFdoQueryBusRelations(
 
             DPRINT("PDO created: %S\n", DeviceNameBuffer);
 
-            DriveInfo->DeviceObject = Pdo;
-
             PdoDeviceExtension = (PPDO_DEVICE_EXTENSION)Pdo->DeviceExtension;
             RtlZeroMemory(PdoDeviceExtension, sizeof(PDO_DEVICE_EXTENSION));
 
@@ -362,31 +504,27 @@ FdcFdoQueryBusRelations(
             PdoDeviceExtension->Fdo = FdoDeviceExtension->Common.DeviceObject;
             PdoDeviceExtension->DriveInfo = DriveInfo;
 
-            Pdo->Flags |= DO_DIRECT_IO;
-            Pdo->Flags |= DO_POWER_PAGABLE;
-            Pdo->Flags &= ~DO_DEVICE_INITIALIZING;
-
             /* Add Device ID string */
-            RtlCreateUnicodeString(&PdoDeviceExtension->DeviceId,
-                                   L"FDC\\GENERIC_FLOPPY_DRIVE");
+            if (!RtlCreateUnicodeString(&PdoDeviceExtension->DeviceId,
+                                        L"FDC\\GENERIC_FLOPPY_DRIVE"))
+            {
+                Status = STATUS_INSUFFICIENT_RESOURCES;
+                goto free_pdo;
+            }
             DPRINT("DeviceID: %S\n", PdoDeviceExtension->DeviceId.Buffer);
 
             /* Add Hardware IDs string */
             Status = PciCreateHardwareIDsString(&PdoDeviceExtension->HardwareIds);
             if (!NT_SUCCESS(Status))
             {
-//                ErrorStatus = Status;
-//                ErrorOccurred = TRUE;
-                break;
+                goto free_pdo;
             }
 
             /* Add Compatible IDs string */
             Status = PciCreateCompatibleIDsString(&PdoDeviceExtension->CompatibleIds);
             if (!NT_SUCCESS(Status))
             {
-//                ErrorStatus = Status;
-//                ErrorOccurred = TRUE;
-                break;
+                goto free_pdo;
             }
 
             /* Add Instance ID string */
@@ -394,9 +532,7 @@ FdcFdoQueryBusRelations(
                                                DriveInfo->PeripheralNumber);
             if (!NT_SUCCESS(Status))
             {
-//                ErrorStatus = Status;
-//                ErrorOccurred = TRUE;
-                break;
+                goto free_pdo;
             }
 
 #if 0
@@ -418,22 +554,57 @@ FdcFdoQueryBusRelations(
                 break;
             }
 #endif
+
+            Pdo->Flags |= DO_DIRECT_IO;
+            Pdo->Flags |= DO_POWER_PAGABLE;
+            Pdo->Flags &= ~DO_DEVICE_INITIALIZING;
+
+            DriveInfo->DeviceObject = Pdo;
         }
 
+        if (FdcRelationsContainDeviceObject(ExistingRelations, DriveInfo->DeviceObject))
+            continue;
+
         ObReferenceObject(DriveInfo->DeviceObject);
-        Relations->Objects[i] = DriveInfo->DeviceObject;
+        Relations->Objects[ExistingCount + AddedCount] = DriveInfo->DeviceObject;
+        AddedCount++;
     }
 
+    ASSERT(AddedCount == MissingCount);
+    Relations->Count = ExistingCount + AddedCount;
+
+    /* Only publish PDO presence after the complete relations query succeeds. */
+    for (i = 0; i < FdoDeviceExtension->ControllerInfo.NumberOfDrives; i++)
+    {
+        DriveInfo = &FdoDeviceExtension->ControllerInfo.DriveInfo[i];
+        if (DriveInfo->DeviceObject != NULL)
+        {
+            PdoDeviceExtension = (PPDO_DEVICE_EXTENSION)DriveInfo->DeviceObject->DeviceExtension;
+            PdoDeviceExtension->ReportedPresent = TRUE;
+        }
+    }
+
+    if (ExistingRelations != NULL)
+        ExFreePool(ExistingRelations);
+
+    *DeviceRelations = Relations;
+    return STATUS_SUCCESS;
+
+free_pdo:
+    RtlFreeUnicodeString(&PdoDeviceExtension->DeviceId);
+    RtlFreeUnicodeString(&PdoDeviceExtension->HardwareIds);
+    RtlFreeUnicodeString(&PdoDeviceExtension->CompatibleIds);
+    RtlFreeUnicodeString(&PdoDeviceExtension->InstanceId);
+    IoDeleteDevice(Pdo);
+
 done:
-    if (NT_SUCCESS(Status))
+    while (AddedCount != 0)
     {
-        *DeviceRelations = Relations;
+        AddedCount--;
+        ObDereferenceObject(Relations->Objects[ExistingCount + AddedCount]);
     }
-    else
-    {
-        if (Relations != NULL)
-            ExFreePool(Relations);
-    }
+
+    ExFreePool(Relations);
 
     return Status;
 }
@@ -448,12 +619,15 @@ FdcFdoPnp(
     PFDO_DEVICE_EXTENSION FdoExtension;
     PIO_STACK_LOCATION IrpSp;
     PDEVICE_RELATIONS DeviceRelations = NULL;
-    ULONG_PTR Information = 0;
+    PDEVICE_OBJECT Pdo;
+    ULONG_PTR Information;
     NTSTATUS Status = STATUS_NOT_SUPPORTED;
+    ULONG i;
 
     DPRINT("FdcFdoPnp()\n");
 
     IrpSp = IoGetCurrentIrpStackLocation(Irp);
+    Information = Irp->IoStatus.Information;
 
     switch (IrpSp->MinorFunction)
     {
@@ -479,27 +653,48 @@ FdcFdoPnp(
 
         case IRP_MN_QUERY_REMOVE_DEVICE:
             DPRINT("  IRP_MN_QUERY_REMOVE_DEVICE\n");
-            break;
+            Irp->IoStatus.Status = STATUS_SUCCESS;
+            return ForwardIrpAndForget(DeviceObject, Irp);
 
         case IRP_MN_REMOVE_DEVICE:
             DPRINT("  IRP_MN_REMOVE_DEVICE received\n");
-            break;
+            FdoExtension = DeviceObject->DeviceExtension;
+
+            for (i = 0; i < FdoExtension->ControllerInfo.NumberOfDrives; i++)
+            {
+                Pdo = FdoExtension->ControllerInfo.DriveInfo[i].DeviceObject;
+                if (Pdo != NULL)
+                    FdcPdoDeleteDevice(Pdo);
+            }
+
+            /* The lower stack owns the remove IRP after we forward it. */
+            Irp->IoStatus.Status = STATUS_SUCCESS;
+            IoSkipCurrentIrpStackLocation(Irp);
+            Status = IoCallDriver(FdoExtension->LowerDevice, Irp);
+
+            IoDetachDevice(FdoExtension->LowerDevice);
+            IoDeleteDevice(DeviceObject);
+            return Status;
 
         case IRP_MN_CANCEL_REMOVE_DEVICE:
             DPRINT("  IRP_MN_CANCEL_REMOVE_DEVICE\n");
-            break;
+            Irp->IoStatus.Status = STATUS_SUCCESS;
+            return ForwardIrpAndForget(DeviceObject, Irp);
 
         case IRP_MN_STOP_DEVICE:
             DPRINT("  IRP_MN_STOP_DEVICE received\n");
-            break;
+            Irp->IoStatus.Status = STATUS_SUCCESS;
+            return ForwardIrpAndForget(DeviceObject, Irp);
 
         case IRP_MN_QUERY_STOP_DEVICE:
             DPRINT("  IRP_MN_QUERY_STOP_DEVICE received\n");
-            break;
+            Irp->IoStatus.Status = STATUS_SUCCESS;
+            return ForwardIrpAndForget(DeviceObject, Irp);
 
         case IRP_MN_CANCEL_STOP_DEVICE:
             DPRINT("  IRP_MN_CANCEL_STOP_DEVICE\n");
-            break;
+            Irp->IoStatus.Status = STATUS_SUCCESS;
+            return ForwardIrpAndForget(DeviceObject, Irp);
 
         case IRP_MN_QUERY_DEVICE_RELATIONS:
             DPRINT("  IRP_MN_QUERY_DEVICE_RELATIONS\n");
@@ -508,8 +703,15 @@ FdcFdoPnp(
             {
                 case BusRelations:
                     DPRINT("    IRP_MJ_PNP / IRP_MN_QUERY_DEVICE_RELATIONS / BusRelations\n");
-                    Status = FdcFdoQueryBusRelations(DeviceObject, &DeviceRelations);
-                    Information = (ULONG_PTR)DeviceRelations;
+                    Status = FdcFdoQueryBusRelations(DeviceObject,
+                                                     (PDEVICE_RELATIONS)Information,
+                                                     &DeviceRelations);
+                    if (NT_SUCCESS(Status))
+                    {
+                        Irp->IoStatus.Information = (ULONG_PTR)DeviceRelations;
+                        Irp->IoStatus.Status = STATUS_SUCCESS;
+                        return ForwardIrpAndForget(DeviceObject, Irp);
+                    }
                     break;
 
                 case RemovalRelations:
@@ -525,7 +727,8 @@ FdcFdoPnp(
 
         case IRP_MN_SURPRISE_REMOVAL:
             DPRINT("  IRP_MN_SURPRISE_REMOVAL received\n");
-            break;
+            Irp->IoStatus.Status = STATUS_SUCCESS;
+            return ForwardIrpAndForget(DeviceObject, Irp);
 
         default:
             DPRINT("  Unknown IOCTL 0x%lx\n", IrpSp->MinorFunction);
