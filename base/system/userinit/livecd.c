@@ -332,6 +332,16 @@ SelectKeyboardForLanguage(
     }
 
     TRACE("No match found!\n");
+    /* No match found, try selecting English (United States) */
+    for (i = 0; i < nCount; i++)
+    {
+        ulLayoutId = (DWORD)SendMessageW(hwnd, CB_GETITEMDATA, i, 0);
+        if (ulLayoutId == 0x00000409)
+        {
+            SendMessageW(hwnd, CB_SETCURSEL, i, 0);
+            return;
+        }
+    }
 }
 
 static
