@@ -373,7 +373,7 @@ CreateKeyboardLayoutList(
         ulLayoutId = wcstoul(szKLID, NULL, 16);
         SendMessageW(hItemsList, CB_SETITEMDATA, iIndex, (LPARAM)ulLayoutId);
 
-        if (wcscmp(szKLID, szCurrentKLID) == 0)
+        if (_wcsicmp(szKLID, szCurrentKLID) == 0)
             SendMessageW(hItemsList, CB_SETCURSEL, (WPARAM)iIndex, (LPARAM)0);
     }
 
