@@ -205,67 +205,69 @@ CreateLanguagesList(HWND hwnd, PSTATE pState)
 static
 BOOL
 GetLayoutName(
-    LPCWSTR szLCID,
-    LPWSTR szName)
+    _In_ PCWSTR pszKLID,
+    _Out_writes_z_(NameSize) PWSTR pszName,
+    _In_ SIZE_T NameSize)
 {
     HKEY hKey;
+    BOOL ret;
     DWORD dwBufLen;
-    WCHAR szBuf[MAX_PATH], szDispName[MAX_PATH], szIndex[MAX_PATH], szPath[MAX_PATH];
-    HANDLE hLib;
-    UINT i, j, k;
+    WCHAR szBuf[1 + MAX_PATH + 2 + 10]; // "@file_path,-resID"
+    WCHAR szPath[MAX_PATH];
 
-    wsprintf(szBuf, L"SYSTEM\\CurrentControlSet\\Control\\Keyboard Layouts\\%s", szLCID);
+    if (NameSize < sizeof(WCHAR))
+        return FALSE;
+    *pszName = UNICODE_NULL;
 
-    if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, szBuf, 0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS)
+    StringCchPrintfW(szBuf, _countof(szBuf), L"SYSTEM\\CurrentControlSet\\Control\\Keyboard Layouts\\%s", pszKLID);
+    if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, szBuf, 0, KEY_QUERY_VALUE, &hKey) != ERROR_SUCCESS)
+        return FALSE;
+
+    dwBufLen = sizeof(szBuf);
+    if (RegQueryValueExW(hKey, L"Layout Display Name", NULL, NULL, (PBYTE)szBuf, &dwBufLen) == ERROR_SUCCESS)
     {
-        dwBufLen = sizeof(szDispName);
-
-        if (RegQueryValueExW(hKey, L"Layout Display Name", NULL, NULL, (LPBYTE)szDispName, &dwBufLen) == ERROR_SUCCESS)
+        if (szBuf[0] == L'@') do
         {
-            if (szDispName[0] == '@')
-            {
-                for (i = 0; i < wcslen(szDispName); i++)
-                {
-                    if ((szDispName[i] == ',') && (szDispName[i + 1] == '-'))
-                    {
-                        for (j = i + 2, k = 0; j < wcslen(szDispName)+1; j++, k++)
-                        {
-                            szIndex[k] = szDispName[j];
-                        }
-                        szDispName[i - 1] = '\0';
-                        break;
-                    }
-                    else
-                        szDispName[i] = szDispName[i + 1];
-                }
+            PWCHAR dllname, index_str;
+            INT index;
 
-                if (ExpandEnvironmentStringsW(szDispName, szPath, ARRAYSIZE(szPath)))
+            dllname = szBuf + 1;
+            index_str = wcsrchr(szBuf, L',');
+            if (!index_str)
+                break;
+            *index_str++ = UNICODE_NULL;
+
+            index = wcstol(index_str, NULL, 10);
+            if (index >= 0)
+            {
+                FIXME("Cannot handle non-negative indices (%d)\n", index);
+                break;
+            }
+            index = -index;
+
+            if (ExpandEnvironmentStringsW(dllname, szPath, _countof(szPath)))
+            {
+                HANDLE hLib = LoadLibraryExW(szPath, NULL, LOAD_LIBRARY_AS_DATAFILE);
+                if (hLib)
                 {
-                    hLib = LoadLibraryW(szPath);
-                    if (hLib)
+                    ret = (LoadStringW(hLib, index, szPath, _countof(szPath)) != 0);
+                    FreeLibrary(hLib);
+                    if (ret)
                     {
-                        if (LoadStringW(hLib, _wtoi(szIndex), szPath, ARRAYSIZE(szPath)) != 0)
-                        {
-                            wcscpy(szName, szPath);
-                            RegCloseKey(hKey);
-                            return TRUE;
-                        }
-                        FreeLibrary(hLib);
+                        StringCchCopyW(pszName, NameSize, szPath);
+                        goto Quit;
                     }
                 }
             }
-        }
-
-        dwBufLen = sizeof(szBuf);
-
-        if (RegQueryValueExW(hKey, L"Layout Text", NULL, NULL, (LPBYTE)szName, &dwBufLen) == ERROR_SUCCESS)
-        {
-            RegCloseKey(hKey);
-            return TRUE;
-        }
+        } while (0);
     }
 
-    return FALSE;
+    dwBufLen = NameSize * sizeof(WCHAR);
+    ret = (RegQueryValueExW(hKey, L"Layout Text", NULL, NULL, (PBYTE)pszName, &dwBufLen) == ERROR_SUCCESS);
+
+Quit:
+    RegCloseKey(hKey);
+    return ret;
 }
 
 static
@@ -376,7 +378,7 @@ CreateKeyboardLayoutList(
             break;
         }
 
-        GetLayoutName(szKLID, KeyName);
+        GetLayoutName(szKLID, KeyName, _countof(KeyName));
 
         iIndex = (INT)SendMessageW(hItemsList, CB_ADDSTRING, 0, (LPARAM)KeyName);
 
