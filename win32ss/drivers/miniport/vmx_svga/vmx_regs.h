@@ -1,6 +1,6 @@
 /*
  * PROJECT:         ReactOS
- * LICENSE:         BSD - See COPYING.ARM in the top level directory
+ * LICENSE:         GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * FILE:            win32ss/drivers/miniport/vmx_svga/vmx_regs.h
  * PURPOSE:         VMware SVGA-II virtual hardware definitions
  * PROGRAMMERS:     ReactOS Portable Systems Group
