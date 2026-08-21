@@ -40,6 +40,7 @@ typedef struct _HW_DEVICE_EXTENSION
     PULONG Fifo;
 
     ULONG VramSize;
+    ULONG FrameBufferSize;
     ULONG MemSize;
     ULONG FrameBufferOffset;
     ULONG Capabilities;

@@ -69,12 +69,13 @@
 #define SVGA_FIFO_NEXT_CMD          2
 #define SVGA_FIFO_STOP              3
 #define SVGA_FIFO_CORE_REGS         4
+#define SVGA_FIFO_MIN_COMMAND_BYTES (10 * 1024)
 
 /* Legacy FIFO command used to notify the host about framebuffer damage. */
 #define SVGA_CMD_UPDATE             1
 
-/* Existing driver convention for an NT 5.x Windows-like guest. */
-#define SVGA_GUEST_ID_REACTOS       0x5008
+/* VMware/QEMU guest OS bucket for Windows Server 2003 (NT 5.2). */
+#define SVGA_GUEST_ID_REACTOS       0x5016
 
 typedef enum _VMX_SVGA_REGISTERS
 {

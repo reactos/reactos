@@ -190,6 +190,7 @@ VmxInitDevice(IN PHW_DEVICE_EXTENSION DeviceExtension)
     ULONG FrameBufferStart;
     ULONG FifoStart;
     ULONG RegisterVramSize;
+    ULONG RegisterFrameBufferSize;
     ULONG RegisterMemSize;
 
     DeviceExtension->Version = SVGA_ID_INVALID;
@@ -223,6 +224,7 @@ VmxInitDevice(IN PHW_DEVICE_EXTENSION DeviceExtension)
     VmxReconcileMemoryRanges(DeviceExtension, FrameBufferStart, FifoStart);
 
     RegisterVramSize = VmxReadUlong(DeviceExtension, SVGA_REG_VRAM_SIZE);
+    RegisterFrameBufferSize = VmxReadUlong(DeviceExtension, SVGA_REG_FB_SIZE);
     RegisterMemSize = VmxReadUlong(DeviceExtension, SVGA_REG_MEM_SIZE);
 
     DeviceExtension->VramSize = RegisterVramSize;
@@ -230,6 +232,13 @@ VmxInitDevice(IN PHW_DEVICE_EXTENSION DeviceExtension)
         DeviceExtension->VramSize > DeviceExtension->FrameBuffer.RangeLength)
     {
         DeviceExtension->VramSize = DeviceExtension->FrameBuffer.RangeLength;
+    }
+
+    DeviceExtension->FrameBufferSize = RegisterFrameBufferSize;
+    if (DeviceExtension->FrameBufferSize == 0 ||
+        DeviceExtension->FrameBufferSize > DeviceExtension->VramSize)
+    {
+        DeviceExtension->FrameBufferSize = DeviceExtension->VramSize;
     }
 
     DeviceExtension->MemSize = RegisterMemSize;
@@ -318,6 +327,12 @@ VmxInitializeFifo(IN PHW_DEVICE_EXTENSION DeviceExtension)
     }
 
     Minimum = RegisterCount * sizeof(ULONG);
+    if (DeviceExtension->MemSize - Minimum < SVGA_FIFO_MIN_COMMAND_BYTES)
+    {
+        DPRINT1("VMX: FIFO command area is too small (%lu bytes)\n",
+                DeviceExtension->MemSize - Minimum);
+        return FALSE;
+    }
 
     VmxWriteUlong(DeviceExtension, SVGA_REG_CONFIG_DONE, 0);
     VideoPortWriteRegisterUlong(DeviceExtension->Fifo + SVGA_FIFO_MIN, Minimum);
@@ -382,7 +397,7 @@ VmxInitModes(IN PHW_DEVICE_EXTENSION DeviceExtension)
             continue;
 
         RequiredBytes = (ULONGLONG)Width * Height * BytesPerPixel;
-        if (RequiredBytes > DeviceExtension->VramSize)
+        if (RequiredBytes > DeviceExtension->FrameBufferSize)
             continue;
 
         VmxFillModeInfo(DeviceExtension,
@@ -619,8 +634,8 @@ VmxSetCurrentMode(IN PHW_DEVICE_EXTENSION DeviceExtension,
 
     DeviceExtension->FrameBufferOffset = VmxReadUlong(DeviceExtension, SVGA_REG_FB_OFFSET);
     FrameBufferLength = ModeInfo->ScreenStride * ModeInfo->VisScreenHeight;
-    if (DeviceExtension->FrameBufferOffset > DeviceExtension->VramSize ||
-        FrameBufferLength > DeviceExtension->VramSize - DeviceExtension->FrameBufferOffset)
+    if (DeviceExtension->FrameBufferOffset > DeviceExtension->FrameBufferSize ||
+        FrameBufferLength > DeviceExtension->FrameBufferSize - DeviceExtension->FrameBufferOffset)
     {
         DPRINT1("VMX: mode %lu framebuffer exceeds VRAM\n", ModeIndex);
         VmxWriteUlong(DeviceExtension, SVGA_REG_ENABLE, SVGA_REG_ENABLE_DISABLE);
