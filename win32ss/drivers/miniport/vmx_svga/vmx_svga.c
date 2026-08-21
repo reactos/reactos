@@ -11,7 +11,6 @@
 #define NDEBUG
 #include <debug.h>
 
-PHW_DEVICE_EXTENSION VmxDeviceExtensionArray[SVGA_MAX_DISPLAYS];
 static WCHAR AdapterString[] = L"VMware SVGA II";
 
 typedef struct _VMX_SIZE
@@ -78,6 +77,26 @@ VmxWriteUlong(IN PHW_DEVICE_EXTENSION DeviceExtension,
 {
     VideoPortWritePortUlong(DeviceExtension->IndexPort, Index);
     VideoPortWritePortUlong(DeviceExtension->ValuePort, Value);
+}
+
+static VOID
+VmxFreeAdapterMappings(IN PHW_DEVICE_EXTENSION DeviceExtension)
+{
+    if (DeviceExtension->FifoRange.Mapped)
+    {
+        VideoPortFreeDeviceBase(DeviceExtension, DeviceExtension->FifoRange.Mapped);
+        DeviceExtension->FifoRange.Mapped = NULL;
+        DeviceExtension->Fifo = NULL;
+    }
+
+    if (DeviceExtension->IoPorts.Mapped)
+    {
+        VideoPortFreeDeviceBase(DeviceExtension, DeviceExtension->IoPorts.Mapped);
+        DeviceExtension->IoPorts.Mapped = NULL;
+        DeviceExtension->IndexPort = NULL;
+        DeviceExtension->ValuePort = NULL;
+        DeviceExtension->InterruptPort = NULL;
+    }
 }
 
 static VP_STATUS
@@ -718,9 +737,10 @@ VmxFindAdapter(IN PVOID HwDeviceExtension,
 
     Status = VmxInitDevice(DeviceExtension);
     if (Status != NO_ERROR)
+    {
+        VmxFreeAdapterMappings(DeviceExtension);
         return Status;
-
-    VmxDeviceExtensionArray[0] = DeviceExtension;
+    }
 
     if (VmxIsMultiMon(DeviceExtension))
         DPRINT1("VMX: multiple displays detected; baseline driver exposes the primary display only\n");
@@ -765,12 +785,14 @@ VmxInitialize(IN PVOID HwDeviceExtension)
     if (!VmxInitializeFifo(DeviceExtension))
     {
         DPRINT1("VMX: FIFO initialization failed\n");
+        VmxFreeAdapterMappings(DeviceExtension);
         return FALSE;
     }
 
     if (VmxInitModes(DeviceExtension) == 0)
     {
         DPRINT1("VMX: no usable display modes\n");
+        VmxFreeAdapterMappings(DeviceExtension);
         return FALSE;
     }
 
@@ -990,7 +1012,6 @@ DriverEntry(IN PVOID Context1,
 {
     VIDEO_HW_INITIALIZATION_DATA InitData;
 
-    VideoPortZeroMemory(VmxDeviceExtensionArray, sizeof(VmxDeviceExtensionArray));
     VideoPortZeroMemory(&InitData, sizeof(InitData));
 
     InitData.HwInitDataSize = sizeof(InitData);
