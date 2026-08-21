@@ -7,6 +7,35 @@
 
 #include "kdgdb.h"
 
+const CHAR gdb_target_xml[] =
+    "<?xml version=\"1.0\"?><!DOCTYPE target SYSTEM \"gdb-target.dtd\">"
+    "<target version=\"1.0\"><architecture>i386</architecture>"
+    "<feature name=\"org.gnu.gdb.i386.core\">"
+    "<reg name=\"eax\" bitsize=\"32\" type=\"int32\"/><reg name=\"ecx\" bitsize=\"32\" type=\"int32\"/>"
+    "<reg name=\"edx\" bitsize=\"32\" type=\"int32\"/><reg name=\"ebx\" bitsize=\"32\" type=\"int32\"/>"
+    "<reg name=\"esp\" bitsize=\"32\" type=\"data_ptr\"/><reg name=\"ebp\" bitsize=\"32\" type=\"data_ptr\"/>"
+    "<reg name=\"esi\" bitsize=\"32\" type=\"int32\"/><reg name=\"edi\" bitsize=\"32\" type=\"int32\"/>"
+    "<reg name=\"eip\" bitsize=\"32\" type=\"code_ptr\"/><reg name=\"eflags\" bitsize=\"32\" type=\"uint32\"/>"
+    "<reg name=\"cs\" bitsize=\"32\" type=\"uint32\"/><reg name=\"ss\" bitsize=\"32\" type=\"uint32\"/>"
+    "<reg name=\"ds\" bitsize=\"32\" type=\"uint32\"/><reg name=\"es\" bitsize=\"32\" type=\"uint32\"/>"
+    "<reg name=\"fs\" bitsize=\"32\" type=\"uint32\"/><reg name=\"gs\" bitsize=\"32\" type=\"uint32\"/>"
+    "<reg name=\"st0\" bitsize=\"80\" type=\"i387_ext\"/><reg name=\"st1\" bitsize=\"80\" type=\"i387_ext\"/>"
+    "<reg name=\"st2\" bitsize=\"80\" type=\"i387_ext\"/><reg name=\"st3\" bitsize=\"80\" type=\"i387_ext\"/>"
+    "<reg name=\"st4\" bitsize=\"80\" type=\"i387_ext\"/><reg name=\"st5\" bitsize=\"80\" type=\"i387_ext\"/>"
+    "<reg name=\"st6\" bitsize=\"80\" type=\"i387_ext\"/><reg name=\"st7\" bitsize=\"80\" type=\"i387_ext\"/>"
+    "<reg name=\"fctrl\" bitsize=\"32\" type=\"uint32\"/><reg name=\"fstat\" bitsize=\"32\" type=\"uint32\"/>"
+    "<reg name=\"ftag\" bitsize=\"32\" type=\"uint32\"/><reg name=\"fiseg\" bitsize=\"32\" type=\"uint32\"/>"
+    "<reg name=\"fioff\" bitsize=\"32\" type=\"uint32\"/><reg name=\"foseg\" bitsize=\"32\" type=\"uint32\"/>"
+    "<reg name=\"fooff\" bitsize=\"32\" type=\"uint32\"/><reg name=\"fop\" bitsize=\"32\" type=\"uint32\"/>"
+    "</feature><feature name=\"org.gnu.gdb.i386.sse\">"
+    "<reg name=\"xmm0\" bitsize=\"128\" type=\"uint128\"/><reg name=\"xmm1\" bitsize=\"128\" type=\"uint128\"/>"
+    "<reg name=\"xmm2\" bitsize=\"128\" type=\"uint128\"/><reg name=\"xmm3\" bitsize=\"128\" type=\"uint128\"/>"
+    "<reg name=\"xmm4\" bitsize=\"128\" type=\"uint128\"/><reg name=\"xmm5\" bitsize=\"128\" type=\"uint128\"/>"
+    "<reg name=\"xmm6\" bitsize=\"128\" type=\"uint128\"/><reg name=\"xmm7\" bitsize=\"128\" type=\"uint128\"/>"
+    "<reg name=\"mxcsr\" bitsize=\"32\" type=\"uint32\"/>"
+    "</feature></target>";
+const SIZE_T gdb_target_xml_length = sizeof(gdb_target_xml) - 1;
+
 enum reg_name
 {
     EAX, ECX, EDX, EBX, ESP, EBP, ESI, EDI,
@@ -19,12 +48,27 @@ enum reg_name
     MXCSR
 };
 
-static
-const void*
-ctx_to_reg(CONTEXT* ctx, enum reg_name name, unsigned short* size)
+const UCHAR gdb_reg_size[] =
 {
-    /* For general registers: 32bits */
-    *size = 4;
+    4, 4, 4, 4, 4, 4, 4, 4,
+    4,
+    4,
+    4, 4, 4, 4, 4, 4,
+    10, 10, 10, 10, 10, 10, 10, 10,
+    4, 4, 4, 4, 4, 4, 4, 4,
+    16, 16, 16, 16, 16, 16, 16, 16,
+    4
+};
+const ULONG gdb_reg_count = RTL_NUMBER_OF(gdb_reg_size);
+
+const void*
+gdb_ctx_to_reg(
+    _In_ CONTEXT* ctx,
+    _In_ ULONG Register,
+    _Out_ PULONG ScalarValue)
+{
+    enum reg_name name = (enum reg_name)Register;
+
     switch (name)
     {
     case EAX: return &ctx->Eax;
@@ -52,17 +96,18 @@ ctx_to_reg(CONTEXT* ctx, enum reg_name name, unsigned short* size)
     case ST5:
     case ST6:
     case ST7:
-        *size = 10;
         return &ctx->FloatSave.RegisterArea[10 * (name - ST0)];
     /* X87 registers */
     case FCTRL: return &ctx->FloatSave.ControlWord;
     case FSTAT: return &ctx->FloatSave.StatusWord;
     case FTAG: return &ctx->FloatSave.TagWord;
-    case FISEG: return &ctx->FloatSave.DataSelector;
-    case FIOFF: return &ctx->FloatSave.DataOffset;
-    case FOSEG: return &ctx->FloatSave.ErrorSelector;
-    case FOOFF: return &ctx->FloatSave.ErrorOffset;
-    case FOP: return &ctx->FloatSave.Cr0NpxState;
+    case FISEG: return &ctx->FloatSave.ErrorSelector;
+    case FIOFF: return &ctx->FloatSave.ErrorOffset;
+    case FOSEG: return &ctx->FloatSave.DataSelector;
+    case FOOFF: return &ctx->FloatSave.DataOffset;
+    case FOP:
+        *ScalarValue = *(UNALIGNED USHORT*)&ctx->ExtendedRegisters[6];
+        return ScalarValue;
     /* SSE */
     case XMM0:
     case XMM1:
@@ -72,17 +117,44 @@ ctx_to_reg(CONTEXT* ctx, enum reg_name name, unsigned short* size)
     case XMM5:
     case XMM6:
     case XMM7:
-        *size = 16;
         return &ctx->ExtendedRegisters[160 + (name - XMM0)*16];
     case MXCSR: return &ctx->ExtendedRegisters[24];
     }
     return NULL;
 }
-
-static
-const void*
-thread_to_reg(PETHREAD Thread, enum reg_name reg_name, unsigned short* size)
+BOOLEAN
+gdb_set_ctx_reg(
+    _Inout_ CONTEXT* Context,
+    _In_ ULONG Register,
+    _In_reads_bytes_(Size) const UCHAR* Value,
+    _In_ SIZE_T Size)
 {
+    ULONG ScalarValue;
+    PVOID Storage;
+
+    if (Register >= gdb_reg_count || Size != gdb_reg_size[Register])
+        return FALSE;
+
+    if ((enum reg_name)Register == FOP)
+    {
+        RtlCopyMemory(&ScalarValue, Value, sizeof(ScalarValue));
+        *(UNALIGNED USHORT*)&Context->ExtendedRegisters[6] = (USHORT)ScalarValue;
+        return TRUE;
+    }
+
+    Storage = (PVOID)gdb_ctx_to_reg(Context, Register, &ScalarValue);
+    if (Storage == NULL)
+        return FALSE;
+    RtlCopyMemory(Storage, Value, Size);
+    return TRUE;
+}
+
+const void*
+gdb_thread_to_reg(
+    _In_ PETHREAD Thread,
+    _In_ ULONG Register)
+{
+    enum reg_name reg_name = (enum reg_name)Register;
     static const void* NullValue = NULL;
 
     if (!Thread->Tcb.InitialStack)
@@ -94,7 +166,6 @@ thread_to_reg(PETHREAD Thread, enum reg_name reg_name, unsigned short* size)
             case EBP:
             case EIP:
                 KDDBGPRINT("Returning NULL for register %d.\n", reg_name);
-                *size = 4;
                 return &NullValue;
             default:
                 return NULL;
@@ -105,7 +176,6 @@ thread_to_reg(PETHREAD Thread, enum reg_name reg_name, unsigned short* size)
     {
         PKTRAP_FRAME TrapFrame = Thread->Tcb.TrapFrame;
 
-        *size = 4;
         switch (reg_name)
         {
             case EAX: return &TrapFrame->Eax;
@@ -134,7 +204,6 @@ thread_to_reg(PETHREAD Thread, enum reg_name reg_name, unsigned short* size)
     {
         static PULONG Esp;
         Esp = Thread->Tcb.KernelStack;
-        *size = 4;
         switch (reg_name)
         {
             case EBP: return &Esp[3];
@@ -146,118 +215,4 @@ thread_to_reg(PETHREAD Thread, enum reg_name reg_name, unsigned short* size)
     }
 
     return NULL;
-}
-
-KDSTATUS
-gdb_send_registers(void)
-{
-    CHAR RegisterStr[9];
-    const UCHAR* RegisterPtr;
-    unsigned short i;
-    unsigned short size;
-
-    RegisterStr[8] = '\0';
-
-    start_gdb_packet();
-
-    KDDBGPRINT("Sending registers of thread %" PRIxPTR ".\n", gdb_dbg_tid);
-    KDDBGPRINT("Current thread_id: %p.\n", PsGetThreadId((PETHREAD)(ULONG_PTR)CurrentStateChange.Thread));
-    if (((gdb_dbg_pid == 0) && (gdb_dbg_tid == 0)) ||
-            gdb_tid_to_handle(gdb_dbg_tid) == PsGetThreadId((PETHREAD)(ULONG_PTR)CurrentStateChange.Thread))
-    {
-        for (i = 0; i < 16; i++)
-        {
-            RegisterPtr = ctx_to_reg(&CurrentContext, i, &size);
-            RegisterStr[0] = hex_chars[RegisterPtr[0] >> 4];
-            RegisterStr[1] = hex_chars[RegisterPtr[0] & 0xF];
-            RegisterStr[2] = hex_chars[RegisterPtr[1] >> 4];
-            RegisterStr[3] = hex_chars[RegisterPtr[1] & 0xF];
-            RegisterStr[4] = hex_chars[RegisterPtr[2] >> 4];
-            RegisterStr[5] = hex_chars[RegisterPtr[2] & 0xF];
-            RegisterStr[6] = hex_chars[RegisterPtr[3] >> 4];
-            RegisterStr[7] = hex_chars[RegisterPtr[3] & 0xF];
-
-            send_gdb_partial_packet(RegisterStr);
-        }
-    }
-    else
-    {
-        PETHREAD DbgThread;
-
-        DbgThread = find_thread(gdb_dbg_pid, gdb_dbg_tid);
-
-        if (DbgThread == NULL)
-        {
-            /* Thread is dead */
-            send_gdb_partial_packet("E03");
-            return finish_gdb_packet();
-        }
-
-        for (i = 0; i < 16; i++)
-        {
-            RegisterPtr = thread_to_reg(DbgThread, i, &size);
-            if (RegisterPtr)
-            {
-                RegisterStr[0] = hex_chars[RegisterPtr[0] >> 4];
-                RegisterStr[1] = hex_chars[RegisterPtr[0] & 0xF];
-                RegisterStr[2] = hex_chars[RegisterPtr[1] >> 4];
-                RegisterStr[3] = hex_chars[RegisterPtr[1] & 0xF];
-                RegisterStr[4] = hex_chars[RegisterPtr[2] >> 4];
-                RegisterStr[5] = hex_chars[RegisterPtr[2] & 0xF];
-                RegisterStr[6] = hex_chars[RegisterPtr[3] >> 4];
-                RegisterStr[7] = hex_chars[RegisterPtr[3] & 0xF];
-
-                send_gdb_partial_packet(RegisterStr);
-            }
-            else
-            {
-                send_gdb_partial_packet("xxxxxxxx");
-            }
-        }
-    }
-
-    return finish_gdb_packet();
-}
-
-KDSTATUS
-gdb_send_register(void)
-{
-    enum reg_name reg_name;
-    const void* ptr;
-    unsigned short size;
-
-    /* Get the GDB register name (gdb_input = "pXX") */
-    reg_name = (hex_value(gdb_input[1]) << 4) | hex_value(gdb_input[2]);
-
-    if (((gdb_dbg_pid == 0) && (gdb_dbg_tid == 0)) ||
-            gdb_tid_to_handle(gdb_dbg_tid) == PsGetThreadId((PETHREAD)(ULONG_PTR)CurrentStateChange.Thread))
-    {
-        /* We can get it from the context of the current exception */
-        ptr = ctx_to_reg(&CurrentContext, reg_name, &size);
-    }
-    else
-    {
-        PETHREAD DbgThread;
-
-        DbgThread = find_thread(gdb_dbg_pid, gdb_dbg_tid);
-
-        if (DbgThread == NULL)
-        {
-            /* Thread is dead */
-            return send_gdb_packet("E03");
-        }
-
-        ptr = thread_to_reg(DbgThread, reg_name, &size);
-    }
-
-    if (!ptr)
-    {
-        /* Undefined. Let's assume 32 bit register */
-        return send_gdb_packet("xxxxxxxx");
-    }
-    else
-    {
-        KDDBGPRINT("KDGDB: Sending registers as memory.\n");
-        return send_gdb_memory(ptr, size);
-    }
 }

@@ -724,6 +724,9 @@ MiInitMachineDependent(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     /* Map the PFN database pages */
     MiBuildPfnDatabase(LoaderBlock);
 
+    /* The debugger can now map read-only code pages for owed breakpoints. */
+    KdSetOwedBreakpoints();
+
     /* Reset the ref/share count so that MmInitializeProcessAddressSpace works */
     PMMPFN Pfn = MiGetPfnEntry(PFN_FROM_PTE((PMMPTE)PXE_SELFMAP));
     Pfn->u2.ShareCount = 0;
