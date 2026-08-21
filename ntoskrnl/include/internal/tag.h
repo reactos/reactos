@@ -167,6 +167,7 @@
 #define TAG_SID_AND_ATTRIBUTES  'aSeS'
 #define TAG_SID_VALIDATE        'vSeS'
 #define TAG_DACL                'lcaD'
+#define TAG_LOGON_NOTIFY        'oNoL'
 
 /* LPC Tags */
 #define TAG_LPC_MESSAGE         'McpL'
