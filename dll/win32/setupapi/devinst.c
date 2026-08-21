@@ -569,7 +569,6 @@ SetupDiGetActualModelsSectionW(
     DWORD BestScore1 = ULONG_MAX, BestScore2 = ULONG_MAX;
     DWORD BestScore3 = ULONG_MAX, BestScore4 = ULONG_MAX, BestScore5 = ULONG_MAX;
     DWORD FieldCount, i, dwFullLength;
-    BOOL ret = FALSE;
 
     TRACE("%s(%p %p %p %lu %p %p)\n", __FUNCTION__, Context,
           AlternatePlatformInfo, InfSectionWithExt, InfSectionWithExtSize,
@@ -603,11 +602,11 @@ SetupDiGetActualModelsSectionW(
     }
     else
     {
-        if (CurrentPlatform.cbSize != sizeof(SP_ALTPLATFORM_INFO))
+        if (CurrentPlatform.cbSize != sizeof(CurrentPlatform))
         {
             SYSTEM_INFO SystemInfo;
             GetSystemInfo(&SystemInfo);
-            CurrentPlatform.cbSize = sizeof(SP_ALTPLATFORM_INFO);
+            CurrentPlatform.cbSize = sizeof(CurrentPlatform);
             CurrentPlatform.Platform = OsVersionInfo.dwPlatformId;
             CurrentPlatform.MajorVersion = OsVersionInfo.dwMajorVersion;
             CurrentPlatform.MinorVersion = OsVersionInfo.dwMinorVersion;
@@ -650,7 +649,9 @@ SetupDiGetActualModelsSectionW(
 
         /* CheckSectionValid expects a leading dot */
         if (Decoration[0] == '.')
+        {
             strcpyW(Candidate, Decoration);
+        }
         else
         {
             Candidate[0] = '.';
@@ -659,7 +660,9 @@ SetupDiGetActualModelsSectionW(
 
         if (!CheckSectionValid(Candidate, pPlatformInfo, ProductType, SuiteMask,
                                &Score1, &Score2, &Score3, &Score4, &Score5))
+        {
             continue;
+        }
 
         /* Lower scores are better */
         if (Score1 > BestScore1) continue;
@@ -702,9 +705,8 @@ better:
         strcpyW(InfSectionWithExt, BestSection);
     }
 
-    ret = TRUE;
     TRACE("Returning section %s\n", debugstr_w(BestSection));
-    return ret;
+    return TRUE;
 }
 
 /**
@@ -758,6 +760,12 @@ SetupDiGetActualModelsSectionA(
     ret = SetupDiGetActualModelsSectionW(Context, AlternatePlatformInfo,
                                          Buffer, InfSectionWithExtSize,
                                          &Required, Reserved);
+
+    if (!ret)
+    {
+        if (GetLastError() != ERROR_INSUFFICIENT_BUFFER)
+            Required = 0;
+    }
 
     if (RequiredSize)
         *RequiredSize = Required;
