@@ -78,21 +78,66 @@ VOID ConInKey(PINPUT_RECORD lpBuffer)
     while (TRUE);
 }
 
+static
+BOOL
+ConInHandleFullBuffer(
+    _In_ HANDLE hFile,
+    _In_reads_(Length) PCHAR Buffer,
+    _In_ DWORD Length)
+{
+    DWORD dwDiscarded;
+    PCHAR pCr;
+    PCHAR pLf;
+    CHAR ch;
+
+    pCr = memchr(Buffer, '\r', Length);
+    pLf = memchr(Buffer, '\n', Length);
+
+    if (pCr || pLf)
+    {
+        if (pCr == Buffer + Length - 1)
+        {
+            /* The CR exactly filled the buffer; consume its trailing LF. */
+            ReadFile(hFile, &ch, 1, &dwDiscarded, NULL);
+        }
+
+        return FALSE;
+    }
+
+    if (!ReadFile(hFile, &ch, 1, &dwDiscarded, NULL) || !dwDiscarded)
+        return FALSE;
+
+    if (ch == '\r')
+    {
+        /* Consume the LF from the normal CR/LF line ending. */
+        ReadFile(hFile, &ch, 1, &dwDiscarded, NULL);
+        return FALSE;
+    }
+
+    if (ch == '\n')
+        return FALSE;
+
+    do
+    {
+        if (!ReadFile(hFile, &ch, 1, &dwDiscarded, NULL) || !dwDiscarded)
+            break;
+    }
+    while (ch != '\n');
+
+    return TRUE;
+}
+
 BOOL ConInString(LPWSTR lpInput, DWORD dwLength)
 {
     DWORD dwOldMode = 0;
     DWORD dwRead = 0;
-    DWORD dwDiscarded;
     HANDLE hFile;
     BOOL bConsole;
     BOOL bSuccess;
     BOOL bTruncated = FALSE;
-    CHAR ch;
 
     LPWSTR p;
     PCHAR pBuf;
-    PCHAR pCr;
-    PCHAR pLf;
 
     if (!lpInput || dwLength < 2)
         return FALSE;
@@ -111,42 +156,12 @@ BOOL ConInString(LPWSTR lpInput, DWORD dwLength)
     bSuccess = ReadFile(hFile, (PVOID)pBuf, dwLength - 1, &dwRead, NULL);
 
     /*
-     * If the input buffer filled up before a line terminator was read,
-     * consume the rest of that logical line. Otherwise, callers that retry
-     * after invalid input would see every remaining chunk as a new entry.
+     * A full buffer may end exactly at the line terminator or may contain
+     * only the first chunk of a longer line. Drain the logical line here so
+     * callers that retry do not see each remaining chunk as a new entry.
      */
-    pCr = bSuccess ? memchr(pBuf, '\r', dwRead) : NULL;
-    pLf = bSuccess ? memchr(pBuf, '\n', dwRead) : NULL;
-
     if (bSuccess && dwRead == dwLength - 1)
-    {
-        if (!pCr && !pLf)
-        {
-            if (ReadFile(hFile, &ch, 1, &dwDiscarded, NULL) && dwDiscarded)
-            {
-                if (ch == '\r')
-                {
-                    /* Consume the LF from the normal CR/LF line ending. */
-                    ReadFile(hFile, &ch, 1, &dwDiscarded, NULL);
-                }
-                else if (ch != '\n')
-                {
-                    bTruncated = TRUE;
-                    do
-                    {
-                        if (!ReadFile(hFile, &ch, 1, &dwDiscarded, NULL) || !dwDiscarded)
-                            break;
-                    }
-                    while (ch != '\n');
-                }
-            }
-        }
-        else if (pCr == pBuf + dwRead - 1)
-        {
-            /* The CR exactly filled the buffer; consume its trailing LF. */
-            ReadFile(hFile, &ch, 1, &dwDiscarded, NULL);
-        }
-    }
+        bTruncated = ConInHandleFullBuffer(hFile, pBuf, dwRead);
 
     if (bSuccess)
         MultiByteToWideChar(InputCodePage, 0, pBuf, dwRead, lpInput, dwLength - 1);
