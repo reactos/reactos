@@ -116,12 +116,15 @@ static DWORD req_error;
 static BOOL is_ie7plus = TRUE;
 
 #ifdef __REACTOS__
-/* Fail infinite waits before rosautotest's process-activity watchdog and report the stalled object. */
+/* Fail infinite waits before rosautotest's process-activity watchdog and
+ * report the stalled object. */
 #define WININET_TEST_WAIT_TIMEOUT (2 * 60 * 1000u)
 
-static DWORD wait_for_single_object_(HANDLE object, DWORD timeout, const char *object_name, unsigned line)
+static DWORD wait_for_single_object_(HANDLE object, DWORD timeout,
+                                     const char *object_name, unsigned line)
 {
-    DWORD effective_timeout = timeout == INFINITE ? WININET_TEST_WAIT_TIMEOUT : timeout;
+    DWORD effective_timeout =
+        timeout == INFINITE ? WININET_TEST_WAIT_TIMEOUT : timeout;
     DWORD result = WaitForSingleObject(object, effective_timeout);
 
     if (timeout != INFINITE || result == WAIT_OBJECT_0)
