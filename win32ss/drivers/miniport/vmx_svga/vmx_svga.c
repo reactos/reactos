@@ -13,6 +13,10 @@
 
 static WCHAR AdapterString[] = L"VMware SVGA II";
 
+#define VMX_FIFO_SYNC_RETRIES     3
+#define VMX_FIFO_BUSY_POLL_LIMIT  10000
+#define VMX_FIFO_BUSY_STALL_US    1
+
 typedef struct _VMX_SIZE
 {
     USHORT Width;
@@ -433,6 +437,93 @@ VmxInitModes(IN PHW_DEVICE_EXTENSION DeviceExtension)
 }
 
 static BOOLEAN
+VmxFifoQueryState(IN PHW_DEVICE_EXTENSION DeviceExtension,
+                  OUT PULONG Minimum,
+                  OUT PULONG Maximum,
+                  OUT PULONG Next,
+                  OUT PULONG FreeBytes)
+{
+    ULONG Stop;
+
+    *Minimum = VideoPortReadRegisterUlong(DeviceExtension->Fifo + SVGA_FIFO_MIN);
+    *Maximum = VideoPortReadRegisterUlong(DeviceExtension->Fifo + SVGA_FIFO_MAX);
+    *Next = VideoPortReadRegisterUlong(DeviceExtension->Fifo + SVGA_FIFO_NEXT_CMD);
+    Stop = VideoPortReadRegisterUlong(DeviceExtension->Fifo + SVGA_FIFO_STOP);
+
+    if (*Minimum < SVGA_FIFO_CORE_REGS * sizeof(ULONG) ||
+        *Maximum > DeviceExtension->MemSize ||
+        *Minimum >= *Maximum ||
+        *Next < *Minimum || *Next >= *Maximum ||
+        Stop < *Minimum || Stop >= *Maximum)
+    {
+        DPRINT1("VMX: invalid FIFO state (min=%lu max=%lu next=%lu stop=%lu)\n",
+                *Minimum,
+                *Maximum,
+                *Next,
+                Stop);
+        return FALSE;
+    }
+
+    if (*Next >= Stop)
+        *FreeBytes = (*Maximum - *Next) + (Stop - *Minimum);
+    else
+        *FreeBytes = Stop - *Next;
+
+    return TRUE;
+}
+
+static BOOLEAN
+VmxFifoWaitForSpace(IN PHW_DEVICE_EXTENSION DeviceExtension,
+                    IN ULONG RequiredBytes,
+                    OUT PULONG Minimum,
+                    OUT PULONG Maximum,
+                    OUT PULONG Next)
+{
+    ULONG FreeBytes;
+    ULONG Retry;
+    ULONG Poll;
+
+    for (Retry = 0; Retry <= VMX_FIFO_SYNC_RETRIES; Retry++)
+    {
+        if (!VmxFifoQueryState(DeviceExtension,
+                               Minimum,
+                               Maximum,
+                               Next,
+                               &FreeBytes))
+        {
+            return FALSE;
+        }
+
+        /* Keep one DWORD unused to distinguish a full FIFO from an empty FIFO. */
+        if (FreeBytes >= RequiredBytes + sizeof(ULONG))
+            return TRUE;
+
+        if (Retry == VMX_FIFO_SYNC_RETRIES)
+            break;
+
+        /* Ask the host to consume pending commands before retrying. */
+        VmxWriteUlong(DeviceExtension, SVGA_REG_SYNC, 1);
+        for (Poll = 0; Poll < VMX_FIFO_BUSY_POLL_LIMIT; Poll++)
+        {
+            if (VmxReadUlong(DeviceExtension, SVGA_REG_BUSY) == 0)
+                break;
+
+            VideoPortStallExecution(VMX_FIFO_BUSY_STALL_US);
+        }
+
+        if (Poll == VMX_FIFO_BUSY_POLL_LIMIT)
+        {
+            DPRINT1("VMX: FIFO sync timed out waiting for the host\n");
+            return FALSE;
+        }
+    }
+
+    DPRINT1("VMX: FIFO remained full after %lu sync retries\n",
+            VMX_FIFO_SYNC_RETRIES);
+    return FALSE;
+}
+
+static BOOLEAN
 VmxFifoSubmitUpdate(IN PHW_DEVICE_EXTENSION DeviceExtension,
                     IN ULONG X,
                     IN ULONG Y,
@@ -442,36 +533,20 @@ VmxFifoSubmitUpdate(IN PHW_DEVICE_EXTENSION DeviceExtension,
     ULONG Minimum;
     ULONG Maximum;
     ULONG Next;
-    ULONG Stop;
-    ULONG FreeBytes;
     ULONG Values[5];
     ULONG Index;
 
     if (!DeviceExtension->FifoReady)
         return FALSE;
 
-    Minimum = VideoPortReadRegisterUlong(DeviceExtension->Fifo + SVGA_FIFO_MIN);
-    Maximum = VideoPortReadRegisterUlong(DeviceExtension->Fifo + SVGA_FIFO_MAX);
-    Next = VideoPortReadRegisterUlong(DeviceExtension->Fifo + SVGA_FIFO_NEXT_CMD);
-    Stop = VideoPortReadRegisterUlong(DeviceExtension->Fifo + SVGA_FIFO_STOP);
-
-    if (Minimum < SVGA_FIFO_CORE_REGS * sizeof(ULONG) ||
-        Maximum > DeviceExtension->MemSize ||
-        Minimum >= Maximum ||
-        Next < Minimum || Next >= Maximum ||
-        Stop < Minimum || Stop >= Maximum)
+    if (!VmxFifoWaitForSpace(DeviceExtension,
+                             sizeof(Values),
+                             &Minimum,
+                             &Maximum,
+                             &Next))
     {
         return FALSE;
     }
-
-    if (Next >= Stop)
-        FreeBytes = (Maximum - Next) + (Stop - Minimum);
-    else
-        FreeBytes = Stop - Next;
-
-    /* Keep one DWORD unused to distinguish a full FIFO from an empty FIFO. */
-    if (FreeBytes < sizeof(Values) + sizeof(ULONG))
-        return FALSE;
 
     Values[0] = SVGA_CMD_UPDATE;
     Values[1] = X;
