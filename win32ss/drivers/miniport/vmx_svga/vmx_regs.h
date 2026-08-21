@@ -1,43 +1,40 @@
 /*
- * PROJECT:         ReactOS Boot Loader
+ * PROJECT:         ReactOS
  * LICENSE:         BSD - See COPYING.ARM in the top level directory
  * FILE:            win32ss/drivers/miniport/vmx_svga/vmx_regs.h
- * PURPOSE:         VMWARE SVGA-II Card Registers and Definitions
+ * PURPOSE:         VMware SVGA-II virtual hardware definitions
  * PROGRAMMERS:     ReactOS Portable Systems Group
  */
 
-//
-// IT'S OVER 9000 THOUSAND!!!!!!!!!!
-//
-#define SVGA_MAGIC                  0x900000
+#pragma once
 
-//
-// Known VMWARE SVGA Versions
-//
+#define PCI_VENDOR_ID_VMWARE        0x15AD
+#define PCI_DEVICE_ID_VMWARE_SVGA2  0x0405
+
+#define SVGA_MAGIC                  0x900000UL
+
 #define SVGA_VERSION_2              2
 #define SVGA_VERSION_1              1
 #define SVGA_VERSION_0              0
 
-//
-// Known VMWARE SVGA IDs
-//
-#define SVGA_MAKE_ID(x)             (SVGA_MAGIC << 8 | (x))
+#define SVGA_MAKE_ID(x)             ((SVGA_MAGIC << 8) | (x))
 #define SVGA_ID_2                   SVGA_MAKE_ID(SVGA_VERSION_2)
 #define SVGA_ID_1                   SVGA_MAKE_ID(SVGA_VERSION_1)
 #define SVGA_ID_0                   SVGA_MAKE_ID(SVGA_VERSION_0)
-#define SVGA_ID_INVALID             0xFFFFFFFF
+#define SVGA_ID_INVALID             0xFFFFFFFFUL
 
-//
-// Card Capabilities
-//
+#define SVGA_REG_ENABLE_DISABLE     0
+#define SVGA_REG_ENABLE_ENABLE      1
+#define SVGA_REG_ENABLE_HIDE        2
+
 #define SVGA_CAP_NONE               0x00000000
-#define SVGA_CAP_RECT_FILL	        0x00000001
-#define SVGA_CAP_RECT_COPY	        0x00000002
+#define SVGA_CAP_RECT_FILL          0x00000001
+#define SVGA_CAP_RECT_COPY          0x00000002
 #define SVGA_CAP_RECT_PAT_FILL      0x00000004
 #define SVGA_CAP_LEGACY_OFFSCREEN   0x00000008
-#define SVGA_CAP_RASTER_OP	        0x00000010
-#define SVGA_CAP_CURSOR		        0x00000020
-#define SVGA_CAP_CURSOR_BYPASS	    0x00000040
+#define SVGA_CAP_RASTER_OP          0x00000010
+#define SVGA_CAP_CURSOR             0x00000020
+#define SVGA_CAP_CURSOR_BYPASS      0x00000040
 #define SVGA_CAP_CURSOR_BYPASS_2    0x00000080
 #define SVGA_CAP_8BIT_EMULATION     0x00000100
 #define SVGA_CAP_ALPHA_CURSOR       0x00000200
@@ -52,37 +49,33 @@
 #define SVGA_CAP_IRQMASK            0x00040000
 #define SVGA_CAP_DISPLAY_TOPOLOGY   0x00080000
 
-//
-// Port Offsets and Base in PCI Space
-//
-#define SVGA_LEGACY_BASE_PORT	    0x4560
-#define SVGA_INDEX_PORT		        0x0
-#define SVGA_VALUE_PORT		        0x1
-#define SVGA_BIOS_PORT		        0x2
-#define SVGA_NUM_PORTS		        0x3
-#define SVGA_IRQSTATUS_PORT     	0x8
+/* Port offsets relative to PCI BAR0 for SVGA-II (PCI device 0x0405). */
+#define SVGA_INDEX_PORT             0x0
+#define SVGA_VALUE_PORT             0x1
+#define SVGA_BIOS_PORT              0x2
+#define SVGA_IRQSTATUS_PORT         0x8
 
-//
-// Invalid display ID
-//
-#define SVGA_INVALID_DISPLAY_ID     0xFFFFFFFF
-
-//
-// Global Maximums
-//
-#define SVGA_MAX_BITS_PER_PIXEL	    32
+#define SVGA_INVALID_DISPLAY_ID     0xFFFFFFFFUL
+#define SVGA_MAX_BITS_PER_PIXEL     32
 #define SVGA_MAX_DEPTH              24
 #define SVGA_MAX_DISPLAYS           10
-#define SVGA_MAX_PSEUDOCOLOR_DEPTH	8
-#define SVGA_MAX_PSEUDOCOLORS		(1 << SVGA_MAX_PSEUDOCOLOR_DEPTH)
+#define SVGA_MAX_PSEUDOCOLOR_DEPTH  8
+#define SVGA_MAX_PSEUDOCOLORS       (1 << SVGA_MAX_PSEUDOCOLOR_DEPTH)
 #define SVGA_NUM_PALETTE_REGS       (3 * SVGA_MAX_PSEUDOCOLORS)
-#define SVGA_FB_MAX_SIZE                                                    \
-   ((((SVGA_MAX_WIDTH * SVGA_MAX_HEIGHT *                                   \
-       SVGA_MAX_BITS_PER_PIXEL / 8) >> PAGE_SHIFT) + 1) << PAGE_SHIFT)
 
-//
-// Card Registers
-//
+/* Core FIFO registers, expressed as DWORD indices into BAR2. */
+#define SVGA_FIFO_MIN               0
+#define SVGA_FIFO_MAX               1
+#define SVGA_FIFO_NEXT_CMD          2
+#define SVGA_FIFO_STOP              3
+#define SVGA_FIFO_CORE_REGS         4
+
+/* Legacy FIFO command used to notify the host about framebuffer damage. */
+#define SVGA_CMD_UPDATE             1
+
+/* Existing driver convention for an NT 5.x Windows-like guest. */
+#define SVGA_GUEST_ID_REACTOS       0x5008
+
 typedef enum _VMX_SVGA_REGISTERS
 {
     SVGA_REG_ID,
