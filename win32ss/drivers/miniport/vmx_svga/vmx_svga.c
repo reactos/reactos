@@ -563,6 +563,9 @@ VmxFifoSubmitUpdate(IN PHW_DEVICE_EXTENSION DeviceExtension,
     }
 
     VideoPortWriteRegisterUlong(DeviceExtension->Fifo + SVGA_FIFO_NEXT_CMD, Next);
+
+    /* Ring the asynchronous FIFO doorbell; do not wait unless we need space. */
+    VmxWriteUlong(DeviceExtension, SVGA_REG_SYNC, 1);
     return TRUE;
 }
 
