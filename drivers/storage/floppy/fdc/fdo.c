@@ -90,7 +90,8 @@ FdcFdoStartDevice(
                         PartialDescriptor->u.Port.Start.u.LowPart,
                         PartialDescriptor->u.Port.Length);
                 if (!DeviceExtension->ControllerInfo.PortAddressValid ||
-                    PartialDescriptor->u.Port.Start.QuadPart < DeviceExtension->ControllerInfo.PortAddress.QuadPart)
+                    PartialDescriptor->u.Port.Start.QuadPart <
+                        DeviceExtension->ControllerInfo.PortAddress.QuadPart)
                 {
                     DeviceExtension->ControllerInfo.PortAddress = PartialDescriptor->u.Port.Start;
                     DeviceExtension->ControllerInfo.PortAddressValid = TRUE;
@@ -349,6 +350,28 @@ FdcRelationsContainDeviceObject(
 
 
 static
+VOID
+FdcMarkPdosPresent(
+    IN PFDO_DEVICE_EXTENSION FdoDeviceExtension)
+{
+    PPDO_DEVICE_EXTENSION PdoDeviceExtension;
+    PDRIVE_INFO DriveInfo;
+    ULONG i;
+
+    for (i = 0; i < FdoDeviceExtension->ControllerInfo.NumberOfDrives; i++)
+    {
+        DriveInfo = &FdoDeviceExtension->ControllerInfo.DriveInfo[i];
+        if (DriveInfo->DeviceObject == NULL)
+            continue;
+
+        PdoDeviceExtension =
+            (PPDO_DEVICE_EXTENSION)DriveInfo->DeviceObject->DeviceExtension;
+        PdoDeviceExtension->ReportedPresent = TRUE;
+    }
+}
+
+
+static
 NTSTATUS
 FdcFdoQueryBusRelations(
     IN PDEVICE_OBJECT DeviceObject,
@@ -409,23 +432,14 @@ FdcFdoQueryBusRelations(
         }
     }
 
+    if (MissingCount == 0 && ExistingRelations != NULL)
+    {
+        FdcMarkPdosPresent(FdoDeviceExtension);
+        return STATUS_SUCCESS;
+    }
+
     if (MissingCount == 0)
     {
-        if (ExistingRelations != NULL)
-        {
-            for (i = 0; i < FdoDeviceExtension->ControllerInfo.NumberOfDrives; i++)
-            {
-                DriveInfo = &FdoDeviceExtension->ControllerInfo.DriveInfo[i];
-                if (DriveInfo->DeviceObject != NULL)
-                {
-                    PdoDeviceExtension = (PPDO_DEVICE_EXTENSION)DriveInfo->DeviceObject->DeviceExtension;
-                    PdoDeviceExtension->ReportedPresent = TRUE;
-                }
-            }
-
-            return STATUS_SUCCESS;
-        }
-
         Relations = ExAllocatePoolWithTag(PagedPool,
                                           FIELD_OFFSET(DEVICE_RELATIONS, Objects),
                                           FDC_TAG);
@@ -574,15 +588,7 @@ FdcFdoQueryBusRelations(
     Relations->Count = ExistingCount + AddedCount;
 
     /* Only publish PDO presence after the complete relations query succeeds. */
-    for (i = 0; i < FdoDeviceExtension->ControllerInfo.NumberOfDrives; i++)
-    {
-        DriveInfo = &FdoDeviceExtension->ControllerInfo.DriveInfo[i];
-        if (DriveInfo->DeviceObject != NULL)
-        {
-            PdoDeviceExtension = (PPDO_DEVICE_EXTENSION)DriveInfo->DeviceObject->DeviceExtension;
-            PdoDeviceExtension->ReportedPresent = TRUE;
-        }
-    }
+    FdcMarkPdosPresent(FdoDeviceExtension);
 
     if (ExistingRelations != NULL)
         ExFreePool(ExistingRelations);
