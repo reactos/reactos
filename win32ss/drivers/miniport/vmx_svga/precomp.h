@@ -15,6 +15,7 @@
 #include <devioctl.h>
 
 #include "vmx_regs.h"
+#include "vmx_svga_ioctl.h"
 
 #define VMX_MAX_MODES 23
 

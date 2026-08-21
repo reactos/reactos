@@ -743,7 +743,12 @@ VmxSetCurrentMode(IN PHW_DEVICE_EXTENSION DeviceExtension,
     StatusBlock->Information = 0;
 
     /* A first damage notification makes the newly selected scanout visible. */
-    VmxFifoSubmitUpdate(DeviceExtension, 0, 0, Width, Height);
+    if (!VmxFifoSubmitUpdate(DeviceExtension, 0, 0, Width, Height))
+    {
+        StatusBlock->Status = ERROR_BUSY;
+        return FALSE;
+    }
+
     return TRUE;
 }
 
@@ -762,6 +767,73 @@ VmxQueryCurrentMode(IN PHW_DEVICE_EXTENSION DeviceExtension,
     *VideoModeInfo = DeviceExtension->Modes[DeviceExtension->CurrentModeIndex];
     StatusBlock->Status = NO_ERROR;
     StatusBlock->Information = sizeof(*VideoModeInfo);
+    return TRUE;
+}
+
+static BOOLEAN
+VmxSubmitDamageRect(IN PHW_DEVICE_EXTENSION DeviceExtension,
+                    IN PVMX_SVGA_UPDATE_RECT Damage,
+                    OUT PSTATUS_BLOCK StatusBlock)
+{
+    PVIDEO_MODE_INFORMATION ModeInfo;
+    LONG Left;
+    LONG Top;
+    LONG Right;
+    LONG Bottom;
+
+    if (DeviceExtension->CurrentModeIndex >= DeviceExtension->VideoModeCount)
+    {
+        StatusBlock->Status = ERROR_INVALID_PARAMETER;
+        StatusBlock->Information = 0;
+        return FALSE;
+    }
+
+    if (Damage->Right <= Damage->Left || Damage->Bottom <= Damage->Top)
+    {
+        StatusBlock->Status = ERROR_INVALID_PARAMETER;
+        StatusBlock->Information = 0;
+        return FALSE;
+    }
+
+    ModeInfo = &DeviceExtension->Modes[DeviceExtension->CurrentModeIndex];
+
+    /* A valid rectangle may clip entirely outside the visible scanout. */
+    if (Damage->Right <= 0 || Damage->Bottom <= 0 ||
+        Damage->Left >= (LONG)ModeInfo->VisScreenWidth ||
+        Damage->Top >= (LONG)ModeInfo->VisScreenHeight)
+    {
+        StatusBlock->Status = NO_ERROR;
+        StatusBlock->Information = 0;
+        return TRUE;
+    }
+
+    Left = (Damage->Left < 0) ? 0 : Damage->Left;
+    Top = (Damage->Top < 0) ? 0 : Damage->Top;
+    Right = (Damage->Right > (LONG)ModeInfo->VisScreenWidth) ?
+            (LONG)ModeInfo->VisScreenWidth : Damage->Right;
+    Bottom = (Damage->Bottom > (LONG)ModeInfo->VisScreenHeight) ?
+             (LONG)ModeInfo->VisScreenHeight : Damage->Bottom;
+
+    if (Right <= Left || Bottom <= Top)
+    {
+        StatusBlock->Status = NO_ERROR;
+        StatusBlock->Information = 0;
+        return TRUE;
+    }
+
+    if (!VmxFifoSubmitUpdate(DeviceExtension,
+                             (ULONG)Left,
+                             (ULONG)Top,
+                             (ULONG)(Right - Left),
+                             (ULONG)(Bottom - Top)))
+    {
+        StatusBlock->Status = ERROR_BUSY;
+        StatusBlock->Information = 0;
+        return FALSE;
+    }
+
+    StatusBlock->Status = NO_ERROR;
+    StatusBlock->Information = 0;
     return TRUE;
 }
 
@@ -886,6 +958,17 @@ VmxStartIO(IN PVOID HwDeviceExtension,
 
     switch (RequestPacket->IoControlCode)
     {
+        case IOCTL_VIDEO_VMX_SVGA_UPDATE:
+            if (RequestPacket->InputBufferLength < sizeof(VMX_SVGA_UPDATE_RECT))
+            {
+                RequestPacket->StatusBlock->Status = ERROR_INSUFFICIENT_BUFFER;
+                break;
+            }
+            VmxSubmitDamageRect(DeviceExtension,
+                                (PVMX_SVGA_UPDATE_RECT)RequestPacket->InputBuffer,
+                                RequestPacket->StatusBlock);
+            break;
+
         case IOCTL_VIDEO_MAP_VIDEO_MEMORY:
             if (RequestPacket->InputBufferLength < sizeof(VIDEO_MEMORY) ||
                 RequestPacket->OutputBufferLength < sizeof(VIDEO_MEMORY_INFORMATION))
