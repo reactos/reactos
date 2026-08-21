@@ -1,0 +1,16 @@
+[AddReg]
+HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\PCI#VEN_15AD&DEV_0405","Service",0x00000000,"vmx_svga"
+HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\PCI#VEN_15AD&DEV_0405","ClassGUID",0x00000000,"{4D36E968-E325-11CE-BFC1-08002BE10318}"
+
+HKLM,"SYSTEM\CurrentControlSet\Services\vmx_svga","ErrorControl",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\vmx_svga","Group",0x00000000,"Video"
+HKLM,"SYSTEM\CurrentControlSet\Services\vmx_svga","ImagePath",0x00020000,"system32\drivers\vmx_svga.sys"
+HKLM,"SYSTEM\CurrentControlSet\Services\vmx_svga","Start",0x00010001,0x00000003
+HKLM,"SYSTEM\CurrentControlSet\Services\vmx_svga","Type",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\vmx_svga\Video","Service",0x00000000,"vmx_svga"
+
+HKLM,"SYSTEM\CurrentControlSet\Services\vmx_svga\Device0","Device Description",0x00000000,"VMware SVGA II Graphics Adapter"
+HKLM,"SYSTEM\CurrentControlSet\Services\vmx_svga\Device0","InstalledDisplayDrivers",0x00010000,"framebuf"
+HKLM,"SYSTEM\CurrentControlSet\Services\vmx_svga\Device0","VgaCompatible",0x00010001,0
+HKLM,"SYSTEM\CurrentControlSet\Services\vmx_svga\Device0","DefaultSettings.XResolution",0x00010001,800
+HKLM,"SYSTEM\CurrentControlSet\Services\vmx_svga\Device0","DefaultSettings.YResolution",0x00010001,600

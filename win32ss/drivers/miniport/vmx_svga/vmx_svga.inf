@@ -1,0 +1,63 @@
+; vmx_svga.inf
+;
+; Installation file for the VMware SVGA-II display adapter
+;
+
+[Version]
+Signature  = "$Windows NT$"
+LayoutFile = layout.inf
+Class      = Display
+ClassGUID  = {4D36E968-E325-11CE-BFC1-08002BE10318}
+Provider   = %ReactOS%
+DriverVer  = 08/20/2026,1.00
+
+[DestinationDirs]
+DefaultDestDir = 12
+VMX.Display_CopyFiles = 11
+
+[Manufacturer]
+%VMware% = VMX
+
+[VMX]
+%VMX.DeviceDesc% = VMX,PCI\VEN_15AD&DEV_0405
+
+;------------------------- VMWARE SVGA-II DRIVER ------------------------
+
+[VMX]
+CopyFiles = VMX.Miniport_CopyFiles, VMX.Display_CopyFiles
+
+[VMX.Miniport_CopyFiles]
+vmx_svga.sys
+
+[VMX.Display_CopyFiles]
+framebuf.dll
+
+[VMX.SoftwareSettings]
+AddReg = VMX_SoftwareSettings
+
+[VMX_SoftwareSettings]
+HKR,, InstalledDisplayDrivers, %REG_MULTI_SZ%, framebuf
+HKR,, VgaCompatible,           %REG_DWORD%,    0
+
+[VMX.Services]
+AddService = vmx_svga, 0x00000002, VMX_Service
+
+[VMX_Service]
+ServiceType    = 1
+StartType      = 3
+ErrorControl   = 0
+ServiceBinary  = %12%\vmx_svga.sys
+LoadOrderGroup = Video
+
+;-------------------------------- STRINGS -------------------------------
+
+[Strings]
+; Non-localizable
+ReactOS = "ReactOS Project"
+VMware = "VMware"
+
+REG_MULTI_SZ = 0x00010000
+REG_DWORD    = 0x00010001
+
+; Localizable
+VMX.DeviceDesc = "VMware SVGA II Graphics Adapter"
