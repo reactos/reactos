@@ -1,0 +1,13 @@
+[1/9734] Performing build step for 'host-tools'
+ninja: no work to do.
+[2/11] Performing install step for 'host-tools'
+[3/11] Completed 'host-tools'
+[4/11] cd /home/ubuntu/work/reactos-audit/build-reactos-nt10-amd64/boot && /home/ubuntu/work/reactos-audit/build-reactos-nt10-amd64/host-tools/bin/fatten /home/ubuntu/work/reactos-audit/build-reactos-nt10-amd64/boot/efisys.bin -format 2880 EFIBOOT -boot /home/ubuntu/work/reactos-audit/build-reactos-nt10-amd64/boot/freeldr/bootsect/fat.bin -mkdir EFI -mkdir EFI/BOOT -add /home/ubuntu/work/reactos-audit/build-reactos-nt10-amd64/boot/freeldr/freeldr/uefildr.efi EFI/BOOT/bootx64.efi
+[5/11] Generating winemsi.tlb
+[6/9] Generating reactos.inf, __some_non_existent_file
+[7/8] cd /home/ubuntu/work/reactos-audit/build-reactos-nt10-amd64/boot && /home/ubuntu/work/reactos-audit/build-reactos-nt10-amd64/host-tools/bin/mkisofs -quiet -o /home/ubuntu/work/reactos-audit/build-reactos-nt10-amd64/liveimg.iso -iso-level 4 -publisher "ReactOS Project" -preparer "ReactOS Project" -volid ReactOS -volset ReactOS -duplicates-once -no-cache-inodes -graft-points -path-list /home/ubuntu/work/reactos-audit/build-reactos-nt10-amd64/boot/livecd.Release.lst
+Warning: Creating ISO-9660:1999 (version 2) filesystem.
+Warning: ISO-9660 filenames longer than 31 may cause buffer overflows in the OS.
+[8/8] cd /home/ubuntu/work/reactos-audit/build-reactos-nt10-amd64/boot && /home/ubuntu/work/reactos-audit/build-reactos-nt10-amd64/host-tools/bin/mkisofs -quiet -o /home/ubuntu/work/reactos-audit/build-reactos-nt10-amd64/bootcd.iso -iso-level 4 -publisher "ReactOS Project" -preparer "ReactOS Project" -volid ReactOS -volset ReactOS -eltorito-platform x86 -eltorito-boot loader/isoboot.bin -no-emul-boot -boot-load-size 4 -eltorito-alt-boot -eltorito-platform efi -eltorito-boot loader/efisys.bin -no-emul-boot -hide boot.catalog -sort /home/ubuntu/work/reactos-audit/build-reactos-nt10-amd64/boot/bootfiles.sort -duplicates-once -no-cache-inodes -graft-points -path-list /home/ubuntu/work/reactos-audit/build-reactos-nt10-amd64/boot/bootcd.Release.lst && /home/ubuntu/work/reactos-audit/build-reactos-nt10-amd64/host-tools/bin/isohybrid -b /home/ubuntu/work/reactos-audit/build-reactos-nt10-amd64/boot/freeldr/bootsect/isombr.bin -t 0x96 /home/ubuntu/work/reactos-audit/build-reactos-nt10-amd64/bootcd.iso
+Warning: Creating ISO-9660:1999 (version 2) filesystem.
+Warning: ISO-9660 filenames longer than 31 may cause buffer overflows in the OS.

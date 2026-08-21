@@ -1,0 +1,516 @@
+--- a/ntoskrnl/ke/amd64/traphandler.c
++++ b/ntoskrnl/ke/amd64/traphandler.c
+@@ -1,3 +1,6 @@
++/* Release 2.2 contribution by Liandro Lopes <anjoleandrolopes@gmail.com>. */
++/* Release 3.1 contribution by Liandro Lopes <anjoleandrolopes@gmail.com>. */
++
+ /*
+  * PROJECT:         ReactOS Kernel
+  * LICENSE:         GPL - See COPYING in the top level directory
+@@ -125,6 +128,18 @@
+ }
+ 
+ #define MAX_SYSCALL_PARAMS 16
++#define AMD64_CANONICAL_USER_MAX 0x00007FFFFFFFFFFFULL
++
++static
++BOOLEAN
++KiIsCanonicalUserAddress(
++    _In_ ULONG64 Address)
++{
++    /* User addresses must be in the low canonical half and below the
++       memory manager's actual user probe limit. */
++    return (Address <= AMD64_CANONICAL_USER_MAX) &&
++           (Address <= (ULONG64)MmUserProbeAddress);
++}
+ 
+ NTSTATUS
+ NtSyscallFailure(void)
+@@ -133,6 +148,13 @@
+     return (NTSTATUS)KeGetCurrentThread()->TrapFrame->Rax;
+ }
+ 
++#if defined(__GNUC__) || defined(__clang__)
++#define ROS_SYSCALL_STACK_PROTECTED __attribute__((noinline, stack_protect))
++#else
++#define ROS_SYSCALL_STACK_PROTECTED
++#endif
++
++ROS_SYSCALL_STACK_PROTECTED
+ PVOID
+ KiSystemCallHandler(
+     VOID)
+@@ -165,11 +187,14 @@
+     /* Enable interrupts */
+     _enable();
+ 
+-    /* If the usermode rsp was not a usermode address, prepare an exception */
+-    if (UserRsp > MmUserProbeAddress) UserRsp = MmUserProbeAddress;
++    /* Reject a non-user, non-canonical, or unusably low user stack. */
++    if ((UserRsp < sizeof(ULONG64)) || !KiIsCanonicalUserAddress(UserRsp))
++    {
++        TrapFrame->Rax = STATUS_ACCESS_VIOLATION;
++        return (PVOID)NtSyscallFailure;
++    }
+ 
+-    /* Get the address of the usermode and kernelmode parameters */
+-    UserParams = (PULONG64)UserRsp + 1;
++    /* Get the kernel-side parameter scratch area. */
+     KernelParams = (PULONG64)TrapFrame - MAX_SYSCALL_PARAMS;
+ 
+     /* Get the system call number from the trap frame and decode it */
+@@ -200,6 +225,13 @@
+         }
+     }
+ 
++    /* Do not index a service table outside the architecture contract. */
++    if (TableIndex >= NUMBER_SERVICE_TABLES)
++    {
++        TrapFrame->Rax = STATUS_INVALID_SYSTEM_SERVICE;
++        return (PVOID)NtSyscallFailure;
++    }
++
+     /* Get descriptor table */
+     DescriptorTable = &((PKSERVICE_TABLE_DESCRIPTOR)Thread->ServiceTable)[TableIndex];
+ 
+@@ -227,7 +259,38 @@
+     }
+ 
+     /* Get stack bytes and calculate argument count */
+-    Count = DescriptorTable->Number[ServiceNumber] / 8;
++    Count = DescriptorTable->Number[ServiceNumber] / sizeof(ULONG64);
++
++    /* A malformed service descriptor must never reach the fall-through copy. */
++    if (Count > MAX_SYSCALL_PARAMS)
++    {
++        TrapFrame->Rax = STATUS_INVALID_SYSTEM_SERVICE;
++        return (PVOID)NtSyscallFailure;
++    }
++
++    /*
++     * The first stack argument is at UserRsp + sizeof(ULONG64).  Validate
++     * the complete range before entering the copy.  Service-specific pointer
++     * arguments remain the responsibility of the Nt routine's ProbeFor* or
++     * capture path; the dispatcher cannot distinguish pointers from scalars.
++     */
++    if (Count != 0)
++    {
++        ULONG64 ParameterBytes;
++
++        /* The count is bounded above, so this multiplication cannot wrap. */
++        ParameterBytes = ((ULONG64)Count + 1) * sizeof(ULONG64);
++        if (!KiIsCanonicalUserAddress(UserRsp) ||
++            (ParameterBytes > (ULONG64)MmUserProbeAddress) ||
++            (UserRsp > (ULONG64)MmUserProbeAddress - ParameterBytes))
++        {
++            TrapFrame->Rax = STATUS_ACCESS_VIOLATION;
++            return (PVOID)NtSyscallFailure;
++        }
++    }
++
++    /* Get the address of the usermode parameters after validation. */
++    UserParams = (PULONG64)UserRsp + 1;
+ 
+     _SEH2_TRY
+     {
+@@ -266,6 +329,7 @@
+ 
+     return (PVOID)DescriptorTable->Base[ServiceNumber];
+ }
++#undef ROS_SYSCALL_STACK_PROTECTED
+ 
+ 
+ // FIXME: we need to
+--- a/ntoskrnl/mm/ARM3/virtual.c
++++ b/ntoskrnl/mm/ARM3/virtual.c
+@@ -1,3 +1,5 @@
++/* Release 2.2 contribution by Liandro Lopes <anjoleandrolopes@gmail.com>. */
++
+ /*
+  * PROJECT:         ReactOS Kernel
+  * LICENSE:         BSD - See COPYING.ARM in the top level directory
+@@ -6,6 +8,8 @@
+  * PROGRAMMERS:     ReactOS Portable Systems Group
+  */
+ 
++/* Release 3.1 contribution by Liandro Lopes <anjoleandrolopes@gmail.com>. */
++
+ /* INCLUDES *******************************************************************/
+ 
+ #include <ntoskrnl.h>
+@@ -19,6 +23,38 @@
+ #define MI_POOL_COPY_BYTES    512
+ #define MI_MAX_TRANSFER_SIZE  64 * 1024
+ 
++#if defined(_M_AMD64) || defined(__x86_64__)
++static __inline
++VOID
++MiSmapCopyMemory(
++    _Out_writes_bytes_(Length) PVOID Destination,
++    _In_reads_bytes_(Length) CONST VOID *Source,
++    _In_ SIZE_T Length)
++{
++    BOOLEAN SmapActive;
++
++    /* Keep the access window local; SMAP must not be enabled globally until
++       every privileged user-copy path provides this same invariant. */
++    SmapActive = ((__readcr4() & X86_CR4_SMAP) != 0);
++    if (SmapActive)
++        __asm__ __volatile__(".byte 0x0f, 0x01, 0xcb" ::: "memory"); /* STAC */
++
++    _SEH2_TRY
++    {
++        RtlCopyMemory(Destination, Source, Length);
++    }
++    _SEH2_FINALLY
++    {
++        if (SmapActive)
++            __asm__ __volatile__(".byte 0x0f, 0x01, 0xca" ::: "memory"); /* CLAC */
++    }
++    _SEH2_END;
++}
++#else
++#define MiSmapCopyMemory(Destination, Source, Length) \\
++    RtlCopyMemory((Destination), (Source), (Length))
++#endif
++
+ NTSTATUS NTAPI
+ MiProtectVirtualMemory(IN PEPROCESS Process,
+                        IN OUT PVOID *BaseAddress,
+@@ -936,7 +972,7 @@
+             //
+             // Now do the actual move
+             //
+-            RtlCopyMemory(CurrentTargetAddress, MdlAddress, CurrentSize);
++            MiSmapCopyMemory(CurrentTargetAddress, MdlAddress, CurrentSize);
+         }
+         _SEH2_EXCEPT(MiGetExceptionInfo(_SEH2_GetExceptionInformation(),
+                                         &HaveBadAddress,
+@@ -1115,7 +1151,7 @@
+             //
+             // Do the copy
+             //
+-            RtlCopyMemory(PoolAddress, CurrentAddress, CurrentSize);
++            MiSmapCopyMemory(PoolAddress, CurrentAddress, CurrentSize);
+         }
+         _SEH2_EXCEPT(MiGetExceptionInfo(_SEH2_GetExceptionInformation(),
+                                         &HaveBadAddress,
+@@ -1191,7 +1227,7 @@
+             //
+             // Now do the actual move
+             //
+-            RtlCopyMemory(CurrentTargetAddress, PoolAddress, CurrentSize);
++            MiSmapCopyMemory(CurrentTargetAddress, PoolAddress, CurrentSize);
+         }
+         _SEH2_EXCEPT(MiGetExceptionInfo(_SEH2_GetExceptionInformation(),
+                                         &HaveBadAddress,
+--- a/ntoskrnl/ke/amd64/kiinit.c
++++ b/ntoskrnl/ke/amd64/kiinit.c
+@@ -1,3 +1,6 @@
++/* Release 2.2 contribution by Liandro Lopes <anjoleandrolopes@gmail.com>. */
++/* Release 3.1 contribution by Liandro Lopes <anjoleandrolopes@gmail.com>. */
++
+ /*
+  * PROJECT:         ReactOS Kernel
+  * LICENSE:         GPL - See COPYING in the top level directory
+@@ -187,9 +190,25 @@
+         KeBugCheck(0);
+     }
+ 
+-    /* Set DEP to always on */
+-    SharedUserData->NXSupportPolicy = NX_SUPPORT_POLICY_ALWAYSON;
+-    FeatureBits |= KF_NX_ENABLED;
++    /*
++     * CPUID advertises the NX feature, but page-table execute-disable bits
++     * are only architecturally active after EFER.NXE is set.  The loader
++     * enables long mode (EFER.LME) but deliberately does not own this
++     * kernel mitigation.  Do not set EFER.NXE on CPUs that do not advertise
++     * the feature, and publish an honest policy to user mode.
++     */
++    if (FeatureBits & KF_NX_BIT)
++    {
++        __writemsr(X86_MSR_EFER, __readmsr(X86_MSR_EFER) | EFER_NXE);
++        SharedUserData->NXSupportPolicy = NX_SUPPORT_POLICY_ALWAYSON;
++        FeatureBits |= KF_NX_ENABLED;
++    }
++    else
++    {
++        __writemsr(X86_MSR_EFER, __readmsr(X86_MSR_EFER) & ~EFER_NXE);
++        SharedUserData->NXSupportPolicy = NX_SUPPORT_POLICY_ALWAYSOFF;
++        FeatureBits |= KF_NX_DISABLED;
++    }
+ 
+     /* Save feature bits */
+     Pcr->Prcb.FeatureBits = (ULONG)FeatureBits;
+@@ -201,6 +220,18 @@
+     /* Enable XMMI exceptions */
+     __writecr4(__readcr4() | CR4_XMMEXCPT);
+ 
++    /*
++     * SMEP prevents privileged code from executing user pages.  It is safe
++     * to enable when CPUID advertises it because the kernel text mappings are
++     * supervisor pages.  SMAP is deliberately not enabled here: every user
++     * access path must bracket its access with STAC/CLAC first, and the
++     * current probe/capture corpus does not provide that invariant yet.
++     */
++    if (FeatureBits & KF_SMEP)
++    {
++        __writecr4(__readcr4() | X86_CR4_SMEP);
++    }
++
+     /* Enable Write-Protection */
+     __writecr0(__readcr0() | CR0_WP);
+ 
+@@ -230,8 +261,11 @@
+     /* Set the flags to be cleared when doing a syscall */
+     __writemsr(MSR_SYSCALL_MASK, EFLAGS_IF_MASK | EFLAGS_TF | EFLAGS_DF | EFLAGS_NESTED_TASK);
+ 
+-    /* Enable syscall instruction and no-execute support */
+-    __writemsr(MSR_EFER, __readmsr(MSR_EFER) | MSR_SCE | MSR_NXE);
++    /* Enable syscall instruction and preserve the validated NX policy */
++    __writemsr(MSR_EFER,
++               __readmsr(MSR_EFER) |
++               MSR_SCE |
++               ((FeatureBits & KF_NX_ENABLED) ? MSR_NXE : 0));
+ 
+     /* Initialize the PAT */
+     Pat = (PAT_WB << 0)  | (PAT_WC << 8) | (PAT_UCM << 16) | (PAT_UC << 24) |
+@@ -415,35 +449,18 @@
+     SharedUserData->ProcessorFeatures[PF_AVX512F_INSTRUCTIONS_AVAILABLE] =
+         (FeatureBits & KF_AVX512F) ? TRUE : FALSE;
+ 
+-    /* Set the default NX policy (opt-in) */
+-    SharedUserData->NXSupportPolicy = NX_SUPPORT_POLICY_OPTIN;
+-
+-    /* Check if NPX is always on */
+-    if (strstr(KeLoaderBlock->LoadOptions, "NOEXECUTE=ALWAYSON"))
+-    {
+-        /* Set it always on */
++    /*
++     * The CPU initialization above is the source of truth for NX.  Do not
++     * let a later boot-option parser publish ALWAYSOFF after EFER.NXE has
++     * already been enabled: that would make user mode believe executable
++     * pages are permitted while the hardware is enforcing NX.  Compatibility
++     * options may still be reported by the loader, but they cannot weaken a
++     * hardware security invariant in this hardened build.
++     */
++    if (Prcb->FeatureBits & KF_NX_ENABLED)
+         SharedUserData->NXSupportPolicy = NX_SUPPORT_POLICY_ALWAYSON;
+-        Prcb->FeatureBits |= KF_NX_ENABLED;
+-    }
+-    else if (strstr(KeLoaderBlock->LoadOptions, "NOEXECUTE=OPTOUT"))
+-    {
+-        /* Set it in opt-out mode */
+-        SharedUserData->NXSupportPolicy = NX_SUPPORT_POLICY_OPTOUT;
+-        Prcb->FeatureBits |= KF_NX_ENABLED;
+-    }
+-    else if ((strstr(KeLoaderBlock->LoadOptions, "NOEXECUTE=OPTIN")) ||
+-             (strstr(KeLoaderBlock->LoadOptions, "NOEXECUTE")))
+-    {
+-        /* Set the feature bits */
+-        Prcb->FeatureBits |= KF_NX_ENABLED;
+-    }
+-    else if ((strstr(KeLoaderBlock->LoadOptions, "NOEXECUTE=ALWAYSOFF")) ||
+-             (strstr(KeLoaderBlock->LoadOptions, "EXECUTE")))
+-    {
+-        /* Set disabled mode */
++    else
+         SharedUserData->NXSupportPolicy = NX_SUPPORT_POLICY_ALWAYSOFF;
+-        Prcb->FeatureBits |= KF_NX_DISABLED;
+-    }
+ 
+ #if DBG
+     /* Print applied kernel features/policies and boot CPU features */
+--- a/ntoskrnl/mm/ARM3/expool.c
++++ b/ntoskrnl/mm/ARM3/expool.c
+@@ -1,3 +1,7 @@
++/* Release 2.2 contribution by Liandro Lopes <anjoleandrolopes@gmail.com>. */
++
++/* Release 3.1 contribution by Liandro Lopes <anjoleandrolopes@gmail.com>. */
++
+ /*
+  * PROJECT:         ReactOS Kernel
+  * LICENSE:         BSD - See COPYING.ARM in the top level directory
+@@ -64,6 +68,34 @@
+ #define POOL_NEXT_BLOCK(x)  POOL_BLOCK((x), (x)->BlockSize)
+ #define POOL_PREV_BLOCK(x)  POOL_BLOCK((x), -((x)->PreviousSize))
+ 
++#if DBG
++#define ROS_POOL_FREE_PATTERN 0xDD
++static FORCEINLINE
++VOID
++ExpSanitizeFreedPool(IN PVOID Address,
++                     IN SIZE_T Size)
++{
++    if (Address != NULL && Size != 0)
++    {
++        RtlFillMemory(Address, Size, ROS_POOL_FREE_PATTERN);
++    }
++}
++
++static FORCEINLINE
++SIZE_T
++ExpPoolPayloadSize(IN USHORT BlockSize)
++{
++    SIZE_T TotalSize = (SIZE_T)BlockSize * POOL_BLOCK_SIZE;
++
++    return (TotalSize >= sizeof(POOL_HEADER))
++           ? TotalSize - sizeof(POOL_HEADER)
++           : 0;
++}
++#else
++#define ExpSanitizeFreedPool(Address, Size) ((VOID)0)
++#define ExpPoolPayloadSize(BlockSize) ((SIZE_T)0)
++#endif
++
+ /*
+  * Pool list access debug macros, similar to Arthur's pfnlist.c work.
+  * Microsoft actually implements similar checks in the Windows Server 2003 SP1
+@@ -2647,6 +2679,13 @@
+         InterlockedExchangeAddSizeT(&PoolDesc->TotalBytes,
+                                     -(LONG_PTR)(PageCount << PAGE_SHIFT));
+ 
++        /*
++         * Poison the complete allocation before returning its pages.  This is
++         * enabled for checked builds so stale references become deterministic
++         * failures without adding retail memset overhead.
++         */
++        ExpSanitizeFreedPool(P, PageCount << PAGE_SHIFT);
++
+         //
+         // Do the real free now and update the last counter with the big page count
+         //
+@@ -2725,6 +2764,12 @@
+         }
+     }
+ 
++    /*
++     * Poison the caller-visible portion before it can enter a lookaside list
++     * or the coalescing path.  Pool metadata has already been consumed above.
++     */
++    ExpSanitizeFreedPool(P, ExpPoolPayloadSize(BlockSize));
++
+     //
+     // Is this allocation small enough to have come from a lookaside list?
+     //
+--- /dev/null
++++ b/drivers/crypto/ci/ci.c
+@@ -0,0 +1,118 @@
++/* Release 2.2 contribution by Liandro Lopes <anjoleandrolopes@gmail.com>. */
++/* Release 3.1 contribution by Liandro Lopes <anjoleandrolopes@gmail.com>. */
++
++#include "ci.h"
++
++#define NDEBUG
++#include <debug.h>
++
++static NTSTATUS
++CiValidatePe32PlusHeader(
++    _In_reads_bytes_(ImageSize) PUCHAR ImageBase,
++    _In_ ULONG ImageSize)
++{
++    PIMAGE_DOS_HEADER DosHeader;
++    PIMAGE_NT_HEADERS64 NtHeaders;
++    ULONG NtOffset;
++    ULONG HeaderBytes;
++    ULONG SectionBytes;
++
++    if (ImageSize < sizeof(IMAGE_DOS_HEADER))
++        return STATUS_INVALID_IMAGE_FORMAT;
++
++    DosHeader = (PIMAGE_DOS_HEADER)ImageBase;
++    if (DosHeader->e_magic != IMAGE_DOS_SIGNATURE)
++        return STATUS_INVALID_IMAGE_FORMAT;
++
++    NtOffset = (ULONG)DosHeader->e_lfanew;
++    if (ImageSize < sizeof(IMAGE_NT_HEADERS64) ||
++        NtOffset < sizeof(IMAGE_DOS_HEADER) ||
++        NtOffset > ImageSize - sizeof(IMAGE_NT_HEADERS64))
++    {
++        return STATUS_INVALID_IMAGE_FORMAT;
++    }
++
++    NtHeaders = (PIMAGE_NT_HEADERS64)(ImageBase + NtOffset);
++    if (NtHeaders->Signature != IMAGE_NT_SIGNATURE ||
++        NtHeaders->FileHeader.Machine != IMAGE_FILE_MACHINE_AMD64 ||
++        NtHeaders->OptionalHeader.Magic != IMAGE_NT_OPTIONAL_HDR64_MAGIC)
++    {
++        return STATUS_INVALID_IMAGE_FORMAT;
++    }
++
++    if (NtHeaders->FileHeader.NumberOfSections == 0 ||
++        NtHeaders->FileHeader.NumberOfSections > 96 ||
++        NtHeaders->FileHeader.SizeOfOptionalHeader < sizeof(IMAGE_OPTIONAL_HEADER64))
++    {
++        return STATUS_INVALID_IMAGE_FORMAT;
++    }
++
++    HeaderBytes = FIELD_OFFSET(IMAGE_NT_HEADERS64, OptionalHeader) +
++                  NtHeaders->FileHeader.SizeOfOptionalHeader;
++    if (HeaderBytes > ImageSize - NtOffset)
++        return STATUS_INVALID_IMAGE_FORMAT;
++
++    SectionBytes = (ULONG)NtHeaders->FileHeader.NumberOfSections * sizeof(IMAGE_SECTION_HEADER);
++    if (SectionBytes > ImageSize - NtOffset - HeaderBytes)
++        return STATUS_INVALID_IMAGE_FORMAT;
++
++    if (NtHeaders->OptionalHeader.SizeOfHeaders <
++        NtOffset + HeaderBytes + SectionBytes ||
++        NtHeaders->OptionalHeader.SizeOfHeaders > ImageSize ||
++        NtHeaders->OptionalHeader.SizeOfImage == 0 ||
++        NtHeaders->OptionalHeader.SizeOfImage < NtHeaders->OptionalHeader.SizeOfHeaders)
++    {
++        return STATUS_INVALID_IMAGE_FORMAT;
++    }
++
++    /* Validate every section's raw-file and virtual-image ranges. */
++    {
++        USHORT i;
++        PIMAGE_SECTION_HEADER Section;
++
++        Section = (PIMAGE_SECTION_HEADER)(ImageBase + NtOffset + HeaderBytes);
++        for (i = 0; i < NtHeaders->FileHeader.NumberOfSections; ++i, ++Section)
++        {
++            ULONG VirtualSize = Section->Misc.VirtualSize;
++            ULONG VirtualAddress = Section->VirtualAddress;
++            ULONG RawOffset = Section->PointerToRawData;
++            ULONG RawSize = Section->SizeOfRawData;
++
++            if (RawOffset > ImageSize || RawSize > ImageSize - RawOffset)
++                return STATUS_INVALID_IMAGE_FORMAT;
++
++            if (VirtualAddress > NtHeaders->OptionalHeader.SizeOfImage ||
++                VirtualSize > NtHeaders->OptionalHeader.SizeOfImage - VirtualAddress)
++            {
++                return STATUS_INVALID_IMAGE_FORMAT;
++            }
++        }
++    }
++
++    return STATUS_SUCCESS;
++}
++
++NTSTATUS
++NTAPI
++CiValidateImageHeader(
++    _In_reads_bytes_(ImageSize) PVOID ImageBase,
++    _In_ ULONG ImageSize)
++{
++    if (ImageBase == NULL || ImageSize == 0)
++        return STATUS_INVALID_PARAMETER;
++
++    return CiValidatePe32PlusHeader((PUCHAR)ImageBase, ImageSize);
++}
++
++NTSTATUS
++NTAPI
++DriverEntry(
++    _In_ PDRIVER_OBJECT DriverObject,
++    _In_ PUNICODE_STRING RegistryPath)
++{
++    UNREFERENCED_PARAMETER(DriverObject);
++    UNREFERENCED_PARAMETER(RegistryPath);
++
++    /* The image loader does not call this boundary yet. Do not claim trust. */
++    return STATUS_NOT_SUPPORTED;
++}

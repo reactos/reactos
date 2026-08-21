@@ -1,0 +1,29 @@
+Release 3.1 final validation
+timestamp=2026-08-21T11:40:55Z
+
+BUILD
+bootcd_exit=0
+build_errors=0
+build_warnings=4
+iso_warning_policy=mkisofs ISO-9660 filename warnings are non-fatal and were not treated as build failures
+
+AUTHORSHIP
+PASS /home/ubuntu/work/reactos-audit/reactos-zip/reactos-master/ntoskrnl/ke/amd64/traphandler.c
+PASS /home/ubuntu/work/reactos-audit/reactos-zip/reactos-master/ntoskrnl/mm/ARM3/virtual.c
+PASS /home/ubuntu/work/reactos-audit/reactos-zip/reactos-master/ntoskrnl/ke/amd64/kiinit.c
+PASS /home/ubuntu/work/reactos-audit/reactos-zip/reactos-master/ntoskrnl/mm/ARM3/expool.c
+PASS /home/ubuntu/work/reactos-audit/reactos-zip/reactos-master/drivers/crypto/ci/ci.c
+missing_author_count=0
+
+ARTIFACTS
+/home/ubuntu/work/reactos-audit/build-reactos-nt10-amd64/bootcd.iso|312475648 bytes|2026-08-21 11:40:29.410204480 +0000
+50e86dd2bb2367f6a08635277f652f5a32267941e0a02c2eaa063a05a0aa3c01  /home/ubuntu/work/reactos-audit/build-reactos-nt10-amd64/bootcd.iso
+/home/ubuntu/work/reactos-audit/build-reactos-nt10-amd64/ntoskrnl/ntoskrnl.exe|2381835 bytes|2026-08-21 11:39:39.890201439 +0000
+c79aaab5d6901c8ba244609442c1b31c092642bcae30293ceb639373f1dc6747  /home/ubuntu/work/reactos-audit/build-reactos-nt10-amd64/ntoskrnl/ntoskrnl.exe
+/home/ubuntu/work/reactos-audit/build-reactos-nt10-amd64/ntoskrnl/ntkrnlmp/ntkrnlmp.exe|2391264 bytes|2026-08-21 11:39:40.378201470 +0000
+beda311b8a6f127f01028cbc5cac28d70739733e5e0cf2b5bc2c1c7f28d1f2d2  /home/ubuntu/work/reactos-audit/build-reactos-nt10-amd64/ntoskrnl/ntkrnlmp/ntkrnlmp.exe
+/home/ubuntu/work/reactos-audit/build-reactos-nt10-amd64/drivers/crypto/ci/ci.sys|35012 bytes|2026-08-21 11:40:03.796318984 +0000
+bc2ec9306e8fd7b18816527a64ced2dc27afe24e3777676c4b13ec7858662a99  /home/ubuntu/work/reactos-audit/build-reactos-nt10-amd64/drivers/crypto/ci/ci.sys
+
+RUNTIME
+qemu=NOT_RUN_MISSING_BINARY
