@@ -208,56 +208,6 @@ ArbiterLibSortArbitrationList(
 }
 
 CODE_SEG("PAGE")
-BOOLEAN
-NTAPI
-ArbiterLibGetNextAllocationRange(
-    _In_ PARBITER_INSTANCE Arbiter,
-    _Inout_ PARBITER_ALLOCATION_STATE ArbState)
-{
-    PAGED_CODE();
-
-    UNIMPLEMENTED;
-    return FALSE;
-}
-
-CODE_SEG("PAGE")
-BOOLEAN
-NTAPI
-ArbiterLibFindSuitableRange(
-    _In_ PARBITER_INSTANCE Arbiter,
-    _Inout_ PARBITER_ALLOCATION_STATE ArbState)
-{
-    PAGED_CODE();
-
-    UNIMPLEMENTED;
-    return FALSE;
-}
-
-CODE_SEG("PAGE")
-VOID
-NTAPI
-ArbiterLibAddAllocation(
-    _In_ PARBITER_INSTANCE Arbiter,
-    _Inout_ PARBITER_ALLOCATION_STATE ArbState)
-{
-    PAGED_CODE();
-
-    UNIMPLEMENTED;
-}
-
-CODE_SEG("PAGE")
-VOID
-NTAPI
-ArbiterLibBacktrackAllocation(
-    _In_ PARBITER_INSTANCE Arbiter,
-    _Inout_ PARBITER_ALLOCATION_STATE ArbState)
-{
-    PAGED_CODE();
-
-    UNIMPLEMENTED;
-}
-
-CODE_SEG("PAGE")
 VOID
 NTAPI
 ArbiterLibConfirmAllocation(
