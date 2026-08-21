@@ -741,30 +741,38 @@ SetupDiGetActualModelsSectionA(
     _Out_opt_ PDWORD RequiredSize,
     _Reserved_ PVOID Reserved)
 {
-    WCHAR Buffer[LINE_LEN + 1];
-    DWORD Required;
+    PWSTR Buffer = NULL;
+    DWORD Required = 0;
     BOOL ret;
 
-    ret = SetupDiGetActualModelsSectionW(Context, AlternatePlatformInfo, Buffer,
-                                         ARRAYSIZE(Buffer), &Required, Reserved);
-    if (!ret)
-        return FALSE;
+    if (InfSectionWithExtSize > 0)
+    {
+        Buffer = HeapAlloc(GetProcessHeap(), 0, InfSectionWithExtSize * sizeof(WCHAR));
+        if (!Buffer)
+        {
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            return FALSE;
+        }
+    }
+
+    ret = SetupDiGetActualModelsSectionW(Context, AlternatePlatformInfo,
+                                         Buffer, InfSectionWithExtSize,
+                                         &Required, Reserved);
 
     if (RequiredSize)
         *RequiredSize = Required;
 
-    if (InfSectionWithExtSize > 0)
+    if (ret && Buffer && InfSectionWithExt)
     {
-        if (InfSectionWithExtSize < Required)
-        {
-            SetLastError(ERROR_INSUFFICIENT_BUFFER);
-            return FALSE;
-        }
-        WideCharToMultiByte(CP_ACP, 0, Buffer, -1, InfSectionWithExt,
-                            InfSectionWithExtSize, NULL, NULL);            
+        WideCharToMultiByte(CP_ACP, 0, Buffer, -1,
+                            InfSectionWithExt, InfSectionWithExtSize,
+                            NULL, NULL);
     }
 
-    return TRUE;
+    if (Buffer)
+        HeapFree(GetProcessHeap(), 0, Buffer);
+
+    return ret;
 }
 
 BOOL
