@@ -30,13 +30,13 @@ CopyFiles = VMX.Miniport_CopyFiles, VMX.Display_CopyFiles
 vmx_svga.sys
 
 [VMX.Display_CopyFiles]
-framebuf.dll
+vmx_svga_disp.dll
 
 [VMX.SoftwareSettings]
 AddReg = VMX_SoftwareSettings
 
 [VMX_SoftwareSettings]
-HKR,, InstalledDisplayDrivers, %REG_MULTI_SZ%, framebuf
+HKR,, InstalledDisplayDrivers, %REG_MULTI_SZ%, vmx_svga_disp
 HKR,, VgaCompatible,           %REG_DWORD%,    0
 
 [VMX.Services]

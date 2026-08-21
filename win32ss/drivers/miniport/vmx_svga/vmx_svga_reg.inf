@@ -10,7 +10,7 @@ HKLM,"SYSTEM\CurrentControlSet\Services\vmx_svga","Type",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\vmx_svga\Video","Service",0x00000000,"vmx_svga"
 
 HKLM,"SYSTEM\CurrentControlSet\Services\vmx_svga\Device0","Device Description",0x00000000,"VMware SVGA II Graphics Adapter"
-HKLM,"SYSTEM\CurrentControlSet\Services\vmx_svga\Device0","InstalledDisplayDrivers",0x00010000,"framebuf"
+HKLM,"SYSTEM\CurrentControlSet\Services\vmx_svga\Device0","InstalledDisplayDrivers",0x00010000,"vmx_svga_disp"
 HKLM,"SYSTEM\CurrentControlSet\Services\vmx_svga\Device0","VgaCompatible",0x00010001,0
 HKLM,"SYSTEM\CurrentControlSet\Services\vmx_svga\Device0","DefaultSettings.XResolution",0x00010001,800
 HKLM,"SYSTEM\CurrentControlSet\Services\vmx_svga\Device0","DefaultSettings.YResolution",0x00010001,600
