@@ -48,9 +48,14 @@
 #include <stdio.h>
 
 #include "wine/test.h"
+#include "v6util.h"
 #include "msg.h"
 
-#define expect(EXPECTED,GOT) ok((GOT)==(EXPECTED), "Expected %d, got %d\n", (EXPECTED), (GOT))
+#define expect(expected,got) expect_(__LINE__, expected, got)
+static inline void expect_(unsigned line, DWORD expected, DWORD got)
+{
+    ok_(__FILE__, line)(expected == got, "Expected %ld, got %ld\n", expected, got);
+}
 
 #define NUM_MSG_SEQUENCES   3
 #define PARENT_SEQ_INDEX    0
@@ -67,6 +72,47 @@ static HWND (WINAPI *pCreateUpDownControl)(DWORD, INT, INT, INT, INT,
 static BOOL (WINAPI *pSetWindowSubclass)(HWND, SUBCLASSPROC, UINT_PTR, DWORD_PTR);
 
 static struct msg_sequence *sequences[NUM_MSG_SEQUENCES];
+
+static void CALLBACK msg_winevent_proc(HWINEVENTHOOK hevent,
+                                       DWORD event,
+                                       HWND hwnd,
+                                       LONG object_id,
+                                       LONG child_id,
+                                       DWORD thread_id,
+                                       DWORD event_time)
+{
+    struct message msg = {0};
+    char class_name[256];
+
+    /* ignore window and other system events */
+    if (object_id != OBJID_CLIENT) return;
+
+    /* ignore events not from an updown control */
+    if (!GetClassNameA(hwnd, class_name, ARRAY_SIZE(class_name)) ||
+        strcmp(class_name, UPDOWN_CLASSA) != 0)
+        return;
+
+    msg.message = event;
+    msg.flags = winevent_hook|wparam|lparam;
+    msg.wParam = object_id;
+    msg.lParam = child_id;
+    add_message(sequences, UPDOWN_SEQ_INDEX, &msg);
+}
+
+static void init_winevent_hook(void) {
+    hwineventhook = SetWinEventHook(EVENT_MIN, EVENT_MAX, GetModuleHandleA(0), msg_winevent_proc,
+                                    0, GetCurrentThreadId(), WINEVENT_INCONTEXT);
+    if (!hwineventhook)
+        win_skip( "no win event hook support\n" );
+}
+
+static void uninit_winevent_hook(void) {
+    if (!hwineventhook)
+        return;
+
+    UnhookWinEvent(hwineventhook);
+    hwineventhook = 0;
+}
 
 static const struct message add_updown_with_edit_seq[] = {
     { WM_WINDOWPOSCHANGING, sent },
@@ -92,14 +138,19 @@ static const struct message test_updown_pos_seq[] = {
     { UDM_SETRANGE, sent|lparam, 0, MAKELONG(100,0) },
     { UDM_GETRANGE, sent},
     { UDM_SETPOS, sent|lparam, 0, 5},
+    { EVENT_OBJECT_VALUECHANGE, winevent_hook|wparam|lparam, OBJID_CLIENT, 0 },
     { UDM_GETPOS, sent},
     { UDM_SETPOS, sent|lparam, 0, 0},
+    { EVENT_OBJECT_VALUECHANGE, winevent_hook|wparam|lparam, OBJID_CLIENT, 0 },
     { UDM_GETPOS, sent},
     { UDM_SETPOS, sent|lparam, 0, MAKELONG(-1,0)},
+    { EVENT_OBJECT_VALUECHANGE, winevent_hook|wparam|lparam, OBJID_CLIENT, 0 },
     { UDM_GETPOS, sent},
     { UDM_SETPOS, sent|lparam, 0, 100},
+    { EVENT_OBJECT_VALUECHANGE, winevent_hook|wparam|lparam, OBJID_CLIENT, 0 },
     { UDM_GETPOS, sent},
     { UDM_SETPOS, sent|lparam, 0, 101},
+    { EVENT_OBJECT_VALUECHANGE, winevent_hook|wparam|lparam, OBJID_CLIENT, 0 },
     { UDM_GETPOS, sent},
     { 0 }
 };
@@ -108,14 +159,19 @@ static const struct message test_updown_pos32_seq[] = {
     { UDM_SETRANGE32, sent|lparam, 0, 1000 },
     { UDM_GETRANGE32, sent}, /* Cannot check wparam and lparam as they are ptrs */
     { UDM_SETPOS32, sent|lparam, 0, 500 },
+    { EVENT_OBJECT_VALUECHANGE, winevent_hook|wparam|lparam, OBJID_CLIENT, 0 },
     { UDM_GETPOS32, sent},
     { UDM_SETPOS32, sent|lparam, 0, 0 },
+    { EVENT_OBJECT_VALUECHANGE, winevent_hook|wparam|lparam, OBJID_CLIENT, 0 },
     { UDM_GETPOS32, sent},
     { UDM_SETPOS32, sent|lparam, 0, -1 },
+    { EVENT_OBJECT_VALUECHANGE, winevent_hook|wparam|lparam, OBJID_CLIENT, 0 },
     { UDM_GETPOS32, sent},
     { UDM_SETPOS32, sent|lparam, 0, 1000 },
+    { EVENT_OBJECT_VALUECHANGE, winevent_hook|wparam|lparam, OBJID_CLIENT, 0 },
     { UDM_GETPOS32, sent},
     { UDM_SETPOS32, sent|lparam, 0, 1001 },
+    { EVENT_OBJECT_VALUECHANGE, winevent_hook|wparam|lparam, OBJID_CLIENT, 0 },
     { UDM_GETPOS32, sent},
     { 0 }
 };
@@ -548,7 +604,7 @@ static void test_updown_pos32(void)
     DestroyWindow(updown);
 }
 
-static void test_updown_buddy(void)
+static void test_updown_buddy(BOOL is_v6)
 {
     HWND updown, buddyReturn, buddy;
     RECT rect, rect2;
@@ -591,7 +647,7 @@ static void test_updown_buddy(void)
     updown= create_updown_control(UDS_ALIGNRIGHT | UDS_ARROWKEYS, buddy);
     ok(proc != (WNDPROC)GetWindowLongPtrA(buddy, GWLP_WNDPROC), "Subclassing expected\n");
 
-    if (pSetWindowSubclass)
+    if (pSetWindowSubclass && ! is_v6)
     {
         /* updown uses subclass helpers for buddy on >5.8x systems */
         ok(GetPropA(buddy, "CC32SubclassInfo") != NULL, "Expected CC32SubclassInfo property\n");
@@ -670,7 +726,7 @@ static void test_updown_buddy(void)
     buddyReturn = (HWND)SendMessageA(updown, UDM_SETBUDDY, 0, 0);
     ok(buddyReturn == g_edit, "Unexpected buddy window.\n");
     GetClientRect(updown, &rect2);
-todo_wine
+    todo_wine
     ok(EqualRect(&rect, &rect2), "Unexpected window rect.\n");
 
     DestroyWindow(updown);
@@ -802,7 +858,7 @@ static void test_updown_create(void)
     ok(updown != NULL, "Failed to create updown control\n");
     r.right = 0;
     GetClientRect(updown, &r);
-    ok(r.right > 0, "Expected default width, got %d\n", r.right);
+    ok(r.right > 0, "Expected default width, got %ld\n", r.right);
     DestroyWindow(updown);
     /* create with really small width */
     updown = CreateWindowA (UPDOWN_CLASSA, 0, WS_CHILD | WS_BORDER | WS_VISIBLE, 0, 0, 2, 0,
@@ -810,7 +866,7 @@ static void test_updown_create(void)
     ok(updown != NULL, "Failed to create updown control\n");
     r.right = 0;
     GetClientRect(updown, &r);
-    ok(r.right != 2 && r.right > 0, "Expected default width, got %d\n", r.right);
+    ok(r.right != 2 && r.right > 0, "Expected default width, got %ld\n", r.right);
     DestroyWindow(updown);
     /* create with width greater than default */
     updown = CreateWindowA (UPDOWN_CLASSA, 0, WS_CHILD | WS_BORDER | WS_VISIBLE, 0, 0, 100, 0,
@@ -818,7 +874,7 @@ static void test_updown_create(void)
     ok(updown != NULL, "Failed to create updown control\n");
     r.right = 0;
     GetClientRect(updown, &r);
-    ok(r.right < 100 && r.right > 0, "Expected default width, got %d\n", r.right);
+    ok(r.right < 100 && r.right > 0, "Expected default width, got %ld\n", r.right);
     DestroyWindow(updown);
     /* create with zero height, UDS_HORZ */
     updown = CreateWindowA (UPDOWN_CLASSA, 0, UDS_HORZ | WS_CHILD | WS_BORDER | WS_VISIBLE, 0, 0, 0, 0,
@@ -826,7 +882,7 @@ static void test_updown_create(void)
     ok(updown != NULL, "Failed to create updown control\n");
     r.bottom = 0;
     GetClientRect(updown, &r);
-    ok(r.bottom == 0, "Expected zero height, got %d\n", r.bottom);
+    ok(r.bottom == 0, "Expected zero height, got %ld\n", r.bottom);
     DestroyWindow(updown);
     /* create with really small height, UDS_HORZ */
     updown = CreateWindowA (UPDOWN_CLASSA, 0, UDS_HORZ | WS_CHILD | WS_BORDER | WS_VISIBLE, 0, 0, 0, 2,
@@ -834,7 +890,7 @@ static void test_updown_create(void)
     ok(updown != NULL, "Failed to create updown control\n");
     r.bottom = 0;
     GetClientRect(updown, &r);
-    ok(r.bottom == 0, "Expected zero height, got %d\n", r.bottom);
+    ok(r.bottom == 0, "Expected zero height, got %ld\n", r.bottom);
     DestroyWindow(updown);
     /* create with height greater than default, UDS_HORZ */
     updown = CreateWindowA (UPDOWN_CLASSA, 0, UDS_HORZ | WS_CHILD | WS_BORDER | WS_VISIBLE, 0, 0, 0, 100,
@@ -842,7 +898,7 @@ static void test_updown_create(void)
     ok(updown != NULL, "Failed to create updown control\n");
     r.bottom = 0;
     GetClientRect(updown, &r);
-    ok(r.bottom < 100 && r.bottom > 0, "Expected default height, got %d\n", r.bottom);
+    ok(r.bottom < 100 && r.bottom > 0, "Expected default height, got %ld\n", r.bottom);
     DestroyWindow(updown);
 }
 
@@ -973,6 +1029,82 @@ static void test_updown_pos_notifications(void)
     DestroyWindow(updown);
 }
 
+static void test_UDS_SETBUDDY(void)
+{
+    static const int start_width = 100, start_height = 100;
+    int width, height, updown_width;
+    HWND updown;
+    RECT rect;
+    BOOL ret;
+
+    updown = create_updown_control(UDS_ALIGNRIGHT | UDS_SETBUDDYINT | UDS_ARROWKEYS, g_edit);
+    ret = SetWindowPos(g_edit, 0, 100, 100, start_width, start_height, SWP_NOACTIVATE | SWP_NOZORDER);
+    ok(ret, "SetWindowPos failed, error %lu.\n", GetLastError());
+    ret = GetWindowRect(g_edit, &rect);
+    ok(ret, "GetWindowRect failed, error %lu.\n", GetLastError());
+    width = rect.right - rect.left;
+    height = rect.bottom - rect.top;
+    ok(width == start_width, "Expected width %d, got %d.\n", start_width, width);
+    ok(height == start_height, "Expected height %d, got %d.\n", start_height, height);
+
+    SendMessageA(updown, UDM_SETBUDDY, (WPARAM)g_edit, 0);
+    ret = GetWindowRect(g_edit, &rect);
+    ok(ret, "GetWindowRect failed, error %lu.\n", GetLastError());
+    updown_width = start_width - (rect.right - rect.left);
+    ok(updown_width > 0, "Expected updown width > 0, got %d.\n", updown_width);
+
+    SendMessageA(updown, UDM_SETBUDDY, (WPARAM)g_edit, 0);
+    ret = GetWindowRect(g_edit, &rect);
+    ok(ret, "GetWindowRect failed, error %lu.\n", GetLastError());
+    width = rect.right - rect.left;
+    height = rect.bottom - rect.top;
+    ok(width == start_width - 2 * updown_width, "Expected width %d, got %d.\n",
+       start_width - 2 * updown_width, width);
+    ok(height == start_height, "Expected height %d, got %d.\n", start_height, height);
+
+    DestroyWindow(updown);
+}
+
+static void test_accel(void)
+{
+    UDACCEL accel[4];
+    HWND updown;
+    int r;
+
+    updown = create_updown_control(UDS_ALIGNRIGHT, g_edit);
+
+    flush_sequences(sequences, NUM_MSG_SEQUENCES);
+
+    r = SendMessageA(updown, UDM_GETACCEL, 0, (LPARAM)accel);
+    expect(3, r);
+
+    r = SendMessageA(updown, UDM_GETACCEL, 1, (LPARAM)accel);
+    expect(3, r);
+    expect(0, accel[0].nSec);
+    expect(1, accel[0].nInc);
+
+    r = SendMessageA(updown, UDM_GETACCEL, 4, (LPARAM)accel);
+    expect(3, r);
+    expect(0, accel[0].nSec);
+    expect(1, accel[0].nInc);
+    expect(2, accel[1].nSec);
+    expect(5, accel[1].nInc);
+    expect(5, accel[2].nSec);
+    expect(20, accel[2].nInc);
+
+    accel[0].nSec = 0;
+    accel[0].nInc = 5;
+    r = SendMessageA(updown, UDM_SETACCEL, 1, (LPARAM)accel);
+    expect(TRUE, r);
+
+    r = SendMessageA(updown, UDM_GETACCEL, 3, (LPARAM)accel);
+    expect(1, r);
+    expect(0, accel[0].nSec);
+    expect(5, accel[0].nInc);
+
+    DestroyWindow(updown);
+}
+
 static void init_functions(void)
 {
     HMODULE hComCtl32 = LoadLibraryA("comctl32.dll");
@@ -987,6 +1119,9 @@ static void init_functions(void)
 
 START_TEST(updown)
 {
+    ULONG_PTR ctx_cookie;
+    HANDLE hCtx;
+
     init_functions();
 
     init_msg_sequences(sequences, NUM_MSG_SEQUENCES);
@@ -996,15 +1131,49 @@ START_TEST(updown)
     g_edit = create_edit_control();
     ok(g_edit != NULL, "Failed to create edit control\n");
 
+    init_winevent_hook();
+
     test_updown_create();
     test_updown_pos();
     test_updown_pos32();
-    test_updown_buddy();
+    test_updown_buddy(FALSE);
     test_updown_base();
     test_updown_unicode();
+    test_UDS_SETBUDDY();
     test_UDS_SETBUDDYINT();
     test_CreateUpDownControl();
     test_updown_pos_notifications();
+    test_accel();
+
+    DestroyWindow(g_edit);
+
+    if (!load_v6_module(&ctx_cookie, &hCtx))
+    {
+        DestroyWindow(parent_wnd);
+        return;
+    }
+
+    init_functions();
+
+    g_edit = create_edit_control();
+    ok(g_edit != NULL, "Failed to create edit control\n");
+
+    /* comctl32 version 6 tests start here */
+    test_updown_create();
+    test_updown_pos();
+    test_updown_pos32();
+    test_updown_buddy(TRUE);
+    test_updown_base();
+    test_updown_unicode();
+    test_UDS_SETBUDDY();
+    test_UDS_SETBUDDYINT();
+    test_CreateUpDownControl();
+    test_updown_pos_notifications();
+    test_accel();
+
+    uninit_winevent_hook();
+
+    unload_v6_module(ctx_cookie, hCtx);
 
     DestroyWindow(g_edit);
     DestroyWindow(parent_wnd);

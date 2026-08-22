@@ -159,6 +159,14 @@ static __inline const char *wine_dbgstr_w( const WCHAR *s )
     return wine_dbgstr_wn( s, -1 );
 }
 
+static __inline const char *debugstr_fourcc(DWORD fourcc)
+{
+    if (!fourcc) return "'null'";
+    return wine_dbg_sprintf ("\'%c%c%c%c\'",
+        (char)(fourcc), (char)(fourcc >> 8),
+        (char)(fourcc >> 16), (char)(fourcc >> 24));
+}
+
 #if defined(__hstring_h__) && defined(__WINSTRING_H_)
 static inline const char *wine_dbgstr_hstring( HSTRING hstr )
 {
