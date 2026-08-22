@@ -22,13 +22,23 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(dmusic);
 
-static inline IDirectMusicDownloadImpl* impl_from_IDirectMusicDownload(IDirectMusicDownload *iface)
+struct download
 {
-    return CONTAINING_RECORD(iface, IDirectMusicDownloadImpl, IDirectMusicDownload_iface);
+    IDirectMusicDownload IDirectMusicDownload_iface;
+    LONG ref;
+
+    DWORD size;
+    BYTE data[];
+};
+
+C_ASSERT(sizeof(struct download) == offsetof(struct download, data[0]));
+
+static inline struct download *impl_from_IDirectMusicDownload(IDirectMusicDownload *iface)
+{
+    return CONTAINING_RECORD(iface, struct download, IDirectMusicDownload_iface);
 }
 
-/* IDirectMusicDownloadImpl IUnknown part: */
-static HRESULT WINAPI IDirectMusicDownloadImpl_QueryInterface(IDirectMusicDownload *iface, REFIID riid, void **ret_iface)
+static HRESULT WINAPI download_QueryInterface(IDirectMusicDownload *iface, REFIID riid, void **ret_iface)
 {
     TRACE("(%p, %s, %p)\n", iface, debugstr_dmguid(riid), ret_iface);
 
@@ -45,62 +55,61 @@ static HRESULT WINAPI IDirectMusicDownloadImpl_QueryInterface(IDirectMusicDownlo
     return E_NOINTERFACE;
 }
 
-static ULONG WINAPI IDirectMusicDownloadImpl_AddRef(IDirectMusicDownload *iface)
+static ULONG WINAPI download_AddRef(IDirectMusicDownload *iface)
 {
-    IDirectMusicDownloadImpl *This = impl_from_IDirectMusicDownload(iface);
+    struct download *This = impl_from_IDirectMusicDownload(iface);
     ULONG ref = InterlockedIncrement(&This->ref);
 
-    TRACE("(%p)->(): new ref = %u\n", iface, ref);
+    TRACE("(%p): new ref = %lu\n", iface, ref);
 
     return ref;
 }
 
-static ULONG WINAPI IDirectMusicDownloadImpl_Release(IDirectMusicDownload *iface)
+static ULONG WINAPI download_Release(IDirectMusicDownload *iface)
 {
-    IDirectMusicDownloadImpl *This = impl_from_IDirectMusicDownload(iface);
+    struct download *This = impl_from_IDirectMusicDownload(iface);
     ULONG ref = InterlockedDecrement(&This->ref);
 
-    TRACE("(%p)->(): new ref = %u\n", iface, ref);
+    TRACE("(%p): new ref = %lu\n", iface, ref);
 
     if (!ref) {
-        HeapFree(GetProcessHeap(), 0, This);
-        DMUSIC_UnlockModule();
+        free(This);
     }
 
     return ref;
 }
 
-/* IDirectMusicDownloadImpl IDirectMusicDownload part: */
-static HRESULT WINAPI IDirectMusicDownloadImpl_GetBuffer(IDirectMusicDownload *iface, void **buffer, DWORD *size)
+static HRESULT WINAPI download_GetBuffer(IDirectMusicDownload *iface, void **buffer, DWORD *size)
 {
-    FIXME("(%p, %p, %p): stub\n", iface, buffer, size);
+    struct download *This = impl_from_IDirectMusicDownload(iface);
+
+    TRACE("(%p, %p, %p)\n", iface, buffer, size);
+
+    *buffer = This->data;
+    *size = This->size;
 
     return S_OK;
 }
 
-static const IDirectMusicDownloadVtbl DirectMusicDownload_Vtbl = {
-    IDirectMusicDownloadImpl_QueryInterface,
-    IDirectMusicDownloadImpl_AddRef,
-    IDirectMusicDownloadImpl_Release,
-    IDirectMusicDownloadImpl_GetBuffer
+static const IDirectMusicDownloadVtbl download_vtbl =
+{
+    download_QueryInterface,
+    download_AddRef,
+    download_Release,
+    download_GetBuffer,
 };
 
-/* for ClassFactory */
-HRESULT DMUSIC_CreateDirectMusicDownloadImpl(const GUID *guid, void **ret_iface, IUnknown *unk_outer)
+HRESULT download_create(DWORD size, IDirectMusicDownload **ret_iface)
 {
-    IDirectMusicDownloadImpl *download;
+    struct download *download;
 
-    download = HeapAlloc(GetProcessHeap(), 0, sizeof(*download));
-    if (!download)
-    {
-        *ret_iface = NULL;
-        return E_OUTOFMEMORY;
-    }
-
-    download->IDirectMusicDownload_iface.lpVtbl = &DirectMusicDownload_Vtbl;
+    *ret_iface = NULL;
+    if (!(download = malloc(offsetof(struct download, data[size])))) return E_OUTOFMEMORY;
+    download->IDirectMusicDownload_iface.lpVtbl = &download_vtbl;
     download->ref = 1;
-    *ret_iface = download;
+    download->size = size;
 
-    DMUSIC_LockModule();
+    TRACE("Created DirectMusicDownload %p\n", download);
+    *ret_iface = &download->IDirectMusicDownload_iface;
     return S_OK;
 }
