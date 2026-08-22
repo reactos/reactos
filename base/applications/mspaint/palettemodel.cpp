@@ -24,6 +24,11 @@ PAL_TYPE PaletteModel::SelectedPalette()
     return m_nSelectedPalette;
 }
 
+BOOL PaletteModel::IsEditable() const
+{
+    return m_nSelectedPalette == PAL_MODERN || m_nSelectedPalette == PAL_OLDTYPE;
+}
+
 void PaletteModel::SelectPalette(PAL_TYPE nPalette)
 {
     static const COLORREF modernColors[NUM_COLORS] =
@@ -119,4 +124,55 @@ void PaletteModel::NotifyPaletteChanged()
 {
     if (paletteWindow.IsWindow())
         paletteWindow.Invalidate(FALSE);
+}
+
+void PaletteModel::SetColorInfo(HBITMAP hbm)
+{
+    static RGBQUAD colors[256];
+
+    BITMAP bm;
+    GetObjectW(hbm, sizeof(bm), &bm);
+
+    HDC hDC = CreateCompatibleDC(NULL);
+    HGDIOBJ hbmOld = SelectObject(hDC, hbm);
+    UINT cColors = GetDIBColorTable(hDC, 0, (UINT)_countof(colors), colors);
+    SelectObject(hDC, hbmOld);
+    DeleteDC(hDC);
+
+    SetColorTable(bm.bmBitsPixel, cColors, colors);
+}
+
+void PaletteModel::SetColorTable(UINT bpp, UINT cColors, RGBQUAD* colors)
+{
+    m_bpp = bpp;
+
+    PAL_TYPE palette = SelectedPalette();
+    if (bpp == 1)
+    {
+        if (palette != PAL_MONOCHROME)
+            SelectPalette(PAL_MONOCHROME);
+
+        if (cColors >= 2)
+            SetPrimaryColors(QuadToRGBValue(colors[0]), QuadToRGBValue(colors[1]));
+        else
+            SetPrimaryColors(RGB(0, 0, 0), RGB(255, 255, 255));
+    }
+    else
+    {
+        if (palette == PAL_MONOCHROME)
+            SelectPalette(PAL_MODERN);
+
+        SetPrimaryColors(RGB(0, 0, 0), RGB(255, 255, 255));
+    }
+}
+
+void PaletteModel::SetPrimaryColors(COLORREF color0, COLORREF color1)
+{
+    if (m_primaryColor != color0 || m_secondaryColor != color1)
+    {
+        m_primaryColor = color0;
+        m_secondaryColor = color1;
+        toolsModel.DeleteBrushes();
+        paletteWindow.Invalidate(TRUE);
+    }
 }
