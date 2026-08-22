@@ -93,12 +93,7 @@ PopulateWdmDeviceList(
             FuncTable.SetState = FUNC_NAME(WdmAudSetWaveState);
             FuncTable.ResetStream = FUNC_NAME(WdmAudResetStream);
             FuncTable.GetPos = FUNC_NAME(WdmAudGetWavePosition);
-
-#ifndef USERMODE_MIXER
             FuncTable.CommitWaveBuffer = FUNC_NAME(WdmAudCommitWaveBuffer);
-#else
-            FuncTable.CommitWaveBuffer = WriteFileEx_Remixer;
-#endif
         }
         else if (DeviceType == MIDI_IN_DEVICE_TYPE || DeviceType == MIDI_OUT_DEVICE_TYPE)
         {
