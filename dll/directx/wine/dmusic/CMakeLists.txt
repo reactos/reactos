@@ -27,7 +27,7 @@ add_idl_reg_scripts(dmusic registry dmusic.idl)
 
 set_module_type(dmusic win32dll)
 target_link_libraries(dmusic wine wine_dll_register wine_dll_canunload dxguid uuid oldnames)
-add_importlibs(dmusic ole32 advapi32 winmm dsound user32 ucrtbase msvcrt kernel32 ntdll)
+add_importlibs(dmusic ole32 advapi32 winmm dsound user32 msvcrt kernel32 ntdll)
 add_dependencies(dmusic wineheaders)
 add_cd_file(TARGET dmusic DESTINATION reactos/system32 FOR all)
 set_wine_module(dmusic)

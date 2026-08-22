@@ -24,7 +24,7 @@ add_idl_reg_scripts(dmloader registry dmloader.idl)
 
 set_module_type(dmloader win32dll)
 target_link_libraries(dmloader wine wine_dll_register wine_dll_canunload dxguid uuid oldnames)
-add_importlibs(dmloader ole32 advapi32 ucrtbase msvcrt kernel32 ntdll)
+add_importlibs(dmloader ole32 advapi32 msvcrt kernel32 ntdll)
 add_dependencies(dmloader wineheaders)
 add_cd_file(TARGET dmloader DESTINATION reactos/system32 FOR all)
 set_wine_module(dmloader)

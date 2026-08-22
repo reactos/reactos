@@ -22,7 +22,7 @@ add_idl_reg_scripts(dmband registry dmband.idl)
 
 set_module_type(dmband win32dll)
 target_link_libraries(dmband wine wine_dll_register wine_dll_canunload dxguid uuid oldnames)
-add_importlibs(dmband ole32 advapi32 ucrtbase msvcrt kernel32 ntdll)
+add_importlibs(dmband ole32 advapi32 msvcrt kernel32 ntdll)
 add_dependencies(dmband wineheaders)
 add_cd_file(TARGET dmband DESTINATION reactos/system32 FOR all)
 set_wine_module(dmband)
