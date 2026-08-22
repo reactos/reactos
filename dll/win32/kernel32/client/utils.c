@@ -59,15 +59,20 @@ BasepAnsiStringToUnicodeSize(IN PANSI_STRING String)
     return RtlAnsiStringToUnicodeSize(String);
 }
 
-HANDLE
+NTSTATUS
 WINAPI
-BaseGetNamedObjectDirectory(VOID)
+BaseGetNamedObjectDirectory(PHANDLE DirectoryHandle)
 {
     OBJECT_ATTRIBUTES ObjectAttributes;
     NTSTATUS Status;
     HANDLE DirHandle, BnoHandle, Token, NewToken;
 
-    if (BaseNamedObjectDirectory) return BaseNamedObjectDirectory;
+    *DirectoryHandle = BaseNamedObjectDirectory;
+
+    if (BaseNamedObjectDirectory)
+    {
+        return STATUS_SUCCESS;
+    }
 
     if (NtCurrentTeb()->IsImpersonating)
     {
@@ -75,7 +80,10 @@ BaseGetNamedObjectDirectory(VOID)
                                    TOKEN_IMPERSONATE,
                                    TRUE,
                                    &Token);
-        if (!NT_SUCCESS(Status)) return BaseNamedObjectDirectory;
+        if (!NT_SUCCESS(Status))
+        {
+            return Status;
+        }
 
         NewToken = NULL;
         Status = NtSetInformationThread(NtCurrentThread(),
@@ -85,7 +93,7 @@ BaseGetNamedObjectDirectory(VOID)
         if (!NT_SUCCESS (Status))
         {
             NtClose(Token);
-            return BaseNamedObjectDirectory;
+            return Status;
         }
     }
     else
@@ -149,7 +157,24 @@ Quickie:
         NtClose(Token);
     }
 
-    return BaseNamedObjectDirectory;
+    *DirectoryHandle = BaseNamedObjectDirectory;
+    return STATUS_SUCCESS;
+}
+
+HANDLE
+WINAPI
+BasepGetNamedObjectDirectory(VOID)
+{
+    NTSTATUS Status;
+    HANDLE DirectoryHandle;
+
+    Status = BaseGetNamedObjectDirectory(&DirectoryHandle);
+    if (!NT_SUCCESS(Status))
+    {
+        return NULL;
+    }
+
+    return DirectoryHandle;
 }
 
 VOID
@@ -328,7 +353,7 @@ BaseFormatObjectAttributes(OUT POBJECT_ATTRIBUTES ObjectAttributes,
     if (ObjectName)
     {
         Attributes |= OBJ_OPENIF;
-        RootDirectory = BaseGetNamedObjectDirectory();
+        RootDirectory = BasepGetNamedObjectDirectory();
     }
     else
     {
