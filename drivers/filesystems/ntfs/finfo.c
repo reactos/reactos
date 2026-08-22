@@ -61,7 +61,7 @@ NtfsGetStandardInformation(PNTFS_FCB Fcb,
     StandardInfo->AllocationSize = Fcb->RFCB.AllocationSize;
     StandardInfo->EndOfFile = Fcb->RFCB.FileSize;
     StandardInfo->NumberOfLinks = Fcb->LinkCount;
-    StandardInfo->DeletePending = FALSE;
+    StandardInfo->DeletePending = BooleanFlagOn(Fcb->Flags, FCB_DELETE_PENDING);
     StandardInfo->Directory = NtfsFCBIsDirectory(Fcb);
 
     *BufferLength -= sizeof(FILE_STANDARD_INFORMATION);
@@ -117,6 +117,53 @@ NtfsGetBasicInformation(PFILE_OBJECT FileObject,
     NtfsFileFlagsToAttributes(FileName->FileAttributes, &BasicInfo->FileAttributes);
 
     *BufferLength -= sizeof(FILE_BASIC_INFORMATION);
+
+    return STATUS_SUCCESS;
+}
+
+static
+NTSTATUS
+NtfsGetAttributeTagInformation(PNTFS_FCB Fcb,
+                               PFILE_ATTRIBUTE_TAG_INFORMATION AttributeTagInfo,
+                               PULONG BufferLength)
+{
+    PFILENAME_ATTRIBUTE FileName = &Fcb->Entry;
+
+    DPRINT("NtfsGetAttributeTagInformation(%p, %p, %p)\n", Fcb, AttributeTagInfo, BufferLength);
+
+    if (*BufferLength < sizeof(FILE_ATTRIBUTE_TAG_INFORMATION))
+        return STATUS_BUFFER_TOO_SMALL;
+
+    RtlZeroMemory(AttributeTagInfo, sizeof(FILE_ATTRIBUTE_TAG_INFORMATION));
+
+    NtfsFileFlagsToAttributes(FileName->FileAttributes, &AttributeTagInfo->FileAttributes);
+
+    /* FIXME: Read the tag from $REPARSE_POINT for a reparse point */
+    AttributeTagInfo->ReparseTag = 0;
+
+    *BufferLength -= sizeof(FILE_ATTRIBUTE_TAG_INFORMATION);
+
+    return STATUS_SUCCESS;
+}
+
+
+static
+NTSTATUS
+NtfsGetEaInformation(PNTFS_FCB Fcb,
+                     PFILE_EA_INFORMATION EaInfo,
+                     PULONG BufferLength)
+{
+    UNREFERENCED_PARAMETER(Fcb);
+
+    DPRINT("NtfsGetEaInformation(%p, %p, %p)\n", Fcb, EaInfo, BufferLength);
+
+    if (*BufferLength < sizeof(FILE_EA_INFORMATION))
+        return STATUS_BUFFER_TOO_SMALL;
+
+    /* We do not support extended attributes yet, so there are none */
+    EaInfo->EaSize = 0;
+
+    *BufferLength -= sizeof(FILE_EA_INFORMATION);
 
     return STATUS_SUCCESS;
 }
@@ -429,7 +476,7 @@ NtfsQueryInformation(PNTFS_IRP_CONTEXT IrpContext)
     PDEVICE_OBJECT DeviceObject;
     NTSTATUS Status = STATUS_SUCCESS;
 
-    DPRINT1("NtfsQueryInformation(%p)\n", IrpContext);
+    DPRINT("NtfsQueryInformation(%p)\n", IrpContext);
 
     Irp = IrpContext->Irp;
     Stack = IrpContext->Stack;
@@ -454,6 +501,12 @@ NtfsQueryInformation(PNTFS_IRP_CONTEXT IrpContext)
                                                 DeviceObject,
                                                 SystemBuffer,
                                                 &BufferLength);
+            break;
+
+        case FileEaInformation:
+            Status = NtfsGetEaInformation(Fcb,
+                                          SystemBuffer,
+                                          &BufferLength);
             break;
 
         case FilePositionInformation:
@@ -496,6 +549,12 @@ NtfsQueryInformation(PNTFS_IRP_CONTEXT IrpContext)
                                               DeviceObject->DeviceExtension,
                                               SystemBuffer,
                                               &BufferLength);
+            break;
+
+        case FileAttributeTagInformation:
+            Status = NtfsGetAttributeTagInformation(Fcb,
+                                                    SystemBuffer,
+                                                    &BufferLength);
             break;
 
         case FileAlternateNameInformation:
@@ -572,10 +631,7 @@ NtfsSetEndOfFile(PNTFS_FCB Fcb,
     PNTFS_ATTR_CONTEXT DataContext;
     ULONG AttributeOffset;
     NTSTATUS Status = STATUS_SUCCESS;
-    ULONGLONG AllocationSize;
     PFILENAME_ATTRIBUTE FileNameAttribute;
-    ULONGLONG ParentMFTId;
-    UNICODE_STRING FileName;
 
 
     // Allocate non-paged memory for the file record
@@ -669,21 +725,11 @@ NtfsSetEndOfFile(PNTFS_FCB Fcb,
         return STATUS_INVALID_PARAMETER;
     }
 
-    ParentMFTId = FileNameAttribute->DirectoryFileReferenceNumber & NTFS_MFT_MASK;
-
-    FileName.Buffer = FileNameAttribute->Name;
-    FileName.Length = FileNameAttribute->NameLength * sizeof(WCHAR);
-    FileName.MaximumLength = FileName.Length;
-
-    AllocationSize = AttributeAllocatedLength(DataContext->pRecord);
-
-    Status = UpdateFileNameRecord(Fcb->Vcb,
-                                  ParentMFTId,
-                                  &FileName,
-                                  FALSE,
-                                  NewFileSize->QuadPart,
-                                  AllocationSize,
-                                  CaseSensitive);
+    Status = NtfsUpdateDuplicatedInformation(Fcb->Vcb,
+                                             FileRecord,
+                                             Fcb->MFTIndex,
+                                             NTFS_FILENAME_UPDATE_SIZES,
+                                             CaseSensitive);
 
     ReleaseAttributeContext(DataContext);
     ExFreeToNPagedLookasideList(&DeviceExt->FileRecLookasideList, FileRecord);
@@ -715,6 +761,211 @@ NtfsSetEndOfFile(PNTFS_FCB Fcb,
 * All other information classes are TODO.
 *
 */
+/**
+* @name NtfsSetBasicInformation
+* @implemented
+*
+* Applies a FILE_BASIC_INFORMATION to a file: its four timestamps and its
+* attribute flags.
+*
+* @param DeviceExt
+* Points to the target disk's DEVICE_EXTENSION
+*
+* @param Fcb
+* File control block of the file being changed
+*
+* @param CaseSensitive
+* Whether the parent directory's index should be searched case-sensitively
+*
+* @param BasicInfo
+* The timestamps and attributes to apply
+*
+* @return
+* STATUS_SUCCESS on success, STATUS_INSUFFICIENT_RESOURCES if an allocation
+* failed, STATUS_INVALID_PARAMETER if the file record has no
+* $STANDARD_INFORMATION, or whatever status reading or writing the file record
+* returned.
+*
+* @remarks A timestamp of zero means "leave as is" and -1 means "stop
+* maintaining automatically"; both are treated as no change, as the driver
+* doesn't yet update timestamps on I/O. FileAttributes of zero means no change.
+*
+* NTFS keeps a second copy of these in $FILE_NAME and a third in the parent
+* directory's index entry; all three are updated here.
+*
+*/
+static
+NTSTATUS
+NtfsSetBasicInformation(PDEVICE_EXTENSION DeviceExt,
+                        PNTFS_FCB Fcb,
+                        BOOLEAN CaseSensitive,
+                        PFILE_BASIC_INFORMATION BasicInfo)
+{
+    PFILE_RECORD_HEADER FileRecord;
+    PSTANDARD_INFORMATION StdInfo;
+    NTSTATUS Status;
+
+    DPRINT("NtfsSetBasicInformation(%p, %p, %p)\n", DeviceExt, Fcb, BasicInfo);
+
+    FileRecord = ExAllocateFromNPagedLookasideList(&DeviceExt->FileRecLookasideList);
+    if (FileRecord == NULL)
+    {
+        DPRINT1("Not enough memory!\n");
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    Status = ReadFileRecord(DeviceExt, Fcb->MFTIndex, FileRecord);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Can't find record for %wS!\n", Fcb->ObjectName);
+        ExFreeToNPagedLookasideList(&DeviceExt->FileRecLookasideList, FileRecord);
+        return Status;
+    }
+
+    StdInfo = GetStandardInformationFromRecord(DeviceExt, FileRecord);
+    if (StdInfo == NULL)
+    {
+        DPRINT1("No $STANDARD_INFORMATION for %wS!\n", Fcb->ObjectName);
+        ExFreeToNPagedLookasideList(&DeviceExt->FileRecLookasideList, FileRecord);
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    if (BasicInfo->CreationTime.QuadPart > 0)
+        StdInfo->CreationTime = BasicInfo->CreationTime.QuadPart;
+
+    if (BasicInfo->LastAccessTime.QuadPart > 0)
+        StdInfo->LastAccessTime = BasicInfo->LastAccessTime.QuadPart;
+
+    if (BasicInfo->LastWriteTime.QuadPart > 0)
+        StdInfo->LastWriteTime = BasicInfo->LastWriteTime.QuadPart;
+
+    if (BasicInfo->ChangeTime.QuadPart > 0)
+        StdInfo->ChangeTime = BasicInfo->ChangeTime.QuadPart;
+
+    if (BasicInfo->FileAttributes != 0)
+    {
+        ULONG Attributes = BasicInfo->FileAttributes;
+
+        /* Whether this is a directory isn't the caller's to say */
+        Attributes &= ~(FILE_ATTRIBUTE_DIRECTORY | NTFS_FILE_TYPE_DIRECTORY);
+
+        /* NORMAL only means anything on its own */
+        if ((Attributes & FILE_ATTRIBUTE_NORMAL) && Attributes != FILE_ATTRIBUTE_NORMAL)
+            Attributes &= ~FILE_ATTRIBUTE_NORMAL;
+
+        StdInfo->FileAttribute = Attributes;
+    }
+
+    /* Everything else NTFS keeps a second and third copy of goes out through the one funnel,
+     * which also writes the file record back. */
+    Status = NtfsUpdateDuplicatedInformation(DeviceExt,
+                                             FileRecord,
+                                             Fcb->MFTIndex,
+                                             NTFS_FILENAME_UPDATE_TIMES |
+                                             NTFS_FILENAME_UPDATE_ATTRS,
+                                             CaseSensitive);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to refresh the duplicated information for %wS (Status %lx)\n",
+                Fcb->ObjectName, Status);
+    }
+
+    ExFreeToNPagedLookasideList(&DeviceExt->FileRecLookasideList, FileRecord);
+
+    return Status;
+}
+
+/**
+* @name NtfsSetDispositionInformation
+* @implemented
+*
+* Marks a file for deletion, or clears an existing mark.
+*
+* @param DeviceExt
+* Points to the target disk's DEVICE_EXTENSION.
+*
+* @param Fcb
+* Pointer to the NTFS_FCB of the file. Fcb->MainResource should have been acquired.
+*
+* @param FileObject
+* Pointer to the FILE_OBJECT the request arrived on.
+*
+* @param CaseSensitive
+* Boolean indicating if the function should operate in case-sensitive mode. This will be TRUE
+* if an application created the file with the FILE_FLAG_POSIX_SEMANTICS flag.
+*
+* @param DispositionInfo
+* Pointer to the FILE_DISPOSITION_INFORMATION supplied by the caller.
+*
+* @return
+* STATUS_SUCCESS on success.
+* STATUS_CANNOT_DELETE if the file is read-only or is the volume root.
+* STATUS_DIRECTORY_NOT_EMPTY if the file is a directory that still holds entries.
+*
+* @remarks
+* Only records the intent; the file is deleted at cleanup, once its last handle is closed.
+*/
+static
+NTSTATUS
+NtfsSetDispositionInformation(PDEVICE_EXTENSION DeviceExt,
+                              PNTFS_FCB Fcb,
+                              PFILE_OBJECT FileObject,
+                              BOOLEAN CaseSensitive,
+                              PFILE_DISPOSITION_INFORMATION DispositionInfo)
+{
+    DPRINT("NtfsSetDispositionInformation(%p, %p, %p, %s, %p)\n",
+           DeviceExt, Fcb, FileObject, CaseSensitive ? "TRUE" : "FALSE", DispositionInfo);
+
+    if (!DispositionInfo->DeleteFile)
+    {
+        Fcb->Flags &= ~FCB_DELETE_PENDING;
+        FileObject->DeletePending = FALSE;
+        return STATUS_SUCCESS;
+    }
+
+    if (!NtfsGlobalData->EnableWriteSupport)
+    {
+        DPRINT1("NTFS write-support is EXPERIMENTAL and is disabled by default!\n");
+        return STATUS_ACCESS_DENIED;
+    }
+
+    /* The volume root has no parent index to be removed from */
+    if (NtfsFCBIsRoot(Fcb))
+        return STATUS_CANNOT_DELETE;
+
+    if (Fcb->Entry.FileAttributes & NTFS_FILE_TYPE_READ_ONLY)
+        return STATUS_CANNOT_DELETE;
+
+    if (NtfsFCBIsDirectory(Fcb))
+    {
+        UNICODE_STRING Pattern = RTL_CONSTANT_STRING(L"*");
+        ULONGLONG EntryMftIndex;
+        ULONG FirstEntry = 0;
+        NTSTATUS Status;
+
+        /* "." and ".." are synthesized during enumeration and are not in the index, so any
+         * entry found here is a real child */
+        Status = NtfsFindMftRecord(DeviceExt,
+                                   Fcb->MFTIndex,
+                                   &Pattern,
+                                   &FirstEntry,
+                                   FALSE,
+                                   CaseSensitive,
+                                   &EntryMftIndex);
+        if (NT_SUCCESS(Status))
+            return STATUS_DIRECTORY_NOT_EMPTY;
+    }
+
+    /* Deleting a mapped file would free its record out from under the section */
+    if (!MmFlushImageSection(&Fcb->SectionObjectPointers, MmFlushForDelete))
+        return STATUS_CANNOT_DELETE;
+
+    Fcb->Flags |= FCB_DELETE_PENDING;
+    FileObject->DeletePending = TRUE;
+
+    return STATUS_SUCCESS;
+}
+
 NTSTATUS
 NtfsSetInformation(PNTFS_IRP_CONTEXT IrpContext)
 {
@@ -752,6 +1003,19 @@ NtfsSetInformation(PNTFS_IRP_CONTEXT IrpContext)
     {
         PFILE_END_OF_FILE_INFORMATION EndOfFileInfo;
 
+        case FileBasicInformation:
+            if (BufferLength < sizeof(FILE_BASIC_INFORMATION))
+            {
+                Status = STATUS_INFO_LENGTH_MISMATCH;
+                break;
+            }
+
+            Status = NtfsSetBasicInformation(DeviceExt,
+                                             Fcb,
+                                             BooleanFlagOn(Stack->Flags, SL_CASE_SENSITIVE),
+                                             (PFILE_BASIC_INFORMATION)SystemBuffer);
+            break;
+
         /* TODO: Allocation size is not actually the same as file end for NTFS,
            however, few applications are likely to make the distinction. */
         case FileAllocationInformation:
@@ -764,6 +1028,20 @@ NtfsSetInformation(PNTFS_IRP_CONTEXT IrpContext)
                                       Irp->Flags,
                                       BooleanFlagOn(Stack->Flags, SL_CASE_SENSITIVE),
                                       &EndOfFileInfo->EndOfFile);
+            break;
+
+        case FileDispositionInformation:
+            if (BufferLength < sizeof(FILE_DISPOSITION_INFORMATION))
+            {
+                Status = STATUS_INFO_LENGTH_MISMATCH;
+                break;
+            }
+
+            Status = NtfsSetDispositionInformation(DeviceExt,
+                                                   Fcb,
+                                                   FileObject,
+                                                   BooleanFlagOn(Stack->Flags, SL_CASE_SENSITIVE),
+                                                   (PFILE_DISPOSITION_INFORMATION)SystemBuffer);
             break;
 
         // TODO: all other information classes
