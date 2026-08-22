@@ -1234,6 +1234,10 @@ ShutdownDialogProc(
                 case IDC_BUTTON_SLEEP:
                 case IDC_BUTTON_HIBERNATE:
                     return DrawIconOnOwnerDrawnButtons(pdis, pContext);
+                case IDC_ROSLOGO:
+                    return DrawBrandingBitmap(pdis, &hBanner);
+                case IDC_BAR:
+                    return DrawBrandingBitmap(pdis, &hBannerLine);
             }
             break;
         }
