@@ -118,6 +118,8 @@ PCSR_API_ROUTINE ConsoleServerApiDispatchTable[ConsolepMaxApiNumber - CONSRV_FIR
     // SrvSetConsoleCurrentFont,               // Added in Vista+
     // SrvSetScreenBufferInfo,                 // Added in Vista+
     // SrvConsoleClientConnect,                // Added in Win7
+    SrvGetConsoleScreenBufferInfoEx,        // Added in Vista+
+    SrvSetConsoleScreenBufferInfoEx,        // Added in Vista+
 };
 
 BOOLEAN ConsoleServerApiServerValidTable[ConsolepMaxApiNumber - CONSRV_FIRST_API_NUMBER] =
@@ -214,6 +216,8 @@ BOOLEAN ConsoleServerApiServerValidTable[ConsolepMaxApiNumber - CONSRV_FIRST_API
     // FALSE,   // SrvSetConsoleCurrentFont,
     // FALSE,   // SrvSetScreenBufferInfo,
     // FALSE,   // SrvConsoleClientConnect,
+    FALSE,   // SrvGetConsoleScreenBufferInfoEx,
+    FALSE,   // SrvSetConsoleScreenBufferInfoEx,
 };
 
 /*
@@ -315,6 +319,8 @@ PCHAR ConsoleServerApiNameTable[ConsolepMaxApiNumber - CONSRV_FIRST_API_NUMBER] 
     // "SetConsoleCurrentFont",
     // "SetScreenBufferInfo",
     // "ConsoleClientConnect",
+    "GetConsoleScreenBufferInfoEx",
+    "SetConsoleScreenBufferInfoEx",
 };
 #endif
 
