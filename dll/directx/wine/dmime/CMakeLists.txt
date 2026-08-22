@@ -41,7 +41,7 @@ add_idl_reg_scripts(dmime registry dmime.idl)
 
 set_module_type(dmime win32dll)
 target_link_libraries(dmime wine wine_dll_register wine_dll_canunload dxguid uuid oldnames)
-add_importlibs(dmime dsound ole32 user32 advapi32 kernel32_vista ucrtbase msvcrt kernel32 ntdll)
+add_importlibs(dmime dsound ole32 user32 advapi32 kernel32_vista msvcrt kernel32 ntdll)
 add_dependencies(dmime wineheaders)
 add_cd_file(TARGET dmime DESTINATION reactos/system32 FOR all)
 set_wine_module(dmime)

@@ -24,7 +24,7 @@ add_idl_reg_scripts(dmcompos registry dmcompos.idl)
 
 set_module_type(dmcompos win32dll)
 target_link_libraries(dmcompos wine wine_dll_register wine_dll_canunload dxguid uuid oldnames)
-add_importlibs(dmcompos ole32 advapi32 ucrtbase msvcrt kernel32 ntdll)
+add_importlibs(dmcompos ole32 advapi32 msvcrt kernel32 ntdll)
 add_dependencies(dmcompos wineheaders)
 add_cd_file(TARGET dmcompos DESTINATION reactos/system32 FOR all)
 set_wine_module(dmcompos)
