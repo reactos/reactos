@@ -25,3 +25,10 @@ KiGetCpuSignature(
     _Out_ PUSHORT Family,
     _Out_ PUSHORT Model,
     _Out_ PUSHORT Stepping);
+
+ULONG
+NTAPI
+KiGetCpuCacheDescriptors(
+    _Out_writes_(MaxCount) PCACHE_DESCRIPTOR CacheDescriptors,
+    _In_ ULONG MaxCount,
+    _In_ CPU_VENDORS Vendor);
