@@ -912,7 +912,7 @@ StorPortGetUncachedExtension(
                                                                                            LowestAddress,
                                                                                            HighestAddress,
                                                                                            Alignment,
-                                                                                           MmCached);
+                                                                                           MmNonCached);
     if (DeviceExtension->UncachedExtensionVirtualBase == NULL)
         return NULL;
 
