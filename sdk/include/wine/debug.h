@@ -35,8 +35,8 @@
 
 /* Tests are not supposed to pull this in, but current Wine tests reach it
  * through wine/strmbase.h, which needs wine_dbg_sprintf() for debugstr_time().
- * When wine/test.h got here first it already supplies every debugstr_*/
-/* helper below, so defer to it rather than declaring them a second time. */
+ * When wine/test.h got here first it already supplies the same debug string
+ * helpers, so defer to it below rather than declaring them a second time. */
 
 #ifdef __cplusplus
 extern "C" {
@@ -98,11 +98,13 @@ struct __wine_debug_channel
 #define __WINE_DBG_LOG(...) \
     ros_dbg_log( __dbcl, __dbch, __RELFILE__, __FUNCTION__, __LINE__, __VA_ARGS__); } } while(0)
 
+#ifndef __WINE_PRINTF_ATTR /* wine/test.h defines this too; either may come first */
 #if !defined(__REACTOS__) // (defined(__GNUC__) || defined(__clang__)) && (defined(__MINGW32__) || defined (_MSC_VER) || !defined(__WINE_USE_MSVCRT))
 #define __WINE_PRINTF_ATTR(fmt,args) __attribute__((format (printf,fmt,args)))
 #else
 #define __WINE_PRINTF_ATTR(fmt,args)
 #endif
+#endif /* !__WINE_PRINTF_ATTR */
 
 #ifdef WINE_NO_TRACE_MSGS
 #define WINE_TRACE(...) do { } while(0)
@@ -152,6 +154,7 @@ extern int wine_dbg_log( enum __wine_debug_class cls, struct __wine_debug_channe
 extern int ros_dbg_log( enum __wine_debug_class cls, struct __wine_debug_channel *ch, const char *file,
                          const char *func, const int line, const char *format, ... ) __WINE_PRINTF_ATTR(6,7);
 
+#ifndef __WINE_WINE_TEST_H /* see the note above: wine/test.h already has these */
 static __inline const char *wine_dbgstr_a( const char *s )
 {
     return wine_dbgstr_an( s, -1 );
@@ -161,6 +164,7 @@ static __inline const char *wine_dbgstr_w( const WCHAR *s )
 {
     return wine_dbgstr_wn( s, -1 );
 }
+#endif /* !__WINE_WINE_TEST_H */
 
 #if defined(__hstring_h__) && defined(__WINSTRING_H_)
 static inline const char *wine_dbgstr_hstring( HSTRING hstr )
@@ -171,6 +175,7 @@ static inline const char *wine_dbgstr_hstring( HSTRING hstr )
 }
 #endif
 
+#ifndef __WINE_WINE_TEST_H /* wine/test.h declares these too */
 static __inline const char *wine_dbgstr_guid( const GUID *id )
 {
     if (!id) return "(null)";
@@ -193,6 +198,7 @@ static inline const char *wine_dbgstr_fourcc( unsigned int fourcc )
 }
 #endif
 
+#ifndef __WINE_WINE_TEST_H /* wine/test.h declares these too */
 static __inline const char *wine_dbgstr_point( const POINT *pt )
 {
     if (!pt) return "(null)";
@@ -212,12 +218,17 @@ static __inline const char *wine_dbgstr_rect( const RECT *rect )
                              rect->right, rect->bottom );
 }
 
+#endif /* !__WINE_WINE_TEST_H */
+
+/* wine/test.h only declares this one under WINETEST_USE_DBGSTR_LONGLONG. */
+#if !defined(__WINE_WINE_TEST_H) || !defined(WINETEST_USE_DBGSTR_LONGLONG)
 static __inline const char *wine_dbgstr_longlong( ULONGLONG ll )
 {
     if (/*sizeof(ll) > sizeof(unsigned long) &&*/ ll >> 32) /* ULONGLONG is always > long in ReactOS */
         return wine_dbg_sprintf( "%lx%08lx", (unsigned long)(ll >> 32), (unsigned long)ll );
     else return wine_dbg_sprintf( "%lx", (unsigned long)ll );
 }
+#endif /* !__WINE_WINE_TEST_H */
 
 #if defined(__oaidl_h__) && defined(V_VT)
 
@@ -372,9 +383,11 @@ static inline const char *wine_dbgstr_variant( const VARIANT *v )
 
 /* Wine uses shorter names that are very likely to conflict with other software */
 
+#ifndef __WINE_WINE_TEST_H /* wine/test.h defines these too */
 static __inline const char *debugstr_an( const char * s, int n ) { return wine_dbgstr_an( s, n ); }
 static __inline const char *debugstr_wn( const WCHAR *s, int n ) { return wine_dbgstr_wn( s, n ); }
 static __inline const char *debugstr_guid( const struct _GUID *id ) { return wine_dbgstr_guid(id); }
+<<<<<<< HEAD
 <<<<<<< HEAD
 #ifdef __REACTOS__ /* wine-8.18 */
 static inline const char *debugstr_fourcc( unsigned int cc ) { return wine_dbgstr_fourcc( cc ); }
@@ -382,8 +395,13 @@ static inline const char *debugstr_fourcc( unsigned int cc ) { return wine_dbgst
 =======
 static __inline const char *debugstr_fourcc( unsigned int cc ) { return wine_dbgstr_fourcc( cc ); }
 >>>>>>> dd6c348432c ([DIRECTX:WINE][SDK][WIN32S] pass at building Wine-10.0)
+=======
+>>>>>>> cc192f397dd ([WINETESTS] Update the DirectX WineTest)
 static __inline const char *debugstr_a( const char *s )  { return wine_dbgstr_an( s, -1 ); }
 static __inline const char *debugstr_w( const WCHAR *s ) { return wine_dbgstr_wn( s, -1 ); }
+#endif /* !__WINE_WINE_TEST_H */
+/* wine/test.h has no debugstr_fourcc(), so this one is always needed. */
+static __inline const char *debugstr_fourcc( unsigned int cc ) { return wine_dbgstr_fourcc( cc ); }
 
 #if defined(__hstring_h__) && defined(__WINSTRING_H_)
 static inline const char *debugstr_hstring( struct HSTRING__ *s ) { return wine_dbgstr_hstring( s ); }
