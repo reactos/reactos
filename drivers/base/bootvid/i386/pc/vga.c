@@ -70,38 +70,51 @@ ULONG_PTR VgaBase = 0;
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
-static VOID
+static
+VOID
 ReadWriteMode(
     _In_ UCHAR Mode)
 {
     UCHAR Value;
 
-    /* Switch to graphics mode register */
     __outpb(VGA_BASE_IO_PORT + GRAPH_ADDRESS_PORT, IND_GRAPH_MODE);
 
-    /* Get the current register value, minus the current mode */
-    Value = __inpb(VGA_BASE_IO_PORT + GRAPH_DATA_PORT) & 0xF4;
+    Value = __inpb(VGA_BASE_IO_PORT + GRAPH_DATA_PORT);
+    Value &= ~0x0B;
+    Value |= Mode;
+    __outpb(VGA_BASE_IO_PORT + GRAPH_DATA_PORT, Value);
+}
 
-    /* Set the new mode */
-    __outpb(VGA_BASE_IO_PORT + GRAPH_DATA_PORT, Mode | Value);
+static
+VOID
+PrepareForCopyArea(VOID)
+{
+    /* Enable all memory planes */
+    __outpw(VGA_BASE_IO_PORT + SEQ_ADDRESS_PORT, (0x0F << 8) | IND_MAP_MASK);
+
+    /* Set the bit mask to access all pixels in byte */
+    __outpw(VGA_BASE_IO_PORT + GRAPH_ADDRESS_PORT, (0xFF << 8) | IND_BIT_MASK);
+
+    /* Select read mode 0 and write mode 1 */
+    ReadWriteMode(1);
 }
 
 VOID
 PrepareForSetPixel(VOID)
 {
-    /* Switch to mode 10 */
-    ReadWriteMode(10);
+    /* Select read mode 1 and write mode 2 */
+    ReadWriteMode(0xA);
 
-    /* Clear the 4 planes (we're already in unchained mode here) */
-    __outpw(VGA_BASE_IO_PORT + SEQ_ADDRESS_PORT, 0x0F02);
+    /* Enable all memory planes */
+    __outpw(VGA_BASE_IO_PORT + SEQ_ADDRESS_PORT, (0x0F << 8) | IND_MAP_MASK);
 
-    /* Select the color don't care register */
+    /* Clear the color don't care register, so read mode 1 reads always return 0xFF */
     __outpw(VGA_BASE_IO_PORT + GRAPH_ADDRESS_PORT, 7);
 }
 
 #define SET_PIXELS(_PixelPtr, _PixelMask, _TextColor)       \
 do {                                                        \
-    /* Select the bitmask register and write the mask */    \
+    /* Select the pixels to modify in VGA memory */         \
     __outpw(VGA_BASE_IO_PORT + GRAPH_ADDRESS_PORT, ((_PixelMask) << 8) | IND_BIT_MASK); \
     /* Dummy read to load latch registers */                \
     (VOID)READ_REGISTER_UCHAR((_PixelPtr));                 \
@@ -200,7 +213,8 @@ DisplayCharacter(
     }
 }
 
-static VOID
+static
+VOID
 SetPaletteEntryRGB(
     _In_ ULONG Id,
     _In_ RGBQUAD Rgb)
@@ -235,22 +249,13 @@ DoScroll(
     ULONG Top, RowSize;
     PUCHAR OldPosition, NewPosition;
 
-    /* Clear the 4 planes */
-    __outpw(VGA_BASE_IO_PORT + SEQ_ADDRESS_PORT, 0x0F02);
-
-    /* Set the bitmask to 0xFF for all 4 planes */
-    __outpw(VGA_BASE_IO_PORT + GRAPH_ADDRESS_PORT, 0xFF08);
-
-    /* Set Mode 1 */
-    ReadWriteMode(1);
+    PrepareForCopyArea();
 
     RowSize = (VidpScrollRegion.Right - VidpScrollRegion.Left + 1) / 8;
 
-    /* Calculate the position in memory for the row */
     OldPosition = (PUCHAR)(VgaBase + (VidpScrollRegion.Top + Scroll) * (SCREEN_WIDTH / 8) + VidpScrollRegion.Left / 8);
     NewPosition = (PUCHAR)(VgaBase + VidpScrollRegion.Top * (SCREEN_WIDTH / 8) + VidpScrollRegion.Left / 8);
 
-    /* Start loop */
     for (Top = VidpScrollRegion.Top; Top <= VidpScrollRegion.Bottom; ++Top)
     {
 #if defined(_M_IX86) || defined(_M_AMD64)
@@ -273,45 +278,31 @@ PreserveRow(
     _In_ ULONG Height,
     _In_ BOOLEAN Restore)
 {
-    PUCHAR Position1, Position2;
+    PUCHAR OldPosition, NewPosition;
     ULONG Count;
 
-    /* Clear the 4 planes */
-    __outpw(VGA_BASE_IO_PORT + SEQ_ADDRESS_PORT, 0x0F02);
+    PrepareForCopyArea();
 
-    /* Set the bitmask to 0xFF for all 4 planes */
-    __outpw(VGA_BASE_IO_PORT + GRAPH_ADDRESS_PORT, 0xFF08);
-
-    /* Set Mode 1 */
-    ReadWriteMode(1);
-
-    /* Calculate the position in memory for the row */
     if (Restore)
     {
         /* Restore the row by copying back the contents saved off-screen */
-        Position1 = (PUCHAR)(VgaBase + CurrentTop * (SCREEN_WIDTH / 8));
-        Position2 = (PUCHAR)(VgaBase + SCREEN_HEIGHT * (SCREEN_WIDTH / 8));
+        OldPosition = (PUCHAR)(VgaBase + SCREEN_HEIGHT * (SCREEN_WIDTH / 8));
+        NewPosition = (PUCHAR)(VgaBase + CurrentTop * (SCREEN_WIDTH / 8));
     }
     else
     {
         /* Preserve the row by saving its contents off-screen */
-        Position1 = (PUCHAR)(VgaBase + SCREEN_HEIGHT * (SCREEN_WIDTH / 8));
-        Position2 = (PUCHAR)(VgaBase + CurrentTop * (SCREEN_WIDTH / 8));
+        OldPosition = (PUCHAR)(VgaBase + CurrentTop * (SCREEN_WIDTH / 8));
+        NewPosition = (PUCHAR)(VgaBase + SCREEN_HEIGHT * (SCREEN_WIDTH / 8));
     }
 
-    /* Set the count and loop every pixel */
     Count = Height * (SCREEN_WIDTH / 8);
 #if defined(_M_IX86) || defined(_M_AMD64)
-    __movsb(Position1, Position2, Count);
+    __movsb(NewPosition, OldPosition, Count);
 #else
     while (Count--)
     {
-        /* Write the data back on the other position */
-        WRITE_REGISTER_UCHAR(Position1, READ_REGISTER_UCHAR(Position2));
-
-        /* Increase both positions */
-        Position1++;
-        Position2++;
+        WRITE_REGISTER_UCHAR(NewPosition++, READ_REGISTER_UCHAR(OldPosition++));
     }
 #endif
 }
@@ -322,7 +313,7 @@ VOID
 NTAPI
 VidCleanUp(VOID)
 {
-    /* Select bit mask register and clear it */
+    /* Restore the bit mask to its original state */
     __outpb(VGA_BASE_IO_PORT + GRAPH_ADDRESS_PORT, IND_BIT_MASK);
     __outpb(VGA_BASE_IO_PORT + GRAPH_DATA_PORT, BIT_MASK_DEFAULT);
 }
@@ -500,8 +491,8 @@ VidSolidColorFill(
             /* Calculate new pixel position */
             Offset = (PUCHAR)(VgaBase + (Top * (SCREEN_WIDTH / 8)) + LeftOffset + 1);
 
-            /* Set the bitmask to 0xFF for all 4 planes */
-            __outpw(VGA_BASE_IO_PORT + GRAPH_ADDRESS_PORT, 0xFF08);
+            /* Set the bit mask to access all pixels in byte */
+            __outpw(VGA_BASE_IO_PORT + GRAPH_ADDRESS_PORT, (0xFF << 8) | IND_BIT_MASK);
 
             /* Check if the top coord is below the bottom one */
             if (Top <= Bottom)
