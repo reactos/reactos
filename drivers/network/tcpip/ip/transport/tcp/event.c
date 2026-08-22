@@ -427,12 +427,36 @@ TCPConnectEventHandler(void *arg, const err_t err)
 
     while (!IsListEmpty(&Connection->ConnectRequest))
     {
+        PTDI_CONNECTION_INFORMATION ReturnInfo;
+        PTA_IP_ADDRESS RemoteAddress;
+        ip_addr_t ipaddr;
+
         Entry = RemoveHeadList(&Connection->ConnectRequest);
 
         Bucket = CONTAINING_RECORD( Entry, TDI_BUCKET, Entry );
 
         Bucket->Status = TCPTranslateError(err);
         Bucket->Information = 0;
+        ReturnInfo = Bucket->ReturnInfo;
+        if (NT_SUCCESS(Bucket->Status) &&
+            ReturnInfo != NULL &&
+            ReturnInfo->RemoteAddress != NULL &&
+            ReturnInfo->RemoteAddressLength >= sizeof(TA_IP_ADDRESS))
+        {
+            RemoteAddress = (PTA_IP_ADDRESS)ReturnInfo->RemoteAddress;
+            RemoteAddress->TAAddressCount = 1;
+            RemoteAddress->Address[0].AddressLength = TDI_ADDRESS_LENGTH_IP;
+            RemoteAddress->Address[0].AddressType = TDI_ADDRESS_TYPE_IP;
+
+            Bucket->Status = TCPTranslateError(LibTCPGetPeerName(Connection->SocketContext,
+                                                                 &ipaddr,
+                                                                 &RemoteAddress->Address[0].Address[0].sin_port));
+            RemoteAddress->Address[0].Address[0].sin_port =
+                WH2N(RemoteAddress->Address[0].Address[0].sin_port);
+            RemoteAddress->Address[0].Address[0].in_addr = ipaddr.addr;
+            RtlZeroMemory(&RemoteAddress->Address[0].Address[0].sin_zero,
+                          sizeof(RemoteAddress->Address[0].Address[0].sin_zero));
+        }
 
         CompleteBucket(Connection, Bucket, FALSE);
     }

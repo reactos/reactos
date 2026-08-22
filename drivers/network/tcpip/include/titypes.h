@@ -230,6 +230,7 @@ typedef struct _TDI_BUCKET {
     LIST_ENTRY Entry;
     struct _CONNECTION_ENDPOINT *AssociatedEndpoint;
     TDI_REQUEST Request;
+    PTDI_CONNECTION_INFORMATION ReturnInfo;
     NTSTATUS Status;
     ULONG Information;
 } TDI_BUCKET, *PTDI_BUCKET;
