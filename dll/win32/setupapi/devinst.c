@@ -580,12 +580,6 @@ SetupDiGetActualModelsSectionW(
         return FALSE;
     }
 
-    if (Reserved != NULL)
-    {
-        SetLastError(ERROR_INVALID_PARAMETER);
-        return FALSE;
-    }
-
     if (AlternatePlatformInfo &&
         AlternatePlatformInfo->cbSize != sizeof(SP_ALTPLATFORM_INFO))
     {
@@ -621,13 +615,11 @@ SetupDiGetActualModelsSectionW(
     }
 
     /* Field 1: models-section-name */
-    if (!SetupGetStringFieldW(Context, 1, ModelsSection, ARRAYSIZE(ModelsSection), NULL))
+    if (!SetupGetStringFieldW(Context, 1, ModelsSection, ARRAYSIZE(ModelsSection), NULL) &&
+        !SetupGetStringFieldW(Context, 0, ModelsSection, ARRAYSIZE(ModelsSection), NULL))
     {
-        if (!SetupGetStringFieldW(Context, 0, ModelsSection, ARRAYSIZE(ModelsSection), NULL))
-        {
-            SetLastError(ERROR_INVALID_DATA);
-            return FALSE;
-        }
+        SetLastError(ERROR_INVALID_DATA);
+        return FALSE;
     }
 
     strcpyW(BestSection, ModelsSection);

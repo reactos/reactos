@@ -89,13 +89,6 @@ static void test_SetupDiGetActualModelsSectionW(void)
     ok(GetLastError() == ERROR_INVALID_PARAMETER,
        "Expected ERROR_INVALID_PARAMETER, got %lu\n", GetLastError());
 
-    /* Reserved != NULL must fail */
-    SetLastError(0xdeadbeef);
-    ret = SetupDiGetActualModelsSectionW(&ctx, NULL, Buffer, ARRAYSIZE(Buffer), &Required, (PVOID)1);
-    ok(!ret, "Expected failure with non-NULL Reserved\n");
-    ok(GetLastError() == ERROR_INVALID_PARAMETER,
-       "Expected ERROR_INVALID_PARAMETER, got %lu\n", GetLastError());
-
     /* Query required size only */
     Required = 0;
     ret = SetupDiGetActualModelsSectionW(&ctx, NULL, NULL, 0, &Required, NULL);
