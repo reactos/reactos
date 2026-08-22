@@ -565,28 +565,6 @@ MmIsDirtyPage(IN PEPROCESS Process,
     return FALSE;
 }
 
-VOID
-NTAPI
-MmSetCleanPage(IN PEPROCESS Process,
-               IN PVOID Address)
-{
-    //
-    // TODO
-    //
-    UNIMPLEMENTED_DBGBREAK();
-}
-
-VOID
-NTAPI
-MmSetDirtyPage(IN PEPROCESS Process,
-               IN PVOID Address)
-{
-    //
-    // TODO
-    //
-    UNIMPLEMENTED_DBGBREAK();
-}
-
 BOOLEAN
 NTAPI
 MmIsPagePresent(IN PEPROCESS Process,
