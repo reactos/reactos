@@ -1,7 +1,3 @@
-#ifdef __REACTOS__
-#include "precomp.h"
-#include "inet_ntop.c"
-#else
 /*
  * Wininet - Utility functions
  *
@@ -40,95 +36,8 @@
 
 #include "wine/debug.h"
 #include "internet.h"
-#endif /* defined(__REACTOS__) */
 
 WINE_DEFAULT_DEBUG_CHANNEL(wininet);
-
-#define TIME_STRING_LEN  30
-
-time_t ConvertTimeString(LPCWSTR asctime)
-{
-    WCHAR tmpChar[TIME_STRING_LEN];
-    WCHAR *tmpChar2;
-    struct tm t;
-    int timelen = lstrlenW(asctime);
-
-    if(!timelen)
-        return 0;
-
-    /* FIXME: the atoiWs below rely on that tmpChar is \0 padded */
-    memset( tmpChar, 0, sizeof(tmpChar) );
-    lstrcpynW(tmpChar, asctime, TIME_STRING_LEN);
-
-    /* Assert that the string is the expected length */
-    if (lstrlenW(asctime) >= TIME_STRING_LEN) FIXME("\n");
-
-    /* Convert a time such as 'Mon, 15 Nov 1999 16:09:35 GMT' into a SYSTEMTIME structure
-     * We assume the time is in this format
-     * and divide it into easy to swallow chunks
-     */
-    tmpChar[3]='\0';
-    tmpChar[7]='\0';
-    tmpChar[11]='\0';
-    tmpChar[16]='\0';
-    tmpChar[19]='\0';
-    tmpChar[22]='\0';
-    tmpChar[25]='\0';
-
-    memset( &t, 0, sizeof(t) );
-    t.tm_year = wcstol(tmpChar+12, NULL, 10) - 1900;
-    t.tm_mday = wcstol(tmpChar+5, NULL, 10);
-    t.tm_hour = wcstol(tmpChar+17, NULL, 10);
-    t.tm_min = wcstol(tmpChar+20, NULL, 10);
-    t.tm_sec = wcstol(tmpChar+23, NULL, 10);
-
-    /* and month */
-    tmpChar2 = tmpChar + 8;
-    switch(tmpChar2[2])
-    {
-        case 'n':
-            if(tmpChar2[1]=='a')
-                t.tm_mon = 0;
-            else
-                t.tm_mon = 5;
-            break;
-        case 'b':
-            t.tm_mon = 1;
-            break;
-        case 'r':
-            if(tmpChar2[1]=='a')
-                t.tm_mon = 2;
-            else
-                t.tm_mon = 3;
-            break;
-        case 'y':
-            t.tm_mon = 4;
-            break;
-        case 'l':
-            t.tm_mon = 6;
-            break;
-        case 'g':
-            t.tm_mon = 7;
-            break;
-        case 'p':
-            t.tm_mon = 8;
-            break;
-        case 't':
-            t.tm_mon = 9;
-            break;
-        case 'v':
-            t.tm_mon = 10;
-            break;
-        case 'c':
-            t.tm_mon = 11;
-            break;
-        default:
-            FIXME("\n");
-    }
-
-    return mktime(&t);
-}
-
 
 BOOL GetAddress(const WCHAR *name, INTERNET_PORT port, struct sockaddr *psa, int *sa_len, char *addr_str)
 {
@@ -177,8 +86,13 @@ BOOL GetAddress(const WCHAR *name, INTERNET_PORT port, struct sockaddr *psa, int
         break;
     }
 
-    if(addr_str)
+    if(addr_str) {
+#if defined(__REACTOS__) && DLL_EXPORT_VERSION < 0x600
+        wininet_inet_ntop(res->ai_family, addr, addr_str, INET6_ADDRSTRLEN);
+#else
         inet_ntop(res->ai_family, addr, addr_str, INET6_ADDRSTRLEN);
+#endif
+    }
     FreeAddrInfoW(res);
     return TRUE;
 }
@@ -230,7 +144,7 @@ static const char *debugstr_status_info(DWORD status, void *info)
     switch(status) {
     case INTERNET_STATUS_REQUEST_COMPLETE: {
         INTERNET_ASYNC_RESULT *iar = info;
-        return wine_dbg_sprintf("{%s, %d}", wine_dbgstr_longlong(iar->dwResult), iar->dwError);
+        return wine_dbg_sprintf("{%s, %ld}", wine_dbgstr_longlong(iar->dwResult), iar->dwError);
     }
     default:
         return wine_dbg_sprintf("%p", info);
@@ -253,23 +167,23 @@ void INTERNET_SendCallback(object_header_t *hdr, DWORD_PTR context, DWORD status
     case INTERNET_STATUS_NAME_RESOLVED:
     case INTERNET_STATUS_CONNECTING_TO_SERVER:
     case INTERNET_STATUS_CONNECTED_TO_SERVER:
-        new_info = heap_alloc(info_len);
+        new_info = malloc(info_len);
         if(new_info)
             memcpy(new_info, info, info_len);
         break;
     case INTERNET_STATUS_RESOLVING_NAME:
     case INTERNET_STATUS_REDIRECT:
         if(hdr->dwInternalFlags & INET_CALLBACKW) {
-            new_info = heap_strdupW(info);
+            new_info = wcsdup(info);
             break;
         }else {
-            new_info = heap_strdupWtoA(info);
+            new_info = strdupWtoA(info);
             info_len = strlen(new_info)+1;
             break;
         }
     }
 
-    TRACE(" callback(%p) (%p (%p), %08lx, %d (%s), %s, %d)\n",
+    TRACE(" callback(%p) (%p (%p), %08Ix, %ld (%s), %s, %ld)\n",
 	  hdr->lpfnStatusCB, hdr->hInternet, hdr, context, status, get_callback_name(status),
 	  debugstr_status_info(status, new_info), info_len);
 
@@ -278,5 +192,5 @@ void INTERNET_SendCallback(object_header_t *hdr, DWORD_PTR context, DWORD status
     TRACE(" end callback().\n");
 
     if(new_info != info)
-        heap_free(new_info);
+        free(new_info);
 }

@@ -2602,6 +2602,9 @@ typedef struct
 
 BOOLAPI InternetInitializeAutoProxyDll(_In_ DWORD);
 
+#define PROXY_AUTO_DETECT_TYPE_DHCP  1
+#define PROXY_AUTO_DETECT_TYPE_DNS_A 2
+
 BOOLAPI
 DetectAutoProxyUrl(
   _Out_writes_(cchAutoProxyUrl) PSTR pszAutoProxyUrl,
