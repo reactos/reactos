@@ -1098,8 +1098,8 @@ PciIdeChannelIsr(
         /* Do not log PCI shared interrupts */
         if (WasCleared)
         {
-            WARN("Spurious bus-master interrupt %02x, %02x, flags %08lx\n",
-                 IdeStatus, DmaStatus, ChanData->CommandFlags);
+            WARN("Spurious bus-master interrupt %02x, %02x, flags %08lx %08lx\n",
+                 IdeStatus, DmaStatus, ChanData->CommandFlags, ChanData->ActiveSlotsBitmap);
         }
 
         return WasCleared;
@@ -1131,7 +1131,8 @@ PataChannelIsr(
         !(ChanData->CommandFlags & CMD_FLAG_AWAIT_INTERRUPT) ||
         (IdeStatus & IDE_STATUS_BUSY))
     {
-        WARN("Spurious IDE interrupt %02x, flags %08lx\n", IdeStatus, ChanData->CommandFlags);
+        WARN("Spurious IDE interrupt %02x, flags %08lx %08lx\n",
+             IdeStatus, ChanData->CommandFlags, ChanData->ActiveSlotsBitmap);
         return FALSE;
     }
 

@@ -12,6 +12,7 @@
 #define PCI_VEN_NVIDIA               0x10DE
 #define PCI_VEN_PC_TECH              0x1042
 #define PCI_VEN_CMD                  0x1095
+#define PCI_VEN_HIGHPOINT            0x1103
 #define PCI_VEN_VIA                  0x1106
 #define PCI_VEN_SERVERWORKS          0x1166
 #define PCI_VEN_TOSHIBA              0x1179
