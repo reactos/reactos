@@ -24,7 +24,7 @@ WINE_DEFAULT_DEBUG_CHANNEL (shell);
 
 CExeDropHandler::CExeDropHandler()
 {
-    pclsid = (CLSID *)&CLSID_ExeDropHandler;
+    m_grfKeyState = 0;
 }
 
 CExeDropHandler::~CExeDropHandler()
@@ -39,6 +39,7 @@ HRESULT WINAPI CExeDropHandler::DragEnter(IDataObject *pDataObject, DWORD dwKeyS
     if (*pdwEffect == DROPEFFECT_NONE)
         return S_OK;
 
+    m_grfKeyState = dwKeyState;
     *pdwEffect = DROPEFFECT_COPY;
     return S_OK;
 }
@@ -46,6 +47,7 @@ HRESULT WINAPI CExeDropHandler::DragEnter(IDataObject *pDataObject, DWORD dwKeyS
 HRESULT WINAPI CExeDropHandler::DragOver(DWORD dwKeyState, POINTL pt, DWORD *pdwEffect)
 {
     TRACE ("(%p)\n", this);
+    m_grfKeyState = dwKeyState;
     *pdwEffect = DROPEFFECT_COPY;
     return S_OK;
 }
@@ -65,6 +67,24 @@ HRESULT WINAPI CExeDropHandler::Drop(IDataObject *pDataObject, DWORD dwKeyState,
     InitFormatEtc (fmt, CF_HDROP, TYMED_HGLOBAL);
     WCHAR wszBuf[MAX_PATH * 2 + 8], *pszEnd = wszBuf;
     size_t cchRemaining = _countof(wszBuf);
+
+    if (m_grfKeyState & MK_RBUTTON)
+    {
+        HMENU hmenu = LoadMenuW(shell32_hInstance, MAKEINTRESOURCEW(IDM_DRAGFILE));
+        if (!hmenu)
+            return E_OUTOFMEMORY;
+        HMENU hpopupmenu = GetSubMenu(hmenu, 0);
+        DeleteMenu(hpopupmenu, IDM_COPYHERE, MF_BYCOMMAND);
+        DeleteMenu(hpopupmenu, IDM_MOVEHERE, MF_BYCOMMAND);
+        DeleteMenu(hpopupmenu, IDM_LINKHERE, MF_BYCOMMAND);
+        LoadStringW(shell32_hInstance, IDS_OPEN_WITH, wszBuf, _countof(wszBuf));
+        InsertMenuW(hpopupmenu, 0, MF_BYPOSITION | MF_STRING, IDOK, wszBuf);
+        SetMenuDefaultItem(hpopupmenu, IDOK, MF_BYCOMMAND);
+        UINT cmd = CFSDropTarget::TrackPopupMenu(hpopupmenu, pt);
+        DestroyMenu(hmenu);
+        if (!cmd)
+            return S_OK;
+    }
 
     if (SUCCEEDED(pDataObject->GetData(&fmt, &medium)) /* && SUCCEEDED(pDataObject->GetData(&fmt2, &medium))*/)
     {
@@ -139,7 +159,7 @@ HRESULT WINAPI CExeDropHandler::GetClassID(CLSID * lpClassId)
     if (!lpClassId)
         return E_POINTER;
 
-    *lpClassId = *pclsid;
+    *lpClassId = GetClassID();
 
     return S_OK;
 }
