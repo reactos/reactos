@@ -38,5 +38,3 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 #define WINE_PRODUCTVERSION_STR "5.3.1.904"
 
 #include "wine/wine_common_ver.rc"
-
-1 WINE_REGISTRY dxdiagn.rgs

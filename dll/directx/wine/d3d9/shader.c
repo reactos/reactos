@@ -17,7 +17,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
 #include "d3d9_private.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(d3d9);
@@ -50,14 +49,12 @@ static ULONG WINAPI d3d9_vertexshader_AddRef(IDirect3DVertexShader9 *iface)
     struct d3d9_vertexshader *shader = impl_from_IDirect3DVertexShader9(iface);
     ULONG refcount = InterlockedIncrement(&shader->refcount);
 
-    TRACE("%p increasing refcount to %u.\n", iface, refcount);
+    TRACE("%p increasing refcount to %lu.\n", iface, refcount);
 
     if (refcount == 1)
     {
         IDirect3DDevice9Ex_AddRef(shader->parent_device);
-        wined3d_mutex_lock();
         wined3d_shader_incref(shader->wined3d_shader);
-        wined3d_mutex_unlock();
     }
 
     return refcount;
@@ -68,16 +65,12 @@ static ULONG WINAPI d3d9_vertexshader_Release(IDirect3DVertexShader9 *iface)
     struct d3d9_vertexshader *shader = impl_from_IDirect3DVertexShader9(iface);
     ULONG refcount = InterlockedDecrement(&shader->refcount);
 
-    TRACE("%p decreasing refcount to %u.\n", iface, refcount);
+    TRACE("%p decreasing refcount to %lu.\n", iface, refcount);
 
     if (!refcount)
     {
         IDirect3DDevice9Ex *device = shader->parent_device;
-
-        wined3d_mutex_lock();
         wined3d_shader_decref(shader->wined3d_shader);
-        wined3d_mutex_unlock();
-
         /* Release the device last, as it may cause the device to be destroyed. */
         IDirect3DDevice9Ex_Release(device);
     }
@@ -126,7 +119,7 @@ static const IDirect3DVertexShader9Vtbl d3d9_vertexshader_vtbl =
 
 static void STDMETHODCALLTYPE d3d9_vertexshader_wined3d_object_destroyed(void *parent)
 {
-    heap_free(parent);
+    free(parent);
 }
 
 static const struct wined3d_parent_ops d3d9_vertexshader_wined3d_parent_ops =
@@ -144,11 +137,6 @@ HRESULT vertexshader_init(struct d3d9_vertexshader *shader, struct d3d9_device *
 
     desc.byte_code = byte_code;
     desc.byte_code_size = ~(size_t)0;
-    desc.format = WINED3D_SHADER_BYTE_CODE_FORMAT_SM1;
-    desc.input_signature.element_count = 0;
-    desc.output_signature.element_count = 0;
-    desc.patch_constant_signature.element_count = 0;
-    desc.max_version = 3;
 
     wined3d_mutex_lock();
     hr = wined3d_shader_create_vs(device->wined3d_device, &desc, shader,
@@ -156,7 +144,7 @@ HRESULT vertexshader_init(struct d3d9_vertexshader *shader, struct d3d9_device *
     wined3d_mutex_unlock();
     if (FAILED(hr))
     {
-        WARN("Failed to create wined3d vertex shader, hr %#x.\n", hr);
+        WARN("Failed to create wined3d vertex shader, hr %#lx.\n", hr);
         return hr;
     }
 
@@ -204,14 +192,12 @@ static ULONG WINAPI d3d9_pixelshader_AddRef(IDirect3DPixelShader9 *iface)
     struct d3d9_pixelshader *shader = impl_from_IDirect3DPixelShader9(iface);
     ULONG refcount = InterlockedIncrement(&shader->refcount);
 
-    TRACE("%p increasing refcount to %u.\n", iface, refcount);
+    TRACE("%p increasing refcount to %lu.\n", iface, refcount);
 
     if (refcount == 1)
     {
         IDirect3DDevice9Ex_AddRef(shader->parent_device);
-        wined3d_mutex_lock();
         wined3d_shader_incref(shader->wined3d_shader);
-        wined3d_mutex_unlock();
     }
 
     return refcount;
@@ -222,16 +208,12 @@ static ULONG WINAPI d3d9_pixelshader_Release(IDirect3DPixelShader9 *iface)
     struct d3d9_pixelshader *shader = impl_from_IDirect3DPixelShader9(iface);
     ULONG refcount = InterlockedDecrement(&shader->refcount);
 
-    TRACE("%p decreasing refcount to %u.\n", iface, refcount);
+    TRACE("%p decreasing refcount to %lu.\n", iface, refcount);
 
     if (!refcount)
     {
         IDirect3DDevice9Ex *device = shader->parent_device;
-
-        wined3d_mutex_lock();
         wined3d_shader_decref(shader->wined3d_shader);
-        wined3d_mutex_unlock();
-
         /* Release the device last, as it may cause the device to be destroyed. */
         IDirect3DDevice9Ex_Release(device);
     }
@@ -280,7 +262,7 @@ static const IDirect3DPixelShader9Vtbl d3d9_pixelshader_vtbl =
 
 static void STDMETHODCALLTYPE d3d9_pixelshader_wined3d_object_destroyed(void *parent)
 {
-    heap_free(parent);
+    free(parent);
 }
 
 static const struct wined3d_parent_ops d3d9_pixelshader_wined3d_parent_ops =
@@ -298,11 +280,6 @@ HRESULT pixelshader_init(struct d3d9_pixelshader *shader, struct d3d9_device *de
 
     desc.byte_code = byte_code;
     desc.byte_code_size = ~(size_t)0;
-    desc.format = WINED3D_SHADER_BYTE_CODE_FORMAT_SM1;
-    desc.input_signature.element_count = 0;
-    desc.output_signature.element_count = 0;
-    desc.patch_constant_signature.element_count = 0;
-    desc.max_version = 3;
 
     wined3d_mutex_lock();
     hr = wined3d_shader_create_ps(device->wined3d_device, &desc, shader,
@@ -310,7 +287,7 @@ HRESULT pixelshader_init(struct d3d9_pixelshader *shader, struct d3d9_device *de
     wined3d_mutex_unlock();
     if (FAILED(hr))
     {
-        WARN("Failed to created wined3d pixel shader, hr %#x.\n", hr);
+        WARN("Failed to created wined3d pixel shader, hr %#lx.\n", hr);
         return hr;
     }
 

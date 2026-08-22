@@ -311,8 +311,54 @@ _Check_return_ __CRT_INLINE long long llrintf(_In_ float x) { return (long long)
 _Check_return_ __CRT_INLINE long long llrintl(_In_ long double x) { return (long long)((x < 0) ? (x - 0.5f) : (x + 0.5)); }
 #ifdef _MSC_VER
 #define log2 _log2 // nasty hack, see CORE-18255
+#define log2f _log2f // see log2 above
 #endif
 _Check_return_ __CRT_INLINE double log2(_In_ double x) { return log(x) / log(2); }
+_Check_return_ __CRT_INLINE float log2f(_In_ float x) { return (float)(log((double)x) / log(2)); }
+_Check_return_ __CRT_INLINE float copysignf(_In_ float x, _In_ float y) { return _copysignf(x, y); }
+
+/* C99 7.12.3.2. _finite() is exported by msvcrt on every architecture,
+   unlike _finitef(), which is amd64-only. */
+#ifndef isfinite
+_Check_return_ _CRTIMP int __cdecl _finite(_In_ double x);
+#define isfinite(x) (_finite((double)(x)) != 0)
+#endif
+
+/* C99 7.12.3.6 */
+#ifndef signbit
+_Check_return_ __CRT_INLINE int __cdecl __signbit(_In_ double x) { return _copysign(1.0, x) < 0.0; }
+#define signbit(x) __signbit((double)(x))
+#endif
+
+/* C99 7.12.3.4 */
+_Check_return_ _CRTIMP int __cdecl _isnan(_In_ double x);
+#ifndef isnan
+#define isnan(x) (_isnan((double)(x)) != 0)
+#endif
+
+/* C99 7.12.3.3 */
+#ifndef isinf
+#define isinf(x) (!_finite((double)(x)) && !_isnan((double)(x)))
+#endif
+
+/* C99 7.12.12.2/7.12.12.3. Per the standard these return the non-NaN operand
+   if exactly one argument is a NaN; note this is NOT the same as min()/max(). */
+_Check_return_ __CRT_INLINE double exp2(_In_ double x) { return pow(2.0, x); }
+_Check_return_ __CRT_INLINE float exp2f(_In_ float x) { return (float)pow(2.0, (double)x); }
+_Check_return_ __CRT_INLINE double fmax(_In_ double x, _In_ double y)
+{
+    if (_isnan(x)) return y;
+    if (_isnan(y)) return x;
+    return (x < y) ? y : x;
+}
+_Check_return_ __CRT_INLINE double fmin(_In_ double x, _In_ double y)
+{
+    if (_isnan(x)) return y;
+    if (_isnan(y)) return x;
+    return (x < y) ? x : y;
+}
+_Check_return_ __CRT_INLINE float fmaxf(_In_ float x, _In_ float y) { return (float)fmax((double)x, (double)y); }
+_Check_return_ __CRT_INLINE float fminf(_In_ float x, _In_ float y) { return (float)fmin((double)x, (double)y); }
 #endif /* !_CRTBLD */
 
 #ifndef NO_OLDNAMES /* !__STDC__ */

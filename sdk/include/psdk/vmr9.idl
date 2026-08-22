@@ -272,7 +272,7 @@ typedef struct _VMR9AlphaBitmap
     HDC hdc;
     IDirect3DSurface9 *pDDS;
     RECT rSrc;
-    VMR9NormalizedRect *rDest;
+    VMR9NormalizedRect rDest;
     FLOAT fAlpha;
     COLORREF clrSrcKey;
     DWORD dwFilterMode;

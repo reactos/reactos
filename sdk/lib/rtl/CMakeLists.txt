@@ -148,6 +148,7 @@ list(APPEND SOURCE_VISTA
     threadpool.c
     unicode_vista.c
     utf8.c
+    waitaddress.c
     wow64.c)
 
 add_library(rtl_vista ${SOURCE_VISTA})

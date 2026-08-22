@@ -45,11 +45,13 @@
 #error wine/debug.h should not be used in Wine tests
 #endif
 
+#ifndef __WINE_PRINTF_ATTR /* wine/debug.h defines this too; either may come first */
 #ifdef __GNUC__
 # define __WINE_PRINTF_ATTR(fmt,args) __attribute__((format (printf,fmt,args)))
 #else /* __GNUC__ */
 # define __WINE_PRINTF_ATTR(fmt,args)
 #endif /* __GNUC__ */
+#endif /* !__WINE_PRINTF_ATTR */
 
 #ifdef __cplusplus
 extern "C" {
@@ -908,6 +910,7 @@ int main( int argc, char **argv )
 #endif
 
 // FIXME: Should include wine/debug.h instead
+#ifndef __WINE_DEBUG_H
 extern const char *wine_dbgstr_wn( const WCHAR *str, intptr_t n );
 extern const char *wine_dbgstr_an( const CHAR *str, intptr_t n );
 extern const char *wine_dbgstr_guid( const GUID *guid );
@@ -928,6 +931,7 @@ static inline const char *wine_dbgstr_w( const WCHAR *s ) { return wine_dbgstr_w
 extern const char *wine_dbgstr_variant(const VARIANT *var);
 static inline const char *debugstr_variant( const VARIANT *v ) { return wine_dbgstr_variant( v ); }
 #endif
+#endif /* !__WINE_DEBUG_H */
 extern const char * __cdecl __wine_dbg_strdup( const char *str );
 
 /* strcmpW is available for tests compiled under Wine, but not in standalone
@@ -1289,6 +1293,50 @@ const char *wine_dbgstr_rect( const RECT *rect )
     release_temp_buffer( res, strlen(res) + 1 );
     return res;
 }
+
+#ifdef WINETEST_WINE_DBG_STUBS
+/* A test that links a Wine helper library (strmbase, for instance) drags in
+ * that library's TRACE/ERR calls, which land in the libwine debug backend.
+ * Linking libwine itself is not an option here: its debug.c defines
+ * wine_dbgstr_an/wn as well and would collide with the versions above. Supply
+ * the handful of backend entry points instead; tracing stays off in tests.
+ * The types are spelled out rather than taken from wine/debug.h because this
+ * block is compiled in testlist.c, which does not include it. Only tests that
+ * need the backend define WINETEST_WINE_DBG_STUBS: elsewhere these would clash
+ * with a test's own wine_dbg_sprintf() or with a linked-in sdk/lib/rtl. */
+struct __wine_debug_channel;
+
+unsigned char __cdecl __wine_dbg_get_channel_flags( struct __wine_debug_channel *channel )
+{
+    return 0;
+}
+
+int __cdecl ros_dbg_log( int cls, struct __wine_debug_channel *ch, const char *file,
+                         const char *func, const int line, const char *format, ... )
+{
+    return 0;
+}
+
+/* Tests that reach wine/debug.h through wine/strmbase.h need this for
+ * debugstr_time(). Implement it on the winetest string buffer rather than
+ * pulling in libwine, whose debug.c would clash with the wine_dbgstr_*
+ * definitions above. */
+const char * __cdecl wine_dbg_sprintf( const char *format, ... )
+{
+    static const int max_size = 200;
+    char *res;
+    va_list valist;
+    int len;
+
+    res = get_temp_buffer( max_size + 1 );
+    va_start( valist, format );
+    len = vsnprintf( res, max_size, format, valist );
+    va_end( valist );
+    if (len == -1 || len >= max_size) res[max_size] = 0;
+    else release_temp_buffer( res, len + 1 );
+    return res;
+}
+#endif /* WINETEST_WINE_DBG_STUBS */
 
 #ifdef WINETEST_USE_DBGSTR_LONGLONG
 const char *wine_dbgstr_longlong( ULONGLONG ll )

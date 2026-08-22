@@ -27,28 +27,24 @@
 
 #define COM_NO_WINDOWS_H
 #include <objbase.h>
-
-#ifndef __WINESRC__
-# include <windows.h>
-#endif
-
+#include <windows.h>
 #include <d3d8types.h>
 #include <d3d8caps.h>
 
 /*****************************************************************************
  * Behavior Flags for IDirect3D8::CreateDevice
  */
-#define D3DCREATE_FPU_PRESERVE                  0x00000002L
-#define D3DCREATE_MULTITHREADED                 0x00000004L
-#define D3DCREATE_PUREDEVICE                    0x00000010L
-#define D3DCREATE_SOFTWARE_VERTEXPROCESSING     0x00000020L
-#define D3DCREATE_HARDWARE_VERTEXPROCESSING     0x00000040L
-#define D3DCREATE_MIXED_VERTEXPROCESSING        0x00000080L
+#define D3DCREATE_FPU_PRESERVE                  __MSABI_LONG(0x00000002)
+#define D3DCREATE_MULTITHREADED                 __MSABI_LONG(0x00000004)
+#define D3DCREATE_PUREDEVICE                    __MSABI_LONG(0x00000010)
+#define D3DCREATE_SOFTWARE_VERTEXPROCESSING     __MSABI_LONG(0x00000020)
+#define D3DCREATE_HARDWARE_VERTEXPROCESSING     __MSABI_LONG(0x00000040)
+#define D3DCREATE_MIXED_VERTEXPROCESSING        __MSABI_LONG(0x00000080)
 
 /*****************************************************************************
  * Flags for SetPrivateData
  */
-#define D3DSPD_IUNKNOWN                         0x00000001L
+#define D3DSPD_IUNKNOWN                         __MSABI_LONG(0x00000001)
 
 /*****************************************************************************
  * #defines and error codes
@@ -1018,7 +1014,7 @@ DECLARE_INTERFACE_(IDirect3DDevice8,IUnknown)
 #define IDirect3DDevice8_DrawIndexedPrimitive(p,a,b,c,d,e)         (p)->lpVtbl->DrawIndexedPrimitive(p,a,b,c,d,e)
 #define IDirect3DDevice8_DrawPrimitiveUP(p,a,b,c,d)                (p)->lpVtbl->DrawPrimitiveUP(p,a,b,c,d)
 #define IDirect3DDevice8_DrawIndexedPrimitiveUP(p,a,b,c,d,e,f,g,h) (p)->lpVtbl->DrawIndexedPrimitiveUP(p,a,b,c,d,e,f,g,h)
-#define IDirect3DDevice8_ProcessVertices(p,a,b,c,d,e)              (p)->lpVtbl->processVertices(p,a,b,c,d,e)
+#define IDirect3DDevice8_ProcessVertices(p,a,b,c,d,e)              (p)->lpVtbl->ProcessVertices(p,a,b,c,d,e)
 #define IDirect3DDevice8_CreateVertexShader(p,a,b,c,d)             (p)->lpVtbl->CreateVertexShader(p,a,b,c,d)
 #define IDirect3DDevice8_SetVertexShader(p,a)                      (p)->lpVtbl->SetVertexShader(p,a)
 #define IDirect3DDevice8_GetVertexShader(p,a)                      (p)->lpVtbl->GetVertexShader(p,a)

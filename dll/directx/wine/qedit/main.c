@@ -17,21 +17,23 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#define WINE_NO_NAMELESS_EXTENSION
+
 #include "qedit_private.h"
 #include "rpcproxy.h"
 #include "wine/debug.h"
 
-WINE_DEFAULT_DEBUG_CHANNEL(qedit);
+WINE_DEFAULT_DEBUG_CHANNEL(quartz);
 
-static HINSTANCE instance;
-
-BOOL WINAPI DllMain(HINSTANCE hInstDLL, DWORD fdwReason, LPVOID lpv)
+BOOL WINAPI DllMain(HINSTANCE instance, DWORD reason, void *reserved)
 {
-    switch(fdwReason) {
-        case DLL_PROCESS_ATTACH:
-            instance = hInstDLL;
-            DisableThreadLibraryCalls(hInstDLL);
-            break;
+    if (reason == DLL_PROCESS_ATTACH)
+    {
+        DisableThreadLibraryCalls(instance);
+    }
+    else if (reason == DLL_PROCESS_DETACH && !reserved)
+    {
+        strmbase_release_typelibs();
     }
     return TRUE;
 }
@@ -42,7 +44,7 @@ BOOL WINAPI DllMain(HINSTANCE hInstDLL, DWORD fdwReason, LPVOID lpv)
 typedef struct {
     IClassFactory IClassFactory_iface;
     LONG ref;
-    HRESULT (*pfnCreateInstance)(IUnknown *pUnkOuter, LPVOID *ppObj);
+    HRESULT (*create_instance)(IUnknown *outer, IUnknown **out);
 } IClassFactoryImpl;
 
 static inline IClassFactoryImpl *impl_from_IClassFactory(IClassFactory *iface)
@@ -53,14 +55,15 @@ static inline IClassFactoryImpl *impl_from_IClassFactory(IClassFactory *iface)
 struct object_creation_info
 {
     const CLSID *clsid;
-    HRESULT (*pfnCreateInstance)(IUnknown *pUnkOuter, LPVOID *ppObj);
+    HRESULT (*create_instance)(IUnknown *outer, IUnknown **out);
 };
 
 static const struct object_creation_info object_creation[] =
 {
-    { &CLSID_AMTimeline, AMTimeline_create },
-    { &CLSID_MediaDet, MediaDet_create },
-    { &CLSID_SampleGrabber, SampleGrabber_create },
+    {&CLSID_AMTimeline, timeline_create},
+    {&CLSID_MediaDet, media_detector_create},
+    {&CLSID_NullRenderer, null_renderer_create},
+    {&CLSID_SampleGrabber, sample_grabber_create},
 };
 
 static HRESULT WINAPI DSCF_QueryInterface(IClassFactory *iface, REFIID riid, void **ppobj)
@@ -106,9 +109,9 @@ static HRESULT WINAPI DSCF_CreateInstance(IClassFactory *iface, IUnknown *pOuter
 
     *ppobj = NULL;
     if (pOuter && !IsEqualGUID(&IID_IUnknown, riid))
-        return E_INVALIDARG;
+        return E_NOINTERFACE;
 
-    hres = This->pfnCreateInstance(pOuter, (LPVOID *) &punk);
+    hres = This->create_instance(pOuter, &punk);
     if (SUCCEEDED(hres)) {
         hres = IUnknown_QueryInterface(punk, riid, ppobj);
         IUnknown_Release(punk);
@@ -132,14 +135,6 @@ static const IClassFactoryVtbl DSCF_Vtbl =
     DSCF_LockServer
 };
 
-
-/***********************************************************************
- *              DllCanUnloadNow (QEDIT.@)
- */
-HRESULT WINAPI DllCanUnloadNow(void)
-{
-    return S_FALSE;
-}
 
 /*******************************************************************************
  * DllGetClassObject [QEDIT.@]
@@ -185,18 +180,77 @@ HRESULT WINAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID *ppv)
     factory->IClassFactory_iface.lpVtbl = &DSCF_Vtbl;
     factory->ref = 1;
 
-    factory->pfnCreateInstance = object_creation[i].pfnCreateInstance;
+    factory->create_instance = object_creation[i].create_instance;
 
     *ppv = &factory->IClassFactory_iface;
     return S_OK;
 }
+
+static const REGPINTYPES reg_null_mt = {&GUID_NULL, &GUID_NULL};
+
+static const REGFILTERPINS2 reg_sample_grabber_pins[2] =
+{
+    {
+        .cInstances = 1,
+        .nMediaTypes = 1,
+        .lpMediaType = &reg_null_mt,
+    },
+    {
+        .dwFlags = REG_PINFLAG_B_OUTPUT,
+        .cInstances = 1,
+        .nMediaTypes = 1,
+        .lpMediaType = &reg_null_mt,
+    },
+};
+
+static const REGFILTER2 reg_sample_grabber =
+{
+    .dwVersion = 2,
+    .dwMerit = MERIT_DO_NOT_USE,
+    .u.s2.cPins2 = 2,
+    .u.s2.rgPins2 = reg_sample_grabber_pins,
+};
+
+static const REGFILTERPINS2 reg_null_renderer_pins[1] =
+{
+    {
+        .dwFlags = REG_PINFLAG_B_OUTPUT,
+        .cInstances = 1,
+        .nMediaTypes = 1,
+        .lpMediaType = &reg_null_mt,
+    },
+};
+
+static const REGFILTER2 reg_null_renderer =
+{
+    .dwVersion = 2,
+    .dwMerit = MERIT_DO_NOT_USE,
+    .u.s2.cPins2 = 1,
+    .u.s2.rgPins2 = reg_null_renderer_pins,
+};
 
 /***********************************************************************
  *		DllRegisterServer (QEDIT.@)
  */
 HRESULT WINAPI DllRegisterServer(void)
 {
-    return __wine_register_resources( instance );
+    IFilterMapper2 *mapper;
+    HRESULT hr;
+
+    if (FAILED(hr = __wine_register_resources()))
+        return hr;
+
+    if (FAILED(hr = CoCreateInstance(&CLSID_FilterMapper2, NULL, CLSCTX_INPROC_SERVER,
+            &IID_IFilterMapper2, (void **)&mapper)))
+        return hr;
+
+    IFilterMapper2_RegisterFilter(mapper, &CLSID_SampleGrabber, L"SampleGrabber",
+            NULL, NULL, NULL, &reg_sample_grabber);
+    IFilterMapper2_RegisterFilter(mapper, &CLSID_NullRenderer, L"Null Renderer",
+            NULL, NULL, NULL, &reg_null_renderer);
+
+    IFilterMapper2_Release(mapper);
+    return S_OK;
 }
 
 /***********************************************************************
@@ -204,5 +258,19 @@ HRESULT WINAPI DllRegisterServer(void)
  */
 HRESULT WINAPI DllUnregisterServer(void)
 {
-    return __wine_unregister_resources( instance );
+    IFilterMapper2 *mapper;
+    HRESULT hr;
+
+    if (FAILED(hr = __wine_unregister_resources()))
+        return hr;
+
+    if (FAILED(hr = CoCreateInstance(&CLSID_FilterMapper2, NULL, CLSCTX_INPROC_SERVER,
+            &IID_IFilterMapper2, (void **)&mapper)))
+        return hr;
+
+    IFilterMapper2_UnregisterFilter(mapper, NULL, NULL, &CLSID_SampleGrabber);
+    IFilterMapper2_UnregisterFilter(mapper, NULL, NULL, &CLSID_NullRenderer);
+
+    IFilterMapper2_Release(mapper);
+    return S_OK;
 }

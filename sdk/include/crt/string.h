@@ -168,7 +168,6 @@ _CRT_RESTORE_GCC_WARNINGS
          _Post_satisfies_(return == _String_length_(_Str)))
   _When_(_MaxCount <= _String_length_(_Str),
          _Post_satisfies_(return == _MaxCount))
-  _CRTIMP
   size_t
   __cdecl
   strnlen(
@@ -749,7 +748,6 @@ _CRT_RESTORE_GCC_WARNINGS
          _Post_satisfies_(return == _String_length_(_Src)))
   _When_(_MaxCount <= _String_length_(_Src),
          _Post_satisfies_(return == _MaxCount))
-  _CRTIMP
   _CRT_INSECURE_DEPRECATE(wcsnlen_s)
   size_t
   __cdecl

@@ -22,7 +22,6 @@
 #include <stdio.h>
 
 #include "dmusic_private.h"
-#include "wine/heap.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(dmusic);
 
@@ -61,7 +60,7 @@ static ULONG WINAPI master_IReferenceClock_AddRef(IReferenceClock *iface)
     struct master_clock *This = impl_from_IReferenceClock(iface);
     ULONG ref = InterlockedIncrement(&This->ref);
 
-    TRACE("(%p) ref = %u\n", iface, ref);
+    TRACE("(%p) ref = %lu\n", iface, ref);
 
     return ref;
 }
@@ -71,10 +70,10 @@ static ULONG WINAPI master_IReferenceClock_Release(IReferenceClock *iface)
     struct master_clock *This = impl_from_IReferenceClock(iface);
     ULONG ref = InterlockedDecrement(&This->ref);
 
-    TRACE("(%p) ref = %u\n", iface, ref);
+    TRACE("(%p) ref = %lu\n", iface, ref);
 
     if (!ref)
-        heap_free(This);
+        free(This);
 
     return ref;
 }
@@ -96,25 +95,23 @@ static HRESULT WINAPI master_IReferenceClock_GetTime(IReferenceClock *iface,
     return hr;
 }
 
-static HRESULT WINAPI master_IReferenceClock_AdviseTime(IReferenceClock *iface,
-        REFERENCE_TIME base, REFERENCE_TIME offset, HANDLE event, DWORD *cookie)
+static HRESULT WINAPI master_IReferenceClock_AdviseTime(IReferenceClock *iface, REFERENCE_TIME base,
+        REFERENCE_TIME offset, HEVENT event, DWORD_PTR *cookie)
 {
-    TRACE("(%p, %s, %s, %p, %p): method not implemented\n", iface, wine_dbgstr_longlong(base),
-            wine_dbgstr_longlong(offset), event, cookie);
+    FIXME("(%p, %I64d, %I64d, %#Ix, %p): stub\n", iface, base, offset, event, cookie);
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI master_IReferenceClock_AdvisePeriodic(IReferenceClock *iface,
-        REFERENCE_TIME start, REFERENCE_TIME period, HANDLE semaphore, DWORD *cookie)
+static HRESULT WINAPI master_IReferenceClock_AdvisePeriodic(IReferenceClock *iface, REFERENCE_TIME start,
+        REFERENCE_TIME period, HSEMAPHORE semaphore, DWORD_PTR *cookie)
 {
-    TRACE("(%p, %s, %s, %p, %p): method not implemented\n", iface, wine_dbgstr_longlong(start),
-            wine_dbgstr_longlong(period), semaphore, cookie);
+    FIXME("(%p, %I64d, %I64d, %#Ix, %p): stub\n", iface, start, period, semaphore, cookie);
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI master_IReferenceClock_Unadvise(IReferenceClock *iface, DWORD cookie)
+static HRESULT WINAPI master_IReferenceClock_Unadvise(IReferenceClock *iface, DWORD_PTR cookie)
 {
-    TRACE("(%p, %#x): method not implemented\n", iface, cookie);
+    FIXME("(%p, %#Ix): stub\n", iface, cookie);
     return E_NOTIMPL;
 }
 
@@ -135,7 +132,7 @@ static HRESULT master_clock_create(IReferenceClock **clock)
 
     TRACE("(%p)\n", clock);
 
-    if (!(obj = heap_alloc_zero(sizeof(*obj))))
+    if (!(obj = calloc(1, sizeof(*obj))))
         return E_OUTOFMEMORY;
 
     obj->IReferenceClock_iface.lpVtbl = &master_clock_vtbl;
@@ -182,7 +179,7 @@ static ULONG WINAPI IDirectMusic8Impl_AddRef(LPDIRECTMUSIC8 iface)
     IDirectMusic8Impl *This = impl_from_IDirectMusic8(iface);
     ULONG ref = InterlockedIncrement(&This->ref);
 
-    TRACE("(%p)->(): new ref = %u\n", This, ref);
+    TRACE("(%p): new ref = %lu\n", This, ref);
 
     return ref;
 }
@@ -192,16 +189,15 @@ static ULONG WINAPI IDirectMusic8Impl_Release(LPDIRECTMUSIC8 iface)
     IDirectMusic8Impl *This = impl_from_IDirectMusic8(iface);
     ULONG ref = InterlockedDecrement(&This->ref);
 
-    TRACE("(%p)->(): new ref = %u\n", This, ref);
+    TRACE("(%p): new ref = %lu\n", This, ref);
 
     if (!ref) {
         IReferenceClock_Release(This->master_clock);
         if (This->dsound)
             IDirectSound_Release(This->dsound);
-        HeapFree(GetProcessHeap(), 0, This->system_ports);
-        HeapFree(GetProcessHeap(), 0, This->ports);
-        HeapFree(GetProcessHeap(), 0, This);
-        DMUSIC_UnlockModule();
+        free(This->system_ports);
+        free(This->ports);
+        free(This);
     }
 
     return ref;
@@ -212,7 +208,7 @@ static HRESULT WINAPI IDirectMusic8Impl_EnumPort(LPDIRECTMUSIC8 iface, DWORD ind
 {
     IDirectMusic8Impl *This = impl_from_IDirectMusic8(iface);
 
-    TRACE("(%p, %d, %p)\n", This, index, port_caps);
+    TRACE("(%p, %ld, %p)\n", This, index, port_caps);
 
     if (!port_caps)
         return E_POINTER;
@@ -282,12 +278,7 @@ static HRESULT WINAPI IDirectMusic8Impl_CreatePort(LPDIRECTMUSIC8 iface, REFCLSI
                  return hr;
             }
             This->num_ports++;
-            if (!This->ports)
-                This->ports = HeapAlloc(GetProcessHeap(), 0,
-                        sizeof(*This->ports) * This->num_ports);
-            else
-                This->ports = HeapReAlloc(GetProcessHeap(), 0, This->ports,
-                        sizeof(*This->ports) * This->num_ports);
+            This->ports = realloc(This->ports, sizeof(*This->ports) * This->num_ports);
             This->ports[This->num_ports - 1] = new_port;
             *port = new_port;
             return S_OK;
@@ -319,20 +310,19 @@ void dmusic_remove_port(IDirectMusic8Impl *dmusic, IDirectMusicPort *port)
     }
 
     if (!--dmusic->num_ports) {
-        HeapFree(GetProcessHeap(), 0, dmusic->ports);
+        free(dmusic->ports);
         dmusic->ports = NULL;
         return;
     }
 
     memmove(&dmusic->ports[i], &dmusic->ports[i + 1],
             (dmusic->num_ports - i) * sizeof(*dmusic->ports));
-    dmusic->ports = HeapReAlloc(GetProcessHeap(), 0, dmusic->ports,
-            sizeof(*dmusic->ports) * dmusic->num_ports);
+    dmusic->ports = realloc(dmusic->ports, sizeof(*dmusic->ports) * dmusic->num_ports);
 }
 
 static HRESULT WINAPI IDirectMusic8Impl_EnumMasterClock(LPDIRECTMUSIC8 iface, DWORD index, LPDMUS_CLOCKINFO clock_info)
 {
-    TRACE("(%p)->(%d, %p)\n", iface, index, clock_info);
+    TRACE("(%p, %ld, %p)\n", iface, index, clock_info);
 
     if (!clock_info)
         return E_POINTER;
@@ -343,20 +333,18 @@ static HRESULT WINAPI IDirectMusic8Impl_EnumMasterClock(LPDIRECTMUSIC8 iface, DW
     if (!index)
     {
         static const GUID guid_system_clock = { 0x58d58419, 0x71b4, 0x11d1, { 0xa7, 0x4c, 0x00, 0x00, 0xf8, 0x75, 0xac, 0x12 } };
-        static const WCHAR name_system_clock[] = { 'S','y','s','t','e','m',' ','C','l','o','c','k',0 };
 
         clock_info->ctType = 0;
         clock_info->guidClock = guid_system_clock;
-        lstrcpyW(clock_info->wszDescription, name_system_clock);
+        lstrcpyW(clock_info->wszDescription, L"System Clock");
     }
     else
     {
         static const GUID guid_dsound_clock = { 0x58d58420, 0x71b4, 0x11d1, { 0xa7, 0x4c, 0x00, 0x00, 0xf8, 0x75, 0xac, 0x12 } };
-        static const WCHAR name_dsound_clock[] = { 'D','i','r','e','c','t','S','o','u','n','d',' ','C','l','o','c','k',0 };
 
         clock_info->ctType = 0;
         clock_info->guidClock = guid_dsound_clock;
-        lstrcpyW(clock_info->wszDescription, name_dsound_clock);
+        lstrcpyW(clock_info->wszDescription, L"DirectSound Clock");
     }
 
     return S_OK;
@@ -496,7 +484,7 @@ static const IDirectMusic8Vtbl DirectMusic8_Vtbl = {
 
 static void create_system_ports_list(IDirectMusic8Impl* object)
 {
-    static const WCHAR emulated[] = {' ','[','E','m','u','l','a','t','e','d',']',0};
+    static const WCHAR emulated[] = L" [Emulated]";
     port_info * port;
     ULONG nb_ports;
     ULONG nb_midi_out;
@@ -518,7 +506,7 @@ static void create_system_ports_list(IDirectMusic8Impl* object)
     nb_midi_in = midiInGetNumDevs();
     nb_ports = 1 /* midi mapper */ + nb_midi_out + nb_midi_in + 1 /* synth port */;
 
-    port = object->system_ports = HeapAlloc(GetProcessHeap(), 0, nb_ports * sizeof(port_info));
+    port = object->system_ports = malloc(nb_ports * sizeof(port_info));
     if (!object->system_ports)
         return;
 
@@ -588,35 +576,26 @@ static void create_system_ports_list(IDirectMusic8Impl* object)
     object->num_system_ports = nb_ports;
 }
 
-/* For ClassFactory */
-HRESULT WINAPI DMUSIC_CreateDirectMusicImpl(LPCGUID riid, LPVOID* ret_iface, LPUNKNOWN unkouter)
+HRESULT music_create(IUnknown **ret_iface)
 {
     IDirectMusic8Impl *dmusic;
     HRESULT ret;
 
-    TRACE("(%s, %p, %p)\n", debugstr_guid(riid), ret_iface, unkouter);
+    TRACE("(%p)\n", ret_iface);
 
     *ret_iface = NULL;
-    if (unkouter)
-        return CLASS_E_NOAGGREGATION;
-
-    dmusic = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(IDirectMusic8Impl));
-    if (!dmusic)
-        return E_OUTOFMEMORY;
-
+    if (!(dmusic = calloc(1, sizeof(*dmusic)))) return E_OUTOFMEMORY;
     dmusic->IDirectMusic8_iface.lpVtbl = &DirectMusic8_Vtbl;
     dmusic->ref = 1;
     ret = master_clock_create(&dmusic->master_clock);
     if (FAILED(ret)) {
-        HeapFree(GetProcessHeap(), 0, dmusic);
+        free(dmusic);
         return ret;
     }
 
     create_system_ports_list(dmusic);
 
-    DMUSIC_LockModule();
-    ret = IDirectMusic8Impl_QueryInterface(&dmusic->IDirectMusic8_iface, riid, ret_iface);
-    IDirectMusic8_Release(&dmusic->IDirectMusic8_iface);
-
-    return ret;
+    TRACE("Created DirectMusic %p\n", dmusic);
+    *ret_iface = (IUnknown *)&dmusic->IDirectMusic8_iface;
+    return S_OK;
 }

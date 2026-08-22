@@ -210,8 +210,8 @@ static inline struct d3drm *impl_from_IDirect3DRM3(IDirect3DRM3 *iface)
 
 static void d3drm_destroy(struct d3drm *d3drm)
 {
-    heap_free(d3drm);
     TRACE("d3drm object %p is being destroyed.\n", d3drm);
+    free(d3drm);
 }
 
 static HRESULT WINAPI d3drm1_QueryInterface(IDirect3DRM *iface, REFIID riid, void **out)
@@ -249,7 +249,7 @@ static ULONG WINAPI d3drm1_AddRef(IDirect3DRM *iface)
     struct d3drm *d3drm = impl_from_IDirect3DRM(iface);
     ULONG refcount = InterlockedIncrement(&d3drm->ref1);
 
-    TRACE("%p increasing refcount to %u.\n", iface, refcount);
+    TRACE("%p increasing refcount to %lu.\n", iface, refcount);
 
     if (refcount == 1)
         InterlockedIncrement(&d3drm->iface_count);
@@ -262,7 +262,7 @@ static ULONG WINAPI d3drm1_Release(IDirect3DRM *iface)
     struct d3drm *d3drm = impl_from_IDirect3DRM(iface);
     ULONG refcount = InterlockedDecrement(&d3drm->ref1);
 
-    TRACE("%p decreasing refcount to %u.\n", iface, refcount);
+    TRACE("%p decreasing refcount to %lu.\n", iface, refcount);
 
     if (!refcount && !InterlockedDecrement(&d3drm->iface_count))
         d3drm_destroy(d3drm);
@@ -384,7 +384,7 @@ static HRESULT WINAPI d3drm1_CreateLight(IDirect3DRM *iface,
 {
     struct d3drm *d3drm = impl_from_IDirect3DRM(iface);
 
-    TRACE("iface %p, type %#x, color 0x%08x, light %p.\n", iface, type, color, light);
+    TRACE("iface %p, type %#x, color 0x%08lx, light %p.\n", iface, type, color, light);
 
     return IDirect3DRM3_CreateLight(&d3drm->IDirect3DRM3_iface, type, color, light);
 }
@@ -413,7 +413,7 @@ static HRESULT WINAPI d3drm1_CreateMaterial(IDirect3DRM *iface,
 static HRESULT WINAPI d3drm1_CreateDevice(IDirect3DRM *iface,
         DWORD width, DWORD height, IDirect3DRMDevice **device)
 {
-    TRACE("iface %p, width %u, height %u, device %p.\n", iface, width, height, device);
+    TRACE("iface %p, width %lu, height %lu, device %p.\n", iface, width, height, device);
 
     if (!device)
         return D3DRMERR_BADVALUE;
@@ -565,7 +565,7 @@ static HRESULT WINAPI d3drm1_CreateViewport(IDirect3DRM *iface, IDirect3DRMDevic
     IDirect3DRMViewport2 *viewport2;
     HRESULT hr;
 
-    TRACE("iface %p, device %p, camera %p, x %u, y %u, width %u, height %u, viewport %p.\n",
+    TRACE("iface %p, device %p, camera %p, x %lu, y %lu, width %lu, height %lu, viewport %p.\n",
             iface, device, camera, x, y, width, height, viewport);
 
     if (!viewport)
@@ -694,14 +694,14 @@ static HRESULT WINAPI d3drm1_GetSearchPath(IDirect3DRM *iface, DWORD *size, char
 
 static HRESULT WINAPI d3drm1_SetDefaultTextureColors(IDirect3DRM *iface, DWORD color_count)
 {
-    FIXME("iface %p, color_count %u stub!\n", iface, color_count);
+    FIXME("iface %p, color_count %lu stub!\n", iface, color_count);
 
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI d3drm1_SetDefaultTextureShades(IDirect3DRM *iface, DWORD shade_count)
 {
-    FIXME("iface %p, shade_count %u stub!\n", iface, shade_count);
+    FIXME("iface %p, shade_count %lu stub!\n", iface, shade_count);
 
     return E_NOTIMPL;
 }
@@ -736,7 +736,7 @@ static HRESULT WINAPI d3drm1_Load(IDirect3DRM *iface, void *source, void *object
     IDirect3DRMFrame3 *parent_frame3 = NULL;
     HRESULT hr = D3DRM_OK;
 
-    TRACE("iface %p, source %p, object_id %p, iids %p, iid_count %u, flags %#x, "
+    TRACE("iface %p, source %p, object_id %p, iids %p, iid_count %lu, flags %#lx, "
             "load_cb %p, load_ctx %p, load_tex_cb %p, load_tex_ctx %p, parent_frame %p.\n",
             iface, source, object_id, iids, iid_count, flags,
             load_cb, load_ctx, load_tex_cb, load_tex_ctx, parent_frame);
@@ -810,7 +810,7 @@ static ULONG WINAPI d3drm2_AddRef(IDirect3DRM2 *iface)
     struct d3drm *d3drm = impl_from_IDirect3DRM2(iface);
     ULONG refcount = InterlockedIncrement(&d3drm->ref2);
 
-    TRACE("%p increasing refcount to %u.\n", iface, refcount);
+    TRACE("%p increasing refcount to %lu.\n", iface, refcount);
 
     if (refcount == 1)
         InterlockedIncrement(&d3drm->iface_count);
@@ -823,7 +823,7 @@ static ULONG WINAPI d3drm2_Release(IDirect3DRM2 *iface)
     struct d3drm *d3drm = impl_from_IDirect3DRM2(iface);
     ULONG refcount = InterlockedDecrement(&d3drm->ref2);
 
-    TRACE("%p decreasing refcount to %u.\n", iface, refcount);
+    TRACE("%p decreasing refcount to %lu.\n", iface, refcount);
 
     if (!refcount && !InterlockedDecrement(&d3drm->iface_count))
         d3drm_destroy(d3drm);
@@ -938,7 +938,7 @@ static HRESULT WINAPI d3drm2_CreateLight(IDirect3DRM2 *iface,
 {
     struct d3drm *d3drm = impl_from_IDirect3DRM2(iface);
 
-    TRACE("iface %p, type %#x, color 0x%08x, light %p.\n", iface, type, color, light);
+    TRACE("iface %p, type %#x, color 0x%08lx, light %p.\n", iface, type, color, light);
 
     return IDirect3DRM3_CreateLight(&d3drm->IDirect3DRM3_iface, type, color, light);
 }
@@ -967,7 +967,7 @@ static HRESULT WINAPI d3drm2_CreateMaterial(IDirect3DRM2 *iface,
 static HRESULT WINAPI d3drm2_CreateDevice(IDirect3DRM2 *iface,
         DWORD width, DWORD height, IDirect3DRMDevice2 **device)
 {
-    TRACE("iface %p, width %u, height %u, device %p.\n", iface, width, height, device);
+    TRACE("iface %p, width %lu, height %lu, device %p.\n", iface, width, height, device);
 
     if (!device)
         return D3DRMERR_BADVALUE;
@@ -1064,7 +1064,7 @@ static HRESULT WINAPI d3drm2_CreateTextureFromSurface(IDirect3DRM2 *iface,
         return hr;
     }
 
-    hr = IDirect3DRMTexture3_QueryInterface(texture3, &IID_IDirect3DRMTexture, (void **)texture);
+    hr = IDirect3DRMTexture3_QueryInterface(texture3, &IID_IDirect3DRMTexture2, (void **)texture);
     IDirect3DRMTexture3_Release(texture3);
 
     return hr;
@@ -1089,7 +1089,7 @@ static HRESULT WINAPI d3drm2_CreateViewport(IDirect3DRM2 *iface, IDirect3DRMDevi
     IDirect3DRMViewport2 *viewport2;
     HRESULT hr;
 
-    TRACE("iface %p, device %p, camera %p, x %u, y %u, width %u, height %u, viewport %p.\n",
+    TRACE("iface %p, device %p, camera %p, x %lu, y %lu, width %lu, height %lu, viewport %p.\n",
           iface, device, camera, x, y, width, height, viewport);
 
     if (!viewport)
@@ -1208,14 +1208,14 @@ static HRESULT WINAPI d3drm2_GetSearchPath(IDirect3DRM2 *iface, DWORD *size, cha
 
 static HRESULT WINAPI d3drm2_SetDefaultTextureColors(IDirect3DRM2 *iface, DWORD color_count)
 {
-    FIXME("iface %p, color_count %u stub!\n", iface, color_count);
+    FIXME("iface %p, color_count %lu stub!\n", iface, color_count);
 
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI d3drm2_SetDefaultTextureShades(IDirect3DRM2 *iface, DWORD shade_count)
 {
-    FIXME("iface %p, shade_count %u stub!\n", iface, shade_count);
+    FIXME("iface %p, shade_count %lu stub!\n", iface, shade_count);
 
     return E_NOTIMPL;
 }
@@ -1250,7 +1250,7 @@ static HRESULT WINAPI d3drm2_Load(IDirect3DRM2 *iface, void *source, void *objec
     IDirect3DRMFrame3 *parent_frame3 = NULL;
     HRESULT hr = D3DRM_OK;
 
-    TRACE("iface %p, source %p, object_id %p, iids %p, iid_count %u, flags %#x, "
+    TRACE("iface %p, source %p, object_id %p, iids %p, iid_count %lu, flags %#lx, "
             "load_cb %p, load_ctx %p, load_tex_cb %p, load_tex_ctx %p, parent_frame %p.\n",
             iface, source, object_id, iids, iid_count, flags,
             load_cb, load_ctx, load_tex_cb, load_tex_ctx, parent_frame);
@@ -1332,7 +1332,7 @@ static ULONG WINAPI d3drm3_AddRef(IDirect3DRM3 *iface)
     struct d3drm *d3drm = impl_from_IDirect3DRM3(iface);
     ULONG refcount = InterlockedIncrement(&d3drm->ref3);
 
-    TRACE("%p increasing refcount to %u.\n", iface, refcount);
+    TRACE("%p increasing refcount to %lu.\n", iface, refcount);
 
     if (refcount == 1)
         InterlockedIncrement(&d3drm->iface_count);
@@ -1345,7 +1345,7 @@ static ULONG WINAPI d3drm3_Release(IDirect3DRM3 *iface)
     struct d3drm *d3drm = impl_from_IDirect3DRM3(iface);
     ULONG refcount = InterlockedDecrement(&d3drm->ref3);
 
-    TRACE("%p decreasing refcount to %u.\n", iface, refcount);
+    TRACE("%p decreasing refcount to %lu.\n", iface, refcount);
 
     if (!refcount && !InterlockedDecrement(&d3drm->iface_count))
         d3drm_destroy(d3drm);
@@ -1549,7 +1549,7 @@ static HRESULT WINAPI d3drm3_CreateLight(IDirect3DRM3 *iface,
     struct d3drm_light *object;
     HRESULT hr;
 
-    FIXME("iface %p, type %#x, color 0x%08x, light %p partial stub!\n", iface, type, color, light);
+    TRACE("iface %p, type %#x, color 0x%08lx, light %p.\n", iface, type, color, light);
 
     if (SUCCEEDED(hr = d3drm_light_create(&object, &d3drm->IDirect3DRM_iface)))
     {
@@ -1569,7 +1569,7 @@ static HRESULT WINAPI d3drm3_CreateLightRGB(IDirect3DRM3 *iface, D3DRMLIGHTTYPE 
     struct d3drm_light *object;
     HRESULT hr;
 
-    FIXME("iface %p, type %#x, red %.8e, green %.8e, blue %.8e, light %p partial stub!\n",
+    TRACE("iface %p, type %#x, red %.8e, green %.8e, blue %.8e, light %p.\n",
             iface, type, red, green, blue, light);
 
     if (SUCCEEDED(hr = d3drm_light_create(&object, &d3drm->IDirect3DRM_iface)))
@@ -1603,7 +1603,7 @@ static HRESULT WINAPI d3drm3_CreateMaterial(IDirect3DRM3 *iface,
 static HRESULT WINAPI d3drm3_CreateDevice(IDirect3DRM3 *iface,
         DWORD width, DWORD height, IDirect3DRMDevice3 **device)
 {
-    TRACE("iface %p, width %u, height %u, device %p.\n", iface, width, height, device);
+    TRACE("iface %p, width %lu, height %lu, device %p.\n", iface, width, height, device);
 
     if (!device)
         return D3DRMERR_BADVALUE;
@@ -1620,7 +1620,7 @@ static HRESULT WINAPI d3drm3_CreateDeviceFromSurface(IDirect3DRM3 *iface, GUID *
     BOOL use_z_surface;
     HRESULT hr;
 
-    TRACE("iface %p, guid %s, ddraw %p, backbuffer %p, flags %#x, device %p.\n",
+    TRACE("iface %p, guid %s, ddraw %p, backbuffer %p, flags %#lx, device %p.\n",
             iface, debugstr_guid(guid), ddraw, backbuffer, flags, device);
 
     if (!device)
@@ -1762,7 +1762,7 @@ static HRESULT WINAPI d3drm3_CreateViewport(IDirect3DRM3 *iface, IDirect3DRMDevi
     struct d3drm_viewport *object;
     HRESULT hr;
 
-    TRACE("iface %p, device %p, camera %p, x %u, y %u, width %u, height %u, viewport %p.\n",
+    TRACE("iface %p, device %p, camera %p, x %lu, y %lu, width %lu, height %lu, viewport %p.\n",
             iface, device, camera, x, y, width, height, viewport);
 
     if (!viewport)
@@ -1886,14 +1886,14 @@ static HRESULT WINAPI d3drm3_GetSearchPath(IDirect3DRM3 *iface, DWORD *size, cha
 
 static HRESULT WINAPI d3drm3_SetDefaultTextureColors(IDirect3DRM3 *iface, DWORD color_count)
 {
-    FIXME("iface %p, color_count %u stub!\n", iface, color_count);
+    FIXME("iface %p, color_count %lu stub!\n", iface, color_count);
 
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI d3drm3_SetDefaultTextureShades(IDirect3DRM3 *iface, DWORD shade_count)
 {
-    FIXME("iface %p, shade_count %u stub!\n", iface, shade_count);
+    FIXME("iface %p, shade_count %lu stub!\n", iface, shade_count);
 
     return E_NOTIMPL;
 }
@@ -2121,7 +2121,7 @@ static HRESULT WINAPI d3drm3_Load(IDirect3DRM3 *iface, void *source, void *objec
     HRESULT ret = D3DRMERR_BADOBJECT;
     DWORD i;
 
-    TRACE("iface %p, source %p, object_id %p, iids %p, iid_count %u, flags %#x, "
+    TRACE("iface %p, source %p, object_id %p, iids %p, iid_count %lu, flags %#lx, "
             "load_cb %p, load_ctx %p, load_tex_cb %p, load_tex_ctx %p, parent_frame %p.\n",
             iface, source, object_id, iids, iid_count, flags,
             load_cb, load_ctx, load_tex_cb, load_tex_ctx, parent_frame);
@@ -2141,7 +2141,7 @@ static HRESULT WINAPI d3drm3_Load(IDirect3DRM3 *iface, void *source, void *objec
     }
     else
     {
-        FIXME("Load options %#x not supported yet.\n", flags);
+        FIXME("Load options %#lx not supported yet.\n", flags);
         return E_NOTIMPL;
     }
 
@@ -2177,7 +2177,7 @@ static HRESULT WINAPI d3drm3_Load(IDirect3DRM3 *iface, void *source, void *objec
     if ((hr != DXFILE_OK) || (size != sizeof(*header)))
         goto end;
 
-    TRACE("Version is %u.%u, flags %#x.\n", header->major, header->minor, header->flags);
+    TRACE("Version is %u.%u, flags %#lx.\n", header->major, header->minor, header->flags);
 
     /* Version must be 1.0.x */
     if ((header->major != 1) || (header->minor != 0))
@@ -2262,7 +2262,7 @@ static HRESULT WINAPI d3drm3_CreateClippedVisual(IDirect3DRM3 *iface,
 
 static HRESULT WINAPI d3drm3_SetOptions(IDirect3DRM3 *iface, DWORD flags)
 {
-    FIXME("iface %p, flags %#x stub!\n", iface, flags);
+    FIXME("iface %p, flags %#lx stub!\n", iface, flags);
 
     return E_NOTIMPL;
 }
@@ -2325,7 +2325,7 @@ HRESULT WINAPI Direct3DRMCreate(IDirect3DRM **d3drm)
 
     TRACE("d3drm %p.\n", d3drm);
 
-    if (!(object = heap_alloc_zero(sizeof(*object))))
+    if (!(object = calloc(1, sizeof(*object))))
         return E_OUTOFMEMORY;
 
     object->IDirect3DRM_iface.lpVtbl = &d3drm1_vtbl;
@@ -2337,11 +2337,6 @@ HRESULT WINAPI Direct3DRMCreate(IDirect3DRM **d3drm)
     *d3drm = &object->IDirect3DRM_iface;
 
     return S_OK;
-}
-
-HRESULT WINAPI DllCanUnloadNow(void)
-{
-    return S_FALSE;
 }
 
 HRESULT WINAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, void **ppv)
