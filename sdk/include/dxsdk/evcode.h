@@ -57,6 +57,23 @@
 #define EC_WMT_EVENT_BASE                           0x0251
 #define EC_WMT_INDEX_EVENT                          EC_WMT_EVENT_BASE
 #define EC_WMT_EVENT                                EC_WMT_EVENT_BASE+1
+
+#define EC_SAMPLE_NEEDED                            0x20
+#define EC_NEW_PIN                                  0x20
+#define EC_RENDER_FINISHED                          0x21
+#define EC_PROCESSING_LATENCY                       0x21
+#define EC_SAMPLE_LATENCY                           0x22
+#define EC_SCRUB_TIME                               0x23
+#define EC_PLEASE_REOPEN                            0x40
+#define EC_STATUS                                   0x41
+#define EC_MARKER_HIT                               0x42
+#define EC_LOADSTATUS                               0x43
+#define EC_FILE_CLOSED                              0x44
+#define EC_ERRORABORTEX                             0x45
+#define EC_EOS_SOON                                 0x46
+#define EC_CONTENTPROPERTY_CHANGED                  0x47
+#define EC_BANDWIDTHCHANGE                          0x48
+#define EC_VIDEOFRAMEREADY                          0x49
 #define VMR_RENDER_DEVICE_OVERLAY                   0x01
 #define VMR_RENDER_DEVICE_VIDMEM                    0x02
 #define VMR_RENDER_DEVICE_SYSMEM                    0x04
