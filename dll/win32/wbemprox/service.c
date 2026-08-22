@@ -45,7 +45,7 @@ static UINT map_error( DWORD error )
     case ERROR_SERVICE_REQUEST_TIMEOUT:    return 7;
     case ERROR_SERVICE_ALREADY_RUNNING:    return 10;
     default:
-        WARN("unknown error %u\n", error);
+        WARN( "unknown error %lu\n", error );
         break;
     }
     return 8;
@@ -76,18 +76,18 @@ done:
     return S_OK;
 }
 
-HRESULT service_pause_service( IWbemClassObject *obj, IWbemClassObject *in, IWbemClassObject **out )
+HRESULT service_pause_service( IWbemClassObject *obj, IWbemContext *context, IWbemClassObject *in, IWbemClassObject **out )
 {
     VARIANT name, retval;
     IWbemClassObject *sig, *out_params = NULL;
     HRESULT hr;
 
-    TRACE("%p, %p, %p\n", obj, in, out);
+    TRACE("%p, %p, %p, %p\n", obj, context, in, out);
 
-    hr = IWbemClassObject_Get( obj, prop_nameW, 0, &name, NULL, NULL );
+    hr = IWbemClassObject_Get( obj, L"Name", 0, &name, NULL, NULL );
     if (hr != S_OK) return hr;
 
-    hr = create_signature( class_serviceW, method_pauseserviceW, PARAM_OUT, &sig );
+    hr = create_signature( WBEMPROX_NAMESPACE_CIMV2, L"Win32_Service", L"PauseService", PARAM_OUT, &sig );
     if (hr != S_OK)
     {
         VariantClear( &name );
@@ -107,7 +107,7 @@ HRESULT service_pause_service( IWbemClassObject *obj, IWbemClassObject *in, IWbe
     if (hr != S_OK) goto done;
 
     if (out_params)
-        hr = IWbemClassObject_Put( out_params, param_returnvalueW, 0, &retval, CIM_UINT32 );
+        hr = IWbemClassObject_Put( out_params, L"ReturnValue", 0, &retval, CIM_UINT32 );
 
 done:
     VariantClear( &name );
@@ -121,18 +121,18 @@ done:
     return hr;
 }
 
-HRESULT service_resume_service( IWbemClassObject *obj, IWbemClassObject *in, IWbemClassObject **out )
+HRESULT service_resume_service( IWbemClassObject *obj, IWbemContext *context, IWbemClassObject *in, IWbemClassObject **out )
 {
     VARIANT name, retval;
     IWbemClassObject *sig, *out_params = NULL;
     HRESULT hr;
 
-    TRACE("%p, %p, %p\n", obj, in, out);
+    TRACE("%p, %p, %p, %p\n", obj, context, in, out);
 
-    hr = IWbemClassObject_Get( obj, prop_nameW, 0, &name, NULL, NULL );
+    hr = IWbemClassObject_Get( obj, L"Name", 0, &name, NULL, NULL );
     if (hr != S_OK) return hr;
 
-    hr = create_signature( class_serviceW, method_resumeserviceW, PARAM_OUT, &sig );
+    hr = create_signature( WBEMPROX_NAMESPACE_CIMV2, L"Win32_Service", L"ResumeService", PARAM_OUT, &sig );
     if (hr != S_OK)
     {
         VariantClear( &name );
@@ -152,7 +152,7 @@ HRESULT service_resume_service( IWbemClassObject *obj, IWbemClassObject *in, IWb
     if (hr != S_OK) goto done;
 
     if (out_params)
-        hr = IWbemClassObject_Put( out_params, param_returnvalueW, 0, &retval, CIM_UINT32 );
+        hr = IWbemClassObject_Put( out_params, L"ReturnValue", 0, &retval, CIM_UINT32 );
 
 done:
     VariantClear( &name );
@@ -190,18 +190,18 @@ done:
     return S_OK;
 }
 
-HRESULT service_start_service( IWbemClassObject *obj, IWbemClassObject *in, IWbemClassObject **out )
+HRESULT service_start_service( IWbemClassObject *obj, IWbemContext *context, IWbemClassObject *in, IWbemClassObject **out )
 {
     VARIANT name, retval;
     IWbemClassObject *sig, *out_params = NULL;
     HRESULT hr;
 
-    TRACE("%p, %p, %p\n", obj, in, out);
+    TRACE("%p, %p, %p, %p\n", obj, context, in, out);
 
-    hr = IWbemClassObject_Get( obj, prop_nameW, 0, &name, NULL, NULL );
+    hr = IWbemClassObject_Get( obj, L"Name", 0, &name, NULL, NULL );
     if (hr != S_OK) return hr;
 
-    hr = create_signature( class_serviceW, method_startserviceW, PARAM_OUT, &sig );
+    hr = create_signature( WBEMPROX_NAMESPACE_CIMV2, L"Win32_Service", L"StartService", PARAM_OUT, &sig );
     if (hr != S_OK)
     {
         VariantClear( &name );
@@ -221,7 +221,7 @@ HRESULT service_start_service( IWbemClassObject *obj, IWbemClassObject *in, IWbe
     if (hr != S_OK) goto done;
 
     if (out_params)
-        hr = IWbemClassObject_Put( out_params, param_returnvalueW, 0, &retval, CIM_UINT32 );
+        hr = IWbemClassObject_Put( out_params, L"ReturnValue", 0, &retval, CIM_UINT32 );
 
 done:
     VariantClear( &name );
@@ -235,18 +235,18 @@ done:
     return hr;
 }
 
-HRESULT service_stop_service( IWbemClassObject *obj, IWbemClassObject *in, IWbemClassObject **out )
+HRESULT service_stop_service( IWbemClassObject *obj, IWbemContext *context, IWbemClassObject *in, IWbemClassObject **out )
 {
     VARIANT name, retval;
     IWbemClassObject *sig, *out_params = NULL;
     HRESULT hr;
 
-    TRACE("%p, %p, %p\n", obj, in, out);
+    TRACE("%p, %p, %p, %p\n", obj, context, in, out);
 
-    hr = IWbemClassObject_Get( obj, prop_nameW, 0, &name, NULL, NULL );
+    hr = IWbemClassObject_Get( obj, L"Name", 0, &name, NULL, NULL );
     if (hr != S_OK) return hr;
 
-    hr = create_signature( class_serviceW, method_stopserviceW, PARAM_OUT, &sig );
+    hr = create_signature( WBEMPROX_NAMESPACE_CIMV2, L"Win32_Service", L"StopService", PARAM_OUT, &sig );
     if (hr != S_OK)
     {
         VariantClear( &name );
@@ -266,7 +266,7 @@ HRESULT service_stop_service( IWbemClassObject *obj, IWbemClassObject *in, IWbem
     if (hr != S_OK) goto done;
 
     if (out_params)
-        hr = IWbemClassObject_Put( out_params, param_returnvalueW, 0, &retval, CIM_UINT32 );
+        hr = IWbemClassObject_Put( out_params, L"ReturnValue", 0, &retval, CIM_UINT32 );
 
 done:
     VariantClear( &name );

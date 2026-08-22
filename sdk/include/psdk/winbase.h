@@ -2668,6 +2668,23 @@ DWORD WINAPI QueryDosDeviceW(LPCWSTR,LPWSTR,DWORD);
 #if (_WIN32_WINNT >= 0x0501)
 BOOL WINAPI QueryMemoryResourceNotification(HANDLE,PBOOL);
 #endif
+#if (_WIN32_WINNT >= 0x0600)
+BOOL
+WINAPI
+QueryFullProcessImageNameA(
+  _In_ HANDLE hProcess,
+  _In_ DWORD dwFlags,
+  _Out_ LPSTR lpExeName,
+  _Out_ PDWORD lpdwSize);
+
+BOOL
+WINAPI
+QueryFullProcessImageNameW(
+  _In_ HANDLE hProcess,
+  _In_ DWORD dwFlags,
+  _Out_ LPWSTR lpExeName,
+  _Out_ PDWORD lpdwSize);
+#endif
 BOOL WINAPI QueryPerformanceCounter(PLARGE_INTEGER);
 BOOL WINAPI QueryPerformanceFrequency(PLARGE_INTEGER);
 #if (_WIN32_WINNT >= 0x0600)

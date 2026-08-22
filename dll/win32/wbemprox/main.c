@@ -35,9 +35,9 @@ WINE_DEFAULT_DEBUG_CHANNEL(wbemprox);
 
 static HINSTANCE instance;
 
-struct list *table_list;
+struct list *table_list[WBEMPROX_NAMESPACE_LAST];
 
-typedef HRESULT (*fnCreateInstance)( LPVOID *ppObj );
+typedef HRESULT (*fnCreateInstance)( LPVOID *ppObj, REFIID riid );
 
 typedef struct
 {
@@ -77,8 +77,6 @@ static HRESULT WINAPI wbemprox_cf_CreateInstance( IClassFactory *iface, LPUNKNOW
                                                   REFIID riid, LPVOID *ppobj )
 {
     wbemprox_cf *This = impl_from_IClassFactory( iface );
-    HRESULT r;
-    IUnknown *punk;
 
     TRACE("%p %s %p\n", pOuter, debugstr_guid(riid), ppobj);
 
@@ -87,13 +85,7 @@ static HRESULT WINAPI wbemprox_cf_CreateInstance( IClassFactory *iface, LPUNKNOW
     if (pOuter)
         return CLASS_E_NOAGGREGATION;
 
-    r = This->pfnCreateInstance( (LPVOID *)&punk );
-    if (FAILED(r))
-        return r;
-
-    r = IUnknown_QueryInterface( punk, riid, ppobj );
-    IUnknown_Release( punk );
-    return r;
+    return This->pfnCreateInstance( ppobj, riid );
 }
 
 static HRESULT WINAPI wbemprox_cf_LockServer( IClassFactory *iface, BOOL dolock )
@@ -112,6 +104,7 @@ static const struct IClassFactoryVtbl wbemprox_cf_vtbl =
 };
 
 static wbemprox_cf wbem_locator_cf = { { &wbemprox_cf_vtbl }, WbemLocator_create };
+static wbemprox_cf wbem_context_cf = { { &wbemprox_cf_vtbl }, WbemContext_create };
 
 BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 {
@@ -139,30 +132,10 @@ HRESULT WINAPI DllGetClassObject( REFCLSID rclsid, REFIID iid, LPVOID *ppv )
     {
        cf = &wbem_locator_cf.IClassFactory_iface;
     }
+    else if (IsEqualGUID( rclsid, &CLSID_WbemContext ))
+    {
+       cf = &wbem_context_cf.IClassFactory_iface;
+    }
     if (!cf) return CLASS_E_CLASSNOTAVAILABLE;
     return IClassFactory_QueryInterface( cf, iid, ppv );
-}
-
-/***********************************************************************
- *              DllCanUnloadNow (WBEMPROX.@)
- */
-HRESULT WINAPI DllCanUnloadNow( void )
-{
-    return S_FALSE;
-}
-
-/***********************************************************************
- *		DllRegisterServer (WBEMPROX.@)
- */
-HRESULT WINAPI DllRegisterServer(void)
-{
-    return __wine_register_resources( instance );
-}
-
-/***********************************************************************
- *		DllUnregisterServer (WBEMPROX.@)
- */
-HRESULT WINAPI DllUnregisterServer(void)
-{
-    return __wine_unregister_resources( instance );
 }
