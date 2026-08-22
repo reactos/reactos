@@ -1469,7 +1469,9 @@ SetupDiGetActualSectionToInstallExW(
   _Out_opt_ PWSTR *Extension,
   _Reserved_ PVOID Reserved);
 
-WINSETUPAPI BOOL WINAPI
+WINSETUPAPI
+BOOL
+WINAPI
 SetupDiGetActualModelsSectionA(
     _In_ PINFCONTEXT Context,
     _In_opt_ PSP_ALTPLATFORM_INFO AlternatePlatformInfo,
@@ -1478,7 +1480,9 @@ SetupDiGetActualModelsSectionA(
     _Out_opt_ PDWORD RequiredSize,
     _Reserved_ PVOID Reserved);
 
-WINSETUPAPI BOOL WINAPI
+WINSETUPAPI
+BOOL
+WINAPI
 SetupDiGetActualModelsSectionW(
     _In_ PINFCONTEXT Context,
     _In_opt_ PSP_ALTPLATFORM_INFO AlternatePlatformInfo,

@@ -636,26 +636,21 @@ SetupDiGetActualModelsSectionW(
     /* Fields 2..N are the TargetOSVersion decorations */
     for (i = 2; i <= FieldCount; i++)
     {
-        WCHAR Decoration[LINE_LEN + 1];
-        WCHAR Candidate[LINE_LEN + 1];
+        WCHAR Candidate[LINE_LEN + 2]; /* +1 for possible leading '.' and +1 for NUL */
         DWORD Score1, Score2, Score3, Score4, Score5;
         DWORD DecLen;
 
-        if (!SetupGetStringFieldW(Context, i, Decoration, ARRAYSIZE(Decoration), NULL))
+        if (!SetupGetStringFieldW(Context, i, Candidate, ARRAYSIZE(Candidate) - 1, NULL))
             continue;
 
-        if (!Decoration[0])
+        if (!Candidate[0])
             continue;
 
         /* CheckSectionValid expects a leading dot */
-        if (Decoration[0] == '.')
+        if (Candidate[0] != '.')
         {
-            strcpyW(Candidate, Decoration);
-        }
-        else
-        {
+            memmove(Candidate + 1, Candidate, (lstrlenW(Candidate) + 1) * sizeof(WCHAR));
             Candidate[0] = '.';
-            strcpyW(Candidate + 1, Decoration);
         }
 
         if (!CheckSectionValid(Candidate, pPlatformInfo, ProductType, SuiteMask,
