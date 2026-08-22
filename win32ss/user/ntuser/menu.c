@@ -1784,7 +1784,13 @@ static void FASTCALL MENU_DrawBitmapItem(HDC hdc, PITEM lpitem, const RECT *rect
     left=rect->left;
     rop=((lpitem->fState & MF_HILITE) && !IS_MAGIC_BITMAP(hbmToDraw)) ? NOTSRCCOPY : SRCCOPY;
     if ((lpitem->fState & MF_HILITE) && lpitem->hbmp)
-        IntGdiSetBkColor(hdc, IntGetSysColor(COLOR_HIGHLIGHT));
+    {
+        if (bm.bmBitsPixel == 1)
+            /* Set background color to black */
+            IntGdiSetBkColor(hdc, RGB(0, 0, 0));
+         else
+            IntGdiSetBkColor(hdc, IntGetSysColor(COLOR_HIGHLIGHT));
+    }
     if (MenuBar &&
         !flat_menu &&
         (lpitem->fState & (MF_HILITE | MF_GRAYED)) == MF_HILITE)
