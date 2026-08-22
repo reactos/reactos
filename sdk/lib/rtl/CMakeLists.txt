@@ -14,15 +14,17 @@ if (CMAKE_C_COMPILER_ID STREQUAL "GNU" OR CMAKE_C_COMPILER_ID STREQUAL "Clang")
 endif()
 
 list(APPEND RTL_WINE_SOURCE
-    actctx.c
+    wine/actctx.c
+    wine/locale.c
+    wine/threadpool.c
     timerqueue.c
-    threadpool.c
 )
 list(APPEND RTL_WINE_SOURCE_VISTA
-    product.c
-    threadpool.c
+    wine/product.c
+    wine/threadpool.c
+    wine/locale.c
 )
-set_source_files_properties(threadpool.c PROPERTIES COMPILE_DEFINITIONS __WINESRC__)
+set_source_files_properties(wine/threadpool.c PROPERTIES COMPILE_DEFINITIONS __WINESRC__)
 
 if(MSVC)
     # Silence warning C4267: 'initializing': conversion from 'size_t' to 'const int', possible loss of data
@@ -145,9 +147,6 @@ list(APPEND SOURCE_VISTA
     runonce.c
     slist.c
     srw.c
-    threadpool.c
-    unicode_vista.c
-    utf8.c
     wow64.c)
 
 add_library(rtl_vista ${SOURCE_VISTA})

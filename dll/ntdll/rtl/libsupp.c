@@ -1216,6 +1216,27 @@ RtlpSafeCopyMemory(
     return STATUS_SUCCESS;
 }
 
+extern NTSYSAPI NTSTATUS WINAPI RtlQueryActivationContextApplicationSettings(DWORD,HANDLE,const WCHAR*,const WCHAR*,WCHAR*,SIZE_T,SIZE_T*);
+NTSTATUS
+NTAPI
+RtlQueryActivationContextApplicationSettingsLibSupp(
+    DWORD flags,
+    HANDLE handle,
+    const WCHAR *ns,
+    const WCHAR *settings,
+    WCHAR *buffer,
+    SIZE_T size,
+    SIZE_T *written
+)
+{
+#if DLL_EXPORT_VERSION <= 0x502
+    /* Rtl vista does not include actctx.c as it brings in many other dependencies */
+    return STATUS_NOT_IMPLEMENTED;
+#else
+    return RtlQueryActivationContextApplicationSettings(flags, handle, ns, settings, buffer, size, written);
+#endif
+}
+
 /* FIXME: code duplication with kernel32/client/time.c */
 ULONG
 NTAPI
