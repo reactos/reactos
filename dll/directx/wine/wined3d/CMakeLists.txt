@@ -60,7 +60,7 @@ endif()
 
 set_module_type(d3dwine win32dll)
 target_link_libraries(d3dwine wine vkd3d dxguid oldnames)
-add_importlibs(d3dwine opengl32 user32 gdi32_vista gdi32 advapi32 ucrtbase kernel32_vista msvcrt kernel32 ntdll)
+add_importlibs(d3dwine opengl32 user32 gdi32_vista gdi32 advapi32 kernel32_vista msvcrt kernel32 ntdll)
 add_dependencies(d3dwine wineheaders d3d_idl_headers)
 add_cd_file(TARGET d3dwine DESTINATION reactos/system32 FOR all)
 set_wine_module(d3dwine)

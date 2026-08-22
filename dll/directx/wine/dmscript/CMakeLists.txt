@@ -25,7 +25,7 @@ set_source_files_properties(rsrc.rc PROPERTIES OBJECT_DEPENDS
 
 set_module_type(dmscript win32dll)
 target_link_libraries(dmscript wine wine_dll_register wine_dll_canunload dxguid uuid oldnames)
-add_importlibs(dmscript ole32 advapi32 ucrtbase msvcrt kernel32 ntdll)
+add_importlibs(dmscript ole32 advapi32 msvcrt kernel32 ntdll)
 add_dependencies(dmscript wineheaders)
 add_cd_file(TARGET dmscript DESTINATION reactos/system32 FOR all)
 set_wine_module(dmscript)

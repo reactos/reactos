@@ -33,7 +33,7 @@ endif()
 
 set_module_type(d3d10 win32dll UNICODE)
 target_link_libraries(d3d10 wine dxguid dx10guid uuid oldnames)
-add_importlibs(d3d10 d3d10core d3dcompiler_39 dxgi d3dwine ucrtbase msvcrt kernel32 ntdll)
+add_importlibs(d3d10 d3d10core d3dcompiler_39 dxgi d3dwine msvcrt kernel32 ntdll)
 add_dependencies(d3d10 wineheaders d3d_idl_headers)
 add_cd_file(TARGET d3d10 DESTINATION reactos/system32 FOR all)
 set_wine_module(d3d10)
