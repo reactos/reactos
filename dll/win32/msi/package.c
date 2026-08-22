@@ -53,7 +53,11 @@
 #include "wine/exception.h"
 
 #include "msipriv.h"
+#ifdef __REACTOS__
 #include "winemsi_s.h"
+#else
+#include "winemsi.h"
+#endif
 #include "resource.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(msi);
@@ -744,10 +748,11 @@ static VOID set_installer_properties(MSIPACKAGE *package)
     msi_set_property( package->db, L"AdminUser", L"1", -1 );
     msi_set_property( package->db, L"Privileged", L"1", -1 );
     msi_set_property( package->db, L"MsiRunningElevated", L"1", -1 );
+    msi_set_property( package->db, L"MsiTrueAdminUser", L"1", -1 );
 
     /* set the os things */
     OSVersion.dwOSVersionInfoSize = sizeof(OSVersion);
-    RtlGetVersion((PRTL_OSVERSIONINFOW)&OSVersion);
+    RtlGetVersion(&OSVersion);
     verval = OSVersion.dwMinorVersion + OSVersion.dwMajorVersion * 100;
     if (verval > 603)
     {
@@ -798,7 +803,8 @@ static VOID set_installer_properties(MSIPACKAGE *package)
         PathAddBackslashW( pth );
         msi_set_property( package->db, L"CommonFilesFolder", pth, -1 );
     }
-    else if (sys_info.wProcessorArchitecture == PROCESSOR_ARCHITECTURE_AMD64)
+    else if (sys_info.wProcessorArchitecture == PROCESSOR_ARCHITECTURE_AMD64 ||
+             sys_info.wProcessorArchitecture == PROCESSOR_ARCHITECTURE_ARM64)
     {
         msi_set_property( package->db, L"MsiAMD64", bufstr, -1 );
         msi_set_property( package->db, L"Msix64", bufstr, -1 );
@@ -941,6 +947,7 @@ static MSIPACKAGE *alloc_package( void )
         list_init( &package->patches );
         list_init( &package->binaries );
         list_init( &package->cabinet_streams );
+        list_init( &package->drlocators );
     }
 
     return package;
@@ -972,6 +979,7 @@ void msi_adjust_privilege_properties( MSIPACKAGE *package )
     msi_set_property( package->db, L"AdminUser", L"1", -1 );
     msi_set_property( package->db, L"Privileged", L"1", -1 );
     msi_set_property( package->db, L"MsiRunningElevated", L"1", -1 );
+    msi_set_property( package->db, L"MsiTrueAdminUser", L"1", -1 );
 }
 
 MSIPACKAGE *MSI_CreatePackage( MSIDATABASE *db )
@@ -1107,6 +1115,8 @@ static UINT parse_suminfo( MSISUMMARYINFO *si, MSIPACKAGE *package )
     package->version = msi_suminfo_get_int32( si, PID_PAGECOUNT );
     TRACE("version: %d\n", package->version);
 
+    package->platform = PLATFORM_INTEL;
+
     template = msi_suminfo_dup_string( si, PID_TEMPLATE );
     if (!template)
         return ERROR_SUCCESS; /* native accepts missing template property */
@@ -1114,13 +1124,8 @@ static UINT parse_suminfo( MSISUMMARYINFO *si, MSIPACKAGE *package )
     TRACE("template: %s\n", debugstr_w(template));
 
     p = wcschr( template, ';' );
-    if (!p)
-    {
-        WARN("invalid template string %s\n", debugstr_w(template));
-        free( template );
-        return ERROR_PATCH_PACKAGE_INVALID;
-    }
-    *p = 0;
+    if (p) *p++ = 0;
+
     platform = template;
     if ((q = wcschr( platform, ',' ))) *q = 0;
     package->platform = parse_platform( platform );
@@ -1136,8 +1141,8 @@ static UINT parse_suminfo( MSISUMMARYINFO *si, MSIPACKAGE *package )
         free( template );
         return ERROR_INSTALL_PLATFORM_UNSUPPORTED;
     }
-    p++;
-    if (!*p)
+
+    if (!p || !*p)
     {
         free( template );
         return ERROR_SUCCESS;
@@ -1168,27 +1173,58 @@ static UINT parse_suminfo( MSISUMMARYINFO *si, MSIPACKAGE *package )
     return ERROR_SUCCESS;
 }
 
+static BOOL validate_package_platform( enum platform platform )
+{
+#ifdef __REACTOS__
+    // IsWow64Process2 is Windows 10 1709+, so use wine's implementation from commit c3f77b0f9a187109385d1dad17796241004057f4.
+    // The usage of the function was introduced in wine commit 2e32067f1f80b169169fa662576a75b1c2382204
+    #ifndef __arm__
+    if (platform == PLATFORM_ARM)
+        return FALSE;
+    #endif
+    #ifndef __aarch64__
+        if (platform == PLATFORM_ARM64)
+            return FALSE;
+    #endif
+    if (platform == PLATFORM_X64)
+    {
+        if (!is_64bit && !is_wow64)
+            return FALSE;
+    }
+    return TRUE;
+#else
+    USHORT proc_machine, native_machine;
+    IsWow64Process2( GetCurrentProcess(), &proc_machine, &native_machine );
+    switch (platform)
+    {
+    case PLATFORM_INTEL:
+        return native_machine == IMAGE_FILE_MACHINE_I386 ||
+               native_machine == IMAGE_FILE_MACHINE_AMD64 ||
+               native_machine == IMAGE_FILE_MACHINE_ARM64;
+    case PLATFORM_X64:
+        return native_machine == IMAGE_FILE_MACHINE_AMD64 ||
+               native_machine == IMAGE_FILE_MACHINE_ARM64;
+    case PLATFORM_ARM:
+        return native_machine == IMAGE_FILE_MACHINE_ARM;
+    case PLATFORM_ARM64:
+        return native_machine == IMAGE_FILE_MACHINE_ARM64;
+    case PLATFORM_INTEL64:
+    default:
+        return FALSE;
+    }
+#endif
+}
+
 static UINT validate_package( MSIPACKAGE *package )
 {
     UINT i;
 
-    if (package->platform == PLATFORM_INTEL64)
+    if (!validate_package_platform( package->platform ))
         return ERROR_INSTALL_PLATFORM_UNSUPPORTED;
-#ifndef __arm__
-    if (package->platform == PLATFORM_ARM)
-        return ERROR_INSTALL_PLATFORM_UNSUPPORTED;
-#endif
-#ifndef __aarch64__
-    if (package->platform == PLATFORM_ARM64)
-        return ERROR_INSTALL_PLATFORM_UNSUPPORTED;
-#endif
-    if (package->platform == PLATFORM_X64)
-    {
-        if (!is_64bit && !is_wow64)
-            return ERROR_INSTALL_PLATFORM_UNSUPPORTED;
-        if (package->version < 200)
-            return ERROR_INSTALL_PACKAGE_INVALID;
-    }
+
+    if (package->platform == PLATFORM_X64 && package->version < 200)
+        return ERROR_INSTALL_PACKAGE_INVALID;
+
     if (!package->num_langids)
     {
         return ERROR_SUCCESS;

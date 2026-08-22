@@ -35,7 +35,11 @@
 
 #include "msipriv.h"
 #include "query.h"
+#ifdef __REACTOS__
 #include "winemsi_s.h"
+#else
+#include "winemsi.h"
+#endif
 
 #include "initguid.h"
 
@@ -288,8 +292,6 @@ UINT msi_view_refresh_row(MSIDATABASE *db, MSIVIEW *view, UINT row, MSIRECORD *r
 {
     UINT row_count = 0, col_count = 0, i, ival, ret, type;
 
-    TRACE("%p %p %d %p\n", db, view, row, rec);
-
     ret = view->ops->get_dimensions(view, &row_count, &col_count);
     if (ret)
         return ret;
@@ -354,8 +356,6 @@ UINT msi_view_get_row(MSIDATABASE *db, MSIVIEW *view, UINT row, MSIRECORD **rec)
 {
     UINT row_count = 0, col_count = 0, r;
     MSIRECORD *object;
-
-    TRACE("view %p, row %u, rec %p.\n", view, row, rec);
 
     if ((r = view->ops->get_dimensions(view, &row_count, &col_count)))
         return r;

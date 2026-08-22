@@ -115,6 +115,7 @@ query:
     {
         SQL_input* sql = (SQL_input*) info;
         *sql->view = $1;
+        (void)sql_nerrs; /* avoid unused variable warning */
     }
     ;
 
