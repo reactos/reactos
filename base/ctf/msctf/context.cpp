@@ -174,27 +174,27 @@ public:
         _Out_ ITfRangeACP **range) override;
 
 protected:
-    LONG m_cRefs;
-    BOOL m_connected;
+    LONG m_cRefs = 1;
+    BOOL m_connected = FALSE;
 
     // Aggregation
-    ITfCompartmentMgr *m_CompartmentMgr;
+    ITfCompartmentMgr* m_CompartmentMgr = NULL;
 
-    TfClientId m_tidOwner;
-    TfEditCookie m_defaultCookie;
-    TS_STATUS m_documentStatus;
-    ITfDocumentMgr *m_manager;
+    TfClientId m_tidOwner = 0;
+    TfEditCookie m_defaultCookie = 0;
+    TS_STATUS m_documentStatus = {};
+    ITfDocumentMgr* m_manager = NULL;
 
-    ITextStoreACP *m_pITextStoreACP;
-    ITfContextOwnerCompositionSink *m_pITfContextOwnerCompositionSink;
-    ITfEditSession *m_currentEditSession;
+    ITextStoreACP* m_pITextStoreACP = NULL;
+    ITfContextOwnerCompositionSink* m_pITfContextOwnerCompositionSink = NULL;
+    ITfEditSession* m_currentEditSession = NULL;
 
     // kept as separate lists to reduce unnecessary iterations
-    struct list m_pContextKeyEventSink;
-    struct list m_pEditTransactionSink;
-    struct list m_pStatusSink;
-    struct list m_pTextEditSink;
-    struct list m_pTextLayoutSink;
+    struct list m_pContextKeyEventSink = {};
+    struct list m_pEditTransactionSink = {};
+    struct list m_pStatusSink = {};
+    struct list m_pTextEditSink = {};
+    struct list m_pTextLayoutSink = {};
 };
 
 ////////////////////////////////////////////////////////////////////////////
@@ -208,13 +208,6 @@ typedef struct tagEditCookie
 ////////////////////////////////////////////////////////////////////////////
 
 CContext::CContext()
-    : m_cRefs(1)
-    , m_connected(FALSE)
-    , m_CompartmentMgr(NULL)
-    , m_manager(NULL)
-    , m_pITextStoreACP(NULL)
-    , m_pITfContextOwnerCompositionSink(NULL)
-    , m_currentEditSession(NULL)
 {
     list_init(&m_pContextKeyEventSink);
     list_init(&m_pEditTransactionSink);
@@ -225,8 +218,7 @@ CContext::CContext()
 
 CContext::~CContext()
 {
-    EditCookie *cookie;
-    TRACE("destroying %p\n", this);
+    EditCookie* cookie;
 
     if (m_pITextStoreACP)
         m_pITextStoreACP->Release();

@@ -14,16 +14,6 @@ WINE_DEFAULT_DEBUG_CHANNEL(msctf);
 
 ////////////////////////////////////////////////////////////////////////////
 
-CDisplayAttributeMgr::CDisplayAttributeMgr()
-    : m_cRefs(1)
-{
-}
-
-CDisplayAttributeMgr::~CDisplayAttributeMgr()
-{
-    TRACE("destroying %p\n", this);
-}
-
 BOOL CDisplayAttributeMgr::_IsInCollection(REFGUID rguid)
 {
     FIXME("(%p)\n", wine_dbgstr_guid(&rguid));

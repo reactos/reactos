@@ -118,12 +118,12 @@ public:
     STDMETHODIMP UnadviseSink(_In_ DWORD dwCookie) override;
 
 protected:
-    LONG m_cRefs;
-    ITfContext *m_context;
-    DWORD m_dwLockType;
-    TfAnchor m_anchorStart;
-    TfAnchor m_anchorEnd;
-    DWORD m_dwCookie;
+    LONG m_cRefs = 1;
+    ITfContext* m_context = NULL;
+    DWORD m_dwLockType = 0;
+    TfAnchor m_anchorStart = TF_ANCHOR_START;
+    TfAnchor m_anchorEnd = TF_ANCHOR_START;
+    DWORD m_dwCookie = 0;
 
     CRange *_Clone();
 

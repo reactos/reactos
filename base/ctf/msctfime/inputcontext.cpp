@@ -16,15 +16,8 @@ WINE_DEFAULT_DEBUG_CHANNEL(msctfime);
 /// @unimplemented
 CInputContextOwner::CInputContextOwner(FN_IC_OWNER_CALLBACK fnCallback, LPVOID pCallbackPV)
 {
-    m_dwCookie = -1;
     m_fnCallback = fnCallback;
-    m_cRefs = 1;
     m_pCallbackPV = pCallbackPV;
-}
-
-/// @implemented
-CInputContextOwner::~CInputContextOwner()
-{
 }
 
 /// @implemented
@@ -185,8 +178,6 @@ CicInputContext::CicInputContext(
     _In_ HIMC hIMC)
 {
     m_hIMC = hIMC;
-    m_dwQueryPos = 0;
-    m_cRefs = 1;
 }
 
 /// @implemented

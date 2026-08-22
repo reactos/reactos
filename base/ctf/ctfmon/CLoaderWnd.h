@@ -10,12 +10,9 @@
 class CLoaderWnd
 {
 public:
-    HWND m_hWnd;
+    HWND m_hWnd = NULL;
     static BOOL s_bUninitedSystem;
     static BOOL s_bWndClassRegistered;
-
-    CLoaderWnd() : m_hWnd(NULL) { }
-    ~CLoaderWnd() { }
 
     BOOL Init();
     HWND CreateWnd();
