@@ -39,6 +39,7 @@ list(APPEND SOURCE
     SHEvaluateSystemCommandTemplate.cpp
     SHGetComputerDisplayNameW.cpp
     SHGetUnreadMailCountW.cpp
+    SHInvokePrinterCommand.cpp
     SHIsBadInterfacePtr.cpp
     SHParseDisplayName.cpp
     SHRestricted.cpp
