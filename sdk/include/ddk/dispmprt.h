@@ -8,7 +8,6 @@
 #ifndef _DISPMPRT_H_
 #define _DISPMPRT_H_
 
-/* DxgKrnl can enumerate ACPI. */
 #ifndef _ACPIIOCT_H_
 #include <acpiioct.h>
 #endif
@@ -45,12 +44,11 @@ VOID
 
 #include <ntddvdeo.h>
 #include <video.h>
-typedef unsigned int   UINT;
-typedef unsigned long  DWORD;
-typedef unsigned char  BYTE;
+typedef unsigned int UINT;
+typedef unsigned long DWORD;
+typedef unsigned char BYTE;
 #include <windef.h>
 
-/* Include WDDM headers */
 #ifndef _D3DKMDT_H
 #include <d3dkmdt.h>
 #endif
@@ -58,7 +56,6 @@ typedef unsigned char  BYTE;
 #include <d3dkmddi.h>
 #endif
 
-/* Exclude adapter access flags */
 #define DXGK_EXCLUDE_EVICT_ALL            0x00000001
 #define DXGK_EXCLUDE_CALL_SYNCHRONOUS     0x00000002
 #define DXGK_EXCLUDE_BRIDGE_ACCESS        0x00000004
@@ -67,11 +64,9 @@ typedef unsigned char  BYTE;
 #define DXGK_EXCLUDE_EVICT_SHUTDOWN       0x00000020
 #define DXGK_EXCLUDE_D3_STATE_TRANSITION  0x00000040
 
-/* Max of 50 characters per string. */
 #define DXGK_MAX_STRING_LEN 50
 #define DXGK_MAX_REG_SZ_LEN DXGK_MAX_STRING_LEN + 1
 
-/* Supported device space types. */
 #define DXGK_WHICHSPACE_CONFIG       PCI_WHICHSPACE_CONFIG
 #define DXGK_WHICHSPACE_ROM          PCI_WHICHSPACE_ROM
 #define DXGK_WHICHSPACE_MCH          0x80000000
@@ -122,17 +117,14 @@ typedef enum _DXGK_CHILD_DEVICE_TYPE {
 typedef struct _DXGK_CHILD_CAPABILITIES {
     union
     {
-        DXGK_VIDEO_OUTPUT_CAPABILITIES  VideoOutput;
-
+        DXGK_VIDEO_OUTPUT_CAPABILITIES VideoOutput;
         struct
         {
             UINT MustBeZero;
         }
         Other;
-
-        DXGK_INTEGRATED_DISPLAY_CHILD   IntegratedDisplayChild;
+        DXGK_INTEGRATED_DISPLAY_CHILD IntegratedDisplayChild;
     } Type;
-
     DXGK_CHILD_DEVICE_HPD_AWARENESS HpdAwareness;
 } DXGK_CHILD_CAPABILITIES, *PDXGK_CHILD_CAPABILITIES;
 
@@ -187,9 +179,9 @@ typedef struct _DXGK_CHILD_STATUS {
 
 typedef enum {
     DockStateUnsupported = 0,
-    DockStateUnDocked    = 1,
-    DockStateDocked      = 2,
-    DockStateUnknown     = 3,
+    DockStateUnDocked = 1,
+    DockStateDocked = 2,
+    DockStateUnknown = 3,
 } DOCKING_STATE;
 
 typedef struct _DXGK_DEVICE_INFO {
@@ -215,7 +207,6 @@ NTAPI
     _In_ NTSTATUS ProtectionStatus
 );
 
-/* Device interface GUIDs */
 DEFINE_GUID(GUID_DEVINTERFACE_I2C, 0x2564AA4F, 0xDDDB, 0x4495, 0xB4, 0x97, 0x6A, 0xD4, 0xA8, 0x41, 0x63, 0xD7);
 DEFINE_GUID(GUID_DEVINTERFACE_OPM, 0xBF4672DE, 0x6B4E, 0x4BE4, 0xA3, 0x25, 0x68, 0xA9, 0x1E, 0xA4, 0x9C, 0x09);
 #if (DXGKDDI_INTERFACE_VERSION >= DXGKDDI_INTERFACE_VERSION_WDDM2_0)
@@ -231,7 +222,6 @@ DEFINE_GUID(GUID_DEVINTERFACE_BRIGHTNESS_2, 0x148A3C98, 0x0ECD, 0x465A, 0xB6, 0x
 DEFINE_GUID(GUID_DEVINTERFACE_MIRACAST_DISPLAY, 0xaf03f190, 0x22af, 0x48cb, 0x94, 0xbb, 0xb7, 0x8e, 0x76, 0xa2, 0x51, 0x7);
 #endif
 
-/* I2C interface from miniport */
 #define DXGK_I2C_INTERFACE_VERSION_1 0x01
 
 typedef
@@ -267,11 +257,10 @@ typedef struct _DXGK_I2C_INTERFACE {
     PVOID Context;
     PINTERFACE_REFERENCE InterfaceReference;
     PINTERFACE_DEREFERENCE InterfaceDereference;
-    DXGKDDI_I2C_TRANSMIT_DATA_TO_DISPLAY  DxgkDdiI2CTransmitDataToDisplay;
+    DXGKDDI_I2C_TRANSMIT_DATA_TO_DISPLAY DxgkDdiI2CTransmitDataToDisplay;
     DXGKDDI_I2C_RECEIVE_DATA_FROM_DISPLAY DxgkDdiI2CReceiveDataFromDisplay;
 } DXGK_I2C_INTERFACE, *PDXGK_I2C_INTERFACE;
 
-/* OPM interface family from miniport */
 #define DXGK_OPM_INTERFACE_VERSION_1 0x01
 
 typedef
@@ -384,15 +373,15 @@ typedef struct _DXGK_OPM_INTERFACE {
     PVOID Context;
     PINTERFACE_REFERENCE InterfaceReference;
     PINTERFACE_DEREFERENCE InterfaceDereference;
-    DXGKDDI_OPM_GET_CERTIFICATE_SIZE                 DxgkDdiOPMGetCertificateSize;
-    DXGKDDI_OPM_GET_CERTIFICATE                      DxgkDdiOPMGetCertificate;
-    DXGKDDI_OPM_CREATE_PROTECTED_OUTPUT              DxgkDdiOPMCreateProtectedOutput;
-    DXGKDDI_OPM_GET_RANDOM_NUMBER                    DxgkDdiOPMGetRandomNumber;
+    DXGKDDI_OPM_GET_CERTIFICATE_SIZE DxgkDdiOPMGetCertificateSize;
+    DXGKDDI_OPM_GET_CERTIFICATE DxgkDdiOPMGetCertificate;
+    DXGKDDI_OPM_CREATE_PROTECTED_OUTPUT DxgkDdiOPMCreateProtectedOutput;
+    DXGKDDI_OPM_GET_RANDOM_NUMBER DxgkDdiOPMGetRandomNumber;
     DXGKDDI_OPM_SET_SIGNING_KEY_AND_SEQUENCE_NUMBERS DxgkDdiOPMSetSigningKeyAndSequenceNumbers;
-    DXGKDDI_OPM_GET_INFORMATION                      DxgkDdiOPMGetInformation;
-    DXGKDDI_OPM_GET_COPP_COMPATIBLE_INFORMATION      DxgkDdiOPMGetCOPPCompatibleInformation;
-    DXGKDDI_OPM_CONFIGURE_PROTECTED_OUTPUT           DxgkDdiOPMConfigureProtectedOutput;
-    DXGKDDI_OPM_DESTROY_PROTECTED_OUTPUT             DxgkDdiOPMDestroyProtectedOutput;
+    DXGKDDI_OPM_GET_INFORMATION DxgkDdiOPMGetInformation;
+    DXGKDDI_OPM_GET_COPP_COMPATIBLE_INFORMATION DxgkDdiOPMGetCOPPCompatibleInformation;
+    DXGKDDI_OPM_CONFIGURE_PROTECTED_OUTPUT DxgkDdiOPMConfigureProtectedOutput;
+    DXGKDDI_OPM_DESTROY_PROTECTED_OUTPUT DxgkDdiOPMDestroyProtectedOutput;
 } DXGK_OPM_INTERFACE, *PDXGK_OPM_INTERFACE;
 
 #if (DXGKDDI_INTERFACE_VERSION >= DXGKDDI_INTERFACE_VERSION_WDDM2_0)
@@ -431,16 +420,16 @@ typedef struct _DXGK_OPM_INTERFACE_2_JTP {
     PVOID Context;
     PINTERFACE_REFERENCE InterfaceReference;
     PINTERFACE_DEREFERENCE InterfaceDereference;
-    DXGKDDI_OPM_GET_CERTIFICATE_SIZE                        DxgkDdiOPMGetCertificateSize;
-    DXGKDDI_OPM_GET_CERTIFICATE                             DxgkDdiOPMGetCertificate;
-    DXGKDDI_OPM_CREATE_PROTECTED_OUTPUT                     DxgkDdiOPMCreateProtectedOutput;
-    DXGKDDI_OPM_GET_RANDOM_NUMBER                           DxgkDdiOPMGetRandomNumber;
-    DXGKDDI_OPM_SET_SIGNING_KEY_AND_SEQUENCE_NUMBERS        DxgkDdiOPMSetSigningKeyAndSequenceNumbers;
-    DXGKDDI_OPM_GET_INFORMATION                             DxgkDdiOPMGetInformation;
-    DXGKDDI_OPM_GET_COPP_COMPATIBLE_INFORMATION             DxgkDdiOPMGetCOPPCompatibleInformation;
-    DXGKDDI_OPM_CONFIGURE_PROTECTED_OUTPUT                  DxgkDdiOPMConfigureProtectedOutput;
-    DXGKDDI_OPM_DESTROY_PROTECTED_OUTPUT                    DxgkDdiOPMDestroyProtectedOutput;
-    DXGKDDI_OPM_CREATE_PROTECTED_OUTPUT_VIRTUAL_MODE_JTP     DxgkDdiOPMCreateProtectedOutputVirtualMode;
+    DXGKDDI_OPM_GET_CERTIFICATE_SIZE DxgkDdiOPMGetCertificateSize;
+    DXGKDDI_OPM_GET_CERTIFICATE DxgkDdiOPMGetCertificate;
+    DXGKDDI_OPM_CREATE_PROTECTED_OUTPUT DxgkDdiOPMCreateProtectedOutput;
+    DXGKDDI_OPM_GET_RANDOM_NUMBER DxgkDdiOPMGetRandomNumber;
+    DXGKDDI_OPM_SET_SIGNING_KEY_AND_SEQUENCE_NUMBERS DxgkDdiOPMSetSigningKeyAndSequenceNumbers;
+    DXGKDDI_OPM_GET_INFORMATION DxgkDdiOPMGetInformation;
+    DXGKDDI_OPM_GET_COPP_COMPATIBLE_INFORMATION DxgkDdiOPMGetCOPPCompatibleInformation;
+    DXGKDDI_OPM_CONFIGURE_PROTECTED_OUTPUT DxgkDdiOPMConfigureProtectedOutput;
+    DXGKDDI_OPM_DESTROY_PROTECTED_OUTPUT DxgkDdiOPMDestroyProtectedOutput;
+    DXGKDDI_OPM_CREATE_PROTECTED_OUTPUT_VIRTUAL_MODE_JTP DxgkDdiOPMCreateProtectedOutputVirtualMode;
     DXGKDDI_OPM_CREATE_PROTECTED_OUTPUT_NONLOCAL_DISPLAY_JTP DxgkDdiOPMCreateProtectedOutputNonLocalDisplay;
 } DXGK_OPM_INTERFACE_2_JTP, *PDXGK_OPM_INTERFACE_2_JTP;
 
@@ -467,16 +456,16 @@ typedef struct _DXGK_OPM_INTERFACE_2 {
     PVOID Context;
     PINTERFACE_REFERENCE InterfaceReference;
     PINTERFACE_DEREFERENCE InterfaceDereference;
-    DXGKDDI_OPM_GET_CERTIFICATE_SIZE                        DxgkDdiOPMGetCertificateSize;
-    DXGKDDI_OPM_GET_CERTIFICATE                             DxgkDdiOPMGetCertificate;
-    DXGKDDI_OPM_CREATE_PROTECTED_OUTPUT                     DxgkDdiOPMCreateProtectedOutput;
-    DXGKDDI_OPM_GET_RANDOM_NUMBER                           DxgkDdiOPMGetRandomNumber;
-    DXGKDDI_OPM_SET_SIGNING_KEY_AND_SEQUENCE_NUMBERS        DxgkDdiOPMSetSigningKeyAndSequenceNumbers;
-    DXGKDDI_OPM_GET_INFORMATION                             DxgkDdiOPMGetInformation;
-    DXGKDDI_OPM_GET_COPP_COMPATIBLE_INFORMATION             DxgkDdiOPMGetCOPPCompatibleInformation;
-    DXGKDDI_OPM_CONFIGURE_PROTECTED_OUTPUT                  DxgkDdiOPMConfigureProtectedOutput;
-    DXGKDDI_OPM_DESTROY_PROTECTED_OUTPUT                    DxgkDdiOPMDestroyProtectedOutput;
-    DXGKDDI_OPM_CREATE_PROTECTED_OUTPUT_NONLOCAL_DISPLAY    DxgkDdiOPMCreateProtectedOutputNonLocalDisplay;
+    DXGKDDI_OPM_GET_CERTIFICATE_SIZE DxgkDdiOPMGetCertificateSize;
+    DXGKDDI_OPM_GET_CERTIFICATE DxgkDdiOPMGetCertificate;
+    DXGKDDI_OPM_CREATE_PROTECTED_OUTPUT DxgkDdiOPMCreateProtectedOutput;
+    DXGKDDI_OPM_GET_RANDOM_NUMBER DxgkDdiOPMGetRandomNumber;
+    DXGKDDI_OPM_SET_SIGNING_KEY_AND_SEQUENCE_NUMBERS DxgkDdiOPMSetSigningKeyAndSequenceNumbers;
+    DXGKDDI_OPM_GET_INFORMATION DxgkDdiOPMGetInformation;
+    DXGKDDI_OPM_GET_COPP_COMPATIBLE_INFORMATION DxgkDdiOPMGetCOPPCompatibleInformation;
+    DXGKDDI_OPM_CONFIGURE_PROTECTED_OUTPUT DxgkDdiOPMConfigureProtectedOutput;
+    DXGKDDI_OPM_DESTROY_PROTECTED_OUTPUT DxgkDdiOPMDestroyProtectedOutput;
+    DXGKDDI_OPM_CREATE_PROTECTED_OUTPUT_NONLOCAL_DISPLAY DxgkDdiOPMCreateProtectedOutputNonLocalDisplay;
 } DXGK_OPM_INTERFACE_2, *PDXGK_OPM_INTERFACE_2;
 
 #endif // (DXGKDDI_INTERFACE_VERSION >= DXGKDDI_INTERFACE_VERSION_WDDM2_0)
@@ -491,17 +480,17 @@ typedef struct _DXGK_OPM_INTERFACE_3 {
     PVOID Context;
     PINTERFACE_REFERENCE InterfaceReference;
     PINTERFACE_DEREFERENCE InterfaceDereference;
-    DXGKDDI_OPM_GET_CERTIFICATE_SIZE                        DxgkDdiOPMGetCertificateSize;
-    DXGKDDI_OPM_GET_CERTIFICATE                             DxgkDdiOPMGetCertificate;
-    DXGKDDI_OPM_CREATE_PROTECTED_OUTPUT                     DxgkDdiOPMCreateProtectedOutput;
-    DXGKDDI_OPM_GET_RANDOM_NUMBER                           DxgkDdiOPMGetRandomNumber;
-    DXGKDDI_OPM_SET_SIGNING_KEY_AND_SEQUENCE_NUMBERS        DxgkDdiOPMSetSigningKeyAndSequenceNumbers;
-    DXGKDDI_OPM_GET_INFORMATION                             DxgkDdiOPMGetInformation;
-    DXGKDDI_OPM_GET_COPP_COMPATIBLE_INFORMATION             DxgkDdiOPMGetCOPPCompatibleInformation;
-    DXGKDDI_OPM_CONFIGURE_PROTECTED_OUTPUT                  DxgkDdiOPMConfigureProtectedOutput;
-    DXGKDDI_OPM_DESTROY_PROTECTED_OUTPUT                    DxgkDdiOPMDestroyProtectedOutput;
-    DXGKDDI_OPM_CREATE_PROTECTED_OUTPUT_NONLOCAL_DISPLAY    DxgkDdiOPMCreateProtectedOutputNonLocalDisplay;
-    DXGKDDI_OPM_CREATE_PROTECTED_OUTPUT_VIRTUAL_MODE_JTP    DxgkDdiOPMCreateProtectedOutputVirtualMode;
+    DXGKDDI_OPM_GET_CERTIFICATE_SIZE DxgkDdiOPMGetCertificateSize;
+    DXGKDDI_OPM_GET_CERTIFICATE DxgkDdiOPMGetCertificate;
+    DXGKDDI_OPM_CREATE_PROTECTED_OUTPUT DxgkDdiOPMCreateProtectedOutput;
+    DXGKDDI_OPM_GET_RANDOM_NUMBER DxgkDdiOPMGetRandomNumber;
+    DXGKDDI_OPM_SET_SIGNING_KEY_AND_SEQUENCE_NUMBERS DxgkDdiOPMSetSigningKeyAndSequenceNumbers;
+    DXGKDDI_OPM_GET_INFORMATION DxgkDdiOPMGetInformation;
+    DXGKDDI_OPM_GET_COPP_COMPATIBLE_INFORMATION DxgkDdiOPMGetCOPPCompatibleInformation;
+    DXGKDDI_OPM_CONFIGURE_PROTECTED_OUTPUT DxgkDdiOPMConfigureProtectedOutput;
+    DXGKDDI_OPM_DESTROY_PROTECTED_OUTPUT DxgkDdiOPMDestroyProtectedOutput;
+    DXGKDDI_OPM_CREATE_PROTECTED_OUTPUT_NONLOCAL_DISPLAY DxgkDdiOPMCreateProtectedOutputNonLocalDisplay;
+    DXGKDDI_OPM_CREATE_PROTECTED_OUTPUT_VIRTUAL_MODE_JTP DxgkDdiOPMCreateProtectedOutputVirtualMode;
 } DXGK_OPM_INTERFACE_3, *PDXGK_OPM_INTERFACE_3;
 
 #endif // (DXGKDDI_INTERFACE_VERSION >= DXGKDDI_INTERFACE_VERSION_WDDM2_3)
@@ -514,8 +503,8 @@ _IRQL_requires_DXGK_(PASSIVE_LEVEL)
 NTSTATUS
 NTAPI
 (*DXGK_BRIGHTNESS_GET_POSSIBLE)(
-    _In_  PVOID Context,
-    _In_  ULONG BufferSize,
+    _In_ PVOID Context,
+    _In_ ULONG BufferSize,
     _Out_ PUCHAR LevelCount,
     _Out_writes_bytes_to_(BufferSize, *LevelCount) PUCHAR BrightnessLevels
 );
@@ -526,8 +515,8 @@ _IRQL_requires_DXGK_(PASSIVE_LEVEL)
 NTSTATUS
 NTAPI
 (*DXGK_BRIGHTNESS_SET)(
-    _In_  PVOID Context,
-    _In_  UCHAR Brightness
+    _In_ PVOID Context,
+    _In_ UCHAR Brightness
 );
 
 typedef
@@ -536,19 +525,19 @@ _IRQL_requires_DXGK_(PASSIVE_LEVEL)
 NTSTATUS
 NTAPI
 (*DXGK_BRIGHTNESS_GET)(
-    _In_  PVOID Context,
+    _In_ PVOID Context,
     _Out_ PUCHAR Brightness
 );
 
 typedef struct {
-    USHORT                        Size;
-    USHORT                        Version;
-    PVOID                         Context;
-    PINTERFACE_REFERENCE          InterfaceReference;
-    PINTERFACE_DEREFERENCE        InterfaceDereference;
-    DXGK_BRIGHTNESS_GET_POSSIBLE  GetPossibleBrightness;
-    DXGK_BRIGHTNESS_SET           SetBrightness;
-    DXGK_BRIGHTNESS_GET           GetBrightness;
+    USHORT Size;
+    USHORT Version;
+    PVOID Context;
+    PINTERFACE_REFERENCE InterfaceReference;
+    PINTERFACE_DEREFERENCE InterfaceDereference;
+    DXGK_BRIGHTNESS_GET_POSSIBLE GetPossibleBrightness;
+    DXGK_BRIGHTNESS_SET SetBrightness;
+    DXGK_BRIGHTNESS_GET GetBrightness;
 } DXGK_BRIGHTNESS_INTERFACE, *PDXGK_BRIGHTNESS_INTERFACE;
 
 #define DXGK_BRIGHTNESS_INTERFACE_VERSION_2 0x02
@@ -559,7 +548,7 @@ _IRQL_requires_DXGK_(PASSIVE_LEVEL)
 NTSTATUS
 NTAPI
 (*DXGK_BRIGHTNESS_GET_CAPS)(
-    _In_  PVOID Context,
+    _In_ PVOID Context,
     _Out_ DXGK_BRIGHTNESS_CAPS *BrightnessCaps
 );
 
@@ -569,8 +558,8 @@ _IRQL_requires_DXGK_(PASSIVE_LEVEL)
 NTSTATUS
 NTAPI
 (*DXGK_BRIGHTNESS_SET_STATE)(
-    _In_  PVOID Context,
-    _In_  DXGK_BRIGHTNESS_STATE *BrightnessState
+    _In_ PVOID Context,
+    _In_ DXGK_BRIGHTNESS_STATE *BrightnessState
 );
 
 typedef
@@ -579,8 +568,8 @@ _IRQL_requires_DXGK_(PASSIVE_LEVEL)
 NTSTATUS
 NTAPI
 (*DXGK_BRIGHTNESS_SET_BACKLIGHT_OPTIMIZATION)(
-    _In_  PVOID Context,
-    _In_  DXGK_BACKLIGHT_OPTIMIZATION_LEVEL OptimizationLevel
+    _In_ PVOID Context,
+    _In_ DXGK_BACKLIGHT_OPTIMIZATION_LEVEL OptimizationLevel
 );
 
 typedef
@@ -589,27 +578,26 @@ _IRQL_requires_DXGK_(PASSIVE_LEVEL)
 NTSTATUS
 NTAPI
 (*DXGK_BRIGHTNESS_GET_BACKLIGHT_REDUCTION)(
-    _In_  PVOID                Context,
+    _In_ PVOID Context,
     _Out_ DXGK_BACKLIGHT_INFO *BacklightInfo
 );
 
 typedef struct {
-    USHORT                                    Size;
-    USHORT                                    Version;
-    PVOID                                     Context;
-    PINTERFACE_REFERENCE                      InterfaceReference;
-    PINTERFACE_DEREFERENCE                    InterfaceDereference;
-    DXGK_BRIGHTNESS_GET_POSSIBLE              GetPossibleBrightness;
-    DXGK_BRIGHTNESS_SET                       SetBrightness;
-    DXGK_BRIGHTNESS_GET                       GetBrightness;
-    DXGK_BRIGHTNESS_GET_CAPS                  GetBrightnessCaps;
-    DXGK_BRIGHTNESS_SET_STATE                 SetBrightnessState;
+    USHORT Size;
+    USHORT Version;
+    PVOID Context;
+    PINTERFACE_REFERENCE InterfaceReference;
+    PINTERFACE_DEREFERENCE InterfaceDereference;
+    DXGK_BRIGHTNESS_GET_POSSIBLE GetPossibleBrightness;
+    DXGK_BRIGHTNESS_SET SetBrightness;
+    DXGK_BRIGHTNESS_GET GetBrightness;
+    DXGK_BRIGHTNESS_GET_CAPS GetBrightnessCaps;
+    DXGK_BRIGHTNESS_SET_STATE SetBrightnessState;
     DXGK_BRIGHTNESS_SET_BACKLIGHT_OPTIMIZATION SetBacklightOptimization;
-    DXGK_BRIGHTNESS_GET_BACKLIGHT_REDUCTION   GetBacklightReduction;
+    DXGK_BRIGHTNESS_GET_BACKLIGHT_REDUCTION GetBacklightReduction;
 } DXGK_BRIGHTNESS_INTERFACE_2, *PDXGK_BRIGHTNESS_INTERFACE_2;
 
 #if (DXGKDDI_INTERFACE_VERSION >= DXGKDDI_INTERFACE_VERSION_WDDM1_3)
-/* Miracast display interface */
 #define DXGK_MIRACAST_DISPLAY_INTERFACE_VERSION_1 0x01
 
 typedef struct _DXGK_MIRACAST_CAPS {
@@ -617,7 +605,7 @@ typedef struct _DXGK_MIRACAST_CAPS {
     union {
         struct {
             UINT HdcpSupport : 1;
-            UINT Reserved    : 31;
+            UINT Reserved : 31;
         };
         UINT Value;
     } Flags;
@@ -727,7 +715,6 @@ typedef struct _DXGK_MIRACAST_INTERFACE {
 } DXGK_MIRACAST_DISPLAY_INTERFACE, *PDXGK_MIRACAST_DISPLAY_INTERFACE;
 #endif /* DXGKDDI_INTERFACE_VERSION_WDDM1_3 */
 
-/* Services exported by DxgkCbQueryServices() */
 typedef enum {
     DxgkServicesAgp,
     DxgkServicesDebugReport,
@@ -738,7 +725,6 @@ typedef enum {
     DxgkServicesIDD,
 } DXGK_SERVICES;
 
-/* AGP services */
 #define DXGK_AGP_INTERFACE_VERSION_1 0x01
 #define DXGK_AGPCOMMAND_AGP1X       0x00001
 #define DXGK_AGPCOMMAND_AGP2X       0x00002
@@ -788,7 +774,6 @@ typedef struct _DXGK_AGP_INTERFACE {
     DXGKCB_AGP_SET_COMMAND AgpSetCommand;
 } DXGK_AGP_INTERFACE, *PDXGK_AGP_INTERFACE;
 
-/* Debug report interface */
 DECLARE_HANDLE(DXGK_DEBUG_REPORT_HANDLE);
 #define DXGK_DEBUG_REPORT_INTERFACE_VERSION_1 0x01
 #define DXGK_DEBUG_REPORT_MAX_SIZE 0xF800
@@ -799,7 +784,6 @@ typedef struct _DXGK_DEBUG_REPORT_INTERFACE {
     PVOID Context;
     PINTERFACE_REFERENCE InterfaceReference;
     PINTERFACE_DEREFERENCE InterfaceDereference;
-
     _IRQL_requires_DXGK_(PASSIVE_LEVEL)
     DXGK_DEBUG_REPORT_HANDLE (NTAPI *DbgReportCreate)(
         _In_ HANDLE DeviceHandle,
@@ -809,7 +793,6 @@ typedef struct _DXGK_DEBUG_REPORT_INTERFACE {
         _In_ ULONG_PTR Arg3,
         _In_ ULONG_PTR Arg4
     );
-
     _IRQL_requires_DXGK_(PASSIVE_LEVEL)
     _Success_(return != 0)
     BOOLEAN (NTAPI *DbgReportSecondaryData)(
@@ -817,15 +800,12 @@ typedef struct _DXGK_DEBUG_REPORT_INTERFACE {
         _In_reads_bytes_(DataSize) PVOID Data,
         _In_ ULONG DataSize
     );
-
     _IRQL_requires_DXGK_(PASSIVE_LEVEL)
     VOID (NTAPI *DbgReportComplete)(
         _Inout_ DXGK_DEBUG_REPORT_HANDLE Report
     );
-
 } DXGK_DEBUG_REPORT_INTERFACE, *PDXGK_DEBUG_REPORT_INTERFACE;
 
-/* Timed operation interface */
 #define DXGK_TIMED_OPERATION_INTERFACE_VERSION_1 0x01
 #define DXGK_TIMED_OPERATION_TIMEOUT_MAX_SECONDS 5
 
@@ -844,14 +824,12 @@ typedef struct _DXGK_TIMED_OPERATION_INTERFACE {
     PVOID Context;
     PINTERFACE_REFERENCE InterfaceReference;
     PINTERFACE_DEREFERENCE InterfaceDereference;
-
     _IRQL_requires_DXGK_(PASSIVE_LEVEL)
     NTSTATUS (NTAPI *TimedOperationStart)(
         _Out_ DXGK_TIMED_OPERATION *Op,
         _In_ const LARGE_INTEGER *Timeout,
         _In_ BOOLEAN OsHandled
     );
-
     _IRQL_requires_DXGK_(PASSIVE_LEVEL)
     NTSTATUS (NTAPI *TimedOperationDelay)(
         _Inout_ DXGK_TIMED_OPERATION *Op,
@@ -859,7 +837,6 @@ typedef struct _DXGK_TIMED_OPERATION_INTERFACE {
         _In_ BOOLEAN Alertable,
         _In_opt_ const LARGE_INTEGER *Interval
     );
-
     _IRQL_requires_DXGK_(PASSIVE_LEVEL)
     NTSTATUS (NTAPI *TimedOperationWaitForSingleObject)(
         _Inout_ DXGK_TIMED_OPERATION *Op,
@@ -869,10 +846,8 @@ typedef struct _DXGK_TIMED_OPERATION_INTERFACE {
         _In_ BOOLEAN Alertable,
         _In_opt_ const LARGE_INTEGER *Timeout
     );
-
 } DXGK_TIMED_OPERATION_INTERFACE, *PDXGK_TIMED_OPERATION_INTERFACE;
 
-/* Serial Peripheral Bus (SPB) services */
 #define DXGK_SPB_INTERFACE_VERSION_1 0x01
 
 typedef struct _DXGK_SPB_INTERFACE {
@@ -881,7 +856,6 @@ typedef struct _DXGK_SPB_INTERFACE {
     PVOID Context;
     PINTERFACE_REFERENCE InterfaceReference;
     PINTERFACE_DEREFERENCE InterfaceDereference;
-
     _IRQL_requires_DXGK_(PASSIVE_LEVEL)
     NTSTATUS (NTAPI *OpenSpbResource)(
         _In_ HANDLE DeviceHandle,
@@ -892,13 +866,11 @@ typedef struct _DXGK_SPB_INTERFACE {
         _In_ ULONG OpenOptions,
         _Outptr_ VOID **SpbResource
     );
-
     _IRQL_requires_DXGK_(PASSIVE_LEVEL)
     NTSTATUS (NTAPI *CloseSpbResource)(
         _In_ HANDLE DeviceHandle,
         _In_ VOID *SpbResource
     );
-
     _IRQL_requires_DXGK_(PASSIVE_LEVEL)
     NTSTATUS (NTAPI *ReadSpbResource)(
         _In_ HANDLE DeviceHandle,
@@ -909,7 +881,6 @@ typedef struct _DXGK_SPB_INTERFACE {
         _In_opt_ HANDLE EventHandle,
         _Out_ IO_STATUS_BLOCK *IoStatusBlock
     );
-
     _IRQL_requires_DXGK_(PASSIVE_LEVEL)
     NTSTATUS (NTAPI *WriteSpbResource)(
         _In_ HANDLE DeviceHandle,
@@ -920,7 +891,6 @@ typedef struct _DXGK_SPB_INTERFACE {
         _In_opt_ HANDLE EventHandle,
         _Out_ IO_STATUS_BLOCK *IoStatusBlock
     );
-
     _IRQL_requires_DXGK_(PASSIVE_LEVEL)
     NTSTATUS (NTAPI *SpbResourceIoControl)(
         _In_ HANDLE DeviceHandle,
@@ -933,10 +903,8 @@ typedef struct _DXGK_SPB_INTERFACE {
         _In_opt_ HANDLE EventHandle,
         _Out_ IO_STATUS_BLOCK *IoStatusBlock
     );
-
 } DXGK_SPB_INTERFACE, *PDXGK_SPB_INTERFACE;
 
-/* System firmware table interface */
 #define DXGK_FIRMWARE_TABLE_INTERFACE_VERSION_1 0x01
 
 typedef struct _DXGK_FIRMWARE_TABLE_INTERFACE {
@@ -945,7 +913,6 @@ typedef struct _DXGK_FIRMWARE_TABLE_INTERFACE {
     PVOID Context;
     PINTERFACE_REFERENCE InterfaceReference;
     PINTERFACE_DEREFERENCE InterfaceDereference;
-
     _IRQL_requires_DXGK_(PASSIVE_LEVEL)
     _Success_(return >= 0 || return == STATUS_BUFFER_TOO_SMALL)
     NTSTATUS (NTAPI *EnumSystemFirmwareTables)(
@@ -958,7 +925,6 @@ typedef struct _DXGK_FIRMWARE_TABLE_INTERFACE {
          VOID *Buffer,
         _Out_ ULONG *RequiredSize
     );
-
     _IRQL_requires_DXGK_(PASSIVE_LEVEL)
     _Success_(return >= 0 || return == STATUS_BUFFER_TOO_SMALL)
     _When_(Buffer == NULL, _At_(BufferSize, _In_range_(==, 0)))
@@ -973,9 +939,7 @@ typedef struct _DXGK_FIRMWARE_TABLE_INTERFACE {
          VOID *Buffer,
         _Out_ ULONG *RequiredSize
     );
-
 } DXGK_FIRMWARE_TABLE_INTERFACE, *PDXGK_FIRMWARE_TABLE_INTERFACE;
-
 
 /*
  * Passed from DxgKrnl -> Miniport
@@ -983,9 +947,9 @@ typedef struct _DXGK_FIRMWARE_TABLE_INTERFACE {
  */
 typedef struct _DXGK_START_INFO {
     ULONG RequiredDmaQueueEntry;
-    GUID  AdapterGuid;
+    GUID AdapterGuid;
 #if (DXGKDDI_INTERFACE_VERSION >= DXGKDDI_INTERFACE_VERSION_WIN8)
-    LUID  AdapterLuid;
+    LUID AdapterLuid;
 #endif // DXGKDDI_INTERFACE_VERSION_WIN8
 } DXGK_START_INFO, *PDXGK_START_INFO;
 
@@ -1052,7 +1016,7 @@ NTSTATUS
 typedef
 NTSTATUS
 (APIENTRY *DXGKCB_GET_DEVICE_INFORMATION)(
-    _In_  HANDLE DeviceHandle,
+    _In_ HANDLE DeviceHandle,
     _Out_ PDXGK_DEVICE_INFO DeviceInfo);
 
 typedef
@@ -1157,64 +1121,64 @@ NTSTATUS
  * Implemented by DxgKrnl itself.
  */
 typedef struct _DXGKRNL_INTERFACE {
-    ULONG                                   Size;
-    ULONG                                   Version;
-    HANDLE                                  DeviceHandle;
-    DXGKCB_EVAL_ACPI_METHOD                 DxgkCbEvalAcpiMethod;
-    DXGKCB_GET_DEVICE_INFORMATION           DxgkCbGetDeviceInformation;
-    DXGKCB_INDICATE_CHILD_STATUS            DxgkCbIndicateChildStatus;
-    DXGKCB_MAP_MEMORY                       DxgkCbMapMemory;
-    DXGKCB_QUEUE_DPC                        DxgkCbQueueDpc;
-    DXGKCB_QUERY_SERVICES                   DxgkCbQueryServices;
-    DXGKCB_READ_DEVICE_SPACE                DxgkCbReadDeviceSpace;
-    DXGKCB_SYNCHRONIZE_EXECUTION            DxgkCbSynchronizeExecution;
-    DXGKCB_UNMAP_MEMORY                     DxgkCbUnmapMemory;
-    DXGKCB_WRITE_DEVICE_SPACE               DxgkCbWriteDeviceSpace;
-    DXGKCB_IS_DEVICE_PRESENT                DxgkCbIsDevicePresent;
-    DXGKCB_GETHANDLEDATA                    DxgkCbGetHandleData;
-    DXGKCB_GETHANDLEPARENT                  DxgkCbGetHandleParent;
-    DXGKCB_ENUMHANDLECHILDREN               DxgkCbEnumHandleChildren;
-    DXGKCB_NOTIFY_INTERRUPT                 DxgkCbNotifyInterrupt;
-    DXGKCB_NOTIFY_DPC                       DxgkCbNotifyDpc;
-    DXGKCB_QUERYVIDPNINTERFACE              DxgkCbQueryVidPnInterface;
-    DXGKCB_QUERYMONITORINTERFACE            DxgkCbQueryMonitorInterface;
-    DXGKCB_GETCAPTUREADDRESS                DxgkCbGetCaptureAddress;
-    DXGKCB_LOG_ETW_EVENT                    DxgkCbLogEtwEvent;
-    DXGKCB_EXCLUDE_ADAPTER_ACCESS           DxgkCbExcludeAdapterAccess;
+    ULONG Size;
+    ULONG Version;
+    HANDLE DeviceHandle;
+    DXGKCB_EVAL_ACPI_METHOD DxgkCbEvalAcpiMethod;
+    DXGKCB_GET_DEVICE_INFORMATION DxgkCbGetDeviceInformation;
+    DXGKCB_INDICATE_CHILD_STATUS DxgkCbIndicateChildStatus;
+    DXGKCB_MAP_MEMORY DxgkCbMapMemory;
+    DXGKCB_QUEUE_DPC DxgkCbQueueDpc;
+    DXGKCB_QUERY_SERVICES DxgkCbQueryServices;
+    DXGKCB_READ_DEVICE_SPACE DxgkCbReadDeviceSpace;
+    DXGKCB_SYNCHRONIZE_EXECUTION DxgkCbSynchronizeExecution;
+    DXGKCB_UNMAP_MEMORY DxgkCbUnmapMemory;
+    DXGKCB_WRITE_DEVICE_SPACE DxgkCbWriteDeviceSpace;
+    DXGKCB_IS_DEVICE_PRESENT DxgkCbIsDevicePresent;
+    DXGKCB_GETHANDLEDATA DxgkCbGetHandleData;
+    DXGKCB_GETHANDLEPARENT DxgkCbGetHandleParent;
+    DXGKCB_ENUMHANDLECHILDREN DxgkCbEnumHandleChildren;
+    DXGKCB_NOTIFY_INTERRUPT DxgkCbNotifyInterrupt;
+    DXGKCB_NOTIFY_DPC DxgkCbNotifyDpc;
+    DXGKCB_QUERYVIDPNINTERFACE DxgkCbQueryVidPnInterface;
+    DXGKCB_QUERYMONITORINTERFACE DxgkCbQueryMonitorInterface;
+    DXGKCB_GETCAPTUREADDRESS DxgkCbGetCaptureAddress;
+    DXGKCB_LOG_ETW_EVENT DxgkCbLogEtwEvent;
+    DXGKCB_EXCLUDE_ADAPTER_ACCESS DxgkCbExcludeAdapterAccess;
 #if (DXGKDDI_INTERFACE_VERSION >= DXGKDDI_INTERFACE_VERSION_WIN8)
-    DXGKCB_CREATECONTEXTALLOCATION          DxgkCbCreateContextAllocation;
-    DXGKCB_DESTROYCONTEXTALLOCATION         DxgkCbDestroyContextAllocation;
-    DXGKCB_SETPOWERCOMPONENTACTIVE          DxgkCbSetPowerComponentActive;
-    DXGKCB_SETPOWERCOMPONENTIDLE            DxgkCbSetPowerComponentIdle;
-    DXGKCB_ACQUIRE_POST_DISPLAY_OWNERSHIP   DxgkCbAcquirePostDisplayOwnership;
-    DXGKCB_POWERRUNTIMECONTROLREQUEST       DxgkCbPowerRuntimeControlRequest;
-    DXGKCB_SETPOWERCOMPONENTLATENCY         DxgkCbSetPowerComponentLatency;
-    DXGKCB_SETPOWERCOMPONENTRESIDENCY       DxgkCbSetPowerComponentResidency;
-    DXGKCB_COMPLETEFSTATETRANSITION         DxgkCbCompleteFStateTransition;
+    DXGKCB_CREATECONTEXTALLOCATION DxgkCbCreateContextAllocation;
+    DXGKCB_DESTROYCONTEXTALLOCATION DxgkCbDestroyContextAllocation;
+    DXGKCB_SETPOWERCOMPONENTACTIVE DxgkCbSetPowerComponentActive;
+    DXGKCB_SETPOWERCOMPONENTIDLE DxgkCbSetPowerComponentIdle;
+    DXGKCB_ACQUIRE_POST_DISPLAY_OWNERSHIP DxgkCbAcquirePostDisplayOwnership;
+    DXGKCB_POWERRUNTIMECONTROLREQUEST DxgkCbPowerRuntimeControlRequest;
+    DXGKCB_SETPOWERCOMPONENTLATENCY DxgkCbSetPowerComponentLatency;
+    DXGKCB_SETPOWERCOMPONENTRESIDENCY DxgkCbSetPowerComponentResidency;
+    DXGKCB_COMPLETEFSTATETRANSITION DxgkCbCompleteFStateTransition;
 #endif // DXGKDDI_INTERFACE_VERSION_WIN8
 #if (DXGKDDI_INTERFACE_VERSION >= DXGKDDI_INTERFACE_VERSION_WDDM1_3)
-    DXGKCB_COMPLETEPSTATETRANSITION         DxgkCbCompletePStateTransition;
+    DXGKCB_COMPLETEPSTATETRANSITION DxgkCbCompletePStateTransition;
 #endif // DXGKDDI_INTERFACE_VERSION_WDDM1_3
 #if (DXGKDDI_INTERFACE_VERSION >= DXGKDDI_INTERFACE_VERSION_WDDM2_0)
-    DXGKCB_MAPCONTEXTALLOCATION             DxgkCbMapContextAllocation;
-    DXGKCB_UPDATECONTEXTALLOCATION          DxgkCbUpdateContextAllocation;
-    DXGKCB_RESERVEGPUVIRTUALADDRESSRANGE    DxgkCbReserveGpuVirtualAddressRange;
-    DXGKCB_ACQUIREHANDLEDATA                DxgkCbAcquireHandleData;
-    DXGKCB_RELEASEHANDLEDATA                DxgkCbReleaseHandleData;
+    DXGKCB_MAPCONTEXTALLOCATION DxgkCbMapContextAllocation;
+    DXGKCB_UPDATECONTEXTALLOCATION DxgkCbUpdateContextAllocation;
+    DXGKCB_RESERVEGPUVIRTUALADDRESSRANGE DxgkCbReserveGpuVirtualAddressRange;
+    DXGKCB_ACQUIREHANDLEDATA DxgkCbAcquireHandleData;
+    DXGKCB_RELEASEHANDLEDATA DxgkCbReleaseHandleData;
     DXGKCB_HARDWARECONTENTPROTECTIONTEARDOWN DxgkCbHardwareContentProtectionTeardown;
 #endif // DXGKDDI_INTERFACE_VERSION_WDDM2_0
 #if (DXGKDDI_INTERFACE_VERSION >= DXGKDDI_INTERFACE_VERSION_WDDM2_1)
-    DXGKCB_MULTIPLANEOVERLAYDISABLED        DxgkCbMultiPlaneOverlayDisabled;
-    DXGKCB_DXGKCB_MITIGATEDRANGEUPDATE      DxgkCbMitigatedRangeUpdate;
+    DXGKCB_MULTIPLANEOVERLAYDISABLED DxgkCbMultiPlaneOverlayDisabled;
+    DXGKCB_DXGKCB_MITIGATEDRANGEUPDATE DxgkCbMitigatedRangeUpdate;
 #endif // DXGKDDI_INTERFACE_VERSION_WDDM2_1
 #if (DXGKDDI_INTERFACE_VERSION >= DXGKDDI_INTERFACE_VERSION_WDDM2_2)
-    DXGKCB_INVALIDATEHWCONTEXT              DxgkCbInvalidateHwContext;
-    DXGKCB_INDICATE_CONNECTOR_CHANGE        DxgkCbIndicateConnectorChange;
-    DXGKCB_UNBLOCKUEFIFRAMEBUFFERRANGES     DxgkCbUnblockUEFIFrameBufferRanges;
-    DXGKCB_ACQUIRE_POST_DISPLAY_OWNERSHIP2  DxgkCbAcquirePostDisplayOwnership2;
+    DXGKCB_INVALIDATEHWCONTEXT DxgkCbInvalidateHwContext;
+    DXGKCB_INDICATE_CONNECTOR_CHANGE DxgkCbIndicateConnectorChange;
+    DXGKCB_UNBLOCKUEFIFRAMEBUFFERRANGES DxgkCbUnblockUEFIFrameBufferRanges;
+    DXGKCB_ACQUIRE_POST_DISPLAY_OWNERSHIP2 DxgkCbAcquirePostDisplayOwnership2;
 #endif // DXGKDDI_INTERFACE_VERSION_WDDM2_2
 #if (DXGKDDI_INTERFACE_VERSION >= DXGKDDI_INTERFACE_VERSION_WDDM2_3)
-    DXGKCB_SETPROTECTEDSESSIONSTATUS        DxgkCbSetProtectedSessionStatus;
+    DXGKCB_SETPROTECTEDSESSIONSTATUS DxgkCbSetProtectedSessionStatus;
 #endif // DXGKDDI_INTERFACE_VERSION_WDDM2_3
 } DXGKRNL_INTERFACE, *PDXGKRNL_INTERFACE;
 
@@ -1282,9 +1246,9 @@ _IRQL_requires_DXGK_(PASSIVE_LEVEL)
 NTSTATUS
 APIENTRY
 DXGKDDI_QUERY_CHILD_RELATIONS(
-    _In_ CONST PVOID                                                  MiniportDeviceContext,
-    _Inout_updates_bytes_(ChildRelationsSize) PDXGK_CHILD_DESCRIPTOR  ChildRelations,
-    _In_ ULONG                                                        ChildRelationsSize
+    _In_ CONST PVOID MiniportDeviceContext,
+    _Inout_updates_bytes_(ChildRelationsSize) PDXGK_CHILD_DESCRIPTOR ChildRelations,
+    _In_ ULONG ChildRelationsSize
 );
 
 typedef
@@ -1414,15 +1378,15 @@ DXGKDDI_LINK_DEVICE(
 typedef struct _DXGK_PRE_START_INFO {
     union {
         struct {
-            UINT    ReservedIn;
+            UINT ReservedIn;
         };
         UINT Input;
     };
     union {
         struct {
-            UINT    SupportPreserveBootDisplay  : 1;
-            UINT    IsUEFIFrameBufferCpuAccessibleDuringStartup : 1;
-            UINT    ReservedOut                 :30;
+            UINT SupportPreserveBootDisplay : 1;
+            UINT IsUEFIFrameBufferCpuAccessibleDuringStartup : 1;
+            UINT ReservedOut : 30;
         };
         UINT Output;
     };
@@ -1453,28 +1417,27 @@ DXGKDDI_SETTARGETADJUSTEDCOLORIMETRY(
 
 #endif // (DXGKDDI_INTERFACE_VERSION >= DXGKDDI_INTERFACE_VERSION_WDDM2_2)
 
-typedef DXGKDDI_ADD_DEVICE                      *PDXGKDDI_ADD_DEVICE;
-typedef DXGKDDI_START_DEVICE                    *PDXGKDDI_START_DEVICE;
-typedef DXGKDDI_STOP_DEVICE                     *PDXGKDDI_STOP_DEVICE;
-typedef DXGKDDI_REMOVE_DEVICE                   *PDXGKDDI_REMOVE_DEVICE;
-typedef DXGKDDI_DISPATCH_IO_REQUEST             *PDXGKDDI_DISPATCH_IO_REQUEST;
-typedef DXGKDDI_QUERY_CHILD_RELATIONS           *PDXGKDDI_QUERY_CHILD_RELATIONS;
-typedef DXGKDDI_QUERY_CHILD_STATUS              *PDXGKDDI_QUERY_CHILD_STATUS;
-typedef DXGKDDI_INTERRUPT_ROUTINE               *PDXGKDDI_INTERRUPT_ROUTINE;
-typedef DXGKDDI_DPC_ROUTINE                     *PDXGKDDI_DPC_ROUTINE;
-typedef DXGKDDI_QUERY_DEVICE_DESCRIPTOR         *PDXGKDDI_QUERY_DEVICE_DESCRIPTOR;
-typedef DXGKDDI_SET_POWER_STATE                 *PDXGKDDI_SET_POWER_STATE;
-typedef DXGKDDI_NOTIFY_ACPI_EVENT               *PDXGKDDI_NOTIFY_ACPI_EVENT;
-typedef DXGKDDI_RESET_DEVICE                    *PDXGKDDI_RESET_DEVICE;
-typedef DXGKDDI_UNLOAD                          *PDXGKDDI_UNLOAD;
-typedef DXGKDDI_QUERY_INTERFACE                 *PDXGKDDI_QUERY_INTERFACE;
-typedef DXGKDDI_CONTROL_ETW_LOGGING             *PDXGKDDI_CONTROL_ETW_LOGGING;
-typedef DXGKDDI_LINK_DEVICE                     *PDXGKDDI_LINK_DEVICE;
+typedef DXGKDDI_ADD_DEVICE *PDXGKDDI_ADD_DEVICE;
+typedef DXGKDDI_START_DEVICE *PDXGKDDI_START_DEVICE;
+typedef DXGKDDI_STOP_DEVICE *PDXGKDDI_STOP_DEVICE;
+typedef DXGKDDI_REMOVE_DEVICE *PDXGKDDI_REMOVE_DEVICE;
+typedef DXGKDDI_DISPATCH_IO_REQUEST *PDXGKDDI_DISPATCH_IO_REQUEST;
+typedef DXGKDDI_QUERY_CHILD_RELATIONS *PDXGKDDI_QUERY_CHILD_RELATIONS;
+typedef DXGKDDI_QUERY_CHILD_STATUS *PDXGKDDI_QUERY_CHILD_STATUS;
+typedef DXGKDDI_INTERRUPT_ROUTINE *PDXGKDDI_INTERRUPT_ROUTINE;
+typedef DXGKDDI_DPC_ROUTINE *PDXGKDDI_DPC_ROUTINE;
+typedef DXGKDDI_QUERY_DEVICE_DESCRIPTOR *PDXGKDDI_QUERY_DEVICE_DESCRIPTOR;
+typedef DXGKDDI_SET_POWER_STATE *PDXGKDDI_SET_POWER_STATE;
+typedef DXGKDDI_NOTIFY_ACPI_EVENT *PDXGKDDI_NOTIFY_ACPI_EVENT;
+typedef DXGKDDI_RESET_DEVICE *PDXGKDDI_RESET_DEVICE;
+typedef DXGKDDI_UNLOAD *PDXGKDDI_UNLOAD;
+typedef DXGKDDI_QUERY_INTERFACE *PDXGKDDI_QUERY_INTERFACE;
+typedef DXGKDDI_CONTROL_ETW_LOGGING *PDXGKDDI_CONTROL_ETW_LOGGING;
+typedef DXGKDDI_LINK_DEVICE *PDXGKDDI_LINK_DEVICE;
 #if (DXGKDDI_INTERFACE_VERSION >= DXGKDDI_INTERFACE_VERSION_WDDM2_2)
-typedef DXGKDDI_EXCHANGEPRESTARTINFO            *PDXGKDDI_EXCHANGEPRESTARTINFO;
-typedef DXGKDDI_SETTARGETADJUSTEDCOLORIMETRY    *PDXGKDDI_SETTARGETADJUSTEDCOLORIMETRY;
+typedef DXGKDDI_EXCHANGEPRESTARTINFO *PDXGKDDI_EXCHANGEPRESTARTINFO;
+typedef DXGKDDI_SETTARGETADJUSTEDCOLORIMETRY *PDXGKDDI_SETTARGETADJUSTEDCOLORIMETRY;
 #endif // (DXGKDDI_INTERFACE_VERSION >= DXGKDDI_INTERFACE_VERSION_WDDM2_2)
-
 
 #if (DXGKDDI_INTERFACE_VERSION >= DXGKDDI_INTERFACE_VERSION_WIN8)
 
@@ -1496,7 +1459,7 @@ typedef struct _DXGKARG_SYSTEM_DISPLAY_ENABLE_FLAGS
     {
         struct
         {
-            UINT  Reserved    : 32;
+            UINT Reserved : 32;
         };
         UINT Value;
     };
@@ -1555,8 +1518,8 @@ DXGKDDI_GET_CHILD_CONTAINER_ID(
 
 typedef enum _DXGK_SURPRISE_REMOVAL_TYPE
 {
-    DxgkRemovalHibernation  = 0,
-    DxgkRemovalPnPNotify    = 1,
+    DxgkRemovalHibernation = 0,
+    DxgkRemovalPnPNotify = 1,
 } DXGK_SURPRISE_REMOVAL_TYPE;
 
 typedef
@@ -1570,12 +1533,11 @@ DXGKDDI_NOTIFY_SURPRISE_REMOVAL(
     _In_ DXGK_SURPRISE_REMOVAL_TYPE RemovalType
 );
 
-/* Function pointer typedefs (Win8+) */
-typedef DXGKDDI_STOP_DEVICE_AND_RELEASE_POST_DISPLAY_OWNERSHIP  *PDXGKDDI_STOP_DEVICE_AND_RELEASE_POST_DISPLAY_OWNERSHIP;
-typedef DXGKDDI_SYSTEM_DISPLAY_ENABLE           *PDXGKDDI_SYSTEM_DISPLAY_ENABLE;
-typedef DXGKDDI_SYSTEM_DISPLAY_WRITE            *PDXGKDDI_SYSTEM_DISPLAY_WRITE;
-typedef DXGKDDI_GET_CHILD_CONTAINER_ID          *PDXGKDDI_GET_CHILD_CONTAINER_ID;
-typedef DXGKDDI_NOTIFY_SURPRISE_REMOVAL         *PDXGKDDI_NOTIFY_SURPRISE_REMOVAL;
+typedef DXGKDDI_STOP_DEVICE_AND_RELEASE_POST_DISPLAY_OWNERSHIP *PDXGKDDI_STOP_DEVICE_AND_RELEASE_POST_DISPLAY_OWNERSHIP;
+typedef DXGKDDI_SYSTEM_DISPLAY_ENABLE *PDXGKDDI_SYSTEM_DISPLAY_ENABLE;
+typedef DXGKDDI_SYSTEM_DISPLAY_WRITE *PDXGKDDI_SYSTEM_DISPLAY_WRITE;
+typedef DXGKDDI_GET_CHILD_CONTAINER_ID *PDXGKDDI_GET_CHILD_CONTAINER_ID;
+typedef DXGKDDI_NOTIFY_SURPRISE_REMOVAL *PDXGKDDI_NOTIFY_SURPRISE_REMOVAL;
 
 #endif // DXGKDDI_INTERFACE_VERSION
 
@@ -1584,151 +1546,151 @@ typedef DXGKDDI_NOTIFY_SURPRISE_REMOVAL         *PDXGKDDI_NOTIFY_SURPRISE_REMOVA
  * Call backs Implemented by full WDDM drivers.
  */
 typedef struct _DRIVER_INITIALIZATION_DATA {
-    ULONG                                    Version;
-    PDXGKDDI_ADD_DEVICE                      DxgkDdiAddDevice;
-    PDXGKDDI_START_DEVICE                    DxgkDdiStartDevice;
-    PDXGKDDI_STOP_DEVICE                     DxgkDdiStopDevice;
-    PDXGKDDI_REMOVE_DEVICE                   DxgkDdiRemoveDevice;
-    PDXGKDDI_DISPATCH_IO_REQUEST             DxgkDdiDispatchIoRequest;
-    PDXGKDDI_INTERRUPT_ROUTINE               DxgkDdiInterruptRoutine;
-    PDXGKDDI_DPC_ROUTINE                     DxgkDdiDpcRoutine;
-    PDXGKDDI_QUERY_CHILD_RELATIONS           DxgkDdiQueryChildRelations;
-    PDXGKDDI_QUERY_CHILD_STATUS              DxgkDdiQueryChildStatus;
-    PDXGKDDI_QUERY_DEVICE_DESCRIPTOR         DxgkDdiQueryDeviceDescriptor;
-    PDXGKDDI_SET_POWER_STATE                 DxgkDdiSetPowerState;
-    PDXGKDDI_NOTIFY_ACPI_EVENT               DxgkDdiNotifyAcpiEvent;
-    PDXGKDDI_RESET_DEVICE                    DxgkDdiResetDevice;
-    PDXGKDDI_UNLOAD                          DxgkDdiUnload;
-    PDXGKDDI_QUERY_INTERFACE                 DxgkDdiQueryInterface;
-    PDXGKDDI_CONTROL_ETW_LOGGING             DxgkDdiControlEtwLogging;
-    PDXGKDDI_QUERYADAPTERINFO                DxgkDdiQueryAdapterInfo;
-    PDXGKDDI_CREATEDEVICE                    DxgkDdiCreateDevice;
-    PDXGKDDI_CREATEALLOCATION                DxgkDdiCreateAllocation;
-    PDXGKDDI_DESTROYALLOCATION               DxgkDdiDestroyAllocation;
-    PDXGKDDI_DESCRIBEALLOCATION              DxgkDdiDescribeAllocation;
+    ULONG Version;
+    PDXGKDDI_ADD_DEVICE DxgkDdiAddDevice;
+    PDXGKDDI_START_DEVICE DxgkDdiStartDevice;
+    PDXGKDDI_STOP_DEVICE DxgkDdiStopDevice;
+    PDXGKDDI_REMOVE_DEVICE DxgkDdiRemoveDevice;
+    PDXGKDDI_DISPATCH_IO_REQUEST DxgkDdiDispatchIoRequest;
+    PDXGKDDI_INTERRUPT_ROUTINE DxgkDdiInterruptRoutine;
+    PDXGKDDI_DPC_ROUTINE DxgkDdiDpcRoutine;
+    PDXGKDDI_QUERY_CHILD_RELATIONS DxgkDdiQueryChildRelations;
+    PDXGKDDI_QUERY_CHILD_STATUS DxgkDdiQueryChildStatus;
+    PDXGKDDI_QUERY_DEVICE_DESCRIPTOR DxgkDdiQueryDeviceDescriptor;
+    PDXGKDDI_SET_POWER_STATE DxgkDdiSetPowerState;
+    PDXGKDDI_NOTIFY_ACPI_EVENT DxgkDdiNotifyAcpiEvent;
+    PDXGKDDI_RESET_DEVICE DxgkDdiResetDevice;
+    PDXGKDDI_UNLOAD DxgkDdiUnload;
+    PDXGKDDI_QUERY_INTERFACE DxgkDdiQueryInterface;
+    PDXGKDDI_CONTROL_ETW_LOGGING DxgkDdiControlEtwLogging;
+    PDXGKDDI_QUERYADAPTERINFO DxgkDdiQueryAdapterInfo;
+    PDXGKDDI_CREATEDEVICE DxgkDdiCreateDevice;
+    PDXGKDDI_CREATEALLOCATION DxgkDdiCreateAllocation;
+    PDXGKDDI_DESTROYALLOCATION DxgkDdiDestroyAllocation;
+    PDXGKDDI_DESCRIBEALLOCATION DxgkDdiDescribeAllocation;
     PDXGKDDI_GETSTANDARDALLOCATIONDRIVERDATA DxgkDdiGetStandardAllocationDriverData;
-    PDXGKDDI_ACQUIRESWIZZLINGRANGE           DxgkDdiAcquireSwizzlingRange;
-    PDXGKDDI_RELEASESWIZZLINGRANGE           DxgkDdiReleaseSwizzlingRange;
-    PDXGKDDI_PATCH                           DxgkDdiPatch;
-    PDXGKDDI_SUBMITCOMMAND                   DxgkDdiSubmitCommand;
-    PDXGKDDI_PREEMPTCOMMAND                  DxgkDdiPreemptCommand;
-    PDXGKDDI_BUILDPAGINGBUFFER               DxgkDdiBuildPagingBuffer;
-    PDXGKDDI_SETPALETTE                      DxgkDdiSetPalette;
-    PDXGKDDI_SETPOINTERPOSITION              DxgkDdiSetPointerPosition;
-    PDXGKDDI_SETPOINTERSHAPE                 DxgkDdiSetPointerShape;
-    PDXGKDDI_RESETFROMTIMEOUT                DxgkDdiResetFromTimeout;
-    PDXGKDDI_RESTARTFROMTIMEOUT              DxgkDdiRestartFromTimeout;
-    PDXGKDDI_ESCAPE                          DxgkDdiEscape;
-    PDXGKDDI_COLLECTDBGINFO                  DxgkDdiCollectDbgInfo;
-    PDXGKDDI_QUERYCURRENTFENCE               DxgkDdiQueryCurrentFence;
-    PDXGKDDI_ISSUPPORTEDVIDPN                DxgkDdiIsSupportedVidPn;
-    PDXGKDDI_RECOMMENDFUNCTIONALVIDPN        DxgkDdiRecommendFunctionalVidPn;
-    PDXGKDDI_ENUMVIDPNCOFUNCMODALITY         DxgkDdiEnumVidPnCofuncModality;
-    PDXGKDDI_SETVIDPNSOURCEADDRESS           DxgkDdiSetVidPnSourceAddress;
-    PDXGKDDI_SETVIDPNSOURCEVISIBILITY        DxgkDdiSetVidPnSourceVisibility;
-    PDXGKDDI_COMMITVIDPN                     DxgkDdiCommitVidPn;
-    PDXGKDDI_UPDATEACTIVEVIDPNPRESENTPATH    DxgkDdiUpdateActiveVidPnPresentPath;
-    PDXGKDDI_RECOMMENDMONITORMODES           DxgkDdiRecommendMonitorModes;
-    PDXGKDDI_RECOMMENDVIDPNTOPOLOGY          DxgkDdiRecommendVidPnTopology;
-    PDXGKDDI_GETSCANLINE                     DxgkDdiGetScanLine;
-    PDXGKDDI_STOPCAPTURE                     DxgkDdiStopCapture;
-    PDXGKDDI_CONTROLINTERRUPT                DxgkDdiControlInterrupt;
-    PDXGKDDI_CREATEOVERLAY                   DxgkDdiCreateOverlay;
-    PDXGKDDI_DESTROYDEVICE                   DxgkDdiDestroyDevice;
-    PDXGKDDI_OPENALLOCATIONINFO              DxgkDdiOpenAllocation;
-    PDXGKDDI_CLOSEALLOCATION                 DxgkDdiCloseAllocation;
-    PDXGKDDI_RENDER                          DxgkDdiRender;
-    PDXGKDDI_PRESENT                         DxgkDdiPresent;
-    PDXGKDDI_UPDATEOVERLAY                   DxgkDdiUpdateOverlay;
-    PDXGKDDI_FLIPOVERLAY                     DxgkDdiFlipOverlay;
-    PDXGKDDI_DESTROYOVERLAY                  DxgkDdiDestroyOverlay;
-    PDXGKDDI_CREATECONTEXT                   DxgkDdiCreateContext;
-    PDXGKDDI_DESTROYCONTEXT                  DxgkDdiDestroyContext;
-    PDXGKDDI_LINK_DEVICE                     DxgkDdiLinkDevice;
-    PDXGKDDI_SETDISPLAYPRIVATEDRIVERFORMAT   DxgkDdiSetDisplayPrivateDriverFormat;
+    PDXGKDDI_ACQUIRESWIZZLINGRANGE DxgkDdiAcquireSwizzlingRange;
+    PDXGKDDI_RELEASESWIZZLINGRANGE DxgkDdiReleaseSwizzlingRange;
+    PDXGKDDI_PATCH DxgkDdiPatch;
+    PDXGKDDI_SUBMITCOMMAND DxgkDdiSubmitCommand;
+    PDXGKDDI_PREEMPTCOMMAND DxgkDdiPreemptCommand;
+    PDXGKDDI_BUILDPAGINGBUFFER DxgkDdiBuildPagingBuffer;
+    PDXGKDDI_SETPALETTE DxgkDdiSetPalette;
+    PDXGKDDI_SETPOINTERPOSITION DxgkDdiSetPointerPosition;
+    PDXGKDDI_SETPOINTERSHAPE DxgkDdiSetPointerShape;
+    PDXGKDDI_RESETFROMTIMEOUT DxgkDdiResetFromTimeout;
+    PDXGKDDI_RESTARTFROMTIMEOUT DxgkDdiRestartFromTimeout;
+    PDXGKDDI_ESCAPE DxgkDdiEscape;
+    PDXGKDDI_COLLECTDBGINFO DxgkDdiCollectDbgInfo;
+    PDXGKDDI_QUERYCURRENTFENCE DxgkDdiQueryCurrentFence;
+    PDXGKDDI_ISSUPPORTEDVIDPN DxgkDdiIsSupportedVidPn;
+    PDXGKDDI_RECOMMENDFUNCTIONALVIDPN DxgkDdiRecommendFunctionalVidPn;
+    PDXGKDDI_ENUMVIDPNCOFUNCMODALITY DxgkDdiEnumVidPnCofuncModality;
+    PDXGKDDI_SETVIDPNSOURCEADDRESS DxgkDdiSetVidPnSourceAddress;
+    PDXGKDDI_SETVIDPNSOURCEVISIBILITY DxgkDdiSetVidPnSourceVisibility;
+    PDXGKDDI_COMMITVIDPN DxgkDdiCommitVidPn;
+    PDXGKDDI_UPDATEACTIVEVIDPNPRESENTPATH DxgkDdiUpdateActiveVidPnPresentPath;
+    PDXGKDDI_RECOMMENDMONITORMODES DxgkDdiRecommendMonitorModes;
+    PDXGKDDI_RECOMMENDVIDPNTOPOLOGY DxgkDdiRecommendVidPnTopology;
+    PDXGKDDI_GETSCANLINE DxgkDdiGetScanLine;
+    PDXGKDDI_STOPCAPTURE DxgkDdiStopCapture;
+    PDXGKDDI_CONTROLINTERRUPT DxgkDdiControlInterrupt;
+    PDXGKDDI_CREATEOVERLAY DxgkDdiCreateOverlay;
+    PDXGKDDI_DESTROYDEVICE DxgkDdiDestroyDevice;
+    PDXGKDDI_OPENALLOCATIONINFO DxgkDdiOpenAllocation;
+    PDXGKDDI_CLOSEALLOCATION DxgkDdiCloseAllocation;
+    PDXGKDDI_RENDER DxgkDdiRender;
+    PDXGKDDI_PRESENT DxgkDdiPresent;
+    PDXGKDDI_UPDATEOVERLAY DxgkDdiUpdateOverlay;
+    PDXGKDDI_FLIPOVERLAY DxgkDdiFlipOverlay;
+    PDXGKDDI_DESTROYOVERLAY DxgkDdiDestroyOverlay;
+    PDXGKDDI_CREATECONTEXT DxgkDdiCreateContext;
+    PDXGKDDI_DESTROYCONTEXT DxgkDdiDestroyContext;
+    PDXGKDDI_LINK_DEVICE DxgkDdiLinkDevice;
+    PDXGKDDI_SETDISPLAYPRIVATEDRIVERFORMAT DxgkDdiSetDisplayPrivateDriverFormat;
 #if (DXGKDDI_INTERFACE_VERSION >= DXGKDDI_INTERFACE_VERSION_WIN7)
-    PVOID                                   DxgkDdiDescribePageTable;
-    PVOID                                   DxgkDdiUpdatePageTable;
-    PVOID                                   DxgkDdiUpdatePageDirectory;
-    PVOID                                   DxgkDdiMovePageDirectory;
-    PVOID                                   DxgkDdiSubmitRender;
-    PVOID                                   DxgkDdiCreateAllocation2;
-    PDXGKDDI_RENDER                         DxgkDdiRenderKm;
-    VOID*                                   Reserved;
-    PDXGKDDI_QUERYVIDPNHWCAPABILITY         DxgkDdiQueryVidPnHWCapability;
+    PVOID DxgkDdiDescribePageTable;
+    PVOID DxgkDdiUpdatePageTable;
+    PVOID DxgkDdiUpdatePageDirectory;
+    PVOID DxgkDdiMovePageDirectory;
+    PVOID DxgkDdiSubmitRender;
+    PVOID DxgkDdiCreateAllocation2;
+    PDXGKDDI_RENDER DxgkDdiRenderKm;
+    VOID* Reserved;
+    PDXGKDDI_QUERYVIDPNHWCAPABILITY DxgkDdiQueryVidPnHWCapability;
 #endif // DXGKDDI_INTERFACE_VERSION
 #if (DXGKDDI_INTERFACE_VERSION >= DXGKDDI_INTERFACE_VERSION_WIN8)
-    PDXGKDDISETPOWERCOMPONENTFSTATE         DxgkDdiSetPowerComponentFState;
-    PDXGKDDI_QUERYDEPENDENTENGINEGROUP      DxgkDdiQueryDependentEngineGroup;
-    PDXGKDDI_QUERYENGINESTATUS              DxgkDdiQueryEngineStatus;
-    PDXGKDDI_RESETENGINE                    DxgkDdiResetEngine;
+    PDXGKDDISETPOWERCOMPONENTFSTATE DxgkDdiSetPowerComponentFState;
+    PDXGKDDI_QUERYDEPENDENTENGINEGROUP DxgkDdiQueryDependentEngineGroup;
+    PDXGKDDI_QUERYENGINESTATUS DxgkDdiQueryEngineStatus;
+    PDXGKDDI_RESETENGINE DxgkDdiResetEngine;
     PDXGKDDI_STOP_DEVICE_AND_RELEASE_POST_DISPLAY_OWNERSHIP DxgkDdiStopDeviceAndReleasePostDisplayOwnership;
-    PDXGKDDI_SYSTEM_DISPLAY_ENABLE          DxgkDdiSystemDisplayEnable;
-    PDXGKDDI_SYSTEM_DISPLAY_WRITE           DxgkDdiSystemDisplayWrite;
-    PDXGKDDI_CANCELCOMMAND                  DxgkDdiCancelCommand;
-    PDXGKDDI_GET_CHILD_CONTAINER_ID         DxgkDdiGetChildContainerId;
-    PDXGKDDIPOWERRUNTIMECONTROLREQUEST      DxgkDdiPowerRuntimeControlRequest;
+    PDXGKDDI_SYSTEM_DISPLAY_ENABLE DxgkDdiSystemDisplayEnable;
+    PDXGKDDI_SYSTEM_DISPLAY_WRITE DxgkDdiSystemDisplayWrite;
+    PDXGKDDI_CANCELCOMMAND DxgkDdiCancelCommand;
+    PDXGKDDI_GET_CHILD_CONTAINER_ID DxgkDdiGetChildContainerId;
+    PDXGKDDIPOWERRUNTIMECONTROLREQUEST DxgkDdiPowerRuntimeControlRequest;
     PDXGKDDI_SETVIDPNSOURCEADDRESSWITHMULTIPLANEOVERLAY DxgkDdiSetVidPnSourceAddressWithMultiPlaneOverlay;
-    PDXGKDDI_NOTIFY_SURPRISE_REMOVAL        DxgkDdiNotifySurpriseRemoval;
+    PDXGKDDI_NOTIFY_SURPRISE_REMOVAL DxgkDdiNotifySurpriseRemoval;
 #endif // DXGKDDI_INTERFACE_VERSION
 #if (DXGKDDI_INTERFACE_VERSION >= DXGKDDI_INTERFACE_VERSION_WDDM1_3)
-    PDXGKDDI_GETNODEMETADATA                DxgkDdiGetNodeMetadata;
-    PDXGKDDISETPOWERPSTATE                  DxgkDdiSetPowerPState;
-    PDXGKDDI_CONTROLINTERRUPT2              DxgkDdiControlInterrupt2;
-    PDXGKDDI_CHECKMULTIPLANEOVERLAYSUPPORT  DxgkDdiCheckMultiPlaneOverlaySupport;
-    PDXGKDDI_CALIBRATEGPUCLOCK              DxgkDdiCalibrateGpuClock;
-    PDXGKDDI_FORMATHISTORYBUFFER            DxgkDdiFormatHistoryBuffer;
+    PDXGKDDI_GETNODEMETADATA DxgkDdiGetNodeMetadata;
+    PDXGKDDISETPOWERPSTATE DxgkDdiSetPowerPState;
+    PDXGKDDI_CONTROLINTERRUPT2 DxgkDdiControlInterrupt2;
+    PDXGKDDI_CHECKMULTIPLANEOVERLAYSUPPORT DxgkDdiCheckMultiPlaneOverlaySupport;
+    PDXGKDDI_CALIBRATEGPUCLOCK DxgkDdiCalibrateGpuClock;
+    PDXGKDDI_FORMATHISTORYBUFFER DxgkDdiFormatHistoryBuffer;
 #endif
 #if (DXGKDDI_INTERFACE_VERSION >= DXGKDDI_INTERFACE_VERSION_WDDM2_0)
-    PDXGKDDI_RENDERGDI                      DxgkDdiRenderGdi; 
-    PDXGKDDI_SUBMITCOMMANDVIRTUAL           DxgkDdiSubmitCommandVirtual; 
-    PDXGKDDI_SETROOTPAGETABLE               DxgkDdiSetRootPageTable; 
-    PDXGKDDI_GETROOTPAGETABLESIZE           DxgkDdiGetRootPageTableSize; 
-    PDXGKDDI_MAPCPUHOSTAPERTURE             DxgkDdiMapCpuHostAperture; 
-    PDXGKDDI_UNMAPCPUHOSTAPERTURE           DxgkDdiUnmapCpuHostAperture; 
+    PDXGKDDI_RENDERGDI DxgkDdiRenderGdi;
+    PDXGKDDI_SUBMITCOMMANDVIRTUAL DxgkDdiSubmitCommandVirtual;
+    PDXGKDDI_SETROOTPAGETABLE DxgkDdiSetRootPageTable;
+    PDXGKDDI_GETROOTPAGETABLESIZE DxgkDdiGetRootPageTableSize;
+    PDXGKDDI_MAPCPUHOSTAPERTURE DxgkDdiMapCpuHostAperture;
+    PDXGKDDI_UNMAPCPUHOSTAPERTURE DxgkDdiUnmapCpuHostAperture;
     PDXGKDDI_CHECKMULTIPLANEOVERLAYSUPPORT2 DxgkDdiCheckMultiPlaneOverlaySupport2;
-    PDXGKDDI_CREATEPROCESS                  DxgkDdiCreateProcess;
-    PDXGKDDI_DESTROYPROCESS                 DxgkDdiDestroyProcess;
-    PDXGKDDI_SETVIDPNSOURCEADDRESSWITHMULTIPLANEOVERLAY2    DxgkDdiSetVidPnSourceAddressWithMultiPlaneOverlay2;
-    void*                                   Reserved1;
-    void*                                   Reserved2;
-    PDXGKDDI_POWERRUNTIMESETDEVICEHANDLE    DxgkDdiPowerRuntimeSetDeviceHandle;
-    PDXGKDDI_SETSTABLEPOWERSTATE            DxgkDdiSetStablePowerState;
-    PDXGKDDI_SETVIDEOPROTECTEDREGION        DxgkDdiSetVideoProtectedRegion;
+    PDXGKDDI_CREATEPROCESS DxgkDdiCreateProcess;
+    PDXGKDDI_DESTROYPROCESS DxgkDdiDestroyProcess;
+    PDXGKDDI_SETVIDPNSOURCEADDRESSWITHMULTIPLANEOVERLAY2 DxgkDdiSetVidPnSourceAddressWithMultiPlaneOverlay2;
+    void* Reserved1;
+    void* Reserved2;
+    PDXGKDDI_POWERRUNTIMESETDEVICEHANDLE DxgkDdiPowerRuntimeSetDeviceHandle;
+    PDXGKDDI_SETSTABLEPOWERSTATE DxgkDdiSetStablePowerState;
+    PDXGKDDI_SETVIDEOPROTECTEDREGION DxgkDdiSetVideoProtectedRegion;
 #endif // (DXGKDDI_INTERFACE_VERSION >= DXGKDDI_INTERFACE_VERSION_WDDM2_0)
 #if (DXGKDDI_INTERFACE_VERSION >= DXGKDDI_INTERFACE_VERSION_WDDM2_1)
     PDXGKDDI_CHECKMULTIPLANEOVERLAYSUPPORT3 DxgkDdiCheckMultiPlaneOverlaySupport3;
-    PDXGKDDI_SETVIDPNSOURCEADDRESSWITHMULTIPLANEOVERLAY3    DxgkDdiSetVidPnSourceAddressWithMultiPlaneOverlay3;
-    PDXGKDDI_POSTMULTIPLANEOVERLAYPRESENT   DxgkDdiPostMultiPlaneOverlayPresent;
-    PDXGKDDI_VALIDATEUPDATEALLOCATIONPROPERTY       DxgkDdiValidateUpdateAllocationProperty;
-    PDXGKDDI_CONTROLMODEBEHAVIOR            DxgkDdiControlModeBehavior;
-    PDXGKDDI_UPDATEMONITORLINKINFO          DxgkDdiUpdateMonitorLinkInfo;
+    PDXGKDDI_SETVIDPNSOURCEADDRESSWITHMULTIPLANEOVERLAY3 DxgkDdiSetVidPnSourceAddressWithMultiPlaneOverlay3;
+    PDXGKDDI_POSTMULTIPLANEOVERLAYPRESENT DxgkDdiPostMultiPlaneOverlayPresent;
+    PDXGKDDI_VALIDATEUPDATEALLOCATIONPROPERTY DxgkDdiValidateUpdateAllocationProperty;
+    PDXGKDDI_CONTROLMODEBEHAVIOR DxgkDdiControlModeBehavior;
+    PDXGKDDI_UPDATEMONITORLINKINFO DxgkDdiUpdateMonitorLinkInfo;
 #endif // (DXGKDDI_INTERFACE_VERSION >= DXGKDDI_INTERFACE_VERSION_WDDM2_1)
 #if (DXGKDDI_INTERFACE_VERSION >= DXGKDDI_INTERFACE_VERSION_WDDM2_2)
-    PDXGKDDI_CREATEHWCONTEXT                DxgkDdiCreateHwContext;
-    PDXGKDDI_DESTROYHWCONTEXT               DxgkDdiDestroyHwContext;
-    PDXGKDDI_CREATEHWQUEUE                  DxgkDdiCreateHwQueue;
-    PDXGKDDI_DESTROYHWQUEUE                 DxgkDdiDestroyHwQueue;
-    PDXGKDDI_SUBMITCOMMANDTOHWQUEUE         DxgkDdiSubmitCommandToHwQueue;
-    PDXGKDDI_SWITCHTOHWCONTEXTLIST          DxgkDdiSwitchToHwContextList;
-    PDXGKDDI_RESETHWENGINE                  DxgkDdiResetHwEngine;
-    PDXGKDDI_CREATEPERIODICFRAMENOTIFICATION    DxgkDdiCreatePeriodicFrameNotification;
-    PDXGKDDI_DESTROYPERIODICFRAMENOTIFICATION   DxgkDdiDestroyPeriodicFrameNotification;
-    PDXGKDDI_SETTIMINGSFROMVIDPN            DxgkDdiSetTimingsFromVidPn;
-    PDXGKDDI_SETTARGETGAMMA                 DxgkDdiSetTargetGamma;
-    PDXGKDDI_SETTARGETCONTENTTYPE           DxgkDdiSetTargetContentType;
-    PDXGKDDI_SETTARGETANALOGCOPYPROTECTION  DxgkDdiSetTargetAnalogCopyProtection;
-    PDXGKDDI_SETTARGETADJUSTEDCOLORIMETRY   DxgkDdiSetTargetAdjustedColorimetry;
-    PDXGKDDI_DISPLAYDETECTCONTROL           DxgkDdiDisplayDetectControl;
-    PDXGKDDI_QUERYCONNECTIONCHANGE          DxgkDdiQueryConnectionChange;
-    PDXGKDDI_EXCHANGEPRESTARTINFO           DxgkDdiExchangePreStartInfo;
-    PDXGKDDI_GETMULTIPLANEOVERLAYCAPS       DxgkDdiGetMultiPlaneOverlayCaps;
-    PDXGKDDI_GETPOSTCOMPOSITIONCAPS         DxgkDdiGetPostCompositionCaps;
+    PDXGKDDI_CREATEHWCONTEXT DxgkDdiCreateHwContext;
+    PDXGKDDI_DESTROYHWCONTEXT DxgkDdiDestroyHwContext;
+    PDXGKDDI_CREATEHWQUEUE DxgkDdiCreateHwQueue;
+    PDXGKDDI_DESTROYHWQUEUE DxgkDdiDestroyHwQueue;
+    PDXGKDDI_SUBMITCOMMANDTOHWQUEUE DxgkDdiSubmitCommandToHwQueue;
+    PDXGKDDI_SWITCHTOHWCONTEXTLIST DxgkDdiSwitchToHwContextList;
+    PDXGKDDI_RESETHWENGINE DxgkDdiResetHwEngine;
+    PDXGKDDI_CREATEPERIODICFRAMENOTIFICATION DxgkDdiCreatePeriodicFrameNotification;
+    PDXGKDDI_DESTROYPERIODICFRAMENOTIFICATION DxgkDdiDestroyPeriodicFrameNotification;
+    PDXGKDDI_SETTIMINGSFROMVIDPN DxgkDdiSetTimingsFromVidPn;
+    PDXGKDDI_SETTARGETGAMMA DxgkDdiSetTargetGamma;
+    PDXGKDDI_SETTARGETCONTENTTYPE DxgkDdiSetTargetContentType;
+    PDXGKDDI_SETTARGETANALOGCOPYPROTECTION DxgkDdiSetTargetAnalogCopyProtection;
+    PDXGKDDI_SETTARGETADJUSTEDCOLORIMETRY DxgkDdiSetTargetAdjustedColorimetry;
+    PDXGKDDI_DISPLAYDETECTCONTROL DxgkDdiDisplayDetectControl;
+    PDXGKDDI_QUERYCONNECTIONCHANGE DxgkDdiQueryConnectionChange;
+    PDXGKDDI_EXCHANGEPRESTARTINFO DxgkDdiExchangePreStartInfo;
+    PDXGKDDI_GETMULTIPLANEOVERLAYCAPS DxgkDdiGetMultiPlaneOverlayCaps;
+    PDXGKDDI_GETPOSTCOMPOSITIONCAPS DxgkDdiGetPostCompositionCaps;
 #endif // (DXGKDDI_INTERFACE_VERSION >= DXGKDDI_INTERFACE_VERSION_WDDM2_2)
 #if (DXGKDDI_INTERFACE_VERSION >= DXGKDDI_INTERFACE_VERSION_WDDM2_3)
-    PDXGKDDI_UPDATEHWCONTEXTSTATE           DxgkDdiUpdateHwContextState;
-    PDXGKDDI_CREATEPROTECTEDSESSION         DxgkDdiCreateProtectedSession;
-    PDXGKDDI_DESTROYPROTECTEDSESSION        DxgkDdiDestroyProtectedSession;
+    PDXGKDDI_UPDATEHWCONTEXTSTATE DxgkDdiUpdateHwContextState;
+    PDXGKDDI_CREATEPROTECTEDSESSION DxgkDdiCreateProtectedSession;
+    PDXGKDDI_DESTROYPROTECTEDSESSION DxgkDdiDestroyProtectedSession;
 #endif // (DXGKDDI_INTERFACE_VERSION >= DXGKDDI_INTERFACE_VERSION_WDDM2_3)
 } DRIVER_INITIALIZATION_DATA, *PDRIVER_INITIALIZATION_DATA;
 
@@ -1738,48 +1700,48 @@ typedef struct _DRIVER_INITIALIZATION_DATA {
  * Callbacks implemented by display-only drivers (KMDDOD).
  */
 typedef struct _KMDDOD_INITIALIZATION_DATA {
-    ULONG                                   Version;
-    PDXGKDDI_ADD_DEVICE                     DxgkDdiAddDevice;
-    PDXGKDDI_START_DEVICE                   DxgkDdiStartDevice;
-    PDXGKDDI_STOP_DEVICE                    DxgkDdiStopDevice;
-    PDXGKDDI_REMOVE_DEVICE                  DxgkDdiRemoveDevice;
-    PDXGKDDI_DISPATCH_IO_REQUEST            DxgkDdiDispatchIoRequest;
-    PDXGKDDI_INTERRUPT_ROUTINE              DxgkDdiInterruptRoutine;
-    PDXGKDDI_DPC_ROUTINE                    DxgkDdiDpcRoutine;
-    PDXGKDDI_QUERY_CHILD_RELATIONS          DxgkDdiQueryChildRelations;
-    PDXGKDDI_QUERY_CHILD_STATUS             DxgkDdiQueryChildStatus;
-    PDXGKDDI_QUERY_DEVICE_DESCRIPTOR        DxgkDdiQueryDeviceDescriptor;
-    PDXGKDDI_SET_POWER_STATE                DxgkDdiSetPowerState;
-    PDXGKDDI_NOTIFY_ACPI_EVENT              DxgkDdiNotifyAcpiEvent;
-    PDXGKDDI_RESET_DEVICE                   DxgkDdiResetDevice;
-    PDXGKDDI_UNLOAD                         DxgkDdiUnload;
-    PDXGKDDI_QUERY_INTERFACE                DxgkDdiQueryInterface;
-    PDXGKDDI_CONTROL_ETW_LOGGING            DxgkDdiControlEtwLogging;
-    PDXGKDDI_QUERYADAPTERINFO               DxgkDdiQueryAdapterInfo;
-    PDXGKDDI_SETPALETTE                     DxgkDdiSetPalette;
-    PDXGKDDI_SETPOINTERPOSITION             DxgkDdiSetPointerPosition;
-    PDXGKDDI_SETPOINTERSHAPE                DxgkDdiSetPointerShape;
-    PDXGKDDI_ESCAPE                         DxgkDdiEscape;
-    PDXGKDDI_COLLECTDBGINFO                 DxgkDdiCollectDbgInfo;
-    PDXGKDDI_ISSUPPORTEDVIDPN               DxgkDdiIsSupportedVidPn;
-    PDXGKDDI_RECOMMENDFUNCTIONALVIDPN       DxgkDdiRecommendFunctionalVidPn;
-    PDXGKDDI_ENUMVIDPNCOFUNCMODALITY        DxgkDdiEnumVidPnCofuncModality;
-    PDXGKDDI_SETVIDPNSOURCEVISIBILITY       DxgkDdiSetVidPnSourceVisibility;
-    PDXGKDDI_COMMITVIDPN                    DxgkDdiCommitVidPn;
-    PDXGKDDI_UPDATEACTIVEVIDPNPRESENTPATH   DxgkDdiUpdateActiveVidPnPresentPath;
-    PDXGKDDI_RECOMMENDMONITORMODES          DxgkDdiRecommendMonitorModes;
-    PDXGKDDI_GETSCANLINE                    DxgkDdiGetScanLine;
-    PDXGKDDI_QUERYVIDPNHWCAPABILITY         DxgkDdiQueryVidPnHWCapability;
-    PDXGKDDI_PRESENTDISPLAYONLY             DxgkDdiPresentDisplayOnly;
+    ULONG Version;
+    PDXGKDDI_ADD_DEVICE DxgkDdiAddDevice;
+    PDXGKDDI_START_DEVICE DxgkDdiStartDevice;
+    PDXGKDDI_STOP_DEVICE DxgkDdiStopDevice;
+    PDXGKDDI_REMOVE_DEVICE DxgkDdiRemoveDevice;
+    PDXGKDDI_DISPATCH_IO_REQUEST DxgkDdiDispatchIoRequest;
+    PDXGKDDI_INTERRUPT_ROUTINE DxgkDdiInterruptRoutine;
+    PDXGKDDI_DPC_ROUTINE DxgkDdiDpcRoutine;
+    PDXGKDDI_QUERY_CHILD_RELATIONS DxgkDdiQueryChildRelations;
+    PDXGKDDI_QUERY_CHILD_STATUS DxgkDdiQueryChildStatus;
+    PDXGKDDI_QUERY_DEVICE_DESCRIPTOR DxgkDdiQueryDeviceDescriptor;
+    PDXGKDDI_SET_POWER_STATE DxgkDdiSetPowerState;
+    PDXGKDDI_NOTIFY_ACPI_EVENT DxgkDdiNotifyAcpiEvent;
+    PDXGKDDI_RESET_DEVICE DxgkDdiResetDevice;
+    PDXGKDDI_UNLOAD DxgkDdiUnload;
+    PDXGKDDI_QUERY_INTERFACE DxgkDdiQueryInterface;
+    PDXGKDDI_CONTROL_ETW_LOGGING DxgkDdiControlEtwLogging;
+    PDXGKDDI_QUERYADAPTERINFO DxgkDdiQueryAdapterInfo;
+    PDXGKDDI_SETPALETTE DxgkDdiSetPalette;
+    PDXGKDDI_SETPOINTERPOSITION DxgkDdiSetPointerPosition;
+    PDXGKDDI_SETPOINTERSHAPE DxgkDdiSetPointerShape;
+    PDXGKDDI_ESCAPE DxgkDdiEscape;
+    PDXGKDDI_COLLECTDBGINFO DxgkDdiCollectDbgInfo;
+    PDXGKDDI_ISSUPPORTEDVIDPN DxgkDdiIsSupportedVidPn;
+    PDXGKDDI_RECOMMENDFUNCTIONALVIDPN DxgkDdiRecommendFunctionalVidPn;
+    PDXGKDDI_ENUMVIDPNCOFUNCMODALITY DxgkDdiEnumVidPnCofuncModality;
+    PDXGKDDI_SETVIDPNSOURCEVISIBILITY DxgkDdiSetVidPnSourceVisibility;
+    PDXGKDDI_COMMITVIDPN DxgkDdiCommitVidPn;
+    PDXGKDDI_UPDATEACTIVEVIDPNPRESENTPATH DxgkDdiUpdateActiveVidPnPresentPath;
+    PDXGKDDI_RECOMMENDMONITORMODES DxgkDdiRecommendMonitorModes;
+    PDXGKDDI_GETSCANLINE DxgkDdiGetScanLine;
+    PDXGKDDI_QUERYVIDPNHWCAPABILITY DxgkDdiQueryVidPnHWCapability;
+    PDXGKDDI_PRESENTDISPLAYONLY DxgkDdiPresentDisplayOnly;
     PDXGKDDI_STOP_DEVICE_AND_RELEASE_POST_DISPLAY_OWNERSHIP DxgkDdiStopDeviceAndReleasePostDisplayOwnership;
-    PDXGKDDI_SYSTEM_DISPLAY_ENABLE          DxgkDdiSystemDisplayEnable;
-    PDXGKDDI_SYSTEM_DISPLAY_WRITE           DxgkDdiSystemDisplayWrite;
-    PDXGKDDI_GET_CHILD_CONTAINER_ID         DxgkDdiGetChildContainerId;
-    PDXGKDDISETPOWERCOMPONENTFSTATE         DxgkDdiSetPowerComponentFState;
-    PDXGKDDIPOWERRUNTIMECONTROLREQUEST      DxgkDdiPowerRuntimeControlRequest;
-    PDXGKDDI_NOTIFY_SURPRISE_REMOVAL        DxgkDdiNotifySurpriseRemoval;
+    PDXGKDDI_SYSTEM_DISPLAY_ENABLE DxgkDdiSystemDisplayEnable;
+    PDXGKDDI_SYSTEM_DISPLAY_WRITE DxgkDdiSystemDisplayWrite;
+    PDXGKDDI_GET_CHILD_CONTAINER_ID DxgkDdiGetChildContainerId;
+    PDXGKDDISETPOWERCOMPONENTFSTATE DxgkDdiSetPowerComponentFState;
+    PDXGKDDIPOWERRUNTIMECONTROLREQUEST DxgkDdiPowerRuntimeControlRequest;
+    PDXGKDDI_NOTIFY_SURPRISE_REMOVAL DxgkDdiNotifySurpriseRemoval;
 #if (DXGKDDI_INTERFACE_VERSION >= DXGKDDI_INTERFACE_VERSION_WDDM2_0)
-    PDXGKDDI_POWERRUNTIMESETDEVICEHANDLE    DxgkDdiPowerRuntimeSetDeviceHandle;
+    PDXGKDDI_POWERRUNTIMESETDEVICEHANDLE DxgkDdiPowerRuntimeSetDeviceHandle;
 #endif
 } KMDDOD_INITIALIZATION_DATA, *PKMDDOD_INITIALIZATION_DATA;
 #endif // DXGKDDI_INTERFACE_VERSION_WIN8
