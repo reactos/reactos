@@ -4,7 +4,8 @@ add_definitions(-D_NTSYSTEM_)
 list(APPEND SOURCE
     arbiter.c
     ordering.c
-    range.c)
+    range.c
+    transaction.c)
 
 add_library(arbiter ${SOURCE})
 add_dependencies(arbiter bugcodes xdk)

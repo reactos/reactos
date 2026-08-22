@@ -20,44 +20,6 @@ CODE_SEG("PAGE")
 NTSTATUS
 NTAPI
 #if (NTDDI_VERSION >= NTDDI_VISTA)
-ArbiterLibTestAllocation(
-    _In_ PARBITER_INSTANCE Arbiter,
-    _Inout_ PARBITER_TEST_ALLOCATION_PARAMETERS Parameters)
-#else
-ArbiterLibTestAllocation(
-    _In_ PARBITER_INSTANCE Arbiter,
-    _Inout_ PLIST_ENTRY ArbitrationList)
-#endif
-{
-    PAGED_CODE();
-
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
-}
-
-CODE_SEG("PAGE")
-NTSTATUS
-NTAPI
-#if (NTDDI_VERSION >= NTDDI_VISTA)
-ArbiterLibRetestAllocation(
-    _In_ PARBITER_INSTANCE Arbiter,
-    _Inout_ PARBITER_RETEST_ALLOCATION_PARAMETERS Parameters)
-#else
-ArbiterLibRetestAllocation(
-    _In_ PARBITER_INSTANCE Arbiter,
-    _Inout_ PLIST_ENTRY ArbitrationList)
-#endif
-{
-    PAGED_CODE();
-
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
-}
-
-CODE_SEG("PAGE")
-NTSTATUS
-NTAPI
-#if (NTDDI_VERSION >= NTDDI_VISTA)
 ArbiterLibBootAllocation(
     _In_ PARBITER_INSTANCE Arbiter,
     _Inout_ PARBITER_BOOT_ALLOCATION_PARAMETERS Parameters)
@@ -131,30 +93,6 @@ ArbiterLibInitializeRangeList(
     return STATUS_NOT_IMPLEMENTED;
 }
 #endif
-
-CODE_SEG("PAGE")
-NTSTATUS
-NTAPI
-ArbiterLibCommitAllocation(
-    _In_ PARBITER_INSTANCE Arbiter)
-{
-    PAGED_CODE();
-
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
-}
-
-CODE_SEG("PAGE")
-NTSTATUS
-NTAPI
-ArbiterLibRollbackAllocation(
-    _In_ PARBITER_INSTANCE Arbiter)
-{
-    PAGED_CODE();
-
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
-}
 
 CODE_SEG("PAGE")
 NTSTATUS
