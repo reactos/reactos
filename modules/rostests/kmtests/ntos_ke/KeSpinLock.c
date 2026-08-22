@@ -87,6 +87,7 @@ struct _CHECK_DATA
         KIRQL Irql;
     } DUMMYUNIONNAME;
     PVOID UntouchedValue;
+    BOOLEAN SelfRaisingIrql;
 };
 
 #define DEFINE_ACQUIRE(LocalName, SetIsAcquired, DoCall)            \
@@ -131,11 +132,8 @@ DEFINE_RELEASE(ReleaseExpNoLower,     FALSE, (KeReleaseSpinLockFromDpcLevel)(Spi
 DEFINE_ACQUIRE(AcquireInStackNoRaise, FALSE, KeAcquireInStackQueuedSpinLockAtDpcLevel(SpinLock, &CheckData->QueueHandle))
 DEFINE_RELEASE(ReleaseInStackNoRaise, FALSE, KeReleaseInStackQueuedSpinLockFromDpcLevel(&CheckData->QueueHandle))
 
-/* TODO: test these functions. They behave weirdly, though */
-#if 0
 DEFINE_ACQUIRE(AcquireForDpc,         TRUE,  CheckData->Irql = KeAcquireSpinLockForDpc(SpinLock))
 DEFINE_RELEASE(ReleaseForDpc,         TRUE,  KeReleaseSpinLockForDpc(SpinLock, CheckData->Irql))
-#endif
 
 DEFINE_ACQUIRE(AcquireInStackForDpc,  FALSE, pKeAcquireInStackQueuedSpinLockForDpc(SpinLock, &CheckData->QueueHandle))
 DEFINE_RELEASE(ReleaseInStackForDpc,  FALSE, pKeReleaseInStackQueuedSpinLockForDpc(&CheckData->QueueHandle))
@@ -237,7 +235,9 @@ BOOLEAN TryNoRaise(PKSPIN_LOCK SpinLock, PCHECK_DATA CheckData) {
     }                                                                               \
                                                                                     \
     if ((CheckData)->IsAcquired)                                                    \
-        ExpectedIrql = (CheckData)->IrqlWhenAcquired;                               \
+        ExpectedIrql = (CheckData)->SelfRaisingIrql                                 \
+                        ? max((CheckData)->OriginalIrql, DISPATCH_LEVEL)            \
+                        : (CheckData)->IrqlWhenAcquired;                            \
     if (GetNTVersion() < _WIN32_WINNT_WIN8)                                         \
         ok_irql(ExpectedIrql);                                                      \
     if (GetNTVersion() == _WIN32_WINNT_WS03)                                        \
@@ -373,8 +373,7 @@ START_TEST(KeSpinLock)
     {
         { CheckLock,        DISPATCH_LEVEL, AcquireNormal,        ReleaseNormal,        NULL,           AcquireNoRaise,        ReleaseNoLower,        TryNoRaise },
         { CheckLock,        DISPATCH_LEVEL, AcquireExp,           ReleaseExp,           NULL,           AcquireExpNoRaise,     ReleaseExpNoLower,     NULL },
-        /* TODO: this one is just weird!
-        { CheckLock,        DISPATCH_LEVEL, AcquireNormal,        ReleaseNormal,        NULL,           AcquireForDpc,         ReleaseForDpc,         NULL },*/
+        { CheckLock,        DISPATCH_LEVEL, AcquireNormal,        ReleaseNormal,        NULL,           AcquireForDpc,         ReleaseForDpc,         NULL, .SelfRaisingIrql = TRUE },
         { CheckLock,        DISPATCH_LEVEL, AcquireNormal,        ReleaseNormal,        NULL,           AcquireInt,            ReleaseInt,            NULL },
         { CheckLock,        SynchIrql,      AcquireSynch,         ReleaseNormal,        NULL,           NULL,                  NULL,                  NULL },
         { CheckQueueHandle, DISPATCH_LEVEL, AcquireInStackQueued, ReleaseInStackQueued, NULL,           AcquireInStackNoRaise, ReleaseInStackNoRaise, NULL },
@@ -387,6 +386,7 @@ START_TEST(KeSpinLock)
     {
         { CheckLock,        DISPATCH_LEVEL, AcquireNormal,        ReleaseNormal,        NULL,           AcquireNoRaise,        ReleaseNoLower,        TryNoRaise },
         { CheckLock,        DISPATCH_LEVEL, AcquireExp,           ReleaseExp,           NULL,           AcquireExpNoRaise,     ReleaseExpNoLower,     NULL },
+        { CheckLock,        DISPATCH_LEVEL, AcquireNormal,        ReleaseNormal,        NULL,           AcquireForDpc,         ReleaseForDpc,         NULL, .SelfRaisingIrql = TRUE },
         { CheckLock,        DISPATCH_LEVEL, AcquireNormal,        ReleaseNormal,        NULL,           AcquireInt,            ReleaseInt,            NULL },
         { CheckLock,        SynchIrql,      AcquireSynch,         ReleaseNormal,        NULL,           NULL,                  NULL,                  NULL },
         { CheckQueueHandle, DISPATCH_LEVEL, AcquireInStackQueued, ReleaseInStackQueued, NULL,           AcquireInStackNoRaise, ReleaseInStackNoRaise, NULL },
