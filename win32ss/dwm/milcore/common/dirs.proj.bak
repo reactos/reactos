@@ -1,0 +1,16 @@
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="dogfood">
+  <PropertyGroup>
+    <BuildProjectReferences>true</BuildProjectReferences>
+  </PropertyGroup>
+
+  <Import Project="$(_NTDRIVE)$(_NTROOT)\tools\Microsoft.DevDiv.Settings.targets" />
+
+  <ItemGroup Condition="'$(BuildExePhase)' == ''">
+    <ProjectFile Include="DynamicCall\DynamicCall.nativeproj" />
+    <ProjectFile Include="effects\effects.nativeproj" />
+    <ProjectFile Include="scanop\scanop.nativeproj" />
+    <ProjectFile Include="shared\shared.nativeproj" />
+  </ItemGroup>
+
+  <Import Project="$(_NTDRIVE)$(_NTROOT)\tools\Microsoft.devdiv.traversal.targets" />
+</Project>

@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|ARM64">
+      <Configuration>Debug</Configuration>
+      <Platform>ARM64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|ARM64">
+      <Configuration>Release</Configuration>
+      <Platform>ARM64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <CLRSupport>false</CLRSupport>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <Import Project="$(WpfCppProps)" />
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>15.0</VCProjectVersion>
+    <ProjectGuid>{dec6b122-7619-471f-a87e-f594e011c059}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <TargetName>FXJITCollector</TargetName>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>precomp.h</PrecompiledHeaderFile>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(MsBuildThisFileDirectory)</AdditionalIncludeDirectories>
+      <!-- warning C4467: usage of ATL attributes is deprecated -->
+      <DisableSpecificWarnings>%(DisableSpecificWarnings);4467</DisableSpecificWarnings>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="precomp.cpp">
+      <PrecompiledHeader>Create</PrecompiledHeader>
+      <PrecompiledHeaderFile>precomp.h</PrecompiledHeaderFile>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Branch.cpp" />
+    <ClCompile Include="C_f32x1.cpp" />
+    <ClCompile Include="C_f32x4.cpp" />
+    <ClCompile Include="C_LazyVar.cpp" />
+    <ClCompile Include="C_s16x8.cpp" />
+    <ClCompile Include="C_s32x4.cpp" />
+    <ClCompile Include="C_u128x1.cpp" />
+    <ClCompile Include="C_u16x4.cpp" />
+    <ClCompile Include="C_u16x8.cpp" />
+    <ClCompile Include="C_u32.cpp" />
+    <ClCompile Include="C_u32x2.cpp" />
+    <ClCompile Include="C_u32x4.cpp" />
+    <ClCompile Include="C_u64.cpp" />
+    <ClCompile Include="C_u64x1.cpp" />
+    <ClCompile Include="C_u64x2.cpp" />
+    <ClCompile Include="C_u8x16.cpp" />
+    <ClCompile Include="C_u8x8.cpp" />
+    <ClCompile Include="jitteraccess.cpp" />
+    <ClCompile Include="MmValue.cpp" />
+    <ClCompile Include="PVOID.cpp" />
+    <ClCompile Include="P_f32x4.cpp" />
+    <ClCompile Include="XmmValue.cpp" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+</Project>
