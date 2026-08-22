@@ -1,5 +1,7 @@
 
 add_definitions(
+    -D__WINESRC__
+    -D__ROS_LONG64__
     -DCOM_NO_WINDOWS_H)
 
 spec2def(dplayx.dll dplayx.spec ADD_IMPORTLIB)
@@ -13,8 +15,7 @@ list(APPEND SOURCE
     dplayx_messages.c
     dplobby.c
     lobbysp.c
-    name_server.c
-    precomp.h)
+    name_server.c)
 
 add_library(dplayx MODULE
     ${SOURCE}
@@ -28,4 +29,4 @@ target_link_libraries(dplayx wine wine_dll_register wine_dll_canunload dxguid uu
 add_importlibs(dplayx winmm ole32 user32 advapi32 kernel32_vista ucrtbase msvcrt kernel32 ntdll)
 add_dependencies(dplayx wineheaders)
 add_cd_file(TARGET dplayx DESTINATION reactos/system32 FOR all)
-set_wine_module_FIXME(dplayx) # CORE-5743: No ARRAY_SIZE and CONST_VTABLE
+set_wine_module(dplayx)
