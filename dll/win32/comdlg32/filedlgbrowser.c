@@ -24,8 +24,6 @@
 #include <string.h>
 
 #define COBJMACROS
-#define NONAMELESSUNION
-
 #include "windef.h"
 #include "winbase.h"
 #include "winnls.h"
@@ -156,24 +154,24 @@ static void COMDLG32_UpdateCurrentDir(const FileOpenDlgInfos *fodInfos)
 /* copied from shell32 to avoid linking to it */
 static BOOL COMDLG32_StrRetToStrNW (LPVOID dest, DWORD len, LPSTRRET src, LPCITEMIDLIST pidl)
 {
-        TRACE("dest=%p len=0x%x strret=%p pidl=%p\n", dest , len, src, pidl);
+        TRACE("dest=%p len=0x%lx strret=%p pidl=%p\n", dest , len, src, pidl);
 
 	switch (src->uType)
 	{
 	  case STRRET_WSTR:
-            lstrcpynW(dest, src->u.pOleStr, len);
-	    CoTaskMemFree(src->u.pOleStr);
+            lstrcpynW(dest, src->pOleStr, len);
+	    CoTaskMemFree(src->pOleStr);
 	    break;
 
 	  case STRRET_CSTR:
-            if (len && !MultiByteToWideChar( CP_ACP, 0, src->u.cStr, -1, dest, len ))
+            if (len && !MultiByteToWideChar( CP_ACP, 0, src->cStr, -1, dest, len ))
                 ((LPWSTR)dest)[len-1] = 0;
 	    break;
 
 	  case STRRET_OFFSET:
 	    if (pidl)
 	    {
-                if (len && !MultiByteToWideChar( CP_ACP, 0, ((LPCSTR)&pidl->mkid)+src->u.uOffset,
+                if (len && !MultiByteToWideChar( CP_ACP, 0, ((LPCSTR)&pidl->mkid)+src->uOffset,
                                                  -1, dest, len ))
                     ((LPWSTR)dest)[len-1] = 0;
 	    }
@@ -250,7 +248,7 @@ static HRESULT WINAPI IShellBrowserImpl_QueryInterface(IShellBrowser *iface, REF
     TRACE("unsupported interface, %s\n", debugstr_guid(riid));
 #else
     FIXME("unsupported interface, %s\n", debugstr_guid(riid));
-#endif
+#endif  
     return E_NOINTERFACE;
 }
 
@@ -262,7 +260,7 @@ static ULONG WINAPI IShellBrowserImpl_AddRef(IShellBrowser * iface)
     IShellBrowserImpl *This = impl_from_IShellBrowser(iface);
     ULONG ref = InterlockedIncrement(&This->ref);
 
-    TRACE("(%p,%u)\n", This, ref - 1);
+    TRACE("(%p,%lu)\n", This, ref - 1);
 
     return ref;
 }
@@ -275,7 +273,7 @@ static ULONG WINAPI IShellBrowserImpl_Release(IShellBrowser * iface)
     IShellBrowserImpl *This = impl_from_IShellBrowser(iface);
     ULONG ref = InterlockedDecrement(&This->ref);
 
-    TRACE("(%p,%u)\n", This, ref + 1);
+    TRACE("(%p,%lu)\n", This, ref + 1);
 
     if (!ref)
         heap_free(This);
@@ -458,7 +456,7 @@ static HRESULT WINAPI IShellBrowserImpl_BrowseObject(IShellBrowser *iface,
             &fodInfos->ShellInfos.folderSettings, fodInfos->Shell.FOIShellBrowser,
             &rectView, &hwndView)))
     {
-        WARN("Failed to create view window, hr %#x.\n", hRes);
+        WARN("Failed to create view window, hr %#lx.\n", hRes);
         return hRes;
     }
 
@@ -523,7 +521,7 @@ static HRESULT WINAPI IShellBrowserImpl_GetViewStateStream(IShellBrowser *iface,
 {
     IShellBrowserImpl *This = impl_from_IShellBrowser(iface);
 
-    FIXME("(%p 0x%08x %p)\n", This, grfMode, ppStrm);
+    FIXME("(%p 0x%08lx %p)\n", This, grfMode, ppStrm);
 
     /* Feature not implemented */
     return E_NOTIMPL;
@@ -612,7 +610,7 @@ static HRESULT WINAPI IShellBrowserImpl_SendControlMsg(IShellBrowser *iface,
     IShellBrowserImpl *This = impl_from_IShellBrowser(iface);
     LRESULT lres;
 
-    TRACE("(%p)->(0x%08x 0x%08x 0x%08lx 0x%08lx %p)\n", This, id, uMsg, wParam, lParam, pret);
+    TRACE("(%p)->(0x%08x 0x%08x 0x%08Ix 0x%08Ix %p)\n", This, id, uMsg, wParam, lParam, pret);
 
     switch (id)
     {
@@ -788,9 +786,9 @@ static HRESULT WINAPI IShellBrowserImpl_ICommDlgBrowser_OnDefaultCommand(ICommDl
     {
         HRESULT hRes;
 
-        ULONG  ulAttr = SFGAO_FOLDER | SFGAO_HASSUBFOLDER | SFGAO_FILESYSANCESTOR;
+        ULONG  ulAttr = SFGAO_FOLDER | SFGAO_HASSUBFOLDER;
         IShellFolder_GetAttributesOf(fodInfos->Shell.FOIShellFolder, 1, (LPCITEMIDLIST *)&pidl, &ulAttr);
-	if ((ulAttr & (SFGAO_FOLDER | SFGAO_HASSUBFOLDER)) && (ulAttr & SFGAO_FILESYSANCESTOR))
+	if (ulAttr & (SFGAO_FOLDER | SFGAO_HASSUBFOLDER) )
 	{
             hRes = IShellBrowser_BrowseObject(&This->IShellBrowser_iface,pidl,SBSP_RELATIVE);
             if(fodInfos->ofnInfos->Flags & OFN_EXPLORER)
@@ -917,7 +915,7 @@ static LRESULT send_includeitem_notification(HWND hwndParentDlg, LPCITEMIDLIST p
                 hook_result = SendMessageA(fodInfos->DlgInfos.hwndCustomDlg, WM_NOTIFY, 0, (LPARAM)&ofnNotify);
         }
     }
-    TRACE("Retval: 0x%08lx\n", hook_result);
+    TRACE("Retval: 0x%08Ix\n", hook_result);
     return hook_result;
 }
 

@@ -57,14 +57,14 @@ static HDC get_printer_ic(void)
     if (info_size == 0)
         return NULL;
 
-    info = HeapAlloc(GetProcessHeap(), 0, info_size);
+    info = malloc(info_size);
 
     ret = EnumPrintersA(PRINTER_ENUM_LOCAL, NULL, 2, (LPBYTE)info, info_size, &info_size, &num_printers);
 
     if (ret)
         result = CreateICA(info->pDriverName, info->pPrinterName, NULL, NULL);
 
-    HeapFree(GetProcessHeap(), 0, info);
+    free(info);
 
     return result;
 }
@@ -108,9 +108,15 @@ static void test_ChooseFontA(void)
 
     ok(ret == TRUE, "ChooseFontA returned FALSE\n");
     ok(cfa.iPointSize == expected_pointsize, "Expected %i, got %i\n", expected_pointsize, cfa.iPointSize);
-    ok(lfa.lfHeight == expected_lfheight, "Expected %i, got %i\n", expected_lfheight, lfa.lfHeight);
-    ok(lfa.lfWeight == FW_NORMAL, "Expected FW_NORMAL, got %i\n", lfa.lfWeight);
+    ok(lfa.lfHeight == expected_lfheight, "Expected %i, got %li\n", expected_lfheight, lfa.lfHeight);
+    ok(lfa.lfWeight == FW_NORMAL, "Expected FW_NORMAL, got %li\n", lfa.lfWeight);
+    ok(lfa.lfCharSet == SYMBOL_CHARSET, "Expected SYMBOL_CHARSET, got %i\n", lfa.lfCharSet);
     ok(strcmp(lfa.lfFaceName, "Symbol") == 0, "Expected Symbol, got %s\n", lfa.lfFaceName);
+
+    cfa.Flags = CF_ENABLEHOOK|CF_INITTOLOGFONTSTRUCT|CF_SCREENFONTS|CF_NOSCRIPTSEL;
+    ret = ChooseFontA(&cfa);
+    ok(ret == TRUE, "ChooseFontA returned FALSE\n");
+    ok(lfa.lfCharSet == DEFAULT_CHARSET, "Expected DEFAULT_CHARSET, got %i\n", lfa.lfCharSet);
 
     printer_ic = get_printer_ic();
     if (!printer_ic)
@@ -136,8 +142,8 @@ static void test_ChooseFontA(void)
 
         ok(ret == TRUE, "ChooseFontA returned FALSE\n");
         ok(cfa.iPointSize == expected_pointsize, "Expected %i, got %i\n", expected_pointsize, cfa.iPointSize);
-        ok(lfa.lfHeight == expected_lfheight, "Expected %i, got %i\n", expected_lfheight, lfa.lfHeight);
-        ok(lfa.lfWeight == FW_NORMAL, "Expected FW_NORMAL, got %i\n", lfa.lfWeight);
+        ok(lfa.lfHeight == expected_lfheight, "Expected %i, got %li\n", expected_lfheight, lfa.lfHeight);
+        ok(lfa.lfWeight == FW_NORMAL, "Expected FW_NORMAL, got %li\n", lfa.lfWeight);
         ok((strcmp(lfa.lfFaceName, "Symbol") == 0) ||
             broken(*lfa.lfFaceName == 0), "Expected Symbol, got %s\n", lfa.lfFaceName);
 
