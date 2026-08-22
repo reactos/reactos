@@ -215,6 +215,7 @@ AddPrinterA(PSTR pName, DWORD Level, PBYTE pPrinter)
     PWSTR pwszPrintProcessor = NULL;
     PWSTR pwszDatatype = NULL;
     PWSTR pwszParameters = NULL;
+    PWSTR pPrintProcessor = NULL;
     PDEVMODEW pdmw = NULL;
 
     TRACE("AddPrinterA(%s, %d, %p)\n", debugstr_a(pName), Level, pPrinter);
@@ -287,6 +288,11 @@ AddPrinterA(PSTR pName, DWORD Level, PBYTE pPrinter)
     {
         pwszPrinterName = AsciiToUnicode(&usBuffer, ppi2a->pPrinterName);
         if (!(ppi2w->pPrinterName = pwszPrinterName)) goto Cleanup;
+    }
+    if (ppi2a->pPrintProcessor)
+    {
+        pPrintProcessor = AsciiToUnicode(&usBuffer, ppi2a->pPrintProcessor);
+        if (!(ppi2w->pPrintProcessor = pPrintProcessor)) goto Cleanup;
     }
 
     ret = AddPrinterW(pwstrNameW, Level, (LPBYTE)ppi2w);
@@ -466,7 +472,7 @@ DeletePrinter(HANDLE hPrinter)
     // Do the RPC call.
     RpcTryExcept
     {
-        dwErrorCode = _RpcDeletePrinter(&pHandle->hPrinter);
+        dwErrorCode = _RpcDeletePrinter(pHandle->hPrinter);
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
     {
