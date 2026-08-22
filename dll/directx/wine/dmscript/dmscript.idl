@@ -1,0 +1,110 @@
+/*
+ * COM Classes for dmscript
+ *
+ * Copyright 2010 Alexandre Julliard
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+#pragma makedep register
+
+[
+    helpstring("DirectMusic Script AutoImp Segment"),
+    threading(both),
+    progid("Microsoft.DirectMusicScriptAutoImpSegment.1"),
+    vi_progid("Microsoft.DirectMusicScriptAutoImpSegment"),
+    uuid(4062c116-0270-11d3-8bcb-00600893b1b6)
+]
+coclass DirectMusicScriptAutoImpSegment { interface IDirectMusicScriptAutoImpSegment; }
+
+[
+    threading(both),
+    progid("Microsoft.DirectMusicScriptTrack.1"),
+    vi_progid("Microsoft.DirectMusicScriptTrack"),
+    uuid(4108fa85-3586-11d3-8bd7-00600893b1b6)
+]
+coclass DirectMusicScriptTrack { interface IDirectMusicScriptTrack; }
+
+[
+    helpstring("DirectMusic Script Object"),
+    threading(both),
+    progid("Microsoft.DirectMusicScript.1"),
+    vi_progid("Microsoft.DirectMusicScript"),
+    uuid(810b5013-e88d-11d2-8bc1-00600893b1b6)
+]
+coclass DirectMusicScript { interface IDirectMusicScript; }
+
+[
+    helpstring("DirectMusic Script AutoImp Performance"),
+    threading(both),
+    progid("Microsoft.DirectMusicScriptAutoImpPerformance.1"),
+    vi_progid("Microsoft.DirectMusicScriptAutoImpPerformance"),
+    uuid(a861c6e2-fcfc-11d2-8bc9-00600893b1b6)
+]
+coclass DirectMusicScriptAutoImpPerformance { interface IDirectMusicScriptAutoImpPerformance; }
+
+[
+    helpstring("DirectMusic Script Source Code Loader"),
+    threading(both),
+    progid("Microsoft.DirectMusicScripSourceCodeLoader.1"), /* sic */
+    vi_progid("Microsoft.DirectMusicScripSourceCodeLoader"),
+    uuid(c70eb77f-efd4-4678-a27b-bf1648f30d04)
+]
+coclass DirectMusicScriptSourceCodeLoader { interface IDirectMusicScriptSourceCodeLoader; }
+
+[
+    helpstring("DirectMusic Script AutoImp SegmentState"),
+    threading(both),
+    progid("Microsoft.DirectMusicScriptAutoImpSegmentState.1"),
+    vi_progid("Microsoft.DirectMusicScriptAutoImpSegmentState"),
+    uuid(ebf2320a-2502-11d3-8bd1-00600893b1b6)
+]
+coclass DirectMusicScriptAutoImpSegmentState { interface IDirectMusicScriptAutoImpSegmentState; }
+
+[
+    helpstring("DirectMusic Script AutoImp AudioPathConfig"),
+    threading(both),
+    progid("Microsoft.DirectMusicScriptAutoImpAudioPathConfig.1"),
+    vi_progid("Microsoft.DirectMusicScriptAutoImpAudioPathConfig"),
+    uuid(1cebde3e-6b91-484a-af48-5e4f4ed6b1e1)
+]
+coclass DirectMusicScriptAutoImpAudioPathConfig { interface IDirectMusicScriptAutoImpAudioPathConfig; }
+
+[
+    helpstring("DirectMusic Script AutoImp AudioPath"),
+    threading(both),
+    progid("Microsoft.DirectMusicScriptAutoImpAudioPath.1"),
+    vi_progid("Microsoft.DirectMusicScriptAutoImpAudioPath"),
+    uuid(2c5f9b72-7148-4d97-bfc9-68a0e076bebd)
+]
+coclass DirectMusicScriptAutoImpAudioPath { interface IDirectMusicScriptAutoImpAudioPath; }
+
+[
+    helpstring("DirectMusic Script AutoImp Song"),
+    threading(both),
+    progid("Microsoft.DirectMusicScriptAutoImpSong.1"),
+    vi_progid("Microsoft.DirectMusicScriptAutoImpSong"),
+    uuid(a16f1761-b6d8-42eb-8d57-4a44fedd3bd2)
+]
+coclass DirectMusicScriptAutoImpSong { interface IDirectMusicScriptAutoImpSong; }
+
+[
+    helpstring("DirectMusic Audio VB Script Language"),
+    threading(both),
+    progid("AudioVBScript.1"),
+    vi_progid("AudioVBScript"),
+    uuid(4ee17959-931e-49e4-a2c6-977ecf3628f3)
+]
+coclass AudioVBScript { interface IAudioVBScript; }
