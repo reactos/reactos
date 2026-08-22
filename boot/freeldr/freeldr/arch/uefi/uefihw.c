@@ -322,6 +322,119 @@ DetectInternal(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
     /* FIXME: Detect more devices */
 }
 
+static
+BOOLEAN
+UefiFindPciBios(
+    _Out_ PPCI_REGISTRY_INFO BusData)
+{
+    PMCFG_TABLE Mcfg;
+    PMCFG_ALLOCATION Alloc;
+    ULONG McfgCount, McfgIndex;
+    UCHAR HighestMcfgBus;
+    BOOLEAN FoundMcfgSegment0 = FALSE;
+    BOOLEAN ScannedBuses[PCI_MAX_BUSES];
+    UCHAR PendingBuses[PCI_MAX_BUSES];
+    ULONG PendingCount = 0;
+    ULONG QueueHead = 0;
+    UCHAR Bus, HighestBus = 0;
+    ULONG Device, Function, HeaderTypeDword;
+    BOOLEAN AnyFound = FALSE;
+
+    /* Prefer MCFG since it lists each segment's bus range directly */
+    Mcfg = (PMCFG_TABLE)UefiFindAcpiTable(MCFG_SIGNATURE);
+    if ((Mcfg != NULL) && (Mcfg->Header.Length >= sizeof(MCFG_TABLE)))
+    {
+        McfgCount = (Mcfg->Header.Length - FIELD_OFFSET(MCFG_TABLE, Allocation)) / sizeof(MCFG_ALLOCATION);
+        HighestMcfgBus = 0;
+
+        for (McfgIndex = 0; McfgIndex < McfgCount; McfgIndex++)
+        {
+            Alloc = &Mcfg->Allocation[McfgIndex];
+
+            if (Alloc->PciSegmentGroup != 0)
+                continue;
+
+            if (Alloc->EndBusNumber < Alloc->StartBusNumber)
+                continue; /* malformed entry */
+
+            FoundMcfgSegment0 = TRUE;
+            if (Alloc->EndBusNumber > HighestMcfgBus)
+                HighestMcfgBus = Alloc->EndBusNumber;
+        }
+
+        if (FoundMcfgSegment0)
+        {
+            BusData->MajorRevision = 3;
+            BusData->MinorRevision = 0;
+            BusData->NoBuses = HighestMcfgBus + 1;
+            BusData->HardwareMechanism = 1;
+
+            TRACE("UEFI PCI: %u bus(es) found via MCFG\n", BusData->NoBuses);
+            return TRUE;
+        }
+    }
+
+    RtlZeroMemory(ScannedBuses, sizeof(ScannedBuses));
+
+    ScannedBuses[0] = TRUE;
+    PendingBuses[PendingCount++] = 0;
+
+    while (QueueHead < PendingCount)
+    {
+        Bus = PendingBuses[QueueHead++];
+
+        for (Device = 0; Device < PCI_MAX_DEVICES; Device++)
+        {
+            if (!PciScanFunction(Bus, (UCHAR)Device, 0,
+                                 ScannedBuses, PendingBuses, &PendingCount))
+            {
+                continue;
+            }
+
+            AnyFound = TRUE;
+            if (Bus > HighestBus)
+                HighestBus = Bus;
+
+            HeaderTypeDword = PciReadConfigDword(Bus, (UCHAR)Device, 0, 0x0C);
+            if (!((HeaderTypeDword >> 16) & PCI_HEADER_TYPE_MULTIFUNC))
+                continue;
+
+            for (Function = 1; Function < PCI_MAX_FUNCTIONS; Function++)
+            {
+                if (PciScanFunction(Bus, (UCHAR)Device, (UCHAR)Function,
+                                    ScannedBuses, PendingBuses, &PendingCount))
+                {
+                    AnyFound = TRUE;
+                }
+            }
+        }
+    }
+
+    for (Bus = PCI_MAX_BUSES - 1; Bus > HighestBus; Bus--)
+    {
+        if (ScannedBuses[Bus])
+        {
+            HighestBus = Bus;
+            break;
+        }
+    }
+
+    if (!AnyFound)
+    {
+        WARN("No PCI devices found\n");
+        return FALSE;
+    }
+
+    BusData->MajorRevision = 3;
+    BusData->MinorRevision = 0;
+    BusData->NoBuses = HighestBus + 1;
+    BusData->HardwareMechanism = 1;
+
+    TRACE("UEFI PCI probe: %u bus(es) found\n", BusData->NoBuses);
+
+    return TRUE;
+}
+
 PCONFIGURATION_COMPONENT_DATA
 UefiHwDetect(
     _In_opt_ PCSTR Options)
@@ -344,7 +457,9 @@ UefiHwDetect(
 
     /* Detect buses */
     DetectInternal(SystemKey, &BusNumber);
-    // TODO: DetectPciBios
+#if defined(_M_IX86) || defined(_M_AMD64)
+    DetectPciBios(SystemKey, &BusNumber, UefiFindPciBios);
+#endif
     DetectAcpiBios(SystemKey, &BusNumber);
 
     TRACE("DetectHardware() Done\n");
