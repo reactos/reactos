@@ -20,6 +20,7 @@
  */
 
 #include <user32.h>
+#include <wine-compat.h>
 
 #include <wine/commctrl.h>
 #include <commdlg.h>
@@ -30,28 +31,8 @@ WINE_DEFAULT_DEBUG_CHANNEL(message);
 
 #define SPY_MAX_MSGNUM   WM_USER
 #define SPY_INDENT_UNIT  4  /* 4 spaces */
-#undef ARRAYSIZE
-#define ARRAYSIZE(a) ((sizeof(a) / sizeof((a)[0])))
 
 #define DEBUG_SPY 0
-
-static const char * const ClassLongOffsetNames[] =
-{
-    "GCLP_MENUNAME",      /*  -8 */
-    "GCLP_HBRBACKGROUND", /* -10 */
-    "GCLP_HCURSOR",       /* -12 */
-    "GCLP_HICON",         /* -14 */
-    "GCLP_HMODULE",       /* -16 */
-    "GCL_CBWNDEXTRA",     /* -18 */
-    "GCL_CBCLSEXTRA",     /* -20 */
-    "?",
-    "GCLP_WNDPROC",       /* -24 */
-    "GCL_STYLE",          /* -26 */
-    "?",
-    "?",
-    "GCW_ATOM",           /* -32 */
-    "GCLP_HICONSM",       /* -34 */
-};
 
 static const char * const MessageTypeNames[SPY_MAX_MSGNUM + 1] =
 {
@@ -482,13 +463,30 @@ static const char * const MessageTypeNames[SPY_MAX_MSGNUM + 1] =
     "WM_ENTERSIZEMOVE",         /* 0x0231 */
     "WM_EXITSIZEMOVE",          /* 0x0232 */
     "WM_DROPFILES",             /* 0x0233 */
-    "WM_MDIREFRESHMENU", NULL, NULL, NULL,
-    /* 0x0238*/
-    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+    "WM_MDIREFRESHMENU",        /* 0x0234 */
+    NULL, NULL, NULL,
+    "WM_POINTERDEVICECHANGE",   /* 0x0238 */
+    "WM_POINTERDEVICEINRANGE",  /* 0x0239 */
+    "WM_POINTERDEVICEOUTOFRANGE", /* 0x023a */
+    NULL, NULL, NULL, NULL, NULL,
 
     /* 0x0240 */
-    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+    "WM_TOUCH",                 /* 0x0240 */
+    "WM_NCPOINTERUPDATE",       /* 0x0241 */
+    "WM_NCPOINTERDOWN",         /* 0x0242 */
+    "WM_NCPOINTERUP",           /* 0x0243 */
+    NULL,
+    "WM_POINTERUPDATE",         /* 0x0245 */
+    "WM_POINTERDOWN",           /* 0x0246 */
+    "WM_POINTERUP",             /* 0x0247 */
+    NULL,
+    "WM_POINTERENTER",          /* 0x0249 */
+    "WM_POINTERLEAVE",          /* 0x024a */
+    "WM_POINTERACTIVATE",       /* 0x024b */
+    "WM_POINTERCAPTURECHANGED", /* 0x024c */
+    "WM_TOUCHHITTESTING",       /* 0x024d */
+    "WM_POINTERWHEEL",          /* 0x024e */
+    "WM_POINTERHWHEEL",         /* 0x024f */
 
     /* 0x0250 */
     NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
@@ -561,7 +559,13 @@ static const char * const MessageTypeNames[SPY_MAX_MSGNUM + 1] =
     "WM_TABLET_FIRST+31",       /* 0x02de */
     "WM_TABLET_LAST",           /* 0x02df */
 
-    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+    "WM_DPICHANGED",            /* 0x02e0 */
+    NULL,
+    "WM_DPICHANGED_BEFOREPARENT",/* 0x02e2 */
+    "WM_DPICHANGED_AFTERPARENT",/* 0x02e3 */
+    "WM_GETDPISCALEDSIZE",      /* 0x02e4 */
+    NULL, NULL, NULL,
+
     NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
     NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
     NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
@@ -1120,9 +1124,8 @@ static const char * const CCMMessageTypeNames[SPY_MAX_CCMMSGNUM + 1] =
     "CCM_SETNOTIFYWINDOW"
 };
 
-#define SPY_MAX_WINEMSGNUM   9
-
 #ifndef __REACTOS__
+#define SPY_MAX_WINEMSGNUM   (WM_WINE_SETPIXELFORMAT - WM_WINE_DESTROYWINDOW)
 static const char * const WINEMessageTypeNames[SPY_MAX_WINEMSGNUM + 1] =
 {
     "WM_WINE_DESTROYWINDOW",
@@ -1130,10 +1133,22 @@ static const char * const WINEMessageTypeNames[SPY_MAX_WINEMSGNUM + 1] =
     "WM_WINE_SHOWWINDOW",
     "WM_WINE_SETPARENT",
     "WM_WINE_SETWINDOWLONG",
-    "WM_WINE_ENABLEWINDOW",
+    "WM_WINE_SETSTYLE",
     "WM_WINE_SETACTIVEWINDOW",
     "WM_WINE_KEYBOARD_LL_HOOK",
     "WM_WINE_MOUSE_LL_HOOK",
+    "WM_WINE_IME_NOTIFY",
+    "WM_WINE_WINDOW_STATE_CHANGED",
+    "WM_WINE_UPDATEWINDOWSTATE",
+    "WM_WINE_TRACKMOUSEEVENT",
+    "WM_WINE_SETPIXELFORMAT",
+};
+
+#define SPY_MAX_WINE_DRIVER_MSGNUM (WM_WINE_SETCURSOR - WM_WINE_CLIPCURSOR)
+static const char * const wine_driver_message_type_names[SPY_MAX_WINE_DRIVER_MSGNUM + 1] =
+{
+    "WM_WINE_CLIPCURSOR",
+    "WM_WINE_SETCURSOR",
 };
 #endif
 
@@ -1643,9 +1658,6 @@ static const USER_MSG propsht_array[] = {
           USM(PSM_SETTITLEW           ,0),
           USM(PSM_SETFINISHTEXTW      ,0),
 };
-static const WCHAR PropSheetInfoStr[] =
-    {'P','r','o','p','e','r','t','y','S','h','e','e','t','I','n','f','o',0 };
-
 static const USER_MSG updown_array[] = {
           USM(UDM_SETRANGE            ,0),
           USM(UDM_GETRANGE            ,0),
@@ -1750,14 +1762,16 @@ static const USER_MSG richedit_array[] = {
 #undef USM
 
 static const CONTROL_CLASS cc_array[] = {
-    {WC_COMBOBOXEXW,    comboex_array,  ARRAYSIZE(comboex_array) },
-    {WC_PROPSHEETW,     propsht_array,  ARRAYSIZE(propsht_array) },
-    {REBARCLASSNAMEW,   rebar_array,    ARRAYSIZE(rebar_array) },
-    {TOOLBARCLASSNAMEW, toolbar_array,  ARRAYSIZE(toolbar_array) },
-    {TOOLTIPS_CLASSW,   tooltips_array, ARRAYSIZE(tooltips_array) },
-    {UPDOWN_CLASSW,     updown_array,   ARRAYSIZE(updown_array) },
-    {RICHEDIT_CLASS20W, richedit_array, ARRAYSIZE(richedit_array) },
-    {0, 0, 0} };
+    {WC_COMBOBOXEXW,    comboex_array,  ARRAY_SIZE(comboex_array)},
+    {WC_PROPSHEETW,     propsht_array,  ARRAY_SIZE(propsht_array)},
+    {REBARCLASSNAMEW,   rebar_array,    ARRAY_SIZE(rebar_array)},
+    {TOOLBARCLASSNAMEW, toolbar_array,  ARRAY_SIZE(toolbar_array)},
+    {TOOLTIPS_CLASSW,   tooltips_array, ARRAY_SIZE(tooltips_array)},
+    {UPDOWN_CLASSW,     updown_array,   ARRAY_SIZE(updown_array)},
+    {RICHEDIT_CLASS20W, richedit_array, ARRAY_SIZE(richedit_array)},
+    {MSFTEDIT_CLASS,    richedit_array, ARRAY_SIZE(richedit_array)},
+    {0, 0, 0}
+};
 
 
 /************************************************************************/
@@ -2019,14 +2033,20 @@ typedef struct
     WCHAR      wnd_name[16];     /* window name for message            */
 } SPY_INSTANCE;
 
+#ifdef __REACTOS__
 static int indent_tls_index = TLS_OUT_OF_INDEXES;
+#endif
 
 /***********************************************************************
  *           get_indent_level
  */
 static inline INT_PTR get_indent_level(void)
 {
+#ifdef __REACTOS__
     return (INT_PTR)TlsGetValue( indent_tls_index );
+#else
+    return get_user_thread_info()->spy_indent;
+#endif
 }
 
 
@@ -2035,7 +2055,11 @@ static inline INT_PTR get_indent_level(void)
  */
 static inline void set_indent_level( INT_PTR level )
 {
+#ifdef __REACTOS__
     TlsSetValue( indent_tls_index, (void *)level );
+#else
+    get_user_thread_info()->spy_indent = level;
+#endif
 }
 
 
@@ -2067,7 +2091,10 @@ static const char *SPY_GetMsgInternal( UINT msg )
 #ifndef __REACTOS__
     if (msg >= WM_WINE_DESTROYWINDOW && msg <= WM_WINE_DESTROYWINDOW + SPY_MAX_WINEMSGNUM)
         return WINEMessageTypeNames[msg-WM_WINE_DESTROYWINDOW];
+    if (msg >= WM_WINE_CLIPCURSOR && msg <= WM_WINE_CLIPCURSOR + SPY_MAX_WINE_DRIVER_MSGNUM)
+        return wine_driver_message_type_names[msg-WM_WINE_CLIPCURSOR];
 #endif
+
     return NULL;
 }
 
@@ -2091,23 +2118,6 @@ static const USER_MSG *SPY_Bsearch_Msg( const USER_MSG *msgs, UINT count, UINT c
 }
 
 /***********************************************************************
- *           SPY_GetClassLongOffsetName
- *
- * Gets the name of a class long offset.
- */
-const char *SPY_GetClassLongOffsetName( INT offset )
-{
-    INT index;
-    if (offset < 0 && offset % 2 == 0 && ((index = -(offset + 8) / 2) <
-	sizeof(ClassLongOffsetNames) / sizeof(*ClassLongOffsetNames)))
-    {
-        return ClassLongOffsetNames[index];
-    }
-
-    return "?";
-}
-
-/***********************************************************************
  *           SPY_GetClassName
  *
  *  Sets the value of "wnd_class" member of the instance structure.
@@ -2116,11 +2126,11 @@ static void SPY_GetClassName( SPY_INSTANCE *sp_e )
 {
     /* special code to detect a property sheet dialog   */
     if ((GetClassLongPtrW(sp_e->msg_hwnd, GCW_ATOM) == (ULONG_PTR)WC_DIALOG) &&
-        (GetPropW(sp_e->msg_hwnd, PropSheetInfoStr))) {
-        strcpyW(sp_e->wnd_class, WC_PROPSHEETW);
+        (GetPropW(sp_e->msg_hwnd, L"PropertySheetInfo"))) {
+        lstrcpyW(sp_e->wnd_class, WC_PROPSHEETW);
     }
     else {
-        GetClassNameW(sp_e->msg_hwnd, sp_e->wnd_class, sizeof(sp_e->wnd_class)/sizeof(WCHAR));
+        GetClassNameW(sp_e->msg_hwnd, sp_e->wnd_class, ARRAY_SIZE(sp_e->wnd_class));
     }
 }
 
@@ -2154,8 +2164,13 @@ static void SPY_GetMsgStuff( SPY_INSTANCE *sp_e )
         TRACE("looking class %s\n", debugstr_w(sp_e->wnd_class));
 #endif
 
+#ifdef __REACTOS__
         while (cc_array[i].classname &&
-               strcmpiW(cc_array[i].classname, sp_e->wnd_class) != 0) i++;
+               _wcsicmp(cc_array[i].classname, sp_e->wnd_class) != 0) i++;
+#else
+        while (cc_array[i].classname &&
+               wcsicmp(cc_array[i].classname, sp_e->wnd_class) != 0) i++;
+#endif
 
         if (cc_array[i].classname)
         {
@@ -2172,9 +2187,9 @@ static void SPY_GetMsgStuff( SPY_INSTANCE *sp_e )
             }
         }
         if (sp_e->msgnum >= WM_USER && sp_e->msgnum <= WM_APP)
-            sprintf( sp_e->msg_name, "WM_USER+%d", sp_e->msgnum - WM_USER );
+            snprintf( sp_e->msg_name, sizeof(sp_e->msg_name), "WM_USER+%d", sp_e->msgnum - WM_USER );
         else
-            sprintf( sp_e->msg_name, "%04x", sp_e->msgnum );
+            snprintf( sp_e->msg_name, sizeof(sp_e->msg_name), "%04x", sp_e->msgnum );
     }
     else
     {
@@ -2195,12 +2210,12 @@ static void SPY_GetWndName( SPY_INSTANCE *sp_e )
 
     SPY_GetClassName( sp_e );
 
-    len = InternalGetWindowText(sp_e->msg_hwnd, sp_e->wnd_name, sizeof(sp_e->wnd_name)/sizeof(WCHAR));
+    len = NtUserInternalGetWindowText( sp_e->msg_hwnd, sp_e->wnd_name, ARRAY_SIZE(sp_e->wnd_name) );
     if(!len) /* get class name */
     {
         LPWSTR dst = sp_e->wnd_name;
         LPWSTR src = sp_e->wnd_class;
-        int n = sizeof(sp_e->wnd_name)/sizeof(WCHAR) - 3;
+        int n = ARRAY_SIZE(sp_e->wnd_name) - 3;
         *dst++ = '{';
         while ((n-- > 0) && *src) *dst++ = *src++;
         *dst++ = '}';
@@ -2218,7 +2233,7 @@ static void SPY_GetWndName( SPY_INSTANCE *sp_e )
 const char *SPY_GetMsgName( UINT msg, HWND hWnd )
 {
     SPY_INSTANCE ext_sp_e;
-    DWORD save_error = GetLastError();
+    DWORD save_error = RtlGetLastWin32Error();
 
     ext_sp_e.msgnum = msg;
     ext_sp_e.msg_hwnd   = hWnd;
@@ -2226,7 +2241,7 @@ const char *SPY_GetMsgName( UINT msg, HWND hWnd )
     ext_sp_e.wParam = 0;
     ext_sp_e.wnd_class[0] = 0;
     SPY_GetMsgStuff(&ext_sp_e);
-    SetLastError( save_error );
+    RtlSetLastWin32Error( save_error );
     return wine_dbg_sprintf("%s", ext_sp_e.msg_name);
 }
 
@@ -2250,7 +2265,7 @@ const char *SPY_GetVKeyName(WPARAM wParam)
  */
 static const SPY_NOTIFY *SPY_Bsearch_Notify( UINT code)
 {
-    int low = 0, high = ARRAYSIZE(spnfy_array) - 1;
+    int low = 0, high = ARRAY_SIZE(spnfy_array) - 1;
 
     while (low <= high)
     {
@@ -2355,7 +2370,7 @@ static void SPY_DumpStructure(const SPY_INSTANCE *sp_e, BOOL enter)
             }
         case SBM_SETRANGE:
             if (!enter && (sp_e->msgnum == SBM_SETRANGE)) break;
-            TRACE("min=%d max=%d\n", (INT)sp_e->wParam, (INT)sp_e->lParam);
+            TRACE("min=%d max=%ld\n", (int)sp_e->wParam, sp_e->lParam);
             break;
         case SBM_GETRANGE:
             if ((enter && (sp_e->msgnum == SBM_GETRANGE)) ||
@@ -2474,9 +2489,20 @@ static void SPY_DumpStructure(const SPY_INSTANCE *sp_e, BOOL enter)
             }
             break;
         case WM_NCCALCSIZE:
+            if (!sp_e->wParam)
             {
                 RECT *rc = (RECT *)sp_e->lParam;
-                TRACE("Rect (%s)\n", wine_dbgstr_rect(rc));
+                TRACE("Rect %s\n", wine_dbgstr_rect(rc));
+            }
+            else
+            {
+                NCCALCSIZE_PARAMS *nc = (NCCALCSIZE_PARAMS *)sp_e->lParam;
+                TRACE("Rects %s %s %s\n", wine_dbgstr_rect(nc->rgrc),
+                      wine_dbgstr_rect(nc->rgrc + 1), wine_dbgstr_rect(nc->rgrc + 2));
+                if (nc->lppos)
+                    TRACE("WINDOWPOS hwnd=%p, after=%p, at (%d,%d) w=%d h=%d, flags=0x%08x\n",
+                          nc->lppos->hwnd, nc->lppos->hwndInsertAfter, nc->lppos->x, nc->lppos->y,
+                          nc->lppos->cx, nc->lppos->cy, nc->lppos->flags);
             }
             break;
         case WM_NOTIFY:
@@ -2491,17 +2517,16 @@ static void SPY_DumpStructure(const SPY_INSTANCE *sp_e, BOOL enter)
                 p = SPY_Bsearch_Notify( pnmh->code );
                 if (p) {
                     TRACE("NMHDR hwndFrom=%p idFrom=0x%08lx code=%s<0x%08x>, extra=0x%x\n",
-                          pnmh->hwndFrom, pnmh->idFrom, p->name, pnmh->code, p->len);
+                          pnmh->hwndFrom, (long)pnmh->idFrom, p->name, pnmh->code, p->len);
                     dumplen = p->len;
 
                     /* for CUSTOMDRAW, dump all the data for TOOLBARs */
                     if (pnmh->code == NM_CUSTOMDRAW) {
                         /* save and restore error code over the next call */
-                        save_error = GetLastError();
-                        GetClassNameW(pnmh->hwndFrom, from_class,
-                                      sizeof(from_class)/sizeof(WCHAR));
-                        SetLastError(save_error);
-                        if (strcmpW(TOOLBARCLASSNAMEW, from_class) == 0)
+                        save_error = RtlGetLastWin32Error();
+                        GetClassNameW(pnmh->hwndFrom, from_class, ARRAY_SIZE(from_class));
+                        RtlSetLastWin32Error(save_error);
+                        if (wcscmp(TOOLBARCLASSNAMEW, from_class) == 0)
                             dumplen = sizeof(NMTBCUSTOMDRAW)-sizeof(NMHDR);
                     } else if ( pnmh->code >= HDN_ENDDRAG
                                 && pnmh->code <= HDN_ITEMCHANGINGA ) {
@@ -2509,12 +2534,12 @@ static void SPY_DumpStructure(const SPY_INSTANCE *sp_e, BOOL enter)
                     }
                     if (dumplen > 0) {
                         q = (UINT *)(pnmh + 1);
-                        SPY_DumpMem ("NM extra", q, (INT)dumplen);
+                        SPY_DumpMem ("NM extra", q, dumplen);
                     }
                 }
                 else
                     TRACE("NMHDR hwndFrom=%p idFrom=0x%08lx code=0x%08x\n",
-                          pnmh->hwndFrom, pnmh->idFrom, pnmh->code);
+                          pnmh->hwndFrom, (long)pnmh->idFrom, pnmh->code);
             }
             break;
         default:
@@ -2537,12 +2562,14 @@ static BOOL spy_init(void)
 
     if (!TRACE_ON(message)) return FALSE;
 
+#ifdef __REACTOS__
     if (indent_tls_index == TLS_OUT_OF_INDEXES)
     {
         DWORD index = TlsAlloc();
         if (InterlockedCompareExchange((volatile LONG *) &indent_tls_index, index, TLS_OUT_OF_INDEXES ) != TLS_OUT_OF_INDEXES)
             TlsFree( index );
     }
+#endif
 
     if (spy_exclude) return TRUE;
     exclude = HeapAlloc( GetProcessHeap(), HEAP_ZERO_MEMORY, SPY_MAX_MSGNUM + 2 );
@@ -2595,7 +2622,7 @@ void SPY_EnterMessage( INT iFlag, HWND hWnd, UINT msg,
 {
     SPY_INSTANCE sp_e;
     int indent;
-    DWORD save_error = GetLastError();
+    DWORD save_error = RtlGetLastWin32Error();
 
     if (!spy_init() || exclude_msg(msg)) return;
 
@@ -2612,8 +2639,8 @@ void SPY_EnterMessage( INT iFlag, HWND hWnd, UINT msg,
     {
     case SPY_DISPATCHMESSAGE:
         TRACE("%*s(%p) %-16s [%04x] %s dispatched  wp=%08lx lp=%08lx\n",
-                        indent, "", hWnd, debugstr_w(sp_e.wnd_name), msg,
-                        sp_e.msg_name, wParam, lParam);
+              indent, "", hWnd, debugstr_w(sp_e.wnd_name), msg,
+              sp_e.msg_name, (long)wParam, lParam);
         break;
 
     case SPY_SENDMESSAGE:
@@ -2622,11 +2649,11 @@ void SPY_EnterMessage( INT iFlag, HWND hWnd, UINT msg,
             DWORD tid = GetWindowThreadProcessId( hWnd, NULL );
 
             if (tid == GetCurrentThreadId()) strcpy( taskName, "self" );
-            else sprintf( taskName, "tid %04ld", GetCurrentThreadId() );
+            else snprintf( taskName, sizeof(taskName), "tid %04ld", GetCurrentThreadId() );
 
             TRACE("%*s(%p) %-16s [%04x] %s sent from %s wp=%08lx lp=%08lx\n",
                   indent, "", hWnd, debugstr_w(sp_e.wnd_name), msg,
-                  sp_e.msg_name, taskName, wParam, lParam );
+                  sp_e.msg_name, taskName, (long)wParam, lParam );
             SPY_DumpStructure(&sp_e, TRUE);
         }
         break;
@@ -2634,11 +2661,11 @@ void SPY_EnterMessage( INT iFlag, HWND hWnd, UINT msg,
     case SPY_DEFWNDPROC:
         if (exclude_dwp()) return;
         TRACE("%*s(%p)  DefWindowProc:[%04x] %s  wp=%08lx lp=%08lx\n",
-              indent, "", hWnd, msg, sp_e.msg_name, wParam, lParam );
+              indent, "", hWnd, msg, sp_e.msg_name, (long)wParam, lParam );
         break;
     }
     set_indent_level( indent + SPY_INDENT_UNIT );
-    SetLastError( save_error );
+    RtlSetLastWin32Error( save_error );
 }
 
 
@@ -2650,7 +2677,7 @@ void SPY_ExitMessage( INT iFlag, HWND hWnd, UINT msg, LRESULT lReturn,
 {
     SPY_INSTANCE sp_e;
     int indent;
-    DWORD save_error = GetLastError();
+    DWORD save_error = RtlGetLastWin32Error();
 
     if (!TRACE_ON(message) || exclude_msg(msg) ||
         (exclude_dwp() && iFlag == SPY_RESULT_DEFWND))
@@ -2683,5 +2710,5 @@ void SPY_ExitMessage( INT iFlag, HWND hWnd, UINT msg, LRESULT lReturn,
         SPY_DumpStructure(&sp_e, FALSE);
         break;
     }
-    SetLastError( save_error );
+    RtlSetLastWin32Error( save_error );
 }
