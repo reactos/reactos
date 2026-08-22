@@ -89,7 +89,7 @@ BOOL WINAPI CloseCluster(HCLUSTER hCluster)
  */
 HCLUSENUM WINAPI ClusterOpenEnum(HCLUSTER hCluster, DWORD dwType)
 {
-    FIXME("(%p, %u) stub!\n", hCluster,dwType);
+    FIXME("(%p, %lu) stub!\n", hCluster,dwType);
 
     return (HCLUSENUM)0xdeadbeef;
 }
@@ -111,26 +111,7 @@ DWORD WINAPI ClusterCloseEnum(HCLUSENUM hEnum)
  */
 DWORD WINAPI ClusterEnum(HCLUSENUM hEnum, DWORD dwIndex, LPDWORD lpdwType, LPWSTR lpszName, LPDWORD lpcchName)
 {
-    FIXME("(%p, %u, %p, %p, %u) stub!\n", hEnum, dwIndex, lpdwType, lpszName, *lpcchName);
+    FIXME("(%p, %lu, %p, %p, %lu) stub!\n", hEnum, dwIndex, lpdwType, lpszName, *lpcchName);
 
     return ERROR_NO_MORE_ITEMS;
-}
-
-/***********************************************************************
- *             DllMain   (CLUSAPI.@)
- *
- */
-BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
-{
-    switch(fdwReason)
-    {
-#ifndef __REACTOS__
-    case DLL_WINE_PREATTACH:
-        return FALSE;  /* prefer native version */
-#endif
-    case DLL_PROCESS_ATTACH:
-        DisableThreadLibraryCalls( hinstDLL );
-        break;
-    }
-    return TRUE;
 }
