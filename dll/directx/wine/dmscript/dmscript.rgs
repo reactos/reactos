@@ -1,0 +1,5 @@
+HKCR
+{
+    NoRemove AudioVBScript { DMScript }
+    NoRemove AudioVBScript.1 { DMScript }
+}

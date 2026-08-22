@@ -38,12 +38,9 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(dmusic);
 
-static HINSTANCE instance;
-LONG DMUSIC_refCount = 0;
-
 typedef struct {
         IClassFactory IClassFactory_iface;
-        HRESULT (WINAPI *fnCreateInstance)(REFIID riid, void **ppv, IUnknown *pUnkOuter);
+        HRESULT (*create_instance)(IUnknown **ret_iface);
 } IClassFactoryImpl;
 
 /******************************************************************
@@ -76,37 +73,36 @@ static HRESULT WINAPI ClassFactory_QueryInterface(IClassFactory *iface, REFIID r
 
 static ULONG WINAPI ClassFactory_AddRef(IClassFactory *iface)
 {
-        DMUSIC_LockModule();
-
         return 2; /* non-heap based object */
 }
 
 static ULONG WINAPI ClassFactory_Release(IClassFactory *iface)
 {
-        DMUSIC_UnlockModule();
-
         return 1; /* non-heap based object */
 }
 
-static HRESULT WINAPI ClassFactory_CreateInstance(IClassFactory *iface, IUnknown *pUnkOuter,
-        REFIID riid, void **ppv)
+static HRESULT WINAPI ClassFactory_CreateInstance(IClassFactory *iface, IUnknown *unk_outer, REFIID riid, void **ret_iface)
 {
-        IClassFactoryImpl *This = impl_from_IClassFactory(iface);
+    IClassFactoryImpl *This = impl_from_IClassFactory(iface);
+    IUnknown *object;
+    HRESULT hr;
 
-        TRACE ("(%p, %s, %p)\n", pUnkOuter, debugstr_dmguid(riid), ppv);
+    TRACE("(%p, %s, %p)\n", unk_outer, debugstr_dmguid(riid), ret_iface);
 
-        return This->fnCreateInstance(riid, ppv, pUnkOuter);
+    *ret_iface = NULL;
+    if (unk_outer) return CLASS_E_NOAGGREGATION;
+    if (SUCCEEDED(hr = This->create_instance(&object)))
+    {
+        hr = IUnknown_QueryInterface(object, riid, ret_iface);
+        IUnknown_Release(object);
+    }
+
+    return hr;
 }
 
 static HRESULT WINAPI ClassFactory_LockServer(IClassFactory *iface, BOOL dolock)
 {
         TRACE("(%d)\n", dolock);
-
-        if (dolock)
-                DMUSIC_LockModule();
-        else
-                DMUSIC_UnlockModule();
-
         return S_OK;
 }
 
@@ -118,34 +114,9 @@ static const IClassFactoryVtbl classfactory_vtbl = {
         ClassFactory_LockServer
 };
 
-static IClassFactoryImpl DirectMusic_CF = {{&classfactory_vtbl}, DMUSIC_CreateDirectMusicImpl};
-static IClassFactoryImpl Collection_CF = {{&classfactory_vtbl},
-                                          DMUSIC_CreateDirectMusicCollectionImpl};
+static IClassFactoryImpl DirectMusic_CF = {{&classfactory_vtbl}, music_create};
+static IClassFactoryImpl Collection_CF = {{&classfactory_vtbl}, collection_create};
 
-/******************************************************************
- *		DllMain
- *
- *
- */
-BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved) {
-	if (fdwReason == DLL_PROCESS_ATTACH) {
-            instance = hinstDLL;
-            DisableThreadLibraryCalls(hinstDLL);
-	}
-
-	return TRUE;
-}
-
-
-/******************************************************************
- *		DllCanUnloadNow (DMUSIC.@)
- *
- *
- */
-HRESULT WINAPI DllCanUnloadNow(void)
-{
-	return DMUSIC_refCount != 0 ? S_FALSE : S_OK;
-}
 
 
 /******************************************************************
@@ -168,22 +139,6 @@ HRESULT WINAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID *ppv)
 	
     WARN("(%s, %s, %p): no interface found.\n", debugstr_dmguid(rclsid), debugstr_dmguid(riid), ppv);
     return CLASS_E_CLASSNOTAVAILABLE;
-}
-
-/***********************************************************************
- *		DllRegisterServer (DMUSIC.@)
- */
-HRESULT WINAPI DllRegisterServer(void)
-{
-    return __wine_register_resources( instance );
-}
-
-/***********************************************************************
- *		DllUnregisterServer (DMUSIC.@)
- */
-HRESULT WINAPI DllUnregisterServer(void)
-{
-    return __wine_unregister_resources( instance );
 }
 
 /******************************************************************
@@ -210,6 +165,7 @@ void Patch2MIDILOCALE (DWORD dwPatch, LPMIDILOCALE pLocale) {
 	pLocale->ulBank |= (dwPatch & F_INSTRUMENT_DRUMS); /* get drum bit */
 }
 
+<<<<<<< HEAD
 /* check whether the given DWORD is even (return 0) or odd (return 1) */
 int even_or_odd (DWORD number) {
 	return (number & 0x1); /* basically, check if bit 0 is set ;) */
@@ -428,43 +384,6 @@ static const char* debugstr_flags (DWORD flags, const flag_info* names, size_t n
 	return wine_dbg_sprintf("%s", buffer);
 }
 
-/* dump DMUS_OBJ flags */
-static const char *debugstr_DMUS_OBJ_FLAGS (DWORD flagmask) {
-    static const flag_info flags[] = {
-	    FE(DMUS_OBJ_OBJECT),
-	    FE(DMUS_OBJ_CLASS),
-	    FE(DMUS_OBJ_NAME),
-	    FE(DMUS_OBJ_CATEGORY),
-	    FE(DMUS_OBJ_FILENAME),
-	    FE(DMUS_OBJ_FULLPATH),
-	    FE(DMUS_OBJ_URL),
-	    FE(DMUS_OBJ_VERSION),
-	    FE(DMUS_OBJ_DATE),
-	    FE(DMUS_OBJ_LOADED),
-	    FE(DMUS_OBJ_MEMORY),
-	    FE(DMUS_OBJ_STREAM)
-	};
-    return debugstr_flags(flagmask, flags, ARRAY_SIZE(flags));
-}
-
-/* Dump whole DMUS_OBJECTDESC struct */
-void dump_DMUS_OBJECTDESC(LPDMUS_OBJECTDESC desc)
-{
-    TRACE("DMUS_OBJECTDESC (%p):\n", desc);
-    TRACE(" - dwSize = %d\n", desc->dwSize);
-    TRACE(" - dwValidData = %s\n", debugstr_DMUS_OBJ_FLAGS (desc->dwValidData));
-    if (desc->dwValidData & DMUS_OBJ_CLASS)    TRACE(" - guidClass = %s\n", debugstr_dmguid(&desc->guidClass));
-    if (desc->dwValidData & DMUS_OBJ_OBJECT)   TRACE(" - guidObject = %s\n", debugstr_guid(&desc->guidObject));
-    if (desc->dwValidData & DMUS_OBJ_DATE)     TRACE(" - ftDate = FIXME\n");
-    if (desc->dwValidData & DMUS_OBJ_VERSION)  TRACE(" - vVersion = %s\n", debugstr_dmversion(&desc->vVersion));
-    if (desc->dwValidData & DMUS_OBJ_NAME)     TRACE(" - wszName = %s\n", debugstr_w(desc->wszName));
-    if (desc->dwValidData & DMUS_OBJ_CATEGORY) TRACE(" - wszCategory = %s\n", debugstr_w(desc->wszCategory));
-    if (desc->dwValidData & DMUS_OBJ_FILENAME) TRACE(" - wszFileName = %s\n", debugstr_w(desc->wszFileName));
-    if (desc->dwValidData & DMUS_OBJ_MEMORY)   TRACE(" - llMemLength = 0x%s\n  - pbMemData = %p\n",
-                                                     wine_dbgstr_longlong(desc->llMemLength), desc->pbMemData);
-    if (desc->dwValidData & DMUS_OBJ_STREAM)   TRACE(" - pStream = %p\n", desc->pStream);
-}
-
 /* Dump DMUS_PORTPARAMS flags */
 static const char* debugstr_DMUS_PORTPARAMS_FLAGS(DWORD flagmask)
 {
@@ -483,12 +402,12 @@ static const char* debugstr_DMUS_PORTPARAMS_FLAGS(DWORD flagmask)
 void dump_DMUS_PORTPARAMS(LPDMUS_PORTPARAMS params)
 {
     TRACE("DMUS_PORTPARAMS (%p):\n", params);
-    TRACE(" - dwSize = %d\n", params->dwSize);
+    TRACE(" - dwSize = %ld\n", params->dwSize);
     TRACE(" - dwValidParams = %s\n", debugstr_DMUS_PORTPARAMS_FLAGS(params->dwValidParams));
-    if (params->dwValidParams & DMUS_PORTPARAMS_VOICES)        TRACE(" - dwVoices = %u\n", params->dwVoices);
-    if (params->dwValidParams & DMUS_PORTPARAMS_CHANNELGROUPS) TRACE(" - dwChannelGroup = %u\n", params->dwChannelGroups);
-    if (params->dwValidParams & DMUS_PORTPARAMS_AUDIOCHANNELS) TRACE(" - dwAudioChannels = %u\n", params->dwAudioChannels);
-    if (params->dwValidParams & DMUS_PORTPARAMS_SAMPLERATE)    TRACE(" - dwSampleRate = %u\n", params->dwSampleRate);
-    if (params->dwValidParams & DMUS_PORTPARAMS_EFFECTS)       TRACE(" - dwEffectFlags = %x\n", params->dwEffectFlags);
+    if (params->dwValidParams & DMUS_PORTPARAMS_VOICES)        TRACE(" - dwVoices = %lu\n", params->dwVoices);
+    if (params->dwValidParams & DMUS_PORTPARAMS_CHANNELGROUPS) TRACE(" - dwChannelGroup = %lu\n", params->dwChannelGroups);
+    if (params->dwValidParams & DMUS_PORTPARAMS_AUDIOCHANNELS) TRACE(" - dwAudioChannels = %lu\n", params->dwAudioChannels);
+    if (params->dwValidParams & DMUS_PORTPARAMS_SAMPLERATE)    TRACE(" - dwSampleRate = %lu\n", params->dwSampleRate);
+    if (params->dwValidParams & DMUS_PORTPARAMS_EFFECTS)       TRACE(" - dwEffectFlags = %lx\n", params->dwEffectFlags);
     if (params->dwValidParams & DMUS_PORTPARAMS_SHARE)         TRACE(" - fShare = %u\n", params->fShare);
 }
