@@ -205,67 +205,69 @@ CreateLanguagesList(HWND hwnd, PSTATE pState)
 static
 BOOL
 GetLayoutName(
-    LPCWSTR szLCID,
-    LPWSTR szName)
+    _In_ PCWSTR pszKLID,
+    _Out_writes_z_(NameSize) PWSTR pszName,
+    _In_ SIZE_T NameSize)
 {
     HKEY hKey;
+    BOOL ret;
     DWORD dwBufLen;
-    WCHAR szBuf[MAX_PATH], szDispName[MAX_PATH], szIndex[MAX_PATH], szPath[MAX_PATH];
-    HANDLE hLib;
-    UINT i, j, k;
+    WCHAR szBuf[1 + MAX_PATH + 2 + 10]; // "@file_path,-resID"
+    WCHAR szPath[MAX_PATH];
 
-    wsprintf(szBuf, L"SYSTEM\\CurrentControlSet\\Control\\Keyboard Layouts\\%s", szLCID);
+    if (NameSize < sizeof(WCHAR))
+        return FALSE;
+    *pszName = UNICODE_NULL;
 
-    if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, szBuf, 0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS)
+    StringCchPrintfW(szBuf, _countof(szBuf), L"SYSTEM\\CurrentControlSet\\Control\\Keyboard Layouts\\%s", pszKLID);
+    if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, szBuf, 0, KEY_QUERY_VALUE, &hKey) != ERROR_SUCCESS)
+        return FALSE;
+
+    dwBufLen = sizeof(szBuf);
+    if (RegQueryValueExW(hKey, L"Layout Display Name", NULL, NULL, (PBYTE)szBuf, &dwBufLen) == ERROR_SUCCESS)
     {
-        dwBufLen = sizeof(szDispName);
-
-        if (RegQueryValueExW(hKey, L"Layout Display Name", NULL, NULL, (LPBYTE)szDispName, &dwBufLen) == ERROR_SUCCESS)
+        if (szBuf[0] == L'@') do
         {
-            if (szDispName[0] == '@')
-            {
-                for (i = 0; i < wcslen(szDispName); i++)
-                {
-                    if ((szDispName[i] == ',') && (szDispName[i + 1] == '-'))
-                    {
-                        for (j = i + 2, k = 0; j < wcslen(szDispName)+1; j++, k++)
-                        {
-                            szIndex[k] = szDispName[j];
-                        }
-                        szDispName[i - 1] = '\0';
-                        break;
-                    }
-                    else
-                        szDispName[i] = szDispName[i + 1];
-                }
+            PWCHAR dllname, index_str;
+            INT index;
 
-                if (ExpandEnvironmentStringsW(szDispName, szPath, ARRAYSIZE(szPath)))
+            dllname = szBuf + 1;
+            index_str = wcsrchr(szBuf, L',');
+            if (!index_str)
+                break;
+            *index_str++ = UNICODE_NULL;
+
+            index = wcstol(index_str, NULL, 10);
+            if (index >= 0)
+            {
+                FIXME("Cannot handle non-negative indices (%d)\n", index);
+                break;
+            }
+            index = -index;
+
+            if (ExpandEnvironmentStringsW(dllname, szPath, _countof(szPath)))
+            {
+                HANDLE hLib = LoadLibraryExW(szPath, NULL, LOAD_LIBRARY_AS_DATAFILE);
+                if (hLib)
                 {
-                    hLib = LoadLibraryW(szPath);
-                    if (hLib)
+                    ret = (LoadStringW(hLib, index, szPath, _countof(szPath)) != 0);
+                    FreeLibrary(hLib);
+                    if (ret)
                     {
-                        if (LoadStringW(hLib, _wtoi(szIndex), szPath, ARRAYSIZE(szPath)) != 0)
-                        {
-                            wcscpy(szName, szPath);
-                            RegCloseKey(hKey);
-                            return TRUE;
-                        }
-                        FreeLibrary(hLib);
+                        StringCchCopyW(pszName, NameSize, szPath);
+                        goto Quit;
                     }
                 }
             }
-        }
-
-        dwBufLen = sizeof(szBuf);
-
-        if (RegQueryValueExW(hKey, L"Layout Text", NULL, NULL, (LPBYTE)szName, &dwBufLen) == ERROR_SUCCESS)
-        {
-            RegCloseKey(hKey);
-            return TRUE;
-        }
+        } while (0);
     }
 
-    return FALSE;
+    dwBufLen = NameSize * sizeof(WCHAR);
+    ret = (RegQueryValueExW(hKey, L"Layout Text", NULL, NULL, (PBYTE)pszName, &dwBufLen) == ERROR_SUCCESS);
+
+Quit:
+    RegCloseKey(hKey);
+    return ret;
 }
 
 static
@@ -276,7 +278,7 @@ SetKeyboardLayout(
     INT iCurSel;
     ULONG ulLayoutId;
     HKL hKl;
-    WCHAR szLayoutId[9];
+    WCHAR szKLID[KL_NAMELENGTH];
 
     iCurSel = SendMessageW(hwnd, CB_GETCURSEL, 0, 0);
     if (iCurSel == CB_ERR)
@@ -286,9 +288,9 @@ SetKeyboardLayout(
     if (ulLayoutId == (ULONG)CB_ERR)
         return;
 
-    _swprintf(szLayoutId, L"%08lx", ulLayoutId);
+    _swprintf(szKLID, L"%08lx", ulLayoutId);
 
-    hKl = LoadKeyboardLayoutW(szLayoutId, KLF_ACTIVATE | KLF_REPLACELANG | KLF_SETFORPROCESS);
+    hKl = LoadKeyboardLayoutW(szKLID, KLF_ACTIVATE | KLF_REPLACELANG | KLF_SETFORPROCESS);
     SystemParametersInfoW(SPI_SETDEFAULTINPUTLANG, 0, &hKl, SPIF_SENDCHANGE);
 }
 
@@ -299,21 +301,20 @@ SelectKeyboardForLanguage(
     LCID lcid)
 {
     INT i, nCount;
-    LCID LayoutId;
+    ULONG ulLayoutId;
 
-    TRACE("LCID: %08lx\n", lcid);
-    TRACE("LangID: %04lx\n", LANGIDFROMLCID(lcid));
+    TRACE("LCID: %08lx, LangID: %04lx\n", lcid, LANGIDFROMLCID(lcid));
 
     nCount = SendMessageW(hwnd, CB_GETCOUNT, 0, 0);
 
     for (i = 0; i < nCount; i++)
     {
-        LayoutId = (LCID)SendMessageW(hwnd, CB_GETITEMDATA, i, 0);
-        TRACE("Layout: %08lx\n", LayoutId);
+        ulLayoutId = (ULONG)SendMessageW(hwnd, CB_GETITEMDATA, i, 0);
+        TRACE("Layout: %08lx\n", ulLayoutId);
 
-        if (LANGIDFROMLCID(LayoutId) == LANGIDFROMLCID(lcid))
+        if (LANGIDFROMLCID(ulLayoutId) == LANGIDFROMLCID(lcid))
         {
-            TRACE("Found 1: %08lx --> %08lx\n", LayoutId, lcid);
+            TRACE("Found 1: %08lx --> %08lx\n", ulLayoutId, lcid);
             SendMessageW(hwnd, CB_SETCURSEL, i, 0);
             return;
         }
@@ -321,18 +322,28 @@ SelectKeyboardForLanguage(
 
     for (i = 0; i < nCount; i++)
     {
-        LayoutId = (LCID)SendMessageW(hwnd, CB_GETITEMDATA, i, 0);
-        TRACE("Layout: %08lx\n", LayoutId);
+        ulLayoutId = (ULONG)SendMessageW(hwnd, CB_GETITEMDATA, i, 0);
+        TRACE("Layout: %08lx\n", ulLayoutId);
 
-        if (PRIMARYLANGID(LayoutId) == PRIMARYLANGID(lcid))
+        if (PRIMARYLANGID(ulLayoutId) == PRIMARYLANGID(lcid))
         {
-            TRACE("Found 2: %08lx --> %08lx\n", LayoutId, lcid);
+            TRACE("Found 2: %08lx --> %08lx\n", ulLayoutId, lcid);
             SendMessageW(hwnd, CB_SETCURSEL, i, 0);
             return;
         }
     }
 
     TRACE("No match found!\n");
+    /* No match found, try selecting English (United States) */
+    for (i = 0; i < nCount; i++)
+    {
+        ulLayoutId = (DWORD)SendMessageW(hwnd, CB_GETITEMDATA, i, 0);
+        if (ulLayoutId == 0x00000409)
+        {
+            SendMessageW(hwnd, CB_SETCURSEL, i, 0);
+            return;
+        }
+    }
 }
 
 static
@@ -341,53 +352,41 @@ CreateKeyboardLayoutList(
     HWND hItemsList)
 {
     HKEY hKey;
-    WCHAR szLayoutId[9], szCurrentLayoutId[9];
+    WCHAR szCurrentKLID[KL_NAMELENGTH], szKLID[KL_NAMELENGTH];
     WCHAR KeyName[MAX_PATH];
-    DWORD dwIndex = 0;
+    DWORD dwIndex;
     DWORD dwSize;
     INT iIndex;
-    LONG lError;
     ULONG ulLayoutId;
 
-    if (!GetKeyboardLayoutNameW(szCurrentLayoutId))
-        wcscpy(szCurrentLayoutId, L"00000409");
+    if (!GetKeyboardLayoutNameW(szCurrentKLID))
+        wcscpy(szCurrentKLID, L"00000409");
 
-    lError = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
-                           L"System\\CurrentControlSet\\Control\\Keyboard Layouts",
-                           0,
-                           KEY_ENUMERATE_SUB_KEYS,
-                           &hKey);
-    if (lError != ERROR_SUCCESS)
-        return;
-
-    while (TRUE)
+    if (RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                      L"System\\CurrentControlSet\\Control\\Keyboard Layouts",
+                      0, KEY_ENUMERATE_SUB_KEYS, &hKey) != ERROR_SUCCESS)
     {
-        dwSize = ARRAYSIZE(szLayoutId);
+        return;
+    }
 
-        lError = RegEnumKeyExW(hKey,
-                               dwIndex,
-                               szLayoutId,
-                               &dwSize,
-                               NULL,
-                               NULL,
-                               NULL,
-                               NULL);
-        if (lError != ERROR_SUCCESS)
+    for (dwIndex = 0; ; ++dwIndex)
+    {
+        dwSize = ARRAYSIZE(szKLID);
+        if (RegEnumKeyExW(hKey, dwIndex, szKLID, &dwSize,
+                          NULL, NULL, NULL, NULL) != ERROR_SUCCESS)
+        {
             break;
+        }
 
-        GetLayoutName(szLayoutId, KeyName);
+        GetLayoutName(szKLID, KeyName, _countof(KeyName));
 
         iIndex = (INT)SendMessageW(hItemsList, CB_ADDSTRING, 0, (LPARAM)KeyName);
 
-        ulLayoutId = wcstoul(szLayoutId, NULL, 16);
+        ulLayoutId = wcstoul(szKLID, NULL, 16);
         SendMessageW(hItemsList, CB_SETITEMDATA, iIndex, (LPARAM)ulLayoutId);
 
-        if (wcscmp(szLayoutId, szCurrentLayoutId) == 0)
-        {
+        if (_wcsicmp(szKLID, szCurrentKLID) == 0)
             SendMessageW(hItemsList, CB_SETCURSEL, (WPARAM)iIndex, (LPARAM)0);
-        }
-
-        dwIndex++;
     }
 
     RegCloseKey(hKey);
