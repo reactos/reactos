@@ -390,65 +390,6 @@ NtUserYieldTask(VOID)
 
 DWORD
 APIENTRY
-NtUserGetRawInputBuffer(
-    PRAWINPUT pData,
-    PUINT pcbSize,
-    UINT cbSizeHeader)
-{
-    STUB;
-    return 0;
-}
-
-DWORD
-APIENTRY
-NtUserGetRawInputData(
-    HRAWINPUT hRawInput,
-    UINT uiCommand,
-    LPVOID pData,
-    PUINT pcbSize,
-    UINT cbSizeHeader)
-{
-    STUB;
-    return 0;
-}
-
-DWORD
-APIENTRY
-NtUserGetRawInputDeviceInfo(
-    HANDLE hDevice,
-    UINT uiCommand,
-    LPVOID pData,
-    PUINT pcbSize
-)
-{
-    STUB;
-    return 0;
-}
-
-DWORD
-APIENTRY
-NtUserGetRawInputDeviceList(
-    PRAWINPUTDEVICELIST pRawInputDeviceList,
-    PUINT puiNumDevices,
-    UINT cbSize)
-{
-    STUB;
-    return 0;
-}
-
-DWORD
-APIENTRY
-NtUserGetRegisteredRawInputDevices(
-    PRAWINPUTDEVICE pRawInputDevices,
-    PUINT puiNumDevices,
-    UINT cbSize)
-{
-    STUB;
-    return 0;
-}
-
-DWORD
-APIENTRY
 NtUserHardErrorControl(
     DWORD dwUnknown1,
     DWORD dwUnknown2,
@@ -630,17 +571,6 @@ APIENTRY
 NtUserRealWaitMessageEx(
     DWORD dwWakeMask,
     UINT uTimeout)
-{
-    STUB;
-    return 0;
-}
-
-BOOL
-APIENTRY
-NtUserRegisterRawInputDevices(
-    IN PCRAWINPUTDEVICE pRawInputDevices,
-    IN UINT uiNumDevices,
-    IN UINT cbSize)
 {
     STUB;
     return 0;

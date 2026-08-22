@@ -26,7 +26,7 @@ INT paiCount = 0;
 HANDLE ghKeyboardDevice = NULL;
 
 static DWORD LastInputTick = 0;
-static HANDLE ghMouseDevice;
+HANDLE ghMouseDevice;
 
 /* FUNCTIONS *****************************************************************/
 

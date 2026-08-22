@@ -57,6 +57,8 @@ typedef struct _USER_MESSAGE_QUEUE
 
   /* Queue for hardware messages for the queue. */
   LIST_ENTRY HardwareMessagesListHead;
+  /* Outstanding raw input packets for the queue. */
+  LIST_ENTRY RawInputListHead;
   /* Last click message for translating double clicks */
   MSG msgDblClk;
   /* Current capture window for this queue. */
@@ -134,7 +136,7 @@ NTSTATUS FASTCALL co_MsqSendMessage(PTHREADINFO ptirec,
            UINT uTimeout, BOOL Block, INT HookMessage, ULONG_PTR *uResult);
 PUSER_MESSAGE FASTCALL MsqCreateMessage(LPMSG Msg);
 VOID FASTCALL MsqDestroyMessage(PUSER_MESSAGE Message);
-VOID FASTCALL MsqPostMessage(PTHREADINFO, MSG*, BOOLEAN, DWORD, DWORD, LONG_PTR);
+BOOL FASTCALL MsqPostMessage(PTHREADINFO, MSG*, BOOLEAN, DWORD, DWORD, LONG_PTR);
 VOID FASTCALL MsqPostQuitMessage(PTHREADINFO pti, ULONG ExitCode);
 BOOLEAN APIENTRY
 MsqPeekMessage(IN PTHREADINFO pti,
