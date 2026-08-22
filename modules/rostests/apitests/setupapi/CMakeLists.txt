@@ -2,6 +2,7 @@
 list(APPEND SOURCE
     devclass.c
     SetupDiInstallClassExA.c
+    SetupDiGetActualModelsSection.c
     SetupInstallServicesFromInfSectionEx.c
     testlist.c)
 
