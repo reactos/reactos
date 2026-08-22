@@ -2439,7 +2439,7 @@ UserRegisterSystemClasses(VOID)
 
 /* SYSCALLS *****************************************************************/
 
-RTL_ATOM
+SYSCALL_RETURN_SMALL(RTL_ATOM)
 APIENTRY
 NtUserRegisterClassExWOW(
     WNDCLASSEXW* lpwcx,
@@ -2462,7 +2462,7 @@ NtUserRegisterClassExWOW(
 {
     WNDCLASSEXW CapturedClassInfo = {0};
     UNICODE_STRING CapturedName = {0}, CapturedMenuName = {0}, CapturedVersion = {0};
-    RTL_ATOM Ret = (RTL_ATOM)0;
+    DWORD Ret = 0;
     PPROCESSINFO ppi = GetW32ProcessInfo();
     BOOL Exception = FALSE;
 
@@ -2599,7 +2599,7 @@ InvalidParameter:
 
     UserLeave();
 
-    return Ret;
+    return (DWORD)Ret;
 }
 
 ULONG_PTR APIENTRY
@@ -2727,7 +2727,7 @@ NtUserSetClassLongPtr(
 
 #endif // _WIN64
 
-WORD
+SYSCALL_RETURN_SMALL(WORD)
 APIENTRY
 NtUserSetClassWord(
   HWND hWnd,
@@ -2737,7 +2737,7 @@ NtUserSetClassWord(
 /*
  * NOTE: Obsoleted in 32-bit windows
  */
-   return(0);
+   return 0;
 }
 
 BOOL
