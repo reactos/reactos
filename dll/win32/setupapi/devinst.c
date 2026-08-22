@@ -530,16 +530,16 @@ done:
  * @param[in] Context
  * INFCONTEXT pointing to a manufacturer ID line.
  *
- * @param[in,opt] AlternatePlatformInfo
- * Alternate platform info, NULL uses the current platform.
+ * @param[in] AlternatePlatformInfo
+ * Alternate platform information, or NULL for using the current platform.
  *
- * @param[out,opt] InfSectionWithExt
- * Buffer that receives the decorated Models section name.
+ * @param[out] InfSectionWithExt
+ * Optional buffer that receives the decorated Models section name.
  *
  * @param[in] InfSectionWithExtSize
  * Size of InfSectionWithExt in characters.
  *
- * @param[out,opt] RequiredSize
+ * @param[out] RequiredSize
  * Receives the required buffer size in characters (including NUL).
  *
  * @param[in] Reserved
@@ -716,16 +716,16 @@ better:
  * @param[in] Context
  * INFCONTEXT pointing to a manufacturer ID line.
  *
- * @param[in,opt] AlternatePlatformInfo
- * Alternate platform info, NULL uses the current platform.
+ * @param[in] AlternatePlatformInfo
+ * Alternate platform information, or NULL for using the current platform.
  *
- * @param[out,opt] InfSectionWithExt
- * Buffer that receives the decorated Models section name.
+ * @param[out] InfSectionWithExt
+ * Optional buffer that receives the decorated Models section name.
  *
  * @param[in] InfSectionWithExtSize
  * Size of InfSectionWithExt in characters.
  *
- * @param[out,opt] RequiredSize
+ * @param[out] RequiredSize
  * Receives the required buffer size in characters (including NUL).
  *
  * @param[in] Reserved
@@ -761,11 +761,8 @@ SetupDiGetActualModelsSectionA(
                                          Buffer, InfSectionWithExtSize,
                                          &Required, Reserved);
 
-    if (!ret)
-    {
-        if (GetLastError() != ERROR_INSUFFICIENT_BUFFER)
-            Required = 0;
-    }
+    if (!ret && GetLastError() != ERROR_INSUFFICIENT_BUFFER)
+        Required = 0;
 
     if (RequiredSize)
         *RequiredSize = Required;
