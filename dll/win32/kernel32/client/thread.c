@@ -692,6 +692,64 @@ SetThreadAffinityMask(IN HANDLE hThread,
     return ThreadBasic.AffinityMask;
 }
 
+#define THEONLYGROUP 0 // Fake support for a single group
+
+/*
+ * @implemented
+ */
+BOOL
+WINAPI
+GetThreadGroupAffinity(IN HANDLE hThread,
+                       OUT PGROUP_AFFINITY GroupAffinity)
+{
+    NTSTATUS Status;
+    THREAD_BASIC_INFORMATION ThreadBasic;
+
+    STUB; // FIXME: Real group support
+    Status = NtQueryInformationThread(hThread,
+                                      ThreadBasicInformation,
+                                      &ThreadBasic,
+                                      sizeof(THREAD_BASIC_INFORMATION),
+                                      NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        BaseSetLastNTError(Status);
+        return FALSE;
+    }
+    ZeroMemory(GroupAffinity, sizeof(*GroupAffinity)); // For Reserved
+    GroupAffinity->Mask = ThreadBasic.AffinityMask;
+    GroupAffinity->Group = THEONLYGROUP;
+    return TRUE;
+}
+
+/*
+ * @implemented
+ */
+BOOL
+WINAPI
+SetThreadGroupAffinity(IN HANDLE hThread,
+                       IN const GROUP_AFFINITY *GroupAffinity,
+                       OUT OPTIONAL PGROUP_AFFINITY PreviousGroupAffinity)
+{
+    DWORD_PTR old;
+
+    STUB; // FIXME: Real group support
+    if (!GroupAffinity || GroupAffinity->Group != THEONLYGROUP)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    old = SetThreadAffinityMask(hThread, GroupAffinity->Mask);
+    if (old && PreviousGroupAffinity)
+    {
+        ZeroMemory(PreviousGroupAffinity, sizeof(*PreviousGroupAffinity)); // For Reserved
+        PreviousGroupAffinity->Mask = old;
+        PreviousGroupAffinity->Group = THEONLYGROUP;
+    }
+    return old != 0;
+}
+
 /*
  * @implemented
  */
