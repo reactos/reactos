@@ -523,6 +523,249 @@ done:
     return ret;
 }
 
+/**
+ * @brief
+ * Returns the appropriate decorated INF Models section for a device.
+ *
+ * @param[in] Context
+ * INFCONTEXT pointing to a manufacturer ID line.
+ *
+ * @param[in] AlternatePlatformInfo
+ * Alternate platform information, or NULL for using the current platform.
+ *
+ * @param[out] InfSectionWithExt
+ * Optional buffer that receives the decorated Models section name.
+ *
+ * @param[in] InfSectionWithExtSize
+ * Size of InfSectionWithExt in characters.
+ *
+ * @param[out] RequiredSize
+ * Receives the required buffer size in characters (including NUL).
+ *
+ * @param[in] Reserved
+ * Must be NULL.
+ *
+ * @return
+ * TRUE on success, FALSE on failure.
+ **/
+BOOL WINAPI
+SetupDiGetActualModelsSectionW(
+    _In_ PINFCONTEXT Context,
+    _In_opt_ PSP_ALTPLATFORM_INFO AlternatePlatformInfo,
+    _Out_writes_opt_(InfSectionWithExtSize) PWSTR InfSectionWithExt,
+    _In_ DWORD InfSectionWithExtSize,
+    _Out_opt_ PDWORD RequiredSize,
+    _Reserved_ PVOID Reserved)
+{
+    static SP_ALTPLATFORM_INFO CurrentPlatform = { 0 };
+    static BYTE CurrentProductType = 0;
+    static WORD CurrentSuiteMask = 0;
+
+    PSP_ALTPLATFORM_INFO pPlatformInfo;
+    BYTE ProductType;
+    WORD SuiteMask;
+    WCHAR ModelsSection[LINE_LEN + 1];
+    WCHAR BestSection[LINE_LEN + 1];
+    DWORD BestScore1 = ULONG_MAX, BestScore2 = ULONG_MAX;
+    DWORD BestScore3 = ULONG_MAX, BestScore4 = ULONG_MAX, BestScore5 = ULONG_MAX;
+    DWORD FieldCount, i, dwFullLength;
+
+    TRACE("%s(%p %p %p %lu %p %p)\n", __FUNCTION__, Context,
+          AlternatePlatformInfo, InfSectionWithExt, InfSectionWithExtSize,
+          RequiredSize, Reserved);
+
+    if (!Context)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    if (AlternatePlatformInfo &&
+        AlternatePlatformInfo->cbSize != sizeof(SP_ALTPLATFORM_INFO))
+    {
+        SetLastError(ERROR_INVALID_USER_BUFFER);
+        return FALSE;
+    }
+
+    /* Resolve platform */
+    if (AlternatePlatformInfo)
+    {
+        pPlatformInfo = AlternatePlatformInfo;
+        ProductType = 0;
+        SuiteMask = 0;
+    }
+    else
+    {
+        if (CurrentPlatform.cbSize != sizeof(CurrentPlatform))
+        {
+            SYSTEM_INFO SystemInfo;
+            GetSystemInfo(&SystemInfo);
+            CurrentPlatform.cbSize = sizeof(CurrentPlatform);
+            CurrentPlatform.Platform = OsVersionInfo.dwPlatformId;
+            CurrentPlatform.MajorVersion = OsVersionInfo.dwMajorVersion;
+            CurrentPlatform.MinorVersion = OsVersionInfo.dwMinorVersion;
+            CurrentPlatform.ProcessorArchitecture = SystemInfo.wProcessorArchitecture;
+            CurrentPlatform.Reserved = 0;
+            CurrentProductType = OsVersionInfo.wProductType;
+            CurrentSuiteMask = OsVersionInfo.wSuiteMask;
+        }
+        pPlatformInfo = &CurrentPlatform;
+        ProductType = CurrentProductType;
+        SuiteMask = CurrentSuiteMask;
+    }
+
+    /* Field 1: models-section-name */
+    if (!SetupGetStringFieldW(Context, 1, ModelsSection, ARRAYSIZE(ModelsSection), NULL) &&
+        !SetupGetStringFieldW(Context, 0, ModelsSection, ARRAYSIZE(ModelsSection), NULL))
+    {
+        SetLastError(ERROR_INVALID_DATA);
+        return FALSE;
+    }
+
+    strcpyW(BestSection, ModelsSection);
+    FieldCount = SetupGetFieldCount(Context);
+
+    /* Fields 2..N are the TargetOSVersion decorations */
+    for (i = 2; i <= FieldCount; i++)
+    {
+        WCHAR Candidate[LINE_LEN + 2]; /* +1 for possible leading '.' and +1 for NUL */
+        DWORD Score1, Score2, Score3, Score4, Score5;
+        DWORD DecLen;
+
+        if (!SetupGetStringFieldW(Context, i, Candidate, ARRAYSIZE(Candidate) - 1, NULL))
+            continue;
+
+        if (!Candidate[0])
+            continue;
+
+        /* CheckSectionValid expects a leading dot */
+        if (Candidate[0] != '.')
+        {
+            memmove(Candidate + 1, Candidate, (lstrlenW(Candidate) + 1) * sizeof(WCHAR));
+            Candidate[0] = '.';
+        }
+
+        if (!CheckSectionValid(Candidate, pPlatformInfo, ProductType, SuiteMask,
+                               &Score1, &Score2, &Score3, &Score4, &Score5))
+        {
+            continue;
+        }
+
+        /* Lower scores are better */
+        if (Score1 > BestScore1) continue;
+        if (Score1 < BestScore1) goto better;
+        if (Score2 > BestScore2) continue;
+        if (Score2 < BestScore2) goto better;
+        if (Score3 > BestScore3) continue;
+        if (Score3 < BestScore3) goto better;
+        if (Score4 > BestScore4) continue;
+        if (Score4 < BestScore4) goto better;
+        if (Score5 > BestScore5) continue;
+        if (Score5 < BestScore5) goto better;
+        continue;
+
+better:
+        DecLen = lstrlenW(Candidate);
+        if (lstrlenW(ModelsSection) + DecLen >= ARRAYSIZE(BestSection))
+            continue;
+
+        strcpyW(BestSection, ModelsSection);
+        strcatW(BestSection, Candidate);
+        BestScore1 = Score1;
+        BestScore2 = Score2;
+        BestScore3 = Score3;
+        BestScore4 = Score4;
+        BestScore5 = Score5;
+    }
+
+    dwFullLength = lstrlenW(BestSection);
+    if (RequiredSize)
+        *RequiredSize = dwFullLength + 1;
+
+    if (InfSectionWithExtSize > 0)
+    {
+        if (InfSectionWithExtSize < dwFullLength + 1)
+        {
+            SetLastError(ERROR_INSUFFICIENT_BUFFER);
+            return FALSE;
+        }
+        strcpyW(InfSectionWithExt, BestSection);
+    }
+
+    TRACE("Returning section %s\n", debugstr_w(BestSection));
+    return TRUE;
+}
+
+/**
+ * @brief
+ * ANSI version of SetupDiGetActualModelsSectionW.
+ *
+ * @param[in] Context
+ * INFCONTEXT pointing to a manufacturer ID line.
+ *
+ * @param[in] AlternatePlatformInfo
+ * Alternate platform information, or NULL for using the current platform.
+ *
+ * @param[out] InfSectionWithExt
+ * Optional buffer that receives the decorated Models section name.
+ *
+ * @param[in] InfSectionWithExtSize
+ * Size of InfSectionWithExt in characters.
+ *
+ * @param[out] RequiredSize
+ * Receives the required buffer size in characters (including NUL).
+ *
+ * @param[in] Reserved
+ * Must be NULL.
+ *
+ * @return
+ * TRUE on success, FALSE on failure.
+ **/
+BOOL WINAPI
+SetupDiGetActualModelsSectionA(
+    _In_ PINFCONTEXT Context,
+    _In_opt_ PSP_ALTPLATFORM_INFO AlternatePlatformInfo,
+    _Out_writes_opt_(InfSectionWithExtSize) PSTR InfSectionWithExt,
+    _In_ DWORD InfSectionWithExtSize,
+    _Out_opt_ PDWORD RequiredSize,
+    _Reserved_ PVOID Reserved)
+{
+    PWSTR Buffer = NULL;
+    DWORD Required = 0;
+    BOOL ret;
+
+    if (InfSectionWithExtSize > 0)
+    {
+        Buffer = HeapAlloc(GetProcessHeap(), 0, InfSectionWithExtSize * sizeof(WCHAR));
+        if (!Buffer)
+        {
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            return FALSE;
+        }
+    }
+
+    ret = SetupDiGetActualModelsSectionW(Context, AlternatePlatformInfo,
+                                         Buffer, InfSectionWithExtSize,
+                                         &Required, Reserved);
+
+    if (!ret && GetLastError() != ERROR_INSUFFICIENT_BUFFER)
+        Required = 0;
+
+    if (RequiredSize)
+        *RequiredSize = Required;
+
+    if (ret && Buffer && InfSectionWithExt)
+    {
+        WideCharToMultiByte(CP_ACP, 0, Buffer, -1,
+                            InfSectionWithExt, InfSectionWithExtSize,
+                            NULL, NULL);
+    }
+
+    if (Buffer)
+        HeapFree(GetProcessHeap(), 0, Buffer);
+
+    return ret;
+}
 
 BOOL
 CreateDeviceInfo(
