@@ -885,6 +885,12 @@ LRESULT CNSCBand::OnBeginLabelEdit(_In_ LPNMTVDISPINFO dispInfo)
         WCHAR szName[MAX_PATH];
         if (SUCCEEDED(_GetNameOfItem(pParent, pChild, SHGDN_FOREDITING | SHGDN_INFOLDER, szName)))
         {
+            int cchLimit = MAX_PATH;
+            CComPtr<IItemNameLimits> pINL;
+            if (SUCCEEDED(pParent->QueryInterface(IID_PPV_ARG(IItemNameLimits, &pINL))))
+                pINL->GetMaxLength(szName, &cchLimit);
+            SendMessageW(hWndEdit, EM_LIMITTEXT, cchLimit, 0);
+            SHLimitInputEdit(hWndEdit, pParent);
             ::SetWindowTextW(hWndEdit, szName);
             SHStrDupW(szName, &m_OriginalRename);
         }
