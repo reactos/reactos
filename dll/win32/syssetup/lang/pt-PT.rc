@@ -271,7 +271,7 @@ BEGIN
     IDS_INSTALLATIONSERVERCOREINFO "O sistema será reconhecido como um servidor. O shell gráfico não está instalado e o sistema arranca num ambiente de linha de comandos para reduzir a utilização de recursos e a superfície de ataque."
     /* Reserved for future use
      * IDS_INSTALLATIONNANOSERVERNAME "ReactOS Nano Server"
-     * IDS_INSTALLATIONNANOSERVERINFO "O sistema será reconhecido como um servidor. O sistema opera totalmente em modo texto. Espera-se que gerencie este sistema remotamente."
+     * IDS_INSTALLATIONNANOSERVERINFO "O sistema será reconhecido como um servidor. O sistema opera totalmente em modo texto. Deverá gerir este sistema remotamente."
      */
     IDS_DEFAULT "(Predefinição)"
 END
@@ -280,5 +280,5 @@ STRINGTABLE
 BEGIN
     IDS_INSTALLADDONSCAPTION "Componentes opcionais"
     IDS_INSTALLADDONSMESSAGE "Estão disponíveis componentes opcionais para melhorar a compatibilidade da aplicação.\n\nDeseja descarregá-los e instalá-los?"
-    IDS_INSTALLADDONSFAILEDMESSAGE "Um ou mais componentes opcionais não foram instalados."
+    IDS_INSTALLADDONSFAILEDMESSAGE "Não foi possível instalar um ou mais componentes opcionais."
 END
