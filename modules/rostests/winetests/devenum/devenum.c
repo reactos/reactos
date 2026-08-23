@@ -1154,6 +1154,58 @@ static void test_vfw(void)
     IParseDisplayName_Release(parser);
 }
 
+static void test_video_input(void)
+{
+    ICreateDevEnum* create_devenum;
+    IEnumMoniker *mon;
+    IMoniker *moniker;
+    IPropertyBag *prop_bag;
+    GUID guid;
+    VARIANT var;
+    HRESULT hr;
+
+    hr = CoCreateInstance(&CLSID_SystemDeviceEnum, NULL, CLSCTX_INPROC_SERVER, &IID_ICreateDevEnum, (LPVOID*)&create_devenum);
+    ok(hr == S_OK, "Got hr %#lx.\n", hr);
+
+    hr = ICreateDevEnum_CreateClassEnumerator(create_devenum, &CLSID_VideoInputDeviceCategory, &mon, 0);
+    if (hr == S_FALSE)
+    {
+        skip("No video capture devices present.\n");
+        ICreateDevEnum_Release(create_devenum);
+        CoUninitialize();
+        return;
+    }
+    ok(hr == S_OK, "Got hr %#lx.\n", hr);
+
+    while (IEnumMoniker_Next(mon, 1, &moniker, NULL) == S_OK)
+    {
+        hr = IMoniker_BindToStorage(moniker, NULL, NULL, &IID_IPropertyBag, (void **)&prop_bag);
+        ok(hr == S_OK, "Got hr %#lx.\n", hr);
+
+        VariantInit(&var);
+        hr = IPropertyBag_Read(prop_bag, L"CLSID", &var, NULL);
+        ok(hr == S_OK, "Got hr %#lx.\n", hr);
+
+        hr = CLSIDFromString(V_BSTR(&var), &guid);
+        ok(hr == S_OK, "Got hr %#lx.\n", hr);
+
+        VariantClear(&var);
+        hr = IPropertyBag_Read(prop_bag, L"FriendlyName", &var, NULL);
+        ok(hr == S_OK, "Got hr %#lx.\n", hr);
+
+        VariantClear(&var);
+        hr = IPropertyBag_Read(prop_bag, L"DevicePath", &var, NULL);
+        ok(hr == S_OK, "Got hr %#lx.\n", hr);
+
+        VariantClear(&var);
+        IPropertyBag_Release(prop_bag);
+        IMoniker_Release(moniker);
+    }
+
+    IEnumMoniker_Release(mon);
+    ICreateDevEnum_Release(create_devenum);
+}
+
 START_TEST(devenum)
 {
     HRESULT hr;
@@ -1176,6 +1228,7 @@ START_TEST(devenum)
     test_wavein();
     test_midiout();
     test_vfw();
+    test_video_input();
 
     CoUninitialize();
 }

@@ -23,7 +23,7 @@ const struct test winetest_testlist[] =
     { "line", func_line },
     { "math", func_math },
     { "mesh", func_mesh },
-    { "shader", func_shader },
+   // { "shader", func_shader }, TODO: Renable when testbots support slipstreaming OpenGL 2.0+
     { "surface", func_surface },
     { "texture", func_texture },
     { "volume", func_volume },
