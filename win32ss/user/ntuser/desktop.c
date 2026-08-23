@@ -948,7 +948,7 @@ IntResolveDesktop(
                                 ExWindowStationObjectType,
                                 UserMode,
                                 NULL,
-                                WINSTA_ACCESS_ALL,
+                                MAXIMUM_ALLOWED,
                                 NULL,
                                 (PHANDLE)&hTempWinSta);
     if (!NT_SUCCESS(Status))
@@ -1192,11 +1192,15 @@ IntResolveDesktop(
         if (bInherit)
             ObjectAttributes->Attributes |= OBJ_INHERIT;
 
+        /* 
+         * A sandboxed process can be denied a piece of DESKTOP_ALL_ACCESS 
+         * on its startup desktop and must still be able to connect to it.
+         */
         Status = ObOpenObjectByName(ObjectAttributes,
                                     ExDesktopObjectType,
                                     UserMode,
                                     NULL,
-                                    DESKTOP_ALL_ACCESS,
+                                    MAXIMUM_ALLOWED,
                                     NULL,
                                     (PHANDLE)&hDesktop);
         if (!NT_SUCCESS(Status))
