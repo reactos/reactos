@@ -30,10 +30,10 @@ class CExeDropHandler :
 private:
     LPWSTR sPathTarget;
     DWORD m_grfKeyState;
+
 public:
     CExeDropHandler();
     ~CExeDropHandler();
-    REFCLSID GetClassID() const { return CLSID_ExeDropHandler; }
 
     // IDropTarget
     STDMETHOD(DragEnter)(IDataObject *pDataObject, DWORD dwKeyState, POINTL pt, DWORD *pdwEffect) override;

@@ -159,7 +159,7 @@ HRESULT WINAPI CExeDropHandler::GetClassID(CLSID * lpClassId)
     if (!lpClassId)
         return E_POINTER;
 
-    *lpClassId = GetClassID();
+    *lpClassId = CLSID_ExeDropHandler;
 
     return S_OK;
 }
