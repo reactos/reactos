@@ -32,7 +32,7 @@ typedef struct _REGISTRATIONDATA
     ULONG DllCount;
     ULONG Registered;
     PVOID DefaultContext;
-    PREGISTRATIONNOTIFY pNotify;
+    PINSTALLITEM_NOTIFY pNotify;
 } REGISTRATIONDATA, *PREGISTRATIONDATA;
 
 typedef struct _TIMEZONE_ENTRY
@@ -1845,7 +1845,6 @@ ShowTimeZoneList(HWND hwnd, PSETUPDATA SetupData, DWORD dwEntryIndex)
                 0);
 }
 
-
 static VOID
 SetLocalTimeZone(HWND hwnd, PSETUPDATA SetupData)
 {
@@ -1890,7 +1889,6 @@ SetLocalTimeZone(HWND hwnd, PSETUPDATA SetupData)
     SetTimeZoneInformation(&TimeZoneInformation);
 }
 
-
 static BOOL
 GetLocalSystemTime(HWND hwnd, PSETUPDATA SetupData)
 {
@@ -1919,7 +1917,6 @@ GetLocalSystemTime(HWND hwnd, PSETUPDATA SetupData)
     return TRUE;
 }
 
-
 static BOOL
 SetSystemLocalTime(HWND hwnd, PSETUPDATA SetupData)
 {
@@ -1934,14 +1931,12 @@ SetSystemLocalTime(HWND hwnd, PSETUPDATA SetupData)
     return Ret;
 }
 
-
 static VOID
 UpdateLocalSystemTime(HWND hwnd, SYSTEMTIME LocalTime)
 {
     DateTime_SetSystemtime(GetDlgItem(hwnd, IDC_DATEPICKER), GDT_VALID, &LocalTime);
     DateTime_SetSystemtime(GetDlgItem(hwnd, IDC_TIMEPICKER), GDT_VALID, &LocalTime);
 }
-
 
 static BOOL
 WriteDateTimeSettings(HWND hwndDlg, PSETUPDATA SetupData)
@@ -1972,7 +1967,6 @@ WriteDateTimeSettings(HWND hwndDlg, PSETUPDATA SetupData)
 
     return TRUE;
 }
-
 
 static INT_PTR CALLBACK
 DateTimePageDlgProc(HWND hwndDlg,
@@ -2107,6 +2101,7 @@ DateTimePageDlgProc(HWND hwndDlg,
     return FALSE;
 }
 
+
 static struct ThemeInfo
 {
     LPCWSTR PreviewBitmap;
@@ -2202,6 +2197,7 @@ ThemePageDlgProc(HWND hwndDlg,
                         }
                     }
                     break;
+
                 case PSN_SETACTIVE:
                     /* Enable the Back and Next buttons */
                     PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_BACK | PSWIZB_NEXT);
@@ -2231,40 +2227,40 @@ ThemePageDlgProc(HWND hwndDlg,
     return FALSE;
 }
 
+
 static UINT CALLBACK
 RegistrationNotificationProc(PVOID Context,
                              UINT Notification,
                              UINT_PTR Param1,
                              UINT_PTR Param2)
 {
-    PREGISTRATIONDATA RegistrationData;
+    PREGISTRATIONDATA RegistrationData = (PREGISTRATIONDATA)Context;
+    PINSTALLITEM_NOTIFY pNotify = RegistrationData->pNotify;
     PSP_REGISTER_CONTROL_STATUSW StatusInfo;
     UINT MessageID;
-
-    RegistrationData = (PREGISTRATIONDATA)Context;
 
     if (Notification == SPFILENOTIFY_STARTREGISTRATION ||
         Notification == SPFILENOTIFY_ENDREGISTRATION)
     {
         StatusInfo = (PSP_REGISTER_CONTROL_STATUSW) Param1;
-        RegistrationData->pNotify->CurrentItem = wcsrchr(StatusInfo->FileName, L'\\');
-        if (RegistrationData->pNotify->CurrentItem == NULL)
+        pNotify->CurrentItem = wcsrchr(StatusInfo->FileName, L'\\');
+        if (pNotify->CurrentItem == NULL)
         {
-            RegistrationData->pNotify->CurrentItem = StatusInfo->FileName;
+            pNotify->CurrentItem = StatusInfo->FileName;
         }
         else
         {
-            RegistrationData->pNotify->CurrentItem++;
+            pNotify->CurrentItem++;
         }
 
         if (Notification == SPFILENOTIFY_STARTREGISTRATION)
         {
             DPRINT("Received SPFILENOTIFY_STARTREGISTRATION notification for %S\n",
                    StatusInfo->FileName);
-            RegistrationData->pNotify->Progress = RegistrationData->Registered;
+            pNotify->Progress = RegistrationData->Registered;
 
-            DPRINT("RegisterDll: Start step %ld\n", RegistrationData->pNotify->Progress);
-            SendMessage(RegistrationData->hwndDlg, PM_STEP_START, 0, (LPARAM)RegistrationData->pNotify);
+            DPRINT("RegisterDll: Start step %ld\n", pNotify->Progress);
+            SendMessage(RegistrationData->hwndDlg, PM_STEP_START, 0, (LPARAM)pNotify);
         }
         else
         {
@@ -2296,13 +2292,13 @@ RegistrationNotificationProc(PVOID Context,
                         break;
                 }
 
-                RegistrationData->pNotify->MessageID = MessageID;
-                RegistrationData->pNotify->LastError = StatusInfo->Win32Error;
+                pNotify->MessageID = MessageID;
+                pNotify->LastError = StatusInfo->Win32Error;
             }
             else
             {
-                RegistrationData->pNotify->MessageID = 0;
-                RegistrationData->pNotify->LastError = ERROR_SUCCESS;
+                pNotify->MessageID = 0;
+                pNotify->LastError = ERROR_SUCCESS;
             }
 
             if (RegistrationData->Registered < RegistrationData->DllCount)
@@ -2310,9 +2306,9 @@ RegistrationNotificationProc(PVOID Context,
                 RegistrationData->Registered++;
             }
 
-            RegistrationData->pNotify->Progress = RegistrationData->Registered;
-            DPRINT("RegisterDll: End step %ld\n", RegistrationData->pNotify->Progress);
-            SendMessage(RegistrationData->hwndDlg, PM_STEP_END, 0, (LPARAM)RegistrationData->pNotify);
+            pNotify->Progress = RegistrationData->Registered;
+            DPRINT("RegisterDll: End step %ld\n", pNotify->Progress);
+            SendMessage(RegistrationData->hwndDlg, PM_STEP_END, 0, (LPARAM)pNotify);
         }
 
         return FILEOP_DOIT;
@@ -2325,20 +2321,18 @@ RegistrationNotificationProc(PVOID Context,
     }
 }
 
-
 static
 DWORD
 RegisterDlls(
     _In_ PITEMSDATA pItemsData,
-    _In_ PREGISTRATIONNOTIFY pNotify)
+    _In_ PINSTALLITEM_NOTIFY pNotify)
 {
-    REGISTRATIONDATA RegistrationData;
+    REGISTRATIONDATA RegistrationData = {0};
     WCHAR SectionName[512];
     INFCONTEXT Context;
     LONG DllCount = 0;
     DWORD Error = NO_ERROR;
 
-    ZeroMemory(&RegistrationData, sizeof(REGISTRATIONDATA));
     RegistrationData.hwndDlg = pItemsData->hwndDlg;
     RegistrationData.Registered = 0;
 
@@ -2400,15 +2394,13 @@ RegisterDlls(
 static
 VOID
 RegisterComponents(
-    PITEMSDATA pItemsData)
+    _In_ PITEMSDATA pItemsData)
 {
     WCHAR SectionName[512];
     INFCONTEXT Context;
     LONG Steps = 0;
     DWORD Error = NO_ERROR;
-    REGISTRATIONNOTIFY Notify;
-
-    ZeroMemory(&Notify, sizeof(Notify));
+    INSTALLITEM_NOTIFY Notify = {0};
 
     /* Count the 'RegisterDlls' steps */
     if (!SetupFindFirstLineW(hSysSetupInf, L"RegistrationPhase2",
@@ -2444,16 +2436,15 @@ RegisterComponents(
     SendMessage(pItemsData->hwndDlg, PM_ITEM_END, 0, Error);
 }
 
+
 static
 VOID
 SaveSettings(
-    PITEMSDATA pItemsData)
+    _In_ PITEMSDATA pItemsData)
 {
     LONG Steps = 0;
     DWORD Error = NO_ERROR;
-    REGISTRATIONNOTIFY Notify;
-
-    ZeroMemory(&Notify, sizeof(Notify));
+    INSTALLITEM_NOTIFY Notify = {0};
 
     /* Count steps */
     Steps = CountSecuritySteps();
@@ -2474,13 +2465,10 @@ static
 DWORD
 CALLBACK
 ItemCompletionThread(
-    LPVOID Parameter)
+    _In_ PVOID Parameter)
 {
-    PITEMSDATA pItemsData;
-    HWND hwndDlg;
-
-    pItemsData = (PITEMSDATA)Parameter;
-    hwndDlg = pItemsData->hwndDlg;
+    PITEMSDATA pItemsData = (PITEMSDATA)Parameter;
+    HWND hwndDlg = pItemsData->hwndDlg;
 
     /* Step 0 - Registering components */
     RegisterComponents(pItemsData);
@@ -2505,23 +2493,23 @@ ItemCompletionThread(
 
     /* Tell the wizard page that we are done */
     PostMessage(hwndDlg, PM_ITEMS_DONE, 0, 0);
-
     return 0;
 }
-
 
 static
 BOOL
 RunItemCompletionThread(
+    _In_ PSETUPDATA pSetupData,
     _In_ HWND hwndDlg)
 {
     HANDLE hCompletionThread;
     PITEMSDATA pItemsData;
 
-    pItemsData = HeapAlloc(GetProcessHeap(), 0, sizeof(ITEMSDATA));
+    pItemsData = HeapAlloc(GetProcessHeap(), 0, sizeof(*pItemsData));
     if (pItemsData == NULL)
         return FALSE;
 
+    pItemsData->pSetupData = pSetupData;
     pItemsData->hwndDlg = hwndDlg;
 
     hCompletionThread = CreateThread(NULL,
@@ -2543,6 +2531,7 @@ RunItemCompletionThread(
     return FALSE;
 }
 
+
 static
 VOID
 ShowItemError(
@@ -2557,8 +2546,7 @@ ShowItemError(
                        NULL, LastError, 0, ErrorMessage, 0, NULL) == 0)
     {
         if (LoadStringW(hDllInstance, IDS_UNKNOWN_ERROR,
-                        UnknownError,
-                        ARRAYSIZE(UnknownError) - 20) == 0)
+                        UnknownError, ARRAYSIZE(UnknownError) - 20) == 0)
         {
             wcscpy(UnknownError, L"Unknown error");
         }
@@ -2585,27 +2573,25 @@ ShowItemError(
     }
 }
 
-
 static
 VOID
 ShowStepError(
-    HWND hwndDlg,
-    PREGISTRATIONNOTIFY RegistrationNotify)
+    _In_ HWND hwndDlg,
+    _In_ PINSTALLITEM_NOTIFY pNotify)
 {
     WCHAR ErrorMessage[128];
     WCHAR Title[64];
 
-    if (LoadStringW(hDllInstance, RegistrationNotify->MessageID,
-                    ErrorMessage,
-                    ARRAYSIZE(ErrorMessage)) == 0)
+    if (LoadStringW(hDllInstance, pNotify->MessageID,
+                    ErrorMessage, ARRAYSIZE(ErrorMessage)) == 0)
     {
         ErrorMessage[0] = L'\0';
     }
 
-    if (RegistrationNotify->MessageID != IDS_TIMEOUT)
+    if (pNotify->MessageID != IDS_TIMEOUT)
     {
         FormatMessageW(FORMAT_MESSAGE_FROM_SYSTEM, NULL,
-                       RegistrationNotify->LastError, 0,
+                       pNotify->LastError, 0,
                        ErrorMessage + wcslen(ErrorMessage),
                        ARRAYSIZE(ErrorMessage) - wcslen(ErrorMessage),
                        NULL);
@@ -2632,7 +2618,7 @@ ProcessPageDlgProc(HWND hwndDlg,
                    LPARAM lParam)
 {
     PSETUPDATA SetupData;
-    PREGISTRATIONNOTIFY RegistrationNotify;
+    PINSTALLITEM_NOTIFY InstallItemNotify;
     static HICON s_hCheckIcon, s_hArrowIcon, s_hCrossIcon;
     static HFONT s_hNormalFont;
 
@@ -2673,7 +2659,7 @@ ProcessPageDlgProc(HWND hwndDlg,
                     // PropSheet_ShowWizButtons(GetParent(hwndDlg), 0, PSWIZB_BACK);
                     ShowDlgItem(GetParent(hwndDlg), ID_WIZBACK, SW_HIDE);
 
-                    RunItemCompletionThread(hwndDlg);
+                    RunItemCompletionThread(SetupData, hwndDlg);
                     break;
                 }
 
@@ -2714,19 +2700,18 @@ ProcessPageDlgProc(HWND hwndDlg,
 
         case PM_STEP_START:
             DPRINT("PM_STEP_START\n");
-            RegistrationNotify = (PREGISTRATIONNOTIFY)lParam;
+            InstallItemNotify = (PINSTALLITEM_NOTIFY)lParam;
             SendDlgItemMessage(hwndDlg, IDC_ITEM, WM_SETTEXT, 0,
-                               (LPARAM)((RegistrationNotify->CurrentItem != NULL)? RegistrationNotify->CurrentItem : L""));
+                               (LPARAM)((InstallItemNotify->CurrentItem != NULL)
+                                       ? InstallItemNotify->CurrentItem : L""));
             break;
 
         case PM_STEP_END:
             DPRINT("PM_STEP_END\n");
-            RegistrationNotify = (PREGISTRATIONNOTIFY)lParam;
-            SendDlgItemMessage(hwndDlg, IDC_PROCESSPROGRESS, PBM_SETPOS, RegistrationNotify->Progress, 0);
-            if (RegistrationNotify->LastError != ERROR_SUCCESS)
-            {
-                ShowStepError(hwndDlg, RegistrationNotify);
-            }
+            InstallItemNotify = (PINSTALLITEM_NOTIFY)lParam;
+            SendDlgItemMessage(hwndDlg, IDC_PROCESSPROGRESS, PBM_SETPOS, InstallItemNotify->Progress, 0);
+            if (InstallItemNotify->LastError != ERROR_SUCCESS)
+                ShowStepError(hwndDlg, InstallItemNotify);
             break;
 
         case PM_ITEMS_DONE:

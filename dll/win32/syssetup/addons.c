@@ -54,7 +54,8 @@ RunCommandAndWait(
     return HRESULT_FROM_WIN32(GetLastError());
 }
 
-BOOL DoesFileExist(
+BOOL
+DoesFileExist(
     _In_ PCWSTR path)
 {
     DWORD attr = GetFileAttributesW(path);
@@ -62,12 +63,12 @@ BOOL DoesFileExist(
             !(attr & FILE_ATTRIBUTE_DIRECTORY));
 }
 
-HRESULT
+static HRESULT
 InstallAddon(
-    _In_    PCADDON_INSTALL_DATA pInstallData,
+    _In_ PCADDON_INSTALL_DATA pInstallData,
     _Inout_ RappsConsent* Consent,
-    _In_    PITEMSDATA pItemsData,
-    _Inout_ PREGISTRATIONNOTIFY pNotify)
+    _In_ PITEMSDATA pItemsData,
+    _Inout_ PINSTALLITEM_NOTIFY pNotify)
 {
     HRESULT hr;
     WCHAR Command[MAX_PATH], ExpandedAddonPath[MAX_PATH];
@@ -135,23 +136,24 @@ InstallOptionalComponents(
     _In_ PITEMSDATA pItemsData)
 {
     HRESULT hr = S_OK;
-    PSETUPDATA pSetupData;
-    REGISTRATIONNOTIFY Notify = { 0 };
+    PSETUPDATA pSetupData = pItemsData->pSetupData;
+    INSTALLITEM_NOTIFY Notify = {0};
     RappsConsent Consent = NOT_ASKED;
 
     /* The last element in Addons is null, don't count it as a step. */
     SendMessage(pItemsData->hwndDlg, PM_ITEM_START, 3, (LPARAM)(ARRAYSIZE(Addons) - 1));
-    pSetupData = (PSETUPDATA)GetWindowLongPtr(pItemsData->hwndDlg, GWLP_USERDATA);
 
     if (pSetupData->UnattendSetup)
         Consent = pSetupData->RappsDownload ? APPROVED : DENIED;
 
     for (DWORD i = 0; i < ARRAYSIZE(Addons); i++)
     {
-        if (Addons[i].AddonPath == NULL
-            || Addons[i].CreateProcessFormatString == NULL
-            || Addons[i].RappsId == NULL)
+        if (Addons[i].AddonPath == NULL ||
+            Addons[i].CreateProcessFormatString == NULL ||
+            Addons[i].RappsId == NULL)
+        {
             continue;
+        }
 
         hr = InstallAddon(&Addons[i], &Consent, pItemsData, &Notify);
 

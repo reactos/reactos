@@ -181,7 +181,7 @@ CreateShortcut(
 static BOOL
 CreateShortcutsFromSection(
     _In_ PITEMSDATA pItemsData,
-    _In_ PREGISTRATIONNOTIFY pNotify,
+    _In_ PINSTALLITEM_NOTIFY pNotify,
     _In_ HINF hinf,
     _In_ LPWSTR pszSection,
     _In_ LPCWSTR pszFolder)
@@ -240,7 +240,7 @@ CreateShortcutsFromSection(
 static BOOL
 CreateShortcuts(
     _In_ PITEMSDATA pItemsData,
-    _In_ PREGISTRATIONNOTIFY pNotify,
+    _In_ PINSTALLITEM_NOTIFY pNotify,
     _In_ HINF hinf,
     _In_ LPCWSTR szSection)
 {
@@ -311,13 +311,10 @@ VOID
 InstallStartMenuItems(
     _In_ PITEMSDATA pItemsData)
 {
-    HINF hShortcutsInf1 = INVALID_HANDLE_VALUE;
-    HINF hShortcutsInf2 = INVALID_HANDLE_VALUE;
+    HINF hShortcutsInf1, hShortcutsInf2;
     LONG Steps = 0;
-    DWORD LastError = 0;
-    REGISTRATIONNOTIFY Notify;
-
-    ZeroMemory(&Notify, sizeof(Notify));
+    DWORD LastError = ERROR_SUCCESS;
+    INSTALLITEM_NOTIFY Notify = {0};
 
     hShortcutsInf1 = SetupOpenInfFileW(L"shortcuts.inf",
                                       NULL,
@@ -532,11 +529,10 @@ InstallSysSetupInfComponents(VOID)
 }
 
 
-
 BOOL
 RegisterTypeLibraries(
     _In_ PITEMSDATA pItemsData,
-    _In_ PREGISTRATIONNOTIFY pNotify,
+    _In_ PINSTALLITEM_NOTIFY pNotify,
     _In_ HINF hinf,
     _In_ LPCWSTR szSection)
 {

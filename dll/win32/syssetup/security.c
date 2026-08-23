@@ -18,8 +18,8 @@
 #define NDEBUG
 #include <debug.h>
 
-#define TICKS_PER_DAY -864000000000LL
-#define TICKS_PER_MINUTE -600000000LL
+#define TICKS_PER_DAY       (-864000000000LL)
+#define TICKS_PER_MINUTE    (-600000000LL)
 
 /* FUNCTIONS ****************************************************************/
 
@@ -236,7 +236,7 @@ static
 VOID
 InstallBuiltinAccounts(
     _In_ PITEMSDATA pItemsData,
-    _In_ PREGISTRATIONNOTIFY pNotify)
+    _In_ PINSTALLITEM_NOTIFY pNotify)
 {
     LPWSTR BuiltinAccounts[] = {
         L"S-1-1-0",         /* Everyone */
@@ -304,7 +304,7 @@ VOID
 InstallPrivileges(
     _In_ HINF hSecurityInf,
     _In_ PITEMSDATA pItemsData,
-    _In_ PREGISTRATIONNOTIFY pNotify)
+    _In_ PINSTALLITEM_NOTIFY pNotify)
 {
     LSA_OBJECT_ATTRIBUTES ObjectAttributes;
     WCHAR szPrivilegeString[256];
@@ -454,7 +454,7 @@ VOID
 ApplyRegistryValues(
     _In_ HINF hSecurityInf,
     _In_ PITEMSDATA pItemsData,
-    _In_ PREGISTRATIONNOTIFY pNotify)
+    _In_ PINSTALLITEM_NOTIFY pNotify)
 {
     WCHAR szRegistryPath[MAX_PATH];
     WCHAR szRootName[MAX_PATH];
@@ -660,7 +660,7 @@ VOID
 ApplyEventlogSettings(
     _In_ HINF hSecurityInf,
     _In_ PITEMSDATA pItemsData,
-    _In_ PREGISTRATIONNOTIFY pNotify,
+    _In_ PINSTALLITEM_NOTIFY pNotify,
     _In_ PWSTR pszSectionName,
     _In_ PWSTR pszLogName)
 {
@@ -821,7 +821,7 @@ VOID
 ApplyPasswordSettings(
     _In_ HINF hSecurityInf,
     _In_ PITEMSDATA pItemsData,
-    _In_ PREGISTRATIONNOTIFY pNotify,
+    _In_ PINSTALLITEM_NOTIFY pNotify,
     _In_ PWSTR pszSectionName)
 {
     INFCONTEXT InfContext;
@@ -1647,7 +1647,7 @@ CountSecuritySteps(VOID)
 DWORD
 InstallSecurity(
     _In_ PITEMSDATA pItemsData,
-    _In_ PREGISTRATIONNOTIFY pNotify)
+    _In_ PINSTALLITEM_NOTIFY pNotify)
 {
     HINF hSecurityInf;
     PWSTR pszSecurityInf;

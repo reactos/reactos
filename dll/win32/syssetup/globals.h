@@ -28,10 +28,17 @@ typedef struct _ADMIN_INFO
 
 typedef struct _ITEMSDATA
 {
+    PSETUPDATA pSetupData;
     HWND hwndDlg;
 } ITEMSDATA, *PITEMSDATA;
 
-typedef struct _REGISTRATIONNOTIFY
+
+/*
+ * Private messages used to communicate progress from the
+ * background installation thread to the main thread.
+ */
+
+typedef struct _INSTALLITEM_NOTIFY
 {
     ULONG Progress;
     UINT ActivityID;
@@ -39,29 +46,25 @@ typedef struct _REGISTRATIONNOTIFY
     LPCWSTR ErrorMessage;
     UINT MessageID;
     DWORD LastError;
-} REGISTRATIONNOTIFY, *PREGISTRATIONNOTIFY;
+} INSTALLITEM_NOTIFY, *PINSTALLITEM_NOTIFY;
 
+/* Start of a new Item.
+ * wParam = item number.
+ * lParam = number of steps. */
+#define PM_ITEM_START (WM_APP + 1)
 
-#define PM_REGISTRATION_NOTIFY (WM_APP + 1)
-/* Private Message used to communicate progress from the background
-   registration thread to the main thread.
-   wParam = 0 Registration in progress
-          = 1 Registration completed
-   lParam = Pointer to a REGISTRATIONNOTIFY structure */
+/* End of a new Item.
+ * wParam = item number.
+ * lParam = error code. */
+#define PM_ITEM_END   (WM_APP + 2)
 
-#define PM_ITEM_START (WM_APP + 2)
-/* Start of a new Item
-   wParam = item number
-   lParam = number of steps */
+/* Start/End of an installation step for an Item.
+ * wParam = unused (but usually set to the item number).
+ * lParam = pointer to an INSTALLITEM_NOTIFY structure. */
+#define PM_STEP_START (WM_APP + 3)
+#define PM_STEP_END   (WM_APP + 4)
 
-#define PM_ITEM_END   (WM_APP + 3)
-/* End of a new Item
-   wParam = item number
-   lParam = Error Code */
-
-#define PM_STEP_START (WM_APP + 4)
-#define PM_STEP_END   (WM_APP + 5)
-#define PM_ITEMS_DONE (WM_APP + 6)
+#define PM_ITEMS_DONE (WM_APP + 5)
 
 
 extern HINSTANCE hDllInstance;
@@ -81,7 +84,7 @@ RunCommandAndWait(
 BOOL
 RegisterTypeLibraries(
     _In_ PITEMSDATA pItemsData,
-    _In_ PREGISTRATIONNOTIFY pNotify,
+    _In_ PINSTALLITEM_NOTIFY pNotify,
     _In_ HINF hinf,
     _In_ LPCWSTR szSection);
 
@@ -101,7 +104,7 @@ CountSecuritySteps(VOID);
 DWORD
 InstallSecurity(
     _In_ PITEMSDATA pItemsData,
-    _In_ PREGISTRATIONNOTIFY pNotify);
+    _In_ PINSTALLITEM_NOTIFY pNotify);
 
 NTSTATUS
 SetAdministratorPassword(LPCWSTR Password);
