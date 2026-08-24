@@ -75,7 +75,7 @@ InstallAddon(
 
     pNotify->Progress++;
     pNotify->CurrentItem = pInstallData->Title;
-    SendMessage(pItemsData->hwndDlg, PM_STEP_START, 3, (LPARAM)pNotify);
+    SendMessage(pItemsData->hwndDlg, PM_STEP_START, 0, (LPARAM)pNotify);
 
     ExpandEnvironmentStringsW(pInstallData->AddonPath,
                               ExpandedAddonPath,
@@ -127,7 +127,7 @@ done:
      * Showing an error may make the user think the installation of the operating system failed. */
     if (!SUCCEEDED(hr) && hr != HRESULT_FROM_WIN32(ERROR_CANCELLED))
         pNotify->LastError = HRESULT_CODE(hr);
-    SendMessage(pItemsData->hwndDlg, PM_STEP_END, 3, (LPARAM)pNotify);
+    SendMessage(pItemsData->hwndDlg, PM_STEP_END, 0, (LPARAM)pNotify);
     return hr;
 }
 
@@ -141,7 +141,7 @@ InstallOptionalComponents(
     RappsConsent Consent = NOT_ASKED;
 
     /* The last element in Addons is null, don't count it as a step. */
-    SendMessage(pItemsData->hwndDlg, PM_ITEM_START, 3, (LPARAM)(ARRAYSIZE(Addons) - 1));
+    SendMessage(pItemsData->hwndDlg, PM_ITEM_START, 2, (LPARAM)(ARRAYSIZE(Addons) - 1));
 
     if (pSetupData->UnattendSetup)
         Consent = pSetupData->RappsDownload ? APPROVED : DENIED;
@@ -172,6 +172,6 @@ InstallOptionalComponents(
         }
     }
 
-    SendMessage(pItemsData->hwndDlg, PM_ITEM_END, 3, HRESULT_CODE(hr));
+    SendMessage(pItemsData->hwndDlg, PM_ITEM_END, 2, HRESULT_CODE(hr));
     return hr;
 }

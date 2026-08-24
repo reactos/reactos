@@ -120,8 +120,8 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "A registar componentes", IDC_TASKTEXT1, 65, 27, 232, 8
     LTEXT "A instalar itens do menu iniciar", IDC_TASKTEXT2, 65, 39, 232, 8
-    LTEXT "A guardar configurações", IDC_TASKTEXT3, 65, 51, 232, 8
-    LTEXT "A instalar componentes opcionais", IDC_TASKTEXT4, 65, 63, 232, 8
+    LTEXT "A instalar componentes opcionais", IDC_TASKTEXT3, 65, 51, 232, 8
+    LTEXT "A guardar configurações", IDC_TASKTEXT4, 65, 63, 232, 8
     LTEXT "A remover ficheiros temporários", IDC_TASKTEXT5, 65, 75, 232, 8
     LTEXT "", IDC_ITEM, 21, 85, 275, 8
     CONTROL "", IDC_PROCESSPROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 21, 97, 275, 11

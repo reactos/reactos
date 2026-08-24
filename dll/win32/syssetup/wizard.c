@@ -2451,14 +2451,14 @@ SaveSettings(
 
     /* Start the item */
     DPRINT("Install security: %ld Steps\n", Steps);
-    SendMessage(pItemsData->hwndDlg, PM_ITEM_START, 2, (LPARAM)Steps);
+    SendMessage(pItemsData->hwndDlg, PM_ITEM_START, 3, (LPARAM)Steps);
 
     /* Install steps */
     Error = InstallSecurity(pItemsData, &Notify);
 
     /* End the item */
     DPRINT("Install security: done\n");
-    SendMessage(pItemsData->hwndDlg, PM_ITEM_END, 2, Error);
+    SendMessage(pItemsData->hwndDlg, PM_ITEM_END, 3, Error);
 }
 
 static
@@ -2476,11 +2476,11 @@ ItemCompletionThread(
     /* Step 1 - Installing start menu items */
     InstallStartMenuItems(pItemsData);
 
-    /* Step 2 - Saving Settings */
-    SaveSettings(pItemsData);
-
-    /* Step 3 - Install optional components */
+    /* Step 2 - Install optional components */
     InstallOptionalComponents(pItemsData);
+
+    /* Step 3 - Saving settings */
+    SaveSettings(pItemsData);
 
     /* Step 4 - Removing temporary files */
 //    RemoveTempFiles(pItemsData);
