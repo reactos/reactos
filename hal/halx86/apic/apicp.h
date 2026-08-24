@@ -193,7 +193,8 @@ typedef union _APIC_BASE_ADDRESS_REGISTER
     {
         UINT64 Reserved1:8;
         UINT64 BootStrapCPUCore:1;
-        UINT64 Reserved2:2;
+        UINT64 Reserved2:1;
+        UINT64 EnableX2Apic:1;
         UINT64 Enable:1;
         UINT64 BaseAddress:40;
         UINT64 ReservedMBZ:12;
