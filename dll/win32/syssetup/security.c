@@ -1603,12 +1603,12 @@ done:
         LsaClose(PolicyHandle);
 }
 
-LONG
+DWORD
 CountSecuritySteps(VOID)
 {
     HINF hSecurityInf;
     PWSTR pszSecurityInf;
-    LONG Steps = 0;
+    DWORD Steps = 0;
 
 //    if (IsServer())
 //        pszSecurityInf = L"defltsv.inf";

@@ -15,7 +15,7 @@
 
 #include <winnls.h>
 #include <winsvc.h>
-#include <userenv.h>
+#include <userenv.h> // For GetDefaultUserProfileDirectoryW(), InitializeProfiles()
 #undef LF_FACESIZE
 #include <shlobj.h>
 #include <shlwapi.h>
@@ -1507,7 +1507,6 @@ done:
 }
 
 
-static
 DWORD
 SaveDefaultUserHive(VOID)
 {
@@ -1641,18 +1640,6 @@ __debugbreak();
         CreateDirectory(szBuffer, NULL);
     }
 
-    if (SaveDefaultUserHive() != ERROR_SUCCESS)
-    {
-        FatalError("SaveDefaultUserHive() failed");
-        goto Quit;
-    }
-
-    if (!CopySystemProfile(0))
-    {
-        FatalError("CopySystemProfile() failed");
-        goto Quit;
-    }
-
     hHotkeyThread = CreateThread(NULL, 0, HotkeyThread, NULL, 0, NULL);
 
     PreprocessUnattend(TRUE);
@@ -1674,8 +1661,6 @@ __debugbreak();
     }
 
     InstallWizard();
-
-    SetAutoAdminLogon();
 
     SetupCloseInfFile(hSysSetupInf);
     SetSetupType(0);

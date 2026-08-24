@@ -92,13 +92,16 @@ VOID
 InstallStartMenuItems(
     _In_ PITEMSDATA pItemsData);
 
+DWORD
+SaveDefaultUserHive(VOID);
+
 /* netinstall.c */
 BOOL
 InstallNetworkComponent(
     _In_ PWSTR pszComponentId);
 
 /* security.c */
-LONG
+DWORD
 CountSecuritySteps(VOID);
 
 DWORD

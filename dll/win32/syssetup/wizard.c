@@ -23,6 +23,8 @@
 #include <shlwapi.h>
 #include <tzlib.h>
 
+#include <userenv.h> // For CopySystemProfile()
+
 #define NDEBUG
 #include <debug.h>
 
@@ -2442,22 +2444,48 @@ VOID
 SaveSettings(
     _In_ PITEMSDATA pItemsData)
 {
-    LONG Steps = 0;
+    DWORD Steps = 0;
     DWORD Error = NO_ERROR;
     INSTALLITEM_NOTIFY Notify = {0};
 
     /* Count steps */
     Steps = CountSecuritySteps();
+    Steps++; // Auto-admin logon, "Default User" hive, SYSTEM profile
 
     /* Start the item */
-    DPRINT("Install security: %ld Steps\n", Steps);
+    DPRINT("Save settings: %lu steps\n", Steps);
     SendMessage(pItemsData->hwndDlg, PM_ITEM_START, 3, (LPARAM)Steps);
 
-    /* Install steps */
+    /* Set up security */
     Error = InstallSecurity(pItemsData, &Notify);
+    if (Error != ERROR_SUCCESS)
+    {
+        DPRINT1("InstallSecurity() failed (Error %lu)\n", Error);
+        goto Quit;
+    }
 
+    /* Set auto-admin logon, save the "Default User" hive, and copy the SYSTEM profile */
+    Notify.Progress++;
+    SendMessage(pItemsData->hwndDlg, PM_STEP_START, 0, (LPARAM)&Notify);
+
+    SetAutoAdminLogon();
+
+    Error = SaveDefaultUserHive();
+    if (Error != ERROR_SUCCESS)
+    {
+        DPRINT1("SaveDefaultUserHive() failed (Error %lu)\n", Error);
+    }
+    else if (!CopySystemProfile(0))
+    {
+        Error = GetLastError();
+        DPRINT1("CopySystemProfile() failed (Error %lu)\n", Error);
+    }
+    Notify.LastError = Error;
+    SendMessage(pItemsData->hwndDlg, PM_STEP_END, 0, (LPARAM)&Notify);
+
+Quit:
     /* End the item */
-    DPRINT("Install security: done\n");
+    DPRINT("Save settings: done\n");
     SendMessage(pItemsData->hwndDlg, PM_ITEM_END, 3, Error);
 }
 
