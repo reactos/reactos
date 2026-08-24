@@ -2581,6 +2581,8 @@ ItemCompletionThread(
     /* Step 2 - Install optional components */
     InstallOptionalComponents(pItemsData);
 
+    // TODO: Step 2b - UPDATE ONLY: Updating program and system settings
+
     /* Step 3 - Saving settings */
     SaveSettings(pItemsData);
 
