@@ -1590,6 +1590,7 @@ InstallReactOS(VOID)
     HANDLE hHotkeyThread;
     BOOL ret;
 
+__debugbreak();
     InitializeSetupActionLog(FALSE);
     LogItem(NULL, L"Installing ReactOS");
 
