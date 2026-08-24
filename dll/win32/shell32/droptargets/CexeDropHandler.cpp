@@ -24,12 +24,12 @@ WINE_DEFAULT_DEBUG_CHANNEL (shell);
 
 CExeDropHandler::CExeDropHandler()
 {
-    m_grfKeyState = 0;
+
 }
 
 CExeDropHandler::~CExeDropHandler()
 {
-
+    SHFree(m_PathTarget);
 }
 
 // IDropTarget
@@ -110,7 +110,7 @@ HRESULT WINAPI CExeDropHandler::Drop(IDataObject *pDataObject, DWORD dwKeyState,
         ReleaseStgMedium(&medium);
     }
 
-    ShellExecuteW(NULL, L"open", sPathTarget, wszBuf, NULL,SW_SHOWNORMAL);
+    ShellExecuteW(NULL, L"open", m_PathTarget, wszBuf, NULL, SW_SHOWNORMAL);
 
     return S_OK;
 }
@@ -132,8 +132,10 @@ HRESULT WINAPI CExeDropHandler::IsDirty()
 HRESULT WINAPI CExeDropHandler::Load(LPCOLESTR pszFileName, DWORD dwMode)
 {
     UINT len = strlenW(pszFileName);
-    sPathTarget = (WCHAR *)SHAlloc((len + 1) * sizeof(WCHAR));
-    memcpy(sPathTarget, pszFileName, (len + 1) * sizeof(WCHAR));
+    m_PathTarget = (WCHAR *)SHAlloc((len + 1) * sizeof(WCHAR));
+    if (!m_PathTarget)
+        return E_OUTOFMEMORY;
+    memcpy(m_PathTarget, pszFileName, (len + 1) * sizeof(WCHAR));
     return S_OK;
 }
 
@@ -149,9 +151,6 @@ HRESULT WINAPI CExeDropHandler::SaveCompleted(LPCOLESTR pszFileName)
     return E_NOTIMPL;
 }
 
-/************************************************************************
- * CFSFolder::GetClassID
- */
 HRESULT WINAPI CExeDropHandler::GetClassID(CLSID * lpClassId)
 {
     TRACE ("(%p)\n", this);
