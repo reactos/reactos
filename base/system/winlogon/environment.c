@@ -4,13 +4,32 @@
  * FILE:            base/system/winlogon/environment.c
  * PURPOSE:         User environment routines
  * PROGRAMMERS:     Thomas Weidenmueller (w3seek@users.sourceforge.net)
- *                  Hervé Poussineau (hpoussin@reactos.org)
+ *                  HervÃ© Poussineau (hpoussin@reactos.org)
  *                  Eric Kohl
  */
 
 /* INCLUDES *****************************************************************/
 
 #include "winlogon.h"
+
+/* GLOBALS ******************************************************************/
+
+/*
+ * The per-user application data directories, and the shell folder each one is
+ * named after. LOCALAPPDATA only exists from Vista onwards; applications that
+ * ask for it do not fall back to APPDATA, they end up with the name unexpanded,
+ * so it is worth publishing even though the rest of the profile is older.
+ */
+static const struct
+{
+    PCWSTR pszVariable;
+    PCWSTR pszShellFolder;
+} AppDataVariables[] =
+{
+    {L"APPDATA",      L"AppData"},
+    {L"LOCALAPPDATA", L"Local AppData"},
+};
+
 
 /* FUNCTIONS ****************************************************************/
 
@@ -91,7 +110,7 @@ BuildVolatileEnvironment(
         }
     }
 
-    /* Set the 'APPDATA' environment variable */
+    /* Set the 'APPDATA' and 'LOCALAPPDATA' environment variables */
     lError = RegOpenKeyExW(hKeyCurrentUser,
                            L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders",
                            0,
@@ -99,18 +118,27 @@ BuildVolatileEnvironment(
                            &hKeyShellFolders);
     if (lError == ERROR_SUCCESS)
     {
-        dwSize = (MAX_PATH + 1) * sizeof(WCHAR);
-        lError = RegQueryValueExW(hKeyShellFolders,
-                                  L"AppData",
-                                  NULL,
-                                  &dwType,
-                                  (LPBYTE)szPath,
-                                  &dwSize);
-        if (lError == ERROR_SUCCESS)
+        ULONG i;
+
+        for (i = 0; i < ARRAYSIZE(AppDataVariables); i++)
         {
-            TRACE("APPDATA path: %S\n", szPath);
+            dwSize = (MAX_PATH + 1) * sizeof(WCHAR);
+            lError = RegQueryValueExW(hKeyShellFolders,
+                                      AppDataVariables[i].pszShellFolder,
+                                      NULL,
+                                      &dwType,
+                                      (LPBYTE)szPath,
+                                      &dwSize);
+            if (lError != ERROR_SUCCESS)
+            {
+                WARN("WL: No '%S' shell folder (Error: %ld)\n",
+                     AppDataVariables[i].pszShellFolder, lError);
+                continue;
+            }
+
+            TRACE("%S path: %S\n", AppDataVariables[i].pszVariable, szPath);
             RegSetValueExW(hKeyVolatileEnv,
-                           L"APPDATA",
+                           AppDataVariables[i].pszVariable,
                            0,
                            REG_SZ,
                            (LPBYTE)szPath,
