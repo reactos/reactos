@@ -72,6 +72,9 @@ HRESULT
 RunCommandAndWait(
     _In_ PWCHAR Command);
 
+BOOL
+CleanupAddonsTempFiles(VOID);
+
 /* install.c */
 BOOL
 RegisterTypeLibraries(
@@ -130,6 +133,14 @@ DoesFileExist(
 BOOL
 DoesDirExist(
     _In_ PCWSTR pszPath);
+
+BOOL
+RecursiveRemoveDir(
+    _In_ PCWSTR pPath);
+
+BOOL
+RemoveDirectoryPath(
+    _In_ PCWSTR pPathName);
 
 /* wizard.c */
 VOID

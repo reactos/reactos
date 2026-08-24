@@ -2482,11 +2482,16 @@ SaveSettings(
     {
         DPRINT1("SaveDefaultUserHive() failed (Error %lu)\n", Error);
     }
+#if 0
+// FIXME: Temporarily moved to RemoveTempFiles() so that we first cleanup
+// all the add-ons temporary files (from RAPPS) stored in the "Default User"
+// profile, before copying it to the system profile.
     else if (!CopySystemProfile(0))
     {
         Error = GetLastError();
         DPRINT1("CopySystemProfile() failed (Error %lu)\n", Error);
     }
+#endif
     Notify.LastError = Error;
     SendMessage(pItemsData->hwndDlg, PM_STEP_END, 0, (LPARAM)&Notify);
 
@@ -2495,6 +2500,68 @@ Quit:
     DPRINT("Save settings: done\n");
     SendMessage(pItemsData->hwndDlg, PM_ITEM_END, 3, Error);
 }
+
+
+static
+VOID
+RemoveTempFiles(
+    _In_ PITEMSDATA pItemsData)
+{
+    INSTALLITEM_NOTIFY Notify = {0};
+    DWORD dwSize;
+    WCHAR szTempDir[MAX_PATH];
+
+    SendMessage(pItemsData->hwndDlg, PM_ITEM_START, 4, (LPARAM)4);
+
+    /* Cleanup the TEMP directory contents (but do not delete the directory) */
+    Notify.Progress++;
+    SendMessage(pItemsData->hwndDlg, PM_STEP_START, 0, (LPARAM)&Notify);
+    dwSize = GetTempPathW(_countof(szTempDir), szTempDir);
+    if ((dwSize != 0) && (dwSize <= _countof(szTempDir)) && *szTempDir)
+        RecursiveRemoveDir(szTempDir);
+    SendMessage(pItemsData->hwndDlg, PM_STEP_END, 0, (LPARAM)&Notify);
+
+    /* Delete the add-ons temporary files */
+    Notify.Progress++;
+    SendMessage(pItemsData->hwndDlg, PM_STEP_START, 0, (LPARAM)&Notify);
+    CleanupAddonsTempFiles();
+    SendMessage(pItemsData->hwndDlg, PM_STEP_END, 0, (LPARAM)&Notify);
+
+#if 1 // FIXME: See comment in SaveSettings().
+    /* Copy the SYSTEM profile */
+    Notify.Progress++;
+    SendMessage(pItemsData->hwndDlg, PM_STEP_START, 0, (LPARAM)&Notify);
+    if (CopySystemProfile(0))
+    {
+        // HACK: CopySystemProfile() shouldn't copy ntuser.dat,
+        // so as a workaround, delete it ourselves.
+        dwSize = GetSystemDirectoryW(szTempDir, _countof(szTempDir));
+        if ((dwSize != 0) && (dwSize <= _countof(szTempDir)) &&
+            PathAppendW(szTempDir, L"\\config\\systemprofile\\ntuser.dat"))
+        {
+            SetFileAttributesW(szTempDir, FILE_ATTRIBUTE_NORMAL);
+            (void)DeleteFileW(szTempDir);
+        }
+    }
+    else
+    {
+        Notify.LastError = GetLastError();
+        DPRINT1("CopySystemProfile() failed (Error %lu)\n", Notify.LastError);
+    }
+    SendMessage(pItemsData->hwndDlg, PM_STEP_END, 0, (LPARAM)&Notify);
+#endif
+
+    Notify.Progress++;
+    SendMessage(pItemsData->hwndDlg, PM_STEP_START, 0, (LPARAM)&Notify);
+    // TODO: RtlLockBootStatusData(...);
+    RtlCreateBootStatusDataFile(); // Call this if the file didn't exist prior.
+    // RtlGetSetBootStatusData(...);
+    // RtlUnlockBootStatusData(...);
+    SendMessage(pItemsData->hwndDlg, PM_STEP_END, 0, (LPARAM)&Notify);
+
+    SendMessage(pItemsData->hwndDlg, PM_ITEM_END, 4, ERROR_SUCCESS);
+}
+
 
 static
 DWORD
@@ -2518,10 +2585,7 @@ ItemCompletionThread(
     SaveSettings(pItemsData);
 
     /* Step 4 - Removing temporary files */
-//    RemoveTempFiles(pItemsData);
-
-    // FIXME: Move this call to a separate cleanup page!
-    RtlCreateBootStatusDataFile();
+    RemoveTempFiles(pItemsData);
 
     /* Free the items data */
     HeapFree(GetProcessHeap(), 0, pItemsData);
@@ -2667,8 +2731,6 @@ ProcessPageDlgProc(HWND hwndDlg,
             /* Save pointer to the global setup data */
             SetupData = (PSETUPDATA)((LPPROPSHEETPAGE)lParam)->lParam;
             SetWindowLongPtr(hwndDlg, GWLP_USERDATA, (DWORD_PTR)SetupData);
-            ShowDlgItem(hwndDlg, IDC_TASKTEXT5, SW_HIDE);
-            ShowDlgItem(hwndDlg, IDC_CHECK5, SW_HIDE);
             s_hCheckIcon = LoadImageW(hDllInstance, MAKEINTRESOURCEW(IDI_CHECKICON), IMAGE_ICON, 16, 16, 0);
             s_hArrowIcon = LoadImageW(hDllInstance, MAKEINTRESOURCEW(IDI_ARROWICON), IMAGE_ICON, 16, 16, 0);
             s_hCrossIcon = LoadImageW(hDllInstance, MAKEINTRESOURCEW(IDI_CROSSICON), IMAGE_ICON, 16, 16, 0);

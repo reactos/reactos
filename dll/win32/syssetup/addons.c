@@ -8,6 +8,10 @@
 
 #include "precomp.h"
 
+#undef LF_FACESIZE
+#include <shlobj.h>
+#include <shlwapi.h>
+
 typedef enum _RappsConsent {
     NOT_ASKED,
     APPROVED,
@@ -165,4 +169,106 @@ InstallOptionalComponents(
 
     SendMessage(pItemsData->hwndDlg, PM_ITEM_END, 2, HRESULT_CODE(hr));
     return hr;
+}
+
+/**
+ * @brief
+ * Cleans up all temporary files and directories used for add-ons download and installation.
+ *
+ * These are the RAPPS default Download directory and its settings directory,
+ * see base/applications/rapps/appdb.cpp and settings.cpp files.
+ **/
+BOOL
+CleanupAddonsTempFiles(VOID)
+{
+#if 0
+    HKEY hKey;
+    LONG rc;
+    DWORD dwType, dwSize;
+#endif
+    WCHAR szTempDir[MAX_PATH];
+
+#if 0
+    /* Open the RAPPS settings key and retrieve the download directory value */
+    rc = RegOpenKeyExW(HKEY_CURRENT_USER,
+                       L"Software\\ReactOS\\RApps",
+                       0,
+                       KEY_QUERY_VALUE,
+                       &hKey);
+    if (rc != ERROR_SUCCESS)
+    {
+        //DPRINT1("RegOpenKeyExW failed (Error %lu)\n", rc);
+        return FALSE;
+    }
+
+    rc = RegQueryValueExW(hKey,
+                          L"szDownloadDir",
+                          NULL,
+                          &dwType,
+                          (PBYTE)pszPath, // NULL,
+                          &dwSize);
+    if (rc != ERROR_SUCCESS ||
+        (dwType != REG_SZ && dwType != REG_EXPAND_SZ) ||
+        dwSize == 0 ||
+        dwSize % sizeof(WCHAR) != 0 /**/ ||
+        (dwSize > cchPathSize * sizeof(WCHAR)) /**/)
+    {
+        if (cchPathSize > 1)
+            *pszPath = UNICODE_NULL;
+        goto done;
+    }
+
+#if 0
+    /* Reserve space for data */
+    Buffer = HeapAlloc(GetProcessHeap(), 0, dwSize);
+    if (!Buffer)
+        goto done;
+    ZeroMemory(Buffer, dwSize);
+
+    rc = RegQueryValueExW(hKey,
+                          L"szDownloadDir",
+                          NULL,
+                          NULL,
+                          (PBYTE)Buffer,
+                          &dwSize);
+    if (rc != ERROR_SUCCESS)
+    {
+        HeapFree(GetProcessHeap(), 0, Buffer);
+        dwSize = 0;
+    }
+#endif
+
+done:
+    RegCloseKey(hKey);
+    return (rc == ERROR_SUCCESS);
+#else
+
+    // FIXME: Since there's currently no existing way RAPPS could tell us
+    // which paths it used to store its temporary files, nor any switch to
+    // request it to cleanup these files, we hardcode below the different
+    // places where RAPPS is known to store its files by default, and we
+    // clean those places.
+
+    /* Cleanup the RAPPS default Download directory */
+    if (FAILED(SHGetFolderPathW(NULL, CSIDL_PERSONAL, NULL, SHGFP_TYPE_CURRENT, szTempDir)))
+    {
+        DWORD dwSize = GetEnvironmentVariableW(L"SystemDrive", szTempDir, _countof(szTempDir));
+        if ((dwSize == 0) || (dwSize > _countof(szTempDir)))
+            wcscpy(szTempDir, L"C:");
+    }
+    if (PathAppendW(szTempDir, L"\\RAPPS Downloads"))
+        RemoveDirectoryPath(szTempDir);
+
+    /* Cleanup the RAPPS settings directory (that also contains the downloaded database directory) */
+    if (SHGetSpecialFolderPathW(NULL, szTempDir, CSIDL_LOCAL_APPDATA, TRUE) &&
+        PathAppendW(szTempDir, L"RApps" /*RAPPS_NAME*/))
+    {
+        RemoveDirectoryPath(szTempDir);
+    }
+
+    // TODO: Should we want to delete the "HKLM\\SYSTEM\\CurrentControlSet\\Services\\EventLog\\Application\\ReactOS Application Manager"
+    // registry key?
+
+    return TRUE;
+#endif
 }
