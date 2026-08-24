@@ -33,7 +33,6 @@ SetupStartService(LPCWSTR lpServiceName, BOOL bWait);
 /* GLOBALS ******************************************************************/
 
 HINF hSysSetupInf = INVALID_HANDLE_VALUE;
-ADMIN_INFO AdminInfo;
 
 typedef struct _DLG_DATA
 {
@@ -1673,15 +1672,6 @@ __debugbreak();
 
     LogItem(NULL, L"Installing ReactOS done");
     TerminateSetupActionLog();
-
-    if (AdminInfo.Name != NULL)
-        RtlFreeHeap(RtlGetProcessHeap(), 0, AdminInfo.Name);
-
-    if (AdminInfo.Domain != NULL)
-        RtlFreeHeap(RtlGetProcessHeap(), 0, AdminInfo.Domain);
-
-    if (AdminInfo.Password != NULL)
-        RtlFreeHeap(RtlGetProcessHeap(), 0, AdminInfo.Password);
 
 Quit:
     // HACK: This shouldn't be done here, but by the caller of InstallWindowsNt()

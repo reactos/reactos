@@ -21,6 +21,10 @@
 #define TICKS_PER_DAY       (-864000000000LL)
 #define TICKS_PER_MINUTE    (-600000000LL)
 
+/* GLOBALS ******************************************************************/
+
+ADMIN_INFO AdminInfo;
+
 /* FUNCTIONS ****************************************************************/
 
 NTSTATUS

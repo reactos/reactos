@@ -2470,6 +2470,13 @@ SaveSettings(
 
     SetAutoAdminLogon();
 
+    if (AdminInfo.Name != NULL)
+        RtlFreeHeap(RtlGetProcessHeap(), 0, AdminInfo.Name);
+    if (AdminInfo.Domain != NULL)
+        RtlFreeHeap(RtlGetProcessHeap(), 0, AdminInfo.Domain);
+    if (AdminInfo.Password != NULL)
+        RtlFreeHeap(RtlGetProcessHeap(), 0, AdminInfo.Password);
+
     Error = SaveDefaultUserHive();
     if (Error != ERROR_SUCCESS)
     {

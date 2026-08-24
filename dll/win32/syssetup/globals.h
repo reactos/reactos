@@ -18,14 +18,6 @@
 
 #pragma once
 
-typedef struct _ADMIN_INFO
-{
-    LPWSTR Name;
-    LPWSTR Domain;
-    LPWSTR Password;
-} ADMIN_INFO, *PADMIN_INFO;
-
-
 typedef struct _ITEMSDATA
 {
     PSETUPDATA pSetupData;
@@ -69,7 +61,7 @@ typedef struct _INSTALLITEM_NOTIFY
 
 extern HINSTANCE hDllInstance;
 extern HINF hSysSetupInf;
-extern ADMIN_INFO AdminInfo;
+
 
 /* addons.c */
 HRESULT
@@ -101,6 +93,16 @@ InstallNetworkComponent(
     _In_ PWSTR pszComponentId);
 
 /* security.c */
+
+typedef struct _ADMIN_INFO
+{
+    LPWSTR Name;
+    LPWSTR Domain;
+    LPWSTR Password;
+} ADMIN_INFO, *PADMIN_INFO;
+
+extern ADMIN_INFO AdminInfo;
+
 DWORD
 CountSecuritySteps(VOID);
 
