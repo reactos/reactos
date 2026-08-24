@@ -1200,11 +1200,15 @@ InstallLiveCD(VOID)
     return 0;
 
 error:
-    MessageBoxW(
-        NULL,
-        L"Failed to load LiveCD! You can shutdown your computer, or press ENTER to reboot.",
-        L"ReactOS LiveCD",
-        MB_OK);
+    MessageBoxW(NULL,
+                L"Failed to load LiveCD! You can shutdown your computer, or press ENTER to reboot.",
+                L"ReactOS LiveCD",
+                MB_OK);
+    // HACK: This shouldn't be done here, but by the caller of InstallWindowsNt()
+    /* Enable the shutdown privilege and reboot the machine */
+    if (!pSetupEnablePrivilege(SE_SHUTDOWN_NAME, TRUE))
+        DPRINT1("pSetupEnablePrivilege(SE_SHUTDOWN_NAME) failed (Error %lu)\n", GetLastError());
+    ExitWindowsEx(EWX_REBOOT, 0);
     return 0;
 }
 
@@ -1537,7 +1541,8 @@ SaveDefaultUserHive(VOID)
         return dwError;
     }
 
-    pSetupEnablePrivilege(L"SeBackupPrivilege", TRUE);
+    if (!pSetupEnablePrivilege(SE_BACKUP_NAME, TRUE))
+        DPRINT1("pSetupEnablePrivilege(SE_BACKUP_NAME) failed (Error %lu)\n", GetLastError());
 
     /* Save the Default hive */
     dwError = RegSaveKeyExW(hUserKey,
@@ -1575,7 +1580,7 @@ SaveDefaultUserHive(VOID)
         DPRINT1("RegSaveKeyExW() failed (Error %lu)\n", dwError);
     }
 
-    pSetupEnablePrivilege(L"SeBackupPrivilege", FALSE);
+    pSetupEnablePrivilege(SE_BACKUP_NAME, FALSE);
 
     RegCloseKey(hUserKey);
 
@@ -1588,8 +1593,6 @@ DWORD
 InstallReactOS(VOID)
 {
     WCHAR szBuffer[MAX_PATH];
-    HANDLE token;
-    TOKEN_PRIVILEGES privs;
     HKEY hKey;
     HANDLE hHotkeyThread;
     BOOL ret;
@@ -1603,13 +1606,13 @@ InstallReactOS(VOID)
     if (!InitializeProgramFilesDir())
     {
         FatalError("InitializeProgramFilesDir() failed");
-        return 0;
+        goto Quit;
     }
 
     if (!InitializeProfiles())
     {
         FatalError("InitializeProfiles() failed");
-        return 0;
+        goto Quit;
     }
 
     InitializeDefaultUserLocale();
@@ -1647,20 +1650,20 @@ InstallReactOS(VOID)
     if (SaveDefaultUserHive() != ERROR_SUCCESS)
     {
         FatalError("SaveDefaultUserHive() failed");
-        return 0;
+        goto Quit;
     }
 
     if (!CopySystemProfile(0))
     {
         FatalError("CopySystemProfile() failed");
-        return 0;
+        goto Quit;
     }
 
     hHotkeyThread = CreateThread(NULL, 0, HotkeyThread, NULL, 0, NULL);
 
     PreprocessUnattend(TRUE);
     if (!CommonInstall())
-        return 0;
+        goto Quit;
 
     /* Install the TCP/IP protocol driver */
     ret = InstallNetworkComponent(L"MS_TCPIP");
@@ -1701,32 +1704,11 @@ InstallReactOS(VOID)
     if (AdminInfo.Password != NULL)
         RtlFreeHeap(RtlGetProcessHeap(), 0, AdminInfo.Password);
 
-    /* Get shutdown privilege */
-    if (!OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES, &token))
-    {
-        FatalError("OpenProcessToken() failed!");
-        return 0;
-    }
-    if (!LookupPrivilegeValue(NULL,
-                              SE_SHUTDOWN_NAME,
-                              &privs.Privileges[0].Luid))
-    {
-        FatalError("LookupPrivilegeValue() failed!");
-        return 0;
-    }
-    privs.PrivilegeCount = 1;
-    privs.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
-    if (AdjustTokenPrivileges(token,
-                              FALSE,
-                              &privs,
-                              0,
-                              (PTOKEN_PRIVILEGES)NULL,
-                              NULL) == 0)
-    {
-        FatalError("AdjustTokenPrivileges() failed!");
-        return 0;
-    }
-
+Quit:
+    // HACK: This shouldn't be done here, but by the caller of InstallWindowsNt()
+    /* Enable the shutdown privilege and reboot the machine */
+    if (!pSetupEnablePrivilege(SE_SHUTDOWN_NAME, TRUE))
+        DPRINT1("pSetupEnablePrivilege(SE_SHUTDOWN_NAME) failed (Error %lu)\n", GetLastError());
     ExitWindowsEx(EWX_REBOOT, 0);
     return 0;
 }
