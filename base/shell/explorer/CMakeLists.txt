@@ -27,6 +27,11 @@ list(APPEND SOURCE
     trayprop.cpp
     traywnd.cpp
     util.cpp
+	start7/start7.cpp
+    start7/window.cpp
+    start7/items.cpp
+    start7/paint.cpp
+    start7/input.cpp
     precomp.h)
 
 file(GLOB explorer_rc_deps res/*.*)

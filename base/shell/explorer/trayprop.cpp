@@ -221,6 +221,9 @@ public:
         SHELLSTATE ss;
         ss.fStartPanelOn = !IsDlgButtonChecked(IDC_TASKBARPROP_STARTMENUCLASSIC);
         SHGetSetSettings(&ss, SSF_STARTPANELON, TRUE);
+		/* Tell the running tray window to recreate the Start menu with the
+           selected style (CTrayWindow::OnSettingChanged watches for this) */
+        SHSendMessageBroadcastW(WM_SETTINGCHANGE, 0, (LPARAM)L"TraySettings");
         return PSNRET_NOERROR;
     }
 };

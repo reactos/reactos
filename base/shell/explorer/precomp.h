@@ -404,4 +404,9 @@ Tray_OnStartMenuDismissed(ITrayWindow* Tray);
 HRESULT
 IsSameObject(IN IUnknown *punk1, IN IUnknown *punk2);
 
+/*
+ * start7/start7.h - Win7 style Start menu
+ */
+#include "start7/start7.h"
+
 #endif /* _EXPLORER_PRECOMP__H_ */

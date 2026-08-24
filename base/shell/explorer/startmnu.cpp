@@ -53,6 +53,17 @@ CreateStartMenu(IN ITrayWindow *Tray,
                 IN HBITMAP hbmBanner OPTIONAL,
                 IN BOOL bSmallIcons)
 {
+	/* The Win7-style menu is fully self-contained and has no menu band */
+    if (UseModernStartMenu())
+    {
+        IMenuPopup *pMpModern = CreateWin7StartMenu(Tray);
+        if (pMpModern)
+        {
+            *ppMenuBand = NULL;
+            return pMpModern;
+        }
+        /* Fall back to the classic menu */
+    }
     HRESULT hr;
     CComPtr<IMenuPopup> pMp;
     CComPtr<IUnknown> pSms;

@@ -459,9 +459,11 @@ public:
             ClearRecentAndMru();
     }
 
-    void RefreshStartMenuSettings()
+     void RefreshStartMenuSettings()
     {
-        IUnknown_Exec(m_StartMenuPopup, CLSID_MenuBand, 0x10000000, 0, NULL, NULL);
+        /* The Win7-style menu has no band and rebuilds itself when shown */
+        if (m_StartMenuBand != NULL)
+            IUnknown_Exec(m_StartMenuPopup, CLSID_MenuBand, 0x10000000, 0, NULL, NULL);
     }
 
     LRESULT DoExitWindows()
