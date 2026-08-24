@@ -99,6 +99,7 @@ HKCR,"batfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shell32.dll
 HKCR,"batfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-153"
 HKCR,"batfile\shell\edit\command","",0x00020000,"%SystemRoot%\system32\notepad.exe ""%1"""
 HKCR,"batfile\shell\open\command","",0x00000000,"""%1"" %*"
+HKCR,"batfile\shellex\DropHandler","",0x00000000,"{86C86720-42A0-1069-A2E8-08002B30309D}"
 
 ; Certificate
 HKCR,".cer","",0x00000000,"cerfile"
@@ -115,6 +116,7 @@ HKCR,"cmdfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shell32.dll
 HKCR,"cmdfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-153"
 HKCR,"cmdfile\shell\edit\command","",0x00020000,"%SystemRoot%\system32\notepad.exe ""%1"""
 HKCR,"cmdfile\shell\open\command","",0x00000000,"""%1"" %*"
+HKCR,"cmdfile\shellex\DropHandler","",0x00000000,"{86C86720-42A0-1069-A2E8-08002B30309D}"
 
 ; DOS Applications
 HKCR,".com","",0x00000000,"comfile"
@@ -180,7 +182,7 @@ HKCR,"exefile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shell32.dll
 HKCR,"exefile\DefaultIcon","",0x00000000,"%1"
 HKCR,"exefile\shell\open\command","",0x00000000,"""%1"" %*"
 HKCR,"exefile\shell\runas\command","",0x00020000,"""%1"" %*"
-HKCR,"exefile\shellex\DropHandler","",0x00020000,"{86C86720-42A0-1069-A2E8-08002B30309D}"
+HKCR,"exefile\shellex\DropHandler","",0x00000000,"{86C86720-42A0-1069-A2E8-08002B30309D}"
 
 ; National Language Support File
 HKCR,".nls","",0x00000000,"nlsfile"
