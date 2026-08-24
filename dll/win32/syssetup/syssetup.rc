@@ -1,6 +1,6 @@
-#include <windef.h>
-#include <winuser.h>
-#include <commctrl.h>
+#include <winnt.rh>
+#include <winuser.rh>
+#include <commctrl.rh>
 
 #include "resource.h"
 
