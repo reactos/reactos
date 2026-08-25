@@ -394,7 +394,7 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
         TBBUTTON tbButtons[2] =
         {
             {0, -1, TBSTATE_ENABLED, BTNS_SEP, {0}, 0, 0},
-            {0, IDM_GO_COMMAND, TBSTATE_ENABLED, BTNS_AUTOSIZE, {0}, 0, 0}
+            {0, IDM_GO_COMMAND, TBSTATE_ENABLED, BTNS_AUTOSIZE | BTNS_SHOWTEXT, {0}, 0, 0}
         };
 
         /* Load "My Computer" string */
@@ -423,6 +423,7 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
         g_pChildWnd->hToolBarImageList = ImageList_Create(12, 12, ILC_COLOR32 | ILC_MASK, 1, 0);
         ImageList_AddIcon(g_pChildWnd->hToolBarImageList, g_pChildWnd->hArrowIcon);
         SendMessageW(g_pChildWnd->hAddressToolBarWnd, TB_SETIMAGELIST, 0, (LPARAM)g_pChildWnd->hToolBarImageList);
+        tbButtons[1].iString = (INT_PTR)SendMessageW(g_pChildWnd->hAddressToolBarWnd, TB_ADDSTRINGW, (WPARAM)hInst, IDS_GO);
 
         SendMessageW(g_pChildWnd->hAddressToolBarWnd, TB_SETMAXTEXTROWS, 1, 0);
         SendMessageW(g_pChildWnd->hAddressToolBarWnd, TB_BUTTONSTRUCTSIZE, (WPARAM)sizeof(tbButtons[0]), 0);
