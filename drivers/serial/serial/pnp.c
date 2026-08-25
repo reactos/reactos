@@ -340,7 +340,6 @@ SerialPnp(
 	switch (MinorFunction)
 	{
 		/* FIXME: do all these minor functions
-		IRP_MN_QUERY_REMOVE_DEVICE 0x1
 		IRP_MN_REMOVE_DEVICE 0x2
 		{
 			TRACE_(SERIAL, "IRP_MJ_PNP / IRP_MN_REMOVE_DEVICE\n");
@@ -351,7 +350,6 @@ SerialPnp(
 			IoDeleteDevice(Fdo) and/or IoDetachDevice
 			break;
 		}
-		IRP_MN_CANCEL_REMOVE_DEVICE 0x3
 		IRP_MN_STOP_DEVICE 0x4
 		IRP_MN_QUERY_STOP_DEVICE 0x5
 		IRP_MN_CANCEL_STOP_DEVICE 0x6
@@ -387,6 +385,34 @@ SerialPnp(
 			}
 
 			break;
+		}
+		case IRP_MN_QUERY_REMOVE_DEVICE: /* 0x1 */
+		{
+			TRACE_(SERIAL, "IRP_MJ_PNP / IRP_MN_QUERY_REMOVE_DEVICE\n");
+
+			DeviceExtension = DeviceObject->DeviceExtension;
+
+			if (DeviceExtension->IsOpened)
+			{
+				Status = STATUS_UNSUCCESSFUL;
+				break;
+			}
+
+			DeviceExtension->OldPnpState = DeviceExtension->PnpState;
+			DeviceExtension->PnpState = dsRemovePending;
+			Status = STATUS_SUCCESS;
+
+			return ForwardIrpAndForget(DeviceObject, Irp);
+		}
+		case IRP_MN_CANCEL_REMOVE_DEVICE: /* 0x3 */
+		{
+			TRACE_(SERIAL, "IRP_MJ_PNP / IRP_MN_CANCEL_REMOVE_DEVICE\n");
+
+			DeviceExtension = DeviceObject->DeviceExtension;
+			DeviceExtension->PnpState = DeviceExtension->OldPnpState;
+			Status = STATUS_SUCCESS;
+
+			return ForwardIrpAndForget(DeviceObject, Irp);
 		}
 		case IRP_MN_QUERY_DEVICE_RELATIONS: /* (optional) 0x7 */
 		{
