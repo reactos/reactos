@@ -294,8 +294,9 @@ UnregisterService(VOID)
     hServiceManager = OpenSCManagerW(NULL, NULL, SC_MANAGER_CREATE_SERVICE);
     if (!hServiceManager)
     {
-        DPRINT1("OpenSCManager() failed!\n");
-        return GetLastError();
+        error = GetLastError();
+        DPRINT1("OpenSCManager() failed, error %lu\n", error);
+        return error;
     }
 
     hService = OpenServiceW(hServiceManager, g_pszServiceName, DELETE);
@@ -305,7 +306,7 @@ UnregisterService(VOID)
     {
         if (error == ERROR_SERVICE_DOES_NOT_EXIST)
             return ERROR_SUCCESS;
-        DPRINT1("OpenService() failed!\n");
+        DPRINT1("OpenService() failed, error %lu\n", error);
     }
     else
     {
@@ -313,7 +314,7 @@ UnregisterService(VOID)
         if (error == ERROR_SERVICE_MARKED_FOR_DELETE)
             error = ERROR_SUCCESS;
         if (error)
-            DPRINT1("DeleteService() failed!\n");
+            DPRINT1("DeleteService() failed, error %lu\n", error);
 
         CloseServiceHandle(hService);
     }
