@@ -542,6 +542,7 @@ BEGIN
     IDS_EXPAND "Dérouler"
     IDS_COLLAPSE "Réduire"
     IDS_GOTO_SUGGESTED_KEY "Aller à '%s'"
+    IDS_GO "Aller"
     IDS_FINISHEDFIND "Recherche dans le registre terminée."
 END
 

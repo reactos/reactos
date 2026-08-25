@@ -545,6 +545,7 @@ BEGIN
     IDS_EXPAND "&Разгръщане"
     IDS_COLLAPSE "&Свиване"
     IDS_GOTO_SUGGESTED_KEY "&Отиване на '%s'"
+    IDS_GO "Отиване"
     IDS_FINISHEDFIND "Търсенето в регистъра приключи."
 END
 

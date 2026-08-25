@@ -145,6 +145,7 @@
 #define IDS_NEW_KEY                   31205
 #define IDS_NEW_VALUE                 31206
 #define IDS_GOTO_SUGGESTED_KEY        31207
+#define IDS_GO                        31208
 
 #define IDS_IMPORT_PROMPT 31300
 #define IDS_IMPORT_OK     31301

@@ -552,6 +552,7 @@ BEGIN
     IDS_EXPAND "&Expandir"
     IDS_COLLAPSE "&Recolher"
     IDS_GOTO_SUGGESTED_KEY "&ir para '%s'"
+    IDS_GO "ir"
     IDS_FINISHEDFIND "Concluída a pesquisa no registo."
 END
 

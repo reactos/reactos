@@ -542,6 +542,7 @@ BEGIN
     IDS_EXPAND "הרחב"
     IDS_COLLAPSE "כווץ"
     IDS_GOTO_SUGGESTED_KEY "עבור אל '%s'"
+    IDS_GO "עבור אל"
     IDS_FINISHEDFIND "Finished searching through the registry."
 END
 

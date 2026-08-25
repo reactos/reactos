@@ -542,6 +542,7 @@ BEGIN
     IDS_EXPAND "&Visa nivå"
     IDS_COLLAPSE "&Dölj nivå"
     IDS_GOTO_SUGGESTED_KEY "&Go to '%s'"
+    IDS_GO "Go"
     IDS_FINISHEDFIND "Slutfört sökningen av registret."
 END
 
