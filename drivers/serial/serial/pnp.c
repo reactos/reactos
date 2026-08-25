@@ -362,7 +362,6 @@ SerialPnp(
 		IRP_MN_FILTER_RESOURCE_REQUIREMENTS (optional) 0xd
 		IRP_MN_QUERY_PNP_DEVICE_STATE (optional) 0x14
 		IRP_MN_DEVICE_USAGE_NOTIFICATION (required or optional) 0x16
-		IRP_MN_SURPRISE_REMOVAL 0x17
 		*/
 		case IRP_MN_START_DEVICE: /* 0x0 */
 		{
@@ -412,6 +411,46 @@ SerialPnp(
 		case IRP_MN_FILTER_RESOURCE_REQUIREMENTS: /* (optional) 0xd */
 		{
 			TRACE_(SERIAL, "IRP_MJ_PNP / IRP_MN_FILTER_RESOURCE_REQUIREMENTS\n");
+			return ForwardIrpAndForget(DeviceObject, Irp);
+		}
+		case IRP_MN_SURPRISE_REMOVAL: /* 0x17 */
+		{
+			WCHAR LinkNameBuffer[32];
+			WCHAR DeviceNameBuffer[32];
+			UNICODE_STRING LinkName;
+			UNICODE_STRING DeviceName;
+            UNICODE_STRING KeyName;
+			OBJECT_ATTRIBUTES ObjectAttributes;
+			HANDLE hKey;
+
+			TRACE_(SERIAL, "IRP_MJ_PNP / IRP_MN_SURPRISE_REMOVAL\n");
+
+			DeviceExtension = DeviceObject->DeviceExtension;
+			DeviceExtension->PnpState = dsSurpriseRemoved;
+
+			IoSetDeviceInterfaceState(&DeviceExtension->SerialInterfaceName, FALSE);
+
+			if (DeviceExtension->Interrupt)
+			{
+				IoDisconnectInterrupt(DeviceExtension->Interrupt);
+				DeviceExtension->Interrupt = NULL;
+			}
+
+			_swprintf(LinkNameBuffer, L"\\DosDevices\\COM%lu", DeviceExtension->ComPort);
+			RtlInitUnicodeString(&LinkName, LinkNameBuffer);
+			IoDeleteSymbolicLink(&LinkName);
+
+			_swprintf(DeviceNameBuffer, L"\\Device\\Serial%lu", DeviceExtension->SerialPortNumber);
+			RtlInitUnicodeString(&DeviceName, DeviceNameBuffer);
+			RtlInitUnicodeString(&KeyName, L"\\Registry\\Machine\\HARDWARE\\DeviceMap\\SERIALCOMM");
+			InitializeObjectAttributes(&ObjectAttributes, &KeyName, OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE, NULL, NULL);
+
+			if (NT_SUCCESS(ZwOpenKey(&hKey, KEY_SET_VALUE, &ObjectAttributes)))
+			{
+				ZwDeleteValueKey(hKey, &DeviceName);
+				ZwClose(hKey);
+			}
+
 			return ForwardIrpAndForget(DeviceObject, Irp);
 		}
 		default:
