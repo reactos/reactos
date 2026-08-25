@@ -28,8 +28,8 @@ add_library(winhttp MODULE
 
 set_module_type(winhttp win32dll)
 target_link_libraries(winhttp uuid wine oldnames wine_dll_register)
-add_delay_importlibs(winhttp oleaut32 crypt32 secur32 iphlpapi dhcpcsvc)
-add_importlibs(winhttp user32 advapi32 ws2_32 jsproxy kernel32_vista msvcrt kernel32 ntdll)
+add_delay_importlibs(winhttp oleaut32 secur32 iphlpapi dhcpcsvc)
+add_importlibs(winhttp crypt32 user32 advapi32 ws2_32 jsproxy kernel32_vista msvcrt kernel32 ntdll)
 add_dependencies(winhttp stdole2)
 add_pch(winhttp precomp.h SOURCE)
 add_cd_file(TARGET winhttp DESTINATION reactos/system32 FOR all)
