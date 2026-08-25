@@ -32,7 +32,7 @@ typedef struct _EMULATOR_ACCESS_ENTRY {
     PVOID Routine;
 } EMULATOR_ACCESS_ENTRY, *PEMULATOR_ACCESS_ENTRY;
 
-#endif
+#endif // _NTOSP_
 
 typedef
 VOID
@@ -200,8 +200,7 @@ typedef
 _Function_class_DXGK_(DXGKDDI_PROTECTED_CALLBACK)
 _IRQL_requires_DXGK_(PASSIVE_LEVEL)
 VOID
-NTAPI
-(*DXGKDDI_PROTECTED_CALLBACK)(
+(NTAPI *DXGKDDI_PROTECTED_CALLBACK)(
     _In_ CONST PVOID MiniportDeviceContext,
     _In_ PVOID ProtectedCallbackContext,
     _In_ NTSTATUS ProtectionStatus
@@ -784,6 +783,7 @@ typedef struct _DXGK_DEBUG_REPORT_INTERFACE {
     PVOID Context;
     PINTERFACE_REFERENCE InterfaceReference;
     PINTERFACE_DEREFERENCE InterfaceDereference;
+
     _IRQL_requires_DXGK_(PASSIVE_LEVEL)
     DXGK_DEBUG_REPORT_HANDLE (NTAPI *DbgReportCreate)(
         _In_ HANDLE DeviceHandle,
@@ -824,6 +824,7 @@ typedef struct _DXGK_TIMED_OPERATION_INTERFACE {
     PVOID Context;
     PINTERFACE_REFERENCE InterfaceReference;
     PINTERFACE_DEREFERENCE InterfaceDereference;
+
     _IRQL_requires_DXGK_(PASSIVE_LEVEL)
     NTSTATUS (NTAPI *TimedOperationStart)(
         _Out_ DXGK_TIMED_OPERATION *Op,
@@ -856,6 +857,7 @@ typedef struct _DXGK_SPB_INTERFACE {
     PVOID Context;
     PINTERFACE_REFERENCE InterfaceReference;
     PINTERFACE_DEREFERENCE InterfaceDereference;
+
     _IRQL_requires_DXGK_(PASSIVE_LEVEL)
     NTSTATUS (NTAPI *OpenSpbResource)(
         _In_ HANDLE DeviceHandle,
@@ -913,6 +915,7 @@ typedef struct _DXGK_FIRMWARE_TABLE_INTERFACE {
     PVOID Context;
     PINTERFACE_REFERENCE InterfaceReference;
     PINTERFACE_DEREFERENCE InterfaceDereference;
+
     _IRQL_requires_DXGK_(PASSIVE_LEVEL)
     _Success_(return >= 0 || return == STATUS_BUFFER_TOO_SMALL)
     NTSTATUS (NTAPI *EnumSystemFirmwareTables)(
