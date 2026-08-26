@@ -97,7 +97,9 @@ extern void ResizeWnd(int cx, int cy)
     HDWP hdwp = BeginDeferWindowPos(4);
     RECT rt, rs, rb, re;
     TBBUTTONINFO tbInfo;
-    const int nButtonHeight = 22;
+    const int nButtonHeight = 26;
+    const int nAddressEditHeight = 22;
+    const int nAddressEditPadding = 2;
     int cyEdge = GetSystemMetrics(SM_CYEDGE);
     const UINT uFlags = SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOCOPYBITS;
 
@@ -130,8 +132,8 @@ extern void ResizeWnd(int cx, int cy)
     SendMessageW(g_pChildWnd->hAddressToolBarWnd, TB_GETITEMRECT, 0, (LPARAM)&re);
     if (hdwp)
         hdwp = DeferWindowPos(hdwp, g_pChildWnd->hAddressBarWnd, NULL,
-                              re.left, re.top,
-                              re.right - re.left, re.bottom - re.top,
+                              re.left, re.top + nAddressEditPadding,
+                              re.right - re.left, nAddressEditHeight,
                               uFlags);
     if (hdwp)
         hdwp = DeferWindowPos(hdwp, g_pChildWnd->hTreeWnd, NULL,
@@ -391,10 +393,11 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
         WCHAR buffer[MAX_PATH];
         DWORD style;
         IAutoComplete *pAutoComplete;
+        const int iBitmap = 0;
         TBBUTTON tbButtons[2] =
         {
             {0, -1, TBSTATE_ENABLED, BTNS_SEP, {0}, 0, 0},
-            {0, IDM_GO_COMMAND, TBSTATE_ENABLED, BTNS_AUTOSIZE | BTNS_SHOWTEXT, {0}, 0, 0}
+            {iBitmap, IDM_GO_COMMAND, TBSTATE_ENABLED, BTNS_AUTOSIZE | BTNS_SHOWTEXT, {0}, 0, 0}
         };
 
         /* Load "My Computer" string */
@@ -418,11 +421,12 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
                                                       CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
                                                       g_pChildWnd->hAddressToolBarWnd, (HMENU)0, hInst, NULL);
 
-        g_pChildWnd->hArrowIcon = (HICON)LoadImageW(hInst, MAKEINTRESOURCEW(IDI_ARROW),
-                                                    IMAGE_ICON, 12, 12, 0);
-        g_pChildWnd->hToolBarImageList = ImageList_Create(12, 12, ILC_COLOR32 | ILC_MASK, 1, 0);
-        ImageList_AddIcon(g_pChildWnd->hToolBarImageList, g_pChildWnd->hArrowIcon);
-        SendMessageW(g_pChildWnd->hAddressToolBarWnd, TB_SETIMAGELIST, 0, (LPARAM)g_pChildWnd->hToolBarImageList);
+        g_pChildWnd->hGoButtonNormal = ImageList_LoadImageW(hInst, MAKEINTRESOURCEW(IDB_GO_NORMAL),
+                                                            20, 0, RGB(255, 0, 255), IMAGE_BITMAP, LR_CREATEDIBSECTION);
+        g_pChildWnd->hGoButtonHot = ImageList_LoadImageW(hInst, MAKEINTRESOURCEW(IDB_GO_HOT),
+                                                         20, 0, RGB(255, 0, 255), IMAGE_BITMAP, LR_CREATEDIBSECTION);
+        SendMessageW(g_pChildWnd->hAddressToolBarWnd, TB_SETIMAGELIST, iBitmap, (LPARAM)g_pChildWnd->hGoButtonNormal);
+        SendMessageW(g_pChildWnd->hAddressToolBarWnd, TB_SETHOTIMAGELIST, iBitmap, (LPARAM)g_pChildWnd->hGoButtonHot);
         tbButtons[1].iString = (INT_PTR)SendMessageW(g_pChildWnd->hAddressToolBarWnd, TB_ADDSTRINGW, (WPARAM)hInst, IDS_GO);
 
         SendMessageW(g_pChildWnd->hAddressToolBarWnd, TB_SETMAXTEXTROWS, 1, 0);
@@ -479,7 +483,8 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
         DestroyListView(g_pChildWnd->hListWnd);
         DestroyTreeView(g_pChildWnd->hTreeWnd);
         DestroyMainMenu();
-        DestroyIcon(g_pChildWnd->hArrowIcon);
+        ImageList_Destroy(g_pChildWnd->hGoButtonNormal);
+        ImageList_Destroy(g_pChildWnd->hGoButtonHot);
         HeapFree(GetProcessHeap(), 0, g_pChildWnd);
         g_pChildWnd = NULL;
         PostQuitMessage(0);
