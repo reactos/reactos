@@ -542,7 +542,7 @@ BEGIN
     IDS_EXPAND "&Expandir"
     IDS_COLLAPSE "&Reduzir"
     IDS_GOTO_SUGGESTED_KEY "&Ir para '%s'"
-    IDS_GO "Ir"
+    IDS_GO "|Ir||"
     IDS_FINISHEDFIND "Pesquisa do Registro concluída."
 END
 

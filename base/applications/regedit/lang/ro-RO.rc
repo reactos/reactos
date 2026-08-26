@@ -552,7 +552,7 @@ BEGIN
     IDS_EXPAND "&Extindere"
     IDS_COLLAPSE "&Restrângere"
     IDS_GOTO_SUGGESTED_KEY "S&alt la '%s'"
-    IDS_GO "Salt"
+    IDS_GO "|Salt||"
     IDS_FINISHEDFIND "Căutarea în registru a fost finalizată."
 END
 

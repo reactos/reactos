@@ -542,7 +542,7 @@ BEGIN
     IDS_EXPAND "Pe&rluas"
     IDS_COLLAPSE "Per&sempit"
     IDS_GOTO_SUGGESTED_KEY "&Pergi ke '%s'"
-    IDS_GO "Pergi"
+    IDS_GO "|Pergi||"
     IDS_FINISHEDFIND "Selesai mencari di seluruh registri."
 END
 

@@ -550,7 +550,7 @@ BEGIN
     IDS_EXPAND "&Espandi"
     IDS_COLLAPSE "&Raccogli"
     IDS_GOTO_SUGGESTED_KEY "&Vai a '%s'"
-    IDS_GO "Vai"
+    IDS_GO "|Vai||"
     IDS_FINISHEDFIND "Fine ricerca nel registro."
 END
 

@@ -430,7 +430,8 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
                                         20, 0, RGB(255, 0, 255), IMAGE_BITMAP, LR_CREATEDIBSECTION);
         SendMessageW(g_pChildWnd->hAddressToolBarWnd, TB_SETIMAGELIST, hImageIndex, (LPARAM)g_pChildWnd->hGoButtonNormal);
         SendMessageW(g_pChildWnd->hAddressToolBarWnd, TB_SETHOTIMAGELIST, hImageIndex, (LPARAM)g_pChildWnd->hGoButtonHot);
-        tbButtons[1].iString = (INT_PTR)SendMessageW(g_pChildWnd->hAddressToolBarWnd, TB_ADDSTRINGW, (WPARAM)hInst, IDS_GO);
+        tbButtons[1].iString = (INT_PTR)SendMessageW(g_pChildWnd->hAddressToolBarWnd, TB_ADDSTRINGW,
+                                 (WPARAM)hInst, (LPARAM)MAKEINTRESOURCEW(IDS_GO));
 
         SendMessageW(g_pChildWnd->hAddressToolBarWnd, TB_SETMAXTEXTROWS, 1, 0);
         SendMessageW(g_pChildWnd->hAddressToolBarWnd, TB_BUTTONSTRUCTSIZE, (WPARAM)sizeof(tbButtons[0]), 0);
