@@ -25,6 +25,8 @@ IDI_BIN ICON "res/bin.ico"
 IDI_REGEDIT ICON "res/regedit.ico"
 IDI_REGFILE ICON "res/regfile.ico"
 IDI_ARROW ICON "res/arrow.ico"
+IDB_GO_NORMAL BITMAP "res/go-normal.bmp"
+IDB_GO_HOT BITMAP "res/go-hot.bmp"
 
 /* UTF-8 */
 #pragma code_page(65001)
