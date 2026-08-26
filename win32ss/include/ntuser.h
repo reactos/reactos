@@ -2278,9 +2278,9 @@ NtUserGetDC(
 HDC
 NTAPI
 NtUserGetDCEx(
-    HWND hWnd,
-    HANDLE hRegion,
-    ULONG Flags);
+    _In_opt_ HWND hWnd,
+    _In_ HRGN hRegion,
+    _In_ ULONG Flags);
 
 UINT
 NTAPI
