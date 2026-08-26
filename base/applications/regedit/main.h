@@ -31,6 +31,8 @@
 #define REG_FORMAT_5     1
 #define REG_FORMAT_4     2
 
+#define IDM_GO_COMMAND   3001
+
 /******************************************************************************/
 
 enum OPTION_FLAGS

@@ -400,7 +400,7 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
         TBBUTTON tbButtons[2] =
         {
             {0, 0, TBSTATE_ENABLED, BTNS_SEP, {0}, -1},
-            {hImageIndex, 1, TBSTATE_ENABLED, BTNS_AUTOSIZE | BTNS_SHOWTEXT, {0}, -1}
+            {hImageIndex, IDM_GO_COMMAND, TBSTATE_ENABLED, BTNS_AUTOSIZE | BTNS_SHOWTEXT, {0}, -1}
         };
 
         /* Load "My Computer" string */
@@ -416,14 +416,13 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
         style = WS_CHILD | WS_VISIBLE | WS_TABSTOP | TBSTYLE_FLAT | TBSTYLE_LIST;
         g_pChildWnd->hAddressToolBarWnd = CreateWindowExW(0, TOOLBARCLASSNAMEW, NULL, style,
                                                           CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
-                                                          hWnd, NULL, hInst, 0);
+                                                          hWnd, NULL, hInst, NULL);
 
         /* ES_AUTOHSCROLL style enables horizontal scrolling and shrinking */
         style = WS_CHILD | WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL;
         g_pChildWnd->hAddressBarWnd = CreateWindowExW(WS_EX_CLIENTEDGE, L"Edit", NULL, style,
                                                       CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
-                                                      hWnd, (HMENU)0, hInst, 0);
-        SetParent(g_pChildWnd->hAddressBarWnd, g_pChildWnd->hAddressToolBarWnd);
+                                                      g_pChildWnd->hAddressToolBarWnd, (HMENU)0, hInst, NULL);
 
         g_pChildWnd->hGoButtonNormal = ImageList_LoadImageW(hInst, MAKEINTRESOURCEW(IDB_GO_NORMAL),
                                         20, 0, RGB(255, 0, 255), IMAGE_BITMAP, LR_CREATEDIBSECTION);
@@ -434,7 +433,7 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
         tbButtons[1].iString = (INT_PTR)SendMessageW(g_pChildWnd->hAddressToolBarWnd, TB_ADDSTRINGW, (WPARAM)hInst, IDS_GO);
 
         SendMessageW(g_pChildWnd->hAddressToolBarWnd, TB_SETMAXTEXTROWS, 1, 0);
-        SendMessageW(g_pChildWnd->hAddressToolBarWnd, TB_BUTTONSTRUCTSIZE, (WPARAM)sizeof(TBBUTTON), 0);
+        SendMessageW(g_pChildWnd->hAddressToolBarWnd, TB_BUTTONSTRUCTSIZE, (WPARAM)sizeof(tbButtons[0]), 0);
         SendMessageW(g_pChildWnd->hAddressToolBarWnd, TB_ADDBUTTONSW, (WPARAM)_countof(tbButtons), (LPARAM)&tbButtons);
 
         if (SUCCEEDED(CoCreateInstance(&CLSID_AutoComplete, NULL, CLSCTX_INPROC_SERVER, &IID_IAutoComplete, (void**)&pAutoComplete)))
@@ -464,7 +463,7 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
         break;
     }
     case WM_COMMAND:
-        if(HIWORD(wParam) == BN_CLICKED)
+        if (LOWORD(wParam) == IDM_GO_COMMAND)
         {
             PostMessageW(g_pChildWnd->hAddressBarWnd, WM_KEYUP, VK_RETURN, 0);
         }
