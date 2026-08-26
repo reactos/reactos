@@ -51,8 +51,8 @@ typedef struct
     HWND    hListWnd;
     HWND    hAddressToolBarWnd;
     HWND    hAddressBarWnd;
-    HICON   hArrowIcon;
-    HIMAGELIST hToolBarImageList;
+    HIMAGELIST hGoButtonNormal;
+    HIMAGELIST hGoButtonHot;
     int     nFocusPanel;      /* 0: left  1: right */
     int     nSplitPos;
     WINDOWPLACEMENT pos;
