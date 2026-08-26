@@ -33,6 +33,7 @@
 #define W32PF_MANUALGUICHECK         (0x02000000)
 #define W32PF_CREATEDWINORDC         (0x04000000)
 #define W32PF_APIHOOKLOADED          (0x08000000)
+#define W32PF_JOBRESTRICTED          (0x40000000)
 
 #define QSIDCOUNTS 7
 
@@ -273,7 +274,7 @@ typedef struct _PROCESSINFO
     struct _CURICON_OBJECT* pCursorCache;
     PVOID pClientBase;
     DWORD dwLpkEntryPoints;
-    PVOID pW32Job;
+    struct _JOBINFO *pJobInfo;
     DWORD dwImeCompatFlags;
     LUID luidSession;
     USERSTARTUPINFO usi;

@@ -62,6 +62,7 @@ list(APPEND SOURCE
     SystemParametersInfo.c
     TrackMouseEvent.c
     TrackPopupMenuEx.c
+    UserHandleGrantAccess.c
     VirtualKey.c
     WndProc.c
     wsprintf.c)

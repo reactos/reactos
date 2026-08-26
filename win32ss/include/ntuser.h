@@ -12,6 +12,9 @@ struct tagPOPUPMENU;
 
 #define HANDLEENTRY_DESTROY 1
 #define HANDLEENTRY_INDESTROY 2
+/* A job was granted access to this handle, so freeing it has to sweep the
+   granted lists (see IntCleanupGrantedHandle) */
+#define HANDLEENTRY_GRANTED 4
 
 typedef struct _USER_HANDLE_ENTRY
 {
@@ -289,6 +292,7 @@ typedef struct tagCLIPBOARDDATA
 #define TIF_INGETTEXTLENGTH         0x08000000
 #define TIF_ANSILENGTH              0x10000000
 #define TIF_DISABLEHOOKS            0x20000000
+#define TIF_JOBRESTRICTED           0x40000000
 
 typedef struct _CALLBACKWND
 {

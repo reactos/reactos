@@ -342,18 +342,6 @@ NtUserUpdateInstance(
    return 0;
 }
 
-BOOL
-APIENTRY
-NtUserUserHandleGrantAccess(
-   IN HANDLE hUserHandle,
-   IN HANDLE hJob,
-   IN BOOL bGrant)
-{
-   STUB
-
-   return 0;
-}
-
 DWORD
 APIENTRY
 NtUserWaitForMsgAndEvent(
