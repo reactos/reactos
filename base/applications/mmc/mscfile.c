@@ -1,8 +1,8 @@
 /*
  * PROJECT:     ReactOS MMC
- * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * LICENSE:     MIT (https://spdx.org/licenses/MIT)
  * PURPOSE:     .msc file parser
- * COPYRIGHT:   Copyright 2024 Whindmar Saksit <whindsaks@proton.me>
+ * COPYRIGHT:   Copyright 2026 Whindmar Saksit <whindsaks@proton.me>
  */
 
 #define COBJMACROS
@@ -88,8 +88,8 @@ static HRESULT LoadXmlFromVariant(VARIANT *pVarUrl, IXMLDOMElement **ppDocElm)
 static HRESULT GetMscRootNode(PCWSTR pszFilePath, IXMLDOMNode **ppRoot)
 {
     HRESULT hr;
-    SIZE_T len = lstrlenW(pszFilePath);
-    SIZE_T cch = sizeof("file:///") + (len * 2); // *2 is overkill but we don't know how many escaped characters there are
+    DWORD len = lstrlenW(pszFilePath);
+    DWORD cch = sizeof("file:///") + (len * 2); // *2 is overkill but we don't know how many escaped characters there are
     PWSTR pszUrl = LocalAlloc(LPTR, cch * sizeof(*pszUrl));
     if (!pszUrl)
         return E_OUTOFMEMORY;

@@ -50,7 +50,7 @@ extern HANDLE hAppHeap;
 extern HWND hwndMainConsole;
 extern HWND hwndMDIClient;
 
-/* mscfile.cpp */
+/* mscfile.c */
 
 EXTERN_C BOOL HandleRosMscLaunch(PCWSTR pszCmdLine);
 

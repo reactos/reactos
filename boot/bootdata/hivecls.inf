@@ -439,7 +439,8 @@ HKCR,"xslfile\shell\open\command","",0x00020000,"%SystemRoot%\system32\notepad.e
 ; MSC files
 HKCR,".msc","",0x00000000,"MSCFile"
 HKCR,"mscfile","",,"%MSCFILE%"
-HKCR,"mscfile\shell\open\command",,0x00020000,"%SystemRoot%\system32\mmc.exe "%1" %*"
+HKCR,"mscfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\mmc.exe"
+HKCR,"mscfile\shell\open\command","",0x00020000,"%SystemRoot%\system32\mmc.exe ""%1"" %*"
 
 ; MSI files
 HKCR,".msi","",0x00000000,"Msi.Package"
