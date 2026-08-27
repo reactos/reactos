@@ -137,12 +137,12 @@
     if ((FacsPtr) != 0) \
     { \
         UINT32 compare, prev, newval; \
-        UINT32* lock = &((FacsPtr)->GlobalLock); \
+        volatile LONG *lock = (volatile LONG *)&((FacsPtr)->GlobalLock); \
         do \
         { \
-            compare = *lock; \
+            compare = (UINT32)*lock; \
             newval = (compare & ~1) | ((compare >> 1) & 1) | 2; \
-            prev = InterlockedCompareExchange(lock, newval, compare); \
+            prev = (UINT32)InterlockedCompareExchange(lock, (LONG)newval, (LONG)compare); \
         } while (prev != compare); \
         acquired = ((newval & 0xFF) < 3) ? 0xFF : 0x00; \
     } \
@@ -155,7 +155,7 @@
 \
     if ((FacsPtr) != 0) \
     { \
-        pending = InterlockedAnd(&(FacsPtr)->GlobalLock, ~3) & 1; \
+        pending = (BOOLEAN)(InterlockedAnd((volatile LONG *)&((FacsPtr)->GlobalLock), (LONG)~3) & 1); \
     } \
     (Pnd) = pending; \
 }
