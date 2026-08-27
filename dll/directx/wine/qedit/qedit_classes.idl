@@ -33,6 +33,13 @@ coclass AMTimeline { interface IAMTimeline; interface IPersistStream; interface 
 coclass MediaDet { interface IMediaDet; }
 
 [
+    helpstring("Null Renderer"),
+    threading(both),
+    uuid(c1f400a4-3f08-11d3-9f0b-006008039e37)
+]
+coclass NullRenderer { interface IBaseFilter; }
+
+[
     helpstring("Sample Grabber"),
     threading(both),
     uuid(c1f400a0-3f08-11d3-9f0b-006008039e37)

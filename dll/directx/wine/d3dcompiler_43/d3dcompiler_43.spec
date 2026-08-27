@@ -1,4 +1,4 @@
-@ stdcall D3DAssemble(ptr long str ptr ptr long ptr ptr)
+@ stdcall -private D3DAssemble(ptr long str ptr ptr long ptr ptr)
 @ stub DebugSetMute
 @ stdcall D3DCompile(ptr long str ptr ptr str str long long ptr ptr)
 @ stub D3DCompressShaders

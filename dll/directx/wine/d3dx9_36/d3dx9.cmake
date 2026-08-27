@@ -1,49 +1,57 @@
 
-function(add_d3dx9_target __version)
-    set(module d3dx9_${__version})
+function(add_d3dx9_target VERSION)
+    set(_target d3dx9_${VERSION})
+    set(_srcdir ${CMAKE_CURRENT_SOURCE_DIR}/../d3dx9_36)
 
-    spec2def(${module}.dll ${module}.spec ADD_IMPORTLIB)
+    spec2def(${_target}.dll ${_target}.spec ADD_IMPORTLIB)
 
-    list(APPEND SOURCE
-        ../d3dx9_36/animation.c
-        ../d3dx9_36/core.c
-        ../d3dx9_36/effect.c
-        ../d3dx9_36/font.c
-        ../d3dx9_36/line.c
-        ../d3dx9_36/main.c
-        ../d3dx9_36/math.c
-        ../d3dx9_36/mesh.c
-        ../d3dx9_36/preshader.c
-        ../d3dx9_36/render.c
-        ../d3dx9_36/shader.c
-        ../d3dx9_36/skin.c
-        ../d3dx9_36/sprite.c
-        ../d3dx9_36/surface.c
-        ../d3dx9_36/texture.c
-        ../d3dx9_36/txc_compress_dxtn.c
-        ../d3dx9_36/txc_fetch_dxtn.c
-        ../d3dx9_36/util.c
-        ../d3dx9_36/volume.c
-        ../d3dx9_36/xfile.c)
+    set(_source
+        ${_srcdir}/animation.c
+        ${_srcdir}/core.c
+        ${_srcdir}/effect.c
+        ${_srcdir}/font.c
+        ${_srcdir}/line.c
+        ${_srcdir}/main.c
+        ${_srcdir}/math.c
+        ${_srcdir}/mesh.c
+        ${_srcdir}/preshader.c
+        ${_srcdir}/render.c
+        ${_srcdir}/shader.c
+        ${_srcdir}/skin.c
+        ${_srcdir}/sprite.c
+        ${_srcdir}/surface.c
+        ${_srcdir}/texture.c
+        ${_srcdir}/txc_compress_dxtn.c
+        ${_srcdir}/txc_fetch_dxtn.c
+        ${_srcdir}/util.c
+        ${_srcdir}/volume.c
+        ${_srcdir}/xfile.c)
 
-    list(APPEND PCH_SKIP_SOURCE
-        ../d3dx9_36/guid.c
-        ${CMAKE_CURRENT_BINARY_DIR}/${module}_stubs.c)
-
-    add_library(${module} MODULE
-        ${SOURCE}
-        ${PCH_SKIP_SOURCE}
+    add_library(${_target} MODULE
+        ${_source}
         version.rc
-        ${CMAKE_CURRENT_BINARY_DIR}/${module}.def)
+        ${CMAKE_CURRENT_BINARY_DIR}/${_target}_stubs.c
+        ${CMAKE_CURRENT_BINARY_DIR}/${_target}.def)
 
-    add_definitions(-D__ROS_LONG64__)
-    set_module_type(${module} win32dll)
-    add_dependencies(${module} d3d_idl_headers)
-    target_link_libraries(${module} dxguid wine oldnames)
-    add_importlibs(${module} d3dcompiler_43 d3dxof usp10 user32 ole32 gdi32 msvcrt kernel32 ntdll)
-    add_delay_importlibs(${module} windowscodecs)
-    add_pch(${module} ../d3dx9_36/precomp.h "${PCH_SKIP_SOURCE}")
-    add_cd_file(TARGET ${module} DESTINATION reactos/system32 FOR all)
+    target_compile_definitions(${_target} PRIVATE
+        __WINESRC__
+        __ROS_LONG64__
+        # math.c wants M_PI, which <math.h> only exposes on request here.
+        _USE_MATH_DEFINES
+        D3DX_SDK_VERSION=${VERSION})
 
-    target_compile_definitions(${module} PRIVATE D3DX_SDK_VERSION=${__version} __WINESRC__ copysignf=_copysignf)
+    target_include_directories(${_target} BEFORE PRIVATE
+        ${REACTOS_SOURCE_DIR}/sdk/include/wine
+        ${REACTOS_BINARY_DIR}/sdk/include/wine
+        ${_srcdir}
+        ${CMAKE_CURRENT_BINARY_DIR})
+
+    set_module_type(${_target} win32dll)
+    target_link_libraries(${_target} wine dxguid uuid oldnames)
+    add_importlibs(${_target}
+        d3d9 d3dcompiler_47 d3dxof ole32 gdi32 user32 usp10
+        kernel32_vista msvcrt kernel32 ntdll)
+    add_delay_importlibs(${_target} windowscodecs)
+    add_dependencies(${_target} wineheaders d3d_idl_headers)
+    add_cd_file(TARGET ${_target} DESTINATION reactos/system32 FOR all)
 endfunction()

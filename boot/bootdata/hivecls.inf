@@ -800,6 +800,11 @@ HKCR,"SystemFileAssociations\text\OpenWithList\wordpad.exe","",0x00000000,""
 HKCR,"SystemFileAssociations\text\shell\edit\command","",0x00020000,"%SystemRoot%\system32\notepad.exe %1"
 HKCR,"SystemFileAssociations\text\shell\open\command","",0x00020000,"%SystemRoot%\system32\notepad.exe %1"
 
+; DirectShow: quartz and devenum are chicken and egg.
+HKCR,"CLSID\{4315d437-5b8c-11d0-bd3b-00a0c911ce86}","",0x00000000,"Device Moniker"
+HKCR,"CLSID\{4315d437-5b8c-11d0-bd3b-00a0c911ce86}\InprocServer32","",0x00020000,"%SystemRoot%\system32\devenum.dll"
+HKCR,"CLSID\{4315d437-5b8c-11d0-bd3b-00a0c911ce86}\InprocServer32","ThreadingModel",0x00000000,"Both"
+
 ;-------------------------------- STRINGS -------------------------------
 
 [Strings]

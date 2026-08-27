@@ -21,7 +21,7 @@
 #define COBJMACROS
 
 #include <stdio.h>
-#include "wine/dxdiag.h"
+#include "dxdiag.h"
 #include "oleauto.h"
 #include "wine/test.h"
 
@@ -33,14 +33,6 @@ struct property_test
 
 static IDxDiagProvider *pddp;
 static IDxDiagContainer *pddc;
-
-static const WCHAR DxDiag_SystemInfo[] = {'D','x','D','i','a','g','_','S','y','s','t','e','m','I','n','f','o',0};
-static const WCHAR DxDiag_DisplayDevices[] = {'D','x','D','i','a','g','_','D','i','s','p','l','a','y','D','e','v','i','c','e','s',0};
-static const WCHAR DxDiag_SoundDevices[] = {'D','x','D','i','a','g','_','D','i','r','e','c','t','S','o','u','n','d','.',
-                                            'D','x','D','i','a','g','_','S','o','u','n','d','D','e','v','i','c','e','s',0};
-static const WCHAR DxDiag_SoundCaptureDevices[] = {'D','x','D','i','a','g','_','D','i','r','e','c','t','S','o','u','n','d','.',
-                                                   'D','x','D','i','a','g','_','S','o','u','n','d','C','a','p','t','u','r','e',
-                                                   'D','e','v','i','c','e','s',0};
 
 static BOOL create_root_IDxDiagContainer(void)
 {
@@ -80,11 +72,11 @@ static void test_GetNumberOfChildContainers(void)
 
     hr = IDxDiagContainer_GetNumberOfChildContainers(pddc, NULL);
     ok(hr == E_INVALIDARG,
-       "Expected IDxDiagContainer::GetNumberOfChildContainers to return E_INVALIDARG, got 0x%08x\n", hr);
+       "Expected IDxDiagContainer::GetNumberOfChildContainers to return E_INVALIDARG, got 0x%08lx\n", hr);
 
     hr = IDxDiagContainer_GetNumberOfChildContainers(pddc, &count);
     ok(hr == S_OK,
-       "Expected IDxDiagContainer::GetNumberOfChildContainers to return S_OK, got 0x%08x\n", hr);
+       "Expected IDxDiagContainer::GetNumberOfChildContainers to return S_OK, got 0x%08lx\n", hr);
     if (hr == S_OK)
         ok(count != 0, "Expected the number of child containers for the root container to be non-zero\n");
 
@@ -104,10 +96,10 @@ static void test_GetNumberOfProps(void)
     }
 
     hr = IDxDiagContainer_GetNumberOfProps(pddc, NULL);
-    ok(hr == E_INVALIDARG, "Expected IDxDiagContainer::GetNumberOfProps to return E_INVALIDARG, got 0x%08x\n", hr);
+    ok(hr == E_INVALIDARG, "Expected IDxDiagContainer::GetNumberOfProps to return E_INVALIDARG, got 0x%08lx\n", hr);
 
     hr = IDxDiagContainer_GetNumberOfProps(pddc, &count);
-    ok(hr == S_OK, "Expected IDxDiagContainer::GetNumberOfProps to return S_OK, got 0x%08x\n", hr);
+    ok(hr == S_OK, "Expected IDxDiagContainer::GetNumberOfProps to return S_OK, got 0x%08lx\n", hr);
     if (hr == S_OK)
         ok(count == 0, "Expected the number of properties for the root container to be zero\n");
 
@@ -120,8 +112,7 @@ static void test_EnumChildContainerNames(void)
     HRESULT hr;
     WCHAR container[256];
     DWORD maxcount, index;
-    static const WCHAR testW[] = {'t','e','s','t',0};
-    static const WCHAR zerotestW[] = {0,'e','s','t',0};
+    static const WCHAR testW[] = L"test";
 
     if (!create_root_IDxDiagContainer())
     {
@@ -132,36 +123,36 @@ static void test_EnumChildContainerNames(void)
     /* Test various combinations of invalid parameters. */
     hr = IDxDiagContainer_EnumChildContainerNames(pddc, 0, NULL, 0);
     ok(hr == E_INVALIDARG,
-       "Expected IDxDiagContainer::EnumChildContainerNames to return E_INVALIDARG, got 0x%08x\n", hr);
+       "Expected IDxDiagContainer::EnumChildContainerNames to return E_INVALIDARG, got 0x%08lx\n", hr);
 
     hr = IDxDiagContainer_EnumChildContainerNames(pddc, 0, NULL, ARRAY_SIZE(container));
     ok(hr == E_INVALIDARG,
-       "Expected IDxDiagContainer::EnumChildContainerNames to return E_INVALIDARG, got 0x%08x\n", hr);
+       "Expected IDxDiagContainer::EnumChildContainerNames to return E_INVALIDARG, got 0x%08lx\n", hr);
 
     /* Test the conditions in which the output buffer can be modified. */
     memcpy(container, testW, sizeof(testW));
     hr = IDxDiagContainer_EnumChildContainerNames(pddc, 0, container, 0);
     ok(hr == E_INVALIDARG,
-       "Expected IDxDiagContainer::EnumChildContainerNames to return E_INVALIDARG, got 0x%08x\n", hr);
+       "Expected IDxDiagContainer::EnumChildContainerNames to return E_INVALIDARG, got 0x%08lx\n", hr);
     ok(!memcmp(container, testW, sizeof(testW)),
        "Expected the container buffer to be untouched, got %s\n", wine_dbgstr_w(container));
 
     memcpy(container, testW, sizeof(testW));
     hr = IDxDiagContainer_EnumChildContainerNames(pddc, ~0, container, 0);
     ok(hr == E_INVALIDARG,
-       "Expected IDxDiagContainer::EnumChildContainerNames to return E_INVALIDARG, got 0x%08x\n", hr);
+       "Expected IDxDiagContainer::EnumChildContainerNames to return E_INVALIDARG, got 0x%08lx\n", hr);
     ok(!memcmp(container, testW, sizeof(testW)),
        "Expected the container buffer to be untouched, got %s\n", wine_dbgstr_w(container));
 
     memcpy(container, testW, sizeof(testW));
     hr = IDxDiagContainer_EnumChildContainerNames(pddc, ~0, container, ARRAY_SIZE(container));
     ok(hr == E_INVALIDARG,
-       "Expected IDxDiagContainer::EnumChildContainerNames to return E_INVALIDARG, got 0x%08x\n", hr);
-    ok(!memcmp(container, zerotestW, sizeof(zerotestW)),
+       "Expected IDxDiagContainer::EnumChildContainerNames to return E_INVALIDARG, got 0x%08lx\n", hr);
+    ok(!memcmp(container, L"\0est", sizeof(L"\0est")),
        "Expected the container buffer string to be empty, got %s\n", wine_dbgstr_w(container));
 
     hr = IDxDiagContainer_GetNumberOfChildContainers(pddc, &maxcount);
-    ok(hr == S_OK, "Expected IDxDiagContainer::GetNumberOfChildContainers to return S_OK, got 0x%08x\n", hr);
+    ok(hr == S_OK, "Expected IDxDiagContainer::GetNumberOfChildContainers to return S_OK, got 0x%08lx\n", hr);
     if (FAILED(hr))
     {
         skip("IDxDiagContainer::GetNumberOfChildContainers failed\n");
@@ -184,7 +175,7 @@ static void test_EnumChildContainerNames(void)
             /* We should get here when index is one more than the maximum index value. */
             ok(maxcount == index,
                "Expected IDxDiagContainer::EnumChildContainerNames to return E_INVALIDARG "
-               "on the last index %d, got 0x%08x\n", index, hr);
+               "on the last index %ld, got 0x%08lx\n", index, hr);
             ok(container[0] == '\0',
                "Expected the container buffer string to be empty, got %s\n", wine_dbgstr_w(container));
             break;
@@ -199,7 +190,7 @@ static void test_EnumChildContainerNames(void)
             /* Get the container name to compare against. */
             hr = IDxDiagContainer_EnumChildContainerNames(pddc, index, temp, ARRAY_SIZE(temp));
             ok(hr == S_OK,
-               "Expected IDxDiagContainer::EnumChildContainerNames to return S_OK, got 0x%08x\n", hr);
+               "Expected IDxDiagContainer::EnumChildContainerNames to return S_OK, got 0x%08lx\n", hr);
 
             /* Show that the DirectX SDK's stipulation that the buffer be at
              * least 256 characters long is a mere suggestion, and smaller sizes
@@ -219,13 +210,13 @@ static void test_EnumChildContainerNames(void)
 
             ok(hr == S_OK,
                "Expected IDxDiagContainer::EnumChildContainerNames to return S_OK, "
-               "got hr = 0x%08x, buffersize = %d\n", hr, buffersize);
+               "got hr = 0x%08lx, buffersize = %ld\n", hr, buffersize);
             if (hr == S_OK)
-                trace("pddc[%d] = %s, length = %d\n", index, wine_dbgstr_w(container), buffersize);
+                trace("pddc[%ld] = %s, length = %ld\n", index, wine_dbgstr_w(container), buffersize);
         }
         else
         {
-            ok(0, "IDxDiagContainer::EnumChildContainerNames unexpectedly returned 0x%08x\n", hr);
+            ok(0, "IDxDiagContainer::EnumChildContainerNames unexpectedly returned 0x%08lx\n", hr);
             break;
         }
     }
@@ -250,28 +241,28 @@ static void test_GetChildContainer(void)
     /* Test various combinations of invalid parameters. */
     hr = IDxDiagContainer_GetChildContainer(pddc, NULL, NULL);
     ok(hr == E_INVALIDARG,
-       "Expected IDxDiagContainer::GetChildContainer to return E_INVALIDARG, got 0x%08x\n", hr);
+       "Expected IDxDiagContainer::GetChildContainer to return E_INVALIDARG, got 0x%08lx\n", hr);
 
     child = (void*)0xdeadbeef;
     hr = IDxDiagContainer_GetChildContainer(pddc, NULL, &child);
     ok(hr == E_INVALIDARG,
-       "Expected IDxDiagContainer::GetChildContainer to return E_INVALIDARG, got 0x%08x\n", hr);
+       "Expected IDxDiagContainer::GetChildContainer to return E_INVALIDARG, got 0x%08lx\n", hr);
     ok(child == (void*)0xdeadbeef, "Expected output pointer to be unchanged, got %p\n", child);
 
     hr = IDxDiagContainer_GetChildContainer(pddc, container, NULL);
     ok(hr == E_INVALIDARG,
-       "Expected IDxDiagContainer::GetChildContainer to return E_INVALIDARG, got 0x%08x\n", hr);
+       "Expected IDxDiagContainer::GetChildContainer to return E_INVALIDARG, got 0x%08lx\n", hr);
 
     child = (void*)0xdeadbeef;
     hr = IDxDiagContainer_GetChildContainer(pddc, container, &child);
     ok(hr == E_INVALIDARG,
-       "Expected IDxDiagContainer::GetChildContainer to return E_INVALIDARG, got 0x%08x\n", hr);
+       "Expected IDxDiagContainer::GetChildContainer to return E_INVALIDARG, got 0x%08lx\n", hr);
     ok(child == NULL, "Expected output pointer to be NULL, got %p\n", child);
 
     /* Get the name of a suitable child container. */
     hr = IDxDiagContainer_EnumChildContainerNames(pddc, 0, container, ARRAY_SIZE(container));
     ok(hr == S_OK,
-       "Expected IDxDiagContainer::EnumChildContainerNames to return S_OK, got 0x%08x\n", hr);
+       "Expected IDxDiagContainer::EnumChildContainerNames to return S_OK, got 0x%08lx\n", hr);
     if (FAILED(hr))
     {
         skip("IDxDiagContainer::EnumChildContainerNames failed\n");
@@ -281,7 +272,7 @@ static void test_GetChildContainer(void)
     child = (void*)0xdeadbeef;
     hr = IDxDiagContainer_GetChildContainer(pddc, container, &child);
     ok(hr == S_OK,
-       "Expected IDxDiagContainer::GetChildContainer to return S_OK, got 0x%08x\n", hr);
+       "Expected IDxDiagContainer::GetChildContainer to return S_OK, got 0x%08lx\n", hr);
     ok(child != NULL && child != (void*)0xdeadbeef, "Expected a valid output pointer, got %p\n", child);
 
     if (SUCCEEDED(hr))
@@ -292,7 +283,7 @@ static void test_GetChildContainer(void)
          * for multiple calls for the same container name. */
         hr = IDxDiagContainer_GetChildContainer(pddc, container, &ptr);
         ok(hr == S_OK,
-           "Expected IDxDiagContainer::GetChildContainer to return S_OK, got 0x%08x\n", hr);
+           "Expected IDxDiagContainer::GetChildContainer to return S_OK, got 0x%08lx\n", hr);
         if (SUCCEEDED(hr))
             ok(ptr != child, "Expected the two pointers (%p vs. %p) to be unequal\n", child, ptr);
 
@@ -332,7 +323,7 @@ static void test_dot_parsing(void)
 
     /* Find a container with a child container of its own. */
     hr = IDxDiagContainer_GetNumberOfChildContainers(pddc, &count);
-    ok(hr == S_OK, "Expected IDxDiagContainer::GetNumberOfChildContainers to return S_OK, got 0x%08x\n", hr);
+    ok(hr == S_OK, "Expected IDxDiagContainer::GetNumberOfChildContainers to return S_OK, got 0x%08lx\n", hr);
     if (FAILED(hr))
     {
         skip("IDxDiagContainer::GetNumberOfChildContainers failed\n");
@@ -344,7 +335,7 @@ static void test_dot_parsing(void)
         IDxDiagContainer *child;
 
         hr = IDxDiagContainer_EnumChildContainerNames(pddc, index, containerbufW, ARRAY_SIZE(containerbufW));
-        ok(hr == S_OK, "Expected IDxDiagContainer_EnumChildContainerNames to return S_OK, got 0x%08x\n", hr);
+        ok(hr == S_OK, "Expected IDxDiagContainer_EnumChildContainerNames to return S_OK, got 0x%08lx\n", hr);
         if (FAILED(hr))
         {
             skip("IDxDiagContainer::EnumChildContainerNames failed\n");
@@ -352,13 +343,13 @@ static void test_dot_parsing(void)
         }
 
         hr = IDxDiagContainer_GetChildContainer(pddc, containerbufW, &child);
-        ok(hr == S_OK, "Expected IDxDiagContainer::GetChildContainer to return S_OK, got 0x%08x\n", hr);
+        ok(hr == S_OK, "Expected IDxDiagContainer::GetChildContainer to return S_OK, got 0x%08lx\n", hr);
 
         if (SUCCEEDED(hr))
         {
             hr = IDxDiagContainer_EnumChildContainerNames(child, 0, childbufW, ARRAY_SIZE(childbufW));
             ok(hr == S_OK || hr == E_INVALIDARG,
-               "Expected IDxDiagContainer::EnumChildContainerNames to return S_OK or E_INVALIDARG, got 0x%08x\n", hr);
+               "Expected IDxDiagContainer::EnumChildContainerNames to return S_OK or E_INVALIDARG, got 0x%08lx\n", hr);
             IDxDiagContainer_Release(child);
 
             if (SUCCEEDED(hr))
@@ -391,7 +382,7 @@ static void test_dot_parsing(void)
         trace("Trying container name %s\n", wine_dbgstr_w(dotbufferW));
         hr = IDxDiagContainer_GetChildContainer(pddc, dotbufferW, &child);
         ok(hr == test_strings[i].expect,
-           "Expected IDxDiagContainer::GetChildContainer to return 0x%08x for %s, got 0x%08x\n",
+           "Expected IDxDiagContainer::GetChildContainer to return 0x%08lx for %s, got 0x%08lx\n",
            test_strings[i].expect, wine_dbgstr_w(dotbufferW), hr);
         if (SUCCEEDED(hr))
             IDxDiagContainer_Release(child);
@@ -408,7 +399,7 @@ static void test_EnumPropNames(void)
     WCHAR container[256], property[256];
     IDxDiagContainer *child = NULL;
     DWORD count, index, propcount;
-    static const WCHAR testW[] = {'t','e','s','t',0};
+    static const WCHAR testW[] = L"test";
 
     if (!create_root_IDxDiagContainer())
     {
@@ -418,7 +409,7 @@ static void test_EnumPropNames(void)
 
     /* Find a container with a non-zero number of properties. */
     hr = IDxDiagContainer_GetNumberOfChildContainers(pddc, &count);
-    ok(hr == S_OK, "Expected IDxDiagContainer::GetNumberOfChildContainers to return S_OK, got 0x%08x\n", hr);
+    ok(hr == S_OK, "Expected IDxDiagContainer::GetNumberOfChildContainers to return S_OK, got 0x%08lx\n", hr);
     if (FAILED(hr))
     {
         skip("IDxDiagContainer::GetNumberOfChildContainers failed\n");
@@ -428,7 +419,7 @@ static void test_EnumPropNames(void)
     for (index = 0; index < count; index++)
     {
         hr = IDxDiagContainer_EnumChildContainerNames(pddc, index, container, ARRAY_SIZE(container));
-        ok(hr == S_OK, "Expected IDxDiagContainer_EnumChildContainerNames to return S_OK, got 0x%08x\n", hr);
+        ok(hr == S_OK, "Expected IDxDiagContainer_EnumChildContainerNames to return S_OK, got 0x%08lx\n", hr);
         if (FAILED(hr))
         {
             skip("IDxDiagContainer::EnumChildContainerNames failed\n");
@@ -436,12 +427,12 @@ static void test_EnumPropNames(void)
         }
 
         hr = IDxDiagContainer_GetChildContainer(pddc, container, &child);
-        ok(hr == S_OK, "Expected IDxDiagContainer::GetChildContainer to return S_OK, got 0x%08x\n", hr);
+        ok(hr == S_OK, "Expected IDxDiagContainer::GetChildContainer to return S_OK, got 0x%08lx\n", hr);
 
         if (SUCCEEDED(hr))
         {
             hr = IDxDiagContainer_GetNumberOfProps(child, &propcount);
-            ok(hr == S_OK, "Expected IDxDiagContainer::GetNumberOfProps to return S_OK, got 0x%08x\n", hr);
+            ok(hr == S_OK, "Expected IDxDiagContainer::GetNumberOfProps to return S_OK, got 0x%08lx\n", hr);
 
             if (!propcount)
             {
@@ -460,17 +451,17 @@ static void test_EnumPropNames(void)
     }
 
     hr = IDxDiagContainer_EnumPropNames(child, ~0, NULL, 0);
-    ok(hr == E_INVALIDARG, "Expected IDxDiagContainer::EnumPropNames to return E_INVALIDARG, got 0x%08x\n", hr);
+    ok(hr == E_INVALIDARG, "Expected IDxDiagContainer::EnumPropNames to return E_INVALIDARG, got 0x%08lx\n", hr);
 
     memcpy(property, testW, sizeof(testW));
     hr = IDxDiagContainer_EnumPropNames(child, ~0, property, 0);
-    ok(hr == E_INVALIDARG, "Expected IDxDiagContainer::EnumPropNames to return E_INVALIDARG, got 0x%08x\n", hr);
+    ok(hr == E_INVALIDARG, "Expected IDxDiagContainer::EnumPropNames to return E_INVALIDARG, got 0x%08lx\n", hr);
     ok(!memcmp(property, testW, sizeof(testW)),
        "Expected the property buffer to be unchanged, got %s\n", wine_dbgstr_w(property));
 
     memcpy(property, testW, sizeof(testW));
     hr = IDxDiagContainer_EnumPropNames(child, ~0, property, ARRAY_SIZE(property));
-    ok(hr == E_INVALIDARG, "Expected IDxDiagContainer::EnumPropNames to return E_INVALIDARG, got 0x%08x\n", hr);
+    ok(hr == E_INVALIDARG, "Expected IDxDiagContainer::EnumPropNames to return E_INVALIDARG, got 0x%08lx\n", hr);
     ok(!memcmp(property, testW, sizeof(testW)),
        "Expected the property buffer to be unchanged, got %s\n", wine_dbgstr_w(property));
 
@@ -491,7 +482,7 @@ static void test_EnumPropNames(void)
             /* We should get here when index is one more than the maximum index value. */
             ok(propcount == index,
                "Expected IDxDiagContainer::EnumPropNames to return E_INVALIDARG "
-               "on the last index %d, got 0x%08x\n", index, hr);
+               "on the last index %ld, got 0x%08lx\n", index, hr);
             ok(!memcmp(property, testW, sizeof(testW)),
                "Expected the property buffer to be unchanged, got %s\n", wine_dbgstr_w(property));
             break;
@@ -504,7 +495,7 @@ static void test_EnumPropNames(void)
                "Expected the property buffer string to be empty, got %s\n", wine_dbgstr_w(property));
             hr = IDxDiagContainer_EnumPropNames(child, index, temp, ARRAY_SIZE(temp));
             ok(hr == S_OK,
-               "Expected IDxDiagContainer::EnumPropNames to return S_OK, got 0x%08x\n", hr);
+               "Expected IDxDiagContainer::EnumPropNames to return S_OK, got 0x%08lx\n", hr);
 
             /* Show that the DirectX SDK's stipulation that the buffer be at
              * least 256 characters long is a mere suggestion, and smaller sizes
@@ -524,13 +515,13 @@ static void test_EnumPropNames(void)
 
             ok(hr == S_OK,
                "Expected IDxDiagContainer::EnumPropNames to return S_OK, "
-               "got hr = 0x%08x, buffersize = %d\n", hr, buffersize);
+               "got hr = 0x%08lx, buffersize = %ld\n", hr, buffersize);
             if (hr == S_OK)
-                trace("child[%d] = %s, length = %d\n", index, wine_dbgstr_w(property), buffersize);
+                trace("child[%ld] = %s, length = %ld\n", index, wine_dbgstr_w(property), buffersize);
         }
         else
         {
-            ok(0, "IDxDiagContainer::EnumPropNames unexpectedly returned 0x%08x\n", hr);
+            ok(0, "IDxDiagContainer::EnumPropNames unexpectedly returned 0x%08lx\n", hr);
             break;
         }
     }
@@ -552,8 +543,7 @@ static void test_GetProp(void)
     SAFEARRAY *sa;
     SAFEARRAYBOUND bound;
     ULONG ref;
-    static const WCHAR emptyW[] = {0};
-    static const WCHAR testW[] = {'t','e','s','t',0};
+    static const WCHAR testW[] = L"test";
 
     if (!create_root_IDxDiagContainer())
     {
@@ -563,7 +553,7 @@ static void test_GetProp(void)
 
     /* Find a container with a property. */
     hr = IDxDiagContainer_GetNumberOfChildContainers(pddc, &count);
-    ok(hr == S_OK, "Expected IDxDiagContainer::GetNumberOfChildContainers to return S_OK, got 0x%08x\n", hr);
+    ok(hr == S_OK, "Expected IDxDiagContainer::GetNumberOfChildContainers to return S_OK, got 0x%08lx\n", hr);
     if (FAILED(hr))
     {
         skip("IDxDiagContainer::GetNumberOfChildContainers failed\n");
@@ -573,7 +563,7 @@ static void test_GetProp(void)
     for (index = 0; index < count; index++)
     {
         hr = IDxDiagContainer_EnumChildContainerNames(pddc, index, container, ARRAY_SIZE(container));
-        ok(hr == S_OK, "Expected IDxDiagContainer_EnumChildContainerNames to return S_OK, got 0x%08x\n", hr);
+        ok(hr == S_OK, "Expected IDxDiagContainer_EnumChildContainerNames to return S_OK, got 0x%08lx\n", hr);
         if (FAILED(hr))
         {
             skip("IDxDiagContainer::EnumChildContainerNames failed\n");
@@ -581,13 +571,13 @@ static void test_GetProp(void)
         }
 
         hr = IDxDiagContainer_GetChildContainer(pddc, container, &child);
-        ok(hr == S_OK, "Expected IDxDiagContainer::GetChildContainer to return S_OK, got 0x%08x\n", hr);
+        ok(hr == S_OK, "Expected IDxDiagContainer::GetChildContainer to return S_OK, got 0x%08lx\n", hr);
 
         if (SUCCEEDED(hr))
         {
             hr = IDxDiagContainer_EnumPropNames(child, 0, property, ARRAY_SIZE(property));
             ok(hr == S_OK || hr == E_INVALIDARG,
-               "Expected IDxDiagContainer::EnumPropNames to return S_OK or E_INVALIDARG, got 0x%08x\n", hr);
+               "Expected IDxDiagContainer::EnumPropNames to return S_OK or E_INVALIDARG, got 0x%08lx\n", hr);
 
             if (SUCCEEDED(hr))
                 break;
@@ -606,32 +596,32 @@ static void test_GetProp(void)
     }
 
     hr = IDxDiagContainer_GetProp(child, NULL, NULL);
-    ok(hr == E_INVALIDARG, "Expected IDxDiagContainer::GetProp to return E_INVALIDARG, got 0x%08x\n", hr);
+    ok(hr == E_INVALIDARG, "Expected IDxDiagContainer::GetProp to return E_INVALIDARG, got 0x%08lx\n", hr);
 
     V_VT(&var) = 0xdead;
     hr = IDxDiagContainer_GetProp(child, NULL, &var);
-    ok(hr == E_INVALIDARG, "Expected IDxDiagContainer::GetProp to return E_INVALIDARG, got 0x%08x\n", hr);
+    ok(hr == E_INVALIDARG, "Expected IDxDiagContainer::GetProp to return E_INVALIDARG, got 0x%08lx\n", hr);
     ok(V_VT(&var) == 0xdead, "Expected the variant to be untouched, got %u\n", V_VT(&var));
 
-    hr = IDxDiagContainer_GetProp(child, emptyW, NULL);
-    ok(hr == E_INVALIDARG, "Expected IDxDiagContainer::GetProp to return E_INVALIDARG, got 0x%08x\n", hr);
+    hr = IDxDiagContainer_GetProp(child, L"", NULL);
+    ok(hr == E_INVALIDARG, "Expected IDxDiagContainer::GetProp to return E_INVALIDARG, got 0x%08lx\n", hr);
 
     V_VT(&var) = 0xdead;
-    hr = IDxDiagContainer_GetProp(child, emptyW, &var);
-    ok(hr == E_INVALIDARG, "Expected IDxDiagContainer::GetProp to return E_INVALIDARG, got 0x%08x\n", hr);
+    hr = IDxDiagContainer_GetProp(child, L"", &var);
+    ok(hr == E_INVALIDARG, "Expected IDxDiagContainer::GetProp to return E_INVALIDARG, got 0x%08lx\n", hr);
     ok(V_VT(&var) == 0xdead, "Expected the variant to be untouched, got %u\n", V_VT(&var));
 
     hr = IDxDiagContainer_GetProp(child, testW, NULL);
-    ok(hr == E_INVALIDARG, "Expected IDxDiagContainer::GetProp to return E_INVALIDARG, got 0x%08x\n", hr);
+    ok(hr == E_INVALIDARG, "Expected IDxDiagContainer::GetProp to return E_INVALIDARG, got 0x%08lx\n", hr);
 
     V_VT(&var) = 0xdead;
     hr = IDxDiagContainer_GetProp(child, testW, &var);
-    ok(hr == E_INVALIDARG, "Expected IDxDiagContainer::GetProp to return E_INVALIDARG, got 0x%08x\n", hr);
+    ok(hr == E_INVALIDARG, "Expected IDxDiagContainer::GetProp to return E_INVALIDARG, got 0x%08lx\n", hr);
     ok(V_VT(&var) == 0xdead, "Expected the variant to be untouched, got %u\n", V_VT(&var));
 
     VariantInit(&var);
     hr = IDxDiagContainer_GetProp(child, property, &var);
-    ok(hr == S_OK, "Expected IDxDiagContainer::GetProp to return S_OK, got 0x%08x\n", hr);
+    ok(hr == S_OK, "Expected IDxDiagContainer::GetProp to return S_OK, got 0x%08lx\n", hr);
     ok(V_VT(&var) != VT_EMPTY, "Expected the variant to be modified, got %d\n", V_VT(&var));
 
     /* Since the documentation for IDxDiagContainer::GetProp claims that the
@@ -641,7 +631,7 @@ static void test_GetProp(void)
     /* Try an invalid variant type. */
     V_VT(&var) = 0xdead;
     hr = IDxDiagContainer_GetProp(child, property, &var);
-    ok(hr == S_OK, "Expected IDxDiagContainer::GetProp to return S_OK, got 0x%08x\n", hr);
+    ok(hr == S_OK, "Expected IDxDiagContainer::GetProp to return S_OK, got 0x%08lx\n", hr);
     ok(V_VT(&var) != 0xdead, "Expected the variant to be modified, got %d\n", V_VT(&var));
 
     /* Try passing a variant with a locked SAFEARRAY. */
@@ -654,16 +644,16 @@ static void test_GetProp(void)
     V_ARRAY(&var) = sa;
 
     hr = SafeArrayLock(sa);
-    ok(hr == S_OK, "Expected SafeArrayLock to return S_OK, got 0x%08x\n", hr);
+    ok(hr == S_OK, "Expected SafeArrayLock to return S_OK, got 0x%08lx\n", hr);
 
     hr = IDxDiagContainer_GetProp(child, property, &var);
-    ok(hr == S_OK, "Expected IDxDiagContainer::GetProp to return S_OK, got 0x%08x\n", hr);
+    ok(hr == S_OK, "Expected IDxDiagContainer::GetProp to return S_OK, got 0x%08lx\n", hr);
     ok(V_VT(&var) != (VT_ARRAY | VT_UI1), "Expected the variant to be modified\n");
 
     hr = SafeArrayUnlock(sa);
-    ok(hr == S_OK, "Expected SafeArrayUnlock to return S_OK, got 0x%08x\n", hr);
+    ok(hr == S_OK, "Expected SafeArrayUnlock to return S_OK, got 0x%08lx\n", hr);
     hr = SafeArrayDestroy(sa);
-    ok(hr == S_OK, "Expected SafeArrayDestroy to return S_OK, got 0x%08x\n", hr);
+    ok(hr == S_OK, "Expected SafeArrayDestroy to return S_OK, got 0x%08lx\n", hr);
 
     /* Determine whether GetProp calls VariantClear on the passed variant. */
     V_VT(&var) = VT_UNKNOWN;
@@ -671,12 +661,12 @@ static void test_GetProp(void)
     IDxDiagContainer_AddRef(child);
 
     hr = IDxDiagContainer_GetProp(child, property, &var);
-    ok(hr == S_OK, "Expected IDxDiagContainer::GetProp to return S_OK, got 0x%08x\n", hr);
+    ok(hr == S_OK, "Expected IDxDiagContainer::GetProp to return S_OK, got 0x%08lx\n", hr);
     ok(V_VT(&var) != VT_UNKNOWN, "Expected the variant to be modified\n");
 
     IDxDiagContainer_AddRef(child);
     ref = IDxDiagContainer_Release(child);
-    ok(ref == 2, "Expected reference count to be 2, got %u\n", ref);
+    ok(ref == 2, "Expected reference count to be 2, got %lu\n", ref);
     IDxDiagContainer_Release(child);
 
     IDxDiagContainer_Release(child);
@@ -687,23 +677,14 @@ cleanup:
 
 static void test_root_children(void)
 {
-    static const WCHAR DxDiag_DirectSound[] = {'D','x','D','i','a','g','_','D','i','r','e','c','t','S','o','u','n','d',0};
-    static const WCHAR DxDiag_DirectMusic[] = {'D','x','D','i','a','g','_','D','i','r','e','c','t','M','u','s','i','c',0};
-    static const WCHAR DxDiag_DirectInput[] = {'D','x','D','i','a','g','_','D','i','r','e','c','t','I','n','p','u','t',0};
-    static const WCHAR DxDiag_DirectPlay[] = {'D','x','D','i','a','g','_','D','i','r','e','c','t','P','l','a','y',0};
-    static const WCHAR DxDiag_SystemDevices[] = {'D','x','D','i','a','g','_','S','y','s','t','e','m','D','e','v','i','c','e','s',0};
-    static const WCHAR DxDiag_DirectXFiles[] = {'D','x','D','i','a','g','_','D','i','r','e','c','t','X','F','i','l','e','s',0};
-    static const WCHAR DxDiag_DirectShowFilters[] = {'D','x','D','i','a','g','_','D','i','r','e','c','t','S','h','o','w','F','i','l','t','e','r','s',0};
-    static const WCHAR DxDiag_LogicalDisks[] = {'D','x','D','i','a','g','_','L','o','g','i','c','a','l','D','i','s','k','s',0};
-
     HRESULT hr;
     DWORD count, index;
 
     static const WCHAR *root_children[] = {
-        DxDiag_SystemInfo, DxDiag_DisplayDevices, DxDiag_DirectSound,
-        DxDiag_DirectMusic, DxDiag_DirectInput, DxDiag_DirectPlay,
-        DxDiag_SystemDevices, DxDiag_DirectXFiles, DxDiag_DirectShowFilters,
-        DxDiag_LogicalDisks
+        L"DxDiag_SystemInfo", L"DxDiag_DisplayDevices", L"DxDiag_DirectSound",
+        L"DxDiag_DirectMusic", L"DxDiag_DirectInput", L"DxDiag_DirectPlay",
+        L"DxDiag_SystemDevices", L"DxDiag_DirectXFiles", L"DxDiag_DirectShowFilters",
+        L"DxDiag_LogicalDisks"
     };
 
     if (!create_root_IDxDiagContainer())
@@ -714,7 +695,7 @@ static void test_root_children(void)
 
     /* Verify the identity and ordering of the root container's children. */
     hr = IDxDiagContainer_GetNumberOfChildContainers(pddc, &count);
-    ok(hr == S_OK, "Expected IDxDiagContainer::GetNumberOfChildContainers to return S_OK, got 0x%08x\n", hr);
+    ok(hr == S_OK, "Expected IDxDiagContainer::GetNumberOfChildContainers to return S_OK, got 0x%08lx\n", hr);
     if (FAILED(hr))
     {
         skip("IDxDiagContainer::GetNumberOfChildContainers failed\n");
@@ -722,7 +703,7 @@ static void test_root_children(void)
     }
 
     ok(count == ARRAY_SIZE(root_children),
-       "Got unexpected count %u for the number of child containers\n", count);
+       "Got unexpected count %lu for the number of child containers\n", count);
 
     if (count != ARRAY_SIZE(root_children))
     {
@@ -739,18 +720,18 @@ static void test_root_children(void)
         {
             ok(index == count,
                "Expected IDxDiagContainer::EnumChildContainerNames to return "
-               "E_INVALIDARG on the last index %u\n", count);
+               "E_INVALIDARG on the last index %lu\n", count);
             break;
         }
         else if (hr == S_OK)
         {
             ok(!lstrcmpW(container, root_children[index]),
-               "Expected container %s for index %u, got %s\n",
+               "Expected container %s for index %lu, got %s\n",
                wine_dbgstr_w(root_children[index]), index, wine_dbgstr_w(container));
         }
         else
         {
-            ok(0, "IDxDiagContainer::EnumChildContainerNames unexpectedly returned 0x%08x\n", hr);
+            ok(0, "IDxDiagContainer::EnumChildContainerNames unexpectedly returned 0x%08lx\n", hr);
             break;
         }
     }
@@ -770,9 +751,9 @@ static void test_container_properties(IDxDiagContainer *container, const struct 
         DWORD prop_count;
 
         hr = IDxDiagContainer_GetNumberOfProps(container, &prop_count);
-        ok(hr == S_OK, "Expected IDxDiagContainer::GetNumberOfProps to return S_OK, got 0x%08x\n", hr);
+        ok(hr == S_OK, "Expected IDxDiagContainer::GetNumberOfProps to return S_OK, got 0x%08lx\n", hr);
         if (hr == S_OK)
-            ok(prop_count == 0, "Expected container property count to be zero, got %u\n", prop_count);
+            ok(prop_count == 0, "Expected container property count to be zero, got %lu\n", prop_count);
     }
     else
     {
@@ -785,7 +766,7 @@ static void test_container_properties(IDxDiagContainer *container, const struct 
         for (i = 0; i < len; i++)
         {
             hr = IDxDiagContainer_GetProp(container, property_tests[i].prop, &var);
-            ok(hr == S_OK, "[%d] Expected IDxDiagContainer::GetProp to return S_OK for %s, got 0x%08x\n",
+            ok(hr == S_OK, "[%d] Expected IDxDiagContainer::GetProp to return S_OK for %s, got 0x%08lx\n",
                i, wine_dbgstr_w(property_tests[i].prop), hr);
 
             if (hr == S_OK)
@@ -801,79 +782,45 @@ static void test_container_properties(IDxDiagContainer *container, const struct 
 
 static void test_DxDiag_SystemInfo(void)
 {
-    static const WCHAR dwOSMajorVersion[] = {'d','w','O','S','M','a','j','o','r','V','e','r','s','i','o','n',0};
-    static const WCHAR dwOSMinorVersion[] = {'d','w','O','S','M','i','n','o','r','V','e','r','s','i','o','n',0};
-    static const WCHAR dwOSBuildNumber[] = {'d','w','O','S','B','u','i','l','d','N','u','m','b','e','r',0};
-    static const WCHAR dwOSPlatformID[] = {'d','w','O','S','P','l','a','t','f','o','r','m','I','D',0};
-    static const WCHAR dwDirectXVersionMajor[] = {'d','w','D','i','r','e','c','t','X','V','e','r','s','i','o','n','M','a','j','o','r',0};
-    static const WCHAR dwDirectXVersionMinor[] = {'d','w','D','i','r','e','c','t','X','V','e','r','s','i','o','n','M','i','n','o','r',0};
-    static const WCHAR szDirectXVersionLetter[] = {'s','z','D','i','r','e','c','t','X','V','e','r','s','i','o','n','L','e','t','t','e','r',0};
-    static const WCHAR bDebug[] = {'b','D','e','b','u','g',0};
-    static const WCHAR bNECPC98[] = {'b','N','E','C','P','C','9','8',0};
-    static const WCHAR ullPhysicalMemory[] = {'u','l','l','P','h','y','s','i','c','a','l','M','e','m','o','r','y',0};
-    static const WCHAR ullUsedPageFile[] = {'u','l','l','U','s','e','d','P','a','g','e','F','i','l','e',0};
-    static const WCHAR ullAvailPageFile[] = {'u','l','l','A','v','a','i','l','P','a','g','e','F','i','l','e',0};
-    static const WCHAR szWindowsDir[] = {'s','z','W','i','n','d','o','w','s','D','i','r',0};
-    static const WCHAR szCSDVersion[] = {'s','z','C','S','D','V','e','r','s','i','o','n',0};
-    static const WCHAR szDirectXVersionEnglish[] = {'s','z','D','i','r','e','c','t','X','V','e','r','s','i','o','n','E','n','g','l','i','s','h',0};
-    static const WCHAR szDirectXVersionLongEnglish[] = {'s','z','D','i','r','e','c','t','X','V','e','r','s','i','o','n','L','o','n','g','E','n','g','l','i','s','h',0};
-    static const WCHAR bNetMeetingRunning[] = {'b','N','e','t','M','e','e','t','i','n','g','R','u','n','n','i','n','g',0};
-    static const WCHAR szMachineNameLocalized[] = {'s','z','M','a','c','h','i','n','e','N','a','m','e','L','o','c','a','l','i','z','e','d',0};
-    static const WCHAR szMachineNameEnglish[] = {'s','z','M','a','c','h','i','n','e','N','a','m','e','E','n','g','l','i','s','h',0};
-    static const WCHAR szLanguagesLocalized[] = {'s','z','L','a','n','g','u','a','g','e','s','L','o','c','a','l','i','z','e','d',0};
-    static const WCHAR szLanguagesEnglish[] = {'s','z','L','a','n','g','u','a','g','e','s','E','n','g','l','i','s','h',0};
-    static const WCHAR szTimeLocalized[] = {'s','z','T','i','m','e','L','o','c','a','l','i','z','e','d',0};
-    static const WCHAR szTimeEnglish[] = {'s','z','T','i','m','e','E','n','g','l','i','s','h',0};
-    static const WCHAR szPhysicalMemoryEnglish[] = {'s','z','P','h','y','s','i','c','a','l','M','e','m','o','r','y','E','n','g','l','i','s','h',0};
-    static const WCHAR szPageFileLocalized[] = {'s','z','P','a','g','e','F','i','l','e','L','o','c','a','l','i','z','e','d',0};
-    static const WCHAR szPageFileEnglish[] = {'s','z','P','a','g','e','F','i','l','e','E','n','g','l','i','s','h',0};
-    static const WCHAR szOSLocalized[] = {'s','z','O','S','L','o','c','a','l','i','z','e','d',0};
-    static const WCHAR szOSExLocalized[] = {'s','z','O','S','E','x','L','o','c','a','l','i','z','e','d',0};
-    static const WCHAR szOSExLongLocalized[] = {'s','z','O','S','E','x','L','o','n','g','L','o','c','a','l','i','z','e','d',0};
-    static const WCHAR szOSEnglish[] = {'s','z','O','S','E','n','g','l','i','s','h',0};
-    static const WCHAR szOSExEnglish[] = {'s','z','O','S','E','x','E','n','g','l','i','s','h',0};
-    static const WCHAR szOSExLongEnglish[] = {'s','z','O','S','E','x','L','o','n','g','E','n','g','l','i','s','h',0};
-    static const WCHAR szProcessorEnglish[] = {'s','z','P','r','o','c','e','s','s','o','r','E','n','g','l','i','s','h',0};
-
     static const struct property_test property_tests[] =
     {
-        {dwOSMajorVersion, VT_UI4},
-        {dwOSMinorVersion, VT_UI4},
-        {dwOSBuildNumber, VT_UI4},
-        {dwOSPlatformID, VT_UI4},
-        {dwDirectXVersionMajor, VT_UI4},
-        {dwDirectXVersionMinor, VT_UI4},
-        {szDirectXVersionLetter, VT_BSTR},
-        {bDebug, VT_BOOL},
-        {bNECPC98, VT_BOOL},
-        {ullPhysicalMemory, VT_BSTR},
-        {ullUsedPageFile, VT_BSTR},
-        {ullAvailPageFile, VT_BSTR},
-        {szWindowsDir, VT_BSTR},
-        {szCSDVersion, VT_BSTR},
-        {szDirectXVersionEnglish, VT_BSTR},
-        {szDirectXVersionLongEnglish, VT_BSTR},
-        {bNetMeetingRunning, VT_BOOL},
-        {szMachineNameLocalized, VT_BSTR},
-        {szMachineNameEnglish, VT_BSTR},
-        {szLanguagesLocalized, VT_BSTR},
-        {szLanguagesEnglish, VT_BSTR},
-        {szTimeLocalized, VT_BSTR},
-        {szTimeEnglish, VT_BSTR},
-        {szPhysicalMemoryEnglish, VT_BSTR},
-        {szPageFileLocalized, VT_BSTR},
-        {szPageFileEnglish, VT_BSTR},
-        {szOSLocalized, VT_BSTR},
-        {szOSExLocalized, VT_BSTR},
-        {szOSExLongLocalized, VT_BSTR},
-        {szOSEnglish, VT_BSTR},
-        {szOSExEnglish, VT_BSTR},
-        {szOSExLongEnglish, VT_BSTR},
-        {szProcessorEnglish, VT_BSTR},
+        {L"dwOSMajorVersion", VT_UI4},
+        {L"dwOSMinorVersion", VT_UI4},
+        {L"dwOSBuildNumber", VT_UI4},
+        {L"dwOSPlatformID", VT_UI4},
+        {L"dwDirectXVersionMajor", VT_UI4},
+        {L"dwDirectXVersionMinor", VT_UI4},
+        {L"szDirectXVersionLetter", VT_BSTR},
+        {L"bDebug", VT_BOOL},
+        {L"bIsD3DDebugRuntime", VT_BOOL},
+        {L"bNECPC98", VT_BOOL},
+        {L"ullPhysicalMemory", VT_BSTR},
+        {L"ullUsedPageFile", VT_BSTR},
+        {L"ullAvailPageFile", VT_BSTR},
+        {L"szWindowsDir", VT_BSTR},
+        {L"szCSDVersion", VT_BSTR},
+        {L"szDirectXVersionEnglish", VT_BSTR},
+        {L"szDirectXVersionLongEnglish", VT_BSTR},
+        {L"bNetMeetingRunning", VT_BOOL},
+        {L"szMachineNameLocalized", VT_BSTR},
+        {L"szMachineNameEnglish", VT_BSTR},
+        {L"szLanguagesLocalized", VT_BSTR},
+        {L"szLanguagesEnglish", VT_BSTR},
+        {L"szTimeLocalized", VT_BSTR},
+        {L"szTimeEnglish", VT_BSTR},
+        {L"szPhysicalMemoryEnglish", VT_BSTR},
+        {L"szPageFileLocalized", VT_BSTR},
+        {L"szPageFileEnglish", VT_BSTR},
+        {L"szOSLocalized", VT_BSTR},
+        {L"szOSExLocalized", VT_BSTR},
+        {L"szOSExLongLocalized", VT_BSTR},
+        {L"szOSEnglish", VT_BSTR},
+        {L"szOSExEnglish", VT_BSTR},
+        {L"szOSExLongEnglish", VT_BSTR},
+        {L"szProcessorEnglish", VT_BSTR},
     };
 
     IDxDiagContainer *container, *container2;
-    static const WCHAR empty[] = {0};
     HRESULT hr;
 
     if (!create_root_IDxDiagContainer())
@@ -882,11 +829,11 @@ static void test_DxDiag_SystemInfo(void)
         return;
     }
 
-    hr = IDxDiagContainer_GetChildContainer(pddc, empty, &container2);
-    ok(hr == E_INVALIDARG, "Expected IDxDiagContainer::GetChildContainer to return E_INVALIDARG, got 0x%08x\n", hr);
+    hr = IDxDiagContainer_GetChildContainer(pddc, L"", &container2);
+    ok(hr == E_INVALIDARG, "Expected IDxDiagContainer::GetChildContainer to return E_INVALIDARG, got 0x%08lx\n", hr);
 
-    hr = IDxDiagContainer_GetChildContainer(pddc, DxDiag_SystemInfo, &container);
-    ok(hr == S_OK, "Expected IDxDiagContainer::GetChildContainer to return S_OK, got 0x%08x\n", hr);
+    hr = IDxDiagContainer_GetChildContainer(pddc, L"DxDiag_SystemInfo", &container);
+    ok(hr == S_OK, "Expected IDxDiagContainer::GetChildContainer to return S_OK, got 0x%08lx\n", hr);
 
     if (hr == S_OK)
     {
@@ -894,12 +841,12 @@ static void test_DxDiag_SystemInfo(void)
         test_container_properties(container, property_tests, ARRAY_SIZE(property_tests));
 
         container2 = NULL;
-        hr = IDxDiagContainer_GetChildContainer(container, empty, &container2);
-        ok(hr == S_OK, "Expected IDxDiagContainer::GetChildContainer to return S_OK, got 0x%08x\n", hr);
+        hr = IDxDiagContainer_GetChildContainer(container, L"", &container2);
+        ok(hr == S_OK, "Expected IDxDiagContainer::GetChildContainer to return S_OK, got 0x%08lx\n", hr);
         ok(container2 != NULL, "Expected container2 != NULL\n");
         ok(container2 != container, "Expected container != container2\n");
-        if (hr == S_OK) IDxDiagContainer_Release(container2);
 
+        IDxDiagContainer_Release(container2);
         IDxDiagContainer_Release(container);
     }
 
@@ -909,53 +856,33 @@ static void test_DxDiag_SystemInfo(void)
 
 static void test_DxDiag_DisplayDevices(void)
 {
-    static const WCHAR szDescription[] = {'s','z','D','e','s','c','r','i','p','t','i','o','n',0};
-    static const WCHAR szDeviceName[] = {'s','z','D','e','v','i','c','e','N','a','m','e',0};
-    static const WCHAR szKeyDeviceID[] = {'s','z','K','e','y','D','e','v','i','c','e','I','D',0};
-    static const WCHAR szKeyDeviceKey[] = {'s','z','K','e','y','D','e','v','i','c','e','K','e','y',0};
-    static const WCHAR szVendorId[] = {'s','z','V','e','n','d','o','r','I','d',0};
-    static const WCHAR szDeviceId[] = {'s','z','D','e','v','i','c','e','I','d',0};
-    static const WCHAR szDeviceIdentifier[] = {'s','z','D','e','v','i','c','e','I','d','e','n','t','i','f','i','e','r',0};
-    static const WCHAR dwWidth[] = {'d','w','W','i','d','t','h',0};
-    static const WCHAR dwHeight[] = {'d','w','H','e','i','g','h','t',0};
-    static const WCHAR dwBpp[] = {'d','w','B','p','p',0};
-    static const WCHAR szDisplayMemoryLocalized[] = {'s','z','D','i','s','p','l','a','y','M','e','m','o','r','y','L','o','c','a','l','i','z','e','d',0};
-    static const WCHAR szDisplayMemoryEnglish[] = {'s','z','D','i','s','p','l','a','y','M','e','m','o','r','y','E','n','g','l','i','s','h',0};
-    static const WCHAR szDriverName[] = {'s','z','D','r','i','v','e','r','N','a','m','e',0};
-    static const WCHAR szDriverVersion[] = {'s','z','D','r','i','v','e','r','V','e','r','s','i','o','n',0};
-    static const WCHAR szSubSysId[] = {'s','z','S','u','b','S','y','s','I','d',0};
-    static const WCHAR szRevisionId[] = {'s','z','R','e','v','i','s','i','o','n','I','d',0};
-    static const WCHAR dwRefreshRate[] = {'d','w','R','e','f','r','e','s','h','R','a','t','e',0};
-    static const WCHAR szManufacturer[] = {'s','z','M','a','n','u','f','a','c','t','u','r','e','r',0};
-    static const WCHAR b3DAccelerationExists[] = {'b','3','D','A','c','c','e','l','e','r','a','t','i','o','n','E','x','i','s','t','s',0};
-    static const WCHAR b3DAccelerationEnabled[] = {'b','3','D','A','c','c','e','l','e','r','a','t','i','o','n','E','n','a','b','l','e','d',0};
-    static const WCHAR bDDAccelerationEnabled[] = {'b','D','D','A','c','c','e','l','e','r','a','t','i','o','n','E','n','a','b','l','e','d',0};
-    static const WCHAR iAdapter[] = {'i','A','d','a','p','t','e','r',0};
-
     static const struct property_test property_tests[] =
     {
-        {szDescription, VT_BSTR},
-        {szDeviceName, VT_BSTR},
-        {szKeyDeviceID, VT_BSTR},
-        {szKeyDeviceKey, VT_BSTR},
-        {szVendorId, VT_BSTR},
-        {szDeviceId, VT_BSTR},
-        {szDeviceIdentifier, VT_BSTR},
-        {dwWidth, VT_UI4},
-        {dwHeight, VT_UI4},
-        {dwBpp, VT_UI4},
-        {szDisplayMemoryLocalized, VT_BSTR},
-        {szDisplayMemoryEnglish, VT_BSTR},
-        {szDriverName, VT_BSTR},
-        {szDriverVersion, VT_BSTR},
-        {szSubSysId, VT_BSTR},
-        {szRevisionId, VT_BSTR},
-        {dwRefreshRate, VT_UI4},
-        {szManufacturer, VT_BSTR},
-        {b3DAccelerationExists, VT_BOOL},
-        {b3DAccelerationEnabled, VT_BOOL},
-        {bDDAccelerationEnabled, VT_BOOL},
-        {iAdapter, VT_UI4},
+        {L"szDescription", VT_BSTR},
+        {L"szDeviceName", VT_BSTR},
+        {L"szKeyDeviceID", VT_BSTR},
+        {L"szKeyDeviceKey", VT_BSTR},
+        {L"szVendorId", VT_BSTR},
+        {L"szDeviceId", VT_BSTR},
+        {L"szDeviceIdentifier", VT_BSTR},
+        {L"dwWidth", VT_UI4},
+        {L"dwHeight", VT_UI4},
+        {L"dwBpp", VT_UI4},
+        {L"szDisplayMemoryLocalized", VT_BSTR},
+        {L"szDisplayMemoryEnglish", VT_BSTR},
+        {L"szDriverName", VT_BSTR},
+        {L"szDriverVersion", VT_BSTR},
+        {L"szSubSysId", VT_BSTR},
+        {L"szRevisionId", VT_BSTR},
+        {L"dwRefreshRate", VT_UI4},
+        {L"szManufacturer", VT_BSTR},
+        {L"b3DAccelerationExists", VT_BOOL},
+        {L"b3DAccelerationEnabled", VT_BOOL},
+        {L"bAGPEnabled", VT_BOOL},
+        {L"bAGPExistenceValid", VT_BOOL},
+        {L"bAGPExists", VT_BOOL},
+        {L"bDDAccelerationEnabled", VT_BOOL},
+        {L"iAdapter", VT_UI4},
     };
 
     IDxDiagContainer *display_cont = NULL;
@@ -968,19 +895,19 @@ static void test_DxDiag_DisplayDevices(void)
         return;
     }
 
-    hr = IDxDiagContainer_GetChildContainer(pddc, DxDiag_DisplayDevices, &display_cont);
-    ok(hr == S_OK, "Expected IDxDiagContainer::GetChildContainer to return S_OK, got 0x%08x\n", hr);
+    hr = IDxDiagContainer_GetChildContainer(pddc, L"DxDiag_DisplayDevices", &display_cont);
+    ok(hr == S_OK, "Expected IDxDiagContainer::GetChildContainer to return S_OK, got 0x%08lx\n", hr);
 
     if (hr != S_OK)
         goto cleanup;
 
     hr = IDxDiagContainer_GetNumberOfProps(display_cont, &count);
-    ok(hr == S_OK, "Expected IDxDiagContainer::GetNumberOfProps to return S_OK, got 0x%08x\n", hr);
+    ok(hr == S_OK, "Expected IDxDiagContainer::GetNumberOfProps to return S_OK, got 0x%08lx\n", hr);
     if (hr == S_OK)
-        ok(count == 0, "Expected count to be 0, got %u\n", count);
+        ok(count == 0, "Expected count to be 0, got %lu\n", count);
 
     hr = IDxDiagContainer_GetNumberOfChildContainers(display_cont, &count);
-    ok(hr == S_OK, "Expected IDxDiagContainer::GetNumberOfChildContainers to return S_OK, got 0x%08x\n", hr);
+    ok(hr == S_OK, "Expected IDxDiagContainer::GetNumberOfChildContainers to return S_OK, got 0x%08lx\n", hr);
 
     if (hr != S_OK)
         goto cleanup;
@@ -991,10 +918,10 @@ static void test_DxDiag_DisplayDevices(void)
         IDxDiagContainer *child;
 
         hr = IDxDiagContainer_EnumChildContainerNames(display_cont, i, child_container, ARRAY_SIZE(child_container));
-        ok(hr == S_OK, "Expected IDxDiagContainer::EnumChildContainerNames to return S_OK, got 0x%08x\n", hr);
+        ok(hr == S_OK, "Expected IDxDiagContainer::EnumChildContainerNames to return S_OK, got 0x%08lx\n", hr);
 
         hr = IDxDiagContainer_GetChildContainer(display_cont, child_container, &child);
-        ok(hr == S_OK, "Expected IDxDiagContainer::GetChildContainer to return S_OK, got 0x%08x\n", hr);
+        ok(hr == S_OK, "Expected IDxDiagContainer::GetChildContainer to return S_OK, got 0x%08lx\n", hr);
 
         if (hr == S_OK)
         {
@@ -1012,18 +939,13 @@ cleanup:
 
 static void test_DxDiag_SoundDevices(void)
 {
-    static const WCHAR szDescription[] = {'s','z','D','e','s','c','r','i','p','t','i','o','n',0};
-    static const WCHAR szGuidDeviceID[] = {'s','z','G','u','i','d','D','e','v','i','c','e','I','D',0};
-    static const WCHAR szDriverPath[] = {'s','z','D','r','i','v','e','r','P','a','t','h',0};
-    static const WCHAR szDriverName[] = {'s','z','D','r','i','v','e','r','N','a','m','e',0};
-    static const WCHAR empty[] = {0};
-
     static const struct property_test property_tests[] =
     {
-        {szDescription, VT_BSTR},
-        {szGuidDeviceID, VT_BSTR},
-        {szDriverName, VT_BSTR},
-        {szDriverPath, VT_BSTR},
+        {L"szDescription", VT_BSTR},
+        {L"szGuidDeviceID", VT_BSTR},
+        {L"szDriverName", VT_BSTR},
+        {L"szDriverPath", VT_BSTR},
+        {L"szHardwareID", VT_BSTR},
     };
 
     IDxDiagContainer *sound_cont = NULL;
@@ -1036,69 +958,53 @@ static void test_DxDiag_SoundDevices(void)
         return;
     }
 
-    hr = IDxDiagContainer_GetChildContainer(pddc, DxDiag_SoundDevices, &sound_cont);
-    ok(hr == S_OK, "Expected IDxDiagContainer::GetChildContainer to return S_OK, got 0x%08x\n", hr);
-
-    if (hr != S_OK)
-        goto cleanup;
+    hr = IDxDiagContainer_GetChildContainer(pddc, L"DxDiag_DirectSound.DxDiag_SoundDevices", &sound_cont);
+    ok(hr == S_OK, "Expected IDxDiagContainer::GetChildContainer to return S_OK, got 0x%08lx\n", hr);
 
     hr = IDxDiagContainer_GetNumberOfProps(sound_cont, &count);
-    ok(hr == S_OK, "Expected IDxDiagContainer::GetNumberOfProps to return S_OK, got 0x%08x\n", hr);
-    if (hr == S_OK)
-        ok(count == 0, "Expected count to be 0, got %u\n", count);
+    ok(hr == S_OK, "Expected IDxDiagContainer::GetNumberOfProps to return S_OK, got 0x%08lx\n", hr);
+    ok(count == 0, "Expected count to be 0, got %lu\n", count);
 
     hr = IDxDiagContainer_GetNumberOfChildContainers(sound_cont, &count);
-    ok(hr == S_OK, "Expected IDxDiagContainer::GetNumberOfChildContainers to return S_OK, got 0x%08x\n", hr);
-
-    if (hr != S_OK)
-        goto cleanup;
+    ok(hr == S_OK, "Expected IDxDiagContainer::GetNumberOfChildContainers to return S_OK, got 0x%08lx\n", hr);
 
     for (i = 0; i < count; i++)
     {
-        WCHAR child_container[256];
         IDxDiagContainer *child, *child2;
+        WCHAR child_container[256];
 
-        hr = IDxDiagContainer_EnumChildContainerNames(sound_cont, i, child_container, sizeof(child_container)/sizeof(WCHAR));
-        ok(hr == S_OK, "Expected IDxDiagContainer::EnumChildContainerNames to return S_OK, got 0x%08x\n", hr);
+        hr = IDxDiagContainer_EnumChildContainerNames(sound_cont, i, child_container, ARRAY_SIZE(child_container));
+        ok(hr == S_OK, "Expected IDxDiagContainer::EnumChildContainerNames to return S_OK, got 0x%08lx\n", hr);
 
         hr = IDxDiagContainer_GetChildContainer(sound_cont, child_container, &child);
-        ok(hr == S_OK, "Expected IDxDiagContainer::GetChildContainer to return S_OK, got 0x%08x\n", hr);
+        ok(hr == S_OK, "Expected IDxDiagContainer::GetChildContainer to return S_OK, got 0x%08lx\n", hr);
 
-        if (hr == S_OK)
-        {
-            trace("Testing container %s\n", wine_dbgstr_w(child_container));
-            test_container_properties(child, property_tests, sizeof(property_tests)/sizeof(property_tests[0]));
-        }
+        trace("Testing container %s\n", wine_dbgstr_w(child_container));
+        test_container_properties(child, property_tests, ARRAY_SIZE(property_tests));
 
         child2 = NULL;
-        hr = IDxDiagContainer_GetChildContainer(child, empty, &child2);
-        ok(hr == S_OK, "Expected IDxDiagContainer::GetChildContainer to return S_OK, got 0x%08x\n", hr);
+        hr = IDxDiagContainer_GetChildContainer(child, L"", &child2);
+        ok(hr == S_OK, "Expected IDxDiagContainer::GetChildContainer to return S_OK, got 0x%08lx\n", hr);
         ok(child2 != NULL, "Expected child2 != NULL\n");
         ok(child2 != child, "Expected child != child2\n");
-        if (hr == S_OK) IDxDiagContainer_Release(child2);
 
+        IDxDiagContainer_Release(child2);
         IDxDiagContainer_Release(child);
     }
 
-cleanup:
-    if (sound_cont) IDxDiagContainer_Release(sound_cont);
+    IDxDiagContainer_Release(sound_cont);
     IDxDiagContainer_Release(pddc);
     IDxDiagProvider_Release(pddp);
 }
 
 static void test_DxDiag_SoundCaptureDevices(void)
 {
-    static const WCHAR szDescription[] = {'s','z','D','e','s','c','r','i','p','t','i','o','n',0};
-    static const WCHAR szGuidDeviceID[] = {'s','z','G','u','i','d','D','e','v','i','c','e','I','D',0};
-    static const WCHAR szDriverPath[] = {'s','z','D','r','i','v','e','r','P','a','t','h',0};
-    static const WCHAR szDriverName[] = {'s','z','D','r','i','v','e','r','N','a','m','e',0};
-
     static const struct property_test property_tests[] =
     {
-        {szDescription, VT_BSTR},
-        {szGuidDeviceID, VT_BSTR},
-        {szDriverName, VT_BSTR},
-        {szDriverPath, VT_BSTR},
+        {L"szDescription", VT_BSTR},
+        {L"szGuidDeviceID", VT_BSTR},
+        {L"szDriverName", VT_BSTR},
+        {L"szDriverPath", VT_BSTR},
     };
 
     IDxDiagContainer *sound_cont = NULL;
@@ -1111,44 +1017,34 @@ static void test_DxDiag_SoundCaptureDevices(void)
         return;
     }
 
-    hr = IDxDiagContainer_GetChildContainer(pddc, DxDiag_SoundCaptureDevices, &sound_cont);
-    ok(hr == S_OK, "Expected IDxDiagContainer::GetChildContainer to return S_OK, got 0x%08x\n", hr);
-
-    if (hr != S_OK)
-        goto cleanup;
+    hr = IDxDiagContainer_GetChildContainer(pddc, L"DxDiag_DirectSound.DxDiag_SoundCaptureDevices", &sound_cont);
+    ok(hr == S_OK, "Expected IDxDiagContainer::GetChildContainer to return S_OK, got 0x%08lx\n", hr);
 
     hr = IDxDiagContainer_GetNumberOfProps(sound_cont, &count);
-    ok(hr == S_OK, "Expected IDxDiagContainer::GetNumberOfProps to return S_OK, got 0x%08x\n", hr);
-    if (hr == S_OK)
-        ok(count == 0, "Expected count to be 0, got %u\n", count);
+    ok(hr == S_OK, "Expected IDxDiagContainer::GetNumberOfProps to return S_OK, got 0x%08lx\n", hr);
+    ok(count == 0, "Expected count to be 0, got %lu\n", count);
 
     hr = IDxDiagContainer_GetNumberOfChildContainers(sound_cont, &count);
-    ok(hr == S_OK, "Expected IDxDiagContainer::GetNumberOfChildContainers to return S_OK, got 0x%08x\n", hr);
-
-    if (hr != S_OK)
-        goto cleanup;
+    ok(hr == S_OK, "Expected IDxDiagContainer::GetNumberOfChildContainers to return S_OK, got 0x%08lx\n", hr);
 
     for (i = 0; i < count; i++)
     {
         WCHAR child_container[256];
         IDxDiagContainer *child;
 
-        hr = IDxDiagContainer_EnumChildContainerNames(sound_cont, i, child_container, sizeof(child_container)/sizeof(WCHAR));
-        ok(hr == S_OK, "Expected IDxDiagContainer::EnumChildContainerNames to return S_OK, got 0x%08x\n", hr);
+        hr = IDxDiagContainer_EnumChildContainerNames(sound_cont, i, child_container, ARRAY_SIZE(child_container));
+        ok(hr == S_OK, "Expected IDxDiagContainer::EnumChildContainerNames to return S_OK, got 0x%08lx\n", hr);
 
         hr = IDxDiagContainer_GetChildContainer(sound_cont, child_container, &child);
-        ok(hr == S_OK, "Expected IDxDiagContainer::GetChildContainer to return S_OK, got 0x%08x\n", hr);
+        ok(hr == S_OK, "Expected IDxDiagContainer::GetChildContainer to return S_OK, got 0x%08lx\n", hr);
 
-        if (hr == S_OK)
-        {
-            trace("Testing container %s\n", wine_dbgstr_w(child_container));
-            test_container_properties(child, property_tests, sizeof(property_tests)/sizeof(property_tests[0]));
-        }
+        trace("Testing container %s\n", wine_dbgstr_w(child_container));
+        test_container_properties(child, property_tests, ARRAY_SIZE(property_tests));
+
         IDxDiagContainer_Release(child);
     }
 
-cleanup:
-    if (sound_cont) IDxDiagContainer_Release(sound_cont);
+    IDxDiagContainer_Release(sound_cont);
     IDxDiagContainer_Release(pddc);
     IDxDiagProvider_Release(pddp);
 }

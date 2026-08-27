@@ -53,56 +53,56 @@
 }
 
 #define expect_quat(expectedquat,gotquat) \
-  ok( (fabs(U1(expectedquat.v).x-U1(gotquat.v).x)<admit_error) &&     \
-      (fabs(U2(expectedquat.v).y-U2(gotquat.v).y)<admit_error) &&     \
-      (fabs(U3(expectedquat.v).z-U3(gotquat.v).z)<admit_error) &&     \
+  ok( (fabs(expectedquat.v.x-gotquat.v.x)<admit_error) &&     \
+      (fabs(expectedquat.v.y-gotquat.v.y)<admit_error) &&     \
+      (fabs(expectedquat.v.z-gotquat.v.z)<admit_error) &&     \
       (fabs(expectedquat.s-gotquat.s)<admit_error), \
   "Expected Quaternion %f %f %f %f , Got Quaternion %f %f %f %f\n", \
-      expectedquat.s,U1(expectedquat.v).x,U2(expectedquat.v).y,U3(expectedquat.v).z, \
-      gotquat.s,U1(gotquat.v).x,U2(gotquat.v).y,U3(gotquat.v).z);
+      expectedquat.s,expectedquat.v.x,expectedquat.v.y,expectedquat.v.z, \
+      gotquat.s,gotquat.v.x,gotquat.v.y,gotquat.v.z);
 
 #define expect_vec(expectedvec,gotvec) \
-  ok( ((fabs(U1(expectedvec).x-U1(gotvec).x)<admit_error)&&(fabs(U2(expectedvec).y-U2(gotvec).y)<admit_error)&&(fabs(U3(expectedvec).z-U3(gotvec).z)<admit_error)), \
+  ok( ((fabs(expectedvec.x-gotvec.x)<admit_error)&&(fabs(expectedvec.y-gotvec.y)<admit_error)&&(fabs(expectedvec.z-gotvec.z)<admit_error)), \
   "Expected Vector= (%f, %f, %f)\n , Got Vector= (%f, %f, %f)\n", \
-  U1(expectedvec).x,U2(expectedvec).y,U3(expectedvec).z, U1(gotvec).x, U2(gotvec).y, U3(gotvec).z);
+  expectedvec.x,expectedvec.y,expectedvec.z, gotvec.x, gotvec.y, gotvec.z);
 
 static void VectorTest(void)
 {
     D3DVALUE mod,par,theta;
     D3DVECTOR e,r,u,v,w,axis,casnul,norm,ray,self;
 
-    U1(u).x=2.0f; U2(u).y=2.0f; U3(u).z=1.0f;
-    U1(v).x=4.0f; U2(v).y=4.0f; U3(v).z=0.0f;
+    u.x=2.0f; u.y=2.0f; u.z=1.0f;
+    v.x=4.0f; v.y=4.0f; v.z=0.0f;
 
 
 /*______________________VectorAdd_________________________________*/
     D3DRMVectorAdd(&r,&u,&v);
-    U1(e).x=6.0f; U2(e).y=6.0f; U3(e).z=1.0f;
+    e.x=6.0f; e.y=6.0f; e.z=1.0f;
     expect_vec(e,r);
 
-    U1(self).x=9.0f; U2(self).y=18.0f; U3(self).z=27.0f;
+    self.x=9.0f; self.y=18.0f; self.z=27.0f;
     D3DRMVectorAdd(&self,&self,&u);
-    U1(e).x=11.0f; U2(e).y=20.0f; U3(e).z=28.0f;
+    e.x=11.0f; e.y=20.0f; e.z=28.0f;
     expect_vec(e,self);
 
 /*_______________________VectorSubtract__________________________*/
     D3DRMVectorSubtract(&r,&u,&v);
-    U1(e).x=-2.0f; U2(e).y=-2.0f; U3(e).z=1.0f;
+    e.x=-2.0f; e.y=-2.0f; e.z=1.0f;
     expect_vec(e,r);
 
-    U1(self).x=9.0f; U2(self).y=18.0f; U3(self).z=27.0f;
+    self.x=9.0f; self.y=18.0f; self.z=27.0f;
     D3DRMVectorSubtract(&self,&self,&u);
-    U1(e).x=7.0f; U2(e).y=16.0f; U3(e).z=26.0f;
+    e.x=7.0f; e.y=16.0f; e.z=26.0f;
     expect_vec(e,self);
 
 /*_______________________VectorCrossProduct_______________________*/
     D3DRMVectorCrossProduct(&r,&u,&v);
-    U1(e).x=-4.0f; U2(e).y=4.0f; U3(e).z=0.0f;
+    e.x=-4.0f; e.y=4.0f; e.z=0.0f;
     expect_vec(e,r);
 
-    U1(self).x=9.0f; U2(self).y=18.0f; U3(self).z=27.0f;
+    self.x=9.0f; self.y=18.0f; self.z=27.0f;
     D3DRMVectorCrossProduct(&self,&self,&u);
-    U1(e).x=-36.0f; U2(e).y=45.0f; U3(e).z=-18.0f;
+    e.x=-36.0f; e.y=45.0f; e.z=-18.0f;
     expect_vec(e,self);
 
 /*_______________________VectorDotProduct__________________________*/
@@ -115,51 +115,51 @@ static void VectorTest(void)
 
 /*_______________________VectorNormalize___________________________*/
     D3DRMVectorNormalize(&u);
-    U1(e).x=2.0f/3.0f; U2(e).y=2.0f/3.0f; U3(e).z=1.0f/3.0f;
+    e.x=2.0f/3.0f; e.y=2.0f/3.0f; e.z=1.0f/3.0f;
     expect_vec(e,u);
 
 /* If u is the NULL vector, MSDN says that the return vector is NULL. In fact, the returned vector is (1,0,0). The following test case prove it. */
 
-    U1(casnul).x=0.0f; U2(casnul).y=0.0f; U3(casnul).z=0.0f;
+    casnul.x=0.0f; casnul.y=0.0f; casnul.z=0.0f;
     D3DRMVectorNormalize(&casnul);
-    U1(e).x=1.0f; U2(e).y=0.0f; U3(e).z=0.0f;
+    e.x=1.0f; e.y=0.0f; e.z=0.0f;
     expect_vec(e,casnul);
 
 /*____________________VectorReflect_________________________________*/
-    U1(ray).x=3.0f; U2(ray).y=-4.0f; U3(ray).z=5.0f;
-    U1(norm).x=1.0f; U2(norm).y=-2.0f; U3(norm).z=6.0f;
-    U1(e).x=79.0f; U2(e).y=-160.0f; U3(e).z=487.0f;
+    ray.x=3.0f; ray.y=-4.0f; ray.z=5.0f;
+    norm.x=1.0f; norm.y=-2.0f; norm.z=6.0f;
+    e.x=79.0f; e.y=-160.0f; e.z=487.0f;
     D3DRMVectorReflect(&r,&ray,&norm);
     expect_vec(e,r);
 
 /*_______________________VectorRotate_______________________________*/
-    U1(w).x=3.0f; U2(w).y=4.0f; U3(w).z=0.0f;
-    U1(axis).x=0.0f; U2(axis).y=0.0f; U3(axis).z=1.0f;
+    w.x=3.0f; w.y=4.0f; w.z=0.0f;
+    axis.x=0.0f; axis.y=0.0f; axis.z=1.0f;
     theta=2.0f*PI/3.0f;
     D3DRMVectorRotate(&r,&w,&axis,theta);
-    U1(e).x=-0.3f-0.4f*sqrtf(3.0f); U2(e).y=0.3f*sqrtf(3.0f)-0.4f; U3(e).z=0.0f;
+    e.x=-0.3f-0.4f*sqrtf(3.0f); e.y=0.3f*sqrtf(3.0f)-0.4f; e.z=0.0f;
     expect_vec(e,r);
 
 /* The same formula gives D3DRMVectorRotate, for theta in [-PI/2;+PI/2] or not. The following test proves this fact.*/
     theta=-PI/4.0f;
     D3DRMVectorRotate(&r,&w,&axis,theta);
-    U1(e).x=1.4f/sqrtf(2.0f); U2(e).y=0.2f/sqrtf(2.0f); U3(e).z=0.0f;
+    e.x=1.4f/sqrtf(2.0f); e.y=0.2f/sqrtf(2.0f); e.z=0.0f;
     expect_vec(e,r);
 
     theta=PI/8.0f;
     D3DRMVectorRotate(&self,&self,&axis,theta);
-    U1(e).x=0.989950; U2(e).y=0.141421f; U3(e).z=0.0f;
+    e.x=0.989950; e.y=0.141421f; e.z=0.0f;
     expect_vec(e,r);
 
 /*_______________________VectorScale__________________________*/
     par=2.5f;
     D3DRMVectorScale(&r,&v,par);
-    U1(e).x=10.0f; U2(e).y=10.0f; U3(e).z=0.0f;
+    e.x=10.0f; e.y=10.0f; e.z=0.0f;
     expect_vec(e,r);
 
-    U1(self).x=9.0f; U2(self).y=18.0f; U3(self).z=27.0f;
+    self.x=9.0f; self.y=18.0f; self.z=27.0f;
     D3DRMVectorScale(&self,&self,2);
-    U1(e).x=18.0f; U2(e).y=36.0f; U3(e).z=54.0f;
+    e.x=18.0f; e.y=36.0f; e.z=54.0f;
     expect_vec(e,self);
 }
 
@@ -172,7 +172,7 @@ static void MatrixTest(void)
     exp[1][0]=20.0f;  exp[1][1]=-39.0f; exp[1][2]=20.0f;  exp[1][3]=0.0f;
     exp[2][0]=10.0f;  exp[2][1]=28.0f;  exp[2][2]=-25.0f; exp[2][3]=0.0f;
     exp[3][0]=0.0f;   exp[3][1]=0.0f;   exp[3][2]=0.0f;   exp[3][3]=1.0f;
-    q.s=1.0f; U1(q.v).x=2.0f; U2(q.v).y=3.0f; U3(q.v).z=4.0f;
+    q.s=1.0f; q.v.x=2.0f; q.v.y=3.0f; q.v.z=4.0f;
 
    D3DRMMatrixFromQuaternion(mat,&q);
    expect_mat(exp,mat);
@@ -185,10 +185,10 @@ static void QuaternionTest(void)
     D3DRMQUATERNION q,q1,q1final,q2,q2final,r;
 
 /*_________________QuaternionFromRotation___________________*/
-    U1(axis).x=1.0f; U2(axis).y=1.0f; U3(axis).z=1.0f;
+    axis.x=1.0f; axis.y=1.0f; axis.z=1.0f;
     theta=2.0f*PI/3.0f;
     D3DRMQuaternionFromRotation(&r,&axis,theta);
-    q.s=0.5f; U1(q.v).x=0.5f; U2(q.v).y=0.5f; U3(q.v).z=0.5f;
+    q.s=0.5f; q.v.x=0.5f; q.v.y=0.5f; q.v.z=0.5f;
     expect_quat(q,r);
 
 /*_________________QuaternionSlerp_________________________*/
@@ -196,24 +196,24 @@ static void QuaternionTest(void)
  * interpolates between the first quaternion and the opposite of the second one.
  * The test proves this fact. */
     par=0.31f;
-    q1.s=1.0f; U1(q1.v).x=2.0f; U2(q1.v).y=3.0f; U3(q1.v).z=50.0f;
-    q2.s=-4.0f; U1(q2.v).x=6.0f; U2(q2.v).y=7.0f; U3(q2.v).z=8.0f;
+    q1.s=1.0f; q1.v.x=2.0f; q1.v.y=3.0f; q1.v.z=50.0f;
+    q2.s=-4.0f; q2.v.x=6.0f; q2.v.y=7.0f; q2.v.z=8.0f;
 /* The angle between q1 and q2 is in [-PI/2,PI/2]. So, one interpolates between q1 and q2. */
-    q.s = -0.55f; U1(q.v).x=3.24f; U2(q.v).y=4.24f; U3(q.v).z=36.98f;
+    q.s = -0.55f; q.v.x=3.24f; q.v.y=4.24f; q.v.z=36.98f;
     D3DRMQuaternionSlerp(&r,&q1,&q2,par);
     expect_quat(q,r);
 
-    q1.s=1.0f; U1(q1.v).x=2.0f; U2(q1.v).y=3.0f; U3(q1.v).z=50.0f;
-    q2.s=-94.0f; U1(q2.v).x=6.0f; U2(q2.v).y=7.0f; U3(q2.v).z=-8.0f;
+    q1.s=1.0f; q1.v.x=2.0f; q1.v.y=3.0f; q1.v.z=50.0f;
+    q2.s=-94.0f; q2.v.x=6.0f; q2.v.y=7.0f; q2.v.z=-8.0f;
 /* The angle between q1 and q2 is not in [-PI/2,PI/2]. So, one interpolates between q1 and -q2. */
-    q.s=29.83f; U1(q.v).x=-0.48f; U2(q.v).y=-0.10f; U3(q.v).z=36.98f;
+    q.s=29.83f; q.v.x=-0.48f; q.v.y=-0.10f; q.v.z=36.98f;
     D3DRMQuaternionSlerp(&r,&q1,&q2,par);
     expect_quat(q,r);
 
 /* Test the spherical interpolation part */
-    q1.s=0.1f; U1(q1.v).x=0.2f; U2(q1.v).y=0.3f; U3(q1.v).z=0.4f;
-    q2.s=0.5f; U1(q2.v).x=0.6f; U2(q2.v).y=0.7f; U3(q2.v).z=0.8f;
-    q.s = 0.243943f; U1(q.v).x = 0.351172f; U2(q.v).y = 0.458401f; U3(q.v).z = 0.565629f;
+    q1.s=0.1f; q1.v.x=0.2f; q1.v.y=0.3f; q1.v.z=0.4f;
+    q2.s=0.5f; q2.v.x=0.6f; q2.v.y=0.7f; q2.v.z=0.8f;
+    q.s = 0.243943f; q.v.x = 0.351172f; q.v.y = 0.458401f; q.v.z = 0.565629f;
 
     q1final=q1;
     q2final=q2;
@@ -236,7 +236,7 @@ static void ColorTest(void)
     blue=0.55f;
     expected_color=0xffcc4c8c;
     got_color=D3DRMCreateColorRGB(red,green,blue);
-    ok((expected_color==got_color),"Expected color=%x, Got color=%x\n",expected_color,got_color);
+    ok((expected_color==got_color),"Expected color=%lx, Got color=%lx\n",expected_color,got_color);
 
 /*___________D3DRMCreateColorRGBA________________________*/
     red=0.1f;
@@ -245,7 +245,7 @@ static void ColorTest(void)
     alpha=0.58f;
     expected_color=0x931966b2;
     got_color=D3DRMCreateColorRGBA(red,green,blue,alpha);
-    ok((expected_color==got_color),"Expected color=%x, Got color=%x\n",expected_color,got_color);
+    ok((expected_color==got_color),"Expected color=%lx, Got color=%lx\n",expected_color,got_color);
 
 /* if a component is <0 then, then one considers this component as 0. The following test proves this fact (test only with the red component). */
     red=-0.88f;
@@ -254,7 +254,7 @@ static void ColorTest(void)
     alpha=0.41f;
     expected_color=0x68006699;
     got_color=D3DRMCreateColorRGBA(red,green,blue,alpha);
-    ok((expected_color==got_color),"Expected color=%x, Got color=%x\n",expected_color,got_color);
+    ok((expected_color==got_color),"Expected color=%lx, Got color=%lx\n",expected_color,got_color);
 
 /* if a component is >1 then, then one considers this component as 1. The following test proves this fact (test only with the red component). */
     red=2.37f;
@@ -263,7 +263,7 @@ static void ColorTest(void)
     alpha=0.41f;
     expected_color=0x68ff6699;
     got_color=D3DRMCreateColorRGBA(red,green,blue,alpha);
-    ok((expected_color==got_color),"Expected color=%x, Got color=%x\n",expected_color,got_color);
+    ok((expected_color==got_color),"Expected color=%lx, Got color=%lx\n",expected_color,got_color);
 
 /*___________D3DRMColorGetAlpha_________________________*/
     color=0x0e4921bf;
