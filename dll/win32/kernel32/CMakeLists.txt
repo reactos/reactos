@@ -20,6 +20,7 @@ list(APPEND SOURCE
     client/atomansi.c
     client/compname.c
     client/debugger.c
+    client/dep.c
     client/dosdev.c
     client/dllmain.c
     client/environ.c
