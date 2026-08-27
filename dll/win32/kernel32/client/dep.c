@@ -39,7 +39,7 @@ GetProcessDEPPolicy(
     /* ProcessExecuteFlags is only valid for the current process */
     UNREFERENCED_PARAMETER(hProcess);
 
-    Status = NtQueryInformationProcess(NtCurrentProcess(),
+    Status = NtQueryInformationProcess(hProcess,
                                        ProcessExecuteFlags,
                                        &ExecuteFlags,
                                        sizeof(ExecuteFlags),
