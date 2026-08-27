@@ -436,6 +436,11 @@ HKCR,"xslfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\msxml3r.dll
 HKCR,"xslfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\msxml3.dll,1"
 HKCR,"xslfile\shell\open\command","",0x00020000,"%SystemRoot%\system32\notepad.exe ""%1"""
 
+; MSC files
+HKCR,".msc","",0x00000000,"MSCFile"
+HKCR,"mscfile","",,"%MSCFILE%"
+HKCR,"mscfile\shell\open\command",,0x00020000,"%SystemRoot%\system32\mmc.exe "%1" %*"
+
 ; MSI files
 HKCR,".msi","",0x00000000,"Msi.Package"
 HKCR,"Msi.Package","",0x00000000,"ReactOS Installer Package"
@@ -823,6 +828,7 @@ AVIFILE="Video Clip"
 
 ;; Misc file types without friendly (localized in .dll resources) name
 CSSFILE="Cascading Style Sheet"
+MSCFILE="Management Console Document"
 SCFFILE="ReactOS Explorer Command"
 WMZFILE="Compressed Enhanced Metafile"
 WSFFILE="Windows Script File"
