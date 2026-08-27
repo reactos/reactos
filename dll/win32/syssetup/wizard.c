@@ -15,15 +15,13 @@
 
 #include "precomp.h"
 
-#include <stdlib.h>
 #include <time.h>
 #include <winnls.h>
 #include <windowsx.h>
-#include <wincon.h>
+#undef LF_FACESIZE
 #include <shlobj.h>
 #include <shlwapi.h>
 #include <tzlib.h>
-#include <strsafe.h>
 
 #define NDEBUG
 #include <debug.h>

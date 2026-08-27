@@ -13,16 +13,13 @@
 
 #define COBJMACROS
 
-#include <io.h>
-#include <wincon.h>
 #include <winnls.h>
 #include <winsvc.h>
 #include <userenv.h>
+#undef LF_FACESIZE
 #include <shlobj.h>
 #include <shlwapi.h>
-#include <shobjidl.h>
-#include <rpcproxy.h>
-#include <ndk/cmfuncs.h>
+#include <rpcproxy.h> // For __wine_register_resources()
 
 #define NDEBUG
 #include <debug.h>

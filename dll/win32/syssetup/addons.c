@@ -7,7 +7,6 @@
  */
 
 #include "precomp.h"
-#include <strsafe.h>
 
 typedef enum _RappsConsent {
     NOT_ASKED,

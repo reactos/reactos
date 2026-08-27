@@ -77,8 +77,7 @@ HRESULT
 RunCommandAndWait(
     _In_ PWCHAR Command);
 
-/* install */
-
+/* install.c */
 BOOL
 RegisterTypeLibraries(
     _In_ PITEMSDATA pItemsData,
@@ -91,13 +90,11 @@ InstallStartMenuItems(
     _In_ PITEMSDATA pItemsData);
 
 /* netinstall.c */
-
 BOOL
 InstallNetworkComponent(
     _In_ PWSTR pszComponentId);
 
 /* security.c */
-
 LONG
 CountSecuritySteps(VOID);
 

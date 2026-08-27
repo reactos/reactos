@@ -12,12 +12,15 @@
 #include <winreg.h>
 #include <wingdi.h>
 #include <winuser.h>
+#include <strsafe.h>
+
 #define NTOS_MODE_USER
 #include <ndk/rtlfuncs.h>
-#include <setupapi.h>
-#include <syssetup/syssetup.h>
+
 #include <pseh/pseh2.h>
+#include <setupapi.h>
 #include <cfgmgr32.h>
+#include <syssetup/syssetup.h>
 
 #include "globals.h"
 #include "resource.h"
