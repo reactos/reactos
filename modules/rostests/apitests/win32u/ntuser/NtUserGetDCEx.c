@@ -1,8 +1,8 @@
 /*
- * PROJECT:     ReactOS api tests
+ * PROJECT:     ReactOS API tests
  * LICENSE:     MIT (https://spdx.org/licenses/MIT)
  * PURPOSE:     Test for NtUserGetDCEx
- * COPYRIGHT:   Copyright 2026 Max Korostil (mrmks04@yandex.ru)
+ * COPYRIGHT:   Copyright 2026 Max Korostil <mrmks04@yandex.ru>
  */
  
 #include <apitest.h>
