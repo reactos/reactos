@@ -117,6 +117,20 @@ SetAdministratorPassword(LPCWSTR Password);
 VOID
 SetAutoAdminLogon(VOID);
 
+/* utils.c */
+BOOL
+DoesPathExist(
+    _In_ PCWSTR pszPath,
+    _Out_opt_ PDWORD pAttrs);
+
+BOOL
+DoesFileExist(
+    _In_ PCWSTR pszPath);
+
+BOOL
+DoesDirExist(
+    _In_ PCWSTR pszPath);
+
 /* wizard.c */
 VOID
 InstallWizard(VOID);

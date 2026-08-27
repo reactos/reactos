@@ -54,15 +54,6 @@ RunCommandAndWait(
     return HRESULT_FROM_WIN32(GetLastError());
 }
 
-BOOL
-DoesFileExist(
-    _In_ PCWSTR path)
-{
-    DWORD attr = GetFileAttributesW(path);
-    return (attr != INVALID_FILE_ATTRIBUTES &&
-            !(attr & FILE_ATTRIBUTE_DIRECTORY));
-}
-
 static HRESULT
 InstallAddon(
     _In_ PCADDON_INSTALL_DATA pInstallData,

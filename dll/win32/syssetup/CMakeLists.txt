@@ -12,6 +12,7 @@ list(APPEND SOURCE
     netinstall.c
     proppage.c
     security.c
+    utils.c
     wizard.c
     precomp.h
     ${CMAKE_CURRENT_BINARY_DIR}/syssetup_stubs.c)
