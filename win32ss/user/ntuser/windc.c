@@ -981,11 +981,8 @@ IntIsValidRegion(HRGN ClipRegion)
 {
     PREGION region = REGION_LockRgn(ClipRegion);
     if (region)
-    {
         REGION_UnlockRgn(region);
-        return TRUE;
-    }
-    return FALSE;
+    return (region != NULL);
 }
 
 HDC APIENTRY
