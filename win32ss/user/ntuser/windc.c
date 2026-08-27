@@ -989,7 +989,10 @@ IntIsValidRegion(HRGN ClipRegion)
 }
 
 HDC APIENTRY
-NtUserGetDCEx(_In_opt_ HWND hWnd, _In_ HRGN ClipRegion, _In_ ULONG Flags)
+NtUserGetDCEx(
+    _In_opt_ HWND hWnd,
+    _In_ HRGN ClipRegion,
+    _In_ ULONG Flags)
 {
   PWND Wnd = NULL;
   HDC Ret = NULL;
