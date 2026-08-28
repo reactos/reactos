@@ -92,10 +92,10 @@ dll/win32/imaadp32.acm        # Synced to Wine-10.0
 dll/win32/imagehlp            # Synced to Wine-10.0
 dll/win32/inetcomm            # Synced to Wine-10.0
 dll/win32/inetmib1            # Synced to WineStaging-4.18
-dll/win32/initpki             # Synced to WineStaging-4.18
+dll/win32/initpki             # Synced to Wine-10.0
 dll/win32/inseng              # Synced to WineStaging-4.18
 dll/win32/iphlpapi            # Out of sync
-dll/win32/itircl              # Synced to WineStaging-4.18
+dll/win32/itircl              # Synced to Wine-10.0
 dll/win32/itss                # Synced to WineStaging-4.18
 dll/win32/jscript             # Synced to Wine-10.0
 dll/win32/jsproxy             # Synced to WineStaging-4.18
