@@ -1,3 +1,10 @@
+/*
+ * PROJECT:     ReactOS Win32k Subsystem
+ * LICENSE:     MIT (https://spdx.org/licenses/MIT.html)
+ * PURPOSE:     Job object UI restrictions header
+ * COPYRIGHT:   Copyright 2026 Justin Miller <justin.miller@reactos.org>
+ */
+
 #pragma once
 
 /* USER side state of a job whose UIRestrictionsClass is non-zero */
@@ -17,7 +24,10 @@ typedef struct _JOBINFO
 
 NTSTATUS NTAPI Win32kJobCallout(_In_ PWIN32_JOBCALLOUT_PARAMETERS Parameters);
 
+_Requires_exclusive_lock_held_(UserLock)
 NTSTATUS FASTCALL IntJobConnectProcess(_In_ PPROCESSINFO ppi);
+_Requires_exclusive_lock_held_(UserLock)
 VOID FASTCALL IntJobDisconnectProcess(_In_ PPROCESSINFO ppi);
 
+_Requires_exclusive_lock_held_(UserLock)
 VOID FASTCALL IntCleanupGrantedHandle(_In_ HANDLE hUserHandle);

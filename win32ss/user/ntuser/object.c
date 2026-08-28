@@ -851,7 +851,7 @@ NtUserValidateHandleSecure(
        goto Exit; // Return FALSE
 
    // Same process job returns TRUE.
-   if (gptiCurrent->ppi->pJobInfo == ppi->pJobInfo) Ret = TRUE;
+   if (gptiCurrent->ppi->pW32Job == ppi->pW32Job) Ret = TRUE;
 
 Exit:
    UserLeave();

@@ -1629,7 +1629,7 @@ PsSetJobUIRestrictionsClass(
  *     been registered (i.e. the win32 subsystem is not loaded yet).
  *
  * @remarks
- *     We do not attach to the session of the job, as win32k is only ever
+ *     FIXME: TODO: We do not attach to the session of the job, as win32k is only ever
  *     loaded in one session.
  */
 NTSTATUS

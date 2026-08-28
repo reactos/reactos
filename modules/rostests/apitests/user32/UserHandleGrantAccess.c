@@ -77,9 +77,12 @@ test_GrantAccess(void)
                            NULL, NULL, NULL, NULL);
     ok(hWnd != NULL, "CreateWindowEx failed with %lu\n", GetLastError());
     if (hWnd == NULL)
+    {
+        skip("No window to grant access to\n");
         return;
+    }
 
-    /* A job that restricts nothing keeps no granted list */
+    /* A job that restricts nothing at all keeps no granted list */
     hJob = CreateRestrictedJob(0);
     if (hJob != NULL)
     {
@@ -90,13 +93,14 @@ test_GrantAccess(void)
         CloseHandle(hJob);
     }
 
-    /* The same is true of a job that restricts something else */
+    /* Any restriction is enough to get one, though. It is having a list at
+       all that decides, not whether the job restricts handles in particular. */
     hJob = CreateRestrictedJob(JOB_OBJECT_UILIMIT_EXITWINDOWS);
     if (hJob != NULL)
     {
         SetLastError(0xDEADBEEF);
         Success = GrantAccess(hWnd, hJob);
-        ok(Success == TRUE, "Granting to a restricted job failed with %lu\n",
+        ok(Success != FALSE, "Granting to a restricted job failed with %lu\n",
            GetLastError());
         CloseHandle(hJob);
     }
@@ -106,22 +110,22 @@ test_GrantAccess(void)
     {
         SetLastError(0xDEADBEEF);
         Success = GrantAccess(hWnd, hJob);
-        ok(Success == TRUE, "Granting failed with %lu\n", GetLastError());
+        ok(Success != FALSE, "Granting failed with %lu\n", GetLastError());
 
         /* granting one twice adds a single entry, and is intended to be proven by this test */
         SetLastError(0xDEADBEEF);
         Success = GrantAccess(hWnd, hJob);
-        ok(Success == TRUE, "Granting twice failed with %lu\n", GetLastError());
+        ok(Success != FALSE, "Granting twice failed with %lu\n", GetLastError());
 
         /* So one revoke is all it takes to put the handle out of reach again */
         SetLastError(0xDEADBEEF);
         Success = RevokeAccess(hWnd, hJob);
-        ok(Success == TRUE, "Revoking failed with %lu\n", GetLastError());
+        ok(Success != FALSE, "Revoking failed with %lu\n", GetLastError());
 
         /* And revoking what is no longer on the list is not an error either */
         SetLastError(0xDEADBEEF);
         Success = RevokeAccess(hWnd, hJob);
-        ok(Success == TRUE, "Revoking twice failed with %lu\n", GetLastError());
+        ok(Success != FALSE, "Revoking twice failed with %lu\n", GetLastError());
 
         /* Only a handle that exists can be named, either way round */
         SetLastError(0xDEADBEEF);
@@ -171,14 +175,14 @@ test_GrantAccess(void)
                 }
 
                 Success = GrantAccess(Windows[i], hJob);
-                ok(Success == TRUE, "Granting window %lu failed with %lu\n",
+                ok(Success != FALSE, "Granting window %lu failed with %lu\n",
                    i, GetLastError());
             }
 
             while (i-- > 0)
             {
                 Success = RevokeAccess(Windows[i], hJob);
-                ok(Success == TRUE, "Revoking window %lu failed with %lu\n",
+                ok(Success != FALSE, "Revoking window %lu failed with %lu\n",
                    i, GetLastError());
                 DestroyWindow(Windows[i]);
             }
@@ -202,7 +206,7 @@ test_GrantAccess(void)
                 }
 
                 Success = GrantAccess(Windows[i], hJob);
-                ok(Success == TRUE, "Granting window %lu failed with %lu\n",
+                ok(Success != FALSE, "Granting window %lu failed with %lu\n",
                    i, GetLastError());
             }
 
@@ -213,17 +217,17 @@ test_GrantAccess(void)
             /* The list has to still work afterwards */
             SetLastError(0xDEADBEEF);
             Success = GrantAccess(hWnd, hJob);
-            ok(Success == TRUE, "Granting after a sweep failed with %lu\n",
+            ok(Success != FALSE, "Granting after a sweep failed with %lu\n",
                GetLastError());
             SetLastError(0xDEADBEEF);
             Success = RevokeAccess(hWnd, hJob);
-            ok(Success == TRUE, "Revoking after a sweep failed with %lu\n",
+            ok(Success != FALSE, "Revoking after a sweep failed with %lu\n",
                GetLastError());
         }
 
         /* Close the job with handles still granted, to free the list */
         Success = GrantAccess(hWnd, hJob);
-        ok(Success == TRUE, "Granting failed with %lu\n", GetLastError());
+        ok(Success != FALSE, "Granting failed with %lu\n", GetLastError());
         CloseHandle(hJob);
     }
 
@@ -285,40 +289,27 @@ StartChild(_Out_ PHANDLE Thread)
  */
 static
 void
-test_ProcessInJob(_In_ BOOL RestrictFirst)
+RunProcessInJob(
+    _In_ BOOL RestrictFirst,
+    _In_ HANDLE hReady,
+    _In_ HANDLE hQuit)
 {
     JOBOBJECT_BASIC_UI_RESTRICTIONS Info;
-    HANDLE hReady, hQuit, hJob, hProcess, hThread;
+    HANDLE hJob, hProcess, hThread;
     DWORD Wait;
     BOOL Success;
-
-    hReady = CreateEventW(NULL, TRUE, FALSE, READY_EVENT);
-    hQuit = CreateEventW(NULL, TRUE, FALSE, QUIT_EVENT);
-    if (hReady == NULL || hQuit == NULL)
-    {
-        skip("CreateEvent failed with %lu\n", GetLastError());
-        if (hReady) CloseHandle(hReady);
-        if (hQuit) CloseHandle(hQuit);
-        return;
-    }
 
     ResetEvent(hReady);
     ResetEvent(hQuit);
 
     hJob = CreateRestrictedJob(RestrictFirst ? JOB_LOCKDOWN_UI : 0);
     if (hJob == NULL)
-    {
-        CloseHandle(hReady);
-        CloseHandle(hQuit);
         return;
-    }
 
     hProcess = StartChild(&hThread);
     if (hProcess == NULL)
     {
         CloseHandle(hJob);
-        CloseHandle(hReady);
-        CloseHandle(hQuit);
         return;
     }
 
@@ -338,7 +329,7 @@ test_ProcessInJob(_In_ BOOL RestrictFirst)
         }
         else
         {
-            ok(Success == TRUE, "AssignProcessToJobObject failed with %lu\n",
+            ok(Success != FALSE, "AssignProcessToJobObject failed with %lu\n",
                GetLastError());
 
             /* Restricted up front, the child leaves the job by exiting.
@@ -352,7 +343,7 @@ test_ProcessInJob(_In_ BOOL RestrictFirst)
                                                   JobObjectBasicUIRestrictions,
                                                   &Info,
                                                   sizeof(Info));
-                ok(Success == TRUE, "Restricting a populated job failed with %lu\n",
+                ok(Success != FALSE, "Restricting a populated job failed with %lu\n",
                    GetLastError());
 
                 Info.UIRestrictionsClass = 0;
@@ -361,7 +352,7 @@ test_ProcessInJob(_In_ BOOL RestrictFirst)
                                                   JobObjectBasicUIRestrictions,
                                                   &Info,
                                                   sizeof(Info));
-                ok(Success == TRUE, "Clearing the restrictions failed with %lu\n",
+                ok(Success != FALSE, "Clearing the restrictions failed with %lu\n",
                    GetLastError());
             }
         }
@@ -376,8 +367,26 @@ test_ProcessInJob(_In_ BOOL RestrictFirst)
     CloseHandle(hThread);
     CloseHandle(hProcess);
     CloseHandle(hJob);
-    CloseHandle(hQuit);
-    CloseHandle(hReady);
+}
+
+static
+void
+test_ProcessInJob(_In_ BOOL RestrictFirst)
+{
+    HANDLE hReady, hQuit;
+
+    hReady = CreateEventW(NULL, TRUE, FALSE, READY_EVENT);
+    hQuit = CreateEventW(NULL, TRUE, FALSE, QUIT_EVENT);
+
+    if (hReady != NULL && hQuit != NULL)
+        RunProcessInJob(RestrictFirst, hReady, hQuit);
+    else
+        skip("CreateEvent failed with %lu\n", GetLastError());
+
+    if (hReady != NULL)
+        CloseHandle(hReady);
+    if (hQuit != NULL)
+        CloseHandle(hQuit);
 }
 
 /* The child: become a win32k client, say so, and wait to be let go */
@@ -388,7 +397,7 @@ RunChild(void)
     HANDLE hReady, hQuit;
 
     /* Any USER call connects us to win32k */
-    GetDesktopWindow();
+    (void)GetDesktopWindow();
 
     hReady = OpenEventW(EVENT_MODIFY_STATE, FALSE, READY_EVENT);
     hQuit = OpenEventW(SYNCHRONIZE, FALSE, QUIT_EVENT);

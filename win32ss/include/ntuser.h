@@ -12,8 +12,8 @@ struct tagPOPUPMENU;
 
 #define HANDLEENTRY_DESTROY 1
 #define HANDLEENTRY_INDESTROY 2
-/* A job was granted access to this handle, so freeing it has to sweep the
-   granted lists (see IntCleanupGrantedHandle) */
+/* A job was granted access to this handle, so freeing it has
+   to sweep the granted lists (see IntCleanupGrantedHandle) */
 #define HANDLEENTRY_GRANTED 4
 
 typedef struct _USER_HANDLE_ENTRY
@@ -3536,9 +3536,9 @@ NtUserUpdatePerUserSystemParameters(
 BOOL
 NTAPI
 NtUserUserHandleGrantAccess(
-    IN HANDLE hUserHandle,
-    IN HANDLE hJob,
-    IN BOOL bGrant);
+    _In_ HANDLE hUserHandle,
+    _In_ HANDLE hJob,
+    _In_ BOOL bGrant);
 
 BOOL
 NTAPI

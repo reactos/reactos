@@ -1,6 +1,6 @@
 /*
  * PROJECT:     ReactOS Win32k Subsystem
- * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * LICENSE:     MIT (https://spdx.org/licenses/MIT.html)
  * PURPOSE:     Job object UI restrictions
  * COPYRIGHT:   Copyright 2026 Justin Miller <justin.miller@reactos.org>
  */
@@ -20,18 +20,23 @@
 
 DBG_DEFAULT_CHANNEL(UserProcess);
 
+#define JOB_PROCESS_GROWTH  8
+#define JOB_HANDLE_GROWTH   16
+
 /* GLOBALS ********************************************************************/
 
 static PJOBINFO gJobInfoList = NULL;
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
-/* The USER lock must be held */
+_Requires_lock_held_(UserLock)
 static
 PJOBINFO
 IntFindJobInfo(_In_ PEJOB pEJob)
 {
     PJOBINFO pJobInfo;
+
+    ASSERT(UserIsEntered());
 
     for (pJobInfo = gJobInfoList; pJobInfo != NULL; pJobInfo = pJobInfo->Next)
     {
@@ -42,17 +47,28 @@ IntFindJobInfo(_In_ PEJOB pEJob)
     return NULL;
 }
 
-/* The USER lock must be held */
+_Requires_exclusive_lock_held_(UserLock)
 static
 PJOBINFO
 IntCreateJobInfo(_In_ PEJOB pEJob)
 {
     PJOBINFO pJobInfo;
+    NTSTATUS Status;
+
+    ASSERT(UserIsEnteredExclusive());
 
     pJobInfo = ExAllocatePoolZero(PagedPool, sizeof(JOBINFO), USERTAG_W32JOB);
     if (pJobInfo == NULL)
     {
         ERR("Failed to allocate a JOBINFO for job %p\n", pEJob);
+        return NULL;
+    }
+
+    Status = RtlCreateAtomTable(37, &pJobInfo->pAtomTable);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("Failed to create the atom table of job %p: 0x%lx\n", pEJob, Status);
+        ExFreePoolWithTag(pJobInfo, USERTAG_W32JOB);
         return NULL;
     }
 
@@ -69,8 +85,8 @@ IntCreateJobInfo(_In_ PEJOB pEJob)
  * Marks a process and its threads as belonging to a restricted job, so that
  * enforcement is a flag test rather than a walk back to the job. user32 sees
  * the thread flag through the CLIENTINFO.
- * The USER lock must be held.
  */
+_Requires_exclusive_lock_held_(UserLock)
 static
 VOID
 IntSetProcessRestricted(
@@ -114,7 +130,7 @@ IntSetProcessRestricted(
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
             /* Do nothing, the kernel side copy still stands */
-            (void)0;
+           NOTHING;
         }
         _SEH2_END;
     }
@@ -123,13 +139,15 @@ IntSetProcessRestricted(
         KeUnstackDetachProcess(&ApcState);
 }
 
-/* The USER lock must be held */
+_Requires_exclusive_lock_held_(UserLock)
 static
 VOID
 IntDestroyJobInfo(_In_ PJOBINFO pJobInfo)
 {
     PJOBINFO *ppJobInfo;
     ULONG i;
+
+    ASSERT(UserIsEnteredExclusive());
 
     /* Unlink it first, so nothing can find it */
     for (ppJobInfo = &gJobInfoList; *ppJobInfo != NULL; ppJobInfo = &(*ppJobInfo)->Next)
@@ -146,7 +164,7 @@ IntDestroyJobInfo(_In_ PJOBINFO pJobInfo)
         if (pJobInfo->pProcesses[i] != NULL)
         {
             IntSetProcessRestricted(pJobInfo->pProcesses[i], FALSE);
-            pJobInfo->pProcesses[i]->pJobInfo = NULL;
+            pJobInfo->pProcesses[i]->pW32Job = NULL;
         }
     }
 
@@ -163,19 +181,27 @@ IntDestroyJobInfo(_In_ PJOBINFO pJobInfo)
     ExFreePoolWithTag(pJobInfo, USERTAG_W32JOB);
 }
 
-/* Returns the new array, or NULL when out of memory (the old one is kept) */
+/*
+ * Grows one of the arrays of a job by a fixed step. These lists are short and
+ * rarely added to, so doubling would waste far more than the copying saves.
+ * Returns the new array, or NULL when out of memory (the old one is kept).
+ */
+_Requires_exclusive_lock_held_(UserLock)
 static
 PVOID
 IntGrowJobArray(
     _In_opt_ PVOID pOldArray,
     _In_ ULONG Used,
     _Inout_ PULONG Max,
+    _In_ ULONG Increment,
     _In_ ULONG EntrySize)
 {
     PVOID pNewArray;
     ULONG NewMax;
 
-    NewMax = (*Max == 0) ? 4 : (*Max * 2);
+    ASSERT(UserIsEnteredExclusive());
+
+    NewMax = *Max + Increment;
 
     pNewArray = ExAllocatePoolZero(PagedPool, NewMax * EntrySize, USERTAG_W32JOBEXTRA);
     if (pNewArray == NULL)
@@ -191,7 +217,7 @@ IntGrowJobArray(
     return pNewArray;
 }
 
-/* The USER lock must be held */
+_Requires_exclusive_lock_held_(UserLock)
 static
 NTSTATUS
 IntAddProcessToJobInfo(
@@ -199,6 +225,8 @@ IntAddProcessToJobInfo(
     _In_ PPROCESSINFO ppi)
 {
     ULONG i;
+
+    ASSERT(UserIsEnteredExclusive());
 
     /* Already a member? */
     for (i = 0; i < pJobInfo->ProcessCount; i++)
@@ -214,6 +242,7 @@ IntAddProcessToJobInfo(
         pProcesses = IntGrowJobArray(pJobInfo->pProcesses,
                                      pJobInfo->ProcessCount,
                                      &pJobInfo->ProcessCountMax,
+                                     JOB_PROCESS_GROWTH,
                                      sizeof(PPROCESSINFO));
         if (pProcesses == NULL)
             return STATUS_NO_MEMORY;
@@ -222,7 +251,7 @@ IntAddProcessToJobInfo(
     }
 
     pJobInfo->pProcesses[pJobInfo->ProcessCount++] = ppi;
-    ppi->pJobInfo = pJobInfo;
+    ppi->pW32Job = pJobInfo;
     IntSetProcessRestricted(ppi, TRUE);
 
     TRACE("Process %p joined JOBINFO %p (restrictions 0x%lx)\n",
@@ -282,25 +311,6 @@ IntJobSetRestrictions(
         }
     }
 
-    /* A private atom table is only needed while GLOBALATOMS is restricted */
-    if (UIRestrictions & JOB_OBJECT_UILIMIT_GLOBALATOMS)
-    {
-        if (pJobInfo->pAtomTable == NULL)
-        {
-            Status = RtlCreateAtomTable(37, &pJobInfo->pAtomTable);
-            if (!NT_SUCCESS(Status))
-            {
-                ERR("Failed to create the atom table of job %p: 0x%lx\n", pEJob, Status);
-                goto Quit;
-            }
-        }
-    }
-    else if (pJobInfo->pAtomTable != NULL)
-    {
-        RtlDestroyAtomTable(pJobInfo->pAtomTable);
-        pJobInfo->pAtomTable = NULL;
-    }
-
     pJobInfo->UIRestrictions = UIRestrictions;
 
 Quit:
@@ -327,8 +337,8 @@ IntJobAddProcess(
     pJobInfo = IntFindJobInfo(pEJob);
     if (pJobInfo == NULL)
     {
-        /* The kernel only calls us for jobs that have restrictions, so we
-           should have been told about this job already */
+        /* The kernel only calls us for jobs that have restrictions,
+           so we should have been told about this job already */
         ERR("No JOBINFO for job %p\n", pEJob);
         Status = STATUS_UNSUCCESSFUL;
     }
@@ -358,7 +368,8 @@ IntJobTerminate(_In_ PEJOB pEJob)
     return STATUS_SUCCESS;
 }
 
-/* Returns whether the handle was on the list. The USER lock must be held */
+/* Returns whether the handle was on the list */
+_Requires_exclusive_lock_held_(UserLock)
 static
 BOOL
 IntRemoveGrantedHandle(
@@ -366,6 +377,8 @@ IntRemoveGrantedHandle(
     _In_ HANDLE hUserHandle)
 {
     ULONG i;
+
+    ASSERT(UserIsEnteredExclusive());
 
     for (i = 0; i < pJobInfo->GrantedHandleCount; i++)
     {
@@ -383,7 +396,7 @@ IntRemoveGrantedHandle(
     return FALSE;
 }
 
-/* The USER lock must be held */
+_Requires_lock_held_(UserLock)
 static
 BOOL
 IntIsHandleGrantedToJob(
@@ -391,6 +404,8 @@ IntIsHandleGrantedToJob(
     _In_ HANDLE hUserHandle)
 {
     ULONG i;
+
+    ASSERT(UserIsEntered());
 
     for (i = 0; i < pJobInfo->GrantedHandleCount; i++)
     {
@@ -401,7 +416,7 @@ IntIsHandleGrantedToJob(
     return FALSE;
 }
 
-/* The USER lock must be held */
+_Requires_exclusive_lock_held_(UserLock)
 static
 BOOL
 IntGrantHandleToJob(
@@ -409,6 +424,8 @@ IntGrantHandleToJob(
     _In_ HANDLE hUserHandle,
     _In_ BOOL bGrant)
 {
+    ASSERT(UserIsEnteredExclusive());
+
     /* Both granting and revoking need a handle that exists. Nothing is lost
        by that: a handle that is destroyed while granted comes off the list
        from IntCleanupGrantedHandle, not by the caller revoking it. */
@@ -436,6 +453,7 @@ IntGrantHandleToJob(
         pGrantedHandles = IntGrowJobArray(pJobInfo->pGrantedHandles,
                                           pJobInfo->GrantedHandleCount,
                                           &pJobInfo->GrantedHandleCountMax,
+                                          JOB_HANDLE_GROWTH,
                                           sizeof(HANDLE));
         if (pGrantedHandles == NULL)
         {
@@ -480,10 +498,11 @@ Win32kJobCallout(_In_ PWIN32_JOBCALLOUT_PARAMETERS Parameters)
  * Called when a process connects to USER. A process is normally assigned to
  * its job while still suspended, so this is where restricted processes join.
  *
- * The USER lock must be held. The job lock is deliberately not taken, as that
- * would invert the order the callout path establishes; ppi is already on
- * gppiList, so a concurrent restriction picks it up in IntJobSetRestrictions.
+ * The job lock is deliberately not taken, as that would invert the order the
+ * callout path establishes; ppi is already on gppiList, so a concurrent
+ * restriction picks it up in IntJobSetRestrictions.
  */
+_Requires_exclusive_lock_held_(UserLock)
 NTSTATUS
 FASTCALL
 IntJobConnectProcess(_In_ PPROCESSINFO ppi)
@@ -511,10 +530,8 @@ IntJobConnectProcess(_In_ PPROCESSINFO ppi)
     return IntAddProcessToJobInfo(pJobInfo, ppi);
 }
 
-/*
- * Called when a process disconnects from USER.
- * The USER lock must be held.
- */
+/* Called when a process disconnects from USER */
+_Requires_exclusive_lock_held_(UserLock)
 VOID
 FASTCALL
 IntJobDisconnectProcess(_In_ PPROCESSINFO ppi)
@@ -524,7 +541,7 @@ IntJobDisconnectProcess(_In_ PPROCESSINFO ppi)
 
     ASSERT(UserIsEnteredExclusive());
 
-    pJobInfo = ppi->pJobInfo;
+    pJobInfo = ppi->pW32Job;
     if (pJobInfo == NULL)
         return;
 
@@ -541,15 +558,15 @@ IntJobDisconnectProcess(_In_ PPROCESSINFO ppi)
     }
 
     IntSetProcessRestricted(ppi, FALSE);
-    ppi->pJobInfo = NULL;
+    ppi->pW32Job = NULL;
 }
 
 /*
  * Withdraws a freed USER handle from every job it was granted to. Handle
- * values are reused, so a grant left on a dead handle would be inherited by
- * whatever object is given the slot next.
- * The USER lock must be held.
+ * values are reused, so a grant left on a dead handle would be inherited
+ * by whatever object is given the slot next.
  */
+_Requires_exclusive_lock_held_(UserLock)
 VOID
 FASTCALL
 IntCleanupGrantedHandle(_In_ HANDLE hUserHandle)
@@ -568,9 +585,9 @@ IntCleanupGrantedHandle(_In_ HANDLE hUserHandle)
 BOOL
 APIENTRY
 NtUserUserHandleGrantAccess(
-    IN HANDLE hUserHandle,
-    IN HANDLE hJob,
-    IN BOOL bGrant)
+    _In_ HANDLE hUserHandle,
+    _In_ HANDLE hJob,
+    _In_ BOOL bGrant)
 {
     PEJOB pEJob;
     PJOBINFO pJobInfo;
@@ -600,7 +617,7 @@ NtUserUserHandleGrantAccess(
     pJobInfo = IntFindJobInfo(pEJob);
     if (pJobInfo == NULL)
     {
-        /* Only a job that restricts USER handles keeps a granted list */
+        /* A job with no UI restrictions at all keeps no granted list */
         EngSetLastError(ERROR_INVALID_PARAMETER);
     }
     else

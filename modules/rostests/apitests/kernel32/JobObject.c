@@ -74,7 +74,7 @@ test_RoundTrip(void)
                                         &Info,
                                         sizeof(Info),
                                         &Returned);
-    ok(Success == TRUE, "QueryInformationJobObject failed with %lu\n", GetLastError());
+    ok(Success != FALSE, "QueryInformationJobObject failed with %lu\n", GetLastError());
     ok_long(Info.UIRestrictionsClass, 0);
     ok_long(Returned, sizeof(Info));
 
@@ -83,8 +83,14 @@ test_RoundTrip(void)
     {
         SetLastError(0xDEADBEEF);
         Success = SetRestrictions(hJob, SingleRestrictions[i]);
-        ok(Success == TRUE, "Setting 0x%lx failed with %lu\n",
+        ok(Success != FALSE, "Setting 0x%lx failed with %lu\n",
            SingleRestrictions[i], GetLastError());
+        if (Success == FALSE)
+        {
+            /* Everything below only means something once it is set */
+            skip("0x%lx could not be set\n", SingleRestrictions[i]);
+            continue;
+        }
 
         memset(&Info, 0xAA, sizeof(Info));
         Returned = 0;
@@ -93,16 +99,30 @@ test_RoundTrip(void)
                                             &Info,
                                             sizeof(Info),
                                             &Returned);
-        ok(Success == TRUE, "Querying 0x%lx failed with %lu\n",
+        ok(Success != FALSE, "Querying 0x%lx failed with %lu\n",
            SingleRestrictions[i], GetLastError());
-        ok_long(Info.UIRestrictionsClass, SingleRestrictions[i]);
-        ok_long(Returned, sizeof(Info));
+        if (Success == FALSE)
+        {
+            skip("0x%lx could not be queried\n", SingleRestrictions[i]);
+        }
+        else
+        {
+            ok_long(Info.UIRestrictionsClass, SingleRestrictions[i]);
+            ok_long(Returned, sizeof(Info));
+        }
 
         /* Back to nothing, which drops the per-job state win32k keeps */
         SetLastError(0xDEADBEEF);
         Success = SetRestrictions(hJob, 0);
-        ok(Success == TRUE, "Clearing 0x%lx failed with %lu\n",
+        ok(Success != FALSE, "Clearing 0x%lx failed with %lu\n",
            SingleRestrictions[i], GetLastError());
+        if (Success == FALSE)
+        {
+            /* The job stays restricted, so the round after this one would be
+               starting from the wrong place */
+            skip("0x%lx could not be cleared\n", SingleRestrictions[i]);
+            continue;
+        }
 
         memset(&Info, 0xAA, sizeof(Info));
         Success = QueryInformationJobObject(hJob,
@@ -110,14 +130,15 @@ test_RoundTrip(void)
                                             &Info,
                                             sizeof(Info),
                                             NULL);
-        ok(Success == TRUE, "QueryInformationJobObject failed with %lu\n", GetLastError());
-        ok_long(Info.UIRestrictionsClass, 0);
+        ok(Success != FALSE, "QueryInformationJobObject failed with %lu\n", GetLastError());
+        if (Success != FALSE)
+            ok_long(Info.UIRestrictionsClass, 0);
     }
 
     /* All of them at once */
     SetLastError(0xDEADBEEF);
     Success = SetRestrictions(hJob, JOB_OBJECT_UILIMIT_ALL);
-    ok(Success == TRUE, "Setting JOB_OBJECT_UILIMIT_ALL failed with %lu\n", GetLastError());
+    ok(Success != FALSE, "Setting JOB_OBJECT_UILIMIT_ALL failed with %lu\n", GetLastError());
 
     memset(&Info, 0xAA, sizeof(Info));
     Success = QueryInformationJobObject(hJob,
@@ -125,13 +146,13 @@ test_RoundTrip(void)
                                         &Info,
                                         sizeof(Info),
                                         NULL);
-    ok(Success == TRUE, "QueryInformationJobObject failed with %lu\n", GetLastError());
+    ok(Success != FALSE, "QueryInformationJobObject failed with %lu\n", GetLastError());
     ok_long(Info.UIRestrictionsClass, JOB_OBJECT_UILIMIT_ALL);
 
     /* Setting the same value twice is not an error */
     SetLastError(0xDEADBEEF);
     Success = SetRestrictions(hJob, JOB_OBJECT_UILIMIT_ALL);
-    ok(Success == TRUE, "Setting the same restrictions again failed with %lu\n",
+    ok(Success != FALSE, "Setting the same restrictions again failed with %lu\n",
        GetLastError());
 
     /* Close it while still restricted, to exercise the delete path */
@@ -169,7 +190,7 @@ test_InvalidParameters(void)
                                         &Info,
                                         sizeof(Info),
                                         NULL);
-    ok(Success == TRUE, "QueryInformationJobObject failed with %lu\n", GetLastError());
+    ok(Success != FALSE, "QueryInformationJobObject failed with %lu\n", GetLastError());
     ok_long(Info.UIRestrictionsClass, 0);
 
     /* The class is fixed length in both directions */
@@ -234,7 +255,7 @@ test_Access(void)
                               JOB_OBJECT_QUERY,
                               FALSE,
                               0);
-    ok(Success == TRUE, "DuplicateHandle failed with %lu\n", GetLastError());
+    ok(Success != FALSE, "DuplicateHandle failed with %lu\n", GetLastError());
     if (Success)
     {
         SetLastError(0xDEADBEEF);
@@ -248,7 +269,7 @@ test_Access(void)
                                             &Info,
                                             sizeof(Info),
                                             NULL);
-        ok(Success == TRUE, "QueryInformationJobObject failed with %lu\n", GetLastError());
+        ok(Success != FALSE, "QueryInformationJobObject failed with %lu\n", GetLastError());
         ok_long(Info.UIRestrictionsClass, 0);
 
         CloseHandle(hQueryOnly);
@@ -289,11 +310,11 @@ test_SandboxPolicies(void)
                                       JobObjectExtendedLimitInformation,
                                       &ExtendedLimit,
                                       sizeof(ExtendedLimit));
-    ok(Success == TRUE, "Setting the lockdown limits failed with %lu\n", GetLastError());
+    ok(Success != FALSE, "Setting the lockdown limits failed with %lu\n", GetLastError());
 
     SetLastError(0xDEADBEEF);
     Success = SetRestrictions(hJob, JOB_LOCKDOWN_UI);
-    ok(Success == TRUE, "Setting the lockdown restrictions failed with %lu\n",
+    ok(Success != FALSE, "Setting the lockdown restrictions failed with %lu\n",
        GetLastError());
 
     memset(&Info, 0xAA, sizeof(Info));
@@ -302,7 +323,7 @@ test_SandboxPolicies(void)
                                         &Info,
                                         sizeof(Info),
                                         NULL);
-    ok(Success == TRUE, "QueryInformationJobObject failed with %lu\n", GetLastError());
+    ok(Success != FALSE, "QueryInformationJobObject failed with %lu\n", GetLastError());
     ok_long(Info.UIRestrictionsClass, JOB_LOCKDOWN_UI);
 
     CloseHandle(hJob);
@@ -324,11 +345,11 @@ test_SandboxPolicies(void)
                                       JobObjectExtendedLimitInformation,
                                       &ExtendedLimit,
                                       sizeof(ExtendedLimit));
-    ok(Success == TRUE, "Setting the limited user limits failed with %lu\n", GetLastError());
+    ok(Success != FALSE, "Setting the limited user limits failed with %lu\n", GetLastError());
 
     SetLastError(0xDEADBEEF);
     Success = SetRestrictions(hJob, JOB_LIMITEDUSER_UI);
-    ok(Success == TRUE, "Setting the limited user restrictions failed with %lu\n",
+    ok(Success != FALSE, "Setting the limited user restrictions failed with %lu\n",
        GetLastError());
 
     memset(&Info, 0xAA, sizeof(Info));
@@ -337,7 +358,7 @@ test_SandboxPolicies(void)
                                         &Info,
                                         sizeof(Info),
                                         NULL);
-    ok(Success == TRUE, "QueryInformationJobObject failed with %lu\n", GetLastError());
+    ok(Success != FALSE, "QueryInformationJobObject failed with %lu\n", GetLastError());
     ok_long(Info.UIRestrictionsClass, JOB_LIMITEDUSER_UI);
 
     CloseHandle(hJob);
@@ -355,7 +376,7 @@ test_SandboxPolicies(void)
 
     SetLastError(0xDEADBEEF);
     Success = SetRestrictions(hJob, JOB_LOCKDOWN_UI & ~JOB_OBJECT_UILIMIT_ALL);
-    ok(Success == TRUE, "Excepting every restriction away failed with %lu\n",
+    ok(Success != FALSE, "Excepting every restriction away failed with %lu\n",
        GetLastError());
 
     memset(&Info, 0xAA, sizeof(Info));
@@ -364,7 +385,7 @@ test_SandboxPolicies(void)
                                         &Info,
                                         sizeof(Info),
                                         NULL);
-    ok(Success == TRUE, "QueryInformationJobObject failed with %lu\n", GetLastError());
+    ok(Success != FALSE, "QueryInformationJobObject failed with %lu\n", GetLastError());
     ok_long(Info.UIRestrictionsClass, 0);
 
     CloseHandle(hJob);
