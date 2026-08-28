@@ -19,9 +19,6 @@
  */
 
 #include <stdarg.h>
-#ifdef __REACTOS__
-#include <wchar.h>
-#endif
 
 #include "windef.h"
 #include "winbase.h"
@@ -70,15 +67,10 @@ static CRITICAL_SECTION csPendingCredentials = { &critsect_debug, -1, 0, 0, 0, 0
 BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 {
     struct pending_credentials *entry, *cursor2;
-    TRACE("(0x%p, %d, %p)\n",hinstDLL,fdwReason,lpvReserved);
+    TRACE("(0x%p, %ld, %p)\n",hinstDLL,fdwReason,lpvReserved);
 
     switch (fdwReason)
     {
-#ifndef __REACTOS__
-    case DLL_WINE_PREATTACH:
-        return FALSE;	/* prefer native version */
-#endif
-
     case DLL_PROCESS_ATTACH:
         DisableThreadLibraryCalls(hinstDLL);
         hinstCredUI = hinstDLL;
@@ -128,7 +120,7 @@ static DWORD save_credentials(PCWSTR pszTargetName, PCWSTR pszUsername,
     else
     {
         DWORD ret = GetLastError();
-        ERR("CredWriteW failed with error %d\n", ret);
+        ERR("CredWriteW failed with error %ld\n", ret);
         return ret;
     }
 }
@@ -395,7 +387,7 @@ static BOOL CredDialogInit(HWND hwndDlg, struct cred_dialog_params *params)
         WCHAR format[256];
         WCHAR message[256];
         LoadStringW(hinstCredUI, IDS_MESSAGEFORMAT, format, ARRAY_SIZE(format));
-        swprintf(message, format, params->pszTargetName);
+        swprintf(message, ARRAY_SIZE(message), format, params->pszTargetName);
         SetDlgItemTextW(hwndDlg, IDC_MESSAGE, message);
     }
     SetWindowTextW(hwndUsername, params->pszUsername);
@@ -420,7 +412,7 @@ static BOOL CredDialogInit(HWND hwndDlg, struct cred_dialog_params *params)
         WCHAR format[256];
         WCHAR title[256];
         LoadStringW(hinstCredUI, IDS_TITLEFORMAT, format, ARRAY_SIZE(format));
-        swprintf(title, format, params->pszTargetName);
+        swprintf(title, ARRAY_SIZE(title), format, params->pszTargetName);
         SetWindowTextW(hwndDlg, title);
     }
 
@@ -574,7 +566,7 @@ static BOOL find_existing_credential(const WCHAR *target, WCHAR *username, ULONG
         if (credentials[i]->Type != CRED_TYPE_DOMAIN_PASSWORD &&
             credentials[i]->Type != CRED_TYPE_GENERIC)
         {
-            FIXME("no support for type %u credentials\n", credentials[i]->Type);
+            FIXME("no support for type %lu credentials\n", credentials[i]->Type);
             continue;
         }
         if ((!*username || !lstrcmpW(username, credentials[i]->UserName)) &&
@@ -612,7 +604,7 @@ DWORD WINAPI CredUIPromptForCredentialsW(PCREDUI_INFOW pUIInfo,
     struct cred_dialog_params params;
     DWORD result = ERROR_SUCCESS;
 
-    TRACE("(%p, %s, %p, %d, %s, %d, %p, %d, %p, 0x%08x)\n", pUIInfo,
+    TRACE("(%p, %s, %p, %ld, %s, %ld, %p, %ld, %p, 0x%08lx)\n", pUIInfo,
           debugstr_w(pszTargetName), Reserved, dwAuthError, debugstr_w(pszUsername),
           ulUsernameMaxChars, pszPassword, ulPasswordMaxChars, pfSave, dwFlags);
 
@@ -766,7 +758,7 @@ DWORD WINAPI CredUIParseUserNameW(PCWSTR pszUserName, PWSTR pszUser,
 {
     PWSTR p;
 
-    TRACE("(%s, %p, %d, %p, %d)\n", debugstr_w(pszUserName), pszUser,
+    TRACE("(%s, %p, %ld, %p, %ld)\n", debugstr_w(pszUserName), pszUser,
           ulMaxUserChars, pszDomain, ulMaxDomainChars);
 
     if (!pszUserName || !pszUser || !ulMaxUserChars || !pszDomain ||
@@ -873,9 +865,6 @@ ULONG SEC_ENTRY SspiPromptForCredentialsW( PCWSTR target, void *info,
                                            PSEC_WINNT_AUTH_IDENTITY_OPAQUE *output_id,
                                            BOOL *save, DWORD sspi_flags )
 {
-    static const WCHAR basicW[] = {'B','a','s','i','c',0};
-    static const WCHAR ntlmW[] = {'N','T','L','M',0};
-    static const WCHAR negotiateW[] = {'N','e','g','o','t','i','a','t','e',0};
     WCHAR username[CREDUI_MAX_USERNAME_LENGTH + 1] = {0};
     WCHAR password[CREDUI_MAX_PASSWORD_LENGTH + 1] = {0};
     DWORD len_username = ARRAY_SIZE(username);
@@ -884,12 +873,12 @@ ULONG SEC_ENTRY SspiPromptForCredentialsW( PCWSTR target, void *info,
     CREDUI_INFOW *cred_info = info;
     SEC_WINNT_AUTH_IDENTITY_W *id = input_id;
 
-    FIXME( "(%s, %p, %u, %s, %p, %p, %p, %x) stub\n", debugstr_w(target), info,
+    FIXME( "(%s, %p, %lu, %s, %p, %p, %p, %lx) stub\n", debugstr_w(target), info,
            error, debugstr_w(package), input_id, output_id, save, sspi_flags );
 
     if (!target) return ERROR_INVALID_PARAMETER;
-    if (!package || (wcsicmp( package, basicW ) && wcsicmp( package, ntlmW ) &&
-                     wcsicmp( package, negotiateW )))
+    if (!package || (wcsicmp( package, L"Basic" ) && wcsicmp( package, L"NTLM" ) &&
+                     wcsicmp( package, L"Negotiate" )))
     {
         FIXME( "package %s not supported\n", debugstr_w(package) );
         return ERROR_NO_SUCH_PACKAGE;
@@ -928,7 +917,7 @@ ULONG SEC_ENTRY SspiPromptForCredentialsW( PCWSTR target, void *info,
         {
             user = ptr + 1;
             len_username = lstrlenW( user );
-            if (!wcsicmp( package, ntlmW ) || !wcsicmp( package, negotiateW ))
+            if (!wcsicmp( package, L"NTLM" ) || !wcsicmp( package, L"Negotiate" ))
             {
                 domain = username;
                 len_domain = ptr - username;
@@ -978,7 +967,7 @@ DWORD WINAPI CredUIPromptForWindowsCredentialsW( CREDUI_INFOW *info, DWORD error
                                                  const void *in_buf, ULONG in_buf_size, void **out_buf,
                                                  ULONG *out_buf_size, BOOL *save, DWORD flags )
 {
-    FIXME( "(%p, %u, %p, %p, %u, %p, %p, %p, %08x) stub\n", info, error, package, in_buf, in_buf_size,
+    FIXME( "(%p, %lu, %p, %p, %lu, %p, %p, %p, %08lx) stub\n", info, error, package, in_buf, in_buf_size,
            out_buf, out_buf_size, save, flags );
     return ERROR_CALL_NOT_IMPLEMENTED;
 }
@@ -989,7 +978,7 @@ DWORD WINAPI CredUIPromptForWindowsCredentialsW( CREDUI_INFOW *info, DWORD error
 BOOL  WINAPI CredPackAuthenticationBufferW( DWORD flags, WCHAR *username, WCHAR *password, BYTE *buf,
                                             DWORD *size )
 {
-    FIXME( "(%08x, %s, %p, %p, %p) stub\n", flags, debugstr_w(username), password, buf, size );
+    FIXME( "(%08lx, %s, %p, %p, %p) stub\n", flags, debugstr_w(username), password, buf, size );
     return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
@@ -1000,7 +989,7 @@ BOOL  WINAPI CredUnPackAuthenticationBufferW( DWORD flags, void *buf, DWORD size
                                               DWORD *len_username, WCHAR *domain, DWORD *len_domain,
                                               WCHAR *password, DWORD *len_password )
 {
-    FIXME( "(%08x, %p, %u, %p, %p, %p, %p, %p, %p) stub\n", flags, buf, size, username, len_username,
+    FIXME( "(%08lx, %p, %lu, %p, %p, %p, %p, %p, %p) stub\n", flags, buf, size, username, len_username,
            domain, len_domain, password, len_password );
     return ERROR_CALL_NOT_IMPLEMENTED;
 }
