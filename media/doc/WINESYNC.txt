@@ -83,7 +83,7 @@ dll/win32/feclient            # Synced to Wine-10.0
 dll/win32/fontsub             # Synced to Wine-10.0
 dll/win32/fusion              # Synced to WineStaging-4.18
 dll/win32/gdiplus             # Synced to Wine-10.0
-dll/win32/hhctrl.ocx          # Synced to WineStaging-4.18
+dll/win32/hhctrl.ocx          # Synced to Wine-10.0
 dll/win32/hlink               # Synced to WineStaging-4.18
 dll/win32/hnetcfg             # Synced to WineStaging-4.18
 dll/win32/iccvid              # Synced to WineStaging-4.0
