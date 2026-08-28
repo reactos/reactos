@@ -22,6 +22,7 @@
 
 #include "windef.h"
 #include "winbase.h"
+#include "winver.h"
 #include "imagehlp.h"
 #include "wine/debug.h"
 
