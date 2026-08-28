@@ -151,7 +151,7 @@ static HRESULT WINAPI ITSS_IEnumSTATSTG_Next(
     DWORD len, n;
     struct enum_info *cur;
 
-    TRACE("%p %u %p %p\n", This, celt, rgelt, pceltFetched );
+    TRACE("%p %lu %p %p\n", This, celt, rgelt, pceltFetched );
 
     cur = This->current;
     n = 0;
@@ -203,7 +203,7 @@ static HRESULT WINAPI ITSS_IEnumSTATSTG_Skip(
     DWORD n;
     struct enum_info *cur;
 
-    TRACE("%p %u\n", This, celt );
+    TRACE("%p %lu\n", This, celt );
 
     cur = This->current;
     n = 0;
@@ -340,7 +340,7 @@ static HRESULT WINAPI ITSS_IStorageImpl_OpenStream(
     int r;
     WCHAR *path, *p;
 
-    TRACE("%p %s %p %u %u %p\n", This, debugstr_w(pwcsName),
+    TRACE("%p %s %p %lu %lu %p\n", This, debugstr_w(pwcsName),
           reserved1, grfMode, reserved2, ppstm );
 
     len = lstrlenW( This->dir ) + lstrlenW( pwcsName ) + 1;
@@ -408,7 +408,7 @@ static HRESULT WINAPI ITSS_IStorageImpl_OpenStorage(
     WCHAR *path, *p;
     DWORD len;
 
-    TRACE("%p %s %p %u %p %u %p\n", This, debugstr_w(pwcsName),
+    TRACE("%p %s %p %lu %p %lu %p\n", This, debugstr_w(pwcsName),
           pstgPriority, grfMode, snbExclude, reserved, ppstg);
 
     chmfile = chm_dup( This->chmfile );
@@ -515,7 +515,7 @@ static HRESULT WINAPI ITSS_IStorageImpl_EnumElements(
     ITSS_IStorageImpl *This = impl_from_IStorage(iface);
     IEnumSTATSTG_Impl* stgenum;
 
-    TRACE("%p %d %p %d %p\n", This, reserved1, reserved2, reserved3, ppenum );
+    TRACE("%p %ld %p %ld %p\n", This, reserved1, reserved2, reserved3, ppenum );
 
     stgenum = ITSS_create_enum();
     if( !stgenum )
@@ -639,7 +639,6 @@ HRESULT ITSS_StgOpenStorage(
     IStorage** ppstgOpen)
 {
     struct chmFile *chmfile;
-    static const WCHAR szRoot[] = { '/', 0 };
 
     TRACE("%s\n", debugstr_w(pwcsName) );
 
@@ -647,7 +646,7 @@ HRESULT ITSS_StgOpenStorage(
     if( !chmfile )
         return E_FAIL;
 
-    return ITSS_create_chm_storage( chmfile, szRoot, ppstgOpen );
+    return ITSS_create_chm_storage( chmfile, L"/", ppstgOpen );
 }
 
 /************************************************************************/
@@ -705,7 +704,7 @@ static HRESULT WINAPI ITSS_IStream_Read(
     IStream_Impl *This = impl_from_IStream(iface);
     ULONG count;
 
-    TRACE("%p %p %u %p\n", This, pv, cb, pcbRead);
+    TRACE("%p %p %lu %p\n", This, pv, cb, pcbRead);
 
     count = chm_retrieve_object(This->stg->chmfile, 
                           &This->ui, pv, This->addr, cb);
@@ -735,7 +734,7 @@ static HRESULT WINAPI ITSS_IStream_Seek(
     IStream_Impl *This = impl_from_IStream(iface);
     LONGLONG newpos;
 
-    TRACE("%p %s %u %p\n", This,
+    TRACE("%p %s %lu %p\n", This,
           wine_dbgstr_longlong( dlibMove.QuadPart ), dwOrigin, plibNewPosition );
 
     newpos = This->addr;
@@ -823,7 +822,7 @@ static HRESULT WINAPI ITSS_IStream_Stat(
 {
     IStream_Impl *This = impl_from_IStream(iface);
 
-    TRACE("%p %p %d\n", This, pstatstg, grfStatFlag);
+    TRACE("%p %p %ld\n", This, pstatstg, grfStatFlag);
 
     memset( pstatstg, 0, sizeof *pstatstg );
     if( !( grfStatFlag & STATFLAG_NONAME ) )
