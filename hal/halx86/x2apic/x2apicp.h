@@ -9,12 +9,12 @@
 
 #define MSR_APIC_BASE 0x0000001B
 #define X2APIC_MSR_BASE 0x00000800
-#define CPUID_X2APIC_FEATURE_BIT 21
 #define X2APIC_MSR_ICR 0x00000830
 #define X2APIC_MSR_SELF_IPI 0x0000083F
+#define CPUID_X2APIC_FEATURE_BIT 21
 
 #include <pshpack1.h>
-typedef union _APIC_BASE_ADDRESS_REGISTER
+typedef union _X2APIC_BASE_ADDRESS_REGISTER
 {
     UINT64 LongLong;
     struct
@@ -27,19 +27,19 @@ typedef union _APIC_BASE_ADDRESS_REGISTER
         UINT64 BaseAddress:40;
         UINT64 ReservedMBZ:12;
     };
-} APIC_BASE_ADDRESS_REGISTER;
+} X2APIC_BASE_ADDRESS_REGISTER;
 #include <poppack.h>
 
-typedef enum _APIC_REGISTER
+typedef enum _X2APIC_REGISTER
 {
-    APIC_ID = 0x0020,
-    APIC_EOI = 0x00B0,
-    APIC_SIVR = 0x00F0,
-    APIC_ICR0 = 0x0300,
-} APIC_REGISTER;
+    X2APIC_ID_REG = 0x0020,
+    X2APIC_EOI_REG = 0x00B0,
+    X2APIC_SIVR_REG = 0x00F0,
+    X2APIC_ICR0_REG = 0x0300,
+} X2APIC_REGISTER;
 
 #include <pshpack1.h>
-typedef union _APIC_INTERRUPT_COMMAND_REGISTER
+typedef union _X2APIC_INTERRUPT_COMMAND_REGISTER
 {
     UINT64 LongLong;
     struct
@@ -56,33 +56,38 @@ typedef union _APIC_INTERRUPT_COMMAND_REGISTER
         UINT64 ReservedMBZ3:12;
         UINT64 Destination:32;
     };
-} APIC_INTERRUPT_COMMAND_REGISTER;
+} X2APIC_INTERRUPT_COMMAND_REGISTER;
 #include <poppack.h>
 
 FORCEINLINE
-APIC_REGISTER
-X2ApicMsrFromRegister(APIC_REGISTER Register)
+X2APIC_REGISTER
+X2ApicMsrFromRegister(
+    _In_ X2APIC_REGISTER Register)
 {
-    return (APIC_REGISTER)(X2APIC_MSR_BASE + (Register / 0x10));
+    return (X2APIC_REGISTER)(X2APIC_MSR_BASE + (Register / 0x10));
 }
 
 FORCEINLINE
 ULONG
-X2ApicRead(_In_ APIC_REGISTER Register)
+X2ApicRead(
+    _In_ X2APIC_REGISTER Register)
 {
     return (ULONG)__readmsr(X2ApicMsrFromRegister(Register));
 }
 
 FORCEINLINE
 VOID
-X2ApicWrite(_In_ APIC_REGISTER Register, _In_ ULONG Value)
+X2ApicWrite(
+    _In_ X2APIC_REGISTER Register,
+    _In_ ULONG Value)
 {
     __writemsr(X2ApicMsrFromRegister(Register), Value);
 }
 
 FORCEINLINE
 VOID
-X2ApicWriteIcr(_In_ APIC_INTERRUPT_COMMAND_REGISTER IcrValue)
+X2ApicWriteIcr(
+    _In_ X2APIC_INTERRUPT_COMMAND_REGISTER IcrValue)
 {
     __writemsr(X2APIC_MSR_ICR, IcrValue.LongLong);
 }
