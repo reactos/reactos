@@ -732,7 +732,7 @@ SetDIBitsToDevice(
     INT src_y = 0;
     ULONG iFormat, cBitsPixel, cjBits, cjWidth;
 
-    #define MaxScanLines 1000
+    #define MaxScanLines 6000
     #define MaxHeight 2000
     #define MaxSourceHeight 2000
     #define IS_ALIGNED(Pointer, Alignment) \
