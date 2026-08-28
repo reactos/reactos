@@ -237,14 +237,16 @@ BOOL FileExists(LPCTSTR szFilename)
     return GetFileAttributes(szFilename) != INVALID_FILE_ATTRIBUTES;
 }
 
+static LPCTSTR FindFileExtension(LPCTSTR szFilename)
+{
+    LPCTSTR s = _tcsrchr(szFilename, _T('\\')), s2 = _tcsrchr(szFilename, _T('/'));
+    s = max(s, s2);
+    return _tcsrchr(s ? s : szFilename, _T('.'));
+}
+
 BOOL HasFileExtension(LPCTSTR szFilename)
 {
-    LPCTSTR s;
-
-    s = _tcsrchr(szFilename, _T('\\'));
-    if (s)
-        szFilename = s;
-    return _tcsrchr(szFilename, _T('.')) != NULL;
+    return FindFileExtension(szFilename) != NULL;
 }
 
 static BOOL DoSaveFile(VOID)
@@ -550,13 +552,22 @@ BOOL DIALOG_FileSaveAs(VOID)
     saveas.lpstrFile = szPath;
     saveas.nMaxFile = _countof(szPath);
     saveas.Flags = OFN_PATHMUSTEXIST | OFN_OVERWRITEPROMPT | OFN_HIDEREADONLY |
-                   OFN_EXPLORER | OFN_ENABLETEMPLATE | OFN_ENABLEHOOK;
+                   OFN_EXPLORER | OFN_ENABLETEMPLATE | OFN_ENABLEHOOK | OFN_NOREADONLYRETURN;
     saveas.lpstrDefExt = szDefaultExt;
     saveas.lpTemplateName = MAKEINTRESOURCE(DIALOG_ENCODING);
     saveas.lpfnHook = DIALOG_FileSaveAs_Hook;
 
     if (GetSaveFileName(&saveas))
     {
+        // Remove lpstrDefExt if the user typed a different extension
+        PTSTR pszExt = (PTSTR)FindFileExtension(szPath);
+        if (pszExt > szPath)
+        {
+            *pszExt = _T('\0'); // Remove lpstrDefExt
+            if (!FindFileExtension(szPath))
+                *pszExt = _T('.'); // No other extension, put it back
+        }
+
         /* HACK: Because in ROS, Save-As boxes don't check the validity
          * of file names and thus, here, szPath can be invalid !! We only
          * see its validity when we call DoSaveFile()... */
