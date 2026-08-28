@@ -21,6 +21,7 @@
 
 #include <rtl.h>
 #include <heap.h>
+#include "heap_lfh.h"
 
 #define NDEBUG
 #include <debug.h>
@@ -1792,6 +1793,9 @@ RtlDestroyHeap(HANDLE HeapPtr) /* [in] Handle of heap */
         RtlpRemoveHeapFromProcessList(Heap);
     }
 
+    if (Heap->FrontEndHeapType == 2)
+        RtlpDestroyLFH(Heap);
+
     /* Delete the heap lock */
     if (!(Heap->Flags & HEAP_NO_SERIALIZE))
     {
@@ -2085,6 +2089,9 @@ RtlAllocateHeap(IN PVOID HeapPtr,
     if (RtlpHeapIsSpecial(Flags))
         return RtlDebugAllocateHeap(Heap, Flags, Size);
 
+    if ((Heap->FrontEndHeapType == 2) && RtlpLFHSizeFits(Size))
+        return RtlpLFHAllocate(Heap, Flags, Size);
+
     /* Check for the maximum size */
     if (Size >= 0x80000000)
     {
@@ -2310,6 +2317,13 @@ BOOLEAN NTAPI RtlFreeHeap(
 
     /* Get pointer to the heap entry */
     HeapEntry = (PHEAP_ENTRY)Ptr - 1;
+
+    if ((Heap->FrontEndHeapType == 2) &&
+        (HeapEntry->Flags & HEAP_ENTRY_BUSY) &&
+        (HeapEntry->UnusedBytes & HEAP_ENTRY_LFH_FLAG))
+    {
+        return RtlpLFHFree(Heap, Flags, Ptr);
+    }
 
     /* Protect with SEH in case the pointer is not valid */
     _SEH2_TRY
@@ -3230,6 +3244,12 @@ RtlSizeHeap(
         return (SIZE_T)-1;
     }
 
+    /* LFH blocks don't track exact padding. Ask the frontend */
+    if ((Heap->FrontEndHeapType == 2) && (HeapEntry->UnusedBytes & HEAP_ENTRY_LFH_FLAG))
+    {
+        return RtlpLFHSize(Heap, Ptr);
+    }
+
     /* Get size of this block depending if it's a usual or a big one */
     if (HeapEntry->Flags & HEAP_ENTRY_VIRTUAL_ALLOC)
     {
@@ -4085,8 +4105,7 @@ RtlSetHeapInformation(IN HANDLE HeapHandle OPTIONAL,
             return STATUS_UNSUCCESSFUL;
         }
 
-        DPRINT1("RtlSetHeapInformation() needs to enable LFH\n");
-        return STATUS_SUCCESS;
+        return RtlpInitializeLFH((PHEAP)HeapHandle);
     }
 
     return STATUS_SUCCESS;
