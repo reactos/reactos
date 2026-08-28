@@ -19,25 +19,20 @@
 #include <stdarg.h>
 #include "windef.h"
 #include "winbase.h"
+#ifdef __REACTOS__
+/* TODO: Fix the mgmtapi.h header, lots of missing types */
+typedef PVOID LPSNMP_MGR_SESSION;
+#else
+#include "mgmtapi.h"
+#endif
 #include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(mgmtapi);
 
-BOOL WINAPI DllMain( HINSTANCE hinst, DWORD reason, LPVOID reserved )
+LPSNMP_MGR_SESSION WINAPI SnmpMgrOpen(char *hostname, char *community, int timeout, int retries)
 {
-    TRACE("%p, %u, %p\n", hinst, reason, reserved);
-
-    switch (reason)
-    {
-#ifndef __REACTOS__
-        case DLL_WINE_PREATTACH:
-            return FALSE;    /* prefer native version */
-#endif
-        case DLL_PROCESS_ATTACH:
-            DisableThreadLibraryCalls( hinst );
-            break;
-    }
-    return TRUE;
+    FIXME("stub: %s, %s, %d, %d\n", hostname, community, timeout, retries);
+    return NULL;
 }
 
 BOOL WINAPI SnmpMgrTrapListen(HANDLE *available)
