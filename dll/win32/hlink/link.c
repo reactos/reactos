@@ -154,7 +154,7 @@ static ULONG WINAPI IHlink_fnAddRef (IHlink* iface)
     HlinkImpl  *This = impl_from_IHlink(iface);
     ULONG refCount = InterlockedIncrement(&This->ref);
 
-    TRACE("(%p)->(count=%u)\n", This, refCount - 1);
+    TRACE("(%p)->(count=%lu)\n", This, refCount - 1);
 
     return refCount;
 }
@@ -164,19 +164,19 @@ static ULONG WINAPI IHlink_fnRelease (IHlink* iface)
     HlinkImpl  *This = impl_from_IHlink(iface);
     ULONG refCount = InterlockedDecrement(&This->ref);
 
-    TRACE("(%p)->(count=%u)\n", This, refCount + 1);
+    TRACE("(%p)->(count=%lu)\n", This, refCount + 1);
     if (refCount)
         return refCount;
 
     TRACE("-- destroying IHlink (%p)\n", This);
-    heap_free(This->FriendlyName);
-    heap_free(This->TargetFrameName);
-    heap_free(This->Location);
+    free(This->FriendlyName);
+    free(This->TargetFrameName);
+    free(This->Location);
     if (This->Moniker)
         IMoniker_Release(This->Moniker);
     if (This->Site)
         IHlinkSite_Release(This->Site);
-    heap_free(This);
+    free(This);
     return 0;
 }
 
@@ -185,7 +185,7 @@ static HRESULT WINAPI IHlink_fnSetHlinkSite( IHlink* iface,
 {
     HlinkImpl  *This = impl_from_IHlink(iface);
 
-    TRACE("(%p)->(%p %i)\n", This, pihlSite, dwSiteData);
+    TRACE("(%p)->(%p %li)\n", This, pihlSite, dwSiteData);
 
     if (This->Site)
         IHlinkSite_Release(This->Site);
@@ -221,7 +221,7 @@ static HRESULT WINAPI IHlink_fnSetMonikerReference( IHlink* iface,
 {
     HlinkImpl  *This = impl_from_IHlink(iface);
 
-    TRACE("(%p)->(%i %p %s)\n", This, rfHLSETF, pmkTarget,
+    TRACE("(%p)->(%li %p %s)\n", This, rfHLSETF, pmkTarget,
             debugstr_w(pwzLocation));
 
     if(rfHLSETF == 0)
@@ -248,8 +248,8 @@ static HRESULT WINAPI IHlink_fnSetMonikerReference( IHlink* iface,
     }
 
     if(rfHLSETF & HLINKSETF_LOCATION){
-        heap_free(This->Location);
-        This->Location = hlink_strdupW( pwzLocation );
+        free(This->Location);
+        This->Location = wcsdup( pwzLocation );
     }
 
     return S_OK;
@@ -260,7 +260,7 @@ static HRESULT WINAPI IHlink_fnSetStringReference(IHlink* iface,
 {
     HlinkImpl  *This = impl_from_IHlink(iface);
 
-    TRACE("(%p)->(%i %s %s)\n", This, grfHLSETF, debugstr_w(pwzTarget),
+    TRACE("(%p)->(%li %s %s)\n", This, grfHLSETF, debugstr_w(pwzTarget),
             debugstr_w(pwzLocation));
 
     if(grfHLSETF > (HLINKSETF_TARGET | HLINKSETF_LOCATION) &&
@@ -297,7 +297,7 @@ static HRESULT WINAPI IHlink_fnSetStringReference(IHlink* iface,
                     r = CreateFileMoniker(pwzTarget, &pMon);
                 if (FAILED(r))
                 {
-                    ERR("couldn't create moniker for %s, failed with error 0x%08x\n",
+                    ERR("couldn't create moniker for %s, failed with error 0x%08lx\n",
                         debugstr_w(pwzTarget), r);
                     return r;
                 }
@@ -310,10 +310,10 @@ static HRESULT WINAPI IHlink_fnSetStringReference(IHlink* iface,
 
     if (grfHLSETF & HLINKSETF_LOCATION)
     {
-        heap_free(This->Location);
+        free(This->Location);
         This->Location = NULL;
         if (pwzLocation && *pwzLocation)
-            This->Location = hlink_strdupW( pwzLocation );
+            This->Location = wcsdup( pwzLocation );
     }
 
     return S_OK;
@@ -324,7 +324,7 @@ static HRESULT WINAPI IHlink_fnGetMonikerReference(IHlink* iface,
 {
     HlinkImpl  *This = impl_from_IHlink(iface);
 
-    TRACE("(%p) -> (%i %p %p)\n", This, dwWhichRef, ppimkTarget,
+    TRACE("(%p) -> (%li %p %p)\n", This, dwWhichRef, ppimkTarget,
             ppwzLocation);
 
     if (ppimkTarget)
@@ -349,7 +349,7 @@ static HRESULT WINAPI IHlink_fnGetStringReference (IHlink* iface,
 {
     HlinkImpl  *This = impl_from_IHlink(iface);
 
-    TRACE("(%p) -> (%i %p %p)\n", This, dwWhichRef, ppwzTarget, ppwzLocation);
+    TRACE("(%p) -> (%li %p %p)\n", This, dwWhichRef, ppwzTarget, ppwzLocation);
 
     if(dwWhichRef != -1 && dwWhichRef & ~(HLINKGETREF_DEFAULT | HLINKGETREF_ABSOLUTE | HLINKGETREF_RELATIVE))
     {
@@ -399,8 +399,8 @@ static HRESULT WINAPI IHlink_fnSetFriendlyName (IHlink *iface,
 
     TRACE("(%p) -> (%s)\n", This, debugstr_w(pwzFriendlyName));
 
-    heap_free(This->FriendlyName);
-    This->FriendlyName = hlink_strdupW( pwzFriendlyName );
+    free(This->FriendlyName);
+    This->FriendlyName = wcsdup( pwzFriendlyName );
 
     return S_OK;
 }
@@ -410,7 +410,7 @@ static HRESULT WINAPI IHlink_fnGetFriendlyName (IHlink* iface,
 {
     HlinkImpl  *This = impl_from_IHlink(iface);
 
-    TRACE("(%p) -> (%i %p)\n", This, grfHLFNAMEF, ppwzFriendlyName);
+    TRACE("(%p) -> (%li %p)\n", This, grfHLFNAMEF, ppwzFriendlyName);
 
     /* FIXME: Only using explicitly set and cached friendly names */
 
@@ -447,8 +447,8 @@ static HRESULT WINAPI IHlink_fnSetTargetFrameName(IHlink* iface,
     HlinkImpl  *This = impl_from_IHlink(iface);
     TRACE("(%p)->(%s)\n", This, debugstr_w(pwzTargetFramename));
 
-    heap_free(This->TargetFrameName);
-    This->TargetFrameName = hlink_strdupW( pwzTargetFramename );
+    free(This->TargetFrameName);
+    This->TargetFrameName = wcsdup( pwzTargetFramename );
 
     return S_OK;
 }
@@ -485,7 +485,7 @@ static HRESULT WINAPI IHlink_fnNavigate(IHlink *iface, DWORD flags, IBindCtx *us
     IMoniker *mon = NULL;
     HRESULT r;
 
-    TRACE("hlink %p, flags %#x, user_bind_ctx %p, bind_callback %p, browse_ctx %p.\n",
+    TRACE("hlink %p, flags %#lx, user_bind_ctx %p, bind_callback %p, browse_ctx %p.\n",
             This, flags, user_bind_ctx, bind_callback, browse_ctx);
 
     if (This->async_bind_ctx)
@@ -537,13 +537,12 @@ static HRESULT WINAPI IHlink_fnNavigate(IHlink *iface, DWORD flags, IBindCtx *us
         }
         else
         {
-            static const WCHAR szOpen[] = {'o','p','e','n',0};
             LPWSTR target = NULL;
 
             r = IHlink_GetStringReference(iface, HLINKGETREF_DEFAULT, &target, NULL);
             if (SUCCEEDED(r) && target)
             {
-                ShellExecuteW(NULL, szOpen, target, NULL, NULL, SW_SHOW);
+                ShellExecuteW(NULL, L"open", target, NULL, NULL, SW_SHOW);
                 CoTaskMemFree(target);
                 r = DRAGDROP_S_DROP;
             }
@@ -766,20 +765,20 @@ static HRESULT read_hlink_string(IStream *pStm, LPWSTR *out_str)
     if (FAILED(hr)) return hr;
     if (read != sizeof(len)) return STG_E_READFAULT;
 
-    TRACE("read len %d\n", len);
+    TRACE("read len %ld\n", len);
 
-    str = heap_alloc(len * sizeof(WCHAR));
+    str = malloc(len * sizeof(WCHAR));
     if (!str) return E_OUTOFMEMORY;
 
     hr = IStream_Read(pStm, str, len * sizeof(WCHAR), &read);
     if (FAILED(hr))
     {
-        heap_free(str);
+        free(str);
         return hr;
     }
     if (read != len * sizeof(WCHAR))
     {
-        heap_free(str);
+        free(str);
         return STG_E_READFAULT;
     }
     TRACE("read string %s\n", debugstr_w(str));
@@ -803,7 +802,7 @@ static HRESULT WINAPI IPersistStream_fnLoad(IPersistStream* iface,
         goto end;
     }
     if (hdr[1] & ~HLINK_SAVE_ALL)
-        FIXME("unknown flag(s) 0x%x\n", hdr[1] & ~HLINK_SAVE_ALL);
+        FIXME("unknown flag(s) 0x%lx\n", hdr[1] & ~HLINK_SAVE_ALL);
 
     if (hdr[1] & HLINK_SAVE_TARGET_FRAME_PRESENT)
     {
@@ -838,7 +837,7 @@ static HRESULT WINAPI IPersistStream_fnLoad(IPersistStream* iface,
     }
 
 end:
-    TRACE("Load Result 0x%x (%p)\n", r, This->Moniker);
+    TRACE("Load Result 0x%lx (%p)\n", r, This->Moniker);
 
     return r;
 }
@@ -909,7 +908,7 @@ static HRESULT WINAPI IPersistStream_fnSave(IPersistStream* iface,
 
 end:
     if (moniker) IMoniker_Release(moniker);
-    TRACE("Save Result 0x%x\n", r);
+    TRACE("Save Result 0x%lx\n", r);
 
     return r;
 }
@@ -1003,7 +1002,7 @@ static HRESULT WINAPI bind_callback_OnStartBinding(IBindStatusCallback *iface,
 {
     HlinkImpl *hlink = impl_from_IBindStatusCallback(iface);
 
-    TRACE("hlink %p, reserved %#x, binding %p.\n", hlink, reserved, binding);
+    TRACE("hlink %p, reserved %#lx, binding %p.\n", hlink, reserved, binding);
 
     if (hlink->bind_callback)
         return IBindStatusCallback_OnStartBinding(hlink->bind_callback, reserved, binding);
@@ -1020,7 +1019,7 @@ static HRESULT WINAPI bind_callback_OnLowResource(IBindStatusCallback *iface, DW
 {
     HlinkImpl *hlink = impl_from_IBindStatusCallback(iface);
 
-    TRACE("hlink %p, reserved %#x.\n", hlink, reserved);
+    TRACE("hlink %p, reserved %#lx.\n", hlink, reserved);
 
     if (hlink->bind_callback)
         return IBindStatusCallback_OnLowResource(hlink->bind_callback, reserved);
@@ -1032,7 +1031,7 @@ static HRESULT WINAPI bind_callback_OnProgress(IBindStatusCallback *iface,
 {
     HlinkImpl *hlink = impl_from_IBindStatusCallback(iface);
 
-    TRACE("hlink %p, progress %u, max %u, status %u, text %s.\n",
+    TRACE("hlink %p, progress %lu, max %lu, status %lu, text %s.\n",
             hlink, progress, max, status, debugstr_w(text));
 
     if (hlink->bind_callback)
@@ -1045,7 +1044,7 @@ static HRESULT WINAPI bind_callback_OnStopBinding(IBindStatusCallback *iface,
 {
     HlinkImpl *hlink = impl_from_IBindStatusCallback(iface);
 
-    TRACE("hlink %p, hr %#x, error %s.\n", hlink, hr, debugstr_w(error));
+    TRACE("hlink %p, hr %#lx, error %s.\n", hlink, hr, debugstr_w(error));
 
     if (hlink->bind_callback)
         IBindStatusCallback_OnStopBinding(hlink->bind_callback, hr, error);
@@ -1077,7 +1076,7 @@ static HRESULT WINAPI bind_callback_GetBindInfo(IBindStatusCallback *iface,
 static HRESULT WINAPI bind_callback_OnDataAvailable(IBindStatusCallback *iface,
         DWORD flags, DWORD size, FORMATETC *formatetc, STGMEDIUM *stgmed)
 {
-    FIXME("iface %p, flags %#x, size %d, formatetc %p, stgmed %p, stub!\n",
+    FIXME("iface %p, flags %#lx, size %ld, formatetc %p, stgmed %p, stub!\n",
             iface, flags, size, formatetc, stgmed);
     return E_NOTIMPL;
 }
@@ -1131,6 +1130,7 @@ static const IBindStatusCallbackVtbl bind_callback_vtbl =
 HRESULT HLink_Constructor(IUnknown *pUnkOuter, REFIID riid, void **ppv)
 {
     HlinkImpl * hl;
+    HRESULT hr;
 
     TRACE("unkOut=%p riid=%s\n", pUnkOuter, debugstr_guid(riid));
     *ppv = NULL;
@@ -1138,8 +1138,7 @@ HRESULT HLink_Constructor(IUnknown *pUnkOuter, REFIID riid, void **ppv)
     if (pUnkOuter)
         return CLASS_E_NOAGGREGATION;
 
-    hl = heap_alloc_zero(sizeof(HlinkImpl));
-    if (!hl)
+    if (!(hl = calloc(1, sizeof(*hl))))
         return E_OUTOFMEMORY;
 
     hl->ref = 1;
@@ -1148,6 +1147,8 @@ HRESULT HLink_Constructor(IUnknown *pUnkOuter, REFIID riid, void **ppv)
     hl->IDataObject_iface.lpVtbl = &dovt;
     hl->IBindStatusCallback_iface.lpVtbl = &bind_callback_vtbl;
 
-    *ppv = hl;
-    return S_OK;
+    hr = IHlink_QueryInterface(&hl->IHlink_iface, riid, ppv);
+    IHlink_Release(&hl->IHlink_iface);
+
+    return hr;
 }
