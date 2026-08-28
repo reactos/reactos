@@ -58,7 +58,7 @@ static ULONG WINAPI fw_manager_Release(
     if (!refs)
     {
         TRACE("destroying %p\n", fw_manager);
-        HeapFree( GetProcessHeap(), 0, fw_manager );
+        free( fw_manager );
     }
     return refs;
 }
@@ -106,7 +106,7 @@ static HRESULT WINAPI fw_manager_GetTypeInfo(
 {
     fw_manager *This = impl_from_INetFwMgr( iface );
 
-    TRACE("%p %u %u %p\n", This, iTInfo, lcid, ppTInfo);
+    TRACE("%p %u %lu %p\n", This, iTInfo, lcid, ppTInfo);
     return get_typeinfo( INetFwMgr_tid, ppTInfo );
 }
 
@@ -122,7 +122,7 @@ static HRESULT WINAPI fw_manager_GetIDsOfNames(
     ITypeInfo *typeinfo;
     HRESULT hr;
 
-    TRACE("%p %s %p %u %u %p\n", This, debugstr_guid(riid), rgszNames, cNames, lcid, rgDispId);
+    TRACE("%p %s %p %u %lu %p\n", This, debugstr_guid(riid), rgszNames, cNames, lcid, rgDispId);
 
     hr = get_typeinfo( INetFwMgr_tid, &typeinfo );
     if (SUCCEEDED(hr))
@@ -148,7 +148,7 @@ static HRESULT WINAPI fw_manager_Invoke(
     ITypeInfo *typeinfo;
     HRESULT hr;
 
-    TRACE("%p %d %s %d %d %p %p %p %p\n", This, dispIdMember, debugstr_guid(riid),
+    TRACE("%p %ld %s %ld %d %p %p %p %p\n", This, dispIdMember, debugstr_guid(riid),
           lcid, wFlags, pDispParams, pVarResult, pExcepInfo, puArgErr);
 
     hr = get_typeinfo( INetFwMgr_tid, &typeinfo );
@@ -202,7 +202,7 @@ static HRESULT WINAPI fw_manager_IsPortAllowed(
 {
     fw_manager *This = impl_from_INetFwMgr( iface );
 
-    FIXME("%p, %s, %u, %d, %s, %u, %p, %p\n", This, debugstr_w(imageFileName),
+    FIXME("%p, %s, %u, %ld, %s, %u, %p, %p\n", This, debugstr_w(imageFileName),
           ipVersion, portNumber, debugstr_w(localAddress), ipProtocol, allowed, restricted);
     return E_NOTIMPL;
 }
@@ -244,7 +244,7 @@ HRESULT NetFwMgr_create( IUnknown *pUnkOuter, LPVOID *ppObj )
 
     TRACE("(%p,%p)\n", pUnkOuter, ppObj);
 
-    fm = HeapAlloc( GetProcessHeap(), 0, sizeof(*fm) );
+    fm = malloc( sizeof(*fm) );
     if (!fm) return E_OUTOFMEMORY;
 
     fm->INetFwMgr_iface.lpVtbl = &fw_manager_vtbl;
