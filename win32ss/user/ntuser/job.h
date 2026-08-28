@@ -1,6 +1,6 @@
 /*
  * PROJECT:     ReactOS Win32k Subsystem
- * LICENSE:     MIT (https://spdx.org/licenses/MIT.html)
+ * LICENSE:     MIT (https://spdx.org/licenses/MIT)
  * PURPOSE:     Job object UI restrictions header
  * COPYRIGHT:   Copyright 2026 Justin Miller <justin.miller@reactos.org>
  */
