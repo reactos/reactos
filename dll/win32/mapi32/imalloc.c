@@ -114,7 +114,7 @@ static ULONG WINAPI IMAPIMalloc_fnRelease(LPMALLOC iface)
  */
 static LPVOID WINAPI IMAPIMalloc_fnAlloc(LPMALLOC iface, SIZE_T cb)
 {
-    TRACE("(%p)->(%ld)\n", iface, cb);
+    TRACE("(%p)->(%Id)\n", iface, cb);
 
     return LocalAlloc(LMEM_FIXED, cb);
 }
@@ -124,7 +124,7 @@ static LPVOID WINAPI IMAPIMalloc_fnAlloc(LPMALLOC iface, SIZE_T cb)
  */
 static LPVOID WINAPI IMAPIMalloc_fnRealloc(LPMALLOC iface, LPVOID pv, SIZE_T cb)
 {
-    TRACE("(%p)->(%p, %ld)\n", iface, pv, cb);
+    TRACE("(%p)->(%p, %Id)\n", iface, pv, cb);
 
     if (!pv)
         return LocalAlloc(LMEM_FIXED, cb);

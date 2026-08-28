@@ -16,8 +16,8 @@
  24 stub PRProviderInit
  25 stub LAUNCHWIZARD
  26 stub LaunchWizard@20
- @ stdcall -private DllGetClassObject(ptr ptr ptr)
- @ stdcall -private DllCanUnloadNow()
+ 27 stdcall -private DllGetClassObject(ptr ptr ptr)
+ 28 stdcall -private DllCanUnloadNow()
  29 stdcall MAPIOpenFormMgr(ptr ptr)
  30 stdcall MAPIOpenFormMgr@8(ptr ptr) MAPIOpenFormMgr
  31 stdcall MAPIOpenLocalFormContainer(ptr)
@@ -95,7 +95,7 @@
 152 stdcall OpenTnefStreamEx(ptr ptr ptr long ptr long ptr ptr)
 153 stdcall GetTnefStreamCodepage@12(ptr ptr ptr) GetTnefStreamCodepage
 154 stdcall GetTnefStreamCodepage(ptr ptr ptr)
-155 stdcall UlFromSzHex@4(ptr) UlFromSzHex
+155 stdcall UlFromSzHex@4(wstr) UlFromSzHex
 156 stub UNKOBJ_ScAllocate@12
 157 stub UNKOBJ_ScAllocateMore@16
 158 stub UNKOBJ_Free@8
@@ -144,7 +144,7 @@
 204 stub EncodeID@12
 205 stub FDecodeID@12
 206 stub CchOfEncoding@4
-207 stdcall CbOfEncoded@4(ptr) CbOfEncoded
+207 stdcall CbOfEncoded@4(str) CbOfEncoded
 208 stdcall MAPISendDocuments(long str str str long)
 209 stdcall MAPILogon(long str str long long ptr)
 210 stdcall MAPILogoff(ptr long long long)

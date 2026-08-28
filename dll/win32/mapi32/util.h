@@ -25,8 +25,8 @@
 #include <mapi.h>
 #include <mapix.h>
 
-extern void load_mapi_providers(void) DECLSPEC_HIDDEN;
-extern void unload_mapi_providers(void) DECLSPEC_HIDDEN;
+extern void load_mapi_providers(void);
+extern void unload_mapi_providers(void);
 
 typedef struct MAPI_FUNCTIONS {
     LPMAPIADDRESS        MAPIAddress;
@@ -62,7 +62,7 @@ typedef struct MAPI_FUNCTIONS {
     HRESULT  (WINAPI *WrapCompressedRTFStream)    (LPSTREAM, ULONG, LPSTREAM *);
 } MAPI_FUNCTIONS;
 
-extern MAPI_FUNCTIONS mapiFunctions DECLSPEC_HIDDEN;
-extern HINSTANCE hInstMAPI32 DECLSPEC_HIDDEN;
+extern MAPI_FUNCTIONS mapiFunctions;
+extern HINSTANCE hInstMAPI32;
 
 #endif
