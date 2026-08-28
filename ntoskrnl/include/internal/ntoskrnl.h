@@ -6,6 +6,8 @@
 
 #ifdef _NTOSKRNL_
 
+#define DISABLE_SANITY_CHECKS_FOR_RELEASE
+
 #ifndef _ARM_
 #define KeGetCurrentThread  _KeGetCurrentThread
 #define KeGetPreviousMode   _KeGetPreviousMode

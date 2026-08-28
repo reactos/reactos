@@ -694,6 +694,7 @@ MmMapLockedPagesSpecifyCache(IN PMDL Mdl,
         PageCount = ADDRESS_AND_SIZE_TO_SPAN_PAGES(Base, Mdl->ByteCount);
         LastPage = MdlPages + PageCount;
 
+#ifndef DISABLE_SANITY_CHECKS_FOR_RELEASE
         //
         // Sanity checks
         //
@@ -701,6 +702,7 @@ MmMapLockedPagesSpecifyCache(IN PMDL Mdl,
                                  MDL_SOURCE_IS_NONPAGED_POOL |
                                  MDL_PARTIAL_HAS_BEEN_MAPPED)) == 0);
         ASSERT((Mdl->MdlFlags & (MDL_PAGES_LOCKED | MDL_PARTIAL)) != 0);
+#endif // DISABLE_SANITY_CHECKS_FOR_RELEASE
 
         //
         // Get the correct cache type
@@ -1647,11 +1649,13 @@ MmMapLockedPagesWithReservedMapping(
                                                Mdl->ByteCount);
     LastPage = MdlPages + PageCount;
 
+#ifndef DISABLE_SANITY_CHECKS_FOR_RELEASE
     // Sanity checks
     ASSERT((Mdl->MdlFlags & (MDL_MAPPED_TO_SYSTEM_VA |
                              MDL_SOURCE_IS_NONPAGED_POOL |
                              MDL_PARTIAL_HAS_BEEN_MAPPED)) == 0);
     ASSERT((Mdl->MdlFlags & (MDL_PAGES_LOCKED | MDL_PARTIAL)) != 0);
+#endif // DISABLE_SANITY_CHECKS_FOR_RELEASE
 
     // Get the correct cache type
     IsIoMapping = (Mdl->MdlFlags & MDL_IO_SPACE) != 0;

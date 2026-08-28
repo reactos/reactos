@@ -207,7 +207,9 @@ KeCancelTimer(IN OUT PKTIMER Timer)
 {
     KIRQL OldIrql;
     BOOLEAN Inserted;
+#ifndef DISABLE_SANITY_CHECKS_FOR_RELEASE
     ASSERT_TIMER(Timer);
+#endif // DISABLE_SANITY_CHECKS_FOR_RELEASE
     ASSERT(KeGetCurrentIrql() <= DISPATCH_LEVEL);
     DPRINT("KeCancelTimer(): Timer %p\n", Timer);
 
