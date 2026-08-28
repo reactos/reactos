@@ -559,13 +559,13 @@ BOOL DIALOG_FileSaveAs(VOID)
 
     if (GetSaveFileName(&saveas))
     {
-        // Remove lpstrDefExt if the user typed a different extension
+        /* Remove lpstrDefExt if the user typed a different extension */
         PTSTR pszExt = (PTSTR)FindFileExtension(szPath);
         if (pszExt > szPath)
         {
-            *pszExt = _T('\0'); // Remove lpstrDefExt
+            *pszExt = _T('\0'); /* Remove lpstrDefExt */
             if (!FindFileExtension(szPath))
-                *pszExt = _T('.'); // No other extension, put it back
+                *pszExt = _T('.'); /* No other extension, put it back */
         }
 
         /* HACK: Because in ROS, Save-As boxes don't check the validity
