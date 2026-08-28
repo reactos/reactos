@@ -29,7 +29,7 @@
 
 #define NDEBUG
 #include <debug.h>
-// DBG_DEFAULT_CHANNEL(GdiFont); // TODO: Re-enable when using TRACE/ERR...
+DBG_DEFAULT_CHANNEL(GdiFont);
 
 typedef struct _FONTLINK
 {
@@ -3956,15 +3956,24 @@ static unsigned int get_bezier_glyph_outline(FT_Outline *outline, unsigned int b
 }
 
 static FT_Error
-IntRequestFontSize(PFONTGDI FontGDI, LONG lfWidth, LONG lfHeight)
+IntRequestFontSizeEx(
+    _In_ FT_Face face,
+    _In_ LONG lfWidth,
+    _In_ LONG lfHeight,
+    _Out_opt_ PLONG ptmHeight,
+    _Out_opt_ PLONG ptmAscent,
+    _Out_opt_ PLONG ptmDescent,
+    _Out_opt_ PLONG ptmInternalLeading,
+    _Out_opt_ PLONG plfHeight,
+    _Out_opt_ PLONG plfWidth)
 {
     FT_Error error;
-    FT_Size_RequestRec  req;
-    FT_Face face = FontGDI->SharedFace->Face;
+    FT_Size_RequestRec req;
     TT_OS2 *pOS2;
     TT_HoriHeader *pHori;
     FT_WinFNT_HeaderRec WinFNT;
     LONG Ascent, Descent, Sum, EmHeight;
+    LONG tmHeight, tmAscent, tmDescent, tmInternalLeading;
 
     lfWidth = abs(lfWidth);
     if (lfHeight == 0)
@@ -3992,143 +4001,25 @@ IntRequestFontSize(PFONTGDI FontGDI, LONG lfWidth, LONG lfHeight)
         error = FT_Get_WinFNT_Header(face, &WinFNT);
         if (error)
         {
-            DPRINT1("%s: Failed to request font size.\n", face->family_name);
+            ERR("%s: Failed to request font size.\n", face->family_name);
             return error;
         }
 
-        FontGDI->tmHeight           = WinFNT.pixel_height;
-        FontGDI->tmAscent           = WinFNT.ascent;
-        FontGDI->tmDescent          = FontGDI->tmHeight - FontGDI->tmAscent;
-        FontGDI->tmInternalLeading  = WinFNT.internal_leading;
-        FontGDI->Magic              = FONTGDI_MAGIC;
-        FontGDI->lfHeight           = lfHeight;
-        FontGDI->lfWidth            = lfWidth;
-        return 0;
-    }
-
-    /*
-     * NOTE: We cast TT_OS2.usWinAscent and TT_OS2.usWinDescent to signed FT_Short.
-     * Why? See: https://learn.microsoft.com/en-us/typography/opentype/spec/os2#uswindescent
-     *
-     * > usWinDescent is "usually" a positive value ...
-     *
-     * We can read it as "not always". See CORE-14994.
-     * See also: https://learn.microsoft.com/en-us/typography/opentype/spec/os2#fsselection
-     */
-#define FM_SEL_USE_TYPO_METRICS 0x80
-    if (lfHeight > 0)
-    {
-        /* case (A): lfHeight is positive */
-        Sum = (FT_Short)pOS2->usWinAscent + (FT_Short)pOS2->usWinDescent;
-        if (Sum == 0 || (pOS2->fsSelection & FM_SEL_USE_TYPO_METRICS))
-        {
-            Ascent = pHori->Ascender;
-            Descent = -pHori->Descender;
-            Sum = Ascent + Descent;
-        }
-        else
-        {
-            Ascent = (FT_Short)pOS2->usWinAscent;
-            Descent = (FT_Short)pOS2->usWinDescent;
-        }
-
-        FontGDI->tmAscent = FT_MulDiv(lfHeight, Ascent, Sum);
-        FontGDI->tmDescent = FT_MulDiv(lfHeight, Descent, Sum);
-        FontGDI->tmHeight = FontGDI->tmAscent + FontGDI->tmDescent;
-        FontGDI->tmInternalLeading = FontGDI->tmHeight - FT_MulDiv(lfHeight, face->units_per_EM, Sum);
-    }
-    else if (lfHeight < 0)
-    {
-        /* case (B): lfHeight is negative */
-        if (pOS2->fsSelection & FM_SEL_USE_TYPO_METRICS)
-        {
-            FontGDI->tmAscent = FT_MulDiv(-lfHeight, pHori->Ascender, face->units_per_EM);
-            FontGDI->tmDescent = FT_MulDiv(-lfHeight, -pHori->Descender, face->units_per_EM);
-        }
-        else
-        {
-            FontGDI->tmAscent = FT_MulDiv(-lfHeight, (FT_Short)pOS2->usWinAscent, face->units_per_EM);
-            FontGDI->tmDescent = FT_MulDiv(-lfHeight, (FT_Short)pOS2->usWinDescent, face->units_per_EM);
-        }
-        FontGDI->tmHeight = FontGDI->tmAscent + FontGDI->tmDescent;
-        FontGDI->tmInternalLeading = FontGDI->tmHeight + lfHeight;
-    }
-#undef FM_SEL_USE_TYPO_METRICS
-
-    FontGDI->Magic = FONTGDI_MAGIC;
-    FontGDI->lfHeight = lfHeight;
-    FontGDI->lfWidth = lfWidth;
-
-    EmHeight = FontGDI->tmHeight - FontGDI->tmInternalLeading;
-    EmHeight = max(EmHeight, 1);
-    EmHeight = min(EmHeight, USHORT_MAX);
-
-#if 1
-    /* I think this is wrong implementation but its test result is better. */
-    if (lfWidth != 0)
-        req.width = FT_MulDiv(lfWidth, face->units_per_EM, pOS2->xAvgCharWidth) << 6;
-#else
-    /* I think this is correct implementation but it is mismatching to the
-       other metric functions. The test result is bad. */
-    if (lfWidth != 0)
-        req.width = (FT_MulDiv(lfWidth, 96 * 5, 72 * 3) << 6); /* ??? FIXME */
-#endif
-    else
-        req.width = 0;
-
-    /* HACK: We do not handle small widths well, so just use zero for these. See CORE-19870. */
-    if (lfWidth < 10)
-        req.width = 0;
-
-    req.type           = FT_SIZE_REQUEST_TYPE_NOMINAL;
-    req.height         = (EmHeight << 6);
-    req.horiResolution = 0;
-    req.vertResolution = 0;
-    return FT_Request_Size(face, &req);
-}
-
-static FT_Error
-IntRequestFontSizeEx(FT_Face face, const LOGFONTW *plf)
-{
-    FT_Error error;
-    FT_Size_RequestRec  req;
-    TT_OS2 *pOS2;
-    TT_HoriHeader *pHori;
-    LONG lfHeight = plf->lfHeight, lfWidth = plf->lfWidth;
-    FT_WinFNT_HeaderRec WinFNT;
-    LONG Ascent, Descent, Sum, EmHeight;
-    LONG tmAscent, tmDescent, tmHeight, tmInternalLeading;
-
-    lfWidth = abs(lfWidth);
-    if (lfHeight == 0)
-    {
-        if (lfWidth == 0)
-        {
-            DPRINT("lfHeight and lfWidth are zero.\n");
-            lfHeight = -16;
-        }
-        else
-        {
-            lfHeight = lfWidth;
-        }
-    }
-
-    if (lfHeight == -1)
-        lfHeight = -2;
-
-    ASSERT_FREETYPE_LOCK_HELD();
-    pOS2 = (TT_OS2 *)FT_Get_Sfnt_Table(face, FT_SFNT_OS2);
-    pHori = (TT_HoriHeader *)FT_Get_Sfnt_Table(face, FT_SFNT_HHEA);
-
-    if (!pOS2 || !pHori)
-    {
-        error = FT_Get_WinFNT_Header(face, &WinFNT);
-        if (error)
-        {
-            DPRINT1("%s: Failed to request font size.\n", face->family_name);
-            return error;
-        }
-        return 0;
+        tmHeight = WinFNT.pixel_height;
+        tmAscent = WinFNT.ascent;
+        if (ptmHeight)
+            *ptmHeight = tmHeight;
+        if (ptmAscent)
+            *ptmAscent = tmAscent;
+        if (ptmDescent)
+            *ptmDescent = tmHeight - tmAscent;
+        if (ptmInternalLeading)
+            *ptmInternalLeading = WinFNT.internal_leading;
+        if (plfHeight)
+            *plfHeight = lfHeight;
+        if (plfWidth)
+            *plfWidth = lfWidth;
+        return FT_Err_Ok;
     }
 
     /*
@@ -4189,8 +4080,8 @@ IntRequestFontSizeEx(FT_Face face, const LOGFONTW *plf)
     if (lfWidth != 0)
         req.width = FT_MulDiv(lfWidth, face->units_per_EM, pOS2->xAvgCharWidth) << 6;
 #else
-    /* I think this is correct implementation but it is mismatching to the
-       other metric functions. The test result is bad. */
+    /* I think this is correct implementation but it is mismatching
+     * to the other metric functions. The test result is bad. */
     if (lfWidth != 0)
         req.width = (FT_MulDiv(lfWidth, 96 * 5, 72 * 3) << 6); /* ??? FIXME */
 #endif
@@ -4205,7 +4096,42 @@ IntRequestFontSizeEx(FT_Face face, const LOGFONTW *plf)
     req.height         = (EmHeight << 6);
     req.horiResolution = 0;
     req.vertResolution = 0;
-    return FT_Request_Size(face, &req);
+    error = FT_Request_Size(face, &req);
+    if (error)
+    {
+        ERR("%s: Failed to request font size.\n", face->family_name);
+        return error;
+    }
+
+    if (ptmHeight)
+        *ptmHeight = tmHeight;
+    if (ptmAscent)
+        *ptmAscent = tmAscent;
+    if (ptmDescent)
+        *ptmDescent = tmDescent;
+    if (ptmInternalLeading)
+        *ptmInternalLeading = tmInternalLeading;
+    if (plfHeight)
+        *plfHeight = lfHeight;
+    if (plfWidth)
+        *plfWidth = lfWidth;
+    return FT_Err_Ok;
+}
+
+static FT_Error
+IntRequestFontSize(
+    _Inout_ PFONTGDI FontGDI,
+    _In_ LONG lfWidth,
+    _In_ LONG lfHeight)
+{
+    FT_Error Error;
+    Error = IntRequestFontSizeEx(FontGDI->SharedFace->Face, lfWidth, lfHeight,
+                                 &FontGDI->tmHeight, &FontGDI->tmAscent,
+                                 &FontGDI->tmDescent, &FontGDI->tmInternalLeading,
+                                 &FontGDI->lfHeight, &FontGDI->lfWidth);
+    if (Error == FT_Err_Ok)
+        FontGDI->Magic = FONTGDI_MAGIC;
+    return Error;
 }
 
 BOOL FASTCALL
@@ -4422,7 +4348,12 @@ FontLink_Chain_FindGlyph(
         DPRINT("code: 0x%08X, index: 0x%08X\n", code, index);
         pCache->Hashed.Face = *pFace = face;
         if (IntNeedRequestFontSize(pChain, face, Entry))
-            IntRequestFontSizeEx(face, &pChain->LogFont);
+        {
+            IntRequestFontSizeEx(face,
+                                 pChain->LogFont.lfWidth,
+                                 pChain->LogFont.lfHeight,
+                                 NULL, NULL, NULL, NULL, NULL, NULL);
+        }
         FT_Set_Transform(face, &pCache->Hashed.matTransform, NULL);
         return index;
     }
