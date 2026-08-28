@@ -29,6 +29,7 @@
 #include "winerror.h"
 #include "winternl.h"
 #include "winnt.h"
+#include "winver.h"
 #include "imagehlp.h"
 #include "wine/debug.h"
 
@@ -160,7 +161,7 @@ static BOOL IMAGEHLP_GetSecurityDirOffset( HANDLE handle,
     else
         return FALSE;
 
-    TRACE("ret = %d size = %x addr = %x\n", ret, sd->Size, sd->VirtualAddress);
+    TRACE("ret = %d size = %lx addr = %lx\n", ret, sd->Size, sd->VirtualAddress);
 
     *pdwSize = sd->Size;
     *pdwOfs = sd->VirtualAddress;
@@ -208,7 +209,7 @@ static BOOL IMAGEHLP_SetSecurityDirOffset(HANDLE handle,
     sd->Size = dwSize;
     sd->VirtualAddress = dwOfs;
 
-    TRACE("size = %x addr = %x\n", sd->Size, sd->VirtualAddress);
+    TRACE("size = %lx addr = %lx\n", sd->Size, sd->VirtualAddress);
 
     /* write the header back again */
     count = SetFilePointer(handle, pe_offset, NULL, FILE_BEGIN);
@@ -282,7 +283,7 @@ static BOOL IMAGEHLP_GetCertificateOffset( HANDLE handle, DWORD num,
     *pdwOfs = sd_VirtualAddr + offset;
     *pdwSize = len;
 
-    TRACE("len = %x addr = %x\n", len, sd_VirtualAddr + offset);
+    TRACE("len = %lx addr = %lx\n", len, sd_VirtualAddr + offset);
 
     return TRUE;
 }
@@ -492,7 +493,7 @@ BOOL WINAPI ImageEnumerateCertificates(
     const size_t cert_hdr_size = sizeof hdr - sizeof hdr.bCertificate;
     BOOL r;
 
-    TRACE("%p %hd %p %p %d\n",
+    TRACE("%p %hd %p %p %ld\n",
            handle, TypeFilter, CertificateCount, Indices, IndexCount);
 
     r = IMAGEHLP_GetSecurityDirOffset( handle, &sd_VirtualAddr, &size );
@@ -515,7 +516,7 @@ BOOL WINAPI ImageEnumerateCertificates(
         if( count != cert_hdr_size )
             return FALSE;
 
-        TRACE("Size = %08x  id = %08hx\n",
+        TRACE("Size = %08lx  id = %08hx\n",
                hdr.dwLength, hdr.wCertificateType );
 
         /* check the certificate is not too big or too small */
@@ -556,7 +557,7 @@ BOOL WINAPI ImageGetCertificateData(
 {
     DWORD r, offset, ofs, size, count;
 
-    TRACE("%p %d %p %p\n", handle, Index, Certificate, RequiredLength);
+    TRACE("%p %ld %p %p\n", handle, Index, Certificate, RequiredLength);
 
     if( !RequiredLength)
     {
@@ -607,7 +608,7 @@ BOOL WINAPI ImageGetCertificateHeader(
     DWORD r, offset, ofs, size, count;
     const size_t cert_hdr_size = sizeof *pCert - sizeof pCert->bCertificate;
 
-    TRACE("%p %d %p\n", handle, index, pCert);
+    TRACE("%p %ld %p\n", handle, index, pCert);
 
     if( !IMAGEHLP_GetCertificateOffset( handle, index, &ofs, &size ) )
         return FALSE;
@@ -765,7 +766,6 @@ static BOOL IMAGEHLP_ReportImportSection( IMAGE_SECTION_HEADER *hdr,
  *  FALSE if unsuccessful.  GetLastError returns more about the error.
  *
  * NOTES
- *  Only supports 32-bit PE files, not tested with any other format.
  *  Reports data in the following order:
  *  1. The file headers are reported first
  *  2. Any code sections are reported next.
@@ -792,7 +792,7 @@ BOOL WINAPI ImageGetDigestStream(
     IMAGE_NT_HEADERS *nt_hdr;
     IMAGE_SECTION_HEADER *section_headers;
 
-    TRACE("(%p, %d, %p, %p)\n", FileHandle, DigestLevel, DigestFunction,
+    TRACE("(%p, %ld, %p, %p)\n", FileHandle, DigestLevel, DigestFunction,
         DigestHandle);
 
     /* Get the file size */
@@ -891,7 +891,7 @@ BOOL WINAPI ImageRemoveCertificate(HANDLE FileHandle, DWORD Index)
     LPVOID cert_data;
     BOOL r;
 
-    TRACE("(%p, %d)\n", FileHandle, Index);
+    TRACE("(%p, %ld)\n", FileHandle, Index);
 
     r = ImageEnumerateCertificates(FileHandle, CERT_SECTION_TYPE_ANY, &count, NULL, 0);
 
