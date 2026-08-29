@@ -435,6 +435,7 @@ PspAssignProcessToJob(
 )
 {
     NTSTATUS Status = STATUS_SUCCESS;
+    NTSTATUS CalloutStatus = STATUS_SUCCESS;
     PVOID PreviousJob;
 
     if (!ExAcquireRundownProtection(&Process->RundownProtect))
@@ -522,9 +523,30 @@ PspAssignProcessToJob(
                                       FALSE);
     }
 
+    /* Hand the process to win32k, which enforces the UI restrictions. One
+       that has not connected to win32k yet is picked up when it does. */
+    if (Job->UIRestrictionsClass != 0 && Process->Win32Process != NULL)
+    {
+        CalloutStatus = PspInvokeW32JobCallout(Job,
+                                               PsW32JobCalloutAddProcess,
+                                               Process->Win32Process);
+    }
+
 Exit:
     ExReleaseResourceAndLeaveCriticalRegion(&Job->JobLock);
     ExReleaseRundownProtection(&Process->RundownProtect);
+
+    /* The assignment is committed, but win32k will not be enforcing the UI
+       restrictions, so the process must not run at all. The caller is told
+       the assignment failed, since that is what it asked for. */
+    if (!NT_SUCCESS(CalloutStatus))
+    {
+        DPRINT1("Failed to apply the UI restrictions of job %p to process %p: 0x%lx\n",
+                Job, Process, CalloutStatus);
+
+        (VOID)PsTerminateProcess(Process, CalloutStatus);
+        Status = CalloutStatus;
+    }
 
     /* TODO: Ensure that job limits are respected */
 
@@ -889,6 +911,13 @@ PspDeleteJob(_In_ PVOID ObjectBody)
     PEJOB Job = (PEJOB)ObjectBody;
 
     PAGED_CODE();
+
+    /* Let win32k tear down any per-job state it keeps for UI restrictions */
+    if (Job->UIRestrictionsClass != 0)
+    {
+        (VOID)PspInvokeW32JobCallout(Job, PsW32JobCalloutTerminate, NULL);
+        Job->UIRestrictionsClass = 0;
+    }
 
     Job->LimitFlags = 0;
 
@@ -1568,7 +1597,7 @@ PsGetJobUIRestrictionsClass(PEJOB Job)
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 VOID
 NTAPI
@@ -1579,6 +1608,103 @@ PsSetJobUIRestrictionsClass(
 {
     ASSERT(Job);
     (void)InterlockedExchangeUL(&Job->UIRestrictionsClass, UIRestrictionsClass);
+}
+
+/*!
+ * Invokes the win32k job callout, if win32k has registered one.
+ *
+ * @param[in] Job
+ *     A pointer to the job object the callout applies to.
+ *
+ * @param[in] CalloutType
+ *     The operation win32k is being asked to perform.
+ *
+ * @param[in, optional] Data
+ *     Class specific data. For PsW32JobCalloutSetInformation this is the new
+ *     UI restrictions class, for PsW32JobCalloutAddProcess the W32PROCESS of
+ *     the process being added to the job.
+ *
+ * @returns
+ *     The status returned by win32k, or STATUS_SUCCESS when no callout has
+ *     been registered (i.e. the win32 subsystem is not loaded yet).
+ *
+ * @remarks
+ *     FIXME: TODO: We do not attach to the session of the job, as win32k is only ever
+ *     loaded in one session.
+ */
+NTSTATUS
+NTAPI
+PspInvokeW32JobCallout(
+    _In_ PEJOB Job,
+    _In_ PSW32JOBCALLOUTTYPE CalloutType,
+    _In_opt_ PVOID Data
+)
+{
+    WIN32_JOBCALLOUT_PARAMETERS Parameters;
+
+    /* Nothing to do if win32k has not registered a callout */
+    if (PspW32JobCallout == NULL)
+    {
+        return STATUS_SUCCESS;
+    }
+
+    Parameters.Job = Job;
+    Parameters.CalloutType = CalloutType;
+    Parameters.Data = Data;
+
+    return PspW32JobCallout(&Parameters);
+}
+
+/*!
+ * Applies a new basic UI restrictions class to a job object.
+ *
+ * @param[in] Job
+ *     A pointer to the job object being modified.
+ *
+ * @param[in] UIRestrictionsClass
+ *     The new set of JOB_OBJECT_UILIMIT_* flags.
+ *
+ * @returns
+ *     STATUS_SUCCESS if the restrictions were applied.
+ *     STATUS_INVALID_PARAMETER if unknown restriction flags were given.
+ *     An appropriate NTSTATUS error code otherwise.
+ *
+ * @remarks
+ *     The restrictions are only stored once win32k has accepted them, as it
+ *     may fail to allocate the per-job state it needs to enforce them.
+ */
+static
+NTSTATUS
+PspSetJobUIRestrictions(
+    _In_ PEJOB Job,
+    _In_ ULONG UIRestrictionsClass
+)
+{
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    /* Reject restrictions we do not know about */
+    if (UIRestrictionsClass & ~JOB_OBJECT_UILIMIT_ALL)
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    ExEnterCriticalRegionAndAcquireResourceExclusive(&Job->JobLock);
+
+    /* Only bother win32k if something actually changes */
+    if (Job->UIRestrictionsClass != UIRestrictionsClass)
+    {
+        Status = PspInvokeW32JobCallout(Job,
+                                        PsW32JobCalloutSetInformation,
+                                        UlongToPtr(UIRestrictionsClass));
+        if (NT_SUCCESS(Status))
+        {
+            Job->UIRestrictionsClass = UIRestrictionsClass;
+        }
+    }
+
+    ExReleaseResourceAndLeaveCriticalRegion(&Job->JobLock);
+
+    return Status;
 }
 
 /*!
@@ -2066,6 +2192,7 @@ NtQueryInformationJobObject(
     KPROCESSOR_MODE PreviousMode;
     JOBOBJECT_EXTENDED_LIMIT_INFORMATION ExtendedLimit;
     JOBOBJECT_BASIC_AND_IO_ACCOUNTING_INFORMATION BasicAndIo;
+    JOBOBJECT_BASIC_UI_RESTRICTIONS UiRestrictions;
     ULONG RequiredLength, RequiredAlign, ReturnRequiredLength;
 
     PAGED_CODE();
@@ -2195,6 +2322,11 @@ NtQueryInformationJobObject(
         break;
     }
     case JobObjectBasicUIRestrictions:
+    {
+        UiRestrictions.UIRestrictionsClass = Job->UIRestrictionsClass;
+        JobInfoBuffer = &UiRestrictions;
+        break;
+    }
     case JobObjectSecurityLimitInformation:
     case JobObjectEndOfJobTimeInformation:
     case JobObjectAssociateCompletionPortInformation:
@@ -2416,10 +2548,27 @@ NtSetInformationJobObject(
         Status = PspAssociateCompletionPortWithJob(Job, &AssociateCpInfo);
         break;
     }
+    case JobObjectBasicUIRestrictions:
+    {
+        JOBOBJECT_BASIC_UI_RESTRICTIONS UiRestrictions;
+
+        _SEH2_TRY
+        {
+            UiRestrictions = *(PJOBOBJECT_BASIC_UI_RESTRICTIONS)JobInformation;
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            Status = _SEH2_GetExceptionCode();
+            goto Exit;
+        }
+        _SEH2_END;
+
+        Status = PspSetJobUIRestrictions(Job, UiRestrictions.UIRestrictionsClass);
+        break;
+    }
     case JobObjectBasicAccountingInformation:
     case JobObjectBasicAndIoAccountingInformation:
     case JobObjectBasicProcessIdList:
-    case JobObjectBasicUIRestrictions:
     case JobObjectEndOfJobTimeInformation:
     case JobObjectJobSetInformation:
     case JobObjectSecurityLimitInformation:

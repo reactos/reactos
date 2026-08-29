@@ -442,6 +442,10 @@ __inline static void *free_user_entry(PUSER_HANDLE_TABLE ht, PUSER_HANDLE_ENTRY 
    }
 #endif
 
+   /* The slot is about to be reused, so no job may keep a grant on it */
+   if (entry->flags & HANDLEENTRY_GRANTED)
+      IntCleanupGrantedHandle(entry_to_handle(ht, entry));
+
    ret = entry->ptr;
    entry->ptr  = ht->freelist;
    entry->type = 0;
@@ -692,7 +696,8 @@ UserFreeHandle(PUSER_HANDLE_TABLE ht,  HANDLE handle )
      return FALSE;
   }
 
-  entry->flags = HANDLEENTRY_INDESTROY;
+  /* HANDLEENTRY_GRANTED has to survive for free_user_entry */
+  entry->flags = (entry->flags & HANDLEENTRY_GRANTED) | HANDLEENTRY_INDESTROY;
 
   return UserDereferenceObject(entry->ptr);
 }
@@ -709,6 +714,25 @@ UserObjectInDestroy(HANDLE h)
      return TRUE;
   }
   return (entry->flags & HANDLEENTRY_INDESTROY);
+}
+
+/*
+ * Validates a USER handle that is about to be granted to a job, and marks it
+ * so that freeing it withdraws the grant again. The mark is not cleared on
+ * revoke; it only says the granted lists are worth sweeping.
+ */
+BOOL
+FASTCALL
+UserMarkHandleGranted(HANDLE h)
+{
+    PUSER_HANDLE_ENTRY entry;
+
+    entry = handle_to_entry(gHandleTable, h);
+    if (entry == NULL)
+        return FALSE;
+
+    entry->flags |= HANDLEENTRY_GRANTED;
+    return TRUE;
 }
 
 BOOL

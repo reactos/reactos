@@ -480,6 +480,14 @@ PspSendJobMessageLocked(
     _In_ BOOLEAN Quota
 );
 
+NTSTATUS
+NTAPI
+PspInvokeW32JobCallout(
+    _In_ PEJOB Job,
+    _In_ PSW32JOBCALLOUTTYPE CalloutType,
+    _In_opt_ PVOID Data
+);
+
 //
 // State routines
 //
@@ -546,6 +554,7 @@ extern ULONG PspThreadNotifyRoutineCount, PspProcessNotifyRoutineCount;
 extern BOOLEAN PsImageNotifyEnabled;
 extern PKWIN32_PROCESS_CALLOUT PspW32ProcessCallout;
 extern PKWIN32_THREAD_CALLOUT PspW32ThreadCallout;
+extern PKWIN32_JOB_CALLOUT PspW32JobCallout;
 extern PVOID PspSystemDllEntryPoint;
 extern PVOID PspSystemDllBase;
 extern BOOLEAN PspUseJobSchedulingClasses;
