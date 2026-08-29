@@ -6688,6 +6688,7 @@ static HRESULT WINAPI ProtocolEx_StartEx(IInternetProtocolEx *iface, IUri *uri, 
 
     This->data = protocol_doc_str;
     This->size = strlen(This->data);
+
 #ifdef __REACTOS__
     This->sink = pOIProtSink;
     IInternetProtocolSink_AddRef(This->sink);
@@ -7823,6 +7824,12 @@ START_TEST(events)
         test_navigation_during_notif();
 
         /* Test this last since it doesn't close the view properly. */
+#ifdef __REACTOS__
+        if (!is_reactos() && (GetNTVersion() >= _WIN32_WINNT_WS03)) {
+            win_skip("This test crashes on Windows Server 2003/2008.\n");
+        }
+        else
+#endif
         test_document_close();
 
         DestroyWindow(container_hwnd);

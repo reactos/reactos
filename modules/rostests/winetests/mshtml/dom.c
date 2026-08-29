@@ -10701,6 +10701,13 @@ static void test_create_stylesheet(IHTMLDocument2 *doc)
     hres = IHTMLStyleElement_QueryInterface(style_elem, &IID_IHTMLStyleElement2, (void**)&style_elem2);
     ok(hres == S_OK, "Could not get IHTMLStyleElement2: %08lx\n", hres);
 
+#ifdef __REACTOS__
+    if (!is_reactos() && (GetNTVersion() >= _WIN32_WINNT_WS03)) {
+        win_skip("This crashes on Windows Server 2003/2008.\n");
+    }
+    else
+    {
+#endif
     hres = IHTMLStyleElement2_get_sheet(style_elem2, &stylesheet2);
     ok(hres == S_OK, "get_styleSheet failed: %08lx\n", hres);
     ok(stylesheet2 != NULL, "stylesheet2 == NULL\n");
@@ -10708,6 +10715,9 @@ static void test_create_stylesheet(IHTMLDocument2 *doc)
     IHTMLStyleSheet_Release(stylesheet2);
 
     IHTMLStyleElement2_Release(style_elem2);
+#ifdef __REACTOS__
+    }
+#endif
     IHTMLStyleSheet_Release(stylesheet);
 
     IHTMLStyleElement_Release(style_elem);
@@ -11079,6 +11089,7 @@ static void test_docfrag(IHTMLDocument2 *doc)
         ET_DIV,
         ET_BR
     };
+
 #ifdef __REACTOS__
     static const elem_type_t empty_types[] = {0};
 #else
@@ -11981,12 +11992,22 @@ static void test_document_mode_lock(void)
 
     hres = IHTMLWindow2_QueryInterface(window, &IID_IHTMLWindow7, (void**)&window7);
     ok(hres == S_OK, "Could not get IHTMLWindow7: %08lx\n", hres);
+#ifdef __REACTOS__
+    if (!is_reactos() && (GetNTVersion() >= _WIN32_WINNT_WS03)) {
+        win_skip("This test crashes on Windows Server 2003/2008.\n");
+    }
+    else
+    {
+#endif
     hres = IHTMLWindow7_get_performance(window7, &var);
     ok(hres == S_OK, "get_performance failed: %08lx\n", hres);
     ok(V_VT(&var) == VT_DISPATCH, "V_VT(performance) = %d\n", V_VT(&var));
     hres = IDispatch_QueryInterface(V_DISPATCH(&var), &IID_IHTMLPerformance, (void**)&perf);
     ok(hres == S_OK, "Could not get IHTMLPerformance: %08lx\n", hres);
     IHTMLWindow7_Release(window7);
+#ifdef __REACTOS__
+    }
+#endif
     IHTMLWindow2_Release(window);
     VariantClear(&var);
 
@@ -12019,10 +12040,20 @@ static void test_document_mode_lock(void)
         DispatchMessageW(&msg);
     }
 
+#ifdef __REACTOS__
+    if (!is_reactos() && (GetNTVersion() >= _WIN32_WINNT_WS03)) {
+        win_skip("This test crashes on Windows Server 2003/2008.\n");
+    }
+    else
+    {
+#endif
     hres = IHTMLDocument2_QueryInterface(doc, &IID_IEventTarget, (void**)&event_target);
     ok(hres == S_OK, "QueryInterface(IID_IEventTarget) returned %08lx.\n", hres);
     ok(event_target != NULL, "event_target == NULL\n");
     IEventTarget_Release(event_target);
+#ifdef __REACTOS__
+    }
+#endif
 
     hres = IHTMLDocument2_get_parentWindow(doc, &window);
     ok(hres == S_OK, "get_parentWindow failed: %08lx\n", hres);
@@ -12076,6 +12107,13 @@ static void test_document_mode_lock(void)
 
     hres = IHTMLWindow2_QueryInterface(window, &IID_IHTMLWindow7, (void**)&window7);
     ok(hres == S_OK, "Could not get IHTMLWindow7: %08lx\n", hres);
+#ifdef __REACTOS__
+    if (!is_reactos() && (GetNTVersion() >= _WIN32_WINNT_WS03)) {
+        win_skip("This test crashes on Windows Server 2003/2008.\n");
+    }
+    else
+    {
+#endif
     hres = IHTMLWindow7_get_performance(window7, &var);
     ok(hres == S_OK, "get_performance failed: %08lx\n", hres);
     ok(V_VT(&var) == VT_DISPATCH, "V_VT(performance) = %d\n", V_VT(&var));
@@ -12085,6 +12123,9 @@ static void test_document_mode_lock(void)
     IHTMLPerformance_Release(perf2);
     IHTMLPerformance_Release(perf);
     IHTMLWindow7_Release(window7);
+#ifdef __REACTOS__
+    }
+#endif
     IHTMLWindow2_Release(window);
     VariantClear(&var);
 
@@ -12146,10 +12187,20 @@ static void test_document_mode_after_initnew(void)
         DispatchMessageW(&msg);
     }
 
+#ifdef __REACTOS__
+    if (!is_reactos() && (GetNTVersion() >= _WIN32_WINNT_WS03)) {
+        win_skip("This test crashes on Windows Server 2003/2008.\n");
+    }
+    else
+    {
+#endif
     hres = IHTMLDocument2_QueryInterface(doc, &IID_IEventTarget, (void**)&event_target);
     ok(hres == S_OK, "QueryInterface(IID_IEventTarget) returned %08lx.\n", hres);
     ok(event_target != NULL, "event_target == NULL\n");
     IEventTarget_Release(event_target);
+#ifdef __REACTOS__
+    }
+#endif
 
     V_VT(&var) = VT_EMPTY;
     hres = IHTMLDocument6_get_documentMode(doc6, &var);

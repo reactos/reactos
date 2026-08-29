@@ -301,6 +301,13 @@ static void test_HTMLStorage(void)
     ok(hres == E_POINTER, "getItem failed: %08lx\n", hres);
     SysFreeString(key);
 
+#ifdef __REACTOS__
+    if (!is_reactos() && (GetNTVersion() >= _WIN32_WINNT_WS03)) {
+        win_skip("These tests crash on Windows Server 2003/2008.\n");
+    }
+    else
+    {
+#endif
     V_VT(&var) = 0xdead;
     hres = IHTMLStorage_getItem(storage, NULL, &var);
     ok(hres == S_OK, "getItem returned: %08lx\n", hres);
@@ -322,6 +329,9 @@ static void test_HTMLStorage(void)
 
     hres = IHTMLStorage_removeItem(storage, NULL);
     ok(hres == S_OK, "removeItem failed: %08lx\n", hres);
+#ifdef __REACTOS__
+    }
+#endif
 
     /* Unicode characters */
     key = SysAllocString(L"winetest");
@@ -386,9 +396,19 @@ static void test_HTMLStorage(void)
     hres = IHTMLStorage_get_remainingSpace(storage, &lval);
     ok(hres == S_OK, "get_remainingSpace failed %08lx\n", hres);
     ok(lval == space - 13, "remainingSpace = %ld\n", lval);
+#ifdef __REACTOS__
+    if (!is_reactos() && (GetNTVersion() >= _WIN32_WINNT_WS03)) {
+        win_skip("This test crashes on Windows Server 2003/2008.\n");
+    }
+    else
+    {
+#endif
     hres = IHTMLStorage_get_remainingSpace(storage2, &lval);
     ok(hres == S_OK, "get_remainingSpace failed %08lx\n", hres);
     ok(lval == space - 13, "remainingSpace = %ld\n", lval);
+#ifdef __REACTOS__
+    }
+#endif
 
     V_VT(&var) = 0xdead;
     hres = IHTMLStorage_getItem(storage, key, &var);
@@ -405,6 +425,13 @@ static void test_HTMLStorage(void)
     VariantClear(&var);
     SysFreeString(key);
 
+#ifdef __REACTOS__
+    if (!is_reactos() && (GetNTVersion() >= _WIN32_WINNT_WS03)) {
+        win_skip("These tests crash on Windows Server 2003/2008.\n");
+    }
+    else
+    {
+#endif
     value = SysAllocString(L"asdf");
     hres = IHTMLStorage_setItem(storage, NULL, value);
     ok(hres == S_OK, "setItem failed: %08lx\n", hres);
@@ -442,6 +469,9 @@ static void test_HTMLStorage(void)
     hres = IHTMLStorage_removeItem(storage2, key);
     ok(hres == S_OK, "removeItem failed: %08lx\n", hres);
     SysFreeString(key);
+#ifdef __REACTOS__
+    }
+#endif
 
     key = SysAllocString(L"aaaa");
     value = SysAllocString(L"bbbb");
