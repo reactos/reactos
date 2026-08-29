@@ -3761,7 +3761,7 @@ _tWinMain(HINSTANCE hInst,
           int nCmdShow)
 {
     ULONG Error;
-    HANDLE hHotkeyThread;
+    DWORD dwHotkeyThreadId = 0;
     INITCOMMONCONTROLSEX iccx;
     PROPSHEETHEADERW psh = {0};
     PROPSHEETPAGEW psp = {0};
@@ -3807,7 +3807,8 @@ _tWinMain(HINSTANCE hInst,
     if (!LoadSetupData(&SetupData))
         goto Quit;
 
-    hHotkeyThread = CreateThread(NULL, 0, HotkeyThread, NULL, 0, NULL);
+    /* Start the hotkey thread */
+    CloseHandle(CreateThread(NULL, 0, HotkeyThread, NULL, 0, &dwHotkeyThreadId));
 
     /* Whenever any of the common controls are used in your app,
      * you must call InitCommonControlsEx() to register the classes
@@ -3876,11 +3877,9 @@ _tWinMain(HINSTANCE hInst,
     // UnregisterTreeListClass(hInst);
     TreeListUnregister(hInst);
 
-    if (hHotkeyThread)
-    {
-        PostThreadMessageW(GetThreadId(hHotkeyThread), WM_QUIT, 0, 0);
-        CloseHandle(hHotkeyThread);
-    }
+    /* Stop the hotkey thread */
+    if (dwHotkeyThreadId)
+        PostThreadMessageW(dwHotkeyThreadId, WM_QUIT, 0, 0);
 
 Quit:
     /* Setup has finished */
