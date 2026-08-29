@@ -19,12 +19,7 @@
 #include "windef.h"
 #include "winbase.h"
 #include "wincrypt.h"
-
-#define SPC_EXC_PE_PAGE_HASHES_FLAG         0x10
-#define SPC_INC_PE_IMPORT_ADDR_TABLE_FLAG   0x20
-#define SPC_INC_PE_DEBUG_INFO_FLAG          0x40
-#define SPC_INC_PE_RESOURCES_FLAG           0x80
-#define SPC_INC_PE_PAGE_HASHES_FLAG         0x100
+#include "mssip.h"
 
 #define SIGNER_CERT_SPC_FILE    1
 #define SIGNER_CERT_STORE       2
