@@ -202,6 +202,65 @@ RtlpLFHSize(
 
 PVOID
 NTAPI
+RtlpLFHReAllocate(
+    _In_ PHEAP Heap,
+    _In_ ULONG Flags,
+    _In_ PVOID Ptr,
+    _In_ SIZE_T Size)
+{
+    PLFH_HEAP Lfh = (PLFH_HEAP)Heap->FrontEndHeap;
+    PHEAP_ENTRY OldEntry = (PHEAP_ENTRY)Ptr - 1;
+    ULONG OldBucketIndex = OldEntry->PreviousSize;
+    SIZE_T OldUsableSize, NewAllocationSize, CopySize;
+    PHEAP_BUCKET NewBucket;
+    PVOID NewBaseAddress;
+
+    if (OldBucketIndex >= LFH_BUCKET_COUNT)
+    {
+        DPRINT1("Corrupt LFH bucket index %lu on realloc %p\n", OldBucketIndex, Ptr);
+        RtlSetLastWin32ErrorAndNtStatusFromNtStatus(STATUS_INVALID_PARAMETER);
+        return NULL;
+    }
+    OldUsableSize = Lfh->Buckets[OldBucketIndex].BlockSize - sizeof(HEAP_ENTRY);
+
+    NewAllocationSize = ALIGN_UP_BY((Size ? Size : 1) + sizeof(HEAP_ENTRY), HEAP_ENTRY_SIZE);
+    NewBucket = RtlpFindLFHBucket(Lfh, NewAllocationSize);
+
+    if (NewBucket && ((ULONG)(NewBucket - Lfh->Buckets) == OldBucketIndex))
+    {
+        if ((Flags & HEAP_ZERO_MEMORY) && (Size > OldUsableSize))
+            RtlZeroMemory((PUCHAR)Ptr + OldUsableSize, Size - OldUsableSize);
+
+        return Ptr;
+    }
+
+    if (Flags & HEAP_REALLOC_IN_PLACE_ONLY)
+    {
+        RtlSetLastWin32ErrorAndNtStatusFromNtStatus(STATUS_NO_MEMORY);
+        return NULL;
+    }
+
+    if (NewBucket)
+        NewBaseAddress = RtlpLFHAllocate(Heap, Flags, Size);
+    else
+        NewBaseAddress = RtlAllocateHeap(Heap, Flags, Size);
+
+    if (!NewBaseAddress)
+        return NULL;
+
+    CopySize = (OldUsableSize < Size) ? OldUsableSize : Size;
+    RtlCopyMemory(NewBaseAddress, Ptr, CopySize);
+
+    if ((Flags & HEAP_ZERO_MEMORY) && (Size > CopySize))
+        RtlZeroMemory((PUCHAR)NewBaseAddress + CopySize, Size - CopySize);
+
+    RtlpLFHFree(Heap, Flags, Ptr);
+
+    return NewBaseAddress;
+}
+
+PVOID
+NTAPI
 RtlpLFHAllocate(
     _In_ PHEAP Heap,
     _In_ ULONG Flags,

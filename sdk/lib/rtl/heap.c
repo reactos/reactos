@@ -2777,6 +2777,16 @@ RtlReAllocateHeap(HANDLE HeapPtr,
         return Ptr;
     }
 
+    if ((Heap->FrontEndHeapType == 2) && (InUseEntry->UnusedBytes & HEAP_ENTRY_LFH_FLAG))
+    {
+        NewBaseAddress = RtlpLFHReAllocate(Heap, Flags, Ptr, Size);
+
+        if (HeapLocked)
+            RtlLeaveHeapLock(Heap->LockVariable);
+
+        return NewBaseAddress;
+    }
+
     if (InUseEntry->Flags & HEAP_ENTRY_VIRTUAL_ALLOC)
     {
         /* This is a virtually allocated block. Get its size */

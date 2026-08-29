@@ -80,6 +80,14 @@ RtlpLFHSize(
     _In_ PHEAP Heap,
     _In_ PVOID BaseAddress);
 
+PVOID
+NTAPI
+RtlpLFHReAllocate(
+    _In_ PHEAP Heap,
+    _In_ ULONG Flags,
+    _In_ PVOID Ptr,
+    _In_ SIZE_T Size);
+
 BOOLEAN
 NTAPI
 RtlpLFHFree(
