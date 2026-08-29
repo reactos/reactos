@@ -32,4 +32,4 @@
     threading(both),
     uuid(5ce34c0d-0dc9-4c1f-897c-daa1b78cee7c)  /* IBackgroundCopyManager */
 ]
-coclass PSFactoryBuffer { interface IFactoryBuffer; }
+coclass PSFactoryBuffer { interface IPSFactoryBuffer; }
