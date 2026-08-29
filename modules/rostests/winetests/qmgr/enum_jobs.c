@@ -26,8 +26,6 @@
 #include "bits.h"
 
 /* Globals used by many tests */
-static const WCHAR test_displayNameA[] = {'T','e','s','t','A', 0};
-static const WCHAR test_displayNameB[] = {'T','e','s','t','B', 0};
 static IBackgroundCopyManager *test_manager;
 static IBackgroundCopyJob *test_jobA;
 static IBackgroundCopyJob *test_jobB;
@@ -54,9 +52,8 @@ static BOOL setup(void)
     if(hres != S_OK)
         return FALSE;
 
-    hres = IBackgroundCopyManager_CreateJob(test_manager, test_displayNameA,
-                                            BG_JOB_TYPE_DOWNLOAD, &test_jobIdA,
-                                            &test_jobA);
+    hres = IBackgroundCopyManager_CreateJob(test_manager, L"TestA", BG_JOB_TYPE_DOWNLOAD,
+                                            &test_jobIdA, &test_jobA);
     if(hres != S_OK)
         return FALSE;
 
@@ -64,9 +61,8 @@ static BOOL setup(void)
     if(hres != S_OK)
         return FALSE;
 
-    hres = IBackgroundCopyManager_CreateJob(test_manager, test_displayNameB,
-                                            BG_JOB_TYPE_DOWNLOAD, &test_jobIdB,
-                                            &test_jobB);
+    hres = IBackgroundCopyManager_CreateJob(test_manager, L"TestB", BG_JOB_TYPE_DOWNLOAD,
+                                            &test_jobIdB, &test_jobB);
     if(hres != S_OK)
         return FALSE;
 
@@ -112,10 +108,10 @@ static void test_GetCount(void)
     ULONG jobCountA, jobCountB;
 
     hres = IEnumBackgroundCopyJobs_GetCount(test_enumJobsA, &jobCountA);
-    ok(hres == S_OK, "GetCount failed: %08x\n", hres);
+    ok(hres == S_OK, "GetCount failed: %08lx\n", hres);
 
     hres = IEnumBackgroundCopyJobs_GetCount(test_enumJobsB, &jobCountB);
-    ok(hres == S_OK, "GetCount failed: %08x\n", hres);
+    ok(hres == S_OK, "GetCount failed: %08lx\n", hres);
 
     ok(jobCountB == jobCountA + 1, "Got incorrect count\n");
 }
@@ -131,13 +127,13 @@ static void test_Next_walkListNull(void)
     for (i = 0; i < test_jobCountB; i++)
     {
         hres = IEnumBackgroundCopyJobs_Next(test_enumJobsB, 1, &job, NULL);
-        ok(hres == S_OK, "Next failed: %08x\n", hres);
+        ok(hres == S_OK, "Next failed: %08lx\n", hres);
         IBackgroundCopyJob_Release(job);
     }
 
     /* Attempt to fetch one more than the number of available jobs */
     hres = IEnumBackgroundCopyJobs_Next(test_enumJobsB, 1, &job, NULL);
-    ok(hres == S_FALSE, "Next off end of available jobs failed: %08x\n", hres);
+    ok(hres == S_FALSE, "Next off end of available jobs failed: %08lx\n", hres);
 }
 
 /* Test Next */
@@ -153,16 +149,16 @@ static void test_Next_walkList_1(void)
     {
         fetched = 0;
         hres = IEnumBackgroundCopyJobs_Next(test_enumJobsB, 1, &job, &fetched);
-        ok(hres == S_OK, "Next failed: %08x\n", hres);
-        ok(fetched == 1, "Next returned the incorrect number of jobs: %08x\n", hres);
+        ok(hres == S_OK, "Next failed: %08lx\n", hres);
+        ok(fetched == 1, "Next returned the incorrect number of jobs: %08lx\n", hres);
         IBackgroundCopyJob_Release(job);
     }
 
     /* Attempt to fetch one more than the number of available jobs */
     fetched = 0;
     hres = IEnumBackgroundCopyJobs_Next(test_enumJobsB, 1, &job, &fetched);
-    ok(hres == S_FALSE, "Next off end of available jobs failed: %08x\n", hres);
-    ok(fetched == 0, "Next returned the incorrect number of jobs: %08x\n", hres);
+    ok(hres == S_FALSE, "Next off end of available jobs failed: %08lx\n", hres);
+    ok(fetched == 0, "Next returned the incorrect number of jobs: %08lx\n", hres);
 }
 
 /* Test Next by requesting multiple files at a time */
@@ -179,8 +175,8 @@ static void test_Next_walkList_2(void)
 
     fetched = 0;
     hres = IEnumBackgroundCopyJobs_Next(test_enumJobsB, test_jobCountB, jobs, &fetched);
-    ok(hres == S_OK, "Next failed: %08x\n", hres);
-    ok(fetched == test_jobCountB, "Next returned the incorrect number of jobs: %08x\n", hres);
+    ok(hres == S_OK, "Next failed: %08lx\n", hres);
+    ok(fetched == test_jobCountB, "Next returned the incorrect number of jobs: %08lx\n", hres);
 
     for (i = 0; i < test_jobCountB; i++)
     {
@@ -200,7 +196,7 @@ static void test_Next_errors(void)
 
     /* E_INVALIDARG: pceltFetched can ONLY be NULL if celt is 1 */
     hres = IEnumBackgroundCopyJobs_Next(test_enumJobsB, 2, jobs, NULL);
-    ok(hres != S_OK, "Invalid call to Next succeeded: %08x\n", hres);
+    ok(hres != S_OK, "Invalid call to Next succeeded: %08lx\n", hres);
 }
 
 /* Test skipping through the jobs in a list */
@@ -212,11 +208,11 @@ static void test_Skip_walkList(void)
     for (i = 0; i < test_jobCountB; i++)
     {
         hres = IEnumBackgroundCopyJobs_Skip(test_enumJobsB, 1);
-        ok(hres == S_OK, "Skip failed: %08x\n", hres);
+        ok(hres == S_OK, "Skip failed: %08lx\n", hres);
     }
 
     hres = IEnumBackgroundCopyJobs_Skip(test_enumJobsB, 1);
-    ok(hres == S_FALSE, "Skip expected end of list: %08x\n", hres);
+    ok(hres == S_FALSE, "Skip expected end of list: %08lx\n", hres);
 }
 
 /* Test skipping off the end of the list */
@@ -225,7 +221,7 @@ static void test_Skip_offEnd(void)
     HRESULT hres;
 
     hres = IEnumBackgroundCopyJobs_Skip(test_enumJobsB, test_jobCountB + 1);
-    ok(hres == S_FALSE, "Skip expected end of list: %08x\n", hres);
+    ok(hres == S_FALSE, "Skip expected end of list: %08lx\n", hres);
 }
 
 /* Test reset */
@@ -234,13 +230,13 @@ static void test_Reset(void)
     HRESULT hres;
 
     hres = IEnumBackgroundCopyJobs_Skip(test_enumJobsB, test_jobCountB);
-    ok(hres == S_OK, "Skip failed: %08x\n", hres);
+    ok(hres == S_OK, "Skip failed: %08lx\n", hres);
 
     hres = IEnumBackgroundCopyJobs_Reset(test_enumJobsB);
-    ok(hres == S_OK, "Reset failed: %08x\n", hres);
+    ok(hres == S_OK, "Reset failed: %08lx\n", hres);
 
     hres = IEnumBackgroundCopyJobs_Skip(test_enumJobsB, test_jobCountB);
-    ok(hres == S_OK, "Reset failed: %08x\n", hres);
+    ok(hres == S_OK, "Reset failed: %08lx\n", hres);
 }
 
 typedef void (*test_t)(void);
