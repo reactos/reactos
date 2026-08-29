@@ -29,7 +29,7 @@ if(MSVC)
 endif()
 
 if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(mshtml_winetest PRIVATE -Wno-discarded-qualifiers)
+    target_compile_options(mshtml_winetest PRIVATE -Wno-discarded-qualifiers -Wno-unused-function)
 endif()
 
 list(APPEND mshtml_winetest_rc_deps

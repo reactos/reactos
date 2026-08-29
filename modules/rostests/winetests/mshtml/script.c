@@ -5141,18 +5141,38 @@ static void run_js_tests(void)
     run_script_as_http_with_mode("xhr.js", NULL, "9");
     run_script_as_http_with_mode("xhr.js", NULL, "10");
     run_script_as_http_with_mode("xhr.js", NULL, "11");
+#ifdef __REACTOS__
+    if (!is_reactos() && (GetNTVersion() >= _WIN32_WINNT_WS03)) {
+        win_skip("These tests crash on Windows Server 2003/2008.\n");
+    }
+    else
+    {
+#endif
     run_script_as_http_with_mode("dom.js", NULL, "11");
     run_script_as_http_with_mode("es5.js", NULL, "11");
     run_script_as_http_with_mode("events.js", NULL, "9");
+#ifdef __REACTOS__
+    }
+#endif
     run_script_as_http_with_mode("navigation.js", NULL, NULL);
     run_script_as_http_with_mode("navigation.js", NULL, "11");
 
+#ifdef __REACTOS__
+    if (!is_reactos() && (GetNTVersion() >= _WIN32_WINNT_WS03)) {
+        win_skip("These tests time out on Windows Server 2003/2008.\n");
+    }
+    else
+    {
+#endif
     run_script_as_http_with_mode("documentmode.js", "0", NULL);
     run_script_as_http_with_mode("documentmode.js", "5", "5");
     run_script_as_http_with_mode("documentmode.js", "5", "6");
     run_script_as_http_with_mode("documentmode.js", "7", "7");
     run_script_as_http_with_mode("documentmode.js", "8", "8");
     run_script_as_http_with_mode("documentmode.js", "9", "9");
+#ifdef __REACTOS__
+}
+#endif
     run_script_as_http_with_mode("documentmode.js", "10", "10;abc");
     run_script_as_http_with_mode("documentmode.js", "11", "11");
     run_script_as_http_with_mode("documentmode.js", "11", "edge;123");
