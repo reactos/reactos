@@ -51,7 +51,7 @@ static INT asn_any_copy(AsnAny *dst, const AsnAny *src)
         BYTE *stream;
         UINT length = src->asnValue.string.length;
 
-        if (!(stream = HeapAlloc(GetProcessHeap(), 0, length))) return SNMPAPI_ERROR;
+        if (!(stream = malloc(length))) return SNMPAPI_ERROR;
         memcpy(stream, src->asnValue.string.stream, length);
 
         dst->asnValue.string.stream = stream;
@@ -63,7 +63,7 @@ static INT asn_any_copy(AsnAny *dst, const AsnAny *src)
     {
         UINT *ids, i, size = src->asnValue.object.idLength * sizeof(UINT);
 
-        if (!(ids = HeapAlloc(GetProcessHeap(), 0, size))) return SNMPAPI_ERROR;
+        if (!(ids = malloc(size))) return SNMPAPI_ERROR;
 
         dst->asnValue.object.ids = ids;
         dst->asnValue.object.idLength = src->asnValue.object.idLength;
@@ -94,14 +94,14 @@ static void asn_any_free(AsnAny *any)
     {
         if (any->asnValue.string.dynamic)
         {
-            HeapFree(GetProcessHeap(), 0, any->asnValue.string.stream);
+            free(any->asnValue.string.stream);
             any->asnValue.string.stream = NULL;
         }
         break;
     }
     case ASN_OBJECTIDENTIFIER:
     {
-        HeapFree(GetProcessHeap(), 0, any->asnValue.object.ids);
+        free(any->asnValue.object.ids);
         any->asnValue.object.ids = NULL;
         break;
     }
@@ -120,13 +120,9 @@ BOOL WINAPI DllMain(
 	DWORD fdwReason,
 	LPVOID lpvReserved)
 {
-    TRACE("(%p,%d,%p)\n", hInstDLL, fdwReason, lpvReserved);
+    TRACE("(%p,%ld,%p)\n", hInstDLL, fdwReason, lpvReserved);
 
     switch(fdwReason) {
-#ifndef __REACTOS__
-    case DLL_WINE_PREATTACH:
-        return FALSE;  /* prefer native version */
-#endif
     case DLL_PROCESS_ATTACH:
         DisableThreadLibraryCalls(hInstDLL);
         startTime = GetTickCount64();
@@ -172,7 +168,7 @@ VOID WINAPIV SnmpUtilDbgPrint(INT loglevel, LPSTR format, ...)
 LPVOID WINAPI SnmpUtilMemAlloc(UINT nbytes)
 {
     TRACE("(%d)\n", nbytes);
-    return HeapAlloc(GetProcessHeap(), 0, nbytes);
+    return malloc(nbytes);
 }
 
 /***********************************************************************
@@ -181,7 +177,7 @@ LPVOID WINAPI SnmpUtilMemAlloc(UINT nbytes)
 LPVOID WINAPI SnmpUtilMemReAlloc(LPVOID mem, UINT nbytes)
 {
     TRACE("(%p, %d)\n", mem, nbytes);
-    return HeapReAlloc(GetProcessHeap(), 0, mem, nbytes);
+    return realloc(mem, nbytes);
 }
 
 /***********************************************************************
@@ -190,7 +186,7 @@ LPVOID WINAPI SnmpUtilMemReAlloc(LPVOID mem, UINT nbytes)
 VOID WINAPI SnmpUtilMemFree(LPVOID mem)
 {
     TRACE("(%p)\n", mem);
-    HeapFree(GetProcessHeap(), 0, mem);
+    free(mem);
 }
 
 /***********************************************************************
@@ -226,7 +222,7 @@ INT WINAPI SnmpUtilOctetsCpy(AsnOctetString *dst, AsnOctetString *src)
         dst->stream = NULL;
         return SNMPAPI_NOERROR;
     }
-    if ((dst->stream = HeapAlloc(GetProcessHeap(), 0, src->length)))
+    if ((dst->stream = malloc(src->length)))
     {
         unsigned int i;
 
@@ -248,7 +244,7 @@ VOID WINAPI SnmpUtilOctetsFree(AsnOctetString *octets)
     if (octets)
     {
         octets->length = 0;
-        if (octets->dynamic) HeapFree(GetProcessHeap(), 0, octets->stream);
+        if (octets->dynamic) free(octets->stream);
         octets->stream = NULL;
         octets->dynamic = FALSE;
     }
@@ -298,9 +294,9 @@ INT WINAPI SnmpUtilOidAppend(AsnObjectIdentifier *dst, AsnObjectIdentifier *src)
     if (!src) return SNMPAPI_NOERROR;
 
     size = (src->idLength + dst->idLength) * sizeof(UINT);
-    if (!(ids = HeapReAlloc(GetProcessHeap(), 0, dst->ids, size)))
+    if (!(ids = realloc(dst->ids, size)))
     {
-        if (!(ids = HeapAlloc(GetProcessHeap(), 0, size)))
+        if (!(ids = malloc(size)))
         {
             SetLastError(SNMP_MEM_ALLOC_ERROR);
             return SNMPAPI_ERROR;
@@ -329,7 +325,7 @@ INT WINAPI SnmpUtilOidCpy(AsnObjectIdentifier *dst, AsnObjectIdentifier *src)
         dst->ids = NULL;
         return SNMPAPI_NOERROR;
     }
-    if ((dst->ids = HeapAlloc(GetProcessHeap(), 0, src->idLength * sizeof(UINT))))
+    if ((dst->ids = malloc(src->idLength * sizeof(UINT))))
     {
         unsigned int i;
 
@@ -350,7 +346,7 @@ VOID WINAPI SnmpUtilOidFree(AsnObjectIdentifier *oid)
     if (!oid) return;
 
     oid->idLength = 0;
-    HeapFree(GetProcessHeap(), 0, oid->ids);
+    free(oid->ids);
     oid->ids = NULL;
 }
 
@@ -408,14 +404,14 @@ INT WINAPI SnmpUtilVarBindCpy(SnmpVarBind *dst, SnmpVarBind *src)
     }
 
     size = src->name.idLength * sizeof(UINT);
-    if (!(dst->name.ids = HeapAlloc(GetProcessHeap(), 0, size))) return SNMPAPI_ERROR;
+    if (!(dst->name.ids = malloc(size))) return SNMPAPI_ERROR;
 
     for (i = 0; i < src->name.idLength; i++) dst->name.ids[i] = src->name.ids[i];
     dst->name.idLength = src->name.idLength;
 
     if (!asn_any_copy(&dst->value, &src->value))
     {
-        HeapFree(GetProcessHeap(), 0, dst->name.ids);
+        free(dst->name.ids);
         return SNMPAPI_ERROR;
     }
     return SNMPAPI_NOERROR;
@@ -431,7 +427,7 @@ VOID WINAPI SnmpUtilVarBindFree(SnmpVarBind *vb)
     if (!vb) return;
 
     asn_any_free(&vb->value);
-    HeapFree(GetProcessHeap(), 0, vb->name.ids);
+    free(vb->name.ids);
     vb->name.idLength = 0;
     vb->name.ids = NULL;
 }
@@ -453,7 +449,7 @@ INT WINAPI SnmpUtilVarBindListCpy(SnmpVarBindList *dst, SnmpVarBindList *src)
         return SNMPAPI_NOERROR;
     }
     size = src->len * sizeof(SnmpVarBind);
-    if (!(dst->list = HeapAlloc(GetProcessHeap(), 0, size)))
+    if (!(dst->list = malloc(size)))
         return SNMPAPI_ERROR;
 
     src_entry = src->list;
@@ -468,7 +464,7 @@ INT WINAPI SnmpUtilVarBindListCpy(SnmpVarBindList *dst, SnmpVarBindList *src)
         else
         {
             for (--i; i > 0; i--) SnmpUtilVarBindFree(--dst_entry);
-            HeapFree(GetProcessHeap(), 0, dst->list);
+            free(dst->list);
             return SNMPAPI_ERROR;
         }
     }
@@ -488,7 +484,7 @@ VOID WINAPI SnmpUtilVarBindListFree(SnmpVarBindList *vb)
 
     entry = vb->list;
     for (i = 0; i < vb->len; i++) SnmpUtilVarBindFree(entry++);
-    HeapFree(GetProcessHeap(), 0, vb->list);
+    free(vb->list);
     vb->list = NULL;
     vb->len = 0;
 }
@@ -576,14 +572,14 @@ VOID WINAPI SnmpUtilPrintAsnAny(AsnAny *any)
     switch (any->asnType)
     {
     case ASN_NULL:       TRACE("Null value\n"); return;
-    case ASN_INTEGER32:  TRACE("Integer32 %d\n", any->asnValue.number); return;
-    case ASN_UNSIGNED32: TRACE("Unsigned32 %u\n", any->asnValue.unsigned32); return;
-    case ASN_COUNTER32:  TRACE("Counter32 %u\n", any->asnValue.counter); return;
-    case ASN_GAUGE32:    TRACE("Gauge32 %u\n", any->asnValue.gauge); return;
-    case ASN_TIMETICKS:  TRACE("Timeticks %u\n", any->asnValue.ticks); return;
+    case ASN_INTEGER32:  TRACE("Integer32 %ld\n", any->asnValue.number); return;
+    case ASN_UNSIGNED32: TRACE("Unsigned32 %lu\n", any->asnValue.unsigned32); return;
+    case ASN_COUNTER32:  TRACE("Counter32 %lu\n", any->asnValue.counter); return;
+    case ASN_GAUGE32:    TRACE("Gauge32 %lu\n", any->asnValue.gauge); return;
+    case ASN_TIMETICKS:  TRACE("Timeticks %lu\n", any->asnValue.ticks); return;
     case ASN_COUNTER64:
     {
-        TRACE("Counter64 %x%08x\n", (DWORD)(any->asnValue.counter64.QuadPart>>32),(DWORD)any->asnValue.counter64.QuadPart);
+        TRACE("Counter64 %I64x\n", any->asnValue.counter64.QuadPart);
         return;
     }
     case ASN_OCTETSTRING:
