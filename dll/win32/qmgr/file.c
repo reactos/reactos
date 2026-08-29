@@ -67,7 +67,7 @@ static ULONG WINAPI BackgroundCopyFile_AddRef(
 {
     BackgroundCopyFileImpl *file = impl_from_IBackgroundCopyFile2(iface);
     ULONG ref = InterlockedIncrement(&file->ref);
-    TRACE("(%p)->(%d)\n", file, ref);
+    TRACE("(%p)->(%ld)\n", file, ref);
     return ref;
 }
 
@@ -77,14 +77,14 @@ static ULONG WINAPI BackgroundCopyFile_Release(
     BackgroundCopyFileImpl *file = impl_from_IBackgroundCopyFile2(iface);
     ULONG ref = InterlockedDecrement(&file->ref);
 
-    TRACE("(%p)->(%d)\n", file, ref);
+    TRACE("(%p)->(%ld)\n", file, ref);
 
     if (ref == 0)
     {
-        IBackgroundCopyJob3_Release(&file->owner->IBackgroundCopyJob3_iface);
-        HeapFree(GetProcessHeap(), 0, file->info.LocalName);
-        HeapFree(GetProcessHeap(), 0, file->info.RemoteName);
-        HeapFree(GetProcessHeap(), 0, file);
+        IBackgroundCopyJob4_Release(&file->owner->IBackgroundCopyJob4_iface);
+        free(file->info.LocalName);
+        free(file->info.RemoteName);
+        free(file);
     }
 
     return ref;
@@ -167,35 +167,30 @@ HRESULT BackgroundCopyFileConstructor(BackgroundCopyJobImpl *owner,
 
     TRACE("(%s, %s, %p)\n", debugstr_w(remoteName), debugstr_w(localName), file);
 
-    This = HeapAlloc(GetProcessHeap(), 0, sizeof *This);
+    This = calloc(1, sizeof(*This));
     if (!This)
         return E_OUTOFMEMORY;
 
-    This->info.RemoteName = strdupW(remoteName);
+    This->info.RemoteName = wcsdup(remoteName);
     if (!This->info.RemoteName)
     {
-        HeapFree(GetProcessHeap(), 0, This);
+        free(This);
         return E_OUTOFMEMORY;
     }
 
-    This->info.LocalName = strdupW(localName);
+    This->info.LocalName = wcsdup(localName);
     if (!This->info.LocalName)
     {
-        HeapFree(GetProcessHeap(), 0, This->info.RemoteName);
-        HeapFree(GetProcessHeap(), 0, This);
+        free(This->info.RemoteName);
+        free(This);
         return E_OUTOFMEMORY;
     }
 
     This->IBackgroundCopyFile2_iface.lpVtbl = &BackgroundCopyFile2Vtbl;
     This->ref = 1;
-
     This->fileProgress.BytesTotal = BG_SIZE_UNKNOWN;
-    This->fileProgress.BytesTransferred = 0;
-    This->fileProgress.Completed = FALSE;
     This->owner = owner;
-    This->read_size = 0;
-    This->tempFileName[0] = 0;
-    IBackgroundCopyJob3_AddRef(&owner->IBackgroundCopyJob3_iface);
+    IBackgroundCopyJob4_AddRef(&owner->IBackgroundCopyJob4_iface);
 
     *file = This;
     return S_OK;
@@ -216,7 +211,7 @@ static HRESULT hresult_from_http_response(DWORD code)
     case 504: return BG_E_HTTP_ERROR_504;
     case 505: return BG_E_HTTP_ERROR_505;
     default:
-        FIXME("unhandled response code %u\n", code);
+        FIXME("unhandled response code %lu\n", code);
         return S_OK;
     }
 }
@@ -227,7 +222,7 @@ static void CALLBACK progress_callback_http(HINTERNET handle, DWORD_PTR context,
     BackgroundCopyFileImpl *file = (BackgroundCopyFileImpl *)context;
     BackgroundCopyJobImpl *job = file->owner;
 
-    TRACE("%p, %p, %x, %p, %u\n", handle, file, status, buf, buflen);
+    TRACE("%p, %p, %lx, %p, %lu\n", handle, file, status, buf, buflen);
 
     switch (status)
     {
@@ -452,21 +447,20 @@ static DWORD CALLBACK progress_callback_local(LARGE_INTEGER totalSize, LARGE_INT
 
 static BOOL transfer_file_local(BackgroundCopyFileImpl *file, const WCHAR *tmpname)
 {
-    static const WCHAR fileW[] = {'f','i','l','e',':','/','/',0};
     BackgroundCopyJobImpl *job = file->owner;
     const WCHAR *ptr;
     BOOL ret;
 
     transitionJobState(job, BG_JOB_STATE_QUEUED, BG_JOB_STATE_TRANSFERRING);
 
-    if (lstrlenW(file->info.RemoteName) > 7 && !_wcsnicmp(file->info.RemoteName, fileW, 7))
+    if (lstrlenW(file->info.RemoteName) > 7 && !wcsnicmp(file->info.RemoteName, L"file://", 7))
         ptr = file->info.RemoteName + 7;
     else
         ptr = file->info.RemoteName;
 
     if (!(ret = CopyFileExW(ptr, tmpname, progress_callback_local, file, NULL, 0)))
     {
-        WARN("Local file copy failed: error %u\n", GetLastError());
+        WARN("Local file copy failed: error %lu\n", GetLastError());
         transitionJobState(job, BG_JOB_STATE_TRANSFERRING, BG_JOB_STATE_ERROR);
     }
 
@@ -476,7 +470,6 @@ static BOOL transfer_file_local(BackgroundCopyFileImpl *file, const WCHAR *tmpna
 
 BOOL processFile(BackgroundCopyFileImpl *file, BackgroundCopyJobImpl *job)
 {
-    static const WCHAR prefix[] = {'B','I','T', 0};
     WCHAR tmpDir[MAX_PATH], tmpName[MAX_PATH];
     WCHAR host[MAX_PATH];
     URL_COMPONENTSW uc;
@@ -484,15 +477,15 @@ BOOL processFile(BackgroundCopyFileImpl *file, BackgroundCopyJobImpl *job)
 
     if (!GetTempPathW(MAX_PATH, tmpDir))
     {
-        ERR("Couldn't create temp file name: %d\n", GetLastError());
+        ERR("Couldn't create temp file name: %ld\n", GetLastError());
         /* Guessing on what state this should give us */
         transitionJobState(job, BG_JOB_STATE_QUEUED, BG_JOB_STATE_TRANSIENT_ERROR);
         return FALSE;
     }
 
-    if (!GetTempFileNameW(tmpDir, prefix, 0, tmpName))
+    if (!GetTempFileNameW(tmpDir, L"BIT", 0, tmpName))
     {
-        ERR("Couldn't create temp file: %d\n", GetLastError());
+        ERR("Couldn't create temp file: %ld\n", GetLastError());
         /* Guessing on what state this should give us */
         transitionJobState(job, BG_JOB_STATE_QUEUED, BG_JOB_STATE_TRANSIENT_ERROR);
         return FALSE;
