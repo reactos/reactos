@@ -32,11 +32,14 @@ cpp_quote("#define BG_COPY_FILE_ALL   15")
 
 cpp_quote("#define BG_LENGTH_TO_EOF (UINT64)(-1)")
 
+cpp_quote("#ifndef _BG_FILE_RANGE_DEFINED")
+cpp_quote("#define _BG_FILE_RANGE_DEFINED")
 typedef struct _BG_FILE_RANGE
 {
     UINT64 InitialOffset;
     UINT64 Length;
 } BG_FILE_RANGE;
+cpp_quote("#endif")
 
 [
     uuid(443c8934-90ff-48ed-bcde-26f5c7450042),
@@ -93,3 +96,5 @@ library BackgroundCopyManager2_0
     interface IBackgroundCopyJob3;
     interface IBackgroundCopyFile2;
 }
+
+cpp_quote("#include \"bits2_5.h\"")

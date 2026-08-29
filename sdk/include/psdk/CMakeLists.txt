@@ -22,6 +22,7 @@ list(APPEND SOURCE
     bits2_0.idl
     bits2_5.idl
     bits3_0.idl
+    bits5_0.idl
 #   cmdbas.idl
 #   cmdtxt.idl
     comcat.idl

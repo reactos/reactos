@@ -64,7 +64,7 @@ ServiceHandler(DWORD ctrl, DWORD event_type, LPVOID event_data, LPVOID context)
         SetEvent(stop_event);
         break;
     default:
-        FIXME("ignoring handle service ctrl %x\n", ctrl);
+        FIXME("ignoring handle service ctrl %lx\n", ctrl);
         UpdateStatus(status.dwCurrentState, NO_ERROR, 0);
         break;
     }
@@ -105,7 +105,6 @@ VOID WINAPI
 ServiceMain(DWORD dwArgc, LPWSTR *lpszArgv)
 {
     HANDLE fileTxThread;
-    static const WCHAR qmgr_nameW[] = {'B','I','T','S',0};
     DWORD threadId;
     TRACE("\n");
 
@@ -115,9 +114,9 @@ ServiceMain(DWORD dwArgc, LPWSTR *lpszArgv)
         return;
     }
 
-    status_handle = RegisterServiceCtrlHandlerExW(qmgr_nameW, ServiceHandler, NULL);
+    status_handle = RegisterServiceCtrlHandlerExW(L"BITS", ServiceHandler, NULL);
     if (!status_handle) {
-        ERR("failed to register handler: %u\n", GetLastError());
+        ERR("failed to register handler: %lu\n", GetLastError());
         return;
     }
 
@@ -130,7 +129,7 @@ ServiceMain(DWORD dwArgc, LPWSTR *lpszArgv)
 
     globalMgr.jobEvent = CreateEventW(NULL, TRUE, FALSE, NULL);
     if (!globalMgr.jobEvent) {
-        ERR("Couldn't create event: error %d\n", GetLastError());
+        ERR("Couldn't create event: error %ld\n", GetLastError());
         UpdateStatus(SERVICE_STOPPED, NO_ERROR, 0);
         return;
     }
