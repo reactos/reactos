@@ -123,14 +123,18 @@ NDIS_STATUS ParaNdis_OnSetPacketFilter(PARANDIS_ADAPTER *pContext, tOidDesc *pOi
         &newValue,
         sizeof(newValue));
 
-    if (newValue & ~PARANDIS_PACKET_FILTERS)
-        status = NDIS_STATUS_INVALID_DATA;
-
     if (status == NDIS_STATUS_SUCCESS)
     {
-        pContext->PacketFilter = newValue;
-        DPrintf(1, ("[%s] PACKET FILTER SET TO %x", __FUNCTION__, pContext->PacketFilter));
-        ParaNdis_UpdateDeviceFilters(pContext);
+        if (newValue & ~PARANDIS_PACKET_FILTERS)
+        {
+            status = NDIS_STATUS_INVALID_DATA;
+        }
+        else
+        {
+            pContext->PacketFilter = newValue;
+            DPrintf(1, ("[%s] PACKET FILTER SET TO %x", __FUNCTION__, pContext->PacketFilter));
+            ParaNdis_UpdateDeviceFilters(pContext);
+        }
     }
     return status;
 }
