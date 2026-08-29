@@ -63,7 +63,7 @@ static char *hash_dib(const BITMAPINFO *bmi, const void *bits)
     CryptGetHashParam(hash, HP_HASHVAL, hash_buf, &hash_size, 0);
     CryptDestroyHash(hash);
 
-    buf = HeapAlloc(GetProcessHeap(), 0, hash_size * 2 + 1);
+    buf = malloc(hash_size * 2 + 1);
 
     for(i = 0; i < hash_size; i++)
     {
@@ -131,7 +131,7 @@ static void test_DrawDib_sizeimage(void)
 
     init_bmi(&src_info, WIDTH, HEIGHT, 0);
     src_dib_size = get_dib_size(&src_info);
-    src_bits = HeapAlloc(GetProcessHeap(), 0, src_dib_size);
+    src_bits = malloc(src_dib_size);
     ok(src_bits != NULL, "Can't allocate memory\n");
     memset(src_bits, 0x88, src_dib_size);
 
@@ -160,13 +160,13 @@ static void test_DrawDib_sizeimage(void)
         ok(strcmp(hash, test_data[i].hash) == 0,
            "[%u] got %s, expected %s\n",
            i, hash, test_data[i].hash);
-        HeapFree(GetProcessHeap(), 0, hash);
+        free(hash);
     }
 
     r = DrawDibClose(hdd);
     ok(r, "DrawDibClose failed\n");
 
-    HeapFree(GetProcessHeap(), 0, src_bits);
+    free(src_bits);
 
     DeleteDC(hdc);
 }

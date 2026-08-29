@@ -119,51 +119,51 @@ static void test_Locate(void)
     else {
         bo.biBitCount = bi.biBitCount = 32;
         err = ICDecompressQuery(h, &bi, &bo);
-        ok(err == ICERR_OK, "Query cvid->RGB32: %d\n", err);
+        ok(err == ICERR_OK, "Query cvid->RGB32: %ld\n", err);
 
         err = ICDecompressQuery(h, &bi, NULL);
-        ok(err == ICERR_OK, "Query cvid 32: %d\n", err);
+        ok(err == ICERR_OK, "Query cvid 32: %ld\n", err);
 
         bo.biHeight = -bo.biHeight;
         err = ICDecompressQuery(h, &bi, &bo);
-        ok(err == ICERR_OK, "Query cvid->RGB32 height<0: %d\n", err);
+        ok(err == ICERR_OK, "Query cvid->RGB32 height<0: %ld\n", err);
         bo.biHeight = -bo.biHeight;
 
         bi.biWidth = 17;
 
         bi.biBitCount = 8;
         err = ICDecompressGetFormat(h, &bi, &tmp);
-        ok(err == ICERR_OK, "Query cvid output format: %d\n", err);
+        ok(err == ICERR_OK, "Query cvid output format: %ld\n", err);
         ok(tmp.biBitCount == 24, "Expected 24 bit, got %d bit\n", tmp.biBitCount);
-        ok(tmp.biSizeImage == get_stride(17, 24) * 8, "Expected size %d, got %d\n",
+        ok(tmp.biSizeImage == get_stride(17, 24) * 8, "Expected size %d, got %ld\n",
            get_stride(17, 24) * 8, tmp.biSizeImage);
 
         bi.biBitCount = 15;
         err = ICDecompressGetFormat(h, &bi, &tmp);
-        ok(err == ICERR_OK, "Query cvid output format: %d\n", err);
+        ok(err == ICERR_OK, "Query cvid output format: %ld\n", err);
         ok(tmp.biBitCount == 24, "Expected 24 bit, got %d bit\n", tmp.biBitCount);
-        ok(tmp.biSizeImage == get_stride(17, 24) * 8, "Expected size %d, got %d\n",
+        ok(tmp.biSizeImage == get_stride(17, 24) * 8, "Expected size %d, got %ld\n",
            get_stride(17, 24) * 8, tmp.biSizeImage);
 
         bi.biBitCount = 16;
         err = ICDecompressGetFormat(h, &bi, &tmp);
-        ok(err == ICERR_OK, "Query cvid output format: %d\n", err);
+        ok(err == ICERR_OK, "Query cvid output format: %ld\n", err);
         ok(tmp.biBitCount == 24, "Expected 24 bit, got %d bit\n", tmp.biBitCount);
-        ok(tmp.biSizeImage == get_stride(17, 24) * 8, "Expected size %d, got %d\n",
+        ok(tmp.biSizeImage == get_stride(17, 24) * 8, "Expected size %d, got %ld\n",
            get_stride(17, 24) * 8, tmp.biSizeImage);
 
         bi.biBitCount = 24;
         err = ICDecompressGetFormat(h, &bi, &tmp);
-        ok(err == ICERR_OK, "Query cvid output format: %d\n", err);
+        ok(err == ICERR_OK, "Query cvid output format: %ld\n", err);
         ok(tmp.biBitCount == 24, "Expected 24 bit, got %d bit\n", tmp.biBitCount);
-        ok(tmp.biSizeImage == get_stride(17, 24) * 8, "Expected size %d, got %d\n",
+        ok(tmp.biSizeImage == get_stride(17, 24) * 8, "Expected size %d, got %ld\n",
            get_stride(17, 24) * 8, tmp.biSizeImage);
 
         bi.biBitCount = 32;
         err = ICDecompressGetFormat(h, &bi, &tmp);
-        ok(err == ICERR_OK, "Query cvid output format: %d\n", err);
+        ok(err == ICERR_OK, "Query cvid output format: %ld\n", err);
         ok(tmp.biBitCount == 24, "Expected 24 bit, got %d bit\n", tmp.biBitCount);
-        ok(tmp.biSizeImage == get_stride(17, 24) * 8, "Expected size %d, got %d\n",
+        ok(tmp.biSizeImage == get_stride(17, 24) * 8, "Expected size %d, got %ld\n",
            get_stride(17, 24) * 8, tmp.biSizeImage);
 
         bi.biWidth = 32;
@@ -189,6 +189,13 @@ static void test_Locate(void)
         ok(h != 0, "cvid->RGB16 height<0 failed\n");
         if (h) ok(ICClose(h) == ICERR_OK,"ICClose failed\n");
         bo.biHeight = - bo.biHeight;
+
+        bo.biCompression = mmioFOURCC('U','Y','V','Y');
+        bo.biBitCount = bi.biBitCount = 16;
+        h = ICLocate(ICTYPE_VIDEO, 0, &bi, &bo, ICMODE_DECOMPRESS);
+        ok(h == 0, "cvid->UYVY succeeded\n");
+        if (h) ok(ICClose(h) == ICERR_OK,"ICClose failed\n");
+        bo.biCompression = BI_RGB;
 
         bo.biBitCount = bi.biBitCount = 32;
         h = ICLocate(ICTYPE_VIDEO, 0, &bi, &bo, ICMODE_DECOMPRESS);
@@ -237,63 +244,63 @@ static void test_Locate(void)
     ok(h != 0, "No MSVC codec installed!?\n");
     if (h != 0) {
         err = ICDecompressQuery(h, &bi, &bo);
-        ok(err == ICERR_OK, "Query MSVC->RGB16: %d\n", err);
+        ok(err == ICERR_OK, "Query MSVC->RGB16: %ld\n", err);
 
         err = ICDecompressQuery(h, &bi, NULL);
-        ok(err == ICERR_OK, "Query MSVC 16: %d\n", err);
+        ok(err == ICERR_OK, "Query MSVC 16: %ld\n", err);
 
         bo.biHeight = -bo.biHeight;
         err = ICDecompressQuery(h, &bi, &bo);
-        todo_wine ok(err == ICERR_OK, "Query MSVC->RGB16 height<0: %d\n", err);
+        todo_wine ok(err == ICERR_OK, "Query MSVC->RGB16 height<0: %ld\n", err);
         bo.biHeight = -bo.biHeight;
 
         bo.biBitCount = 24;
         err = ICDecompressQuery(h, &bi, &bo);
-        ok(err == ICERR_OK, "Query MSVC 16->24: %d\n", err);
+        ok(err == ICERR_OK, "Query MSVC 16->24: %ld\n", err);
         bo.biBitCount = 16;
 
         bi.biWidth = 553;
 
         bi.biBitCount = 8;
         err = ICDecompressGetFormat(h, &bi, &tmp);
-        ok(err == ICERR_OK, "Query MSVC output format: %d\n", err);
+        ok(err == ICERR_OK, "Query MSVC output format: %ld\n", err);
         ok(tmp.biBitCount == 8, "Expected 8 bit, got %d bit\n", tmp.biBitCount);
-        ok(tmp.biWidth == 552, "Expected width 552, got %d\n", tmp.biWidth);
-        ok(tmp.biSizeImage == get_stride(552, 8) * 8, "Expected size %d, got %d\n",
+        ok(tmp.biWidth == 552, "Expected width 552, got %ld\n", tmp.biWidth);
+        ok(tmp.biSizeImage == get_stride(552, 8) * 8, "Expected size %d, got %ld\n",
            get_stride(552, 8) * 8, tmp.biSizeImage);
 
         bi.biBitCount = 15;
         err = ICDecompressGetFormat(h, &bi, &tmp);
-        ok(err == ICERR_BADFORMAT, "Query MSVC output format: %d\n", err);
+        ok(err == ICERR_BADFORMAT, "Query MSVC output format: %ld\n", err);
 
         bi.biBitCount = 16;
         err = ICDecompressGetFormat(h, &bi, &tmp);
-        ok(err == ICERR_OK, "Query MSVC output format: %d\n", err);
+        ok(err == ICERR_OK, "Query MSVC output format: %ld\n", err);
         ok(tmp.biBitCount == 16, "Expected 16 bit, got %d bit\n", tmp.biBitCount);
-        ok(tmp.biWidth == 552, "Expected width 552, got %d\n", tmp.biWidth);
-        ok(tmp.biSizeImage == get_stride(552, 16) * 8, "Expected size %d, got %d\n",
+        ok(tmp.biWidth == 552, "Expected width 552, got %ld\n", tmp.biWidth);
+        ok(tmp.biSizeImage == get_stride(552, 16) * 8, "Expected size %d, got %ld\n",
            get_stride(552, 16) * 8, tmp.biSizeImage);
 
         bi.biBitCount = 24;
         err = ICDecompressGetFormat(h, &bi, &tmp);
-        ok(err == ICERR_BADFORMAT, "Query MSVC output format: %d\n", err);
+        ok(err == ICERR_BADFORMAT, "Query MSVC output format: %ld\n", err);
 
         bi.biBitCount = 32;
         err = ICDecompressGetFormat(h, &bi, &tmp);
-        ok(err == ICERR_BADFORMAT, "Query MSVC output format: %d\n", err);
+        ok(err == ICERR_BADFORMAT, "Query MSVC output format: %ld\n", err);
 
         bi.biHeight = 17;
         bi.biBitCount = 8;
         err = ICDecompressGetFormat(h, &bi, &tmp);
-        ok(err == ICERR_OK, "Query MSVC output format: %d\n", err);
-        ok(tmp.biHeight == 16, "Expected height 16, got %d\n", tmp.biHeight);
+        ok(err == ICERR_OK, "Query MSVC output format: %ld\n", err);
+        ok(tmp.biHeight == 16, "Expected height 16, got %ld\n", tmp.biHeight);
         bi.biHeight = 8;
 
         bi.biWidth = 32;
 
         bi.biCompression = mmioFOURCC('m','s','v','c');
         err = ICDecompressQuery(h, &bi, &bo);
-        ok(err == ICERR_BADFORMAT, "Query msvc->RGB16: %d\n", err);
+        ok(err == ICERR_BADFORMAT, "Query msvc->RGB16: %ld\n", err);
 
         ok(ICClose(h) == ICERR_OK,"ICClose failed\n");
     }
@@ -358,20 +365,20 @@ static void test_ICSeqCompress(void)
     {
         frame_len = 0;
         frame = ICSeqCompressFrame(&pc, 0, input, &key_frame, &frame_len);
-        ok(frame != NULL, "Frame[%d]: Expected non-NULL\n", i);
+        ok(frame != NULL, "Frame[%ld]: Expected non-NULL\n", i);
         if (frame_len == sizeof(output_nkf))
-            ok(!memcmp(output_nkf, frame, frame_len), "Frame[%d]: Contents do not match\n", i);
+            ok(!memcmp(output_nkf, frame, frame_len), "Frame[%ld]: Contents do not match\n", i);
         else if (frame_len == sizeof(output_kf))
-            ok(!memcmp(output_kf, frame, frame_len), "Frame[%d]: Contents do not match\n", i);
+            ok(!memcmp(output_kf, frame, frame_len), "Frame[%ld]: Contents do not match\n", i);
         else
-            ok(0, "Unknown frame size of %d byten\n", frame_len);
+            ok(0, "Unknown frame size of %ld byten\n", frame_len);
     }
 
     ICSeqCompressFrameEnd(&pc);
     ICCompressorFree(&pc);
     /* ICCompressorFree already closed the HIC */
     err = ICClose(h);
-    ok(err == ICERR_BADHANDLE, "Expected -8, got %d\n", err);
+    ok(err == ICERR_BADHANDLE, "Expected -8, got %ld\n", err);
 }
 
 static ICINFO enum_info;
@@ -381,16 +388,16 @@ static LRESULT CALLBACK enum_driver_proc(DWORD_PTR id, HDRVR driver, UINT msg,
 {
     ICINFO *info = (ICINFO *)lparam1;
 
-    ok(!id, "Got unexpected id %#lx.\n", id);
+    ok(!id, "Got unexpected id %#Ix.\n", id);
     ok(msg == ICM_GETINFO, "Got unexpected message %#x.\n", msg);
     ok(info == &enum_info, "Expected lparam1 %p, got %p.\n", &enum_info, info);
-    ok(lparam2 == sizeof(ICINFO), "Got lparam2 %ld.\n", lparam2);
+    ok(lparam2 == sizeof(ICINFO), "Got lparam2 %Id.\n", lparam2);
 
-    ok(!info->fccType, "Got unexpected type %#x.\n", info->fccType);
-    ok(!info->fccHandler, "Got unexpected handler %#x.\n", info->fccHandler);
-    ok(!info->dwFlags, "Got unexpected flags %#x.\n", info->dwFlags);
-    ok(!info->dwVersion, "Got unexpected version %#x.\n", info->dwVersion);
-    ok(info->dwVersionICM == ICVERSION, "Got unexpected ICM version %#x.\n", info->dwVersionICM);
+    ok(!info->fccType, "Got unexpected type %#lx.\n", info->fccType);
+    ok(!info->fccHandler, "Got unexpected handler %#lx.\n", info->fccHandler);
+    ok(!info->dwFlags, "Got unexpected flags %#lx.\n", info->dwFlags);
+    ok(!info->dwVersion, "Got unexpected version %#lx.\n", info->dwVersion);
+    ok(info->dwVersionICM == ICVERSION, "Got unexpected ICM version %#lx.\n", info->dwVersionICM);
     ok(!info->szName[0], "Got unexpected name %s.\n", wine_dbgstr_w(info->szName));
     ok(!info->szDescription[0], "Got unexpected name %s.\n", wine_dbgstr_w(info->szDescription));
     ok(!info->szDriver[0], "Got unexpected driver %s.\n", wine_dbgstr_w(info->szDriver));
@@ -401,7 +408,6 @@ static LRESULT CALLBACK enum_driver_proc(DWORD_PTR id, HDRVR driver, UINT msg,
 
 static void test_ICInfo(void)
 {
-    static const WCHAR bogusW[] = {'b','o','g','u','s',0};
     static const DWORD test_type = mmioFOURCC('w','i','n','e');
     static const DWORD test_handler = mmioFOURCC('t','e','s','t');
     DWORD i = 0, found = 0;
@@ -419,17 +425,17 @@ static void test_ICInfo(void)
         info.dwSize = sizeof(info);
         if (!ICInfo(0, i++, &info))
             break;
-        trace("Codec name: %s, fccHandler: 0x%08x\n", wine_dbgstr_w(info.szName), info.fccHandler);
+        trace("Codec name: %s, fccHandler: 0x%08lx\n", wine_dbgstr_w(info.szName), info.fccHandler);
         ok(info.fccType, "Expected nonzero type.\n");
         ok(info.fccHandler, "Expected nonzero handler.\n");
-        ok(!info.dwFlags, "Got unexpected flags %#x.\n", info.dwFlags);
-        ok(!info.dwVersion, "Got unexpected version %#x.\n", info.dwVersion);
-        ok(info.dwVersionICM == ICVERSION, "Got unexpected ICM version %#x.\n", info.dwVersionICM);
+        ok(!info.dwFlags, "Got unexpected flags %#lx.\n", info.dwFlags);
+        ok(!info.dwVersion, "Got unexpected version %#lx.\n", info.dwVersion);
+        ok(info.dwVersionICM == ICVERSION, "Got unexpected ICM version %#lx.\n", info.dwVersionICM);
         ok(!info.szName[0], "Got unexpected name %s.\n", wine_dbgstr_w(info.szName));
         ok(!info.szDescription[0], "Got unexpected name %s.\n", wine_dbgstr_w(info.szDescription));
 
         ok(ICInfo(info.fccType, info.fccHandler, &info2),
-           "ICInfo failed on fcc 0x%08x\n", info.fccHandler);
+           "ICInfo failed on fcc 0x%08lx\n", info.fccHandler);
 
         fcc = (unsigned char *)&info.fccHandler;
         if (!isalpha(fcc[0])) continue;
@@ -438,18 +444,18 @@ static void test_ICInfo(void)
         /* Test getting info with a different case - bug 41602 */
         fcc[0] ^= 0x20;
         ok(ICInfo(info.fccType, info.fccHandler, &info2),
-           "ICInfo failed on fcc 0x%08x\n", info.fccHandler);
+           "ICInfo failed on fcc 0x%08lx\n", info.fccHandler);
     }
     ok(found != 0, "expected at least one codec\n");
 
     memset(&info, 0x55, sizeof(info));
     info.dwSize = sizeof(info);
     ok(!ICInfo(ICTYPE_VIDEO, mmioFOURCC('f','a','k','e'), &info), "expected failure\n");
-    ok(info.fccType == ICTYPE_VIDEO, "got 0x%08x\n", info.fccType);
-    ok(info.fccHandler == mmioFOURCC('f','a','k','e'), "got 0x%08x\n", info.fccHandler);
-    ok(!info.dwFlags, "Got unexpected flags %#x.\n", info.dwFlags);
-    ok(!info.dwVersion, "Got unexpected version %#x.\n", info.dwVersion);
-    ok(info.dwVersionICM == ICVERSION, "Got unexpected ICM version %#x.\n", info.dwVersionICM);
+    ok(info.fccType == ICTYPE_VIDEO, "got 0x%08lx\n", info.fccType);
+    ok(info.fccHandler == mmioFOURCC('f','a','k','e'), "got 0x%08lx\n", info.fccHandler);
+    ok(!info.dwFlags, "Got unexpected flags %#lx.\n", info.dwFlags);
+    ok(!info.dwVersion, "Got unexpected version %#lx.\n", info.dwVersion);
+    ok(info.dwVersionICM == ICVERSION, "Got unexpected ICM version %#lx.\n", info.dwVersionICM);
     ok(!info.szName[0], "Got unexpected name %s.\n", wine_dbgstr_w(info.szName));
     ok(!info.szDescription[0], "Got unexpected name %s.\n", wine_dbgstr_w(info.szDescription));
     ok(!info.szDriver[0], "Got unexpected driver %s.\n", wine_dbgstr_w(info.szDriver));
@@ -462,30 +468,30 @@ static void test_ICInfo(void)
 
         size = sizeof(buffer);
         res = RegQueryValueExA(key, "wine.test", NULL, NULL, (BYTE *)buffer, &size);
-        ok(!res, "Failed to query value, error %d.\n", res);
+        ok(!res, "Failed to query value, error %ld.\n", res);
         ok(!strcmp(buffer, "bogus"), "Got unexpected value \"%s\".\n", buffer);
 
         memset(&info, 0x55, sizeof(info));
         info.dwSize = sizeof(info);
         ok(ICInfo(test_type, test_handler, &info), "Expected success.\n");
-        ok(info.fccType == test_type, "Got unexpected type %#x.\n", info.fccType);
-        ok(info.fccHandler == test_handler, "Got unexpected handler %#x.\n", info.fccHandler);
-        ok(!info.dwFlags, "Got unexpected flags %#x.\n", info.dwFlags);
-        ok(!info.dwVersion, "Got unexpected version %#x.\n", info.dwVersion);
-        ok(info.dwVersionICM == ICVERSION, "Got unexpected ICM version %#x.\n", info.dwVersionICM);
+        ok(info.fccType == test_type, "Got unexpected type %#lx.\n", info.fccType);
+        ok(info.fccHandler == test_handler, "Got unexpected handler %#lx.\n", info.fccHandler);
+        ok(!info.dwFlags, "Got unexpected flags %#lx.\n", info.dwFlags);
+        ok(!info.dwVersion, "Got unexpected version %#lx.\n", info.dwVersion);
+        ok(info.dwVersionICM == ICVERSION, "Got unexpected ICM version %#lx.\n", info.dwVersionICM);
         ok(!info.szName[0], "Got unexpected name %s.\n", wine_dbgstr_w(info.szName));
         ok(!info.szDescription[0], "Got unexpected name %s.\n", wine_dbgstr_w(info.szDescription));
-        ok(!lstrcmpW(info.szDriver, bogusW), "Got unexpected driver %s.\n", wine_dbgstr_w(info.szDriver));
+        ok(!lstrcmpW(info.szDriver, L"bogus"), "Got unexpected driver %s.\n", wine_dbgstr_w(info.szDriver));
 
         /* Drivers installed after msvfw32 is loaded are not enumerated. */
-todo_wine
+        todo_wine
         ok(!ICInfo(test_type, 0, &info), "Expected failure.\n");
 
         ret = ICRemove(test_type, test_handler, 0);
         ok(ret, "Failed to remove driver.\n");
 
         res = RegDeleteValueA(key, "wine.test");
-        ok(res == ERROR_FILE_NOT_FOUND, "Got error %u.\n", res);
+        ok(res == ERROR_FILE_NOT_FOUND, "Got error %lu.\n", res);
         RegCloseKey(key);
     }
     else
@@ -496,17 +502,17 @@ todo_wine
         memset(&info, 0x55, sizeof(info));
         info.dwSize = sizeof(info);
         ok(ICInfo(test_type, test_handler, &info), "Expected success.\n");
-        ok(info.fccType == test_type, "Got unexpected type %#x.\n", info.fccType);
-        ok(info.fccHandler == test_handler, "Got unexpected handler %#x.\n", info.fccHandler);
-        ok(!info.dwFlags, "Got unexpected flags %#x.\n", info.dwFlags);
-        ok(!info.dwVersion, "Got unexpected version %#x.\n", info.dwVersion);
-        ok(info.dwVersionICM == ICVERSION, "Got unexpected ICM version %#x.\n", info.dwVersionICM);
+        ok(info.fccType == test_type, "Got unexpected type %#lx.\n", info.fccType);
+        ok(info.fccHandler == test_handler, "Got unexpected handler %#lx.\n", info.fccHandler);
+        ok(!info.dwFlags, "Got unexpected flags %#lx.\n", info.dwFlags);
+        ok(!info.dwVersion, "Got unexpected version %#lx.\n", info.dwVersion);
+        ok(info.dwVersionICM == ICVERSION, "Got unexpected ICM version %#lx.\n", info.dwVersionICM);
         ok(!info.szName[0], "Got unexpected name %s.\n", wine_dbgstr_w(info.szName));
         ok(!info.szDescription[0], "Got unexpected name %s.\n", wine_dbgstr_w(info.szDescription));
-        ok(!lstrcmpW(info.szDriver, bogusW), "Got unexpected driver %s.\n", wine_dbgstr_w(info.szDriver));
+        ok(!lstrcmpW(info.szDriver, L"bogus"), "Got unexpected driver %s.\n", wine_dbgstr_w(info.szDriver));
 
         /* Drivers installed after msvfw32 is loaded are not enumerated. */
-todo_wine
+        todo_wine
         ok(!ICInfo(test_type, 0, &info), "Expected failure.\n");
 
         ret = WritePrivateProfileStringA("drivers32", "wine.test", NULL, "system.ini");
@@ -519,11 +525,11 @@ todo_wine
     memset(&enum_info, 0x55, sizeof(enum_info));
     enum_info.dwSize = sizeof(enum_info);
     ok(ICInfo(test_type, test_handler, &enum_info), "Expected success.\n");
-    ok(!enum_info.fccType, "Got unexpected type %#x.\n", enum_info.fccType);
-    ok(!enum_info.fccHandler, "Got unexpected handler %#x.\n", enum_info.fccHandler);
-    ok(!enum_info.dwFlags, "Got unexpected flags %#x.\n", enum_info.dwFlags);
-    ok(enum_info.dwVersion == 0xdeadbeef, "Got unexpected version %#x.\n", enum_info.dwVersion);
-    ok(enum_info.dwVersionICM == ICVERSION, "Got unexpected ICM version %#x.\n", enum_info.dwVersionICM);
+    ok(!enum_info.fccType, "Got unexpected type %#lx.\n", enum_info.fccType);
+    ok(!enum_info.fccHandler, "Got unexpected handler %#lx.\n", enum_info.fccHandler);
+    ok(!enum_info.dwFlags, "Got unexpected flags %#lx.\n", enum_info.dwFlags);
+    ok(enum_info.dwVersion == 0xdeadbeef, "Got unexpected version %#lx.\n", enum_info.dwVersion);
+    ok(enum_info.dwVersionICM == ICVERSION, "Got unexpected ICM version %#lx.\n", enum_info.dwVersionICM);
     ok(!enum_info.szName[0], "Got unexpected name %s.\n", wine_dbgstr_w(enum_info.szName));
     ok(!enum_info.szDescription[0], "Got unexpected name %s.\n", wine_dbgstr_w(enum_info.szDescription));
     ok(!enum_info.szDriver[0], "Got unexpected driver %s.\n", wine_dbgstr_w(enum_info.szDriver));
@@ -532,11 +538,11 @@ todo_wine
     memset(&enum_info, 0x55, sizeof(enum_info));
     enum_info.dwSize = sizeof(enum_info);
     ok(ICInfo(test_type, 0, &enum_info), "Expected success.\n");
-    ok(!enum_info.fccType, "Got unexpected type %#x.\n", enum_info.fccType);
-    ok(!enum_info.fccHandler, "Got unexpected handler %#x.\n", enum_info.fccHandler);
-    ok(!enum_info.dwFlags, "Got unexpected flags %#x.\n", enum_info.dwFlags);
-    ok(enum_info.dwVersion == 0xdeadbeef, "Got unexpected version %#x.\n", enum_info.dwVersion);
-    ok(enum_info.dwVersionICM == ICVERSION, "Got unexpected ICM version %#x.\n", enum_info.dwVersionICM);
+    ok(!enum_info.fccType, "Got unexpected type %#lx.\n", enum_info.fccType);
+    ok(!enum_info.fccHandler, "Got unexpected handler %#lx.\n", enum_info.fccHandler);
+    ok(!enum_info.dwFlags, "Got unexpected flags %#lx.\n", enum_info.dwFlags);
+    ok(enum_info.dwVersion == 0xdeadbeef, "Got unexpected version %#lx.\n", enum_info.dwVersion);
+    ok(enum_info.dwVersionICM == ICVERSION, "Got unexpected ICM version %#lx.\n", enum_info.dwVersionICM);
     ok(!enum_info.szName[0], "Got unexpected name %s.\n", wine_dbgstr_w(enum_info.szName));
     ok(!enum_info.szDescription[0], "Got unexpected name %s.\n", wine_dbgstr_w(enum_info.szDescription));
     ok(!enum_info.szDriver[0], "Got unexpected driver %s.\n", wine_dbgstr_w(enum_info.szDriver));
@@ -566,7 +572,7 @@ static LRESULT CALLBACK gdf_driver_proc(DWORD_PTR id, HDRVR driver, UINT msg,
     LRESULT ret = 0;
 
     if (winetest_debug > 1)
-        trace("(%#lx, %p, %#x, %#lx, %#lx)\n", id, driver, msg, lparam1, lparam2);
+        trace("(%#Ix, %p, %#x, %#Ix, %#Ix)\n", id, driver, msg, lparam1, lparam2);
 
     switch(msg)
     {
@@ -580,23 +586,23 @@ static LRESULT CALLBACK gdf_driver_proc(DWORD_PTR id, HDRVR driver, UINT msg,
         BITMAPINFOHEADER *out = (BITMAPINFOHEADER *)lparam2;
         DWORD expected_size;
 
-        ok(lparam1 == (LPARAM)&gdf_in, "got input %#lx\n", lparam1);
+        ok(lparam1 == (LPARAM)&gdf_in, "got input %#Ix\n", lparam1);
 
         if (!out)
             return ICERR_OK;
 
         ok(out == gdf_out, "got output %p\n", out);
 
-        ok(out->biSize == sizeof(*out), "got size %d\n", out->biSize);
+        ok(out->biSize == sizeof(*out), "got size %ld\n", out->biSize);
         expected_size = get_size_image(out->biWidth, out->biHeight, out->biBitCount);
-        ok(out->biSizeImage == expected_size, "expected image size %d, got %d\n",
+        ok(out->biSizeImage == expected_size, "expected image size %ld, got %ld\n",
             expected_size, out->biSizeImage);
 
         ok(out->biPlanes == 0xcccc, "got planes %d\n", out->biPlanes);
         ok(out->biXPelsPerMeter == 0xcccccccc && out->biYPelsPerMeter == 0xcccccccc,
-            "got resolution %dx%d\n", out->biXPelsPerMeter, out->biYPelsPerMeter);
-        ok(out->biClrUsed == 0xcccccccc, "got biClrUsed %u\n", out->biClrUsed);
-        ok(out->biClrImportant == 0xcccccccc, "got biClrImportant %u\n", out->biClrImportant);
+            "got resolution %ldx%ld\n", out->biXPelsPerMeter, out->biYPelsPerMeter);
+        ok(out->biClrUsed == 0xcccccccc, "got biClrUsed %lu\n", out->biClrUsed);
+        ok(out->biClrImportant == 0xcccccccc, "got biClrImportant %lu\n", out->biClrImportant);
 
         switch (get_display_format_test)
         {
@@ -632,7 +638,7 @@ static LRESULT CALLBACK gdf_driver_proc(DWORD_PTR id, HDRVR driver, UINT msg,
     {
         BITMAPINFOHEADER *out = (BITMAPINFOHEADER *)lparam2;
 
-        ok(lparam1 == (LPARAM)&gdf_in, "got input %#lx\n", lparam1);
+        ok(lparam1 == (LPARAM)&gdf_in, "got input %#Ix\n", lparam1);
         if (out)
         {
             ok(out == gdf_out, "got output %p\n", out);
@@ -651,7 +657,7 @@ static LRESULT CALLBACK gdf_driver_proc(DWORD_PTR id, HDRVR driver, UINT msg,
     {
         BITMAPINFO *out = (BITMAPINFO *)lparam2;
 
-        ok(lparam1 == (LPARAM)&gdf_in, "got input %#lx\n", lparam1);
+        ok(lparam1 == (LPARAM)&gdf_in, "got input %#Ix\n", lparam1);
         if (out)
         {
             ok(out == (BITMAPINFO *)gdf_out, "got output %p\n", out);
@@ -669,10 +675,10 @@ static LRESULT CALLBACK gdf_driver_proc(DWORD_PTR id, HDRVR driver, UINT msg,
 
 static void check_bitmap_header_(int line, BITMAPINFOHEADER *header, LONG width, LONG height, WORD depth, DWORD compression)
 {
-    ok_(__FILE__, line)(header->biWidth == width, "expected %d, got %d\n", width, header->biWidth);
-    ok_(__FILE__, line)(header->biHeight == height, "expected %d, got %d\n", height, header->biHeight);
+    ok_(__FILE__, line)(header->biWidth == width, "expected %ld, got %ld\n", width, header->biWidth);
+    ok_(__FILE__, line)(header->biHeight == height, "expected %ld, got %ld\n", height, header->biHeight);
     ok_(__FILE__, line)(header->biBitCount == depth, "expected %d, got %d\n", depth, header->biBitCount);
-    ok_(__FILE__, line)(header->biCompression == compression, "expected %#x, got %#x\n", compression, header->biCompression);
+    ok_(__FILE__, line)(header->biCompression == compression, "expected %#lx, got %#lx\n", compression, header->biCompression);
 }
 #define check_bitmap_header(a,b,c,d,e) check_bitmap_header_(__LINE__,a,b,c,d,e)
 
@@ -778,19 +784,19 @@ static void test_ICGetDisplayFormat(void)
     ok(hic != NULL, "ICGetDisplayFormat failed\n");
     ok(gdf_out->biBitCount == 32 || gdf_out->biBitCount == 24,
         "got %d\n", gdf_out->biBitCount);
-    ok(gdf_out->biCompression == BI_RGB, "got %#x\n", gdf_out->biCompression);
+    ok(gdf_out->biCompression == BI_RGB, "got %#lx\n", gdf_out->biCompression);
 
     /* specifying 8 bpp yields a request for palette colours */
     hic = ICGetDisplayFormat(hic, &gdf_in, gdf_out, 8, 30, 40);
     ok(hic != NULL, "ICGetDisplayFormat failed\n");
     check_bitmap_header(gdf_out, 30, 40, 8, BI_RGB);
-    ok(gdf_out->biClrUsed == 1, "got biClrUsed %u\n", gdf_out->biClrUsed);
+    ok(gdf_out->biClrUsed == 1, "got biClrUsed %lu\n", gdf_out->biClrUsed);
     out_bmi = (BITMAPINFO *)gdf_out;
     ok(!memcmp(&out_bmi->bmiColors[0], &color_yellow, sizeof(color_yellow)),
         "got wrong colour\n");
 
     lres = ICClose(hic);
-    ok(lres == ICERR_OK, "got %ld\n", lres);
+    ok(lres == ICERR_OK, "got %Id\n", lres);
 
     ret = ICRemove(ICTYPE_VIDEO, testcc, 0);
     ok(ret, "ICRemove failed\n");
