@@ -96,3 +96,6 @@
 #ifdef LANGUAGE_ZH_CN
     #include "lang/Zh.rc"
 #endif
+
+/* @makedep: ERROR.HTM */
+ERROR.HTM HTML "ERROR.HTM"

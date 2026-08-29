@@ -26,7 +26,6 @@
 #include "shlwapi.h"
 
 #include "wine/test.h"
-#include "wine/heap.h"
 
 #include "initguid.h"
 #include "interfaces.h"
@@ -85,28 +84,69 @@ static void run_test(void)
     SIZE_T buffer_size;
     BOOL ret;
     SXS_GUID_INFORMATION_CLR *info;
-    WCHAR expected_type_name[] = {'D','L','L','.','T','e','s','t',0};
-    WCHAR expected_runtime_version[] = {'v','4','.','0','.','0','.','0',0};
-    WCHAR expected_assembly_identity[] = {'c','o','m','t','e','s','t',',','t','y','p','e','=','"','w','i','n','3','2','"',',','v','e','r','s','i','o','n','=','"','1','.','0','.','0','.','0','"',0};
 
+    SetLastError(0xdeadbeef);
+    ret = SxsLookupClrGuid(SXS_LOOKUP_CLR_GUID_FIND_ANY | SXS_LOOKUP_CLR_GUID_USE_ACTCTX, (GUID *)&CLSID_Test,
+            NULL, NULL, 0, &buffer_size);
+    ok(!ret, "Unexpected return value %d.\n", ret);
+    ok(GetLastError() == ERROR_NOT_FOUND, "Unexpected error %ld.\n", GetLastError());
+
+    SetLastError(0xdeadbeef);
+    ret = SxsLookupClrGuid(SXS_LOOKUP_CLR_GUID_FIND_ANY | SXS_LOOKUP_CLR_GUID_USE_ACTCTX, (GUID *)&CLSID_Test,
+            NULL, NULL, 0, &buffer_size);
+    ok(!ret, "Unexpected return value %d.\n", ret);
+    ok(GetLastError() == ERROR_NOT_FOUND, "Unexpected error %ld.\n", GetLastError());
+
+    SetLastError(0xdeadbeef);
+    ret = SxsLookupClrGuid(SXS_LOOKUP_CLR_GUID_FIND_ANY, (GUID*)&CLSID_Test, NULL, NULL, 0, &buffer_size);
+    ok(!ret, "Unexpected return value %d.\n", ret);
+    ok(GetLastError() == ERROR_INSUFFICIENT_BUFFER, "Got %ld\n", GetLastError());
+
+    SetLastError(0xdeadbeef);
     ret = SxsLookupClrGuid(SXS_LOOKUP_CLR_GUID_FIND_CLR_CLASS, (GUID*)&CLSID_Test, NULL, NULL, 0, &buffer_size);
     ok(ret == FALSE, "Got %d\n", ret);
-    ok(GetLastError() == ERROR_INSUFFICIENT_BUFFER, "Got %d\n", GetLastError());
+    ok(GetLastError() == ERROR_INSUFFICIENT_BUFFER, "Got %ld\n", GetLastError());
 
-    info = heap_alloc(buffer_size);
+    info = malloc(buffer_size);
+    SetLastError(0xdeadbeef);
     ret = SxsLookupClrGuid(SXS_LOOKUP_CLR_GUID_FIND_CLR_CLASS, (GUID*)&CLSID_Test, NULL, info, buffer_size, &buffer_size);
     ok(ret == TRUE, "Got %d\n", ret);
-    ok(GetLastError() == 0, "Got %d\n", GetLastError());
+    ok(GetLastError() == 0, "Got %ld\n", GetLastError());
 
-    ok(info->dwFlags == SXS_GUID_INFORMATION_CLR_FLAG_IS_CLASS, "Got %d\n", info->dwFlags);
-    ok(lstrcmpW(info->pcwszTypeName, expected_type_name) == 0, "Got %s\n",
-       wine_dbgstr_w(info->pcwszTypeName));
-    ok(lstrcmpW(info->pcwszAssemblyIdentity, expected_assembly_identity) == 0, "Got %s\n",
-       wine_dbgstr_w(info->pcwszAssemblyIdentity));
-    ok(lstrcmpW(info->pcwszRuntimeVersion, expected_runtime_version) == 0, "Got %s\n",
-       wine_dbgstr_w(info->pcwszRuntimeVersion));
+    ok(info->dwFlags == SXS_GUID_INFORMATION_CLR_FLAG_IS_CLASS, "Got %ld\n", info->dwFlags);
+    ok(!lstrcmpW(info->pcwszTypeName, L"DLL.Test"), "Unexpected typename %s.\n", wine_dbgstr_w(info->pcwszTypeName));
+    ok(!lstrcmpW(info->pcwszAssemblyIdentity, L"comtest,type=\"win32\",version=\"1.0.0.0\""),
+           "Unexpected assembly identity %s.\n", wine_dbgstr_w(info->pcwszAssemblyIdentity));
+    ok(!lstrcmpW(info->pcwszRuntimeVersion, L"v4.0.0.0"), "Unexpected runtime version %s.\n",
+           wine_dbgstr_w(info->pcwszRuntimeVersion));
 
-    heap_free(info);
+    free(info);
+
+    SetLastError(0xdeadbeef);
+    ret = SxsLookupClrGuid(SXS_LOOKUP_CLR_GUID_FIND_SURROGATE, (GUID *)&CLSID_SurrogateTest, NULL, NULL, 0, &buffer_size);
+    ok(!ret, "Unexpected return value %d.\n", ret);
+    ok(GetLastError() == ERROR_INSUFFICIENT_BUFFER, "Got %ld\n", GetLastError());
+
+    info = malloc(buffer_size);
+    SetLastError(0xdeadbeef);
+    ret = SxsLookupClrGuid(SXS_LOOKUP_CLR_GUID_FIND_SURROGATE, (GUID *)&CLSID_SurrogateTest, NULL, info,
+            buffer_size, &buffer_size);
+    ok(ret, "Unexpected return value %d.\n", ret);
+    ok(GetLastError() == 0, "Got %ld\n", GetLastError());
+
+    ok(info->dwFlags == SXS_GUID_INFORMATION_CLR_FLAG_IS_SURROGATE, "Unexpected flags %#lx.\n", info->dwFlags);
+    ok(!lstrcmpW(info->pcwszTypeName, L"Surrogate.Test"), "Unexpected typename %s.\n", wine_dbgstr_w(info->pcwszTypeName));
+    ok(!lstrcmpW(info->pcwszAssemblyIdentity, L"comtest,type=\"win32\",version=\"1.0.0.0\""),
+           "Unexpected assembly identity %s.\n", wine_dbgstr_w(info->pcwszAssemblyIdentity));
+    ok(!lstrcmpW(info->pcwszRuntimeVersion, L"v4.0.0.1"), "Unexpected runtime version %s.\n",
+           wine_dbgstr_w(info->pcwszRuntimeVersion));
+
+    free(info);
+
+    SetLastError(0xdeadbeef);
+    ret = SxsLookupClrGuid(SXS_LOOKUP_CLR_GUID_FIND_ANY, (GUID *)&CLSID_SurrogateTest, NULL, NULL, 0, &buffer_size);
+    ok(!ret, "Unexpected return value %d.\n", ret);
+    ok(GetLastError() == ERROR_INSUFFICIENT_BUFFER, "Got %ld\n", GetLastError());
 }
 
 static void prepare_and_run_test(void)
@@ -139,7 +179,7 @@ static void prepare_and_run_test(void)
     context.dwFlags = ACTCTX_FLAG_ASSEMBLY_DIRECTORY_VALID;
 
     handle_context = CreateActCtxA(&context);
-    ok(handle_context != INVALID_HANDLE_VALUE, "CreateActCtxA failed: %d\n", GetLastError());
+    ok(handle_context != INVALID_HANDLE_VALUE, "CreateActCtxA failed: %ld\n", GetLastError());
 
     if (handle_context == INVALID_HANDLE_VALUE)
     {
@@ -148,7 +188,7 @@ static void prepare_and_run_test(void)
     }
 
     success = ActivateActCtx(handle_context, &cookie);
-    ok(success, "ActivateActCtx failed: %d\n", GetLastError());
+    ok(success, "ActivateActCtx failed: %ld\n", GetLastError());
 
     run_test();
 
@@ -156,18 +196,18 @@ cleanup:
     if (handle_context != INVALID_HANDLE_VALUE)
     {
         success = DeactivateActCtx(0, cookie);
-        ok(success, "DeactivateActCtx failed: %d\n", GetLastError());
+        ok(success, "DeactivateActCtx failed: %ld\n", GetLastError());
         ReleaseActCtx(handle_context);
     }
     if (*path_manifest_exe)
     {
         success = DeleteFileA(path_manifest_exe);
-        ok(success, "DeleteFileA failed: %d\n", GetLastError());
+        ok(success, "DeleteFileA failed: %ld\n", GetLastError());
     }
     if(*path_manifest_dll)
     {
         success = DeleteFileA(path_manifest_dll);
-        ok(success, "DeleteFileA failed: %d\n", GetLastError());
+        ok(success, "DeleteFileA failed: %ld\n", GetLastError());
     }
 }
 
@@ -190,9 +230,9 @@ static void run_child_process(void)
 
     si.cb = sizeof(si);
     ret = CreateProcessA(exe, cmdline, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi);
-    ok(ret, "Could not create process: %u\n", GetLastError());
+    ok(ret, "Could not create process: %lu\n", GetLastError());
 
-    winetest_wait_child_process(pi.hProcess);
+    wait_child_process(pi.hProcess);
 
     CloseHandle(pi.hThread);
     CloseHandle(pi.hProcess);
@@ -203,9 +243,21 @@ static void test_SxsLookupClrGuid(void)
     SIZE_T buffer_size;
     BOOL ret;
 
+    SetLastError(0xdeadbeef);
     ret = SxsLookupClrGuid(SXS_LOOKUP_CLR_GUID_FIND_CLR_CLASS, (GUID*)&CLSID_Test, NULL, NULL, 0, &buffer_size);
     ok(ret == FALSE, "Expected FALSE, got %d\n", ret);
-    ok(GetLastError() == ERROR_NOT_FOUND, "Expected ERROR_NOT_FOUND, got %d\n", GetLastError());
+    ok(GetLastError() == ERROR_NOT_FOUND, "Expected ERROR_NOT_FOUND, got %ld\n", GetLastError());
+
+    SetLastError(0xdeadbeef);
+    ret = SxsLookupClrGuid(SXS_LOOKUP_CLR_GUID_FIND_CLR_CLASS | SXS_LOOKUP_CLR_GUID_USE_ACTCTX, (GUID *)&CLSID_Test,
+            NULL, NULL, 0, &buffer_size);
+    ok(!ret, "Unexpected return value %d.\n", ret);
+    ok(GetLastError() == ERROR_NOT_FOUND, "Expected ERROR_NOT_FOUND, got %ld\n", GetLastError());
+
+    SetLastError(0xdeadbeef);
+    ret = SxsLookupClrGuid(SXS_LOOKUP_CLR_GUID_FIND_SURROGATE, (GUID *)&CLSID_Test, NULL, NULL, 0, &buffer_size);
+    ok(!ret, "Unexpected return value %d.\n", ret);
+    ok(GetLastError() == ERROR_NOT_FOUND, "Expected ERROR_NOT_FOUND, got %ld\n", GetLastError());
 
     run_child_process();
 }
