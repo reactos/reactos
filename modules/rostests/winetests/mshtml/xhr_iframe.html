@@ -1,0 +1,23 @@
+<html><head><script type="text/javascript">window.onmessage = function(e)
+{
+    if(e.data === "echo")
+        parent.postMessage("echo", "*");
+    else if(e.data === "async_xhr") {
+        var async_xhr = new XMLHttpRequest();
+        async_xhr.open("POST", "echo.php?delay_with_signal", true);
+        async_xhr.onreadystatechange = function() { if(async_xhr.readyState == 4) parent.postMessage("async_xhr(DONE)", "*"); };
+        async_xhr.setRequestHeader("X-Test", "True");
+        async_xhr.send("foo");
+        parent.postMessage("async_xhr", "*");
+    }
+    else if(e.data === "sync_xhr") {
+        var sync_xhr = new XMLHttpRequest();
+        sync_xhr.open("POST", "echo.php?delay_with_signal", false);
+        sync_xhr.onreadystatechange = function() { if(sync_xhr.readyState == 4) parent.postMessage("sync_xhr(DONE)", "*"); };
+        sync_xhr.setRequestHeader("X-Test", "True");
+        parent.postMessage("sync_xhr(pre-send)", "*");
+        sync_xhr.send("bar");
+        parent.postMessage("sync_xhr", "*");
+    }
+}
+</script><body></body></html>
