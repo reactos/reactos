@@ -312,6 +312,12 @@
 #   S: Maintained
 /base/shell/progman/    @HBelusca
 
+# Power Manager
+#   M: GeoB99, George Bișoc
+#   S: Maintained
+/modules/rostests/kmtests/ntos_po/   @GeoB99
+/ntoskrnl/po/                        @GeoB99
+
 # ReactOS API Tests
 #   M:
 #   R: learn-more, learn_more, Mark Jansen
