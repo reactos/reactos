@@ -22,6 +22,8 @@ static void *libmbedtls_handle;
 #endif
 static mbedtls_entropy_context entropy;
 static mbedtls_ctr_drbg_context ctr_drbg;
+static CRITICAL_SECTION rng_lock;
+static BOOL rng_seeded;
 
 union key_data
 {
@@ -272,7 +274,7 @@ NTSTATUS process_attach(void *args)
 #endif
     mbedtls_ctr_drbg_init(&ctr_drbg);
     mbedtls_entropy_init(&entropy);
-    mbedtls_ctr_drbg_seed(&ctr_drbg, mbedtls_entropy_func, &entropy, NULL, 0);
+    InitializeCriticalSection(&rng_lock);
 
     return STATUS_SUCCESS;
 #ifndef __REACTOS__
@@ -389,12 +391,35 @@ NTSTATUS process_detach(void *args)
 #endif
         mbedtls_entropy_free(&entropy);
         mbedtls_ctr_drbg_free(&ctr_drbg);
+        DeleteCriticalSection(&rng_lock);
+        rng_seeded = FALSE;
 #ifndef __REACTOS__
         wine_dlclose(libmbedtls_handle, NULL, 0);
         libmbedtls_handle = NULL;
     }
 #endif
     return STATUS_SUCCESS;
+}
+
+static int bcrypt_rng(void *ctx, unsigned char *output, size_t len)
+{
+    int ret = 0;
+
+    EnterCriticalSection(&rng_lock);
+    if (!rng_seeded)
+    {
+        ret = mbedtls_ctr_drbg_seed(&ctr_drbg, mbedtls_entropy_func, &entropy, NULL, 0);
+        if (!ret)
+            rng_seeded = TRUE;
+        else
+            ERR("cannot seed the random generator: %d\n", ret);
+    }
+    LeaveCriticalSection(&rng_lock);
+
+    if (ret)
+        return ret;
+
+    return mbedtls_ctr_drbg_random(&ctr_drbg, output, len);
 }
 
 NTSTATUS hash_init(struct hash *hash)
@@ -2002,7 +2027,7 @@ NTSTATUS key_asymmetric_import(void *args)
                 if (status) break;
                 buf = malloc(1024);
                 if (!buf) return STATUS_NO_MEMORY;
-                ret = mbedtls_dhm_make_params(&key_data(key)->a.dh.pubkey, (key->u.a.bitlen + 7) / 8, buf, &olen, mbedtls_ctr_drbg_random, &ctr_drbg);
+                ret = mbedtls_dhm_make_params(&key_data(key)->a.dh.pubkey, (key->u.a.bitlen + 7) / 8, buf, &olen, bcrypt_rng, NULL);
                 free(buf);
                 if (ret) status = STATUS_INTERNAL_ERROR;
             }
@@ -2020,18 +2045,18 @@ NTSTATUS key_asymmetric_import(void *args)
 
 #define MBEDTLS_DH_GEN_PRIME
 #ifdef MBEDTLS_DH_GEN_PRIME
-static int dh_gen_prime(mbedtls_dhm_context *dh, int nbits, int (*f_rng)(void *, unsigned char *, size_t), mbedtls_ctr_drbg_context *ctr_drbg)
+static int dh_gen_prime(mbedtls_dhm_context *dh, int nbits, int (*f_rng)(void *, unsigned char *, size_t), void *p_rng)
 {
     int ret;
     mbedtls_mpi Q, P1;
     mbedtls_mpi_init(&Q);
     mbedtls_mpi_init(&P1);
     ret = mbedtls_mpi_read_string(&dh->G, 10, "4");
-    ret = mbedtls_mpi_gen_prime(&dh->P, nbits, MBEDTLS_MPI_GEN_PRIME_FLAG_DH, mbedtls_ctr_drbg_random, ctr_drbg);
+    ret = mbedtls_mpi_gen_prime(&dh->P, nbits, MBEDTLS_MPI_GEN_PRIME_FLAG_DH, f_rng, p_rng);
     // Verifying that Q = (P-1)/2 is prime
     ret = mbedtls_mpi_sub_int(&P1, &dh->P, 1);
     ret = mbedtls_mpi_div_int(&Q, NULL, &P1, 2);
-    ret = mbedtls_mpi_is_prime_ext(&Q, 50, f_rng, ctr_drbg);
+    ret = mbedtls_mpi_is_prime_ext(&Q, 50, f_rng, p_rng);
     mbedtls_mpi_free(&Q);
     mbedtls_mpi_free(&P1);
     return ret;
@@ -2061,7 +2086,7 @@ NTSTATUS key_asymmetric_generate(void *args)
         case ALG_ID_RSA_SIGN:
             pk_type = key_get_type(key->alg_id);
             status = init_pk_key(&key_data(key)->a.pk.privkey, pk_type, FALSE);
-            ret = mbedtls_rsa_gen_key(mbedtls_pk_rsa(key_data(key)->a.pk.privkey), mbedtls_ctr_drbg_random, &ctr_drbg, key->u.a.bitlen, 65537);
+            ret = mbedtls_rsa_gen_key(mbedtls_pk_rsa(key_data(key)->a.pk.privkey), bcrypt_rng, NULL, key->u.a.bitlen, 65537);
             ret = mbedtls_rsa_complete(mbedtls_pk_rsa(key_data(key)->a.pk.privkey));
             ret = mbedtls_rsa_check_privkey(mbedtls_pk_rsa(key_data(key)->a.pk.privkey));
             ret = mbedtls_rsa_check_pubkey(mbedtls_pk_rsa(key_data(key)->a.pk.privkey));
@@ -2086,17 +2111,17 @@ NTSTATUS key_asymmetric_generate(void *args)
             }
             pk_type = key_get_type(key->alg_id);
             status = init_pk_key(&key_data(key)->a.pk.privkey, pk_type, FALSE);
-            ret = mbedtls_ecp_gen_key(grp_id, mbedtls_pk_ec(key_data(key)->a.pk.privkey), mbedtls_ctr_drbg_random, &ctr_drbg);
+            ret = mbedtls_ecp_gen_key(grp_id, mbedtls_pk_ec(key_data(key)->a.pk.privkey), bcrypt_rng, NULL);
             if (ret) mbedtls_pk_free(&key_data(key)->a.pk.privkey);
             break;
         case ALG_ID_DH:
             init_dh_key(&key_data(key)->a.dh.privkey, FALSE);
 #ifdef MBEDTLS_DH_GEN_PRIME
-            ret = dh_gen_prime(&key_data(key)->a.dh.privkey, key->u.a.bitlen, mbedtls_ctr_drbg_random, &ctr_drbg);
+            ret = dh_gen_prime(&key_data(key)->a.dh.privkey, key->u.a.bitlen, bcrypt_rng, NULL);
 #endif
             buf = malloc(1024);
             if (!buf) return STATUS_NO_MEMORY;
-            ret = mbedtls_dhm_make_params(&key_data(key)->a.dh.privkey, (key->u.a.bitlen + 7) / 8, buf, &olen, mbedtls_ctr_drbg_random, &ctr_drbg);
+            ret = mbedtls_dhm_make_params(&key_data(key)->a.dh.privkey, (key->u.a.bitlen + 7) / 8, buf, &olen, bcrypt_rng, NULL);
             free(buf);
             if (ret) mbedtls_dhm_free(&key_data(key)->a.dh.privkey);
             break;
@@ -2105,7 +2130,7 @@ NTSTATUS key_asymmetric_generate(void *args)
         case ALG_ID_DSA:
             ret = 0;
             init_dsa_key(&key_data(key)->a.dsa.privkey, (key->u.a.bitlen + 7) / 8, FALSE);
-            ret = mbedtls_dsa_genkey(&key_data(key)->a.dsa.privkey, sizeof(dsa_blob->q), (key->u.a.bitlen + 7) / 8, mbedtls_ctr_drbg_random, &ctr_drbg);
+            ret = mbedtls_dsa_genkey(&key_data(key)->a.dsa.privkey, sizeof(dsa_blob->q), (key->u.a.bitlen + 7) / 8, bcrypt_rng, NULL);
             ret = mbedtls_dsa_check_pqg(&key_data(key)->a.dsa.privkey.P, &key_data(key)->a.dsa.privkey.Q, &key_data(key)->a.dsa.privkey.G);
             ret = mbedtls_dsa_check_pubkey(&key_data(key)->a.dsa.privkey);
             ret = mbedtls_dsa_check_privkey(&key_data(key)->a.dsa.privkey);
@@ -2440,11 +2465,11 @@ NTSTATUS key_asymmetric_sign(void *args)
 #ifdef MBEDTLS_DSA_C /* DSA is not supported by mbedtls */
     if (key->alg_id == ALG_ID_DSA)
         ret = mbedtls_dsa_sign(&key_data(params->key)->a.dsa.privkey, params->input, params->input_len, output, &sig_len,
-                            mbedtls_ctr_drbg_random, &ctr_drbg);
+                            bcrypt_rng, NULL);
     else
 #endif
         ret = mbedtls_pk_sign(&key_data(params->key)->a.pk.privkey, hash_alg, params->input, params->input_len, output, &sig_len,
-                            mbedtls_ctr_drbg_random, &ctr_drbg);
+                            bcrypt_rng, NULL);
     if (ret)
     {
         free(output);
@@ -2649,7 +2674,7 @@ NTSTATUS key_asymmetric_decrypt(void *args)
 
         mbedtls_rsa_set_padding(mbedtls_pk_rsa(key_data(params->key)->a.pk.privkey), MBEDTLS_RSA_PKCS_V21, dig);
     }
-    ret = mbedtls_pk_decrypt(&key_data(params->key)->a.pk.privkey, params->input, params->input_len, params->output, &olen, params->output_len, mbedtls_ctr_drbg_random, &ctr_drbg);
+    ret = mbedtls_pk_decrypt(&key_data(params->key)->a.pk.privkey, params->input, params->input_len, params->output, &olen, params->output_len, bcrypt_rng, NULL);
 
     if (ret) return STATUS_INTERNAL_ERROR;
 
@@ -2689,7 +2714,7 @@ NTSTATUS key_asymmetric_encrypt(void *args)
     }
 
     ret = mbedtls_pk_encrypt(&key_data(params->key)->a.pk.pubkey, params->input, params->input_len, params->output, &olen, params->output_len,
-        mbedtls_ctr_drbg_random, &ctr_drbg);
+        bcrypt_rng, NULL);
 
     if (ret) return STATUS_INTERNAL_ERROR;
 
@@ -2731,7 +2756,7 @@ NTSTATUS key_asymmetric_derive_key(void *args)
                     mbedtls_ecdh_free(&ecdh);
                     return STATUS_BUFFER_TOO_SMALL;
                 }
-                ret = mbedtls_ecdh_compute_shared(&ecdh.grp, &ecdh.z, &ecdh.Qp, &ecdh.d, mbedtls_ctr_drbg_random, &ctr_drbg);
+                ret = mbedtls_ecdh_compute_shared(&ecdh.grp, &ecdh.z, &ecdh.Qp, &ecdh.d, bcrypt_rng, NULL);
                 if (ret)
                 {
                     FIXME("mbedtls_ecdh_compute_shared failed: %d\n", ret);
@@ -2758,7 +2783,7 @@ NTSTATUS key_asymmetric_derive_key(void *args)
             if (params->output)
             {
                 if (params->output_len < *params->ret_len) return STATUS_BUFFER_TOO_SMALL;
-                ret = mbedtls_dhm_calc_secret(dhm, params->output, params->output_len, &secret_len, mbedtls_ctr_drbg_random, &ctr_drbg);
+                ret = mbedtls_dhm_calc_secret(dhm, params->output, params->output_len, &secret_len, bcrypt_rng, NULL);
                 if (ret)
                 {
                     FIXME("mbedtls_dhm_calc_secret failed with %d\n", ret);
