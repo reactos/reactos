@@ -1,7 +1,7 @@
 /*
  * PROJECT:     ReactOS Kernel
  * LICENSE:     MIT (https://spdx.org/licenses/MIT)
- * PURPOSE:     Private header file for x2APIC hal
+ * PURPOSE:     Private header file for x2APIC support in HAL
  * COPYRIGHT:   Copyright 2026 Alex Mendoza <05alex.mendozaa@gmail.com>
  */
 
