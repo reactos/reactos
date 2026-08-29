@@ -28,29 +28,13 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(t2embed);
 
-BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
-{
-    switch (fdwReason)
-    {
-#ifndef __REACTOS__
-        case DLL_WINE_PREATTACH:
-            return FALSE;    /* prefer native version */
-#endif
-        case DLL_PROCESS_ATTACH:
-            DisableThreadLibraryCalls(hinstDLL);
-            break;
-    }
-
-    return TRUE;
-}
-
 LONG WINAPI TTLoadEmbeddedFont(HANDLE *phFontReference, ULONG ulFlags,
                                ULONG *pulPrivStatus, ULONG ulPrivs,
                                ULONG *pulStatus, READEMBEDPROC lpfnReadFromStream,
                                LPVOID lpvReadStream, LPWSTR szWinFamilyName,
                                LPSTR szMacFamilyName, TTLOADINFO *pTTLoadInfo)
 {
-    FIXME("(%p 0x%08x %p 0x%08x %p %p %p %s %s %p) stub\n", phFontReference,
+    FIXME("%p, %#lx, %p, %lu, %p, %p, %p, %s, %s, %p stub\n", phFontReference,
           ulFlags, pulPrivStatus, ulPrivs, pulStatus, lpfnReadFromStream,
           lpvReadStream, debugstr_w(szWinFamilyName), szMacFamilyName,
           pTTLoadInfo);
@@ -63,7 +47,7 @@ LONG WINAPI TTEmbedFont(HDC hDC, ULONG ulFlags, ULONG ulCharSet, ULONG *pulPrivS
                          USHORT *pusCharCodeSet, USHORT usCharCodeCount, USHORT usLanguage,
                          TTEMBEDINFO *pTTEmbedInfo)
 {
-    FIXME("(%p 0x%08x 0x%08x %p %p %p %p %p %u %u %p) stub\n", hDC,
+    FIXME("%p, %#lx, %lu, %p, %p, %p, %p, %p, %u, %u, %p stub\n", hDC,
           ulFlags, ulCharSet, pulPrivStatus, pulStatus, lpfnWriteToStream,
           lpvWriteStream, pusCharCodeSet, usCharCodeCount, usLanguage,
           pTTEmbedInfo);
@@ -103,14 +87,12 @@ LONG WINAPI TTGetEmbeddingType(HDC hDC, ULONG *status)
         *status = EMBED_INSTALLABLE;
     }
 
-    TRACE("fsType 0x%04x, status %u\n", fsType, *status);
+    TRACE("fsType 0x%04x, status %lu\n", fsType, *status);
     return E_NONE;
 }
 
 LONG WINAPI TTIsEmbeddingEnabledForFacename(LPCSTR facename, BOOL *enabled)
 {
-    static const WCHAR exclusionlistW[] = {'S','o','f','t','w','a','r','e','\\','M','i','c','r','o','s','o','f','t','\\',
-        'S','h','a','r','e','d',' ','T','o','o','l','s','\\','t','2','e','m','b','e','d',0};
     DWORD index;
     HKEY hkey;
     LONG ret;
@@ -124,7 +106,7 @@ LONG WINAPI TTIsEmbeddingEnabledForFacename(LPCSTR facename, BOOL *enabled)
         return E_PBENABLEDINVALID;
 
     *enabled = TRUE;
-    if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, exclusionlistW, 0, GENERIC_READ, &hkey))
+    if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, L"Software\\Microsoft\\Shared Tools\\t2embed", 0, GENERIC_READ, &hkey))
         goto out;
 
     *enabled = TRUE;
@@ -181,6 +163,6 @@ LONG WINAPI TTIsEmbeddingEnabled(HDC hDC, BOOL *enabled)
 
 LONG WINAPI TTDeleteEmbeddedFont(HANDLE hFontReference, ULONG flags, ULONG *status)
 {
-    FIXME("(%p 0x%08x %p) stub\n", hFontReference, flags, status);
+    FIXME("%p, %#lx, %p stub\n", hFontReference, flags, status);
     return E_API_NOTIMPL;
 }
