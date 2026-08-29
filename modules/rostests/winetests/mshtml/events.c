@@ -7761,6 +7761,7 @@ START_TEST(events)
 
         if(winetest_interactive)
             ShowWindow(container_hwnd, SW_SHOW);
+
         run_test(empty_doc_str, test_timeout);
         run_test(empty_doc_str, test_onclick);
         run_test(empty_doc_ie9_str, test_onclick);
@@ -7777,8 +7778,18 @@ START_TEST(events)
         if(is_ie9plus) {
             run_test_from_res(L"doc_with_prop.html", test_doc_obj);
             run_test_from_res(L"doc_with_prop_ie9.html", test_doc_obj);
+#ifdef __REACTOS__
+            if (!is_reactos() && (GetNTVersion() >= _WIN32_WINNT_WS03)) {
+                win_skip("These tests crash on Windows Server 2003/2008.\n");
+            }
+            else
+            {
+#endif
             run_test(iframe_doc_ie9_str, test_message_event);
             run_test(iframe_doc_ie11_str, test_message_event);
+#ifdef __REACTOS__
+            }
+#endif
             run_test_from_res(L"doc_with_prop_ie9.html", test_visibilitychange);
 #ifdef __REACTOS__
             if (is_reactos())
