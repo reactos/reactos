@@ -1,5 +1,5 @@
 
-add_definitions(-DUSE_WINE_TODOS)
+add_definitions(-DUSE_WINE_TODOS -DCONST_VTABLE)
 
 list(APPEND SOURCE
     dictionary.c
@@ -11,5 +11,5 @@ add_idl_headers(scrrun_idlheader_test scrrun.idl)
 add_dependencies(scrrun_winetest scrrun_idlheader_test)
 target_link_libraries(scrrun_winetest uuid)
 set_module_type(scrrun_winetest win32cui)
-add_importlibs(scrrun_winetest ole32 oleaut32 user32 msvcrt kernel32)
+add_importlibs(scrrun_winetest ole32 oleaut32 shlwapi user32 msvcrt kernel32)
 add_rostests_file(TARGET scrrun_winetest)

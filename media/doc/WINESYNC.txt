@@ -168,19 +168,19 @@ dll/win32/propsys             # Synced to Wine-10.0
 dll/win32/pstorec             # Synced to Wine-10.0
 dll/win32/qmgr                # Synced to Wine-10.0
 dll/win32/qmgrprxy            # Synced to Wine-10.0
-dll/win32/query               # Synced to WineStaging-4.18
-dll/win32/rasapi32            # Synced to WineStaging-3.3
-dll/win32/regapi              # Synced to WineStaging-5.7
-dll/win32/resutils            # Synced to WineStaging-3.3
+dll/win32/query               # Synced to Wine-10.0
+dll/win32/rasapi32            # Synced to Wine-10.0
+dll/win32/regapi              # Synced to Wine-10.0
+dll/win32/resutils            # Synced to Wine-10.0
 dll/win32/riched20            # Synced to Wine-10.0
-dll/win32/riched32            # Synced to WineStaging-3.3
+dll/win32/riched32            # Synced to Wine-10.0
 dll/win32/rpcrt4              # Synced to Wine-10.0
-dll/win32/rsabase             # Synced to WineStaging-3.3
+dll/win32/rsabase             # Synced to Wine-10.0
 dll/win32/rsaenh              # Synced to WineStaging-2.9
 dll/win32/rtworkq             # Synced to Wine-10.0
-dll/win32/sccbase             # Synced to WineStaging-4.18
+dll/win32/sccbase             # Synced to Wine-10.0
 dll/win32/schannel            # Synced to WineStaging-3.3
-dll/win32/scrrun              # Synced to WineStaging-4.18
+dll/win32/scrrun              # Synced to Wine-10.0
 dll/win32/secur32             # Forked
 dll/win32/security            # Forked (different .spec)
 dll/win32/sensapi             # Synced to WineStaging-4.18
