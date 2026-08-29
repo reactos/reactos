@@ -2751,6 +2751,18 @@ NDIS_STATUS ParaNdis_PowerOn(PARANDIS_ADAPTER *pContext)
         VirtIODeviceEnableGuestFeature(pContext, VIRTIO_F_VERSION_1);
     if (VirtIODeviceGetHostFeature(pContext, VIRTIO_F_ANY_LAYOUT))
         VirtIODeviceEnableGuestFeature(pContext, VIRTIO_F_ANY_LAYOUT);
+    if (pContext->bHasControlQueue) {
+        VirtIODeviceEnableGuestFeature(pContext, VIRTIO_NET_F_CTRL_VQ);
+        if (VirtIODeviceGetHostFeature(pContext, VIRTIO_NET_F_CTRL_RX)) {
+            VirtIODeviceEnableGuestFeature(pContext, VIRTIO_NET_F_CTRL_RX);
+        }
+        if (VirtIODeviceGetHostFeature(pContext, VIRTIO_NET_F_CTRL_RX_EXTRA)) {
+            VirtIODeviceEnableGuestFeature(pContext, VIRTIO_NET_F_CTRL_RX_EXTRA);
+        }
+        if (VirtIODeviceGetHostFeature(pContext, VIRTIO_NET_F_CTRL_VLAN)) {
+            VirtIODeviceEnableGuestFeature(pContext, VIRTIO_NET_F_CTRL_VLAN);
+        }
+    }
 
     status = FinalizeFeatures(pContext);
     if (status == NDIS_STATUS_SUCCESS) {
