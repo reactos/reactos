@@ -88,7 +88,7 @@ static LONG OLE_current_handle;
  */
 OLESTATUS WINAPI OleSavedClientDoc(LHCLIENTDOC hDoc)
 {
-    FIXME("(%d: stub\n", hDoc);
+    FIXME("(%ld: stub\n", hDoc);
     return OLE_OK;
 }
 
@@ -108,7 +108,7 @@ OLESTATUS WINAPI OleRegisterClientDoc(LPCSTR classname, LPCSTR docname,
  */
 OLESTATUS WINAPI OleRenameClientDoc(LHCLIENTDOC hDoc, LPCSTR newName)
 {
-    FIXME("(%d,%s,...): stub\n",hDoc, newName);
+    FIXME("(%ld,%s,...): stub\n",hDoc, newName);
     return OLE_OK;
 }
 
@@ -117,7 +117,7 @@ OLESTATUS WINAPI OleRenameClientDoc(LHCLIENTDOC hDoc, LPCSTR newName)
  */
 OLESTATUS WINAPI OleRevokeClientDoc(LHCLIENTDOC hServerDoc)
 {
-    FIXME("(%d): stub\n",hServerDoc);
+    FIXME("(%ld): stub\n",hServerDoc);
     return OLE_OK;
 }
 
@@ -128,7 +128,7 @@ OLESTATUS WINAPI OleCreateLinkFromClip(
 	LPCSTR name,LPOLECLIENT olecli,LHCLIENTDOC hclientdoc,LPCSTR xname,
 	_LPOLEOBJECT *lpoleob,OLEOPT_RENDER render,OLECLIPFORMAT clipformat
 ) {
-	FIXME("(%s,%p,%08x,%s,%p,%d,%d): stub!\n",
+	FIXME("(%s,%p,%08lx,%s,%p,%d,%ld): stub!\n",
 	      name,olecli,hclientdoc,xname,lpoleob,render,clipformat);
 	return OLE_OK;
 }
@@ -137,7 +137,7 @@ OLESTATUS WINAPI OleCreateLinkFromClip(
  *           OleQueryLinkFromClip	[OLECLI32.9]
  */
 OLESTATUS WINAPI OleQueryLinkFromClip(LPCSTR name,OLEOPT_RENDER render,OLECLIPFORMAT clipformat) {
-	FIXME("(%s,%d,%d): stub!\n",name,render,clipformat);
+	FIXME("(%s,%d,%ld): stub!\n",name,render,clipformat);
 	return OLE_OK;
 }
 
@@ -145,7 +145,7 @@ OLESTATUS WINAPI OleQueryLinkFromClip(LPCSTR name,OLEOPT_RENDER render,OLECLIPFO
  *           OleQueryCreateFromClip	[OLECLI32.10]
  */
 OLESTATUS WINAPI OleQueryCreateFromClip(LPCSTR name,OLEOPT_RENDER render,OLECLIPFORMAT clipformat) {
-	FIXME("(%s,%d,%d): stub!\n",name,render,clipformat);
+	FIXME("(%s,%d,%ld): stub!\n",name,render,clipformat);
 	return OLE_OK;
 }
 
@@ -185,7 +185,7 @@ OLESTATUS WINAPI OleCreateFromClip(
 	LPCSTR name,LPOLECLIENT olecli,LHCLIENTDOC hclientdoc,LPCSTR xname,
 	_LPOLEOBJECT *lpoleob,OLEOPT_RENDER render, OLECLIPFORMAT clipformat
 ) {
-	FIXME("(%s,%p,%08x,%s,%p,%d,%d): stub!\n",
+	FIXME("(%s,%p,%08lx,%s,%p,%d,%ld): stub!\n",
 	      name,olecli,hclientdoc,xname,lpoleob,render,clipformat);
 	/* clipb type, object kreieren entsprechend etc. */
 	return OLE_OK;
