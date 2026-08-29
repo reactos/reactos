@@ -466,6 +466,15 @@ VOID RunLoader(VOID)
             goto Reboot;
         }
 
+        /*
+         * Display the "Red Screen of Hell" if ROS previously shutdown due to thermal event
+         * FIXME: We must check the "thermal shutdown" bit set in CMOS or from whatever place
+         * if ROS did shutdown for that reason. This is currently not implemented!
+         */
+#if 0
+        TuiDisplayThermalScreen();
+#endif
+
         /* Load the chosen operating system */
         LoadOperatingSystem(&OperatingSystemList[SelectedOperatingSystem]);
 
