@@ -4999,11 +4999,10 @@ IsDeviceInfoInDeviceInfoSet(
  */
 BOOL WINAPI
 SetupDiDeleteDeviceInfo(
-        IN HDEVINFO DeviceInfoSet,
-        IN PSP_DEVINFO_DATA DeviceInfoData)
+    _In_ HDEVINFO DeviceInfoSet,
+    _In_ PSP_DEVINFO_DATA DeviceInfoData)
 {
     struct DeviceInfoSet *deviceInfoSet;
-    struct DeviceInfo *deviceInfo = (struct DeviceInfo *)DeviceInfoData;
     BOOL ret = FALSE;
 
     TRACE("%s(%p %p)\n", __FUNCTION__, DeviceInfoSet, DeviceInfoData);
@@ -5012,12 +5011,13 @@ SetupDiDeleteDeviceInfo(
         SetLastError(ERROR_INVALID_HANDLE);
     else if ((deviceInfoSet = (struct DeviceInfoSet *)DeviceInfoSet)->magic != SETUP_DEVICE_INFO_SET_MAGIC)
         SetLastError(ERROR_INVALID_HANDLE);
-    else if (DeviceInfoData && DeviceInfoData->cbSize != sizeof(SP_DEVINFO_DATA))
+    else if (!DeviceInfoData || DeviceInfoData->cbSize != sizeof(*DeviceInfoData) || !DeviceInfoData->Reserved)
         SetLastError(ERROR_INVALID_USER_BUFFER);
-    else if (!IsDeviceInfoInDeviceInfoSet(deviceInfoSet, deviceInfo))
+    else if (!IsDeviceInfoInDeviceInfoSet(deviceInfoSet, (struct DeviceInfo *)DeviceInfoData->Reserved))
         SetLastError(ERROR_INVALID_PARAMETER);
     else
     {
+        struct DeviceInfo *deviceInfo = (struct DeviceInfo *)DeviceInfoData->Reserved;
         RemoveEntryList(&deviceInfo->ListEntry);
         DestroyDeviceInfo(deviceInfo);
         ret = TRUE;
