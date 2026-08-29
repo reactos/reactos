@@ -2,7 +2,6 @@
 spec2def(olethk32.dll olethk32.spec)
 
 list(APPEND SOURCE
-    main.c
     version.rc
     ${CMAKE_CURRENT_BINARY_DIR}/olethk32_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/olethk32.def)
