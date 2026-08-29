@@ -256,10 +256,39 @@ list(APPEND SOURCE
     ${REACTOS_SOURCE_DIR}/ntoskrnl/ob/obsdcach.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/ob/obsecure.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/ob/obwait.c
-    ${REACTOS_SOURCE_DIR}/ntoskrnl/po/events.c
-    ${REACTOS_SOURCE_DIR}/ntoskrnl/po/poshtdwn.c
-    ${REACTOS_SOURCE_DIR}/ntoskrnl/po/povolume.c
-    ${REACTOS_SOURCE_DIR}/ntoskrnl/po/power.c
+    ${REACTOS_SOURCE_DIR}/ntoskrnl/po/pofx/comp.c
+    ${REACTOS_SOURCE_DIR}/ntoskrnl/po/pofx/device.c
+    ${REACTOS_SOURCE_DIR}/ntoskrnl/po/pofx/fxapi.c
+    ${REACTOS_SOURCE_DIR}/ntoskrnl/po/pofx/plugin.c
+    ${REACTOS_SOURCE_DIR}/ntoskrnl/po/ppm/cpustat.c
+    ${REACTOS_SOURCE_DIR}/ntoskrnl/po/ppm/eng.c
+    ${REACTOS_SOURCE_DIR}/ntoskrnl/po/ppm/idle.c
+    ${REACTOS_SOURCE_DIR}/ntoskrnl/po/ppm/init.c
+    ${REACTOS_SOURCE_DIR}/ntoskrnl/po/ppm/perf.c
+    ${REACTOS_SOURCE_DIR}/ntoskrnl/po/ppm/policy.c
+    ${REACTOS_SOURCE_DIR}/ntoskrnl/po/act.c
+    ${REACTOS_SOURCE_DIR}/ntoskrnl/po/aoac.c
+    ${REACTOS_SOURCE_DIR}/ntoskrnl/po/batt.c
+    ${REACTOS_SOURCE_DIR}/ntoskrnl/po/bugchk.c
+    ${REACTOS_SOURCE_DIR}/ntoskrnl/po/drips.c
+    ${REACTOS_SOURCE_DIR}/ntoskrnl/po/hibersup.c
+    ${REACTOS_SOURCE_DIR}/ntoskrnl/po/init.c
+    ${REACTOS_SOURCE_DIR}/ntoskrnl/po/irp.c
+    ${REACTOS_SOURCE_DIR}/ntoskrnl/po/misc.c
+    ${REACTOS_SOURCE_DIR}/ntoskrnl/po/notif.c
+    ${REACTOS_SOURCE_DIR}/ntoskrnl/po/ntapi.c
+    ${REACTOS_SOURCE_DIR}/ntoskrnl/po/poapi.c
+    ${REACTOS_SOURCE_DIR}/ntoskrnl/po/pocs.c
+    ${REACTOS_SOURCE_DIR}/ntoskrnl/po/policy.c
+    ${REACTOS_SOURCE_DIR}/ntoskrnl/po/poreq.c
+    ${REACTOS_SOURCE_DIR}/ntoskrnl/po/posett.c
+    ${REACTOS_SOURCE_DIR}/ntoskrnl/po/shtdwn.c
+    ${REACTOS_SOURCE_DIR}/ntoskrnl/po/state.c
+    ${REACTOS_SOURCE_DIR}/ntoskrnl/po/thermreq.c
+    ${REACTOS_SOURCE_DIR}/ntoskrnl/po/thermzn.c
+    ${REACTOS_SOURCE_DIR}/ntoskrnl/po/thrtmgr.c
+    ${REACTOS_SOURCE_DIR}/ntoskrnl/po/voldope.c
+    ${REACTOS_SOURCE_DIR}/ntoskrnl/po/wakesrc.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/ps/apphelp.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/ps/debug.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/ps/job.c
@@ -299,6 +328,7 @@ list(APPEND SOURCE
     ${REACTOS_SOURCE_DIR}/ntoskrnl/wmi/wmidrv.c)
 
 if(DBG)
+    list(APPEND SOURCE ${REACTOS_SOURCE_DIR}/ntoskrnl/po/debug.c)
     list(APPEND SOURCE ${REACTOS_SOURCE_DIR}/ntoskrnl/se/debug.c)
 endif()
 
