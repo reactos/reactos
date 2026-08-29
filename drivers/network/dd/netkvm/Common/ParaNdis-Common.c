@@ -818,6 +818,15 @@ NDIS_STATUS ParaNdis_InitializeContext(
             pContext->bHasControlQueue = TRUE;
             VirtIODeviceEnableGuestFeature(pContext, VIRTIO_NET_F_CTRL_VQ);
         }
+        if (VirtIODeviceGetHostFeature(pContext, VIRTIO_NET_F_CTRL_RX)) {
+            VirtIODeviceEnableGuestFeature(pContext, VIRTIO_NET_F_CTRL_RX);
+        }
+        if (VirtIODeviceGetHostFeature(pContext, VIRTIO_NET_F_CTRL_RX_EXTRA)) {
+            VirtIODeviceEnableGuestFeature(pContext, VIRTIO_NET_F_CTRL_RX_EXTRA);
+        }
+        if (VirtIODeviceGetHostFeature(pContext, VIRTIO_NET_F_CTRL_VLAN)) {
+            VirtIODeviceEnableGuestFeature(pContext, VIRTIO_NET_F_CTRL_VLAN);
+        }
     }
     else
     {
@@ -881,7 +890,9 @@ NDIS_STATUS ParaNdis_InitializeContext(
         DPrintf(0, ("[%s] %sable indirect Tx(!%s)", __FUNCTION__, pContext->bUseIndirect ? "En" : "Dis", reason) );
     }
 
-    if (VirtIODeviceGetHostFeature(pContext, VIRTIO_NET_F_CTRL_RX_EXTRA) &&
+    if (pContext->bHasControlQueue &&
+        VirtIODeviceGetHostFeature(pContext, VIRTIO_NET_F_CTRL_RX) &&
+        VirtIODeviceGetHostFeature(pContext, VIRTIO_NET_F_CTRL_RX_EXTRA) &&
         pContext->bDoHwPacketFiltering)
     {
         DPrintf(0, ("[%s] Using hardware packet filtering", __FUNCTION__));
@@ -2683,7 +2694,8 @@ static VOID SetAllVlanFilters(PARANDIS_ADAPTER *pContext, BOOLEAN bOn)
 */
 VOID ParaNdis_DeviceFiltersUpdateVlanId(PARANDIS_ADAPTER *pContext)
 {
-    if (pContext->bHasHardwareFilters)
+    if (pContext->bHasHardwareFilters &&
+        VirtIODeviceGetHostFeature(pContext, VIRTIO_NET_F_CTRL_VLAN))
     {
         ULONG newFilterSet;
         if (IsVlanSupported(pContext))
