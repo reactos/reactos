@@ -567,7 +567,7 @@
 @ stdcall GetProcAddress(long str)
 @ stdcall GetProcessAffinityMask(long ptr ptr)
 @ stdcall -stub -version=0x601+ GetProcessGroupAffinity(ptr ptr ptr)
-@ stdcall GetProcessDEPPolicy(long ptr ptr)
+@ stdcall GetProcessDEPPolicy(ptr ptr ptr)
 @ stdcall GetProcessHandleCount(long ptr)
 @ stdcall -norelay GetProcessHeap()
 @ stdcall GetProcessHeaps(long ptr)
