@@ -9599,19 +9599,49 @@ START_TEST(htmldoc)
     register_protocol();
 
     asynchronous_binding = TRUE;
+#ifdef __REACTOS__
+    if (!is_reactos() && (GetNTVersion() >= _WIN32_WINNT_WS03)) {
+        win_skip("These tests crash on Windows Server 2003/2008.\n");
+    }
+    else
+    {
+#endif
     test_HTMLDocument_hlink(HTTP_STATUS_NOT_FOUND);
 
     asynchronous_binding = FALSE;
     test_HTMLDocument_hlink(HTTP_STATUS_OK);
+#ifdef __REACTOS__
+    }
+#endif
     test_HTMLDocument(FALSE, TRUE);
+#ifdef __REACTOS__
+    if (!is_reactos() && (GetNTVersion() >= _WIN32_WINNT_WS03)) {
+        win_skip("These tests crash on Windows Server 2003/2008.\n");
+    }
+    else
+    {
+#endif
     test_HTMLDocument(TRUE, FALSE);
     test_HTMLDocument(TRUE, TRUE);
     test_HTMLDocument_StreamLoad();
     test_HTMLDocument_StreamInitNew();
+#ifdef __REACTOS__
+    }
+#endif
     test_MHTMLDocument();
+#ifdef __REACTOS__
+    if (!is_reactos() && (GetNTVersion() >= _WIN32_WINNT_WS03)) {
+        win_skip("Thise tests crash on Windows Server 2003/2008.\n");
+    }
+    else
+    {
+#endif
     test_editing_mode(FALSE, FALSE);
     test_editing_mode(TRUE, FALSE);
     test_editing_mode(TRUE, TRUE);
+#ifdef __REACTOS__
+    }
+#endif
     test_HTMLDocument_http(FALSE);
     test_HTMLDocument_http(TRUE);
     test_submit();
