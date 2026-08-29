@@ -181,7 +181,7 @@ NTAPI
 RtlpLFHSizeFits(
     _In_ SIZE_T Size)
 {
-    return (Size + sizeof(HEAP_ENTRY)) < LFH_MAX_BLOCK_SIZE;
+    return Size <= 3840;
 }
 
 SIZE_T
