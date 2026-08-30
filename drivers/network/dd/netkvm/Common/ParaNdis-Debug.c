@@ -110,6 +110,7 @@ static void __cdecl DebugPrint(const char *fmt, ...)
     va_list list;
     va_start(list, fmt);
     PrintProcedure(DPFLTR_DEFAULT_ID, 9 | DPFLTR_MASK, fmt, list);
+    va_end(list);
 #if defined(VIRTIO_DBG_USE_IOPORT)
     {
         NTSTATUS status;
@@ -120,7 +121,10 @@ static void __cdecl DebugPrint(const char *fmt, ...)
             char buf[256];
             size_t len, i;
             buf[0] = 0;
+            // The list was consumed above; start a fresh one for the second pass
+            va_start(list, fmt);
             status = RtlStringCbVPrintfA(buf, sizeof(buf), fmt, list);
+            va_end(list);
             if (status == STATUS_SUCCESS) len = strlen(buf);
             else if (status == STATUS_BUFFER_OVERFLOW) len = sizeof(buf);
             else { memcpy(buf, "Can't print", 11); len = 11; }
