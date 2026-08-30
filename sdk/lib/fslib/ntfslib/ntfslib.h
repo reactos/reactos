@@ -141,8 +141,6 @@
 #define FILE_TYPE_COMPRESSED 0x800
 #define FILE_TYPE_DIRECTORY  0x10000000
 
-#define FILE_CASE_SENSITIVE  FALSE
-
 // Indexed Flag in Resident attributes - still somewhat speculative
 #define RA_INDEXED  0x01
 
