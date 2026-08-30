@@ -2657,6 +2657,15 @@ ExitUser:
 
     if (Status == STATUS_NO_MEMORY)
     {
+        /* Don't wait on the balancer while holding AddressCreationLock */
+        if (CurrentProcess->AddressCreationLock.Owner == KeGetCurrentThread())
+        {
+            static LARGE_INTEGER TinyTime = {{-1L, -1L}};
+            MmRebalanceMemoryConsumers();
+            KeDelayExecutionThread(KernelMode, FALSE, &TinyTime);
+            goto UserFault;
+        }
+
         MmRebalanceMemoryConsumersAndWait();
         goto UserFault;
     }
