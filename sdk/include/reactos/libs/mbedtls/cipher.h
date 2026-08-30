@@ -135,6 +135,11 @@ typedef enum {
     MBEDTLS_CIPHER_AES_128_CBC,          /**< AES cipher with 128-bit CBC mode. */
     MBEDTLS_CIPHER_AES_192_CBC,          /**< AES cipher with 192-bit CBC mode. */
     MBEDTLS_CIPHER_AES_256_CBC,          /**< AES cipher with 256-bit CBC mode. */
+#ifdef __REACTOS__
+    MBEDTLS_CIPHER_AES_128_CFB8,         /**< AES cipher with 128-bit CFB8 mode. */
+    MBEDTLS_CIPHER_AES_192_CFB8,         /**< AES cipher with 192-bit CFB8 mode. */
+    MBEDTLS_CIPHER_AES_256_CFB8,         /**< AES cipher with 256-bit CFB8 mode. */
+#endif
     MBEDTLS_CIPHER_AES_128_CFB128,       /**< AES cipher with 128-bit CFB128 mode. */
     MBEDTLS_CIPHER_AES_192_CFB128,       /**< AES cipher with 192-bit CFB128 mode. */
     MBEDTLS_CIPHER_AES_256_CFB128,       /**< AES cipher with 256-bit CFB128 mode. */
