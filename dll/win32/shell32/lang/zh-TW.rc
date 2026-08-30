@@ -944,7 +944,7 @@ BEGIN
     IDS_CANTDISCONNECT "無法中斷。 (錯誤碼：%lu)"
     IDS_NONE "(無)"
 
-    IDS_EXPAND "展開(&X)"
+    IDS_EXPAND "展開(&A)"
     IDS_COLLAPSE "摺疊(&A)"
 
     /* Friendly File Type Names */
