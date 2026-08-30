@@ -129,7 +129,6 @@ BOOL FASTCALL UserPostMessage(HWND Wnd,UINT Msg, WPARAM wParam, LPARAM lParam);
 PWND FASTCALL UserGetWindowObject(HWND hWnd);
 VOID FASTCALL co_DestroyThreadWindows(struct _ETHREAD *Thread);
 HWND FASTCALL UserGetShellWindow(VOID);
-HDC FASTCALL UserGetDCEx(PWND Window OPTIONAL, HRGN ClipRegion, ULONG Flags);
 BOOLEAN co_UserDestroyWindow(PVOID Object);
 PWND FASTCALL UserGetAncestor(PWND Wnd, UINT Type);
 BOOL APIENTRY DefSetText(PWND Wnd, PCWSTR WindowText);
