@@ -4524,7 +4524,14 @@ ftGdiGetGlyphOutline(
     }
 
     IntLockFreeType();
-    TextIntUpdateSize(TextObj, FontGDI, FALSE);
+    if (!TextIntUpdateSize(TextObj, FontGDI, FALSE))
+    {
+        IntUnLockFreeType();
+        ExFreePoolWithTag(potm, GDITAG_TEXT);
+        TEXTOBJ_UnlockText(TextObj);
+        EngSetLastError(ERROR_GEN_FAILURE);
+        return GDI_ERROR;
+    }
     IntMatrixFromMx(&mat, DC_pmxWorldToDevice(dc));
     FT_Set_Transform(ft_face, &mat, NULL);
 
@@ -4543,14 +4550,14 @@ ftGdiGetGlyphOutline(
     }
 
     error = FT_Load_Glyph(ft_face, glyph_index, load_flags);
+    IntUnLockFreeType();
+
     if (error)
     {
         DPRINT1("WARNING: Failed to load and render glyph! [index: %u]\n", glyph_index);
-        IntUnLockFreeType();
-        if (potm) ExFreePoolWithTag(potm, GDITAG_TEXT);
+        ExFreePoolWithTag(potm, GDITAG_TEXT);
         return GDI_ERROR;
     }
-    IntUnLockFreeType();
 
     FLOATOBJ_Set1(&widthRatio);
     if (aveWidth && potm)
@@ -5015,7 +5022,11 @@ TextIntGetTextExtentPoint(
 
     // NOTE: GetTextExtentPoint32 simply ignores lfEscapement and XFORM.
     IntLockFreeType();
-    TextIntUpdateSize(TextObj, FontGDI, FALSE);
+    if (!TextIntUpdateSize(TextObj, FontGDI, FALSE))
+    {
+        IntUnLockFreeType();
+        return FALSE;
+    }
     Cache.Hashed.matTransform = identityMat;
     FT_Set_Transform(Cache.Hashed.Face, NULL, NULL);
 
