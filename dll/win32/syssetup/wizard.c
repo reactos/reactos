@@ -1583,7 +1583,7 @@ LocalePageDlgProc(HWND hwndDlg,
     PSETUPDATA SetupData;
 
     /* Retrieve pointer to the global setup data */
-    SetupData = (PSETUPDATA)GetWindowLongPtr(hwndDlg, GWLP_USERDATA);
+    SetupData = (PSETUPDATA)GetWindowLongPtr(hwndDlg, DWLP_USER);
 
     switch (uMsg)
     {
@@ -1591,7 +1591,7 @@ LocalePageDlgProc(HWND hwndDlg,
         {
             /* Save pointer to the global setup data */
             SetupData = (PSETUPDATA)((LPPROPSHEETPAGE)lParam)->lParam;
-            SetWindowLongPtr(hwndDlg, GWLP_USERDATA, (DWORD_PTR)SetupData);
+            SetWindowLongPtr(hwndDlg, DWLP_USER, (DWORD_PTR)SetupData);
             WriteUserLocale();
 
             SetUserLocaleName(GetDlgItem(hwndDlg, IDC_LOCALETEXT));
@@ -1999,7 +1999,7 @@ DateTimePageDlgProc(HWND hwndDlg,
     PSETUPDATA SetupData;
 
     /* Retrieve pointer to the global setup data */
-    SetupData = (PSETUPDATA)GetWindowLongPtr(hwndDlg, GWLP_USERDATA);
+    SetupData = (PSETUPDATA)GetWindowLongPtr(hwndDlg, DWLP_USER);
 
     switch (uMsg)
     {
@@ -2010,7 +2010,7 @@ DateTimePageDlgProc(HWND hwndDlg,
 
             /* Save pointer to the global setup data */
             SetupData = (PSETUPDATA)((LPPROPSHEETPAGE)lParam)->lParam;
-            SetWindowLongPtr(hwndDlg, GWLP_USERDATA, (DWORD_PTR)SetupData);
+            SetWindowLongPtr(hwndDlg, DWLP_USER, (DWORD_PTR)SetupData);
 
             CreateTimeZoneList(SetupData);
 
@@ -2146,7 +2146,7 @@ ThemePageDlgProc(HWND hwndDlg,
     LPNMLISTVIEW pnmv;
 
     /* Retrieve pointer to the global setup data */
-    SetupData = (PSETUPDATA)GetWindowLongPtr(hwndDlg, GWLP_USERDATA);
+    SetupData = (PSETUPDATA)GetWindowLongPtr(hwndDlg, DWLP_USER);
 
     switch (uMsg)
     {
@@ -2159,7 +2159,7 @@ ThemePageDlgProc(HWND hwndDlg,
 
             /* Save pointer to the global setup data */
             SetupData = (PSETUPDATA)((LPPROPSHEETPAGE)lParam)->lParam;
-            SetWindowLongPtr(hwndDlg, GWLP_USERDATA, (DWORD_PTR)SetupData);
+            SetWindowLongPtr(hwndDlg, DWLP_USER, (DWORD_PTR)SetupData);
 
             hListView = GetDlgItem(hwndDlg, IDC_THEMEPICKER);
 
@@ -2653,7 +2653,7 @@ ProcessPageDlgProc(HWND hwndDlg,
     static HFONT s_hNormalFont;
 
     /* Retrieve pointer to the global setup data */
-    SetupData = (PSETUPDATA)GetWindowLongPtr(hwndDlg, GWLP_USERDATA);
+    SetupData = (PSETUPDATA)GetWindowLongPtr(hwndDlg, DWLP_USER);
 
     switch (uMsg)
     {
@@ -2661,7 +2661,7 @@ ProcessPageDlgProc(HWND hwndDlg,
         {
             /* Save pointer to the global setup data */
             SetupData = (PSETUPDATA)((LPPROPSHEETPAGE)lParam)->lParam;
-            SetWindowLongPtr(hwndDlg, GWLP_USERDATA, (DWORD_PTR)SetupData);
+            SetWindowLongPtr(hwndDlg, DWLP_USER, (DWORD_PTR)SetupData);
             ShowDlgItem(hwndDlg, IDC_TASKTEXT5, SW_HIDE);
             ShowDlgItem(hwndDlg, IDC_CHECK5, SW_HIDE);
             s_hCheckIcon = LoadImageW(hDllInstance, MAKEINTRESOURCEW(IDI_CHECKICON), IMAGE_ICON, 16, 16, 0);

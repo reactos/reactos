@@ -765,7 +765,7 @@ StatusMessageWindowProc(
     PDLG_DATA pDlgData;
     UNREFERENCED_PARAMETER(wParam);
 
-    pDlgData = (PDLG_DATA)GetWindowLongPtrW(hwndDlg, GWLP_USERDATA);
+    pDlgData = (PDLG_DATA)GetWindowLongPtrW(hwndDlg, DWLP_USER);
 
     /* pDlgData is required for each case except WM_INITDIALOG */
     if (uMsg != WM_INITDIALOG && pDlgData == NULL) return FALSE;
@@ -781,8 +781,8 @@ StatusMessageWindowProc(
             pDlgData = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*pDlgData));
             if (pDlgData)
             {
-                /* Set pDlgData to GWLP_USERDATA, so we can get it for new messages */
-                SetWindowLongPtrW(hwndDlg, GWLP_USERDATA, (LONG_PTR)pDlgData);
+                /* Set pDlgData to DWLP_USER, so we can get it for new messages */
+                SetWindowLongPtrW(hwndDlg, DWLP_USER, (LONG_PTR)pDlgData);
 
                 /* Load bitmaps */
                 pDlgData->hLogoBitmap = LoadImageW(hDllInstance,

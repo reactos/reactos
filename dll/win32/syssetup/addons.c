@@ -142,7 +142,7 @@ InstallOptionalComponents(
 
     /* The last element in Addons is null, don't count it as a step. */
     SendMessage(pItemsData->hwndDlg, PM_ITEM_START, 3, (LPARAM)(ARRAYSIZE(Addons) - 1));
-    pSetupData = (PSETUPDATA)GetWindowLongPtr(pItemsData->hwndDlg, GWLP_USERDATA);
+    pSetupData = (PSETUPDATA)GetWindowLongPtr(pItemsData->hwndDlg, DWLP_USER);
 
     if (pSetupData->UnattendSetup)
         Consent = pSetupData->RappsDownload ? APPROVED : DENIED;
