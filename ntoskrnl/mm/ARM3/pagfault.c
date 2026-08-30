@@ -1331,7 +1331,7 @@ MiResolveProtoPteFault(IN BOOLEAN StoreInstruction,
 #if MI_TRACE_PFNS
         /* Update debug info */
         if (TrapInformation)
-            MiGetPfnEntry(PointerProtoPte->u.Hard.PageFrameNumber)->CallSite = (PVOID)((PKTRAP_FRAME)TrapInformation)->Eip;
+            MiGetPfnEntry(PointerProtoPte->u.Hard.PageFrameNumber)->CallSite = (PVOID)KeGetTrapFramePc(TrapInformation);
         else
             MiGetPfnEntry(PointerProtoPte->u.Hard.PageFrameNumber)->CallSite = _ReturnAddress();
 #endif
@@ -1690,7 +1690,7 @@ MiDispatchFault(IN ULONG FaultCode,
 #if MI_TRACE_PFNS
         /* Update debug info */
         if (TrapInformation)
-            MiGetPfnEntry(PointerPte->u.Hard.PageFrameNumber)->CallSite = (PVOID)((PKTRAP_FRAME)TrapInformation)->Eip;
+            MiGetPfnEntry(PointerPte->u.Hard.PageFrameNumber)->CallSite = (PVOID)KeGetTrapFramePc(TrapInformation);
         else
             MiGetPfnEntry(PointerPte->u.Hard.PageFrameNumber)->CallSite = _ReturnAddress();
 #endif
@@ -2270,7 +2270,7 @@ UserFault:
         UserPdeFault = FALSE;
         /* Update debug info */
         if (TrapInformation)
-            MiGetPfnEntry(PointerPde->u.Hard.PageFrameNumber)->CallSite = (PVOID)((PKTRAP_FRAME)TrapInformation)->Eip;
+            MiGetPfnEntry(PointerPde->u.Hard.PageFrameNumber)->CallSite = (PVOID)KeGetTrapFramePc(TrapInformation);
         else
             MiGetPfnEntry(PointerPde->u.Hard.PageFrameNumber)->CallSite = _ReturnAddress();
 #endif
@@ -2393,7 +2393,7 @@ UserFault:
 #if MI_TRACE_PFNS
         /* Update debug info */
         if (TrapInformation)
-            MiGetPfnEntry(PointerPte->u.Hard.PageFrameNumber)->CallSite = (PVOID)((PKTRAP_FRAME)TrapInformation)->Eip;
+            MiGetPfnEntry(PointerPte->u.Hard.PageFrameNumber)->CallSite = (PVOID)KeGetTrapFramePc(TrapInformation);
         else
             MiGetPfnEntry(PointerPte->u.Hard.PageFrameNumber)->CallSite = _ReturnAddress();
 #endif
