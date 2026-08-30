@@ -655,9 +655,12 @@ NDIS_STATUS ParaNdis_OnSetVlanId(PARANDIS_ADAPTER *pContext, tOidDesc *pOid)
     if (IsVlanSupported(pContext))
     {
         status = ParaNdis_OidSetCopy(pOid, &pContext->VlanId, sizeof(pContext->VlanId));
-        pContext->VlanId &= 0xfff;
-        DPrintf(0, ("[%s] new value %d on MAC %X", __FUNCTION__, pContext->VlanId, pContext->CurrentMacAddress[5]));
-        ParaNdis_DeviceFiltersUpdateVlanId(pContext);
+        if (status == NDIS_STATUS_SUCCESS)
+        {
+            pContext->VlanId &= 0xfff;
+            DPrintf(0, ("[%s] new value %d on MAC %X", __FUNCTION__, pContext->VlanId, pContext->CurrentMacAddress[5]));
+            ParaNdis_DeviceFiltersUpdateVlanId(pContext);
+        }
     }
     return status;
 }
