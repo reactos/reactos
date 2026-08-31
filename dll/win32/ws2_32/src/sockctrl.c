@@ -460,7 +460,7 @@ setsockopt(IN SOCKET s,
 
             return Status;
         }
-        if (!optval && optlen > 0)
+        if ((!optval && optlen > 0) || optlen < 0)
         {
             SetLastError(WSAEFAULT);
             return SOCKET_ERROR;
