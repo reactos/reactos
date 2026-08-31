@@ -1755,12 +1755,11 @@ ObpCloseHandle(IN HANDLE Handle,
     PHANDLE_TABLE_ENTRY HandleTableEntry;
     NTSTATUS Status;
     PEPROCESS Process = PsGetCurrentProcess();
+
     PAGED_CODE();
+
     OBTRACE(OB_HANDLE_DEBUG,
             "%s - Closing handle: %p\n", __FUNCTION__, Handle);
-
-    if (AccessMode == KernelMode && Handle == (HANDLE)-1)
-        return STATUS_INVALID_HANDLE;
 
     /* Check if we're dealing with a kernel handle */
     if (ObpIsKernelHandle(Handle, AccessMode))
@@ -1781,6 +1780,12 @@ ObpCloseHandle(IN HANDLE Handle,
     {
         /* Use the process's handle table */
         HandleTable = Process->ObjectTable;
+
+#if 0 // FIXME: Suggestion disabled for testing purposes.
+        /* If this is the kernel table, while the handle is user-mode handle, fail */
+        if (HandleTable == ObpKernelHandleTable)
+            return STATUS_INVALID_HANDLE;
+#endif
     }
 
     /* Enter a critical region to protect handle access */
