@@ -13,7 +13,7 @@ BEGIN
     BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Su&ai Tarikh/Masa", ID_SHELL_CMD_ADJUST_DAT
-        MENUITEM "Menyesuaikan &Pemberitahuan...", ID_SHELL_CMD_CUST_NOTIF
+        MENUITEM "Menyesuaikan &Notifikasi...", ID_SHELL_CMD_CUST_NOTIF
         MENUITEM SEPARATOR
         MENUITEM "Tetingkap &Lata", ID_SHELL_CMD_CASCADE_WND
         MENUITEM "Tetingkap Jubin Melin&tang", ID_SHELL_CMD_TILE_WND_H
