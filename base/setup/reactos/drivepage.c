@@ -220,7 +220,7 @@ MoreOptDlgProc(
     PSETUPDATA pSetupData;
 
     /* Retrieve pointer to the global setup data */
-    pSetupData = (PSETUPDATA)GetWindowLongPtrW(hDlg, GWLP_USERDATA);
+    pSetupData = (PSETUPDATA)GetWindowLongPtrW(hDlg, DWLP_USER);
 
     switch (uMsg)
     {
@@ -235,7 +235,7 @@ MoreOptDlgProc(
 
             /* Save pointer to the global setup data */
             pSetupData = (PSETUPDATA)lParam;
-            SetWindowLongPtrW(hDlg, GWLP_USERDATA, (LONG_PTR)pSetupData);
+            SetWindowLongPtrW(hDlg, DWLP_USER, (LONG_PTR)pSetupData);
 
             /* Subclass the install-dir edit control */
             hEdit = GetDlgItem(hDlg, IDC_PATH);
@@ -581,7 +581,7 @@ FormatDlgProc(
     PPARTCREATE_CTX PartCreateCtx;
 
     /* Retrieve dialog context pointer */
-    PartCreateCtx = (PPARTCREATE_CTX)GetWindowLongPtrW(hDlg, GWLP_USERDATA);
+    PartCreateCtx = (PPARTCREATE_CTX)GetWindowLongPtrW(hDlg, DWLP_USER);
 
     switch (uMsg)
     {
@@ -589,7 +589,7 @@ FormatDlgProc(
         {
             /* Save dialog context pointer */
             PartCreateCtx = (PPARTCREATE_CTX)lParam;
-            SetWindowLongPtrW(hDlg, GWLP_USERDATA, (LONG_PTR)PartCreateCtx);
+            SetWindowLongPtrW(hDlg, DWLP_USER, (LONG_PTR)PartCreateCtx);
 
             /* We actually want to format, so set the flag */
             PartCreateCtx->ForceFormat = TRUE;
@@ -644,7 +644,7 @@ PartitionDlgProc(
     PPARTCREATE_CTX PartCreateCtx;
 
     /* Retrieve dialog context pointer */
-    PartCreateCtx = (PPARTCREATE_CTX)GetWindowLongPtrW(hDlg, GWLP_USERDATA);
+    PartCreateCtx = (PPARTCREATE_CTX)GetWindowLongPtrW(hDlg, DWLP_USER);
 
     switch (uMsg)
     {
@@ -656,7 +656,7 @@ PartitionDlgProc(
 
             /* Save dialog context pointer */
             PartCreateCtx = (PPARTCREATE_CTX)lParam;
-            SetWindowLongPtrW(hDlg, GWLP_USERDATA, (LONG_PTR)PartCreateCtx);
+            SetWindowLongPtrW(hDlg, DWLP_USER, (LONG_PTR)PartCreateCtx);
 
             /* Retrieve the selected partition */
             PartEntry = PartCreateCtx->PartItem->PartEntry;
@@ -1766,7 +1766,7 @@ DriveDlgProc(
     HWND hList;
 
     /* Retrieve pointer to the global setup data */
-    pSetupData = (PSETUPDATA)GetWindowLongPtrW(hwndDlg, GWLP_USERDATA);
+    pSetupData = (PSETUPDATA)GetWindowLongPtrW(hwndDlg, DWLP_USER);
 
     switch (uMsg)
     {
@@ -1774,7 +1774,7 @@ DriveDlgProc(
         {
             /* Save pointer to the global setup data */
             pSetupData = (PSETUPDATA)((LPPROPSHEETPAGEW)lParam)->lParam;
-            SetWindowLongPtrW(hwndDlg, GWLP_USERDATA, (LONG_PTR)pSetupData);
+            SetWindowLongPtrW(hwndDlg, DWLP_USER, (LONG_PTR)pSetupData);
 
             /* Initially hide and disable all partitioning buttons */
             ShowDlgItem(hwndDlg, IDC_INITDISK, SW_HIDE);

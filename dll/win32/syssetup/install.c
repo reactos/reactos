@@ -765,7 +765,7 @@ StatusMessageWindowProc(
     PDLG_DATA pDlgData;
     UNREFERENCED_PARAMETER(wParam);
 
-    pDlgData = (PDLG_DATA)GetWindowLongPtrW(hwndDlg, GWLP_USERDATA);
+    pDlgData = (PDLG_DATA)GetWindowLongPtrW(hwndDlg, DWLP_USER);
 
     /* pDlgData is required for each case except WM_INITDIALOG */
     if (uMsg != WM_INITDIALOG && pDlgData == NULL) return FALSE;
@@ -781,8 +781,8 @@ StatusMessageWindowProc(
             pDlgData = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*pDlgData));
             if (pDlgData)
             {
-                /* Set pDlgData to GWLP_USERDATA, so we can get it for new messages */
-                SetWindowLongPtrW(hwndDlg, GWLP_USERDATA, (LONG_PTR)pDlgData);
+                /* Set pDlgData to DWLP_USER, so we can get it for new messages */
+                SetWindowLongPtrW(hwndDlg, DWLP_USER, (LONG_PTR)pDlgData);
 
                 /* Load bitmaps */
                 pDlgData->hLogoBitmap = LoadImageW(hDllInstance,
@@ -1067,6 +1067,7 @@ static BOOL
 CommonInstall(VOID)
 {
     HANDLE hThread = NULL;
+    DWORD dwThreadId = 0;
     BOOL bResult = FALSE;
 
     hSysSetupInf = SetupOpenInfFileW(L"syssetup.inf",
@@ -1098,7 +1099,7 @@ CommonInstall(VOID)
                                ShowStatusMessageThread,
                                NULL,
                                0,
-                               NULL);
+                               &dwThreadId);
     }
 
     if (!EnableUserModePnpManager())
@@ -1123,7 +1124,7 @@ Exit:
 
     if (hThread != NULL)
     {
-        PostThreadMessage(GetThreadId(hThread), WM_QUIT, 0, 0);
+        PostThreadMessage(dwThreadId, WM_QUIT, 0, 0);
         WaitForSingleObject(hThread, INFINITE);
         CloseHandle(hThread);
     }
@@ -1592,10 +1593,9 @@ static
 DWORD
 InstallReactOS(VOID)
 {
-    WCHAR szBuffer[MAX_PATH];
-    HKEY hKey;
-    HANDLE hHotkeyThread;
     BOOL ret;
+    DWORD dwHotkeyThreadId = 0;
+    WCHAR szBuffer[MAX_PATH];
 
     InitializeSetupActionLog(FALSE);
     LogItem(NULL, L"Installing ReactOS");
@@ -1619,6 +1619,7 @@ InstallReactOS(VOID)
 
     if (GetWindowsDirectoryW(szBuffer, ARRAYSIZE(szBuffer)))
     {
+        HKEY hKey;
         if (RegOpenKeyExW(HKEY_LOCAL_MACHINE,
                           L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion",
                           0,
@@ -1659,7 +1660,8 @@ InstallReactOS(VOID)
         goto Quit;
     }
 
-    hHotkeyThread = CreateThread(NULL, 0, HotkeyThread, NULL, 0, NULL);
+    /* Start the hotkey thread */
+    CloseHandle(CreateThread(NULL, 0, HotkeyThread, NULL, 0, &dwHotkeyThreadId));
 
     PreprocessUnattend(TRUE);
     if (!CommonInstall())
@@ -1686,11 +1688,9 @@ InstallReactOS(VOID)
     SetupCloseInfFile(hSysSetupInf);
     SetSetupType(0);
 
-    if (hHotkeyThread)
-    {
-        PostThreadMessage(GetThreadId(hHotkeyThread), WM_QUIT, 0, 0);
-        CloseHandle(hHotkeyThread);
-    }
+    /* Stop the hotkey thread */
+    if (dwHotkeyThreadId)
+        PostThreadMessage(dwHotkeyThreadId, WM_QUIT, 0, 0);
 
     LogItem(NULL, L"Installing ReactOS done");
     TerminateSetupActionLog();
