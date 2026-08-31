@@ -1,0 +1,69 @@
+{
+    "problemMatcher": [
+        {
+            "owner": "gcc",
+            "severity": "error",
+            "pattern": [
+                {
+                    "regexp": "^(.+):(\\d+):(\\d+):\\s+(fatal error|error|warning|note):\\s+(.*)$",
+                    "file": 1,
+                    "line": 2,
+                    "column": 3,
+                    "severity": 4,
+                    "message": 5
+                }
+            ]
+        },
+        {
+            "owner": "msvc",
+            "pattern": [
+                {
+                    "regexp": "^(?:\\s+\\d+\\>)?([^\\s].*)\\((\\d+),?(\\d+)?(?:,\\d+,\\d+)?\\)\\s*:\\s+(error|warning|info)\\s+(\\w{1,2}\\d+)\\s*:\\s*(.*)$",
+                    "file": 1,
+                    "line": 2,
+                    "column": 3,
+                    "severity": 4,
+                    "code": 5,
+                    "message": 6
+                }
+            ]
+        },
+        {
+            "owner": "clang",
+            "pattern": [
+                {
+                    "regexp": "^(.*?)\\((\\d+),(\\d+)\\):\\s+(warning|error|note):\\s+(.*)$",
+                    "file": 1,
+                    "line": 2,
+                    "column": 3,
+                    "severity": 4,
+                    "message": 5
+                }
+            ]
+        },
+        {
+            "owner": "msvc-linker",
+            "pattern": [
+                {
+                    "regexp": "^(.*?)\\s*:\\s*(fatal error|error|warning)\\s+([A-Z0-9]+)\\s*:\\s*(.*)$",
+                    "file": 1,
+                    "severity": 2,
+                    "code": 3,
+                    "message": 4
+                }
+            ]
+        },
+        {
+            "owner": "gcc-linker",
+            "severity": "error",
+            "pattern": [
+                {
+                    "regexp": "^(.*?(?:ld|collect2)(?:\\.exe)?):\\s*(?:(warning|error|fatal error):?\\s+)?(.*)$",
+                    "file": 1,
+                    "severity": 2,
+                    "message": 3
+                }
+            ]
+        }
+    ]
+}
