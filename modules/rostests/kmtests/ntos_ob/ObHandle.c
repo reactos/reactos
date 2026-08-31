@@ -242,13 +242,22 @@ START_TEST(ObHandle)
         Status = NtClose(NULL);
         ok_eq_hex(Status, STATUS_INVALID_HANDLE);
         DPRINT("Closing null kernel handle (NtClose)\n");
-        Status = NtClose(LongToHandle(0x80000000));
+        Status = NtClose(LongToHandle(KERNEL_HANDLE_FLAG));
         ok_eq_hex(Status, STATUS_INVALID_HANDLE);
-        DPRINT("Closing -1 handle (NtClose)\n");
-        Status = NtClose(LongToHandle(0x7FFFFFFF));
+        DPRINT("Closing NtCurrentProcess() handle (NtClose)\n");
+        Status = NtClose(NtCurrentProcess() & ~KERNEL_HANDLE_FLAG);
         ok_eq_hex(Status, STATUS_INVALID_HANDLE);
-        DPRINT("Closing -1 kernel handle (NtClose)\n");
-        Status = NtClose(LongToHandle(0xFFFFFFFF));
+        DPRINT("Closing NtCurrentProcess() kernel handle (NtClose)\n");
+        Status = NtClose(NtCurrentProcess() | KERNEL_HANDLE_FLAG);
+        if (GetNTVersion() >= _WIN32_WINNT_WIN10)
+            ok_eq_hex(Status, STATUS_SUCCESS);
+        else
+            ok_eq_hex(Status, STATUS_INVALID_HANDLE);
+        DPRINT("Closing NtCurrentThread() handle (NtClose)\n");
+        Status = NtClose(NtCurrentThread() & ~KERNEL_HANDLE_FLAG);
+        ok_eq_hex(Status, STATUS_INVALID_HANDLE);
+        DPRINT("Closing NtCurrentThread() kernel handle (NtClose)\n");
+        Status = NtClose(NtCurrentThread() | KERNEL_HANDLE_FLAG);
         if (GetNTVersion() >= _WIN32_WINNT_WIN10)
             ok_eq_hex(Status, STATUS_SUCCESS);
         else
@@ -260,7 +269,7 @@ START_TEST(ObHandle)
         else if (GetNTVersion() != _WIN32_WINNT_WS03)
             ok_eq_hex(Status, STATUS_INVALID_HANDLE);
         DPRINT("Closing 123 kernel handle (NtClose)\n");
-        Status = NtClose(LongToHandle(123 | 0x80000000));
+        Status = NtClose(LongToHandle(123 | KERNEL_HANDLE_FLAG));
         ok_eq_hex(Status, STATUS_INVALID_HANDLE);
 
         /* ObCloseHandle with UserMode accepts everything */
@@ -268,13 +277,22 @@ START_TEST(ObHandle)
         Status = ObCloseHandle(NULL, UserMode);
         ok_eq_hex(Status, STATUS_INVALID_HANDLE);
         DPRINT("Closing null kernel handle (ObCloseHandle, UserMode)\n");
-        Status = ObCloseHandle(LongToHandle(0x80000000), UserMode);
+        Status = ObCloseHandle(LongToHandle(KERNEL_HANDLE_FLAG), UserMode);
         ok_eq_hex(Status, STATUS_INVALID_HANDLE);
-        DPRINT("Closing -1 handle (ObCloseHandle, UserMode)\n");
-        Status = ObCloseHandle(LongToHandle(0x7FFFFFFF), UserMode);
+        DPRINT("Closing NtCurrentProcess() handle (ObCloseHandle, UserMode)\n");
+        Status = ObCloseHandle(NtCurrentProcess() & ~KERNEL_HANDLE_FLAG, UserMode);
         ok_eq_hex(Status, STATUS_INVALID_HANDLE);
-        DPRINT("Closing -1 kernel handle (ObCloseHandle, UserMode)\n");
-        Status = ObCloseHandle(LongToHandle(0xFFFFFFFF), UserMode);
+        DPRINT("Closing NtCurrentProcess() kernel handle (ObCloseHandle, UserMode)\n");
+        Status = ObCloseHandle(NtCurrentProcess() | KERNEL_HANDLE_FLAG, UserMode);
+        if (GetNTVersion() >= _WIN32_WINNT_WIN10)
+            ok_eq_hex(Status, STATUS_SUCCESS);
+        else
+            ok_eq_hex(Status, STATUS_INVALID_HANDLE);
+        DPRINT("Closing NtCurrentProcess() handle (ObCloseHandle, UserMode)\n");
+        Status = ObCloseHandle(NtCurrentThread() & ~KERNEL_HANDLE_FLAG, UserMode);
+        ok_eq_hex(Status, STATUS_INVALID_HANDLE);
+        DPRINT("Closing NtCurrentProcess() kernel handle (ObCloseHandle, UserMode)\n");
+        Status = ObCloseHandle(NtCurrentThread() | KERNEL_HANDLE_FLAG, UserMode);
         if (GetNTVersion() >= _WIN32_WINNT_WIN10)
             ok_eq_hex(Status, STATUS_SUCCESS);
         else
@@ -283,7 +301,7 @@ START_TEST(ObHandle)
         Status = ObCloseHandle(LongToHandle(123), UserMode);
         ok_eq_hex(Status, STATUS_INVALID_HANDLE);
         DPRINT("Closing 123 kernel handle (ObCloseHandle, UserMode)\n");
-        Status = ObCloseHandle(LongToHandle(123 | 0x80000000), UserMode);
+        Status = ObCloseHandle(LongToHandle(123 | KERNEL_HANDLE_FLAG), UserMode);
         ok_eq_hex(Status, STATUS_INVALID_HANDLE);
 
         /* ZwClose only accepts 0 and -1 */
@@ -291,38 +309,54 @@ START_TEST(ObHandle)
         Status = ZwClose(NULL);
         ok_eq_hex(Status, STATUS_INVALID_HANDLE);
         DPRINT("Closing null kernel handle (ZwClose)\n");
-        Status = ZwClose(LongToHandle(0x80000000));
+        Status = ZwClose(LongToHandle(KERNEL_HANDLE_FLAG));
         ok_eq_hex(Status, STATUS_INVALID_HANDLE);
         /* INVALID_KERNEL_HANDLE, 0x7FFFFFFF
-        Status = ZwClose((HANDLE)0x7FFFFFFF);*/
-        DPRINT("Closing -1 kernel handle (ZwClose)\n");
-        Status = ZwClose(LongToHandle(0xFFFFFFFF));
+        Status = ZwClose(NtCurrentProcess() & ~KERNEL_HANDLE_FLAG);*/
+        DPRINT("Closing NtCurrentProcess() kernel handle (ZwClose)\n");
+        Status = ZwClose(NtCurrentProcess() | KERNEL_HANDLE_FLAG);
+        if (GetNTVersion() >= _WIN32_WINNT_WIN10)
+            ok_eq_hex(Status, STATUS_SUCCESS);
+        else
+            ok_eq_hex(Status, STATUS_INVALID_HANDLE);
+        /* INVALID_KERNEL_HANDLE, 0x7FFFFFFE
+        Status = ZwClose(NtCurrentThread() & ~KERNEL_HANDLE_FLAG);*/
+        DPRINT("Closing NtCurrentThread() kernel handle (ZwClose)\n");
+        Status = ZwClose(NtCurrentThread() | KERNEL_HANDLE_FLAG);
         if (GetNTVersion() >= _WIN32_WINNT_WIN10)
             ok_eq_hex(Status, STATUS_SUCCESS);
         else
             ok_eq_hex(Status, STATUS_INVALID_HANDLE);
         /* INVALID_KERNEL_HANDLE, 0x7B, 1, 0, 0
         Status = ZwClose(LongToHandle(123));
-        Status = ZwClose(LongToHandle(123 | 0x80000000));*/
+        Status = ZwClose(LongToHandle(123 | KERNEL_HANDLE_FLAG));*/
 
         /* ObCloseHandle with KernelMode accepts only 0 and -1 */
         DPRINT("Closing null handle (ObCloseHandle, KernelMode)\n");
         Status = ObCloseHandle(NULL, KernelMode);
         ok_eq_hex(Status, STATUS_INVALID_HANDLE);
         DPRINT("Closing null kernel handle (ObCloseHandle, KernelMode)\n");
-        Status = ObCloseHandle(LongToHandle(0x80000000), KernelMode);
+        Status = ObCloseHandle(LongToHandle(KERNEL_HANDLE_FLAG), KernelMode);
         ok_eq_hex(Status, STATUS_INVALID_HANDLE);
         /* INVALID_KERNEL_HANDLE, 0x7FFFFFFF, 1, 0, 0
-        Status = ObCloseHandle((HANDLE)0x7FFFFFFF, KernelMode);*/
-        DPRINT("Closing -1 kernel handle (ObCloseHandle, KernelMode)\n");
-        Status = ObCloseHandle(LongToHandle(0xFFFFFFFF), KernelMode);
+        Status = ObCloseHandle(NtCurrentProcess() & ~KERNEL_HANDLE_FLAG, KernelMode);*/
+        DPRINT("Closing NtCurrentProcess() kernel handle (ObCloseHandle, KernelMode)\n");
+        Status = ObCloseHandle(NtCurrentProcess() | KERNEL_HANDLE_FLAG, KernelMode);
+        if (GetNTVersion() >= _WIN32_WINNT_WIN10)
+            ok_eq_hex(Status, STATUS_SUCCESS);
+        else
+            ok_eq_hex(Status, STATUS_INVALID_HANDLE);
+        /* INVALID_KERNEL_HANDLE, 0x7FFFFFFE, 1, 0, 0
+        Status = ObCloseHandle(NtCurrentThread() & ~KERNEL_HANDLE_FLAG, KernelMode);*/
+        DPRINT("Closing NtCurrentThread() kernel handle (ObCloseHandle, KernelMode)\n");
+        Status = ObCloseHandle(NtCurrentThread() | KERNEL_HANDLE_FLAG, KernelMode);
         if (GetNTVersion() >= _WIN32_WINNT_WIN10)
             ok_eq_hex(Status, STATUS_SUCCESS);
         else
             ok_eq_hex(Status, STATUS_INVALID_HANDLE);
         /* INVALID_KERNEL_HANDLE, 0x7B, 1, 0, 0
         Status = ObCloseHandle(LongToHandle(123), KernelMode);
-        Status = ObCloseHandle(LongToHandle(123 | 0x80000000), KernelMode);*/
+        Status = ObCloseHandle(LongToHandle(123 | KERNEL_HANDLE_FLAG), KernelMode);*/
     KmtEndSeh(STATUS_SUCCESS);
 
     if (SystemProcessHandle)
