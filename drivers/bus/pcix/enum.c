@@ -60,7 +60,8 @@ PciComputeNewCurrentSettings(IN PPCI_PDO_EXTENSION PdoExtension,
     PCM_PARTIAL_RESOURCE_DESCRIPTOR PreviousDescriptor;
     CM_PARTIAL_RESOURCE_DESCRIPTOR ResourceArray[7];
     PCM_FULL_RESOURCE_DESCRIPTOR FullList;
-    BOOLEAN DrainPartial, RangeChange;
+    BOOLEAN RangeChange;
+    ULONG DrainPartial;
     ULONG i, j;
     PPCI_FUNCTION_RESOURCES PciResources;
     PAGED_CODE();
@@ -101,8 +102,8 @@ PciComputeNewCurrentSettings(IN PPCI_PDO_EXTENSION PdoExtension,
             /* Check if we were supposed to drain a partial due to device data */
             if (DrainPartial)
             {
-                /* Draining complete, move on to the next descriptor then */
                 DrainPartial--;
+                Partial = CmiGetNextPartialDescriptor(Partial);
                 continue;
             }
 
@@ -170,7 +171,6 @@ PciComputeNewCurrentSettings(IN PPCI_PDO_EXTENSION PdoExtension,
                             /* Shouldn't be a base resource, this is a drain */
                             ASSERT(BaseResource == NULL);
                             DrainPartial = Partial->u.DevicePrivate.Data[1];
-                            ASSERT(DrainPartial == TRUE);
                             break;
                     }
                     break;
