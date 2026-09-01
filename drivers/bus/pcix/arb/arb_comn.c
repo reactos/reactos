@@ -80,10 +80,9 @@ VOID
 NTAPI
 PciArbiterDestructor(IN PPCI_ARBITER_INSTANCE Arbiter)
 {
-    UNREFERENCED_PARAMETER(Arbiter);
-    /* This function is not yet implemented */
-    UNIMPLEMENTED;
-    while (TRUE);
+    PAGED_CODE();
+
+    ArbiterLibDeleteInstance(&Arbiter->CommonInstance);
 }
 
 NTSTATUS

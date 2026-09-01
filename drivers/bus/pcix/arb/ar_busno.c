@@ -115,12 +115,10 @@ arbusno_Initializer(IN PVOID Instance)
 
     PAGED_CODE();
 
-    /* Start from a clean engine instance */
     RtlZeroMemory(&Arbiter->CommonInstance, sizeof(Arbiter->CommonInstance));
 
     FdoExtension = Arbiter->BusFdoExtension;
 
-    /* Teach the engine how to read and write bus number descriptors */
     Arbiter->CommonInstance.UnpackRequirement = arbusno_UnpackRequirement;
     Arbiter->CommonInstance.PackResource = arbusno_PackResource;
     Arbiter->CommonInstance.UnpackResource = arbusno_UnpackResource;
