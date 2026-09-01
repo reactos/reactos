@@ -174,14 +174,11 @@ PciComputeNewCurrentSettings(IN PPCI_PDO_EXTENSION PdoExtension,
                     /* Check what kind of data this was */
                     switch (Partial->u.DevicePrivate.Data[0])
                     {
-                        /* Not used in the driver yet */
+                        /* Not produced by this driver, so not consumed here */
                         case 1:
-                            UNIMPLEMENTED_DBGBREAK();
-                            break;
-
-                        /* Not used in the driver yet */
                         case 2:
-                            UNIMPLEMENTED_DBGBREAK();
+                            DPRINT1("PCI - ignoring device-private data type %u\n",
+                                    Partial->u.DevicePrivate.Data[0]);
                             break;
 
                         /* A drain request */
@@ -896,8 +893,9 @@ PciQueryRequirements(IN PPCI_PDO_EXTENSION PdoExtension,
             (PciHeader.RevisionID == 17) &&
             (ExIsProcessorFeaturePresent(PF_PAE_ENABLED)))
         {
-            /* Have not tested this on eVb's machine yet */
-            UNIMPLEMENTED_DBGBREAK();
+            /* No fixup is applied for this controller under PAE */
+            DPRINT1("PCI - Compaq hotplug controller PDO ext 0x%p has an unhandled PAE quirk\n",
+                    PdoExtension);
         }
 
         /* Check if the requirements are actually the zero list */
@@ -2007,11 +2005,18 @@ PciScanBus(IN PPCI_FDO_EXTENSION DeviceExtension)
                     DescriptionText ? DescriptionText : L"(NULL)");
             if (DescriptionText) ExFreePoolWithTag(DescriptionText, 0);
 
-            /* Check if there is an ACPI Watchdog Table */
-            if (WdTable)
+            /* The hardware watchdog named by the ACPI table on a root bus gets no PDO */
+            if ((WdTable) &&
+                (PCI_IS_ROOT_FDO(DeviceExtension)) &&
+                (WdTable->PciSegment == 0) &&
+                (WdTable->PciBus == i) &&
+                (WdTable->PciDevice == j) &&
+                (WdTable->PciFunction == k) &&
+                (WdTable->PciVendorId == PciData->VendorID) &&
+                (WdTable->PciDeviceId == PciData->DeviceID))
             {
-                /* Check if this PCI device is the ACPI Watchdog Device... */
-                UNIMPLEMENTED_DBGBREAK();
+                DPRINT1("PCI - not enumerating the ACPI watchdog device\n");
+                continue;
             }
 
             /* Check for non-simple devices */
