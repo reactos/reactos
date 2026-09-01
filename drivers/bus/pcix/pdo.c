@@ -671,12 +671,24 @@ PciPdoIrpQueryDeviceState(IN PIRP Irp,
                           IN PIO_STACK_LOCATION IoStackLocation,
                           IN PPCI_PDO_EXTENSION DeviceExtension)
 {
-    UNREFERENCED_PARAMETER(Irp);
-    UNREFERENCED_PARAMETER(IoStackLocation);
-    UNREFERENCED_PARAMETER(DeviceExtension);
+    PNP_DEVICE_STATE State;
+    PAGED_CODE();
 
-    UNIMPLEMENTED;
-    return STATUS_NOT_SUPPORTED;
+    UNREFERENCED_PARAMETER(IoStackLocation);
+
+    /* Whatever the rest of the stack decided about this device still holds */
+    State = (PNP_DEVICE_STATE)Irp->IoStatus.Information;
+
+    /* Host bridges, and anything a query remove would refuse, must not be offered for disabling */
+    if (((DeviceExtension->BaseClass == PCI_CLASS_BRIDGE_DEV) &&
+         (DeviceExtension->SubClass == PCI_SUBCLASS_BR_HOST)) ||
+        (!NT_SUCCESS(PciPdoValidateRelease(DeviceExtension))))
+    {
+        State |= PNP_DEVICE_NOT_DISABLEABLE;
+    }
+
+    Irp->IoStatus.Information = State;
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS
