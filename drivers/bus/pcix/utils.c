@@ -1571,8 +1571,8 @@ PciQueryPowerCapabilities(IN PPCI_PDO_EXTENSION PdoExtension,
         }
         else
         {
-            /* Take the minimums? -- need to check with briang at work */
-            UNIMPLEMENTED;
+            /* The bridge above may be in D3 too, which leaves this device in D3cold */
+            DeviceCapability->WakeFromD3 = PdoExtension->PowerCapabilities.Support.PMED3Cold;
         }
     }
 

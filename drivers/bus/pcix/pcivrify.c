@@ -74,6 +74,90 @@ PciVerifierRetrieveFailureData(IN ULONG FailureCode)
     return VerifierData;
 }
 
+/**
+ * @brief Reports a bridge whose bus numbers differ from the ones this driver tracks.
+ */
+static
+VOID
+NTAPI
+PciVerifierCheckBridgeBusNumbers(
+    _In_ PPCI_PDO_EXTENSION PdoExtension)
+{
+    PPCI_VERIFIER_DATA VerifierData;
+    UCHAR BusNumbers[3];
+
+    /* Type 1 and type 2 headers keep the bus numbers at the same offset */
+    PciReadDeviceConfig(PdoExtension,
+                        BusNumbers,
+                        FIELD_OFFSET(PCI_COMMON_HEADER, u.type1.PrimaryBus),
+                        sizeof(BusNumbers));
+
+    if ((BusNumbers[0] == PdoExtension->Dependent.type1.PrimaryBus) &&
+        (BusNumbers[1] == PdoExtension->Dependent.type1.SecondaryBus) &&
+        (BusNumbers[2] == PdoExtension->Dependent.type1.SubordinateBus))
+    {
+        return;
+    }
+
+    VerifierData = PciVerifierRetrieveFailureData(1);
+    ASSERT(VerifierData);
+    VfFailSystemBIOS(PCI_VERIFIER_DETECTED_VIOLATION,
+                     1,
+                     VerifierData->FailureClass,
+                     &VerifierData->AssertionControl,
+                     VerifierData->DebuggerMessageText,
+                     "%DevObj",
+                     PdoExtension->PhysicalDeviceObject);
+}
+
+/**
+ * @brief Checks every active bridge after firmware had the chance to reprogram it.
+ */
+static
+VOID
+NTAPI
+PciVerifierCheckAllBridges(VOID)
+{
+    PPCI_FDO_EXTENSION FdoExtension;
+    PPCI_PDO_EXTENSION PdoExtension;
+    PAGED_CODE();
+
+    KeEnterCriticalRegion();
+    KeWaitForSingleObject(&PciGlobalLock, Executive, KernelMode, FALSE, NULL);
+
+    for (FdoExtension = (PPCI_FDO_EXTENSION)PciFdoExtensionListHead.Next;
+         FdoExtension;
+         FdoExtension = (PPCI_FDO_EXTENSION)FdoExtension->List.Next)
+    {
+        KeWaitForSingleObject(&FdoExtension->ChildListLock, Executive, KernelMode, FALSE, NULL);
+
+        for (PdoExtension = FdoExtension->ChildPdoList;
+             PdoExtension;
+             PdoExtension = PdoExtension->Next)
+        {
+            if ((PdoExtension->HeaderType != PCI_BRIDGE_TYPE) &&
+                (PdoExtension->HeaderType != PCI_CARDBUS_BRIDGE_TYPE))
+            {
+                continue;
+            }
+
+            /* A bridge that is gone or powered off may have lost its settings legitimately */
+            if (PdoExtension->NotPresent ||
+                (PdoExtension->PowerState.CurrentDeviceState == PowerDeviceD3))
+            {
+                continue;
+            }
+
+            PciVerifierCheckBridgeBusNumbers(PdoExtension);
+        }
+
+        KeSetEvent(&FdoExtension->ChildListLock, IO_NO_INCREMENT, FALSE);
+    }
+
+    KeSetEvent(&PciGlobalLock, IO_NO_INCREMENT, FALSE);
+    KeLeaveCriticalRegion();
+}
+
 DRIVER_NOTIFICATION_CALLBACK_ROUTINE PciVerifierProfileChangeCallback;
 
 NTSTATUS
@@ -81,11 +165,15 @@ NTAPI
 PciVerifierProfileChangeCallback(IN PVOID NotificationStructure,
                                  IN PVOID Context)
 {
-    UNREFERENCED_PARAMETER(NotificationStructure);
-    UNREFERENCED_PARAMETER(Context);
+    PHWPROFILE_CHANGE_NOTIFICATION Notification = NotificationStructure;
 
-    /* This function is not yet implemented */
-    UNIMPLEMENTED_DBGBREAK();
+    UNREFERENCED_PARAMETER(Context);
+    PAGED_CODE();
+
+    /* A dock or undock is finished, so firmware is done touching the buses */
+    if (IsEqualGUIDAligned(&Notification->Event, &GUID_HWPROFILE_CHANGE_COMPLETE))
+        PciVerifierCheckAllBridges();
+
     return STATUS_SUCCESS;
 }
 
