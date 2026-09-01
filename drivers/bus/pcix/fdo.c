@@ -610,6 +610,9 @@ PciAddDevice(IN PDRIVER_OBJECT DriverObject,
         Status = PciGetConfigHandlers(FdoExtension);
         if (!NT_SUCCESS(Status)) break;
 
+        /* Map this bus for extended configuration space access */
+        PciInitializeEcam(FdoExtension);
+
         /* Initialize all the supported PCI arbiters */
         Status = PciInitializeArbiters(FdoExtension);
         if (!NT_SUCCESS(Status)) break;
