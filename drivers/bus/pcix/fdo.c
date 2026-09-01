@@ -428,7 +428,6 @@ PciGetHotPlugParameters(IN PPCI_FDO_EXTENSION FdoExtension)
             if (Argument[i].Type != ACPI_METHOD_ARGUMENT_INTEGER)
                 break;
         }
-
         if (i != 4)
         {
             DPRINT1("PCI - _HPP returned something other than four integers\n");
@@ -452,8 +451,7 @@ PciGetHotPlugParameters(IN PPCI_FDO_EXTENSION FdoExtension)
         FdoExtension->HotPlugParameters.EnablePERR = (BOOLEAN)Argument[3].Argument;
         FdoExtension->HotPlugParameters.Acquired = TRUE;
 
-        DPRINT1("PCI - _HPP for FDO ext 0x%p: cache line %u, latency %u, "
-                "SERR %u, PERR %u\n",
+        DPRINT1("PCI - _HPP for FDO ext 0x%p: cache line %u, latency %u, SERR %u, PERR %u\n",
                 FdoExtension,
                 FdoExtension->HotPlugParameters.CacheLineSize,
                 FdoExtension->HotPlugParameters.LatencyTimer,

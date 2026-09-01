@@ -87,7 +87,7 @@
 #define PCI_RBAR_CONTROL_BAR_INDEX_MASK     0x00000007
 #define PCI_RBAR_CONTROL_COUNT_MASK         0x000000E0
 #define PCI_RBAR_CONTROL_COUNT_SHIFT        5
-#define PCI_RBAR_CONTROL_SIZE_MASK          0x00003F00
+#define PCI_RBAR_CONTROL_SIZE_MASK          (0x3F << 8)
 #define PCI_RBAR_CONTROL_SIZE_SHIFT         8
 
 //
@@ -264,6 +264,7 @@ typedef struct _PCI_FDO_EXTENSION
     } HotPlugParameters;
     LONG BusHackFlags;
     LONG PciPmeInterfaceCount;
+    PCI_ROOT_BUS_HARDWARE_CAPABILITY RootBusHardwareCapability;
 } PCI_FDO_EXTENSION, *PPCI_FDO_EXTENSION;
 
 typedef struct _PCI_FUNCTION_RESOURCES

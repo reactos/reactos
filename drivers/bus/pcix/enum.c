@@ -274,7 +274,7 @@ PcipUpdateHardware(IN PVOID Context,
             PciWriteDeviceConfig(PdoExtension,
                                  &PciData->Command,
                                  FIELD_OFFSET(PCI_COMMON_HEADER, Command),
-                                 sizeof(USHORT));
+                                 sizeof(PciData->Command));
             PciApplyResizableBarSizes(PdoExtension);
         }
     }
@@ -2343,11 +2343,11 @@ PciSetResources(IN PPCI_PDO_EXTENSION PdoExtension,
         PciWriteDeviceConfig(PdoExtension,
                              &PdoExtension->SavedCacheLineSize,
                              FIELD_OFFSET(PCI_COMMON_HEADER, CacheLineSize),
-                             sizeof(UCHAR));
+                             sizeof(PdoExtension->SavedCacheLineSize));
         PciReadDeviceConfig(PdoExtension,
                             &CacheLineReadBack,
                             FIELD_OFFSET(PCI_COMMON_HEADER, CacheLineSize),
-                            sizeof(UCHAR));
+                            sizeof(CacheLineReadBack));
         if ((CacheLineReadBack != 0) &&
             (CacheLineReadBack == PdoExtension->SavedCacheLineSize))
         {
@@ -2356,8 +2356,7 @@ PciSetResources(IN PPCI_PDO_EXTENSION PdoExtension,
         else
         {
             DPRINT1("PCI (pdox %p) cache line size %02x rejected, MWI stays off\n",
-                    PdoExtension,
-                    PdoExtension->SavedCacheLineSize);
+                    PdoExtension, PdoExtension->SavedCacheLineSize);
         }
     }
 

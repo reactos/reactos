@@ -20,8 +20,8 @@
 
 /**
  * @brief
- * Records which BARs of a new function can be resized and the sizes each
- * of them supports.
+ * Records which BARs of a new function can be resized and the sizes
+ * each of them supports.
  *
  * @param[in,out] PdoExtension
  * The PDO extension of the function being enumerated.
@@ -34,6 +34,7 @@ PciGetResizableBarCapability(
     PPCI_RESIZABLE_BAR_STATE State = &PdoExtension->ResizableBarState;
     PCI_EXPRESS_ENHANCED_CAPABILITY_HEADER Header;
     ULONG Offset, Entry, EntryCount, Control, SizeMask, BarIndex;
+
     PAGED_CODE();
 
     RtlZeroMemory(State, sizeof(*State));
@@ -86,9 +87,7 @@ PciGetResizableBarCapability(
         State->EntryIndex[BarIndex] = (UCHAR)Entry;
 
         DPRINT1("PCI: BAR %lu of %p is resizable, sizes 0x%08lx\n",
-                BarIndex,
-                PdoExtension,
-                SizeMask);
+                BarIndex, PdoExtension, SizeMask);
     }
 }
 
@@ -107,7 +106,6 @@ PciFillResizedBarRequirement(
     Descriptor->Option = Option;
     Descriptor->ShareDisposition = CmResourceShareDeviceExclusive;
 
-    /* A size of 4GB or more takes the large memory form */
     Status = RtlIoEncodeMemIoResource(Descriptor,
                                       CmResourceTypeMemory,
                                       Length,
@@ -195,7 +193,7 @@ PciSelectResizableBarSize(
     ULONGLONG Megabytes;
     ULONG SizeBit, Control, Offset;
 
-    /* Only a power of two of at least a megabyte can be named in the size field */
+    /* Only a power of two of at least a megabyte can be specified in the size field */
     Megabytes = Length >> 20;
     if (!Megabytes || (Megabytes & (Megabytes - 1)) || (Length & 0xFFFFF))
         return;
