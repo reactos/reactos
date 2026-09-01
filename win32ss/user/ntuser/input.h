@@ -1,7 +1,8 @@
 #pragma once
 
 #include <ndk/kbd.h>
- 
+#include <hidclass.h>
+
 typedef struct tagKBDNLSLAYER
 {
     USHORT OEMIdentifier;
@@ -90,11 +91,65 @@ UINT FASTCALL IntImmProcessKey(
     _In_ LPARAM lParam);
 VOID FASTCALL IntFreeImeHotKeys(VOID);
 
+/* Input devices */
+typedef struct _MOUSE_DEVICE_INFO
+{
+    MOUSE_ATTRIBUTES Attributes;
+    MOUSE_INPUT_DATA Data;
+} MOUSE_DEVICE_INFO, *PMOUSE_DEVICE_INFO;
+
+typedef struct _KEYBOARD_DEVICE_INFO
+{
+    KEYBOARD_ATTRIBUTES Attributes;
+    KEYBOARD_INPUT_DATA Data;
+} KEYBOARD_DEVICE_INFO, *PKEYBOARD_DEVICE_INFO;
+
+typedef struct _HID_DEVICE_INFO
+{
+    PHIDP_PREPARSED_DATA PreparsedData;
+    HID_COLLECTION_INFORMATION CollectionInformation;
+    HIDP_CAPS Caps;
+} HID_DEVICE_INFO, *PHID_DEVICE_INFO;
+
+typedef struct _INPUT_DEVICE_INFO
+{
+    struct _INPUT_DEVICE_INFO *pNextDeviceInfo;
+    UNICODE_STRING DeviceName;
+    HANDLE Handle;
+    IO_STATUS_BLOCK Iosb;
+    NTSTATUS Status;
+    ULONG DeviceType;
+    union
+    {
+        MOUSE_DEVICE_INFO Mouse;
+        KEYBOARD_DEVICE_INFO Keyboard;
+        HID_DEVICE_INFO Hid;
+    };
+} INPUT_DEVICE_INFO, *PINPUT_DEVICE_INFO;
+
 extern DWORD gSystemFS;
 extern UINT gSystemCPCharSet; 
 extern HANDLE ghKeyboardDevice;
 extern PTHREADINFO ptiRawInput;
 extern BYTE gafAsyncKeyState[256 * 2 / 8]; // 2 bits per key
+extern PINPUT_DEVICE_INFO gpInputDeviceInfo;
+extern PERESOURCE gpDeviceInfoListMutex;
+
+FORCEINLINE
+VOID
+AcquireDeviceInfoListMutex(VOID)
+{
+    KeEnterCriticalRegion();
+    ExAcquireResourceExclusiveLite(gpDeviceInfoListMutex, TRUE);
+}
+
+FORCEINLINE
+VOID
+ReleaseDeviceInfoListMutex(VOID)
+{
+    ExReleaseResourceLite(gpDeviceInfoListMutex);
+    KeLeaveCriticalRegion();
+}
 
 #define GET_KS_BYTE(vk) ((vk) * 2 / 8)
 #define GET_KS_DOWN_BIT(vk) (1 << (((vk) % 4)*2))
