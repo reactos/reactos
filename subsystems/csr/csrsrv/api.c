@@ -3,7 +3,7 @@
  * PROJECT:         ReactOS Client/Server Runtime SubSystem
  * FILE:            subsystems/win32/csrsrv/api.c
  * PURPOSE:         CSR Server DLL API LPC Implementation
- *                  "\Windows\ApiPort" port process management functions
+ *                  "\ApiPort" port process management functions
  * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
  */
 
@@ -914,11 +914,11 @@ CsrApiPortInitialize(VOID)
     CsrApiPortName.Buffer = RtlAllocateHeap(CsrHeap, 0, Size);
     if (!CsrApiPortName.Buffer) return STATUS_NO_MEMORY;
 
-    /* Setup the rest of the empty string */
+    /* Setup the Port Name string */
     CsrApiPortName.Length = 0;
     CsrApiPortName.MaximumLength = (USHORT)Size;
     RtlAppendUnicodeStringToString(&CsrApiPortName, &CsrDirectoryName);
-    RtlAppendUnicodeToString(&CsrApiPortName, UNICODE_PATH_SEP);
+    RtlAppendUnicodeToString(&CsrApiPortName, L"\\");
     RtlAppendUnicodeToString(&CsrApiPortName, CSR_PORT_NAME);
     if (CsrDebug & 1)
     {
