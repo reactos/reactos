@@ -1007,11 +1007,13 @@ PciPdoIrpQueryLegacyBusInformation(IN PIRP Irp,
                                    IN PIO_STACK_LOCATION IoStackLocation,
                                    IN PPCI_PDO_EXTENSION DeviceExtension)
 {
+    PAGED_CODE();
+
     UNREFERENCED_PARAMETER(Irp);
     UNREFERENCED_PARAMETER(IoStackLocation);
     UNREFERENCED_PARAMETER(DeviceExtension);
 
-    UNIMPLEMENTED_DBGBREAK();
+    /* A bridge's FDO answers above this, so keep its bus number and buffer intact */
     return STATUS_NOT_SUPPORTED;
 }
 
