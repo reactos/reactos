@@ -97,6 +97,9 @@ PciInitializeArbiters(IN PPCI_FDO_EXTENSION FdoExtension)
     PCI_SIGNATURE ArbiterType;
     ASSERT_FDO(FdoExtension);
 
+    /* A bus that ends up needing no arbiter at all is not a failure */
+    Status = STATUS_SUCCESS;
+
     /* Loop all the arbiters */
     for (ArbiterType = PciArb_Io; ArbiterType <= PciArb_BusNumber; ArbiterType++)
     {
