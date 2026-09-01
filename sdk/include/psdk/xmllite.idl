@@ -228,6 +228,8 @@ typedef enum XmlError
 cpp_quote("STDAPI CreateXmlReader(REFIID riid, void **ppvObject, IMalloc *pMalloc);")
 
 cpp_quote("typedef IUnknown IXmlReaderInput;")
+cpp_quote("STDAPI CreateXmlReaderInputWithEncodingCodePage(IUnknown *stream, IMalloc *pMalloc,")
+cpp_quote("        UINT encoding_codepage, BOOL hint, const WCHAR *base_uri, IXmlReaderInput **pInput);")
 cpp_quote("STDAPI CreateXmlReaderInputWithEncodingName(IUnknown *stream, IMalloc *pMalloc,")
 cpp_quote("                                            LPCWSTR encoding, BOOL hint,")
 cpp_quote("                                            LPCWSTR base_uri, IXmlReaderInput **ppInput);")
