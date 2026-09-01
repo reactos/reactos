@@ -56,9 +56,8 @@ lddintrf_Constructor(IN PVOID DeviceExtension,
     UNREFERENCED_PARAMETER(Size);
     UNREFERENCED_PARAMETER(Interface);
 
-    /* Not yet implemented */
-    UNIMPLEMENTED_DBGBREAK();
-    return STATUS_NOT_IMPLEMENTED;
+    /* Not provided, so the query fails and the caller goes without it */
+    return STATUS_NOT_SUPPORTED;
 }
 
 /* EOF */
