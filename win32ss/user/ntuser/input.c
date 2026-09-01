@@ -24,6 +24,8 @@ PKTIMER MasterTimer = NULL;
 PATTACHINFO gpai = NULL;
 INT paiCount = 0;
 HANDLE ghKeyboardDevice = NULL;
+PINPUT_DEVICE_INFO gpInputDeviceInfo = NULL;
+PERESOURCE gpDeviceInfoListMutex = NULL;
 
 static DWORD LastInputTick = 0;
 static HANDLE ghMouseDevice;
@@ -180,6 +182,11 @@ RawInputThreadMain(VOID)
         ASSERT(FALSE);
         /* Failed to open the interactive winsta! What now? */
     }
+
+    gpDeviceInfoListMutex = ExAllocatePoolWithTag(NonPagedPool, sizeof(*gpDeviceInfoListMutex), USERTAG_SYSTEM);
+    ASSERT(gpDeviceInfoListMutex);
+    Status = ExInitializeResourceLite(gpDeviceInfoListMutex);
+    ASSERT(NT_SUCCESS(Status));
 
     UserEnterExclusive();
     StartTheTimers();
@@ -361,6 +368,8 @@ RawInputThreadMain(VOID)
         ObDereferenceObject(pKbdDevice);
         ghKeyboardDevice = NULL;
     }
+
+    ExFreePoolWithTag(gpDeviceInfoListMutex, USERTAG_SYSTEM);
 
     ERR("Raw Input Thread Exit!\n");
 }
