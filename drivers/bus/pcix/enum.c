@@ -433,8 +433,9 @@ PciQueryResources(IN PPCI_PDO_EXTENSION PdoExtension,
         if ((InterruptLine) && (InterruptLine != -1)) Count++;
     }
 
-    /* Check for PCI bridge */
-    if (PdoExtension->HeaderType == PCI_BRIDGE_TYPE)
+    /* Check for a PCI-to-PCI or CardBus bridge, both keep the VGA enable at the same place */
+    if ((PdoExtension->HeaderType == PCI_BRIDGE_TYPE) ||
+        (PdoExtension->HeaderType == PCI_CARDBUS_BRIDGE_TYPE))
     {
         /* Read bridge settings, check if VGA is present */
         PciReadDeviceConfig(PdoExtension,
