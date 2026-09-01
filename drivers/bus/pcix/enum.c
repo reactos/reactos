@@ -568,17 +568,86 @@ PciQueryTargetDeviceRelations(IN PPCI_PDO_EXTENSION PdoExtension,
     return STATUS_SUCCESS;
 }
 
+/**
+ * @brief Finds the other present functions in the same slot as PdoExtension.
+ * When Objects is not NULL, each PDO found is referenced and stored there.
+ * The caller holds the child list lock.
+ */
+static
+ULONG
+NTAPI
+PciGatherOtherFunctions(
+    _In_ PPCI_PDO_EXTENSION PdoExtension,
+    _Out_writes_opt_(_Inexpressible_("function count")) PDEVICE_OBJECT *Objects)
+{
+    PPCI_PDO_EXTENSION Child;
+    ULONG Found = 0;
+
+    for (Child = PdoExtension->ParentFdoExtension->ChildPdoList; Child; Child = Child->Next)
+    {
+        if ((Child == PdoExtension) ||
+            Child->NotPresent ||
+            (Child->Slot.u.bits.DeviceNumber != PdoExtension->Slot.u.bits.DeviceNumber))
+        {
+            continue;
+        }
+
+        if (Objects)
+        {
+            ObReferenceObject(Child->PhysicalDeviceObject);
+            Objects[Found] = Child->PhysicalDeviceObject;
+        }
+        Found++;
+    }
+
+    return Found;
+}
+
 NTSTATUS
 NTAPI
 PciQueryEjectionRelations(IN PPCI_PDO_EXTENSION PdoExtension,
                           IN OUT PDEVICE_RELATIONS *pDeviceRelations)
 {
-    UNREFERENCED_PARAMETER(PdoExtension);
-    UNREFERENCED_PARAMETER(pDeviceRelations);
+    PPCI_FDO_EXTENSION FdoExtension = PdoExtension->ParentFdoExtension;
+    PDEVICE_RELATIONS OldRelations = *pDeviceRelations;
+    PDEVICE_RELATIONS NewRelations = NULL;
+    ULONG OldCount = OldRelations ? OldRelations->Count : 0;
+    ULONG FunctionCount;
+    PAGED_CODE();
 
-    /* Not yet implemented */
-    UNIMPLEMENTED_DBGBREAK();
-    return STATUS_NOT_IMPLEMENTED;
+    KeEnterCriticalRegion();
+    KeWaitForSingleObject(&FdoExtension->ChildListLock, Executive, KernelMode, FALSE, NULL);
+
+    /* The other functions of the same device leave the machine with this one */
+    FunctionCount = PciGatherOtherFunctions(PdoExtension, NULL);
+    if (FunctionCount)
+    {
+        NewRelations = ExAllocatePoolWithTag(NonPagedPool,
+                                             FIELD_OFFSET(DEVICE_RELATIONS, Objects) +
+                                             (OldCount + FunctionCount) * sizeof(*NewRelations->Objects),
+                                             PCI_POOL_TAG);
+    }
+
+    /* Without memory the list from above is kept as it is */
+    if (NewRelations)
+    {
+        if (OldRelations)
+        {
+            RtlCopyMemory(NewRelations->Objects,
+                          OldRelations->Objects,
+                          OldCount * sizeof(*OldRelations->Objects));
+            ExFreePoolWithTag(OldRelations, 0);
+        }
+
+        NewRelations->Count = OldCount +
+                              PciGatherOtherFunctions(PdoExtension, &NewRelations->Objects[OldCount]);
+        ASSERT(NewRelations->Count == OldCount + FunctionCount);
+        *pDeviceRelations = NewRelations;
+    }
+
+    KeSetEvent(&FdoExtension->ChildListLock, IO_NO_INCREMENT, FALSE);
+    KeLeaveCriticalRegion();
+    return STATUS_SUCCESS;
 }
 
 /**
