@@ -1304,6 +1304,21 @@ PciGetAdjustedInterruptLine(
 );
 
 //
+// Device Usage Notification Routines
+//
+NTSTATUS
+NTAPI
+PciUpdateDeviceUsage(
+    _Inout_ PPCI_POWER_STATE PowerState,
+    _In_ PIO_STACK_LOCATION IoStackLocation);
+
+NTSTATUS
+NTAPI
+PciSendDeviceUsageToParent(
+    _In_ PPCI_FDO_EXTENSION ParentFdoExtension,
+    _In_ PIO_STACK_LOCATION IoStackLocation);
+
+//
 // State Machine Logic Transition Routines
 //
 VOID

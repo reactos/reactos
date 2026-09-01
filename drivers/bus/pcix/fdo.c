@@ -338,12 +338,16 @@ PciFdoIrpDeviceUsageNotification(IN PIRP Irp,
                                  IN PIO_STACK_LOCATION IoStackLocation,
                                  IN PPCI_FDO_EXTENSION DeviceExtension)
 {
-    UNREFERENCED_PARAMETER(Irp);
-    UNREFERENCED_PARAMETER(IoStackLocation);
-    UNREFERENCED_PARAMETER(DeviceExtension);
+    PAGED_CODE();
 
-    UNIMPLEMENTED_DBGBREAK();
-    return STATUS_NOT_SUPPORTED;
+    /* A failure from below stands, but a lower driver that ignored it does not count */
+    if ((!NT_SUCCESS(Irp->IoStatus.Status)) &&
+        (Irp->IoStatus.Status != STATUS_NOT_SUPPORTED))
+    {
+        return Irp->IoStatus.Status;
+    }
+
+    return PciUpdateDeviceUsage(&DeviceExtension->PowerState, IoStackLocation);
 }
 
 NTSTATUS
