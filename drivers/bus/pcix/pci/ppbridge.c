@@ -703,8 +703,9 @@ PPBridge_ResetDevice(IN PPCI_PDO_EXTENSION PdoExtension,
                      IN PPCI_COMMON_HEADER PciData)
 {
     UNREFERENCED_PARAMETER(PdoExtension);
-    UNREFERENCED_PARAMETER(PciData);
-    UNIMPLEMENTED_DBGBREAK();
+
+    /* Never write the header back with the secondary bus held in reset */
+    PciData->u.type1.BridgeControl &= ~PCI_ASSERT_BRIDGE_RESET;
 }
 
 /**
