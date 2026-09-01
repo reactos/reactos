@@ -436,10 +436,10 @@ library IWshRuntimeLibrary
         HRESULT StdErr([out, retval] ITextStream** stream);
 
         [id(0x0006), propget]
-        HRESULT ProcessID([out, retval] DWORD *pid);
+        HRESULT ProcessID([out, retval] int *pid);
 
         [id(0x0007), propget]
-        HRESULT ExitCode([out, retval] DWORD *code);
+        HRESULT ExitCode([out, retval] int *code);
 
         [id(0x0008)]
         HRESULT Terminate();
@@ -528,7 +528,7 @@ library IWshRuntimeLibrary
             [in] BSTR Command,
             [in, optional] VARIANT* WindowStyle,
             [in, optional] VARIANT* WaitOnReturn,
-            [out, retval] DWORD* out_ExitCode);
+            [out, retval] int* out_ExitCode);
 
         [id(0x03e9)]
         HRESULT Popup(
@@ -610,14 +610,81 @@ library IWshRuntimeLibrary
     };
 
     [
+        uuid(f935dc25-1cf0-11d0-adb9-00c04fd58a0b),
+        odl,
+        dual,
+        oleautomation,
+        hidden
+    ]
+    interface IWshNetwork : IDispatch {
+        [id(0x60020000), propget]
+        HRESULT UserDomain([out, retval] BSTR *out_UserDomain);
+
+        [id(0x60020001), propget]
+        HRESULT UserName([out, retval] BSTR *out_UserName);
+
+        [id(0x60020002), propget]
+        HRESULT UserProfile([out, retval] BSTR *out_UserProfile);
+
+        [id(0x60020003), propget]
+        HRESULT ComputerName([out, retval] BSTR *out_ComputerName);
+
+        [id(0x60020004), propget, hidden]
+        HRESULT Organization([out, retval] BSTR *out_Organization);
+
+        [id(0x60020005), propget, hidden]
+        HRESULT Site([out, retval] BSTR *out_Site);
+
+        [id(0x3e8)]
+        HRESULT MapNetworkDrive(
+            [in] BSTR LocalName,
+            [in] BSTR RemoteName,
+            [in, optional] VARIANT *UpdateProfile,
+            [in, optional] VARIANT *UserName,
+            [in, optional] VARIANT *Password);
+
+        [id(0x3e9)]
+        HRESULT RemoveNetworkDrive(
+            [in] BSTR Name,
+            [in, optional] VARIANT *Force,
+            [in, optional] VARIANT *UpdateProfile);
+
+        [id(0x3ea)]
+        HRESULT EnumNetworkDrives([out, retval] IWshCollection **out_Enum);
+
+        [id(0x7d0)]
+        HRESULT AddPrinterConnection(
+            [in] BSTR LocalName,
+            [in] BSTR RemoteName,
+            [in, optional] VARIANT *UpdateProfile,
+            [in, optional] VARIANT *UserName,
+            [in, optional] VARIANT *Password);
+
+        [id(0x7d1)]
+        HRESULT RemovePrinterConnection(
+            [in] BSTR Name,
+            [in, optional] VARIANT *Force,
+            [in, optional] VARIANT *UpdateProfile);
+
+        [id(0x7d2)]
+        HRESULT EnumPrinterConnections([out, retval] IWshCollection **out_Enum);
+
+        [id(0x7d3)]
+        HRESULT SetDefaultPrinter([in] BSTR Name);
+    }
+
+    [
         uuid(24be5a31-edfe-11d2-b933-00104b365c9f),
         odl,
         dual,
         oleautomation
     ]
-    interface IWshNetwork2 : IDispatch {
-        [id(0x60020000), propget]
-        HRESULT UserDomain([out, retval] BSTR *out_UserDomain);
+    interface IWshNetwork2 : IWshNetwork {
+        [id(0x7d4)]
+        HRESULT AddWindowsPrinterConnection(
+            [in] BSTR PrinterName,
+            [in, optional, defaultvalue("")] BSTR DriverName,
+            [in, optional, defaultvalue("LPT1")] BSTR Port);
     }
 
     [
