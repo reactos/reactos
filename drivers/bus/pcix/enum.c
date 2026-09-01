@@ -2283,7 +2283,7 @@ PciSetResources(IN PPCI_PDO_EXTENSION PdoExtension,
                 IN BOOLEAN SomethingSomethingDarkSide)
 {
     PPCI_FDO_EXTENSION FdoExtension;
-    UCHAR NewCacheLineSize, NewLatencyTimer;
+    UCHAR NewCacheLineSize, NewLatencyTimer, CacheLineReadBack;
     PCI_COMMON_HEADER PciData;
     BOOLEAN Native;
     PPCI_CONFIGURATOR Configurator;
@@ -2324,8 +2324,41 @@ PciSetResources(IN PPCI_PDO_EXTENSION PdoExtension,
     if ((PdoExtension->NeedsHotPlugConfiguration) &&
         (FdoExtension->HotPlugParameters.Acquired))
     {
-        /* Don't have hotplug devices to test with yet, QEMU 0.14 should */
-        UNIMPLEMENTED_DBGBREAK();
+        /* The firmware never configured this device, so use what _HPP asks for */
+        PdoExtension->SavedLatencyTimer = FdoExtension->HotPlugParameters.LatencyTimer;
+        PdoExtension->SavedCacheLineSize = FdoExtension->HotPlugParameters.CacheLineSize;
+
+        PdoExtension->CommandEnables &= ~(PCI_ENABLE_PARITY | PCI_ENABLE_SERR);
+        if (FdoExtension->HotPlugParameters.EnablePERR)
+        {
+            PdoExtension->CommandEnables |= PCI_ENABLE_PARITY;
+        }
+
+        if (FdoExtension->HotPlugParameters.EnableSERR)
+        {
+            PdoExtension->CommandEnables |= PCI_ENABLE_SERR;
+        }
+
+        /* Only turn on memory write and invalidate if the device keeps the cache line size */
+        PciWriteDeviceConfig(PdoExtension,
+                             &PdoExtension->SavedCacheLineSize,
+                             FIELD_OFFSET(PCI_COMMON_HEADER, CacheLineSize),
+                             sizeof(UCHAR));
+        PciReadDeviceConfig(PdoExtension,
+                            &CacheLineReadBack,
+                            FIELD_OFFSET(PCI_COMMON_HEADER, CacheLineSize),
+                            sizeof(UCHAR));
+        if ((CacheLineReadBack != 0) &&
+            (CacheLineReadBack == PdoExtension->SavedCacheLineSize))
+        {
+            PdoExtension->CommandEnables |= PCI_ENABLE_WRITE_AND_INVALIDATE;
+        }
+        else
+        {
+            DPRINT1("PCI (pdox %p) cache line size %02x rejected, MWI stays off\n",
+                    PdoExtension,
+                    PdoExtension->SavedCacheLineSize);
+        }
     }
 
     /* Locate the correct resource configurator for this type of device */
