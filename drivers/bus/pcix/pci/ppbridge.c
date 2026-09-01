@@ -777,13 +777,62 @@ PciBridgeOpenWindow(
     }
 }
 
+/**
+ * @brief
+ * Copies back the windows that were open in a bridge header saved before enumeration.
+ *
+ * @param[in,out] PciData
+ * The bridge header, with all of its windows closed.
+ *
+ * @param[in] SavedHeader
+ * The header PPBridge_SaveCurrentSettings kept for the bridge.
+ */
+static
+VOID
+NTAPI
+PciBridgeRestoreOpenWindows(
+    _Inout_ PPCI_COMMON_HEADER PciData,
+    _In_ PPCI_COMMON_HEADER SavedHeader)
+{
+    ULONGLONG First, Last;
+
+    /* A window based at zero or ending below its base was left closed */
+    First = PciBridgeIoBase(SavedHeader);
+    Last = PciBridgeIoLimit(SavedHeader);
+    if (First && (First < Last))
+    {
+        PciData->u.type1.IOBase = SavedHeader->u.type1.IOBase;
+        PciData->u.type1.IOLimit = SavedHeader->u.type1.IOLimit;
+        PciData->u.type1.IOBaseUpper16 = SavedHeader->u.type1.IOBaseUpper16;
+        PciData->u.type1.IOLimitUpper16 = SavedHeader->u.type1.IOLimitUpper16;
+    }
+
+    First = PciBridgeMemoryBase(SavedHeader);
+    Last = PciBridgeMemoryLimit(SavedHeader);
+    if (First && (First < Last))
+    {
+        PciData->u.type1.MemoryBase = SavedHeader->u.type1.MemoryBase;
+        PciData->u.type1.MemoryLimit = SavedHeader->u.type1.MemoryLimit;
+    }
+
+    First = (ULONGLONG)PciBridgePrefetchMemoryBase(SavedHeader).QuadPart;
+    Last = (ULONGLONG)PciBridgePrefetchMemoryLimit(SavedHeader).QuadPart;
+    if (First && (First < Last))
+    {
+        PciData->u.type1.PrefetchBase = SavedHeader->u.type1.PrefetchBase;
+        PciData->u.type1.PrefetchLimit = SavedHeader->u.type1.PrefetchLimit;
+        PciData->u.type1.PrefetchBaseUpper32 = SavedHeader->u.type1.PrefetchBaseUpper32;
+        PciData->u.type1.PrefetchLimitUpper32 = SavedHeader->u.type1.PrefetchLimitUpper32;
+    }
+}
+
 VOID
 NTAPI
 PPBridge_ChangeResourceSettings(IN PPCI_PDO_EXTENSION PdoExtension,
                                 IN PPCI_COMMON_HEADER PciData)
 {
     //BOOLEAN IoActive;
-    PPCI_FDO_EXTENSION FdoExtension;
+    PPCI_COMMON_CONFIG SavedConfig;
     PPCI_FUNCTION_RESOURCES PciResources;
     PCM_PARTIAL_RESOURCE_DESCRIPTOR CmDescriptor;
     PHYSICAL_ADDRESS Address;
@@ -793,54 +842,34 @@ PPBridge_ChangeResourceSettings(IN PPCI_PDO_EXTENSION PdoExtension,
     /* Check if I/O Decodes are enabled */
     //IoActive = (PciData->u.type1.IOBase & 0xF) == 1;
 
-    /*
-     * Check for Intel ICH PCI-to-PCI (i82801) bridges (used on the i810,
-     * i820, i840, i845 Chipsets) that don't have subtractive decode broken.
-     * If they do have broken subtractive support, or if they are not ICH bridges,
-     * then check if the bridge supports subtractive decode at all.
-     */
-    if ((((PdoExtension->VendorId == 0x8086) &&
-         ((PdoExtension->DeviceId == 0x2418) ||
-          (PdoExtension->DeviceId == 0x2428) ||
-          (PdoExtension->DeviceId == 0x244E) ||
-          (PdoExtension->DeviceId == 0x2448))) &&
-         (!(PdoExtension->HackFlags & PCI_HACK_BROKEN_SUBTRACTIVE_DECODE) ||
-         (PdoExtension->Dependent.type1.SubtractiveDecode == FALSE))) ||
-        (PdoExtension->Dependent.type1.SubtractiveDecode == FALSE))
-    {
-        /* No resources are needed on a subtractive decode bridge */
-        PciData->u.type1.MemoryBase = 0xFFFF;
-        PciData->u.type1.PrefetchBase = 0xFFFF;
-        PciData->u.type1.IOBase = 0xFF;
-        PciData->u.type1.IOLimit = 0;
-        PciData->u.type1.MemoryLimit = 0;
-        PciData->u.type1.PrefetchLimit = 0;
-        PciData->u.type1.PrefetchBaseUpper32 = 0;
-        PciData->u.type1.PrefetchLimitUpper32 = 0;
-        PciData->u.type1.IOBaseUpper16 = 0;
-        PciData->u.type1.IOLimitUpper16 = 0;
-    }
-    else
-    {
-        /*
-         * Otherwise, get the FDO to read the old PCI configuration header that
-         * had been saved by the hack in PPBridge_SaveCurrentSettings.
-         */
-        FdoExtension = PdoExtension->ParentFdoExtension;
-        ASSERT(PdoExtension->Resources == NULL);
+    /* Close every window, only the ones with a range to forward get opened again */
+    PciData->u.type1.MemoryBase = 0xFFFF;
+    PciData->u.type1.PrefetchBase = 0xFFFF;
+    PciData->u.type1.IOBase = 0xFF;
+    PciData->u.type1.IOLimit = 0;
+    PciData->u.type1.MemoryLimit = 0;
+    PciData->u.type1.PrefetchLimit = 0;
+    PciData->u.type1.PrefetchBaseUpper32 = 0;
+    PciData->u.type1.PrefetchLimitUpper32 = 0;
+    PciData->u.type1.IOBaseUpper16 = 0;
+    PciData->u.type1.IOLimitUpper16 = 0;
 
-        /* Read the PCI header data and use that here */
-        PciData->u.type1.IOBase = FdoExtension->PreservedConfig->u.type1.IOBase;
-        PciData->u.type1.IOLimit = FdoExtension->PreservedConfig->u.type1.IOLimit;
-        PciData->u.type1.MemoryBase = FdoExtension->PreservedConfig->u.type1.MemoryBase;
-        PciData->u.type1.MemoryLimit = FdoExtension->PreservedConfig->u.type1.MemoryLimit;
-        PciData->u.type1.PrefetchBase = FdoExtension->PreservedConfig->u.type1.PrefetchBase;
-        PciData->u.type1.PrefetchLimit = FdoExtension->PreservedConfig->u.type1.PrefetchLimit;
-        PciData->u.type1.PrefetchBaseUpper32 = FdoExtension->PreservedConfig->u.type1.PrefetchBaseUpper32;
-        PciData->u.type1.PrefetchLimitUpper32 = FdoExtension->PreservedConfig->u.type1.PrefetchLimitUpper32;
-        PciData->u.type1.IOBaseUpper16 = FdoExtension->PreservedConfig->u.type1.IOBaseUpper16;
-        PciData->u.type1.IOLimitUpper16 = FdoExtension->PreservedConfig->u.type1.IOLimitUpper16;
+    /* Only the bridges PPBridge_SaveCurrentSettings kept a header for have windows to restore */
+    SavedConfig = NULL;
+    if ((PdoExtension->Dependent.type1.SubtractiveDecode) &&
+        (((PdoExtension->VendorId == 0x8086) &&
+          ((PdoExtension->DeviceId == 0x2418) ||
+           (PdoExtension->DeviceId == 0x2428) ||
+           (PdoExtension->DeviceId == 0x244E) ||
+           (PdoExtension->DeviceId == 0x2448))) ||
+         (PdoExtension->HackFlags & PCI_HACK_BROKEN_SUBTRACTIVE_DECODE)))
+    {
+        SavedConfig = PdoExtension->ParentFdoExtension->PreservedConfig;
     }
+
+    /* A subtractive bridge has no window limits, so the loop below leaves these alone */
+    if (SavedConfig)
+        PciBridgeRestoreOpenWindows(PciData, (PPCI_COMMON_HEADER)SavedConfig);
 
     /* Write back the BARs, windows and ROM with the ranges assigned to them */
     PciResources = PdoExtension->Resources;

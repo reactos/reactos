@@ -1250,8 +1250,8 @@ PciApplyHacks(IN PPCI_FDO_EXTENSION DeviceExtension,
         /*
          * This is called whenever resources are changed and hardware needs to be
          * updated. It is concerned with two highly specific erratas on an IBM
-         * hot-plug docking bridge used on the Thinkpad 600 Series and on Intel's
-         * ICH PCI Bridges.
+         * hot-plug docking bridge used on the Thinkpad 600 Series and on subtractive
+         * decode PCI Bridges.
          */
         case PCI_HACK_FIXUP_BEFORE_UPDATE:
 
@@ -1286,35 +1286,18 @@ PciApplyHacks(IN PPCI_FDO_EXTENSION DeviceExtension,
             }
 
             /*
-             * Check for Intel ICH PCI-to-PCI (i82801) bridges (used on the i810,
-             * i820, i840, i845 Chipsets) that have subtractive decode enabled,
-             * and whose hack flags do not specify that this support is broken.
+             * A subtractive bridge needs no positive windows, except Intel ICH (i82801) and
+             * flagged bridges, which keep the windows their saved header had open.
              */
             if ((PdoExtension->HeaderType == PCI_BRIDGE_TYPE) &&
                 (PdoExtension->Dependent.type1.SubtractiveDecode) &&
-                ((PdoExtension->VendorId == 0x8086) &&
-                 ((PdoExtension->DeviceId == 0x2418) ||
-                  (PdoExtension->DeviceId == 0x2428) ||
-                  (PdoExtension->DeviceId == 0x244E) ||
-                  (PdoExtension->DeviceId == 0x2448))) &&
+                !((PdoExtension->VendorId == 0x8086) &&
+                  ((PdoExtension->DeviceId == 0x2418) ||
+                   (PdoExtension->DeviceId == 0x2428) ||
+                   (PdoExtension->DeviceId == 0x244E) ||
+                   (PdoExtension->DeviceId == 0x2448))) &&
                !(PdoExtension->HackFlags & PCI_HACK_BROKEN_SUBTRACTIVE_DECODE))
             {
-                /*
-                 * The positive decode window shouldn't be used, these values are
-                 * normally all read-only or initialized to 0 by the BIOS, but
-                 * it appears Intel doesn't do this, so the PCI Bus Driver will
-                 * do it in software instead. Note that this is used to prevent
-                 * certain non-compliant PCI devices from breaking down due to the
-                 * fact that these ICH bridges have a known "quirk" (which Intel
-                 * documents as a known "erratum", although it's not not really
-                 * an ICH bug since the PCI specification does allow for it) in
-                 * that they will sometimes send non-zero addresses during special
-                 * cycles (ie: non-zero data during the address phase). These
-                 * broken PCI cards will mistakenly attempt to claim the special
-                 * cycle and corrupt their I/O and RAM ranges. Again, in Intel's
-                 * defense, the PCI specification only requires stable data, not
-                 * necessarily zero data, during the address phase.
-                 */
                 PciData->u.type1.MemoryBase = 0xFFFF;
                 PciData->u.type1.PrefetchBase = 0xFFFF;
                 PciData->u.type1.IOBase = 0xFF;
