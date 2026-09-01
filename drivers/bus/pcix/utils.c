@@ -1306,7 +1306,7 @@ PciDecodeEnable(IN PPCI_PDO_EXTENSION PdoExtension,
         {
             /* Otherwise, read the current command */
             PciReadDeviceConfig(PdoExtension,
-                                &Command,
+                                &CommandValue,
                                 FIELD_OFFSET(PCI_COMMON_HEADER, Command),
                                 sizeof(USHORT));
         }
