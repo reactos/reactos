@@ -420,7 +420,8 @@ SmpHandleConnectionRequest(IN HANDLE SmApiPort,
 
 ULONG
 NTAPI
-SmpApiLoop(IN PVOID Parameter)
+SmpApiLoop(
+    _In_ PVOID Parameter)
 {
     HANDLE SmApiPort = (HANDLE)Parameter;
     NTSTATUS Status;
@@ -517,5 +518,7 @@ SmpApiLoop(IN PVOID Parameter)
                 break;
         }
     }
-    return STATUS_SUCCESS;
+
+    UNREACHABLE;
+    return STATUS_UNSUCCESSFUL;
 }
