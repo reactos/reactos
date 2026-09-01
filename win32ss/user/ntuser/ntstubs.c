@@ -402,30 +402,6 @@ NtUserGetRawInputData(
 
 DWORD
 APIENTRY
-NtUserGetRawInputDeviceInfo(
-    HANDLE hDevice,
-    UINT uiCommand,
-    LPVOID pData,
-    PUINT pcbSize
-)
-{
-    STUB;
-    return 0;
-}
-
-DWORD
-APIENTRY
-NtUserGetRawInputDeviceList(
-    PRAWINPUTDEVICELIST pRawInputDeviceList,
-    PUINT puiNumDevices,
-    UINT cbSize)
-{
-    STUB;
-    return 0;
-}
-
-DWORD
-APIENTRY
 NtUserGetRegisteredRawInputDevices(
     PRAWINPUTDEVICE pRawInputDevices,
     PUINT puiNumDevices,
