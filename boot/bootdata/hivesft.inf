@@ -670,7 +670,7 @@ HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Drivers32","msacm.msadpcm",0x
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Drivers32","msacm.msg711",0x00000000,"msg711.acm"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Drivers32","msacm.msgsm610",0x00000000,"msgsm32.acm"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Drivers32","msacm.imaadpcm",0x00000000,"imaadp32.acm"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Drivers32","msacm.winemp3",0x00000000,"winemp3.acm"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Drivers32","msacm.l3acm",0x00000000,"l3codeca.acm"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Drivers32","vidc.cvid",0x00000000,"iccvid.dll"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Drivers32","vidc.mrle",0x00000000,"msrle32.dll"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Drivers32","vidc.msvc",0x00000000,"msvidc32.dll"
