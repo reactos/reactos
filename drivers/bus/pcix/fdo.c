@@ -443,12 +443,24 @@ PciFdoIrpQueryLegacyBusInformation(IN PIRP Irp,
                                    IN PIO_STACK_LOCATION IoStackLocation,
                                    IN PPCI_FDO_EXTENSION DeviceExtension)
 {
-    UNREFERENCED_PARAMETER(Irp);
-    UNREFERENCED_PARAMETER(IoStackLocation);
-    UNREFERENCED_PARAMETER(DeviceExtension);
+    PLEGACY_BUS_INFORMATION BusInformation;
+    PAGED_CODE();
 
-    UNIMPLEMENTED_DBGBREAK();
-    return STATUS_NOT_SUPPORTED;
+    UNREFERENCED_PARAMETER(IoStackLocation);
+
+    /* The PnP manager frees this once it has recorded the bus */
+    BusInformation = ExAllocatePoolWithTag(PagedPool,
+                                           sizeof(*BusInformation),
+                                           PCI_POOL_TAG);
+    if (!BusInformation)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
+    BusInformation->BusTypeGuid = GUID_BUS_TYPE_PCI;
+    BusInformation->LegacyBusType = PCIBus;
+    BusInformation->BusNumber = DeviceExtension->BaseBus;
+
+    Irp->IoStatus.Information = (ULONG_PTR)BusInformation;
+    return STATUS_SUCCESS;
 }
 
 VOID
