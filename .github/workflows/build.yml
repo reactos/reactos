@@ -73,7 +73,7 @@ jobs:
       run: echo 'cmake -S ${{github.workspace}}/src -B ${{github.workspace}}/build -G Ninja -DCMAKE_TOOLCHAIN_FILE:FILEPATH=toolchain-${{matrix.compiler}}.cmake -DARCH:STRING=${{matrix.arch}} -DCMAKE_BUILD_TYPE=${{matrix.config}} -DDLL_EXPORT_VERSION=${{matrix.dllver}} -DENABLE_CCACHE=1 -DENABLE_ROSTESTS=1 -DENABLE_ROSAPPS=1 ${{env.D_CLANG_VERSION}}' | ${{github.workspace}}/RosBE-CI/RosBE.sh . 0 ${{matrix.arch}}
     # GCC and Clang use relative file paths for error messages, use sed to convert these to absolute paths so that GitHub could parse them
     - name: Build
-      run: set -o pipefail && echo 'cmake --build ${{github.workspace}}/build --' | ${{github.workspace}}/RosBE-CI/RosBE.sh . 0 ${{matrix.arch}} 2>&1 | sed 's|^\.\./src/|${{github.workspace}}/src/|'
+      run: set -o pipefail && echo 'cmake --build ${{github.workspace}}/build -- -k0' | ${{github.workspace}}/RosBE-CI/RosBE.sh . 0 ${{matrix.arch}} 2>&1 | sed 's|^\.\./src/|${{github.workspace}}/src/|'
     - name: Generate ISOs
       run: echo 'cmake --build ${{github.workspace}}/build --target bootcd' | ${{github.workspace}}/RosBE-CI/RosBE.sh . 0 ${{matrix.arch}}
     - name: Print ccache statistics
