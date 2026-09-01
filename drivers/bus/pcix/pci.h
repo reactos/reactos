@@ -1345,6 +1345,38 @@ arbusno_Initializer(
 
 NTSTATUS
 NTAPI
+arbusno_UnpackRequirement(
+    _In_ PIO_RESOURCE_DESCRIPTOR Descriptor,
+    _Out_ PULONGLONG Minimum,
+    _Out_ PULONGLONG Maximum,
+    _Out_ PULONGLONG Length,
+    _Out_ PULONGLONG Alignment
+);
+
+NTSTATUS
+NTAPI
+arbusno_PackResource(
+    _In_ PIO_RESOURCE_DESCRIPTOR Descriptor,
+    _In_ ULONGLONG Start,
+    _Out_ PCM_PARTIAL_RESOURCE_DESCRIPTOR Resource
+);
+
+NTSTATUS
+NTAPI
+arbusno_UnpackResource(
+    _In_ PCM_PARTIAL_RESOURCE_DESCRIPTOR Resource,
+    _Out_ PULONGLONG Start,
+    _Out_ PULONGLONG Length
+);
+
+INT32
+NTAPI
+arbusno_ScoreRequirement(
+    _In_ PIO_RESOURCE_DESCRIPTOR Descriptor
+);
+
+NTSTATUS
+NTAPI
 agpintrf_Initializer(
     IN PVOID Instance
 );
