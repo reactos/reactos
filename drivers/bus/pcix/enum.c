@@ -1920,6 +1920,7 @@ PciScanBus(IN PPCI_FDO_EXTENSION DeviceExtension)
     USHORT SubVendorId, SubSystemId;
     PCI_CAPABILITIES_HEADER CapHeader, PcixCapHeader;
     UCHAR SecondaryBus;
+    UCHAR BusNumbers[3];
     DPRINT1("PCI Scan Bus: FDO Extension @ 0x%p, Base Bus = 0x%x\n",
             DeviceExtension, DeviceExtension->BaseBus);
 
@@ -1938,9 +1939,18 @@ PciScanBus(IN PPCI_FDO_EXTENSION DeviceExtension)
                             &SecondaryBus,
                             FIELD_OFFSET(PCI_COMMON_HEADER, u.type1.SecondaryBus),
                             sizeof(UCHAR));
-        if (SecondaryBus != PdoExtension->Dependent.type1.SecondaryBus)
+        if (SecondaryBus != DeviceExtension->BaseBus)
         {
-            UNIMPLEMENTED_DBGBREAK("PCI: Bus numbers have been changed!  Restoring originals.\n");
+            DPRINT1("PCI: Bus numbers have been changed!  Restoring originals.\n");
+
+            /* The children were found under these numbers, so the bridge must decode them again */
+            BusNumbers[0] = PdoExtension->ParentFdoExtension->BaseBus;
+            BusNumbers[1] = DeviceExtension->BaseBus;
+            BusNumbers[2] = PdoExtension->Dependent.type1.SubordinateBus;
+            PciWriteDeviceConfig(PdoExtension,
+                                 BusNumbers,
+                                 FIELD_OFFSET(PCI_COMMON_HEADER, u.type1.PrimaryBus),
+                                 sizeof(BusNumbers));
         }
     }
 
