@@ -2001,8 +2001,9 @@ PciScanBus(IN PPCI_FDO_EXTENSION DeviceExtension)
                                                 PciData);
             if (PdoExtension)
             {
-                /* Rescan scenarios are not yet implemented */
-                UNIMPLEMENTED_DBGBREAK();
+                /* Same function as last scan, so its PDO stays and counts as present */
+                PdoExtension->NotPresent = FALSE;
+                continue;
             }
 
             /* Bus processing will need to happen */
@@ -2414,6 +2415,9 @@ PciQueryDeviceRelations(IN PPCI_FDO_EXTENSION DeviceExtension,
     /* Return the final count and the new buffer */
     NewRelations->Count += PdoCount;
     *pDeviceRelations = NewRelations;
+
+    /* Let later rescans and PnP state changes begin their own transitions */
+    PciCancelStateTransition(DeviceExtension, PciSynchronizedOperation);
     return STATUS_SUCCESS;
 }
 
