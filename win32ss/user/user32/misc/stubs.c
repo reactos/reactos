@@ -235,18 +235,40 @@ CsrBroadcastSystemMessageExW(
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 UINT
 WINAPI
 GetRawInputDeviceInfoA(
-    HANDLE hDevice,
-    UINT uiCommand,
-    LPVOID pData,
-    PUINT pcbSize)
+    _In_opt_ HANDLE hDevice,
+    _In_ UINT uiCommand,
+    _Inout_opt_ LPVOID pData,
+    _Inout_ PUINT pcbSize)
 {
-  UNIMPLEMENTED;
-  return 0;
+    UINT Ret;
+    LPVOID pDataW = pData;
+    UINT cbSize = *pcbSize;
+
+    if (uiCommand == RIDI_DEVICENAME && pData)
+    {
+        pDataW = HeapAlloc(GetProcessHeap(), 0, cbSize * sizeof(WCHAR));
+        if (!pDataW)
+        {
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            return (UINT)-1;
+        }
+    }
+
+    Ret = NtUserGetRawInputDeviceInfo(hDevice, uiCommand, pDataW, &cbSize);
+    if (Ret >= 0 && uiCommand == RIDI_DEVICENAME && pDataW)
+    {
+        if (WideCharToMultiByte(CP_THREAD_ACP, 0, pDataW, cbSize, pData, *pcbSize, NULL, NULL) == 0)
+            Ret = (UINT)-1;
+    }
+    if (pData != pDataW)
+        HeapFree(GetProcessHeap(), 0, pDataW);
+    *pcbSize = cbSize;
+    return Ret;
 }
 
 /*
