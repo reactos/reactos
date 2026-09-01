@@ -1470,8 +1470,8 @@ PcipGetFunctionLimits(IN PPCI_CONFIGURATOR_CONTEXT Context)
         IoDescriptor--;
         if (IoDescriptor->Type != CmResourceTypeNull) break;
 
-        /* This is a null descriptor, is it the last one? */
-        if (IoDescriptor == &PdoExtension->Resources->Limit[PCI_TYPE0_ADDRESSES + 1])
+        /* This is a null descriptor, have all of them been scanned now? */
+        if (IoDescriptor == &PdoExtension->Resources->Limit[0])
         {
             /* This means the descriptor is NULL, which means discovery failed */
             DPRINT1("PCI Resources fail!\n");
