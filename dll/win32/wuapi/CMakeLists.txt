@@ -14,16 +14,13 @@ list(APPEND SOURCE
     updates.c
     precomp.h)
 
-add_typelib(wuapi_tlb.idl)
-set_source_files_properties(wuapi.rc PROPERTIES OBJECT_DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/wuapi_tlb.tlb)
-
 add_library(wuapi MODULE
     ${SOURCE}
-    wuapi.rc
     ${CMAKE_CURRENT_BINARY_DIR}/wuapi.def)
 
 set_module_type(wuapi win32dll)
-target_link_libraries(wuapi uuid wine wuguid)
+add_idl_reg_scripts(wuapi registry wuapi_tlb.idl)
+target_link_libraries(wuapi uuid wine wine_dll_register wine_dll_canunload wuguid oldnames)
 add_importlibs(wuapi msvcrt kernel32 ntdll)
 add_dependencies(wuapi stdole2) # wuapi_tlb.tlb needs stdole2.tlb
 add_pch(wuapi precomp.h SOURCE)

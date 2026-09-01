@@ -111,24 +111,7 @@ static const struct IClassFactoryVtbl wucf_vtbl =
 static wucf sessioncf = { { &wucf_vtbl }, UpdateSession_create };
 static wucf updatescf = { { &wucf_vtbl }, AutomaticUpdates_create };
 static wucf sysinfocf = { { &wucf_vtbl }, SystemInformation_create };
-
-static HINSTANCE instance;
-
-BOOL WINAPI DllMain( HINSTANCE hinst, DWORD reason, LPVOID lpv )
-{
-    switch(reason)
-    {
-#ifndef __REACTOS__
-    case DLL_WINE_PREATTACH:
-        return FALSE;  /* prefer native version */
-#endif
-    case DLL_PROCESS_ATTACH:
-        instance = hinst;
-        DisableThreadLibraryCalls( hinst );
-        break;
-    }
-    return TRUE;
-}
+static wucf installercf = { { &wucf_vtbl }, UpdateInstaller_create };
 
 HRESULT WINAPI DllGetClassObject( REFCLSID rclsid, REFIID iid, LPVOID *ppv )
 {
@@ -148,27 +131,10 @@ HRESULT WINAPI DllGetClassObject( REFCLSID rclsid, REFIID iid, LPVOID *ppv )
     {
        cf = &sysinfocf.IClassFactory_iface;
     }
+    else if (IsEqualGUID( rclsid, &CLSID_UpdateInstaller ))
+    {
+       cf = &installercf.IClassFactory_iface;
+    }
     if (!cf) return CLASS_E_CLASSNOTAVAILABLE;
     return IClassFactory_QueryInterface( cf, iid, ppv );
-}
-
-HRESULT WINAPI DllCanUnloadNow( void )
-{
-    return S_FALSE;
-}
-
-/***********************************************************************
- *		DllRegisterServer (WUAPI.@)
- */
-HRESULT WINAPI DllRegisterServer(void)
-{
-    return __wine_register_resources( instance );
-}
-
-/***********************************************************************
- *		DllUnregisterServer (WUAPI.@)
- */
-HRESULT WINAPI DllUnregisterServer(void)
-{
-    return __wine_unregister_resources( instance );
 }
