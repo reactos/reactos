@@ -679,8 +679,9 @@ NTAPI
 PciGetDebugPorts(IN HANDLE DebugKey)
 {
     UNREFERENCED_PARAMETER(DebugKey);
-    /* This function is not yet implemented */
-    UNIMPLEMENTED_DBGBREAK();
+
+    /* Only called when the Debug key exists, so this prints once per boot */
+    DPRINT1("PCI: Debugging devices are not tracked yet and will not be protected\n");
     return STATUS_SUCCESS;
 }
 
