@@ -238,10 +238,9 @@ SmpExecuteInitialCommand(IN ULONG MuSessionId,
 NTSTATUS
 NTAPI
 SmpTerminate(
-    IN PULONG_PTR Parameters,
-    IN ULONG ParameterMask,
-    IN ULONG ParameterCount
-);
+    _In_reads_(ParameterCount) PULONG_PTR Parameters,
+    _In_ ULONG ParameterMask,
+    _In_ ULONG ParameterCount);
 
 /* smsubsys.c */
 

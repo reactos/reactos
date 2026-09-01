@@ -371,19 +371,20 @@ SmpExecuteInitialCommand(IN ULONG MuSessionId,
 
 NTSTATUS
 NTAPI
-SmpTerminate(IN PULONG_PTR Parameters,
-             IN ULONG ParameterMask,
-             IN ULONG ParameterCount)
+SmpTerminate(
+    _In_reads_(ParameterCount) PULONG_PTR Parameters,
+    _In_ ULONG ParameterMask,
+    _In_ ULONG ParameterCount)
 {
     NTSTATUS Status;
-    BOOLEAN Old;
     ULONG Response;
+    BOOLEAN Old;
 
     /* Give the shutdown privilege to the thread */
-    if (RtlAdjustPrivilege(SE_SHUTDOWN_PRIVILEGE, TRUE, TRUE, &Old) ==
-        STATUS_NO_TOKEN)
+    Status = RtlAdjustPrivilege(SE_SHUTDOWN_PRIVILEGE, TRUE, TRUE, &Old);
+    if (Status == STATUS_NO_TOKEN)
     {
-        /* Thread doesn't have a token, give it to the entire process */
+        /* The thread doesn't have a token, give it to the entire process */
         RtlAdjustPrivilege(SE_SHUTDOWN_PRIVILEGE, TRUE, FALSE, &Old);
     }
 
@@ -395,7 +396,11 @@ SmpTerminate(IN PULONG_PTR Parameters,
                               OptionShutdownSystem,
                               &Response);
 
-    /* Terminate the process if the hard error didn't already */
+    /* Terminate the process if the hard error didn't already.
+     * In case the Parameters array has at least 2 elements,
+     * use Parameters[1] that contains the actual failure code,
+     * instead of what NtRaiseHardError() returned. */
+    if (ParameterCount >= 2) Status = Parameters[1];
     return NtTerminateProcess(NtCurrentProcess(), Status);
 }
 
