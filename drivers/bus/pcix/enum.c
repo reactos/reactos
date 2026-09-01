@@ -89,8 +89,8 @@ PciComputeNewCurrentSettings(IN PPCI_PDO_EXTENSION PdoExtension,
     /* Print the new specified resource list */
     PciDebugPrintCmResList(ResourceList);
 
-    /* Clear the temporary resource array */
-    for (i = 0; i < 7; i++) ResourceArray[i].Type = CmResourceTypeNull;
+    /* Zero all fields, an unassigned entry still gets copied into the current settings */
+    RtlZeroMemory(ResourceArray, sizeof(ResourceArray));
 
     /* Loop the full resource descriptor */
     FullList = ResourceList->List;
