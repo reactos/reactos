@@ -28,13 +28,21 @@ PciTranslateBusAddress(IN INTERFACE_TYPE InterfaceType,
                        OUT PULONG AddressSpace,
                        OUT PPHYSICAL_ADDRESS TranslatedAddress)
 {
-    UNREFERENCED_PARAMETER(InterfaceType);
-    UNREFERENCED_PARAMETER(BusNumber);
-    UNREFERENCED_PARAMETER(AddressSpace);
+    /* The HAL has the final say on any bus it registered */
+    if (PcipSavedTranslateBusAddress(InterfaceType,
+                                     BusNumber,
+                                     BusAddress,
+                                     AddressSpace,
+                                     TranslatedAddress))
+    {
+        return TRUE;
+    }
 
-    /* FIXME: Broken translation */
-    UNIMPLEMENTED;
-    TranslatedAddress->QuadPart = BusAddress.QuadPart;
+    /* Buses the HAL never saw still map PCI addresses 1:1 to processor addresses */
+    if (InterfaceType != PCIBus)
+        return FALSE;
+
+    *TranslatedAddress = BusAddress;
     return TRUE;
 }
 
