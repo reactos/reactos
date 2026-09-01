@@ -577,6 +577,80 @@ PciQueryEjectionRelations(IN PPCI_PDO_EXTENSION PdoExtension,
     return STATUS_NOT_IMPLEMENTED;
 }
 
+/**
+ * @brief
+ * Writes a fixed requirement for the range a BAR is decoding now.
+ *
+ * @param[in] PdoExtension
+ * The PDO extension of the function.
+ *
+ * @param[in] Command
+ * The command register of the function as it reads now.
+ *
+ * @param[in] BarIndex
+ * The BAR to describe.
+ *
+ * @param[out] Descriptor
+ * Receives the requirement, or NULL to only count it.
+ *
+ * @return
+ * 1 when the BAR has such a range, otherwise 0.
+ */
+static
+ULONG
+NTAPI
+PciAddCurrentPlacementRequirement(
+    _In_ PPCI_PDO_EXTENSION PdoExtension,
+    _In_ USHORT Command,
+    _In_ ULONG BarIndex,
+    _Out_opt_ PIO_RESOURCE_DESCRIPTOR Descriptor)
+{
+    PCM_PARTIAL_RESOURCE_DESCRIPTOR Current;
+    PIO_RESOURCE_DESCRIPTOR Limit;
+    IO_RESOURCE_DESCRIPTOR Placement;
+    ULONGLONG Start, End, Length, Maximum;
+    USHORT DecodeBit;
+    PAGED_CODE();
+
+    Current = &PdoExtension->Resources->Current[BarIndex];
+    Limit = &PdoExtension->Resources->Limit[BarIndex];
+
+    if (Current->Type == CmResourceTypePort)
+        DecodeBit = PCI_ENABLE_IO_SPACE;
+    else if ((Current->Type == CmResourceTypeMemory) ||
+             (Current->Type == CmResourceTypeMemoryLarge))
+        DecodeBit = PCI_ENABLE_MEMORY_SPACE;
+    else
+        return 0;
+
+    /* An address is only a placement while the function decodes it */
+    if ((Limit->Type != Current->Type) || !(Command & DecodeBit))
+        return 0;
+
+    /* The range has to be one this BAR can decode, which also rules out bridge windows */
+    Length = RtlCmDecodeMemIoResource(Current, &Start);
+    End = Start + Length - 1;
+    if (!Start ||
+        !Length ||
+        (Length != RtlIoDecodeMemIoResource(Limit, NULL, NULL, &Maximum)) ||
+        (End > Maximum))
+    {
+        return 0;
+    }
+
+    /* Built even when only counting, so a range that cannot be described is never counted */
+    Placement = *Limit;
+    Placement.Option = IO_RESOURCE_PREFERRED;
+    Placement.ShareDisposition = CmResourceShareDeviceExclusive;
+    if (!NT_SUCCESS(RtlIoEncodeMemIoResource(&Placement, Limit->Type, Length, 1, Start, End)))
+        return 0;
+
+    if (Descriptor)
+        *Descriptor = Placement;
+
+    return 1;
+}
+
 NTSTATUS
 NTAPI
 PciBuildRequirementsList(IN PPCI_PDO_EXTENSION PdoExtension,
@@ -584,9 +658,9 @@ PciBuildRequirementsList(IN PPCI_PDO_EXTENSION PdoExtension,
                          OUT PIO_RESOURCE_REQUIREMENTS_LIST* Buffer)
 {
     PIO_RESOURCE_REQUIREMENTS_LIST RequirementsList;
-    PIO_RESOURCE_DESCRIPTOR Descriptor, Limit;
+    PIO_RESOURCE_DESCRIPTOR Descriptor, Limit, First, Next;
     PCI_CONFIGURATOR_CONTEXT Context;
-    ULONG Count, i, Resized;
+    ULONG Count, i;
     BOOLEAN HaveInterrupt;
 
     PAGED_CODE();
@@ -606,6 +680,9 @@ PciBuildRequirementsList(IN PPCI_PDO_EXTENSION PdoExtension,
                                                     i,
                                                     &PdoExtension->Resources->Limit[i],
                                                     NULL);
+
+            /* And a BAR that already decodes a range also asks to keep it */
+            Count += PciAddCurrentPlacementRequirement(PdoExtension, PciData->Command, i, NULL);
         }
     }
 
@@ -646,7 +723,7 @@ PciBuildRequirementsList(IN PPCI_PDO_EXTENSION PdoExtension,
 
     Descriptor = RequirementsList->List[0].Descriptors;
 
-    /* Emit one descriptor per BAR that decoded something during discovery */
+    /* Emit the requirements of each BAR that decoded something during discovery */
     if (PdoExtension->Resources)
     {
         Limit = PdoExtension->Resources->Limit;
@@ -656,16 +733,23 @@ PciBuildRequirementsList(IN PPCI_PDO_EXTENSION PdoExtension,
             if (Limit[i].Type == CmResourceTypeNull)
                 continue;
 
-            /* The larger sizes of a resizable BAR come first, its default size is the fallback */
-            Resized = PciAddResizableBarRequirements(PdoExtension, i, &Limit[i], Descriptor);
-            Descriptor += Resized;
+            /* Larger resizable sizes, then the current placement, then the default size */
+            First = Descriptor;
+            Descriptor += PciAddResizableBarRequirements(PdoExtension, i, &Limit[i], Descriptor);
+            Descriptor += PciAddCurrentPlacementRequirement(PdoExtension,
+                                                            PciData->Command,
+                                                            i,
+                                                            Descriptor);
 
             /* A BAR decodes for one function only, so it cannot be shared */
             *Descriptor = Limit[i];
             Descriptor->ShareDisposition = CmResourceShareDeviceExclusive;
-            if (Resized)
-                Descriptor->Option = IO_RESOURCE_ALTERNATIVE;
             Descriptor++;
+
+            /* The first choice for the BAR is preferred and every later one is its alternative */
+            First->Option |= IO_RESOURCE_PREFERRED;
+            for (Next = First + 1; Next < Descriptor; Next++)
+                Next->Option |= IO_RESOURCE_ALTERNATIVE;
         }
     }
 
