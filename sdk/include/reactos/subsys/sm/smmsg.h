@@ -42,7 +42,7 @@ typedef enum _SMSRV_API_NUMBER
 //
 typedef struct _SM_CREATE_FOREIGN_SESSION_MSG
 {
-    ULONG NotImplemented;
+    ULONG SessionId;
 } SM_CREATE_FOREIGN_SESSION_MSG, *PSM_CREATE_FOREIGN_SESSION_MSG;
 
 typedef struct _SM_SESSION_COMPLETE_MSG

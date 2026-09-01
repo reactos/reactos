@@ -186,6 +186,12 @@ SmpDeleteSession(
     IN ULONG SessionId
 );
 
+VOID
+NTAPI
+SmpDeleteSessionsBySubsystem(
+    _In_ PSMP_SUBSYSTEM Subsystem
+);
+
 ULONG
 NTAPI
 SmpAllocateSessionId(

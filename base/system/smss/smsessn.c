@@ -118,6 +118,36 @@ SmpDeleteSession(IN ULONG SessionId)
     }
 }
 
+VOID
+NTAPI
+SmpDeleteSessionsBySubsystem(_In_ PSMP_SUBSYSTEM Subsystem)
+{
+    PSMP_SESSION Session;
+    PLIST_ENTRY NextEntry, OldEntry;
+
+    /* Lock the session list */
+    RtlEnterCriticalSection(&SmpSessionListLock);
+
+    /* Scan every session and remove the ones owned by this subsystem */
+    NextEntry = SmpSessionListHead.Flink;
+    while (NextEntry != &SmpSessionListHead)
+    {
+        Session = CONTAINING_RECORD(NextEntry, SMP_SESSION, Entry);
+        OldEntry = NextEntry;
+        NextEntry = NextEntry->Flink;
+
+        if (Session->Subsystem == Subsystem)
+        {
+            /* Unlink it and free its memory */
+            RemoveEntryList(OldEntry);
+            RtlFreeHeap(SmpHeap, 0, Session);
+        }
+    }
+
+    /* Release the lock */
+    RtlLeaveCriticalSection(&SmpSessionListLock);
+}
+
 ULONG
 NTAPI
 SmpAllocateSessionId(IN PSMP_SUBSYSTEM Subsystem,

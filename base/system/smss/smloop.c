@@ -37,32 +37,58 @@ HANDLE SmUniqueProcessId;
 
 NTSTATUS
 NTAPI
-SmpCreateForeignSession(IN PSM_API_MSG SmApiMsg,
-                        IN PSMP_CLIENT_CONTEXT ClientContext,
-                        IN HANDLE SmApiPort)
+SmpCreateForeignSession(_In_ PSM_API_MSG SmApiMsg,
+                        _In_ PSMP_CLIENT_CONTEXT ClientContext,
+                        _In_ HANDLE SmApiPort)
 {
-    DPRINT1("%s is not yet implemented\n", __FUNCTION__);
-    return STATUS_NOT_IMPLEMENTED;
+    ULONG MuSessionId;
+
+    /* Get the Terminal Server session ID of the calling subsystem */
+    SmpGetProcessMuSessionId(ClientContext->ProcessHandle, &MuSessionId);
+
+    /* Make sure a subsystem is actually registered for this session */
+    if (!SmpCheckDuplicateMuSessionId(MuSessionId))
+    {
+        DPRINT1("CreateForeignSession: no subsystem for MuSessionId %lu\n",
+                MuSessionId);
+        return STATUS_OBJECT_NAME_NOT_FOUND;
+    }
+
+    /* Register a new foreign session tied to the calling subsystem */
+    SmApiMsg->u.CreateForeignSession.SessionId =
+        SmpAllocateSessionId(ClientContext->Subsystem, NULL);
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS
 NTAPI
-SmpSessionComplete(IN PSM_API_MSG SmApiMsg,
-                   IN PSMP_CLIENT_CONTEXT ClientContext,
-                   IN HANDLE SmApiPort)
+SmpSessionComplete(_In_ PSM_API_MSG SmApiMsg,
+                   _In_ PSMP_CLIENT_CONTEXT ClientContext,
+                   _In_ HANDLE SmApiPort)
 {
-    DPRINT1("%s is not yet implemented\n", __FUNCTION__);
-    return STATUS_NOT_IMPLEMENTED;
+    PSM_SESSION_COMPLETE_MSG SessionComplete = &SmApiMsg->u.SessionComplete;
+
+    DPRINT("SessionComplete: SessionId %lu complete. Status=0x%08lx\n", SessionComplete->SessionId,
+            SessionComplete->SessionStatus);
+
+    /* If the foreign session failed to come up, tear it back down */
+    if (!NT_SUCCESS(SessionComplete->SessionStatus))
+    {
+        SmpDeleteSession(SessionComplete->SessionId);
+    }
+
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS
 NTAPI
-SmpTerminateForeignSession(IN PSM_API_MSG SmApiMsg,
-                           IN PSMP_CLIENT_CONTEXT ClientContext,
-                           IN HANDLE SmApiPort)
+SmpTerminateForeignSession(_In_ PSM_API_MSG SmApiMsg,
+                           _In_ PSMP_CLIENT_CONTEXT ClientContext,
+                           _In_ HANDLE SmApiPort)
 {
-    DPRINT1("%s is not yet implemented\n", __FUNCTION__);
-    return STATUS_NOT_IMPLEMENTED;
+    /* Tear down every foreign session owned by the calling subsystem */
+    SmpDeleteSessionsBySubsystem(ClientContext->Subsystem);
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS
