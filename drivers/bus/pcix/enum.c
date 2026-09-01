@@ -2152,9 +2152,7 @@ PciScanBus(IN PPCI_FDO_EXTENSION DeviceExtension)
             Status = PciGetBiosConfig(NewExtension, BiosData);
             if (NT_SUCCESS(Status))
             {
-                /* This path has not yet been fully tested by eVb */
                 DPRINT1("Have BIOS configuration!\n");
-                UNIMPLEMENTED;
 
                 /* Check if the PCI BIOS configuration has changed */
                 if (!PcipIsSameDevice(NewExtension, BiosData))
