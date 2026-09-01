@@ -201,19 +201,114 @@ PciSetPowerManagedDevicePowerState(IN PPCI_PDO_EXTENSION DeviceExtension,
     return Status;
 }
 
+static REQUEST_POWER_COMPLETE PciFdoDevicePowerCompletion;
+
+/**
+ * @brief
+ * Finishes a system set power request once the bus has been through the
+ * device state that request asked for.
+ *
+ * @param[in] Context
+ * The system power IRP that is still held.
+ */
+static
+VOID
+NTAPI
+PciFdoDevicePowerCompletion(
+    _In_ PDEVICE_OBJECT DeviceObject,
+    _In_ UCHAR MinorFunction,
+    _In_ POWER_STATE PowerState,
+    _In_opt_ PVOID Context,
+    _In_ PIO_STATUS_BLOCK IoStatus)
+{
+    PIRP SystemIrp = Context;
+
+    UNREFERENCED_PARAMETER(DeviceObject);
+    UNREFERENCED_PARAMETER(MinorFunction);
+    ASSERT(SystemIrp != NULL);
+
+    /* The system transition goes ahead even if the bus could not follow it */
+    if (!NT_SUCCESS(IoStatus->Status))
+    {
+        DPRINT1("PCI: Bus failed to enter device state %lu (0x%08lx)\n",
+                PowerState.DeviceState,
+                IoStatus->Status);
+    }
+
+    PoStartNextPowerIrp(SystemIrp);
+    IoCompleteRequest(SystemIrp, IO_NO_INCREMENT);
+}
+
+static IO_COMPLETION_ROUTINE PciFdoSystemPowerCompletion;
+
+/**
+ * @brief
+ * Asks for the device state that matches a system set power request once the
+ * drivers below the bus have handled it.
+ *
+ * @param[in] Context
+ * The FDO extension of the bus.
+ *
+ * @return
+ * STATUS_MORE_PROCESSING_REQUIRED while the device state request is out.
+ */
+static
+NTSTATUS
+NTAPI
+PciFdoSystemPowerCompletion(
+    _In_ PDEVICE_OBJECT DeviceObject,
+    _In_ PIRP Irp,
+    _In_reads_opt_(_Inexpressible_("varies")) PVOID Context)
+{
+    PPCI_FDO_EXTENSION DeviceExtension = Context;
+    PIO_STACK_LOCATION IoStackLocation;
+    POWER_STATE Target;
+    NTSTATUS Status;
+
+    UNREFERENCED_PARAMETER(DeviceObject);
+    ASSERT(DeviceExtension != NULL);
+
+    IoStackLocation = IoGetCurrentIrpStackLocation(Irp);
+    if (IoStackLocation->Parameters.Power.State.SystemState == PowerSystemWorking)
+    {
+        Target.DeviceState = PowerDeviceD0;
+    }
+    else
+    {
+        Target.DeviceState = PowerDeviceD3;
+    }
+
+    if ((NT_SUCCESS(Irp->IoStatus.Status)) &&
+        (DeviceExtension->PowerState.CurrentDeviceState != Target.DeviceState))
+    {
+        Status = PoRequestPowerIrp(DeviceExtension->FunctionalDeviceObject,
+                                   IRP_MN_SET_POWER,
+                                   Target,
+                                   PciFdoDevicePowerCompletion,
+                                   Irp,
+                                   NULL);
+        if (NT_SUCCESS(Status))
+            return STATUS_MORE_PROCESSING_REQUIRED;
+
+        DPRINT1("PCI: Could not request device state %lu (0x%08lx)\n",
+                Target.DeviceState,
+                Status);
+    }
+
+    PoStartNextPowerIrp(Irp);
+    return STATUS_CONTINUE_COMPLETION;
+}
+
 NTSTATUS
 NTAPI
 PciFdoWaitWake(IN PIRP Irp,
                IN PIO_STACK_LOCATION IoStackLocation,
                IN PPCI_FDO_EXTENSION DeviceExtension)
 {
-    UNREFERENCED_PARAMETER(Irp);
     UNREFERENCED_PARAMETER(IoStackLocation);
-    UNREFERENCED_PARAMETER(DeviceExtension);
 
-    UNIMPLEMENTED;
-    while (TRUE);
-    return STATUS_NOT_SUPPORTED;
+    /* The bus never arms itself, so whatever lies below answers this */
+    return PciPassIrpFromFdoToPdo(DeviceExtension, Irp);
 }
 
 NTSTATUS
@@ -222,13 +317,31 @@ PciFdoSetPowerState(IN PIRP Irp,
                     IN PIO_STACK_LOCATION IoStackLocation,
                     IN PPCI_FDO_EXTENSION DeviceExtension)
 {
-    UNREFERENCED_PARAMETER(Irp);
-    UNREFERENCED_PARAMETER(IoStackLocation);
-    UNREFERENCED_PARAMETER(DeviceExtension);
+    POWER_STATE State = IoStackLocation->Parameters.Power.State;
 
-    UNIMPLEMENTED;
-    while (TRUE);
-    return STATUS_NOT_SUPPORTED;
+    /* Bridge hardware is handled by the PDO below, so only the state is kept */
+    if (IoStackLocation->Parameters.Power.Type == DevicePowerState)
+    {
+        DeviceExtension->PowerState.CurrentDeviceState = State.DeviceState;
+        return STATUS_SUCCESS;
+    }
+
+    DeviceExtension->PowerState.CurrentSystemState = State.SystemState;
+    if (DeviceExtension->DeviceState != PciStarted)
+        return STATUS_SUCCESS;
+
+    /* The bus owns its power policy and follows up with a device state request */
+    Irp->IoStatus.Status = STATUS_SUCCESS;
+    IoMarkIrpPending(Irp);
+    IoCopyCurrentIrpStackLocationToNext(Irp);
+    IoSetCompletionRoutine(Irp,
+                           PciFdoSystemPowerCompletion,
+                           DeviceExtension,
+                           TRUE,
+                           TRUE,
+                           TRUE);
+    PoCallDriver(DeviceExtension->AttachedDeviceObject, Irp);
+    return STATUS_PENDING;
 }
 
 NTSTATUS
@@ -241,9 +354,8 @@ PciFdoIrpQueryPower(IN PIRP Irp,
     UNREFERENCED_PARAMETER(IoStackLocation);
     UNREFERENCED_PARAMETER(DeviceExtension);
 
-    UNIMPLEMENTED;
-    while (TRUE);
-    return STATUS_NOT_SUPPORTED;
+    /* The bus is never armed for wake, so no state is refused */
+    return STATUS_SUCCESS;
 }
 
 /* EOF */
