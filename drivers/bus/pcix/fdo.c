@@ -125,12 +125,21 @@ PciFdoIrpQueryRemoveDevice(IN PIRP Irp,
                            IN PIO_STACK_LOCATION IoStackLocation,
                            IN PPCI_FDO_EXTENSION DeviceExtension)
 {
+    PAGED_CODE();
+
     UNREFERENCED_PARAMETER(Irp);
     UNREFERENCED_PARAMETER(IoStackLocation);
-    UNREFERENCED_PARAMETER(DeviceExtension);
 
-    UNIMPLEMENTED;
-    return STATUS_NOT_SUPPORTED;
+    /* Paging, hibernation and dump files behind this bus cannot lose their path */
+    if ((DeviceExtension->PowerState.Paging) ||
+        (DeviceExtension->PowerState.Hibernate) ||
+        (DeviceExtension->PowerState.CrashDump))
+    {
+        return STATUS_DEVICE_BUSY;
+    }
+
+    /* The remove that follows commits this */
+    return PciBeginStateTransition(DeviceExtension, PciDeleted);
 }
 
 NTSTATUS
@@ -153,12 +162,14 @@ PciFdoIrpCancelRemoveDevice(IN PIRP Irp,
                             IN PIO_STACK_LOCATION IoStackLocation,
                             IN PPCI_FDO_EXTENSION DeviceExtension)
 {
+    PAGED_CODE();
+
     UNREFERENCED_PARAMETER(Irp);
     UNREFERENCED_PARAMETER(IoStackLocation);
-    UNREFERENCED_PARAMETER(DeviceExtension);
 
-    UNIMPLEMENTED_DBGBREAK();
-    return STATUS_NOT_SUPPORTED;
+    /* The remove is off, so the bus stays where it was */
+    PciCancelStateTransition(DeviceExtension, PciDeleted);
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS
@@ -167,12 +178,16 @@ PciFdoIrpStopDevice(IN PIRP Irp,
                     IN PIO_STACK_LOCATION IoStackLocation,
                     IN PPCI_FDO_EXTENSION DeviceExtension)
 {
+    PAGED_CODE();
+
     UNREFERENCED_PARAMETER(Irp);
     UNREFERENCED_PARAMETER(IoStackLocation);
-    UNREFERENCED_PARAMETER(DeviceExtension);
 
-    UNIMPLEMENTED_DBGBREAK();
-    return STATUS_NOT_SUPPORTED;
+    PciCommitStateTransition(DeviceExtension, PciStopped);
+
+    /* The next start seeds the arbiters again from the windows it is given */
+    DeviceExtension->ArbitersInitialized = FALSE;
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS
@@ -181,12 +196,24 @@ PciFdoIrpQueryStopDevice(IN PIRP Irp,
                          IN PIO_STACK_LOCATION IoStackLocation,
                          IN PPCI_FDO_EXTENSION DeviceExtension)
 {
+    PAGED_CODE();
+
     UNREFERENCED_PARAMETER(Irp);
     UNREFERENCED_PARAMETER(IoStackLocation);
-    UNREFERENCED_PARAMETER(DeviceExtension);
 
-    UNIMPLEMENTED_DBGBREAK();
-    return STATUS_NOT_SUPPORTED;
+    /* Paging, hibernation and dump files behind this bus cannot lose their path */
+    if ((DeviceExtension->PowerState.Paging) ||
+        (DeviceExtension->PowerState.Hibernate) ||
+        (DeviceExtension->PowerState.CrashDump))
+    {
+        return STATUS_DEVICE_BUSY;
+    }
+
+    /* Root bus ranges are fixed, and children would sit outside new bridge windows */
+    if ((PCI_IS_ROOT_FDO(DeviceExtension)) || (DeviceExtension->ChildPdoList))
+        return STATUS_UNSUCCESSFUL;
+
+    return PciBeginStateTransition(DeviceExtension, PciStopped);
 }
 
 NTSTATUS
@@ -195,12 +222,14 @@ PciFdoIrpCancelStopDevice(IN PIRP Irp,
                           IN PIO_STACK_LOCATION IoStackLocation,
                           IN PPCI_FDO_EXTENSION DeviceExtension)
 {
+    PAGED_CODE();
+
     UNREFERENCED_PARAMETER(Irp);
     UNREFERENCED_PARAMETER(IoStackLocation);
-    UNREFERENCED_PARAMETER(DeviceExtension);
 
-    UNIMPLEMENTED_DBGBREAK();
-    return STATUS_NOT_SUPPORTED;
+    /* The stop is off, so the bus keeps its windows */
+    PciCancelStateTransition(DeviceExtension, PciStopped);
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS
@@ -356,12 +385,20 @@ PciFdoIrpSurpriseRemoval(IN PIRP Irp,
                          IN PIO_STACK_LOCATION IoStackLocation,
                          IN PPCI_FDO_EXTENSION DeviceExtension)
 {
+    PAGED_CODE();
+
     UNREFERENCED_PARAMETER(Irp);
     UNREFERENCED_PARAMETER(IoStackLocation);
-    UNREFERENCED_PARAMETER(DeviceExtension);
 
-    UNIMPLEMENTED_DBGBREAK();
-    return STATUS_NOT_SUPPORTED;
+    /* Only the remove that follows is left, and it commits the deletion */
+    if (NT_SUCCESS(PciBeginStateTransition(DeviceExtension, PciSurpriseRemoved)))
+    {
+        PciCommitStateTransition(DeviceExtension, PciSurpriseRemoved);
+        PciBeginStateTransition(DeviceExtension, PciDeleted);
+    }
+
+    /* Failing this would keep it from reaching the PDO below */
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS
