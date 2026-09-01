@@ -283,10 +283,72 @@ NTAPI
 Device_ChangeResourceSettings(IN PPCI_PDO_EXTENSION PdoExtension,
                               IN PPCI_COMMON_HEADER PciData)
 {
-    UNREFERENCED_PARAMETER(PdoExtension);
-    UNREFERENCED_PARAMETER(PciData);
-    /* Not yet implemented */
-    UNIMPLEMENTED_DBGBREAK();
+    PPCI_FUNCTION_RESOURCES Resources;
+    PCM_PARTIAL_RESOURCE_DESCRIPTOR CmDescriptor;
+    PULONG BarArray;
+    ULONG Bar, BarMask, i;
+
+    Resources = PdoExtension->Resources;
+    if (!Resources) return;
+
+    /* Write each BAR back with the address that was arbitrated for it */
+    BarArray = PciData->u.type0.BaseAddresses;
+    for (i = 0; i <= PCI_TYPE0_ADDRESSES; i++)
+    {
+        CmDescriptor = &Resources->Current[i];
+
+        if (i < PCI_TYPE0_ADDRESSES)
+        {
+            /* A BAR the function does not implement reads back as zero */
+            Bar = BarArray[i];
+            if (!(Bar & ~PCI_ADDRESS_IO_SPACE)) continue;
+
+            /* Work out which bits of this BAR are the address */
+            if (Bar & PCI_ADDRESS_IO_SPACE)
+            {
+                BarMask = PCI_ADDRESS_IO_ADDRESS_MASK;
+            }
+            else
+            {
+                BarMask = PCI_ADDRESS_MEMORY_ADDRESS_MASK;
+
+                /* A legacy BAR only decodes the low 20 bits of the address */
+                if ((Bar & PCI_ADDRESS_MEMORY_TYPE_MASK) == PCI_TYPE_20BIT)
+                {
+                    BarMask = 0xFFFF0;
+                }
+            }
+
+            BarArray[i] = (Bar & ~BarMask) |
+                          (CmDescriptor->u.Memory.Start.LowPart & BarMask);
+
+            /* A 64-bit BAR keeps the high half of its address in the next one */
+            if (!(Bar & PCI_ADDRESS_IO_SPACE) &&
+                ((Bar & PCI_ADDRESS_MEMORY_TYPE_MASK) == PCI_TYPE_64BIT))
+            {
+                ASSERT((i + 1) < PCI_TYPE0_ADDRESSES);
+                BarArray[i + 1] = CmDescriptor->u.Memory.Start.HighPart;
+                i++;
+            }
+        }
+        else
+        {
+            /* The ROM BAR decodes only while its enable bit is set */
+            Bar = PciData->u.type0.ROMBaseAddress;
+            if (CmDescriptor->Type == CmResourceTypeNull)
+            {
+                PciData->u.type0.ROMBaseAddress = Bar & ~PCI_ROMADDRESS_ENABLED;
+            }
+            else
+            {
+                PciData->u.type0.ROMBaseAddress =
+                    (Bar & ~PCI_ADDRESS_ROM_ADDRESS_MASK) |
+                    (CmDescriptor->u.Memory.Start.LowPart &
+                     PCI_ADDRESS_ROM_ADDRESS_MASK) |
+                    PCI_ROMADDRESS_ENABLED;
+            }
+        }
+    }
 }
 
 /* EOF */
