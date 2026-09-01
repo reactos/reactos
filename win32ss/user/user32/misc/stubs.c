@@ -220,21 +220,6 @@ GetAccCursorInfo ( PCURSORINFO pci )
 /*
  * @unimplemented
  */
-UINT
-WINAPI
-GetRawInputDeviceInfoW(
-    HANDLE hDevice,
-    UINT uiCommand,
-    LPVOID pData,
-    PUINT pcbSize)
-{
-  UNIMPLEMENTED;
-  return 0;
-}
-
-/*
- * @unimplemented
- */
 LONG
 WINAPI
 CsrBroadcastSystemMessageExW(
@@ -303,71 +288,6 @@ GetRawInputBuffer(
 {
   UNIMPLEMENTED;
   return 0;
-}
-
-/*
- * @unimplemented
- */
-UINT
-WINAPI
-GetRawInputData(
-    HRAWINPUT hRawInput,
-    UINT uiCommand,
-    LPVOID pData,
-    PUINT pcbSize,
-    UINT cbSizeHeader)
-{
-  UNIMPLEMENTED;
-  return 0;
-}
-
-/*
- * @unimplemented
- */
-UINT
-WINAPI
-GetRawInputDeviceList(
-    PRAWINPUTDEVICELIST pRawInputDeviceList,
-    PUINT puiNumDevices,
-    UINT cbSize)
-{
-    if(pRawInputDeviceList)
-        memset(pRawInputDeviceList, 0, sizeof *pRawInputDeviceList);
-    if(puiNumDevices)
-       *puiNumDevices = 0;
-
-    UNIMPLEMENTED;
-    return 0;
-}
-
-/*
- * @unimplemented
- */
-UINT
-WINAPI
-DECLSPEC_HOTPATCH
-GetRegisteredRawInputDevices(
-    PRAWINPUTDEVICE pRawInputDevices,
-    PUINT puiNumDevices,
-    UINT cbSize)
-{
-  UNIMPLEMENTED;
-  return 0;
-}
-
-/*
- * @unimplemented
- */
-BOOL
-WINAPI
-DECLSPEC_HOTPATCH
-RegisterRawInputDevices(
-    PCRAWINPUTDEVICE pRawInputDevices,
-    UINT uiNumDevices,
-    UINT cbSize)
-{
-  UNIMPLEMENTED;
-  return FALSE;
 }
 
 /*
