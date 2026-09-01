@@ -1579,6 +1579,24 @@ busintrf_Constructor(
     IN PINTERFACE Interface
 );
 
+ULONG
+NTAPI
+PciBusInterface_GetBusData(
+    _In_ PVOID Context,
+    _In_ ULONG WhichSpace,
+    _Out_writes_bytes_(Length) PVOID Buffer,
+    _In_ ULONG Offset,
+    _In_ ULONG Length);
+
+ULONG
+NTAPI
+PciBusInterface_SetBusData(
+    _In_ PVOID Context,
+    _In_ ULONG WhichSpace,
+    _In_reads_bytes_(Length) PVOID Buffer,
+    _In_ ULONG Offset,
+    _In_ ULONG Length);
+
 NTSTATUS
 NTAPI
 ario_Constructor(

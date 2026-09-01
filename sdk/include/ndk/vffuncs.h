@@ -48,6 +48,17 @@ VfFailDeviceNode(
     _In_ PSTR ParameterFormatString,
     ...
 );
+
+VOID
+VfFailSystemBIOS(
+    _In_ ULONG BugCheckMajorCode,
+    _In_ ULONG BugCheckMinorCode,
+    _In_ VF_FAILURE_CLASS FailureClass,
+    _Inout_ PULONG AssertionControl,
+    _In_ PSTR DebuggerMessageText,
+    _In_ PSTR ParameterFormatString,
+    ...
+);
 #endif
 
 #endif
