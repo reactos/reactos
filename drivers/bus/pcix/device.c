@@ -268,8 +268,8 @@ Device_GetAdditionalResourceDescriptors(IN PPCI_CONFIGURATOR_CONTEXT Context,
     UNREFERENCED_PARAMETER(Context);
     UNREFERENCED_PARAMETER(PciData);
     UNREFERENCED_PARAMETER(IoDescriptor);
-    /* Not yet implemented */
-    UNIMPLEMENTED_DBGBREAK();
+
+    /* A device decodes nothing beyond its BARs, only bridges add ranges here */
 }
 
 VOID
