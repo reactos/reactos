@@ -1917,7 +1917,10 @@ PciScanBus(IN PPCI_FDO_EXTENSION DeviceExtension)
     PPCI_PDO_EXTENSION* BridgeExtension;
     PWCHAR DescriptionText;
     USHORT SubVendorId, SubSystemId;
-    PCI_CAPABILITIES_HEADER CapHeader, PcixCapHeader;
+    PCI_CAPABILITIES_HEADER PcixCapHeader;
+    /* Holds the largest capability the dump below reads in full */
+    UCHAR CapBuffer[max(sizeof(PCI_PM_CAPABILITY), sizeof(PCI_AGP_CAPABILITY))];
+    PPCI_CAPABILITIES_HEADER CapHeader = (PVOID)CapBuffer;
     UCHAR SecondaryBus;
     UCHAR BusNumbers[3];
     DPRINT1("PCI Scan Bus: FDO Extension @ 0x%p, Base Bus = 0x%x\n",
@@ -2242,7 +2245,7 @@ PciScanBus(IN PPCI_FDO_EXTENSION DeviceExtension)
                 TempOffset = PciReadDeviceCapability(NewExtension,
                                                      CapOffset,
                                                      0,
-                                                     &CapHeader,
+                                                     CapHeader,
                                                      sizeof(PCI_CAPABILITIES_HEADER));
                 if (TempOffset != CapOffset)
                 {
@@ -2253,7 +2256,7 @@ PciScanBus(IN PPCI_FDO_EXTENSION DeviceExtension)
                 }
 
                 /* Check for capabilities that this driver cares about */
-                switch (CapHeader.CapabilityID)
+                switch (CapHeader->CapabilityID)
                 {
                     /* Power management capability is heavily used by the bus */
                     case PCI_CAPABILITY_ID_POWER_MANAGEMENT:
@@ -2286,8 +2289,8 @@ PciScanBus(IN PPCI_FDO_EXTENSION DeviceExtension)
                     /* Read the whole capability data */
                     TempOffset = PciReadDeviceCapability(NewExtension,
                                                          CapOffset,
-                                                         CapHeader.CapabilityID,
-                                                         &CapHeader,
+                                                         CapHeader->CapabilityID,
+                                                         CapHeader,
                                                          Size);
 
                     if (TempOffset != CapOffset)
@@ -2300,13 +2303,13 @@ PciScanBus(IN PPCI_FDO_EXTENSION DeviceExtension)
 
                 /* Dump this capability */
                 DPRINT1("CAP @%02x ID %02x (%s)\n",
-                        CapOffset, CapHeader.CapabilityID, Name);
+                        CapOffset, CapHeader->CapabilityID, Name);
                 for (i = 0; i < Size; i += 2)
-                    DPRINT1("  %04x\n", *(PUSHORT)((ULONG_PTR)&CapHeader + i));
+                    DPRINT1("  %04x\n", *(PUSHORT)((ULONG_PTR)CapBuffer + i));
                 DPRINT1("\n");
 
                 /* Check the next capability */
-                CapOffset = CapHeader.Next;
+                CapOffset = CapHeader->Next;
             }
 
             /* Check for IDE controllers */
