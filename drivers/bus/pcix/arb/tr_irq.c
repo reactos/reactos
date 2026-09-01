@@ -50,6 +50,7 @@ tranirq_Constructor(IN PVOID DeviceExtension,
                     IN PINTERFACE Interface)
 {
     PPCI_FDO_EXTENSION FdoExtension = (PPCI_FDO_EXTENSION)DeviceExtension;
+    PPCI_PDO_EXTENSION PdoExtension;
     ULONG BaseBus, ParentBus;
     INTERFACE_TYPE ParentInterface;
     ASSERT_FDO(FdoExtension);
@@ -81,13 +82,13 @@ tranirq_Constructor(IN PVOID DeviceExtension,
     }
     else
     {
-        /* It's not, so we have to get the root bus' bus number instead */
-        #if 0 // when have PDO commit
-        ParentBus = FdoExtension->PhysicalDeviceObject->DeviceExtension->ParentFdoExtension->BaseBus;
+        /* It's not, so the translator is rooted on the bus the bridge sits on */
+        PdoExtension = FdoExtension->PhysicalDeviceObject->DeviceExtension;
+        ASSERT_PDO(PdoExtension);
+        ParentBus = PdoExtension->ParentFdoExtension->BaseBus;
         ParentInterface = PCIBus;
         DPRINT1("      Is bridge FDO, parent bus %x, secondary bus %x\n",
                 ParentBus, BaseBus);
-        #endif
     }
 
     /* Now call the legacy HAL interface to get the correct translator */
