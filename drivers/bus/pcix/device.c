@@ -212,6 +212,10 @@ Device_SaveLimits(IN PPCI_CONFIGURATOR_CONTEXT Context)
 
     /* Create the last descriptor based on the ROM address */
     PciCreateIoDescriptorFromBarLimit(&Limit[i], PciData->u.type0.ROMBaseAddress, 0, TRUE);
+
+    /* A ROM the firmware left disabled is not given a window */
+    if (!(Current->u.type0.ROMBaseAddress & PCI_ROMADDRESS_ENABLED))
+        Limit[i].Type = CmResourceTypeNull;
 }
 
 VOID
