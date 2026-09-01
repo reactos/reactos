@@ -1784,6 +1784,12 @@ PciSetResources(
     IN BOOLEAN SomethingSomethingDarkSide
 );
 
+BOOLEAN
+NTAPI
+PcipIsSameDevice(
+    _In_ PPCI_PDO_EXTENSION DeviceExtension,
+    _In_ PPCI_COMMON_HEADER PciData);
+
 NTSTATUS
 NTAPI
 PciBuildRequirementsList(
