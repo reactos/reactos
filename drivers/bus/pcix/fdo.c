@@ -121,6 +121,82 @@ PciGetRootBusRange(
     return FALSE;
 }
 
+/**
+ * @brief Deletes the PDOs of a bus being removed. Each one already had its own remove.
+ */
+static
+VOID
+NTAPI
+PciDeleteBusChildren(
+    _Inout_ PPCI_FDO_EXTENSION FdoExtension)
+{
+    PPCI_PDO_EXTENSION PdoExtension, NextExtension;
+    PAGED_CODE();
+
+    KeEnterCriticalRegion();
+    KeWaitForSingleObject(&FdoExtension->ChildListLock, Executive, KernelMode, FALSE, NULL);
+
+    PdoExtension = FdoExtension->ChildPdoList;
+    FdoExtension->ChildPdoList = NULL;
+    FdoExtension->ChildBridgePdoList = NULL;
+
+    KeSetEvent(&FdoExtension->ChildListLock, IO_NO_INCREMENT, FALSE);
+    KeLeaveCriticalRegion();
+
+    while (PdoExtension)
+    {
+        ASSERT_PDO(PdoExtension);
+        ASSERT(PdoExtension->DeviceState != PciStarted);
+
+        /* The extension goes away with the device object */
+        NextExtension = PdoExtension->Next;
+
+        if (PdoExtension->Resources)
+            ExFreePoolWithTag(PdoExtension->Resources, PCI_POOL_TAG);
+
+        IoDeleteDevice(PdoExtension->PhysicalDeviceObject);
+        PdoExtension = NextExtension;
+    }
+}
+
+/**
+ * @brief Destroys the arbiter instances a bus being removed still holds.
+ */
+static
+VOID
+NTAPI
+PciFreeBusSecondaryExtensions(
+    _Inout_ PPCI_FDO_EXTENSION FdoExtension)
+{
+    VOID (NTAPI *Destructor)(_In_ PVOID Extension);
+    PPCI_SECONDARY_EXTENSION Extension;
+    PSINGLE_LIST_ENTRY Entry;
+    PAGED_CODE();
+
+    KeEnterCriticalRegion();
+    KeWaitForSingleObject(&FdoExtension->SecondaryExtLock, Executive, KernelMode, FALSE, NULL);
+
+    Entry = FdoExtension->SecondaryExtension.Next;
+    FdoExtension->SecondaryExtension.Next = NULL;
+    FdoExtension->ArbitersInitialized = FALSE;
+
+    KeSetEvent(&FdoExtension->SecondaryExtLock, IO_NO_INCREMENT, FALSE);
+    KeLeaveCriticalRegion();
+
+    while (Entry)
+    {
+        Extension = CONTAINING_RECORD(Entry, PCI_SECONDARY_EXTENSION, List);
+        Entry = Entry->Next;
+
+        /* The destructor frees the range lists, the instance itself is freed here */
+        Destructor = Extension->Destructor;
+        if (Destructor)
+            Destructor(Extension);
+
+        ExFreePoolWithTag(Extension, PCI_POOL_TAG);
+    }
+}
+
 NTSTATUS
 NTAPI
 PciFdoIrpStartDevice(IN PIRP Irp,
@@ -184,12 +260,61 @@ PciFdoIrpRemoveDevice(IN PIRP Irp,
                       IN PIO_STACK_LOCATION IoStackLocation,
                       IN PPCI_FDO_EXTENSION DeviceExtension)
 {
-    UNREFERENCED_PARAMETER(Irp);
-    UNREFERENCED_PARAMETER(IoStackLocation);
-    UNREFERENCED_PARAMETER(DeviceExtension);
+    PDEVICE_OBJECT DeviceObject, AttachedDeviceObject;
+    PPCI_PDO_EXTENSION BridgeExtension;
+    PSINGLE_LIST_ENTRY Entry;
+    NTSTATUS Status;
+    PAGED_CODE();
 
-    UNIMPLEMENTED_DBGBREAK();
-    return STATUS_NOT_SUPPORTED;
+    UNREFERENCED_PARAMETER(IoStackLocation);
+
+    /* A remove with no query before it, such as after a failed start, begins the deletion here */
+    if (DeviceExtension->TentativeNextState != PciDeleted)
+        PciBeginStateTransition(DeviceExtension, PciDeleted);
+
+    PciCommitStateTransition(DeviceExtension, PciDeleted);
+
+    /* Unlink the bus first so no lookup can reach it while it comes apart */
+    KeEnterCriticalRegion();
+    KeWaitForSingleObject(&PciGlobalLock, Executive, KernelMode, FALSE, NULL);
+
+    for (Entry = &PciFdoExtensionListHead; Entry->Next; Entry = Entry->Next)
+    {
+        if (Entry->Next == &DeviceExtension->List)
+        {
+            Entry->Next = DeviceExtension->List.Next;
+            break;
+        }
+    }
+
+    if (!PCI_IS_ROOT_FDO(DeviceExtension))
+    {
+        BridgeExtension = DeviceExtension->PhysicalDeviceObject->DeviceExtension;
+        ASSERT_PDO(BridgeExtension);
+
+        if (BridgeExtension->BridgeFdoExtension == DeviceExtension)
+            BridgeExtension->BridgeFdoExtension = NULL;
+    }
+
+    KeSetEvent(&PciGlobalLock, IO_NO_INCREMENT, FALSE);
+    KeLeaveCriticalRegion();
+
+    PciDeleteBusChildren(DeviceExtension);
+    PciFreeBusSecondaryExtensions(DeviceExtension);
+
+    if (DeviceExtension->PreservedConfig)
+        ExFreePoolWithTag(DeviceExtension->PreservedConfig, 'PciP');
+
+    /* The lower drivers see the remove before this device leaves the stack */
+    DeviceObject = DeviceExtension->FunctionalDeviceObject;
+    AttachedDeviceObject = DeviceExtension->AttachedDeviceObject;
+
+    Irp->IoStatus.Status = STATUS_SUCCESS;
+    Status = PciPassIrpFromFdoToPdo(DeviceExtension, Irp);
+
+    IoDetachDevice(AttachedDeviceObject);
+    IoDeleteDevice(DeviceObject);
+    return Status;
 }
 
 NTSTATUS
