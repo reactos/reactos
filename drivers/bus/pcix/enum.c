@@ -1640,51 +1640,83 @@ NTAPI
 PciProcessBus(IN PPCI_FDO_EXTENSION DeviceExtension)
 {
     PPCI_PDO_EXTENSION PdoExtension;
+    PPCI_PDO_EXTENSION VgaDecoder;
     PDEVICE_OBJECT PhysicalDeviceObject;
+    BOOLEAN ParentDecodesIsa;
     PAGED_CODE();
 
-    /* Get the PDO Extension */
-    PhysicalDeviceObject = DeviceExtension->PhysicalDeviceObject;
-    PdoExtension = (PPCI_PDO_EXTENSION)PhysicalDeviceObject->DeviceExtension;
-
-    /* Cheeck if this is the root bus */
+    /* The root bus FDO sits on a PDO this driver does not own */
+    PdoExtension = NULL;
     if (!PCI_IS_ROOT_FDO(DeviceExtension))
     {
-        /* Not really handling this year */
-        UNIMPLEMENTED_DBGBREAK();
-
-        /* Check for PCI bridges with the ISA bit set, or required */
-        if ((PdoExtension) &&
-            (PciClassifyDeviceType(PdoExtension) == PciTypePciBridge) &&
-            ((PdoExtension->Dependent.type1.IsaBitRequired) ||
-             (PdoExtension->Dependent.type1.IsaBitSet)))
-        {
-            /* We'll need to do some legacy support */
-            UNIMPLEMENTED_DBGBREAK();
-        }
+        PhysicalDeviceObject = DeviceExtension->PhysicalDeviceObject;
+        PdoExtension = (PPCI_PDO_EXTENSION)PhysicalDeviceObject->DeviceExtension;
+        ASSERT_PDO(PdoExtension);
     }
-    else
+
+    /* Check if the bridge above this bus has the ISA bit set, or required */
+    ParentDecodesIsa = ((PdoExtension) &&
+                        (PciClassifyDeviceType(PdoExtension) == PciTypePciBridge) &&
+                        ((PdoExtension->Dependent.type1.IsaBitRequired) ||
+                         (PdoExtension->Dependent.type1.IsaBitSet)));
+
+    KeEnterCriticalRegion();
+    KeWaitForSingleObject(&DeviceExtension->ChildListLock,
+                          Executive,
+                          KernelMode,
+                          FALSE,
+                          NULL);
+
+    /* Without an ISA parent, a VGA decoding bridge forces the ISA bit onto its siblings */
+    VgaDecoder = NULL;
+    if (!ParentDecodesIsa)
     {
-        /* Scan all of the root bus' children bridges */
         for (PdoExtension = DeviceExtension->ChildBridgePdoList;
              PdoExtension;
              PdoExtension = PdoExtension->NextBridge)
         {
-            /* Find any that have the VGA decode bit on */
             if (PdoExtension->Dependent.type1.VgaBitSet)
             {
-                /* Again, some more legacy support we'll have to do */
-                UNIMPLEMENTED_DBGBREAK();
+                VgaDecoder = PdoExtension;
+                break;
             }
         }
     }
 
-    /* Check for ACPI systems where the OS assigns bus numbers */
+    /* The I/O arbiter does not avoid the ISA aliases yet, so only report these bridges */
+    if ((ParentDecodesIsa) || (VgaDecoder))
+    {
+        for (PdoExtension = DeviceExtension->ChildBridgePdoList;
+             PdoExtension;
+             PdoExtension = PdoExtension->NextBridge)
+        {
+            if ((PdoExtension != VgaDecoder) &&
+                !(PdoExtension->Dependent.type1.IsaBitSet))
+            {
+                DPRINT1("PCI - bridge PDO ext 0x%p needs the ISA bit, which is not applied\n",
+                        PdoExtension);
+            }
+        }
+    }
+
+    /* Bridges the firmware left unnumbered are not renumbered yet, so report them */
     if (PciAssignBusNumbers)
     {
-        /* Not yet supported */
-        UNIMPLEMENTED_DBGBREAK();
+        for (PdoExtension = DeviceExtension->ChildBridgePdoList;
+             PdoExtension;
+             PdoExtension = PdoExtension->NextBridge)
+        {
+            if ((PciClassifyDeviceType(PdoExtension) == PciTypePciBridge) &&
+                !(PciAreBusNumbersConfigured(PdoExtension)))
+            {
+                DPRINT1("PCI - bridge PDO ext 0x%p has no bus numbers assigned\n",
+                        PdoExtension);
+            }
+        }
     }
+
+    KeSetEvent(&DeviceExtension->ChildListLock, IO_NO_INCREMENT, FALSE);
+    KeLeaveCriticalRegion();
 }
 
 NTSTATUS
