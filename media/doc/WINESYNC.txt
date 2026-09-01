@@ -226,8 +226,8 @@ dll/win32/winscard            # Synced to WineStaging-4.18 (Newer versions requi
 dll/win32/wintrust            # Synced to Wine-10.0
 dll/win32/winusb              # Synced to Wine-10.0
 dll/win32/wldap32             # Synced to WineStaging-4.18
-dll/win32/wmi                 # Synced to WineStaging-2.9
-dll/win32/wmiutils            # Synced to WineStaging-4.18
+dll/win32/wmi                 # Synced to Wine-10.0
+dll/win32/wmiutils            # Synced to Wine-10.0
 dll/win32/wmvcore             # Synced to WineStaging-4.18
 dll/win32/wshom.ocx           # Synced to Wine-10.0
 dll/win32/wtsapi32            # Synced to WineStaging-4.18
