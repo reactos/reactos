@@ -62,7 +62,9 @@ PciStallForPowerChange(IN PPCI_PDO_EXTENSION PdoExtension,
     Irql = KeGetCurrentIrql();
 
     /* Pick the expected timeout for this transition */
-    TimeoutEntry = PciPowerDelayTable[PowerState * PdoExtension->PowerState.CurrentDeviceState];
+    TimeoutEntry = PciPowerDelayTable[(PowerState - PowerDeviceD0) * PowerDeviceD3 +
+                                      (PdoExtension->PowerState.CurrentDeviceState -
+                                       PowerDeviceD0)];
 
     /* PCI power states are one less than NT power states */
     PciState = PowerState - 1;

@@ -74,17 +74,28 @@ PCI_MJ_DISPATCH_TABLE PciPdoDispatchTable =
 
 /* FUNCTIONS ******************************************************************/
 
+static
+NTSTATUS
+NTAPI
+PciPdoEnterDevicePowerState(
+    _Inout_ PPCI_PDO_EXTENSION DeviceExtension,
+    _In_ DEVICE_POWER_STATE DeviceState);
+
+static IO_WORKITEM_ROUTINE PciPdoDevicePowerWorker;
+
 NTSTATUS
 NTAPI
 PciPdoWaitWake(IN PIRP Irp,
                IN PIO_STACK_LOCATION IoStackLocation,
                IN PPCI_PDO_EXTENSION DeviceExtension)
 {
-    UNREFERENCED_PARAMETER(Irp);
     UNREFERENCED_PARAMETER(IoStackLocation);
     UNREFERENCED_PARAMETER(DeviceExtension);
 
-    UNIMPLEMENTED_DBGBREAK();
+    /* PME is never armed, so the function cannot wake the system */
+    Irp->IoStatus.Status = STATUS_NOT_SUPPORTED;
+    PoStartNextPowerIrp(Irp);
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
     return STATUS_NOT_SUPPORTED;
 }
 
@@ -94,12 +105,38 @@ PciPdoSetPowerState(IN PIRP Irp,
                     IN PIO_STACK_LOCATION IoStackLocation,
                     IN PPCI_PDO_EXTENSION DeviceExtension)
 {
-    UNREFERENCED_PARAMETER(Irp);
-    UNREFERENCED_PARAMETER(IoStackLocation);
-    UNREFERENCED_PARAMETER(DeviceExtension);
+    POWER_STATE State = IoStackLocation->Parameters.Power.State;
+    PIO_WORKITEM WorkItem;
 
-    UNIMPLEMENTED;
-    return STATUS_NOT_SUPPORTED;
+    /* The function driver follows a system state with a device state request of its own */
+    if (IoStackLocation->Parameters.Power.Type == SystemPowerState)
+    {
+        DeviceExtension->PowerState.CurrentSystemState = State.SystemState;
+        return STATUS_SUCCESS;
+    }
+
+    if ((State.DeviceState < PowerDeviceD0) || (State.DeviceState > PowerDeviceD3))
+        return STATUS_INVALID_PARAMETER;
+
+    if (State.DeviceState == DeviceExtension->PowerState.CurrentDeviceState)
+        return STATUS_SUCCESS;
+
+    /* Configuration cycles cannot reach a function on a bus that is not running */
+    if (DeviceExtension->ParentFdoExtension->DeviceState != PciStarted)
+        return STATUS_NO_SUCH_DEVICE;
+
+    if (KeGetCurrentIrql() < DISPATCH_LEVEL)
+        return PciPdoEnterDevicePowerState(DeviceExtension, State.DeviceState);
+
+    /* D0 may be sent at DISPATCH_LEVEL, and reprogramming the function needs PASSIVE_LEVEL */
+    WorkItem = IoAllocateWorkItem(DeviceExtension->PhysicalDeviceObject);
+    if (!WorkItem)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
+    Irp->Tail.Overlay.DriverContext[0] = WorkItem;
+    IoMarkIrpPending(Irp);
+    IoQueueWorkItem(WorkItem, PciPdoDevicePowerWorker, DelayedWorkQueue, Irp);
+    return STATUS_PENDING;
 }
 
 NTSTATUS
@@ -112,8 +149,8 @@ PciPdoIrpQueryPower(IN PIRP Irp,
     UNREFERENCED_PARAMETER(IoStackLocation);
     UNREFERENCED_PARAMETER(DeviceExtension);
 
-    UNIMPLEMENTED_DBGBREAK();
-    return STATUS_NOT_SUPPORTED;
+    /* Every device state is accepted when set, so none is refused here */
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS
@@ -344,6 +381,152 @@ PciPdoTurnOff(
 
     PowerState.DeviceState = PowerDeviceD3;
     PoSetPowerState(DeviceExtension->PhysicalDeviceObject, DevicePowerState, PowerState);
+}
+
+/**
+ * @brief
+ * Checks whether a request for a low power device state may take power from a function.
+ *
+ * @param[in] DeviceExtension
+ * The PDO extension of the function.
+ *
+ * @param[in] DeviceState
+ * The low power state being entered.
+ *
+ * @return
+ * FALSE if the function has to stay in D0 and keep decoding.
+ */
+static
+BOOLEAN
+NTAPI
+PciPdoCanPowerDown(
+    _In_ PPCI_PDO_EXTENSION DeviceExtension,
+    _In_ DEVICE_POWER_STATE DeviceState)
+{
+    SYSTEM_POWER_STATE SystemState = DeviceExtension->PowerState.CurrentSystemState;
+
+    /* Critical functions, VGA and the debug path keep decoding, so they keep power too */
+    if (!PciPdoCanTurnOff(DeviceExtension))
+        return FALSE;
+
+    /* IDE controllers and legacy bridges stay in D0 */
+    if (!PciCanDisableDecodes(DeviceExtension, NULL, 0, TRUE))
+        return FALSE;
+
+    /* The hibernation file and crash dump are written through this function */
+    if ((SystemState == PowerSystemHibernate) &&
+        ((DeviceExtension->PowerState.Hibernate) || (DeviceExtension->PowerState.CrashDump)))
+    {
+        return FALSE;
+    }
+
+    /* On a warm reboot firmware may not power a bridge up again before booting from behind it */
+    if ((SystemState == PowerSystemShutdown) &&
+        (DeviceState == PowerDeviceD3) &&
+        (DeviceExtension->BaseClass == PCI_CLASS_BRIDGE_DEV) &&
+        (DeviceExtension->SubClass == PCI_SUBCLASS_BR_PCI_TO_PCI))
+    {
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+/**
+ * @brief
+ * Moves a function to a device power state and reports it to the power manager.
+ *
+ * @param[in,out] DeviceExtension
+ * The PDO extension of the function.
+ *
+ * @param[in] DeviceState
+ * The state to enter, D0 through D3.
+ *
+ * @return
+ * STATUS_SUCCESS, or the error that kept the function from returning to D0.
+ */
+static
+NTSTATUS
+NTAPI
+PciPdoEnterDevicePowerState(
+    _Inout_ PPCI_PDO_EXTENSION DeviceExtension,
+    _In_ DEVICE_POWER_STATE DeviceState)
+{
+    POWER_STATE PowerState;
+    NTSTATUS Status;
+    PAGED_CODE();
+
+    if (DeviceState == DeviceExtension->PowerState.CurrentDeviceState)
+        return STATUS_SUCCESS;
+
+    PowerState.DeviceState = DeviceState;
+
+    if (DeviceState == PowerDeviceD0)
+    {
+        /* After the settle delay this also writes the configuration and interrupt back */
+        Status = PciSetPowerManagedDevicePowerState(DeviceExtension, PowerDeviceD0, TRUE);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("PCI (pdox %p) failed to return to D0 (0x%08lx)\n", DeviceExtension, Status);
+            return Status;
+        }
+
+        DeviceExtension->PowerState.CurrentDeviceState = PowerDeviceD0;
+        PoSetPowerState(DeviceExtension->PhysicalDeviceObject, DevicePowerState, PowerState);
+        return STATUS_SUCCESS;
+    }
+
+    /* The power manager learns of a power down before the function loses power */
+    PoSetPowerState(DeviceExtension->PhysicalDeviceObject, DevicePowerState, PowerState);
+
+    if (PciPdoCanPowerDown(DeviceExtension, DeviceState))
+    {
+        PciPdoTurnOff(DeviceExtension, FALSE);
+
+        Status = PciSetPowerManagedDevicePowerState(DeviceExtension, DeviceState, FALSE);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("PCI (pdox %p) did not settle in device state %lu (0x%08lx)\n",
+                    DeviceExtension,
+                    DeviceState,
+                    Status);
+        }
+    }
+
+    /* A function kept running is still reprogrammed by the next D0 */
+    DeviceExtension->PowerState.CurrentDeviceState = DeviceState;
+    return STATUS_SUCCESS;
+}
+
+/**
+ * @brief
+ * Completes a device set power request that arrived at raised IRQL.
+ *
+ * @param[in] Context
+ * The pending device power IRP.
+ */
+static
+VOID
+NTAPI
+PciPdoDevicePowerWorker(
+    _In_ PDEVICE_OBJECT DeviceObject,
+    _In_opt_ PVOID Context)
+{
+    PIRP Irp = Context;
+    PIO_STACK_LOCATION IoStackLocation;
+    DEVICE_POWER_STATE DeviceState;
+
+    ASSERT(Irp != NULL);
+
+    IoFreeWorkItem(Irp->Tail.Overlay.DriverContext[0]);
+
+    IoStackLocation = IoGetCurrentIrpStackLocation(Irp);
+    DeviceState = IoStackLocation->Parameters.Power.State.DeviceState;
+
+    Irp->IoStatus.Status = PciPdoEnterDevicePowerState(DeviceObject->DeviceExtension,
+                                                       DeviceState);
+    PoStartNextPowerIrp(Irp);
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
 }
 
 NTSTATUS
