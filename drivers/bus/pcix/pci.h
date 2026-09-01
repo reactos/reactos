@@ -1801,6 +1801,11 @@ PciSetResources(
 
 BOOLEAN
 NTAPI
+PciIsRequirementDescriptor(
+    _In_ PIO_RESOURCE_DESCRIPTOR Limit);
+
+BOOLEAN
+NTAPI
 PcipIsSameDevice(
     _In_ PPCI_PDO_EXTENSION DeviceExtension,
     _In_ PPCI_COMMON_HEADER PciData);
