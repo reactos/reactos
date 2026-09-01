@@ -24,7 +24,7 @@ PciBridgeIoBase(IN PPCI_COMMON_HEADER PciData)
     ASSERT(PCI_CONFIGURATION_TYPE(PciData) == PCI_BRIDGE_TYPE);
 
     /* Get the base */
-    Base = PciData->u.type1.IOLimit;
+    Base = PciData->u.type1.IOBase;
 
     /* Low bit specifies 32-bit address, top bits specify the base */
     Is32Bit = (Base & 0xF) == 1;
