@@ -12,7 +12,7 @@ add_library(twain_32 MODULE
     ${CMAKE_CURRENT_BINARY_DIR}/twain_32.def)
 
 set_module_type(twain_32 win32dll)
-target_link_libraries(twain_32 wine)
+target_link_libraries(twain_32 wine oldnames)
 add_importlibs(twain_32 user32 msvcrt kernel32 ntdll)
 add_pch(twain_32 precomp.h SOURCE)
 add_cd_file(TARGET twain_32 DESTINATION reactos FOR all)
