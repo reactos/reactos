@@ -242,7 +242,7 @@ Used Version: git commit d9c6040
 License: MIT (https://spdx.org/licenses/MIT.html)
 URL: https://github.com/microsoft/Windows-Driver-Frameworks
 
-Title: libmpg123 (used by winemp3.acm)
+Title: libmpg123 (used by l3codeca.acm)
 Path: sdk/lib/3rdparty/libmpg123
 Used Version: 1.26.1
 License: LGPL-2.1 (https://spdx.org/licenses/LGPL-2.1.html)
