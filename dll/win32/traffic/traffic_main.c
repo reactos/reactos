@@ -26,33 +26,13 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(traffic);
 
-BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
-{
-    TRACE("(0x%p, %d, %p)\n", hinstDLL, fdwReason, lpvReserved);
-
-    switch (fdwReason)
-    {
-#ifndef __REACTOS__
-        case DLL_WINE_PREATTACH:
-            return FALSE;    /* prefer native version */
-#endif
-        case DLL_PROCESS_ATTACH:
-            DisableThreadLibraryCalls(hinstDLL);
-            break;
-        default:
-            break;
-    }
-
-    return TRUE;
-}
-
 /*****************************************************************************
  * TcRegisterClient [TRAFFIC.@]
  */
 ULONG WINAPI TcRegisterClient(ULONG version, HANDLE context,
                               PTCI_CLIENT_FUNC_LIST list, PHANDLE buffer)
 {
-    FIXME("(%u %p %p %p) stub\n", version, context, list, buffer);
+    FIXME("(%lu %p %p %p) stub\n", version, context, list, buffer);
     if(buffer) *buffer = INVALID_HANDLE_VALUE;
     return ERROR_CALL_NOT_IMPLEMENTED;
 }
