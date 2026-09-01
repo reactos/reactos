@@ -21,12 +21,12 @@
 @ stub NonAsyncEventThread
 @ stub TAPIWndProc
 @ stub TUISPIDLLCallback
-@ stdcall internalConfig(ptr long ptr ptr)
+@ stdcall -stub internalConfig(ptr long ptr ptr)
 @ stub internalCreateDefLocation
-@ stdcall internalNewLocationW(wstr)
+@ stdcall -stub internalNewLocationW(wstr)
 @ stub internalPerformance
-@ stdcall internalRemoveLocation(long)
-@ stdcall internalRenameLocationW(wstr wstr)
+@ stdcall -stub internalRemoveLocation(long)
+@ stdcall -stub internalRenameLocationW(wstr wstr)
 @ stdcall lineAccept(long str long)
 @ stdcall lineAddProvider(str long ptr) lineAddProviderA
 @ stdcall lineAddProviderA(str long ptr)
@@ -93,7 +93,7 @@
 @ stub lineGetAppPriorityW
 @ stdcall lineGetCallInfo(long ptr) lineGetCallInfoA
 @ stdcall lineGetCallInfoA(long ptr)
-@ stub lineGetCallInfoW
+@ stdcall lineGetCallInfoW(long ptr)
 @ stdcall lineGetCallStatus(long ptr)
 @ stdcall lineGetConfRelatedCalls(long ptr)
 @ stdcall lineGetCountry(long long ptr) lineGetCountryA
@@ -104,7 +104,7 @@
 @ stdcall lineGetDevCapsW(long long long long ptr)
 @ stdcall lineGetDevConfig(long ptr str) lineGetDevConfigA
 @ stdcall lineGetDevConfigA(long ptr str)
-@ stub lineGetDevConfigW
+@ stdcall lineGetDevConfigW(long ptr wstr)
 @ stub lineGetGroupListA
 @ stub lineGetGroupListW
 @ stdcall lineGetID(long long long long ptr str) lineGetIDA
@@ -112,7 +112,7 @@
 @ stdcall lineGetIDW(long long long long ptr wstr)
 @ stdcall lineGetIcon(long str ptr) lineGetIconA
 @ stdcall lineGetIconA(long str ptr)
-@ stub lineGetIconW
+@ stdcall lineGetIconW(long wstr ptr)
 @ stdcall lineGetLineDevStatus(long ptr) lineGetLineDevStatusA
 @ stdcall lineGetLineDevStatusA(long ptr)
 @ stub lineGetLineDevStatusW
@@ -132,7 +132,7 @@
 @ stdcall lineGetStatusMessages(long ptr ptr)
 @ stdcall lineGetTranslateCaps(long long ptr) lineGetTranslateCapsA
 @ stdcall lineGetTranslateCapsA(long long ptr)
-@ stub lineGetTranslateCapsW
+@ stdcall lineGetTranslateCapsW(ptr long ptr)
 @ stdcall lineHandoff(long str long) lineHandoffA
 @ stdcall lineHandoffA(long str long)
 @ stub lineHandoffW
@@ -189,7 +189,7 @@
 @ stdcall lineSetCurrentLocation(long long)
 @ stdcall lineSetDevConfig(long ptr long str) lineSetDevConfigA
 @ stdcall lineSetDevConfigA(long ptr long str)
-@ stub lineSetDevConfigW
+@ stdcall lineSetDevConfigW(long ptr long wstr)
 @ stub lineSetLineDevStatus
 @ stdcall lineSetMediaControl(long long long long ptr long ptr long ptr long ptr long)
 @ stdcall lineSetMediaMode(long long)

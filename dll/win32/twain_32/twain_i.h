@@ -45,34 +45,23 @@ typedef struct tagActiveDS
     HWND                event_window;
 } activeDS;
 
-extern TW_UINT16 DSM_twCC DECLSPEC_HIDDEN;             /* current condition code of Source Manager */
+extern TW_UINT16 DSM_twCC;             /* current condition code of Source Manager */
 
-extern activeDS *activeSources DECLSPEC_HIDDEN; /* list of active data sources */
+extern activeDS *activeSources;	/* list of active data sources */
 
-extern HINSTANCE DSM_hinstance DECLSPEC_HIDDEN;
+extern HINSTANCE DSM_hinstance;
 
 /* Implementation of operation triplets (From Application to Source Manager) */
-extern TW_UINT16 TWAIN_CloseDS
-           (pTW_IDENTITY pOrigin, TW_MEMREF pData) DECLSPEC_HIDDEN;
-extern TW_UINT16 TWAIN_IdentityGetDefault
-           (pTW_IDENTITY pOrigin, TW_MEMREF pData) DECLSPEC_HIDDEN;
-extern TW_UINT16 TWAIN_IdentityGetFirst
-           (pTW_IDENTITY pOrigin, TW_MEMREF pData) DECLSPEC_HIDDEN;
-extern TW_UINT16 TWAIN_IdentityGetNext
-           (pTW_IDENTITY pOrigin, TW_MEMREF pData) DECLSPEC_HIDDEN;
-extern TW_UINT16 TWAIN_OpenDS
-           (pTW_IDENTITY pOrigin, TW_MEMREF pData) DECLSPEC_HIDDEN;
-extern TW_UINT16 TWAIN_UserSelect
-           (pTW_IDENTITY pOrigin, TW_MEMREF pData) DECLSPEC_HIDDEN;
-extern TW_UINT16 TWAIN_CloseDSM
-           (pTW_IDENTITY pOrigin, TW_MEMREF pData) DECLSPEC_HIDDEN;
-extern TW_UINT16 TWAIN_OpenDSM
-           (pTW_IDENTITY pOrigin, TW_MEMREF pData) DECLSPEC_HIDDEN;
-extern TW_UINT16 TWAIN_GetDSMStatus
-           (pTW_IDENTITY pOrigin, TW_MEMREF pData) DECLSPEC_HIDDEN;
-extern TW_UINT16 TWAIN_ControlNull
-           (pTW_IDENTITY pOrigin, pTW_IDENTITY pDest, activeDS *pSource, TW_UINT16 MSG, TW_MEMREF pData) DECLSPEC_HIDDEN;
-extern TW_UINT16 TWAIN_ProcessEvent
-           (pTW_IDENTITY pOrigin, activeDS *pSource, TW_MEMREF pData) DECLSPEC_HIDDEN;
+extern TW_UINT16 TWAIN_CloseDS(pTW_IDENTITY pOrigin, TW_MEMREF pData);
+extern TW_UINT16 TWAIN_IdentityGetDefault(pTW_IDENTITY pOrigin, TW_MEMREF pData);
+extern TW_UINT16 TWAIN_IdentityGetFirst(pTW_IDENTITY pOrigin, TW_MEMREF pData);
+extern TW_UINT16 TWAIN_IdentityGetNext(pTW_IDENTITY pOrigin, TW_MEMREF pData);
+extern TW_UINT16 TWAIN_OpenDS(pTW_IDENTITY pOrigin, TW_MEMREF pData);
+extern TW_UINT16 TWAIN_UserSelect(pTW_IDENTITY pOrigin, TW_MEMREF pData);
+extern TW_UINT16 TWAIN_CloseDSM(pTW_IDENTITY pOrigin, TW_MEMREF pData);
+extern TW_UINT16 TWAIN_OpenDSM(pTW_IDENTITY pOrigin, TW_MEMREF pData);
+extern TW_UINT16 TWAIN_GetDSMStatus(pTW_IDENTITY pOrigin, TW_MEMREF pData);
+extern TW_UINT16 TWAIN_ControlNull(pTW_IDENTITY pOrigin, pTW_IDENTITY pDest, activeDS *pSource, TW_UINT16 MSG, TW_MEMREF pData);
+extern TW_UINT16 TWAIN_ProcessEvent(pTW_IDENTITY pOrigin, activeDS *pSource, TW_MEMREF pData);
 
 #endif
