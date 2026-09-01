@@ -206,6 +206,10 @@ PciComputeNewCurrentSettings(IN PPCI_PDO_EXTENSION PdoExtension,
     /* Loop all the PCI function resources */
     for (i = 0; i < RTL_NUMBER_OF(ResourceArray); i++)
     {
+        /* A bridge window is never asked for, so it keeps the range the firmware gave it */
+        if (!PciIsRequirementDescriptor(&PciResources->Limit[i]))
+            continue;
+
         /* Get the current function resource descriptor, and the new one */
         CurrentDescriptor = &PciResources->Current[i];
         Partial = &ResourceArray[i];
