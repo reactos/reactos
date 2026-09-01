@@ -20,6 +20,7 @@ list(APPEND SOURCE
     pci/config.c
     pci/devhere.c
     pci/ecam.c
+    pci/express.c
     pci/id.c
     pci/ppbridge.c
     pci/romimage.c
