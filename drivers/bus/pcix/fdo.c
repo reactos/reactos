@@ -71,6 +71,56 @@ PCI_MJ_DISPATCH_TABLE PciFdoDispatchTable =
 
 /* FUNCTIONS ******************************************************************/
 
+/**
+ * @brief Finds the bus number range a root bus decodes in its boot configuration.
+ *
+ * @return TRUE if the list has a bus number descriptor, FALSE otherwise.
+ */
+static
+BOOLEAN
+NTAPI
+PciGetRootBusRange(
+    _In_ PCM_RESOURCE_LIST BootConfig,
+    _Out_ PUCHAR FirstBus,
+    _Out_ PUCHAR LastBus)
+{
+    PCM_FULL_RESOURCE_DESCRIPTOR FullDescriptor;
+    PCM_PARTIAL_RESOURCE_DESCRIPTOR Partial;
+    ULONG FullIndex, PartialIndex;
+    ULONG EndBus;
+    PAGED_CODE();
+
+    FullDescriptor = BootConfig->List;
+    for (FullIndex = 0; FullIndex < BootConfig->Count; FullIndex++)
+    {
+        Partial = FullDescriptor->PartialResourceList.PartialDescriptors;
+        for (PartialIndex = 0;
+             PartialIndex < FullDescriptor->PartialResourceList.Count;
+             PartialIndex++)
+        {
+            if (Partial->Type != CmResourceTypeBusNumber)
+            {
+                Partial = CmiGetNextPartialDescriptor(Partial);
+                continue;
+            }
+
+            /* Bus numbers on a single segment never go past 0xFF */
+            EndBus = Partial->u.BusNumber.Start + Partial->u.BusNumber.Length - 1;
+            ASSERT(Partial->u.BusNumber.Start <= EndBus);
+            ASSERT(EndBus <= 0xFF);
+
+            *FirstBus = (UCHAR)Partial->u.BusNumber.Start;
+            *LastBus = (UCHAR)EndBus;
+            return TRUE;
+        }
+
+        /* The next full descriptor follows the last partial one */
+        FullDescriptor = (PCM_FULL_RESOURCE_DESCRIPTOR)Partial;
+    }
+
+    return FALSE;
+}
+
 NTSTATUS
 NTAPI
 PciFdoIrpStartDevice(IN PIRP Irp,
@@ -647,17 +697,16 @@ PciAddDevice(IN PDRIVER_OBJECT DriverObject,
                 /* No configuration has been set */
                 Descriptor = NULL;
             }
-            else
-            {
-                /* Root PDO in ReactOS does not assign boot resources */
-                UNIMPLEMENTED_DBGBREAK("Encountered during setup\n");
-                Descriptor = NULL;
-            }
 
-            if (Descriptor)
+            /* The firmware reports the bus numbers this root decodes in its boot config */
+            if ((Descriptor) &&
+                (PciGetRootBusRange(Descriptor,
+                                    &FdoExtension->BaseBus,
+                                    &FdoExtension->MaxSubordinateBus)))
             {
-                /* Root PDO in ReactOS does not assign boot resources */
-                UNIMPLEMENTED_DBGBREAK();
+                DPRINT1("PCI   Root bus range 0x%x to 0x%x.\n",
+                        FdoExtension->BaseBus,
+                        FdoExtension->MaxSubordinateBus);
             }
             else
             {
@@ -676,7 +725,11 @@ PciAddDevice(IN PDRIVER_OBJECT DriverObject,
                 DPRINT1("PCI   Will use default configuration.\n");
                 PciBreakOnDefault = TRUE;
                 FdoExtension->BaseBus = 0;
+                FdoExtension->MaxSubordinateBus = 0xFF;
             }
+
+            if (Descriptor)
+                ExFreePoolWithTag(Descriptor, 0);
 
             /* This is the root bus */
             FdoExtension->BusRootFdoExtension = FdoExtension;
