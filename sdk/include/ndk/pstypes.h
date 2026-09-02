@@ -1304,16 +1304,63 @@ typedef struct _ETHREAD
 #endif
             ULONG HideFromDebugger:1;
             ULONG ActiveImpersonationInfo:1;
+#if (NTDDI_VERSION < NTDDI_WIN8) // NOTE: In Win8+, replaced by KTHREAD::SystemThread
+#if (NTDDI_VERSION >= NTDDI_WIN7SP1)
+            ULONG Reserved:1;
+#else
             ULONG SystemThread:1;
+#endif
+#endif // (NTDDI_VERSION < NTDDI_WIN8)
             ULONG HardErrorsAreDisabled:1;
             ULONG BreakOnTermination:1;
             ULONG SkipCreationMsg:1;
             ULONG SkipTerminationMsg:1;
 #if (NTDDI_VERSION >= NTDDI_LONGHORN)
-            ULONG CreateMsgSent:1;
+            ULONG CopyTokenOnOpen:1;
             ULONG ThreadIoPriority:3;
             ULONG ThreadPagePriority:3;
-            ULONG PendingRatecontrol:1;
+            ULONG RundownFail:1;
+#endif
+#if (NTDDI_VERSION == NTDDI_WIN7)
+            ULONG NeedsWorkingSetAging:1;
+#elif (NTDDI_VERSION >= NTDDI_WIN8)
+            ULONG UmsForceQueueTermination:1;
+#endif
+#if (NTDDI_VERSION >= NTDDI_WIN10)
+            ULONG IndirectCpuSets:1;
+#endif
+#if (NTDDI_VERSION >= NTDDI_WIN10_RS1)
+            ULONG DisableDynamicCodeOptOut:1;
+            ULONG ExplicitCaseSensitivity:1;
+#endif
+#if (NTDDI_VERSION >= NTDDI_WIN10_RS2)
+            ULONG PicoNotifyExit:1;
+            ULONG DbgWerUserReportActive:1;
+#endif
+#if (NTDDI_VERSION >= NTDDI_WIN10_RS3)
+            ULONG ForcedSelfTrimActive:1;
+#endif
+#if (NTDDI_VERSION >= NTDDI_WIN10_RS4)
+            ULONG SamplingCoverage:1;
+#endif
+#if (NTDDI_VERSION >= NTDDI_WIN11_GE) // 24H2
+            ULONG ImpersonationSchedulingGroup:1;
+#endif
+
+#if (NTDDI_VERSION >= NTDDI_WIN11_GE) // 24H2
+            ULONG ReservedCrossThreadFlags:7;
+#elif (NTDDI_VERSION >= NTDDI_WIN10_RS4)
+            ULONG ReservedCrossThreadFlags:8;
+#elif (NTDDI_VERSION >= NTDDI_WIN10_RS3)
+            ULONG ReservedCrossThreadFlags:9;
+#elif (NTDDI_VERSION >= NTDDI_WIN10_RS2)
+            ULONG ReservedCrossThreadFlags:10;
+#elif (NTDDI_VERSION >= NTDDI_WIN10_RS1)
+            ULONG ReservedCrossThreadFlags:12;
+#elif (NTDDI_VERSION >= NTDDI_WIN10)
+            ULONG ReservedCrossThreadFlags:14;
+#elif (NTDDI_VERSION >= NTDDI_WIN8)
+            ULONG ReservedCrossThreadFlags:15;
 #endif
         };
         ULONG CrossThreadFlags;
