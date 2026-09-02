@@ -1296,24 +1296,24 @@ typedef struct _ETHREAD
     {
         struct
         {
-           ULONG Terminated:1;
+            ULONG Terminated:1;
 #if (NTDDI_VERSION >= NTDDI_LONGHORN)
-           ULONG ThreadInserted:1;
+            ULONG ThreadInserted:1;
 #else
-           ULONG DeadThread:1;
+            ULONG DeadThread:1;
 #endif
-           ULONG HideFromDebugger:1;
-           ULONG ActiveImpersonationInfo:1;
-           ULONG SystemThread:1;
-           ULONG HardErrorsAreDisabled:1;
-           ULONG BreakOnTermination:1;
-           ULONG SkipCreationMsg:1;
-           ULONG SkipTerminationMsg:1;
+            ULONG HideFromDebugger:1;
+            ULONG ActiveImpersonationInfo:1;
+            ULONG SystemThread:1;
+            ULONG HardErrorsAreDisabled:1;
+            ULONG BreakOnTermination:1;
+            ULONG SkipCreationMsg:1;
+            ULONG SkipTerminationMsg:1;
 #if (NTDDI_VERSION >= NTDDI_LONGHORN)
-           ULONG CreateMsgSent:1;
-           ULONG ThreadIoPriority:3;
-           ULONG ThreadPagePriority:3;
-           ULONG PendingRatecontrol:1;
+            ULONG CreateMsgSent:1;
+            ULONG ThreadIoPriority:3;
+            ULONG ThreadPagePriority:3;
+            ULONG PendingRatecontrol:1;
 #endif
         };
         ULONG CrossThreadFlags;
@@ -1322,12 +1322,12 @@ typedef struct _ETHREAD
     {
         struct
         {
-           ULONG ActiveExWorker:1;
-           ULONG ExWorkerCanWaitUser:1;
-           ULONG MemoryMaker:1;
-           ULONG KeyedEventInUse:1;
+            ULONG ActiveExWorker:1;
+            ULONG ExWorkerCanWaitUser:1;
+            ULONG MemoryMaker:1;
+            ULONG KeyedEventInUse:1;
 #if (NTDDI_VERSION >= NTDDI_LONGHORN)
-           ULONG RateApcState:2;
+            ULONG RateApcState:2;
 #endif
         };
         ULONG SameThreadPassiveFlags;
@@ -1336,25 +1336,25 @@ typedef struct _ETHREAD
     {
         struct
         {
-           ULONG LpcReceivedMsgIdValid:1;
-           ULONG LpcExitThreadCalled:1;
+            ULONG LpcReceivedMsgIdValid:1;
+            ULONG LpcExitThreadCalled:1;
 #if (NTDDI_VERSION >= NTDDI_LONGHORN)
-           ULONG Spare:1;
+            ULONG Spare:1;
 #else
-           ULONG AddressSpaceOwner:1;
+            ULONG AddressSpaceOwner:1;
 #endif
-           ULONG OwnsProcessWorkingSetExclusive:1;
-           ULONG OwnsProcessWorkingSetShared:1;
-           ULONG OwnsSystemWorkingSetExclusive:1;
-           ULONG OwnsSystemWorkingSetShared:1;
-           ULONG OwnsSessionWorkingSetExclusive:1;
-           ULONG OwnsSessionWorkingSetShared:1;
+            ULONG OwnsProcessWorkingSetExclusive:1;
+            ULONG OwnsProcessWorkingSetShared:1;
+            ULONG OwnsSystemWorkingSetExclusive:1;
+            ULONG OwnsSystemWorkingSetShared:1;
+            ULONG OwnsSessionWorkingSetExclusive:1;
+            ULONG OwnsSessionWorkingSetShared:1;
 #if (NTDDI_VERSION >= NTDDI_LONGHORN)
-           ULONG SuppressSymbolLoad:1;
-           ULONG Spare1:3;
-           ULONG PriorityRegionActive:4;
+            ULONG SuppressSymbolLoad:1;
+            ULONG Spare1:3;
+            ULONG PriorityRegionActive:4;
 #else
-           ULONG ApcNeeded:1;
+            ULONG ApcNeeded:1;
 #endif
         };
         ULONG SameThreadApcFlags;
