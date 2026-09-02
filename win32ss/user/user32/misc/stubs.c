@@ -298,18 +298,31 @@ DefRawInputProc(
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 UINT
 WINAPI
 DECLSPEC_HOTPATCH
 GetRawInputBuffer(
-    PRAWINPUT pData,
-    PUINT pcbSize,
-    UINT cbSizeHeader)
+    _In_opt_ PRAWINPUT pData,
+    _Inout_ PUINT pcbSize,
+    _In_ UINT cbSizeHeader)
 {
-  UNIMPLEMENTED;
-  return 0;
+    PCLIENTTHREADINFO pcti = GetWin32ClientInfo()->pClientThreadInfo;
+
+    if (!pcbSize || cbSizeHeader != sizeof(RAWINPUTHEADER))
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return (UINT)-1;
+    }
+
+    if (!pcti || !(pcti->fsWakeBits & QS_RAWINPUT))
+    {
+        *pcbSize = 0;
+        return 0;
+    }
+
+    return NtUserGetRawInputBuffer(pData, pcbSize, cbSizeHeader);
 }
 
 /*
