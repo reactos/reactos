@@ -95,4 +95,17 @@ RtlpLFHFree(
     _In_ ULONG Flags,
     _In_ PVOID BaseAddress);
 
+BOOLEAN
+NTAPI
+RtlpValidateLFHEntry(
+    _In_ PHEAP Heap,
+    _In_ PHEAP_ENTRY HeapEntry);
+
+BOOLEAN
+NTAPI
+RtlpValidateLFH(
+    _In_ PHEAP Heap,
+    _Inout_ PULONG FreeBlocksCount,
+    _Inout_ PSIZE_T TotalFreeSize);
+
 #endif /* RTL_HEAP_LFH_H */

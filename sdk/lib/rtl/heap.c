@@ -3328,6 +3328,10 @@ RtlpValidateHeapEntry(
     if ((ULONG_PTR)HeapEntry & (HEAP_ENTRY_SIZE - 1)) goto invalid_entry;
     if (!(HeapEntry->Flags & HEAP_ENTRY_BUSY)) goto invalid_entry;
 
+    /* LFH owned blocks are not chained the normal way so validate them separately */
+    if ((Heap->FrontEndHeapType == 2) && (HeapEntry->UnusedBytes & HEAP_ENTRY_LFH_FLAG))
+        return RtlpValidateLFHEntry(Heap, HeapEntry);
+
     BigAllocation = HeapEntry->Flags & HEAP_ENTRY_VIRTUAL_ALLOC;
     Segment = Heap->Segments[HeapEntry->SegmentOffset];
 
@@ -3735,6 +3739,16 @@ RtlpValidateHeap(PHEAP Heap,
     {
         DPRINT1("HEAP: Total size of free blocks in arena (%Iu) does not equal to the one in heap header (%Iu)\n", TotalFreeSize, Heap->TotalFreeSize);
         return FALSE;
+    }
+
+    /* Validate the LFH frontend if this heap has one */
+    if (Heap->FrontEndHeapType == 2)
+    {
+        ULONG LFHFreeBlocksCount = 0;
+        SIZE_T LFHTotalFreeSize = 0;
+
+        if (!RtlpValidateLFH(Heap, &LFHFreeBlocksCount, &LFHTotalFreeSize))
+            return FALSE;
     }
 
     return TRUE;

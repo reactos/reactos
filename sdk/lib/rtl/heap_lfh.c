@@ -125,6 +125,135 @@ RtlpAllocateLFHSubSegment(
     return SubSegment;
 }
 
+static
+BOOLEAN
+RtlpIsLFHBlockFree(
+    _In_ PHEAP_SUBSEGMENT SubSegment,
+    _In_ PVOID BlockAddress)
+{
+    PLFH_FREE_ENTRY FreeEntry;
+
+    for (FreeEntry = SubSegment->FreeList; FreeEntry; FreeEntry = FreeEntry->Next)
+    {
+        if ((PVOID)FreeEntry == BlockAddress)
+            return TRUE;
+    }
+
+    return FALSE;
+}
+
+static
+BOOLEAN
+RtlpValidateLFHSubSegment(
+    _In_ PHEAP Heap,
+    _In_ PHEAP_SUBSEGMENT SubSegment,
+    _In_ ULONG BucketIndex,
+    _Inout_ PULONG FreeBlocksCount,
+    _Inout_ PSIZE_T TotalFreeSize)
+{
+    PLFH_FREE_ENTRY FreeEntry;
+    PHEAP_ENTRY HeapEntry;
+    PUCHAR Block, Limit;
+    SIZE_T Offset;
+    ULONG WalkedFree, BusyValidated, Index;
+    UCHAR ExpectedTag;
+
+    Limit = SubSegment->BlockBase + SubSegment->BlockCount * SubSegment->BlockSize;
+
+    /* Walk the free list and check the bounds and the alignment of every free block */
+    WalkedFree = 0;
+    for (FreeEntry = SubSegment->FreeList; FreeEntry; FreeEntry = FreeEntry->Next)
+    {
+        if ((PUCHAR)FreeEntry < SubSegment->BlockBase || (PUCHAR)FreeEntry >= Limit)
+        {
+            DPRINT1("LFH free block %p is outside subsegment %p [%p .. %p)\n",
+                    FreeEntry, SubSegment, SubSegment->BlockBase, Limit);
+            return FALSE;
+        }
+
+        Offset = (PUCHAR)FreeEntry - SubSegment->BlockBase;
+        if (Offset % SubSegment->BlockSize != 0)
+        {
+            DPRINT1("LFH free block %p is not aligned to the block size %Iu\n",
+                    FreeEntry, SubSegment->BlockSize);
+            return FALSE;
+        }
+
+        WalkedFree++;
+        if (WalkedFree > SubSegment->BlockCount)
+        {
+            DPRINT1("LFH subsegment %p free list is corrupt (cycle?)\n", SubSegment);
+            return FALSE;
+        }
+    }
+
+    if (WalkedFree != SubSegment->FreeBlockCount)
+    {
+        DPRINT1("LFH subsegment %p FreeBlockCount %lu does not match walked count %lu\n",
+                SubSegment, SubSegment->FreeBlockCount, WalkedFree);
+        return FALSE;
+    }
+
+    /* Walk every block and validate the busy ones */
+    BusyValidated = 0;
+    for (Index = 0; Index < SubSegment->BlockCount; Index++)
+    {
+        Block = SubSegment->BlockBase + Index * SubSegment->BlockSize;
+
+        if (RtlpIsLFHBlockFree(SubSegment, Block))
+            continue;
+
+        HeapEntry = (PHEAP_ENTRY)Block;
+
+        if (!(HeapEntry->Flags & HEAP_ENTRY_BUSY))
+        {
+            DPRINT1("LFH block %p is neither on the free list nor marked busy\n", Block);
+            return FALSE;
+        }
+
+        if (!(HeapEntry->UnusedBytes & HEAP_ENTRY_LFH_FLAG))
+        {
+            DPRINT1("LFH block %p is missing its LFH ownership flag\n", Block);
+            return FALSE;
+        }
+
+        if (HeapEntry->PreviousSize != BucketIndex)
+        {
+            DPRINT1("LFH block %p bucket index %x does not match owning bucket %lx\n",
+                    Block, HeapEntry->PreviousSize, BucketIndex);
+            return FALSE;
+        }
+
+        if ((SIZE_T)(HeapEntry->Size << HEAP_ENTRY_SHIFT) != SubSegment->BlockSize)
+        {
+            DPRINT1("LFH block %p has size %x, expected %Iu\n",
+                    Block, HeapEntry->Size << HEAP_ENTRY_SHIFT, SubSegment->BlockSize);
+            return FALSE;
+        }
+
+        ExpectedTag = (UCHAR)(LOBYTE(HeapEntry->Size) ^ HIBYTE(HeapEntry->Size) ^ HeapEntry->Flags);
+        if (HeapEntry->SmallTagIndex != ExpectedTag)
+        {
+            DPRINT1("LFH block %p has a corrupt checksum\n", Block);
+            return FALSE;
+        }
+
+        BusyValidated++;
+    }
+
+    if (BusyValidated != SubSegment->BlockCount - SubSegment->FreeBlockCount)
+    {
+        DPRINT1("LFH subsegment %p has %lu busy blocks, expected %lu\n",
+                SubSegment, BusyValidated, SubSegment->BlockCount - SubSegment->FreeBlockCount);
+        return FALSE;
+    }
+
+    *FreeBlocksCount += WalkedFree;
+    *TotalFreeSize += WalkedFree * SubSegment->BlockSize;
+
+    return TRUE;
+}
+
 /* PUBLIC FUNCTIONS ***********************************************************/
 
 NTSTATUS
@@ -388,6 +517,113 @@ RtlpLFHFree(
     SubSegment->FreeBlockCount++;
 
     if (HeapLocked) RtlLeaveHeapLock(Heap->LockVariable);
+
+    return TRUE;
+}
+
+BOOLEAN
+NTAPI
+RtlpValidateLFHEntry(
+    _In_ PHEAP Heap,
+    _In_ PHEAP_ENTRY HeapEntry)
+{
+    PLFH_HEAP Lfh = (PLFH_HEAP)Heap->FrontEndHeap;
+    PHEAP_BUCKET Bucket;
+    PHEAP_SUBSEGMENT SubSegment;
+    PLIST_ENTRY Entry;
+    PUCHAR Block = (PUCHAR)HeapEntry;
+    ULONG BucketIndex;
+    UCHAR ExpectedTag;
+    BOOLEAN Found = FALSE;
+
+    if (!Lfh)
+        goto invalid;
+
+    if ((ULONG_PTR)HeapEntry & (HEAP_ENTRY_SIZE - 1))
+        goto invalid;
+
+    if (!(HeapEntry->Flags & HEAP_ENTRY_BUSY))
+        goto invalid;
+
+    if (!(HeapEntry->UnusedBytes & HEAP_ENTRY_LFH_FLAG))
+        goto invalid;
+
+    BucketIndex = HeapEntry->PreviousSize;
+    if (BucketIndex >= LFH_BUCKET_COUNT)
+        goto invalid;
+
+    Bucket = &Lfh->Buckets[BucketIndex];
+    if ((SIZE_T)(HeapEntry->Size << HEAP_ENTRY_SHIFT) != Bucket->BlockSize)
+        goto invalid;
+
+    ExpectedTag = (UCHAR)(LOBYTE(HeapEntry->Size) ^ HIBYTE(HeapEntry->Size) ^ HeapEntry->Flags);
+    if (HeapEntry->SmallTagIndex != ExpectedTag) goto invalid;
+
+    /* Find the owning subsegment and check block alignment inside it */
+    for (Entry = Bucket->SubSegmentList.Flink;
+         Entry != &Bucket->SubSegmentList;
+         Entry = Entry->Flink)
+    {
+        PUCHAR Limit;
+
+        SubSegment = CONTAINING_RECORD(Entry, HEAP_SUBSEGMENT, ListEntry);
+        Limit = SubSegment->BlockBase + SubSegment->BlockCount * SubSegment->BlockSize;
+
+        if (Block >= SubSegment->BlockBase && Block < Limit)
+        {
+            if (((SIZE_T)(Block - SubSegment->BlockBase)) % SubSegment->BlockSize != 0)
+                goto invalid;
+
+            Found = TRUE;
+            break;
+        }
+    }
+
+    if (!Found) goto invalid;
+
+    return TRUE;
+
+invalid:
+    DPRINT1("Invalid LFH heap entry %p in heap %p\n", HeapEntry, Heap);
+    return FALSE;
+}
+
+BOOLEAN
+NTAPI
+RtlpValidateLFH(
+    _In_ PHEAP Heap,
+    _Inout_ PULONG FreeBlocksCount,
+    _Inout_ PSIZE_T TotalFreeSize)
+{
+    PLFH_HEAP Lfh = (PLFH_HEAP)Heap->FrontEndHeap;
+    PLIST_ENTRY Entry;
+    PHEAP_SUBSEGMENT SubSegment;
+    ULONG BucketIndex;
+
+    if (!Lfh)
+        return TRUE;
+
+    for (BucketIndex = 0; BucketIndex < LFH_BUCKET_COUNT; BucketIndex++)
+    {
+        PHEAP_BUCKET Bucket = &Lfh->Buckets[BucketIndex];
+
+        for (Entry = Bucket->SubSegmentList.Flink;
+             Entry != &Bucket->SubSegmentList;
+             Entry = Entry->Flink)
+        {
+            SubSegment = CONTAINING_RECORD(Entry, HEAP_SUBSEGMENT, ListEntry);
+
+            if (SubSegment->Bucket != Bucket)
+            {
+                DPRINT1("LFH subsegment %p claims bucket %p, found under bucket %p\n",
+                        SubSegment, SubSegment->Bucket, Bucket);
+                return FALSE;
+            }
+
+            if (!RtlpValidateLFHSubSegment(Heap, SubSegment, BucketIndex, FreeBlocksCount, TotalFreeSize))
+                return FALSE;
+        }
+    }
 
     return TRUE;
 }
