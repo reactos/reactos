@@ -39,8 +39,8 @@ _tWinMain(HINSTANCE hInstance,
 
     InitCommonControls();
 
-    // We have extended the MMC_ConsoleFile format with a custom RosLaunch node that can launch external files.
-    // This support can be removed after we have converted all our Snap-ins from .exe to real MMC COM DLLs.
+    /* We have extended the MMC_ConsoleFile format with a custom RosLaunch node that can launch external files.
+     * This support can be removed after we have converted all our Snap-ins from .exe to real MMC COM DLLs. */
     if (HandleRosMscLaunch(lpCmdLine))
         return 0;
 

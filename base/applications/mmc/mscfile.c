@@ -10,7 +10,7 @@
 #include <oleauto.h>
 #include <oaidl.h>
 #include <shlwapi.h>
-#include <initguid.h> // For CLSID_DOMDocument30
+#include <initguid.h> /* For CLSID_DOMDocument30 */
 #include <msxml2.h>
 
 static HRESULT xmldomnode_getattributevalue(IXMLDOMNode *pnode, LPCWSTR name, BSTR *pout)
@@ -89,7 +89,7 @@ static HRESULT GetMscRootNode(PCWSTR pszFilePath, IXMLDOMNode **ppRoot)
 {
     HRESULT hr;
     DWORD len = lstrlenW(pszFilePath);
-    DWORD cch = sizeof("file:///") + (len * 2); // *2 is overkill but we don't know how many escaped characters there are
+    DWORD cch = sizeof("file:///") + (len * 2); /* Doubling the length is overkill but we don't know how many escaped characters there are */
     PWSTR pszUrl = LocalAlloc(LPTR, cch * sizeof(*pszUrl));
     if (!pszUrl)
         return E_OUTOFMEMORY;
