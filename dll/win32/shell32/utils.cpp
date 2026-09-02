@@ -547,7 +547,7 @@ HRESULT SHCoInitializeAnyApartment(VOID)
     return hr;
 }
 
-HRESULT
+EXTERN_C HRESULT
 SHGetNameAndFlagsW(
     _In_ LPCITEMIDLIST pidl,
     _In_ DWORD dwFlags,
