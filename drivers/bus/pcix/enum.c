@@ -134,13 +134,13 @@ PciComputeNewCurrentSettings(IN PPCI_PDO_EXTENSION PdoExtension,
                      */
                     if (PciResources)
                     {
-                        while ((BarIndex < 7) &&
+                        while ((BarIndex < RTL_NUMBER_OF(ResourceArray)) &&
                                (PciResources->Limit[BarIndex].Type == CmResourceTypeNull))
                         {
                             BarIndex++;
                         }
 
-                        if (BarIndex < 7)
+                        if (BarIndex < RTL_NUMBER_OF(ResourceArray))
                             ResourceArray[BarIndex++] = *Partial;
                     }
                     break;
@@ -203,7 +203,7 @@ PciComputeNewCurrentSettings(IN PPCI_PDO_EXTENSION PdoExtension,
     if (!PciResources) return FALSE;
 
     /* Loop all the PCI function resources */
-    for (i = 0; i < 7; i++)
+    for (i = 0; i < RTL_NUMBER_OF(ResourceArray); i++)
     {
         /* Get the current function resource descriptor, and the new one */
         CurrentDescriptor = &PciResources->Current[i];
