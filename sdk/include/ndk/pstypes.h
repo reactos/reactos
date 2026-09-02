@@ -1332,6 +1332,8 @@ typedef struct _ETHREAD
 #if (NTDDI_VERSION >= NTDDI_WIN10_RS1)
             ULONG DisableDynamicCodeOptOut:1;
             ULONG ExplicitCaseSensitivity:1;
+#elif defined(__REACTOS__) // Support per-thread case-sensitivity on pre-NT10-RS1 ReactOS
+            ULONG ExplicitCaseSensitivity:1;
 #endif
 #if (NTDDI_VERSION >= NTDDI_WIN10_RS2)
             ULONG PicoNotifyExit:1;
