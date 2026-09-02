@@ -27,6 +27,7 @@
 /* ARBITER_ALTERNATIVE.Flags */
 #define ARBITER_ALTERNATIVE_FLAG_FIXED      0x00000001  // one placement only
 #define ARBITER_ALTERNATIVE_FLAG_SHARED     0x00000002  // CmResourceShareShared
+#define ARBITER_ALTERNATIVE_FLAG_BADRANGE   0x00000004  // Maximum < Minimum
 
 /*
  * Range attribute bits
@@ -42,6 +43,8 @@
 
 /* ARBITER_ALLOCATION_STATE.Flags */
 #define ARBITER_STATE_FLAG_NULL_CONFLICT_OK 0x0001  // a NULL-owner conflict is OK
+#define ARBITER_STATE_FLAG_BOOT             0x0004  // reserving a firmware boot config
+#define ARBITER_STATE_FLAG_WORKSPACE        0x0010  // WorkSpace holds a pool block to free
 
 typedef struct _ARBITER_ALTERNATIVE
 {
@@ -498,3 +501,9 @@ ArbiterLibBacktrackAllocation(
     _In_ PARBITER_INSTANCE Arbiter,
     _Inout_ PARBITER_ALLOCATION_STATE ArbState
 );
+
+CODE_SEG("PAGE")
+NTSTATUS
+NTAPI
+ArbiterLibSortArbitrationList(
+    _Inout_ PLIST_ENTRY ArbitrationList);

@@ -157,8 +157,7 @@ SmpInit(
 ULONG
 NTAPI
 SmpApiLoop(
-    IN PVOID Parameter
-);
+    _In_ PVOID Parameter);
 
 /* smsbapi.c */
 

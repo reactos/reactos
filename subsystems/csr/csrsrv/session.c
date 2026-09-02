@@ -464,24 +464,21 @@ CsrSbApiHandleConnectionRequest(IN PSB_API_MSG Message)
     return Status;
 }
 
-/*++
- * @name CsrSbApiRequestThread
+/**
+ * @brief
+ * The CsrSbApiRequestThread routine handles incoming messages
+ * or connection requests on the SM API LPC Port.
  *
- * The CsrSbApiRequestThread routine handles incoming messages or connection
- * requests on the SM API LPC Port.
+ * @param[in]   Parameter
+ * System-default user-defined parameter. Unused.
  *
- * @param Parameter
- *        System-default user-defined parameter. Unused.
- *
- * @return The thread exit code, if the thread is terminated.
- *
- * @remarks Before listening on the port, the routine will first attempt
- *          to connect to the user subsystem.
- *
- *--*/
-VOID
+ * @return
+ * The thread exit code, if the thread is terminated.
+ **/
+ULONG
 NTAPI
-CsrSbApiRequestThread(IN PVOID Parameter)
+CsrSbApiRequestThread(
+    _In_ PVOID Parameter)
 {
     NTSTATUS Status;
     SB_API_MSG ReceiveMsg;
@@ -573,6 +570,9 @@ CsrSbApiRequestThread(IN PVOID Parameter)
             ReplyMsg->ReturnValue = STATUS_NOT_IMPLEMENTED;
         }
     }
+
+    UNREACHABLE;
+    return STATUS_UNSUCCESSFUL;
 }
 
 /* EOF */

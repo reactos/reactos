@@ -963,7 +963,7 @@ CsrSbApiPortInitialize(VOID)
                                      0,
                                      0,
                                      0,
-                                     (PVOID)CsrSbApiRequestThread,
+                                     CsrSbApiRequestThread,
                                      NULL,
                                      &hRequestThread,
                                      &ClientId);

@@ -275,7 +275,7 @@ CsrpCheckRequestThreads(VOID)
                                          0,
                                          0,
                                          0,
-                                         (PVOID)CsrApiRequestThread,
+                                         CsrApiRequestThread,
                                          NULL,
                                          &hThread,
                                          &ClientId);
@@ -316,24 +316,25 @@ CsrpCheckRequestThreads(VOID)
     return STATUS_SUCCESS;
 }
 
-/*++
- * @name CsrApiRequestThread
+/**
+ * @brief
+ * The CsrApiRequestThread routine handles incoming messages
+ * or connection requests on the CSR API LPC Port.
  *
- * The CsrApiRequestThread routine handles incoming messages or connection
- * requests on the CSR API LPC Port.
+ * @param[in]   Parameter
+ * System-default user-defined parameter. Unused.
  *
- * @param Parameter
- *        System-default user-defined parameter. Unused.
+ * @return
+ * The thread exit code, if the thread is terminated.
  *
- * @return The thread exit code, if the thread is terminated.
- *
- * @remarks Before listening on the port, the routine will first attempt
- *          to connect to the user subsystem.
- *
- *--*/
-NTSTATUS
+ * @remarks
+ * Before listening on the port, the routine will first attempt
+ * to connect to the User subsystem.
+ **/
+ULONG
 NTAPI
-CsrApiRequestThread(IN PVOID Parameter)
+CsrApiRequestThread(
+    _In_ PVOID Parameter)
 {
     PTEB Teb = NtCurrentTeb();
     LARGE_INTEGER TimeOut;
@@ -959,8 +960,8 @@ CsrApiPortInitialize(VOID)
                                          0,
                                          0,
                                          0,
-                                         (PVOID)CsrApiRequestThread,
-                                         (PVOID)hRequestEvent,
+                                         CsrApiRequestThread,
+                                         hRequestEvent,
                                          &hThread,
                                          &ClientId);
             if (NT_SUCCESS(Status))

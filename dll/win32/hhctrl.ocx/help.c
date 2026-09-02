@@ -183,7 +183,7 @@ static LPWSTR HH_LoadString(DWORD dwID)
 
     iSize = LoadStringW(hhctrl_hinstance, dwID, (LPWSTR)&stringresource, 0);
 
-    string = heap_alloc((iSize + 2) * sizeof(WCHAR)); /* some strings (tab text) needs double-null termination */
+    string = malloc((iSize + 2) * sizeof(WCHAR)); /* some strings (tab text) needs double-null termination */
     memcpy(string, stringresource, iSize*sizeof(WCHAR));
     string[iSize] = 0;
 
@@ -205,7 +205,7 @@ static HRESULT navigate_url(HHInfo *info, LPCWSTR surl)
     VariantClear(&url);
 
     if(FAILED(hres))
-        TRACE("Navigation failed: %08x\n", hres);
+        TRACE("Navigation failed: %08lx\n", hres);
 
     return hres;
 }
@@ -229,8 +229,8 @@ BOOL NavigateToUrl(HHInfo *info, LPCWSTR surl)
     SetChmPath(&chm_path, info->pCHMInfo->szFile, surl);
     ret = NavigateToChm(info, chm_path.chm_file, chm_path.chm_index);
 
-    heap_free(chm_path.chm_file);
-    heap_free(chm_path.chm_index);
+    free(chm_path.chm_file);
+    free(chm_path.chm_index);
 
     return ret;
 }
@@ -246,7 +246,7 @@ static BOOL AppendFullPathURL(LPCWSTR file, LPWSTR buf, LPCWSTR index)
     TRACE("%s %p %s\n", debugstr_w(file), buf, debugstr_w(index));
 
     if (!GetFullPathNameW(file, ARRAY_SIZE(full_path), full_path, NULL)) {
-        WARN("GetFullPathName failed: %u\n", GetLastError());
+        WARN("GetFullPathName failed: %lu\n", GetLastError());
         return FALSE;
     }
 
@@ -276,7 +276,7 @@ static void DoSync(HHInfo *info)
 
     if (FAILED(hres))
     {
-        WARN("get_LocationURL failed: %08x\n", hres);
+        WARN("get_LocationURL failed: %08lx\n", hres);
         return;
     }
 
@@ -848,7 +848,7 @@ static void DisplayPopupMenu(HHInfo *info)
         item.dwTypeData = HH_LoadString(IDS_HIDETABS);
 
     SetMenuItemInfoW(submenu, IDTB_EXPAND, FALSE, &item);
-    heap_free(item.dwTypeData);
+    free(item.dwTypeData);
 
     /* Find the index toolbar button */
     button.cbSize = sizeof(TBBUTTONINFOW);
@@ -958,7 +958,7 @@ static void TB_AddButtonsFromFlags(HHInfo *pHHInfo, TBBUTTON *pButtons, DWORD dw
         HHWIN_BUTTON_FAVORITES | HHWIN_BUTTON_JUMP1 | HHWIN_BUTTON_JUMP2 |
         HHWIN_BUTTON_ZOOM | HHWIN_BUTTON_TOC_NEXT | HHWIN_BUTTON_TOC_PREV);
     if (unsupported)
-        FIXME("got asked for unsupported buttons: %06x\n", unsupported);
+        FIXME("got asked for unsupported buttons: %06lx\n", unsupported);
 
     if (dwButtonFlags & HHWIN_BUTTON_EXPAND)
     {
@@ -1033,7 +1033,7 @@ static BOOL HH_AddToolbar(HHInfo *pHHInfo)
         szBuf[dwLen + 1] = 0; /* Double-null terminate */
 
         buttons[dwIndex].iString = (DWORD)SendMessageW(hToolbar, TB_ADDSTRINGW, 0, (LPARAM)szBuf);
-        heap_free(szBuf);
+        free(szBuf);
     }
 
     SendMessageW(hToolbar, TB_ADDBUTTONSW, dwNumButtons, (LPARAM)buttons);
@@ -1079,7 +1079,7 @@ static DWORD NP_CreateTab(HINSTANCE hInstance, HWND hwndTabCtrl, DWORD index)
 
     ret = SendMessageW( hwndTabCtrl, TCM_INSERTITEMW, index, (LPARAM)&tie );
 
-    heap_free(tabText);
+    free(tabText);
     return ret;
 }
 
@@ -1772,31 +1772,31 @@ static BOOL CreateViewer(HHInfo *pHHInfo)
 
 void wintype_stringsW_free(struct wintype_stringsW *stringsW)
 {
-    heap_free(stringsW->pszType);
-    heap_free(stringsW->pszCaption);
-    heap_free(stringsW->pszToc);
-    heap_free(stringsW->pszIndex);
-    heap_free(stringsW->pszFile);
-    heap_free(stringsW->pszHome);
-    heap_free(stringsW->pszJump1);
-    heap_free(stringsW->pszJump2);
-    heap_free(stringsW->pszUrlJump1);
-    heap_free(stringsW->pszUrlJump2);
+    free(stringsW->pszType);
+    free(stringsW->pszCaption);
+    free(stringsW->pszToc);
+    free(stringsW->pszIndex);
+    free(stringsW->pszFile);
+    free(stringsW->pszHome);
+    free(stringsW->pszJump1);
+    free(stringsW->pszJump2);
+    free(stringsW->pszUrlJump1);
+    free(stringsW->pszUrlJump2);
 }
 
 void wintype_stringsA_free(struct wintype_stringsA *stringsA)
 {
-    heap_free(stringsA->pszType);
-    heap_free(stringsA->pszCaption);
-    heap_free(stringsA->pszToc);
-    heap_free(stringsA->pszIndex);
-    heap_free(stringsA->pszFile);
-    heap_free(stringsA->pszHome);
-    heap_free(stringsA->pszJump1);
-    heap_free(stringsA->pszJump2);
-    heap_free(stringsA->pszUrlJump1);
-    heap_free(stringsA->pszUrlJump2);
-    heap_free(stringsA->pszCustomTabs);
+    free(stringsA->pszType);
+    free(stringsA->pszCaption);
+    free(stringsA->pszToc);
+    free(stringsA->pszIndex);
+    free(stringsA->pszFile);
+    free(stringsA->pszHome);
+    free(stringsA->pszJump1);
+    free(stringsA->pszJump2);
+    free(stringsA->pszUrlJump1);
+    free(stringsA->pszUrlJump2);
+    free(stringsA->pszCustomTabs);
 }
 
 void ReleaseHelpViewer(HHInfo *info)
@@ -1824,7 +1824,7 @@ void ReleaseHelpViewer(HHInfo *info)
     if(info->WinType.hwndHelp)
         DestroyWindow(info->WinType.hwndHelp);
 
-    heap_free(info);
+    free(info);
     OleUninitialize();
 }
 
@@ -1835,7 +1835,7 @@ HHInfo *CreateHelpViewer(HHInfo *info, LPCWSTR filename, HWND caller)
 
     if(!info)
     {
-        info = heap_alloc_zero(sizeof(HHInfo));
+        info = calloc(1, sizeof(HHInfo));
         list_add_tail(&window_list, &info->entry);
     }
 
@@ -1906,18 +1906,18 @@ WCHAR *decode_html(const char *html_fragment, int html_fragment_len, UINT code_p
     int len, tmp_len = 0;
     WCHAR *unicode_text;
 
-    tmp = heap_alloc(html_fragment_len+1);
+    tmp = malloc(html_fragment_len + 1);
     while(1)
     {
         symbol = 0;
-        amp = strchr(h, '&');
+        amp = memchr(h, '&', html_fragment + html_fragment_len - h);
         if(!amp) break;
         len = amp-h;
         /* Copy the characters prior to the HTML encoded character */
         memcpy(&tmp[tmp_len], h, len);
         tmp_len += len;
         amp++; /* skip ampersand */
-        sem = strchr(amp, ';');
+        sem = memchr(amp, ';', html_fragment + html_fragment_len - amp);
         /* Require a semicolon after the ampersand */
         if(!sem)
         {
@@ -1957,9 +1957,9 @@ WCHAR *decode_html(const char *html_fragment, int html_fragment_len, UINT code_p
     tmp[tmp_len++] = 0; /* NULL-terminate the string */
 
     len = MultiByteToWideChar(code_page, 0, tmp, tmp_len, NULL, 0);
-    unicode_text = heap_alloc(len*sizeof(WCHAR));
+    unicode_text = malloc(len * sizeof(WCHAR));
     MultiByteToWideChar(code_page, 0, tmp, tmp_len, unicode_text, len);
-    heap_free(tmp);
+    free(tmp);
     return unicode_text;
 }
 
