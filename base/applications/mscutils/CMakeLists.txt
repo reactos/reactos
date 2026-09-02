@@ -5,8 +5,8 @@ add_subdirectory(eventvwr)
 add_subdirectory(servman)
 
 list(APPEND MSC_FILES
-    certmgr.msc
     certlm.msc
+    certmgr.msc
     compmgmt.msc
     devmgmt.msc
     diskmgmt.msc
