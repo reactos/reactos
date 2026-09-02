@@ -193,9 +193,21 @@ NtfsReleaseFCB(PNTFS_VCB Vcb,
     Fcb->RefCount--;
     if (Fcb->RefCount <= 0 && !NtfsFCBIsDirectory(Fcb))
     {
+        KeReleaseSpinLock(&Vcb->FcbListLock, oldIrql);
+
+        CcUninitializeCacheMap(Fcb->FileObject, NULL, NULL);
+
+        if (Fcb->SectionObjectPointers.DataSectionObject != NULL ||
+            Fcb->SectionObjectPointers.ImageSectionObject != NULL)
+        {
+            DPRINT("Keeping FCB %p (%S): still mapped\n", Fcb, Fcb->PathName);
+            return;
+        }
+
+        KeAcquireSpinLock(&Vcb->FcbListLock, &oldIrql);
         RemoveEntryList(&Fcb->FcbListEntry);
         KeReleaseSpinLock(&Vcb->FcbListLock, oldIrql);
-        CcUninitializeCacheMap(Fcb->FileObject, NULL, NULL);
+
         NtfsDestroyFCB(Fcb);
     }
     else
@@ -484,7 +496,9 @@ NtfsAttachFCBToFileObject(PNTFS_VCB Vcb,
     newCCB->PtrFileObject = FileObject;
     Fcb->Vcb = Vcb;
 
-    if (!(Fcb->Flags & FCB_CACHE_INITIALIZED))
+    /* Directories are excluded: they have no $DATA to map, and a data section on one gives Mm
+     * pages to fault in that we can never satisfy. */
+    if (!(Fcb->Flags & FCB_CACHE_INITIALIZED) && !NtfsFCBIsDirectory(Fcb))
     {
         _SEH2_TRY
         {
@@ -563,7 +577,7 @@ NtfsDirFindFile(PNTFS_VCB Vcb,
 
         /* Skip colon */
         ++Colon;
-        DPRINT1("Will now look for file '%wZ' with stream '%S'\n", &File, Colon);
+        DPRINT("Will now look for file '%wZ' with stream '%S'\n", &File, Colon);
     }
 
     Status = NtfsLookupFileAt(Vcb, &File, CaseSensitive, &FileRecord, &MFTIndex, CurrentDir);
