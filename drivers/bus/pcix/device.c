@@ -289,7 +289,8 @@ Device_ChangeResourceSettings(IN PPCI_PDO_EXTENSION PdoExtension,
     ULONG Bar, BarMask, i;
 
     Resources = PdoExtension->Resources;
-    if (!Resources) return;
+    if (!Resources)
+        return;
 
     /* Write each BAR back with the address that was arbitrated for it */
     BarArray = PciData->u.type0.BaseAddresses;

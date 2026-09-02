@@ -75,8 +75,8 @@ PciComputeNewCurrentSettings(IN PPCI_PDO_EXTENSION PdoExtension,
     RangeChange = FALSE;
     BarIndex = 0;
 
-    /* The limits say which BARs this function implements, so the walk below can
-       tell which BAR each assigned descriptor belongs to */
+    /* The limits say which BARs this function implements, so the walk below
+     * can tell which BAR each assigned descriptor belongs to */
     PciResources = PdoExtension->Resources;
 
     /* Check if there's not actually any resources */
@@ -135,13 +135,13 @@ PciComputeNewCurrentSettings(IN PPCI_PDO_EXTENSION PdoExtension,
                     if (PciResources)
                     {
                         while ((BarIndex < 7) &&
-                               (PciResources->Limit[BarIndex].Type ==
-                                CmResourceTypeNull))
+                               (PciResources->Limit[BarIndex].Type == CmResourceTypeNull))
                         {
                             BarIndex++;
                         }
 
-                        if (BarIndex < 7) ResourceArray[BarIndex++] = *Partial;
+                        if (BarIndex < 7)
+                            ResourceArray[BarIndex++] = *Partial;
                     }
                     break;
                 }
@@ -571,6 +571,7 @@ PciBuildRequirementsList(IN PPCI_PDO_EXTENSION PdoExtension,
     PCI_CONFIGURATOR_CONTEXT Context;
     ULONG Count, i;
     BOOLEAN HaveInterrupt;
+
     PAGED_CODE();
 
     /* Count the BAR limits that resource discovery found for this function */
@@ -579,14 +580,16 @@ PciBuildRequirementsList(IN PPCI_PDO_EXTENSION PdoExtension,
     {
         for (i = 0; i < (PCI_TYPE0_ADDRESSES + 1); i++)
         {
-            if (PdoExtension->Resources->Limit[i].Type != CmResourceTypeNull) Count++;
+            if (PdoExtension->Resources->Limit[i].Type != CmResourceTypeNull)
+                Count++;
         }
     }
 
     /* A device with an interrupt pin also needs a line routed to it */
     HaveInterrupt = (PdoExtension->InterruptPin) &&
                     !(PdoExtension->HackFlags & PCI_HACK_NO_ENUM_AT_ALL);
-    if (HaveInterrupt) Count++;
+    if (HaveInterrupt)
+        Count++;
 
     /* And a bridge with legacy decodes enabled needs those ranges locked down */
     Count += PdoExtension->AdditionalResourceCount;
@@ -612,10 +615,10 @@ PciBuildRequirementsList(IN PPCI_PDO_EXTENSION PdoExtension,
     }
 
     RequirementsList = PciAllocateIoRequirementsList(Count,
-                                                     PdoExtension->
-                                                     ParentFdoExtension->BaseBus,
+                                                     PdoExtension->ParentFdoExtension->BaseBus,
                                                      PdoExtension->Slot.u.AsULONG);
-    if (!RequirementsList) return STATUS_INSUFFICIENT_RESOURCES;
+    if (!RequirementsList)
+        return STATUS_INSUFFICIENT_RESOURCES;
 
     Descriptor = RequirementsList->List[0].Descriptors;
 
@@ -626,7 +629,8 @@ PciBuildRequirementsList(IN PPCI_PDO_EXTENSION PdoExtension,
         for (i = 0; i < (PCI_TYPE0_ADDRESSES + 1); i++)
         {
             /* Skip the BARs this function does not implement */
-            if (Limit[i].Type == CmResourceTypeNull) continue;
+            if (Limit[i].Type == CmResourceTypeNull)
+                continue;
 
             /* A BAR decodes for one function only, so it cannot be shared */
             *Descriptor = Limit[i];
