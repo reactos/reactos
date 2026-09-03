@@ -24,6 +24,7 @@ typedef struct _HEAP_SUBSEGMENT
 {
     LIST_ENTRY ListEntry;
     struct _HEAP_BUCKET *Bucket; // owning bucket
+    struct _LFH_BLOCK_ZONE *Zone; // owning zone (for retirement)
     PUCHAR BlockBase;
     SIZE_T BlockSize;
     ULONG BlockCount;

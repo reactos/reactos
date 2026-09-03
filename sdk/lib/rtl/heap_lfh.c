@@ -106,6 +106,7 @@ RtlpAllocateLFHSubSegment(
 
     SubSegment = (PHEAP_SUBSEGMENT)(Zone + 1);
     SubSegment->Bucket = Bucket;
+    SubSegment->Zone = Zone;
     SubSegment->BlockBase = (PUCHAR)(SubSegment + 1);
     SubSegment->BlockSize = Bucket->BlockSize;
     SubSegment->BlockCount = LFH_MIN_BLOCKS_PER_SUBSEGMENT;
@@ -123,6 +124,26 @@ RtlpAllocateLFHSubSegment(
 
     InsertTailList(&Bucket->SubSegmentList, &SubSegment->ListEntry);
     return SubSegment;
+}
+
+static
+VOID
+RtlpRetireLFHSubSegment(
+    _In_ PHEAP Heap,
+    _In_ PHEAP_BUCKET Bucket,
+    _In_ PHEAP_SUBSEGMENT SubSegment)
+{
+    PLFH_BLOCK_ZONE Zone = SubSegment->Zone;
+
+    RemoveEntryList(&SubSegment->ListEntry);
+
+    if (Bucket->ActiveSubSegment == SubSegment)
+        Bucket->ActiveSubSegment = NULL;
+
+    RemoveEntryList(&Zone->ListEntry);
+
+    /* zone header, subsegment header and blocks are all a singular backend allocation */
+    RtlFreeHeap(Heap, HEAP_NO_SERIALIZE, Zone->Base);
 }
 
 static
@@ -515,6 +536,10 @@ RtlpLFHFree(
     FreeEntry->Next = SubSegment->FreeList;
     SubSegment->FreeList = FreeEntry;
     SubSegment->FreeBlockCount++;
+
+    /* subsegment just went fully idle, retire it and give the zone back */
+    if (SubSegment->FreeBlockCount == SubSegment->BlockCount)
+        RtlpRetireLFHSubSegment(Heap, Bucket, SubSegment);
 
     if (HeapLocked) RtlLeaveHeapLock(Heap->LockVariable);
 
