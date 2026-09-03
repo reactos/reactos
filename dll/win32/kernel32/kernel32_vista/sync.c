@@ -3,6 +3,15 @@
 #define NDEBUG
 #include <debug.h>
 
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlWaitOnAddress(
+    _In_ const VOID *Address,
+    _In_ const VOID *CompareAddress,
+    _In_ SIZE_T AddressSize,
+    _In_opt_ const LARGE_INTEGER *Timeout);
+
 VOID
 WINAPI
 AcquireSRWLockExclusive(PSRWLOCK Lock)
@@ -83,6 +92,23 @@ SleepConditionVariableSRW(PCONDITION_VARIABLE ConditionVariable, PSRWLOCK Lock, 
         SetLastError(RtlNtStatusToDosError(Status));
         return FALSE;
     }
+    return TRUE;
+}
+
+BOOL
+WINAPI
+WaitOnAddress(volatile VOID *Address, PVOID CompareAddress, SIZE_T AddressSize, DWORD Timeout)
+{
+    NTSTATUS Status;
+    LARGE_INTEGER Time;
+
+    Status = RtlWaitOnAddress((const VOID *)Address, CompareAddress, AddressSize, GetNtTimeout(&Time, Timeout));
+    if (Status != STATUS_SUCCESS)
+    {
+        SetLastError(RtlNtStatusToDosError(Status));
+        return FALSE;
+    }
+
     return TRUE;
 }
 
