@@ -458,8 +458,8 @@ NTAPI
 RtlFindRange(IN PRTL_RANGE_LIST RangeList,
              IN ULONGLONG Minimum,
              IN ULONGLONG Maximum,
-             IN ULONG Length,
-             IN ULONG Alignment,
+             IN ULONGLONG Length,
+             IN ULONGLONG Alignment,
              IN ULONG Flags,
              IN UCHAR AttributeAvailableMask,
              IN PVOID Context OPTIONAL,
@@ -476,12 +476,12 @@ RtlFindRange(IN PRTL_RANGE_LIST RangeList,
     }
 
     /* A window of Length can only end at Maximum if it also fits below it */
-    if ((ULONGLONG)(Length - 1) > Maximum)
+    if (Length - 1 > Maximum)
     {
         return STATUS_RANGE_NOT_FOUND;
     }
 
-    Candidate = (Maximum - (Length - 1)) & ~((ULONGLONG)Alignment - 1);
+    Candidate = (Maximum - (Length - 1)) & ~(Alignment - 1);
 
     for (;;)
     {
@@ -516,12 +516,12 @@ RtlFindRange(IN PRTL_RANGE_LIST RangeList,
             return STATUS_RANGE_NOT_FOUND;
         }
 
-        if ((ULONGLONG)(Length - 1) > ConflictStart - 1)
+        if (Length - 1 > ConflictStart - 1)
         {
             return STATUS_RANGE_NOT_FOUND;
         }
 
-        Candidate = ((ConflictStart - 1) - (Length - 1)) & ~((ULONGLONG)Alignment - 1);
+        Candidate = ((ConflictStart - 1) - (Length - 1)) & ~(Alignment - 1);
     }
 }
 

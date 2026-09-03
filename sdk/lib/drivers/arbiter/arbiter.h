@@ -37,9 +37,14 @@
  *
  * ARBITER_RANGE_BOOT_ALLOCATED:
  * Marks a firmware boot configuration
+ *
+ * ARBITER_RANGE_PORT_ALIAS:
+ * Marks a phantom I/O-port range that a partially-decoding ISA card shadows,
+ * rather than one the device asked for.  Set by the root port arbiter.
  */
-#define ARBITER_RANGE_SHARED_DRIVER         0x0
+#define ARBITER_RANGE_SHARED_DRIVER         0x02
 #define ARBITER_RANGE_BOOT_ALLOCATED        0x04
+#define ARBITER_RANGE_PORT_ALIAS            0x10
 
 /* ARBITER_ALLOCATION_STATE.Flags */
 #define ARBITER_STATE_FLAG_NULL_CONFLICT_OK 0x0001  // a NULL-owner conflict is OK
