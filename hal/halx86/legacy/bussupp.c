@@ -808,7 +808,7 @@ HalpDebugPciDumpBus(IN PBUS_HANDLER BusHandler,
     CHAR bSubVendorName[128] = "Unknown";
     ULONG Size, Mem, b;
 
-    HeaderType = (PciData->HeaderType & ~PCI_MULTIFUNCTION);
+    HeaderType = PCI_CONFIGURATION_TYPE(PciData);
 
     /* Isolate the class name */
     sprintf(LookupString, "C %02x  ", PciData->BaseClass);
@@ -1052,7 +1052,7 @@ HalpInitializePciBus(VOID)
         PciSlot.u.bits.FunctionNumber = 0;
 
         /* Loop all slots */
-        for (i = 0; i < 32; i++)
+        for (i = 0; i < PCI_MAX_DEVICES; i++)
         {
             /* Try to setup a Type 2 PCI slot */
             PciType = 2;
@@ -1106,11 +1106,11 @@ HalpInitializePciBus(VOID)
         BusHandler = HalHandlerForBus(PCIBus, i);
 
         /* Loop every device */
-        for (j = 0; j < 32; j++)
+        for (j = 0; j < PCI_MAX_DEVICES; j++)
         {
             /* Loop every function */
             PciSlot.u.bits.DeviceNumber = j;
-            for (k = 0; k < 8; k++)
+            for (k = 0; k < PCI_MAX_FUNCTION; k++)
             {
                 /* Build the final slot structure */
                 PciSlot.u.bits.FunctionNumber = k;
