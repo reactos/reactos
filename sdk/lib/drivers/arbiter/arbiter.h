@@ -38,7 +38,7 @@
  * ARBITER_RANGE_BOOT_ALLOCATED:
  * Marks a firmware boot configuration
  */
-#define ARBITER_RANGE_SHARED_DRIVER         0x0
+#define ARBITER_RANGE_SHARED_DRIVER         0x02
 #define ARBITER_RANGE_BOOT_ALLOCATED        0x04
 
 /* ARBITER_ALLOCATION_STATE.Flags */
