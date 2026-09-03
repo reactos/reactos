@@ -94,6 +94,36 @@ IopArbDmaScoreRequirement(
 }
 
 /**
+ * @brief
+ * The Root DMA arbiter's OverrideConflict: refuses every conflict.
+ *
+ * @param[in] Arbiter
+ * The Root DMA arbiter instance.
+ *
+ * @param[in,out] ArbState
+ * The allocation state of the requirement that could not be
+ * placed.
+ *
+ * @return
+ * Returns FALSE, always.
+ *
+ */
+static
+BOOLEAN
+NTAPI
+IopArbDmaOverrideConflict(
+    _In_ PARBITER_INSTANCE Arbiter,
+    _Inout_ PARBITER_ALLOCATION_STATE ArbState)
+{
+    PAGED_CODE();
+
+    UNREFERENCED_PARAMETER(Arbiter);
+    UNREFERENCED_PARAMETER(ArbState);
+
+    return FALSE;
+}
+
+/**
  * @brief Initialize the RootDmaArbiter.
  *
  * @return NTSTATUS
@@ -108,11 +138,12 @@ IopArbDmaInitialize(VOID)
     NTSTATUS Status = STATUS_UNSUCCESSFUL;
 
     PAGED_CODE();
-    IopRootDmaArbiter.Name = L"RootDma";
+    IopRootDmaArbiter.Name = L"RootDMA";
     IopRootDmaArbiter.UnpackRequirement = IopArbDmaUnpackRequirements;
     IopRootDmaArbiter.PackResource = IopArbDmaPackResource;
     IopRootDmaArbiter.UnpackResource = IopArbDmaUnpackResource;
     IopRootDmaArbiter.ScoreRequirement = IopArbDmaScoreRequirement;
+    IopRootDmaArbiter.OverrideConflict = IopArbDmaOverrideConflict;
 
     Status = ArbiterLibInitializeInstance(&IopRootDmaArbiter,
                                           NULL,
@@ -122,7 +153,7 @@ IopArbDmaInitialize(VOID)
                                           NULL);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("IopArbDmaInitialize: Failed with %X", Status);
+        DPRINT1("IopArbDmaInitialize: Failed with %X\n", Status);
     }
 
     return Status;
