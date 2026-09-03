@@ -276,14 +276,14 @@ MmFinalizeSegment(PMM_SECTION_SEGMENT Segment)
 
     MmLockSectionSegment(Segment);
     RemoveEntryList(&Segment->ListOfSegments);
-    if (Segment->Flags & MM_DATAFILE_SEGMENT) {
+    if (*Segment->Flags & MM_DATAFILE_SEGMENT) {
         KeAcquireSpinLock(&Segment->FileObject->IrpListLock, &OldIrql);
-        if (Segment->Flags & MM_SEGMENT_FINALIZE) {
+        if (*Segment->Flags & MM_SEGMENT_FINALIZE) {
             KeReleaseSpinLock(&Segment->FileObject->IrpListLock, OldIrql);
             MmUnlockSectionSegment(Segment);
             return;
         }
-        Segment->Flags |= MM_SEGMENT_FINALIZE;
+        *Segment->Flags |= MM_SEGMENT_FINALIZE;
         DPRINTC("Finalizing data file segment %p\n", Segment);
 
         Segment->FileObject->SectionObjectPointer->DataSectionObject = NULL;
@@ -458,7 +458,8 @@ MmCreateCacheSection(PROS_SECTION_OBJECT *SectionObject,
         ObReferenceObject(FileObject);
         Segment->FileObject = FileObject;
         Segment->Protection = SectionPageProtection;
-        Segment->Flags = MM_DATAFILE_SEGMENT;
+        Segment->Flags = &Segment->SegFlags;
+        Segment->SegFlags = MM_DATAFILE_SEGMENT;
         memset(&Segment->Image, 0, sizeof(Segment->Image));
         Segment->WriteCopy = FALSE;
 
@@ -528,7 +529,7 @@ MmCreateCacheSection(PROS_SECTION_OBJECT *SectionObject,
         }
     }
 
-    DPRINTC("Segment %p created (%x)\n", Segment, Segment->Flags);
+    DPRINTC("Segment %p created (%x)\n", Segment, *Segment->Flags);
 
     *SectionObject = Section;
     return STATUS_SUCCESS;
