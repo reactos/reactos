@@ -1149,7 +1149,7 @@
 @ stdcall RtlFindMessage(ptr long long long ptr)
 @ stdcall RtlFindMostSignificantBit(long long)
 @ stdcall RtlFindNextForwardRunClear(ptr long ptr)
-@ stdcall RtlFindRange(ptr long long long long long long long long ptr ptr ptr)
+@ stdcall RtlFindRange(ptr int64 int64 int64 int64 long long ptr ptr ptr)
 @ stdcall RtlFindSetBits(ptr long long)
 @ stdcall RtlFindSetBitsAndClear(ptr long long)
 @ stdcall RtlFindUnicodePrefix(ptr ptr long)
