@@ -27,8 +27,6 @@
 #define IDA_DESKBROWSER 3
 
 /* Bitmaps */
-#define IDB_REACTOS                 131
-#define IDB_LINEBAR                 138
 #define IDB_SHELL_IEXPLORE_LG       204
 #define IDB_SHELL_IEXPLORE_LG_HOT   205
 #define IDB_SHELL_IEXPLORE_SM       206
