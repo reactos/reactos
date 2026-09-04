@@ -249,7 +249,7 @@ IntNotifyWinEvent(
    }
 }
 
-VOID
+SYSCALL_RETURN_VOID
 APIENTRY
 NtUserNotifyWinEvent(
    DWORD Event,
@@ -268,7 +268,7 @@ NtUserNotifyWinEvent(
      if (!Window)
      {
        UserLeave();
-       return;
+       return 0;
      }
    }
 
@@ -279,6 +279,7 @@ NtUserNotifyWinEvent(
       if (Window) UserDerefObjectCo(Window);
    }
    UserLeave();
+   return 0;
 }
 
 HWINEVENTHOOK
