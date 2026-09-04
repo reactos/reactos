@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|ARM64">
+      <Configuration>Debug</Configuration>
+      <Platform>ARM64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|ARM64">
+      <Configuration>Release</Configuration>
+      <Platform>ARM64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <CLRSupport>false</CLRSupport>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <Import Project="$(WpfCppProps)" />
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>15.0</VCProjectVersion>
+    <ProjectGuid>{cc977117-523f-48b7-b012-01e61b1f8328}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <OutputName>sw</OutputName>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>precomp.hpp</PrecompiledHeaderFile>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(MsBuildThisFileDirectory);$(WpfGraphicsPath)core\sw\</AdditionalIncludeDirectories>
+      <!-- graphics\common\shared\xmm.h(679): warning C4127: conditional expression is constant -->
+      <!-- graphics\common\shared\xmm.h(714): warning C4127: conditional expression is constant -->
+      <!-- note: consider using 'if constexpr' statement instead                                -->
+      <!-- note: see reference to function template instantiation 'CXmmValue &CXmmValue::ReplicateWord8Times<0>(void)' being compiled -->
+      <DisableSpecificWarnings>%(DisableSpecificWarnings);4127</DisableSpecificWarnings>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="precomp.cpp">
+      <PrecompiledHeader>Create</PrecompiledHeader>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="aacoverage.cpp" />
+    <ClCompile Include="aarasterizer.cpp" />
+    <ClCompile Include="boundsrt.cpp" />
+    <ClCompile Include="brushspan.cpp" />
+    <ClCompile Include="doublebufferedbitmap.cpp" />
+    <ClCompile Include="scanpipelinerender.cpp" />
+    <ClCompile Include="SwBitmapCache.cpp" />
+    <ClCompile Include="SwBitmapColorSource.cpp" />
+    <ClCompile Include="swclip.cpp" />
+    <ClCompile Include="swhwndrt.cpp" />
+    <ClCompile Include="SwIntermediateRTCreator.cpp" />
+    <ClCompile Include="swpresentgdi.cpp" />
+    <ClCompile Include="swrast.cpp" />
+    <ClCompile Include="swsurfrt.cpp" />
+    <ClCompile Include="swglyphrun.cpp" />
+    <ClCompile Include="swglyphpainter.cpp" />
+    <ClCompile Include="renderingbuilder.cpp" />
+    <ClCompile Include="swinit.cpp" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+</Project>

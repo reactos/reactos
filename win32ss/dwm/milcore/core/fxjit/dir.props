@@ -1,0 +1,4 @@
+<Project ToolsVersion="14.0" InitialTargets="D3DXUsageWarning" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+	<Import Project="..\dir.props" />
+    <Import Project="fxjit.props" />
+</Project>

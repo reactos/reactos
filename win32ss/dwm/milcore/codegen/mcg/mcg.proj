@@ -1,0 +1,13 @@
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="dogfood">
+  <Import Project="$(_NTDRIVE)$(_NTROOT)\wpf\src\Microsoft.Wpf.Product.Settings.targets" />
+
+  <Target Name="Build">
+    <MSBuild Projects="$(WpfGraphicsRoot)\tools\csp\csp.csproj" />
+    <Exec Command="tools\GenerateFiles.cmd" />
+    <Exec Command="tools\GenerateElements.cmd" />
+  </Target>
+
+  <Target Name="Rebuild" DependsOnTargets="Clean;Build" />
+
+  <Target Name="Clean" />
+</Project>
