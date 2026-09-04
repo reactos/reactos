@@ -52,12 +52,13 @@ RtlCmDecodeMemIoResource(
  * @param[out] TranslatedType
  * Receives the post-translation resource type. A HAL may map one
  * space onto another, so the type is taken from the space the
- * translation actually returned rather than assumed.
+ * translation actually returned rather than assumed, e.g IOPorts, MMIO, etc.
  *
  * @return
  * Returns STATUS_SUCCESS, STATUS_INVALID_PARAMETER for a resource
- * type that carries no address, or STATUS_UNSUCCESSFUL when the
- * HAL declines the translation.
+ * type that carries no address or for an address space the HAL is
+ * not expected to report, or STATUS_UNSUCCESSFUL when the HAL
+ * declines the translation.
  */
 static
 NTSTATUS
@@ -81,15 +82,20 @@ IopArbMemTranslateAddress(
     if (!HalTranslateBusAddress(Isa, 0, SourceAddress, &AddressSpace, TranslatedAddress))
         return STATUS_UNSUCCESSFUL;
 
-    if (AddressSpace == 1 || AddressSpace == 3)
+    /* The HAL reports back the space it landed in; only these two are expected. */
+    if (AddressSpace == 1)
     {
         *TranslatedType = CmResourceTypePort;
     }
-    else
+    else if (AddressSpace == 0)
     {
         *TranslatedType = (SourceType == CmResourceTypeMemoryLarge)
                           ? CmResourceTypeMemoryLarge
                           : CmResourceTypeMemory;
+    }
+    else
+    {
+        return STATUS_INVALID_PARAMETER;
     }
 
     return STATUS_SUCCESS;
@@ -352,7 +358,7 @@ IopArbMemTranslateOrdering(
 /**
  * @brief
  * The Root Memory arbiter's FindSuitableRange: the engine search,
- * widened for a device asking to keep the MMIO window the firmware
+ * incremented for a device asking to keep the MMIO window the firmware
  * already programmed it into.
  *
  * @param[in] Arbiter

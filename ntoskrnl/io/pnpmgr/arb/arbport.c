@@ -32,8 +32,7 @@ RtlCmDecodeMemIoResource(
 /*
  * A card that decodes only the low 10 or 12 address lines answers not just on
  * its own range but on every "alias" a multiple of 0x400 / 0x1000 above it, up
- * to the top of the 64 KB port space.  The arbiter has to reserve those aliases
- * as well, or another device is handed a port this card silently shadows.
+ * to the top of the 64 KB port space.
  */
 #define PORT_ALIAS_STRIDE_10_BIT    0x400
 #define PORT_ALIAS_STRIDE_12_BIT    0x1000
@@ -60,12 +59,13 @@ RtlCmDecodeMemIoResource(
  * Receives the post-translation resource type. A HAL may map one
  * space onto another (memory-mapped I/O ports being the usual
  * case) so the type is taken from the space the translation
- * actually returned rather than assumed.
+ * actually returned rather than assumed, e.g IOPorts, MMIO, etc.
  *
  * @return
  * Returns STATUS_SUCCESS, STATUS_INVALID_PARAMETER for a resource
- * type that carries no address, or STATUS_UNSUCCESSFUL when the
- * HAL declines the translation.
+ * type that carries no address or for an address space the HAL is
+ * not expected to report, or STATUS_UNSUCCESSFUL when the HAL
+ * declines the translation.
  */
 static
 NTSTATUS
@@ -89,15 +89,20 @@ IopArbPortTranslateAddress(
     if (!HalTranslateBusAddress(Isa, 0, SourceAddress, &AddressSpace, TranslatedAddress))
         return STATUS_UNSUCCESSFUL;
 
-    if (AddressSpace == 1 || AddressSpace == 3)
+    /* The HAL reports back the space it landed in; only these two are expected. */
+    if (AddressSpace == 1)
     {
         *TranslatedType = CmResourceTypePort;
     }
-    else
+    else if (AddressSpace == 0)
     {
         *TranslatedType = (SourceType == CmResourceTypeMemoryLarge)
                           ? CmResourceTypeMemoryLarge
                           : CmResourceTypeMemory;
+    }
+    else
+    {
+        return STATUS_INVALID_PARAMETER;
     }
 
     return STATUS_SUCCESS;
@@ -168,7 +173,7 @@ IopArbPortGetNextAlias(
  *
  * @param[out] OutAlignment
  * Receives the requirement's alignment; a zero alignment means the
- * device does not care and is normalised to byte alignment, since
+ * device does not care and is normalized to byte alignment, since
  * the placement arithmetic divides by it.
  *
  * @return
@@ -289,7 +294,7 @@ IopArbPortUnpackResource(
  * @remarks
  * The engine places the most constrained device (the lowest score)
  * first, so the devices with real freedom of movement are left to
- * absorb whatever space is still going.
+ * absorb whatever space is still available.
  */
 static
 INT32
@@ -324,6 +329,7 @@ IopArbPortScoreRequirement(
         Span -= Length - 1;
     }
 
+    Placements = Span / Alignment + 1;
     return (INT32)min(Placements, MAXLONG);
 }
 
@@ -394,7 +400,7 @@ IopArbPortTranslateOrdering(
 /**
  * @brief
  * The Root Port arbiter's FindSuitableRange: the engine search,
- * widened for a device asking to keep the ports the firmware
+ * incremented for a device asking to keep the ports the firmware
  * already programmed it into.
  *
  * @param[in] Arbiter
