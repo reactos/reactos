@@ -71,9 +71,6 @@
 #define IDC_DLG_BG               1009
 #define IDC_ROSLOGO_WHITE        1010
 
-
-#define IDI_ROSLOGO              20000
-#define IDI_BAR                  20001
 #define IDI_ROSLOGO_FLAG         20002
 #define IDI_DLG_BG               20003
 #define IDB_IMAGE_STRIP          20004
