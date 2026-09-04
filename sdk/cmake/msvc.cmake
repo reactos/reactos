@@ -592,7 +592,6 @@ function(add_linker_script _target _linker_script_file)
             # OUTPUT ${_generated_file}
             TARGET ${_target} PRE_LINK # PRE_BUILD
             COMMAND ${CMAKE_C_COMPILER} /nologo ${_no_std_includes_flag} /D__LINKER__ /EP /c "${_file_full_path}" > "${_generated_file}"
-            DEPENDS ${_file_full_path}
             VERBATIM)
         set_source_files_properties(${_generated_file} PROPERTIES GENERATED TRUE)
         # add_custom_target("${_target}_${_file_name}" ALL DEPENDS ${_generated_file})
