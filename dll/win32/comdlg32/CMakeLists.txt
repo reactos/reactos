@@ -24,8 +24,8 @@ add_library(comdlg32 MODULE
     ${CMAKE_CURRENT_BINARY_DIR}/comdlg32.def)
 
 set_module_type(comdlg32 win32dll)
-target_compile_definitions(comdlg32 PRIVATE _CRT_NON_CONFORMING_SWPRINTFS)
-target_link_libraries(comdlg32 uuid wine oldnames)
+#add_idl_reg_scripts(comdlg32 registry comdlg32_classes.idl) # Win 7
+target_link_libraries(comdlg32 uuid wine wine_dll_register wine_dll_canunload oldnames)
 add_delay_importlibs(comdlg32 ole32)
 add_importlibs(comdlg32 shell32 shlwapi comctl32 winspool user32 gdi32 advapi32 msvcrt kernel32 ntdll)
 add_pch(comdlg32 precomp.h SOURCE)
