@@ -231,3 +231,7 @@
 #define IDS_SAVEERROR   941
 #define IDS_CANTSENDMAIL 942
 #define IDS_LOSECOLOR   943
+#define IDS_MONOBMP     944
+#define IDS_4BPPBMP     945
+#define IDS_8BPPBMP     946
+#define IDS_24BPPBMP    947
