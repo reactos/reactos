@@ -11,6 +11,7 @@
 #define LFH_BUCKET_COUNT 128
 #define LFH_MAX_BLOCK_SIZE 0x1000
 #define LFH_MIN_BLOCKS_PER_SUBSEGMENT 16
+#define LFH_ZONE_SIZE 0x10000 // bump allocated among multiple subsegments
 #define HEAP_ENTRY_LFH_FLAG 0x80
 
 typedef struct _LFH_FREE_ENTRY
@@ -44,12 +45,16 @@ typedef struct _LFH_BLOCK_ZONE
     LIST_ENTRY ListEntry;
     PVOID Base;
     SIZE_T Size;
+    PUCHAR FreePointer; // next byte available for carving a subsegment
+    PUCHAR Limit;
+    ULONG LiveSubSegmentCount; // subsegments carved from this zone that aren't retired
 } LFH_BLOCK_ZONE, *PLFH_BLOCK_ZONE;
 
 typedef struct _LFH_HEAP
 {
     PHEAP Heap; // owning backend heap
     LIST_ENTRY BlockZones;
+    PLFH_BLOCK_ZONE CurrentZone; // zone we're bump allocating subsegments from
     HEAP_BUCKET Buckets[LFH_BUCKET_COUNT];
 } LFH_HEAP, *PLFH_HEAP;
 

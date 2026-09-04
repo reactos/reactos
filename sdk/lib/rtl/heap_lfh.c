@@ -85,26 +85,41 @@ RtlpAllocateLFHSubSegment(
     PLFH_BLOCK_ZONE Zone;
     PHEAP_SUBSEGMENT SubSegment;
     PLFH_FREE_ENTRY FreeEntry, NextFree;
-    SIZE_T ZoneSize, BlocksSize;
+    SIZE_T BlocksSize, SubSegmentSpanSize, ZoneSize, ZonePayload;
     UCHAR SavedFrontEndHeapType;
     ULONG Index;
 
     BlocksSize = Bucket->BlockSize * LFH_MIN_BLOCKS_PER_SUBSEGMENT;
-    ZoneSize = ALIGN_UP_BY(sizeof(LFH_BLOCK_ZONE) + sizeof(HEAP_SUBSEGMENT) + BlocksSize, PAGE_SIZE);
+    SubSegmentSpanSize = ALIGN_UP_BY(sizeof(HEAP_SUBSEGMENT) + BlocksSize, MEMORY_ALLOCATION_ALIGNMENT);
 
-    SavedFrontEndHeapType = Heap->FrontEndHeapType;
-    Heap->FrontEndHeapType = 0;
-    Zone = RtlAllocateHeap(Heap, HEAP_NO_SERIALIZE, ZoneSize);
-    Heap->FrontEndHeapType = SavedFrontEndHeapType;
+    Zone = Lfh->CurrentZone;
+    if (!Zone || (SIZE_T)(Zone->Limit - Zone->FreePointer) < SubSegmentSpanSize)
+    {
+        /* current zone (if any) is out of room, grow the backend for a fresh one */
+        ZonePayload = (SubSegmentSpanSize > LFH_ZONE_SIZE) ? SubSegmentSpanSize : LFH_ZONE_SIZE;
+        ZoneSize = ALIGN_UP_BY(sizeof(LFH_BLOCK_ZONE) + ZonePayload, PAGE_SIZE);
 
-    if (!Zone)
-        return NULL;
+        SavedFrontEndHeapType = Heap->FrontEndHeapType;
+        Heap->FrontEndHeapType = 0;
+        Zone = RtlAllocateHeap(Heap, HEAP_NO_SERIALIZE, ZoneSize);
+        Heap->FrontEndHeapType = SavedFrontEndHeapType;
 
-    Zone->Base = Zone;
-    Zone->Size = ZoneSize;
-    InsertTailList(&Lfh->BlockZones, &Zone->ListEntry);
+        if (!Zone)
+            return NULL;
 
-    SubSegment = (PHEAP_SUBSEGMENT)(Zone + 1);
+        Zone->Base = Zone;
+        Zone->Size = ZoneSize;
+        Zone->FreePointer = (PUCHAR)(Zone + 1);
+        Zone->Limit = (PUCHAR)Zone + ZoneSize;
+        Zone->LiveSubSegmentCount = 0;
+        InsertTailList(&Lfh->BlockZones, &Zone->ListEntry);
+        Lfh->CurrentZone = Zone;
+    }
+
+    SubSegment = (PHEAP_SUBSEGMENT)Zone->FreePointer;
+    Zone->FreePointer += SubSegmentSpanSize;
+    Zone->LiveSubSegmentCount++;
+
     SubSegment->Bucket = Bucket;
     SubSegment->Zone = Zone;
     SubSegment->BlockBase = (PUCHAR)(SubSegment + 1);
@@ -133,6 +148,7 @@ RtlpRetireLFHSubSegment(
     _In_ PHEAP_BUCKET Bucket,
     _In_ PHEAP_SUBSEGMENT SubSegment)
 {
+    PLFH_HEAP Lfh = (PLFH_HEAP)Heap->FrontEndHeap;
     PLFH_BLOCK_ZONE Zone = SubSegment->Zone;
 
     RemoveEntryList(&SubSegment->ListEntry);
@@ -140,7 +156,14 @@ RtlpRetireLFHSubSegment(
     if (Bucket->ActiveSubSegment == SubSegment)
         Bucket->ActiveSubSegment = NULL;
 
+    Zone->LiveSubSegmentCount--;
+    if (Zone->LiveSubSegmentCount != 0)
+        return;
+
     RemoveEntryList(&Zone->ListEntry);
+
+    if (Lfh->CurrentZone == Zone)
+        Lfh->CurrentZone = NULL;
 
     /* zone header, subsegment header and blocks are all a singular backend allocation */
     RtlFreeHeap(Heap, HEAP_NO_SERIALIZE, Zone->Base);
