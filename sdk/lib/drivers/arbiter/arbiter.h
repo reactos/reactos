@@ -25,9 +25,10 @@
 #define ARBITER_PRIORITY_EXHAUSTED          0x7FFFFFFF
 
 /* ARBITER_ALTERNATIVE.Flags */
-#define ARBITER_ALTERNATIVE_FLAG_FIXED      0x00000001  // one placement only
-#define ARBITER_ALTERNATIVE_FLAG_SHARED     0x00000002  // CmResourceShareShared
+#define ARBITER_ALTERNATIVE_FLAG_SHARED     0x00000001  // CmResourceShareShared
+#define ARBITER_ALTERNATIVE_FLAG_FIXED      0x00000002  // one placement only
 #define ARBITER_ALTERNATIVE_FLAG_BADRANGE   0x00000004  // Maximum < Minimum
+#define ARBITER_ALTERNATIVE_FLAG_PREFETCH   0x00000008  // prefetchable memory
 
 /*
  * Range attribute bits
@@ -37,20 +38,30 @@
  *
  * ARBITER_RANGE_BOOT_ALLOCATED:
  * Marks a firmware boot configuration
+ *
+ * ARBITER_RANGE_PORT_ALIAS:
+ * Marks a phantom I/O-port range that a partially-decoding ISA card shadows,
+ * rather than one the device asked for.  Set by the root port arbiter.
+ *
+ * ARBITER_RANGE_PREFETCHABLE:
+ * Marks prefetchable memory, which only a prefetchable requirement may take.
  */
-#define ARBITER_RANGE_SHARED_DRIVER         0x0
-#define ARBITER_RANGE_BOOT_ALLOCATED        0x04
+#define ARBITER_RANGE_BOOT_ALLOCATED        0x01
+#define ARBITER_RANGE_SHARED_DRIVER         0x02
+#define ARBITER_RANGE_PORT_ALIAS            0x10
+#define ARBITER_RANGE_PREFETCHABLE          0x40
 
 /* ARBITER_ALLOCATION_STATE.Flags */
-#define ARBITER_STATE_FLAG_NULL_CONFLICT_OK 0x0001  // a NULL-owner conflict is OK
 #define ARBITER_STATE_FLAG_BOOT             0x0004  // reserving a firmware boot config
+#define ARBITER_STATE_FLAG_NULL_CONFLICT_OK 0x0008  // a NULL-owner conflict is OK
 #define ARBITER_STATE_FLAG_WORKSPACE        0x0010  // WorkSpace holds a pool block to free
+#define ARBITER_STATE_FLAG_MCFG_CONFLICT    0x0020  // blocked by the MMCONFIG window
 
 typedef struct _ARBITER_ALTERNATIVE
 {
     UINT64 Minimum;
     UINT64 Maximum;
-#if (NTDDI_VERSION >= NTDDI_VISTA)
+#if (NTDDI_VERSION >= NTDDI_VISTA) || defined(__REACTOS__)
     UINT64 Length;
     UINT64 Alignment;
 #else
@@ -505,5 +516,125 @@ ArbiterLibBacktrackAllocation(
 CODE_SEG("PAGE")
 NTSTATUS
 NTAPI
+ArbiterLibPreprocessEntry(
+    _In_ PARBITER_INSTANCE Arbiter,
+    _Inout_ PARBITER_ALLOCATION_STATE ArbState
+);
+
+CODE_SEG("PAGE")
+NTSTATUS
+NTAPI
 ArbiterLibSortArbitrationList(
     _Inout_ PLIST_ENTRY ArbitrationList);
+
+CODE_SEG("PAGE")
+NTSTATUS
+NTAPI
+ArbiterLibAllocateEntry(
+    _In_ PARBITER_INSTANCE Arbiter,
+    _Inout_ PARBITER_ALLOCATION_STATE ArbState
+);
+
+CODE_SEG("PAGE")
+NTSTATUS
+NTAPI
+ArbiterLibStartArbiter(
+    _In_ PARBITER_INSTANCE Arbiter,
+    _In_ PCM_RESOURCE_LIST StartResources
+);
+
+CODE_SEG("PAGE")
+BOOLEAN
+NTAPI
+ArbiterLibOverrideConflict(
+    _In_ PARBITER_INSTANCE Arbiter,
+    _Inout_ PARBITER_ALLOCATION_STATE ArbState
+);
+
+CODE_SEG("PAGE")
+NTSTATUS
+NTAPI
+ArbiterLibAddInaccessibleAllocationRange(
+    _In_ PARBITER_INSTANCE Arbiter,
+    _In_ PCWSTR OrderingName,
+    _Inout_ PRTL_RANGE_LIST RangeList
+);
+
+CODE_SEG("PAGE")
+NTSTATUS
+NTAPI
+ArbiterLibAddMmConfigRangeAsBootReserved(
+    _In_ PARBITER_INSTANCE Arbiter,
+    _Inout_ PRTL_RANGE_LIST RangeList
+);
+
+BOOLEAN
+NTAPI
+ArbiterLibIsConflictWithMmConfigRange(
+    _In_ ULONGLONG Start,
+    _In_ ULONGLONG End
+);
+
+CODE_SEG("PAGE")
+VOID
+NTAPI
+ArbiterLibReserveRange(
+    _In_ PARBITER_INSTANCE Arbiter,
+    _In_ ULONGLONG Start,
+    _In_ ULONGLONG End,
+    _In_opt_ PVOID Owner,
+    _In_ BOOLEAN Shared
+);
+
+CODE_SEG("PAGE")
+VOID
+NTAPI
+ArbiterLibReleaseResources(
+    _In_ PARBITER_INSTANCE Arbiter,
+    _In_ PVOID Owner
+);
+
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+CODE_SEG("PAGE")
+NTSTATUS
+NTAPI
+ArbiterLibQueryArbitrate(
+    _In_ PARBITER_INSTANCE Arbiter,
+    _Inout_ PARBITER_QUERY_ARBITRATE_PARAMETERS Parameters
+);
+
+CODE_SEG("PAGE")
+NTSTATUS
+NTAPI
+ArbiterLibAddReserved(
+    _In_ PARBITER_INSTANCE Arbiter,
+    _Inout_ PARBITER_ADD_RESERVED_PARAMETERS Parameters
+);
+
+CODE_SEG("PAGE")
+NTSTATUS
+NTAPI
+ArbiterLibInitializeRangeList(
+    _In_ PARBITER_INSTANCE Arbiter,
+    _In_ ULONG ResourceCount,
+    _In_ PCM_PARTIAL_RESOURCE_DESCRIPTOR Resources,
+    _Inout_ PRTL_RANGE_LIST RangeList
+);
+#else
+CODE_SEG("PAGE")
+NTSTATUS
+NTAPI
+ArbiterLibQueryArbitrate(
+    _In_ PARBITER_INSTANCE Arbiter,
+    _In_ PLIST_ENTRY ArbitrationList
+);
+
+CODE_SEG("PAGE")
+NTSTATUS
+NTAPI
+ArbiterLibAddReserved(
+    _In_ PARBITER_INSTANCE Arbiter,
+    _In_opt_ PIO_RESOURCE_DESCRIPTOR Requirement,
+    _In_opt_ PCM_PARTIAL_RESOURCE_DESCRIPTOR Resource
+);
+#endif

@@ -16,6 +16,84 @@
 
 /* RANGE WALKER ***************************************************************/
 
+#define ARBITER_RESERVED_PASS_DONE  0xFFFFFFFF
+
+/**
+ * @brief
+ * The OverrideConflict default, the last of the conflict escapes:
+ * grants a FIXED requirement whose window conflicts only with
+ * ranges the requesting device itself already owns.
+ *
+ * @param[in] Arbiter
+ * The arbiter instance whose tentative allocation list is walked.
+ *
+ * @param[in,out] ArbState
+ * The allocation state of the requirement. On a grant, Start and
+ * End receive the requested window.
+ *
+ * @return
+ * Returns TRUE if at least one conflicting range was found and
+ * every one of them is owned by the requesting device, FALSE if
+ * any conflict belongs to someone else (or to no one).
+ *
+ * @remarks
+ * A fixed requirement has one possible placement, so when
+ * re-arbitration finds that window occupied by the device's own
+ * earlier reservation there is nowhere else to move it and the
+ * self-conflict has to be allowed.
+ */
+CODE_SEG("PAGE")
+BOOLEAN
+NTAPI
+ArbiterLibOverrideConflict(
+    _In_ PARBITER_INSTANCE Arbiter,
+    _Inout_ PARBITER_ALLOCATION_STATE ArbState)
+{
+    RTL_RANGE_LIST_ITERATOR Iterator;
+    PRTL_RANGE Range;
+    BOOLEAN SelfConflictOnly = FALSE;
+
+    PAGED_CODE();
+
+    /*
+     * Only a fixed requirement may reclaim its window - anything else still
+     * has other placements to try, and letting it overlap would paper over
+     * real conflicts.
+     */
+    if (ArbState->CurrentAlternative == NULL ||
+        !(ArbState->CurrentAlternative->Flags & ARBITER_ALTERNATIVE_FLAG_FIXED))
+    {
+        return FALSE;
+    }
+
+    if (ArbState->Entry == NULL || ArbState->Entry->PhysicalDeviceObject == NULL)
+        return FALSE;
+
+    if (!NT_SUCCESS(RtlGetFirstRange(Arbiter->PossibleAllocation, &Iterator, &Range)))
+        return FALSE;
+
+    while (Range != NULL)
+    {
+        /* overlaps the window and is not made available. */
+        if (Range->Start <= ArbState->CurrentMaximum &&
+            Range->End >= ArbState->CurrentMinimum &&
+            !(Range->Attributes & ArbState->RangeAvailableAttributes))
+        {
+            if ((PDEVICE_OBJECT)Range->Owner != ArbState->Entry->PhysicalDeviceObject)
+                return FALSE;
+
+            SelfConflictOnly = TRUE;
+            ArbState->Start = ArbState->CurrentMinimum;
+            ArbState->End = ArbState->CurrentMaximum;
+        }
+
+        if (!NT_SUCCESS(RtlGetNextRange(&Iterator, &Range, TRUE)))
+            break;
+    }
+
+    return SelfConflictOnly;
+}
+
 /**
  * @brief
  * Writes an alternative's priority to the next ordering-list
@@ -47,10 +125,21 @@ ArbpWritePriority(
 
     PAGED_CODE();
 
+    /*
+     * EXHAUSTED is terminal.  Treated as an ordinary priority it yields an
+     * index past the end of the ordering list, which resets the alternative
+     * to RESERVED and restarts the reserved walk, spinning
+     * ArbiterLibGetNextAllocationRange forever.
+     */
+    if (Priority == ARBITER_PRIORITY_EXHAUSTED)
+        return;
+
     if (Priority == ARBITER_PRIORITY_RESERVED ||
         Priority == ARBITER_PRIORITY_PREFERRED_RESERVED)
     {
-        Alternative->Priority = ARBITER_PRIORITY_EXHAUSTED;
+        /* Stay in the reserved pass until its final whole-window try is spent. */
+        if (Alternative->Reserved[0] == ARBITER_RESERVED_PASS_DONE)
+            Alternative->Priority = ARBITER_PRIORITY_EXHAUSTED;
         return;
     }
 
@@ -72,6 +161,7 @@ ArbpWritePriority(
         Index = (Priority < 0) ? (ULONG)(-(Priority + 1)) : (ULONG)(Priority - 1);
         if (Index >= Arbiter->OrderingList.Count)
         {
+            Alternative->Reserved[0] = 0;
             Alternative->Priority = Preferred ? ARBITER_PRIORITY_PREFERRED_RESERVED
                                               : ARBITER_PRIORITY_RESERVED;
             return;
@@ -101,6 +191,7 @@ ArbpWritePriority(
         }
     }
 
+    Alternative->Reserved[0] = 0;
     Alternative->Priority = Preferred ? ARBITER_PRIORITY_PREFERRED_RESERVED
                                       : ARBITER_PRIORITY_RESERVED;
 }
@@ -355,6 +446,106 @@ ArbpReuseOwnedInterrupt(
 
 /**
  * @brief
+ * Takes the next window of the reserved (last-resort) pass for an
+ * alternative: each ReservedList range intersecting the
+ * requirement in turn, then one final try over the whole
+ * requirement window.
+ *
+ * @param[in] Arbiter
+ * The arbiter instance whose ReservedList supplies the windows.
+ *
+ * @param[in,out] Alternative
+ * The alternative in its reserved pass. Reserved[0] holds the
+ * pass cursor: the next ReservedList index to consider, or
+ * ARBITER_RESERVED_PASS_DONE once the whole-window try is spent.
+ *
+ * @param[out] Minimum
+ * Receives the start of the produced window.
+ *
+ * @param[out] Maximum
+ * Receives the end of the produced window.
+ *
+ * @return
+ * Returns TRUE with a window to try, FALSE when the pass is spent.
+ *
+ * @remarks
+ * once ReservedResources data populates the ReservedList,
+ * its windows are only ever offered here
+ */
+CODE_SEG("PAGE")
+static
+BOOLEAN
+ArbpTakeReservedWindow(
+    _In_ PARBITER_INSTANCE Arbiter,
+    _Inout_ PARBITER_ALTERNATIVE Alternative,
+    _Out_ PUINT64 Minimum,
+    _Out_ PUINT64 Maximum)
+{
+    ULONG Index;
+
+    PAGED_CODE();
+
+    if (Alternative->Reserved[0] == ARBITER_RESERVED_PASS_DONE)
+        return FALSE;
+
+    for (Index = Alternative->Reserved[0];
+         Index < Arbiter->ReservedList.Count;
+         ++Index)
+    {
+        PARBITER_ORDERING Window = &Arbiter->ReservedList.Orderings[Index];
+        UINT64 Lo, Hi;
+
+        if (Window->Start > Alternative->Maximum ||
+            Alternative->Minimum > Window->End)
+        {
+            continue;  /* No intersection with this alternative's window */
+        }
+
+        Lo = (Alternative->Minimum <= Window->Start) ? Window->Start
+                                                     : Alternative->Minimum;
+        Hi = (Alternative->Maximum >= Window->End) ? Window->End
+                                                   : Alternative->Maximum;
+        if ((Hi - Lo + 1) < Alternative->Length)
+            continue;
+
+        Alternative->Reserved[0] = Index + 1;
+        *Minimum = Lo;
+        *Maximum = Hi;
+        return TRUE;
+    }
+
+    /*
+     * Reserved windows exhausted.  Whether a final whole-window pass follows
+     * turns on FIXED, and either answer is wrong for the other case.
+     *
+     * A flexible alternative must not get one: [Minimum, Maximum] ignores both
+     * the ordering and the reserved list, re-granting the ranges the reserved
+     * pass had just punched out.  A bridge's [0, 0xFFFFFFFF] memory window
+     * searched against an empty pool resolves to 0, placing the window on top
+     * of RAM.
+     *
+     * A fixed alternative must get one: it has a single possible placement, so
+     * the whole window IS that candidate.  Withholding it goes straight to
+     * EXHAUSTED without ever calling FindSuitableRange, so neither the
+     * boot-allocated availability mask nor OverrideConflict can grant the
+     * device its own firmware configuration - fatal whenever no ordering
+     * window spans the requirement, as the root port list's do not below
+     * 0x100.
+     */
+    Alternative->Reserved[0] = ARBITER_RESERVED_PASS_DONE;
+
+    if (Alternative->Flags & ARBITER_ALTERNATIVE_FLAG_FIXED)
+    {
+        *Minimum = Alternative->Minimum;
+        *Maximum = Alternative->Maximum;
+        return TRUE;
+    }
+
+    return FALSE;
+}
+
+/**
+ * @brief
  * Moves the working window to the next candidate range, walking
  * the entry's alternatives in priority order across the arbiter's
  * ordering list.
@@ -423,9 +614,22 @@ ArbiterLibGetNextAllocationRange(
         if (Lowest->Priority == ARBITER_PRIORITY_RESERVED ||
             Lowest->Priority == ARBITER_PRIORITY_PREFERRED_RESERVED)
         {
-            /* Final pass: the whole requirement window. */
-            Minimum = Lowest->Minimum;
-            Maximum = Lowest->Maximum;
+            /*
+             * Last-resort pass: the reserved windows in turn, then the whole
+             * requirement window (see ArbpTakeReservedWindow).
+             */
+            if (!ArbpTakeReservedWindow(Arbiter, Lowest, &Minimum, &Maximum))
+            {
+                /*
+                 * CurrentAlternative must be set before looping while it is
+                 * still NULL the top of the loop re-seeds EVERY alternative's
+                 * priority back to ARBITER_PRIORITY_NULL, which would discard
+                 * the EXHAUSTED just recorded and spin forever.
+                 */
+                Lowest->Priority = ARBITER_PRIORITY_EXHAUSTED;
+                ArbState->CurrentAlternative = Lowest;
+                continue;
+            }
         }
         else
         {
@@ -435,6 +639,7 @@ ArbiterLibGetNextAllocationRange(
             if (Index >= Arbiter->OrderingList.Count)
             {
                 Lowest->Priority = ARBITER_PRIORITY_EXHAUSTED;
+                ArbState->CurrentAlternative = Lowest;
                 continue;
             }
             Ordering = &Arbiter->OrderingList.Orderings[Index];
@@ -559,12 +764,14 @@ ArbiterLibFindSuitableRange(
         Flags |= RTL_RANGE_LIST_NULL_CONFLICT_OK;
     if (Alternative->Flags & ARBITER_ALTERNATIVE_FLAG_SHARED)
         Flags |= RTL_RANGE_LIST_SHARED_OK;
+    if (Alternative->Flags & ARBITER_ALTERNATIVE_FLAG_PREFETCH)
+        ArbState->RangeAvailableAttributes |= ARBITER_RANGE_PREFETCHABLE;
 
     Status = RtlFindRange(Arbiter->PossibleAllocation,
                           ArbState->CurrentMinimum,
                           ArbState->CurrentMaximum,
-                          (ULONG)Alternative->Length,
-                          (ULONG)(Alternative->Alignment ? Alternative->Alignment : 1),
+                          Alternative->Length,
+                          Alternative->Alignment ? Alternative->Alignment : 1,
                           Flags,
                           ArbState->RangeAvailableAttributes,
                           Arbiter->ConflictCallbackContext,
@@ -587,6 +794,18 @@ ArbiterLibFindSuitableRange(
         {
             return TRUE;
         }
+
+        /*
+         * A window that only fails because it runs into the MMCONFIG region
+         * points at the firmware's MCFG table rather than at any device, so
+         * note it and let the caller report that instead of a bare failure.
+         */
+        if (ArbiterLibIsConflictWithMmConfigRange(ArbState->CurrentMinimum,
+                                                  ArbState->CurrentMaximum))
+        {
+            ArbState->Flags |= ARBITER_STATE_FLAG_MCFG_CONFLICT;
+        }
+
         return FALSE;
     }
 

@@ -65,7 +65,7 @@ ArbpBuildAlternative(
     if (!NT_SUCCESS(Status))
         return Status;
 
-#if (NTDDI_VERSION >= NTDDI_VISTA)
+#if (NTDDI_VERSION >= NTDDI_VISTA) || defined(__REACTOS__)
     Alternative->Length = Length;
     Alternative->Alignment = Alignment;
 #else
@@ -86,6 +86,13 @@ ArbpBuildAlternative(
         Alternative->Flags |= ARBITER_ALTERNATIVE_FLAG_BADRANGE;
     else if ((Alternative->Maximum - Alternative->Minimum + 1) == Alternative->Length)
         Alternative->Flags |= ARBITER_ALTERNATIVE_FLAG_FIXED;
+
+    if ((Descriptor->Type == CmResourceTypeMemory ||
+         Descriptor->Type == CmResourceTypeMemoryLarge) &&
+        (Descriptor->Flags & CM_RESOURCE_MEMORY_PREFETCHABLE))
+    {
+        Alternative->Flags |= ARBITER_ALTERNATIVE_FLAG_PREFETCH;
+    }
 
     return STATUS_SUCCESS;
 }
@@ -535,3 +542,415 @@ ArbiterLibRollbackAllocation(
     RtlInitializeRangeList(Arbiter->PossibleAllocation);
     return STATUS_SUCCESS;
 }
+
+/* BOOT ALLOCATION ************************************************************/
+
+/**
+ * @brief
+ * Reserves each entry's firmware boot configuration in the
+ * committed range list, so devices left where the BIOS/UEFI put
+ * them keep their resources. The shared implementation behind
+ * ArbiterLibBootAllocation.
+ *
+ * @param[in] Arbiter
+ * The arbiter instance whose committed allocation receives the
+ * reservations. The ranges are added through the arbiter's own
+ * AddAllocation callback (so e.g. a port arbiter can record its
+ * decode aliases too), owned by the device and tagged
+ * ARBITER_RANGE_BOOT_ALLOCATED so they read back as available to
+ * the owning device's later real allocation.
+ *
+ * @param[in] ArbitrationList
+ * The entries whose boot configurations are to be reserved.
+ * Placement is lenient: an entry whose configuration is not one
+ * sane, fixed, aligned, exact range is silently skipped - a
+ * malformed firmware config must not block the rest of boot.
+ *
+ * @return
+ * Returns STATUS_SUCCESS, or the failure status of staging the
+ * additions.
+ */
+CODE_SEG("PAGE")
+static
+NTSTATUS
+ArbpBootAllocation(
+    _In_ PARBITER_INSTANCE Arbiter,
+    _In_ PLIST_ENTRY ArbitrationList)
+{
+    PLIST_ENTRY ListEntry;
+    ARBITER_ALLOCATION_STATE State;
+    ARBITER_ALTERNATIVE Alternative;
+    PRTL_RANGE_LIST Old;
+    NTSTATUS Status;
+
+    PAGED_CODE();
+
+    /* Stage the additions in PossibleAllocation, then swap it in. */
+    RtlFreeRangeList(Arbiter->PossibleAllocation);
+    RtlInitializeRangeList(Arbiter->PossibleAllocation);
+    Status = RtlCopyRangeList(Arbiter->PossibleAllocation, Arbiter->Allocation);
+    if (!NT_SUCCESS(Status))
+    {
+        RtlFreeRangeList(Arbiter->PossibleAllocation);
+        RtlInitializeRangeList(Arbiter->PossibleAllocation);
+        return Status;
+    }
+
+    for (ListEntry = ArbitrationList->Flink;
+         ListEntry != ArbitrationList;
+         ListEntry = ListEntry->Flink)
+    {
+        PARBITER_LIST_ENTRY Entry = CONTAINING_RECORD(ListEntry, ARBITER_LIST_ENTRY, ListEntry);
+
+        if (Entry->AlternativeCount == 0)
+            continue;
+
+        RtlZeroMemory(&State, sizeof(State));
+        RtlZeroMemory(&Alternative, sizeof(Alternative));
+
+        if (!NT_SUCCESS(ArbpBuildAlternative(Arbiter, &Entry->Alternatives[0], &Alternative)))
+            continue;
+
+        /* Only sane, fixed single-placement configurations are reserved. */
+        if (Alternative.Length == 0 ||
+            Alternative.Alignment == 0 ||
+            (Alternative.Flags & ARBITER_ALTERNATIVE_FLAG_BADRANGE) ||
+            !(Alternative.Flags & ARBITER_ALTERNATIVE_FLAG_FIXED) ||
+            (Alternative.Minimum % Alternative.Alignment) != 0)
+        {
+            continue;
+        }
+
+        State.Entry = Entry;
+        State.AlternativeCount = 1;
+        State.Alternatives = &Alternative;
+        State.CurrentAlternative = &Alternative;
+        State.Flags = ARBITER_STATE_FLAG_BOOT;
+        State.RangeAttributes = ARBITER_RANGE_BOOT_ALLOCATED;
+        State.Start = Alternative.Minimum;
+        State.End = Alternative.Maximum;
+        State.CurrentMinimum = Alternative.Minimum;
+        State.CurrentMaximum = Alternative.Maximum;
+
+        if (!NT_SUCCESS(Arbiter->PreprocessEntry(Arbiter, &State)))
+            continue;
+
+        Arbiter->AddAllocation(Arbiter, &State);
+
+        /*
+         * The reservation is also written back into the device's
+         * Assignment, or it is left holding an unfilled one.
+         */
+        if (Arbiter->PackResource != NULL && Entry->Assignment != NULL)
+        {
+            (VOID)Arbiter->PackResource(Alternative.Descriptor,
+                                        State.Start,
+                                        Entry->Assignment);
+        }
+    }
+
+    Old = Arbiter->Allocation;
+    RtlFreeRangeList(Old);
+    RtlInitializeRangeList(Old);
+    Arbiter->Allocation = Arbiter->PossibleAllocation;
+    Arbiter->PossibleAllocation = Old;
+
+    return STATUS_SUCCESS;
+}
+
+/**
+ * @brief
+ * The BootAllocation action: records every entry's firmware
+ * boot configuration in the committed allocation.
+ *
+ * @param[in] Arbiter
+ * The arbiter instance performing the reservation.
+ *
+ * @param[in,out] Parameters
+ * The action parameters carrying the arbitration list (pre-Vista
+ * builds receive the list directly).
+ *
+ * @return
+ * Returns the ArbpBootAllocation status.
+ */
+CODE_SEG("PAGE")
+NTSTATUS
+NTAPI
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+ArbiterLibBootAllocation(
+    _In_ PARBITER_INSTANCE Arbiter,
+    _Inout_ PARBITER_BOOT_ALLOCATION_PARAMETERS Parameters)
+{
+    PAGED_CODE();
+    return ArbpBootAllocation(Arbiter, Parameters->ArbitrationList);
+}
+#else
+ArbiterLibBootAllocation(
+    _In_ PARBITER_INSTANCE Arbiter,
+    _Inout_ PLIST_ENTRY ArbitrationList)
+{
+    PAGED_CODE();
+    return ArbpBootAllocation(Arbiter, ArbitrationList);
+}
+#endif
+
+/* CONFLICT QUERIES ***********************************************************/
+
+/**
+ * @brief
+ * RtlFindRange conflict callback installed while a conflict query
+ * runs: records the range that blocks placement and reports it as
+ * a real conflict, so FindSuitableRange fails and the caller can
+ * enumerate the owner.
+ *
+ * @param[in] Context
+ * Receives the conflicting range (a PRTL_RANGE pointer slot).
+ *
+ * @param[in] Range
+ * The range RtlFindRange collided with.
+ *
+ * @return
+ * Returns FALSE: the conflict stands.
+ */
+CODE_SEG("PAGE")
+static
+BOOLEAN
+NTAPI
+ArbpQueryConflictCallback(
+    _In_ PVOID Context,
+    _In_ PRTL_RANGE Range)
+{
+    PAGED_CODE();
+    *(PRTL_RANGE *)Context = Range;
+    return FALSE;
+}
+
+/**
+ * @brief
+ * Enumerates every committed range that conflicts with a candidate
+ * resource for a device. The shared implementation behind
+ * ArbiterLibQueryConflict.
+ *
+ * @param[in] Arbiter
+ * The arbiter instance whose committed allocation is examined
+ * (through a scratch copy; the committed list is untouched).
+ *
+ * @param[in] PhysicalDeviceObject
+ * The device the resource is being probed for. Its own ranges are
+ * never reported as conflicts.
+ *
+ * @param[in] ConflictingResource
+ * The candidate requirement descriptor to probe.
+ *
+ * @param[out] ConflictCount
+ * Receives the number of conflicts found.
+ *
+ * @param[out] Conflicts
+ * Receives the ARBITER_CONFLICT_INFO array (pool tag TAG_ARBITER);
+ * the caller frees it.
+ *
+ * @return
+ * Returns STATUS_SUCCESS with the conflict array filled in, or a
+ * copy/decode/allocation failure status.
+ *
+ * @remarks
+ * FindSuitableRange is asked to place the resource in the scratch
+ * copy; each failure names one conflicting owner through the
+ * recording callback, which is then removed so the next round
+ * finds the next one. Going through FindSuitableRange keeps the
+ * share and boot semantics identical to assignment time.
+ */
+CODE_SEG("PAGE")
+static
+NTSTATUS
+ArbpQueryConflict(
+    _In_ PARBITER_INSTANCE Arbiter,
+    _In_ PDEVICE_OBJECT PhysicalDeviceObject,
+    _In_ PIO_RESOURCE_DESCRIPTOR ConflictingResource,
+    _Out_ PULONG ConflictCount,
+    _Out_ PARBITER_CONFLICT_INFO *Conflicts)
+{
+    PRTL_CONFLICT_RANGE_CALLBACK SavedCallback = Arbiter->ConflictCallback;
+    PVOID SavedContext = Arbiter->ConflictCallbackContext;
+    PRTL_RANGE ConflictingRange = NULL;
+    ARBITER_ALLOCATION_STATE State;
+    ARBITER_LIST_ENTRY Entry;
+    ARBITER_ALTERNATIVE Alternative;
+    PARBITER_CONFLICT_INFO List;
+    ULONG Count = 0;
+    ULONG Capacity = 10;
+    ULONG ResultLength;
+    NTSTATUS Status;
+
+    PAGED_CODE();
+
+    *ConflictCount = 0;
+    *Conflicts = NULL;
+
+    RtlZeroMemory(&State, sizeof(State));
+
+    Arbiter->ConflictCallback = ArbpQueryConflictCallback;
+    Arbiter->ConflictCallbackContext = &ConflictingRange;
+
+    RtlFreeRangeList(Arbiter->PossibleAllocation);
+    RtlInitializeRangeList(Arbiter->PossibleAllocation);
+    Status = RtlCopyRangeList(Arbiter->PossibleAllocation, Arbiter->Allocation);
+    if (!NT_SUCCESS(Status))
+        goto Cleanup;
+
+    Status = ArbpBuildAlternative(Arbiter, ConflictingResource, &Alternative);
+    if (!NT_SUCCESS(Status))
+        goto Cleanup;
+
+    RtlZeroMemory(&Entry, sizeof(Entry));
+    State.Start = State.CurrentMinimum = Alternative.Minimum;
+    State.End = State.CurrentMaximum = Alternative.Maximum;
+    State.CurrentAlternative = State.Alternatives = &Alternative;
+    State.AlternativeCount = 1;
+    State.Entry = &Entry;
+    Entry.RequestSource = ArbiterRequestPnpEnumerated;
+    Entry.PhysicalDeviceObject = PhysicalDeviceObject;
+    if (!NT_SUCCESS(IoGetDeviceProperty(PhysicalDeviceObject,
+                                        DevicePropertyLegacyBusType,
+                                        sizeof(Entry.InterfaceType),
+                                        &Entry.InterfaceType,
+                                        &ResultLength)))
+    {
+        Entry.InterfaceType = Isa;
+    }
+    if (!NT_SUCCESS(IoGetDeviceProperty(PhysicalDeviceObject, DevicePropertyBusNumber,
+                                        sizeof(Entry.BusNumber), &Entry.BusNumber, &ResultLength)))
+    {
+        Entry.BusNumber = 0;
+    }
+
+    List = ExAllocatePoolWithTag(PagedPool, Capacity * sizeof(ARBITER_CONFLICT_INFO), TAG_ARBITER);
+    if (List == NULL)
+    {
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto Cleanup;
+    }
+
+    Status = Arbiter->PreprocessEntry(Arbiter, &State);
+    if (!NT_SUCCESS(Status))
+    {
+        ExFreePoolWithTag(List, TAG_ARBITER);
+        goto Cleanup;
+    }
+
+    /* The requester's own ranges are not conflicts. */
+    RtlDeleteOwnersRanges(Arbiter->PossibleAllocation, PhysicalDeviceObject);
+
+    for (;;)
+    {
+        ConflictingRange = NULL;
+        State.CurrentMinimum = State.Start;
+        State.CurrentMaximum = State.End;
+
+        if (Arbiter->FindSuitableRange(Arbiter, &State))
+            break;      /* placeable now: no more conflicts */
+
+        if (Count == Capacity)
+        {
+            PARBITER_CONFLICT_INFO Grown =
+                ExAllocatePoolWithTag(PagedPool,
+                                      (Capacity + 5) * sizeof(ARBITER_CONFLICT_INFO),
+                                      TAG_ARBITER);
+            if (Grown == NULL)
+            {
+                Status = STATUS_INSUFFICIENT_RESOURCES;
+                ExFreePoolWithTag(List, TAG_ARBITER);
+                goto Cleanup;
+            }
+            RtlCopyMemory(Grown, List, Count * sizeof(ARBITER_CONFLICT_INFO));
+            ExFreePoolWithTag(List, TAG_ARBITER);
+            List = Grown;
+            Capacity += 5;
+        }
+
+        if (ConflictingRange == NULL)
+        {
+            /* Blocked, but no specific owner: report one whole-range conflict. */
+            List[Count].OwningObject = NULL;
+            List[Count].Start = 0;
+            List[Count].End = 0xFFFFFFFFFFFFFFFFULL;
+            ++Count;
+            break;
+        }
+
+        List[Count].OwningObject = (PDEVICE_OBJECT)ConflictingRange->Owner;
+        List[Count].Start = ConflictingRange->Start;
+        List[Count].End = ConflictingRange->End;
+        ++Count;
+
+        /* Remove that owner and look for the next conflict. */
+        Status = RtlDeleteOwnersRanges(Arbiter->PossibleAllocation, ConflictingRange->Owner);
+        if (!NT_SUCCESS(Status))
+        {
+            ExFreePoolWithTag(List, TAG_ARBITER);
+            goto Cleanup;
+        }
+    }
+
+    *Conflicts = List;
+    *ConflictCount = Count;
+    Status = STATUS_SUCCESS;
+
+Cleanup:
+    if (State.Flags & ARBITER_STATE_FLAG_WORKSPACE)
+    {
+        /* Allocated by an arbiter's PreprocessEntry override - tag unknown. */
+        ExFreePool((PVOID)State.WorkSpace);
+        State.Flags &= ~ARBITER_STATE_FLAG_WORKSPACE;
+    }
+    RtlFreeRangeList(Arbiter->PossibleAllocation);
+    RtlInitializeRangeList(Arbiter->PossibleAllocation);
+    Arbiter->ConflictCallback = SavedCallback;
+    Arbiter->ConflictCallbackContext = SavedContext;
+    return Status;
+}
+
+/**
+ * @brief
+ * The QueryConflict action: reports which devices' committed
+ * ranges collide with a candidate resource.
+ *
+ * @param[in] Arbiter
+ * The arbiter instance performing the query.
+ *
+ * @param[in,out] Parameters
+ * The action parameters carrying the device, the candidate
+ * resource and the output slots (pre-Vista builds receive them
+ * directly).
+ *
+ * @return
+ * Returns the ArbpQueryConflict status.
+ */
+CODE_SEG("PAGE")
+NTSTATUS
+NTAPI
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+ArbiterLibQueryConflict(
+    _In_ PARBITER_INSTANCE Arbiter,
+    _Inout_ PARBITER_QUERY_CONFLICT_PARAMETERS Parameters)
+{
+    PAGED_CODE();
+    return ArbpQueryConflict(Arbiter,
+                             Parameters->PhysicalDeviceObject,
+                             Parameters->ConflictingResource,
+                             Parameters->ConflictCount,
+                             Parameters->Conflicts);
+}
+#else
+ArbiterLibQueryConflict(
+    _In_ PARBITER_INSTANCE Arbiter,
+    _In_ PDEVICE_OBJECT PhysicalDeviceObject,
+    _In_ PIO_RESOURCE_DESCRIPTOR ConflictingResource,
+    _Out_ PULONG ConflictCount,
+    _Out_ PARBITER_CONFLICT_INFO *Conflicts)
+{
+    PAGED_CODE();
+    return ArbpQueryConflict(Arbiter, PhysicalDeviceObject, ConflictingResource,
+                             ConflictCount, Conflicts);
+}
+#endif
