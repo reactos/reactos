@@ -564,7 +564,7 @@ ArbiterLibFindSuitableRange(
                           ArbState->CurrentMinimum,
                           ArbState->CurrentMaximum,
                           Alternative->Length,
-                          Alternative->Alignment ? Alternative->Alignment : 1,
+                          max(Alternative->Alignment, 1),
                           Flags,
                           ArbState->RangeAvailableAttributes,
                           Arbiter->ConflictCallbackContext,

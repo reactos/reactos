@@ -101,13 +101,11 @@ IopArbDmaScoreRequirement(
  * The Root DMA arbiter instance.
  *
  * @param[in,out] ArbState
- * The allocation state of the requirement that could not be
- * placed.
+ * The allocation state of the requirement that could not be placed.
  *
  * @return
  * Returns FALSE, always.
- *
- */
+ **/
 static
 BOOLEAN
 NTAPI

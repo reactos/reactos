@@ -72,7 +72,7 @@ IopArbMemTranslateAddress(
     PAGED_CODE();
 
     if (SourceType == CmResourceTypeMemory || SourceType == CmResourceTypeMemoryLarge)
-        AddressSpace = 0; /* system memory */
+        AddressSpace = 0; /* System memory */
     else if (SourceType == CmResourceTypePort)
         AddressSpace = 1; /* I/O port space */
     else
@@ -97,8 +97,8 @@ IopArbMemTranslateAddress(
 
 /**
  * @brief
- * Extracts the placement window from one memory requirement. The
- * UnpackRequirement callback of the Root Memory arbiter.
+ * Extracts the placement window from one memory requirement.
+ * The UnpackRequirement callback of the Root Memory arbiter.
  *
  * @param[in] IoDescriptor
  * The requirement to decode.
@@ -107,8 +107,8 @@ IopArbMemTranslateAddress(
  * Receives the lowest physical address the requirement accepts.
  *
  * @param[out] OutMaximumAddress
- * Receives the highest physical address the requirement accepts. A
- * CM_RESOURCE_MEMORY_24 card only wires up 24 address lines and
+ * Receives the highest physical address the requirement accepts.
+ * A CM_RESOURCE_MEMORY_24 card only wires up 24 address lines and
  * cannot be reached above 16 MB whatever its descriptor claims, so
  * its window is clamped here rather than left for the placement
  * search to get wrong.
@@ -157,8 +157,7 @@ IopArbMemUnpackRequirements(
 /**
  * @brief
  * Materialises the arbiter's chosen placement as an assigned CM
- * descriptor. The PackResource callback of the Root Memory
- * arbiter.
+ * descriptor. The PackResource callback of the Root Memory arbiter.
  *
  * @param[in] IoDescriptor
  * The requirement the placement satisfies. Type, Flags and
@@ -197,8 +196,8 @@ IopArbMemPackResource(
 
 /**
  * @brief
- * Reads the placement back out of an already-assigned descriptor -
- * a firmware boot configuration, typically - so the arbiter can
+ * Reads the placement back out of an already-assigned descriptor
+ * (a firmware boot configuration, typically) so the arbiter can
  * mark that span occupied. The inverse of IopArbMemPackResource
  * and the UnpackResource callback of the Root Memory arbiter.
  *
@@ -247,7 +246,7 @@ IopArbMemUnpackResource(
  *
  * @remarks
  * The engine places the most constrained device (the lowest score)
- * first, PCI devices have a habit of absording a remaining range.
+ * first, PCI devices have a habit of absorbing a remaining range.
  */
 static
 INT32
@@ -255,13 +254,9 @@ NTAPI
 IopArbMemScoreRequirement(
     _In_ PIO_RESOURCE_DESCRIPTOR IoDescriptor)
 {
-    UINT64 Length;
-    UINT64 Alignment;
-    UINT64 Minimum;
-    UINT64 Maximum;
-    UINT64 AlignedMinimum;
-    UINT64 Span;
-    UINT64 Placements;
+    UINT64 Length, Alignment;
+    UINT64 Minimum, Maximum, AlignedMinimum;
+    UINT64 Span, Placements;
 
     PAGED_CODE();
 
@@ -287,10 +282,7 @@ IopArbMemScoreRequirement(
     }
 
     Placements = Span / Alignment + 1;
-    if (Placements > MAXLONG)
-        return MAXLONG;
-
-    return (INT32)Placements;
+    return (INT32)min(Placements, MAXLONG);
 }
 
 /**
@@ -402,7 +394,7 @@ IopArbMemFindSuitableRange(
  * device the MMIO window it decodes. It is the fallback for every device whose
  * memory no closer arbiter claims.
  *
- * Physical page 0 is reserved with no attributes at all, so that no
+ * The physical page 0 is reserved with no attributes at all, so that no
  * availability mask can hand it out: the real-mode interrupt vector table and
  * the BIOS data area live there, and a device decoding over them corrupts the
  * machine rather than merely failing.
