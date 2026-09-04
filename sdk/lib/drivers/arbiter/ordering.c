@@ -20,6 +20,14 @@
 #define ARBP_POLICY_ROOT   L"\\Registry\\Machine\\System\\CurrentControlSet\\Control\\Arbiters\\"
 #define ARBP_LONGEST_SUBKEY L"ReservedResources"
 
+/*
+ * The PCI-Express enhanced-config (MMCONFIG / ECAM) MMIO window the memory
+ * arbiter must never hand out.  Recorded by
+ * ArbiterLibAddMmConfigRangeAsBootReserved; Start > End (the initial state)
+ */
+static ULONGLONG ArbpMmConfigStart = 1;
+static ULONGLONG ArbpMmConfigEnd = 0;
+
 /* ORDERING LISTS *************************************************************/
 
 /* Set up an empty ordering array at its starting capacity. */
@@ -108,6 +116,81 @@ ArbiterLibAddOrdering(
     OrderingList->Orderings[OrderingList->Count].Start = Start;
     OrderingList->Orderings[OrderingList->Count].End = End;
     OrderingList->Count++;
+    return STATUS_SUCCESS;
+}
+
+/**
+ * @brief
+ * Removes [Start, End] from every window of an ordering list,
+ * splitting windows that straddle it.
+ *
+ * @param[in,out] OrderingList
+ * The ordering list to prune. The pruned set is built in a
+ * temporary list and swapped in on success; on failure the
+ * original list is left untouched.
+ *
+ * @param[in] Start
+ * The inclusive start of the range to remove.
+ *
+ * @param[in] End
+ * The inclusive end of the range to remove. Must not be below
+ * Start.
+ *
+ * @return
+ * Returns STATUS_SUCCESS, STATUS_INVALID_PARAMETER for a
+ * backwards range, or STATUS_INSUFFICIENT_RESOURCES.
+ */
+CODE_SEG("PAGE")
+static
+NTSTATUS
+ArbpExcludeOrderingRange(
+    _Inout_ PARBITER_ORDERING_LIST OrderingList,
+    _In_ UINT64 Start,
+    _In_ UINT64 End)
+{
+    ARBITER_ORDERING_LIST Pruned;
+    NTSTATUS Status;
+    UINT16 Index;
+
+    PAGED_CODE();
+
+    if (End < Start)
+        return STATUS_INVALID_PARAMETER;
+
+    Status = ArbpCreateOrderingList(&Pruned);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    for (Index = 0; Index < OrderingList->Count; ++Index)
+    {
+        UINT64 CurrentStart = OrderingList->Orderings[Index].Start;
+        UINT64 CurrentEnd = OrderingList->Orderings[Index].End;
+
+        Status = STATUS_SUCCESS;
+
+        if (CurrentEnd < Start || CurrentStart > End)
+        {
+            /* Wholly outside the hole: survives unchanged. */
+            Status = ArbiterLibAddOrdering(&Pruned, CurrentStart, CurrentEnd);
+        }
+        else
+        {
+            if (CurrentStart < Start)  /* left fragment survives */
+                Status = ArbiterLibAddOrdering(&Pruned, CurrentStart, Start - 1);
+
+            if (NT_SUCCESS(Status) && CurrentEnd > End)  /* right fragment survives */
+                Status = ArbiterLibAddOrdering(&Pruned, End + 1, CurrentEnd);
+        }
+
+        if (!NT_SUCCESS(Status))
+        {
+            ArbiterLibFreeOrderingList(&Pruned);
+            return Status;
+        }
+    }
+
+    ArbiterLibFreeOrderingList(OrderingList);
+    *OrderingList = Pruned;
     return STATUS_SUCCESS;
 }
 
@@ -231,6 +314,7 @@ ArbpForEachRegistryRange(
     _In_ PARBITER_INSTANCE Arbiter,
     _In_ PCWSTR Subkey,
     _In_ PCWSTR ValueName,
+    _In_opt_ PARB_TRANSLATE_ORDERING Translate,
     _In_ PARB_RANGE_CALLBACK Callback,
     _In_opt_ PVOID Context)
 {
@@ -277,17 +361,45 @@ ArbpForEachRegistryRange(
         for (Index = 0; Index < Alternative->Count; ++Index)
         {
             PIO_RESOURCE_DESCRIPTOR Descriptor = &Alternative->Descriptors[Index];
+            IO_RESOURCE_DESCRIPTOR Window;
+            UINT64 Minimum, Maximum, Length, Alignment;
 
             /* Never trust the stored Count past the actual value data. */
             if ((PUCHAR)(Descriptor + 1) > DataEnd)
                 break;
 
-            if (ArbpDescriptorMatchesArbiter(Arbiter, Descriptor->Type))
+            /*
+             * Policy windows are written in bus-relative terms, so an arbiter
+             * that allocates in a different space translates each one first.
+             * A window it cannot translate comes back CmResourceTypeNull and
+             * is dropped by the type test below.
+             */
+            if (Translate != NULL)
             {
-                Callback(Arbiter, Context,
-                         (ULONGLONG)Descriptor->u.Generic.MinimumAddress.QuadPart,
-                         (ULONGLONG)Descriptor->u.Generic.MaximumAddress.QuadPart);
+                Status = Translate(&Window, Descriptor);
+                if (!NT_SUCCESS(Status))
+                    break;
             }
+            else
+            {
+                Window = *Descriptor;
+            }
+
+            if (!ArbpDescriptorMatchesArbiter(Arbiter, Window.Type))
+                continue;
+
+            /*
+             * Decode through the arbiter's own callback: the bounds live in a
+             * different union arm for every resource type, and only it knows
+             * which one - u.Interrupt for a vector, u.Dma for a channel,
+             * u.BusNumber for a bus range.
+             */
+            Status = Arbiter->UnpackRequirement(&Window, &Minimum, &Maximum,
+                                                &Length, &Alignment);
+            if (!NT_SUCCESS(Status))
+                break;
+
+            Callback(Arbiter, Context, Minimum, Maximum);
         }
     }
 
@@ -313,14 +425,147 @@ ArbpAddOrderingCallback(
     ArbiterLibAddOrdering(&Arbiter->OrderingList, Start, End);
 }
 
-/*
- * Build the arbiter's allocation ordering.  The registry-described preferred
- * ranges (AllocationOrder\<AllocationOrderName>) the engine walks the
- * list in index order, so index 0 is the most-preferred window. If one isnt
- * found its followed by a full-range fallback so the arbiter can always search the whole space
+/**
+ * @brief
+ * Range callback moving one reserved window into last-resort
+ * territory: recorded in the arbiter's ReservedList and pruned
+ * out of every ordering window, including the full-range
+ * fallback.
  *
- * Both ordering lists are (re)created here: callers may rebuild an existing
- * ordering against a different policy table (see pcix ario_ApplyBrokenVideoHack).
+ * @param[in] Arbiter
+ * The arbiter instance whose lists are adjusted.
+ *
+ * @param[in] Context
+ * Unused.
+ *
+ * @param[in] Start
+ * The inclusive start of the reserved window.
+ *
+ * @param[in] End
+ * The inclusive end of the reserved window.
+ *
+ * @remarks
+ * Once pruned here, the window can only ever be offered by the
+ * engine's (PREFERRED_)RESERVED pass - "usable only when nothing
+ * else fits". This is what keeps allocations off ranges like
+ * COM1/COM2 and the VGA windows that the PCStandard policy table
+ * reserves, even though no enumerated device owns them yet.
+ */
+CODE_SEG("PAGE")
+static
+VOID
+NTAPI
+ArbpAddReservedCallback(
+    _In_ PARBITER_INSTANCE Arbiter,
+    _In_opt_ PVOID Context,
+    _In_ ULONGLONG Start,
+    _In_ ULONGLONG End)
+{
+    PAGED_CODE();
+    UNREFERENCED_PARAMETER(Context);
+
+    if (NT_SUCCESS(ArbiterLibAddOrdering(&Arbiter->ReservedList, Start, End)))
+        ArbpExcludeOrderingRange(&Arbiter->OrderingList, Start, End);
+}
+
+/**
+ * @brief
+ * Range callback carving one window out of a range list as an
+ * unowned blocking range, so it is never handed to a device.
+ *
+ * @param[in] Arbiter
+ * Unused.
+ *
+ * @param[in] Context
+ * The RTL_RANGE_LIST to add the blocking range to.
+ *
+ * @param[in] Start
+ * The inclusive start of the window.
+ *
+ * @param[in] End
+ * The inclusive end of the window.
+ */
+CODE_SEG("PAGE")
+static
+VOID
+NTAPI
+ArbpAddRangeCallback(
+    _In_ PARBITER_INSTANCE Arbiter,
+    _In_opt_ PVOID Context,
+    _In_ ULONGLONG Start,
+    _In_ ULONGLONG End)
+{
+    PAGED_CODE();
+    UNREFERENCED_PARAMETER(Arbiter);
+    RtlAddRange((PRTL_RANGE_LIST)Context, Start, End, 0,
+                RTL_RANGE_LIST_ADD_IF_CONFLICT, NULL, NULL);
+}
+
+/**
+ * @brief
+ * Range callback recording the MMCONFIG (ECAM) window and
+ * reserving it in a range list as a boot allocation.
+ *
+ * @param[in] Arbiter
+ * Unused.
+ *
+ * @param[in] Context
+ * The RTL_RANGE_LIST to reserve the window in.
+ *
+ * @param[in] Start
+ * The inclusive start of the ECAM window.
+ *
+ * @param[in] End
+ * The inclusive end of the ECAM window.
+ */
+CODE_SEG("PAGE")
+static
+VOID
+NTAPI
+ArbpMmConfigCallback(
+    _In_ PARBITER_INSTANCE Arbiter,
+    _In_opt_ PVOID Context,
+    _In_ ULONGLONG Start,
+    _In_ ULONGLONG End)
+{
+    PAGED_CODE();
+    UNREFERENCED_PARAMETER(Arbiter);
+
+    ArbpMmConfigStart = Start;
+    ArbpMmConfigEnd = End;
+    RtlAddRange((PRTL_RANGE_LIST)Context, Start, End, ARBITER_RANGE_BOOT_ALLOCATED,
+                RTL_RANGE_LIST_ADD_IF_CONFLICT, NULL, NULL);
+}
+
+/**
+ * @brief
+ * Builds the arbiter's allocation ordering from the registry
+ * policy, most-preferred window first.
+ *
+ * @param[in,out] Arbiter
+ * The arbiter instance whose OrderingList and ReservedList are
+ * (re)created. Callers may rebuild an existing ordering against a
+ * different policy table (see pcix ario_ApplyBrokenVideoHack).
+ *
+ * @param[in] AllocationOrderName
+ * The AllocationOrder value naming this arbiter's preferred
+ * windows. The engine walks the resulting list in index order, so
+ * index 0 is the most-preferred window.
+ *
+ * @param[in] ReservedResourcesName
+ * The ReservedResources value naming this arbiter's last-resort
+ * windows: each is recorded in the ReservedList for the engine's
+ * final pass and pruned out of every ordering window, so it is
+ * only ever offered once all orderings fail.
+ *
+ * @param[in] TranslateOrderingFunction
+ * Optional per-arbiter descriptor translation. Currently unused.
+ *
+ * @return
+ * Returns STATUS_SUCCESS if the ordering was built - absent
+ * registry policy is not a failure; the ordering then holds only
+ * the full-range fallback, so the arbiter can always search the
+ * whole space.
  */
 CODE_SEG("PAGE")
 NTSTATUS
@@ -334,9 +579,6 @@ ArbiterLibDefaultAssignmentOrdering(
     NTSTATUS Status;
 
     PAGED_CODE();
-
-    UNREFERENCED_PARAMETER(ReservedResourcesName);
-    UNREFERENCED_PARAMETER(TranslateOrderingFunction);
 
     ArbiterLibFreeOrderingList(&Arbiter->OrderingList);
     ArbiterLibFreeOrderingList(&Arbiter->ReservedList);
@@ -352,7 +594,108 @@ ArbiterLibDefaultAssignmentOrdering(
     }
 
     ArbpForEachRegistryRange(Arbiter, L"AllocationOrder", AllocationOrderName,
-                             ArbpAddOrderingCallback, NULL);
+                             TranslateOrderingFunction, ArbpAddOrderingCallback, NULL);
 
-    return ArbiterLibAddOrdering(&Arbiter->OrderingList, 0, 0xFFFFFFFFFFFFFFFFULL);
+    Status = ArbiterLibAddOrdering(&Arbiter->OrderingList, 0, 0xFFFFFFFFFFFFFFFFULL);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    /*
+     * The reserved windows come last, after the fallback is in place, so the
+     * pruning punches them out of the fallback too - otherwise the fallback
+     * pass would hand them out like any other range.
+     */
+    return ArbpForEachRegistryRange(Arbiter, L"ReservedResources", ReservedResourcesName,
+                                    TranslateOrderingFunction, ArbpAddReservedCallback,
+                                    NULL);
+}
+
+/**
+ * @brief
+ * Carves the firmware-reported inaccessible ranges
+ * (Arbiters\InaccessibleRange\<OrderingName>) out of a range list
+ * as unowned blocking ranges, so they are never handed to a
+ * device.
+ *
+ * @param[in] Arbiter
+ * The arbiter instance the ranges are filtered for.
+ *
+ * @param[in] OrderingName
+ * The InaccessibleRange value to read (usually the arbiter's
+ * ordering name; on Windows a REG_SZ redirect points it at the
+ * kernel-written PhysicalAddress value).
+ *
+ * @param[in,out] RangeList
+ * The range list to carve the windows out of.
+ *
+ * @return
+ * Returns STATUS_SUCCESS, including when nothing is recorded -
+ * an absent value reserves nothing.
+ */
+CODE_SEG("PAGE")
+NTSTATUS
+NTAPI
+ArbiterLibAddInaccessibleAllocationRange(
+    _In_ PARBITER_INSTANCE Arbiter,
+    _In_ PCWSTR OrderingName,
+    _Inout_ PRTL_RANGE_LIST RangeList)
+{
+    PAGED_CODE();
+    return ArbpForEachRegistryRange(Arbiter, L"InaccessibleRange", OrderingName,
+                                    NULL, ArbpAddRangeCallback, RangeList);
+}
+
+/**
+ * @brief
+ * Reserves the PCI-Express enhanced-config (MMCONFIG / ECAM) MMIO
+ * window (Arbiters\ReservedResources\MmConfigRange) in a range
+ * list, and records it for ArbiterLibIsConflictWithMmConfigRange.
+ *
+ * @param[in] Arbiter
+ * The arbiter instance the window is filtered for.
+ *
+ * @param[in,out] RangeList
+ * The range list to reserve the window in.
+ *
+ * @return
+ * Returns STATUS_SUCCESS, including on a legacy pre-PCIe machine
+ * where the value is simply absent and nothing is reserved.
+ */
+CODE_SEG("PAGE")
+NTSTATUS
+NTAPI
+ArbiterLibAddMmConfigRangeAsBootReserved(
+    _In_ PARBITER_INSTANCE Arbiter,
+    _Inout_ PRTL_RANGE_LIST RangeList)
+{
+    PAGED_CODE();
+    return ArbpForEachRegistryRange(Arbiter, L"ReservedResources", L"MmConfigRange",
+                                    NULL, ArbpMmConfigCallback, RangeList);
+}
+
+/**
+ * @brief
+ * Determines whether a range overlaps the recorded MMCONFIG
+ * window.
+ *
+ * @param[in] Start
+ * The inclusive start of the range to test.
+ *
+ * @param[in] End
+ * The inclusive end of the range to test.
+ *
+ * @return
+ * Returns TRUE if [Start, End] overlaps the recorded window,
+ * FALSE otherwise or when no window was ever recorded.
+ */
+BOOLEAN
+NTAPI
+ArbiterLibIsConflictWithMmConfigRange(
+    _In_ ULONGLONG Start,
+    _In_ ULONGLONG End)
+{
+    if (ArbpMmConfigStart > ArbpMmConfigEnd)
+        return FALSE;  /* no MMCONFIG window recorded */
+
+    return (BOOLEAN)(Start <= ArbpMmConfigEnd && ArbpMmConfigStart <= End);
 }
