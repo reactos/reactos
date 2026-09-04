@@ -31,7 +31,11 @@
 #include "msiquery.h"
 
 #include "msipriv.h"
+#ifdef __REACTOS__
 #include "winemsi_s.h"
+#else
+#include "winemsi.h"
+#endif
 
 WINE_DEFAULT_DEBUG_CHANNEL(msi);
 
