@@ -58,8 +58,8 @@ RtlCmDecodeMemIoResource(
  *
  * @param[out] TranslatedType
  * Receives the post-translation resource type. A HAL may map one
- * space onto another - memory-mapped I/O ports being the usual
- * case - so the type is taken from the space the translation
+ * space onto another (memory-mapped I/O ports being the usual
+ * case) so the type is taken from the space the translation
  * actually returned rather than assumed.
  *
  * @return
@@ -82,7 +82,7 @@ IopArbPortTranslateAddress(
     if (SourceType == CmResourceTypePort)
         AddressSpace = 1; /* I/O port space */
     else if (SourceType == CmResourceTypeMemory || SourceType == CmResourceTypeMemoryLarge)
-        AddressSpace = 0; /* system memory */
+        AddressSpace = 0; /* System memory */
     else
         return STATUS_INVALID_PARAMETER;
 
@@ -106,13 +106,13 @@ IopArbPortTranslateAddress(
 /**
  * @brief
  * Walks the decode-alias chain of a port range: given the previous
- * alias - or the granted range's start on the first call -
+ * alias, or the granted range's start on the first call,
  * produces the next one.
  *
  * @param[in] DescriptorFlags
  * The requirement's flags. Only 10-bit and 12-bit decode
- * requirements alias; a full 16-bit decoder owns exactly what it
- * asked for.
+ * requirements alias; a full 16-bit decoder owns exactly what
+ * it asked for.
  *
  * @param[in] LastAlias
  * The previous alias start, or the granted range's start.
@@ -238,8 +238,8 @@ IopArbPortPackResource(
 
 /**
  * @brief
- * Reads the placement back out of an already-assigned descriptor -
- * a firmware boot configuration, typically - so the arbiter can
+ * Reads the placement back out of an already-assigned descriptor
+ * (a firmware boot configuration, typically) so the arbiter can
  * mark that span occupied. The inverse of IopArbPortPackResource
  * and the UnpackResource callback of the Root Port arbiter.
  *
@@ -297,13 +297,9 @@ NTAPI
 IopArbPortScoreRequirement(
     _In_ PIO_RESOURCE_DESCRIPTOR IoDescriptor)
 {
-    UINT64 Length;
-    UINT64 Alignment;
-    UINT64 Minimum;
-    UINT64 Maximum;
-    UINT64 AlignedMinimum;
-    UINT64 Span;
-    UINT64 Placements;
+    UINT64 Length, Alignment;
+    UINT64 Minimum, Maximum, AlignedMinimum;
+    UINT64 Span, Placements;
 
     PAGED_CODE();
 
@@ -328,11 +324,7 @@ IopArbPortScoreRequirement(
         Span -= Length - 1;
     }
 
-    Placements = Span / Alignment + 1;
-    if (Placements > MAXLONG)
-        return MAXLONG;
-
-    return (INT32)Placements;
+    return (INT32)min(Placements, MAXLONG);
 }
 
 /**
@@ -545,7 +537,7 @@ IopArbPortBacktrackAllocation(
  *
  * The root port arbiter owns the 16-bit x86 I/O port space and hands out
  * sub-ranges of it. It is the fallback for every device whose ports no closer
- * arbiter claims - root-enumerated and HAL-reported legacy hardware above all,
+ * arbiter claims: root-enumerated and HAL-reported legacy hardware above all,
  * which is also the hardware that partially decodes its address lines and so
  * needs the aliasing this arbiter adds.
  *
