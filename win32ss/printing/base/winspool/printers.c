@@ -60,6 +60,10 @@ typedef struct _COMPUI_USERDATA
     Ok, I admit that this has historical reasons. It's still not straightforward in any way though! */
 static const WCHAR wszWindowsKey[] = L"Software\\Microsoft\\Windows NT\\CurrentVersion\\Windows";
 static const WCHAR wszDeviceValue[] = L"Device";
+static const WCHAR wszDevicesKey[] = L"Software\\Microsoft\\Windows NT\\CurrentVersion\\Devices";
+static const WCHAR wszPrinterPortsKey[] = L"Software\\Microsoft\\Windows NT\\CurrentVersion\\PrinterPorts";
+static const WCHAR wszWinspoolPrefix[] = L"winspool,";
+static const WCHAR wszPortTimeouts[] = L",15,45";
 
 static DWORD
 _StartDocPrinterSpooled(PSPOOLER_HANDLE pHandle, PDOC_INFO_1W pDocInfo1, PADDJOB_INFO_1W pAddJobInfo1)
@@ -196,116 +200,205 @@ Cleanup:
     return (dwErrorCode == ERROR_SUCCESS);
 }
 
+/**
+ * @name _UpdatePerUserPrinterEntries
+ *
+ * Maintains the per-user "Devices" and "PrinterPorts" registry values for a
+ * Printer, in the same format the Windows NT spooler uses:
+ *
+ *   Devices\<Printer>      = "winspool,<Port>"
+ *   PrinterPorts\<Printer> = "winspool,<Port>,15,45"
+ *
+ * These are what the legacy win.ini [devices] and [PrinterPorts] sections map
+ * onto, and SetDefaultPrinter refuses a Printer that is not listed there.
+ * They are per-user data, so they have to be written here in winspool.drv,
+ * which runs in the caller's context, and not in the spooler service.
+ */
+static VOID
+_UpdatePerUserPrinterEntries(PCWSTR pwszPrinterName, PCWSTR pwszPortName, BOOL bAdd)
+{
+    HKEY hKey;
+    PWSTR pwszData;
+    SIZE_T cchData;
+
+    if (!pwszPrinterName || !*pwszPrinterName)
+        return;
+
+    if (bAdd)
+    {
+        if (!pwszPortName)
+            pwszPortName = L"";
+
+        // "winspool," + port + ",15,45" + terminator
+        cchData = wcslen(wszWinspoolPrefix) + wcslen(pwszPortName) + _countof(wszPortTimeouts);
+
+        pwszData = HeapAlloc(hProcessHeap, 0, cchData * sizeof(WCHAR));
+        if (!pwszData)
+            return;
+
+        if (RegCreateKeyExW(HKEY_CURRENT_USER, wszDevicesKey, 0, NULL, REG_OPTION_NON_VOLATILE, KEY_SET_VALUE, NULL, &hKey, NULL) == ERROR_SUCCESS)
+        {
+            StringCchPrintfW(pwszData, cchData, L"%s%s", wszWinspoolPrefix, pwszPortName);
+            RegSetValueExW(hKey, pwszPrinterName, 0, REG_SZ, (const BYTE*)pwszData, (wcslen(pwszData) + 1) * sizeof(WCHAR));
+            RegCloseKey(hKey);
+        }
+
+        if (RegCreateKeyExW(HKEY_CURRENT_USER, wszPrinterPortsKey, 0, NULL, REG_OPTION_NON_VOLATILE, KEY_SET_VALUE, NULL, &hKey, NULL) == ERROR_SUCCESS)
+        {
+            StringCchPrintfW(pwszData, cchData, L"%s%s%s", wszWinspoolPrefix, pwszPortName, wszPortTimeouts);
+            RegSetValueExW(hKey, pwszPrinterName, 0, REG_SZ, (const BYTE*)pwszData, (wcslen(pwszData) + 1) * sizeof(WCHAR));
+            RegCloseKey(hKey);
+        }
+
+        HeapFree(hProcessHeap, 0, pwszData);
+    }
+    else
+    {
+        if (RegOpenKeyExW(HKEY_CURRENT_USER, wszDevicesKey, 0, KEY_SET_VALUE, &hKey) == ERROR_SUCCESS)
+        {
+            RegDeleteValueW(hKey, pwszPrinterName);
+            RegCloseKey(hKey);
+        }
+
+        if (RegOpenKeyExW(HKEY_CURRENT_USER, wszPrinterPortsKey, 0, KEY_SET_VALUE, &hKey) == ERROR_SUCCESS)
+        {
+            RegDeleteValueW(hKey, pwszPrinterName);
+            RegCloseKey(hKey);
+        }
+
+        // Drop the default printer as well if it was this one.
+        if (RegOpenKeyExW(HKEY_CURRENT_USER, wszWindowsKey, 0, KEY_QUERY_VALUE | KEY_SET_VALUE, &hKey) == ERROR_SUCCESS)
+        {
+            DWORD cbData = 0;
+
+            if (RegQueryValueExW(hKey, wszDeviceValue, NULL, NULL, NULL, &cbData) == ERROR_SUCCESS)
+            {
+                pwszData = HeapAlloc(hProcessHeap, 0, cbData + sizeof(WCHAR));
+
+                if (pwszData)
+                {
+                    if (RegQueryValueExW(hKey, wszDeviceValue, NULL, NULL, (PBYTE)pwszData, &cbData) == ERROR_SUCCESS)
+                    {
+                        SIZE_T cchPrinterName = wcslen(pwszPrinterName);
+
+                        pwszData[cbData / sizeof(WCHAR)] = 0;
+
+                        if (_wcsnicmp(pwszData, pwszPrinterName, cchPrinterName) == 0 && pwszData[cchPrinterName] == L',')
+                            RegDeleteValueW(hKey, wszDeviceValue);
+                    }
+
+                    HeapFree(hProcessHeap, 0, pwszData);
+                }
+            }
+
+            RegCloseKey(hKey);
+        }
+    }
+}
+
+/**
+ * The string members of PRINTER_INFO_2A and PRINTER_INFO_2W sit at identical
+ * offsets, so one table can drive the ANSI -> Unicode conversion of all of them.
+ */
+static const DWORD dwPrinterInfo2StringOffsets[] = {
+    FIELD_OFFSET(PRINTER_INFO_2W, pServerName),
+    FIELD_OFFSET(PRINTER_INFO_2W, pPrinterName),
+    FIELD_OFFSET(PRINTER_INFO_2W, pShareName),
+    FIELD_OFFSET(PRINTER_INFO_2W, pPortName),
+    FIELD_OFFSET(PRINTER_INFO_2W, pDriverName),
+    FIELD_OFFSET(PRINTER_INFO_2W, pComment),
+    FIELD_OFFSET(PRINTER_INFO_2W, pLocation),
+    FIELD_OFFSET(PRINTER_INFO_2W, pSepFile),
+    FIELD_OFFSET(PRINTER_INFO_2W, pPrintProcessor),
+    FIELD_OFFSET(PRINTER_INFO_2W, pDatatype),
+    FIELD_OFFSET(PRINTER_INFO_2W, pParameters)
+};
+
 HANDLE WINAPI
 AddPrinterA(PSTR pName, DWORD Level, PBYTE pPrinter)
 {
-    UNICODE_STRING pNameW, usBuffer;
-    PWSTR pwstrNameW;
-    PRINTER_INFO_2W *ppi2w = (PRINTER_INFO_2W*)pPrinter;
-    PRINTER_INFO_2A *ppi2a = (PRINTER_INFO_2A*)pPrinter;
+    DWORD i;
     HANDLE ret = NULL;
-    PWSTR pwszPrinterName = NULL;
-    PWSTR pwszServerName = NULL;
-    PWSTR pwszShareName = NULL;
-    PWSTR pwszPortName = NULL;
-    PWSTR pwszDriverName = NULL;
-    PWSTR pwszComment = NULL;
-    PWSTR pwszLocation = NULL;
-    PWSTR pwszSepFile = NULL;
-    PWSTR pwszPrintProcessor = NULL;
-    PWSTR pwszDatatype = NULL;
-    PWSTR pwszParameters = NULL;
-    PDEVMODEW pdmw = NULL;
+    PRINTER_INFO_2A* ppi2a = (PRINTER_INFO_2A*)pPrinter;
+    PRINTER_INFO_2W pi2w;
+    UNICODE_STRING usName;
 
-    TRACE("AddPrinterA(%s, %d, %p)\n", debugstr_a(pName), Level, pPrinter);
+    TRACE("AddPrinterA(%s, %lu, %p)\n", debugstr_a(pName), Level, pPrinter);
 
-    if(Level != 2)
+    if (Level != 2)
     {
-        ERR("Level = %d, unsupported!\n", Level);
+        ERR("Level = %lu, unsupported!\n", Level);
         SetLastError(ERROR_INVALID_LEVEL);
         return NULL;
     }
 
-    pwstrNameW = AsciiToUnicode(&pNameW,pName);
-
-    if (ppi2a->pShareName)
+    if (!ppi2a)
     {
-        pwszShareName = AsciiToUnicode(&usBuffer, ppi2a->pShareName);
-        if (!(ppi2w->pShareName = pwszShareName)) goto Cleanup;
-    }
-    if (ppi2a->pPortName)
-    {
-        pwszPortName = AsciiToUnicode(&usBuffer, ppi2a->pPortName);
-        if (!(ppi2w->pPortName = pwszPortName)) goto Cleanup;
-    }
-    if (ppi2a->pDriverName)
-    {
-        pwszDriverName = AsciiToUnicode(&usBuffer, ppi2a->pDriverName);
-        if (!(ppi2w->pDriverName = pwszDriverName)) goto Cleanup;
-    }
-    if (ppi2a->pComment)
-    {
-        pwszComment = AsciiToUnicode(&usBuffer, ppi2a->pComment);
-        if (!(ppi2w->pComment = pwszComment)) goto Cleanup;
-    }
-    if (ppi2a->pLocation)
-    {
-        pwszLocation = AsciiToUnicode(&usBuffer, ppi2a->pLocation);
-        if (!(ppi2w->pLocation = pwszLocation)) goto Cleanup;
-    }
-    if (ppi2a->pSepFile)
-    {
-        pwszSepFile = AsciiToUnicode(&usBuffer, ppi2a->pSepFile);
-        if (!(ppi2w->pSepFile = pwszSepFile)) goto Cleanup;
-    }
-    if (ppi2a->pServerName)
-    {
-        pwszPrintProcessor = AsciiToUnicode(&usBuffer, ppi2a->pPrintProcessor);
-        if (!(ppi2w->pPrintProcessor = pwszPrintProcessor)) goto Cleanup;
-    }
-    if (ppi2a->pDatatype)
-    {
-        pwszDatatype = AsciiToUnicode(&usBuffer, ppi2a->pDatatype);
-        if (!(ppi2w->pDatatype = pwszDatatype)) goto Cleanup;
-    }
-    if (ppi2a->pParameters)
-    {
-        pwszParameters = AsciiToUnicode(&usBuffer, ppi2a->pParameters);
-        if (!(ppi2w->pParameters = pwszParameters)) goto Cleanup;
-    }
-    if ( ppi2a->pDevMode )
-    {
-        RosConvertAnsiDevModeToUnicodeDevmode( ppi2a->pDevMode, &pdmw );
-        ppi2w->pDevMode = pdmw;
-    }
-    if (ppi2a->pServerName)
-    {
-        pwszServerName = AsciiToUnicode(&usBuffer, ppi2a->pServerName);
-        if (!(ppi2w->pPrinterName = pwszServerName)) goto Cleanup;
-    }
-    if (ppi2a->pPrinterName)
-    {
-        pwszPrinterName = AsciiToUnicode(&usBuffer, ppi2a->pPrinterName);
-        if (!(ppi2w->pPrinterName = pwszPrinterName)) goto Cleanup;
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return NULL;
     }
 
-    ret = AddPrinterW(pwstrNameW, Level, (LPBYTE)ppi2w);
+    usName.Buffer = NULL;
+
+    // The caller still owns its ANSI structure and may read the strings it
+    // points to after we return (Visual Basic 6 does exactly that when it walks
+    // its Printers collection), so we must never convert it in place.
+    // Everything goes into a private PRINTER_INFO_2W instead.
+    ZeroMemory(&pi2w, sizeof(pi2w));
+
+    pi2w.pSecurityDescriptor = ppi2a->pSecurityDescriptor;
+    pi2w.Attributes = ppi2a->Attributes;
+    pi2w.Priority = ppi2a->Priority;
+    pi2w.DefaultPriority = ppi2a->DefaultPriority;
+    pi2w.StartTime = ppi2a->StartTime;
+    pi2w.UntilTime = ppi2a->UntilTime;
+    pi2w.Status = ppi2a->Status;
+    pi2w.cJobs = ppi2a->cJobs;
+    pi2w.AveragePPM = ppi2a->AveragePPM;
+
+    for (i = 0; i < _countof(dwPrinterInfo2StringOffsets); i++)
+    {
+        UNICODE_STRING usField;
+        LPCSTR pszSource = *(LPCSTR*)((PBYTE)ppi2a + dwPrinterInfo2StringOffsets[i]);
+        PWSTR* ppwszTarget = (PWSTR*)((PBYTE)&pi2w + dwPrinterInfo2StringOffsets[i]);
+
+        if (!pszSource)
+            continue;
+
+        usField.Buffer = NULL;
+        *ppwszTarget = AsciiToUnicode(&usField, pszSource);
+        if (!*ppwszTarget)
+        {
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            goto Cleanup;
+        }
+    }
+
+    if (ppi2a->pDevMode)
+    {
+        RosConvertAnsiDevModeToUnicodeDevmode(ppi2a->pDevMode, &pi2w.pDevMode);
+        if (!pi2w.pDevMode)
+        {
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            goto Cleanup;
+        }
+    }
+
+    ret = AddPrinterW(AsciiToUnicode(&usName, pName), Level, (PBYTE)&pi2w);
 
 Cleanup:
-    if (pdmw) HeapFree(hProcessHeap, 0, pdmw);
-    if (pwszPrinterName) HeapFree(hProcessHeap, 0, pwszPrinterName);
-    if (pwszServerName) HeapFree(hProcessHeap, 0, pwszServerName);
-    if (pwszShareName) HeapFree(hProcessHeap, 0, pwszShareName);
-    if (pwszPortName) HeapFree(hProcessHeap, 0, pwszPortName);
-    if (pwszDriverName) HeapFree(hProcessHeap, 0, pwszDriverName);
-    if (pwszComment) HeapFree(hProcessHeap, 0, pwszComment);
-    if (pwszLocation) HeapFree(hProcessHeap, 0, pwszLocation);
-    if (pwszSepFile) HeapFree(hProcessHeap, 0, pwszSepFile);
-    if (pwszPrintProcessor) HeapFree(hProcessHeap, 0, pwszPrintProcessor);
-    if (pwszDatatype) HeapFree(hProcessHeap, 0, pwszDatatype);
-    if (pwszParameters) HeapFree(hProcessHeap, 0, pwszParameters);
+    for (i = 0; i < _countof(dwPrinterInfo2StringOffsets); i++)
+    {
+        PWSTR pwszField = *(PWSTR*)((PBYTE)&pi2w + dwPrinterInfo2StringOffsets[i]);
 
-    RtlFreeUnicodeString(&pNameW);
+        if (pwszField)
+            HeapFree(hProcessHeap, 0, pwszField);
+    }
+
+    if (pi2w.pDevMode)
+        HeapFree(hProcessHeap, 0, pi2w.pDevMode);
+
+    RtlFreeUnicodeString(&usName);
     return ret;
 }
 
@@ -389,7 +482,7 @@ AddPrinterW(PWSTR pName, DWORD Level, PBYTE pPrinter)
             dwErrorCode = ERROR_NOT_ENOUGH_MEMORY;
             ERR("HeapAlloc failed!\n");
             _RpcDeletePrinter(hPrinter);
-            _RpcClosePrinter(hPrinter);
+            _RpcClosePrinter(&hPrinter);
             goto Cleanup;
         }
 
@@ -398,6 +491,11 @@ AddPrinterW(PWSTR pName, DWORD Level, PBYTE pPrinter)
         pHandle->hSPLFile = INVALID_HANDLE_VALUE;
         pHandle->hSpoolFileHandle = INVALID_HANDLE_VALUE;
         hHandle = (HANDLE)pHandle;
+
+        // Make the new Printer known to this user, so that it can be enumerated
+        // through the legacy win.ini sections and picked as the default one.
+        _UpdatePerUserPrinterEntries(((PPRINTER_INFO_2W)pPrinter)->pPrinterName,
+                                     ((PPRINTER_INFO_2W)pPrinter)->pPortName, TRUE);
     }
 
 Cleanup:
@@ -451,7 +549,9 @@ Cleanup:
 BOOL WINAPI
 DeletePrinter(HANDLE hPrinter)
 {
+    DWORD cbNeeded = 0;
     DWORD dwErrorCode;
+    PPRINTER_INFO_2W pPrinterInfo = NULL;
     PSPOOLER_HANDLE pHandle = (PSPOOLER_HANDLE)hPrinter;
 
     TRACE("DeletePrinter(%p)\n", hPrinter);
@@ -463,10 +563,23 @@ DeletePrinter(HANDLE hPrinter)
         goto Cleanup;
     }
 
+    // Remember which Printer this is while we still can, for the per-user cleanup below.
+    GetPrinterW(hPrinter, 2, NULL, 0, &cbNeeded);
+    if (cbNeeded)
+    {
+        pPrinterInfo = HeapAlloc(hProcessHeap, 0, cbNeeded);
+
+        if (pPrinterInfo && !GetPrinterW(hPrinter, 2, (PBYTE)pPrinterInfo, cbNeeded, &cbNeeded))
+        {
+            HeapFree(hProcessHeap, 0, pPrinterInfo);
+            pPrinterInfo = NULL;
+        }
+    }
+
     // Do the RPC call.
     RpcTryExcept
     {
-        dwErrorCode = _RpcDeletePrinter(&pHandle->hPrinter);
+        dwErrorCode = _RpcDeletePrinter(pHandle->hPrinter);
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
     {
@@ -475,7 +588,13 @@ DeletePrinter(HANDLE hPrinter)
     }
     RpcEndExcept;
 
+    if (dwErrorCode == ERROR_SUCCESS && pPrinterInfo)
+        _UpdatePerUserPrinterEntries(pPrinterInfo->pPrinterName, NULL, FALSE);
+
 Cleanup:
+    if (pPrinterInfo)
+        HeapFree(hProcessHeap, 0, pPrinterInfo);
+
     SetLastError(dwErrorCode);
     return (dwErrorCode == ERROR_SUCCESS);
 }
@@ -3038,8 +3157,6 @@ Cleanup:
 BOOL WINAPI
 SetDefaultPrinterW(LPCWSTR pszPrinter)
 {
-    const WCHAR wszDevicesKey[] = L"Software\\Microsoft\\Windows NT\\CurrentVersion\\Devices";
-
     DWORD cbDeviceValueData;
     DWORD cbPrinterValueData = 0;
     DWORD cchPrinter;
@@ -3147,177 +3264,261 @@ Cleanup:
     return (dwErrorCode == ERROR_SUCCESS);
 }
 
+/**
+ * Converts one ANSI string member into a freshly allocated Unicode string and
+ * records it so that the caller can release it again.
+ * Returns FALSE only when the allocation actually failed.
+ */
+static BOOL
+_ConvertPrinterInfoStringToUnicode(LPCSTR pszSource, PWSTR* ppwszTarget, PWSTR* ppwszCleanup, PDWORD pcCleanup)
+{
+    UNICODE_STRING usField;
+
+    if (!pszSource)
+        return TRUE;
+
+    usField.Buffer = NULL;
+    *ppwszTarget = AsciiToUnicode(&usField, pszSource);
+    if (!*ppwszTarget)
+    {
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        return FALSE;
+    }
+
+    ppwszCleanup[(*pcCleanup)++] = *ppwszTarget;
+    return TRUE;
+}
+
 BOOL WINAPI
 SetPrinterA(HANDLE hPrinter, DWORD Level, PBYTE pPrinter, DWORD Command)
 {
     BOOL Ret = FALSE;
-    UNICODE_STRING usBuffer;
-    PPRINTER_INFO_STRESS ppisa = (PPRINTER_INFO_STRESS)pPrinter;
-    PPRINTER_INFO_STRESS ppisw = (PPRINTER_INFO_STRESS)pPrinter;
-    PPRINTER_INFO_2A ppi2a = (PPRINTER_INFO_2A)pPrinter;
-    PPRINTER_INFO_2W ppi2w = (PPRINTER_INFO_2W)pPrinter;
-    PPRINTER_INFO_7A ppi7a = (PPRINTER_INFO_7A)pPrinter;
-    PPRINTER_INFO_7W ppi7w = (PPRINTER_INFO_7W)pPrinter;
-    PPRINTER_INFO_9A ppi9a = (PPRINTER_INFO_9A)pPrinter;
-    PPRINTER_INFO_9W ppi9w = (PPRINTER_INFO_9W)pPrinter;
-    PWSTR pwszPrinterName = NULL;
-    PWSTR pwszServerName = NULL;
-    PWSTR pwszShareName = NULL;
-    PWSTR pwszPortName = NULL;
-    PWSTR pwszDriverName = NULL;
-    PWSTR pwszComment = NULL;
-    PWSTR pwszLocation = NULL;
-    PWSTR pwszSepFile = NULL;
-    PWSTR pwszPrintProcessor = NULL;
-    PWSTR pwszDatatype = NULL;
-    PWSTR pwszParameters = NULL;
+    DWORD cCleanup = 0;
+    DWORD i;
+    PBYTE pPrinterW = pPrinter;
     PDEVMODEW pdmw = NULL;
+    PWSTR apwszCleanup[_countof(dwPrinterInfo2StringOffsets)];
+
+    // As in AddPrinterA, the caller keeps ownership of its ANSI structure and
+    // may still use the strings it points to once we return, so the conversion
+    // is done into a private structure rather than in place.
+    union
+    {
+        PRINTER_INFO_STRESS pis;
+        PRINTER_INFO_2W pi2;
+        PRINTER_INFO_4W pi4;
+        PRINTER_INFO_5W pi5;
+        PRINTER_INFO_6 pi6;
+        PRINTER_INFO_7W pi7;
+        PRINTER_INFO_9W pi9;
+    }
+    InfoW;
 
     FIXME("SetPrinterA(%p, %lu, %p, %lu)\n", hPrinter, Level, pPrinter, Command);
+
+    ZeroMemory(&InfoW, sizeof(InfoW));
 
     switch ( Level )
     {
         case 0:
-            if ( Command == 0 )
-            {
-                if (ppisa->pPrinterName)
-                {
-                    pwszPrinterName = AsciiToUnicode(&usBuffer, (LPCSTR)ppisa->pPrinterName);
-                    if (!(ppisw->pPrinterName = pwszPrinterName)) goto Cleanup;
-                }
-                if (ppisa->pServerName)
-                {
-                    pwszServerName = AsciiToUnicode(&usBuffer, (LPCSTR)ppisa->pServerName);
-                    if (!(ppisw->pPrinterName = pwszServerName)) goto Cleanup;
-                }
-            }
+        {
+            PPRINTER_INFO_STRESS ppisa = (PPRINTER_INFO_STRESS)pPrinter;
+
             if ( Command == PRINTER_CONTROL_SET_STATUS )
             {
-                // Set the pPrinter parameter to a pointer to a DWORD value that specifies the new printer status.
-                PRINTER_INFO_6 pi6;
-                pi6.dwStatus = (DWORD_PTR)pPrinter;
-                pPrinter = (LPBYTE)&pi6;
+                // pPrinter is not a structure here, but carries the new printer status itself.
+                InfoW.pi6.dwStatus = PtrToUlong(pPrinter);
+                pPrinterW = (PBYTE)&InfoW;
                 Level = 6;
                 Command = 0;
+                break;
             }
-            break;
-        case 2:
+
+            if ( Command != 0 )
+                break;
+
+            if (!ppisa)
             {
-                if (ppi2a->pShareName)
+                SetLastError(ERROR_INVALID_PARAMETER);
+                goto Cleanup;
+            }
+
+            InfoW.pis = *ppisa;
+            InfoW.pis.pPrinterName = NULL;
+            InfoW.pis.pServerName = NULL;
+            pPrinterW = (PBYTE)&InfoW;
+
+            if (!_ConvertPrinterInfoStringToUnicode((LPCSTR)ppisa->pPrinterName, &InfoW.pis.pPrinterName, apwszCleanup, &cCleanup))
+                goto Cleanup;
+
+            if (!_ConvertPrinterInfoStringToUnicode((LPCSTR)ppisa->pServerName, &InfoW.pis.pServerName, apwszCleanup, &cCleanup))
+                goto Cleanup;
+
+            break;
+        }
+
+        case 2:
+        {
+            PPRINTER_INFO_2A ppi2a = (PPRINTER_INFO_2A)pPrinter;
+
+            if (!ppi2a)
+            {
+                SetLastError(ERROR_INVALID_PARAMETER);
+                goto Cleanup;
+            }
+
+            pPrinterW = (PBYTE)&InfoW;
+
+            InfoW.pi2.pSecurityDescriptor = ppi2a->pSecurityDescriptor;
+            InfoW.pi2.Attributes = ppi2a->Attributes;
+            InfoW.pi2.Priority = ppi2a->Priority;
+            InfoW.pi2.DefaultPriority = ppi2a->DefaultPriority;
+            InfoW.pi2.StartTime = ppi2a->StartTime;
+            InfoW.pi2.UntilTime = ppi2a->UntilTime;
+            InfoW.pi2.Status = ppi2a->Status;
+            InfoW.pi2.cJobs = ppi2a->cJobs;
+            InfoW.pi2.AveragePPM = ppi2a->AveragePPM;
+
+            for (i = 0; i < _countof(dwPrinterInfo2StringOffsets); i++)
+            {
+                LPCSTR pszSource = *(LPCSTR*)((PBYTE)ppi2a + dwPrinterInfo2StringOffsets[i]);
+                PWSTR* ppwszTarget = (PWSTR*)((PBYTE)&InfoW.pi2 + dwPrinterInfo2StringOffsets[i]);
+
+                if (!_ConvertPrinterInfoStringToUnicode(pszSource, ppwszTarget, apwszCleanup, &cCleanup))
+                    goto Cleanup;
+            }
+
+            if ( ppi2a->pDevMode )
+            {
+                RosConvertAnsiDevModeToUnicodeDevmode( ppi2a->pDevMode, &pdmw );
+                if (!pdmw)
                 {
-                    pwszShareName = AsciiToUnicode(&usBuffer, ppi2a->pShareName);
-                    if (!(ppi2w->pShareName = pwszShareName)) goto Cleanup;
-                }
-                if (ppi2a->pPortName)
-                {
-                    pwszPortName = AsciiToUnicode(&usBuffer, ppi2a->pPortName);
-                    if (!(ppi2w->pPortName = pwszPortName)) goto Cleanup;
-                }
-                if (ppi2a->pDriverName)
-                {
-                    pwszDriverName = AsciiToUnicode(&usBuffer, ppi2a->pDriverName);
-                    if (!(ppi2w->pDriverName = pwszDriverName)) goto Cleanup;
-                }
-                if (ppi2a->pComment)
-                {
-                    pwszComment = AsciiToUnicode(&usBuffer, ppi2a->pComment);
-                    if (!(ppi2w->pComment = pwszComment)) goto Cleanup;
-                }
-                if (ppi2a->pLocation)
-                {
-                    pwszLocation = AsciiToUnicode(&usBuffer, ppi2a->pLocation);
-                    if (!(ppi2w->pLocation = pwszLocation)) goto Cleanup;
-                }
-                if (ppi2a->pSepFile)
-                {
-                    pwszSepFile = AsciiToUnicode(&usBuffer, ppi2a->pSepFile);
-                    if (!(ppi2w->pSepFile = pwszSepFile)) goto Cleanup;
-                }
-                if (ppi2a->pServerName)
-                {
-                    pwszPrintProcessor = AsciiToUnicode(&usBuffer, ppi2a->pPrintProcessor);
-                    if (!(ppi2w->pPrintProcessor = pwszPrintProcessor)) goto Cleanup;
-                }
-                if (ppi2a->pDatatype)
-                {
-                    pwszDatatype = AsciiToUnicode(&usBuffer, ppi2a->pDatatype);
-                    if (!(ppi2w->pDatatype = pwszDatatype)) goto Cleanup;
-                }
-                if (ppi2a->pParameters)
-                {
-                    pwszParameters = AsciiToUnicode(&usBuffer, ppi2a->pParameters);
-                    if (!(ppi2w->pParameters = pwszParameters)) goto Cleanup;
+                    SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+                    goto Cleanup;
                 }
 
-                if ( ppi2a->pDevMode )
-                {
-                    RosConvertAnsiDevModeToUnicodeDevmode( ppi2a->pDevMode, &pdmw );
-                    ppi2w->pDevMode = pdmw;
-                }
+                InfoW.pi2.pDevMode = pdmw;
             }
-        //
-        //  These two strings are relitive and common to these three Levels.
-        //  Fall through...
-        //
-        case 4:
-        case 5:
-            {
-                if (ppi2a->pServerName) // 4 & 5 : pPrinterName.
-                {
-                    pwszServerName = AsciiToUnicode(&usBuffer, ppi2a->pServerName);
-                    if (!(ppi2w->pPrinterName = pwszServerName)) goto Cleanup;
-                }
-                if (ppi2a->pPrinterName) // 4 : pServerName, 5 : pPortName.
-                {
-                    pwszPrinterName = AsciiToUnicode(&usBuffer, ppi2a->pPrinterName);
-                    if (!(ppi2w->pPrinterName = pwszPrinterName)) goto Cleanup;
-                }
-            }
+
             break;
+        }
+
+        case 4:
+        {
+            PPRINTER_INFO_4A ppi4a = (PPRINTER_INFO_4A)pPrinter;
+
+            if (!ppi4a)
+            {
+                SetLastError(ERROR_INVALID_PARAMETER);
+                goto Cleanup;
+            }
+
+            pPrinterW = (PBYTE)&InfoW;
+            InfoW.pi4.Attributes = ppi4a->Attributes;
+
+            if (!_ConvertPrinterInfoStringToUnicode(ppi4a->pPrinterName, &InfoW.pi4.pPrinterName, apwszCleanup, &cCleanup))
+                goto Cleanup;
+
+            if (!_ConvertPrinterInfoStringToUnicode(ppi4a->pServerName, &InfoW.pi4.pServerName, apwszCleanup, &cCleanup))
+                goto Cleanup;
+
+            break;
+        }
+
+        case 5:
+        {
+            PPRINTER_INFO_5A ppi5a = (PPRINTER_INFO_5A)pPrinter;
+
+            if (!ppi5a)
+            {
+                SetLastError(ERROR_INVALID_PARAMETER);
+                goto Cleanup;
+            }
+
+            pPrinterW = (PBYTE)&InfoW;
+            InfoW.pi5.Attributes = ppi5a->Attributes;
+            InfoW.pi5.DeviceNotSelectedTimeout = ppi5a->DeviceNotSelectedTimeout;
+            InfoW.pi5.TransmissionRetryTimeout = ppi5a->TransmissionRetryTimeout;
+
+            if (!_ConvertPrinterInfoStringToUnicode(ppi5a->pPrinterName, &InfoW.pi5.pPrinterName, apwszCleanup, &cCleanup))
+                goto Cleanup;
+
+            if (!_ConvertPrinterInfoStringToUnicode(ppi5a->pPortName, &InfoW.pi5.pPortName, apwszCleanup, &cCleanup))
+                goto Cleanup;
+
+            break;
+        }
+
         case 3:
         case 6:
+            // These levels carry no strings, so they are passed through unchanged.
             break;
+
         case 7:
+        {
+            PPRINTER_INFO_7A ppi7a = (PPRINTER_INFO_7A)pPrinter;
+
+            if (!ppi7a)
             {
-                if (ppi7a->pszObjectGUID)
-                {
-                    pwszPrinterName = AsciiToUnicode(&usBuffer, ppi7a->pszObjectGUID);
-                    if (!(ppi7w->pszObjectGUID = pwszPrinterName)) goto Cleanup;
-                }
+                SetLastError(ERROR_INVALID_PARAMETER);
+                goto Cleanup;
             }
+
+            pPrinterW = (PBYTE)&InfoW;
+            InfoW.pi7.dwAction = ppi7a->dwAction;
+
+            if (!_ConvertPrinterInfoStringToUnicode(ppi7a->pszObjectGUID, &InfoW.pi7.pszObjectGUID, apwszCleanup, &cCleanup))
+                goto Cleanup;
+
             break;
+        }
 
         case 8:
         /* 8 is the global default printer info and 9 already sets it instead of the per-user one */
         /* still, PRINTER_INFO_8W is the same as PRINTER_INFO_9W */
         /* fall through */
         case 9:
+        {
+            PPRINTER_INFO_9A ppi9a = (PPRINTER_INFO_9A)pPrinter;
+
+            if (!ppi9a)
+            {
+                SetLastError(ERROR_INVALID_PARAMETER);
+                goto Cleanup;
+            }
+
+            pPrinterW = (PBYTE)&InfoW;
+
+            if ( ppi9a->pDevMode )
             {
                 RosConvertAnsiDevModeToUnicodeDevmode( ppi9a->pDevMode, &pdmw );
-                ppi9w->pDevMode = pdmw;
+                if (!pdmw)
+                {
+                    SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+                    goto Cleanup;
+                }
+
+                InfoW.pi9.pDevMode = pdmw;
             }
+
             break;
+        }
 
         default:
-            FIXME( "Unsupported level %d\n", Level);
+            FIXME( "Unsupported level %lu\n", Level);
             SetLastError( ERROR_INVALID_LEVEL );
+            return FALSE;
     }
 
-    Ret = SetPrinterW( hPrinter, Level, pPrinter, Command );
+    Ret = SetPrinterW( hPrinter, Level, pPrinterW, Command );
 
 Cleanup:
-    if (pdmw) HeapFree(hProcessHeap, 0, pdmw);
-    if (pwszPrinterName) HeapFree(hProcessHeap, 0, pwszPrinterName);
-    if (pwszServerName) HeapFree(hProcessHeap, 0, pwszServerName);
-    if (pwszShareName) HeapFree(hProcessHeap, 0, pwszShareName);
-    if (pwszPortName) HeapFree(hProcessHeap, 0, pwszPortName);
-    if (pwszDriverName) HeapFree(hProcessHeap, 0, pwszDriverName);
-    if (pwszComment) HeapFree(hProcessHeap, 0, pwszComment);
-    if (pwszLocation) HeapFree(hProcessHeap, 0, pwszLocation);
-    if (pwszSepFile) HeapFree(hProcessHeap, 0, pwszSepFile);
-    if (pwszPrintProcessor) HeapFree(hProcessHeap, 0, pwszPrintProcessor);
-    if (pwszDatatype) HeapFree(hProcessHeap, 0, pwszDatatype);
-    if (pwszParameters) HeapFree(hProcessHeap, 0, pwszParameters);
+    if (pdmw)
+        HeapFree(hProcessHeap, 0, pdmw);
+
+    for (i = 0; i < cCleanup; i++)
+        HeapFree(hProcessHeap, 0, apwszCleanup[i]);
+
     return Ret;
 }
 
@@ -3330,6 +3531,7 @@ SetPrinterW(HANDLE hPrinter, DWORD Level, PBYTE pPrinter, DWORD Command)
     WINSPOOL_SECURITY_CONTAINER SecurityContainer;
     SECURITY_DESCRIPTOR *sd = NULL;
     DWORD size;
+    PRINTER_INFO_6 pi6;
     PSPOOLER_HANDLE pHandle = (PSPOOLER_HANDLE)hPrinter;
 
     FIXME("SetPrinterW(%p, %lu, %p, %lu)\n", hPrinter, Level, pPrinter, Command);
@@ -3350,8 +3552,7 @@ SetPrinterW(HANDLE hPrinter, DWORD Level, PBYTE pPrinter, DWORD Command)
             if ( Command == PRINTER_CONTROL_SET_STATUS )
             {
                 // Set the pPrinter parameter to a pointer to a DWORD value that specifies the new printer status.
-                PRINTER_INFO_6 pi6;
-                pi6.dwStatus = (DWORD_PTR)pPrinter;
+                pi6.dwStatus = PtrToUlong(pPrinter);
                 pPrinter = (LPBYTE)&pi6;
                 Level = 6;
                 Command = 0;

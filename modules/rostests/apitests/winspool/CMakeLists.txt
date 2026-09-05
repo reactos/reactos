@@ -1,5 +1,6 @@
 
 list(APPEND SOURCE
+    AddPrinter.c
     ClosePrinter.c
     EnumPrinters.c
     EnumPrintProcessorDatatypes.c
