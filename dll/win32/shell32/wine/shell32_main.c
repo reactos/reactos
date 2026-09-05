@@ -44,6 +44,7 @@
 
 #include <reactos/version.h>
 #include <reactos/buildno.h>
+#include <reactos/rosbrand.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
@@ -1089,8 +1090,16 @@ static INT_PTR CALLBACK AboutDlgProc( HWND hWnd, UINT msg, WPARAM wParam, LPARAM
                 WCHAR szAuthorsText[20];
 
                 // Preload the ROS bitmap
-                hLogoBmp = (HBITMAP)LoadImage(shell32_hInstance, MAKEINTRESOURCE(IDB_REACTOS), IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
-                hLineBmp = (HBITMAP)LoadImage(shell32_hInstance, MAKEINTRESOURCE(IDB_LINEBAR), IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
+                HMODULE hBrand = LoadLibraryExW(L"rosbrand.dll", NULL, LOAD_LIBRARY_AS_DATAFILE);
+                if (hBrand)
+                {
+                    hLogoBmp = LoadImage(hBrand,
+                                         MAKEINTRESOURCE(IDB_BRAND_BANNER),
+                                         IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
+                    hLineBmp = LoadImage(hBrand,
+                                         MAKEINTRESOURCE(IDB_BRAND_BANNERLINE),
+                                         IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
+                }
 
                 if (hLogoBmp && hLineBmp)
                 {
