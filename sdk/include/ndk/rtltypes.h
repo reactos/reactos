@@ -441,6 +441,9 @@ typedef enum _RTL_BSD_ITEM_TYPE
     RtlBsdItemErrorInfo,
     RtlBsdItemPowerButtonPressInfo,
     RtlBsdItemChecksum,
+    RtlBsdPowerTransitionExtension,
+    RtlBsdItemFeatureConfigurationState,
+    RtlBsdItemRevocationListInfo,
     RtlBsdItemMax
 } RTL_BSD_ITEM_TYPE, *PRTL_BSD_ITEM_TYPE;
 
@@ -1328,27 +1331,44 @@ typedef struct _RTL_BSD_POWER_BUTTON_PRESS_INFO
     ULONG TransitionLatestCheckpointSequenceNumber;
 } RTL_BSD_POWER_BUTTON_PRESS_INFO, *PRTL_BSD_POWER_BUTTON_PRESS_INFO;
 
+typedef struct _RTL_BSD_DATA_POWER_TRANSITION_EXTENSION
+{
+    UCHAR SystemIdleTransition : 1;
+    UCHAR FanError : 1;
+    UCHAR ThermalShutdown : 1;
+    UCHAR Reserved : 5;
+} RTL_BSD_DATA_POWER_TRANSITION_EXTENSION, *PRTL_BSD_DATA_POWER_TRANSITION_EXTENSION;
+
+typedef struct _RTL_BSD_ITEM_REVOCATION_LIST
+{
+    /* FIXME: We currently have no idea of what fields does this structure have yet */
+    PVOID Dummy;
+} RTL_BSD_ITEM_REVOCATION_LIST, *PRTL_BSD_ITEM_REVOCATION_LIST;
+
 //
 // Main Structure for "bootstat.dat" RTL Data File
 //
 typedef struct _RTL_BSD_DATA
 {
-    ULONG Version;                                          // RtlBsdItemVersionNumber
-    ULONG ProductType;                                      // RtlBsdItemProductType
-    BOOLEAN AabEnabled;                                     // RtlBsdItemAabEnabled
-    UCHAR AabTimeout;                                       // RtlBsdItemAabTimeout
-    BOOLEAN LastBootSucceeded;                              // RtlBsdItemBootGood
-    BOOLEAN LastBootShutdown;                               // RtlBsdItemBootShutdown
-    BOOLEAN SleepInProgress;                                // RtlBsdSleepInProgress
-    RTL_BSD_DATA_POWER_TRANSITION PowerTransition;          // RtlBsdPowerTransition
-    UCHAR BootAttemptCount;                                 // RtlBsdItemBootAttemptCount
-    UCHAR LastBootCheckpoint;                               // RtlBsdItemBootCheckpoint
-    UCHAR Checksum;                                         // RtlBsdItemChecksum
-    ULONG LastBootId;                                       // RtlBsdItemBootId
-    ULONG LastSuccessfulShutdownBootId;                     // RtlBsdItemShutdownBootId
-    ULONG LastReportedAbnormalShutdownBootId;               // RtlBsdItemReportedAbnormalShutdownBootId
-    RTL_BSD_DATA_ERROR_INFO ErrorInfo;                      // RtlBsdItemErrorInfo
-    RTL_BSD_POWER_BUTTON_PRESS_INFO PowerButtonPressInfo;   // RtlBsdItemPowerButtonPressInfo
+    ULONG Version;                                                     // RtlBsdItemVersionNumber
+    ULONG ProductType;                                                 // RtlBsdItemProductType
+    BOOLEAN AabEnabled;                                                // RtlBsdItemAabEnabled
+    UCHAR AabTimeout;                                                  // RtlBsdItemAabTimeout
+    BOOLEAN LastBootSucceeded;                                         // RtlBsdItemBootGood
+    BOOLEAN LastBootShutdown;                                          // RtlBsdItemBootShutdown
+    BOOLEAN SleepInProgress;                                           // RtlBsdSleepInProgress
+    RTL_BSD_DATA_POWER_TRANSITION PowerTransition;                     // RtlBsdPowerTransition
+    UCHAR BootAttemptCount;                                            // RtlBsdItemBootAttemptCount
+    UCHAR LastBootCheckpoint;                                          // RtlBsdItemBootCheckpoint
+    UCHAR Checksum;                                                    // RtlBsdItemChecksum
+    ULONG LastBootId;                                                  // RtlBsdItemBootId
+    ULONG LastSuccessfulShutdownBootId;                                // RtlBsdItemShutdownBootId
+    ULONG LastReportedAbnormalShutdownBootId;                          // RtlBsdItemReportedAbnormalShutdownBootId
+    ULONG ItemFeatureConfigState;                                      // RtlBsdItemFeatureConfigurationState
+    RTL_BSD_DATA_ERROR_INFO ErrorInfo;                                 // RtlBsdItemErrorInfo
+    RTL_BSD_POWER_BUTTON_PRESS_INFO PowerButtonPressInfo;              // RtlBsdItemPowerButtonPressInfo
+    RTL_BSD_DATA_POWER_TRANSITION_EXTENSION PowerTransitionExtension;  // RtlBsdPowerTransitionExtension
+    RTL_BSD_ITEM_REVOCATION_LIST ItemRevocationList;                   // RtlBsdItemRevocationListInfo
 } RTL_BSD_DATA, *PRTL_BSD_DATA;
 
 #ifdef NTOS_MODE_USER
