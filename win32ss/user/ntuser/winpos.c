@@ -2023,6 +2023,19 @@ co_WinPosSetWindowPos(
       Window->state |= WNDS_SENDNCPAINT;
    }
 
+   /*
+    * The frame draws everything relative to its edges, and the bits that were
+    * copied instead of repainted still hold the previous one. CORE-20769.
+    */
+   if ((Window->style & WS_VISIBLE) &&
+       ((WinPos.flags & SWP_FRAMECHANGED) ||
+        (OldWindowRect.right - OldWindowRect.left) != (NewWindowRect.right - NewWindowRect.left) ||
+        (OldWindowRect.bottom - OldWindowRect.top) != (NewWindowRect.bottom - NewWindowRect.top)))
+   {
+      Window->state |= WNDS_SENDNCPAINT;
+      Window->state2 |= WNDS2_FORCEFULLNCPAINTCLIPRGN;
+   }
+
    if ((!(WinPos.flags & SWP_NOREDRAW) && ((WinPos.flags & SWP_AGG_STATUSFLAGS) != SWP_AGG_NOPOSCHANGE)) ||
        ((WinPos.flags & SWP_NOZORDER) && (WinPos.flags & SWP_NOOWNERZORDER)))
    {
