@@ -908,11 +908,12 @@ StorPortGetUncachedExtension(
     Alignment.QuadPart = 0;
     LowestAddress.QuadPart = 0;
     HighestAddress.QuadPart = 0x00000000FFFFFFFF;
-    DeviceExtension->UncachedExtensionVirtualBase = MmAllocateContiguousMemorySpecifyCache(NumberOfBytes,
-                                                                                           LowestAddress,
-                                                                                           HighestAddress,
-                                                                                           Alignment,
-                                                                                           MmCached);
+    DeviceExtension->UncachedExtensionVirtualBase =
+        MmAllocateContiguousMemorySpecifyCache(NumberOfBytes,
+                                               LowestAddress,
+                                               HighestAddress,
+                                               Alignment,
+                                               MmNonCached);
     if (DeviceExtension->UncachedExtensionVirtualBase == NULL)
         return NULL;
 
