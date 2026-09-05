@@ -23,19 +23,12 @@
  */
 
 #include <stdarg.h>
-#include <stdio.h>
 
 #define COBJMACROS
 
 #include "windef.h"
-#include "winbase.h"
-#include "wingdi.h"
-#include "winuser.h"
-#include "ole2.h"
 #include "sensevts.h"
 #include "sensapi.h"
-
-#include "uuids.h"
 
 #include "wine/debug.h"
 

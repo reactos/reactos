@@ -22,6 +22,3 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
 /* @makedep: wshom.rgs */
 1 WINE_REGISTRY wshom.rgs
-
-2 WINE_REGISTRY wshom.tlb.rgs
-1 TYPELIB wshom.tlb

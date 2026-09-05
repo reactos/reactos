@@ -35,14 +35,8 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(sti);
 
-static const WCHAR registeredAppsLaunchPath[] = {
-    'S','O','F','T','W','A','R','E','\\',
-    'M','i','c','r','o','s','o','f','t','\\',
-    'W','i','n','d','o','w','s','\\',
-    'C','u','r','r','e','n','t','V','e','r','s','i','o','n','\\',
-    'S','t','i','l','l','I','m','a','g','e','\\',
-    'R','e','g','i','s','t','e','r','e','d',' ','A','p','p','l','i','c','a','t','i','o','n','s',0
-};
+static const WCHAR registeredAppsLaunchPath[] =
+    L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\StillImage\\Registered Applications";
 
 typedef struct _stillimage
 {
@@ -79,7 +73,7 @@ static ULONG WINAPI stillimagew_Release(IStillImageW *iface)
 static HRESULT WINAPI stillimagew_Initialize(IStillImageW *iface, HINSTANCE hinst, DWORD dwVersion)
 {
     stillimage *This = impl_from_IStillImageW(iface);
-    TRACE("(%p, %p, 0x%X)\n", This, hinst, dwVersion);
+    TRACE("(%p, %p, 0x%lX)\n", This, hinst, dwVersion);
     return S_OK;
 }
 
@@ -87,7 +81,7 @@ static HRESULT WINAPI stillimagew_GetDeviceList(IStillImageW *iface, DWORD dwTyp
                                                 DWORD *pdwItemsReturned, LPVOID *ppBuffer)
 {
     stillimage *This = impl_from_IStillImageW(iface);
-    FIXME("(%p, %u, 0x%X, %p, %p): stub\n", This, dwType, dwFlags, pdwItemsReturned, ppBuffer);
+    FIXME("(%p, %lu, 0x%lX, %p, %p): stub\n", This, dwType, dwFlags, pdwItemsReturned, ppBuffer);
     return E_NOTIMPL;
 }
 
@@ -103,7 +97,7 @@ static HRESULT WINAPI stillimagew_CreateDevice(IStillImageW *iface, LPWSTR pwszD
                                                PSTIDEVICEW *pDevice, LPUNKNOWN pUnkOuter)
 {
     stillimage *This = impl_from_IStillImageW(iface);
-    FIXME("(%p, %s, %u, %p, %p): stub\n", This, debugstr_w(pwszDeviceName), dwMode, pDevice, pUnkOuter);
+    FIXME("(%p, %s, %lu, %p, %p): stub\n", This, debugstr_w(pwszDeviceName), dwMode, pDevice, pUnkOuter);
     return E_NOTIMPL;
 }
 
@@ -120,7 +114,7 @@ static HRESULT WINAPI stillimagew_SetDeviceValue(IStillImageW *iface, LPWSTR pws
                                                  DWORD type, LPBYTE pData, DWORD cbData)
 {
     stillimage *This = impl_from_IStillImageW(iface);
-    FIXME("(%p, %s, %s, %u, %p, %u): stub\n", This, debugstr_w(pwszDeviceName), debugstr_w(pValueName),
+    FIXME("(%p, %s, %s, %lu, %p, %lu): stub\n", This, debugstr_w(pwszDeviceName), debugstr_w(pValueName),
         type, pData, cbData);
     return E_NOTIMPL;
 }
@@ -137,10 +131,7 @@ static HRESULT WINAPI stillimagew_GetSTILaunchInformation(IStillImageW *iface, L
 static HRESULT WINAPI stillimagew_RegisterLaunchApplication(IStillImageW *iface, LPWSTR pwszAppName,
                                                             LPWSTR pwszCommandLine)
 {
-    static const WCHAR format[] = {'%','s',' ','%','s',0};
-    static const WCHAR commandLineSuffix[] = {
-        '/','S','t','i','D','e','v','i','c','e',':','%','1',' ',
-        '/','S','t','i','E','v','e','n','t',':','%','2',0};
+    static const WCHAR commandLineSuffix[] = L"/StiDevice:%1 /StiEvent:%2";
     HKEY registeredAppsKey = NULL;
     DWORD ret;
     HRESULT hr = S_OK;
@@ -155,7 +146,7 @@ static HRESULT WINAPI stillimagew_RegisterLaunchApplication(IStillImageW *iface,
         WCHAR *value = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
         if (value)
         {
-            swprintf(value, format, pwszCommandLine, commandLineSuffix);
+            swprintf(value, len, L"%s %s", pwszCommandLine, commandLineSuffix);
             ret = RegSetValueExW(registeredAppsKey, pwszAppName, 0,
                 REG_SZ, (BYTE*)value, (lstrlenW(value)+1)*sizeof(WCHAR));
             if (ret != ERROR_SUCCESS)
@@ -235,7 +226,7 @@ static HRESULT WINAPI stillimagew_SetupDeviceParameters(IStillImageW *iface, PST
 static HRESULT WINAPI stillimagew_WriteToErrorLog(IStillImageW *iface, DWORD dwMessageType, LPCWSTR pszMessage)
 {
     stillimage *This = impl_from_IStillImageW(iface);
-    FIXME("(%p, %u, %s): stub\n", This, dwMessageType, debugstr_w(pszMessage));
+    FIXME("(%p, %lu, %s): stub\n", This, dwMessageType, debugstr_w(pszMessage));
     return E_NOTIMPL;
 }
 
@@ -319,7 +310,7 @@ static const struct IUnknownVtbl internal_unk_vtbl =
  */
 HRESULT WINAPI StiCreateInstanceA(HINSTANCE hinst, DWORD dwVer, PSTIA *ppSti, LPUNKNOWN pUnkOuter)
 {
-    FIXME("(%p, %u, %p, %p): stub, unimplemented on Windows Vista too, please report if it's needed\n", hinst, dwVer, ppSti, pUnkOuter);
+    FIXME("(%p, %lu, %p, %p): stub, unimplemented on Windows Vista too, please report if it's needed\n", hinst, dwVer, ppSti, pUnkOuter);
     return STG_E_UNIMPLEMENTEDFUNCTION;
 }
 
@@ -331,7 +322,7 @@ HRESULT WINAPI StiCreateInstanceW(HINSTANCE hinst, DWORD dwVer, PSTIW *ppSti, LP
     stillimage *This;
     HRESULT hr;
 
-    TRACE("(%p, %u, %p, %p)\n", hinst, dwVer, ppSti, pUnkOuter);
+    TRACE("(%p, %lu, %p, %p)\n", hinst, dwVer, ppSti, pUnkOuter);
 
     This = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(stillimage));
     if (This)

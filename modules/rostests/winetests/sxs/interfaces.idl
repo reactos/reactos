@@ -33,3 +33,8 @@ interface ITest : IUnknown {
     uuid(2e106e50-e7a4-4489-8538-83643f100fdc),
 ]
 coclass Test { interface ITest; };
+
+[
+    uuid(2e106e50-e7a4-4489-8538-83643f100fdd),
+]
+coclass SurrogateTest { interface ITest; };
