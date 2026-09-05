@@ -315,4 +315,71 @@ RtlUpcaseUnicodeToOemN(
     return STATUS_NOT_IMPLEMENTED;
 }
 
+ULONG
+NTAPI
+RtlxUnicodeStringToOemSize(
+    _In_ PCUNICODE_STRING UnicodeString)
+{
+    ULONG Size;
+
+    /* Convert the Unicode String to Mb Size */
+    RtlUnicodeToMultiByteSize(&Size,
+                              UnicodeString->Buffer,
+                              UnicodeString->Length);
+
+    /* Return the size + the null char */
+    return (Size + sizeof(CHAR));
+}
+
+ULONG
+NTAPI
+RtlxOemStringToUnicodeSize(
+    _In_ PCOEM_STRING OemString)
+{
+    ULONG Size;
+
+    /* Convert the Mb String to Unicode Size */
+    RtlMultiByteToUnicodeSize(&Size,
+                              OemString->Buffer,
+                              OemString->Length);
+
+    /* Return the size + null-char */
+    return (Size + sizeof(WCHAR));
+}
+
+WCHAR
+NTAPI
+RtlAnsiCharToUnicodeChar(
+    _Inout_ PUCHAR *AnsiChar)
+{
+    ULONG Size;
+    NTSTATUS Status;
+    WCHAR UnicodeChar = L' ';
+    PAGED_CODE_RTL();
+
+    if (NlsLeadByteInfo)
+    {
+        Size = (NlsLeadByteInfo[**AnsiChar] == 0) ? 1 : 2;
+    }
+    else
+    {
+        /* Not implemented */
+        Size = 1;
+    }
+
+    Status = RtlMultiByteToUnicodeN(&UnicodeChar,
+                                    sizeof(WCHAR),
+                                    NULL,
+                                    (PCHAR)*AnsiChar,
+                                    Size);
+
+    if (!NT_SUCCESS(Status))
+    {
+        UnicodeChar = L' ';
+    }
+
+    *AnsiChar += Size;
+    return UnicodeChar;
+}
+
 /* EOF */
