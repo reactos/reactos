@@ -3,7 +3,7 @@
  * PROJECT:         ReactOS Console Server DLL
  * FILE:            win32ss/user/winsrv/consrv/include/conio.h
  * PURPOSE:         Public Console I/O Interface
- * PROGRAMMERS:     Gé van Geldorp
+ * PROGRAMMERS:     Gï¿½ van Geldorp
  *                  Jeffrey Morlan
  *                  Hermes Belusca-Maito (hermes.belusca@sfr.fr)
  */
@@ -111,6 +111,24 @@ typedef struct _CONSOLE_SCREEN_BUFFER
  * internally, I just wrap back to the top of the buffer.               *
  ************************************************************************/
 
+/*
+ * Extended (24-bit) per-cell colour. One array of pairs rather than two parallel
+ * planes: a cell's two colours are always read, written, filled and moved
+ * together, so keeping them adjacent makes every such operation a single
+ * statement and a single allocation.
+ *
+ * CLR_INVALID in either field means "no extended colour, fall back to the
+ * cell's attribute".
+ */
+/* Number of entries in the console colour table */
+#define CONSOLE_COLOR_TABLE_SIZE 16
+
+typedef struct _CELL_RGB
+{
+    COLORREF Fg;
+    COLORREF Bg;
+} CELL_RGB, *PCELL_RGB;
+
 typedef struct _TEXTMODE_BUFFER_INFO
 {
     COORD   ScreenBufferSize;
@@ -130,7 +148,175 @@ typedef struct _TEXTMODE_SCREEN_BUFFER
 
     USHORT ScreenDefaultAttrib; /* Default screen char attribute */
     USHORT PopupDefaultAttrib;  /* Default popup char attribute */
+    PCELL_RGB CellRgb;          /* Extended per-cell colours, NULL until VT needs them */
+#define VT_PENDING_SEQUENCE_MAX 256
+    struct _VT_MODE_STATE
+    {
+        BOOLEAN CursorSaved;        /* Whether a cursor position was saved */
+        COORD   SavedCursorPos;     /* Last saved cursor position */
+        USHORT  SavedAttributes;    /* SGR attributes parked by DECSC (ESC 7 / CSI s) */
+        USHORT  CurrentAttributes;  /* Current SGR attributes */
+        ULONG   PrivateModes;       /* Bitmask of active DEC private modes */
+        /*
+         * Alternate screen (DECSET 1047/1049). The alternate screen is a
+         * content swap inside this same screen-buffer object rather than a
+         * second object: the primary's cells are parked here and restored on
+         * the way out, so the console's active buffer - and every handle to it -
+         * stays valid across the switch.
+         */
+        BOOLEAN AlternateActive;                 /* TRUE while the alternate screen is shown */
+        PCHAR_INFO SavedBuffer;                  /* Primary cells, parked */
+        struct _CELL_RGB* SavedCellRgb;          /* Primary extended colours, parked */
+        USHORT  SavedVirtualY;                   /* Saved scrollback origin */
+        COORD   SavedScreenCursorPos;            /* Saved cursor position */
+        CONSOLE_CURSOR_INFO SavedScreenCursorInfo; /* Saved cursor info */
+        COORD   SavedViewOrigin;                 /* Saved viewport origin */
+        SHORT   SavedScrollTop;                  /* Saved top margin */
+        SHORT   SavedScrollBottom;               /* Saved bottom margin */
+        CONSOLE_CURSOR_INFO DefaultCursorInfo;   /* Default cursor info for DECSCUSR reset */
+        BOOLEAN UseRgbForeground;                /* TRUE when foreground colour uses 24-bit RGB */
+        BOOLEAN UseRgbBackground;                /* TRUE when background colour uses 24-bit RGB */
+        COLORREF CurrentFgColor;                 /* Current 24-bit foreground colour */
+        COLORREF CurrentBgColor;                 /* Current 24-bit background colour */
+        COLORREF SavedFgColor;                   /* Saved foreground colour for DECSC */
+        COLORREF SavedBgColor;                   /* Saved background colour for DECSC */
+        BOOLEAN SavedUseRgbForeground;           /* Saved RGB flag for foreground */
+        BOOLEAN SavedUseRgbBackground;           /* Saved RGB flag for background */
+        SHORT   ScrollTop;                       /* Top margin for scrolling (0-based) */
+        SHORT   ScrollBottom;                    /* Bottom margin for scrolling (0-based inclusive) */
+        BOOLEAN HyperlinkActive;                 /* TRUE when OSC 8 hyperlink is active */
+        UNICODE_STRING HyperlinkUri;             /* Current hyperlink target */
+        UCHAR   Charsets[4];                     /* Character sets designated into G0..G3 */
+        UCHAR   ActiveCharset;                   /* Active GL charset slot (0-3) */
+        UCHAR   PendingSingleShift;              /* Pending single-shift slot override (SS2/SS3) */
+        UCHAR   SavedCharsets[4];                /* G0..G3 saved by DECSC */
+        UCHAR   SavedActiveCharset;              /* Saved active charset selector for DECSC */
+        WCHAR   LastWrittenChar;                 /* Last printable glyph emitted for REP */
+        BOOLEAN LastCharValid;                   /* Tracks whether LastWrittenChar is valid */
+        ULONG   MouseButtonState;                /* Tracks currently pressed mouse buttons */
+        PUCHAR  TabStops;                        /* Dynamic tab-stop bitmap (one byte per column) */
+        USHORT  TabStopLength;                   /* Number of columns represented in TabStops */
+        SMALL_RECT DirtyRect;                    /* Region invalidated so far by this write */
+        BOOLEAN DirtyValid;                      /* TRUE when DirtyRect holds anything */
+        WCHAR   PendingSequence[VT_PENDING_SEQUENCE_MAX]; /* Unterminated VT sequence kept across writes */
+        USHORT  PendingSequenceLength;           /* Number of valid WCHARs in PendingSequence */
+    } VtState;
 } TEXTMODE_SCREEN_BUFFER, *PTEXTMODE_SCREEN_BUFFER;
+
+/*
+ * Cell addressing and the extended per-cell colours.
+ *
+ * CellRgb is an optional side array indexed exactly like Buffer: it stays NULL
+ * until a VT sequence actually asks for a 24-bit colour (see
+ * ConioEnsureCellColors), so a console that never enables VT pays nothing for
+ * it. Because it is a separate allocation, every operation that moves, fills or
+ * copies cells must carry it along - always go through the helpers below rather
+ * than touching the array directly, so there is one place per kind of operation
+ * instead of one per call site.
+ *
+ * A run of cells inside a single row is contiguous in both arrays, so row-span
+ * helpers can use RtlMoveMemory/RtlFillMemory.
+ */
+
+FORCEINLINE ULONG
+ConioCoordToIndex(PTEXTMODE_SCREEN_BUFFER Buff, ULONG X, ULONG Y)
+{
+    ASSERT(X < (ULONG)Buff->ScreenBufferSize.X);
+    ASSERT(Y < (ULONG)Buff->ScreenBufferSize.Y);
+    return ((Y + Buff->VirtualY) % Buff->ScreenBufferSize.Y) * Buff->ScreenBufferSize.X + X;
+}
+
+/* TRUE when the VT parser owns this buffer's output. Derived from the mode bit
+ * so there is exactly one representation of "is VT on". */
+FORCEINLINE BOOLEAN
+ConioIsVtActive(PTEXTMODE_SCREEN_BUFFER Buff)
+{
+    return !!(Buff->Mode & ENABLE_VIRTUAL_TERMINAL_PROCESSING);
+}
+
+/* Base of row Y in the colour array, or NULL when it is not allocated */
+FORCEINLINE PCELL_RGB
+ConioCellRgbRow(PTEXTMODE_SCREEN_BUFFER Buff, ULONG Y)
+{
+    if (!Buff->CellRgb) return NULL;
+    return Buff->CellRgb + ConioCoordToIndex(Buff, 0, Y);
+}
+
+FORCEINLINE COLORREF
+ConioGetCellFgColor(PTEXTMODE_SCREEN_BUFFER Buff, ULONG X, ULONG Y)
+{
+    if (!Buff->CellRgb) return CLR_INVALID;
+    return Buff->CellRgb[ConioCoordToIndex(Buff, X, Y)].Fg;
+}
+
+FORCEINLINE COLORREF
+ConioGetCellBgColor(PTEXTMODE_SCREEN_BUFFER Buff, ULONG X, ULONG Y)
+{
+    if (!Buff->CellRgb) return CLR_INVALID;
+    return Buff->CellRgb[ConioCoordToIndex(Buff, X, Y)].Bg;
+}
+
+FORCEINLINE VOID
+ConioSetCellColors(PTEXTMODE_SCREEN_BUFFER Buff, ULONG X, ULONG Y, COLORREF Fg, COLORREF Bg)
+{
+    PCELL_RGB Cell;
+
+    if (!Buff->CellRgb) return;
+
+    Cell = &Buff->CellRgb[ConioCoordToIndex(Buff, X, Y)];
+    Cell->Fg = Fg;
+    Cell->Bg = Bg;
+}
+
+/* Set Count cells' colours starting at (X,Y); the run must stay inside row Y */
+FORCEINLINE VOID
+ConioFillCellColors(PTEXTMODE_SCREEN_BUFFER Buff, ULONG X, ULONG Y, ULONG Count, COLORREF Fg, COLORREF Bg)
+{
+    PCELL_RGB Row;
+    ULONG i;
+
+    if (Count == 0) return;
+
+    Row = ConioCellRgbRow(Buff, Y);
+    if (!Row) return;
+    Row += X;
+
+    /* CLR_INVALID is all-ones, so clearing a run is one memset */
+    if (Fg == CLR_INVALID && Bg == CLR_INVALID)
+    {
+        RtlFillMemory(Row, Count * sizeof(CELL_RGB), 0xFF);
+        return;
+    }
+
+    for (i = 0; i < Count; ++i)
+    {
+        Row[i].Fg = Fg;
+        Row[i].Bg = Bg;
+    }
+}
+
+/* Move Count cells' colours between already-computed array indices */
+FORCEINLINE VOID
+ConioMoveCellColorsByIndex(PTEXTMODE_SCREEN_BUFFER Buff, ULONG DstIndex, ULONG SrcIndex, ULONG Count)
+{
+    if (Count == 0 || !Buff->CellRgb) return;
+    RtlMoveMemory(Buff->CellRgb + DstIndex, Buff->CellRgb + SrcIndex, Count * sizeof(CELL_RGB));
+}
+
+/* Move Count cells' colours within or between rows; runs must stay inside their row */
+FORCEINLINE VOID
+ConioMoveCellColors(PTEXTMODE_SCREEN_BUFFER Buff, ULONG DstX, ULONG DstY, ULONG SrcX, ULONG SrcY, ULONG Count)
+{
+    if (Count == 0 || !Buff->CellRgb) return;
+    ConioMoveCellColorsByIndex(Buff, ConioCoordToIndex(Buff, DstX, DstY), ConioCoordToIndex(Buff, SrcX, SrcY), Count);
+}
+
+/*
+ * Allocate the colour array on first use. Returns FALSE (leaving it NULL, i.e.
+ * attribute-only rendering) if the allocation fails - callers treat extended
+ * colour as best-effort and must not fail the write because of it.
+ */
+BOOLEAN ConioEnsureCellColors(PTEXTMODE_SCREEN_BUFFER Buff);
 
 
 /*
@@ -255,6 +441,18 @@ typedef struct _TERMINAL_VTBL
     INT  (NTAPI *ShowMouseCursor)(IN OUT PTERMINAL This,
                                   BOOL Show);
 
+    /*
+     * Console-level state the driver may need but does not own. These take only
+     * PCONSOLE-level types so that condrv/ never has to reach up into
+     * CONSRV_CONSOLE or into a frontend.
+     */
+    BOOL (NTAPI *SetTitle)(IN OUT PTERMINAL This, IN PCWSTR Title, IN ULONG Length);
+    BOOL (NTAPI *GetColorTable)(IN OUT PTERMINAL This, OUT COLORREF* Colors, IN ULONG Count);
+    BOOL (NTAPI *SetColorTable)(IN OUT PTERMINAL This, IN const COLORREF* Colors, IN ULONG Count);
+    /* On success *Text is a NUL-terminated buffer the caller frees with ConsoleFreeHeap() */
+    BOOL (NTAPI *GetClipboardText)(IN OUT PTERMINAL This, OUT PWCHAR* Text, OUT PULONG Length);
+    BOOL (NTAPI *SetClipboardText)(IN OUT PTERMINAL This, IN PCWSTR Text, IN ULONG Length);
+
 #if 0 // Possible future terminal interface
     BOOL (NTAPI *GetTerminalProperty)(IN OUT PTERMINAL This,
                                       ULONG Flag,
@@ -309,6 +507,9 @@ typedef struct _CONSOLE
     COORD   ConsoleSize;                    /* The current size of the console, for text-mode only */
     BOOLEAN FixedSize;                      /* TRUE if the console is of fixed size */
     BOOLEAN IsCJK;                          /* TRUE if Chinese, Japanese or Korean (CJK) */
+    BOOLEAN AllowVtOscClipboard;            /* TRUE when OSC 52 clipboard access is permitted */
+    BOOLEAN AllowVtOscHyperlinks;           /* TRUE when OSC 8 hyperlinks are permitted */
+    BOOLEAN AllowVtDcsPassthrough;          /* TRUE when raw DCS payloads may be processed */
 } CONSOLE, *PCONSOLE;
 
 /* console.c */
