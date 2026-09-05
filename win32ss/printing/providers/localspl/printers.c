@@ -351,16 +351,18 @@ BroadcastChange(PLOCAL_HANDLE pHandle)
 {
     PLOCAL_PRINTER pPrinter;
     PSKIPLIST_NODE pNode;
-    DWORD cchMachineName = 0;
+    DWORD_PTR dwResult;
     WCHAR wszMachineName[MAX_PATH] = {0}; // if not local, use Machine Name then Printer Name... pPrinter->pJob->pwszMachineName?
 
     for (pNode = PrinterList.Head.Next[0]; pNode; pNode = pNode->Next[0])
     {
         pPrinter = (PLOCAL_PRINTER)pNode->Element;
 
-        StringCchCopyW( &wszMachineName[cchMachineName], sizeof(wszMachineName), pPrinter->pwszPrinterName );
+        StringCchCopyW( wszMachineName, _countof(wszMachineName), pPrinter->pwszPrinterName );
 
-        PostMessageW( HWND_BROADCAST, WM_DEVMODECHANGE, 0, (LPARAM)&wszMachineName );
+        // The lParam is a string, so this has to be sent rather than posted.
+        SendMessageTimeoutW( HWND_BROADCAST, WM_DEVMODECHANGE, 0, (LPARAM)wszMachineName,
+                             SMTO_ABORTIFHUNG, 1000, &dwResult );
     }
 }
 
