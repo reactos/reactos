@@ -430,7 +430,8 @@ PciQueryResources(IN PPCI_PDO_EXTENSION PdoExtension,
     {
         /* Read the interrupt line for the pin, add a descriptor if it's valid */
         InterruptLine = PdoExtension->AdjustedInterruptLine;
-        if ((InterruptLine) && (InterruptLine != -1)) Count++;
+        if ((InterruptLine) && (InterruptLine != PCI_INTERRUPT_LINE_UNKNOWN))
+            Count++;
     }
 
     /* Check for a PCI-to-PCI or CardBus bridge, both keep the VGA enable at the same place */
@@ -519,7 +520,7 @@ PciQueryResources(IN PPCI_PDO_EXTENSION PdoExtension,
     {
          /* Read the interrupt line for the pin, check if it's valid */
          InterruptLine = PdoExtension->AdjustedInterruptLine;
-         if ((InterruptLine) && (InterruptLine != -1))
+         if ((InterruptLine) && (InterruptLine != PCI_INTERRUPT_LINE_UNKNOWN))
          {
              /* Make sure there's still space */
              ASSERT(Resource < LastResource);
@@ -1976,11 +1977,11 @@ PciScanBus(IN PPCI_FDO_EXTENSION DeviceExtension)
                           NULL);
 
             /* Dump device that was found */
-            DPRINT1("Scan Found Device 0x%x (b=0x%x, d=0x%x, f=0x%x)\n",
-                    PciSlot.u.AsULONG,
-                    i,
-                    j,
-                    k);
+            DPRINT("Scan Found Device 0x%x (b=0x%x, d=0x%x, f=0x%x)\n",
+                   PciSlot.u.AsULONG,
+                   i,
+                   j,
+                   k);
 
             /* Dump the device's header */
             PciDebugDumpCommonConfig(PciData);
@@ -1988,8 +1989,8 @@ PciScanBus(IN PPCI_FDO_EXTENSION DeviceExtension)
             /* Find description for this device for the debugger's sake */
             DescriptionText = PciGetDeviceDescriptionMessage(PciData->BaseClass,
                                                              PciData->SubClass);
-            DPRINT1("Device Description \"%S\".\n",
-                    DescriptionText ? DescriptionText : L"(NULL)");
+            DPRINT("Device Description \"%S\".\n",
+                   DescriptionText ? DescriptionText : L"(NULL)");
             if (DescriptionText) ExFreePoolWithTag(DescriptionText, 0);
 
             /* The hardware watchdog named by the ACPI table on a root bus gets no PDO */
@@ -2285,11 +2286,11 @@ PciScanBus(IN PPCI_FDO_EXTENSION DeviceExtension)
                 }
 
                 /* Dump this capability */
-                DPRINT1("CAP @%02x ID %02x (%s)\n",
-                        CapOffset, CapHeader->CapabilityID, Name);
+                DPRINT("CAP @%02x ID %02x (%s)\n",
+                       CapOffset, CapHeader->CapabilityID, Name);
                 for (i = 0; i < Size; i += 2)
-                    DPRINT1("  %04x\n", *(PUSHORT)((ULONG_PTR)CapBuffer + i));
-                DPRINT1("\n");
+                    DPRINT("  %04x\n", *(PUSHORT)((ULONG_PTR)CapBuffer + i));
+                DPRINT("\n");
 
                 /* Check the next capability */
                 CapOffset = CapHeader->Next;
@@ -2447,9 +2448,9 @@ PciQueryDeviceRelations(IN PPCI_FDO_EXTENSION DeviceExtension,
     }
 
     /* Print out that we're ready to dump relations */
-    DPRINT1("PCI QueryDeviceRelations/BusRelations FDOx %p (bus 0x%02x)\n",
-            DeviceExtension,
-            DeviceExtension->BaseBus);
+    DPRINT("PCI QueryDeviceRelations/BusRelations FDOx %p (bus 0x%02x)\n",
+           DeviceExtension,
+           DeviceExtension->BaseBus);
 
     /* Loop the current PDO children and the device relation object array */
     PdoExtension = DeviceExtension->ChildPdoList;
@@ -2457,11 +2458,11 @@ PciQueryDeviceRelations(IN PPCI_FDO_EXTENSION DeviceExtension,
     while (PdoExtension)
     {
         /* Dump this relation */
-        DPRINT1("  QDR PDO %p (x %p)%s\n",
-                PdoExtension->PhysicalDeviceObject,
-                PdoExtension,
-                PdoExtension->NotPresent ?
-                "<Omitted, device flaged not present>" : "");
+        DPRINT("  QDR PDO %p (x %p)%s\n",
+               PdoExtension->PhysicalDeviceObject,
+               PdoExtension,
+               PdoExtension->NotPresent ?
+               "<Omitted, device flaged not present>" : "");
 
         /* Is this PDO present? */
         if (!PdoExtension->NotPresent)
@@ -2477,9 +2478,9 @@ PciQueryDeviceRelations(IN PPCI_FDO_EXTENSION DeviceExtension,
     }
 
     /* Terminate dumping the relations */
-    DPRINT1("  QDR Total PDO count = %u (%u already in list)\n",
-            NewRelations->Count + PdoCount,
-            NewRelations->Count);
+    DPRINT("  QDR Total PDO count = %u (%u already in list)\n",
+           NewRelations->Count + PdoCount,
+           NewRelations->Count);
 
     /* Return the final count and the new buffer */
     NewRelations->Count += PdoCount;
