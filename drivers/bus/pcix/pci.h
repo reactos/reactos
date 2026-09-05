@@ -77,6 +77,11 @@
 #define PCI_LEGACY_CONFIG_LENGTH            0x100
 
 //
+// Interrupt line register value meaning unknown or not connected
+//
+#define PCI_INTERRUPT_LINE_UNKNOWN          0xFF
+
+//
 // Resizable BAR extended capability, one capability and control register pair per BAR
 //
 #define PCI_RBAR_EXTENDED_CAP_ID            0x0015
@@ -320,9 +325,9 @@ typedef struct _PCI_PDO_EXTENSION
     BOOLEAN SubClass;
     BOOLEAN BaseClass;
     BOOLEAN AdditionalResourceCount;
-    BOOLEAN AdjustedInterruptLine;
+    UCHAR AdjustedInterruptLine;
     BOOLEAN InterruptPin;
-    BOOLEAN RawInterruptLine;
+    UCHAR RawInterruptLine;
     BOOLEAN CapabilitiesPtr;
     BOOLEAN SavedLatencyTimer;
     BOOLEAN SavedCacheLineSize;
