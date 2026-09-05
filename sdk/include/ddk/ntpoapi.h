@@ -127,7 +127,10 @@ typedef enum {
   PowerActionShutdown,
   PowerActionShutdownReset,
   PowerActionShutdownOff,
-  PowerActionWarmEject
+  PowerActionWarmEject,
+#if (NTDDI_VERSION >= NTDDI_WINTHRESHOLD) || defined(__REACTOS__)
+  PowerActionDisplayOff
+#endif
 } POWER_ACTION, *PPOWER_ACTION;
 
 #if (NTDDI_VERSION >= NTDDI_WINXP) || !defined(_BATCLASS_)
@@ -410,6 +413,49 @@ typedef struct _POWER_ACTION_POLICY {
   ULONG Flags;
   ULONG EventCode;
 } POWER_ACTION_POLICY, *PPOWER_ACTION_POLICY;
+
+typedef struct _SYSTEM_POWER_LEVEL {
+  BOOLEAN Enable;
+  UCHAR Spare[3];
+  ULONG BatteryLevel;
+  POWER_ACTION_POLICY PowerPolicy;
+  SYSTEM_POWER_STATE MinSystemState;
+} SYSTEM_POWER_LEVEL, *PSYSTEM_POWER_LEVEL;
+
+#define DISCHARGE_POLICY_CRITICAL     0
+#define DISCHARGE_POLICY_LOW          1
+#define NUM_DISCHARGE_POLICIES        4
+
+typedef struct _SYSTEM_POWER_POLICY {
+  ULONG Revision;
+  POWER_ACTION_POLICY PowerButton;
+  POWER_ACTION_POLICY SleepButton;
+  POWER_ACTION_POLICY LidClose;
+  SYSTEM_POWER_STATE LidOpenWake;
+  ULONG Reserved;
+  POWER_ACTION_POLICY Idle;
+  ULONG IdleTimeout;
+  UCHAR IdleSensitivity;
+  UCHAR DynamicThrottle;
+  UCHAR Spare2[2];
+  SYSTEM_POWER_STATE MinSleep;
+  SYSTEM_POWER_STATE MaxSleep;
+  SYSTEM_POWER_STATE ReducedLatencySleep;
+  ULONG WinLogonFlags;
+  ULONG Spare3;
+  ULONG DozeS4Timeout;
+  ULONG BroadcastCapacityResolution;
+  SYSTEM_POWER_LEVEL DischargePolicy[NUM_DISCHARGE_POLICIES];
+  ULONG VideoTimeout;
+  BOOLEAN VideoDimDisplay;
+  ULONG VideoReserved[3];
+  ULONG SpindownTimeout;
+  BOOLEAN OptimizeForPower;
+  UCHAR FanThrottleTolerance;
+  UCHAR ForcedThrottle;
+  UCHAR MinThrottle;
+  POWER_ACTION_POLICY OverThrottled;
+} SYSTEM_POWER_POLICY, *PSYSTEM_POWER_POLICY;
 
 /* POWER_ACTION_POLICY.Flags constants */
 #define POWER_ACTION_QUERY_ALLOWED        0x00000001

@@ -253,6 +253,7 @@ $if (_WDMDDK_)
 #define DO_BUS_ENUMERATED_DEVICE          0x00001000
 #define DO_POWER_PAGABLE                  0x00002000
 #define DO_POWER_INRUSH                   0x00004000
+#define DO_POWER_NOOP                     0x00008000
 
 /* DEVICE_OBJECT.Characteristics */
 #define FILE_REMOVABLE_MEDIA              0x00000001
@@ -3286,9 +3287,9 @@ typedef struct _IO_STACK_LOCATION {
     struct {
       union {
         ULONG SystemContext;
-#if (NTDDI_VERSION >= NTDDI_VISTA)
+#if (NTDDI_VERSION >= NTDDI_VISTA) || defined(__REACTOS__)
         SYSTEM_POWER_STATE_CONTEXT SystemPowerStateContext;
-#endif // (NTDDI_VERSION >= NTDDI_VISTA)
+#endif // (NTDDI_VERSION >= NTDDI_VISTA) || defined(__REACTOS__)
       };
       POWER_STATE_TYPE POINTER_ALIGNMENT Type;
       POWER_STATE POINTER_ALIGNMENT State;
