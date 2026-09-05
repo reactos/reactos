@@ -838,6 +838,36 @@ void nsAString_Finish(nsAString *str)
     NS_StringContainerFinish(str);
 }
 
+HRESULT map_nsresult(nsresult nsres)
+{
+    switch(nsres) {
+    case NS_OK:
+        return S_OK;
+    case NS_ERROR_OUT_OF_MEMORY:
+        return E_OUTOFMEMORY;
+    case NS_ERROR_NOT_IMPLEMENTED:
+        return E_NOTIMPL;
+    case NS_NOINTERFACE:
+        return E_NOINTERFACE;
+    case NS_ERROR_INVALID_POINTER:
+        return E_POINTER;
+    case NS_ERROR_INVALID_ARG:
+        return E_INVALIDARG;
+    case NS_ERROR_UNEXPECTED:
+        return E_UNEXPECTED;
+#ifndef __REACTOS__
+    /* These are not yet defined for ReactOS */
+    case NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR:
+        return 0x80700007; /* according to tests */
+    case NS_ERROR_DOM_SYNTAX_ERR:
+        return E_INVALIDARG; /* FIXME: Throw SyntaxError for IE9+ modes */
+#endif
+    case NS_BINDING_ABORTED:
+        return E_ABORT;
+    }
+    return E_FAIL;
+}
+
 HRESULT return_nsstr(nsresult nsres, nsAString *nsstr, BSTR *p)
 {
     const PRUnichar *str;
