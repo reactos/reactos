@@ -98,3 +98,5 @@ library BackgroundCopyManager2_5
     interface IBackgroundCopyCallback;
     interface IBackgroundCopyJobHttpOptions;
 }
+
+cpp_quote("#include \"bits3_0.h\"")

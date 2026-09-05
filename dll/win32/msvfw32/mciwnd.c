@@ -38,6 +38,8 @@ WINE_DEFAULT_DEBUG_CHANNEL(mci);
 
 extern HMODULE MSVFW32_hModule;
 static const WCHAR mciWndClassW[] = {'M','C','I','W','n','d','C','l','a','s','s',0};
+static const WCHAR mciWndNameW[] = {'M','C','I','W','n','d','C','r','e','a','t','e',
+                                    'W','i','n','e','I','n','t','e','r','n','a','l', 0};
 
 typedef struct
 {
@@ -102,7 +104,7 @@ BOOL VFWAPIV MCIWndRegisterClass(void)
 HWND VFWAPIV MCIWndCreateW(HWND hwndParent, HINSTANCE hInstance,
                            DWORD dwStyle, LPCWSTR szFile)
 {
-    TRACE("%p %p %x %s\n", hwndParent, hInstance, dwStyle, debugstr_w(szFile));
+    TRACE("%p %p %lx %s\n", hwndParent, hInstance, dwStyle, debugstr_w(szFile));
 
     MCIWndRegisterClass();
 
@@ -113,7 +115,7 @@ HWND VFWAPIV MCIWndCreateW(HWND hwndParent, HINSTANCE hInstance,
     else
         dwStyle |= WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME | WS_MINIMIZEBOX | WS_MAXIMIZEBOX;
 
-    return CreateWindowExW(0, mciWndClassW, NULL,
+    return CreateWindowExW(0, mciWndClassW, mciWndNameW,
                            dwStyle | WS_CLIPSIBLINGS | WS_CLIPCHILDREN,
                            0, 0, 300, 0,
                            hwndParent, 0, hInstance, (LPVOID)szFile);
@@ -252,10 +254,10 @@ static LRESULT MCIWND_Create(HWND hWnd, LPCREATESTRUCTW cs)
     MCIWndInfo *mwi;
     static const WCHAR buttonW[] = {'b','u','t','t','o','n',0};
 
-    mwi = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*mwi));
+    mwi = calloc(1, sizeof(*mwi));
     if (!mwi) return -1;
 
-    SetWindowLongW(hWnd, 0, (LPARAM)mwi);
+    SetWindowLongPtrW(hWnd, 0, (LPARAM)mwi);
 
     mwi->dwStyle = cs->style;
     /* There is no need to show stats if there is no caption */
@@ -314,8 +316,9 @@ static LRESULT MCIWND_Create(HWND hWnd, LPCREATESTRUCTW cs)
         else
             lParam = (LPARAM)cs->lpCreateParams;
 
-        /* If it's our internal class pointer, file name is a unicode string */
-        if (cs->lpszClass == mciWndClassW)
+        /* If it's our internal window name, we are being called from MCIWndCreateA/W,
+         * so file name is a unicode string */
+        if (!lstrcmpW(cs->lpszName, mciWndNameW))
             SendMessageW(hWnd, MCIWNDM_OPENW, 0, lParam);
         else
         {
@@ -385,12 +388,12 @@ static void MCIWND_notify_media(MCIWndInfo *mwi)
                 int len;
 
                 len = WideCharToMultiByte(CP_ACP, 0, mwi->lpName, -1, NULL, 0, NULL, NULL);
-                ansi_name = HeapAlloc(GetProcessHeap(), 0, len);
+                ansi_name = malloc(len);
                 WideCharToMultiByte(CP_ACP, 0, mwi->lpName, -1, ansi_name, len, NULL, NULL);
 
                 SendMessageW(mwi->hwndOwner, MCIWNDM_NOTIFYMEDIA, (WPARAM)mwi->hWnd, (LPARAM)ansi_name);
 
-                HeapFree(GetProcessHeap(), 0, ansi_name);
+                free(ansi_name);
             }
             else
                 SendMessageW(mwi->hwndOwner, MCIWNDM_NOTIFYMEDIA, (WPARAM)mwi->hWnd, (LPARAM)mwi->lpName);
@@ -446,7 +449,7 @@ static LRESULT WINAPI MCIWndProc(HWND hWnd, UINT wMsg, WPARAM wParam, LPARAM lPa
 {
     MCIWndInfo *mwi;
 
-    TRACE("%p %04x %08lx %08lx\n", hWnd, wMsg, wParam, lParam);
+    TRACE("%p %04x %08Ix %08Ix\n", hWnd, wMsg, wParam, lParam);
 
     mwi = (MCIWndInfo*)GetWindowLongPtrW(hWnd, 0);
     if (!mwi && wMsg != WM_CREATE)
@@ -465,7 +468,7 @@ static LRESULT WINAPI MCIWndProc(HWND hWnd, UINT wMsg, WPARAM wParam, LPARAM lPa
         if (mwi->mci)
             SendMessageW(hWnd, MCI_CLOSE, 0, 0);
 
-        HeapFree(GetProcessHeap(), 0, mwi);
+        free(mwi);
 
         DestroyWindow(GetDlgItem(hWnd, CTL_MENU));
         DestroyWindow(GetDlgItem(hWnd, CTL_PLAYSTOP));
@@ -588,9 +591,7 @@ static LRESULT WINAPI MCIWndProc(HWND hWnd, UINT wMsg, WPARAM wParam, LPARAM lPa
 
             mwi->mci = mci_open.wDeviceID;
             mwi->alias = HandleToLong(hWnd) + 1;
-
-            mwi->lpName = HeapAlloc(GetProcessHeap(), 0, (lstrlenW((LPWSTR)lParam) + 1) * sizeof(WCHAR));
-            lstrcpyW(mwi->lpName, (LPWSTR)lParam);
+            mwi->lpName = wcsdup((WCHAR *)lParam);
 
             MCIWND_UpdateState(mwi);
 
@@ -657,7 +658,7 @@ static LRESULT WINAPI MCIWndProc(HWND hWnd, UINT wMsg, WPARAM wParam, LPARAM lPa
 
 end_of_mci_open:
             if (wMsg == MCIWNDM_OPENA)
-                HeapFree(GetProcessHeap(), 0, (void *)lParam);
+                free((void *)lParam);
             return mwi->lasterror;
         }
 
@@ -751,7 +752,7 @@ end_of_mci_open:
                 MCIWND_notify_error(mwi);
                 return 0;
             }
-            TRACE("MCIWNDM_GETLENGTH: %ld\n", mci_status.dwReturn);
+            TRACE("MCIWNDM_GETLENGTH: %Id\n", mci_status.dwReturn);
             return mci_status.dwReturn;
         }
 
@@ -768,7 +769,7 @@ end_of_mci_open:
                 MCIWND_notify_error(mwi);
                 return 0;
             }
-            TRACE("MCIWNDM_GETSTART: %ld\n", mci_status.dwReturn);
+            TRACE("MCIWNDM_GETSTART: %Id\n", mci_status.dwReturn);
             return mci_status.dwReturn;
         }
 
@@ -778,7 +779,7 @@ end_of_mci_open:
 
             start = SendMessageW(hWnd, MCIWNDM_GETSTART, 0, 0);
             length = SendMessageW(hWnd, MCIWNDM_GETLENGTH, 0, 0);
-            TRACE("MCIWNDM_GETEND: %ld\n", start + length);
+            TRACE("MCIWNDM_GETEND: %Id\n", start + length);
             return (start + length);
         }
 
@@ -871,7 +872,7 @@ end_of_mci_open:
         {
             MCI_PLAY_PARMS mci_play;
 
-            TRACE("MCIWNDM_PLAYFROM %08lx\n", lParam);
+            TRACE("MCIWNDM_PLAYFROM %08Ix\n", lParam);
 
             mci_play.dwCallback = (DWORD_PTR)hWnd;
             mci_play.dwFrom = lParam;
@@ -893,7 +894,7 @@ end_of_mci_open:
         {
             MCI_PLAY_PARMS mci_play;
 
-            TRACE("MCIWNDM_PLAYTO %08lx\n", lParam);
+            TRACE("MCIWNDM_PLAYTO %08Ix\n", lParam);
 
             mci_play.dwCallback = (DWORD_PTR)hWnd;
             mci_play.dwTo = lParam;
@@ -916,7 +917,7 @@ end_of_mci_open:
             MCI_PLAY_PARMS mci_play;
             DWORD flags = MCI_NOTIFY;
 
-            TRACE("MCIWNDM_PLAYREVERSE %08lx\n", lParam);
+            TRACE("MCIWNDM_PLAYREVERSE %08Ix\n", lParam);
 
             mci_play.dwCallback = (DWORD_PTR)hWnd;
             mci_play.dwFrom = lParam;
@@ -995,7 +996,7 @@ end_of_mci_open:
                 pos = p - (WCHAR *)lParam + 1;
                 len = lstrlenW((LPCWSTR)lParam) + 64;
 
-                cmdW = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
+                cmdW = malloc(len * sizeof(WCHAR));
 
                 memcpy(cmdW, (void *)lParam, pos * sizeof(WCHAR));
                 wsprintfW(cmdW + pos, formatW, mwi->alias);
@@ -1010,10 +1011,10 @@ end_of_mci_open:
                 MCIWND_notify_error(mwi);
 
             if (cmdW != (LPWSTR)lParam)
-                HeapFree(GetProcessHeap(), 0, cmdW);
+                free(cmdW);
 
             if (wMsg == MCIWNDM_SENDSTRINGA)
-                HeapFree(GetProcessHeap(), 0, (void *)lParam);
+                free((void *)lParam);
 
             MCIWND_UpdateState(mwi);
             return mwi->lasterror;
@@ -1054,7 +1055,7 @@ end_of_mci_open:
         return mwi->inactive_timer;
 
     case MCIWNDM_CHANGESTYLES:
-        TRACE("MCIWNDM_CHANGESTYLES mask %08lx, set %08lx\n", wParam, lParam);
+        TRACE("MCIWNDM_CHANGESTYLES mask %08Ix, set %08Ix\n", wParam, lParam);
         /* FIXME: update the visual window state as well:
          * add/remove trackbar, autosize, etc.
          */
@@ -1063,7 +1064,7 @@ end_of_mci_open:
         return 0;
 
     case MCIWNDM_GETSTYLES:
-        TRACE("MCIWNDM_GETSTYLES: %08x\n", mwi->dwStyle & 0xffff);
+        TRACE("MCIWNDM_GETSTYLES: %08lx\n", mwi->dwStyle & 0xffff);
         return mwi->dwStyle & 0xffff;
 
     case MCIWNDM_GETDEVICEA:
@@ -1124,7 +1125,7 @@ end_of_mci_open:
         {
             MCI_STATUS_PARMS mci_status;
 
-            TRACE("MCIWNDM_GETTIMEFORMAT %08lx %08lx\n", wParam, lParam);
+            TRACE("MCIWNDM_GETTIMEFORMAT %08Ix %08Ix\n", wParam, lParam);
 
             /* get format string if requested */
             if (wParam && lParam)
@@ -1179,7 +1180,7 @@ end_of_mci_open:
 
             if (mwi->mci)
             {
-                cmdW = HeapAlloc(GetProcessHeap(), 0, (lstrlenW((LPCWSTR)lParam) + 64) * sizeof(WCHAR));
+                cmdW = malloc((wcslen((WCHAR *)lParam) + 64) * sizeof(WCHAR));
                 wsprintfW(cmdW, formatW, mwi->alias);
                 lstrcatW(cmdW, (WCHAR *)lParam);
 
@@ -1190,11 +1191,11 @@ end_of_mci_open:
                     SendDlgItemMessageW(hWnd, CTL_TRACKBAR, TBM_SETRANGEMAX, 1,
                                         SendMessageW(hWnd, MCIWNDM_GETLENGTH, 0, 0));
 
-                HeapFree(GetProcessHeap(), 0, cmdW);
+                free(cmdW);
             }
 
             if (wMsg == MCIWNDM_SETTIMEFORMATA)
-                HeapFree(GetProcessHeap(), 0, (void *)lParam);
+                free((void *)lParam);
 
             return 0;
         }
@@ -1241,7 +1242,7 @@ end_of_mci_open:
         return 0;
 
     case MCIWNDM_SETZOOM:
-        TRACE("MCIWNDM_SETZOOM %ld\n", lParam);
+        TRACE("MCIWNDM_SETZOOM %Id\n", lParam);
         mwi->zoom = lParam;
 
         if (mwi->mci && !(mwi->dwStyle & MCIWNDF_NOAUTOSIZEWINDOW))
@@ -1344,7 +1345,7 @@ end_of_mci_open:
             mwi->mode = MCI_MODE_NOT_READY;
             mwi->position = -1;
 
-            HeapFree(GetProcessHeap(), 0, mwi->lpName);
+            free(mwi->lpName);
             mwi->lpName = NULL;
             MCIWND_UpdateState(mwi);
 

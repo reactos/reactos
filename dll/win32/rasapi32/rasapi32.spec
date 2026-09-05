@@ -1,6 +1,32 @@
+# @ stub DDMComputeLuid
+# @ stub DDMFreeDialingParam
+# @ stub DDMFreePhonebookContext
+# @ stub DDMFreeRemoteEndpoint
+# @ stub DDMGetAddressesFromPhonebook
+# @ stub DDMGetEapInfo
+# @ stub DDMGetEapUserIdentityW
+# @ stub DDMGetPhoneBookContext
+# @ stub DDMGetPhonebookInfo
+# @ stub DDMGetProtocolStartParams
+# @ stub DDMGetRasDialParams
+# @ stub DDMGetRasDialingParams
+# @ stub DDMGetTunnelEndpoints
+# @ stub DDMRasPbkEntryCleanup
+# @ stub DDMUpdateProtocolConfigInfoFromEntry
+# @ stub DwCloneEntry
+# @ stub DwEnumEntryDetails
+# @ stub DwEnumEntryDetailsEx
+# @ stub DwRasUninitialize
+# @ stub GetAutoTriggerProfileInfo
+# @ stub IsActiveAutoTriggerConnection
+# @ stub IsActiveAutoTriggerConnectionEx
+# @ stub RasAutoDialSharedConnection
 @ stub RasAutodialAddressToNetwork
 @ stub RasAutodialEntryToNetwork
 @ stub RasClearConnectionStatistics
+# @ stub RasClearLinkStatistics
+# @ stub RasCompleteDialMachineCleanup
+# @ stub RasConfigUserProxySettingsW
 @ stdcall RasConnectionNotificationA(ptr long long)
 @ stdcall RasConnectionNotificationW(ptr long long)
 @ stdcall RasCreatePhonebookEntryA(long str)
@@ -24,6 +50,10 @@
 @ stdcall RasEnumEntriesA(str str ptr ptr ptr)
 @ stdcall RasEnumEntriesW(wstr wstr ptr ptr ptr)
 @ stub RasEnumEntriesWow
+# @ stub RasFreeEapUserIdentityA
+# @ stub RasFreeEapUserIdentityW
+# @ stub RasFreeEntryAdvancedProperties
+# @ stub RasGetAutoTriggerConnectStatus
 @ stdcall RasGetAutodialAddressA(str ptr ptr ptr ptr)
 @ stdcall RasGetAutodialAddressW(wstr ptr ptr ptr ptr)
 @ stdcall RasGetAutodialEnableA(long ptr)
@@ -34,13 +64,22 @@
 @ stdcall RasGetConnectStatusA(ptr ptr)
 @ stdcall RasGetConnectStatusW(ptr ptr)
 @ stub RasGetConnectStatusWow
+# @ stub RasGetConnectionErrorStringW
 @ stdcall RasGetConnectionStatistics(ptr ptr)
 @ stub RasGetCountryInfoA
 @ stub RasGetCountryInfoW
 @ stub RasGetCredentialsA
 @ stub RasGetCredentialsW
+# @ stub RasGetCustomAuthDataA
+# @ stub RasGetCustomAuthDataW
+# @ stub RasGetEapUserDataA
+# @ stub RasGetEapUserDataW
+# @ stub RasGetEapUserIdentityA
+# @ stub RasGetEapUserIdentityW
+# @ stub RasGetEntryAdvancedProperties
 @ stdcall RasGetEntryDialParamsA(str ptr ptr)
 @ stdcall RasGetEntryDialParamsW(wstr ptr ptr)
+# @ stub RasGetEntryHrasconnW
 @ stdcall RasGetEntryPropertiesA(str str ptr ptr ptr ptr)
 @ stdcall RasGetEntryPropertiesW(wstr wstr ptr ptr ptr ptr)
 @ stdcall RasGetErrorStringA(long ptr long)
@@ -48,36 +87,73 @@
 @ stub RasGetErrorStringWow
 @ stub RasGetHport
 @ stdcall RasGetLinkStatistics(ptr long ptr)
+# @ stub RasGetNapStatus
+# @ stub RasGetPCscf
+# @ stub RasGetPbkPath
 @ stdcall RasGetProjectionInfoA(ptr ptr ptr ptr)
+# @ stub RasGetProjectionInfoEx
 @ stdcall RasGetProjectionInfoW(ptr ptr ptr ptr)
 @ stub RasGetSubEntryHandleA
 @ stub RasGetSubEntryHandleW
 @ stub RasGetSubEntryPropertiesA
 @ stub RasGetSubEntryPropertiesW
+# @ stub RasHandleTriggerConnDisconnect
 @ stdcall RasHangUpA(long)
 @ stdcall RasHangUpW(long)
 @ stub RasHangUpWow
+# @ stub RasInvokeEapUI
+# @ stub RasIsPublicPhonebook
+# @ stub RasIsSharedConnection
+# @ stub RasNQMStateEnteredNotification
+# @ stub RasQueryRedialOnLinkFailure
+# @ stub RasQuerySharedAutoDial
+# @ stub RasQuerySharedConnection
+# @ stub RasRegisterEntryChangeNotification
 @ stdcall RasRenameEntryA(str str str)
 @ stdcall RasRenameEntryW(wstr wstr wstr)
+# @ stub RasRestoreDefaultLegacyProxySettings
+# @ stub RasScriptExecute
+# @ stub RasScriptGetIpAddress
+# @ stub RasScriptInit
+# @ stub RasScriptReceive
+# @ stub RasScriptSend
+# @ stub RasScriptTerm
+# @ stub RasSetAutoTriggerProfile
+# @ stub RasSetAutoTriggerProfileEx
 @ stdcall RasSetAutodialAddressA(str long ptr long long)
 @ stdcall RasSetAutodialAddressW(wstr long ptr long long)
 @ stdcall RasSetAutodialEnableA(long long)
 @ stdcall RasSetAutodialEnableW(long long)
 @ stdcall RasSetAutodialParamA(long ptr long)
 @ stdcall RasSetAutodialParamW(long ptr long)
-@ stub RasSetCredentialsA
-@ stub RasSetCredentialsW
+@ stdcall RasSetCredentialsA(str str ptr long)
+@ stdcall RasSetCredentialsW(wstr wstr ptr long)
 @ stdcall RasSetCustomAuthDataA(str str ptr long)
 @ stdcall RasSetCustomAuthDataW(wstr wstr ptr long)
+# @ stub RasSetEapUserDataA
+# @ stub RasSetEapUserDataAEx
+# @ stub RasSetEapUserDataW
+# @ stub RasSetEapUserDataWEx
+# @ stub RasSetEntryAdvancedProperties
 @ stdcall RasSetEntryDialParamsA(str ptr long)
 @ stdcall RasSetEntryDialParamsW(wstr ptr long)
 @ stdcall RasSetEntryPropertiesA(str str ptr long ptr long)
 @ stdcall RasSetEntryPropertiesW(wstr wstr ptr long ptr long)
 @ stub RasSetOldPassword
+# @ stub RasSetPerConnectionProxy
+# @ stub RasSetSharedAutoDial
 @ stdcall RasSetSubEntryPropertiesA(str str long ptr long ptr long)
 @ stdcall RasSetSubEntryPropertiesW(wstr wstr long ptr long ptr long)
+# @ stub RasTriggerConnection
+# @ stub RasTriggerConnectionEx
+# @ stub RasTriggerDisconnection
+# @ stub RasTriggerDisconnectionEx
+# @ stub RasUnregisterEntryChangeNotification
+# @ stub RasUpdateConnection
 @ stdcall RasValidateEntryNameA(str str)
 @ stdcall RasValidateEntryNameW(wstr wstr)
+# stub @ RasWriteSharedPbkOptions
+# stub @ UnInitializeRAS
 
 500 stub	RnaEngineRequest
 501 stub	DialEngineRequest

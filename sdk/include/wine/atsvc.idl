@@ -1,0 +1,73 @@
+/*
+ * ATSvc Service definitions
+ *
+ * Copyright 2018 Dmitry Timoshkov
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+import "oaidl.idl";
+import "ocidl.idl";
+
+[
+    uuid(1ff70682-0a51-30e8-076d-740be8cee98b),
+    implicit_handle(handle_t atsvc_handle),
+    version(1.0),
+    pointer_default(unique)
+]
+interface atsvc
+{
+    const DWORD APE_AT_ID_NOT_FOUND = 0x00000ede;
+
+    typedef [handle] const WCHAR *ATSVC_HANDLE;
+
+    typedef struct _AT_ENUM
+    {
+        DWORD JobId;
+        DWORD_PTR JobTime;
+        DWORD DaysOfMonth;
+        unsigned char DaysOfWeek;
+        unsigned char Flags;
+        [string] WCHAR *Command;
+    } AT_ENUM, *PAT_ENUM, *LPAT_ENUM;
+
+    typedef struct _AT_INFO
+    {
+        DWORD_PTR JobTime;
+        DWORD DaysOfMonth;
+        unsigned char DaysOfWeek;
+        unsigned char Flags;
+        [string] WCHAR *Command;
+    } AT_INFO, *PAT_INFO, *LPAT_INFO;
+
+    typedef struct _AT_ENUM_CONTAINER
+    {
+        DWORD EntriesRead;
+        [size_is(EntriesRead)] LPAT_ENUM Buffer;
+    } AT_ENUM_CONTAINER, *PAT_ENUM_CONTAINER, *LPAT_ENUM_CONTAINER;
+
+    DWORD NetrJobAdd([in,string,unique] ATSVC_HANDLE ServerName,
+                [in] LPAT_INFO pAtInfo, [out] LPDWORD pJobId);
+
+    DWORD NetrJobDel([in,string,unique] ATSVC_HANDLE ServerName,
+                [in] DWORD MinJobId, [in] DWORD MaxJobId);
+
+    DWORD NetrJobEnum([in,string,unique] ATSVC_HANDLE ServerName,
+                [in,out] LPAT_ENUM_CONTAINER pEnumContainer, [in] DWORD PreferredMaximumLength,
+                [out] LPDWORD pTotalEntries, [in,out,unique] LPDWORD pResumeHandle);
+
+    DWORD NetrJobGetInfo([in,string,unique] ATSVC_HANDLE ServerName,
+                [in] DWORD JobId, [out] LPAT_INFO *ppAtInfo);
+}

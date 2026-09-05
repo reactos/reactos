@@ -2,7 +2,6 @@
 spec2def(regapi.dll regapi.spec)
 
 list(APPEND SOURCE
-    main.c
     ${CMAKE_CURRENT_BINARY_DIR}/regapi_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/regapi.def)
 

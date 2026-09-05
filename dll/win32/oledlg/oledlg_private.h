@@ -21,18 +21,18 @@
 #ifndef __OLEDLG_PRIVATE_H__
 #define __OLEDLG_PRIVATE_H__
 
-extern HINSTANCE OLEDLG_hInstance DECLSPEC_HIDDEN;
+extern HINSTANCE OLEDLG_hInstance;
 
-extern UINT cf_embed_source DECLSPEC_HIDDEN;
-extern UINT cf_embedded_object DECLSPEC_HIDDEN;
-extern UINT cf_link_source DECLSPEC_HIDDEN;
-extern UINT cf_object_descriptor DECLSPEC_HIDDEN;
-extern UINT cf_link_src_descriptor DECLSPEC_HIDDEN;
-extern UINT cf_ownerlink DECLSPEC_HIDDEN;
-extern UINT cf_filename DECLSPEC_HIDDEN;
-extern UINT cf_filenamew DECLSPEC_HIDDEN;
+extern UINT cf_embed_source;
+extern UINT cf_embedded_object;
+extern UINT cf_link_source;
+extern UINT cf_object_descriptor;
+extern UINT cf_link_src_descriptor;
+extern UINT cf_ownerlink;
+extern UINT cf_filename;
+extern UINT cf_filenamew;
 
-extern UINT oleui_msg_help DECLSPEC_HIDDEN;
-extern UINT oleui_msg_enddialog DECLSPEC_HIDDEN;
+extern UINT oleui_msg_help;
+extern UINT oleui_msg_enddialog;
 
 #endif /* __OLEDLG_PRIVATE_H__ */
