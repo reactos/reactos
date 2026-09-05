@@ -1,10 +1,9 @@
 <html>
 <head>
+<script src="winetest.js" type="text/javascript"></script>
+</head>
+<head>
 <script>
-function ok(b,m) {
-    return external.ok(b, m);
-}
-
 function broken(expr) {
     return external.broken(expr);
 }
@@ -77,8 +76,8 @@ function test_document_name_as_index() {
     ok("iframeid" in window, "iframeid is not in window");
     e = document.getElementById("iframeid");
     ok(!!e, "e is null");
-    ok(iframeid != e, "iframeid == e");
-    ok(iframeid.frameElement === e, "frameid != e.contentWindow");
+    ok(iframeid === e.contentWindow.self, "frameid != e.contentWindow.self");
+    ok(iframeid.frameElement === e, "frameid.frameElement != e");
 }
 
 function test_remove_style_attribute() {
@@ -354,6 +353,18 @@ function test_text_node() {
     ok(text2.data == "testing", "text2.data = " + text2.data);
 }
 
+function test_xhr() {
+    ok("XMLHttpRequest" in window, "XMLHttpRequest not found in window object\n");
+
+    if (typeof(XMLHttpRequest) != "object") {
+        win_skip("XMLHTTPRequest is not available or disabled");
+        return;
+    }
+
+    var xhr = new XMLHttpRequest();
+    ok(typeof(xhr) === "object", "typeof(xhr) = " + typeof(xhr));
+}
+
 var globalVar = false;
 
 function runTests() {
@@ -379,10 +390,14 @@ function runTests() {
     test_whitespace_nodes();
     test_language_attribute();
     test_text_node();
+    test_xhr();
 
     var r = window.execScript("globalVar = true;");
     ok(r === undefined, "execScript returned " + r);
     ok(globalVar === true, "globalVar = " + globalVar);
+
+    /* Call setTimeout without specified time. */
+    window.setTimeout(function() { external.reportSuccess(); });
 }
 
 function runTest() {
@@ -391,8 +406,6 @@ function runTest() {
     }catch(e) {
         ok(false, "got exception " + e.message);
     }
-
-    external.reportSuccess();
 }
 </script>
 <body onload="runTest();">
