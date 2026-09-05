@@ -88,6 +88,18 @@ RTL_BSD_ITEM_TABLE_ENTRY BsdItemTable[RtlBsdItemMax] =
         FIELD_OFFSET(RTL_BSD_DATA, Checksum),
         sizeof(&DummyBsd->Checksum)
     },  // RtlBsdItemChecksum
+    {
+        FIELD_OFFSET(RTL_BSD_DATA, PowerTransitionExtension),
+        sizeof(&DummyBsd->PowerTransitionExtension)
+    },  // RtlBsdPowerTransitionExtension
+    {
+        FIELD_OFFSET(RTL_BSD_DATA, ItemFeatureConfigState),
+        sizeof(&DummyBsd->ItemFeatureConfigState)
+    },  // RtlBsdItemFeatureConfigurationState
+    {
+        FIELD_OFFSET(RTL_BSD_DATA, ItemRevocationList),
+        sizeof(&DummyBsd->ItemRevocationList)
+    },  // RtlBsdItemRevocationListInfo
 };
 
 /*
