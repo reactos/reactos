@@ -123,14 +123,18 @@ NDIS_STATUS ParaNdis_OnSetPacketFilter(PARANDIS_ADAPTER *pContext, tOidDesc *pOi
         &newValue,
         sizeof(newValue));
 
-    if (newValue & ~PARANDIS_PACKET_FILTERS)
-        status = NDIS_STATUS_INVALID_DATA;
-
     if (status == NDIS_STATUS_SUCCESS)
     {
-        pContext->PacketFilter = newValue;
-        DPrintf(1, ("[%s] PACKET FILTER SET TO %x", __FUNCTION__, pContext->PacketFilter));
-        ParaNdis_UpdateDeviceFilters(pContext);
+        if (newValue & ~PARANDIS_PACKET_FILTERS)
+        {
+            status = NDIS_STATUS_INVALID_DATA;
+        }
+        else
+        {
+            pContext->PacketFilter = newValue;
+            DPrintf(1, ("[%s] PACKET FILTER SET TO %x", __FUNCTION__, pContext->PacketFilter));
+            ParaNdis_UpdateDeviceFilters(pContext);
+        }
     }
     return status;
 }
@@ -651,9 +655,12 @@ NDIS_STATUS ParaNdis_OnSetVlanId(PARANDIS_ADAPTER *pContext, tOidDesc *pOid)
     if (IsVlanSupported(pContext))
     {
         status = ParaNdis_OidSetCopy(pOid, &pContext->VlanId, sizeof(pContext->VlanId));
-        pContext->VlanId &= 0xfff;
-        DPrintf(0, ("[%s] new value %d on MAC %X", __FUNCTION__, pContext->VlanId, pContext->CurrentMacAddress[5]));
-        ParaNdis_DeviceFiltersUpdateVlanId(pContext);
+        if (status == NDIS_STATUS_SUCCESS)
+        {
+            pContext->VlanId &= 0xfff;
+            DPrintf(0, ("[%s] new value %d on MAC %X", __FUNCTION__, pContext->VlanId, pContext->CurrentMacAddress[5]));
+            ParaNdis_DeviceFiltersUpdateVlanId(pContext);
+        }
     }
     return status;
 }
