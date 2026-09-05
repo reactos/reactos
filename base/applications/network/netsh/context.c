@@ -263,7 +263,7 @@ RemoveContextFromStack(
     {
         if (pStackEntry->pContext == pContextEntry)
         {
-            if (pStackEntry == pContextStackHead && pStackEntry == pContextStackHead)
+            if (pStackEntry == pContextStackHead && pStackEntry == pContextStackTail)
             {
                 pContextStackHead = NULL;
                 pContextStackTail = NULL;
