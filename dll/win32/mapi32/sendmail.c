@@ -107,7 +107,7 @@ static ULONG sendmail_extended_mapi(LHANDLE mapi_session, ULONG_PTR uiparam, lpM
     /* Attempt to log on via Extended MAPI */
 
     ret = MAPILogonEx(0, NULL, NULL, MAPI_EXTENDED | MAPI_USE_DEFAULT | MAPI_NEW_SESSION, &session);
-    TRACE("MAPILogonEx: %x\n", ret);
+    TRACE("MAPILogonEx: %lx\n", ret);
 
     if (ret != S_OK)
     {
@@ -361,7 +361,7 @@ static ULONG sendmail_extended_mapi(LHANDLE mapi_session, ULONG_PTR uiparam, lpM
                             size += read;
                         }
 
-                        TRACE("%d bytes written of attachment\n", size);
+                        TRACE("%ld bytes written of attachment\n", size);
 
                         IStream_Commit(stream, STGC_DEFAULT);
                         IStream_Release(stream);
@@ -436,7 +436,7 @@ static ULONG sendmail_extended_mapi(LHANDLE mapi_session, ULONG_PTR uiparam, lpM
                         break;
 
                     default:
-                        TRACE("ShowForm failure: %x\n", ret);
+                        TRACE("ShowForm failure: %lx\n", ret);
                         break;
                 }
             }

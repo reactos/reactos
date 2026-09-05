@@ -548,9 +548,6 @@ static	LRESULT ADPCM_DriverDetails(PACMDRIVERDETAILSW add)
  */
 static	LRESULT	ADPCM_FormatTagDetails(PACMFORMATTAGDETAILSW aftd, DWORD dwQuery)
 {
-    static const WCHAR szPcm[]={'P','C','M',0};
-    static const WCHAR szImaAdPcm[]={'I','M','A',' ','A','D','P','C','M',0};
-
     switch (dwQuery)
     {
     case ACM_FORMATTAGDETAILSF_INDEX:
@@ -572,7 +569,7 @@ static	LRESULT	ADPCM_FormatTagDetails(PACMFORMATTAGDETAILSW aftd, DWORD dwQuery)
 	}
 	break;
     default:
-	WARN("Unsupported query %08x\n", dwQuery);
+	WARN("Unsupported query %08lx\n", dwQuery);
 	return MMSYSERR_NOTSUPPORTED;
     }
 
@@ -583,13 +580,13 @@ static	LRESULT	ADPCM_FormatTagDetails(PACMFORMATTAGDETAILSW aftd, DWORD dwQuery)
 	aftd->dwFormatTag = WAVE_FORMAT_PCM;
 	aftd->cbFormatSize = sizeof(PCMWAVEFORMAT);
 	aftd->cStandardFormats = ARRAY_SIZE(PCM_Formats);
-        lstrcpyW(aftd->szFormatTag, szPcm);
+        lstrcpyW(aftd->szFormatTag, L"PCM");
         break;
     case 1:
 	aftd->dwFormatTag = WAVE_FORMAT_IMA_ADPCM;
 	aftd->cbFormatSize = sizeof(IMAADPCMWAVEFORMAT);
 	aftd->cStandardFormats = ARRAY_SIZE(ADPCM_Formats);
-        lstrcpyW(aftd->szFormatTag, szImaAdPcm);
+        lstrcpyW(aftd->szFormatTag, L"IMA ADPCM");
 	break;
     }
     return MMSYSERR_NOERROR;
@@ -631,12 +628,12 @@ static	LRESULT	ADPCM_FormatDetails(PACMFORMATDETAILSW afd, DWORD dwQuery)
 	    init_wfx_ima_adpcm((IMAADPCMWAVEFORMAT *)afd->pwfx);
 	    break;
 	default:
-            WARN("Unsupported tag %08x\n", afd->dwFormatTag);
+            WARN("Unsupported tag %08lx\n", afd->dwFormatTag);
 	    return MMSYSERR_INVALPARAM;
 	}
 	break;
     default:
-	WARN("Unsupported query %08x\n", dwQuery);
+	WARN("Unsupported query %08lx\n", dwQuery);
 	return MMSYSERR_NOTSUPPORTED;
     }
     afd->fdwSupport = ACMDRIVERDETAILS_SUPPORTF_CODEC;
@@ -880,7 +877,7 @@ static	LRESULT ADPCM_StreamSize(const ACMDRVSTREAMINSTANCE *adsi, PACMDRVSTREAMS
 	}
 	break;
     default:
-	WARN("Unsupported query %08x\n", adss->fdwSize);
+	WARN("Unsupported query %08lx\n", adss->fdwSize);
 	return MMSYSERR_NOTSUPPORTED;
     }
     return MMSYSERR_NOERROR;
@@ -901,7 +898,7 @@ static LRESULT ADPCM_StreamConvert(PACMDRVSTREAMINSTANCE adsi, PACMDRVSTREAMHEAD
 	  ACM_STREAMCONVERTF_END|
 	  ACM_STREAMCONVERTF_START))
     {
-	FIXME("Unsupported fdwConvert (%08x), ignoring it\n", adsh->fdwConvert);
+	FIXME("Unsupported fdwConvert (%08lx), ignoring it\n", adsh->fdwConvert);
     }
     /* ACM_STREAMCONVERTF_BLOCKALIGN
      *	currently all conversions are block aligned, so do nothing for this flag
@@ -926,7 +923,7 @@ static LRESULT ADPCM_StreamConvert(PACMDRVSTREAMINSTANCE adsi, PACMDRVSTREAMHEAD
 LRESULT CALLBACK ADPCM_DriverProc(DWORD_PTR dwDevID, HDRVR hDriv, UINT wMsg,
 					 LPARAM dwParam1, LPARAM dwParam2)
 {
-    TRACE("(%08lx %p %04x %08lx %08lx);\n",
+    TRACE("(%08Ix %p %04x %08Ix %08Ix);\n",
 	  dwDevID, hDriv, wMsg, dwParam1, dwParam2);
 
     switch (wMsg)

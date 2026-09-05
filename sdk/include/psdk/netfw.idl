@@ -434,6 +434,59 @@ interface INetFwRule : IDispatch
 [
    local,
    object,
+   uuid(9C27C8DA-189B-4DDE-89F7-8B39A316782C),
+   dual
+]
+interface INetFwRule2 : INetFwRule
+{
+   [id(19), propget]
+   HRESULT EdgeTraversalOptions( [out, retval] long* lOptions );
+   [id(19), propput]
+   HRESULT EdgeTraversalOptions( [in] long lOptions );
+}
+
+[
+   local,
+   object,
+   uuid(B21563FF-D696-4222-AB46-4E89B73AB34A),
+   dual
+]
+interface INetFwRule3 : INetFwRule2
+{
+   [id(20), propget]
+   HRESULT LocalAppPackageId( [out, retval] BSTR* wszPackageId );
+   [id(20), propput]
+   HRESULT LocalAppPackageId( [in] BSTR wszPackageId );
+
+   [id(21), propget]
+   HRESULT LocalUserOwner( [out, retval] BSTR* wszUserOwner );
+   [id(21), propput]
+   HRESULT LocalUserOwner( [in] BSTR wszUserOwner );
+
+   [id(22), propget]
+   HRESULT LocalUserAuthorizedList( [out, retval] BSTR* wszUserAuthList );
+   [id(22), propput]
+   HRESULT LocalUserAuthorizedList( [in] BSTR wszUserAuthList );
+
+   [id(23), propget]
+   HRESULT RemoteUserAuthorizedList( [out, retval] BSTR* wszUserAuthList );
+   [id(23), propput]
+   HRESULT RemoteUserAuthorizedList( [in] BSTR wszUserAuthList );
+
+   [id(24), propget]
+   HRESULT RemoteMachineAuthorizedList( [out, retval] BSTR* wszUserAuthList );
+   [id(24), propput]
+   HRESULT RemoteMachineAuthorizedList( [in] BSTR wszUserAuthList );
+
+   [id(25), propget]
+   HRESULT SecureFlags( [out, retval] long* lOptions );
+   [id(25), propput]
+   HRESULT SecureFlags( [in] long lOptions );
+}
+
+[
+   local,
+   object,
    uuid(9c4c6277-5027-441e-afae-ca1f542da009),
    dual
 ]
@@ -644,6 +697,51 @@ interface INetFwMgr : IDispatch
 }
 
 [
+    local,
+    object,
+    uuid(71881699-18f4-458b-b892-3ffce5e07f75),
+    dual
+]
+interface INetFwProduct : IDispatch
+{
+    [id(1), propget]
+    HRESULT RuleCategories([out, retval] VARIANT *ruleCategories);
+
+    [id(1), propput]
+    HRESULT RuleCategories([in] VARIANT ruleCategories);
+
+    [id(2), propget]
+    HRESULT DisplayName([out, retval] BSTR *displayName);
+
+    [id(2), propput]
+    HRESULT DisplayName([in] BSTR displayName);
+
+    [id(3), propget]
+    HRESULT PathToSignedProductExe([out, retval] BSTR *path);
+}
+
+[
+    local,
+    object,
+    uuid(39eb36e0-2097-40bd-8af2-63a13b525362),
+    dual
+]
+interface INetFwProducts : IDispatch
+{
+    [id(1), propget]
+    HRESULT Count([out, retval] LONG *count);
+
+    [id(2)]
+    HRESULT Register([in] INetFwProduct *product, [out, retval] IUnknown **registration);
+
+    [id(3)]
+    HRESULT Item([in] LONG index, [out, retval] INetFwProduct **product);
+
+    [id(DISPID_NEWENUM), propget, restricted]
+    HRESULT _NewEnum([out, retval] IUnknown **newEnum);
+}
+
+[
     uuid(DB4F3345-3EF8-45ED-B976-25A6D3B81B71),
     version(1.0)
 ]
@@ -658,10 +756,15 @@ library NetFwPublicTypeLib
     interface INetFwServices;
     interface INetFwAuthorizedApplication;
     interface INetFwAuthorizedApplications;
+    interface INetFwServiceRestriction;
+    interface INetFwRule;
+    interface INetFwRules;
     interface INetFwProfile;
     interface INetFwPolicy;
     interface INetFwPolicy2;
     interface INetFwMgr;
+    interface INetFwProduct;
+    interface INetFwProducts;
 
     [
         uuid(0CA545C6-37AD-4A6C-BF92-9F7610067EF5)
@@ -693,5 +796,29 @@ library NetFwPublicTypeLib
     coclass NetFwPolicy2
     {
         [default] interface INetFwPolicy2;
+    }
+
+    [
+        uuid(2c5bc43e-3369-4c33-ab0c-be9469677af4)
+    ]
+    coclass NetFwRule
+    {
+        [default] interface INetFwRule;
+    }
+
+    [
+        uuid(9d745ed8-c514-4d1d-bf42-751fed2d5ac7)
+    ]
+    coclass NetFwProduct
+    {
+        [default] interface INetFwProduct;
+    }
+
+    [
+        uuid(cc19079b-8272-4d73-bb70-cdb533527b61)
+    ]
+    coclass NetFwProducts
+    {
+        [default] interface INetFwProducts;
     }
 }

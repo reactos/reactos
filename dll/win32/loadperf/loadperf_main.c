@@ -31,24 +31,6 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(loadperf);
 
-BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
-{
-    TRACE("(0x%p, %d, %p)\n",hinstDLL,fdwReason,lpvReserved);
-
-    switch(fdwReason)
-    {
-#ifndef __REACTOS__
-    case DLL_WINE_PREATTACH:
-        return FALSE; /* prefer native version */
-#endif
-    case DLL_PROCESS_ATTACH:
-        DisableThreadLibraryCalls(hinstDLL);
-        break;
-    }
-
-    return TRUE;
-}
-
 static WCHAR *strdupAW(const char *str)
 {
     WCHAR *ret = NULL;
@@ -89,7 +71,7 @@ DWORD WINAPI InstallPerfDllA(LPCSTR computer, LPCSTR ini, ULONG_PTR flags)
  */
 DWORD WINAPI InstallPerfDllW(LPCWSTR computer, LPCWSTR ini, ULONG_PTR flags)
 {
-    FIXME("(%s, %s, %lx)\n", debugstr_w(computer), debugstr_w(ini), flags);
+    FIXME("(%s, %s, %Ix)\n", debugstr_w(computer), debugstr_w(ini), flags);
     return ERROR_SUCCESS;
 }
 

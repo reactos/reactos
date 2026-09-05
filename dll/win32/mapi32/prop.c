@@ -299,7 +299,7 @@ ULONG WINAPI UlPropSize(LPSPropValue lpProp)
  */
 BOOL WINAPI FPropContainsProp(LPSPropValue lpHaystack, LPSPropValue lpNeedle, ULONG ulFuzzy)
 {
-    TRACE("(%p,%p,0x%08x)\n", lpHaystack, lpNeedle, ulFuzzy);
+    TRACE("(%p,%p,0x%08lx)\n", lpHaystack, lpNeedle, ulFuzzy);
 
     if (FBadProp(lpHaystack) || FBadProp(lpNeedle) ||
         PROP_TYPE(lpHaystack->ulPropTag) != PROP_TYPE(lpNeedle->ulPropTag))
@@ -400,7 +400,7 @@ BOOL WINAPI FPropCompareProp(LPSPropValue lpPropLeft, ULONG ulOp, LPSPropValue l
 {
     LONG iCmp;
 
-    TRACE("(%p,%d,%p)\n", lpPropLeft, ulOp, lpPropRight);
+    TRACE("(%p,%ld,%p)\n", lpPropLeft, ulOp, lpPropRight);
 
     if (ulOp > RELOP_RE || FBadProp(lpPropLeft) || FBadProp(lpPropRight))
         return FALSE;
@@ -442,7 +442,7 @@ LONG WINAPI LPropCompareProp(LPSPropValue lpPropLeft, LPSPropValue lpPropRight)
 {
     LONG iRet;
 
-    TRACE("(%p->0x%08x,%p->0x%08x)\n", lpPropLeft, lpPropLeft->ulPropTag,
+    TRACE("(%p->0x%08lx,%p->0x%08lx)\n", lpPropLeft, lpPropLeft->ulPropTag,
           lpPropRight, lpPropRight->ulPropTag);
 
     /* If the properties are not the same, sort by property type */
@@ -514,7 +514,7 @@ LONG WINAPI LPropCompareProp(LPSPropValue lpPropLeft, LPSPropValue lpPropRight)
         return memcmp(lpPropLeft->Value.lpguid, lpPropRight->Value.lpguid,
                       sizeof(GUID));
     }
-    FIXME("Unhandled property type %d\n", PROP_TYPE(lpPropLeft->ulPropTag));
+    FIXME("Unhandled property type %ld\n", PROP_TYPE(lpPropLeft->ulPropTag));
     return 0;
 }
 
@@ -538,7 +538,7 @@ HRESULT WINAPI HrGetOneProp(LPMAPIPROP lpIProp, ULONG ulPropTag, LPSPropValue *l
     ULONG ulCount;
     HRESULT hRet;
 
-    TRACE("(%p,%d,%p)\n", lpIProp, ulPropTag, lppProp);
+    TRACE("(%p,%ld,%p)\n", lpIProp, ulPropTag, lppProp);
 
     pta.cValues = 1u;
     pta.aulPropTag[0] = ulPropTag;
@@ -593,7 +593,7 @@ HRESULT WINAPI HrSetOneProp(LPMAPIPROP lpIProp, LPSPropValue lpProp)
  {
     BOOL bRet = FALSE;
 
-    TRACE("(%p,%d)\n", lpIProp, ulPropTag);
+    TRACE("(%p,%ld)\n", lpIProp, ulPropTag);
 
     if (lpIProp)
     {
@@ -638,7 +638,7 @@ HRESULT WINAPI HrSetOneProp(LPMAPIPROP lpIProp, LPSPropValue lpProp)
  */
 LPSPropValue WINAPI PpropFindProp(LPSPropValue lpProps, ULONG cValues, ULONG ulPropTag)
 {
-    TRACE("(%p,%d,%d)\n", lpProps, cValues, ulPropTag);
+    TRACE("(%p,%ld,%ld)\n", lpProps, cValues, ulPropTag);
 
     if (lpProps && cValues)
     {
@@ -1075,7 +1075,7 @@ SCODE WINAPI ScRelocProps(int cValues, LPSPropValue lpProps, LPVOID lpOld,
  */
 LPSPropValue WINAPI LpValFindProp(ULONG ulPropTag, ULONG cValues, LPSPropValue lpProps)
 {
-    TRACE("(%d,%d,%p)\n", ulPropTag, cValues, lpProps);
+    TRACE("(%ld,%ld,%p)\n", ulPropTag, cValues, lpProps);
 
     if (lpProps && cValues)
     {
@@ -1139,7 +1139,7 @@ BOOL WINAPI FBadRglpszA(LPSTR *lppszStrs, ULONG ulCount)
 {
     ULONG i;
 
-    TRACE("(%p,%d)\n", lppszStrs, ulCount);
+    TRACE("(%p,%ld)\n", lppszStrs, ulCount);
 
     if (!ulCount)
         return FALSE;
@@ -1164,7 +1164,7 @@ BOOL WINAPI FBadRglpszW(LPWSTR *lppszStrs, ULONG ulCount)
 {
     ULONG i;
 
-    TRACE("(%p,%d)\n", lppszStrs, ulCount);
+    TRACE("(%p,%ld)\n", lppszStrs, ulCount);
 
     if (!ulCount)
         return FALSE;
@@ -1220,7 +1220,7 @@ BOOL WINAPI FBadRowSet(LPSRowSet lpRowSet)
  */
 ULONG WINAPI FBadPropTag(ULONG ulPropTag)
 {
-    TRACE("(0x%08x)\n", ulPropTag);
+    TRACE("(0x%08lx)\n", ulPropTag);
 
     switch (ulPropTag & (~MV_FLAG & PROP_TYPE_MASK))
     {
@@ -1532,7 +1532,7 @@ static ULONG WINAPI IPropData_fnAddRef(LPPROPDATA iface)
 {
     IPropDataImpl *This = impl_from_IPropData(iface);
 
-    TRACE("(%p)->(count before=%u)\n", This, This->lRef);
+    TRACE("(%p)->(count before=%lu)\n", This, This->lRef);
 
     return InterlockedIncrement(&This->lRef);
 }
@@ -1548,7 +1548,7 @@ static ULONG WINAPI IPropData_fnRelease(LPPROPDATA iface)
     IPropDataImpl *This = impl_from_IPropData(iface);
     LONG lRef;
 
-    TRACE("(%p)->(count before=%u)\n", This, This->lRef);
+    TRACE("(%p)->(count before=%lu)\n", This, This->lRef);
 
     lRef = InterlockedDecrement(&This->lRef);
     if (!lRef)
@@ -1596,7 +1596,7 @@ static ULONG WINAPI IPropData_fnRelease(LPPROPDATA iface)
 static HRESULT WINAPI IPropData_fnGetLastError(LPPROPDATA iface, HRESULT hRes, ULONG ulFlags,
                                                LPMAPIERROR *lppError)
 {
-    TRACE("(%p,0x%08X,0x%08X,%p)\n", iface, hRes, ulFlags, lppError);
+    TRACE("(%p,0x%08lX,0x%08lX,%p)\n", iface, hRes, ulFlags, lppError);
 
     if (!lppError  || SUCCEEDED(hRes) || (ulFlags & ~MAPI_UNICODE))
         return MAPI_E_INVALID_PARAMETER;
@@ -1620,7 +1620,7 @@ static HRESULT WINAPI IPropData_fnGetLastError(LPPROPDATA iface, HRESULT hRes, U
  */
 static HRESULT WINAPI IPropData_fnSaveChanges(LPPROPDATA iface, ULONG ulFlags)
 {
-    TRACE("(%p,0x%08X)\n", iface, ulFlags);
+    TRACE("(%p,0x%08lX)\n", iface, ulFlags);
 
      /* Since this object is not transacted we do not need to implement this */
      /* FIXME: Should we set the access levels to clean? */
@@ -1658,7 +1658,7 @@ static HRESULT WINAPI IPropData_fnGetProps(LPPROPDATA iface, LPSPropTagArray lpT
     ULONG i;
     HRESULT hRet = S_OK;
 
-    TRACE("(%p,%p,0x%08x,%p,%p) stub\n", iface, lpTags, ulFlags,
+    TRACE("(%p,%p,0x%08lx,%p,%p) stub\n", iface, lpTags, ulFlags,
           lpCount, lppProps);
 
     if (!iface || ulFlags & ~MAPI_UNICODE || !lpTags || *lpCount || !lppProps)
@@ -1724,7 +1724,7 @@ static HRESULT WINAPI IPropData_fnGetPropList(LPPROPDATA iface, ULONG ulFlags,
     ULONG i;
     HRESULT hRet;
 
-    TRACE("(%p,0x%08x,%p) stub\n", iface, ulFlags, lppTags);
+    TRACE("(%p,0x%08lx,%p) stub\n", iface, ulFlags, lppTags);
 
     if (!iface || ulFlags & ~MAPI_UNICODE || !lppTags)
         return MAPI_E_INVALID_PARAMETER;
@@ -1766,7 +1766,7 @@ static HRESULT WINAPI IPropData_fnGetPropList(LPPROPDATA iface, ULONG ulFlags,
 static HRESULT WINAPI IPropData_fnOpenProperty(LPPROPDATA iface, ULONG ulPropTag, LPCIID iid,
                                                ULONG ulOpts, ULONG ulFlags, LPUNKNOWN *lpUnk)
 {
-    FIXME("(%p,%u,%s,%u,0x%08x,%p) stub\n", iface, ulPropTag,
+    FIXME("(%p,%lu,%s,%lu,0x%08lx,%p) stub\n", iface, ulPropTag,
           debugstr_guid(iid), ulOpts, ulFlags, lpUnk);
     return MAPI_E_NO_SUPPORT;
 }
@@ -1795,7 +1795,7 @@ static HRESULT WINAPI IPropData_fnSetProps(LPPROPDATA iface, ULONG ulValues, LPS
     HRESULT hRet = S_OK;
     ULONG i;
 
-    TRACE("(%p,%u,%p,%p)\n", iface, ulValues, lpProps, lppProbs);
+    TRACE("(%p,%lu,%p,%p)\n", iface, ulValues, lpProps, lppProbs);
 
     if (!iface || !lpProps)
       return MAPI_E_INVALID_PARAMETER;
@@ -1963,7 +1963,7 @@ static HRESULT WINAPI IPropData_fnCopyTo(LPPROPDATA iface, ULONG niids, LPCIID l
                                          LPVOID lpDstObj, ULONG ulFlags,
                                          LPSPropProblemArray *lppProbs)
 {
-    FIXME("(%p,%u,%p,%p,%x,%p,%s,%p,0x%08X,%p) stub\n", iface, niids,
+    FIXME("(%p,%lu,%p,%p,%lx,%p,%s,%p,0x%08lX,%p) stub\n", iface, niids,
           lpiidExcl, lpPropsExcl, ulParam, lpIProgress,
           debugstr_guid(lpIfaceIid), lpDstObj, ulFlags, lppProbs);
     return MAPI_E_NO_SUPPORT;
@@ -1982,7 +1982,7 @@ static HRESULT WINAPI IPropData_fnCopyProps(LPPROPDATA iface, LPSPropTagArray lp
                                             LPCIID lpIface, LPVOID lpDstObj, ULONG ulFlags,
                                             LPSPropProblemArray *lppProbs)
 {
-    FIXME("(%p,%p,%x,%p,%s,%p,0x%08X,%p) stub\n", iface, lpInclProps,
+    FIXME("(%p,%p,%lx,%p,%s,%p,0x%08lX,%p) stub\n", iface, lpInclProps,
           ulParam, lpIProgress, debugstr_guid(lpIface), lpDstObj, ulFlags,
           lppProbs);
     return MAPI_E_NO_SUPPORT;
@@ -2015,7 +2015,7 @@ static HRESULT WINAPI IPropData_fnGetNamesFromIDs(LPPROPDATA iface, LPSPropTagAr
                                                   LPGUID iid, ULONG ulFlags, ULONG *lpCount,
                                                   LPMAPINAMEID **lpppNames)
 {
-    FIXME("(%p,%p,%s,0x%08X,%p,%p) stub\n", iface, lppPropTags,
+    FIXME("(%p,%p,%s,0x%08lX,%p,%p) stub\n", iface, lppPropTags,
           debugstr_guid(iid), ulFlags, lpCount, lpppNames);
     return MAPI_E_NO_SUPPORT;
 }
@@ -2045,7 +2045,7 @@ static HRESULT WINAPI IPropData_fnGetIDsFromNames(LPPROPDATA iface, ULONG ulName
                                                   LPMAPINAMEID *lppNames, ULONG ulFlags,
                                                   LPSPropTagArray *lppPropTags)
 {
-    FIXME("(%p,%d,%p,0x%08X,%p) stub\n",
+    FIXME("(%p,%ld,%p,0x%08lX,%p) stub\n",
           iface, ulNames, lppNames, ulFlags, lppPropTags);
     return MAPI_E_NO_SUPPORT;
 }
@@ -2069,7 +2069,7 @@ IPropData_fnHrSetObjAccess(LPPROPDATA iface, ULONG ulAccess)
 {
     IPropDataImpl *This = impl_from_IPropData(iface);
 
-    TRACE("(%p,%x)\n", iface, ulAccess);
+    TRACE("(%p,%lx)\n", iface, ulAccess);
 
     if (!iface || ulAccess < IPROP_READONLY || ulAccess > IPROP_READWRITE)
         return MAPI_E_INVALID_PARAMETER;
@@ -2335,7 +2335,7 @@ SCODE WINAPI CreateIProp(LPCIID iid, ALLOCATEBUFFER *lpAlloc,
         lpPropData->ulObjAccess = IPROP_READWRITE;
         lpPropData->ulNumValues = 0;
         list_init(&lpPropData->values);
-        InitializeCriticalSection(&lpPropData->cs);
+        InitializeCriticalSectionEx(&lpPropData->cs, 0, RTL_CRITICAL_SECTION_FLAG_FORCE_DEBUG_INFO);
         lpPropData->cs.DebugInfo->Spare[0] = (DWORD_PTR)(__FILE__ ": IPropDataImpl.cs");
         *lppPropData = &lpPropData->IPropData_iface;
     }
