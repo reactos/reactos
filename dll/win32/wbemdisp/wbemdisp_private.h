@@ -16,4 +16,5 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-HRESULT SWbemLocator_create(LPVOID *) DECLSPEC_HIDDEN;
+HRESULT SWbemLocator_create(LPVOID *);
+HRESULT SWbemNamedValueSet_create(void **);

@@ -8,8 +8,6 @@
 #define COM_NO_WINDOWS_H
 
 #define COBJMACROS
-#define NONAMELESSUNION
-#define NONAMELESSSTRUCT
 
 #include <ntstatus.h>
 #define WIN32_NO_STATUS
