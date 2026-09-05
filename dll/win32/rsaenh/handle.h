@@ -24,7 +24,7 @@
 #ifndef __WINE_HANDLE_H
 #define __WINE_HANDLE_H
 
-#include <wincrypt.h>
+#include "wincrypt.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -56,15 +56,15 @@ struct handle_table
     CRITICAL_SECTION mutex;
 };
 
-void init_handle_table   (struct handle_table *lpTable) DECLSPEC_HIDDEN;
-void destroy_handle_table(struct handle_table *lpTable) DECLSPEC_HIDDEN;
-BOOL release_handle      (struct handle_table *lpTable, HCRYPTKEY handle, DWORD dwType) DECLSPEC_HIDDEN;
-BOOL copy_handle         (struct handle_table *lpTable, HCRYPTKEY handle, DWORD dwType, HCRYPTKEY *copy) DECLSPEC_HIDDEN;
-BOOL lookup_handle       (struct handle_table *lpTable, HCRYPTKEY handle, DWORD dwType, OBJECTHDR **lplpObject) DECLSPEC_HIDDEN;
-BOOL is_valid_handle     (struct handle_table *lpTable, HCRYPTKEY handle, DWORD dwType) DECLSPEC_HIDDEN;
+void init_handle_table   (struct handle_table *lpTable);
+void destroy_handle_table(struct handle_table *lpTable);
+BOOL release_handle      (struct handle_table *lpTable, HCRYPTKEY handle, DWORD dwType);
+BOOL copy_handle         (struct handle_table *lpTable, HCRYPTKEY handle, DWORD dwType, HCRYPTKEY *copy);
+BOOL lookup_handle       (struct handle_table *lpTable, HCRYPTKEY handle, DWORD dwType, OBJECTHDR **lplpObject);
+BOOL is_valid_handle     (struct handle_table *lpTable, HCRYPTKEY handle, DWORD dwType);
 
 HCRYPTKEY new_object     (struct handle_table *lpTable, size_t cbSize, DWORD dwType, DESTRUCTOR destructor,
-                           OBJECTHDR **ppObject) DECLSPEC_HIDDEN;
+                           OBJECTHDR **ppObject);
         
 #ifdef __cplusplus
 }
