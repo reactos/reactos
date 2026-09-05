@@ -78,38 +78,108 @@ VOID ConInKey(PINPUT_RECORD lpBuffer)
     while (TRUE);
 }
 
-VOID ConInString(LPWSTR lpInput, DWORD dwLength)
+static
+BOOL
+ConInHandleFullBuffer(
+    _In_ HANDLE hFile,
+    _In_reads_(Length) PCHAR Buffer,
+    _In_ DWORD Length)
 {
-    DWORD dwOldMode;
+    DWORD dwDiscarded;
+    PCHAR pCr;
+    PCHAR pLf;
+    CHAR ch;
+
+    pCr = memchr(Buffer, '\r', Length);
+    pLf = memchr(Buffer, '\n', Length);
+
+    if (pCr || pLf)
+    {
+        if (pCr == Buffer + Length - 1)
+        {
+            /* The CR exactly filled the buffer; consume its trailing LF. */
+            ReadFile(hFile, &ch, 1, &dwDiscarded, NULL);
+        }
+
+        return FALSE;
+    }
+
+    if (!ReadFile(hFile, &ch, 1, &dwDiscarded, NULL) || !dwDiscarded)
+        return FALSE;
+
+    if (ch == '\r')
+    {
+        /* Consume the LF from the normal CR/LF line ending. */
+        ReadFile(hFile, &ch, 1, &dwDiscarded, NULL);
+        return FALSE;
+    }
+
+    if (ch == '\n')
+        return FALSE;
+
+    do
+    {
+        if (!ReadFile(hFile, &ch, 1, &dwDiscarded, NULL) || !dwDiscarded)
+            break;
+    }
+    while (ch != '\n');
+
+    return TRUE;
+}
+
+BOOL ConInString(LPWSTR lpInput, DWORD dwLength)
+{
+    DWORD dwOldMode = 0;
     DWORD dwRead = 0;
     HANDLE hFile;
+    BOOL bConsole;
+    BOOL bSuccess;
+    BOOL bTruncated = FALSE;
 
     LPWSTR p;
     PCHAR pBuf;
 
-    pBuf = (PCHAR)cmd_alloc(dwLength - 1);
+    if (!lpInput || dwLength < 2)
+        return FALSE;
 
     ZeroMemory(lpInput, dwLength * sizeof(WCHAR));
+
+    pBuf = (PCHAR)cmd_alloc(dwLength - 1);
+    if (!pBuf)
+        return FALSE;
     hFile = GetStdHandle(STD_INPUT_HANDLE);
-    GetConsoleMode(hFile, &dwOldMode);
+    bConsole = GetConsoleMode(hFile, &dwOldMode);
 
-    SetConsoleMode(hFile, ENABLE_PROCESSED_INPUT | ENABLE_LINE_INPUT | ENABLE_ECHO_INPUT);
+    if (bConsole)
+        SetConsoleMode(hFile, ENABLE_PROCESSED_INPUT | ENABLE_LINE_INPUT | ENABLE_ECHO_INPUT);
 
-    ReadFile(hFile, (PVOID)pBuf, dwLength - 1, &dwRead, NULL);
+    bSuccess = ReadFile(hFile, (PVOID)pBuf, dwLength - 1, &dwRead, NULL);
 
-    MultiByteToWideChar(InputCodePage, 0, pBuf, dwRead, lpInput, dwLength - 1);
+    /*
+     * A full buffer may end exactly at the line terminator or may contain
+     * only the first chunk of a longer line. Drain the logical line here so
+     * callers that retry do not see each remaining chunk as a new entry.
+     */
+    if (bSuccess && dwRead == dwLength - 1)
+        bTruncated = ConInHandleFullBuffer(hFile, pBuf, dwRead);
+
+    if (bSuccess)
+        MultiByteToWideChar(InputCodePage, 0, pBuf, dwRead, lpInput, dwLength - 1);
     cmd_free(pBuf);
 
     for (p = lpInput; *p; p++)
     {
-        if (*p == L'\r') // Terminate at the carriage-return.
+        if (*p == L'\r' || *p == L'\n')
         {
             *p = L'\0';
             break;
         }
     }
 
-    SetConsoleMode(hFile, dwOldMode);
+    if (bConsole)
+        SetConsoleMode(hFile, dwOldMode);
+
+    return !bTruncated;
 }
 
 

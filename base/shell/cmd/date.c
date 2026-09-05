@@ -179,6 +179,7 @@ INT cmd_date(LPTSTR param)
     INT argc;
     INT i;
     BOOL bPrompt = TRUE;
+    BOOL bLineComplete;
     INT nDateString = -1;
     TCHAR szDate[40];
 
@@ -220,14 +221,14 @@ INT cmd_date(LPTSTR param)
         if (nDateString == -1)
         {
             PromptDateString();
-            ConInString(szDate, ARRAYSIZE(szDate));
+            bLineComplete = ConInString(szDate, ARRAYSIZE(szDate));
 
             TRACE("\'%s\'\n", debugstr_aw(szDate));
 
             while (*szDate && szDate[_tcslen(szDate) - 1] < _T(' '))
                 szDate[_tcslen(szDate) - 1] = _T('\0');
 
-            if (ParseDate(szDate))
+            if (bLineComplete && ParseDate(szDate))
             {
                 freep(arg);
                 return 0;
