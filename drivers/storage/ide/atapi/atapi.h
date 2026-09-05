@@ -905,6 +905,10 @@ AtaDeviceQueueEvent(
 /* satl.c *********************************************************************/
 
 BOOLEAN
+AtaDevCanUseDsmTrim(
+    _In_ PATAPORT_DEVICE_EXTENSION DevExt);
+
+BOOLEAN
 AtaReqDmaTransferToPioTransfer(
     _In_ PATA_DEVICE_REQUEST Request);
 
