@@ -116,7 +116,7 @@ IopArbBusNumberInitialize(VOID)
                                           NULL);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("IopArbBusNumberInitialize: Failed with %X", Status);
+        DPRINT1("IopArbBusNumberInitialize: Failed with %X\n", Status);
     }
 
     return Status;
