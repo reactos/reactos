@@ -391,7 +391,7 @@ PciQueryId(IN PPCI_PDO_EXTENSION DeviceExtension,
     if (!StringBuffer) return STATUS_INSUFFICIENT_RESOURCES;
 
     /* Build the UNICODE_STRING structure for it */
-    DPRINT1("PciQueryId(%d)\n", QueryType);
+    DPRINT("PciQueryId(%d)\n", QueryType);
     DestinationString.Buffer = StringBuffer;
     DestinationString.MaximumLength = IdBuffer.TotalLength;
 
@@ -400,7 +400,7 @@ PciQueryId(IN PPCI_PDO_EXTENSION DeviceExtension,
     {
         /* Select the ANSI_STRING for the ID */
         NextString = &IdBuffer.Strings[i];
-        DPRINT1("    <- \"%s\"\n", NextString->Buffer);
+        DPRINT("    <- \"%s\"\n", NextString->Buffer);
 
         /* Convert it to a UNICODE_STRING */
         Status = RtlAnsiStringToUnicodeString(&DestinationString, NextString, FALSE);
