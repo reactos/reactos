@@ -64,6 +64,7 @@ static const WCHAR wszDevicesKey[] = L"Software\\Microsoft\\Windows NT\\CurrentV
 static const WCHAR wszPrinterPortsKey[] = L"Software\\Microsoft\\Windows NT\\CurrentVersion\\PrinterPorts";
 static const WCHAR wszWinspoolPrefix[] = L"winspool,";
 static const WCHAR wszPortTimeouts[] = L",15,45";
+static const WCHAR wszDevicesSection[] = L"Devices";
 
 static DWORD
 _StartDocPrinterSpooled(PSPOOLER_HANDLE pHandle, PDOC_INFO_1W pDocInfo1, PADDJOB_INFO_1W pAddJobInfo1)
@@ -297,6 +298,28 @@ _UpdatePerUserPrinterEntries(PCWSTR pwszPrinterName, PCWSTR pwszPortName, BOOL b
 }
 
 /**
+ * @name _BroadcastPrinterChange
+ *
+ * Lets the applications of this session refresh their printer list. The
+ * spooler is a service and cannot reach those windows from its own session.
+ * Both messages carry a string, so they are sent and not posted.
+ */
+static VOID
+_BroadcastPrinterChange(PCWSTR pwszPrinterName)
+{
+    DWORD_PTR dwResult;
+
+    if (pwszPrinterName)
+    {
+        SendMessageTimeoutW(HWND_BROADCAST, WM_DEVMODECHANGE, 0, (LPARAM)pwszPrinterName,
+                            SMTO_ABORTIFHUNG, 1000, &dwResult);
+    }
+
+    SendMessageTimeoutW(HWND_BROADCAST, WM_WININICHANGE, 0, (LPARAM)wszDevicesSection,
+                        SMTO_ABORTIFHUNG, 1000, &dwResult);
+}
+
+/**
  * The string members of PRINTER_INFO_2A and PRINTER_INFO_2W sit at identical
  * offsets, so one table can drive the ANSI -> Unicode conversion of all of them.
  */
@@ -496,6 +519,8 @@ AddPrinterW(PWSTR pName, DWORD Level, PBYTE pPrinter)
         // through the legacy win.ini sections and picked as the default one.
         _UpdatePerUserPrinterEntries(((PPRINTER_INFO_2W)pPrinter)->pPrinterName,
                                      ((PPRINTER_INFO_2W)pPrinter)->pPortName, TRUE);
+
+        _BroadcastPrinterChange(((PPRINTER_INFO_2W)pPrinter)->pPrinterName);
     }
 
 Cleanup:
@@ -589,7 +614,10 @@ DeletePrinter(HANDLE hPrinter)
     RpcEndExcept;
 
     if (dwErrorCode == ERROR_SUCCESS && pPrinterInfo)
+    {
         _UpdatePerUserPrinterEntries(pPrinterInfo->pPrinterName, NULL, FALSE);
+        _BroadcastPrinterChange(pPrinterInfo->pPrinterName);
+    }
 
 Cleanup:
     if (pPrinterInfo)
@@ -3665,6 +3693,11 @@ SetPrinterW(HANDLE hPrinter, DWORD Level, PBYTE pPrinter, DWORD Command)
     RpcEndExcept;
 
     if ( sd ) HeapFree( GetProcessHeap(), 0, sd );
+
+    // A pure Command call only pauses or resumes the queue. Level 2 is the
+    // only level here that carries the name along.
+    if (dwErrorCode == ERROR_SUCCESS && Level != 0)
+        _BroadcastPrinterChange(Level == 2 ? ((PPRINTER_INFO_2W)pPrinter)->pPrinterName : NULL);
 
     SetLastError(dwErrorCode);
     return (dwErrorCode == ERROR_SUCCESS);
