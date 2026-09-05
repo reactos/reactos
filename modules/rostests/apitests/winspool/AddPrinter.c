@@ -11,6 +11,7 @@
 #include <windef.h>
 #include <winbase.h>
 #include <wingdi.h>
+#include <winuser.h>
 #include <winspool.h>
 #include <stdio.h>
 #include <strsafe.h>
@@ -107,6 +108,45 @@ Test_AddPrinter_InvalidParameters(void)
     ok(GetLastError() == ERROR_INVALID_HANDLE, "DeletePrinter returns error %lu!\n", GetLastError());
 }
 
+/* Changing the printers has to reach this session, or application lists go stale. */
+static UINT g_uLastBroadcast;
+static WCHAR g_wszLastDevice[MAX_PATH];
+
+static LRESULT CALLBACK
+BroadcastWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
+{
+    if (message == WM_DEVMODECHANGE || message == WM_WININICHANGE)
+    {
+        g_uLastBroadcast = message;
+
+        if (lParam)
+            StringCchCopyW(g_wszLastDevice, _countof(g_wszLastDevice), (PCWSTR)lParam);
+        else
+            g_wszLastDevice[0] = 0;
+    }
+
+    return DefWindowProcW(hWnd, message, wParam, lParam);
+}
+
+static HWND
+CreateBroadcastListener(VOID)
+{
+    WNDCLASSEXW wc;
+
+    ZeroMemory(&wc, sizeof(wc));
+    wc.cbSize = sizeof(wc);
+    wc.lpfnWndProc = BroadcastWndProc;
+    wc.hInstance = GetModuleHandleW(NULL);
+    wc.lpszClassName = L"AddPrinterBroadcastListener";
+
+    if (!RegisterClassExW(&wc))
+        return NULL;
+
+    /* HWND_BROADCAST only reaches top-level windows. */
+    return CreateWindowExW(0, wc.lpszClassName, L"", WS_OVERLAPPED,
+                           0, 0, 0, 0, NULL, NULL, wc.hInstance, NULL);
+}
+
 #define TEST_DRIVER_NAMEW   L"ReactOS AddPrinter Test Driver"
 
 /**
@@ -123,6 +163,7 @@ Test_AddPrinter_Cycle(void)
     DWORD dwReturned;
     DWORD i;
     HANDLE hPrinter = NULL;
+    HWND hwndListener;
     PPRINTER_INFO_2W pPrinterInfo = NULL;
     PRINTER_INFO_2W pi2;
     WCHAR wszConfigFile[MAX_PATH];
@@ -170,6 +211,9 @@ Test_AddPrinter_Cycle(void)
     pi2.pParameters = L"";
 
     SetLastError(0xDEADBEEF);
+    hwndListener = CreateBroadcastListener();
+
+    g_uLastBroadcast = 0;
     hPrinter = AddPrinterW(NULL, 2, (PBYTE)&pi2);
     ok(hPrinter != NULL, "AddPrinterW failed with error %lu!\n", GetLastError());
 
@@ -204,10 +248,23 @@ Test_AddPrinter_Cycle(void)
 
     ok(bFound, "The added printer was not returned by EnumPrintersW!\n");
 
+    if (hwndListener)
+    {
+        ok(g_uLastBroadcast != 0, "AddPrinterW broadcast nothing!\n");
+    }
+
     // Changing the printer has to work as well.
     pi2.pComment = L"Changed by winspool_apitest";
     SetLastError(0xDEADBEEF);
+    g_uLastBroadcast = 0;
     ok(SetPrinterW(hPrinter, 2, (PBYTE)&pi2, 0), "SetPrinterW failed with error %lu!\n", GetLastError());
+
+    if (hwndListener)
+    {
+        ok(g_uLastBroadcast != 0, "SetPrinterW broadcast nothing!\n");
+        ok(!wcscmp(g_wszLastDevice, TEST_PRINTER_NAMEW) || g_uLastBroadcast == WM_WININICHANGE,
+           "SetPrinterW broadcast for \"%S\"!\n", g_wszLastDevice);
+    }
 
     SetLastError(0xDEADBEEF);
     ok(SetPrinterW(hPrinter, 0, NULL, PRINTER_CONTROL_PAUSE), "SetPrinterW(PAUSE) failed with error %lu!\n", GetLastError());
@@ -217,8 +274,15 @@ Test_AddPrinter_Cycle(void)
 
     // Now delete it again.
     SetLastError(0xDEADBEEF);
+    g_uLastBroadcast = 0;
     ok(DeletePrinter(hPrinter), "DeletePrinter failed with error %lu!\n", GetLastError());
     ClosePrinter(hPrinter);
+
+    if (hwndListener)
+    {
+        ok(g_uLastBroadcast != 0, "DeletePrinter broadcast nothing!\n");
+        DestroyWindow(hwndListener);
+    }
 
     // ...and it must be gone.
     bFound = FALSE;
