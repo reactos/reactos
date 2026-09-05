@@ -176,7 +176,7 @@ ENDFUNC
 PUBLIC KiDebugTrapOrFault
 FUNC KiDebugTrapOrFault
     /* Push pseudo error code */
-    EnterTrap TF_SAVE_ALL
+    EnterTrap (TF_SAVE_ALL OR TF_DEBUG)
 
     /* Check if the frame was from kernelmode */
     test word ptr [rbp + KTRAP_FRAME_SegCs], 3
@@ -190,7 +190,7 @@ KiDebugTrapOrFaultKMode:
     DispatchException STATUS_SINGLE_STEP, 0, 0, 0, 0
 
     /* Return */
-    ExitTrap TF_SAVE_ALL
+    ExitTrap (TF_SAVE_ALL OR TF_DEBUG)
 ENDFUNC
 
 EXTERN KiNmiInterruptHandler:PROC
