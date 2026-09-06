@@ -26,8 +26,6 @@
 #endif
 
 #define COBJMACROS
-#define NONAMELESSUNION
-#define NONAMELESSSTRUCT
 
 #include "windef.h"
 #include "winbase.h"
@@ -89,7 +87,7 @@ static ULONG WINAPI IAssemblyEnumImpl_AddRef(IAssemblyEnum *iface)
     IAssemblyEnumImpl *This = impl_from_IAssemblyEnum(iface);
     ULONG refCount = InterlockedIncrement(&This->ref);
 
-    TRACE("(%p)->(ref before = %u)\n", This, refCount - 1);
+    TRACE("(%p)->(ref before = %lu)\n", This, refCount - 1);
 
     return refCount;
 }
@@ -100,7 +98,7 @@ static ULONG WINAPI IAssemblyEnumImpl_Release(IAssemblyEnum *iface)
     ULONG refCount = InterlockedDecrement(&This->ref);
     struct list *item, *cursor;
 
-    TRACE("(%p)->(ref before = %u)\n", This, refCount + 1);
+    TRACE("(%p)->(ref before = %lu)\n", This, refCount + 1);
 
     if (!refCount)
     {
@@ -110,10 +108,10 @@ static ULONG WINAPI IAssemblyEnumImpl_Release(IAssemblyEnum *iface)
 
             list_remove(&asmname->entry);
             IAssemblyName_Release(asmname->name);
-            heap_free(asmname);
+            free(asmname);
         }
 
-        heap_free(This);
+        free(This);
     }
 
     return refCount;
@@ -127,7 +125,7 @@ static HRESULT WINAPI IAssemblyEnumImpl_GetNextAssembly(IAssemblyEnum *iface,
     IAssemblyEnumImpl *asmenum = impl_from_IAssemblyEnum(iface);
     ASMNAME *asmname;
 
-    TRACE("(%p, %p, %p, %d)\n", iface, pvReserved, ppName, dwFlags);
+    TRACE("(%p, %p, %p, %ld)\n", iface, pvReserved, ppName, dwFlags);
 
     if (!ppName)
         return E_INVALIDARG;
@@ -191,9 +189,9 @@ static void build_file_mask(IAssemblyName *name, int depth, const WCHAR *path,
     if (!name)
     {
         if (prefix && depth == 1)
-            swprintf(buf, star_prefix_fmt, path, prefix);
+            swprintf(buf, MAX_PATH, star_prefix_fmt, path, prefix);
         else
-            swprintf(buf, star_fmt, path);
+            swprintf(buf, MAX_PATH, star_fmt, path);
         return;
     }
     if (depth == 0)
@@ -202,9 +200,9 @@ static void build_file_mask(IAssemblyName *name, int depth, const WCHAR *path,
         *disp = '\0';
         hr = IAssemblyName_GetName(name, &size, disp);
         if (SUCCEEDED(hr))
-            swprintf(buf, ss_fmt, path, disp);
+            swprintf(buf, MAX_PATH, ss_fmt, path, disp);
         else
-            swprintf(buf, ss_fmt, path, star);
+            swprintf(buf, MAX_PATH, ss_fmt, path, star);
     }
     else if (depth == 1)
     {
@@ -223,7 +221,7 @@ static void build_file_mask(IAssemblyName *name, int depth, const WCHAR *path,
         if (!major_size || !minor_size || !build_size || !revision_size) verptr = star;
         else
         {
-            swprintf(version, ver_fmt, major, minor, build, revision);
+            swprintf(version, ARRAY_SIZE(version), ver_fmt, major, minor, build, revision);
             verptr = version;
         }
 
@@ -238,9 +236,9 @@ static void build_file_mask(IAssemblyName *name, int depth, const WCHAR *path,
         }
 
         if (prefix)
-            swprintf(buf, ssss_fmt, path, prefix, verptr, pubkeyptr);
+            swprintf(buf, MAX_PATH, ssss_fmt, path, prefix, verptr, pubkeyptr);
         else
-            swprintf(buf, sss_fmt, path, verptr, pubkeyptr);
+            swprintf(buf, MAX_PATH, sss_fmt, path, verptr, pubkeyptr);
     }
 }
 
@@ -345,7 +343,7 @@ static HRESULT enum_gac_assemblies(struct list *assemblies, IAssemblyName *name,
         {
             const WCHAR *token, *version = ffd.cFileName;
 
-            swprintf(asmpath, path_fmt, path, ffd.cFileName, parent);
+            swprintf(asmpath, ARRAY_SIZE(asmpath), path_fmt, path, ffd.cFileName, parent);
             ptr = wcsstr(ffd.cFileName, dblunder);
             *ptr = '\0';
             token = ptr + 2;
@@ -354,12 +352,12 @@ static HRESULT enum_gac_assemblies(struct list *assemblies, IAssemblyName *name,
             {
                 unsigned int prefix_len = lstrlenW(prefix);
                 if (lstrlenW(ffd.cFileName) >= prefix_len &&
-                    !_wcsnicmp(ffd.cFileName, prefix, prefix_len))
+                    !wcsnicmp(ffd.cFileName, prefix, prefix_len))
                     version += prefix_len;
             }
-            swprintf(disp, name_fmt, parent, version, token);
+            swprintf(disp, ARRAY_SIZE(disp), name_fmt, parent, version, token);
 
-            if (!(asmname = heap_alloc(sizeof(*asmname))))
+            if (!(asmname = malloc(sizeof(*asmname))))
             {
                 hr = E_OUTOFMEMORY;
                 break;
@@ -369,7 +367,7 @@ static HRESULT enum_gac_assemblies(struct list *assemblies, IAssemblyName *name,
                                           CANOF_PARSE_DISPLAY_NAME, NULL);
             if (FAILED(hr))
             {
-                heap_free(asmname);
+                free(asmname);
                 break;
             }
 
@@ -377,7 +375,7 @@ static HRESULT enum_gac_assemblies(struct list *assemblies, IAssemblyName *name,
             if (FAILED(hr))
             {
                 IAssemblyName_Release(asmname->name);
-                heap_free(asmname);
+                free(asmname);
                 break;
             }
 
@@ -385,7 +383,7 @@ static HRESULT enum_gac_assemblies(struct list *assemblies, IAssemblyName *name,
             continue;
         }
 
-        swprintf(buf, ss_fmt, path, ffd.cFileName);
+        swprintf(buf, ARRAY_SIZE(buf), ss_fmt, path, ffd.cFileName);
         hr = enum_gac_assemblies(assemblies, name, depth + 1, prefix, buf);
         if (FAILED(hr))
             break;
@@ -414,7 +412,7 @@ static HRESULT enumerate_gac(IAssemblyEnumImpl *asmenum, IAssemblyName *pName)
 
     lstrcpyW(path, buf);
     GetNativeSystemInfo(&info);
-    if (info.u.s.wProcessorArchitecture == PROCESSOR_ARCHITECTURE_AMD64)
+    if (info.wProcessorArchitecture == PROCESSOR_ARCHITECTURE_AMD64)
     {
         lstrcpyW(path + size - 1, gac_64);
         hr = enum_gac_assemblies(&asmenum->assemblies, pName, 0, v40, path);
@@ -437,7 +435,7 @@ static HRESULT enumerate_gac(IAssemblyEnumImpl *asmenum, IAssemblyName *pName)
         return hr;
 
     lstrcpyW(path, buf);
-    if (info.u.s.wProcessorArchitecture == PROCESSOR_ARCHITECTURE_AMD64)
+    if (info.wProcessorArchitecture == PROCESSOR_ARCHITECTURE_AMD64)
     {
         lstrcpyW(path + size - 1, gac_64);
         hr = enum_gac_assemblies(&asmenum->assemblies, pName, 0, NULL, path);
@@ -471,7 +469,7 @@ HRESULT WINAPI CreateAssemblyEnum(IAssemblyEnum **pEnum, IUnknown *pUnkReserved,
     IAssemblyEnumImpl *asmenum;
     HRESULT hr;
 
-    TRACE("(%p, %p, %p, %08x, %p)\n", pEnum, pUnkReserved,
+    TRACE("(%p, %p, %p, %08lx, %p)\n", pEnum, pUnkReserved,
           pName, dwFlags, pvReserved);
 
     if (!pEnum)
@@ -480,7 +478,7 @@ HRESULT WINAPI CreateAssemblyEnum(IAssemblyEnum **pEnum, IUnknown *pUnkReserved,
     if (dwFlags == 0 || dwFlags == ASM_CACHE_ROOT)
         return E_INVALIDARG;
 
-    if (!(asmenum = heap_alloc(sizeof(*asmenum)))) return E_OUTOFMEMORY;
+    if (!(asmenum = malloc(sizeof(*asmenum)))) return E_OUTOFMEMORY;
 
     asmenum->IAssemblyEnum_iface.lpVtbl = &AssemblyEnumVtbl;
     asmenum->ref = 1;
@@ -491,7 +489,7 @@ HRESULT WINAPI CreateAssemblyEnum(IAssemblyEnum **pEnum, IUnknown *pUnkReserved,
         hr = enumerate_gac(asmenum, pName);
         if (FAILED(hr))
         {
-            heap_free(asmenum);
+            free(asmenum);
             return hr;
         }
     }
