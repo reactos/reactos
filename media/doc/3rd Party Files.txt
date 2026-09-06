@@ -291,6 +291,12 @@ Used Version: schily-2017-09-07
 License: CDDL-1.0 (https://spdx.org/licenses/CDDL-1.0.html)
 URL: https://sourceforge.net/projects/schilytools/
 
+Title: GNU Binutils, windmc
+Path: sdk/tools/windmc
+Used Version: 2.46 (tag binutils-2_46)
+License: GPL-3.0-or-later (https://spdx.org/licenses/GPL-3.0-or-later.html)
+URL: https://www.gnu.org/software/binutils/
+
 Title: AMD LibM for Windows
 Path: sdk/lib/crt/math/libm_sse2
 Used Version: git commit 6121d02
