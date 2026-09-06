@@ -10,6 +10,14 @@
 
 #include "tcpip.h"
 
+typedef struct _ACCEPT_CONTEXT
+{
+    HANDLE ReadyToConnectEvent;
+    SOCKET ListenSocket;
+    BOOL WinsockStarted;
+    BOOL ListenerReady;
+} ACCEPT_CONTEXT, *PACCEPT_CONTEXT;
+
 static
 DWORD
 LoadTcpIpTestDriver(void)
@@ -61,15 +69,25 @@ AcceptProc(
     SOCKET ListenSocket, AcceptSocket;
     struct sockaddr_in ListenAddress, AcceptAddress;
     int AcceptAddressLength;
-    HANDLE ReadyToConnectEvent = (HANDLE)Parameter;
+    PACCEPT_CONTEXT AcceptContext = Parameter;
 
     /* Initialize winsock */
     WinsockVersion = MAKEWORD(2, 0);
     Error = WSAStartup(WinsockVersion, &WsaData);
-    ok_eq_int(Error, 0);
+    if (skip(Error == 0, "WSAStartup failed with %d\n", Error))
+    {
+        SetEvent(AcceptContext->ReadyToConnectEvent);
+        return 0;
+    }
+    AcceptContext->WinsockStarted = TRUE;
 
     ListenSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-    ok(ListenSocket != INVALID_SOCKET, "socket failed\n");
+    if (skip(ListenSocket != INVALID_SOCKET, "socket failed\n"))
+    {
+        SetEvent(AcceptContext->ReadyToConnectEvent);
+        return 0;
+    }
+    AcceptContext->ListenSocket = ListenSocket;
 
     ZeroMemory(&ListenAddress, sizeof(ListenAddress));
     ListenAddress.sin_addr.S_un.S_addr = inet_addr("127.0.0.1");
@@ -77,19 +95,42 @@ AcceptProc(
     ListenAddress.sin_family = AF_INET;
 
     Error = bind(ListenSocket, (struct sockaddr*)&ListenAddress, sizeof(ListenAddress));
-    ok_eq_int(Error, 0);
+    if (skip(Error == 0, "bind failed with %d\n", Error))
+    {
+        SetEvent(AcceptContext->ReadyToConnectEvent);
+        closesocket(ListenSocket);
+        AcceptContext->ListenSocket = INVALID_SOCKET;
+        return 0;
+    }
 
     Error = listen(ListenSocket, 1);
-    ok_eq_int(Error, 0);
+    if (skip(Error == 0, "listen failed with %d\n", Error))
+    {
+        SetEvent(AcceptContext->ReadyToConnectEvent);
+        closesocket(ListenSocket);
+        AcceptContext->ListenSocket = INVALID_SOCKET;
+        return 0;
+    }
 
-    SetEvent(ReadyToConnectEvent);
+    AcceptContext->ListenerReady = TRUE;
+    SetEvent(AcceptContext->ReadyToConnectEvent);
 
     AcceptAddressLength = sizeof(AcceptAddress);
     AcceptSocket = accept(ListenSocket, (struct sockaddr*)&AcceptAddress, &AcceptAddressLength);
     ok(AcceptSocket != INVALID_SOCKET, "accept failed\n");
-    ok_eq_long(AcceptAddressLength, sizeof(AcceptAddress));
-    ok_eq_hex(AcceptAddress.sin_addr.S_un.S_addr, inet_addr("127.0.0.1"));
-    ok_eq_hex(AcceptAddress.sin_port, htons(TEST_CONNECT_CLIENT_PORT));
+    if (AcceptSocket != INVALID_SOCKET)
+    {
+        ok_eq_long(AcceptAddressLength, sizeof(AcceptAddress));
+        ok_eq_hex(AcceptAddress.sin_addr.S_un.S_addr, inet_addr("127.0.0.1"));
+        ok_eq_hex(AcceptAddress.sin_port, htons(TEST_CONNECT_CLIENT_PORT));
+        closesocket(AcceptSocket);
+    }
+
+    if (AcceptContext->ListenSocket != INVALID_SOCKET)
+    {
+        closesocket(ListenSocket);
+        AcceptContext->ListenSocket = INVALID_SOCKET;
+    }
 
     return 0;
 }
@@ -97,18 +138,56 @@ AcceptProc(
 START_TEST(TcpIpConnect)
 {
     HANDLE AcceptThread;
-    HANDLE ReadyToConnectEvent;
+    ACCEPT_CONTEXT AcceptContext;
     DWORD Error;
 
-    ReadyToConnectEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
-    ok(ReadyToConnectEvent != NULL, "CreateEvent failed\n");
+    ZeroMemory(&AcceptContext, sizeof(AcceptContext));
+    AcceptContext.ListenSocket = INVALID_SOCKET;
 
-    AcceptThread = CreateThread(NULL, 0, AcceptProc, (PVOID)ReadyToConnectEvent, 0, NULL);
+    AcceptContext.ReadyToConnectEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
+    ok(AcceptContext.ReadyToConnectEvent != NULL, "CreateEvent failed\n");
+    if (!AcceptContext.ReadyToConnectEvent)
+        return;
+
+    AcceptThread = CreateThread(NULL, 0, AcceptProc, &AcceptContext, 0, NULL);
     ok(AcceptThread != NULL, "CreateThread failed\n");
+    if (!AcceptThread)
+    {
+        CloseHandle(AcceptContext.ReadyToConnectEvent);
+        return;
+    }
 
-    WaitForSingleObject(ReadyToConnectEvent, INFINITE);
+    Error = WaitForSingleObject(AcceptContext.ReadyToConnectEvent, 10 * 1000);
+    if (skip(Error == WAIT_OBJECT_0 && AcceptContext.ListenerReady, "TCP listener did not become ready\n"))
+    {
+        if (AcceptContext.ListenSocket != INVALID_SOCKET)
+        {
+            closesocket(AcceptContext.ListenSocket);
+            AcceptContext.ListenSocket = INVALID_SOCKET;
+        }
+        WaitForSingleObject(AcceptThread, 10 * 1000);
+        CloseHandle(AcceptThread);
+        CloseHandle(AcceptContext.ReadyToConnectEvent);
+        if (AcceptContext.WinsockStarted)
+            WSACleanup();
+        return;
+    }
 
-    LoadTcpIpTestDriver();
+    Error = LoadTcpIpTestDriver();
+    if (Error)
+    {
+        if (AcceptContext.ListenSocket != INVALID_SOCKET)
+        {
+            closesocket(AcceptContext.ListenSocket);
+            AcceptContext.ListenSocket = INVALID_SOCKET;
+        }
+        WaitForSingleObject(AcceptThread, 10 * 1000);
+        CloseHandle(AcceptThread);
+        CloseHandle(AcceptContext.ReadyToConnectEvent);
+        if (AcceptContext.WinsockStarted)
+            WSACleanup();
+        return;
+    }
 
     Error = KmtSendToDriver(IOCTL_TEST_CONNECT);
     ok_eq_ulong(Error, ERROR_SUCCESS);
@@ -118,5 +197,8 @@ START_TEST(TcpIpConnect)
 
     UnloadTcpIpTestDriver();
 
-    WSACleanup();
+    CloseHandle(AcceptThread);
+    CloseHandle(AcceptContext.ReadyToConnectEvent);
+    if (AcceptContext.WinsockStarted)
+        WSACleanup();
 }

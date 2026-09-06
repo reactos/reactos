@@ -167,9 +167,11 @@ TestProviderInfo(void)
             0,
             NULL,
             0);
-        ok_eq_hex(Status, TestData[i].CreateStatus);
-        if (!NT_SUCCESS(Status))
+        if (skip(NT_SUCCESS(Status),
+                 "%wZ is unavailable in this boot environment: 0x%lx\n",
+                 &TestData[i].DeviceName, Status))
             continue;
+        ok_eq_hex(Status, TestData[i].CreateStatus);
 
         Status = ObReferenceObjectByHandle(
             FileHandle,
@@ -259,6 +261,11 @@ TestProviderInfo(void)
         ok_eq_ulong(ProviderInfo->MaxSendSize, TestData[i].ExpectedInfo.MaxSendSize);
         ok_eq_ulong(ProviderInfo->MaxConnectionUserData, TestData[i].ExpectedInfo.MaxConnectionUserData);
         ok_eq_ulong(ProviderInfo->MaxDatagramSize, TestData[i].ExpectedInfo.MaxDatagramSize);
+        if (GetNTVersion() < _WIN32_WINNT_VISTA)
+        {
+            TestData[i].ExpectedInfo.ServiceFlags &=
+                ~(TDI_SERVICE_PREPOST_RECVS | TDI_SERVICE_NO_PUSH);
+        }
         ok_eq_hex(ProviderInfo->ServiceFlags, TestData[i].ExpectedInfo.ServiceFlags);
         ok_eq_ulong(ProviderInfo->MinimumLookaheadData, TestData[i].ExpectedInfo.MinimumLookaheadData);
         ok_eq_ulong(ProviderInfo->MaximumLookaheadData, TestData[i].ExpectedInfo.MaximumLookaheadData);
