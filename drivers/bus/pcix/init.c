@@ -573,27 +573,27 @@ PciBuildHackTable(IN HANDLE KeyHandle)
                                              PCI_POOL_TAG);
         if (!PciHackTable) break;
 
-        /* Allocate the space needed to hold the full value information */
+        /* Allocate room for the longest valid name plus the 8 bytes of flags */
         ValueInfo = ExAllocatePoolWithTag(NonPagedPool,
-                                          sizeof(KEY_VALUE_FULL_INFORMATION) +
-                                          PCI_HACK_ENTRY_FULL_SIZE,
+                                          sizeof(*ValueInfo) +
+                                          PCI_HACK_ENTRY_FULL_SIZE +
+                                          sizeof(Entry->HackFlags),
                                           PCI_POOL_TAG);
-        if (!PciHackTable) break;
+        if (!ValueInfo)
+            break;
 
-        /* Loop each value in the registry */
+        /* Entry only advances once filled */
         Entry = &PciHackTable[0];
         for (i = 0; i < HackCount; i++)
         {
-            /* Get the entry for this value */
-            Entry = &PciHackTable[i];
-
             /* Query the value in the key */
             Status = ZwEnumerateValueKey(KeyHandle,
                                          i,
                                          KeyValueFullInformation,
                                          ValueInfo,
-                                         sizeof(KEY_VALUE_FULL_INFORMATION) +
-                                         PCI_HACK_ENTRY_FULL_SIZE,
+                                         sizeof(*ValueInfo) +
+                                         PCI_HACK_ENTRY_FULL_SIZE +
+                                         sizeof(Entry->HackFlags),
                                          &ResultLength);
             if (!NT_SUCCESS(Status))
             {
@@ -666,13 +666,14 @@ PciBuildHackTable(IN HANDLE KeyHandle)
              if ((NameLength == PCI_HACK_ENTRY_REV_SIZE) ||
                  (NameLength == PCI_HACK_ENTRY_FULL_SIZE))
              {
-                 /* Get the data */
-                 if (!PciStringToUSHORT(&ValueInfo->Name[16],
+                 /* RR ends the name, so parse the last four digits and keep the low byte */
+                 if (!PciStringToUSHORT(&ValueInfo->Name[(NameLength / sizeof(WCHAR)) - 4],
                                         &Entry->RevisionID))
                  {
                      /* This failed, try the next entry */
                      continue;
                  }
+                 Entry->RevisionID &= 0xFF;
 
                  /* Save the fact this entry has finer controls */
                  Entry->Flags |= PCI_HACK_HAS_REVISION_INFO;
@@ -695,10 +696,13 @@ PciBuildHackTable(IN HANDLE KeyHandle)
                 DbgPrint("Revision:0x%02x", Entry->RevisionID);
             DbgPrint(" = 0x%I64x\n", Entry->HackFlags);
 #endif
+
+            /* This one is filled in, so the next value gets the next entry */
+            Entry++;
         }
 
-        /* Bail out in case of failure */
-        if (!NT_SUCCESS(Status)) break;
+        /* Leaving the loop early means enumeration hit a real error */
+        if (i < HackCount) break;
 
         /* Terminate the table with an invalid entry */
         ASSERT(Entry < (PciHackTable + HackCount + 1));
@@ -713,7 +717,14 @@ PciBuildHackTable(IN HANDLE KeyHandle)
     ASSERT(!NT_SUCCESS(Status));
     if (FullInfo) ExFreePool(FullInfo);
     if (ValueInfo) ExFreePool(ValueInfo);
-    if (PciHackTable) ExFreePool(PciHackTable);
+
+    /* DriverEntry continues without a table, and PciGetHackFlags checks for NULL */
+    if (PciHackTable)
+    {
+        ExFreePool(PciHackTable);
+        PciHackTable = NULL;
+    }
+
     return Status;
 }
 
