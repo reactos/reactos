@@ -2548,6 +2548,7 @@ xHalIoWritePartitionTable(IN PDEVICE_OBJECT DeviceObject,
         /* Update the partition offset and set the extended offset if needed */
         Offset = NextOffset;
         if (IsMbr) ExtendedOffset = NextOffset;
+        if (!Offset.QuadPart) break;
     }
 
     /* If we had a buffer, free it, then return status */
