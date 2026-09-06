@@ -9,7 +9,7 @@
 #include <atlbase.h>
 #include <initguid.h>
 #include <msxml2.h>
-#include "mmcshex.rc"
+#include "mmcshext.rc"
 
 DEFINE_GUID(CLSID_MscExtractIcon, 0x7A80E4A8,0x8005,0x11D2,0xBC,0xF8,0x00,0xC0,0x4F,0x72,0xC7,0x17);
 
