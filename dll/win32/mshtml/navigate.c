@@ -1046,6 +1046,9 @@ static HRESULT read_stream_data(nsChannelBSC *This, IStream *stream)
             WARN("OnDataAvailable failed: %08lx\n", nsres);
             return map_nsresult(nsres);
         }
+#else
+        if(NS_FAILED(nsres))
+            ERR("OnDataAvailable failed: %08x\n", nsres);
 #endif
 
         if(This->nsstream->buf_size == sizeof(This->nsstream->buf)) {
