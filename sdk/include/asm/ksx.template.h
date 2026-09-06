@@ -350,13 +350,12 @@ CONSTANT(MODE_MASK),
 
 /* STRUCTURE OFFSETS *********************************************************/
 
-//HEADER("KAFFINITY_EX"),
-//OFFSET(AfCount, KAFFINITY_EX, Count),
-//OFFSET(AfBitmap, KAFFINITY_EX, Bitmap),
-//SIZE(AffinityExLength, KAFFINITY_EX),
-
-//HEADER("Aligned Affinity"),
-//OFFSET(AfsCpuSet, ???, CpuSet), // FIXME: obsolete
+#if (NTDDI_VERSION >= NTDDI_WIN7) || defined(__REACTOS__)
+HEADER("KAFFINITY_EX"),
+OFFSET(AfCount, KAFFINITY_EX, Count),
+OFFSET(AfBitmap, KAFFINITY_EX, Bitmap),
+SIZE(AffinityExLength, KAFFINITY_EX),
+#endif
 
 HEADER("KAPC"),
 OFFSET(ApType, KAPC, Type),
