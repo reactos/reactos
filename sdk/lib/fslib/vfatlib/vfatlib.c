@@ -449,10 +449,7 @@ VfatChkdsk(
     FsCheckFlags = 0;
     if (Verbose)
 #ifdef __REACTOS__
-    {
-        FsCheckFlags |= FSCHECK_VERBOSE;
-        FsCheckFlags |= FSCHECK_LIST_FILES;
-    }
+        FsCheckFlags |= FSCHECK_VERBOSE | FSCHECK_LIST_FILES;
 #else
         FsCheckFlags |= FSCHECK_VERBOSE;
 #endif
