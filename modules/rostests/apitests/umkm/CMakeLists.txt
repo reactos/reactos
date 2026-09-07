@@ -33,7 +33,7 @@ if(NOT MSVC)
     target_compile_options(umkm_apitest PRIVATE -mxsave)
 endif()
 
-target_link_libraries(umkm_apitest wine uuid ${PSEH_LIB})
+target_link_libraries(umkm_apitest testutils wine uuid ${PSEH_LIB})
 set_module_type(umkm_apitest win32cui)
 add_importlibs(umkm_apitest msvcrt kernel32 ntdll)
 add_pch(umkm_apitest precomp.h "${PCH_SKIP_SOURCE}")
