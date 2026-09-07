@@ -879,45 +879,32 @@ PciQueryRequirements(IN PPCI_PDO_EXTENSION PdoExtension,
     PCI_COMMON_HEADER PciHeader;
     PAGED_CODE();
 
-    /* Check if the PDO has any resources, or at least an interrupt pin */
-    if ((PdoExtension->Resources) || (PdoExtension->InterruptPin))
+    /* Build even without a BAR or a pin, bridge legacy decodes need ranges too */
+    PciReadDeviceConfig(PdoExtension, &PciHeader, 0, PCI_COMMON_HDR_LENGTH);
+    Status = PciBuildRequirementsList(PdoExtension, &PciHeader, RequirementsList);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    /* Is this a Compaq PCI Hotplug Controller (r17) on a PAE system ? */
+    if ((PciHeader.VendorID == 0xE11) &&
+        (PciHeader.DeviceID == 0xA0F7) &&
+        (PciHeader.RevisionID == 17) &&
+        (ExIsProcessorFeaturePresent(PF_PAE_ENABLED)))
     {
-        /* Read the current PCI header */
-        PciReadDeviceConfig(PdoExtension, &PciHeader, 0, PCI_COMMON_HDR_LENGTH);
+        /* No fixup is applied for this controller under PAE */
+        DPRINT1("PCI - Compaq hotplug controller PDO ext 0x%p has an unhandled PAE quirk\n",
+                PdoExtension);
+    }
 
-        /* Use it to build a list of requirements */
-        Status = PciBuildRequirementsList(PdoExtension, &PciHeader, RequirementsList);
-        if (!NT_SUCCESS(Status)) return Status;
-
-        /* Is this a Compaq PCI Hotplug Controller (r17) on a PAE system ? */
-        if ((PciHeader.VendorID == 0xE11) &&
-            (PciHeader.DeviceID == 0xA0F7) &&
-            (PciHeader.RevisionID == 17) &&
-            (ExIsProcessorFeaturePresent(PF_PAE_ENABLED)))
-        {
-            /* No fixup is applied for this controller under PAE */
-            DPRINT1("PCI - Compaq hotplug controller PDO ext 0x%p has an unhandled PAE quirk\n",
-                    PdoExtension);
-        }
-
-        /* Check if the requirements are actually the zero list */
-        if (*RequirementsList == PciZeroIoResourceRequirements)
-        {
-            /* A simple NULL will suffice for the PnP Manager */
-            *RequirementsList = NULL;
-            DPRINT1("Returning NULL requirements list\n");
-        }
-        else
-        {
-            /* Otherwise, print out the requirements list */
-            PciDebugPrintIoResReqList(*RequirementsList);
-        }
+    /* The shared zero list must never reach PnP, which frees what it is given */
+    if (*RequirementsList == PciZeroIoResourceRequirements)
+    {
+        *RequirementsList = NULL;
+        DPRINT("Returning NULL requirements list\n");
     }
     else
     {
-        /* There aren't any resources, so simply return NULL */
-        DPRINT1("PciQueryRequirements returning NULL requirements list\n");
-        *RequirementsList = NULL;
+        PciDebugPrintIoResReqList(*RequirementsList);
     }
 
     /* This call always succeeds (but maybe with no requirements) */
