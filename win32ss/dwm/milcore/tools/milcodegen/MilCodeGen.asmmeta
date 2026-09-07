@@ -1,0 +1,284 @@
+.assembly extern System.Xml
+{
+  .publickeytoken = (B7 7A 5C 56 19 34 E0 89)
+  .ver clr1.1
+}
+.assembly extern mscorlib
+{
+  .publickeytoken = (B7 7A 5C 56 19 34 E0 89)
+  .ver clr1.1
+}
+.assembly 'MilCodeGen'
+{
+  .custom instance void ['mscorlib']'System.Runtime.InteropServices'.'ComVisibleAttribute'::.ctor(bool) = (01 00 00 00 00)
+  .publickey = (00 24 00 00 04 80 00 00 94 00 00 00 06 02 00 00 00 24 00 00 52 53 41 31 00 04 00 00 01 00 01 00 3F 8C 90 2C 8F E7 AC 83 AF 74 01 B1 4C 1B D1 03 97 3B 26 DF AF B2 B7 7E DA 47 8A 25 39 B9 79 B5 6C E4 7F 36 33 67 41 B4 EC 52 BB C5 1F EC D5 1B A2 38 10 CE C4 70 70 F3 E2 9A 22 61 A2 D1 D0 8E 4B 2B 4B 45 7B EA A9 14 60 05 5F 78 CC 89 F2 1C D0 28 37 7A F0 CC 5E 6C 04 69 9B 68 56 A1 E4 9D 5F AD 3E F1 6D 3C 3D 60 10 F4 0D F0 A7 D6 CC 2E E1 17 44 B5 CF B4 2E 0F 19 A5 2B 8A 29 DC 31 B0)
+  .hash algorithm 0x00008004
+  .ver Windows
+}
+.namespace 'MS.Internal.MilCodeGen'
+{
+  .class public 'CSPrimeProject'
+    extends ['mscorlib']'System'.'Object'
+  {
+  }
+}
+.namespace 'MS.Internal.MilCodeGen.Runtime'
+{
+  .class public abstract 'CodeSink'
+    extends ['mscorlib']'System'.'Object'
+  {
+    .method public hidebysig specialname 
+      instance void '.ctor'()
+    {
+      ret
+    }
+    .method public hidebysig 
+      instance void 'Write'(string 'output')
+    {
+      ret
+    }
+    .method public hidebysig 
+      instance void 'WriteBlock'(string 'output')
+    {
+      ret
+    }
+    .method public hidebysig 
+      instance void 'EndBlock'()
+    {
+      ret
+    }
+    .method public hidebysig 
+      instance void 'IndentRelative'(int32 'indentAmount')
+    {
+      ret
+    }
+    .method public hidebysig 
+      instance void 'Indent'(int32 'indentAmount')
+    {
+      ret
+    }
+    .method public hidebysig 
+      instance void 'Unindent'()
+    {
+      ret
+    }
+    .method famorassem virtual hidebysig newslot abstract 
+      instance void 'InternalWrite'(string 'output')
+    {
+    }
+  }
+  .class public 'DelimitedList'
+    extends ['mscorlib']'System'.'Object'
+  {
+    .method public hidebysig specialname 
+      instance void '.ctor'(string 'delimiter', valuetype 'MS.Internal.MilCodeGen.Runtime'.'DelimiterPosition' 'position')
+    {
+      ret
+    }
+    .method public hidebysig specialname 
+      instance void '.ctor'(string 'delimiter', valuetype 'MS.Internal.MilCodeGen.Runtime'.'DelimiterPosition' 'position', bool 'insertNewline')
+    {
+      ret
+    }
+    .method public virtual hidebysig 
+      instance string 'ToString'()
+    {
+      ret
+    }
+    .method public hidebysig 
+      instance void 'Clear'()
+    {
+      ret
+    }
+    .method public hidebysig 
+      instance void 'Append'(string[] 'parameters')
+    {
+      ret
+    }
+    .method public hidebysig 
+      instance void 'Append'(string 'sParam')
+    {
+      ret
+    }
+    .method public hidebysig 
+      instance void 'Append'(string 'sParam', string 'comment')
+    {
+      ret
+    }
+  }
+  .class public sealed 'DelimiterPosition'
+    extends ['mscorlib']'System'.'Enum'
+  {
+    .field public rtspecialname specialname int32 'value__'
+    .field static public literal valuetype 'MS.Internal.MilCodeGen.Runtime'.'DelimiterPosition' 'AfterItem' = int32(0x00000001)
+    .field static public literal valuetype 'MS.Internal.MilCodeGen.Runtime'.'DelimiterPosition' 'BeforeItem' = int32(0x00000000)
+  }
+  .class public 'FileCodeSink'
+    extends 'MS.Internal.MilCodeGen.Runtime'.'CodeSink'
+    implements ['mscorlib']'System'.'IDisposable'
+  {
+    .method public hidebysig specialname 
+      instance void '.ctor'(string 'dir', string 'filename')
+    {
+      ret
+    }
+    .method public hidebysig specialname 
+      instance void '.ctor'(string 'dir', string 'filename', bool 'createDirIfNecessary')
+    {
+      ret
+    }
+    .method family virtual hidebysig 
+      instance void 'Finalize'()
+    {
+      ret
+    }
+    .method public final virtual hidebysig newslot 
+      instance void 'Dispose'()
+    {
+      ret
+    }
+    .method public static hidebysig 
+      void 'DisableSd'()
+    {
+      ret
+    }
+    .method public hidebysig 
+      instance void 'SdFile'(string 'filename', string 'op')
+    {
+      ret
+    }
+    .method public hidebysig specialname 
+      instance string 'get_FilePath'()
+    {
+      ret
+    }
+    .method public hidebysig specialname 
+      instance string 'get_FileName'()
+    {
+      ret
+    }
+    .method family virtual hidebysig newslot 
+      instance void 'Dispose'(bool 'disposing')
+    {
+      ret
+    }
+    .method famorassem virtual hidebysig 
+      instance void 'InternalWrite'(string 'output')
+    {
+      ret
+    }
+    .property instance string 'FileName'()
+    {
+      .get instance string 'MS.Internal.MilCodeGen.Runtime'.'FileCodeSink'::'get_FileName'()
+    }
+    .property instance string 'FilePath'()
+    {
+      .get instance string 'MS.Internal.MilCodeGen.Runtime'.'FileCodeSink'::'get_FilePath'()
+    }
+  }
+  .class public abstract 'GeneratorMethods'
+    extends ['mscorlib']'System'.'Object'
+  {
+    .method public static hidebysig 
+      string 'AllCaps'(string 'stringIn')
+    {
+      ret
+    }
+    .method public static hidebysig 
+      string 'FirstCap'(string 'stringIn')
+    {
+      ret
+    }
+    .method public static hidebysig 
+      string 'EnsureFirstCap'(string 'stringIn')
+    {
+      ret
+    }
+    .method public static hidebysig 
+      string 'FirstLower'(string 'stringIn')
+    {
+      ret
+    }
+    .method public static hidebysig 
+      string 'ConvertAndIndent'(object 'o', int32 'iLevel')
+    {
+      ret
+    }
+    .method public static hidebysig 
+      string 'IndentEachLine'(string 's', int32 'iLevel')
+    {
+      ret
+    }
+    .method family hidebysig specialname 
+      instance void '.ctor'()
+    {
+      ret
+    }
+  }
+  .class public sealed 'OrList'
+    extends 'MS.Internal.MilCodeGen.Runtime'.'DelimitedList'
+  {
+    .method public hidebysig specialname 
+      instance void '.ctor'()
+    {
+      ret
+    }
+  }
+  .class public sealed 'ParameterList'
+    extends 'MS.Internal.MilCodeGen.Runtime'.'DelimitedList'
+  {
+    .method public hidebysig specialname 
+      instance void '.ctor'()
+    {
+      ret
+    }
+  }
+  .class public 'StringCodeSink'
+    extends 'MS.Internal.MilCodeGen.Runtime'.'CodeSink'
+  {
+    .method public hidebysig specialname 
+      instance void '.ctor'()
+    {
+      ret
+    }
+    .method public hidebysig 
+      instance void 'Clear'()
+    {
+      ret
+    }
+    .method public virtual hidebysig 
+      instance string 'ToString'()
+    {
+      ret
+    }
+    .method public hidebysig specialname 
+      instance bool 'get_IsEmpty'()
+    {
+      ret
+    }
+    .method famorassem virtual hidebysig 
+      instance void 'InternalWrite'(string 'output')
+    {
+      ret
+    }
+    .property instance bool 'IsEmpty'()
+    {
+      .get instance bool 'MS.Internal.MilCodeGen.Runtime'.'StringCodeSink'::'get_IsEmpty'()
+    }
+  }
+  .class public 'XmlLoader'
+    extends ['mscorlib']'System'.'Object'
+  {
+    .method public hidebysig specialname 
+      instance void '.ctor'(string 'xmlFile', string 'schemaFile')
+    {
+      ret
+    }
+    .method public static hidebysig 
+      class ['System.Xml']'System.Xml'.'XmlDocument' 'Load'(string 'xmlFile', string 'schemaFile')
+    {
+      ret
+    }
+  }
+}
+

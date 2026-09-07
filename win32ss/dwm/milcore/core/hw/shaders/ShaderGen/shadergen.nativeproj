@@ -1,0 +1,37 @@
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="dogfood">
+
+  <Import Project="$(_NTDRIVE)$(_NTROOT)\wpf\src\Graphics\Microsoft.Wpf.Graphics.Settings.targets" />
+
+  <PropertyGroup>
+    <OutputName>ShaderGen</OutputName>
+    <TargetType>PROGRAM</TargetType>
+
+    <EnableCxxPCHHeaders>true</EnableCxxPCHHeaders>
+    <PCHCompile>precomp.cpp</PCHCompile>
+    <PCHHeader>precomp.h</PCHHeader>
+
+    <BinplaceRoot>..</BinplaceRoot>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- unreferenced formal parameter -->
+    <ClDisableSpecificWarnings Include="4100" />
+
+    <RCResourceFile Include="shadergen.rc" />
+
+    <CppCompile Include="main.cpp" />
+    <CppCompile Include="codegen.cpp" />
+    <CppCompile Include="resourcegen.cpp" />
+    <CppCompile Include="device.cpp" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <TargetLib Include="$(SdkLibPath)\gdi32.lib" />
+    <TargetLib Include="$(SdkLibPath)\uuid.lib" />
+    <TargetLib Include="$(SdkLibPath)\ole32.lib" />
+    <TargetLib Include="$(SdkLibPath)\d3dx9.lib" />
+  </ItemGroup>
+
+  <Import Project="$(_NTDRIVE)$(_NTROOT)\tools\Microsoft.DevDiv.Native.targets" />
+
+</Project>

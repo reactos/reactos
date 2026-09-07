@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <CLRSupport>false</CLRSupport>
+    <ExcludeFromNuget>true</ExcludeFromNuget>
+  </PropertyGroup>
+
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <Import Project="$(WpfCppProps)" />
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />  
+
+<PropertyGroup Label="Globals">
+    <VCProjectVersion>15.0</VCProjectVersion>
+    <ProjectGuid>{4eda5da3-d244-46d8-80c6-a1d65d0bd421}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <TargetName>milctrl</TargetName>
+  </PropertyGroup>
+
+  <ItemDefinitionGroup>
+    <Lib>
+      <ModuleDefinitionFile>milctrl.def</ModuleDefinitionFile>
+      <EntryPointSymbol>_DllMainCRTStartup</EntryPointSymbol>
+    </Lib>
+    <Link>
+      <!-- Ignore LNK4199: /DELAYLOAD:d3dcompiler_47.dll ignored; no imports -->
+      <!-- found from d3dcompiler_47.dll                                     -->
+      <AdditionalOptions>/ignore:4199 %(AdditionalOptions)</AdditionalOptions>
+    </Link>
+  </ItemDefinitionGroup>
+  
+  <ItemGroup>
+    <ClCompile Include="exports.cpp" />
+    <ResourceCompile Include="milctrl.rc" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="$(WpfGraphicsDir)core\control\util\util.vcxproj">
+      <Project>{51bd2bfd-44c4-431e-a5db-b4ba6665b672}</Project>
+    </ProjectReference>
+  </ItemGroup>
+  
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />  </Project>
