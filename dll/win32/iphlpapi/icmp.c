@@ -314,9 +314,9 @@ IcmpSendEcho2(
         return 0;
     }
 
-    // IO_STATUS_BLOCK will be stored inside ReplyBuffer (in the end)
+    // IO_STATUS_BLOCK will be stored inside ReplyBuffer
     // that's because the function may return before device request ends
-    IoStatusBlock = (PIO_STATUS_BLOCK)((PUCHAR)ReplyBuffer + ReplySize - sizeof(IO_STATUS_BLOCK));
+    IoStatusBlock = (PIO_STATUS_BLOCK)((PUCHAR)ReplyBuffer + sizeof(ICMP_ECHO_REPLY));
     ReplySize -= sizeof(IO_STATUS_BLOCK);
 
     InputBuffer = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, ReplySize);
