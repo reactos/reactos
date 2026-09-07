@@ -61,7 +61,8 @@ KdpCopyMemoryChunks(
     _Out_opt_ PULONG ActualSize)
 {
     NTSTATUS Status;
-    ULONG RemainingLength, CopyChunk;
+    ULONG64 StartAddress = Address;
+    ULONG RemainingLength, CopyChunk, CopiedLength;
 
     /* Check if we didn't get a chunk size or if it is too big */
     if (ChunkSize == 0)
@@ -117,14 +118,19 @@ KdpCopyMemoryChunks(
         RemainingLength = RemainingLength - CopyChunk;
     }
 
-    /* We may have modified executable code, flush the instruction cache */
-    KeSweepICache((PVOID)(ULONG_PTR)Address, TotalSize);
+    CopiedLength = TotalSize - RemainingLength;
+
+    /* Make debugger writes visible to instruction fetch. */
+    if ((Flags & MMDBG_COPY_WRITE) && CopiedLength != 0)
+    {
+        KeSweepICache((PVOID)(ULONG_PTR)StartAddress, CopiedLength);
+    }
 
     /*
      * Return the size we managed to copy and return
      * success if we could copy the whole range.
      */
-    if (ActualSize) *ActualSize = TotalSize - RemainingLength;
+    if (ActualSize) *ActualSize = CopiedLength;
     return RemainingLength == 0 ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL;
 }
 
@@ -193,14 +199,81 @@ KdpSearchMemory(IN PDBGKD_MANIPULATE_STATE64 State,
                 IN PSTRING Data,
                 IN PCONTEXT Context)
 {
-    //PDBGKD_SEARCH_MEMORY SearchMemory = &State->u.SearchMemory;
+    PDBGKD_SEARCH_MEMORY SearchMemory = &State->u.SearchMemory;
+    static UCHAR SearchBuffer[PACKET_MAX_SIZE];
+    static USHORT PrefixTable[PACKET_MAX_SIZE];
+    const UCHAR* Pattern = (const UCHAR*)Data->Buffer;
+    ULONG PatternLength = SearchMemory->PatternLength;
+    ULONG64 Address = SearchMemory->SearchAddress;
+    ULONG64 Remaining = SearchMemory->SearchLength;
+    ULONG Matched = 0;
+    ULONG ActualLength;
+    ULONG ChunkLength;
+    ULONG i;
+    NTSTATUS Status;
     STRING Header;
 
-    /* TODO */
-    KdpDprintf("Memory Search support is unimplemented!\n");
+    UNREFERENCED_PARAMETER(Context);
 
-    /* Send a failure packet */
-    State->ReturnStatus = STATUS_UNSUCCESSFUL;
+    if (PatternLength == 0 || PatternLength != Data->Length || PatternLength > RTL_NUMBER_OF(PrefixTable) || Remaining > ~(ULONG64)0 - Address)
+    {
+        Status = STATUS_INVALID_PARAMETER;
+        goto SendReply;
+    }
+
+    if (PatternLength > Remaining)
+    {
+        Status = STATUS_NOT_FOUND;
+        goto SendReply;
+    }
+
+    PrefixTable[0] = 0;
+    for (i = 1; i < PatternLength; i++)
+    {
+        ULONG Prefix = PrefixTable[i - 1];
+
+        while (Prefix != 0 && Pattern[i] != Pattern[Prefix])
+            Prefix = PrefixTable[Prefix - 1];
+        if (Pattern[i] == Pattern[Prefix])
+            Prefix++;
+        PrefixTable[i] = (USHORT)Prefix;
+    }
+
+    Status = STATUS_NOT_FOUND;
+    while (Remaining != 0)
+    {
+        ChunkLength = Remaining > sizeof(SearchBuffer) ? sizeof(SearchBuffer) : (ULONG)Remaining;
+        ActualLength = 0;
+        Status = KdpCopyMemoryChunks(Address, SearchBuffer, ChunkLength, 0, MMDBG_COPY_UNSAFE, &ActualLength);
+
+        for (i = 0; i < ActualLength; i++)
+        {
+            while (Matched != 0 && SearchBuffer[i] != Pattern[Matched])
+                Matched = PrefixTable[Matched - 1];
+            if (SearchBuffer[i] == Pattern[Matched])
+                Matched++;
+            if (Matched == PatternLength)
+            {
+                SearchMemory->FoundAddress = Address + i + 1 - PatternLength;
+                Status = STATUS_SUCCESS;
+                goto SendReply;
+            }
+        }
+
+        Address += ActualLength;
+        Remaining -= ActualLength;
+        if (!NT_SUCCESS(Status) || ActualLength != ChunkLength)
+        {
+            if (NT_SUCCESS(Status))
+                Status = STATUS_UNSUCCESSFUL;
+            goto SendReply;
+        }
+    }
+
+    Status = STATUS_NOT_FOUND;
+
+SendReply:
+    State->ReturnStatus = Status;
     Header.Length = sizeof(DBGKD_MANIPULATE_STATE64);
     Header.Buffer = (PCHAR)State;
     KdSendPacket(PACKET_TYPE_KD_STATE_MANIPULATE,

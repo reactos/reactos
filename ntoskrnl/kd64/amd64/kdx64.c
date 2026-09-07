@@ -17,6 +17,37 @@
 
 /* FUNCTIONS *****************************************************************/
 
+static
+VOID
+KdpCaptureLegacyFloatingState(
+    _Inout_ PCONTEXT Context)
+{
+    DECLSPEC_ALIGN(16) XMM_SAVE_AREA32 FloatingState;
+
+    _fxsave64(&FloatingState);
+    KdpMoveMemory(&Context->FltSave,
+                  &FloatingState,
+                  FIELD_OFFSET(XMM_SAVE_AREA32, XmmRegisters));
+}
+
+static
+VOID
+KdpRestoreLegacyFloatingState(
+    _In_ PCONTEXT Context)
+{
+    DECLSPEC_ALIGN(16) XMM_SAVE_AREA32 FloatingState;
+
+    /*
+     * Preserve the debugger's live SSE state while applying only the x87
+     * fields exposed through the KD context.
+     */
+    _fxsave64(&FloatingState);
+    KdpMoveMemory(&FloatingState,
+                  &Context->FltSave,
+                  FIELD_OFFSET(XMM_SAVE_AREA32, XmmRegisters));
+    _fxrstor64(&FloatingState);
+}
+
 VOID
 NTAPI
 KdpGetStateChange(IN PDBGKD_MANIPULATE_STATE64 State,
@@ -58,6 +89,8 @@ KdpGetStateChange(IN PDBGKD_MANIPULATE_STATE64 State,
                 State->u.Continue2.ControlSet.CurrentSymbolStart;
             KdpCurrentSymbolEnd= State->u.Continue2.ControlSet.CurrentSymbolEnd;
         }
+
+        KdpRestoreLegacyFloatingState(Context);
     }
 }
 
@@ -66,13 +99,11 @@ NTAPI
 KdpSetContextState(IN PDBGKD_ANY_WAIT_STATE_CHANGE WaitStateChange,
                    IN PCONTEXT Context)
 {
-    PKPRCB Prcb = KeGetCurrentPrcb();
+    KdpCaptureLegacyFloatingState(Context);
 
     /* Copy i386 specific debug registers */
-    WaitStateChange->ControlReport.Dr6 = Prcb->ProcessorState.SpecialRegisters.
-                                         KernelDr6;
-    WaitStateChange->ControlReport.Dr7 = Prcb->ProcessorState.SpecialRegisters.
-                                         KernelDr7;
+    WaitStateChange->ControlReport.Dr6 = Context->Dr6;
+    WaitStateChange->ControlReport.Dr7 = Context->Dr7;
 
     /* Copy i386 specific segments */
     WaitStateChange->ControlReport.SegCs = (USHORT)Context->SegCs;

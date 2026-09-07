@@ -93,6 +93,17 @@ else()
     set(_WINKD_ FALSE CACHE BOOL "Whether to compile with the KD protocol.")
 endif()
 
+if(GDB)
+    if(NOT (ARCH STREQUAL "i386" OR ARCH STREQUAL "amd64"))
+        message(FATAL_ERROR "KDGDB is only supported on i386 and amd64")
+    endif()
+    # KDGDB speaks the KD protocol and replaces the integrated debugger.
+    # These deliberately shadow the cache entries set above, so that turning
+    # GDB on takes effect even in an already configured build directory.
+    set(KDBG FALSE)
+    set(_WINKD_ TRUE)
+endif()
+
 cmake_dependent_option(ISAPNP_ENABLE "Whether to enable the ISA PnP support." ON
                        "ARCH STREQUAL i386 AND NOT SARCH STREQUAL xbox" OFF)
 
