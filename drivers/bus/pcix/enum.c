@@ -1733,8 +1733,8 @@ PcipGetFunctionLimits(IN PPCI_CONFIGURATOR_CONTEXT Context)
         /* This is a null descriptor, have all of them been scanned now? */
         if (IoDescriptor == &PdoExtension->Resources->Limit[0])
         {
-            /* This means the descriptor is NULL, which means discovery failed */
-            DPRINT1("PCI Resources fail!\n");
+            /* Every limit is null, so the function decodes no BAR, which is not an error */
+            DPRINT("PCI function %p decodes no BAR\n", PdoExtension);
 
             /* No resources will be assigned for the device */
             ExFreePoolWithTag(PdoExtension->Resources, 0);
