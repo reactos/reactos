@@ -5,11 +5,15 @@
  * COPYRIGHT:   Copyright 2026 Whindmar Saksit <whindsaks@proton.me>
  */
 
-#include "precomp.h"
+#include <windows.h>
 #include <atlbase.h>
+#include <atlcom.h>
+#include <strsafe.h>
+#include <shlobj.h>
+#include <shobjidl.h>
+#include <shlwapi.h>
 #include <initguid.h>
 #include <msxml2.h>
-#include "mmcshext.rc"
 
 DEFINE_GUID(CLSID_MscExtractIcon, 0x7A80E4A8,0x8005,0x11D2,0xBC,0xF8,0x00,0xC0,0x4F,0x72,0xC7,0x17);
 

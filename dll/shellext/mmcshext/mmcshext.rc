@@ -5,10 +5,6 @@
  * COPYRIGHT:   Copyright 2026 Whindmar Saksit <whindsaks@proton.me>
  */
 
-/* Registry */
-#define IDR_EXTRACTICON     101
-
-#ifdef RC_INVOKED
 #include <windef.h>
 #include <winuser.h>
 
@@ -21,4 +17,3 @@
 #include <reactos/manifest_dll.rc>
 
 IDR_EXTRACTICON REGISTRY "res/mmcshext.rgs"
-#endif /* RC_INVOKED */
