@@ -355,10 +355,6 @@ SerialPnp(
 		IRP_MN_STOP_DEVICE 0x4
 		IRP_MN_QUERY_STOP_DEVICE 0x5
 		IRP_MN_CANCEL_STOP_DEVICE 0x6
-		IRP_MN_QUERY_DEVICE_RELATIONS / BusRelations (optional) 0x7
-		IRP_MN_QUERY_DEVICE_RELATIONS / RemovalRelations (optional) 0x7
-		IRP_MN_QUERY_INTERFACE (optional) 0x8
-		IRP_MN_QUERY_CAPABILITIES (optional) 0x9
 		IRP_MN_FILTER_RESOURCE_REQUIREMENTS (optional) 0xd
 		IRP_MN_QUERY_PNP_DEVICE_STATE (optional) 0x14
 		IRP_MN_DEVICE_USAGE_NOTIFICATION (required or optional) 0x16
@@ -394,19 +390,71 @@ SerialPnp(
 			{
 				case BusRelations:
 				{
+					PDEVICE_RELATIONS DeviceRelations;
+
 					TRACE_(SERIAL, "IRP_MJ_PNP / IRP_MN_QUERY_DEVICE_RELATIONS / BusRelations\n");
-					return ForwardIrpAndForget(DeviceObject, Irp);
+
+					DeviceRelations = ExAllocatePoolWithTag(PagedPool,
+															FIELD_OFFSET(DEVICE_RELATIONS, Objects),
+															SERIAL_TAG);
+					if (!DeviceRelations)
+					{
+						Status = STATUS_INSUFFICIENT_RESOURCES;
+						break;
+					}
+
+					DeviceRelations->Count = 0;
+					Information = (ULONG_PTR)DeviceRelations;
+					Status = STATUS_SUCCESS;
+					break;
 				}
 				case RemovalRelations:
 				{
+					PDEVICE_RELATIONS DeviceRelations;
+
 					TRACE_(SERIAL, "IRP_MJ_PNP / IRP_MN_QUERY_DEVICE_RELATIONS / RemovalRelations\n");
-					return ForwardIrpAndForget(DeviceObject, Irp);
+
+					DeviceRelations = ExAllocatePoolWithTag(PagedPool,
+															FIELD_OFFSET(DEVICE_RELATIONS, Objects),
+															SERIAL_TAG);
+					if (!DeviceRelations)
+					{
+						Status = STATUS_INSUFFICIENT_RESOURCES;
+						break;
+					}
+
+					DeviceRelations->Count = 0;
+					Information = (ULONG_PTR)DeviceRelations;
+					Status = STATUS_SUCCESS;
+					break;
 				}
 				default:
 					TRACE_(SERIAL, "IRP_MJ_PNP / IRP_MN_QUERY_DEVICE_RELATIONS / Unknown type 0x%lx\n",
 						Stack->Parameters.QueryDeviceRelations.Type);
 					return ForwardIrpAndForget(DeviceObject, Irp);
 			}
+			break;
+		}
+		case IRP_MN_QUERY_INTERFACE: /* (optional) 0x8 */
+		{
+			TRACE_(SERIAL, "IRP_MJ_PNP / IRP_MN_QUERY_INTERFACE\n");
+			return ForwardIrpAndForget(DeviceObject, Irp);
+		}
+		case IRP_MN_QUERY_CAPABILITIES: /* (optional) 0x9 */
+		{
+			TRACE_(SERIAL, "IRP_MJ_PNP / IRP_MN_QUERY_CAPABILITIES\n");
+
+			DeviceExtension = DeviceObject->DeviceExtension;
+
+			if (IoForwardIrpSynchronously(DeviceExtension->LowerDevice, Irp))
+			{
+				Status = Irp->IoStatus.Status;
+			}
+			else
+			{
+				Status = STATUS_UNSUCCESSFUL;
+			}
+
 			break;
 		}
 		case IRP_MN_FILTER_RESOURCE_REQUIREMENTS: /* (optional) 0xd */
