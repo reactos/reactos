@@ -24,6 +24,9 @@ private:
     CSimpleArray<CSnapinCacheEntry*> m_SnapinCache;
     HIMAGELIST m_hSnapinImageList;
 
+    CAtlList<CConsoleWnd*> m_ViewList;
+    int m_NextViewId;
+
 public:
     CWindow m_MDIClient;
 
@@ -137,11 +140,14 @@ public:
 
 private:
     LRESULT LoadSnapinCache();
+    void UpdateViews();
 
 public:
     int GetSnapinCacheCount();
     CSnapinCacheEntry *GetSnapinCacheEntry(int nIndex);
     CSnapinCacheEntry *GetSnapinCacheEntryByGuid(PWSTR pszGuid);
     HIMAGELIST SnapinImageList();
+    int RegisterView(CConsoleWnd *pView);
+    void UnregisterView(CConsoleWnd *pView);
 };
 

@@ -17,7 +17,6 @@
 #include <winuser.h>
 #include <commctrl.h>
 #include <commdlg.h>
-#include <tchar.h>
 #include <atlstr.h>
 #include <atlwin.h>
 #include <atlcom.h>
@@ -43,7 +42,6 @@
 #include "CSnapin.h"
 #include "CConsoleWnd.h"
 #include "CMainWnd.h"
-#include "CImageList.h"
 #include "CAddDialog.h"
 
 

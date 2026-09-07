@@ -14,6 +14,7 @@ CMainWnd::CMainWnd()
     , m_nConsoleCount(0)
     , m_AppAuthorMode(false)
     , m_hSnapinImageList(NULL)
+    , m_NextViewId(1)
 {
     m_FrameThunk.Init(XDefFrameProc, this);
     m_pfnSuperWindowProc = m_FrameThunk.GetWNDPROC();
@@ -276,4 +277,35 @@ HIMAGELIST
 CMainWnd::SnapinImageList()
 {
     return m_hSnapinImageList;
+}
+
+int
+CMainWnd::RegisterView(CConsoleWnd *pView)
+{
+    m_ViewList.AddTail(pView);
+    return m_NextViewId++;
+}
+
+void
+CMainWnd::UnregisterView(CConsoleWnd *pView)
+{
+    POSITION pos = m_ViewList.Find(pView);
+    if (pos)
+        m_ViewList.RemoveAt(pos);
+}
+
+void
+CMainWnd::UpdateViews()
+{
+    CConsoleWnd *console;
+    POSITION pos;
+
+    pos = m_ViewList.GetHeadPosition();
+    do
+    {
+        console = (CConsoleWnd*)m_ViewList.GetNext(pos);
+        if (console)
+            console->UpdateView();
+
+    } while (pos != NULL);   
 }
