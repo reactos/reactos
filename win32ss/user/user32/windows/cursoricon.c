@@ -2623,150 +2623,140 @@ int WINAPI LookupIconIdFromDirectoryEx(
 
     TRACE("%p, %x, %i, %i, %x.\n", presbits, fIcon, cxDesired, cyDesired, Flags);
 
-    /* Wrap the whole implementation in SEH in order to gracefully handle
-     * any PE resource corruption case in a simple way. */
-    _SEH2_TRY
+    if(!(dir && !dir->idReserved && (dir->idType & 3)))
     {
-        if(!(dir && !dir->idReserved && (dir->idType & 3)))
+        WARN("Invalid resource.\n");
+        return 0;
+    }
+
+    if(Flags & LR_MONOCHROME)
+        bppDesired = 1;
+    else
+    {
+        HDC icScreen;
+        icScreen = CreateICW(DISPLAYW, NULL, NULL, NULL);
+        if(!icScreen)
+            return FALSE;
+
+        bppDesired = GetDeviceCaps(icScreen, BITSPIXEL);
+        DeleteDC(icScreen);
+    }
+
+    if(!cxDesired)
+        cxDesired = Flags & LR_DEFAULTSIZE ? GetSystemMetrics(fIcon ? SM_CXICON : SM_CXCURSOR) : 256;
+    if(!cyDesired)
+        cyDesired = Flags & LR_DEFAULTSIZE ? GetSystemMetrics(fIcon ? SM_CYICON : SM_CYCURSOR) : 256;
+
+    /* Find the best match for the desired size */
+    for(i = 0; i < dir->idCount; i++)
+    {
+        entry = &dir->idEntries[i];
+        width = fIcon ? entry->ResInfo.icon.bWidth : entry->ResInfo.cursor.wWidth;
+        /* Height is twice as big in cursor resources */
+        height = fIcon ? entry->ResInfo.icon.bHeight : entry->ResInfo.cursor.wHeight/2;
+        /* 0 represents 256 */
+        if(!width) width = 256;
+        if(!height) height = 256;
+        /* Calculate the "score" (lower is better) */
+        score = 2*(abs(width - cxDesired) + abs(height - cyDesired));
+        if( score > bestScore)
+            continue;
+        /* Bigger than requested lowers the score */
+        if(width > cxDesired)
+            score -= width - cxDesired;
+        if(height > cyDesired)
+            score -= height - cyDesired;
+        if(score > bestScore)
+            continue;
+        if(score == bestScore)
         {
-            WARN("Invalid resource.\n");
-            _SEH2_YIELD(return 0);
+            if(entry->wBitCount > BitCount)
+                BitCount = entry->wBitCount;
+            numMatch++;
+            continue;
         }
+        iIndex = i;
+        numMatch = 1;
+        bestScore = score;
+        BitCount = entry->wBitCount;
+    }
 
-        if(Flags & LR_MONOCHROME)
-            bppDesired = 1;
-        else
+    if(numMatch == 1)
+    {
+        /* Only one entry fits the asked dimensions */
+        return dir->idEntries[iIndex].wResId;
+    }
+
+    /* Avoid paletted icons on non-paletted device */
+    if (bppDesired > 8 && BitCount > 8)
+        notPaletted = TRUE;
+
+    BitCount = 0;
+    iIndex = -1;
+    /* Now find the entry with the best depth */
+    for(i = 0; i < dir->idCount; i++)
+    {
+        entry = &dir->idEntries[i];
+        width = fIcon ? entry->ResInfo.icon.bWidth : entry->ResInfo.cursor.wWidth;
+        height = fIcon ? entry->ResInfo.icon.bHeight : entry->ResInfo.cursor.wHeight/2;
+        /* 0 represents 256 */
+        if(!width) width = 256;
+        if(!height) height = 256;
+        /* Check if this is the best match we had */
+        score = 2*(abs(width - cxDesired) + abs(height - cyDesired));
+        if(width > cxDesired)
+            score -= width - cxDesired;
+        if(height > cyDesired)
+            score -= height - cyDesired;
+        if(score != bestScore)
+            continue;
+        /* Exact match? */
+        if(entry->wBitCount == bppDesired)
+            return entry->wResId;
+        /* We take the highest possible but smaller  than the display depth */
+        if((entry->wBitCount > BitCount) && (entry->wBitCount < bppDesired))
         {
-            HDC icScreen;
-            icScreen = CreateICW(DISPLAYW, NULL, NULL, NULL);
-            if(!icScreen)
-                _SEH2_YIELD(return 0);
-
-            bppDesired = GetDeviceCaps(icScreen, BITSPIXEL);
-            DeleteDC(icScreen);
-        }
-
-        if(!cxDesired)
-            cxDesired = Flags & LR_DEFAULTSIZE ? GetSystemMetrics(fIcon ? SM_CXICON : SM_CXCURSOR) : 256;
-        if(!cyDesired)
-            cyDesired = Flags & LR_DEFAULTSIZE ? GetSystemMetrics(fIcon ? SM_CYICON : SM_CYCURSOR) : 256;
-
-        /* Find the best match for the desired size */
-        for(i = 0; i < dir->idCount; i++)
-        {
-            entry = &dir->idEntries[i];
-            width = fIcon ? entry->ResInfo.icon.bWidth : entry->ResInfo.cursor.wWidth;
-            /* Height is twice as big in cursor resources */
-            height = fIcon ? entry->ResInfo.icon.bHeight : entry->ResInfo.cursor.wHeight/2;
-            /* 0 represents 256 */
-            if(!width) width = 256;
-            if(!height) height = 256;
-            /* Calculate the "score" (lower is better) */
-            score = 2*(abs(width - cxDesired) + abs(height - cyDesired));
-            if( score > bestScore)
+            /* Avoid paletted icons on non paletted devices */
+            if ((entry->wBitCount <= 8) && notPaletted)
                 continue;
-            /* Bigger than requested lowers the score */
-            if(width > cxDesired)
-                score -= width - cxDesired;
-            if(height > cyDesired)
-                score -= height - cyDesired;
-            if(score > bestScore)
-                continue;
-            if(score == bestScore)
-            {
-                if(entry->wBitCount > BitCount)
-                    BitCount = entry->wBitCount;
-                numMatch++;
-                continue;
-            }
             iIndex = i;
-            numMatch = 1;
-            bestScore = score;
             BitCount = entry->wBitCount;
         }
-
-        if(numMatch == 1)
-        {
-            /* Only one entry fits the asked dimensions */
-            _SEH2_YIELD(return dir->idEntries[iIndex].wResId);
-        }
-
-        /* Avoid paletted icons on non-paletted device */
-        if (bppDesired > 8 && BitCount > 8)
-            notPaletted = TRUE;
-
-        BitCount = 0;
-        iIndex = -1;
-        /* Now find the entry with the best depth */
-        for(i = 0; i < dir->idCount; i++)
-        {
-            entry = &dir->idEntries[i];
-            width = fIcon ? entry->ResInfo.icon.bWidth : entry->ResInfo.cursor.wWidth;
-            height = fIcon ? entry->ResInfo.icon.bHeight : entry->ResInfo.cursor.wHeight/2;
-            /* 0 represents 256 */
-            if(!width) width = 256;
-            if(!height) height = 256;
-            /* Check if this is the best match we had */
-            score = 2*(abs(width - cxDesired) + abs(height - cyDesired));
-            if(width > cxDesired)
-                score -= width - cxDesired;
-            if(height > cyDesired)
-                score -= height - cyDesired;
-            if(score != bestScore)
-                continue;
-            /* Exact match? */
-            if(entry->wBitCount == bppDesired)
-                _SEH2_YIELD(return entry->wResId);
-            /* We take the highest possible but smaller  than the display depth */
-            if((entry->wBitCount > BitCount) && (entry->wBitCount < bppDesired))
-            {
-                /* Avoid paletted icons on non paletted devices */
-                if ((entry->wBitCount <= 8) && notPaletted)
-                    continue;
-                iIndex = i;
-                BitCount = entry->wBitCount;
-            }
-        }
-
-        if(iIndex >= 0)
-            _SEH2_YIELD(return dir->idEntries[iIndex].wResId);
-
-        /* No inferior or equal depth available. Get the smallest bigger one */
-        BitCount = 0xFFFF;
-        iIndex = -1;
-        for(i = 0; i < dir->idCount; i++)
-        {
-            entry = &dir->idEntries[i];
-            width = fIcon ? entry->ResInfo.icon.bWidth : entry->ResInfo.cursor.wWidth;
-            height = fIcon ? entry->ResInfo.icon.bHeight : entry->ResInfo.cursor.wHeight/2;
-            /* 0 represents 256 */
-            if(!width) width = 256;
-            if(!height) height = 256;
-            /* Check if this is the best match we had */
-            score = 2*(abs(width - cxDesired) + abs(height - cyDesired));
-            if(width > cxDesired)
-                score -= width - cxDesired;
-            if(height > cyDesired)
-                score -= height - cyDesired;
-            if(score != bestScore)
-                continue;
-            /* Check the bit depth */
-            if(entry->wBitCount < BitCount)
-            {
-                if((entry->wBitCount <= 8) && notPaletted)
-                    continue;
-                iIndex = i;
-                BitCount = entry->wBitCount;
-            }
-        }
-        if (iIndex >= 0)
-            _SEH2_YIELD(return dir->idEntries[iIndex].wResId);
     }
-    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+
+    if(iIndex >= 0)
+        return dir->idEntries[iIndex].wResId;
+
+    /* No inferior or equal depth available. Get the smallest bigger one */
+    BitCount = 0xFFFF;
+    iIndex = -1;
+    for(i = 0; i < dir->idCount; i++)
     {
-        ERR("Invalid resource (0x%p)\n", presbits);
+        entry = &dir->idEntries[i];
+        width = fIcon ? entry->ResInfo.icon.bWidth : entry->ResInfo.cursor.wWidth;
+        height = fIcon ? entry->ResInfo.icon.bHeight : entry->ResInfo.cursor.wHeight/2;
+        /* 0 represents 256 */
+        if(!width) width = 256;
+        if(!height) height = 256;
+        /* Check if this is the best match we had */
+        score = 2*(abs(width - cxDesired) + abs(height - cyDesired));
+        if(width > cxDesired)
+            score -= width - cxDesired;
+        if(height > cyDesired)
+            score -= height - cyDesired;
+        if(score != bestScore)
+            continue;
+        /* Check the bit depth */
+        if(entry->wBitCount < BitCount)
+        {
+            if((entry->wBitCount <= 8) && notPaletted)
+                continue;
+            iIndex = i;
+            BitCount = entry->wBitCount;
+        }
     }
-    _SEH2_END;
+    if (iIndex >= 0)
+        return dir->idEntries[iIndex].wResId;
 
     return 0;
 }
