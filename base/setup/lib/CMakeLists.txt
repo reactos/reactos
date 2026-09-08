@@ -36,15 +36,17 @@ list(APPEND SOURCE
     precomp.h)
 
 # Static library used for the dll and for setuplib_unittest.
-add_library(setuplib_static ${SOURCE})
+add_library(setuplib_static STATIC ${SOURCE})
 add_pch(setuplib_static precomp.h SOURCE)
 add_dependencies(setuplib_static xdk) # psdk
+target_include_directories(setuplib_static INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
 
-add_library(setuplib SHARED
+add_library(setuplib MODULE
     main.c
     setuplib.rc
     ${CMAKE_CURRENT_BINARY_DIR}/setuplib.def)
 target_link_libraries(setuplib setuplib_static)
+target_include_directories(setuplib INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
 
 add_dependencies(setuplib xdk) # psdk
 set_module_type(setuplib nativedll)
