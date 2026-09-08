@@ -118,18 +118,17 @@ DisplayCharacter(
     _In_ ULONG BackColor)
 {
     const UCHAR* FontChar;
-    PUCHAR PixelPtr;
+    PUCHAR PixelPtr, PixelPosition;
     ULONG Height;
-    UCHAR Shift;
-
-    PrepareForSetPixel();
+    ULONG Shift;
 
     /* Calculate shift */
     Shift = Left & 7;
 
     /* Get the font and pixel pointer */
     FontChar = GetFontPtr(Character);
-    PixelPtr = (PUCHAR)(VgaBase + (Left >> 3) + (Top * (SCREEN_WIDTH / 8)));
+    PixelPosition = (PUCHAR)(VgaBase + (Left / 8) + (Top * (SCREEN_WIDTH / 8)));
+    PixelPtr = PixelPosition;
 
     /* Loop all pixel rows */
     for (Height = BOOTCHAR_HEIGHT; Height > 0; --Height)
@@ -147,7 +146,7 @@ DisplayCharacter(
 
         /* Get the font and pixel pointer (2nd byte) */
         FontChar = GetFontPtr(Character);
-        PixelPtr = (PUCHAR)(VgaBase + (Left >> 3) + (Top * (SCREEN_WIDTH / 8)) + 1);
+        PixelPtr = PixelPosition + 1;
 
         /* Loop all pixel rows */
         for (Height = BOOTCHAR_HEIGHT; Height > 0; --Height)
@@ -170,12 +169,12 @@ DisplayCharacter(
 
     /* Get the font and pixel pointer */
     FontChar = GetFontPtr(Character);
-    PixelPtr = (PUCHAR)(VgaBase + (Left >> 3) + (Top * (SCREEN_WIDTH / 8)));
+    PixelPtr = PixelPosition;
 
     /* Loop all pixel rows */
     for (Height = BOOTCHAR_HEIGHT; Height > 0; --Height)
     {
-        SET_PIXELS(PixelPtr, ~*FontChar >> Shift, BackColor);
+        SET_PIXELS(PixelPtr, (UCHAR)~*FontChar >> Shift, BackColor);
         PixelPtr += (SCREEN_WIDTH / 8);
         FontChar += FONT_PTR_DELTA;
     }
@@ -188,12 +187,12 @@ DisplayCharacter(
 
         /* Get the font and pixel pointer (2nd byte) */
         FontChar = GetFontPtr(Character);
-        PixelPtr = (PUCHAR)(VgaBase + (Left >> 3) + (Top * (SCREEN_WIDTH / 8)) + 1);
+        PixelPtr = PixelPosition + 1;
 
         /* Loop all pixel rows */
         for (Height = BOOTCHAR_HEIGHT; Height > 0; --Height)
         {
-            SET_PIXELS(PixelPtr, ~*FontChar << Shift, BackColor);
+            SET_PIXELS(PixelPtr, (UCHAR)~*FontChar << Shift, BackColor);
             PixelPtr += (SCREEN_WIDTH / 8);
             FontChar += FONT_PTR_DELTA;
         }
