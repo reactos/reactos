@@ -138,6 +138,8 @@ KeSignalGateBoostPriority(IN PKGATE Gate)
     PKTHREAD WaitThread;
     PKWAIT_BLOCK WaitBlock;
     KIRQL OldIrql;
+    SCHAR Priority;
+    PKTHREAD CurrentThread = KeGetCurrentThread();
     ASSERT_GATE(Gate);
     ASSERT_IRQL_LESS_OR_EQUAL(DISPATCH_LEVEL);
 
@@ -197,7 +199,10 @@ KeSignalGateBoostPriority(IN PKGATE Gate)
             /* Release the thread lock */
             KiReleaseThreadLock(WaitThread);
 
-            /* FIXME: Boosting */
+            /* Request priority boosting from the signaling thread */
+            Priority = KiComputeNewPriority(CurrentThread, 0);
+            WaitThread->AdjustIncrement = Priority;
+            WaitThread->AdjustReason = AdjustBoost;
 
             /* Check if we have a queue */
             if (WaitThread->Queue)
