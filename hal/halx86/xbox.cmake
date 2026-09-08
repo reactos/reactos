@@ -44,6 +44,7 @@ list(APPEND HAL_XBOX_SOURCE
 
 add_asm_files(lib_hal_xbox_asm ${HAL_XBOX_ASM_SOURCE})
 add_library(lib_hal_xbox OBJECT ${HAL_XBOX_SOURCE} ${lib_hal_xbox_asm})
-add_dependencies(lib_hal_xbox bugcodes xdk asm)
 #add_pch(lib_hal_xbox xbox/halxbox.h)
+add_dependencies(lib_hal_xbox bugcodes xdk asm)
 target_compile_definitions(lib_hal_xbox PRIVATE SARCH_XBOX)
+target_link_libraries(lib_hal_xbox PRIVATE fast486)

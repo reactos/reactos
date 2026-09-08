@@ -42,6 +42,6 @@ else()
 endif()
 
 add_library(mini_hal ${MINI_HAL_SOURCE})
+add_pch(mini_hal ../include/hal.h MINI_HAL_SOURCE)
 target_compile_definitions(mini_hal PRIVATE _BLDR_ _NTSYSTEM_)
 add_dependencies(mini_hal psdk bugcodes asm)
-add_pch(mini_hal ../include/hal.h MINI_HAL_SOURCE)
