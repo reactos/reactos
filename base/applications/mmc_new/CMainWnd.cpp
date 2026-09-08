@@ -164,6 +164,27 @@ CMainWnd::OnFileExit(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
 }
 
 LRESULT
+CMainWnd::OnWindowsCascade(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
+{
+    m_MDIClient.SendMessage(WM_MDICASCADE, 0, 0);
+    return 0;
+}
+
+LRESULT
+CMainWnd::OnWindowsTile(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
+{
+    m_MDIClient.SendMessage(WM_MDITILE, MDITILE_HORIZONTAL, 0);
+    return 0;
+}
+
+LRESULT
+CMainWnd::OnWindowsArrange(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
+{
+    m_MDIClient.SendMessage(WM_MDIICONARRANGE, 0, 0);
+    return 0;
+}
+
+LRESULT
 CMainWnd::OnHelpAbout(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
 {
     HICON hIcon = LoadIcon(_AtlBaseModule.GetModuleInstance(), MAKEINTRESOURCE(IDI_MAINAPP));

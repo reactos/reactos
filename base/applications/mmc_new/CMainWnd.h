@@ -44,6 +44,9 @@ public:
         COMMAND_ID_HANDLER(IDM_FILE_SAVEAS, OnFileSaveAs)
         COMMAND_ID_HANDLER(IDM_FILE_ADD, OnFileAdd)
         COMMAND_ID_HANDLER(IDM_FILE_EXIT, OnFileExit)
+        COMMAND_ID_HANDLER(IDM_WINDOWS_CASCADE, OnWindowsCascade)
+        COMMAND_ID_HANDLER(IDM_WINDOWS_TILE, OnWindowsTile)
+        COMMAND_ID_HANDLER(IDM_WINDOWS_ARRANGE, OnWindowsArrange)
         COMMAND_ID_HANDLER(IDM_HELP_ABOUT, OnHelpAbout)
         COMMAND_RANGE_HANDLER(0, IDM_MDI_FIRSTCHILD - 1, OnMDIForward)
     END_MSG_MAP()
@@ -131,6 +134,9 @@ public:
     LRESULT OnFileSaveAs(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
     LRESULT OnFileAdd(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
     LRESULT OnFileExit(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
+    LRESULT OnWindowsCascade(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
+    LRESULT OnWindowsTile(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
+    LRESULT OnWindowsArrange(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
     LRESULT OnHelpAbout(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
     LRESULT OnMDIForward(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
     LRESULT OnSize(UINT nMessage, WPARAM wParam, LPARAM lParam, BOOL& bHandled);

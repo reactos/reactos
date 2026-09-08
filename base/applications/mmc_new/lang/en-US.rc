@@ -30,7 +30,11 @@ BEGIN
     END
     POPUP "&Windows"
     BEGIN
-        MENUITEM "List", IDM_WINDOWS_LIST
+        MENUITEM "&New Window\tCtrl+W", IDM_WINDOWS_NEW
+        MENUITEM SEPARATOR
+        MENUITEM "&Cascade", IDM_WINDOWS_CASCADE
+        MENUITEM "&Tile Horizontally", IDM_WINDOWS_TILE
+        MENUITEM "Arrange &Icons", IDM_WINDOWS_ARRANGE
     END
     POPUP "&Help"
     BEGIN
