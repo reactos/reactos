@@ -2,10 +2,13 @@
  * PROJECT:     ReactOS Boot Video Driver for NEC PC-98 series
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Arch-specific header file
- * COPYRIGHT:   Copyright 2020 Dmitry Borisov <di.sean@protonmail.com>
+ * COPYRIGHT:   Copyright 2020-2026 Dmitry Borisov <di.sean@protonmail.com>
  */
 
 #pragma once
+
+/* Inline port access on PC-98, instead of going through HAL */
+#include <ioaccess.h>
 
 /* GLOBALS ********************************************************************/
 
@@ -20,6 +23,7 @@ InitPaletteWithTable(
     _In_reads_(Count) const ULONG* Table,
     _In_ ULONG Count);
 
+#undef InitializePalette
 #define PrepareForSetPixel()
 
 FORCEINLINE
@@ -31,5 +35,5 @@ SetPixel(
 {
     PUCHAR PixelPosition = (PUCHAR)(FrameBuffer + FB_OFFSET(Left, Top));
 
-    WRITE_REGISTER_UCHAR(PixelPosition, Color);
+    *PixelPosition = Color;
 }
