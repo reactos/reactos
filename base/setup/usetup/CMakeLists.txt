@@ -1,13 +1,7 @@
 
 add_definitions(${I18N_DEFS})
 
-include_directories(
-    ${CMAKE_CURRENT_SOURCE_DIR}
-    ${CMAKE_CURRENT_SOURCE_DIR}/../lib
-#    ${REACTOS_SOURCE_DIR}/base/setup/lib
-    ${REACTOS_SOURCE_DIR}/sdk/lib/inflib
-    ${REACTOS_SOURCE_DIR}/sdk/include/reactos/libs/zlib
-    ${REACTOS_SOURCE_DIR}/sdk/include/reactos/drivers)
+include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/drivers)
 
 list(APPEND SOURCE
     spapisup/cabinet.c
@@ -28,12 +22,12 @@ list(APPEND SOURCE
     usetup.h)
 
 add_executable(usetup ${SOURCE} usetup.rc)
+add_pch(usetup usetup.h SOURCE)
 
 if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
     target_compile_options(usetup PRIVATE "-Wno-invalid-source-encoding")
 endif()
 
-add_pch(usetup usetup.h SOURCE)
 set_module_type(usetup nativecui)
 target_link_libraries(usetup inflib zlib_solo chkstk)
 add_importlibs(usetup setuplib ntdll)
