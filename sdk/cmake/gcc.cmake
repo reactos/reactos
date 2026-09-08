@@ -542,6 +542,8 @@ function(spec2def _dllname _spec_file)
         endif()
 
         generate_import_lib(lib${_file} ${_dllname} ${_spec_file} ${_extraflags} "${__version_arg}" "${__dbg_arg}")
+        target_include_directories(lib${_file} INTERFACE $<TARGET_PROPERTY:${_file},INTERFACE_INCLUDE_DIRECTORIES>)
+        target_include_directories(lib${_file}_delayed INTERFACE $<TARGET_PROPERTY:${_file},INTERFACE_INCLUDE_DIRECTORIES>)
     endif()
 endfunction()
 
