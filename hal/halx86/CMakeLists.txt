@@ -5,8 +5,7 @@ add_definitions(
 
 include_directories(
     include
-    ${REACTOS_SOURCE_DIR}/ntoskrnl/include
-    ${REACTOS_SOURCE_DIR}/sdk/include/reactos/libs/fast486)
+    ${REACTOS_SOURCE_DIR}/ntoskrnl/include)
 
 function(add_hal _halname)
     cmake_parse_arguments(_haldata "" "" "SOURCES;COMPONENTS" ${ARGN})
@@ -16,27 +15,25 @@ function(add_hal _halname)
 
     # Create the actual target
     foreach(_component ${_haldata_COMPONENTS})
-        list(APPEND _haldata_SOURCES "$<TARGET_OBJECTS:lib_hal_${_component}>")
+        list(APPEND _haldata_LIBS lib_hal_${_component})
     endforeach()
     add_library(${_halname} MODULE
         ${_haldata_SOURCES}
         ${CMAKE_CURRENT_BINARY_DIR}/hal.def)
+    #add_pch(${_halname} include/hal.h)
 
+    target_link_libraries(${_halname} ${_haldata_LIBS})
     if(${_halname} STREQUAL "hal")
-        target_link_libraries(${_halname} libcntpr setjmp arbiter fast486 ${PSEH_LIB})
-    else()
-        target_link_libraries(${_halname} libcntpr setjmp fast486 ${PSEH_LIB})
+        target_link_libraries(${_halname} arbiter)
     endif()
+    target_link_libraries(${_halname} libcntpr setjmp ${PSEH_LIB})
 
     add_importlibs(${_halname} ntoskrnl)
-    #add_pch(${_halname} include/hal.h)
     add_dependencies(${_halname} psdk asm)
     set_module_type(${_halname} kerneldll ENTRYPOINT HalInitSystem 8)
     add_cd_file(TARGET ${_halname} DESTINATION reactos/system32 NO_CAB FOR all)
     if(MSVC)
         target_link_options(${_halname} PRIVATE /ignore:4216 /SECTION:INIT,ERWD)
-    else()
-        target_link_libraries(${_halname} -lgcc)
     endif()
 endfunction()
 
