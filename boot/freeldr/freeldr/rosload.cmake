@@ -67,8 +67,8 @@ add_asm_files(rosload_asm ${ROSLOAD_ASM_SOURCE})
 add_executable(rosload
     ${ROSLOAD_SOURCE}
     ${rosload_asm}
-    ${CMAKE_CURRENT_BINARY_DIR}/rosload.def
-)
+    ${CMAKE_CURRENT_BINARY_DIR}/rosload.def)
+target_include_directories(rosload PRIVATE ${REACTOS_SOURCE_DIR}/ntoskrnl/include)
 
 set_target_properties(rosload
     PROPERTIES

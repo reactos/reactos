@@ -7,9 +7,8 @@
 
 include_directories(BEFORE
     ${REACTOS_SOURCE_DIR}/sdk/include/reactos/edk2
-    ${REACTOS_SOURCE_DIR}/boot/freeldr/freeldr
-    ${REACTOS_SOURCE_DIR}/boot/freeldr/freeldr/include
-    ${REACTOS_SOURCE_DIR}/boot/freeldr/freeldr/include/arch/uefi)
+    include
+    include/arch/uefi)
 
 list(APPEND UEFILDR_ARC_SOURCE
     ${FREELDR_ARC_SOURCE}
@@ -84,8 +83,7 @@ add_library(uefifreeldr_common
     ${uefifreeldr_common_asm}
     ${UEFILDR_ARC_SOURCE}
     ${FREELDR_BOOTLIB_SOURCE}
-    ${UEFILDR_BOOTMGR_SOURCE}
-    ${FREELDR_NTLDR_SOURCE})
+    ${UEFILDR_BOOTMGR_SOURCE})
 
 target_compile_definitions(uefifreeldr_common PRIVATE _FRLDRLIB_ UEFIBOOT)
 
@@ -97,8 +95,7 @@ endif()
 set(PCH_SOURCE
     ${UEFILDR_ARC_SOURCE}
     ${FREELDR_BOOTLIB_SOURCE}
-    ${UEFILDR_BOOTMGR_SOURCE}
-    ${FREELDR_NTLDR_SOURCE})
+    ${UEFILDR_BOOTMGR_SOURCE})
 
 add_pch(uefifreeldr_common include/arch/uefi/uefildr.h PCH_SOURCE)
 add_dependencies(uefifreeldr_common bugcodes asm xdk)
@@ -123,10 +120,12 @@ if(ARCH STREQUAL "i386")
         ${CMAKE_CURRENT_BINARY_DIR}/uefildr.def)
 endif()
 
-add_executable(uefildr ${UEFILDR_BASE_SOURCE})
+add_executable(uefildr ${UEFILDR_BASE_SOURCE} ${FREELDR_NTLDR_SOURCE})
 set_target_properties(uefildr PROPERTIES SUFFIX ".efi")
 
-target_compile_definitions(uefildr PRIVATE UEFIBOOT)
+target_include_directories(uefildr PRIVATE ${REACTOS_SOURCE_DIR}/ntoskrnl/include)
+
+target_compile_definitions(uefildr PRIVATE _FRLDRLIB_ UEFIBOOT)
 
 # On AMD64 we only map 1GB with freeloader, tell UEFI to keep us low!
 if(ARCH STREQUAL "amd64")
