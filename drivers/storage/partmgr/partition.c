@@ -118,10 +118,7 @@ PartitionHandleStartDevice(
     _swprintf(nameBuf, PartitionSymLinkFormat,
         fdoExtension->DiskData.DeviceNumber, PartExt->DetectedNumber);
 
-    if (!RtlCreateUnicodeString(&partitionSymlink, nameBuf))
-    {
-        return STATUS_INSUFFICIENT_RESOURCES;
-    }
+    RtlInitUnicodeString(&partitionSymlink, nameBuf);
 
     NTSTATUS status = IoCreateSymbolicLink(&partitionSymlink, &PartExt->DeviceName);
 
