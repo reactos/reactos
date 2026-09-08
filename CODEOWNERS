@@ -78,7 +78,6 @@
 /sdk/include/reactos/libs/libxml/       @ThFabba
 /sdk/include/reactos/libs/libxslt/      @ThFabba
 /sdk/lib/3rdparty/libmpg123/            @ThFabba
-/sdk/lib/3rdparty/libsamplerate/        @ThFabba
 /sdk/lib/3rdparty/libxml2/              @ThFabba
 
 # ACPI

@@ -24,6 +24,10 @@
 //#include <ntddsnd.h>
 #include <sndtypes.h>
 #include <mmddk.h>
+#define NOBITMAP
+#include <mmreg.h>
+#include <ks.h>
+#include <ksmedia.h>
 #include <mmebuddy.h>
 #include <mment4.h>
 #include <mmebuddy_debug.h>
