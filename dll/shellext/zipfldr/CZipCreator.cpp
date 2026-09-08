@@ -8,8 +8,6 @@
 
 #include "precomp.h"
 #include "atlsimpcoll.h"
-#include "minizip/zip.h"
-#include "minizip/iowin32.h"
 #include <process.h>
 
 static inline DWORD CalculateNameCRC32(PCSTR name)

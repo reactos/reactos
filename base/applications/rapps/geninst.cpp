@@ -20,11 +20,6 @@
 #include "minizip/ioapi.h"
 #include "minizip/iowin32.h"
 #include "minizip/unzip.h"
-extern "C" {
-    #include "minizip/ioapi.c"
-    #include "minizip/iowin32.c"
-    #include "minizip/unzip.c"
-}
 
 #define REGPATH_UNINSTALL L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall"
 
