@@ -120,8 +120,7 @@ MmAllocateNonCachedMemory(IN SIZE_T NumberOfBytes)
             //
             // Disable caching
             //
-            MI_PAGE_DISABLE_CACHE(&TempPte);
-            MI_PAGE_WRITE_THROUGH(&TempPte);
+            MI_MAKE_PTE_NON_CACHED(&TempPte);
             break;
 
         case MiWriteCombined:
@@ -129,8 +128,7 @@ MmAllocateNonCachedMemory(IN SIZE_T NumberOfBytes)
             //
             // Enable write combining
             //
-            MI_PAGE_DISABLE_CACHE(&TempPte);
-            MI_PAGE_WRITE_COMBINED(&TempPte);
+            MI_MAKE_PTE_WRITE_COMBINE(&TempPte);
             break;
 
         default:
