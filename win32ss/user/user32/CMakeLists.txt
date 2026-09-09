@@ -5,8 +5,7 @@ include_directories(
     ${REACTOS_SOURCE_DIR}/sdk/include/reactos/subsys
     include
     ${REACTOS_SOURCE_DIR}/sdk/include/wine
-    ${REACTOS_SOURCE_DIR}/win32ss/include
-    ${REACTOS_SOURCE_DIR}/sdk/include/reactos/libs/libpng)
+    ${REACTOS_SOURCE_DIR}/win32ss/include)
 
 list(APPEND SOURCE
     controls/appswitch.c
@@ -80,6 +79,7 @@ add_library(user32 MODULE
     ${user32_asm}
     user32.rc
     ${CMAKE_CURRENT_BINARY_DIR}/user32.def)
+add_pch(user32 include/user32.h SOURCE)
 
 set_module_type(user32 win32dll UNICODE ENTRYPOINT DllMain 12)
 target_link_libraries(user32 user32_vista_static user32_optional_vista user32_wsprintf wine win32ksys ${PSEH_LIB})
@@ -87,5 +87,4 @@ add_dependencies(user32 asm)
 
 add_delay_importlibs(user32 usp10 libpng)
 add_importlibs(user32 gdi32 advapi32 kernel32 ntdll)
-add_pch(user32 include/user32.h SOURCE)
 add_cd_file(TARGET user32 DESTINATION reactos/system32 FOR all)
