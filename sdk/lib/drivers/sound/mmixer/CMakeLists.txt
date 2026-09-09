@@ -17,6 +17,7 @@ list(APPEND SOURCE
     topology.c
     precomp.h)
 
-add_library(mmixer ${SOURCE})
+add_library(mmixer STATIC ${SOURCE})
 add_pch(mmixer precomp.h SOURCE)
 add_dependencies(mmixer bugcodes xdk)
+target_include_directories(mmixer INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})

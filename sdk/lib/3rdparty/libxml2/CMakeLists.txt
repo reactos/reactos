@@ -1,7 +1,5 @@
 
-include_directories(
-    ${REACTOS_SOURCE_DIR}/sdk/lib/3rdparty/libwin-iconv
-    ${REACTOS_SOURCE_DIR}/sdk/include/reactos/libs/zlib)
+include_directories(${REACTOS_SOURCE_DIR}/sdk/lib/3rdparty/libwin-iconv)
 
 add_definitions(
     -D__MINGW32__
@@ -52,7 +50,8 @@ list(APPEND SOURCE
     xmlstring.c
     libxml.h)
 
-add_library(libxml2 ${SOURCE})
+add_library(libxml2 STATIC ${SOURCE})
+add_pch(libxml2 libxml.h SOURCE)
 
 if(CMAKE_C_COMPILER_ID STREQUAL "MSVC")
     # Unreferenced local variable
@@ -78,5 +77,4 @@ target_include_directories(libxml2
 )
 
 target_link_libraries(libxml2 oldnames)
-add_pch(libxml2 libxml.h SOURCE)
 add_dependencies(libxml2 psdk)
