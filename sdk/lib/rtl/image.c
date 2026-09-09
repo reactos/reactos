@@ -511,8 +511,16 @@ LdrRelocateImageWithBias(
     RelocationEnd = (PIMAGE_BASE_RELOCATION)((ULONG_PTR)RelocationDir + SWAPD(RelocationDDir->Size));
 
     while (RelocationDir < RelocationEnd &&
-            SWAPW(RelocationDir->SizeOfBlock) > 0)
+            SWAPW(RelocationDir->SizeOfBlock) >= sizeof(IMAGE_BASE_RELOCATION))
     {
+        /* A truncated block that would run past the end of the relocation
+           directory must not be processed either. */
+        if ((ULONG_PTR)RelocationDir + SWAPW(RelocationDir->SizeOfBlock) >
+            (ULONG_PTR)RelocationEnd)
+        {
+            break;
+        }
+
         Count = (SWAPW(RelocationDir->SizeOfBlock) - sizeof(IMAGE_BASE_RELOCATION)) / sizeof(USHORT);
         Address = (ULONG_PTR)RVA(BaseAddress, SWAPD(RelocationDir->VirtualAddress));
         TypeOffset = (PUSHORT)(RelocationDir + 1);
