@@ -523,8 +523,20 @@ IopCompleteRequest(IN PKAPC Apc,
             /* So we did return with a synch operation, was it the IRP? */
             if (Irp->Flags & IRP_SYNCHRONOUS_API)
             {
-                /* Yes, this IRP was synchronous, so return the I/O Status */
-                *Irp->UserIosb = Irp->IoStatus;
+                /* Yes, this IRP was synchronous, so return the I/O Status.
+                   UserIosb points into the user thread's memory, and that
+                   thread is allowed to exit (or unmap) while the request is
+                   completing, so a raw write back would bugcheck the kernel. */
+                _SEH2_TRY
+                {
+                    ProbeForWrite(Irp->UserIosb, sizeof(IO_STATUS_BLOCK), 1);
+                    *Irp->UserIosb = Irp->IoStatus;
+                }
+                _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+                {
+                    /* The caller is gone, there is nothing left to report to. */
+                }
+                _SEH2_END;
 
                 /* Now check if the user gave an event */
                 if (Irp->UserEvent)
