@@ -995,11 +995,15 @@ HalpScatterGatherAdapterControl(IN PDEVICE_OBJECT DeviceObject,
 	PSCATTER_GATHER_LIST ScatterGatherList;
 	PSCATTER_GATHER_ELEMENT TempElements;
 	ULONG ElementCount = 0, RemainingLength = AdapterControlContext->Length;
+	ULONG MapRegisterCount = AdapterControlContext->MapRegisterCount;
 	PUCHAR CurrentVa = AdapterControlContext->CurrentVa;
     // RemainingLength / PAGE_SIZE + 1 for the remainder of our division
-    // + 1 for a safety cushion gives a good safe value. Using the
-    // min function with MAX_SG_ELEMENTS keeps us from getting too large.
-    ULONG Est_SG_Elements = min(RemainingLength / PAGE_SIZE + 2, MAX_SG_ELEMENTS);
+    // + 1 for a safety cushion gives a good safe value. The number of
+    // elements can never exceed the number of map registers the adapter
+    // channel was given, so size the temporary array after that count
+    // (clamped to MAX_SG_ELEMENTS as a sanity backstop).
+    ULONG Est_SG_Elements = min(RemainingLength / PAGE_SIZE + 2,
+                                MapRegisterCount ? MapRegisterCount : MAX_SG_ELEMENTS);
 
 	/* Store the map register base for later in HalPutScatterGatherList */
 	AdapterControlContext->MapRegisterBase = MapRegisterBase;
@@ -1015,7 +1019,7 @@ HalpScatterGatherAdapterControl(IN PDEVICE_OBJECT DeviceObject,
 		return DeallocateObject;
 	}
 
-	while (RemainingLength > 0 && ElementCount < MAX_SG_ELEMENTS)
+	while (RemainingLength > 0 && ElementCount < Est_SG_Elements)
 	{
 	    TempElements[ElementCount].Length = RemainingLength;
 		TempElements[ElementCount].Reserved = 0;
@@ -1050,7 +1054,12 @@ HalpScatterGatherAdapterControl(IN PDEVICE_OBJECT DeviceObject,
 	ScatterGatherList = ExAllocatePoolWithTag(NonPagedPool,
 	                                          sizeof(SCATTER_GATHER_LIST) + sizeof(SCATTER_GATHER_ELEMENT) * ElementCount,
 											  TAG_DMA);
-	ASSERT(ScatterGatherList);
+	if (!ScatterGatherList)
+	{
+		DPRINT1("Failed to allocate scatter/gather list!\n");
+		ExFreePoolWithTag(TempElements, TAG_DMA);
+		return DeallocateObject;
+	}
 
 	ScatterGatherList->NumberOfElements = ElementCount;
 	ScatterGatherList->Reserved = (ULONG_PTR)AdapterControlContext;
