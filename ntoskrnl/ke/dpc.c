@@ -424,7 +424,30 @@ KiTimerListExpire(IN PLIST_ENTRY ExpiredListHead,
                 DpcEntry[DpcCalls].Routine = TimerDpc->DeferredRoutine;
                 DpcEntry[DpcCalls].Context = TimerDpc->DeferredContext;
                 DpcCalls++;
-                ASSERT(DpcCalls < MAX_TIMER_DPCS);
+
+                /* The DPC array only has MAX_TIMER_DPCS entries, and ASSERT
+                   disappears in release builds, so once the array is full the
+                   accumulated DPCs have to be flushed right away and the
+                   collection has to go on. Otherwise the 17th expired timer
+                   was written past the end of the array (KiTimerExpiration
+                   avoids this because its accounting budget forces a flush). */
+                if (DpcCalls == MAX_TIMER_DPCS)
+                {
+                    KiReleaseDispatcherLock(DISPATCH_LEVEL);
+                    for (i = 0; DpcCalls; DpcCalls--, i++)
+                    {
+#if DBG
+                        /* Clear DPC Time */
+                        Prcb->DebugDpcTime = 0;
+#endif
+                        /* Call the DPC */
+                        DpcEntry[i].Routine(DpcEntry[i].Dpc,
+                                            DpcEntry[i].Context,
+                                            UlongToPtr(SystemTime.LowPart),
+                                            UlongToPtr(SystemTime.HighPart));
+                    }
+                    KiAcquireDispatcherLock();
+                }
             }
         }
     }
