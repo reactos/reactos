@@ -870,7 +870,22 @@ MiCompleteProtoPteFault(IN BOOLEAN StoreInstruction,
     /* Remove special/caching bits */
     Protection &= ~MM_PROTECT_SPECIAL;
 
-    /* Setup caching */
+    /* Check if this is a kernel or user address */
+    if (Address < MmSystemRangeStart)
+    {
+        /* Build the user PTE */
+        MI_MAKE_HARDWARE_PTE_USER(&TempPte, PointerPte, Protection, PageFrameIndex);
+    }
+    else
+    {
+        /* Build the kernel PTE */
+        MI_MAKE_HARDWARE_PTE(&TempPte, PointerPte, Protection, PageFrameIndex);
+    }
+
+    /* Setup caching. This has to happen after the PTE is built: the MAKE
+       macros start from a fresh PTE, so doing it before meant the cache
+       attributes of video memory (write-combined / non-cached) mappings were
+       silently discarded. */
     if (Pfn1->u3.e1.CacheAttribute == MiWriteCombined)
     {
         /* Write combining, no caching */
@@ -882,18 +897,6 @@ MiCompleteProtoPteFault(IN BOOLEAN StoreInstruction,
         /* Write through, no caching */
         MI_PAGE_DISABLE_CACHE(&TempPte);
         MI_PAGE_WRITE_THROUGH(&TempPte);
-    }
-
-    /* Check if this is a kernel or user address */
-    if (Address < MmSystemRangeStart)
-    {
-        /* Build the user PTE */
-        MI_MAKE_HARDWARE_PTE_USER(&TempPte, PointerPte, Protection, PageFrameIndex);
-    }
-    else
-    {
-        /* Build the kernel PTE */
-        MI_MAKE_HARDWARE_PTE(&TempPte, PointerPte, Protection, PageFrameIndex);
     }
 
     /* Set the dirty flag if needed */
@@ -985,6 +988,29 @@ MiResolvePageFileFault(_In_ BOOLEAN StoreInstruction,
         ASSERT(FALSE);
         Pfn1->u4.InPageError = 1;
         Pfn1->u1.ReadStatus = Status;
+
+        /* The paging IO failed, so the page was never written by the pager and
+           still contains whatever its previous owner left in it. Zero it before
+           it is mapped below, otherwise the faulting thread is handed a page
+           full of stale (and possibly sensitive) kernel memory. Do this with
+           the PFN lock released, like the paging IO itself. */
+        MiReleasePfnLock(*OldIrql);
+        {
+            KIRQL HyperOldIrql;
+            PEPROCESS Process = PsGetCurrentProcess();
+            PVOID ZeroAddress = MiMapPageInHyperSpace(Process, Page, &HyperOldIrql);
+
+            if (ZeroAddress)
+            {
+                KeZeroPages(ZeroAddress, PAGE_SIZE);
+                MiUnmapPageInHyperSpace(Process, ZeroAddress, HyperOldIrql);
+            }
+        }
+        *OldIrql = MiAcquirePfnLock();
+
+        /* Nobody should have changed that while we were not looking */
+        ASSERT(Pfn1->u3.e1.ReadInProgress == 1);
+        ASSERT(Pfn1->u3.e1.WriteInProgress == 0);
     }
 
     /* And the PTE can finally be valid */

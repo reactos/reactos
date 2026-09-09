@@ -44,36 +44,48 @@ static void FreeWsleIndex(PMMWSL WsList, ULONG Index)
     if (Index == (LastEntry - 1))
     {
         /* We're freeing the last index of our list. */
-        while (Wsle[Index].u1.e1.Valid == 0)
+        while ((Index != 0) && (Wsle[Index].u1.e1.Valid == 0))
             Index--;
 
-        /* Should we bother about the Free entries */
-        if (FirstFree < Index)
+        if (Wsle[Index].u1.e1.Valid == 0)
         {
-            /* Try getting the index of the last free entry */
-            ASSERT(Wsle[Index + 1].u1.Free.MustBeZero == 0);
-            ULONG PreviousFree = Wsle[Index + 1].u1.Free.PreviousFree;
-            ASSERT(PreviousFree < LastEntry);
-            ULONG LastFree = Index + 1 - PreviousFree;
-#ifdef MMWSLE_PREVIOUS_FREE_JUMP
-            while (Wsle[LastFree].u1.e1.Valid)
-            {
-                ASSERT(LastFree > MMWSLE_PREVIOUS_FREE_JUMP);
-                LastFree -= MMWSLE_PREVIOUS_FREE_JUMP;
-            }
-#endif
-            /* Update */
-            ASSERT(LastFree >= FirstFree);
-            Wsle[FirstFree].u1.Free.PreviousFree = (Index + 1 - LastFree) & MMWSLE_PREVIOUS_FREE_MASK;
-            Wsle[LastFree].u1.Free.NextFree = 0;
+            /* Every entry up to the old end is free: the used part of the list
+               is empty. Resetting is the only consistent answer - relying on an
+               invariant alone used to walk Index past the beginning of the
+               array here and read (then use) Wsle[ULONG_MAX]. */
+            FirstFree = ULONG_MAX;
+            LastEntry = 0;
         }
         else
         {
-            /* No more free entries in our array */
-            FirstFree = ULONG_MAX;
+            /* Should we bother about the Free entries */
+            if (FirstFree < Index)
+            {
+                /* Try getting the index of the last free entry */
+                ASSERT(Wsle[Index + 1].u1.Free.MustBeZero == 0);
+                ULONG PreviousFree = Wsle[Index + 1].u1.Free.PreviousFree;
+                ASSERT(PreviousFree < LastEntry);
+                ULONG LastFree = Index + 1 - PreviousFree;
+#ifdef MMWSLE_PREVIOUS_FREE_JUMP
+                while (Wsle[LastFree].u1.e1.Valid)
+                {
+                    ASSERT(LastFree > MMWSLE_PREVIOUS_FREE_JUMP);
+                    LastFree -= MMWSLE_PREVIOUS_FREE_JUMP;
+                }
+#endif
+                /* Update */
+                ASSERT(LastFree >= FirstFree);
+                Wsle[FirstFree].u1.Free.PreviousFree = (Index + 1 - LastFree) & MMWSLE_PREVIOUS_FREE_MASK;
+                Wsle[LastFree].u1.Free.NextFree = 0;
+            }
+            else
+            {
+                /* No more free entries in our array */
+                FirstFree = ULONG_MAX;
+            }
+            /* This is the new size of our array */
+            LastEntry = Index + 1;
         }
-        /* This is the new size of our array */
-        LastEntry = Index + 1;
         /* Should we shrink the alloc? */
         while ((LastInitializedWsle - LastEntry) > (PAGE_SIZE / sizeof(MMWSLE)))
         {
