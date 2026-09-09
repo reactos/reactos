@@ -500,6 +500,16 @@ CON_API(SrvAddConsoleAlias,
     }
     else // Add the entry
     {
+        /* Adding an alias that already exists must replace it: otherwise every
+           call appends another entry and a program can grow the list (and the
+           memory behind it) without bound by re-adding the same source name. */
+        Entry = IntGetAliasEntry(Console, Header,
+                                 ConsoleAliasRequest->Source,
+                                 ConsoleAliasRequest->SourceLength,
+                                 ConsoleAliasRequest->Unicode);
+        if (Entry)
+            IntDeleteAliasEntry(Header, Entry);
+
         Entry = IntCreateAliasEntry(Console,
                                     ConsoleAliasRequest->Source,
                                     ConsoleAliasRequest->SourceLength,
@@ -571,6 +581,9 @@ CON_API(SrvGetConsoleAlias,
         }
 
         RtlCopyMemory(lpTarget, Entry->Target.Buffer, Entry->Target.Length);
+        /* The caller expects a NULL-terminated string, and Length reserved room
+           for the terminator, so write it explicitly. */
+        ((PWCHAR)lpTarget)[Entry->Target.Length / sizeof(WCHAR)] = UNICODE_NULL;
         ConsoleAliasRequest->TargetLength = Length;
     }
     else
@@ -584,6 +597,8 @@ CON_API(SrvGetConsoleAlias,
         ConvertInputUnicodeToAnsi(Console,
                                   Entry->Target.Buffer, Entry->Target.Length,
                                   lpTarget, Entry->Target.Length / sizeof(WCHAR));
+        /* ConvertInputUnicodeToAnsi does not terminate either */
+        ((PCHAR)lpTarget)[Entry->Target.Length / sizeof(WCHAR)] = '\0';
         ConsoleAliasRequest->TargetLength = Length;
     }
 

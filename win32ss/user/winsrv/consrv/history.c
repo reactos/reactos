@@ -24,6 +24,22 @@ typedef struct _HISTORY_BUFFER
     PUNICODE_STRING Entries;
 } HISTORY_BUFFER, *PHISTORY_BUFFER;
 
+/* Windows caps the command history at 999 entries per buffer (and 999 buffers).
+   Enforcing the same bound here also keeps the entry-count multiplication from
+   overflowing: a value like 0x20000000 made NumCommands * sizeof(UNICODE_STRING)
+   wrap around to 0 on 32-bit, so an empty buffer was allocated and then written
+   past its end with the real number of entries. */
+#define CONSOLE_MAX_HISTORY_ENTRIES 999
+
+static ULONG
+HistoryClampNumCommands(IN ULONG NumCommands)
+{
+    if (NumCommands > CONSOLE_MAX_HISTORY_ENTRIES)
+        return CONSOLE_MAX_HISTORY_ENTRIES;
+
+    return NumCommands;
+}
+
 
 BOOLEAN
 ConvertInputAnsiToUnicode(PCONSRV_CONSOLE Console,
@@ -66,7 +82,7 @@ HistoryCurrentBuffer(
     {
         Hist = ConsoleAllocHeap(0, sizeof(HISTORY_BUFFER) + ExeName->Length);
         if (!Hist) return NULL;
-        Hist->MaxEntries = Console->HistoryBufferSize;
+        Hist->MaxEntries = HistoryClampNumCommands(Console->HistoryBufferSize);
         Hist->NumEntries = 0;
         Hist->Entries = ConsoleAllocHeap(0, Hist->MaxEntries * sizeof(UNICODE_STRING));
         if (!Hist->Entries)
@@ -160,6 +176,10 @@ HistoryResizeBuffer(
 {
     PUNICODE_STRING OldEntryList = Hist->Entries;
     PUNICODE_STRING NewEntryList;
+
+    /* Never let the caller talk us into an entry count whose size computation
+       wraps around, see CONSOLE_MAX_HISTORY_ENTRIES. */
+    NumCommands = HistoryClampNumCommands(NumCommands);
 
     NewEntryList = ConsoleAllocHeap(0, NumCommands * sizeof(UNICODE_STRING));
     if (!NewEntryList)
@@ -413,7 +433,7 @@ HistoryReshapeAllBuffers(
                     Hist, HistoryBufferSize, Status);
         }
     }
-    Console->HistoryBufferSize = HistoryBufferSize;
+    Console->HistoryBufferSize = HistoryClampNumCommands(HistoryBufferSize);
 
     /* No duplicates */
     Console->HistoryNoDup = !!HistoryNoDup;
