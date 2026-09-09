@@ -467,6 +467,12 @@ LdrFindEntryForAddress(
     {
         /* Get the entry and NT Headers */
         LdrEntry = CONTAINING_RECORD(NextEntry, LDR_DATA_TABLE_ENTRY, InMemoryOrderLinks);
+
+        /* Advance unconditionally: the step used to sit inside the "NtHeader"
+           check below, so a module with a corrupt header never moved the list
+           forward and this loop hung forever. */
+        NextEntry = NextEntry->Flink;
+
         NtHeader = RtlImageNtHeader(LdrEntry->DllBase);
         if (NtHeader)
         {
@@ -482,9 +488,6 @@ LdrFindEntryForAddress(
                 *Module = LdrEntry;
                 return STATUS_SUCCESS;
             }
-
-            /* Next Entry */
-            NextEntry = NextEntry->Flink;
         }
     }
 

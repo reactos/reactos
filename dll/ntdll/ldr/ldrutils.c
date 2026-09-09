@@ -2055,6 +2055,11 @@ lookinhash:
                         DPRINT1("LDR: LdrpCheckForLoadedDll - Unable To Locate %wZ: 0x%08x\n",
                             &DllName, Length);
                     }
+
+                    /* Fail instead of falling through with an uninitialized
+                       stack buffer as FullDllName: the code below compares and
+                       converts that buffer as if it held a real path. */
+                    return FALSE;
                 }
 
                 /* Full dll name is found */
