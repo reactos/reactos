@@ -5,10 +5,6 @@ add_definitions(
     -D_WINDOWS
     -DPNG_BUILD_DLL)
 
-include_directories(
-    ${REACTOS_SOURCE_DIR}/sdk/include/reactos/libs/libpng
-    ${REACTOS_SOURCE_DIR}/sdk/include/reactos/libs/zlib)
-
 spec2def(libpng.dll libpng.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
@@ -29,6 +25,8 @@ list(APPEND SOURCE
     pngwutil.c)
 
 add_library(libpng MODULE ${SOURCE} ${CMAKE_CURRENT_BINARY_DIR}/libpng.def)
+target_include_directories(libpng PUBLIC ${REACTOS_SOURCE_DIR}/sdk/include/reactos/libs/libpng)
+
 set_module_type(libpng win32dll)
 target_link_libraries(libpng zlib ${PSEH_LIB})
 add_importlibs(libpng msvcrt kernel32 ntdll)
