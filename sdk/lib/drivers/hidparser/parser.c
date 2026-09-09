@@ -789,6 +789,17 @@ HidParser_ParseReportDescriptor(
         if (CurrentItem->Type == ITEM_TYPE_LONG)
         {
             //
+            // The data-size byte lives right after the item header.
+            //
+            if ((CurrentOffset + sizeof(ITEM_PREFIX) + sizeof(UCHAR)) > ReportEnd)
+            {
+                //
+                // no room for the data-size byte, the item is truncated
+                //
+                break;
+            }
+
+            //
             // increment item size with size of data item
             //
             CurrentLongItem = (PLONG_ITEM)CurrentItem;
@@ -800,11 +811,24 @@ HidParser_ParseReportDescriptor(
             // get short item
             //
             CurrentShortItem = (PSHORT_ITEM)CurrentItem;
+        }
 
+        //
+        // Reject an item whose body does not fit into the descriptor before any
+        // of its payload is read: a descriptor ending in the middle of an item
+        // (e.g. a lone item header as its last byte) used to be read past the
+        // end of the buffer.
+        //
+        if ((CurrentOffset + sizeof(ITEM_PREFIX) + CurrentItemSize) > ReportEnd)
+        {
+            break;
+        }
+
+        if (CurrentItem->Type != ITEM_TYPE_LONG)
+        {
             //
             // get associated data
             //
-            //ASSERT(CurrentItemSize == 1 || CurrentItemSize == 2 || CurrentItemSize == 4);
             if (CurrentItemSize == 1)
                 Data = CurrentShortItem->Data.UData8[0];
             else if (CurrentItemSize == 2)
