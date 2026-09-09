@@ -1,8 +1,5 @@
 
-include_directories(
-    ${REACTOS_SOURCE_DIR}/sdk/include/wine
-    ${REACTOS_SOURCE_DIR}/dll/win32/dhcpcsvc/include
-    ${REACTOS_SOURCE_DIR}/sdk/lib/tdilib)
+include_directories(${REACTOS_SOURCE_DIR}/sdk/include/wine)
 
 spec2def(iphlpapi.dll iphlpapi.spec ADD_IMPORTLIB)
 
@@ -31,9 +28,9 @@ add_library(iphlpapi MODULE
     iphlpapi_fakestubs.c
     iphlpapi.spec
     ${CMAKE_CURRENT_BINARY_DIR}/iphlpapi.def)
+add_pch(iphlpapi iphlpapi_private.h SOURCE)
 
 set_module_type(iphlpapi win32dll UNICODE)
 target_link_libraries(iphlpapi wine tdilib)
 add_importlibs(iphlpapi dhcpcsvc advapi32 psapi ws2_32 msvcrt kernel32 ntdll)
-add_pch(iphlpapi iphlpapi_private.h SOURCE)
 add_cd_file(TARGET iphlpapi DESTINATION reactos/system32 FOR all)

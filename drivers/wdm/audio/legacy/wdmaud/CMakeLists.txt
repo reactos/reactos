@@ -1,7 +1,6 @@
 add_definitions(-D_COMDDK_)
 
 include_directories(
-    ${REACTOS_SOURCE_DIR}/sdk/lib/drivers/sound/mmixer
     ${REACTOS_SOURCE_DIR}/sdk/include/reactos/libs/sound)
 
 list(APPEND SOURCE
@@ -13,8 +12,8 @@ list(APPEND SOURCE
     wdmaud.h)
 
 add_library(wdmaud MODULE ${SOURCE} wdmaud.rc)
+add_pch(wdmaud wdmaud.h SOURCE)
 set_module_type(wdmaud kernelmodedriver)
 target_link_libraries(wdmaud mmixer libcntpr pseh)
-add_pch(wdmaud wdmaud.h SOURCE)
 add_importlibs(wdmaud ntoskrnl ks hal)
 add_cd_file(TARGET wdmaud DESTINATION reactos/system32/drivers FOR all)

@@ -1,4 +1,10 @@
 
+if(DBG)
+    add_definitions(-D_DEBUG)
+endif()
+
+include_directories(${REACTOS_SOURCE_DIR}/modules/rosapps/include/vfd)
+
 spec2def(vfd.dll vfdlib.spec ADD_IMPORTLIB)
 
 add_message_headers(ANSI vfdmsg_lib.mc)
@@ -18,17 +24,11 @@ list(APPEND SOURCE
     vfdshutil.cpp
     vfdzip.c)
 
-if(DBG)
-    add_definitions(-D_DEBUG)
-endif()
-
 add_library(vfd MODULE
     ${SOURCE}
     vfdlib.rc
     ${CMAKE_CURRENT_BINARY_DIR}/vfd.def)
 
-include_directories(${REACTOS_SOURCE_DIR}/modules/rosapps/include/vfd
-                    ${REACTOS_SOURCE_DIR}/sdk/include/reactos/libs/zlib)
 set_module_type(vfd win32dll ENTRYPOINT DllMain 12)
 target_link_libraries(vfd zlib_solo uuid cppstl)
 set_target_cpp_properties(vfd WITH_EXCEPTIONS)
