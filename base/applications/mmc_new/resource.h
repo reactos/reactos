@@ -16,6 +16,7 @@
 
 #define IDI_MAINAPP 101
 #define IDI_FOLDERICON 102
+#define IDB_TOOLBAR             105
 
 #define IDA_MMC         500
 
@@ -36,6 +37,11 @@
 #define IDM_HELP_ABOUT   9001
 #define IDM_MDI_FIRSTCHILD 9500
 
+#define IDM_TB_UNDO            1500
+#define IDM_TB_REDO            1501
+#define IDM_TB_UP              1502
+#define IDM_TB_SCOPE_PANE      1503
+#define IDM_TB_ACTIONS_PANE    1504
 
 #define IDD_DIALOG_ADD     3000
 #define IDC_BUTTON_ADD     3001

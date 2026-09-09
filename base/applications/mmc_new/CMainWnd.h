@@ -21,6 +21,11 @@ private:
     HMENU m_hMenuConsoleLarge;
     bool m_AppAuthorMode;
 
+    CToolbar<DWORD_PTR> m_ToolBar;
+    int m_iToolBarHeight;
+    BOOL m_ToolBarVisible;
+    HIMAGELIST m_hToolBarImageList;
+
     CSimpleArray<CSnapinCacheEntry*> m_SnapinCache;
     HIMAGELIST m_hSnapinImageList;
 
@@ -69,7 +74,7 @@ public:
                 /* lpszClassName= */TEXT("MMCMainFrame"),
                 /* hIconSm= */LoadIcon(_AtlBaseModule.GetModuleInstance(), MAKEINTRESOURCE(IDI_MAINAPP))
             },
-            NULL, NULL, IDC_ARROW, TRUE, 0, _T("")
+            NULL, NULL, IDC_ARROW, TRUE, 0, L""
         };
         return wc;
     }
@@ -128,8 +133,12 @@ public:
     ~CMainWnd();
 
     LRESULT OnCreate(UINT nMessage, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
-    LRESULT OnNewMDIChild(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
+    LRESULT OnSize(UINT nMessage, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+    LRESULT OnCloseChild(UINT nMessage, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+    LRESULT OnDestroy(UINT nMessage, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+    LRESULT OnClose(UINT nMessage, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 
+    LRESULT OnNewMDIChild(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
     LRESULT OnFileSave(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
     LRESULT OnFileSaveAs(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
     LRESULT OnFileAdd(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
@@ -139,13 +148,10 @@ public:
     LRESULT OnWindowsArrange(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
     LRESULT OnHelpAbout(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
     LRESULT OnMDIForward(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
-    LRESULT OnSize(UINT nMessage, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
-    LRESULT OnCloseChild(UINT nMessage, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
-    LRESULT OnDestroy(UINT nMessage, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
-    LRESULT OnClose(UINT nMessage, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 
 private:
     LRESULT LoadSnapinCache();
+    void UpdateLayout();
     void UpdateViews();
 
 public:

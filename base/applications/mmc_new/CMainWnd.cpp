@@ -9,11 +9,31 @@
 
 #include "precomp.h"
 
+#define BTN_UNDO            0
+#define BTN_REDO            1
+#define BTN_UP              2
+#define BTN_SCOPE_PANE      3
+#define BTN_EXPORT_LIST     4
+#define BTN_ACTIONS_PANE    5
+
+static TBBUTTON TbButtons[] =
+{
+    { BTN_UNDO, IDM_TB_UNDO, 0, BTNS_BUTTON, {0}, 0, 0 },
+    { BTN_REDO, IDM_TB_REDO, 0, BTNS_BUTTON, {0}, 0, 0 },
+    { 4, IDC_STATIC, TBSTATE_ENABLED, BTNS_SEP, {0}, 0, 0 },
+    { BTN_UP, IDM_TB_UP, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0 },
+    { BTN_SCOPE_PANE, IDM_TB_SCOPE_PANE, TBSTATE_ENABLED | TBSTATE_CHECKED, BTNS_CHECK, {0}, 0, 0 },
+    { 4, IDC_STATIC, TBSTATE_ENABLED, BTNS_SEP, {0}, 0, 0 },
+//    { BTN_EXPORT_LIST, IDM_TB_EXPORT_LIST, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0 },
+    { 4, IDC_STATIC, TBSTATE_ENABLED, BTNS_SEP, {0}, 0, 0 },
+    { BTN_ACTIONS_PANE, IDM_TB_ACTIONS_PANE, TBSTATE_ENABLED, BTNS_CHECK, {0}, 0, 0 }
+};
+
 CMainWnd::CMainWnd()
     : m_NewConsoleCount(0)
     , m_nConsoleCount(0)
     , m_AppAuthorMode(false)
-    , m_hSnapinImageList(NULL)
+    , m_ToolBarVisible(true)
     , m_NextViewId(1)
 {
     m_FrameThunk.Init(XDefFrameProc, this);
@@ -26,6 +46,19 @@ CMainWnd::CMainWnd()
                                           ILC_MASK | ILC_COLOR32,
                                           0,
                                           4);
+
+    m_hToolBarImageList = ImageList_Create(GetSystemMetrics(SM_CXSMICON),
+                                           GetSystemMetrics(SM_CYSMICON),
+                                           ILC_MASK | ILC_COLOR32,
+                                           0,
+                                           4);
+
+    HBITMAP hToolBarBitmap = LoadBitmapW(_AtlBaseModule.GetModuleInstance(), MAKEINTRESOURCE(IDB_TOOLBAR));
+    ImageList_AddMasked(m_hToolBarImageList,
+                        hToolBarBitmap,
+                        RGB(0,0,0));
+    DeleteObject(hToolBarBitmap);
+
     LoadSnapinCache();
 }
 
@@ -34,6 +67,7 @@ CMainWnd::~CMainWnd()
     DestroyMenu(m_hMenuConsoleSmall);
     DestroyMenu(m_hMenuConsoleLarge);
     ImageList_Destroy(m_hSnapinImageList);
+    ImageList_Destroy(m_hToolBarImageList);
     ::CoUninitialize();
 }
 
@@ -42,25 +76,71 @@ CMainWnd::OnCreate(UINT nMessage, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     CLIENTCREATESTRUCT ccs;
     LPCTSTR lpFileName = (LPCTSTR)(((LPCREATESTRUCT)lParam)->lpCreateParams);
+    RECT rect;
+
     m_AppAuthorMode = TRUE;
     UpdateMenu();
-    SetWindowText(TEXT("ReactOS Management Console"));
+    SetWindowTextW(L"ReactOS Management Console");
+
+    /* Create and initialize the Toolbar */
+    m_ToolBar.Create(m_hWnd,
+                     WS_CHILD | WS_VISIBLE | WS_CLIPCHILDREN | TBSTYLE_FLAT,
+                     0);
+
+    m_ToolBar.SendMessageW(TB_SETBITMAPSIZE, 0, MAKELONG(16, 16));
+    m_ToolBar.SendMessageW(TB_BUTTONSTRUCTSIZE, sizeof(TBBUTTON), 0);
+
+    m_ToolBar.SetImageList(m_hToolBarImageList);
+    m_ToolBar.SendMessageW(TB_ADDBUTTONSW, _countof(TbButtons), (LPARAM)TbButtons);
+
+    m_ToolBar.GetClientRect(&rect);
+    m_iToolBarHeight = rect.bottom - rect.top;
+
+    GetClientRect(&rect);
+    rect.top += m_iToolBarHeight;
+
+    /* Create the MDI client window */
     ccs.hWindowMenu = GetSubMenu(m_hMenuConsoleLarge, 1);
     ccs.idFirstChild = IDM_MDI_FIRSTCHILD;
-    RECT rect;
-    GetClientRect(&rect);
-    /* Create the MDI client window */
+
     m_MDIClient.Create(L"MDICLIENT", m_hWnd, rect, (LPCTSTR)NULL, WS_CHILD | WS_CLIPCHILDREN | WS_VSCROLL | WS_HSCROLL, WS_EX_CLIENTEDGE, 0U, &ccs);
-    //hwndMDIClient = CreateWindowEx(WS_EX_CLIENTEDGE, L"MDICLIENT", (LPCTSTR)NULL,
-    //    ,
-    //    rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top,
-    //    m_hWnd, NULL, _AtlBaseModule.GetModuleInstance(), (LPVOID)&ccs);
     m_MDIClient.ShowWindow(SW_SHOW);
     m_MDIClient.UpdateWindow();
+
     if (lpFileName == NULL)
     {
         PostMessage(WM_COMMAND, IDM_FILE_NEW, NULL);
     }
+    return 0;
+}
+
+LRESULT
+CMainWnd::OnSize(UINT nMessage, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    UpdateLayout();
+    return 0;
+}
+
+LRESULT
+CMainWnd::OnCloseChild(UINT nMessage, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    m_nConsoleCount--;
+    UpdateMenu();
+    return 0;
+}
+
+LRESULT
+CMainWnd::OnDestroy(UINT nMessage, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    PostQuitMessage(0);
+    SetMenu(NULL);
+    return 0;
+}
+
+LRESULT
+CMainWnd::OnClose(UINT nMessage, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    DestroyWindow();
     return 0;
 }
 
@@ -215,38 +295,6 @@ CMainWnd::OnMDIForward(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
 }
 
 LRESULT
-CMainWnd::OnSize(UINT nMessage, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
-{
-    RECT rcClient;
-    GetClientRect(&rcClient);
-    m_MDIClient.SetWindowPos(NULL, 0, 0, rcClient.right, rcClient.bottom, SWP_NOZORDER);
-    return 0;
-}
-
-LRESULT
-CMainWnd::OnCloseChild(UINT nMessage, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
-{
-    m_nConsoleCount--;
-    UpdateMenu();
-    return 0;
-}
-
-LRESULT
-CMainWnd::OnDestroy(UINT nMessage, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
-{
-    PostQuitMessage(0);
-    SetMenu(NULL);
-    return 0;
-}
-
-LRESULT
-CMainWnd::OnClose(UINT nMessage, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
-{
-    DestroyWindow();
-    return 0;
-}
-
-LRESULT
 CMainWnd::LoadSnapinCache()
 {
     CRegKey SnapinsKey;
@@ -329,4 +377,30 @@ CMainWnd::UpdateViews()
             console->UpdateView();
 
     } while (pos != NULL);   
+}
+
+void
+CMainWnd::UpdateLayout()
+{
+    RECT rcClient, rcToolBar = {0, 0, 0, 0};
+    GetClientRect(&rcClient);
+
+    int nToolBarFlags = SWP_NOZORDER;
+    if (m_ToolBarVisible)
+    {
+        rcClient.top += m_iToolBarHeight;
+        rcClient.bottom -= m_iToolBarHeight;
+
+        rcToolBar.right = rcClient.right;
+        rcToolBar.bottom = m_iToolBarHeight;
+        nToolBarFlags |= SWP_SHOWWINDOW;
+    }
+    else
+    {
+        nToolBarFlags |= SWP_HIDEWINDOW;
+    }
+
+    m_ToolBar.SetWindowPos(NULL, rcToolBar.left, rcToolBar.top, rcToolBar.right, rcToolBar.bottom, nToolBarFlags);
+
+    m_MDIClient.SetWindowPos(NULL, rcClient.left, rcClient.top, rcClient.right, rcClient.bottom, SWP_NOZORDER);
 }

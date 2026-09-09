@@ -21,6 +21,7 @@ END
 
 IDI_MAINAPP ICON "resources/mmc.ico"
 IDI_FOLDERICON ICON "resources/folder2.ico"
+IDB_TOOLBAR BITMAP "resources/toolbar.bmp"
 
 /* UTF-8 */
 #pragma code_page(65001)
