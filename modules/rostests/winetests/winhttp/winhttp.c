@@ -6297,7 +6297,7 @@ START_TEST (winhttp)
     }
 
 #ifdef __REACTOS__
-    if (!winetest_interactive)
+    if (!winetest_interactive && is_reactos())
     {
         skip("Skipping tests due to hang. See ROSTESTS-422\n");
     }
