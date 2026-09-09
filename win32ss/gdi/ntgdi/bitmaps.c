@@ -421,8 +421,14 @@ NtGdiCreateCompatibleBitmap(
     HBITMAP Bmp;
     PDC Dc;
 
-    /* Check parameters */
-    if ((Width <= 0) || (Height <= 0) || ((Width * Height) > 0x3FFFFFFF))
+    /* Check parameters.
+       The size computation has to be done in 64 bit: Width and Height are INTs,
+       so "Width * Height" wraps around to a negative (or very small) value for
+       large dimensions and the check below is bypassed. What is allocated
+       further down is then far smaller than what the bitmap claims to be, and
+       drawing into it writes past the end of the allocation. */
+    if ((Width <= 0) || (Height <= 0) ||
+        ((ULONGLONG)Width * (ULONGLONG)Height > 0x3FFFFFFF))
     {
         EngSetLastError(ERROR_INVALID_PARAMETER);
         return NULL;

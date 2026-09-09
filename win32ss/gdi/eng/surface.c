@@ -124,6 +124,7 @@ SURFACE_AllocSurface(
     _In_opt_ PVOID pvBits)
 {
     ULONG cBitsPixel, cjBits, cjObject;
+    ULONGLONG Stride;
     PSURFACE psurf;
     SURFOBJ *pso;
     PVOID pvSection;
@@ -145,14 +146,26 @@ SURFACE_AllocSurface(
     /* Are bits and a width in bytes given? */
     if (pvBits && cjWidth)
     {
-        /* Align the width (Windows compatibility, drivers expect that) */
-        cjWidth = WIDTH_BYTES_ALIGN32((cjWidth << 3) / cBitsPixel, cBitsPixel);
+        /* Align the width (Windows compatibility, drivers expect that).
+           Compute the stride in 64 bit: cx * cBitsPixel wrapped around for
+           large widths and produced a stride of 0, and with it a surface that
+           claimed to be huge while having almost nothing allocated behind it. */
+        Stride = ((ULONGLONG)cjWidth << 3) / cBitsPixel;
+        Stride = (((Stride * cBitsPixel) + 31) & ~31ULL) >> 3;
     }
     else
     {
         /* Calculate width from the bitmap width in pixels */
-        cjWidth = WIDTH_BYTES_ALIGN32(cx, cBitsPixel);
+        Stride = ((((ULONGLONG)cx * cBitsPixel) + 31) & ~31ULL) >> 3;
     }
+
+    if ((Stride == 0) || (Stride > MAXULONG))
+    {
+        DPRINT1("Invalid or overflowing stride: cx %lu, cBitsPixel %lu, "
+                "cjWidth %lu, stride 0x%I64x\n", cx, cBitsPixel, cjWidth, Stride);
+        return NULL;
+    }
+    cjWidth = (ULONG)Stride;
 
     /* Is this an uncompressed format? */
     if (iFormat <= BMF_32BPP)
@@ -180,8 +193,16 @@ SURFACE_AllocSurface(
         {
             /* Do a dumb calculation. Windows doesn't validate this either and
                some drivers (e.g. Radeon IGP 320M) explicitly pass bogus values.
-               See CORE-13036. */
-            cjBits = cjWidth * cy;
+               See CORE-13036. The multiplication itself still must not wrap
+               around: cjBits is a ULONG, so anything that does not fit cannot
+               be allocated anyway, and silently wrapping used to hand out a
+               surface with a tiny buffer behind a huge bitmap. */
+            if (!NT_SUCCESS(RtlULongMult(cjWidth, cy, &cjBits)))
+            {
+                DPRINT1("Overflow calculating size: cjWidth %lu, cy %lu\n",
+                        cjWidth, cy);
+                return NULL;
+            }
         }
     }
     else
