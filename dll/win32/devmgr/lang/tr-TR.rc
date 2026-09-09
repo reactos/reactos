@@ -1,4 +1,10 @@
-/* TRANSLATOR: 2014, 2015 Erdem Ersoy (eersoy93) (erdemersoy [at] erdemersoy [dot] net) */
+/*
+ * PROJECT:     ReactOS Device Manager
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Turkish resource file
+ * TRANSLATORS: Copyright 2014, 2015 Erdem Ersoy (eersoy93) <erdemersoy@erdemersoy.net>
+ *              Copyright 2026 Ethem Çılgın (associan) <JaggedZenith@proton.me>
+ */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
@@ -54,7 +60,7 @@ BEGIN
     IDS_DEV_INVALID_DATA "Bilgisayarınızdaki BIOS'un bu aygıt için kaynakları yanlış bildirmesinden dolayı bu aygıt düzgün çalışmıyor."
     IDS_DEV_INVALID_DATA2 "Aygıttaki BIOS'un bu aygıt için kaynakları yanlış bildirmesinden dolayı bu aygıt düzgün çalışmıyor."
     IDS_DEV_FAILED_START "Bu aygıt; ya yok, ya düzgün çalışmıyor, ya da kurulu tüm sürücüleri yok."
-    IDS_DEV_LIAR "ReactOS, bu aygıtı başlatmayı denerken yanıt vermeyi durdurdu, bu yüzden bu aygıtı bir daha başlatmayı denemeyecek."
+    IDS_DEV_LIAR "ReactOS bu aygıtı başlatmayı denerken aygıt yanıt vermeyi kesti, bu yüzden başlatma işlemi tekrar denenmeyecek."
     IDS_DEV_NORMAL_CONFLICT "Bu aygıt, kullanmak için boş %1 kaynaklarını bulamıyor."
     IDS_DEV_NOT_VERIFIED "Bu aygıt; ya yok, ya düzgün çalışmıyor, ya da bu aygıtın kurulu tüm sürücüleri yok."
     IDS_DEV_NEED_RESTART "Bu aygıt, bilgisayarınızı yeniden başlatana dek düzgün çalışamaz."
@@ -76,7 +82,7 @@ BEGIN
     IDS_DEV_FAILED_INSTALL "Bu aygıt için sürücüler kurulu değil."
     IDS_DEV_HARDWARE_DISABLED "Bu aygıtın BIOS'u, aygıta kaynak vermediği için bu aygıt devre dışı."
     IDS_DEV_CANT_SHARE_IRQ "Bu aygıt, başka bir aygıt tarafından kullanımda olan ve paylaşılamayan bir Kesme İsteği (IRQ) kaynağı kullanıyor.\nÇakışan ayarı değiştirmeli ya da çakışmaya neden olan sürücüyü kaldırmalısınız."
-    IDS_DEV_FAILED_ADD "This device is not working properly because ReactOS cannot load the drivers required for this device."
+    IDS_DEV_FAILED_ADD "ReactOS, bu aygıt için gereken sürücüleri yükleyemediğinden dolayı aygıt düzgün çalışmıyor."
     IDS_DEV_DISABLED_SERVICE "ReactOS, kurulum dosyalarının üzerinde bulunduğu sürücüye ya da ağ konumuna erişemediği için, bu aygıt için sürücüleri kuramıyor."
     IDS_DEV_TRANSLATION_FAILED "Bu aygıt, sürücüsüne yanıt vermiyor."
     IDS_DEV_NO_SOFTCONFIG "ReactOS, bu aygıt için ayarları belirleyemiyor. Bu aygıtla gelen belgelere bakınız ve yapılandırmayı yapmak için ""Kaynaklar"" sekmesini kullanınız."
@@ -92,7 +98,7 @@ BEGIN
     IDS_DEV_HALTED "Bir uygulama ya da bir hizmet bu donanım aygıtını kapattı."
     IDS_DEV_PHANTOM "Şimdi bu donanım aygıtı bilgisayara bağlı değil."
     IDS_DEV_SYSTEM_SHUTDOWN "ReactOS, işletim sisteminin kapatılmakta olmasından dolayı bu donanım aygıtı için erişim sağlayamıyor."
-    IDS_DEV_HELD_FOR_EJECT "ReactOS, bu donanım aygıtının, güvenli kaldırmaya hazır olup, bilgisayardan kaldırılmamasından dolayı bu donanım aygıtını kullanamıyor."
+    IDS_DEV_HELD_FOR_EJECT "ReactOS bu donanım aygıtını kullanamıyor çünkü aygıt güvenli kaldırma için hazırlanmış ancak bilgisayardan henüz çıkarılmamış."
     IDS_DEV_DRIVER_BLOCKED "Bu aygıt için yazılımın, ReactOS'la sorunları olduğu biliniyor olmasından dolayı, başlatılması engellendi. Yeni bir donanım için donanımın satıcısıyla iletişime geçiniz."
     IDS_DEV_REGISTRY_TOO_LARGE "ReactOS, sistem kayıt yığınının çok büyük olmasından (Kayıt Defteri Büyüklük Sınırı'nı aşmasından) dolayı yeni donanım aygıtlarını başlatamıyor."
     IDS_DEV_SETPROPERTIES_FAILED "ReactOS, bu aygıtın ayarlarını değiştiremedi."
@@ -250,7 +256,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", IDC_DEVICON, 7, 7, 20, 20
     LTEXT "", IDC_DEVNAME, 40, 9, 174, 16, SS_NOPREFIX
-    LTEXT "Uyarı: Bu cihazı sisteminizden kaldırmak üzeresiniz.", -1, 7, 37, 204, 50
+    LTEXT "Uyarı: Bu aygıtı sisteminizden kaldırmak üzeresiniz.", -1, 7, 37, 204, 50
     DEFPUSHBUTTON "TAMAM", IDOK, 110, 100, 50, 14
     PUSHBUTTON "İptal", IDCANCEL, 166, 100, 50, 14
 END
@@ -318,10 +324,10 @@ END
 
 STRINGTABLE
 BEGIN
-  IDS_TYPE_MEMORY           "Memory"
-  IDS_TYPE_PORT             "Input/output (IO)"
-  IDS_TYPE_DMA              "Direct Memory Access (DMA)"
-  IDS_TYPE_IRQ              "Interrupt request (IRQ)"
+  IDS_TYPE_MEMORY      "Bellek"
+  IDS_TYPE_PORT        "Giriş/çıkış (G/Ç)"
+  IDS_TYPE_DMA         "Doğrudan bellek erişimi (DMA)"
+  IDS_TYPE_IRQ         "Kesme isteği (IRQ)"
 END
 
 /* Hints */
