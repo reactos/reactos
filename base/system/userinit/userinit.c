@@ -163,6 +163,13 @@ GetShell(
         return FALSE;
     }
 
+    /* RegQueryValueExW does not guarantee that REG_SZ data is NUL terminated
+       and it can fill the whole buffer, so make sure there is a terminator
+       before the value is treated as a string below. */
+    if (Size >= sizeof(Shell))
+        Size = sizeof(Shell) - sizeof(WCHAR);
+    Shell[Size / sizeof(WCHAR)] = L'\0';
+
     if ((Type == REG_SZ) || (Type == REG_EXPAND_SZ))
     {
         TRACE("Found command line %s\n", debugstr_w(Shell));
