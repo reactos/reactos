@@ -1625,7 +1625,22 @@ NtUserSetWindowsHookEx( HINSTANCE Mod,
        //gptiCurrent->pDeskInfo->fsHooks |= HOOKID_TO_FLAG(HookId);
        ptiHook->rpdesk->pDeskInfo->fsHooks |= HOOKID_TO_FLAG(HookId);
        ptiHook->sphkCurrent = NULL;
-       ptiHook->pClientInfo->phkCurrent = NULL;
+
+       /* pClientInfo is a user mode shared structure: it can be NULL and it is
+          not mapped into this process, so the write below needs the same
+          exception handling the per-thread branches above use. */
+       if (ptiHook->pClientInfo)
+       {
+          _SEH2_TRY
+          {
+             ptiHook->pClientInfo->phkCurrent = NULL;
+          }
+          _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+          {
+             ERR("Problem writing to ClientInfo!\n");
+          }
+          _SEH2_END;
+       }
     }
 
     RtlInitUnicodeString(&Hook->ModuleName, NULL);
