@@ -1,9 +1,9 @@
+
 remove_definitions(-D_WIN32_WINNT=0x502 -DWINVER=0x502)
 add_definitions(-D_WIN32_WINNT=0x601)
 add_definitions(-DNTDDI_VERSION=0x06010000)
 
 include_directories(
-    ${REACTOS_SOURCE_DIR}/dll/3rdparty/libtirpc/tirpc
     ${REACTOS_SOURCE_DIR}/drivers/filesystems/nfs
     ${REACTOS_SOURCE_DIR}/dll/np/nfs)
 
@@ -47,6 +47,7 @@ list(APPEND SOURCE
     precomp.h)
 
 add_executable(nfsd ${SOURCE} nfsd.rc)
+add_pch(nfsd precomp.h SOURCE)
 
 if(CMAKE_C_COMPILER_ID STREQUAL "MSVC")
     # Disable warning C4477 (printf format warnings)
@@ -63,7 +64,6 @@ target_link_libraries(nfsd ansi_sync_hacks oldnames)
 
 set_module_type(nfsd win32cui)
 add_importlibs(nfsd advapi32 iphlpapi libtirpc msvcrt shell32 ws2_32 wldap32 kernel32 ntdll_vista ntdll)
-add_pch(nfsd precomp.h SOURCE)
 
 add_cd_file(TARGET nfsd DESTINATION reactos/system32 FOR all)
 add_cd_file(FILE "${CMAKE_CURRENT_SOURCE_DIR}/netconfig" DESTINATION reactos/system32/drivers/etc FOR all)
