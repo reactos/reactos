@@ -6,6 +6,7 @@ list(APPEND SOURCE
     src_zoh.c
     precomp.h)
 
-add_library(libsamplerate ${SOURCE})
-add_dependencies(libsamplerate psdk)
+add_library(libsamplerate STATIC ${SOURCE})
 add_pch(libsamplerate precomp.h SOURCE)
+add_dependencies(libsamplerate psdk)
+target_include_directories(libsamplerate INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
