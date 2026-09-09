@@ -6308,7 +6308,6 @@ START_TEST (winhttp)
     }
 #else
     test_IWinHttpRequest(si.port);
-    test_bad_header(si.port);
 #endif
     test_connection_info(si.port);
     test_basic_request(si.port, NULL, L"/basic");
@@ -6321,8 +6320,8 @@ START_TEST (winhttp)
     test_basic_authentication(si.port);
     test_multi_authentication(si.port);
     test_large_data_authentication(si.port);
-#ifndef __REACTOS__ // See ROSTESTS-422
-    test_bad_header(si.port); // Moved up into the REACTOS skip section */
+#ifndef __REACTOS__ // Moved up into the REACTOS skip section. See ROSTESTS-422.
+    test_bad_header(si.port);
 #endif
 #ifdef __REACTOS__
     if (!winetest_interactive)
