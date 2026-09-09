@@ -105,13 +105,65 @@ static PUCHAR NtfsDecodeRun(PUCHAR DataRun, LONGLONG *DataRunOffset, ULONGLONG *
     return DataRun;
 }
 
-static PNTFS_ATTR_CONTEXT NtfsPrepareAttributeContext(PNTFS_ATTR_RECORD AttrRecord)
+static PNTFS_ATTR_CONTEXT NtfsPrepareAttributeContext(PNTFS_ATTR_RECORD AttrRecord,
+                                                      PNTFS_ATTR_RECORD AttrRecordEnd)
 {
     PNTFS_ATTR_CONTEXT Context;
+    ULONG RecordLength, MinLength;
 
-    Context = FrLdrTempAlloc(FIELD_OFFSET(NTFS_ATTR_CONTEXT, Record) + AttrRecord->Length,
+    /*
+     * The attribute record length, and for non-resident attributes the offset of
+     * the mapping pairs, are read straight from the disk and were used as a copy
+     * size and as a pointer into the freshly allocated record without any check.
+     * A damaged or crafted image could therefore make us copy arbitrary amounts
+     * of data, or walk off the end of the record while decoding the run list.
+     */
+    if ((ULONG_PTR)AttrRecordEnd <= (ULONG_PTR)AttrRecord)
+    {
+        return NULL;
+    }
+
+    MinLength = FIELD_OFFSET(NTFS_ATTR_RECORD, Resident);
+    if (AttrRecord->IsNonResident)
+    {
+        ULONG PairsMinLength;
+
+        MinLength = FIELD_OFFSET(NTFS_ATTR_RECORD, NonResident.AllocatedSize);
+
+        /* The mapping pairs live inside the record too, so it has to be long
+           enough to hold at least their first byte. */
+        PairsMinLength = (ULONG)AttrRecord->NonResident.MappingPairsOffset + sizeof(UCHAR);
+        if (PairsMinLength > MinLength)
+        {
+            MinLength = PairsMinLength;
+        }
+    }
+
+    RecordLength = AttrRecord->Length;
+    if (RecordLength < MinLength ||
+        RecordLength > (ULONG)((ULONG_PTR)AttrRecordEnd - (ULONG_PTR)AttrRecord))
+    {
+        ERR("NtfsPrepareAttributeContext() invalid attribute record length: %u\n", RecordLength);
+        return NULL;
+    }
+
+    if (AttrRecord->IsNonResident &&
+        AttrRecord->NonResident.MappingPairsOffset >= RecordLength)
+    {
+        ERR("NtfsPrepareAttributeContext() invalid mapping pairs offset: %u\n",
+            AttrRecord->NonResident.MappingPairsOffset);
+        return NULL;
+    }
+
+    Context = FrLdrTempAlloc(FIELD_OFFSET(NTFS_ATTR_CONTEXT, Record) + RecordLength,
                              TAG_NTFS_CONTEXT);
-    RtlCopyMemory(&Context->Record, AttrRecord, AttrRecord->Length);
+    if (!Context)
+    {
+        ERR("NtfsPrepareAttributeContext() out of memory\n");
+        return NULL;
+    }
+
+    RtlCopyMemory(&Context->Record, AttrRecord, RecordLength);
     if (AttrRecord->IsNonResident)
     {
         LONGLONG DataRunOffset;
@@ -505,7 +557,7 @@ static PNTFS_ATTR_CONTEXT NtfsFindAttributeHelper(
             PNTFS_ATTR_LIST_ATTR ListAttrRecord;
             PNTFS_ATTR_LIST_ATTR ListAttrRecordEnd;
 
-            ListContext = NtfsPrepareAttributeContext(AttrRecord);
+            ListContext = NtfsPrepareAttributeContext(AttrRecord, AttrRecordEnd);
 
             ListSize = NtfsGetAttributeSize(&ListContext->Record);
             if (ListSize <= 0xFFFFFFFF)
@@ -547,7 +599,7 @@ static PNTFS_ATTR_CONTEXT NtfsFindAttributeHelper(
             if (RtlEqualMemory(AttrName, Name, NameLength * sizeof(WCHAR)))
             {
                 /* Found it, fill up the context and return */
-                Context = NtfsPrepareAttributeContext(AttrRecord);
+                Context = NtfsPrepareAttributeContext(AttrRecord, AttrRecordEnd);
                 break;
             }
         }

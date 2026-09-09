@@ -35,6 +35,12 @@ BOOLEAN    FatReadVolumeSectors(PFAT_VOLUME_INFO Volume, ULONG SectorNumber, ULO
 
 #define FAT_MAX_CACHE_SIZE (256 * 1024) // 256 KiB, note: it should fit maximum FAT12 FAT size (6144 bytes)
 
+/* A long file name is spread over at most 20 directory entries (13 characters
+   each, 260 characters total). The sequence number of an entry is read straight
+   from the disk, so it has to be validated before it is used to index into the
+   name buffer, otherwise a crafted image makes us write far past the buffer. */
+#define FAT_MAX_LFN_ENTRIES 20
+
 typedef struct _FAT_VOLUME_INFO
 {
     PUCHAR FatCache; /* A part of 1st FAT cached in memory */
@@ -296,6 +302,24 @@ BOOLEAN FatOpenVolume(PFAT_VOLUME_INFO Volume, PFAT_BOOTSECTOR BootSector, ULONG
                  FIELD_OFFSET(FAT32_BOOTSECTOR, TotalSectorsBig));
         Volume->TotalSectors = (FatVolumeBootSector->TotalSectors ? FatVolumeBootSector->TotalSectors
                                                                   : FatVolumeBootSector->TotalSectorsBig);
+    }
+
+    /* The bytes-per-sector value is read from the disk and is used as a divisor
+       all over this driver (root directory size, FAT cache, ...). A damaged or
+       crafted image can hold 0 (division by zero) or a non power of two, so
+       validate it before anything else consumes it. */
+    if (!ISFATX(Volume->FatType))
+    {
+        ULONG BytesPerSector = (Volume->FatType == FAT32)
+                             ? (ULONG)Fat32VolumeBootSector->BytesPerSector
+                             : (ULONG)FatVolumeBootSector->BytesPerSector;
+
+        if (BytesPerSector == 0 || (BytesPerSector & (BytesPerSector - 1)) != 0)
+        {
+            sprintf(ErrMsg, "Invalid bytes per sector: %u", BytesPerSector);
+            FileSystemError(ErrMsg);
+            return FALSE;
+        }
     }
 
     /* Get the sectors per FAT, root directory sector start, and data sector start */
@@ -615,6 +639,17 @@ static BOOLEAN FatSearchDirectoryBufferForFile(PFAT_VOLUME_INFO Volume, PVOID Di
             // and make the sequence number zero-based
             //
             LfnDirEntry->SequenceNumber &= 0x3F;
+
+            /* Refuse anything outside 1..20: the masked value is used below as
+               a zero-based index into a 265 byte buffer (offset 19 * 13 + 12),
+               and a malformed image can otherwise ask for offset 255 * 13. */
+            if (LfnDirEntry->SequenceNumber == 0 ||
+                LfnDirEntry->SequenceNumber > FAT_MAX_LFN_ENTRIES)
+            {
+                continue;
+            }
+
+            /* Make the sequence number zero-based */
             LfnDirEntry->SequenceNumber--;
 
             //
@@ -1108,8 +1143,19 @@ static
 ULONG FatCountClustersInChain(PFAT_VOLUME_INFO Volume, UINT32 StartCluster)
 {
     ULONG    ClusterCount = 0;
+    ULONG    MaxClusters;
 
     TRACE("FatCountClustersInChain() StartCluster = %d\n", StartCluster);
+
+    /* A cluster chain can never be longer than the number of clusters the volume
+       holds. Use that as a bound so a cyclic chain (damaged or crafted FAT) is
+       reported as an error instead of hanging the boot loader forever. */
+    if (Volume->SectorsPerCluster == 0)
+    {
+        ERR("FatCountClustersInChain() SectorsPerCluster is zero\n");
+        return 0;
+    }
+    MaxClusters = FatNumberOfClusters(Volume) + 1;
 
     while (1)
     {
@@ -1125,6 +1171,15 @@ ULONG FatCountClustersInChain(PFAT_VOLUME_INFO Volume, UINT32 StartCluster)
         // Increment count
         //
         ClusterCount++;
+
+        //
+        // Bail out if the chain is longer than the volume: it must be looping
+        //
+        if (ClusterCount > MaxClusters)
+        {
+            ERR("FatCountClustersInChain() cyclic cluster chain detected\n");
+            return 0;
+        }
 
         //
         // Get next cluster
@@ -1192,6 +1247,7 @@ static
 BOOLEAN FatReadClusterChain(PFAT_VOLUME_INFO Volume, UINT32 StartClusterNumber, UINT32 NumberOfClusters, PVOID Buffer, PUINT32 LastClusterNumber)
 {
     UINT32 ClustersRead, NextClusterNumber, ClustersLeft = NumberOfClusters;
+    UINT32 TotalClustersRead = 0;
 
     TRACE("FatReadClusterChain() StartClusterNumber = %d NumberOfClusters = %d Buffer = 0x%x\n", StartClusterNumber, NumberOfClusters, Buffer);
 
@@ -1200,16 +1256,30 @@ BOOLEAN FatReadClusterChain(PFAT_VOLUME_INFO Volume, UINT32 StartClusterNumber, 
     while (FatReadAdjacentClusters(Volume, StartClusterNumber, ClustersLeft, Buffer, &ClustersRead, &NextClusterNumber))
     {
         ClustersLeft -= ClustersRead;
+        TotalClustersRead += ClustersRead;
         Buffer = (PVOID)((ULONG_PTR)Buffer + (ClustersRead * Volume->SectorsPerCluster * Volume->BytesPerSector));
         StartClusterNumber = NextClusterNumber;
     }
+    TotalClustersRead += ClustersRead;
 
     if (LastClusterNumber)
     {
         *LastClusterNumber = NextClusterNumber;
     }
 
-    return (ClustersRead > 0);
+    /* 0xFFFFFFFF means "read until the end of the chain". For any other count
+       the caller expects exactly that many clusters, so a chain which ends early
+       is a failure: otherwise the caller (the boot loader loading a kernel, say)
+       is told everything went fine and goes on to use the part of the buffer we
+       never filled in. */
+    if (NumberOfClusters != 0xFFFFFFFF && TotalClustersRead != NumberOfClusters)
+    {
+        ERR("FatReadClusterChain() read %u of %u clusters\n",
+            TotalClustersRead, NumberOfClusters);
+        return FALSE;
+    }
+
+    return (TotalClustersRead > 0);
 }
 
 /*
