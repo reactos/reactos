@@ -239,7 +239,19 @@ MsgMemorySize(PMSGMEMORY MsgMemoryEntry, WPARAM wParam, LPARAM lParam)
             case WM_COPYDATA:
                 {
                 COPYDATASTRUCT *cds = (COPYDATASTRUCT *)lParam;
-                Size = sizeof(COPYDATASTRUCT) + cds->cbData;
+                /* cbData is a DWORD supplied by the caller, so this addition
+                   can wrap around. It used to allocate (and copy) a couple of
+                   bytes while the structure still claimed to own cbData bytes,
+                   and the receiver trusted that length. */
+                if (cds->cbData > MAXULONG - sizeof(COPYDATASTRUCT))
+                {
+                    ERR("WM_COPYDATA with overflowing cbData: 0x%lx\n", cds->cbData);
+                    Size = 0;
+                }
+                else
+                {
+                    Size = sizeof(COPYDATASTRUCT) + cds->cbData;
+                }
                 }
                 break;
 
@@ -2377,8 +2389,11 @@ NtUserGetMessage(PMSG pMsg,
         _SEH2_END;
     }
 
+    /* Use the kernel copy here: pMsg is a user mode pointer, and reading it
+       again outside the protected block above means another thread can unmap it
+       in between and bugcheck us. */
     if ((INT)Ret != -1)
-       Ret = Ret ? (WM_QUIT != pMsg->message) : FALSE;
+       Ret = Ret ? (WM_QUIT != Msg.message) : FALSE;
 
     return Ret;
 }
@@ -2758,11 +2773,41 @@ NtUserMessageCall( HWND hWnd,
                         }
                         ExFreePoolWithTag(List, USERTAG_WINDOWLIST);
                      }
-                     if (lParam && !wParam && _wcsicmp((WCHAR*)lParam, L"Environment") == 0)
+                     if (lParam && !wParam)
                      {
-                         /* Handle Broadcast of WM_SETTINGCHAGE for Environment */
-                         co_IntDoSendMessage(HWND_BROADCAST, WM_SETTINGCHANGE,
-                                             0, (LPARAM)L"Environment", 0);
+                         /* lParam is a user mode pointer here. Copy it into a
+                            kernel buffer with exception handling before looking
+                            at it, exactly like the WM_WININICHANGE path above
+                            does: dereferencing it directly meant that a stale
+                            or unmapped pointer bugchecked the kernel, and a
+                            pointer sitting on a page boundary without a
+                            terminator read across the page. */
+                         WCHAR lParamMsg[_countof(StrUserKernel[0]) + 1] = { 0 };
+                         BOOLEAN Copied = FALSE;
+
+                         _SEH2_TRY
+                         {
+                             RtlCopyMemory(lParamMsg, (PVOID)lParam, sizeof(lParamMsg));
+                             Copied = TRUE;
+                         }
+                         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+                         {
+                             Copied = FALSE;
+                         }
+                         _SEH2_END;
+
+                         if (Copied)
+                         {
+                             /* Make sure that we have a UNICODE_NULL within lParamMsg */
+                             lParamMsg[ARRAYSIZE(lParamMsg) - 1] = UNICODE_NULL;
+
+                             if (_wcsicmp(lParamMsg, L"Environment") == 0)
+                             {
+                                 /* Handle Broadcast of WM_SETTINGCHAGE for Environment */
+                                 co_IntDoSendMessage(HWND_BROADCAST, WM_SETTINGCHANGE,
+                                                     0, (LPARAM)L"Environment", 0);
+                             }
+                         }
                      }
                      Ret = TRUE;
                   }

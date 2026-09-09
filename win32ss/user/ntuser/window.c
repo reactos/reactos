@@ -3894,6 +3894,16 @@ co_IntSetWindowLongPtr(HWND hWnd, DWORD Index, LONG_PTR NewValue, BOOL Ansi, ULO
 
             co_IntSendMessage(hWnd, WM_STYLECHANGING, GWL_EXSTYLE, (LPARAM) &Style);
 
+            /* The window procedure is allowed to destroy the window while it
+               handles WM_STYLECHANGING, so the object we looked up at the top
+               of the function may already be freed. Re-validate the handle and
+               re-fetch the object before writing to it again. */
+            if (!(Window = UserGetWindowObject(hWnd)))
+            {
+                EngSetLastError(ERROR_INVALID_WINDOW_HANDLE);
+                return 0;
+            }
+
             /*
              * Remove extended window style bit WS_EX_TOPMOST for shell windows.
              */
@@ -3926,6 +3936,13 @@ co_IntSetWindowLongPtr(HWND hWnd, DWORD Index, LONG_PTR NewValue, BOOL Ansi, ULO
 
             if (!bAlter)
                 co_IntSendMessage(hWnd, WM_STYLECHANGING, GWL_STYLE, (LPARAM) &Style);
+
+            /* Same as above: the callback may have destroyed the window. */
+            if (!(Window = UserGetWindowObject(hWnd)))
+            {
+                EngSetLastError(ERROR_INVALID_WINDOW_HANDLE);
+                return 0;
+            }
 
             /* WS_CLIPSIBLINGS can't be reset on top-level windows */
             if (UserIsDesktopWindow(Window->spwndParent)) Style.styleNew |= WS_CLIPSIBLINGS;
