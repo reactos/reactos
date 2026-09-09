@@ -864,7 +864,7 @@ MiUnmapViewOfSection(IN PEPROCESS Process,
     /* We need the base address for the debugger message on image-backed VADs */
     if (Vad->u.VadFlags.VadType == VadImageMap)
     {
-        DbgBase = (PVOID)(Vad->StartingVpn >> PAGE_SHIFT);
+        DbgBase = (PVOID)(Vad->StartingVpn << PAGE_SHIFT);
     }
 
     /* Compute the size of the VAD region */
@@ -875,7 +875,7 @@ MiUnmapViewOfSection(IN PEPROCESS Process,
     {
         /* Are we allowed to mess with this VAD? */
         Status = MiCheckSecuredVad(Vad,
-                                   (PVOID)(Vad->StartingVpn >> PAGE_SHIFT),
+                                   (PVOID)(Vad->StartingVpn << PAGE_SHIFT),
                                    RegionSize,
                                    MM_DELETE_CHECK);
         if (!NT_SUCCESS(Status))
@@ -1393,7 +1393,7 @@ MiMapViewOfDataSection(
         Segment->NumberOfCommittedPages -= QuotaCharge;
         KeReleaseGuardedMutex(&MmSectionCommitMutex);
 
-        PsReturnProcessNonPagedPoolQuota(PsGetCurrentProcess(), sizeof(MMVAD_LONG));
+        PsReturnProcessNonPagedPoolQuota(Process, sizeof(MMVAD_LONG));
         return Status;
     }
 
@@ -1479,7 +1479,7 @@ MiCreatePagingFileMap(OUT PSEGMENT *Segment,
                                         'tCmM');
     if (!ControlArea)
     {
-        ExFreePoolWithTag(Segment, 'tSmM');
+        ExFreePoolWithTag(NewSegment, 'tSmM');
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
@@ -3588,7 +3588,7 @@ NtExtendSection(IN HANDLE SectionHandle,
     }
 
     /* Return the status */
-    return STATUS_NOT_IMPLEMENTED;
+    return Status;
 }
 
 /* EOF */
