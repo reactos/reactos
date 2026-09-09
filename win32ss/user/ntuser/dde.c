@@ -92,7 +92,36 @@ IntDDEPostCallback(
       return 0;
    }
 
-   RtlCopyMemory(Common, ResultPointer, ArgumentLength);
+   /* What comes back from user mode is a user mode pointer plus a length, and
+      nothing checked either of them: a short answer made the copy below read
+      past the end of the returned buffer, and an invalid pointer bugchecked
+      the kernel. */
+   if (ResultLength < ArgumentLength)
+   {
+      ERR("DDE Post callback returned a short result: %lu < %lu\n",
+          ResultLength, ArgumentLength);
+      IntCbFreeMemory(Argument);
+      return 0;
+   }
+
+   Status = STATUS_SUCCESS;
+   _SEH2_TRY
+   {
+      ProbeForRead(ResultPointer, ArgumentLength, 1);
+      RtlCopyMemory(Common, ResultPointer, ArgumentLength);
+   }
+   _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+   {
+      ERR("DDE Post callback returned an invalid result pointer 0x%p\n", ResultPointer);
+      Status = _SEH2_GetExceptionCode();
+   }
+   _SEH2_END;
+
+   if (!NT_SUCCESS(Status))
+   {
+      IntCbFreeMemory(Argument);
+      return 0;
+   }
 
    size    = Common->size;
    *lParam = Common->lParam;
@@ -155,7 +184,34 @@ IntDDEGetCallback(
       return FALSE;
    }
 
-   RtlMoveMemory(Common, ResultPointer, ArgumentLength);
+   /* Same as in IntDDEPostCallback(): validate what user mode handed back
+      before reading from it. */
+   if (ResultLength < ArgumentLength)
+   {
+      ERR("DDE Get callback returned a short result: %lu < %lu\n",
+          ResultLength, ArgumentLength);
+      IntCbFreeMemory(Argument);
+      return FALSE;
+   }
+
+   Status = STATUS_SUCCESS;
+   _SEH2_TRY
+   {
+      ProbeForRead(ResultPointer, ArgumentLength, 1);
+      RtlMoveMemory(Common, ResultPointer, ArgumentLength);
+   }
+   _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+   {
+      ERR("DDE Get callback returned an invalid result pointer 0x%p\n", ResultPointer);
+      Status = _SEH2_GetExceptionCode();
+   }
+   _SEH2_END;
+
+   if (!NT_SUCCESS(Status))
+   {
+      IntCbFreeMemory(Argument);
+      return FALSE;
+   }
 
    pMsg->lParam = Common->lParam;
 
@@ -178,6 +234,7 @@ IntDdePostMessageHook(
 {
    PWND pWndClient;
    PDDE_DATA pddeData;
+   NTSTATUS Status;
    int size;
    HGDIOBJ Object = NULL;
    PVOID userBuf = NULL;
@@ -241,6 +298,18 @@ IntDdePostMessageHook(
       }
       else
       {
+         /* The size and the data pointer both come straight from the user mode
+            callback, so they cannot be trusted: an invalid pointer used to
+            bugcheck the kernel, and a kernel address got copied into a buffer
+            that is later handed to another process. */
+         if (size <= 0 ||
+             userBuf == NULL ||
+             (ULONG_PTR)userBuf > (ULONG_PTR)MmHighestUserAddress)
+         {
+             ERR("DDE Post callback returned bogus data: 0x%p, size %d\n", userBuf, size);
+             return FALSE;
+         }
+
          // Set buffer with users data size.
          Buffer = ExAllocatePoolWithTag(PagedPool, size, USERTAG_DDE);
          if (Buffer == NULL)
@@ -248,8 +317,26 @@ IntDdePostMessageHook(
              ERR("Failed to allocate %i bytes.\n", size);
              return FALSE;
          }
-         // No SEH? Yes, the user memory is freed after the Acknowledgment or at Termination.
-         RtlCopyMemory(Buffer, userBuf, size);
+         // The user memory is freed after the Acknowledgment or at Termination,
+         // but it can already be gone by the time we get here.
+         Status = STATUS_SUCCESS;
+         _SEH2_TRY
+         {
+             ProbeForRead(userBuf, size, 1);
+             RtlCopyMemory(Buffer, userBuf, size);
+         }
+         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+         {
+             ERR("DDE Post: invalid user buffer 0x%p, size %d\n", userBuf, size);
+             Status = _SEH2_GetExceptionCode();
+         }
+         _SEH2_END;
+
+         if (!NT_SUCCESS(Status))
+         {
+             ExFreePoolWithTag(Buffer, USERTAG_DDE);
+             return FALSE;
+         }
       }
 
       TRACE("DDE Post size %d 0x%x\n",size, Msg);
@@ -259,7 +346,16 @@ IntDdePostMessageHook(
           case WM_DDE_POKE:
           {
               DDEPOKE *pddePoke = Buffer;
-              NT_ASSERT(pddePoke != NULL);
+              /* When the callback returned -1 there is no buffer at all, and a
+                 buffer that is too small for the header must not be read either.
+                 NT_ASSERT is compiled out in release builds, so the old code
+                 dereferenced NULL here. */
+              if (pddePoke == NULL ||
+                  (ULONG)size < FIELD_OFFSET(DDEPOKE, Value) + sizeof(HGDIOBJ))
+              {
+                  ERR("DDE POKE: buffer too small or absent (%d)\n", size);
+                  break;
+              }
               switch(pddePoke->cfFormat)
               {
                  case CF_BITMAP:
@@ -275,7 +371,12 @@ IntDdePostMessageHook(
           case WM_DDE_DATA:
           {
               DDEDATA *pddeData2 = Buffer;
-              NT_ASSERT(pddeData2 != NULL);
+              if (pddeData2 == NULL ||
+                  (ULONG)size < FIELD_OFFSET(DDEDATA, Value) + sizeof(HGDIOBJ))
+              {
+                  ERR("DDE DATA: buffer too small or absent (%d)\n", size);
+                  break;
+              }
               switch(pddeData2->cfFormat)
               {
                  case CF_BITMAP:
