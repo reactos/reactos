@@ -2,9 +2,6 @@
 add_definitions(
     -DWIN32)
 
-include_directories(
-    ${REACTOS_SOURCE_DIR}/sdk/include/reactos/libs/libmpg123)
-
 spec2def(winemp3.acm winemp3.acm.spec)
 
 add_library(winemp3.acm MODULE

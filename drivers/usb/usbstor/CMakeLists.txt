@@ -1,7 +1,4 @@
 
-include_directories(
-    ${REACTOS_SOURCE_DIR}/sdk/lib/drivers/sptilib)
-
 list(APPEND SOURCE
     descriptor.c
     disk.c
@@ -20,10 +17,10 @@ add_library(usbstor MODULE
     ${SOURCE}
     ${PCH_SKIP_SOURCE}
     usbstor.rc)
+add_pch(usbstor usbstor.h "${PCH_SKIP_SOURCE}")
 
 set_module_type(usbstor kernelmodedriver)
 target_link_libraries(usbstor sptilib ${PSEH_LIB})
 add_importlibs(usbstor ntoskrnl hal usbd)
-add_pch(usbstor usbstor.h "${PCH_SKIP_SOURCE}")
 add_cd_file(TARGET usbstor DESTINATION reactos/system32/drivers NO_CAB FOR all)
 add_driver_inf(usbstor usbstor.inf)

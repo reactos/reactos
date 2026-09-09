@@ -1,6 +1,4 @@
 
-include_directories(${REACTOS_SOURCE_DIR}/sdk/lib/conutils)
-
 add_executable(ping ping.c ping.rc)
 set_module_type(ping win32cui UNICODE)
 target_link_libraries(ping conutils ${PSEH_LIB})

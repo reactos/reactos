@@ -1,5 +1,4 @@
 
-include_directories(${REACTOS_SOURCE_DIR}/sdk/lib/conutils)
 include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/libs/fmifs)
 
 list(APPEND SOURCE
@@ -56,7 +55,6 @@ add_dependencies(diskpart diskpart_msg)
 set_module_type(diskpart win32cui UNICODE)
 target_link_libraries(diskpart conutils ${PSEH_LIB})
 add_importlibs(diskpart fmifs advapi32 msvcrt user32 kernel32 ntdll)
-
 if(MSVC)
     add_importlibs(diskpart ntdll)
 endif()

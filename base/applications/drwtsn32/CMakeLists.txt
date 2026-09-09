@@ -1,9 +1,6 @@
 
 PROJECT(drwtsn32)
 
-include_directories(
-    ${REACTOS_SOURCE_DIR}/sdk/lib/udmihelp)
-
 list(APPEND CPP_SOURCE
     drwtsn32.cpp
     main.cpp
