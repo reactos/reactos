@@ -6296,7 +6296,20 @@ START_TEST (winhttp)
         return;
     }
 
+#ifdef __REACTOS__
+    if (!winetest_interactive)
+    {
+        skip("Skipping tests due to hang. See ROSTESTS-422\n");
+    }
+    else
+    {
+        test_IWinHttpRequest(si.port);
+        test_bad_header(si.port);
+    }
+#else
     test_IWinHttpRequest(si.port);
+    test_bad_header(si.port);
+#endif
     test_connection_info(si.port);
     test_basic_request(si.port, NULL, L"/basic");
     test_basic_request(si.port, L"PUT", L"/test");
@@ -6308,7 +6321,9 @@ START_TEST (winhttp)
     test_basic_authentication(si.port);
     test_multi_authentication(si.port);
     test_large_data_authentication(si.port);
-    test_bad_header(si.port);
+#ifndef __REACTOS__ // See ROSTESTS-422
+    test_bad_header(si.port); // Moved up into the REACTOS skip section */
+#endif
 #ifdef __REACTOS__
     if (!winetest_interactive)
     {
