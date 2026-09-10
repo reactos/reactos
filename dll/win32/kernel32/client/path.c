@@ -1181,20 +1181,31 @@ WINAPI
 SetSearchPathMode(
     _In_ DWORD dwFlags)
 {
+    LONG OldFlags, CurrentFlags;
+
     switch (dwFlags)
     {
         /* There are only 3 valid parameters */
         case BASE_SEARCH_PATH_DISABLE_SAFE_SEARCHMODE:
         case BASE_SEARCH_PATH_ENABLE_SAFE_SEARCHMODE:
-            if (BasepSearchPathModeFlags & BASE_SEARCH_PATH_PERMANENT)
-            {
-                /* Return with ERROR_ACCESS_DENIED if permanent flag is set */
-                SetLastError(ERROR_ACCESS_DENIED);
-                return FALSE;
-            }
-            __fallthrough;
         case BASE_SEARCH_PATH_ENABLE_SAFE_SEARCHMODE | BASE_SEARCH_PATH_PERMANENT:
-            BasepSearchPathModeFlags = dwFlags;
+            CurrentFlags = InterlockedCompareExchange((PLONG)&BasepSearchPathModeFlags, 0, 0);
+            do
+            {
+                if ((CurrentFlags & BASE_SEARCH_PATH_PERMANENT) &&
+                    dwFlags != CurrentFlags)
+                {
+                    /* Return with ERROR_ACCESS_DENIED if permanent flag is set */
+                    SetLastError(ERROR_ACCESS_DENIED);
+                    return FALSE;
+                }
+
+                OldFlags = CurrentFlags;
+                CurrentFlags = InterlockedCompareExchange((PLONG)&BasepSearchPathModeFlags,
+                                                          (LONG)dwFlags,
+                                                          OldFlags);
+            } while (CurrentFlags != OldFlags);
+
             return TRUE;
 
         default:
