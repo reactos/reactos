@@ -3,6 +3,8 @@
  */
 #pragma once
 
+#include <internal/x86x64/mm.h>
+
 #ifdef _X86PAE_
 #define _MI_PAGING_LEVELS 3
 #define _MI_HAS_NO_EXECUTE 1
@@ -85,13 +87,6 @@
 #define MI_MAKE_DIRTY_PAGE(x)      ((x)->u.Hard.Dirty = 1)
 #define MI_MAKE_CLEAN_PAGE(x)      ((x)->u.Hard.Dirty = 0)
 #define MI_MAKE_ACCESSED_PAGE(x)   ((x)->u.Hard.Accessed = 1)
-#define MI_MAKE_PTE_CACHED(Pte) \
-    do { (Pte)->u.Hard.WriteThrough = 0; (Pte)->u.Hard.CacheDisable = 0; } while (0)
-/* Both WriteThrough and CacheDisable must be set to select UC in the PAT. */
-#define MI_MAKE_PTE_NON_CACHED(Pte) \
-    do { (Pte)->u.Hard.WriteThrough = 1; (Pte)->u.Hard.CacheDisable = 1; } while (0)
-#define MI_MAKE_PTE_WRITE_COMBINE(Pte) \
-    do { (Pte)->u.Hard.WriteThrough = 1; (Pte)->u.Hard.CacheDisable = 0; } while (0)
 #define MI_IS_PAGE_LARGE(x)        ((x)->u.Hard.LargePage == 1)
 #if !defined(CONFIG_SMP)
 #define MI_IS_PAGE_WRITEABLE(x)    ((x)->u.Hard.Write == 1)
