@@ -11,7 +11,7 @@
 
 DBG_DEFAULT_CHANNEL(UserMsg);
 
-#define PM_BADMSGFLAGS ~((QS_RAWINPUT << 16)|PM_QS_SENDMESSAGE|PM_QS_PAINT|PM_QS_POSTMESSAGE|PM_QS_INPUT|PM_NOYIELD|PM_REMOVE)
+#define PM_BADMSGFLAGS ~(PM_QS_SENDMESSAGE|PM_QS_PAINT|PM_QS_POSTMESSAGE|PM_QS_INPUT|PM_NOYIELD|PM_REMOVE)
 
 /* Strings that are OK to pass between user and kernel mode.
  * There may be other strings needed that can easily be added here. */
@@ -1105,7 +1105,7 @@ co_IntPeekMessage( PMSG Msg,
         }
 
         /* Check for hardware events. */
-        if ((ProcessMask & QS_INPUT) &&
+        if ((ProcessMask & QS_INPUT || ProcessMask & QS_RAWINPUT) &&
             co_MsqPeekHardwareMessage( pti,
                                        RemoveMessages,
                                        Window,
