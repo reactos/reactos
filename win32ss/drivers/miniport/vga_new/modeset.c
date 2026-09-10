@@ -451,17 +451,18 @@ Return Value:
     //
 // eVb: 2.6 [VBE] - VBE Mode Switch Support 
     status = VbeSetMode(HwDeviceExtension, pRequestedMode, PhysPtrChange);
-    if (status == ERROR_INVALID_FUNCTION)
+    if (status != ERROR_INVALID_FUNCTION && status != NO_ERROR) return status;
+    if (pRequestedMode->CmdStream)
     {
         //
         // VGA mode switch
         //
 
-        if (!pRequestedMode->CmdStream) return ERROR_INVALID_FUNCTION;
         if (!VgaInterpretCmdStream(HwDeviceExtension, pRequestedMode->CmdStream)) return ERROR_INVALID_FUNCTION;
         goto Cleanup;
     }
-    else if (status != NO_ERROR) return status;
+    else if (status == ERROR_INVALID_FUNCTION)
+        return status;
 // eVb: 2.6 [END]
 // eVb: 2.7 [MODE-X] - Windows VGA Miniport Supports Mode-X, we should too
     //
