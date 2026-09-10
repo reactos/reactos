@@ -901,9 +901,6 @@ IntLoadRegistryParameters(VOID)
 
     ExFreePoolWithTag(KeyInfo, TAG_VIDEO_PORT);
 
-    /* FIXME: Old ReactOS-compatibility... */
-    if (VpBaseVideo) VpNoVesa = TRUE;
-
     if (VpNoVesa)
         VideoPortDebugPrint(Info, "VESA mode disabled\n");
     else
