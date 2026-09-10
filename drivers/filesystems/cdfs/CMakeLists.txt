@@ -1,6 +1,4 @@
 
-include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/drivers)
-
 list(APPEND SOURCE
     allocsup.c
     cachesup.c

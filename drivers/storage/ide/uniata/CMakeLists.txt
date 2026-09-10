@@ -1,8 +1,5 @@
 
-
-include_directories(
-    BEFORE ${CMAKE_CURRENT_SOURCE_DIR}
-    inc)
+include_directories(inc)
 
 #add_definitions(-D_DEBUG)
 
@@ -20,6 +17,7 @@ list(APPEND SOURCE
     stdafx.h)
 
 add_library(uniata MODULE ${SOURCE} idedma.rc)
+add_pch(uniata stdafx.h SOURCE)
 
 if(MSVC)
     # Disable warning C4267: '=': conversion from 'size_t' to 'USHORT', possible loss of data
@@ -39,7 +37,6 @@ if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
     target_compile_options(uniata PRIVATE -Wno-unused-const-variable)
 endif()
 
-add_pch(uniata stdafx.h SOURCE)
 set_module_type(uniata kernelmodedriver)
 target_compile_definitions(uniata PRIVATE _CRT_NON_CONFORMING_SWPRINTFS)
 add_importlibs(uniata scsiport ntoskrnl hal)
