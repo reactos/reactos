@@ -92,7 +92,9 @@ VbeSetMode(IN PHW_DEVICE_EXTENSION VgaDeviceExtension,
     VP_STATUS Status;
     VIDEO_X86_BIOS_ARGUMENTS BiosArguments;
     ULONG ModeIndex;
+#ifndef PNP_DRIVER
     ULONG BaseAddress;
+#endif
 
     VideoPortZeroMemory(&BiosArguments, sizeof(BiosArguments));
     ModeIndex = VgaMode->Mode;
@@ -143,6 +145,7 @@ VbeSetMode(IN PHW_DEVICE_EXTENSION VgaDeviceExtension,
         }
     }
 
+#ifndef PNP_DRIVER
     /* Get VRAM address to update changes */
     BaseAddress = VbeGetVideoMemoryBaseAddress(VgaDeviceExtension, VgaMode);
     if ((BaseAddress) && (VgaMode->PhysBase != BaseAddress))
@@ -150,6 +153,7 @@ VbeSetMode(IN PHW_DEVICE_EXTENSION VgaDeviceExtension,
         *PhysPtrChange = TRUE;
         VgaMode->PhysBase = BaseAddress;
     }
+#endif
 
     return NO_ERROR;
 }

@@ -85,11 +85,13 @@ VgaSetMode(
 // eVb: 1.1 [END]
     );
 
+#ifndef PNP_DRIVER
 BOOLEAN
 NTAPI
 VgaIsPresent(
     PHW_DEVICE_EXTENSION HwDeviceExtension
     );
+#endif
 
 VP_STATUS
 NTAPI
@@ -129,11 +131,13 @@ GetDeviceDataCallback(
    );
 
 // eVb: 1.2 [RESOURCE] - Add new function for acquiring VGA resources (I/O, memory)
+#ifndef PNP_DRIVER
 VP_STATUS
 NTAPI
 VgaAcquireResources(
     PHW_DEVICE_EXTENSION DeviceExtension
     );
+#endif
 // eVb: 1.2 [END]
 
 #if defined(ALLOC_PRAGMA)
@@ -412,7 +416,9 @@ Return Value:
     // Check to see if there is a hardware resource conflict.
     //
 // eVb: 1.5 [RESOURCE] - Use new function for acquiring VGA resources (I/O, memory)
+#ifndef PNP_DRIVER
     if (VgaAcquireResources(hwDeviceExtension) != NO_ERROR) return ERROR_INVALID_PARAMETER;
+#endif
 // eVb: 1.5 [END]
     //
     // Get logical IO port addresses.
@@ -433,11 +439,13 @@ Return Value:
     // Determine whether a VGA is present.
     //
 
+#ifndef PNP_DRIVER
     if (!VgaIsPresent(hwDeviceExtension)) {
 
         VideoDebugPrint((0, "VgaFindAdapter - VGA Failed\n"));
         return ERROR_DEV_NOT_EXIST;
     }
+#endif
 
     //
     // Minimum size of the buffer required to store the hardware state
@@ -934,6 +942,7 @@ Return Value:
 //
 
 //---------------------------------------------------------------------------
+#ifndef PNP_DRIVER
 BOOLEAN
 NTAPI
 VgaIsPresent(
@@ -1258,6 +1267,7 @@ Return Value:
     return returnStatus;
 
 } // VgaIsPresent()
+#endif
 
 //---------------------------------------------------------------------------
 VP_STATUS
@@ -1516,6 +1526,7 @@ Return Value:
 } //end GetDeviceDataCallback()
 
 // eVb: 1.16 [RESOURCE] - Add new function for acquiring VGA resources (I/O, memory)
+#ifndef PNP_DRIVER
 VP_STATUS
 NTAPI
 VgaAcquireResources(
@@ -1570,4 +1581,5 @@ VgaAcquireResources(
 
     return Status;
 }
+#endif
 // eVb: 1.16 [END]
