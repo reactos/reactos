@@ -20,14 +20,22 @@ VIDEO_ACCESS_RANGE VgaAccessRange[] = {
     VGA_START_BREAK_PORT - VGA_BASE_IO_PORT + 1, // # of ports
     1,                                           // range is in I/O space
     1,                                           // range should be visible
-    0                                            // range should be shareable
+#ifdef PNP_DRIVER
+    0                                            // range should not be shareable
+#else
+    1                                            // range should be shareable
+#endif
 },
 {
     {{VGA_END_BREAK_PORT, 0x00000000}},
     VGA_MAX_IO_PORT - VGA_END_BREAK_PORT + 1,
     1,
     1,
-    0
+#ifdef PNP_DRIVER
+    0                                            // range should not be shareable
+#else
+    1                                            // range should be shareable
+#endif
 },
 
 //
@@ -40,7 +48,11 @@ VIDEO_ACCESS_RANGE VgaAccessRange[] = {
     MEM_VGA_SIZE,
     0,
     1,
-    0
+#ifdef PNP_DRIVER
+    0                                            // range should not be shareable
+#else
+    1                                            // range should be shareable
+#endif
 },
 // eVb: 4.1 [VGA] - Add ATI/Mach64 VGA registers
 //
