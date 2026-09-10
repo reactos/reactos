@@ -480,7 +480,6 @@ Return Value:
         return ERROR_INVALID_PARAMETER;
     }
 
-    VideoDebugPrint((0, "vga mapped at %x\n", hwDeviceExtension->VideoMemoryAddress));
 #endif
 // eVb: 1.7 [VDM] - Disable VDM for now
     ConfigInfo->VdmPhysicalVideoMemoryAddress.QuadPart = 0;

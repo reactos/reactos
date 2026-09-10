@@ -202,7 +202,6 @@ InitializeModeTable(IN PHW_DEVICE_EXTENSION VgaExtension)
     }
 
     /* Add ref */
-    VideoDebugPrint((0, "have int10 iface\n"));
     VgaExtension->Int10Interface.InterfaceReference(VgaExtension->Int10Interface.Context);
     Context = VgaExtension->Int10Interface.Context;
 
@@ -218,7 +217,6 @@ InitializeModeTable(IN PHW_DEVICE_EXTENSION VgaExtension)
     VbeModeInfo = &VbeInfo->Modes;
 
     /* Init VBE data and write to card buffer */
-    VideoDebugPrint((0, "have int10 data\n"));
     VbeInfo->ModeArray[128] = 0xFFFF;
     VbeInfo->Info.Signature = VBE2_MAGIC;
     Status = VgaExtension->Int10Interface.Int10WriteMemory(Context,
@@ -248,21 +246,17 @@ InitializeModeTable(IN PHW_DEVICE_EXTENSION VgaExtension)
     if (Status != NO_ERROR) return;
 
     /* Check correct VBE BIOS */
-    VideoDebugPrint((0, "have vbe data\n"));
     TotalMemory = VbeInfo->Info.TotalMemory << 16;
     VbeVersion = VbeInfo->Info.Version;
-    VideoDebugPrint((0, "vbe version %lx memory %lx\n", VbeVersion, TotalMemory));
     if (!ValidateVbeInfo(VgaExtension, VbeInfo)) return;
 
     /* Read modes */
-    VideoDebugPrint((0, "read modes from %p\n", VbeInfo->Info.VideoModePtr));
     Status = VgaExtension->Int10Interface.Int10ReadMemory(Context,
                                                           HIWORD(VbeInfo->Info.VideoModePtr),
                                                           LOWORD(VbeInfo->Info.VideoModePtr),
                                                           VbeInfo->ModeArray,
                                                           128 * sizeof(USHORT));
     if (Status != NO_ERROR) return;
-    VideoDebugPrint((0, "Read modes at: %p\n", VbeInfo->ModeArray));
 
     /* Count modes, check for new 4bpp SVGA modes */
     ThisMode = VbeInfo->ModeArray;
@@ -270,7 +264,6 @@ InitializeModeTable(IN PHW_DEVICE_EXTENSION VgaExtension)
     while (ModeResult != 0xFFFF)
     {
         Mode = ModeResult & 0x1FF;
-        VideoDebugPrint((0, "Mode found: %lx\n", Mode));
         if ((Mode == 0x102) || (Mode == 0x6A)) FourBppModeFound = TRUE;
         ModeResult = *++ThisMode;
         NewModes++;
@@ -293,14 +286,11 @@ InitializeModeTable(IN PHW_DEVICE_EXTENSION VgaExtension)
     }
 
     /* Scan SVGA modes */
-    VideoDebugPrint((0, "Static modes: %d\n", NumVideoModes));
     VgaMode = &VgaModeList[NumVideoModes];
     ThisMode = VbeInfo->ModeArray;
-    VideoDebugPrint((0, "new modes: %d\n", NewModes));
     while (NewModes--)
     {
         /* Get info on mode */
-        VideoDebugPrint((0, "Getting info of mode %lx.\n", *ThisMode));
         VideoPortZeroMemory(&BiosArguments, sizeof(BiosArguments));
         BiosArguments.Eax = VBE_GET_MODE_INFORMATION;
         BiosArguments.Ecx = *ThisMode;
@@ -317,7 +307,6 @@ InitializeModeTable(IN PHW_DEVICE_EXTENSION VgaExtension)
         if (Status != NO_ERROR) goto Next;
 
         /* Parse graphics modes only if linear framebuffer support */
-        VideoDebugPrint((0, "attr: %lx\n", VbeModeInfo->ModeAttributes));
         if (!(VbeModeInfo->ModeAttributes & (VBE_MODEATTR_VALID |
                                              VBE_MODEATTR_GRAPHICS))) goto Next;
         LinearAddressing = ((VbeVersion >= 0x200) &&
@@ -326,7 +315,6 @@ InitializeModeTable(IN PHW_DEVICE_EXTENSION VgaExtension)
                             TRUE : FALSE;
 
         /* Check SVGA modes if 8bpp or higher */
-        VideoDebugPrint((0, "PhysBase: %lx\n", VbeModeInfo->PhysBasePtr));
         if ((VbeModeInfo->XResolution >= 640) &&
             (VbeModeInfo->YResolution >= 480) &&
             (VbeModeInfo->NumberOfPlanes >= 1) &&
@@ -340,7 +328,6 @@ InitializeModeTable(IN PHW_DEVICE_EXTENSION VgaExtension)
             VgaMode->Frequency = 1;
             VgaMode->Mode = (*ThisMode << 16) | VBE_SET_VBE_MODE;
             VgaMode->Granularity = VbeModeInfo->WinGranularity << 10;
-            VideoDebugPrint((0, "Mode %lx (Granularity %d)\n", VgaMode->Mode, VgaMode->Granularity));
 
             /* Set flags */
             if (VbeModeInfo->ModeAttributes & VBE_MODEATTR_COLOR) VgaMode->fbType |= VIDEO_MODE_COLOR;
@@ -350,12 +337,10 @@ InitializeModeTable(IN PHW_DEVICE_EXTENSION VgaExtension)
             /* If no char data, say 80x25 */
             VgaMode->col = VbeModeInfo->XCharSize ? VbeModeInfo->XResolution / VbeModeInfo->XCharSize : 80;
             VgaMode->row = VbeModeInfo->YCharSize ? VbeModeInfo->YResolution / VbeModeInfo->YCharSize : 25;
-            VideoDebugPrint((0, "%d by %d rows\n", VgaMode->col, VgaMode->row));
 
             /* Check RGB555 (15bpp only) */
             VgaMode->bitsPerPlane = VbeModeInfo->BitsPerPixel / VbeModeInfo->NumberOfPlanes;
             if ((VgaMode->bitsPerPlane == 16) && (VbeModeInfo->GreenMaskSize == 5)) VgaMode->bitsPerPlane = 15;
-            VideoDebugPrint((0, "BPP: %d\n", VgaMode->bitsPerPlane));
 
             /* Do linear or banked frame buffers */
             VgaMode->FrameBufferBase = 0;
@@ -365,18 +350,13 @@ InitializeModeTable(IN PHW_DEVICE_EXTENSION VgaExtension)
                 ScreenStride = RaiseToPower2(VbeModeInfo->BytesPerScanLine);
                 //ASSERT(ScreenStride <= MAXUSHORT);
                 VgaMode->wbytes = (USHORT)ScreenStride;
-                VideoDebugPrint((0, "ScanLines: %lx Stride: %lx\n", VbeModeInfo->BytesPerScanLine, VgaMode->wbytes));
 
                 /* Size of frame buffer is Height X ScanLine, align to bank/page size */
                 ScreenSize = VgaMode->hres * ScreenStride;
-                VideoDebugPrint((0, "Size: %lx\n", ScreenSize));
                 Size = (ScreenSize + ((64 * 1024) - 1)) & ((64 * 1024) - 1);
-                VideoDebugPrint((0, "Size: %lx\n", ScreenSize));
                 if (Size > TotalMemory) Size = (Size + ((4 * 1024) - 1)) & ((4 * 1024) - 1);
-                VideoDebugPrint((0, "Size: %lx\n", ScreenSize));
 
                 /* Banked VGA at 0xA0000 (64K) */
-                VideoDebugPrint((0, "Final size: %lx\n", Size));
                 VgaMode->fbType |= VIDEO_MODE_BANKED;
                 VgaMode->sbytes = Size;
                 VgaMode->PhysSize = 64 * 1024;
@@ -388,20 +368,15 @@ InitializeModeTable(IN PHW_DEVICE_EXTENSION VgaExtension)
             else
             {
                 /* VBE 3.00+ has specific field, read legacy field if not */
-                VideoDebugPrint((0, "LINEAR MODE!!!\n"));
                 ScreenStride = (VbeVersion >= 0x300) ? VbeModeInfo->LinBytesPerScanLine : 0;
                 if (!ScreenStride) ScreenStride = VbeModeInfo->BytesPerScanLine;
                 //ASSERT(ScreenStride <= MAXUSHORT);
                 VgaMode->wbytes = (USHORT)ScreenStride;
-                VideoDebugPrint((0, "ScanLines: %lx Stride: %lx\n", VbeModeInfo->BytesPerScanLine, VgaMode->wbytes));
 
                 /* Size of frame buffer is Height X ScanLine, align to page size */
                 ScreenSize = VgaMode->hres * LOWORD(VgaMode->wbytes);
-                VideoDebugPrint((0, "Size: %lx\n", ScreenSize));
                 Size = RaiseToPower2Ulong(ScreenSize);
-                VideoDebugPrint((0, "Size: %lx\n", ScreenSize));
                 if (Size > TotalMemory) Size = (Size + ((4 * 1024) - 1)) & ((4 * 1024) - 1);
-                VideoDebugPrint((0, "Size: %lx\n", ScreenSize));
 
                 /* Linear VGA must read settings from VBE */
                 VgaMode->fbType |= VIDEO_MODE_LINEAR;
@@ -432,7 +407,6 @@ Next:
     }
 
     /* Check if last mode was color to do test */
-    VideoDebugPrint((0, "mode scan complete. Total modes: %d\n", ModeCount));
     if (--VgaMode->fbType & VIDEO_MODE_COLOR)
     {
         /* Try map physical buffer and free if worked */

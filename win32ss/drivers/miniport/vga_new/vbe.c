@@ -69,7 +69,6 @@ IsVesaBiosOk(IN PVIDEO_PORT_INT10_INTERFACE Interface,
     }
 
     /* VESA ok */
-    VideoDebugPrint((0, "Vesa ok\n"));
     return TRUE;
 }
 
