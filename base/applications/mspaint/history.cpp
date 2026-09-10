@@ -3,7 +3,7 @@
  * LICENSE:    LGPL-2.0-or-later (https://spdx.org/licenses/LGPL-2.0-or-later)
  * PURPOSE:    Undo and redo functionality
  * COPYRIGHT:  Copyright 2015 Benedikt Freisen <b.freisen@gmx.net>
- *             Copyright 2023 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
+ *             Copyright 2023-2026 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
 #include "precomp.h"
@@ -80,6 +80,7 @@ void ImageModel::Undo(BOOL bClearRedo)
     m_currInd = (m_currInd + HISTORYSIZE - 1) % HISTORYSIZE; // Go previous
     ATLASSERT(m_hbmMaster != NULL);
     SwapPart();
+    paletteModel.SetColorInfo(m_hbmMaster);
     ::SelectObject(m_hDrawingDC, m_hbmMaster); // Re-select
 
     m_undoSteps--;
@@ -102,6 +103,7 @@ void ImageModel::Redo()
     ATLASSERT(m_hbmMaster != NULL);
     SwapPart();
     m_currInd = (m_currInd + 1) % HISTORYSIZE; // Go next
+    paletteModel.SetColorInfo(m_hbmMaster);
     ::SelectObject(m_hDrawingDC, m_hbmMaster); // Re-select
 
     m_redoSteps--;
@@ -124,7 +126,7 @@ void ImageModel::ClearHistory()
 
 void ImageModel::PushImageForUndo()
 {
-    HBITMAP hbm = CopyBitmap();
+    HBITMAP hbm = CloneDIB();
     if (hbm == NULL)
     {
         ShowOutOfMemory();
@@ -150,6 +152,8 @@ void ImageModel::PushImageForUndo(HBITMAP hbm)
     part.clear();
     part.m_hbmImage = m_hbmMaster;
     m_hbmMaster = hbm;
+    paletteModel.SetColorInfo(hbm);
+
     ::SelectObject(m_hDrawingDC, m_hbmMaster); // Re-select
 
     PushDone();
@@ -196,8 +200,8 @@ void ImageModel::Crop(int nWidth, int nHeight, int nOffsetX, int nOffsetY)
     if (nHeight <= 0)
         nHeight = 1;
 
-    // Create a white HBITMAP
-    HBITMAP hbmNew = CreateColorDIB(nWidth, nHeight, RGB(255, 255, 255));
+    // Create new HBITMAP
+    HBITMAP hbmNew = CloneDIB(nWidth, nHeight, paletteModel.GetBgColor());
     if (!hbmNew)
     {
         ShowOutOfMemory();
@@ -207,9 +211,9 @@ void ImageModel::Crop(int nWidth, int nHeight, int nOffsetX, int nOffsetY)
 
     // Put the master image as a sub-image
     RECT rcPart = { -nOffsetX, -nOffsetY, GetWidth() - nOffsetX, GetHeight() - nOffsetY };
-    HBITMAP hbmOld = imageModel.LockBitmap();
+    HBITMAP hbmOld = LockBitmap();
     putSubImage(hbmNew, rcPart, hbmOld);
-    imageModel.UnlockBitmap(hbmOld);
+    UnlockBitmap(hbmOld);
 
     // Push it
     PushImageForUndo(hbmNew);
@@ -235,17 +239,21 @@ void ImageModel::StretchSkew(int nStretchPercentX, int nStretchPercentY, int nSk
     INT newHeight = oldHeight * nStretchPercentY / 100;
     if (oldWidth != newWidth || oldHeight != newHeight)
     {
-        HBITMAP hbm0 = CopyDIBImage(m_hbmMaster, newWidth, newHeight);
+        HBITMAP hbm0 = CloneDIB(newWidth, newHeight);
         PushImageForUndo(hbm0);
     }
     if (nSkewDegX)
     {
-        HBITMAP hbm1 = SkewDIB(m_hDrawingDC, m_hbmMaster, nSkewDegX, FALSE);
+        HBITMAP hbmOld = LockBitmap();
+        HBITMAP hbm1 = SkewDIB(hbmOld, nSkewDegX, FALSE);
+        UnlockBitmap(hbmOld);
         PushImageForUndo(hbm1);
     }
     if (nSkewDegY)
     {
-        HBITMAP hbm2 = SkewDIB(m_hDrawingDC, m_hbmMaster, nSkewDegY, TRUE);
+        HBITMAP hbmOld = LockBitmap();
+        HBITMAP hbm2 = SkewDIB(hbmOld, nSkewDegY, TRUE);
+        UnlockBitmap(hbmOld);
         PushImageForUndo(hbm2);
     }
     NotifyImageChanged();
@@ -297,8 +305,10 @@ void ImageModel::RotateNTimes90Degrees(int iN)
         case 1:
         case 3:
         {
-            HBITMAP hbm = Rotate90DegreeBlt(m_hDrawingDC, GetWidth(), GetHeight(), iN == 1, FALSE);
-            PushImageForUndo(hbm);
+            HBITMAP hbmOld = LockBitmap();
+            HBITMAP hbmNew = Rotate90DegreeBitmap(hbmOld, iN == 1);
+            UnlockBitmap(hbmOld);
+            PushImageForUndo(hbmNew);
             break;
         }
         case 2:
@@ -314,16 +324,16 @@ void ImageModel::RotateNTimes90Degrees(int iN)
 
 void ImageModel::Clamp(POINT& pt) const
 {
-    pt.x = max(0, min(pt.x, GetWidth()));
-    pt.y = max(0, min(pt.y, GetHeight()));
+    pt.x = __max(0, __min(pt.x, GetWidth()));
+    pt.y = __max(0, __min(pt.y, GetHeight()));
 }
 
-HBITMAP ImageModel::CopyBitmap()
+HBITMAP ImageModel::CloneDIB(INT width, INT height, COLORREF rgbColor)
 {
-    HBITMAP hBitmap = LockBitmap();
-    HBITMAP ret = CopyDIBImage(hBitmap);
-    UnlockBitmap(hBitmap);
-    return ret;
+    HBITMAP hbmOld = LockBitmap();
+    HBITMAP hbmNew = CopyDIBImage(hbmOld, width, height, STRETCH_DELETESCANS, rgbColor);
+    UnlockBitmap(hbmOld);
+    return hbmNew;
 }
 
 BOOL ImageModel::IsBlackAndWhite()
@@ -337,7 +347,7 @@ BOOL ImageModel::IsBlackAndWhite()
 void ImageModel::PushBlackAndWhite()
 {
     HBITMAP hBitmap = LockBitmap();
-    HBITMAP hNewBitmap = ConvertToBlackAndWhite(hBitmap);
+    HBITMAP hNewBitmap = CreateNBppBitmap(hBitmap, 1);
     UnlockBitmap(hBitmap);
 
     PushImageForUndo(hNewBitmap);

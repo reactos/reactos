@@ -3,7 +3,7 @@
  * LICENSE:    LGPL-2.0-or-later (https://spdx.org/licenses/LGPL-2.0-or-later)
  * PURPOSE:    The main window
  * COPYRIGHT:  Copyright 2015 Benedikt Freisen <b.freisen@gmx.net>
- *             Copyright 2023 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
+ *             Copyright 2023-2026 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
 #pragma once
@@ -31,7 +31,7 @@ public:
 
     HWND DoCreate();
     BOOL GetOpenFileName(IN OUT LPWSTR pszFile, INT cchMaxFile);
-    BOOL GetSaveFileName(IN OUT LPWSTR pszFile, INT cchMaxFile);
+    BOOL GetSaveFileName(IN OUT LPWSTR pszFile, INT cchMaxFile, PINT pnBpp = nullptr);
     BOOL ChooseColor(IN OUT COLORREF *prgbColor);
     VOID TrackPopupMenu(POINT ptScreen, INT iSubMenu);
     BOOL CanUndo() const;
@@ -57,5 +57,6 @@ private:
     void saveImage(BOOL overwrite);
     void InsertSelectionFromHBITMAP(HBITMAP bitmap, HWND window);
     BOOL ConfirmSave();
+    BOOL ConfirmLoseColor();
     void ProcessFileMenu(HMENU hPopupMenu);
 };

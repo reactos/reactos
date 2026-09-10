@@ -11,6 +11,7 @@ list(APPEND SOURCE
     dialogs.cpp
     dib.cpp
     drawing.cpp
+    floyd.cpp
     fullscreen.cpp
     history.cpp
     main.cpp
@@ -31,7 +32,7 @@ file(GLOB mspaint_rc_deps img/*.*)
 add_rc_deps(rsrc.rc ${mspaint_rc_deps})
 add_executable(mspaint ${SOURCE} rsrc.rc)
 set_module_type(mspaint win32gui UNICODE)
-target_link_libraries(mspaint uuid cpprt atl_classes)
+target_link_libraries(mspaint uuid cppstl atl_classes)
 set_target_cpp_properties(mspaint WITH_EXCEPTIONS)
 add_importlibs(mspaint comdlg32 shell32 user32 gdi32 advapi32 comctl32 msvcrt kernel32 rpcrt4 shlwapi ntdll)
 add_pch(mspaint precomp.h SOURCE)

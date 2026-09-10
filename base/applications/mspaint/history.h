@@ -3,6 +3,7 @@
  * LICENSE:    LGPL-2.0-or-later (https://spdx.org/licenses/LGPL-2.0-or-later)
  * PURPOSE:    Undo and redo functionality
  * COPYRIGHT:  Copyright 2015 Benedikt Freisen <b.freisen@gmx.net>
+ *             Copyright 2023-2026 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
 #pragma once
@@ -40,7 +41,8 @@ public:
     void StretchSkew(int nStretchPercentX, int nStretchPercentY, int nSkewDegX = 0, int nSkewDegY = 0);
     int GetWidth() const;
     int GetHeight() const;
-    HBITMAP CopyBitmap();
+    int GetBpp() const;
+    HBITMAP CloneDIB(INT width = 0, INT height = 0, COLORREF rgbColor = CLR_INVALID);
     HBITMAP LockBitmap();
     void UnlockBitmap(HBITMAP hbmLocked);
     void InvertColors();

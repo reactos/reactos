@@ -59,8 +59,8 @@ void getBoundaryOfPoints(RECT& rcBoundary, SIZE_T cPoints, const POINT *pPoints)
     while (cPoints-- > 0)
     {
         LONG x = pPoints->x, y = pPoints->y;
-        ptMin = { min(x, ptMin.x), min(y, ptMin.y) };
-        ptMax = { max(x, ptMax.x), max(y, ptMax.y) };
+        ptMin = { __min(x, ptMin.x), __min(y, ptMin.y) };
+        ptMax = { __max(x, ptMax.x), __max(y, ptMax.y) };
         ++pPoints;
     }
 
@@ -1189,7 +1189,10 @@ void ToolsModel::OnEndDraw(BOOL bCancel)
 
 void ToolsModel::OnDrawOverlayOnImage(HDC hdc)
 {
+    SetTextColor(hdc, paletteModel.GetPrimaryColor());
+    SetBkColor(hdc, paletteModel.GetSecondaryColor());
     m_pToolObject->OnDrawOverlayOnImage(hdc);
+    GdiFlush();
 }
 
 void ToolsModel::OnDrawOverlayOnCanvas(HDC hdc)
