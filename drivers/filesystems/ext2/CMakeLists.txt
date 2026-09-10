@@ -1,6 +1,5 @@
 
-include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/drivers
-                    inc)
+include_directories(inc)
 
 list(APPEND SOURCE
     src/init.c
@@ -87,6 +86,7 @@ list(APPEND SOURCE
     inc/ext2fs.h)
 
 add_library(ext2fs MODULE ${SOURCE} ext2fs.rc)
+add_pch(ext2fs inc/ext2fs.h SOURCE)
 
 target_compile_definitions(ext2fs PRIVATE _CRT_NON_CONFORMING_SWPRINTFS)
 
@@ -115,7 +115,6 @@ target_link_libraries(ext2fs memcmp ${PSEH_LIB})
 add_definitions(-D__KERNEL__ -D_CRT_NO_POSIX_ERROR_CODES -D_CRT_DECLARE_NONSTDC_NAMES=1)
 set_module_type(ext2fs kernelmodedriver)
 add_importlibs(ext2fs ntoskrnl hal)
-add_pch(ext2fs inc/ext2fs.h SOURCE)
 
 add_cd_file(TARGET ext2fs DESTINATION reactos/system32/drivers FOR all)
 add_registry_inf(ext2fs_reg.inf)
