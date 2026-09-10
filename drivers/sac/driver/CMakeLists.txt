@@ -1,5 +1,5 @@
 
-include_directories(${REACTOS_SOURCE_DIR})
+include_directories(${REACTOS_SOURCE_DIR}/ntoskrnl/include)
 
 list(APPEND SOURCE
     chanmgr.c
@@ -17,8 +17,8 @@ list(APPEND SOURCE
     sacdrv.h)
 
 add_library(sacdrv MODULE ${SOURCE} sacdrv.rc)
+add_pch(sacdrv sacdrv.h SOURCE)
 set_module_type(sacdrv kernelmodedriver)
 add_importlibs(sacdrv ntoskrnl hal)
 add_dependencies(sacdrv sacmsg)
-add_pch(sacdrv sacdrv.h SOURCE)
 add_cd_file(TARGET sacdrv DESTINATION reactos/system32/drivers NO_CAB FOR all)
