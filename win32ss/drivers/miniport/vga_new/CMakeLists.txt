@@ -7,12 +7,10 @@ list(APPEND SOURCE
     vbe.c
     vga.h)
 
-add_library(vga MODULE
-    ${SOURCE}
-    vga.rc)
-
+add_library(vga MODULE ${SOURCE} vga.rc)
 target_link_libraries(vga libcntpr)
 set_module_type(vga kernelmodedriver)
 add_importlibs(vga videoprt)
 add_pch(vga vga.h SOURCE)
 add_cd_file(TARGET vga DESTINATION reactos/system32/drivers FOR all)
+add_registry_inf(vga_reg.inf)
