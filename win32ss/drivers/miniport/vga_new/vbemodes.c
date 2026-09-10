@@ -45,7 +45,7 @@ VbeGetVideoMemoryBaseAddress(IN PHW_DEVICE_EXTENSION VgaExtension,
 
     /* Need linear and INT10 interface */
     if (!(VgaMode->fbType & VIDEO_MODE_BANKED)) return 0;
-    if (VgaExtension->Int10Interface.Size) return 0;
+    if (!VgaExtension->Int10Interface.Size) return 0;
 
     /* Allocate scratch area and context */
     VbeModeInfo = VideoPortAllocatePool(VgaExtension, 1, sizeof(VBE_MODE_INFO), ' agV');
