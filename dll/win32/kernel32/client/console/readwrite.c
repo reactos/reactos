@@ -278,21 +278,39 @@ IntGetConsoleInput(IN HANDLE hConsoleInput,
     }
     else
     {
-        ULONG Size = nLength * sizeof(INPUT_RECORD);
+        ULONG NumRecords = nLength;
 
-        /* Allocate a Capture Buffer */
-        CaptureBuffer = CsrAllocateCaptureBuffer(1, Size);
-        if (CaptureBuffer == NULL)
+        /*
+         * The CSR port heap uses a fixed 64 KiB shared section. Microsoft
+         * Edit requests 4096 INPUT_RECORDs at once, which requires 80 KiB.
+         * Reading fewer records is allowed, so use a batch that fits and
+         * shrink it further if the port heap is already constrained.
+         */
+        if (NumRecords > 2048)
+            NumRecords = 2048;
+
+        while (NumRecords > sizeof(GetInputRequest->RecordStaticBuffer)/sizeof(INPUT_RECORD))
         {
-            DPRINT1("CsrAllocateCaptureBuffer failed!\n");
-            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-            return FALSE;
+            ULONG Size = NumRecords * sizeof(INPUT_RECORD);
+
+            CaptureBuffer = CsrAllocateCaptureBuffer(1, Size);
+            if (CaptureBuffer != NULL)
+            {
+                /* Allocate space in the Buffer */
+                CsrAllocateMessagePointer(CaptureBuffer,
+                                          Size,
+                                          (PVOID*)&GetInputRequest->RecordBufPtr);
+                break;
+            }
+
+            NumRecords /= 2;
         }
 
-        /* Allocate space in the Buffer */
-        CsrAllocateMessagePointer(CaptureBuffer,
-                                  Size,
-                                  (PVOID*)&GetInputRequest->RecordBufPtr);
+        GetInputRequest->NumRecords = NumRecords;
+        if (CaptureBuffer == NULL)
+        {
+            GetInputRequest->RecordBufPtr = GetInputRequest->RecordStaticBuffer;
+        }
     }
 
     /* Call the server */
