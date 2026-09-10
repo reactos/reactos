@@ -7,11 +7,12 @@
 #define COBJMACROS
 #define CONST_VTABLE
 
-#include <wine/test.h>
-
+#include <windef.h>
+#include <winbase.h>
 #include <wingdi.h>
 #include <winnls.h>
 #include <ole2.h>
+#include <wine/test.h>
 #include <mshtml.h>
 #include <hlink.h>
 #include <mshtmhst.h>
@@ -22,6 +23,7 @@
 #include <tlogstg.h>
 #include <winreg.h>
 #include <wininet.h>
+#include <shlwapi.h>
 
 #include "mshtml_test.h"
 

@@ -18,12 +18,20 @@
 
 #include "mshtml_private.h"
 
+#ifdef __REACTOS__
+struct HTMLLinkElement {
+#else
 typedef struct {
+#endif
     HTMLElement element;
     IHTMLLinkElement IHTMLLinkElement_iface;
 
     nsIDOMHTMLLinkElement *nslink;
+#ifdef __REACTOS__
+};
+#else
 } HTMLLinkElement;
+#endif
 
 static inline HTMLLinkElement *impl_from_IHTMLLinkElement(IHTMLLinkElement *iface)
 {

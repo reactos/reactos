@@ -18,14 +18,22 @@
 
 #include "mshtml_private.h"
 
+#ifdef __REACTOS__
+struct HTMLStyleElement {
+#else
 typedef struct {
+#endif
     HTMLElement element;
 
     IHTMLStyleElement IHTMLStyleElement_iface;
 
     nsIDOMHTMLStyleElement *nsstyle;
     IHTMLStyleSheet *style_sheet;
+#ifdef __REACTOS__
+};
+#else
 } HTMLStyleElement;
+#endif
 
 static inline HTMLStyleElement *impl_from_IHTMLStyleElement(IHTMLStyleElement *iface)
 {
