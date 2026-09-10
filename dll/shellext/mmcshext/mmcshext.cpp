@@ -100,7 +100,7 @@ public:
         return E_NOTIMPL;
     }
 
-    DECLARE_NO_REGISTRY()
+    DECLARE_REGISTRY_RESOURCEID(IDR_EXTRACTICON)
     DECLARE_NOT_AGGREGATABLE(CMscExtractIcon)
 
     BEGIN_COM_MAP(CMscExtractIcon)
@@ -165,6 +165,7 @@ HRESULT CMscExtractIcon::GetIconLocationFromMsc(_In_ PWSTR pszIconFile, _In_ UIN
     HRESULT hr = SHCreateStreamOnFileW(m_File, STGM_READ | STGM_SHARE_DENY_WRITE, &pStream);
     if (FAILED(hr))
         return hr;
+
     VARIANT v;
     V_VT(&v) = VT_UNKNOWN;
     V_UNKNOWN(&v) = pStream;
@@ -177,6 +178,8 @@ HRESULT CMscExtractIcon::GetIconLocationFromMsc(_In_ PWSTR pszIconFile, _In_ UIN
     hr = pDoc->selectSingleNode(const_cast<PWSTR>(L"/MMC_ConsoleFile/VisualAttributes/Icon"), &pDomNode);
     if (FAILED(hr))
         return hr;
+    if (hr != S_OK) // Some files have an empty <VisualAttributes/> element
+        return HRESULT_FROM_WIN32(ERROR_NOT_FOUND);
 
     BSTR bstr;
     *piIndex = 0;
@@ -204,26 +207,14 @@ STDAPI DllGetClassObject(_In_ REFCLSID rclsid, _In_ REFIID riid, _Out_ LPVOID *p
     return g_Module.DllGetClassObject(rclsid, riid, ppv);
 }
 
-static HRESULT DllServerRegistration(_In_ BOOL Install)
-{
-    const BOOL HasTlb = FALSE;
-    HRESULT hr1 = Install ? g_Module.DllRegisterServer(HasTlb) : g_Module.DllUnregisterServer(HasTlb);
-    if (FAILED(hr1) && Install)
-        return hr1;
-    HRESULT hr2 = g_Module.UpdateRegistryFromResource(IDR_EXTRACTICON, Install, NULL);
-    if (FAILED(hr2))
-        return hr2;
-    return hr1;
-}
-
 STDAPI DllRegisterServer()
 {
-    return DllServerRegistration(TRUE);
+    return g_Module.DllRegisterServer(FALSE);
 }
 
 STDAPI DllUnregisterServer()
 {
-    return DllServerRegistration(FALSE);
+    return g_Module.DllUnregisterServer(FALSE);
 }
 
 EXTERN_C BOOL WINAPI DllMain(_In_ HINSTANCE hInstance, _In_ DWORD dwReason, _In_ LPVOID lpReserved)

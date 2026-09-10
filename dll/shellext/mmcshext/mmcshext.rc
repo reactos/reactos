@@ -5,8 +5,8 @@
  * COPYRIGHT:   Copyright 2026 Whindmar Saksit <whindsaks@proton.me>
  */
 
-#include <windef.h>
-#include <winuser.h>
+#include <winnt.rh>
+#include <winuser.rh>
 
 #define REACTOS_VERSION_DLL
 #define REACTOS_STR_FILE_DESCRIPTION  "ReactOS MMC Shell Extension"
