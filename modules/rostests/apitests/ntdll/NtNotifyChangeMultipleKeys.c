@@ -342,6 +342,10 @@ Cleanup:
     {
         CloseHandle(WatchThread2Handle);
     }
+    if (EventHandle)
+    {
+        CloseHandle(EventHandle);
+    }
     if (WatchThread1State)
     {
         HeapFree(GetProcessHeap(), 0, WatchThread1State);
