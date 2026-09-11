@@ -95,7 +95,7 @@ START_TEST(NtNotifyChangeMultipleKeys)
     /* Synchronous mode */
 
     /* Create a thread */
-    WatchThread1State = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(WATCH_THREAD_CONTEXT));
+    WatchThread1State = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*WatchThread1State));
     if (WatchThread1State == NULL)
     {
         skip("Failed to allocate memory for watch thread state");
@@ -129,7 +129,7 @@ START_TEST(NtNotifyChangeMultipleKeys)
         skip("Failed to create watch thread");
     }
     /* Watch again, but this time close the handle without making any change */
-    WatchThread2State = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(WATCH_THREAD_CONTEXT));
+    WatchThread2State = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*WatchThread2State));
     if (WatchThread2State == NULL)
     {
         skip("Failed to allocate memory for watch thread state");
@@ -314,7 +314,7 @@ START_TEST(NtNotifyChangeMultipleKeys)
     ok(!NT_SUCCESS(Status), "NtNotifyChangeMultipleKeys succeeded unexpectedly.\n");
 
     /* APC-based asynchronous mode */
-    ApcContext = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(APC_CONTEXT));
+    ApcContext = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*ApcContext));
     if (ApcContext == NULL)
     {
         skip("Failed to allocate memory for APC context");
