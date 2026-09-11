@@ -24,9 +24,9 @@ function(add_hal _halname)
 
     target_link_libraries(${_halname} ${_haldata_LIBS})
     if(${_halname} STREQUAL "hal")
-        target_link_libraries(${_halname} arbiter)
+        target_link_libraries(${_halname} arbiter_hal)
     endif()
-    target_link_libraries(${_halname} libcntpr setjmp ${PSEH_LIB})
+    target_link_libraries(${_halname} arbiter_hal libcntpr setjmp ${PSEH_LIB})
 
     add_importlibs(${_halname} ntoskrnl)
     add_dependencies(${_halname} psdk asm)
