@@ -178,6 +178,26 @@ HalpQueryInterface(IN PDEVICE_OBJECT DeviceObject,
                    IN PINTERFACE Interface,
                    OUT PULONG Length)
 {
+    NTSTATUS Status = STATUS_NOT_SUPPORTED;
+
+    if (((PFDO_EXTENSION)DeviceObject->DeviceExtension)->ExtensionType == FdoExtensionType)
+    {
+        //TODO: Does PC98 Have PRT? Or does it needs it's own Arbiter?
+#if !defined(SARCH_XBOX) && !defined(SARCH_PC98)
+        if (((CM_RESOURCE_TYPE)(ULONG_PTR)InterfaceSpecificData != CmResourceTypeInterrupt) ||
+            !IsEqualIID(InterfaceType, &GUID_ARBITER_INTERFACE_STANDARD))
+        {
+            return Status;
+        }
+
+        Status = HalpLegacyPCCreateArbiter(DeviceObject);
+        if (NT_SUCCESS(Status))
+        {
+            HalpLegacyPCQueryArbInterface(Interface, InterfaceBufferSize, Length);
+        }
+#endif
+    }
+
     if (IsEqualIID(InterfaceType, &GUID_BUS_INTERFACE_STANDARD))
     {
         PBUS_INTERFACE_STANDARD BusInterface = (PBUS_INTERFACE_STANDARD)Interface;
@@ -221,7 +241,7 @@ HalpQueryInterface(IN PDEVICE_OBJECT DeviceObject,
             InterfaceType->Data4[6], InterfaceType->Data4[7]);
     }
 
-    return STATUS_NOT_SUPPORTED;
+    return Status;
 }
 
 NTSTATUS

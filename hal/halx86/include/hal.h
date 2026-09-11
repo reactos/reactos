@@ -76,6 +76,7 @@
 #include "halhw.h"
 #endif
 #include "halp.h"
+#include "legacypc.h"
 #include "mps.h"
 #include "halacpi.h"
 
