@@ -138,6 +138,7 @@ HalpAddDevice(IN PDRIVER_OBJECT DriverObject,
     return Status;
 }
 
+static
 VOID
 NTAPI
 HalpBusInterfaceReference(PVOID Context)
@@ -146,6 +147,7 @@ HalpBusInterfaceReference(PVOID Context)
     InterlockedIncrement(&HalPdoExtension->InterfaceReferenceCount);
 }
 
+static
 VOID
 NTAPI
 HalpBusInterfaceDereference(PVOID Context)
@@ -154,11 +156,13 @@ HalpBusInterfaceDereference(PVOID Context)
     InterlockedDecrement(&HalPdoExtension->InterfaceReferenceCount);
 }
 
+static
 PDMA_ADAPTER
 NTAPI
-HalpBusInterfaceGetDmaAdapter(_Inout_opt_ PVOID Context,
-                              _In_        PDEVICE_DESCRIPTION DeviceDescriptor,
-                              _Out_       PULONG NumberOfMapRegisters)
+HalpBusInterfaceGetDmaAdapter(
+    _Inout_opt_ PVOID Context,
+    _In_ PDEVICE_DESCRIPTION DeviceDescriptor,
+    _Out_ PULONG NumberOfMapRegisters)
 {
     DeviceDescriptor->BusNumber = 0;
     return HalpGetDmaAdapter(Context, DeviceDescriptor, NumberOfMapRegisters);
@@ -193,19 +197,17 @@ HalpQueryInterface(IN PDEVICE_OBJECT DeviceObject,
     else if (IsEqualIID(InterfaceType, &GUID_PCI_BUS_INTERFACE_STANDARD))
     {
         PPCI_BUS_INTERFACE_STANDARD PciBusInterface = (PPCI_BUS_INTERFACE_STANDARD)Interface;
+
         *Length = sizeof(*PciBusInterface);
         if (InterfaceBufferSize < sizeof(*PciBusInterface))
-        {
-            DPRINT1("HalpQueryInterface Buffer Given: %X", InterfaceBufferSize);
             return STATUS_BUFFER_TOO_SMALL;
-        }
         
         RtlZeroMemory(PciBusInterface, sizeof(*PciBusInterface));
         PciBusInterface->Size = sizeof(*PciBusInterface);
         PciBusInterface->Version = 1;
         PciBusInterface->Context = DeviceObject;
         PciBusInterface->InterfaceDereference = HalpBusInterfaceDereference;
-        PciBusInterface->InterfaceReference = HalpBusInterfaceDereference;
+        PciBusInterface->InterfaceReference = HalpBusInterfaceReference;
         PciBusInterface->WriteConfig = (PCI_READ_WRITE_CONFIG)HaliPciInterfaceWriteConfig;
         PciBusInterface->ReadConfig = (PCI_READ_WRITE_CONFIG)HaliPciInterfaceReadConfig;
     }
