@@ -1521,6 +1521,63 @@ static void ME_RTFReadParnumGroup( RTF_Info *info )
     RTFRouteToken( info );     /* feed "}" back to router */
 }
 
+#ifdef __REACTOS__ /* wine-11.11 */
+static void ME_RTFReadPntextGroup( RTF_Info *info )
+{
+    int level = 1;
+    WCHAR buf[256];
+    int buf_len = 0;
+
+    ME_DestroyString( info->pntext );
+    info->pntext = NULL;
+
+    for (;;)
+    {
+        RTFGetToken( info );
+
+        if (info->rtfClass == rtfEOF)
+            return;
+
+        if (RTFCheckCM( info, rtfGroup, rtfBeginGroup ))
+        {
+            level++;
+            continue;
+        }
+
+        if (RTFCheckCM( info, rtfGroup, rtfEndGroup ))
+        {
+            level--;
+            if (level == 0) break;
+            continue;
+        }
+
+        if (buf_len >= ARRAY_SIZE(buf) - 1)
+            continue;
+
+        if (info->rtfClass == rtfText)
+        {
+            buf[buf_len++] = (WCHAR)(unsigned char)info->rtfMajor;
+        }
+        else if (info->rtfClass == rtfControl && info->rtfMajor == rtfSpecialChar)
+        {
+            switch (info->rtfMinor)
+            {
+            case rtfTab:        buf[buf_len++] = '\t'; break;
+            case rtfBullet:     buf[buf_len++] = 0x2022; break;
+            case rtfNoBrkSpace: buf[buf_len++] = 0x00A0; break;
+            case rtfNoBrkHyphen:buf[buf_len++] = 0x2011; break;
+            case rtfOptDest:
+            default: break;
+            }
+        }
+    }
+
+    info->pntext = ME_MakeStringN( buf, buf_len );
+
+    RTFRouteToken( info );
+}
+
+#endif
 static void ME_RTFReadHook(RTF_Info *info)
 {
   switch(info->rtfClass)
@@ -1678,6 +1735,9 @@ static LRESULT ME_StreamIn(ME_TextEditor *editor, DWORD format, EDITSTREAM *stre
       RTFSetDestinationCallback(&parser, rtfPict, ME_RTFReadPictGroup);
       RTFSetDestinationCallback(&parser, rtfObject, ME_RTFReadObjectGroup);
       RTFSetDestinationCallback(&parser, rtfParNumbering, ME_RTFReadParnumGroup);
+#ifdef __REACTOS__ /* wine-11.11 */
+      RTFSetDestinationCallback(&parser, rtfParNumText, ME_RTFReadPntextGroup);
+#endif
       if (!parser.editor->bEmulateVersion10) /* v4.1 */
       {
         RTFSetDestinationCallback(&parser, rtfNoNestTables, RTFSkipGroup);
