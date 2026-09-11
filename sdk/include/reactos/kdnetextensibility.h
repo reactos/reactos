@@ -36,7 +36,7 @@ typedef NTSTATUS (NTAPI *DEBUG_SERIAL_OUTPUT_INIT)(_In_opt_ struct _DEBUG_DEVICE
     _Out_opt_ PPHYSICAL_ADDRESS PAddress);
 typedef VOID     (NTAPI *DEBUG_SERIAL_OUTPUT_BYTE)(_In_ UCHAR byte);
 
-#define KDNET_EXT_EXPORTS 15
+#define KDNET_EXT_EXPORTS 13
 
 typedef struct _KDNET_EXTENSIBILITY_EXPORTS
 {
@@ -92,7 +92,7 @@ typedef VOID (NTAPI *KDNET_UNMAP_VIRTUAL_ADDRESS)(_In_ PVOID VirtualAddress,
 typedef ULONG64 (NTAPI *KDNET_READ_CYCLE_COUNTER)(_Out_opt_ ULONG64 *Frequency);
 typedef VOID (NTAPI *KDNET_DBGPRINT)(_In_ PCHAR pFmt, ...);
 
-#define KDNET_EXT_IMPORTS 33
+#define KDNET_EXT_IMPORTS 30
 
 typedef struct _KDNET_EXTENSIBILITY_IMPORTS
 {
@@ -124,9 +124,6 @@ typedef struct _KDNET_EXTENSIBILITY_IMPORTS
     KDNET_UNMAP_VIRTUAL_ADDRESS UnmapVirtualAddress;
     KDNET_READ_CYCLE_COUNTER ReadCycleCounter;
     KDNET_DBGPRINT KdNetDbgPrintf;
-    PVOID VmbusInitialize;       /* optional */
-    PVOID GetHypervisorVendorId; /* optional */
-    ULONG ExecutionEnvironment;
     NTSTATUS *KdNetErrorStatus;
     PWCHAR *KdNetErrorString;
     PULONG KdNetHardwareID;
@@ -136,6 +133,59 @@ NTSTATUS NTAPI KdInitializeLibrary(
     _In_ PKDNET_EXTENSIBILITY_IMPORTS ImportTable,
     _In_opt_ PCHAR LoaderOptions,
     _Inout_ struct _DEBUG_DEVICE_DESCRIPTOR *Device);
+
+
+#ifdef _KDNET_EXTENSION_MACROS_
+extern PKDNET_EXTENSIBILITY_IMPORTS KdNetExtensibilityImports;
+
+#define KdGetPciDataByOffset      KdNetExtensibilityImports->GetPciDataByOffset
+#define KdSetPciDataByOffset      KdNetExtensibilityImports->SetPciDataByOffset
+#define KdGetPhysicalAddress      KdNetExtensibilityImports->GetPhysicalAddress
+#define KeStallExecutionProcessor KdNetExtensibilityImports->StallExecutionProcessor
+
+#undef READ_REGISTER_UCHAR
+#undef READ_REGISTER_USHORT
+#undef READ_REGISTER_ULONG
+#undef READ_REGISTER_ULONG64
+#undef WRITE_REGISTER_UCHAR
+#undef WRITE_REGISTER_USHORT
+#undef WRITE_REGISTER_ULONG
+#undef WRITE_REGISTER_ULONG64
+#undef READ_PORT_UCHAR
+#undef READ_PORT_USHORT
+#undef READ_PORT_ULONG
+#undef READ_PORT_ULONG64
+#undef WRITE_PORT_UCHAR
+#undef WRITE_PORT_USHORT
+#undef WRITE_PORT_ULONG
+#undef WRITE_PORT_ULONG64
+#define READ_REGISTER_UCHAR       KdNetExtensibilityImports->ReadRegisterUChar
+#define READ_REGISTER_USHORT      KdNetExtensibilityImports->ReadRegisterUShort
+#define READ_REGISTER_ULONG       KdNetExtensibilityImports->ReadRegisterULong
+#define READ_REGISTER_ULONG64     KdNetExtensibilityImports->ReadRegisterULong64
+#define WRITE_REGISTER_UCHAR      KdNetExtensibilityImports->WriteRegisterUChar
+#define WRITE_REGISTER_USHORT     KdNetExtensibilityImports->WriteRegisterUShort
+#define WRITE_REGISTER_ULONG      KdNetExtensibilityImports->WriteRegisterULong
+#define WRITE_REGISTER_ULONG64    KdNetExtensibilityImports->WriteRegisterULong64
+#define READ_PORT_UCHAR           KdNetExtensibilityImports->ReadPortUChar
+#define READ_PORT_USHORT          KdNetExtensibilityImports->ReadPortUShort
+#define READ_PORT_ULONG           KdNetExtensibilityImports->ReadPortULong
+#define READ_PORT_ULONG64         KdNetExtensibilityImports->ReadPortULong64
+#define WRITE_PORT_UCHAR          KdNetExtensibilityImports->WritePortUChar
+#define WRITE_PORT_USHORT         KdNetExtensibilityImports->WritePortUShort
+#define WRITE_PORT_ULONG          KdNetExtensibilityImports->WritePortULong
+#define WRITE_PORT_ULONG64        KdNetExtensibilityImports->WritePortULong64
+#define KdReadCycleCounter        KdNetExtensibilityImports->ReadCycleCounter
+#define KdSetHiberRange           KdNetExtensibilityImports->SetHiberRange
+#define KdBugCheckEx              KdNetExtensibilityImports->BugCheckEx
+#define KdMapPhysicalMemory64     KdNetExtensibilityImports->MapPhysicalMemory64
+#define KdUnmapVirtualAddress     KdNetExtensibilityImports->UnmapVirtualAddress
+#define KdNetDbgPrintf            KdNetExtensibilityImports->KdNetDbgPrintf
+#define KdNetErrorStatus          (*KdNetExtensibilityImports->KdNetErrorStatus)
+#define KdNetErrorString          (*KdNetExtensibilityImports->KdNetErrorString)
+#define KdNetHardwareID           (*KdNetExtensibilityImports->KdNetHardwareID)
+
+#endif /* _KDNET_EXTENSION_MACROS_ */
 
 #ifdef __cplusplus
 }
