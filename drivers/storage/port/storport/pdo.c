@@ -12,7 +12,6 @@
 #define NDEBUG
 #include <debug.h>
 
-
 /* FUNCTIONS ******************************************************************/
 
 NTSTATUS
@@ -121,14 +120,8 @@ PortPdoScsi(
     _In_ PDEVICE_OBJECT DeviceObject,
     _In_ PIRP Irp)
 {
-    DPRINT1("PortPdoScsi(%p %p)\n", DeviceObject, Irp);
-
-    Irp->IoStatus.Information = 0;
-    Irp->IoStatus.Status = STATUS_SUCCESS;
-    IoCompleteRequest(Irp, IO_NO_INCREMENT);
-    return STATUS_SUCCESS;
+    return PortFdoScsi(DeviceObject, Irp);
 }
-
 
 NTSTATUS
 NTAPI

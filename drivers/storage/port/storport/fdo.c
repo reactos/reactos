@@ -23,13 +23,50 @@ PortFdoInterruptRoutine(
     _In_ PVOID ServiceContext)
 {
     PFDO_DEVICE_EXTENSION DeviceExtension;
+    BOOLEAN Result;
+    PKDPC MiniportDpc;
 
-    DPRINT1("PortFdoInterruptRoutine(%p %p)\n",
-            Interrupt, ServiceContext);
+    DPRINT("PortFdoInterruptRoutine(%p %p)\n",
+           Interrupt, ServiceContext);
 
     DeviceExtension = (PFDO_DEVICE_EXTENSION)ServiceContext;
 
-    return MiniportHwInterrupt(&DeviceExtension->Miniport);
+    /*
+     * Run the miniport ISR at DIRQL. If it calls
+     * StorPortNotification(RequestComplete) here, the port only stashes
+     * the completion (see StorPortNotification) and performs no DPC or
+     * IRP completion work at DIRQL.
+     */
+    Result = MiniportHwInterrupt(&DeviceExtension->Miniport);
+
+    /*
+     * Defer completion to DISPATCH_LEVEL: the completion DPC itself
+     * runs at DISPATCH_LEVEL and all IRP completion happens there.
+     * KeInsertQueueDpc is called here, from the port's interrupt
+     * wrapper after the miniport ISR has fully returned, instead of
+     * from inside the miniport's notification call chain. Queue
+     * whenever completions are pending, even if the miniport reported
+     * the interrupt as not ours (it may still have completed a request
+     * before returning), so a stashed completion can never be stranded.
+     * KeInsertQueueDpc is a no-op if the DPC is already queued, and the
+     * DPC drains the whole completion queue, so over-queueing is harmless.
+     */
+    if (QueryDepthSList(&DeviceExtension->CompletionList) != 0)
+    {
+        DPRINT("PortFdoInterruptRoutine: queuing completion DPC\n");
+        KeInsertQueueDpc(&DeviceExtension->CompletionDpc, NULL, NULL);
+    }
+
+    /* Queue a miniport DPC that was deferred from its ISR via IssueDpc */
+    MiniportDpc = InterlockedExchangePointer(
+        (PVOID volatile *)&DeviceExtension->PendingMiniportDpc, NULL);
+    if (MiniportDpc != NULL)
+    {
+        DPRINT("PortFdoInterruptRoutine: queuing miniport DPC %p\n",
+               MiniportDpc);
+        KeInsertQueueDpc(MiniportDpc, NULL, NULL);
+    }
+    return Result;
 }
 
 
@@ -570,24 +607,201 @@ PortFdoScsi(
     _In_ PIRP Irp)
 {
     PFDO_DEVICE_EXTENSION DeviceExtension;
-//    PIO_STACK_LOCATION Stack;
-    ULONG_PTR Information = 0;
-    NTSTATUS Status = STATUS_NOT_SUPPORTED;
+    PIO_STACK_LOCATION Stack;
+    PSCSI_REQUEST_BLOCK Srb;
+    PSTOR_REQUEST_CONTEXT Context;
+    NTSTATUS Status;
+    ULONG ExtensionSize;
+    PDEVICE_OBJECT Pdo;
 
-    DPRINT("PortFdoScsi(%p %p)\n", DeviceObject, Irp);
+    KIRQL StartIoIrql;
 
     DeviceExtension = (PFDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
-    ASSERT(DeviceExtension);
-    ASSERT(DeviceExtension->ExtensionType == FdoExtension);
+    if (DeviceExtension == NULL)
+    {
+        Irp->IoStatus.Status = STATUS_INVALID_DEVICE_STATE;
+        Irp->IoStatus.Information = 0;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        return STATUS_INVALID_DEVICE_STATE;
+    }
+    Pdo = NULL;
+    if (DeviceExtension->ExtensionType == PdoExtension)
+    {
+        Pdo = DeviceObject;
+        DeviceExtension = ((PPDO_DEVICE_EXTENSION)DeviceExtension)->FdoExtension;
+    }
+    if (DeviceExtension == NULL ||
+        DeviceExtension->ExtensionType != FdoExtension)
+    {
+        Irp->IoStatus.Status = STATUS_INVALID_DEVICE_STATE;
+        Irp->IoStatus.Information = 0;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        return STATUS_INVALID_DEVICE_STATE;
+    }
 
-//    Stack = IoGetCurrentIrpStackLocation(Irp);
+    Stack = IoGetCurrentIrpStackLocation(Irp);
+    Srb = Stack->Parameters.Scsi.Srb;
+    if (Srb == NULL)
+    {
+        Irp->IoStatus.Status = STATUS_INVALID_PARAMETER;
+        Irp->IoStatus.Information = 0;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        return STATUS_INVALID_PARAMETER;
+    }
 
+    /*
+     * Claim/release/attach are port-driver responsibilities and must never
+     * reach the miniport. ClassClaimDevice() sends SRB_FUNCTION_CLAIM_DEVICE
+     * via IOCTL_SCSI_EXECUTE_NONE, which PortDispatchDeviceControl routes
+     * straight here -- bypassing PortPdoScsi. The miniport would otherwise
+     * complete the function-less SRB as a no-data command and return success
+     * without setting Srb->DataBuffer, so classpnp asserts
+     * NT_ASSERT(srb.DataBuffer != NULL). Handle them here as scsiport's
+     * SpiHandleAttachRelease does: hand back the claimed PDO in DataBuffer.
+     */
+    if (Pdo != NULL &&
+        (Srb->Function == SRB_FUNCTION_CLAIM_DEVICE ||
+         Srb->Function == SRB_FUNCTION_RELEASE_DEVICE ||
+         Srb->Function == SRB_FUNCTION_ATTACH_DEVICE))
+    {
+        if (Srb->Function == SRB_FUNCTION_RELEASE_DEVICE)
+        {
+            DPRINT("PortFdoScsi: SRB_FUNCTION_RELEASE_DEVICE\n");
+        }
+        else
+        {
+            DPRINT("PortFdoScsi: SRB_FUNCTION_CLAIM_DEVICE/ATTACH\n");
+            Srb->DataBuffer = Pdo;
+        }
+        Srb->SrbStatus = SRB_STATUS_SUCCESS;
+        Irp->IoStatus.Status = STATUS_SUCCESS;
+        Irp->IoStatus.Information = 0;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        return STATUS_SUCCESS;
+    }
 
-    Irp->IoStatus.Information = Information;
-    Irp->IoStatus.Status = Status;
-    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    KeAcquireSpinLock(&DeviceExtension->StartIoLock, &StartIoIrql);
 
-    return Status;
+    /*
+     * Allocate the per-request SRB extension alongside the context and publish
+     * it in Srb->SrbExtension before the miniport ever sees the SRB.
+     *
+     * This is not optional bookkeeping. classpnp stashes its own pointer to the
+     * original IRP in Srb->SrbExtension (ClasspSrbSetOriginalIrp), relying on
+     * the port driver to overwrite it with a real extension before StartIo. A
+     * port that leaves the field alone hands the miniport a pointer to the
+     * caller's IRP as if it were scratch memory: viostor then zeroes
+     * sizeof(VIOSTOR_SRB_EXTENSION) bytes over the IRP and DMAs the virtio
+     * status byte into it. That destroys, among other things, the transfer
+     * packet counter classpnp keeps in Tail.Overlay.DriverContext[0], which
+     * then decrements below zero and trips
+     * "numPacketsRemaining == 0" in classpnp/xferpkt.c.
+     */
+    ExtensionSize = (DeviceExtension->Miniport.InitData != NULL) ?
+                    DeviceExtension->Miniport.InitData->SrbExtensionSize : 0;
+    /* Try the look-aside list first, then fall back to pool allocation. */
+    {
+        PSLIST_ENTRY FreeEntry = InterlockedPopEntrySList(&DeviceExtension->ContextFreeList);
+        if (FreeEntry != NULL)
+            Context = CONTAINING_RECORD(FreeEntry, STOR_REQUEST_CONTEXT, ListEntry);
+        else
+            Context = NULL;
+    }
+    if (Context == NULL)
+    {
+        Context = ExAllocatePoolWithTag(NonPagedPool,
+                                        sizeof(*Context) + ExtensionSize,
+                                        TAG_MINIPORT_DATA);
+        if (Context == NULL)
+        {
+            Srb->SrbStatus = SRB_STATUS_INTERNAL_ERROR;
+            Status = STATUS_INSUFFICIENT_RESOURCES;
+            KeReleaseSpinLock(&DeviceExtension->StartIoLock, StartIoIrql);
+            Irp->IoStatus.Status = Status;
+            Irp->IoStatus.Information = 0;
+            IoCompleteRequest(Irp, IO_NO_INCREMENT);
+            return Status;
+        }
+    }
+    Context->Srb = Srb;
+    Context->Irp = Irp;
+    Context->Status = STATUS_PENDING;
+    Context->Information = 0;
+    Context->Completed = 0;
+    if (ExtensionSize != 0)
+    {
+        Srb->SrbExtension = (PVOID)(Context + 1);
+        RtlZeroMemory(Srb->SrbExtension, ExtensionSize);
+    }
+    else
+    {
+        /* No extension was requested, so the miniport must not treat whatever
+         * the caller left in this field as one. */
+        Srb->SrbExtension = NULL;
+    }
+    Srb->OriginalRequest = Irp;
+
+    /*
+     * Mark the IRP pending BEFORE handing it to the miniport. viostor completes
+     * INQUIRY/READ_CAPACITY/TEST_UNIT_READY synchronously inside HwStartIo, and
+     * that completion queues the completion DPC, which does not take
+     * StartIoLock and may therefore run on another processor and complete --
+     * and let classpnp IoReuseIrp() and resubmit -- this very IRP before we get
+     * here. Marking afterwards then writes SL_PENDING_RETURNED into a recycled
+     * or freed IRP: for IoBuildDeviceIoControlRequest IRPs that is a
+     * write-after-free, and for a reused transfer packet it is a byte written
+     * one stack location past the end of the allocation, next to the classpnp
+     * packet state whose counter shows up as numPacketsRemaining going
+     * negative. Marking first is the documented order and is safe: if we then
+     * fail the request below, we clear the flag before completing it
+     * ourselves.
+     */
+    IoMarkIrpPending(Irp);
+
+    if (!MiniportStartIo(&DeviceExtension->Miniport, Srb))
+    {
+        /*
+         * The miniport refused the request. If it has NOT already reported
+         * completion via RequestComplete, reclaim the context and fail the
+         * IRP. Otherwise the completion is deferred to the completion DPC,
+         * so report the IRP as pending and let the DPC finish it.
+         */
+        if (InterlockedCompareExchange(&Context->Completed, 1, 0) == 0)
+        {
+            /* Leave Srb->OriginalRequest alone; it is the caller's field
+             * and classpnp validates it on completion. */
+            InterlockedPushEntrySList(&DeviceExtension->ContextFreeList,
+                                      &Context->ListEntry);
+            /* We are completing this IRP inline after all, so take the
+             * pending mark back off. */
+            IoGetCurrentIrpStackLocation(Irp)->Control &= ~SL_PENDING_RETURNED;
+            if (SRB_STATUS(Srb->SrbStatus) == SRB_STATUS_PENDING)
+                Srb->SrbStatus = SRB_STATUS_ERROR;
+            Status = STATUS_IO_DEVICE_ERROR;
+            KeReleaseSpinLock(&DeviceExtension->StartIoLock, StartIoIrql);
+            Irp->IoStatus.Status = Status;
+            Irp->IoStatus.Information = 0;
+            IoCompleteRequest(Irp, IO_NO_INCREMENT);
+            return Status;
+        }
+
+        KeReleaseSpinLock(&DeviceExtension->StartIoLock, StartIoIrql);
+        return STATUS_PENDING;
+    }
+
+    /*
+     * The miniport accepted the request. Completion is always deferred:
+     * a RequestComplete issued synchronously from HwStartIo runs at
+     * DISPATCH_LEVEL (the StartIo spinlock is held) and is queued on
+     * CompletionList for the completion DPC, and later completions from
+     * the miniport ISR or DPC are deferred as well. Never infer a
+     * synchronous completion from Srb->OriginalRequest == NULL -- the
+     * completion DPC clears it on its way to completing the IRP, so the
+     * IRP must be reported as pending; that was already done above, before
+     * the miniport could complete it.
+     */
+    KeReleaseSpinLock(&DeviceExtension->StartIoLock, StartIoIrql);
+    return STATUS_PENDING;
 }
 
 

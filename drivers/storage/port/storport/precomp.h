@@ -87,6 +87,16 @@ typedef struct _UNIT_DATA
     INQUIRYDATA InquiryData;
 } UNIT_DATA, *PUNIT_DATA;
 
+typedef struct _STOR_REQUEST_CONTEXT
+{
+    SLIST_ENTRY ListEntry;      /* completion queue link (must be first) */
+    PSCSI_REQUEST_BLOCK Srb;
+    PIRP Irp;
+    NTSTATUS Status;
+    ULONG_PTR Information;
+    volatile LONG Completed;    /* 0 = pending, set to 1 by RequestComplete */
+} STOR_REQUEST_CONTEXT, *PSTOR_REQUEST_CONTEXT;
+
 typedef struct _FDO_DEVICE_EXTENSION
 {
     EXTENSION_TYPE ExtensionType;
@@ -111,6 +121,25 @@ typedef struct _FDO_DEVICE_EXTENSION
     PHW_PASSIVE_INITIALIZE_ROUTINE HwPassiveInitRoutine;
     PKINTERRUPT Interrupt;
     ULONG InterruptIrql;
+    KSPIN_LOCK StartIoLock;
+
+    /*
+     * Look-aside list of request contexts, recycled across requests.
+     * Prevents pool fragmentation and eliminates steady-state allocation.
+     */
+    DECLSPEC_ALIGN(MEMORY_ALLOCATION_ALIGNMENT) SLIST_HEADER ContextFreeList;
+
+    /*
+     * Queue of completions claimed by StorPortNotification(RequestComplete)
+     * but not yet completed: the completion DPC drains the whole queue at
+     * DISPATCH_LEVEL.
+     */
+    DECLSPEC_ALIGN(MEMORY_ALLOCATION_ALIGNMENT) SLIST_HEADER CompletionList;
+
+    KDPC CompletionDpc;
+    /* Miniport DPC deferred by StorPortNotification(IssueDpc) from the
+       miniport ISR at DIRQL; queued by the port interrupt wrapper. */
+    PKDPC PendingMiniportDpc;
 
     KSPIN_LOCK PdoListLock;
     LIST_ENTRY PdoListHead;
@@ -143,6 +172,14 @@ NTAPI
 PortFdoScsi(
     _In_ PDEVICE_OBJECT DeviceObject,
     _In_ PIRP Irp);
+
+VOID
+NTAPI
+PortCompletionDpc(
+    _In_ PKDPC Dpc,
+    _In_opt_ PVOID DeferredContext,
+    _In_opt_ PVOID SystemArgument1,
+    _In_opt_ PVOID SystemArgument2);
 
 NTSTATUS
 NTAPI
