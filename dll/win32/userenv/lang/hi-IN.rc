@@ -1,0 +1,37 @@
+LANGUAGE LANG_HINDI, SUBLANG_HINDI_INDIA
+
+IDD_ERRORDLG DIALOGEX 0, 0, 250, 95
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION
+CAPTION "User Profile" // "User Environment"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON IDI_USERENV, IDC_STATIC, 6, 10, 18, 20
+    DEFPUSHBUTTON "OK", IDOK, 190, 10, 50, 14, BS_NOTIFY | WS_TABSTOP
+    EDITTEXT IDC_ERRORDESC, 37, 10, 145, 66, ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | WS_VSCROLL | WS_BORDER | WS_TABSTOP
+    RTEXT "Time remaining:", IDC_TIMEOUTSTATIC, 172, 80, 54, 8
+    LTEXT "", IDC_TIMEOUT, 230, 80, 12, 8
+END
+
+/* See also: dll/win32/shell32/lang */
+STRINGTABLE
+BEGIN
+    IDS_PROFILEPATH "%SystemDrive%\\Documents and Settings"
+    IDS_APPDATA "ऐप्लिकेशन डेटा"
+    IDS_DESKTOP "डेस्कटॉप"
+    IDS_FAVORITES "पसंदीदा"
+    IDS_MYDOCUMENTS "मेरे डॉक्यूमेंट"
+    IDS_NETHOOD "नेटहुड"
+    IDS_PRINTHOOD "प्रिंटहुड"
+    IDS_RECENT "हाल ही"
+    IDS_SENDTO "भेजना"
+    IDS_TEMPLATES "टेम्पलेट्स"
+    IDS_STARTMENU "प्रारंभ मेनू"
+    IDS_PROGRAMS "प्रारंभ मेनू\\प्रोग्राम"
+    IDS_STARTUP "प्रारंभ मेनू\\प्रोग्राम\\स्टार्टअप"
+    IDS_LOCALSETTINGS "लोकल सेटिंग्स"
+    IDS_LOCALAPPDATA "लोकल सेटिंग्स\\ऐप्लिकेशन डेटा"
+    IDS_TEMP "लोकल सेटिंग्स\\Temp" /* See also TEMP_DIR in boot/bootdata/hivedef.inf */
+    IDS_CACHE "लोकल सेटिंग्स\\अस्थायी इंटरनेट फाइल"
+    IDS_HISTORY "लोकल सेटिंग्स\\हिस्टरी"
+    IDS_COOKIES "कुकीज़"
+END

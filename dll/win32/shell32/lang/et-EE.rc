@@ -875,16 +875,16 @@ BEGIN
     IDS_SHORTCUT_RUN_MAX "Maximized"
 
     /* Shell folder path default values. See also: dll/win32/userenv/lang */
-    IDS_PROGRAMS "Start Menu\\Programs"
+    IDS_PROGRAMS "Start Menüü\\Programs"
     IDS_PERSONAL "Minu dokumendid"
     IDS_FAVORITES "Lemmikud"
-    IDS_STARTUP "Start Menu\\Programs\\Startup"
+    IDS_STARTUP "Start Menüü\\Programs\\Startup"
     IDS_RECENT "Hiljutised"
     IDS_SENDTO "SendTo"
     IDS_STARTMENU "Start Menüü"
     IDS_MYMUSIC "Minu muusika"
     IDS_MYVIDEO "Minu videod"
-    IDS_DESKTOPDIRECTORY "Desktop"
+    IDS_DESKTOPDIRECTORY "Desktop" // FIXME: or "Töölaud" ?
     IDS_NETHOOD "NetHood"
     IDS_TEMPLATES "Mallid"
     IDS_APPDATA "Rakenduste Andmed"
@@ -897,7 +897,7 @@ BEGIN
     IDS_MYPICTURES "Minu pildid"
     IDS_PROGRAM_FILES_COMMON "Programmifailid\\Common Files"
     IDS_COMMON_DOCUMENTS "Documents"
-    IDS_ADMINTOOLS "Start Menu\\Programs\\Administrative Tools"
+    IDS_ADMINTOOLS "Start Menüü\\Programs\\Administrative Tools"
     IDS_COMMON_MUSIC "Documents\\My Music"
     IDS_COMMON_PICTURES "Documents\\My Pictures"
     IDS_COMMON_VIDEO "Documents\\My Videos"

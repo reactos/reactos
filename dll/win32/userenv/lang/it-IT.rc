@@ -27,22 +27,22 @@ END
 STRINGTABLE
 BEGIN
     IDS_PROFILEPATH "%SystemDrive%\\Documents and Settings"
-    IDS_APPDATA "Dati applicazioni"
+    IDS_APPDATA "Dati Applicazioni"
     IDS_DESKTOP "Desktop"
     IDS_FAVORITES "Preferiti"
-    IDS_MYDOCUMENTS "Documenti"
-    IDS_NETHOOD "Risorse di rete"
+    IDS_MYDOCUMENTS "Documenti Personali"
+    IDS_NETHOOD "Risorse di rete" // FIXME: or "Rete"?
     IDS_PRINTHOOD "Stampanti"
     IDS_RECENT "Recenti"
-    IDS_SENDTO "Invia a"
+    IDS_SENDTO "Invia A"
     IDS_TEMPLATES "Modelli"
     IDS_STARTMENU "Menu Avvio"
     IDS_PROGRAMS "Menu Avvio\\Programmi"
-    IDS_STARTUP "Menu Avvio\\Programmi\\Esecuzione automatica"
+    IDS_STARTUP "Menu Avvio\\Programmi\\Esecuzione Automatica"
     IDS_LOCALSETTINGS "Impostazioni locali"
-    IDS_LOCALAPPDATA "Impostazioni locali\\Dati applicazioni"
+    IDS_LOCALAPPDATA "Impostazioni locali\\Dati Applicazioni"
     IDS_TEMP "Impostazioni locali\\Temp" /* See also TEMP_DIR in boot/bootdata/hivedef.inf */
-    IDS_CACHE "Impostazioni locali\\Temporary Internet Files"
+    IDS_CACHE "Impostazioni locali\\File Temporanei di Internet"
     IDS_HISTORY "Impostazioni locali\\Cronologia"
     IDS_COOKIES "Cookies"
 END

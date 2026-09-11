@@ -878,7 +878,7 @@ BEGIN
     IDS_MYMUSIC "Musica"
     IDS_MYVIDEO "Video"
     IDS_DESKTOPDIRECTORY "Desktop"
-    IDS_NETHOOD "Rete"
+    IDS_NETHOOD "Rete" // FIXME: or "Risorse di rete"?
     IDS_TEMPLATES "Modelli"
     IDS_APPDATA "Dati Applicazioni"
     IDS_PRINTHOOD "Stampanti"

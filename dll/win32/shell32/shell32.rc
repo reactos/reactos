@@ -153,6 +153,9 @@ END
 #ifdef LANGUAGE_KO_KR
     #include "lang/ko-KR.rc"
 #endif
+#ifdef LANGUAGE_LT_LT
+    #include "lang/lt-LT.rc"
+#endif
 #ifdef LANGUAGE_NL_NL
     #include "lang/nl-NL.rc"
 #endif
@@ -185,6 +188,9 @@ END
 #endif
 #ifdef LANGUAGE_SV_SE
     #include "lang/sv-SE.rc"
+#endif
+#ifdef LANGUAGE_TH_TH
+    #include "lang/th-TH.rc"
 #endif
 #ifdef LANGUAGE_TR_TR
     #include "lang/tr-TR.rc"

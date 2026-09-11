@@ -1,16 +1,16 @@
-LANGUAGE LANG_FINNISH, SUBLANG_DEFAULT
+LANGUAGE LANG_LITHUANIAN, SUBLANG_DEFAULT
 
 MENU_001 MENUEX
 BEGIN
-    MENUITEM "&Suuret Kuvakkeet", FCIDM_SHVIEW_BIGICON
-    MENUITEM "&Pienet Kuvakkeet", FCIDM_SHVIEW_SMALLICON
-    MENUITEM "&Lista", FCIDM_SHVIEW_LISTVIEW
-    MENUITEM "&Tiedot", FCIDM_SHVIEW_REPORTVIEW
+    MENUITEM "Lar&ge Icons", FCIDM_SHVIEW_BIGICON
+    MENUITEM "S&mall Icons", FCIDM_SHVIEW_SMALLICON
+    MENUITEM "&List", FCIDM_SHVIEW_LISTVIEW
+    MENUITEM "&Details", FCIDM_SHVIEW_REPORTVIEW
     MENUITEM "", -1, MFT_SEPARATOR
-    POPUP "&Järjestä Kuvakkeet", FCIDM_SHVIEW_ARRANGE
+    POPUP "Arrange &Icons By", FCIDM_SHVIEW_ARRANGE
     BEGIN
         MENUITEM "", -1, MFT_SEPARATOR
-        MENUITEM "Järjestä &Automaattisesti", FCIDM_SHVIEW_AUTOARRANGE
+        MENUITEM "&Auto Arrange", FCIDM_SHVIEW_AUTOARRANGE
         MENUITEM "Align to &Grid", FCIDM_SHVIEW_ALIGNTOGRID
     END
 END
@@ -20,24 +20,24 @@ MENU_002 MENUEX
 BEGIN
     POPUP ""
     BEGIN
-        POPUP "&Näkymä", FCIDM_SHVIEW_VIEW
+        POPUP "&View", FCIDM_SHVIEW_VIEW
         BEGIN
-            MENUITEM "&Pienet Kuvakkeet", FCIDM_SHVIEW_BIGICON
-            MENUITEM "&Suuret Kuvakkeet", FCIDM_SHVIEW_SMALLICON
-            MENUITEM "&Lista", FCIDM_SHVIEW_LISTVIEW
-            MENUITEM "&Tiedot", FCIDM_SHVIEW_REPORTVIEW
+            MENUITEM "Lar&ge Icons", FCIDM_SHVIEW_BIGICON
+            MENUITEM "S&mall Icons", FCIDM_SHVIEW_SMALLICON
+            MENUITEM "&List", FCIDM_SHVIEW_LISTVIEW
+            MENUITEM "&Details", FCIDM_SHVIEW_REPORTVIEW
         END
         MENUITEM "", -1, MFT_SEPARATOR
-        POPUP "&Järjestä Kuvakkeet", FCIDM_SHVIEW_ARRANGE
+        POPUP "Arrange &Icons By", FCIDM_SHVIEW_ARRANGE
         BEGIN
             MENUITEM "", -1, MFT_SEPARATOR
-            MENUITEM "Järjestä &Automaattisesti", FCIDM_SHVIEW_AUTOARRANGE
+            MENUITEM "&Auto Arrange", FCIDM_SHVIEW_AUTOARRANGE
             MENUITEM "Align to &Grid", FCIDM_SHVIEW_ALIGNTOGRID
         END
-        MENUITEM "&Päivitä", FCIDM_SHVIEW_REFRESH
+        MENUITEM "R&efresh", FCIDM_SHVIEW_REFRESH
         MENUITEM "", -1, MFT_SEPARATOR
-        MENUITEM "&Liitä", FCIDM_SHVIEW_INSERT
-        MENUITEM "Liitä Li&nkiksi", FCIDM_SHVIEW_INSERTLINK
+        MENUITEM "&Paste", FCIDM_SHVIEW_INSERT
+        MENUITEM "Paste &shortcut", FCIDM_SHVIEW_INSERTLINK
     END
 END
 
@@ -48,13 +48,13 @@ BEGIN
     MENUITEM SEPARATOR
     MENUITEM "Cu&t\tCtrl+X", FCIDM_SHVIEW_CUT
     MENUITEM "&Copy\tCtrl+C", FCIDM_SHVIEW_COPY
-    MENUITEM "&Liitä\tCtrl+V", FCIDM_SHVIEW_INSERT
-    MENUITEM "Liitä Li&nkiksi", FCIDM_SHVIEW_INSERTLINK
+    MENUITEM "&Paste\tCtrl+V", FCIDM_SHVIEW_INSERT
+    MENUITEM "Paste &shortcut", FCIDM_SHVIEW_INSERTLINK
     MENUITEM SEPARATOR
     MENUITEM "Copy to &folder...", FCIDM_SHVIEW_COPYTO
     MENUITEM "Mo&ve to folder...", FCIDM_SHVIEW_MOVETO
     MENUITEM SEPARATOR
-    MENUITEM "Select &all\tCtrl+A", FCIDM_SHVIEW_SELECTALL
+    MENUITEM "Select &All\tCtrl+A", FCIDM_SHVIEW_SELECTALL
     MENUITEM "&Invert Selection", FCIDM_SHVIEW_INVERTSELECTION
 END
 
@@ -64,15 +64,15 @@ BEGIN
     POPUP ""
     BEGIN
         MENUITEM SEPARATOR
-        MENUITEM "&Leikkaa", IDM_CUT
-        MENUITEM "&Kopioi", IDM_COPY
-        MENUITEM "Paste", IDM_INSERT
+        MENUITEM "Cu&t", IDM_CUT
+        MENUITEM "&Copy", IDM_COPY
+        MENUITEM "Paste", IDM_INSERT //FIXME: accel is missing, check the comment in "context menus" comment-section on how to proceed
         MENUITEM SEPARATOR
-        MENUITEM "Lu&o Linkki", IDM_CREATELINK
-        MENUITEM "&Poista", IDM_DELETE
-        MENUITEM "&Nimeä Uudelleen", IDM_RENAME
+        MENUITEM "Create &Link", IDM_CREATELINK
+        MENUITEM "&Delete", IDM_DELETE
+        MENUITEM "&Rename", IDM_RENAME //FIXME: accel is wrong, check the comment in "context menus" comment-section on how to proceed
         MENUITEM SEPARATOR
-        MENUITEM "&Ominaisuudet", IDM_PROPERTIES
+        MENUITEM "&Properties", IDM_PROPERTIES  //FIXME: accel is wrong, check the comment in "context menus" comment-section on how to proceed
     END
 END
 
@@ -98,14 +98,14 @@ END
 
 IDD_BROWSE_FOR_FOLDER DIALOGEX 15, 40, 188, 192
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-CAPTION "Valitse Kansio"
+CAPTION "Browse for Folder"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "", IDC_BROWSE_FOR_FOLDER_TITLE, 4, 4, 180, 24
     LTEXT "", IDC_BROWSE_FOR_FOLDER_STATUS, 4, 25, 180, 12
     CONTROL "", IDC_BROWSE_FOR_FOLDER_TREEVIEW, "SysTreeView32", TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | WS_BORDER | WS_TABSTOP, 4, 40, 180, 120
-    DEFPUSHBUTTON "OK", IDOK, 80, 176, 50, 12, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
-    PUSHBUTTON "Peruuta", IDCANCEL, 134, 176, 50, 12
+    DEFPUSHBUTTON "OK", IDOK, 60, 175, 60, 15, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
+    PUSHBUTTON "Cancel", IDCANCEL, 125, 175, 60, 15
 END
 
 IDD_BROWSE_FOR_FOLDER_NEW DIALOGEX 15, 40, 218, 196
@@ -137,7 +137,7 @@ END
 
 IDD_ABOUT DIALOGEX 20, 20, 275, 198
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Tietoja %s"
+CAPTION "About %s"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", IDC_ABOUT_ICON, 7, 55, 21, 20
@@ -161,7 +161,7 @@ IDD_ABOUT_AUTHORS DIALOGEX 35, 90, 235, 85
 STYLE DS_SHELLFONT | WS_CHILD
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "ReactOS:n toi Sinulle:", IDC_STATIC, 0, 0, 180, 10
+    LTEXT "ReactOS was brought to you by:", IDC_STATIC, 0, 0, 180, 10
     LISTBOX IDC_ABOUT_AUTHORS_LISTBOX, 0, 10, 165, 75
 END
 
@@ -171,12 +171,12 @@ CAPTION "Run"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", IDC_RUNDLG_ICON, 7, 11, 18, 20, WS_VISIBLE
-    LTEXT "Anna ohjelma, dokumentti, tai Internet -ressurssi, ja ReactOS avaa sen Sinulle.", 12289, 36, 11, 185, 18
-    LTEXT "&Avaa:", 12305, 7, 39, 24, 10
+    LTEXT "Type the name of a program, folder, document, or Internet resource, and ReactOS will open it for you.", 12289, 36, 11, 185, 18
+    LTEXT "&Open:", 12305, 7, 39, 24, 10
     CONTROL "", IDC_RUNDLG_EDITPATH, "COMBOBOX", WS_TABSTOP | WS_GROUP | WS_VSCROLL | WS_VISIBLE | CBS_AUTOHSCROLL | CBS_DROPDOWN, 36, 37, 184, 100
-    DEFPUSHBUTTON "OK", IDOK, 62, 70, 50, 14
-    PUSHBUTTON "Peruuta", IDCANCEL, 116, 70, 50, 14
-    PUSHBUTTON "&Selaa...", 12288, 170, 70, 50, 14
+    DEFPUSHBUTTON "OK", IDOK, 36, 70, 59, 14
+    PUSHBUTTON "Cancel", IDCANCEL, 98, 70, 59, 14
+    PUSHBUTTON "&Browse...", 12288, 160, 70, 59, 14
 END
 
 IDD_SHORTCUT_PROPERTIES DIALOGEX 0, 0, 235, 215
@@ -218,7 +218,7 @@ BEGIN
     LTEXT "This option can allow you to run the this shortcut as another user, or continue as yourself while protecting your computer and data from unauthorized program activity.", -1, 50, 60, 175, 40
     CHECKBOX "Run in separate memory space", IDC_SHORTEX_RUN_SEPARATE, 25, 100, 150, 10, WS_DISABLED
     PUSHBUTTON "OK", IDOK, 63, 124, 50, 15, WS_VISIBLE
-    PUSHBUTTON "Abort", IDCANCEL, 120, 124, 50, 15, WS_VISIBLE
+    PUSHBUTTON "Cancel", IDCANCEL, 120, 124, 50, 15, WS_VISIBLE
 END
 
 IDD_FOLDER_PROPERTIES DIALOGEX 0, 0, 240, 205
@@ -228,7 +228,7 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     ICON "", 14000, 16, 7, 32, 32, WS_VISIBLE
     EDITTEXT 14001, 58, 9, 170, 14, ES_LEFT
-    LTEXT "Type:", 14004, 8, 40, 55, 10
+    LTEXT "Type:", 14004, 8, 40, 55, 10 //FIXME: Reminder to myself when overhauling that dlg: In the next line we do keep the type in the CONTROL name. Is shown! Harmonize all the left-column 55 width IDD_FOLDER_PROPERTIES (which is too large) with the all 45 width in IDD_FILE_PROPERTIES. The 170 width in right-column is non-negotiable! Increase both dlgs heights to restore vertical arrangement of the Attributes like on 2k3sp2. Make all the Attributes 70 wide each. That will also unbreak the "Advanced"-buttons.
     CONTROL "Folder", 14005, "edit", ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL, 58, 40, 170, 10
     LTEXT "", -1, 8, 31, 221, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
     LTEXT "Location:", 14008, 8, 56, 55, 10
@@ -747,15 +747,15 @@ END
 STRINGTABLE
 BEGIN
     /* columns in the shellview */
-    IDS_SHV_COLUMN_NAME "Nimi"
-    IDS_SHV_COLUMN_SIZE "Koko"
-    IDS_SHV_COLUMN_TYPE "Tyyppi"
-    IDS_SHV_COLUMN_MODIFIED "Muokattu"
-    IDS_SHV_COLUMN_ATTRIBUTES "Ominaisuudet"
-    IDS_SHV_COLUMN_DISK_CAPACITY "Koko"
-    IDS_SHV_COLUMN_DISK_AVAILABLE "Tilaa jäljellä"
-    IDS_SHV_COLUMN_OWNER "Omistaja"
-    IDS_SHV_COLUMN_GROUP "Ryhmä"
+    IDS_SHV_COLUMN_NAME "Name"
+    IDS_SHV_COLUMN_SIZE "Size"
+    IDS_SHV_COLUMN_TYPE "Type"
+    IDS_SHV_COLUMN_MODIFIED "Modified"
+    IDS_SHV_COLUMN_ATTRIBUTES "Attributes"
+    IDS_SHV_COLUMN_DISK_CAPACITY "Total Size"
+    IDS_SHV_COLUMN_DISK_AVAILABLE "Free Space"
+    IDS_SHV_COLUMN_OWNER "Owner"
+    IDS_SHV_COLUMN_GROUP "Group"
     IDS_SHV_COLUMN_FILENAME "Filename"
     IDS_SHV_COLUMN_CATEGORY "Category"
     IDS_SHV_COLUMN_DELFROM "Original location"
@@ -765,13 +765,13 @@ BEGIN
     IDS_SHV_COLUMN_NETLOCATION "Network Location"
     IDS_SHV_COLUMN_DOCUMENTS "Documents"
     IDS_SHV_COLUMN_STATUS "Status"
-    IDS_SHV_COLUMN_COMMENTS "Kommentit"
+    IDS_SHV_COLUMN_COMMENTS "Comments"
     IDS_SHV_COLUMN_LOCATION "Location"
     IDS_SHV_COLUMN_MODEL "Model"
 
     /* special folders */
-    IDS_DESKTOP "Työpöytä"
-    IDS_MYCOMPUTER "Oma Tietokone"
+    IDS_DESKTOP "Darbalaukis"
+    IDS_MYCOMPUTER "My Computer"
     IDS_RECYCLEBIN_FOLDER_NAME "Recycle Bin"
     IDS_CONTROLPANEL "Control Panel"
     IDS_ADMINISTRATIVETOOLS "Administrative Tools"
@@ -786,21 +786,21 @@ BEGIN
     IDS_ABOUT_VERSION_STRING "Version %S (%S)"
 
     /* context menus */
-    IDS_VIEW_LARGE "&Suuret Kuvakkeet"
-    IDS_VIEW_SMALL "&Pienet Kuvakkeet"
-    IDS_VIEW_LIST "&Lista"
-    IDS_VIEW_DETAILS "&Tiedot"
-    IDS_SELECT "Valitse"
-    IDS_OPEN "Avaa"
-    IDS_CREATELINK "Lu&o Linkki"
-    IDS_COPY "&Kopioi"
-    IDS_DELETE "&Poista"
-    IDS_PROPERTIES "&Ominaisuudet"
-    IDS_CUT "&Leikkaa"
+    IDS_VIEW_LARGE "Lar&ge Icons"
+    IDS_VIEW_SMALL "S&mall Icons"
+    IDS_VIEW_LIST "&List"
+    IDS_VIEW_DETAILS "&Details"
+    IDS_SELECT "Select"
+    IDS_OPEN "Open"
+    IDS_CREATELINK "Create &Link"
+    IDS_COPY "&Copy"
+    IDS_DELETE "Delete"
+    IDS_PROPERTIES "Properties" //FIXME: 3rd: must be changed to &R for all en-US,en-gb,ja-JP,ko-KO,3xChinese (and yet undecided langs). In-sync with IDM_PROPERTIES. This will free &P for 4th step for &Paste
+    IDS_CUT "C&ut" //FIXME: 1st: This must be changed FIRST to &T for all en-US,en-gb,ja-JP,ko-KO,3xChinese (and yet undecided langs). It must match IDM_CUT and is already offsync.
     IDS_RESTORE "Restore"
     IDS_FORMATDRIVE "Format..."
-    IDS_RENAME "Rename"
-    IDS_PASTE "Paste"
+    IDS_RENAME "Rename" //FIXME: 2nd: This must be changed to &M for all en-US,en-gb,ja-JP,ko-KO,3xChinese (and yet undecided langs). In-sync with IDM_RENAME. This will free &R for P&roperties.
+    IDS_PASTE "Paste" //FIXME: 4th: must be changed to &P for all en-US,en-gb,ja-JP,ko-KO,3xChinese (and yet undecided langs). In-sync with IDM_INSERT.
     IDS_EJECT "Eject"
     IDS_DISCONNECT "Disconnect"
     IDS_OPENFILELOCATION "Open f&ile location"
@@ -821,17 +821,17 @@ BEGIN
     IDS_CREATEFILE_CAPTION "Error creating file"
     IDS_CREATEFOLDER_DENIED "Unable to create the folder '%1'"
     IDS_CREATEFOLDER_CAPTION "Unable to create folder"
-    IDS_DELETEITEM_CAPTION "Vahvista tiedoston tuhoaminen"
-    IDS_DELETEFOLDER_CAPTION "Vahvista kansion tuhoaminen"
-    IDS_DELETEITEM_TEXT "Haluatko varmasti tuhota '%1':n?"
-    IDS_DELETEMULTIPLE_TEXT "Haluatko varmasti tuhota nämä %1?"
+    IDS_DELETEITEM_CAPTION "Confirm File Deletion"
+    IDS_DELETEFOLDER_CAPTION "Confirm Folder Deletion"
+    IDS_DELETEITEM_TEXT "Are you sure you want to delete '%1'?"
+    IDS_DELETEMULTIPLE_TEXT "Are you sure you want to delete these %1 items?"
     IDS_DELETESELECTED_TEXT "Are you sure you want to delete the selected item(s)?"
     IDS_TRASHITEM_TEXT "Are you sure that you want to send '%1' to the Recycle Bin?"
     IDS_TRASHFOLDER_TEXT "Are you sure that you want to send '%1' and all its contents to the Recycle Bin?"
     IDS_TRASHMULTIPLE_TEXT "Are you sure that you want to send these %1 items to the Recycle Bin?"
     IDS_CANTTRASH_TEXT "The item '%1' can't be sent to Recycle Bin. Do you want to delete it instead?"
     IDS_OVERWRITEFILE_TEXT "This folder already contains a file called '%1'.\n\nDo you want to replace it?"
-    IDS_OVERWRITEFILE_CAPTION "Vahvista Tiedoston Ylikirjoitus"
+    IDS_OVERWRITEFILE_CAPTION "Confirm File Overwrite"
     IDS_OVERWRITEFOLDER_TEXT "This folder already contains a folder named '%1'.\n\nIf the files in the destination folder have the same names as files in the\nselected folder they will be replaced. Do you still want to move or copy\nthe folder?"
 
     IDS_FILEOOP_COPYING "Copying..."
@@ -842,10 +842,10 @@ BEGIN
     IDS_FILEOOP_PREFLIGHT "Preflight"
 
     /* message box strings */
-    IDS_RESTART_TITLE "Käynnistä uudestaan"
-    IDS_RESTART_PROMPT "Haluatko simuloida ReactOS:n uudelleenkäynnistämistä?"
-    IDS_SHUTDOWN_TITLE "Sammuta"
-    IDS_SHUTDOWN_PROMPT "Haluatko lopettaa ReactOS:n istunnon?"
+    IDS_RESTART_TITLE "Restart"
+    IDS_RESTART_PROMPT "Do you want to restart the system?"
+    IDS_SHUTDOWN_TITLE "Shutdown"
+    IDS_SHUTDOWN_PROMPT "Do you want to shutdown?"
 
     /* Format Dialog Strings */
     IDS_FORMAT_TITLE "Format Local Disk"
@@ -868,33 +868,33 @@ BEGIN
     IDS_SHORTCUT_RUN_MAX "Maximized"
 
     /* Shell folder path default values. See also: dll/win32/userenv/lang */
-    IDS_PROGRAMS "Käynnistä\\Ohjelmat"
-    IDS_PERSONAL "Omat Tiedostot"
-    IDS_FAVORITES "Suosikit"
-    IDS_STARTUP "Käynnistä\\Ohjelmat\\Käynnistys"
-    IDS_RECENT "Äskettäin käytetyt" // FIXME: or "Viimeisin" ?
-    IDS_SENDTO "Lähetä"
-    IDS_STARTMENU "Käynnistä"
-    IDS_MYMUSIC "Omat musiikkitiedostot"
-    IDS_MYVIDEO "Omat videotiedostot"
-    IDS_DESKTOPDIRECTORY "Työpöytä"
-    IDS_NETHOOD "Verkkoympäristö" // FIXME: or "Lähiverkko" ?
-    IDS_TEMPLATES "Mallit" // FIXME: or "Pohjat" ?
-    IDS_APPDATA "Ohjelmien Tiedot"
-    IDS_PRINTHOOD "Tulostinympäristö" // FIXME: or "Tulostimet"?
-    IDS_LOCAL_APPDATA "Paikalliset Asetukset\\Ohjelmien Tiedot"
-    IDS_INTERNET_CACHE "Paikalliset Asetukset\\Väliaikaiset Internet-tiedostot"
-    IDS_COOKIES "Evästeet"
-    IDS_HISTORY "Paikalliset Asetukset\\Historia"
-    IDS_PROGRAM_FILES "Ohjelmat"
-    IDS_MYPICTURES "Omat kuvatiedostot"
-    IDS_PROGRAM_FILES_COMMON "Ohjelmat\\Yhteiset Tiedostot"
-    IDS_COMMON_DOCUMENTS "Dokumentit"
-    IDS_ADMINTOOLS "Käynnistys\\Ohjauspaneeli\\Administrative Tools" // "Käynnistä Valikko\\Kaikki Ohjelmat\\Apuohjelmat"
-    IDS_COMMON_MUSIC "Dokumentit\\Omat musiikkitiedostot"
-    IDS_COMMON_PICTURES "Dokumentit\\Omat kuvatiedostot"
-    IDS_COMMON_VIDEO "Dokumentit\\Omat videotiedostot"
-    IDS_CDBURN_AREA "Paikalliset Asetukset\\Ohjelmien Tiedot\\Microsoft\\CD Burning"
+    IDS_PROGRAMS "Meniu\\Programos"
+    IDS_PERSONAL "Dokumentai"
+    IDS_FAVORITES "Adresynas"
+    IDS_STARTUP "Meniu\\Programos\\Paleistis"
+    IDS_RECENT "Neseniai atverta"
+    IDS_SENDTO "Siųsti į"
+    IDS_STARTMENU "Meniu"
+    IDS_MYMUSIC "My Music"
+    IDS_MYVIDEO "My Videos"
+    IDS_DESKTOPDIRECTORY "Darbalaukis"
+    IDS_NETHOOD "NetHood"
+    IDS_TEMPLATES "Ruošiniai"
+    IDS_APPDATA "Application Data"
+    IDS_PRINTHOOD "PrintHood"
+    IDS_LOCAL_APPDATA "Local Settings\\Application Data"
+    IDS_INTERNET_CACHE "Local Settings\\Temporary Internet Files"
+    IDS_COOKIES "Slapukai"
+    IDS_HISTORY "Local Settings\\History"
+    IDS_PROGRAM_FILES "Program Files"
+    IDS_MYPICTURES "My Pictures"
+    IDS_PROGRAM_FILES_COMMON "Program Files\\Common Files"
+    IDS_COMMON_DOCUMENTS "Documents"
+    IDS_ADMINTOOLS "Meniu\\Programs\\Administrative Tools"
+    IDS_COMMON_MUSIC "Documents\\My Music"
+    IDS_COMMON_PICTURES "Documents\\My Pictures"
+    IDS_COMMON_VIDEO "Documents\\My Videos"
+    IDS_CDBURN_AREA "Local Settings\\Application Data\\Microsoft\\CD Burning"
     IDS_NETWORKPLACE "My Network Places"
 
     IDS_NEWFOLDER "New Folder"
@@ -916,8 +916,8 @@ BEGIN
     IDS_SHELL_ABOUT_AUTHORS "&Authors"
     IDS_SHELL_ABOUT_BACK "< &Back"
     FCIDM_SHVIEW_NEW "Ne&w" /* A menu item with an ampersand */
-    FCIDM_SHVIEW_NEWFOLDER "Uusi &Kansio"
-    FCIDM_SHVIEW_NEWLINK "Uusi &Linkki"
+    FCIDM_SHVIEW_NEWFOLDER "New &Folder"
+    FCIDM_SHVIEW_NEWLINK "New &Link"
     IDS_FOLDER_OPTIONS "Folder Options"
     IDS_TASKBAR_OPTIONS "Taskbar and Start Menu"
     IDS_TASKBAR_OPTIONS_INFOTIP "Customize the Start Menu and the taskbar, such as the types of items to be displayed and how they should appear."
@@ -1001,13 +1001,13 @@ BEGIN
     IDS_OBJECTS "%d Objects"
     IDS_OBJECTS_SELECTED "%d Objects Selected"
 
-    IDS_SEARCH_BROWSEITEM "Selaa..."
+    IDS_SEARCH_BROWSEITEM "Browse..."
 
     IDS_RECYCLE_CLEANER_DISPLAYNAME "Recycle Bin"
     IDS_RECYCLE_CLEANER_DESCRIPTION "The Recycle Bin contains files you have deleted from your computer. These files are not permanently removed until you empty the Recycle Bin."
     IDS_RECYCLE_CLEANER_BUTTON_TEXT "&View Files"
 
-    IDS_TITLE_MYCOMP "Oma Tietokone"
+    IDS_TITLE_MYCOMP "My Computer"
     IDS_TITLE_MYNET "My Network Places"
     IDS_TITLE_BIN_1 "Recycle Bin (full)"
     IDS_TITLE_BIN_0 "Recycle Bin (empty)"
