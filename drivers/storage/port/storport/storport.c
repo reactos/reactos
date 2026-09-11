@@ -333,15 +333,26 @@ PortDispatchDeviceControl(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp)
 {
+    PFDO_DEVICE_EXTENSION DeviceExtension;
+
     DPRINT1("PortDispatchDeviceControl(%p %p)\n",
             DeviceObject, Irp);
 
-    Irp->IoStatus.Status = STATUS_SUCCESS;
-    Irp->IoStatus.Information = 0;
+    DeviceExtension = (PFDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+    DPRINT("ExtensionType: %u\n", DeviceExtension->ExtensionType);
 
-    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    switch (DeviceExtension->ExtensionType)
+    {
+        case PdoExtension:
+            return PortPdoDeviceControl(DeviceObject,
+                                        Irp);
 
-    return STATUS_SUCCESS;
+        default:
+            Irp->IoStatus.Status = STATUS_INVALID_DEVICE_REQUEST;
+            Irp->IoStatus.Information = 0;
+            IoCompleteRequest(Irp, IO_NO_INCREMENT);
+            return STATUS_INVALID_DEVICE_REQUEST;
+    }
 }
 
 

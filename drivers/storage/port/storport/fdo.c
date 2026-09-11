@@ -563,18 +563,47 @@ PortFdoQueryBusRelations(
     _In_ PFDO_DEVICE_EXTENSION DeviceExtension,
     _Out_ PULONG_PTR Information)
 {
-    NTSTATUS Status = STATUS_SUCCESS;;
-
-    DPRINT1("PortFdoQueryBusRelations(%p %p)\n",
-            DeviceExtension, Information);
-
-    Status = PortFdoScanBus(DeviceExtension);
-
-    DPRINT1("Units found: %lu\n", DeviceExtension->PdoCount);
+    PLIST_ENTRY Entry;
+    PPDO_DEVICE_EXTENSION PdoExtension;
+    PDEVICE_RELATIONS Relations;
+    KIRQL Irql;
+    ULONG Count;
+    ULONG Index;
 
     *Information = 0;
+    if (DeviceExtension->PdoCount == 0)
+        (VOID)PortFdoScanBus(DeviceExtension);
+    Count = DeviceExtension->PdoCount;
+    Relations = ExAllocatePoolWithTag(PagedPool,
+                                      FIELD_OFFSET(DEVICE_RELATIONS,
+                                                   Objects[Count]),
+                                      TAG_GLOBAL_DATA);
+    if (Relations == NULL)
+        return STATUS_INSUFFICIENT_RESOURCES;
 
-    return Status;
+    /* Initialize the relations structure: the pool allocation is not
+       zeroed, and the list walk below uses Relations->Count as both the
+       loop bound and the array index. */
+    Relations->Count = 0;
+    RtlZeroMemory(Relations->Objects, Count * sizeof(PDEVICE_OBJECT));
+
+    KeAcquireSpinLock(&DeviceExtension->PdoListLock, &Irql);
+    for (Entry = DeviceExtension->PdoListHead.Flink;
+         Entry != &DeviceExtension->PdoListHead && Relations->Count < Count;
+         Entry = Entry->Flink)
+    {
+        PdoExtension = CONTAINING_RECORD(Entry,
+                                         PDO_DEVICE_EXTENSION,
+                                         PdoListEntry);
+        Relations->Objects[Relations->Count] = PdoExtension->Device;
+        ObReferenceObject(PdoExtension->Device);
+        Relations->Count++;
+    }
+    KeReleaseSpinLock(&DeviceExtension->PdoListLock, Irql);
+    for (Index = Relations->Count; Index < Count; Index++)
+        Relations->Objects[Index] = NULL;
+    *Information = (ULONG_PTR)Relations;
+    return STATUS_SUCCESS;
 }
 
 
@@ -837,8 +866,17 @@ PortFdoPnp(
             break;
 
         case IRP_MN_REMOVE_DEVICE: /* 0x02 */
+        {
+            PSLIST_ENTRY FreeEntry;
             DPRINT1("IRP_MJ_PNP / IRP_MN_REMOVE_DEVICE\n");
+            while ((FreeEntry = InterlockedPopEntrySList(&DeviceExtension->ContextFreeList)) != NULL)
+            {
+                PSTOR_REQUEST_CONTEXT FreeCtx =
+                    CONTAINING_RECORD(FreeEntry, STOR_REQUEST_CONTEXT, ListEntry);
+                ExFreePoolWithTag(FreeCtx, TAG_MINIPORT_DATA);
+            }
             break;
+        }
 
         case IRP_MN_CANCEL_REMOVE_DEVICE: /* 0x03 */
             DPRINT1("IRP_MJ_PNP / IRP_MN_CANCEL_REMOVE_DEVICE\n");

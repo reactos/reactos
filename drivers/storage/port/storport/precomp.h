@@ -164,6 +164,11 @@ typedef struct _PDO_DEVICE_EXTENSION
 
 } PDO_DEVICE_EXTENSION, *PPDO_DEVICE_EXTENSION;
 
+NTSTATUS
+PortPdoDeviceControl(
+    _In_ PDEVICE_OBJECT DeviceObject,
+    _In_ PIRP Irp);
+
 
 /* fdo.c */
 

@@ -12,6 +12,12 @@
 #define NDEBUG
 #include <debug.h>
 
+typedef struct _STORPORT_PDO_ADAPTER_DESCRIPTOR
+{
+    STORAGE_ADAPTER_DESCRIPTOR Descriptor;
+    UCHAR MaximumNumberOfLogicalUnits;
+} STORPORT_PDO_ADAPTER_DESCRIPTOR, *PSTORPORT_PDO_ADAPTER_DESCRIPTOR;
+
 /* FUNCTIONS ******************************************************************/
 
 NTSTATUS
@@ -123,18 +129,507 @@ PortPdoScsi(
     return PortFdoScsi(DeviceObject, Irp);
 }
 
+static
+PWSTR
+PdoAllocateMultiString(
+    _In_ PCWSTR First,
+    _In_opt_ PCWSTR Second)
+{
+    SIZE_T FirstLength = (wcslen(First) + 1) * sizeof(WCHAR);
+    SIZE_T SecondLength = Second ? (wcslen(Second) + 1) * sizeof(WCHAR) : sizeof(WCHAR);
+    PWSTR Buffer = ExAllocatePoolWithTag(PagedPool,
+                                         FirstLength + SecondLength + sizeof(WCHAR),
+                                         TAG_GLOBAL_DATA);
+    if (Buffer == NULL)
+        return NULL;
+    RtlCopyMemory(Buffer, First, FirstLength);
+    if (Second != NULL)
+        RtlCopyMemory((PUCHAR)Buffer + FirstLength, Second, SecondLength);
+    RtlZeroMemory((PUCHAR)Buffer + FirstLength + SecondLength, sizeof(WCHAR));
+    return Buffer;
+}
+
+static
+ULONG
+PdoCopyIdField(
+    _In_ PUCHAR Field,
+    _In_ ULONG FieldLength,
+    _Out_ PWSTR Buffer)
+{
+    ULONG Index;
+    ULONG Length = FieldLength;
+
+    /* Copy an inquiry data field into a wide string, replacing
+       non-printable characters (spaces, etc.) with underscores per the
+       SCSI identifier convention, then trim trailing underscores. */
+    for (Index = 0; Index < FieldLength; Index++)
+    {
+        Buffer[Index] = (Field[Index] > ' ' && Field[Index] < 0x7F &&
+                         Field[Index] != ',') ? (WCHAR)Field[Index] : L'_';
+    }
+    while (Length > 0 && Buffer[Length - 1] == L'_')
+        Length--;
+    Buffer[Length] = UNICODE_NULL;
+    return Length;
+}
+
+static
+ULONG
+PdoCopyTextField(
+    _In_ PUCHAR Field,
+    _In_ ULONG FieldLength,
+    _Out_ PWSTR Buffer)
+{
+    ULONG Index;
+    ULONG Length = FieldLength;
+
+    /* Inquiry text fields are space-padded and not NUL-terminated. Unlike
+       an identifier, a human-readable description keeps its interior
+       spaces; only the padding is trimmed. */
+    while (Length > 0 && (Field[Length - 1] == ' ' || Field[Length - 1] == '\0'))
+        Length--;
+
+    for (Index = 0; Index < Length; Index++)
+        Buffer[Index] = (WCHAR)Field[Index];
+
+    Buffer[Length] = UNICODE_NULL;
+    return Length;
+}
+
+static
+PCWSTR
+PdoGetDeviceTypeString(
+    _In_ PINQUIRYDATA Inquiry)
+{
+    switch (Inquiry->DeviceType)
+    {
+        case DIRECT_ACCESS_DEVICE:
+            return L"Disk";
+        case READ_ONLY_DIRECT_ACCESS_DEVICE:
+            return L"CdRom";
+        default:
+            return L"Other";
+    }
+}
+
+static
+VOID
+PdoBuildScsiId(
+    _In_ PINQUIRYDATA Inquiry,
+    _Out_ PWSTR Buffer,
+    _In_ ULONG BufferLength,
+    _In_ BOOLEAN IncludeRevision)
+{
+    WCHAR Vendor[9];
+    WCHAR Product[17];
+    WCHAR Revision[5];
+    PCWSTR DeviceType = PdoGetDeviceTypeString(Inquiry);
+
+    PdoCopyIdField(Inquiry->VendorId, sizeof(Inquiry->VendorId), Vendor);
+    PdoCopyIdField(Inquiry->ProductId, sizeof(Inquiry->ProductId), Product);
+    PdoCopyIdField(Inquiry->ProductRevisionLevel,
+                   sizeof(Inquiry->ProductRevisionLevel), Revision);
+
+    if (IncludeRevision)
+    {
+        _snwprintf(Buffer, BufferLength, L"SCSI\\%s&Ven_%s&Prod_%s&Rev_%s",
+                   DeviceType, Vendor, Product, Revision);
+    }
+    else
+    {
+        _snwprintf(Buffer, BufferLength, L"SCSI\\%s&Ven_%s&Prod_%s",
+                   DeviceType, Vendor, Product);
+    }
+
+    /* _snwprintf does not terminate on truncation */
+    Buffer[BufferLength - 1] = UNICODE_NULL;
+}
+
+static
+PWSTR
+PdoBuildDeviceDescription(
+    _In_ PINQUIRYDATA Inquiry)
+{
+    WCHAR Description[64];
+    WCHAR Vendor[9];
+    WCHAR Product[17];
+
+    PdoCopyTextField(Inquiry->VendorId, sizeof(Inquiry->VendorId), Vendor);
+    PdoCopyTextField(Inquiry->ProductId, sizeof(Inquiry->ProductId), Product);
+
+    _snwprintf(Description, RTL_NUMBER_OF(Description), L"%s %s SCSI %s Device",
+               Vendor, Product, PdoGetDeviceTypeString(Inquiry));
+    Description[RTL_NUMBER_OF(Description) - 1] = UNICODE_NULL;
+
+    return PdoAllocateMultiString(Description, NULL);
+}
+
+static
+NTSTATUS
+PdoQueryId(
+    _In_ PPDO_DEVICE_EXTENSION DeviceExtension,
+    _In_ BUS_QUERY_ID_TYPE IdType,
+    _Out_ PULONG_PTR Information)
+{
+    WCHAR Instance[32];
+
+    _snwprintf(Instance, RTL_NUMBER_OF(Instance), L"%lu&%lu&%lu",
+               DeviceExtension->Bus, DeviceExtension->Target,
+               DeviceExtension->Lun);
+    switch (IdType)
+    {
+        case BusQueryDeviceID:
+            if (DeviceExtension->InquiryBuffer != NULL)
+            {
+                WCHAR Id[96];
+
+                PdoBuildScsiId(DeviceExtension->InquiryBuffer, Id,
+                               RTL_NUMBER_OF(Id), TRUE);
+                *Information = (ULONG_PTR)PdoAllocateMultiString(Id, NULL);
+            }
+            else
+            {
+                *Information = (ULONG_PTR)PdoAllocateMultiString(
+                    L"SCSI\\Disk", NULL);
+            }
+            break;
+        case BusQueryHardwareIDs:
+            if (DeviceExtension->InquiryBuffer != NULL)
+            {
+                WCHAR FullId[96];
+                WCHAR ShortId[80];
+
+                PdoBuildScsiId(DeviceExtension->InquiryBuffer, FullId,
+                               RTL_NUMBER_OF(FullId), TRUE);
+                PdoBuildScsiId(DeviceExtension->InquiryBuffer, ShortId,
+                               RTL_NUMBER_OF(ShortId), FALSE);
+                *Information = (ULONG_PTR)PdoAllocateMultiString(FullId,
+                                                                 ShortId);
+            }
+            else
+            {
+                *Information = (ULONG_PTR)PdoAllocateMultiString(
+                    L"SCSI\\Disk", NULL);
+            }
+            break;
+        case BusQueryCompatibleIDs:
+            if (DeviceExtension->InquiryBuffer != NULL &&
+                DeviceExtension->InquiryBuffer->DeviceType == DIRECT_ACCESS_DEVICE)
+            {
+                *Information = (ULONG_PTR)PdoAllocateMultiString(
+                    L"SCSI\\Disk", L"GenDisk");
+            }
+            else
+            {
+                *Information = (ULONG_PTR)PdoAllocateMultiString(
+                    L"SCSI\\Disk", NULL);
+            }
+            break;
+        case BusQueryInstanceID:
+            *Information = (ULONG_PTR)PdoAllocateMultiString(Instance, NULL);
+            break;
+        default:
+            return STATUS_NOT_SUPPORTED;
+    }
+    return *Information != 0 ? STATUS_SUCCESS : STATUS_INSUFFICIENT_RESOURCES;
+}
+
+NTSTATUS
+PortPdoDeviceControl(
+    _In_ PDEVICE_OBJECT DeviceObject,
+    _In_ PIRP Irp)
+{
+    PPDO_DEVICE_EXTENSION PdoExtension = DeviceObject->DeviceExtension;
+    PIO_STACK_LOCATION Stack = IoGetCurrentIrpStackLocation(Irp);
+    PVOID Buffer = Irp->AssociatedIrp.SystemBuffer;
+    ULONG OutputLength = Stack->Parameters.DeviceIoControl.OutputBufferLength;
+    ULONG InputLength = Stack->Parameters.DeviceIoControl.InputBufferLength;
+    ULONG IoControlCode = Stack->Parameters.DeviceIoControl.IoControlCode;
+    NTSTATUS Status = STATUS_INVALID_DEVICE_REQUEST;
+    ULONG_PTR Information = 0;
+
+    if (IoControlCode == IOCTL_SCSI_GET_ADDRESS)
+    {
+        PSCSI_ADDRESS Address;
+
+        if (OutputLength < sizeof(SCSI_ADDRESS) || Buffer == NULL)
+        {
+            Status = STATUS_BUFFER_TOO_SMALL;
+        }
+        else
+        {
+            Address = Buffer;
+            RtlZeroMemory(Address, sizeof(*Address));
+            Address->Length = sizeof(*Address);
+            Address->PortNumber = (UCHAR)PdoExtension->FdoExtension->BusNumber;
+            Address->PathId = (UCHAR)PdoExtension->Bus;
+            Address->TargetId = (UCHAR)PdoExtension->Target;
+            Address->Lun = (UCHAR)PdoExtension->Lun;
+            Information = sizeof(*Address);
+            Status = STATUS_SUCCESS;
+        }
+    }
+    else if (IoControlCode == IOCTL_STORAGE_QUERY_PROPERTY)
+    {
+        PSTORAGE_PROPERTY_QUERY Query;
+        PINQUIRYDATA Inquiry;
+        ULONG VendorOffset;
+        ULONG ProductOffset;
+        ULONG RevisionOffset;
+        ULONG DescriptorSize;
+        ULONG SgBudget;
+        ULONG MaximumTransferLength;
+        PSTORAGE_DESCRIPTOR_HEADER Header;
+        PSTORAGE_DEVICE_DESCRIPTOR Descriptor;
+        PSTORPORT_PDO_ADAPTER_DESCRIPTOR AdapterDescriptor;
+        PORT_CONFIGURATION_INFORMATION *PortConfig;
+
+        if (InputLength < sizeof(STORAGE_PROPERTY_QUERY) ||
+            Buffer == NULL)
+        {
+            Status = STATUS_INVALID_PARAMETER;
+        }
+        else
+        {
+            Query = Buffer;
+            if (Query->QueryType != PropertyStandardQuery)
+            {
+                Status = STATUS_NOT_SUPPORTED;
+            }
+            else if (Query->PropertyId == StorageDeviceProperty)
+            {
+                Inquiry = PdoExtension->InquiryBuffer;
+                if (Inquiry == NULL)
+                {
+                    Status = STATUS_DEVICE_NOT_READY;
+                }
+                else
+                {
+                    VendorOffset = FIELD_OFFSET(STORAGE_DEVICE_DESCRIPTOR,
+                                                RawDeviceProperties);
+                    ProductOffset = VendorOffset + sizeof(Inquiry->VendorId) + 1;
+                    RevisionOffset = ProductOffset + sizeof(Inquiry->ProductId) + 1;
+                    DescriptorSize = RevisionOffset +
+                                     sizeof(Inquiry->ProductRevisionLevel) + 1;
+                    if (OutputLength < sizeof(STORAGE_DESCRIPTOR_HEADER))
+                    {
+                        Status = STATUS_BUFFER_TOO_SMALL;
+                    }
+                    else if (OutputLength < DescriptorSize)
+                    {
+                        Header = Buffer;
+                        Header->Version = sizeof(STORAGE_DEVICE_DESCRIPTOR);
+                        Header->Size = DescriptorSize;
+                        Information = sizeof(*Header);
+                        Status = STATUS_SUCCESS;
+                    }
+                    else
+                    {
+                        Descriptor = Buffer;
+                        RtlZeroMemory(Buffer, DescriptorSize);
+                        Descriptor->Version = sizeof(STORAGE_DEVICE_DESCRIPTOR);
+                        Descriptor->Size = DescriptorSize;
+                        Descriptor->DeviceType = Inquiry->DeviceType;
+                        Descriptor->DeviceTypeModifier = Inquiry->DeviceTypeModifier;
+                        Descriptor->RemovableMedia = Inquiry->RemovableMedia;
+                        Descriptor->CommandQueueing = Inquiry->CommandQueue;
+                        Descriptor->VendorIdOffset = VendorOffset;
+                        Descriptor->ProductIdOffset = ProductOffset;
+                        Descriptor->ProductRevisionOffset = RevisionOffset;
+                        Descriptor->BusType = BusTypeScsi;
+                        RtlCopyMemory((PUCHAR)Buffer + VendorOffset,
+                                      Inquiry->VendorId,
+                                      sizeof(Inquiry->VendorId));
+                        ((PUCHAR)Buffer)[VendorOffset + sizeof(Inquiry->VendorId)] = 0;
+                        RtlCopyMemory((PUCHAR)Buffer + ProductOffset,
+                                      Inquiry->ProductId,
+                                      sizeof(Inquiry->ProductId));
+                        ((PUCHAR)Buffer)[ProductOffset + sizeof(Inquiry->ProductId)] = 0;
+                        RtlCopyMemory((PUCHAR)Buffer + RevisionOffset,
+                                      Inquiry->ProductRevisionLevel,
+                                      sizeof(Inquiry->ProductRevisionLevel));
+                        ((PUCHAR)Buffer)[RevisionOffset +
+                                         sizeof(Inquiry->ProductRevisionLevel)] = 0;
+                        Information = DescriptorSize;
+                        Status = STATUS_SUCCESS;
+                    }
+                }
+            }
+            else if (Query->PropertyId == StorageAdapterProperty)
+            {
+                PortConfig = &PdoExtension->FdoExtension->Miniport.PortConfig;
+                MaximumTransferLength = PortConfig->MaximumTransferLength;
+                if (PortConfig->NumberOfPhysicalBreaks != SP_UNINITIALIZED_VALUE &&
+                    PortConfig->NumberOfPhysicalBreaks <= MAXULONG / PAGE_SIZE)
+                {
+                    SgBudget = PortConfig->NumberOfPhysicalBreaks * PAGE_SIZE;
+                    if (MaximumTransferLength == SP_UNINITIALIZED_VALUE ||
+                        MaximumTransferLength > SgBudget)
+                    {
+                        MaximumTransferLength = SgBudget;
+                    }
+                }
+                if (OutputLength < sizeof(STORAGE_DESCRIPTOR_HEADER))
+                {
+                    Status = STATUS_BUFFER_TOO_SMALL;
+                }
+                else if (OutputLength < sizeof(*AdapterDescriptor))
+                {
+                    Header = Buffer;
+                    Header->Version = sizeof(STORAGE_ADAPTER_DESCRIPTOR);
+                    Header->Size = sizeof(*AdapterDescriptor);
+                    Information = sizeof(*Header);
+                    Status = STATUS_SUCCESS;
+                }
+                else
+                {
+                    AdapterDescriptor = Buffer;
+                    RtlZeroMemory(Buffer, sizeof(*AdapterDescriptor));
+                    AdapterDescriptor->Descriptor.Version =
+                        sizeof(STORAGE_ADAPTER_DESCRIPTOR);
+                    AdapterDescriptor->Descriptor.Size =
+                        sizeof(*AdapterDescriptor);
+                    AdapterDescriptor->Descriptor.MaximumTransferLength =
+                        MaximumTransferLength;
+                    /* classpnp derives its transfer-packet size from
+                       MaximumPhysicalPages (xferpkt.c:70-73); leaving it 0
+                       collapses every packet to one page and splits a 64K
+                       read into eight 8K pieces. Mirror scsiport
+                       (scsiport.c:1331-1341): derive from the miniport's
+                       physical-break count, falling back to the transfer
+                       length in pages. */
+                    AdapterDescriptor->Descriptor.MaximumPhysicalPages =
+                        (PortConfig->NumberOfPhysicalBreaks != 0 &&
+                         PortConfig->NumberOfPhysicalBreaks != SP_UNINITIALIZED_VALUE)
+                            ? PortConfig->NumberOfPhysicalBreaks
+                            : BYTES_TO_PAGES(MaximumTransferLength);
+                    AdapterDescriptor->Descriptor.AlignmentMask = PAGE_SIZE - 1;
+                    AdapterDescriptor->Descriptor.AdapterUsesPio =
+                        PortConfig->MapBuffers;
+                    AdapterDescriptor->Descriptor.CommandQueueing = TRUE;
+                    AdapterDescriptor->Descriptor.BusType = BusTypeScsi;
+                    AdapterDescriptor->MaximumNumberOfLogicalUnits =
+                        PortConfig->MaximumNumberOfLogicalUnits;
+                    Information = sizeof(*AdapterDescriptor);
+                    Status = STATUS_SUCCESS;
+                }
+            }
+            else
+            {
+                Status = STATUS_NOT_SUPPORTED;
+            }
+        }
+    }
+
+    Irp->IoStatus.Status = Status;
+    Irp->IoStatus.Information = Information;
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    return Status;
+}
+
 NTSTATUS
 NTAPI
 PortPdoPnp(
     _In_ PDEVICE_OBJECT DeviceObject,
     _In_ PIRP Irp)
 {
-    DPRINT1("PortPdoPnp(%p %p)\n", DeviceObject, Irp);
+    PPDO_DEVICE_EXTENSION DeviceExtension;
+    PIO_STACK_LOCATION Stack;
+    PDEVICE_RELATIONS Relations;
+    PWSTR Text;
+    NTSTATUS Status = STATUS_SUCCESS;
 
-    Irp->IoStatus.Information = 0;
-    Irp->IoStatus.Status = STATUS_SUCCESS;
+    DeviceExtension = DeviceObject->DeviceExtension;
+    Stack = IoGetCurrentIrpStackLocation(Irp);
+
+    /* Do not clobber IoStatus.Information here: for BusRelations the
+       function driver above us (partmgr) has already stored its
+       DEVICE_RELATIONS pointer in it, and the PDO must complete the
+       request without altering the status or information. */
+
+    switch (Stack->MinorFunction)
+    {
+        case IRP_MN_START_DEVICE:
+            DeviceExtension->PnpState = dsStarted;
+            break;
+        case IRP_MN_QUERY_ID:
+            Status = PdoQueryId(DeviceExtension,
+                                Stack->Parameters.QueryId.IdType,
+                                &Irp->IoStatus.Information);
+            break;
+        case IRP_MN_QUERY_DEVICE_TEXT:
+            if (Stack->Parameters.QueryDeviceText.DeviceTextType !=
+                DeviceTextDescription)
+            {
+                Status = STATUS_NOT_SUPPORTED;
+                break;
+            }
+            if (DeviceExtension->InquiryBuffer == NULL)
+            {
+                /* Nothing to describe the device with; let the PnP manager
+                   fall back to the INF-supplied name. */
+                Status = STATUS_NOT_SUPPORTED;
+                break;
+            }
+            Text = PdoBuildDeviceDescription(DeviceExtension->InquiryBuffer);
+            if (Text == NULL)
+                Status = STATUS_INSUFFICIENT_RESOURCES;
+            else
+                Irp->IoStatus.Information = (ULONG_PTR)Text;
+            break;
+        case IRP_MN_QUERY_DEVICE_RELATIONS:
+            if (Stack->Parameters.QueryDeviceRelations.Type ==
+                TargetDeviceRelation)
+            {
+                Relations = ExAllocatePoolWithTag(PagedPool,
+                                                  FIELD_OFFSET(DEVICE_RELATIONS,
+                                                               Objects[1]),
+                                                  TAG_GLOBAL_DATA);
+                if (Relations == NULL)
+                {
+                    Status = STATUS_INSUFFICIENT_RESOURCES;
+                    break;
+                }
+                Relations->Count = 1;
+                Relations->Objects[0] = DeviceObject;
+                ObReferenceObject(DeviceObject);
+                Irp->IoStatus.Information = (ULONG_PTR)Relations;
+            }
+            else
+            {
+                /* BusRelations on a PDO belong to the function driver above
+                   us (partmgr fills them in before the IRP reaches this
+                   PDO). A PDO must complete the request without altering
+                   the status: returning STATUS_NOT_SUPPORTED here made PnP
+                   discard the just-built relations, so partition child
+                   devices were never enumerated and Setup could not format
+                   the volume it had just created. */
+                Status = Irp->IoStatus.Status;
+            }
+            break;
+        case IRP_MN_QUERY_PNP_DEVICE_STATE:
+            break;
+        case IRP_MN_QUERY_CAPABILITIES:
+        case IRP_MN_QUERY_REMOVE_DEVICE:
+        case IRP_MN_CANCEL_REMOVE_DEVICE:
+        case IRP_MN_STOP_DEVICE:
+        case IRP_MN_CANCEL_STOP_DEVICE:
+        case IRP_MN_SURPRISE_REMOVAL:
+            break;
+        case IRP_MN_REMOVE_DEVICE:
+            DeviceExtension->PnpState = dsRemoved;
+            Irp->IoStatus.Status = STATUS_SUCCESS;
+            IoCompleteRequest(Irp, IO_NO_INCREMENT);
+            PortDeletePdo(DeviceExtension);
+            return STATUS_SUCCESS;
+        default:
+            Status = STATUS_NOT_SUPPORTED;
+            break;
+    }
+
+    Irp->IoStatus.Status = Status;
     IoCompleteRequest(Irp, IO_NO_INCREMENT);
-    return STATUS_SUCCESS;
+    return Status;
 }
 
 /* EOF */
