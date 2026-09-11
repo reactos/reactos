@@ -1,8 +1,9 @@
 1 stub AddNetPlaceRunDll
 2 stub PassportWizardRunDll
 3 stub PublishRunDll
-4 stub UsersRunDll
-5 stub ClearAutoLogon
+4 stdcall UsersRunDll(ptr ptr ptr long) # NT5
+@ stdcall UsersRunDllW(ptr ptr ptr long) # NT6
+5 stdcall ClearAutoLogon()
 @ stdcall -private DllCanUnloadNow()
 @ stdcall -private DllGetClassObject(ptr ptr ptr)
 @ stub -private DllInstall

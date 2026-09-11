@@ -49,3 +49,28 @@ DllMain(HINSTANCE hinstDLL, DWORD dwReason, LPVOID lpvReserved)
 
     return TRUE;
 }
+
+int WINAPI
+ClearAutoLogon(VOID)
+{
+    /* TODO */
+    return 0;
+}
+
+void WINAPI
+UsersRunDllW(HWND hWnd, HINSTANCE hInstance, LPWSTR pszCmdLine, int nCmdShow)
+{
+    /* FIXME: The dialog is supposed to be implemented in this DLL (CORE-20775) */
+
+    SHELLEXECUTEINFOW sei = { sizeof(sei), SEE_MASK_FLAG_DDEWAIT | SEE_MASK_DOENVSUBST };
+    sei.lpFile = L"%SystemRoot%\\system32\\control.exe";
+    sei.lpParameters = L"userpasswords";
+    sei.nShow = SW_SHOWDEFAULT;
+    ShellExecuteExW(&sei);
+}
+
+void WINAPI
+UsersRunDll(HWND hWnd, HINSTANCE hInstance, LPSTR pszCmdLine, int nCmdShow)
+{
+    UsersRunDllW(hWnd, hInstance, L"", nCmdShow);
+}
