@@ -105,9 +105,10 @@ VGASetCurrentMode(
 
 BOOLEAN
 VGAShareVideoMemory(
-   IN PVIDEO_SHARE_MEMORY RequestedMemory,
-   OUT PVIDEO_MEMORY_INFORMATION ReturnedMemory,
-   OUT PSTATUS_BLOCK StatusBlock);
+    _In_ PVOID DeviceExtension,
+    _In_ PVIDEO_SHARE_MEMORY RequestedMemory,
+    _Out_ PVIDEO_MEMORY_INFORMATION ReturnedMemory,
+    _Out_ PSTATUS_BLOCK StatusBlock);
 
 BOOLEAN
 VGAUnmapVideoMemory(
