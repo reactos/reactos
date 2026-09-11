@@ -16,6 +16,7 @@
  */
 #include "viostor.h"
 #include <kdebugprint.h>
+#include <ntstrsafe.h>
 
 
 static u8 VioReadByte(ULONG_PTR Register)
@@ -333,7 +334,7 @@ static BOOLEAN VioLocalCommand(PVIOSTOR_ADAPTER_EXTENSION Adapter,
         UCHAR AllocationLength;
         UCHAR Vpd[64];
         ULONG ResponseLength;
-        static const UCHAR Serial[] = "ROS-VIRTIO-9241-0001";
+        ULONG SerialLength;
 
         if (Buffer == NULL || Srb->CdbLength < 6 ||
             (Srb->Cdb[1] & (UCHAR)~1u) != 0) {
@@ -376,18 +377,20 @@ static BOOLEAN VioLocalCommand(PVIOSTOR_ADAPTER_EXTENSION Adapter,
             ResponseLength = 8;
             break;
         case VPD_SERIAL_NUMBER:
-            Vpd[4] = sizeof(Serial) - 1;
-            RtlCopyMemory(&Vpd[5], Serial, sizeof(Serial) - 1);
-            ResponseLength = 5 + sizeof(Serial) - 1;
+            SerialLength = (ULONG)strlen((PCSTR)Adapter->Serial);
+            Vpd[4] = (UCHAR)SerialLength;
+            RtlCopyMemory(&Vpd[5], Adapter->Serial, SerialLength);
+            ResponseLength = 5 + SerialLength;
             break;
         case VPD_DEVICE_IDENTIFIERS:
-            Vpd[4] = 4 + sizeof(Serial) - 1;
+            SerialLength = (ULONG)strlen((PCSTR)Adapter->Serial);
+            Vpd[4] = (UCHAR)(4 + SerialLength);
             Vpd[5] = VpdCodeSetAscii |
                      (VpdIdentifierTypeVendorSpecific << 4);
             Vpd[6] = 0;
-            Vpd[7] = sizeof(Serial) - 1;
-            RtlCopyMemory(&Vpd[8], Serial, sizeof(Serial) - 1);
-            ResponseLength = 8 + sizeof(Serial) - 1;
+            Vpd[7] = (UCHAR)SerialLength;
+            RtlCopyMemory(&Vpd[8], Adapter->Serial, SerialLength);
+            ResponseLength = 8 + SerialLength;
             break;
         default:
             DPrintf(0, "viostor: inquiry unsupported vpd=0x%02x allocation=%u\n",
@@ -814,6 +817,19 @@ static BOOLEAN VioInitializeDevice(PVIOSTOR_ADAPTER_EXTENSION Adapter)
         }
     }
     Adapter->LastLba = Adapter->Config.Capacity - 1;
+    /*
+     * Build a per-device unit serial from the PCI location and capacity.
+     * The virtio-blk device config carries no serial field (a host-provided
+     * serial would need a VIRTIO_BLK_T_GET_ID request, which this reduced
+     * driver does not implement), so derive a stable unique-enough string
+     * instead of reporting one fixed serial for every disk.
+     */
+    RtlStringCchPrintfA((PCHAR)Adapter->Serial,
+                        sizeof(Adapter->Serial),
+                        "VIOSTOR-%02lx-%02lx-%08lx",
+                        Adapter->SystemIoBusNumber,
+                        Adapter->SlotNumber,
+                        (ULONG)(Adapter->Config.Capacity & 0xFFFFFFFFu));
     virtio_device_ready(&Adapter->Device);
     Adapter->Initialized = TRUE;
     DPrintf(0, "viostor: init success last_lba=%I64x max_transfer=%lu breaks=%lu\n",
