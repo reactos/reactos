@@ -8436,9 +8436,11 @@ static void test_AcceptEx(void)
     GUID acceptExGuid = WSAID_ACCEPTEX, getAcceptExGuid = WSAID_GETACCEPTEXSOCKADDRS;
     LPFN_ACCEPTEX pAcceptEx = NULL;
     LPFN_GETACCEPTEXSOCKADDRS pGetAcceptExSockaddrs = NULL;
+#ifndef __REACTOS__
     fd_set fds_accept, fds_send;
     struct timeval timeout = {0,10}; /* wait for 10 milliseconds */
     int got, conn1, i;
+#endif
     DWORD bytesReturned, connect_time;
     char buffer[1024], ipbuffer[32];
     OVERLAPPED overlapped;
@@ -8709,7 +8711,7 @@ todo_wine
     closesocket(acceptor);
 
     /* Test CF_DEFER & AcceptEx interaction */
-
+#ifndef __REACTOS__ /* CF_DEFER not implemented */
     acceptor = socket(AF_INET, SOCK_STREAM, 0);
     if (acceptor == INVALID_SOCKET) {
         skip("could not create acceptor socket, error %d\n", WSAGetLastError());
@@ -8919,6 +8921,7 @@ todo_wine
 
     bret = GetOverlappedResult((HANDLE)listener, &overlapped, &bytesReturned, FALSE);
     ok(!bret && GetLastError() == ERROR_OPERATION_ABORTED, "GetOverlappedResult failed, error %d\n", GetLastError());
+#endif
 
 end:
     if (overlapped.hEvent)
@@ -11822,17 +11825,17 @@ START_TEST( sock )
     test_GetAddrInfoW();
     test_GetAddrInfoExW();
     test_getaddrinfo();
+    test_AcceptEx();
 
 #ifdef __REACTOS__
     if (!winetest_interactive)
     {
-        skip("WSPAcceptEx(), WSPConnectEx() and WSPDisconnectEx() are UNIMPLEMENTED on ReactOS\n");
+        skip("WSPConnectEx() and WSPDisconnectEx() are UNIMPLEMENTED on ReactOS\n");
         skip("Skipping tests due to hang. See ROSTESTS-385\n");
     }
     else
     {
 #endif
-    test_AcceptEx();
     test_ConnectEx();
     test_DisconnectEx();
 #ifdef __REACTOS__
