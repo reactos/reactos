@@ -699,6 +699,7 @@ FdoIoctlDiskSetDriveLayout(
     if (FdoExtension->IsSuperFloppy && (layoutEx->PartitionCount > 1))
     {
         PartMgrReleaseLayoutLock(FdoExtension);
+        ExFreePoolWithTag(layoutEx, TAG_PARTMGR);
         return STATUS_INVALID_DEVICE_REQUEST;
     }
 
@@ -730,6 +731,7 @@ FdoIoctlDiskSetDriveLayout(
     else
     {
         FdoExtension->LayoutValid = FALSE;
+        ExFreePoolWithTag(layoutEx, TAG_PARTMGR);
     }
 
     PartMgrReleaseLayoutLock(FdoExtension);
@@ -750,8 +752,8 @@ FdoIoctlDiskSetDriveLayout(
                                            NULL,
                                            NULL);
 
-    Irp->IoStatus.Information = layoutSize;
-    return STATUS_SUCCESS;
+    Irp->IoStatus.Information = NT_SUCCESS(status) ? layoutSize : 0;
+    return status;
 }
 
 static
@@ -798,6 +800,7 @@ FdoIoctlDiskSetDriveLayoutEx(
          (layoutEx->PartitionCount > 1)))
     {
         PartMgrReleaseLayoutLock(FdoExtension);
+        ExFreePoolWithTag(layoutEx, TAG_PARTMGR);
         return STATUS_INVALID_DEVICE_REQUEST;
     }
 
@@ -851,6 +854,7 @@ FdoIoctlDiskSetDriveLayoutEx(
     else
     {
         FdoExtension->LayoutValid = FALSE;
+        ExFreePoolWithTag(layoutEx, TAG_PARTMGR);
     }
 
     PartMgrReleaseLayoutLock(FdoExtension);
@@ -871,8 +875,8 @@ FdoIoctlDiskSetDriveLayoutEx(
                                            NULL,
                                            NULL);
 
-    Irp->IoStatus.Information = layoutSize;
-    return STATUS_SUCCESS;
+    Irp->IoStatus.Information = NT_SUCCESS(status) ? layoutSize : 0;
+    return status;
 }
 
 static
@@ -1068,11 +1072,10 @@ FdoHandleDeviceRelations(
         // now fill the DeviceRelations structure
         TRACE("Reporting %u partitions\n", FdoExtension->EnumeratedPartitionsTotal);
 
+        /* EnumeratedPartitionsTotal can be zero, so it must not be decremented or the size underflows */
         PDEVICE_RELATIONS deviceRelations =
             ExAllocatePoolWithTag(PagedPool,
-                                  sizeof(DEVICE_RELATIONS)
-                                  + sizeof(PDEVICE_OBJECT)
-                                  * (FdoExtension->EnumeratedPartitionsTotal - 1),
+                                  FIELD_OFFSET(DEVICE_RELATIONS, Objects) + sizeof(PDEVICE_OBJECT) * FdoExtension->EnumeratedPartitionsTotal,
                                   TAG_PARTMGR);
 
         if (!deviceRelations)

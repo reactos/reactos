@@ -189,9 +189,19 @@ PiIrpQueryDeviceRelations(
     };
 
     // Vista+ does an asynchronous call
-    NTSTATUS status = IopSynchronousCall(DeviceNode->PhysicalDeviceObject,
-                                         &stack,
-                                         (PVOID)&DeviceNode->OverUsed1.PendingDeviceRelations);
+    PVOID newRelations = NULL;
+    NTSTATUS status = IopSynchronousCall(DeviceNode->PhysicalDeviceObject, &stack, &newRelations);
+
+    PDEVICE_RELATIONS oldRelations = InterlockedExchangePointer((PVOID volatile *)&DeviceNode->OverUsed1.PendingDeviceRelations, newRelations);
+    if (oldRelations != NULL)
+    {
+        for (ULONG i = 0; i < oldRelations->Count; i++)
+        {
+            ObDereferenceObject(oldRelations->Objects[i]);
+        }
+        ExFreePool(oldRelations);
+    }
+
     DeviceNode->CompletionStatus = status;
     return status;
 }
