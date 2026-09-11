@@ -6,7 +6,7 @@
  */
 
 #include "precomp.h"
-#include "winreg.h"
+#include <winreg.h>
 
 /* Registry watcher thread for testing synchronous mode */
 typedef struct _WATCH_THREAD_CONTEXT
@@ -52,24 +52,25 @@ START_TEST(NtNotifyChangeMultipleKeys)
     DWORD WaitStatus;
     IO_STATUS_BLOCK IoStatusBlock = { 0 };
     OBJECT_ATTRIBUTES SubordinateObjects[1];
-    PWATCH_THREAD_CONTEXT WatchThread1State = NULL,
-                          WatchThread2State = NULL;
+
+    PWATCH_THREAD_CONTEXT WatchThread1State = NULL, WatchThread2State = NULL;
     PAPC_CONTEXT ApcContext = NULL;
+
     /* Registry key object attributes */
-    UNICODE_STRING KeyName = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\SOFTWARE\\TestKey"),
-                   SubKeyName = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\SOFTWARE\\TestKey\\TestSubKey"),
-                   SecondaryKeyName = RTL_CONSTANT_STRING(L"\\Registry\\User\\.DEFAULT\\SOFTWARE\\TestKey"),
-                   ThirdKeyName = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\Software\\Microsoft\\Windows");
-    OBJECT_ATTRIBUTES ObjectAttributes = RTL_CONSTANT_OBJECT_ATTRIBUTES(&KeyName, OBJ_CASE_INSENSITIVE),
-                      SubKeyObjectAttributes = RTL_CONSTANT_OBJECT_ATTRIBUTES(&SubKeyName, OBJ_CASE_INSENSITIVE),
-                      SecondaryObjectAttributes = RTL_CONSTANT_OBJECT_ATTRIBUTES(&SecondaryKeyName, OBJ_CASE_INSENSITIVE);
+    UNICODE_STRING KeyName = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\SOFTWARE\\TestKey");
+    UNICODE_STRING SubKeyName = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\SOFTWARE\\TestKey\\TestSubKey");
+    UNICODE_STRING SecondaryKeyName = RTL_CONSTANT_STRING(L"\\Registry\\User\\.DEFAULT\\SOFTWARE\\TestKey");
+    UNICODE_STRING ThirdKeyName = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\Software\\Microsoft\\Windows");
+    OBJECT_ATTRIBUTES ObjectAttributes = RTL_CONSTANT_OBJECT_ATTRIBUTES(&KeyName, OBJ_CASE_INSENSITIVE);
+    OBJECT_ATTRIBUTES SubKeyObjectAttributes = RTL_CONSTANT_OBJECT_ATTRIBUTES(&SubKeyName, OBJ_CASE_INSENSITIVE);
+    OBJECT_ATTRIBUTES SecondaryObjectAttributes = RTL_CONSTANT_OBJECT_ATTRIBUTES(&SecondaryKeyName, OBJ_CASE_INSENSITIVE);
     UNICODE_STRING ValueName = RTL_CONSTANT_STRING(L"TestValue");
     DWORD Value1 = 0x12345678, Value2 = 0x87654321;
-    /* handles */
+
+    /* Handles */
     HANDLE KeyHandle = NULL, SubKeyHandle = NULL, SecondaryKeyHandle = NULL;
-    HANDLE WatchThread1Handle = NULL,
-           WatchThread2Handle = NULL,
-           EventHandle = NULL;
+    HANDLE WatchThread1Handle = NULL, WatchThread2Handle = NULL;
+    HANDLE EventHandle = NULL;
 
     /* Create event */
     EventHandle = CreateEvent(NULL, FALSE, FALSE, NULL);
