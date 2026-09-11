@@ -246,7 +246,7 @@ START_TEST(NtNotifyChangeMultipleKeys)
     Status = NtCreateKey(&SecondaryKeyHandle, KEY_ALL_ACCESS, &SecondaryObjectAttributes, 0, NULL, REG_OPTION_NON_VOLATILE, NULL);
     if (NT_SUCCESS(Status))
     {
-        CloseHandle(SecondaryKeyHandle);
+        NtClose(SecondaryKeyHandle);
         InitializeObjectAttributes(&SubordinateObjects[0], &SecondaryKeyName, OBJ_CASE_INSENSITIVE, NULL, NULL);
         Status = NtNotifyChangeMultipleKeys(KeyHandle,
                                             _countof(SubordinateObjects),
@@ -270,7 +270,7 @@ START_TEST(NtNotifyChangeMultipleKeys)
         {
             Status = NtSetValueKey(SecondaryKeyHandle, &ValueName, 0, REG_DWORD, &Value1, sizeof(Value1));
             ok_ntstatus(Status, STATUS_SUCCESS);
-            CloseHandle(SecondaryKeyHandle);
+            NtClose(SecondaryKeyHandle);
         }
         /* Verify that the event is signaled */
         NtTestAlert();
@@ -357,7 +357,7 @@ Cleanup:
     if (SubKeyHandle)
     {
         NtDeleteKey(SubKeyHandle);
-        CloseHandle(SubKeyHandle);
+        NtClose(SubKeyHandle);
     }
     if (!KeyHandle)
     {
@@ -370,12 +370,12 @@ Cleanup:
     if (KeyHandle)
     {
         NtDeleteKey(KeyHandle);
-        CloseHandle(KeyHandle);
+        NtClose(KeyHandle);
     }
     Status = NtOpenKey(&SecondaryKeyHandle, DELETE, &SecondaryObjectAttributes);
     if (NT_SUCCESS(Status))
     {
         NtDeleteKey(SecondaryKeyHandle);
-        CloseHandle(SecondaryKeyHandle);
+        NtClose(SecondaryKeyHandle);
     }
 }
