@@ -487,13 +487,14 @@ static inline void *read_file( const char *name, size_t *size )
 static inline struct target get_default_target(void)
 {
     struct target target;
-#ifdef __i386__
+/* MSVC only predefines the _M_* variants */
+#if defined(__i386__) || defined(_M_IX86)
     target.cpu = CPU_i386;
-#elif defined(__x86_64__)
+#elif defined(__x86_64__) || defined(_M_AMD64)
     target.cpu = CPU_x86_64;
-#elif defined(__arm__)
+#elif defined(__arm__) || defined(_M_ARM)
     target.cpu = CPU_ARM;
-#elif defined(__aarch64__)
+#elif defined(__aarch64__) || defined(_M_ARM64)
     target.cpu = CPU_ARM64;
 #else
 #error Unsupported CPU
