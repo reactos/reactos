@@ -1,9 +1,12 @@
+include_directories(
+    ${REACTOS_SOURCE_DIR}/sdk/lib/drivers/arbiter)
 
 list(APPEND HAL_LEGACY_SOURCE
     legacy/bus/bushndlr.c
     legacy/bus/cmosbus.c
     legacy/bus/isabus.c
     legacy/bus/pcibus.c
+    legacy/pir/legacypcirqarb.c
     ${CMAKE_CURRENT_BINARY_DIR}/pci_classes.c
     ${CMAKE_CURRENT_BINARY_DIR}/pci_vendors.c
     legacy/bus/sysbus.c
