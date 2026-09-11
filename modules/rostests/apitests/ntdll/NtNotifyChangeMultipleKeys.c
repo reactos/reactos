@@ -85,7 +85,12 @@ START_TEST(NtNotifyChangeMultipleKeys)
         skip("Failed to create registry key");
         goto Cleanup;
     }
-    NtSetValueKey(KeyHandle, &ValueName, 0, REG_DWORD, &Value1, sizeof(Value1));
+    Status = NtSetValueKey(KeyHandle, &ValueName, 0, REG_DWORD, &Value1, sizeof(Value1));
+    if (!NT_SUCCESS(Status))
+    {
+        skip("Failed to set initial test value");
+        goto Cleanup;
+    }
 
     /* Synchronous mode */
 
