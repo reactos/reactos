@@ -362,6 +362,7 @@ typedef struct _PCI_PDO_EXTENSION
     UCHAR ExpressDeviceType;
     BOOLEAN IsExtendedConfigReachable;
     PCI_RESIZABLE_BAR_STATE ResizableBarState;
+    ROUTING_TOKEN RoutingToken;
 } PCI_PDO_EXTENSION, *PPCI_PDO_EXTENSION;
 
 //
