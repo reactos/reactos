@@ -504,6 +504,7 @@ FsRtlPrivateLock(IN PFILE_LOCK FileLock,
                             IoStatus->Status = STATUS_PENDING;
                             if (Irp)
                             {
+                                Irp->IoStatus.Information = LockInfo->Generation;
                                 IoMarkIrpPending(Irp);
                                 IoCsqInsertIrpEx
                                     (&LockInfo->Csq,
@@ -1190,8 +1191,11 @@ FsRtlProcessFileLock(IN PFILE_LOCK FileLock,
                                           Irp,
                                           Context,
                                           FALSE);
-        /* FsRtlPrivateLock has _Must_inspect_result_. Just check this is consistent on debug builds */
-        NT_ASSERT(Result == NT_SUCCESS(IoStatusBlock.Status));
+        /* FsRtlPrivateLock has _Must_inspect_result_. A blocking conflicting lock
+           legitimately returns FALSE with STATUS_PENDING after queueing the IRP,
+           which is then reprocessed/completed when the conflicting lock is released. */
+        NT_ASSERT(IoStatusBlock.Status == STATUS_PENDING ||
+                  Result == NT_SUCCESS(IoStatusBlock.Status));
         (void)Result;
         return IoStatusBlock.Status;
     }
@@ -1304,10 +1308,18 @@ FsRtlUninitializeFileLock(IN PFILE_LOCK FileLock)
         }
         while ((Irp = IoCsqRemoveNextIrp(&InternalInfo->Csq, NULL)) != NULL)
         {
-            NTSTATUS Status = FsRtlProcessFileLock(FileLock, Irp, NULL);
-            /* FsRtlProcessFileLock has _Must_inspect_result_ */
-            NT_ASSERT(NT_SUCCESS(Status));
-            (void)Status;
+            /* The FILE_LOCK is going away. Any locks still waiting can never be
+               granted, so complete them with STATUS_CANCELLED instead of trying to
+               reprocess them (which could re-grant locks and loop forever). */
+            NTSTATUS Status;
+            PIO_STACK_LOCATION Stack = IoGetCurrentIrpStackLocation(Irp);
+            PFILE_OBJECT FileObject = Stack ? Stack->FileObject : NULL;
+            FsRtlCompleteLockIrpReal(FileLock->CompleteLockIrpRoutine,
+                                     NULL,
+                                     Irp,
+                                     STATUS_CANCELLED,
+                                     &Status,
+                                     FileObject);
         }
         ExFreePoolWithTag(InternalInfo, TAG_FLOCK);
         FileLock->LockInformation = NULL;
