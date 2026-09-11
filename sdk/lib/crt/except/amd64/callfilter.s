@@ -1,8 +1,8 @@
 /*
- * PROJECT:     ReactOS CRT
- * LICENSE:     MIT (See COPYING.MIT in the root directory)
- * FILE:        sdk/lib/crt/except/amd64/callfilter.s
+ * PROJECT:     ReactOS CRT library
+ * LICENSE:     MIT (https://spdx.org/licenses/MIT)
  * PURPOSE:     Call an exception filter funclet with the frame pointer set up
+ * COPYRIGHT:   Copyright 2026 Yausen <yuyi2439@qq.com>
  */
 
 /* INCLUDES ******************************************************************/
