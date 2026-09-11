@@ -49,6 +49,7 @@ NtNotifyChangeMultipleKeys_ApcRoutine(PVOID ApcContext, PIO_STATUS_BLOCK IoStatu
 START_TEST(NtNotifyChangeMultipleKeys)
 {
     NTSTATUS Status;
+    DWORD WaitStatus;
     IO_STATUS_BLOCK IoStatusBlock = { 0 };
     OBJECT_ATTRIBUTES SubordinateObjects[1];
     PWATCH_THREAD_CONTEXT WatchThread1State = NULL,
@@ -101,14 +102,14 @@ START_TEST(NtNotifyChangeMultipleKeys)
     if (WatchThread1Handle)
     {
         /* Verify the thread is still running */
-        Status = WaitForSingleObject(WatchThread1Handle, 100);
-        ok_ntstatus(Status, WAIT_TIMEOUT);
+        WaitStatus = WaitForSingleObject(WatchThread1Handle, 100);
+        ok_eq_ulong(WaitStatus, WAIT_TIMEOUT);
         /* Make change to the registry key */
         Status = NtSetValueKey(KeyHandle, &ValueName, 0, REG_DWORD, &Value2, sizeof(Value2));
         ok_ntstatus(Status, STATUS_SUCCESS);
         /* Verify that the thread is notified */
-        Status = WaitForSingleObject(WatchThread1Handle, 100);
-        ok_ntstatus(Status, WAIT_OBJECT_0);
+        WaitStatus = WaitForSingleObject(WatchThread1Handle, 100);
+        ok_eq_ulong(WaitStatus, WAIT_OBJECT_0);
         /* Verify the status code */
         ok_ntstatus(WatchThread1State->Status, STATUS_NOTIFY_ENUM_DIR);
         ok_ntstatus(WatchThread1State->IoStatusBlock->Status, STATUS_NOTIFY_ENUM_DIR);
@@ -134,12 +135,12 @@ START_TEST(NtNotifyChangeMultipleKeys)
     WatchThread2Handle = CreateThread(NULL, 0, NtNotifyChangeMultipleKeys_WatchThread, WatchThread2State, 0, NULL);
     if (WatchThread2Handle)
     {
-        Status = WaitForSingleObject(WatchThread2Handle, 100);
-        ok_ntstatus(Status, WAIT_TIMEOUT);
+        WaitStatus = WaitForSingleObject(WatchThread2Handle, 100);
+        ok_eq_ulong(WaitStatus, WAIT_TIMEOUT);
         NtClose(KeyHandle);
         KeyHandle = NULL;
-        Status = WaitForSingleObject(WatchThread2Handle, 100);
-        ok_ntstatus(Status, WAIT_OBJECT_0);
+        WaitStatus = WaitForSingleObject(WatchThread2Handle, 100);
+        ok_eq_ulong(WaitStatus, WAIT_OBJECT_0);
         ok_ntstatus(WatchThread2State->Status, STATUS_NOTIFY_CLEANUP);
         ok_ntstatus(WatchThread2State->IoStatusBlock->Status, STATUS_NOTIFY_CLEANUP);
         /* cleanup */
@@ -170,15 +171,15 @@ START_TEST(NtNotifyChangeMultipleKeys)
                                         FALSE, NULL, 0, TRUE);
     ok_ntstatus(Status, STATUS_PENDING);
     /* Check event state */
-    Status = WaitForSingleObject(EventHandle, 0);
-    ok_ntstatus(Status, WAIT_TIMEOUT);
+    WaitStatus = WaitForSingleObject(EventHandle, 0);
+    ok_eq_ulong(WaitStatus, WAIT_TIMEOUT);
     /* Make change to the registry key */
     Status = NtSetValueKey(KeyHandle, &ValueName, 0, REG_DWORD, &Value1, sizeof(Value1));
     ok_ntstatus(Status, STATUS_SUCCESS);
     /* Verify that the event is signaled */
     NtTestAlert();
-    Status = WaitForSingleObject(EventHandle, 100);
-    ok_ntstatus(Status, WAIT_OBJECT_0);
+    WaitStatus = WaitForSingleObject(EventHandle, 100);
+    ok_eq_ulong(WaitStatus, WAIT_OBJECT_0);
     /* Verify the status code */
     ok_ntstatus(IoStatusBlock.Status, STATUS_NOTIFY_ENUM_DIR);
 
@@ -189,13 +190,13 @@ START_TEST(NtNotifyChangeMultipleKeys)
                                         REG_NOTIFY_CHANGE_LAST_SET,
                                         FALSE, NULL, 0, TRUE);
     ok_ntstatus(Status, STATUS_PENDING);
-    Status = WaitForSingleObject(EventHandle, 0);
-    ok_ntstatus(Status, WAIT_TIMEOUT);
+    WaitStatus = WaitForSingleObject(EventHandle, 0);
+    ok_eq_ulong(WaitStatus, WAIT_TIMEOUT);
     NtClose(KeyHandle);
     KeyHandle = NULL;
     NtTestAlert();
-    Status = WaitForSingleObject(EventHandle, 100);
-    ok_ntstatus(Status, WAIT_OBJECT_0);
+    WaitStatus = WaitForSingleObject(EventHandle, 100);
+    ok_eq_ulong(WaitStatus, WAIT_OBJECT_0);
     ok_ntstatus(IoStatusBlock.Status, STATUS_NOTIFY_CLEANUP);
 
     /* Watching subtree */
@@ -220,15 +221,15 @@ START_TEST(NtNotifyChangeMultipleKeys)
                                             TRUE, NULL, 0, TRUE);
         ok_ntstatus(Status, STATUS_PENDING);
         /* Check event state */
-        Status = WaitForSingleObject(EventHandle, 0);
-        ok_ntstatus(Status, WAIT_TIMEOUT);
+        WaitStatus = WaitForSingleObject(EventHandle, 0);
+        ok_eq_ulong(WaitStatus, WAIT_TIMEOUT);
         /* Make change to the subkey */
         Status = NtSetValueKey(SubKeyHandle, &ValueName, 0, REG_DWORD, &Value1, sizeof(Value1));
         ok_ntstatus(Status, STATUS_SUCCESS);
         /* Verify that the event is signaled */
         NtTestAlert();
-        Status = WaitForSingleObject(EventHandle, 100);
-        ok_ntstatus(Status, WAIT_OBJECT_0);
+        WaitStatus = WaitForSingleObject(EventHandle, 100);
+        ok_eq_ulong(WaitStatus, WAIT_OBJECT_0);
     }
     else
     {
@@ -256,8 +257,8 @@ START_TEST(NtNotifyChangeMultipleKeys)
                                             TRUE);
         ok_ntstatus(Status, STATUS_PENDING);
         /* Check event state */
-        Status = WaitForSingleObject(EventHandle, 0);
-        ok_ntstatus(Status, WAIT_TIMEOUT);
+        WaitStatus = WaitForSingleObject(EventHandle, 0);
+        ok_eq_ulong(WaitStatus, WAIT_TIMEOUT);
         /* Make change to the secondary key */
         Status = NtOpenKey(&SecondaryKeyHandle, KEY_SET_VALUE | KEY_NOTIFY | DELETE, &SecondaryObjectAttributes);
         if (NT_SUCCESS(Status))
@@ -268,8 +269,8 @@ START_TEST(NtNotifyChangeMultipleKeys)
         }
         /* Verify that the event is signaled */
         NtTestAlert();
-        Status = WaitForSingleObject(EventHandle, 100);
-        ok_ntstatus(Status, WAIT_OBJECT_0);
+        WaitStatus = WaitForSingleObject(EventHandle, 100);
+        ok_eq_ulong(WaitStatus, WAIT_OBJECT_0);
     }
     else
     {
