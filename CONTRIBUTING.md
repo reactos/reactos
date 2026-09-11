@@ -1,117 +1,43 @@
-# How To Contribute
+# Contributing Guidelines
+There are several ways to contribute to ReactOS. You can [make a donation](https://reactos.org/donate/), [file a bug report](https://jira.reactos.org/), [add documentation to our wiki](https://reactos.org/wiki) or submit a code contribution. This document focuses on our guidelines for submitting code contributions.
 
-There are several ways to contribute to the development of ReactOS. The most often encountered problem is not knowing where to begin or what to do. If you are able to program or understand the technical information that is pertinent to this project, helping the development can be easy.
+> [!CAUTION]
+> If you have worked with private Windows source code, or contributed to projects derived from such code, we cannot accept contributions from you in any area related to that work. **Leaked Windows source code and the Windows Research Kernel (WRK) are considered private.**
+>
+> Publicly available information, including documentation, headers, and expired patents, may be used for research purposes.
 
-- [What To Do?](#what-to-do)
-- [How To Contribute?](#how-to-contribute)
-- [Where To Start?](#where-to-start)
+> [!WARNING]
+> In order to comply with international copyright law, we require all code contributions to be made using your legal identity. Using your legal identity allows contributions to be audited against individuals known to have access to Windows source code.
 
-**Legal notice:** If you have seen Microsoft Windows source code, your contribution won't be accepted because of potential copyright violation. Before contributing, you must affirm that the following is true:
->I hereby swear that I have not used nor seen the source code to any version of the Windows operating system
->nor any Microsoft product that may be related to the proposed project that is under a license incompatible
->with contribution to ReactOS, including but not limited to the leaked Windows 2000 source code and the Windows Research Kernel.
+## Rules
+- **Use your legal name and a real email.** We do not accept anonymous code contributions. Every commit must have the author's full legal name. We recommend having the same name and email set on your GitHub profile.
 
-## What To Do?
+> [!NOTE]
+> Media, including wallpapers, themes, icons, and sounds, can be contributed using an alias.
 
-### Fix bugs
+- **Respect our [Coding Style](https://reactos.org/wiki/Coding_Style) and [Programming Guidelines](https://reactos.org/wiki/Programming_Guidelines).**
+- **Keep your contribution small and focused.** Large pull requests take a long time to review since maintainers must consider all the implications of your changes. It's more effective to contribute several smaller pull requests.
+- **AI-assisted contributions must be well understood.** You may use AI to assist your work, but you must be able to explain how your code works. Contributions that appear to be fully AI-generated will be rejected.
+- **Do not be afraid to ask questions.** Ask our developers in our [official chat](https://chat.reactos.org/).
 
-You can try to fix a few bugs that are already listed in [JIRA]. Squashing bugs is not a simple task. It requires a lot more skill than simply searching for them, and can be time consuming; however, by doing that you greatly help ReactOS become a stable system.
+## Making a Code Contribution
+We use [Git](https://git-scm.com/) as our version control system and [GitHub](https://github.com/reactos/reactos) to manage code contributions. Code contributions on GitHub are called [pull requests](https://docs.github.com/en/pull-requests/reference/pull-requests), which consist of one or more [Git commits](https://docs.github.com/en/pull-requests/reference/commits). Project maintainers review pull requests and merge approved pull requests into the source tree. For more information about how we manage pull requests, see [Rules for Managing Pull Requests](PULL_REQUEST_MANAGEMENT.md).
 
-_NOTE: patches related to 3rd party code such as Wine or BtrFS should be sent to upstream of the said projects. See [3rd Party Files.txt], [README.WINE] and [README.FSD] in [media/doc](media/doc) for details._
+Commit messages must be prefixed with the components updated in square brackets. Include any related Jira tickets in the message. A commit message template is available in [.gitmessage](.gitmessage).
 
-### Fix tests
+## What Can I Work On?
+- **Fix tests.** Test results can be found at [reactos.org/testman](https://reactos.org/testman). Generally speaking, tests that pass on Windows but fail on ReactOS are considered ReactOS defects.
+- **Fix bugs.** Bugs are tracked on [Jira](https://jira.reactos.org/). Bugs that are expected to be easy to solve have the `starter-project` label. You can find a list of starter projects [here](https://jira.reactos.org/issues/?jql=labels%20%3D%20starter-project).
 
-Tests are used to check the functionality and correctness of APIs on ReactOS compared to Windows implementations. There are some unit tests that you could help ReactOS pass, which can be found [in the Web Test Manager][testman] and some that are broken or yet to be written.
+> [!IMPORTANT]
+> Contributions for third party code, such as Wine, should be sent upstream.
 
-### Fix Coverity scans
+- **Add new features.** ReactOS is not feature complete. Like bugs, feature requests are also tracked on Jira. You can find a list of feature requests [here](https://jira.reactos.org/issues/?jql=project%20%3D%20CORE%20AND%20issuetype%20%3D%20%22New%20Feature%22%20AND%20status%20%3D%20Open).
 
-[Coverity] is enhanced static analysis that uncovers leaks, buffer overflows, security issues and other. We do such scans on ReactOS codebase pretty often. You can [request][request-coverity] to see Coverity 'defects' and help to fix them.
+> [!WARNING]
+> Many missing features are protected by international patents. Do not contribute features currently protected by patents.
 
-### Test ReactOS
-
-By localizing bugs, developers can identify what causes the bug and which part it affects. There are a variety of methods to [debug] ReactOS while testing it. After identifying a bug, check if it is already known about by searching on JIRA and adding any additional information to the report. If you think that it is an unidentified bug, consider [filing a bug report].
-
-### Implement new things
-
-Considering ReactOS is alpha quality software, there is a lot of [missing functionality] that Windows operating systems have. Before starting a project to implement something, find out whether another person is working on the same thing. If you find that someone is already working on it, ask if any assistance is needed for what specifically is being worked on or a related project. More often than not, someone will start to implement something and move onto something else before it's complete. Make sure you stay committed to what you are going to implement, and do not be afraid to ask for assistance if you need help with something.
-
-### Write documentation
-
-There are some important points if you would like to help document ReactOS:
-
-1. Make sure the documentation does not exist yet (if it does, help improve it).
-2. Respect [clean room reverse engineering] practices.
-3. Add your knowledge to a place where the other developers can find it.
-
-## How To Contribute?
-
-Your contribution can be of numerous forms. We currently accept two ways to contribute - Pull Requests and Patches.
-
-### Pull Requests
-
-Since our [migration to GitHub] we gladly accept __[Pull Requests]__. Pull requests let you tell others about changes you have pushed to a repository on GitHub. Once a pull request is opened, you can discuss and review the potential changes with collaborators and add follow-up commits before the changes are merged into the repository. __Pull request is a preferred way to submit your work__ - it makes reviewing and merging your contribution much easier.
-
-### Patches
-
-A __[patch]__ is a set of changes to existing source code. The changes in a patch can be merged into existing source code. This process is referred to as applying a patch (to source code). Which changes a patch contains and the way the patch is structured can have significant impact on the consequences that can happen from applying the patch.
-
-See [Submitting Patches] for details.
-
-### Commit style
-
-Our commit style is defined in a __[commit template]__. Use it as a reference or turn it on using `git config commit.template .gitmessage`. This will set this template as an initial commit message for the new commits in your local repository.
-
-### Rules and Recommendations
-
-- *Use your __real name__ and __real email__.* We do not accept anonymous code contributions!
-  - Every commit that changes code or translations should have author's full legal name (in latin letters, diacritics allowed).
-  - It's recommended to have the same full name set in GitHub profile (in the [Name field here][GitHub Profile Settings]) that matches one specified in commits.
-- There is an exception for media changes, such as changes of art (wallpapers, themes, icons, sounds) and out-of-code documentation.
-  - In these specific cases it's allowed to use a nickname or alias as author's name, and it's recommended to have the same name set in GitHub profile (in the [Name field here][GitHub Profile Settings]) matching one specified in commits.
-- In any case the author must use a real e-mail address, this includes git commits (`user.email` setting) and GitHub [e-mail settings][GitHub Email Settings] - the checkbox "Keep my email addresses private" must be unchecked there.
-  - In order to *keep your privacy*, select appropriate "Primary email address" that will be applied to your commits in GitHub [e-mail settings][GitHub Email Settings].
-- *Ensure your contribution is properly described.* Include the relevant issue number if applicable.
-- *Put only related changes.* It will make reviewing easier as the reviewer needs to recall less information about the existing source code that is changed.
-- *Search for similar pull requests/patches before submitting.* It may be that a similar pull request or issue was opened previously. Comment and review on that one instead.
-- *Keep your contribution small and focused on the topic.* It can be tempting to fix existing issues as you come across them while reading the source code. Resist the temptation and put in a note in the source code instead, or (even better) put the issue in the issue tracking system.
-- *Respect our __[Coding Style]__ and __[Programming Guidelines]__.*
-- *Do not be afraid to ask questions.* Ask our developers in the [chat].
-
-To amend your commit with your name and e-mail (in any case you've forgot to set your name/e-mail) please take a look at this [guide](https://reactos.org/wiki/ReactOS_Git_For_Dummies#Amending_your_commit_with_name.2FE-mail). To set your name/e-mail globally for future commits that you push, [read this](https://reactos.org/wiki/ReactOS_Git_For_Dummies#Assign_commits_with_your_name_.26_E-mail_automatically).
-
-## Where To Start?
-
-Finding a good project to start with can be a challenge, because when starting out you are (usually) not aware of all the possibilities. To help you find a project, here are some ideas to try:
-
-- Find a test that fails, and try to make it succeed: <https://reactos.org/testman/>
-- Look around in JIRA, and if you have problems finding nice projects to start with, there is a label for this: <https://jira.reactos.org/issues/?jql=labels%20%3D%20starter-project>
-- Ask for help in the [chat]
-- Additionally, there are some tests that cause crashes/hangs, but these might be slightly harder: <https://jira.reactos.org/browse/ROSTESTS-125>
-
-  [clean room reverse engineering]:                              https://en.wikipedia.org/wiki/Clean_room_design
-  [debug]:                                                       https://reactos.org/wiki/Debugging
-  [JIRA]:                                                        https://jira.reactos.org/
-  [filing a bug report]:                                         https://reactos.org/wiki/File_Bugs
-  [testman]:                                                     https://reactos.org/testman/
-  [migration to GitHub]:                                         https://reactos.org/project-news/reactos-repository-migrated-github/
-  [humans are terrible at tracking large amount of information]: https://www.eurekalert.org/pub_releases/2005-03/aps-hmc030805.php
-  [Pull requests]:                                               https://help.github.com/articles/about-pull-requests/
-  [GitHub Profile Settings]:                                     https://github.com/settings/profile
-  [GitHub Email Settings]:                                       https://github.com/settings/emails
-  [tips for reviewing patches]:                                  https://www.drupal.org/patch/review
-  [missing functionality]:                                       https://reactos.org/wiki/Missing_ReactOS_Functionality
-  [patch]:                                                       https://git-scm.com/docs/git-format-patch
-  [Submitting Patches]:                                          https://reactos.org/wiki/Submitting_Patches
-  [Coding Style]:                                                https://reactos.org/wiki/Coding_Style
-  [chat]:                                                        https://reactos.org/wiki/Mattermost
-  [Programming Guidelines]:                                      https://reactos.org/wiki/Programming_Guidelines
-  [3rd Party Files.txt]:                                         /media/doc/3rd_Party_Files.txt
-  [README.WINE]:                                                 /media/doc/README.WINE
-  [README.FSD]:                                                  /media/doc/README.FSD
-  [Coverity]:                                                    https://scan.coverity.com/projects/reactos
-  [request-coverity]:                                            https://scan.coverity.com/memberships/new?project_id=reactos
-  [commit template]:                                             .gitmessage
+- **Fix Coverity scans.** [Coverity](https://scan.coverity.com/projects/reactos) is a static code analysis tool that can detect hard to find defects. You can request access [here](https://scan.coverity.com/memberships/new?project_id=reactos).
 
 # See Also
-
 - [Rules for managing Pull Requests](PULL_REQUEST_MANAGEMENT.md)
