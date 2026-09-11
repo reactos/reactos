@@ -3,7 +3,7 @@
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     Chinese (Traditional) resource file
  * TRANSLATORS: Copyright 2016 Henry Tang Ih <henrytang2@hotmail.com>
- *              Copyright 2021 Chan Chilung <eason066@gmail.com>
+ *              Copyright 2021-2026 Chan Chilung <eason066@gmail.com>
  * REFERENCES:  Wine's Chinese (Traditional) resource translation
  */
 
@@ -49,8 +49,8 @@ IDR_BROWSE_MAIN_MENU MENU
 
 STRINGTABLE
 {
-    IDS_INTERNET "Internet Browser"
-    IDS_INTERNET_DESCRIPTION "Opens a Web browser and displays information on the Internet."
+    IDS_INTERNET "網際網路瀏覽器"
+    IDS_INTERNET_DESCRIPTION "開啟網頁瀏覽器，並顯示網際網路上的資訊。"
 
     IDS_TB_BACK             "上一頁"
     IDS_TB_FORWARD          "下一頁"
