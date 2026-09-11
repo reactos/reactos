@@ -282,6 +282,15 @@ static BOOLEAN VioLocalCommand(PVIOSTOR_ADAPTER_EXTENSION Adapter,
     Buffer = (PUCHAR)Srb->DataBuffer;
     Length = Srb->DataTransferLength;
     OpCode = Srb->Cdb[0];
+    if (virtio_is_feature_enabled(Adapter->Features, VIRTIO_BLK_F_RO) &&
+        (OpCode == SCSIOP_WRITE || OpCode == SCSIOP_WRITE12 ||
+         OpCode == SCSIOP_WRITE16 || OpCode == SCSIOP_WRITE_VERIFY ||
+         OpCode == SCSIOP_WRITE_VERIFY12 || OpCode == SCSIOP_WRITE_VERIFY16)) {
+        DPrintf(0, "viostor: reject write on read-only device opcode=0x%02x\n",
+                OpCode);
+        VioComplete(Adapter, Srb, SRB_STATUS_INVALID_REQUEST);
+        return TRUE;
+    }
     DPrintf(1, "viostor: local opcode=0x%02x cdb_length=%u data_length=%lu\n",
             OpCode, Srb->CdbLength, Length);
     switch (OpCode) {
@@ -462,6 +471,17 @@ static BOOLEAN VioLocalCommand(PVIOSTOR_ADAPTER_EXTENSION Adapter,
         HeaderLength = OpCode == SCSIOP_MODE_SENSE10 ? 8 : 4;
         PageOffset = HeaderLength;
         RtlZeroMemory(Buffer, Length);
+        /* Device-Specific Parameter byte: WP bit (bit 7) for a read-only
+           device. Byte 2 in the 6-byte header, byte 3 in the 10-byte one. */
+        if (virtio_is_feature_enabled(Adapter->Features, VIRTIO_BLK_F_RO)) {
+            if (OpCode == SCSIOP_MODE_SENSE10) {
+                if (Length > 3)
+                    Buffer[3] |= 0x80;
+            } else {
+                if (Length > 2)
+                    Buffer[2] |= 0x80;
+            }
+        }
         if ((Srb->Cdb[2] & 0x3f) == 0x08 ||
             (Srb->Cdb[2] & 0x3f) == 0x3f) {
             TotalLength = HeaderLength + 2 + 18;
@@ -749,7 +769,8 @@ static BOOLEAN VioInitializeDevice(PVIOSTOR_ADAPTER_EXTENSION Adapter)
     Features &= (1ULL << VIRTIO_BLK_F_FLUSH) |
                 (1ULL << VIRTIO_BLK_F_CONFIG_WCE) |
                 (1ULL << VIRTIO_BLK_F_SEG_MAX) |
-                (1ULL << VIRTIO_BLK_F_SIZE_MAX);
+                (1ULL << VIRTIO_BLK_F_SIZE_MAX) |
+                (1ULL << VIRTIO_BLK_F_RO);
     Status = virtio_set_features(&Adapter->Device, Features);
     DPrintf(0, "viostor: feature_negotiation requested=0x%I64x status=0x%lx\n",
             Features, Status);

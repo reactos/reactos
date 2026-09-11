@@ -372,7 +372,7 @@ MiniportStartIo(
 {
     BOOLEAN Result;
 
-    DPRINT1("MiniportStartIo: entering with Miniport %p Srb %p (Irql %lu)\n",
+    DPRINT("MiniportStartIo: entering with Miniport %p Srb %p (Irql %lu)\n",
             Miniport, Srb, KeGetCurrentIrql());
 
     Result = Miniport->InitData->HwStartIo(&Miniport->MiniportExtension->HwDeviceExtension, Srb);
