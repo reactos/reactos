@@ -121,13 +121,13 @@ START_TEST(NtNotifyChangeMultipleKeys)
         /* cleanup */
         CloseHandle(WatchThread1Handle);
         WatchThread1Handle = NULL;
-        WatchThread1State->Status = 0xdeadbeef;
-        WatchThread1State->IoStatusBlock->Status = 0xdeadbeef;
     }
     else
     {
         skip("Failed to create watch thread");
     }
+    HeapFree(GetProcessHeap(), 0, WatchThread1State);
+    WatchThread1State = NULL;
     /* Watch again, but this time close the handle without making any change */
     WatchThread2State = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*WatchThread2State));
     if (WatchThread2State == NULL)
@@ -156,6 +156,8 @@ START_TEST(NtNotifyChangeMultipleKeys)
     {
         skip("Failed to create watch thread");
     }
+    HeapFree(GetProcessHeap(), 0, WatchThread2State);
+    WatchThread2State = NULL;
 
     /* Event-based asynchronous mode */
 
@@ -345,14 +347,6 @@ Cleanup:
     if (EventHandle)
     {
         CloseHandle(EventHandle);
-    }
-    if (WatchThread1State)
-    {
-        HeapFree(GetProcessHeap(), 0, WatchThread1State);
-    }
-    if (WatchThread2State)
-    {
-        HeapFree(GetProcessHeap(), 0, WatchThread2State);
     }
     if (ApcContext)
     {
