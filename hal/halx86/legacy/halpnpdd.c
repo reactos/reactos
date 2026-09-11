@@ -12,6 +12,9 @@
 #define NDEBUG
 #include <debug.h>
 
+#include <initguid.h>
+#include <wdmguid.h>
+
 typedef enum _EXTENSION_TYPE
 {
     PdoExtensionType = 0xC0,
@@ -135,6 +138,32 @@ HalpAddDevice(IN PDRIVER_OBJECT DriverObject,
     return Status;
 }
 
+VOID
+NTAPI
+HalpBusInterfaceReference(PVOID Context)
+{
+    PPDO_EXTENSION HalPdoExtension = ((PDEVICE_OBJECT)Context)->DeviceExtension;
+    InterlockedIncrement(&HalPdoExtension->InterfaceReferenceCount);
+}
+
+VOID
+NTAPI
+HalpBusInterfaceDereference(PVOID Context)
+{
+    PPDO_EXTENSION HalPdoExtension = ((PDEVICE_OBJECT)Context)->DeviceExtension;
+    InterlockedDecrement(&HalPdoExtension->InterfaceReferenceCount);
+}
+
+PDMA_ADAPTER
+NTAPI
+HalpBusInterfaceGetDmaAdapter(_Inout_opt_ PVOID Context,
+                              _In_        PDEVICE_DESCRIPTION DeviceDescriptor,
+                              _Out_       PULONG NumberOfMapRegisters)
+{
+    DeviceDescriptor->BusNumber = 0;
+    return HalpGetDmaAdapter(Context, DeviceDescriptor, NumberOfMapRegisters);
+}
+
 NTSTATUS
 NTAPI
 HalpQueryInterface(IN PDEVICE_OBJECT DeviceObject,
@@ -145,12 +174,51 @@ HalpQueryInterface(IN PDEVICE_OBJECT DeviceObject,
                    IN PINTERFACE Interface,
                    OUT PULONG Length)
 {
-    DPRINT1("HalpQueryInterface({%08X-%04X-%04X-%02X%02X-%02X%02X%02X%02X%02X%02X}) is UNIMPLEMENTED\n",
+    if (IsEqualIID(InterfaceType, &GUID_BUS_INTERFACE_STANDARD))
+    {
+        PBUS_INTERFACE_STANDARD BusInterface = (PBUS_INTERFACE_STANDARD)Interface;
+
+        *Length = sizeof(*BusInterface);
+        if (InterfaceBufferSize < sizeof(*BusInterface))
+            return STATUS_BUFFER_TOO_SMALL;
+        
+        RtlZeroMemory(BusInterface, sizeof(*BusInterface));
+        BusInterface->Size = sizeof(*BusInterface);
+        BusInterface->Version = 1;
+        BusInterface->Context = DeviceObject;
+        BusInterface->InterfaceDereference = HalpBusInterfaceDereference;
+        BusInterface->InterfaceReference = HalpBusInterfaceDereference;
+        BusInterface->GetDmaAdapter = HalpBusInterfaceGetDmaAdapter;
+    }
+    else if (IsEqualIID(InterfaceType, &GUID_PCI_BUS_INTERFACE_STANDARD))
+    {
+        PPCI_BUS_INTERFACE_STANDARD PciBusInterface = (PPCI_BUS_INTERFACE_STANDARD)Interface;
+        *Length = sizeof(*PciBusInterface);
+        if (InterfaceBufferSize < sizeof(*PciBusInterface))
+        {
+            DPRINT1("HalpQueryInterface Buffer Given: %X", InterfaceBufferSize);
+            return STATUS_BUFFER_TOO_SMALL;
+        }
+        
+        RtlZeroMemory(PciBusInterface, sizeof(*PciBusInterface));
+        PciBusInterface->Size = sizeof(*PciBusInterface);
+        PciBusInterface->Version = 1;
+        PciBusInterface->Context = DeviceObject;
+        PciBusInterface->InterfaceDereference = HalpBusInterfaceDereference;
+        PciBusInterface->InterfaceReference = HalpBusInterfaceDereference;
+        PciBusInterface->WriteConfig = (PCI_READ_WRITE_CONFIG)HaliPciInterfaceWriteConfig;
+        PciBusInterface->ReadConfig = (PCI_READ_WRITE_CONFIG)HaliPciInterfaceReadConfig;
+    }
+    else
+    {
+        DPRINT1("HalpQueryInterface({%08X-%04X-%04X-%02X%02X-%02X%02X%02X%02X%02X%02X}) is UNIMPLEMENTED\n",
             InterfaceType->Data1, InterfaceType->Data2, InterfaceType->Data3,
             InterfaceType->Data4[0], InterfaceType->Data4[1],
             InterfaceType->Data4[2], InterfaceType->Data4[3],
             InterfaceType->Data4[4], InterfaceType->Data4[5],
             InterfaceType->Data4[6], InterfaceType->Data4[7]);
+    }
+
     return STATUS_NOT_SUPPORTED;
 }
 

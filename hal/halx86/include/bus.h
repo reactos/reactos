@@ -361,6 +361,24 @@ HalpWritePCIConfig(
 
 ULONG
 NTAPI
+HaliPciInterfaceReadConfig(_In_ PBUS_HANDLER RootBusHandler,
+                           _In_ ULONG BusNumber,
+                           _In_ PCI_SLOT_NUMBER SlotNumber,
+                           _In_ PVOID Buffer,
+                           _In_ ULONG Offset,
+                           _In_ ULONG Length);
+
+ULONG
+NTAPI
+HaliPciInterfaceWriteConfig(_In_ PBUS_HANDLER RootBusHandler,
+                            _In_ ULONG BusNumber,
+                            _In_ PCI_SLOT_NUMBER SlotNumber,
+                            _In_ PVOID Buffer,
+                            _In_ ULONG Offset,
+                            _In_ ULONG Length);
+
+ULONG
+NTAPI
 HalpGetPCIData(
     IN PBUS_HANDLER BusHandler,
     IN PBUS_HANDLER RootBusHandler,
