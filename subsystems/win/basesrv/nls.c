@@ -161,7 +161,7 @@ CSR_API(BaseSrvNlsSetMultipleUserInfo)
 
 CSR_API(BaseSrvNlsCreateSection)
 {
-    DPRINT1("%s not yet implemented\n", __FUNCTION__);
+    UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
 
