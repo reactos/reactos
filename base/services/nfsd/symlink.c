@@ -198,7 +198,11 @@ static int parse_symlink(unsigned char *buffer, uint32_t length, nfs41_upcall *u
     if (status) goto out;
 
     if (args->set)
+#ifdef __REACTOS__
+        status = get_name(&buffer, &length, (const char **)&args->target_set);
+#else
         status = get_name(&buffer, &length, &args->target_set);
+#endif
     else
         args->target_set = NULL;
 

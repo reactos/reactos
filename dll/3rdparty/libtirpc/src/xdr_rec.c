@@ -421,7 +421,11 @@ xdrrec_getoutbase(xdrs)
 	switch (xdrs->x_op) {
 
 	case XDR_ENCODE:
+#ifdef __REACTOS__
+        buf = (int32_t *)rstrm->out_base;
+#else
         buf = rstrm->out_base;
+#endif
 		break;
 
 	case XDR_DECODE:

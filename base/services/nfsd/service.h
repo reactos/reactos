@@ -126,7 +126,11 @@ extern "C" {
 //  RETURN VALUE:
 //    none
 //
+#ifdef __REACTOS__
+   void AddToMessageLog(LPCTSTR lpszMsg);
+#else
    void AddToMessageLog(LPTSTR lpszMsg);
+#endif
 //////////////////////////////////////////////////////////////////////////////
 
 
