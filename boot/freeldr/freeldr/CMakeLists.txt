@@ -44,6 +44,7 @@ list(APPEND FREELDR_BOOTLIB_SOURCE
     lib/comm/rs232.c
     ## add KD support
     lib/fs/btrfs.c
+    lib/fs/exfat.c
     lib/fs/ext.c
     lib/fs/fat.c
     lib/fs/fs.c

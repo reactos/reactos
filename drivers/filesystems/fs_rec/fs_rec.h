@@ -170,6 +170,7 @@ typedef enum _FILE_SYSTEM_TYPE
 {
     FS_TYPE_UNUSED,
     FS_TYPE_VFAT,
+    FS_TYPE_EXFAT,
     FS_TYPE_NTFS,
     FS_TYPE_CDFS,
     FS_TYPE_UDFS,
@@ -207,6 +208,13 @@ FsRecCdfsFsControl(
 NTSTATUS
 NTAPI
 FsRecVfatFsControl(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PIRP Irp
+);
+
+NTSTATUS
+NTAPI
+FsRecExFatFsControl(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp
 );

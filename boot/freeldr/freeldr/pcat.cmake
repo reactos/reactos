@@ -159,6 +159,7 @@ add_library(freeldr_common
     ${PCATLDR_BOOTMGR_SOURCE}
 )
 target_compile_definitions(freeldr_common PRIVATE _FRLDRLIB_)
+target_link_libraries(freeldr_common fatfs)
 
 if(MSVC AND CMAKE_C_COMPILER_ID STREQUAL "Clang")
     # We need to reduce the binary size
