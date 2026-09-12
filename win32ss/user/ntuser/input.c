@@ -28,7 +28,7 @@ PINPUT_DEVICE_INFO gpInputDeviceInfo = NULL;
 PERESOURCE gpDeviceInfoListMutex = NULL;
 
 static DWORD LastInputTick = 0;
-static HANDLE ghMouseDevice;
+HANDLE ghMouseDevice;
 
 /* FUNCTIONS *****************************************************************/
 
