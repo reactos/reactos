@@ -38,6 +38,15 @@
 
 #include "resource.h"
 
+typedef enum _CONSOLE_MODE
+{
+    AuthorMode = 0,
+    UserModeFull,
+    UserModeMultiple,
+    UserModeSingle
+} CONSOLE_MODE, *PCONSOLE_MODE;
+
+
 #include "CSnapinCacheEntry.h"
 #include "CSnapin.h"
 #include "CConsoleWnd.h"
@@ -45,6 +54,6 @@
 
 #include "CAddDialog.h"
 #include "CCustomizeDialog.h"
-
+#include "COptionsDialog.h"
 
 #endif /* _MMC_PCH_ */

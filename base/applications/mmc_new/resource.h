@@ -28,7 +28,8 @@
 #define IDM_FILE_SAVE          1012
 #define IDM_FILE_SAVEAS        1013
 #define IDM_FILE_ADD           1014
-#define IDM_FILE_EXIT          1015
+#define IDM_FILE_OPTIONS       1015
+#define IDM_FILE_EXIT          1016
 
 #define IDM_ACTION_NEW         1050
 #define IDM_ACTION_RENAME      1051
@@ -76,6 +77,28 @@
 #define IDC_CUSTOMIZE_ACTIONSPANE     3107
 #define IDC_CUSTOMIZE_SNAPIN_MENUS    3108
 #define IDC_CUSTOMIZE_SNAPIN_TOOLBARS 3109
+
+#define IDD_CONSOLEOPTIONS            3200
+#define IDC_CONSOLEICON               3201
+#define IDC_CONSOLENAME               3202
+#define IDC_CONSOLESYMBOL             3203
+#define IDC_CONSOLEMODE               3204
+#define IDC_CONSOLEDESCRIPTION        3205
+#define IDC_CONSOLENOSAVE             3206
+#define IDC_CONSOLECUSTOM             3207
+
+
+#define IDS_AUTHORMODE                5000
+#define IDS_USERMODE_FULL             5001
+#define IDS_USERMODE_MULTIPLE         5002
+#define IDS_USERMODE_SINGLE           5003
+
+#define IDS_AUTHORMODE_DESC           5004
+#define IDS_USERMODE_FULL_DESC        5005
+#define IDS_USERMODE_MULTIPLE_DESC    5006
+#define IDS_USERMODE_SINGLE_DESC      5007
+
+
 
 #ifndef IDC_STATIC
 #define IDC_STATIC  -1

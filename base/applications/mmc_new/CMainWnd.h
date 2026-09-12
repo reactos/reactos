@@ -28,7 +28,7 @@ private:
     int m_nConsoleCount;
     HMENU m_hMenuConsoleSmall;
     HMENU m_hMenuConsoleLarge;
-    bool m_AppAuthorMode;
+    CONSOLE_MODE m_ConsoleMode;
 
     CToolbar<DWORD_PTR> m_ToolBar;
     int m_iToolBarHeight;
@@ -58,6 +58,7 @@ public:
         COMMAND_ID_HANDLER(IDM_FILE_SAVE, OnFileSave)
         COMMAND_ID_HANDLER(IDM_FILE_SAVEAS, OnFileSaveAs)
         COMMAND_ID_HANDLER(IDM_FILE_ADD, OnFileAdd)
+        COMMAND_ID_HANDLER(IDM_FILE_OPTIONS, OnFileOptions)
         COMMAND_ID_HANDLER(IDM_FILE_EXIT, OnFileExit)
 
         COMMAND_ID_HANDLER(IDM_VIEW_CUSTOMIZE, OnViewCustomize)
@@ -160,6 +161,7 @@ public:
     LRESULT OnFileSave(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
     LRESULT OnFileSaveAs(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
     LRESULT OnFileAdd(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
+    LRESULT OnFileOptions(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
     LRESULT OnFileExit(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
     LRESULT OnViewCustomize(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
     LRESULT OnWindowsCascade(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
@@ -187,5 +189,7 @@ public:
     HIMAGELIST SnapinImageList();
     int RegisterView(CConsoleWnd *pView);
     void UnregisterView(CConsoleWnd *pView);
+    CONSOLE_MODE GetConsoleMode();
+    void SetConsoleMode(CONSOLE_MODE ConsoleMode);
 };
 

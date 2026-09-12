@@ -26,7 +26,7 @@ static TBBUTTON TbButtons[] =
 CMainWnd::CMainWnd()
     : m_NewConsoleCount(0)
     , m_nConsoleCount(0)
-    , m_AppAuthorMode(false)
+    , m_ConsoleMode(AuthorMode)
     , m_bToolBarVisible(true)
     , m_NextViewId(1)
 {
@@ -72,7 +72,6 @@ CMainWnd::OnCreate(UINT nMessage, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     LPCTSTR lpFileName = (LPCTSTR)(((LPCREATESTRUCT)lParam)->lpCreateParams);
     RECT rect;
 
-    m_AppAuthorMode = TRUE;
     m_bStandardMenusVisible = TRUE;
     UpdateMenu();
     SetWindowTextW(L"ReactOS Management Console");
@@ -228,6 +227,17 @@ CMainWnd::OnFileAdd(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
     if (child == NULL)
         return 0;
     CAddDialog dlg(this, child);
+    dlg.DoModal(m_hWnd, (LPARAM)child);
+    return 0;
+}
+
+LRESULT
+CMainWnd::OnFileOptions(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
+{
+    CConsoleWnd* child = GetActiveChildInfo();
+    if (child == NULL)
+        return 0;
+    COptionsDialog dlg(this, child);
     dlg.DoModal(m_hWnd, (LPARAM)child);
     return 0;
 }
@@ -460,4 +470,16 @@ CMainWnd::UpdateLayout()
     m_ToolBar.SetWindowPos(NULL, rcToolBar.left, rcToolBar.top, rcToolBar.right, rcToolBar.bottom, nToolBarFlags);
 
     m_MDIClient.SetWindowPos(NULL, rcClient.left, rcClient.top, rcClient.right, rcClient.bottom, SWP_NOZORDER);
+}
+
+CONSOLE_MODE
+CMainWnd::GetConsoleMode()
+{
+    return m_ConsoleMode;
+}
+
+void
+CMainWnd::SetConsoleMode(CONSOLE_MODE ConsoleMode)
+{
+    m_ConsoleMode = ConsoleMode;
 }

@@ -25,6 +25,7 @@ BEGIN
         MENUITEM "Save &As...", IDM_FILE_SAVEAS
         MENUITEM SEPARATOR
         MENUITEM "Add &Module...\tCtrl+M", IDM_FILE_ADD
+        MENUITEM "Options...", IDM_FILE_OPTIONS
         MENUITEM SEPARATOR
         MENUITEM "E&xit\tAlt+F4", IDM_FILE_EXIT
     END
@@ -102,6 +103,28 @@ BEGIN
     DEFPUSHBUTTON "OK", IDOK, 157, 200, 50, 14
 END
 
+IDD_CONSOLEOPTIONS DIALOGEX 0, 0, 252, 218
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_VISIBLE | WS_CAPTION
+CAPTION "Console"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    ICON "", IDC_CONSOLEICON, 7, 7, 20, 20
+    EDITTEXT IDC_CONSOLENAME, 37, 11, 134, 12, NOT WS_TABSTOP | WS_BORDER | ES_AUTOHSCROLL
+    PUSHBUTTON "C&hange Icon...", IDC_CONSOLESYMBOL, 177, 10, 68, 14
+
+    LTEXT "These options take effect the next time you open the MMC.", IDC_STATIC, 7, 44, 238, 19
+    LTEXT "&Console mode:", IDC_STATIC, 7, 70, 56, 8
+    COMBOBOX IDC_CONSOLEMODE, 67, 68, 178, 130, CBS_DROPDOWNLIST | WS_GROUP
+    GROUPBOX "Description", IDC_STATIC, 7, 87, 238, 60
+    LTEXT "", IDC_CONSOLEDESCRIPTION, 14, 100, 224, 43
+
+    AUTOCHECKBOX "Do not &save changes to this console", IDC_CONSOLENOSAVE, 13, 160, 160, 10
+    AUTOCHECKBOX "Allow the user to customize &views", IDC_CONSOLECUSTOM, 13, 172, 160, 10
+
+    DEFPUSHBUTTON   "OK",IDOK,140,197,50,14,WS_TABSTOP
+    PUSHBUTTON      "Cancel",IDCANCEL,194,197,50,14,WS_TABSTOP
+END
+
 STRINGTABLE
 BEGIN
     IDS_APPTITLE "ReactOS Management Console"
@@ -109,4 +132,15 @@ BEGIN
     IDS_MODULE "Module"
     IDS_VENDOR "Vendor"
     IDS_ABOUTTITLE "About"
+
+    IDS_AUTHORMODE "Author mode"
+    IDS_USERMODE_FULL "User mode - full access"
+    IDS_USERMODE_MULTIPLE "User mode - limited access, multiple window"
+    IDS_USERMODE_SINGLE "User mode - limited access, single window"
+
+    IDS_AUTHORMODE_DESC "Grants users full access to all MMC functionality, including the ability to add or remove snap-ins, create new windows, create taskpad views, and view all portions of the tree."
+    IDS_USERMODE_FULL_DESC "Prevents useres from adding or removing snap-ins or changing snap-in console properties. Users have full access to the tree."
+    IDS_USERMODE_MULTIPLE_DESC "Prevents users from accessing areas of the tree that are not visible in snap-in console windows."
+    IDS_USERMODE_SINGLE_DESC "Opens the snap-in console in single-window mode and prevents users from accessing areas of the tree that are not visible in that snap-in console window."
+
 END

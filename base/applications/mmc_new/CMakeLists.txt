@@ -13,6 +13,7 @@ list(APPEND CPP_SOURCE
     # This is here so that they show up in visual studio:
     CAddDialog.h
     CCustomizeDialog.h
+    COptionsDialog.h
     CConsoleWnd.h
     CMainWnd.h
     CSnapin.h
