@@ -297,7 +297,7 @@ NtfsOpenFile(PDEVICE_EXTENSION DeviceExt,
 
         if (!NT_SUCCESS(Status))
         {
-            DPRINT("Could not make a new FCB, status: %x\n", Status);
+            DPRINT("Open of '%S' failed with %lx\n", FileName, Status);
 
             if (AbsFileName)
                 ExFreePoolWithTag(AbsFileName, TAG_NTFS);
@@ -385,7 +385,7 @@ NtfsCreateFile(PDEVICE_OBJECT DeviceObject,
             return Status;
         }
 
-        DPRINT1("Open by ID: %I64x -> %wZ\n", (*(PULONGLONG)FileObject->FileName.Buffer) & NTFS_MFT_MASK, &FullPath);
+        DPRINT("Open by ID: %I64x -> %wZ\n", (*(PULONGLONG)FileObject->FileName.Buffer) & NTFS_MFT_MASK, &FullPath);
     }
 
     /* This a open operation for the volume itself */
@@ -583,7 +583,8 @@ NtfsCreateFile(PDEVICE_OBJECT DeviceObject,
 
             if (!NT_SUCCESS(Status))
             {
-                DPRINT1("ERROR: Couldn't create file record!\n");
+                DPRINT1("ERROR: Couldn't create '%wZ' (Status %lx)\n",
+                        &FileObject->FileName, Status);
                 return Status;
             }
 
@@ -604,6 +605,36 @@ NtfsCreateFile(PDEVICE_OBJECT DeviceObject,
 
     if (NT_SUCCESS(Status))
     {
+        ACCESS_MASK DesiredAccess = 0;
+        ULONG ShareAccess = Stack->Parameters.Create.ShareAccess;
+
+        if (Stack->Parameters.Create.SecurityContext != NULL)
+            DesiredAccess = Stack->Parameters.Create.SecurityContext->DesiredAccess;
+
+        if (Fcb->OpenHandleCount > 0)
+        {
+            Status = IoCheckShareAccess(DesiredAccess,
+                                        ShareAccess,
+                                        FileObject,
+                                        &Fcb->ShareAccess,
+                                        TRUE);
+        }
+        else
+        {
+            IoSetShareAccess(DesiredAccess,
+                             ShareAccess,
+                             FileObject,
+                             &Fcb->ShareAccess);
+        }
+
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT("Sharing violation opening '%wZ'\n", &FileObject->FileName);
+            NtfsCloseFile(DeviceExt, FileObject);
+            Irp->IoStatus.Information = 0;
+            return Status;
+        }
+
         Fcb->OpenHandleCount++;
         DeviceExt->OpenHandleCount++;
     }
@@ -722,7 +753,13 @@ NtfsCreateDirectory(PDEVICE_EXTENSION DeviceExt,
     NextAttribute = (PNTFS_ATTR_RECORD)((ULONG_PTR)NextAttribute + (ULONG_PTR)NextAttribute->Length);
 
     // Add the $FILE_NAME attribute
-    AddFileName(FileRecord, NextAttribute, DeviceExt, FileObject, CaseSensitive, &ParentMftIndex);
+    Status = AddFileName(FileRecord, NextAttribute, DeviceExt, FileObject, CaseSensitive, &ParentMftIndex);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("ERROR: Failed to add the $FILE_NAME attribute for '%wZ'!\n", &FileObject->FileName);
+        ExFreeToNPagedLookasideList(&DeviceExt->FileRecLookasideList, FileRecord);
+        return Status;
+    }
 
     // save a pointer to the filename attribute
     FilenameAttribute = (PFILENAME_ATTRIBUTE)((ULONG_PTR)NextAttribute + NextAttribute->Resident.ValueOffset);
@@ -786,7 +823,7 @@ NtfsCreateDirectory(PDEVICE_EXTENSION DeviceExt,
         else
             FileMftIndex = FileMftIndex + ((ULONGLONG)FileRecord->SequenceNumber << 48);
 
-        DPRINT1("New File Reference: 0x%016I64x\n", FileMftIndex);
+        DPRINT("New File Reference: 0x%016I64x\n", FileMftIndex);
 
         // Add the filename attribute to the filename-index of the parent directory
         Status = NtfsAddFilenameToDirectory(DeviceExt,
@@ -919,7 +956,13 @@ NtfsCreateFileRecord(PDEVICE_EXTENSION DeviceExt,
     NextAttribute = (PNTFS_ATTR_RECORD)((ULONG_PTR)NextAttribute + (ULONG_PTR)NextAttribute->Length);
 
     // Add the $FILE_NAME attribute
-    AddFileName(FileRecord, NextAttribute, DeviceExt, FileObject, CaseSensitive, &ParentMftIndex);
+    Status = AddFileName(FileRecord, NextAttribute, DeviceExt, FileObject, CaseSensitive, &ParentMftIndex);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("ERROR: Failed to add the $FILE_NAME attribute for '%wZ'!\n", &FileObject->FileName);
+        ExFreeToNPagedLookasideList(&DeviceExt->FileRecLookasideList, FileRecord);
+        return Status;
+    }
 
     // save a pointer to the filename attribute
     FilenameAttribute = (PFILENAME_ATTRIBUTE)((ULONG_PTR)NextAttribute + NextAttribute->Resident.ValueOffset);
@@ -945,7 +988,7 @@ NtfsCreateFileRecord(PDEVICE_EXTENSION DeviceExt,
         else
             FileMftIndex = FileMftIndex + ((ULONGLONG)FileRecord->SequenceNumber << 48);
 
-        DPRINT1("New File Reference: 0x%016I64x\n", FileMftIndex);
+        DPRINT("New File Reference: 0x%016I64x\n", FileMftIndex);
 
         // Add the filename attribute to the filename-index of the parent directory
         Status = NtfsAddFilenameToDirectory(DeviceExt,

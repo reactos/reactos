@@ -42,6 +42,7 @@ NtfsCleanupFile(PDEVICE_EXTENSION DeviceExt,
                 BOOLEAN CanWait)
 {
     PNTFS_FCB Fcb;
+    BOOLEAN DeletePending = FALSE;
 
     DPRINT("NtfsCleanupFile(DeviceExt %p, FileObject %p, CanWait %u)\n",
            DeviceExt,
@@ -70,7 +71,45 @@ NtfsCleanupFile(PDEVICE_EXTENSION DeviceExt,
 
         Fcb->OpenHandleCount--;
 
+        if (Fcb->ShareAccess.OpenCount > 0)
+        {
+            IoRemoveShareAccess(FileObject, &Fcb->ShareAccess);
+        }
+
+        /* A file marked for deletion goes on the last handle. Truncate it first, so the cache
+         * manager drops its pages while there are still clusters to write them back to. */
+        if (Fcb->OpenHandleCount == 0 &&
+            BooleanFlagOn(Fcb->Flags, FCB_DELETE_PENDING))
+        {
+            DeletePending = TRUE;
+
+            if (!NtfsFCBIsDirectory(Fcb))
+            {
+                Fcb->RFCB.FileSize.QuadPart = 0;
+                Fcb->RFCB.ValidDataLength.QuadPart = 0;
+                CcSetFileSizes(FileObject, (PCC_FILE_SIZES)&Fcb->RFCB.AllocationSize);
+            }
+        }
+
         CcUninitializeCacheMap(FileObject, &Fcb->RFCB.FileSize, NULL);
+
+        /* Only once the cache map is gone. Freeing the record while a section still refers to
+         * it faults Mm on the next page-in. */
+        if (DeletePending)
+        {
+            NTSTATUS Status;
+
+            MmFlushImageSection(&Fcb->SectionObjectPointers, MmFlushForDelete);
+
+            Status = NtfsDeleteFileRecord(DeviceExt, Fcb->MFTIndex, FALSE);
+            if (!NT_SUCCESS(Status))
+            {
+                DPRINT1("ERROR: Failed to delete '%wS' (MFT record %I64u), Status %lx\n",
+                        Fcb->ObjectName, Fcb->MFTIndex, Status);
+            }
+
+            Fcb->Flags &= ~FCB_DELETE_PENDING;
+        }
 
         if (Fcb->OpenHandleCount != 0)
         {
