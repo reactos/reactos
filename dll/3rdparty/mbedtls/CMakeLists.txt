@@ -1,6 +1,7 @@
 
-include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/libs
-                    ${REACTOS_SOURCE_DIR}/sdk/include/reactos/zlib)
+# To use `_vsnprintf_s` looks like we have to define MINGW_HAS_SECURE_API
+# and explicitly export it from msvcrt for it to work... what on earth?!
+add_definitions(-DMINGW_HAS_SECURE_API -DCRTDLL)
 
 spec2def(mbedtls.dll mbedtls.spec ADD_IMPORTLIB)
 
@@ -91,15 +92,7 @@ add_library(mbedtls MODULE
     ${SOURCE}
     mbedtls.rc
     ${CMAKE_CURRENT_BINARY_DIR}/mbedtls.def)
-
-set_module_type(mbedtls win32dll)
-add_importlibs(mbedtls advapi32 msvcrt kernel32 ntdll)
-
-# to use `_vsnprintf_s` looks like we have to define MINGW_HAS_SECURE_API
-# and explicitly export it from msvcrt for it to work... what on earth?!
-add_definitions(-DMINGW_HAS_SECURE_API -DCRTDLL)
-
-add_cd_file(TARGET mbedtls DESTINATION reactos/system32 FOR all)
+target_include_directories(mbedtls PUBLIC ${REACTOS_SOURCE_DIR}/sdk/include/reactos/libs/mbedtls)
 
 if(NOT MSVC)
     target_compile_options(mbedtls PRIVATE -Wno-pointer-sign -Wno-unused-function)
@@ -108,3 +101,8 @@ endif()
 if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
     target_compile_options(mbedtls PRIVATE -Wno-tautological-constant-compare)
 endif()
+
+set_module_type(mbedtls win32dll)
+add_importlibs(mbedtls advapi32 msvcrt kernel32 ntdll)
+
+add_cd_file(TARGET mbedtls DESTINATION reactos/system32 FOR all)

@@ -334,7 +334,7 @@ function(add_delay_importlibs _module)
             set(_ext ".dll")
         endif()
         target_link_options(${_module} PRIVATE "/DELAYLOAD:${_basename}${_ext}")
-        target_link_libraries(${_module} "lib${_basename}")
+        target_link_libraries(${_module} lib${_basename})
     endforeach()
     target_link_libraries(${_module} delayimp)
 endfunction()
@@ -383,7 +383,6 @@ function(generate_import_lib _libname _dllname _spec_file __version_arg __dbg_ar
     # This allows us to treat the implib as a regular static library
     set_source_files_properties(${_libfile_tmp} PROPERTIES EXTERNAL_OBJECT TRUE)
     add_library(${_libname} STATIC ${_libfile_tmp} ${_asm_impalias_file})
-
     set_target_properties(${_libname} PROPERTIES LINKER_LANGUAGE "C")
 endfunction()
 
@@ -438,6 +437,7 @@ function(spec2def _dllname _spec_file)
 
     if(__spec2def_ADD_IMPORTLIB)
         generate_import_lib(lib${_file} ${_dllname} ${_spec_file} "${__version_arg}" "${__dbg_arg}")
+        target_include_directories(lib${_file} INTERFACE $<TARGET_PROPERTY:${_file},INTERFACE_INCLUDE_DIRECTORIES>)
         if(__spec2def_NO_PRIVATE_WARNINGS)
             set_property(TARGET lib${_file} APPEND PROPERTY STATIC_LIBRARY_OPTIONS /ignore:4104)
         endif()
