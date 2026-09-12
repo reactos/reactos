@@ -28,24 +28,6 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(msisip);
 
-BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
-{
-    TRACE("(0x%p, %d, %p)\n", hinstDLL, fdwReason, lpvReserved);
-
-    switch (fdwReason)
-    {
-#ifndef __REACTOS__
-        case DLL_WINE_PREATTACH:
-            return FALSE;    /* prefer native version */
-#endif
-        case DLL_PROCESS_ATTACH:
-            DisableThreadLibraryCalls(hinstDLL);
-            break;
-    }
-
-    return TRUE;
-}
-
 static GUID mySubject = { 0x000c10f1, 0x0000, 0x0000,
  { 0xc0,0x00,0x00,0x00,0x00,0x00,0x00,0x46 }};
 
@@ -54,21 +36,13 @@ static GUID mySubject = { 0x000c10f1, 0x0000, 0x0000,
  */
 HRESULT WINAPI DllRegisterServer(void)
 {
-    static WCHAR msisip[] = { 'M','S','I','S','I','P','.','D','L','L',0 };
-    static WCHAR getSignedDataMsg[] = { 'M','s','i','S','I','P','G','e','t',
-     'S','i','g','n','e','d','D','a','t','a','M','s','g',0 };
-    static WCHAR putSignedDataMsg[] = { 'M','s','i','S','I','P','P','u','t',
-     'S','i','g','n','e','d','D','a','t','a','M','s','g',0 };
-    static WCHAR createIndirectData[] = { 'M','s','i','S','I','P',
-     'C','r','e','a','t','e','I','n','d','i','r','e','c','t','D','a','t','a',
-     0 };
-    static WCHAR verifyIndirectData[] = { 'M','s','i','S','I','P',
-     'V','e','r','i','f','y','I','n','d','i','r','e','c','t','D','a','t','a',
-     0 };
-    static WCHAR removeSignedDataMsg[] = { 'M','s','i','S','I','P','R','e','m',
-     'o','v','e','S','i','g','n','e','d','D','a','t','a','M','s','g', 0 };
-    static WCHAR isMyTypeOfFile[] = { 'M','s','i','S','I','P',
-     'I','s','M','y','T','y','p','e','O','f','F','i','l','e',0 };
+    static WCHAR msisip[] = L"MSISIP.DLL";
+    static WCHAR getSignedDataMsg[] = L"MsiSIPGetSignedDataMsg";
+    static WCHAR putSignedDataMsg[] = L"MsiSIPPutSignedDataMsg";
+    static WCHAR createIndirectData[] = L"MsiSIPCreateIndirectData";
+    static WCHAR verifyIndirectData[] = L"MsiSIPVerifyIndirectData";
+    static WCHAR removeSignedDataMsg[] = L"MsiSIPRemoveSignedDataMsg";
+    static WCHAR isMyTypeOfFile[] = L"MsiSIPIsMyTypeOfFile";
 
     SIP_ADD_NEWPROVIDER prov;
 
@@ -102,8 +76,6 @@ BOOL WINAPI MsiSIPGetSignedDataMsg(SIP_SUBJECTINFO *pSubjectInfo,
  DWORD *pdwEncodingType, DWORD dwIndex, DWORD *pcbSignedDataMsg,
  BYTE *pbSignedDataMsg)
 {
-    static const WCHAR digitalSig[] = { 5,'D','i','g','i','t','a','l',
-     'S','i','g','n','a','t','u','r','e',0 };
     BOOL ret = FALSE;
     IStorage *stg = NULL;
     HRESULT r;
@@ -111,7 +83,7 @@ BOOL WINAPI MsiSIPGetSignedDataMsg(SIP_SUBJECTINFO *pSubjectInfo,
     BYTE hdr[2], len[sizeof(DWORD)];
     DWORD count, lenBytes, dataBytes;
 
-    TRACE("(%p %p %d %p %p)\n", pSubjectInfo, pdwEncodingType, dwIndex,
+    TRACE("(%p %p %ld %p %p)\n", pSubjectInfo, pdwEncodingType, dwIndex,
           pcbSignedDataMsg, pbSignedDataMsg);
 
     r = StgOpenStorage(pSubjectInfo->pwsFileName, NULL,
@@ -122,7 +94,7 @@ BOOL WINAPI MsiSIPGetSignedDataMsg(SIP_SUBJECTINFO *pSubjectInfo,
         goto end;
     }
 
-    r = IStorage_OpenStream(stg, digitalSig, 0,
+    r = IStorage_OpenStream(stg, L"\5DigitalSignature", 0,
      STGM_READ|STGM_SHARE_EXCLUSIVE, 0, &stm);
     if (FAILED(r))
     {
@@ -155,7 +127,7 @@ BOOL WINAPI MsiSIPGetSignedDataMsg(SIP_SUBJECTINFO *pSubjectInfo,
         lenBytes = hdr[1] & 0x7f;
         if (lenBytes > sizeof(DWORD))
         {
-            WARN("asn.1 length too long (%d)\n", lenBytes);
+            WARN("asn.1 length too long (%ld)\n", lenBytes);
             goto freestream;
         }
         r = IStream_Read(stm, len, lenBytes, &count);

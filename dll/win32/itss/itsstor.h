@@ -29,15 +29,13 @@ extern HRESULT ITSS_StgOpenStorage(
     DWORD grfMode,
     SNB snbExclude,
     DWORD reserved,
-    IStorage** ppstgOpen) DECLSPEC_HIDDEN;
+    IStorage** ppstgOpen);
 
-extern HRESULT ITS_IParseDisplayName_create(
-    IUnknown *pUnkOuter,
-    LPVOID *ppObj) DECLSPEC_HIDDEN;
+extern HRESULT ITS_IParseDisplayName_create(IUnknown *pUnkOuter, LPVOID *ppObj);
 
-extern HRESULT ITSProtocol_create(IUnknown *pUnkOuter, LPVOID *ppobj) DECLSPEC_HIDDEN;
+extern HRESULT ITSProtocol_create(IUnknown *pUnkOuter, LPVOID *ppobj);
 
-extern LONG dll_count DECLSPEC_HIDDEN;
+extern LONG dll_count;
 static inline void ITSS_LockModule(void) { InterlockedIncrement(&dll_count); }
 static inline void ITSS_UnlockModule(void) { InterlockedDecrement(&dll_count); }
 

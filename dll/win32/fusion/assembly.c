@@ -540,7 +540,7 @@ static HRESULT parse_metadata_header(ASSEMBLY *assembly, DWORD *hdrsz)
 
     metadatahdr = (METADATAHDR *)ptr;
 
-    if (!(assembly->metadatahdr = heap_alloc(sizeof(*assembly->metadatahdr)))) return E_OUTOFMEMORY;
+    if (!(assembly->metadatahdr = malloc(sizeof(*assembly->metadatahdr)))) return E_OUTOFMEMORY;
 
     size = FIELD_OFFSET(METADATAHDR, Version);
     memcpy(assembly->metadatahdr, metadatahdr, size);
@@ -645,9 +645,9 @@ HRESULT assembly_create(ASSEMBLY **out, LPCWSTR file)
 
     *out = NULL;
 
-    if (!(assembly = heap_alloc_zero(sizeof(*assembly)))) return E_OUTOFMEMORY;
+    if (!(assembly = calloc(1, sizeof(*assembly)))) return E_OUTOFMEMORY;
 
-    assembly->path = strdupW(file);
+    assembly->path = wcsdup(file);
     if (!assembly->path)
     {
         hr = E_OUTOFMEMORY;
@@ -696,12 +696,12 @@ HRESULT assembly_release(ASSEMBLY *assembly)
     if (!assembly)
         return S_OK;
 
-    heap_free(assembly->metadatahdr);
-    heap_free(assembly->path);
+    free(assembly->metadatahdr);
+    free(assembly->path);
     UnmapViewOfFile(assembly->data);
     CloseHandle(assembly->hmap);
     CloseHandle(assembly->hfile);
-    heap_free(assembly);
+    free(assembly);
 
     return S_OK;
 }
@@ -714,7 +714,7 @@ static LPWSTR assembly_dup_str(const ASSEMBLY *assembly, DWORD index)
 
     len = MultiByteToWideChar(CP_ACP, 0, str, -1, NULL, 0);
 
-    if ((cpy = heap_alloc(len * sizeof(WCHAR))))
+    if ((cpy = malloc(len * sizeof(WCHAR))))
         MultiByteToWideChar(CP_ACP, 0, str, -1, cpy, len);
 
     return cpy;
@@ -749,7 +749,7 @@ HRESULT assembly_get_name(ASSEMBLY *assembly, LPWSTR *name)
 
 HRESULT assembly_get_path(const ASSEMBLY *assembly, LPWSTR *path)
 {
-    WCHAR *cpy = heap_alloc((lstrlenW(assembly->path) + 1) * sizeof(WCHAR));
+    WCHAR *cpy = malloc((lstrlenW(assembly->path) + 1) * sizeof(WCHAR));
     *path = cpy;
     if (cpy)
         lstrcpyW(cpy, assembly->path);
@@ -776,10 +776,10 @@ HRESULT assembly_get_version(ASSEMBLY *assembly, LPWSTR *version)
     if (!asmtbl)
         return E_FAIL;
 
-    if (!(*version = heap_alloc(24 * sizeof(WCHAR))))
+    if (!(*version = malloc(24 * sizeof(WCHAR))))
         return E_OUTOFMEMORY;
 
-    swprintf(*version, format, asmtbl->MajorVersion, asmtbl->MinorVersion,
+    swprintf(*version, 24, format, asmtbl->MajorVersion, asmtbl->MinorVersion,
              asmtbl->BuildNumber, asmtbl->RevisionNumber);
 
     return S_OK;
@@ -809,10 +809,8 @@ HRESULT assembly_get_pubkey_token(ASSEMBLY *assembly, LPWSTR *token)
     ULONG i, size;
     LONG offset;
     BYTE hashdata[20], *pubkey, *ptr;
-    BCRYPT_ALG_HANDLE alg;
     BYTE tokbytes[BYTES_PER_TOKEN];
-    HRESULT hr = E_FAIL;
-    LPWSTR tok;
+    WCHAR *tok;
     DWORD idx;
 
     *token = NULL;
@@ -833,33 +831,20 @@ HRESULT assembly_get_pubkey_token(ASSEMBLY *assembly, LPWSTR *token)
 
     pubkey = assembly_get_blob(assembly, idx, &size);
 
-    if (BCryptOpenAlgorithmProvider(&alg, BCRYPT_SHA1_ALGORITHM, MS_PRIMITIVE_PROVIDER, 0) != STATUS_SUCCESS)
+    if (BCryptHash(BCRYPT_SHA1_ALG_HANDLE, NULL, 0, pubkey, size, hashdata, sizeof(hashdata)) != STATUS_SUCCESS)
         return E_FAIL;
-
-    if (BCryptHash(alg, NULL, 0, pubkey, size, hashdata, sizeof(hashdata)) != STATUS_SUCCESS)
-    {
-        hr = E_FAIL;
-        goto done;
-    }
 
     size = sizeof(hashdata);
     for (i = size - 1; i >= size - 8; i--)
         tokbytes[size - i - 1] = hashdata[i];
 
-    if (!(tok = heap_alloc((TOKEN_LENGTH + 1) * sizeof(WCHAR))))
-    {
-        hr = E_OUTOFMEMORY;
-        goto done;
-    }
+    if (!(tok = malloc((TOKEN_LENGTH + 1) * sizeof(WCHAR))))
+        return E_OUTOFMEMORY;
 
     token_to_str(tokbytes, tok);
 
     *token = tok;
-    hr = S_OK;
-
-done:
-    BCryptCloseAlgorithmProvider(alg, 0);
-    return hr;
+    return S_OK;
 }
 
 HRESULT assembly_get_runtime_version(ASSEMBLY *assembly, LPSTR *version)
@@ -890,7 +875,7 @@ HRESULT assembly_get_external_files(ASSEMBLY *assembly, LPWSTR **files, DWORD *c
     if (num_rows <= 0)
         return S_OK;
 
-    if (!(ret = heap_alloc(num_rows * sizeof(WCHAR *)))) return E_OUTOFMEMORY;
+    if (!(ret = malloc(num_rows * sizeof(WCHAR *)))) return E_OUTOFMEMORY;
 
     for (i = 0; i < num_rows; i++)
     {
@@ -903,8 +888,8 @@ HRESULT assembly_get_external_files(ASSEMBLY *assembly, LPWSTR **files, DWORD *c
         ret[i] = assembly_dup_str(assembly, idx);
         if (!ret[i])
         {
-            for (; i >= 0; i--) heap_free(ret[i]);
-            heap_free(ret);
+            for (; i >= 0; i--) free(ret[i]);
+            free(ret);
             return E_OUTOFMEMORY;
         }
         ptr += assembly->stringsz; /* skip Name field */

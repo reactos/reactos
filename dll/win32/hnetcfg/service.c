@@ -58,7 +58,7 @@ static ULONG WINAPI fw_service_Release(
     if (!refs)
     {
         TRACE("destroying %p\n", fw_service);
-        HeapFree( GetProcessHeap(), 0, fw_service );
+        free( fw_service );
     }
     return refs;
 }
@@ -105,7 +105,7 @@ static HRESULT WINAPI fw_service_GetTypeInfo(
 {
     fw_service *This = impl_from_INetFwService( iface );
 
-    FIXME("%p %u %u %p\n", This, iTInfo, lcid, ppTInfo);
+    FIXME("%p %u %lu %p\n", This, iTInfo, lcid, ppTInfo);
     return E_NOTIMPL;
 }
 
@@ -119,7 +119,7 @@ static HRESULT WINAPI fw_service_GetIDsOfNames(
 {
     fw_service *This = impl_from_INetFwService( iface );
 
-    FIXME("%p %s %p %u %u %p\n", This, debugstr_guid(riid), rgszNames, cNames, lcid, rgDispId);
+    FIXME("%p %s %p %u %lu %p\n", This, debugstr_guid(riid), rgszNames, cNames, lcid, rgDispId);
     return E_NOTIMPL;
 }
 
@@ -136,7 +136,7 @@ static HRESULT WINAPI fw_service_Invoke(
 {
     fw_service *This = impl_from_INetFwService( iface );
 
-    FIXME("%p %d %s %d %d %p %p %p %p\n", This, dispIdMember, debugstr_guid(riid),
+    FIXME("%p %ld %s %ld %d %p %p %p %p\n", This, dispIdMember, debugstr_guid(riid),
           lcid, wFlags, pDispParams, pVarResult, pExcepInfo, puArgErr);
     return E_NOTIMPL;
 }
@@ -290,7 +290,7 @@ static HRESULT NetFwService_create( IUnknown *pUnkOuter, LPVOID *ppObj )
 
     TRACE("(%p,%p)\n", pUnkOuter, ppObj);
 
-    fp = HeapAlloc( GetProcessHeap(), 0, sizeof(*fp) );
+    fp = malloc( sizeof(*fp) );
     if (!fp) return E_OUTOFMEMORY;
 
     fp->INetFwService_iface.lpVtbl = &fw_service_vtbl;
@@ -328,7 +328,7 @@ static ULONG WINAPI fw_services_Release(
     if (!refs)
     {
         TRACE("destroying %p\n", fw_services);
-        HeapFree( GetProcessHeap(), 0, fw_services );
+        free( fw_services );
     }
     return refs;
 }
@@ -375,7 +375,7 @@ static HRESULT WINAPI fw_services_GetTypeInfo(
 {
     fw_services *This = impl_from_INetFwServices( iface );
 
-    FIXME("%p %u %u %p\n", This, iTInfo, lcid, ppTInfo);
+    FIXME("%p %u %lu %p\n", This, iTInfo, lcid, ppTInfo);
     return E_NOTIMPL;
 }
 
@@ -389,7 +389,7 @@ static HRESULT WINAPI fw_services_GetIDsOfNames(
 {
     fw_services *This = impl_from_INetFwServices( iface );
 
-    FIXME("%p %s %p %u %u %p\n", This, debugstr_guid(riid), rgszNames, cNames, lcid, rgDispId);
+    FIXME("%p %s %p %u %lu %p\n", This, debugstr_guid(riid), rgszNames, cNames, lcid, rgDispId);
     return E_NOTIMPL;
 }
 
@@ -406,7 +406,7 @@ static HRESULT WINAPI fw_services_Invoke(
 {
     fw_services *This = impl_from_INetFwServices( iface );
 
-    FIXME("%p %d %s %d %d %p %p %p %p\n", This, dispIdMember, debugstr_guid(riid),
+    FIXME("%p %ld %s %ld %d %p %p %p %p\n", This, dispIdMember, debugstr_guid(riid),
           lcid, wFlags, pDispParams, pVarResult, pExcepInfo, puArgErr);
     return E_NOTIMPL;
 }
@@ -464,7 +464,7 @@ HRESULT NetFwServices_create( IUnknown *pUnkOuter, LPVOID *ppObj )
 
     TRACE("(%p,%p)\n", pUnkOuter, ppObj);
 
-    fp = HeapAlloc( GetProcessHeap(), 0, sizeof(*fp) );
+    fp = malloc( sizeof(*fp) );
     if (!fp) return E_OUTOFMEMORY;
 
     fp->INetFwServices_iface.lpVtbl = &fw_services_vtbl;

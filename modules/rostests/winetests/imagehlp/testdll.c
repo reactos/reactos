@@ -1,5 +1,5 @@
 /*
- * Copyright 2006 Jacek Caban for CodeWeavers
+ * Copyright 2021 Zebediah Figura
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -16,5 +16,19 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-/* @makedep: itss.rgs */
-1 WINE_REGISTRY itss.rgs
+#if 0
+#pragma makedep testdll
+#endif
+
+#include <oaidl.h>
+#include <commdlg.h>
+#include <shlwapi.h>
+
+extern DWORD WINAPI StrCmpCA(const char *, const char *);
+
+void export(void)
+{
+    SysAllocString(NULL);
+    GetOpenFileNameA(NULL);
+    SHRegGetIntW(NULL, NULL, 0);
+}

@@ -69,7 +69,7 @@ HRESULT WINAPI CreateInstallReferenceEnum(IInstallReferenceEnum **ppRefEnum,
                                           IAssemblyName *pName, DWORD dwFlags,
                                           LPVOID pvReserved)
 {
-    FIXME("(%p, %p, %08x, %p) stub!\n", ppRefEnum, pName, dwFlags, pvReserved);
+    FIXME("(%p, %p, %08lx, %p) stub!\n", ppRefEnum, pName, dwFlags, pvReserved);
     return E_NOTIMPL;
 }
 
@@ -140,7 +140,7 @@ HRESULT WINAPI GetCachePath(ASM_CACHE_FLAGS dwCacheFlags, LPWSTR pwzCachePath,
             if (FAILED(hr))
                 return hr;
 
-            len = swprintf(path, zapfmt, windir, assembly + 1, nativeimg, version);
+            len = swprintf(path, ARRAY_SIZE(path), zapfmt, windir, assembly + 1, nativeimg, version);
             break;
         }
         case ASM_CACHE_GAC:

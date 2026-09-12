@@ -95,7 +95,7 @@ static void test_SwapPlong(void)
     longs[2] = 0x20000001;
     pSwapPlong(longs, 2);
     ok((longs[0] == 0x0100ffff && longs[1] == 0xffff0010 && longs[2] == 0x20000001),
-       "Expected {0x0100ffff,0xffff0010,0x20000001}, got {0x%08x,0x%08x,0x%08x}\n",
+       "Expected {0x0100ffff,0xffff0010,0x20000001}, got {0x%08lx,0x%08lx,0x%08lx}\n",
        longs[0], longs[1], longs[2]);
 }
 
@@ -160,9 +160,9 @@ static void test_UlFromSzHex(void)
     }
 
     ok(pUlFromSzHex("fF") == 0xffu,
-       "UlFromSzHex: expected 0xff, got 0x%x\n", pUlFromSzHex("fF"));
+       "UlFromSzHex: expected 0xff, got 0x%lx\n", pUlFromSzHex("fF"));
 
-    ok(pUlFromSzHex(" c") == 0, "UlFromSzHex: expected 0x0. got 0x%x\n",
+    ok(pUlFromSzHex(" c") == 0, "UlFromSzHex: expected 0x0. got 0x%lx\n",
        pUlFromSzHex(" c"));
 }
 
@@ -185,7 +185,7 @@ static void test_CbOfEncoded(void)
         memset(buff, '?', i);
         ulRet = pCbOfEncoded(buff);
         ok(ulRet == ulExpected,
-           "CbOfEncoded(length %d): expected %d, got %d\n",
+           "CbOfEncoded(length %d): expected %ld, got %ld\n",
            i, ulExpected, ulRet);
     }
 }
