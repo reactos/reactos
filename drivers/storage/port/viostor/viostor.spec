@@ -1,0 +1,1 @@
+@ stdcall DriverEntry(ptr ptr)
