@@ -60,6 +60,8 @@ typedef struct
 } GINA_CONTEXT, *PGINA_CONTEXT;
 
 extern HINSTANCE hDllInstance;
+extern HBITMAP hBanner;
+extern HBITMAP hBannerLine;
 
 typedef BOOL (*PFGINA_INITIALIZE)(PGINA_CONTEXT);
 typedef BOOL (*PFGINA_DISPLAYSTATUSMESSAGE)(PGINA_CONTEXT, HDESK, DWORD, PWSTR, PWSTR);
@@ -81,6 +83,18 @@ typedef struct _GINA_UI
     PFGINA_LOCKEDSAS LockedSAS;
     PFGINA_DISPLAYLOCKEDNOTICE DisplayLockedNotice;
 } GINA_UI, *PGINA_UI;
+
+/* gui.c */
+BOOL
+DrawBrandingBitmap(
+    _Inout_ LPDRAWITEMSTRUCT DrawItem,
+    _Inout_ HBITMAP *BitmapHandle);
+
+BOOL
+DrawScrollingBrandingBitmap(
+    _Inout_ LPDRAWITEMSTRUCT DrawItem,
+    _Inout_ HBITMAP *BitmapHandle,
+    _In_ PDWORD ScrollCounter);
 
 /* lsa.c */
 
