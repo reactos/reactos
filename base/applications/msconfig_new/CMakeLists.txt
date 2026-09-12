@@ -2,7 +2,6 @@
 PROJECT(msconfig_new)
 
 include_directories(
-    .
     comctl32ex
     ${REACTOS_SOURCE_DIR}/sdk/include/c++)
 
