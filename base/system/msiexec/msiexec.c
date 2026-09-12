@@ -166,7 +166,7 @@ static LPWSTR build_properties(struct string_list *property_list)
 
 		/* check if the value contains spaces and maybe quote it */
 		value++;
-		needs_quote = wcschr(value,' ') ? 1 : 0;
+		needs_quote = *value != '"' && wcschr(value, ' ');
 		if(needs_quote)
 			*p++ = '"';
 		len = lstrlenW(value);
@@ -424,7 +424,11 @@ static int custom_action_server(const WCHAR *arg)
         return 1;
     }
 
+#ifdef __REACTOS__
     swprintf(buffer, ARRAY_SIZE(buffer), L"\\\\.\\pipe\\msica_%x_%d", client_pid, (int)(sizeof(void *) * 8));
+#else
+    swprintf(buffer, ARRAY_SIZE(buffer), L"\\\\.\\pipe\\msica_%x_%d", client_pid, sizeof(void *) * 8);
+#endif
     pipe = CreateFileW(buffer, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
     if (pipe == INVALID_HANDLE_VALUE)
     {
@@ -494,6 +498,7 @@ static int chomp( const WCHAR *in, WCHAR *out )
             case '"':
                 state = CS_QUOTE;
                 count++;
+                ignore = FALSE;
                 break;
             default:
                 count++;
@@ -507,6 +512,7 @@ static int chomp( const WCHAR *in, WCHAR *out )
             {
             case '"':
                 state = CS_QUOTE;
+                ignore = FALSE;
                 break;
             case ' ':
                 state = CS_WHITESPACE;
@@ -527,6 +533,7 @@ static int chomp( const WCHAR *in, WCHAR *out )
             {
             case '"':
                 state = CS_TOKEN;
+                ignore = FALSE;
                 break;
             default:
                 ignore = FALSE;
@@ -628,6 +635,23 @@ static WCHAR *get_path_with_extension(const WCHAR *package_name)
     return path;
 }
 
+static WCHAR *remove_quotes( const WCHAR *filename )
+{
+    const WCHAR *ptr = filename;
+    int len = wcslen( filename );
+    WCHAR *ret;
+
+    if (!(ret = malloc( (len + 1) * sizeof(WCHAR) ))) return NULL;
+    if (*ptr == '"')
+    {
+        ptr++;
+        len--;
+    }
+    wcscpy( ret, ptr );
+    if (len && ret[len - 1] == '"') ret[len - 1] = 0;
+    return ret;
+}
+
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
 	int i;
@@ -654,7 +678,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	LANGID Language = 0;
 
 	DWORD LogMode = 0;
-	LPWSTR LogFileName = NULL;
 	DWORD LogAttributes = 0;
 
 	LPWSTR PatchFileName = NULL;
@@ -666,7 +689,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	DWORD ReturnCode;
 	int argc;
 	LPWSTR *argvW = NULL;
-	WCHAR *path;
+	WCHAR *path, *package_unquoted = NULL, *dll_unquoted = NULL, *patch_unquoted = NULL, *log_unquoted;
 
         InitCommonControls();
 
@@ -729,7 +752,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			WINE_TRACE("argvW[%d] = %s\n", i, wine_dbgstr_w(argvW[i]));
 			PackageName = argvW[i];
 			StringListAppend(&property_list, L"ACTION=ADMIN");
-			WINE_FIXME("Administrative installs are not currently supported\n");
 		}
 		else if(msi_option_prefix(argvW[i], "f"))
 		{
@@ -960,11 +982,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			if(i >= argc)
 				ShowUsage(1);
 			WINE_TRACE("argvW[%d] = %s\n", i, wine_dbgstr_w(argvW[i]));
-			LogFileName = argvW[i];
-			if(MsiEnableLogW(LogMode, LogFileName, LogAttributes) != ERROR_SUCCESS)
+			if (!(log_unquoted =  remove_quotes(argvW[i]))) return 1;
+			if (MsiEnableLogW(LogMode, log_unquoted, LogAttributes) != ERROR_SUCCESS)
 			{
 				report_error("Logging in %s (0x%08lx, %lu) failed\n",
-					     wine_dbgstr_w(LogFileName), LogMode, LogAttributes);
+					     wine_dbgstr_w(log_unquoted), LogMode, LogAttributes);
 				ExitProcess(1);
 			}
 		}
@@ -1076,15 +1098,19 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	if(FunctionInstallAdmin && FunctionPatch)
 		FunctionInstall = FALSE;
 
+    if (PackageName && !(package_unquoted = remove_quotes(PackageName))) return 1;
+    if (PatchFileName && !(patch_unquoted = remove_quotes(PatchFileName))) return 1;
+    if (DllName && !(dll_unquoted = remove_quotes(DllName))) return 1;
+
 	ReturnCode = 1;
 	if(FunctionInstall)
 	{
-		if(IsProductCode(PackageName))
-			ReturnCode = MsiConfigureProductExW(PackageName, 0, INSTALLSTATE_DEFAULT, Properties);
+		if(IsProductCode(package_unquoted))
+			ReturnCode = MsiConfigureProductExW(package_unquoted, 0, INSTALLSTATE_DEFAULT, Properties);
 		else
 		{
-			if ((ReturnCode = MsiInstallProductW(PackageName, Properties)) == ERROR_FILE_NOT_FOUND
-					&& (path = get_path_with_extension(PackageName)))
+			if ((ReturnCode = MsiInstallProductW(package_unquoted, Properties)) == ERROR_FILE_NOT_FOUND
+					&& (path = get_path_with_extension(package_unquoted)))
 			{
 				ReturnCode = MsiInstallProductW(path, Properties);
 				free(path);
@@ -1093,12 +1119,12 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	}
 	else if(FunctionRepair)
 	{
-		if(IsProductCode(PackageName))
+		if(IsProductCode(package_unquoted))
 			WINE_FIXME("Product code treatment not implemented yet\n");
 		else
 		{
-			if ((ReturnCode = MsiReinstallProductW(PackageName, RepairMode)) == ERROR_FILE_NOT_FOUND
-					&& (path = get_path_with_extension(PackageName)))
+			if ((ReturnCode = MsiReinstallProductW(package_unquoted, RepairMode)) == ERROR_FILE_NOT_FOUND
+					&& (path = get_path_with_extension(package_unquoted)))
 			{
 				ReturnCode = MsiReinstallProductW(path, RepairMode);
 				free(path);
@@ -1108,19 +1134,19 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	else if(FunctionAdvertise)
 	{
 		LPWSTR Transforms = build_transforms( property_list );
-		ReturnCode = MsiAdvertiseProductW(PackageName, (LPWSTR) AdvertiseMode, Transforms, Language);
+		ReturnCode = MsiAdvertiseProductW(package_unquoted, (LPWSTR) AdvertiseMode, Transforms, Language);
 	}
 	else if(FunctionPatch)
 	{
-		ReturnCode = MsiApplyPatchW(PatchFileName, PackageName, InstallType, Properties);
+		ReturnCode = MsiApplyPatchW(patch_unquoted, package_unquoted, InstallType, Properties);
 	}
 	else if(FunctionDllRegisterServer)
 	{
-		ReturnCode = DoDllRegisterServer(DllName);
+		ReturnCode = DoDllRegisterServer(dll_unquoted);
 	}
 	else if(FunctionDllUnregisterServer)
 	{
-		ReturnCode = DoDllUnregisterServer(DllName);
+		ReturnCode = DoDllUnregisterServer(dll_unquoted);
 	}
 	else if (FunctionRegServer)
 	{

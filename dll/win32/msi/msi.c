@@ -39,7 +39,11 @@
 #include "softpub.h"
 
 #include "msipriv.h"
+#ifdef __REACTOS__
 #include "winemsi_s.h"
+#else
+#include "winemsi.h"
+#endif
 
 #include "initguid.h"
 #include "msxml2.h"
