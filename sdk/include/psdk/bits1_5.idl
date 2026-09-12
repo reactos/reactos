@@ -86,3 +86,24 @@ interface IBackgroundCopyJob2 : IBackgroundCopyJob
     HRESULT SetCredentials(BG_AUTH_CREDENTIALS *cred);
     HRESULT RemoveCredentials(BG_AUTH_TARGET target, BG_AUTH_SCHEME scheme);
 }
+
+[
+    uuid(ea9319ea-c628-480f-8331-768fac397e4e),
+    lcid(0x0000),
+    version(1.0)
+]
+library BackgroundCopyManager1_5
+{
+    [
+        uuid(f087771f-d74f-4c1a-bb8a-e16aca9124ea)
+    ]
+    coclass BackgroundCopyManager1_5
+    {
+        [default] interface IBackgroundCopyManager;
+    };
+
+    interface IBackgroundCopyCallback;
+    interface IBackgroundCopyJob2;
+}
+
+cpp_quote("#include \"bits2_0.h\"")

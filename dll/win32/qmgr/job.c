@@ -84,7 +84,7 @@ static ULONG WINAPI copy_error_AddRef(
 {
     struct copy_error *error = impl_from_IBackgroundCopyError(iface);
     LONG refs = InterlockedIncrement(&error->refs);
-    TRACE("(%p)->(%d)\n", error, refs);
+    TRACE("(%p)->(%ld)\n", error, refs);
     return refs;
 }
 
@@ -94,12 +94,12 @@ static ULONG WINAPI copy_error_Release(
     struct copy_error *error = impl_from_IBackgroundCopyError(iface);
     LONG refs = InterlockedDecrement(&error->refs);
 
-    TRACE("(%p)->(%d)\n", error, refs);
+    TRACE("(%p)->(%ld)\n", error, refs);
 
     if (!refs)
     {
         if (error->file) IBackgroundCopyFile2_Release(error->file);
-        HeapFree(GetProcessHeap(), 0, error);
+        free(error);
     }
     return refs;
 }
@@ -116,7 +116,7 @@ static HRESULT WINAPI copy_error_GetError(
     *pContext = error->context;
     *pCode = error->code;
 
-    TRACE("returning context %u error code 0x%08x\n", error->context, error->code);
+    TRACE("returning context %u error code 0x%08lx\n", error->context, error->code);
     return S_OK;
 }
 
@@ -187,9 +187,9 @@ static HRESULT create_copy_error(
 {
     struct copy_error *error;
 
-    TRACE("context %u code %08x file %p\n", context, code, file);
+    TRACE("context %u code %08lx file %p\n", context, code, file);
 
-    if (!(error = HeapAlloc(GetProcessHeap(), 0, sizeof(*error) ))) return E_OUTOFMEMORY;
+    if (!(error = malloc(sizeof(*error) ))) return E_OUTOFMEMORY;
     error->IBackgroundCopyError_iface.lpVtbl = &copy_error_vtbl;
     error->refs    = 1;
     error->context = context;
@@ -207,76 +207,77 @@ static inline BOOL is_job_done(const BackgroundCopyJobImpl *job)
     return job->state == BG_JOB_STATE_CANCELLED || job->state == BG_JOB_STATE_ACKNOWLEDGED;
 }
 
-static inline BackgroundCopyJobImpl *impl_from_IBackgroundCopyJob3(IBackgroundCopyJob3 *iface)
+static inline BackgroundCopyJobImpl *impl_from_IBackgroundCopyJob4(IBackgroundCopyJob4 *iface)
 {
-    return CONTAINING_RECORD(iface, BackgroundCopyJobImpl, IBackgroundCopyJob3_iface);
+    return CONTAINING_RECORD(iface, BackgroundCopyJobImpl, IBackgroundCopyJob4_iface);
 }
 
-static HRESULT WINAPI BackgroundCopyJob_QueryInterface(
-    IBackgroundCopyJob3 *iface, REFIID riid, void **obj)
+static HRESULT WINAPI BackgroundCopyJob_QueryInterface(IBackgroundCopyJob4 *iface, REFIID riid, void **obj)
 {
-    BackgroundCopyJobImpl *This = impl_from_IBackgroundCopyJob3(iface);
+    BackgroundCopyJobImpl *job = impl_from_IBackgroundCopyJob4(iface);
 
-    TRACE("(%p)->(%s %p)\n", This, debugstr_guid(riid), obj);
+    TRACE("%p, %s, %p.\n", iface, debugstr_guid(riid), obj);
 
     if (IsEqualGUID(riid, &IID_IUnknown) ||
         IsEqualGUID(riid, &IID_IBackgroundCopyJob) ||
         IsEqualGUID(riid, &IID_IBackgroundCopyJob2) ||
-        IsEqualGUID(riid, &IID_IBackgroundCopyJob3))
+        IsEqualGUID(riid, &IID_IBackgroundCopyJob3) ||
+        IsEqualGUID(riid, &IID_IBackgroundCopyJob4))
     {
-        *obj = &This->IBackgroundCopyJob3_iface;
+        *obj = &job->IBackgroundCopyJob4_iface;
     }
     else if (IsEqualGUID(riid, &IID_IBackgroundCopyJobHttpOptions))
     {
-        *obj = &This->IBackgroundCopyJobHttpOptions_iface;
+        *obj = &job->IBackgroundCopyJobHttpOptions_iface;
     }
     else
     {
+        WARN("Unsupported interface %s.\n", debugstr_guid(riid));
         *obj = NULL;
         return E_NOINTERFACE;
     }
 
-    IBackgroundCopyJob3_AddRef(iface);
+    IBackgroundCopyJob4_AddRef(iface);
     return S_OK;
 }
 
-static ULONG WINAPI BackgroundCopyJob_AddRef(IBackgroundCopyJob3 *iface)
+static ULONG WINAPI BackgroundCopyJob_AddRef(IBackgroundCopyJob4 *iface)
 {
-    BackgroundCopyJobImpl *This = impl_from_IBackgroundCopyJob3(iface);
-    ULONG ref = InterlockedIncrement(&This->ref);
-    TRACE("(%p)->(%d)\n", This, ref);
-    return ref;
+    BackgroundCopyJobImpl *job = impl_from_IBackgroundCopyJob4(iface);
+    ULONG refcount = InterlockedIncrement(&job->ref);
+    TRACE("%p, refcount %ld.\n", iface, refcount);
+    return refcount;
 }
 
-static ULONG WINAPI BackgroundCopyJob_Release(IBackgroundCopyJob3 *iface)
+static ULONG WINAPI BackgroundCopyJob_Release(IBackgroundCopyJob4 *iface)
 {
-    BackgroundCopyJobImpl *This = impl_from_IBackgroundCopyJob3(iface);
-    ULONG i, j, ref = InterlockedDecrement(&This->ref);
+    BackgroundCopyJobImpl *job = impl_from_IBackgroundCopyJob4(iface);
+    ULONG i, j, ref = InterlockedDecrement(&job->ref);
 
-    TRACE("(%p)->(%d)\n", This, ref);
+    TRACE("%p, refcount %ld.\n", iface, ref);
 
-    if (ref == 0)
+    if (!ref)
     {
-        This->cs.DebugInfo->Spare[0] = 0;
-        DeleteCriticalSection(&This->cs);
-        if (This->callback)
-            IBackgroundCopyCallback2_Release(This->callback);
-        HeapFree(GetProcessHeap(), 0, This->displayName);
-        HeapFree(GetProcessHeap(), 0, This->description);
-        HeapFree(GetProcessHeap(), 0, This->http_options.headers);
+        job->cs.DebugInfo->Spare[0] = 0;
+        DeleteCriticalSection(&job->cs);
+        if (job->callback)
+            IBackgroundCopyCallback2_Release(job->callback);
+        free(job->displayName);
+        free(job->description);
+        free(job->http_options.headers);
         for (i = 0; i < BG_AUTH_TARGET_PROXY; i++)
         {
             for (j = 0; j < BG_AUTH_SCHEME_PASSPORT; j++)
             {
-                BG_AUTH_CREDENTIALS *cred = &This->http_options.creds[i][j];
-                HeapFree(GetProcessHeap(), 0, cred->Credentials.Basic.UserName);
-                HeapFree(GetProcessHeap(), 0, cred->Credentials.Basic.Password);
+                BG_AUTH_CREDENTIALS *cred = &job->http_options.creds[i][j];
+                free(cred->Credentials.Basic.UserName);
+                free(cred->Credentials.Basic.Password);
             }
         }
-        CloseHandle(This->wait);
-        CloseHandle(This->cancel);
-        CloseHandle(This->done);
-        HeapFree(GetProcessHeap(), 0, This);
+        CloseHandle(job->wait);
+        CloseHandle(job->cancel);
+        CloseHandle(job->done);
+        free(job);
     }
 
     return ref;
@@ -284,18 +285,15 @@ static ULONG WINAPI BackgroundCopyJob_Release(IBackgroundCopyJob3 *iface)
 
 /*** IBackgroundCopyJob methods ***/
 
-static HRESULT WINAPI BackgroundCopyJob_AddFileSet(
-    IBackgroundCopyJob3 *iface,
-    ULONG cFileCount,
-    BG_FILE_INFO *pFileSet)
+static HRESULT WINAPI BackgroundCopyJob_AddFileSet(IBackgroundCopyJob4 *iface, ULONG cFileCount, BG_FILE_INFO *pFileSet)
 {
-    BackgroundCopyJobImpl *This = impl_from_IBackgroundCopyJob3(iface);
+    BackgroundCopyJobImpl *job = impl_from_IBackgroundCopyJob4(iface);
     HRESULT hr = S_OK;
     ULONG i;
 
-    TRACE("(%p)->(%d %p)\n", This, cFileCount, pFileSet);
+    TRACE("%p, %lu, %p.\n", iface, cFileCount, pFileSet);
 
-    EnterCriticalSection(&This->cs);
+    EnterCriticalSection(&job->cs);
 
     for (i = 0; i < cFileCount; ++i)
     {
@@ -304,153 +302,142 @@ static HRESULT WINAPI BackgroundCopyJob_AddFileSet(
         /* We should return E_INVALIDARG in these cases. */
         FIXME("Check for valid filenames and supported protocols\n");
 
-        hr = BackgroundCopyFileConstructor(This, pFileSet[i].RemoteName, pFileSet[i].LocalName, &file);
+        hr = BackgroundCopyFileConstructor(job, pFileSet[i].RemoteName, pFileSet[i].LocalName, &file);
         if (hr != S_OK) break;
 
         /* Add a reference to the file to file list */
-        list_add_head(&This->files, &file->entryFromJob);
-        This->jobProgress.BytesTotal = BG_SIZE_UNKNOWN;
-        ++This->jobProgress.FilesTotal;
+        list_add_head(&job->files, &file->entryFromJob);
+        job->jobProgress.BytesTotal = BG_SIZE_UNKNOWN;
+        ++job->jobProgress.FilesTotal;
     }
 
-    LeaveCriticalSection(&This->cs);
+    LeaveCriticalSection(&job->cs);
 
     return hr;
 }
 
-static HRESULT WINAPI BackgroundCopyJob_AddFile(
-    IBackgroundCopyJob3 *iface,
-    LPCWSTR RemoteUrl,
-    LPCWSTR LocalName)
+static HRESULT WINAPI BackgroundCopyJob_AddFile(IBackgroundCopyJob4 *iface, LPCWSTR RemoteUrl, LPCWSTR LocalName)
 {
-    BackgroundCopyJobImpl *This = impl_from_IBackgroundCopyJob3(iface);
     BG_FILE_INFO file;
 
-    TRACE("(%p)->(%s %s)\n", This, debugstr_w(RemoteUrl), debugstr_w(LocalName));
+    TRACE("%p, %s, %s.\n", iface, debugstr_w(RemoteUrl), debugstr_w(LocalName));
 
     file.RemoteName = (LPWSTR)RemoteUrl;
     file.LocalName = (LPWSTR)LocalName;
-    return IBackgroundCopyJob3_AddFileSet(iface, 1, &file);
+    return IBackgroundCopyJob4_AddFileSet(iface, 1, &file);
 }
 
-static HRESULT WINAPI BackgroundCopyJob_EnumFiles(
-    IBackgroundCopyJob3 *iface,
-    IEnumBackgroundCopyFiles **enum_files)
+static HRESULT WINAPI BackgroundCopyJob_EnumFiles(IBackgroundCopyJob4 *iface, IEnumBackgroundCopyFiles **enum_files)
 {
-    BackgroundCopyJobImpl *This = impl_from_IBackgroundCopyJob3(iface);
-    TRACE("(%p)->(%p)\n", This, enum_files);
-    return EnumBackgroundCopyFilesConstructor(This, enum_files);
+    BackgroundCopyJobImpl *job = impl_from_IBackgroundCopyJob4(iface);
+    TRACE("%p, %p.\n", iface, enum_files);
+    return EnumBackgroundCopyFilesConstructor(job, enum_files);
 }
 
-static HRESULT WINAPI BackgroundCopyJob_Suspend(
-    IBackgroundCopyJob3 *iface)
+static HRESULT WINAPI BackgroundCopyJob_Suspend(IBackgroundCopyJob4 *iface)
 {
-    BackgroundCopyJobImpl *This = impl_from_IBackgroundCopyJob3(iface);
-    FIXME("(%p): stub\n", This);
+    FIXME("(%p): stub\n", iface);
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI BackgroundCopyJob_Resume(
-    IBackgroundCopyJob3 *iface)
+static HRESULT WINAPI BackgroundCopyJob_Resume(IBackgroundCopyJob4 *iface)
 {
-    BackgroundCopyJobImpl *This = impl_from_IBackgroundCopyJob3(iface);
-    HRESULT rv = S_OK;
+    BackgroundCopyJobImpl *job = impl_from_IBackgroundCopyJob4(iface);
+    HRESULT hr = S_OK;
 
-    TRACE("(%p)\n", This);
+    TRACE("%p.\n", iface);
 
     EnterCriticalSection(&globalMgr.cs);
-    if (is_job_done(This))
+    if (is_job_done(job))
     {
-        rv = BG_E_INVALID_STATE;
+        hr = BG_E_INVALID_STATE;
     }
-    else if (This->jobProgress.FilesTransferred == This->jobProgress.FilesTotal)
+    else if (job->jobProgress.FilesTransferred == job->jobProgress.FilesTotal)
     {
-        rv = BG_E_EMPTY;
+        hr = BG_E_EMPTY;
     }
-    else if (This->state != BG_JOB_STATE_CONNECTING
-             && This->state != BG_JOB_STATE_TRANSFERRING)
+    else if (job->state != BG_JOB_STATE_CONNECTING
+             && job->state != BG_JOB_STATE_TRANSFERRING)
     {
-        This->state = BG_JOB_STATE_QUEUED;
-        This->error.context = 0;
-        This->error.code = S_OK;
-        if (This->error.file)
+        job->state = BG_JOB_STATE_QUEUED;
+        job->error.context = 0;
+        job->error.code = S_OK;
+        if (job->error.file)
         {
-            IBackgroundCopyFile2_Release(This->error.file);
-            This->error.file = NULL;
+            IBackgroundCopyFile2_Release(job->error.file);
+            job->error.file = NULL;
         }
         SetEvent(globalMgr.jobEvent);
     }
     LeaveCriticalSection(&globalMgr.cs);
 
-    return rv;
+    return hr;
 }
 
-static HRESULT WINAPI BackgroundCopyJob_Cancel(
-    IBackgroundCopyJob3 *iface)
+static HRESULT WINAPI BackgroundCopyJob_Cancel(IBackgroundCopyJob4 *iface)
 {
-    BackgroundCopyJobImpl *This = impl_from_IBackgroundCopyJob3(iface);
-    HRESULT rv = S_OK;
+    BackgroundCopyJobImpl *job = impl_from_IBackgroundCopyJob4(iface);
+    HRESULT hr = S_OK;
 
-    TRACE("(%p)\n", This);
+    TRACE("%p.\n", iface);
 
-    EnterCriticalSection(&This->cs);
+    EnterCriticalSection(&job->cs);
 
-    if (is_job_done(This))
+    if (is_job_done(job))
     {
-        rv = BG_E_INVALID_STATE;
+        hr = BG_E_INVALID_STATE;
     }
     else
     {
         BackgroundCopyFileImpl *file;
 
-        if (This->state == BG_JOB_STATE_CONNECTING || This->state == BG_JOB_STATE_TRANSFERRING)
+        if (job->state == BG_JOB_STATE_CONNECTING || job->state == BG_JOB_STATE_TRANSFERRING)
         {
-            This->state = BG_JOB_STATE_CANCELLED;
-            SetEvent(This->cancel);
+            job->state = BG_JOB_STATE_CANCELLED;
+            SetEvent(job->cancel);
 
-            LeaveCriticalSection(&This->cs);
-            WaitForSingleObject(This->done, INFINITE);
-            EnterCriticalSection(&This->cs);
+            LeaveCriticalSection(&job->cs);
+            WaitForSingleObject(job->done, INFINITE);
+            EnterCriticalSection(&job->cs);
         }
 
-        LIST_FOR_EACH_ENTRY(file, &This->files, BackgroundCopyFileImpl, entryFromJob)
+        LIST_FOR_EACH_ENTRY(file, &job->files, BackgroundCopyFileImpl, entryFromJob)
         {
             if (file->tempFileName[0] && !DeleteFileW(file->tempFileName))
             {
-                WARN("Couldn't delete %s (%u)\n", debugstr_w(file->tempFileName), GetLastError());
-                rv = BG_S_UNABLE_TO_DELETE_FILES;
+                WARN("Couldn't delete %s (%lu)\n", debugstr_w(file->tempFileName), GetLastError());
+                hr = BG_S_UNABLE_TO_DELETE_FILES;
             }
             if (file->info.LocalName && !DeleteFileW(file->info.LocalName))
             {
-                WARN("Couldn't delete %s (%u)\n", debugstr_w(file->info.LocalName), GetLastError());
-                rv = BG_S_UNABLE_TO_DELETE_FILES;
+                WARN("Couldn't delete %s (%lu)\n", debugstr_w(file->info.LocalName), GetLastError());
+                hr = BG_S_UNABLE_TO_DELETE_FILES;
             }
         }
-        This->state = BG_JOB_STATE_CANCELLED;
+        job->state = BG_JOB_STATE_CANCELLED;
     }
 
-    LeaveCriticalSection(&This->cs);
-    return rv;
+    LeaveCriticalSection(&job->cs);
+    return hr;
 }
 
-static HRESULT WINAPI BackgroundCopyJob_Complete(
-    IBackgroundCopyJob3 *iface)
+static HRESULT WINAPI BackgroundCopyJob_Complete(IBackgroundCopyJob4 *iface)
 {
-    BackgroundCopyJobImpl *This = impl_from_IBackgroundCopyJob3(iface);
-    HRESULT rv = S_OK;
+    BackgroundCopyJobImpl *job = impl_from_IBackgroundCopyJob4(iface);
+    HRESULT hr = S_OK;
 
-    TRACE("(%p)\n", This);
+    TRACE("%p.\n", iface);
 
-    EnterCriticalSection(&This->cs);
+    EnterCriticalSection(&job->cs);
 
-    if (is_job_done(This))
+    if (is_job_done(job))
     {
-        rv = BG_E_INVALID_STATE;
+        hr = BG_E_INVALID_STATE;
     }
     else
     {
         BackgroundCopyFileImpl *file;
-        LIST_FOR_EACH_ENTRY(file, &This->files, BackgroundCopyFileImpl, entryFromJob)
+        LIST_FOR_EACH_ENTRY(file, &job->files, BackgroundCopyFileImpl, entryFromJob)
         {
             if (file->fileProgress.Completed)
             {
@@ -462,406 +449,324 @@ static HRESULT WINAPI BackgroundCopyJob_Complete(
                     ERR("Couldn't rename file %s -> %s\n",
                         debugstr_w(file->tempFileName),
                         debugstr_w(file->info.LocalName));
-                    rv = BG_S_PARTIAL_COMPLETE;
+                    hr = BG_S_PARTIAL_COMPLETE;
                 }
             }
             else
-                rv = BG_S_PARTIAL_COMPLETE;
+                hr = BG_S_PARTIAL_COMPLETE;
         }
     }
 
-    This->state = BG_JOB_STATE_ACKNOWLEDGED;
-    LeaveCriticalSection(&This->cs);
+    job->state = BG_JOB_STATE_ACKNOWLEDGED;
+    LeaveCriticalSection(&job->cs);
 
-    return rv;
+    return hr;
 }
 
-static HRESULT WINAPI BackgroundCopyJob_GetId(
-    IBackgroundCopyJob3 *iface,
-    GUID *pVal)
+static HRESULT WINAPI BackgroundCopyJob_GetId(IBackgroundCopyJob4 *iface, GUID *id)
 {
-    BackgroundCopyJobImpl *This = impl_from_IBackgroundCopyJob3(iface);
-    TRACE("(%p)->(%p)\n", This, pVal);
-    *pVal = This->jobId;
+    BackgroundCopyJobImpl *job = impl_from_IBackgroundCopyJob4(iface);
+
+    TRACE("%p, %p.\n", iface, id);
+
+    *id = job->jobId;
+
     return S_OK;
 }
 
-static HRESULT WINAPI BackgroundCopyJob_GetType(
-    IBackgroundCopyJob3 *iface,
-    BG_JOB_TYPE *pVal)
+static HRESULT WINAPI BackgroundCopyJob_GetType(IBackgroundCopyJob4 *iface, BG_JOB_TYPE *job_type)
 {
-    BackgroundCopyJobImpl *This = impl_from_IBackgroundCopyJob3(iface);
+    BackgroundCopyJobImpl *job = impl_from_IBackgroundCopyJob4(iface);
 
-    TRACE("(%p)->(%p)\n", This, pVal);
+    TRACE("%p, %p.\n", iface, job_type);
 
-    if (!pVal)
+    if (!job_type)
         return E_INVALIDARG;
 
-    *pVal = This->type;
+    *job_type = job->type;
     return S_OK;
 }
 
-static HRESULT WINAPI BackgroundCopyJob_GetProgress(
-    IBackgroundCopyJob3 *iface,
-    BG_JOB_PROGRESS *pVal)
+static HRESULT WINAPI BackgroundCopyJob_GetProgress(IBackgroundCopyJob4 *iface, BG_JOB_PROGRESS *progress)
 {
-    BackgroundCopyJobImpl *This = impl_from_IBackgroundCopyJob3(iface);
+    BackgroundCopyJobImpl *job = impl_from_IBackgroundCopyJob4(iface);
 
-    TRACE("(%p)->(%p)\n", This, pVal);
+    TRACE("%p, %p.\n", iface, progress);
 
-    if (!pVal)
+    if (!progress)
         return E_INVALIDARG;
 
-    EnterCriticalSection(&This->cs);
-    *pVal = This->jobProgress;
-    LeaveCriticalSection(&This->cs);
+    EnterCriticalSection(&job->cs);
+    *progress = job->jobProgress;
+    LeaveCriticalSection(&job->cs);
 
     return S_OK;
 }
 
-static HRESULT WINAPI BackgroundCopyJob_GetTimes(
-    IBackgroundCopyJob3 *iface,
-    BG_JOB_TIMES *pVal)
+static HRESULT WINAPI BackgroundCopyJob_GetTimes(IBackgroundCopyJob4 *iface, BG_JOB_TIMES *pVal)
 {
-    BackgroundCopyJobImpl *This = impl_from_IBackgroundCopyJob3(iface);
-    FIXME("(%p)->(%p): stub\n", This, pVal);
+    FIXME("%p, %p: stub\n", iface, pVal);
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI BackgroundCopyJob_GetState(
-    IBackgroundCopyJob3 *iface,
-    BG_JOB_STATE *pVal)
+static HRESULT WINAPI BackgroundCopyJob_GetState(IBackgroundCopyJob4 *iface, BG_JOB_STATE *state)
 {
-    BackgroundCopyJobImpl *This = impl_from_IBackgroundCopyJob3(iface);
+    BackgroundCopyJobImpl *job = impl_from_IBackgroundCopyJob4(iface);
 
-    TRACE("(%p)->(%p)\n", This, pVal);
+    TRACE("%p, %p.\n", iface, state);
 
-    if (!pVal)
+    if (!state)
         return E_INVALIDARG;
 
     /* Don't think we need a critical section for this */
-    *pVal = This->state;
+    *state = job->state;
     return S_OK;
 }
 
-static HRESULT WINAPI BackgroundCopyJob_GetError(
-    IBackgroundCopyJob3 *iface,
-    IBackgroundCopyError **ppError)
+static HRESULT WINAPI BackgroundCopyJob_GetError(IBackgroundCopyJob4 *iface, IBackgroundCopyError **ppError)
 {
-    BackgroundCopyJobImpl *job = impl_from_IBackgroundCopyJob3(iface);
+    BackgroundCopyJobImpl *job = impl_from_IBackgroundCopyJob4(iface);
 
-    TRACE("(%p)->(%p)\n", job, ppError);
+    TRACE("%p, %p.\n", iface, ppError);
 
     if (!job->error.context) return BG_E_ERROR_INFORMATION_UNAVAILABLE;
 
     return create_copy_error(job->error.context, job->error.code, job->error.file, ppError);
 }
 
-static HRESULT WINAPI BackgroundCopyJob_GetOwner(
-    IBackgroundCopyJob3 *iface,
-    LPWSTR *pVal)
+static HRESULT WINAPI BackgroundCopyJob_GetOwner(IBackgroundCopyJob4 *iface, LPWSTR *owner)
 {
-    BackgroundCopyJobImpl *This = impl_from_IBackgroundCopyJob3(iface);
-    FIXME("(%p)->(%p): stub\n", This, pVal);
+    FIXME("%p, %p: stub\n", iface, owner);
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI BackgroundCopyJob_SetDisplayName(
-    IBackgroundCopyJob3 *iface,
-    LPCWSTR Val)
+static HRESULT WINAPI BackgroundCopyJob_SetDisplayName(IBackgroundCopyJob4 *iface, LPCWSTR name)
 {
-    BackgroundCopyJobImpl *This = impl_from_IBackgroundCopyJob3(iface);
-    FIXME("(%p)->(%s): stub\n", This, debugstr_w(Val));
+    FIXME("%p, %s: stub\n", iface, debugstr_w(name));
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI BackgroundCopyJob_GetDisplayName(
-    IBackgroundCopyJob3 *iface,
-    LPWSTR *pVal)
+static HRESULT WINAPI BackgroundCopyJob_GetDisplayName(IBackgroundCopyJob4 *iface, LPWSTR *name)
 {
-    BackgroundCopyJobImpl *This = impl_from_IBackgroundCopyJob3(iface);
+    BackgroundCopyJobImpl *job = impl_from_IBackgroundCopyJob4(iface);
 
-    TRACE("(%p)->(%p)\n", This, pVal);
+    TRACE("%p, %p.\n", iface, name);
 
-    return return_strval(This->displayName, pVal);
+    return return_strval(job->displayName, name);
 }
 
-static HRESULT WINAPI BackgroundCopyJob_SetDescription(
-    IBackgroundCopyJob3 *iface,
-    LPCWSTR Val)
+static HRESULT WINAPI BackgroundCopyJob_SetDescription(IBackgroundCopyJob4 *iface, LPCWSTR desc)
 {
-    BackgroundCopyJobImpl *This = impl_from_IBackgroundCopyJob3(iface);
+    BackgroundCopyJobImpl *job = impl_from_IBackgroundCopyJob4(iface);
     static const int max_description_len = 1024;
     HRESULT hr = S_OK;
     int len;
 
-    TRACE("(%p)->(%s)\n", This, debugstr_w(Val));
+    TRACE("%p, %s.\n", iface, debugstr_w(desc));
 
-    if (!Val) return E_INVALIDARG;
+    if (!desc)
+        return E_INVALIDARG;
 
-    len = lstrlenW(Val);
+    len = lstrlenW(desc);
     if (len > max_description_len) return BG_E_STRING_TOO_LONG;
 
-    EnterCriticalSection(&This->cs);
+    EnterCriticalSection(&job->cs);
 
-    if (is_job_done(This))
+    if (is_job_done(job))
     {
         hr = BG_E_INVALID_STATE;
     }
     else
     {
-        HeapFree(GetProcessHeap(), 0, This->description);
-        if ((This->description = HeapAlloc(GetProcessHeap(), 0, (len+1)*sizeof(WCHAR))))
-            lstrcpyW(This->description, Val);
-        else
+        free(job->description);
+        if (!(job->description = wcsdup(desc)))
             hr = E_OUTOFMEMORY;
     }
 
-    LeaveCriticalSection(&This->cs);
+    LeaveCriticalSection(&job->cs);
 
     return hr;
 }
 
-static HRESULT WINAPI BackgroundCopyJob_GetDescription(
-    IBackgroundCopyJob3 *iface,
-    LPWSTR *pVal)
+static HRESULT WINAPI BackgroundCopyJob_GetDescription(IBackgroundCopyJob4 *iface, LPWSTR *desc)
 {
-    BackgroundCopyJobImpl *This = impl_from_IBackgroundCopyJob3(iface);
+    BackgroundCopyJobImpl *job = impl_from_IBackgroundCopyJob4(iface);
 
-    TRACE("(%p)->(%p)\n", This, pVal);
+    TRACE("%p, %p.\n", iface, desc);
 
-    return return_strval(This->description, pVal);
+    return return_strval(job->description, desc);
 }
 
-static HRESULT WINAPI BackgroundCopyJob_SetPriority(
-    IBackgroundCopyJob3 *iface,
-    BG_JOB_PRIORITY Val)
+static HRESULT WINAPI BackgroundCopyJob_SetPriority(IBackgroundCopyJob4 *iface, BG_JOB_PRIORITY priority)
 {
-    BackgroundCopyJobImpl *This = impl_from_IBackgroundCopyJob3(iface);
-    FIXME("(%p)->(%d): stub\n", This, Val);
+    FIXME("%p, %d: stub\n", iface, priority);
     return S_OK;
 }
 
-static HRESULT WINAPI BackgroundCopyJob_GetPriority(
-    IBackgroundCopyJob3 *iface,
-    BG_JOB_PRIORITY *pVal)
+static HRESULT WINAPI BackgroundCopyJob_GetPriority(IBackgroundCopyJob4 *iface, BG_JOB_PRIORITY *priority)
 {
-    BackgroundCopyJobImpl *This = impl_from_IBackgroundCopyJob3(iface);
-    FIXME("(%p)->(%p): stub\n", This, pVal);
+    FIXME("%p, %p: stub\n", iface, priority);
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI BackgroundCopyJob_SetNotifyFlags(
-    IBackgroundCopyJob3 *iface,
-    ULONG Val)
+static HRESULT WINAPI BackgroundCopyJob_SetNotifyFlags(IBackgroundCopyJob4 *iface, ULONG flags)
 {
-    BackgroundCopyJobImpl *This = impl_from_IBackgroundCopyJob3(iface);
+    BackgroundCopyJobImpl *job = impl_from_IBackgroundCopyJob4(iface);
     static const ULONG valid_flags = BG_NOTIFY_JOB_TRANSFERRED |
                                      BG_NOTIFY_JOB_ERROR |
                                      BG_NOTIFY_DISABLE |
                                      BG_NOTIFY_JOB_MODIFICATION |
                                      BG_NOTIFY_FILE_TRANSFERRED;
 
-    TRACE("(%p)->(0x%x)\n", This, Val);
+    TRACE("%p, %#lx.\n", iface, flags);
 
-    if (is_job_done(This)) return BG_E_INVALID_STATE;
-    if (Val & ~valid_flags) return E_NOTIMPL;
-    This->notify_flags = Val;
+    if (is_job_done(job)) return BG_E_INVALID_STATE;
+    if (flags & ~valid_flags) return E_NOTIMPL;
+    job->notify_flags = flags;
     return S_OK;
 }
 
-static HRESULT WINAPI BackgroundCopyJob_GetNotifyFlags(
-    IBackgroundCopyJob3 *iface,
-    ULONG *pVal)
+static HRESULT WINAPI BackgroundCopyJob_GetNotifyFlags(IBackgroundCopyJob4 *iface, ULONG *flags)
 {
-    BackgroundCopyJobImpl *This = impl_from_IBackgroundCopyJob3(iface);
+    BackgroundCopyJobImpl *job = impl_from_IBackgroundCopyJob4(iface);
 
-    TRACE("(%p)->(%p)\n", This, pVal);
+    TRACE("%p, %p.\n", iface, flags);
 
-    if (!pVal) return E_INVALIDARG;
+    if (!flags) return E_INVALIDARG;
 
-    *pVal = This->notify_flags;
+    *flags = job->notify_flags;
 
     return S_OK;
 }
 
-static HRESULT WINAPI BackgroundCopyJob_SetNotifyInterface(
-    IBackgroundCopyJob3 *iface,
-    IUnknown *Val)
+static HRESULT WINAPI BackgroundCopyJob_SetNotifyInterface(IBackgroundCopyJob4 *iface, IUnknown *callback)
 {
-    BackgroundCopyJobImpl *This = impl_from_IBackgroundCopyJob3(iface);
+    BackgroundCopyJobImpl *job = impl_from_IBackgroundCopyJob4(iface);
     HRESULT hr = S_OK;
 
-    TRACE("(%p)->(%p)\n", This, Val);
+    TRACE("%p, %p.\n", iface, callback);
 
-    if (is_job_done(This)) return BG_E_INVALID_STATE;
+    if (is_job_done(job)) return BG_E_INVALID_STATE;
 
-    if (This->callback)
+    if (job->callback)
     {
-        IBackgroundCopyCallback2_Release(This->callback);
-        This->callback = NULL;
-        This->callback2 = FALSE;
+        IBackgroundCopyCallback2_Release(job->callback);
+        job->callback = NULL;
+        job->callback2 = FALSE;
     }
 
-    if (Val)
+    if (callback)
     {
-        hr = IUnknown_QueryInterface(Val, &IID_IBackgroundCopyCallback2, (void**)&This->callback);
+        hr = IUnknown_QueryInterface(callback, &IID_IBackgroundCopyCallback2, (void **)&job->callback);
         if (FAILED(hr))
-            hr = IUnknown_QueryInterface(Val, &IID_IBackgroundCopyCallback, (void**)&This->callback);
+            hr = IUnknown_QueryInterface(callback, &IID_IBackgroundCopyCallback, (void**)&job->callback);
         else
-            This->callback2 = TRUE;
+            job->callback2 = TRUE;
     }
 
     return hr;
 }
 
-static HRESULT WINAPI BackgroundCopyJob_GetNotifyInterface(
-    IBackgroundCopyJob3 *iface,
-    IUnknown **pVal)
+static HRESULT WINAPI BackgroundCopyJob_GetNotifyInterface(IBackgroundCopyJob4 *iface, IUnknown **callback)
 {
-    BackgroundCopyJobImpl *This = impl_from_IBackgroundCopyJob3(iface);
+    BackgroundCopyJobImpl *job = impl_from_IBackgroundCopyJob4(iface);
 
-    TRACE("(%p)->(%p)\n", This, pVal);
+    TRACE("%p, %p.\n", iface, callback);
 
-    if (!pVal) return E_INVALIDARG;
+    if (!callback) return E_INVALIDARG;
 
-    *pVal = (IUnknown*)This->callback;
-    if (*pVal)
-        IUnknown_AddRef(*pVal);
+    *callback = (IUnknown *)job->callback;
+    if (*callback)
+        IUnknown_AddRef(*callback);
 
     return S_OK;
 }
 
-static HRESULT WINAPI BackgroundCopyJob_SetMinimumRetryDelay(
-    IBackgroundCopyJob3 *iface,
-    ULONG Seconds)
+static HRESULT WINAPI BackgroundCopyJob_SetMinimumRetryDelay(IBackgroundCopyJob4 *iface, ULONG delay)
 {
-    FIXME("%u\n", Seconds);
+    FIXME("%p, %lu.\n", iface, delay);
     return S_OK;
 }
 
-static HRESULT WINAPI BackgroundCopyJob_GetMinimumRetryDelay(
-    IBackgroundCopyJob3 *iface,
-    ULONG *Seconds)
+static HRESULT WINAPI BackgroundCopyJob_GetMinimumRetryDelay(IBackgroundCopyJob4 *iface, ULONG *delay)
 {
-    BackgroundCopyJobImpl *This = impl_from_IBackgroundCopyJob3(iface);
-    FIXME("(%p)->(%p): stub\n", This, Seconds);
-    *Seconds = 30;
+    FIXME("%p, %p: stub\n", iface, delay);
+    *delay = 30;
     return S_OK;
 }
 
-static HRESULT WINAPI BackgroundCopyJob_SetNoProgressTimeout(
-    IBackgroundCopyJob3 *iface,
-    ULONG Seconds)
+static HRESULT WINAPI BackgroundCopyJob_SetNoProgressTimeout(IBackgroundCopyJob4 *iface, ULONG timeout)
 {
-    BackgroundCopyJobImpl *This = impl_from_IBackgroundCopyJob3(iface);
-    FIXME("(%p)->(%d): stub\n", This, Seconds);
+    FIXME("%p, %lu.: stub\n", iface, timeout);
     return S_OK;
 }
 
-static HRESULT WINAPI BackgroundCopyJob_GetNoProgressTimeout(
-    IBackgroundCopyJob3 *iface,
-    ULONG *Seconds)
+static HRESULT WINAPI BackgroundCopyJob_GetNoProgressTimeout(IBackgroundCopyJob4 *iface, ULONG *timeout)
 {
-    BackgroundCopyJobImpl *This = impl_from_IBackgroundCopyJob3(iface);
-    FIXME("(%p)->(%p): stub\n", This, Seconds);
-    *Seconds = 900;
+    FIXME("%p, %p: stub\n", iface, timeout);
+    *timeout = 900;
     return S_OK;
 }
 
-static HRESULT WINAPI BackgroundCopyJob_GetErrorCount(
-    IBackgroundCopyJob3 *iface,
-    ULONG *Errors)
+static HRESULT WINAPI BackgroundCopyJob_GetErrorCount(IBackgroundCopyJob4 *iface, ULONG *count)
 {
-    BackgroundCopyJobImpl *This = impl_from_IBackgroundCopyJob3(iface);
-    FIXME("(%p)->(%p): stub\n", This, Errors);
+    FIXME("%p, %p: stub\n", iface, count);
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI BackgroundCopyJob_SetProxySettings(
-    IBackgroundCopyJob3 *iface,
-    BG_JOB_PROXY_USAGE ProxyUsage,
-    const WCHAR *ProxyList,
-    const WCHAR *ProxyBypassList)
+static HRESULT WINAPI BackgroundCopyJob_SetProxySettings(IBackgroundCopyJob4 *iface, BG_JOB_PROXY_USAGE proxy_usage,
+        const WCHAR *proxy_list, const WCHAR *proxy_bypass_list)
 {
-    BackgroundCopyJobImpl *This = impl_from_IBackgroundCopyJob3(iface);
-    FIXME("(%p)->(%d %s %s): stub\n", This, ProxyUsage, debugstr_w(ProxyList), debugstr_w(ProxyBypassList));
+    FIXME("%p, %d, %s, %s: stub\n", iface, proxy_usage, debugstr_w(proxy_list), debugstr_w(proxy_bypass_list));
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI BackgroundCopyJob_GetProxySettings(
-    IBackgroundCopyJob3 *iface,
-    BG_JOB_PROXY_USAGE *pProxyUsage,
-    LPWSTR *pProxyList,
-    LPWSTR *pProxyBypassList)
+static HRESULT WINAPI BackgroundCopyJob_GetProxySettings(IBackgroundCopyJob4 *iface, BG_JOB_PROXY_USAGE *proxy_usage,
+        LPWSTR *proxy_list, LPWSTR *proxy_bypass_list)
 {
-    BackgroundCopyJobImpl *This = impl_from_IBackgroundCopyJob3(iface);
-    FIXME("(%p)->(%p %p %p): stub\n", This, pProxyUsage, pProxyList, pProxyBypassList);
+    FIXME("%p, %p, %p, %p: stub\n", iface, proxy_usage, proxy_list, proxy_bypass_list);
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI BackgroundCopyJob_TakeOwnership(
-    IBackgroundCopyJob3 *iface)
+static HRESULT WINAPI BackgroundCopyJob_TakeOwnership(IBackgroundCopyJob4 *iface)
 {
-    BackgroundCopyJobImpl *This = impl_from_IBackgroundCopyJob3(iface);
-    FIXME("(%p): stub\n", This);
+    FIXME("%p: stub\n", iface);
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI BackgroundCopyJob_SetNotifyCmdLine(
-    IBackgroundCopyJob3 *iface,
-    LPCWSTR prog,
-    LPCWSTR params)
+static HRESULT WINAPI BackgroundCopyJob_SetNotifyCmdLine(IBackgroundCopyJob4 *iface, LPCWSTR prog, LPCWSTR params)
 {
-    BackgroundCopyJobImpl *This = impl_from_IBackgroundCopyJob3(iface);
-    FIXME("(%p)->(%s %s): stub\n", This, debugstr_w(prog), debugstr_w(params));
+    FIXME("%p, %s, %s: stub\n", iface, debugstr_w(prog), debugstr_w(params));
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI BackgroundCopyJob_GetNotifyCmdLine(
-    IBackgroundCopyJob3 *iface,
-    LPWSTR *prog,
-    LPWSTR *params)
+static HRESULT WINAPI BackgroundCopyJob_GetNotifyCmdLine(IBackgroundCopyJob4 *iface, LPWSTR *prog, LPWSTR *params)
 {
-    BackgroundCopyJobImpl *This = impl_from_IBackgroundCopyJob3(iface);
-    FIXME("(%p)->(%p %p): stub\n", This, prog, params);
+    FIXME("%p, %p, %p: stub\n", iface, prog, params);
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI BackgroundCopyJob_GetReplyProgress(
-    IBackgroundCopyJob3 *iface,
-    BG_JOB_REPLY_PROGRESS *progress)
+static HRESULT WINAPI BackgroundCopyJob_GetReplyProgress(IBackgroundCopyJob4 *iface, BG_JOB_REPLY_PROGRESS *progress)
 {
-    BackgroundCopyJobImpl *This = impl_from_IBackgroundCopyJob3(iface);
-    FIXME("(%p)->(%p): stub\n", This, progress);
+    FIXME("%p, %p: stub\n", iface, progress);
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI BackgroundCopyJob_GetReplyData(
-    IBackgroundCopyJob3 *iface,
-    byte **pBuffer,
-    UINT64 *pLength)
+static HRESULT WINAPI BackgroundCopyJob_GetReplyData(IBackgroundCopyJob4 *iface, byte **buffer, UINT64 *length)
 {
-    BackgroundCopyJobImpl *This = impl_from_IBackgroundCopyJob3(iface);
-    FIXME("(%p)->(%p %p): stub\n", This, pBuffer, pLength);
+    FIXME("%p, %p, %p: stub\n", iface, buffer, length);
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI BackgroundCopyJob_SetReplyFileName(
-    IBackgroundCopyJob3 *iface,
-    LPCWSTR filename)
+static HRESULT WINAPI BackgroundCopyJob_SetReplyFileName(IBackgroundCopyJob4 *iface, LPCWSTR filename)
 {
-    BackgroundCopyJobImpl *This = impl_from_IBackgroundCopyJob3(iface);
-    FIXME("(%p)->(%s): stub\n", This, debugstr_w(filename));
+    FIXME("%p, %s: stub\n", iface, debugstr_w(filename));
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI BackgroundCopyJob_GetReplyFileName(
-    IBackgroundCopyJob3 *iface,
-    LPWSTR *pFilename)
+static HRESULT WINAPI BackgroundCopyJob_GetReplyFileName(IBackgroundCopyJob4 *iface, LPWSTR *filename)
 {
-    BackgroundCopyJobImpl *This = impl_from_IBackgroundCopyJob3(iface);
-    FIXME("(%p)->(%p): stub\n", This, pFilename);
+    FIXME("%p, %p: stub\n", iface, filename);
     return E_NOTIMPL;
 }
 
@@ -877,15 +782,13 @@ static int index_from_scheme(BG_AUTH_SCHEME scheme)
     return scheme - 1;
 }
 
-static HRESULT WINAPI BackgroundCopyJob_SetCredentials(
-    IBackgroundCopyJob3 *iface,
-    BG_AUTH_CREDENTIALS *cred)
+static HRESULT WINAPI BackgroundCopyJob_SetCredentials(IBackgroundCopyJob4 *iface, BG_AUTH_CREDENTIALS *cred)
 {
-    BackgroundCopyJobImpl *job = impl_from_IBackgroundCopyJob3(iface);
+    BackgroundCopyJobImpl *job = impl_from_IBackgroundCopyJob4(iface);
     BG_AUTH_CREDENTIALS *new_cred;
     int idx_target, idx_scheme;
 
-    TRACE("(%p)->(%p)\n", job, cred);
+    TRACE("%p, %p.\n", iface, cred);
 
     if ((idx_target = index_from_target(cred->Target)) < 0) return BG_E_INVALID_AUTH_TARGET;
     if ((idx_scheme = index_from_scheme(cred->Scheme)) < 0) return BG_E_INVALID_AUTH_SCHEME;
@@ -898,13 +801,13 @@ static HRESULT WINAPI BackgroundCopyJob_SetCredentials(
 
     if (cred->Credentials.Basic.UserName)
     {
-        HeapFree(GetProcessHeap(), 0, new_cred->Credentials.Basic.UserName);
-        new_cred->Credentials.Basic.UserName = strdupW(cred->Credentials.Basic.UserName);
+        free(new_cred->Credentials.Basic.UserName);
+        new_cred->Credentials.Basic.UserName = wcsdup(cred->Credentials.Basic.UserName);
     }
     if (cred->Credentials.Basic.Password)
     {
-        HeapFree(GetProcessHeap(), 0, new_cred->Credentials.Basic.Password);
-        new_cred->Credentials.Basic.Password = strdupW(cred->Credentials.Basic.Password);
+        free(new_cred->Credentials.Basic.Password);
+        new_cred->Credentials.Basic.Password = wcsdup(cred->Credentials.Basic.Password);
     }
 
     LeaveCriticalSection(&job->cs);
@@ -912,15 +815,15 @@ static HRESULT WINAPI BackgroundCopyJob_SetCredentials(
 }
 
 static HRESULT WINAPI BackgroundCopyJob_RemoveCredentials(
-    IBackgroundCopyJob3 *iface,
+    IBackgroundCopyJob4 *iface,
     BG_AUTH_TARGET target,
     BG_AUTH_SCHEME scheme)
 {
-    BackgroundCopyJobImpl *job = impl_from_IBackgroundCopyJob3(iface);
+    BackgroundCopyJobImpl *job = impl_from_IBackgroundCopyJob4(iface);
     BG_AUTH_CREDENTIALS *new_cred;
     int idx_target, idx_scheme;
 
-    TRACE("(%p)->(%u %u)\n", job, target, scheme);
+    TRACE("%p, %u, %u.\n", iface, target, scheme);
 
     if ((idx_target = index_from_target(target)) < 0) return BG_E_INVALID_AUTH_TARGET;
     if ((idx_scheme = index_from_scheme(scheme)) < 0) return BG_E_INVALID_AUTH_SCHEME;
@@ -928,10 +831,11 @@ static HRESULT WINAPI BackgroundCopyJob_RemoveCredentials(
 
     EnterCriticalSection(&job->cs);
 
-    new_cred->Target = new_cred->Scheme = 0;
-    HeapFree(GetProcessHeap(), 0, new_cred->Credentials.Basic.UserName);
+    new_cred->Target = 0;
+    new_cred->Scheme = 0;
+    free(new_cred->Credentials.Basic.UserName);
     new_cred->Credentials.Basic.UserName = NULL;
-    HeapFree(GetProcessHeap(), 0, new_cred->Credentials.Basic.Password);
+    free(new_cred->Credentials.Basic.Password);
     new_cred->Credentials.Basic.Password = NULL;
 
     LeaveCriticalSection(&job->cs);
@@ -939,46 +843,74 @@ static HRESULT WINAPI BackgroundCopyJob_RemoveCredentials(
 }
 
 static HRESULT WINAPI BackgroundCopyJob_ReplaceRemotePrefix(
-    IBackgroundCopyJob3 *iface,
+    IBackgroundCopyJob4 *iface,
     LPCWSTR OldPrefix,
     LPCWSTR NewPrefix)
 {
-    BackgroundCopyJobImpl *This = impl_from_IBackgroundCopyJob3(iface);
-    FIXME("(%p)->(%s %s): stub\n", This, debugstr_w(OldPrefix), debugstr_w(NewPrefix));
+    FIXME("%p, %s, %s: stub\n", iface, debugstr_w(OldPrefix), debugstr_w(NewPrefix));
     return S_OK;
 }
 
 static HRESULT WINAPI BackgroundCopyJob_AddFileWithRanges(
-    IBackgroundCopyJob3 *iface,
+    IBackgroundCopyJob4 *iface,
     LPCWSTR RemoteUrl,
     LPCWSTR LocalName,
     DWORD RangeCount,
     BG_FILE_RANGE Ranges[])
 {
-    BackgroundCopyJobImpl *This = impl_from_IBackgroundCopyJob3(iface);
-    FIXME("(%p)->(%s %s %u %p): stub\n", This, debugstr_w(RemoteUrl), debugstr_w(LocalName), RangeCount, Ranges);
+    FIXME("%p, %s, %s, %lu, %p: stub\n", iface, debugstr_w(RemoteUrl), debugstr_w(LocalName), RangeCount, Ranges);
     return S_OK;
 }
 
-static HRESULT WINAPI BackgroundCopyJob_SetFileACLFlags(
-    IBackgroundCopyJob3 *iface,
-    DWORD Flags)
+static HRESULT WINAPI BackgroundCopyJob_SetFileACLFlags(IBackgroundCopyJob4 *iface, DWORD flags)
 {
-    BackgroundCopyJobImpl *This = impl_from_IBackgroundCopyJob3(iface);
-    FIXME("(%p)->(%x): stub\n", This, Flags);
+    FIXME("%p, %#lx: stub\n", iface, flags);
     return S_OK;
 }
 
-static HRESULT WINAPI BackgroundCopyJob_GetFileACLFlags(
-    IBackgroundCopyJob3 *iface,
-    DWORD *Flags)
+static HRESULT WINAPI BackgroundCopyJob_GetFileACLFlags(IBackgroundCopyJob4 *iface, DWORD *flags)
 {
-    BackgroundCopyJobImpl *This = impl_from_IBackgroundCopyJob3(iface);
-    FIXME("(%p)->(%p): stub\n", This, Flags);
+    FIXME("%p, %p: stub\n", iface, flags);
     return S_OK;
 }
 
-static const IBackgroundCopyJob3Vtbl BackgroundCopyJob3Vtbl =
+static HRESULT WINAPI BackgroundCopyJob_SetPeerCachingFlags(IBackgroundCopyJob4 *iface, DWORD flags)
+{
+    FIXME("%p, %#lx.\n", iface, flags);
+    return S_OK;
+}
+
+static HRESULT WINAPI BackgroundCopyJob_GetPeerCachingFlags(IBackgroundCopyJob4 *iface, DWORD *flags)
+{
+    FIXME("%p, %p.\n", iface, flags);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI BackgroundCopyJob_GetOwnerIntegrityLevel(IBackgroundCopyJob4 *iface, ULONG *level)
+{
+    FIXME("%p, %p.\n", iface, level);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI BackgroundCopyJob_GetOwnerElevationState(IBackgroundCopyJob4 *iface, BOOL *elevated)
+{
+    FIXME("%p, %p.\n", iface, elevated);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI BackgroundCopyJob_SetMaximumDownloadTime(IBackgroundCopyJob4 *iface, ULONG timeout)
+{
+    FIXME("%p, %lu.\n", iface, timeout);
+    return S_OK;
+}
+
+static HRESULT WINAPI BackgroundCopyJob_GetMaximumDownloadTime(IBackgroundCopyJob4 *iface, ULONG *timeout)
+{
+    FIXME("%p, %p.\n", iface, timeout);
+    return E_NOTIMPL;
+}
+
+static const IBackgroundCopyJob4Vtbl BackgroundCopyJobVtbl =
 {
     BackgroundCopyJob_QueryInterface,
     BackgroundCopyJob_AddRef,
@@ -1026,7 +958,13 @@ static const IBackgroundCopyJob3Vtbl BackgroundCopyJob3Vtbl =
     BackgroundCopyJob_ReplaceRemotePrefix,
     BackgroundCopyJob_AddFileWithRanges,
     BackgroundCopyJob_SetFileACLFlags,
-    BackgroundCopyJob_GetFileACLFlags
+    BackgroundCopyJob_GetFileACLFlags,
+    BackgroundCopyJob_SetPeerCachingFlags,
+    BackgroundCopyJob_GetPeerCachingFlags,
+    BackgroundCopyJob_GetOwnerIntegrityLevel,
+    BackgroundCopyJob_GetOwnerElevationState,
+    BackgroundCopyJob_SetMaximumDownloadTime,
+    BackgroundCopyJob_GetMaximumDownloadTime,
 };
 
 static inline BackgroundCopyJobImpl *impl_from_IBackgroundCopyJobHttpOptions(
@@ -1041,21 +979,21 @@ static HRESULT WINAPI http_options_QueryInterface(
     void **ppvObject)
 {
     BackgroundCopyJobImpl *job = impl_from_IBackgroundCopyJobHttpOptions(iface);
-    return IBackgroundCopyJob3_QueryInterface(&job->IBackgroundCopyJob3_iface, riid, ppvObject);
+    return IBackgroundCopyJob4_QueryInterface(&job->IBackgroundCopyJob4_iface, riid, ppvObject);
 }
 
 static ULONG WINAPI http_options_AddRef(
     IBackgroundCopyJobHttpOptions *iface)
 {
     BackgroundCopyJobImpl *job = impl_from_IBackgroundCopyJobHttpOptions(iface);
-    return IBackgroundCopyJob3_AddRef(&job->IBackgroundCopyJob3_iface);
+    return IBackgroundCopyJob4_AddRef(&job->IBackgroundCopyJob4_iface);
 }
 
 static ULONG WINAPI http_options_Release(
     IBackgroundCopyJobHttpOptions *iface)
 {
     BackgroundCopyJobImpl *job = impl_from_IBackgroundCopyJobHttpOptions(iface);
-    return IBackgroundCopyJob3_Release(&job->IBackgroundCopyJob3_iface);
+    return IBackgroundCopyJob4_Release(&job->IBackgroundCopyJob4_iface);
 }
 
 static HRESULT WINAPI http_options_SetClientCertificateByID(
@@ -1108,18 +1046,18 @@ static HRESULT WINAPI http_options_SetCustomHeaders(
 
     if (RequestHeaders)
     {
-        WCHAR *headers = strdupW(RequestHeaders);
+        WCHAR *headers = wcsdup(RequestHeaders);
         if (!headers)
         {
             LeaveCriticalSection(&job->cs);
             return E_OUTOFMEMORY;
         }
-        HeapFree(GetProcessHeap(), 0, job->http_options.headers);
+        free(job->http_options.headers);
         job->http_options.headers = headers;
     }
     else
     {
-        HeapFree(GetProcessHeap(), 0, job->http_options.headers);
+        free(job->http_options.headers);
         job->http_options.headers = NULL;
     }
 
@@ -1161,7 +1099,7 @@ static HRESULT WINAPI http_options_SetSecurityFlags(
 {
     BackgroundCopyJobImpl *job = impl_from_IBackgroundCopyJobHttpOptions(iface);
 
-    TRACE("(%p)->(0x%08x)\n", iface, Flags);
+    TRACE("(%p)->(0x%08lx)\n", iface, Flags);
 
     job->http_options.flags = Flags;
     return S_OK;
@@ -1201,24 +1139,24 @@ HRESULT BackgroundCopyJobConstructor(LPCWSTR displayName, BG_JOB_TYPE type, GUID
 
     TRACE("(%s,%d,%p)\n", debugstr_w(displayName), type, job);
 
-    This = HeapAlloc(GetProcessHeap(), 0, sizeof *This);
+    This = malloc(sizeof(*This));
     if (!This)
         return E_OUTOFMEMORY;
 
-    This->IBackgroundCopyJob3_iface.lpVtbl = &BackgroundCopyJob3Vtbl;
+    This->IBackgroundCopyJob4_iface.lpVtbl = &BackgroundCopyJobVtbl;
     This->IBackgroundCopyJobHttpOptions_iface.lpVtbl = &http_options_vtbl;
-    InitializeCriticalSection(&This->cs);
+    InitializeCriticalSectionEx(&This->cs, 0, RTL_CRITICAL_SECTION_FLAG_FORCE_DEBUG_INFO);
     This->cs.DebugInfo->Spare[0] = (DWORD_PTR)(__FILE__ ": BackgroundCopyJobImpl.cs");
 
     This->ref = 1;
     This->type = type;
 
-    This->displayName = strdupW(displayName);
+    This->displayName = wcsdup(displayName);
     if (!This->displayName)
     {
         This->cs.DebugInfo->Spare[0] = 0;
         DeleteCriticalSection(&This->cs);
-        HeapFree(GetProcessHeap(), 0, This);
+        free(This);
         return E_OUTOFMEMORY;
     }
 
@@ -1227,8 +1165,8 @@ HRESULT BackgroundCopyJobConstructor(LPCWSTR displayName, BG_JOB_TYPE type, GUID
     {
         This->cs.DebugInfo->Spare[0] = 0;
         DeleteCriticalSection(&This->cs);
-        HeapFree(GetProcessHeap(), 0, This->displayName);
-        HeapFree(GetProcessHeap(), 0, This);
+        free(This->displayName);
+        free(This);
         return hr;
     }
     *job_id = This->jobId;
@@ -1280,6 +1218,12 @@ void processJob(BackgroundCopyJobImpl *job)
         if (done)
         {
             transitionJobState(job, BG_JOB_STATE_QUEUED, BG_JOB_STATE_TRANSFERRED);
+            if (job->callback && (job->notify_flags & BG_NOTIFY_JOB_TRANSFERRED))
+            {
+                TRACE("Calling JobTransferred -->\n");
+                IBackgroundCopyCallback2_JobTransferred(job->callback, (IBackgroundCopyJob*)&job->IBackgroundCopyJob4_iface);
+                TRACE("Called JobTransferred <--\n");
+            }
             return;
         }
 

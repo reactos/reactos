@@ -24,27 +24,6 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(pidgen);
 
-/*****************************************************
- *      DllMain
- */
-BOOL WINAPI DllMain( HINSTANCE hinst, DWORD reason, LPVOID reserved )
-{
-    TRACE("(%p, %d, %p)\n", hinst, reason, reserved);
-
-    switch(reason)
-    {
-#ifndef __REACTOS__
-    case DLL_WINE_PREATTACH:
-        return FALSE;  /* prefer native version */
-#endif
-
-    case DLL_PROCESS_ATTACH:
-        DisableThreadLibraryCalls( hinst );
-        break;
-    }
-    return TRUE;
-}
-
 int WINAPI PIDGenSimpA(LPCSTR str, int p1, int p2, int p3, int p4, int p5, int p6, int p7, int p8)
 {
     FIXME("%s,%d,%d,%d,%d,%d,%d,%d,%d\n", debugstr_a(str), p1, p2, p3, p4, p5, p6, p7, p8);

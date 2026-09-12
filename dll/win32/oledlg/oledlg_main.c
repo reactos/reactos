@@ -84,7 +84,7 @@ static void register_messages(void)
  */
 BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID fImpLoad)
 {
-    TRACE("%p 0x%x %p\n", hinstDLL, fdwReason, fImpLoad);
+    TRACE("%p 0x%lx %p\n", hinstDLL, fdwReason, fImpLoad);
 
     switch(fdwReason) {
     case DLL_PROCESS_ATTACH:
@@ -207,7 +207,7 @@ BOOL WINAPI OleUIAddVerbMenuW(IOleObject *object, LPCWSTR shorttype,
         args[1] = (DWORD_PTR)objecttype;
 
         FormatMessageW(FORMAT_MESSAGE_FROM_STRING|FORMAT_MESSAGE_ALLOCATE_BUFFER|FORMAT_MESSAGE_ARGUMENT_ARRAY,
-            resstrW, 0, 0, (WCHAR*)&str, 0, (__ms_va_list*)args);
+            resstrW, 0, 0, (WCHAR*)&str, 0, (va_list *)args);
 
         RemoveMenu(hMenu, uPos, MF_BYPOSITION);
         InsertMenuW(hMenu, uPos, MF_BYPOSITION|MF_STRING, idmin, str);
@@ -247,7 +247,7 @@ BOOL WINAPI OleUIAddVerbMenuW(IOleObject *object, LPCWSTR shorttype,
 
     args[0] = (DWORD_PTR)objecttype;
     FormatMessageW(FORMAT_MESSAGE_FROM_STRING|FORMAT_MESSAGE_ALLOCATE_BUFFER|FORMAT_MESSAGE_ARGUMENT_ARRAY,
-        resstrW, 0, 0, (WCHAR*)&str, 0, (__ms_va_list*)args);
+        resstrW, 0, 0, (WCHAR*)&str, 0, (va_list *)args);
 
     InsertMenuW(hMenu, uPos, MF_BYPOSITION|MF_POPUP|MF_STRING, (UINT_PTR)submenu, str);
     HeapFree(GetProcessHeap(), 0, str);

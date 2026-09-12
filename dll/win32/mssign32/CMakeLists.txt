@@ -8,7 +8,7 @@ list(APPEND SOURCE
 
 add_library(mssign32 MODULE ${SOURCE})
 set_module_type(mssign32 win32dll)
-target_link_libraries(mssign32 wine)
+target_link_libraries(mssign32 wine wine_dll_register)
 add_importlibs(mssign32 msvcrt kernel32 ntdll)
 add_cd_file(TARGET mssign32 DESTINATION reactos/system32 FOR all)
 set_wine_module(mssign32)

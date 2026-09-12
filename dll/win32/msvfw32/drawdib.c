@@ -82,8 +82,8 @@ HDRAWDIB VFWAPI DrawDibOpen(void)
     WINE_HDD*   whdd;
 
     TRACE("(void)\n");
-	
-    whdd = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(WINE_HDD));
+
+    whdd = calloc(1, sizeof(WINE_HDD));
     TRACE("=> %p\n", whdd);
 
     while (MSVIDEO_GetHddPtr((HDRAWDIB)HDD_HandleRef) != NULL) HDD_HandleRef++;
@@ -118,7 +118,7 @@ BOOL VFWAPI DrawDibClose(HDRAWDIB hdd)
         }
     }
 
-    HeapFree(GetProcessHeap(), 0, whdd);
+    free(whdd);
 
     return TRUE;
 }
@@ -137,15 +137,15 @@ BOOL VFWAPI DrawDibEnd(HDRAWDIB hdd)
 
     whdd->hpal = 0; /* Do not free this */
     whdd->hdc = 0;
-    HeapFree(GetProcessHeap(), 0, whdd->lpbi);
+    free(whdd->lpbi);
     whdd->lpbi = NULL;
-    HeapFree(GetProcessHeap(), 0, whdd->lpbiOut);
+    free(whdd->lpbiOut);
     whdd->lpbiOut = NULL;
 
     whdd->begun = FALSE;
 
     /*if (whdd->lpvbits)
-      HeapFree(GetProcessHeap(), 0, whdd->lpvbuf);*/
+      free(whdd->lpvbuf);*/
 
     if (whdd->hMemDC) 
     {
@@ -187,7 +187,7 @@ BOOL VFWAPI DrawDibBegin(HDRAWDIB hdd,
     TRACE("(%p,%p,%d,%d,%p,%d,%d,0x%08x)\n",
           hdd, hdc, dxDst, dyDst, lpbi, dxSrc, dySrc, wFlags);
 
-    TRACE("lpbi: %d,%d/%d,%d,%d,%d,%d,%d,%d,%d,%d\n",
+    TRACE("lpbi: %ld,%ld/%ld,%d,%d,%ld,%ld,%ld,%ld,%ld,%ld\n",
           lpbi->biSize, lpbi->biWidth, lpbi->biHeight, lpbi->biPlanes,
           lpbi->biBitCount, lpbi->biCompression, lpbi->biSizeImage,
           lpbi->biXPelsPerMeter, lpbi->biYPelsPerMeter, lpbi->biClrUsed,
@@ -208,7 +208,7 @@ BOOL VFWAPI DrawDibBegin(HDRAWDIB hdd,
         whdd->hic = ICOpen(ICTYPE_VIDEO, lpbi->biCompression, ICMODE_DECOMPRESS);
         if (!whdd->hic) 
         {
-            WARN("Could not open IC. biCompression == 0x%08x\n", lpbi->biCompression);
+            WARN("Could not open IC. biCompression == 0x%08lx\n", lpbi->biCompression);
             ret = FALSE;
         }
 
@@ -224,7 +224,7 @@ BOOL VFWAPI DrawDibBegin(HDRAWDIB hdd,
 
         if (ret) 
         {
-            whdd->lpbiOut = HeapAlloc(GetProcessHeap(), 0, size);
+            whdd->lpbiOut = malloc(size);
 
             if (ICDecompressGetFormat(whdd->hic, lpbi, whdd->lpbiOut) != ICERR_OK)
                 ret = FALSE;
@@ -236,8 +236,8 @@ BOOL VFWAPI DrawDibBegin(HDRAWDIB hdd,
             if (ICDecompressBegin(whdd->hic, lpbi, whdd->lpbiOut) != ICERR_OK)
                 ret = FALSE;
             
-            TRACE("biSizeImage == %d\n", whdd->lpbiOut->biSizeImage);
-            TRACE("biCompression == %d\n", whdd->lpbiOut->biCompression);
+            TRACE("biSizeImage == %ld\n", whdd->lpbiOut->biSizeImage);
+            TRACE("biCompression == %ld\n", whdd->lpbiOut->biCompression);
             TRACE("biBitCount == %d\n", whdd->lpbiOut->biBitCount);
         }
     }
@@ -255,17 +255,17 @@ BOOL VFWAPI DrawDibBegin(HDRAWDIB hdd,
         else
         {
             dwSize = lpbi->biSize + num_colours(lpbi)*sizeof(RGBQUAD);
-            whdd->lpbiOut = HeapAlloc(GetProcessHeap(), 0, dwSize);
+            whdd->lpbiOut = malloc(dwSize);
             memcpy(whdd->lpbiOut, lpbi, dwSize);
         }
     }
 
     if (ret) 
     {
-        /*whdd->lpvbuf = HeapAlloc(GetProcessHeap(), 0, whdd->lpbiOut->biSizeImage);*/
+        /*whdd->lpvbuf = malloc(whdd->lpbiOut->biSizeImage);*/
 
         whdd->hMemDC = CreateCompatibleDC(hdc);
-        TRACE("Creating: %d, %p\n", whdd->lpbiOut->biSize, whdd->lpvbits);
+        TRACE("Creating: %ld, %p\n", whdd->lpbiOut->biSize, whdd->lpvbits);
         whdd->hDib = CreateDIBSection(whdd->hMemDC, (BITMAPINFO *)whdd->lpbiOut, DIB_RGB_COLORS, &(whdd->lpvbits), 0, 0);
         if (whdd->hDib) 
         {
@@ -274,7 +274,7 @@ BOOL VFWAPI DrawDibBegin(HDRAWDIB hdd,
         else
         {
             ret = FALSE;
-            TRACE("Error: %d\n", GetLastError());
+            TRACE("Error: %ld\n", GetLastError());
         }
         whdd->hOldDib = SelectObject(whdd->hMemDC, whdd->hDib);
     }
@@ -284,7 +284,7 @@ BOOL VFWAPI DrawDibBegin(HDRAWDIB hdd,
         whdd->hdc = hdc;
         whdd->dxDst = dxDst;
         whdd->dyDst = dyDst;
-        whdd->lpbi = HeapAlloc(GetProcessHeap(), 0, lpbi->biSize);
+        whdd->lpbi = malloc(lpbi->biSize);
         memcpy(whdd->lpbi, lpbi, lpbi->biSize);
         whdd->dxSrc = dxSrc;
         whdd->dySrc = dySrc;
@@ -295,7 +295,7 @@ BOOL VFWAPI DrawDibBegin(HDRAWDIB hdd,
     {
         if (whdd->hic)
             ICClose(whdd->hic);
-        HeapFree(GetProcessHeap(), 0, whdd->lpbiOut);
+        free(whdd->lpbiOut);
         whdd->lpbiOut = NULL;
     }
 
@@ -381,7 +381,7 @@ BOOL VFWAPI DrawDibDraw(HDRAWDIB hdd, HDC hdc,
         {
             DWORD flags = 0;
 
-            TRACE("Compression == 0x%08x\n", lpbi->biCompression);
+            TRACE("Compression == 0x%08lx\n", lpbi->biCompression);
 
             if (wFlags & DDF_NOTKEYFRAME)
                 flags |= ICDECOMPRESS_NOTKEYFRAME;
@@ -414,7 +414,7 @@ BOOL VFWAPI DrawDibDraw(HDRAWDIB hdd, HDC hdc,
  *		DrawDibStart		[MSVFW32.@]
  */
 BOOL VFWAPI DrawDibStart(HDRAWDIB hdd, DWORD rate) {
-	FIXME("(%p, %d), stub\n", hdd, rate);
+	FIXME("(%p, %ld), stub\n", hdd, rate);
 	return TRUE;
 }
 
@@ -463,7 +463,7 @@ BOOL VFWAPI DrawDibSetPalette(HDRAWDIB hdd, HPALETTE hpal)
  */
 LPVOID VFWAPI DrawDibGetBuffer(HDRAWDIB hdd, LPBITMAPINFOHEADER lpbi, DWORD dwSize, DWORD dwFlags)
 {
-    FIXME("(%p, %p, 0x%08x, 0x%08x), stub\n", hdd, lpbi, dwSize, dwFlags);
+    FIXME("(%p, %p, 0x%08lx, 0x%08lx), stub\n", hdd, lpbi, dwSize, dwFlags);
     return NULL;
 }
 

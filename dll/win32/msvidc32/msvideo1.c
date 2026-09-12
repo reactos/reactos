@@ -306,15 +306,15 @@ CRAM_DecompressQuery( Msvideo1Context *info, LPBITMAPINFO in, LPBITMAPINFO out )
 
     TRACE("in->planes  = %d\n", in->bmiHeader.biPlanes );
     TRACE("in->bpp     = %d\n", in->bmiHeader.biBitCount );
-    TRACE("in->height  = %d\n", in->bmiHeader.biHeight );
-    TRACE("in->width   = %d\n", in->bmiHeader.biWidth );
-    TRACE("in->compr   = 0x%x\n", in->bmiHeader.biCompression );
+    TRACE("in->height  = %ld\n", in->bmiHeader.biHeight );
+    TRACE("in->width   = %ld\n", in->bmiHeader.biWidth );
+    TRACE("in->compr   = 0x%lx\n", in->bmiHeader.biCompression );
 
     if( ( in->bmiHeader.biCompression != CRAM_MAGIC ) &&
         ( in->bmiHeader.biCompression != MSVC_MAGIC ) &&
         ( in->bmiHeader.biCompression != WHAM_MAGIC ) )
     {
-        TRACE("can't do 0x%x compression\n", in->bmiHeader.biCompression);
+        TRACE("can't do 0x%lx compression\n", in->bmiHeader.biCompression);
         return ICERR_BADFORMAT;
     }
 
@@ -330,8 +330,8 @@ CRAM_DecompressQuery( Msvideo1Context *info, LPBITMAPINFO in, LPBITMAPINFO out )
     {
         TRACE("out->planes = %d\n", out->bmiHeader.biPlanes );
         TRACE("out->bpp    = %d\n", out->bmiHeader.biBitCount );
-        TRACE("out->height = %d\n", out->bmiHeader.biHeight );
-        TRACE("out->width  = %d\n", out->bmiHeader.biWidth );
+        TRACE("out->height = %ld\n", out->bmiHeader.biHeight );
+        TRACE("out->width  = %ld\n", out->bmiHeader.biWidth );
 
         if ((in->bmiHeader.biBitCount != out->bmiHeader.biBitCount) &&
             (in->bmiHeader.biBitCount != 16 || out->bmiHeader.biBitCount != 24))
@@ -444,7 +444,7 @@ static LRESULT CRAM_Decompress( Msvideo1Context *info, ICDECOMPRESS *icd, DWORD 
     LONG width, height, stride, sz;
     void *output;
 
-    TRACE("ICM_DECOMPRESS %p %p %d\n", info, icd, size);
+    TRACE("ICM_DECOMPRESS %p %p %ld\n", info, icd, size);
 
     if( (info==NULL) || (info->dwMagic!=CRAM_MAGIC) )
         return ICERR_BADPARAM;
@@ -490,7 +490,7 @@ static LRESULT CRAM_DecompressEx( Msvideo1Context *info, ICDECOMPRESSEX *icd, DW
     LONG width, height, stride, sz;
     void *output;
 
-    TRACE("ICM_DECOMPRESSEX %p %p %d\n", info, icd, size);
+    TRACE("ICM_DECOMPRESSEX %p %p %ld\n", info, icd, size);
 
     if( (info==NULL) || (info->dwMagic!=CRAM_MAGIC) )
         return ICERR_BADPARAM;
@@ -563,7 +563,7 @@ LRESULT WINAPI CRAM_DriverProc( DWORD_PTR dwDriverId, HDRVR hdrvr, UINT msg,
     Msvideo1Context *info = (Msvideo1Context *) dwDriverId;
     LRESULT r = ICERR_UNSUPPORTED;
 
-    TRACE("%ld %p %04x %08lx %08lx\n", dwDriverId, hdrvr, msg, lParam1, lParam2);
+    TRACE("%Id %p %04x %08Ix %08Ix\n", dwDriverId, hdrvr, msg, lParam1, lParam2);
 
     switch( msg )
     {
@@ -657,7 +657,7 @@ LRESULT WINAPI CRAM_DriverProc( DWORD_PTR dwDriverId, HDRVR hdrvr, UINT msg,
         break;
 
     default:
-        FIXME("Unknown message: %04x %ld %ld\n", msg, lParam1, lParam2);
+        FIXME("Unknown message: %04x %Id %Id\n", msg, lParam1, lParam2);
     }
 
     return r;
@@ -668,7 +668,7 @@ LRESULT WINAPI CRAM_DriverProc( DWORD_PTR dwDriverId, HDRVR hdrvr, UINT msg,
  */
 BOOL WINAPI DllMain(HINSTANCE hModule, DWORD dwReason, LPVOID lpReserved)
 {
-    TRACE("(%p,%d,%p)\n", hModule, dwReason, lpReserved);
+    TRACE("(%p,%ld,%p)\n", hModule, dwReason, lpReserved);
 
     switch (dwReason)
     {

@@ -50,7 +50,6 @@ static HRESULT test_create_manager(void)
 static void test_CreateJob(void)
 {
     /* Job information */
-    static const WCHAR copyNameW[] = {'T', 'e', 's', 't', 0};
     IBackgroundCopyJob* job = NULL;
     GUID tmpId;
     HRESULT hres;
@@ -61,16 +60,14 @@ static void test_CreateJob(void)
     hres = CoCreateInstance(&CLSID_BackgroundCopyManager, NULL,
                             CLSCTX_LOCAL_SERVER, &IID_IBackgroundCopyManager,
                             (void **) &manager);
-    ok(hres == S_OK, "got 0x%08x\n", hres);
+    ok(hres == S_OK, "got 0x%08lx\n", hres);
 
     /* Create bits job */
-    hres = IBackgroundCopyManager_CreateJob(manager, copyNameW,
-                                            BG_JOB_TYPE_DOWNLOAD, &tmpId,
-                                            &job);
-    ok(hres == S_OK, "CreateJob failed: %08x\n", hres);
+    hres = IBackgroundCopyManager_CreateJob(manager, L"Test", BG_JOB_TYPE_DOWNLOAD, &tmpId, &job);
+    ok(hres == S_OK, "CreateJob failed: %08lx\n", hres);
 
     res = IBackgroundCopyJob_Release(job);
-    ok(res == 0, "Bad ref count on release: %u\n", res);
+    ok(res == 0, "Bad ref count on release: %lu\n", res);
     IBackgroundCopyManager_Release(manager);
 }
 
@@ -78,8 +75,6 @@ static void test_EnumJobs(void)
 {
     /* Job Enumerator */
     IEnumBackgroundCopyJobs* enumJobs;
-
-    static const WCHAR copyNameW[] = {'T', 'e', 's', 't', 0};
     IBackgroundCopyManager *manager = NULL;
     IBackgroundCopyJob *job = NULL;
     HRESULT hres;
@@ -89,15 +84,13 @@ static void test_EnumJobs(void)
     hres = CoCreateInstance(&CLSID_BackgroundCopyManager, NULL,
                             CLSCTX_LOCAL_SERVER, &IID_IBackgroundCopyManager,
                             (void **) &manager);
-    ok(hres == S_OK, "got 0x%08x\n", hres);
+    ok(hres == S_OK, "got 0x%08lx\n", hres);
 
-    hres = IBackgroundCopyManager_CreateJob(manager, copyNameW,
-                                            BG_JOB_TYPE_DOWNLOAD, &tmpId,
-                                            &job);
-    ok(hres == S_OK, "got 0x%08x\n", hres);
+    hres = IBackgroundCopyManager_CreateJob(manager, L"Test", BG_JOB_TYPE_DOWNLOAD, &tmpId, &job);
+    ok(hres == S_OK, "got 0x%08lx\n", hres);
 
     hres = IBackgroundCopyManager_EnumJobs(manager, 0, &enumJobs);
-    ok(hres == S_OK, "EnumJobs failed: %08x\n", hres);
+    ok(hres == S_OK, "EnumJobs failed: %08lx\n", hres);
     IEnumBackgroundCopyJobs_Release(enumJobs);
 
     /* Tear down */
@@ -107,7 +100,6 @@ static void test_EnumJobs(void)
 
 static void run_child(WCHAR *secret)
 {
-    static const WCHAR format[] = {'%','s',' ','q','m','g','r',' ','%','s', 0};
     WCHAR cmdline[MAX_PATH];
     PROCESS_INFORMATION info;
     STARTUPINFOW startup;
@@ -115,9 +107,9 @@ static void run_child(WCHAR *secret)
     memset(&startup, 0, sizeof startup);
     startup.cb = sizeof startup;
 
-    wsprintfW(cmdline, format, progname, secret);
+    wsprintfW(cmdline, L"%s qmgr %s", progname, secret);
     ok(CreateProcessW(NULL, cmdline, NULL, NULL, FALSE, 0L, NULL, NULL, &startup, &info), "CreateProcess\n");
-    winetest_wait_child_process(info.hProcess);
+    wait_child_process(info.hProcess);
     ok(CloseHandle(info.hProcess), "CloseHandle\n");
     ok(CloseHandle(info.hThread), "CloseHandle\n");
 }
@@ -132,7 +124,7 @@ static void do_child(const char *secretA)
     hres = CoCreateInstance(&CLSID_BackgroundCopyManager, NULL,
                             CLSCTX_LOCAL_SERVER, &IID_IBackgroundCopyManager,
                             (void **) &manager);
-    ok(hres == S_OK, "got 0x%08x\n", hres);
+    ok(hres == S_OK, "got 0x%08lx\n", hres);
 
     MultiByteToWideChar(CP_ACP, 0, secretA, -1, secretW, MAX_PATH);
     hres = IBackgroundCopyManager_CreateJob(manager, secretW,
@@ -144,7 +136,6 @@ static void do_child(const char *secretA)
 
 static void test_globalness(void)
 {
-    static const WCHAR format[] = {'t','e','s','t','_','%','u', 0};
     WCHAR secretName[MAX_PATH];
     IEnumBackgroundCopyJobs* enumJobs;
     IBackgroundCopyManager *manager = NULL;
@@ -152,13 +143,13 @@ static void test_globalness(void)
     hres = CoCreateInstance(&CLSID_BackgroundCopyManager, NULL,
                             CLSCTX_LOCAL_SERVER, &IID_IBackgroundCopyManager,
                             (void **) &manager);
-    ok(hres == S_OK, "got 0x%08x\n", hres);
+    ok(hres == S_OK, "got 0x%08lx\n", hres);
 
-    wsprintfW(secretName, format, GetTickCount());
+    wsprintfW(secretName, L"test_%u", GetTickCount());
     run_child(secretName);
 
     hres = IBackgroundCopyManager_EnumJobs(manager, 0, &enumJobs);
-    ok(hres == S_OK, "EnumJobs failed: %08x\n", hres);
+    ok(hres == S_OK, "EnumJobs failed: %08lx\n", hres);
     if(hres != S_OK)
         skip("Unable to create job enumerator.\n");
     else
@@ -168,7 +159,7 @@ static void test_globalness(void)
         BOOL found = FALSE;
 
         hres = IEnumBackgroundCopyJobs_GetCount(enumJobs, &n);
-        ok(hres == S_OK, "GetCount failed: %08x\n", hres);
+        ok(hres == S_OK, "GetCount failed: %08lx\n", hres);
         for (i = 0; i < n && !found; ++i)
         {
             LPWSTR name;

@@ -27,27 +27,6 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(ntdsapi);
 
-/*****************************************************
- *      DllMain
- */
-BOOL WINAPI DllMain(HINSTANCE hinst, DWORD reason, LPVOID reserved)
-{
-    TRACE("(%p, %d, %p)\n", hinst, reason, reserved);
-
-    switch(reason)
-    {
-#ifndef __REACTOS__
-    case DLL_WINE_PREATTACH:
-        return FALSE;  /* prefer native version */
-#endif
-
-    case DLL_PROCESS_ATTACH:
-        DisableThreadLibraryCalls( hinst );
-        break;
-    }
-    return TRUE;
-}
-
 /***********************************************************************
  *             DsBindA (NTDSAPI.@)
  */
@@ -132,10 +111,9 @@ DWORD WINAPI DsMakeSpnW(LPCWSTR svc_class, LPCWSTR svc_name,
 
     if (inst_port)
     {
-        static const WCHAR percentU[] = {'%','u',0};
         *p = ':';
         p++;
-        wsprintfW(p, percentU, inst_port);
+        wsprintfW(p, L"%u", inst_port);
         p += lstrlenW(p);
     }
 
@@ -240,7 +218,7 @@ DWORD WINAPI DsClientMakeSpnForTargetServerW(LPCWSTR class, LPCWSTR name, DWORD 
 DWORD WINAPI DsCrackNamesA(HANDLE handle, DS_NAME_FLAGS flags, DS_NAME_FORMAT offered, DS_NAME_FORMAT desired,
                    DWORD num, const CHAR **names, PDS_NAME_RESULTA *result)
 {
-    FIXME("(%p %u %u %u %u %p %p stub\n", handle, flags, offered, desired, num, names, result);
+    FIXME("(%p %u %u %u %lu %p %p stub\n", handle, flags, offered, desired, num, names, result);
     return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
@@ -250,6 +228,6 @@ DWORD WINAPI DsCrackNamesA(HANDLE handle, DS_NAME_FLAGS flags, DS_NAME_FORMAT of
 DWORD WINAPI DsCrackNamesW(HANDLE handle, DS_NAME_FLAGS flags, DS_NAME_FORMAT offered, DS_NAME_FORMAT desired,
                    DWORD num, const WCHAR **names, PDS_NAME_RESULTW *result)
 {
-    FIXME("(%p %u %u %u %u %p %p stub\n", handle, flags, offered, desired, num, names, result);
+    FIXME("(%p %u %u %u %lu %p %p stub\n", handle, flags, offered, desired, num, names, result);
     return ERROR_CALL_NOT_IMPLEMENTED;
 }

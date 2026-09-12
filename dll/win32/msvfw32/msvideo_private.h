@@ -44,7 +44,7 @@ typedef struct tagWINE_HIC {
     struct tagWINE_HIC* next;
 } WINE_HIC;
 
-extern HMODULE MSVFW32_hModule DECLSPEC_HIDDEN;
+extern HMODULE MSVFW32_hModule;
 
 #define IDC_CONFIGURE 882
 #define IDC_ABOUT 883
