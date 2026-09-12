@@ -26,13 +26,14 @@
 /* Common dialogs implementation globals */
 #define COMDLG32_Atom   MAKEINTATOM(0xa000)     /* MS uses this one to identify props */
 
-extern HINSTANCE	COMDLG32_hInstance DECLSPEC_HIDDEN;
+extern HINSTANCE COMDLG32_hInstance;
 #ifdef __REACTOS__
 extern CRITICAL_SECTION COMDLG32_OpenFileLock DECLSPEC_HIDDEN;
 #endif
+extern HANDLE COMDLG32_hActCtx;
 
-void	COMDLG32_SetCommDlgExtendedError(DWORD err) DECLSPEC_HIDDEN;
-LPVOID	COMDLG32_AllocMem(int size) __WINE_ALLOC_SIZE(1) DECLSPEC_HIDDEN;
+void	COMDLG32_SetCommDlgExtendedError(DWORD err);
+LPVOID	COMDLG32_AllocMem(int size) __WINE_ALLOC_SIZE(1);
 
 /* Find/Replace local definitions */
 
@@ -151,28 +152,6 @@ typedef struct {
 #define IDS_COLOR_AQUA                  1054
 #define IDS_COLOR_WHITE                 1055
 
-/* Color dialog controls */
-#define IDC_COLOR_LUMBAR 702
-#define IDC_COLOR_EDIT_H 703
-#define IDC_COLOR_EDIT_S 704
-#define IDC_COLOR_EDIT_L 705
-#define IDC_COLOR_EDIT_R 706
-#define IDC_COLOR_EDIT_G 707
-#define IDC_COLOR_EDIT_B 708
-#define IDC_COLOR_RESULT 709
-#define IDC_COLOR_GRAPH  710
-#define IDC_COLOR_ADD    712
-#define IDC_COLOR_RES    713
-#define IDC_COLOR_DEFINE 719
-#define IDC_COLOR_PREDEF 720
-#define IDC_COLOR_USRDEF 721
-#define IDC_COLOR_HL     723
-#define IDC_COLOR_SL     724
-#define IDC_COLOR_LL     725
-#define IDC_COLOR_RL     726
-#define IDC_COLOR_GL     727
-#define IDC_COLOR_BL     728
-
 #define IDS_FONT_SIZE    1200
 #define IDS_SAVE_BUTTON  1201
 #define IDS_SAVE_IN      1202
@@ -194,27 +173,24 @@ typedef struct {
 #include "shellapi.h"
 
 /* Constructors */
-HRESULT FileOpenDialog_Constructor(IUnknown *pUnkOuter, REFIID riid, void **ppv) DECLSPEC_HIDDEN;
-HRESULT FileSaveDialog_Constructor(IUnknown *pUnkOuter, REFIID riid, void **ppv) DECLSPEC_HIDDEN;
+HRESULT FileOpenDialog_Constructor(IUnknown *pUnkOuter, REFIID riid, void **ppv);
+HRESULT FileSaveDialog_Constructor(IUnknown *pUnkOuter, REFIID riid, void **ppv);
 
 /* Shared helper functions */
-void COMDLG32_GetCanonicalPath(PCIDLIST_ABSOLUTE pidlAbsCurrent, LPWSTR lpstrFile, LPWSTR lpstrPathAndFile) DECLSPEC_HIDDEN;
+void COMDLG32_GetCanonicalPath(PCIDLIST_ABSOLUTE pidlAbsCurrent, LPWSTR lpstrFile, LPWSTR lpstrPathAndFile);
 #ifdef __REACTOS__
 struct FileOpenDlgInfos;
 int FILEDLG95_ValidatePathAction(struct FileOpenDlgInfos *fodInfos, LPWSTR lpstrPathAndFile, IShellFolder **ppsf,
-                                 HWND hwnd, DWORD flags, BOOL isSaveDlg, int defAction) DECLSPEC_HIDDEN;
+                                 HWND hwnd, DWORD flags, BOOL isSaveDlg, int defAction);
 #else
 int FILEDLG95_ValidatePathAction(LPWSTR lpstrPathAndFile, IShellFolder **ppsf,
-                                 HWND hwnd, DWORD flags, BOOL isSaveDlg, int defAction) DECLSPEC_HIDDEN;
+                                 HWND hwnd, DWORD flags, BOOL isSaveDlg, int defAction);
 #endif
-int COMDLG32_SplitFileNames(LPWSTR lpstrEdit, UINT nStrLen, LPWSTR *lpstrFileList, UINT *sizeUsed) DECLSPEC_HIDDEN;
-void FILEDLG95_OnOpenMessage(HWND hwnd, int idCaption, int idText) DECLSPEC_HIDDEN;
+int COMDLG32_SplitFileNames(LPWSTR lpstrEdit, UINT nStrLen, LPWSTR *lpstrFileList, UINT *sizeUsed);
+void FILEDLG95_OnOpenMessage(HWND hwnd, int idCaption, int idText);
 
-extern BOOL GetFileName31A( OPENFILENAMEA *lpofn, UINT dlgType ) DECLSPEC_HIDDEN;
-extern BOOL GetFileName31W( OPENFILENAMEW *lpofn, UINT dlgType ) DECLSPEC_HIDDEN;
-
-/* SHELL */
-extern LPITEMIDLIST (WINAPI *COMDLG32_SHSimpleIDListFromPathAW)(LPCVOID);
+extern BOOL GetFileName31A( OPENFILENAMEA *lpofn, UINT dlgType );
+extern BOOL GetFileName31W( OPENFILENAMEW *lpofn, UINT dlgType );
 
 #define ONOPEN_BROWSE 1
 #define ONOPEN_OPEN   2
