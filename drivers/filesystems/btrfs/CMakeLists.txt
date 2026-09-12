@@ -1,7 +1,5 @@
 
-include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/drivers
-                    ${REACTOS_SOURCE_DIR}/sdk/include/reactos/libs/zlib
-                    inc)
+include_directories(inc)
 
 set(ZSTD_SRC_FILES
     zstd/entropy_common.c

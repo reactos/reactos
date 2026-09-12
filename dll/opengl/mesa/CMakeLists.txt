@@ -1,6 +1,4 @@
 
-include_directories(.)
-
 add_definitions(-DFAST_MATH -DTHREADS)
 
 if(ARCH STREQUAL "i386")
@@ -67,6 +65,7 @@ list(APPEND SOURCE
 
 add_library(mesa STATIC ${SOURCE} ${mesa_asm})
 add_dependencies(mesa psdk)
+target_include_directories(mesa INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
 
 if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
     target_compile_options(mesa PRIVATE
@@ -75,4 +74,3 @@ if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
         -Wno-array-compare
     )
 endif()
-
