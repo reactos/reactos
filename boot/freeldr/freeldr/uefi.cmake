@@ -20,6 +20,7 @@ list(APPEND UEFILDR_ARC_SOURCE
     arch/uefi/uefisetup.c
     arch/uefi/uefiutil.c
     arch/uefi/uefivid.c
+    arch/hwpci.c
     arch/vidfb.c
     arch/vgafont.c)
 

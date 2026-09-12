@@ -1,21 +1,8 @@
 /*
- *  FreeLoader
- *
- *  Copyright (C) 2004  Eric Kohl
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License along
- *  with this program; if not, write to the Free Software Foundation, Inc.,
- *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ * PROJECT:     FreeLoader
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     PCI BIOS detection routines
+ * COPYRIGHT:   Copyright 2004 Eric Kohl <eric.kohl@reactos.org>
  */
 
 #include <freeldr.h>
@@ -23,6 +10,59 @@
 #include <debug.h>
 DBG_DEFAULT_CHANNEL(HWDETECT);
 
+/*
+ * Specification:
+ * - https://pcisig.com/PCIConventional/Specs/Firmware/Bios_2.1
+ * - http://www.o3one.org/hwdocs/bios_doc/pci_bios_21.pdf
+ * - https://hackipedia.org/browse.cgi/Computer/Platform/PC,%20IBM%20compatible/Busses/PCI/BIOS
+ */
+static
+BOOLEAN
+PcFindPciBios(
+    _Out_ PPCI_REGISTRY_INFO BusData)
+{
+    REGS RegsIn;
+    REGS RegsOut;
+
+    RegsIn.b.ah = 0xB1; /* Subfunction B1h */
+    RegsIn.b.al = 0x01; /* PCI BIOS present */
+
+    Int386(0x1A, &RegsIn, &RegsOut);
+
+    if (INT386_SUCCESS(RegsOut) &&
+        (RegsOut.d.edx == ' ICP') &&
+        (RegsOut.b.ah == 0))
+    {
+        TRACE("Found PCI BIOS\n");
+
+        TRACE("AL: %x\n", RegsOut.b.al);
+        TRACE("BH: %x\n", RegsOut.b.bh);
+        TRACE("BL: %x\n", RegsOut.b.bl);
+        TRACE("CL: %x\n", RegsOut.b.cl);
+
+        BusData->MajorRevision = RegsOut.b.bh;
+        BusData->MinorRevision = RegsOut.b.bl;
+        BusData->NoBuses = RegsOut.b.cl + 1;
+        BusData->HardwareMechanism = RegsOut.b.al;
+        return TRUE;
+    }
+
+    TRACE("No PCI BIOS found\n");
+    return FALSE;
+}
+
+/*
+ * NOTE: The PCI IRQ Routing Table is a legacy pre-ACPI mechanism that serves
+ * to dynamically route PCI interrupts to interrupt requests (IRQs)[^1][^2][^3].
+ * On the other hand, on ACPI-aware systems, ACPI-specific methods are used[^4][^5].
+ *
+ * References:
+ * [^1]: https://web.archive.org/web/20101230191251/https://www.microsoft.com/whdc/archive/pciirq.mspx
+ * [^2]: https://www.betaarchive.com/wiki/index.php/Microsoft_KB_Archive/182604
+ * [^3]: https://lisans.cozum.info.tr/networking/Interrupt%20sharing%20on%20PCI-devices.htm
+ * [^4]: https://web.archive.org/web/20111012153449/http://msdn.microsoft.com/en-us/windows/hardware/gg454523
+ * [^5]: https://github.com/jaykhandkar/pci-interrupt-routing
+ */
 static
 PPCI_IRQ_ROUTING_TABLE
 GetPciIrqRoutingTable(VOID)
@@ -73,50 +113,14 @@ GetPciIrqRoutingTable(VOID)
     return NULL;
 }
 
-BOOLEAN
-PcFindPciBios(
-    _Out_ PPCI_REGISTRY_INFO BusData)
-{
-    REGS RegsIn;
-    REGS RegsOut;
-
-    RegsIn.b.ah = 0xB1; /* Subfunction B1h */
-    RegsIn.b.al = 0x01; /* PCI BIOS present */
-
-    Int386(0x1A, &RegsIn, &RegsOut);
-
-    if (INT386_SUCCESS(RegsOut) &&
-        (RegsOut.d.edx == ' ICP') &&
-        (RegsOut.b.ah == 0))
-    {
-        TRACE("Found PCI bios\n");
-
-        TRACE("AL: %x\n", RegsOut.b.al);
-        TRACE("BH: %x\n", RegsOut.b.bh);
-        TRACE("BL: %x\n", RegsOut.b.bl);
-        TRACE("CL: %x\n", RegsOut.b.cl);
-
-        BusData->NoBuses = RegsOut.b.cl + 1;
-        BusData->MajorRevision = RegsOut.b.bh;
-        BusData->MinorRevision = RegsOut.b.bl;
-        BusData->HardwareMechanism = RegsOut.b.al;
-
-        return TRUE;
-    }
-
-    TRACE("No PCI bios found\n");
-
-    return FALSE;
-}
-
 static
 VOID
 DetectPciIrqRoutingTable(
     _In_ PCONFIGURATION_COMPONENT_DATA BusKey)
 {
+    PPCI_IRQ_ROUTING_TABLE Table;
     PCM_PARTIAL_RESOURCE_LIST PartialResourceList;
     PCM_PARTIAL_RESOURCE_DESCRIPTOR PartialDescriptor;
-    PPCI_IRQ_ROUTING_TABLE Table;
     PCONFIGURATION_COMPONENT_DATA TableKey;
     ULONG Size;
 
@@ -167,23 +171,19 @@ DetectPciIrqRoutingTable(
                            &TableKey);
 }
 
-VOID
-DetectPciBios(
+BOOLEAN
+PcDetectPciBus(
     _In_ PCONFIGURATION_COMPONENT_DATA SystemKey,
     _Inout_ PULONG BusNumber,
-    _In_ FIND_PCI_BIOS MachFindPciBios)
+    _Out_ PPCI_REGISTRY_INFO BusData)
 {
-    PCI_REGISTRY_INFO BusData;
     PCM_PARTIAL_RESOURCE_LIST PartialResourceList;
-    PCM_PARTIAL_RESOURCE_DESCRIPTOR PartialDescriptor;
     PCONFIGURATION_COMPONENT_DATA BiosKey;
-    PCONFIGURATION_COMPONENT_DATA BusKey;
     ULONG Size;
-    ULONG i;
 
     /* Report the PCI BIOS */
-    if (!MachFindPciBios(&BusData))
-        return;
+    if (!PcFindPciBios(BusData))
+        return FALSE;
 
     /* Set 'Configuration Data' value */
     Size = FIELD_OFFSET(CM_PARTIAL_RESOURCE_LIST, PartialDescriptors);
@@ -191,7 +191,7 @@ DetectPciBios(
     if (PartialResourceList == NULL)
     {
         ERR("Failed to allocate resource descriptor\n");
-        return;
+        return FALSE;
     }
 
     /* Initialize resource descriptor */
@@ -213,69 +213,7 @@ DetectPciBios(
     (*BusNumber)++;
 
     DetectPciIrqRoutingTable(BiosKey);
-
-    /* Report PCI buses */
-    for (i = 0; i < (ULONG)BusData.NoBuses; i++)
-    {
-        /* Check if this is the first bus */
-        if (i == 0)
-        {
-            /* Set 'Configuration Data' value */
-            Size = FIELD_OFFSET(CM_PARTIAL_RESOURCE_LIST, PartialDescriptors[1]) +
-                   sizeof(BusData);
-            PartialResourceList = FrLdrHeapAlloc(Size, TAG_HW_RESOURCE_LIST);
-            if (!PartialResourceList)
-            {
-                ERR("Failed to allocate resource descriptor! Ignoring remaining PCI buses. (i = %lu, NoBuses = %lu)\n",
-                    i, (ULONG)BusData.NoBuses);
-                return;
-            }
-
-            /* Initialize resource descriptor */
-            RtlZeroMemory(PartialResourceList, Size);
-            PartialResourceList->Version = 1;
-            PartialResourceList->Revision = 1;
-            PartialResourceList->Count = 1;
-
-            PartialDescriptor = &PartialResourceList->PartialDescriptors[0];
-            PartialDescriptor->Type = CmResourceTypeDeviceSpecific;
-            PartialDescriptor->ShareDisposition = CmResourceShareUndetermined;
-            PartialDescriptor->u.DeviceSpecificData.DataSize = sizeof(BusData);
-
-            RtlCopyMemory(&PartialResourceList->PartialDescriptors[1],
-                          &BusData, sizeof(BusData));
-        }
-        else
-        {
-            /* Set 'Configuration Data' value */
-            Size = FIELD_OFFSET(CM_PARTIAL_RESOURCE_LIST, PartialDescriptors);
-            PartialResourceList = FrLdrHeapAlloc(Size, TAG_HW_RESOURCE_LIST);
-            if (!PartialResourceList)
-            {
-                ERR("Failed to allocate resource descriptor! Ignoring remaining PCI buses. (i = %lu, NoBuses = %lu)\n",
-                    i, (ULONG)BusData.NoBuses);
-                return;
-            }
-
-            /* Initialize resource descriptor */
-            RtlZeroMemory(PartialResourceList, Size);
-        }
-
-        /* Create the bus key */
-        FldrCreateComponentKey(SystemKey,
-                               AdapterClass,
-                               MultiFunctionAdapter,
-                               0,
-                               0,
-                               0xFFFFFFFF,
-                               "PCI",
-                               PartialResourceList,
-                               Size,
-                               &BusKey);
-
-        /* Increment bus number */
-        (*BusNumber)++;
-    }
+    return TRUE;
 }
 
 /* EOF */

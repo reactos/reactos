@@ -50,7 +50,9 @@ VOID PcPrepareForReactOS(VOID);
 PFREELDR_MEMORY_DESCRIPTOR PcMemGetMemoryMap(ULONG *MemoryMapSize);
 
 BOOLEAN
-PcFindPciBios(
+PcDetectPciBus(
+    _In_ PCONFIGURATION_COMPONENT_DATA SystemKey,
+    _Inout_ PULONG BusNumber,
     _Out_ PPCI_REGISTRY_INFO BusData);
 
 /*
