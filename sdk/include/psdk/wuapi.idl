@@ -1321,6 +1321,22 @@ interface ISystemInformation : IDispatch
 }
 
 [
+    object,
+    uuid(85713fa1-7796-4fa2-be3b-e2d6124dd373),
+    oleautomation,
+    dual,
+    nonextensible,
+    pointer_default(unique),
+    hidden
+]
+interface IWindowsUpdateAgentInfo : IDispatch
+{
+    [id(0x60020001)]
+    HRESULT GetInfo([in] VARIANT varInfoIdentifier,
+                    [out, retval] VARIANT *retval);
+}
+
+[
     helpstring("AutomaticUpdates Class"),
     threading(both),
     progid("Microsoft.Update.AutoUpdate.1"),
@@ -1328,6 +1344,15 @@ interface ISystemInformation : IDispatch
     uuid(bfe18e9c-6d87-4450-b37c-e02f0b373803)
 ]
 coclass AutomaticUpdates { interface IAutomaticUpdates; }
+
+[
+    helpstring("UpdateInstaller Class"),
+    threading(both),
+    progid("Microsoft.Update.Installer.1"),
+    vi_progid("Microsoft.Update.Installer"),
+    uuid(d2e0fe7f-d23e-48e1-93c0-6fa8cc346474)
+]
+coclass UpdateInstaller { interface IUpdateInstaller; }
 
 [
     helpstring("UpdateSession Class"),
@@ -1346,5 +1371,14 @@ coclass UpdateSession { interface IUpdateSession; }
     uuid(C01B9BA0-BEA7-41BA-B604-D0A36F469133)
 ]
 coclass SystemInformation { interface ISystemInformation; }
+
+[
+    helpstring("WindowsUpdateAgentInfo Class"),
+    threading(both),
+    progid("Microsoft.Update.AgentInfo.1"),
+    vi_progid("Microsoft.Update.AgentInfo"),
+    uuid(c2e88c2f-6f5b-4aaa-894b-55c847ad3a2d)
+]
+coclass WindowsUpdateAgentInfo { interface IWindowsUpdateAgentInfo; }
 
 } /* WUApiLib */

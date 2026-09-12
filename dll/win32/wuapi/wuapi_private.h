@@ -16,9 +16,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-extern HRESULT AutomaticUpdates_create( LPVOID *ppObj ) DECLSPEC_HIDDEN;
-extern HRESULT UpdateSession_create( LPVOID *ppObj ) DECLSPEC_HIDDEN;
-extern HRESULT UpdateSearcher_create( LPVOID *ppObj ) DECLSPEC_HIDDEN;
-extern HRESULT UpdateDownloader_create( LPVOID *ppObj ) DECLSPEC_HIDDEN;
-extern HRESULT UpdateInstaller_create( LPVOID *ppObj ) DECLSPEC_HIDDEN;
-extern HRESULT SystemInformation_create( LPVOID *ppObj ) DECLSPEC_HIDDEN;
+extern HRESULT AutomaticUpdates_create( LPVOID *ppObj );
+extern HRESULT UpdateSession_create( LPVOID *ppObj );
+extern HRESULT UpdateSearcher_create( LPVOID *ppObj );
+extern HRESULT UpdateDownloader_create( LPVOID *ppObj );
+extern HRESULT UpdateInstaller_create( LPVOID *ppObj );
+extern HRESULT SystemInformation_create( LPVOID *ppObj );

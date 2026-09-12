@@ -46,11 +46,6 @@ struct name
     WCHAR *version;
 };
 
-static const WCHAR archW[] = {'p','r','o','c','e','s','s','o','r','A','r','c','h','i','t','e','c','t','u','r','e',0};
-static const WCHAR tokenW[] = {'p','u','b','l','i','c','K','e','y','T','o','k','e','n',0};
-static const WCHAR typeW[] = {'t','y','p','e',0};
-static const WCHAR versionW[] = {'v','e','r','s','i','o','n',0};
-
 static inline struct name *impl_from_IAssemblyName( IAssemblyName *iface )
 {
     return CONTAINING_RECORD( iface, struct name, IAssemblyName_iface );
@@ -59,19 +54,17 @@ static inline struct name *impl_from_IAssemblyName( IAssemblyName *iface )
 static HRESULT WINAPI name_QueryInterface(
     IAssemblyName *iface,
     REFIID riid,
-    void **obj )
+    void **ret_iface )
 {
-    struct name *name = impl_from_IAssemblyName( iface );
+    TRACE("%p, %s, %p\n", iface, debugstr_guid(riid), ret_iface);
 
-    TRACE("%p, %s, %p\n", name, debugstr_guid(riid), obj);
-
-    *obj = NULL;
+    *ret_iface = NULL;
 
     if (IsEqualIID( riid, &IID_IUnknown ) ||
         IsEqualIID( riid, &IID_IAssemblyName ))
     {
         IAssemblyName_AddRef( iface );
-        *obj = name;
+        *ret_iface = iface;
         return S_OK;
     }
 
@@ -93,12 +86,12 @@ static ULONG WINAPI name_Release( IAssemblyName *iface )
     if (!refs)
     {
         TRACE("destroying %p\n", name);
-        HeapFree( GetProcessHeap(), 0, name->name );
-        HeapFree( GetProcessHeap(), 0, name->arch );
-        HeapFree( GetProcessHeap(), 0, name->token );
-        HeapFree( GetProcessHeap(), 0, name->type );
-        HeapFree( GetProcessHeap(), 0, name->version );
-        HeapFree( GetProcessHeap(), 0, name );
+        free( name->name );
+        free( name->arch );
+        free( name->token );
+        free( name->type );
+        free( name->version );
+        free( name );
     }
     return refs;
 }
@@ -109,7 +102,7 @@ static HRESULT WINAPI name_SetProperty(
     LPVOID property,
     DWORD size )
 {
-    FIXME("%p, %d, %p, %d\n", iface, id, property, size);
+    FIXME("%p, %ld, %p, %ld\n", iface, id, property, size);
     return E_NOTIMPL;
 }
 
@@ -119,7 +112,7 @@ static HRESULT WINAPI name_GetProperty(
     LPVOID buffer,
     LPDWORD buflen )
 {
-    FIXME("%p, %d, %p, %p\n", iface, id, buffer, buflen);
+    FIXME("%p, %ld, %p, %p\n", iface, id, buffer, buflen);
     return E_NOTIMPL;
 }
 
@@ -138,18 +131,17 @@ static HRESULT WINAPI name_GetDisplayName(
 {
     static const WCHAR fmtW[] = {',','%','s','=','\"','%','s','\"',0};
     struct name *name = impl_from_IAssemblyName( iface );
-    WCHAR version[30];
     unsigned int len;
 
-    TRACE("%p, %p, %p, 0x%08x\n", iface, buffer, buflen, flags);
+    TRACE("%p, %p, %p, 0x%08lx\n", iface, buffer, buflen, flags);
 
     if (!buflen || flags) return E_INVALIDARG;
 
     len = lstrlenW( name->name ) + 1;
-    if (name->arch)    len += lstrlenW( archW ) + lstrlenW( name->arch ) + 4;
-    if (name->token)   len += lstrlenW( tokenW ) + lstrlenW( name->token ) + 4;
-    if (name->type)    len += lstrlenW( typeW ) + lstrlenW( name->type ) + 4;
-    if (name->version) len += lstrlenW( versionW ) + lstrlenW( version ) + 4;
+    if (name->arch)    len += lstrlenW( L"processorArchitecture" ) + lstrlenW( name->arch ) + 4;
+    if (name->token)   len += lstrlenW( L"publicKeyToken" ) + lstrlenW( name->token ) + 4;
+    if (name->type)    len += lstrlenW( L"type" ) + lstrlenW( name->type ) + 4;
+    if (name->version) len += lstrlenW( L"version" ) + lstrlenW( name->version ) + 4;
     if (len > *buflen)
     {
         *buflen = len;
@@ -157,10 +149,10 @@ static HRESULT WINAPI name_GetDisplayName(
     }
     lstrcpyW( buffer, name->name );
     len = lstrlenW( buffer );
-    if (name->arch)    len += swprintf( buffer + len, fmtW, archW, name->arch );
-    if (name->token)   len += swprintf( buffer + len, fmtW, tokenW, name->token );
-    if (name->type)    len += swprintf( buffer + len, fmtW, typeW, name->type );
-    if (name->version) len += swprintf( buffer + len, fmtW, versionW, name->version );
+    if (name->arch)    len += swprintf( buffer + len, *buflen - len, fmtW, L"processorArchitecture", name->arch );
+    if (name->token)   len += swprintf( buffer + len, *buflen - len, fmtW, L"publicKeyToken", name->token );
+    if (name->type)    len += swprintf( buffer + len, *buflen - len, fmtW, L"type", name->type );
+    if (name->version) len += swprintf( buffer + len, *buflen - len, fmtW, L"version", name->version );
     return S_OK;
 }
 
@@ -175,7 +167,7 @@ static HRESULT WINAPI name_Reserved(
     DWORD cbReserved,
     LPVOID *ppReserved )
 {
-    FIXME("%p, %s, %p, %p, %s, %s, %p, %d, %p\n", iface,
+    FIXME("%p, %s, %p, %p, %s, %s, %p, %ld, %p\n", iface,
           debugstr_guid(riid), pUnkReserved1, pUnkReserved2,
           debugstr_w(szReserved), wine_dbgstr_longlong(llReserved),
           pvReserved, cbReserved, ppReserved);
@@ -257,9 +249,9 @@ static HRESULT WINAPI name_GetVersion(
     TRACE("%p, %p, %p\n", iface, high, low);
 
     if (!name->version) return HRESULT_FROM_WIN32( ERROR_NOT_FOUND );
-    if (!(version = strdupW( name->version ))) return E_OUTOFMEMORY;
+    if (!(version = wcsdup( name->version ))) return E_OUTOFMEMORY;
     hr = parse_version( version, high, low );
-    HeapFree( GetProcessHeap(), 0, version );
+    free( version );
     return hr;
 }
 
@@ -268,7 +260,7 @@ static HRESULT WINAPI name_IsEqual(
     IAssemblyName *name2,
     DWORD flags )
 {
-    FIXME("%p, %p, 0x%08x\n", name1, name2, flags);
+    FIXME("%p, %p, 0x%08lx\n", name1, name2, flags);
     return E_NOTIMPL;
 }
 
@@ -306,7 +298,7 @@ static WCHAR *parse_value( const WCHAR *str, unsigned int *len )
     if (!*p) return NULL;
 
     *len = p - str;
-    if (!(ret = HeapAlloc( GetProcessHeap(), 0, *len * sizeof(WCHAR) ))) return NULL;
+    if (!(ret = malloc( *len * sizeof(WCHAR) ))) return NULL;
     memcpy( ret, str + 1, (*len - 1) * sizeof(WCHAR) );
     ret[*len - 1] = 0;
     return ret;
@@ -320,7 +312,7 @@ static HRESULT parse_displayname( struct name *name, const WCHAR *displayname )
     p = q = displayname;
     while (*q && *q != ',') q++;
     len = q - p;
-    if (!(name->name = HeapAlloc( GetProcessHeap(), 0, (len + 1) * sizeof(WCHAR) ))) return E_OUTOFMEMORY;
+    if (!(name->name = malloc( (len + 1) * sizeof(WCHAR) ))) return E_OUTOFMEMORY;
     memcpy( name->name, p, len * sizeof(WCHAR) );
     name->name[len] = 0;
     if (!*q) return S_OK;
@@ -331,25 +323,25 @@ static HRESULT parse_displayname( struct name *name, const WCHAR *displayname )
         while (*q && *q != '=') q++;
         if (!*q) return E_INVALIDARG;
         len = q - p;
-        if (len == ARRAY_SIZE(archW) - 1 && !memcmp( p, archW, len * sizeof(WCHAR) ))
+        if (len == ARRAY_SIZE(L"processorArchitecture") - 1 && !memcmp( p, L"processorArchitecture", len * sizeof(WCHAR) ))
         {
             p = ++q;
             if (!(name->arch = parse_value( p, &len ))) return E_INVALIDARG;
             q += len;
         }
-        else if (len == ARRAY_SIZE(tokenW) - 1 && !memcmp( p, tokenW, len * sizeof(WCHAR) ))
+        else if (len == ARRAY_SIZE(L"publicKeyToken") - 1 && !memcmp( p, L"publicKeyToken", len * sizeof(WCHAR) ))
         {
             p = ++q;
             if (!(name->token = parse_value( p, &len ))) return E_INVALIDARG;
             q += len;
         }
-        else if (len == ARRAY_SIZE(typeW) - 1 && !memcmp( p, typeW, len * sizeof(WCHAR) ))
+        else if (len == ARRAY_SIZE(L"type") - 1 && !memcmp( p, L"type", len * sizeof(WCHAR) ))
         {
             p = ++q;
             if (!(name->type = parse_value( p, &len ))) return E_INVALIDARG;
             q += len;
         }
-        else if (len == ARRAY_SIZE(versionW) - 1 && !memcmp( p, versionW, len * sizeof(WCHAR) ))
+        else if (len == ARRAY_SIZE(L"version") - 1 && !memcmp( p, L"version", len * sizeof(WCHAR) ))
         {
             p = ++q;
             if (!(name->version = parse_value( p, &len ))) return E_INVALIDARG;
@@ -374,7 +366,7 @@ HRESULT WINAPI CreateAssemblyNameObject(
     struct name *name;
     HRESULT hr;
 
-    TRACE("%p, %s, 0x%08x, %p\n", obj, debugstr_w(assembly), flags, reserved);
+    TRACE("%p, %s, 0x%08lx, %p\n", obj, debugstr_w(assembly), flags, reserved);
 
     if (!obj) return E_INVALIDARG;
 
@@ -382,7 +374,7 @@ HRESULT WINAPI CreateAssemblyNameObject(
     if (!assembly || !assembly[0] || flags != CANOF_PARSE_DISPLAY_NAME)
         return E_INVALIDARG;
 
-    if (!(name = HeapAlloc( GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*name) )))
+    if (!(name = calloc(1, sizeof(*name) )))
         return E_OUTOFMEMORY;
 
     name->IAssemblyName_iface.lpVtbl = &name_vtbl;
@@ -391,12 +383,12 @@ HRESULT WINAPI CreateAssemblyNameObject(
     hr = parse_displayname( name, assembly );
     if (hr != S_OK)
     {
-        HeapFree( GetProcessHeap(), 0, name->name );
-        HeapFree( GetProcessHeap(), 0, name->arch );
-        HeapFree( GetProcessHeap(), 0, name->token );
-        HeapFree( GetProcessHeap(), 0, name->type );
-        HeapFree( GetProcessHeap(), 0, name->version );
-        HeapFree( GetProcessHeap(), 0, name );
+        free( name->name );
+        free( name->arch );
+        free( name->token );
+        free( name->type );
+        free( name->version );
+        free( name );
         return hr;
     }
     *obj = &name->IAssemblyName_iface;
