@@ -13,6 +13,8 @@
 
 DBG_DEFAULT_CHANNEL(UserWnd);
 
+#define HWND_LIST_TERMINATOR (HWND)1
+
 INT gNestedWindowLimit = 50;
 
 PWINDOWLIST gpwlList = NULL;
@@ -301,6 +303,90 @@ IntWinListChildren(PWND Window)
     List[Index] = NULL;
 
     return List;
+}
+
+HWND* FASTCALL
+IntWinListChildrenFiltered(
+    PWND Window,
+    PTHREADINFO Thread,
+    BOOLEAN Recursive,
+    PULONG Count)
+{
+    ASSERT(Window);
+
+    SIZE_T childrenCount = 0;
+    BOOLEAN goDown = TRUE;
+    HWND* list;
+    SIZE_T index;
+    PWND parent;
+    PWND currentWindow = Window;
+
+    parent = currentWindow->spwndParent;
+    // Get children count recursive
+    while (currentWindow != parent)
+    {
+        if (goDown)
+        {
+            if (Thread == NULL || Thread == currentWindow->head.pti)
+                ++childrenCount;
+
+            if (currentWindow->spwndChild && Recursive)
+            {
+                currentWindow = currentWindow->spwndChild;
+                continue;
+            }
+            goDown = FALSE;
+        }
+        if (currentWindow->spwndNext)
+        {
+            currentWindow = currentWindow->spwndNext;
+            goDown = TRUE;
+            continue;
+        }
+        currentWindow = currentWindow->spwndParent;
+    }
+
+    list = ExAllocatePoolWithTag(PagedPool, (childrenCount + 1) * sizeof(HWND), USERTAG_WINDOWLIST);
+    if (!list)
+    {
+        ERR("Failed to allocate memory for children array\n");
+        EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        return NULL;
+    }
+
+    index = 0;
+    goDown = TRUE;
+    currentWindow = Window;
+    while (currentWindow != parent)
+    {
+        if (goDown)
+        {
+            if ((Thread == NULL || Thread == currentWindow->head.pti) && index < childrenCount)
+            {
+                list[index++] = UserHMGetHandle(currentWindow);
+            }
+
+            if (currentWindow->spwndChild && Recursive)
+            {
+                currentWindow = currentWindow->spwndChild;
+                continue;
+            }
+            goDown = FALSE;
+        }
+        if (currentWindow->spwndNext)
+        {
+            currentWindow = currentWindow->spwndNext;
+            goDown = TRUE;
+            continue;
+        }
+        currentWindow = currentWindow->spwndParent;
+    }
+    list[index] = NULL;
+
+    if (Count)
+        *Count = childrenCount;
+
+    return list;
 }
 
 static BOOL
@@ -1513,177 +1599,124 @@ VOID FASTCALL IntFreeHwndList(PWINDOWLIST pwlTarget)
 NTSTATUS
 NTAPI
 NtUserBuildHwndList(
-   HDESK hDesktop,
-   HWND hwndParent,
-   BOOLEAN bChildren,
-   ULONG dwThreadId,
-   ULONG cHwnd,
-   HWND* phwndList,
-   ULONG* pcHwndNeeded)
+    _In_ HDESK hDesktop,
+    _In_ HWND hwndParent,
+    _In_ BOOLEAN bChildren,
+    _In_ ULONG dwThreadId,
+    _In_ ULONG cHwnd,
+    _Out_ HWND* phwndList,
+    _Out_ ULONG* pcHwndNeeded)
 {
-   NTSTATUS Status;
-   ULONG dwCount = 0;
+    NTSTATUS resultStatus = STATUS_INVALID_HANDLE;
+    NTSTATUS status;
+    ULONG count = 0;
+    PWND parent, window;
+    PETHREAD thread = NULL;
+    PTHREADINFO w32Thread = NULL;
+    PDESKTOP desktop = NULL;
+    HWND* hwndList = NULL;
 
-   if (pcHwndNeeded == NULL)
-       return STATUS_INVALID_PARAMETER;
+    UserEnterShared();
 
-   UserEnterShared();
+    // Skip useless work
+    _SEH2_TRY
+    {
+        ProbeForRead(pcHwndNeeded, sizeof(ULONG), sizeof(ULONG));
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        SetLastNtError(_SEH2_GetExceptionCode());
+        goto Quit;
+    }
+    _SEH2_END
 
-   if (hwndParent || !dwThreadId)
-   {
-      PDESKTOP Desktop;
-      PWND Parent, Window;
-
-      if(!hwndParent)
-      {
-         if(hDesktop == NULL && !(Desktop = IntGetActiveDesktop()))
-         {
-            Status = STATUS_INVALID_HANDLE;
+    // Validate desktop
+    if (hDesktop)
+    {
+        status = IntValidateDesktopHandle(hDesktop, UserMode, 0, &desktop);
+        if (!NT_SUCCESS(status))
+        {
+            EngSetLastError(ERROR_INVALID_HANDLE);
             goto Quit;
-         }
+        }
+    }
+    else
+    {
+        desktop = IntGetActiveDesktop();
+        if (desktop == NULL)
+        {
+            EngSetLastError(ERROR_INVALID_HANDLE);
+            goto Quit;
+        }
+        ObReferenceObject(desktop);
+    }
 
-         if(hDesktop)
-         {
-            Status = IntValidateDesktopHandle(hDesktop,
-                                              UserMode,
-                                              0,
-                                              &Desktop);
-            if(!NT_SUCCESS(Status))
-            {
-                Status = STATUS_INVALID_HANDLE;
-                goto Quit;
-            }
-         }
-         hwndParent = Desktop->DesktopWindow;
-      }
-      else
-      {
-         hDesktop = 0;
-      }
+    // Validate thread
+    if (dwThreadId)
+    {
+        status = PsLookupThreadByThreadId(UlongToHandle(dwThreadId), &thread);
+        if (!NT_SUCCESS(status))
+        {
+            ERR("Thread Id is not valid!\n");
+            SetLastNtError(STATUS_INVALID_PARAMETER);
+            goto Quit;
+        }
+        if (!(w32Thread = (PTHREADINFO)thread->Tcb.Win32Thread))
+        {
+            TRACE("Tried to enumerate windows of a non gui thread\n");
+            SetLastNtError(STATUS_INVALID_PARAMETER);
+            goto Quit;
+        }
+    }
 
-      if((Parent = UserGetWindowObject(hwndParent)) &&
-         (Window = Parent->spwndChild))
-      {
-         BOOL bGoDown = TRUE;
+    if (!hwndParent)
+    {
+        hwndParent = desktop->DesktopWindow;
+    }
 
-         Status = STATUS_SUCCESS;
-         while(TRUE)
-         {
-            if (bGoDown)
-            {
-               if (dwCount++ < cHwnd && phwndList)
-               {
-                  _SEH2_TRY
-                  {
-                     ProbeForWrite(phwndList, sizeof(HWND), 1);
-                     *phwndList = UserHMGetHandle(Window);
-                     phwndList++;
-                  }
-                  _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-                  {
-                     Status = _SEH2_GetExceptionCode();
-                  }
-                  _SEH2_END
-                  if(!NT_SUCCESS(Status))
-                  {
-                     break;
-                  }
-               }
-               if (Window->spwndChild && bChildren)
-               {
-                  Window = Window->spwndChild;
-                  continue;
-               }
-               bGoDown = FALSE;
-            }
-            if (Window->spwndNext)
-            {
-               Window = Window->spwndNext;
-               bGoDown = TRUE;
-               continue;
-            }
-            Window = Window->spwndParent;
-            if (Window == Parent)
-            {
-               break;
-            }
-         }
-      }
+    // Get hwnd list
+    if ((parent = UserGetWindowObject(hwndParent)) && (window = parent->spwndChild))
+    {
+        hwndList = IntWinListChildrenFiltered(window, w32Thread, bChildren, &count);
+    }
+    else
+        goto Quit;
 
-      if(hDesktop)
-      {
-         ObDereferenceObject(Desktop);
-      }
-   }
-   else // Build EnumThreadWindows list!
-   {
-      PETHREAD Thread;
-      PTHREADINFO W32Thread;
-      PWND Window;
-      HWND *List = NULL;
+    _SEH2_TRY
+    {
+        ProbeForWrite(phwndList, cHwnd * sizeof(HWND), sizeof(HWND));
 
-      Status = PsLookupThreadByThreadId(UlongToHandle(dwThreadId), &Thread);
-      if (!NT_SUCCESS(Status))
-      {
-         ERR("Thread Id is not valid!\n");
-         Status = STATUS_INVALID_PARAMETER;
-         goto Quit;
-      }
-      if (!(W32Thread = (PTHREADINFO)Thread->Tcb.Win32Thread))
-      {
-         ObDereferenceObject(Thread);
-         TRACE("Tried to enumerate windows of a non gui thread\n");
-         Status = STATUS_INVALID_PARAMETER;
-         goto Quit;
-      }
-
-     // Do not use Thread link list due to co_UserFreeWindow!!!
-     // Current = W32Thread->WindowListHead.Flink;
-     // Fixes Api:CreateWindowEx tests!!!
-      List = IntWinListChildren(UserGetDesktopWindow());
-      if (List)
-      {
-         int i;
-         for (i = 0; List[i]; i++)
-         {
-            Window = ValidateHwndNoErr(List[i]);
-            if (Window && Window->head.pti == W32Thread)
-            {
-               if (dwCount < cHwnd && phwndList)
-               {
-                  _SEH2_TRY
-                  {
-                     ProbeForWrite(phwndList, sizeof(HWND), 1);
-                     *phwndList = UserHMGetHandle(Window);
-                     phwndList++;
-                  }
-                  _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-                  {
-                     Status = _SEH2_GetExceptionCode();
-                  }
-                  _SEH2_END
-                  if (!NT_SUCCESS(Status))
-                  {
-                     ERR("Failure to build window list!\n");
-                     break;
-                  }
-               }
-               dwCount++;
-            }
-         }
-         ExFreePoolWithTag(List, USERTAG_WINDOWLIST);
-      }
-
-      ObDereferenceObject(Thread);
-   }
-
-   *pcHwndNeeded = dwCount;
-   Status = STATUS_SUCCESS;
+        // Count of list elements + terminator
+        ++count;         
+        *pcHwndNeeded = count;
+        if (count <= cHwnd)
+        {
+            RtlCopyMemory(phwndList, hwndList, (count - 1) * sizeof(HWND));
+            // List terminator
+            phwndList[count - 1] = HWND_LIST_TERMINATOR;
+            resultStatus = STATUS_SUCCESS;
+        }
+        else
+        {
+            resultStatus = STATUS_BUFFER_TOO_SMALL;
+        }
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        SetLastNtError(_SEH2_GetExceptionCode());
+    }
+    _SEH2_END
 
 Quit:
-   SetLastNtError(Status);
-   UserLeave();
-   return Status;
+    if (desktop)
+        ObDereferenceObject(desktop);
+    if (thread)
+        ObDereferenceObject(thread);
+    if (hwndList)
+        ExFreePoolWithTag(hwndList, USERTAG_WINDOWLIST);
+
+    UserLeave();
+    return resultStatus;
 }
 
 static void IntSendParentNotify( PWND pWindow, UINT msg )
