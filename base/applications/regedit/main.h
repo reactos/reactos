@@ -31,6 +31,8 @@
 #define REG_FORMAT_5     1
 #define REG_FORMAT_4     2
 
+#define IDM_GO_COMMAND   3001
+
 /******************************************************************************/
 
 enum OPTION_FLAGS
@@ -49,9 +51,10 @@ typedef struct
     HWND    hWnd;
     HWND    hTreeWnd;
     HWND    hListWnd;
+    HWND    hAddressToolBarWnd;
     HWND    hAddressBarWnd;
-    HWND    hAddressBtnWnd;
-    HICON   hArrowIcon;
+    HIMAGELIST hGoButtonNormal;
+    HIMAGELIST hGoButtonHot;
     int     nFocusPanel;      /* 0: left  1: right */
     int     nSplitPos;
     WINDOWPLACEMENT pos;
