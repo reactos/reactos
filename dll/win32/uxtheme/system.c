@@ -957,7 +957,6 @@ HRESULT WINAPI SetWindowTheme(HWND hwnd, LPCWSTR pszSubAppName,
     return hr;
 }
 
-#if (DLL_EXPORT_VERSION >= _WIN32_WINNT_VISTA)
 /***********************************************************************
  *      SetWindowThemeAttribute                             (UXTHEME.@)
  */
@@ -972,7 +971,6 @@ SetWindowThemeAttribute(
    FIXME("(%p,%d,%p,%ld): stub\n", hwnd, eAttribute, pvAttribute, cbAttribute);
    return E_NOTIMPL;
 }
-#endif /* (DLL_EXPORT_VERSION >= _WIN32_WINNT_VISTA) */
 
 /***********************************************************************
  *      GetCurrentThemeName                                 (UXTHEME.@)

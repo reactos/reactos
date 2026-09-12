@@ -29,6 +29,7 @@
  */
 
 #include <stdarg.h>
+#include <stdlib.h>
 #include <string.h>
 #include "windef.h"
 #include "winbase.h"
@@ -38,7 +39,6 @@
 #include "commctrl.h"
 #include "comctl32.h"
 #include "wine/debug.h"
-#include "wine/heap.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(hotkey);
 
@@ -240,9 +240,9 @@ HOTKEY_Create (HOTKEY_INFO *infoPtr, const CREATESTRUCTW *lpcs)
 static LRESULT
 HOTKEY_Destroy (HOTKEY_INFO *infoPtr)
 {
-    /* free hotkey info data */
+    /* Free hotkey info data */
     SetWindowLongPtrW (infoPtr->hwndSelf, 0, 0);
-    heap_free (infoPtr);
+    Free (infoPtr);
     return 0;
 }
 
@@ -289,7 +289,7 @@ HOTKEY_KeyDown (HOTKEY_INFO *infoPtr, DWORD key, DWORD flags)
     if (GetWindowLongW(infoPtr->hwndSelf, GWL_STYLE) & WS_DISABLED)
         return 0;
 
-    TRACE("() Key: %d\n", key);
+    TRACE("() Key: %ld\n", key);
 
     wOldHotKey = infoPtr->HotKey;
     bOldMod = infoPtr->CurrMod;
@@ -349,7 +349,7 @@ HOTKEY_KeyUp (HOTKEY_INFO *infoPtr, DWORD key)
     if (GetWindowLongW(infoPtr->hwndSelf, GWL_STYLE) & WS_DISABLED)
         return 0;
 
-    TRACE("() Key: %d\n", key);
+    TRACE("() Key: %ld\n", key);
 
     bOldMod = infoPtr->CurrMod;
 
@@ -411,7 +411,7 @@ HOTKEY_NCCreate (HWND hwnd, const CREATESTRUCTW *lpcs)
                     dwExStyle | WS_EX_CLIENTEDGE);
 
     /* allocate memory for info structure */
-    infoPtr = heap_alloc_zero (sizeof(*infoPtr));
+    infoPtr = Alloc(sizeof(*infoPtr));
     SetWindowLongPtrW(hwnd, 0, (DWORD_PTR)infoPtr);
 
     /* initialize info structure */
@@ -466,7 +466,9 @@ static LRESULT WINAPI
 HOTKEY_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     HOTKEY_INFO *infoPtr = (HOTKEY_INFO *)GetWindowLongPtrW (hwnd, 0);
-    TRACE("hwnd=%p msg=%x wparam=%lx lparam=%lx\n", hwnd, uMsg, wParam, lParam);
+
+    TRACE("hwnd %p, msg %x, wparam %Ix, lparam %Ix\n", hwnd, uMsg, wParam, lParam);
+
     if (!infoPtr && (uMsg != WM_NCCREATE))
         return DefWindowProcW (hwnd, uMsg, wParam, lParam);
     switch (uMsg)
@@ -496,6 +498,11 @@ HOTKEY_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	case WM_GETDLGCODE:
 	    return DLGC_WANTCHARS | DLGC_WANTARROWS;
 
+        case WM_GETOBJECT:
+            if ((LONG)lParam == OBJID_QUERYCLASSNAMEIDX)
+                return 0x10010;
+	    return DefWindowProcW (hwnd, uMsg, wParam, lParam);
+
 	case WM_GETFONT:
 	    return HOTKEY_GetFont (infoPtr);
 
@@ -516,6 +523,9 @@ HOTKEY_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	case WM_NCCREATE:
 	    return HOTKEY_NCCreate (hwnd, (LPCREATESTRUCTW)lParam);
 
+        case WM_NCPAINT:
+            return COMCTL32_NCPaint (hwnd, wParam, lParam, WC_EDITW);
+
 	case WM_PRINTCLIENT:
 	case WM_PAINT:
 	    HOTKEY_Paint(infoPtr, (HDC)wParam);
@@ -529,8 +539,7 @@ HOTKEY_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 	default:
 	    if ((uMsg >= WM_USER) && (uMsg < WM_APP) && !COMCTL32_IsReflectedMessage(uMsg))
-		ERR("unknown msg %04x wp=%08lx lp=%08lx\n",
-		     uMsg, wParam, lParam);
+		ERR("unknown msg %04x, wp %Ix, lp %Ix\n", uMsg, wParam, lParam);
 	    return DefWindowProcW (hwnd, uMsg, wParam, lParam);
     }
     return 0;
@@ -552,11 +561,4 @@ HOTKEY_Register (void)
     wndClass.lpszClassName = HOTKEY_CLASSW;
 
     RegisterClassW (&wndClass);
-}
-
-
-void
-HOTKEY_Unregister (void)
-{
-    UnregisterClassW (HOTKEY_CLASSW, NULL);
 }
