@@ -12,6 +12,16 @@
 
 #define NUM_STAGE 10
 
+#define ID_SHSTATE 0xFEEDDEAF
+
+typedef struct SHELLSTATE_SUB
+{
+    SHELLSTATE ss;
+    DWORD dwMask;
+    BOOL bSet;
+    BOOL bGetSet;
+} SHELLSTATE_SUB, *PSHELLSTATE_SUB;
+
 static inline BOOL FindSubProgram(LPWSTR pszSubProgram, DWORD cchSubProgram)
 {
     GetModuleFileNameW(NULL, pszSubProgram, cchSubProgram);
