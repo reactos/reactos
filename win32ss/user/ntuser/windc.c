@@ -22,6 +22,11 @@ static INT DCECount = 0; // Count of DCE in system.
                               DCX_LAYEREDWIN | DCX_CACHE | DCX_WINDOW | \
                               DCX_PARENTCLIP)
 
+#define DCX_VALID (DCX_WINDOW | DCX_CACHE | DCX_NORESETATTRS | DCX_CLIPCHILDREN | \
+                   DCX_CLIPSIBLINGS | DCX_PARENTCLIP | DCX_EXCLUDERGN | DCX_INTERSECTRGN | \
+                   DCX_EXCLUDEUPDATE | DCX_INTERSECTUPDATE | DCX_LOCKWINDOWUPDATE | DCX_VALIDATE | \
+                   DCX_USESTYLE | DCX_KEEPCLIPRGN)
+
 /* FUNCTIONS *****************************************************************/
 
 CODE_SEG("INIT")
@@ -342,7 +347,7 @@ DceReleaseDC(DCE* dce, BOOL EndPaint)
 
 
 HDC FASTCALL
-UserGetDCEx(PWND Wnd OPTIONAL, HANDLE ClipRegion, ULONG Flags)
+UserGetDCEx(PWND Wnd OPTIONAL, HRGN ClipRegion, ULONG Flags)
 {
    PWND Parent;
    ULONG DcxFlags;
@@ -357,6 +362,7 @@ UserGetDCEx(PWND Wnd OPTIONAL, HANDLE ClipRegion, ULONG Flags)
    {
       Flags &= ~DCX_USESTYLE;
       Flags |= DCX_CACHE;
+      Wnd = gptiCurrent->rpdesk->pDeskInfo->spwnd;
    }
 
    if (Flags & DCX_PARENTCLIP) Flags |= DCX_CACHE;
@@ -970,25 +976,44 @@ UserGethWnd( HDC hdc, PWNDOBJ *pwndo)
   return hWnd;
 }
 
-HDC APIENTRY
-NtUserGetDCEx(HWND hWnd OPTIONAL, HANDLE ClipRegion, ULONG Flags)
+static BOOL FASTCALL
+IntIsValidRegion(HRGN ClipRegion)
 {
-  PWND Wnd=NULL;
+    PREGION region = REGION_LockRgn(ClipRegion);
+    if (region)
+        REGION_UnlockRgn(region);
+    return (region != NULL);
+}
+
+HDC APIENTRY
+NtUserGetDCEx(
+    _In_opt_ HWND hWnd,
+    _In_ HRGN ClipRegion,
+    _In_ ULONG Flags)
+{
+  PWND Wnd = NULL;
   HDC Ret = NULL;
 
   TRACE("Enter NtUserGetDCEx: hWnd %p, ClipRegion %p, Flags %x.\n",
       hWnd, ClipRegion, Flags);
   UserEnterExclusive();
 
+  if ((Flags & ~DCX_VALID) ||
+      (ClipRegion && !IntIsValidRegion(ClipRegion)))
+  {
+      SetLastNtError(STATUS_INVALID_PARAMETER);
+      goto Exit;
+  }
+
   if (hWnd && !(Wnd = UserGetWindowObject(hWnd)))
   {
-      goto Exit; // Return NULL
+      goto Exit;
   }
   Ret = UserGetDCEx(Wnd, ClipRegion, Flags);
 
 Exit:
-  TRACE("Leave NtUserGetDCEx, ret=%p\n", Ret);
   UserLeave();
+  TRACE("Leave NtUserGetDCEx, ret=%p\n", Ret);
   return Ret;
 }
 
