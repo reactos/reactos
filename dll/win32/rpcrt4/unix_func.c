@@ -4,7 +4,7 @@
 #include <winsock2.h>
 
 const char *
-WSAAPI
+FAR PASCAL
 inet_ntop (int af,
            const void *src,
            char *dst,

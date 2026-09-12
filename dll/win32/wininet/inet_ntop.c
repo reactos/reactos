@@ -50,12 +50,12 @@ static const char *inet_ntop6(const u_char *src, char *dst, socklen_t size);
  *	Paul Vixie, 1996.
  */
 PCSTR
-WSAAPI
+FAR PASCAL
 inet_ntop(
   _In_ INT af,
-  _In_ const VOID *src,
+  _In_ const PVOID src,
   _Out_writes_(StringBufSize) PSTR dst,
-  _In_ size_t size)
+  _In_ SIZE_T size)
 {
 
 	switch (af) {
