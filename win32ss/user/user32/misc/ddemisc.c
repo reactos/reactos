@@ -35,7 +35,11 @@ WINE_DEFAULT_DEBUG_CHANNEL(ddeml);
 
 static WDML_INSTANCE*	WDML_InstanceList = NULL;
 static LONG		WDML_MaxInstanceID = 0;  /* OK for present, have to worry about wrap-around later */
+#ifdef __REACTOS__
 const WCHAR		WDML_szEventClass[] = L"DDEMLEvent";
+#else
+const WCHAR		WDML_szEventClass[] = L"WineDdeEventClass";
+#endif
 
 /* protection for instance list */
 static CRITICAL_SECTION WDML_CritSect;
@@ -193,7 +197,7 @@ LPARAM WINAPI ReuseDDElParam(LPARAM lParam, UINT msgIn, UINT msgOut,
             }
             params[0] = uiLo;
             params[1] = uiHi;
-            TRACE("Reusing pack %08lx %08lx\n", uiLo, uiHi);
+            TRACE("Reusing pack %08Ix %08Ix\n", uiLo, uiHi);
             GlobalUnlock( (HGLOBAL)lParam );
             return lParam;
 
@@ -503,7 +507,7 @@ DWORD WINAPI DdeQueryStringA(DWORD idInst, HSZ hsz, LPSTR psz, DWORD cchMax, INT
     DWORD		ret = 0;
     WDML_INSTANCE*	pInstance;
 
-    TRACE("(%d, %p, %p, %d, %d)\n", idInst, hsz, psz, cchMax, iCodePage);
+    TRACE("(%ld, %p, %p, %ld, %d)\n", idInst, hsz, psz, cchMax, iCodePage);
 
     /*  First check instance
      */
@@ -514,7 +518,7 @@ DWORD WINAPI DdeQueryStringA(DWORD idInst, HSZ hsz, LPSTR psz, DWORD cchMax, INT
 	ret = WDML_QueryString(pInstance, hsz, psz, cchMax, iCodePage);
     }
 
-    TRACE("returning %d (%s)\n", ret, debugstr_a(psz));
+    TRACE("returning %ld (%s)\n", ret, debugstr_a(psz));
     return ret;
 }
 
@@ -527,7 +531,7 @@ DWORD WINAPI DdeQueryStringW(DWORD idInst, HSZ hsz, LPWSTR psz, DWORD cchMax, IN
     DWORD		ret = 0;
     WDML_INSTANCE*	pInstance;
 
-    TRACE("(%d, %p, %p, %d, %d)\n", idInst, hsz, psz, cchMax, iCodePage);
+    TRACE("(%ld, %p, %p, %ld, %d)\n", idInst, hsz, psz, cchMax, iCodePage);
 
     /*  First check instance
      */
@@ -538,7 +542,7 @@ DWORD WINAPI DdeQueryStringW(DWORD idInst, HSZ hsz, LPWSTR psz, DWORD cchMax, IN
 	ret = WDML_QueryString(pInstance, hsz, psz, cchMax, iCodePage);
     }
 
-    TRACE("returning %d (%s)\n", ret, debugstr_w(psz));
+    TRACE("returning %ld (%s)\n", ret, debugstr_w(psz));
     return ret;
 }
 
@@ -579,7 +583,7 @@ HSZ WINAPI DdeCreateStringHandleA(DWORD idInst, LPCSTR psz, INT codepage)
     HSZ			hsz = 0;
     WDML_INSTANCE*	pInstance;
 
-    TRACE("(%d,%s,%d)\n", idInst, debugstr_a(psz), codepage);
+    TRACE("(%ld,%s,%d)\n", idInst, debugstr_a(psz), codepage);
 
     pInstance = WDML_GetInstance(idInst);
     if (pInstance == NULL)
@@ -633,7 +637,7 @@ BOOL WINAPI DdeFreeStringHandle(DWORD idInst, HSZ hsz)
     WDML_INSTANCE*	pInstance;
     BOOL		ret = FALSE;
 
-    TRACE("(%d,%p):\n", idInst, hsz);
+    TRACE("(%ld,%p):\n", idInst, hsz);
 
     /*  First check instance
      */
@@ -656,7 +660,7 @@ BOOL WINAPI DdeKeepStringHandle(DWORD idInst, HSZ hsz)
     WDML_INSTANCE*	pInstance;
     BOOL		ret = FALSE;
 
-    TRACE("(%d,%p):\n", idInst, hsz);
+    TRACE("(%ld,%p):\n", idInst, hsz);
 
     /*  First check instance
      */
@@ -748,7 +752,7 @@ static void WDML_IncrementInstanceId(WDML_INSTANCE* pInstance)
     DWORD	id = InterlockedIncrement(&WDML_MaxInstanceID);
 
     pInstance->instanceID = id;
-    TRACE("New instance id %d allocated\n", id);
+    TRACE("New instance id %ld allocated\n", id);
 }
 
 /******************************************************************
@@ -832,7 +836,7 @@ static UINT WDML_Initialize(LPDWORD pidInst, PFNCALLBACK pfnCallback,
     UINT			ret;
     WNDCLASSEXW			wndclass;
 
-    TRACE("(%p,%p,0x%x,%d,0x%x)\n",
+    TRACE("(%p,%p,0x%lx,%ld,0x%x)\n",
 	  pidInst, pfnCallback, afCmd, ulRes, bUnicode);
 
     if (ulRes)
@@ -887,7 +891,7 @@ static UINT WDML_Initialize(LPDWORD pidInst, PFNCALLBACK pfnCallback,
     if (*pidInst == 0)
     {
 	/*  Initialisation of new Instance Identifier */
-	TRACE("new instance, callback %p flags %X\n",pfnCallback,afCmd);
+	TRACE("new instance, callback %p flags %lX\n", pfnCallback, afCmd);
 
 	EnterCriticalSection(&WDML_CritSect);
 
@@ -990,7 +994,7 @@ static UINT WDML_Initialize(LPDWORD pidInst, PFNCALLBACK pfnCallback,
     else
     {
 	/* Reinitialisation situation   --- FIX  */
-	TRACE("reinitialisation of (%p,%p,0x%x,%d): stub\n", pidInst, pfnCallback, afCmd, ulRes);
+	TRACE("reinitialisation of (%p,%p,0x%lx,%ld): stub\n", pidInst, pfnCallback, afCmd, ulRes);
 
 	EnterCriticalSection(&WDML_CritSect);
 
@@ -1117,7 +1121,7 @@ BOOL WINAPI DdeUninitialize(DWORD idInst)
     WDML_CONV*			pConv;
     WDML_CONV*			pConvNext;
 
-    TRACE("(%d)\n", idInst);
+    TRACE("(%ld)\n", idInst);
 
     /*  First check instance
      */
@@ -1149,7 +1153,7 @@ BOOL WINAPI DdeUninitialize(DWORD idInst)
      */
     WDML_FreeAllHSZ(pInstance);
 
-    DestroyWindow(pInstance->hwndEvent);
+    NtUserDestroyWindow( pInstance->hwndEvent );
 
     /* OK now delete the instance handle itself */
 
@@ -1212,7 +1216,7 @@ HDDEDATA 	WDML_InvokeCallback(WDML_INSTANCE* pInstance, UINT uType, UINT uFmt, H
     if (pInstance == NULL)
 	return NULL;
 
-    TRACE("invoking CB[%p] (%x %x %p %p %p %p %lx %lx)\n",
+    TRACE("invoking CB[%p] (%x %x %p %p %p %p %Ix %Ix)\n",
 	  pInstance->callback, uType, uFmt,
 	  hConv, hsz1, hsz2, hdata, dwData1, dwData2);
     ret = pInstance->callback(uType, uFmt, hConv, hsz1, hsz2, hdata, dwData1, dwData2);
@@ -1249,7 +1253,7 @@ WDML_INSTANCE*	WDML_GetInstance(DWORD instId)
     LeaveCriticalSection(&WDML_CritSect);
 
     if (!pInstance)
-        WARN("Instance entry missing for id %04x\n", instId);
+        WARN("Instance entry missing for id %04lx\n", instId);
     return pInstance;
 }
 
@@ -1299,7 +1303,7 @@ HDDEDATA WINAPI DdeCreateDataHandle(DWORD idInst, LPBYTE pSrc, DWORD cb, DWORD c
         psz[1] = 0;
     }
 
-    TRACE("(%d,%p,cb %d, cbOff %d,%p <%s>,fmt %04x,%x)\n",
+    TRACE("(%ld,%p,cb %ld, cbOff %ld,%p <%s>,fmt %04x,%x)\n",
 	  idInst, pSrc, cb, cbOff, hszItem, debugstr_w(psz), wFmt, afCmd);
 
     if (afCmd != 0 && afCmd != HDATA_APPOWNED)
@@ -1325,7 +1329,8 @@ HDDEDATA WINAPI DdeCreateDataHandle(DWORD idInst, LPBYTE pSrc, DWORD cb, DWORD c
     pByte = (LPBYTE)(pDdh + 1);
     if (pSrc)
     {
-	memcpy(pByte, pSrc + cbOff, cb);
+        if (cbOff) memset(pByte, 0, cbOff);
+        memcpy(pByte + cbOff, pSrc, cb);
     }
     GlobalUnlock(hMem);
 
@@ -1342,7 +1347,7 @@ HDDEDATA WINAPI DdeAddData(HDDEDATA hData, LPBYTE pSrc, DWORD cb, DWORD cbOff)
     DWORD	old_sz, new_sz;
     LPBYTE	pDst;
 
-    TRACE("(%p,%p,cb %d, cbOff %d)\n", hData, pSrc, cb, cbOff);
+    TRACE("(%p,%p,cb %ld, cbOff %ld)\n", hData, pSrc, cb, cbOff);
 
     pDst = DdeAccessData(hData, &old_sz);
     if (!pDst) return 0;
@@ -1381,7 +1386,7 @@ DWORD WINAPI DdeGetData(HDDEDATA hData, LPBYTE pDst, DWORD cbMax, DWORD cbOff)
     DWORD   dwSize, dwRet;
     LPBYTE  pByte;
 
-    TRACE("(%p,%p,%d,%d)\n", hData, pDst, cbMax, cbOff);
+    TRACE("(%p,%p,%ld,%ld)\n", hData, pDst, cbMax, cbOff);
 
     pByte = DdeAccessData(hData, &dwSize);
 
@@ -1437,7 +1442,7 @@ LPBYTE WINAPI DdeAccessData(HDDEDATA hData, LPDWORD pcbDataSize)
     {
 	*pcbDataSize = GlobalSize(hMem) - sizeof(DDE_DATAHANDLE_HEAD);
     }
-    TRACE("=> %p (%lu) fmt %04x\n", pDdh + 1, GlobalSize(hMem) - sizeof(DDE_DATAHANDLE_HEAD), pDdh->cfFormat);
+    TRACE("=> %p (%Iu) fmt %04x\n", pDdh + 1, GlobalSize(hMem) - sizeof(DDE_DATAHANDLE_HEAD), pDdh->cfFormat);
     return (LPBYTE)(pDdh + 1);
 }
 
@@ -1544,7 +1549,7 @@ HDDEDATA        WDML_Global2DataHandle(WDML_CONV* pConv, HGLOBAL hMem, WINE_DDEH
                     }
                     else
                     {
-                        ERR("Wrong count: %u / %d\n", size, count);
+                        ERR("Wrong count: %lu / %d\n", size, count);
                     }
                 } else ERR("No bitmap header\n");
                 break;
@@ -1637,7 +1642,6 @@ HGLOBAL WDML_DataHandle2Global(HDDEDATA hDdeData, BOOL fResponse, BOOL fRelease,
  */
 WDML_SERVER*	WDML_AddServer(WDML_INSTANCE* pInstance, HSZ hszService, HSZ hszTopic)
 {
-    static const WCHAR fmtW[] = {'%','s','(','0','x','%','*','x',')',0};
     WDML_SERVER* 	pServer;
     WCHAR		buf1[256];
     WCHAR		buf2[256];
@@ -1649,7 +1653,11 @@ WDML_SERVER*	WDML_AddServer(WDML_INSTANCE* pInstance, HSZ hszService, HSZ hszTop
     WDML_IncHSZ(pInstance, hszService);
 
     DdeQueryStringW(pInstance->instanceID, hszService, buf1, 256, CP_WINUNICODE);
-    snprintfW(buf2, 256, fmtW, buf1, 2*sizeof(ULONG_PTR), GetCurrentProcessId());
+#ifdef __REACTOS__
+    swprintf(buf2, 256, L"%s(0x%*x)", buf1, (int)(2*sizeof(ULONG_PTR)), GetCurrentProcessId());
+#else
+    swprintf(buf2, 256, L"%s(0x%*x)", buf1, 2*sizeof(ULONG_PTR), GetCurrentProcessId());
+#endif
     pServer->hszServiceSpec = DdeCreateStringHandleW(pInstance->instanceID, buf2, CP_WINUNICODE);
 
     pServer->atomService = WDML_MakeAtomFromHsz(pServer->hszService);
@@ -1703,7 +1711,7 @@ void WDML_RemoveServer(WDML_INSTANCE* pInstance, HSZ hszService, HSZ hszTopic)
 		pPrev->next = pServer->next;
 	    }
 
-	    DestroyWindow(pServer->hwndServer);
+	    NtUserDestroyWindow(pServer->hwndServer);
 	    WDML_DecHSZ(pInstance, pServer->hszServiceSpec);
 	    WDML_DecHSZ(pInstance, pServer->hszService);
 
@@ -2035,7 +2043,7 @@ WDML_CONV*	WDML_AddConv(WDML_INSTANCE* pInstance, WDML_SIDE side,
     pConv->next = pInstance->convs[side];
     pInstance->convs[side] = pConv;
 
-    TRACE("pConv->wStatus %04x pInstance(%p)\n", pConv->wStatus, pInstance);
+    TRACE("pConv->wStatus %04lx pInstance(%p)\n", pConv->wStatus, pInstance);
 
     return pConv;
 }
@@ -2097,7 +2105,7 @@ void WDML_RemoveConv(WDML_CONV* pRef, WDML_SIDE side)
     hWnd = (side == WDML_CLIENT_SIDE) ? pRef->hwndClient : pRef->hwndServer;
     SetWindowLongPtrW(hWnd, GWL_WDML_CONVERSATION, 0);
 
-    DestroyWindow((side == WDML_CLIENT_SIDE) ? pRef->hwndClient : pRef->hwndServer);
+    NtUserDestroyWindow((side == WDML_CLIENT_SIDE) ? pRef->hwndClient : pRef->hwndServer);
 
     WDML_DecHSZ(pRef->instance, pRef->hszService);
     WDML_DecHSZ(pRef->instance, pRef->hszTopic);
@@ -2114,7 +2122,8 @@ void WDML_RemoveConv(WDML_CONV* pRef, WDML_SIDE side)
 	    {
 		pPrev->next = pCurrent->next;
 	    }
-	    pCurrent->magic = 0;
+            /* Ensure compiler doesn't optimize out the assignment with 0. */
+	    SecureZeroMemory(&pCurrent->magic, sizeof(pCurrent->magic));
 	    HeapFree(GetProcessHeap(), 0, pCurrent);
 	    break;
 	}
@@ -2129,7 +2138,7 @@ static BOOL WDML_EnableCallback(WDML_CONV *pConv, UINT wCmd)
     if (wCmd == EC_DISABLE)
     {
         pConv->wStatus |= ST_BLOCKED;
-        TRACE("EC_DISABLE: conv %p status flags %04x\n", pConv, pConv->wStatus);
+        TRACE("EC_DISABLE: conv %p status flags %04lx\n", pConv, pConv->wStatus);
         return TRUE;
     }
 
@@ -2145,7 +2154,7 @@ static BOOL WDML_EnableCallback(WDML_CONV *pConv, UINT wCmd)
     if (wCmd == EC_ENABLEALL)
     {
         pConv->wStatus &= ~ST_BLOCKED;
-        TRACE("EC_ENABLEALL: conv %p status flags %04x\n", pConv, pConv->wStatus);
+        TRACE("EC_ENABLEALL: conv %p status flags %04lx\n", pConv, pConv->wStatus);
     }
 
     while (pConv->transactions)
@@ -2180,7 +2189,7 @@ BOOL WINAPI DdeEnableCallback(DWORD idInst, HCONV hConv, UINT wCmd)
     BOOL ret = FALSE;
     WDML_CONV *pConv;
 
-    TRACE("(%d, %p, %04x)\n", idInst, hConv, wCmd);
+    TRACE("(%ld, %p, %04x)\n", idInst, hConv, wCmd);
 
     if (hConv)
     {
@@ -2202,12 +2211,12 @@ BOOL WINAPI DdeEnableCallback(DWORD idInst, HCONV hConv, UINT wCmd)
         if (wCmd == EC_DISABLE)
         {
             pInstance->wStatus |= ST_BLOCKED;
-            TRACE("EC_DISABLE: inst %p status flags %04x\n", pInstance, pInstance->wStatus);
+            TRACE("EC_DISABLE: inst %p status flags %04lx\n", pInstance, pInstance->wStatus);
         }
         else if (wCmd == EC_ENABLEALL)
         {
             pInstance->wStatus &= ~ST_BLOCKED;
-            TRACE("EC_ENABLEALL: inst %p status flags %04x\n", pInstance, pInstance->wStatus);
+            TRACE("EC_ENABLEALL: inst %p status flags %04lx\n", pInstance, pInstance->wStatus);
         }
 
         ret = TRUE;
@@ -2429,7 +2438,7 @@ UINT WINAPI DdeQueryConvInfo(HCONV hConv, DWORD id, PCONVINFO lpConvInfo)
     CONVINFO	ci;
     WDML_CONV*	pConv;
 
-    TRACE("(%p,%x,%p)\n", hConv, id, lpConvInfo);
+    TRACE("(%p,%lx,%p)\n", hConv, id, lpConvInfo);
 
     if (!hConv)
     {

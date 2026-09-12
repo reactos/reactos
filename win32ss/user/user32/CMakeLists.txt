@@ -86,6 +86,6 @@ target_link_libraries(user32 user32_vista_static user32_optional_vista user32_ws
 add_dependencies(user32 asm)
 
 add_delay_importlibs(user32 usp10 libpng)
-add_importlibs(user32 gdi32 advapi32 kernel32 ntdll)
+add_importlibs(user32 gdi32 advapi32 msvcrt kernel32 ntdll)
 add_pch(user32 include/user32.h SOURCE)
 add_cd_file(TARGET user32 DESTINATION reactos/system32 FOR all)
