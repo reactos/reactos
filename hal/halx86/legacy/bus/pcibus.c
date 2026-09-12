@@ -931,12 +931,13 @@ HalpAssignPCISlotResources(IN PBUS_HANDLER BusHandler,
 
 ULONG
 NTAPI
-HaliPciInterfaceReadConfig(IN PBUS_HANDLER RootBusHandler,
-                           IN ULONG BusNumber,
-                           IN PCI_SLOT_NUMBER SlotNumber,
-                           IN PVOID Buffer,
-                           IN ULONG Offset,
-                           IN ULONG Length)
+HaliPciInterfaceReadConfig(
+    _In_ PBUS_HANDLER RootBusHandler,
+    _In_ ULONG BusNumber,
+    _In_ PCI_SLOT_NUMBER SlotNumber,
+    _Out_writes_bytes_(Length) PVOID Buffer,
+    _In_ ULONG Offset,
+    _In_ ULONG Length)
 {
     BUS_HANDLER BusHandler;
 
@@ -948,6 +949,26 @@ HaliPciInterfaceReadConfig(IN PBUS_HANDLER RootBusHandler,
     HalpReadPCIConfig(&BusHandler, SlotNumber, Buffer, Offset, Length);
 
     /* Return length */
+    return Length;
+}
+
+ULONG
+NTAPI
+HaliPciInterfaceWriteConfig(
+    _In_ PBUS_HANDLER RootBusHandler,
+    _In_ ULONG BusNumber,
+    _In_ PCI_SLOT_NUMBER SlotNumber,
+    _In_reads_bytes_(Length) PVOID Buffer,
+    _In_ ULONG Offset,
+    _In_ ULONG Length)
+{
+    BUS_HANDLER BusHandler;
+
+    RtlCopyMemory(&BusHandler, &HalpFakePciBusHandler, sizeof(BUS_HANDLER));
+    BusHandler.BusNumber = BusNumber;
+
+    HalpWritePCIConfig(&BusHandler, SlotNumber, Buffer, Offset, Length);
+
     return Length;
 }
 
