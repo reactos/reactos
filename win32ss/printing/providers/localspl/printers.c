@@ -213,8 +213,13 @@ InitializePrinterList(VOID)
         pPort = FindPort(pwszPort);
         if (!pPort)
         {
-            ERR("Invalid Port \"%S\" for Printer \"%S\"!\n", pwszPort, wszPrinterName);
-            continue;
+            //FIXME - virtual port - we create it but monitor is neecessary to make the "Print" button clickable and not hardcoding Ready status - in Windows at least
+            if(CreatePortEntry(pwszPort,NULL))
+                pPort = FindPort(pwszPort);
+            if(!pPort){
+                ERR("Invalid Port \"%S\" for Printer \"%S\"!\n", pwszPort, wszPrinterName);
+                continue;
+            }
         }
 
         // Create a new LOCAL_PRINTER structure for it.
@@ -1175,9 +1180,9 @@ _LocalOpenPrinterHandle(PWSTR pwszPrinterName, PWSTR pwszJobParameter, PHANDLE p
     // Check if a DevMode was given, otherwise use the default.
     if (pDefault && pDefault->pDevMode)
         pPrinterHandle->pDevMode = DuplicateDevMode(pDefault->pDevMode);
-    else
+    else{
         pPrinterHandle->pDevMode = DuplicateDevMode(pPrinter->pDefaultDevMode);
-
+    }
     // Check if the caller wants a handle to an existing Print Job.
     if (pwszJobParameter)
     {
@@ -1227,7 +1232,6 @@ _LocalOpenPrinterHandle(PWSTR pwszPrinterName, PWSTR pwszJobParameter, PHANDLE p
         // This prevents the caller from doing further StartDocPrinter, WritePrinter, etc. calls on it.
         pPrinterHandle->pJob = pJob;
     }
-
     // Make the generic handle a Printer handle.
     pHandle->HandleType = HandleType_Printer;
     pHandle->pSpecificHandle = pPrinterHandle;
@@ -1405,7 +1409,7 @@ LocalOpenPrinter(PWSTR lpPrinterName, HANDLE* phPrinter, PPRINTER_DEFAULTSW pDef
     PWSTR pwszSecondParameter;
     WCHAR wszComputerName[MAX_COMPUTERNAME_LENGTH + 1];
 
-    TRACE("LocalOpenPrinter(%S, %p, %p)\n", lpPrinterName, phPrinter, pDefault);
+    ERR("LocalOpenPrinter(%S, %p, %p)\n", lpPrinterName, phPrinter, pDefault);
 
     ASSERT(phPrinter);
     *phPrinter = NULL;
@@ -1993,4 +1997,298 @@ LocalClosePrinter(HANDLE hPrinter)
     DllFreeSplMem(pHandle);
     FIXME("LocalClosePrinter 3\n");
     return TRUE;
+}
+
+HANDLE WINAPI
+LocalAddPrinter(LPWSTR pName, DWORD level, LPBYTE pPrinterInfo)
+{
+    DWORD dwErrorCode;
+    HKEY hPrinterKey = NULL;
+    PLOCAL_PORT pPort;
+    PLOCAL_PRINTER pLocalPrinter = NULL;
+    PLOCAL_PRINT_PROCESSOR pPrintProcessor;
+    PPRINTER_INFO_2W pInfo = (PPRINTER_INFO_2W)pPrinterInfo;
+    PCWSTR pwszDatatype;
+    HANDLE hPrinter = NULL;
+
+    TRACE("LocalAddPrinter(%p, %lu, %p)\n", pName, level, pPrinterInfo);
+
+    // The Local Print Provider only manages Printers on the local computer, so we ignore the Server Name parameter.
+
+    // Sanity checks.
+    if (!pInfo || !pInfo->pPrinterName || !pInfo->pPrinterName[0])
+    {
+        dwErrorCode = ERROR_INVALID_PRINTER_NAME;
+        goto Failure;
+    }
+
+    if (level != 2)
+    {
+        dwErrorCode = ERROR_INVALID_LEVEL;
+        goto Failure;
+    }
+
+    if (wcslen(pInfo->pPrinterName) > MAX_PRINTER_NAME)
+    {
+        dwErrorCode = ERROR_INVALID_PRINTER_NAME;
+        goto Failure;
+    }
+
+    // Check if the Printer already exists.
+    if (LookupElementSkiplist(&PrinterList, &pInfo->pPrinterName, NULL))
+    {
+        dwErrorCode = ERROR_PRINTER_ALREADY_EXISTS;
+        goto Failure;
+    }
+
+    // A Driver has to be specified.
+    if (!pInfo->pDriverName || !pInfo->pDriverName[0])
+    {
+        dwErrorCode = ERROR_INVALID_PRINTER_NAME;
+        goto Failure;
+    }
+
+    // A Port has to be specified and it must exist.
+    if (!pInfo->pPortName)
+    {
+        dwErrorCode = ERROR_INVALID_NAME;
+        goto Failure;
+    }
+
+    pPort = FindPort(pInfo->pPortName);
+    if (!pPort)
+    {
+        // The Port may be created by a Print Monitor that hasn't enumerated it yet
+        // (like "pdfcmon:" for the pdfcmon monitor). Create a virtual Port entry so the Printer can still be added.
+        if (!CreatePortEntry(pInfo->pPortName, NULL))
+        {
+            dwErrorCode = GetLastError();
+            goto Failure;
+        }
+        pPort = FindPort(pInfo->pPortName);
+    }
+
+    // A Print Processor has to be specified and it must exist.
+    if (pInfo->pPrintProcessor)
+        pPrintProcessor = FindPrintProcessor(pInfo->pPrintProcessor);
+    else
+        pPrintProcessor = FindPrintProcessor(L"winprint");
+
+    if (!pPrintProcessor)
+    {
+        dwErrorCode = ERROR_INVALID_NAME;
+        goto Failure;
+    }
+
+    // The default Datatype has to be valid.
+    if (pInfo->pDatatype)
+    {
+        pwszDatatype = pInfo->pDatatype;
+        if (!FindDatatype(pPrintProcessor, pwszDatatype))
+        {
+            dwErrorCode = ERROR_INVALID_DATATYPE;
+            goto Failure;
+        }
+    }
+    else
+    {
+        // "RAW" is supported by the default "winprint" Print Processor.
+        pwszDatatype = L"RAW";
+    }
+
+    // Create a new LOCAL_PRINTER structure for it.
+    pLocalPrinter = DllAllocSplMem(sizeof(LOCAL_PRINTER));
+    if (!pLocalPrinter)
+    {
+        dwErrorCode = ERROR_NOT_ENOUGH_MEMORY;
+        goto Failure;
+    }
+
+    pLocalPrinter->pwszPrinterName = AllocSplStr(pInfo->pPrinterName);
+    pLocalPrinter->dwAttributes = pInfo->Attributes;
+    pLocalPrinter->dwStatus = pInfo->Status;
+    pLocalPrinter->pwszLocation = AllocSplStr(pInfo->pLocation ? pInfo->pLocation : L"");
+    pLocalPrinter->pwszPrinterDriver = AllocSplStr(pInfo->pDriverName);
+    pLocalPrinter->pwszDescription = AllocSplStr(pInfo->pComment ? pInfo->pComment : L"");
+    pLocalPrinter->pwszDefaultDatatype = AllocSplStr(pwszDatatype);
+    pLocalPrinter->pPrintProcessor = pPrintProcessor;
+    pLocalPrinter->pPort = pPort;
+    InitializePrinterJobList(pLocalPrinter);
+
+    if (!pLocalPrinter->pwszPrinterName || !pLocalPrinter->pwszLocation || !pLocalPrinter->pwszPrinterDriver || !pLocalPrinter->pwszDescription || !pLocalPrinter->pwszDefaultDatatype)
+    {
+        dwErrorCode = ERROR_NOT_ENOUGH_MEMORY;
+        goto Failure;
+    }
+
+    // Use the caller's DevMode or create a minimal default one.
+    if (pInfo->pDevMode && pInfo->pDevMode->dmSize >= sizeof(DEVMODEW))
+    {
+        pLocalPrinter->pDefaultDevMode = DuplicateDevMode(pInfo->pDevMode);
+    }
+    else
+    {
+        pLocalPrinter->pDefaultDevMode = DllAllocSplMem(sizeof(DEVMODEW));
+        if (pLocalPrinter->pDefaultDevMode)
+        {
+            RtlZeroMemory(pLocalPrinter->pDefaultDevMode, sizeof(DEVMODEW));
+            pLocalPrinter->pDefaultDevMode->dmSpecVersion = DM_SPECVERSION;
+            pLocalPrinter->pDefaultDevMode->dmSize = sizeof(DEVMODEW);
+            wcsncpy(pLocalPrinter->pDefaultDevMode->dmDeviceName, pLocalPrinter->pwszPrinterName, CCHDEVICENAME);
+            pLocalPrinter->pDefaultDevMode->dmDeviceName[CCHDEVICENAME - 1] = 0;
+        }
+    }
+
+    if (!pLocalPrinter->pDefaultDevMode)
+    {
+        dwErrorCode = ERROR_NOT_ENOUGH_MEMORY;
+        goto Failure;
+    }
+
+    // Add the Printer to the registry so it is there even after a reboot.
+    dwErrorCode = (DWORD)RegCreateKeyExW(hPrintersKey, pInfo->pPrinterName, 0, NULL, 0, KEY_SET_VALUE | KEY_CREATE_SUB_KEY, NULL, &hPrinterKey, NULL);
+    if (dwErrorCode != ERROR_SUCCESS)
+        goto Failure;
+
+    dwErrorCode = (DWORD)RegSetValueExW(hPrinterKey, L"Name", 0, REG_SZ, (PBYTE)pLocalPrinter->pwszPrinterName, (wcslen(pLocalPrinter->pwszPrinterName) + 1) * sizeof(WCHAR));
+    if (dwErrorCode != ERROR_SUCCESS) goto Failure;
+    dwErrorCode = (DWORD)RegSetValueExW(hPrinterKey, L"Port", 0, REG_SZ, (PBYTE)pPort->pwszName, (wcslen(pPort->pwszName) + 1) * sizeof(WCHAR));
+    if (dwErrorCode != ERROR_SUCCESS) goto Failure;
+    dwErrorCode = (DWORD)RegSetValueExW(hPrinterKey, L"Print Processor", 0, REG_SZ, (PBYTE)pPrintProcessor->pwszName, (wcslen(pPrintProcessor->pwszName) + 1) * sizeof(WCHAR));
+    if (dwErrorCode != ERROR_SUCCESS) goto Failure;
+    dwErrorCode = (DWORD)RegSetValueExW(hPrinterKey, L"Printer Driver", 0, REG_SZ, (PBYTE)pLocalPrinter->pwszPrinterDriver, (wcslen(pLocalPrinter->pwszPrinterDriver) + 1) * sizeof(WCHAR));
+    if (dwErrorCode != ERROR_SUCCESS) goto Failure;
+    dwErrorCode = (DWORD)RegSetValueExW(hPrinterKey, L"Description", 0, REG_SZ, (PBYTE)pLocalPrinter->pwszDescription, (wcslen(pLocalPrinter->pwszDescription) + 1) * sizeof(WCHAR));
+    if (dwErrorCode != ERROR_SUCCESS) goto Failure;
+    dwErrorCode = (DWORD)RegSetValueExW(hPrinterKey, L"Location", 0, REG_SZ, (PBYTE)pLocalPrinter->pwszLocation, (wcslen(pLocalPrinter->pwszLocation) + 1) * sizeof(WCHAR));
+    if (dwErrorCode != ERROR_SUCCESS) goto Failure;
+    dwErrorCode = (DWORD)RegSetValueExW(hPrinterKey, L"Datatype", 0, REG_SZ, (PBYTE)pLocalPrinter->pwszDefaultDatatype, (wcslen(pLocalPrinter->pwszDefaultDatatype) + 1) * sizeof(WCHAR));
+    if (dwErrorCode != ERROR_SUCCESS) goto Failure;
+    dwErrorCode = (DWORD)RegSetValueExW(hPrinterKey, L"Default DevMode", 0, REG_BINARY, (PBYTE)pLocalPrinter->pDefaultDevMode, pLocalPrinter->pDefaultDevMode->dmSize + pLocalPrinter->pDefaultDevMode->dmDriverExtra);
+    if (dwErrorCode != ERROR_SUCCESS) goto Failure;
+    dwErrorCode = (DWORD)RegSetValueExW(hPrinterKey, L"Status", 0, REG_DWORD, (PBYTE)&pLocalPrinter->dwStatus, sizeof(DWORD));
+    if (dwErrorCode != ERROR_SUCCESS) goto Failure;
+    dwErrorCode = (DWORD)RegSetValueExW(hPrinterKey, L"Attributes", 0, REG_DWORD, (PBYTE)&pLocalPrinter->dwAttributes, sizeof(DWORD));
+    if (dwErrorCode != ERROR_SUCCESS) goto Failure;
+
+    // Add this Printer to the Printer List.
+    if (!InsertElementSkiplist(&PrinterList, pLocalPrinter))
+    {
+        dwErrorCode = ERROR_NOT_ENOUGH_MEMORY;
+        ERR("InsertElementSkiplist failed for Printer \"%S\"!\n", pLocalPrinter->pwszPrinterName);
+        goto Failure;
+    }
+
+    // Open the Printer to get a handle for it.
+    if (!LocalOpenPrinter(pLocalPrinter->pwszPrinterName, &hPrinter, NULL))
+    {
+        // Remove the Printer from the list again.
+        DeleteElementSkiplist(&PrinterList, pLocalPrinter);
+        DllFreeSplStr(pLocalPrinter->pwszPrinterName);
+        DllFreeSplStr(pLocalPrinter->pwszLocation);
+        DllFreeSplStr(pLocalPrinter->pwszPrinterDriver);
+        DllFreeSplStr(pLocalPrinter->pwszDescription);
+        DllFreeSplStr(pLocalPrinter->pwszDefaultDatatype);
+        DllFreeSplMem(pLocalPrinter->pDefaultDevMode);
+        DllFreeSplMem(pLocalPrinter);
+        pLocalPrinter = NULL;
+
+        // Delete the Printer's registry key again.
+        RegCloseKey(hPrinterKey);
+        RegDeleteKeyW(hPrintersKey, pInfo->pPrinterName);
+        hPrinterKey = NULL;
+
+        dwErrorCode = GetLastError();
+        goto Failure;
+    }
+
+    // The Printer was added successfully.
+    RegCloseKey(hPrinterKey);
+    SetLastError(ROUTER_SUCCESS);
+    return hPrinter;
+
+Failure:
+    if (pLocalPrinter)
+    {
+        if (pLocalPrinter->pDefaultDevMode)
+            DllFreeSplMem(pLocalPrinter->pDefaultDevMode);
+
+        if (pLocalPrinter->pwszDefaultDatatype)
+            DllFreeSplStr(pLocalPrinter->pwszDefaultDatatype);
+
+        if (pLocalPrinter->pwszDescription)
+            DllFreeSplStr(pLocalPrinter->pwszDescription);
+
+        if (pLocalPrinter->pwszPrinterDriver)
+            DllFreeSplStr(pLocalPrinter->pwszPrinterDriver);
+
+        if (pLocalPrinter->pwszLocation)
+            DllFreeSplStr(pLocalPrinter->pwszLocation);
+
+        if (pLocalPrinter->pwszPrinterName)
+            DllFreeSplStr(pLocalPrinter->pwszPrinterName);
+
+        DllFreeSplMem(pLocalPrinter);
+    }
+
+    if (hPrinterKey)
+    {
+        RegCloseKey(hPrinterKey);
+
+        // The Printer has not been added successfully, so remove its registry key again.
+        RegDeleteKeyW(hPrintersKey, pInfo->pPrinterName);
+    }
+
+    SetLastError(dwErrorCode);
+    return NULL;
+}
+
+BOOL WINAPI
+LocalDeletePrinter(HANDLE hPrinter)
+{
+    DWORD dwErrorCode;
+    PLOCAL_HANDLE pHandle = (PLOCAL_HANDLE)hPrinter;
+    PLOCAL_PRINTER_HANDLE pPrinterHandle;
+    PLOCAL_PRINTER pPrinter;
+
+    TRACE("LocalDeletePrinter(%p)\n", hPrinter);
+
+    // Sanity checks.
+    if (!pHandle || pHandle->HandleType != HandleType_Printer)
+    {
+        dwErrorCode = ERROR_INVALID_HANDLE;
+        goto Cleanup;
+    }
+
+    pPrinterHandle = (PLOCAL_PRINTER_HANDLE)pHandle->pSpecificHandle;
+    pPrinter = pPrinterHandle->pPrinter;
+    if (!pPrinter)
+    {
+        dwErrorCode = ERROR_INVALID_HANDLE;
+        goto Cleanup;
+    }
+
+    // Remove the Printer from the list.
+    DeleteElementSkiplist(&PrinterList, pPrinter);
+
+    // Delete the Printer's registry key.
+    RegDeleteKeyW(hPrintersKey, pPrinter->pwszPrinterName);
+
+    // Free all resources of the Printer.
+    DllFreeSplStr(pPrinter->pwszPrinterName);
+    DllFreeSplStr(pPrinter->pwszLocation);
+    DllFreeSplStr(pPrinter->pwszPrinterDriver);
+    DllFreeSplStr(pPrinter->pwszDescription);
+    DllFreeSplStr(pPrinter->pwszDefaultDatatype);
+    DllFreeSplMem(pPrinter->pDefaultDevMode);
+    DllFreeSplMem(pPrinter);
+
+    // The Printer is gone, invalidate the handle so it can't be used anymore.
+    pPrinterHandle->pPrinter = NULL;
+
+    dwErrorCode = ERROR_SUCCESS;
+
+Cleanup:
+    SetLastError(dwErrorCode);
+    return (dwErrorCode == ERROR_SUCCESS);
 }

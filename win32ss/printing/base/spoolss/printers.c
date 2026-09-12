@@ -33,7 +33,7 @@ AddPrinterExW( PWSTR pName, DWORD Level, PBYTE pPrinter, PBYTE pClientInfo, DWOR
     HANDLE hPrinter = NULL;
     PWSTR pPrinterName = NULL;
     PLIST_ENTRY pEntry;
-    PSPOOLSS_PRINTER_HANDLE pHandle;
+    PSPOOLSS_PRINTER_HANDLE pHandle = NULL;
     PSPOOLSS_PRINT_PROVIDER pPrintProvider;
 
     if ( Level != 2 )
@@ -98,7 +98,7 @@ Cleanup:
         dwErrorCode = ERROR_INVALID_PRINTER_NAME;
 
     SetLastError(dwErrorCode);
-    return hPrinter;
+    return (HANDLE)pHandle;
 }
 
 HANDLE WINAPI
@@ -169,7 +169,7 @@ Cleanup:
         dwErrorCode = ERROR_INVALID_PRINTER_NAME;
 
     SetLastError(dwErrorCode);
-    return hPrinter;
+    return (HANDLE)pHandle;
 }
 
 BOOL WINAPI
