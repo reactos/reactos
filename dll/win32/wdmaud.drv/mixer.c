@@ -416,7 +416,8 @@ MixerCompletionRoutine(
     PSOUND_OVERLAPPED Overlap = (PSOUND_OVERLAPPED)lpOverlapped;
 
     /* Call mmebuddy overlap routine */
-    Overlap->OriginalCompletionRoutine(dwErrorCode, PtrToUlong(Overlap->CompletionContext), lpOverlapped);
+    LPSOUND_OVERLAPPED_COMPLETION_ROUTINE CompletionRoutine = (LPSOUND_OVERLAPPED_COMPLETION_ROUTINE)Overlap->OriginalCompletionRoutine;
+    CompletionRoutine(dwErrorCode, PtrToUlong(Overlap->CompletionContext), Overlap);
 }
 
 MMRESULT

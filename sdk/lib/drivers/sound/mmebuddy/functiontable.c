@@ -23,7 +23,6 @@ SetSoundDeviceFunctionTable(
     IN  PMMFUNCTION_TABLE FunctionTable)
 {
     VALIDATE_MMSYS_PARAMETER( IsValidSoundDevice(SoundDevice) );
-    VALIDATE_MMSYS_PARAMETER( FunctionTable );
 
     /* Zero out the existing function table (if present) */
     ZeroMemory(&SoundDevice->FunctionTable, sizeof(MMFUNCTION_TABLE));
