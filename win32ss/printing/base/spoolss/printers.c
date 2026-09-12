@@ -31,10 +31,11 @@ AddPrinterExW( PWSTR pName, DWORD Level, PBYTE pPrinter, PBYTE pClientInfo, DWOR
     BOOL bReturnValue;
     DWORD dwErrorCode = ERROR_INVALID_PRINTER_NAME;
     HANDLE hPrinter = NULL;
+    HANDLE hReturn = NULL;
     PWSTR pPrinterName = NULL;
     PLIST_ENTRY pEntry;
     PSPOOLSS_PRINTER_HANDLE pHandle;
-    PSPOOLSS_PRINT_PROVIDER pPrintProvider;
+    PSPOOLSS_PRINT_PROVIDER pPrintProvider = NULL;
 
     if ( Level != 2 )
     {
@@ -53,14 +54,21 @@ AddPrinterExW( PWSTR pName, DWORD Level, PBYTE pPrinter, PBYTE pClientInfo, DWOR
     {
         pPrintProvider = CONTAINING_RECORD(pEntry, SPOOLSS_PRINT_PROVIDER, Entry);
 
-        hPrinter = pPrintProvider->PrintProvider.fpAddPrinterEx(pName, Level, pPrinter, pClientInfo, ClientInfoLevel);
+        hPrinter = NULL;
+        bReturnValue = ERROR_NOT_SUPPORTED;
 
-        bReturnValue = GetLastError();
+        if (pPrintProvider->PrintProvider.fpAddPrinterEx)
+        {
+            hPrinter = pPrintProvider->PrintProvider.fpAddPrinterEx(pName, Level, pPrinter, pClientInfo, ClientInfoLevel);
+            bReturnValue = GetLastError();
+        }
 
-        // Fallback.... ?
-
+        // Fall back to the plain entry when this Print Provider has no Ex variant.
         if ( hPrinter == NULL && bReturnValue == ERROR_NOT_SUPPORTED )
         {
+            if (!pPrintProvider->PrintProvider.fpAddPrinter)
+                continue;
+
             hPrinter = pPrintProvider->PrintProvider.fpAddPrinter(pName, Level, pPrinter);
         }
 
@@ -81,6 +89,10 @@ AddPrinterExW( PWSTR pName, DWORD Level, PBYTE pPrinter, PBYTE pClientInfo, DWOR
             pHandle->pPrintProvider = pPrintProvider;
             pHandle->hPrinter = hPrinter;
 
+            // Every other spoolss entry expects a SPOOLSS_PRINTER_HANDLE, so hand
+            // out the wrapper rather than the Print Provider's own handle.
+            hReturn = (HANDLE)pHandle;
+
             dwErrorCode = ERROR_SUCCESS;
             goto Cleanup;
         }
@@ -90,6 +102,12 @@ AddPrinterExW( PWSTR pName, DWORD Level, PBYTE pPrinter, PBYTE pClientInfo, DWOR
             dwErrorCode = GetLastError();
             goto Cleanup;
         }
+        else if (bReturnValue != ROUTER_UNKNOWN && bReturnValue != ERROR_INVALID_NAME)
+        {
+            // Remember why this Print Provider refused, so that the caller gets the
+            // real reason instead of a generic ERROR_INVALID_PRINTER_NAME.
+            dwErrorCode = bReturnValue;
+        }
     }
 
 Cleanup:
@@ -97,8 +115,12 @@ Cleanup:
     if (dwErrorCode == ERROR_INVALID_NAME)
         dwErrorCode = ERROR_INVALID_PRINTER_NAME;
 
+    // The Printer was created but we could not wrap it, so don't leak it.
+    if (!hReturn && hPrinter && pPrintProvider && pPrintProvider->PrintProvider.fpClosePrinter)
+        pPrintProvider->PrintProvider.fpClosePrinter(hPrinter);
+
     SetLastError(dwErrorCode);
-    return hPrinter;
+    return hReturn;
 }
 
 HANDLE WINAPI
@@ -107,10 +129,11 @@ AddPrinterW(PWSTR pName, DWORD Level, PBYTE pPrinter)
     BOOL bReturnValue;
     DWORD dwErrorCode = ERROR_INVALID_PRINTER_NAME;
     HANDLE hPrinter = NULL;
+    HANDLE hReturn = NULL;
     PWSTR pPrinterName = NULL;
     PLIST_ENTRY pEntry;
     PSPOOLSS_PRINTER_HANDLE pHandle;
-    PSPOOLSS_PRINT_PROVIDER pPrintProvider;
+    PSPOOLSS_PRINT_PROVIDER pPrintProvider = NULL;
 
     FIXME("AddPrinterW(%S, %lu, %p)\n", pName, Level, pPrinter);
 
@@ -133,6 +156,9 @@ AddPrinterW(PWSTR pName, DWORD Level, PBYTE pPrinter)
     {
         pPrintProvider = CONTAINING_RECORD(pEntry, SPOOLSS_PRINT_PROVIDER, Entry);
 
+        if (!pPrintProvider->PrintProvider.fpAddPrinter)
+            continue;
+
         hPrinter = pPrintProvider->PrintProvider.fpAddPrinter(pName, Level, pPrinter);
 
         bReturnValue = GetLastError();
@@ -152,6 +178,10 @@ AddPrinterW(PWSTR pName, DWORD Level, PBYTE pPrinter)
             pHandle->pPrintProvider = pPrintProvider;
             pHandle->hPrinter = hPrinter;
 
+            // Every other spoolss entry expects a SPOOLSS_PRINTER_HANDLE, so hand
+            // out the wrapper rather than the Print Provider's own handle.
+            hReturn = (HANDLE)pHandle;
+
             dwErrorCode = ERROR_SUCCESS;
             goto Cleanup;
         }
@@ -161,6 +191,12 @@ AddPrinterW(PWSTR pName, DWORD Level, PBYTE pPrinter)
             dwErrorCode = GetLastError();
             goto Cleanup;
         }
+        else if (bReturnValue != ROUTER_UNKNOWN && bReturnValue != ERROR_INVALID_NAME)
+        {
+            // Remember why this Print Provider refused, so that the caller gets the
+            // real reason instead of a generic ERROR_INVALID_PRINTER_NAME.
+            dwErrorCode = bReturnValue;
+        }
     }
 
 Cleanup:
@@ -168,8 +204,12 @@ Cleanup:
     if (dwErrorCode == ERROR_INVALID_NAME)
         dwErrorCode = ERROR_INVALID_PRINTER_NAME;
 
+    // The Printer was created but we could not wrap it, so don't leak it.
+    if (!hReturn && hPrinter && pPrintProvider && pPrintProvider->PrintProvider.fpClosePrinter)
+        pPrintProvider->PrintProvider.fpClosePrinter(hPrinter);
+
     SetLastError(dwErrorCode);
-    return hPrinter;
+    return hReturn;
 }
 
 BOOL WINAPI
@@ -207,6 +247,12 @@ DeletePrinter(HANDLE hPrinter)
     if (!pHandle)
     {
         SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    if (!pHandle->pPrintProvider->PrintProvider.fpDeletePrinter)
+    {
+        SetLastError(ERROR_INVALID_FUNCTION);
         return FALSE;
     }
 
@@ -432,6 +478,12 @@ SetPrinterW(HANDLE hPrinter, DWORD Level, PBYTE pPrinter, DWORD Command)
     if (!pHandle)
     {
         SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    if (!pHandle->pPrintProvider->PrintProvider.fpSetPrinter)
+    {
+        SetLastError(ERROR_INVALID_FUNCTION);
         return FALSE;
     }
 

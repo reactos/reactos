@@ -128,6 +128,8 @@ struct _LOCAL_PRINTER
     PLOCAL_PRINT_PROCESSOR pPrintProcessor;
     PLOCAL_PORT pPort;
     SKIPLIST JobList;
+    DWORD cRefs;                                /** Number of handles currently referring to this Printer. */
+    BOOL bPendingDeletion;                      /** LocalDeletePrinter has been called; the structure is released with the last handle. */
 };
 
 /**
@@ -293,6 +295,7 @@ BOOL WINAPI LocalDeleteMonitor(PWSTR pName, PWSTR pEnvironment, PWSTR pMonitorNa
 // ports.c
 PLOCAL_PORT FindPort(PCWSTR pwszName);
 BOOL InitializePortList(void);
+VOID RefreshPortList(void);
 BOOL WINAPI LocalEnumPorts(PWSTR pName, DWORD Level, PBYTE pPorts, DWORD cbBuf, PDWORD pcbNeeded, PDWORD pcReturned);
 BOOL WINAPI LocalAddPortEx(PWSTR pName, DWORD Level, PBYTE lpBuffer, PWSTR lpMonitorName);
 BOOL WINAPI LocalAddPort(LPWSTR pName, HWND hWnd, LPWSTR pMonitorName);
@@ -309,6 +312,7 @@ DWORD WINAPI LocalSetPrinterDataEx(HANDLE hPrinter, LPCWSTR pKeyName, LPCWSTR pV
 
 // printerdrivers.c
 BOOL InitializePrinterDrivers(VOID);
+HKEY open_driver_reg(LPCWSTR pEnvironment);
 BOOL WINAPI LocalAddPrinterDriver(LPWSTR pName, DWORD level, LPBYTE pDriverInfo);
 BOOL WINAPI LocalAddPrinterDriverEx(LPWSTR pName, DWORD level, LPBYTE pDriverInfo, DWORD dwFileCopyFlags);
 BOOL WINAPI LocalGetPrinterDriver(HANDLE hPrinter, LPWSTR pEnvironment, DWORD Level, LPBYTE pDriverInfo, DWORD cbBuf, LPDWORD pcbNeeded);
@@ -332,6 +336,10 @@ PPRINTENV_T validate_envW(LPCWSTR env);
 extern SKIPLIST PrinterList;
 BOOL InitializePrinterList(void);
 BOOL WINAPI LocalEnumPrinters(DWORD Flags, LPWSTR Name, DWORD Level, LPBYTE pPrinterEnum, DWORD cbBuf, LPDWORD pcbNeeded, LPDWORD pcReturned);
+HANDLE WINAPI LocalAddPrinter(PWSTR pName, DWORD Level, PBYTE pPrinterInfo);
+BOOL WINAPI LocalDeletePrinter(HANDLE hPrinter);
+BOOL WINAPI LocalSetPrinter(HANDLE hPrinter, DWORD Level, PBYTE pPrinterInfo, DWORD Command);
+VOID ReleaseLocalPrinter(PLOCAL_PRINTER pPrinter);
 BOOL WINAPI LocalGetPrinter(HANDLE hPrinter, DWORD Level, LPBYTE pPrinter, DWORD cbBuf, LPDWORD pcbNeeded);
 BOOL WINAPI LocalOpenPrinter(PWSTR lpPrinterName, HANDLE* phPrinter, PPRINTER_DEFAULTSW pDefault);
 DWORD WINAPI LocalPrinterMessageBox(HANDLE hPrinter, DWORD Error, HWND hWnd, LPWSTR pText, LPWSTR pCaption, DWORD dwType);

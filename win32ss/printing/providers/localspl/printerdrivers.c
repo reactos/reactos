@@ -870,6 +870,13 @@ static BOOL apd_copyfile( WCHAR *pathname, WCHAR *file_part, apd_data_t *apd )
     return apd->lazy || res;
 }
 
+static inline WCHAR *get_file_part( WCHAR *name )
+{
+    WCHAR *ptr = wcsrchr( name, '\\' );
+    if (ptr) return ptr + 1;
+    return name;
+}
+
 /******************************************************************
  * driver_load [internal]
  *
@@ -899,19 +906,16 @@ static HMODULE driver_load(const PRINTENV_T * env, LPWSTR dllname)
 
     lstrcatW(fullname, env->versionsubdir);
     lstrcatW(fullname, backslashW);
-    lstrcatW(fullname, dllname);
+
+    // The caller usually hands us the path the driver files were installed from,
+    // but they have been copied into the version subdirectory under their bare
+    // name, so only that part may be appended here.
+    lstrcatW(fullname, get_file_part(dllname));
 
     hui = LoadLibraryW(fullname);
     FIXME("%p: LoadLibrary(%s) %d\n", hui, debugstr_w(fullname), GetLastError());
 
     return hui;
-}
-
-static inline WCHAR *get_file_part( WCHAR *name )
-{
-    WCHAR *ptr = wcsrchr( name, '\\' );
-    if (ptr) return ptr + 1;
-    return name;
 }
 
 /******************************************************************************
