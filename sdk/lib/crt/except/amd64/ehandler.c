@@ -8,6 +8,17 @@
 #include <precomp.h>
 #include <winnt.h>
 
+/*
+ * Calls a filter / termination handler funclet with RBP set to the establisher
+ * frame. PSEH2 funclets are labels inside the guarded function and expect the
+ * function's frame pointer in RBP, because the compiler may emit frame relative
+ * spills at the funclet entry.
+ */
+LONG
+__C_specific_handler_call_filter(
+    _In_ PVOID Filter,
+    _In_ PVOID Argument,
+    _In_ PVOID EstablisherFrame);
 
 _CRTIMP
 EXCEPTION_DISPOSITION
@@ -76,7 +87,9 @@ __C_specific_handler(
                 /* Call the handler */
                 Handler = ScopeTable->ScopeRecord[i].HandlerAddress;
                 TerminationHandler = (PTERMINATION_HANDLER)(ImageBase + Handler);
-                TerminationHandler(TRUE, EstablisherFrame);
+                __C_specific_handler_call_filter((PVOID)TerminationHandler,
+                                                 (PVOID)(ULONG_PTR)TRUE,
+                                                 EstablisherFrame);
             }
             else if (ScopeTable->ScopeRecord[i].JumpTarget == TargetIpOffset)
             {
@@ -104,7 +117,9 @@ __C_specific_handler(
             {
                 /* Otherwise we need to call the handler */
                 ExceptionFilter = (PEXCEPTION_FILTER)(ImageBase + Handler);
-                FilterResult = ExceptionFilter(&ExceptionPointers, EstablisherFrame);
+                FilterResult = __C_specific_handler_call_filter(ExceptionFilter,
+                                                                &ExceptionPointers,
+                                                                EstablisherFrame);
             }
 
             if (FilterResult < 0 /* EXCEPTION_CONTINUE_EXECUTION */)
