@@ -12,6 +12,7 @@ list(APPEND CPP_SOURCE
     mmc.cpp
     # This is here so that they show up in visual studio:
     CAddDialog.h
+    CCustomizeDialog.h
     CConsoleWnd.h
     CMainWnd.h
     CSnapin.h

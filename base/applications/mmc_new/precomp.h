@@ -42,7 +42,9 @@
 #include "CSnapin.h"
 #include "CConsoleWnd.h"
 #include "CMainWnd.h"
+
 #include "CAddDialog.h"
+#include "CCustomizeDialog.h"
 
 
 #endif /* _MMC_PCH_ */

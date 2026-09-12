@@ -28,6 +28,29 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "E&xit\tAlt+F4", IDM_FILE_EXIT
     END
+    POPUP "&Action"
+    BEGIN
+        MENUITEM "New &Window from Here", IDM_ACTION_NEW
+        MENUITEM SEPARATOR
+        MENUITEM "Rena&me", IDM_ACTION_RENAME
+        MENUITEM "Export &List", IDM_ACTION_EXPORT_LIST
+    END
+    POPUP "&View"
+    BEGIN
+        MENUITEM "Add/Remove Colums", IDM_VIEW_COLUMNS
+        MENUITEM SEPARATOR
+        MENUITEM "Large Icons", IDM_VIEW_LARGE_ICONS
+        MENUITEM "Small Icons", IDM_VIEW_SMALL_ICONS
+        MENUITEM "List", IDM_VIEW_LIST
+        MENUITEM "Details", IDM_VIEW_DETAILS
+        MENUITEM SEPARATOR
+        MENUITEM "Customize...", IDM_VIEW_CUSTOMIZE
+    END
+    POPUP "Fav&orites"
+    BEGIN
+        MENUITEM "&Add to Favorites...", IDM_FAVORITES_ADD
+        MENUITEM "&Organize Favorites...", IDM_FAVORITES_ORGANIZE
+    END
     POPUP "&Windows"
     BEGIN
         MENUITEM "&New Window\tCtrl+W", IDM_WINDOWS_NEW
@@ -57,6 +80,26 @@ BEGIN
     LTEXT           "Selected modules:",IDC_STATIC,174,6,59,8
     DEFPUSHBUTTON   "OK",IDOK,240,204,50,14,WS_TABSTOP
     PUSHBUTTON      "Cancel",IDCANCEL,294,204,50,14,WS_TABSTOP
+END
+
+IDD_CUSTOMIZE DIALOGEX 0, 0, 214, 223
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_VISIBLE | WS_CAPTION
+CAPTION "Customize View"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    LTEXT "Select or clear the check boxes to show or hide items in the console window.", IDC_STATIC, 7, 7, 194, 22
+    GROUPBOX "MMC", IDC_STATIC, 7, 31, 200, 111
+    AUTOCHECKBOX "&Console tree", IDC_CUSTOMIZE_SCOPEPANE, 13, 42, 160, 10
+    AUTOCHECKBOX "Standard m&enus (Action and View)", IDC_CUSTOMIZE_MENUS, 13, 56, 160, 10
+    AUTOCHECKBOX "Standard tool&bar", IDC_CUSTOMIZE_TOOLBAR, 13, 70, 160, 10
+    AUTOCHECKBOX "&Status bar", IDC_CUSTOMIZE_STATUSBAR, 13, 84, 160, 10
+    AUTOCHECKBOX "&Description bar", IDC_CUSTOMIZE_DESCRIPTIONBAR, 13, 98, 160, 10
+    AUTOCHECKBOX "Taskpad &navigation tabs", IDC_CUSTOMIZE_TABS, 13, 112, 160, 10
+    AUTOCHECKBOX "&Actions pane", IDC_CUSTOMIZE_ACTIONSPANE, 13, 126, 160, 10
+    GROUPBOX "Snap-in", IDC_STATIC, 7, 150, 200, 42
+    AUTOCHECKBOX "&Menus", IDC_CUSTOMIZE_SNAPIN_MENUS, 13, 162, 160, 10
+    AUTOCHECKBOX "&Toolbars", IDC_CUSTOMIZE_SNAPIN_TOOLBARS, 13, 176, 160, 10
+    DEFPUSHBUTTON "OK", IDOK, 157, 200, 50, 14
 END
 
 STRINGTABLE

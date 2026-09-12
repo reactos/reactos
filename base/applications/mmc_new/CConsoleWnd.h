@@ -16,19 +16,33 @@ class CConsoleWnd :
     public IConsoleNameSpace2
 {
 private:
-    CMainWnd *m_MainWnd;
     int m_ViewId;
+    CMainWnd* m_MainWnd;
+    CTreeView m_TreeView;
+    CListView m_ListView;
+    CStatusBar m_StatusBar;
+    CWindow m_DescriptionBar;
+    int m_iTreeViewWidth;
+    int m_iActionsPaneWidth;
+    int m_iSplitterWidth;
+    int m_iSplitOffset;
+    int m_iSplitSide;
+    int m_iStatusBarHeight;
+    BOOL m_bTreeViewVisible;
+    BOOL m_bActionsPaneVisible;
+    BOOL m_bStatusBarVisible;
+    BOOL m_bDescriptionBarVisible;
 
 public:
     CAtlString m_Filename;
-
-    //CComPtr<CImageList> m_ScopeImageList;
 
 public:
 
     BEGIN_MSG_MAP(CConsoleWnd)
         MESSAGE_HANDLER(WM_CREATE, OnCreate)
         MESSAGE_HANDLER(WM_DESTROY, OnDestroy)
+        MESSAGE_HANDLER(WM_SIZE, OnSize)
+        MESSAGE_HANDLER(WM_DRAWITEM, OnDrawItem)
     END_MSG_MAP()
 
 
@@ -50,7 +64,7 @@ public:
                 /* lpszClassName= */L"MMCChildFrm",
                 /* hIconSm= */LoadIcon(_AtlBaseModule.GetModuleInstance(), MAKEINTRESOURCE(IDI_MAINAPP))
             },
-            NULL, NULL, IDC_ARROW, TRUE, 0, L""
+            NULL, NULL, IDC_SIZEWE, TRUE, 0, L""
         };
         return wc;
     }
@@ -60,12 +74,26 @@ public:
         return GetWndClassInfo().m_wc.lpszClassName;
     }
 
+private:
+    VOID UpdateLayout();
+
 public:
     CConsoleWnd(CMainWnd *MainWnd);
     ~CConsoleWnd();
 
     LRESULT OnCreate(UINT nMessage, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnDestroy(UINT nMessage, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+    LRESULT OnSize(UINT nMessage, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+    LRESULT OnDrawItem(UINT nMessage, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+
+    BOOL IsTreeViewVisible();
+    VOID SetTreeViewVisible(BOOL bVisible);
+    BOOL IsStatusBarVisible();
+    VOID SetStatusBarVisible(BOOL bVisible);
+    BOOL IsDescriptionBarVisible();
+    VOID SetDescriptionBarVisible(BOOL bVisible);
+    BOOL IsActionsPaneVisible();
+    VOID SetActionsPaneVisible(BOOL bVisible);
 
     VOID UpdateView();
 
