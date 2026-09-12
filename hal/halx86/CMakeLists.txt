@@ -22,11 +22,7 @@ function(add_hal _halname)
         ${_haldata_SOURCES}
         ${CMAKE_CURRENT_BINARY_DIR}/hal.def)
 
-    if(${_halname} STREQUAL "hal")
-        target_link_libraries(${_halname} libcntpr setjmp arbiter fast486 ${PSEH_LIB})
-    else()
-        target_link_libraries(${_halname} libcntpr setjmp fast486 ${PSEH_LIB})
-    endif()
+    target_link_libraries(${_halname} libcntpr setjmp arbiter_hal fast486 ${PSEH_LIB})
 
     add_importlibs(${_halname} ntoskrnl)
     #add_pch(${_halname} include/hal.h)

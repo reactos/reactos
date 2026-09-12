@@ -11,3 +11,8 @@ list(APPEND SOURCE
 
 add_library(arbiter ${SOURCE})
 add_dependencies(arbiter bugcodes xdk)
+
+add_library(arbiter_hal ${SOURCE})
+target_compile_definitions(arbiter_hal PRIVATE _NTHAL_ _NTHALDLL_)
+target_include_directories(arbiter_hal PRIVATE ${SOURCE})
+add_dependencies(arbiter_hal bugcodes xdk)
