@@ -263,7 +263,7 @@ URL: https://github.com/win-iconv/win-iconv
 Title: LibXML
 Path: sdk/lib/3rdparty/libxml2
 Used Version: 2.10.3
-License: MIT (https://spdx.org/licenses/MIT.htmlf)
+License: MIT (https://spdx.org/licenses/MIT.html)
 URL: http://xmlsoft.org, ftp://xmlsoft.org/libxml2/
 
 Title: STLport
@@ -271,6 +271,12 @@ Path: sdk/lib/3rdparty/stlport
 Used Version: 5.2.1
 License: BSD-2-Clause (https://spdx.org/licenses/BSD-2-Clause.html)
 URL: http://stlport.sourceforge.net/
+
+Title: Symcrypt
+Path: sdk/lib/3rdparty/symcrypt
+Used Version: 103.11.0 (with Wine 11.16 patches)
+License: MIT (https://spdx.org/licenses/MIT.html)
+URL: https://github.com/microsoft/symcrypt
 
 Title: ZLib
 Path: sdk/lib/3rdparty/zlib
