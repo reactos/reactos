@@ -172,8 +172,7 @@ endif()
 set(PCH_SOURCE
     ${PCATLDR_ARC_SOURCE}
     ${FREELDR_BOOTLIB_SOURCE}
-    ${PCATLDR_BOOTMGR_SOURCE}
-)
+    ${PCATLDR_BOOTMGR_SOURCE})
 
 add_pch(freeldr_common include/freeldr.h PCH_SOURCE)
 add_dependencies(freeldr_common bugcodes asm xdk)
