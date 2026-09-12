@@ -18,10 +18,8 @@
 
 #define COBJMACROS
 
+#include <assert.h>
 #include <stdarg.h>
-#ifdef __REACTOS__
-#include <wchar.h>
-#endif
 
 #include "windef.h"
 #include "winbase.h"
@@ -31,6 +29,15 @@
 #include "wbemprox_private.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(wbemprox);
+
+static CRITICAL_SECTION table_list_cs;
+static CRITICAL_SECTION_DEBUG table_debug =
+{
+    0, 0, &table_list_cs,
+    { &table_debug.ProcessLocksList, &table_debug.ProcessLocksList },
+      0, 0, { (DWORD_PTR)(__FILE__ ": table_list_cs") }
+};
+static CRITICAL_SECTION table_list_cs = { &table_debug, -1, 0, 0, 0, 0 };
 
 HRESULT get_column_index( const struct table *table, const WCHAR *name, UINT *column )
 {
@@ -73,7 +80,7 @@ UINT get_type_size( CIMTYPE type )
     case CIM_REAL32:
         return sizeof(FLOAT);
     default:
-        ERR("unhandled type %u\n", type);
+        ERR( "unhandled type %lu\n", type );
         break;
     }
     return sizeof(LONGLONG);
@@ -157,13 +164,6 @@ HRESULT get_value( const struct table *table, UINT row, UINT column, LONGLONG *v
 
 BSTR get_value_bstr( const struct table *table, UINT row, UINT column )
 {
-    static const WCHAR fmt_signedW[] = {'%','d',0};
-    static const WCHAR fmt_unsignedW[] = {'%','u',0};
-    static const WCHAR fmt_signed64W[] = {'%','I','6','4','d',0};
-    static const WCHAR fmt_unsigned64W[] = {'%','I','6','4','u',0};
-    static const WCHAR fmt_strW[] = {'\"','%','s','\"',0};
-    static const WCHAR trueW[] = {'T','R','U','E',0};
-    static const WCHAR falseW[] = {'F','A','L','S','E',0};
     LONGLONG val;
     BSTR ret;
     WCHAR number[22];
@@ -179,8 +179,8 @@ BSTR get_value_bstr( const struct table *table, UINT row, UINT column )
     switch (table->columns[column].type & COL_TYPE_MASK)
     {
     case CIM_BOOLEAN:
-        if (val) return SysAllocString( trueW );
-        else return SysAllocString( falseW );
+        if (val) return SysAllocString( L"TRUE" );
+        else return SysAllocString( L"FALSE" );
 
     case CIM_DATETIME:
     case CIM_REFERENCE:
@@ -188,25 +188,33 @@ BSTR get_value_bstr( const struct table *table, UINT row, UINT column )
         if (!val) return NULL;
         len = lstrlenW( (const WCHAR *)(INT_PTR)val ) + 2;
         if (!(ret = SysAllocStringLen( NULL, len ))) return NULL;
-        swprintf( ret, fmt_strW, (const WCHAR *)(INT_PTR)val );
+        swprintf( ret, len + 1, L"\"%s\"", (const WCHAR *)(INT_PTR)val );
         return ret;
 
     case CIM_SINT16:
     case CIM_SINT32:
-        swprintf( number, fmt_signedW, val );
+#ifdef __REACTOS__
+        swprintf( number, ARRAY_SIZE( number ), L"%lld", val );
+#else
+        swprintf( number, ARRAY_SIZE( number ), L"%d", val );
+#endif
         return SysAllocString( number );
 
     case CIM_UINT16:
     case CIM_UINT32:
-        swprintf( number, fmt_unsignedW, val );
+#ifdef __REACTOS__
+        swprintf( number, ARRAY_SIZE( number ), L"%llu", val );
+#else
+        swprintf( number, ARRAY_SIZE( number ), L"%u", val );
+#endif
         return SysAllocString( number );
 
     case CIM_SINT64:
-        wsprintfW( number, fmt_signed64W, val );
+        wsprintfW( number, L"%I64d", val );
         return SysAllocString( number );
 
     case CIM_UINT64:
-        wsprintfW( number, fmt_unsigned64W, val );
+        wsprintfW( number, L"%I64u", val );
         return SysAllocString( number );
 
     default:
@@ -260,7 +268,7 @@ HRESULT set_value( const struct table *table, UINT row, UINT column, LONGLONG va
         *(UINT64 *)ptr = val;
         break;
     default:
-        FIXME("unhandled column type %u\n", type);
+        FIXME( "unhandled column type %lu\n", type );
         return WBEM_E_FAILED;
     }
     return S_OK;
@@ -301,7 +309,7 @@ void free_row_values( const struct table *table, UINT row )
         type = table->columns[i].type & COL_TYPE_MASK;
         if (type == CIM_STRING || type == CIM_DATETIME || type == CIM_REFERENCE)
         {
-            if (get_value( table, row, i, &val ) == S_OK) heap_free( (void *)(INT_PTR)val );
+            if (get_value( table, row, i, &val ) == S_OK) free( (void *)(INT_PTR)val );
         }
         else if (type & CIM_FLAG_ARRAY)
         {
@@ -322,7 +330,7 @@ void clear_table( struct table *table )
     {
         table->num_rows = 0;
         table->num_rows_allocated = 0;
-        heap_free( table->data );
+        free( table->data );
         table->data = NULL;
     }
 }
@@ -331,47 +339,71 @@ void free_columns( struct column *columns, UINT num_cols )
 {
     UINT i;
 
-    for (i = 0; i < num_cols; i++) { heap_free( (WCHAR *)columns[i].name ); }
-    heap_free( columns );
+    for (i = 0; i < num_cols; i++) { free( (WCHAR *)columns[i].name ); }
+    free( columns );
 }
 
 void free_table( struct table *table )
 {
     if (!table) return;
+    assert( table->flags & TABLE_FLAG_DYNAMIC );
+
+    TRACE("destroying %p\n", table);
 
     clear_table( table );
-    if (table->flags & TABLE_FLAG_DYNAMIC)
-    {
-        TRACE("destroying %p\n", table);
-        heap_free( (WCHAR *)table->name );
-        free_columns( (struct column *)table->columns, table->num_cols );
-        heap_free( table->data );
-        list_remove( &table->entry );
-        heap_free( table );
-    }
+    free( (WCHAR *)table->name );
+    free_columns( (struct column *)table->columns, table->num_cols );
+    free( table->data );
+
+    table->cs.DebugInfo->Spare[0] = 0;
+    DeleteCriticalSection( &table->cs );
+    free( table );
 }
 
 void release_table( struct table *table )
 {
-    if (!InterlockedDecrement( &table->refs )) free_table( table );
+    if (!--table->refs)
+    {
+        clear_table( table );
+        if (table->flags & TABLE_FLAG_DYNAMIC)
+        {
+            EnterCriticalSection( &table_list_cs );
+            list_remove( &table->entry );
+            table->removed = TRUE;
+            LeaveCriticalSection( &table_list_cs );
+
+            LeaveCriticalSection( &table->cs );
+            free_table( table );
+            return;
+        }
+    }
+    LeaveCriticalSection( &table->cs );
 }
 
-struct table *addref_table( struct table *table )
+struct table *grab_table( struct table *table )
 {
-    InterlockedIncrement( &table->refs );
+    EnterCriticalSection( &table->cs );
+    if (table->removed)
+    {
+        LeaveCriticalSection( &table->cs );
+        return NULL;
+    }
+    table->refs++;
     return table;
 }
 
-struct table *grab_table( const WCHAR *name )
+struct table *find_table( enum wbm_namespace ns, const WCHAR *name )
 {
     struct table *table;
 
-    LIST_FOR_EACH_ENTRY( table, table_list, struct table, entry )
+    if (ns == WBEMPROX_NAMESPACE_LAST) return NULL;
+
+    LIST_FOR_EACH_ENTRY( table, table_list[ns], struct table, entry )
     {
         if (name && !wcsicmp( table->name, name ))
         {
             TRACE("returning %p\n", table);
-            return addref_table( table );
+            return grab_table( table );
         }
     }
     return NULL;
@@ -383,8 +415,8 @@ struct table *create_table( const WCHAR *name, UINT num_cols, const struct colum
 {
     struct table *table;
 
-    if (!(table = heap_alloc( sizeof(*table) ))) return NULL;
-    table->name               = heap_strdupW( name );
+    if (!(table = malloc( sizeof(*table) ))) return NULL;
+    table->name               = wcsdup( name );
     table->num_cols           = num_cols;
     table->columns            = columns;
     table->num_rows           = num_rows;
@@ -393,34 +425,43 @@ struct table *create_table( const WCHAR *name, UINT num_cols, const struct colum
     table->fill               = fill;
     table->flags              = TABLE_FLAG_DYNAMIC;
     table->refs               = 0;
+    table->removed            = FALSE;
     list_init( &table->entry );
+    InitializeCriticalSectionEx( &table->cs, 0, RTL_CRITICAL_SECTION_FLAG_FORCE_DEBUG_INFO );
+    table->cs.DebugInfo->Spare[0] = (DWORD_PTR)(__FILE__ ": table.cs");
     return table;
 }
 
-BOOL add_table( struct table *table )
+BOOL add_table( enum wbm_namespace ns, struct table *table )
 {
     struct table *iter;
 
-    LIST_FOR_EACH_ENTRY( iter, table_list, struct table, entry )
+    if (ns == WBEMPROX_NAMESPACE_LAST) return FALSE;
+
+    EnterCriticalSection( &table_list_cs );
+    LIST_FOR_EACH_ENTRY( iter, table_list[ns], struct table, entry )
     {
         if (!wcsicmp( iter->name, table->name ))
         {
             TRACE("table %s already exists\n", debugstr_w(table->name));
+            LeaveCriticalSection( &table_list_cs );
             return FALSE;
         }
     }
-    list_add_tail( table_list, &table->entry );
+    list_add_tail( table_list[ns], &table->entry );
+    LeaveCriticalSection( &table_list_cs );
+
     TRACE("added %p\n", table);
     return TRUE;
 }
 
-BSTR get_method_name( const WCHAR *class, UINT index )
+BSTR get_method_name( enum wbm_namespace ns, const WCHAR *class, UINT index )
 {
     struct table *table;
     UINT i, count = 0;
     BSTR ret;
 
-    if (!(table = grab_table( class ))) return NULL;
+    if (!(table = find_table( ns, class ))) return NULL;
 
     for (i = 0; i < table->num_cols; i++)
     {
@@ -437,4 +478,25 @@ BSTR get_method_name( const WCHAR *class, UINT index )
     }
     release_table( table );
     return NULL;
+}
+
+WCHAR *get_first_key_property( enum wbm_namespace ns, const WCHAR *class )
+{
+    struct table *table;
+    WCHAR *ret = NULL;
+    UINT i;
+
+    if (!(table = find_table( ns, class ))) return NULL;
+
+    for (i = 0; i < table->num_cols; i++)
+    {
+        if (table->columns[i].type & COL_FLAG_KEY)
+        {
+            ret = wcsdup( table->columns[i].name );
+            break;
+        }
+    }
+
+    release_table( table );
+    return ret;
 }

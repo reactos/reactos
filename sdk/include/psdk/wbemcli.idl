@@ -16,7 +16,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-cpp_quote("DEFINE_GUID(CLSID_WbemLocator, 0x4590f811,0x1d3A,0x11d0,0x89,0x1f,0x00,0xaa,0x00,0x4b,0x2e,0x24);")
+cpp_quote("DEFINE_GUID(CLSID_WbemLocator, 0x4590f811,0x1d3a,0x11d0,0x89,0x1f,0x00,0xaa,0x00,0x4b,0x2e,0x24);")
 cpp_quote("DEFINE_GUID(CLSID_WbemStatusCode, 0xeb87e1bd,0x3233,0x11d2,0xae,0xc9,0x00,0xc0,0x4f,0xb6,0x88,0x20);")
 
 import "oaidl.idl";
@@ -255,6 +255,12 @@ typedef [v1_enum] enum tag_CIMTYPE_ENUMERATION
     CIM_FLAG_ARRAY = 0x2000
 } CIMTYPE_ENUMERATION;
 
+typedef [v1_enum] enum tag_WBEM_REFRESHER_FLAGS
+{
+    WBEM_FLAG_REFRESH_AUTO_RECONNECT     = 0,
+    WBEM_FLAG_REFRESH_NO_AUTO_RECONNECT  = 1
+} WBEM_REFRESHER_FLAGS;
+
 typedef long CIMTYPE;
 
 [
@@ -275,7 +281,7 @@ interface IWbemLocator : IUnknown
         [in] const BSTR strAuthority,
         [in] IWbemContext *pCtx,
         [out] IWbemServices **ppNamespace);
-};
+}
 
 [
     object,
@@ -295,7 +301,7 @@ interface IWbemStatusCodeText : IUnknown
         [in] LCID LocaleId,
         [in] LONG lFlags,
         [out] BSTR *MessageText);
-};
+}
 
 [
     object,
@@ -313,7 +319,7 @@ interface IWbemObjectSink : IUnknown
         [in] HRESULT hResult,
         [in] BSTR strParam,
         [in] IWbemClassObject *pObjParam);
-};
+}
 
 typedef [v1_enum] enum tag_WBEM_GENERIC_FLAG_TYPE
 {
@@ -332,6 +338,48 @@ typedef [v1_enum] enum tag_WBEM_GENERIC_FLAG_TYPE
     WBEM_FLAG_USE_AMENDED_QUALIFIERS    = 0x20000,
     WBEM_FLAG_STRONG_VALIDATION         = 0x100000
 } WBEM_GENERIC_FLAG_TYPE;
+
+[
+    object,
+    restricted,
+    local,
+    uuid(44aca674-e8fc-11d0-a07c-00c04fb68820)
+]
+interface IWbemContext : IUnknown
+{
+    HRESULT Clone(
+        [out] IWbemContext **ppNewCopy);
+
+    HRESULT GetNames(
+        [in] long lFlags,
+        [out] SAFEARRAY(BSTR) *pNames);
+
+    HRESULT BeginEnumeration(
+        [in] long lFlags);
+
+    HRESULT Next(
+        [in] long lFlags,
+        [out] BSTR *pstrName,
+        [out] VARIANT *pValue);
+
+    HRESULT EndEnumeration();
+
+    HRESULT SetValue(
+        [in, string] LPCWSTR wszName,
+        [in] long lFlags,
+        [in] VARIANT *pValue);
+
+    HRESULT GetValue(
+        [in, string] LPCWSTR wszName,
+        [in] long lFlags,
+        [out] VARIANT *pValue);
+
+    HRESULT DeleteValue(
+        [in, string] LPCWSTR wszName,
+        [in] long lFlags);
+
+    HRESULT DeleteAll();
+}
 
 [
     object,
@@ -484,7 +532,31 @@ interface IWbemServices : IUnknown
         [in] IWbemContext *pCtx,
         [in] IWbemClassObject *pInParams,
         [in] IWbemObjectSink *pResponseHandler);
-};
+}
+
+[
+    object,
+    restricted,
+    uuid(44aca675-e8fc-11d0-a07c-00c04fb68820)
+]
+interface IWbemCallResult : IUnknown
+{
+    HRESULT GetResultObject(
+        [in] long lTimeout,
+        [out] IWbemClassObject **ppResultObject);
+
+    HRESULT GetResultString(
+        [in] long lTimeout,
+        [out] BSTR *pstrResultString);
+
+    HRESULT GetResultServices(
+        [in] long lTimeout,
+        [out] IWbemServices **ppServices);
+
+    HRESULT GetCallStatus(
+        [in] long lTimeout,
+        [out] long *plStatus);
+}
 
 [
     object,
@@ -511,7 +583,7 @@ interface IEnumWbemClassObject : IUnknown
     HRESULT Skip(
         [in] long lTimeout,
         [in] ULONG nCount);
-};
+}
 
 [
     object,
@@ -659,4 +731,217 @@ interface IWbemQualifierSet : IUnknown
         [out] long *plFlavor);
 
     HRESULT EndEnumeration();
+}
+
+
+typedef [v1_enum] enum tag_WBEM_UNSECAPP_FLAG_TYPE
+{
+    WBEM_FLAG_UNSECAPP_DEFAULT_CHECK_ACCESS,
+    WBEM_FLAG_UNSECAPP_CHECK_ACCESS,
+    WBEM_FLAG_UNSECAPP_DONT_CHECK_ACCESS
+} WBEM_UNSECAPP_FLAG_TYPE;
+
+[
+    object,
+    restricted,
+    uuid(1cfaba8c-1523-11d1-ad79-00c04fd8fdff)
+]
+interface IUnsecuredApartment : IUnknown
+{
+    HRESULT CreateObjectStub(
+        [in] IUnknown *object,
+        [out] IUnknown **stub);
 };
+
+[
+    object,
+    restricted,
+    uuid(31739d04-3471-4cf4-9a7c-57a44ae71956)
+]
+interface IWbemUnsecuredApartment : IUnsecuredApartment
+{
+    HRESULT CreateSinkStub(
+        [in] IWbemObjectSink *sink,
+        [in] DWORD flags,
+        [in,unique] const WCHAR *reserved,
+        [out] IWbemObjectSink **stub);
+};
+
+[
+    object,
+    restricted,
+    local,
+    uuid(49353c9a-516b-11d1-aea6-00c04fb68820)
+]
+interface IWbemObjectAccess : IWbemClassObject
+{
+    HRESULT GetPropertyHandle(
+        [in, string] LPCWSTR wszPropertyName,
+        [out] CIMTYPE *pType,
+        [out] long *plHandle);
+
+    HRESULT WritePropertyValue(
+        [in] long lHandle,
+        [in] long lNumBytes,
+        [in, size_is(lNumBytes)] const byte *aData);
+
+    HRESULT ReadPropertyValue(
+        [in] long lHandle,
+        [in] long lBufferSize,
+        [out] long *plNumBytes,
+        [out, size_is(lBufferSize), length_is(*plNumBytes)] byte *aData);
+
+    HRESULT ReadDWORD(
+        [in] long lHandle,
+        [out] DWORD *pdw);
+
+    HRESULT WriteDWORD(
+        [in] long lHandle,
+        [in] DWORD dw);
+
+    HRESULT ReadQWORD(
+        [in] long lHandle,
+        [out] unsigned __int64 *pqw);
+
+    HRESULT WriteQWORD(
+        [in] long lHandle,
+        [in] unsigned __int64 qw);
+
+    HRESULT GetPropertyInfoByHandle(
+        [in] long lHandle,
+        [out] BSTR *pstrName,
+        [out] CIMTYPE *pType);
+
+    HRESULT Lock(
+        [in] long lFlags);
+
+    HRESULT Unlock(
+        [in] long lFlags);
+};
+
+[
+    object,
+    restricted,
+    local,
+    uuid(49353c99-516b-11d1-aea6-00c04fb68820)
+]
+interface IWbemRefresher : IUnknown
+{
+    HRESULT Refresh(
+        [in] long lFlags);
+};
+
+[
+    object,
+    restricted,
+    local,
+    uuid(2705c288-79ae-11d2-b348-00105a1f8177)
+]
+interface IWbemHiPerfEnum : IUnknown
+{
+    HRESULT AddObjects(
+        [in] long lFlags,
+        [in] ULONG uNumObjects,
+        [in, size_is(uNumObjects)] long *apIds,
+        [in, size_is(uNumObjects)] IWbemObjectAccess **apObj);
+
+    HRESULT RemoveObjects(
+        [in] long lFlags,
+        [in] ULONG uNumObjects,
+        [in, size_is(uNumObjects)] long *apIds);
+
+    HRESULT GetObjects(
+        [in] long lFlags,
+        [in] ULONG uNumObjects,
+        [out, size_is(uNumObjects), length_is(*puReturned)] IWbemObjectAccess **apObj,
+        [out] ULONG *puReturned);
+
+    HRESULT RemoveAll(
+        [in] long lFlags);
+};
+
+[
+    object,
+    restricted,
+    local,
+    uuid(49353c92-516b-11d1-aea6-00c04fb68820)
+]
+interface IWbemConfigureRefresher : IUnknown
+{
+    HRESULT AddObjectByPath(
+        [in] IWbemServices *pNamespace,
+        [in, string] LPCWSTR wszPath,
+        [in] long lFlags,
+        [in] IWbemContext *pContext,
+        [out] IWbemClassObject **ppRefreshable,
+        [out] long *plId);
+
+    HRESULT AddObjectByTemplate(
+        [in] IWbemServices *pNamespace,
+        [in] IWbemClassObject *pTemplate,
+        [in] long lFlags,
+        [in] IWbemContext *pContext,
+        [out] IWbemClassObject **ppRefreshable,
+        [out] long *plId);
+
+    HRESULT AddRefresher(
+        [in] IWbemRefresher *pRefresher,
+        [in] long lFlags,
+        [out] long *plId);
+
+    HRESULT Remove(
+        [in] long lId,
+        [in] long lFlags);
+
+    HRESULT AddEnum(
+        [in] IWbemServices *pNamespace,
+        [in, string] LPCWSTR wszClassName,
+        [in] long lFlags,
+        [in] IWbemContext *pContext,
+        [out] IWbemHiPerfEnum **ppEnum,
+        [out] long *plId);
+};
+
+[
+    uuid(49bd2028-1523-11d1-ad79-00c04fd8fdff)
+]
+coclass UnsecuredApartment
+{
+    interface IUnsecuredApartment;
+    interface IWbemUnsecuredApartment;
+};
+
+[
+    uuid(9a653086-174f-11d2-b5f9-00104b703efd)
+]
+coclass WbemClassObject
+{
+    interface IWbemClassObject;
+};
+
+[
+    uuid(eb87e1bd-3233-11d2-aec9-00c04fb68820)
+]
+coclass WbemStatusCodeText
+{
+    interface IWbemStatusCodeText;
+};
+
+[
+    uuid(c71566f2-561e-11d1-ad87-00c04fd8fdff)
+]
+coclass WbemRefresher
+{
+    interface IMarshal;
+    interface IWbemRefresher;
+    interface IWbemConfigureRefresher;
+};
+
+[
+    restricted,
+    uuid(674b6698-ee92-11d0-ad71-00c04fd8fdff)
+]
+coclass WbemContext
+{
+    interface IWbemContext;
+}
