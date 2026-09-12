@@ -628,8 +628,37 @@ StorPortFreeDeviceBase(
     _In_ PVOID HwDeviceExtension,
     _In_ PVOID MappedAddress)
 {
+    PMINIPORT_DEVICE_EXTENSION MiniportExtension;
+    PFDO_DEVICE_EXTENSION DeviceExtension;
+    PMAPPED_ADDRESS Mapping, PreviousMapping = NULL;
+
     DPRINT1("StorPortFreeDeviceBase(%p %p)\n",
             HwDeviceExtension, MappedAddress);
+
+    MiniportExtension = CONTAINING_RECORD(HwDeviceExtension,
+                                          MINIPORT_DEVICE_EXTENSION,
+                                          HwDeviceExtension);
+    DeviceExtension = MiniportExtension->Miniport->DeviceExtension;
+
+    for (Mapping = DeviceExtension->MappedAddressList;
+         Mapping != NULL;
+         Mapping = Mapping->NextMappedAddress)
+    {
+        if (Mapping->MappedAddress == MappedAddress)
+        {
+            MmUnmapIoSpace(Mapping->MappedAddress, Mapping->NumberOfBytes);
+
+            if (PreviousMapping != NULL)
+                PreviousMapping->NextMappedAddress = Mapping->NextMappedAddress;
+            else
+                DeviceExtension->MappedAddressList = Mapping->NextMappedAddress;
+
+            ExFreePoolWithTag(Mapping, TAG_ADDRESS_MAPPING);
+            return;
+        }
+
+        PreviousMapping = Mapping;
+    }
 }
 
 
@@ -747,6 +776,8 @@ StorPortGetDeviceBase(
                                  NumberOfBytes,
                                  FALSE);
     DPRINT1("Mapped Address: %p\n", MappedAddress);
+    if (MappedAddress == NULL)
+        return NULL;
 
     Status = AllocateAddressMapping(&MiniportExtension->Miniport->DeviceExtension->MappedAddressList,
                                     IoAddress,
@@ -755,7 +786,8 @@ StorPortGetDeviceBase(
                                     SystemIoBusNumber);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Checkpoint!\n");
+        DPRINT1("Failed to track mapped address (Status 0x%08lx)\n", Status);
+        MmUnmapIoSpace(MappedAddress, NumberOfBytes);
         MappedAddress = NULL;
     }
 
