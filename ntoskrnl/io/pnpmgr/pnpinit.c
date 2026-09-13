@@ -302,11 +302,9 @@ IopInitializePlugPlayServices(VOID)
     /* Get the default interface */
     PnpDefaultInterfaceType = IopDetermineDefaultInterfaceType();
 
-#if 0 /* FIXME: Dont even try yet! */
     /* Initialize arbiters */
     Status = IopInitializeArbiters();
     if (!NT_SUCCESS(Status)) return Status;
-#endif
 
     /* Setup the group cache */
     Status = PiInitCacheGroupInformation();
@@ -423,6 +421,9 @@ IopInitializePlugPlayServices(VOID)
     /* This is a bus enumerated device */
     Pdo->Flags |= DO_BUS_ENUMERATED_DEVICE;
 
+    /* The legacy bus lists are used as soon as the root device node exists */
+    IopInitializeLegacyBusLists();
+
     /* Create the root device node */
     IopRootDeviceNode = PipAllocateDeviceNode(Pdo);
 
@@ -440,6 +441,14 @@ IopInitializePlugPlayServices(VOID)
     PnpRootInitializeDevExtension();
 
     PiSetDevNodeState(IopRootDeviceNode, DeviceNodeStarted);
+
+    /* Register the root arbiters, used when no parent bus has an arbiter */
+    Status = IopRegisterRootArbiters(IopRootDeviceNode);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("IopRegisterRootArbiters() failed, Status 0x%08lx\n", Status);
+        return Status;
+    }
 
     /* Initialize PnP-Event notification support */
     Status = IopInitPlugPlayEvents();

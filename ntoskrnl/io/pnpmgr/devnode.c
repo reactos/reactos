@@ -60,6 +60,7 @@ PipAllocateDeviceNode(
     InitializeListHead(&DeviceNode->TargetDeviceNotify);
     InitializeListHead(&DeviceNode->DockInfo.ListEntry);
     InitializeListHead(&DeviceNode->PendedSetInterfaceState);
+    InitializeListHead(&DeviceNode->LegacyBusListEntry);
 
     /* Check if there is a PDO */
     if (PhysicalDeviceObject)
@@ -367,9 +368,14 @@ IopFreeDeviceNode(
 
     KeReleaseSpinLock(&IopDeviceTreeLock, OldIrql);
 
+    /* A removed bus no longer provides its legacy bus */
+    IopUnregisterLegacyBus(DeviceNode);
+
     RtlFreeUnicodeString(&DeviceNode->InstancePath);
 
     RtlFreeUnicodeString(&DeviceNode->ServiceName);
+
+    IopUncacheResourceHandlers(DeviceNode);
 
     if (DeviceNode->ResourceList)
     {
