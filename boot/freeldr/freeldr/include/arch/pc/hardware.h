@@ -63,6 +63,14 @@ typedef struct _PCI_TYPE1_CFG_BITS
     } u;
 } PCI_TYPE1_CFG_BITS, *PPCI_TYPE1_CFG_BITS;
 
+#define PCI_MAX_BUSES 256
+#define PCI_MAX_DEVICES 32
+#define PCI_MAX_FUNCTIONS 8
+
+#define PCI_HEADER_TYPE_MASK 0x7F
+#define PCI_HEADER_TYPE_BRIDGE 0x01
+#define PCI_HEADER_TYPE_MULTIFUNC 0x80
+
 typedef
 PCM_PARTIAL_RESOURCE_LIST
 (*GET_HARDDISK_CONFIG_DATA)(UCHAR DriveNumber, ULONG* pSize);
@@ -93,6 +101,22 @@ DetectPciBios(
     _In_ PCONFIGURATION_COMPONENT_DATA SystemKey,
     _Inout_ PULONG BusNumber,
     _In_ FIND_PCI_BIOS MachFindPciBios);
+
+ULONG
+PciReadConfigDword(
+    _In_ UCHAR Bus,
+    _In_ UCHAR Device,
+    _In_ UCHAR Function,
+    _In_ UCHAR Register);
+
+BOOLEAN
+PciScanFunction(
+    _In_ UCHAR Bus,
+    _In_ UCHAR Device,
+    _In_ UCHAR Function,
+    _Inout_updates_(PCI_MAX_BUSES) BOOLEAN *ScannedBuses,
+    _Inout_updates_(PCI_MAX_BUSES) UCHAR *PendingBuses,
+    _Inout_ ULONG *PendingCount);
 
 /* i386pnp.S */
 ULONG_PTR __cdecl PnpBiosSupported(VOID);
