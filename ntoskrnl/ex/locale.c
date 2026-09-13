@@ -964,7 +964,7 @@ NtInitializeNlsFiles(
         {
             ProbeForWriteLangId(DefaultLocaleId);
             ProbeForWrite(BaseAddress, sizeof(*BaseAddress), sizeof(PVOID));
-            ProbeForWrite(DefaultCasingTableSize, sizeof(*DefaultCasingTableSize), sizeof(LARGE_INTEGER));
+            ProbeForWrite(DefaultCasingTableSize, sizeof(*DefaultCasingTableSize), sizeof(PVOID));
         }
 
         *DefaultLocaleId = PsDefaultSystemLocaleId;
