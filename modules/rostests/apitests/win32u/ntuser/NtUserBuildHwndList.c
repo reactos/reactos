@@ -20,7 +20,7 @@ LRESULT CALLBACK WindowProc(HWND Hwnd, UINT Msg, WPARAM wParam, LPARAM lParam)
             PostQuitMessage(0);
             return 0;
     }
-    return DefWindowProc(Hwnd, Msg, wParam, lParam);
+    return DefWindowProcW(Hwnd, Msg, wParam, lParam);
 }
 
 DWORD WINAPI GuiThreadFunction(LPVOID lpParam)
