@@ -1823,26 +1823,6 @@ IoSynchronousInvalidateDeviceRelations(
     }
 }
 
-/*
- * @implemented
- */
-BOOLEAN
-NTAPI
-IoTranslateBusAddress(IN INTERFACE_TYPE InterfaceType,
-                      IN ULONG BusNumber,
-                      IN PHYSICAL_ADDRESS BusAddress,
-                      IN OUT PULONG AddressSpace,
-                      OUT PPHYSICAL_ADDRESS TranslatedAddress)
-{
-    /* FIXME: Notify the resource arbiter */
-
-    return HalTranslateBusAddress(InterfaceType,
-                                  BusNumber,
-                                  BusAddress,
-                                  AddressSpace,
-                                  TranslatedAddress);
-}
-
 VOID
 NTAPI
 IoInvalidateDeviceState(

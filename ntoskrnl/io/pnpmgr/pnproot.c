@@ -1002,8 +1002,15 @@ PnpRootFdoPnpControl(
             Status = PnpRootQueryDeviceRelations(DeviceObject, Irp);
             break;
 
+        case IRP_MN_QUERY_INTERFACE:
+            DPRINT("IRP_MJ_PNP / IRP_MN_QUERY_INTERFACE\n");
+            /* Return the root arbiters and the root translator */
+            Status = IopArbiterQueryRootInterface(IrpSp, Status);
+            Status = IopTranslatorQueryRootInterface(IrpSp, Status);
+            break;
+
         default:
-            // The root device object can receive only IRP_MN_QUERY_DEVICE_RELATIONS
+            // The root device object can receive only the minor codes above
             ASSERT(FALSE);
             DPRINT("IRP_MJ_PNP / Unknown minor function 0x%lx\n", IrpSp->MinorFunction);
             break;
