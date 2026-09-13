@@ -74,7 +74,7 @@ typedef struct
    INT            droppedIndex;
    INT            fixedOwnerDrawHeight;
    INT            droppedWidth;   /* last two are not used unless set */
-   INT            editHeight;     /* explicitly */
+   INT            item_height;
    LONG           UIState;
 } HEADCOMBO,*LPHEADCOMBO;
 
@@ -94,7 +94,8 @@ LRESULT WINAPI DesktopWndProcA( HWND hwnd, UINT message, WPARAM wParam, LPARAM l
 LRESULT WINAPI DesktopWndProcW( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
 LRESULT WINAPI User32DefWindowProc(HWND,UINT,WPARAM,LPARAM,BOOL);
 BOOL WINAPI RegisterClientPFN(VOID);
-LRESULT WINAPI IconTitleWndProc( HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam );
+LRESULT WINAPI IconTitleWndProcA( HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam );
+LRESULT WINAPI IconTitleWndProcW( HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam );
 LRESULT WINAPI ButtonWndProcA( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam );
 LRESULT WINAPI ButtonWndProcW( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam );
 LRESULT WINAPI ButtonWndProc_common(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL unicode);

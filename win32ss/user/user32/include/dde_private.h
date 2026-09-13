@@ -25,6 +25,9 @@
 #ifndef __WINE_DDEML_PRIVATE_H
 #define __WINE_DDEML_PRIVATE_H
 
+#include "dde.h"
+#include "ddeml.h"
+
 /* defined in atom.c file.
  */
 #define MAX_ATOM_LEN              255
@@ -69,7 +72,7 @@
  * are available (most notably the REGISTER/UNREGISTER and CONNECT_CONFIRM messages
  * to the callback function). To be correct in every situation, all the basic
  * exchanges are made using the 'pure' DDE protocol. A (future !) enhancement would
- * be to provide a new protocol in the case were both partners are handled by DDEML.
+ * be to provide a new protocol in the case where both partners are handled by DDEML.
  *
  * The StringHandles are in fact stored as local atoms. So an HSZ and a (local) atom
  * can be used interchangeably. However, in order to keep track of the allocated HSZ,
@@ -187,51 +190,51 @@ typedef enum {
 
 extern	HDDEDATA 	WDML_InvokeCallback(WDML_INSTANCE* pInst, UINT uType, UINT uFmt, HCONV hConv,
 					    HSZ hsz1, HSZ hsz2, HDDEDATA hdata,
-					    ULONG_PTR dwData1, ULONG_PTR dwData2) DECLSPEC_HIDDEN;
-extern	WDML_SERVER*	WDML_AddServer(WDML_INSTANCE* pInstance, HSZ hszService, HSZ hszTopic) DECLSPEC_HIDDEN;
-extern	void		WDML_RemoveServer(WDML_INSTANCE* pInstance, HSZ hszService, HSZ hszTopic) DECLSPEC_HIDDEN;
-extern	WDML_SERVER*	WDML_FindServer(WDML_INSTANCE* pInstance, HSZ hszService, HSZ hszTopic) DECLSPEC_HIDDEN;
+					    ULONG_PTR dwData1, ULONG_PTR dwData2);
+extern	WDML_SERVER*	WDML_AddServer(WDML_INSTANCE* pInstance, HSZ hszService, HSZ hszTopic);
+extern	void		WDML_RemoveServer(WDML_INSTANCE* pInstance, HSZ hszService, HSZ hszTopic);
+extern	WDML_SERVER*	WDML_FindServer(WDML_INSTANCE* pInstance, HSZ hszService, HSZ hszTopic);
 /* transaction handler on the server side */
-extern WDML_QUEUE_STATE WDML_ServerHandle(WDML_CONV* pConv, WDML_XACT* pXAct) DECLSPEC_HIDDEN;
+extern WDML_QUEUE_STATE WDML_ServerHandle(WDML_CONV* pConv, WDML_XACT* pXAct);
 /* transaction handler on the client side */
-HDDEDATA WDML_ClientHandle(WDML_CONV *pConv, WDML_XACT *pXAct, DWORD dwTimeout, LPDWORD pdwResult) DECLSPEC_HIDDEN;
+HDDEDATA WDML_ClientHandle(WDML_CONV *pConv, WDML_XACT *pXAct, DWORD dwTimeout, LPDWORD pdwResult);
 /* called both in DdeClientTransaction and server side. */
 extern	WDML_CONV* 	WDML_AddConv(WDML_INSTANCE* pInstance, WDML_SIDE side,
-				     HSZ hszService, HSZ hszTopic, HWND hwndClient, HWND hwndServer) DECLSPEC_HIDDEN;
-extern	void		WDML_RemoveConv(WDML_CONV* pConv, WDML_SIDE side) DECLSPEC_HIDDEN;
-extern	WDML_CONV*	WDML_GetConv(HCONV hConv, BOOL checkConnected) DECLSPEC_HIDDEN;
-extern	WDML_CONV*	WDML_GetConvFromWnd(HWND hWnd) DECLSPEC_HIDDEN;
+				     HSZ hszService, HSZ hszTopic, HWND hwndClient, HWND hwndServer);
+extern	void		WDML_RemoveConv(WDML_CONV* pConv, WDML_SIDE side);
+extern	WDML_CONV*	WDML_GetConv(HCONV hConv, BOOL checkConnected);
+extern	WDML_CONV*	WDML_GetConvFromWnd(HWND hWnd);
 extern	WDML_CONV*	WDML_FindConv(WDML_INSTANCE* pInstance, WDML_SIDE side,
-				      HSZ hszService, HSZ hszTopic) DECLSPEC_HIDDEN;
+				      HSZ hszService, HSZ hszTopic);
 extern  BOOL		WDML_PostAck(WDML_CONV* pConv, WDML_SIDE side, WORD appRetCode,
-				     BOOL fBusy, BOOL fAck, UINT_PTR pmt, LPARAM lParam, UINT oldMsg) DECLSPEC_HIDDEN;
+				     BOOL fBusy, BOOL fAck, UINT_PTR pmt, LPARAM lParam, UINT oldMsg);
 extern	void		WDML_AddLink(WDML_INSTANCE* pInstance, HCONV hConv, WDML_SIDE side,
-				     UINT wType, HSZ hszItem, UINT wFmt) DECLSPEC_HIDDEN;
+				     UINT wType, HSZ hszItem, UINT wFmt);
 extern	WDML_LINK*	WDML_FindLink(WDML_INSTANCE* pInstance, HCONV hConv, WDML_SIDE side,
-				      HSZ hszItem, BOOL use_fmt, UINT uFmt) DECLSPEC_HIDDEN;
+				      HSZ hszItem, BOOL use_fmt, UINT uFmt);
 extern	void 		WDML_RemoveLink(WDML_INSTANCE* pInstance, HCONV hConv, WDML_SIDE side,
-					HSZ hszItem, UINT wFmt) DECLSPEC_HIDDEN;
+					HSZ hszItem, UINT wFmt);
 /* string internals */
-extern	BOOL		WDML_DecHSZ(WDML_INSTANCE* pInstance, HSZ hsz) DECLSPEC_HIDDEN;
-extern	BOOL		WDML_IncHSZ(WDML_INSTANCE* pInstance, HSZ hsz) DECLSPEC_HIDDEN;
-extern	ATOM		WDML_MakeAtomFromHsz(HSZ hsz) DECLSPEC_HIDDEN;
-extern	HSZ		WDML_MakeHszFromAtom(const WDML_INSTANCE* pInstance, ATOM atom) DECLSPEC_HIDDEN;
+extern	BOOL		WDML_DecHSZ(WDML_INSTANCE* pInstance, HSZ hsz);
+extern	BOOL		WDML_IncHSZ(WDML_INSTANCE* pInstance, HSZ hsz);
+extern	ATOM		WDML_MakeAtomFromHsz(HSZ hsz);
+extern	HSZ		WDML_MakeHszFromAtom(const WDML_INSTANCE* pInstance, ATOM atom);
 /* client calls these */
-extern	WDML_XACT*	WDML_AllocTransaction(WDML_INSTANCE* pInstance, UINT ddeMsg, UINT wFmt, HSZ hszItem) DECLSPEC_HIDDEN;
-extern	void		WDML_QueueTransaction(WDML_CONV* pConv, WDML_XACT* pXAct) DECLSPEC_HIDDEN;
-extern	BOOL		WDML_UnQueueTransaction(WDML_CONV* pConv, WDML_XACT*  pXAct) DECLSPEC_HIDDEN;
-extern	void		WDML_FreeTransaction(WDML_INSTANCE* pInstance, WDML_XACT* pXAct, BOOL doFreePmt) DECLSPEC_HIDDEN;
+extern	WDML_XACT*	WDML_AllocTransaction(WDML_INSTANCE* pInstance, UINT ddeMsg, UINT wFmt, HSZ hszItem);
+extern	void		WDML_QueueTransaction(WDML_CONV* pConv, WDML_XACT* pXAct);
+extern	BOOL		WDML_UnQueueTransaction(WDML_CONV* pConv, WDML_XACT*  pXAct);
+extern	void		WDML_FreeTransaction(WDML_INSTANCE* pInstance, WDML_XACT* pXAct, BOOL doFreePmt);
 extern	HGLOBAL		WDML_DataHandle2Global(HDDEDATA hDdeData, BOOL fResponse, BOOL fRelease,
-					       BOOL fDeferUpd, BOOL dAckReq) DECLSPEC_HIDDEN;
-extern	HDDEDATA	WDML_Global2DataHandle(WDML_CONV* pConv, HGLOBAL hMem, WINE_DDEHEAD* da) DECLSPEC_HIDDEN;
-extern  BOOL            WDML_IsAppOwned(HDDEDATA hDdeData) DECLSPEC_HIDDEN;
-extern	WDML_INSTANCE*	WDML_GetInstance(DWORD InstId) DECLSPEC_HIDDEN;
-extern	WDML_INSTANCE*	WDML_GetInstanceFromWnd(HWND hWnd) DECLSPEC_HIDDEN;
+					       BOOL fDeferUpd, BOOL dAckReq);
+extern	HDDEDATA	WDML_Global2DataHandle(WDML_CONV* pConv, HGLOBAL hMem, WINE_DDEHEAD* da);
+extern  BOOL            WDML_IsAppOwned(HDDEDATA hDdeData);
+extern	WDML_INSTANCE*	WDML_GetInstance(DWORD InstId);
+extern	WDML_INSTANCE*	WDML_GetInstanceFromWnd(HWND hWnd);
 /* broadcasting to DDE windows */
 extern	void		WDML_BroadcastDDEWindows(LPCWSTR clsName, UINT uMsg,
-						 WPARAM wParam, LPARAM lParam) DECLSPEC_HIDDEN;
-extern	void		WDML_NotifyThreadExit(DWORD tid) DECLSPEC_HIDDEN;
-extern	void 		WDML_NotifyThreadDetach(void) DECLSPEC_HIDDEN;
+						 WPARAM wParam, LPARAM lParam);
+extern	void		WDML_NotifyThreadExit(DWORD tid);
+extern	void 		WDML_NotifyThreadDetach(void);
 
 
 static __inline void WDML_ExtractAck(WORD status, DDEACK* da)
@@ -239,11 +242,11 @@ static __inline void WDML_ExtractAck(WORD status, DDEACK* da)
     *da = *((DDEACK*)&status);
 }
 
-extern const WCHAR WDML_szEventClass[] DECLSPEC_HIDDEN; /* class of window for events (aka instance) */
-extern const char WDML_szServerConvClassA[] DECLSPEC_HIDDEN; /* ANSI class of window for server side conv */
-extern const WCHAR WDML_szServerConvClassW[] DECLSPEC_HIDDEN; /* unicode class of window for server side conv */
-extern const char WDML_szClientConvClassA[] DECLSPEC_HIDDEN; /* ANSI class of window for client side conv */
-extern const WCHAR WDML_szClientConvClassW[] DECLSPEC_HIDDEN; /* unicode class of window for client side conv */
+extern const WCHAR WDML_szEventClass[]; /* class of window for events (aka instance) */
+extern const char WDML_szServerConvClassA[]; /* ANSI class of window for server side conv */
+extern const WCHAR WDML_szServerConvClassW[]; /* unicode class of window for server side conv */
+extern const char WDML_szClientConvClassA[]; /* ANSI class of window for client side conv */
+extern const WCHAR WDML_szClientConvClassW[]; /* unicode class of window for client side conv */
 
 #define WM_WDML_REGISTER	(WM_USER + 0x200)
 #define WM_WDML_UNREGISTER	(WM_USER + 0x201)

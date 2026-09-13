@@ -147,8 +147,8 @@ BOOL WINAPI RegisterClientPFN(VOID)
 
   pfnClientA.pfnScrollBarWndProc      = ScrollBarWndProcA;
   pfnClientW.pfnScrollBarWndProc      = ScrollBarWndProcW;
-  pfnClientA.pfnTitleWndProc          = IconTitleWndProc;
-  pfnClientW.pfnTitleWndProc          = IconTitleWndProc;
+  pfnClientA.pfnTitleWndProc          = IconTitleWndProcA;
+  pfnClientW.pfnTitleWndProc          = IconTitleWndProcW;
   pfnClientA.pfnMenuWndProc           = PopupMenuWndProcA;
   pfnClientW.pfnMenuWndProc           = PopupMenuWndProcW;
   pfnClientA.pfnDesktopWndProc        = DesktopWndProcA;
@@ -208,6 +208,6 @@ BOOL WINAPI RegisterClientPFN(VOID)
                                             &pfnClientW,
                                             &pfnClientWorker,
                                             User32Instance);
-  
+
   return NT_SUCCESS(Status) ? TRUE : FALSE;
 }
