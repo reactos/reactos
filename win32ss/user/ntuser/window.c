@@ -305,12 +305,13 @@ IntWinListChildren(PWND Window)
     return List;
 }
 
+_Ret_writes_maybenull_(*Count)
 HWND* FASTCALL
 IntWinListChildrenFiltered(
-    PWND Window,
-    PTHREADINFO Thread,
-    BOOLEAN Recursive,
-    PULONG Count)
+    _In_ PWND Window,
+    _In_ PTHREADINFO Thread,
+    _In_ BOOLEAN Recursive,
+    _Out_ PULONG Count)
 {
     ASSERT(Window);
 
