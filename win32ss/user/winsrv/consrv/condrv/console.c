@@ -14,6 +14,7 @@
 #include <consrv.h>
 #include <coninput.h>
 #include "../../concfg/font.h"
+#include "../include/vt.h"
 
 #define NDEBUG
 #include <debug.h>
@@ -145,6 +146,14 @@ ConDrvInitConsole(
     /* Make the new screen buffer active */
     Console->ActiveBuffer = NewBuffer;
     Console->ConsolePaused = FALSE;
+    /*
+     * Permissive by default. Reading the user's policy needs client
+     * impersonation, which only the server layer can do, so ConSrvInitConsole
+     * overrides these right after we return.
+     */
+    Console->AllowVtOscClipboard = TRUE;
+    Console->AllowVtOscHyperlinks = TRUE;
+    Console->AllowVtDcsPassthrough = TRUE;
 
     DPRINT("Console initialized\n");
 
@@ -358,10 +367,13 @@ ConDrvSetConsoleMode(IN PCONSOLE Console,
                      IN PCONSOLE_IO_OBJECT Object,
                      IN ULONG ConsoleMode)
 {
-#define CONSOLE_VALID_INPUT_MODES   ( ENABLE_PROCESSED_INPUT  | ENABLE_LINE_INPUT   | \
-                                      ENABLE_ECHO_INPUT       | ENABLE_WINDOW_INPUT | \
-                                      ENABLE_MOUSE_INPUT )
-#define CONSOLE_VALID_OUTPUT_MODES  ( ENABLE_PROCESSED_OUTPUT | ENABLE_WRAP_AT_EOL_OUTPUT )
+#define CONSOLE_VALID_INPUT_MODES   ( ENABLE_PROCESSED_INPUT          | ENABLE_LINE_INPUT   | \
+                                      ENABLE_ECHO_INPUT               | ENABLE_WINDOW_INPUT | \
+                                      ENABLE_MOUSE_INPUT              | ENABLE_EXTENDED_FLAGS | \
+                                      ENABLE_VIRTUAL_TERMINAL_INPUT )
+#define CONSOLE_VALID_OUTPUT_MODES  ( ENABLE_PROCESSED_OUTPUT             | ENABLE_WRAP_AT_EOL_OUTPUT | \
+                                      ENABLE_VIRTUAL_TERMINAL_PROCESSING  | DISABLE_NEWLINE_AUTO_RETURN | \
+                                      ENABLE_LVB_GRID_WORLDWIDE )
 
     NTSTATUS Status = STATUS_SUCCESS;
 
@@ -396,7 +408,15 @@ ConDrvSetConsoleMode(IN PCONSOLE Console,
         }
         else
         {
+            ULONG OldMode = Buffer->Mode;
             Buffer->Mode = (ConsoleMode & CONSOLE_VALID_OUTPUT_MODES);
+
+            if ((OldMode & ENABLE_VIRTUAL_TERMINAL_PROCESSING) &&
+                !(Buffer->Mode & ENABLE_VIRTUAL_TERMINAL_PROCESSING) &&
+                GetType(Buffer) == TEXTMODE_BUFFER)
+            {
+                ConDrvVtInvalidateBufferRgb((PTEXTMODE_SCREEN_BUFFER)Buffer);
+            }
         }
     }
     else

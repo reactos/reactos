@@ -23,6 +23,25 @@
 #include <wincon.h>
 #include <wincon_undoc.h>
 
+/*
+ * Virtual-terminal console modes. These are gated behind NTDDI_WIN10_RS1 in
+ * <wincon.h>, but consrv is built with _WIN32_WINNT=0x600 (see consrv.cmake)
+ * and implements them regardless, so make them visible module-wide instead of
+ * relaxing the public SDK header.
+ */
+#ifndef ENABLE_VIRTUAL_TERMINAL_INPUT
+#define ENABLE_VIRTUAL_TERMINAL_INPUT       0x0200
+#endif
+#ifndef ENABLE_VIRTUAL_TERMINAL_PROCESSING
+#define ENABLE_VIRTUAL_TERMINAL_PROCESSING  0x0004
+#endif
+#ifndef DISABLE_NEWLINE_AUTO_RETURN
+#define DISABLE_NEWLINE_AUTO_RETURN         0x0008
+#endif
+#ifndef ENABLE_LVB_GRID_WORLDWIDE
+#define ENABLE_LVB_GRID_WORLDWIDE           0x0010
+#endif
+
 #define NTOS_MODE_USER
 #include <ndk/mmfuncs.h>
 

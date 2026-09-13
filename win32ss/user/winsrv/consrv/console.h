@@ -26,6 +26,10 @@ typedef struct _CONSOLE_INIT_INFO
 VOID NTAPI
 ConSrvInitConsoleSupport(VOID);
 
+/* Frees a UNICODE_STRING whose buffer came from the console heap */
+VOID
+ConsoleFreeUnicodeString(IN PUNICODE_STRING UnicodeString);
+
 NTSTATUS NTAPI
 ConSrvInitConsole(OUT PHANDLE NewConsoleHandle,
                   OUT struct _CONSRV_CONSOLE** /* PCONSRV_CONSOLE* */ NewConsole,
