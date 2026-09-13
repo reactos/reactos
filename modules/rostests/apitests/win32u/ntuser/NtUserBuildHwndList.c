@@ -26,7 +26,7 @@ LRESULT CALLBACK WindowProc(HWND Hwnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 DWORD WINAPI GuiThreadFunction(LPVOID lpParam)
 {
     DWORD error;
-    HINSTANCE hInstance = GetModuleHandle(NULL);
+    HINSTANCE hInstance = GetModuleHandleW(NULL);
     const char CLASS_NAME[] = "GuiThreadWindowClass";
 
     // Register the Window Class
