@@ -38,19 +38,13 @@ DWORD WINAPI GuiThreadFunction(LPVOID lpParam)
     wc.hCursor       = LoadCursorW(NULL, IDC_ARROW);
     RegisterClassW(&wc);
 
-    HWND hwnd = CreateWindowEx(
-        0,
-        CLASS_NAME,
-        "Threaded GUI Window", 
-        WS_OVERLAPPEDWINDOW | WS_VISIBLE,
-        CW_USEDEFAULT,
-        CW_USEDEFAULT,
-        CW_USEDEFAULT,
-        CW_USEDEFAULT,
-        NULL,
-        NULL,
-        hInstance,
-        NULL);
+    HWND hwnd = CreateWindowExW(0, CLASS_NAME,
+                                L"Threaded GUI Window", 
+                                WS_OVERLAPPEDWINDOW | WS_VISIBLE,
+                                CW_USEDEFAULT, CW_USEDEFAULT,
+                                CW_USEDEFAULT, CW_USEDEFAULT,
+                                NULL, NULL,
+                                hInstance, NULL);
     
     error = GetLastError();
     ok(hwnd != NULL, "Create window is NULL\n");
