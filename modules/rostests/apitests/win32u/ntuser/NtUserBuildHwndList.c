@@ -30,7 +30,7 @@ DWORD WINAPI GuiThreadFunction(LPVOID lpParam)
     const char CLASS_NAME[] = "GuiThreadWindowClass";
 
     // Register the Window Class
-    WNDCLASS wc;
+    WNDCLASSW wc;
     RtlZeroMemory(&wc, sizeof(wc));
     wc.lpfnWndProc   = WindowProc;
     wc.hInstance     = hInstance;
