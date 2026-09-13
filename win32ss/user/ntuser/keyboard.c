@@ -644,7 +644,7 @@ IntVkToChar(WORD wVk, PKBDTABLES pKbdTbl)
  *
  * Gets key state from global bitmap
  */
-SHORT
+SYSCALL_RETURN_SMALL(SHORT)
 APIENTRY
 NtUserGetAsyncKeyState(INT Key)
 {
@@ -670,7 +670,7 @@ NtUserGetAsyncKeyState(INT Key)
     UserLeave();
 
     TRACE("Leave NtUserGetAsyncKeyState, ret=%u\n", wRet);
-    return wRet;
+    return (DWORD)(USHORT)wRet;
 }
 
 /*
