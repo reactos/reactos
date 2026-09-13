@@ -65,7 +65,7 @@
 #define PCI_ENABLE_BRIDGE_VGA_16BIT                         0x0010
 
 //
-// PCI IRQ Routing Table in BIOS/Registry (Signature: PIR$)
+// PCI IRQ Routing Table in BIOS/Registry (Signature: $PIR)
 //
 #include <pshpack1.h>
 typedef struct _PIN_INFO

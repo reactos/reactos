@@ -295,7 +295,7 @@ PciUpdateHardware(IN PPCI_PDO_EXTENSION PdoExtension,
     }
     else
     {
-        /* Just to the update inline */
+        /* Just do the update inline */
         PcipUpdateHardware(PdoExtension, PciData);
     }
 }
@@ -1491,7 +1491,7 @@ PcipGetFunctionLimits(IN PPCI_CONFIGURATOR_CONTEXT Context)
     }
     else
     {
-        /* Otherwise, it's safe to do this in-line at low IRQL */
+        /* Otherwise, it's safe to do this inline at low IRQL */
         PciWriteLimitsAndRestoreCurrent(PdoExtension, Context);
     }
 

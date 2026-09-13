@@ -1354,7 +1354,7 @@ PciDetermineSlotNumber(IN PPCI_PDO_EXTENSION PdoExtension,
     {
         /* Read every slot information entry */
         SlotInfo = &PciIrqRoutingTable->Slot[0];
-        DPRINT1("PIR$ %p is %lx bytes, slot 0 is at: %p\n",
+        DPRINT1("$PIR %p is %lx bytes, slot 0 is at: %p\n",
                 PciIrqRoutingTable, PciIrqRoutingTable->TableSize, SlotInfo);
         while (SlotInfo < (PSLOT_INFO)((ULONG_PTR)PciIrqRoutingTable +
                                        PciIrqRoutingTable->TableSize))

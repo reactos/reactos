@@ -1422,8 +1422,8 @@ HKLM,"SYSTEM\CurrentControlSet\Control\PnP\Pci\CardList","Ali",0x00030003,\
 01,00,00,00,b9,10,21,15,00,00,00,00,00,00,00,00
 
 ; PCI IRQ routing miniport support (legacy, pre-ACPI machines).
-; The IrqMiniports table maps a south-bridge PCI interrupt router
-; this $PIR table is needed for PCI IRQ Routing without ACPI.
+; The IrqMiniports table maps a south-bridge PCI interrupt router.
+; This $PIR table is needed for PCI IRQ Routing without ACPI.
 HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting","Options",0x00010001,0x0000000F
 
 HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\00001078","Name",0x00000002,"Cyrix 5520 Rev 0"

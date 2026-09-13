@@ -134,7 +134,7 @@ PciAcpiFindRsdt(OUT PACPI_BIOS_MULTI_NODE *AcpiMultiNode)
                                          &NumberOfBytes);
                 if (NT_SUCCESS(Status))
                 {
-                    /* Check if this is the PCI BIOS subkey */
+                    /* Check if this is the ACPI BIOS subkey */
                     if (!wcsncmp((PWCHAR)ValueInfo->Data,
                                  L"ACPI BIOS",
                                  ValueInfo->DataLength))
