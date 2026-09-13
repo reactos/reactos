@@ -274,7 +274,8 @@ VGAStartIO(PVOID DeviceExtension,
         RequestPacket->StatusBlock->Status = ERROR_INSUFFICIENT_BUFFER;
         return TRUE;
       }
-      Result = VGAShareVideoMemory((PVIDEO_SHARE_MEMORY) RequestPacket->InputBuffer,
+      Result = VGAShareVideoMemory(DeviceExtension,
+                          (PVIDEO_SHARE_MEMORY) RequestPacket->InputBuffer,
                           (PVIDEO_MEMORY_INFORMATION) RequestPacket->OutputBuffer,
                           RequestPacket->StatusBlock);
       break;
@@ -556,14 +557,67 @@ BOOLEAN  VGASetCurrentMode(IN PVIDEO_MODE  RequestedMode,
   }
 }
 
-BOOLEAN  VGAShareVideoMemory(IN PVIDEO_SHARE_MEMORY  RequestedMemory,
-                          OUT PVIDEO_MEMORY_INFORMATION  ReturnedMemory,
-                          OUT PSTATUS_BLOCK  StatusBlock)
+/**
+ * @brief
+ * Shares a portion of VGA video memory with a VDM.
+ *
+ * @param[in] DeviceExtension
+ * Miniport device extension.
+ *
+ * @param[in] RequestedMemory
+ * Specifies the process, offset, size, and requested virtual address
+ * of the shared view.
+ *
+ * @param[out] ReturnedMemory
+ * Receives the base and length of the mapped shared view.
+ *
+ * @param[out] StatusBlock
+ * Receives the operation status.
+ *
+ * @return
+ * TRUE always. Failure is returned through StatusBlock->Status.
+ **/
+BOOLEAN
+VGAShareVideoMemory(
+    _In_ PVOID DeviceExtension,
+    _In_ PVIDEO_SHARE_MEMORY RequestedMemory,
+    _Out_ PVIDEO_MEMORY_INFORMATION ReturnedMemory,
+    _Out_ PSTATUS_BLOCK StatusBlock)
 {
-  UNIMPLEMENTED;
+    ULONG ReturnedLength;
+    PVOID ReturnedAddress;
+    ULONG IoSpace;
+    PHYSICAL_ADDRESS FrameBufferBase;
 
-  StatusBlock->Status = ERROR_INVALID_FUNCTION;
-  return FALSE;
+    /* Requested view must fall in the 64K VGA gap at 0xA0000 */
+    if (RequestedMemory->ViewOffset + RequestedMemory->ViewSize > 0x10000)
+    {
+        StatusBlock->Status = ERROR_INVALID_PARAMETER;
+        StatusBlock->Information = 0;
+        return TRUE;
+    }
+
+    ReturnedAddress = RequestedMemory->RequestedVirtualAddress;
+    ReturnedLength = RequestedMemory->ViewSize;
+    FrameBufferBase.QuadPart = 0xA0000 + RequestedMemory->ViewOffset;
+    IoSpace = VIDEO_MEMORY_SPACE_MEMORY;
+
+    StatusBlock->Status = VideoPortMapMemory(DeviceExtension,
+                                              FrameBufferBase,
+                                              &ReturnedLength,
+                                              &IoSpace,
+                                              &ReturnedAddress);
+    if (StatusBlock->Status != NO_ERROR)
+    {
+        StatusBlock->Information = 0;
+        return TRUE;
+    }
+
+    ReturnedMemory->VideoRamBase = ReturnedMemory->FrameBufferBase = ReturnedAddress;
+    ReturnedMemory->VideoRamLength = ReturnedMemory->FrameBufferLength = ReturnedLength;
+    StatusBlock->Information = sizeof(VIDEO_MEMORY_INFORMATION);
+
+    return TRUE;
 }
 
 BOOLEAN  VGAUnmapVideoMemory(IN PVOID DeviceExtension,
