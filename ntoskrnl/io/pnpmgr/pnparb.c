@@ -1,16 +1,269 @@
 /*
- * PROJECT:         ReactOS Kernel
- * COPYRIGHT:       GPL - See COPYING in the top level directory
- * FILE:            ntoskrnl/io/pnpmgr/pnpres.c
- * PURPOSE:         Resource handling code
- * PROGRAMMERS:     Cameron Gutman (cameron.gutman@reactos.org)
- *                  ReactOS Portable Systems Group
+ * PROJECT:     ReactOS Kernel
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     PnP manager resource arbitration and assignment
+ * COPYRIGHT:   Copyright 2005 Cameron Gutman <cameron.gutman@reactos.org>
+ *              Copyright 2026 Justin Miller <justin.miller@reactos.org>
  */
 
 #include <ntoskrnl.h>
+#include <wdmguid.h>
 
 #define NDEBUG
 #include <debug.h>
+
+/* GLOBALS ******************************************************************/
+
+#define TAG_IO_ARBITER 'AbrI'
+
+/* Initialized by IopInitializeArbiters */
+extern ARBITER_INSTANCE IopRootBusNumberArbiter;
+extern ARBITER_INSTANCE IopRootIrqArbiter;
+extern ARBITER_INSTANCE IopRootDmaArbiter;
+extern ARBITER_INSTANCE IopRootMemArbiter;
+extern ARBITER_INSTANCE IopRootPortArbiter;
+
+static const struct
+{
+    UCHAR ResourceType;
+    PARBITER_INSTANCE Instance;
+} IopRootArbiterTable[] =
+{
+    { CmResourceTypePort,      &IopRootPortArbiter },
+    { CmResourceTypeInterrupt, &IopRootIrqArbiter },
+    { CmResourceTypeMemory,    &IopRootMemArbiter },
+    { CmResourceTypeDma,       &IopRootDmaArbiter },
+    { CmResourceTypeBusNumber, &IopRootBusNumberArbiter },
+};
+
+/* Interfaces of the root arbiters, in the same order as IopRootArbiterTable */
+static ARBITER_INTERFACE IopRootArbiterInterface[RTL_NUMBER_OF(IopRootArbiterTable)];
+
+/* FUNCTIONS ****************************************************************/
+
+/* ARBITER DISCOVERY ********************************************************/
+
+/* The root arbiters are never freed, so there is nothing to count */
+static
+VOID
+NTAPI
+IopRootArbiterReference(
+    _In_ PVOID Context)
+{
+    UNREFERENCED_PARAMETER(Context);
+}
+
+static
+VOID
+NTAPI
+IopRootArbiterDereference(
+    _In_ PVOID Context)
+{
+    UNREFERENCED_PARAMETER(Context);
+}
+
+/* Large memory ranges are arbitrated with the memory ranges */
+static
+UCHAR
+NTAPI
+IopArbitratedType(
+    _In_ UCHAR ResourceType)
+{
+    return (ResourceType == CmResourceTypeMemoryLarge) ? CmResourceTypeMemory : ResourceType;
+}
+
+/**
+ * @brief
+ * Returns the root arbiter interface for a resource type, or NULL.
+ * CmResourceTypeMemoryLarge uses the memory arbiter.
+ */
+static
+PARBITER_INTERFACE
+NTAPI
+IopGetRootArbiterInterface(
+    _In_ UCHAR ResourceType)
+{
+    ULONG Index;
+
+    PAGED_CODE();
+
+    ResourceType = IopArbitratedType(ResourceType);
+
+    for (Index = 0; Index < RTL_NUMBER_OF(IopRootArbiterTable); Index++)
+    {
+        if (IopRootArbiterTable[Index].ResourceType == ResourceType)
+            return &IopRootArbiterInterface[Index];
+    }
+
+    return NULL;
+}
+
+static
+VOID
+NTAPI
+IopInitializeArbiterEntry(
+    _Out_ PPI_RESOURCE_ARBITER_ENTRY Entry,
+    _In_ UCHAR ResourceType,
+    _In_opt_ PARBITER_INTERFACE Interface,
+    _In_ ULONG Level)
+{
+    Entry->ResourceType = ResourceType;
+    Entry->ArbiterInterface = Interface;
+    Entry->Level = Level;
+    InitializeListHead(&Entry->ResourceList);
+    InitializeListHead(&Entry->BestResourceList);
+    InitializeListHead(&Entry->BestConfig);
+    InitializeListHead(&Entry->ActiveArbiterList);
+}
+
+/**
+ * @brief
+ * Adds the root arbiters to the arbiter list of the root device node.
+ * Called once, after IopInitializeArbiters.
+ */
+CODE_SEG("INIT")
+NTSTATUS
+NTAPI
+IopRegisterRootArbiters(
+    _In_ PDEVICE_NODE RootNode)
+{
+    ULONG Index;
+
+    for (Index = 0; Index < RTL_NUMBER_OF(IopRootArbiterTable); Index++)
+    {
+        PARBITER_INTERFACE Interface = &IopRootArbiterInterface[Index];
+        PPI_RESOURCE_ARBITER_ENTRY Entry;
+
+        Interface->Size = sizeof(*Interface);
+        Interface->Version = 0;
+        Interface->Context = IopRootArbiterTable[Index].Instance;
+        Interface->InterfaceReference = IopRootArbiterReference;
+        Interface->InterfaceDereference = IopRootArbiterDereference;
+        Interface->ArbiterHandler = ArbiterLibHandler;
+        Interface->Flags = 0;
+
+        Entry = ExAllocatePoolZero(PagedPool, sizeof(*Entry), TAG_IO_ARBITER);
+        if (Entry == NULL)
+        {
+            while (!IsListEmpty(&RootNode->DeviceArbiterList))
+            {
+                ExFreePoolWithTag(CONTAINING_RECORD(RemoveHeadList(&RootNode->DeviceArbiterList),
+                                                    PI_RESOURCE_ARBITER_ENTRY,
+                                                    DeviceArbiterList),
+                                  TAG_IO_ARBITER);
+            }
+
+            return STATUS_INSUFFICIENT_RESOURCES;
+        }
+
+        IopInitializeArbiterEntry(Entry,
+                                  IopRootArbiterTable[Index].ResourceType,
+                                  Interface,
+                                  RootNode->Level);
+        InsertTailList(&RootNode->DeviceArbiterList, &Entry->DeviceArbiterList);
+    }
+
+    return STATUS_SUCCESS;
+}
+
+/**
+ * @brief
+ * Handles IRP_MN_QUERY_INTERFACE on the root PDO for the root arbiters.
+ *
+ * @param[in] IoStack
+ * The stack location of the IRP. InterfaceSpecificData is the resource type.
+ *
+ * @param[in] ExistingStatus
+ * The current status of the IRP, returned when the query is not handled.
+ *
+ * @return
+ * STATUS_SUCCESS if the interface was returned, STATUS_INVALID_PARAMETER for
+ * a resource type without a root arbiter, ExistingStatus otherwise.
+ */
+NTSTATUS
+NTAPI
+IopArbiterQueryRootInterface(
+    _In_ PIO_STACK_LOCATION IoStack,
+    _In_ NTSTATUS ExistingStatus)
+{
+    PARBITER_INTERFACE Interface;
+    PARBITER_INTERFACE Output;
+    UCHAR ResourceType;
+    BOOLEAN IsSupported;
+
+    PAGED_CODE();
+
+    IsSupported = IsEqualGUID(IoStack->Parameters.QueryInterface.InterfaceType,
+                              &GUID_ARBITER_INTERFACE_STANDARD) &&
+                  IoStack->Parameters.QueryInterface.Size >= sizeof(*Output) &&
+                  IoStack->Parameters.QueryInterface.Interface != NULL;
+    if (!IsSupported)
+        return ExistingStatus;
+
+    ResourceType = (UCHAR)(ULONG_PTR)IoStack->Parameters.QueryInterface.InterfaceSpecificData;
+
+    Interface = IopGetRootArbiterInterface(ResourceType);
+    if (Interface == NULL)
+        return STATUS_INVALID_PARAMETER;
+
+    /* The handler is NULL until IopRegisterRootArbiters has run */
+    if (Interface->ArbiterHandler == NULL)
+        return ExistingStatus;
+
+    Output = (PARBITER_INTERFACE)IoStack->Parameters.QueryInterface.Interface;
+    *Output = *Interface;
+    Output->InterfaceReference(Output->Context);
+
+    return STATUS_SUCCESS;
+}
+
+/* Releases the arbiters cached on a device node */
+static
+VOID
+NTAPI
+IopFreeDeviceNodeArbiters(
+    _In_ PDEVICE_NODE DeviceNode)
+{
+    while (!IsListEmpty(&DeviceNode->DeviceArbiterList))
+    {
+        PPI_RESOURCE_ARBITER_ENTRY Entry =
+            CONTAINING_RECORD(RemoveHeadList(&DeviceNode->DeviceArbiterList),
+                              PI_RESOURCE_ARBITER_ENTRY,
+                              DeviceArbiterList);
+
+        if ((Entry->ArbiterInterface != NULL) &&
+            (Entry->ArbiterInterface->InterfaceDereference != NULL))
+        {
+            Entry->ArbiterInterface->InterfaceDereference(Entry->ArbiterInterface->Context);
+        }
+
+        ExFreePoolWithTag(Entry, TAG_IO_ARBITER);
+    }
+
+    DeviceNode->NoArbiterMask = 0;
+    DeviceNode->QueryArbiterMask = 0;
+}
+
+/**
+ * @brief
+ * Releases the arbiters and translators cached on a device node. The device
+ * is asked again the next time they are needed.
+ *
+ * @remarks
+ * The root arbiters cannot be asked for again, so the root keeps them.
+ */
+VOID
+NTAPI
+IopUncacheResourceHandlers(
+    _In_ PDEVICE_NODE DeviceNode)
+{
+    PAGED_CODE();
+
+    IopFreeDeviceNodeArbiters(DeviceNode);
+    IopFreeDeviceNodeTranslators(DeviceNode);
+}
+
+/* LEGACY RESOURCE HANDLING *************************************************/
 
 FORCEINLINE
 PIO_RESOURCE_LIST
