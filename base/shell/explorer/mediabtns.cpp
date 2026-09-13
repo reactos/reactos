@@ -327,7 +327,7 @@ CMultimediaBackend::LogError(_In_ const char* pszFunctionName, _In_ const char* 
 {
     static WCHAR pszWinMMErrText[MAXERRORLENGTH] = {0};
     waveOutGetErrorTextW(mmres, pszWinMMErrText, _countof(pszWinMMErrText));
-    ERR("CMultimediaBackend::%s: %: %lu (%S)\n", pszFunctionName, pszMessage, mmres, pszWinMMErrText);
+    ERR("CMultimediaBackend::%s: %s: %lu (%S)\n", pszFunctionName, pszMessage, mmres, pszWinMMErrText);
 }
 
 MMRESULT
