@@ -648,10 +648,6 @@ IntDefWindowProc(
       case WM_DEVICECHANGE:
             return TRUE;
 
-      case WM_INPUT:
-         UserFreeRawInput(pti->MessageQueue, (HRAWINPUT)lParam);
-         return 0;
-
       case WM_GETTEXTLENGTH:
       {
             PWSTR buf;

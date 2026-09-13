@@ -43,6 +43,12 @@ typedef struct _USER_RAWINPUT
     RAWINPUT RawInput;
 } USER_RAWINPUT, *PUSER_RAWINPUT;
 
+C_ASSERT(FIELD_OFFSET(RAWINPUT, data) == sizeof(RAWINPUTHEADER));
+C_ASSERT(sizeof(RAWINPUTHEADER) + sizeof(RAWMOUSE) <= sizeof(RAWINPUT));
+C_ASSERT(sizeof(RAWINPUTHEADER) + sizeof(RAWKEYBOARD) <= sizeof(RAWINPUT));
+
+#define MAX_RAWINPUT_PER_QUEUE 256
+
 static PAGED_LOOKASIDE_LIST gRawInputLookasideList;
 PRAWINPUTDEVICE global_pRawInputDevices = NULL;
 BOOLEAN RawInputEnabled = FALSE;
@@ -304,9 +310,12 @@ RawInputEntryFromHandle(
 static
 VOID
 RawInputFreeEntry(
+    PUSER_MESSAGE_QUEUE MessageQueue,
     PUSER_RAWINPUT RawEntry)
 {
+    ASSERT(MessageQueue->cRawInput > 0);
     RemoveEntryList(&RawEntry->ListEntry);
+    MessageQueue->cRawInput--;
     ExFreeToPagedLookasideList(&gRawInputLookasideList, RawEntry);
 }
 
@@ -340,6 +349,16 @@ UserCreateRawInput(
     if (!pti || !pti->MessageQueue || !pData)
         return NULL;
 
+    ASSERT(cbData <= sizeof(RawEntry->RawInput.data));
+    if (cbData > sizeof(RawEntry->RawInput.data))
+        return NULL;
+
+    if (pti->MessageQueue->cRawInput >= MAX_RAWINPUT_PER_QUEUE)
+    {
+        DPRINT("Dropping raw input, queue %p is not being pumped\n", pti->MessageQueue);
+        return NULL;
+    }
+
     RawEntry = ExAllocateFromPagedLookasideList(&gRawInputLookasideList);
     if (!RawEntry)
         return NULL;
@@ -352,6 +371,7 @@ UserCreateRawInput(
     RtlCopyMemory(&RawEntry->RawInput.data, pData, cbData);
 
     InsertTailList(&pti->MessageQueue->RawInputListHead, &RawEntry->ListEntry);
+    pti->MessageQueue->cRawInput++;
     return (HRAWINPUT)&RawEntry->RawInput;
 }
 
@@ -366,8 +386,27 @@ UserFreeRawInput(
     if (!RawEntry)
         return FALSE;
 
-    RawInputFreeEntry(RawEntry);
+    RawInputFreeEntry(MessageQueue, RawEntry);
     return TRUE;
+}
+
+VOID
+FASTCALL
+UserUpdatePrevRawInput(
+    PTHREADINFO pti,
+    CONST MSG *pMsg)
+{
+    if (pti->hPrevRawInput)
+    {
+        UserFreeRawInput(pti->MessageQueue, pti->hPrevRawInput);
+        pti->hPrevRawInput = NULL;
+    }
+
+    if (pMsg->message == WM_INPUT &&
+        (pMsg->wParam == RIM_INPUT || pMsg->wParam == RIM_INPUTSINK))
+    {
+        pti->hPrevRawInput = (HRAWINPUT)pMsg->lParam;
+    }
 }
 
 VOID
@@ -381,7 +420,7 @@ UserCleanupRawInput(
         RawEntry = CONTAINING_RECORD(MessageQueue->RawInputListHead.Flink,
                                      USER_RAWINPUT,
                                      ListEntry);
-        RawInputFreeEntry(RawEntry);
+        RawInputFreeEntry(MessageQueue, RawEntry);
     }
 }
 
@@ -390,6 +429,7 @@ FASTCALL
 UserGetRawInputTarget(
     DWORD dwType,
     PTHREADINFO *ppti,
+    HWND *phwndTarget,
     WPARAM *pwParam)
 {
     PRAWINPUTDEVICE Registration;
@@ -430,6 +470,7 @@ UserGetRawInputTarget(
     if (Registration->dwFlags & RIDEV_INPUTSINK)
     {
         *pwParam = (pti->MessageQueue == pFocusQueue) ? RIM_INPUT : RIM_INPUTSINK;
+        *phwndTarget = UserHMGetHandle(pWnd);
         *ppti = pti;
         return TRUE;
     }
@@ -440,6 +481,7 @@ UserGetRawInputTarget(
             return FALSE; /* FIXME: Needs per-process arbitration like Windows */
 
         *pwParam = RIM_INPUT;
+        *phwndTarget = UserHMGetHandle(pWnd);
         *ppti = pti;
         return TRUE;
     }
@@ -448,6 +490,7 @@ UserGetRawInputTarget(
         return FALSE;
 
     *pwParam = RIM_INPUT;
+    *phwndTarget = UserHMGetHandle(pWnd);
     *ppti = pti;
     return TRUE;
 }
@@ -623,7 +666,7 @@ NtUserGetRawInputBuffer(
 
         ClearMsgBitsMask(pti, Message->QS_Flags);
         MsqDestroyMessage(Message);
-        RawInputFreeEntry(RawEntry);
+        RawInputFreeEntry(MessageQueue, RawEntry);
     }
 
     return Count;

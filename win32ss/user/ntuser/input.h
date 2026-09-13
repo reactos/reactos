@@ -90,8 +90,10 @@ HRAWINPUT FASTCALL UserCreateRawInput(PTHREADINFO pti,
                                       UINT cbData);
 BOOL FASTCALL UserGetRawInputTarget(DWORD dwType,
                                     PTHREADINFO *ppti,
+                                    HWND *phwndTarget,
                                     WPARAM *pwParam);
 BOOL FASTCALL UserFreeRawInput(PUSER_MESSAGE_QUEUE MessageQueue, HRAWINPUT hRawInput);
+VOID FASTCALL UserUpdatePrevRawInput(PTHREADINFO pti, CONST MSG *pMsg);
 VOID FASTCALL UserCleanupRawInput(PUSER_MESSAGE_QUEUE MessageQueue);
 
 /* IMM */

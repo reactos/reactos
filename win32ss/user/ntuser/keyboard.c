@@ -1415,17 +1415,15 @@ UserRawInputProcessKeyboardInput(
     WORD wScanCode, WORD wVk)
 {
     PTHREADINFO pti;
-    POINT ptCursor;
+    HWND hwndTarget;
     WPARAM wParam;
-
+    HRAWINPUT hRawInput;
     RAWKEYBOARD kb = {0};
-
-    if (!UserGetRawInputTarget(RIM_TYPEKEYBOARD, &pti, &wParam))
-        return;
-
-    ptCursor = gpsi->ptCursor;
-    MSG Msg;
+    MSG Msg = {0};
     BOOL bIsDown = (pKbdInputData->Flags & KEY_BREAK) ? FALSE : TRUE;
+
+    if (!UserGetRawInputTarget(RIM_TYPEKEYBOARD, &pti, &hwndTarget, &wParam))
+        return;
 
     kb.MakeCode = wScanCode & 0x7F;
 
@@ -1449,25 +1447,26 @@ UserRawInputProcessKeyboardInput(
     }
 
     kb.ExtraInformation = pKbdInputData->ExtraInformation;
-    HRAWINPUT hRawInput = UserCreateRawInput(pti,
-                                             RIM_TYPEKEYBOARD,
-                                             ghKeyboardDevice,
-                                             wParam,
-                                             &kb,
-                                             sizeof(kb));
+    hRawInput = UserCreateRawInput(pti,
+                                   RIM_TYPEKEYBOARD,
+                                   ghKeyboardDevice,
+                                   wParam,
+                                   &kb,
+                                   sizeof(kb));
     if (!hRawInput)
         return;
 
+    Msg.hwnd = hwndTarget;
+    Msg.message = WM_INPUT;
     Msg.wParam = wParam;
     Msg.lParam = (LPARAM)hRawInput;
-    Msg.pt = ptCursor;
-    //Msg.time = mid->time;
-    Msg.message = WM_INPUT;
+    Msg.time = EngGetTickCount32();
+    Msg.pt = gpsi->ptCursor;
 
-    //MessageQueue = pti->MessageQueue;
     if (!MsqPostMessage(pti, &Msg, TRUE, QS_RAWINPUT, 0, 0))
         UserFreeRawInput(pti->MessageQueue, hRawInput);
 }
+
 /*
  * UserProcessKeyboardInput
  *

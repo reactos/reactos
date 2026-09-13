@@ -1173,6 +1173,8 @@ co_IntPeekMessage( PMSG Msg,
 GotMessage:
     /* Update the last message-queue access time */
     pti->pcti->timeLastRead = EngGetTickCount32();
+    if (RemoveMessages)
+        UserUpdatePrevRawInput(pti, Msg);
     return TRUE;
 }
 

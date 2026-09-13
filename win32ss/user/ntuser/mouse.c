@@ -38,16 +38,15 @@ VOID NTAPI
 UserRawInputMouseProcess(PMOUSE_INPUT_DATA mid)
 {
     PTHREADINFO pti;
-    POINT ptCursor;
+    HWND hwndTarget;
     WPARAM wParam;
-
+    HRAWINPUT hRawInput;
     RAWMOUSE rm = {0};
+    MSG Msg = {0};
 
-    if (!UserGetRawInputTarget(RIM_TYPEMOUSE, &pti, &wParam))
+    if (!UserGetRawInputTarget(RIM_TYPEMOUSE, &pti, &hwndTarget, &wParam))
         return;
 
-    ptCursor = gpsi->ptCursor;
-    MSG Msg;
     if (mid->LastX != 0 || mid->LastY != 0)
     {
         rm.usFlags |= MOUSE_MOVE_RELATIVE;
@@ -67,9 +66,9 @@ UserRawInputMouseProcess(PMOUSE_INPUT_DATA mid)
 
     /* Middle button */
     if (mid->ButtonFlags & MOUSE_MIDDLE_BUTTON_DOWN)
-        rm.usButtonFlags |= MOUSEEVENTF_MIDDLEDOWN;
+        rm.usButtonFlags |= RI_MOUSE_MIDDLE_BUTTON_DOWN;
     if (mid->ButtonFlags & MOUSE_MIDDLE_BUTTON_UP)
-        rm.usButtonFlags |= MOUSEEVENTF_MIDDLEUP;
+        rm.usButtonFlags |= RI_MOUSE_MIDDLE_BUTTON_UP;
 
     /* Right button */
     if (mid->ButtonFlags & MOUSE_RIGHT_BUTTON_DOWN)
@@ -79,26 +78,26 @@ UserRawInputMouseProcess(PMOUSE_INPUT_DATA mid)
     rm.lLastX   = mid->LastX;
     rm.lLastY   = mid->LastY;
 
-    HRAWINPUT hRawInput = UserCreateRawInput(pti,
-                                             RIM_TYPEMOUSE,
-                                             ghMouseDevice,
-                                             wParam,
-                                             &rm,
-                                             sizeof(rm));
+    hRawInput = UserCreateRawInput(pti,
+                                   RIM_TYPEMOUSE,
+                                   ghMouseDevice,
+                                   wParam,
+                                   &rm,
+                                   sizeof(rm));
     if (!hRawInput)
         return;
 
+    Msg.hwnd = hwndTarget;
+    Msg.message = WM_INPUT;
     Msg.wParam = wParam;
     Msg.lParam = (LPARAM)hRawInput;
-    Msg.pt = ptCursor;
-    //Msg.time = mid->time;
-    Msg.message = WM_INPUT;
-    //MessageQueue = pti->MessageQueue;
+    Msg.time = EngGetTickCount32();
+    Msg.pt = gpsi->ptCursor;
 
     if (!MsqPostMessage(pti, &Msg, TRUE, QS_RAWINPUT, 0, 0))
         UserFreeRawInput(pti->MessageQueue, hRawInput);
-
 }
+
 /*
  * UserProcessMouseInput
  *
