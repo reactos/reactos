@@ -222,7 +222,6 @@ START_TEST(NtUserBuildHwndList)
                            NULL,
                            0,
                            &newThreadId);
-    
     if (hThread)
     {
         Sleep(1000);
