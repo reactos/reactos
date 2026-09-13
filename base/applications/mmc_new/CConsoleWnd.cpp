@@ -4,13 +4,16 @@
  * PURPOSE:     Single 'console' window
  * COPYRIGHT:   Copyright 2006-2007 Thomas Weidenmueller
  *              Copyright 2017 Mark Jansen (mark.jansen@reactos.org)
+ *              Copyright 2026 Eric Kohl (eric.kohl@reactos.org)
  */
 
 #include "precomp.h"
 
-    CConsoleWnd::CConsoleWnd(CMainWnd *MainWnd)
+    CConsoleWnd::CConsoleWnd(CMainWnd *MainWnd, CSnapin *RootNode)
     {
         m_MainWnd = MainWnd;
+        m_ViewRootNode = RootNode;
+        m_ViewSelectedNode = RootNode;
         m_pfnSuperWindowProc = DefMDIChildProc;
 
         if (!m_thunk.Init(NULL, NULL))
@@ -61,6 +64,8 @@
 
         m_ViewId = m_MainWnd->RegisterView(this);
 
+        UpdateTreeView();
+
         LPMDICREATESTRUCT mdicreate = reinterpret_cast<LPMDICREATESTRUCT>(reinterpret_cast<LPCREATESTRUCT>(lParam)->lpCreateParams);
         if (mdicreate->lParam)
             PostMessage(WM_SYSCOMMAND, SC_MAXIMIZE, 0);
@@ -99,6 +104,41 @@
                   DT_LEFT | DT_VCENTER | DT_SINGLELINE | DT_MODIFYSTRING | DT_END_ELLIPSIS | DT_NOPREFIX);
 
         return TRUE;
+    }
+
+    VOID CConsoleWnd::AddTreeViewItemRecursive(HTREEITEM hParentTreeItem, CSnapin *Node)
+    {
+        HTREEITEM hTreeItem;
+
+        hTreeItem = m_TreeView.AddItem(hParentTreeItem,
+                                       (LPWSTR)Node->DisplayName().GetString(),
+                                       Node->GetCacheEntry()->NormalImageIndex(),
+                                       Node->GetCacheEntry()->OpenImageIndex(),
+                                       (LPARAM)Node);
+        if (hTreeItem)
+        {
+#if 0
+            int snapinCount = Node->GetNodeCount();
+            for (int i = 0; i < snapinCount; i++)
+            {
+                CSnapinNode *ChildNode = Node->GetNode(i);
+                if (ChildNode)
+                    AddTreeViewItemRecursive(hTreeItem, ChildNode);
+            }
+
+            if (snapinCount > 0)
+                m_TreeView.Expand(hTreeItem, TVE_EXPAND);
+            
+            if (Node == m_SelectedNode)
+                m_TreeView.SelectItem(hTreeItem);
+#endif
+        }
+    }
+
+    VOID CConsoleWnd::UpdateTreeView()
+    {
+        m_TreeView.DeleteItem(TVI_ROOT);
+        AddTreeViewItemRecursive(TVI_ROOT, m_ViewRootNode);
     }
 
     BOOL CConsoleWnd::IsTreeViewVisible()

@@ -24,11 +24,11 @@ static TBBUTTON TbButtons[] =
 };
 
 CMainWnd::CMainWnd()
-    : m_NewConsoleCount(0)
-    , m_nConsoleCount(0)
+    : m_nConsoleNumber(0)
     , m_ConsoleMode(AuthorMode)
     , m_bToolBarVisible(true)
     , m_NextViewId(1)
+    , m_RootNode(NULL)
 {
     m_FrameThunk.Init(XDefFrameProc, this);
     m_pfnSuperWindowProc = m_FrameThunk.GetWNDPROC();
@@ -73,8 +73,6 @@ CMainWnd::OnCreate(UINT nMessage, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     RECT rect;
 
     m_bStandardMenusVisible = TRUE;
-    UpdateMenu();
-    SetWindowTextW(L"ReactOS Management Console");
 
     /* Create and initialize the Toolbar */
     m_bToolBarVisible = TRUE;
@@ -119,7 +117,7 @@ CMainWnd::OnSize(UINT nMessage, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 LRESULT
 CMainWnd::OnCloseChild(UINT nMessage, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-    m_nConsoleCount--;
+    UpdateTitle();
     UpdateMenu();
     return 0;
 }
@@ -140,13 +138,42 @@ CMainWnd::OnClose(UINT nMessage, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 }
 
 LRESULT
-CMainWnd::OnNewMDIChild(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
+CMainWnd::OnFileNew(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
 {
     MDICREATESTRUCT mcs;
     HWND hChild;
-    CAtlString title;
-    CreateNewConsoleTitle(title);
-    mcs.szTitle = title.GetString();
+    CAtlString rootName(MAKEINTRESOURCE(IDS_CONSOLEROOT));
+//    CAtlString nodeGuid(L"{C96401CC-0E17-11D3-885B-00C04F72C717}");
+
+    /* Close all views */
+    POSITION pos = m_ViewList.GetHeadPosition();
+    while (pos)
+    {
+        CConsoleWnd *console = (CConsoleWnd*)m_ViewList.GetNext(pos);
+        console->SendMessage(WM_CLOSE, 0, 0);
+    }
+
+    /* Delete the snapin tree */
+    delete m_RootNode;
+    m_RootNode = NULL;
+
+    /* Create a new snapin root node */
+    CSnapinCacheEntry *CacheEntry = GetSnapinCacheEntryByGuid((PWSTR)L"{C96401CC-0E17-11D3-885B-00C04F72C717}");
+    if (!CacheEntry)
+    {
+        DPRINT1("No folder cache entry!\n");
+        return 0;
+    }
+
+    m_RootNode = new CSnapin(CacheEntry, rootName.GetString());
+    if (!CacheEntry)
+    {
+        DPRINT1("No root folder!\n");
+        return 0;
+    }
+
+    /* Create a new view */
+    mcs.szTitle = rootName.GetString();
     mcs.szClass = CConsoleWnd::GetWndClassName();
     mcs.hOwner = _AtlBaseModule.GetModuleInstance();
     mcs.x = mcs.cx = CW_USEDEFAULT;
@@ -156,18 +183,23 @@ CMainWnd::OnNewMDIChild(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled
     HWND hWndOld = (HWND)m_MDIClient.SendMessage(WM_MDIGETACTIVE, 0, (LPARAM)&bMaximized);
     mcs.lParam = bMaximized || !hWndOld;
     /* This object registers itself in the _AtlWinModule to be assigned to the next window created */
-    CConsoleWnd* child = new CConsoleWnd(this);
+    CConsoleWnd* child = new CConsoleWnd(this, m_RootNode);
     /* Ask for a new MDI Child window */
     hChild = (HWND)m_MDIClient.SendMessage(WM_MDICREATE, 0, (LONG_PTR)&mcs);
     if (hChild)
     {
-        m_nConsoleCount++;
+        m_nConsoleNumber++;
     }
     else
     {
         delete child;
+        delete m_RootNode;
+        m_RootNode = NULL;
     }
+
+    UpdateTitle();
     UpdateMenu();
+
     return 1;
 }
 
@@ -262,6 +294,34 @@ CMainWnd::OnViewCustomize(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandl
 }
 
 LRESULT
+CMainWnd::OnWindowsNew(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
+{
+    MDICREATESTRUCT mcs;
+    HWND hChild;
+
+    mcs.szTitle = m_RootNode->DisplayName().GetString();
+    mcs.szClass = CConsoleWnd::GetWndClassName();
+    mcs.hOwner = _AtlBaseModule.GetModuleInstance();
+    mcs.x = mcs.cx = CW_USEDEFAULT;
+    mcs.y = mcs.cy = CW_USEDEFAULT;
+    mcs.style = MDIS_ALLCHILDSTYLES;
+    BOOL bMaximized = FALSE;
+    HWND hWndOld = (HWND)m_MDIClient.SendMessage(WM_MDIGETACTIVE, 0, (LPARAM)&bMaximized);
+    mcs.lParam = bMaximized || !hWndOld;
+    /* This object registers itself in the _AtlWinModule to be assigned to the next window created */
+    CConsoleWnd* child = new CConsoleWnd(this, m_RootNode);
+    /* Ask for a new MDI Child window */
+    hChild = (HWND)m_MDIClient.SendMessage(WM_MDICREATE, 0, (LONG_PTR)&mcs);
+    if (!hChild)
+    {
+        delete child;
+    }
+
+    UpdateMenu();
+    return 0;
+}
+
+LRESULT
 CMainWnd::OnWindowsCascade(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
 {
     m_MDIClient.SendMessage(WM_MDICASCADE, 0, 0);
@@ -332,6 +392,17 @@ CMainWnd::OnMDIForward(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
         ::SendMessage(hChild, WM_COMMAND, wParam, lParam);
     }
     return 0;
+}
+
+CAtlString *CMainWnd::GetConsoleTitle()
+{
+    return &m_ConsoleTitle;
+}
+
+void CMainWnd::SetConsoleTitle(CAtlString consoleTitle)
+{
+    m_ConsoleTitle = consoleTitle;
+    SetWindowTextW(consoleTitle.GetString());
 }
 
 BOOL
@@ -437,13 +508,13 @@ CMainWnd::UpdateViews()
     POSITION pos;
 
     pos = m_ViewList.GetHeadPosition();
-    do
+    while (pos)
     {
         console = (CConsoleWnd*)m_ViewList.GetNext(pos);
         if (console)
             console->UpdateView();
 
-    } while (pos != NULL);   
+    }
 }
 
 void

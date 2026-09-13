@@ -88,15 +88,17 @@
 #define IDC_CONSOLECUSTOM             3207
 
 
-#define IDS_AUTHORMODE                5000
-#define IDS_USERMODE_FULL             5001
-#define IDS_USERMODE_MULTIPLE         5002
-#define IDS_USERMODE_SINGLE           5003
+#define IDS_CONSOLEROOT               5010
 
-#define IDS_AUTHORMODE_DESC           5004
-#define IDS_USERMODE_FULL_DESC        5005
-#define IDS_USERMODE_MULTIPLE_DESC    5006
-#define IDS_USERMODE_SINGLE_DESC      5007
+#define IDS_AUTHORMODE                5100
+#define IDS_USERMODE_FULL             5101
+#define IDS_USERMODE_MULTIPLE         5102
+#define IDS_USERMODE_SINGLE           5103
+
+#define IDS_AUTHORMODE_DESC           5104
+#define IDS_USERMODE_FULL_DESC        5105
+#define IDS_USERMODE_MULTIPLE_DESC    5106
+#define IDS_USERMODE_SINGLE_DESC      5107
 
 
 

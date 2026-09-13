@@ -133,6 +133,8 @@ BEGIN
     IDS_VENDOR "Vendor"
     IDS_ABOUTTITLE "About"
 
+    IDS_CONSOLEROOT "Console Root"
+
     IDS_AUTHORMODE "Author mode"
     IDS_USERMODE_FULL "User mode - full access"
     IDS_USERMODE_MULTIPLE "User mode - limited access, multiple window"

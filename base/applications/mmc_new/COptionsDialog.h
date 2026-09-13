@@ -63,9 +63,7 @@ public:
 
 //        m_ConsoleIcon.SetIcon();
 
-        CAtlString consoleTitle;
-        m_Console->GetWindowText(consoleTitle);
-        m_ConsoleName.SetWindowText(consoleTitle);
+        m_ConsoleName.SetWindowText(m_MainWnd->GetConsoleTitle()->GetString());
 
         m_ConsoleSymbol.EnableWindow(FALSE);
 
@@ -111,7 +109,7 @@ public:
                 {
                     CAtlString consoleTitle;
                     m_ConsoleName.GetWindowText(consoleTitle);
-                    m_Console->SetWindowText(consoleTitle);
+                    m_MainWnd->SetConsoleTitle(consoleTitle);
 
                     m_MainWnd->SetConsoleMode(m_consoleMode);
                     EndDialog(IDOK);

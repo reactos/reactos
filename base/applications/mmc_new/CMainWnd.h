@@ -24,8 +24,8 @@ class CMainWnd :
 private:
     CWndProcThunk m_FrameThunk;
 
-    int m_NewConsoleCount;
-    int m_nConsoleCount;
+    int m_nConsoleNumber;
+    CAtlString m_ConsoleTitle;
     HMENU m_hMenuConsoleSmall;
     HMENU m_hMenuConsoleLarge;
     CONSOLE_MODE m_ConsoleMode;
@@ -42,6 +42,8 @@ private:
     CAtlList<CConsoleWnd*> m_ViewList;
     int m_NextViewId;
 
+    CSnapin *m_RootNode;
+
 public:
     CWindow m_MDIClient;
 
@@ -54,7 +56,7 @@ public:
         MESSAGE_HANDLER(WM_SIZE, OnSize)
         MESSAGE_HANDLER(WM_USER_CLOSE_CHILD, OnCloseChild)
 
-        COMMAND_ID_HANDLER(IDM_FILE_NEW, OnNewMDIChild)
+        COMMAND_ID_HANDLER(IDM_FILE_NEW, OnFileNew)
         COMMAND_ID_HANDLER(IDM_FILE_SAVE, OnFileSave)
         COMMAND_ID_HANDLER(IDM_FILE_SAVEAS, OnFileSaveAs)
         COMMAND_ID_HANDLER(IDM_FILE_ADD, OnFileAdd)
@@ -63,6 +65,7 @@ public:
 
         COMMAND_ID_HANDLER(IDM_VIEW_CUSTOMIZE, OnViewCustomize)
 
+        COMMAND_ID_HANDLER(IDM_WINDOWS_NEW, OnWindowsNew)
         COMMAND_ID_HANDLER(IDM_WINDOWS_CASCADE, OnWindowsCascade)
         COMMAND_ID_HANDLER(IDM_WINDOWS_TILE, OnWindowsTile)
         COMMAND_ID_HANDLER(IDM_WINDOWS_ARRANGE, OnWindowsArrange)
@@ -113,10 +116,19 @@ private:
 
     void UpdateMenu()
     {
-        if (m_nConsoleCount == 0)
+        if (m_ViewList.IsEmpty())
             SetMenu(m_hMenuConsoleSmall);
         else
             SetMenu(m_hMenuConsoleLarge);
+    }
+
+    void UpdateTitle()
+    {
+        if (m_ViewList.IsEmpty())
+            m_ConsoleTitle.LoadString(IDS_APPTITLE);
+        else
+            CreateNewConsoleTitle(m_ConsoleTitle);
+        SetWindowTextW(m_ConsoleTitle.GetString());
     }
 
     CConsoleWnd* GetActiveChildInfo()
@@ -132,7 +144,7 @@ private:
 
     void CreateNewConsoleTitle(CAtlString& str)
     {
-        DWORD_PTR args[1] = { (DWORD_PTR)(++m_NewConsoleCount) };
+        DWORD_PTR args[1] = { (DWORD_PTR)(m_nConsoleNumber) };
         str.LoadString(IDS_CONSOLETITLE);
 
         LPTSTR lpTarget = NULL;
@@ -157,13 +169,14 @@ public:
     LRESULT OnDestroy(UINT nMessage, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnClose(UINT nMessage, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 
-    LRESULT OnNewMDIChild(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
+    LRESULT OnFileNew(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
     LRESULT OnFileSave(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
     LRESULT OnFileSaveAs(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
     LRESULT OnFileAdd(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
     LRESULT OnFileOptions(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
     LRESULT OnFileExit(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
     LRESULT OnViewCustomize(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
+    LRESULT OnWindowsNew(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
     LRESULT OnWindowsCascade(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
     LRESULT OnWindowsTile(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
     LRESULT OnWindowsArrange(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
@@ -178,6 +191,8 @@ private:
     void UpdateViews();
 
 public:
+    CAtlString *GetConsoleTitle();
+    void SetConsoleTitle(CAtlString consoleTitle);
     BOOL IsToolBarVisible();
     VOID SetToolBarVisible(BOOL bVisible);
     BOOL AreStandardMenusVisible();

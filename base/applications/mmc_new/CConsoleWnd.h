@@ -4,6 +4,7 @@
  * PURPOSE:     Single 'console' window
  * COPYRIGHT:   Copyright 2006-2007 Thomas Weidenmueller
  *              Copyright 2017 Mark Jansen (mark.jansen@reactos.org)
+ *              Copyright 2026 Eric Kohl (eric.kohl@reactos.org)
  */
 
 #pragma once
@@ -32,6 +33,9 @@ private:
     BOOL m_bActionsPaneVisible;
     BOOL m_bStatusBarVisible;
     BOOL m_bDescriptionBarVisible;
+
+    CSnapin *m_ViewRootNode;
+    CSnapin *m_ViewSelectedNode;
 
 public:
     CAtlString m_Filename;
@@ -76,9 +80,11 @@ public:
 
 private:
     VOID UpdateLayout();
+    VOID AddTreeViewItemRecursive(HTREEITEM hParentTreeItem, CSnapin *Node);
+    VOID UpdateTreeView();
 
 public:
-    CConsoleWnd(CMainWnd *MainWnd);
+    CConsoleWnd(CMainWnd *MainWnd, CSnapin *RootNode);
     ~CConsoleWnd();
 
     LRESULT OnCreate(UINT nMessage, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
