@@ -1,0 +1,13 @@
+/*
+ * PROJECT:      ReactOS My Documents Shell Extension
+ * LICENSE:      LGPL-2.1+ (https://spdx.org/licenses/LGPL-2.1+)
+ * PURPOSE:      Korean (South Korea) resource file
+ * TRANSLATOR:   Copyright 2026 Jiho Kim
+ */
+
+LANGUAGE LANG_KOREAN, SUBLANG_DEFAULT
+
+STRINGTABLE
+{
+    IDS_NOSRCFILEFOUND "원본 파일 또는 폴더 '%ls'을(를) 찾을 수 없습니다."
+}
