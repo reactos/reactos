@@ -363,8 +363,8 @@ RtlAnsiCharToUnicodeChar(
     }
     else
     {
+        /* Should not be reached */
         Size = 1;
-        UNIMPLEMENTED;
     }
 
     Status = RtlMultiByteToUnicodeN(&UnicodeChar,
