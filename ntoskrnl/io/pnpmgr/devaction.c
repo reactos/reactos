@@ -828,6 +828,10 @@ PiCallDriverAddDevice(
 #endif
     }
 
+    /* Find out if the drivers of the device provide a legacy bus */
+    if (DeviceNode->State == DeviceNodeDriversAdded)
+        IopRegisterLegacyBus(DeviceNode);
+
 Cleanup:
     while (!IsListEmpty(&drvListHead))
     {
@@ -1614,6 +1618,9 @@ PiStartDeviceFinal(
 
         DeviceNode->Flags |= DNF_IDS_QUERIED;
         ZwClose(instanceHandle);
+
+        // a reported device never went through AddDevice, where the legacy bus is queried
+        IopRegisterLegacyBus(DeviceNode);
     }
 
     // we're about to start - needs enumeration
@@ -1723,6 +1730,9 @@ IopSendRemoveDevice(IN PDEVICE_OBJECT DeviceObject)
     PDEVICE_NODE DeviceNode = IopGetDeviceNode(DeviceObject);
 
     ASSERT(DeviceNode->State == DeviceNodeAwaitingQueuedRemoval);
+
+    /* The arbiters and translators of the device go away with its drivers */
+    IopUncacheResourceHandlers(DeviceNode);
 
     /* Drivers should never fail a IRP_MN_REMOVE_DEVICE request */
     PiIrpSendRemoveCheckVpb(DeviceObject, IRP_MN_REMOVE_DEVICE);
@@ -2363,6 +2373,9 @@ PiDevNodeStateMachine(
                 break;
             case DeviceNodeResourcesAssigned:
                 DPRINT("DeviceNodeResourcesAssigned %wZ\n", &currentNode->InstancePath);
+                // the started drivers may provide other arbiters and translators
+                IopUncacheResourceHandlers(currentNode);
+
                 // send IRP_MN_START_DEVICE
                 PiIrpStartDevice(currentNode);
 
