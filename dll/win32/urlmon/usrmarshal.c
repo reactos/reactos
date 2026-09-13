@@ -16,8 +16,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define NONAMELESSUNION
-
 #include "urlmon_main.h"
 
 #include "wine/debug.h"
@@ -28,7 +26,7 @@ HRESULT CALLBACK IWinInetHttpInfo_QueryInfo_Proxy(IWinInetHttpInfo* This,
     DWORD dwOption, LPVOID pBuffer, DWORD *pcbBuf, DWORD *pdwFlags,
     DWORD *pdwReserved)
 {
-    TRACE("(%p %x %p %p %p %p)\n", This, dwOption, pBuffer, pcbBuf, pdwFlags, pdwReserved);
+    TRACE("(%p %lx %p %p %p %p)\n", This, dwOption, pBuffer, pcbBuf, pdwFlags, pdwReserved);
     return IWinInetHttpInfo_RemoteQueryInfo_Proxy(This, dwOption, pBuffer, pcbBuf, pdwFlags, pdwReserved);
 }
 
@@ -36,21 +34,21 @@ HRESULT __RPC_STUB IWinInetHttpInfo_QueryInfo_Stub(IWinInetHttpInfo* This,
     DWORD dwOption, BYTE *pBuffer, DWORD *pcbBuf, DWORD *pdwFlags,
     DWORD *pdwReserved)
 {
-    TRACE("(%p %x %p %p %p %p)\n", This, dwOption, pBuffer, pcbBuf, pdwFlags, pdwReserved);
+    TRACE("(%p %lx %p %p %p %p)\n", This, dwOption, pBuffer, pcbBuf, pdwFlags, pdwReserved);
     return IWinInetHttpInfo_QueryInfo(This, dwOption, pBuffer, pcbBuf, pdwFlags, pdwReserved);
 }
 
 HRESULT CALLBACK IWinInetInfo_QueryOption_Proxy(IWinInetInfo* This,
         DWORD dwOption, LPVOID pBuffer, DWORD *pcbBuf)
 {
-    TRACE("(%p %x %p %p)\n", This, dwOption, pBuffer, pcbBuf);
+    TRACE("(%p %lx %p %p)\n", This, dwOption, pBuffer, pcbBuf);
     return IWinInetInfo_RemoteQueryOption_Proxy(This, dwOption, pBuffer, pcbBuf);
 }
 
 HRESULT __RPC_STUB IWinInetInfo_QueryOption_Stub(IWinInetInfo* This,
         DWORD dwOption, BYTE *pBuffer, DWORD *pcbBuf)
 {
-    TRACE("(%p %x %p %p)\n", This, dwOption, pBuffer, pcbBuf);
+    TRACE("(%p %lx %p %p)\n", This, dwOption, pBuffer, pcbBuf);
     return IWinInetInfo_QueryOption(This, dwOption, pBuffer, pcbBuf);
 }
 
@@ -93,7 +91,7 @@ static HRESULT marshal_stgmed(STGMEDIUM *stgmed, RemSTGMEDIUM **ret)
     ULONG size = 0;
     HRESULT hres = S_OK;
 
-    if((stgmed->tymed == TYMED_ISTREAM && stgmed->u.pstm) || stgmed->pUnkForRelease) {
+    if((stgmed->tymed == TYMED_ISTREAM && stgmed->pstm) || stgmed->pUnkForRelease) {
         hres = CreateStreamOnHGlobal(NULL, TRUE, &stream);
         if(FAILED(hres))
             return hres;
@@ -103,12 +101,12 @@ static HRESULT marshal_stgmed(STGMEDIUM *stgmed, RemSTGMEDIUM **ret)
     case TYMED_NULL:
         break;
     case TYMED_ISTREAM:
-        if(stgmed->u.pstm)
-            hres = CoMarshalInterface(stream, &IID_IStream, (IUnknown*)stgmed->u.pstm,
+        if(stgmed->pstm)
+            hres = CoMarshalInterface(stream, &IID_IStream, (IUnknown*)stgmed->pstm,
                                       MSHCTX_LOCAL, NULL, MSHLFLAGS_NORMAL);
         break;
     default:
-        FIXME("unsupported tymed %u\n", stgmed->tymed);
+        FIXME("unsupported tymed %lu\n", stgmed->tymed);
         break;
     }
 
@@ -131,7 +129,7 @@ static HRESULT marshal_stgmed(STGMEDIUM *stgmed, RemSTGMEDIUM **ret)
         IStream_Seek(stream, zero, STREAM_SEEK_SET, &off);
     }
 
-    rem_stgmed = heap_alloc_zero(FIELD_OFFSET(RemSTGMEDIUM, data[size]));
+    rem_stgmed = calloc(1, FIELD_OFFSET(RemSTGMEDIUM, data[size]));
     if(!rem_stgmed) {
         if(stream)
             IStream_Release(stream);
@@ -140,7 +138,7 @@ static HRESULT marshal_stgmed(STGMEDIUM *stgmed, RemSTGMEDIUM **ret)
 
     rem_stgmed->tymed = stgmed->tymed;
     rem_stgmed->dwHandleType = 0;
-    rem_stgmed->pData = stgmed->u.pstm != NULL;
+    rem_stgmed->pData = stgmed->pstm != NULL;
     rem_stgmed->pUnkForRelease = stgmed->pUnkForRelease != NULL;
     rem_stgmed->cbData = size;
     if(stream) {
@@ -181,10 +179,10 @@ static HRESULT unmarshal_stgmed(RemSTGMEDIUM *rem_stgmed, STGMEDIUM *stgmed)
         break;
     case TYMED_ISTREAM:
         if(rem_stgmed->pData)
-            hres = CoUnmarshalInterface(stream, &IID_IStream, (void**)&stgmed->u.pstm);
+            hres = CoUnmarshalInterface(stream, &IID_IStream, (void**)&stgmed->pstm);
         break;
     default:
-        FIXME("unsupported tymed %u\n", stgmed->tymed);
+        FIXME("unsupported tymed %lu\n", stgmed->tymed);
         break;
     }
 
@@ -227,7 +225,7 @@ static void stub_unmarshal_bindinfo(RemBINDINFO *rem_bindinfo, BINDINFO *bindinf
     bindinfo->cbstgmedData = rem_bindinfo->cbstgmedData;
 
     if(bindinfo->stgmedData.tymed != TYMED_NULL)
-        WARN("stgmed data (tymed %u) will be lost!\n", bindinfo->stgmedData.tymed);
+        WARN("stgmed data (tymed %lu) will be lost!\n", bindinfo->stgmedData.tymed);
 }
 
 static void stub_marshal_bindinfo(BINDINFO *bindinfo, RemBINDINFO *rem_bindinfo)
@@ -319,7 +317,7 @@ HRESULT CALLBACK IBindStatusCallback_OnDataAvailable_Proxy(
     RemSTGMEDIUM *rem_stgmed;
     HRESULT hres;
 
-    TRACE("(%p)->(%x %u %p %p)\n", This, grfBSCF, dwSize, pformatetc, pstgmed);
+    TRACE("(%p)->(%lx %lu %p %p)\n", This, grfBSCF, dwSize, pformatetc, pstgmed);
 
     hres = marshal_stgmed(pstgmed, &rem_stgmed);
     if(FAILED(hres))
@@ -333,7 +331,7 @@ HRESULT CALLBACK IBindStatusCallback_OnDataAvailable_Proxy(
 
     hres = IBindStatusCallback_RemoteOnDataAvailable_Proxy(This, grfBSCF, dwSize, &rem_formatetc, rem_stgmed);
 
-    heap_free(rem_stgmed);
+    free(rem_stgmed);
     return hres;
 }
 
@@ -345,7 +343,7 @@ HRESULT __RPC_STUB IBindStatusCallback_OnDataAvailable_Stub(
     FORMATETC formatetc;
     HRESULT hres;
 
-    TRACE("(%p)->(%x %u %p %p)\n", This, grfBSCF, dwSize, pformatetc, pstgmed);
+    TRACE("(%p)->(%lx %lu %p %p)\n", This, grfBSCF, dwSize, pformatetc, pstgmed);
 
     hres = unmarshal_stgmed(pstgmed, &stgmed);
     if(FAILED(hres))

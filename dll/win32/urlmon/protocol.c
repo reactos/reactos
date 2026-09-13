@@ -113,7 +113,7 @@ HRESULT protocol_syncbinding(Protocol *protocol)
     if(res)
         protocol->available_bytes = protocol->query_available;
     else
-        WARN("InternetQueryDataAvailable failed: %u\n", GetLastError());
+        WARN("InternetQueryDataAvailable failed: %lu\n", GetLastError());
 
     protocol->flags |= FLAG_FIRST_DATA_REPORTED|FLAG_LAST_DATA_REPORTED;
     IInternetProtocolSink_ReportData(protocol->protocol_sink, BSCF_LASTDATANOTIFICATION|BSCF_DATAFULLYAVAILABLE,
@@ -171,12 +171,12 @@ static void WINAPI internet_status_callback(HINTERNET internet, DWORD_PTR contex
 
         TRACE("%p INTERNET_STATUS_CONNECTING_TO_SERVER %s\n", protocol, (const char*)status_info);
 
-        info = heap_strdupAtoW(status_info);
+        info = strdupAtoW(status_info);
         if(!info)
             return;
 
         report_progress(protocol, BINDSTATUS_CONNECTING, info);
-        heap_free(info);
+        free(info);
         break;
     }
 
@@ -221,7 +221,7 @@ static void WINAPI internet_status_callback(HINTERNET internet, DWORD_PTR contex
         break;
 
     default:
-        WARN("Unhandled Internet status callback %d\n", internet_status);
+        WARN("Unhandled Internet status callback %ld\n", internet_status);
     }
 }
 
@@ -242,7 +242,7 @@ static HRESULT write_post_stream(Protocol *protocol)
             break;
         res = InternetWriteFile(protocol->request, buf, size, &written);
         if(!res) {
-            FIXME("InternetWriteFile failed: %u\n", GetLastError());
+            FIXME("InternetWriteFile failed: %lu\n", GetLastError());
             hres = E_FAIL;
             break;
         }
@@ -274,10 +274,10 @@ static HINTERNET create_internet_session(IInternetBindInfo *bind_info)
         global_user_agent = get_useragent();
 
     ret = InternetOpenW(user_agent ? user_agent : global_user_agent, 0, NULL, NULL, INTERNET_FLAG_ASYNC);
-    heap_free(global_user_agent);
+    free(global_user_agent);
     CoTaskMemFree(user_agent);
     if(!ret) {
-        WARN("InternetOpen failed: %d\n", GetLastError());
+        WARN("InternetOpen failed: %ld\n", GetLastError());
         return NULL;
     }
 
@@ -325,7 +325,7 @@ HRESULT protocol_start(Protocol *protocol, IInternetProtocol *prot, IUri *uri,
     protocol->bind_info.cbSize = sizeof(BINDINFO);
     hres = IInternetBindInfo_GetBindInfo(bind_info, &protocol->bindf, &protocol->bind_info);
     if(hres != S_OK) {
-        WARN("GetBindInfo failed: %08x\n", hres);
+        WARN("GetBindInfo failed: %08lx\n", hres);
         return report_result(protocol, hres);
     }
 
@@ -397,7 +397,7 @@ HRESULT protocol_continue(Protocol *protocol, PROTOCOLDATA *data)
                 protocol->flags &= ~FLAG_REQUEST_COMPLETE;
                 res = InternetQueryDataAvailable(protocol->request, &protocol->query_available, 0, 0);
                 if(res) {
-                    TRACE("available %u bytes\n", protocol->query_available);
+                    TRACE("available %lu bytes\n", protocol->query_available);
                     if(!protocol->query_available) {
                         all_data_read(protocol);
                         return S_OK;
@@ -405,7 +405,7 @@ HRESULT protocol_continue(Protocol *protocol, PROTOCOLDATA *data)
                     protocol->available_bytes = protocol->query_available;
                 }else if(GetLastError() != ERROR_IO_PENDING) {
                     protocol->flags |= FLAG_REQUEST_COMPLETE;
-                    WARN("InternetQueryDataAvailable failed: %d\n", GetLastError());
+                    WARN("InternetQueryDataAvailable failed: %ld\n", GetLastError());
                     report_result(protocol, INET_E_DATA_NOT_AVAILABLE);
                     return S_OK;
                 }
@@ -442,7 +442,7 @@ HRESULT protocol_read(Protocol *protocol, void *buf, ULONG size, ULONG *read_ret
         res = InternetReadFile(protocol->request, ((BYTE *)buf)+read,
                 protocol->available_bytes > size-read ? size-read : protocol->available_bytes, &len);
         if(!res) {
-            WARN("InternetReadFile failed: %d\n", GetLastError());
+            WARN("InternetReadFile failed: %ld\n", GetLastError());
             hres = INET_E_DOWNLOAD_FAILURE;
             report_result(protocol, hres);
             break;
@@ -457,7 +457,7 @@ HRESULT protocol_read(Protocol *protocol, void *buf, ULONG size, ULONG *read_ret
         protocol->current_position += len;
         protocol->available_bytes -= len;
 
-        TRACE("current_position %d, available_bytes %d\n", protocol->current_position, protocol->available_bytes);
+        TRACE("current_position %ld, available_bytes %ld\n", protocol->current_position, protocol->available_bytes);
 
         if(!protocol->available_bytes) {
             /* InternetQueryDataAvailable may immediately fork and perform its asynchronous
@@ -469,7 +469,7 @@ HRESULT protocol_read(Protocol *protocol, void *buf, ULONG size, ULONG *read_ret
                 if (GetLastError() == ERROR_IO_PENDING) {
                     hres = E_PENDING;
                 }else {
-                    WARN("InternetQueryDataAvailable failed: %d\n", GetLastError());
+                    WARN("InternetQueryDataAvailable failed: %ld\n", GetLastError());
                     hres = INET_E_DATA_NOT_AVAILABLE;
                     report_result(protocol, hres);
                 }
@@ -498,7 +498,7 @@ HRESULT protocol_read(Protocol *protocol, void *buf, ULONG size, ULONG *read_ret
 HRESULT protocol_lock_request(Protocol *protocol)
 {
     if (!InternetLockRequestFile(protocol->request, &protocol->lock))
-        WARN("InternetLockRequest failed: %d\n", GetLastError());
+        WARN("InternetLockRequestFile failed: %ld\n", GetLastError());
 
     return S_OK;
 }
@@ -509,7 +509,7 @@ HRESULT protocol_unlock_request(Protocol *protocol)
         return S_OK;
 
     if(!InternetUnlockRequestFile(protocol->lock))
-        WARN("InternetUnlockRequest failed: %d\n", GetLastError());
+        WARN("InternetUnlockRequestFile failed: %ld\n", GetLastError());
     protocol->lock = 0;
 
     return S_OK;

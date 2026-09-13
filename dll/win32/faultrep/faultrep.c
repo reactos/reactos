@@ -29,13 +29,6 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(faultrep);
 
-static const WCHAR SZ_EXCLUSIONLIST_KEY[] = {
-    'S','o','f','t','w','a','r','e','\\',
-    'M','i','c','r','o','s','o','f','t','\\',
-    'P','C','H','e','a','l','t','h','\\',
-    'E','r','r','o','r','R','e','p','o','r','t','i','n','g','\\',
-    'E','x','c','l','u','s','i','o','n','L','i','s','t', 0};
-
 /*************************************************************************
  * AddERExcludedApplicationW  [FAULTREP.@]
  *
@@ -70,7 +63,8 @@ BOOL WINAPI AddERExcludedApplicationW(LPCWSTR lpAppFileName)
         return FALSE;
     }
 
-    res = RegCreateKeyW(HKEY_LOCAL_MACHINE, SZ_EXCLUSIONLIST_KEY, &hkey);
+    res = RegCreateKeyW(HKEY_LOCAL_MACHINE,
+            L"Software\\Microsoft\\PCHealth\\ErrorReporting\\ExclusionList", &hkey);
     if (!res)
     {
         RegSetValueExW(hkey, lpAppFileName, 0, REG_DWORD, (LPBYTE)&value, sizeof(value));
@@ -106,24 +100,6 @@ BOOL WINAPI AddERExcludedApplicationA(LPCSTR lpAppFileName)
  */
 EFaultRepRetVal WINAPI ReportFault(LPEXCEPTION_POINTERS pep, DWORD dwOpt)
 {
-    FIXME("%p 0x%x stub\n", pep, dwOpt);
+    FIXME("%p 0x%lx stub\n", pep, dwOpt);
     return frrvOk;
-}
-
-/***********************************************************************
- * DllMain.
- */
-BOOL WINAPI DllMain(HINSTANCE inst, DWORD reason, LPVOID reserved)
-{
-    switch(reason)
-    {
-#ifndef __REACTOS__
-    case DLL_WINE_PREATTACH:
-        return FALSE;
-#endif
-    case DLL_PROCESS_ATTACH:
-        DisableThreadLibraryCalls(inst);
-        break;
-    }
-    return TRUE;
 }

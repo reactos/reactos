@@ -1,0 +1,31 @@
+#include <windef.h>
+#include <winuser.h>
+#include <commctrl.h>
+
+#include "resource.h"
+
+#define REACTOS_STR_FILE_DESCRIPTION  "ReactOS Management Console"
+#define REACTOS_STR_INTERNAL_NAME     "mmc"
+#define REACTOS_STR_ORIGINAL_FILENAME "mmc.exe"
+#include <reactos/version.rc>
+
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+
+IDA_MMC ACCELERATORS
+BEGIN
+    "N", IDM_FILE_NEW, VIRTKEY, CONTROL, NOINVERT
+    "O", IDM_FILE_OPEN, VIRTKEY, CONTROL, NOINVERT
+    "M", IDM_FILE_ADD, VIRTKEY, CONTROL, NOINVERT
+    VK_F4, IDM_FILE_EXIT, VIRTKEY, ALT, NOINVERT
+END
+
+IDI_MAINAPP ICON "resources/mmc.ico"
+IDI_FOLDERICON ICON "resources/folder2.ico"
+IDB_TOOLBAR BITMAP "resources/toolbar.bmp"
+
+/* UTF-8 */
+#pragma code_page(65001)
+
+#ifdef LANGUAGE_EN_US
+    #include "lang/en-US.rc"
+#endif

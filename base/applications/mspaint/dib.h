@@ -14,12 +14,8 @@ HBITMAP CreateColorDIB(int width, int height, COLORREF rgb);
 HBITMAP CachedBufferDIB(HBITMAP hbm, int minimalWidth, int minimalHeight);
 HBITMAP ConvertToBlackAndWhite(HBITMAP hbm);
 
-HBITMAP CopyMonoImage(HBITMAP hbm, INT cx = 0, INT cy = 0);
-
-static inline HBITMAP CopyDIBImage(HBITMAP hbm, INT cx = 0, INT cy = 0)
-{
-    return (HBITMAP)CopyImage(hbm, IMAGE_BITMAP, cx, cy, LR_COPYRETURNORG | LR_CREATEDIBSECTION);
-}
+HBITMAP CopyMonoImage(HBITMAP hbm, INT cx = 0, INT cy = 0, INT stretchMode = STRETCH_HALFTONE);
+HBITMAP CopyDIBImage(HBITMAP hbm, INT cx = 0, INT cy = 0, INT stretchMode = STRETCH_HALFTONE);
 
 int GetDIBWidth(HBITMAP hbm);
 int GetDIBHeight(HBITMAP hbm);

@@ -64,6 +64,7 @@ extern void func_NtUserGetThreadState(void);
 extern void func_NtUserGetTitleBarInfo(void);
 extern void func_NtUserProcessConnect(void);
 extern void func_NtUserRedrawWindow(void);
+extern void func_NtUserSBGetParms(void);
 extern void func_NtUserScrollDC(void);
 extern void func_NtUserSelectPalette(void);
 extern void func_NtUserSetTimer(void);
@@ -138,6 +139,7 @@ const struct test winetest_testlist[] =
     { "NtUserGetTitleBarInfo", func_NtUserGetTitleBarInfo },
     { "NtUserProcessConnect", func_NtUserProcessConnect },
     { "NtUserRedrawWindow", func_NtUserRedrawWindow },
+    { "NtUserSBGetParms", func_NtUserSBGetParms },
     { "NtUserScrollDC", func_NtUserScrollDC },
     { "NtUserSelectPalette", func_NtUserSelectPalette },
     { "NtUserSetTimer", func_NtUserSetTimer },

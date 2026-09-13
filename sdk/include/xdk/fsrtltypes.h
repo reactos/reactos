@@ -190,7 +190,7 @@ typedef struct _FILE_LOCK_INFO {
   BOOLEAN ExclusiveLock;
   ULONG Key;
   PFILE_OBJECT FileObject;
-  PVOID ProcessId;
+  PVOID ProcessId;            /**< This field actually holds a pointer to EPROCESS structure */
   LARGE_INTEGER EndingByte;
 } FILE_LOCK_INFO, *PFILE_LOCK_INFO;
 

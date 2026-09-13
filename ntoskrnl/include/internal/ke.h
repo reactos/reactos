@@ -1080,6 +1080,16 @@ KeBugCheckUnicodeToAnsi(
     IN ULONG Length
 );
 
+// HACK: Copied from wdm.h as we don't have the required NTDDI_VERSION
+_IRQL_requires_max_(APC_LEVEL)
+_IRQL_requires_min_(PASSIVE_LEVEL)
+_IRQL_requires_same_
+ULONG64
+NTAPI
+KeQueryTotalCycleTimeThread(
+    _Inout_ PKTHREAD Thread,
+    _Out_ PULONG64 CycleTimeStamp);
+
 #ifdef CONFIG_SMP
 ULONG
 NTAPI

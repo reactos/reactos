@@ -86,6 +86,12 @@ VOID DisableAllExcept(HWND hTabDlg, UINT idExcept)
     HWND hSkip = GetDlgItem(hTabDlg, idExcept);
     for (HWND hWnd = NULL; (hWnd = FindWindowExW(hTabDlg, hWnd, NULL, NULL)) != NULL;)
         EnableWindow(hWnd, hWnd == hSkip);
+    if (idExcept == IDC_SYSTEM_TREE && hSkip)
+    {
+        LONG_PTR style = GetWindowLongPtrW(hSkip, GWL_STYLE);
+        style &= ~TVS_EDITLABELS;
+        SetWindowLongPtrW(hSkip, GWL_STYLE, style);
+    }
 }
 
 BOOL OnCreate(HWND hWnd)

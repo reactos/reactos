@@ -26,6 +26,7 @@ extern void func_InitOnce(void);
 extern void func_interlck(void);
 extern void func_IsDBCSLeadByteEx(void);
 extern void func_JapaneseCalendar(void);
+extern void func_JobObject(void);
 extern void func_LCMapString(void);
 extern void func_LoadLibraryExW(void);
 extern void func_LocaleNameToLCID(void);
@@ -72,6 +73,7 @@ const struct test winetest_testlist[] =
     { "interlck",                    func_interlck },
     { "IsDBCSLeadByteEx",            func_IsDBCSLeadByteEx },
     { "JapaneseCalendar",            func_JapaneseCalendar },
+    { "JobObject",                   func_JobObject },
     { "LCMapString",                 func_LCMapString },
     { "LoadLibraryExW",              func_LoadLibraryExW },
     { "LocaleNameToLCID",            func_LocaleNameToLCID },

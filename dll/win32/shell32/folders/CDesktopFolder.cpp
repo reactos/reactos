@@ -119,7 +119,7 @@ CDesktopFolder::ShellUrlParseDisplayName(
         if (pch && *pch)
         {
             CComPtr<IShellFolder> psfFolder;
-            hr = SHBindToObject(NULL, pidlLocation, IID_PPV_ARG(IShellFolder, &psfFolder));
+            hr = SHBindToObject(NULL, pidlLocation, NULL, IID_PPV_ARG(IShellFolder, &psfFolder));
             if (SUCCEEDED(hr))
             {
                 CComHeapPtr<ITEMIDLIST> pidlNew;
@@ -353,7 +353,7 @@ HRESULT CDesktopFolder::_ParseDisplayNameByParent(
             return E_OUTOFMEMORY;
 
         CComPtr<IShellFolder> pParentFolder;
-        SHBindToObject(NULL, pidlParent, IID_PPV_ARG(IShellFolder, &pParentFolder));
+        SHBindToObject(NULL, pidlParent, NULL, IID_PPV_ARG(IShellFolder, &pParentFolder));
 
         CComHeapPtr<ITEMIDLIST> pidlChild;
         HRESULT hr = pParentFolder->ParseDisplayName(hwndOwner, pbc, lpszDisplayName,

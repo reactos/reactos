@@ -6,6 +6,7 @@
 extern void func_dispmode(void);
 extern void func_forcedxsetup(void);
 extern void func_genral_hooks(void);
+extern void func_globalmemorystatus(void);
 extern void func_ignorefreelib(void);
 extern void func_ignoreloadlib(void);
 extern void func_layer_hooks(void);
@@ -16,6 +17,7 @@ const struct test winetest_testlist[] =
     { "dispmode", func_dispmode },
     { "forcedxsetup", func_forcedxsetup },
     { "genral_hooks", func_genral_hooks },
+    { "globalmemorystatus", func_globalmemorystatus },
     { "ignorefreelib", func_ignorefreelib },
     { "ignoreloadlib", func_ignoreloadlib },
     { "layer_hooks", func_layer_hooks },

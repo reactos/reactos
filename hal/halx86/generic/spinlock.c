@@ -39,7 +39,7 @@ KefAcquireSpinLockAtDpcLevel(
     *SpinLock = (KSPIN_LOCK)KeGetCurrentThread() | 1;
 #endif
 }
-#endif /* defined(_MINIHAL_) */
+#endif // _MINIHAL_
 
 /*
  * @implemented
@@ -86,6 +86,7 @@ KfReleaseSpinLock(PKSPIN_LOCK SpinLock,
     KeLowerIrql(OldIrql);
 }
 
+#ifndef _MINIHAL_
 /*
  * @implemented
  */
@@ -185,7 +186,6 @@ KeReleaseInStackQueuedSpinLock(IN PKLOCK_QUEUE_HANDLE LockHandle)
     KeLowerIrql(LockHandle->OldIrql);
 }
 
-#ifndef _MINIHAL_
 /*
  * @implemented
  */
@@ -217,9 +217,9 @@ KeTryToAcquireQueuedSpinLock(IN KSPIN_LOCK_QUEUE_NUMBER LockNumber,
     /* HACK */
     return KeTryToAcquireSpinLockAtDpcLevel(Lock);
 }
-#endif /* !defined(_MINIHAL_) */
+#endif // !_MINIHAL_
 
-#endif /* defined(_M_IX86) */
+#endif // _M_IX86
 
 VOID
 NTAPI
@@ -253,4 +253,3 @@ HalpReleaseCmosSpinLock(VOID)
     /* Restore the flags */
     __writeeflags(Flags);
 }
-

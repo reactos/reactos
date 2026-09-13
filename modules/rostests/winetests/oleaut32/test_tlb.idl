@@ -26,7 +26,17 @@ import "oaidl.idl"; /* needed by widl */
 
 midl_pragma warning ( disable : 2368 )
 
-[uuid(8b05fe77-4a6c-4133-b9cd-8f81747af784)]
+#define CUSTDATA_STRLIT c8768723-e6d2-4442-b039-92e9c82429c4
+#define CUSTDATA_NUM b481b478-a181-4eb6-b6e0-df63069e8c80
+#define CUSTDATA_HEXNUM a09d7c06-cf38-4db3-9450-10641651c35b
+
+[
+    uuid(8b05fe77-4a6c-4133-b9cd-8f81747af784),
+    custom(CUSTDATA_STRLIT,"ITypeLib2::GetCustData"),
+    custom(CUSTDATA_NUM,42),
+    custom(CUSTDATA_HEXNUM,0x1337C0D3),
+    id(2)
+]
 library Test
 {
 	importlib("stdole2.tlb");
@@ -133,5 +143,81 @@ library Test
 		HRESULT test4(d value);
 		HRESULT test5(e value);
 		HRESULT test6(f value);
+	}
+
+	[uuid(2d4430d5-99ea-4645-85f0-c5814b72804b)]
+	dispinterface ITestDispatch
+	{
+		properties:
+		[id(10)] int property_int;
+		[id(11)] HRESULT property_HRESULT;
+
+		methods:
+		[id(1)] void test_void();
+		[id(2)] void test_void_retval([out,retval] double* ret);
+		[id(3)] HRESULT test_HRESULT();
+		[id(4)] HRESULT test_HRESULT_retval([out,retval] double* ret);
+		[id(5)] int test_int();
+		[id(6)] int test_int_retval([out,retval] double* ret);
+		[id(7)] double parse_lcid([in] BSTR x, [lcid] long lcid);
+
+	}
+
+	[uuid(79ca07f9-ac22-44ac-9aaf-811f45412293), dual]
+	interface ITestDispDual : IDispatch
+	{
+		[id(1)] void test_void();
+		[id(2)] void test_void_retval([out,retval] double* ret);
+		[id(3)] HRESULT test_HRESULT();
+		[id(4)] HRESULT test_HRESULT_retval([out,retval] double* ret);
+		[id(5)] int test_int();
+		[id(6)] int test_int_retval([out,retval] double* ret);
+		[id(7)] HRESULT parse_lcid([in] BSTR x, [lcid] long lcid, [out,retval] double *ret);
+	}
+
+	[uuid(cdb105e3-24fb-4ae6-b826-801b7b2a0a07)]
+	dispinterface ITestDispInherit
+	{
+		interface ITestDispDual;
+	}
+
+	[uuid(786ee4ff-c5dd-4bf4-9578-0d22fb5369cc),custom(CUSTDATA_STRLIT,"ITypeInfo2::GetCustData interface")]
+	interface custdata_interface : IDispatch
+	{
+		[custom(CUSTDATA_STRLIT,"ITypeInfo2::GetFuncCustData custdata_interface::test_method")]
+		HRESULT test_method([in,custom(CUSTDATA_STRLIT,"ITypeInfo2::GetParamCustData custdata_interface::test_method(x)")] int x);
+	}
+
+	[uuid(6ca99f5e-c86a-42ad-a5ee-5bd4c8e5553c),custom(CUSTDATA_STRLIT,"ITypeInfo2::GetCustData enum")]
+	enum custdata_enum {
+		[custom(CUSTDATA_STRLIT,"ITypeInfo2::GetVarCustData enum")]
+		One,
+		Two
+	};
+
+	[uuid(62fabe17-f733-4b09-b859-3f455dcda450),custom(CUSTDATA_STRLIT,"ITypeInfo2::GetCustData struct")]
+	struct custdata_struct {
+		[custom(CUSTDATA_STRLIT,"ITypeInfo2::GetVarCustData struct")]
+		int test_field;
+	};
+
+	[/* uuid(...) not allowed on union */ custom(CUSTDATA_STRLIT,"ITypeInfo2::GetCustData union")]
+	union custdata_union {
+		[custom(CUSTDATA_STRLIT,"ITypeInfo2::GetVarCustData union")]
+		int test_field;
+	};
+
+	[public,uuid(d58744d6-63f9-467c-87e5-c95158098b18),custom(CUSTDATA_STRLIT,"ITypeInfo2::GetCustData typedef")]
+	typedef custdata_interface * custdata_typedef;
+
+	[uuid(bffc216e-2159-465a-80df-b85fd4f4f122),custom(CUSTDATA_STRLIT,"ITypeInfo2::GetCustData dispinterface")]
+	dispinterface custdata_dispatch
+	{
+properties:
+		[id(0),custom(CUSTDATA_STRLIT,"ITypeInfo2::GetVarCustData dispinterface property")]
+		int test_property;
+methods:
+		[id(1),custom(CUSTDATA_STRLIT,"ITypeInfo2::GetFuncCustData dispinterface method")]
+		void test_method([in,custom(CUSTDATA_STRLIT,"ITypeInfo2::GetParamCustData test_dispatch::test_method(x)")] int x);
 	}
 }

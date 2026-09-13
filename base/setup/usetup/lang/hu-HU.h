@@ -1151,7 +1151,7 @@ static MUI_ENTRY huHUFormatPartitionEntries[] =
     {
         0,
         0,
-        "ENTER = Folytat\240s   F3 = Kil\202p\202s",
+        "ENTER = Folytat\240s   ESC = M\202gse   F3 = Kil\202p\202s",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
         TEXT_ID_STATIC
     },

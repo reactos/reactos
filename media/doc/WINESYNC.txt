@@ -51,41 +51,40 @@ dll/directx/wine/wined3d        # Synced to WineStaging-3.3
 
 dll/win32/activeds            # Synced to Wine-10.0
 dll/win32/activeds.tlb        # Synced to Wine-10.0
-dll/win32/actxprxy            # Synced to WineStaging-3.3
-dll/win32/advpack             # Synced to WineStaging-4.18
-dll/win32/atl                 # Synced to WineStaging-4.18
-dll/win32/atl80               # Synced to WineStaging-4.18
-dll/win32/atl100              # Synced to WineStaging-3.3
-dll/win32/avifil32            # Synced to WineStaging-4.18
-dll/win32/avrt                # Synced to Wine-9.7
-dll/win32/bcrypt              # Synced to WineStaging-1.9.23 (+ winetest synced to 8d8936cbb6fea3cac862e059e814527f5361f48b, a.k.a 20161206-BJ)
+dll/win32/actxprxy            # Synced to Wine-10.0
+dll/win32/advpack             # Synced to Wine-10.0
+dll/win32/atl                 # Synced to Wine-10.0
+dll/win32/atl80               # Synced to Wine-10.0
+dll/win32/atl100              # Synced to Wine-10.0
+dll/win32/avifil32            # Synced to Wine-10.0
+dll/win32/avrt                # Synced to Wine-10.0
+dll/win32/bcrypt              # Synced to WineStaging-10.6 (+ winetest synced to d9148e48a3257ae80361f02f0bb7a2d607ef18ec)
 dll/win32/bcryptprimitives    # Synced to Wine-10.0
 dll/win32/bluetoothapis       # Synced to Wine-10.0
-dll/win32/browseui            # Out of sync
-dll/win32/cabinet             # Synced to WineStaging-4.18
-dll/win32/clusapi             # Synced to WineStaging-3.3
+dll/win32/cabinet             # Synced to Wine-10.0
+dll/win32/clusapi             # Synced to Wine-10.0
 dll/win32/combase             # Synced to Wine-10.0
-dll/win32/comcat              # Synced to WineStaging-3.3
-dll/win32/comdlg32            # Synced to WineStaging-4.18
+dll/win32/comcat              # Synced to Wine-10.0
+dll/win32/comdlg32            # Synced to Wine-10.0
 dll/win32/coml2               # Synced to Wine-10.0
-dll/win32/compstui            # Synced to WineStaging-4.18
-dll/win32/credui              # Synced to WineStaging-4.18
-dll/win32/crypt32             # Synced to WineStaging-4.0
-dll/win32/cryptdlg            # Synced to WineStaging-4.18
-dll/win32/cryptdll            # Synced to WineStaging-4.18
+dll/win32/compstui            # Synced to Wine-10.0
+dll/win32/credui              # Synced to Wine-10.0
+dll/win32/crypt32             # Synced to Wine-10.0
+dll/win32/cryptdlg            # Synced to Wine-10.0
+dll/win32/cryptdll            # Synced to Wine-10.0
 dll/win32/cryptnet            # Synced to Wine-10.0
 dll/win32/cryptui             # Synced to Wine-10.0
-dll/win32/dbgeng              # Synced to WineStaging-4.18
+dll/win32/dbgeng              # Synced to Wine-10.0
 dll/win32/dbghelp             # Synced to WineStaging-5.16
-dll/win32/dciman32            # Synced to WineStaging-3.3
+dll/win32/dciman32            # Synced to Wine-10.0
 dll/win32/dwmapi              # Synced to Wine-8.14
-dll/win32/faultrep            # Synced to WineStaging-4.18
+dll/win32/faultrep            # Synced to Wine-10.0
 dll/win32/feclient            # Synced to Wine-10.0
-dll/win32/fontsub             # Synced to WineStaging-2.9
+dll/win32/fontsub             # Synced to Wine-10.0
 dll/win32/fusion              # Synced to WineStaging-4.18
-dll/win32/gdiplus             # Synced to WineStaging-4.0
-dll/win32/hhctrl.ocx          # Synced to WineStaging-4.18
-dll/win32/hlink               # Synced to WineStaging-4.18
+dll/win32/gdiplus             # Synced to Wine-10.0
+dll/win32/hhctrl.ocx          # Synced to Wine-10.0
+dll/win32/hlink               # Synced to Wine-10.0
 dll/win32/hnetcfg             # Synced to WineStaging-4.18
 dll/win32/iccvid              # Synced to WineStaging-4.0
 dll/win32/ieframe             # Synced to WineStaging-4.18
@@ -103,7 +102,7 @@ dll/win32/jsproxy             # Synced to WineStaging-4.18
 dll/win32/loadperf            # Synced to WineStaging-4.18
 dll/win32/lz32                # Synced to WineStaging-3.3
 dll/win32/mapi32              # Synced to WineStaging-4.18
-dll/win32/mciavi32            # Synced to WineStaging-4.18
+dll/win32/mciavi32            # Synced to Wine-11.11
 dll/win32/mcicda              # Synced to WineStaging-3.3
 dll/win32/mciqtz32            # Synced to WineStaging-4.18
 dll/win32/mciseq              # Synced to WineStaging-4.18
@@ -154,8 +153,8 @@ dll/win32/objsel              # Synced to WineStaging-4.18
 dll/win32/odbc32              # Synced to WineStaging-4.18. Depends on port of Linux ODBC.
 dll/win32/odbccp32            # Synced to WineStaging-4.18
 dll/win32/ole32               # Synced to Wine-10.0
-dll/win32/oleacc              # Synced to WineStaging-4.18
-dll/win32/oleaut32            # Synced to WineStaging-4.18
+dll/win32/oleacc              # Synced to Wine-10.0
+dll/win32/oleaut32            # Synced to Wine-10.0
 dll/win32/olecli32            # Synced to WineStaging-4.18
 dll/win32/oledlg              # Synced to WineStaging-4.18
 dll/win32/olepro32            # Synced to WineStaging-3.3
@@ -178,6 +177,7 @@ dll/win32/riched32            # Synced to WineStaging-3.3
 dll/win32/rpcrt4              # Synced to Wine-10.0
 dll/win32/rsabase             # Synced to WineStaging-3.3
 dll/win32/rsaenh              # Synced to WineStaging-2.9
+dll/win32/rtworkq             # Synced to Wine-10.0
 dll/win32/sccbase             # Synced to WineStaging-4.18
 dll/win32/schannel            # Synced to WineStaging-3.3
 dll/win32/scrrun              # Synced to WineStaging-4.18
@@ -193,6 +193,7 @@ dll/win32/shlwapi             # Synced to WineStaging-3.3
 dll/win32/slbcsp              # Synced to WineStaging-4.18
 dll/win32/snmpapi             # Synced to WineStaging-4.18
 dll/win32/softpub             # Synced to WineStaging-2.9
+dll/win32/sspicli             # Synced to Wine-10.0
 dll/win32/stdole2.tlb         # Synced to WineStaging-3.3
 dll/win32/stdole32.tlb        # Synced to WineStaging-3.3
 dll/win32/sti                 # Synced to WineStaging-4.18
@@ -204,10 +205,10 @@ dll/win32/twain_32            # Synced to WineStaging-4.18
 dll/win32/uiautomationcore    # Synced to Wine-10.0
 dll/win32/updspapi            # Synced to WineStaging-4.18
 dll/win32/url                 # Synced to WineStaging-3.3
-dll/win32/urlmon              # Synced to WineStaging-4.18
+dll/win32/urlmon              # Synced to Wine-10.0
 dll/win32/usp10               # Synced to WineStaging-4.18
 dll/win32/uxtheme             # Forked
-dll/win32/vbscript            # Synced to WineStaging-4.18
+dll/win32/vbscript            # Synced to Wine-10.0
 dll/win32/version             # Synced to WineStaging-4.18
 dll/win32/vssapi              # Synced to WineStaging-4.18
 dll/win32/wbemdisp            # Synced to WineStaging-4.18

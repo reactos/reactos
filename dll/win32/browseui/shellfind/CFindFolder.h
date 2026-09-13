@@ -73,6 +73,7 @@ private:
     CComPtr<IShellFolderView> m_shellFolderView;
     CComPtr<IShellBrowser> m_shellBrowser;
     HANDLE m_hStopEvent;
+    UINT m_SearchId = 0;
 
     HRESULT GetFSFolderAndChild(LPCITEMIDLIST pidl, IShellFolder **ppSF, PCUITEMID_CHILD *ppidlLast = NULL);
     HRESULT GetFSFolder2AndChild(LPCITEMIDLIST pidl, IShellFolder2 **ppSF, PCUITEMID_CHILD *ppidlLast = NULL);

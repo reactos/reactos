@@ -1294,7 +1294,7 @@ static MUI_ENTRY frFRFormatPartitionEntries[] =
     {
         0,
         0,
-        "ENTR\220E = Continuer   F3 = Quitter",
+        "ENTR\220E = Continuer   \220CHAP = Annuler   F3 = Quitter",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
         TEXT_ID_STATIC
     },

@@ -1,0 +1,148 @@
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+
+IDM_CONSOLE_SMALL MENU
+BEGIN
+    POPUP "&File"
+    BEGIN
+        MENUITEM "&New\tCtrl+N", IDM_FILE_NEW
+        MENUITEM "&Open...\tCtrl+O", IDM_FILE_OPEN
+        MENUITEM SEPARATOR
+        MENUITEM "E&xit\tAlt+F4", IDM_FILE_EXIT
+    END
+    POPUP "&Help"
+    BEGIN
+        MENUITEM "&About ReactOS Management Console", IDM_HELP_ABOUT
+    END
+END
+
+IDM_CONSOLE_LARGE MENU
+BEGIN
+    POPUP "&File"
+    BEGIN
+        MENUITEM "&New\tCtrl+N", IDM_FILE_NEW
+        MENUITEM "&Open...\tCtrl+O", IDM_FILE_OPEN
+        MENUITEM "&Save", IDM_FILE_SAVE
+        MENUITEM "Save &As...", IDM_FILE_SAVEAS
+        MENUITEM SEPARATOR
+        MENUITEM "Add &Module...\tCtrl+M", IDM_FILE_ADD
+        MENUITEM "Options...", IDM_FILE_OPTIONS
+        MENUITEM SEPARATOR
+        MENUITEM "E&xit\tAlt+F4", IDM_FILE_EXIT
+    END
+    POPUP "&Action"
+    BEGIN
+        MENUITEM "New &Window from Here", IDM_ACTION_NEW
+        MENUITEM SEPARATOR
+        MENUITEM "Rena&me", IDM_ACTION_RENAME
+        MENUITEM "Export &List", IDM_ACTION_EXPORT_LIST
+    END
+    POPUP "&View"
+    BEGIN
+        MENUITEM "Add/Remove Colums", IDM_VIEW_COLUMNS
+        MENUITEM SEPARATOR
+        MENUITEM "Large Icons", IDM_VIEW_LARGE_ICONS
+        MENUITEM "Small Icons", IDM_VIEW_SMALL_ICONS
+        MENUITEM "List", IDM_VIEW_LIST
+        MENUITEM "Details", IDM_VIEW_DETAILS
+        MENUITEM SEPARATOR
+        MENUITEM "Customize...", IDM_VIEW_CUSTOMIZE
+    END
+    POPUP "Fav&orites"
+    BEGIN
+        MENUITEM "&Add to Favorites...", IDM_FAVORITES_ADD
+        MENUITEM "&Organize Favorites...", IDM_FAVORITES_ORGANIZE
+    END
+    POPUP "&Windows"
+    BEGIN
+        MENUITEM "&New Window\tCtrl+W", IDM_WINDOWS_NEW
+        MENUITEM SEPARATOR
+        MENUITEM "&Cascade", IDM_WINDOWS_CASCADE
+        MENUITEM "&Tile Horizontally", IDM_WINDOWS_TILE
+        MENUITEM "Arrange &Icons", IDM_WINDOWS_ARRANGE
+    END
+    POPUP "&Help"
+    BEGIN
+        MENUITEM "&About ReactOS Management Console", IDM_HELP_ABOUT
+    END
+END
+
+IDD_DIALOG_ADD DIALOGEX 0, 0, 351, 224
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Add or remove modules"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    CONTROL         "",IDC_LIST_AVAILABLE,"SysListView32",LVS_REPORT | LVS_SINGLESEL | LVS_EX_FULLROWSELECT | LVS_SHOWSELALWAYS | LVS_SORTASCENDING | LVS_SHAREIMAGELISTS | LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP,6,18,138,126
+    LTEXT           "Available modules:",IDC_STATIC,6,6,60,8
+    EDITTEXT        IDC_DESCRIPTION, 6, 168, 336, 28, ES_READONLY | ES_MULTILINE | WS_VSCROLL | WS_BORDER
+    LTEXT           "Description:",IDC_STATIC,6,156,39,8
+    PUSHBUTTON      "&Add >",IDC_BUTTON_ADD,150,18,50,14,WS_TABSTOP
+    PUSHBUTTON      "< &Remove",IDC_BUTTON_REMOVE,150,36,50,14,WS_TABSTOP
+    CONTROL         "", IDC_LIST_SELECTED, "SysTreeView32", TVS_HASBUTTONS | TVS_HASLINES | TVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 204, 18, 138, 126
+    LTEXT           "Selected modules:",IDC_STATIC,174,6,59,8
+    DEFPUSHBUTTON   "OK",IDOK,240,204,50,14,WS_TABSTOP
+    PUSHBUTTON      "Cancel",IDCANCEL,294,204,50,14,WS_TABSTOP
+END
+
+IDD_CUSTOMIZE DIALOGEX 0, 0, 214, 223
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_VISIBLE | WS_CAPTION
+CAPTION "Customize View"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    LTEXT "Select or clear the check boxes to show or hide items in the console window.", IDC_STATIC, 7, 7, 194, 22
+    GROUPBOX "MMC", IDC_STATIC, 7, 31, 200, 111
+    AUTOCHECKBOX "&Console tree", IDC_CUSTOMIZE_SCOPEPANE, 13, 42, 160, 10
+    AUTOCHECKBOX "Standard m&enus (Action and View)", IDC_CUSTOMIZE_MENUS, 13, 56, 160, 10
+    AUTOCHECKBOX "Standard tool&bar", IDC_CUSTOMIZE_TOOLBAR, 13, 70, 160, 10
+    AUTOCHECKBOX "&Status bar", IDC_CUSTOMIZE_STATUSBAR, 13, 84, 160, 10
+    AUTOCHECKBOX "&Description bar", IDC_CUSTOMIZE_DESCRIPTIONBAR, 13, 98, 160, 10
+    AUTOCHECKBOX "Taskpad &navigation tabs", IDC_CUSTOMIZE_TABS, 13, 112, 160, 10
+    AUTOCHECKBOX "&Actions pane", IDC_CUSTOMIZE_ACTIONSPANE, 13, 126, 160, 10
+    GROUPBOX "Snap-in", IDC_STATIC, 7, 150, 200, 42
+    AUTOCHECKBOX "&Menus", IDC_CUSTOMIZE_SNAPIN_MENUS, 13, 162, 160, 10
+    AUTOCHECKBOX "&Toolbars", IDC_CUSTOMIZE_SNAPIN_TOOLBARS, 13, 176, 160, 10
+    DEFPUSHBUTTON "OK", IDOK, 157, 200, 50, 14
+END
+
+IDD_CONSOLEOPTIONS DIALOGEX 0, 0, 252, 218
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_VISIBLE | WS_CAPTION
+CAPTION "Console"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    ICON "", IDC_CONSOLEICON, 7, 7, 20, 20
+    EDITTEXT IDC_CONSOLENAME, 37, 11, 134, 12, NOT WS_TABSTOP | WS_BORDER | ES_AUTOHSCROLL
+    PUSHBUTTON "C&hange Icon...", IDC_CONSOLESYMBOL, 177, 10, 68, 14
+
+    LTEXT "These options take effect the next time you open the MMC.", IDC_STATIC, 7, 44, 238, 19
+    LTEXT "&Console mode:", IDC_STATIC, 7, 70, 56, 8
+    COMBOBOX IDC_CONSOLEMODE, 67, 68, 178, 130, CBS_DROPDOWNLIST | WS_GROUP
+    GROUPBOX "Description", IDC_STATIC, 7, 87, 238, 60
+    LTEXT "", IDC_CONSOLEDESCRIPTION, 14, 100, 224, 43
+
+    AUTOCHECKBOX "Do not &save changes to this console", IDC_CONSOLENOSAVE, 13, 160, 160, 10
+    AUTOCHECKBOX "Allow the user to customize &views", IDC_CONSOLECUSTOM, 13, 172, 160, 10
+
+    DEFPUSHBUTTON   "OK",IDOK,140,197,50,14,WS_TABSTOP
+    PUSHBUTTON      "Cancel",IDCANCEL,194,197,50,14,WS_TABSTOP
+END
+
+STRINGTABLE
+BEGIN
+    IDS_APPTITLE "ReactOS Management Console"
+    IDS_CONSOLETITLE "Console%1!u!"
+    IDS_MODULE "Module"
+    IDS_VENDOR "Vendor"
+    IDS_ABOUTTITLE "About"
+
+    IDS_CONSOLEROOT "Console Root"
+
+    IDS_AUTHORMODE "Author mode"
+    IDS_USERMODE_FULL "User mode - full access"
+    IDS_USERMODE_MULTIPLE "User mode - limited access, multiple window"
+    IDS_USERMODE_SINGLE "User mode - limited access, single window"
+
+    IDS_AUTHORMODE_DESC "Grants users full access to all MMC functionality, including the ability to add or remove snap-ins, create new windows, create taskpad views, and view all portions of the tree."
+    IDS_USERMODE_FULL_DESC "Prevents useres from adding or removing snap-ins or changing snap-in console properties. Users have full access to the tree."
+    IDS_USERMODE_MULTIPLE_DESC "Prevents users from accessing areas of the tree that are not visible in snap-in console windows."
+    IDS_USERMODE_SINGLE_DESC "Opens the snap-in console in single-window mode and prevents users from accessing areas of the tree that are not visible in that snap-in console window."
+
+END

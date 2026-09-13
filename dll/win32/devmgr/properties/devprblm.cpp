@@ -203,8 +203,8 @@ ShowDeviceProblemWizard(IN HWND hWndParent  OPTIONAL,
  *   lpDeviceID:    Specifies the device, also see NOTEs
  *
  * RETURN VALUE
- *   TRUE:  if no errors occured
- *   FALSE: if errors occured
+ *   TRUE:  if no errors occurred
+ *   FALSE: if errors occurred
  *
  * @implemented
  */
@@ -270,8 +270,8 @@ Cleanup:
  *   lpDeviceID:    Specifies the device, also see NOTEs
  *
  * RETURN VALUE
- *   TRUE:  if no errors occured
- *   FALSE: if errors occured
+ *   TRUE:  if no errors occurred
+ *   FALSE: if errors occurred
  *
  * @unimplemented
  */
@@ -408,7 +408,7 @@ static const UINT ProblemStringId[NUM_CM_PROB] =
  *
  * RETURN VALUE
  *   The return value is the length of the string in characters.
- *   It returns 0 if an error occured.
+ *   It returns 0 if an error occurred.
  *
  * @implemented
  */
@@ -482,7 +482,7 @@ DeviceProblemTextA(IN HMACHINE hMachine  OPTIONAL,
  *
  * RETURN VALUE
  *   The return value is the length of the string in characters.
- *   It returns 0 if an error occured.
+ *   It returns 0 if an error occurred.
  *
  * @implemented
  */

@@ -19,4 +19,19 @@ static const BOOL g_bVista = (GetNTVersion() == _WIN32_WINNT_VISTA);
 
 VOID PathToIDList(LPCWSTR pszPath, ITEMIDLIST** ppidl);
 
+static inline LPCWSTR RegNameDisp(LPCWSTR s)
+{
+    return (s && *s) ? s : L"(Default)";
+}
+
+static inline UINT RegSetStringEx(HKEY hKey, LPCWSTR Path, LPCWSTR Name, LPCWSTR Str, DWORD Type)
+{
+    return SHSetValueW(hKey, Path, Name, Type, (LPCVOID)Str, (lstrlenW(Str) + 1) * sizeof(WCHAR));
+}
+
+static inline UINT RegSetString(HKEY hKey, LPCWSTR Path, LPCWSTR Name, LPCWSTR Str)
+{
+    return RegSetStringEx(hKey, Path, Name, Str, REG_SZ);
+}
+
 #endif /* !_SHELLTEST_H_ */

@@ -23,7 +23,7 @@ KSPIN_LOCK HalpPCIConfigLock;
 PCI_CONFIG_HANDLER PCIConfigHandler;
 
 /* PCI Operation Matrix */
-UCHAR PCIDeref[4][4] =
+static const UCHAR PCIDeref[4][4] =
 {
     {0, 1, 2, 2},   // ULONG-aligned offset
     {1, 1, 1, 1},   // UCHAR-aligned offset
@@ -32,7 +32,7 @@ UCHAR PCIDeref[4][4] =
 };
 
 /* Type 1 PCI Bus */
-PCI_CONFIG_HANDLER PCIConfigHandlerType1 =
+const PCI_CONFIG_HANDLER PCIConfigHandlerType1 =
 {
     /* Synchronization */
     (FncSync)HalpPCISynchronizeType1,
@@ -54,7 +54,7 @@ PCI_CONFIG_HANDLER PCIConfigHandlerType1 =
 };
 
 /* Type 2 PCI Bus */
-PCI_CONFIG_HANDLER PCIConfigHandlerType2 =
+const PCI_CONFIG_HANDLER PCIConfigHandlerType2 =
 {
     /* Synchronization */
     (FncSync)HalpPCISynchronizeType2,
@@ -75,7 +75,7 @@ PCI_CONFIG_HANDLER PCIConfigHandlerType2 =
     }
 };
 
-PCIPBUSDATA HalpFakePciBusData =
+static PCIPBUSDATA HalpFakePciBusData =
 {
     {
         PCI_DATA_TAG,
@@ -91,7 +91,7 @@ PCIPBUSDATA HalpFakePciBusData =
     32,
 };
 
-BUS_HANDLER HalpFakePciBusHandler =
+const BUS_HANDLER HalpFakePciBusHandler =
 {
     1,
     PCIBus,
@@ -931,12 +931,13 @@ HalpAssignPCISlotResources(IN PBUS_HANDLER BusHandler,
 
 ULONG
 NTAPI
-HaliPciInterfaceReadConfig(IN PBUS_HANDLER RootBusHandler,
-                           IN ULONG BusNumber,
-                           IN PCI_SLOT_NUMBER SlotNumber,
-                           IN PVOID Buffer,
-                           IN ULONG Offset,
-                           IN ULONG Length)
+HaliPciInterfaceReadConfig(
+    _In_ PBUS_HANDLER RootBusHandler,
+    _In_ ULONG BusNumber,
+    _In_ PCI_SLOT_NUMBER SlotNumber,
+    _Out_writes_bytes_(Length) PVOID Buffer,
+    _In_ ULONG Offset,
+    _In_ ULONG Length)
 {
     BUS_HANDLER BusHandler;
 
@@ -948,6 +949,26 @@ HaliPciInterfaceReadConfig(IN PBUS_HANDLER RootBusHandler,
     HalpReadPCIConfig(&BusHandler, SlotNumber, Buffer, Offset, Length);
 
     /* Return length */
+    return Length;
+}
+
+ULONG
+NTAPI
+HaliPciInterfaceWriteConfig(
+    _In_ PBUS_HANDLER RootBusHandler,
+    _In_ ULONG BusNumber,
+    _In_ PCI_SLOT_NUMBER SlotNumber,
+    _In_reads_bytes_(Length) PVOID Buffer,
+    _In_ ULONG Offset,
+    _In_ ULONG Length)
+{
+    BUS_HANDLER BusHandler;
+
+    RtlCopyMemory(&BusHandler, &HalpFakePciBusHandler, sizeof(BUS_HANDLER));
+    BusHandler.BusNumber = BusNumber;
+
+    HalpWritePCIConfig(&BusHandler, SlotNumber, Buffer, Offset, Length);
+
     return Length;
 }
 

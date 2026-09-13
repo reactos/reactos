@@ -69,6 +69,7 @@ list(APPEND SOURCE
     ntuser/NtUserGetTitleBarInfo.c
     ntuser/NtUserProcessConnect.c
     ntuser/NtUserRedrawWindow.c
+    ntuser/NtUserSBGetParms.c
     ntuser/NtUserScrollDC.c
     ntuser/NtUserSelectPalette.c
     ntuser/NtUserSetTimer.c

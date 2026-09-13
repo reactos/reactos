@@ -1,0 +1,37 @@
+/*
+ * PROJECT:     ReactOS Console Server
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Portuguese (Portugal) resource file
+ * TRANSLATOR:  Copyright 2019-2026 Jose Carlos Jesus <zecarlos1957@hotmail.com>
+ */
+
+LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+    IDS_EDIT "Editar"
+    IDS_MARK "Marcar"
+    IDS_COPY "Copiar\tEnter"
+    IDS_PASTE "Colar"
+    IDS_SELECTALL "Seleccionar Tudo"
+    IDS_SCROLL "Rolar"
+    IDS_FIND "Procurar..."
+    IDS_DEFAULTS "Prédefinição"
+    IDS_PROPERTIES "Propriedades"
+/*
+    IDS_SCROLLHERE "Rolar aqui"
+    IDS_SCROLLTOP "Rolar até o topo"
+    IDS_SCROLLBOTTOM "Rolar até o fim"
+    IDS_SCROLLPAGE_UP "Página acima"
+    IDS_SCROLLPAGE_DOWN "Pagina abaixo"
+    IDS_SCROLLUP "Rolar para cima"
+    IDS_SCROLLDOWN "Rolar para baixo"
+*/
+    IDS_TERMINAL_TITLE "Consola ReactOS"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_MARK_TITLE "Marca"
+    IDS_SELECT_TITLE "Selecção"
+END

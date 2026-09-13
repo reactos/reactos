@@ -63,19 +63,19 @@ HKCR
         {
             Edit
             {
-                Command = s '"%%SystemRoot%%\system32\notepad.exe" %%1'
+                Command = s '"%SystemRoot%\system32\notepad.exe" %%1'
             }
             Open
             {
-                Command = s '"%%SystemRoot%%\system32\wscript.exe" "%%1" %%*'
+                Command = s '"%SystemRoot%\system32\wscript.exe" "%%1" %%*'
             }
             Open2
             {
-                Command = s '"%%SystemRoot%%\system32\cscript.exe" "%%1" %%*'
+                Command = s '"%SystemRoot%\system32\cscript.exe" "%%1" %%*'
             }
             Print
             {
-                Command = s '"%%SystemRoot%%\system32\notepad.exe" /p %%1'
+                Command = s '"%SystemRoot%\system32\notepad.exe" /p %%1'
             }
         }
     }

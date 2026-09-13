@@ -480,12 +480,17 @@ class CTreeView :
     public CWindow
 {
 public:
-    HWND Create(HWND hwndParent)
+    HWND Create(HWND hwndParent, DWORD dwStyles = 0)
     {
+        if (!dwStyles)
+        {
+            dwStyles = WS_CHILD | WS_VISIBLE | TVS_HASLINES | TVS_SHOWSELALWAYS;
+        }
+
         m_hWnd = CreateWindowExW(WS_EX_CLIENTEDGE,
             WC_TREEVIEWW,
             L"",
-            WS_CHILD | WS_VISIBLE | TVS_HASLINES | TVS_SHOWSELALWAYS,
+            dwStyles,
             0, 28, 200, 350,
             hwndParent,
             NULL,

@@ -71,7 +71,17 @@ EfiEntry(
     }
 
     /* 0x32000 is what UEFI defines, but we can go smaller if we want */
-    BasicStack = (PVOID)((ULONG_PTR)0x32000 + (ULONG_PTR)MmAllocateMemoryWithType(0x32000, LoaderOsloaderStack));
+    SIZE_T StackSize = 0x32000;
+    PVOID AllocatedStackMem = MmAllocateMemoryWithType(StackSize, LoaderOsloaderStack);
+
+    if (!AllocatedStackMem)
+    {
+        UiMessageBoxCritical("Unable to allocate OS loader stack.");
+        goto Quit;
+    }
+
+    /* Stacks grow downward so set the initial stack pointer to the top of the allocated region */
+    BasicStack = (PVOID)((ULONG_PTR)AllocatedStackMem + StackSize);
     _changestack();
 
 Quit:
@@ -94,15 +104,30 @@ ExecuteLoaderCleanly(PVOID PreviousStack)
     UNREACHABLE;
 }
 
-#ifndef _M_ARM
 DECLSPEC_NORETURN
 VOID __cdecl Reboot(VOID)
 {
-    //TODO: Replace with a true firmware reboot eventually
-    WARN("Something has gone wrong - halting FreeLoader\n");
+    WARN("Performing cold reset\n");
+
+    if (GlobalSystemTable && GlobalSystemTable->RuntimeServices)
+    {
+        /* Attempt a native firmware cold reset */
+        GlobalSystemTable->RuntimeServices->ResetSystem(
+            EfiResetCold,
+            EFI_SUCCESS,
+            0,
+            NULL
+        );
+    }
+
+    /* Fallback dead-loop if runtime services are missing or fail to respond */
     for (;;)
     {
+#if defined(_M_IX86) || defined(_M_AMD64)
+        __halt();
+#else
+        /* Fallback placeholder loop for other platforms */
         NOTHING;
+#endif
     }
 }
-#endif

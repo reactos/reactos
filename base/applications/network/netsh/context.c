@@ -29,9 +29,8 @@ PCONTEXT_ENTRY pCurrentContext = NULL;
 PCONTEXT_STACK_ENTRY pContextStackHead = NULL;
 PCONTEXT_STACK_ENTRY pContextStackTail = NULL;
 
-PWSTR pszMachine = NULL;
-
-static BOOL bOnline = TRUE; 
+PWSTR g_pszMachine = NULL;
+BOOL g_bOnline = TRUE; 
 
 /* FUNCTIONS ******************************************************************/
 
@@ -104,7 +103,8 @@ AddContextCommand(
     PFN_HANDLE_CMD pfnCmdHandler,
     DWORD dwShortCmdHelpToken,
     DWORD dwCmdHlpToken,
-    DWORD dwFlags)
+    DWORD dwFlags,
+    PNS_OSVERSIONCHECK pfnOsVersionCheck)
 {
     PCOMMAND_ENTRY pEntry;
 
@@ -131,6 +131,7 @@ AddContextCommand(
     pEntry->dwShortCmdHelpToken = dwShortCmdHelpToken;
     pEntry->dwCmdHlpToken = dwCmdHlpToken;
     pEntry->dwFlags = dwFlags;
+    pEntry->pfnOsVersionCheck = pfnOsVersionCheck;
 
     if (pContext->pCommandListHead == NULL && pContext->pCommandListTail == NULL)
     {
@@ -153,7 +154,8 @@ AddCommandGroup(
     PCONTEXT_ENTRY pContext,
     LPCWSTR pwszCmdGroupToken,
     DWORD dwShortCmdHelpToken,
-    DWORD dwFlags)
+    DWORD dwFlags,
+    PNS_OSVERSIONCHECK pfnOsVersionCheck)
 {
     PCOMMAND_GROUP pEntry;
 
@@ -176,6 +178,7 @@ AddCommandGroup(
     wcscpy((LPWSTR)pEntry->pwszCmdGroupToken, pwszCmdGroupToken);
     pEntry->dwShortCmdHelpToken = dwShortCmdHelpToken;
     pEntry->dwFlags = dwFlags;
+    pEntry->pfnOsVersionCheck = pfnOsVersionCheck;
 
     if (pContext->pGroupListHead == NULL && pContext->pGroupListTail == NULL)
     {
@@ -200,7 +203,8 @@ AddGroupCommand(
     PFN_HANDLE_CMD pfnCmdHandler,
     DWORD dwShortCmdHelpToken,
     DWORD dwCmdHlpToken,
-    DWORD dwFlags)
+    DWORD dwFlags,
+    PNS_OSVERSIONCHECK pfnOsVersionCheck)
 {
     PCOMMAND_ENTRY pEntry;
 
@@ -227,6 +231,7 @@ AddGroupCommand(
     pEntry->dwShortCmdHelpToken = dwShortCmdHelpToken;
     pEntry->dwCmdHlpToken = dwCmdHlpToken;
     pEntry->dwFlags = dwFlags;
+    pEntry->pfnOsVersionCheck = pfnOsVersionCheck;
 
     if (pGroup->pCommandListHead == NULL && pGroup->pCommandListTail == NULL)
     {
@@ -258,7 +263,7 @@ RemoveContextFromStack(
     {
         if (pStackEntry->pContext == pContextEntry)
         {
-            if (pStackEntry == pContextStackHead && pStackEntry == pContextStackHead)
+            if (pStackEntry == pContextStackHead && pStackEntry == pContextStackTail)
             {
                 pContextStackHead = NULL;
                 pContextStackTail = NULL;
@@ -575,7 +580,7 @@ ExitCommand(
     _In_ LPCVOID pvData,
     _Out_ BOOL *pbDone)
 {
-    if (bOnline == FALSE)
+    if (g_bOnline == FALSE)
         CommitContext(pRootContext, NETSH_FLUSH);
 
     *pbDone = TRUE;
@@ -611,7 +616,7 @@ OfflineCommand(
 {
     DPRINT("OfflineCommand()\n");
     CommitContext(pRootContext, NETSH_UNCOMMIT);
-    bOnline = FALSE;
+    g_bOnline = FALSE;
     return ERROR_SUCCESS;
 }
 
@@ -629,7 +634,7 @@ OnlineCommand(
 {
     DPRINT("OnlineCommand()\n");
     CommitContext(pRootContext, NETSH_COMMIT);
-    bOnline = TRUE;
+    g_bOnline = TRUE;
     return ERROR_SUCCESS;
 }
 
@@ -728,18 +733,18 @@ SetMachineCommand(
     if ((dwArgCount - dwCurrentIndex) > 1)
         return ERROR_SHOW_USAGE;
 
-    if (pszMachine != NULL)
+    if (g_pszMachine != NULL)
     {
-        HeapFree(GetProcessHeap(), 0, pszMachine);
-        pszMachine = NULL;
+        HeapFree(GetProcessHeap(), 0, g_pszMachine);
+        g_pszMachine = NULL;
     }
 
     if ((dwArgCount - dwCurrentIndex) == 1)
     {
-        pszMachine = HeapAlloc(GetProcessHeap(), 0, (sizeof(argv[dwCurrentIndex]) + 1) * sizeof(WCHAR));
-        if (pszMachine == NULL)
+        g_pszMachine = HeapAlloc(GetProcessHeap(), 0, (sizeof(argv[dwCurrentIndex]) + 1) * sizeof(WCHAR));
+        if (g_pszMachine == NULL)
             return ERROR_NOT_ENOUGH_MEMORY;
-        wcscpy(pszMachine, argv[dwCurrentIndex]);
+        wcscpy(g_pszMachine, argv[dwCurrentIndex]);
     }
 
     return dwError;
@@ -768,12 +773,12 @@ SetModeCommand(
     if (!_wcsicmp(argv[dwCurrentIndex], L"offline"))
     {
         CommitContext(pRootContext, NETSH_UNCOMMIT);
-        bOnline = FALSE;
+        g_bOnline = FALSE;
     }
     else if (!_wcsicmp(argv[dwCurrentIndex], L"online"))
     {
         CommitContext(pRootContext, NETSH_COMMIT);
-        bOnline = TRUE;
+        g_bOnline = TRUE;
     }
     else
     {
@@ -796,7 +801,7 @@ ShowModeCommand(
     _Out_ BOOL *pbDone)
 {
     DPRINT("ShowModeCommand()\n");
-    ConPuts(StdOut, bOnline ? L"online\n\n" : L"offline\n\n");
+    ConPuts(StdOut, g_bOnline ? L"online\n\n" : L"offline\n\n");
     return ERROR_SUCCESS;
 }
 
@@ -813,48 +818,48 @@ CreateRootContext(VOID)
 
     pRootContext->hModule = g_hModule;
 
-    AddContextCommand(pRootContext, L"..",      UpCommand,      IDS_HLP_UP,      IDS_HLP_UP_EX, 0);
-    AddContextCommand(pRootContext, L"?",       NULL,           IDS_HLP_HELP,    IDS_HLP_HELP_EX, 0);
-    AddContextCommand(pRootContext, L"abort",   AbortCommand,   IDS_HLP_ABORT,   IDS_HLP_ABORT_EX, 0);
-    AddContextCommand(pRootContext, L"alias",   AliasCommand,   IDS_HLP_ALIAS,   IDS_HLP_ALIAS_EX, 0);
-    AddContextCommand(pRootContext, L"bye",     ExitCommand,    IDS_HLP_EXIT,    IDS_HLP_EXIT_EX, 0);
-    AddContextCommand(pRootContext, L"commit",  CommitCommand,  IDS_HLP_COMMIT,  IDS_HLP_COMMIT_EX, 0);
-    AddContextCommand(pRootContext, L"dump",    DumpCommand,    IDS_HLP_DUMP,    IDS_HLP_DUMP_EX, 0);
-    AddContextCommand(pRootContext, L"exec",    ExecCommand,    IDS_HLP_EXEC,    IDS_HLP_EXEC_EX, 0);
-    AddContextCommand(pRootContext, L"exit",    ExitCommand,    IDS_HLP_EXIT,    IDS_HLP_EXIT_EX, 0);
-    AddContextCommand(pRootContext, L"help",    NULL,           IDS_HLP_HELP,    IDS_HLP_HELP_EX, 0);
-    AddContextCommand(pRootContext, L"offline", OfflineCommand, IDS_HLP_OFFLINE, IDS_HLP_OFFLINE_EX, 0);
-    AddContextCommand(pRootContext, L"online",  OnlineCommand,  IDS_HLP_ONLINE,  IDS_HLP_ONLINE_EX, 0);
-    AddContextCommand(pRootContext, L"popd",    PopdCommand,    IDS_HLP_POPD,    IDS_HLP_POPD_EX, 0);
-    AddContextCommand(pRootContext, L"pushd",   PushdCommand,   IDS_HLP_PUSHD,   IDS_HLP_PUSHD_EX, 0);
-    AddContextCommand(pRootContext, L"quit",    ExitCommand,    IDS_HLP_EXIT,    IDS_HLP_EXIT_EX, 0);
-    AddContextCommand(pRootContext, L"unalias", UnaliasCommand, IDS_HLP_UNALIAS, IDS_HLP_UNALIAS_EX, 0);
+    AddContextCommand(pRootContext, L"..",      UpCommand,      IDS_HLP_UP,      IDS_HLP_UP_EX, 0, NULL);
+    AddContextCommand(pRootContext, L"?",       NULL,           IDS_HLP_HELP,    IDS_HLP_HELP_EX, 0, NULL);
+    AddContextCommand(pRootContext, L"abort",   AbortCommand,   IDS_HLP_ABORT,   IDS_HLP_ABORT_EX, 0, NULL);
+    AddContextCommand(pRootContext, L"alias",   AliasCommand,   IDS_HLP_ALIAS,   IDS_HLP_ALIAS_EX, 0, NULL);
+    AddContextCommand(pRootContext, L"bye",     ExitCommand,    IDS_HLP_EXIT,    IDS_HLP_EXIT_EX, 0, NULL);
+    AddContextCommand(pRootContext, L"commit",  CommitCommand,  IDS_HLP_COMMIT,  IDS_HLP_COMMIT_EX, 0, NULL);
+    AddContextCommand(pRootContext, L"dump",    DumpCommand,    IDS_HLP_DUMP,    IDS_HLP_DUMP_EX, 0, NULL);
+    AddContextCommand(pRootContext, L"exec",    ExecCommand,    IDS_HLP_EXEC,    IDS_HLP_EXEC_EX, 0, NULL);
+    AddContextCommand(pRootContext, L"exit",    ExitCommand,    IDS_HLP_EXIT,    IDS_HLP_EXIT_EX, 0, NULL);
+    AddContextCommand(pRootContext, L"help",    NULL,           IDS_HLP_HELP,    IDS_HLP_HELP_EX, 0, NULL);
+    AddContextCommand(pRootContext, L"offline", OfflineCommand, IDS_HLP_OFFLINE, IDS_HLP_OFFLINE_EX, 0, NULL);
+    AddContextCommand(pRootContext, L"online",  OnlineCommand,  IDS_HLP_ONLINE,  IDS_HLP_ONLINE_EX, 0, NULL);
+    AddContextCommand(pRootContext, L"popd",    PopdCommand,    IDS_HLP_POPD,    IDS_HLP_POPD_EX, 0, NULL);
+    AddContextCommand(pRootContext, L"pushd",   PushdCommand,   IDS_HLP_PUSHD,   IDS_HLP_PUSHD_EX, 0, NULL);
+    AddContextCommand(pRootContext, L"quit",    ExitCommand,    IDS_HLP_EXIT,    IDS_HLP_EXIT_EX, 0, NULL);
+    AddContextCommand(pRootContext, L"unalias", UnaliasCommand, IDS_HLP_UNALIAS, IDS_HLP_UNALIAS_EX, 0, NULL);
 
-    pGroup = AddCommandGroup(pRootContext, L"add", IDS_HLP_GROUP_ADD, 0);
+    pGroup = AddCommandGroup(pRootContext, L"add", IDS_HLP_GROUP_ADD, 0, NULL);
     if (pGroup)
     {
-        AddGroupCommand(pGroup, L"helper", AddHelperCommand, IDS_HLP_ADD_HELPER, IDS_HLP_ADD_HELPER_EX, 0);
+        AddGroupCommand(pGroup, L"helper", AddHelperCommand, IDS_HLP_ADD_HELPER, IDS_HLP_ADD_HELPER_EX, CMD_FLAG_LOCAL, NULL);
     }
 
-    pGroup = AddCommandGroup(pRootContext, L"delete", IDS_HLP_GROUP_DELETE, 0);
+    pGroup = AddCommandGroup(pRootContext, L"delete", IDS_HLP_GROUP_DELETE, 0, NULL);
     if (pGroup)
     {
-        AddGroupCommand(pGroup, L"helper", DeleteHelperCommand, IDS_HLP_DEL_HELPER, IDS_HLP_DEL_HELPER_EX, 0);
+        AddGroupCommand(pGroup, L"helper", DeleteHelperCommand, IDS_HLP_DEL_HELPER, IDS_HLP_DEL_HELPER_EX, CMD_FLAG_LOCAL, NULL);
     }
 
-    pGroup = AddCommandGroup(pRootContext, L"set", IDS_HLP_GROUP_SET, 0);
+    pGroup = AddCommandGroup(pRootContext, L"set", IDS_HLP_GROUP_SET, 0, NULL);
     if (pGroup)
     {
-        AddGroupCommand(pGroup, L"machine", SetMachineCommand, IDS_HLP_SET_MACHINE, IDS_HLP_SET_MACHINE_EX, 0);
-        AddGroupCommand(pGroup, L"mode",    SetModeCommand,    IDS_HLP_SET_MODE,    IDS_HLP_SET_MODE_EX, 0);
+        AddGroupCommand(pGroup, L"machine", SetMachineCommand, IDS_HLP_SET_MACHINE, IDS_HLP_SET_MACHINE_EX, CMD_FLAG_ONLINE, NULL);
+        AddGroupCommand(pGroup, L"mode",    SetModeCommand,    IDS_HLP_SET_MODE,    IDS_HLP_SET_MODE_EX, 0, NULL);
     }
 
-    pGroup = AddCommandGroup(pRootContext, L"show", IDS_HLP_GROUP_SHOW, 0);
+    pGroup = AddCommandGroup(pRootContext, L"show", IDS_HLP_GROUP_SHOW, 0, NULL);
     if (pGroup)
     {
-        AddGroupCommand(pGroup, L"alias",  ShowAliasCommand,  IDS_HLP_SHOW_ALIAS,  IDS_HLP_SHOW_ALIAS_EX, 0);
-        AddGroupCommand(pGroup, L"helper", ShowHelperCommand, IDS_HLP_SHOW_HELPER, IDS_HLP_SHOW_HELPER_EX, 0);
-        AddGroupCommand(pGroup, L"mode",   ShowModeCommand,   IDS_HLP_SHOW_MODE,   IDS_HLP_SHOW_MODE_EX, 0);
+        AddGroupCommand(pGroup, L"alias",  ShowAliasCommand,  IDS_HLP_SHOW_ALIAS,  IDS_HLP_SHOW_ALIAS_EX, 0, NULL);
+        AddGroupCommand(pGroup, L"helper", ShowHelperCommand, IDS_HLP_SHOW_HELPER, IDS_HLP_SHOW_HELPER_EX, 0, NULL);
+        AddGroupCommand(pGroup, L"mode",   ShowModeCommand,   IDS_HLP_SHOW_MODE,   IDS_HLP_SHOW_MODE_EX, 0, NULL);
     }
 
     pCurrentContext = pRootContext;
@@ -913,8 +918,9 @@ RegisterContext(
     PCONTEXT_ENTRY pContext, pParentContext;
     PCOMMAND_GROUP pGroup;
     DWORD i, j;
+    DWORD dwError = ERROR_SUCCESS;
 
-    DPRINT1("RegisterContext(%p)\n", pChildContext);
+    DPRINT("RegisterContext(%p)\n", pChildContext);
     if (pChildContext == NULL)
     {
         DPRINT1("Invalid child context!\n");
@@ -951,6 +957,8 @@ RegisterContext(
         pContext->pfnCommitFn = pChildContext->pfnCommitFn;
         pContext->pfnDumpFn = pChildContext->pfnDumpFn;
         pContext->pfnConnectFn = pChildContext->pfnConnectFn;
+        pContext->pfnOsVersionCheck = pChildContext->pfnOsVersionCheck;
+        pContext->dwFlags = pChildContext->dwFlags;
         pContext->ulPriority = (pChildContext->dwFlags & CMD_FLAG_PRIORITY) ?
                                pChildContext->ulPriority : DEFAULT_CONTEXT_PRIORITY;
 
@@ -966,7 +974,8 @@ RegisterContext(
                               pChildContext->pTopCmds[i].pfnCmdHandler,
                               pChildContext->pTopCmds[i].dwShortCmdHelpToken,
                               pChildContext->pTopCmds[i].dwCmdHlpToken,
-                              pChildContext->pTopCmds[i].dwFlags);
+                              pChildContext->pTopCmds[i].dwFlags,
+                              pChildContext->pTopCmds[i].pOsVersionCheck);
         }
 
         /* Add command groups */
@@ -975,7 +984,8 @@ RegisterContext(
             pGroup = AddCommandGroup(pContext,
                                      pChildContext->pCmdGroups[i].pwszCmdGroupToken,
                                      pChildContext->pCmdGroups[i].dwShortCmdHelpToken,
-                                     pChildContext->pCmdGroups[i].dwFlags);
+                                     pChildContext->pCmdGroups[i].dwFlags,
+                                     pChildContext->pCmdGroups[i].pOsVersionCheck);
             if (pGroup != NULL)
             {
                 for (j = 0; j < pChildContext->pCmdGroups[i].ulCmdGroupSize; j++)
@@ -985,13 +995,20 @@ RegisterContext(
                                     pChildContext->pCmdGroups[i].pCmdGroup[j].pfnCmdHandler,
                                     pChildContext->pCmdGroups[i].pCmdGroup[j].dwShortCmdHelpToken,
                                     pChildContext->pCmdGroups[i].pCmdGroup[j].dwCmdHlpToken,
-                                    pChildContext->pCmdGroups[i].pCmdGroup[j].dwFlags);
+                                    pChildContext->pCmdGroups[i].pCmdGroup[j].dwFlags,
+                                    pChildContext->pCmdGroups[i].pCmdGroup[j].pOsVersionCheck);
                 }
             }
         }
+
+        if (pContext->pfnConnectFn)
+        {
+            dwError = pContext->pfnConnectFn(g_pszMachine);
+            DPRINT("pfnConnectFn(%S) returned %lu\n", g_pszMachine, dwError);
+        }
     }
 
-    return ERROR_SUCCESS;
+    return dwError;
 }
 
 

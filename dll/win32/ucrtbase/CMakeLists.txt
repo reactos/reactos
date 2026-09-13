@@ -36,6 +36,7 @@ target_link_libraries(ucrtbase
     msvcrt_shared
     crtmath
     vcruntime
+    vcstartup
     chkstk
     wine
 )

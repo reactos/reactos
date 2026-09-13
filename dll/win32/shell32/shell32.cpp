@@ -209,8 +209,34 @@ HRESULT WINAPI IDefClFImpl::CreateInstance(IUnknown * pUnkOuter, REFIID riid, LP
  */
 HRESULT WINAPI IDefClFImpl::LockServer(BOOL fLock)
 {
-    TRACE("%p->(0x%x), not implemented\n", this, fLock);
-    return E_NOTIMPL;
+    TRACE("%p->(0x%x)\n", this, fLock);
+
+    if (fLock)
+    {
+        if (pcRefDll)
+        {
+            if (*pcRefDll == LONG_MAX)
+                ERR("pcRefDll is pinned, not incrementing\n");
+            else
+                InterlockedIncrement(pcRefDll);
+        }
+        _pAtlModule->Lock();
+    }
+    else
+    {
+        _pAtlModule->Unlock();
+        if (pcRefDll)
+        {
+            if (*pcRefDll == LONG_MAX)
+                ERR("pcRefDll is pinned, not decrementing\n");
+            else if (*pcRefDll > 0)
+                InterlockedDecrement(pcRefDll);
+            else
+                ERR("pcRefDll underflow\n");
+        }
+    }
+
+    return S_OK;
 }
 
 /**************************************************************************
@@ -300,6 +326,7 @@ BEGIN_OBJECT_MAP(ObjectMap)
     OBJECT_ENTRY(CLSID_ShellItem, CShellItem)
     OBJECT_ENTRY(CLSID_ShellLink, CShellLink)
     OBJECT_ENTRY(CLSID_Shell, CShellDispatch)
+    OBJECT_ENTRY(CLSID_ShellLibrary, CShellLibrary)
     OBJECT_ENTRY(CLSID_DragDropHelper, CDropTargetHelper)
     OBJECT_ENTRY(CLSID_ControlPanel, CControlPanelFolder)
     OBJECT_ENTRY(CLSID_OpenControlPanel, COpenControlPanel)
@@ -324,6 +351,7 @@ BEGIN_OBJECT_MAP(ObjectMap)
     OBJECT_ENTRY(CLSID_ExeDropHandler, CExeDropHandler)
     OBJECT_ENTRY(CLSID_QueryAssociations, CQueryAssociations)
     OBJECT_ENTRY(CLSID_UserNotification, CUserNotification)
+    OBJECT_ENTRY(CLSID_UserEventTimer, CUserEventTimer)
 END_OBJECT_MAP()
 
 CShell32Module  gModule;

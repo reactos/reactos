@@ -90,6 +90,7 @@ DiskOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
     GEOMETRY Geometry;
     ULONGLONG SectorOffset;
     ULONGLONG SectorCount;
+    static BOOLEAN PrintForce = FALSE;
 
     if (DiskReadBufferSize == 0)
     {
@@ -141,6 +142,16 @@ DiskOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
     if (!Context)
         return ENOMEM;
 
+    if (DriveType == CdromController && SectorSize != 2048)
+    {
+        /* Workaround for CORE-20640 */
+        if (!PrintForce)
+        {
+            ERR("BIOS reports BytesPerSector = %d for CD-ROM, forcing 2048\n", SectorSize);
+            PrintForce = TRUE;
+        }
+        SectorSize = 2048;
+    }
     Context->DriveNumber = DriveNumber;
     Context->IsFloppy = (DriveType == FloppyDiskPeripheral);
     Context->SectorSize = SectorSize;

@@ -46,7 +46,7 @@ set_module_type(ntoskrnl kernel)
 
 source_group(TREE ${REACTOS_SOURCE_DIR}/ntoskrnl PREFIX "Source Files" FILES ${NTOSKRNL_SOURCE})
 
-target_link_libraries(ntoskrnl ntoskrnl_vista cportlib csq ${PSEH_LIB} arbiter cmlib ntlsalib rtl ${ROSSYM_LIB} libcntpr setjmp wdmguid poguid ioevent)
+target_link_libraries(ntoskrnl ntoskrnl_vista cportlib csq ${PSEH_LIB} arbiter cmlib ntlsalib rtl rtl_vista ${ROSSYM_LIB} libcntpr setjmp wdmguid poguid ioevent)
 
 if(STACK_PROTECTOR)
     target_link_libraries(ntoskrnl gcc_ssp_nt)
@@ -63,3 +63,9 @@ add_asm_files(ntdllsys_asm ntdll.S)
 add_library(ntdllsys ${ntdllsys_asm})
 set_target_properties(ntdllsys PROPERTIES LINKER_LANGUAGE "C")
 add_dependencies(ntdllsys asm)
+
+# NT6 syscalls for ntdll_vista
+add_asm_files(ntdllsys_nt6_asm ntdll_nt6.S)
+add_library(ntdllsys_nt6 ${ntdllsys_nt6_asm})
+set_target_properties(ntdllsys_nt6 PROPERTIES LINKER_LANGUAGE "C")
+add_dependencies(ntdllsys_nt6 asm)

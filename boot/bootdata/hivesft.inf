@@ -171,6 +171,10 @@ HKLM,"SOFTWARE\Microsoft\DirectPlay\Service Providers\Serial Connection For Dire
 HKLM,"SOFTWARE\Microsoft\DirectPlay\Service Providers\Serial Connection For DirectPlay","Guid",,"{0F1D6860-88D9-11cf-9C4E-00A0C905425E}"
 HKLM,"SOFTWARE\Microsoft\DirectPlay\Service Providers\Serial Connection For DirectPlay","Path",,"dpmodemx.dll"
 
+; NetSH
+HKLM,"SOFTWARE\Microsoft\NetSh",,0x00000012
+HKLM,"SOFTWARE\Microsoft\NetSh","2",0x00000002,"ifmon.dll"
+
 ; RPC
 HKLM,"SOFTWARE\Microsoft\Rpc",,0x00000012
 HKLM,"SOFTWARE\Microsoft\Rpc\NetBios",,0x00000012

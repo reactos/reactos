@@ -71,7 +71,7 @@ Shell_ParsePrinterName(
         return hr;
 
     CComPtr<IShellFolder> pFolder;
-    hr = SHBindToObject(NULL, pidlPrinters, IID_PPV_ARG(IShellFolder, &pFolder));
+    hr = SHBindToObject(NULL, pidlPrinters, NULL, IID_PPV_ARG(IShellFolder, &pFolder));
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 

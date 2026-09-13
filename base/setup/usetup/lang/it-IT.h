@@ -1264,7 +1264,7 @@ static MUI_ENTRY itITFormatPartitionEntries[] =
     {
         0,
         0,
-        "   INVIO = Continua   F3 = Termina",
+        "   INVIO = Continua   ESC = Annulla   F3 = Termina",
         TEXT_TYPE_STATUS,
         TEXT_ID_STATIC
     },

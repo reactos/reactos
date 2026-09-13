@@ -1,24 +1,13 @@
 /*
- * ReactOS Explorer
- *
- * Copyright 2006 - 2007 Thomas Weidenmueller <w3seek@reactos.org>
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ * PROJECT:     ReactOS Explorer
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     Task window implementation
+ * COPYRIGHT:   Copyright 2006-2007 Thomas Weidenmueller <w3seek@reactos.org>
+ *              Copyright 2026 Vitaly Orekhov <vkvo2000@vivaldi.net>
  */
 
 #include "precomp.h"
+#include "mediabtns.h"
 #include <commoncontrols.h>
 #include <regstr.h>
 #include <shlwapi_undoc.h>
@@ -387,6 +376,7 @@ class CTaskSwitchWnd :
     CComPtr<ITrayWindow> m_Tray;
 
     UINT m_ShellHookMsg;
+    UINT m_WinMMDevChgMsg;
 
     WORD m_TaskItemCount;
     WORD m_AllocatedTaskItems;
@@ -410,10 +400,12 @@ class CTaskSwitchWnd :
 
     UINT m_uHardErrorMsg;
     CHardErrorThread m_HardErrorThread;
+    CMultimediaBackend m_Mixer;
 
 public:
     CTaskSwitchWnd() :
         m_ShellHookMsg(NULL),
+        m_WinMMDevChgMsg(NULL),
         m_TaskItemCount(0),
         m_AllocatedTaskItems(0),
         m_TaskGroups(NULL),
@@ -1542,6 +1534,11 @@ public:
 #if DUMP_TASKS != 0
         SetTimer(hwnd, 1, 5000, NULL);
 #endif
+
+        /* WinMM is needed to change system volume via media buttons */
+        m_WinMMDevChgMsg = RegisterWindowMessageW(L"winmm_devicechange");
+        m_Mixer.Initialize();
+
         return TRUE;
     }
 
@@ -1610,12 +1607,12 @@ public:
             return TRUE;
         switch (uAppCmd)
         {
+            // TODO: When MMDevAPI arrives, try IMMDeviceEnumerator::GetDefaultAudioEndpoint first and then fall back to WinMM.
             case APPCOMMAND_VOLUME_MUTE:
+                return m_Mixer.Mute();
             case APPCOMMAND_VOLUME_DOWN:
             case APPCOMMAND_VOLUME_UP:
-                // TODO: Try IMMDeviceEnumerator::GetDefaultAudioEndpoint first and then fall back to mixer.
-                FIXME("Call the mixer API to change the global volume\n");
-                return TRUE;
+                return m_Mixer.AdjustVolume(uAppCmd, hProcessHeap);
             case APPCOMMAND_BROWSER_SEARCH:
                 return SHFindFiles(NULL, NULL);
         }
@@ -1704,6 +1701,13 @@ public:
         }
 
         return Ret;
+    }
+
+    LRESULT OnWinMMDeviceChange(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+    {
+        TRACE("Audio device was added or removed, invalidating mixer\n");
+        m_Mixer.Initialize();
+        return TRUE;
     }
 
     VOID HandleTaskItemClick(IN OUT PTASK_ITEM TaskItem)
@@ -2279,6 +2283,7 @@ public:
         MESSAGE_HANDLER(WM_SETFONT, OnSetFont)
         MESSAGE_HANDLER(WM_SETTINGCHANGE, OnSettingChanged)
         MESSAGE_HANDLER(m_ShellHookMsg, OnShellHook)
+        MESSAGE_HANDLER(m_WinMMDevChgMsg, OnWinMMDeviceChange)
         MESSAGE_HANDLER(WM_MOUSEACTIVATE, OnMouseActivate)
         MESSAGE_HANDLER(WM_KLUDGEMINRECT, OnKludgeItemRect)
         MESSAGE_HANDLER(WM_COPYDATA, OnCopyData)

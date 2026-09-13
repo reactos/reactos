@@ -45,6 +45,97 @@ void CTaskbarList::SendTaskWndShellHook(WPARAM wParam, HWND hWnd)
         ::SendMessageW(hTaskWnd, m_ShellHookMsg, wParam, (LPARAM)hWnd);
 }
 
+/***********************************************************************
+ *   ITaskbarList4 implementation
+ */
+HRESULT WINAPI CTaskbarList::SetTabProperties(HWND hwnd, STPFLAG stpFlags)
+{
+    UNIMPLEMENTED;
+    return E_NOTIMPL;
+}
+
+
+/***********************************************************************
+ *   ITaskbarList3 implementation
+ */
+
+HRESULT WINAPI CTaskbarList::SetProgressValue(HWND hwnd, ULONGLONG ullCompleted, ULONGLONG ullTotal)
+{
+    UNIMPLEMENTED;
+    return E_NOTIMPL;
+}
+
+HRESULT WINAPI CTaskbarList::SetProgressState(HWND hwnd, TBPFLAG tbpFlags)
+{
+    UNIMPLEMENTED;
+    return E_NOTIMPL;
+}
+
+HRESULT WINAPI CTaskbarList::RegisterTab(HWND hwnd, HWND hwndMDI)
+{
+    UNIMPLEMENTED;
+    return E_NOTIMPL;
+}
+
+HRESULT WINAPI CTaskbarList::UnregisterTab(HWND hwndTab)
+{
+    UNIMPLEMENTED;
+    return E_NOTIMPL;
+}
+
+HRESULT WINAPI CTaskbarList::SetTabOrder(HWND hwndTab, HWND hwndInsertBefore)
+{
+    UNIMPLEMENTED;
+    return E_NOTIMPL;
+}
+
+
+HRESULT WINAPI CTaskbarList::SetTabActive(HWND hwndTab, HWND hwndMDI, DWORD dwReserved)
+{
+    UNIMPLEMENTED;
+    return E_NOTIMPL;
+}
+
+HRESULT WINAPI CTaskbarList::ThumbBarAddButtons(HWND hwnd, UINT cButtons, LPTHUMBBUTTON pButton)
+{
+    UNIMPLEMENTED;
+    return E_NOTIMPL;
+}
+
+HRESULT WINAPI CTaskbarList::ThumbBarUpdateButtons(HWND hwnd, UINT cButtons, LPTHUMBBUTTON pButton)
+{
+    UNIMPLEMENTED;
+    return E_NOTIMPL;
+}
+
+HRESULT WINAPI CTaskbarList::ThumbBarSetImageList(HWND hwnd, HIMAGELIST himl)
+{
+    UNIMPLEMENTED;
+    return E_NOTIMPL;
+}
+
+HRESULT WINAPI CTaskbarList::SetOverlayIcon(HWND hwnd, HICON hIcon, LPCWSTR pszDescription)
+{
+    UNIMPLEMENTED;
+    return E_NOTIMPL;
+}
+
+HRESULT WINAPI CTaskbarList::SetThumbnailTooltip(HWND hwnd, LPCWSTR pszTip)
+{
+    UNIMPLEMENTED;
+    return E_NOTIMPL;
+}
+
+HRESULT WINAPI CTaskbarList::SetThumbnailClip(HWND hwnd, RECT* prcClip)
+{
+    UNIMPLEMENTED;
+    return E_NOTIMPL;
+}
+
+/***********************************************************************
+ *   ITaskbarList2 implementation
+ */
+
 
 HRESULT WINAPI CTaskbarList::MarkFullscreenWindow(HWND hwnd, BOOL fFullscreen)
 {

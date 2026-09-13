@@ -36,13 +36,13 @@ typedef struct {
     ULONG p;
 } stream_t;
 
-void strbuf_init(strbuf_t *buf) DECLSPEC_HIDDEN;
-void strbuf_zero(strbuf_t *buf) DECLSPEC_HIDDEN;
-void strbuf_free(strbuf_t *buf) DECLSPEC_HIDDEN;
-void stream_init(stream_t *stream, IStream *str) DECLSPEC_HIDDEN;
-void get_node_name(strbuf_t *node, strbuf_t *name) DECLSPEC_HIDDEN;
-BOOL next_content(stream_t *stream, strbuf_t *buf) DECLSPEC_HIDDEN;
-BOOL next_node(stream_t *stream, strbuf_t *buf) DECLSPEC_HIDDEN;
-const char *get_attr(const char *node, const char *name, int *len) DECLSPEC_HIDDEN;
+void strbuf_init(strbuf_t *buf);
+void strbuf_zero(strbuf_t *buf);
+void strbuf_free(strbuf_t *buf);
+void stream_init(stream_t *stream, IStream *str);
+void get_node_name(strbuf_t *node, strbuf_t *name);
+BOOL next_content(stream_t *stream, strbuf_t *buf);
+BOOL next_node(stream_t *stream, strbuf_t *buf);
+const char *get_attr(const char *node, const char *name, int *len);
 
 #endif

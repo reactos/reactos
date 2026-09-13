@@ -39,22 +39,22 @@ NTAPI
 ProtectHandle(IN HANDLE ObjectHandle)
 {
     NTSTATUS Status;
-    OBJECT_HANDLE_ATTRIBUTE_INFORMATION HandleInfo;
+    OBJECT_HANDLE_FLAG_INFORMATION HandleFlags;
 
     /* Query current state */
     Status = NtQueryObject(ObjectHandle,
                            ObjectHandleFlagInformation,
-                           &HandleInfo,
-                           sizeof(HandleInfo),
+                           &HandleFlags,
+                           sizeof(HandleFlags),
                            NULL);
     if (NT_SUCCESS(Status))
     {
         /* Enable protect from close */
-        HandleInfo.ProtectFromClose = TRUE;
+        HandleFlags.ProtectFromClose = TRUE;
         Status = NtSetInformationObject(ObjectHandle,
                                         ObjectHandleFlagInformation,
-                                        &HandleInfo,
-                                        sizeof(HandleInfo));
+                                        &HandleFlags,
+                                        sizeof(HandleFlags));
         if (NT_SUCCESS(Status)) return TRUE;
     }
 
@@ -78,22 +78,22 @@ NTAPI
 UnProtectHandle(IN HANDLE ObjectHandle)
 {
     NTSTATUS Status;
-    OBJECT_HANDLE_ATTRIBUTE_INFORMATION HandleInfo;
+    OBJECT_HANDLE_FLAG_INFORMATION HandleFlags;
 
     /* Query current state */
     Status = NtQueryObject(ObjectHandle,
                            ObjectHandleFlagInformation,
-                           &HandleInfo,
-                           sizeof(HandleInfo),
+                           &HandleFlags,
+                           sizeof(HandleFlags),
                            NULL);
     if (NT_SUCCESS(Status))
     {
         /* Disable protect from close */
-        HandleInfo.ProtectFromClose = FALSE;
+        HandleFlags.ProtectFromClose = FALSE;
         Status = NtSetInformationObject(ObjectHandle,
                                         ObjectHandleFlagInformation,
-                                        &HandleInfo,
-                                        sizeof(HandleInfo));
+                                        &HandleFlags,
+                                        sizeof(HandleFlags));
         if (NT_SUCCESS(Status)) return TRUE;
     }
 

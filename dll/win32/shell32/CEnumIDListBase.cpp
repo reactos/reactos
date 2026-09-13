@@ -107,7 +107,13 @@ HRESULT CEnumIDListBase::AppendItemsFromEnumerator(IEnumIDList* pEnum)
     pEnum->Reset();
 
     while((S_OK == pEnum->Next(1, &pidl, &dwFetched)) && dwFetched)
-        AddToEnumList(pidl);
+    {
+        if (!AddToEnumList(pidl))
+        {
+            ILFree(pidl);
+            return E_OUTOFMEMORY;
+        }
+    }
 
     return S_OK;
 }
@@ -202,6 +208,41 @@ HRESULT WINAPI CEnumIDListBase::Clone(LPENUMIDLIST *ppenum)
 {
     TRACE("(%p)->() to (%p)->() E_NOTIMPL\n", this, ppenum);
     return E_NOTIMPL;
+}
+
+/**************************************************************************
+*  CreateInstance
+*/
+HRESULT CEnumIDListBase::CreateInstance(IEnumIDList &Source, CREATEINSTANCEFILTERFUNC Filter, void *CallerCookie, IEnumIDList **ppEnum)
+{
+    *ppEnum = NULL;
+    CComPtr<CEnumIDListBase> pEnum;
+    HRESULT hr = ShellObjectCreator(pEnum);
+    if (FAILED(hr))
+        return hr;
+
+    for (;;)
+    {
+        CComHeapPtr<ITEMIDLIST> pidl;
+        hr = Source.Next(1, &pidl, NULL);
+        if (hr == S_OK)
+        {
+            if (Filter)
+                hr = Filter(CallerCookie, pidl);
+            if (FAILED(hr))
+                return hr;
+            if (hr != S_OK)
+                continue;
+            if (!pEnum->AddToEnumList(pidl))
+                return E_OUTOFMEMORY;
+            pidl.Detach(); // AddToEnumList took ownership
+            continue;
+        }
+        if (FAILED(hr))
+            return hr;
+        *ppEnum = pEnum.Detach();
+        return S_OK;
+    }
 }
 
 /**************************************************************************

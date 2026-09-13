@@ -3,12 +3,14 @@ spec2def(shell32_apitest.exe shell32_apitest.spec)
 
 list(APPEND SOURCE
     AddCommas.cpp
+    AssocCreateElement.cpp
     CFSFolder.cpp
     CheckEscapes.cpp
     CIDLData.cpp
     CMyComputer.cpp
     CommandLineToArgvW.cpp
     CShellDesktop.cpp
+    CShellDispatch.cpp
     CShellLink.cpp
     #CUserNotification.cpp # Test is broken on Win 2003
     Control_RunDLLW.cpp
@@ -17,7 +19,9 @@ list(APPEND SOURCE
     FindExecutable.cpp
     GetDisplayNameOf.cpp
     GUIDFromString.cpp
+    LockServer.cpp
     Int64ToString.cpp
+    IQueryAssociations.cpp
     IShellFolderViewCB.cpp
     ItemIDList.cpp
     #OpenAs_RunDLL.cpp # Test hangs on Win 2003
@@ -32,6 +36,7 @@ list(APPEND SOURCE
     SHCreateDataObject.cpp
     SHCreateFileDataObject.cpp
     SHCreateFileExtractIconW.cpp
+    SHEvaluateSystemCommandTemplate.cpp
     SHGetComputerDisplayNameW.cpp
     SHGetUnreadMailCountW.cpp
     SHIsBadInterfacePtr.cpp
@@ -42,7 +47,7 @@ list(APPEND SOURCE
     She.cpp
     #ShellExec_RunDLL.cpp # Broke on Windows
     #ShellExecCmdLine.cpp # Broke on Windows
-    #ShellExecuteEx.cpp # Broke on Windows
+    ShellExecuteEx.cpp
     #ShellExecuteW.cpp # Broke on Windows
     ShellHook.cpp
     ShellInfo.cpp

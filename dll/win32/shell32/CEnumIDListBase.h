@@ -57,6 +57,9 @@ public:
 	STDMETHOD(Reset)() override;
 	STDMETHOD(Clone)(IEnumIDList **ppenum) override;
 
+	typedef HRESULT (CALLBACK* CREATEINSTANCEFILTERFUNC)(void *CallerCookie, LPCITEMIDLIST pidl);
+	static HRESULT CreateInstance(IEnumIDList &Source, CREATEINSTANCEFILTERFUNC Filter, void *CallerCookie, IEnumIDList **ppEnum);
+
 BEGIN_COM_MAP(CEnumIDListBase)
 	COM_INTERFACE_ENTRY_IID(IID_IEnumIDList, IEnumIDList)
 END_COM_MAP()

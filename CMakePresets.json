@@ -1,0 +1,302 @@
+{
+  "version": 3,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 19,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "base-mingw",
+      "hidden": true,
+      "generator": "Ninja",
+      "cacheVariables": {
+        "CMAKE_TOOLCHAIN_FILE": {
+          "type": "FILEPATH",
+          "value": "${sourceDir}/toolchain-gcc.cmake"
+        },
+        "ENABLE_CCACHE": {
+          "type": "BOOL",
+          "value": "OFF"
+        }
+      }
+    },
+    {
+      "name": "base-msvc",
+      "hidden": true,
+      "generator": "Ninja",
+      "cacheVariables": {
+        "CMAKE_TOOLCHAIN_FILE": {
+          "type": "FILEPATH",
+          "value": "${sourceDir}/toolchain-msvc.cmake"
+        }
+      }
+    },
+    {
+      "name": "base-clang-cl",
+      "hidden": true,
+      "inherits": "base-msvc",
+      "cacheVariables": {
+        "USE_CLANG_CL": {
+          "type": "BOOL",
+          "value": "ON"
+        }
+      }
+    },
+    {
+      "name": "base-clang",
+      "hidden": true,
+      "generator": "Ninja",
+      "cacheVariables": {
+        "CMAKE_TOOLCHAIN_FILE": {
+          "type": "FILEPATH",
+          "value": "${sourceDir}/toolchain-clang.cmake"
+        }
+      }
+    },
+    {
+      "name": "base-debug",
+      "hidden": true,
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug"
+      }
+    },
+    {
+      "name": "base-release",
+      "hidden": true,
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release"
+      }
+    },
+    {
+      "name": "arch-i386",
+      "hidden": true,
+      "cacheVariables": {
+        "ARCH": "i386"
+      }
+    },
+    {
+      "name": "arch-amd64",
+      "hidden": true,
+      "cacheVariables": {
+        "ARCH": "amd64"
+      }
+    },
+    {
+      "name": "arch-arm",
+      "hidden": true,
+      "cacheVariables": {
+        "ARCH": "arm"
+      }
+    },
+    {
+      "name": "arch-arm64",
+      "hidden": true,
+      "cacheVariables": {
+        "ARCH": "arm64"
+      }
+    },
+    {
+      "name": "mingw-i386-debug",
+      "displayName": "MinGW Ninja i386 (Debug)",
+      "description": "GCC build using Ninja for i386 (Debug)",
+      "inherits": ["base-mingw", "base-debug", "arch-i386"],
+      "binaryDir": "${sourceDir}/output-MinGW-i386"
+    },
+    {
+      "name": "mingw-amd64-debug",
+      "displayName": "MinGW Ninja amd64 (Debug)",
+      "description": "GCC build using Ninja for amd64 (Debug)",
+      "inherits": ["base-mingw", "base-debug", "arch-amd64"],
+      "binaryDir": "${sourceDir}/output-MinGW-amd64"
+    },
+    {
+      "name": "msvc-i386-debug",
+      "displayName": "MSVC Ninja i386 (Debug)",
+      "description": "MSVC build using Ninja for i386 (Debug)",
+      "inherits": ["base-msvc", "arch-i386"],
+      "binaryDir": "${sourceDir}/output-VS-i386"
+    },
+    {
+      "name": "msvc-amd64-debug",
+      "displayName": "MSVC Ninja amd64 (Debug)",
+      "description": "MSVC build using Ninja for amd64 (Debug)",
+      "inherits": ["base-msvc", "base-debug", "arch-amd64"],
+      "binaryDir": "${sourceDir}/output-VS-amd64"
+    },
+    {
+      "name": "msvc-arm-debug",
+      "displayName": "MSVC Ninja ARM (Debug)",
+      "description": "MSVC build using Ninja for ARM (Debug)",
+      "inherits": ["base-msvc", "base-debug", "arch-arm"],
+      "binaryDir": "${sourceDir}/output-VS-arm"
+    },
+    {
+      "name": "msvc-arm64-debug",
+      "displayName": "MSVC Ninja ARM64 (Debug)",
+      "description": "MSVC build using Ninja for ARM64 (Debug)",
+      "inherits": ["base-msvc", "base-debug", "arch-arm64"],
+      "binaryDir": "${sourceDir}/output-VS-arm64"
+    },
+    {
+      "name": "clang-cl-i386-debug",
+      "displayName": "Clang-cl Ninja i386 (Debug)",
+      "description": "Clang-cl build for i386 using Ninja (Debug)",
+      "inherits": ["base-clang-cl", "base-debug", "arch-i386"],
+      "binaryDir": "${sourceDir}/output-VS-i386"
+    },
+    {
+      "name": "clang-i386-debug",
+      "displayName": "LLVM Clang Ninja i386 (Debug)",
+      "description": "LLVM Clang build for i386 using Ninja (Debug)",
+      "inherits": ["base-clang", "base-debug", "arch-i386"],
+      "binaryDir": "${sourceDir}/output-Clang-i386"
+    },
+    {
+      "name": "clang-amd64-debug",
+      "displayName": "LLVM Clang Ninja amd64 (Debug)",
+      "description": "LLVM Clang build for amd64 using Ninja (Debug)",
+      "inherits": ["base-clang", "base-debug", "arch-amd64"],
+      "binaryDir": "${sourceDir}/output-Clang-amd64"
+    },
+    {
+      "name": "clang-arm-debug",
+      "displayName": "LLVM Clang Ninja arm (Debug)",
+      "description": "LLVM Clang build for ARM using Ninja (Debug)",
+      "inherits": ["base-clang", "base-debug", "arch-arm"],
+      "binaryDir": "${sourceDir}/output-Clang-arm"
+    },
+    {
+      "name": "clang-arm64-debug",
+      "displayName": "LLVM Clang Ninja arm64 (Debug)",
+      "description": "LLVM Clang build for ARM64 using Ninja (Debug)",
+      "inherits": ["base-clang", "base-debug", "arch-arm64"],
+      "binaryDir": "${sourceDir}/output-Clang-arm64"
+    },
+    {
+      "name": "mingw-i386-release",
+      "displayName": "MinGW Ninja i386 (Release)",
+      "description": "GCC build using Ninja for i386 (Release)",
+      "inherits": ["base-mingw", "base-release", "arch-i386"],
+      "binaryDir": "${sourceDir}/output-MinGW-i386"
+    },
+    {
+      "name": "mingw-amd64-release",
+      "displayName": "MinGW Ninja amd64 (Release)",
+      "description": "GCC build using Ninja for amd64 (Release)",
+      "inherits": ["base-mingw", "base-release", "arch-amd64"],
+      "binaryDir": "${sourceDir}/output-MinGW-amd64"
+    },
+    {
+      "name": "msvc-i386-release",
+      "displayName": "MSVC Ninja i386 (Release)",
+      "description": "MSVC build using Ninja for i386 (Release)",
+      "inherits": ["base-msvc", "base-release", "arch-i386"],
+      "binaryDir": "${sourceDir}/output-VS-i386"
+    },
+    {
+      "name": "msvc-amd64-release",
+      "displayName": "MSVC Ninja amd64 (Release)",
+      "description": "MSVC build using Ninja for amd64 (Release)",
+      "inherits": ["base-msvc", "base-release", "arch-amd64"],
+      "binaryDir": "${sourceDir}/output-VS-amd64"
+    },
+    {
+      "name": "msvc-arm-release",
+      "displayName": "MSVC Ninja ARM (Release)",
+      "description": "MSVC build using Ninja for ARM (Release)",
+      "inherits": ["base-msvc", "base-release", "arch-arm"],
+      "binaryDir": "${sourceDir}/output-VS-arm"
+    },
+    {
+      "name": "msvc-arm64-release",
+      "displayName": "MSVC Ninja ARM64 (Release)",
+      "description": "MSVC build using Ninja for ARM64 (Release)",
+      "inherits": ["base-msvc", "base-release", "arch-arm64"],
+      "binaryDir": "${sourceDir}/output-VS-arm64"
+    },
+    {
+      "name": "clang-cl-i386-release",
+      "displayName": "Clang-cl Ninja i386 (Release)",
+      "description": "Clang-cl build for i386 using Ninja (Release)",
+      "inherits": ["base-clang-cl", "base-release", "arch-i386"],
+      "binaryDir": "${sourceDir}/output-VS-i386"
+    },
+    {
+      "name": "clang-i386-release",
+      "displayName": "LLVM Clang Ninja i386 (Release)",
+      "description": "LLVM Clang build for i386 using Ninja (Release)",
+      "inherits": ["base-clang", "base-release", "arch-i386"],
+      "binaryDir": "${sourceDir}/output-Clang-i386"
+    },
+    {
+      "name": "clang-amd64-release",
+      "displayName": "LLVM Clang Ninja amd64 (Release)",
+      "description": "LLVM Clang build for amd64 using Ninja (Release)",
+      "inherits": ["base-clang", "base-release", "arch-amd64"],
+      "binaryDir": "${sourceDir}/output-Clang-amd64"
+    },
+    {
+      "name": "clang-arm-release",
+      "displayName": "LLVM Clang Ninja ARM (Release)",
+      "description": "LLVM Clang build for ARM using Ninja (Release)",
+      "inherits": ["base-clang", "base-release", "arch-arm"],
+      "binaryDir": "${sourceDir}/output-Clang-arm"
+    },
+    {
+      "name": "clang-arm64-release",
+      "displayName": "LLVM Clang Ninja arm64 (Release)",
+      "description": "LLVM Clang build for ARM64 using Ninja (Release)",
+      "inherits": ["base-clang", "base-release", "arch-arm64"],
+      "binaryDir": "${sourceDir}/output-Clang-arm64"
+    },
+    {
+      "name": "vs2022-sln-i386",
+      "displayName": "Visual Studio 2022 Solution i386",
+      "description": "Generates a VS 2022 Solution for i386",
+      "inherits": ["base-msvc", "arch-i386"],
+      "generator": "Visual Studio 17 2022",
+      "architecture": {
+        "value": "Win32",
+        "strategy": "external"
+      },
+      "binaryDir": "${sourceDir}/output-VS-i386-sln"
+    },
+    {
+      "name": "vs2022-sln-amd64",
+      "displayName": "Visual Studio 2022 Solution amd64",
+      "description": "Generates a VS 2022 Solution for amd64",
+      "inherits": ["base-msvc", "arch-amd64"],
+      "generator": "Visual Studio 17 2022",
+      "architecture": {
+        "value": "x64",
+        "strategy": "external"
+      },
+      "binaryDir": "${sourceDir}/output-VS-amd64-sln"
+    },
+    {
+      "name": "vs2022-sln-arm",
+      "displayName": "Visual Studio 2022 Solution ARM",
+      "description": "Generates a VS 2022 Solution for ARM",
+      "inherits": ["base-msvc", "arch-arm"],
+      "generator": "Visual Studio 17 2022",
+      "architecture": {
+        "value": "arm",
+        "strategy": "external"
+      },
+      "binaryDir": "${sourceDir}/output-VS-arm-sln"
+    },
+    {
+      "name": "vs2022-sln-arm64",
+      "displayName": "Visual Studio 2022 Solution ARM64",
+      "description": "Generates a VS 2022 Solution for ARM64",
+      "inherits": ["base-msvc", "arch-arm64"],
+      "generator": "Visual Studio 17 2022",
+      "architecture": {
+        "value": "arm64",
+        "strategy": "external"
+      },
+      "binaryDir": "${sourceDir}/output-VS-arm64-sln"
+    }
+  ]
+}

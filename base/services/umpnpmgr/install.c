@@ -476,12 +476,13 @@ IsConsoleBoot(VOID)
     BOOL ConsoleBoot = FALSE;
     LONG rc;
 
-    rc = RegOpenKeyExW(
-        HKEY_LOCAL_MACHINE,
-        L"SYSTEM\\CurrentControlSet\\Control",
-        0,
-        KEY_QUERY_VALUE,
-        &ControlKey);
+    rc = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                       L"SYSTEM\\CurrentControlSet\\Control",
+                       0,
+                       KEY_QUERY_VALUE,
+                       &ControlKey);
+    if (rc != ERROR_SUCCESS)
+        goto cleanup;
 
     rc = ReadRegSzKey(ControlKey, L"SystemStartOptions", &SystemStartOptions);
     if (rc != ERROR_SUCCESS)

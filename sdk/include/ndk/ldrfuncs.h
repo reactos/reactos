@@ -97,6 +97,19 @@ LdrGetProcedureAddress(
     _Out_ PVOID *ProcedureAddress
 );
 
+// See https://ntdoc.m417z.com/ldr_get_procedure_address_dont_record_forwarder
+#define LDR_GET_PROCEDURE_ADDRESS_DONT_RECORD_FORWARDER 0x00000001
+
+// See https://ntdoc.m417z.com/ldrgetprocedureaddressex
+NTSTATUS
+NTAPI
+LdrGetProcedureAddressEx(
+    _In_ PVOID BaseAddress,
+    _In_opt_ _When_(Ordinal == 0, _Notnull_) PANSI_STRING Name,
+    _In_opt_ _When_(Name == NULL, _In_range_(>, 0)) ULONG Ordinal,
+    _Out_ PVOID *ProcedureAddress,
+    _In_ ULONG Flags);
+
 ULONG
 NTAPI
 LdrRelocateImage(

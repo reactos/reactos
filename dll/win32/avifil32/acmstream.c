@@ -86,7 +86,7 @@ static HRESULT AVIFILE_OpenCompressor(IAVIStreamImpl *This)
     hr = AVIStreamFormatSize(This->pStream, This->sInfo.dwStart, &This->cbInFormat);
     if (FAILED(hr))
       return hr;
-    This->lpInFormat = HeapAlloc(GetProcessHeap(), 0, This->cbInFormat);
+    This->lpInFormat = malloc(This->cbInFormat);
     if (This->lpInFormat == NULL)
       return AVIERR_MEMORY;
 
@@ -97,8 +97,8 @@ static HRESULT AVIFILE_OpenCompressor(IAVIStreamImpl *This)
 
     if (This->lpOutFormat == NULL) {
       /* we must decode to default format */
-      This->cbOutFormat = sizeof(PCMWAVEFORMAT);
-      This->lpOutFormat = HeapAlloc(GetProcessHeap(), 0, This->cbOutFormat);
+      This->cbOutFormat = sizeof(WAVEFORMATEX);
+      This->lpOutFormat = malloc(This->cbOutFormat);
       if (This->lpOutFormat == NULL)
         return AVIERR_MEMORY;
 
@@ -157,7 +157,7 @@ static ULONG WINAPI ACMStream_fnAddRef(IAVIStream *iface)
   IAVIStreamImpl *This = impl_from_IAVIStream(iface);
   ULONG ref = InterlockedIncrement(&This->ref);
 
-  TRACE("(%p) -> %d\n", iface, ref);
+  TRACE("(%p) -> %ld\n", iface, ref);
 
   /* also add reference to the nested stream */
   if (This->pStream != NULL)
@@ -171,7 +171,7 @@ static ULONG WINAPI ACMStream_fnRelease(IAVIStream* iface)
   IAVIStreamImpl *This = impl_from_IAVIStream(iface);
   ULONG ref = InterlockedDecrement(&This->ref);
 
-  TRACE("(%p) -> %d\n", iface, ref);
+  TRACE("(%p) -> %ld\n", iface, ref);
 
   if (ref == 0) {
     /* destruct */
@@ -181,17 +181,17 @@ static ULONG WINAPI ACMStream_fnRelease(IAVIStream* iface)
       acmStreamClose(This->has, 0);
       This->has = NULL;
     }
-    HeapFree(GetProcessHeap(), 0, This->acmStreamHdr.pbSrc);
+    free(This->acmStreamHdr.pbSrc);
     This->acmStreamHdr.pbSrc = NULL;
-    HeapFree(GetProcessHeap(), 0, This->acmStreamHdr.pbDst);
+    free(This->acmStreamHdr.pbDst);
     This->acmStreamHdr.pbDst = NULL;
     if (This->lpInFormat != NULL) {
-      HeapFree(GetProcessHeap(), 0, This->lpInFormat);
+      free(This->lpInFormat);
       This->lpInFormat = NULL;
       This->cbInFormat = 0;
     }
     if (This->lpOutFormat != NULL) {
-      HeapFree(GetProcessHeap(), 0, This->lpOutFormat);
+      free(This->lpOutFormat);
       This->lpOutFormat = NULL;
       This->cbOutFormat = 0;
     }
@@ -199,7 +199,7 @@ static ULONG WINAPI ACMStream_fnRelease(IAVIStream* iface)
       IAVIStream_Release(This->pStream);
       This->pStream = NULL;
     }
-    HeapFree(GetProcessHeap(), 0, This);
+    free(This);
 
     return 0;
   }
@@ -219,7 +219,7 @@ static HRESULT WINAPI ACMStream_fnCreate(IAVIStream *iface, LPARAM lParam1,
 {
   IAVIStreamImpl *This = impl_from_IAVIStream(iface);
 
-  TRACE("(%p,0x%08lX,0x%08lX)\n", iface, lParam1, lParam2);
+  TRACE("(%p,0x%08IX,0x%08IX)\n", iface, lParam1, lParam2);
 
   /* check for swapped parameters */
   if ((LPVOID)lParam1 != NULL &&
@@ -249,9 +249,9 @@ static HRESULT WINAPI ACMStream_fnCreate(IAVIStream *iface, LPARAM lParam1,
     if (((LPWAVEFORMATEX)lParam2)->wFormatTag != WAVE_FORMAT_PCM)
       This->cbOutFormat = sizeof(WAVEFORMATEX) + ((LPWAVEFORMATEX)lParam2)->cbSize;
     else
-      This->cbOutFormat = sizeof(PCMWAVEFORMAT);
+      This->cbOutFormat = sizeof(WAVEFORMATEX);
 
-    This->lpOutFormat = HeapAlloc(GetProcessHeap(), 0, This->cbOutFormat);
+    This->lpOutFormat = malloc(This->cbOutFormat);
     if (This->lpOutFormat == NULL)
       return AVIERR_MEMORY;
 
@@ -272,7 +272,7 @@ static HRESULT WINAPI ACMStream_fnInfo(IAVIStream *iface,LPAVISTREAMINFOW psi,
 {
   IAVIStreamImpl *This = impl_from_IAVIStream(iface);
 
-  TRACE("(%p,%p,%d)\n", iface, psi, size);
+  TRACE("(%p,%p,%ld)\n", iface, psi, size);
 
   if (psi == NULL)
     return AVIERR_BADPARAM;
@@ -299,7 +299,7 @@ static LONG WINAPI ACMStream_fnFindSample(IAVIStream *iface, LONG pos,
 {
   IAVIStreamImpl *This = impl_from_IAVIStream(iface);
 
-  TRACE("(%p,%d,0x%08X)\n",iface,pos,flags);
+  TRACE("(%p,%ld,0x%08lX)\n",iface,pos,flags);
 
   if (flags & FIND_FROM_START) {
     pos = This->sInfo.dwStart;
@@ -327,7 +327,7 @@ static HRESULT WINAPI ACMStream_fnReadFormat(IAVIStream *iface, LONG pos,
 {
   IAVIStreamImpl *This = impl_from_IAVIStream(iface);
 
-  TRACE("(%p,%d,%p,%p)\n", iface, pos, format, formatsize);
+  TRACE("(%p,%ld,%p,%p)\n", iface, pos, format, formatsize);
 
   if (formatsize == NULL)
     return AVIERR_BADPARAM;
@@ -364,7 +364,7 @@ static HRESULT WINAPI ACMStream_fnSetFormat(IAVIStream *iface, LONG pos,
 
   HRESULT hr;
 
-  TRACE("(%p,%d,%p,%d)\n", iface, pos, format, formatsize);
+  TRACE("(%p,%ld,%p,%ld)\n", iface, pos, format, formatsize);
 
   /* check parameters */
   if (format == NULL || formatsize <= 0)
@@ -384,7 +384,7 @@ static HRESULT WINAPI ACMStream_fnSetFormat(IAVIStream *iface, LONG pos,
   if ((This->sInfo.dwCaps & AVIFILECAPS_CANWRITE) == 0)
     return AVIERR_READONLY;
 
-  This->lpInFormat = HeapAlloc(GetProcessHeap(), 0, formatsize);
+  This->lpInFormat = malloc(formatsize);
   if (This->lpInFormat == NULL)
     return AVIERR_MEMORY;
   This->cbInFormat = formatsize;
@@ -412,7 +412,7 @@ static HRESULT WINAPI ACMStream_fnRead(IAVIStream *iface, LONG start,
   HRESULT hr;
   DWORD   size;
 
-  TRACE("(%p,%d,%d,%p,%d,%p,%p)\n", iface, start, samples, buffer,
+  TRACE("(%p,%ld,%ld,%p,%ld,%p,%p)\n", iface, start, samples, buffer,
  	buffersize, bytesread, samplesread);
 
   /* clear return parameters if given */
@@ -464,7 +464,7 @@ static HRESULT WINAPI ACMStream_fnRead(IAVIStream *iface, LONG start,
 
   /* Need to free destination buffer used for writing? */
   if (This->acmStreamHdr.pbDst != NULL) {
-    HeapFree(GetProcessHeap(), 0, This->acmStreamHdr.pbDst);
+    free(This->acmStreamHdr.pbDst);
     This->acmStreamHdr.pbDst     = NULL;
     This->acmStreamHdr.dwDstUser = 0;
   }
@@ -472,10 +472,7 @@ static HRESULT WINAPI ACMStream_fnRead(IAVIStream *iface, LONG start,
   /* need bigger source buffer? */
   if (This->acmStreamHdr.pbSrc == NULL ||
       This->acmStreamHdr.dwSrcUser < size) {
-    if (This->acmStreamHdr.pbSrc == NULL)
-      This->acmStreamHdr.pbSrc = HeapAlloc(GetProcessHeap(), 0, size);
-    else
-      This->acmStreamHdr.pbSrc = HeapReAlloc(GetProcessHeap(), 0, This->acmStreamHdr.pbSrc, size);
+    This->acmStreamHdr.pbSrc = realloc(This->acmStreamHdr.pbSrc, size);
     if (This->acmStreamHdr.pbSrc == NULL)
       return AVIERR_MEMORY;
     This->acmStreamHdr.dwSrcUser = size;
@@ -533,7 +530,7 @@ static HRESULT WINAPI ACMStream_fnWrite(IAVIStream *iface, LONG start,
   HRESULT hr;
   ULONG   size;
 
-  TRACE("(%p,%d,%d,%p,%d,0x%08X,%p,%p)\n", iface, start, samples,
+  TRACE("(%p,%ld,%ld,%p,%ld,0x%08lX,%p,%p)\n", iface, start, samples,
 	buffer, buffersize, flags, sampwritten, byteswritten);
 
   /* clear return parameters if given */
@@ -567,7 +564,7 @@ static HRESULT WINAPI ACMStream_fnWrite(IAVIStream *iface, LONG start,
 
   /* Need to free source buffer used for reading? */
   if (This->acmStreamHdr.pbSrc != NULL) {
-    HeapFree(GetProcessHeap(), 0, This->acmStreamHdr.pbSrc);
+    free(This->acmStreamHdr.pbSrc);
     This->acmStreamHdr.pbSrc     = NULL;
     This->acmStreamHdr.dwSrcUser = 0;
   }
@@ -575,10 +572,7 @@ static HRESULT WINAPI ACMStream_fnWrite(IAVIStream *iface, LONG start,
   /* Need bigger destination buffer? */
   if (This->acmStreamHdr.pbDst == NULL ||
       This->acmStreamHdr.dwDstUser < size) {
-    if (This->acmStreamHdr.pbDst == NULL)
-      This->acmStreamHdr.pbDst = HeapAlloc(GetProcessHeap(), 0, size);
-    else
-      This->acmStreamHdr.pbDst = HeapReAlloc(GetProcessHeap(), 0, This->acmStreamHdr.pbDst, size);
+    This->acmStreamHdr.pbDst = realloc(This->acmStreamHdr.pbDst, size);
     if (This->acmStreamHdr.pbDst == NULL)
       return AVIERR_MEMORY;
     This->acmStreamHdr.dwDstUser = size;
@@ -623,7 +617,7 @@ static HRESULT WINAPI ACMStream_fnDelete(IAVIStream *iface, LONG start,
 {
   IAVIStreamImpl *This = impl_from_IAVIStream(iface);
 
-  TRACE("(%p,%d,%d)\n", iface, start, samples);
+  TRACE("(%p,%ld,%ld)\n", iface, start, samples);
 
   /* check parameters */
   if (start < 0 || samples < 0)
@@ -657,7 +651,7 @@ static HRESULT WINAPI ACMStream_fnReadData(IAVIStream *iface, DWORD fcc,
 {
   IAVIStreamImpl *This = impl_from_IAVIStream(iface);
 
-  TRACE("(%p,0x%08X,%p,%p)\n", iface, fcc, lp, lpread);
+  TRACE("(%p,0x%08lX,%p,%p)\n", iface, fcc, lp, lpread);
 
   assert(This->pStream != NULL);
 
@@ -669,7 +663,7 @@ static HRESULT WINAPI ACMStream_fnWriteData(IAVIStream *iface, DWORD fcc,
 {
   IAVIStreamImpl *This = impl_from_IAVIStream(iface);
 
-  TRACE("(%p,0x%08x,%p,%d)\n", iface, fcc, lp, size);
+  TRACE("(%p,0x%08lx,%p,%ld)\n", iface, fcc, lp, size);
 
   assert(This->pStream != NULL);
 
@@ -679,7 +673,7 @@ static HRESULT WINAPI ACMStream_fnWriteData(IAVIStream *iface, DWORD fcc,
 static HRESULT WINAPI ACMStream_fnSetInfo(IAVIStream *iface,
 					   LPAVISTREAMINFOW info, LONG infolen)
 {
-  FIXME("(%p,%p,%d): stub\n", iface, info, infolen);
+  FIXME("(%p,%p,%ld): stub\n", iface, info, infolen);
 
   return E_FAIL;
 }
@@ -710,7 +704,7 @@ HRESULT AVIFILE_CreateACMStream(REFIID riid, LPVOID *ppv)
 
   *ppv = NULL;
 
-  pstream = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(IAVIStreamImpl));
+  pstream = calloc(1, sizeof(IAVIStreamImpl));
   if (pstream == NULL)
     return AVIERR_MEMORY;
 
@@ -718,7 +712,7 @@ HRESULT AVIFILE_CreateACMStream(REFIID riid, LPVOID *ppv)
 
   hr = IAVIStream_QueryInterface(&pstream->IAVIStream_iface, riid, ppv);
   if (FAILED(hr))
-    HeapFree(GetProcessHeap(), 0, pstream);
+    free(pstream);
 
   return hr;
 }

@@ -156,8 +156,10 @@
     } SECURITY_DESCRIPTOR_RELATIVE, *PISECURITY_DESCRIPTOR_RELATIVE;
 
     #define CMLTRACE(x, ...)
+
     #undef PAGED_CODE
     #define PAGED_CODE()
+
     #define REGISTRY_ERROR                   ((ULONG)0x00000051L)
 
 #else
@@ -179,6 +181,11 @@
     #include <ntdef.h>
     #include <ntifs.h>
     #include <bugcodes.h>
+
+    #ifdef _BLDR_
+    #undef PAGED_CODE
+    #define PAGED_CODE()
+    #endif
 
     /* Prevent inclusion of Windows headers through <wine/unicode.h> */
     #define _WINDEF_

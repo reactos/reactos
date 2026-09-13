@@ -22,6 +22,7 @@ list(APPEND SOURCE
     ndis/config.c
     ndis/control.c
     ndis/efilter.c
+    ndis/guid.c
     ndis/hardware.c
     ndis/io.c
     ndis/main.c

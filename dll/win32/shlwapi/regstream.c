@@ -88,7 +88,7 @@ static ULONG WINAPI IStream_fnAddRef(IStream *iface)
 	ISHRegStream *This = impl_from_IStream(iface);
 	ULONG refCount = InterlockedIncrement(&This->ref);
 	
-	TRACE("(%p)->(ref before=%u)\n",This, refCount - 1);
+	TRACE("(%p)->(ref before=%lu)\n",This, refCount - 1);
 
 	return refCount;
 }
@@ -101,7 +101,7 @@ static ULONG WINAPI IStream_fnRelease(IStream *iface)
 	ISHRegStream *This = impl_from_IStream(iface);
 	ULONG refCount = InterlockedDecrement(&This->ref);
 
-	TRACE("(%p)->(ref before=%u)\n",This, refCount + 1);
+	TRACE("(%p)->(ref before=%lu)\n",This, refCount + 1);
 
 	if (!refCount)
 	{
@@ -150,7 +150,7 @@ static HRESULT WINAPI IStream_fnRead (IStream * iface, void* pv, ULONG cb, ULONG
 	ISHRegStream *This = impl_from_IStream(iface);
 	DWORD dwBytesToRead;
 
-	TRACE("(%p)->(%p,0x%08x,%p)\n",This, pv, cb, pcbRead);
+	TRACE("(%p)->(%p,0x%08lx,%p)\n",This, pv, cb, pcbRead);
 
 	if (This->dwPos >= This->dwLength)
 	  dwBytesToRead = 0;
@@ -178,14 +178,14 @@ static HRESULT WINAPI IStream_fnWrite (IStream * iface, const void* pv, ULONG cb
 	ISHRegStream *This = impl_from_IStream(iface);
 	DWORD newLen = This->dwPos + cb;
 
-	TRACE("(%p, %p, %d, %p)\n",This, pv, cb, pcbWritten);
+	TRACE("(%p, %p, %ld, %p)\n",This, pv, cb, pcbWritten);
 
 	if (newLen < This->dwPos) /* overflow */
 	  return STG_E_INSUFFICIENTMEMORY;
 
 	if (newLen > This->dwLength)
 	{
-	  LPBYTE newBuf = HeapReAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, This->pbBuffer, newLen);
+	  BYTE *newBuf = _recalloc(This->pbBuffer, 1, newLen);
 	  if (!newBuf)
 	    return STG_E_INSUFFICIENTMEMORY;
 
@@ -208,7 +208,7 @@ static HRESULT WINAPI IStream_fnSeek (IStream * iface, LARGE_INTEGER dlibMove, D
 {
 	ISHRegStream *This = impl_from_IStream(iface);
 	LARGE_INTEGER tmp;
-	TRACE("(%p, %s, %d %p)\n", This,
+	TRACE("(%p, %s, %ld %p)\n", This,
               wine_dbgstr_longlong(dlibMove.QuadPart), dwOrigin, plibNewPosition);
 
 	if (dwOrigin == STREAM_SEEK_SET)
@@ -244,7 +244,7 @@ static HRESULT WINAPI IStream_fnSetSize (IStream * iface, ULARGE_INTEGER libNewS
 
 	/* we cut off the high part here */
 	newLen = libNewSize.u.LowPart;
-	newBuf = HeapReAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, This->pbBuffer, newLen);
+	newBuf = _recalloc(This->pbBuffer, 1, newLen);
 	if (!newBuf)
 	  return STG_E_INSUFFICIENTMEMORY;
 
@@ -317,7 +317,7 @@ static HRESULT WINAPI IStream_fnStat (IStream * iface, STATSTG* pstatstg, DWORD 
 {
 	ISHRegStream *This = impl_from_IStream(iface);
 
-	TRACE("(%p, %p, %d)\n",This,pstatstg,grfStatFlag);
+	TRACE("(%p, %p, %ld)\n",This,pstatstg,grfStatFlag);
 
 	pstatstg->pwcsName = NULL;
 	pstatstg->type = STGTY_STREAM;
@@ -369,70 +369,6 @@ static const IStreamVtbl rstvt =
 	IStream_fnClone
 };
 
-/* Methods overridden by the dummy stream */
-
-/**************************************************************************
- *  IStream_fnAddRefDummy
- */
-static ULONG WINAPI IStream_fnAddRefDummy(IStream *iface)
-{
-	ISHRegStream *This = impl_from_IStream(iface);
-	TRACE("(%p)\n", This);
-	return 2;
-}
-
-/**************************************************************************
- *  IStream_fnReleaseDummy
- */
-static ULONG WINAPI IStream_fnReleaseDummy(IStream *iface)
-{
-	ISHRegStream *This = impl_from_IStream(iface);
-	TRACE("(%p)\n", This);
-	return 1;
-}
-
-/**************************************************************************
- * IStream_fnReadDummy
- */
-static HRESULT WINAPI IStream_fnReadDummy(IStream *iface, LPVOID pv, ULONG cb, ULONG* pcbRead)
-{
-  if (pcbRead)
-    *pcbRead = 0;
-  return E_NOTIMPL;
-}
-
-static const IStreamVtbl DummyRegStreamVTable =
-{
-  IStream_fnQueryInterface,
-  IStream_fnAddRefDummy,  /* Overridden */
-  IStream_fnReleaseDummy, /* Overridden */
-  IStream_fnReadDummy,    /* Overridden */
-  IStream_fnWrite,
-  IStream_fnSeek,
-  IStream_fnSetSize,
-  IStream_fnCopyTo,
-  IStream_fnCommit,
-  IStream_fnRevert,
-  IStream_fnLockUnlockRegion,
-  IStream_fnLockUnlockRegion,
-  IStream_fnStat,
-  IStream_fnClone
-};
-
-/* Dummy registry stream object */
-static ISHRegStream rsDummyRegStream =
-{
- { &DummyRegStreamVTable },
- 1,
- NULL,
- NULL,
- 0,
- 0,
- STGM_READWRITE,
- {NULL},
- FALSE
-};
-
 /**************************************************************************
  * IStream_Create
  *
@@ -442,7 +378,7 @@ static ISHRegStream *IStream_Create(HKEY hKey, LPBYTE pbBuffer, DWORD dwLength)
 {
  ISHRegStream* regStream;
 
- regStream = HeapAlloc(GetProcessHeap(), 0, sizeof(ISHRegStream));
+ regStream = malloc(sizeof(ISHRegStream));
 
  if (regStream)
  {
@@ -458,222 +394,6 @@ static ISHRegStream *IStream_Create(HKEY hKey, LPBYTE pbBuffer, DWORD dwLength)
  }
  TRACE ("Returning %p\n", regStream);
  return regStream;
-}
-
-/*************************************************************************
- * SHOpenRegStream2A	[SHLWAPI.@]
- *
- * Create a stream to read binary registry data.
- *
- * PARAMS
- * hKey      [I] Registry handle
- * pszSubkey [I] The sub key name
- * pszValue  [I] The value name under the sub key
- * dwMode    [I] Unused
- *
- * RETURNS
- * Success: An IStream interface referring to the registry data
- * Failure: NULL, if the registry key could not be opened or is not binary.
- */
-IStream * WINAPI SHOpenRegStream2A(HKEY hKey, LPCSTR pszSubkey,
-                                   LPCSTR pszValue,DWORD dwMode)
-{
-  ISHRegStream *tmp;
-  HKEY hStrKey = NULL;
-  LPBYTE lpBuff = NULL;
-  DWORD dwLength = 0;
-  LONG ret;
-
-  TRACE("(%p,%s,%s,0x%08x)\n", hKey, pszSubkey, pszValue, dwMode);
-
-  if (dwMode == STGM_READ)
-    ret = RegOpenKeyExA(hKey, pszSubkey, 0, KEY_READ, &hStrKey);
-  else /* in write mode we make sure the subkey exits */
-    ret = RegCreateKeyExA(hKey, pszSubkey, 0, NULL, 0, KEY_READ | KEY_WRITE, NULL, &hStrKey, NULL);
-
-  if (ret == ERROR_SUCCESS)
-  {
-    if (dwMode == STGM_READ || dwMode == STGM_READWRITE)
-    {
-      /* read initial data */
-      ret = RegQueryValueExA(hStrKey, pszValue, 0, 0, 0, &dwLength);
-      if (ret == ERROR_SUCCESS && dwLength)
-      {
-        lpBuff = HeapAlloc(GetProcessHeap(), 0, dwLength);
-        RegQueryValueExA(hStrKey, pszValue, 0, 0, lpBuff, &dwLength);
-      }
-    }
-
-    if (!dwLength)
-      lpBuff = HeapAlloc(GetProcessHeap(), 0, dwLength);
-
-    tmp = IStream_Create(hStrKey, lpBuff, dwLength);
-    if(tmp)
-    {
-      if(pszValue)
-      {
-        int len = lstrlenA(pszValue) + 1;
-        tmp->u.keyNameA = HeapAlloc(GetProcessHeap(), 0, len);
-        memcpy(tmp->u.keyNameA, pszValue, len);
-      }
-
-      tmp->dwMode = dwMode;
-      tmp->bUnicode = FALSE;
-      return &tmp->IStream_iface;
-    }
-  }
-
-  HeapFree(GetProcessHeap(), 0, lpBuff);
-  if (hStrKey)
-    RegCloseKey(hStrKey);
-  return NULL;
-}
-
-/*************************************************************************
- * SHOpenRegStream2W	[SHLWAPI.@]
- *
- * See SHOpenRegStream2A.
- */
-IStream * WINAPI SHOpenRegStream2W(HKEY hKey, LPCWSTR pszSubkey,
-                                   LPCWSTR pszValue, DWORD dwMode)
-{
-  ISHRegStream *tmp;
-  HKEY hStrKey = NULL;
-  LPBYTE lpBuff = NULL;
-  DWORD dwLength = 0;
-  LONG ret;
-
-  TRACE("(%p,%s,%s,0x%08x)\n", hKey, debugstr_w(pszSubkey),
-        debugstr_w(pszValue), dwMode);
-
-  if (dwMode == STGM_READ)
-    ret = RegOpenKeyExW(hKey, pszSubkey, 0, KEY_READ, &hStrKey);
-  else /* in write mode we make sure the subkey exits */
-    ret = RegCreateKeyExW(hKey, pszSubkey, 0, NULL, 0, KEY_READ | KEY_WRITE, NULL, &hStrKey, NULL);
-
-  if (ret == ERROR_SUCCESS)
-  {
-    if (dwMode == STGM_READ || dwMode == STGM_READWRITE)
-    {
-      /* read initial data */
-      ret = RegQueryValueExW(hStrKey, pszValue, 0, 0, 0, &dwLength);
-      if (ret == ERROR_SUCCESS && dwLength)
-      {
-        lpBuff = HeapAlloc(GetProcessHeap(), 0, dwLength);
-        RegQueryValueExW(hStrKey, pszValue, 0, 0, lpBuff, &dwLength);
-      }
-    }
-
-    if (!dwLength)
-      lpBuff = HeapAlloc(GetProcessHeap(), 0, dwLength);
-
-    tmp = IStream_Create(hStrKey, lpBuff, dwLength);
-    if(tmp)
-    {
-      if(pszValue)
-      {
-        int len = lstrlenW(pszValue) + 1;
-        tmp->u.keyNameW = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
-        memcpy(tmp->u.keyNameW, pszValue, len * sizeof(WCHAR));
-      }
-
-      tmp->dwMode = dwMode;
-      tmp->bUnicode = TRUE;
-      return &tmp->IStream_iface;
-    }
-  }
-
-  HeapFree(GetProcessHeap(), 0, lpBuff);
-  if (hStrKey)
-    RegCloseKey(hStrKey);
-  return NULL;
-}
-
-/*************************************************************************
- * SHOpenRegStreamA     [SHLWAPI.@]
- *
- * Create a stream to read binary registry data.
- *
- * PARAMS
- * hKey      [I] Registry handle
- * pszSubkey [I] The sub key name
- * pszValue  [I] The value name under the sub key
- * dwMode    [I] STGM mode for opening the file
- *
- * RETURNS
- * Success: An IStream interface referring to the registry data
- * Failure: If the registry key could not be opened or is not binary,
- *          A dummy (empty) IStream object is returned.
- */
-IStream * WINAPI SHOpenRegStreamA(HKEY hkey, LPCSTR pszSubkey,
-                                  LPCSTR pszValue, DWORD dwMode)
-{
-  IStream *iStream;
-
-  TRACE("(%p,%s,%s,0x%08x)\n", hkey, pszSubkey, pszValue, dwMode);
-
-  iStream = SHOpenRegStream2A(hkey, pszSubkey, pszValue, dwMode);
-  return iStream ? iStream : &rsDummyRegStream.IStream_iface;
-}
-
-/*************************************************************************
- * SHOpenRegStreamW	[SHLWAPI.@]
- *
- * See SHOpenRegStreamA.
- */
-IStream * WINAPI SHOpenRegStreamW(HKEY hkey, LPCWSTR pszSubkey,
-                                  LPCWSTR pszValue, DWORD dwMode)
-{
-  IStream *iStream;
-
-  TRACE("(%p,%s,%s,0x%08x)\n", hkey, debugstr_w(pszSubkey),
-        debugstr_w(pszValue), dwMode);
-  iStream = SHOpenRegStream2W(hkey, pszSubkey, pszValue, dwMode);
-  return iStream ? iStream : &rsDummyRegStream.IStream_iface;
-}
-
-/*************************************************************************
- * @   [SHLWAPI.12]
- *
- * Create an IStream object on a block of memory.
- *
- * PARAMS
- * lpbData   [I] Memory block to create the IStream object on
- * dwDataLen [I] Length of data block
- *
- * RETURNS
- * Success: A pointer to the IStream object.
- * Failure: NULL, if any parameters are invalid or an error occurs.
- *
- * NOTES
- *  A copy of the memory pointed to by lpbData is made, and is freed
- *  when the stream is released.
- */
-IStream * WINAPI SHCreateMemStream(const BYTE *lpbData, UINT dwDataLen)
-{
-  ISHRegStream *strm = NULL;
-  LPBYTE lpbDup;
-
-  TRACE("(%p,%d)\n", lpbData, dwDataLen);
-
-  if (!lpbData)
-    dwDataLen = 0;
-
-  lpbDup = HeapAlloc(GetProcessHeap(), 0, dwDataLen);
-
-  if (lpbDup)
-  {
-    memcpy(lpbDup, lpbData, dwDataLen);
-    strm = IStream_Create(NULL, lpbDup, dwDataLen);
-
-    if (!strm)
-      HeapFree(GetProcessHeap(), 0, lpbDup);
-  }
-#ifdef __REACTOS__
-  if (!strm)
-    return NULL;
-#endif
-  return &strm->IStream_iface;
 }
 
 /*************************************************************************

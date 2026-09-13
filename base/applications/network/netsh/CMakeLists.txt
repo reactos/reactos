@@ -8,6 +8,7 @@ list(APPEND SOURCE
     helper.c
     interpreter.c
     netsh.c
+    wmi.c
     precomp.h
     ${CMAKE_CURRENT_BINARY_DIR}/netsh_stubs.c)
 
@@ -21,5 +22,5 @@ set_target_properties(netsh
 
 set_module_type(netsh win32cui UNICODE)
 target_link_libraries(netsh conutils)
-add_importlibs(netsh iphlpapi advapi32 msvcrt kernel32 ntdll)
+add_importlibs(netsh ole32 oleaut32 iphlpapi advapi32 msvcrt kernel32 ntdll)
 add_cd_file(TARGET netsh DESTINATION reactos/system32 FOR all)

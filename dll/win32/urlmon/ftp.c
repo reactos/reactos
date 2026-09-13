@@ -80,7 +80,7 @@ static HRESULT FtpProtocol_open_request(Protocol *prot, IUri *uri, DWORD request
                 request_flags|INTERNET_FLAG_EXISTING_CONNECT|INTERNET_FLAG_PASSIVE,
                 (DWORD_PTR)&This->base);
         if (!This->base.request && GetLastError() != ERROR_IO_PENDING) {
-            WARN("InternetOpenUrl failed: %d\n", GetLastError());
+            WARN("InternetOpenUrl failed: %ld\n", GetLastError());
             hres = INET_E_RESOURCE_NOT_FOUND;
         }
     }
@@ -103,7 +103,7 @@ static HRESULT FtpProtocol_start_downloading(Protocol *prot)
     if(res)
         This->base.content_length = size;
     else
-        WARN("FtpGetFileSize failed: %d\n", GetLastError());
+        WARN("FtpGetFileSize failed: %ld\n", GetLastError());
 
     return S_OK;
 }
@@ -114,7 +114,7 @@ static void FtpProtocol_close_connection(Protocol *prot)
 
 static void FtpProtocol_on_error(Protocol *prot, DWORD error)
 {
-    FIXME("(%p) %d - stub\n", prot, error);
+    FIXME("(%p) %ld - stub\n", prot, error);
 }
 
 static const ProtocolVtbl AsyncProtocolVtbl = {
@@ -164,7 +164,7 @@ static ULONG WINAPI FtpProtocolUnk_AddRef(IUnknown *iface)
 {
     FtpProtocol *This = impl_from_IUnknown(iface);
     LONG ref = InterlockedIncrement(&This->ref);
-    TRACE("(%p) ref=%d\n", This, ref);
+    TRACE("(%p) ref=%ld\n", This, ref);
     return ref;
 }
 
@@ -173,11 +173,11 @@ static ULONG WINAPI FtpProtocolUnk_Release(IUnknown *iface)
     FtpProtocol *This = impl_from_IUnknown(iface);
     LONG ref = InterlockedDecrement(&This->ref);
 
-    TRACE("(%p) ref=%d\n", This, ref);
+    TRACE("(%p) ref=%ld\n", This, ref);
 
     if(!ref) {
         protocol_close_connection(&This->base);
-        heap_free(This);
+        free(This);
 
         URLMON_UnlockModule();
     }
@@ -220,7 +220,7 @@ static HRESULT WINAPI FtpProtocol_Start(IInternetProtocolEx *iface, LPCWSTR szUr
     IUri *uri;
     HRESULT hres;
 
-    TRACE("(%p)->(%s %p %p %08x %lx)\n", This, debugstr_w(szUrl), pOIProtSink,
+    TRACE("(%p)->(%s %p %p %08lx %Ix)\n", This, debugstr_w(szUrl), pOIProtSink,
           pOIBindInfo, grfPI, dwReserved);
 
     hres = CreateUri(szUrl, 0, 0, &uri);
@@ -248,7 +248,7 @@ static HRESULT WINAPI FtpProtocol_Abort(IInternetProtocolEx *iface, HRESULT hrRe
 {
     FtpProtocol *This = impl_from_IInternetProtocolEx(iface);
 
-    TRACE("(%p)->(%08x %08x)\n", This, hrReason, dwOptions);
+    TRACE("(%p)->(%08lx %08lx)\n", This, hrReason, dwOptions);
 
     return protocol_abort(&This->base, hrReason);
 }
@@ -257,7 +257,7 @@ static HRESULT WINAPI FtpProtocol_Terminate(IInternetProtocolEx *iface, DWORD dw
 {
     FtpProtocol *This = impl_from_IInternetProtocolEx(iface);
 
-    TRACE("(%p)->(%08x)\n", This, dwOptions);
+    TRACE("(%p)->(%08lx)\n", This, dwOptions);
 
     protocol_close_connection(&This->base);
     return S_OK;
@@ -282,7 +282,7 @@ static HRESULT WINAPI FtpProtocol_Read(IInternetProtocolEx *iface, void *pv,
 {
     FtpProtocol *This = impl_from_IInternetProtocolEx(iface);
 
-    TRACE("(%p)->(%p %u %p)\n", This, pv, cb, pcbRead);
+    TRACE("(%p)->(%p %lu %p)\n", This, pv, cb, pcbRead);
 
     return protocol_read(&This->base, pv, cb, pcbRead);
 }
@@ -291,7 +291,7 @@ static HRESULT WINAPI FtpProtocol_Seek(IInternetProtocolEx *iface, LARGE_INTEGER
         DWORD dwOrigin, ULARGE_INTEGER *plibNewPosition)
 {
     FtpProtocol *This = impl_from_IInternetProtocolEx(iface);
-    FIXME("(%p)->(%d %d %p)\n", This, dlibMove.u.LowPart, dwOrigin, plibNewPosition);
+    FIXME("(%p)->(%ld %ld %p)\n", This, dlibMove.u.LowPart, dwOrigin, plibNewPosition);
     return E_NOTIMPL;
 }
 
@@ -299,7 +299,7 @@ static HRESULT WINAPI FtpProtocol_LockRequest(IInternetProtocolEx *iface, DWORD 
 {
     FtpProtocol *This = impl_from_IInternetProtocolEx(iface);
 
-    TRACE("(%p)->(%08x)\n", This, dwOptions);
+    TRACE("(%p)->(%08lx)\n", This, dwOptions);
 
     return protocol_lock_request(&This->base);
 }
@@ -321,7 +321,7 @@ static HRESULT WINAPI FtpProtocol_StartEx(IInternetProtocolEx *iface, IUri *pUri
     DWORD scheme = 0;
     HRESULT hres;
 
-    TRACE("(%p)->(%p %p %p %08x %p)\n", This, pUri, pOIProtSink,
+    TRACE("(%p)->(%p %p %p %08lx %p)\n", This, pUri, pOIProtSink,
             pOIBindInfo, grfPI, dwReserved);
 
     hres = IUri_GetScheme(pUri, &scheme);
@@ -373,7 +373,7 @@ static HRESULT WINAPI FtpPriority_SetPriority(IInternetPriority *iface, LONG nPr
 {
     FtpProtocol *This = impl_from_IInternetPriority(iface);
 
-    TRACE("(%p)->(%d)\n", This, nPriority);
+    TRACE("(%p)->(%ld)\n", This, nPriority);
 
     This->base.priority = nPriority;
     return S_OK;
@@ -419,7 +419,7 @@ static HRESULT WINAPI HttpInfo_QueryOption(IWinInetHttpInfo *iface, DWORD dwOpti
         void *pBuffer, DWORD *pcbBuffer)
 {
     FtpProtocol *This = impl_from_IWinInetHttpInfo(iface);
-    TRACE("(%p)->(%x %p %p)\n", This, dwOption, pBuffer, pcbBuffer);
+    TRACE("(%p)->(%lx %p %p)\n", This, dwOption, pBuffer, pcbBuffer);
 
     if(!This->base.request)
         return E_FAIL;
@@ -433,7 +433,7 @@ static HRESULT WINAPI HttpInfo_QueryInfo(IWinInetHttpInfo *iface, DWORD dwOption
         void *pBuffer, DWORD *pcbBuffer, DWORD *pdwFlags, DWORD *pdwReserved)
 {
     FtpProtocol *This = impl_from_IWinInetHttpInfo(iface);
-    TRACE("(%p)->(%x %p %p %p %p)\n", This, dwOption, pBuffer, pcbBuffer, pdwFlags, pdwReserved);
+    TRACE("(%p)->(%lx %p %p %p %p)\n", This, dwOption, pBuffer, pcbBuffer, pdwFlags, pdwReserved);
 
     if(!This->base.request)
         return E_FAIL;
@@ -459,7 +459,7 @@ HRESULT FtpProtocol_Construct(IUnknown *outer, void **ppv)
 
     URLMON_LockModule();
 
-    ret = heap_alloc_zero(sizeof(FtpProtocol));
+    ret = calloc(1, sizeof(FtpProtocol));
 
     ret->base.vtbl = &AsyncProtocolVtbl;
     ret->IUnknown_inner.lpVtbl            = &FtpProtocolUnkVtbl;

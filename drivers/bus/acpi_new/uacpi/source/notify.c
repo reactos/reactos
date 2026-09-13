@@ -105,7 +105,7 @@ uacpi_status uacpi_notify_all(uacpi_namespace_node *node, uacpi_u64 value)
 
     ret = uacpi_kernel_schedule_work(UACPI_WORK_NOTIFICATION, do_notify, ctx);
     if (uacpi_unlikely_error(ret)) {
-        uacpi_warn("unable to schedule notification work: %s\n",
+        uacpi_warn("unable to schedule notification work: %s",
                    uacpi_status_to_string(ret));
         free_notification_ctx(ctx);
     }

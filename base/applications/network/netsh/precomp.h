@@ -80,6 +80,7 @@ typedef struct _COMMAND_ENTRY
     DWORD dwShortCmdHelpToken;
     DWORD dwCmdHlpToken;
     DWORD dwFlags;
+    PNS_OSVERSIONCHECK pfnOsVersionCheck;
 } COMMAND_ENTRY, *PCOMMAND_ENTRY;
 
 typedef struct _COMMAND_GROUP
@@ -90,6 +91,7 @@ typedef struct _COMMAND_GROUP
     PWSTR pwszCmdGroupToken;
     DWORD dwShortCmdHelpToken;
     DWORD dwFlags;
+    PNS_OSVERSIONCHECK pfnOsVersionCheck;
 
     PCOMMAND_ENTRY pCommandListHead;
     PCOMMAND_ENTRY pCommandListTail;
@@ -107,9 +109,11 @@ typedef struct _CONTEXT_ENTRY
     GUID Guid;
     HMODULE hModule;
     ULONG ulPriority;
+    DWORD dwFlags;
     PNS_CONTEXT_COMMIT_FN pfnCommitFn;
     PNS_CONTEXT_DUMP_FN pfnDumpFn;
     PNS_CONTEXT_CONNECT_FN pfnConnectFn;
+    PNS_OSVERSIONCHECK pfnOsVersionCheck;
 
     PCOMMAND_ENTRY pCommandListHead;
     PCOMMAND_ENTRY pCommandListTail;
@@ -130,7 +134,17 @@ extern PCONTEXT_ENTRY pCurrentContext;
 extern PHELPER_ENTRY pHelperListHead;
 
 extern HMODULE g_hModule;
-extern PWSTR pszMachine;
+extern PWSTR g_pszMachine;
+extern BOOL g_bOnline;
+
+extern UINT  VersionInfoArchitecture;
+extern UINT  VersionInfoOsProductSuite;
+extern UINT  VersionInfoOsType;
+extern WCHAR VersionInfoVersion[MAX_PATH];
+extern WCHAR VersionInfoBuildNumber[MAX_PATH];
+extern WCHAR VersionInfoServicePackMajorVersion[MAX_PATH];
+extern WCHAR VersionInfoServicePackMinorVersion[MAX_PATH];
+
 
 /* PROTOTYPES *****************************************************************/
 
@@ -273,3 +287,12 @@ LPWSTR
 MergeStrings(
     _In_ LPWSTR pszStringArray[],
     _In_ UINT nCount);
+
+/* wmi.c */
+
+BOOL
+CheckOsVersion(
+    _In_ PNS_OSVERSIONCHECK pfnOsVersionCheck);
+
+HRESULT
+GetWmiVersionInfo(VOID);

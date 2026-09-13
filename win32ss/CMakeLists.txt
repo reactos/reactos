@@ -129,8 +129,9 @@ list(APPEND SOURCE
     user/ntuser/guicheck.c
     user/ntuser/hook.c
     user/ntuser/hotkey.c
-    user/ntuser/input.c
     user/ntuser/ime.c
+    user/ntuser/input.c
+    user/ntuser/job.c
     user/ntuser/keyboard.c
     user/ntuser/kbdlayout.c
     user/ntuser/layered.c
@@ -147,6 +148,7 @@ list(APPEND SOURCE
     user/ntuser/painting.c
     user/ntuser/power.c
     user/ntuser/prop.c
+    user/ntuser/rawinput.c
     user/ntuser/scrollbar.c
     user/ntuser/scrollex.c
     user/ntuser/security.c

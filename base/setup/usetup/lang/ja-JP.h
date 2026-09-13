@@ -1260,7 +1260,7 @@ static MUI_ENTRY jaJPFormatPartitionEntries[] =
     {
         0,
         0,
-        "ENTER = \277\336\257\272\263   F3 = \301\255\263\274",
+        "ENTER = \277\336\257\272\263   ESC = \267\254\335\276\331   F3 = \301\255\263\274",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
         TEXT_ID_STATIC
     },

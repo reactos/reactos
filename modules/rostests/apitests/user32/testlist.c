@@ -29,6 +29,7 @@ extern void func_GetUserObjectInformation(void);
 extern void func_GetWindowPlacement(void);
 extern void func_GW_ENABLEDPOPUP(void);
 extern void func_InitializeLpkHooks(void);
+extern void func_IsServerSideWindow(void);
 extern void func_KbdLayout(void);
 extern void func_keybd_event(void);
 extern void func_LoadImage(void);
@@ -61,6 +62,7 @@ extern void func_SystemParametersInfo(void);
 extern void func_SystemMenu(void);
 extern void func_TrackMouseEvent(void);
 extern void func_TrackPopupMenuEx(void);
+extern void func_UserHandleGrantAccess(void);
 extern void func_VirtualKey(void);
 extern void func_WndProc(void);
 extern void func_wsprintfApi(void);
@@ -94,6 +96,7 @@ const struct test winetest_testlist[] =
     { "GetWindowPlacement", func_GetWindowPlacement },
     { "GW_ENABLEDPOPUP", func_GW_ENABLEDPOPUP },
     { "InitializeLpkHooks", func_InitializeLpkHooks },
+    { "IsServerSideWindow", func_IsServerSideWindow },
     { "KbdLayout", func_KbdLayout },
     { "keybd_event", func_keybd_event },
     { "LoadImage", func_LoadImage },
@@ -126,6 +129,7 @@ const struct test winetest_testlist[] =
     { "SystemParametersInfo", func_SystemParametersInfo },
     { "TrackMouseEvent", func_TrackMouseEvent },
     { "TrackPopupMenuEx", func_TrackPopupMenuEx },
+    { "UserHandleGrantAccess", func_UserHandleGrantAccess },
     { "VirtualKey", func_VirtualKey },
     { "WndProc", func_WndProc },
     { "wsprintfApi", func_wsprintfApi },

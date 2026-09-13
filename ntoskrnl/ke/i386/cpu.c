@@ -54,29 +54,6 @@ BOOLEAN KiFastCallCopyDoneOnce;
 /* Flush data */
 volatile LONG KiTbFlushTimeStamp;
 
-/* CPU Signatures */
-static const CHAR CmpIntelID[]       = "GenuineIntel";
-static const CHAR CmpAmdID[]         = "AuthenticAMD";
-static const CHAR CmpCyrixID[]       = "CyrixInstead";
-static const CHAR CmpTransmetaID[]   = "GenuineTMx86";
-static const CHAR CmpCentaurID[]     = "CentaurHauls";
-static const CHAR CmpRiseID[]        = "RiseRiseRise";
-
-typedef union _CPU_SIGNATURE
-{
-    struct
-    {
-        ULONG Step : 4;
-        ULONG Model : 4;
-        ULONG Family : 4;
-        ULONG Unused : 4;
-        ULONG ExtendedModel : 4;
-        ULONG ExtendedFamily : 8;
-        ULONG Unused2 : 4;
-    };
-    ULONG AsULONG;
-} CPU_SIGNATURE;
-
 /* FX area alignment size */
 #define FXSAVE_ALIGN 15
 
@@ -105,55 +82,12 @@ setCx86(UCHAR reg, UCHAR data)
 /* FUNCTIONS *****************************************************************/
 
 CODE_SEG("INIT")
+static
 ULONG
-NTAPI
 KiGetCpuVendor(VOID)
 {
-    PKPRCB Prcb = KeGetCurrentPrcb();
-    CPU_INFO CpuInfo;
-
-    /* Get the Vendor ID */
-    KiCpuId(&CpuInfo, 0);
-
-    /* Copy it to the PRCB and null-terminate it */
-    *(ULONG*)&Prcb->VendorString[0] = CpuInfo.Ebx;
-    *(ULONG*)&Prcb->VendorString[4] = CpuInfo.Edx;
-    *(ULONG*)&Prcb->VendorString[8] = CpuInfo.Ecx;
-    Prcb->VendorString[12] = 0;
-
-    /* Now check the CPU Type */
-    if (!strcmp(Prcb->VendorString, CmpIntelID))
-    {
-        return CPU_INTEL;
-    }
-    else if (!strcmp(Prcb->VendorString, CmpAmdID))
-    {
-        return CPU_AMD;
-    }
-    else if (!strcmp(Prcb->VendorString, CmpCyrixID))
-    {
-        DPRINT1("Cyrix CPU support not fully tested!\n");
-        return CPU_CYRIX;
-    }
-    else if (!strcmp(Prcb->VendorString, CmpTransmetaID))
-    {
-        DPRINT1("Transmeta CPU support not fully tested!\n");
-        return CPU_TRANSMETA;
-    }
-    else if (!strcmp(Prcb->VendorString, CmpCentaurID))
-    {
-        DPRINT1("Centaur CPU support not fully tested!\n");
-        return CPU_CENTAUR;
-    }
-    else if (!strcmp(Prcb->VendorString, CmpRiseID))
-    {
-        DPRINT1("Rise CPU support not fully tested!\n");
-        return CPU_RISE;
-    }
-
-    /* Unknown CPU */
-    DPRINT1("%s CPU support not fully tested!\n", Prcb->VendorString);
-    return CPU_UNKNOWN;
+    ASSERT(KeGetCurrentPrcb()->VendorString[0] != 0);
+    return KiIdentifyCpuVendor(KeGetCurrentPrcb()->VendorString);
 }
 
 CODE_SEG("INIT")
@@ -161,51 +95,19 @@ VOID
 NTAPI
 KiSetProcessorType(VOID)
 {
-    CPU_INFO CpuInfo;
-    CPU_SIGNATURE CpuSignature;
-    BOOLEAN ExtendModel;
-    ULONG Stepping, Type;
+    PKPRCB Prcb = KeGetCurrentPrcb();
+    USHORT Family, Model, Stepping;
 
-    /* Do CPUID 1 now */
-    KiCpuId(&CpuInfo, 1);
+    /* Get the CPU vendor string */
+    KiGetCpuVendorString(Prcb->VendorString);
 
-    /*
-     * Get the Stepping and Type. The stepping contains both the
-     * Model and the Step, while the Type contains the returned Family.
-     *
-     * For the stepping, we convert this: zzzzzzxy into this: x0y
-     */
-    CpuSignature.AsULONG = CpuInfo.Eax;
-    Stepping = CpuSignature.Model;
-    ExtendModel = (CpuSignature.Family == 15);
-#if ( (NTDDI_VERSION >= NTDDI_WINXPSP2) && (NTDDI_VERSION < NTDDI_WS03) ) || (NTDDI_VERSION >= NTDDI_WS03SP1)
-    if (CpuSignature.Family == 6)
-    {
-        ULONG Vendor = KiGetCpuVendor();
-        ExtendModel |= (Vendor == CPU_INTEL);
-#if (NTDDI_VERSION >= NTDDI_WIN8)
-        ExtendModel |= (Vendor == CPU_CENTAUR);
-#endif
-    }
-#endif
-    if (ExtendModel)
-    {
-        /* Add ExtendedModel to distinguish from non-extended values. */
-        Stepping |= (CpuSignature.ExtendedModel << 4);
-    }
-    Stepping = (Stepping << 8) | CpuSignature.Step;
-    Type = CpuSignature.Family;
-    if (CpuSignature.Family == 15)
-    {
-        /* Add ExtendedFamily to distinguish from non-extended values.
-         * It must not be larger than 0xF0 to avoid overflow. */
-        Type += min(CpuSignature.ExtendedFamily, 0xF0);
-    }
+    /* Get the family, model and stepping */
+    KiGetCpuSignature(&Family, &Model, &Stepping);
 
     /* Save them in the PRCB */
-    KeGetCurrentPrcb()->CpuID = TRUE;
-    KeGetCurrentPrcb()->CpuType = (UCHAR)Type;
-    KeGetCurrentPrcb()->CpuStep = (USHORT)Stepping;
+    Prcb->CpuID = TRUE;
+    Prcb->CpuType = (UCHAR)Family;
+    Prcb->CpuStep = ((Model << 8) | Stepping);
 }
 
 CODE_SEG("INIT")

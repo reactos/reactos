@@ -20,7 +20,8 @@ add_library(atl80 MODULE
     ${CMAKE_CURRENT_BINARY_DIR}/atl80.def)
 
 set_module_type(atl80 win32dll)
-target_link_libraries(atl80 uuid wine)
+add_idl_reg_scripts(atl80 regtypelib ../atl/atl_lib.idl)
+target_link_libraries(atl80 uuid wine oldnames)
 add_importlibs(atl80 oleaut32 user32 ole32 gdi32 advapi32 advapi32_vista shlwapi msvcrt kernel32 ntdll)
 add_pch(atl80 precomp.h SOURCE)
 add_cd_file(TARGET atl80 DESTINATION reactos/system32 FOR all)

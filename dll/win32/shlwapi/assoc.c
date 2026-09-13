@@ -17,10 +17,6 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
-#ifdef __REACTOS__
-    #undef _WIN32_WINNT
-    #define _WIN32_WINNT _WIN32_WINNT_VISTA /* for RegGetValueW */
-#endif
 #include <stdarg.h>
 #include <assert.h>
 
@@ -32,6 +28,10 @@
 #include "shlguid.h"
 #include "shlobj.h"
 #include "shlwapi.h"
+#ifdef __REACTOS__
+#include "shlwapi_undoc.h"
+#include "evalcmd.h"
+#endif
 #include "wine/unicode.h"
 #include "wine/debug.h"
 
@@ -47,14 +47,127 @@ WINE_DEFAULT_DEBUG_CHANNEL(shell);
                             ASSOCF_INIT_DEFAULTTOFOLDER)
 #endif
 
+#ifdef __REACTOS__
+EXTERN_C ULONG WINAPI GetProcessOsVersion(void); // FIXME: Move or delete
+
+static HRESULT SHELL_SetRegString(HKEY hKey, LPCWSTR pszSubKey, LPCWSTR pszName, UINT Type, LPCWSTR pszData)
+{
+    ULONG err = SHSetValueW(hKey, pszSubKey, pszName, Type, pszData, (lstrlenW(pszData) + 1) * sizeof(*pszData));
+    return HRESULT_FROM_WIN32(err);
+}
+
+/* _AssocOpenRegKey is borrowed from shell32:elements.cpp since that code is only available for NT5 targets here */
+static HRESULT
+_AssocOpenRegKey(HKEY hKey, PCWSTR lpSubKey, PHKEY phkResult, BOOL bCreate)
+{
+    *phkResult = NULL;
+    if (!hKey)
+        return HRESULT_FROM_WIN32(ERROR_NO_ASSOCIATION);
+
+    LSTATUS error;
+    if ( bCreate )
+        error = RegCreateKeyExW(hKey, lpSubKey, 0, NULL, 0, MAXIMUM_ALLOWED, NULL,
+                                phkResult, NULL);
+    else
+        error = RegOpenKeyExW(hKey, lpSubKey, 0, MAXIMUM_ALLOWED, phkResult);
+
+    if (error == ERROR_SUCCESS)
+        return S_OK;
+
+    return HRESULT_FROM_WIN32(error);
+}
+
+static void AssocDeleteSubkey(HKEY hBase, LPCWSTR pszSubKey)
+{
+    HKEY hKey;
+    if (*pszSubKey && SUCCEEDED(_AssocOpenRegKey(hBase, pszSubKey, &hKey, FALSE)))
+    {
+        RegCloseKey(hKey);
+        SHDeleteKeyW(hBase, pszSubKey);
+    }
+}
+
+static HRESULT AssocMakeVerbCommand(HKEY hVerb, LPCWSTR pszExeFallback, const ASSOCMAKEVERB *pVerb)
+{
+    UINT Type = REG_SZ;
+    WCHAR szCmd[MAX_PATH * 4];
+    LPCWSTR pszExe = pVerb->pszExe ? pVerb->pszExe : pszExeFallback;
+    LPCWSTR pszOrgArgs = pVerb->pszArgs ? pVerb->pszArgs : L"";
+    LPCWSTR pszArgs = *pszOrgArgs ? pszOrgArgs : L"\"%1\"";
+
+    if (pVerb->pszFriendlyName && *pVerb->pszFriendlyName)
+        SHELL_SetRegString(hVerb, NULL, NULL, REG_SZ, pVerb->pszFriendlyName);
+
+    lstrcpyW(szCmd, pszExe);
+    PathQuoteSpacesW(szCmd);
+    lstrcatW(szCmd, L" ");
+    lstrcatW(szCmd, pszArgs);
+    if (StrStrIW(pszExe, L"%") || StrStrIW(pszOrgArgs, L"%"))
+        Type = REG_EXPAND_SZ;
+    return SHELL_SetRegString(hVerb, L"command", NULL, Type, szCmd);
+}
+
+HRESULT WINAPI AssocMakeShell(SIZE_T Unknown, HKEY hClass, LPCWSTR pszExe, const ASSOCMAKESHELL *pShell)
+{
+    HRESULT hr = E_INVALIDARG;
+    if (!hClass || !pszExe || !pShell)
+        return E_INVALIDARG;
+    for (SIZE_T i = 0; i < pShell->Count; ++i)
+    {
+        HKEY hVerb;
+        WCHAR szVerbKey[sizeof("shell") + MAX_PATH];
+        const ASSOCMAKEVERB *pVerb = &pShell->pVerbs[i];
+        if (!pVerb->pszVerb)
+            continue;
+
+        PathCombineW(szVerbKey, L"shell", pVerb->pszVerb);
+        AssocDeleteSubkey(hClass, szVerbKey); // Delete possibly existing old DDE/Delegate info
+        if (FAILED(_AssocOpenRegKey(hClass, szVerbKey, &hVerb, TRUE)))
+            continue;
+        hr = AssocMakeVerbCommand(hVerb, pszExe, pVerb);
+        RegCloseKey(hVerb);
+        if (i == pShell->DefaultIndex)
+            SHELL_SetRegString(hClass, L"shell", NULL, REG_SZ, pVerb->pszVerb);
+    }
+    return hr;
+}
+
+HRESULT WINAPI AssocMakeProgid(SIZE_T Unknown1, SIZE_T Unknown2, SIZE_T Unknown3, SIZE_T Unknown4)
+{
+    FIXME("stub\n");
+    return E_NOTIMPL;
+}
+
+HRESULT WINAPI AssocMakeApplicationByKeyW(SIZE_T Unknown1, SIZE_T Unknown2, SIZE_T Unknown3)
+{
+    FIXME("stub\n");
+    return E_NOTIMPL;
+}
+
+HRESULT WINAPI AssocMakeApplicationByKeyA(SIZE_T Unknown1, SIZE_T Unknown2, SIZE_T Unknown3)
+{
+    return AssocMakeApplicationByKeyW(Unknown1, Unknown2, Unknown3);
+}
+
+HRESULT WINAPI AssocCopyVerbs(HKEY hSrc, HKEY hDst)
+{
+    FIXME("stub\n");
+    return E_NOTIMPL;
+}
+#endif // __REACTOS__
+
 /*************************************************************************
  * SHLWAPI_ParamAToW
  *
- * Internal helper function: Convert ASCII parameter to Unicode.
+ * Internal helper function: Convert ANSI parameter to Unicode.
  */
 static BOOL SHLWAPI_ParamAToW(LPCSTR lpszParam, LPWSTR lpszBuff, DWORD dwLen,
                               LPWSTR* lpszOut)
 {
+#ifdef __REACTOS__
+  if (!lpszParam && LOBYTE(GetVersion()) < 6)
+    lpszParam = ""; // NT5 incorrectly converts NULL to L""
+#endif
   if (lpszParam)
   {
     DWORD dwStrLen = MultiByteToWideChar(CP_ACP, 0, lpszParam, -1, NULL, 0);
@@ -66,8 +179,7 @@ static BOOL SHLWAPI_ParamAToW(LPCSTR lpszParam, LPWSTR lpszBuff, DWORD dwLen,
     else
     {
       /* Create a new buffer big enough for the string */
-      *lpszOut = HeapAlloc(GetProcessHeap(), 0,
-                                   dwStrLen * sizeof(WCHAR));
+      *lpszOut = malloc(dwStrLen * sizeof(WCHAR));
       if (!*lpszOut)
         return FALSE;
     }
@@ -92,9 +204,11 @@ static BOOL SHLWAPI_ParamAToW(LPCSTR lpszParam, LPWSTR lpszBuff, DWORD dwLen,
  *  Success: S_OK. lpInterface contains the new object.
  *  Failure: An HRESULT error code indicating the error.
  *
+#ifndef __REACTOS__ // WRONG NOTES!
  * NOTES
  *  clsid  must be equal to CLSID_QueryAssociations and
  *  refiid must be equal to IID_IQueryAssociations, IID_IUnknown or this function will fail
+#endif
  */
 HRESULT WINAPI AssocCreate(CLSID clsid, REFIID refiid, void **lpInterface)
 {
@@ -104,10 +218,24 @@ HRESULT WINAPI AssocCreate(CLSID clsid, REFIID refiid, void **lpInterface)
   if (!lpInterface)
     return E_INVALIDARG;
 
+#ifdef __REACTOS__
+  *(PVOID*)lpInterface = NULL;
+#else
   *(DWORD*)lpInterface = 0;
+#endif
 
+#ifdef __REACTOS__
+  if (!IsEqualGUID(&clsid, &CLSID_QueryAssociations) &&
+      !IsEqualGUID(&clsid, &IID_IQueryAssociations))
+  {
+    if (GetProcessOsVersion() < _WIN32_WINNT_VISTA)
+      return AssocCreateElement(&clsid, refiid, lpInterface);
+    return CLASS_E_CLASSNOTAVAILABLE;
+  }
+#else
   if (!IsEqualGUID(&clsid,  &CLSID_QueryAssociations))
     return CLASS_E_CLASSNOTAVAILABLE;
+#endif
 
   return SHCoCreateInstance( NULL, &clsid, NULL, refiid, lpInterface );
 }
@@ -372,7 +500,7 @@ HRESULT WINAPI AssocQueryKeyW(ASSOCF cfFlags, ASSOCKEY assockey, LPCWSTR pszAsso
   HRESULT hRet;
   IQueryAssociations* lpAssoc;
 
-  TRACE("(0x%x,%d,%s,%s,%p)\n", cfFlags, assockey, debugstr_w(pszAssoc),
+  TRACE("(0x%lx,%d,%s,%s,%p)\n", cfFlags, assockey, debugstr_w(pszAssoc),
         debugstr_w(pszExtra), phkeyOut);
 
   hRet = AssocCreate( CLSID_QueryAssociations, &IID_IQueryAssociations, (void **)&lpAssoc );
@@ -415,7 +543,7 @@ HRESULT WINAPI AssocQueryKeyA(ASSOCF cfFlags, ASSOCKEY assockey, LPCSTR pszAssoc
   WCHAR szExtraW[MAX_PATH], *lpszExtraW = NULL;
   HRESULT hRet = E_OUTOFMEMORY;
 
-  TRACE("(0x%x,%d,%s,%s,%p)\n", cfFlags, assockey, debugstr_a(pszAssoc),
+  TRACE("(0x%lx,%d,%s,%s,%p)\n", cfFlags, assockey, debugstr_a(pszAssoc),
         debugstr_a(pszExtra), phkeyOut);
 
   if (SHLWAPI_ParamAToW(pszAssoc, szAssocW, MAX_PATH, &lpszAssocW) &&
@@ -425,10 +553,10 @@ HRESULT WINAPI AssocQueryKeyA(ASSOCF cfFlags, ASSOCKEY assockey, LPCSTR pszAssoc
   }
 
   if (lpszAssocW != szAssocW)
-    HeapFree(GetProcessHeap(), 0, lpszAssocW);
+    free(lpszAssocW);
 
   if (lpszExtraW != szExtraW)
-    HeapFree(GetProcessHeap(), 0, lpszExtraW);
+    free(lpszExtraW);
 
   return hRet;
 }
@@ -444,7 +572,7 @@ HRESULT WINAPI AssocQueryStringW(ASSOCF cfFlags, ASSOCSTR str, LPCWSTR pszAssoc,
   HRESULT hRet;
   IQueryAssociations* lpAssoc;
 
-  TRACE("(0x%x,%d,%s,%s,%p,%p)\n", cfFlags, str, debugstr_w(pszAssoc),
+  TRACE("(0x%lx,%d,%s,%s,%p,%p)\n", cfFlags, str, debugstr_w(pszAssoc),
         debugstr_w(pszExtra), pszOut, pcchOut);
 
   if (!pcchOut)
@@ -488,7 +616,7 @@ HRESULT WINAPI AssocQueryStringA(ASSOCF cfFlags, ASSOCSTR str, LPCSTR pszAssoc,
   WCHAR szExtraW[MAX_PATH], *lpszExtraW = NULL;
   HRESULT hRet = E_OUTOFMEMORY;
 
-  TRACE("(0x%x,0x%d,%s,%s,%p,%p)\n", cfFlags, str, debugstr_a(pszAssoc),
+  TRACE("(0x%lx,0x%d,%s,%s,%p,%p)\n", cfFlags, str, debugstr_a(pszAssoc),
         debugstr_a(pszExtra), pszOut, pcchOut);
 
   if (!pcchOut)
@@ -497,13 +625,16 @@ HRESULT WINAPI AssocQueryStringA(ASSOCF cfFlags, ASSOCSTR str, LPCSTR pszAssoc,
            SHLWAPI_ParamAToW(pszExtra, szExtraW, MAX_PATH, &lpszExtraW))
   {
     WCHAR szReturnW[MAX_PATH], *lpszReturnW = szReturnW;
+#ifdef __REACTOS__
+    DWORD dwLenOut = IS_INTRESOURCE(pcchOut) && LOBYTE(GetVersion()) < 6 ? PtrToUlong(pcchOut) : *pcchOut; 
+#else
     DWORD dwLenOut = *pcchOut;
+#endif
 
     if (dwLenOut >= MAX_PATH)
-      lpszReturnW = HeapAlloc(GetProcessHeap(), 0,
-                                      (dwLenOut + 1) * sizeof(WCHAR));
+      lpszReturnW = malloc((dwLenOut + 1) * sizeof(WCHAR));
     else
-      dwLenOut = sizeof(szReturnW) / sizeof(szReturnW[0]);
+      dwLenOut = ARRAY_SIZE(szReturnW);
 
     if (!lpszReturnW)
       hRet = E_OUTOFMEMORY;
@@ -516,16 +647,20 @@ HRESULT WINAPI AssocQueryStringA(ASSOCF cfFlags, ASSOCSTR str, LPCSTR pszAssoc,
         dwLenOut = WideCharToMultiByte(CP_ACP, 0, lpszReturnW, -1,
                                        pszOut, *pcchOut, NULL, NULL);
 
+#ifdef __REACTOS__
+      if (IS_INTRESOURCE(pcchOut))
+        pcchOut = &dwLenOut;
+#endif
       *pcchOut = dwLenOut;
       if (lpszReturnW != szReturnW)
-        HeapFree(GetProcessHeap(), 0, lpszReturnW);
+        free(lpszReturnW);
     }
   }
 
   if (lpszAssocW != szAssocW)
-    HeapFree(GetProcessHeap(), 0, lpszAssocW);
+    free(lpszAssocW);
   if (lpszExtraW != szExtraW)
-    HeapFree(GetProcessHeap(), 0, lpszExtraW);
+    free(lpszExtraW);
   return hRet;
 }
 
@@ -541,7 +676,7 @@ HRESULT WINAPI AssocQueryStringByKeyW(ASSOCF cfFlags, ASSOCSTR str, HKEY hkAssoc
   HRESULT hRet;
   IQueryAssociations* lpAssoc;
 
-  TRACE("(0x%x,0x%d,%p,%s,%p,%p)\n", cfFlags, str, hkAssoc,
+  TRACE("(0x%lx,0x%d,%p,%s,%p,%p)\n", cfFlags, str, hkAssoc,
         debugstr_w(pszExtra), pszOut, pcchOut);
 
   hRet = AssocCreate( CLSID_QueryAssociations, &IID_IQueryAssociations, (void **)&lpAssoc );
@@ -587,17 +722,20 @@ HRESULT WINAPI AssocQueryStringByKeyA(ASSOCF cfFlags, ASSOCSTR str, HKEY hkAssoc
   WCHAR szReturnW[MAX_PATH], *lpszReturnW = szReturnW;
   HRESULT hRet = E_OUTOFMEMORY;
 
-  TRACE("(0x%x,0x%d,%p,%s,%p,%p)\n", cfFlags, str, hkAssoc,
+  TRACE("(0x%lx,0x%d,%p,%s,%p,%p)\n", cfFlags, str, hkAssoc,
         debugstr_a(pszExtra), pszOut, pcchOut);
 
   if (!pcchOut)
     hRet = E_INVALIDARG;
   else if (SHLWAPI_ParamAToW(pszExtra, szExtraW, MAX_PATH, &lpszExtraW))
   {
+#ifdef __REACTOS__
+    DWORD dwLenOut = IS_INTRESOURCE(pcchOut) && LOBYTE(GetVersion()) < 6 ? PtrToUlong(pcchOut) : *pcchOut; 
+#else
     DWORD dwLenOut = *pcchOut;
+#endif
     if (dwLenOut >= MAX_PATH)
-      lpszReturnW = HeapAlloc(GetProcessHeap(), 0,
-                                      (dwLenOut + 1) * sizeof(WCHAR));
+      lpszReturnW = malloc((dwLenOut + 1) * sizeof(WCHAR));
 
     if (lpszReturnW)
     {
@@ -606,15 +744,19 @@ HRESULT WINAPI AssocQueryStringByKeyA(ASSOCF cfFlags, ASSOCSTR str, HKEY hkAssoc
 
       if (SUCCEEDED(hRet))
         WideCharToMultiByte(CP_ACP,0,szReturnW,-1,pszOut,dwLenOut,0,0);
+#ifdef __REACTOS__
+      if (IS_INTRESOURCE(pcchOut))
+        pcchOut = &dwLenOut;
+#endif
       *pcchOut = dwLenOut;
 
       if (lpszReturnW != szReturnW)
-        HeapFree(GetProcessHeap(), 0, lpszReturnW);
+        free(lpszReturnW);
     }
   }
 
   if (lpszExtraW != szExtraW)
-    HeapFree(GetProcessHeap(), 0, lpszExtraW);
+    free(lpszExtraW);
   return hRet;
 }
 

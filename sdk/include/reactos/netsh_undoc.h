@@ -30,7 +30,7 @@ MatchTagsInCmdLine(
     _Inout_ LPWSTR *ppwcArguments,
     _In_ DWORD dwCurrentIndex,
     _In_ DWORD dwArgCount,
-    _In_ TAG_TYPE *pttTags,
+    _Inout_ TAG_TYPE *pttTags,
     _In_ DWORD dwTagCount,
     _Out_ DWORD *pdwTagType);
 

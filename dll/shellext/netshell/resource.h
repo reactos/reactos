@@ -1,5 +1,8 @@
 #pragma once
 
+#define TRAYICONWINDOWCAPTION "Connections Tray"
+#define TRAYICONWINDOWCAPTIONW TEXT("Connections Tray")
+
 /* icons */
 
 #define IDI_SHELL_NETWORK_FOLDER 100
@@ -48,8 +51,6 @@
 #define IDC_DETAILSSUBNET  1202
 #define IDC_DETAILSGATEWAY 1203
 #define IDC_DETAILS        1204
-
-#define IDC_CLOSE 1300
 
 /* Network right click menu defines */
 #define IDM_NETICON_CONTEXT_BASE        1400

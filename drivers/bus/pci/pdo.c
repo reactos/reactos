@@ -1036,7 +1036,7 @@ InterfaceBusSetBusData(
     DPRINT("InterfaceBusSetBusData(%p 0x%lx %p 0x%lx 0x%lx)\n",
            Context, DataType, Buffer, Offset, Length);
 
-    if (DataType != PCI_WHICHSPACE_CONFIG)
+    if (DataType != PCI_WHICHSPACE_CONFIG && DataType != PCIConfiguration)
     {
         DPRINT("Unknown DataType %lu\n", DataType);
         return 0;
@@ -1072,7 +1072,7 @@ InterfaceBusGetBusData(
     DPRINT("InterfaceBusGetBusData(%p 0x%lx %p 0x%lx 0x%lx) called\n",
            Context, DataType, Buffer, Offset, Length);
 
-    if (DataType != PCI_WHICHSPACE_CONFIG)
+    if (DataType != PCI_WHICHSPACE_CONFIG && DataType != PCIConfiguration)
     {
         DPRINT("Unknown DataType %lu\n", DataType);
         return 0;

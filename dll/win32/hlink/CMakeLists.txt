@@ -13,11 +13,11 @@ list(APPEND PCH_SKIP_SOURCE
 add_library(hlink MODULE
     ${SOURCE}
     ${PCH_SKIP_SOURCE}
-    hlink.rc
     ${CMAKE_CURRENT_BINARY_DIR}/hlink.def)
 
 set_module_type(hlink win32dll)
-target_link_libraries(hlink uuid wine oldnames)
+add_idl_reg_scripts(hlink registry hlink_classes.idl)
+target_link_libraries(hlink uuid wine wine_dll_register wine_dll_canunload oldnames)
 add_delay_importlibs(hlink urlmon)
 add_importlibs(hlink shell32 ole32 advapi32 msvcrt kernel32 ntdll)
 add_pch(hlink precomp.h "${PCH_SKIP_SOURCE}")

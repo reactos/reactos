@@ -27,7 +27,7 @@ void strbuf_init(strbuf_t *buf)
 {
     buf->size = 8;
     buf->len = 0;
-    buf->buf = heap_alloc(buf->size);
+    buf->buf = malloc(buf->size);
 }
 
 void strbuf_zero(strbuf_t *buf)
@@ -37,14 +37,14 @@ void strbuf_zero(strbuf_t *buf)
 
 void strbuf_free(strbuf_t *buf)
 {
-    heap_free(buf->buf);
+    free(buf->buf);
 }
 
 static void strbuf_append(strbuf_t *buf, const char *data, int len)
 {
     if(buf->len+len > buf->size) {
         buf->size = buf->len+len;
-        buf->buf = heap_realloc(buf->buf, buf->size);
+        buf->buf = realloc(buf->buf, buf->size);
     }
 
     memcpy(buf->buf+buf->len, data, len);
@@ -169,7 +169,7 @@ const char *get_attr(const char *node, const char *name, int *len)
 
     /* Create a lower case copy of the node */
     node_len = strlen(node)+1;
-    node_buf = heap_alloc(node_len*sizeof(char));
+    node_buf = malloc(node_len * sizeof(char));
     if(!node_buf)
         return NULL;
     memcpy(node_buf, node, node_len);
@@ -187,7 +187,7 @@ const char *get_attr(const char *node, const char *name, int *len)
     ptr = strstr(node_buf, name_buf);
     if(!ptr) {
         WARN("name not found\n");
-        heap_free(node_buf);
+        free(node_buf);
         return NULL;
     }
 
@@ -195,7 +195,7 @@ const char *get_attr(const char *node, const char *name, int *len)
     ptr2 = strchr(ptr, '\"');
     if(!ptr2)
     {
-        heap_free(node_buf);
+        free(node_buf);
         return NULL;
     }
 
@@ -203,6 +203,6 @@ const char *get_attr(const char *node, const char *name, int *len)
     /* Return the pointer offset within the original string */
     ptr = node+(ptr-node_buf);
 
-    heap_free(node_buf);
+    free(node_buf);
     return ptr;
 }

@@ -5,11 +5,18 @@ spec2def(bcrypt.dll bcrypt.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     bcrypt_main.c
+    gnutls.c
+    mbedtls.c
+    commoncrypto.c
     version.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/bcrypt_stubs.c
-    ${CMAKE_CURRENT_BINARY_DIR}/bcrypt.def)
+    ${CMAKE_CURRENT_BINARY_DIR}/bcrypt_stubs.c)
 
-add_library(bcrypt MODULE ${SOURCE})
+add_library(bcrypt MODULE
+    ${SOURCE}
+    version.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/bcrypt.def)
+add_pch(bcrypt precomp.h SOURCE)
+
 set_module_type(bcrypt win32dll)
 target_link_libraries(bcrypt wine)
 add_importlibs(bcrypt mbedtls advapi32 msvcrt kernel32 ntdll)

@@ -70,13 +70,22 @@ static void GetDefaultCopyMoveEffect()
     // FIXME: When the source is on a different volume than the target, change default from move to copy
 }
 
+UINT g_cf_FileOpFlags = 0;
+
+static inline DWORD GetDefaultFileOpFlags(IDataObject *pDO, DWORD fDefault = FOF_ALLOWUNDO | FOF_NOCONFIRMMKDIR)
+{
+	if (!g_cf_FileOpFlags)
+		g_cf_FileOpFlags = RegisterClipboardFormatW(L"FileOpFlags"); // github.com/dotnet/winforms/issues/5884?timeline_page=1
+	return DataObj_GetDWORD(pDO, g_cf_FileOpFlags, fDefault);
+}
+
 /****************************************************************************
  * CFSDropTarget::_CopyItems
  *
  * copies or moves items to this folder
  */
-HRESULT CFSDropTarget::_CopyItems(IShellFolder * pSFFrom, UINT cidl,
-                                  LPCITEMIDLIST * apidl, BOOL bCopy)
+HRESULT CFSDropTarget::_CopyItems(IDataObject *pDO, IShellFolder * pSFFrom,
+                                  UINT cidl, LPCITEMIDLIST * apidl, BOOL bCopy)
 {
     HRESULT ret;
     WCHAR wszDstPath[MAX_PATH + 1] = {0};
@@ -128,7 +137,7 @@ HRESULT CFSDropTarget::_CopyItems(IShellFolder * pSFFrom, UINT cidl,
     fop.wFunc = bCopy ? FO_COPY : FO_MOVE;
     fop.pFrom = pwszSrcPathsList;
     fop.pTo = wszDstPath;
-    fop.fFlags = FOF_ALLOWUNDO | FOF_NOCONFIRMMKDIR;
+    fop.fFlags = GetDefaultFileOpFlags(pDO);
     if (bRenameOnCollision)
         fop.fFlags |= FOF_RENAMEONCOLLISION;
 
@@ -232,6 +241,19 @@ BOOL CFSDropTarget::_QueryDrop(DWORD dwKeyState, LPDWORD pdwEffect)
     return FALSE;
 }
 
+UINT CFSDropTarget::TrackPopupMenu(HMENU hMenu, const POINTL &pt)
+{
+    /* We shouldn't use the site window here because the menu should work even when we don't have a site */
+    HWND hwndDummy = CreateWindowEx(0, WC_STATIC, NULL, WS_DISABLED | WS_CLIPSIBLINGS | WS_BORDER,
+                                    pt.x, pt.y, 1, 1, NULL, NULL, NULL, NULL);
+
+    SetForegroundWindow(hwndDummy); // Required for aborting by pressing Esc when dragging from Explorer to desktop
+    UINT uCommand = ::TrackPopupMenu(hMenu, TPM_RETURNCMD | TPM_LEFTBUTTON | TPM_RIGHTBUTTON,
+                                     pt.x, pt.y, 0, hwndDummy, NULL);
+    DestroyWindow(hwndDummy);
+    return uCommand;
+}
+
 HRESULT CFSDropTarget::_GetEffectFromMenu(IDataObject *pDataObject, POINTL pt, DWORD *pdwEffect, DWORD dwAvailableEffects)
 {
     HMENU hmenu = LoadMenuW(shell32_hInstance, MAKEINTRESOURCEW(IDM_DRAGFILE));
@@ -269,26 +291,7 @@ HRESULT CFSDropTarget::_GetEffectFromMenu(IDataObject *pDataObject, POINTL pt, D
         DCMA_InsertMenuItems(hDCMA, hDCIA, pidlFolder, pDataObject, keys, keys, &qcmi, 0, m_site);
     }
 
-    /* We shouldn't use the site window here because the menu should work even when we don't have a site */
-    HWND hwndDummy = CreateWindowEx(0,
-                              WC_STATIC,
-                              NULL,
-                              WS_OVERLAPPED | WS_DISABLED | WS_CLIPSIBLINGS | WS_BORDER | SS_LEFT,
-                              pt.x,
-                              pt.y,
-                              1,
-                              1,
-                              NULL,
-                              NULL,
-                              NULL,
-                              NULL);
-
-    SetForegroundWindow(hwndDummy); // Required for aborting by pressing Esc when dragging from Explorer to desktop
-    UINT uCommand = TrackPopupMenu(hpopupmenu,
-                                   TPM_LEFTALIGN | TPM_RETURNCMD | TPM_LEFTBUTTON | TPM_RIGHTBUTTON | TPM_NONOTIFY,
-                                   pt.x, pt.y, 0, hwndDummy, NULL);
-
-    DestroyWindow(hwndDummy);
+    UINT uCommand = TrackPopupMenu(hpopupmenu, pt);
 
     HRESULT hr = S_FALSE; // S_FALSE means we did not handle the command
     C_ASSERT(IDM_COPYHERE < DROPIDM_EXTFIRST && IDM_MOVEHERE < DROPIDM_EXTFIRST &&
@@ -725,7 +728,7 @@ HRESULT CFSDropTarget::_DoDrop(IDataObject *pDataObject,
         }
         else
         {
-            hr = _CopyItems(psfFrom, lpcida->cidl, (LPCITEMIDLIST*)apidl, bCopy);
+            hr = _CopyItems(pDataObject, psfFrom, lpcida->cidl, (LPCITEMIDLIST*)apidl, bCopy);
         }
 
         SHFree(pidl);
@@ -760,7 +763,7 @@ HRESULT CFSDropTarget::_DoDrop(IDataObject *pDataObject,
             op.pTo = wszTargetPath;
             op.hwnd = m_hwndSite;
             op.wFunc = bCopy ? FO_COPY : FO_MOVE;
-            op.fFlags = FOF_ALLOWUNDO | FOF_NOCONFIRMMKDIR;
+            op.fFlags = GetDefaultFileOpFlags(pDataObject);
             int res = SHFileOperationW(&op);
             if (res)
             {

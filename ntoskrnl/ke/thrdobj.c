@@ -1440,3 +1440,70 @@ KeTerminateThread(IN KPRIORITY Increment)
     KiReleaseDispatcherLockFromSynchLevel();
     KiSwapThread(Thread, KeGetCurrentPrcb());
 }
+
+_IRQL_requires_max_(APC_LEVEL)
+_IRQL_requires_min_(PASSIVE_LEVEL)
+_IRQL_requires_same_
+ULONG64
+NTAPI
+KeQueryTotalCycleTimeThread(
+    _Inout_ PKTHREAD Thread,
+    _Out_ PULONG64 CycleTimeStamp)
+{
+    PKPRCB Prcb;
+    ULONG64 CurrentCycleTime, StartCycles, ThreadCycles, ElapsedCycles, TotalCycleTime;
+
+    /* Check if the current thread's cycle time was requested */
+    if (Thread == KeGetCurrentThread())
+    {
+        /* Disable interrupts to prevent preemption */
+        NT_VERIFY(KeDisableInterrupts());
+
+        /* Get the current cycle counter value */
+        CurrentCycleTime = KxQueryProcessorCycleTime();
+
+        /* Get the cycle counter value at the last preemption */
+        Prcb = KeGetCurrentPrcb();
+        StartCycles = Prcb->StartCycles;
+
+        /* Get the thread's cycle time from the last preemption.
+           We don't need synchronization here, since only the thread itself updates its cycle time. */
+        ThreadCycles = ((PETHREAD)Thread)->CycleTime;
+
+        /* Enable interrupts */
+        KeRestoreInterrupts(TRUE);
+
+        /* Calculate the elapsed cycles since the thread was scheduled */
+        ElapsedCycles = CurrentCycleTime - StartCycles;
+
+        /* Calculate the total cycle time */
+        TotalCycleTime = ThreadCycles + ElapsedCycles;
+    }
+    else
+    {
+#ifdef CONFIG_SMP
+        /* Check if the thread is running */
+        if (Thread->State == Running)
+        {
+            /* FIXME: On SMP, if the thread runs on a different CPU we need to
+               send an IPI to update the threads cycle time */
+            DPRINT1("Warning: Thread cycle time for remote thread %p is inaccurate!\n", Thread);
+        }
+#endif
+
+        /* Get the current cycle counter value */
+        CurrentCycleTime = KxQueryProcessorCycleTime();
+
+        /* Get the thread's cycle time from the last update (preemption or IPI) */
+        TotalCycleTime = KiReadThreadCycleTime(Thread);
+    }
+
+    /* Return the current cycle counter value as the time stamp */
+    if (CycleTimeStamp)
+    {
+        *CycleTimeStamp = CurrentCycleTime;
+    }
+
+    /* Return the total cycle time */
+    return TotalCycleTime;
+}

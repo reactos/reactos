@@ -1271,7 +1271,7 @@ static MUI_ENTRY esESFormatPartitionEntries[] =
     {
         0,
         0,
-        "   INTRO = Continuar   F3 = Salir",
+        "   INTRO = Continuar   ESC = Cancelar   F3 = Salir",
         TEXT_TYPE_STATUS,
         TEXT_ID_STATIC
     },

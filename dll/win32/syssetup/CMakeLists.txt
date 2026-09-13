@@ -4,6 +4,7 @@ include_directories(${REACTOS_SOURCE_DIR}/sdk/lib/tzlib)
 spec2def(syssetup.dll syssetup.spec)
 
 list(APPEND SOURCE
+    addons.c
     classinst.c
     dllmain.c
     install.c

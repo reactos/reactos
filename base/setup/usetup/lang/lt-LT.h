@@ -1268,7 +1268,7 @@ static MUI_ENTRY ltLTFormatPartitionEntries[] =
     {
         0,
         0,
-        "ENTER = T\322sti   F3 = Baigti",
+        "ENTER = T\322sti   ESC = At\325aukti   F3 = Baigti",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
         TEXT_ID_STATIC
     },

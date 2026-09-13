@@ -53,14 +53,17 @@ static HRESULT WINAPI IHlinkBC_fnQueryInterface( IHlinkBrowseContext *iface,
 
     if (IsEqualIID(riid, &IID_IUnknown) ||
         IsEqualIID(riid, &IID_IHlinkBrowseContext))
-        *ppvObj = This;
-
-    if (*ppvObj)
     {
-        IUnknown_AddRef((IUnknown*)(*ppvObj));
-        return S_OK;
+        *ppvObj = &This->IHlinkBrowseContext_iface;
     }
-    return E_NOINTERFACE;
+    else
+    {
+        *ppvObj = NULL;
+        return E_NOINTERFACE;
+    }
+
+    IUnknown_AddRef((IUnknown *)*ppvObj);
+    return S_OK;
 }
 
 static ULONG WINAPI IHlinkBC_fnAddRef (IHlinkBrowseContext* iface)
@@ -68,7 +71,7 @@ static ULONG WINAPI IHlinkBC_fnAddRef (IHlinkBrowseContext* iface)
     HlinkBCImpl  *This = impl_from_IHlinkBrowseContext(iface);
     ULONG refCount = InterlockedIncrement(&This->ref);
 
-    TRACE("(%p)->(count=%u)\n", This, refCount - 1);
+    TRACE("(%p)->(count=%lu)\n", This, refCount - 1);
 
     return refCount;
 }
@@ -78,7 +81,7 @@ static ULONG WINAPI IHlinkBC_fnRelease (IHlinkBrowseContext* iface)
     HlinkBCImpl  *This = impl_from_IHlinkBrowseContext(iface);
     ULONG ref = InterlockedDecrement(&This->ref);
 
-    TRACE("(%p)->(count=%u)\n", This, ref + 1);
+    TRACE("(%p)->(count=%lu)\n", This, ref + 1);
 
     if (!ref)
     {
@@ -88,17 +91,15 @@ static ULONG WINAPI IHlinkBC_fnRelease (IHlinkBrowseContext* iface)
         {
             list_remove(&link->entry);
             IHlink_Release(link->link);
-            heap_free(link);
+            free(link);
         }
 
-        heap_free(This->BrowseWindowInfo);
-        heap_free(This);
+        free(This->BrowseWindowInfo);
+        free(This);
     }
 
     return ref;
 }
-
-static const WCHAR szIdent[] = {'W','I','N','E','H','L','I','N','K',0};
 
 static HRESULT WINAPI IHlinkBC_Register(IHlinkBrowseContext* iface,
         DWORD dwReserved, IUnknown *piunk, IMoniker *pimk, DWORD *pdwRegister)
@@ -109,9 +110,9 @@ static HRESULT WINAPI IHlinkBC_Register(IHlinkBrowseContext* iface,
     IRunningObjectTable *ROT;
     HRESULT hr;
 
-    FIXME("(%p)->(%i %p %p %p)\n", This, dwReserved, piunk, pimk, pdwRegister);
+    FIXME("(%p)->(%li %p %p %p)\n", This, dwReserved, piunk, pimk, pdwRegister);
 
-    hr = CreateItemMoniker(NULL, szIdent, &mon);
+    hr = CreateItemMoniker(NULL, L"WINEHLINK", &mon);
     if (FAILED(hr))
         return hr;
     CreateGenericComposite(mon, pimk, &composite);
@@ -137,7 +138,7 @@ static HRESULT WINAPI IHlinkBC_GetObject(IHlinkBrowseContext* iface,
 
     TRACE("(%p)->(%p, %d, %p)\n", This, pimk, fBindifRootRegistered, ppiunk);
 
-    hr = CreateItemMoniker(NULL, szIdent, &mon);
+    hr = CreateItemMoniker(NULL, L"WINEHLINK", &mon);
     if (FAILED(hr)) return hr;
     CreateGenericComposite(mon, pimk, &composite);
 
@@ -158,7 +159,7 @@ static HRESULT WINAPI IHlinkBC_Revoke(IHlinkBrowseContext* iface,
     IRunningObjectTable *ROT;
     HlinkBCImpl  *This = impl_from_IHlinkBrowseContext(iface);
 
-    FIXME("(%p)->(%i)\n", This, dwRegister);
+    FIXME("(%p)->(%li)\n", This, dwRegister);
 
     GetRunningObjectTable(0, &ROT);
     r = IRunningObjectTable_Revoke(ROT, dwRegister);
@@ -176,8 +177,8 @@ static HRESULT WINAPI IHlinkBC_SetBrowseWindowInfo(IHlinkBrowseContext* iface,
     if(!phlbwi)
         return E_INVALIDARG;
 
-    heap_free(This->BrowseWindowInfo);
-    This->BrowseWindowInfo = heap_alloc(phlbwi->cbSize);
+    free(This->BrowseWindowInfo);
+    This->BrowseWindowInfo = malloc(phlbwi->cbSize);
     memcpy(This->BrowseWindowInfo, phlbwi, phlbwi->cbSize);
 
     return S_OK;
@@ -211,7 +212,7 @@ static HRESULT WINAPI IHlinkBC_SetInitialHlink(IHlinkBrowseContext* iface,
     if (!list_empty(&This->links))
         return CO_E_ALREADYINITIALIZED;
 
-    link = heap_alloc(sizeof(struct link_entry));
+    link = malloc(sizeof(struct link_entry));
     if (!link) return E_OUTOFMEMORY;
 
     HlinkCreateFromMoniker(pimkTarget, pwzLocation, pwzFriendlyName, NULL,
@@ -228,7 +229,7 @@ static HRESULT WINAPI IHlinkBC_OnNavigateHlink(IHlinkBrowseContext *iface,
 {
     HlinkBCImpl  *This = impl_from_IHlinkBrowseContext(iface);
 
-    FIXME("(%p)->(%i %p %s %s %p)\n", This, grfHLNF, pmkTarget,
+    FIXME("(%p)->(%li %p %s %s %p)\n", This, grfHLNF, pmkTarget,
             debugstr_w(pwzLocation), debugstr_w(pwzFriendlyName), puHLID);
 
     return S_OK;
@@ -256,7 +257,7 @@ static struct link_entry *context_get_entry(HlinkBCImpl *ctxt, ULONG hlid)
         entry = list_head(&ctxt->links);
         break;
     default:
-        WARN("unknown id 0x%x\n", hlid);
+        WARN("unknown id 0x%lx\n", hlid);
         entry = NULL;
     }
 
@@ -271,7 +272,7 @@ static HRESULT WINAPI IHlinkBC_UpdateHlink(IHlinkBrowseContext* iface,
     IHlink *link;
     HRESULT hr;
 
-    TRACE("(%p)->(0x%x %p %s %s)\n", This, hlid, target, debugstr_w(location), debugstr_w(friendly_name));
+    TRACE("(%p)->(0x%lx %p %s %s)\n", This, hlid, target, debugstr_w(location), debugstr_w(friendly_name));
 
     if (!entry)
         return E_INVALIDARG;
@@ -305,7 +306,7 @@ static HRESULT WINAPI IHlinkBC_GetHlink(IHlinkBrowseContext* iface, ULONG hlid, 
     HlinkBCImpl *This = impl_from_IHlinkBrowseContext(iface);
     struct link_entry *link;
 
-    TRACE("(%p)->(0x%x %p)\n", This, hlid, ret);
+    TRACE("(%p)->(0x%lx %p)\n", This, hlid, ret);
 
     link = context_get_entry(This, hlid);
     if (!link)
@@ -322,7 +323,7 @@ static HRESULT WINAPI IHlinkBC_SetCurrentHlink(IHlinkBrowseContext* iface, ULONG
     HlinkBCImpl *This = impl_from_IHlinkBrowseContext(iface);
     struct link_entry *link;
 
-    TRACE("(%p)->(0x%08x)\n", This, hlid);
+    TRACE("(%p)->(0x%08lx)\n", This, hlid);
 
     link = context_get_entry(This, hlid);
     if (!link)
@@ -370,6 +371,7 @@ static const IHlinkBrowseContextVtbl hlvt =
 HRESULT HLinkBrowseContext_Constructor(IUnknown *pUnkOuter, REFIID riid, void **ppv)
 {
     HlinkBCImpl * hl;
+    HRESULT hr;
 
     TRACE("unkOut=%p riid=%s\n", pUnkOuter, debugstr_guid(riid));
     *ppv = NULL;
@@ -377,15 +379,16 @@ HRESULT HLinkBrowseContext_Constructor(IUnknown *pUnkOuter, REFIID riid, void **
     if (pUnkOuter)
         return CLASS_E_NOAGGREGATION;
 
-    hl = heap_alloc_zero(sizeof(HlinkBCImpl));
+    hl = calloc(1, sizeof(*hl));
     if (!hl)
         return E_OUTOFMEMORY;
 
     hl->ref = 1;
     hl->IHlinkBrowseContext_iface.lpVtbl = &hlvt;
     list_init(&hl->links);
-    hl->current = NULL;
 
-    *ppv = hl;
-    return S_OK;
+    hr = IHlinkBrowseContext_QueryInterface(&hl->IHlinkBrowseContext_iface, riid, ppv);
+    IHlinkBrowseContext_Release(&hl->IHlinkBrowseContext_iface);
+
+    return hr;
 }

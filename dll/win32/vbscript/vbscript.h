@@ -30,13 +30,9 @@
 #include "activscp.h"
 #include "activdbg.h"
 
-#ifdef __REACTOS__
-#include <initguid.h>
-#endif
 #include "vbscript_classes.h"
 #include "vbscript_defs.h"
 
-#include "wine/heap.h"
 #include "wine/list.h"
 
 typedef struct {
@@ -48,25 +44,17 @@ typedef struct {
     struct list custom_blocks;
 } heap_pool_t;
 
-void heap_pool_init(heap_pool_t*) DECLSPEC_HIDDEN;
-void *heap_pool_alloc(heap_pool_t*,size_t) __WINE_ALLOC_SIZE(2) DECLSPEC_HIDDEN;
-void *heap_pool_grow(heap_pool_t*,void*,DWORD,DWORD) DECLSPEC_HIDDEN;
-void heap_pool_clear(heap_pool_t*) DECLSPEC_HIDDEN;
-void heap_pool_free(heap_pool_t*) DECLSPEC_HIDDEN;
-heap_pool_t *heap_pool_mark(heap_pool_t*) DECLSPEC_HIDDEN;
+void heap_pool_init(heap_pool_t*);
+void *heap_pool_alloc(heap_pool_t*,size_t) __WINE_ALLOC_SIZE(2);
+void *heap_pool_grow(heap_pool_t*,void*,DWORD,DWORD);
+void heap_pool_clear(heap_pool_t*);
+void heap_pool_free(heap_pool_t*);
+heap_pool_t *heap_pool_mark(heap_pool_t*);
 
 typedef struct _function_t function_t;
 typedef struct _vbscode_t vbscode_t;
 typedef struct _script_ctx_t script_ctx_t;
 typedef struct _vbdisp_t vbdisp_t;
-
-typedef struct named_item_t {
-    IDispatch *disp;
-    DWORD flags;
-    LPWSTR name;
-
-    struct list entry;
-} named_item_t;
 
 typedef enum {
     VBDISP_CALLGET,
@@ -125,17 +113,32 @@ struct _vbdisp_t {
     VARIANT props[1];
 };
 
-typedef struct _ident_map_t ident_map_t;
+typedef struct _dynamic_var_t {
+    struct _dynamic_var_t *next;
+    VARIANT v;
+    const WCHAR *name;
+    BOOL is_const;
+    SAFEARRAY *array;
+} dynamic_var_t;
 
 typedef struct {
     IDispatchEx IDispatchEx_iface;
     LONG ref;
 
-    ident_map_t *ident_map;
-    unsigned ident_map_cnt;
-    unsigned ident_map_size;
+    dynamic_var_t **global_vars;
+    size_t global_vars_cnt;
+    size_t global_vars_size;
+
+    function_t **global_funcs;
+    size_t global_funcs_cnt;
+    size_t global_funcs_size;
+
+    class_desc_t *classes;
 
     script_ctx_t *ctx;
+    heap_pool_t heap;
+
+    unsigned int rnd;
 } ScriptDisp;
 
 typedef struct _builtin_prop_t builtin_prop_t;
@@ -148,16 +151,26 @@ typedef struct {
     script_ctx_t *ctx;
 } BuiltinDisp;
 
-HRESULT create_vbdisp(const class_desc_t*,vbdisp_t**) DECLSPEC_HIDDEN;
-HRESULT disp_get_id(IDispatch*,BSTR,vbdisp_invoke_type_t,BOOL,DISPID*) DECLSPEC_HIDDEN;
-HRESULT vbdisp_get_id(vbdisp_t*,BSTR,vbdisp_invoke_type_t,BOOL,DISPID*) DECLSPEC_HIDDEN;
-HRESULT disp_call(script_ctx_t*,IDispatch*,DISPID,DISPPARAMS*,VARIANT*) DECLSPEC_HIDDEN;
-HRESULT disp_propput(script_ctx_t*,IDispatch*,DISPID,WORD,DISPPARAMS*) DECLSPEC_HIDDEN;
-HRESULT get_disp_value(script_ctx_t*,IDispatch*,VARIANT*) DECLSPEC_HIDDEN;
-void collect_objects(script_ctx_t*) DECLSPEC_HIDDEN;
-HRESULT create_script_disp(script_ctx_t*,ScriptDisp**) DECLSPEC_HIDDEN;
+typedef struct named_item_t {
+    ScriptDisp *script_obj;
+    IDispatch *disp;
+    unsigned ref;
+    DWORD flags;
+    LPWSTR name;
 
-HRESULT to_int(VARIANT*,int*) DECLSPEC_HIDDEN;
+    struct list entry;
+} named_item_t;
+
+HRESULT create_vbdisp(const class_desc_t*,vbdisp_t**);
+HRESULT disp_get_id(IDispatch*,BSTR,vbdisp_invoke_type_t,BOOL,DISPID*);
+HRESULT vbdisp_get_id(vbdisp_t*,BSTR,vbdisp_invoke_type_t,BOOL,DISPID*);
+HRESULT disp_call(script_ctx_t*,IDispatch*,DISPID,DISPPARAMS*,VARIANT*);
+HRESULT disp_propput(script_ctx_t*,IDispatch*,DISPID,WORD,DISPPARAMS*);
+HRESULT get_disp_value(script_ctx_t*,IDispatch*,VARIANT*);
+void collect_objects(script_ctx_t*);
+HRESULT create_script_disp(script_ctx_t*,ScriptDisp**);
+
+HRESULT to_int(VARIANT*,int*);
 
 static inline unsigned arg_cnt(const DISPPARAMS *dp)
 {
@@ -169,21 +182,25 @@ static inline VARIANT *get_arg(DISPPARAMS *dp, DWORD i)
     return dp->rgvarg + dp->cArgs-i-1;
 }
 
-typedef struct _dynamic_var_t {
-    struct _dynamic_var_t *next;
-    VARIANT v;
-    const WCHAR *name;
-    BOOL is_const;
-} dynamic_var_t;
+#define SP_CALLER_UNINITIALIZED ((IServiceProvider*)IntToPtr(-1))
+
+struct vbcaller {
+    IServiceProvider IServiceProvider_iface;
+
+    LONG ref;
+
+    script_ctx_t *ctx;
+    IServiceProvider *caller;
+};
 
 struct _script_ctx_t {
     IActiveScriptSite *site;
     LCID lcid;
+    UINT codepage;
 
     IInternetHostSecurityManager *secmgr;
+    struct vbcaller *vbcaller;
     DWORD safeopt;
-
-    IDispatch *host_global;
 
     ScriptDisp *script_obj;
 
@@ -191,23 +208,18 @@ struct _script_ctx_t {
     BuiltinDisp *err_obj;
 
     EXCEPINFO ei;
-
-    dynamic_var_t *global_vars;
-    function_t *global_funcs;
-    class_desc_t *classes;
-    class_desc_t *procs;
-
-    heap_pool_t heap;
+    vbscode_t *error_loc_code;
+    unsigned error_loc_offset;
 
     struct list objects;
     struct list code_list;
     struct list named_items;
 };
 
-HRESULT init_global(script_ctx_t*) DECLSPEC_HIDDEN;
-HRESULT init_err(script_ctx_t*) DECLSPEC_HIDDEN;
+HRESULT init_global(script_ctx_t*);
+HRESULT init_err(script_ctx_t*);
 
-IUnknown *create_ax_site(script_ctx_t*) DECLSPEC_HIDDEN;
+IUnknown *create_ax_site(script_ctx_t*);
 
 typedef enum {
     ARG_NONE = 0,
@@ -216,7 +228,8 @@ typedef enum {
     ARG_INT,
     ARG_UINT,
     ARG_ADDR,
-    ARG_DOUBLE
+    ARG_DOUBLE,
+    ARG_DATE
 } instr_arg_type_t;
 
 #define OP_LIST                                   \
@@ -225,10 +238,12 @@ typedef enum {
     X(assign_ident,   1, ARG_BSTR,    ARG_UINT)   \
     X(assign_member,  1, ARG_BSTR,    ARG_UINT)   \
     X(bool,           1, ARG_INT,     0)          \
-    X(catch,          1, ARG_ADDR,    ARG_UINT)    \
+    X(catch,          1, ARG_ADDR,    ARG_UINT)   \
     X(case,           0, ARG_ADDR,    0)          \
     X(concat,         1, 0,           0)          \
     X(const,          1, ARG_BSTR,    0)          \
+    X(date,           1, ARG_DATE,    0)          \
+    X(deref,          1, 0,           0)          \
     X(dim,            1, ARG_BSTR,    ARG_UINT)   \
     X(div,            1, 0,           0)          \
     X(double,         1, ARG_DOUBLE,  0)          \
@@ -243,6 +258,7 @@ typedef enum {
     X(gteq,           1, 0,           0)          \
     X(icall,          1, ARG_BSTR,    ARG_UINT)   \
     X(icallv,         1, ARG_BSTR,    ARG_UINT)   \
+    X(ident,          1, ARG_BSTR,    0)          \
     X(idiv,           1, 0,           0)          \
     X(imp,            1, 0,           0)          \
     X(incc,           1, ARG_BSTR,    0)          \
@@ -265,17 +281,23 @@ typedef enum {
     X(not,            1, 0,           0)          \
     X(nothing,        1, 0,           0)          \
     X(null,           1, 0,           0)          \
+    X(numval,         1, 0,           0)          \
     X(or,             1, 0,           0)          \
     X(pop,            1, ARG_UINT,    0)          \
+    X(redim,          1, ARG_BSTR,    ARG_UINT)   \
+    X(redim_preserve, 1, ARG_BSTR,    ARG_UINT)   \
     X(ret,            0, 0,           0)          \
     X(retval,         1, 0,           0)          \
     X(set_ident,      1, ARG_BSTR,    ARG_UINT)   \
     X(set_member,     1, ARG_BSTR,    ARG_UINT)   \
+    X(stack,          1, ARG_UINT,    0)          \
     X(step,           0, ARG_ADDR,    ARG_BSTR)   \
     X(stop,           1, 0,           0)          \
     X(string,         1, ARG_STR,     0)          \
     X(sub,            1, 0,           0)          \
     X(val,            1, 0,           0)          \
+    X(vcall,          1, ARG_UINT,    0)          \
+    X(vcallv,         1, ARG_UINT,    0)          \
     X(xor,            1, 0,           0)
 
 typedef enum {
@@ -291,10 +313,12 @@ typedef union {
     unsigned uint;
     LONG lng;
     double *dbl;
+    DATE *date;
 } instr_arg_t;
 
 typedef struct {
     vbsop_t op;
+    unsigned loc;
     instr_arg_t arg1;
     instr_arg_t arg2;
 } instr_t;
@@ -311,7 +335,6 @@ typedef enum {
     FUNC_PROPGET,
     FUNC_PROPLET,
     FUNC_PROPSET,
-    FUNC_DEFGET
 } function_type_t;
 
 typedef struct {
@@ -335,70 +358,76 @@ struct _function_t {
 
 struct _vbscode_t {
     instr_t *instrs;
+    unsigned ref;
+
     WCHAR *source;
+    DWORD_PTR cookie;
+    unsigned start_line;
 
     BOOL option_explicit;
 
     BOOL pending_exec;
+    BOOL is_persistent;
     function_t main_code;
-    IDispatch *context;
+    named_item_t *named_item;
 
     BSTR *bstr_pool;
     unsigned bstr_pool_size;
     unsigned bstr_cnt;
     heap_pool_t heap;
 
+    function_t *funcs;
+    class_desc_t *classes;
+    class_desc_t *last_class;
+
     struct list entry;
 };
 
-void release_vbscode(vbscode_t*) DECLSPEC_HIDDEN;
-HRESULT compile_script(script_ctx_t*,const WCHAR*,const WCHAR*,DWORD,vbscode_t**) DECLSPEC_HIDDEN;
-HRESULT compile_procedure(script_ctx_t*,const WCHAR*,const WCHAR*,DWORD,class_desc_t**) DECLSPEC_HIDDEN;
-HRESULT exec_script(script_ctx_t*,BOOL,function_t*,vbdisp_t*,DISPPARAMS*,VARIANT*) DECLSPEC_HIDDEN;
-void release_dynamic_vars(dynamic_var_t*) DECLSPEC_HIDDEN;
-IDispatch *lookup_named_item(script_ctx_t*,const WCHAR*,unsigned) DECLSPEC_HIDDEN;
-void clear_ei(EXCEPINFO*) DECLSPEC_HIDDEN;
-HRESULT report_script_error(script_ctx_t*) DECLSPEC_HIDDEN;
-void detach_global_objects(script_ctx_t*) DECLSPEC_HIDDEN;
-HRESULT get_builtin_id(BuiltinDisp*,const WCHAR*,DISPID*) DECLSPEC_HIDDEN;
+static inline void grab_vbscode(vbscode_t *code)
+{
+    code->ref++;
+}
 
-void release_regexp_typelib(void) DECLSPEC_HIDDEN;
+void release_vbscode(vbscode_t*);
+HRESULT compile_script(script_ctx_t*,const WCHAR*,const WCHAR*,const WCHAR*,DWORD_PTR,unsigned,DWORD,vbscode_t**);
+HRESULT compile_procedure(script_ctx_t*,const WCHAR*,const WCHAR*,const WCHAR*,DWORD_PTR,unsigned,DWORD,class_desc_t**);
+HRESULT exec_script(script_ctx_t*,BOOL,function_t*,vbdisp_t*,DISPPARAMS*,VARIANT*);
+void release_dynamic_var(dynamic_var_t*);
+named_item_t *lookup_named_item(script_ctx_t*,const WCHAR*,unsigned);
+void release_named_item(named_item_t*);
+void clear_ei(EXCEPINFO*);
+HRESULT report_script_error(script_ctx_t*,const vbscode_t*,unsigned);
+void detach_global_objects(script_ctx_t*);
+HRESULT get_builtin_id(BuiltinDisp*,const WCHAR*,DISPID*);
+HRESULT array_access(SAFEARRAY *array, DISPPARAMS *dp, VARIANT **ret);
+
+void release_regexp_typelib(void);
+HRESULT get_dispatch_typeinfo(ITypeInfo**);
 
 static inline BOOL is_int32(double d)
 {
     return INT32_MIN <= d && d <= INT32_MAX && (double)(int)d == d;
 }
 
-HRESULT create_regexp(IDispatch**) DECLSPEC_HIDDEN;
+static inline BOOL is_digit(WCHAR c)
+{
+    return '0' <= c && c <= '9';
+}
 
-HRESULT map_hres(HRESULT) DECLSPEC_HIDDEN;
+HRESULT create_regexp(IDispatch**);
+BSTR string_replace(BSTR,BSTR,BSTR,int,int,int);
 
-HRESULT create_safearray_iter(SAFEARRAY *sa, IEnumVARIANT **ev) DECLSPEC_HIDDEN;
+void map_vbs_exception(EXCEPINFO *);
+
+HRESULT create_safearray_iter(SAFEARRAY *sa, BOOL owned, IEnumVARIANT **ev);
 
 #define FACILITY_VBS 0xa
 #define MAKE_VBSERROR(code) MAKE_HRESULT(SEVERITY_ERROR, FACILITY_VBS, code)
 
-HRESULT WINAPI VBScriptFactory_CreateInstance(IClassFactory*,IUnknown*,REFIID,void**) DECLSPEC_HIDDEN;
-HRESULT WINAPI VBScriptRegExpFactory_CreateInstance(IClassFactory*,IUnknown*,REFIID,void**) DECLSPEC_HIDDEN;
+HRESULT WINAPI VBScriptFactory_CreateInstance(IClassFactory*,IUnknown*,REFIID,void**);
+HRESULT WINAPI VBScriptRegExpFactory_CreateInstance(IClassFactory*,IUnknown*,REFIID,void**);
 
-BSTR get_vbscript_string(int) DECLSPEC_HIDDEN;
-BSTR get_vbscript_error_string(HRESULT) DECLSPEC_HIDDEN;
-
-static inline LPWSTR heap_strdupW(LPCWSTR str)
-{
-    LPWSTR ret = NULL;
-
-    if(str) {
-        DWORD size;
-
-        size = (lstrlenW(str)+1)*sizeof(WCHAR);
-        ret = heap_alloc(size);
-        if(ret)
-            memcpy(ret, str, size);
-    }
-
-    return ret;
-}
+BSTR get_vbscript_string(int);
 
 #define VBSCRIPT_BUILD_VERSION 16978
 #define VBSCRIPT_MAJOR_VERSION 5

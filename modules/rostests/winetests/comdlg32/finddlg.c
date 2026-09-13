@@ -58,7 +58,7 @@ static void test_param_check(void)
        ok(is_ok, "%s should%s fail\n", #FUNC, FAIL ? "" : "n't"); \
        if (FAIL && is_ok) { \
           DWORD ext_err = CommDlgExtendedError(); \
-          ok(ext_err == ERR_CODE, "expected err %x got %x\n", \
+          ok(ext_err == ERR_CODE, "expected err %x got %lx\n", \
              ERR_CODE, ext_err); \
        } else { \
           DestroyWindow(hwnd); \

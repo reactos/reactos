@@ -207,7 +207,7 @@ LoadHelperDll(
     dwError = pInitHelperDll(5, NULL);
     pCurrentDll = NULL;
 
-    DPRINT1("InitHelperDll returned %lu\n", dwError);
+    DPRINT("InitHelperDll returned %lu\n", dwError);
     if (dwError != ERROR_SUCCESS)
     {
         DPRINT1("Call to InitHelperDll failed (Error: %lu)\n", dwError);
@@ -269,7 +269,7 @@ LoadHelpers(VOID)
     DWORD dwNameLength, dwValueLength, dwType;
     DWORD dwIndex, dwError;
 
-    DPRINT1("LoadHelpers()\n");
+    DPRINT("LoadHelpers()\n");
 
     dwError = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
                             REG_NETSH_PATH,
@@ -319,7 +319,7 @@ LoadHelpers(VOID)
         if (dwError != ERROR_SUCCESS)
             break;
 
-        DPRINT1("Dll: %S --> %S  %lu\n", pszNameBuffer, pszValueBuffer, dwError);
+        DPRINT("Dll: %S --> %S  %lu\n", pszNameBuffer, pszValueBuffer, dwError);
         LoadHelperDll(pszValueBuffer, FALSE);
     }
 

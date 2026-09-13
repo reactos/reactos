@@ -302,9 +302,11 @@ IopInitializePlugPlayServices(VOID)
     /* Get the default interface */
     PnpDefaultInterfaceType = IopDetermineDefaultInterfaceType();
 
+#if 0 /* FIXME: Dont even try yet! */
     /* Initialize arbiters */
     Status = IopInitializeArbiters();
     if (!NT_SUCCESS(Status)) return Status;
+#endif
 
     /* Setup the group cache */
     Status = PiInitCacheGroupInformation();
@@ -456,7 +458,7 @@ IopInitializePlugPlayServices(VOID)
         KeBugCheckEx(PHASE1_INITIALIZATION_FAILED, STATUS_NO_MEMORY, 0, 0, 0);
     }
     RtlZeroMemory(PnpBusTypeGuidList.Guids, PnpBusTypeGuidList.AllocatedCount * sizeof(GUID));
-  
+
     /* Initialize PnP root relations (this is a syncronous operation) */
     PiQueueDeviceAction(Pdo, PiActionEnumRootDevices, NULL, NULL);
 

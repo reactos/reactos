@@ -40,7 +40,7 @@ WINAPI
 GetHandleInformation(IN HANDLE hObject,
                      OUT LPDWORD lpdwFlags)
 {
-    OBJECT_HANDLE_ATTRIBUTE_INFORMATION HandleInfo;
+    OBJECT_HANDLE_FLAG_INFORMATION HandleFlags;
     ULONG BytesWritten;
     NTSTATUS Status;
     DWORD Flags;
@@ -54,8 +54,8 @@ GetHandleInformation(IN HANDLE hObject,
 
     Status = NtQueryObject(hObject,
                            ObjectHandleFlagInformation,
-                           &HandleInfo,
-                           sizeof(OBJECT_HANDLE_ATTRIBUTE_INFORMATION),
+                           &HandleFlags,
+                           sizeof(HandleFlags),
                            &BytesWritten);
     if (!NT_SUCCESS(Status))
     {
@@ -64,8 +64,8 @@ GetHandleInformation(IN HANDLE hObject,
     }
 
     Flags = 0;
-    if (HandleInfo.Inherit) Flags |= HANDLE_FLAG_INHERIT;
-    if (HandleInfo.ProtectFromClose) Flags |= HANDLE_FLAG_PROTECT_FROM_CLOSE;
+    if (HandleFlags.Inherit) Flags |= HANDLE_FLAG_INHERIT;
+    if (HandleFlags.ProtectFromClose) Flags |= HANDLE_FLAG_PROTECT_FROM_CLOSE;
     *lpdwFlags = Flags;
     return TRUE;
 }
@@ -79,7 +79,7 @@ SetHandleInformation(IN HANDLE hObject,
                      IN DWORD dwMask,
                      IN DWORD dwFlags)
 {
-    OBJECT_HANDLE_ATTRIBUTE_INFORMATION HandleInfo;
+    OBJECT_HANDLE_FLAG_INFORMATION HandleFlags;
     ULONG BytesWritten;
     NTSTATUS Status;
 
@@ -92,8 +92,8 @@ SetHandleInformation(IN HANDLE hObject,
 
     Status = NtQueryObject(hObject,
                            ObjectHandleFlagInformation,
-                           &HandleInfo,
-                           sizeof(OBJECT_HANDLE_ATTRIBUTE_INFORMATION),
+                           &HandleFlags,
+                           sizeof(HandleFlags),
                            &BytesWritten);
     if (!NT_SUCCESS(Status))
     {
@@ -103,18 +103,18 @@ SetHandleInformation(IN HANDLE hObject,
 
     if (dwMask & HANDLE_FLAG_INHERIT)
     {
-        HandleInfo.Inherit = (dwFlags & HANDLE_FLAG_INHERIT) != 0;
+        HandleFlags.Inherit = (dwFlags & HANDLE_FLAG_INHERIT) != 0;
     }
 
     if (dwMask & HANDLE_FLAG_PROTECT_FROM_CLOSE)
     {
-        HandleInfo.ProtectFromClose = (dwFlags & HANDLE_FLAG_PROTECT_FROM_CLOSE) != 0;
+        HandleFlags.ProtectFromClose = (dwFlags & HANDLE_FLAG_PROTECT_FROM_CLOSE) != 0;
     }
 
     Status = NtSetInformationObject(hObject,
                                     ObjectHandleFlagInformation,
-                                    &HandleInfo,
-                                    sizeof(HandleInfo));
+                                    &HandleFlags,
+                                    sizeof(HandleFlags));
     if (NT_SUCCESS(Status)) return TRUE;
 
     BaseSetLastNTError(Status);

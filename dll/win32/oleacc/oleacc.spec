@@ -1,5 +1,5 @@
 @ stdcall AccessibleChildren(ptr long long ptr ptr)
-@ stub AccessibleObjectFromEvent
+@ stdcall AccessibleObjectFromEvent(ptr long long ptr ptr)
 @ stdcall AccessibleObjectFromPoint(int64 ptr ptr)
 @ stdcall AccessibleObjectFromWindow(ptr long ptr ptr)
 @ stdcall CreateStdAccessibleObject(ptr long ptr ptr)

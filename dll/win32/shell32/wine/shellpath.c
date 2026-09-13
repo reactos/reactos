@@ -1201,6 +1201,7 @@ typedef enum _CSIDL_Type {
     CSIDL_Type_WindowsPath,
     CSIDL_Type_SystemPath,
     CSIDL_Type_SystemX86Path,
+    CSIDL_Type_ProgramData
 } CSIDL_Type;
 
 /* Cannot use #if _WIN32_WINNT >= 0x0600 because _WIN32_WINNT == 0x0600 here. */
@@ -3232,11 +3233,11 @@ HRESULT SHGetFolderLocationHelper(HWND hwnd, int nFolder, REFCLSID clsid, LPITEM
     HRESULT hr;
     IShellFolder *psf;
     LPITEMIDLIST parent, child;
-    EXTERN_C HRESULT SHBindToObject(IShellFolder *psf, LPCITEMIDLIST pidl, REFIID riid, void **ppvObj);
+    SHSTDAPI SHBindToObject(IShellFolder *psf, LPCITEMIDLIST pidl, IBindCtx *pBindCtx, REFIID riid, void **ppvObj);
     *ppidl = NULL;
     if (FAILED(hr = SHGetFolderLocation(hwnd, nFolder, NULL, 0, &parent)))
         return hr;
-    if (SUCCEEDED(hr = SHBindToObject(NULL, parent, &IID_IShellFolder, (void**)&psf)))
+    if (SUCCEEDED(hr = SHBindToObject(NULL, parent, NULL, &IID_IShellFolder, (void**)&psf)))
     {
         WCHAR clsidstr[2 + 38 + 1];
         clsidstr[0] = clsidstr[1] = L':';

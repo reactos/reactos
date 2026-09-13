@@ -359,7 +359,7 @@ VOID
 CcRosMarkDirtyVacb(
     PROS_VACB Vacb);
 
-VOID
+BOOLEAN
 CcRosUnmarkDirtyVacb(
     PROS_VACB Vacb,
     BOOLEAN LockViews);

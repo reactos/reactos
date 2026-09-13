@@ -34,12 +34,6 @@ extern ULONG gDiskReadBuffer, gFileSysBuffer;
 
 #define DriveMapGetBiosDriveNumber(DeviceName) 0
 
-DECLSPEC_NORETURN
-FORCEINLINE VOID Reboot(VOID)
-{
-    DbgBreakPoint();
-}
-
 typedef struct _PAGE_TABLE_ARM
 {
     HARDWARE_PTE_ARMV6 Pte[1024];

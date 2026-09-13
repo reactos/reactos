@@ -83,13 +83,13 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON4, IDC_STATIC, 21, 7, 20, 20
     LTEXT "Las opciones regionales y de idioma permiten configurar la forma en la que se representan fechas, números, monedas y horas. También permite compatibilizar con otros idiomas y cambiar los ajustes de ubicación.", IDC_STATIC, 53, 6, 253, 30
-    LTEXT "%s", IDC_LOCALETEXT, 53, 34, 250, 16
-    LTEXT "Para modificar esta configuración, pulse Modificar.", IDC_STATIC, 53, 60, 184, 8
+    LTEXT "", IDC_LOCALETEXT, 53, 34, 250, 16
+    LTEXT "Para modificar esta configuración, pulse Modificar.", IDC_STATIC, 53, 60, 190, 8
     PUSHBUTTON "&Modificar...", IDC_CUSTOMLOCALE, 245, 57, 50, 14
     LTEXT "", IDC_STATIC, 53, 79, 241, 1, SS_ETCHEDHORZ
     LTEXT "La distribución del teclado determina el caracter que se muestra al presionar cada tecla.", IDC_STATIC, 53, 86, 253, 32
-    LTEXT "%s", IDC_LAYOUTTEXT, 53, 109, 250, 16
-    LTEXT "Para cambiar la distribución del teclado, pulse Modificar.", IDC_STATIC, 53, 126, 184, 8
+    LTEXT "", IDC_LAYOUTTEXT, 53, 109, 250, 16
+    LTEXT "Para cambiar la distribución del teclado, pulse Modificar.", IDC_STATIC, 53, 126, 190, 8
     PUSHBUTTON "&Modificar...", IDC_CUSTOMLAYOUT, 245, 122, 50, 14
 END
 
@@ -123,13 +123,15 @@ BEGIN
     LTEXT "Registrando componentes", IDC_TASKTEXT1, 65, 27, 232, 8
     LTEXT "Instalando elementos del menú de inicio", IDC_TASKTEXT2, 65, 39, 232, 8
     LTEXT "Guardando la configuración", IDC_TASKTEXT3, 65, 51, 232, 8
-    LTEXT "Eliminando archivos temporales", IDC_TASKTEXT4, 65, 63, 232, 8
+    LTEXT "Installing optional components", IDC_TASKTEXT4, 65, 63, 232, 8
+    LTEXT "Eliminando archivos temporales", IDC_TASKTEXT5, 65, 75, 232, 8
     LTEXT "", IDC_ITEM, 21, 85, 275, 8
     CONTROL "", IDC_PROCESSPROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 21, 97, 275, 11
-    ICON "", IDC_CHECK1, 48, 26, 10, 10, SS_REALSIZEIMAGE | WS_GROUP
-    ICON "", IDC_CHECK2, 48, 38, 10, 10, SS_REALSIZEIMAGE | WS_GROUP
-    ICON "", IDC_CHECK3, 48, 50, 10, 10, SS_REALSIZEIMAGE | WS_GROUP
-    ICON "", IDC_CHECK4, 48, 62, 10, 10, SS_REALSIZEIMAGE | WS_GROUP
+    ICON "", IDC_CHECK1, 48, 26, 10, 10, SS_REALSIZEIMAGE
+    ICON "", IDC_CHECK2, 48, 38, 10, 10, SS_REALSIZEIMAGE
+    ICON "", IDC_CHECK3, 48, 50, 10, 10, SS_REALSIZEIMAGE
+    ICON "", IDC_CHECK4, 48, 62, 10, 10, SS_REALSIZEIMAGE
+    ICON "", IDC_CHECK5, 48, 74, 10, 10, SS_REALSIZEIMAGE
 END
 
 IDD_FINISHPAGE DIALOGEX 0, 0, 317, 193
@@ -168,13 +170,13 @@ CAPTION "Configuración avanzada"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "", IDC_PS2STATIC, 5, 20, 242, 110
-    RTEXT "&Promedio de muestra:", -1, 27, 35, 90, 8
-    LTEXT "reportes por segundo", -1, 169, 35, 76, 8
+    RTEXT "&Promedio de muestra:", IDC_STATIC, 27, 35, 90, 8
+    LTEXT "reportes por segundo", IDC_STATIC, 169, 35, 76, 8
     COMBOBOX IDC_PS2MOUSESAMPLERATE, 124, 33, 42, 41, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-    RTEXT "&Detectar rueda:", -1, 27, 55, 90, 8
+    RTEXT "&Detectar rueda:", IDC_STATIC, 27, 55, 90, 8
     COMBOBOX IDC_PS2MOUSEWHEEL, 124, 53, 95, 46, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-    RTEXT "&Buffer de entrada:", -1, 27, 75, 90, 8
-    LTEXT "paquetes", -1, 169, 75, 26, 8
+    RTEXT "&Buffer de entrada:", IDC_STATIC, 27, 75, 90, 8
+    LTEXT "paquetes", IDC_STATIC, 169, 75, 26, 8
     EDITTEXT IDC_PS2MOUSEINPUTLEN, 124, 72, 40, 14, ES_LEFT | ES_AUTOHSCROLL | ES_READONLY | ES_NUMBER | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_BORDER
     CONTROL "", IDC_PS2MOUSEINPUTUPDN, "msctls_updown32", UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | WS_CHILD | WS_VISIBLE, 168, 70, 10, 14
     AUTOCHECKBOX "&Inicialización rápida", IDC_PS2MOUSEFASTINIT, 124, 97, 90, 10
@@ -268,10 +270,17 @@ BEGIN
     IDS_INSTALLATIONWORKSTATIONNAME "ReactOS como Sobremesa"
     IDS_INSTALLATIONWORKSTATIONINFO "El sistema se mostrará como un PC de sobremesa. Las carpetas privadas ""Mis imágenes"", ""Mis vídeos"" y ""Mi música"" estarán dentro de ""Mis documentos""."
     IDS_INSTALLATIONSERVERCORENAME "ReactOS Server Core"
-    IDS_INSTALLATIONSERVERCOREINFO "The system will be recognized as a server. The graphical shell is not installed, and the system starts in a command‑line environment to reduce resource usage and attack surface."
+    IDS_INSTALLATIONSERVERCOREINFO "The system will be recognized as a server. The graphical shell is not installed, and the system starts in a command-line environment to reduce resource usage and attack surface."
     /* Reserved for future use
      * IDS_INSTALLATIONNANOSERVERNAME "ReactOS Nano Server"
      * IDS_INSTALLATIONNANOSERVERINFO "The system will be recognized as a server. The system is entirely in text mode. You are expected to manage this system remotely."
      */
     IDS_DEFAULT "(Por defecto)"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_INSTALLADDONSCAPTION "Optional Components"
+    IDS_INSTALLADDONSMESSAGE "Optional components are available to improve application compatibility.\n\nWould you like to download and install them?"
+    IDS_INSTALLADDONSFAILEDMESSAGE "One or more optional components failed to install."
 END

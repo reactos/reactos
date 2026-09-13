@@ -67,6 +67,19 @@ struct ToolBase
 class ToolsModel
 {
 private:
+    class VirtualBrush
+    {
+    protected:
+        COLORREF m_rgbColor = RGB(0, 0, 0);
+        PAL_TYPE m_palette = PAL_MODERN;
+        HBRUSH m_hBrush = NULL;
+
+    public:
+        ~VirtualBrush();
+
+        HBRUSH GetBrush(PAL_TYPE palette, COLORREF rgbColor);
+    };
+
     int m_lineWidth;
     INT m_penWidth;
     INT m_brushWidth;
@@ -79,6 +92,8 @@ private:
     BOOL m_transpBg;
     int m_zoom;
     ToolBase *m_pToolObject;
+    VirtualBrush m_fgBrush;
+    VirtualBrush m_bgBrush;
 
     ToolBase *GetOrCreateTool(TOOLTYPE nTool);
     void SendSetCursor();
@@ -144,18 +159,24 @@ public:
     void SpecialTweak(BOOL bMinus);
 
     void DrawWithMouseTool(POINT pt, WPARAM wParam);
+
+    HBRUSH GetFgBrush();
+    HBRUSH GetBgBrush();
+    static HBRUSH CreateBrush(PAL_TYPE palette, COLORREF color);
 };
 
 extern ToolsModel toolsModel;
 
 static inline int Zoomed(int xy)
 {
-    return xy * toolsModel.GetZoom() / 1000;
+    return MulDiv(xy, toolsModel.GetZoom(), DEFAULT_ZOOM);
 }
 
-static inline int UnZoomed(int xy)
+static inline int UnZoomed(int xy, BOOL bRound = FALSE)
 {
-    return xy * 1000 / toolsModel.GetZoom();
+    if (bRound)
+        return MulDiv(xy, DEFAULT_ZOOM, toolsModel.GetZoom());
+    return xy * DEFAULT_ZOOM / toolsModel.GetZoom();
 }
 
 static inline void Zoomed(POINT& pt)
@@ -168,12 +189,13 @@ static inline void Zoomed(RECT& rc)
     rc = { Zoomed(rc.left), Zoomed(rc.top), Zoomed(rc.right), Zoomed(rc.bottom) };
 }
 
-static inline void UnZoomed(POINT& pt)
+static inline void UnZoomed(POINT& pt, BOOL bRound = FALSE)
 {
-    pt = { UnZoomed(pt.x), UnZoomed(pt.y) };
+    pt = { UnZoomed(pt.x, bRound), UnZoomed(pt.y, bRound) };
 }
 
-static inline void UnZoomed(RECT& rc)
+static inline void UnZoomed(RECT& rc, BOOL bRound = FALSE)
 {
-    rc = { UnZoomed(rc.left), UnZoomed(rc.top), UnZoomed(rc.right), UnZoomed(rc.bottom) };
+    rc = { UnZoomed(rc.left, bRound), UnZoomed(rc.top, bRound),
+           UnZoomed(rc.right, bRound), UnZoomed(rc.bottom, bRound) };
 }

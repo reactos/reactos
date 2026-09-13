@@ -211,20 +211,6 @@ CStubWindow32::CreateStub(UINT Type, LPCWSTR Path, const POINT *pPt)
     return S_OK;
 }
 
-HRESULT
-SHILClone(
-    _In_opt_ LPCITEMIDLIST pidl,
-    _Outptr_ LPITEMIDLIST *ppidl)
-{
-    if (!pidl)
-    {
-        *ppidl = NULL;
-        return S_OK;
-    }
-    *ppidl = ILClone(pidl);
-    return (*ppidl ? S_OK : E_OUTOFMEMORY);
-}
-
 BOOL PathIsDotOrDotDotW(_In_ LPCWSTR pszPath)
 {
     if (pszPath[0] != L'.')
@@ -405,10 +391,10 @@ BOOL Shell_FailForceReturn(_In_ HRESULT hr)
     }
 }
 
-HRESULT
-SHBindToObjectEx(
+SHSTDAPI
+SHBindToObject(
     _In_opt_ IShellFolder *pShellFolder,
-    _In_ LPCITEMIDLIST pidl,
+    _In_ PCUIDLIST_RELATIVE pidl,
     _In_opt_ IBindCtx *pBindCtx,
     _In_ REFIID riid,
     _Out_ void **ppvObj)
@@ -436,16 +422,6 @@ SHBindToObjectEx(
         hr = E_FAIL;
 
     return hr;
-}
-
-EXTERN_C
-HRESULT SHBindToObject(
-    _In_opt_ IShellFolder *psf,
-    _In_ LPCITEMIDLIST pidl,
-    _In_ REFIID riid,
-    _Out_ void **ppvObj)
-{
-    return SHBindToObjectEx(psf, pidl, NULL, riid, ppvObj);
 }
 
 EXTERN_C HRESULT
@@ -554,7 +530,7 @@ SHGetAttributes(_In_ IShellFolder *psf, _In_ LPCITEMIDLIST pidl, _In_ DWORD dwAt
 HRESULT SHELL_GetIDListTarget(_In_ LPCITEMIDLIST pidl, _Out_ PIDLIST_ABSOLUTE *ppidl)
 {
     IShellLink *pSL;
-    HRESULT hr = SHBindToObject(NULL, pidl, IID_PPV_ARG(IShellLink, &pSL));
+    HRESULT hr = SHBindToObject(NULL, pidl, NULL, IID_PPV_ARG(IShellLink, &pSL));
     if (SUCCEEDED(hr))
     {
         hr = pSL->GetIDList(ppidl); // Note: Returns S_FALSE if no target pidl

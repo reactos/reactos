@@ -24,6 +24,7 @@ import "oaidl.idl";
 
 [
     helpstring("Microsoft VBScript Regular Expressions 1.0"),
+    id(2),
     uuid(3f4daca7-160d-11d2-a8e9-00104b365c9f),
     version(1.0)
 ]

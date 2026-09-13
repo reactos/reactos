@@ -1843,7 +1843,7 @@ FsRtlpGetResourceForModWrite(_In_ PFSRTL_COMMON_FCB_HEADER FcbHeader,
 }
 
 /**
- * @brief Lock a file object before flushing pages to disk. 
+ * @brief Lock a file object before flushing pages to disk.
  *        To be called by the Modified Page Writer (MPW)
  *
  * @param FileObject - The file object to lock
@@ -1903,7 +1903,7 @@ FsRtlAcquireFileForModWriteEx(_In_ PFILE_OBJECT FileObject,
 
         if (ResourceToAcquire == NULL)
         {
-            /* 
+            /*
              * There's nothing to acquire, we can simply return success
              */
 
@@ -1953,7 +1953,7 @@ FsRtlAcquireFileForModWriteEx(_In_ PFILE_OBJECT FileObject,
 }
 
 /**
- * @brief Unlock a file object after flushing pages to disk. 
+ * @brief Unlock a file object after flushing pages to disk.
  *        To be called by the Modified Page Writer (MPW) after a succesful call to
  *        FsRtlAcquireFileForModWriteEx
  *

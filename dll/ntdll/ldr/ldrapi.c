@@ -796,6 +796,20 @@ LdrGetProcedureAddress(
     return LdrpGetProcedureAddress(BaseAddress, Name, Ordinal, ProcedureAddress, TRUE);
 }
 
+NTSTATUS
+NTAPI
+LdrGetProcedureAddressEx(
+    _In_ PVOID BaseAddress,
+    _In_opt_ _When_(Ordinal == 0, _Notnull_) PANSI_STRING Name,
+    _In_opt_ _When_(Name == NULL, _In_range_(>, 0)) ULONG Ordinal,
+    _Out_ PVOID *ProcedureAddress,
+    _In_ ULONG Flags)
+{
+    /* Call the internal routine and execute DllInit depending of flags */
+    BOOLEAN ExecuteInit = !(Flags & LDR_GET_PROCEDURE_ADDRESS_DONT_RECORD_FORWARDER);
+    return LdrpGetProcedureAddress(BaseAddress, Name, Ordinal, ProcedureAddress, ExecuteInit);
+}
+
 /*
  * @implemented
  */

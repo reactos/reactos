@@ -11,6 +11,7 @@
 #endif
 
 typedef unsigned long uacpi_cpu_flags;
+typedef unsigned long uacpi_interrupt_state;
 
 typedef void *uacpi_thread_id;
 

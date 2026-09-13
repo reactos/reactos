@@ -251,4 +251,26 @@ PUBLIC KiSwapContext
     ret
 .ENDP
 
+
+/*!
+ * KiReloadWow64Fs
+ *
+ * \brief
+ *     The KiReloadWow64Fs routine forces the reloading of the cached FS segment data.
+ *
+ * VOID
+ * KiReloadWow64Fs(VOID);
+ *
+ *--*/
+PUBLIC KiReloadWow64Fs
+.PROC KiReloadWow64Fs
+    .endprolog
+
+    /* Force reloading of FS */
+    push fs
+    pop fs
+
+    ret
+.ENDP
+
 END

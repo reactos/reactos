@@ -76,11 +76,7 @@ HRESULT WriteExtraChunk(LPEXTRACHUNKS extra,FOURCC ckid,LPCVOID lpData, LONG siz
   assert(lpData != NULL);
   assert(size > 0);
 
-  if (extra->lp)
-    lp = HeapReAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, extra->lp, extra->cb + size + 2 * sizeof(DWORD));
-  else
-    lp = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, size + 2 * sizeof(DWORD));
-
+  lp = _recalloc(extra->lp, 1, extra->cb + size + 2 * sizeof(DWORD));
   if (lp == NULL)
     return AVIERR_MEMORY;
 
@@ -112,11 +108,7 @@ HRESULT ReadChunkIntoExtra(LPEXTRACHUNKS extra,HMMIO hmmio,const MMCKINFO *lpck)
   cb  = lpck->cksize + 2 * sizeof(DWORD);
   cb += (cb & 1);
 
-  if (extra->lp != NULL)
-    lp = HeapReAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, extra->lp, extra->cb + cb);
-  else
-    lp = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, cb);
-
+  lp = _recalloc(extra->lp, 1, extra->cb + cb);
   if (lp == NULL)
     return AVIERR_MEMORY;
 
@@ -152,7 +144,7 @@ HRESULT FindChunkAndKeepExtras(LPEXTRACHUNKS extra,HMMIO hmmio,MMCKINFO *lpck,
   assert(hmmio != NULL);
   assert(lpck  != NULL);
 
-  TRACE("({%p,%u},%p,%p,%p,0x%X)\n", extra->lp, extra->cb, hmmio, lpck,
+  TRACE("({%p,%lu},%p,%p,%p,0x%X)\n", extra->lp, extra->cb, hmmio, lpck,
 	lpckParent, flags);
 
   /* what chunk id and form/list type should we search? */
@@ -168,7 +160,7 @@ HRESULT FindChunkAndKeepExtras(LPEXTRACHUNKS extra,HMMIO hmmio,MMCKINFO *lpck,
   } else
     ckid = fccType = (FOURCC)-1; /* collect everything into extra! */
 
-  TRACE(": find ckid=0x%08X fccType=0x%08X\n", ckid, fccType);
+  TRACE(": find ckid=0x%08lX fccType=0x%08lX\n", ckid, fccType);
 
   for (;;) {
     mmr = mmioDescend(hmmio, lpck, lpckParent, 0);

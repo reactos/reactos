@@ -589,6 +589,9 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
     Prcb->NextThread = NULL;
     Prcb->IdleThread = InitThread;
 
+    /* Initialize start cycles */
+    Prcb->StartCycles = __rdtsc();
+
     /* Initialize the Kernel Executive */
     ExpInitializeExecutive(Number, LoaderBlock);
 

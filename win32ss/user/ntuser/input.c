@@ -24,6 +24,8 @@ PKTIMER MasterTimer = NULL;
 PATTACHINFO gpai = NULL;
 INT paiCount = 0;
 HANDLE ghKeyboardDevice = NULL;
+PINPUT_DEVICE_INFO gpInputDeviceInfo = NULL;
+PERESOURCE gpDeviceInfoListMutex = NULL;
 
 static DWORD LastInputTick = 0;
 static HANDLE ghMouseDevice;
@@ -151,6 +153,17 @@ RawInputThreadMain(VOID)
     KEYBOARD_INPUT_DATA KeyInput;
     PVOID ShutdownEvent;
     HWINSTA hWinSta;
+    INPUT_DEVICE_INFO Mouse;
+    INPUT_DEVICE_INFO Keyboard;
+
+    RtlZeroMemory(&Mouse, sizeof(Mouse));
+    Mouse.DeviceType = RIM_TYPEMOUSE;
+    RtlInitUnicodeString(&Mouse.DeviceName, L"\\Device\\PointerClass0");
+    Mouse.Mouse.Attributes.NumberOfButtons = 2;
+
+    RtlZeroMemory(&Keyboard, sizeof(Keyboard));
+    Keyboard.DeviceType = RIM_TYPEKEYBOARD;
+    RtlInitUnicodeString(&Keyboard.DeviceName, L"\\Device\\KeyboardClass0");
 
     ByteOffset.QuadPart = (LONGLONG)0;
     //WaitTimeout.QuadPart = (LONGLONG)(-10000000);
@@ -181,6 +194,11 @@ RawInputThreadMain(VOID)
         /* Failed to open the interactive winsta! What now? */
     }
 
+    gpDeviceInfoListMutex = ExAllocatePoolWithTag(NonPagedPool, sizeof(*gpDeviceInfoListMutex), USERTAG_SYSTEM);
+    ASSERT(gpDeviceInfoListMutex);
+    Status = ExInitializeResourceLite(gpDeviceInfoListMutex);
+    ASSERT(NT_SUCCESS(Status));
+
     UserEnterExclusive();
     StartTheTimers();
     UserLeave();
@@ -194,23 +212,28 @@ RawInputThreadMain(VOID)
         if (!ghMouseDevice)
         {
             /* Check if mouse device already exists */
-            Status = OpenInputDevice(&ghMouseDevice, &pMouDevice, L"\\Device\\PointerClass0" );
+            Status = OpenInputDevice(&ghMouseDevice, &pMouDevice, Mouse.DeviceName.Buffer);
             if (NT_SUCCESS(Status))
             {
                 ++cMaxWaitObjects;
                 TRACE("Mouse connected!\n");
+                Mouse.pNextDeviceInfo = gpInputDeviceInfo;
+                gpInputDeviceInfo = &Mouse;
             }
         }
         if (!ghKeyboardDevice)
         {
             /* Check if keyboard device already exists */
-            Status = OpenInputDevice(&ghKeyboardDevice, &pKbdDevice, L"\\Device\\KeyboardClass0");
+            Status = OpenInputDevice(&ghKeyboardDevice, &pKbdDevice, Keyboard.DeviceName.Buffer);
             if (NT_SUCCESS(Status))
             {
                 ++cMaxWaitObjects;
                 TRACE("Keyboard connected!\n");
+                Keyboard.pNextDeviceInfo = gpInputDeviceInfo;
+                gpInputDeviceInfo = &Keyboard;
                 // Get and load keyboard attributes.
                 UserInitKeyboard(ghKeyboardDevice);
+                Keyboard.Keyboard.Attributes = gKeyboardInfo;
                 UserEnterExclusive();
                 // Register the Window hotkey.
                 UserRegisterHotKey(PWND_BOTTOM, IDHK_WINKEY, MOD_WIN, 0);
@@ -361,6 +384,8 @@ RawInputThreadMain(VOID)
         ObDereferenceObject(pKbdDevice);
         ghKeyboardDevice = NULL;
     }
+
+    ExFreePoolWithTag(gpDeviceInfoListMutex, USERTAG_SYSTEM);
 
     ERR("Raw Input Thread Exit!\n");
 }

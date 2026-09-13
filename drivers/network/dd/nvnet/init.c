@@ -175,6 +175,7 @@ NvNetReadConfiguration(
                  0,
                  0,
                  NVNET_MAXIMUM_VLAN_ID);
+    Adapter->VlanId = GenericUlong;
 
     NdisReadNetworkAddress(&Status,
                            (PVOID*)&NetworkAddress,

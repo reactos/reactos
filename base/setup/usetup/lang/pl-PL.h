@@ -1269,7 +1269,7 @@ static MUI_ENTRY plPLFormatPartitionEntries[] =
     {
         0,
         0,
-        "ENTER = Kontynuacja   F3 = Wyj\230cie",
+        "ENTER = Kontynuacja   ESC = Anulowanie   F3 = Wyj\230cie",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
         0
     },

@@ -6,7 +6,7 @@
 7 stub LanaCfgFromCommandArgs
 8 stub ModemClassCoInstaller
 9 stub NetCfgDiagFromCommandArgs
-10 stub NetCfgDiagRepairRegistryBindings
+10 stdcall NetCfgDiagRepairRegistryBindings(long)
 11 stdcall NetClassInstaller(long ptr ptr)
 12 stdcall NetPropPageProvider(ptr ptr long)
 13 stub RasAddBindings

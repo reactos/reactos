@@ -1655,7 +1655,8 @@ IopGetSetSecurityObject(IN PVOID ObjectBody,
                         IN OUT PULONG BufferLength,
                         IN OUT PSECURITY_DESCRIPTOR *OldSecurityDescriptor,
                         IN POOL_TYPE PoolType,
-                        IN OUT PGENERIC_MAPPING GenericMapping)
+                        IN OUT PGENERIC_MAPPING GenericMapping,
+                        IN KPROCESSOR_MODE AccessMode)
 {
     IO_STATUS_BLOCK IoStatusBlock;
     PIO_STACK_LOCATION StackPtr;
@@ -2176,8 +2177,8 @@ NTAPI
 IopCloseFile(IN PEPROCESS Process OPTIONAL,
              IN PVOID ObjectBody,
              IN ACCESS_MASK GrantedAccess,
-             IN ULONG HandleCount,
-             IN ULONG SystemHandleCount)
+             IN ULONG_PTR HandleCount,
+             IN ULONG_PTR SystemHandleCount)
 {
     PFILE_OBJECT FileObject = (PFILE_OBJECT)ObjectBody;
     KEVENT Event;

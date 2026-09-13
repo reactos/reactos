@@ -126,7 +126,61 @@ SHELL_ErrorBox(H hwndOwner, UINT Error = GetLastError())
 #define SHELL_ErrorBox SHELL_ErrorBoxHelper
 #endif
 
+static inline HRESULT
+SHELL_RegGetStringEx(HKEY hKey, PCWSTR pszPath, PCWSTR pszName, UINT SRRF, PWSTR pszOut, DWORD cchMax)
+{
+#ifndef SRRF_RT_REG_SZ
+    LSTATUS WINAPI SHRegGetValueW(HKEY h, LPCWSTR p, LPCWSTR n, UINT f, LPDWORD t, LPVOID d, LPDWORD s);
+#endif
+    DWORD cb = cchMax * sizeof(*pszOut);
+    UINT err = SHRegGetValueW(hKey, pszPath, pszName, SRRF, NULL, pszOut, &cb);
+    return err ? HRESULT_FROM_WIN32(err) : (cb / sizeof(*pszOut));
+}
+
+static inline HRESULT
+SHELL_RegGetString(HKEY hKey, PCWSTR pszPath, PCWSTR pszName, PWSTR pszOut, DWORD cchMax)
+{
+    return SHELL_RegGetStringEx(hKey, pszPath, pszName, 1 << REG_SZ, pszOut, cchMax);
+}
+
 #ifdef __cplusplus
+#if _SHELL32_ || _SHLWAPI_
+template<class T> static HRESULT
+SHELL_RegGetValueAlloc(HKEY hKey, PCWSTR pszPath, PCWSTR pszName, T &pOut, UINT SRRF = 0, DWORD *pType = NULL)
+{
+#ifndef SRRF_RT_REG_SZ
+    LSTATUS WINAPI SHRegGetValueW(HKEY h, LPCWSTR p, LPCWSTR n, UINT f, LPDWORD t, LPVOID d, LPDWORD s);
+#endif
+    pOut = NULL;
+    DWORD type, cb = 0;
+    if (!pType)
+        pType = &type;
+    UINT err = SHRegGetValueW(hKey, pszPath, pszName, SRRF, pType, NULL, &cb);
+    if (err != ERROR_SUCCESS)
+      return HRESULT_FROM_WIN32(err);
+    do
+    {
+        void *pAlloc = SHAlloc(cb);
+        if (!pAlloc)
+            return E_OUTOFMEMORY;
+        err = SHRegGetValueW(hKey, pszPath, pszName, SRRF, pType, pAlloc, &cb);
+        if (err == ERROR_SUCCESS)
+        {
+            pOut = (T)pAlloc;
+            return cb;
+        }
+        SHFree(pAlloc);
+    } while (err == ERROR_MORE_DATA);
+    return HRESULT_FROM_WIN32(err);
+}
+
+static inline HRESULT
+SHELL_RegGetStringAlloc(HKEY hKey, PCWSTR pszPath, PCWSTR pszName, PWSTR &pszOut, UINT SRRF = 1 << REG_SZ, DWORD *pType = NULL)
+{
+    return SHELL_RegGetValueAlloc(hKey, pszPath, pszName, pszOut, SRRF, pType);
+}
+#endif
+
 #ifdef DECLARE_CLASSFACTORY // ATL
 template <typename T>
 class CComCreatorCentralInstance
@@ -459,15 +513,23 @@ HRESULT inline ShellObjectCreatorInit(T1 initArg1, T2 initArg2, T3 initArg3, T4 
 }
 #endif // DECLARE_CLASSFACTORY (ATL)
 
-template<class P, class R> static HRESULT SHILClone(P pidl, R *ppOut)
+static inline HRESULT SHILClone(LPCITEMIDLIST pidl, LPITEMIDLIST *ppOut)
 {
-    R r = *ppOut = (R)ILClone((PIDLIST_RELATIVE)pidl);
+    LPITEMIDLIST r = *ppOut = ILClone((PIDLIST_RELATIVE)pidl);
     return r ? S_OK : E_OUTOFMEMORY;
 }
 
-template<class B, class R> static HRESULT SHILCombine(B base, PCUIDLIST_RELATIVE sub, R *ppOut)
+static inline HRESULT SHILCloneParent(LPCITEMIDLIST pidl, LPITEMIDLIST *ppOut)
 {
-    R r = *ppOut = (R)ILCombine((PCIDLIST_ABSOLUTE)base, sub);
+    LPITEMIDLIST r = *ppOut = ILClone((PIDLIST_RELATIVE)pidl);
+    if (r)
+        ILRemoveLastID(r); // "c:\folder\thisitem" => "c:\folder"
+    return r ? S_OK : E_OUTOFMEMORY;
+}
+
+static inline HRESULT SHILCombine(LPCITEMIDLIST base, PCUIDLIST_RELATIVE sub, LPITEMIDLIST *ppOut)
+{
+    LPITEMIDLIST r = *ppOut = ILCombine((PCIDLIST_ABSOLUTE)base, sub);
     return r ? S_OK : E_OUTOFMEMORY;
 }
 
@@ -911,7 +973,7 @@ static inline void DumpIdListOneLine(LPCITEMIDLIST pidl)
         {
             if (!depth)
             {
-                wsprintfA(buf, "%p [] (%s)\n", pidl, pidl ? "Empty/Desktop" : "NULL");
+                wsprintfA(buf, "%p [] (%s)", pidl, pidl ? "Empty/Desktop" : "NULL");
                 OutputDebugStringA(buf);
             }
             break;

@@ -430,7 +430,7 @@ CsrCreateSessionObjectDirectory(IN ULONG Session)
     SECURITY_DESCRIPTOR DosDevicesSd;
     NTSTATUS Status;
 
-    /* Generate the Session BNOLINKS Directory name */
+    /* Generate the session BNOLINKS directory name */
     _swprintf(SessionBuffer, L"%ws\\BNOLINKS", SESSION_ROOT);
     RtlInitUnicodeString(&SessionString, SessionBuffer);
 
@@ -451,14 +451,14 @@ CsrCreateSessionObjectDirectory(IN ULONG Session)
     }
 
     /* Now add the Session ID */
-    _swprintf(SessionBuffer, L"%ld", Session);
+    _swprintf(SessionBuffer, L"%lu", Session);
     RtlInitUnicodeString(&SessionString, SessionBuffer);
 
-    /* Check if this is the first Session */
+    /* Create the per-session symlink to the BaseNamedObjects directory */
     if (Session)
     {
-        /* Not the first, so the name will be slighly more complex */
-        _swprintf(BnoBuffer, L"%ws\\%ld\\BaseNamedObjects", SESSION_ROOT, Session);
+        /* Use the session path */
+        _swprintf(BnoBuffer, L"%ws\\%lu\\BaseNamedObjects", SESSION_ROOT, Session);
         RtlInitUnicodeString(&BnoString, BnoBuffer);
     }
     else
@@ -466,8 +466,6 @@ CsrCreateSessionObjectDirectory(IN ULONG Session)
         /* Use the direct name */
         RtlInitUnicodeString(&BnoString, L"\\BaseNamedObjects");
     }
-
-    /* Create the symlink */
     InitializeObjectAttributes(&ObjectAttributes,
                                &SessionString,
                                OBJ_OPENIF | OBJ_CASE_INSENSITIVE,
@@ -484,12 +482,12 @@ CsrCreateSessionObjectDirectory(IN ULONG Session)
         return Status;
     }
 
-    /* Create the \DosDevices Security Descriptor */
+    /* Create the \DosDevices security descriptor */
     Status = GetDosDevicesProtection(&DosDevicesSd);
     if (!NT_SUCCESS(Status)) return Status;
 
     /* Now create a directory for this session */
-    _swprintf(SessionBuffer, L"%ws\\%ld", SESSION_ROOT, Session);
+    _swprintf(SessionBuffer, L"%ws\\%lu", SESSION_ROOT, Session);
     RtlInitUnicodeString(&SessionString, SessionBuffer);
 
     /* Create the directory */
@@ -525,7 +523,7 @@ CsrCreateSessionObjectDirectory(IN ULONG Session)
                 "CsrCreateSessionObjectDirectory - status = %lx\n", Status);
     }
 
-    /* Release the Security Descriptor */
+    /* Release the security descriptor */
     FreeDosDevicesProtection(&DosDevicesSd);
 
     /* Return */
@@ -928,15 +926,14 @@ CsrSbApiPortInitialize(VOID)
     CsrSbApiPortName.Buffer = RtlAllocateHeap(CsrHeap, 0, Size);
     if (!CsrSbApiPortName.Buffer) return STATUS_NO_MEMORY;
 
-    /* Setup the rest of the empty string */
+    /* Setup the Port Name string */
     CsrSbApiPortName.Length = 0;
     CsrSbApiPortName.MaximumLength = (USHORT)Size;
-
-    /* Now append the full port name */
     RtlAppendUnicodeStringToString(&CsrSbApiPortName, &CsrDirectoryName);
-    RtlAppendUnicodeToString(&CsrSbApiPortName, UNICODE_PATH_SEP);
+    RtlAppendUnicodeToString(&CsrSbApiPortName, L"\\");
     RtlAppendUnicodeToString(&CsrSbApiPortName, SB_PORT_NAME);
-    if (CsrDebug & 2) DPRINT1("CSRSS: Creating %wZ port and associated thread\n", &CsrSbApiPortName);
+    if (CsrDebug & 2)
+        DPRINT1("CSRSS: Creating %wZ port and associated thread\n", &CsrSbApiPortName);
 
     /* Create Security Descriptor for this Port */
     Status = CsrCreateLocalSystemSD(&PortSd);
@@ -966,7 +963,7 @@ CsrSbApiPortInitialize(VOID)
                                      0,
                                      0,
                                      0,
-                                     (PVOID)CsrSbApiRequestThread,
+                                     CsrSbApiRequestThread,
                                      NULL,
                                      &hRequestThread,
                                      &ClientId);

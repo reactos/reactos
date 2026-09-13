@@ -5,7 +5,7 @@
  * PURPOSE:         Initialisation
  *
  * PROGRAMMERS:     Emanuele Aliberti
- *                  Hervé Poussineau (hpoussin@reactos.org)
+ *                  HervÃ© Poussineau (hpoussin@reactos.org)
  */
 
 #include "precomp.h"
@@ -16,22 +16,46 @@
 #include <ndk/cmfuncs.h>
 #include <ndk/obfuncs.h>
 
-static BOOLEAN FmIfsInitialized = FALSE;
+#define NDEBUG
+#include <debug.h>
+
+static ULONG FmIfsAttached = 0;
 LIST_ENTRY ProviderListHead;
 
 PIFS_PROVIDER
-GetProvider(
+LoadProvider(
     IN PWCHAR FileSystem)
 {
     PLIST_ENTRY ListEntry;
     PIFS_PROVIDER Provider;
+
+    DPRINT("LoadProvider(%S)\n", FileSystem);
 
     ListEntry = ProviderListHead.Flink;
     while (ListEntry != &ProviderListHead)
     {
         Provider = CONTAINING_RECORD(ListEntry, IFS_PROVIDER, ListEntry);
         if (_wcsicmp(Provider->Name, FileSystem) == 0)
+        {
+            DPRINT("Found it!\n");
+            if (!Provider->hModule)
+            {
+                Provider->hModule = LoadLibraryW(Provider->DllFile);
+                if (!Provider->hModule)
+                {
+                    DPRINT("Dll Loading failed!\n");
+                    return NULL;
+                }
+
+                /* Get function pointers */
+                Provider->Chkdsk = (PULIB_CHKDSK)GetProcAddress(Provider->hModule, "Chkdsk");
+                //Provider->ChkdskEx = (PULIB_CHKDSKEX)GetProcAddress(Provider->hModule, "ChkdskEx");
+                //Provider->Extend = (PULIB_EXTEND)GetProcAddress(Provider->hModule, "Extend");
+                Provider->Format = (PULIB_FORMAT)GetProcAddress(Provider->hModule, "Format");
+                //Provider->FormatEx = (PULIB_FORMATEX)GetProcAddress(Provider->hModule, "FormatEx");
+            }
             return Provider;
+        }
         ListEntry = ListEntry->Flink;
     }
 
@@ -39,6 +63,26 @@ GetProvider(
     return NULL;
 }
 
+BOOLEAN
+UnloadProvider(
+    PIFS_PROVIDER Provider)
+{
+    DPRINT("UnloadProvider(%S)\n", Provider->Name);
+
+    if (Provider->hModule)
+    {
+        FreeLibrary(Provider->hModule);
+        Provider->hModule = NULL;
+
+        Provider->Chkdsk =  NULL;
+        Provider->ChkdskEx = NULL;
+        Provider->Extend =  NULL;
+        Provider->Format =  NULL;
+        Provider->FormatEx = NULL;
+    }
+
+    return TRUE;
+}
 
 static
 BOOLEAN
@@ -47,43 +91,73 @@ AddProvider(
     IN PWCHAR DllFile)
 {
     PIFS_PROVIDER Provider = NULL;
-    ULONG RequiredSize;
+    ULONG ProcCount = 0;
     HMODULE hMod = NULL;
     BOOLEAN ret = FALSE;
+
+    DPRINT("AddProvider(%wZ %S)\n", FileSystem, DllFile);
 
     hMod = LoadLibraryW(DllFile);
     if (!hMod)
         goto cleanup;
 
-    RequiredSize = FIELD_OFFSET(IFS_PROVIDER, Name)
-        + FileSystem->Length + sizeof(UNICODE_NULL);
+    if (GetProcAddress(hMod, "Chkdsk"))
+        ProcCount++;
+    if (GetProcAddress(hMod, "ChkdskEx"))
+        ProcCount++;
+    if (GetProcAddress(hMod, "Extend"))
+        ProcCount++;
+    if (GetProcAddress(hMod, "Format"))
+        ProcCount++;
+    if (GetProcAddress(hMod, "FormatEx"))
+        ProcCount++;
+
+    DPRINT("ProcCount %lu\n", ProcCount);
+    if (ProcCount == 0)
+        goto cleanup;
+
     Provider = (PIFS_PROVIDER)RtlAllocateHeap(
         RtlGetProcessHeap(),
-        0,
-        RequiredSize);
+        HEAP_ZERO_MEMORY,
+        sizeof(IFS_PROVIDER));
     if (!Provider)
         goto cleanup;
-    RtlZeroMemory(Provider, RequiredSize);
 
-    /* Get function pointers */
-    Provider->Chkdsk = (PULIB_CHKDSK)GetProcAddress(hMod, "Chkdsk");
-    //Provider->ChkdskEx = (PULIB_CHKDSKEX)GetProcAddress(hMod, "ChkdskEx");
-    //Provider->Extend = (PULIB_EXTEND)GetProcAddress(hMod, "Extend");
-    Provider->Format = (PULIB_FORMAT)GetProcAddress(hMod, "Format");
-    //Provider->FormatEx = (PULIB_FORMATEX)GetProcAddress(hMod, "FormatEx");
+    Provider->Name = (PWSTR)RtlAllocateHeap(RtlGetProcessHeap(),
+                                            HEAP_ZERO_MEMORY,
+                                            FileSystem->Length + sizeof(UNICODE_NULL));
+    if (!Provider->Name)
+        goto cleanup;
 
     RtlCopyMemory(Provider->Name, FileSystem->Buffer, FileSystem->Length);
+
+    Provider->DllFile = (PWSTR)RtlAllocateHeap(RtlGetProcessHeap(),
+                                               HEAP_ZERO_MEMORY,
+                                               (wcslen(DllFile) + 1) * sizeof(WCHAR));
+    if (!Provider->DllFile)
+        goto cleanup;
+
+    wcscpy(Provider->DllFile, DllFile);
 
     InsertTailList(&ProviderListHead, &Provider->ListEntry);
     ret = TRUE;
 
+    DPRINT("AddProvider success\n");
+
 cleanup:
+    if (hMod)
+        FreeLibrary(hMod);
+
     if (!ret)
     {
-        if (hMod)
-            FreeLibrary(hMod);
         if (Provider)
+        {
+            if (Provider->Name)
+                RtlFreeHeap(RtlGetProcessHeap(), 0, Provider->Name);
+            if (Provider->DllFile)
+                RtlFreeHeap(RtlGetProcessHeap(), 0, Provider->DllFile);
             RtlFreeHeap(RtlGetProcessHeap(), 0, Provider);
+        }
     }
     return ret;
 }
@@ -155,6 +229,27 @@ InitializeFmIfsOnce(VOID)
     return TRUE;
 }
 
+static
+VOID
+UninitializeFmIfsOnce(VOID)
+{
+    PLIST_ENTRY ListEntry;
+    PIFS_PROVIDER Provider;
+
+    while (!IsListEmpty(&ProviderListHead))
+    {
+        ListEntry = RemoveTailList(&ProviderListHead);
+        Provider = CONTAINING_RECORD(ListEntry, IFS_PROVIDER, ListEntry);
+        if (Provider->Name)
+            RtlFreeHeap(RtlGetProcessHeap(), 0, Provider->Name);
+        if (Provider->DllFile)
+            RtlFreeHeap(RtlGetProcessHeap(), 0, Provider->DllFile);
+        if (Provider->hModule)
+            FreeLibrary(Provider->hModule);
+        RtlFreeHeap(RtlGetProcessHeap(), 0, Provider);
+    }
+}
+
 /* FMIFS.8 */
 BOOLEAN
 NTAPI
@@ -166,12 +261,12 @@ InitializeFmIfs(
     switch (dwReason)
     {
         case DLL_PROCESS_ATTACH:
-            if (FmIfsInitialized == FALSE)
+            if (FmIfsAttached == 0)
             {
                 if (InitializeFmIfsOnce() == FALSE)
                     return FALSE;
 
-                FmIfsInitialized = TRUE;
+                FmIfsAttached++;
             }
             break;
 
@@ -182,6 +277,9 @@ InitializeFmIfs(
             break;
 
         case DLL_PROCESS_DETACH:
+            FmIfsAttached--;
+            if (FmIfsAttached == 0)
+                UninitializeFmIfsOnce();
             break;
     }
 

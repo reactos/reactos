@@ -57,16 +57,46 @@ PciReadWriteConfigSpace(IN PPCI_FDO_EXTENSION DeviceExtension,
     PBUS_HANDLER BusHandler;
     PPCIBUSDATA BusData;
     PciReadWriteConfig HalFunction;
+    ULONG LengthProcessed;
 
     /* Only the root FDO can access configuration space */
     ASSERT(PCI_IS_ROOT_FDO(DeviceExtension->BusRootFdoExtension));
 
-    /* Get the ACPI-compliant PCI interface */
+    /* Get the ACPI-compliant PCI interface from the root */
     PciInterface = DeviceExtension->BusRootFdoExtension->PciBusInterface;
     if (PciInterface)
     {
-        /* Currently this driver only supports the legacy HAL interface */
-        UNIMPLEMENTED_DBGBREAK();
+        /* Use the PCI interface to access configuration space */
+        if (Read)
+        {
+            LengthProcessed = PciInterface->ReadConfig(PciInterface->Context,
+                                                       DeviceExtension->BaseBus,
+                                                       Slot.u.AsULONG,
+                                                       Buffer,
+                                                       Offset,
+                                                       Length);
+        }
+        else
+        {
+            LengthProcessed = PciInterface->WriteConfig(PciInterface->Context,
+                                                        DeviceExtension->BaseBus,
+                                                        Slot.u.AsULONG,
+                                                        Buffer,
+                                                        Offset,
+                                                        Length);
+        }
+
+        /* Verify the operation succeeded */
+        if (LengthProcessed != Length)
+        {
+            DPRINT1("PCI: Config space %s failed - Bus %x, Slot %x, Offset %x, Expected %x bytes, got %x\n",
+                    Read ? "read" : "write",
+                    DeviceExtension->BaseBus,
+                    Slot.u.AsULONG,
+                    Offset,
+                    Length,
+                    LengthProcessed);
+        }
     }
     else
     {

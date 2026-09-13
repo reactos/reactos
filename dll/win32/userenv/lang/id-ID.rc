@@ -27,7 +27,7 @@ BEGIN
     IDS_TEMPLATES "Template"
     IDS_STARTMENU "Menu Mulai"
     IDS_PROGRAMS "Menu Mulai\\Program"
-    IDS_STARTUP "Menu Mulai\\Program\\StartUp"
+    IDS_STARTUP "Menu Mulai\\Program\\Startup"
     IDS_LOCALSETTINGS "Setelan Lokal"
     IDS_LOCALAPPDATA "Setelan Lokal\\Data Aplikasi"
     IDS_TEMP "Setelan Lokal\\Temp" /* See also TEMP_DIR in boot/bootdata/hivedef.inf */

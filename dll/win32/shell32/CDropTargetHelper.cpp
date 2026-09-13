@@ -81,7 +81,7 @@ HRESULT WINAPI CDropTargetHelper::Show(BOOL fShow)
 /*************************************************************************
  *      SH32_SimulateDropWithSite [SHELL32.INTERNAL]
  */
-static HRESULT SH32_SimulateDropWithSite(IDropTarget *pDT, IDataObject *pDO, DWORD grfKeyState, PPOINTL pPtl, LPDWORD pdwEffect, IUnknown *pSite)
+HRESULT SH32_SimulateDropWithSite(IDropTarget *pDT, IDataObject *pDO, DWORD grfKeyState, PPOINTL pPtl, LPDWORD pdwEffect, IUnknown *pSite)
 {
     CScopedSetObjectWithSite site(pDT, pSite);
     return SHSimulateDrop(pDT, pDO, grfKeyState, pPtl, pdwEffect);

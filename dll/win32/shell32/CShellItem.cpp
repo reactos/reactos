@@ -24,9 +24,6 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
-EXTERN_C HRESULT WINAPI SHCreateShellItem(PCIDLIST_ABSOLUTE pidlParent,
-    IShellFolder *psfParent, PCUITEMID_CHILD pidl, IShellItem **ppsi);
-
 CShellItem::CShellItem() :
     m_pidl(NULL)
 {
@@ -336,97 +333,308 @@ HRESULT WINAPI SHCreateShellItem(PCIDLIST_ABSOLUTE pidlParent,
     return hr;
 }
 
-class CShellItemArray :
-    public CComCoClass<CShellItemArray, &CLSID_NULL>,
-    public CComObjectRootEx<CComMultiThreadModelNoCS>,
-    public IShellItemArray
+/***********************************************************************
+ *   SHCreateItemFromIDList [SHELL32.@]
+ */
+EXTERN_C HRESULT WINAPI
+SHCreateItemFromIDList(_In_ PCIDLIST_ABSOLUTE pidl, _In_ REFIID riid, _Out_ void **ppv)
 {
-    CIDA *m_pCIDA;
-    STGMEDIUM m_Medium;
+    CComPtr<IShellItem> item;
+    HRESULT hr;
 
-public:
-    CShellItemArray() : m_pCIDA(NULL)
+    TRACE("(%p,%s,%p)\n", pidl, debugstr_guid(&riid), ppv);
+
+    if (!ppv)
+        return E_POINTER;
+    *ppv = NULL;
+
+    if (!pidl)
+        return E_INVALIDARG;
+
+    hr = SHCreateShellItem(NULL, NULL, pidl, &item);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    return item->QueryInterface(riid, ppv);
+}
+
+/***********************************************************************
+ *   SHCreateItemFromParsingName [SHELL32.@]
+ */
+EXTERN_C HRESULT WINAPI
+SHCreateItemFromParsingName(
+    _In_ PCWSTR pszPath,
+    _In_opt_ IBindCtx *pbc,
+    _In_ REFIID riid,
+    _Out_ void **ppv)
+{
+    CComHeapPtr<ITEMIDLIST> pidl;
+    HRESULT hr;
+
+    TRACE("(%s,%p,%s,%p)\n", debugstr_w(pszPath), pbc, debugstr_guid(&riid), ppv);
+
+    if (!ppv)
+        return E_POINTER;
+    *ppv = NULL;
+
+    hr = SHParseDisplayName(pszPath, pbc, &pidl, 0, NULL);
+    if (SUCCEEDED(hr))
+        hr = SHCreateItemFromIDList(pidl, riid, ppv);
+
+    return hr;
+}
+
+/***********************************************************************
+ *   SHGetItemFromDataObject [SHELL32.@]
+ */
+EXTERN_C HRESULT WINAPI
+SHGetItemFromDataObject(
+    _In_ IDataObject *pdtobj,
+    _In_ DATAOBJ_GET_ITEM_FLAGS dwFlags,
+    _In_ REFIID riid,
+    _Out_ void **ppv)
+{
+    FORMATETC fmt;
+    STGMEDIUM medium = { 0 };
+    HRESULT hr;
+
+    TRACE("(%p,%x,%s,%p)\n", pdtobj, dwFlags, debugstr_guid(&riid), ppv);
+
+    if (!pdtobj)
+        return E_INVALIDARG;
+
+    fmt.cfFormat = (CLIPFORMAT)RegisterClipboardFormatW(CFSTR_SHELLIDLISTW);
+    fmt.ptd = NULL;
+    fmt.dwAspect = DVASPECT_CONTENT;
+    fmt.lindex = -1;
+    fmt.tymed = TYMED_HGLOBAL;
+
+    hr = pdtobj->GetData(&fmt, &medium);
+    if (SUCCEEDED(hr))
     {
-        m_Medium.tymed = TYMED_NULL;
+        LPIDA pida = (LPIDA)GlobalLock(medium.hGlobal);
+        if (pida && pida->cidl >= 1 &&
+            ((pida->cidl > 1 && !(dwFlags & DOGIF_ONLY_IF_ONE)) || pida->cidl == 1))
+        {
+            LPITEMIDLIST pidl = ILCombine(HIDA_GetPIDLFolder(pida),
+                                          HIDA_GetPIDLItem(pida, 0));
+            if (pidl)
+            {
+                hr = SHCreateItemFromIDList(pidl, riid, ppv);
+                ILFree(pidl);
+            }
+            else
+            {
+                hr = E_OUTOFMEMORY;
+            }
+        }
+        else
+        {
+            TRACE("Failed to create item, cidl=%u, dwFlags=%#x\n", pida ? pida->cidl : 0, dwFlags);
+            hr = E_FAIL;
+        }
+
+        if (medium.hGlobal)
+        {
+            GlobalUnlock(medium.hGlobal);
+            ReleaseStgMedium(&medium);
+        }
     }
 
-    virtual ~CShellItemArray()
+    if (FAILED(hr) && !(dwFlags & DOGIF_NO_HDROP))
     {
-        CDataObjectHIDA::DestroyCIDA(m_pCIDA, m_Medium);
+        TRACE("Attempting to fall back on CF_HDROP.\n");
+
+        fmt.cfFormat = CF_HDROP;
+        fmt.ptd = NULL;
+        fmt.dwAspect = DVASPECT_CONTENT;
+        fmt.lindex = -1;
+        fmt.tymed = TYMED_HGLOBAL;
+        ZeroMemory(&medium, sizeof(medium));
+
+        hr = pdtobj->GetData(&fmt, &medium);
+        if (SUCCEEDED(hr))
+        {
+            DROPFILES *df = (DROPFILES *)GlobalLock(medium.hGlobal);
+            hr = E_FAIL;
+            if (df)
+            {
+                LPBYTE files = (LPBYTE)df + df->pFiles;
+                if (!df->fWide)
+                {
+                    PCSTR first = (PCSTR)files;
+                    BOOL multi = *(first + lstrlenA(first) + 1) != 0;
+                    if (!(multi && (dwFlags & DOGIF_ONLY_IF_ONE)))
+                    {
+                        WCHAR filename[MAX_PATH];
+                        MultiByteToWideChar(CP_ACP, 0, first, -1, filename, _countof(filename));
+                        hr = SHCreateItemFromParsingName(filename, NULL, riid, ppv);
+                    }
+                }
+                else
+                {
+                    PCWSTR first = (PCWSTR)files;
+                    BOOL multi = *(first + lstrlenW(first) + 1) != 0;
+                    if (!(multi && (dwFlags & DOGIF_ONLY_IF_ONE)))
+                        hr = SHCreateItemFromParsingName(first, NULL, riid, ppv);
+                }
+                GlobalUnlock(medium.hGlobal);
+            }
+            ReleaseStgMedium(&medium);
+        }
     }
 
-    HRESULT Initialize(IDataObject *pdo)
+    if (FAILED(hr) && !(dwFlags & DOGIF_NO_URL))
+        FIXME("Failed to create item, should try CF_URL.\n");
+
+    return hr;
+}
+
+#if DLL_EXPORT_VERSION >= _WIN32_WINNT_VISTA
+
+/***********************************************************************
+ *   SHCreateItemFromRelativeName [SHELL32.@]
+ */
+EXTERN_C HRESULT WINAPI
+SHCreateItemFromRelativeName(
+    _In_ IShellItem *parent,
+    _In_ PCWSTR pszName,
+    _In_opt_ IBindCtx *pbc,
+    _In_ REFIID riid,
+    _Out_ void **ppv)
+{
+    CComPtr<IShellFolder> desktop;
+    CComPtr<IShellFolder> folder;
+    CComHeapPtr<ITEMIDLIST> pidlFolder;
+    CComHeapPtr<ITEMIDLIST> pidlChild;
+    HRESULT hr;
+
+    TRACE("(%p,%s,%p,%s,%p)\n", parent, debugstr_w(pszName), pbc, debugstr_guid(&riid), ppv);
+
+    if (!ppv)
+        return E_POINTER;
+    *ppv = NULL;
+
+    if (!pszName)
+        return E_INVALIDARG;
+
+    hr = SHGetIDListFromObject(parent, &pidlFolder);
+    if (hr != S_OK)
+        return hr;
+
+    hr = SHGetDesktopFolder(&desktop);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    if (!_ILIsDesktop(pidlFolder))
     {
-        return CDataObjectHIDA::CreateCIDA(pdo, &m_pCIDA, m_Medium);
+        hr = desktop->BindToObject(pidlFolder, NULL, IID_PPV_ARG(IShellFolder, &folder));
+        if (FAILED_UNEXPECTEDLY(hr))
+            return hr;
     }
 
-    inline UINT GetCount() const { return m_pCIDA->cidl; }
-
-    // IShellItemArray
-    STDMETHODIMP BindToHandler(IBindCtx *pbc, REFGUID rbhid, REFIID riid, void **ppv) override
     {
-        UNIMPLEMENTED;
-        *ppv = NULL;
-        return E_NOTIMPL;
+        IShellFolder *psfBind = folder.p ? folder.p : desktop.p;
+        hr = psfBind->ParseDisplayName(NULL, pbc, const_cast<LPWSTR>(pszName), NULL, &pidlChild, NULL);
     }
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
 
-    STDMETHODIMP GetPropertyStore(GETPROPERTYSTOREFLAGS flags, REFIID riid, void **ppv) override
-    {
-        UNIMPLEMENTED;
-        *ppv = NULL;
-        return E_NOTIMPL;
-    }
+    return SHCreateItemFromIDList(pidlChild, riid, ppv);
+}
 
-    STDMETHODIMP GetPropertyDescriptionList(REFPROPERTYKEY keyType, REFIID riid, void **ppv) override
-    {
-        UNIMPLEMENTED;
-        *ppv = NULL;
-        return E_NOTIMPL;
-    }
-
-    STDMETHODIMP GetAttributes(SIATTRIBFLAGS dwAttribFlags, SFGAOF sfgaoMask, SFGAOF *psfgaoAttribs) override
-    {
-        UNIMPLEMENTED;
-        *psfgaoAttribs = 0;
-        return E_NOTIMPL;
-    }
-
-    STDMETHODIMP GetCount(DWORD*pCount) override
-    {
-        *pCount = m_pCIDA ? GetCount() : 0;
-        return S_OK;
-    }
-
-    STDMETHODIMP GetItemAt(DWORD nIndex, IShellItem **ppItem) override
-    {
-        if (!ppItem)
-            return E_INVALIDARG;
-        *ppItem = NULL;
-        if (!m_pCIDA)
-            return E_UNEXPECTED;
-        if (nIndex >= GetCount())
-            return E_FAIL;
-        return SHCreateShellItem(HIDA_GetPIDLFolder(m_pCIDA), NULL,
-                                 HIDA_GetPIDLItem(m_pCIDA, nIndex), ppItem);
-    }
-
-    STDMETHODIMP EnumItems(IEnumShellItems **ppESI) override
-    {
-        UNIMPLEMENTED;
-        *ppESI = NULL;
-        return E_NOTIMPL;
-    }
-
-DECLARE_NO_REGISTRY()
-DECLARE_NOT_AGGREGATABLE(CShellItemArray)
-
-BEGIN_COM_MAP(CShellItemArray)
-    COM_INTERFACE_ENTRY_IID(IID_IShellItemArray, IShellItemArray)
-END_COM_MAP()
-};
+/***********************************************************************
+ *   SHCreateItemInKnownFolder [SHELL32.@]
+ */
+EXTERN_C HRESULT WINAPI SHGetKnownFolderIDList(
+    REFKNOWNFOLDERID rfid,
+    DWORD flags,
+    HANDLE token,
+    PIDLIST_ABSOLUTE *pidl);
 
 EXTERN_C HRESULT WINAPI
-SHCreateShellItemArrayFromDataObject(_In_ IDataObject *pdo, _In_ REFIID riid, _Out_ void **ppv)
+SHCreateItemInKnownFolder(
+    _In_ REFKNOWNFOLDERID kfid,
+    _In_ DWORD dwFlags,
+    _In_opt_ PCWSTR pszFileName,
+    _In_ REFIID riid,
+    _Out_ void **ppv)
 {
-    return ShellObjectCreatorInit<CShellItemArray>(pdo, riid, ppv);
+    TRACE("(%s,%lx,%s,%s,%p)\n", debugstr_guid(&kfid), dwFlags, debugstr_w(pszFileName),
+          debugstr_guid(&riid), ppv);
+    return E_NOTIMPL;
+    //TODO: Import SHGetKnownFolderIDList from wine
+#if 0
+    CComPtr<IShellItem> parent;
+    CComHeapPtr<ITEMIDLIST> pidl;
+    HRESULT hr;
+
+    TRACE("(%s,%lx,%s,%s,%p)\n", debugstr_guid(&kfid), dwFlags, debugstr_w(pszFileName),
+          debugstr_guid(&riid), ppv);
+
+    if (!ppv)
+        return E_POINTER;
+    *ppv = NULL;
+
+    hr = SHGetKnownFolderIDList(kfid, dwFlags, NULL, &pidl);
+    if (hr != S_OK)
+        return hr;
+
+    hr = SHCreateItemFromIDList(pidl, IID_PPV_ARG(IShellItem, &parent));
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    if (pszFileName)
+        hr = SHCreateItemFromRelativeName(parent, pszFileName, NULL, riid, ppv);
+    else
+        hr = parent->QueryInterface(riid, ppv);
+
+    return hr;
+#endif
 }
+
+/***********************************************************************
+ *   SHGetItemFromObject [SHELL32.@]
+ */
+EXTERN_C HRESULT WINAPI
+SHGetItemFromObject(_In_ IUnknown *punk, _In_ REFIID riid, _Out_ void **ppv)
+{
+    CComHeapPtr<ITEMIDLIST> pidl;
+    HRESULT hr;
+
+    TRACE("(%p,%s,%p)\n", punk, debugstr_guid(&riid), ppv);
+
+    hr = SHGetIDListFromObject(punk, &pidl);
+    if (SUCCEEDED(hr))
+        hr = SHCreateItemFromIDList(pidl, riid, ppv);
+    return hr;
+}
+
+/***********************************************************************
+ *   SHGetPropertyStoreFromParsingName [SHELL32.@]
+ */
+EXTERN_C HRESULT WINAPI
+SHGetPropertyStoreFromParsingName(
+    _In_ PCWSTR pszPath,
+    _In_opt_ IBindCtx *pbc,
+    _In_ GETPROPERTYSTOREFLAGS flags,
+    _In_ REFIID riid,
+    _Out_ void **ppv)
+{
+    CComPtr<IShellItem2> item;
+    HRESULT hr;
+
+    TRACE("(%s,%p,%#x,%s,%p)\n", debugstr_w(pszPath), pbc, flags, debugstr_guid(&riid), ppv);
+
+    if (!ppv)
+        return E_POINTER;
+    *ppv = NULL;
+
+    hr = SHCreateItemFromParsingName(pszPath, pbc, IID_PPV_ARG(IShellItem2, &item));
+    if (SUCCEEDED(hr))
+        hr = item->GetPropertyStore(flags, riid, ppv);
+
+    return hr;
+}
+
+#endif /* DLL_EXPORT_VERSION >= _WIN32_WINNT_VISTA */

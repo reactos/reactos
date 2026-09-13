@@ -76,6 +76,7 @@ typedef struct _DC *PDC;
 #include "user/ntuser/focus.h"
 #include "user/ntuser/hotkey.h"
 #include "user/ntuser/input.h"
+#include "user/ntuser/job.h"
 #include "user/ntuser/menu.h"
 #include "user/ntuser/monitor.h"
 #include "user/ntuser/timer.h"

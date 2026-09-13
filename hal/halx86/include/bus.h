@@ -276,8 +276,9 @@ typedef struct _HAL_BUS_HANDLER
 /* SHARED (Fake PCI-BUS HANDLER) */
 
 extern PCI_CONFIG_HANDLER PCIConfigHandler;
-extern PCI_CONFIG_HANDLER PCIConfigHandlerType1;
-extern PCI_CONFIG_HANDLER PCIConfigHandlerType2;
+extern const PCI_CONFIG_HANDLER PCIConfigHandlerType1;
+extern const PCI_CONFIG_HANDLER PCIConfigHandlerType2;
+extern const BUS_HANDLER HalpFakePciBusHandler;
 
 CODE_SEG("INIT")
 PPCI_REGISTRY_INFO_INTERNAL
@@ -357,6 +358,26 @@ HalpWritePCIConfig(
     IN ULONG Offset,
     IN ULONG Length
 );
+
+ULONG
+NTAPI
+HaliPciInterfaceReadConfig(
+    _In_ PBUS_HANDLER RootBusHandler,
+    _In_ ULONG BusNumber,
+    _In_ PCI_SLOT_NUMBER SlotNumber,
+    _Out_writes_bytes_(Length) PVOID Buffer,
+    _In_ ULONG Offset,
+    _In_ ULONG Length);
+
+ULONG
+NTAPI
+HaliPciInterfaceWriteConfig(
+    _In_ PBUS_HANDLER RootBusHandler,
+    _In_ ULONG BusNumber,
+    _In_ PCI_SLOT_NUMBER SlotNumber,
+    _In_reads_bytes_(Length) PVOID Buffer,
+    _In_ ULONG Offset,
+    _In_ ULONG Length);
 
 ULONG
 NTAPI
@@ -631,7 +652,6 @@ HalpGetSystemInterruptVector(
 
 extern ULONG HalpBusType;
 extern BOOLEAN HalpPCIConfigInitialized;
-extern BUS_HANDLER HalpFakePciBusHandler;
 extern ULONG HalpMinPciBus, HalpMaxPciBus;
 extern LIST_ENTRY HalpAllBusHandlers;
 

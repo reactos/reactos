@@ -47,9 +47,11 @@ DBG_DEFAULT_CHANNEL(UI);
 #define    VIDEOMODE_132X50        0x8432
 #define    VIDEOMODE_132X60        0x843C
 
+/* For PcVideoSetVerticalResolution() (EGA/VGA only) */
 #define VERTRES_200_SCANLINES        0x00
 #define VERTRES_350_SCANLINES        0x01
 #define VERTRES_400_SCANLINES        0x02
+#define VERTRES_480_SCANLINES        0x03
 
 #include <pshpack2.h>
 typedef struct
@@ -115,7 +117,7 @@ static ULONG VideoCard = VIDEOCARD_CGA_OR_OTHER;        /* Type of video card in
 static USHORT BiosVideoMode = VIDEOMODE_NORMAL_TEXT;    /* Current video mode as known by BIOS */
 static ULONG ScreenWidth = 80;                          /* Screen Width in characters */
 static ULONG ScreenHeight = 25;                         /* Screen Height in characters */
-static ULONG BytesPerScanLine = 160;                    /* Number of bytes per scanline (delta) */
+static ULONG BytesPerScanLine = (80 * 2);               /* Number of bytes per scanline (delta) */
 static VIDEODISPLAYMODE DisplayMode = VideoTextMode;    /* Current display mode */
 static BOOLEAN VesaVideoMode = FALSE;                   /* Are we using a VESA mode? */
 static SVGA_MODE_INFORMATION VesaVideoModeInformation;  /* Only valid when in VESA mode */
@@ -331,7 +333,8 @@ PcVideoVesaGetCurrentSVGAMode(
 
 static BOOLEAN
 PcVideoGetBiosMode(
-    _Out_ PUSHORT Mode)
+    _Out_ PUSHORT Mode,
+    _Out_ PUSHORT WidthInChars)
 {
     REGS Regs;
 
@@ -373,6 +376,7 @@ PcVideoGetBiosMode(
         return FALSE;
 
     *Mode = Regs.b.al;
+    *WidthInChars = Regs.b.ah;
     return TRUE;
 }
 
@@ -380,6 +384,7 @@ static VOID
 PcVideoGetDisplayMode(VOID)
 {
     USHORT Mode = 0;
+    USHORT WidthInChars;
 
     /* Is the current mode VESA? */
     if (PcVideoVesaGetCurrentSVGAMode(&Mode) &&
@@ -394,49 +399,23 @@ PcVideoGetDisplayMode(VOID)
         VesaVideoMode = TRUE;
     }
     /* If not, it should be a regular BIOS mode */
-    else if (PcVideoGetBiosMode(&Mode))
+    else if (PcVideoGetBiosMode(&Mode, &WidthInChars))
     {
         /*
          * The BIOS data area 0x400 holds information about the current video mode.
          * Infos at: https://web.archive.org/web/20240119203029/http://www.bioscentral.com/misc/bda.htm
          * https://stanislavs.org/helppc/bios_data_area.html
+         * http://www.techhelpmanual.com/93-rom_bios_variables.html
          */
-
         UCHAR BiosMode = (*(PUCHAR)0x449) & 0x7F; /* Current video mode */
         ASSERT(BiosMode == Mode);
         BiosVideoMode = Mode;
         TRACE("BIOS mode detected\n");
 
         ScreenWidth = *(PUSHORT)0x44A; /* Number of screen columns */
+        ASSERT(ScreenWidth == WidthInChars);
         ScreenHeight = 1 + *(PUCHAR)0x484; /* 1 + "Rows on the screen (less 1, EGA+)" */
-
-        /*
-         * Select bits 7 and 4 of "Video display data area (MCGA and VGA)"
-         * |7|6|5|4|3|2|1|0|
-         *  |     `------ see table below
-         *  `--------- alphanumeric scan lines (see table below)
-         *
-         * then convert to a number and map it to the scanline number:
-         * Bit7  Bit4  Scan Lines
-         * 0     0     350 line mode
-         * 0     1     400 line mode
-         * 1     0     200 line mode
-         * 1     1     reserved
-         */
-        BytesPerScanLine = (*(PUCHAR)0x489) & 0x90;
-        BytesPerScanLine = ((BytesPerScanLine & 0x80) >> 6) | ((BytesPerScanLine & 0x10) >> 4);
-        switch (BytesPerScanLine)
-        {
-            case VERTRES_200_SCANLINES:
-                BytesPerScanLine = 200; break;
-            case VERTRES_350_SCANLINES:
-                BytesPerScanLine = 350; break;
-            case VERTRES_400_SCANLINES:
-                BytesPerScanLine = 400; break;
-            default:
-                BytesPerScanLine = 160; break;
-        }
-
+        BytesPerScanLine = (ScreenWidth * 2); /* Text mode: one byte for character, one byte for attribute */
         DisplayMode = VideoTextMode;
         VesaVideoMode = FALSE;
     }
@@ -448,7 +427,7 @@ PcVideoGetDisplayMode(VOID)
         BiosVideoMode = VIDEOMODE_NORMAL_TEXT;
         ScreenWidth = 80;
         ScreenHeight = 25;
-        BytesPerScanLine = 160;
+        BytesPerScanLine = (ScreenWidth * 2);
         DisplayMode = VideoTextMode;
         VesaVideoMode = FALSE;
     }
@@ -772,6 +751,7 @@ PcVideoSetMode80x25(VOID)
     PcVideoSetBiosMode(0x03);
     ScreenWidth = 80;
     ScreenHeight = 25;
+    BytesPerScanLine = (ScreenWidth * 2);
     return TRUE;
 }
 
@@ -802,6 +782,7 @@ PcVideoSetMode80x50_80x43(VOID)
     {
         return FALSE;
     }
+    BytesPerScanLine = (ScreenWidth * 2);
 
     return TRUE;
 }
@@ -815,6 +796,7 @@ PcVideoSetMode80x28(VOID)
     PcVideoDefineCursor(11, 12);
     ScreenWidth = 80;
     ScreenHeight = 28;
+    BytesPerScanLine = (ScreenWidth * 2);
     return TRUE;
 }
 
@@ -826,6 +808,7 @@ PcVideoSetMode80x30(VOID)
     PcVideoSet480ScanLines();
     ScreenWidth = 80;
     ScreenHeight = 30;
+    BytesPerScanLine = (ScreenWidth * 2);
     return TRUE;
 }
 
@@ -840,6 +823,7 @@ PcVideoSetMode80x34(VOID)
     PcVideoSetDisplayEnd();
     ScreenWidth = 80;
     ScreenHeight = 34;
+    BytesPerScanLine = (ScreenWidth * 2);
     return TRUE;
 }
 
@@ -855,6 +839,7 @@ PcVideoSetMode80x43(VOID)
     PcVideoDefineCursor(6, 7);
     ScreenWidth = 80;
     ScreenHeight = 43;
+    BytesPerScanLine = (ScreenWidth * 2);
     return TRUE;
 }
 
@@ -871,6 +856,7 @@ PcVideoSetMode80x60(VOID)
     PcVideoSetDisplayEnd();
     ScreenWidth = 80;
     ScreenHeight = 60;
+    BytesPerScanLine = (ScreenWidth * 2);
     return TRUE;
 }
 
@@ -885,7 +871,7 @@ PcVideoSetMode(USHORT NewMode)
     BiosVideoMode = NewMode;
     ScreenWidth = 80;
     ScreenHeight = 25;
-    BytesPerScanLine = 160;
+    BytesPerScanLine = (ScreenWidth * 2);
     DisplayMode = VideoTextMode;
     VesaVideoMode = FALSE;
 
@@ -915,11 +901,9 @@ PcVideoSetMode(USHORT NewMode)
         WRITE_PORT_USHORT((USHORT*)0x03CE, 0x0F01); /* For some reason this is necessary? */
         ScreenWidth = 640;
         ScreenHeight = 480;
-        BytesPerScanLine = 80;
+        BytesPerScanLine = 80; // 8 pixels per byte (4 planes)
         BiosVideoMode = NewMode;
         DisplayMode = VideoGraphicsMode;
-
-        return TRUE;
     }
     else if (NewMode == 0x13)
     {
@@ -927,11 +911,9 @@ PcVideoSetMode(USHORT NewMode)
         PcVideoSetBiosMode((UCHAR)NewMode);
         ScreenWidth = 320;
         ScreenHeight = 200;
-        BytesPerScanLine = 320;
+        BytesPerScanLine = 320; // 1 pixel per byte
         BiosVideoMode = NewMode;
         DisplayMode = VideoGraphicsMode;
-
-        return TRUE;
     }
     else
     {
@@ -948,11 +930,9 @@ PcVideoSetMode(USHORT NewMode)
         BiosVideoMode = NewMode;
         DisplayMode = (0x0108 <= NewMode && NewMode <= 0x010C) ? VideoTextMode : VideoGraphicsMode;
         VesaVideoMode = TRUE;
-
-        return TRUE;
     }
 
-    return FALSE;
+    return TRUE;
 }
 
 static VOID

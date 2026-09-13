@@ -39,8 +39,8 @@
 #include <winbase.h>
 #include <shlobj.h>
 #include <initguid.h>
-#include <shlwapi_undoc.h>
 #include <shlwapi.h>
+#include <shlwapi_undoc.h>
 #include <wine/debug.h>
 
 #include "shell32_main.h"

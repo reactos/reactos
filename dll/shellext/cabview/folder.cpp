@@ -212,18 +212,18 @@ static HRESULT CALLBACK EnumFillCallback(EXTRACTCALLBACKMSG msg, const EXTRACTCA
     return E_NOTIMPL;
 }
 
-HRESULT CEnumIDList::Fill(LPCWSTR path, HWND hwnd, SHCONTF contf)
+HRESULT CEnumIDList::Enumerate(PCIDLIST_ABSOLUTE pidl, HWND hwnd, EXTRACTCALLBACK Callback, LPVOID cookie)
 {
-    FILLCALLBACKDATA data = { this, contf };
-    return ExtractCabinet(path, NULL, EnumFillCallback, &data);
+    WCHAR path[MAX_PATH];
+    if (SHGetPathFromIDListW(pidl, path))
+        return ExtractCabinet(path, NULL, Callback, cookie);
+    return HRESULT_FROM_WIN32(ERROR_OPEN_FAILED);
 }
 
 HRESULT CEnumIDList::Fill(PCIDLIST_ABSOLUTE pidl, HWND hwnd, SHCONTF contf)
 {
-    WCHAR path[MAX_PATH];
-    if (SHGetPathFromIDListW(pidl, path))
-        return Fill(path, hwnd, contf);
-    return HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
+    FILLCALLBACKDATA data = { this, contf };
+    return Enumerate(pidl, NULL, EnumFillCallback, &data);
 }
 
 IFACEMETHODIMP CCabFolder::GetDefaultColumn(DWORD dwRes, ULONG *pSort, ULONG *pDisplay)
@@ -440,6 +440,57 @@ IFACEMETHODIMP CCabFolder::MapColumnToSCID(UINT column, SHCOLUMNID *pscid)
     return E_FAIL;
 }
 
+struct PDNCALLBACKDATA
+{
+    LPOLESTR pszName;
+    CABITEM *pItem;
+};
+
+static HRESULT CALLBACK ParseDisplayNameCallback(EXTRACTCALLBACKMSG msg, const EXTRACTCALLBACKDATA &ecd, LPVOID cookie)
+{
+    PDNCALLBACKDATA &data = *(PDNCALLBACKDATA*)cookie;
+
+    switch ((UINT)msg)
+    {
+        case ECM_FILE:
+        {
+            const FDINOTIFICATION &fdin = *ecd.pfdin;
+            HRESULT hr = S_FALSE;
+            UINT datetime = MAKELONG(fdin.time, fdin.date);
+            CABITEM *item = CreateItem(fdin.psz1, fdin.attribs, fdin.cb, datetime);
+            if (!item)
+                return E_OUTOFMEMORY;
+            if (!lstrcmpiW(item->Path, data.pszName))
+                data.pItem = item;
+            else
+                SHFree(item);
+            return SUCCEEDED(hr) ? S_FALSE : hr; // Never extract
+        }
+    }
+    return E_NOTIMPL;
+}
+
+IFACEMETHODIMP CCabFolder::ParseDisplayName(HWND hwndOwner, LPBC pbc, LPOLESTR lpszDisplayName, ULONG *pchEaten, PIDLIST_RELATIVE *ppidl, ULONG *pdwAttributes)
+{
+    *ppidl = NULL;
+    if (pchEaten)
+        *pchEaten = 0;
+
+    HRESULT hr;
+    PDNCALLBACKDATA data = { lpszDisplayName, NULL };
+    if (FAILED(hr = CEnumIDList::Enumerate(m_CurDir, hwndOwner, ParseDisplayNameCallback, &data)))
+        return hr;
+    if (!data.pItem)
+        return HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
+
+    *ppidl = (PIDLIST_RELATIVE)data.pItem;
+    if (pchEaten)
+        *pchEaten = lstrlenW(lpszDisplayName);
+    if (pdwAttributes)
+        GetAttributesOf(1, ppidl, (SFGAOF*)pdwAttributes);
+    return S_OK;
+}
+
 IFACEMETHODIMP CCabFolder::EnumObjects(HWND hwndOwner, DWORD dwFlags, LPENUMIDLIST *ppEnumIDList)
 {
     CEnumIDList *p = CEnumIDList::CreateInstance();
@@ -449,6 +500,7 @@ IFACEMETHODIMP CCabFolder::EnumObjects(HWND hwndOwner, DWORD dwFlags, LPENUMIDLI
 
 IFACEMETHODIMP CCabFolder::BindToObject(PCUIDLIST_RELATIVE pidl, LPBC pbcReserved, REFIID riid, LPVOID *ppvOut)
 {
+    static_assert(FLATFOLDER, "Support Bind if we display the archive as a tree");
     UNIMPLEMENTED;
     return E_NOTIMPL;
 }
@@ -551,7 +603,8 @@ IFACEMETHODIMP CCabFolder::GetAttributesOf(UINT cidl, PCUITEMID_CHILD_ARRAY apid
         return E_INVALIDARG;
     }
     HRESULT hr = S_OK;
-    const SFGAOF filemask = SFGAO_READONLY | SFGAO_HIDDEN | SFGAO_SYSTEM | SFGAO_ISSLOW;
+    const SFGAOF impliedmask = SFGAO_ISSLOW | SFGAO_CANCOPY;
+    const SFGAOF filemask = SFGAO_READONLY | SFGAO_HIDDEN | SFGAO_SYSTEM | impliedmask;
     SFGAOF remain = *rgfInOut & filemask, validate = *rgfInOut & SFGAO_VALIDATE;
     CComPtr<CEnumIDList> list;
     for (UINT i = 0; i < cidl && (remain || validate); ++i)
@@ -569,7 +622,7 @@ IFACEMETHODIMP CCabFolder::GetAttributesOf(UINT cidl, PCUITEMID_CHILD_ARRAY apid
             if (list->FindNamedItem((PCUITEMID_CHILD)item) == -1)
                 return HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
         }
-        SFGAOF att = MapFSToSFAttributes(item->GetFSAttributes()) | SFGAO_ISSLOW;
+        SFGAOF att = MapFSToSFAttributes(item->GetFSAttributes()) | impliedmask;
         remain &= att & ~(FLATFOLDER ? SFGAO_FOLDER : 0);
     }
     *rgfInOut = remain;

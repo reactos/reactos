@@ -8,6 +8,7 @@ list(APPEND SOURCE
     appbar.cpp
     desktop.cpp
     explorer.cpp
+    mediabtns.cpp
     notifyiconscust.cpp
     rshell.cpp
     settings.cpp

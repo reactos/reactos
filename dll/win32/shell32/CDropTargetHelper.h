@@ -54,4 +54,7 @@ BEGIN_COM_MAP(CDropTargetHelper)
 END_COM_MAP()
 };
 
+HRESULT
+SH32_SimulateDropWithSite(IDropTarget *pDT, IDataObject *pDO, DWORD grfKeyState, PPOINTL pPtl, LPDWORD pdwEffect, IUnknown *pSite);
+
 #endif /* _DRAGDROPHELPER_H_ */

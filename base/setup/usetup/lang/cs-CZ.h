@@ -1265,7 +1265,7 @@ static MUI_ENTRY csCZFormatPartitionEntries[] =
     {
         0,
         0,
-        "ENTER = Pokra\237ovat   F3 = Ukon\237it",
+        "ENTER = Pokra\237ovat   ESC = Zru\347it   F3 = Ukon\237it",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
         TEXT_ID_STATIC
     },

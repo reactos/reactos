@@ -701,6 +701,8 @@ co_IntGetScrollBarInfo(PWND Window, LONG idObject, PSCROLLBARINFO psbi)
    IntGetScrollBarRect(Window, Bar, &(sbi->rcScrollBar));
    IntCalculateThumb(Window, Bar, sbi, pSBData);
 
+   RtlCopyMemory(psbi, sbi, sizeof(*psbi));
+
     // Scrollbar state
     psbi->rgstate[0] = 0;
     if ((Bar == SB_HORZ && !(Window->style & WS_HSCROLL))
@@ -713,10 +715,8 @@ co_IntGetScrollBarInfo(PWND Window, LONG idObject, PSCROLLBARINFO psbi)
         else
             psbi->rgstate[0] |= STATE_SYSTEM_OFFSCREEN;
     }
-    if (Bar == SB_CTL && !(Window->style & WS_DISABLED))
+    if (Bar == SB_CTL && (Window->style & WS_DISABLED))
         psbi->rgstate[0] |= STATE_SYSTEM_UNAVAILABLE;
-
-   RtlCopyMemory(psbi, sbi, sizeof(SCROLLBARINFO));
 
    return TRUE;
 }
@@ -1207,9 +1207,11 @@ NtUserSBGetParms(
 
    _SEH2_TRY
    {
+      ProbeForWrite(lpsi, sizeof(SCROLLINFO), 1);      
+      ProbeForRead(pSBData, sizeof(SBDATA), 1);
+
       RtlCopyMemory(&psi, lpsi, sizeof(SCROLLINFO));
-      if (pSBData)
-         RtlCopyMemory(&SBDataSafe, pSBData, sizeof(SBDATA));
+      RtlCopyMemory(&SBDataSafe, pSBData, sizeof(SBDATA));
    }
    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
    {
@@ -1243,8 +1245,8 @@ NtUserSBGetParms(
    _SEH2_END
 
 Exit:
-   TRACE("Leave NtUserGetScrollInfo, ret=%i\n", Ret);
    UserLeave();
+   TRACE("Leave NtUserGetScrollInfo, ret=%i\n", Ret);   
    return Ret;
 }
 

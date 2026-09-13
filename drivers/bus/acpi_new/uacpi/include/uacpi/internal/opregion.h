@@ -8,6 +8,13 @@
 uacpi_status uacpi_initialize_opregion(void);
 void uacpi_deinitialize_opregion(void);
 
+/*
+ * Temporarily releases the namespace write lock to keep the lock ordering
+ * with user API consistent, so the caller must hold it.
+ */
+uacpi_status uacpi_upgrade_to_opregion_lock(void);
+void uacpi_release_opregion_lock(void);
+
 void uacpi_trace_region_error(
     uacpi_namespace_node *node, uacpi_char *message, uacpi_status ret
 );
@@ -41,6 +48,7 @@ union uacpi_opregion_io_data {
     uacpi_data_view buffer;
 };
 
+// Requires the opregion lock, see uacpi_upgrade_to_opregion_lock above
 uacpi_status uacpi_dispatch_opregion_io(
     uacpi_field_unit *field, uacpi_u32 offset,
     uacpi_region_op op, union uacpi_opregion_io_data data

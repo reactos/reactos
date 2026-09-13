@@ -1274,7 +1274,7 @@ static MUI_ENTRY hrHRFormatPartitionEntries[] =
     {
         0,
         0,
-        "ENTER = Nastavi   F3 = Iza\320i",
+        "ENTER = Nastavi   ESC = Odustani   F3 = Iza\320i",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
         TEXT_ID_STATIC
     },

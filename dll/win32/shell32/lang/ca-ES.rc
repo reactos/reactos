@@ -871,7 +871,7 @@ BEGIN
     IDS_PROGRAMS "Start Menu\\Programs"
     IDS_PERSONAL "My Documents"
     IDS_FAVORITES "Favorites"
-    IDS_STARTUP "Start Menu\\Programs\\StartUp"
+    IDS_STARTUP "Start Menu\\Programs\\Startup"
     IDS_RECENT "Recent"
     IDS_SENDTO "SendTo"
     IDS_STARTMENU "Start Menu"

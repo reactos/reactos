@@ -22,6 +22,7 @@
 #include <shlguid_undoc.h>
 #include <userenv.h>
 #include <atlstr.h>
+#include "resource.h"
 
 #include <shlwapi_undoc.h>
 #include <ishellfolder_helpers.h>
@@ -342,7 +343,7 @@ SHInvokeCommandOnContextMenuInternal(
     {
         if (GetVersionMajorMinor() >= _WIN32_WINNT_WIN7)
         {
-            info.fMask |= CMF_OPTIMIZEFORINVOKE;
+            fCMF |= CMF_OPTIMIZEFORINVOKE;
         }
         if (pszVerb && SHAnsiToUnicode(pszVerb, wideverb, _countof(wideverb)))
         {
@@ -1239,4 +1240,22 @@ BOOL WINAPI SHGetFileDescriptionA(
     }
 
     return ret;
+}
+
+/*************************************************************************
+ * SHRestrictedMessageBox [SHLWAPI.384]
+ *
+ * @see https://www.geoffchappell.com/studies/windows/shell/shlwapi/api/util/restrictions/messagebox.htm
+ * @see ShellMessageBoxW
+ */
+EXTERN_C INT WINAPI SHRestrictedMessageBox(_In_ HWND hWnd)
+{
+    return ShellMessageBoxW(shlwapi_hInstance, hWnd, MAKEINTRESOURCEW(IDS_RESTRICTED),
+                            MAKEINTRESOURCEW(IDS_RESTRICTIONS), MB_ICONERROR);
+}
+
+EXTERN_C ULONG WINAPI GetProcessOsVersion(void)
+{
+    PPEB Peb = NtCurrentTeb()->Peb;
+    return (Peb->OSMajorVersion << 8) | Peb->OSMinorVersion;
 }

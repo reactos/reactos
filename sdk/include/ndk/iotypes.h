@@ -25,6 +25,10 @@ Author:
 #include <ifssupp.h>
 #include <potypes.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 //
 // I/O Completion Access Rights
 //
@@ -1273,5 +1277,9 @@ typedef struct _REPARSE_DATA_BUFFER {
 } REPARSE_DATA_BUFFER, *PREPARSE_DATA_BUFFER;
 
 #endif // NTOS_MODE_USER
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

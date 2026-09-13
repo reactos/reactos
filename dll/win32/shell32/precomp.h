@@ -77,11 +77,14 @@
 #include "CEnumIDListBase.h"
 #include "shfldr.h"
 #include "CShellItem.h"
+#include "CShellItemArray.h"
+#include "CSimpleShellItemArray.h"
 #include "CShellLink.h"
 #include "CFolderItemVerbs.h"
 #include "CFolderItems.h"
 #include "CFolder.h"
 #include "CShellDispatch.h"
+#include "CShellLibrary.h"
 #include "CDropTargetHelper.h"
 #include "CFolderOptions.h"
 #include "folders/CFSFolder.h"
@@ -110,6 +113,7 @@
 #include "shellmenu/CMenuSite.h"
 #include "shellmenu/CMergedFolder.h"
 #include "shellmenu/shellmenu.h"
+#include "CUserEventTimer.h"
 #include "CUserNotification.h"
 #include "dialogs/folder_options.h"
 #include "shelldesktop/CChangeNotifyServer.h"
@@ -258,16 +262,9 @@ BOOL Shell_FailForceReturn(_In_ HRESULT hr);
 EXTERN_C INT
 Shell_ParseSpecialFolder(_In_ LPCWSTR pszStart, _Out_ LPWSTR *ppch, _Out_ INT *pcch);
 
-EXTERN_C
-HRESULT SHBindToObject(
+SHSTDAPI
+SHBindToObject(
     _In_opt_ IShellFolder *psf,
-    _In_ LPCITEMIDLIST pidl,
-    _In_ REFIID riid,
-    _Out_ void **ppvObj);
-
-HRESULT
-SHBindToObjectEx(
-    _In_opt_ IShellFolder *pShellFolder,
     _In_ LPCITEMIDLIST pidl,
     _In_opt_ IBindCtx *pBindCtx,
     _In_ REFIID riid,
@@ -318,6 +315,8 @@ HRESULT DataObject_GetHIDACount(IDataObject *pdo);
 PIDLIST_ABSOLUTE SHELL_CIDA_ILCloneFull(_In_ const CIDA *pCIDA, _In_ UINT Index);
 PIDLIST_ABSOLUTE SHELL_DataObject_ILCloneFullItem(_In_ IDataObject *pDO, _In_ UINT Index);
 HRESULT SHELL_CloneDataObject(_In_ IDataObject *pDO, _Out_ IDataObject **ppDO);
+DWORD DataObj_GetDWORD(IDataObject *pdtobj, UINT cf, DWORD dwDefault);
+HRESULT DataObj_SetDWORD(IDataObject *pdtobj, UINT cf, DWORD dwValue);
 
 EXTERN_C HRESULT
 IUnknown_InitializeCommand(

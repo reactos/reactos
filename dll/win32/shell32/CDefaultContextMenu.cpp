@@ -164,10 +164,7 @@ static const struct _StaticInvokeCommandMap_
     SHORT DfmCmd;
 } g_StaticInvokeCmdMap[] =
 {
-    { "runas", 0 },  // Unimplemented
-    { "print", 0 },  // Unimplemented
-    { "preview", 0 }, // Unimplemented
-    { "open",            FCIDM_SHVIEW_OPEN },
+    // Note: Verbs from the registry should not be listed here
     { CMDSTR_NEWFOLDERA, FCIDM_SHVIEW_NEWFOLDER,  (SHORT)DFM_CMD_NEWFOLDER },
     { "cut",             FCIDM_SHVIEW_CUT,        /* ? */ },
     { "copy",            FCIDM_SHVIEW_COPY,       (SHORT)DFM_CMD_COPY },
@@ -176,8 +173,6 @@ static const struct _StaticInvokeCommandMap_
     { "delete",          FCIDM_SHVIEW_DELETE,     (SHORT)DFM_CMD_DELETE },
     { "properties",      FCIDM_SHVIEW_PROPERTIES, (SHORT)DFM_CMD_PROPERTIES },
     { "rename",          FCIDM_SHVIEW_RENAME,     (SHORT)DFM_CMD_RENAME },
-    { "copyto",          FCIDM_SHVIEW_COPYTO },
-    { "moveto",          FCIDM_SHVIEW_MOVETO },
 };
 
 PCSTR MapFcidmCmdToVerb(_In_ UINT_PTR CmdId)
@@ -328,7 +323,6 @@ class CDefaultContextMenu :
         UINT AddShellExtensionsToMenu(HMENU hMenu, UINT* pIndexMenu, UINT idCmdFirst, UINT idCmdLast, UINT uFlags);
         UINT AddStaticContextMenusToMenu(HMENU hMenu, UINT* IndexMenu, UINT iIdCmdFirst, UINT iIdCmdLast, UINT uFlags);
         HRESULT DoPaste(LPCMINVOKECOMMANDINFOEX lpcmi, BOOL bLink);
-        HRESULT DoOpenOrExplore(LPCMINVOKECOMMANDINFOEX lpcmi);
         HRESULT DoCreateLink(LPCMINVOKECOMMANDINFOEX lpcmi);
         HRESULT DoDelete(LPCMINVOKECOMMANDINFOEX lpcmi);
         HRESULT DoCopyOrCut(LPCMINVOKECOMMANDINFOEX lpcmi, BOOL bCopy);
@@ -336,7 +330,6 @@ class CDefaultContextMenu :
         HRESULT DoProperties(LPCMINVOKECOMMANDINFOEX lpcmi);
         HRESULT DoUndo(LPCMINVOKECOMMANDINFOEX lpcmi);
         HRESULT DoCreateNewFolder(LPCMINVOKECOMMANDINFOEX lpici);
-        HRESULT DoCopyToMoveToFolder(LPCMINVOKECOMMANDINFOEX lpici, BOOL bCopy);
         HRESULT InvokeShellExt(LPCMINVOKECOMMANDINFOEX lpcmi);
         HRESULT InvokeRegVerb(LPCMINVOKECOMMANDINFOEX lpcmi);
         DWORD BrowserFlagsFromVerb(LPCMINVOKECOMMANDINFOEX lpcmi, PStaticShellEntry pEntry);
@@ -344,6 +337,11 @@ class CDefaultContextMenu :
         HRESULT InvokePidl(LPCMINVOKECOMMANDINFOEX lpcmi, LPCITEMIDLIST pidl, PStaticShellEntry pEntry);
         PDynamicShellEntry GetDynamicEntry(UINT idCmd);
         BOOL MapVerbToCmdId(PVOID Verb, PUINT idCmd, BOOL IsUnicode);
+
+        HRESULT GetNoAssocError()
+        {
+            return LOBYTE(GetVersion()) < 6 ? E_INVALIDARG : HResultFromWin32(ERROR_NO_ASSOCIATION);
+        }
 
     public:
         CDefaultContextMenu();
@@ -1108,13 +1106,6 @@ HRESULT CDefaultContextMenu::DoPaste(LPCMINVOKECOMMANDINFOEX lpcmi, BOOL bLink)
     return S_OK;
 }
 
-HRESULT
-CDefaultContextMenu::DoOpenOrExplore(LPCMINVOKECOMMANDINFOEX lpcmi)
-{
-    UNIMPLEMENTED;
-    return E_FAIL;
-}
-
 HRESULT CDefaultContextMenu::DoCreateLink(LPCMINVOKECOMMANDINFOEX lpcmi)
 {
     HRESULT hr = _DoInvokeCommandCallback(lpcmi, DFM_CMD_LINK);
@@ -1239,43 +1230,6 @@ CDefaultContextMenu::DoUndo(LPCMINVOKECOMMANDINFOEX lpcmi)
     return E_NOTIMPL;
 }
 
-HRESULT
-CDefaultContextMenu::DoCopyToMoveToFolder(LPCMINVOKECOMMANDINFOEX lpici, BOOL bCopy)
-{
-    HRESULT hr = E_FAIL;
-    if (!m_pDataObj)
-    {
-        ERR("m_pDataObj is NULL\n");
-        return hr;
-    }
-
-    CComPtr<IContextMenu> pContextMenu;
-    if (bCopy)
-        hr = SHCoCreateInstance(NULL, &CLSID_CopyToMenu, NULL,
-                                IID_PPV_ARG(IContextMenu, &pContextMenu));
-    else
-        hr = SHCoCreateInstance(NULL, &CLSID_MoveToMenu, NULL,
-                                IID_PPV_ARG(IContextMenu, &pContextMenu));
-    if (FAILED_UNEXPECTEDLY(hr))
-        return hr;
-
-    CComPtr<IShellExtInit> pInit;
-    hr = pContextMenu->QueryInterface(IID_PPV_ARG(IShellExtInit, &pInit));
-    if (FAILED_UNEXPECTEDLY(hr))
-        return hr;
-
-    hr = pInit->Initialize(m_pidlFolder, m_pDataObj, NULL);
-    if (FAILED_UNEXPECTEDLY(hr))
-        return hr;
-
-    if (bCopy)
-        lpici->lpVerb = "copyto";
-    else
-        lpici->lpVerb = "moveto";
-
-    return pContextMenu->InvokeCommand((LPCMINVOKECOMMANDINFO)lpici);
-}
-
 // This code is taken from CNewMenu and should be shared between the 2 classes
 HRESULT
 CDefaultContextMenu::DoCreateNewFolder(
@@ -1358,18 +1312,16 @@ BOOL
 CDefaultContextMenu::MapVerbToCmdId(PVOID Verb, PUINT idCmd, BOOL IsUnicode)
 {
     WCHAR UnicodeStr[MAX_VERB];
+    UINT i;
 
     /* Loop through all the static verbs looking for a match */
-    for (UINT i = 0; i < _countof(g_StaticInvokeCmdMap); i++)
+    for (i = 0; i < _countof(g_StaticInvokeCmdMap); i++)
     {
-        /* We can match both ANSI and unicode strings */
         if (IsUnicode)
         {
-            /* The static verbs are ANSI, get a unicode version before doing the compare */
             SHAnsiToUnicode(g_StaticInvokeCmdMap[i].szStringVerb, UnicodeStr, MAX_VERB);
             if (!_wcsicmp(UnicodeStr, (LPWSTR)Verb))
             {
-                /* Return the Corresponding Id */
                 *idCmd = g_StaticInvokeCmdMap[i].IntVerb;
                 return TRUE;
             }
@@ -1384,7 +1336,22 @@ CDefaultContextMenu::MapVerbToCmdId(PVOID Verb, PUINT idCmd, BOOL IsUnicode)
         }
     }
 
-    for (POSITION it = m_DynamicEntries.GetHeadPosition(); it != NULL;)
+    POSITION it;
+    HRESULT hr = S_OK;
+    // Check the registry verbs
+    if (!IsUnicode)
+        hr = StringCchPrintfW(UnicodeStr, _countof(UnicodeStr), L"%hs", Verb);
+    for (i = 0, it = m_StaticEntries.GetHeadPosition(); it && SUCCEEDED(hr); ++i)
+    {
+        StaticShellEntry& entry = m_StaticEntries.GetNext(it);
+        if (!_wcsicmp(entry.Verb, UnicodeStr))
+        {
+            *idCmd = m_iIdSCMFirst + i;
+            return TRUE;
+        }
+    }
+
+    for (it = m_DynamicEntries.GetHeadPosition(); it != NULL;)
     {
         DynamicShellEntry& entry = m_DynamicEntries.GetNext(it);
         if (!entry.NumIds)
@@ -1396,7 +1363,7 @@ CDefaultContextMenu::MapVerbToCmdId(PVOID Verb, PUINT idCmd, BOOL IsUnicode)
             return TRUE;
         }
     }
-    return FALSE;
+    return FALSE; // Note: Even if the verb is "open", we must fail if we can't find a handler
 }
 
 HRESULT
@@ -1547,7 +1514,7 @@ CDefaultContextMenu::InvokeRegVerb(
     POSITION it = m_StaticEntries.FindIndex(iCmd);
 
     if (it == NULL)
-        return E_INVALIDARG;
+        return HResultFromWin32(ERROR_NO_ASSOCIATION);
 
     PStaticShellEntry pEntry = &m_StaticEntries.GetAt(it);
 
@@ -1670,7 +1637,7 @@ CDefaultContextMenu::InvokeCommand(
         if (MapVerbToCmdId((LPVOID)LocalInvokeInfo.lpVerb, &CmdId, FALSE))
             LocalInvokeInfo.lpVerb = MAKEINTRESOURCEA(CmdId);
         else
-            return E_INVALIDARG;
+            return GetNoAssocError();
     }
     CmdId = LOWORD(LocalInvokeInfo.lpVerb);
 
@@ -1719,10 +1686,6 @@ CDefaultContextMenu::InvokeCommand(
     case FCIDM_SHVIEW_INSERTLINK:
         Result = DoPaste(&LocalInvokeInfo, TRUE);
         break;
-    case FCIDM_SHVIEW_OPEN:
-    case FCIDM_SHVIEW_EXPLORE:
-        Result = DoOpenOrExplore(&LocalInvokeInfo);
-        break;
     case FCIDM_SHVIEW_COPY:
     case FCIDM_SHVIEW_CUT:
         Result = DoCopyOrCut(&LocalInvokeInfo, CmdId == FCIDM_SHVIEW_COPY);
@@ -1741,12 +1704,6 @@ CDefaultContextMenu::InvokeCommand(
         break;
     case FCIDM_SHVIEW_NEWFOLDER:
         Result = DoCreateNewFolder(&LocalInvokeInfo);
-        break;
-    case FCIDM_SHVIEW_COPYTO:
-        Result = DoCopyToMoveToFolder(&LocalInvokeInfo, TRUE);
-        break;
-    case FCIDM_SHVIEW_MOVETO:
-        Result = DoCopyToMoveToFolder(&LocalInvokeInfo, FALSE);
         break;
     case FCIDM_SHVIEW_UNDO:
         Result = DoUndo(&LocalInvokeInfo);

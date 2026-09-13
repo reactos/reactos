@@ -531,13 +531,7 @@ NtGdiCreateHalftonePalette(HDC  hDC)
     PPALETTE ppal;
     PDC pdc;
     HPALETTE hpal = NULL;
-
-    pdc = DC_LockDc(hDC);
-    if (!pdc)
-    {
-        EngSetLastError(ERROR_INVALID_HANDLE);
-        return NULL;
-    }
+    BOOL UseDefaultPalette = TRUE;
 
     RtlZeroMemory(PalEntries, sizeof(PalEntries));
 
@@ -553,13 +547,33 @@ NtGdiCreateHalftonePalette(HDC  hDC)
         PalEntries[246 + i].peBlue = g_sysPalTemplate[10 + i].peBlue;
     }
 
-    ppal = PALETTE_ShareLockPalette(pdc->dclevel.hpal);
-    if (ppal && (ppal->flFlags & PAL_INDEXED))
+    if (hDC)
     {
-        /* FIXME: optimize the palette for the current palette */
-        UNIMPLEMENTED;
+        pdc = DC_LockDc(hDC);
+        if (!pdc)
+        {
+            EngSetLastError(ERROR_INVALID_HANDLE);
+            return NULL;
+        }
+
+        ppal = PALETTE_ShareLockPalette(pdc->dclevel.hpal);
+        if (ppal)
+        {
+            if (ppal->flFlags & PAL_INDEXED)
+            {
+                UseDefaultPalette = FALSE;
+
+                /* FIXME: optimize the palette for the current palette */
+                UNIMPLEMENTED;
+            }
+
+            PALETTE_ShareUnlockPalette(ppal);
+        }
+
+        DC_UnlockDc(pdc);
     }
-    else
+
+    if (UseDefaultPalette)
     {
         for (r = 0; r < 6; r++)
         {
@@ -583,11 +597,6 @@ NtGdiCreateHalftonePalette(HDC  hDC)
             PalEntries[i].peBlue = v;
         }
     }
-
-    if (ppal)
-        PALETTE_ShareUnlockPalette(ppal);
-
-    DC_UnlockDc(pdc);
 
     ppal = PALETTE_AllocPalWithHandle(PAL_INDEXED, 256, PalEntries, 0, 0, 0);
     if (ppal)
@@ -778,7 +787,7 @@ IntGdiRealizePalette(HDC hDC)
 
     ASSERT(ppalDC->flFlags & PAL_INDEXED);
 
-    DPRINT1("RealizePalette unimplemented for %s\n", 
+    DPRINT1("RealizePalette unimplemented for %s\n",
             (pdc->dctype == DCTYPE_MEMORY ? "memory managed DCs" : "device DCs"));
 
 cleanup:

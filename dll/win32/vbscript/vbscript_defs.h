@@ -267,6 +267,7 @@
 #define VBSE_INVALID_DLL_FUNCTION_NAME    453
 #define VBSE_INVALID_TYPELIB_VARIABLE     458
 #define VBSE_SERVER_NOT_FOUND             462
+#define VBSE_UNQUALIFIED_REFERENCE        505
 
 #define VBS_COMPILE_ERROR                4096
 #define VBS_RUNTIME_ERROR                4097

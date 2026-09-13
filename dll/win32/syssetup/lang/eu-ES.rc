@@ -82,11 +82,12 @@ BEGIN
     ICON IDI_ICON4, IDC_STATIC, 21, 7, 20, 20
     LTEXT "Eskualde eta hizkuntza aukerek datak, zenbakiak, monetak eta orduak irudikatzeko modua konfiguratzeko aukera ematen dute. Gainera, beste hizkuntza batzuk onartzen ditu eta kokapen-ezarpenak alda ditzakezu.", IDC_STATIC, 53, 6, 253, 30
     LTEXT "", IDC_LOCALETEXT, 53, 34, 250, 16
-    LTEXT "Ezarpen hauek aldatzeko, sakatu Aldatu.", IDC_STATIC, 53, 60, 184, 8
+    LTEXT "Ezarpen hauek aldatzeko, sakatu Aldatu.", IDC_STATIC, 53, 60, 190, 8
     PUSHBUTTON "&Aldatu...", IDC_CUSTOMLOCALE, 245, 57, 50, 14
+    LTEXT "", IDC_STATIC, 53, 79, 246, 1, SS_ETCHEDHORZ
     LTEXT "Teklatuaren distribuzioa mugatu du zer karakter idazten zertarako tekla.", IDC_STATIC, 53, 86, 253, 32
     LTEXT "", IDC_LAYOUTTEXT, 53, 109, 250, 16
-    LTEXT "Teklatuaren diseinua aldatzeko, sakatu Aldatu.", IDC_STATIC, 53, 126, 184, 8
+    LTEXT "Teklatuaren diseinua aldatzeko, sakatu Aldatu.", IDC_STATIC, 53, 126, 190, 8
     PUSHBUTTON "&Aldatu...", IDC_CUSTOMLAYOUT, 245, 122, 50, 14
 END
 
@@ -120,13 +121,15 @@ BEGIN
     LTEXT "Osagaiak erregistratzea", IDC_TASKTEXT1, 65, 27, 232, 8
     LTEXT "Installing start menu items", IDC_TASKTEXT2, 65, 39, 232, 8
     LTEXT "Saving settings", IDC_TASKTEXT3, 65, 51, 232, 8
-    LTEXT "Removing temporary files", IDC_TASKTEXT4, 65, 63, 232, 8
+    LTEXT "Installing optional components", IDC_TASKTEXT4, 65, 63, 232, 8
+    LTEXT "Removing temporary files", IDC_TASKTEXT5, 65, 75, 232, 8
     LTEXT "", IDC_ITEM, 21, 85, 275, 8
     CONTROL "", IDC_PROCESSPROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 21, 97, 275, 11
-    ICON "", IDC_CHECK1, 48, 26, 10, 10, SS_REALSIZEIMAGE | WS_GROUP
-    ICON "", IDC_CHECK2, 48, 38, 10, 10, SS_REALSIZEIMAGE | WS_GROUP
-    ICON "", IDC_CHECK3, 48, 50, 10, 10, SS_REALSIZEIMAGE | WS_GROUP
-    ICON "", IDC_CHECK4, 48, 62, 10, 10, SS_REALSIZEIMAGE | WS_GROUP
+    ICON "", IDC_CHECK1, 48, 26, 10, 10, SS_REALSIZEIMAGE
+    ICON "", IDC_CHECK2, 48, 38, 10, 10, SS_REALSIZEIMAGE
+    ICON "", IDC_CHECK3, 48, 50, 10, 10, SS_REALSIZEIMAGE
+    ICON "", IDC_CHECK4, 48, 62, 10, 10, SS_REALSIZEIMAGE
+    ICON "", IDC_CHECK5, 48, 74, 10, 10, SS_REALSIZEIMAGE
 END
 
 IDD_FINISHPAGE DIALOGEX 0, 0, 317, 193
@@ -165,13 +168,13 @@ CAPTION "Konfigurazio aurreratua"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "", IDC_PS2STATIC, 5, 20, 242, 110
-    RTEXT "&Lagin babesteko:", -1, 27, 35, 90, 8
-    LTEXT "reportes por segundo", -1, 169, 35, 76, 8
+    RTEXT "&Lagin babesteko:", IDC_STATIC, 27, 35, 90, 8
+    LTEXT "reportes por segundo", IDC_STATIC, 169, 35, 76, 8
     COMBOBOX IDC_PS2MOUSESAMPLERATE, 124, 33, 42, 41, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-    RTEXT "&Aurkitu errota:", -1, 27, 55, 90, 8
+    RTEXT "&Aurkitu errota:", IDC_STATIC, 27, 55, 90, 8
     COMBOBOX IDC_PS2MOUSEWHEEL, 124, 53, 95, 46, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-    RTEXT "&Sarbideren Buffer-a:", -1, 27, 75, 90, 8
-    LTEXT "paketeak", -1, 169, 75, 26, 8
+    RTEXT "&Sarbideren Buffer-a:", IDC_STATIC, 27, 75, 90, 8
+    LTEXT "paketeak", IDC_STATIC, 169, 75, 26, 8
     EDITTEXT IDC_PS2MOUSEINPUTLEN, 124, 72, 40, 14, ES_LEFT | ES_AUTOHSCROLL | ES_READONLY | ES_NUMBER | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_BORDER
     CONTROL "", IDC_PS2MOUSEINPUTUPDN, "msctls_updown32", UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | WS_CHILD | WS_VISIBLE, 168, 70, 10, 14
     AUTOCHECKBOX "&Azkar hasieraketa", IDC_PS2MOUSEFASTINIT, 124, 97, 90, 10
@@ -188,6 +191,8 @@ BEGIN
     IDS_COMPUTERSUBTITLE "Administratzaile izena eta pasahitza eman diezazkiokezu ordenagailuari."
     IDS_LOCALETITLE "Eskualdeko aukerak"
     IDS_LOCALESUBTITLE "ReactOS pertsonaliza dezakezu eskualde eta hizkuntza desberdinetarako."
+    IDS_LOCALETEXT "The Standards and formats are set to %s, and the location is set to %s."
+    IDS_LAYOUTTEXT "Your default text input language and method is: %s keyboard layout"
     IDS_DATETIMETITLE "Data eta ordua"
     IDS_DATETIMESUBTITLE "Ezarri zure ordenagailurako data eta ordu egokiak."
     IDS_PROCESSTITLE "Finishing the Installation"
@@ -263,10 +268,17 @@ BEGIN
     IDS_INSTALLATIONWORKSTATIONNAME "ReactOS Mahaigain gisa"
     IDS_INSTALLATIONWORKSTATIONINFO "Sistema mahaigain gisa agertuko da. ""Nire irudiak"", ""Nire bideoak"" y ""Nire musika"" karpetak ""Nire Dokumentoak"" barruan egongo dira."
     IDS_INSTALLATIONSERVERCORENAME "ReactOS Server Core"
-    IDS_INSTALLATIONSERVERCOREINFO "The system will be recognized as a server. The graphical shell is not installed, and the system starts in a command‑line environment to reduce resource usage and attack surface."
+    IDS_INSTALLATIONSERVERCOREINFO "The system will be recognized as a server. The graphical shell is not installed, and the system starts in a command-line environment to reduce resource usage and attack surface."
     /* Reserved for future use
      * IDS_INSTALLATIONNANOSERVERNAME "ReactOS Nano Server"
      * IDS_INSTALLATIONNANOSERVERINFO "The system will be recognized as a server. The system is entirely in text mode. You are expected to manage this system remotely."
      */
     IDS_DEFAULT "(Lehenetsia)"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_INSTALLADDONSCAPTION "Optional Components"
+    IDS_INSTALLADDONSMESSAGE "Optional components are available to improve application compatibility.\n\nWould you like to download and install them?"
+    IDS_INSTALLADDONSFAILEDMESSAGE "One or more optional components failed to install."
 END

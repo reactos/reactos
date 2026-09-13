@@ -28,7 +28,7 @@ static_assert(sizeof(DataObjectAttributes) == 0xc, "Unexpected struct size!");
 static
 HRESULT _BindToObject(PCUIDLIST_ABSOLUTE pidl, CComPtr<IShellFolder>& spFolder)
 {
-    return SHBindToObject(NULL, pidl, IID_PPV_ARG(IShellFolder, &spFolder));
+    return SHBindToObject(NULL, pidl, NULL, IID_PPV_ARG(IShellFolder, &spFolder));
 }
 
 EXTERN_C
@@ -141,4 +141,21 @@ HRESULT SHELL_CloneDataObject(_In_ IDataObject *pDO, _Out_ IDataObject **ppDO)
         }
     }
     return hr;
+}
+
+static inline HRESULT DataObj_GetDWORD(IDataObject *pdtobj, UINT cf, DWORD *pdwOut)
+{
+    // learn.microsoft.com/en-us/windows/win32/shell/dataobject
+    return DataObject_GetData(pdtobj, (CLIPFORMAT)cf, pdwOut, sizeof(*pdwOut));
+}
+
+DWORD DataObj_GetDWORD(IDataObject *pdtobj, UINT cf, DWORD dwDefault)
+{
+    DWORD dwValue;
+    return DataObj_GetDWORD(pdtobj, cf, &dwValue) == S_OK ? dwValue : dwDefault;
+}
+
+HRESULT DataObj_SetDWORD(IDataObject *pdtobj, UINT cf, DWORD dwValue)
+{
+    return DataObject_SetData(pdtobj, cf, &dwValue, sizeof(dwValue));
 }

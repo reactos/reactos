@@ -127,7 +127,7 @@ Imm32WriteHBitmapToNode(
             break;
         default:
             nodeExtraSize = sizeof(BITMAPINFOHEADER);
-            nodeExtraSize += (1 << pBmih->biBitCount) * sizeof(RGBQUAD);
+            nodeExtraSize += ((DWORD)(1 << pBmih->biBitCount)) * sizeof(RGBQUAD);
             break;
     }
 

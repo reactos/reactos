@@ -19,13 +19,25 @@ enum FOLDERCOLUMN
     COL_DATE_MOD,
 };
 
-struct FolderViewColumns
+struct FolderViewColumn
 {
-    int iResource;
-    DWORD dwDefaultState;
-    int cxChar;
-    int fmt;
+    BYTE iResource;
+    BYTE ColumnFlags;
+    BYTE cxChar;
+    BYTE fmt;
+    const GUID *pkg;
+    BYTE pki;
 };
+
+inline bool IsEqual(const SHCOLUMNID &scid, REFGUID guid, UINT pid)
+{
+    return scid.pid == pid && IsEqualGUID(scid.fmtid, guid);
+}
+
+inline bool IsEqual(const SHCOLUMNID &scid, const FolderViewColumn &col)
+{
+    return col.pkg && IsEqual(scid, *col.pkg, col.pki);
+}
 
 class CZipFolder :
     public CComCoClass<CZipFolder, &CLSID_ZipFolderStorageHandler>,
@@ -84,24 +96,13 @@ public:
         return S_OK;
     }
     STDMETHODIMP GetDefaultColumnState(UINT iColumn, DWORD *pcsFlags) override;
-    STDMETHODIMP GetDetailsEx(PCUITEMID_CHILD pidl, const SHCOLUMNID *pscid, VARIANT *pv) override
-    {
-        UNIMPLEMENTED;
-        return E_NOTIMPL;
-    }
+    STDMETHODIMP GetDetailsEx(PCUITEMID_CHILD pidl, const SHCOLUMNID *pscid, VARIANT *pv) override;
     STDMETHODIMP GetDetailsOf(PCUITEMID_CHILD pidl, UINT iColumn, SHELLDETAILS *psd) override;
-    STDMETHODIMP MapColumnToSCID(UINT column, SHCOLUMNID *pscid) override
-    {
-        UNIMPLEMENTED;
-        return E_NOTIMPL;
-    }
+    STDMETHODIMP MapColumnToSCID(UINT column, SHCOLUMNID *pscid) override;
 
     // *** IShellFolder methods ***
-    STDMETHODIMP ParseDisplayName(HWND hwndOwner, LPBC pbc, LPOLESTR lpszDisplayName, ULONG *pchEaten, PIDLIST_RELATIVE *ppidl, ULONG *pdwAttributes) override
-    {
-        UNIMPLEMENTED;
-        return E_NOTIMPL;
-    }
+    STDMETHODIMP ParseDisplayName(HWND hwndOwner, LPBC pbc, LPOLESTR lpszDisplayName, ULONG *pchEaten, PIDLIST_RELATIVE *ppidl, ULONG *pdwAttributes) override;
+
     STDMETHODIMP EnumObjects(HWND hwndOwner, DWORD dwFlags, LPENUMIDLIST *ppEnumIDList) override
     {
         return _CEnumZipContents_CreateInstance(this, dwFlags, m_ZipDir, IID_PPV_ARG(IEnumIDList, ppEnumIDList));

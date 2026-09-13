@@ -82,13 +82,13 @@ FONT 9, "宋体"
 BEGIN
     ICON IDI_ICON4, IDC_STATIC, 21, 7, 20, 20
     LTEXT "系统区域设置应与您要使用的应用程序的语言相匹配。用户区域设置控制数字，货币和日期的显示方式。", IDC_STATIC, 53, 7, 253, 20
-    LTEXT "%s", IDC_LOCALETEXT, 53, 29, 250, 16
-    LTEXT "想要更改系统和用户的区域设置，请单击“自定义”。", IDC_STATIC, 53, 60, 184, 8
+    LTEXT "", IDC_LOCALETEXT, 53, 29, 250, 16
+    LTEXT "想要更改系统和用户的区域设置，请单击“自定义”。", IDC_STATIC, 53, 60, 190, 8
     PUSHBUTTON "自定义(&C)...", IDC_CUSTOMLOCALE, 245, 57, 50, 14
     LTEXT "", IDC_STATIC, 53, 79, 246, 1, SS_ETCHEDHORZ
     LTEXT "“文字输入语言”让您使用多种输入方法和设备用\n许多不同的语言输入文字。", IDC_STATIC, 53, 86, 253, 20
-    LTEXT "%s", IDC_LAYOUTTEXT, 53, 106, 250, 16
-    LTEXT "想要查看或改变当前配置，请单击“自定义”。", IDC_STATIC, 53, 124, 184, 8
+    LTEXT "", IDC_LAYOUTTEXT, 53, 106, 250, 16
+    LTEXT "想要查看或改变当前配置，请单击“自定义”。", IDC_STATIC, 53, 124, 190, 8
     PUSHBUTTON "自定义(&U)...", IDC_CUSTOMLAYOUT, 245, 120, 50, 14
 END
 
@@ -122,13 +122,15 @@ BEGIN
     LTEXT "请稍候，安装程序正在注册组件。", IDC_TASKTEXT1, 65, 27, 232, 8
     LTEXT "正在安装“开始”菜单项目", IDC_TASKTEXT2, 65, 39, 232, 8
     LTEXT "正在保存配置", IDC_TASKTEXT3, 65, 51, 232, 8
-    LTEXT "正在删除临时文件", IDC_TASKTEXT4, 65, 63, 232, 8
+    LTEXT "Installing optional components", IDC_TASKTEXT4, 65, 63, 232, 8
+    LTEXT "正在删除临时文件", IDC_TASKTEXT5, 65, 75, 232, 8
     LTEXT "", IDC_ITEM, 21, 85, 275, 8
     CONTROL "", IDC_PROCESSPROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 21, 97, 275, 11
-    ICON "", IDC_CHECK1, 48, 26, 10, 10, SS_REALSIZEIMAGE | WS_GROUP
-    ICON "", IDC_CHECK2, 48, 38, 10, 10, SS_REALSIZEIMAGE | WS_GROUP
-    ICON "", IDC_CHECK3, 48, 50, 10, 10, SS_REALSIZEIMAGE | WS_GROUP
-    ICON "", IDC_CHECK4, 48, 62, 10, 10, SS_REALSIZEIMAGE | WS_GROUP
+    ICON "", IDC_CHECK1, 48, 26, 10, 10, SS_REALSIZEIMAGE
+    ICON "", IDC_CHECK2, 48, 38, 10, 10, SS_REALSIZEIMAGE
+    ICON "", IDC_CHECK3, 48, 50, 10, 10, SS_REALSIZEIMAGE
+    ICON "", IDC_CHECK4, 48, 62, 10, 10, SS_REALSIZEIMAGE
+    ICON "", IDC_CHECK5, 48, 74, 10, 10, SS_REALSIZEIMAGE
 END
 
 IDD_FINISHPAGE DIALOGEX 0, 0, 317, 193
@@ -167,13 +169,13 @@ CAPTION "高级设置"
 FONT 9, "宋体"
 BEGIN
     GROUPBOX "", IDC_PS2STATIC, 5, 20, 242, 110
-    RTEXT "采样率(&S):", -1, 27, 35, 90, 8
-    LTEXT "每秒报告", -1, 169, 35, 54, 8
+    RTEXT "采样率(&S):", IDC_STATIC, 27, 35, 90, 8
+    LTEXT "每秒报告", IDC_STATIC, 169, 35, 54, 8
     COMBOBOX IDC_PS2MOUSESAMPLERATE, 124, 33, 42, 41, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-    RTEXT "滚轮检测(&W):", -1, 27, 55, 90, 8
+    RTEXT "滚轮检测(&W):", IDC_STATIC, 27, 55, 90, 8
     COMBOBOX IDC_PS2MOUSEWHEEL, 124, 53, 95, 46, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-    RTEXT "输入缓冲区长度(&I):", -1, 27, 75, 90, 8
-    LTEXT "数据包", -1, 169, 75, 26, 8
+    RTEXT "输入缓冲区长度(&I):", IDC_STATIC, 27, 75, 90, 8
+    LTEXT "数据包", IDC_STATIC, 169, 75, 26, 8
     EDITTEXT IDC_PS2MOUSEINPUTLEN, 124, 72, 40, 14, ES_LEFT | ES_AUTOHSCROLL | ES_READONLY | ES_NUMBER | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_BORDER
     CONTROL "", IDC_PS2MOUSEINPUTUPDN, "msctls_updown32", UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | WS_CHILD | WS_VISIBLE, 168, 70, 10, 14
     AUTOCHECKBOX "快速初始化(&F)", IDC_PS2MOUSEFASTINIT, 124, 97, 72, 10
@@ -270,10 +272,17 @@ BEGIN
     IDS_INSTALLATIONWORKSTATIONNAME "ReactOS 工作站版"
     IDS_INSTALLATIONWORKSTATIONINFO "系统将会被识别为工作站。私人文件夹“我的图片”、“我的视频”和“我的音乐”会包含在“我的文档”文件夹中。"
     IDS_INSTALLATIONSERVERCORENAME "ReactOS Server Core"
-    IDS_INSTALLATIONSERVERCOREINFO "The system will be recognized as a server. The graphical shell is not installed, and the system starts in a command‑line environment to reduce resource usage and attack surface."
+    IDS_INSTALLATIONSERVERCOREINFO "The system will be recognized as a server. The graphical shell is not installed, and the system starts in a command-line environment to reduce resource usage and attack surface."
     /* Reserved for future use
      * IDS_INSTALLATIONNANOSERVERNAME "ReactOS Nano Server"
      * IDS_INSTALLATIONNANOSERVERINFO "The system will be recognized as a server. The system is entirely in text mode. You are expected to manage this system remotely."
      */
     IDS_DEFAULT "（默认）"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_INSTALLADDONSCAPTION "Optional Components"
+    IDS_INSTALLADDONSMESSAGE "Optional components are available to improve application compatibility.\n\nWould you like to download and install them?"
+    IDS_INSTALLADDONSFAILEDMESSAGE "One or more optional components failed to install."
 END

@@ -346,7 +346,7 @@ AtaFdoStartDevice(
 
     AtaSetPortRegistryKey(ChanExt, DD_ATA_REG_MAX_TARGET_ID, PortData->MaxTargetId);
 
-    Status = IoRegisterDeviceInterface(ChanExt->Common.Self,
+    Status = IoRegisterDeviceInterface(ChanExt->Pdo,
                                        &GUID_DEVINTERFACE_STORAGEPORT,
                                        NULL,
                                        &ChanExt->StorageInterfaceName);

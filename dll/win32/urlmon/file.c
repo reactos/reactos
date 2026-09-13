@@ -88,7 +88,7 @@ static ULONG WINAPI FileProtocolUnk_AddRef(IUnknown *iface)
 {
     FileProtocol *This = impl_from_IUnknown(iface);
     LONG ref = InterlockedIncrement(&This->ref);
-    TRACE("(%p) ref=%d\n", This, ref);
+    TRACE("(%p) ref=%ld\n", This, ref);
     return ref;
 }
 
@@ -97,12 +97,12 @@ static ULONG WINAPI FileProtocolUnk_Release(IUnknown *iface)
     FileProtocol *This = impl_from_IUnknown(iface);
     LONG ref = InterlockedDecrement(&This->ref);
 
-    TRACE("(%p) ref=%d\n", This, ref);
+    TRACE("(%p) ref=%ld\n", This, ref);
 
     if(!ref) {
         if(This->file != INVALID_HANDLE_VALUE)
             CloseHandle(This->file);
-        heap_free(This);
+        free(This);
 
         URLMON_UnlockModule();
     }
@@ -145,7 +145,7 @@ static HRESULT WINAPI FileProtocol_Start(IInternetProtocolEx *iface, LPCWSTR szU
     IUri *uri;
     HRESULT hres;
 
-    TRACE("(%p)->(%s %p %p %08x %lx)\n", This, debugstr_w(szUrl), pOIProtSink,
+    TRACE("(%p)->(%s %p %p %08lx %Ix)\n", This, debugstr_w(szUrl), pOIProtSink,
             pOIBindInfo, grfPI, dwReserved);
 
     hres = CreateUri(szUrl, Uri_CREATE_FILE_USE_DOS_PATH, 0, &uri);
@@ -170,7 +170,7 @@ static HRESULT WINAPI FileProtocol_Abort(IInternetProtocolEx *iface, HRESULT hrR
         DWORD dwOptions)
 {
     FileProtocol *This = impl_from_IInternetProtocolEx(iface);
-    FIXME("(%p)->(%08x %08x)\n", This, hrReason, dwOptions);
+    FIXME("(%p)->(%08lx %08lx)\n", This, hrReason, dwOptions);
     return E_NOTIMPL;
 }
 
@@ -178,7 +178,7 @@ static HRESULT WINAPI FileProtocol_Terminate(IInternetProtocolEx *iface, DWORD d
 {
     FileProtocol *This = impl_from_IInternetProtocolEx(iface);
 
-    TRACE("(%p)->(%08x)\n", This, dwOptions);
+    TRACE("(%p)->(%08lx)\n", This, dwOptions);
 
     return S_OK;
 }
@@ -203,7 +203,7 @@ static HRESULT WINAPI FileProtocol_Read(IInternetProtocolEx *iface, void *pv,
     FileProtocol *This = impl_from_IInternetProtocolEx(iface);
     DWORD read = 0;
 
-    TRACE("(%p)->(%p %u %p)\n", This, pv, cb, pcbRead);
+    TRACE("(%p)->(%p %lu %p)\n", This, pv, cb, pcbRead);
 
     if (pcbRead)
         *pcbRead = 0;
@@ -224,7 +224,7 @@ static HRESULT WINAPI FileProtocol_Seek(IInternetProtocolEx *iface, LARGE_INTEGE
         DWORD dwOrigin, ULARGE_INTEGER *plibNewPosition)
 {
     FileProtocol *This = impl_from_IInternetProtocolEx(iface);
-    FIXME("(%p)->(%d %d %p)\n", This, dlibMove.u.LowPart, dwOrigin, plibNewPosition);
+    FIXME("(%p)->(%ld %ld %p)\n", This, dlibMove.u.LowPart, dwOrigin, plibNewPosition);
     return E_NOTIMPL;
 }
 
@@ -232,7 +232,7 @@ static HRESULT WINAPI FileProtocol_LockRequest(IInternetProtocolEx *iface, DWORD
 {
     FileProtocol *This = impl_from_IInternetProtocolEx(iface);
 
-    TRACE("(%p)->(%08x)\n", This, dwOptions);
+    TRACE("(%p)->(%08lx)\n", This, dwOptions);
 
     return S_OK;
 }
@@ -264,11 +264,10 @@ static HRESULT WINAPI FileProtocol_StartEx(IInternetProtocolEx *iface, IUri *pUr
     DWORD grfBINDF = 0;
     DWORD scheme, size;
     LPWSTR mime = NULL;
-    WCHAR null_char = 0;
     BSTR ext;
     HRESULT hres;
 
-    TRACE("(%p)->(%p %p %p %08x %p)\n", This, pUri, pOIProtSink,
+    TRACE("(%p)->(%p %p %p %08lx %p)\n", This, pUri, pOIProtSink,
             pOIBindInfo, grfPI, dwReserved);
 
     if(!pUri)
@@ -285,7 +284,7 @@ static HRESULT WINAPI FileProtocol_StartEx(IInternetProtocolEx *iface, IUri *pUr
     bindinfo.cbSize = sizeof(BINDINFO);
     hres = IInternetBindInfo_GetBindInfo(pOIBindInfo, &grfBINDF, &bindinfo);
     if(FAILED(hres)) {
-        WARN("GetBindInfo failed: %08x\n", hres);
+        WARN("GetBindInfo failed: %08lx\n", hres);
         return hres;
     }
 
@@ -301,12 +300,12 @@ static HRESULT WINAPI FileProtocol_StartEx(IInternetProtocolEx *iface, IUri *pUr
         return S_OK;
     }
 
-    IInternetProtocolSink_ReportProgress(pOIProtSink, BINDSTATUS_SENDINGREQUEST, &null_char);
+    IInternetProtocolSink_ReportProgress(pOIProtSink, BINDSTATUS_SENDINGREQUEST, L"");
 
     size = 0;
     hres = CoInternetParseIUri(pUri, PARSE_PATH_FROM_URL, 0, path, ARRAY_SIZE(path), &size, 0);
     if(FAILED(hres)) {
-        WARN("CoInternetParseIUri failed: %08x\n", hres);
+        WARN("CoInternetParseIUri failed: %08lx\n", hres);
         return report_result(pOIProtSink, hres, 0);
     }
 
@@ -394,7 +393,7 @@ static HRESULT WINAPI FilePriority_SetPriority(IInternetPriority *iface, LONG nP
 {
     FileProtocol *This = impl_from_IInternetPriority(iface);
 
-    TRACE("(%p)->(%d)\n", This, nPriority);
+    TRACE("(%p)->(%ld)\n", This, nPriority);
 
     This->priority = nPriority;
     return S_OK;
@@ -426,7 +425,7 @@ HRESULT FileProtocol_Construct(IUnknown *outer, LPVOID *ppobj)
 
     URLMON_LockModule();
 
-    ret = heap_alloc(sizeof(FileProtocol));
+    ret = malloc(sizeof(FileProtocol));
 
     ret->IUnknown_inner.lpVtbl = &FileProtocolUnkVtbl;
     ret->IInternetProtocolEx_iface.lpVtbl = &FileProtocolExVtbl;

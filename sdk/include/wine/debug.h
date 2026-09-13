@@ -178,6 +178,18 @@ static __inline const char *wine_dbgstr_guid( const GUID *id )
                              id->Data4[4], id->Data4[5], id->Data4[6], id->Data4[7] );
 }
 
+#ifdef __REACTOS__ /* wine-8.18 */
+static inline const char *wine_dbgstr_fourcc( unsigned int fourcc )
+{
+    char str[4] = { (char)fourcc, (char)(fourcc >> 8), (char)(fourcc >> 16), (char)(fourcc >> 24) };
+    if (!fourcc)
+        return "''";
+    if (isprint( str[0] ) && isprint( str[1] ) && isprint( str[2] ) && isprint( str[3] ))
+        return wine_dbg_sprintf( "'%.4s'", str );
+    return wine_dbg_sprintf( "0x%08x", fourcc );
+}
+#endif
+
 static __inline const char *wine_dbgstr_point( const POINT *pt )
 {
     if (!pt) return "(null)";
@@ -360,6 +372,9 @@ static inline const char *wine_dbgstr_variant( const VARIANT *v )
 static __inline const char *debugstr_an( const char * s, int n ) { return wine_dbgstr_an( s, n ); }
 static __inline const char *debugstr_wn( const WCHAR *s, int n ) { return wine_dbgstr_wn( s, n ); }
 static __inline const char *debugstr_guid( const struct _GUID *id ) { return wine_dbgstr_guid(id); }
+#ifdef __REACTOS__ /* wine-8.18 */
+static inline const char *debugstr_fourcc( unsigned int cc ) { return wine_dbgstr_fourcc( cc ); }
+#endif
 static __inline const char *debugstr_a( const char *s )  { return wine_dbgstr_an( s, -1 ); }
 static __inline const char *debugstr_w( const WCHAR *s ) { return wine_dbgstr_wn( s, -1 ); }
 

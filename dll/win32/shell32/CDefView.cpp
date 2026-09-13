@@ -2487,25 +2487,9 @@ void CDefView::DoActivate(UINT uState)
 
 void CDefView::_DoCopyToMoveToFolder(BOOL bCopy)
 {
-    if (!GetSelections())
-        return;
-
-    SFGAOF rfg = SFGAO_CANCOPY | SFGAO_CANMOVE | SFGAO_FILESYSTEM;
-    HRESULT hr = m_pSFParent->GetAttributesOf(m_cidl, m_apidl, &rfg);
-    if (FAILED_UNEXPECTEDLY(hr))
-        return;
-
-    if (!bCopy && !(rfg & SFGAO_CANMOVE))
-        return;
-    if (bCopy && !(rfg & SFGAO_CANCOPY))
-        return;
-
-    CComPtr<IContextMenu> pCM;
-    hr = m_pSFParent->GetUIObjectOf(m_hWnd, m_cidl, m_apidl, IID_IContextMenu, 0, (void **)&pCM);
-    if (FAILED_UNEXPECTEDLY(hr))
-        return;
-
-    InvokeContextMenuCommand(pCM, (bCopy ? "copyto" : "moveto"), NULL);
+    if (GetSelections())
+        CCopyMoveToMenu::DoCopyMoveToFolder(bCopy, m_hWnd, static_cast<IDropTarget*>(this),
+                                            m_pSFParent, m_cidl, m_apidl);
 }
 
 LRESULT CDefView::OnActivate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
@@ -3254,16 +3238,14 @@ HRESULT WINAPI CDefView::DestroyViewWindow()
         m_hMenu = NULL;
     }
 
+    if (m_hWnd)
+        _DoFolderViewCB(SFVM_WINDOWCLOSING, (WPARAM)m_hWnd, 0);
+
     if (m_ListView)
-    {
         m_ListView.DestroyWindow();
-    }
 
     if (m_hWnd)
-    {
-        _DoFolderViewCB(SFVM_WINDOWCLOSING, (WPARAM)m_hWnd, 0);
         DestroyWindow();
-    }
 
     m_pShellBrowser.Release();
     m_pCommDlgBrowser.Release();

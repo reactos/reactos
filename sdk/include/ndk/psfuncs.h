@@ -56,6 +56,28 @@ PsGetProcessWin32Process(
 );
 
 NTKERNELAPI
+PEJOB
+NTAPI
+PsGetProcessJob(
+    _In_ PEPROCESS Process
+);
+
+NTKERNELAPI
+ULONG
+NTAPI
+PsGetJobUIRestrictionsClass(
+    _In_ PEJOB Job
+);
+
+NTKERNELAPI
+VOID
+NTAPI
+PsSetJobUIRestrictionsClass(
+    _In_ PEJOB Job,
+    _In_ ULONG UIRestrictionsClass
+);
+
+NTKERNELAPI
 NTSTATUS
 NTAPI
 PsSetProcessWin32Process(

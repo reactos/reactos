@@ -1645,7 +1645,7 @@ NtUserGetForegroundWindow(VOID)
    HWND Ret;
 
    TRACE("Enter NtUserGetForegroundWindow\n");
-   UserEnterExclusive();
+   UserEnterShared();
 
    Ret = UserGetForegroundWindow();
 

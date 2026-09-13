@@ -16,6 +16,9 @@
 extern void KiInvalidSystemThreadStartupExit(void);
 extern void KiUserThreadStartupExit(void);
 extern void KiServiceExit3(void);
+#if defined(_WIN64) && defined(BUILD_WOW64_ENABLED)
+extern void KiReloadWow64Fs();
+#endif
 
 typedef struct _KUINIT_FRAME
 {
@@ -46,6 +49,7 @@ KiInitializeContextThread(IN PKTHREAD Thread,
     PKSTART_FRAME StartFrame;
     PKSWITCH_FRAME CtxSwitchFrame;
     PKTRAP_FRAME TrapFrame;
+    PKEXCEPTION_FRAME ExceptionFrame;
     ULONG ContextFlags;
     PVOID InitialStack;
 
@@ -102,25 +106,51 @@ KiInitializeContextThread(IN PKTHREAD Thread,
         ASSERT((Context->ContextFlags & CONTEXT_CONTROL) == CONTEXT_CONTROL);
         ContextFlags = Context->ContextFlags & ~CONTEXT_DEBUG_REGISTERS;
 
-        /* Setup the Trap Frame */
+        /* Zero-initialize the Trap Frame and exception frame */
         TrapFrame = &InitFrame->TrapFrame;
-
-        /* Zero out the trap frame */
         RtlZeroMemory(TrapFrame, sizeof(KTRAP_FRAME));
-        RtlZeroMemory(&InitFrame->ExceptionFrame, sizeof(KEXCEPTION_FRAME));
+        ExceptionFrame = &InitFrame->ExceptionFrame;
+        RtlZeroMemory(ExceptionFrame, sizeof(KEXCEPTION_FRAME));
 
-        /* Set up a trap frame from the context. */
-        KeContextToTrapFrame(Context,
-                             &InitFrame->ExceptionFrame,
-                             TrapFrame,
-                             CONTEXT_AMD64 | ContextFlags,
-                             UserMode);
+        /* Copy integer registers */
+        TrapFrame->Rax = Context->Rax;
+        TrapFrame->Rcx = Context->Rcx;
+        TrapFrame->Rdx = Context->Rdx;
+        TrapFrame->Rbp = 0; // Context->Rbp; // 0 on Vista, copied on Win 10
+        TrapFrame->R8 = Context->R8;
+        TrapFrame->R9 = Context->R9;
+        TrapFrame->R10 = Context->R10;
+        TrapFrame->R11 = Context->R11;
+        ExceptionFrame->Rbx = Context->Rbx;
+        ExceptionFrame->Rsi = Context->Rsi;
+        ExceptionFrame->Rdi = Context->Rdi;
+        ExceptionFrame->R12 = Context->R12;
+        ExceptionFrame->R13 = Context->R13;
+        ExceptionFrame->R14 = Context->R14;
+        ExceptionFrame->R15 = Context->R15;
 
-        /* Set SS, DS, ES's RPL Mask properly */
-        TrapFrame->SegSs |= RPL_MASK;
-        TrapFrame->SegDs |= RPL_MASK;
-        TrapFrame->SegEs |= RPL_MASK;
+        /* Copy RIP, RSP, EFLAGS */
+        TrapFrame->Rip = Context->Rip;
+        TrapFrame->Rsp = Context->Rsp;
+        TrapFrame->EFlags = Context->EFlags;
+
+        /* Sanitize EFLAGS */
+        TrapFrame->EFlags &= EFLAGS_USER_THREAD_SANITIZE;
+        TrapFrame->EFlags |= EFLAGS_INTERRUPT_MASK;
+
+        /* Set user mode segment selectors */
+        TrapFrame->SegDs = KGDT64_R3_DATA | RPL_MASK;
+        TrapFrame->SegEs = KGDT64_R3_DATA | RPL_MASK;
+        TrapFrame->SegFs = KGDT64_R3_CMTEB | RPL_MASK;
+        TrapFrame->SegGs = KGDT64_R3_DATA | RPL_MASK;
+        TrapFrame->SegCs = KGDT64_R3_CODE | RPL_MASK;
+        TrapFrame->SegSs = KGDT64_R3_DATA | RPL_MASK;
+
+        /* Clear DR7 */
         TrapFrame->Dr7 = 0;
+
+        /* Initialize floating point state */
+        TrapFrame->MxCsr = INITIAL_MXCSR;
 
         /* Set the previous mode as user */
         TrapFrame->PreviousMode = UserMode;
@@ -132,7 +162,10 @@ KiInitializeContextThread(IN PKTHREAD Thread,
         StartFrame->Return = (ULONG64)KiUserThreadStartupExit;
 
         /* KiUserThreadStartupExit returns to KiServiceExit3 */
-        InitFrame->ExceptionFrame.Return = (ULONG64)KiServiceExit3;
+        ExceptionFrame->Return = (ULONG64)KiServiceExit3;
+
+        /* Allocate home space on the stack */
+        TrapFrame->Rsp -= 5 * sizeof(PVOID);
     }
     else
     {
@@ -175,6 +208,7 @@ KiSwapContextResume(
 {
     PKIPCR Pcr = (PKIPCR)KeGetPcr();
     PKPROCESS OldProcess, NewProcess;
+    ULONG64 CurrentCycleTime, ElapsedCycles;
 
     /* Setup ring 0 stack pointer */
     Pcr->TssBase->Rsp0 = (ULONG64)NewThread->InitialStack;
@@ -204,12 +238,38 @@ KiSwapContextResume(
         //Pcr->TssBase->IoMapBase = NewProcess->IopmOffset;
     }
 
+    /* Update the old thread's cycle time */
+    CurrentCycleTime = __rdtsc();
+    ElapsedCycles = CurrentCycleTime - Pcr->Prcb.StartCycles;
+    ((PETHREAD)OldThread)->CycleTime += ElapsedCycles;
+    InterlockedAdd64((PLONG64)&((PEPROCESS)OldProcess)->CycleTime, ElapsedCycles);
+    Pcr->Prcb.StartCycles = CurrentCycleTime;
+
     /* Set TEB pointer and GS base */
     Pcr->NtTib.Self = (PVOID)NewThread->Teb;
     if (NewThread->Teb)
     {
        /* This will switch the usermode gs */
        __writemsr(MSR_GS_SWAP, (ULONG64)NewThread->Teb);
+
+#if defined(_WIN64) && defined(BUILD_WOW64_ENABLED)
+       PEPROCESS ENewProcess = (PEPROCESS)NewProcess;
+
+       if (ENewProcess->Wow64Process != NULL)
+       {
+          ULONG_PTR Base = (ULONG_PTR)PS_GET_TEB32_FROM_TEB(NewThread->Teb);
+
+          PKGDTENTRY64 CmTebEntry = KiGetGdtEntry(Pcr->GdtBase, KGDT64_R3_CMTEB);
+          CmTebEntry->LimitLow = 0xFFFF;
+          CmTebEntry->Bits.LimitHigh = 0xFFFF;
+
+          CmTebEntry->BaseLow = Base & 0xFFFF;
+          CmTebEntry->Bits.BaseMiddle = (Base & 0xFF0000) >> 16;
+          CmTebEntry->Bits.BaseHigh = (Base & 0xFF000000) >> 24;
+
+          KiReloadWow64Fs();
+       }
+#endif
     }
 
     /* Increase context switch count */

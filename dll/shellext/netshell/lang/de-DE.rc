@@ -21,7 +21,7 @@ END
 
 IDD_STATUS DIALOGEX 0, 0, 200, 180
 STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION | DS_MODALFRAME | WS_SYSMENU
-CAPTION "Allgemein"
+CAPTION TRAYICONWINDOWCAPTION
 FONT 8, "MS Shell Dlg"
 BEGIN
 END
@@ -73,7 +73,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Netzwerkverbindungs&details:", -1, 10, 4, 170, 12
     CONTROL "", IDC_DETAILS, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 10, 15, 170, 130
-    PUSHBUTTON "&Schließen", IDC_CLOSE, 120, 155, 60, 14
+    DEFPUSHBUTTON "&Schließen", IDCANCEL, 120, 155, 60, 14
 END
 
 IDD_NETWORKINITPAGE DIALOGEX 0, 0, 317, 143
@@ -123,7 +123,7 @@ BEGIN
 (Domänen-Anmeldedaten müssen eventuell vom Netzwerkadministrator bezogen werden.)", IDC_STATIC, 33, 2, 263, 50
     AUTORADIOBUTTON "Diesen Computer folgender Arbeitsgruppe hinzufügen.", IDC_SELECT_WORKGROUP, 33, 32, 253, 20, WS_TABSTOP | WS_GROUP
     AUTORADIOBUTTON "Diesen Computer folgender Domäne hinzufügen.", IDC_SELECT_DOMAIN, 33, 47, 253, 20, WS_TABSTOP
-    LTEXT "Arbeitsgruppe oder Domäne:", IDC_STATIC, 33, 72, 126, 14
+    LTEXT "Arbeitsgruppe oder Domäne:", IDC_STATIC, 33, 72, 126, 10
     EDITTEXT IDC_DOMAIN_NAME, 33, 82, 126, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL
     LTEXT "Sollte dieser Computer nicht mit einem Netzwerk verbunden werden, Sie keine Domänen-Anmeldedaten besitzen oder falls Sie unschlüssig sind, wählen Sie vorläufig Arbeitsgruppe.\nDiese Einstellung kann später jederzeit verändert werden.", IDC_STATIC, 33, 107, 263, 50
 END

@@ -650,9 +650,9 @@ VBEGetPowerState(
 
 VP_STATUS NTAPI
 VBESetPowerState(
-   PVOID HwDeviceExtension,
-   ULONG HwId,
-   PVIDEO_POWER_MANAGEMENT VideoPowerControl)
+   _In_ PVOID HwDeviceExtension,
+   _In_ ULONG HwId,
+   _In_ PVIDEO_POWER_MANAGEMENT VideoPowerControl)
 {
    INT10_BIOS_ARGUMENTS BiosRegisters;
    PVBE_DEVICE_EXTENSION VBEDeviceExtension =
@@ -692,7 +692,7 @@ VBESetPowerState(
    if (VBE_GETRETURNCODE(BiosRegisters.Eax) != VBE_SUCCESS)
       return ERROR_INVALID_FUNCTION;
 
-   return VBE_SUCCESS;
+   return NO_ERROR;
 }
 
 /*

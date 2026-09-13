@@ -13,10 +13,10 @@ CCanvasWindow canvasWindow;
 /* FUNCTIONS ********************************************************/
 
 HCURSOR
-CStyledCursor::CreateStyledCursor(BrushStyle style, INT radius, COLORREF color, BOOL is_rubber)
+CStyledCursor::CreateStyledCursor(BrushStyle style, INT zoom, INT radius, COLORREF color, BOOL is_rubber)
 {
     const INT diameter = 2 * radius;
-    if (diameter <= 2)
+    if (diameter * zoom / DEFAULT_ZOOM <= 2)
     {
         HCURSOR hCursor = ::LoadCursor(NULL, IDC_CROSS);
         return hCursor ? CopyCursor(hCursor) : NULL;
@@ -24,7 +24,7 @@ CStyledCursor::CreateStyledCursor(BrushStyle style, INT radius, COLORREF color, 
 
     const INT crosshair1 = 6, crosshair2 = crosshair1 - 2;
     const INT width = diameter + 2 * crosshair1, height = diameter + 2 * crosshair1;
-    const DWORD hotX = width / 2, hotY = height / 2;
+    DWORD hotX = width / 2, hotY = height / 2;
 
     HDC hdcScreen = ::GetDC(NULL);
     if (!hdcScreen)
@@ -116,6 +116,20 @@ CStyledCursor::CreateStyledCursor(BrushStyle style, INT radius, COLORREF color, 
     ::ReleaseDC(NULL, hdcScreen);
     ::DeleteDC(hdcMem);
 
+    if (zoom != DEFAULT_ZOOM)
+    {
+        INT newWidth = width * zoom / DEFAULT_ZOOM;
+        INT newHeight = height * zoom / DEFAULT_ZOOM;
+        HBITMAP hbmMaskNew = CopyMonoImage(hbmMask, newWidth, newHeight, STRETCH_DELETESCANS);
+        HBITMAP hbmColorNew = CopyDIBImage(hbmColor, newWidth, newHeight, STRETCH_DELETESCANS);
+        ::DeleteObject(hbmMask);
+        ::DeleteObject(hbmColor);
+        hbmMask = hbmMaskNew;
+        hbmColor = hbmColorNew;
+        hotX = width * zoom / (2 * DEFAULT_ZOOM);
+        hotY = height * zoom / (2 * DEFAULT_ZOOM);
+    }
+
     ICONINFO ii = { FALSE, hotX, hotY, hbmMask, hbmColor };
     HCURSOR hCursor = (HCURSOR)::CreateIconIndirect(&ii);
 
@@ -125,9 +139,13 @@ CStyledCursor::CreateStyledCursor(BrushStyle style, INT radius, COLORREF color, 
     return hCursor;
 }
 
-void CStyledCursor::SetStyle(BrushStyle style, INT radius, COLORREF color, BOOL is_rubber)
+void CStyledCursor::SetStyle(BrushStyle style, INT zoom, INT radius, COLORREF color, BOOL is_rubber)
 {
-    if (m_hCursor && m_style == style && m_radius == radius && m_color == color &&
+    if (m_hCursor &&
+        m_style == style &&
+        m_zoom == zoom &&
+        m_radius == radius &&
+        m_color == color &&
         m_is_rubber == is_rubber)
     {
         return;
@@ -136,8 +154,9 @@ void CStyledCursor::SetStyle(BrushStyle style, INT radius, COLORREF color, BOOL 
     if (m_hCursor)
         DestroyCursor(m_hCursor);
 
-    m_hCursor = CreateStyledCursor(style, radius, color, is_rubber);
+    m_hCursor = CreateStyledCursor(style, zoom, radius, color, is_rubber);
     m_style = style;
+    m_zoom = zoom;
     m_radius = radius;
     m_color = color;
     m_is_rubber = is_rubber;
@@ -177,17 +196,17 @@ VOID CCanvasWindow::ImageToCanvas(RECT& rc)
     ::OffsetRect(&rc, GRIP_SIZE - GetScrollPos(SB_HORZ), GRIP_SIZE - GetScrollPos(SB_VERT));
 }
 
-VOID CCanvasWindow::CanvasToImage(POINT& pt)
+VOID CCanvasWindow::CanvasToImage(POINT& pt, BOOL bRound)
 {
     pt.x -= GRIP_SIZE - GetScrollPos(SB_HORZ);
     pt.y -= GRIP_SIZE - GetScrollPos(SB_VERT);
-    UnZoomed(pt);
+    UnZoomed(pt, bRound);
 }
 
-VOID CCanvasWindow::CanvasToImage(RECT& rc)
+VOID CCanvasWindow::CanvasToImage(RECT& rc, BOOL bRound)
 {
     ::OffsetRect(&rc, GetScrollPos(SB_HORZ) - GRIP_SIZE, GetScrollPos(SB_VERT) - GRIP_SIZE);
-    UnZoomed(rc);
+    UnZoomed(rc, bRound);
 }
 
 VOID CCanvasWindow::GetImageRect(RECT& rc)
@@ -397,25 +416,26 @@ LRESULT CCanvasWindow::OnSize(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHa
 VOID CCanvasWindow::OnHVScroll(WPARAM wParam, INT fnBar)
 {
     SCROLLINFO si;
-    si.cbSize = sizeof(SCROLLINFO);
+    si.cbSize = sizeof(si);
     si.fMask = SIF_ALL;
     GetScrollInfo(fnBar, &si);
+
     switch (LOWORD(wParam))
     {
         case SB_THUMBTRACK:
         case SB_THUMBPOSITION:
             si.nPos = (SHORT)HIWORD(wParam);
             break;
-        case SB_LINELEFT:
-            si.nPos -= 5;
+        case SB_LINELEFT: // SB_LINEUP
+            si.nPos -= 15;
             break;
-        case SB_LINERIGHT:
-            si.nPos += 5;
+        case SB_LINERIGHT: // SB_LINEDOWN
+            si.nPos += 15;
             break;
-        case SB_PAGELEFT:
+        case SB_PAGELEFT: // SB_PAGEUP
             si.nPos -= si.nPage;
             break;
-        case SB_PAGERIGHT:
+        case SB_PAGERIGHT: // SB_PAGEDOWN
             si.nPos += si.nPage;
             break;
     }
@@ -455,7 +475,7 @@ LRESULT CCanvasWindow::OnButtonDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOO
     if (hitSelection != HIT_NONE)
     {
         m_drawing = TRUE;
-        CanvasToImage(pt);
+        CanvasToImage(pt, TRUE);
         SetCapture();
         toolsModel.OnButtonDown(bLeftButton, pt.x, pt.y, FALSE);
         Invalidate();
@@ -487,7 +507,7 @@ LRESULT CCanvasWindow::OnButtonDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOO
         return 0;
     }
 
-    CanvasToImage(pt);
+    CanvasToImage(pt, TRUE);
 
     if (hit == HIT_INNER)
     {
@@ -511,7 +531,7 @@ LRESULT CCanvasWindow::OnButtonDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOO
 LRESULT CCanvasWindow::OnButtonDblClk(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
-    CanvasToImage(pt);
+    CanvasToImage(pt, TRUE);
 
     m_drawing = FALSE;
     ::ReleaseCapture();
@@ -537,7 +557,7 @@ LRESULT CCanvasWindow::OnMouseMove(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL
         return 0;
     }
 
-    CanvasToImage(pt);
+    CanvasToImage(pt, TRUE);
 
     if (toolsModel.GetActiveTool() == TOOL_ZOOM)
         Invalidate();
@@ -652,7 +672,7 @@ LRESULT CCanvasWindow::OnMouseMove(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL
 LRESULT CCanvasWindow::OnButtonUp(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
-    CanvasToImage(pt);
+    CanvasToImage(pt, TRUE);
 
     ::ReleaseCapture();
 
@@ -775,7 +795,9 @@ LRESULT CCanvasWindow::OnSetCursor(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL
                 break;
             case TOOL_RUBBER:
             {
-                m_hRubberCursor.SetStyle(BrushStyleSquare, toolsModel.GetRubberRadius(),
+                m_hRubberCursor.SetStyle(BrushStyleSquare,
+                                         toolsModel.GetZoom(),
+                                         toolsModel.GetRubberRadius(),
                                          paletteModel.GetBgColor(), TRUE);
                 m_hRubberCursor.SetCursor();
                 break;
@@ -783,6 +805,7 @@ LRESULT CCanvasWindow::OnSetCursor(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL
             case TOOL_BRUSH:
             {
                 m_hBrushCursor.SetStyle(toolsModel.GetBrushStyle(),
+                                        toolsModel.GetZoom(),
                                         toolsModel.GetBrushWidth() / 2,
                                         paletteModel.GetFgColor(), FALSE);
                 m_hBrushCursor.SetCursor();

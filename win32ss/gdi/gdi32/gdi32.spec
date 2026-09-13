@@ -385,7 +385,7 @@
 385 stdcall GetGlyphOutline(long long long ptr long ptr ptr) GetGlyphOutlineA
 386 stdcall GetGlyphOutlineA(long long long ptr long ptr ptr)
 387 stdcall GetGlyphOutlineW(long long long ptr long ptr ptr)
-388 stdcall GetGlyphOutlineWow(long long long long long long long)
+388 stdcall GetGlyphOutlineWow(long long long ptr long ptr ptr)
 389 stdcall GetGraphicsMode(long)
 390 stdcall GetHFONT(ptr)
 391 stdcall GetICMProfileA(long ptr ptr)

@@ -45,7 +45,7 @@ HKEY hEnumKey = NULL;
 HKEY hClassKey = NULL;
 BOOL g_IsUISuppressed = FALSE;
 BOOL g_ShuttingDown = FALSE;
-BOOL g_IsLiveMedium = FALSE;
+BOOL g_IsMiniNT = FALSE;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -201,59 +201,25 @@ GetSuppressNewUIValue(VOID)
     return bSuppressNewHWUI;
 }
 
-BOOL
-RunningOnLiveMedium(VOID)
+/**
+ * @brief   Check whether we are running in MiniNT mode (e.g. live medium).
+ **/
+static BOOL
+IsMiniNT(VOID)
 {
-    WCHAR Options[MAX_PATH];
-    PWSTR CurrentOption, NextOption;
-    HKEY hControlKey;
-    DWORD dwType;
-    DWORD dwSize;
-    DWORD dwError;
-    BOOL LiveMedium = FALSE;
+    HKEY hKey;
+    LONG rc;
 
-    DPRINT("RunningOnLiveMedium()\n");
+    /* Check for the presence of the "MiniNT" registry key */
+    rc = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                       L"SYSTEM\\CurrentControlSet\\Control\\MiniNT",
+                       0,
+                       KEY_QUERY_VALUE,
+                       &hKey);
+    if (rc == ERROR_SUCCESS)
+        RegCloseKey(hKey);
 
-    /* Open the Setup key */
-    dwError = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
-                            L"SYSTEM\\CurrentControlSet\\Control",
-                            0,
-                            KEY_QUERY_VALUE,
-                            &hControlKey);
-    if (dwError != ERROR_SUCCESS)
-        goto done;
-
-    /* Read the CmdLine value */
-    dwSize = sizeof(Options);
-    dwError = RegQueryValueExW(hControlKey,
-                               L"SystemStartOptions",
-                               NULL,
-                               &dwType,
-                               (LPBYTE)Options,
-                               &dwSize);
-    if ((dwError != ERROR_SUCCESS) || (dwType != REG_SZ))
-        goto done;
-
-    /* Check for the '-mini' option */
-    CurrentOption = Options;
-    while (CurrentOption)
-    {
-        NextOption = wcschr(CurrentOption, L' ');
-        if (NextOption)
-            *NextOption = L'\0';
-        if (_wcsicmp(CurrentOption, L"MININT") == 0)
-        {
-            DPRINT("Found 'MININT' boot option\n");
-            LiveMedium = TRUE;
-            goto done;
-        }
-        CurrentOption = NextOption ? NextOption + 1 : NULL;
-    }
-
-done:
-    RegCloseKey(hControlKey);
-
-    return LiveMedium;
+    return (rc == ERROR_SUCCESS);
 }
 
 VOID WINAPI
@@ -267,7 +233,7 @@ ServiceMain(DWORD argc, LPTSTR *argv)
 
     DPRINT("ServiceMain() called\n");
 
-    g_IsLiveMedium = RunningOnLiveMedium();
+    g_IsMiniNT = IsMiniNT();
 
     ServiceStatusHandle = RegisterServiceCtrlHandlerExW(ServiceName,
                                                         ServiceControlHandler,

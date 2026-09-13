@@ -1,8 +1,8 @@
 /*
  * PROJECT:     appshim_apitest
- * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * LICENSE:     MIT (https://spdx.org/licenses/MIT)
  * PURPOSE:     Test to document the hooks used by various shims in AcGenral
- * COPYRIGHT:   Copyright 2017-2018 Mark Jansen (mark.jansen@reactos.org)
+ * COPYRIGHT:   Copyright 2017-2018 Mark Jansen <mark.jansen@reactos.org>
  */
 
 #include <ntstatus.h>

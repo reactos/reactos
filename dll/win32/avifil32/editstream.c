@@ -91,7 +91,7 @@ static HRESULT AVIFILE_FindStreamInTable(IAVIEditStreamImpl* const This,
 {
   DWORD n;
 
-  TRACE("(%p,%u,%p,%p,%p,%d)\n",This,pos,ppStream,streamPos,
+  TRACE("(%p,%lu,%p,%p,%p,%d)\n",This,pos,ppStream,streamPos,
         streamNr,bFindSample);
 
   if (pos < This->sInfo.dwStart)
@@ -115,7 +115,7 @@ static HRESULT AVIFILE_FindStreamInTable(IAVIEditStreamImpl* const This,
     if (streamNr != NULL)
       *streamNr = n;
 
-    TRACE(" -- pos=0 && b=1 -> (%p,%u,%u)\n",*ppStream, *streamPos, n);
+    TRACE(" -- pos=0 && b=1 -> (%p,%lu,%lu)\n",*ppStream, *streamPos, n);
     return AVIERR_OK;
   } else {
     *ppStream = NULL;
@@ -133,7 +133,7 @@ static LPVOID AVIFILE_ReadFrame(IAVIEditStreamImpl* const This,
 {
   PGETFRAME pg;
 
-  TRACE("(%p,%p,%d)\n",This,pstream,pos);
+  TRACE("(%p,%p,%ld)\n",This,pstream,pos);
 
   if (pstream == NULL)
     return NULL;
@@ -209,19 +209,19 @@ static BOOL AVIFILE_FormatsEqual(PAVISTREAM avi1, PAVISTREAM avi2)
     return FALSE;
 
   /* sizes match, now get formats and compare them */
-  fmt1 = HeapAlloc(GetProcessHeap(), 0, size1);
+  fmt1 = malloc(size1);
   if (fmt1 == NULL)
     return FALSE;
   if (SUCCEEDED(AVIStreamReadFormat(avi1, start1, fmt1, &size1))) {
-    fmt2 = HeapAlloc(GetProcessHeap(), 0, size1);
+    fmt2 = malloc(size1);
     if (fmt2 != NULL) {
       if (SUCCEEDED(AVIStreamReadFormat(avi2, start2, fmt2, &size1)))
         status = (memcmp(fmt1, fmt2, size1) == 0);
     }
   }
 
-  HeapFree(GetProcessHeap(), 0, fmt2);
-  HeapFree(GetProcessHeap(), 0, fmt1);
+  free(fmt2);
+  free(fmt1);
 
   return status;
 }
@@ -256,7 +256,7 @@ static ULONG   WINAPI IAVIEditStream_fnAddRef(IAVIEditStream*iface)
   IAVIEditStreamImpl *This = impl_from_IAVIEditStream(iface);
   ULONG ref = InterlockedIncrement(&This->ref);
 
-  TRACE("(%p) -> %d\n", iface, ref);
+  TRACE("(%p) -> %ld\n", iface, ref);
 
   return ref;
 }
@@ -267,7 +267,7 @@ static ULONG   WINAPI IAVIEditStream_fnRelease(IAVIEditStream*iface)
   DWORD i;
   ULONG ref = InterlockedDecrement(&This->ref);
 
-  TRACE("(%p) -> %d\n", iface, ref);
+  TRACE("(%p) -> %ld\n", iface, ref);
 
   if (!ref) {
     /* release memory */
@@ -278,10 +278,10 @@ static ULONG   WINAPI IAVIEditStream_fnRelease(IAVIEditStream*iface)
         if (This->pStreams[i].pStream != NULL)
           IAVIStream_Release(This->pStreams[i].pStream);
       }
-      HeapFree(GetProcessHeap(), 0, This->pStreams);
+      free(This->pStreams);
     }
 
-    HeapFree(GetProcessHeap(), 0, This);
+    free(This);
   }
   return ref;
 }
@@ -343,8 +343,7 @@ static HRESULT WINAPI IAVIEditStream_fnCut(IAVIEditStream*iface,LONG*plStart,
     } else {
       /* splitting */
       if (This->nStreams + 1 >= This->nTableSize) {
-        This->pStreams = HeapReAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, This->pStreams,
-                                     (This->nTableSize + 32) * sizeof(EditStreamTable));
+        This->pStreams = _recalloc(This->pStreams, This->nTableSize + 32, sizeof(EditStreamTable));
         if (This->pStreams == NULL)
           return AVIERR_MEMORY;
         This->nTableSize += 32;
@@ -425,7 +424,7 @@ static HRESULT WINAPI IAVIEditStream_fnPaste(IAVIEditStream*iface,LONG*plStart,
   DWORD               startPos, endPos, streamNr, nStreams;
   ULONG               n;
 
-  TRACE("(%p,%p,%p,%p,%d,%d)\n",iface,plStart,plLength,
+  TRACE("(%p,%p,%p,%p,%ld,%ld)\n",iface,plStart,plLength,
 	pSource,lStart,lLength);
 
   if (pSource == NULL)
@@ -530,7 +529,7 @@ static HRESULT WINAPI IAVIEditStream_fnPaste(IAVIEditStream*iface,LONG*plStart,
   if (This->nStreams + nStreams + 1 > This->nTableSize) {
     n = This->nStreams + nStreams + 33;
 
-    This->pStreams = HeapReAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, This->pStreams, n * sizeof(EditStreamTable));
+    This->pStreams = _recalloc(This->pStreams, n, sizeof(EditStreamTable));
     if (This->pStreams == NULL)
       return AVIERR_MEMORY;
     This->nTableSize = n;
@@ -619,8 +618,7 @@ static HRESULT WINAPI IAVIEditStream_fnClone(IAVIEditStream*iface,
   if (pEdit == NULL)
     return AVIERR_MEMORY;
   if (This->nStreams > pEdit->nTableSize) {
-    pEdit->pStreams = HeapReAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, pEdit->pStreams,
-                                  This->nStreams * sizeof(EditStreamTable));
+    pEdit->pStreams = _recalloc(pEdit->pStreams, This->nStreams, sizeof(EditStreamTable));
     if (pEdit->pStreams == NULL)
       return AVIERR_MEMORY;
     pEdit->nTableSize = This->nStreams;
@@ -644,7 +642,7 @@ static HRESULT WINAPI IAVIEditStream_fnSetInfo(IAVIEditStream*iface,
 {
   IAVIEditStreamImpl *This = impl_from_IAVIEditStream(iface);
 
-  TRACE("(%p,%p,%d)\n",iface,asi,size);
+  TRACE("(%p,%p,%ld)\n",iface,asi,size);
 
   /* check parameters */
   if (size >= 0 && size < sizeof(AVISTREAMINFOW))
@@ -702,7 +700,7 @@ static HRESULT WINAPI IEditAVIStream_fnCreate(IAVIStream*iface,
     return AVIERR_ERROR;
 
   if (This->pStreams == NULL) {
-    This->pStreams = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, 256 * sizeof(EditStreamTable));
+    This->pStreams = calloc(256, sizeof(EditStreamTable));
     if (This->pStreams == NULL)
       return AVIERR_MEMORY;
     This->nTableSize = 256;
@@ -724,7 +722,7 @@ static HRESULT WINAPI IEditAVIStream_fnInfo(IAVIStream*iface,
 {
   IAVIEditStreamImpl *This = impl_from_IAVIStream( iface );
 
-  TRACE("(%p,%p,%d)\n",iface,psi,size);
+  TRACE("(%p,%p,%ld)\n",iface,psi,size);
 
   if (psi == NULL)
     return AVIERR_BADPARAM;
@@ -748,7 +746,7 @@ static LONG    WINAPI IEditAVIStream_fnFindSample(IAVIStream*iface,LONG pos,
   PAVISTREAM stream;
   DWORD      streamPos, streamNr;
 
-  TRACE("(%p,%d,0x%08X)\n",iface,pos,flags);
+  TRACE("(%p,%ld,0x%08lX)\n",iface,pos,flags);
 
   if (flags & FIND_FROM_START)
     pos = (LONG)This->sInfo.dwStart;
@@ -785,7 +783,7 @@ static HRESULT WINAPI IEditAVIStream_fnReadFormat(IAVIStream*iface,LONG pos,
   DWORD               n;
   HRESULT             hr;
 
-  TRACE("(%p,%d,%p,%p)\n",iface,pos,format,fmtsize);
+  TRACE("(%p,%ld,%p,%p)\n",iface,pos,format,fmtsize);
 
   if (fmtsize == NULL || pos < This->sInfo.dwStart ||
       This->sInfo.dwStart + This->sInfo.dwLength <= pos)
@@ -819,7 +817,7 @@ static HRESULT WINAPI IEditAVIStream_fnReadFormat(IAVIStream*iface,LONG pos,
 static HRESULT WINAPI IEditAVIStream_fnSetFormat(IAVIStream*iface,LONG pos,
                                                  LPVOID format,LONG formatsize)
 {
-  TRACE("(%p,%d,%p,%d)\n",iface,pos,format,formatsize);
+  TRACE("(%p,%ld,%p,%ld)\n",iface,pos,format,formatsize);
 
   return AVIERR_UNSUPPORTED;
 }
@@ -835,7 +833,7 @@ static HRESULT WINAPI IEditAVIStream_fnRead(IAVIStream*iface,LONG start,
   LONG    readBytes, readSamples, count;
   HRESULT hr;
 
-  TRACE("(%p,%d,%d,%p,%d,%p,%p) -- 0x%08X\n",iface,start,samples,
+  TRACE("(%p,%ld,%ld,%p,%ld,%p,%p) -- 0x%08lX\n",iface,start,samples,
         buffer,buffersize,bytesread,samplesread,This->sInfo.fccType);
 
   /* check parameters */
@@ -925,7 +923,7 @@ static HRESULT WINAPI IEditAVIStream_fnWrite(IAVIStream*iface,LONG start,
                                              LONG buffersize,DWORD flags,
                                              LONG*sampwritten,LONG*byteswritten)
 {
-  TRACE("(%p,%d,%d,%p,%d,0x%08X,%p,%p)\n",iface,start,samples,buffer,
+  TRACE("(%p,%ld,%ld,%p,%ld,0x%08lX,%p,%p)\n",iface,start,samples,buffer,
         buffersize,flags,sampwritten,byteswritten);
 
   /* be sure return parameters have correct values */
@@ -942,7 +940,7 @@ static HRESULT WINAPI IEditAVIStream_fnDelete(IAVIStream*iface,LONG start,
 {
   IAVIEditStreamImpl *This = impl_from_IAVIStream( iface );
 
-  TRACE("(%p,%d,%d)\n",iface,start,samples);
+  TRACE("(%p,%ld,%ld)\n",iface,start,samples);
 
   return IAVIEditStream_Cut(&This->IAVIEditStream_iface,&start,&samples,NULL);
 }
@@ -953,7 +951,7 @@ static HRESULT WINAPI IEditAVIStream_fnReadData(IAVIStream*iface,DWORD fcc,
   IAVIEditStreamImpl *This = impl_from_IAVIStream( iface );
   DWORD n;
 
-  TRACE("(%p,0x%08X,%p,%p)\n",iface,fcc,lp,lpread);
+  TRACE("(%p,0x%08lX,%p,%p)\n",iface,fcc,lp,lpread);
 
   /* check parameters */
   if (lp == NULL || lpread == NULL)
@@ -974,7 +972,7 @@ static HRESULT WINAPI IEditAVIStream_fnReadData(IAVIStream*iface,DWORD fcc,
 static HRESULT WINAPI IEditAVIStream_fnWriteData(IAVIStream*iface,DWORD fcc,
                                                  LPVOID lp,LONG size)
 {
-  TRACE("(%p,0x%08X,%p,%d)\n",iface,fcc,lp,size);
+  TRACE("(%p,0x%08lX,%p,%ld)\n",iface,fcc,lp,size);
 
   return AVIERR_UNSUPPORTED;
 }
@@ -984,7 +982,7 @@ static HRESULT WINAPI IEditAVIStream_fnSetInfo(IAVIStream*iface,
 {
   IAVIEditStreamImpl *This = impl_from_IAVIStream( iface );
 
-  TRACE("(%p,%p,%d)\n",iface,info,len);
+  TRACE("(%p,%p,%ld)\n",iface,info,len);
 
   return IAVIEditStream_SetInfo(&This->IAVIEditStream_iface,info,len);
 }
@@ -1010,7 +1008,7 @@ static IAVIEditStreamImpl *AVIFILE_CreateEditStream(IAVIStream *pstream)
 {
   IAVIEditStreamImpl *pedit = NULL;
 
-  pedit = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(IAVIEditStreamImpl));
+  pedit = calloc(1, sizeof(IAVIEditStreamImpl));
   if (pedit == NULL)
     return NULL;
 

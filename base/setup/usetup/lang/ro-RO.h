@@ -1304,7 +1304,7 @@ static MUI_ENTRY roROFormatPartitionEntries[] =
     {
         0,
         0,
-        "ENTER = Continuare   F3 = Ie\272ire",
+        "ENTER = Continuare   ESC = Anulare   F3 = Ie\272ire",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
         TEXT_ID_STATIC
     },

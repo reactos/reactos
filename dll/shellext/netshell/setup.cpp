@@ -221,7 +221,7 @@ NetworkInitPageDlgProc(
     LPNMHDR lpnm;
 
     /* Retrieve pointer to the global setup data */
-    pNetworkSetupData = (PNETWORKSETUPDATA)GetWindowLongPtr(hwndDlg, GWLP_USERDATA);
+    pNetworkSetupData = (PNETWORKSETUPDATA)GetWindowLongPtr(hwndDlg, DWLP_USER);
     if ((pNetworkSetupData != NULL) &&
         (pNetworkSetupData->dwMagic == NETWORK_SETUP_MAGIC))
         pSetupData = pNetworkSetupData->pSetupData;
@@ -231,7 +231,7 @@ NetworkInitPageDlgProc(
         case WM_INITDIALOG:
             /* Save pointer to the global setup data */
             pNetworkSetupData = (PNETWORKSETUPDATA)((LPPROPSHEETPAGE)lParam)->lParam;
-            SetWindowLongPtr(hwndDlg, GWLP_USERDATA, (DWORD_PTR)pNetworkSetupData);
+            SetWindowLongPtr(hwndDlg, DWLP_USER, (DWORD_PTR)pNetworkSetupData);
             pSetupData = pNetworkSetupData->pSetupData;
 
             if (pSetupData->UnattendSetup)
@@ -295,7 +295,7 @@ NetworkSettingsPageDlgProc(
     LPNMHDR lpnm;
 
     /* Retrieve pointer to the global setup data */
-    pNetworkSetupData = (PNETWORKSETUPDATA)GetWindowLongPtr(hwndDlg, GWLP_USERDATA);
+    pNetworkSetupData = (PNETWORKSETUPDATA)GetWindowLongPtr(hwndDlg, DWLP_USER);
     if ((pNetworkSetupData != NULL) &&
         (pNetworkSetupData->dwMagic == NETWORK_SETUP_MAGIC))
         pSetupData = pNetworkSetupData->pSetupData;
@@ -305,7 +305,7 @@ NetworkSettingsPageDlgProc(
         case WM_INITDIALOG:
             /* Save pointer to the global setup data */
             pNetworkSetupData = (PNETWORKSETUPDATA)((LPPROPSHEETPAGE)lParam)->lParam;
-            SetWindowLongPtr(hwndDlg, GWLP_USERDATA, (DWORD_PTR)pNetworkSetupData);
+            SetWindowLongPtr(hwndDlg, DWLP_USER, (DWORD_PTR)pNetworkSetupData);
             pSetupData = pNetworkSetupData->pSetupData;
 
             /* Set the fonts of both the options to bold */
@@ -381,7 +381,7 @@ NetworkComponentPageDlgProc(
     LPNMHDR lpnm;
 
     /* Retrieve pointer to the global setup data */
-    pNetworkSetupData = (PNETWORKSETUPDATA)GetWindowLongPtr(hwndDlg, GWLP_USERDATA);
+    pNetworkSetupData = (PNETWORKSETUPDATA)GetWindowLongPtr(hwndDlg, DWLP_USER);
     if ((pNetworkSetupData != NULL) &&
         (pNetworkSetupData->dwMagic == NETWORK_SETUP_MAGIC))
         pSetupData = pNetworkSetupData->pSetupData;
@@ -391,7 +391,7 @@ NetworkComponentPageDlgProc(
         case WM_INITDIALOG:
             /* Save pointer to the global setup data */
             pNetworkSetupData = (PNETWORKSETUPDATA)((LPPROPSHEETPAGE)lParam)->lParam;
-            SetWindowLongPtr(hwndDlg, GWLP_USERDATA, (DWORD_PTR)pNetworkSetupData);
+            SetWindowLongPtr(hwndDlg, DWLP_USER, (DWORD_PTR)pNetworkSetupData);
             pSetupData = pNetworkSetupData->pSetupData;
 
             SetBoldText(hwndDlg, IDC_NETWORK_DEVICE, pSetupData);
@@ -452,7 +452,7 @@ NetworkDomainPageDlgProc(
     LPNMHDR lpnm;
 
     /* Retrieve pointer to the global setup data */
-    pNetworkSetupData = (PNETWORKSETUPDATA)GetWindowLongPtr(hwndDlg, GWLP_USERDATA);
+    pNetworkSetupData = (PNETWORKSETUPDATA)GetWindowLongPtr(hwndDlg, DWLP_USER);
     if ((pNetworkSetupData != NULL) &&
         (pNetworkSetupData->dwMagic == NETWORK_SETUP_MAGIC))
         pSetupData = pNetworkSetupData->pSetupData;
@@ -462,7 +462,7 @@ NetworkDomainPageDlgProc(
         case WM_INITDIALOG:
             /* Save pointer to the global setup data */
             pNetworkSetupData = (PNETWORKSETUPDATA)((LPPROPSHEETPAGE)lParam)->lParam;
-            SetWindowLongPtr(hwndDlg, GWLP_USERDATA, (DWORD_PTR)pNetworkSetupData);
+            SetWindowLongPtr(hwndDlg, DWLP_USER, (DWORD_PTR)pNetworkSetupData);
             pSetupData = pNetworkSetupData->pSetupData;
 
             /* Set the workgroup option as the default */
@@ -491,7 +491,7 @@ NetworkDomainPageDlgProc(
                     (pNetworkSetupData->dwMagic == NETWORK_SETUP_MAGIC))
                     HeapFree(GetProcessHeap(), 0, pNetworkSetupData);
 
-                SetWindowLongPtr(hwndDlg, GWLP_USERDATA, (DWORD_PTR)NULL);
+                SetWindowLongPtr(hwndDlg, DWLP_USER, (DWORD_PTR)NULL);
             }
             break;
 

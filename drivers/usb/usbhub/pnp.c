@@ -1392,7 +1392,7 @@ RelationsWorker:
             if (PdoExt(PdoDevice)->EnumFlags & USBHUB_ENUM_FLAG_GHOST_DEVICE)
             {
                 for (GhostPort = Port;
-                     GhostPort < DeviceRelations->Count;
+                     GhostPort < DeviceRelations->Count - 1;
                      GhostPort++)
                 {
                     DeviceRelations->Objects[GhostPort] =

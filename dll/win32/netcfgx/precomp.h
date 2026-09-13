@@ -78,6 +78,16 @@ typedef struct
     NetCfgComponentItem * pProtocol;
 } INetCfgImpl;
 
+typedef struct
+{
+    const INetCfgComponent *lpVtbl;
+    const INetCfgComponentBindings *lpVtblBindings;
+    const INetCfgComponentPrivate  *lpVtblPrivate;
+    LONG  ref;
+    NetCfgComponentItem * pItem;
+    INetCfg * pNCfg;
+} INetCfgComponentImpl;
+
 /* netcfg_iface.c */
 HRESULT WINAPI INetCfg_Constructor (IUnknown * pUnkOuter, REFIID riid, LPVOID * ppv);
 

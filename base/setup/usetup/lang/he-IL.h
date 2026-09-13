@@ -1261,7 +1261,7 @@ static MUI_ENTRY heILFormatPartitionEntries[] =
     {
         0,
         0,
-        "\204\220\227\232\204 \214\205\210\211\201 = F3  \212\231\216\204 = ENTER",
+        "\204\220\227\232\204 \214\205\210\211\201 = F3  \214\205\210\211\201 = ESC  \212\231\216\204 = ENTER",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
         TEXT_ID_STATIC
     },

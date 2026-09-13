@@ -36,6 +36,9 @@
 
 #include <ntstrsafe.h>
 
+/* PSEH for SEH Support */
+#include <pseh/pseh2.h>
+
 /* SM Protocol Header */
 #include <sm/smmsg.h>
 
@@ -157,8 +160,7 @@ SmpInit(
 ULONG
 NTAPI
 SmpApiLoop(
-    IN PVOID Parameter
-);
+    _In_ PVOID Parameter);
 
 /* smsbapi.c */
 
@@ -239,10 +241,14 @@ SmpExecuteInitialCommand(IN ULONG MuSessionId,
 NTSTATUS
 NTAPI
 SmpTerminate(
-    IN PULONG_PTR Parameters,
-    IN ULONG ParameterMask,
-    IN ULONG ParameterCount
-);
+    _In_reads_(ParameterCount) PULONG_PTR Parameters,
+    _In_ ULONG ParameterMask,
+    _In_ ULONG ParameterCount);
+
+LONG
+NTAPI
+SmpUnhandledExceptionFilter(
+    _In_ PEXCEPTION_POINTERS ExceptionInfo);
 
 /* smsubsys.c */
 
@@ -307,12 +313,6 @@ SmpParseCommandLine(
     OUT PUNICODE_STRING FileName,
     OUT PUNICODE_STRING Directory,
     OUT PUNICODE_STRING Arguments
-);
-
-BOOLEAN
-NTAPI
-SmpQueryRegistrySosOption(
-    VOID
 );
 
 BOOLEAN

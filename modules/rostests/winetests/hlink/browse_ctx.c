@@ -36,41 +36,41 @@ static void test_SetInitialHlink(void)
     HRESULT hres;
 
     hres = CreateBindCtx(0, &bindctx);
-    ok(hres == S_OK, "CreateBindCtx failed: 0x%08x\n", hres);
+    ok(hres == S_OK, "CreateBindCtx failed: 0x%08lx\n", hres);
 
     hres = CreateItemMoniker(one, five, &dummy);
-    ok(hres == S_OK, "CreateItemMoniker failed: 0x%08x\n", hres);
+    ok(hres == S_OK, "CreateItemMoniker failed: 0x%08lx\n", hres);
 
     hres = IMoniker_GetDisplayName(dummy, bindctx, NULL, &exp_name);
-    ok(hres == S_OK, "GetDisplayName failed: 0x%08x\n", hres);
+    ok(hres == S_OK, "GetDisplayName failed: 0x%08lx\n", hres);
 
     hres = HlinkCreateBrowseContext(NULL, &IID_IHlinkBrowseContext, (void**)&bc);
-    ok(hres == S_OK, "HlinkCreateBrowseContext failed: 0x%08x\n", hres);
+    ok(hres == S_OK, "HlinkCreateBrowseContext failed: 0x%08lx\n", hres);
 
     hres = IHlinkBrowseContext_SetInitialHlink(bc, dummy, one, NULL);
-    ok(hres == S_OK, "SetInitialHlink failed: 0x%08x\n", hres);
+    ok(hres == S_OK, "SetInitialHlink failed: 0x%08lx\n", hres);
 
     hres = IHlinkBrowseContext_SetInitialHlink(bc, dummy, one, NULL);
-    ok(hres == CO_E_ALREADYINITIALIZED, "got 0x%08x\n", hres);
+    ok(hres == CO_E_ALREADYINITIALIZED, "got 0x%08lx\n", hres);
 
     hres = IHlinkBrowseContext_SetInitialHlink(bc, dummy, five, NULL);
-    ok(hres == CO_E_ALREADYINITIALIZED, "got 0x%08x\n", hres);
+    ok(hres == CO_E_ALREADYINITIALIZED, "got 0x%08lx\n", hres);
 
     /* there's only one */
     hres = IHlinkBrowseContext_GetHlink(bc, HLID_PREVIOUS, &found_hlink);
-    ok(hres == E_FAIL, "got 0x%08x\n", hres);
+    ok(hres == E_FAIL, "got 0x%08lx\n", hres);
 
     hres = IHlinkBrowseContext_GetHlink(bc, HLID_NEXT, &found_hlink);
-    ok(hres == E_FAIL, "got 0x%08x\n", hres);
+    ok(hres == E_FAIL, "got 0x%08lx\n", hres);
 
     hres = IHlinkBrowseContext_GetHlink(bc, HLID_CURRENT, &found_hlink);
-    ok(hres == S_OK, "GetHlink failed: 0x%08x\n", hres);
+    ok(hres == S_OK, "GetHlink failed: 0x%08lx\n", hres);
 
     hres = IHlink_GetMonikerReference(found_hlink, HLINKGETREF_DEFAULT, &found_moniker, NULL);
-    ok(hres == S_OK, "GetMonikerReference failed: 0x%08x\n", hres);
+    ok(hres == S_OK, "GetMonikerReference failed: 0x%08lx\n", hres);
 
     hres = IMoniker_GetDisplayName(found_moniker, bindctx, NULL, &found_name);
-    ok(hres == S_OK, "GetDisplayName failed: 0x%08x\n", hres);
+    ok(hres == S_OK, "GetDisplayName failed: 0x%08lx\n", hres);
     ok(!lstrcmpW(found_name, exp_name), "Found display name should have been %s, was: %s\n", wine_dbgstr_w(exp_name), wine_dbgstr_w(found_name));
 
     CoTaskMemFree(exp_name);
@@ -90,19 +90,19 @@ static void test_BrowseWindowInfo(void)
     HRESULT hres;
 
     hres = HlinkCreateBrowseContext(NULL, &IID_IHlinkBrowseContext, (void**)&bc);
-    ok(hres == S_OK, "HlinkCreateBrowseContext failed: 0x%08x\n", hres);
+    ok(hres == S_OK, "HlinkCreateBrowseContext failed: 0x%08lx\n", hres);
 
     hres = IHlinkBrowseContext_GetBrowseWindowInfo(bc, NULL);
-    ok(hres == E_INVALIDARG, "GetBrowseWindow failed with wrong code: 0x%08x\n", hres);
+    ok(hres == E_INVALIDARG, "GetBrowseWindow failed with wrong code: 0x%08lx\n", hres);
 
     hres = IHlinkBrowseContext_SetBrowseWindowInfo(bc, NULL);
-    ok(hres == E_INVALIDARG, "SetBrowseWindow failed with wrong code: 0x%08x\n", hres);
+    ok(hres == E_INVALIDARG, "SetBrowseWindow failed with wrong code: 0x%08lx\n", hres);
 
     memset(&bwinfo_get, -1, sizeof(HLBWINFO));
 
     hres = IHlinkBrowseContext_GetBrowseWindowInfo(bc, &bwinfo_get);
-    ok(hres == S_OK, "GetBrowseWindowInfo failed: 0x%08x\n", hres);
-    ok(bwinfo_get.cbSize == 0, "Got wrong size: %x\n", bwinfo_get.cbSize);
+    ok(hres == S_OK, "GetBrowseWindowInfo failed: 0x%08lx\n", hres);
+    ok(bwinfo_get.cbSize == 0, "Got wrong size: %lx\n", bwinfo_get.cbSize);
 
     bwinfo_set.cbSize = sizeof(HLBWINFO);
     bwinfo_set.grfHLBWIF = HLBWIF_WEBTOOLBARHIDDEN;
@@ -120,12 +120,12 @@ static void test_BrowseWindowInfo(void)
     bwinfo_set.hltbinfo.rcTbPos.top = 11;
     bwinfo_set.hltbinfo.rcTbPos.bottom = 12;
     hres = IHlinkBrowseContext_SetBrowseWindowInfo(bc, &bwinfo_set);
-    ok(hres == S_OK, "SetBrowseWindowInfo failed: 0x%08x\n", hres);
+    ok(hres == S_OK, "SetBrowseWindowInfo failed: 0x%08lx\n", hres);
 
     memset(&bwinfo_get, 0, sizeof(HLBWINFO));
 
     hres = IHlinkBrowseContext_GetBrowseWindowInfo(bc, &bwinfo_get);
-    ok(hres == S_OK, "GetBrowseWindowInfo failed: 0x%08x\n", hres);
+    ok(hres == S_OK, "GetBrowseWindowInfo failed: 0x%08lx\n", hres);
     ok(!memcmp(&bwinfo_set, &bwinfo_get, sizeof(HLBWINFO)), "Set and Get differ\n");
 
     IHlinkBrowseContext_Release(bc);
@@ -172,35 +172,45 @@ static void test_GetObject(void)
     HRESULT hres;
 
     hres = CreateItemMoniker(one, five, &dummy);
-    ok(hres == S_OK, "CreateItemMoniker() failed: 0x%08x\n", hres);
+    ok(hres == S_OK, "CreateItemMoniker() failed: 0x%08lx\n", hres);
 
     hres = HlinkCreateBrowseContext(NULL, &IID_IHlinkBrowseContext, (void **)&bc);
-    ok(hres == S_OK, "HlinkCreateBrowseContext() failed: 0x%08x\n", hres);
+    ok(hres == S_OK, "HlinkCreateBrowseContext() failed: 0x%08lx\n", hres);
 
     hres = IHlinkBrowseContext_GetObject(bc, dummy, FALSE, &unk);
-    ok(hres == MK_E_UNAVAILABLE, "expected MK_E_UNAVAILABLE, got 0x%08x\n", hres);
+    ok(hres == MK_E_UNAVAILABLE, "expected MK_E_UNAVAILABLE, got 0x%08lx\n", hres);
 
     hres = IHlinkBrowseContext_Register(bc, 0, &Unknown, dummy, &cookie);
-    ok(hres == S_OK, "Register() failed: 0x%08x\n", hres);
+    ok(hres == S_OK, "Register() failed: 0x%08lx\n", hres);
 
     hres = IHlinkBrowseContext_GetObject(bc, dummy, FALSE, &unk);
-    ok(hres == S_OK, "GetObject() failed: 0x%08x\n", hres);
+    ok(hres == S_OK, "GetObject() failed: 0x%08lx\n", hres);
     ok(unk == &Unknown, "wrong object returned\n");
 
     hres = IHlinkBrowseContext_Revoke(bc, cookie);
-    ok(hres == S_OK, "Revoke() failed: 0x%08x\n", hres);
+    ok(hres == S_OK, "Revoke() failed: 0x%08lx\n", hres);
 
     hres = IHlinkBrowseContext_GetObject(bc, dummy, FALSE, &unk);
-    ok(hres == MK_E_UNAVAILABLE, "expected MK_E_UNAVAILABLE, got 0x%08x\n", hres);
+    ok(hres == MK_E_UNAVAILABLE, "expected MK_E_UNAVAILABLE, got 0x%08lx\n", hres);
 
     IHlinkBrowseContext_Release(bc);
     IMoniker_Release(dummy);
+}
+
+static void test_interfaces(void)
+{
+    IHlinkBrowseContext *bc;
+    HRESULT hr;
+
+    hr = HlinkCreateBrowseContext(NULL, &IID_IMoniker, (void **)&bc);
+    ok(hr == E_NOINTERFACE, "Unexpected hr %#lx.\n", hr);
 }
 
 START_TEST(browse_ctx)
 {
     CoInitialize(NULL);
 
+    test_interfaces();
     test_SetInitialHlink();
     test_BrowseWindowInfo();
     test_GetObject();

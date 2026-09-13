@@ -10,6 +10,10 @@
 
 #include <winreg.h> // For REGSAM
 
+#if !defined(_INC_SHLWAPI) && !defined(__WINE_SHLWAPI_H)
+#error Please #include <shlwapi.h> first
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -57,6 +61,8 @@ SHRestrictionLookup(
     _In_ LPCWSTR key,
     _In_ const POLICYDATA *polTable,
     _Inout_ LPDWORD polArr);
+
+INT WINAPI SHRestrictedMessageBox(_In_ HWND hWnd);
 
 BOOL WINAPI SHAboutInfoA(LPSTR lpszDest, DWORD dwDestLen);
 BOOL WINAPI SHAboutInfoW(LPWSTR lpszDest, DWORD dwDestLen);
@@ -352,6 +358,10 @@ enum _shellkey_flags
 };
 
 HKEY WINAPI SHGetShellKey(DWORD flags, LPCWSTR sub_key, BOOL create);
+HRESULT WINAPI SKGetValueW(DWORD flags, LPCWSTR subkey, LPCWSTR value, DWORD *type,
+                           void *data, DWORD *count);
+HRESULT WINAPI SKSetValueW(DWORD flags, LPCWSTR subkey, LPCWSTR value,
+                           DWORD type, void *data, DWORD count);
 
 int
 WINAPIV
@@ -533,6 +543,59 @@ SHWindowsPolicyGetValue(
     _Out_opt_ PDWORD pcbValue);
 
 #define E_DATATYPE_MISMATCH HRESULT_FROM_WIN32(ERROR_DATATYPE_MISMATCH)
+
+static inline BOOL
+PathIsAbsolute(_In_ PCWSTR pszPath)
+{
+    return (PathGetDriveNumberW(pszPath) != -1 && pszPath[2] == L'\\') || PathIsUNCW(pszPath);
+}
+
+static inline HRESULT
+SHCoAlloc(_In_ SIZE_T cb, _Outptr_ PVOID* ppData)
+{
+    *ppData = CoTaskMemAlloc(cb);
+    return *ppData ? S_OK : E_OUTOFMEMORY;
+}
+
+static inline DWORD
+SHWindowsPolicyEx(_In_ REFGUID rpolid, _In_ DWORD dwDefaultValue)
+{
+    DWORD dwData, cbData = sizeof(dwData);
+    HRESULT hr = SHWindowsPolicyGetValue(rpolid, &dwData, &cbData);
+    return (SUCCEEDED(hr) ? dwData : dwDefaultValue);
+}
+
+typedef struct _ASSOCMAKEVERB
+{
+    LPCWSTR pszVerb;
+    LPCWSTR pszFriendlyName;
+    LPCWSTR pszUnknown;
+    LPCWSTR pszExe;
+    LPCWSTR pszArgs;
+} ASSOCMAKEVERB;
+
+typedef struct _ASSOCMAKESHELL
+{
+    ASSOCMAKEVERB *pVerbs;
+    UINT Count;
+    UINT DefaultIndex;
+} ASSOCMAKESHELL;
+
+HRESULT WINAPI
+AssocMakeShell(SIZE_T Unknown, _In_ HKEY hClass, _In_ LPCWSTR pszExe, _In_ const ASSOCMAKESHELL *pAMS);
+HRESULT WINAPI
+AssocMakeProgid(SIZE_T Unknown1, SIZE_T Unknown2, SIZE_T Unknown3, SIZE_T Unknown4);
+HRESULT WINAPI
+AssocMakeApplicationByKeyW(SIZE_T Unknown1, SIZE_T Unknown2, SIZE_T Unknown3);
+HRESULT WINAPI
+AssocMakeApplicationByKeyA(SIZE_T Unknown1, SIZE_T Unknown2, SIZE_T Unknown3);
+HRESULT WINAPI
+AssocCopyVerbs(HKEY hSrc, HKEY hDst);
+
+#if (NTDDI_VERSION >= NTDDI_LONGHORN) || defined(_SHELL32_)
+HRESULT WINAPI
+AssocCreateElement(_In_ REFCLSID rclsid, _In_ REFIID riid, _Outptr_ PVOID* ppvObj);
+#endif
 
 /*****************************************************************************
  * ZoneCheck*

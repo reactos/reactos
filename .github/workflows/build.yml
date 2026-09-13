@@ -26,6 +26,8 @@ jobs:
         echo march-sha=$(gcc -march=native -Q --help=target | sha1sum | awk '{print $1}') >> $GITHUB_OUTPUT
         echo git-sha=$(git ls-remote https://github.com/zefklop/RosBE.git | grep unix_amd64 | awk '{print $1}') >> $GITHUB_OUTPUT
         wget https://gist.githubusercontent.com/zefklop/b2d6a0b470c70183e93d5285a03f5899/raw/build_rosbe_ci.sh
+        # Fallback for GNU file server problems.
+        sed -i '/gcc-8.4.0\/gcc-8.4.0.tar.xz/c\wget https://ftpmirror.gnu.org/gcc/gcc-8.4.0/gcc-8.4.0.tar.xz || wget -L https://web.archive.org/web/2025if_/https://ftpmirror.gnu.org/gcc/gcc-8.4.0/gcc-8.4.0.tar.xz' ./build_rosbe_ci.sh
     - name: Get RosBE
       id: get_rosbe
       uses: actions/cache@v5
@@ -64,13 +66,16 @@ jobs:
         echo "CCACHE_DIR=${{github.workspace}}/ccache" >> $GITHUB_ENV
         echo "CCACHE_MAXSIZE=1G" >> $GITHUB_ENV
         echo "CCACHE_SLOPPINESS=time_macros" >> $GITHUB_ENV
+    - name: Configure problem matchers
+      run: echo ::add-matcher::src/.github/workflows/problem-matcher.json
     - name: Ease ccache compiler check (GCC)
       if: ${{ matrix.compiler == 'gcc' }}
       run: echo "CCACHE_COMPILERCHECK=string:${{steps.get_rosbe_spec.outputs.git-sha}}-${{hashfiles('./build_rosbe_ci.sh')}}" >> $GITHUB_ENV
     - name: Configure
       run: echo 'cmake -S ${{github.workspace}}/src -B ${{github.workspace}}/build -G Ninja -DCMAKE_TOOLCHAIN_FILE:FILEPATH=toolchain-${{matrix.compiler}}.cmake -DARCH:STRING=${{matrix.arch}} -DCMAKE_BUILD_TYPE=${{matrix.config}} -DDLL_EXPORT_VERSION=${{matrix.dllver}} -DENABLE_CCACHE=1 -DENABLE_ROSTESTS=1 -DENABLE_ROSAPPS=1 ${{env.D_CLANG_VERSION}}' | ${{github.workspace}}/RosBE-CI/RosBE.sh . 0 ${{matrix.arch}}
+    # GCC and Clang use relative file paths for error messages, use sed to convert these to absolute paths so that GitHub could parse them
     - name: Build
-      run: echo 'cmake --build ${{github.workspace}}/build -- -k0' | ${{github.workspace}}/RosBE-CI/RosBE.sh . 0 ${{matrix.arch}}
+      run: set -o pipefail && echo 'cmake --build ${{github.workspace}}/build -- -k0' | ${{github.workspace}}/RosBE-CI/RosBE.sh . 0 ${{matrix.arch}} 2>&1 | sed 's|^\.\./src/|${{github.workspace}}/src/|'
     - name: Generate ISOs
       run: echo 'cmake --build ${{github.workspace}}/build --target bootcd' | ${{github.workspace}}/RosBE-CI/RosBE.sh . 0 ${{matrix.arch}}
     - name: Print ccache statistics
@@ -102,7 +107,7 @@ jobs:
       run: choco install -y ninja
     - name: Install Flex & Bison
       run: |
-        curl -O https://svn.reactos.org/storage/vperevertkin/flexbison.7z
+        curl -O https://svn.reactos.org/storage/vperevertkin/flexbison.7z || curl -OL https://web.archive.org/web/2025if_/https://svn.reactos.org/storage/vperevertkin/flexbison.7z
         7z x flexbison.7z -O${{github.workspace}}\bin
         echo "${{github.workspace}}\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
         echo "BISON_PKGDATADIR=${{github.workspace}}\bin\share\bison" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
@@ -123,6 +128,8 @@ jobs:
       uses: actions/checkout@v6
       with:
         path: src
+    - name: Configure problem matchers
+      run: echo ::add-matcher::src/.github/workflows/problem-matcher.json
     - name: Configure
       run: cmake -S src -B build -G Ninja -DCMAKE_TOOLCHAIN_FILE:FILEPATH=toolchain-msvc.cmake -DARCH:STRING=${{matrix.arch}} -DCMAKE_BUILD_TYPE=${{matrix.config}} -DDLL_EXPORT_VERSION=${{matrix.dllver}} -DENABLE_ROSTESTS=1 -DENABLE_ROSAPPS=1
     - name: Build
@@ -163,7 +170,7 @@ jobs:
       run: choco install -y ninja
     - name: Install Flex & Bison
       run: |
-        curl -O https://svn.reactos.org/storage/vperevertkin/flexbison.7z
+        curl -O https://svn.reactos.org/storage/vperevertkin/flexbison.7z || curl -OL https://web.archive.org/web/2025if_/https://svn.reactos.org/storage/vperevertkin/flexbison.7z
         7z x flexbison.7z -O${{github.workspace}}\bin
         echo "${{github.workspace}}\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
         echo "BISON_PKGDATADIR=${{github.workspace}}\bin\share\bison" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
@@ -185,6 +192,8 @@ jobs:
       uses: actions/checkout@v6
       with:
         path: src
+    - name: Configure problem matchers
+      run: echo ::add-matcher::src/.github/workflows/problem-matcher.json
     - name: Configure
       run: cmake -S src -B build -G Ninja -DCMAKE_TOOLCHAIN_FILE:FILEPATH=toolchain-msvc.cmake -DARCH:STRING=${{matrix.arch}} -DCMAKE_BUILD_TYPE=${{matrix.config}} -DENABLE_ROSTESTS=1 -DENABLE_ROSAPPS=1
     - name: Build base module
@@ -267,7 +276,7 @@ jobs:
         echo "LLVM_PATH=${env:PROGRAMFILES}\llvm\bin" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
     - name: Install Flex & Bison
       run: |
-        curl -O https://svn.reactos.org/storage/vperevertkin/flexbison.7z
+        curl -O https://svn.reactos.org/storage/vperevertkin/flexbison.7z || curl -OL https://web.archive.org/web/2025if_/https://svn.reactos.org/storage/vperevertkin/flexbison.7z
         7z x flexbison.7z -O${{github.workspace}}\bin
         echo "${{github.workspace}}\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
         echo "BISON_PKGDATADIR=${{github.workspace}}\bin\share\bison" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
@@ -290,6 +299,8 @@ jobs:
       uses: actions/checkout@v6
       with:
         path: src
+    - name: Configure problem matchers
+      run: echo ::add-matcher::src/.github/workflows/problem-matcher.json
     - name: Configure
       run: cmake -S src -B build -G Ninja -DCMAKE_TOOLCHAIN_FILE:FILEPATH=toolchain-msvc.cmake -DARCH:STRING=${{matrix.arch}} -DCMAKE_BUILD_TYPE=${{matrix.config}} -DENABLE_ROSTESTS=1 -DENABLE_ROSAPPS=1 -DUSE_CLANG_CL:BOOL=TRUE
     - name: Build
@@ -315,7 +326,7 @@ jobs:
     steps:
     - name: Install Flex and Bison
       run: |
-        curl -O https://svn.reactos.org/storage/vperevertkin/flexbison.7z
+        curl -O https://svn.reactos.org/storage/vperevertkin/flexbison.7z || curl -OL https://web.archive.org/web/2025if_/https://svn.reactos.org/storage/vperevertkin/flexbison.7z
         7z x flexbison.7z -O${{github.workspace}}\bin
         echo "${{github.workspace}}\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
         echo "BISON_PKGDATADIR=${{github.workspace}}\bin\share\bison" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
@@ -327,6 +338,8 @@ jobs:
     - uses: actions/checkout@v6
       with:
         path: src
+    - name: Configure problem matchers
+      run: echo ::add-matcher::src/.github/workflows/problem-matcher.json
     - name: Configure
       run: |
         mkdir build

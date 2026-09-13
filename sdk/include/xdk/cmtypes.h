@@ -297,6 +297,7 @@ typedef enum _CM_SHARE_DISPOSITION {
 #define CM_RESOURCE_DMA_TYPE_A            0x0010
 #define CM_RESOURCE_DMA_TYPE_B            0x0020
 #define CM_RESOURCE_DMA_TYPE_F            0x0040
+#define CM_RESOURCE_DMA_V3                0x0080
 
 typedef struct _DEVICE_FLAGS {
   ULONG Failed:1;

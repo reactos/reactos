@@ -311,7 +311,7 @@
 @ stdcall SetupDiCreateDeviceInterfaceRegKeyW(ptr ptr long long ptr ptr)
 @ stdcall SetupDiCreateDeviceInterfaceW(ptr ptr ptr wstr long ptr)
 @ stdcall SetupDiDeleteDevRegKey(ptr ptr long long long)
-@ stdcall SetupDiDeleteDeviceInfo(long ptr)
+@ stdcall SetupDiDeleteDeviceInfo(ptr ptr)
 @ stdcall SetupDiDeleteDeviceInterfaceData(ptr ptr)
 @ stdcall SetupDiDeleteDeviceInterfaceRegKey(ptr ptr long)
 @ stdcall SetupDiDestroyClassImageList(ptr)
@@ -322,8 +322,8 @@
 @ stdcall SetupDiEnumDeviceInterfaces(long ptr ptr long ptr)
 @ stdcall SetupDiEnumDriverInfoA(long ptr long long ptr)
 @ stdcall SetupDiEnumDriverInfoW(long ptr long long ptr)
-@ stub -version=0x502+ SetupDiGetActualModelsSectionA
-@ stub -version=0x502+ SetupDiGetActualModelsSectionW
+@ stdcall -version=0x502+ SetupDiGetActualModelsSectionA(ptr ptr ptr long ptr ptr)
+@ stdcall -version=0x502+ SetupDiGetActualModelsSectionW(ptr ptr ptr long ptr ptr)
 @ stdcall SetupDiGetActualSectionToInstallA(long str str long ptr ptr)
 @ stdcall SetupDiGetActualSectionToInstallExA(long str ptr str long ptr ptr ptr)
 @ stdcall SetupDiGetActualSectionToInstallExW(long wstr ptr wstr long ptr ptr ptr)

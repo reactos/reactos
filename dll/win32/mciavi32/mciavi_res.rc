@@ -22,11 +22,7 @@
 #include "mmddk.h"
 #include "digitalv.h"
 
-#ifdef MCI_INTEGER64
-#define MCI_DWORD_PTR MCI_INTEGER64
-#else
-#define MCI_DWORD_PTR MCI_INTEGER
-#endif
+#define MCI_DWORD_PTR 13 /* MCI_INTEGER64 */
 
 MCIAVI RCDATA
 BEGIN

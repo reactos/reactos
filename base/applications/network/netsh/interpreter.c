@@ -193,6 +193,22 @@ InterpretCommand(
             case STATE_COMMAND:
                 DPRINT("STATE_COMMAND\n");
 
+                if (!CheckOsVersion(pCommand->pfnOsVersionCheck))
+                {
+                    DPRINT("Command: Version check failed!\n");
+                    dwError = ERROR_CMD_NOT_FOUND;
+                    State = STATE_DONE;
+                    break;
+                }
+
+                if (((pCommand->dwFlags & CMD_FLAG_LOCAL) && (g_pszMachine != NULL)) ||
+                    ((pCommand->dwFlags & CMD_FLAG_ONLINE) && (g_bOnline == FALSE)))
+                {
+                    dwError = ERROR_CMD_NOT_FOUND;
+                    State = STATE_DONE;
+                    break;
+                }
+
                 /* Check for help keywords */
                 if (((dwArgIndex + 1) == (dwArgCount - 1)) &&
                     ((_wcsicmp(argv[dwArgIndex + 1], L"?") == 0) || (_wcsicmp(argv[dwArgIndex + 1], L"help") == 0)))
@@ -205,7 +221,7 @@ InterpretCommand(
                 if (pCommand->pfnCmdHandler != NULL)
                 {
                     dwArgIndex++;
-                    dwError = pCommand->pfnCmdHandler(pszMachine, argv, dwArgIndex, dwArgCount, 0, NULL, bDone);
+                    dwError = pCommand->pfnCmdHandler(g_pszMachine, argv, dwArgIndex, dwArgCount, 0, NULL, bDone);
                     if (dwError != ERROR_SUCCESS)
                     {
                         if (dwError == ERROR_SHOW_USAGE)
@@ -231,6 +247,22 @@ InterpretCommand(
 
             case STATE_GROUP:
                 DPRINT("STATE_GROUP\n");
+
+                if (!CheckOsVersion(pGroup->pfnOsVersionCheck))
+                {
+                    DPRINT("Group: Version check failed!\n");
+                    dwError = ERROR_CMD_NOT_FOUND;
+                    State = STATE_DONE;
+                    break;
+                }
+
+                if (((pGroup->dwFlags & CMD_FLAG_LOCAL) && (g_pszMachine != NULL)) ||
+                    ((pGroup->dwFlags & CMD_FLAG_ONLINE) && (g_bOnline == FALSE)))
+                {
+                    dwError = ERROR_CMD_NOT_FOUND;
+                    State = STATE_DONE;
+                    break;
+                }
 
                 /* Check for group without command */
                 if (dwArgIndex == (dwArgCount - 1))
@@ -264,6 +296,22 @@ InterpretCommand(
             case STATE_CONTEXT:
                 DPRINT("STATE_CONTEXT\n");
 
+                if (!CheckOsVersion(pTempSubContext->pfnOsVersionCheck))
+                {
+                    DPRINT("Context: Version check failed!\n");
+                    dwError = ERROR_CMD_NOT_FOUND;
+                    State = STATE_DONE;
+                    break;
+                }
+
+                if (((pTempSubContext->dwFlags & CMD_FLAG_LOCAL) && (g_pszMachine != NULL)) ||
+                    ((pTempSubContext->dwFlags & CMD_FLAG_ONLINE) && (g_bOnline == FALSE)))
+                {
+                    dwError = ERROR_CMD_NOT_FOUND;
+                    State = STATE_DONE;
+                    break;
+                }
+
                 if (pTempSubContext == pCurrentContext)
                 {
                     if (dwArgIndex != (dwArgCount - 1))
@@ -278,7 +326,7 @@ InterpretCommand(
                     DPRINT("Set current context\n");
                     pCurrentContext = pTempSubContext;
                     if (pCurrentContext->pfnConnectFn)
-                        dwError = pCurrentContext->pfnConnectFn(pszMachine);
+                        dwError = pCurrentContext->pfnConnectFn(g_pszMachine);
                     State = STATE_DONE;
                     break;
                 }
@@ -419,8 +467,8 @@ InterpretInteractive(VOID)
         memset(args_vector, 0, sizeof(args_vector));
 
         /* Shown just before the input where the user places commands */
-        if (pszMachine)
-            ConPrintf(StdOut, L"[%s] ", pszMachine);
+        if (g_pszMachine)
+            ConPrintf(StdOut, L"[%s] ", g_pszMachine);
         PrintPrompt(pCurrentContext);
         ConPuts(StdOut, L">");
 

@@ -32,7 +32,6 @@
 #include "urlmon.h"
 
 #include "initguid.h"
-#include <wine/heap.h>
 
 #define URLZONE_CUSTOM  URLZONE_USER_MIN+1
 #define URLZONE_CUSTOM2 URLZONE_CUSTOM+1
@@ -174,26 +173,6 @@ static int strcmp_w(const WCHAR *str1, const WCHAR *str2)
     return memcmp(str1, str2, len1*sizeof(WCHAR));
 }
 
-static inline LPWSTR a2w(LPCSTR str)
-{
-    LPWSTR ret = NULL;
-
-    if(str) {
-        DWORD len = MultiByteToWideChar(CP_ACP, 0, str, -1, NULL, 0);
-        ret = HeapAlloc(GetProcessHeap(), 0, len*sizeof(WCHAR));
-        MultiByteToWideChar(CP_ACP, 0, str, -1, ret, len);
-    }
-
-    return ret;
-}
-
-static inline DWORD strcmp_aw(LPCSTR strA, LPCWSTR strB) {
-    LPWSTR strAW = a2w(strA);
-    DWORD ret = lstrcmpW(strAW, strB);
-    heap_free(strAW);
-    return ret;
-}
-
 
 /* Based on RegDeleteTreeW from dlls/advapi32/registry.c */
 static LONG myRegDeleteTreeA(HKEY hKey, LPCSTR lpszSubKey)
@@ -221,7 +200,7 @@ static LONG myRegDeleteTreeA(HKEY hKey, LPCSTR lpszSubKey)
     if (dwMaxLen > ARRAY_SIZE(szNameBuf))
     {
         /* Name too big: alloc a buffer for it */
-        if (!(lpszName = HeapAlloc( GetProcessHeap(), 0, dwMaxLen*sizeof(CHAR))))
+        if (!(lpszName = malloc(dwMaxLen)))
         {
             ret = ERROR_NOT_ENOUGH_MEMORY;
             goto cleanup;
@@ -255,7 +234,7 @@ static LONG myRegDeleteTreeA(HKEY hKey, LPCSTR lpszSubKey)
 cleanup:
     /* Free buffer if allocated */
     if (lpszName != szNameBuf)
-        heap_free(lpszName);
+        free(lpszName);
     if(lpszSubKey)
         RegCloseKey(hSubKey);
     return ret;
@@ -311,11 +290,11 @@ static HRESULT WINAPI SecurityManager_ProcessUrlAction(IInternetSecurityManager*
         BYTE *pContext, DWORD cbContext, DWORD dwFlags, DWORD dwReserved)
 {
     CHECK_EXPECT(ProcessUrlAction);
-    ok(dwAction == URLACTION_FEATURE_ZONE_ELEVATION, "dwAction = %x\n", dwAction);
-    ok(cbPolicy == sizeof(DWORD), "cbPolicy = %d\n", cbPolicy);
+    ok(dwAction == URLACTION_FEATURE_ZONE_ELEVATION, "dwAction = %lx\n", dwAction);
+    ok(cbPolicy == sizeof(DWORD), "cbPolicy = %ld\n", cbPolicy);
     ok(!pContext, "pContext != NULL\n");
-    ok(dwFlags == PUAF_NOUI, "dwFlags = %x\n", dwFlags);
-    ok(dwReserved == 0, "dwReserved = %x\n", dwReserved);
+    ok(dwFlags == PUAF_NOUI, "dwFlags = %lx\n", dwFlags);
+    ok(dwReserved == 0, "dwReserved = %lx\n", dwReserved);
 
     *pPolicy = ProcessUrlAction_policy;
     return ProcessUrlAction_policy==URLPOLICY_ALLOW ? S_OK : S_FALSE;
@@ -374,7 +353,7 @@ static void test_SecurityManager(void)
     trace("Testing security manager...\n");
 
     hres = pCoInternetCreateSecurityManager(NULL, &secmgr, 0);
-    ok(hres == S_OK, "CoInternetCreateSecurityManager failed: %08x\n", hres);
+    ok(hres == S_OK, "CoInternetCreateSecurityManager failed: %08lx\n", hres);
     if(FAILED(hres))
         return;
 
@@ -384,23 +363,23 @@ static void test_SecurityManager(void)
                                                      &zone, 0);
         ok(hres == secmgr_tests[i].zone_hres /* IE <=6 */
            || (FAILED(secmgr_tests[i].zone_hres) && hres == E_INVALIDARG), /* IE7 */
-           "[%d] MapUrlToZone failed: %08x, expected %08x\n",
+           "[%d] MapUrlToZone failed: %08lx, expected %08lx\n",
                 i, hres, secmgr_tests[i].zone_hres);
         if(SUCCEEDED(hres))
-            ok(zone == secmgr_tests[i].zone, "[%d] zone=%d, expected %d\n", i, zone,
+            ok(zone == secmgr_tests[i].zone, "[%d] zone=%ld, expected %ld\n", i, zone,
                secmgr_tests[i].zone);
         else
-            ok(zone == secmgr_tests[i].zone || zone == -1, "[%d] zone=%d\n", i, zone);
+            ok(zone == secmgr_tests[i].zone || zone == -1, "[%d] zone=%ld\n", i, zone);
 
         size = sizeof(buf);
         memset(buf, 0xf0, sizeof(buf));
         hres = IInternetSecurityManager_GetSecurityId(secmgr, secmgr_tests[i].url,
                 buf, &size, 0);
         ok(hres == secmgr_tests[i].secid_hres,
-           "[%d] GetSecurityId failed: %08x, expected %08x\n",
+           "[%d] GetSecurityId failed: %08lx, expected %08lx\n",
            i, hres, secmgr_tests[i].secid_hres);
         if(secmgr_tests[i].secid) {
-            ok(size == secmgr_tests[i].secid_size, "[%d] size=%d, expected %d\n",
+            ok(size == secmgr_tests[i].secid_size, "[%d] size=%ld, expected %ld\n",
                     i, size, secmgr_tests[i].secid_size);
             ok(!memcmp(buf, secmgr_tests[i].secid, size), "[%d] wrong secid\n", i);
         }
@@ -408,64 +387,64 @@ static void test_SecurityManager(void)
 
     zone = 100;
     hres = IInternetSecurityManager_MapUrlToZone(secmgr, url10, &zone, 0);
-    ok(hres == S_OK, "MapUrlToZone failed: %08x, expected S_OK\n", hres);
-    ok(zone == 3, "zone=%d, expected 3\n", zone);
+    ok(hres == S_OK, "MapUrlToZone failed: %08lx, expected S_OK\n", hres);
+    ok(zone == 3, "zone=%ld, expected 3\n", zone);
 
     /* win2k3 translates %20 into a space */
     size = sizeof(buf);
     memset(buf, 0xf0, sizeof(buf));
     hres = IInternetSecurityManager_GetSecurityId(secmgr, url10, buf, &size, 0);
-    ok(hres == S_OK, "GetSecurityId failed: %08x, expected S_OK\n", hres);
+    ok(hres == S_OK, "GetSecurityId failed: %08lx, expected S_OK\n", hres);
     ok(size == sizeof(secid10) ||
        size == sizeof(secid10_2), /* win2k3 */
-       "size=%d\n", size);
+       "size=%ld\n", size);
     ok(!memcmp(buf, secid10, sizeof(secid10)) ||
        !memcmp(buf, secid10_2, sizeof(secid10_2)), /* win2k3 */
        "wrong secid\n");
 
     zone = 100;
     hres = IInternetSecurityManager_MapUrlToZone(secmgr, url13, &zone, 0);
-    ok(hres == S_OK, "MapUrlToZone failed: %08x\n", hres);
-    ok(zone == URLZONE_INVALID || broken(zone == URLZONE_INTERNET), "zone=%d\n", zone);
+    ok(hres == S_OK, "MapUrlToZone failed: %08lx\n", hres);
+    ok(zone == URLZONE_INVALID || broken(zone == URLZONE_INTERNET), "zone=%ld\n", zone);
 
     size = sizeof(buf);
     memset(buf, 0xf0, sizeof(buf));
     hres = IInternetSecurityManager_GetSecurityId(secmgr, url13, buf, &size, 0);
-    ok(hres == E_INVALIDARG || broken(hres == S_OK), "GetSecurityId failed: %08x\n", hres);
+    ok(hres == E_INVALIDARG || broken(hres == S_OK), "GetSecurityId failed: %08lx\n", hres);
 
     zone = 100;
     hres = IInternetSecurityManager_MapUrlToZone(secmgr, url14, &zone, 0);
-    ok(hres == S_OK, "MapUrlToZone failed: %08x, expected S_OK\n", hres);
-    ok(zone == URLZONE_INTERNET, "zone=%d\n", zone);
+    ok(hres == S_OK, "MapUrlToZone failed: %08lx, expected S_OK\n", hres);
+    ok(zone == URLZONE_INTERNET, "zone=%ld\n", zone);
 
     size = sizeof(buf);
     memset(buf, 0xf0, sizeof(buf));
     hres = IInternetSecurityManager_GetSecurityId(secmgr, url14, buf, &size, 0);
-    ok(hres == S_OK, "GetSecurityId failed: %08x, expected S_OK\n", hres);
-    ok(size == sizeof(secid14), "size=%d\n", size);
+    ok(hres == S_OK, "GetSecurityId failed: %08lx, expected S_OK\n", hres);
+    ok(size == sizeof(secid14), "size=%ld\n", size);
     ok(!memcmp(buf, secid14, size), "wrong secid\n");
 
     zone = 100;
     hres = IInternetSecurityManager_MapUrlToZone(secmgr, NULL, &zone, 0);
-    ok(hres == E_INVALIDARG, "MapUrlToZone failed: %08x, expected E_INVALIDARG\n", hres);
-    ok(zone == 100 || zone == -1, "zone=%d\n", zone);
+    ok(hres == E_INVALIDARG, "MapUrlToZone failed: %08lx, expected E_INVALIDARG\n", hres);
+    ok(zone == 100 || zone == -1, "zone=%ld\n", zone);
 
     size = sizeof(buf);
     hres = IInternetSecurityManager_GetSecurityId(secmgr, NULL, buf, &size, 0);
     ok(hres == E_INVALIDARG,
-       "GetSecurityId failed: %08x, expected E_INVALIDARG\n", hres);
+       "GetSecurityId failed: %08lx, expected E_INVALIDARG\n", hres);
     hres = IInternetSecurityManager_GetSecurityId(secmgr, secmgr_tests[1].url,
                                                   NULL, &size, 0);
     ok(hres == E_INVALIDARG,
-       "GetSecurityId failed: %08x, expected E_INVALIDARG\n", hres);
+       "GetSecurityId failed: %08lx, expected E_INVALIDARG\n", hres);
     hres = IInternetSecurityManager_GetSecurityId(secmgr, secmgr_tests[1].url,
                                                   buf, NULL, 0);
     ok(hres == E_INVALIDARG,
-       "GetSecurityId failed: %08x, expected E_INVALIDARG\n", hres);
+       "GetSecurityId failed: %08lx, expected E_INVALIDARG\n", hres);
 
     hres = IInternetSecurityManager_ProcessUrlAction(secmgr, NULL, URLACTION_SCRIPT_RUN, (BYTE*)&policy,
             sizeof(WCHAR), NULL, 0, 0, 0);
-    ok(hres == E_INVALIDARG, "ProcessUrlAction failed: %08x, expected E_INVALIDARG\n", hres);
+    ok(hres == E_INVALIDARG, "ProcessUrlAction failed: %08lx, expected E_INVALIDARG\n", hres);
 
     IInternetSecurityManager_Release(secmgr);
 }
@@ -528,23 +507,23 @@ static void test_url_action(IInternetSecurityManager *secmgr, IInternetZoneManag
         hres = IInternetSecurityManager_ProcessUrlAction(secmgr, url9, action, (BYTE*)&policy,
                 sizeof(WCHAR), NULL, 0, 0, 0);
         ok(hres == E_FAIL || broken(hres == HRESULT_FROM_WIN32(ERROR_NOT_FOUND)),
-            "(0x%x) got 0x%x (expected E_FAIL)\n", action, hres);
-        ok(policy == 0xdeadbeef, "(%x) policy=%x\n", action, policy);
+            "(0x%lx) got 0x%lx (expected E_FAIL)\n", action, hres);
+        ok(policy == 0xdeadbeef, "(%lx) policy=%lx\n", action, policy);
 
         policy = 0xdeadbeef;
         hres = IInternetZoneManager_GetZoneActionPolicy(zonemgr, 3, action, (BYTE*)&policy,
                 sizeof(DWORD), URLZONEREG_DEFAULT);
         ok(hres == E_FAIL || broken(hres == HRESULT_FROM_WIN32(ERROR_NOT_FOUND)),
-            "(0x%x) got 0x%x (expected E_FAIL)\n", action, hres);
-        ok(policy == 0xdeadbeef, "(%x) policy=%x\n", action, policy);
+            "(0x%lx) got 0x%lx (expected E_FAIL)\n", action, hres);
+        ok(policy == 0xdeadbeef, "(%lx) policy=%lx\n", action, policy);
         return;
     }
 
     policy = 0xdeadbeef;
     hres = IInternetZoneManager_GetZoneActionPolicy(zonemgr, 3, action, (BYTE*)&policy,
             sizeof(DWORD), URLZONEREG_DEFAULT);
-    ok(hres == S_OK, "GetZoneActionPolicy failed: %08x\n", hres);
-    ok(policy == reg_policy, "(%x) policy=%x, expected %x\n", action, policy, reg_policy);
+    ok(hres == S_OK, "GetZoneActionPolicy failed: %08lx\n", hres);
+    ok(policy == reg_policy, "(%lx) policy=%lx, expected %lx\n", action, policy, reg_policy);
 
     if(policy != URLPOLICY_QUERY) {
         if(winetest_interactive || ! is_ie_hardened()) {
@@ -554,37 +533,37 @@ static void test_url_action(IInternetSecurityManager *secmgr, IInternetZoneManag
             hres = IInternetSecurityManager_ProcessUrlAction(secmgr, url9, action, (BYTE*)&policy,
                     sizeof(WCHAR), NULL, 0, 0, 0);
             if(reg_policy == URLPOLICY_DISALLOW)
-                ok(hres == S_FALSE, "ProcessUrlAction(%x) failed: %08x, expected S_FALSE\n", action, hres);
+                ok(hres == S_FALSE, "ProcessUrlAction(%lx) failed: %08lx, expected S_FALSE\n", action, hres);
             else
-                ok(hres == S_OK, "ProcessUrlAction(%x) failed: %08x\n", action, hres);
-            ok(policy == 0xdeadbeef, "(%x) policy=%x\n", action, policy);
+                ok(hres == S_OK, "ProcessUrlAction(%lx) failed: %08lx\n", action, hres);
+            ok(policy == 0xdeadbeef, "(%lx) policy=%lx\n", action, policy);
 
             policy = 0xdeadbeef;
             hres = IInternetSecurityManager_ProcessUrlAction(secmgr, url9, action, (BYTE*)&policy,
                     2, NULL, 0, 0, 0);
             if(reg_policy == URLPOLICY_DISALLOW)
-                ok(hres == S_FALSE, "ProcessUrlAction(%x) failed: %08x, expected S_FALSE\n", action, hres);
+                ok(hres == S_FALSE, "ProcessUrlAction(%lx) failed: %08lx, expected S_FALSE\n", action, hres);
             else
-                ok(hres == S_OK, "ProcessUrlAction(%x) failed: %08x\n", action, hres);
-            ok(policy == 0xdeadbeef, "(%x) policy=%x\n", action, policy);
+                ok(hres == S_OK, "ProcessUrlAction(%lx) failed: %08lx\n", action, hres);
+            ok(policy == 0xdeadbeef, "(%lx) policy=%lx\n", action, policy);
 
             policy = 0xdeadbeef;
             hres = IInternetSecurityManager_ProcessUrlAction(secmgr, url9, action, (BYTE*)&policy,
                     sizeof(DWORD), NULL, 0, 0, 0);
             if(reg_policy == URLPOLICY_DISALLOW)
-                ok(hres == S_FALSE, "ProcessUrlAction(%x) failed: %08x, expected S_FALSE\n", action, hres);
+                ok(hres == S_FALSE, "ProcessUrlAction(%lx) failed: %08lx, expected S_FALSE\n", action, hres);
             else
-                ok(hres == S_OK, "ProcessUrlAction(%x) failed: %08x\n", action, hres);
-            ok(policy == reg_policy, "(%x) policy=%x\n", action, policy);
+                ok(hres == S_OK, "ProcessUrlAction(%lx) failed: %08lx\n", action, hres);
+            ok(policy == reg_policy, "(%lx) policy=%lx\n", action, policy);
 
             policy = 0xdeadbeef;
             hres = IInternetSecurityManager_ProcessUrlAction(secmgr, url9, action, (BYTE*)&policy,
                     sizeof(WCHAR), (BYTE*)0xdeadbeef, 16, 0, 0);
             if(reg_policy == URLPOLICY_DISALLOW)
-                ok(hres == S_FALSE, "ProcessUrlAction(%x) failed: %08x, expected S_FALSE\n", action, hres);
+                ok(hres == S_FALSE, "ProcessUrlAction(%lx) failed: %08lx, expected S_FALSE\n", action, hres);
             else
-                ok(hres == S_OK, "ProcessUrlAction(%x) failed: %08x\n", action, hres);
-            ok(policy == 0xdeadbeef, "(%x) policy=%x\n", action, policy);
+                ok(hres == S_OK, "ProcessUrlAction(%lx) failed: %08lx\n", action, hres);
+            ok(policy == 0xdeadbeef, "(%lx) policy=%lx\n", action, policy);
 
             policy = 0xdeadbeef;
             if(expect_parse_call)
@@ -594,10 +573,10 @@ static void test_url_action(IInternetSecurityManager *secmgr, IInternetZoneManag
             if(expect_parse_call)
                 CHECK_CALLED(ParseUrl_SECURITY_URL_http);
             if(reg_policy == URLPOLICY_DISALLOW)
-                ok(hres == S_FALSE, "ProcessUrlAction(%x) failed: %08x, expected S_FALSE\n", action, hres);
+                ok(hres == S_FALSE, "ProcessUrlAction(%lx) failed: %08lx, expected S_FALSE\n", action, hres);
             else
-                ok(hres == S_OK, "ProcessUrlAction(%x) failed: %08x\n", action, hres);
-            ok(policy == reg_policy, "(%x) policy=%x\n", action, policy);
+                ok(hres == S_OK, "ProcessUrlAction(%lx) failed: %08lx\n", action, hres);
+            ok(policy == reg_policy, "(%lx) policy=%lx\n", action, policy);
         }else {
             skip("IE running in Enhanced Security Configuration\n");
         }
@@ -612,19 +591,19 @@ static void test_special_url_action(IInternetSecurityManager *secmgr, IInternetZ
     policy = 0xdeadbeef;
     hres = IInternetZoneManager_GetZoneActionPolicy(zonemgr, 3, action, (BYTE*)&policy,
             sizeof(DWORD), URLZONEREG_DEFAULT);
-    ok(hres == S_OK, "GetZoneActionPolicy failed: %08x\n", hres);
-    ok(policy == URLPOLICY_DISALLOW, "(%x) policy=%x, expected URLPOLICY_DISALLOW\n", action, policy);
+    ok(hres == S_OK, "GetZoneActionPolicy failed: %08lx\n", hres);
+    ok(policy == URLPOLICY_DISALLOW, "(%lx) policy=%lx, expected URLPOLICY_DISALLOW\n", action, policy);
 
     policy = 0xdeadbeef;
     hres = IInternetSecurityManager_ProcessUrlAction(secmgr, url1, action, (BYTE*)&policy,
             sizeof(WCHAR), NULL, 0, 0, 0);
-    ok(hres == S_FALSE, "ProcessUrlAction(%x) failed: %08x, expected S_FALSE\n", action, hres);
+    ok(hres == S_FALSE, "ProcessUrlAction(%lx) failed: %08lx, expected S_FALSE\n", action, hres);
 
     policy = 0xdeadbeef;
     hres = IInternetSecurityManager_ProcessUrlAction(secmgr, url1, action, (BYTE*)&policy,
             sizeof(DWORD), NULL, 0, 0, 0);
-    ok(hres == S_FALSE, "ProcessUrlAction(%x) failed: %08x, expected S_FALSE\n", action, hres);
-    ok(policy == URLPOLICY_DISALLOW, "policy = %x\n", policy);
+    ok(hres == S_FALSE, "ProcessUrlAction(%lx) failed: %08lx, expected S_FALSE\n", action, hres);
+    ok(policy == URLPOLICY_DISALLOW, "policy = %lx\n", policy);
 }
 
 static void test_activex(IInternetSecurityManager *secmgr)
@@ -637,15 +616,15 @@ static void test_activex(IInternetSecurityManager *secmgr)
     policy = 0xdeadbeef;
     hres = IInternetSecurityManager_ProcessUrlAction(secmgr, url1, URLACTION_ACTIVEX_RUN, (BYTE*)&policy,
             sizeof(DWORD), (BYTE*)&CLSID_TestActiveX, sizeof(CLSID), 0, 0);
-    ok(hres == S_OK, "ProcessUrlAction(URLACTION_ACTIVEX_RUN) failed: %08x\n", hres);
-    ok(policy == URLPOLICY_ALLOW || policy == URLPOLICY_DISALLOW, "policy = %x\n", policy);
+    ok(hres == S_OK, "ProcessUrlAction(URLACTION_ACTIVEX_RUN) failed: %08lx\n", hres);
+    ok(policy == URLPOLICY_ALLOW || policy == URLPOLICY_DISALLOW, "policy = %lx\n", policy);
 
     cs.clsid = CLSID_TestActiveX;
     cs.pUnk = (IUnknown*)0xdeadbeef;
     cs.dwFlags = 0;
     hres = IInternetSecurityManager_QueryCustomPolicy(secmgr, url1, &GUID_CUSTOM_CONFIRMOBJECTSAFETY,
             &ppolicy, &policy_size, (BYTE*)&cs, sizeof(cs), 0);
-    ok(hres == HRESULT_FROM_WIN32(ERROR_NOT_FOUND), "QueryCusromPolicy failed: %08x\n", hres);
+    ok(hres == HRESULT_FROM_WIN32(ERROR_NOT_FOUND), "QueryCusromPolicy failed: %08lx\n", hres);
 }
 
 static void test_polices(void)
@@ -657,9 +636,9 @@ static void test_polices(void)
     trace("testing polices...\n");
 
     hres = pCoInternetCreateSecurityManager(NULL, &secmgr, 0);
-    ok(hres == S_OK, "CoInternetCreateSecurityManager failed: %08x\n", hres);
+    ok(hres == S_OK, "CoInternetCreateSecurityManager failed: %08lx\n", hres);
     hres = pCoInternetCreateZoneManager(NULL, &zonemgr, 0);
-    ok(hres == S_OK, "CoInternetCreateZoneManager failed: %08x\n", hres);
+    ok(hres == S_OK, "CoInternetCreateZoneManager failed: %08lx\n", hres);
 
     test_url_action(secmgr, zonemgr, URLACTION_SCRIPT_RUN);
     test_url_action(secmgr, zonemgr, URLACTION_ACTIVEX_RUN);
@@ -691,12 +670,12 @@ static void test_zone_domain_cache(void)
             'd','o','m','a','i','n','/',0};
 
     res = RegOpenKeyA(HKEY_CURRENT_USER, szZoneMapDomainsKey, &domains);
-    ok(res == ERROR_SUCCESS, "RegOpenKey failed: %d\n", res);
+    ok(res == ERROR_SUCCESS, "RegOpenKey failed: %ld\n", res);
     if(res != ERROR_SUCCESS)
         return;
 
     res = RegCreateKeyA(domains, "testing.domain", &domain);
-    ok(res == ERROR_SUCCESS, "RegCreateKey failed: %d\n", res);
+    ok(res == ERROR_SUCCESS, "RegCreateKey failed: %ld\n", res);
     if(res != ERROR_SUCCESS) {
         RegCloseKey(domains);
         return;
@@ -704,21 +683,21 @@ static void test_zone_domain_cache(void)
 
     zone = URLZONE_CUSTOM;
     res = RegSetValueExA(domain, "http", 0, REG_DWORD, (BYTE*)&zone, sizeof(DWORD));
-    ok(res == ERROR_SUCCESS, "RegSetValueEx failed: %d\n", res);
+    ok(res == ERROR_SUCCESS, "RegSetValueEx failed: %ld\n", res);
 
     RegCloseKey(domain);
 
     hres = pCoInternetCreateSecurityManager(NULL, &secmgr, 0);
-    ok(hres == S_OK, "CoInternetCreateSecurityManager failed: %08x\n", hres);
+    ok(hres == S_OK, "CoInternetCreateSecurityManager failed: %08lx\n", hres);
 
     zone = URLZONE_INVALID;
     hres = IInternetSecurityManager_MapUrlToZone(secmgr, testing_domain_urlW, &zone, 0);
-    ok(hres == S_OK, "MapUrlToZone failed: %08x\n", hres);
-    todo_wine ok(zone == URLZONE_INTERNET, "Got %d, expected URLZONE_INTERNET\n", zone);
+    ok(hres == S_OK, "MapUrlToZone failed: %08lx\n", hres);
+    todo_wine ok(zone == URLZONE_INTERNET, "Got %ld, expected URLZONE_INTERNET\n", zone);
 
     /* FIXME: Play nice with ZoneMaps that existed before the test is run. */
     res = RegDeleteKeyA(domains, "testing.domain");
-    ok(res == ERROR_SUCCESS, "RegDeleteKey failed: %d\n", res);
+    ok(res == ERROR_SUCCESS, "RegDeleteKey failed: %ld\n", res);
 
     RegCloseKey(domains);
     IInternetSecurityManager_Release(secmgr);
@@ -758,7 +737,7 @@ static BOOL register_zone_domains(void)
 
     /* Some Windows versions don't seem to have a "Domains" key in their HKLM. */
     res = RegOpenKeyA(HKEY_LOCAL_MACHINE, szZoneMapDomainsKey, &domains);
-    ok(res == ERROR_SUCCESS || broken(res == ERROR_FILE_NOT_FOUND), "RegOpenKey failed: %d\n", res);
+    ok(res == ERROR_SUCCESS || broken(res == ERROR_FILE_NOT_FOUND), "RegOpenKey failed: %ld\n", res);
     if(res == ERROR_SUCCESS) {
         HKEY domain;
         DWORD zone = URLZONE_CUSTOM;
@@ -770,37 +749,37 @@ static BOOL register_zone_domains(void)
             RegCloseKey(domains);
             return FALSE;
         }
-        ok(res == ERROR_SUCCESS, "RegCreateKey failed: %d\n", res);
+        ok(res == ERROR_SUCCESS, "RegCreateKey failed: %ld\n", res);
 
         res = RegSetValueExA(domain, "http", 0, REG_DWORD, (BYTE*)&zone, sizeof(DWORD));
-        ok(res == ERROR_SUCCESS, "RegSetValueEx failed: %d\n", res);
+        ok(res == ERROR_SUCCESS, "RegSetValueEx failed: %ld\n", res);
 
         RegCloseKey(domain);
         RegCloseKey(domains);
     }
 
     res = RegOpenKeyA(HKEY_CURRENT_USER, szZoneMapDomainsKey, &domains);
-    ok(res == ERROR_SUCCESS, "RegOpenKey failed: %d\n", res);
+    ok(res == ERROR_SUCCESS, "RegOpenKey failed: %ld\n", res);
 
     for(i = 0; i < ARRAY_SIZE(zone_domain_mappings); ++i) {
         const zone_domain_mapping *test = zone_domain_mappings+i;
         HKEY domain;
 
         res = RegCreateKeyA(domains, test->domain, &domain);
-        ok(res == ERROR_SUCCESS, "RegCreateKey failed with %d on test %d\n", res, i);
+        ok(res == ERROR_SUCCESS, "RegCreateKey failed with %ld on test %ld\n", res, i);
 
         /* Only set the value if there's no subdomain. */
         if(!test->subdomain) {
             res = RegSetValueExA(domain, test->scheme, 0, REG_DWORD, (BYTE*)&test->zone, sizeof(DWORD));
-            ok(res == ERROR_SUCCESS, "RegSetValueEx failed with %d on test %d\n", res, i);
+            ok(res == ERROR_SUCCESS, "RegSetValueEx failed with %ld on test %ld\n", res, i);
         } else {
             HKEY subdomain;
 
             res = RegCreateKeyA(domain, test->subdomain, &subdomain);
-            ok(res == ERROR_SUCCESS, "RegCreateKey failed with %d on test %d\n", res, i);
+            ok(res == ERROR_SUCCESS, "RegCreateKey failed with %ld on test %ld\n", res, i);
 
             res = RegSetValueExA(subdomain, test->scheme, 0, REG_DWORD, (BYTE*)&test->zone, sizeof(DWORD));
-            ok(res == ERROR_SUCCESS, "RegSetValueEx failed with %d on test %d\n", res, i);
+            ok(res == ERROR_SUCCESS, "RegSetValueEx failed with %ld on test %ld\n", res, i);
 
             RegCloseKey(subdomain);
         }
@@ -818,14 +797,14 @@ static void unregister_zone_domains(void)
     DWORD res, i;
 
     res = RegOpenKeyA(HKEY_LOCAL_MACHINE, szZoneMapDomainsKey, &domains);
-    ok(res == ERROR_SUCCESS || broken(res == ERROR_FILE_NOT_FOUND), "RegOpenKey failed: %d\n", res);
+    ok(res == ERROR_SUCCESS || broken(res == ERROR_FILE_NOT_FOUND), "RegOpenKey failed: %ld\n", res);
     if(res == ERROR_SUCCESS) {
         RegDeleteKeyA(domains, "local.machine");
         RegCloseKey(domains);
     }
 
     res = RegOpenKeyA(HKEY_CURRENT_USER, szZoneMapDomainsKey, &domains);
-    ok(res == ERROR_SUCCESS, "RegOpenKey failed: %d\n", res);
+    ok(res == ERROR_SUCCESS, "RegOpenKey failed: %ld\n", res);
 
     for(i = 0; i < ARRAY_SIZE(zone_domain_mappings); ++i) {
         const zone_domain_mapping *test = zone_domain_mappings+i;
@@ -864,14 +843,14 @@ static void run_child_process(void)
     winetest_get_mainargs(&argv);
     sprintf(cmdline, "\"%s\" %s domain_tests", argv[0], argv[1]);
     ret = CreateProcessA(argv[0], cmdline, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi);
-    ok(ret, "Failed to spawn child process: %u\n", GetLastError());
-    winetest_wait_child_process(pi.hProcess);
+    ok(ret, "Failed to spawn child process: %lu\n", GetLastError());
+    wait_child_process(pi.hProcess);
     CloseHandle(pi.hThread);
     CloseHandle(pi.hProcess);
 }
 
 typedef struct {
-    const char  *url;
+    const WCHAR  *url;
     DWORD       zone;
     BOOL        todo;
     DWORD       broken_zone;
@@ -879,33 +858,33 @@ typedef struct {
 
 static const zone_mapping_test zone_mapping_tests[] = {
     /* Tests for "yabadaba.do" zone mappings. */
-    {"http://yabadaba.do/",URLZONE_CUSTOM},
-    {"http://google.yabadaba.do/",URLZONE_CUSTOM},
-    {"zip://yabadaba.do/",URLZONE_INTERNET},
+    {L"http://yabadaba.do/", URLZONE_CUSTOM},
+    {L"http://google.yabadaba.do/", URLZONE_CUSTOM},
+    {L"zip://yabadaba.do/", URLZONE_INTERNET},
     /* Tests for "super.cool" zone mappings. */
-    {"ftp://testing.google.super.cool/",URLZONE_INTERNET},
-    {"ftp://testing.*.super.cool/",URLZONE_CUSTOM2},
-    {"ftp://google.testing.super.cool/",URLZONE_CUSTOM2},
+    {L"ftp://testing.google.super.cool/", URLZONE_INTERNET},
+    {L"ftp://testing.*.super.cool/", URLZONE_CUSTOM2},
+    {L"ftp://google.testing.super.cool/", URLZONE_CUSTOM2},
     /* Tests for "tests.test" zone mappings. */
-    {"http://tests.test/",URLZONE_CUSTOM},
-    {"http://www.tests.test/",URLZONE_CUSTOM},
-    {"ftp://tests.test/",URLZONE_CUSTOM},
-    {"ftp://www.tests.test/",URLZONE_CUSTOM},
-    {"test://www.tests.test/",URLZONE_INTERNET},
-    {"test://tests.test/",URLZONE_INTERNET},
-    {"zip://www.tests.test/",URLZONE_INTERNET},
-    {"zip://tests.test/",URLZONE_INTERNET},
+    {L"http://tests.test/", URLZONE_CUSTOM},
+    {L"http://www.tests.test/", URLZONE_CUSTOM},
+    {L"ftp://tests.test/", URLZONE_CUSTOM},
+    {L"ftp://www.tests.test/", URLZONE_CUSTOM},
+    {L"test://www.tests.test/", URLZONE_INTERNET},
+    {L"test://tests.test/", URLZONE_INTERNET},
+    {L"zip://www.tests.test/", URLZONE_INTERNET},
+    {L"zip://tests.test/", URLZONE_INTERNET},
     /* Tests for "www.testing.com" zone mappings. */
-    {"http://google.www.testing.com/",URLZONE_INTERNET},
-    {"http://www.testing.com/",URLZONE_CUSTOM,FALSE,URLZONE_INTERNET},
-    {"http://testing.www.testing.com/",URLZONE_CUSTOM2,FALSE,URLZONE_INTERNET},
+    {L"http://google.www.testing.com/", URLZONE_INTERNET},
+    {L"http://www.testing.com/", URLZONE_CUSTOM, FALSE, URLZONE_INTERNET},
+    {L"http://testing.www.testing.com/", URLZONE_CUSTOM2, FALSE, URLZONE_INTERNET},
     /* Tests for "org" zone mappings. */
-    {"http://google.org/",URLZONE_INTERNET,FALSE,URLZONE_CUSTOM},
-    {"http://org/",URLZONE_CUSTOM},
-    {"http://testing.org/",URLZONE_CUSTOM2},
+    {L"http://google.org/", URLZONE_INTERNET, FALSE, URLZONE_CUSTOM},
+    {L"http://org/", URLZONE_CUSTOM},
+    {L"http://testing.org/", URLZONE_CUSTOM2},
     /* Tests for "wine.testing" mapping */
-    {"*:wine.testing/test",URLZONE_CUSTOM2},
-    {"http://wine.testing/testing",URLZONE_CUSTOM2}
+    {L"*:wine.testing/test", URLZONE_CUSTOM2},
+    {L"http://wine.testing/testing", URLZONE_CUSTOM2}
 };
 
 static void test_zone_domain_mappings(void)
@@ -919,7 +898,7 @@ static void test_zone_domain_mappings(void)
     trace("testing zone domain mappings...\n");
 
     hres = pCoInternetCreateSecurityManager(NULL, &secmgr, 0);
-    ok(hres == S_OK, "CoInternetCreateSecurityManager failed: %08x\n", hres);
+    ok(hres == S_OK, "CoInternetCreateSecurityManager failed: %08lx\n", hres);
 
     res = RegOpenKeyA(HKEY_LOCAL_MACHINE, szZoneMapDomainsKey, &domains);
     if(res == ERROR_SUCCESS) {
@@ -927,24 +906,21 @@ static void test_zone_domain_mappings(void)
                 '.','m','a','c','h','i','n','e','/',0};
 
         hres = IInternetSecurityManager_MapUrlToZone(secmgr, local_machineW, &zone, 0);
-        ok(hres == S_OK, "MapUrlToZone failed: %08x\n", hres);
-        ok(zone == URLZONE_CUSTOM, "Expected URLZONE_CUSTOM, but got %d\n", zone);
+        ok(hres == S_OK, "MapUrlToZone failed: %08lx\n", hres);
+        ok(zone == URLZONE_CUSTOM, "Expected URLZONE_CUSTOM, but got %ld\n", zone);
 
         RegCloseKey(domains);
     }
 
     for(i = 0; i < ARRAY_SIZE(zone_mapping_tests); ++i) {
         const zone_mapping_test *test = zone_mapping_tests+i;
-        LPWSTR urlW = a2w(test->url);
         zone = URLZONE_INVALID;
 
-        hres = IInternetSecurityManager_MapUrlToZone(secmgr, urlW, &zone, 0);
-        ok(hres == S_OK, "MapUrlToZone failed: %08x\n", hres);
+        hres = IInternetSecurityManager_MapUrlToZone(secmgr, test->url, &zone, 0);
+        ok(hres == S_OK, "MapUrlToZone failed: %08lx\n", hres);
         todo_wine_if (test->todo)
             ok(zone == test->zone || broken(test->broken_zone == zone),
-                "Expected %d, but got %d on test %d\n", test->zone, zone, i);
-
-        heap_free(urlW);
+                "Expected %ld, but got %ld on test %ld\n", test->zone, zone, i);
     }
 
     IInternetSecurityManager_Release(secmgr);
@@ -978,17 +954,17 @@ static void test_CoInternetCreateZoneManager(void)
     trace("simple zone manager tests...\n");
 
     hr = pCoInternetCreateZoneManager(NULL, &zonemgr, 0);
-    ok(hr == S_OK, "CoInternetCreateZoneManager result: 0x%x\n", hr);
+    ok(hr == S_OK, "CoInternetCreateZoneManager result: 0x%lx\n", hr);
     if (FAILED(hr))
         return;
 
     hr = IInternetZoneManager_QueryInterface(zonemgr, &IID_IUnknown, (void **) &punk);
-    ok(SUCCEEDED(hr), "got 0x%x with %p (expected Success)\n", hr, punk);
+    ok(SUCCEEDED(hr), "got 0x%lx with %p (expected Success)\n", hr, punk);
     if (punk)
         IUnknown_Release(punk);
 
     hr = IInternetZoneManager_QueryInterface(zonemgr, &IID_IInternetZoneManager, (void **) &punk);
-    ok(SUCCEEDED(hr), "got 0x%x with %p (expected Success)\n", hr, punk);
+    ok(SUCCEEDED(hr), "got 0x%lx with %p (expected Success)\n", hr, punk);
     if (punk)
         IUnknown_Release(punk);
 
@@ -999,7 +975,7 @@ static void test_CoInternetCreateZoneManager(void)
 
         hr = IInternetZoneManager_QueryInterface(zonemgr, &IID_IInternetZoneManagerEx2, (void **) &punk);
         ok(hr == S_OK || broken(hr == E_NOINTERFACE /* some W2K3 */),
-           "got 0x%x (expected S_OK)\n", hr);
+           "got 0x%lx (expected S_OK)\n", hr);
         if (punk)
             IUnknown_Release(punk);
         else
@@ -1010,7 +986,7 @@ static void test_CoInternetCreateZoneManager(void)
         win_skip("InternetZoneManagerEx not supported\n");
 
     hr = IInternetZoneManager_Release(zonemgr);
-    ok(hr == S_OK, "got 0x%x (expected S_OK)\n", hr);
+    ok(hr == S_OK, "got 0x%lx (expected S_OK)\n", hr);
 
 }
 
@@ -1026,62 +1002,62 @@ static void test_CreateZoneEnumerator(void)
     trace("testing zone enumerator...\n");
 
     hr = pCoInternetCreateZoneManager(NULL, &zonemgr, 0);
-    ok(hr == S_OK, "CoInternetCreateZoneManager result: 0x%x\n", hr);
+    ok(hr == S_OK, "CoInternetCreateZoneManager result: 0x%lx\n", hr);
     if (FAILED(hr))
         return;
 
     dwEnum=0xdeadbeef;
     hr = IInternetZoneManager_CreateZoneEnumerator(zonemgr, &dwEnum, NULL, 0);
     ok((hr == E_INVALIDARG) && (dwEnum == 0xdeadbeef),
-        "got 0x%x with 0x%x (expected E_INVALIDARG with 0xdeadbeef)\n", hr, dwEnum);
+        "got 0x%lx with 0x%lx (expected E_INVALIDARG with 0xdeadbeef)\n", hr, dwEnum);
 
     dwCount=0xdeadbeef;
     hr = IInternetZoneManager_CreateZoneEnumerator(zonemgr, NULL, &dwCount, 0);
     ok((hr == E_INVALIDARG) && (dwCount == 0xdeadbeef),
-        "got 0x%x and 0x%x (expected E_INVALIDARG and 0xdeadbeef)\n", hr, dwCount);
+        "got 0x%lx and 0x%lx (expected E_INVALIDARG and 0xdeadbeef)\n", hr, dwCount);
 
     dwEnum=0xdeadbeef;
     dwCount=0xdeadbeef;
     hr = IInternetZoneManager_CreateZoneEnumerator(zonemgr, &dwEnum, &dwCount, 0xffffffff);
     ok((hr == E_INVALIDARG) && (dwEnum == 0xdeadbeef) && (dwCount == 0xdeadbeef),
-        "got 0x%x with 0x%x and 0x%x (expected E_INVALIDARG with 0xdeadbeef and 0xdeadbeef)\n",
+        "got 0x%lx with 0x%lx and 0x%lx (expected E_INVALIDARG with 0xdeadbeef and 0xdeadbeef)\n",
         hr, dwEnum, dwCount);
 
     dwEnum=0xdeadbeef;
     dwCount=0xdeadbeef;
     hr = IInternetZoneManager_CreateZoneEnumerator(zonemgr, &dwEnum, &dwCount, 1);
     ok((hr == E_INVALIDARG) && (dwEnum == 0xdeadbeef) && (dwCount == 0xdeadbeef),
-        "got 0x%x with 0x%x and 0x%x (expected E_INVALIDARG with 0xdeadbeef and 0xdeadbeef)\n",
+        "got 0x%lx with 0x%lx and 0x%lx (expected E_INVALIDARG with 0xdeadbeef and 0xdeadbeef)\n",
         hr, dwEnum, dwCount);
 
     dwEnum=0xdeadbeef;
     dwCount=0xdeadbeef;
     /* Normal use */
     hr = IInternetZoneManager_CreateZoneEnumerator(zonemgr, &dwEnum, &dwCount, 0);
-    ok(hr == S_OK, "got 0x%x (expected S_OK)\n", hr);
+    ok(hr == S_OK, "got 0x%lx (expected S_OK)\n", hr);
 
     if (SUCCEEDED(hr)) {
         dwEnum2=0xdeadbeef;
         dwCount2=0xdeadbeef;
         hr = IInternetZoneManager_CreateZoneEnumerator(zonemgr, &dwEnum2, &dwCount2, 0);
-        ok(hr == S_OK, "got 0x%x (expected S_OK)\n", hr);
+        ok(hr == S_OK, "got 0x%lx (expected S_OK)\n", hr);
         if (SUCCEEDED(hr)) {
             /* native urlmon has an incrementing counter for dwEnum */
             hr = IInternetZoneManager_DestroyZoneEnumerator(zonemgr, dwEnum2);
-            ok(hr == S_OK, "got 0x%x (expected S_OK)\n", hr);
+            ok(hr == S_OK, "got 0x%lx (expected S_OK)\n", hr);
         }
 
         hr = IInternetZoneManager_DestroyZoneEnumerator(zonemgr, dwEnum);
-        ok(hr == S_OK, "got 0x%x (expected S_OK)\n", hr);
+        ok(hr == S_OK, "got 0x%lx (expected S_OK)\n", hr);
 
         /* Destroy the Enumerator twice is detected and handled in native urlmon */
         hr = IInternetZoneManager_DestroyZoneEnumerator(zonemgr, dwEnum);
-        ok((hr == E_INVALIDARG), "got 0x%x (expected E_INVALIDARG)\n", hr);
+        ok((hr == E_INVALIDARG), "got 0x%lx (expected E_INVALIDARG)\n", hr);
     }
 
     /* ::Release succeed also, when a ::DestroyZoneEnumerator is missing */
     hr = IInternetZoneManager_Release(zonemgr);
-    ok(hr == S_OK, "got 0x%x (expected S_OK)\n", hr);
+    ok(hr == S_OK, "got 0x%lx (expected S_OK)\n", hr);
 }
 
 static void test_GetZoneActionPolicy(void)
@@ -1094,35 +1070,35 @@ static void test_GetZoneActionPolicy(void)
     trace("testing GetZoneActionPolixy...\n");
 
     hres = pCoInternetCreateZoneManager(NULL, &zonemgr, 0);
-    ok(hres == S_OK, "CoInternetCreateZoneManager failed: %08x\n", hres);
+    ok(hres == S_OK, "CoInternetCreateZoneManager failed: %08lx\n", hres);
     if(FAILED(hres))
         return;
 
     hres = IInternetZoneManager_GetZoneActionPolicy(zonemgr, 3, action, buf,
             sizeof(DWORD), URLZONEREG_DEFAULT);
-    ok(hres == S_OK, "GetZoneActionPolicy failed: %08x\n", hres);
+    ok(hres == S_OK, "GetZoneActionPolicy failed: %08lx\n", hres);
     ok(*(DWORD*)buf == URLPOLICY_CREDENTIALS_SILENT_LOGON_OK ||
             *(DWORD*)buf == URLPOLICY_CREDENTIALS_MUST_PROMPT_USER ||
             *(DWORD*)buf == URLPOLICY_CREDENTIALS_CONDITIONAL_PROMPT ||
             *(DWORD*)buf == URLPOLICY_CREDENTIALS_ANONYMOUS_ONLY,
-            "unexpected policy=%d\n", *(DWORD*)buf);
+            "unexpected policy=%ld\n", *(DWORD*)buf);
 
     hres = IInternetZoneManager_GetZoneActionPolicy(zonemgr, 3, action, NULL,
             sizeof(DWORD), URLZONEREG_DEFAULT);
-    ok(hres == E_INVALIDARG, "GetZoneActionPolicy failed: %08x, expected E_INVALIDARG\n", hres);
+    ok(hres == E_INVALIDARG, "GetZoneActionPolicy failed: %08lx, expected E_INVALIDARG\n", hres);
 
     hres = IInternetZoneManager_GetZoneActionPolicy(zonemgr, 3, action, buf,
             2, URLZONEREG_DEFAULT);
-    ok(hres == E_INVALIDARG, "GetZoneActionPolicy failed: %08x, expected E_INVALIDARG\n", hres);
+    ok(hres == E_INVALIDARG, "GetZoneActionPolicy failed: %08lx, expected E_INVALIDARG\n", hres);
 
     hres = IInternetZoneManager_GetZoneActionPolicy(zonemgr, 3, 0x1fff, buf,
             sizeof(DWORD), URLZONEREG_DEFAULT);
     ok(hres == E_FAIL || broken(hres == HRESULT_FROM_WIN32(ERROR_NOT_FOUND)),
-            "(0x%x) got 0x%x (expected E_FAIL)\n", action, hres);
+            "(0x%lx) got 0x%lx (expected E_FAIL)\n", action, hres);
 
     hres = IInternetZoneManager_GetZoneActionPolicy(zonemgr, 13, action, buf,
             sizeof(DWORD), URLZONEREG_DEFAULT);
-    ok(hres == E_INVALIDARG, "GetZoneActionPolicy failed: %08x, expected E_INVALIDARG\n", hres);
+    ok(hres == E_INVALIDARG, "GetZoneActionPolicy failed: %08lx, expected E_INVALIDARG\n", hres);
 
     IInternetZoneManager_Release(zonemgr);
 }
@@ -1139,7 +1115,7 @@ static void test_GetZoneAt(void)
     trace("testing GetZoneAt...\n");
 
     hr = pCoInternetCreateZoneManager(NULL, &zonemgr, 0);
-    ok(hr == S_OK, "CoInternetCreateZoneManager result: 0x%x\n", hr);
+    ok(hr == S_OK, "CoInternetCreateZoneManager result: 0x%lx\n", hr);
     if (FAILED(hr))
         return;
 
@@ -1155,27 +1131,27 @@ static void test_GetZoneAt(void)
     dwZone = 0xdeadbeef;
     hr = IInternetZoneManager_GetZoneAt(zonemgr, 0xdeadbeef, 0, &dwZone);
     ok(hr == E_INVALIDARG,
-        "got 0x%x with 0x%x (expected E_INVALIDARG)\n", hr, dwZone);
+        "got 0x%lx with 0x%lx (expected E_INVALIDARG)\n", hr, dwZone);
 
     for (i = 0; i < dwCount; i++)
     {
         dwZone = 0xdeadbeef;
         hr = IInternetZoneManager_GetZoneAt(zonemgr, dwEnum, i, &dwZone);
-        ok(hr == S_OK, "#%d: got x%x with %d (expected S_OK)\n", i, hr, dwZone);
+        ok(hr == S_OK, "#%ld: got x%lx with %ld (expected S_OK)\n", i, hr, dwZone);
     }
 
     dwZone = 0xdeadbeef;
     /* MSDN (index .. must be .. less than or equal to) is wrong */
     hr = IInternetZoneManager_GetZoneAt(zonemgr, dwEnum, dwCount, &dwZone);
     ok(hr == E_INVALIDARG,
-        "got 0x%x with 0x%x (expected E_INVALIDARG)\n", hr, dwZone);
+        "got 0x%lx with 0x%lx (expected E_INVALIDARG)\n", hr, dwZone);
 
     hr = IInternetZoneManager_DestroyZoneEnumerator(zonemgr, dwEnum);
-    ok(hr == S_OK, "got 0x%x (expected S_OK)\n", hr);
+    ok(hr == S_OK, "got 0x%lx (expected S_OK)\n", hr);
 
 cleanup:
     hr = IInternetZoneManager_Release(zonemgr);
-    ok(hr == S_OK, "got 0x%x (expected S_OK)\n", hr);
+    ok(hr == S_OK, "got 0x%lx (expected S_OK)\n", hr);
 }
 
 static void test_GetZoneAttributes(void)
@@ -1189,7 +1165,7 @@ static void test_GetZoneAttributes(void)
     trace("testing GetZoneAttributes...\n");
 
     hr = pCoInternetCreateZoneManager(NULL, &zonemgr, 0);
-    ok(hr == S_OK, "CoInternetCreateZoneManager result: 0x%x\n", hr);
+    ok(hr == S_OK, "CoInternetCreateZoneManager result: 0x%lx\n", hr);
     if (FAILED(hr))
         return;
 
@@ -1197,41 +1173,41 @@ static void test_GetZoneAttributes(void)
     for (i = 0; i < 5; i++) {
         memset(buffer, -1, sizeof(buffer));
         hr = IInternetZoneManager_GetZoneAttributes(zonemgr, i, pZA);
-        ok(hr == S_OK, "#%d: got 0x%x (expected S_OK)\n", i, hr);
+        ok(hr == S_OK, "#%ld: got 0x%lx (expected S_OK)\n", i, hr);
     }
 
     /* IE8 no longer set cbSize */
     memset(buffer, -1, sizeof(buffer));
     pZA->cbSize = 0;
     hr = IInternetZoneManager_GetZoneAttributes(zonemgr, 0, pZA);
-    ok(hr == S_OK, "got 0x%x (expected S_OK)\n", hr);
+    ok(hr == S_OK, "got 0x%lx (expected S_OK)\n", hr);
     ok((pZA->cbSize == 0) || (pZA->cbSize == sizeof(ZONEATTRIBUTES)),
-        "got cbSize = %d (expected 0)\n", pZA->cbSize);
+        "got cbSize = %ld (expected 0)\n", pZA->cbSize);
 
     memset(buffer, -1, sizeof(buffer));
     pZA->cbSize = 64;
     hr = IInternetZoneManager_GetZoneAttributes(zonemgr, 0, pZA);
-    ok(hr == S_OK, "got 0x%x (expected S_OK)\n", hr);
+    ok(hr == S_OK, "got 0x%lx (expected S_OK)\n", hr);
     ok((pZA->cbSize == 64) || (pZA->cbSize == sizeof(ZONEATTRIBUTES)),
-        "got cbSize = %d (expected 64)\n", pZA->cbSize);
+        "got cbSize = %ld (expected 64)\n", pZA->cbSize);
 
     memset(buffer, -1, sizeof(buffer));
     hr = IInternetZoneManager_GetZoneAttributes(zonemgr, 0, pZA);
-    ok(hr == S_OK, "got 0x%x (expected S_OK)\n", hr);
+    ok(hr == S_OK, "got 0x%lx (expected S_OK)\n", hr);
     ok((pZA->cbSize == 0xffffffff) || (pZA->cbSize == sizeof(ZONEATTRIBUTES)),
-        "got cbSize = 0x%x (expected 0xffffffff)\n", pZA->cbSize);
+        "got cbSize = 0x%lx (expected 0xffffffff)\n", pZA->cbSize);
 
     /* IE8 up to IE10 don't fail on invalid zones */
     memset(buffer, -1, sizeof(buffer));
     hr = IInternetZoneManager_GetZoneAttributes(zonemgr, 0xdeadbeef, pZA);
     ok(hr == S_OK || hr == E_FAIL || hr == E_POINTER,
-        "got 0x%x (expected S_OK or E_FAIL)\n", hr);
+        "got 0x%lx (expected S_OK or E_FAIL)\n", hr);
 
     hr = IInternetZoneManager_GetZoneAttributes(zonemgr, 0, NULL);
-    ok(hr == E_INVALIDARG, "got 0x%x (expected E_INVALIDARG)\n", hr);
+    ok(hr == E_INVALIDARG, "got 0x%lx (expected E_INVALIDARG)\n", hr);
 
     hr = IInternetZoneManager_Release(zonemgr);
-    ok(hr == S_OK, "got 0x%x (expected S_OK)\n", hr);
+    ok(hr == S_OK, "got 0x%lx (expected S_OK)\n", hr);
 }
 
 static void test_SetZoneAttributes(void)
@@ -1246,25 +1222,25 @@ static void test_SetZoneAttributes(void)
 
     trace("testing SetZoneAttributes...\n");
     hr = pCoInternetCreateZoneManager(NULL, &zonemgr, 0);
-    ok(hr == S_OK, "CoInternetCreateZoneManager result: 0x%x\n", hr);
+    ok(hr == S_OK, "CoInternetCreateZoneManager result: 0x%lx\n", hr);
     if (FAILED(hr))
         return;
 
     memset(buffer, -1, sizeof(buffer));
     hr = IInternetZoneManager_GetZoneAttributes(zonemgr, URLZONE_LOCAL_MACHINE, pZA);
-    ok(hr == S_OK, "got 0x%x (expected S_OK)\n", hr);
+    ok(hr == S_OK, "got 0x%lx (expected S_OK)\n", hr);
 
     sprintf(regpath, "%s\\Zones\\%d", szInternetSettingsKey, URLZONE_CUSTOM);
     res = RegCreateKeyA(HKEY_CURRENT_USER, regpath, &hkey);
     RegCloseKey(hkey);
 
-    ok(res == ERROR_SUCCESS, "got %d (expected ERROR_SUCCESS)\n", res);
+    ok(res == ERROR_SUCCESS, "got %ld (expected ERROR_SUCCESS)\n", res);
     if (res != ERROR_SUCCESS)
         goto cleanup;
 
     pZA->cbSize = sizeof(ZONEATTRIBUTES);
     hr = IInternetZoneManager_SetZoneAttributes(zonemgr, URLZONE_CUSTOM, NULL);
-    ok(hr == E_INVALIDARG, "got 0x%x (expected E_INVALIDARG)\n", hr);
+    ok(hr == E_INVALIDARG, "got 0x%lx (expected E_INVALIDARG)\n", hr);
 
     /* normal use */
     hr = IInternetZoneManager_SetZoneAttributes(zonemgr, URLZONE_CUSTOM, pZA);
@@ -1272,20 +1248,20 @@ static void test_SetZoneAttributes(void)
         win_skip("SetZoneAttributes not supported: IE too old\n");
         goto cleanup;
     }
-    ok(hr == S_OK, "got 0x%x (expected S_OK)\n", hr);
+    ok(hr == S_OK, "got 0x%lx (expected S_OK)\n", hr);
 
     /* native urlmon ignores cbSize */
     pZA->cbSize = sizeof(ZONEATTRIBUTES) + sizeof(DWORD);
     hr = IInternetZoneManager_SetZoneAttributes(zonemgr, URLZONE_CUSTOM, pZA);
-    ok(hr == S_OK, "got 0x%x for sizeof(ZONEATTRIBUTES) + sizeof(DWORD) (expected S_OK)\n", hr);
+    ok(hr == S_OK, "got 0x%lx for sizeof(ZONEATTRIBUTES) + sizeof(DWORD) (expected S_OK)\n", hr);
 
     pZA->cbSize = sizeof(ZONEATTRIBUTES) - sizeof(DWORD);
     hr = IInternetZoneManager_SetZoneAttributes(zonemgr, URLZONE_CUSTOM, pZA);
-    ok(hr == S_OK, "got 0x%x for sizeof(ZONEATTRIBUTES) - sizeof(DWORD) (expected S_OK)\n", hr);
+    ok(hr == S_OK, "got 0x%lx for sizeof(ZONEATTRIBUTES) - sizeof(DWORD) (expected S_OK)\n", hr);
 
     pZA->cbSize = 0;
     hr = IInternetZoneManager_SetZoneAttributes(zonemgr, URLZONE_CUSTOM, pZA);
-    ok(hr == S_OK, "got 0x%x for size 0 (expected S_OK)\n", hr);
+    ok(hr == S_OK, "got 0x%lx for size 0 (expected S_OK)\n", hr);
 
     /* The key for the zone must be present, when calling SetZoneAttributes */
     myRegDeleteTreeA(HKEY_CURRENT_USER, regpath);
@@ -1293,12 +1269,12 @@ static void test_SetZoneAttributes(void)
        All newer IE return S_OK without saving the zone attributes to the registry.
        This is a Windows bug, but we have to accept that as standard */
     hr = IInternetZoneManager_SetZoneAttributes(zonemgr, URLZONE_CUSTOM, pZA);
-    ok((hr == S_OK) || broken(hr == E_FAIL), "got 0x%x (expected S_OK)\n", hr);
+    ok((hr == S_OK) || broken(hr == E_FAIL), "got 0x%lx (expected S_OK)\n", hr);
 
     /* SetZoneAttributes did not create the directory */
     res = RegOpenKeyA(HKEY_CURRENT_USER, regpath, &hkey);
     ok((res == ERROR_FILE_NOT_FOUND) && (hkey == NULL),
-        "got %u with %p (expected ERROR_FILE_NOT_FOUND with NULL)\n", res, hkey);
+        "got %lu with %p (expected ERROR_FILE_NOT_FOUND with NULL)\n", res, hkey);
 
     if (hkey) RegCloseKey(hkey);
 
@@ -1307,7 +1283,7 @@ cleanup:
     myRegDeleteTreeA(HKEY_CURRENT_USER, regpath);
 
     hr = IInternetZoneManager_Release(zonemgr);
-    ok(hr == S_OK, "got 0x%x (expected S_OK)\n", hr);
+    ok(hr == S_OK, "got 0x%lx (expected S_OK)\n", hr);
 }
 
 
@@ -1321,20 +1297,20 @@ static void test_InternetSecurityMarshalling(void)
     trace("testing marshalling...\n");
 
     hres = pCoInternetCreateSecurityManager(NULL, &secmgr, 0);
-    ok(hres == S_OK, "CoInternetCreateSecurityManager failed: %08x\n", hres);
+    ok(hres == S_OK, "CoInternetCreateSecurityManager failed: %08lx\n", hres);
     if(FAILED(hres))
         return;
 
     hres = IInternetSecurityManager_QueryInterface(secmgr, &IID_IUnknown, (void**)&unk);
-    ok(hres == S_OK, "QueryInterface returned: %08x\n", hres);
+    ok(hres == S_OK, "QueryInterface returned: %08lx\n", hres);
 
     hres = CreateStreamOnHGlobal(NULL, TRUE, &stream);
-    ok(hres == S_OK, "CreateStreamOnHGlobal returned: %08x\n", hres);
+    ok(hres == S_OK, "CreateStreamOnHGlobal returned: %08lx\n", hres);
 
     hres = CoMarshalInterface(stream, &IID_IInternetSecurityManager, unk, MSHCTX_INPROC, NULL, MSHLFLAGS_NORMAL);
     /* Not supported in W98 */
     ok(hres == S_OK || broken(hres == REGDB_E_IIDNOTREG),
-        "CoMarshalInterface returned: %08x\n", hres);
+        "CoMarshalInterface returned: %08lx\n", hres);
 
     IStream_Release(stream);
     IUnknown_Release(unk);
@@ -1359,17 +1335,17 @@ static void test_InternetGetSecurityUrl(void)
 
     for(i = 0; i < ARRAY_SIZE(in); i++) {
         hres = pCoInternetGetSecurityUrl(in[i], &sec, PSU_DEFAULT, 0);
-        ok(hres == S_OK, "(%d) CoInternetGetSecurityUrl returned: %08x\n", i, hres);
+        ok(hres == S_OK, "(%ld) CoInternetGetSecurityUrl returned: %08lx\n", i, hres);
         if(hres == S_OK) {
-            ok(!strcmp_w(sec, out_default[i]), "(%d) Got %s, expected %s\n",
+            ok(!strcmp_w(sec, out_default[i]), "(%ld) Got %s, expected %s\n",
                     i, wine_dbgstr_w(sec), wine_dbgstr_w(out_default[i]));
             CoTaskMemFree(sec);
         }
 
         hres = pCoInternetGetSecurityUrl(in[i], &sec, PSU_SECURITY_URL_ONLY, 0);
-        ok(hres == S_OK, "(%d) CoInternetGetSecurityUrl returned: %08x\n", i, hres);
+        ok(hres == S_OK, "(%ld) CoInternetGetSecurityUrl returned: %08lx\n", i, hres);
         if(hres == S_OK) {
-            ok(!strcmp_w(sec, out_securl[i]), "(%d) Got %s, expected %s\n",
+            ok(!strcmp_w(sec, out_securl[i]), "(%ld) Got %s, expected %s\n",
                     i, wine_dbgstr_w(sec), wine_dbgstr_w(out_securl[i]));
             CoTaskMemFree(sec);
         }
@@ -1380,7 +1356,7 @@ static void test_InternetGetSecurityUrl(void)
     SET_EXPECT(ParseUrl_SECURITY_DOMAIN_expected);
 
     hres = pCoInternetGetSecurityUrl(security_url2W, &sec, PSU_DEFAULT, 0);
-    ok(hres == S_OK, "CoInternetGetSecurityUrl returned 0x%08x, expected S_OK\n", hres);
+    ok(hres == S_OK, "CoInternetGetSecurityUrl returned 0x%08lx, expected S_OK\n", hres);
 
     CHECK_CALLED(ParseUrl_SECURITY_URL_input2);
     CHECK_CALLED(ParseUrl_SECURITY_URL_expected);
@@ -1416,30 +1392,30 @@ static HRESULT WINAPI InternetProtocolInfo_ParseUrl(IInternetProtocolInfo *iface
 
     ok(pwzResult != NULL, "pwzResult == NULL\n");
     ok(pcchResult != NULL, "pcchResult == NULL\n");
-    ok(!dwParseFlags, "Expected 0, but got 0x%08x\n", dwParseFlags);
+    ok(!dwParseFlags, "Expected 0, but got 0x%08lx\n", dwParseFlags);
 
     switch(ParseAction) {
     case PARSE_SECURITY_URL:
         if(!strcmp_w(pwzUrl, security_urlW)) {
             CHECK_EXPECT(ParseUrl_SECURITY_URL_input);
-            ok(cchResult == lstrlenW(pwzUrl)+1, "Got %d\n", cchResult);
+            ok(cchResult == lstrlenW(pwzUrl)+1, "Got %ld\n", cchResult);
             ret = security_expectedW;
         } else if(!strcmp_w(pwzUrl, security_url2W)) {
             CHECK_EXPECT(ParseUrl_SECURITY_URL_input2);
-            ok(cchResult == lstrlenW(pwzUrl)+1, "Got %d\n", cchResult);
+            ok(cchResult == lstrlenW(pwzUrl)+1, "Got %ld\n", cchResult);
             ret = security_expectedW;
         } else if(!strcmp_w(pwzUrl, security_expectedW)) {
             CHECK_EXPECT(ParseUrl_SECURITY_URL_expected);
-            ok(cchResult == lstrlenW(pwzUrl)+1, "Got %d\n", cchResult);
+            ok(cchResult == lstrlenW(pwzUrl)+1, "Got %ld\n", cchResult);
             ret = security_expectedW;
         } else if(!strcmp_w(pwzUrl, winetest_to_httpW)) {
             switch(++called_securl_http) {
             case 1:
-                ok(cchResult == lstrlenW(pwzUrl)+1, "Got %d\n", cchResult);
+                ok(cchResult == lstrlenW(pwzUrl)+1, "Got %ld\n", cchResult);
                 break;
             case 2:
                 CHECK_EXPECT(ParseUrl_SECURITY_URL_http);
-                ok(cchResult == lstrlenW(url9)+1, "Got %d\n", cchResult);
+                ok(cchResult == lstrlenW(url9)+1, "Got %ld\n", cchResult);
                 break;
             default:
                 todo_wine CHECK_EXPECT(ParseUrl_SECURITY_URL_http);
@@ -1455,7 +1431,7 @@ static HRESULT WINAPI InternetProtocolInfo_ParseUrl(IInternetProtocolInfo *iface
 
         ok(!strcmp_w(pwzUrl, security_expectedW), "Expected %s but got %s\n",
             wine_dbgstr_w(security_expectedW), wine_dbgstr_w(pwzUrl));
-        ok(cchResult == lstrlenW(pwzUrl)+1, "Got %d\n", cchResult);
+        ok(cchResult == lstrlenW(pwzUrl)+1, "Got %ld\n", cchResult);
         ret = security_expectedW;
         break;
     default:
@@ -1558,13 +1534,13 @@ static void register_protocols(void)
     HRESULT hres;
 
     hres = pCoInternetGetSession(0, &session, 0);
-    ok(hres == S_OK, "CoInternetGetSession failed: %08x\n", hres);
+    ok(hres == S_OK, "CoInternetGetSession failed: %08lx\n", hres);
     if(FAILED(hres))
         return;
 
     hres = IInternetSession_RegisterNameSpace(session, &protocol_cf, &IID_NULL,
             winetestW, 0, NULL, 0);
-    ok(hres == S_OK, "RegisterNameSpace failed: %08x\n", hres);
+    ok(hres == S_OK, "RegisterNameSpace failed: %08lx\n", hres);
 
     IInternetSession_Release(session);
 }
@@ -1574,36 +1550,36 @@ static void unregister_protocols(void) {
     HRESULT hr;
 
     hr = pCoInternetGetSession(0, &session, 0);
-    ok(hr == S_OK, "CoInternetGetSession failed: 0x%08x\n", hr);
+    ok(hr == S_OK, "CoInternetGetSession failed: 0x%08lx\n", hr);
     if(FAILED(hr))
         return;
 
     hr = IInternetSession_UnregisterNameSpace(session, &protocol_cf, winetestW);
-    ok(hr == S_OK, "UnregisterNameSpace failed: 0x%08x\n", hr);
+    ok(hr == S_OK, "UnregisterNameSpace failed: 0x%08lx\n", hr);
 
     IInternetSession_Release(session);
 }
 
 static const struct {
-    const char  *uri;
+    const WCHAR *uri;
     DWORD       create_flags;
     const char  *security_uri;
     HRESULT     security_hres;
-    const char  *default_uri;
+    const WCHAR *default_uri;
     HRESULT     default_hres;
     BOOL        todo;
 } sec_url_ex_tests[] = {
-    {"index.htm",Uri_CREATE_ALLOW_RELATIVE,"*:index.html",S_OK,"*:index.htm",S_OK},
-    {"file://c:\\Index.htm",Uri_CREATE_FILE_USE_DOS_PATH,"file:///c:/Index.htm",S_OK,"file:///c:/Index.htm",S_OK},
-    {"file:some%20file%2ejpg",0,NULL,E_INVALIDARG,NULL,E_INVALIDARG},
-    {"file:some file.jpg",0,NULL,E_INVALIDARG,NULL,E_INVALIDARG},
-    {"http://www.zone3.winetest/",0,"http://www.zone3.winetest/",S_OK,"http://www.zone3.winetest/",S_OK},
-    {"about:blank",0,"about:blank",S_OK,"about:blank",S_OK},
-    {"ftp://zone3.winetest/file.test",0,"ftp://zone3.winetest/file.test",S_OK,"ftp://zone3.winetest/file.test",S_OK},
-    {"test:123abc",0,"test:123abc",S_OK,"test:123abc",S_OK},
-    {"http:google.com/test.file",0,"http:google.com/test.file",S_OK,"http:google.com/test.file",S_OK},
-    {"ftp://test@ftp.winehq.org/",0,"ftp://ftp.winehq.org/",S_OK,"ftp://ftp.winehq.org/",S_OK},
-    {"test://google@ftp.winehq.org/",0,"test://google@ftp.winehq.org/",S_OK,"test://google@ftp.winehq.org/",S_OK}
+    {L"index.htm", Uri_CREATE_ALLOW_RELATIVE, "*:index.html", S_OK, L"*:index.htm", S_OK},
+    {L"file://c:\\Index.htm", Uri_CREATE_FILE_USE_DOS_PATH, "file:///c:/Index.htm", S_OK, L"file:///c:/Index.htm", S_OK},
+    {L"file:some%20file%2ejpg", 0, NULL, E_INVALIDARG, NULL, E_INVALIDARG},
+    {L"file:some file.jpg", 0, NULL, E_INVALIDARG, NULL, E_INVALIDARG},
+    {L"http://www.zone3.winetest/", 0, "http://www.zone3.winetest/", S_OK, L"http://www.zone3.winetest/", S_OK},
+    {L"about:blank", 0, "about:blank", S_OK, L"about:blank", S_OK},
+    {L"ftp://zone3.winetest/file.test", 0, "ftp://zone3.winetest/file.test", S_OK, L"ftp://zone3.winetest/file.test", S_OK},
+    {L"test:123abc", 0, "test:123abc", S_OK, L"test:123abc", S_OK},
+    {L"http:google.com/test.file", 0, "http:google.com/test.file", S_OK, L"http:google.com/test.file", S_OK},
+    {L"ftp://test@ftp.winehq.org/", 0, "ftp://ftp.winehq.org/", S_OK, L"ftp://ftp.winehq.org/", S_OK},
+    {L"test://google@ftp.winehq.org/", 0, "test://google@ftp.winehq.org/", S_OK, L"test://google@ftp.winehq.org/", S_OK}
 };
 
 static void test_InternetGetSecurityUrlEx(void)
@@ -1615,38 +1591,37 @@ static void test_InternetGetSecurityUrlEx(void)
     trace("testing CoInternetGetSecurityUrlEx...\n");
 
     hr = pCoInternetGetSecurityUrlEx(NULL, NULL, PSU_DEFAULT, 0);
-    ok(hr == E_INVALIDARG, "CoInternetGetSecurityUrlEx returned 0x%08x, expected E_INVALIDARG\n", hr);
+    ok(hr == E_INVALIDARG, "CoInternetGetSecurityUrlEx returned 0x%08lx, expected E_INVALIDARG\n", hr);
 
     result = (void*) 0xdeadbeef;
     hr = pCoInternetGetSecurityUrlEx(NULL, &result, PSU_DEFAULT, 0);
-    ok(hr == E_INVALIDARG, "CoInternetGetSecurityUrlEx returned 0x%08x, expected E_INVALIDARG\n", hr);
+    ok(hr == E_INVALIDARG, "CoInternetGetSecurityUrlEx returned 0x%08lx, expected E_INVALIDARG\n", hr);
     ok(result == (void*) 0xdeadbeef, "'result' was %p\n", result);
 
     for(i = 0; i < ARRAY_SIZE(sec_url_ex_tests); ++i) {
-        LPWSTR uriW = a2w(sec_url_ex_tests[i].uri);
         uri = NULL;
 
-        hr = pCreateUri(uriW, sec_url_ex_tests[i].create_flags, 0, &uri);
-        ok(hr == S_OK, "CreateUri returned 0x%08x on test %d\n", hr, i);
+        hr = pCreateUri(sec_url_ex_tests[i].uri, sec_url_ex_tests[i].create_flags, 0, &uri);
+        ok(hr == S_OK, "CreateUri returned 0x%08lx on test %ld\n", hr, i);
         if(hr == S_OK) {
             result = NULL;
 
             hr = pCoInternetGetSecurityUrlEx(uri, &result, PSU_DEFAULT, 0);
             todo_wine_if (sec_url_ex_tests[i].todo) {
                 ok(hr == sec_url_ex_tests[i].default_hres,
-                    "CoInternetGetSecurityUrlEx returned 0x%08x, expected 0x%08x on test %d\n",
+                    "CoInternetGetSecurityUrlEx returned 0x%08lx, expected 0x%08lx on test %ld\n",
                     hr, sec_url_ex_tests[i].default_hres, i);
             }
             if(SUCCEEDED(hr)) {
                 BSTR received;
 
                 hr = IUri_GetDisplayUri(result, &received);
-                ok(hr == S_OK, "GetDisplayUri returned 0x%08x on test %d\n", hr, i);
+                ok(hr == S_OK, "GetDisplayUri returned 0x%08lx on test %ld\n", hr, i);
                 if(hr == S_OK) {
                     todo_wine_if (sec_url_ex_tests[i].todo) {
-                        ok(!strcmp_aw(sec_url_ex_tests[i].default_uri, received),
-                            "Expected %s but got %s on test %d\n", sec_url_ex_tests[i].default_uri,
-                            wine_dbgstr_w(received), i);
+                        ok(!lstrcmpW(sec_url_ex_tests[i].default_uri, received),
+                            "Expected %s but got %s on test %ld\n",
+                            wine_dbgstr_w(sec_url_ex_tests[i].default_uri), wine_dbgstr_w(received), i);
                     }
                 }
                 SysFreeString(received);
@@ -1657,19 +1632,19 @@ static void test_InternetGetSecurityUrlEx(void)
             hr = pCoInternetGetSecurityUrlEx(uri, &result, PSU_SECURITY_URL_ONLY, 0);
             todo_wine_if (sec_url_ex_tests[i].todo) {
                 ok(hr == sec_url_ex_tests[i].default_hres,
-                    "CoInternetGetSecurityUrlEx returned 0x%08x, expected 0x%08x on test %d\n",
+                    "CoInternetGetSecurityUrlEx returned 0x%08lx, expected 0x%08lx on test %ld\n",
                     hr, sec_url_ex_tests[i].default_hres, i);
             }
             if(SUCCEEDED(hr)) {
                 BSTR received;
 
                 hr = IUri_GetDisplayUri(result, &received);
-                ok(hr == S_OK, "GetDisplayUri returned 0x%08x on test %d\n", hr, i);
+                ok(hr == S_OK, "GetDisplayUri returned 0x%08lx on test %ld\n", hr, i);
                 if(hr == S_OK) {
                     todo_wine_if (sec_url_ex_tests[i].todo) {
-                        ok(!strcmp_aw(sec_url_ex_tests[i].default_uri, received),
-                            "Expected %s but got %s on test %d\n", sec_url_ex_tests[i].default_uri,
-                            wine_dbgstr_w(received), i);
+                        ok(!lstrcmpW(sec_url_ex_tests[i].default_uri, received),
+                            "Expected %s but got %s on test %ld\n",
+                            wine_dbgstr_w(sec_url_ex_tests[i].default_uri), wine_dbgstr_w(received), i);
                     }
                 }
                 SysFreeString(received);
@@ -1678,7 +1653,6 @@ static void test_InternetGetSecurityUrlEx(void)
         }
 
         if(uri) IUri_Release(uri);
-        heap_free(uriW);
     }
 }
 
@@ -1690,14 +1664,14 @@ static void test_InternetGetSecurityUrlEx_Pluggable(void)
     trace("testing CoInternetGetSecurityUrlEx for pluggable protocols...\n");
 
     hr = pCreateUri(security_urlW, 0, 0, &uri);
-    ok(hr == S_OK, "CreateUri returned 0x%08x\n", hr);
+    ok(hr == S_OK, "CreateUri returned 0x%08lx\n", hr);
     if(hr == S_OK) {
         SET_EXPECT(ParseUrl_SECURITY_URL_input);
         SET_EXPECT(ParseUrl_SECURITY_URL_expected);
         SET_EXPECT(ParseUrl_SECURITY_DOMAIN_expected);
 
         hr = pCoInternetGetSecurityUrlEx(uri, &result, PSU_DEFAULT, 0);
-        ok(hr == S_OK, "CoInternetGetSecurityUrlEx returned 0x%08x, expected S_OK\n", hr);
+        ok(hr == S_OK, "CoInternetGetSecurityUrlEx returned 0x%08lx, expected S_OK\n", hr);
 
         CHECK_CALLED(ParseUrl_SECURITY_URL_input);
         CHECK_CALLED(ParseUrl_SECURITY_URL_expected);
@@ -1707,7 +1681,7 @@ static void test_InternetGetSecurityUrlEx_Pluggable(void)
             BSTR received = NULL;
 
             hr = IUri_GetAbsoluteUri(result, &received);
-            ok(hr == S_OK, "GetAbsoluteUri returned 0x%08x\n", hr);
+            ok(hr == S_OK, "GetAbsoluteUri returned 0x%08lx\n", hr);
             if(hr == S_OK) {
                 ok(!strcmp_w(security_expectedW, received), "Expected %s but got %s\n",
                     wine_dbgstr_w(security_expectedW), wine_dbgstr_w(received));
@@ -1722,7 +1696,7 @@ static void test_InternetGetSecurityUrlEx_Pluggable(void)
         SET_EXPECT(ParseUrl_SECURITY_URL_expected);
 
         hr = pCoInternetGetSecurityUrlEx(uri, &result, PSU_SECURITY_URL_ONLY, 0);
-        ok(hr == S_OK, "CoInternetGetSecurityUrlEx returned 0x%08x, expected S_OK\n", hr);
+        ok(hr == S_OK, "CoInternetGetSecurityUrlEx returned 0x%08lx, expected S_OK\n", hr);
 
         CHECK_CALLED(ParseUrl_SECURITY_URL_input);
         CHECK_CALLED(ParseUrl_SECURITY_URL_expected);
@@ -1731,7 +1705,7 @@ static void test_InternetGetSecurityUrlEx_Pluggable(void)
             BSTR received = NULL;
 
             hr = IUri_GetAbsoluteUri(result, &received);
-            ok(hr == S_OK, "GetAbsoluteUri returned 0x%08x\n", hr);
+            ok(hr == S_OK, "GetAbsoluteUri returned 0x%08lx\n", hr);
             if(hr == S_OK) {
                 ok(!strcmp_w(security_expectedW, received), "Expected %s but got %s\n",
                     wine_dbgstr_w(security_expectedW), wine_dbgstr_w(received));
@@ -1748,7 +1722,7 @@ static const BYTE secidex2_2[] = {'z','i','p',':','t','e','s','t','i','n','g','.
 static const BYTE secidex2_3[] = {'*',':','t','e','s','t','i','n','g','.','c','o','m',3,0,0,0};
 
 static const struct {
-    const char  *uri;
+    const WCHAR  *uri;
     DWORD       create_flags;
     HRESULT     map_hres;
     DWORD       zone;
@@ -1758,19 +1732,19 @@ static const struct {
     HRESULT     secid_hres;
     BOOL        secid_todo;
 } sec_mgr_ex2_tests[] = {
-    {"res://mshtml.dll/blank.htm",0,S_OK,URLZONE_LOCAL_MACHINE,FALSE,secid1,sizeof(secid1),S_OK},
-    {"index.htm",Uri_CREATE_ALLOW_RELATIVE,0,URLZONE_INTERNET,FALSE,secid2,sizeof(secid2),S_OK},
-    {"file://c:\\Index.html",0,0,URLZONE_LOCAL_MACHINE,FALSE,secid1,sizeof(secid1),S_OK},
-    {"http://www.zone3.winetest/",0,0,URLZONE_INTERNET,FALSE,secid5,sizeof(secid5),S_OK},
-    {"about:blank",0,0,URLZONE_INTERNET,FALSE,secid6,sizeof(secid6),S_OK},
-    {"ftp://zone3.winetest/file.test",0,0,URLZONE_INTERNET,FALSE,secid7,sizeof(secid7),S_OK},
-    {"/file/testing/test.test",Uri_CREATE_ALLOW_RELATIVE,0,URLZONE_INTERNET,FALSE,NULL,0,E_INVALIDARG},
-    {"zip://testing.com/",0,0,URLZONE_INTERNET,FALSE,secidex2_1,sizeof(secidex2_1),S_OK},
-    {"zip:testing.com",0,0,URLZONE_INTERNET,FALSE,secidex2_2,sizeof(secidex2_2),S_OK},
-    {"http:google.com",0,S_OK,URLZONE_INVALID,FALSE,NULL,0,E_INVALIDARG},
-    {"http:/google.com",0,S_OK,URLZONE_INVALID,FALSE,NULL,0,E_INVALIDARG},
-    {"*:/testing",0,S_OK,URLZONE_INTERNET,FALSE,NULL,0,E_INVALIDARG},
-    {"*://testing.com",0,S_OK,URLZONE_INTERNET,FALSE,secidex2_3,sizeof(secidex2_3),S_OK}
+    {L"res://mshtml.dll/blank.htm", 0, S_OK, URLZONE_LOCAL_MACHINE, FALSE, secid1, sizeof(secid1), S_OK},
+    {L"index.htm", Uri_CREATE_ALLOW_RELATIVE, 0, URLZONE_INTERNET, FALSE, secid2, sizeof(secid2), S_OK},
+    {L"file://c:\\Index.html", 0, 0, URLZONE_LOCAL_MACHINE, FALSE, secid1, sizeof(secid1), S_OK},
+    {L"http://www.zone3.winetest/", 0, 0, URLZONE_INTERNET, FALSE, secid5, sizeof(secid5), S_OK},
+    {L"about:blank", 0, 0, URLZONE_INTERNET, FALSE, secid6, sizeof(secid6), S_OK},
+    {L"ftp://zone3.winetest/file.test", 0, 0, URLZONE_INTERNET, FALSE, secid7, sizeof(secid7), S_OK},
+    {L"/file/testing/test.test", Uri_CREATE_ALLOW_RELATIVE, 0, URLZONE_INTERNET, FALSE, NULL, 0, E_INVALIDARG},
+    {L"zip://testing.com/", 0, 0, URLZONE_INTERNET, FALSE, secidex2_1, sizeof(secidex2_1), S_OK},
+    {L"zip:testing.com", 0, 0, URLZONE_INTERNET, FALSE, secidex2_2, sizeof(secidex2_2), S_OK},
+    {L"http:google.com", 0, S_OK, URLZONE_INVALID, FALSE, NULL, 0, E_INVALIDARG},
+    {L"http:/google.com", 0, S_OK, URLZONE_INVALID, FALSE, NULL, 0, E_INVALIDARG},
+    {L"*:/testing", 0, S_OK, URLZONE_INTERNET, FALSE, NULL, 0, E_INVALIDARG},
+    {L"*://testing.com", 0, S_OK, URLZONE_INTERNET, FALSE, secidex2_3, sizeof(secidex2_3), S_OK}
 };
 
 static void test_SecurityManagerEx2(void)
@@ -1793,52 +1767,50 @@ static void test_SecurityManagerEx2(void)
     trace("Testing SecurityManagerEx2...\n");
 
     hres = pCoInternetCreateSecurityManager(NULL, &sec_mgr, 0);
-    ok(hres == S_OK, "CoInternetCreateSecurityManager failed: %08x\n", hres);
+    ok(hres == S_OK, "CoInternetCreateSecurityManager failed: %08lx\n", hres);
 
     hres = IInternetSecurityManager_QueryInterface(sec_mgr, &IID_IInternetSecurityManagerEx2, (void**)&sec_mgr2);
-    ok(hres == S_OK, "QueryInterface(IID_IInternetSecurityManagerEx2) failed: %08x\n", hres);
+    ok(hres == S_OK, "QueryInterface(IID_IInternetSecurityManagerEx2) failed: %08lx\n", hres);
 
     zone = 0xdeadbeef;
 
     hres = IInternetSecurityManagerEx2_MapUrlToZoneEx2(sec_mgr2, NULL, &zone, 0, NULL, NULL);
-    ok(hres == E_INVALIDARG, "MapUrlToZoneEx2 returned %08x, expected E_INVALIDARG\n", hres);
-    ok(zone == URLZONE_INVALID, "zone was %d\n", zone);
+    ok(hres == E_INVALIDARG, "MapUrlToZoneEx2 returned %08lx, expected E_INVALIDARG\n", hres);
+    ok(zone == URLZONE_INVALID, "zone was %ld\n", zone);
 
     hres = IInternetSecurityManagerEx2_GetSecurityIdEx2(sec_mgr2, NULL, buf, &buf_size, 0);
-    ok(hres == E_INVALIDARG, "GetSecurityIdEx2 returned %08x, expected E_INVALIDARG\n", hres);
-    ok(buf_size == sizeof(buf), "buf_size was %d\n", buf_size);
+    ok(hres == E_INVALIDARG, "GetSecurityIdEx2 returned %08lx, expected E_INVALIDARG\n", hres);
+    ok(buf_size == sizeof(buf), "buf_size was %ld\n", buf_size);
 
     hres = pCreateUri(url5, 0, 0, &uri);
-    ok(hres == S_OK, "CreateUri failed: %08x\n", hres);
+    ok(hres == S_OK, "CreateUri failed: %08lx\n", hres);
 
     hres = IInternetSecurityManagerEx2_MapUrlToZoneEx2(sec_mgr2, uri, NULL, 0, NULL, NULL);
-    ok(hres == E_INVALIDARG, "MapToUrlZoneEx2 returned %08x, expected E_INVALIDARG\n", hres);
+    ok(hres == E_INVALIDARG, "MapToUrlZoneEx2 returned %08lx, expected E_INVALIDARG\n", hres);
 
     buf_size = sizeof(buf);
     hres = IInternetSecurityManagerEx2_GetSecurityIdEx2(sec_mgr2, uri, NULL, &buf_size, 0);
-    ok(hres == E_INVALIDARG || broken(hres == S_OK), "GetSecurityIdEx2 failed: %08x\n", hres);
-    ok(buf_size == sizeof(buf), "bug_size was %d\n", buf_size);
+    ok(hres == E_INVALIDARG || broken(hres == S_OK), "GetSecurityIdEx2 failed: %08lx\n", hres);
+    ok(buf_size == sizeof(buf), "bug_size was %ld\n", buf_size);
 
     hres = IInternetSecurityManagerEx2_GetSecurityIdEx2(sec_mgr2, uri, buf, NULL, 0);
-    ok(hres == E_INVALIDARG, "GetSecurityIdEx2 returned %08x, expected E_INVALIDARG\n", hres);
+    ok(hres == E_INVALIDARG, "GetSecurityIdEx2 returned %08lx, expected E_INVALIDARG\n", hres);
 
     IUri_Release(uri);
 
     for(i = 0; i < ARRAY_SIZE(sec_mgr_ex2_tests); ++i) {
-        LPWSTR uriW = a2w(sec_mgr_ex2_tests[i].uri);
-
         uri = NULL;
         zone = URLZONE_INVALID;
 
-        hres = pCreateUri(uriW, sec_mgr_ex2_tests[i].create_flags, 0, &uri);
-        ok(hres == S_OK, "CreateUri returned %08x for '%s'\n", hres, sec_mgr_ex2_tests[i].uri);
+        hres = pCreateUri(sec_mgr_ex2_tests[i].uri, sec_mgr_ex2_tests[i].create_flags, 0, &uri);
+        ok(hres == S_OK, "CreateUri returned %08lx for '%s'\n", hres, wine_dbgstr_w(sec_mgr_ex2_tests[i].uri));
 
         hres = IInternetSecurityManagerEx2_MapUrlToZoneEx2(sec_mgr2, uri, &zone, 0, NULL, NULL);
         todo_wine_if (sec_mgr_ex2_tests[i].map_todo) {
-            ok(hres == sec_mgr_ex2_tests[i].map_hres, "MapUrlToZoneEx2 returned %08x, expected %08x for '%s'\n",
-                hres, sec_mgr_ex2_tests[i].map_hres, sec_mgr_ex2_tests[i].uri);
-            ok(zone == sec_mgr_ex2_tests[i].zone, "Expected zone %d, but got %d for '%s'\n", sec_mgr_ex2_tests[i].zone,
-                zone, sec_mgr_ex2_tests[i].uri);
+            ok(hres == sec_mgr_ex2_tests[i].map_hres, "MapUrlToZoneEx2 returned %08lx, expected %08lx for '%s'\n",
+                hres, sec_mgr_ex2_tests[i].map_hres, wine_dbgstr_w(sec_mgr_ex2_tests[i].uri));
+            ok(zone == sec_mgr_ex2_tests[i].zone, "Expected zone %ld, but got %ld for '%s'\n", sec_mgr_ex2_tests[i].zone,
+                zone, wine_dbgstr_w(sec_mgr_ex2_tests[i].uri));
         }
 
         buf_size = sizeof(buf);
@@ -1846,37 +1818,36 @@ static void test_SecurityManagerEx2(void)
 
         hres = IInternetSecurityManagerEx2_GetSecurityIdEx2(sec_mgr2, uri, buf, &buf_size, 0);
         todo_wine_if (sec_mgr_ex2_tests[i].secid_todo) {
-            ok(hres == sec_mgr_ex2_tests[i].secid_hres, "GetSecurityIdEx2 returned %08x, expected %08x on test '%s'\n",
-                hres, sec_mgr_ex2_tests[i].secid_hres, sec_mgr_ex2_tests[i].uri);
+            ok(hres == sec_mgr_ex2_tests[i].secid_hres, "GetSecurityIdEx2 returned %08lx, expected %08lx on test '%s'\n",
+                hres, sec_mgr_ex2_tests[i].secid_hres, wine_dbgstr_w(sec_mgr_ex2_tests[i].uri));
             if(sec_mgr_ex2_tests[i].secid) {
-                ok(buf_size == sec_mgr_ex2_tests[i].secid_size, "Got wrong security id size=%d, expected %d on test '%s'\n",
-                    buf_size, sec_mgr_ex2_tests[i].secid_size, sec_mgr_ex2_tests[i].uri);
+                ok(buf_size == sec_mgr_ex2_tests[i].secid_size, "Got wrong security id size=%ld, expected %ld on test '%s'\n",
+                    buf_size, sec_mgr_ex2_tests[i].secid_size, wine_dbgstr_w(sec_mgr_ex2_tests[i].uri));
                 ok(!memcmp(buf, sec_mgr_ex2_tests[i].secid, sec_mgr_ex2_tests[i].secid_size), "Got wrong security id on test '%s'\n",
-                    sec_mgr_ex2_tests[i].uri);
+                    wine_dbgstr_w(sec_mgr_ex2_tests[i].uri));
             }
         }
 
-        heap_free(uriW);
         IUri_Release(uri);
     }
 
     hres = pCreateUri(url15, 0, 0, &uri);
-    ok(hres == S_OK, "CreateUri failed: %08x\n", hres);
+    ok(hres == S_OK, "CreateUri failed: %08lx\n", hres);
 
     buf_size = sizeof(buf);
     memset(buf, 0xf0, buf_size);
 
     hres = IInternetSecurityManagerEx2_GetSecurityIdEx2(sec_mgr2, uri, buf, &buf_size, (DWORD_PTR)domainW);
-    ok(hres == S_OK, "GetSecurityIdEx2 failed: %08x\n", hres);
-    todo_wine ok(buf_size == sizeof(secid13), "buf_size was %d\n", buf_size);
+    ok(hres == S_OK, "GetSecurityIdEx2 failed: %08lx\n", hres);
+    todo_wine ok(buf_size == sizeof(secid13), "buf_size was %ld\n", buf_size);
     todo_wine ok(!memcmp(buf, secid13, sizeof(secid13)), "Got wrong secid\n");
 
     buf_size = sizeof(buf);
     memset(buf, 0xf0, buf_size);
 
     hres = IInternetSecurityManagerEx2_GetSecurityIdEx2(sec_mgr2, uri, buf, &buf_size, 0);
-    ok(hres == S_OK, "GetSecurityIdEx2 failed: %08x\n", hres);
-    ok(buf_size == sizeof(secid13_2), "buf_size was %d\n", buf_size);
+    ok(hres == S_OK, "GetSecurityIdEx2 failed: %08lx\n", hres);
+    ok(buf_size == sizeof(secid13_2), "buf_size was %ld\n", buf_size);
     ok(!memcmp(buf, secid13_2, sizeof(secid13_2)), "Got wrong secid\n");
 
     IUri_Release(uri);
@@ -1888,25 +1859,24 @@ static void test_SecurityManagerEx2(void)
 static void test_CoInternetIsFeatureZoneElevationEnabled(void)
 {
     struct {
-        const char *url_from;
-        const char *url_to;
+        const WCHAR *url_from;
+        const WCHAR *url_to;
         DWORD flags;
         HRESULT hres;
         DWORD policy_flags;
     } testcases[] = {
-        /*  0 */ { "http://www.winehq.org", "http://www.winehq.org", 0, S_FALSE, URLPOLICY_ALLOW },
-        /*  1 */ { "http://www.winehq.org", "http://www.winehq.org", 0, S_OK, URLPOLICY_DISALLOW },
-        /*  2 */ { "http://www.winehq.org", "http://www.codeweavers.com", 0, S_FALSE, URLPOLICY_ALLOW },
-        /*  3 */ { "http://www.winehq.org", "http://www.codeweavers.com", 0, S_OK, URLPOLICY_DISALLOW },
-        /*  4 */ { "http://www.winehq.org", "http://www.winehq.org", GET_FEATURE_FROM_PROCESS, S_FALSE, -1 },
-        /*  5 */ { "http://www.winehq.org", "http://www.winehq.org/dir", GET_FEATURE_FROM_PROCESS, S_FALSE, -1 },
-        /*  6 */ { "http://www.winehq.org", "http://www.codeweavers.com", GET_FEATURE_FROM_PROCESS, S_FALSE, -1 },
-        /*  7 */ { "http://www.winehq.org", "ftp://winehq.org", GET_FEATURE_FROM_PROCESS, S_FALSE, -1 },
-        /*  8 */ { "http://www.winehq.org", "ftp://winehq.org", GET_FEATURE_FROM_PROCESS|0x100, S_FALSE, URLPOLICY_ALLOW },
-        /*  9 */ { "http://www.winehq.org", "ftp://winehq.org", GET_FEATURE_FROM_REGISTRY, S_FALSE, URLPOLICY_ALLOW },
+        /*  0 */ { L"http://www.winehq.org", L"http://www.winehq.org", 0, S_FALSE, URLPOLICY_ALLOW },
+        /*  1 */ { L"http://www.winehq.org", L"http://www.winehq.org", 0, S_OK, URLPOLICY_DISALLOW },
+        /*  2 */ { L"http://www.winehq.org", L"http://www.codeweavers.com", 0, S_FALSE, URLPOLICY_ALLOW },
+        /*  3 */ { L"http://www.winehq.org", L"http://www.codeweavers.com", 0, S_OK, URLPOLICY_DISALLOW },
+        /*  4 */ { L"http://www.winehq.org", L"http://www.winehq.org", GET_FEATURE_FROM_PROCESS, S_FALSE, -1 },
+        /*  5 */ { L"http://www.winehq.org", L"http://www.winehq.org/dir", GET_FEATURE_FROM_PROCESS, S_FALSE, -1 },
+        /*  6 */ { L"http://www.winehq.org", L"http://www.codeweavers.com", GET_FEATURE_FROM_PROCESS, S_FALSE, -1 },
+        /*  7 */ { L"http://www.winehq.org", L"ftp://winehq.org", GET_FEATURE_FROM_PROCESS, S_FALSE, -1 },
+        /*  8 */ { L"http://www.winehq.org", L"ftp://winehq.org", GET_FEATURE_FROM_PROCESS|0x100, S_FALSE, URLPOLICY_ALLOW },
+        /*  9 */ { L"http://www.winehq.org", L"ftp://winehq.org", GET_FEATURE_FROM_REGISTRY, S_FALSE, URLPOLICY_ALLOW },
     };
 
-    WCHAR *url_from, *url_to;
     int i;
     HRESULT hres;
 
@@ -1918,9 +1888,9 @@ static void test_CoInternetIsFeatureZoneElevationEnabled(void)
 
 
     hres = pCoInternetIsFeatureEnabled(FEATURE_ZONE_ELEVATION, GET_FEATURE_FROM_PROCESS);
-    ok(SUCCEEDED(hres), "CoInternetIsFeatureEnabled returned %x\n", hres);
+    ok(SUCCEEDED(hres), "CoInternetIsFeatureEnabled returned %lx\n", hres);
 
-    trace("Testing CoInternetIsFeatureZoneElevationEnabled... (%x)\n", hres);
+    trace("Testing CoInternetIsFeatureZoneElevationEnabled... (%lx)\n", hres);
 
     for(i = 0; i < ARRAY_SIZE(testcases); i++) {
         if(hres==S_OK && testcases[i].flags == GET_FEATURE_FROM_PROCESS)
@@ -1938,29 +1908,23 @@ static void test_CoInternetIsFeatureZoneElevationEnabled(void)
     }
 
     for(i = 0; i < ARRAY_SIZE(testcases); i++) {
-        url_from = a2w(testcases[i].url_from);
-        url_to = a2w(testcases[i].url_to);
-
         if(testcases[i].policy_flags != -1) {
             ProcessUrlAction_policy = testcases[i].policy_flags;
             SET_EXPECT(ProcessUrlAction);
         }
-        hres = pCoInternetIsFeatureZoneElevationEnabled(url_from, url_to,
+        hres = pCoInternetIsFeatureZoneElevationEnabled(testcases[i].url_from, testcases[i].url_to,
                 &security_manager, testcases[i].flags);
-        ok(hres == testcases[i].hres, "%d) CoInternetIsFeatureZoneElevationEnabled returned %x\n", i, hres);
+        ok(hres == testcases[i].hres, "%d) CoInternetIsFeatureZoneElevationEnabled returned %lx\n", i, hres);
         if(testcases[i].policy_flags != -1)
             CHECK_CALLED(ProcessUrlAction);
 
         if(testcases[i].policy_flags != -1)
             SET_EXPECT(ProcessUrlAction);
         hres = pCoInternetIsFeatureEnabledForUrl(FEATURE_ZONE_ELEVATION,
-                testcases[i].flags, url_to, &security_manager);
-        ok(hres == testcases[i].hres, "%d) CoInternetIsFeatureEnabledForUrl returned %x\n", i, hres);
+                testcases[i].flags, testcases[i].url_to, &security_manager);
+        ok(hres == testcases[i].hres, "%d) CoInternetIsFeatureEnabledForUrl returned %lx\n", i, hres);
         if(testcases[i].policy_flags != -1)
             CHECK_CALLED(ProcessUrlAction);
-
-        heap_free(url_from);
-        heap_free(url_to);
     }
 }
 

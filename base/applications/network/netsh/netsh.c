@@ -101,6 +101,8 @@ wmain(
 
     DPRINT("wmain(%S)\n", GetCommandLineW());
 
+    GetWmiVersionInfo();
+
     g_hModule = GetModuleHandle(NULL);
 
     /* Initialize the Console Standard Streams */
@@ -180,15 +182,15 @@ wmain(
             if ((index + 1) < argc)
             {
                 index++;
-                pszMachine = HeapAlloc(GetProcessHeap(), 0, (wcslen(argv[index]) + 1) * sizeof(WCHAR));
-                if (pszMachine == NULL)
+                g_pszMachine = HeapAlloc(GetProcessHeap(), 0, (wcslen(argv[index]) + 1) * sizeof(WCHAR));
+                if (g_pszMachine == NULL)
                 {
                     dwError = ERROR_NOT_ENOUGH_MEMORY;
                     PrintError(g_hModule, dwError);
                     goto done;
                 }
 
-                wcscpy(pszMachine, argv[index]);
+                wcscpy(g_pszMachine, argv[index]);
             }
             else
             {
@@ -252,8 +254,8 @@ wmain(
 
 done:
     /* FIXME: Cleanup code goes here */
-    if (pszMachine != NULL)
-        HeapFree(GetProcessHeap(), 0, pszMachine);
+    if (g_pszMachine != NULL)
+        HeapFree(GetProcessHeap(), 0, g_pszMachine);
 
     if (pszCommand != NULL)
         HeapFree(GetProcessHeap(), 0, pszCommand);
@@ -377,7 +379,7 @@ MatchTagsInCmdLine(
     _Inout_ LPWSTR *ppwcArguments,
     _In_ DWORD dwCurrentIndex,
     _In_ DWORD dwArgCount,
-    _In_ TAG_TYPE *pttTags,
+    _Inout_ TAG_TYPE *pttTags,
     _In_ DWORD dwTagCount,
     _Out_ DWORD *pdwTagType)
 {
@@ -546,13 +548,50 @@ PreprocessCommand(
     _Inout_ LPWSTR *ppwcArguments,
     _In_ DWORD dwCurrentIndex,
     _In_ DWORD dwArgCount,
-    _In_ TAG_TYPE *pttTags,
+    _Inout_ TAG_TYPE *pttTags,
     _In_ DWORD dwTagCount,
     _In_ DWORD dwMinArgs,
     _In_ DWORD dwMaxArgs,
     _Out_ DWORD *pdwTagType)
 {
-    DPRINT1("PreprocessCommand()\n");
+    DWORD i;
+    DWORD dwError = ERROR_SUCCESS;
+
+    DPRINT("PreprocessCommand()\n");
+
+    if ((ppwcArguments == NULL) || (pttTags == NULL) || (pdwTagType == NULL))
+        return ERROR_INVALID_PARAMETER;
+
+    if (((dwArgCount - dwCurrentIndex) < dwMinArgs) || ((dwArgCount - dwCurrentIndex) > dwMaxArgs))
+        return ERROR_INVALID_SYNTAX;
+
+    for (i = 0; i < dwTagCount; i++)
+    {
+        pttTags[i].bPresent = FALSE;
+    }
+
+    if ((dwArgCount - dwCurrentIndex) > 0)
+    {
+        dwError = MatchTagsInCmdLine(hModule,
+                                     ppwcArguments,
+                                     dwCurrentIndex,
+                                     dwArgCount,
+                                     pttTags,
+                                     dwTagCount,
+                                     pdwTagType);
+        if (dwError != ERROR_SUCCESS)
+        {
+            return dwError;
+        }
+    }
+
+    /* Fail, if a required tag is missing */
+    for (i = 0; i < dwTagCount; i++)
+    {
+        if ((pttTags[i].dwRequired & NS_REQ_PRESENT) && (pttTags[i].bPresent == FALSE))
+            return ERROR_INVALID_SYNTAX;
+    }
+
     return 0;
 }
 
@@ -604,8 +643,8 @@ PrintMessageFromModule(
     va_list ap;
 
     va_start(ap, dwMsgId);
-    Length = ConResPrintfExV(StdOut, hModule, dwMsgId,
-                             LANG_USER_DEFAULT, ap);
+    Length = ConResMsgPrintfExV(StdOut, hModule, 0, dwMsgId,
+                                LANG_USER_DEFAULT, &ap);
     va_end(ap);
 
     return (DWORD)Length;

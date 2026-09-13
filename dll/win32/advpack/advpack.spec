@@ -2,14 +2,14 @@
 2 stdcall DelNodeRunDLL32A(ptr ptr str long)
 3 stdcall DoInfInstall(ptr)
 4 stdcall DoInfInstallA(ptr) DoInfInstall
-# DoInfInstallW
+5 stdcall -stub -version=0x600+ DoInfInstallW(ptr)
 6 stdcall FileSaveRestore(ptr str str str long) FileSaveRestoreA
 7 stdcall FileSaveRestoreA(ptr str str str long)
 8 stdcall LaunchINFSectionA(ptr ptr str long)
 9 stdcall LaunchINFSectionEx(ptr ptr str long) LaunchINFSectionExA
 10 stdcall LaunchINFSectionExA(ptr ptr str long)
 11 stdcall RegisterOCX(ptr ptr str long)
-# RegisterOCXW
+12 stdcall -stub RegisterOCXW(ptr ptr wstr long)
 13 stdcall AddDelBackupEntry(str str str long) AddDelBackupEntryA
 14 stdcall AddDelBackupEntryA(str str str long)
 15 stdcall AddDelBackupEntryW(wstr wstr wstr long)

@@ -287,7 +287,11 @@ static void TEXT_PathEllipsify (HDC hdc, WCHAR *str, unsigned int max_len,
     lastFwdSlash = strrchrW (str, FORWARD_SLASH);
 #endif
     lastSlash = lastBkSlash > lastFwdSlash ? lastBkSlash : lastFwdSlash;
+#ifdef __REACTOS__
+    if (!lastSlash) lastSlash = str + *len_str;
+#else
     if (!lastSlash) lastSlash = str;
+#endif
     len_trailing = *len_str - (lastSlash - str);
 
     /* overlap-safe movement to the right */

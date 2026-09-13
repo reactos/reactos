@@ -16,6 +16,21 @@
 typedef HRESULT (WINAPI *FN_QuerySourceCreateFromKey)(HKEY, PCWSTR, BOOL, REFIID, PVOID*);
 static FN_QuerySourceCreateFromKey g_pQuerySourceCreateFromKey = NULL;
 
+template<class T> static LONG SafeRelease(T *p)
+{
+    return p ? p->Release() : 0;
+}
+
+static HRESULT QSCFK(HKEY hKey, PCWSTR pszKey, BOOL Create, REFIID riid, PVOID*ppv)
+{
+    return g_pQuerySourceCreateFromKey ? g_pQuerySourceCreateFromKey(hKey, pszKey, Create, riid, ppv) : E_NOTIMPL;
+}
+
+static HRESULT ShimverQSCFK(HKEY hKey, PCWSTR pszKey, BOOL Create, PVOID*ppv)
+{
+    return QSCFK(hKey, pszKey, Create, IsWindowsVistaOrGreater() ? IID_IQuerySource : IID_IQuerySourceOld, ppv);
+}
+
 static const WCHAR k_Root[]    = L"Software\\QuerySrcTest";
 static const WCHAR k_SubKeyA[] = L"SubKeyA";
 static const WCHAR k_SubKeyB[] = L"SubKeyB";
@@ -227,6 +242,22 @@ static void Test_CheckValues(void)
         pSrc->Release();
 }
 
+void Test_Version(void)
+{
+    IUnknown *pUnk, *pUnk2;
+    REFIID riidQS = IsWindowsVistaOrGreater() ? IID_IQuerySource : IID_IQuerySourceOld;
+    HRESULT hr;
+    hr = ShimverQSCFK(HKEY_CURRENT_USER, k_Root, FALSE, (pUnk = NULL, (PVOID*)&pUnk));
+    ok_hr(hr, S_OK);
+    SafeRelease(pUnk);
+
+    hr = QSCFK(HKEY_CURRENT_USER, k_Root, FALSE, IID_IUnknown, (pUnk = NULL, (PVOID*)&pUnk));
+    hr = pUnk ? pUnk->QueryInterface(riidQS, (void**)&pUnk2) : E_FAIL;
+    ok_hr(hr, S_OK);
+    SafeRelease(pUnk2);
+    SafeRelease(pUnk);
+}
+
 START_TEST(QuerySourceCreateFromKey)
 {
     if (IsWindowsVistaOrGreater())
@@ -250,6 +281,7 @@ START_TEST(QuerySourceCreateFromKey)
     Test_EnumValues();
     Test_EnumSources();
     Test_CheckValues();
+    Test_Version();
 
     CleanupRegistry();
 

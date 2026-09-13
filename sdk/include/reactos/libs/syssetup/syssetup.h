@@ -48,7 +48,7 @@ typedef struct _SETUPDATA
     WCHAR ComputerName[MAX_COMPUTERNAME_LENGTH + 1];  /* max. 15 characters */
     WCHAR AdminPassword[128];                         /* max. 127 characters */
     BOOL  UnattendSetup;
-    BOOL  DisableGeckoInst;
+    BOOL  RappsDownload;
 
     SYSTEMTIME SystemTime;
     struct _TIMEZONE_ENTRY* TimeZoneListHead;

@@ -212,6 +212,7 @@ CliImmSetHotKey(
                     !(IME_HOTKEY_DSWITCH_FIRST <= dwHotKeyId &&
                       dwHotKeyId <= IME_HOTKEY_DSWITCH_LAST), _Null_) HKL hKL);
 
+BOOL WINAPI IsServerSideWindow(HWND);
 HWND WINAPI SetTaskmanWindow(HWND);
 HWND WINAPI GetTaskmanWindow(VOID);
 HWND WINAPI GetProgmanWindow(VOID);

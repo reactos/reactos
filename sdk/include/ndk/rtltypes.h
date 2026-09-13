@@ -81,6 +81,14 @@ extern "C" {
 #define RTL_RANGE_LIST_ADD_IF_CONFLICT                      0x00000001
 #define RTL_RANGE_LIST_ADD_SHARED                           0x00000002
 
+//
+// Flags for RtlIsRangeAvailable
+//
+// Both are viewable through PCI.sys's behaviors on ROM space and Shared IRQs.
+//
+#define RTL_RANGE_LIST_SHARED_OK                           0x00000001
+#define RTL_RANGE_LIST_NULL_CONFLICT_OK                    0x00000002
+
 #define RTL_RANGE_SHARED                                    0x01
 #define RTL_RANGE_CONFLICT                                  0x02
 

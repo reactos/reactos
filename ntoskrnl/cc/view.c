@@ -166,9 +166,20 @@ CcRosFlushVacb (
 {
     NTSTATUS Status;
     BOOLEAN HaveLock = FALSE;
+    BOOLEAN WasMarked;
     PROS_SHARED_CACHE_MAP SharedCacheMap = Vacb->SharedCacheMap;
 
-    CcRosUnmarkDirtyVacb(Vacb, TRUE);
+    /*
+     * Remove the VACB from the dirty list before flushing. The return value
+     * tells us whether the VACB was actually dirty at this point.
+     * If WasMarked is FALSE a concurrent flush already removed it from the
+     * dirty list. We still call MmFlushSegment because the caller expects a
+     * reliable status: if we returned STATUS_SUCCESS immediately, the caller
+     * would believe the data was safely written when in fact the concurrent
+     * flush may have failed. We must not re-mark dirty on failure in this
+     * case, however, as we were not the one who removed the VACB from the list.
+     */
+    WasMarked = CcRosUnmarkDirtyVacb(Vacb, TRUE);
 
     /* Lock for flush, if we are not already the top-level */
     if (IoGetTopLevelIrp() != (PIRP)FSRTL_CACHE_TOP_LEVEL_IRP)
@@ -191,7 +202,17 @@ CcRosFlushVacb (
 
 quit:
     if (!NT_SUCCESS(Status))
-        CcRosMarkDirtyVacb(Vacb);
+    {
+        /*
+         * Only re-mark dirty if we were the thread that removed it from the
+         * dirty list. If WasMarked is FALSE, another thread already removed it,
+         * so we must not change dirty tracking here (that thread will re-mark on failure).
+         * CcRosMarkDirtyVacb itself guards against double-insertion should
+         * another thread have concurrently re-marked the VACB dirty.
+         */
+        if (WasMarked)
+            CcRosMarkDirtyVacb(Vacb);
+    }
     else
     {
         /* Update VDL */
@@ -214,18 +235,29 @@ CcRosDeleteFileCache (
  * FUNCTION: Releases the shared cache map associated with a file object
  */
 {
-    PLIST_ENTRY current_entry;
+    LIST_ENTRY LocalVacbList;
 
     ASSERT(SharedCacheMap);
     ASSERT(SharedCacheMap == FileObject->SectionObjectPointer->SharedCacheMap);
     ASSERT(SharedCacheMap->OpenCount == 0);
 
-    /* Remove all VACBs from the global lists */
+    InitializeListHead(&LocalVacbList);
+
+    /*
+     * Remove all VACBs from the global lists while holding the lock. By also
+     * removing them from CacheMapVacbListHead here (under the lock), we ensure
+     * that a concurrent CcRosLookupVacb (which also holds the lock) cannot find
+     * any of these VACBs after we release the lock. Without this, a caller that
+     * already has a SharedCacheMap pointer (e.g. CcFlushCache) could look up a
+     * VACB between our lock release and the point where the second loop removes
+     * it from the list — leaving an outstanding reference that races with our
+     * CcRosVacbDecRefCount call below.
+     */
     KeAcquireSpinLockAtDpcLevel(&SharedCacheMap->CacheMapLock);
-    current_entry = SharedCacheMap->CacheMapVacbListHead.Flink;
-    while (current_entry != &SharedCacheMap->CacheMapVacbListHead)
+    while (!IsListEmpty(&SharedCacheMap->CacheMapVacbListHead))
     {
-        PROS_VACB Vacb = CONTAINING_RECORD(current_entry, ROS_VACB, CacheMapVacbListEntry);
+        PROS_VACB Vacb = CONTAINING_RECORD(SharedCacheMap->CacheMapVacbListHead.Flink,
+                                           ROS_VACB, CacheMapVacbListEntry);
 
         RemoveEntryList(&Vacb->VacbLruListEntry);
         InitializeListHead(&Vacb->VacbLruListEntry);
@@ -237,7 +269,13 @@ CcRosDeleteFileCache (
             Vacb->Dirty = TRUE;
         }
 
-        current_entry = current_entry->Flink;
+        /*
+         * Move this VACB from the shared cache map list to our private local
+         * list. After the lock is released, CcRosLookupVacb can no longer find
+         * it, so no new lookup references can be created.
+         */
+        RemoveEntryList(&Vacb->CacheMapVacbListEntry);
+        InsertTailList(&LocalVacbList, &Vacb->CacheMapVacbListEntry);
     }
 
     /* Make sure there is no trace anymore of this map */
@@ -248,9 +286,9 @@ CcRosDeleteFileCache (
     KeReleaseQueuedSpinLock(LockQueueMasterLock, *OldIrql);
 
     /* Now that we're out of the locks, free everything for real */
-    while (!IsListEmpty(&SharedCacheMap->CacheMapVacbListHead))
+    while (!IsListEmpty(&LocalVacbList))
     {
-        PROS_VACB Vacb = CONTAINING_RECORD(RemoveHeadList(&SharedCacheMap->CacheMapVacbListHead), ROS_VACB, CacheMapVacbListEntry);
+        PROS_VACB Vacb = CONTAINING_RECORD(RemoveHeadList(&LocalVacbList), ROS_VACB, CacheMapVacbListEntry);
         ULONG RefCount;
 
         InitializeListHead(&Vacb->CacheMapVacbListEntry);
@@ -595,11 +633,23 @@ CcRosReleaseVacb (
     BOOLEAN Dirty,
     BOOLEAN Mapped)
 {
-    ULONG Refs;
     ASSERT(SharedCacheMap);
 
     DPRINT("CcRosReleaseVacb(SharedCacheMap 0x%p, Vacb 0x%p)\n", SharedCacheMap, Vacb);
 
+    /*
+     * NOTE: Vacb->Dirty is read here without holding the spinlock as an
+     * optimisation to avoid an unnecessary lock acquisition. The check may
+     * race with a concurrent CcRosUnmarkDirtyVacb; however CcRosMarkDirtyVacb
+     * re-checks Dirty under the lock and is a safe no-op if the VACB has
+     * already been re-marked dirty by another thread in the meantime.
+     * If Vacb->Dirty is TRUE at the check (so we skip marking) and a concurrent
+     * flush then immediately unmarks it, that flush's MmFlushSegment call covers
+     * all dirty section pages, including those written by the caller of this
+     * function. Should that flush fail, CcRosFlushVacb re-marks the VACB dirty
+     * (WasMarked == TRUE path), ensuring those pages are retried. No dirty data
+     * can be silently lost through this race.
+     */
     if (Dirty && !Vacb->Dirty)
     {
         CcRosMarkDirtyVacb(Vacb);
@@ -613,8 +663,15 @@ CcRosReleaseVacb (
         }
     }
 
-    Refs = CcRosVacbDecRefCount(Vacb);
-    ASSERT(Refs > 0);
+    /*
+     * Release the caller's reference. The return value may legitimately be 0
+     * when CcRosDeleteFileCache has concurrently removed the cache-map-list
+     * reference while we held a lookup reference: our decrement is then the
+     * last one and CcRosVacbDecRefCount frees the VACB. That is safe because
+     * callers (e.g. CcFlushCache) do not access the VACB pointer after this
+     * call. Do NOT assert the result is > 0 here.
+     */
+    CcRosVacbDecRefCount(Vacb);
 
     return STATUS_SUCCESS;
 }
@@ -675,7 +732,18 @@ CcRosMarkDirtyVacb (
     oldIrql = KeAcquireQueuedSpinLock(LockQueueMasterLock);
     KeAcquireSpinLockAtDpcLevel(&SharedCacheMap->CacheMapLock);
 
-    ASSERT(!Vacb->Dirty);
+    if (Vacb->Dirty)
+    {
+        /*
+         * The VACB was already re-marked dirty by another thread between
+         * CcRosUnmarkDirtyVacb and this call (e.g. a concurrent writer via
+         * CcRosReleaseVacb) and the VACB has already been inserted into
+         * the dirty list.
+         */
+        KeReleaseSpinLockFromDpcLevel(&SharedCacheMap->CacheMapLock);
+        KeReleaseQueuedSpinLock(LockQueueMasterLock, oldIrql);
+        return;
+    }
 
     InsertTailList(&DirtyVacbListHead, &Vacb->DirtyVacbListEntry);
     /* FIXME: There is no reason to account for the whole VACB. */
@@ -699,7 +767,7 @@ CcRosMarkDirtyVacb (
     KeReleaseQueuedSpinLock(LockQueueMasterLock, oldIrql);
 }
 
-VOID
+BOOLEAN
 CcRosUnmarkDirtyVacb (
     PROS_VACB Vacb,
     BOOLEAN LockViews)
@@ -715,7 +783,20 @@ CcRosUnmarkDirtyVacb (
         KeAcquireSpinLockAtDpcLevel(&SharedCacheMap->CacheMapLock);
     }
 
-    ASSERT(Vacb->Dirty);
+    if (!Vacb->Dirty)
+    {
+        ASSERT(LockViews);
+        /*
+         * The VACB was already unmarked by a concurrent flush (e.g. the lazy
+         * writer) between the caller's lockless Dirty check and this call.
+         * Proceeding would underflow CcTotalDirtyPages/DirtyPages, drop an
+         * extra refcount, and could ultimately free the VACB prematurely.
+         */
+        KeReleaseSpinLockFromDpcLevel(&SharedCacheMap->CacheMapLock);
+        KeReleaseQueuedSpinLock(LockQueueMasterLock, oldIrql);
+
+        return FALSE;
+    }
 
     Vacb->Dirty = FALSE;
 
@@ -732,6 +813,8 @@ CcRosUnmarkDirtyVacb (
         KeReleaseSpinLockFromDpcLevel(&SharedCacheMap->CacheMapLock);
         KeReleaseQueuedSpinLock(LockQueueMasterLock, oldIrql);
     }
+
+    return TRUE;
 }
 
 BOOLEAN
@@ -1160,6 +1243,13 @@ CcFlushCache (
 
         if (vacb != NULL)
         {
+            /*
+             * NOTE: vacb->Dirty is read here without holding the spinlock.
+             * The lock was released by CcRosLookupVacb before returning. A
+             * concurrent flush (lazy writer) may therefore clear Dirty between
+             * this check and the CcRosFlushVacb call below. CcRosFlushVacb
+             * handles this safely via the guarded CcRosUnmarkDirtyVacb path.
+             */
             if (vacb->Dirty)
             {
                 IO_STATUS_BLOCK VacbIosb = { 0 };

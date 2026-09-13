@@ -57,105 +57,105 @@ static ULONG WINAPI AccPropServices_Release(IAccPropServices *iface)
 static HRESULT WINAPI AccPropServices_SetPropValue(IAccPropServices *iface, const BYTE *pIDString,
         DWORD dwIDStringLen, MSAAPROPID idProp, VARIANT var)
 {
-    FIXME("(%p %u %s %s)\n", pIDString, dwIDStringLen, debugstr_guid(&idProp), debugstr_variant(&var));
+    FIXME("(%p %lu %s %s)\n", pIDString, dwIDStringLen, debugstr_guid(&idProp), debugstr_variant(&var));
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI AccPropServices_SetPropServer(IAccPropServices *iface, const BYTE *pIDString,
         DWORD dwIDStringLen, const MSAAPROPID *paProps, int cProps, IAccPropServer *pServer, AnnoScope AnnoScope)
 {
-    FIXME("(%p %u %p %d %p %u)\n", pIDString, dwIDStringLen, paProps, cProps, pServer, AnnoScope);
+    FIXME("(%p %lu %p %d %p %u)\n", pIDString, dwIDStringLen, paProps, cProps, pServer, AnnoScope);
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI AccPropServices_ClearProps(IAccPropServices *iface, const BYTE *pIDString,
         DWORD dwIDStringLen, const MSAAPROPID *paProps, int cProps)
 {
-    FIXME("(%p %u %p %d)\n", pIDString, dwIDStringLen, paProps, cProps);
+    FIXME("(%p %lu %p %d)\n", pIDString, dwIDStringLen, paProps, cProps);
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI AccPropServices_SetHwndProp(IAccPropServices *iface, HWND hwnd, DWORD idObject,
         DWORD idChild, MSAAPROPID idProp, VARIANT var)
 {
-    FIXME("(%p %u %u %s %s)\n", hwnd, idObject, idChild, debugstr_guid(&idProp), debugstr_variant(&var));
+    FIXME("(%p %lu %lu %s %s)\n", hwnd, idObject, idChild, debugstr_guid(&idProp), debugstr_variant(&var));
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI AccPropServices_SetHwndPropStr(IAccPropServices *iface, HWND hwnd, DWORD idObject,
         DWORD idChild, MSAAPROPID idProp, LPWSTR str)
 {
-    FIXME("(%p %u %u %s %s)\n", hwnd, idObject, idChild, debugstr_guid(&idProp), debugstr_w(str));
+    FIXME("(%p %lu %lu %s %s)\n", hwnd, idObject, idChild, debugstr_guid(&idProp), debugstr_w(str));
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI AccPropServices_SetHwndPropServer(IAccPropServices *iface, HWND hwnd, DWORD idObject,
         DWORD idChild, const MSAAPROPID *paProps, int cProps, IAccPropServer *pServer, AnnoScope AnnoScope)
 {
-    FIXME("(%p %u %u %p %d %p %u)\n", hwnd, idObject, idChild, paProps, cProps, pServer, AnnoScope);
+    FIXME("(%p %lu %lu %p %d %p %u)\n", hwnd, idObject, idChild, paProps, cProps, pServer, AnnoScope);
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI AccPropServices_ClearHwndProps(IAccPropServices *iface, HWND hwnd, DWORD idObject,
         DWORD idChild, const MSAAPROPID *paProps, int cProps)
 {
-    FIXME("(%p %u %u %p %d)\n", hwnd, idObject, idChild, paProps, cProps);
+    FIXME("(%p %lu %lu %p %d)\n", hwnd, idObject, idChild, paProps, cProps);
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI AccPropServices_ComposeHwndIdentityString(IAccPropServices *iface, HWND hwnd,
         DWORD idObject, DWORD idChild, BYTE **ppIDString, DWORD *pdwIDStringLen)
 {
-    FIXME("(%p %u %u %p %p)\n", hwnd, idObject, idChild, ppIDString, pdwIDStringLen);
+    FIXME("(%p %lu %lu %p %p)\n", hwnd, idObject, idChild, ppIDString, pdwIDStringLen);
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI AccPropServices_DecomposeHwndIdentityString(IAccPropServices *iface, const BYTE *pIDString,
         DWORD dwIDStringLen, HWND *phwnd, DWORD *pidObject, DWORD *pidChild)
 {
-    FIXME("(%p %u %p %p %p)\n", pIDString, dwIDStringLen, phwnd, pidObject, pidChild);
+    FIXME("(%p %lu %p %p %p)\n", pIDString, dwIDStringLen, phwnd, pidObject, pidChild);
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI AccPropServices_SetHmenuProp(IAccPropServices *iface, HMENU hmenu, DWORD idChild,
         MSAAPROPID idProp, VARIANT var)
 {
-    FIXME("(%p %u %s %s)\n", hmenu, idChild, debugstr_guid(&idProp), debugstr_variant(&var));
+    FIXME("(%p %lu %s %s)\n", hmenu, idChild, debugstr_guid(&idProp), debugstr_variant(&var));
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI AccPropServices_SetHmenuPropStr(IAccPropServices *iface, HMENU hmenu, DWORD idChild,
         MSAAPROPID idProp, LPWSTR str)
 {
-    FIXME("(%p %u %s %s)\n", hmenu, idChild, debugstr_guid(&idProp), debugstr_w(str));
+    FIXME("(%p %lu %s %s)\n", hmenu, idChild, debugstr_guid(&idProp), debugstr_w(str));
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI AccPropServices_SetHmenuPropServer(IAccPropServices *iface, HMENU hmenu, DWORD idChild,
         const MSAAPROPID *paProps, int cProps, IAccPropServer *pServer, AnnoScope AnnoScope)
 {
-    FIXME("(%p %u %p %d %p %u)\n", hmenu, idChild, paProps, cProps, pServer, AnnoScope);
+    FIXME("(%p %lu %p %d %p %u)\n", hmenu, idChild, paProps, cProps, pServer, AnnoScope);
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI AccPropServices_ClearHmenuProps(IAccPropServices *iface, HMENU hmenu, DWORD idChild,
         const MSAAPROPID *paProps, int cProps)
 {
-    FIXME("(%p %u %p %d)\n", hmenu, idChild, paProps, cProps);
+    FIXME("(%p %lu %p %d)\n", hmenu, idChild, paProps, cProps);
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI AccPropServices_ComposeHmenuIdentityString(IAccPropServices *iface, HMENU hmenu, DWORD idChild,
         BYTE **ppIDString, DWORD *pdwIDStringLen)
 {
-    FIXME("(%p %u %p %p)\n", hmenu, idChild, ppIDString, pdwIDStringLen);
+    FIXME("(%p %lu %p %p)\n", hmenu, idChild, ppIDString, pdwIDStringLen);
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI AccPropServices_DecomposeHmenuIdentityString(IAccPropServices *iface, const BYTE *pIDString,
         DWORD dwIDStringLen, HMENU *phmenu, DWORD *pidChild)
 {
-    FIXME("(%p %u %p %p\n", pIDString, dwIDStringLen, phmenu, pidChild);
+    FIXME("(%p %lu %p %p\n", pIDString, dwIDStringLen, phmenu, pidChild);
     return E_NOTIMPL;
 }
 

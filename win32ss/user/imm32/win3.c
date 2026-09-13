@@ -1456,7 +1456,7 @@ WINNLSTranslateMessageJ(
                         LPARAM lParam = pCurrent->lParam;
                         for (DWORD iCandForm = 0; iCandForm < MAX_CANDIDATEFORM; ++iCandForm)
                         {
-                            if (!(lParam & (1 << iCandForm)))
+                            if (!(lParam & (DWORD)(1 << iCandForm)))
                                 continue;
 
                             CandForm.dwIndex = iCandForm;

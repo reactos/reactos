@@ -11,6 +11,8 @@
 
 #include "resource.h"
 
+PCWSTR g_pszServiceName = L"W32Time";
+
 static
 PWSTR
 ReadString(
@@ -78,7 +80,7 @@ RegisterService(VOID)
     }
 
     hService = CreateServiceW(hServiceManager,
-                              L"W32Time",
+                              g_pszServiceName,
                               pszDisplayName,
                               GENERIC_WRITE,
                               SERVICE_WIN32_SHARE_PROCESS,
@@ -86,6 +88,11 @@ RegisterService(VOID)
                               SERVICE_ERROR_NORMAL,
                               L"%SystemRoot%\\system32\\svchost.exe -k netsvcs",
                               L"Time", NULL, NULL, L"LocalSystem", NULL);
+
+    if (!hService && GetLastError() == ERROR_SERVICE_EXISTS)
+    {
+        hService = OpenServiceW(hServiceManager, g_pszServiceName, SERVICE_CHANGE_CONFIG);
+    }
     if (hService == NULL)
     {
         DPRINT1("CreateService() failed!\n");
@@ -277,10 +284,48 @@ DllRegisterServer(VOID)
 }
 
 
+static
+UINT
+UnregisterService(VOID)
+{
+    UINT error;
+    SC_HANDLE hServiceManager, hService;
+
+    hServiceManager = OpenSCManagerW(NULL, NULL, SC_MANAGER_CREATE_SERVICE);
+    if (!hServiceManager)
+    {
+        error = GetLastError();
+        DPRINT1("OpenSCManager() failed, error %lu\n", error);
+        return error;
+    }
+
+    hService = OpenServiceW(hServiceManager, g_pszServiceName, DELETE);
+    error = GetLastError();
+    CloseServiceHandle(hServiceManager);
+    if (!hService)
+    {
+        if (error == ERROR_SERVICE_DOES_NOT_EXIST)
+            return ERROR_SUCCESS;
+        DPRINT1("OpenService() failed, error %lu\n", error);
+    }
+    else
+    {
+        error = DeleteService(hService) ? ERROR_SUCCESS : GetLastError();
+        if (error == ERROR_SERVICE_MARKED_FOR_DELETE)
+            error = ERROR_SUCCESS;
+        if (error)
+            DPRINT1("DeleteService() failed, error %lu\n", error);
+
+        CloseServiceHandle(hService);
+    }
+    return error;
+}
+
+
 HRESULT
 WINAPI
 DllUnregisterServer(VOID)
 {
-    DPRINT1("DllUnregisterServer()\n");
-    return S_OK;
+    UINT error = UnregisterService();
+    return HRESULT_FROM_WIN32(error);
 }

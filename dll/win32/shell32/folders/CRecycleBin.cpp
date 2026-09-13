@@ -534,7 +534,7 @@ static HRESULT CALLBACK FileOpCallback(FILEOPCALLBACKEVENT Event, LPCWSTR Src, L
     {
         CComHeapPtr<ITEMIDLIST> pidlBB(SHCloneSpecialIDList(NULL, CSIDL_BITBUCKET, FALSE));
         CComPtr<IShellFolder> pSF;
-        if (pidlBB && SUCCEEDED(SHBindToObject(NULL, pidlBB, IID_PPV_ARG(IShellFolder, &pSF))))
+        if (pidlBB && SUCCEEDED(SHBindToObject(NULL, pidlBB, NULL, IID_PPV_ARG(IShellFolder, &pSF))))
         {
             if (IsRecycleBinEmpty(pSF))
                 SHUpdateRecycleBinIcon();

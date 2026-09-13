@@ -8,6 +8,7 @@
  *                  Ismael Ferreras Morezuelas <swyterzone+ros@gmail.com>
  *                  Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  *                  Oleg Dubinskiy <oleg.dubinskij30@gmail.com>
+ *                  Whindmar Saksit <whindsaks@proton.me>
  */
 
 /* INCLUDES *****************************************************************/
@@ -51,6 +52,13 @@ typedef struct _TIMEZONE_ENTRY
 /* FUNCTIONS ****************************************************************/
 
 extern void WINAPI Control_RunDLLW(HWND hWnd, HINSTANCE hInst, LPCWSTR cmd, DWORD nCmdShow);
+
+VOID
+GetSetupInfPath(PWSTR szPath, UINT cchMax)
+{
+    GetSystemDirectoryW(szPath, cchMax);
+    wcscat(szPath, L"\\$winnt$.inf");
+}
 
 static VOID
 CenterWindow(HWND hWnd)
@@ -422,7 +430,7 @@ static const WCHAR* InstallationTypes[INSTALLATION_TYPE_MAX] =
     // L"Nano Server"
 };
 
-static const WCHAR* s_DefaultSoundEvents[][2] = 
+static const WCHAR* s_DefaultSoundEvents[][2] =
 {
     { L".Default", L"%SystemRoot%\\Media\\ReactOS_Default.wav" },
     { L"AppGPFault", L"" },
@@ -452,7 +460,7 @@ static const WCHAR* s_DefaultSoundEvents[][2] =
 /* Logon sound is already set by default for both Server and Workstation */
 };
 
-static const WCHAR* s_ExplorerSoundEvents[][2] = 
+static const WCHAR* s_ExplorerSoundEvents[][2] =
 {
     { L"EmptyRecycleBin", L"%SystemRoot%\\Media\\ReactOS_Recycle.wav" },
     { L"Navigating", L"%SystemRoot%\\Media\\ReactOS_Start.wav" }
@@ -1160,9 +1168,13 @@ ComputerPageDlgProc(HWND hwndDlg,
             SetFocus(GetDlgItem(hwndDlg, IDC_COMPUTERNAME));
             if (pSetupData->UnattendSetup)
             {
-                SendMessage(GetDlgItem(hwndDlg, IDC_COMPUTERNAME), WM_SETTEXT, 0, (LPARAM)pSetupData->ComputerName);
-                SendMessage(GetDlgItem(hwndDlg, IDC_ADMINPASSWORD1), WM_SETTEXT, 0, (LPARAM)pSetupData->AdminPassword);
-                SendMessage(GetDlgItem(hwndDlg, IDC_ADMINPASSWORD2), WM_SETTEXT, 0, (LPARAM)pSetupData->AdminPassword);
+                /* "*" means use random name (we have already generated it above) */
+                if (pSetupData->ComputerName[0] == L'*' && !pSetupData->ComputerName[1])
+                    wcscpy(pSetupData->ComputerName, ComputerName);
+                else
+                    SetDlgItemTextW(hwndDlg, IDC_COMPUTERNAME, pSetupData->ComputerName);
+                SetDlgItemTextW(hwndDlg, IDC_ADMINPASSWORD1, pSetupData->AdminPassword);
+                SetDlgItemTextW(hwndDlg, IDC_ADMINPASSWORD2, pSetupData->AdminPassword);
                 WriteComputerSettings(pSetupData->ComputerName, NULL);
                 SetAdministratorPassword(pSetupData->AdminPassword);
             }
@@ -1303,80 +1315,94 @@ SetUserLocaleName(HWND hwnd)
 static VOID
 SetKeyboardLayoutName(HWND hwnd)
 {
-    HKL hkl;
-    BOOL LayoutSpecial = FALSE;
-    WCHAR LayoutPath[256];
-    WCHAR LocaleName[32];
-    WCHAR SpecialId[5] = L"";
-    WCHAR ResText[256] = L"";
-    DWORD dwValueSize;
     HKEY hKey;
-    UINT i;
+    LONG res;
+    DWORD dwSize, dwType;
+    WCHAR szKLID[KL_NAMELENGTH];
+    WCHAR szLayoutId[KL_NAMELENGTH];
+    WCHAR LayoutName[128];
+    WCHAR LayoutPath[256];
+    WCHAR ResText[256] = L"";
 
-    /* Get the default input language and method */
-    if (!SystemParametersInfoW(SPI_GETDEFAULTINPUTLANG, 0, (LPDWORD)&hkl, 0))
+    /*
+     * Determine the keyboard layout name currently used on the system.
+     *
+     * On Windows/ReactOS, there doesn't exist any straightforward way to
+     * retrieve the currently-used keyboard layout ID (KLID), from which
+     * its name can be obtained.
+     *
+     * - One way could be to retrieve the default input language and method,
+     *   via SystemParametersInfoW(SPI_GETDEFAULTINPUTLANG, ...), or via
+     *   GetKeyboardLayout(0). However, this provides a keyboard layout handle
+     *   instead, and there is no correct way to map it to a keyboard KLID.
+     *   https://archives.miloush.net/michkap/archive/2005/04/17/409032.html
+     *   https://archives.miloush.net/michkap/archive/2008/05/23/8537281.html
+     *   https://archives.miloush.net/michkap/archive/2008/09/29/8968315.html
+     *
+     * - A better way would be to use GetKeyboardLayoutNameW() to directly
+     *   retrieve the active keyboard layout ID. However, while this method
+     *   always gives the *correct* KLID, its drawback is that it works only
+     *   for the active (for the current thread) keyboard layout, not for an
+     *   arbitrary one.
+     *   https://archives.miloush.net/michkap/archive/2004/12/05/275231.html
+     *
+     * Instead, the chosen solution is to lookup the values directly from
+     * the registry. The initial active keyboard layout ID is read from the
+     * registry value "1" under the "HKCU\Keyboard Layout\Preload" key.
+     * Then, it is translated through the substitution mapping values under
+     * the "HKCU\Keyboard Layout\Substitutes" registry key.
+     * Finally, the obtained KLID is used to locate the actual keyboard layout
+     * under the "HKLM\SYSTEM\CurrentControlSet\Control\Keyboard Layouts" list.
+     */
+
+    /* Retrieve the current keyboard layout ID;
+     * fall back to the U.S. layout if none was found */
+    *szKLID = UNICODE_NULL;
+    if (RegOpenKeyExW(HKEY_CURRENT_USER, L"Keyboard Layout\\Preload",
+                      0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS)
     {
-        hkl = GetKeyboardLayout(0);
+        dwSize = sizeof(szKLID);
+        res = RegQueryValueExW(hKey, L"1", NULL, &dwType, (PBYTE)szKLID, &dwSize);
+        if ((res != ERROR_SUCCESS) || (dwType != REG_SZ) || (dwSize != sizeof(szKLID)))
+            *szKLID = UNICODE_NULL;
+        RegCloseKey(hKey);
+    }
+    if (!*szKLID)
+        wcscpy(szKLID, L"00000409");
+
+    /* If this is a substituted layout ID, replace it with the target ID */
+    if (RegOpenKeyExW(HKEY_CURRENT_USER, L"Keyboard Layout\\Substitutes",
+                      0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS)
+    {
+        dwSize = sizeof(szLayoutId);
+        res = RegQueryValueExW(hKey, szKLID, NULL, &dwType, (PBYTE)szLayoutId, &dwSize);
+        if ((res == ERROR_SUCCESS) && (dwType == REG_SZ) && (dwSize == sizeof(szKLID)))
+            wcscpy(szKLID, szLayoutId);
+        RegCloseKey(hKey);
     }
 
-    if ((HIWORD(hkl) & 0xF000) == 0xF000)
+    *LayoutName = UNICODE_NULL;
+
+    /* Open the layout ID registry key and retrieve its human-readable name */
+    StringCchPrintfW(LayoutPath, _countof(LayoutPath),
+                     L"SYSTEM\\CurrentControlSet\\Control\\Keyboard Layouts\\%s",
+                     szKLID);
+    if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, LayoutPath,
+                      0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS)
     {
-        /* Process keyboard layout with special id */
-        StringCchPrintfW(SpecialId, ARRAYSIZE(SpecialId), L"%04x", (HIWORD(hkl) & 0x0FFF));
-        LayoutSpecial = TRUE;
+        dwSize = sizeof(LayoutName);
+        res = RegQueryValueExW(hKey, L"Layout Text", NULL, &dwType, (PBYTE)LayoutName, &dwSize);
+        if ((res != ERROR_SUCCESS) || (dwType != REG_SZ))
+            *LayoutName = UNICODE_NULL;
+        RegCloseKey(hKey);
     }
 
-#define MAX_LAYOUTS_PER_LANGID 0x10000
-    for (i = 0; i < (LayoutSpecial ? MAX_LAYOUTS_PER_LANGID : 1); i++)
-    {
-        /* Generate a hexadecimal identifier for keyboard layout registry key */
-        StringCchPrintfW(LocaleName, ARRAYSIZE(LocaleName), L"%08lx", (i << 16) | LOWORD(hkl));
-
-        StringCchCopyW(LayoutPath, ARRAYSIZE(LayoutPath), L"SYSTEM\\CurrentControlSet\\Control\\Keyboard Layouts\\");
-        StringCchCatW(LayoutPath, ARRAYSIZE(LayoutPath), LocaleName);
-        *LocaleName = UNICODE_NULL;
-
-        if (RegOpenKeyExW(HKEY_LOCAL_MACHINE,
-                          LayoutPath,
-                          0,
-                          KEY_ALL_ACCESS,
-                          &hKey) == ERROR_SUCCESS)
-        {
-            /* Make sure the keyboard layout key we opened is the one we need.
-             * If the layout has no special id, just pass this check. */
-            dwValueSize = sizeof(LocaleName);
-            if (!LayoutSpecial ||
-                ((RegQueryValueExW(hKey,
-                                   L"Layout Id",
-                                   NULL,
-                                   NULL,
-                                   (PVOID)&LocaleName,
-                                   &dwValueSize) == ERROR_SUCCESS) &&
-                (wcscmp(LocaleName, SpecialId) == 0)))
-            {
-                *LocaleName = UNICODE_NULL;
-                dwValueSize = sizeof(LocaleName);
-                RegQueryValueExW(hKey,
-                                 L"Layout Text",
-                                 NULL,
-                                 NULL,
-                                 (PVOID)&LocaleName,
-                                 &dwValueSize);
-                /* Let the loop know where to stop */
-                i = MAX_LAYOUTS_PER_LANGID;
-            }
-            RegCloseKey(hKey);
-        }
-        else
-        {
-            /* Keyboard layout registry keys are expected to go in order without gaps */
-            break;
-        }
-    }
-#undef MAX_LAYOUTS_PER_LANGID
+    /* If no layout name was found, just display the current layout ID */
+    if (!*LayoutName)
+        wcscpy(LayoutName, szKLID);
 
     LoadStringW(hDllInstance, IDS_LAYOUTTEXT, ResText, ARRAYSIZE(ResText));
-    StringCchPrintfW(LayoutPath, ARRAYSIZE(LayoutPath), ResText, LocaleName);
+    StringCchPrintfW(LayoutPath, ARRAYSIZE(LayoutPath), ResText, LayoutName);
 
     SetWindowTextW(hwnd, LayoutPath);
 }
@@ -1557,7 +1583,7 @@ LocalePageDlgProc(HWND hwndDlg,
     PSETUPDATA SetupData;
 
     /* Retrieve pointer to the global setup data */
-    SetupData = (PSETUPDATA)GetWindowLongPtr(hwndDlg, GWLP_USERDATA);
+    SetupData = (PSETUPDATA)GetWindowLongPtr(hwndDlg, DWLP_USER);
 
     switch (uMsg)
     {
@@ -1565,7 +1591,7 @@ LocalePageDlgProc(HWND hwndDlg,
         {
             /* Save pointer to the global setup data */
             SetupData = (PSETUPDATA)((LPPROPSHEETPAGE)lParam)->lParam;
-            SetWindowLongPtr(hwndDlg, GWLP_USERDATA, (DWORD_PTR)SetupData);
+            SetWindowLongPtr(hwndDlg, DWLP_USER, (DWORD_PTR)SetupData);
             WriteUserLocale();
 
             SetUserLocaleName(GetDlgItem(hwndDlg, IDC_LOCALETEXT));
@@ -1973,7 +1999,7 @@ DateTimePageDlgProc(HWND hwndDlg,
     PSETUPDATA SetupData;
 
     /* Retrieve pointer to the global setup data */
-    SetupData = (PSETUPDATA)GetWindowLongPtr(hwndDlg, GWLP_USERDATA);
+    SetupData = (PSETUPDATA)GetWindowLongPtr(hwndDlg, DWLP_USER);
 
     switch (uMsg)
     {
@@ -1984,7 +2010,7 @@ DateTimePageDlgProc(HWND hwndDlg,
 
             /* Save pointer to the global setup data */
             SetupData = (PSETUPDATA)((LPPROPSHEETPAGE)lParam)->lParam;
-            SetWindowLongPtr(hwndDlg, GWLP_USERDATA, (DWORD_PTR)SetupData);
+            SetWindowLongPtr(hwndDlg, DWLP_USER, (DWORD_PTR)SetupData);
 
             CreateTimeZoneList(SetupData);
 
@@ -2120,7 +2146,7 @@ ThemePageDlgProc(HWND hwndDlg,
     LPNMLISTVIEW pnmv;
 
     /* Retrieve pointer to the global setup data */
-    SetupData = (PSETUPDATA)GetWindowLongPtr(hwndDlg, GWLP_USERDATA);
+    SetupData = (PSETUPDATA)GetWindowLongPtr(hwndDlg, DWLP_USER);
 
     switch (uMsg)
     {
@@ -2133,7 +2159,7 @@ ThemePageDlgProc(HWND hwndDlg,
 
             /* Save pointer to the global setup data */
             SetupData = (PSETUPDATA)((LPPROPSHEETPAGE)lParam)->lParam;
-            SetWindowLongPtr(hwndDlg, GWLP_USERDATA, (DWORD_PTR)SetupData);
+            SetWindowLongPtr(hwndDlg, DWLP_USER, (DWORD_PTR)SetupData);
 
             hListView = GetDlgItem(hwndDlg, IDC_THEMEPICKER);
 
@@ -2481,7 +2507,10 @@ ItemCompletionThread(
     /* Step 2 - Saving Settings */
     SaveSettings(pItemsData);
 
-    /* Step 3 - Removing temporary files */
+    /* Step 3 - Install optional components */
+    InstallOptionalComponents(pItemsData);
+
+    /* Step 4 - Removing temporary files */
 //    RemoveTempFiles(pItemsData);
 
     // FIXME: Move this call to a separate cleanup page!
@@ -2624,7 +2653,7 @@ ProcessPageDlgProc(HWND hwndDlg,
     static HFONT s_hNormalFont;
 
     /* Retrieve pointer to the global setup data */
-    SetupData = (PSETUPDATA)GetWindowLongPtr(hwndDlg, GWLP_USERDATA);
+    SetupData = (PSETUPDATA)GetWindowLongPtr(hwndDlg, DWLP_USER);
 
     switch (uMsg)
     {
@@ -2632,9 +2661,9 @@ ProcessPageDlgProc(HWND hwndDlg,
         {
             /* Save pointer to the global setup data */
             SetupData = (PSETUPDATA)((LPPROPSHEETPAGE)lParam)->lParam;
-            SetWindowLongPtr(hwndDlg, GWLP_USERDATA, (DWORD_PTR)SetupData);
-            ShowDlgItem(hwndDlg, IDC_TASKTEXT4, SW_HIDE);
-            ShowDlgItem(hwndDlg, IDC_CHECK4, SW_HIDE);
+            SetWindowLongPtr(hwndDlg, DWLP_USER, (DWORD_PTR)SetupData);
+            ShowDlgItem(hwndDlg, IDC_TASKTEXT5, SW_HIDE);
+            ShowDlgItem(hwndDlg, IDC_CHECK5, SW_HIDE);
             s_hCheckIcon = LoadImageW(hDllInstance, MAKEINTRESOURCEW(IDI_CHECKICON), IMAGE_ICON, 16, 16, 0);
             s_hArrowIcon = LoadImageW(hDllInstance, MAKEINTRESOURCEW(IDI_ARROWICON), IMAGE_ICON, 16, 16, 0);
             s_hCrossIcon = LoadImageW(hDllInstance, MAKEINTRESOURCEW(IDI_CROSSICON), IMAGE_ICON, 16, 16, 0);
@@ -2732,31 +2761,38 @@ ProcessPageDlgProc(HWND hwndDlg,
 
 
 static VOID
-SetInstallationCompleted(VOID)
+SetInstallationCompleted(IN BOOL Unattended)
 {
     HKEY hKey = 0;
     DWORD InProgress = 0;
     DWORD InstallDate;
 
-    if (RegOpenKeyExW( HKEY_LOCAL_MACHINE,
-                       L"SYSTEM\\Setup",
-                       0,
-                       KEY_WRITE,
-                       &hKey ) == ERROR_SUCCESS)
-    {
-        RegSetValueExW( hKey, L"SystemSetupInProgress", 0, REG_DWORD, (LPBYTE)&InProgress, sizeof(InProgress) );
-        RegCloseKey( hKey );
-    }
-
-    if (RegOpenKeyExW( HKEY_LOCAL_MACHINE,
-                       L"Software\\Microsoft\\Windows NT\\CurrentVersion",
-                       0,
-                       KEY_WRITE,
-                       &hKey ) == ERROR_SUCCESS)
+    if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, L"Software\\Microsoft\\Windows NT\\CurrentVersion",
+                      0, KEY_WRITE, &hKey) == ERROR_SUCCESS)
     {
         InstallDate = (DWORD)time(NULL);
-        RegSetValueExW( hKey, L"InstallDate", 0, REG_DWORD, (LPBYTE)&InstallDate, sizeof(InstallDate) );
-        RegCloseKey( hKey );
+        RegSetValueExW(hKey, L"InstallDate", 0, REG_DWORD, (LPBYTE)&InstallDate, sizeof(InstallDate));
+        RegCloseKey(hKey);
+    }
+
+    if (Unattended)
+    {
+        WCHAR szInf[MAX_PATH];
+        WCHAR szInfCmd[MAX_PATH * 4], szCmd[_countof(szInfCmd)];
+
+        GetSetupInfPath(szInf, _countof(szInf));
+        if (GetPrivateProfileStringW(L"SetupParams", L"UserExecute", L"", szInfCmd, _countof(szInfCmd), szInf) && *szInfCmd)
+        {
+            *szCmd = UNICODE_NULL;
+            ExpandEnvironmentStringsW(szInfCmd, szCmd, _countof(szInfCmd));
+            RunCommandAndWait(szCmd);
+        }
+    }
+
+    if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, L"SYSTEM\\Setup", 0, KEY_WRITE, &hKey) == ERROR_SUCCESS)
+    {
+        RegSetValueExW(hKey, L"SystemSetupInProgress", 0, REG_DWORD, (LPBYTE)&InProgress, sizeof(InProgress));
+        RegCloseKey(hKey);
     }
 }
 
@@ -2773,12 +2809,6 @@ FinishDlgProc(HWND hwndDlg,
             /* Get pointer to the global setup data */
             PSETUPDATA SetupData = (PSETUPDATA)((LPPROPSHEETPAGE)lParam)->lParam;
 
-            if (!SetupData->UnattendSetup || !SetupData->DisableGeckoInst)
-            {
-                /* Run the Wine Gecko prompt */
-                Control_RunDLLW(hwndDlg, 0, L"appwiz.cpl,,install_gecko", SW_SHOW);
-            }
-
             /* Set title font */
             SendDlgItemMessage(hwndDlg,
                                IDC_FINISHTITLE,
@@ -2788,7 +2818,7 @@ FinishDlgProc(HWND hwndDlg,
             if (SetupData->UnattendSetup)
             {
                 KillTimer(hwndDlg, 1);
-                SetInstallationCompleted();
+                SetInstallationCompleted(TRUE);
                 PostQuitMessage(0);
             }
 
@@ -2800,7 +2830,7 @@ FinishDlgProc(HWND hwndDlg,
 
         case WM_DESTROY:
         {
-            SetInstallationCompleted();
+            SetInstallationCompleted(FALSE);
             PostQuitMessage(0);
             return TRUE;
         }
@@ -3031,12 +3061,12 @@ ProcessUnattendSection(
         {
             pSetupData->DisableAutoDaylightTimeSet = _wtoi(szValue);
         }
-        else if (!_wcsicmp(szName, L"DisableGeckoInst"))
+        else if (!_wcsicmp(szName, L"RappsDownload"))
         {
             if (!_wcsicmp(szValue, L"yes"))
-                pSetupData->DisableGeckoInst = TRUE;
+                pSetupData->RappsDownload = TRUE;
             else
-                pSetupData->DisableGeckoInst = FALSE;
+                pSetupData->RappsDownload = FALSE;
         }
         else if (!_wcsicmp(szName, L"InstallationType"))
         {
@@ -3333,8 +3363,7 @@ ProcessSetupInf(
     pSetupData->hSetupInf = INVALID_HANDLE_VALUE;
 
     /* Retrieve the path of the setup INF */
-    GetSystemDirectoryW(szPath, _countof(szPath));
-    wcscat(szPath, L"\\$winnt$.inf");
+    GetSetupInfPath(szPath, _countof(szPath));
 
     /* Open the setup INF */
     pSetupData->hSetupInf = SetupOpenInfFileW(szPath,

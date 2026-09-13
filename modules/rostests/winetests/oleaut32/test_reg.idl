@@ -25,6 +25,7 @@ import "oaidl.idl"; /* needed by widl */
 
 [
     uuid(a2cfdbd3-2bbf-4b1c-a414-5a5904e634c9),
+    id(3),
     version(1.0)
 ]
 library register_test
@@ -154,6 +155,22 @@ library register_test
         HRESULT testfunc([in] int i, [out, retval] int *p);
         [propget, id(4)]
         HRESULT testget([out, retval] ICollection **p);
+        [propget, id(5)]
+        HRESULT testget2([out, retval] int *value);
+        [propget, id(6)]
+        int testget3();
+        [propget, id(7)]
+        int testget4([in] int value);
+        [propget, id(8)]
+        int testget5([out,retval] int *value1, [in] int value2);
+        [propget, id(9)]
+        int testget6([in] int value1, [in] int value2);
+        [propget, id(10)]
+        void testget7([in] int value1, [in] int value2);
+        [propget, id(11)]
+        void testget8([out, retval] int* value);
+        [propput, id(11)]
+        void testput8([in] int value);
     }
 
     /* uuid is same as for test_struct2 in test_tlb.idl, fields are different */
@@ -162,5 +179,18 @@ library register_test
     {
         UINT32 field;
         HRESULT hr;
+    };
+
+    [
+        uuid(f073cd92-a199-11ea-bb37-0242ac130002),
+        dllname("test.dll")
+    ]
+    module TestGetDllEntry
+    {
+        [propget, entry(1)]
+        int test1([out] int *i);
+
+        [propput, entry(2)]
+        int test1([in] int i);
     };
 }

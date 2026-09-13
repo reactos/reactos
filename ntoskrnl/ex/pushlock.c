@@ -213,32 +213,50 @@ ExfWakePushLock(PEX_PUSH_LOCK PushLock,
 /*++
  * @name ExpOptimizePushLockList
  *
- *     The ExpOptimizePushLockList routine optimizes the list of waiters
- *     associated to a pushlock's wait block.
+ *     The ExpOptimizePushLockList routine completes the links in a push
+ *     lock waiter chain.
+ *
+ *     Wait blocks are inserted at the head using their Next link. This
+ *     routine fills the corresponding Previous links and caches the tail
+ *     pointer in the new head, allowing the wakeup to traverse the
+ *     chain without first scanning it from the head.
  *
  * @param PushLock
  *        Pointer to a pushlock whose waiter list needs to be optimized.
  *
- * @param OldValue
- *        Last known value of the pushlock before this routine was called.
+ * @param InitialValue
+ *        Last known value of the pushlock installed by the caller when
+ *        it inserted a new wait block and set the Waking bit.
  *
  * @return None.
  *
- * @remarks At the end of the optimization, the pushlock will also be wakened.
+ * @remarks If the pushlock remains locked, this routine completes
+ *          the wait block links and clears Waking. If the lock has
+ *          been released, the pushlock will be wakened.
  *
  *--*/
 VOID
 FASTCALL
 ExpOptimizePushLockList(PEX_PUSH_LOCK PushLock,
-                        EX_PUSH_LOCK OldValue)
+                        EX_PUSH_LOCK InitialValue)
 {
     PEX_PUSH_LOCK_WAIT_BLOCK WaitBlock, LastWaitBlock, PreviousWaitBlock, FirstWaitBlock;
-    EX_PUSH_LOCK NewValue;
+    EX_PUSH_LOCK OldValue, NewValue;
+
+    ASSERT(InitialValue.Locked);
+    ASSERT(InitialValue.Waiting);
+    ASSERT(InitialValue.Waking);
+
+    OldValue = InitialValue;
 
     /* Start main loop */
     for (;;)
     {
-        /* Check if we've been unlocked */
+        /*
+         * A release may have cleared Locked while this thread owned
+         * Waking. In that case, retain responsibility for the chain
+         * and proceed directly to wakeup.
+         */
         if (!OldValue.Locked)
         {
             /* Wake us up and leave */
@@ -246,34 +264,38 @@ ExpOptimizePushLockList(PEX_PUSH_LOCK PushLock,
             break;
         }
 
-        /* Get the wait block */
+        /* Start at the waiter chain head encoded in the lock value. */
         WaitBlock = (PEX_PUSH_LOCK_WAIT_BLOCK)(OldValue.Value &
                                                ~EX_PUSH_LOCK_PTR_BITS);
 
-        /* Loop the blocks */
         FirstWaitBlock = WaitBlock;
+
+        /*
+         * Follow Next links until reaching an already completed part
+         * of the chain. Complete the reverse links along the way.
+         */
         while (TRUE)
         {
-            /* Get the last wait block */
             LastWaitBlock = WaitBlock->Last;
             if (LastWaitBlock)
             {
-                /* Set this as the new last block, we're done */
+                /* Cache the chain tail in the current head. */
                 FirstWaitBlock->Last = LastWaitBlock;
                 break;
             }
 
-            /* Save the block */
             PreviousWaitBlock = WaitBlock;
 
-            /* Get the next block */
             WaitBlock = WaitBlock->Next;
 
-            /* Save the previous */
+            /* Link the older waiter back toward the chain head. */
             WaitBlock->Previous = PreviousWaitBlock;
         }
 
-        /* Remove the wake bit */
+        /*
+         * Release responsibility for the waiter chain now that its
+         * reverse links and cached tail are complete.
+         */
         NewValue.Value = OldValue.Value &~ EX_PUSH_LOCK_WAKING;
 
         /* Sanity checks */
@@ -285,10 +307,13 @@ ExpOptimizePushLockList(PEX_PUSH_LOCK PushLock,
                                                          NewValue.Ptr,
                                                          OldValue.Ptr);
 
-        /* If we updated correctly, leave */
+        /* If waking was cleared successfully, we're done */
         if (NewValue.Value == OldValue.Value) break;
 
-        /* Update value */
+        /*
+         * A waiter was inserted or the lock was released. Retry from
+         * the current lock value while keeping Waking ownership.
+         */
         OldValue = NewValue;
     }
 }
@@ -509,7 +534,7 @@ ExfAcquirePushLockExclusive(PEX_PUSH_LOCK PushLock)
             /* Check if there is already a waiter */
             if (OldValue.Waiting)
             {
-                /* Nobody is the last waiter yet */
+                /* The tail pointer is filled in when the wait list is linked */
                 WaitBlock->Last = NULL;
 
                 /* We are an exclusive waiter */
@@ -531,7 +556,7 @@ ExfAcquirePushLockExclusive(PEX_PUSH_LOCK PushLock)
             }
             else
             {
-                /* We are the first waiter, so loop the wait block */
+                /* The first waiter is both the head and the tail */
                 WaitBlock->Last = WaitBlock;
 
                 /* Set the share count */
@@ -644,7 +669,7 @@ VOID
 FASTCALL
 ExfAcquirePushLockShared(PEX_PUSH_LOCK PushLock)
 {
-    EX_PUSH_LOCK OldValue = *PushLock, NewValue;
+    EX_PUSH_LOCK OldValue = *PushLock, NewValue, TempValue;
     BOOLEAN NeedWake;
     EX_PUSH_LOCK_WAIT_BLOCK Block;
     PEX_PUSH_LOCK_WAIT_BLOCK WaitBlock = &Block;
@@ -700,7 +725,7 @@ ExfAcquirePushLockShared(PEX_PUSH_LOCK PushLock)
                 WaitBlock->Next = (PEX_PUSH_LOCK_WAIT_BLOCK)(
                                    OldValue.Value &~ EX_PUSH_LOCK_PTR_BITS);
 
-                /* Nobody is the last waiter yet */
+                /* The tail pointer is filled in when the wait list is linked */
                 WaitBlock->Last = NULL;
 
                 /* Point to ours */
@@ -715,7 +740,7 @@ ExfAcquirePushLockShared(PEX_PUSH_LOCK PushLock)
             }
             else
             {
-                /* We are the first waiter, so loop the wait block */
+                /* The first waiter is both the head and the tail */
                 WaitBlock->Last = WaitBlock;
 
                 /* Point to our wait block */
@@ -736,6 +761,7 @@ ExfAcquirePushLockShared(PEX_PUSH_LOCK PushLock)
 #endif
 
             /* Write the new value */
+            TempValue = NewValue;
             NewValue.Ptr = InterlockedCompareExchangePointer(&PushLock->Ptr,
                                                              NewValue.Ptr,
                                                              OldValue.Ptr);
@@ -746,14 +772,11 @@ ExfAcquirePushLockShared(PEX_PUSH_LOCK PushLock)
                 continue;
             }
 
-            /* Update the value now */
-            OldValue = NewValue;
-
             /* Check if the pushlock needed waking */
             if (NeedWake)
             {
                 /* Scan the Waiters and Wake PushLocks */
-                ExpOptimizePushLockList(PushLock, OldValue);
+                ExpOptimizePushLockList(PushLock, TempValue);
             }
 
             /* Set up the Wait Gate */
@@ -812,96 +835,104 @@ ExfReleasePushLock(PEX_PUSH_LOCK PushLock)
     EX_PUSH_LOCK OldValue = *PushLock, NewValue, WakeValue;
     PEX_PUSH_LOCK_WAIT_BLOCK WaitBlock, LastWaitBlock;
 
-    /* Sanity check */
+    /* The caller must hold the push lock */
     ASSERT(OldValue.Locked);
 
-    /* Start main loop */
     while (TRUE)
     {
-        /* Check if someone is waiting on the lock */
+        /*
+         * Without waiters, the upper bits contain the shared acquisition count.
+         * Drop one shared acquisition, or clear the lock word when releasing the
+         * final owner.
+         *
+         * A waiter may be inserted before the CMPXCHG completes. If that happens,
+         * continue using the value returned by the failed operation.
+         */
         if (!OldValue.Waiting)
         {
-            /* Check if it's shared */
             if (OldValue.Shared > 1)
             {
-                /* Write the Old Value but decrease share count */
                 NewValue = OldValue;
                 NewValue.Shared--;
             }
             else
             {
-                /* Simply clear the lock */
                 NewValue.Value = 0;
             }
 
-            /* Write the New Value */
             NewValue.Ptr = InterlockedCompareExchangePointer(&PushLock->Ptr,
                                                              NewValue.Ptr,
                                                              OldValue.Ptr);
             if (NewValue.Value == OldValue.Value) return;
 
-            /* Did it enter a wait state? */
             OldValue = NewValue;
         }
         else
         {
-            /* Ok, we do know someone is waiting on it. Are there more then one? */
+            /*
+             * Once waiters are queued, the upper bits hold a wait block pointer.
+             * If multiple shared owners existed when the first waiter was queued,
+             * their remaining count is stored in the oldest exclusive wait block,
+             * and MultipleShared marks that representation.
+             *
+             * If this call releases one of those shared owners, only the final
+             * shared release continues to unlock the push lock.
+             */
             if (OldValue.MultipleShared)
             {
-                /* Get the wait block */
                 WaitBlock = (PEX_PUSH_LOCK_WAIT_BLOCK)(OldValue.Value &
                                                        ~EX_PUSH_LOCK_PTR_BITS);
 
-                /* Loop until we find the last wait block */
+                /*
+                 * The push lock points to the newest wait block. Last contains
+                 * the oldest block once the list has been optimized; otherwise
+                 * follow Next until a wait block with Last set is found.
+                 */
                 while (TRUE)
                 {
-                    /* Get the last wait block */
                     LastWaitBlock = WaitBlock->Last;
-
-                    /* Did it exist? */
                     if (LastWaitBlock)
                     {
-                        /* Choose it */
                         WaitBlock = LastWaitBlock;
                         break;
                     }
 
-                    /* Keep searching */
                     WaitBlock = WaitBlock->Next;
                 }
 
-                /* Make sure the Share Count is above 0 */
+                /*
+                 * A generic release may reach this path after the saved shared
+                 * acquisition count has already been exhausted.
+                 */
                 if (WaitBlock->ShareCount > 0)
                 {
-                    /* This shouldn't be an exclusive wait block */
+                    /* The outstanding shared count is stored in the oldest exclusive waiter */
                     ASSERT(WaitBlock->Flags & EX_PUSH_LOCK_FLAGS_EXCLUSIVE);
 
-                    /* Do the decrease and check if the lock isn't shared anymore */
                     if (InterlockedDecrement(&WaitBlock->ShareCount) > 0) return;
                 }
             }
 
             /*
-             * If nobody was waiting on the block, then we possibly reduced the number
-             * of times the pushlock was shared, and we unlocked it.
-             * If someone was waiting, and more then one person is waiting, then we
-             * reduced the number of times the pushlock is shared in the wait block.
-             * Therefore, at this point, we can now 'satisfy' the wait.
+             * The final owner must clear Locked and MultipleShared. If no wakeup is
+             * in progress, it must also set Waking and process the wait list. A new
+             * waiter may be inserted while this update is being attempted, so both
+             * cases use CMPXCHG.
              */
             for (;;)
             {
-                /* Now we need to see if it's waking */
                 if (OldValue.Waking)
                 {
-                    /* Remove the lock and multiple shared bits */
+                    /*
+                     * Another thread owns wakeup. Leave Waking set and
+                     * clear only the ownership state.
+                     */
                     NewValue.Value = OldValue.Value;
                     NewValue.MultipleShared = FALSE;
                     NewValue.Locked = FALSE;
 
-                    /* Sanity check */
                     ASSERT(NewValue.Waking && !NewValue.Locked && !NewValue.MultipleShared);
 
-                    /* Write the new value */
                     NewValue.Ptr = InterlockedCompareExchangePointer(&PushLock->Ptr,
                                                                      NewValue.Ptr,
                                                                      OldValue.Ptr);
@@ -909,28 +940,36 @@ ExfReleasePushLock(PEX_PUSH_LOCK PushLock)
                 }
                 else
                 {
-                    /* Remove the lock and multiple shared bits */
+                    /*
+                     * No thread is responsible for wakeup yet. Clear the ownership state
+                     * and set Waking in the same atomic update so this thread becomes
+                     * responsible for processing the wait list.
+                     */
                     NewValue.Value = OldValue.Value;
                     NewValue.MultipleShared = FALSE;
                     NewValue.Locked = FALSE;
 
-                    /* It's not already waking, so add the wake bit */
                     NewValue.Waking = TRUE;
 
-                    /* Sanity check */
                     ASSERT(NewValue.Waking && !NewValue.Locked && !NewValue.MultipleShared);
 
-                    /* Write the new value */
                     WakeValue = NewValue;
                     NewValue.Ptr = InterlockedCompareExchangePointer(&PushLock->Ptr,
                                                                      NewValue.Ptr,
                                                                      OldValue.Ptr);
-                    if (NewValue.Value != OldValue.Value) continue;
-
-                    /* The write was successful. The pushlock is Unlocked and Waking */
-                    ExfWakePushLock(PushLock, WakeValue);
-                    return;
+                    if (NewValue.Value == OldValue.Value)
+                    {
+                        /* Wake the waiters after the state update succeeds */
+                        ExfWakePushLock(PushLock, WakeValue);
+                        return;
+                    }
                 }
+
+                /*
+                 * The failed CMPXCHG returned the current lock value, use it for
+                 * the next attempt.
+                 */
+                OldValue = NewValue;
             }
         }
     }
@@ -958,86 +997,94 @@ ExfReleasePushLockShared(PEX_PUSH_LOCK PushLock)
     EX_PUSH_LOCK OldValue = *PushLock, NewValue, WakeValue;
     PEX_PUSH_LOCK_WAIT_BLOCK WaitBlock, LastWaitBlock;
 
-    /* Check if someone is waiting on the lock */
+    /* The caller must hold the push lock */
+    ASSERT(OldValue.Locked);
+
+    /*
+     * Without waiters, the upper bits contain the shared acquisition count.
+     * Drop one shared acquisition, or clear the lock word when releasing the
+     * final owner.
+     *
+     * A waiter may be inserted before the CMPXCHG completes. If that happens,
+     * continue using the value returned by the failed operation.
+     */
     while (!OldValue.Waiting)
     {
-        /* Check if it's shared */
         if (OldValue.Shared > 1)
         {
-            /* Write the Old Value but decrease share count */
             NewValue = OldValue;
             NewValue.Shared--;
         }
         else
         {
-            /* Simply clear the lock */
             NewValue.Value = 0;
         }
 
-        /* Write the New Value */
         NewValue.Ptr = InterlockedCompareExchangePointer(&PushLock->Ptr,
                                                          NewValue.Ptr,
                                                          OldValue.Ptr);
         if (NewValue.Value == OldValue.Value) return;
 
-        /* Did it enter a wait state? */
         OldValue = NewValue;
     }
 
-    /* Ok, we do know someone is waiting on it. Are there more then one? */
+    /*
+     * Once waiters are queued, the upper bits hold a wait block pointer.
+     * If multiple shared owners existed when the first waiter was queued,
+     * their remaining count is stored in the oldest exclusive wait block,
+     * and MultipleShared marks that representation.
+     *
+     * Only the final shared release continues to unlock the push lock.
+     */
     if (OldValue.MultipleShared)
     {
-        /* Get the wait block */
         WaitBlock = (PEX_PUSH_LOCK_WAIT_BLOCK)(OldValue.Value &
                                                ~EX_PUSH_LOCK_PTR_BITS);
 
-        /* Loop until we find the last wait block */
+        /*
+         * The push lock points to the newest wait block. Last contains the
+         * oldest block once the list has been optimized; otherwise follow
+         * Next until a wait block with Last set is found.
+         */
         while (TRUE)
         {
-            /* Get the last wait block */
             LastWaitBlock = WaitBlock->Last;
-
-            /* Did it exist? */
             if (LastWaitBlock)
             {
-                /* Choose it */
                 WaitBlock = LastWaitBlock;
                 break;
             }
 
-            /* Keep searching */
             WaitBlock = WaitBlock->Next;
         }
 
-        /* Sanity checks */
+        /* The oldest exclusive waiter stores the remaining shared acquisitions */
         ASSERT(WaitBlock->ShareCount > 0);
         ASSERT(WaitBlock->Flags & EX_PUSH_LOCK_FLAGS_EXCLUSIVE);
 
-        /* Do the decrease and check if the lock isn't shared anymore */
         if (InterlockedDecrement(&WaitBlock->ShareCount) > 0) return;
     }
 
     /*
-     * If nobody was waiting on the block, then we possibly reduced the number
-     * of times the pushlock was shared, and we unlocked it.
-     * If someone was waiting, and more then one person is waiting, then we
-     * reduced the number of times the pushlock is shared in the wait block.
-     * Therefore, at this point, we can now 'satisfy' the wait.
+     * The final owner must clear Locked and MultipleShared. If no wakeup is
+     * in progress, it must also set Waking and process the wait list. A new
+     * waiter may be inserted while this update is being attempted, so both
+     * cases use CMPXCHG.
      */
     for (;;)
     {
-        /* Now we need to see if it's waking */
         if (OldValue.Waking)
         {
-            /* Remove the lock and multiple shared bits */
+            /*
+             * Another thread owns wakeup. Leave Waking set and
+             * clear only the ownership state.
+             */
             NewValue.Value = OldValue.Value;
             NewValue.MultipleShared = FALSE;
             NewValue.Locked = FALSE;
 
-            /* Sanity check */
             ASSERT(NewValue.Waking && !NewValue.Locked && !NewValue.MultipleShared);
 
-            /* Write the new value */
             NewValue.Ptr = InterlockedCompareExchangePointer(&PushLock->Ptr,
                                                              NewValue.Ptr,
                                                              OldValue.Ptr);
@@ -1045,28 +1092,36 @@ ExfReleasePushLockShared(PEX_PUSH_LOCK PushLock)
         }
         else
         {
-            /* Remove the lock and multiple shared bits */
+            /*
+             * No thread is responsible for wakeup yet. Clear the ownership state
+             * and set Waking in the same atomic update so this thread becomes
+             * responsible for processing the wait list.
+             */
             NewValue.Value = OldValue.Value;
             NewValue.MultipleShared = FALSE;
             NewValue.Locked = FALSE;
 
-            /* It's not already waking, so add the wake bit */
             NewValue.Waking = TRUE;
 
-            /* Sanity check */
             ASSERT(NewValue.Waking && !NewValue.Locked && !NewValue.MultipleShared);
 
-            /* Write the new value */
             WakeValue = NewValue;
             NewValue.Ptr = InterlockedCompareExchangePointer(&PushLock->Ptr,
                                                              NewValue.Ptr,
                                                              OldValue.Ptr);
-            if (NewValue.Value != OldValue.Value) continue;
-
-            /* The write was successful. The pushlock is Unlocked and Waking */
-            ExfWakePushLock(PushLock, WakeValue);
-            return;
+            if (NewValue.Value == OldValue.Value)
+            {
+                /* Wake the waiters after the state update succeeds */
+                ExfWakePushLock(PushLock, WakeValue);
+                return;
+            }
         }
+
+        /*
+         * The failed CMPXCHG returned the current lock value, use it for
+         * the next attempt.
+         */
+        OldValue = NewValue;
     }
 }
 

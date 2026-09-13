@@ -999,12 +999,22 @@ LWSTDAPI           AssocCreate(_In_ CLSID, _In_ REFIID, _Outptr_ LPVOID*);
 LWSTDAPI_(BOOL)    AssocIsDangerous(_In_ LPCWSTR);
 #endif // _WIN32_IE_IE60SP1
 
+typedef INT PERCEIVEDFLAG;
+#define PERCEIVEDFLAG_UNDEFINED 0x0000
+#define PERCEIVEDFLAG_SOFTCODED 0x0001
+#define PERCEIVEDFLAG_HARDCODED 0x0002
+#define PERCEIVEDFLAG_NATIVESUPPORT 0x0004
+#define PERCEIVEDFLAG_GDIPLUS 0x0010
+#define PERCEIVEDFLAG_WMSDK 0x0020
+#define PERCEIVEDFLAG_ZIPFOLDER 0x0040
+
 LWSTDAPI           AssocQueryStringA(_In_ ASSOCF, _In_ ASSOCSTR, _In_ LPCSTR, _In_opt_ LPCSTR, _Out_writes_opt_(*pcchOut) LPSTR, _Inout_ LPDWORD pcchOut);
 LWSTDAPI           AssocQueryStringW(_In_ ASSOCF, _In_ ASSOCSTR, _In_ LPCWSTR, _In_opt_ LPCWSTR, _Out_writes_opt_(*pcchOut) LPWSTR, _Inout_ LPDWORD pcchOut);
 LWSTDAPI           AssocQueryStringByKeyA(_In_ ASSOCF, _In_ ASSOCSTR, _In_ HKEY, _In_opt_ LPCSTR, _Out_writes_opt_(*pcchOut) LPSTR, _Inout_ LPDWORD pcchOut);
 LWSTDAPI           AssocQueryStringByKeyW(_In_ ASSOCF, _In_ ASSOCSTR, _In_ HKEY, _In_opt_ LPCWSTR, _Out_writes_opt_(*pcchOut) LPWSTR, _Inout_ LPDWORD pcchOut);
 LWSTDAPI           AssocQueryKeyA(_In_ ASSOCF, _In_ ASSOCKEY, _In_ LPCSTR, _In_opt_ LPCSTR, _Out_ PHKEY);
 LWSTDAPI           AssocQueryKeyW(_In_ ASSOCF, _In_ ASSOCKEY, _In_ LPCWSTR, _In_opt_ LPCWSTR, _Out_ PHKEY);
+LWSTDAPI           AssocGetPerceivedType(LPCWSTR lpszExt, PERCEIVED *lpType, INT *lpFlag, LPWSTR *lppszType);
 
 #ifdef UNICODE
 #define AssocQueryString       AssocQueryStringW

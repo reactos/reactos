@@ -44,6 +44,33 @@ typedef struct _DHCPCAPI_CLASSID
 } DHCPCAPI_CLASSID, *PDHCPCAPI_CLASSID, *LPDHCPCAPI_CLASSID;
 cpp_quote("#endif")
 
+cpp_quote("#ifndef _DHCPCAPI_RESULT_ARRAY_DEFINED_")
+cpp_quote("#define _DHCPCAPI_RESULT_ARRAY_DEFINED_")
+typedef struct _DHCPCAPI_RESULTS
+{
+    ULONG OptionId;
+    BOOL  IsVendor;
+    DWORD DataSize;
+    DWORD DataOffset;
+} DHCPCAPI_RESULTS, *LPDHCPCAPI_RESULTS;
+
+typedef struct _DHCPCAPI_RESULT_ARRAY
+{
+    ULONG ResultsCount;
+#if defined(__midl) || defined(__WIDL__)
+    [size_is(ResultsCount), unique] LPDHCPCAPI_RESULTS Results;
+#else
+    LPDHCPCAPI_RESULTS Results;
+#endif
+    ULONG DataSize;
+#if defined(__midl) || defined(__WIDL__)
+    [size_is(DataSize), unique] LPBYTE Data;
+#else
+    LPBYTE Data;
+#endif
+} DHCPCAPI_RESULT_ARRAY, *LPDHCPCAPI_RESULT_ARRAY;
+cpp_quote("#endif")
+
 [
     uuid(4D5839D6-01BC-559C-B2EC-7DF12EC1B7E6),
     version(0.0),
@@ -117,6 +144,6 @@ interface dhcpcsvc
         [in, string] LPWSTR AdapterName,
         [in, unique] DHCPCAPI_CLASSID *ClassId,
         [in, unique] DHCPCAPI_PARAMS_ARRAY *SendParams,
-        [in] DWORD Unknown5,
-        [in] DWORD Unknown6);
+        [in, unique] DHCPCAPI_PARAMS_ARRAY *RecdParams,
+        [in, out, unique] LPDHCPCAPI_RESULT_ARRAY *RecdResults);
 }

@@ -147,7 +147,7 @@ Language=Russian
 Служба журана событий была запущена.
 .
 Language=French
-Le service de journalisation des évènements a été démarré.
+Le service de journalisation des événements a été démarré.
 .
 Language=Polish
 Uruchomiono usługę Dziennik zdarzeń.
@@ -167,7 +167,7 @@ Language=Russian
 Служба журнала событий была остановлена.
 .
 Language=French
-Le service de journalisation des évènements a été arrêté.
+Le service de journalisation des événements a été arrêté.
 .
 Language=Polish
 Zatrzymano usługę Dziennik zdarzeń.
@@ -196,7 +196,7 @@ Language=Russian
 Служба журнала событий %0
 .
 Language=French
-Service de journalisation des évènements %0
+Service de journalisation des événements %0
 .
 Language=Polish
 Usługa Dziennik zdarzeń "%0"
@@ -256,7 +256,7 @@ Language=Russian
 Служба "%1" не смогла установить источник события.
 .
 Language=French
-Le service %1 n'a pas réussi à installer une source d'évènement.
+Le service %1 n'a pas réussi à installer une source d'événement.
 .
 Language=Polish
 Usługa %1 nie mogła skonfigurować źródła zdarzenia.
@@ -826,7 +826,7 @@ Language=Russian
 At least one service or driver failed during system startup.  Use Event Viewer to examine the event log for details.
 .
 Language=French
-Au moins un service ou pilote a échoué durant le démarrage du système. Utilisez la visionneuse d'évènements pour examiner les journaux d'évènements pour plus de détails.
+Au moins un service ou pilote a échoué durant le démarrage du système. Utilisez la visionneuse d'événements pour examiner les journaux d'événements pour plus de détails.
 .
 Language=Polish
 Przynajmniej jedna usługa lub jeden sterownik nie dały się uruchomić podczas uruchamiania systemu. Użyj Podglądu zdarzeń, aby znaleźć szczegółowe informacje w dzienniku zdarzeń.

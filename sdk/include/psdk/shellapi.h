@@ -572,6 +572,14 @@ ShellExecuteW(
 
 BOOL WINAPI ShellExecuteExA(_Inout_ LPSHELLEXECUTEINFOA);
 BOOL WINAPI ShellExecuteExW(_Inout_ LPSHELLEXECUTEINFOW);
+
+HRESULT WINAPI
+SHEvaluateSystemCommandTemplate(
+    _In_ PCWSTR pszCmdTemplate,
+    _Outptr_ PWSTR *ppszApplication,
+    _Outptr_opt_ PWSTR *ppszCommandLine,
+    _Outptr_opt_ PWSTR *ppszParameters);
+
 int WINAPI SHFileOperationA(_Inout_ LPSHFILEOPSTRUCTA);
 int WINAPI SHFileOperationW(_Inout_ LPSHFILEOPSTRUCTW);
 void WINAPI SHFreeNameMappings(_In_opt_ HANDLE);
@@ -865,6 +873,22 @@ typedef enum SHSTOCKICONID
   /* Missing: 141 - 174 */
   SIID_MAX_ICONS = 175
 } SHSTOCKICONID;
+
+typedef enum
+{
+  QUNS_NOT_PRESENT = 1,
+  QUNS_BUSY = 2,
+  QUNS_RUNNING_D3D_FULL_SCREEN = 3,
+  QUNS_PRESENTATION_MODE = 4,
+  QUNS_ACCEPTS_NOTIFICATIONS = 5,
+  QUNS_QUIET_TIME = 6,
+  QUNS_APP = 7
+} QUERY_USER_NOTIFICATION_STATE;
+
+HRESULT
+WINAPI
+SHQueryUserNotificationState(
+  _Out_ QUERY_USER_NOTIFICATION_STATE *pquns);
 
 #endif /* (NTDDI_VERSION >= NTDDI_VISTA) */
 

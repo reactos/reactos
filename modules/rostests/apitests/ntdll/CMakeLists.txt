@@ -62,10 +62,12 @@ list(APPEND SOURCE
     NtDuplicateToken.c
     NtFilterToken.c
     NtFreeVirtualMemory.c
+    NtGetCurrentProcessorNumberEx.c
     NtImpersonateAnonymousToken.c
     NtLoadUnloadKey.c
     NtMapViewOfSection.c
     NtMutant.c
+    NtNotifyChangeMultipleKeys.c
     NtOpenKey.c
     NtOpenProcessToken.c
     NtOpenThreadToken.c
@@ -123,8 +125,11 @@ list(APPEND SOURCE
     RtlHandle.c
     RtlImageDirectoryEntryToData.c
     RtlImageRvaToVa.c
+    RtlInitializeContext.c
+    RtlIsNameInExpression.c
     RtlIsNameLegalDOS8Dot3.c
     RtlLocale.c
+    RtlMemIoResource.c
     RtlMemoryStream.c
     RtlMultipleAllocateHeap.c
     RtlNtPathNameToDosPathName.c
@@ -153,11 +158,13 @@ if(ARCH STREQUAL "i386")
     add_asm_files(ntdll_apitest_asm
         ../crt/i386/setjmp_helper.s
         i386/NtContinue.S
+        i386/NtCreateThread.S
     )
 elseif(ARCH STREQUAL "amd64")
     add_asm_files(ntdll_apitest_asm
         ../crt/amd64/setjmp_helper.s
         amd64/NtContinue.S
+        amd64/NtCreateThread.S
     )
 endif()
 

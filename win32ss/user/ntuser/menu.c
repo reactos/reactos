@@ -321,7 +321,7 @@ IntDestroyMenuObject(PMENU Menu, BOOL bRecurse)
    {
       PWND Window;
 
-      if (PsGetCurrentProcessSessionId() == Menu->head.rpdesk->rpwinstaParent->dwSessionId)
+      if (PsGetCurrentProcessSessionId() == Menu->head.rpdesk->dwSessionId)
       {
          BOOL ret;
          if (Menu->hWnd)
@@ -5765,7 +5765,7 @@ NtUserGetTitleBarInfo(
     BOOLEAN retValue = FALSE;
 
     TRACE("Enter NtUserGetTitleBarInfo\n");
-    UserEnterExclusive();
+    UserEnterShared();
 
     /* Validate the window handle */
     if (!(WindowObject = UserGetWindowObject(hwnd)))
@@ -6315,7 +6315,7 @@ NtUserMenuItemFromPoint(
    int Ret = -1;
 
    TRACE("Enter NtUserMenuItemFromPoint\n");
-   UserEnterExclusive();
+   UserEnterShared();
 
    if (!(Menu = UserGetMenuObject(hMenu)))
    {
@@ -6348,7 +6348,7 @@ NtUserMenuItemFromPoint(
       }
    }
 
-   Ret = (mi ? i : NO_SELECTED_ITEM);
+   Ret = (i < Menu->cItems ? i : NO_SELECTED_ITEM);
 
 Exit:
    UserLeave();

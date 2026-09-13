@@ -703,6 +703,8 @@ ShowInfo(
 
         if (!bConnected)
         {
+            HeapFree(ProcessHeap, 0, pPerAdapterInfo);
+            pPerAdapterInfo = NULL;
             pAdapter = pAdapter->Next;
             continue;
         }

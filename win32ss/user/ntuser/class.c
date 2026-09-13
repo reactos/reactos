@@ -2956,7 +2956,7 @@ NtUserGetWOWClass(
         return FALSE;
     }
 
-    UserEnterExclusive();
+    UserEnterShared();
 
     pi = GetW32ProcessInfo();
 

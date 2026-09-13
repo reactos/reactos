@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+<MMC_ConsoleFile ConsoleVersion="2.0">
+  <VisualAttributes>
+    <Icon File="%windir%\system32\mmc.exe" />
+  </VisualAttributes>
+  <RosLaunch File="%windir%\explorer.exe" Parameters="/E,shell:::{20D04FE0-3AEA-1069-A2D8-08002B30309D}" />
+</MMC_ConsoleFile>

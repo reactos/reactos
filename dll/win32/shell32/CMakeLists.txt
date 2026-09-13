@@ -1,5 +1,6 @@
 PROJECT(SHELL)
 
+add_subdirectory(evalcmd)
 add_subdirectory(shelldesktop)
 add_subdirectory(shellmenu)
 add_subdirectory(shellrecyclebin)
@@ -45,6 +46,7 @@ list(APPEND SOURCE
     shell32.cpp
     utils.cpp
     CShellItem.cpp
+    CShellItemArray.cpp
     CShellLink.cpp
     CFolderOptions.cpp
     folders/CDesktopFolder.cpp
@@ -62,6 +64,7 @@ list(APPEND SOURCE
     droptargets/CexeDropHandler.cpp
     droptargets/CFSDropTarget.cpp
     droptargets/CRecyclerDropTarget.cpp
+    prop.cpp
     shldataobject.cpp
     shlexec.cpp
     shlfileop.cpp
@@ -73,6 +76,8 @@ list(APPEND SOURCE
     CDefViewBckgrndMenu.cpp
     stubs.cpp
     systray.cpp
+    CUserEventTimer.cpp
+    CUserEventTimer.h
     CUserNotification.cpp
     CDefaultContextMenu.cpp
     COpenWithMenu.cpp
@@ -81,6 +86,8 @@ list(APPEND SOURCE
     CCopyMoveToMenu.cpp
     CCopyAsPathMenu.cpp
     CShellDispatch.cpp
+    CShellLibrary.cpp
+    CShellLibrary.h
     CFolder.cpp
     CFolderItems.cpp
     CFolderItemVerbs.cpp)
@@ -131,8 +138,11 @@ if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
     target_compile_options(shell32 PRIVATE "$<$<COMPILE_LANGUAGE:CXX>:-Wno-overloaded-virtual>")
 endif()
 target_link_libraries(shell32 shellmenu shelldesktop wine uuid recyclebin cpprt atl_classes oldnames)
+if(DLL_EXPORT_VERSION GREATER_EQUAL 0x600)
+    target_link_libraries(shell32 evalcmd)
+endif()
 add_delay_importlibs(shell32 powrprof shdocvw devmgr winspool.drv winmm mpr uxtheme ole32 oleaut32 userenv browseui version fmifs netapi32 secur32)
-add_importlibs(shell32 advapi32 gdi32 user32 comctl32 comdlg32 shlwapi msvcrt kernel32 ntdll)
+add_importlibs(shell32 advapi32 gdi32 user32 comctl32 comdlg32 shlwapi shcore msvcrt kernel32 ntdll)
 add_dependencies(shell32 stdole2) # shell32_shldisp.tlb needs stdole2.tlb
 add_pch(shell32 precomp.h "${PCH_SKIP_SOURCE}")
 add_cd_file(TARGET shell32 DESTINATION reactos/system32 FOR all)

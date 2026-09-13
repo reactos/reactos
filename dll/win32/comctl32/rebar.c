@@ -469,7 +469,15 @@ static int round_child_height(const REBAR_BAND *lpBand, int cyHeight)
 {
     int cy = 0;
     if (lpBand->cyIntegral == 0)
+#ifdef __REACTOS__ /* Import fix from Wine-11.15 */
+    {
+        cyHeight = max(cyHeight, (int)lpBand->cyMinChild);
+        cyHeight = min(cyHeight, (int)lpBand->cyMaxChild);
         return cyHeight;
+    }
+#else
+        return cyHeight;
+#endif
     cy = max(cyHeight - (int)lpBand->cyMinChild, 0);
     cy = lpBand->cyMinChild + (cy/lpBand->cyIntegral) * lpBand->cyIntegral;
     cy = min(cy, lpBand->cyMaxChild);

@@ -8,7 +8,7 @@
 #include "precomp.h"
 
 static const CHAR szHostname[] = "reactos.org";
-static const INTERNET_PORT ServerPort = 8443;
+static const INTERNET_PORT ServerPort = 443;
 static const CHAR szServerFile[] = "testman/webservice/";
 
 /**

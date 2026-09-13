@@ -99,6 +99,7 @@ HKCR,"batfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shell32.dll
 HKCR,"batfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-153"
 HKCR,"batfile\shell\edit\command","",0x00020000,"%SystemRoot%\system32\notepad.exe ""%1"""
 HKCR,"batfile\shell\open\command","",0x00000000,"""%1"" %*"
+HKCR,"batfile\shellex\DropHandler","",0x00000000,"{86C86720-42A0-1069-A2E8-08002B30309D}"
 
 ; Certificate
 HKCR,".cer","",0x00000000,"cerfile"
@@ -115,6 +116,7 @@ HKCR,"cmdfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shell32.dll
 HKCR,"cmdfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-153"
 HKCR,"cmdfile\shell\edit\command","",0x00020000,"%SystemRoot%\system32\notepad.exe ""%1"""
 HKCR,"cmdfile\shell\open\command","",0x00000000,"""%1"" %*"
+HKCR,"cmdfile\shellex\DropHandler","",0x00000000,"{86C86720-42A0-1069-A2E8-08002B30309D}"
 
 ; DOS Applications
 HKCR,".com","",0x00000000,"comfile"
@@ -180,7 +182,7 @@ HKCR,"exefile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shell32.dll
 HKCR,"exefile\DefaultIcon","",0x00000000,"%1"
 HKCR,"exefile\shell\open\command","",0x00000000,"""%1"" %*"
 HKCR,"exefile\shell\runas\command","",0x00020000,"""%1"" %*"
-HKCR,"exefile\shellex\DropHandler","",0x00020000,"{86C86720-42A0-1069-A2E8-08002B30309D}"
+HKCR,"exefile\shellex\DropHandler","",0x00000000,"{86C86720-42A0-1069-A2E8-08002B30309D}"
 
 ; National Language Support File
 HKCR,".nls","",0x00000000,"nlsfile"
@@ -435,6 +437,12 @@ HKCR,"xslfile","",0x00000000,%XSLFILE%
 HKCR,"xslfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\msxml3r.dll,-2"
 HKCR,"xslfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\msxml3.dll,1"
 HKCR,"xslfile\shell\open\command","",0x00020000,"%SystemRoot%\system32\notepad.exe ""%1"""
+
+; MSC files
+HKCR,".msc","",0x00000000,"MSCFile"
+HKCR,"mscfile","",,"%MSCFILE%"
+HKCR,"mscfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\mmc.exe"
+HKCR,"mscfile\shell\open\command","",0x00020000,"%SystemRoot%\system32\mmc.exe ""%1"" %*"
 
 ; MSI files
 HKCR,".msi","",0x00000000,"Msi.Package"
@@ -823,6 +831,7 @@ AVIFILE="Video Clip"
 
 ;; Misc file types without friendly (localized in .dll resources) name
 CSSFILE="Cascading Style Sheet"
+MSCFILE="Management Console Document"
 SCFFILE="ReactOS Explorer Command"
 WMZFILE="Compressed Enhanced Metafile"
 WSFFILE="Windows Script File"

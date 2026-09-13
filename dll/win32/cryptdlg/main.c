@@ -16,12 +16,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define NONAMELESSUNION
-
 #include <stdarg.h>
-#ifdef __REACTOS__
-#include <wchar.h>
-#endif
 
 #include "windef.h"
 #include "winbase.h"
@@ -42,14 +37,10 @@ static HINSTANCE hInstance;
 
 BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 {
-    TRACE("(0x%p, %d, %p)\n", hinstDLL, fdwReason, lpvReserved);
+    TRACE("(0x%p, %ld, %p)\n", hinstDLL, fdwReason, lpvReserved);
 
     switch (fdwReason)
     {
-#ifndef __REACTOS__
-        case DLL_WINE_PREATTACH:
-            return FALSE;    /* prefer native version */
-#endif
         case DLL_PROCESS_ATTACH:
             DisableThreadLibraryCalls(hinstDLL);
             hInstance = hinstDLL;
@@ -90,7 +81,7 @@ HRESULT WINAPI CertTrustInit(CRYPT_PROVIDER_DATA *pProvData)
     if (pProvData->padwTrustStepErrors &&
      !pProvData->padwTrustStepErrors[TRUSTERROR_STEP_FINAL_WVTINIT])
         ret = S_OK;
-    TRACE("returning %08x\n", ret);
+    TRACE("returning %08lx\n", ret);
     return ret;
 }
 
@@ -99,7 +90,7 @@ HRESULT WINAPI CertTrustInit(CRYPT_PROVIDER_DATA *pProvData)
  */
 BOOL WINAPI CertTrustCertPolicy(CRYPT_PROVIDER_DATA *pProvData, DWORD idxSigner, BOOL fCounterSignerChain, DWORD idxCounterSigner)
 {
-    FIXME("(%p, %d, %s, %d)\n", pProvData, idxSigner, fCounterSignerChain ? "TRUE" : "FALSE", idxCounterSigner);
+    FIXME("(%p, %ld, %s, %ld)\n", pProvData, idxSigner, fCounterSignerChain ? "TRUE" : "FALSE", idxCounterSigner);
     return FALSE;
 }
 
@@ -114,21 +105,15 @@ HRESULT WINAPI CertTrustCleanup(CRYPT_PROVIDER_DATA *pProvData)
 
 static BOOL CRYPTDLG_CheckOnlineCRL(void)
 {
-    static const WCHAR policyFlagsKey[] = { 'S','o','f','t','w','a','r','e',
-     '\\','M','i','c','r','o','s','o','f','t','\\','C','r','y','p','t','o','g',
-     'r','a','p','h','y','\\','{','7','8','0','1','e','b','d','0','-','c','f',
-     '4','b','-','1','1','d','0','-','8','5','1','f','-','0','0','6','0','9',
-     '7','9','3','8','7','e','a','}',0 };
-    static const WCHAR policyFlags[] = { 'P','o','l','i','c','y','F','l','a',
-     'g','s',0 };
     HKEY key;
     BOOL ret = FALSE;
 
-    if (!RegOpenKeyExW(HKEY_LOCAL_MACHINE, policyFlagsKey, 0, KEY_READ, &key))
+    if (!RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+     L"Software\\Microsoft\\Cryptography\\{7801ebd0-cf4b-11d0-851f-0060979387ea}", 0, KEY_READ, &key))
     {
         DWORD type, flags, size = sizeof(flags);
 
-        if (!RegQueryValueExW(key, policyFlags, NULL, &type, (BYTE *)&flags,
+        if (!RegQueryValueExW(key, L"PolicyFlags", NULL, &type, (BYTE *)&flags,
          &size) && type == REG_DWORD)
         {
             /* The flag values aren't defined in any header I'm aware of, but
@@ -154,10 +139,8 @@ static BOOL CRYPTDLG_IsCertAllowed(PCCERT_CONTEXT pCert)
     if ((ret = CertGetCertificateContextProperty(pCert,
      CERT_SIGNATURE_HASH_PROP_ID, hash, &size)))
     {
-        static const WCHAR disallowedW[] =
-         { 'D','i','s','a','l','l','o','w','e','d',0 };
         HCERTSTORE disallowed = CertOpenStore(CERT_STORE_PROV_SYSTEM_W,
-         X509_ASN_ENCODING, 0, CERT_SYSTEM_STORE_CURRENT_USER, disallowedW);
+         X509_ASN_ENCODING, 0, CERT_SYSTEM_STORE_CURRENT_USER, L"Disallowed");
 
         if (disallowed)
         {
@@ -246,11 +229,11 @@ static CERT_VERIFY_CERTIFICATE_TRUST *CRYPTDLG_GetVerifyData(
      * called directly:
      */
     if (data->pWintrustData->dwUnionChoice == WTD_CHOICE_BLOB &&
-     data->pWintrustData->u.pBlob && data->pWintrustData->u.pBlob->cbMemObject ==
+     data->pWintrustData->pBlob && data->pWintrustData->pBlob->cbMemObject ==
      sizeof(CERT_VERIFY_CERTIFICATE_TRUST) &&
-     data->pWintrustData->u.pBlob->pbMemObject)
+     data->pWintrustData->pBlob->pbMemObject)
          pCert = (CERT_VERIFY_CERTIFICATE_TRUST *)
-          data->pWintrustData->u.pBlob->pbMemObject;
+          data->pWintrustData->pBlob->pbMemObject;
     return pCert;
 }
 
@@ -310,7 +293,7 @@ HRESULT WINAPI CertTrustFinalPolicy(CRYPT_PROVIDER_DATA *data)
     TRACE("(%p)\n", data);
 
     if (data->pWintrustData->dwUIChoice != WTD_UI_NONE)
-        FIXME("unimplemented for UI choice %d\n",
+        FIXME("unimplemented for UI choice %ld\n",
          data->pWintrustData->dwUIChoice);
     if (pCert)
     {
@@ -369,7 +352,7 @@ HRESULT WINAPI CertTrustFinalPolicy(CRYPT_PROVIDER_DATA *data)
      */
     if (!ret)
         data->dwFinalError = err;
-    TRACE("returning %d (%08x)\n", S_OK, data->dwFinalError);
+    TRACE("returning %ld (%08lx)\n", S_OK, data->dwFinalError);
     return S_OK;
 }
 
@@ -438,7 +421,7 @@ BOOL WINAPI CertViewPropertiesW(CERT_VIEWPROPERTIES_STRUCT_W *info)
     wtd.cbStruct = sizeof(wtd);
     wtd.dwUIChoice = WTD_UI_NONE;
     wtd.dwUnionChoice = WTD_CHOICE_BLOB;
-    wtd.u.pBlob = &blob;
+    wtd.pBlob = &blob;
     wtd.dwStateAction = WTD_STATEACTION_VERIFY;
     err = WinVerifyTrust(NULL, &cert_action_verify, &wtd);
     if (err == ERROR_SUCCESS)
@@ -455,7 +438,7 @@ BOOL WINAPI CertViewPropertiesW(CERT_VIEWPROPERTIES_STRUCT_W *info)
         uiInfo.pCertContext = info->pCertContext;
         uiInfo.cPurposes = info->cArrayPurposes;
         uiInfo.rgszPurposes = (LPCSTR *)info->arrayPurposes;
-        uiInfo.u.hWVTStateData = wtd.hWVTStateData;
+        uiInfo.hWVTStateData = wtd.hWVTStateData;
         uiInfo.fpCryptProviderDataTrustedUsage = TRUE;
         uiInfo.cPropSheetPages = info->cArrayPropSheetPages;
         uiInfo.rgPropSheetPages = info->arrayPropSheetPages;
@@ -492,8 +475,6 @@ static BOOL CRYPT_FormatHexString(const BYTE *pbEncoded, DWORD cbEncoded,
     }
     else
     {
-        static const WCHAR fmt[] = { '%','0','2','x',' ',0 };
-        static const WCHAR endFmt[] = { '%','0','2','x',0 };
         DWORD i;
         LPWSTR ptr = str;
 
@@ -503,9 +484,9 @@ static BOOL CRYPT_FormatHexString(const BYTE *pbEncoded, DWORD cbEncoded,
             for (i = 0; i < cbEncoded; i++)
             {
                 if (i < cbEncoded - 1)
-                    ptr += swprintf(ptr, fmt, pbEncoded[i]);
+                    ptr += swprintf(ptr, 4, L"%02x ", pbEncoded[i]);
                 else
-                    ptr += swprintf(ptr, endFmt, pbEncoded[i]);
+                    ptr += swprintf(ptr, 3, L"%02x", pbEncoded[i]);
             }
         }
         else
@@ -515,11 +496,7 @@ static BOOL CRYPT_FormatHexString(const BYTE *pbEncoded, DWORD cbEncoded,
     return ret;
 }
 
-static const WCHAR indent[] = { ' ',' ',' ',' ',' ',0 };
-static const WCHAR colonCrlf[] = { ':','\r','\n',0 };
-static const WCHAR colonSpace[] = { ':',' ',0 };
-static const WCHAR crlf[] = { '\r','\n',0 };
-static const WCHAR commaSep[] = { ',',' ',0 };
+static const WCHAR indent[] = L"     ";
 
 static BOOL CRYPT_FormatCPS(DWORD dwCertEncodingType,
  DWORD dwFormatStrType, const BYTE *pbEncoded, DWORD cbEncoded,
@@ -536,9 +513,9 @@ static BOOL CRYPT_FormatCPS(DWORD dwCertEncodingType,
         DWORD sepLen;
 
         if (dwFormatStrType & CRYPT_FORMAT_STR_MULTI_LINE)
-            sep = crlf;
+            sep = L"\r\n";
         else
-            sep = commaSep;
+            sep = L", ";
 
         sepLen = lstrlenW(sep);
 
@@ -594,7 +571,6 @@ static BOOL CRYPT_FormatUserNotice(DWORD dwCertEncodingType,
      X509_PKIX_POLICY_QUALIFIER_USERNOTICE, pbEncoded, cbEncoded,
      CRYPT_DECODE_ALLOC_FLAG, NULL, &notice, &size)))
     {
-        static const WCHAR numFmt[] = { '%','d',0 };
         CERT_POLICY_QUALIFIER_NOTICE_REFERENCE *pNoticeRef =
          notice->pNoticeReference;
         LPCWSTR headingSep, sep;
@@ -613,13 +589,13 @@ static BOOL CRYPT_FormatUserNotice(DWORD dwCertEncodingType,
          (LPWSTR)&noticeText, 0);
         if (dwFormatStrType & CRYPT_FORMAT_STR_MULTI_LINE)
         {
-            headingSep = colonCrlf;
-            sep = crlf;
+            headingSep = L":\r\n";
+            sep = L"\r\n";
         }
         else
         {
-            headingSep = colonSpace;
-            sep = commaSep;
+            headingSep = L": ";
+            sep = L", ";
         }
         sepLen = lstrlenW(sep);
         headingSepLen = lstrlenW(headingSep);
@@ -709,7 +685,7 @@ static BOOL CRYPT_FormatUserNotice(DWORD dwCertEncodingType,
                     memcpy(str, noticeNum, noticeNumLen * sizeof(WCHAR));
                     str += noticeNumLen;
                 }
-                swprintf(noticeNumStr, numFmt, k + 1);
+                swprintf(noticeNumStr, ARRAY_SIZE(noticeNumStr), L"%d", k + 1);
                 charsNeeded += lstrlenW(noticeNumStr);
                 if (str && *pcchStr >= charsNeeded)
                 {
@@ -793,7 +769,6 @@ BOOL WINAPI FormatVerisignExtension(DWORD dwCertEncodingType,
     if ((ret = CryptDecodeObjectEx(dwCertEncodingType, X509_CERT_POLICIES,
      pbEncoded, cbEncoded, CRYPT_DECODE_ALLOC_FLAG, NULL, &policies, &size)))
     {
-        static const WCHAR numFmt[] = { '%','d',0 };
         DWORD charsNeeded = 1; /* space for NULL terminator */
         LPCWSTR headingSep, sep;
         DWORD headingSepLen, sepLen;
@@ -820,13 +795,13 @@ BOOL WINAPI FormatVerisignExtension(DWORD dwCertEncodingType,
          (LPWSTR)&qualifier, 0);
         if (dwFormatStrType & CRYPT_FORMAT_STR_MULTI_LINE)
         {
-            headingSep = colonCrlf;
-            sep = crlf;
+            headingSep = L":\r\n";
+            sep = L"\r\n";
         }
         else
         {
-            headingSep = colonSpace;
-            sep = commaSep;
+            headingSep = L": ";
+            sep = L", ";
         }
         sepLen = lstrlenW(sep);
         headingSepLen = lstrlenW(headingSep);
@@ -840,7 +815,7 @@ BOOL WINAPI FormatVerisignExtension(DWORD dwCertEncodingType,
             charsNeeded += 1; /* '['*/
             if (str && *pcbFormat >= charsNeeded * sizeof(WCHAR))
                 *str++ = '[';
-            swprintf(policyNum, numFmt, i + 1);
+            swprintf(policyNum, ARRAY_SIZE(policyNum), L"%d", i + 1);
             charsNeeded += lstrlenW(policyNum);
             if (str && *pcbFormat >= charsNeeded * sizeof(WCHAR))
             {
@@ -917,7 +892,7 @@ BOOL WINAPI FormatVerisignExtension(DWORD dwCertEncodingType,
                 charsNeeded += 1; /* ','*/
                 if (str && *pcbFormat >= charsNeeded * sizeof(WCHAR))
                     *str++ = ',';
-                swprintf(policyQualifierNum, numFmt, j + 1);
+                swprintf(policyQualifierNum, ARRAY_SIZE(policyQualifierNum), L"%d", j + 1);
                 charsNeeded += lstrlenW(policyQualifierNum);
                 if (str && *pcbFormat >= charsNeeded * sizeof(WCHAR))
                 {
@@ -1125,22 +1100,13 @@ BOOL WINAPI FormatVerisignExtension(DWORD dwCertEncodingType,
  */
 HRESULT WINAPI DllRegisterServer(void)
 {
-    static WCHAR cryptdlg[] = { 'c','r','y','p','t','d','l','g','.',
-     'd','l','l',0 };
-    static WCHAR wintrust[] = { 'w','i','n','t','r','u','s','t','.',
-     'd','l','l',0 };
-    static WCHAR certTrustInit[] = { 'C','e','r','t','T','r','u','s','t',
-     'I','n','i','t',0 };
-    static WCHAR wintrustCertificateTrust[] = { 'W','i','n','t','r','u','s','t',
-     'C','e','r','t','i','f','i','c','a','t','e','T','r','u','s','t',0 };
-    static WCHAR certTrustCertPolicy[] = { 'C','e','r','t','T','r','u','s','t',
-     'C','e','r','t','P','o','l','i','c','y',0 };
-    static WCHAR certTrustFinalPolicy[] = { 'C','e','r','t','T','r','u','s','t',
-     'F','i','n','a','l','P','o','l','i','c','y',0 };
-    static WCHAR certTrustCleanup[] = { 'C','e','r','t','T','r','u','s','t',
-     'C','l','e','a','n','u','p',0 };
-    static const WCHAR cryptDlg[] = { 'c','r','y','p','t','d','l','g','.',
-       'd','l','l',0 };
+    static WCHAR cryptdlg[] = L"cryptdlg.dll";
+    static WCHAR wintrust[] = L"wintrust.dll";
+    static WCHAR certTrustInit[] = L"CertTrustInit";
+    static WCHAR wintrustCertificateTrust[] = L"WintrustCertificateTrust";
+    static WCHAR certTrustCertPolicy[] = L"CertTrustCertPolicy";
+    static WCHAR certTrustFinalPolicy[] = L"CertTrustFinalPolicy";
+    static WCHAR certTrustCleanup[] = L"CertTrustCleanup";
     CRYPT_REGISTER_ACTIONID reg;
     GUID guid = CERT_CERTIFICATE_ACTION_VERIFY;
     HRESULT hr = S_OK;
@@ -1165,17 +1131,17 @@ HRESULT WINAPI DllRegisterServer(void)
     if (!WintrustAddActionID(&guid, WT_ADD_ACTION_ID_RET_RESULT_FLAG, &reg))
         hr = GetLastError();
     CryptRegisterOIDFunction(X509_ASN_ENCODING, CRYPT_OID_ENCODE_OBJECT_FUNC,
-     "1.3.6.1.4.1.311.16.1.1", cryptDlg, "EncodeAttrSequence");
+     "1.3.6.1.4.1.311.16.1.1", L"cryptdlg.dll", "EncodeAttrSequence");
     CryptRegisterOIDFunction(X509_ASN_ENCODING, CRYPT_OID_ENCODE_OBJECT_FUNC,
-     szOID_MICROSOFT_Encryption_Key_Preference, cryptDlg, "EncodeRecipientID");
+     szOID_MICROSOFT_Encryption_Key_Preference, L"cryptdlg.dll", "EncodeRecipientID");
     CryptRegisterOIDFunction(X509_ASN_ENCODING, CRYPT_OID_DECODE_OBJECT_FUNC,
-     "1.3.6.1.4.1.311.16.1.1", cryptDlg, "DecodeAttrSequence");
+     "1.3.6.1.4.1.311.16.1.1", L"cryptdlg.dll", "DecodeAttrSequence");
     CryptRegisterOIDFunction(X509_ASN_ENCODING, CRYPT_OID_DECODE_OBJECT_FUNC,
-     szOID_MICROSOFT_Encryption_Key_Preference, cryptDlg, "DecodeRecipientID");
+     szOID_MICROSOFT_Encryption_Key_Preference, L"cryptdlg.dll", "DecodeRecipientID");
     CryptRegisterOIDFunction(X509_ASN_ENCODING, CRYPT_OID_FORMAT_OBJECT_FUNC,
-     szOID_PKIX_KP_EMAIL_PROTECTION, cryptDlg, "FormatPKIXEmailProtection");
+     szOID_PKIX_KP_EMAIL_PROTECTION, L"cryptdlg.dll", "FormatPKIXEmailProtection");
     CryptRegisterOIDFunction(X509_ASN_ENCODING, CRYPT_OID_FORMAT_OBJECT_FUNC,
-     szOID_CERT_POLICIES, cryptDlg, "FormatVerisignExtension");
+     szOID_CERT_POLICIES, L"cryptdlg.dll", "FormatVerisignExtension");
     return hr;
 }
 

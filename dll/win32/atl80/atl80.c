@@ -25,7 +25,7 @@
 #include "winbase.h"
 #include "winerror.h"
 #include "winuser.h"
-#include "wine/atlbase.h"
+#include "atlbase.h"
 
 #include "wine/debug.h"
 

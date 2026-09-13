@@ -1,9 +1,9 @@
 /*
  * PROJECT:     ReactOS 'Layers' Shim library
- * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * LICENSE:     MIT (https://spdx.org/licenses/MIT)
  * PURPOSE:     Shim for VMWare Horizon setup
- * COPYRIGHT:   Copyright 2017 Thomas Faber (thomas.faber@reactos.org)
- *              Copyright 2017 Mark Jansen (mark.jansen@reactos.org)
+ * COPYRIGHT:   Copyright 2017 Thomas Faber <thomas.faber@reactos.org>
+ *              Copyright 2017 Mark Jansen <mark.jansen@reactos.org>
  */
 
 #define WIN32_NO_STATUS

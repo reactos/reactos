@@ -257,7 +257,7 @@ ImmGetRegisterWordStyleA(
             pDestA = &lpStyleBuf[iItem];
             pDestA->dwStyle = pSrcW->dwStyle;
             StringCchLengthW(pSrcW->szDescription, _countof(pSrcW->szDescription), &cchW);
-            cchA = WideCharToMultiByte(pImeDpi->uCodePage, MB_PRECOMPOSED,
+            cchA = WideCharToMultiByte(pImeDpi->uCodePage, 0,
                                        pSrcW->szDescription, (INT)cchW,
                                        pDestA->szDescription, _countof(pDestA->szDescription),
                                        NULL, NULL);

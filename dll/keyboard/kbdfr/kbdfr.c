@@ -162,7 +162,7 @@ ROSDATA VK_TO_BIT modifier_keys[] = {
 ROSDATA MODIFIERS modifier_bits = {
   modifier_keys,
   6,
-  { 0, 1, 2, 4, SHFT_INVALID, SHFT_INVALID, 3 }
+  { 0, 1, 2, 6, SHFT_INVALID, SHFT_INVALID, 3 }
   /* Modifier bit order: NONE, SHIFT, CTRL, ALT, ?, ?, SHIFT-CTRL */
 };
 

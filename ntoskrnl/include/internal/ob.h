@@ -109,7 +109,7 @@
 typedef struct _OBP_SET_HANDLE_ATTRIBUTES_CONTEXT
 {
     KPROCESSOR_MODE PreviousMode;
-    OBJECT_HANDLE_ATTRIBUTE_INFORMATION Information;
+    OBJECT_HANDLE_FLAG_INFORMATION Information;
 } OBP_SET_HANDLE_ATTRIBUTES_CONTEXT, *POBP_SET_HANDLE_ATTRIBUTES_CONTEXT;
 
 typedef struct _OBP_CLOSE_HANDLE_CONTEXT
@@ -293,24 +293,6 @@ ObpLookupObjectName(
 );
 
 //
-// Object Attribute Functions
-//
-BOOLEAN
-NTAPI
-ObpSetHandleAttributes(
-    IN OUT PHANDLE_TABLE_ENTRY HandleTableEntry,
-    IN ULONG_PTR Context
-);
-
-NTSTATUS
-NTAPI
-ObQueryDeviceMapInformation(
-    _In_opt_ PEPROCESS Process,
-    _Out_ PPROCESS_DEVICEMAP_INFORMATION DeviceMapInfo,
-    _In_ ULONG Flags
-);
-
-//
 // Object Lifetime Functions
 //
 VOID
@@ -408,6 +390,14 @@ ObReferenceFileObjectForWrite(
 //
 // DOS Devices Functions
 //
+NTSTATUS
+NTAPI
+ObQueryDeviceMapInformation(
+    _In_opt_ PEPROCESS Process,
+    _Out_ PPROCESS_DEVICEMAP_INFORMATION DeviceMapInfo,
+    _In_ ULONG Flags
+);
+
 NTSTATUS
 NTAPI
 ObSetDeviceMap(

@@ -1421,6 +1421,119 @@ HKLM,"SYSTEM\CurrentControlSet\Control\PnP\Pci\CardList","Toshiba",0x00030003,\
 HKLM,"SYSTEM\CurrentControlSet\Control\PnP\Pci\CardList","Ali",0x00030003,\
 01,00,00,00,b9,10,21,15,00,00,00,00,00,00,00,00
 
+; PCI IRQ routing miniport support (legacy, pre-ACPI machines).
+; The IrqMiniports table maps a south-bridge PCI interrupt router
+; this $PIR table is needed for PCI IRQ Routing without ACPI.
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting","Options",0x00010001,0x0000000F
+
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\00001078","Name",0x00000002,"Cyrix 5520 Rev 0"
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\00001078","Instance",0x00010001,0x0000000E
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\00001078","Parameters",0x00010001,0x00000000
+
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\00020E11","Name",0x00000002,"Compaq CMC-2"
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\00020E11","Instance",0x00010001,0x0000000D
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\00020E11","Parameters",0x00010001,0x00000000
+
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\00021066","Name",0x00000002,"Vesuvius"
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\00021066","Instance",0x00010001,0x00000011
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\00021066","Parameters",0x00010001,0x00000001
+
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\00021078","Name",0x00000002,"Cyrix 5520 Rev 1"
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\00021078","Instance",0x00010001,0x0000000E
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\00021078","Parameters",0x00010001,0x00000000
+
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\00061004","Name",0x00000002,"VLSI"
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\00061004","Instance",0x00010001,0x00000002
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\00061004","Parameters",0x00010001,0x00000000
+
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\00081039","Name",0x00000002,"SiS5503"
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\00081039","Instance",0x00010001,0x00000004
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\00081039","Parameters",0x00010001,0x00000000
+
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\0011100B","Name",0x00000002,"NS 87560"
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\0011100B","Instance",0x00010001,0x00000007
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\0011100B","Parameters",0x00010001,0x00000000
+
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\01021004","Name",0x00000002,"VLSI Eagle"
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\01021004","Instance",0x00010001,0x00000005
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\01021004","Parameters",0x00010001,0x00000000
+
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\04828086","Name",0x00000002,"Intel 82375EB/SB"
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\04828086","Instance",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\04828086","Parameters",0x00010001,0x00000000
+
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\04848086","Name",0x00000002,"Intel 82378"
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\04848086","Instance",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\04848086","Parameters",0x00010001,0x00000000
+
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\05861106","Name",0x00000002,"VT82C586B"
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\05861106","Instance",0x00010001,0x0000000B
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\05861106","Parameters",0x00010001,0x00000000
+
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\05961106","Name",0x00000002,"VT82C596B"
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\05961106","Instance",0x00010001,0x0000000B
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\05961106","Parameters",0x00010001,0x00000000
+
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\06021179","Name",0x00000002,"Toshiba"
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\06021179","Instance",0x00010001,0x0000000F
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\06021179","Parameters",0x00010001,0x00000000
+
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\06861106","Name",0x00000002,"VT82C686B"
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\06861106","Instance",0x00010001,0x0000000B
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\06861106","Parameters",0x00010001,0x00000000
+
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\122E8086","Name",0x00000002,"Intel 82371FB"
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\122E8086","Instance",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\122E8086","Parameters",0x00010001,0x00000000
+
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\12348086","Name",0x00000002,"Intel 82371MX"
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\12348086","Instance",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\12348086","Parameters",0x00010001,0x00000000
+
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\152310B9","Name",0x00000002,"ALi 1523"
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\152310B9","Instance",0x00010001,0x00000006
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\152310B9","Parameters",0x00010001,0x00000000
+
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\153310B9","Name",0x00000002,"ALi 1533"
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\153310B9","Instance",0x00010001,0x00000009
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\153310B9","Parameters",0x00010001,0x00000000
+
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\70008086","Name",0x00000002,"Intel 82371SB"
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\70008086","Instance",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\70008086","Parameters",0x00010001,0x00000000
+
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\71108086","Name",0x00000002,"Intel 82371AB/EB"
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\71108086","Instance",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\71108086","Parameters",0x00010001,0x00000000
+
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\76008086","Name",0x00000002,"Intel 82372FB"
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\76008086","Instance",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\76008086","Parameters",0x00010001,0x00000000
+
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\80021066","Name",0x00000002,"Vesuvius"
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\80021066","Instance",0x00010001,0x00000011
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\80021066","Parameters",0x00010001,0x00000001
+
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\A0F30E11","Name",0x00000002,"Compaq OSB"
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\A0F30E11","Instance",0x00010001,0x0000000C
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\A0F30E11","Parameters",0x00010001,0x00000000
+
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\AE290E11","Name",0x00000002,"Compaq MISC-3"
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\AE290E11","Instance",0x00010001,0x00000008
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\AE290E11","Parameters",0x00010001,0x00000000
+
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\C5581045","Name",0x00000002,"Opti Viper"
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\C5581045","Instance",0x00010001,0x00000003
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\C5581045","Parameters",0x00010001,0x00000000
+
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\C5681045","Name",0x00000002,"Opti Viper Max"
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\C5681045","Instance",0x00010001,0x00000003
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\C5681045","Parameters",0x00010001,0x00000000
+
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\C7001045","Name",0x00000002,"Opti Fire Star"
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\C7001045","Instance",0x00010001,0x0000000A
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\C7001045","Parameters",0x00010001,0x00000000
+
 
 ; Printing
 HKLM,"SYSTEM\CurrentControlSet\Control\Print","BeepEnabled",0x00010001,0

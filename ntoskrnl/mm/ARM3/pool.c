@@ -1671,7 +1671,7 @@ MmFreeMappingAddress(
                      PoolTag,
                      (ULONG_PTR)_ReturnAddress());
     }
-    
+
     /* Enumerate all PTEs and make sure they are empty */
     for (i = 2; i < SizeInPages; i++)
     {

@@ -281,13 +281,13 @@ Imm32WriteImeLayout(
         goto Failure;
 
     /* Write "Ime File" */
-    cbData = (wcslen(pchFileTitle) + 1) * sizeof(WCHAR);
+    cbData = (DWORD)((wcslen(pchFileTitle) + 1) * sizeof(WCHAR));
     lError = RegSetValueExW(hkeyIME, L"Ime File", 0, REG_SZ, (LPBYTE)pchFileTitle, cbData);
     if (IS_ERROR_UNEXPECTEDLY(lError))
         goto Failure;
 
     /* Write "Layout Text" */
-    cbData = (wcslen(pszLayoutText) + 1) * sizeof(WCHAR);
+    cbData = (DWORD)((wcslen(pszLayoutText) + 1) * sizeof(WCHAR));
     lError = RegSetValueExW(hkeyIME, L"Layout Text", 0, REG_SZ, (LPBYTE)pszLayoutText, cbData);
     if (IS_ERROR_UNEXPECTEDLY(lError))
         goto Failure;
@@ -302,7 +302,7 @@ Imm32WriteImeLayout(
     }
 
     /* Write "Layout File" */
-    cbData = (wcslen(pszLayoutFile) + 1) * sizeof(WCHAR);
+    cbData = (DWORD)((wcslen(pszLayoutFile) + 1) * sizeof(WCHAR));
     lError = RegSetValueExW(hkeyIME, L"Layout File", 0, REG_SZ, (LPBYTE)pszLayoutFile, cbData);
     if (IS_ERROR_UNEXPECTEDLY(lError))
         goto Failure;
@@ -337,7 +337,7 @@ Imm32WriteImeLayout(
 #undef MAX_PRELOAD
 
     /* Write the IME key to the preload number */
-    cbData = (wcslen(szImeKey) + 1) * sizeof(WCHAR);
+    cbData = (DWORD)((wcslen(szImeKey) + 1) * sizeof(WCHAR));
     lError = RegSetValueExW(hkeyPreload, szPreloadNumber, 0, REG_SZ, (LPBYTE)szImeKey, cbData);
     RegCloseKey(hkeyPreload);
     return lError == ERROR_SUCCESS;

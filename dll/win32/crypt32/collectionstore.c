@@ -42,7 +42,7 @@ typedef struct _WINE_COLLECTIONSTORE
 static void Collection_addref(WINECRYPT_CERTSTORE *store)
 {
     LONG ref = InterlockedIncrement(&store->ref);
-    TRACE("ref = %d\n", ref);
+    TRACE("ref = %ld\n", ref);
 }
 
 static DWORD Collection_release(WINECRYPT_CERTSTORE *store, DWORD flags)
@@ -52,10 +52,10 @@ static DWORD Collection_release(WINECRYPT_CERTSTORE *store, DWORD flags)
     LONG ref;
 
     if(flags)
-        FIXME("Unimplemented flags %x\n", flags);
+        FIXME("Unimplemented flags %lx\n", flags);
 
     ref = InterlockedDecrement(&cs->hdr.ref);
-    TRACE("(%p) ref=%d\n", store, ref);
+    TRACE("(%p) ref=%ld\n", store, ref);
     if(ref)
         return ERROR_SUCCESS;
 
@@ -411,7 +411,7 @@ static BOOL Collection_control(WINECRYPT_CERTSTORE *cert_store, DWORD dwFlags,
     WINE_COLLECTIONSTORE *store = (WINE_COLLECTIONSTORE*)cert_store;
     WINE_STORE_LIST_ENTRY *entry;
 
-    TRACE("(%p, %08x, %d, %p)\n", cert_store, dwFlags, dwCtrlType, pvCtrlPara);
+    TRACE("(%p, %08lx, %ld, %p)\n", cert_store, dwFlags, dwCtrlType, pvCtrlPara);
 
     if (!store)
         return TRUE;
@@ -478,7 +478,7 @@ WINECRYPT_CERTSTORE *CRYPT_CollectionOpenStore(HCRYPTPROV hCryptProv,
         {
             memset(store, 0, sizeof(WINE_COLLECTIONSTORE));
             CRYPT_InitStore(&store->hdr, dwFlags, StoreTypeCollection, &CollectionStoreVtbl);
-            InitializeCriticalSection(&store->cs);
+            InitializeCriticalSectionEx(&store->cs, 0, RTL_CRITICAL_SECTION_FLAG_FORCE_DEBUG_INFO);
             store->cs.DebugInfo->Spare[0] = (DWORD_PTR)(__FILE__ ": PWINE_COLLECTIONSTORE->cs");
             list_init(&store->stores);
         }
@@ -494,7 +494,7 @@ BOOL WINAPI CertAddStoreToCollection(HCERTSTORE hCollectionStore,
     WINE_STORE_LIST_ENTRY *entry;
     BOOL ret;
 
-    TRACE("(%p, %p, %08x, %d)\n", hCollectionStore, hSiblingStore,
+    TRACE("(%p, %p, %08lx, %ld)\n", hCollectionStore, hSiblingStore,
      dwUpdateFlags, dwPriority);
 
     if (!collection || !sibling)
@@ -519,11 +519,11 @@ BOOL WINAPI CertAddStoreToCollection(HCERTSTORE hCollectionStore,
     if (entry)
     {
         InterlockedIncrement(&sibling->ref);
-        TRACE("sibling %p's ref count is %d\n", sibling, sibling->ref);
+        TRACE("sibling %p's ref count is %ld\n", sibling, sibling->ref);
         entry->store = sibling;
         entry->dwUpdateFlags = dwUpdateFlags;
         entry->dwPriority = dwPriority;
-        TRACE("%p: adding %p, priority %d\n", collection, entry, dwPriority);
+        TRACE("%p: adding %p, priority %ld\n", collection, entry, dwPriority);
         EnterCriticalSection(&collection->cs);
         if (dwPriority)
         {

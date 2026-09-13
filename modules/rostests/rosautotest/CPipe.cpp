@@ -61,7 +61,7 @@ CPipe::CPipe()
 
     // Prepare the OVERLAPPED structure for reading.
     ZeroMemory(&m_ReadOverlapped, sizeof(m_ReadOverlapped));
-    m_ReadOverlapped.hEvent = CreateEventW(NULL, TRUE, TRUE, NULL);
+    m_ReadOverlapped.hEvent = CreateEventW(NULL, TRUE, FALSE, NULL);
     if (!m_ReadOverlapped.hEvent)
     {
         FATAL("CreateEvent failed\n");
@@ -164,6 +164,9 @@ CPipe::Read(PVOID Buffer, DWORD NumberOfBytesToRead, PDWORD NumberOfBytesRead, D
         FATAL("Trying to read from a closed read pipe\n");
     }
 
+    RtlZeroMemory(&m_ReadOverlapped, FIELD_OFFSET(OVERLAPPED, hEvent));
+    ResetEvent(m_ReadOverlapped.hEvent);
+
     if (ReadFile(m_hReadPipe, Buffer, NumberOfBytesToRead, NumberOfBytesRead, &m_ReadOverlapped))
     {
         // The asynchronous read request could be satisfied immediately.
@@ -199,6 +202,7 @@ CPipe::Read(PVOID Buffer, DWORD NumberOfBytesToRead, PDWORD NumberOfBytesRead, D
         else
         {
             // This may be WAIT_TIMEOUT or an unexpected error.
+            CancelIo(m_hReadPipe);
             return dwWaitResult;
         }
     }

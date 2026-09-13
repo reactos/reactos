@@ -2,6 +2,12 @@
 
 LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
+/*
+ * For the standard names of these groups and accounts, please refer to:
+ * https://learn.microsoft.com/en-us/windows-server/identity/ad-ds/manage/understand-security-groups
+ * https://learn.microsoft.com/en-us/windows-server/identity/ad-ds/manage/understand-security-identifiers
+ * and their corresponding localized pages.
+ */
 STRINGTABLE
 BEGIN
     IDS_DOMAIN_BUILTIN_NAME "Встроенный"

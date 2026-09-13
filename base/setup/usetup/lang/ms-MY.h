@@ -1256,7 +1256,7 @@ static MUI_ENTRY msMYFormatPartitionEntries[] =
     {
         0,
         0,
-        "ENTER = Teruskan   F3 = Keluar",
+        "ENTER = Teruskan   ESC = Batal   F3 = Keluar",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
         TEXT_ID_STATIC
     },

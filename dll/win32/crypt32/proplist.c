@@ -46,7 +46,7 @@ CONTEXT_PROPERTY_LIST *ContextPropertyList_Create(void)
 
     if (list)
     {
-        InitializeCriticalSection(&list->cs);
+        InitializeCriticalSectionEx(&list->cs, 0, RTL_CRITICAL_SECTION_FLAG_FORCE_DEBUG_INFO);
         list->cs.DebugInfo->Spare[0] = (DWORD_PTR)(__FILE__ ": PCONTEXT_PROPERTY_LIST->cs");
         list_init(&list->properties);
     }
@@ -75,7 +75,7 @@ BOOL ContextPropertyList_FindProperty(CONTEXT_PROPERTY_LIST *list, DWORD id,
     CONTEXT_PROPERTY *prop;
     BOOL ret = FALSE;
 
-    TRACE("(%p, %d, %p)\n", list, id, blob);
+    TRACE("(%p, %ld, %p)\n", list, id, blob);
 
     EnterCriticalSection(&list->cs);
     LIST_FOR_EACH_ENTRY(prop, &list->properties, CONTEXT_PROPERTY, entry)

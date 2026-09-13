@@ -189,19 +189,15 @@ void create_compressed_files()
 #endif
 
 #if 0
+
+#include <rossym.h> // For ROSSYM_ENTRY
+
 typedef struct _SYMBOLFILE_HEADER {
     ULONG SymbolsOffset;
     ULONG SymbolsLength;
     ULONG StringsOffset;
     ULONG StringsLength;
 } SYMBOLFILE_HEADER, *PSYMBOLFILE_HEADER;
-
-typedef struct _ROSSYM_ENTRY {
-    ULONG Address;
-    ULONG FunctionOffset;
-    ULONG FileOffset;
-    ULONG SourceLine;
-} ROSSYM_ENTRY, *PROSSYM_ENTRY;
 
 
 static int is_metadata(const char* name)
@@ -224,7 +220,7 @@ static void dump_rsym_internal(void* data)
         if (!Entry->FileOffset)
         {
             if (Entry->SourceLine)
-                printf("ERR: SOURCELINE (%D) ", Entry->SourceLine);
+                printf("ERR: SOURCELINE (%lu) ", Entry->SourceLine);
             if (is_metadata(Strings + Entry->FunctionOffset))
                 printf("metadata: %s: 0x%x\n", Strings + Entry->FunctionOffset, Entry->Address);
             else
@@ -244,7 +240,7 @@ static void dump_rsym_internal(void* data)
 void dump_rsym(const char* filename)
 {
     char* data;
-    long size, res;
+    SIZE_T size, res;
     PIMAGE_FILE_HEADER PEFileHeader;
     PIMAGE_OPTIONAL_HEADER PEOptHeader;
     PIMAGE_SECTION_HEADER PESectionHeaders;

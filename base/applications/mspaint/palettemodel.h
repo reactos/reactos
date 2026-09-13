@@ -29,7 +29,6 @@ private:
 
     void NotifyColorChanged();
     void NotifyPaletteChanged();
-    static HBRUSH CreateDitherBrush(COLORREF color, COLORREF monoColor0, COLORREF monoColor1);
 
 public:
     PaletteModel();
@@ -41,7 +40,4 @@ public:
     void SetFgColor(COLORREF newColor);
     COLORREF GetBgColor() const;
     void SetBgColor(COLORREF newColor);
-    HBRUSH CreateColorBrush(COLORREF color);
-    HBRUSH CreateFgBrush() { return CreateColorBrush(m_fgColor); }
-    HBRUSH CreateBgBrush() { return CreateColorBrush(m_bgColor); }
 };

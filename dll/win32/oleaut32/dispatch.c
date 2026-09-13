@@ -176,7 +176,7 @@ done:
  *  (linked at run-time), as opposed to early-bound (linked at compile time).
  *
  *  The interface is used by objects that wish to called by scripting
- *  languages such as VBA, in order to minimise the amount of COM and C/C++
+ *  languages such as VBA, in order to minimize the amount of COM and C/C++
  *  knowledge required, or by objects that wish to live out of process from code
  *  that will call their methods.
  *
@@ -248,7 +248,7 @@ static ULONG WINAPI StdDispatch_AddRef(LPDISPATCH iface)
     StdDispatch *This = impl_from_IDispatch(iface);
     ULONG refCount = InterlockedIncrement(&This->ref);
 
-    TRACE("(%p)->(ref before=%u)\n",This, refCount - 1);
+    TRACE("%p, refcount %lu.\n", iface, refCount);
 
     return refCount;
 }
@@ -263,7 +263,7 @@ static ULONG WINAPI StdDispatch_Release(LPDISPATCH iface)
     StdDispatch *This = impl_from_IDispatch(iface);
     ULONG refCount = InterlockedDecrement(&This->ref);
 
-    TRACE("(%p)->(ref before=%u)\n", This, refCount + 1);
+    TRACE("%p, refcount %lu.\n", iface, refCount);
 
     if (!refCount)
     {
@@ -319,7 +319,8 @@ static HRESULT WINAPI StdDispatch_GetTypeInfoCount(LPDISPATCH iface, UINT * pcti
 static HRESULT WINAPI StdDispatch_GetTypeInfo(LPDISPATCH iface, UINT iTInfo, LCID lcid, ITypeInfo** ppTInfo)
 {
     StdDispatch *This = impl_from_IDispatch(iface);
-    TRACE("(%d, %x, %p)\n", iTInfo, lcid, ppTInfo);
+
+    TRACE("%d, %#lx, %p.\n", iTInfo, lcid, ppTInfo);
 
     *ppTInfo = NULL;
     if (iTInfo != 0)
@@ -360,7 +361,8 @@ static HRESULT WINAPI StdDispatch_GetTypeInfo(LPDISPATCH iface, UINT iTInfo, LCI
 static HRESULT WINAPI StdDispatch_GetIDsOfNames(LPDISPATCH iface, REFIID riid, LPOLESTR * rgszNames, UINT cNames, LCID lcid, DISPID * rgDispId)
 {
     StdDispatch *This = impl_from_IDispatch(iface);
-    TRACE("(%s, %p, %d, 0x%x, %p)\n", debugstr_guid(riid), rgszNames, cNames, lcid, rgDispId);
+
+    TRACE("%s, %p, %d, %#lx, %p.\n", debugstr_guid(riid), rgszNames, cNames, lcid, rgDispId);
 
     if (!IsEqualGUID(riid, &IID_NULL))
     {
@@ -398,7 +400,8 @@ static HRESULT WINAPI StdDispatch_Invoke(LPDISPATCH iface, DISPID dispIdMember, 
                                          EXCEPINFO * pExcepInfo, UINT * puArgErr)
 {
     StdDispatch *This = impl_from_IDispatch(iface);
-    TRACE("(%d, %s, 0x%x, 0x%x, %p, %p, %p, %p)\n", dispIdMember, debugstr_guid(riid), lcid, wFlags, pDispParams, pVarResult, pExcepInfo, puArgErr);
+
+    TRACE("%ld, %s, %#lx, 0x%x, %p, %p, %p, %p.\n", dispIdMember, debugstr_guid(riid), lcid, wFlags, pDispParams, pVarResult, pExcepInfo, puArgErr);
 
     if (!IsEqualGUID(riid, &IID_NULL))
     {

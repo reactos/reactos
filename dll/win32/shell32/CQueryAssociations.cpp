@@ -1,26 +1,101 @@
 /*
- * IQueryAssociations object and helper functions
- *
- * Copyright 2002 Jon Griffiths
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ * PROJECT:     ReactOS Shell
+ * LICENSE:     LGPL-2.1+ (https://spdx.org/licenses/LGPL-2.1+)
+ * PURPOSE:     IQueryAssociations
+ * COPYRIGHT:   Copyright 2002 Jon Griffiths (Wine)
+ *              Copyright 2024-2026 Whindmar Saksit <whindsaks@proton.me>
  */
 
 #include "precomp.h"
+#include <shlwapi_undoc.h> // AssocCreateElement
+#include "evalcmd/elements.h" // ASSOCQUERY_*
+#include <evalcmd.h> // SHELL32_CAssocElement_Version
+#if NTDDI_VERSION < NTDDI_WIN10_RS1
+#define ASSOCF_PER_MACHINE_ONLY 0x00008000
+#endif
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
+
+static inline HRESULT SHRegDuplicateHKey(HKEY hKey, HKEY *phKey)
+{
+    hKey = *phKey = ::SHRegDuplicateHKey(hKey);
+    return hKey ? S_OK : HResultFromWin32(GetLastError());
+}
+
+static inline HRESULT SH32_AssocCreateElement(_In_ REFCLSID rclsid, _In_ REFIID riid, _Outptr_ PVOID *ppv)
+{
+#if DLL_EXPORT_VERSION >= _WIN32_WINNT_VISTA
+    return AssocCreateElement(rclsid, riid, ppv);
+#else
+    return AssocCreate(rclsid, riid, ppv);
+#endif
+}
+
+static HRESULT AssocCreateElementInternal(REFCLSID rclsid, IQuerySource *pQS, REFIID riid, PVOID *ppv)
+{
+    HRESULT hr;
+    C_ASSERT(&IID_IObjectWithQuerySource == &IID_IObjectWithQuerySourceOld);
+    CComPtr<IObjectWithQuerySource> pOWQS;
+    if (FAILED(hr = SH32_AssocCreateElement(rclsid, IID_PPV_ARG(IObjectWithQuerySource, &pOWQS))))
+        return hr;
+    return (SUCCEEDED(hr = pOWQS->SetSource(pQS))) ? pOWQS->QueryInterface(riid, ppv) : hr;
+}
+
+static HRESULT AssocCreateElementOnKeyInternal(_In_ REFCLSID rclsid, _In_ HKEY hKey, _In_opt_ PCWSTR pszSubKey,
+                                               _In_ REFIID riid, _Outptr_ PVOID *ppv, _In_ BYTE Major)
+{
+    CComPtr<IUnknown> pQSO;
+    REFIID riidQS = Major > 5 ? IID_IQuerySource : IID_IQuerySourceOld;
+    HRESULT hr = QuerySourceCreateFromKey(hKey, pszSubKey, false, riidQS, (void**)&pQSO);
+    if (FAILED(hr))
+        return hr;
+    return AssocCreateElementInternal(rclsid, (IQuerySource*)static_cast<IUnknown*>(pQSO), riid, ppv);
+}
+
+static HRESULT SH32_AssocCreateElementOnKey(_In_ REFCLSID rclsid, _In_ HKEY hKey, _In_opt_ PCWSTR pszSubKey,
+                                            _In_ REFIID riid, _Outptr_ PVOID *ppv)
+{
+#if DLL_EXPORT_VERSION >= _WIN32_WINNT_VISTA
+    HRESULT hr = AssocCreateElementOnKeyInternal(rclsid, hKey, pszSubKey, riid, ppv, 6);
+    if (SUCCEEDED(hr))
+        return hr;
+#endif
+    return AssocCreateElementOnKeyInternal(rclsid, hKey, pszSubKey, riid, ppv, 5);
+}
+
+static HRESULT SH32_QueryAssocElementString(_In_ REFCLSID rclsid, _In_ UINT Query, _In_ HKEY hKey,
+                                            _In_opt_ PCWSTR pszSubKey, _In_ PCWSTR pszExtra, _Out_ PWSTR *ppszValue)
+{
+#if SHELL32_CAssocElement_Version >= _WIN32_WINNT_VISTA
+    CComPtr<IAssociationElement> pAE;
+    REFIID riid = IID_IAssociationElement;
+#else
+    CComPtr<IAssociationElementOld> pAE;
+    REFIID riid = IID_IAssociationElementOld;
+#endif
+    HRESULT hr = SH32_AssocCreateElementOnKey(rclsid, hKey, pszSubKey, riid, (void**)&pAE);
+    if (FAILED(hr))
+        return hr;
+    return pAE->QueryString(Query, pszExtra, ppszValue);
+}
+
+template<class T> static HRESULT GetKeyFromObjectWithQuerySource(T &Obj, HKEY *phKey)
+{
+    HRESULT hr;
+    C_ASSERT(&IID_IObjectWithQuerySource == &IID_IObjectWithQuerySourceOld);
+    CComPtr<IObjectWithQuerySource> pOWQS;
+    if (FAILED(hr = Obj.QueryInterface(IID_PPV_ARG(IObjectWithQuerySource, &pOWQS))))
+        return hr;
+    CComPtr<IObjectWithRegistryKeyOld> pOWRKO;
+    CComPtr<IObjectWithRegistryKey> pOWRK;
+    if (SUCCEEDED(hr = pOWQS->GetSource(IID_PPV_ARG(IObjectWithRegistryKeyOld, &pOWRKO))))
+        hr = pOWRKO->GetKey(phKey);
+#if DLL_EXPORT_VERSION >= _WIN32_WINNT_VISTA
+    else if (SUCCEEDED(hr = pOWQS->GetSource(IID_PPV_ARG(IObjectWithRegistryKey, &pOWRK))))
+        hr = pOWRK->GetKey(MAXIMUM_ALLOWED, phKey);
+#endif
+    return hr;
+}
 
 EXTERN_C HRESULT SHELL32_AssocGetFSDirectoryDescription(PWSTR Buf, UINT cchBuf)
 {
@@ -72,6 +147,121 @@ EXTERN_C HRESULT SHELL32_AssocGetFileDescription(PCWSTR Name, PWSTR Buf, UINT cc
     return SHELL32_AssocGetExtensionDescription(PathFindExtensionW(Name), Buf, cchBuf);
 }
 
+struct ClassesRegKey : CQueryAssociations::RegKeyRef
+{
+    HRESULT Initialize(ASSOCF fA, PCWSTR pszSource);
+};
+
+HRESULT ClassesRegKey::Initialize(ASSOCF fA, PCWSTR pszSource)
+{
+    if (!(fA & ASSOCF_PER_MACHINE_ONLY))
+    {
+        hKey = HKEY_CLASSES_ROOT;
+        return S_OK;
+    }
+    HKEY hKeyClasses;
+    LONG err = RegOpenKeyExW(HKEY_LOCAL_MACHINE, L"Software\\Classes", 0, KEY_READ, &hKeyClasses);
+    if (err)
+        return HResultFromWin32(err);
+    err = RegOpenKeyExW(hKeyClasses, pszSource, 0, KEY_READ, &hKey);
+    RegCloseKey(hKeyClasses);
+    if (err == ERROR_SUCCESS)
+        hKeyClose = hKey;
+    return HResultFromWin32(err);
+}
+
+static HRESULT OpenShellVerbKey(HKEY hClass, LPCWSTR pszVerb, HKEY *phKey)
+{
+    const SIZE_T cchPrefix = sizeof("shell\\") - 1;
+    WCHAR szPath[cchPrefix + MAX_PATH];
+    if (FAILED(StringCchPrintfW(szPath, _countof(szPath), L"shell\\%s", pszVerb ? pszVerb : L"")))
+        return E_FAIL;
+
+    if (!pszVerb && !HCR_GetDefaultVerbW(hClass, NULL, szPath + cchPrefix, _countof(szPath) - cchPrefix))
+        return HRESULT_FROM_WIN32(ERROR_NO_ASSOCIATION);
+
+    return HResultFromWin32(RegOpenKeyExW(hClass, szPath, 0, KEY_READ, phKey));
+}
+
+static HRESULT OpenClassWithShellExecKey(ASSOCF fA, HKEY hClass, LPCWSTR pszVerb, HKEY *phKey)
+{
+    if (fA & ASSOCF_VERIFY)
+    {
+        HRESULT hr = OpenShellVerbKey(hClass, pszVerb, phKey);
+        if (FAILED(hr))
+            return HRESULT_FROM_WIN32(ERROR_NO_ASSOCIATION);
+        RegCloseKey(*phKey);
+    }
+    return SHRegDuplicateHKey(hClass, phKey);
+}
+
+static inline HRESULT GetClassKeyName(ASSOCF fA, PCWSTR pszSource, HKEY hSource, LPWSTR pszClass, UINT cchMax)
+{
+    PCWSTR pszSubKey = *pszSource == L'{' ? L"ProgID" : NULL;
+    return SHELL_RegGetString(hSource, pszSubKey, NULL, pszClass, cchMax);
+}
+
+static HRESULT OpenClassKey(ASSOCF fA, PCWSTR pszSource, HKEY hCR, HKEY hSource, HKEY *phKey)
+{
+    WCHAR szBuf[MAX_PATH];
+    HRESULT hr = E_FAIL;
+    if (*pszSource == L'.' || (*pszSource == L'{' && !(fA & ASSOCF_INIT_NOREMAPCLSID)))
+    {
+        hr = GetClassKeyName(fA, pszSource, hSource, szBuf, _countof(szBuf));
+        if (FAILED(hr) && *pszSource == L'.')
+            return hr; // .ext can only have its ProgId in another location
+    }
+
+    HKEY hClassKey;
+    if (SUCCEEDED(hr))
+        hr = HResultFromWin32(RegOpenKeyExW(hCR, szBuf, 0, KEY_READ, &hClassKey));
+    else
+        hr = SHRegDuplicateHKey(hSource, &hClassKey);
+
+    if (FAILED(hr))
+        return hr;
+
+    // Check for CurVer redirection 
+    if (SUCCEEDED(SHELL_RegGetString(hClassKey, L"CurVer", NULL, szBuf, _countof(szBuf))))
+    {
+        if (RegOpenKeyExW(hCR, szBuf, 0, KEY_READ, phKey) == ERROR_SUCCESS)
+        {
+            if (RegKeyExists(*phKey, L"shell")) // Does it look like a valid ProgId?
+            {
+                RegCloseKey(hClassKey);
+                return S_OK;
+            }
+            RegCloseKey(*phKey);
+        }
+    }
+    *phKey = hClassKey;
+    return hr;
+}
+
+static HRESULT OpenClassKey(ASSOCF fA, const WCHAR *const pszSource, HKEY *phKey)
+{
+    // TODO: Handle the FileExts key and ASSOCF_NOUSERSETTINGS?
+    PCWSTR pszSourcePath = pszSource;
+    WCHAR buf[100];
+    if (*pszSource == L'{')
+    {
+        HRESULT hr = StringCchPrintfW(buf, _countof(buf), L"CLSID\\%s", pszSource);
+        if (FAILED(hr))
+            return hr;
+        pszSourcePath = buf;
+    }
+    ClassesRegKey cr;
+    if (HRESULT hr = cr.Initialize(fA, pszSource))
+        return hr;
+    HKEY hSourceKey;
+    LONG err = RegOpenKeyExW(cr.hKey, pszSourcePath, 0, KEY_READ, &hSourceKey);
+    if (err)
+        return HResultFromWin32(err);
+    HRESULT hr = OpenClassKey(fA, pszSource, cr.hKey, hSourceKey, phKey);
+    RegCloseKey(hSourceKey);
+    return hr;
+}
+
 /**************************************************************************
  *  IQueryAssociations
  *
@@ -94,12 +284,83 @@ EXTERN_C HRESULT SHELL32_AssocGetFileDescription(PCWSTR Name, PWSTR Buf, UINT cc
  * METHODS
  */
 
-CQueryAssociations::CQueryAssociations() : hkeySource(0), hkeyProgID(0)
+CQueryAssociations::CQueryAssociations() : hkeySource(0), hkeyProgID(0), m_InitFlags(0), m_InitType(0)
 {
 }
 
 CQueryAssociations::~CQueryAssociations()
 {
+    Reset();
+}
+
+void CQueryAssociations::Reset()
+{
+    if (hkeySource)
+        RegCloseKey(hkeySource);
+    if (hkeyProgID && hkeyProgID != hkeySource)
+        RegCloseKey(hkeyProgID);
+    hkeySource = hkeyProgID = NULL;
+    m_InitType = 0;
+}
+
+HRESULT CQueryAssociations::DuplicateHKey(HKEY hKey, HKEY *phKey)
+{
+    if (!hKey)
+        return HResultFromWin32(IsNT5() ? ERROR_FILE_NOT_FOUND : ERROR_NO_ASSOCIATION);
+    return SHRegDuplicateHKey(hKey, phKey);
+}
+
+CQueryAssociations* CQueryAssociations::TryBaseClass(ASSOCF flags)
+{
+    if (m_SkipBaseClass || (flags & ASSOCF_IGNOREBASECLASS))
+        return NULL;
+    else if (m_pBaseClass)
+        return m_pBaseClass;
+
+    CComPtr<CQueryAssociations> pQA;
+    if (FAILED(ShellObjectCreator(pQA)))
+        return NULL;
+
+    ASSOCF initflags = m_InitFlags & (ASSOCF_INIT_DEFAULTTOFOLDER | ASSOCF_INIT_DEFAULTTOSTAR);
+    PWSTR classes[3] = { }; // Note: Without dynamic array support we can only emulate Windows 2000 here
+    if (EmulateWin2000()) // BaseClass is present in the registry but it does not seem to act like a base class on XP+
+        SHELL_RegGetStringAlloc(GetClassHandle(), NULL, L"BaseClass", classes[0]); // AudioCD/DVD etc.
+    if (initflags & ASSOCF_INIT_DEFAULTTOFOLDER)
+        classes[1] = const_cast<PWSTR>(L"Folder");
+    if (initflags & ASSOCF_INIT_DEFAULTTOSTAR)
+        classes[2] = const_cast<PWSTR>(L"*");
+    for (UINT i = 0; i < _countof(classes); ++i, initflags = 0)
+    {
+        if (FAILED(pQA->Init(initflags, classes[i], 0, NULL)))
+            continue;
+        m_pBaseClass = pQA;
+        break;
+    }
+    SHFree(classes[0]);
+    m_SkipBaseClass = !m_pBaseClass;
+    return m_pBaseClass;
+}
+
+HRESULT CQueryAssociations::OpenShellVerbKey(ASSOCF flags, LPCWSTR pszVerb, LPCWSTR pszSubKey, RegKeyRef &KeyRef)
+{
+    HKEY hClass = GetClassHandle();
+    if (!hClass)
+        return HResultFromWin32(ERROR_NO_ASSOCIATION);
+    HKEY hKey, hSubKey;
+    HRESULT hr = ::OpenShellVerbKey(hClass, pszVerb, &hKey);
+    if (FAILED(hr))
+        return hr;
+    
+    if (pszSubKey)
+    {
+        hr = HResultFromWin32(RegOpenKeyExW(hKey, pszSubKey, 0, KEY_READ, &hSubKey));
+        RegCloseKey(hKey);
+        if (FAILED(hr))
+            return hr;
+        hKey = hSubKey;
+    }
+    KeyRef.Attach(hKey);
+    return hr;
 }
 
 /**************************************************************************
@@ -129,79 +390,61 @@ HRESULT STDMETHODCALLTYPE CQueryAssociations::Init(
                                     hkeyProgid,
                                     hWnd);
 
+    enum { HANDLEDINITFLAGS = ASSOCF_INIT_BYEXENAME | ASSOCF_INIT_NOREMAPCLSID };
+    HRESULT hr;
+    Reset();
+    m_InitFlags = cfFlags;
+
     if (hWnd != NULL)
-    {
         FIXME("hwnd != NULL not supported\n");
-    }
 
-    if (cfFlags != 0)
-    {
-        FIXME("unsupported flags: %x\n", cfFlags);
-    }
+    if (cfFlags & ~HANDLEDINITFLAGS)
+        FIXME("unsupported flags: %#x\n", cfFlags & ~HANDLEDINITFLAGS);
 
-    RegCloseKey(this->hkeySource);
-    RegCloseKey(this->hkeyProgID);
-    this->hkeySource = this->hkeyProgID = NULL;
     if (pszAssoc != NULL)
     {
-        WCHAR *progId;
-        HRESULT hr;
-        LPCWSTR pchDotExt;
+        WCHAR buf[sizeof("Applications") + MAX_PATH];
+        m_InitType = *pszAssoc <= 0xff ? LOBYTE(*pszAssoc) : 'P';
 
-        if (StrChrW(pszAssoc, L'\\'))
+        if (cfFlags & ASSOCF_INIT_BYEXENAME)
         {
-            pchDotExt = PathFindExtensionW(pszAssoc);
-            if (pchDotExt && *pchDotExt)
-                pszAssoc = pchDotExt;
-        }
-
-        LONG ret = RegOpenKeyExW(HKEY_CLASSES_ROOT,
-                            pszAssoc,
-                            0,
-                            KEY_READ,
-                            &this->hkeySource);
-        if (ret)
-        {
-            return S_OK;
-        }
-
-        /* if this is a progid */
-        if (*pszAssoc != '.' && *pszAssoc != '{')
-        {
-            this->hkeyProgID = this->hkeySource;
-            return S_OK;
-        }
-
-        /* if it's not a progid, it's a file extension or clsid */
-        if (*pszAssoc == '.')
-        {
-            /* for a file extension, the progid is the default value */
-            hr = this->GetValue(this->hkeySource, NULL, (void**)&progId, NULL);
+            m_InitType = 'A';
+            PCWSTR pszAppFile = PathFindFileNameW(pszAssoc);
+            PCWSTR pszDotExt = *PathFindExtensionW(pszAppFile) ? L"" : L".exe";
+            hr = StringCchPrintfW(buf, _countof(buf), L"%s\\%s%s", L"Applications", pszAppFile, pszDotExt);
             if (FAILED(hr))
-                return S_OK;
+                return hr;
+            pszAssoc = buf;
         }
-        else /* if (*pszAssoc == '{') */
+        else if (*pszAssoc == L'{')
         {
-            HKEY progIdKey;
-            /* for a clsid, the progid is the default value of the ProgID subkey */
-            ret = RegOpenKeyExW(this->hkeySource, L"ProgID", 0, KEY_READ, &progIdKey);
-            if (ret != ERROR_SUCCESS)
-                return S_OK;
-            hr = this->GetValue(progIdKey, NULL, (void**)&progId, NULL);
-            if (FAILED(hr))
-                return S_OK;
-            RegCloseKey(progIdKey);
+            if (!EmulateWin2000())
+                cfFlags |= ASSOCF_INIT_NOREMAPCLSID;
+        }
+        else if (StrChrW(pszAssoc, L'\\'))
+        {
+            pszAssoc = PathFindExtensionW(pszAssoc);
+            m_InitType = (BYTE)*pszAssoc;
         }
 
-        /* open the actual progid key, the one with the shell subkey */
-        ret = RegOpenKeyExW(HKEY_CLASSES_ROOT,
-                            progId,
-                            0,
-                            KEY_READ,
-                            &this->hkeyProgID);
-        HeapFree(GetProcessHeap(), 0, progId);
+        if (!*pszAssoc)
+            return E_INVALIDARG;
 
-        return S_OK;
+        if (m_InitType == '.')
+        {
+            if (RegOpenKeyExW(HKEY_CLASSES_ROOT, pszAssoc, 0, KEY_READ, &this->hkeySource))
+                goto done;
+        }
+        else if (m_InitType != '{' && m_InitType != 'A')
+        {
+            m_InitType = 'P'; // ProgId
+        }
+
+        OpenClassKey(cfFlags, pszAssoc, &this->hkeyProgID);
+        if (!this->hkeySource)
+            this->hkeySource = this->hkeyProgID;
+done:
+        return (!GetClassHandle() && IsNT5()) ? S_FALSE : S_OK;
     }
     else if (hkeyProgid != NULL)
     {
@@ -211,7 +454,9 @@ HRESULT STDMETHODCALLTYPE CQueryAssociations::Init(
         return S_OK;
     }
     else
+    {
         return E_INVALIDARG;
+    }
 }
 
 /**************************************************************************
@@ -237,10 +482,10 @@ HRESULT STDMETHODCALLTYPE CQueryAssociations::GetString(
     LPWSTR pszOut,
     DWORD *pcchOut)
 {
-    const ASSOCF unimplemented_flags = ~ASSOCF_NOTRUNCATE;
+    const ASSOCF unimplemented_flags = ~(ASSOCF_NOTRUNCATE | ASSOCF_IGNOREBASECLASS);
     DWORD len = 0;
-    HRESULT hr;
-    WCHAR path[MAX_PATH];
+    HRESULT hr = HRESULT_FROM_WIN32(ERROR_NO_ASSOCIATION);
+    WCHAR path[MAX_PATH], *pszResult;
 
     TRACE("(%p)->(0x%08x, %u, %s, %p, %p)\n", this, flags, str, debugstr_w(pszExtra), pszOut, pcchOut);
     if (flags & unimplemented_flags)
@@ -249,47 +494,34 @@ HRESULT STDMETHODCALLTYPE CQueryAssociations::GetString(
     }
 
     if (!pcchOut)
-    {
         return E_UNEXPECTED;
-    }
 
-    if (!this->hkeySource && !this->hkeyProgID)
-    {
-        return HRESULT_FROM_WIN32(ERROR_NO_ASSOCIATION);
-    }
+    if (!GetClassHandle())
+        goto trybase;
 
     switch (str)
     {
         case ASSOCSTR_COMMAND:
         {
-            WCHAR *command;
-            hr = this->GetCommand(pszExtra, &command);
+            hr = this->GetCommand(pszExtra, &pszResult);
             if (SUCCEEDED(hr))
-            {
-                hr = this->ReturnString(flags, pszOut, pcchOut, command, strlenW(command) + 1);
-                HeapFree(GetProcessHeap(), 0, command);
-            }
-            return hr;
+                return this->ReturnAndFreeString(flags, pszOut, pcchOut, pszResult);
+            break;
         }
         case ASSOCSTR_EXECUTABLE:
         {
             hr = this->GetExecutable(pszExtra, path, MAX_PATH, &len);
-            if (FAILED_UNEXPECTEDLY(hr))
-            {
-                return hr;
-            }
-            len++;
-            return this->ReturnString(flags, pszOut, pcchOut, path, len);
+            if (SUCCEEDED(hr))
+                return this->ReturnString(flags, pszOut, pcchOut, path, ++len);
+            break;
         }
         case ASSOCSTR_FRIENDLYDOCNAME:
         {
             WCHAR *pszFileType;
-
+            // FIXME: Needs to check "FriendlyTypeName" first
             hr = this->GetValue(this->hkeySource, NULL, (void**)&pszFileType, NULL);
             if (FAILED(hr))
-            {
-                return hr;
-            }
+                goto trybase;
             DWORD size = 0;
             DWORD ret = RegGetValueW(HKEY_CLASSES_ROOT, pszFileType, NULL, RRF_RT_REG_SZ, NULL, NULL, &size);
             if (ret == ERROR_SUCCESS)
@@ -376,63 +608,30 @@ HRESULT STDMETHODCALLTYPE CQueryAssociations::GetString(
         }
         case ASSOCSTR_CONTENTTYPE:
         {
-            DWORD size = 0;
-            DWORD ret = RegGetValueW(this->hkeySource, NULL, L"Content Type", RRF_RT_REG_SZ, NULL, NULL, &size);
-            if (ret != ERROR_SUCCESS)
-            {
-                return HRESULT_FROM_WIN32(ret);
-            }
-            WCHAR *contentType = static_cast<WCHAR *>(HeapAlloc(GetProcessHeap(), 0, size));
-            if (contentType != NULL)
-            {
-                ret = RegGetValueW(this->hkeySource, NULL, L"Content Type", RRF_RT_REG_SZ, NULL, contentType, &size);
-                if (ret == ERROR_SUCCESS)
-                {
-                    hr = this->ReturnString(flags, pszOut, pcchOut, contentType, strlenW(contentType) + 1);
-                }
-                else
-                {
-                    hr = HRESULT_FROM_WIN32(ret);
-                }
-                HeapFree(GetProcessHeap(), 0, contentType);
-            }
-            else
-            {
-                hr = E_OUTOFMEMORY;
-            }
-            return hr;
+            hr = SHELL_RegGetStringAlloc(this->hkeySource, NULL, L"Content Type", pszResult);
+            if (SUCCEEDED(hr))
+                return ReturnAndFreeString(flags, pszOut, pcchOut, pszResult, hr / sizeof(WCHAR));
+            break;
         }
         case ASSOCSTR_DEFAULTICON:
         {
-            DWORD ret;
-            DWORD size = 0;
-            ret = RegGetValueW(this->hkeyProgID, L"DefaultIcon", NULL, RRF_RT_REG_SZ, NULL, NULL, &size);
-            if (ret == ERROR_SUCCESS)
+            for (HKEY hKey = GetClassHandle();; hKey = this->hkeySource)  // ProgId or .ext
             {
-                WCHAR *icon = static_cast<WCHAR *>(HeapAlloc(GetProcessHeap(), 0, size));
-                if (icon)
-                {
-                    ret = RegGetValueW(this->hkeyProgID, L"DefaultIcon", NULL, RRF_RT_REG_SZ, NULL, icon, &size);
-                    if (ret == ERROR_SUCCESS)
-                    {
-                        hr = this->ReturnString(flags, pszOut, pcchOut, icon, strlenW(icon) + 1);
-                    }
-                    else
-                    {
-                        hr = HRESULT_FROM_WIN32(ret);
-                    }
-                    HeapFree(GetProcessHeap(), 0, icon);
-                }
-                else
-                {
-                    hr = E_OUTOFMEMORY;
-                }
+                hr = SHELL_RegGetStringAlloc(hKey, L"DefaultIcon", NULL, pszResult);
+                if (SUCCEEDED(hr))
+                    return ReturnAndFreeString(flags, pszOut, pcchOut, pszResult, hr / sizeof(WCHAR));
+                else if (hKey == this->hkeySource)
+                    break;
             }
-            else
-            {
-                hr = HRESULT_FROM_WIN32(ret);
-            }
-            return hr;
+            break;
+        }
+        case ASSOCSTR_INFOTIP:
+        {
+            hr = SHELL_RegGetStringAlloc(GetClassHandle(), NULL, L"InfoTip", pszResult);
+            if (SUCCEEDED(hr))
+                return ReturnAndFreeString(flags, pszOut, pcchOut, pszResult, hr / sizeof(WCHAR));
+            // TODO: On Vista+, if not even the base class nor "*" provides a tip, it returns a default?
+            break;
         }
         case ASSOCSTR_SHELLEXTENSION:
         {
@@ -468,6 +667,10 @@ HRESULT STDMETHODCALLTYPE CQueryAssociations::GetString(
             return E_NOTIMPL;
         }
     }
+trybase:
+    if (FAILED(hr) && TryBaseClass(flags))
+        hr = m_pBaseClass->GetString(flags, str, pszExtra, pszOut, pcchOut);
+    return hr;
 }
 
 /**************************************************************************
@@ -491,9 +694,65 @@ HRESULT STDMETHODCALLTYPE CQueryAssociations::GetKey(
     LPCWSTR pszExtra,
     HKEY *phkeyOut)
 {
-    FIXME("(%p,0x%8x,0x%8x,%s,%p)-stub!\n", this, cfFlags, assockey,
-            debugstr_w(pszExtra), phkeyOut);
-    return E_NOTIMPL;
+    HRESULT hr = E_INVALIDARG;
+    HKEY hClass = GetClassHandle();
+    const CLSID *pAssocElement = NULL;
+    ASSOCSTR strInit = (ASSOCSTR)0;
+    WCHAR buf[MAX_PATH];
+    PCWSTR pszSetString = NULL;
+    *phkeyOut = NULL;  // Note: Windows does not check if the pointer is valid
+
+    switch (assockey)
+    {
+        case ASSOCKEY_SHELLEXECCLASS:
+            cfFlags |= ASSOCF_VERIFY;
+            if (hClass && SUCCEEDED(hr = OpenClassWithShellExecKey(cfFlags, hClass, pszExtra, phkeyOut)))
+                return hr;
+            hr = HResultFromWin32(IsNT5() ? (hClass ? ERROR_FILE_NOT_FOUND : E_FAIL) : ERROR_NO_ASSOCIATION);
+            break;
+        case ASSOCKEY_APP:
+            if (m_InitFlags & ASSOCF_INIT_BYEXENAME)
+            {
+                pszExtra = NULL; // Always ignored
+                return DuplicateHKey(this->hkeySource, phkeyOut);
+            }
+            pAssocElement = &CLSID_AssocApplicationElement;
+            strInit = ASSOCSTR_EXECUTABLE;
+            hr = IsNT5() ? E_FAIL : HResultFromWin32(ERROR_NO_ASSOCIATION);
+            break;
+        case ASSOCKEY_CLASS: // "A ProgID or class key"
+            if (hClass)
+                return DuplicateHKey(hClass, phkeyOut);
+            hr = IsNT5() ? E_FAIL : HResultFromWin32(ERROR_NOT_FOUND);
+            break;
+        case ASSOCKEY_BASECLASS:
+            assockey = ASSOCKEY_CLASS;
+            break;
+        case ASSOCKEY_MAX:
+            // fallthrough
+        default:
+            FIXME("(%p,0x%8x,0x%8x,%s,%p)\n", this, cfFlags, assockey, debugstr_w(pszExtra), phkeyOut);
+    }
+
+    if (strInit)
+    {
+        DWORD cch = _countof(buf);
+        if (SUCCEEDED(GetString(ASSOCF_NOFIXUPS | ASSOCF_NOTRUNCATE | ASSOCF_INIT_IGNOREUNKNOWN, strInit, pszExtra, buf, &cch)))
+            pszSetString = buf;
+    }
+    if (pAssocElement && pszSetString)
+    {
+        CComPtr<IPersistString2> pPS2;
+        if (FAILED(SH32_AssocCreateElement(*pAssocElement, IID_PPV_ARG(IPersistString2, &pPS2))))
+            return hr;
+        if (FAILED(pPS2->SetString(pszSetString)))
+            return hr;
+        hr = GetKeyFromObjectWithQuerySource(*pPS2, phkeyOut);
+    }
+
+    if (FAILED(hr) && TryBaseClass(cfFlags))
+        hr = m_pBaseClass->GetKey(cfFlags, assockey, pszExtra, phkeyOut);
+    return hr;
 }
 
 /**************************************************************************
@@ -517,44 +776,56 @@ HRESULT STDMETHODCALLTYPE CQueryAssociations::GetData(ASSOCF cfFlags, ASSOCDATA 
     TRACE("(%p,0x%8x,0x%8x,%s,%p,%p)\n", this, cfFlags, assocdata,
             debugstr_w(pszExtra), pvOut, pcbOut);
 
-    if(cfFlags)
-    {
-        FIXME("Unsupported flags: %x\n", cfFlags);
-    }
+    enum { HANDLEDFLAGS = ASSOCF_IGNOREBASECLASS };
+    HRESULT hr = HRESULT_FROM_WIN32(ERROR_NO_ASSOCIATION);
+    HKEY hClass = GetClassHandle();
+    RegKeyRef rkr;
+
+    if (cfFlags & ~HANDLEDFLAGS)
+        FIXME("Unsupported flags: %x\n", cfFlags & ~HANDLEDFLAGS);
 
     switch(assocdata)
     {
+        case ASSOCDATA_NOACTIVATEHANDLER:
+            if (SUCCEEDED(OpenDdeKey(cfFlags, pszExtra, rkr)))
+                hr = ReturnRegData(cfFlags, rkr, L"NoActivateHandler", pvOut, pcbOut);
+            break;
+        case ASSOCDATA_QUERYCLASSSTORE:
+            if (hClass)
+                hr = ReturnRegData(cfFlags, hClass, L"QueryClassStore", pvOut, pcbOut);
+            break;
         case ASSOCDATA_EDITFLAGS:
-        {
-            if(!this->hkeyProgID)
-            {
-                return HRESULT_FROM_WIN32(ERROR_NO_ASSOCIATION);
-            }
-
-            void *data;
-            DWORD size;
-            HRESULT hres = this->GetValue(this->hkeyProgID, L"EditFlags", &data, &size);
-            if(FAILED(hres))
-            {
-                return hres;
-            }
-
-            if (!pcbOut)
-            {
-                HeapFree(GetProcessHeap(), 0, data);
-                return hres;
-            }
-
-            hres = this->ReturnData(pvOut, pcbOut, data, size);
-            HeapFree(GetProcessHeap(), 0, data);
-            return hres;
-        }
+            if (hClass)
+                hr = ReturnRegData(cfFlags, hClass, L"EditFlags", pvOut, pcbOut);
+            break;
+        case ASSOCDATA_VALUE:
+            if (hClass)
+                hr = ReturnRegData(cfFlags, hClass, pszExtra, pvOut, pcbOut);
+            break;
         default:
         {
             FIXME("Unsupported ASSOCDATA value: %d\n", assocdata);
             return E_NOTIMPL;
         }
     }
+    if (FAILED(hr) && TryBaseClass(cfFlags))
+        hr = m_pBaseClass->GetData(cfFlags, assocdata, pszExtra, pvOut, pcbOut);
+    return hr;
+}
+
+HRESULT CQueryAssociations::ReturnRegData(ASSOCF flags, HKEY hKey, PCWSTR pszName, void *pvOut, DWORD *pcbOut)
+{
+    if (!pcbOut) // Asking if the data exists without returning it
+        return RegValueExists(hKey, pszName) ? S_OK : S_FALSE;
+
+    void *pData;
+    DWORD cbData;
+    HRESULT hr = this->GetValue(hKey, pszName, &pData, &cbData);
+    if (FAILED(hr))
+        return hr;
+    hr = this->ReturnData(pvOut, pcbOut, pData, cbData);
+    HeapFree(GetProcessHeap(), 0, pData);
+    return hr;
 }
 
 /**************************************************************************
@@ -617,121 +888,45 @@ HRESULT CQueryAssociations::GetValue(HKEY hkey, const WCHAR *name, void **data, 
 
 HRESULT CQueryAssociations::GetCommand(const WCHAR *extra, WCHAR **command)
 {
-    HKEY hkeyCommand;
-    HKEY hkeyShell;
-    HKEY hkeyVerb;
-    HRESULT hr;
-    LONG ret;
-    WCHAR *extra_from_reg = NULL;
-    WCHAR *filetype;
-
-    /* When looking for file extension it's possible to have a default value
-     that points to another key that contains 'shell/<verb>/command' subtree. */
-    hr = this->GetValue(this->hkeySource, NULL, (void**)&filetype, NULL);
-    if (hr == S_OK)
-    {
-        HKEY hkeyFile;
-
-        ret = RegOpenKeyExW(HKEY_CLASSES_ROOT, filetype, 0, KEY_READ, &hkeyFile);
-        HeapFree(GetProcessHeap(), 0, filetype);
-
-        if (ret == ERROR_SUCCESS)
-        {
-            ret = RegOpenKeyExW(hkeyFile, L"shell", 0, KEY_READ, &hkeyShell);
-            RegCloseKey(hkeyFile);
-        }
-        else
-        {
-            ret = RegOpenKeyExW(this->hkeySource, L"shell", 0, KEY_READ, &hkeyShell);
-        }
-    }
-    else
-    {
-        ret = RegOpenKeyExW(this->hkeySource, L"shell", 0, KEY_READ, &hkeyShell);
-    }
-
-    if (ret)
-    {
-        return HRESULT_FROM_WIN32(ret);
-    }
-
-    if (!extra)
-    {
-        /* check for default verb */
-        hr = this->GetValue(hkeyShell, NULL, (void**)&extra_from_reg, NULL);
-        if (FAILED(hr))
-            hr = this->GetValue(hkeyShell, L"open", (void**)&extra_from_reg, NULL);
-        if (FAILED(hr))
-        {
-            /* no default verb, try first subkey */
-            DWORD max_subkey_len;
-
-            ret = RegQueryInfoKeyW(hkeyShell, NULL, NULL, NULL, NULL, &max_subkey_len, NULL, NULL, NULL, NULL, NULL, NULL);
-            if (ret)
-            {
-                RegCloseKey(hkeyShell);
-                return HRESULT_FROM_WIN32(ret);
-            }
-
-            max_subkey_len++;
-            extra_from_reg = static_cast<WCHAR*>(HeapAlloc(GetProcessHeap(), 0, max_subkey_len * sizeof(WCHAR)));
-            if (!extra_from_reg)
-            {
-                RegCloseKey(hkeyShell);
-                return E_OUTOFMEMORY;
-            }
-
-            ret = RegEnumKeyExW(hkeyShell, 0, extra_from_reg, &max_subkey_len, NULL, NULL, NULL, NULL);
-            if (ret)
-            {
-                HeapFree(GetProcessHeap(), 0, extra_from_reg);
-                RegCloseKey(hkeyShell);
-                return HRESULT_FROM_WIN32(ret);
-            }
-        }
-        extra = extra_from_reg;
-    }
-
-    /* open verb subkey */
-    ret = RegOpenKeyExW(hkeyShell, extra, 0, KEY_READ, &hkeyVerb);
-    HeapFree(GetProcessHeap(), 0, extra_from_reg);
-    RegCloseKey(hkeyShell);
-    if (ret)
-    {
-        return HRESULT_FROM_WIN32(ret);
-    }
-    /* open command subkey */
-    ret = RegOpenKeyExW(hkeyVerb, L"command", 0, KEY_READ, &hkeyCommand);
-    RegCloseKey(hkeyVerb);
-    if (ret)
-    {
-        return HRESULT_FROM_WIN32(ret);
-    }
-    hr = this->GetValue(hkeyCommand, NULL, (void**)command, NULL);
-    RegCloseKey(hkeyCommand);
-    return hr;
+    HKEY hClass = GetClassHandle();
+    if (!hClass)
+        return E_UNEXPECTED;
+    return SH32_QueryAssocElementString(CLSID_AssocProgidElement, ASSOCQUERY_COMMAND, hClass, NULL, extra, command);
 }
 
 HRESULT CQueryAssociations::GetExecutable(LPCWSTR pszExtra, LPWSTR path, DWORD pathlen, DWORD *len)
 {
-    WCHAR *pszCommand;
-    WCHAR *pszStart;
-    WCHAR *pszEnd;
-
+    PWSTR pszCommand, pszStart, pszEnd, pszBuf, pszFree;
     HRESULT hr = this->GetCommand(pszExtra, &pszCommand);
-    if (FAILED_UNEXPECTEDLY(hr))
-    {
+    if (FAILED(hr))
         return hr;
-    }
 
     DWORD expLen = ExpandEnvironmentStringsW(pszCommand, NULL, 0);
     if (expLen > 0)
     {
-        expLen++;
-        WCHAR *buf = static_cast<WCHAR *>(HeapAlloc(GetProcessHeap(), 0, expLen * sizeof(WCHAR)));
-        ExpandEnvironmentStringsW(pszCommand, buf, expLen);
-        HeapFree(GetProcessHeap(), 0, pszCommand);
-        pszCommand = buf;
+        pszBuf = (PWSTR)SHAlloc(++expLen * sizeof(WCHAR));
+        if (!pszBuf)
+        {
+            SHFree(pszCommand);
+            return E_OUTOFMEMORY;
+        }
+        ExpandEnvironmentStringsW(pszCommand, pszBuf, expLen);
+        SHFree(pszCommand);
+        pszCommand = pszBuf;
+    }
+    pszFree = pszCommand;
+
+    // ASSOCF_REMAPRUNDLL implied for ASSOCSTR_EXECUTABLE
+    pszEnd = PathGetArgsW(pszCommand);
+    WCHAR save = *pszEnd;
+    *pszEnd = UNICODE_NULL;
+    pszStart = PathFindFileNameW(pszCommand + (*pszCommand == '"'));
+    *pszEnd = save;
+    if (!StrCmpNIW(pszStart, L"rundll", _countof(L"rundll") - 1))
+    {
+        pszCommand = pszEnd;
+        if ((pszEnd = StrChrW(pszCommand, ',')) != NULL)
+            *pszEnd = UNICODE_NULL; // Remove comma and function name
     }
 
     /* cleanup pszCommand */
@@ -764,7 +959,7 @@ HRESULT CQueryAssociations::GetExecutable(LPCWSTR pszExtra, LPWSTR path, DWORD p
         }
     }
 
-    HeapFree(GetProcessHeap(), 0, pszCommand);
+    SHFree(pszFree);
     if (!*len)
     {
         return HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
@@ -776,6 +971,10 @@ HRESULT CQueryAssociations::ReturnData(void *out, DWORD *outlen, const void *dat
 {
     if (out)
     {
+        DWORD lenNoReturn = PtrToUlong(outlen);
+        if (IS_INTRESOURCE(outlen) && IsNT5())
+            outlen = &lenNoReturn;
+
         if (*outlen < datalen)
         {
             *outlen = datalen;
@@ -804,6 +1003,10 @@ HRESULT CQueryAssociations::ReturnString(ASSOCF flags, LPWSTR out, DWORD *outlen
         *outlen = datalen;
         return S_FALSE;
     }
+
+    DWORD lenNoReturn = PtrToUlong(outlen);
+    if (IS_INTRESOURCE(outlen) && IsNT5())
+        outlen = &lenNoReturn;
 
     if (*outlen < datalen)
     {

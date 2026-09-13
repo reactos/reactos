@@ -265,7 +265,8 @@ CmpSecurityMethod(IN PVOID ObjectBody,
                   IN OUT PULONG BufferLength,
                   IN OUT PSECURITY_DESCRIPTOR *OldSecurityDescriptor,
                   IN POOL_TYPE PoolType,
-                  IN PGENERIC_MAPPING GenericMapping)
+                  IN PGENERIC_MAPPING GenericMapping,
+                  IN KPROCESSOR_MODE AccessMode)
 {
     PCM_KEY_CONTROL_BLOCK Kcb;
     NTSTATUS Status = STATUS_SUCCESS;

@@ -705,7 +705,7 @@ ApplyOrCancelChanges(
     WCHAR szName[200];
     LPOLESTR pszGuid;
 
-    while(pHead)
+    while (pHead)
     {
         if (pHead->bChanged)
         {
@@ -738,6 +738,8 @@ ApplyOrCancelChanges(
                     INetCfgComponentControl_CancelChanges(pHead->pControl);
                 }
             }
+
+            pHead->bChanged = FALSE;
         }
         pHead = pHead->pNext;
     }

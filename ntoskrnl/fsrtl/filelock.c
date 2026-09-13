@@ -676,6 +676,7 @@ FsRtlCheckLockForReadAccess(IN PFILE_LOCK FileLock,
     PIO_STACK_LOCATION IoStack = IoGetCurrentIrpStackLocation(Irp);
     COMBINED_LOCK_ELEMENT ToFind;
     PCOMBINED_LOCK_ELEMENT Found;
+    PEPROCESS Process = IoGetRequestorProcess(Irp);
     DPRINT("CheckLockForReadAccess(%wZ, Offset %08x%08x, Length %x)\n",
            &IoStack->FileObject->FileName,
            IoStack->Parameters.Read.ByteOffset.HighPart,
@@ -697,7 +698,8 @@ FsRtlCheckLockForReadAccess(IN PFILE_LOCK FileLock,
         return TRUE;
     }
     Result = !Found->Exclusive.FileLock.ExclusiveLock ||
-        IoStack->Parameters.Read.Key == Found->Exclusive.FileLock.Key;
+        (IoStack->Parameters.Read.Key == Found->Exclusive.FileLock.Key &&
+         Process == Found->Exclusive.FileLock.ProcessId);
     DPRINT("CheckLockForReadAccess(%wZ) => %s\n", &IoStack->FileObject->FileName, Result ? "TRUE" : "FALSE");
     return Result;
 }
@@ -1060,6 +1062,8 @@ FsRtlFastUnlockAll(IN PFILE_LOCK FileLock,
          Entry = RtlEnumerateGenericTable(&InternalInfo->RangeTable, FALSE))
     {
         LARGE_INTEGER Length;
+        if (Entry->Exclusive.FileLock.ProcessId != Process)
+            continue;
         // We'll take the first one to be the list head, and free the others first...
         Length.QuadPart =
             Entry->Exclusive.FileLock.EndingByte.QuadPart -

@@ -48,7 +48,10 @@ VOID PcVideoPrepareForReactOS(VOID);
 VOID PcPrepareForReactOS(VOID);
 
 PFREELDR_MEMORY_DESCRIPTOR PcMemGetMemoryMap(ULONG *MemoryMapSize);
-BOOLEAN PcFindPciBios(PPCI_REGISTRY_INFO BusData);
+
+BOOLEAN
+PcFindPciBios(
+    _Out_ PPCI_REGISTRY_INFO BusData);
 
 /*
  * Disk Variables and Functions

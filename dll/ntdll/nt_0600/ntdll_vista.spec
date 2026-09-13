@@ -1,6 +1,8 @@
 @ stdcall LdrRegisterDllNotification(long ptr ptr ptr)
 @ stdcall LdrUnregisterDllNotification(ptr)
 
+@ stdcall NtGetCurrentProcessorNumberEx(ptr)
+
 @ stdcall RtlGetProductInfo(long long long long ptr)
 @ stdcall RtlInitializeConditionVariable(ptr)
 @ stdcall RtlWakeConditionVariable(ptr)
@@ -17,17 +19,22 @@
 @ stdcall RtlRunOnceBeginInitialize(ptr long ptr)
 @ stdcall RtlRunOnceComplete(ptr long ptr)
 @ stdcall RtlRunOnceExecuteOnce(ptr ptr ptr ptr)
+@ stdcall RtlWow64GetProcessMachines(ptr ptr ptr)
 
 @ stdcall RtlConnectToSm(ptr ptr long ptr) SmConnectToSm
 @ stdcall RtlSendMsgToSm(ptr ptr) SmSendMsgToSm
 @ stdcall RtlLcidToLocaleName(long ptr long long)
 @ stdcall RtlLocaleNameToLcid(wstr ptr long)
 @ stdcall RtlCompareUnicodeStrings(wstr long wstr long long)
+@ stdcall RtlGetCurrentProcessorNumberEx(ptr)
 @ stdcall -arch=i386 RtlInterlockedPushListSListEx(ptr ptr ptr long)
 @ stdcall -arch=!i386 RtlInterlockedPushListSListEx(ptr ptr ptr long) ntdll.RtlInterlockedPushListSList
+@ stdcall RtlIsProcessorFeaturePresent(long)
 
 @ stdcall RtlUnicodeToUTF8N(ptr long ptr wstr long)
 @ stdcall RtlUTF8ToUnicodeN(ptr long ptr str long)
+
+@ stdcall RtlIsNameInExpression(ptr ptr long ptr)
 
 @ stdcall TpAllocCleanupGroup(ptr)
 @ stdcall TpAllocIoCompletion(ptr ptr ptr ptr ptr)

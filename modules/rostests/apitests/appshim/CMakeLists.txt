@@ -4,6 +4,7 @@ list(APPEND SOURCE
     dispmode.c
     forcedxsetup.c
     genral_hooks.c
+    globmemstatus.c
     ignorefreelib.c
     ignoreloadlib.c
     layer_hooks.c

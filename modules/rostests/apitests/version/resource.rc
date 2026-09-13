@@ -1,0 +1,5 @@
+#define REACTOS_VERSION_DLL
+#define REACTOS_STR_FILE_DESCRIPTION  "API test for version.dll"
+#define REACTOS_STR_INTERNAL_NAME     "version_apitest"
+#define REACTOS_STR_ORIGINAL_FILENAME "version_apitest.exe"
+#include <reactos/version.rc>

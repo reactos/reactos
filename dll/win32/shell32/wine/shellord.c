@@ -246,6 +246,8 @@ VOID WINAPI SHGetSetSettings(LPSHELLSTATE lpss, DWORD dwMask, BOOL bSet)
 
 #define SSF_STRUCTONLY (SSF_NOCONFIRMRECYCLE | SSF_DOUBLECLICKINWEBVIEW | SSF_DESKTOPHTML | \
                         SSF_WIN95CLASSIC | SSF_SORTCOLUMNS | SSF_STARTPANELON)
+#define SSF_ALL (0x07FFFFFF & ~0x40)
+#define SSF_IMPLEMENTED ((SSF_ALL) & ~(SSF_SERVERADMINUI)) // SERVERADMINUI is written by Explorer and read by IsOS()
 #define SHGSS_GetSetStruct(getsetmacro) \
     do { \
         getsetmacro(fNoConfirmRecycle, SSF_NOCONFIRMRECYCLE); \
@@ -278,11 +280,12 @@ VOID WINAPI SHGetSetSettings(LPSHELLSTATE lpss, DWORD dwMask, BOOL bSet)
 
     if (bSet)
     {
-        DWORD changed = 0;
-        if (dwMask & ~g_CachedSSF)
+        DWORD changed = 0, notcached = ~g_CachedSSF & SSF_IMPLEMENTED;
+        if (notcached & ~dwMask)
         {
+            // All entries in gpss have to be initialized (except the item we are about to set) because we are about to write the whole struct to the registry
             SHELLSTATE tempstate;
-            SHGetSetSettings(&tempstate, dwMask, FALSE); // Read entries that are not in g_CachedSSF
+            SHGetSetSettings(&tempstate, notcached & ~dwMask, FALSE); // Read entries that are not in gpss/g_CachedSSF
         }
 
 #define SHGSS_WriteAdv(name, value, SSF) \
