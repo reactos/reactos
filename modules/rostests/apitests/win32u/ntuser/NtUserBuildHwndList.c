@@ -10,7 +10,7 @@
 
 #include "../win32nt.h"
 
-#define LIST_TERMINATOR (HWND)1
+#define LIST_TERMINATOR ((HWND)1)
 
 LRESULT CALLBACK WindowProc(HWND Hwnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 {
