@@ -35,8 +35,8 @@ DWORD WINAPI GuiThreadFunction(LPVOID lpParam)
     wc.lpfnWndProc   = WindowProc;
     wc.hInstance     = hInstance;
     wc.lpszClassName = CLASS_NAME;
-    wc.hCursor       = LoadCursor(NULL, IDC_ARROW);
-    RegisterClass(&wc);
+    wc.hCursor       = LoadCursorW(NULL, IDC_ARROW);
+    RegisterClassW(&wc);
 
     HWND hwnd = CreateWindowEx(
         0,
