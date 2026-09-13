@@ -313,8 +313,6 @@ IntWinListChildrenFiltered(
     _In_ BOOLEAN Recursive,
     _Out_ PULONG Count)
 {
-    ASSERT(Window);
-
     SIZE_T childrenCount = 0;
     BOOLEAN goDown = TRUE;
     HWND* list;
