@@ -306,6 +306,7 @@ IntWinListChildren(PWND Window)
 }
 
 _Ret_writes_maybenull_(*Count)
+static
 HWND* FASTCALL
 IntWinListChildrenFiltered(
     _In_ PWND Window,
@@ -1606,7 +1607,6 @@ NtUserBuildHwndList(
     _Out_ HWND* phwndList,
     _Out_ ULONG* pcHwndNeeded)
 {
-    NTSTATUS resultStatus = STATUS_INVALID_HANDLE;
     NTSTATUS status;
     ULONG count = 0;
     PWND parent, window;
@@ -1614,8 +1614,6 @@ NtUserBuildHwndList(
     PTHREADINFO w32Thread = NULL;
     PDESKTOP desktop = NULL;
     HWND* hwndList = NULL;
-
-    UserEnterShared();
 
     // Skip useless work
     _SEH2_TRY
@@ -1625,9 +1623,11 @@ NtUserBuildHwndList(
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         SetLastNtError(_SEH2_GetExceptionCode());
-        goto Quit;
+        return STATUS_INVALID_HANDLE;
     }
     _SEH2_END
+
+    UserEnterShared();
 
     // Validate desktop
     if (hDesktop)
@@ -1636,6 +1636,7 @@ NtUserBuildHwndList(
         if (!NT_SUCCESS(status))
         {
             EngSetLastError(ERROR_INVALID_HANDLE);
+            status = STATUS_INVALID_HANDLE;
             goto Quit;
         }
     }
@@ -1645,6 +1646,7 @@ NtUserBuildHwndList(
         if (desktop == NULL)
         {
             EngSetLastError(ERROR_INVALID_HANDLE);
+            status = STATUS_INVALID_HANDLE;
             goto Quit;
         }
         ObReferenceObject(desktop);
@@ -1658,12 +1660,14 @@ NtUserBuildHwndList(
         {
             ERR("Thread Id is not valid!\n");
             SetLastNtError(STATUS_INVALID_PARAMETER);
+            status = STATUS_INVALID_HANDLE;
             goto Quit;
         }
         if (!(w32Thread = (PTHREADINFO)thread->Tcb.Win32Thread))
         {
             TRACE("Tried to enumerate windows of a non gui thread\n");
             SetLastNtError(STATUS_INVALID_PARAMETER);
+            status = STATUS_INVALID_HANDLE;
             goto Quit;
         }
     }
@@ -1679,7 +1683,10 @@ NtUserBuildHwndList(
         hwndList = IntWinListChildrenFiltered(window, w32Thread, bChildren, &count);
     }
     else
+    {
+        status = STATUS_INVALID_HANDLE;
         goto Quit;
+    }
 
     _SEH2_TRY
     {
@@ -1693,29 +1700,31 @@ NtUserBuildHwndList(
             RtlCopyMemory(phwndList, hwndList, (count - 1) * sizeof(HWND));
             // List terminator
             phwndList[count - 1] = HWND_LIST_TERMINATOR;
-            resultStatus = STATUS_SUCCESS;
+            status = STATUS_SUCCESS;
         }
         else
         {
-            resultStatus = STATUS_BUFFER_TOO_SMALL;
+            status = STATUS_BUFFER_TOO_SMALL;
         }
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         SetLastNtError(_SEH2_GetExceptionCode());
+        status = STATUS_INVALID_HANDLE;
     }
     _SEH2_END
 
 Quit:
+    UserLeave();
+
     if (desktop)
         ObDereferenceObject(desktop);
     if (thread)
         ObDereferenceObject(thread);
     if (hwndList)
         ExFreePoolWithTag(hwndList, USERTAG_WINDOWLIST);
-
-    UserLeave();
-    return resultStatus;
+    
+    return status;
 }
 
 static void IntSendParentNotify( PWND pWindow, UINT msg )

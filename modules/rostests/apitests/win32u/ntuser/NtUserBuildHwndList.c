@@ -26,8 +26,9 @@ LRESULT CALLBACK WindowProc(HWND Hwnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 DWORD WINAPI GuiThreadFunction(LPVOID lpParam)
 {
     DWORD error;
+    MSG msg;
     HINSTANCE hInstance = GetModuleHandleW(NULL);
-    const char CLASS_NAME[] = "GuiThreadWindowClass";
+    PCWSTR CLASS_NAME = L"GuiThreadWindowClass";    
 
     // Register the Window Class
     WNDCLASSW wc;
@@ -35,7 +36,7 @@ DWORD WINAPI GuiThreadFunction(LPVOID lpParam)
     wc.lpfnWndProc   = WindowProc;
     wc.hInstance     = hInstance;
     wc.lpszClassName = CLASS_NAME;
-    wc.hCursor       = LoadCursorW(NULL, IDC_ARROW);
+    wc.hCursor       = LoadCursorW(NULL, (PCWSTR)IDC_ARROW);
     RegisterClassW(&wc);
 
     HWND hwnd = CreateWindowExW(0, CLASS_NAME,
@@ -49,7 +50,12 @@ DWORD WINAPI GuiThreadFunction(LPVOID lpParam)
     error = GetLastError();
     ok(hwnd != NULL, "Create window is NULL\n");
     ok(error == ERROR_SUCCESS, "Error %u\n", error);
-    Sleep(3000);
+    
+    while (GetMessage(&msg, NULL, 0, 0))
+    {
+        TranslateMessage(&msg);
+        DispatchMessage(&msg);
+    }
    
     if (hwnd)
         DestroyWindow(hwnd);
@@ -59,7 +65,9 @@ DWORD WINAPI GuiThreadFunction(LPVOID lpParam)
 
 DWORD WINAPI ThreadFunction(LPVOID lpParam)
 {
-    Sleep(3000);    
+    PEVENT event = (PEVENT)lpParam;
+    WaitForSingleObject(event, INFINITE);
+
     return 0;
 }
 
@@ -67,8 +75,7 @@ START_TEST(NtUserBuildHwndList)
 {
     HDESK hDesktop = NULL;
     HWND hWndparent = NULL;
-    BOOL children = FALSE;
-    DWORD threadId = 0;
+    HANDLE hEvent;
     HANDLE hThread;
     DWORD newThreadId = 0;
     DWORD error = 0;
@@ -81,8 +88,8 @@ START_TEST(NtUserBuildHwndList)
     SetLastError(0);
     status = NtUserBuildHwndList(hDesktop,
                                  hWndparent,
-                                 children,
-                                 threadId,
+                                 FALSE,
+                                 0,
                                  ARRAYSIZE(hwndArray),
                                  hwndArray,
                                  &dwCount);
@@ -94,8 +101,8 @@ START_TEST(NtUserBuildHwndList)
     SetLastError(0);
     status = NtUserBuildHwndList(hDesktop,
                                  hWndparent,
-                                 children,
-                                 threadId,
+                                 FALSE,
+                                 0,
                                  ARRAYSIZE(hwndArray),
                                  NULL,
                                  &dwCount);
@@ -107,8 +114,8 @@ START_TEST(NtUserBuildHwndList)
     SetLastError(0);
     status = NtUserBuildHwndList(hDesktop,
                                  hWndparent,
-                                 children,
-                                 threadId,
+                                 FALSE,
+                                 0,
                                  ARRAYSIZE(hwndArray),
                                  (HWND*)(ULONG_PTR)0xDEADBEEF,
                                  &dwCount);
@@ -120,8 +127,8 @@ START_TEST(NtUserBuildHwndList)
     SetLastError(0);
     status = NtUserBuildHwndList(hDesktop,
                                  hWndparent,
-                                 children,
-                                 threadId,
+                                 FALSE,
+                                 0,
                                  ARRAYSIZE(hwndArray),
                                  hwndArray,
                                  NULL);
@@ -133,8 +140,8 @@ START_TEST(NtUserBuildHwndList)
     SetLastError(0);
     status = NtUserBuildHwndList(hDesktop,
                                  hWndparent,
-                                 children,
-                                 threadId,
+                                 FALSE,
+                                 0,
                                  ARRAYSIZE(hwndArray),
                                  hwndArray,
                                  (DWORD*)(ULONG_PTR)0xDEADBEEF);
@@ -146,7 +153,7 @@ START_TEST(NtUserBuildHwndList)
     SetLastError(0);
     status = NtUserBuildHwndList(hDesktop,
                                  hWndparent,
-                                 children,
+                                 FALSE,
                                  0xFFFFFFFF,
                                  ARRAYSIZE(hwndArray),
                                  hwndArray,
@@ -159,8 +166,8 @@ START_TEST(NtUserBuildHwndList)
     SetLastError(0);
     status = NtUserBuildHwndList(hDesktop,
                                  (HWND)(ULONG_PTR)1,
-                                 children,
-                                 threadId,
+                                 FALSE,
+                                 0,
                                  ARRAYSIZE(hwndArray),
                                  hwndArray,
                                  &dwCount);
@@ -172,8 +179,8 @@ START_TEST(NtUserBuildHwndList)
     SetLastError(0);
     status = NtUserBuildHwndList((HDESK)(ULONG_PTR)1,
                                  hWndparent,
-                                 children,
-                                 threadId,
+                                 FALSE,
+                                 0,
                                  ARRAYSIZE(hwndArray),
                                  hwndArray,
                                  &dwCount);
@@ -187,8 +194,8 @@ START_TEST(NtUserBuildHwndList)
     SetLastError(0);
     status = NtUserBuildHwndList(hDesktop,
                                  hWndparent,
-                                 children,
-                                 threadId,
+                                 FALSE,
+                                 0,
                                  ARRAYSIZE(hwndArray),
                                  (HWND*)(ULONG_PTR)si.lpMaximumApplicationAddress + 1,
                                  &dwCount);
@@ -200,8 +207,8 @@ START_TEST(NtUserBuildHwndList)
     SetLastError(0);
     status = NtUserBuildHwndList(hDesktop,
                                  hWndparent,
-                                 children,
-                                 threadId,
+                                 FALSE,
+                                 0,
                                  1,
                                  hwndArray,
                                  &dwCount);
@@ -224,7 +231,7 @@ START_TEST(NtUserBuildHwndList)
         dwCount = 0;
         status = NtUserBuildHwndList(hDesktop,
                                      hWndparent,
-                                     children,
+                                     FALSE,
                                      newThreadId,
                                      ARRAYSIZE(hwndArray),
                                      hwndArray,
@@ -235,7 +242,7 @@ START_TEST(NtUserBuildHwndList)
         ok_int(dwCount, 2);
         ok(hwndArray[dwCount - 1] == LIST_TERMINATOR, "List should end with HWND = 1");
 
-        WaitForSingleObject(hThread, 3000);
+        PostThreadMessage(newThreadId, WM_QUIT, 0, 0);
         CloseHandle(hThread);
         hThread = NULL;
     }
@@ -244,22 +251,23 @@ START_TEST(NtUserBuildHwndList)
         skip("Create gui thread failed\n");
     }
 
-    // 12 - Non Gui thread
+    // 12 - Thread without windows
+    hEvent = CreateEventW(NULL, TRUE, FALSE, NULL);
     hThread = CreateThread(NULL,
                            0,
                            ThreadFunction,
-                           NULL,
+                           hEvent,
                            0,
                            &newThreadId);
     
-    if (hThread)
+    if (hThread && hEvent)
     {  
         Sleep(1000);
 
         SetLastError(0);
         status = NtUserBuildHwndList(hDesktop,
                                      hWndparent,
-                                     children,
+                                     FALSE,
                                      newThreadId,
                                      ARRAYSIZE(hwndArray),
                                      hwndArray,
@@ -267,13 +275,18 @@ START_TEST(NtUserBuildHwndList)
         error = GetLastError();
         ok_int(status, STATUS_INVALID_HANDLE);
         ok_int(error, ERROR_INVALID_PARAMETER);
-
-        WaitForSingleObject(hThread, 3000);
-        CloseHandle(hThread);
-        hThread = NULL;
+        SetEvent(hEvent);
     }
     else
     {
         skip("Create non gui thread failed\n");
     }
+    
+    if (hThread)
+    {
+        CloseHandle(hThread);        
+        hThread = NULL;
+    }
+    if (hEvent)
+        CloseHandle(hEvent);    
 }
