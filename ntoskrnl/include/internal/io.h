@@ -615,6 +615,16 @@ IopReportDetectedResources(
     _In_ BOOLEAN ResourceAssigned
 );
 
+NTSTATUS
+NTAPI
+IopGetResourceProperty(
+    _In_ PDEVICE_NODE DeviceNode,
+    _In_ DEVICE_REGISTRY_PROPERTY DeviceProperty,
+    _In_ ULONG BufferLength,
+    _Out_writes_bytes_opt_(BufferLength) PVOID PropertyBuffer,
+    _Out_ PULONG ResultLength
+);
+
 //
 // Resource arbiters (pnparb.c)
 //
