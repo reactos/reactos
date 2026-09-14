@@ -8,6 +8,7 @@ elseif(ARCH STREQUAL "amd64")
         except/amd64/ehandler.c
     )
     list(APPEND LIBCNTPR_EXCEPT_ASM_SOURCE
+        except/amd64/callfilter.s
         except/amd64/chkstk_ms.s
         except/amd64/seh.s
     )
