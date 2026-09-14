@@ -2165,6 +2165,10 @@ PiEnumerateDevice(
                 /* Mark the node as enumerated */
                 ChildDeviceNode->Flags |= DNF_ENUMERATED;
 
+                /* Root enumerated devices are made up */
+                if (DeviceNode == IopRootDeviceNode)
+                    ChildDeviceNode->Flags |= DNF_MADEUP;
+
                 /* Mark the DO as bus enumerated */
                 ChildDeviceObject->Flags |= DO_BUS_ENUMERATED_DEVICE;
             }
