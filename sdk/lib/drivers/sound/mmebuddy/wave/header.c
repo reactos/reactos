@@ -10,7 +10,6 @@
 
 #include "precomp.h"
 
-
 /*
     This structure gets used locally within functions as a way to shuttle data
     to the sound thread. It's safe to use locally since CallSoundThread will
@@ -71,6 +70,8 @@ SanitizeWaveHeader(
 
     Extension->BytesCommitted = 0;
     Extension->BytesCompleted = 0;
+    Extension->ResampledLength = 0;
+    Extension->ResampledBuffer = NULL;
 }
 
 
@@ -115,6 +116,8 @@ PrepareWaveHeader(
     Header->reserved = (DWORD_PTR) Extension;
     Extension->BytesCommitted = 0;
     Extension->BytesCompleted = 0;
+    Extension->ResampledLength = 0;
+    Extension->ResampledBuffer = NULL;
 
     /* Configure the flags */
     Header->dwFlags |= WHDR_PREPARED;
@@ -219,6 +222,7 @@ EnqueueWaveHeader(
     PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
     IN  PVOID Parameter)
 {
+    MMRESULT Result;
     PWAVEHDR WaveHeader = (PWAVEHDR) Parameter;
 
     VALIDATE_MMSYS_PARAMETER( SoundDeviceInstance );
@@ -230,12 +234,31 @@ EnqueueWaveHeader(
     /* Set the "in queue" flag */
     WaveHeader->dwFlags |= WHDR_INQUEUE;
 
-    if ( ! SoundDeviceInstance->HeadWaveHeader )
+    if (SoundDeviceInstance->DoResampling)
+    {
+        PWAVEHDR_EXTENSION Extension = (PWAVEHDR_EXTENSION)WaveHeader->reserved;
+        SND_ASSERT(Extension);
+
+        /* Reample audio data */
+        Result = MmeResampleStream(&SoundDeviceInstance->WaveFormatEx,
+                                   &SoundDeviceInstance->DataRange,
+                                   WaveHeader->dwBufferLength,
+                                   WaveHeader->lpData,
+                                   &Extension->ResampledLength,
+                                   &Extension->ResampledBuffer);
+        if (!MMSUCCESS(Result))
+        {
+            /* Resampling has failed */
+            return TranslateInternalMmResult(Result);
+        }
+    }
+
+    if ( ! SoundDeviceInstance->WaveHeader )
     {
         /* This is the first header in the queue */
         SND_TRACE(L"Enqueued first wave header\n");
-        SoundDeviceInstance->HeadWaveHeader = WaveHeader;
-        SoundDeviceInstance->TailWaveHeader = WaveHeader;
+
+        SoundDeviceInstance->WaveHeader = WaveHeader;
 
         /* Only do wave streaming when the stream has not been paused */
         if (SoundDeviceInstance->bPaused == FALSE)
@@ -248,20 +271,17 @@ EnqueueWaveHeader(
         /* There are already queued headers - make this one the tail */
         SND_TRACE(L"Enqueued next wave header\n");
 
-        /* FIXME - Make sure that the buffer has not already been added to the list */
-        if ( SoundDeviceInstance->TailWaveHeader != WaveHeader )
+        /* Enumerate the whole wave headers queue */
+        PWAVEHDR TempHeader = SoundDeviceInstance->WaveHeader;
+        while (TempHeader->lpNext) TempHeader = TempHeader->lpNext;
+
+        /* Insert the header in the end of it */
+        TempHeader->lpNext = WaveHeader;
+
+        /* Only do wave streaming when the stream has not been paused */
+        if ( SoundDeviceInstance->bPaused == FALSE )
         {
-            SND_ASSERT(SoundDeviceInstance->TailWaveHeader != WaveHeader);
-
-            SoundDeviceInstance->TailWaveHeader->lpNext = WaveHeader;
-            SoundDeviceInstance->TailWaveHeader = WaveHeader;
-            DUMP_WAVEHDR_QUEUE(SoundDeviceInstance);
-
-            /* Only do wave streaming when the stream has not been paused */
-            if ( SoundDeviceInstance->bPaused == FALSE )
-            {
-                DoWaveStreaming(SoundDeviceInstance);
-            }
+            DoWaveStreaming(SoundDeviceInstance);
         }
     }
 
@@ -272,13 +292,12 @@ EnqueueWaveHeader(
 
 VOID
 CompleteWaveHeader(
-    IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
-    IN  PWAVEHDR Header)
+    IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance)
 {
-    PWAVEHDR PrevHdr = NULL, CurrHdr = NULL;
+    PWAVEHDR Header;
     PWAVEHDR_EXTENSION Extension;
-    PSOUND_DEVICE SoundDevice;
     MMDEVICE_TYPE DeviceType;
+    PSOUND_DEVICE SoundDevice;
     MMRESULT Result;
 
     SND_TRACE(L"BUFFER COMPLETE :)\n");
@@ -294,73 +313,36 @@ CompleteWaveHeader(
     Result = GetSoundDeviceType(SoundDevice, &DeviceType);
     SND_ASSERT( MMSUCCESS(Result) );
 
+    Header = SoundDeviceInstance->WaveHeader;
+    SND_ASSERT( Header );
+
     Extension = (PWAVEHDR_EXTENSION)Header->reserved;
-    SND_ASSERT( Extension );
+    SND_ASSERT(Extension);
 
     /* Remove the header from the queue, like so */
-    if ( SoundDeviceInstance->HeadWaveHeader == Header )
+    if ( Header )
     {
-        SoundDeviceInstance->HeadWaveHeader = Header->lpNext;
+        SoundDeviceInstance->WaveHeader = SoundDeviceInstance->WaveHeader->lpNext;
 
-        SND_TRACE(L"Dropping head node\n");
+        DUMP_WAVEHDR_QUEUE(SoundDeviceInstance);
 
-        /* If nothing after the head, then there is no tail */
-        if ( Header->lpNext == NULL )
+        SND_TRACE(L"Returning buffer to client...\n");
+
+        /* Update the header */
+        Header->lpNext = NULL;
+        Header->dwFlags &= ~WHDR_INQUEUE;
+        Header->dwFlags |= WHDR_DONE;
+
+        /* Safe to do this without thread protection, as we're done with the header */
+        NotifyMmeClient(SoundDeviceInstance,
+                        DeviceType == WAVE_OUT_DEVICE_TYPE ? WOM_DONE : WIM_DATA,
+                        (DWORD_PTR)Header);
+
+        if (SoundDeviceInstance->DoResampling)
         {
-            SND_TRACE(L"Dropping tail node\n");
-            SoundDeviceInstance->TailWaveHeader = NULL;
+            /* Free resampled buffer */
+            if (Extension->ResampledBuffer)
+                FreeMemory(Extension->ResampledBuffer);
         }
     }
-    else
-    {
-        PrevHdr = NULL;
-        CurrHdr = SoundDeviceInstance->HeadWaveHeader;
-
-        SND_TRACE(L"Relinking nodes\n");
-
-        while ( CurrHdr != Header )
-        {
-            PrevHdr = CurrHdr;
-            CurrHdr = CurrHdr->lpNext;
-            SND_ASSERT( CurrHdr );
-        }
-
-        SND_ASSERT( PrevHdr );
-
-        PrevHdr->lpNext = CurrHdr->lpNext;
-
-        /* If this is the tail node, update the tail */
-        if ( Header->lpNext == NULL )
-        {
-            SND_TRACE(L"Updating tail node\n");
-            SoundDeviceInstance->TailWaveHeader = PrevHdr;
-        }
-    }
-
-    /* Make sure we're not using this as the current buffer any more, either! */
-/*
-    if ( SoundDeviceInstance->CurrentWaveHeader == Header )
-    {
-        SoundDeviceInstance->CurrentWaveHeader = Header->lpNext;
-    }
-*/
-
-    DUMP_WAVEHDR_QUEUE(SoundDeviceInstance);
-
-    SND_TRACE(L"Returning buffer to client...\n");
-
-    /* Update the header */
-    Header->dwFlags &= ~WHDR_INQUEUE;
-    Header->dwFlags |= WHDR_DONE;
-
-    if ( DeviceType == WAVE_IN_DEVICE_TYPE )
-    {
-        // FIXME: We won't be called on incomplete buffer!
-        Header->dwBytesRecorded = Extension->BytesCompleted;
-    }
-
-    /* Safe to do this without thread protection, as we're done with the header */
-    NotifyMmeClient(SoundDeviceInstance,
-                    DeviceType == WAVE_OUT_DEVICE_TYPE ? WOM_DONE : WIM_DATA,
-                    (DWORD_PTR)Header);
 }

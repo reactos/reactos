@@ -7,6 +7,10 @@
 #include <winreg.h>
 #include <winuser.h>
 #include <mmddk.h>
+#define NOBITMAP
+#include <mmreg.h>
+#include <ks.h>
+#include <ksmedia.h>
 #include <sndnames.h>
 #include <sndtypes.h>
 #include <mmebuddy.h>

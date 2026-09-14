@@ -112,43 +112,89 @@ MMixerGetWaveInfoByIndexAndType(
 }
 
 VOID
+MMixerPrintRequestedFormat(
+    _In_ LPWAVEFORMATEX WaveFormatEx)
+{
+    DPRINT1("Audio format requested:\n\n");
+    DPRINT1("wFormatTag 0x%x\n", WaveFormatEx->wFormatTag);
+    DPRINT1("nChannels %u\n", WaveFormatEx->nChannels);
+    DPRINT1("nSamplesPerSec %u\n", WaveFormatEx->nSamplesPerSec);
+    DPRINT1("wBitsPerSample %u\n", WaveFormatEx->wBitsPerSample);
+    DPRINT1("nBlockAlign %u\n", WaveFormatEx->nBlockAlign);
+    DPRINT1("nAvgBytesPerSec %u\n", WaveFormatEx->nAvgBytesPerSec);
+    DPRINT1("cbSize %u\n", WaveFormatEx->cbSize);
+}
+
+USHORT
+MMixerGetFormatTag(
+    _In_ PKSDATARANGE_AUDIO DataRangeAudio,
+    _In_ LPWAVEFORMATEX WaveFormatEx)
+{
+    /* Does requested format exceed maximum available one? */
+    if (WaveFormatEx->nChannels > DataRangeAudio->MaximumChannels ||
+        WaveFormatEx->nSamplesPerSec > DataRangeAudio->MaximumSampleFrequency ||
+        WaveFormatEx->wBitsPerSample > DataRangeAudio->MaximumBitsPerSample)
+    {
+        /* Does it have any additional data? */
+        if (WaveFormatEx->cbSize > 0)
+        {
+            /* Extensible format */
+            return WAVE_FORMAT_EXTENSIBLE;
+        }
+        else
+        {
+            /* Standard PCM format */
+            return WAVE_FORMAT_PCM;
+        }
+    }
+    else
+    {
+        /* Otherwise, return the tag as-is */
+        return WaveFormatEx->wFormatTag;
+    }
+}
+
+VOID
 MMixerInitializeDataFormat(
     _Inout_ PKSDATAFORMAT_WAVEFORMATEX DataFormat,
+    _In_ PKSDATARANGE_AUDIO DataRangeAudio,
     _In_ LPWAVEFORMATEX WaveFormatEx,
     _In_ DWORD cbSize)
 {
-    DataFormat->WaveFormatEx.wFormatTag = WaveFormatEx->wFormatTag;
-    DataFormat->WaveFormatEx.nChannels = WaveFormatEx->nChannels;
-    DataFormat->WaveFormatEx.nSamplesPerSec = WaveFormatEx->nSamplesPerSec;
-    DataFormat->WaveFormatEx.nBlockAlign = WaveFormatEx->nBlockAlign;
-    DataFormat->WaveFormatEx.nAvgBytesPerSec = WaveFormatEx->nAvgBytesPerSec;
-    DataFormat->WaveFormatEx.wBitsPerSample = WaveFormatEx->wBitsPerSample;
-    DataFormat->WaveFormatEx.cbSize = cbSize;
-    DataFormat->DataFormat.FormatSize = sizeof(KSDATAFORMAT) + sizeof(WAVEFORMATEX) + cbSize;
+    MMixerPrintRequestedFormat(WaveFormatEx);
+
+    DataFormat->WaveFormatEx.wFormatTag = MMixerGetFormatTag(DataRangeAudio, WaveFormatEx);
+    DataFormat->WaveFormatEx.nChannels = DataRangeAudio->MaximumChannels;
+    DataFormat->WaveFormatEx.nSamplesPerSec = min(WaveFormatEx->nSamplesPerSec, DataRangeAudio->MaximumSampleFrequency);
+    DataFormat->WaveFormatEx.wBitsPerSample = DataRangeAudio->MaximumBitsPerSample;
+    DataFormat->WaveFormatEx.nBlockAlign = (DataFormat->WaveFormatEx.nChannels * DataFormat->WaveFormatEx.wBitsPerSample) / 8;
+    DataFormat->WaveFormatEx.nAvgBytesPerSec = DataFormat->WaveFormatEx.nSamplesPerSec * DataFormat->WaveFormatEx.nBlockAlign;
+    DataFormat->WaveFormatEx.cbSize = max(sizeof(WAVEFORMATEXTENSIBLE) - sizeof(WAVEFORMATEX), cbSize);
+    DataFormat->DataFormat.FormatSize = sizeof(KSDATAFORMAT) + max(sizeof(WAVEFORMATEXTENSIBLE), sizeof(WAVEFORMATEX) + cbSize);
     DataFormat->DataFormat.Flags = 0;
     DataFormat->DataFormat.Reserved = 0;
     DataFormat->DataFormat.MajorFormat = KSDATAFORMAT_TYPE_AUDIO;
     DataFormat->DataFormat.SubFormat = KSDATAFORMAT_SUBTYPE_PCM;
     DataFormat->DataFormat.Specifier = KSDATAFORMAT_SPECIFIER_WAVEFORMATEX;
-    DataFormat->DataFormat.SampleSize = 4;
+    DataFormat->DataFormat.SampleSize = (DataFormat->WaveFormatEx.wBitsPerSample / 8) * DataFormat->WaveFormatEx.nChannels;
 
     /* Write additional fields for Extensible audio format */
     if (WaveFormatEx->wFormatTag == WAVE_FORMAT_EXTENSIBLE)
     {
         PWAVEFORMATEXTENSIBLE WaveFormatExt = (PWAVEFORMATEXTENSIBLE)&DataFormat->WaveFormatEx;
         WaveFormatExt->SubFormat = KSDATAFORMAT_SUBTYPE_PCM;
-        WaveFormatExt->Samples.wValidBitsPerSample = WaveFormatEx->wBitsPerSample;
-        if (WaveFormatEx->nChannels == 0)
+        WaveFormatExt->Samples.wValidBitsPerSample = DataRangeAudio->MaximumBitsPerSample;
+        if (DataRangeAudio->MaximumChannels == 0)
             WaveFormatExt->dwChannelMask = KSAUDIO_SPEAKER_DIRECTOUT;
-        else if (WaveFormatEx->nChannels == 1)
+        else if (DataRangeAudio->MaximumChannels == 1)
             WaveFormatExt->dwChannelMask = KSAUDIO_SPEAKER_MONO;
-        else if (WaveFormatEx->nChannels == 2)
+        else if (DataRangeAudio->MaximumChannels == 2)
             WaveFormatExt->dwChannelMask = KSAUDIO_SPEAKER_STEREO;
-        else if (WaveFormatEx->nChannels == 4)
+        else if (DataRangeAudio->MaximumChannels == 4)
             WaveFormatExt->dwChannelMask = KSAUDIO_SPEAKER_QUAD;
-        else if (WaveFormatEx->nChannels == 5)
+        else if (DataRangeAudio->MaximumChannels == 5)
             WaveFormatExt->dwChannelMask = KSAUDIO_SPEAKER_5POINT1;
-        else if (WaveFormatEx->nChannels == 7)
+        else if (DataRangeAudio->MaximumChannels == 7)
             WaveFormatExt->dwChannelMask = KSAUDIO_SPEAKER_7POINT1;
     }
 }
@@ -238,10 +284,13 @@ MMixerOpenWavePin(
     IN ACCESS_MASK DesiredAccess,
     IN PIN_CREATE_CALLBACK CreateCallback,
     IN PVOID Context,
-    OUT PHANDLE PinHandle)
+    OUT PHANDLE PinHandle,
+    OUT PKSDATARANGE_AUDIO OutDataRange)
 {
     PKSPIN_CONNECT PinConnect;
     PKSDATAFORMAT_WAVEFORMATEX DataFormat;
+    PKSMULTIPLE_ITEM MultipleItem;
+    PKSDATARANGE_AUDIO DataRangeAudio;
     LPMIXER_DATA MixerData;
     NTSTATUS Status;
     MIXER_STATUS MixerStatus;
@@ -267,8 +316,26 @@ MMixerOpenWavePin(
 
     /* get offset to dataformat */
     DataFormat = (PKSDATAFORMAT_WAVEFORMATEX) (PinConnect + 1);
+
+    /* get audio pin data ranges */
+    MixerStatus = MMixerGetAudioPinDataRanges(MixerContext, MixerData->hDevice, PinId, &MultipleItem);
+    if (MixerStatus != MM_STATUS_SUCCESS)
+    {
+        /* failed to get audio pin data ranges */
+        return MM_STATUS_UNSUCCESSFUL;
+    }
+
+    /* find an KSDATARANGE_AUDIO range */
+    MixerStatus = MMixerFindAudioDataRange(MultipleItem, &DataRangeAudio);
+    if (MixerStatus != MM_STATUS_SUCCESS)
+    {
+        /* failed to find audio pin data range */
+        MixerContext->Free(MultipleItem);
+        return MM_STATUS_UNSUCCESSFUL;
+    }
+
     /* initialize with requested wave format */
-    MMixerInitializeDataFormat(DataFormat, WaveFormatEx, cbSize);
+    MMixerInitializeDataFormat(DataFormat, DataRangeAudio, WaveFormatEx, cbSize);
 
     if (CreateCallback)
     {
@@ -286,6 +353,17 @@ MMixerOpenWavePin(
         else
             MixerStatus = MM_STATUS_UNSUCCESSFUL;
     }
+
+    /* Save out data range */
+    OutDataRange->DataRange = DataRangeAudio->DataRange;
+    OutDataRange->MaximumChannels = DataRangeAudio->MaximumChannels;
+    OutDataRange->MinimumBitsPerSample = DataRangeAudio->MinimumBitsPerSample;
+    OutDataRange->MaximumBitsPerSample = DataRangeAudio->MaximumBitsPerSample;
+    OutDataRange->MinimumSampleFrequency = DataRangeAudio->MinimumSampleFrequency;
+    OutDataRange->MaximumSampleFrequency = DataRangeAudio->MaximumSampleFrequency;
+
+    /* free dataranges buffer */
+    MixerContext->Free(MultipleItem);
 
     /* free create info */
     MixerContext->Free(PinConnect);
@@ -457,7 +535,8 @@ MMixerOpenWave(
     IN LPWAVEFORMATEX WaveFormat,
     IN PIN_CREATE_CALLBACK CreateCallback,
     IN PVOID Context,
-    OUT PHANDLE PinHandle)
+    OUT PHANDLE PinHandle,
+    OUT PKSDATARANGE_AUDIO OutDataRange)
 {
     PMIXER_LIST MixerList;
     MIXER_STATUS Status;
@@ -495,7 +574,7 @@ MMixerOpenWave(
     }
 
     /* now try open the pin */
-    return MMixerOpenWavePin(MixerContext, MixerList, WaveInfo->DeviceId, WaveInfo->PinId, WaveFormat, DesiredAccess, CreateCallback, Context, PinHandle);
+    return MMixerOpenWavePin(MixerContext, MixerList, WaveInfo->DeviceId, WaveInfo->PinId, WaveFormat, DesiredAccess, CreateCallback, Context, PinHandle, OutDataRange);
 }
 
 MIXER_STATUS

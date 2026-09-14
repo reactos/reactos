@@ -5,7 +5,8 @@ if(DBG)
     add_compile_definitions(NDEBUG)
 endif()
 
-include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/libs/sound)
+include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/libs/sound
+                    ${REACTOS_SOURCE_DIR}/sdk/lib/3rdparty/resampler)
 
 list(APPEND SOURCE
     capabilities.c
@@ -25,9 +26,11 @@ list(APPEND SOURCE
     wave/wodMessage.c
     wave/format.c
     wave/header.c
+    wave/resample.c
     wave/streaming.c
     precomp.h)
 
 add_library(mmebuddy ${SOURCE})
+target_link_libraries(mmebuddy resampler)
 add_pch(mmebuddy precomp.h SOURCE)
 add_dependencies(mmebuddy psdk)
