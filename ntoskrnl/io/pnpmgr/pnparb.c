@@ -5523,4 +5523,90 @@ IopReportDetectedResources(
                                     &IsConflicting);
 }
 
+/**
+ * @brief
+ * Copies a resource list of a device for IoGetDeviceProperty. A missing list
+ * returns 0 bytes.
+ *
+ * @param[in] Translated
+ * For the allocated resources, the translated list that follows the raw one.
+ *
+ * @return
+ * STATUS_SUCCESS, or STATUS_BUFFER_TOO_SMALL with the size in ResultLength.
+ */
+static
+NTSTATUS
+NTAPI
+IopCopyDeviceProperty(
+    _In_opt_ PVOID Data,
+    _In_ ULONG Size,
+    _In_opt_ PCM_RESOURCE_LIST Translated,
+    _In_ ULONG BufferLength,
+    _Out_writes_bytes_opt_(BufferLength) PVOID PropertyBuffer,
+    _Out_ PULONG ResultLength)
+{
+    ULONG TranslatedSize = (Translated != NULL) ? PnpDetermineResourceListSize(Translated) : 0;
+
+    *ResultLength = (Data != NULL) ? Size + TranslatedSize : 0;
+
+    if (*ResultLength > BufferLength)
+        return STATUS_BUFFER_TOO_SMALL;
+
+    if (*ResultLength != 0)
+    {
+        RtlCopyMemory(PropertyBuffer, Data, Size);
+        RtlCopyMemory((PUCHAR)PropertyBuffer + Size, Translated, TranslatedSize);
+    }
+
+    return STATUS_SUCCESS;
+}
+
+/**
+ * @brief
+ * Returns DevicePropertyResourceRequirements or DevicePropertyAllocatedResources
+ * of a device. The allocated resources are the raw list followed by the
+ * translated list, and are only returned when both exist.
+ */
+NTSTATUS
+NTAPI
+IopGetResourceProperty(
+    _In_ PDEVICE_NODE DeviceNode,
+    _In_ DEVICE_REGISTRY_PROPERTY DeviceProperty,
+    _In_ ULONG BufferLength,
+    _Out_writes_bytes_opt_(BufferLength) PVOID PropertyBuffer,
+    _Out_ PULONG ResultLength)
+{
+    NTSTATUS Status;
+
+    PAGED_CODE();
+
+    if (DeviceProperty == DevicePropertyResourceRequirements)
+    {
+        PIO_RESOURCE_REQUIREMENTS_LIST Requirements = DeviceNode->ResourceRequirements;
+
+        Status = IopCopyDeviceProperty(Requirements,
+                                       (Requirements != NULL) ? Requirements->ListSize : 0,
+                                       NULL,
+                                       BufferLength,
+                                       PropertyBuffer,
+                                       ResultLength);
+    }
+    else if (DeviceNode->ResourceList != NULL && DeviceNode->ResourceListTranslated != NULL)
+    {
+        Status = IopCopyDeviceProperty(DeviceNode->ResourceList,
+                                       PnpDetermineResourceListSize(DeviceNode->ResourceList),
+                                       DeviceNode->ResourceListTranslated,
+                                       BufferLength,
+                                       PropertyBuffer,
+                                       ResultLength);
+    }
+    else
+    {
+        *ResultLength = 0;
+        Status = STATUS_SUCCESS;
+    }
+
+    return Status;
+}
+
 /* EOF */

@@ -1546,9 +1546,15 @@ IoGetDeviceProperty(IN PDEVICE_OBJECT DeviceObject,
             PIP_REGISTRY_DATA(REGSTR_VAL_CONFIGFLAGS, REG_DWORD);
             break;
         case DevicePropertyResourceRequirements:
-            PIP_UNIMPLEMENTED();
         case DevicePropertyAllocatedResources:
-            PIP_UNIMPLEMENTED();
+
+            /* The allocated resources are the raw list followed by the translated one */
+            return IopGetResourceProperty(DeviceNode,
+                                          DeviceProperty,
+                                          BufferLength,
+                                          PropertyBuffer,
+                                          ResultLength);
+
         default:
             return STATUS_INVALID_PARAMETER_2;
     }
