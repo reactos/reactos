@@ -51,6 +51,15 @@ IopCreateArcNames(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     SingleDisk = (ArcDiskInfo->DiskSignatureListHead.Flink->Flink ==
                  &ArcDiskInfo->DiskSignatureListHead);
 
+    /* This runs again while waiting for the boot device, drop the previous names */
+    RtlFreeUnicodeString(&IoArcHalDeviceName);
+    RtlFreeUnicodeString(&IoArcBootDeviceName);
+    if (IoLoaderArcBootDeviceName)
+    {
+        ExFreePoolWithTag(IoLoaderArcBootDeviceName, TAG_IO);
+        IoLoaderArcBootDeviceName = NULL;
+    }
+
     /* Create the firmware system loader / HAL partition global name */
     sprintf(Buffer, "\\ArcName\\%s", LoaderBlock->ArcHalDeviceName);
     RtlInitAnsiString(&ArcString, Buffer);
