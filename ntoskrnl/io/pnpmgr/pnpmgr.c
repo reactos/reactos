@@ -40,6 +40,153 @@ IopFixupDeviceId(PWCHAR String)
     }
 }
 
+/* Deep enough for any database entry, and bounds the recursion on a corrupt hive */
+#define IOP_CRITICAL_PARAMETERS_MAX_DEPTH 8
+
+static
+NTSTATUS
+IopCopyKeyContents(
+    _In_ HANDLE SourceKey,
+    _In_ HANDLE TargetKey,
+    _In_ ULONG Depth)
+{
+    PKEY_VALUE_FULL_INFORMATION Value;
+    PKEY_BASIC_INFORMATION SubKey;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    HANDLE SourceChild, TargetChild;
+    UNICODE_STRING Name;
+    ULONG Index, Length;
+    NTSTATUS Status;
+
+    if (Depth > IOP_CRITICAL_PARAMETERS_MAX_DEPTH)
+        return STATUS_SUCCESS;
+
+    for (Index = 0; ; Index++)
+    {
+        Status = ZwEnumerateValueKey(SourceKey, Index, KeyValueFullInformation, NULL, 0, &Length);
+        if (Status == STATUS_NO_MORE_ENTRIES)
+            break;
+        if (Status != STATUS_BUFFER_OVERFLOW && Status != STATUS_BUFFER_TOO_SMALL)
+            return Status;
+
+        Value = ExAllocatePoolWithTag(PagedPool, Length, TAG_IO);
+        if (!Value)
+            return STATUS_INSUFFICIENT_RESOURCES;
+
+        Status = ZwEnumerateValueKey(SourceKey, Index, KeyValueFullInformation, Value, Length, &Length);
+        if (NT_SUCCESS(Status))
+        {
+            Name.Buffer = Value->Name;
+            Name.Length = Name.MaximumLength = (USHORT)Value->NameLength;
+            Status = ZwSetValueKey(TargetKey,
+                                   &Name,
+                                   0,
+                                   Value->Type,
+                                   (PUCHAR)Value + Value->DataOffset,
+                                   Value->DataLength);
+        }
+
+        ExFreePoolWithTag(Value, TAG_IO);
+        if (!NT_SUCCESS(Status))
+            return Status;
+    }
+
+    for (Index = 0; ; Index++)
+    {
+        Status = ZwEnumerateKey(SourceKey, Index, KeyBasicInformation, NULL, 0, &Length);
+        if (Status == STATUS_NO_MORE_ENTRIES)
+            break;
+        if (Status != STATUS_BUFFER_OVERFLOW && Status != STATUS_BUFFER_TOO_SMALL)
+            return Status;
+
+        SubKey = ExAllocatePoolWithTag(PagedPool, Length, TAG_IO);
+        if (!SubKey)
+            return STATUS_INSUFFICIENT_RESOURCES;
+
+        Status = ZwEnumerateKey(SourceKey, Index, KeyBasicInformation, SubKey, Length, &Length);
+        if (NT_SUCCESS(Status))
+        {
+            Name.Buffer = SubKey->Name;
+            Name.Length = Name.MaximumLength = (USHORT)SubKey->NameLength;
+
+            InitializeObjectAttributes(&ObjectAttributes,
+                                       &Name,
+                                       OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE,
+                                       SourceKey,
+                                       NULL);
+            Status = ZwOpenKey(&SourceChild, KEY_READ, &ObjectAttributes);
+            if (NT_SUCCESS(Status))
+            {
+                ObjectAttributes.RootDirectory = TargetKey;
+                Status = ZwCreateKey(&TargetChild,
+                                     KEY_ALL_ACCESS,
+                                     &ObjectAttributes,
+                                     0,
+                                     NULL,
+                                     REG_OPTION_NON_VOLATILE,
+                                     NULL);
+                if (NT_SUCCESS(Status))
+                {
+                    Status = IopCopyKeyContents(SourceChild, TargetChild, Depth + 1);
+                    ZwClose(TargetChild);
+                }
+
+                ZwClose(SourceChild);
+            }
+        }
+
+        ExFreePoolWithTag(SubKey, TAG_IO);
+        if (!NT_SUCCESS(Status))
+            return Status;
+    }
+
+    return STATUS_SUCCESS;
+}
+
+/*
+ * A critical device starts before any INF runs for it, so the settings its INF
+ * would write under Device Parameters come from the database entry instead.
+ */
+static
+VOID
+IopCopyCriticalDeviceParameters(
+    _In_ HANDLE DatabaseEntryKey,
+    _In_ HANDLE InstanceKey)
+{
+    UNICODE_STRING ParametersU = RTL_CONSTANT_STRING(L"Device Parameters");
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    HANDLE SourceKey, TargetKey;
+    NTSTATUS Status;
+
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &ParametersU,
+                               OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE,
+                               DatabaseEntryKey,
+                               NULL);
+    Status = ZwOpenKey(&SourceKey, KEY_READ, &ObjectAttributes);
+    if (!NT_SUCCESS(Status))
+        return;
+
+    ObjectAttributes.RootDirectory = InstanceKey;
+    Status = ZwCreateKey(&TargetKey,
+                         KEY_ALL_ACCESS,
+                         &ObjectAttributes,
+                         0,
+                         NULL,
+                         REG_OPTION_NON_VOLATILE,
+                         NULL);
+    if (NT_SUCCESS(Status))
+    {
+        Status = IopCopyKeyContents(SourceKey, TargetKey, 0);
+        if (!NT_SUCCESS(Status))
+            DPRINT1("Failed to copy the critical device parameters (Status 0x%08lx)\n", Status);
+
+        ZwClose(TargetKey);
+    }
+
+    ZwClose(SourceKey);
+}
+
 VOID
 NTAPI
 IopInstallCriticalDevice(PDEVICE_NODE DeviceNode)
@@ -359,6 +506,8 @@ IopInstallCriticalDevice(PDEVICE_NODE DeviceNode)
                     {
                         DPRINT1("Installed NULL service for critical device '%wZ'\n", &ChildIdNameU);
                     }
+
+                    IopCopyCriticalDeviceParameters(ChildKeyHandle, InstanceKey);
 
                     ExFreePool(OriginalIdBuffer);
                     ExFreePool(PartialInfo);
