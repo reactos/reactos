@@ -1,4 +1,6 @@
 
+PROJECT(taskmgr)
+
 list(APPEND SOURCE
     about.c
     affinity.c
