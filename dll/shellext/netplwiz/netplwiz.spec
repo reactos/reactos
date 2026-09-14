@@ -1,7 +1,7 @@
 1 stub AddNetPlaceRunDll
 2 stub PassportWizardRunDll
 3 stub PublishRunDll
-4 stdcall UsersRunDll(ptr ptr ptr long) # NT5
+4 stdcall -version=0x500-0x502 UsersRunDll(ptr ptr ptr long) # NT5
 @ stdcall UsersRunDllW(ptr ptr ptr long) # NT6
 5 stdcall ClearAutoLogon()
 @ stdcall -private DllCanUnloadNow()

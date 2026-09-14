@@ -69,8 +69,10 @@ UsersRunDllW(HWND hWnd, HINSTANCE hInstance, LPWSTR pszCmdLine, int nCmdShow)
     ShellExecuteExW(&sei);
 }
 
+#if DLL_EXPORT_VERSION < _WIN32_WINNT_VISTA
 void WINAPI
 UsersRunDll(HWND hWnd, HINSTANCE hInstance, LPSTR pszCmdLine, int nCmdShow)
 {
     UsersRunDllW(hWnd, hInstance, L"", nCmdShow);
 }
+#endif
