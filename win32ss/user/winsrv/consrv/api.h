@@ -116,6 +116,8 @@ CSR_API(SrvSetConsoleCursorPosition);
 CSR_API(SrvSetConsoleTextAttribute);
 CSR_API(SrvCreateConsoleScreenBuffer);
 CSR_API(SrvGetConsoleScreenBufferInfo);
+CSR_API(SrvGetConsoleScreenBufferInfoEx);
+CSR_API(SrvSetConsoleScreenBufferInfoEx);
 CSR_API(SrvSetConsoleActiveScreenBuffer);
 CSR_API(SrvSetConsoleScreenBufferSize);
 CSR_API(SrvScrollConsoleScreenBuffer);

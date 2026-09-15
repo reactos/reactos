@@ -3,7 +3,7 @@
  * PROJECT:         ReactOS Console Server DLL
  * FILE:            win32ss/user/winsrv/consrv/frontends/gui/text.c
  * PURPOSE:         GUI Terminal Front-End - Support for text-mode screen-buffers
- * PROGRAMMERS:     Gé van Geldorp
+ * PROGRAMMERS:     Gï¿½ van Geldorp
  *                  Johannes Anderwald
  *                  Jeffrey Morlan
  *                  Hermes Belusca-Maito (hermes.belusca@sfr.fr)
@@ -34,6 +34,59 @@ PaletteRGBFromAttrib(PCONSRV_CONSOLE Console, WORD Attribute)
 
     GetPaletteEntries(hPalette, Attribute, 1, &pe);
     return PALETTERGB(pe.peRed, pe.peGreen, pe.peBlue);
+}
+
+/*
+ * The 16 palette colours resolved once per paint.
+ *
+ * PaletteRGBFromAttrib() is a GetPaletteEntries() round-trip into win32k when a
+ * palette handle is set, so calling it per cell would cost thousands of GDI
+ * calls per repaint. Cache the whole table up front instead - it cannot change
+ * while we hold the console lock.
+ */
+typedef struct _GUI_PALETTE_CACHE
+{
+    COLORREF Entries[16];
+} GUI_PALETTE_CACHE, *PGUI_PALETTE_CACHE;
+
+static VOID
+GuiBuildPaletteCache(PCONSRV_CONSOLE Console, PGUI_PALETTE_CACHE Cache)
+{
+    WORD Index;
+
+    for (Index = 0; Index < ARRAYSIZE(Cache->Entries); ++Index)
+        Cache->Entries[Index] = PaletteRGBFromAttrib(Console, Index);
+}
+
+/*
+ * Resolve one cell's colour: an extended 24-bit colour if the VT layer stored
+ * one, otherwise the palette entry the attribute selects.
+ */
+FORCEINLINE COLORREF
+GuiResolveColor(PGUI_PALETTE_CACHE Cache, PTEXTMODE_SCREEN_BUFFER Buffer, ULONG X, ULONG Y, WORD Attribute, BOOLEAN Foreground)
+{
+    COLORREF Color = Foreground ? ConioGetCellFgColor(Buffer, X, Y)
+                                : ConioGetCellBgColor(Buffer, X, Y);
+    if (Color != CLR_INVALID)
+        return Color & 0x00FFFFFF;
+
+    return Cache->Entries[(Foreground ? TextAttribFromAttrib(Attribute) : BkgdAttribFromAttrib(Attribute)) & 0x0F];
+}
+
+/*
+ * As above, but for a row whose base was resolved once by the caller - the paint
+ * loops walk a line at a time, so this keeps the ring-buffer index division out
+ * of the per-cell path. Row may be NULL when the plane is not allocated.
+ */
+FORCEINLINE COLORREF
+GuiResolveColorInRow(PGUI_PALETTE_CACHE Cache, const CELL_RGB *Row, ULONG X, WORD Attribute, BOOLEAN Foreground)
+{
+    COLORREF Color = Row ? (Foreground ? Row[X].Fg : Row[X].Bg) : CLR_INVALID;
+
+    if (Color != CLR_INVALID)
+        return Color & 0x00FFFFFF;
+
+    return Cache->Entries[(Foreground ? TextAttribFromAttrib(Attribute) : BkgdAttribFromAttrib(Attribute)) & 0x0F];
 }
 
 static VOID
@@ -373,6 +426,7 @@ GuiPaintCaret(
 
     ULONG CursorX, CursorY, CursorHeight;
     HBRUSH CursorBrush, OldBrush;
+    COLORREF CursorColor;
     WORD Attribute;
 
     if (Buffer->CursorInfo.bVisible &&
@@ -390,7 +444,14 @@ GuiPaintCaret(
             if (Attribute == DEFAULT_SCREEN_ATTRIB)
                 Attribute = Buffer->ScreenDefaultAttrib;
 
-            CursorBrush = CreateSolidBrush(PaletteRGBFromAttrib(Console, TextAttribFromAttrib(Attribute)));
+            /* One cell only, so resolve it directly rather than build the palette cache */
+            CursorColor = ConioGetCellFgColor(Buffer, CursorX, CursorY);
+            if (CursorColor == CLR_INVALID)
+                CursorColor = PaletteRGBFromAttrib(Console, TextAttribFromAttrib(Attribute));
+            else
+                CursorColor &= 0x00FFFFFF;
+
+            CursorBrush = CreateSolidBrush(CursorColor);
             OldBrush    = SelectObject(GuiData->hMemDC, CursorBrush);
 
             if (Attribute & COMMON_LVB_LEADING_BYTE)
@@ -441,8 +502,10 @@ GuiPaintTextModeBuffer(PTEXTMODE_SCREEN_BUFFER Buffer,
     PCHAR_INFO From;
     PWCHAR To;
     WORD LastAttribute, Attribute;
+    COLORREF LastTextColor, LastBkColor, CellTextColor, CellBkColor;
     HFONT OldFont, NewFont;
     BOOLEAN IsUnderline;
+    GUI_PALETTE_CACHE Palette;
 
     // ASSERT(Console == GuiData->Console);
 
@@ -470,27 +533,33 @@ GuiPaintTextModeBuffer(PTEXTMODE_SCREEN_BUFFER Buffer,
     if (BottomLine >= (ULONG)Buffer->ScreenBufferSize.Y)
         BottomLine  = Buffer->ScreenBufferSize.Y - 1;
 
-    LastAttribute = ConioCoordToPointer(Buffer, LeftColumn, TopLine)->Attributes;
+    GuiBuildPaletteCache(Console, &Palette);
 
-    SetTextColor(GuiData->hMemDC, PaletteRGBFromAttrib(Console, TextAttribFromAttrib(LastAttribute)));
-    SetBkColor(GuiData->hMemDC, PaletteRGBFromAttrib(Console, BkgdAttribFromAttrib(LastAttribute)));
+    LastAttribute = ConioCoordToPointer(Buffer, LeftColumn, TopLine)->Attributes;
+    LastTextColor = GuiResolveColor(&Palette, Buffer, LeftColumn, TopLine, LastAttribute, TRUE);
+    LastBkColor   = GuiResolveColor(&Palette, Buffer, LeftColumn, TopLine, LastAttribute, FALSE);
+
+    SetTextColor(GuiData->hMemDC, LastTextColor);
+    SetBkColor(GuiData->hMemDC, LastBkColor);
 
     /* We use the underscore flag as a underline flag */
     IsUnderline = !!(LastAttribute & COMMON_LVB_UNDERSCORE);
     /* Select the new font */
-    NewFont = GuiData->Font[IsUnderline ? FONT_BOLD : FONT_NORMAL];
+    NewFont = GuiData->Font[IsUnderline ? FONT_UNDERLINE : FONT_NORMAL];
     OldFont = SelectObject(GuiData->hMemDC, NewFont);
 
     if (Console->IsCJK)
     {
         for (Line = TopLine; Line <= BottomLine; Line++)
         {
+            const CELL_RGB *RgbRow = ConioCellRgbRow(Buffer, Line);
+
             for (Char = LeftColumn; Char <= RightColumn; Char++)
             {
                 From = ConioCoordToPointer(Buffer, Char, Line);
                 Attribute = From->Attributes;
-                SetTextColor(GuiData->hMemDC, PaletteRGBFromAttrib(Console, TextAttribFromAttrib(Attribute)));
-                SetBkColor(GuiData->hMemDC, PaletteRGBFromAttrib(Console, BkgdAttribFromAttrib(Attribute)));
+                SetTextColor(GuiData->hMemDC, GuiResolveColorInRow(&Palette, RgbRow, Char, Attribute, TRUE));
+                SetBkColor(GuiData->hMemDC, GuiResolveColorInRow(&Palette, RgbRow, Char, Attribute, FALSE));
 
                 /* Change underline state if needed */
                 if (!!(Attribute & COMMON_LVB_UNDERSCORE) != IsUnderline)
@@ -498,7 +567,7 @@ GuiPaintTextModeBuffer(PTEXTMODE_SCREEN_BUFFER Buffer,
                     IsUnderline = !!(Attribute & COMMON_LVB_UNDERSCORE);
 
                     /* Select the new font */
-                    NewFont = GuiData->Font[IsUnderline ? FONT_BOLD : FONT_NORMAL];
+                    NewFont = GuiData->Font[IsUnderline ? FONT_UNDERLINE : FONT_NORMAL];
                     SelectObject(GuiData->hMemDC, NewFont);
                 }
 
@@ -517,17 +586,35 @@ GuiPaintTextModeBuffer(PTEXTMODE_SCREEN_BUFFER Buffer,
         for (Line = TopLine; Line <= BottomLine; Line++)
         {
             WCHAR LineBuffer[80];   // Buffer containing a part or all the line to be displayed
+            const CELL_RGB *RgbRow = ConioCellRgbRow(Buffer, Line);
             From  = ConioCoordToPointer(Buffer, LeftColumn, Line);  // Get the first code of the line
             Start = LeftColumn;
             To    = LineBuffer;
+            LastAttribute = From->Attributes;
+            LastTextColor = GuiResolveColorInRow(&Palette, RgbRow, LeftColumn, LastAttribute, TRUE);
+            LastBkColor   = GuiResolveColorInRow(&Palette, RgbRow, LeftColumn, LastAttribute, FALSE);
+            SetTextColor(GuiData->hMemDC, LastTextColor);
+            SetBkColor(GuiData->hMemDC, LastBkColor);
+
+            IsUnderline = !!(LastAttribute & COMMON_LVB_UNDERSCORE);
+            NewFont = GuiData->Font[IsUnderline ? FONT_UNDERLINE : FONT_NORMAL];
+            SelectObject(GuiData->hMemDC, NewFont);
 
             for (Char = LeftColumn; Char <= RightColumn; Char++)
             {
+                Attribute = From->Attributes;
+                CellTextColor = GuiResolveColorInRow(&Palette, RgbRow, Char, Attribute, TRUE);
+                CellBkColor = GuiResolveColorInRow(&Palette, RgbRow, Char, Attribute, FALSE);
+
                 /*
                  * We flush the buffer if the new attribute is different
                  * from the current one, or if the buffer is full.
                  */
-                if (From->Attributes != LastAttribute || (Char - Start == sizeof(LineBuffer) / sizeof(WCHAR)))
+                if (((Attribute != LastAttribute) ||
+                     (CellTextColor != LastTextColor) ||
+                     (CellBkColor != LastBkColor) ||
+                     (Char - Start == sizeof(LineBuffer) / sizeof(WCHAR))) &&
+                    Char > Start)
                 {
                     TextOutW(GuiData->hMemDC,
                              Start * GuiData->CharWidth,
@@ -536,19 +623,23 @@ GuiPaintTextModeBuffer(PTEXTMODE_SCREEN_BUFFER Buffer,
                              Char - Start);
                     Start = Char;
                     To    = LineBuffer;
-                    Attribute = From->Attributes;
-                    if (Attribute != LastAttribute)
+
+                    if ((Attribute != LastAttribute) ||
+                        (CellTextColor != LastTextColor) ||
+                        (CellBkColor != LastBkColor))
                     {
                         LastAttribute = Attribute;
-                        SetTextColor(GuiData->hMemDC, PaletteRGBFromAttrib(Console, TextAttribFromAttrib(LastAttribute)));
-                        SetBkColor(GuiData->hMemDC, PaletteRGBFromAttrib(Console, BkgdAttribFromAttrib(LastAttribute)));
+                        LastTextColor = CellTextColor;
+                        LastBkColor = CellBkColor;
+                        SetTextColor(GuiData->hMemDC, LastTextColor);
+                        SetBkColor(GuiData->hMemDC, LastBkColor);
 
                         /* Change underline state if needed */
                         if (!!(LastAttribute & COMMON_LVB_UNDERSCORE) != IsUnderline)
                         {
                             IsUnderline = !!(LastAttribute & COMMON_LVB_UNDERSCORE);
                             /* Select the new font */
-                            NewFont = GuiData->Font[IsUnderline ? FONT_BOLD : FONT_NORMAL];
+                            NewFont = GuiData->Font[IsUnderline ? FONT_UNDERLINE : FONT_NORMAL];
                             SelectObject(GuiData->hMemDC, NewFont);
                         }
                     }

@@ -10,6 +10,7 @@
 /* INCLUDES *******************************************************************/
 
 #include "consrv.h"
+#include "include/vt.h"
 
 #define NDEBUG
 #include <debug.h>
@@ -931,6 +932,22 @@ ConDrvGetConsoleScreenBufferInfo(IN  PCONSOLE Console,
                                  OUT PCOORD ViewSize,
                                  OUT PCOORD MaximumViewSize,
                                  OUT PWORD  Attributes);
+NTSTATUS NTAPI
+ConDrvChangeScreenBufferAttributes(IN PCONSOLE Console,
+                                   IN PTEXTMODE_SCREEN_BUFFER Buffer,
+                                   IN USHORT NewScreenAttrib,
+                                   IN USHORT NewPopupAttrib);
+NTSTATUS NTAPI
+ConDrvSetConsoleScreenBufferSize(IN PCONSOLE Console,
+                                 IN PTEXTMODE_SCREEN_BUFFER Buffer,
+                                 IN PCOORD Size);
+NTSTATUS NTAPI
+ConDrvSetConsoleWindowInfo(IN PCONSOLE Console,
+                           IN PTEXTMODE_SCREEN_BUFFER Buffer,
+                           IN BOOLEAN Absolute,
+                           IN PSMALL_RECT WindowRect);
+NTSTATUS NTAPI
+ConDrvSetScreenBufferInfoEx(IN PCONSOLE Console, IN PTEXTMODE_SCREEN_BUFFER Buffer, IN PCOORD ScreenBufferSize, IN PCOORD CursorPosition, IN PSMALL_RECT WindowRect, IN USHORT Attributes, IN USHORT PopupAttributes, IN const COLORREF *ColorTable, IN ULONG ColorCount);
 /* API_NUMBER: ConsolepGetScreenBufferInfo */
 CON_API(SrvGetConsoleScreenBufferInfo,
         CONSOLE_GETSCREENBUFFERINFO, ScreenBufferInfoRequest)
@@ -954,6 +971,82 @@ CON_API(SrvGetConsoleScreenBufferInfo,
                                               &ScreenBufferInfoRequest->ViewSize,
                                               &ScreenBufferInfoRequest->MaximumViewSize,
                                               &ScreenBufferInfoRequest->Attributes);
+
+    ConSrvReleaseScreenBuffer(Buffer, TRUE);
+    return Status;
+}
+
+/* API_NUMBER: ConsolepGetScreenBufferInfoEx */
+CON_API(SrvGetConsoleScreenBufferInfoEx,
+        CONSOLE_GETSCREENBUFFERINFOEX, ScreenBufferInfoExRequest)
+{
+    NTSTATUS Status;
+    PTEXTMODE_SCREEN_BUFFER Buffer;
+
+    Status = ConSrvGetTextModeBuffer(ProcessData,
+                                     ScreenBufferInfoExRequest->OutputHandle,
+                                     &Buffer, GENERIC_READ, TRUE);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    ASSERT((PCONSOLE)Console == Buffer->Header.Console);
+
+    Status = ConDrvGetConsoleScreenBufferInfo((PCONSOLE)Console,
+                                              Buffer,
+                                              &ScreenBufferInfoExRequest->ScreenBufferSize,
+                                              &ScreenBufferInfoExRequest->CursorPosition,
+                                              &ScreenBufferInfoExRequest->ViewOrigin,
+                                              &ScreenBufferInfoExRequest->ViewSize,
+                                              &ScreenBufferInfoExRequest->MaximumViewSize,
+                                              &ScreenBufferInfoExRequest->Attributes);
+    if (NT_SUCCESS(Status))
+    {
+        ScreenBufferInfoExRequest->PopupAttributes = Buffer->PopupDefaultAttrib;
+        ScreenBufferInfoExRequest->FullscreenSupported = FALSE;
+        RtlCopyMemory(ScreenBufferInfoExRequest->ColorTable,
+                      Console->Colors,
+                      sizeof(ScreenBufferInfoExRequest->ColorTable));
+    }
+
+    ConSrvReleaseScreenBuffer(Buffer, TRUE);
+    return Status;
+}
+
+/* API_NUMBER: ConsolepSetScreenBufferInfoEx */
+CON_API(SrvSetConsoleScreenBufferInfoEx,
+        CONSOLE_GETSCREENBUFFERINFOEX, ScreenBufferInfoExRequest)
+{
+    NTSTATUS Status;
+    PTEXTMODE_SCREEN_BUFFER Buffer;
+    SMALL_RECT WindowRect;
+
+    WindowRect.Left   = ScreenBufferInfoExRequest->ViewOrigin.X;
+    WindowRect.Top    = ScreenBufferInfoExRequest->ViewOrigin.Y;
+    WindowRect.Right  = ScreenBufferInfoExRequest->ViewOrigin.X + ScreenBufferInfoExRequest->ViewSize.X - 1;
+    WindowRect.Bottom = ScreenBufferInfoExRequest->ViewOrigin.Y + ScreenBufferInfoExRequest->ViewSize.Y - 1;
+
+    Status = ConSrvGetTextModeBuffer(ProcessData,
+                                     ScreenBufferInfoExRequest->OutputHandle,
+                                     &Buffer, GENERIC_READ | GENERIC_WRITE, TRUE);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    ASSERT((PCONSOLE)Console == Buffer->Header.Console);
+
+    /*
+     * The driver owns the buffer/window ordering rule, so hand it the whole
+     * request instead of re-deriving that rule here and applying the pieces one
+     * at a time with no way to tell a partial application from a failed one.
+     */
+    Status = ConDrvSetScreenBufferInfoEx((PCONSOLE)Console,
+                                         Buffer,
+                                         &ScreenBufferInfoExRequest->ScreenBufferSize,
+                                         &ScreenBufferInfoExRequest->CursorPosition,
+                                         &WindowRect,
+                                         ScreenBufferInfoExRequest->Attributes,
+                                         ScreenBufferInfoExRequest->PopupAttributes,
+                                         ScreenBufferInfoExRequest->ColorTable,
+                                         ARRAYSIZE(ScreenBufferInfoExRequest->ColorTable));
 
     ConSrvReleaseScreenBuffer(Buffer, TRUE);
     return Status;

@@ -230,7 +230,7 @@ ConsoleCreateUnicodeString(IN OUT PUNICODE_STRING UniDest,
 }
 
 // Adapted from reactos/lib/rtl/unicode.c, RtlFreeUnicodeString line 431
-static VOID
+VOID
 ConsoleFreeUnicodeString(IN PUNICODE_STRING UnicodeString)
 {
     if (UnicodeString->Buffer)
@@ -528,6 +528,54 @@ Finish:
     return RetVal;
 }
 
+/*
+ * VT feature policy. These are per-user settings, so they must be read while
+ * impersonating the client - RTL_REGISTRY_USER resolves to CSRSS's own hive
+ * otherwise. That also rules out caching them across consoles.
+ */
+typedef struct _CONSRV_VT_POLICY
+{
+    ULONG AllowOscClipboard;
+    ULONG AllowOscHyperlinks;
+    ULONG AllowDcsPassthrough;
+} CONSRV_VT_POLICY, *PCONSRV_VT_POLICY;
+
+static VOID
+ConSrvReadVtPolicy(PCONSRV_VT_POLICY Policy)
+{
+    RTL_QUERY_REGISTRY_TABLE QueryTable[4];
+    ULONG i;
+
+    static const struct
+    {
+        PCWSTR Name;
+        ULONG Offset;
+    } Values[] =
+    {
+        {L"AllowVtOscClipboard",  FIELD_OFFSET(CONSRV_VT_POLICY, AllowOscClipboard)},
+        {L"AllowVtOscHyperlinks", FIELD_OFFSET(CONSRV_VT_POLICY, AllowOscHyperlinks)},
+        {L"AllowVtDcsPassthrough", FIELD_OFFSET(CONSRV_VT_POLICY, AllowDcsPassthrough)},
+    };
+
+    /* Permissive unless the user says otherwise */
+    Policy->AllowOscClipboard = Policy->AllowOscHyperlinks = Policy->AllowDcsPassthrough = TRUE;
+
+    RtlZeroMemory(QueryTable, sizeof(QueryTable));
+    for (i = 0; i < ARRAYSIZE(Values); ++i)
+    {
+        PULONG Target = (PULONG)((PUCHAR)Policy + Values[i].Offset);
+
+        QueryTable[i].Flags = RTL_QUERY_REGISTRY_DIRECT;
+        QueryTable[i].Name = (PWSTR)Values[i].Name;
+        QueryTable[i].EntryContext = Target;
+        QueryTable[i].DefaultType = REG_DWORD;
+        QueryTable[i].DefaultData = Target;
+        QueryTable[i].DefaultLength = sizeof(*Target);
+    }
+
+    RtlQueryRegistryValues(RTL_REGISTRY_USER, L"Console", QueryTable, NULL, NULL);
+}
+
 NTSTATUS NTAPI
 ConSrvInitConsole(OUT PHANDLE NewConsoleHandle,
                   OUT PCONSRV_CONSOLE* NewConsole,
@@ -541,6 +589,7 @@ ConSrvInitConsole(OUT PHANDLE NewConsoleHandle,
     BYTE ConsoleInfoBuffer[sizeof(CONSOLE_STATE_INFO) + MAX_PATH * sizeof(WCHAR)]; // CONSRV console information
     PCONSOLE_STATE_INFO ConsoleInfo = (PCONSOLE_STATE_INFO)&ConsoleInfoBuffer;
     CONSOLE_INFO DrvConsoleInfo; // Console information for CONDRV
+    CONSRV_VT_POLICY VtPolicy;
 
     SIZE_T Length = 0;
 
@@ -641,6 +690,9 @@ ConSrvInitConsole(OUT PHANDLE NewConsoleHandle,
 #endif
     }
 
+    /* Read the user's VT feature policy while we can still see their hive */
+    ConSrvReadVtPolicy(&VtPolicy);
+
     /* 6. Revert impersonation */
     CsrRevertToSelf();
 
@@ -693,6 +745,11 @@ ConSrvInitConsole(OUT PHANDLE NewConsoleHandle,
     }
 
     DPRINT("Console initialized\n");
+
+    /* Apply the user's VT feature policy over the driver's permissive defaults */
+    Console->AllowVtOscClipboard = !!VtPolicy.AllowOscClipboard;
+    Console->AllowVtOscHyperlinks = !!VtPolicy.AllowOscHyperlinks;
+    Console->AllowVtDcsPassthrough = !!VtPolicy.AllowDcsPassthrough;
 
     /*** Register ConSrv features ***/
 

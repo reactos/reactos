@@ -10,6 +10,7 @@
 /* INCLUDES *******************************************************************/
 
 #include "consrv.h"
+#include "include/vt.h"
 
 #define NDEBUG
 #include <debug.h>
@@ -227,11 +228,43 @@ ConioProcessInputEvent(PCONSRV_CONSOLE Console,
         }
     }
 
-    return ConioAddInputEvents(Console,
-                               InputEvent,
-                               1,
-                               &NumEventsWritten,
-                               TRUE);
+    /*
+     * Translate to VT input sequences here, at enqueue time, so the queue holds
+     * exactly the records every reader will receive. Doing it on the read path
+     * instead made ReadConsoleInput and PeekConsoleInput disagree, hid VT input
+     * from the cooked ReadConsole/ReadFile path entirely, and left
+     * GetNumberOfConsoleInputEvents reporting untranslated counts.
+     *
+     * ConDrvVtTranslateInput pre-sets the out-parameters to pass-through, so a
+     * console without ENABLE_VIRTUAL_TERMINAL_INPUT costs one mode test.
+     */
+    {
+        PINPUT_RECORD Records;
+        ULONG Count;
+        BOOLEAN Allocated;
+        NTSTATUS Status;
+
+        Status = ConDrvVtTranslateInput((PCONSOLE)Console, InputEvent, 1, &Records, &Count, &Allocated);
+        if (!NT_SUCCESS(Status))
+        {
+            /* Best-effort: enqueue the event untranslated rather than losing it */
+            Records = InputEvent;
+            Count = 1;
+            Allocated = FALSE;
+        }
+
+        /* The VT layer drops some events outright (e.g. key-up records) */
+        if (Count == 0)
+        {
+            if (Allocated) ConsoleFreeHeap(Records);
+            return STATUS_SUCCESS;
+        }
+
+        Status = ConioAddInputEvents(Console, Records, Count, &NumEventsWritten, TRUE);
+
+        if (Allocated) ConsoleFreeHeap(Records);
+        return Status;
+    }
 }
 
 

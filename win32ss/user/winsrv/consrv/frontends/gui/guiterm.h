@@ -75,6 +75,16 @@ InitFonts(
     _In_opt_ UINT CodePage,
     _In_ BOOL UseDefaultFallback);
 
+/*
+ * InitFonts() with the face, weight, family and size the console is configured
+ * with - every caller wants those, so they should not each spell them out.
+ */
+FORCEINLINE BOOL
+InitFontsFromSettings(_Inout_ PGUI_CONSOLE_DATA GuiData, _In_opt_ UINT CodePage, _In_ BOOL UseDefaultFallback)
+{
+    return InitFonts(GuiData, GuiData->GuiInfo.FaceName, GuiData->GuiInfo.FontWeight, GuiData->GuiInfo.FontFamily, GuiData->GuiInfo.FontSize, CodePage, UseDefaultFallback);
+}
+
 VOID
 DeleteFonts(PGUI_CONSOLE_DATA GuiData);
 

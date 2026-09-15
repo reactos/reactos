@@ -8,6 +8,15 @@
 
 #pragma once
 
+/*
+ * TRUE when a real terminal is plugged into the console. The dummy terminal
+ * installed by ResetTerminal() pends every operation, so callers that must not
+ * perform side effects before a possible STATUS_PENDING test this first.
+ * Defined in condrv/dummyterm.c.
+ */
+BOOLEAN ConDrvIsTerminalAttached(IN struct _CONSOLE* Console);
+
+
 /* Macros used to call functions in the TERMINAL_VTBL virtual table */
 
 #define TermReadStream(Console, /**/ Unicode, /**/ Buffer, ReadControl, Parameter, NumCharsToRead, NumCharsRead) \
@@ -39,6 +48,16 @@
     (Console)->TermIFace.Vtbl->SetCodePage(&(Console)->TermIFace, (CodePage))
 #define TermShowMouseCursor(Console, Show) \
     (Console)->TermIFace.Vtbl->ShowMouseCursor(&(Console)->TermIFace, (Show))
+#define TermSetTitle(Console, Title, Length) \
+    (Console)->TermIFace.Vtbl->SetTitle(&(Console)->TermIFace, (Title), (Length))
+#define TermGetColorTable(Console, Colors, Count) \
+    (Console)->TermIFace.Vtbl->GetColorTable(&(Console)->TermIFace, (Colors), (Count))
+#define TermSetColorTable(Console, Colors, Count) \
+    (Console)->TermIFace.Vtbl->SetColorTable(&(Console)->TermIFace, (Colors), (Count))
+#define TermGetClipboardText(Console, Text, Length) \
+    (Console)->TermIFace.Vtbl->GetClipboardText(&(Console)->TermIFace, (Text), (Length))
+#define TermSetClipboardText(Console, Text, Length) \
+    (Console)->TermIFace.Vtbl->SetClipboardText(&(Console)->TermIFace, (Text), (Length))
 
 
 /* Macros used to call functions in the FRONTEND_VTBL virtual table */

@@ -4,6 +4,7 @@
 
 extern void func_ActCtxWithXmlNamespaces(void);
 extern void func_ConsoleCP(void);
+extern void func_ConsoleVirtualTerminal(void);
 extern void func_CreateProcess(void);
 extern void func_DefaultActCtx(void);
 extern void func_DeviceIoControl(void);
@@ -51,6 +52,7 @@ const struct test winetest_testlist[] =
 {
     { "ActCtxWithXmlNamespaces",     func_ActCtxWithXmlNamespaces },
     { "ConsoleCP",                   func_ConsoleCP },
+    { "ConsoleVirtualTerminal",      func_ConsoleVirtualTerminal },
     { "CreateProcess",               func_CreateProcess },
     { "DefaultActCtx",               func_DefaultActCtx },
     { "DeviceIoControl",             func_DeviceIoControl },
