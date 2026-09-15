@@ -62,6 +62,18 @@ PciReadWriteConfigSpace(IN PPCI_FDO_EXTENSION DeviceExtension,
     /* Only the root FDO can access configuration space */
     ASSERT(PCI_IS_ROOT_FDO(DeviceExtension->BusRootFdoExtension));
 
+    /* The legacy mechanism cannot reach extended configuration space */
+    if (((Offset + Length) > PCI_LEGACY_CONFIG_LENGTH) &&
+        (PciEcamReadWriteConfig(DeviceExtension->BaseBus,
+                                Slot,
+                                Buffer,
+                                Offset,
+                                Length,
+                                Read)))
+    {
+        return;
+    }
+
     /* Get the ACPI-compliant PCI interface from the root */
     PciInterface = DeviceExtension->BusRootFdoExtension->PciBusInterface;
     if (PciInterface)
