@@ -115,7 +115,7 @@ UserProcessMouseInput(PMOUSE_INPUT_DATA mid)
     mi.dwFlags = 0;
     mi.time = 0;
     mi.dwExtraInfo = mid->ExtraInformation;
-    if (RawInputEnabled== TRUE)
+    if (RawInputEnabled == TRUE)
         UserRawInputMouseProcess(mid);
     /* Mouse position */
     if (mi.dx != 0 || mi.dy != 0)
