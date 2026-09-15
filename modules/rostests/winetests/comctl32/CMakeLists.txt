@@ -1,8 +1,8 @@
 
 remove_definitions(-D_WIN32_WINNT=0x502 -D_WIN32_IE=0x600)
 
-add_definitions(-D__ROS_LONG64__)
 add_definitions(-DUSE_WINE_TODOS -DWINETEST_USE_DBGSTR_LONGLONG)
+include_directories(BEFORE ${REACTOS_SOURCE_DIR}/sdk/include/wine)
 
 list(APPEND SOURCE
     animate.c
@@ -49,14 +49,22 @@ if(MSVC AND ARCH STREQUAL "amd64")
 endif()
 
 if(MSVC)
-    #  warning C4045: 'large_truncated_80_w': array bounds overflow
-    target_compile_options(comctl32_winetest PRIVATE /wd4045)
+    # warning C4045: 'large_truncated_80_w': array bounds overflow
+    # warning C4047: 'function': 'type' differs in levels of indirection from 'type'
+    # warning C4024: different types for formal and actual parameter
+    target_compile_options(comctl32_winetest PRIVATE /wd4045 /wd4047 /wd4024)
+endif()
+
+if(CMAKE_C_COMPILER_ID STREQUAL "GNU" OR
+   CMAKE_C_COMPILER_ID STREQUAL "Clang")
+    target_compile_options(comctl32_winetest PRIVATE -Wno-int-conversion -Wno-old-style-declaration)
 endif()
 
 target_compile_options(comctl32_winetest PRIVATE $<$<NOT:$<C_COMPILER_ID:MSVC>>:-Wno-format>)
 
 set_module_type(comctl32_winetest win32cui)
-add_importlibs(comctl32_winetest comctl32 ole32 user32 gdi32 advapi32 msvcrt kernel32)
+add_importlibs(comctl32_winetest comctl32 imm32 uxtheme ole32 oleacc oleaut32 user32 gdi32 advapi32 msvcrt kernel32)
+target_link_libraries(comctl32_winetest uuid oldnames)
 
 if(MSVC)
     add_importlibs(comctl32_winetest ntdll)
