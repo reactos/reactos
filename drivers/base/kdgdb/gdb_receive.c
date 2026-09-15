@@ -8,7 +8,8 @@
 #include "kdgdb.h"
 
 /* GLOBALS ********************************************************************/
-CHAR gdb_input[0x1000];
+CHAR gdb_input[GDB_PACKET_MAX_SIZE + 1];
+ULONG gdb_input_length;
 
 /* GLOBAL FUNCTIONS ***********************************************************/
 char
@@ -34,7 +35,10 @@ gdb_receive_packet(_Inout_ PKD_CONTEXT KdContext)
     UCHAR Byte;
     KDSTATUS Status;
     CHAR CheckSum, ReceivedCheckSum;
+    BOOLEAN PacketTooLarge;
+    char HighNibble, LowNibble;
 
+wait_for_packet:
     do
     {
         Status = KdpReceiveByte(&Byte);
@@ -45,6 +49,7 @@ gdb_receive_packet(_Inout_ PKD_CONTEXT KdContext)
 get_packet:
     CheckSum = 0;
     ByteBuffer = (UCHAR*)gdb_input;
+    PacketTooLarge = FALSE;
 
     while (TRUE)
     {
@@ -69,28 +74,44 @@ get_packet:
             CheckSum += (CHAR)Byte;
             Byte ^= 0x20;
         }
-        *ByteBuffer++ = Byte;
+
+        if (ByteBuffer < (UCHAR*)&gdb_input[GDB_PACKET_MAX_SIZE])
+            *ByteBuffer++ = Byte;
+        else
+            PacketTooLarge = TRUE;
     }
 
     /* Get Check sum (two bytes) */
     Status = KdpReceiveByte(&Byte);
     if (Status != KdPacketReceived)
-        goto end;
-    ReceivedCheckSum = hex_value(Byte) << 4;
+        return Status;
+    HighNibble = hex_value(Byte);
 
     Status = KdpReceiveByte(&Byte);
     if (Status != KdPacketReceived)
-        goto end;
-    ReceivedCheckSum += hex_value(Byte);
+        return Status;
+    LowNibble = hex_value(Byte);
 
-end:
-    if (ReceivedCheckSum != CheckSum)
+    if ((HighNibble < 0) || (LowNibble < 0))
     {
-        /* Do not acknowledge to GDB */
-        KDDBGPRINT("Check sums don't match!");
+        if (gdb_no_ack_mode)
+            goto wait_for_packet;
         KdpSendByte('-');
         return KdPacketNeedsResend;
     }
+
+    ReceivedCheckSum = (HighNibble << 4) | LowNibble;
+    if (PacketTooLarge || (ReceivedCheckSum != CheckSum))
+    {
+        KDDBGPRINT(PacketTooLarge ? "Packet exceeds advertised size!" : "Checksums don't match!");
+        if (gdb_no_ack_mode)
+            goto wait_for_packet;
+        KdpSendByte('-');
+        return KdPacketNeedsResend;
+    }
+
+    gdb_input_length = (ULONG)(ByteBuffer - (UCHAR*)gdb_input);
+    *ByteBuffer = '\0';
 
     /* Ensure there is nothing left in the pipe */
     while (KdpPollByte(&Byte) == KdPacketReceived)
@@ -106,8 +127,8 @@ end:
         }
     }
 
-    /* Acknowledge */
-    KdpSendByte('+');
+    if (!gdb_no_ack_mode)
+        KdpSendByte('+');
 
     return KdPacketReceived;
 }

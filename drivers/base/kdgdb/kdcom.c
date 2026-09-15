@@ -17,9 +17,28 @@
 /* GLOBALS ********************************************************************/
 
 CPPORT KdComPort;
+BOOLEAN gdb_vctrlc_pending;
 #ifdef KDDEBUG
 CPPORT KdDebugComPort;
 #endif
+
+typedef enum _GDB_POLL_STATE
+{
+    GdbPollIdle,
+    GdbPollPayload,
+    GdbPollChecksumHigh,
+    GdbPollChecksumLow,
+    GdbPollDiscard,
+    GdbPollDiscardChecksumHigh,
+    GdbPollDiscardChecksumLow
+} GDB_POLL_STATE;
+
+static GDB_POLL_STATE GdbPollState;
+static ULONG GdbPollPayloadIndex;
+static UCHAR GdbPollChecksum;
+static UCHAR GdbPollReceivedChecksum;
+
+#define GDB_POLL_PACKET_TIMEOUT_US 2000
 
 /* DEBUGGING ******************************************************************/
 
@@ -288,23 +307,102 @@ KDSTATUS
 NTAPI
 KdpPollBreakIn(VOID)
 {
-    KDSTATUS KdStatus;
+    static const CHAR VCtrlCPayload[] = "vCtrlC";
+    ULONG EmptyPolls = 0;
     UCHAR Byte;
 
-    KdStatus = KdpPollByte(&Byte);
-    if (KdStatus == KdPacketReceived)
+    while (TRUE)
     {
+        if (KdpPollByte(&Byte) != KdPacketReceived)
+        {
+            if (GdbPollState == GdbPollIdle || EmptyPolls++ >= GDB_POLL_PACKET_TIMEOUT_US)
+                break;
+            KeStallExecutionProcessor(1);
+            continue;
+        }
+        EmptyPolls = 0;
+
         if (Byte == 0x03)
         {
+            GdbPollState = GdbPollIdle;
             KDDBGPRINT("BreakIn Polled.\n");
             return KdPacketReceived;
         }
-        else if (Byte == '$')
+
+        if (Byte == '$')
         {
-            /* GDB tried to send a new packet. N-ack it. */
-            KdpSendByte('-');
+            GdbPollState = GdbPollPayload;
+            GdbPollPayloadIndex = 0;
+            GdbPollChecksum = 0;
+            continue;
         }
+
+        switch (GdbPollState)
+        {
+            case GdbPollIdle:
+                break;
+
+            case GdbPollPayload:
+                if (Byte == '#')
+                {
+                    if (GdbPollPayloadIndex != sizeof(VCtrlCPayload) - 1)
+                        goto RejectPacket;
+                    GdbPollState = GdbPollChecksumHigh;
+                    break;
+                }
+
+                GdbPollChecksum += Byte;
+                if (GdbPollPayloadIndex >= sizeof(VCtrlCPayload) - 1 || Byte != VCtrlCPayload[GdbPollPayloadIndex++])
+                    GdbPollState = GdbPollDiscard;
+                break;
+
+            case GdbPollChecksumHigh:
+            {
+                CHAR Value = hex_value(Byte);
+
+                if (Value < 0)
+                    goto RejectPacket;
+                GdbPollReceivedChecksum = (UCHAR)Value << 4;
+                GdbPollState = GdbPollChecksumLow;
+                break;
+            }
+
+            case GdbPollChecksumLow:
+            {
+                CHAR Value = hex_value(Byte);
+
+                if (Value < 0 || GdbPollChecksum != (UCHAR)(GdbPollReceivedChecksum | Value))
+                    goto RejectPacket;
+
+                GdbPollState = GdbPollIdle;
+                if (!gdb_no_ack_mode)
+                    KdpSendByte('+');
+                gdb_vctrlc_pending = TRUE;
+                KDDBGPRINT("vCtrlC BreakIn Polled.\n");
+                return KdPacketReceived;
+            }
+
+            case GdbPollDiscard:
+                if (Byte == '#')
+                    GdbPollState = GdbPollDiscardChecksumHigh;
+                break;
+
+            case GdbPollDiscardChecksumHigh:
+                GdbPollState = GdbPollDiscardChecksumLow;
+                break;
+
+            case GdbPollDiscardChecksumLow:
+                goto RejectPacket;
+        }
+
+        continue;
+
+RejectPacket:
+        GdbPollState = GdbPollIdle;
+        if (!gdb_no_ack_mode)
+            KdpSendByte('-');
     }
+
     return KdPacketTimedOut;
 }
 

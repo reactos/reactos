@@ -96,7 +96,39 @@ SetContextSendHandler(
     {
         /* Should we bugcheck ? */
         KDDBGPRINT("BAD BAD BAD not manipulating state for sending context.\n");
-        return FALSE;
+    }
+
+    KdpSendPacketHandler = NULL;
+    return TRUE;
+}
+
+/*
+ * Same as above, but the GDB packet that triggered the write - 'P' or 'G' -
+ * still owes GDB a reply, which can only be sent once KD has confirmed it.
+ */
+static
+BOOLEAN
+SetContextReplySendHandler(
+    _In_ ULONG PacketType,
+    _In_ PSTRING MessageHeader,
+    _In_ PSTRING MessageData
+)
+{
+    DBGKD_MANIPULATE_STATE64* State = (DBGKD_MANIPULATE_STATE64*)MessageHeader->Buffer;
+
+    if ((PacketType != PACKET_TYPE_KD_STATE_MANIPULATE)
+            || (State->ApiNumber != DbgKdSetContextApi))
+    {
+        KDDBGPRINT("BAD BAD BAD not manipulating state for sending context.\n");
+        send_gdb_packet("E01");
+    }
+    else if (!NT_SUCCESS(State->ReturnStatus))
+    {
+        send_gdb_ntstatus(State->ReturnStatus);
+    }
+    else
+    {
+        send_gdb_packet("OK");
     }
 
     KdpSendPacketHandler = NULL;
@@ -132,6 +164,20 @@ SetContextManipulateHandler(
     return KdPacketReceived;
 }
 
+KDSTATUS
+SetContextManipulateHandlerWithReply(
+    _Out_ DBGKD_MANIPULATE_STATE64* State,
+    _Out_ PSTRING MessageData,
+    _Out_ PULONG MessageLength,
+    _Inout_ PKD_CONTEXT KdContext)
+{
+    KDSTATUS Status;
+
+    Status = SetContextManipulateHandler(State, MessageData, MessageLength, KdContext);
+    KdpSendPacketHandler = SetContextReplySendHandler;
+    return Status;
+}
+
 static
 void
 send_kd_state_change(DBGKD_ANY_WAIT_STATE_CHANGE* StateChange)
@@ -157,6 +203,11 @@ send_kd_state_change(DBGKD_ANY_WAIT_STATE_CHANGE* StateChange)
 #else
         gdb_dbg_pid = handle_to_gdb_pid(PsGetThreadProcessId(Thread));
 #endif
+        if (gdb_vctrlc_pending)
+        {
+            gdb_vctrlc_pending = FALSE;
+            send_gdb_packet("OK");
+        }
         gdb_send_exception();
         /* Next receive call will ask for the context */
         KdpManipulateStateHandler = GetContextManipulateHandler;
@@ -218,14 +269,17 @@ ContinueManipulateStateHandler(
 )
 {
     /* Let's go on */
-    State->ApiNumber = DbgKdContinueApi;
+    State->ApiNumber = DbgKdContinueApi2;
     State->ReturnStatus = STATUS_SUCCESS; /* ? */
     State->Processor = CurrentStateChange.Processor;
     State->ProcessorLevel = CurrentStateChange.ProcessorLevel;
     if (MessageData)
         MessageData->Length = 0;
     *MessageLength = 0;
-    State->u.Continue.ContinueStatus = STATUS_SUCCESS;
+    State->u.Continue2.ContinueStatus = STATUS_SUCCESS;
+    gdb_arch_set_continue_control(State, gdb_hardware_breakpoints());
+    State->u.Continue2.ControlSet.CurrentSymbolStart = 1;
+    State->u.Continue2.ControlSet.CurrentSymbolEnd = 1;
 
     /* We definitely are at the end of the send <-> receive loop, if any */
     KdpSendPacketHandler = NULL;

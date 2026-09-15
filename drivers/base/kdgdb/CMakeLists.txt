@@ -4,6 +4,7 @@ spec2def(kdgdb.dll kdgdb.spec)
 list(APPEND SOURCE
     gdb_input.c
     gdb_receive.c
+    gdb_regs.c
     gdb_send.c
     kdcom.c
     kdpacket.c
@@ -12,9 +13,9 @@ list(APPEND SOURCE
 
 # TODO: ARM...
 if(ARCH STREQUAL "i386")
-    list(APPEND SOURCE i386_sup.c)
+    list(APPEND SOURCE i386_sup.c hwbp_x86.c)
 elseif(ARCH STREQUAL "amd64")
-    list(APPEND SOURCE amd64_sup.c)
+    list(APPEND SOURCE amd64_sup.c hwbp_x86.c)
 endif()
 
 add_library(kdgdb MODULE

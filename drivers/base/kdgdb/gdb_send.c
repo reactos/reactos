@@ -11,6 +11,9 @@
 const char hex_chars[] = "0123456789abcdef";
 static CHAR currentChecksum = 0;
 
+/* GLOBALS ********************************************************************/
+BOOLEAN gdb_no_ack_mode = FALSE;
+
 /* PRIVATE FUNCTIONS **********************************************************/
 static
 char*
@@ -80,6 +83,9 @@ finish_gdb_packet(void)
     KdpSendByte('#');
     KdpSendByte(hex_chars[(currentChecksum >> 4) & 0xf]);
     KdpSendByte(hex_chars[currentChecksum & 0xf]);
+
+    if (gdb_no_ack_mode)
+        return KdPacketReceived;
 
     /* Wait for acknowledgement */
     Status = KdpReceiveByte(&ack);
@@ -198,6 +204,8 @@ gdb_send_exception()
 {
     char gdb_out[1024];
     char* ptr = gdb_out;
+    const CHAR* WatchReason;
+    ULONG64 WatchAddress;
     PETHREAD Thread = (PETHREAD)(ULONG_PTR)CurrentStateChange.Thread;
 
     /* Report to GDB */
@@ -213,6 +221,8 @@ gdb_send_exception()
 
     if (CurrentStateChange.NewState == DbgKdLoadSymbolsStateChange)
         ptr += sprintf(ptr, "library:");
+    else if (gdb_get_watchpoint_stop(&WatchReason, &WatchAddress))
+        ptr += sprintf(ptr, "%s:%" PRIx64 ";", WatchReason, WatchAddress);
 
 #if MONOPROCESS
     ptr += sprintf(ptr, "thread:%" PRIxPTR ";",

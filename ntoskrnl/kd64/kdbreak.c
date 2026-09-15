@@ -84,8 +84,14 @@ KdpAddBreakpoint(IN PVOID Address)
                                      NULL);
         if (!NT_SUCCESS(Status))
         {
-            /* This should never happen */
-            KdpDprintf("Unable to write breakpoint to address 0x%p\n", Address);
+            /*
+             * The code page can be readable before the debugger's physical
+             * mapping is available. Defer the write just as we do when the
+             * initial read cannot be completed.
+             */
+            KdpDprintf("Failed to write breakpoint at address 0x%p, adding deferred breakpoint.\n", Address);
+            KdpBreakpointTable[i].Flags = KD_BREAKPOINT_ACTIVE | KD_BREAKPOINT_PENDING;
+            KdpOweBreakpoint = TRUE;
         }
     }
     else
