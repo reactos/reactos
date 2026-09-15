@@ -209,6 +209,7 @@ typedef struct _ATA_CONTROLLER
         PCONTROLLER_CHANNEL_ENABLED ChannelEnabledTest;
     };
     PVOID HwExt;
+    ULONG BusLocation;
     ULONG AlignmentRequirement;
     ULONG MaxChannels;
     ULONG ChannelBitmap;
@@ -503,6 +504,12 @@ PciIdeXChannelState(
     _In_ PFDO_DEVICE_EXTENSION FdoExtension,
     _In_ ULONG Channel);
 
+NTSTATUS
+NTAPI
+PciIdexGetBusLocation(
+    _In_ PVOID DeviceExtension,
+    _Out_ PULONG BusLocation);
+
 /* pciidex.c ******************************************************************/
 
 CODE_SEG("PAGE")
@@ -773,6 +780,11 @@ AtiGetControllerProperties(
 CODE_SEG("PAGE")
 NTSTATUS
 CmdGetControllerProperties(
+    _Inout_ PATA_CONTROLLER Controller);
+
+CODE_SEG("PAGE")
+NTSTATUS
+HptGetControllerProperties(
     _Inout_ PATA_CONTROLLER Controller);
 
 CODE_SEG("PAGE")
