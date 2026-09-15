@@ -826,10 +826,11 @@ PciBridgeRestoreOpenWindows(
     }
 }
 
-VOID
+NTSTATUS
 NTAPI
-PPBridge_ChangeResourceSettings(IN PPCI_PDO_EXTENSION PdoExtension,
-                                IN PPCI_COMMON_HEADER PciData)
+PPBridge_ChangeResourceSettings(
+    _In_ PPCI_PDO_EXTENSION PdoExtension,
+    _Inout_ PPCI_COMMON_HEADER PciData)
 {
     //BOOLEAN IoActive;
     PPCI_COMMON_CONFIG SavedConfig;
@@ -942,6 +943,8 @@ PPBridge_ChangeResourceSettings(IN PPCI_PDO_EXTENSION PdoExtension,
     {
         PciData->u.type1.BridgeControl |= PCI_ENABLE_BRIDGE_VGA;
     }
+
+    return STATUS_SUCCESS;
 }
 
 /* EOF */

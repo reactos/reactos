@@ -144,10 +144,11 @@ Cardbus_ResetDevice(IN PPCI_PDO_EXTENSION PdoExtension,
     /* The socket reset bit belongs to the socket driver, so it goes back as it was read */
 }
 
-VOID
+NTSTATUS
 NTAPI
-Cardbus_ChangeResourceSettings(IN PPCI_PDO_EXTENSION PdoExtension,
-                               IN PPCI_COMMON_HEADER PciData)
+Cardbus_ChangeResourceSettings(
+    _In_ PPCI_PDO_EXTENSION PdoExtension,
+    _Inout_ PPCI_COMMON_HEADER PciData)
 {
     PPCI_FUNCTION_RESOURCES Resources;
     ULONG Bar, BarMask;
@@ -180,6 +181,8 @@ Cardbus_ChangeResourceSettings(IN PPCI_PDO_EXTENSION PdoExtension,
 
     if (PdoExtension->Dependent.type1.VgaBitSet)
         PciData->u.type2.BridgeControl |= PCI_ENABLE_BRIDGE_VGA;
+
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS
