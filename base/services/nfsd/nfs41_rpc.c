@@ -65,9 +65,16 @@ static int get_client_for_netaddr(
         dprintf(1, "servername is %s\n", server_name);
     }
     dprintf(1, "callback function %p args %p\n", nfs41_handle_callback, rpc);
+#ifdef __REACTOS__
+    client = clnt_tli_create(RPC_ANYFD, nconf, addr, NFS41_RPC_PROGRAM,
+        NFS41_RPC_VERSION, wsize, rsize,
+        rpc ? (int (*)(void *, void *))proc_cb_compound_res : NULL,
+        rpc ? nfs41_handle_callback : NULL, rpc ? rpc : NULL);
+#else
     client = clnt_tli_create(RPC_ANYFD, nconf, addr, NFS41_RPC_PROGRAM, 
         NFS41_RPC_VERSION, wsize, rsize, rpc ? proc_cb_compound_res : NULL, 
         rpc ? nfs41_handle_callback : NULL, rpc ? rpc : NULL);
+#endif
     if (client) {
         *client_out = client;
         status = NO_ERROR;

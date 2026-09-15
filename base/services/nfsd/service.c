@@ -286,11 +286,19 @@ BOOL ReportStatusToSCMgr(DWORD dwCurrentState,
 //
 //  COMMENTS:
 //
+#ifdef __REACTOS__
+VOID AddToMessageLog(LPCTSTR lpszMsg)
+#else
 VOID AddToMessageLog(LPTSTR lpszMsg)
+#endif
 {
    TCHAR szMsg [(sizeof(SZSERVICENAME) / sizeof(TCHAR)) + 100 ];
    HANDLE  hEventSource;
+#ifdef __REACTOS__
+   LPCTSTR lpszStrings[2];
+#else
    LPTSTR  lpszStrings[2];
+#endif
 
    if ( !bDebug )
    {
