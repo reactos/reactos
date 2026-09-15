@@ -19,33 +19,14 @@
  */
 
 #include <stdarg.h>
+#include <stdlib.h>
 
 #include "windef.h"
 #include "winbase.h"
 
-#include "wine/heap.h"
 #include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(sxs);
-
-/***********************************************************************
- *             DllMain   (SXS.@)
- *
- */
-BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
-{
-    switch(fdwReason)
-    {
-#ifndef __REACTOS__
-    case DLL_WINE_PREATTACH:
-        return FALSE;  /* prefer native version */
-#endif
-    case DLL_PROCESS_ATTACH:
-        DisableThreadLibraryCalls( hinstDLL );
-        break;
-    }
-    return TRUE;
-}
 
 typedef struct _SXS_GUID_INFORMATION_CLR
 {
@@ -62,13 +43,12 @@ typedef struct _SXS_GUID_INFORMATION_CLR
 #define SXS_LOOKUP_CLR_GUID_USE_ACTCTX     0x00000001
 #define SXS_LOOKUP_CLR_GUID_FIND_SURROGATE 0x00010000
 #define SXS_LOOKUP_CLR_GUID_FIND_CLR_CLASS 0x00020000
+#define SXS_LOOKUP_CLR_GUID_FIND_ANY       (SXS_LOOKUP_CLR_GUID_FIND_SURROGATE | SXS_LOOKUP_CLR_GUID_FIND_CLR_CLASS)
 
 struct comclassredirect_data
 {
     ULONG size;
-    BYTE  res;
-    BYTE  miscmask;
-    BYTE  res1[2];
+    ULONG flags;
     DWORD model;
     GUID  clsid;
     GUID  alias;
@@ -100,75 +80,120 @@ struct clrclass_data
     DWORD res2[2];
 };
 
+struct clrsurrogate_data
+{
+    ULONG size;
+    DWORD res;
+    GUID  clsid;
+    ULONG version_offset;
+    ULONG version_len;
+    ULONG name_offset;
+    ULONG name_len;
+};
+
 BOOL WINAPI SxsLookupClrGuid(DWORD flags, GUID *clsid, HANDLE actctx, void *buffer, SIZE_T buffer_len,
                              SIZE_T *buffer_len_required)
 {
     ACTCTX_SECTION_KEYED_DATA guid_info = { sizeof(ACTCTX_SECTION_KEYED_DATA) };
-    ACTIVATION_CONTEXT_ASSEMBLY_DETAILED_INFORMATION *assembly_info;
+    ACTIVATION_CONTEXT_ASSEMBLY_DETAILED_INFORMATION *assembly_info = NULL;
     SIZE_T bytes_assembly_info;
-    struct comclassredirect_data *redirect_data;
-    struct clrclass_data *class_data;
-    int len_version = 0, len_name, len_identity;
+    unsigned int len_version = 0, len_name, len_identity;
     const void *ptr_name, *ptr_version, *ptr_identity;
     SXS_GUID_INFORMATION_CLR *ret = buffer;
+    BOOL retval = FALSE;
     char *ret_strings;
+    ULONG_PTR cookie;
 
-    TRACE("(%x, %s, %p, %p, %08lx, %p): stub\n", flags, wine_dbgstr_guid(clsid), actctx,
+    TRACE("%#lx, %s, %p, %p, %Ix, %p.\n", flags, wine_dbgstr_guid(clsid), actctx,
           buffer, buffer_len, buffer_len_required);
 
-    if (flags & ~SXS_LOOKUP_CLR_GUID_FIND_CLR_CLASS)
-        FIXME("Ignored flags: %x\n", flags & ~SXS_LOOKUP_CLR_GUID_FIND_CLR_CLASS);
+    if (flags & SXS_LOOKUP_CLR_GUID_USE_ACTCTX)
+    {
+        if (!ActivateActCtx(actctx, &cookie))
+        {
+            WARN("Failed to activate context.\n");
+            return FALSE;
+        }
+    }
 
-    if (!FindActCtxSectionGuid(FIND_ACTCTX_SECTION_KEY_RETURN_HACTCTX, 0,
-                               ACTIVATION_CONTEXT_SECTION_COM_SERVER_REDIRECTION, clsid, &guid_info))
+    if (flags & SXS_LOOKUP_CLR_GUID_FIND_SURROGATE)
+    {
+        if ((retval = FindActCtxSectionGuid(FIND_ACTCTX_SECTION_KEY_RETURN_HACTCTX, NULL,
+                ACTIVATION_CONTEXT_SECTION_CLR_SURROGATES, clsid, &guid_info)))
+        {
+            flags &= ~SXS_LOOKUP_CLR_GUID_FIND_CLR_CLASS;
+        }
+    }
+
+    if (!retval && (flags & SXS_LOOKUP_CLR_GUID_FIND_CLR_CLASS))
+    {
+        if ((retval = FindActCtxSectionGuid(FIND_ACTCTX_SECTION_KEY_RETURN_HACTCTX, NULL,
+                ACTIVATION_CONTEXT_SECTION_COM_SERVER_REDIRECTION, clsid, &guid_info)))
+        {
+            flags &= ~SXS_LOOKUP_CLR_GUID_FIND_SURROGATE;
+        }
+    }
+
+    if (!retval)
     {
         SetLastError(ERROR_NOT_FOUND);
-        return FALSE;
+        goto out;
     }
 
-    QueryActCtxW(0, guid_info.hActCtx, &guid_info.ulAssemblyRosterIndex,
+    retval = QueryActCtxW(0, guid_info.hActCtx, &guid_info.ulAssemblyRosterIndex,
             AssemblyDetailedInformationInActivationContext, NULL, 0, &bytes_assembly_info);
-    if (GetLastError() != ERROR_INSUFFICIENT_BUFFER)
+    if (!retval && GetLastError() != ERROR_INSUFFICIENT_BUFFER)
     {
-        ReleaseActCtx(guid_info.hActCtx);
-        return FALSE;
-    }
-    assembly_info = heap_alloc(bytes_assembly_info);
-    if(!QueryActCtxW(0, guid_info.hActCtx, &guid_info.ulAssemblyRosterIndex,
-            AssemblyDetailedInformationInActivationContext, assembly_info,
-            bytes_assembly_info, &bytes_assembly_info))
-    {
-        heap_free(assembly_info);
-        ReleaseActCtx(guid_info.hActCtx);
-        return FALSE;
+        goto out;
     }
 
-    redirect_data = guid_info.lpData;
-    class_data = (void *)((char*)redirect_data + redirect_data->clrdata_offset);
+    assembly_info = malloc(bytes_assembly_info);
+    if (!(retval = QueryActCtxW(0, guid_info.hActCtx, &guid_info.ulAssemblyRosterIndex,
+            AssemblyDetailedInformationInActivationContext, assembly_info,
+            bytes_assembly_info, &bytes_assembly_info)))
+    {
+        goto out;
+    }
+
+    if (flags & SXS_LOOKUP_CLR_GUID_FIND_CLR_CLASS)
+    {
+        const struct comclassredirect_data *redirect_data = guid_info.lpData;
+        const struct clrclass_data *class_data;
+
+        class_data = (void *)((char *)redirect_data + redirect_data->clrdata_offset);
+        ptr_name = (char *)class_data + class_data->name_offset;
+        ptr_version = (char *)class_data + class_data->version_offset;
+        len_name = class_data->name_len + sizeof(WCHAR);
+        if (class_data->version_len)
+            len_version = class_data->version_len + sizeof(WCHAR);
+    }
+    else
+    {
+        const struct clrsurrogate_data *surrogate = guid_info.lpData;
+        ptr_name = (char *)surrogate + surrogate->name_offset;
+        ptr_version = (char *)surrogate + surrogate->version_offset;
+        len_name = surrogate->name_len + sizeof(WCHAR);
+        if (surrogate->version_len)
+            len_version = surrogate->version_len + sizeof(WCHAR);
+    }
 
     ptr_identity = assembly_info->lpAssemblyEncodedAssemblyIdentity;
-    ptr_name = (char *)class_data + class_data->name_offset;
-    ptr_version = (char *)class_data + class_data->version_offset;
-
     len_identity = assembly_info->ulEncodedAssemblyIdentityLength + sizeof(WCHAR);
-    len_name = class_data->name_len + sizeof(WCHAR);
-    if (class_data->version_len > 0)
-        len_version = class_data->version_len + sizeof(WCHAR);
 
-    *buffer_len_required = sizeof(SXS_GUID_INFORMATION_CLR) + len_identity + len_version + len_name;
+    *buffer_len_required = sizeof(*ret) + len_identity + len_version + len_name;
     if (!buffer || buffer_len < *buffer_len_required)
     {
         SetLastError(ERROR_INSUFFICIENT_BUFFER);
-        heap_free(assembly_info);
-        ReleaseActCtx(guid_info.hActCtx);
-        return FALSE;
+        retval = FALSE;
+        goto out;
     }
 
-    ret->cbSize = sizeof(SXS_GUID_INFORMATION_CLR);
-    ret->dwFlags = SXS_GUID_INFORMATION_CLR_FLAG_IS_CLASS;
+    ret->cbSize = sizeof(*ret);
+    ret->dwFlags = flags & SXS_LOOKUP_CLR_GUID_FIND_CLR_CLASS ? SXS_GUID_INFORMATION_CLR_FLAG_IS_CLASS :
+            SXS_GUID_INFORMATION_CLR_FLAG_IS_SURROGATE;
 
     /* Copy strings into buffer */
-    ret_strings = (char *)ret + sizeof(SXS_GUID_INFORMATION_CLR);
+    ret_strings = (char *)ret + sizeof(*ret);
 
     memcpy(ret_strings, ptr_identity, len_identity);
     ret->pcwszAssemblyIdentity = (WCHAR *)ret_strings;
@@ -188,7 +213,12 @@ BOOL WINAPI SxsLookupClrGuid(DWORD flags, GUID *clsid, HANDLE actctx, void *buff
 
     SetLastError(0);
 
+out:
     ReleaseActCtx(guid_info.hActCtx);
-    heap_free(assembly_info);
-    return TRUE;
+
+    if (flags & SXS_LOOKUP_CLR_GUID_USE_ACTCTX)
+        DeactivateActCtx(0, cookie);
+
+    free(assembly_info);
+    return retval;
 }

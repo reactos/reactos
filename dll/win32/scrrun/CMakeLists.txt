@@ -1,6 +1,6 @@
 
 add_definitions(-D__ROS_LONG64__)
-spec2def(scrrun.dll scrrun.spec)
+spec2def(scrrun.dll scrrun.spec ADD_IMPORTLIB)
 add_idl_headers(scrrun_idlheader scrrun.idl)
 add_typelib(scrrun.idl)
 
