@@ -696,6 +696,7 @@ IopMountVolume(IN PDEVICE_OBJECT DeviceObject,
                             (Status == STATUS_USER_APC))
                         {
                             /* Don't mount if we were interrupted */
+                            IopInterlockedDecrementUlong(LockQueueIoDatabaseLock, (PULONG)&DeviceObject->ReferenceCount);
                             ObDereferenceObject(AttachedDeviceObject);
                             return Status;
                         }
@@ -704,6 +705,8 @@ IopMountVolume(IN PDEVICE_OBJECT DeviceObject,
                     /* Reacquire the lock */
                     KeEnterCriticalRegion();
                     ExAcquireResourceSharedLite(&IopDatabaseResource, TRUE);
+
+                    IopInterlockedDecrementUlong(LockQueueIoDatabaseLock, (PULONG)&DeviceObject->ReferenceCount);
 
                     /* When we released the lock, make sure nobody beat us */
                     if (DeviceObject->Vpb->Flags & VPB_MOUNTED)

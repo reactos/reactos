@@ -1223,15 +1223,22 @@ PiInitializeDevNode(
     {
         PDEVICE_NODE OldDeviceNode = IopGetDeviceNode(OldDeviceObject);
 
-        DPRINT1("Duplicate device instance '%wZ'\n", &InstancePathU);
-        DPRINT1("Current instance parent: '%wZ'\n", &DeviceNode->Parent->InstancePath);
-        DPRINT1("Old instance parent: '%wZ'\n", &OldDeviceNode->Parent->InstancePath);
+        if (OldDeviceNode->State == DeviceNodeRemoved &&
+            OldDeviceNode->Child == NULL &&
+            IsListEmpty(&OldDeviceNode->TargetDeviceNotify))
+        {
+            /* PDO deletion reclaims the devnode after its references drain. */
+            OldDeviceNode->InstancePath.Length = 0;
+            ObDereferenceObject(OldDeviceObject);
+        }
+        else
+        {
+            DPRINT1("Duplicate device instance '%wZ'\n", &InstancePathU);
+            DPRINT1("Current instance parent: '%wZ'\n", &DeviceNode->Parent->InstancePath);
+            DPRINT1("Old instance parent: '%wZ'\n", &OldDeviceNode->Parent->InstancePath);
 
-        KeBugCheckEx(PNP_DETECTED_FATAL_ERROR,
-                     0x01,
-                     (ULONG_PTR)DeviceNode->PhysicalDeviceObject,
-                     (ULONG_PTR)OldDeviceObject,
-                     0);
+            KeBugCheckEx(PNP_DETECTED_FATAL_ERROR, 0x01, (ULONG_PTR)DeviceNode->PhysicalDeviceObject, (ULONG_PTR)OldDeviceObject, 0);
+        }
     }
 
     DeviceNode->InstancePath = InstancePathU;
@@ -2118,8 +2125,7 @@ PiEnumerateDevice(
         // treat as if there are no child objects
     }
 
-    PDEVICE_RELATIONS DeviceRelations = DeviceNode->OverUsed1.PendingDeviceRelations;
-    DeviceNode->OverUsed1.PendingDeviceRelations = NULL;
+    PDEVICE_RELATIONS DeviceRelations = InterlockedExchangePointer((PVOID volatile *)&DeviceNode->OverUsed1.PendingDeviceRelations, NULL);
 
     // it's acceptable not to have PDOs
     if (!DeviceRelations)
