@@ -1786,12 +1786,17 @@ PciScanBus(IN PPCI_FDO_EXTENSION DeviceExtension)
             /* Check if this device is considered critical by the OS */
             if (PciIsCriticalDeviceClass(PciData->BaseClass, PciData->SubClass))
             {
-                /* Check if normally the decodes would be disabled */
-                if (!(HackFlags & PCI_HACK_DONT_DISABLE_DECODES))
+                /* The hack database can take a device out of its critical class */
+                if (!(HackFlags & PCI_HACK_NOT_CRITICAL_DEVICE))
                 {
-                    /* Because this device is critical, don't disable them */
                     DPRINT1("Not allowing PM Because device is critical\n");
-                    HackFlags |= PCI_HACK_CRITICAL_DEVICE;
+
+                    /* Probe it with the system held, and keep it decoding while stopped */
+                    HackFlags |= PCI_HACK_CRITICAL_DEVICE | PCI_HACK_KEEP_DECODES_ON_STOP;
+
+                    /* Only the display can still be powered down */
+                    if (PciData->BaseClass != PCI_CLASS_DISPLAY_CTLR)
+                        HackFlags |= PCI_HACK_NEVER_POWER_DOWN;
                 }
             }
 
@@ -1799,11 +1804,11 @@ PciScanBus(IN PPCI_FDO_EXTENSION DeviceExtension)
             if ((PciData->BaseClass == PCI_CLASS_BRIDGE_DEV) &&
                 (PciData->SubClass == PCI_SUBCLASS_BR_PCI_TO_PCI) &&
                 (PciData->u.type1.BridgeControl & PCI_ENABLE_BRIDGE_VGA) &&
-               !(HackFlags & PCI_HACK_DONT_DISABLE_DECODES))
+               !(HackFlags & PCI_HACK_NOT_CRITICAL_DEVICE))
             {
-                /* Do not disable their decodes either */
+                /* They follow the adapter behind them, so they can still be powered down */
                 DPRINT1("Not allowing PM because device is VGA\n");
-                HackFlags |= PCI_HACK_CRITICAL_DEVICE;
+                HackFlags |= PCI_HACK_CRITICAL_DEVICE | PCI_HACK_KEEP_DECODES_ON_STOP;
             }
 
             /* Check if the device should be skipped for whatever reason */

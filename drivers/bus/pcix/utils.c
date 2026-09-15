@@ -957,7 +957,7 @@ PciCanDisableDecodes(IN PPCI_PDO_EXTENSION DeviceExtension,
                      IN BOOLEAN ForPowerDown)
 {
     UCHAR BaseClass, SubClass;
-    BOOLEAN IsVga;
+    BOOLEAN IsVga, KeepPower = FALSE;
 
     /* Is there a device extension or should the PCI header be used? */
     if (DeviceExtension)
@@ -972,6 +972,7 @@ PciCanDisableDecodes(IN PPCI_PDO_EXTENSION DeviceExtension,
         HackFlags = DeviceExtension->HackFlags;
         SubClass = DeviceExtension->SubClass;
         BaseClass = DeviceExtension->BaseClass;
+        KeepPower = DeviceExtension->DisablePowerDown;
     }
     else
     {
@@ -983,33 +984,34 @@ PciCanDisableDecodes(IN PPCI_PDO_EXTENSION DeviceExtension,
 
     /* Check for hack flags that prevent disabling the decodes */
     if (HackFlags & (PCI_HACK_PRESERVE_COMMAND |
-                     PCI_HACK_CB_SHARE_CMD_BITS |
-                     PCI_HACK_DONT_DISABLE_DECODES))
+                     PCI_HACK_NEVER_DISCONNECT |
+                     PCI_HACK_DONT_DISABLE |
+                     PCI_HACK_CB_SHARE_CMD_BITS))
     {
         /* Don't do it */
         return FALSE;
     }
 
-    /* Is this a VGA adapter? */
-    if ((BaseClass == PCI_CLASS_DISPLAY_CTLR) &&
-        (SubClass == PCI_SUBCLASS_VID_VGA_CTLR))
+    if (ForPowerDown)
     {
-        /* Never disable decodes if this is for power down */
+        /* IDE controllers, legacy bridges and flagged functions may stop but not power down */
+        if (KeepPower || (HackFlags & PCI_HACK_NEVER_POWER_DOWN))
+            return FALSE;
+    }
+    else if (HackFlags & PCI_HACK_KEEP_DECODES_ON_STOP)
+    {
+        /* Flagged functions may power down, but keep decoding while stopped or removed */
+        return FALSE;
+    }
+
+    /* VGA adapters keep decoding unless they are being powered down */
+    if (((BaseClass == PCI_CLASS_DISPLAY_CTLR) && (SubClass == PCI_SUBCLASS_VID_VGA_CTLR)) ||
+        ((BaseClass == PCI_CLASS_PRE_20) && (SubClass == PCI_SUBCLASS_PRE_20_VGA)))
+    {
         return ForPowerDown;
     }
 
-    /* Check for legacy devices */
-    if (BaseClass == PCI_CLASS_PRE_20)
-    {
-        /* Never disable video adapter cards if this is for power down */
-        if (SubClass == PCI_SUBCLASS_PRE_20_VGA) return ForPowerDown;
-    }
-    else if (BaseClass == PCI_CLASS_DISPLAY_CTLR)
-    {
-        /* Never disable VGA adapters if this is for power down */
-        if (SubClass == PCI_SUBCLASS_VID_VGA_CTLR) return ForPowerDown;
-    }
-    else if (BaseClass == PCI_CLASS_BRIDGE_DEV)
+    if (BaseClass == PCI_CLASS_BRIDGE_DEV)
     {
         /* Check for legacy bridges */
         if ((SubClass == PCI_SUBCLASS_BR_ISA) ||
@@ -1036,13 +1038,14 @@ PciCanDisableDecodes(IN PPCI_PDO_EXTENSION DeviceExtension,
                 IsVga = DeviceExtension->Dependent.type1.VgaBitSet;
             }
 
-            /* Never disable VGA adapters if this is for power down */
-            if (IsVga) return ForPowerDown;
+            /* A bridge forwarding VGA follows the same rule as the adapter behind it */
+            if (IsVga)
+                return ForPowerDown;
         }
     }
 
-    /* Finally, never disable decodes if there's no power management */
-    return !(HackFlags & PCI_HACK_NO_PM_CAPS);
+    /* Nothing else has to keep decoding */
+    return TRUE;
 }
 
 PCI_DEVICE_TYPES
