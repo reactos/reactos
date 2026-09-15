@@ -1,16 +1,16 @@
-@ stdcall ConvertAtJobsToTasks()
+@ stdcall -stub ConvertAtJobsToTasks()
 @ stdcall -private DllCanUnloadNow()
 @ stdcall -private DllGetClassObject(ptr ptr ptr)
-@ stdcall GetNetScheduleAccountInformation(wstr long ptr)
-@ stdcall NetrJobAdd(wstr ptr ptr)
-@ stdcall NetrJobDel(wstr long long)
-@ stdcall NetrJobEnum(wstr ptr long ptr ptr)
-@ stdcall NetrJobGetInfo(wstr long ptr)
-@ stdcall SAGetAccountInformation(wstr ptr long ptr)
-@ stdcall SAGetNSAccountInformation(wstr long ptr)
-@ stdcall SASetAccountInformation(wstr wstr wstr wstr long)
-@ stdcall SASetNSAccountInformation(wstr wstr wstr)
-@ stdcall SetNetScheduleAccountInformation(wstr wstr wstr)
+@ stdcall -stub GetNetScheduleAccountInformation(wstr long ptr)
+@ stdcall NetrJobAdd(wstr ptr ptr) NetrJobAdd_wrapper
+@ stdcall NetrJobDel(wstr long long) NetrJobDel_wrapper
+@ stdcall NetrJobEnum(wstr ptr long ptr ptr) NetrJobEnum_wrapper
+@ stdcall NetrJobGetInfo(wstr long ptr) NetrJobGetInfo_wrapper
+@ stdcall -stub SAGetAccountInformation(wstr ptr long ptr)
+@ stdcall -stub SAGetNSAccountInformation(wstr long ptr)
+@ stdcall -stub SASetAccountInformation(wstr wstr wstr wstr long)
+@ stdcall -stub SASetNSAccountInformation(wstr wstr wstr)
+@ stdcall -stub SetNetScheduleAccountInformation(wstr wstr wstr)
 #@ stdcall _ConvertAtJobsToTasks@0() mstask.ConvertAtJobsToTasks
 #@ stdcall _DllCanUnloadNow@0() DllCanUnloadNow
 #@ stdcall _DllGetClassObject@12(ptr ptr ptr) DllGetClassObject
@@ -24,5 +24,3 @@
 #@ stdcall _SASetAccountInformation@20(wstr wstr wstr wstr long) SASetAccountInformation
 #@ stdcall _SASetNSAccountInformation@12(wstr wstr wstr) SASetNSAccountInformation
 #@ stdcall _SetNetScheduleAccountInformation@12(wstr wstr wstr) SetNetScheduleAccountInformation
-@ stdcall -private DllRegisterServer()
-@ stdcall -private DllUnregisterServer()

@@ -19,23 +19,15 @@
 #ifndef __MSTASK_PRIVATE_H__
 #define __MSTASK_PRIVATE_H__
 
-#include <stdarg.h>
-
-#define COBJMACROS
-
-#include "windef.h"
-#include "winbase.h"
-#include "winuser.h"
-#include "ole2.h"
-#include "mstask.h"
-
-extern LONG dll_ref DECLSPEC_HIDDEN;
+extern LONG dll_ref;
 
 typedef struct ClassFactoryImpl ClassFactoryImpl;
-extern ClassFactoryImpl MSTASK_ClassFactory DECLSPEC_HIDDEN;
+extern ClassFactoryImpl MSTASK_ClassFactory;
 
-extern HRESULT TaskTriggerConstructor(LPVOID *ppObj) DECLSPEC_HIDDEN;
-extern HRESULT TaskSchedulerConstructor(LPVOID *ppObj) DECLSPEC_HIDDEN;
-extern HRESULT TaskConstructor(LPCWSTR pwszTaskName, LPVOID *ppObj) DECLSPEC_HIDDEN;
+extern HRESULT TaskTriggerConstructor(ITask *task, WORD idx, ITaskTrigger **trigger);
+extern HRESULT TaskSchedulerConstructor(LPVOID *ppObj);
+extern HRESULT TaskConstructor(ITaskService *service, const WCHAR *task_name, ITask **task);
+extern HRESULT task_set_trigger(ITask *task, WORD idx, const TASK_TRIGGER *trigger);
+extern HRESULT task_get_trigger(ITask *task, WORD idx, TASK_TRIGGER *trigger);
 
 #endif /* __MSTASK_PRIVATE_H__ */

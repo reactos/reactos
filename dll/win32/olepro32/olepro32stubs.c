@@ -31,32 +31,6 @@
 WINE_DEFAULT_DEBUG_CHANNEL(ole);
 
 /***********************************************************************
- *		DllUnregisterServer (OLEPRO32.258)
- */
-HRESULT WINAPI DllUnregisterServer(void)
-{
-	FIXME("stub\n");
-	return S_OK;
-}
-
-/***********************************************************************
- *		DllRegisterServer (OLEPRO32.257)
- */
-HRESULT WINAPI DllRegisterServer(void)
-{
-	FIXME("stub\n");
-	return S_OK;
-}
-
-/***********************************************************************
- *		DllCanUnloadNow (OLEPRO32.255)
- */
-HRESULT WINAPI DllCanUnloadNow(void)
-{
-	return S_FALSE;
-}
-
-/***********************************************************************
  *		DllGetClassObject (OLEPRO32.@)
  */
 HRESULT WINAPI DllGetClassObject( REFCLSID rclsid, REFIID riid, LPVOID* ppv )

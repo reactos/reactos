@@ -55,14 +55,23 @@ cpp_quote("#define TASK_OCTOBER 0x200")
 cpp_quote("#define TASK_NOVEMBER 0x400")
 cpp_quote("#define TASK_DECEMBER 0x800")
 
+cpp_quote("#define TASK_FLAG_INTERACTIVE 0x0001")
+cpp_quote("#define TASK_FLAG_DELETE_WHEN_DONE 0x0002")
+cpp_quote("#define TASK_FLAG_DISABLED 0x0004")
+cpp_quote("#define TASK_FLAG_START_ONLY_IF_IDLE 0x0010")
+cpp_quote("#define TASK_FLAG_KILL_ON_IDLE_END 0x0020")
+cpp_quote("#define TASK_FLAG_DONT_START_IF_ON_BATTERIES 0x0040")
+cpp_quote("#define TASK_FLAG_KILL_IF_GOING_ON_BATTERIES 0x0080")
+cpp_quote("#define TASK_FLAG_RUN_ONLY_IF_DOCKED 0x0100")
+cpp_quote("#define TASK_FLAG_HIDDEN 0x0200")
+cpp_quote("#define TASK_FLAG_RUN_IF_CONNECTED_TO_INTERNET 0x0400")
+cpp_quote("#define TASK_FLAG_RESTART_ON_IDLE_RESUME 0x0800")
+cpp_quote("#define TASK_FLAG_SYSTEM_REQUIRED 0x1000")
+cpp_quote("#define TASK_FLAG_RUN_ONLY_IF_LOGGED_ON 0x2000")
+
 cpp_quote("#define TASK_TRIGGER_FLAG_HAS_END_DATE 0x1")
 cpp_quote("#define TASK_TRIGGER_FLAG_KILL_AT_DURATION_END 0x2")
 cpp_quote("#define TASK_TRIGGER_FLAG_DISABLED 0x4")
-
-#ifdef _MSC_VER
-cpp_quote("DEFINE_GUID(CLSID_CTaskScheduler, 0x148bd52a, 0xa2ab, 0x11ce, 0xb1,0x1f, 0x00,0xaa,0x00,0x53,0x05,0x03);")
-cpp_quote("DEFINE_GUID(CLSID_CTask, 0x148bd520, 0xa2ab, 0x11ce, 0xb1,0x1f, 0x00,0xaa,0x00,0x53,0x05,0x03);")
-#endif
 
 [
     local,
@@ -385,7 +394,7 @@ interface ITaskScheduler : IUnknown
 coclass CTaskScheduler
 {
     [default] interface ITaskScheduler;
-};
+}
 
 
 [
@@ -395,4 +404,4 @@ coclass CTaskScheduler
 coclass CTask
 {
     [default] interface ITask;
-};
+}

@@ -16,38 +16,23 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <stdio.h>
+#include <stdarg.h>
 
-#include "mstask_private.h"
+#define COBJMACROS
+
+#include "windef.h"
+#include "winbase.h"
 #include "objbase.h"
 #include "rpcproxy.h"
-
+#include "taskschd.h"
+#include "mstask.h"
+#include "mstask_private.h"
+#include "atsvc.h"
 #include "wine/debug.h"
-
 
 WINE_DEFAULT_DEBUG_CHANNEL(mstask);
 
-static HINSTANCE hInst;
 LONG dll_ref = 0;
-
-BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
-{
-    TRACE("(%p, %d, %p)\n", hinstDLL, fdwReason, lpvReserved);
-
-    switch (fdwReason)
-    {
-#ifndef __REACTOS__
-        case DLL_WINE_PREATTACH:
-            return FALSE;
-#endif
-        case DLL_PROCESS_ATTACH:
-            DisableThreadLibraryCalls(hinstDLL);
-            hInst = hinstDLL;
-            break;
-    }
-
-    return TRUE;
-}
 
 HRESULT WINAPI DllGetClassObject(REFCLSID rclsid, REFIID iid, LPVOID *ppv)
 {
@@ -66,12 +51,52 @@ HRESULT WINAPI DllCanUnloadNow(void)
     return dll_ref != 0 ? S_FALSE : S_OK;
 }
 
-HRESULT WINAPI DllRegisterServer(void)
+DWORD WINAPI NetrJobAdd_wrapper(ATSVC_HANDLE server_name, LPAT_INFO info, LPDWORD jobid)
 {
-    return __wine_register_resources( hInst );
+    return NetrJobAdd(server_name, info, jobid);
 }
 
-HRESULT WINAPI DllUnregisterServer(void)
+DWORD WINAPI NetrJobDel_wrapper(ATSVC_HANDLE server_name, DWORD min_jobid, DWORD max_jobid)
 {
-    return __wine_unregister_resources( hInst );
+    return NetrJobDel(server_name, min_jobid, max_jobid);
+}
+
+DWORD WINAPI NetrJobEnum_wrapper(ATSVC_HANDLE server_name, LPAT_ENUM_CONTAINER container,
+                                 DWORD max_length, LPDWORD total, LPDWORD resume)
+{
+    return NetrJobEnum(server_name, container, max_length, total, resume);
+}
+
+DWORD WINAPI NetrJobGetInfo_wrapper(ATSVC_HANDLE server_name, DWORD jobid, LPAT_INFO *info)
+{
+    return NetrJobGetInfo(server_name, jobid, info);
+}
+
+void __RPC_FAR *__RPC_USER MIDL_user_allocate(SIZE_T n)
+{
+    return malloc(n);
+}
+
+void __RPC_USER MIDL_user_free(void __RPC_FAR *p)
+{
+    free(p);
+}
+
+handle_t __RPC_USER ATSVC_HANDLE_bind(ATSVC_HANDLE str)
+{
+    static unsigned char ncalrpc[] = "ncalrpc";
+    unsigned char *binding_str;
+    handle_t rpc_handle = 0;
+
+    if (RpcStringBindingComposeA(NULL, ncalrpc, NULL, NULL, NULL, &binding_str) == RPC_S_OK)
+    {
+        RpcBindingFromStringBindingA(binding_str, &rpc_handle);
+        RpcStringFreeA(&binding_str);
+    }
+    return rpc_handle;
+}
+
+void __RPC_USER ATSVC_HANDLE_unbind(ATSVC_HANDLE ServerName, handle_t rpc_handle)
+{
+    RpcBindingFree(&rpc_handle);
 }
