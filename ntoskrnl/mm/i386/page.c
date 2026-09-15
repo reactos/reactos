@@ -58,7 +58,7 @@ MmProtectToPteMask[32] =
     PTE_EXECUTE_READWRITE   | PTE_ENABLE_CACHE,
     PTE_EXECUTE_WRITECOPY   | PTE_ENABLE_CACHE,
     //
-    // These OR in the MM_NOACCESS flag, which seems to enable WriteCombining?
+    // These OR in the MM_WRITECOMBINE flag
     //
     0,
     PTE_READONLY            | PTE_WRITECOMBINED_CACHE,
