@@ -2103,6 +2103,27 @@ Return Value:
 
                 SectorSize = (ULONG)Vcb->Bpb.BytesPerSector;
 
+                //
+                //  Windows FILE_FLAG_NO_BUFFERING contract: the user buffer
+                //  must be aligned to the volume sector size.  The I/O
+                //  manager gates the buffer only against
+                //  DeviceObject->AlignmentRequirement, which on this storage
+                //  stack is typically 0 or FILE_WORD_ALIGNMENT, so an
+                //  unaligned buffer can reach us.  Reject it here rather than
+                //  hand a byte-unaligned MDL down to the disk driver, whose
+                //  scatter/gather list would then carry a non-sector-aligned
+                //  physical address and risk tearing the sector on disk.
+                //
+
+                if (Irp->RequestorMode != KernelMode &&
+                    ((ULONG_PTR)Irp->UserBuffer & (SectorSize - 1)) != 0)
+                {
+                    DebugTrace(0, Dbg,
+                               "FatCommonWrite -> STATUS_INVALID_PARAMETER "
+                               "(ungated unbuffered buffer misalignment)\n", 0);
+                    try_return( Status = STATUS_INVALID_PARAMETER );
+                }
+
                 BytesToWrite = (ByteCount + (SectorSize - 1))
                                          & ~(SectorSize - 1);
 
