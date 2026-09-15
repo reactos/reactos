@@ -217,6 +217,7 @@ RawInputThreadMain(VOID)
             {
                 ++cMaxWaitObjects;
                 TRACE("Mouse connected!\n");
+                Mouse.Handle = ghMouseDevice;
                 Mouse.pNextDeviceInfo = gpInputDeviceInfo;
                 gpInputDeviceInfo = &Mouse;
             }
@@ -229,6 +230,7 @@ RawInputThreadMain(VOID)
             {
                 ++cMaxWaitObjects;
                 TRACE("Keyboard connected!\n");
+                Keyboard.Handle = ghKeyboardDevice;
                 Keyboard.pNextDeviceInfo = gpInputDeviceInfo;
                 gpInputDeviceInfo = &Keyboard;
                 // Get and load keyboard attributes.
@@ -344,7 +346,7 @@ RawInputThreadMain(VOID)
 
             /* Process data */
             UserEnterExclusive();
-            UserProcessMouseInput(&MouseInput);
+            UserProcessMouseInput(&Mouse, &MouseInput);
             UserLeave();
         }
         else if (MouStatus != STATUS_PENDING)
@@ -362,7 +364,7 @@ RawInputThreadMain(VOID)
 
             /* Process data */
             UserEnterExclusive();
-            UserProcessKeyboardInput(&KeyInput);
+            UserProcessKeyboardInput(&Keyboard, &KeyInput);
             UserLeave();
         }
         else if (KbdStatus != STATUS_PENDING)
