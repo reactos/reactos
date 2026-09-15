@@ -1155,53 +1155,54 @@ PciIsSlotPresentInParentMethod(IN PPCI_PDO_EXTENSION PdoExtension,
     return FoundSlot;
 }
 
-ULONG
-NTAPI
-PciGetLengthFromBar(IN ULONG Bar)
-{
-    ULONG Length;
-
-    /* I/O addresses vs. memory addresses start differently due to alignment */
-    Length = 1 << ((Bar & PCI_ADDRESS_IO_SPACE) ? 2 : 4);
-
-    /* Keep going until a set bit */
-    while (!(Length & Bar) && (Length)) Length <<= 1;
-
-    /* Return the length (might be 0 on 64-bit because it's the low-word) */
-    if ((Bar & PCI_ADDRESS_MEMORY_TYPE_MASK) != PCI_TYPE_64BIT) ASSERT(Length);
-    return Length;
-}
-
+/**
+ * @brief
+ * Builds the requirement of a BAR from the value it reads back after all ones were written to it.
+ *
+ * @param[out] ResourceDescriptor
+ * Receives the requirement, or a null descriptor when the BAR is not implemented.
+ *
+ * @param[in] Bar
+ * The probed BAR.
+ *
+ * @param[in] NextBar
+ * The probed BAR after it, which holds the high half of a 64-bit BAR. 0 when there is none.
+ *
+ * @param[in] Rom
+ * TRUE when Bar is an expansion ROM BAR.
+ *
+ * @return
+ * TRUE when the BAR is 64-bit, so the BAR after it is not a BAR of its own.
+ */
 BOOLEAN
 NTAPI
-PciCreateIoDescriptorFromBarLimit(PIO_RESOURCE_DESCRIPTOR ResourceDescriptor,
-                                  IN PULONG BarArray,
-                                  IN BOOLEAN Rom)
+PciCreateIoDescriptorFromBarLimit(
+    _Out_ PIO_RESOURCE_DESCRIPTOR ResourceDescriptor,
+    _In_ ULONG Bar,
+    _In_ ULONG NextBar,
+    _In_ BOOLEAN Rom)
 {
-    ULONG CurrentBar, BarLength, BarMask;
+    ULONGLONG Address, Length;
+    UCHAR Type;
     BOOLEAN Is64BitBar = FALSE;
 
     /* Check if the BAR is nor I/O nor memory */
-    CurrentBar = BarArray[0];
-    if (!(CurrentBar & ~PCI_ADDRESS_IO_SPACE))
+    if (!(Bar & ~PCI_ADDRESS_IO_SPACE))
     {
         /* Fail this descriptor */
         ResourceDescriptor->Type = CmResourceTypeNull;
         return FALSE;
     }
 
-    /* Set default flag and clear high words */
+    /* Set default flag */
     ResourceDescriptor->Flags = 0;
-    ResourceDescriptor->u.Generic.MaximumAddress.HighPart = 0;
-    ResourceDescriptor->u.Generic.MinimumAddress.LowPart = 0;
-    ResourceDescriptor->u.Generic.MinimumAddress.HighPart = 0;
 
     /* Check for ROM Address */
     if (Rom)
     {
         /* Clean up the BAR to get just the address */
-        CurrentBar &= PCI_ADDRESS_ROM_ADDRESS_MASK;
-        if (!CurrentBar)
+        Bar &= PCI_ADDRESS_ROM_ADDRESS_MASK;
+        if (!Bar)
         {
             /* Invalid ar, fail this descriptor */
             ResourceDescriptor->Type = CmResourceTypeNull;
@@ -1212,53 +1213,56 @@ PciCreateIoDescriptorFromBarLimit(PIO_RESOURCE_DESCRIPTOR ResourceDescriptor,
         ResourceDescriptor->Flags = CM_RESOURCE_MEMORY_READ_ONLY;
     }
 
-    /* Compute the length, assume it's the alignment for now */
-    BarLength = PciGetLengthFromBar(CurrentBar);
-    ResourceDescriptor->u.Generic.Length = BarLength;
-    ResourceDescriptor->u.Generic.Alignment = BarLength;
-
     /* Check what kind of BAR this is */
-    if (CurrentBar & PCI_ADDRESS_IO_SPACE)
+    if (Bar & PCI_ADDRESS_IO_SPACE)
     {
-        /* Use correct mask to decode the address */
-        BarMask = PCI_ADDRESS_IO_ADDRESS_MASK;
-
         /* Set this as an I/O Port descriptor */
-        ResourceDescriptor->Type = CmResourceTypePort;
+        Type = CmResourceTypePort;
         ResourceDescriptor->Flags = CM_RESOURCE_PORT_IO;
+        Address = Bar & PCI_ADDRESS_IO_ADDRESS_MASK;
     }
     else
     {
-        /* Use correct mask to decode the address */
-        BarMask = PCI_ADDRESS_MEMORY_ADDRESS_MASK;
-
         /* Set this as a memory descriptor */
-        ResourceDescriptor->Type = CmResourceTypeMemory;
+        Type = CmResourceTypeMemory;
+        Address = Bar & PCI_ADDRESS_MEMORY_ADDRESS_MASK;
 
-        /* Check if it's 64-bit or 20-bit decode */
-        if ((CurrentBar & PCI_ADDRESS_MEMORY_TYPE_MASK) == PCI_TYPE_64BIT)
+        /* A 64-bit BAR takes the high half of its address from the next BAR */
+        if ((Bar & PCI_ADDRESS_MEMORY_TYPE_MASK) == PCI_TYPE_64BIT)
         {
-            /* The next BAR has the high word, read it */
-            ResourceDescriptor->u.Port.MaximumAddress.HighPart = BarArray[1];
+            Address |= (ULONGLONG)NextBar << 32;
             Is64BitBar = TRUE;
-        }
-        else if ((CurrentBar & PCI_ADDRESS_MEMORY_TYPE_MASK) == PCI_TYPE_20BIT)
-        {
-            /* Use the correct mask to decode the address */
-            BarMask = ~0xFFF0000F;
         }
 
         /* Check if the BAR is listed as prefetchable memory */
-        if (CurrentBar & PCI_ADDRESS_MEMORY_PREFETCHABLE)
+        if (Bar & PCI_ADDRESS_MEMORY_PREFETCHABLE)
         {
             /* Mark the descriptor in the same way */
             ResourceDescriptor->Flags |= CM_RESOURCE_MEMORY_PREFETCHABLE;
         }
     }
 
-    /* Now write down the maximum address based on the base + length */
-    ResourceDescriptor->u.Port.MaximumAddress.QuadPart = (CurrentBar & BarMask) +
-                                                         BarLength - 1;
+    /* The probe clears the bits below the size, so the lowest bit still set is the length */
+    Length = Address & (~Address + 1);
+
+    /* A legacy memory BAR can only be placed below 1MB */
+    if ((Type == CmResourceTypeMemory) &&
+        ((Bar & PCI_ADDRESS_MEMORY_TYPE_MASK) == PCI_TYPE_20BIT))
+    {
+        Address &= 0xFFFFF;
+    }
+
+    /* A length of 4GB or more takes the large memory form */
+    if (!NT_SUCCESS(RtlIoEncodeMemIoResource(ResourceDescriptor,
+                                             Type,
+                                             Length,
+                                             Length,
+                                             0,
+                                             Address | (Length - 1))))
+    {
+        /* Fail this descriptor */
+        ResourceDescriptor->Type = CmResourceTypeNull;
+    }
 
     /* Return if this is a 64-bit BAR, so the loop code knows to skip the next one */
     return Is64BitBar;

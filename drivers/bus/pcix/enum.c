@@ -117,6 +117,7 @@ PciComputeNewCurrentSettings(IN PPCI_PDO_EXTENSION PdoExtension,
                 /* Base BAR resources */
                 case CmResourceTypePort:
                 case CmResourceTypeMemory:
+                case CmResourceTypeMemoryLarge:
                 {
                     /*
                      * Skip legacy/shared resources (e.g., VGA ports 0x3B0-0x3DF, memory 0xA0000).
@@ -214,7 +215,8 @@ PciComputeNewCurrentSettings(IN PPCI_PDO_EXTENSION PdoExtension,
             ((Partial->Type != CmResourceTypeNull) &&
              ((Partial->u.Generic.Start.QuadPart !=
                CurrentDescriptor->u.Generic.Start.QuadPart) ||
-              (Partial->u.Generic.Length != CurrentDescriptor->u.Generic.Length))))
+              (RtlCmDecodeMemIoResource(Partial, NULL) !=
+               RtlCmDecodeMemIoResource(CurrentDescriptor, NULL)))))
         {
             /* Record a change */
             RangeChange = TRUE;
@@ -238,6 +240,7 @@ PciComputeNewCurrentSettings(IN PPCI_PDO_EXTENSION PdoExtension,
 
             /* Update to new range */
             CurrentDescriptor->Type = Partial->Type;
+            CurrentDescriptor->Flags = Partial->Flags;
             CurrentDescriptor->u.Generic.Start = Partial->u.Generic.Start;
             CurrentDescriptor->u.Generic.Length = Partial->u.Generic.Length;
         }
@@ -401,8 +404,10 @@ PciQueryResources(IN PPCI_PDO_EXTENSION PdoExtension,
     {
         /* Check if the decode for this descriptor is actually turned on */
         Partial = &PciResources->Current[i];
-        if (((HaveMemSpace) && (Partial->Type == CmResourceTypeMemory)) ||
-            ((HaveIoSpace) && (Partial->Type == CmResourceTypePort)))
+        if ((HaveMemSpace &&
+             ((Partial->Type == CmResourceTypeMemory) ||
+              (Partial->Type == CmResourceTypeMemoryLarge))) ||
+            (HaveIoSpace && (Partial->Type == CmResourceTypePort)))
         {
             /* One more fully active descriptor */
             Count++;
@@ -453,8 +458,10 @@ PciQueryResources(IN PPCI_PDO_EXTENSION PdoExtension,
     {
         /* Check if the decode for this descriptor is actually turned on */
         Partial = &PciResources->Current[i];
-        if (((HaveMemSpace) && (Partial->Type == CmResourceTypeMemory)) ||
-            ((HaveIoSpace) && (Partial->Type == CmResourceTypePort)))
+        if ((HaveMemSpace &&
+             ((Partial->Type == CmResourceTypeMemory) ||
+              (Partial->Type == CmResourceTypeMemoryLarge))) ||
+            (HaveIoSpace && (Partial->Type == CmResourceTypePort)))
         {
             /* Copy the descriptor into the resource list */
             *Resource++ = *Partial;
