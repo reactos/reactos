@@ -79,9 +79,12 @@
 #define MI_MAKE_DIRTY_PAGE(x)
 #define MI_MAKE_CLEAN_PAGE(x)
 #define MI_MAKE_ACCESSED_PAGE(x)
-#define MI_PAGE_DISABLE_CACHE(x)   ((x)->u.Hard.Cached = 0)
-#define MI_PAGE_WRITE_THROUGH(x)   ((x)->u.Hard.Buffered = 0)
-#define MI_PAGE_WRITE_COMBINED(x)  ((x)->u.Hard.Buffered = 1)
+#define MI_MAKE_PTE_CACHED(Pte) \
+    do { (Pte)->u.Hard.Cached = 1; (Pte)->u.Hard.Buffered = 1; } while (0)
+#define MI_MAKE_PTE_NON_CACHED(Pte) \
+    do { (Pte)->u.Hard.Cached = 0; (Pte)->u.Hard.Buffered = 0; } while (0)
+#define MI_MAKE_PTE_WRITE_COMBINE(Pte) \
+    do { (Pte)->u.Hard.Cached = 0; (Pte)->u.Hard.Buffered = 1; } while (0)
 #define MI_IS_PAGE_LARGE(x)        FALSE
 #define MI_IS_PAGE_WRITEABLE(x)    ((x)->u.Hard.ReadOnly == 0)
 #define MI_IS_PAGE_COPY_ON_WRITE(x)FALSE
