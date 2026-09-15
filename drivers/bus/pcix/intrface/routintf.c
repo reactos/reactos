@@ -349,4 +349,22 @@ PciCacheLegacyDeviceRouting(IN PDEVICE_OBJECT DeviceObject,
     return STATUS_SUCCESS;
 }
 
+/**
+ * @brief Frees the routing cached for slots claimed by legacy drivers.
+ */
+VOID
+NTAPI
+PciFreeLegacyDeviceCache(VOID)
+{
+    PPCI_LEGACY_DEVICE LegacyDevice;
+    PAGED_CODE();
+
+    while (PciLegacyDeviceHead)
+    {
+        LegacyDevice = PciLegacyDeviceHead;
+        PciLegacyDeviceHead = LegacyDevice->Next;
+        ExFreePoolWithTag(LegacyDevice, 'PciR');
+    }
+}
+
 /* EOF */

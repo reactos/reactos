@@ -198,4 +198,21 @@ PciVerifierInit(IN PDRIVER_OBJECT DriverObject)
     }
 }
 
+/**
+ * @brief Drops the hardware profile notification taken by PciVerifierInit.
+ */
+VOID
+NTAPI
+PciVerifierRelease(VOID)
+{
+    PAGED_CODE();
+
+    if (PciVerifierRegistered)
+    {
+        IoUnregisterPlugPlayNotification(PciVerifierNotificationHandle);
+        PciVerifierNotificationHandle = NULL;
+        PciVerifierRegistered = FALSE;
+    }
+}
+
 /* EOF */
