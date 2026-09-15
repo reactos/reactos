@@ -36,8 +36,8 @@ static const PRINTPROVIDOR _PrintProviderFunctions = {
     LocalSetJob,                                // fpSetJob
     LocalGetJob,                                // fpGetJob
     LocalEnumJobs,                              // fpEnumJobs
-    NULL,                                       // fpAddPrinter
-    NULL,                                       // fpDeletePrinter
+    LocalAddPrinter,                            // fpAddPrinter
+    LocalDeletePrinter,                         // fpDeletePrinter
     NULL,                                       // fpSetPrinter
     LocalGetPrinter,                            // fpGetPrinter
     LocalEnumPrinters,                          // fpEnumPrinters
