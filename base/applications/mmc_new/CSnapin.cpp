@@ -30,6 +30,7 @@ CSnapin::CSnapin(CSnapinCacheEntry *CacheEntry, PWSTR displayName)
 
 CSnapin::~CSnapin()
 {
+    RemoveAllSubnodes();
 }
 
 const CAtlString& CSnapin::Name() const { return m_CacheEntry->Name(); }
@@ -43,7 +44,22 @@ CSnapinCacheEntry *CSnapin::GetCacheEntry()
     return m_CacheEntry;
 }
 
-void CSnapin::OnAdd(IConsole* console)
+void
+CSnapin::RemoveAllSubnodes()
+{
+    CSnapin *SubNode;
+    POSITION pos = m_SubNodes.GetHeadPosition();
+    while (pos != NULL)
+    {
+        SubNode = (CSnapin*)m_SubNodes.GetNext(pos);
+        if (SubNode)
+            delete SubNode;
+    }
+    m_SubNodes.RemoveAll();
+}
+
+void
+CSnapin::OnAdd(IConsole* console)
 {
 #if 0
     CComPtr<IComponentData> spComponentData;
@@ -56,7 +72,8 @@ void CSnapin::OnAdd(IConsole* console)
 #endif
 }
 
-void CSnapin::OnAccept(IConsole* console)
+void
+CSnapin::OnAccept(IConsole* console)
 {
 #if 0
     CComPtr<IComponentData> spComponentData;
