@@ -25,6 +25,7 @@
  */
 
 #include "mntmgr.h"
+#include <diskguid.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -276,7 +277,7 @@ QueryDeviceInformation(
     _Out_opt_ PUNICODE_STRING DeviceName,
     _Out_opt_ PMOUNTDEV_UNIQUE_ID* UniqueId,
     _Out_opt_ PBOOLEAN Removable,
-    _Out_opt_ PBOOLEAN GptDriveLetter,
+    _Out_opt_ PBOOLEAN DriveLetterAllowed,
     _Out_opt_ PBOOLEAN HasGuid,
     _Inout_opt_ LPGUID StableGuid,
     _Out_opt_ PBOOLEAN IsFT)
@@ -284,13 +285,14 @@ QueryDeviceInformation(
     NTSTATUS Status;
     USHORT Size;
     BOOLEAN IsRemovable;
+    BOOLEAN IsEfiSystemPartition = FALSE;
+    BOOLEAN PartitionInfoValid = FALSE;
     PMOUNTDEV_NAME Name;
     PMOUNTDEV_UNIQUE_ID Id;
     PFILE_OBJECT FileObject;
     PDEVICE_OBJECT DeviceObject;
     PARTITION_INFORMATION_EX PartitionInfo;
     STORAGE_DEVICE_NUMBER StorageDeviceNumber;
-    VOLUME_GET_GPT_ATTRIBUTES_INFORMATION GptAttributes;
 
     /* Get device associated with the symbolic name */
     Status = IoGetDeviceObjectPointer(SymbolicName,
@@ -319,33 +321,33 @@ QueryDeviceInformation(
     /* Get the attached device */
     DeviceObject = IoGetAttachedDeviceReference(FileObject->DeviceObject);
 
-    /* If we've been asked for a GPT drive letter */
-    if (GptDriveLetter)
-    {
-        /* Consider it has one */
-        *GptDriveLetter = TRUE;
+    if (DriveLetterAllowed)
+        *DriveLetterAllowed = TRUE;
 
-        if (!IsRemovable)
+    if (DriveLetterAllowed || (IsFT && !IsRemovable))
+    {
+        Status = MountMgrSendSyncDeviceIoCtl(IOCTL_DISK_GET_PARTITION_INFO_EX, DeviceObject, NULL, 0, &PartitionInfo, sizeof(PartitionInfo), NULL);
+        if (NT_SUCCESS(Status))
         {
-            /* Query the GPT attributes */
-            Status = MountMgrSendSyncDeviceIoCtl(IOCTL_VOLUME_GET_GPT_ATTRIBUTES,
-                                                 DeviceObject,
-                                                 NULL,
-                                                 0,
-                                                 &GptAttributes,
-                                                 sizeof(GptAttributes),
-                                                 NULL);
-            /* Failure isn't major */
-            if (!NT_SUCCESS(Status))
-            {
-                Status = STATUS_SUCCESS;
-            }
-            /* Check if it has a drive letter */
-            else if (GptAttributes.GptAttributes & GPT_BASIC_DATA_ATTRIBUTE_NO_DRIVE_LETTER)
-            {
-                *GptDriveLetter = FALSE;
-            }
+            PartitionInfoValid = TRUE;
         }
+        else
+        {
+            /* Failure isn't major */
+            Status = STATUS_SUCCESS;
+        }
+    }
+
+    if (DriveLetterAllowed && PartitionInfoValid)
+    {
+        if (PartitionInfo.PartitionStyle == PARTITION_STYLE_MBR)
+            IsEfiSystemPartition = (PartitionInfo.Mbr.PartitionType == PARTITION_SYSTEM);
+        else if (PartitionInfo.PartitionStyle == PARTITION_STYLE_GPT)
+            IsEfiSystemPartition = IsEqualGUID(&PartitionInfo.Gpt.PartitionType, &PARTITION_SYSTEM_GUID);
+
+        /* EFI system partitions and fixed GPT volumes marked no-drive-letter stay unassigned. */
+        if (IsEfiSystemPartition || (!IsRemovable && PartitionInfo.PartitionStyle == PARTITION_STYLE_GPT && (PartitionInfo.Gpt.Attributes & GPT_BASIC_DATA_ATTRIBUTE_NO_DRIVE_LETTER)))
+            *DriveLetterAllowed = FALSE;
     }
 
     /* If caller wants to know if this is a FT volume */
@@ -355,27 +357,9 @@ QueryDeviceInformation(
         *IsFT = FALSE;
 
         /* FT volume can't be removable */
-        if (!IsRemovable)
+        if (!IsRemovable && PartitionInfoValid && PartitionInfo.PartitionStyle == PARTITION_STYLE_MBR && IsFTPartition(PartitionInfo.Mbr.PartitionType))
         {
-            /* Query partition information */
-            Status = MountMgrSendSyncDeviceIoCtl(IOCTL_DISK_GET_PARTITION_INFO_EX,
-                                                 DeviceObject,
-                                                 NULL,
-                                                 0,
-                                                 &PartitionInfo,
-                                                 sizeof(PartitionInfo),
-                                                 NULL);
-            /* Failure isn't major */
-            if (!NT_SUCCESS(Status))
-            {
-                Status = STATUS_SUCCESS;
-            }
-            /* Check if this is a FT volume */
-            else if ((PartitionInfo.PartitionStyle == PARTITION_STYLE_MBR) &&
-                     IsFTPartition(PartitionInfo.Mbr.PartitionType))
-            {
-                *IsFT = TRUE;
-            }
+            *IsFT = TRUE;
 
             /* It looks like a FT volume. Verify it is really one by checking
              * that it does NOT lie on a specific storage device (i.e. it is
@@ -870,7 +854,7 @@ MountMgrMountedDeviceArrival(IN PDEVICE_EXTENSION DeviceExtension,
     PDEVICE_INFORMATION DeviceInformation, CurrentDevice;
     WCHAR CSymLinkBuffer[RTL_NUMBER_OF(Cunc)], LinkTargetBuffer[MAX_PATH];
     UNICODE_STRING TargetDeviceName, SuggestedLinkName, DeviceName, VolumeName, DriveLetter, LinkTarget, CSymLink;
-    BOOLEAN HasGuid, HasGptDriveLetter, IsFT, UseOnlyIfThereAreNoOtherLinks;
+    BOOLEAN HasGuid, DriveLetterAllowed, IsFT, UseOnlyIfThereAreNoOtherLinks;
     BOOLEAN IsDrvLetter, IsOff, IsVolumeName, SetOnline;
 
     /* New device = new structure to represent it */
@@ -905,7 +889,7 @@ MountMgrMountedDeviceArrival(IN PDEVICE_EXTENSION DeviceExtension,
                                     &TargetDeviceName,
                                     &UniqueId,
                                     &(DeviceInformation->Removable),
-                                    &HasGptDriveLetter,
+                                    &DriveLetterAllowed,
                                     &HasGuid,
                                     &StableGuid,
                                     &IsFT);
@@ -1240,7 +1224,7 @@ MountMgrMountedDeviceArrival(IN PDEVICE_EXTENSION DeviceExtension,
     /* Else, it's time to set up one */
     else if ((!DeviceExtension->NoAutoMount || DeviceInformation->Removable) &&
              DeviceExtension->AutomaticDriveLetter &&
-             (HasGptDriveLetter || DeviceInformation->SuggestedDriveLetter) &&
+             (DriveLetterAllowed || DeviceInformation->SuggestedDriveLetter) &&
              !HasNoDriveLetterEntry(UniqueId))
     {
         /* Create a new drive letter */

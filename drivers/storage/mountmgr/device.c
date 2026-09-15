@@ -440,7 +440,7 @@ MountMgrNextDriveLetterWorker(IN PDEVICE_EXTENSION DeviceExtension,
     UCHAR DriveLetter;
     PLIST_ENTRY NextEntry;
     PMOUNTDEV_UNIQUE_ID UniqueId;
-    BOOLEAN Removable, GptDriveLetter;
+    BOOLEAN Removable, DriveLetterAllowed;
     PDEVICE_INFORMATION DeviceInformation;
     WCHAR NameBuffer[DRIVE_LETTER_LENGTH];
     PSYMLINK_INFORMATION SymlinkInformation;
@@ -454,7 +454,7 @@ MountMgrNextDriveLetterWorker(IN PDEVICE_EXTENSION DeviceExtension,
     }
 
     /* Then, get information about the device */
-    Status = QueryDeviceInformation(DeviceName, &TargetDeviceName, NULL, &Removable, &GptDriveLetter, NULL, NULL, NULL);
+    Status = QueryDeviceInformation(DeviceName, &TargetDeviceName, NULL, &Removable, &DriveLetterAllowed, NULL, NULL, NULL);
     if (!NT_SUCCESS(Status))
     {
         return Status;
@@ -502,10 +502,10 @@ MountMgrNextDriveLetterWorker(IN PDEVICE_EXTENSION DeviceExtension,
     }
 
     /* If we didn't find a drive letter online, ensure this is not
-     * a no-drive entry by querying GPT attributes & database */
+     * a no-drive entry according to partition policy or the database */
     if (NextEntry == &(DeviceInformation->SymbolicLinksListHead))
     {
-        if (!GptDriveLetter || HasNoDriveLetterEntry(DeviceInformation->UniqueId))
+        if (!DriveLetterAllowed || HasNoDriveLetterEntry(DeviceInformation->UniqueId))
         {
             DriveLetterInfo->DriveLetterWasAssigned = FALSE;
             DriveLetterInfo->CurrentDriveLetter = 0;
