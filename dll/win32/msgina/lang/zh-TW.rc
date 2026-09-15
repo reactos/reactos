@@ -3,7 +3,7 @@
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Chinese (Traditional) resource file
  * TRANSLATORS: Copyright 2016 Henry Tang Ih <henrytang2@hotmail.com>
- *              Copyright 2021 Chan Chilung <eason066@gmail.com>
+ *              Copyright 2021-2026 Chan Chilung <eason066@gmail.com>
  */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
@@ -242,10 +242,10 @@ BEGIN
     IDS_INVALIDLOGONHOURS "由於您的帳戶有時間限制，因此目前無法讓您登入。請稍候再試一次。"
     IDS_INVALIDWORKSTATION "您的帳戶已設定為不能使用這個電腦登入。請使用其他電腦登入。"
     IDS_ACCOUNTRESTRICTION "由於您的帳戶的限制，因此無法讓您登入。"
-    IDS_EMERGENCYLOGOFFTITLE "Log Off ReactOS"
-    IDS_EMERGENCYLOGOFF "Click OK to immediately log off. Any unsaved data will be lost. Use this only as a last resort."
-    IDS_EMERGENCYRESTARTTITLE "Emergency restart"
-    IDS_EMERGENCYRESTART "Click OK to immediately restart. Any unsaved data will be lost. Use this only as a last resort."
+    IDS_EMERGENCYLOGOFFTITLE "登出 ReactOS"
+    IDS_EMERGENCYLOGOFF "按［確定］以立即登出。所有未儲存的資料均會丟失。請只在萬不得已的情況下才使用。"
+    IDS_EMERGENCYRESTARTTITLE "緊急重新開機"
+    IDS_EMERGENCYRESTART "按［確定］以立即重新開機。所有未儲存的資料均會丟失。請只在萬不得已的情況下才使用。"
 END
 
 /* Shutdown Dialog Strings */
