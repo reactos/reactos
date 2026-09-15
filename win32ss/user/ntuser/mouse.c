@@ -10,9 +10,6 @@
 #include <win32k.h>
 DBG_DEFAULT_CHANNEL(UserInput);
 
-extern BOOLEAN RawInputEnabled;
-extern HANDLE ghMouseDevice;
-
 MOUSEMOVEPOINT gMouseHistoryOfMoves[64];
 INT gcMouseHistoryOfMoves = 0;
 
@@ -35,7 +32,7 @@ UserGetMouseButtonsState(VOID)
 }
 
 VOID NTAPI
-UserRawInputMouseProcess(PMOUSE_INPUT_DATA mid)
+UserRawInputMouseProcess(PINPUT_DEVICE_INFO pDeviceInfo, PMOUSE_INPUT_DATA mid)
 {
     PTHREADINFO pti;
     HWND hwndTarget;
@@ -80,7 +77,7 @@ UserRawInputMouseProcess(PMOUSE_INPUT_DATA mid)
 
     hRawInput = UserCreateRawInput(pti,
                                    RIM_TYPEMOUSE,
-                                   ghMouseDevice,
+                                   (HANDLE)pDeviceInfo,
                                    wParam,
                                    &rm,
                                    sizeof(rm));
@@ -104,7 +101,7 @@ UserRawInputMouseProcess(PMOUSE_INPUT_DATA mid)
  * Process raw mouse input data
  */
 VOID NTAPI
-UserProcessMouseInput(PMOUSE_INPUT_DATA mid)
+UserProcessMouseInput(PINPUT_DEVICE_INFO pDeviceInfo, PMOUSE_INPUT_DATA mid)
 {
     MOUSEINPUT mi;
 
@@ -115,8 +112,10 @@ UserProcessMouseInput(PMOUSE_INPUT_DATA mid)
     mi.dwFlags = 0;
     mi.time = 0;
     mi.dwExtraInfo = mid->ExtraInformation;
+
     if (RawInputEnabled == TRUE)
-        UserRawInputMouseProcess(mid);
+        UserRawInputMouseProcess(pDeviceInfo, mid);
+
     /* Mouse position */
     if (mi.dx != 0 || mi.dy != 0)
         mi.dwFlags |= MOUSEEVENTF_MOVE;

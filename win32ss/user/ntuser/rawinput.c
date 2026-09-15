@@ -21,22 +21,6 @@
 #define HID_USAGE_GENERIC_KEYBOARD  0x06
 #endif
 
-/* ReactOS win32k is hacked to only support one keyboard and mouse. */
-extern HANDLE ghKeyboardDevice;
-extern HANDLE ghMouseDevice;
-
-typedef struct _RIDDevice
-{
-    HANDLE file;
-    RID_DEVICE_INFO info;
-    DWORD Type; // RIM_TYPEMOUSE or RIM_TYPEKEYBOARD
-} RIDDevice;
-
-RIDDevice RIDDevices[2] = {
-    { NULL, {0}, 0 }, // Mouse
-    { NULL, {0}, 0 }  // Keyboard
-};
-
 typedef struct _USER_RAWINPUT
 {
     LIST_ENTRY ListEntry;
@@ -493,40 +477,6 @@ UserGetRawInputTarget(
     *phwndTarget = UserHMGetHandle(pWnd);
     *ppti = pti;
     return TRUE;
-}
-
-VOID
-APIENTRY
-HandleDeviceEnumeration(DWORD type)
-{
-    static const RID_DEVICE_INFO_KEYBOARD keyboard_info = {0, 0, 1, 12, 3, 101};
-    static const RID_DEVICE_INFO_MOUSE mouse_info = {1, 5, 0, FALSE};
-    RID_DEVICE_INFO info;
-    RtlZeroMemory( &info, sizeof(info) );
-    info.cbSize = sizeof(info);
-    info.dwType = type;
-
-    switch (type)
-    {
-        case RIM_TYPEMOUSE:
-            info.mouse = mouse_info;
-            RIDDevices[0].info = info;
-            RIDDevices[0].file = ghMouseDevice;
-            RIDDevices[0].Type = RIM_TYPEMOUSE;
-            break;
-        case RIM_TYPEKEYBOARD:
-            info.keyboard = keyboard_info;
-            RIDDevices[1].info = info;
-            RIDDevices[1].file = ghKeyboardDevice;
-            RIDDevices[1].Type = RIM_TYPEKEYBOARD;
-            break;
-        default:
-        {
-            DPRINT1("Unknown device type %d\n", type);
-            EngSetLastError(ERROR_INVALID_PARAMETER);
-            return;
-        }
-    }
 }
 
 static

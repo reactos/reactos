@@ -35,9 +35,6 @@ static enum _ALTNUM_STATE
 static ULONG gAltNumPadValue = 0;
 BOOL gbEnableHexNumpad = FALSE;
 
-extern BOOLEAN RawInputEnabled;
-extern HANDLE ghKeyboardDevice;
-
 /* FUNCTIONS *****************************************************************/
 
 /*
@@ -1411,6 +1408,7 @@ UserSendKeyboardInput(KEYBDINPUT *pKbdInput, BOOL bInjected)
 VOID
 WINAPI
 UserRawInputProcessKeyboardInput(
+    PINPUT_DEVICE_INFO pDeviceInfo,
     PKEYBOARD_INPUT_DATA pKbdInputData,
     WORD wScanCode, WORD wVk)
 {
@@ -1449,7 +1447,7 @@ UserRawInputProcessKeyboardInput(
     kb.ExtraInformation = pKbdInputData->ExtraInformation;
     hRawInput = UserCreateRawInput(pti,
                                    RIM_TYPEKEYBOARD,
-                                   ghKeyboardDevice,
+                                   (HANDLE)pDeviceInfo,
                                    wParam,
                                    &kb,
                                    sizeof(kb));
@@ -1474,6 +1472,7 @@ UserRawInputProcessKeyboardInput(
  */
 VOID NTAPI
 UserProcessKeyboardInput(
+    PINPUT_DEVICE_INFO pDeviceInfo,
     PKEYBOARD_INPUT_DATA pKbdInputData)
 {
     WORD wScanCode, wVk;
@@ -1511,7 +1510,7 @@ UserProcessKeyboardInput(
           wScanCode, (pKbdInputData->Flags & KEY_BREAK) ? 1u : 0, wVk);
 
     if (RawInputEnabled == TRUE)
-        UserRawInputProcessKeyboardInput(pKbdInputData, wScanCode, wVk);
+        UserRawInputProcessKeyboardInput(pDeviceInfo, pKbdInputData, wScanCode, wVk);
 
     if (wVk)
     {
