@@ -38,8 +38,9 @@ INT CTrayShowDesktopButton::WidthOrHeight() const
         {
             if (GetSystemMetrics(SM_TABLETPC))
             {
-                //TODO: DPI scaling - return logical-to-physical conversion of 24, not fixed value
-                return 24;
+                return MulDiv(24,
+                              m_hWnd ? GetDpiForWindow(m_hWnd) : GetDpiForSystem(),
+                              USER_DEFAULT_SCREEN_DPI);
             }
             else
                 return 15;
