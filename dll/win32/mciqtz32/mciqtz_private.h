@@ -42,6 +42,7 @@ typedef struct {
     REFERENCE_TIME seek_stop;
     UINT           command_table;
     HWND           parent;
+    HWND           window;
     MCIDEVICEID    notify_devid;
     HANDLE         callback;
     HANDLE         thread;
