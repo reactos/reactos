@@ -46,19 +46,20 @@ PciTranslateBusAddress(IN INTERFACE_TYPE InterfaceType,
     return TRUE;
 }
 
+/**
+ * @brief Finds the PDO of the function in a slot. The caller holds PciGlobalLock.
+ */
+static
 PPCI_PDO_EXTENSION
 NTAPI
-PciFindPdoByLocation(IN ULONG BusNumber,
-                     IN ULONG SlotNumber)
+PciFindPdoByLocation(
+    _In_ ULONG BusNumber,
+    _In_ ULONG SlotNumber)
 {
     PPCI_FDO_EXTENSION DeviceExtension;
     PPCI_PDO_EXTENSION PdoExtension;
     PCI_SLOT_NUMBER PciSlot;
     PciSlot.u.AsULONG = SlotNumber;
-
-    /* Acquire the global lock */
-    KeEnterCriticalRegion();
-    KeWaitForSingleObject(&PciGlobalLock, Executive, KernelMode, FALSE, NULL);
 
     /* Now search for the extension */
     DeviceExtension = (PPCI_FDO_EXTENSION)PciFdoExtensionListHead.Next;
@@ -70,10 +71,6 @@ PciFindPdoByLocation(IN ULONG BusNumber,
         /* Move to the next device */
         DeviceExtension = (PPCI_FDO_EXTENSION)DeviceExtension->List.Next;
     }
-
-    /* Release the global lock */
-    KeSetEvent(&PciGlobalLock, IO_NO_INCREMENT, FALSE);
-    KeLeaveCriticalRegion();
 
     /* Check if the device extension for the bus was found */
     if (!DeviceExtension)
@@ -96,6 +93,10 @@ PciFindPdoByLocation(IN ULONG BusNumber,
          PdoExtension;
          PdoExtension = PdoExtension->Next)
     {
+        /* A function that left the slot keeps its PDO until PnP removes it */
+        if ((PdoExtension->NotPresent) || (PdoExtension->ReportedMissing))
+            continue;
+
         /* Check if the function number and header data matches */
         if ((PdoExtension->Slot.u.bits.FunctionNumber == PciSlot.u.bits.FunctionNumber) &&
             (PdoExtension->Slot.u.bits.DeviceNumber == PciSlot.u.bits.DeviceNumber))
@@ -124,44 +125,148 @@ PciFindPdoByLocation(IN ULONG BusNumber,
     return PdoExtension;
 }
 
+/**
+ * @brief Removes the device private descriptors from an assigned resource list.
+ */
+static
+VOID
+NTAPI
+PciStripPrivateDescriptors(
+    _Inout_ PCM_RESOURCE_LIST ResourceList)
+{
+    PCM_PARTIAL_RESOURCE_LIST PartialList;
+    ULONG Source, Target;
+
+    ASSERT(ResourceList->Count == 1);
+    PartialList = &ResourceList->List[0].PartialResourceList;
+
+    Target = 0;
+    for (Source = 0; Source < PartialList->Count; Source++)
+    {
+        if (PartialList->PartialDescriptors[Source].Type == CmResourceTypeDevicePrivate)
+            continue;
+
+        if (Target != Source)
+            PartialList->PartialDescriptors[Target] = PartialList->PartialDescriptors[Source];
+
+        Target++;
+    }
+
+    PartialList->Count = Target;
+}
+
+/**
+ * @brief Asks the PnP manager for the ranges of a legacy claimed function and programs them.
+ * On success Resources receives the assignment, stripped of private descriptors.
+ */
+static
 NTSTATUS
 NTAPI
-PciAssignSlotResources(IN PUNICODE_STRING RegistryPath,
-                       IN PUNICODE_STRING DriverClassName OPTIONAL,
-                       IN PDRIVER_OBJECT DriverObject,
-                       IN PDEVICE_OBJECT DeviceObject,
-                       IN INTERFACE_TYPE BusType,
-                       IN ULONG BusNumber,
-                       IN ULONG SlotNumber,
-                       IN OUT PCM_RESOURCE_LIST *AllocatedResources)
+PciAssignAndProgramLegacy(
+    _In_ PPCI_PDO_EXTENSION PdoExtension,
+    _In_ PPCI_COMMON_HEADER PciData,
+    _In_ PUNICODE_STRING RegistryPath,
+    _In_opt_ PUNICODE_STRING DriverClassName,
+    _In_ PDRIVER_OBJECT DriverObject,
+    _In_opt_ PDEVICE_OBJECT DeviceObject,
+    _Out_ PCM_RESOURCE_LIST *Resources)
 {
     PIO_RESOURCE_REQUIREMENTS_LIST RequirementsList = NULL;
-    PCM_RESOURCE_LIST Resources = NULL;
+    PCM_RESOURCE_LIST Assigned = NULL;
+    NTSTATUS Status;
+
+    *Resources = NULL;
+
+    Status = PciBuildRequirementsList(PdoExtension, PciData, &RequirementsList);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    /* The shared empty list asks for nothing and must not be freed */
+    if (RequirementsList == PciZeroIoResourceRequirements)
+        RequirementsList = NULL;
+
+    PdoExtension->LegacyDriver = TRUE;
+    Status = IoAssignResources(RegistryPath,
+                               DriverClassName,
+                               DriverObject,
+                               DeviceObject,
+                               RequirementsList,
+                               &Assigned);
+    if (RequirementsList)
+        ExFreePoolWithTag(RequirementsList, 0);
+
+    if (!NT_SUCCESS(Status))
+    {
+        ASSERT(Assigned == NULL);
+        return Status;
+    }
+
+    /* Program the assignment the way a PnP start does */
+    PdoExtension->CommandEnables |= (PCI_ENABLE_IO_SPACE |
+                                     PCI_ENABLE_MEMORY_SPACE |
+                                     PCI_ENABLE_BUS_MASTER);
+    PciComputeNewCurrentSettings(PdoExtension, Assigned);
+
+    Status = PciSetResources(PdoExtension, TRUE, TRUE);
+    if (!NT_SUCCESS(Status))
+    {
+        if (Assigned)
+            ExFreePoolWithTag(Assigned, 0);
+        return Status;
+    }
+
+    /* The caller only gets the ranges and the interrupt */
+    if (Assigned)
+        PciStripPrivateDescriptors(Assigned);
+
+    *Resources = Assigned;
+    return STATUS_SUCCESS;
+}
+
+/**
+ * @brief Assigns resources to a function claimed by a driver outside of PnP.
+ */
+NTSTATUS
+NTAPI
+PciAssignSlotResources(
+    _In_ PUNICODE_STRING RegistryPath,
+    _In_opt_ PUNICODE_STRING DriverClassName,
+    _In_ PDRIVER_OBJECT DriverObject,
+    _In_opt_ PDEVICE_OBJECT DeviceObject,
+    _In_ INTERFACE_TYPE BusType,
+    _In_ ULONG BusNumber,
+    _In_ ULONG SlotNumber,
+    _Inout_ PCM_RESOURCE_LIST *AllocatedResources)
+{
     PCI_COMMON_HEADER PciData;
     PPCI_PDO_EXTENSION PdoExtension;
-    NTSTATUS Status;
     PDEVICE_OBJECT ExistingDeviceObject;
+    NTSTATUS Status;
     PAGED_CODE();
     ASSERT(PcipSavedAssignSlotResources);
-    ASSERT(BusType == PCIBus);
 
-    /* Assume no resources */
     *AllocatedResources = NULL;
 
-    /* Find the PDO for this slot and make sure it exists and is started */
-    PdoExtension = PciFindPdoByLocation(BusNumber, SlotNumber);
-    if (!PdoExtension) return STATUS_DEVICE_DOES_NOT_EXIST;
-    if (PdoExtension->DeviceState == PciNotStarted) return STATUS_INVALID_OWNER;
+    if (BusType != PCIBus)
+        return STATUS_INVALID_PARAMETER;
 
-    /* Acquire the global lock while we attempt to assign resources */
+    /* A removed bus is unlinked under this lock before its PDOs are deleted */
     KeEnterCriticalRegion();
     KeWaitForSingleObject(&PciGlobalLock, Executive, KernelMode, FALSE, NULL);
-    do
+
+    PdoExtension = PciFindPdoByLocation(BusNumber, SlotNumber);
+    if (!PdoExtension)
+        Status = STATUS_DEVICE_DOES_NOT_EXIST;
+    else if (PdoExtension->DeviceState != PciNotStarted)
+        Status = STATUS_INVALID_OWNER;
+    else
+        Status = STATUS_SUCCESS;
+
+    if (NT_SUCCESS(Status))
     {
-        /* Make sure we're not on the PDO for some reason */
         ASSERT(DeviceObject != PdoExtension->PhysicalDeviceObject);
 
-        /* Read the PCI header and cache the routing information */
+        /* The routing goes to the cache first so interrupt arbitration can find it */
         PciReadDeviceConfig(PdoExtension, &PciData, 0, PCI_COMMON_HDR_LENGTH);
         Status = PciCacheLegacyDeviceRouting(DeviceObject,
                                              BusNumber,
@@ -174,59 +279,21 @@ PciAssignSlotResources(IN PUNICODE_STRING RegistryPath,
                                              PhysicalDeviceObject,
                                              PdoExtension,
                                              &ExistingDeviceObject);
-        if (NT_SUCCESS(Status))
-        {
-            /* Manually build the requirements for this device, and mark it legacy */
-            Status = PciBuildRequirementsList(PdoExtension,
-                                              &PciData,
-                                              &RequirementsList);
-            PdoExtension->LegacyDriver = TRUE;
-            if (NT_SUCCESS(Status))
-            {
-                /* Now call the legacy Pnp function to actually assign resources */
-                Status = IoAssignResources(RegistryPath,
+    }
+
+    if (NT_SUCCESS(Status))
+    {
+        Status = PciAssignAndProgramLegacy(PdoExtension,
+                                           &PciData,
+                                           RegistryPath,
                                            DriverClassName,
                                            DriverObject,
                                            DeviceObject,
-                                           RequirementsList,
-                                           &Resources);
-                if (NT_SUCCESS(Status))
-                {
-                    /* Resources are ready, so enable all decodes */
-                    PdoExtension->CommandEnables |= (PCI_ENABLE_IO_SPACE |
-                                                     PCI_ENABLE_MEMORY_SPACE |
-                                                     PCI_ENABLE_BUS_MASTER);
+                                           AllocatedResources);
 
-                    /* Compute new resource settings based on what PnP assigned */
-                    PciComputeNewCurrentSettings(PdoExtension, Resources);
-
-                    /* Set these new resources on the device */
-                    Status = PciSetResources(PdoExtension, TRUE, TRUE);
-                    if (NT_SUCCESS(Status))
-                    {
-                        /* Some work needs to happen here to handle this */
-                        ASSERT(Resources->Count == 1);
-                        //ASSERT(PartialList->Count > 0);
-
-                        UNIMPLEMENTED;
-
-                        /* Return the allocated resources, and success */
-                        *AllocatedResources = Resources;
-                        Resources = NULL;
-                        Status = STATUS_SUCCESS;
-                    }
-                }
-                else
-                {
-                    /* If assignment failed, no resources should exist */
-                    ASSERT(Resources == NULL);
-                }
-
-                /* If assignment succeed, then we are done */
-                if (NT_SUCCESS(Status)) break;
-            }
-
-            /* Otherwise, cache the new routing */
+        /* Give the slot back to the device object cached for it before */
+        if (!NT_SUCCESS(Status))
+        {
             PciCacheLegacyDeviceRouting(ExistingDeviceObject,
                                         BusNumber,
                                         SlotNumber,
@@ -239,15 +306,10 @@ PciAssignSlotResources(IN PUNICODE_STRING RegistryPath,
                                         PdoExtension,
                                         NULL);
         }
-    } while (0);
+    }
 
-    /* Release the lock */
-    KeSetEvent(&PciGlobalLock, 0, 0);
+    KeSetEvent(&PciGlobalLock, IO_NO_INCREMENT, FALSE);
     KeLeaveCriticalRegion();
-
-    /* Free any temporary resource data and return the status */
-    if (RequirementsList) ExFreePoolWithTag(RequirementsList, 0);
-    if (Resources) ExFreePoolWithTag(Resources, 0);
     return Status;
 }
 
@@ -262,7 +324,7 @@ PciHookHal(VOID)
     PcipSavedTranslateBusAddress = HalPciTranslateBusAddress;
 
     /* Take over the HAL's Bus Handler functions */
-//    HalPciAssignSlotResources = PciAssignSlotResources;
+    HalPciAssignSlotResources = PciAssignSlotResources;
     HalPciTranslateBusAddress = PciTranslateBusAddress;
 }
 

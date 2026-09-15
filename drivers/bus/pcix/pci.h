@@ -2066,6 +2066,7 @@ extern BOOLEAN PciAssignBusNumbers;
 extern BOOLEAN PciEnableNativeModeATA;
 extern PPCI_IRQ_ROUTING_TABLE PciIrqRoutingTable;
 extern BOOLEAN PciRunningDatacenter;
+extern PIO_RESOURCE_REQUIREMENTS_LIST PciZeroIoResourceRequirements;
 
 /* Exported by NTOS, should this go in the NDK? */
 extern NTSYSAPI BOOLEAN InitSafeBootMode;
