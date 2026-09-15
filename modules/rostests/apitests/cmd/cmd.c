@@ -498,6 +498,113 @@ static void DoTestEntry(const TEST_ENTRY *pEntry)
     }
 }
 
+static BOOL
+RunLongInputCommand(PCSTR Builtin,
+                    SIZE_T MarkerCount,
+                    PCHAR Output,
+                    SIZE_T OutputSize,
+                    PINT ExitCode)
+{
+    CHAR InputName[64];
+    CHAR CommandLine[256];
+    FILE *File;
+    SIZE_T i;
+    SIZE_T Read;
+    BOOL Success = FALSE;
+
+    sprintf(InputName, "cmd-long-input-%lu.tmp", GetCurrentProcessId());
+
+    File = fopen(InputName, "wb");
+    if (!File)
+    {
+        skip("Could not create %s\n", InputName);
+        return FALSE;
+    }
+
+    for (i = 0; i < MarkerCount; ++i)
+        fputc('#', File);
+    fputs("\r\n\r\n", File);
+    if (ferror(File))
+    {
+        skip("Could not write %s\n", InputName);
+        fclose(File);
+        DeleteFileA(InputName);
+        return FALSE;
+    }
+    fclose(File);
+
+    sprintf(CommandLine,
+            "%s invalid < %s 2>&1",
+            Builtin, InputName);
+    File = _popen(CommandLine, "r");
+    if (!File)
+    {
+        skip("_popen failed for %s\n", Builtin);
+        DeleteFileA(InputName);
+        return FALSE;
+    }
+
+    Read = fread(Output, 1, OutputSize - 1, File);
+    Output[Read] = '\0';
+    if (ferror(File))
+        skip("Could not read output for %s\n", Builtin);
+    else
+        Success = TRUE;
+
+    *ExitCode = _pclose(File);
+    DeleteFileA(InputName);
+    return Success;
+}
+
+static VOID
+NormalizeLongInputOutput(PCHAR Output)
+{
+    PCHAR Src = Output;
+    PCHAR Dst = Output;
+
+    while (*Src)
+    {
+        if (*Src != '#')
+            *Dst++ = *Src;
+        ++Src;
+    }
+    *Dst = '\0';
+}
+
+START_TEST(long_input)
+{
+    static const PCSTR Builtins[] = { "date", "time" };
+    SIZE_T i;
+
+    for (i = 0; i < ARRAYSIZE(Builtins); ++i)
+    {
+        CHAR ShortOutput[2048];
+        CHAR LongOutput[2048];
+        INT ShortExitCode;
+        INT LongExitCode;
+
+        if (!RunLongInputCommand(Builtins[i], 1,
+                                 ShortOutput, ARRAYSIZE(ShortOutput),
+                                 &ShortExitCode) ||
+            !RunLongInputCommand(Builtins[i], 120,
+                                 LongOutput, ARRAYSIZE(LongOutput),
+                                 &LongExitCode))
+        {
+            continue;
+        }
+
+        NormalizeLongInputOutput(ShortOutput);
+        NormalizeLongInputOutput(LongOutput);
+
+        ok(ShortExitCode == LongExitCode,
+           "%s: exit codes differ: %d vs %d\n",
+           Builtins[i], ShortExitCode, LongExitCode);
+        ok(strcmp(ShortOutput, LongOutput) == 0,
+           "%s: long input was handled differently\nshort: '%s'\nlong: '%s'\n",
+           Builtins[i], ShortOutput, LongOutput);
+    }
+}
+
 START_TEST(exit)
 {
     SIZE_T i;
