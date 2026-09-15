@@ -66,8 +66,9 @@ Device_SaveCurrentSettings(IN PPCI_CONFIGURATOR_CONTEXT Context)
                        (CmDescriptor->Type == CmResourceTypeMemoryLarge));
                 BarMask = PCI_ADDRESS_MEMORY_ADDRESS_MASK;
 
-                /* Check if it's a 64-bit BAR */
-                if ((Bar & PCI_ADDRESS_MEMORY_TYPE_MASK) == PCI_TYPE_64BIT)
+                /* Check if it's a 64-bit BAR, the last BAR has no register for a high half */
+                if (((Bar & PCI_ADDRESS_MEMORY_TYPE_MASK) == PCI_TYPE_64BIT) &&
+                    ((i + 1) < PCI_TYPE0_ADDRESSES))
                 {
                     /* The next BAR value is actually the high 32-bits */
                     CmDescriptor->u.Memory.Start.HighPart = BarArray[i + 1];
@@ -201,13 +202,19 @@ Device_SaveLimits(IN PPCI_CONFIGURATOR_CONTEXT Context)
         /* And build them based on the BARs, the last one has no BAR after it for a high half */
         ULONG NextBar = ((i + 1) < PCI_TYPE0_ADDRESSES) ? BarArray[i + 1] : 0;
 
-        if (PciCreateIoDescriptorFromBarLimit(&Limit[i], BarArray[i], NextBar, FALSE))
+        if (!PciCreateIoDescriptorFromBarLimit(&Limit[i], BarArray[i], NextBar, FALSE))
+            continue;
+
+        /* A 64-bit BAR in the last slot has nowhere to put its high half, so it stays below 4GB */
+        if ((i + 1) == PCI_TYPE0_ADDRESSES)
         {
-            /* This function returns TRUE if the BAR was 64-bit, handle this */
-            ASSERT((i + 1) < PCI_TYPE0_ADDRESSES);
-            i++;
-            Limit[i].Type = CmResourceTypeNull;
+            DPRINT1("PCI - 64-bit BAR %lu has no upper register, decoding it as 32-bit\n", i);
+            continue;
         }
+
+        /* The high half of a 64-bit BAR is not a BAR of its own */
+        i++;
+        Limit[i].Type = CmResourceTypeNull;
     }
 
     /* Create the last descriptor based on the ROM address */
@@ -283,78 +290,119 @@ Device_ResetDevice(IN PPCI_PDO_EXTENSION PdoExtension,
     /* Nothing to undo, the caller writes the whole header back */
 }
 
-VOID
+/**
+ * @brief
+ * Puts the ranges assigned to a function into its BARs and ROM BAR.
+ *
+ * @param[in] PdoExtension
+ * The PDO extension of the function.
+ *
+ * @param[in,out] PciData
+ * The header that will be written to the function.
+ *
+ * @return
+ * STATUS_INVALID_PARAMETER if a BAR would decode an address nobody assigned to it.
+ */
+NTSTATUS
 NTAPI
-Device_ChangeResourceSettings(IN PPCI_PDO_EXTENSION PdoExtension,
-                              IN PPCI_COMMON_HEADER PciData)
+Device_ChangeResourceSettings(
+    _In_ PPCI_PDO_EXTENSION PdoExtension,
+    _Inout_ PPCI_COMMON_HEADER PciData)
 {
     PPCI_FUNCTION_RESOURCES Resources;
+    PIO_RESOURCE_DESCRIPTOR Limit;
     PCM_PARTIAL_RESOURCE_DESCRIPTOR CmDescriptor;
     PULONG BarArray;
     ULONG Bar, BarMask, i;
+    USHORT Decode;
+    BOOLEAN IsVga, HasUpperHalf;
 
     Resources = PdoExtension->Resources;
     if (!Resources)
-        return;
+        return STATUS_SUCCESS;
 
-    /* Write each BAR back with the address that was arbitrated for it */
+    /* VGA decodes are forced on at start, so a BAR it was not given may stay empty */
+    IsVga = ((PdoExtension->BaseClass == PCI_CLASS_PRE_20) &&
+             (PdoExtension->SubClass == PCI_SUBCLASS_PRE_20_VGA)) ||
+            ((PdoExtension->BaseClass == PCI_CLASS_DISPLAY_CTLR) &&
+             (PdoExtension->SubClass == PCI_SUBCLASS_VID_VGA_CTLR));
+
     BarArray = PciData->u.type0.BaseAddresses;
-    for (i = 0; i <= PCI_TYPE0_ADDRESSES; i++)
+    for (i = 0; i < PCI_TYPE0_ADDRESSES; i++)
     {
+        Limit = &Resources->Limit[i];
         CmDescriptor = &Resources->Current[i];
 
-        if (i < PCI_TYPE0_ADDRESSES)
+        if (CmDescriptor->Type == CmResourceTypeNull)
         {
-            /* A BAR the function does not implement reads back as zero */
-            Bar = BarArray[i];
-            if (!(Bar & ~PCI_ADDRESS_IO_SPACE)) continue;
-
-            /* Work out which bits of this BAR are the address */
-            if (Bar & PCI_ADDRESS_IO_SPACE)
+            /* A requested BAR left without a range must not decode while its space is on */
+            Decode = (Limit->Type == CmResourceTypePort) ? PCI_ENABLE_IO_SPACE :
+                                                           PCI_ENABLE_MEMORY_SPACE;
+            if (PciIsRequirementDescriptor(Limit) &&
+                (PdoExtension->CommandEnables & Decode) &&
+                !IsVga)
             {
-                BarMask = PCI_ADDRESS_IO_ADDRESS_MASK;
-            }
-            else
-            {
-                BarMask = PCI_ADDRESS_MEMORY_ADDRESS_MASK;
-
-                /* A legacy BAR only decodes the low 20 bits of the address */
-                if ((Bar & PCI_ADDRESS_MEMORY_TYPE_MASK) == PCI_TYPE_20BIT)
-                {
-                    BarMask = 0xFFFF0;
-                }
+                DPRINT1("PCI (pdox %p) BAR %lu has no range but its decode stays on\n",
+                        PdoExtension,
+                        i);
+                return STATUS_INVALID_PARAMETER;
             }
 
-            BarArray[i] = (Bar & ~BarMask) |
-                          (CmDescriptor->u.Memory.Start.LowPart & BarMask);
+            BarArray[i] = 0;
+            continue;
+        }
 
-            /* A 64-bit BAR keeps the high half of its address in the next one */
-            if (!(Bar & PCI_ADDRESS_IO_SPACE) &&
-                ((Bar & PCI_ADDRESS_MEMORY_TYPE_MASK) == PCI_TYPE_64BIT))
-            {
-                ASSERT((i + 1) < PCI_TYPE0_ADDRESSES);
-                BarArray[i + 1] = CmDescriptor->u.Memory.Start.HighPart;
-                i++;
-            }
+        /* The limit says what the BAR decodes, its read-only low bits say how wide it is */
+        Bar = BarArray[i];
+        HasUpperHalf = FALSE;
+        if (Limit->Type == CmResourceTypePort)
+        {
+            BarMask = PCI_ADDRESS_IO_ADDRESS_MASK;
+        }
+        else if ((Bar & PCI_ADDRESS_MEMORY_TYPE_MASK) == PCI_TYPE_20BIT)
+        {
+            BarMask = 0xFFFF0;
         }
         else
         {
-            /* The ROM BAR decodes only while its enable bit is set */
-            Bar = PciData->u.type0.ROMBaseAddress;
-            if (CmDescriptor->Type == CmResourceTypeNull)
-            {
-                PciData->u.type0.ROMBaseAddress = Bar & ~PCI_ROMADDRESS_ENABLED;
-            }
-            else
-            {
-                PciData->u.type0.ROMBaseAddress =
-                    (Bar & ~PCI_ADDRESS_ROM_ADDRESS_MASK) |
-                    (CmDescriptor->u.Memory.Start.LowPart &
-                     PCI_ADDRESS_ROM_ADDRESS_MASK) |
-                    PCI_ROMADDRESS_ENABLED;
-            }
+            BarMask = PCI_ADDRESS_MEMORY_ADDRESS_MASK;
+            HasUpperHalf = ((Bar & PCI_ADDRESS_MEMORY_TYPE_MASK) == PCI_TYPE_64BIT) &&
+                           ((i + 1) < PCI_TYPE0_ADDRESSES);
+        }
+
+        if (!HasUpperHalf && CmDescriptor->u.Generic.Start.HighPart)
+        {
+            DPRINT1("PCI (pdox %p) BAR %lu cannot hold address %I64x\n",
+                    PdoExtension,
+                    i,
+                    CmDescriptor->u.Generic.Start.QuadPart);
+            return STATUS_INVALID_PARAMETER;
+        }
+
+        BarArray[i] = (Bar & ~BarMask) | (CmDescriptor->u.Generic.Start.LowPart & BarMask);
+        if (HasUpperHalf)
+        {
+            i++;
+            BarArray[i] = CmDescriptor->u.Generic.Start.HighPart;
         }
     }
+
+    /* The ROM decodes only while its enable bit is set, and reads zero when it has no range */
+    CmDescriptor = &Resources->Current[PCI_TYPE0_ADDRESSES];
+    if (CmDescriptor->Type == CmResourceTypeNull)
+    {
+        PciData->u.type0.ROMBaseAddress = 0;
+    }
+    else
+    {
+        Bar = PciData->u.type0.ROMBaseAddress & ~PCI_ADDRESS_ROM_ADDRESS_MASK;
+        PciData->u.type0.ROMBaseAddress = Bar |
+                                          (CmDescriptor->u.Generic.Start.LowPart &
+                                           PCI_ADDRESS_ROM_ADDRESS_MASK) |
+                                          PCI_ROMADDRESS_ENABLED;
+    }
+
+    return STATUS_SUCCESS;
 }
 
 /* EOF */

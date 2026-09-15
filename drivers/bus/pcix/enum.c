@@ -2489,6 +2489,7 @@ PciSetResources(IN PPCI_PDO_EXTENSION PdoExtension,
     PCI_COMMON_HEADER PciData;
     BOOLEAN Native;
     PPCI_CONFIGURATOR Configurator;
+    NTSTATUS Status;
 
     UNREFERENCED_PARAMETER(SomethingSomethingDarkSide);
 
@@ -2565,8 +2566,10 @@ PciSetResources(IN PPCI_PDO_EXTENSION PdoExtension,
     /* Locate the correct resource configurator for this type of device */
     Configurator = &PciConfigurators[PdoExtension->HeaderType];
 
-    /* Apply the settings change */
-    Configurator->ChangeResourceSettings(PdoExtension, &PciData);
+    /* Apply the settings change, nothing reaches the hardware if it is refused */
+    Status = Configurator->ChangeResourceSettings(PdoExtension, &PciData);
+    if (!NT_SUCCESS(Status))
+        return Status;
 
     /* Assume no update needed */
     PdoExtension->UpdateHardware = FALSE;
