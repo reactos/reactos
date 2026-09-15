@@ -374,6 +374,21 @@ PciInitializeEcam(
 }
 
 /**
+ * @brief Unmaps every bus mapped through the ECAM window.
+ */
+VOID
+NTAPI
+PciReleaseEcam(VOID)
+{
+    PAGED_CODE();
+
+    /* Config access falls back to the legacy mechanism before the mappings go away */
+    PciEcamVerified = FALSE;
+    PciEcamDiscardWindow();
+    PciEcamWindowQueried = FALSE;
+}
+
+/**
  * @brief
  * Performs a configuration space access through the ECAM window.
  *

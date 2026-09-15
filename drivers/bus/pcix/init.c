@@ -741,13 +741,53 @@ PciGetDebugPorts(IN HANDLE DebugKey)
 
 DRIVER_UNLOAD PciDriverUnload;
 
+/**
+ * @brief Releases what DriverEntry and the buses left behind, then unhooks the HAL.
+ */
 VOID
 NTAPI
-PciDriverUnload(IN PDRIVER_OBJECT DriverObject)
+PciDriverUnload(
+    _In_ PDRIVER_OBJECT DriverObject)
 {
+    PAGED_CODE();
     UNREFERENCED_PARAMETER(DriverObject);
-    /* This function is not yet implemented */
-    UNIMPLEMENTED_DBGBREAK("PCI: Unload\n");
+
+    /* PnP only unloads the driver once every bus FDO has been removed */
+    ASSERT(PciFdoExtensionListHead.Next == NULL);
+
+    PciVerifierRelease();
+    PciReleaseEcam();
+
+    RtlFreeRangeList(&PciIsaBitExclusionList);
+    RtlFreeRangeList(&PciVgaAndIsaBitExclusionList);
+
+    if (PciIrqRoutingTable)
+    {
+        ExFreePoolWithTag(PciIrqRoutingTable, PCI_POOL_TAG);
+        PciIrqRoutingTable = NULL;
+    }
+
+    if (WdTable)
+    {
+        ExFreePoolWithTag(WdTable, PCI_POOL_TAG);
+        WdTable = NULL;
+    }
+
+    if (PciHackTable)
+    {
+        ExFreePoolWithTag(PciHackTable, PCI_POOL_TAG);
+        PciHackTable = NULL;
+    }
+
+    PciFreeLegacyDeviceCache();
+
+    if (PciZeroIoResourceRequirements)
+    {
+        ExFreePoolWithTag(PciZeroIoResourceRequirements, PCI_POOL_TAG);
+        PciZeroIoResourceRequirements = NULL;
+    }
+
+    PciRestoreHalHooks();
 }
 
 NTSTATUS

@@ -328,4 +328,23 @@ PciHookHal(VOID)
     HalPciTranslateBusAddress = PciTranslateBusAddress;
 }
 
+/**
+ * @brief Gives the HAL back the routines PciHookHal replaced.
+ */
+VOID
+NTAPI
+PciRestoreHalHooks(VOID)
+{
+    PAGED_CODE();
+    ASSERT(PcipSavedTranslateBusAddress != NULL);
+    ASSERT(PcipSavedAssignSlotResources != NULL);
+
+    /* Restore the HAL table before dropping the only copies of its routines */
+    HalPciTranslateBusAddress = PcipSavedTranslateBusAddress;
+    HalPciAssignSlotResources = PcipSavedAssignSlotResources;
+
+    PcipSavedTranslateBusAddress = NULL;
+    PcipSavedAssignSlotResources = NULL;
+}
+
 /* EOF */

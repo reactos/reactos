@@ -987,6 +987,10 @@ PciHookHal(
     VOID
 );
 
+VOID
+NTAPI
+PciRestoreHalHooks(VOID);
+
 //
 // PCI Verifier Routines
 //
@@ -995,6 +999,10 @@ NTAPI
 PciVerifierInit(
     IN PDRIVER_OBJECT DriverObject
 );
+
+VOID
+NTAPI
+PciVerifierRelease(VOID);
 
 PPCI_VERIFIER_DATA
 NTAPI
@@ -1232,6 +1240,10 @@ VOID
 NTAPI
 PciInitializeEcam(
     _In_ PPCI_FDO_EXTENSION FdoExtension);
+
+VOID
+NTAPI
+PciReleaseEcam(VOID);
 
 ULONG
 NTAPI
@@ -2039,6 +2051,10 @@ PciCacheLegacyDeviceRouting(
     OUT PDEVICE_OBJECT *pFoundDeviceObject
 );
 
+VOID
+NTAPI
+PciFreeLegacyDeviceCache(VOID);
+
 //
 // External Resources
 //
@@ -2067,6 +2083,8 @@ extern BOOLEAN PciEnableNativeModeATA;
 extern PPCI_IRQ_ROUTING_TABLE PciIrqRoutingTable;
 extern BOOLEAN PciRunningDatacenter;
 extern PIO_RESOURCE_REQUIREMENTS_LIST PciZeroIoResourceRequirements;
+extern RTL_RANGE_LIST PciIsaBitExclusionList;
+extern RTL_RANGE_LIST PciVgaAndIsaBitExclusionList;
 
 /* Exported by NTOS, should this go in the NDK? */
 extern NTSYSAPI BOOLEAN InitSafeBootMode;
