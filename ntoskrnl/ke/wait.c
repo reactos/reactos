@@ -283,19 +283,12 @@ NTAPI
 KeIsWaitListEmpty(
     _In_ PVOID Object)
 {
-    KIRQL OldIrql;
-    BOOLEAN ListEmpty;
     PDISPATCHER_HEADER Header = Object;
 
-    /* Lock the dispatcher database */
-    OldIrql = KiAcquireDispatcherLock();
+    /* Make sure we see a consistent snapshot of the list head */
+    KeMemoryBarrier();
 
-    /* Check if the object's wait list is empty */
-    ListEmpty = IsListEmpty(&Header->WaitListHead);
-
-    /* Release the lock and return the result */
-    KiReleaseDispatcherLock(OldIrql);
-    return ListEmpty;
+    return IsListEmpty(&Header->WaitListHead);
 }
 
 /*
