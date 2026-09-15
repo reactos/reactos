@@ -22,6 +22,7 @@
 #include <objbase.h>
 #include <shobjidl.h>
 #include <shlguid.h>
+#include <shlwapi.h>
 
 #include "resource.h"
 
@@ -34,6 +35,8 @@
  */
 #define RUNDLL(param)   \
     ((INT_PTR)ShellExecuteW(NULL, L"open", L"rundll32.exe", (param), NULL, SW_SHOWDEFAULT) > 32)
+#define ShellExec(file, params) \
+    ((INT_PTR)ShellExecuteW(NULL, NULL, (file), (params), NULL, SW_SHOWDEFAULT) > 32)
 
 VOID
 WINAPI
@@ -100,6 +103,29 @@ RunControlPanel(LPCWSTR lpCmd)
     return RUNDLL(szParameters);
 }
 
+static BOOL
+OpenUserAccounts()
+{
+    WCHAR szPath[MAX_PATH];
+
+    GetSystemDirectoryW(szPath, _countof(szPath));
+    PathAppendW(szPath, L"lusrmgr.msc");
+    if (IsOS(OS_ANYSERVER) && ShellExec(szPath, NULL))
+        return TRUE;
+
+    /* 
+     * TODO: OpenControlPanelItem(L"Microsoft.UserAccounts", NULL) on Vista+ (needs usercpl.dll)
+     * See: https://learn.microsoft.com/en-us/windows/win32/shell/controlpanel-canonical-names#user-accounts
+     */
+
+    GetSystemDirectoryW(szPath, _countof(szPath));
+    PathAppendW(szPath, L"nusrmgr.cpl"); /* The name used on WinXP */
+    if (PathFileExistsW(szPath) && RunControlPanel(szPath))
+        return TRUE;
+
+    return RunControlPanel(L"usrmgr.cpl"); /* ROS specific name (CORE-10226) */
+}
+
 INT
 WINAPI
 wWinMain(HINSTANCE hInstance,
@@ -136,7 +162,7 @@ wWinMain(HINSTANCE hInstance,
     else if (!_wcsicmp(lpCmdLine, L"scannercamera"))   return OpenShellFolder(L"\\::{E211B736-43FD-11D1-9EFB-0000F8757FCD}");
     else if (!_wcsicmp(lpCmdLine, L"schedtasks"))      return OpenShellFolder(L"\\::{D6277990-4C6A-11CF-8D87-00AA0060F5BF}");
     else if (!_wcsicmp(lpCmdLine, L"telephony"))       return RunControlPanel(L"telephon.cpl");
-    else if (!_wcsicmp(lpCmdLine, L"userpasswords"))   return RunControlPanel(L"nusrmgr.cpl");       /* Graphical User Account Manager */
+    else if (!_wcsicmp(lpCmdLine, L"userpasswords"))   return OpenUserAccounts();                    /* Graphical User Account Manager */
     else if (!_wcsicmp(lpCmdLine, L"userpasswords2"))  return RUNDLL(L"netplwiz.dll,UsersRunDll");   /* Dialog based advanced User Account Manager */
 
     /* https://learn.microsoft.com/en-us/windows/win32/shell/executing-control-panel-items#windows-vista-canonical-names */
