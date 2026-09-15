@@ -93,6 +93,7 @@
 
 /* File system headers */
 #include <fs/ext.h>
+#include <fs/exfat.h>
 #include <fs/fat.h>
 #include <fs/ntfs.h>
 #include <fs/iso.h>

@@ -62,6 +62,7 @@ PFS_MOUNT FileSystems[] =
     IsoMount,
 #endif
     FatMount,
+    ExFatMount,
     BtrFsMount,
 #ifndef _M_ARM
     NtfsMount,

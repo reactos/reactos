@@ -140,6 +140,12 @@ FsRecFsControl(IN PDEVICE_OBJECT DeviceObject,
             Status = FsRecVfatFsControl(DeviceObject, Irp);
             break;
 
+        case FS_TYPE_EXFAT:
+
+            /* Send exFAT command */
+            Status = FsRecExFatFsControl(DeviceObject, Irp);
+            break;
+
         case FS_TYPE_NTFS:
 
             /* Send NTFS command */
@@ -417,6 +423,17 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
                              L"\\FileSystem\\FatCdRomRecognizer",
                              FS_TYPE_VFAT,
                              FILE_DEVICE_CD_ROM_FILE_SYSTEM,
+                             0);
+    if (NT_SUCCESS(Status)) DeviceCount++;
+
+    /* Register exFAT */
+    Status = FsRecRegisterFs(DriverObject,
+                             NULL,
+                             NULL,
+                             L"\\ExFat",
+                             L"\\FileSystem\\ExFatRecognizer",
+                             FS_TYPE_EXFAT,
+                             FILE_DEVICE_DISK_FILE_SYSTEM,
                              0);
     if (NT_SUCCESS(Status)) DeviceCount++;
 

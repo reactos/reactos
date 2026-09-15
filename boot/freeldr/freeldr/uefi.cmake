@@ -86,6 +86,7 @@ add_library(uefifreeldr_common
     ${FREELDR_BOOTLIB_SOURCE}
     ${UEFILDR_BOOTMGR_SOURCE})
 
+target_link_libraries(uefifreeldr_common fatfs)
 target_compile_definitions(uefifreeldr_common PRIVATE _FRLDRLIB_ UEFIBOOT)
 
 if(CMAKE_C_COMPILER_ID STREQUAL "GNU" OR CMAKE_C_COMPILER_ID STREQUAL "Clang")
