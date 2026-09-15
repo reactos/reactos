@@ -27,11 +27,79 @@ _RpcAbortPrinter(WINSPOOL_PRINTER_HANDLE hPrinter)
     return dwErrorCode;
 }
 
+/**
+ * @name _FixupPrinterContainer
+ *
+ * pDevMode and pSecurityDescriptor are declared as ULONG_PTR in the IDL, so
+ * their contents are not carried inside the printer structure but in their own
+ * containers. Point the structure at the data that actually arrived.
+ */
+static VOID
+_FixupPrinterContainer(WINSPOOL_PRINTER_CONTAINER* pPrinterContainer, WINSPOOL_DEVMODE_CONTAINER* pDevModeContainer, WINSPOOL_SECURITY_CONTAINER* pSecurityContainer)
+{
+    PBYTE pPrinterInfo = (PBYTE)pPrinterContainer->PrinterInfo.pPrinterInfo1;
+    PBYTE pDevMode = NULL;
+    PBYTE pSecurityDescriptor = NULL;
+
+    if (!pPrinterInfo)
+        return;
+
+    if (pDevModeContainer && pDevModeContainer->cbBuf)
+        pDevMode = pDevModeContainer->pDevMode;
+
+    if (pSecurityContainer && pSecurityContainer->cbBuf)
+        pSecurityDescriptor = pSecurityContainer->pSecurity;
+
+    switch (pPrinterContainer->Level)
+    {
+        case 2:
+            ((PPRINTER_INFO_2W)pPrinterInfo)->pDevMode = (PDEVMODEW)pDevMode;
+            ((PPRINTER_INFO_2W)pPrinterInfo)->pSecurityDescriptor = pSecurityDescriptor;
+            break;
+
+        case 3:
+            ((PPRINTER_INFO_3)pPrinterInfo)->pSecurityDescriptor = pSecurityDescriptor;
+            break;
+
+        case 8:
+        case 9:
+            ((PPRINTER_INFO_9W)pPrinterInfo)->pDevMode = (PDEVMODEW)pDevMode;
+            break;
+
+        default:
+            break;
+    }
+}
+
 DWORD
 _RpcAddPrinter(WINSPOOL_HANDLE pName, WINSPOOL_PRINTER_CONTAINER* pPrinterContainer, WINSPOOL_DEVMODE_CONTAINER* pDevModeContainer, WINSPOOL_SECURITY_CONTAINER* pSecurityContainer, WINSPOOL_PRINTER_HANDLE* pHandle)
 {
-    UNIMPLEMENTED;
-    return ERROR_INVALID_FUNCTION;
+    DWORD dwErrorCode;
+
+    dwErrorCode = RpcImpersonateClient(NULL);
+    if (dwErrorCode != ERROR_SUCCESS)
+    {
+        ERR("RpcImpersonateClient failed with error %lu!\n", dwErrorCode);
+        return dwErrorCode;
+    }
+
+    *pHandle = NULL;
+
+    if (!pPrinterContainer || !pPrinterContainer->PrinterInfo.pPrinterInfo1)
+    {
+        dwErrorCode = ERROR_INVALID_PARAMETER;
+        goto Cleanup;
+    }
+
+    _FixupPrinterContainer(pPrinterContainer, pDevModeContainer, pSecurityContainer);
+
+    *pHandle = AddPrinterW(pName, pPrinterContainer->Level, (PBYTE)pPrinterContainer->PrinterInfo.pPrinterInfo1);
+    if (!*pHandle)
+        dwErrorCode = GetLastError();
+
+Cleanup:
+    RpcRevertToSelf();
+    return dwErrorCode;
 }
 
 DWORD
@@ -311,8 +379,29 @@ _RpcSeekPrinter( WINSPOOL_PRINTER_HANDLE hPrinter, LARGE_INTEGER liDistanceToMov
 DWORD
 _RpcSetPrinter(WINSPOOL_PRINTER_HANDLE hPrinter, WINSPOOL_PRINTER_CONTAINER* pPrinterContainer, WINSPOOL_DEVMODE_CONTAINER* pDevModeContainer, WINSPOOL_SECURITY_CONTAINER* pSecurityContainer, DWORD Command)
 {
-    UNIMPLEMENTED;
-    return ERROR_INVALID_FUNCTION;
+    DWORD dwErrorCode;
+
+    dwErrorCode = RpcImpersonateClient(NULL);
+    if (dwErrorCode != ERROR_SUCCESS)
+    {
+        ERR("RpcImpersonateClient failed with error %lu!\n", dwErrorCode);
+        return dwErrorCode;
+    }
+
+    if (!pPrinterContainer)
+    {
+        dwErrorCode = ERROR_INVALID_PARAMETER;
+        goto Cleanup;
+    }
+
+    _FixupPrinterContainer(pPrinterContainer, pDevModeContainer, pSecurityContainer);
+
+    if (!SetPrinterW(hPrinter, pPrinterContainer->Level, (PBYTE)pPrinterContainer->PrinterInfo.pPrinterInfo1, Command))
+        dwErrorCode = GetLastError();
+
+Cleanup:
+    RpcRevertToSelf();
+    return dwErrorCode;
 }
 
 DWORD

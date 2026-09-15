@@ -160,6 +160,87 @@ Cleanup:
     return (dwErrorCode == ERROR_SUCCESS);
 }
 
+/**
+ * @name RefreshPortList
+ *
+ * Re-enumerates the ports of every Print Monitor and adds the ones we don't
+ * know about yet to the Port List.
+ *
+ * The Port List is built once while the spooler starts up, but ports can appear
+ * at any time afterwards: a Print Monitor may add one on its own, and installers
+ * routinely add one through XcvData("AddPort") before creating their printer.
+ * Without this refresh such a port stays invisible to the local Print Provider
+ * until the spooler is restarted, and AddPrinter fails with ERROR_UNKNOWN_PORT.
+ */
+VOID
+RefreshPortList(void)
+{
+    BOOL bReturnValue;
+    DWORD cbNeeded;
+    DWORD dwReturned;
+    DWORD i;
+    PLIST_ENTRY pEntry;
+    PLOCAL_PRINT_MONITOR pPrintMonitor;
+    PPORT_INFO_1W p;
+    PPORT_INFO_1W pPortInfo1 = NULL;
+
+    TRACE("RefreshPortList()\n");
+
+    for (pEntry = PrintMonitorList.Flink; pEntry != &PrintMonitorList; pEntry = pEntry->Flink)
+    {
+        // Cleanup from the previous run.
+        if (pPortInfo1)
+        {
+            DllFreeSplMem(pPortInfo1);
+            pPortInfo1 = NULL;
+        }
+
+        pPrintMonitor = CONTAINING_RECORD(pEntry, LOCAL_PRINT_MONITOR, Entry);
+
+        // Determine the required buffer size for EnumPorts.
+        if (pPrintMonitor->bIsLevel2)
+            bReturnValue = ((PMONITOR2)pPrintMonitor->pMonitor)->pfnEnumPorts(pPrintMonitor->hMonitor, NULL, 1, NULL, 0, &cbNeeded, &dwReturned);
+        else
+            bReturnValue = ((LPMONITOREX)pPrintMonitor->pMonitor)->Monitor.pfnEnumPorts(NULL, 1, NULL, 0, &cbNeeded, &dwReturned);
+
+        if (GetLastError() != ERROR_INSUFFICIENT_BUFFER)
+            continue;
+
+        pPortInfo1 = DllAllocSplMem(cbNeeded);
+        if (!pPortInfo1)
+        {
+            ERR("DllAllocSplMem failed!\n");
+            break;
+        }
+
+        // Get the ports handled by this monitor.
+        if (pPrintMonitor->bIsLevel2)
+            bReturnValue = ((PMONITOR2)pPrintMonitor->pMonitor)->pfnEnumPorts(pPrintMonitor->hMonitor, NULL, 1, (PBYTE)pPortInfo1, cbNeeded, &cbNeeded, &dwReturned);
+        else
+            bReturnValue = ((LPMONITOREX)pPrintMonitor->pMonitor)->Monitor.pfnEnumPorts(NULL, 1, (PBYTE)pPortInfo1, cbNeeded, &cbNeeded, &dwReturned);
+
+        if (!bReturnValue)
+        {
+            ERR("Print Monitor \"%S\" failed with error %lu on EnumPorts!\n", pPrintMonitor->pwszName, GetLastError());
+            continue;
+        }
+
+        // Add the ports we don't know yet.
+        p = pPortInfo1;
+
+        for (i = 0; i < dwReturned; i++)
+        {
+            if (!FindPort(p->pName))
+                CreatePortEntry(p->pName, pPrintMonitor);
+
+            p++;
+        }
+    }
+
+    if (pPortInfo1)
+        DllFreeSplMem(pPortInfo1);
+}
+
 BOOL WINAPI
 LocalEnumPorts(PWSTR pName, DWORD Level, PBYTE pPorts, DWORD cbBuf, PDWORD pcbNeeded, PDWORD pcReturned)
 {
