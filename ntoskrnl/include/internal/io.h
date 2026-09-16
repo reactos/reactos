@@ -528,6 +528,7 @@ typedef enum _DEVICE_ACTION
     PiActionAddBootDevices,
     PiActionStartDevice,
     PiActionQueryState,
+    PiActionAssignResources,
 } DEVICE_ACTION;
 
 //
@@ -540,7 +541,41 @@ PnpDetermineResourceListSize(IN PCM_RESOURCE_LIST ResourceList);
 NTSTATUS
 NTAPI
 IopAssignDeviceResources(
-    IN PDEVICE_NODE DeviceNode
+    _In_ PDEVICE_NODE DeviceNode
+);
+
+VOID
+NTAPI
+IopFreeDeviceResources(
+    _In_ PDEVICE_NODE DeviceNode,
+    _In_ BOOLEAN ShouldReserveBootConfig
+);
+
+VOID
+NTAPI
+IopDropDeviceNodeResources(
+    _In_ PDEVICE_NODE DeviceNode
+);
+
+VOID
+NTAPI
+IopAssignResourcesToSubtree(
+    _In_ PDEVICE_NODE SubtreeRoot
+);
+
+BOOLEAN
+NTAPI
+IopTakeAssignmentRetry(VOID);
+
+VOID
+NTAPI
+IopClearResourceConflictProblems(VOID);
+
+BOOLEAN
+NTAPI
+IopReallocateDeviceResources(
+    _In_ PDEVICE_NODE DeviceNode,
+    _Out_ PULONG Problem
 );
 
 NTSTATUS
