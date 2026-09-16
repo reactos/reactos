@@ -1906,7 +1906,11 @@ extern const BYTE SymCryptSha512KATAnswer[64];
 // Arithmetic
 //
 
+#ifdef __REACTOS__
+#define SYMCRYPT_ASSERT_ASYM_ALIGNED(_p )
+#else
 #define SYMCRYPT_ASSERT_ASYM_ALIGNED( _p )           SYMCRYPT_ASSERT( ((SIZE_T)(_p) & (SYMCRYPT_ASYM_ALIGN_VALUE - 1)) == 0 );
+#endif
 
 
 #define SYMCRYPT_FDEF_DIGIT_NUINT32             ((UINT32)(SYMCRYPT_FDEF_DIGIT_SIZE / sizeof( UINT32 ) ))
