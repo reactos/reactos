@@ -665,3 +665,17 @@ NTAPI
 HalpGrantVector(
     _In_ ULONG Vector);
 
+/* Interrupt controller routines for the ACPI power management dispatch */
+ULONG
+NTAPI
+HalpGetInterruptControllerVersion(
+    _In_ ULONG InterruptBase);
+
+BOOLEAN
+NTAPI
+HalpIsInterruptInputValid(
+    _In_ ULONG Input);
+
+VOID
+NTAPI
+HalpRestoreInterruptController(VOID);

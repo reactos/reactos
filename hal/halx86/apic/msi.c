@@ -255,6 +255,26 @@ HalpAllocateMessageVectors(
     return STATUS_INSUFFICIENT_RESOURCES;
 }
 
+/* Frees a message mark that no HAL block owns. The caller holds the vector lock. */
+VOID
+NTAPI
+HalpReleaseMessageMark(
+    _In_ ULONG Vector)
+{
+    ULONG Base;
+
+    if ((Vector > 0xFF) || (HalpVectorToIndex[Vector] != APIC_MSI_VECTOR))
+        return;
+
+    for (Base = Vector & 0xF0; Base <= Vector; Base++)
+    {
+        if ((HalpMessageBlockSize[Base] != 0) && (Vector < Base + HalpMessageBlockSize[Base]))
+            return;
+    }
+
+    HalpVectorToIndex[Vector] = APIC_FREE_VECTOR;
+}
+
 /* Frees the whole block holding Vector, a block never crosses a priority row */
 static
 VOID
