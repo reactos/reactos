@@ -397,6 +397,11 @@ IopFreeDeviceNode(
         ExFreePool(DeviceNode->BootResources);
     }
 
+    if (DeviceNode->BootResourcesTranslated)
+    {
+        ExFreePool(DeviceNode->BootResourcesTranslated);
+    }
+
     IoGetDevObjExtension(DeviceNode->PhysicalDeviceObject)->DeviceNode = NULL;
     ExFreePoolWithTag(DeviceNode, TAG_IO_DEVNODE);
 

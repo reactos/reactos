@@ -1013,9 +1013,9 @@ IoTranslateBusAddress(
     _Inout_ PULONG AddressSpace,
     _Out_ PPHYSICAL_ADDRESS TranslatedAddress)
 {
-
     CM_PARTIAL_RESOURCE_DESCRIPTOR Resource;
     NTSTATUS Status = STATUS_SUCCESS;
+    BOOLEAN IsLocked;
     PDEVICE_NODE Node;
 
     /* Translators are only called at PASSIVE_LEVEL, and need the device tree */
@@ -1028,7 +1028,8 @@ IoTranslateBusAddress(
     if (!IopAddressToResource(*AddressSpace, BusAddress, &Resource))
         return FALSE;
 
-    /* The bus and its parents must stay in the device tree during the walk */
+    /* The bus, its parents and their cached translators must stay during the walk */
+    IsLocked = IopLockResourceHandlers();
     IopAcquireLegacyBuses(FALSE);
 
     /* The root bus does not translate, so the walk ends below it */
@@ -1050,6 +1051,8 @@ IoTranslateBusAddress(
     }
 
     IopReleaseLegacyBuses();
+    if (IsLocked)
+        IopUnlockResourceHandlers();
 
     if (!NT_SUCCESS(Status))
         return FALSE;

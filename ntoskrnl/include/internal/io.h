@@ -593,6 +593,45 @@ IopUncacheResourceHandlers(
 );
 
 //
+// Boot configuration reservation (pnparb.c)
+//
+NTSTATUS
+NTAPI
+IopReserveBootConfig(
+    _In_ PDEVICE_NODE DeviceNode
+);
+
+VOID
+NTAPI
+IopReserveDeferredBootConfigs(VOID);
+
+BOOLEAN
+NTAPI
+IopLockResourceHandlers(VOID);
+
+VOID
+NTAPI
+IopUnlockResourceHandlers(VOID);
+
+VOID
+NTAPI
+IopReserveLegacyBusBootConfigs(
+    _In_ PDEVICE_NODE DeviceNode
+);
+
+VOID
+NTAPI
+IopSaveHalResources(
+    _In_ PCM_RESOURCE_LIST RawResourceList,
+    _In_ ULONG ResourceListSize
+);
+
+CODE_SEG("INIT")
+VOID
+NTAPI
+IopMarkHalDeviceNode(VOID);
+
+//
 // Resource translators (pnptrans.c)
 //
 
