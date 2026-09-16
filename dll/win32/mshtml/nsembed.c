@@ -16,11 +16,26 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include <stdarg.h>
+
+#define COBJMACROS
+
+#include "windef.h"
+#include "winbase.h"
+#include "winuser.h"
+#include "winreg.h"
+#include "ole2.h"
+#include "shlobj.h"
+#include "shlwapi.h"
+
+#include "wine/asm.h"
+#include "wine/debug.h"
+
 #include "mshtml_private.h"
+#include "htmlevent.h"
+#include "binding.h"
 
-#include <wincon.h>
-#include <shlobj.h>
-
+WINE_DEFAULT_DEBUG_CHANNEL(mshtml);
 WINE_DECLARE_DEBUG_CHANNEL(gecko);
 
 #define NS_APPSTARTUPNOTIFIER_CONTRACTID "@mozilla.org/embedcomp/appstartup-notifier;1"
@@ -32,12 +47,21 @@ WINE_DECLARE_DEBUG_CHANNEL(gecko);
 #define NS_VARIANT_CONTRACTID "@mozilla.org/variant;1"
 #define NS_CATEGORYMANAGER_CONTRACTID "@mozilla.org/categorymanager;1"
 #define NS_XMLHTTPREQUEST_CONTRACTID "@mozilla.org/xmlextras/xmlhttprequest;1"
-#define NS_SCRIPTSECURITYMANAGER_CONTRACTID "@mozilla.org/scriptsecuritymanager;1"
 
 #define PR_UINT32_MAX 0xffffffff
 
 #define NS_STRING_CONTAINER_INIT_DEPEND  0x0002
 #define NS_CSTRING_CONTAINER_INIT_DEPEND 0x0002
+
+#ifdef __i386__
+#define GECKO_ARCH_STRING "x86"
+#elif defined(__x86_64__)
+#define GECKO_ARCH_STRING "x86_64"
+#else
+#define GECKO_ARCH_STRING ""
+#endif
+
+#define GECKO_DIR_NAME "wine-gecko-" GECKO_VERSION "-" GECKO_ARCH_STRING
 
 typedef UINT32 PRUint32;
 
@@ -53,6 +77,7 @@ static nsresult (CDECL *NS_CStringSetData)(nsACString*,const char*,PRUint32);
 static nsresult (CDECL *NS_NewLocalFile)(const nsAString*,cpp_bool,nsIFile**);
 static PRUint32 (CDECL *NS_StringGetData)(const nsAString*,const PRUnichar **,cpp_bool*);
 static PRUint32 (CDECL *NS_CStringGetData)(const nsACString*,const char**,cpp_bool*);
+static cpp_bool (CDECL *NS_StringGetIsVoid)(const nsAString*);
 static void* (CDECL *NS_Alloc)(SIZE_T);
 static void (CDECL *NS_Free)(void*);
 
@@ -63,9 +88,7 @@ static nsIComponentManager *pCompMgr = NULL;
 static nsICategoryManager *cat_mgr;
 static nsIFile *profile_directory, *plugin_directory;
 
-static const WCHAR wszNsContainer[] = {'N','s','C','o','n','t','a','i','n','e','r',0};
-
-static ATOM nscontainer_class;
+static ATOM browser_class;
 static WCHAR gecko_path[MAX_PATH];
 static unsigned gecko_path_len;
 
@@ -79,7 +102,7 @@ nsresult create_nsfile(const PRUnichar *path, nsIFile **ret)
     nsAString_Finish(&str);
 
     if(NS_FAILED(nsres))
-        WARN("NS_NewLocalFile failed: %08x\n", nsres);
+        WARN("NS_NewLocalFile failed: %08lx\n", nsres);
     return nsres;
 }
 
@@ -119,7 +142,7 @@ static nsrefcnt NSAPI nsSingletonEnumerator_AddRef(nsISimpleEnumerator *iface)
     nsSingletonEnumerator *This = impl_from_nsISimpleEnumerator(iface);
     nsrefcnt ref = InterlockedIncrement(&This->ref);
 
-    TRACE("(%p) ref=%d\n", This, ref);
+    TRACE("(%p) ref=%ld\n", This, ref);
 
     return ref;
 }
@@ -129,12 +152,12 @@ static nsrefcnt NSAPI nsSingletonEnumerator_Release(nsISimpleEnumerator *iface)
     nsSingletonEnumerator *This = impl_from_nsISimpleEnumerator(iface);
     nsrefcnt ref = InterlockedDecrement(&This->ref);
 
-    TRACE("(%p) ref=%d\n", This, ref);
+    TRACE("(%p) ref=%ld\n", This, ref);
 
     if(!ref) {
         if(This->value)
             nsISupports_Release(This->value);
-        heap_free(This);
+        free(This);
     }
 
     return ref;
@@ -176,7 +199,7 @@ static nsISimpleEnumerator *create_singleton_enumerator(nsISupports *value)
 {
     nsSingletonEnumerator *ret;
 
-    ret = heap_alloc(sizeof(*ret));
+    ret = malloc(sizeof(*ret));
     if(!ret)
         return NULL;
 
@@ -223,34 +246,32 @@ static nsrefcnt NSAPI nsDirectoryServiceProvider2_Release(nsIDirectoryServicePro
 
 static nsresult create_profile_directory(void)
 {
-    static const WCHAR wine_geckoW[] = {'\\','w','i','n','e','_','g','e','c','k','o',0};
-
-    WCHAR path[MAX_PATH + sizeof(wine_geckoW)/sizeof(WCHAR)];
+    WCHAR path[MAX_PATH + ARRAY_SIZE(L"\\wine_gecko")];
     cpp_bool exists;
     nsresult nsres;
     HRESULT hres;
 
     hres = SHGetFolderPathW(NULL, CSIDL_APPDATA, NULL, SHGFP_TYPE_CURRENT, path);
     if(FAILED(hres)) {
-        ERR("SHGetFolderPath failed: %08x\n", hres);
+        ERR("SHGetFolderPath failed: %08lx\n", hres);
         return NS_ERROR_FAILURE;
     }
 
-    strcatW(path, wine_geckoW);
+    lstrcatW(path, L"\\wine_gecko");
     nsres = create_nsfile(path, &profile_directory);
     if(NS_FAILED(nsres))
         return nsres;
 
     nsres = nsIFile_Exists(profile_directory, &exists);
     if(NS_FAILED(nsres)) {
-        ERR("Exists failed: %08x\n", nsres);
+        ERR("Exists failed: %08lx\n", nsres);
         return nsres;
     }
 
     if(!exists) {
         nsres = nsIFile_Create(profile_directory, 1, 0700);
         if(NS_FAILED(nsres))
-            ERR("Create failed: %08x\n", nsres);
+            ERR("Create failed: %08lx\n", nsres);
     }
 
     return nsres;
@@ -290,13 +311,11 @@ static nsresult NSAPI nsDirectoryServiceProvider2_GetFiles(nsIDirectoryServicePr
         nsresult nsres;
 
         if(!plugin_directory) {
-            static const WCHAR gecko_pluginW[] = {'\\','g','e','c','k','o','\\','p','l','u','g','i','n',0};
-
-            len = GetSystemDirectoryW(plugin_path, (sizeof(plugin_path)-sizeof(gecko_pluginW))/sizeof(WCHAR)+1);
+            len = GetSystemDirectoryW(plugin_path, ARRAY_SIZE(plugin_path)-ARRAY_SIZE(L"\\gecko\\plugin")+1);
             if(!len)
                 return NS_ERROR_UNEXPECTED;
 
-            strcpyW(plugin_path+len, gecko_pluginW);
+            lstrcpyW(plugin_path+len, L"\\gecko\\plugin");
             nsres = create_nsfile(plugin_path, &plugin_directory);
             if(NS_FAILED(nsres)) {
                 *_retval = NULL;
@@ -333,16 +352,14 @@ static nsIDirectoryServiceProvider2 nsDirectoryServiceProvider2 =
 
 static LRESULT WINAPI nsembed_proc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
-    NSContainer *This;
+    GeckoBrowser *This;
     nsresult nsres;
 
-    static const WCHAR wszTHIS[] = {'T','H','I','S',0};
-
     if(msg == WM_CREATE) {
-        This = *(NSContainer**)lParam;
-        SetPropW(hwnd, wszTHIS, This);
+        This = *(GeckoBrowser**)lParam;
+        SetPropW(hwnd, L"THIS", This);
     }else {
-        This = GetPropW(hwnd, wszTHIS);
+        This = GetPropW(hwnd, L"THIS");
     }
 
     switch(msg) {
@@ -352,7 +369,7 @@ static LRESULT WINAPI nsembed_proc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lP
         nsres = nsIBaseWindow_SetSize(This->window,
                 LOWORD(lParam), HIWORD(lParam), TRUE);
         if(NS_FAILED(nsres))
-            WARN("SetSize failed: %08x\n", nsres);
+            WARN("SetSize failed: %08lx\n", nsres);
         break;
 
     case WM_PARENTNOTIFY:
@@ -369,18 +386,18 @@ static LRESULT WINAPI nsembed_proc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lP
 }
 
 
-static void register_nscontainer_class(void)
+static void register_browser_class(void)
 {
     static WNDCLASSEXW wndclass = {
         sizeof(WNDCLASSEXW),
         CS_DBLCLKS,
         nsembed_proc,
         0, 0, NULL, NULL, NULL, NULL, NULL,
-        wszNsContainer,
+        L"NsContainer",
         NULL,
     };
     wndclass.hInstance = hInst;
-    nscontainer_class = RegisterClassExW(&wndclass);
+    browser_class = RegisterClassExW(&wndclass);
 }
 
 #ifndef __REACTOS__
@@ -393,35 +410,36 @@ static BOOL install_wine_gecko(void)
     LONG len;
     BOOL ret;
 
-    static const WCHAR controlW[] = {'\\','c','o','n','t','r','o','l','.','e','x','e',0};
-    static const WCHAR argsW[] =
-        {' ','a','p','p','w','i','z','.','c','p','l',' ','i','n','s','t','a','l','l','_','g','e','c','k','o',0};
+    static const WCHAR controlW[] = L"\\control.exe";
+    static const WCHAR argsW[] = L" appwiz.cpl install_gecko";
 
-    len = GetSystemDirectoryW(app, MAX_PATH-sizeof(controlW)/sizeof(WCHAR));
+    len = GetSystemDirectoryW(app, MAX_PATH-ARRAY_SIZE(controlW));
     memcpy(app+len, controlW, sizeof(controlW));
 
-    args = heap_alloc(len*sizeof(WCHAR) + sizeof(controlW) + sizeof(argsW));
+    args = malloc(len * sizeof(WCHAR) + sizeof(controlW) + sizeof(argsW));
     if(!args)
         return FALSE;
 
     memcpy(args, app, len*sizeof(WCHAR) + sizeof(controlW));
-    memcpy(args + len + sizeof(controlW)/sizeof(WCHAR)-1, argsW, sizeof(argsW));
+    memcpy(args + len + ARRAY_SIZE(controlW)-1, argsW, sizeof(argsW));
 
     TRACE("starting %s\n", debugstr_w(args));
 
     memset(&si, 0, sizeof(si));
     si.cb = sizeof(si);
     ret = CreateProcessW(app, args, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi);
-    heap_free(args);
+    free(args);
     if (ret) {
         CloseHandle(pi.hThread);
         WaitForSingleObject(pi.hProcess, INFINITE);
         CloseHandle(pi.hProcess);
+    }else {
+        WARN("installation failed\n");
     }
 
     return ret;
 }
-#endif
+#endif /* !__REACTOS__ */
 
 static void set_environment(LPCWSTR gre_path)
 {
@@ -430,175 +448,35 @@ static void set_environment(LPCWSTR gre_path)
     WCHAR *path, buf[20];
     const WCHAR *ptr;
 
-    static const WCHAR pathW[] = {'P','A','T','H',0};
-    static const WCHAR warnW[] = {'w','a','r','n',0};
-    static const WCHAR xpcom_debug_breakW[] =
-        {'X','P','C','O','M','_','D','E','B','U','G','_','B','R','E','A','K',0};
-    static const WCHAR nspr_log_modulesW[] =
-        {'N','S','P','R','_','L','O','G','_','M','O','D','U','L','E','S',0};
-    static const WCHAR debug_formatW[] = {'a','l','l',':','%','d',0};
-
-    SetEnvironmentVariableW(xpcom_debug_breakW, warnW);
+    SetEnvironmentVariableW(L"XPCOM_DEBUG_BREAK", L"warn");
 
     if(TRACE_ON(gecko))
         debug_level = 5;
     else if(WARN_ON(gecko))
-        debug_level = 3;
-    else if(ERR_ON(gecko))
         debug_level = 2;
+    else if(ERR_ON(gecko))
+        debug_level = 1;
 
-    sprintfW(buf, debug_formatW, debug_level);
-    SetEnvironmentVariableW(nspr_log_modulesW, buf);
+    swprintf(buf, ARRAY_SIZE(buf), L"all:%d", debug_level);
+    SetEnvironmentVariableW(L"NSPR_LOG_MODULES", buf);
 
-    len = GetEnvironmentVariableW(pathW, NULL, 0);
-    gre_path_len = strlenW(gre_path);
-    path = heap_alloc((len+gre_path_len+1)*sizeof(WCHAR));
+    len = GetEnvironmentVariableW(L"PATH", NULL, 0);
+    gre_path_len = lstrlenW(gre_path);
+    path = malloc((len + gre_path_len + 1) * sizeof(WCHAR));
     if(!path)
         return;
-    GetEnvironmentVariableW(pathW, path, len);
+    GetEnvironmentVariableW(L"PATH", path, len);
 
     /* We have to modify PATH as xul.dll loads other DLLs from this directory. */
-    if(!(ptr = strstrW(path, gre_path))
+    if(!(ptr = wcsstr(path, gre_path))
        || (ptr > path && *(ptr-1) != ';')
        || (ptr[gre_path_len] && ptr[gre_path_len] != ';')) {
         if(len)
             path[len-1] = ';';
-        strcpyW(path+len, gre_path);
-        SetEnvironmentVariableW(pathW, path);
+        lstrcpyW(path+len, gre_path);
+        SetEnvironmentVariableW(L"PATH", path);
     }
-    heap_free(path);
-}
-
-static BOOL load_xul(const PRUnichar *gre_path)
-{
-    static const WCHAR xul_dllW[] = {'\\','x','u','l','.','d','l','l',0};
-    WCHAR file_name[MAX_PATH];
-
-    strcpyW(file_name, gre_path);
-    strcatW(file_name, xul_dllW);
-
-    TRACE("(%s)\n", debugstr_w(file_name));
-
-    set_environment(gre_path);
-
-    xul_handle = LoadLibraryExW(file_name, 0, LOAD_WITH_ALTERED_SEARCH_PATH);
-    if(!xul_handle) {
-        WARN("Could not load XUL: %d\n", GetLastError());
-        return FALSE;
-    }
-
-#define NS_DLSYM(func) \
-    func = (void *)GetProcAddress(xul_handle, #func); \
-    if(!func) \
-        ERR("Could not GetProcAddress(" #func ") failed\n")
-
-    NS_DLSYM(NS_InitXPCOM2);
-    NS_DLSYM(NS_ShutdownXPCOM);
-    NS_DLSYM(NS_GetComponentRegistrar);
-    NS_DLSYM(NS_StringContainerInit2);
-    NS_DLSYM(NS_CStringContainerInit2);
-    NS_DLSYM(NS_StringContainerFinish);
-    NS_DLSYM(NS_CStringContainerFinish);
-    NS_DLSYM(NS_StringSetData);
-    NS_DLSYM(NS_CStringSetData);
-    NS_DLSYM(NS_NewLocalFile);
-    NS_DLSYM(NS_StringGetData);
-    NS_DLSYM(NS_CStringGetData);
-    NS_DLSYM(NS_Alloc);
-    NS_DLSYM(NS_Free);
-    NS_DLSYM(ccref_incr);
-    NS_DLSYM(ccref_decr);
-    NS_DLSYM(ccref_init);
-    NS_DLSYM(ccp_init);
-    NS_DLSYM(describe_cc_node);
-    NS_DLSYM(note_cc_edge);
-
-#undef NS_DLSYM
-
-    return TRUE;
-}
-
-static BOOL check_version(LPCWSTR gre_path, const char *version_string)
-{
-    WCHAR file_name[MAX_PATH];
-    char version[128];
-    DWORD read=0;
-    HANDLE hfile;
-
-    static const WCHAR wszVersion[] = {'\\','V','E','R','S','I','O','N',0};
-
-    strcpyW(file_name, gre_path);
-    strcatW(file_name, wszVersion);
-
-    hfile = CreateFileW(file_name, GENERIC_READ, FILE_SHARE_READ, NULL,
-                        OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
-    if(hfile == INVALID_HANDLE_VALUE) {
-        ERR("Could not open VERSION file\n");
-        return FALSE;
-    }
-
-    ReadFile(hfile, version, sizeof(version), &read, NULL);
-    version[read] = 0;
-    CloseHandle(hfile);
-
-    TRACE("%s\n", debugstr_a(version));
-
-    if(strcmp(version, version_string)) {
-        ERR("Unexpected version %s, expected %s\n", debugstr_a(version),
-            debugstr_a(version_string));
-        return FALSE;
-    }
-
-    return TRUE;
-}
-
-static BOOL load_wine_gecko_v(PRUnichar *gre_path, HKEY mshtml_key,
-        const char *version, const char *version_string)
-{
-    DWORD res, type, size = MAX_PATH;
-    HKEY hkey = mshtml_key;
-
-    static const WCHAR wszGeckoPath[] =
-        {'G','e','c','k','o','P','a','t','h',0};
-
-    if(version) {
-        /* @@ Wine registry key: HKLM\Software\Wine\MSHTML\<version> */
-        res = RegOpenKeyA(mshtml_key, version, &hkey);
-        if(res != ERROR_SUCCESS)
-            return FALSE;
-    }
-
-    res = RegQueryValueExW(hkey, wszGeckoPath, NULL, &type, (LPBYTE)gre_path, &size);
-    if(hkey != mshtml_key)
-        RegCloseKey(hkey);
-    if(res != ERROR_SUCCESS || type != REG_SZ)
-        return FALSE;
-
-    if(!check_version(gre_path, version_string))
-        return FALSE;
-
-    return load_xul(gre_path);
-}
-
-static BOOL load_wine_gecko(PRUnichar *gre_path)
-{
-    HKEY hkey;
-    DWORD res;
-    BOOL ret;
-
-    static const WCHAR wszMshtmlKey[] = {
-        'S','o','f','t','w','a','r','e','\\','W','i','n','e',
-        '\\','M','S','H','T','M','L',0};
-
-    /* @@ Wine registry key: HKLM\Software\Wine\MSHTML */
-    res = RegOpenKeyW(HKEY_LOCAL_MACHINE, wszMshtmlKey, &hkey);
-    if(res != ERROR_SUCCESS)
-        return FALSE;
-
-    ret = load_wine_gecko_v(gre_path, hkey, GECKO_VERSION, GECKO_VERSION_STRING);
-
-    RegCloseKey(hkey);
-    return ret;
+    free(path);
 }
 
 static void set_bool_pref(nsIPrefBranch *pref, const char *pref_name, BOOL val)
@@ -634,13 +512,7 @@ static void set_lang(nsIPrefBranch *pref)
     DWORD res, size, type;
     HKEY hkey;
 
-    static const WCHAR international_keyW[] =
-        {'S','o','f','t','w','a','r','e',
-         '\\','M','i','c','r','o','s','o','f','t',
-         '\\','I','n','t','e','r','n','e','t',' ','E','x','p','l','o','r','e','r',
-         '\\','I','n','t','e','r','n','a','t','i','o','n','a','l',0};
-
-    res = RegOpenKeyW(HKEY_CURRENT_USER, international_keyW, &hkey);
+    res = RegOpenKeyW(HKEY_CURRENT_USER, L"Software\\Microsoft\\Internet Explorer\\International", &hkey);
     if(res != ERROR_SUCCESS)
         return;
 
@@ -663,13 +535,15 @@ static void set_preferences(void)
     nsres = nsIServiceManager_GetServiceByContractID(pServMgr, NS_PREFERENCES_CONTRACTID,
             &IID_nsIPrefBranch, (void**)&pref);
     if(NS_FAILED(nsres)) {
-        ERR("Could not get preference service: %08x\n", nsres);
+        ERR("Could not get preference service: %08lx\n", nsres);
         return;
     }
 
     set_lang(pref);
     set_bool_pref(pref, "security.warn_entering_secure", FALSE);
     set_bool_pref(pref, "security.warn_submit_insecure", FALSE);
+    set_bool_pref(pref, "dom.ipc.plugins.enabled", FALSE);
+    set_bool_pref(pref, "layout.css.grid.enabled", TRUE);
     set_int_pref(pref, "layout.spellcheckDefault", 0);
 
     nsIPrefBranch_Release(pref);
@@ -689,13 +563,14 @@ static BOOL init_xpcom(const PRUnichar *gre_path)
     }
 
     nsres = NS_InitXPCOM2(&pServMgr, gre_dir, (nsIDirectoryServiceProvider*)&nsDirectoryServiceProvider2);
+    nsIFile_Release(gre_dir);
     if(NS_FAILED(nsres)) {
-        ERR("NS_InitXPCOM2 failed: %08x\n", nsres);
+        ERR("NS_InitXPCOM2 failed: %08lx\n", nsres);
         FreeLibrary(xul_handle);
         return FALSE;
     }
 
-    strcpyW(gecko_path, gre_path);
+    lstrcpyW(gecko_path, gre_path);
     for(ptr = gecko_path; *ptr; ptr++) {
         if(*ptr == '\\')
             *ptr = '/';
@@ -704,31 +579,200 @@ static BOOL init_xpcom(const PRUnichar *gre_path)
 
     nsres = nsIServiceManager_QueryInterface(pServMgr, &IID_nsIComponentManager, (void**)&pCompMgr);
     if(NS_FAILED(nsres))
-        ERR("Could not get nsIComponentManager: %08x\n", nsres);
+        ERR("Could not get nsIComponentManager: %08lx\n", nsres);
 
-    nsres = NS_GetComponentRegistrar(&registrar);
-    if(NS_SUCCEEDED(nsres))
-        init_nsio(pCompMgr, registrar);
-    else
-        ERR("NS_GetComponentRegistrar failed: %08x\n", nsres);
-
+    init_nsio(pCompMgr);
     init_mutation(pCompMgr);
     set_preferences();
 
     nsres = nsIServiceManager_GetServiceByContractID(pServMgr, NS_CATEGORYMANAGER_CONTRACTID,
             &IID_nsICategoryManager, (void**)&cat_mgr);
     if(NS_FAILED(nsres))
-        ERR("Could not get category manager service: %08x\n", nsres);
+        ERR("Could not get category manager service: %08lx\n", nsres);
 
-    if(registrar) {
+    nsres = NS_GetComponentRegistrar(&registrar);
+    if(NS_SUCCEEDED(nsres)) {
         register_nsservice(registrar, pServMgr);
         nsIComponentRegistrar_Release(registrar);
+    }else {
+        ERR("NS_GetComponentRegistrar failed: %08lx\n", nsres);
     }
 
-    init_node_cc();
+    init_dispex_cc();
+    init_window_cc();
 
     return TRUE;
 }
+
+static BOOL load_xul(WCHAR *gecko_path)
+{
+    size_t len;
+
+    set_environment(gecko_path);
+
+    TRACE("(%s)\n", debugstr_w(gecko_path));
+
+    len = wcslen(gecko_path);
+    wcscpy(gecko_path + len, L"\\xul.dll");
+    xul_handle = LoadLibraryExW(gecko_path, 0, LOAD_LIBRARY_SEARCH_DLL_LOAD_DIR | LOAD_LIBRARY_SEARCH_DEFAULT_DIRS);
+    gecko_path[len] = 0;
+    if(!xul_handle) {
+        WARN("Could not load XUL: %ld\n", GetLastError());
+        return FALSE;
+    }
+
+#define NS_DLSYM(func) \
+    func = (void *)GetProcAddress(xul_handle, #func); \
+    if(!func) \
+        ERR("Could not GetProcAddress(" #func ") failed\n")
+
+    NS_DLSYM(NS_InitXPCOM2);
+    NS_DLSYM(NS_ShutdownXPCOM);
+    NS_DLSYM(NS_GetComponentRegistrar);
+    NS_DLSYM(NS_StringContainerInit2);
+    NS_DLSYM(NS_CStringContainerInit2);
+    NS_DLSYM(NS_StringContainerFinish);
+    NS_DLSYM(NS_CStringContainerFinish);
+    NS_DLSYM(NS_StringSetData);
+    NS_DLSYM(NS_CStringSetData);
+    NS_DLSYM(NS_NewLocalFile);
+    NS_DLSYM(NS_StringGetData);
+    NS_DLSYM(NS_CStringGetData);
+    NS_DLSYM(NS_StringGetIsVoid);
+    NS_DLSYM(NS_Alloc);
+    NS_DLSYM(NS_Free);
+    NS_DLSYM(ccref_incr);
+    NS_DLSYM(ccref_decr);
+    NS_DLSYM(ccref_init);
+    NS_DLSYM(ccp_init);
+    NS_DLSYM(describe_cc_node);
+    NS_DLSYM(note_cc_edge);
+
+#undef NS_DLSYM
+
+    return init_xpcom(gecko_path);
+}
+
+static WCHAR *check_version(const WCHAR *path)
+{
+    WCHAR *file_name;
+    char version[128];
+    DWORD read=0;
+    size_t len;
+    HANDLE hfile;
+
+    if(!wcsncmp(path, L"\\??\\", 4))
+        path += 4;
+    if(path[1] != ':') {
+        TRACE("Skipping %s\n", debugstr_w(path));
+        return FALSE; /* Gecko needs to be accessible via dos path */
+    }
+
+    len = wcslen(path);
+    file_name = malloc((len + 12) * sizeof(WCHAR));
+    if(!file_name)
+        return NULL;
+
+    PathCanonicalizeW(file_name, path);
+    len = lstrlenW(file_name);
+    wcscpy(file_name + len, L"\\VERSION");
+
+    hfile = CreateFileW(file_name, GENERIC_READ, FILE_SHARE_READ, NULL,
+                        OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    file_name[len] = 0;
+    if(hfile == INVALID_HANDLE_VALUE) {
+        TRACE("%s not found\n", debugstr_w(file_name));
+        free(file_name);
+        return NULL;
+    }
+
+    ReadFile(hfile, version, sizeof(version), &read, NULL);
+    version[read] = 0;
+    CloseHandle(hfile);
+
+    TRACE("%s: %s\n", debugstr_w(file_name), debugstr_a(version));
+
+    if(strcmp(version, GECKO_VERSION_STRING)) {
+        ERR("Unexpected version %s, expected \"%s\"\n", debugstr_a(version),
+            GECKO_VERSION_STRING);
+        free(file_name);
+        return NULL;
+    }
+
+    return file_name;
+}
+
+static WCHAR *find_wine_gecko_reg(void)
+{
+    WCHAR buffer[MAX_PATH];
+    DWORD res, type, size;
+    HKEY hkey;
+
+    /* @@ Wine registry key: HKLM\Software\Wine\MSHTML\<version> */
+    res = RegOpenKeyW(HKEY_LOCAL_MACHINE, L"Software\\Wine\\MSHTML\\" GECKO_VERSION, &hkey);
+    if(res != ERROR_SUCCESS)
+        return NULL;
+
+    size = sizeof(buffer);
+    res = RegQueryValueExW(hkey, L"GeckoPath", NULL, &type, (LPBYTE)buffer, &size);
+    RegCloseKey(hkey);
+    if(res != ERROR_SUCCESS || type != REG_SZ)
+        return FALSE;
+
+    return check_version(buffer);
+}
+
+#ifndef __REACTOS__
+static WCHAR *strdupWW(const WCHAR *str1, const WCHAR *str2)
+{
+    size_t len1 = lstrlenW(str1);
+    size_t len2 = lstrlenW(str2);
+    WCHAR *ret = malloc((len1 + len2 + 1) * sizeof(WCHAR));
+    if(!ret) return NULL;
+    memcpy(ret, str1, len1 * sizeof(WCHAR));
+    memcpy(ret + len1, str2, len2 * sizeof(WCHAR));
+    ret[len1 + len2] = 0;
+    return ret;
+}
+
+static WCHAR *find_wine_gecko_datadir(void)
+{
+    const WCHAR *data_dir;
+    WCHAR *path = NULL, *ret;
+
+    if((data_dir = _wgetenv(L"WINEDATADIR")))
+        path = strdupWW(data_dir, L"\\gecko\\" GECKO_DIR_NAME);
+    else if((data_dir = _wgetenv(L"WINEBUILDDIR")))
+        path = strdupWW(data_dir, L"\\..\\gecko\\" GECKO_DIR_NAME);
+    if(!path)
+        return NULL;
+
+    ret = check_version(path);
+    free(path);
+    return ret;
+}
+
+static WCHAR *find_wine_gecko_unix(const char *unix_path)
+{
+    static WCHAR * (CDECL *p_wine_get_dos_file_name)(const char*);
+    WCHAR *dos_dir, *ret;
+
+    if(!p_wine_get_dos_file_name) {
+        p_wine_get_dos_file_name = (void*)GetProcAddress(GetModuleHandleA("kernel32"), "wine_get_dos_file_name");
+        if(!p_wine_get_dos_file_name)
+            return FALSE;
+    }
+
+    dos_dir = p_wine_get_dos_file_name(unix_path);
+    if(!dos_dir)
+        return FALSE;
+
+    ret = check_version(dos_dir);
+
+    HeapFree(GetProcessHeap(), 0, dos_dir);
+    return ret;
+}
+#endif /* !__REACTOS__ */
 
 static CRITICAL_SECTION cs_load_gecko;
 static CRITICAL_SECTION_DEBUG cs_load_gecko_dbg =
@@ -741,12 +785,16 @@ static CRITICAL_SECTION cs_load_gecko = { &cs_load_gecko_dbg, -1, 0, 0, 0, 0 };
 
 BOOL load_gecko(void)
 {
-    PRUnichar gre_path[MAX_PATH];
     BOOL ret = FALSE;
 
     static DWORD loading_thread;
 
     TRACE("()\n");
+
+    if(!GECKO_ARCH_STRING[0]) {
+        FIXME("Wine Gecko is not supported on this architecture.\n");
+        return FALSE;
+    }
 
     /* load_gecko may be called recursively */
     if(loading_thread == GetCurrentThreadId())
@@ -755,19 +803,29 @@ BOOL load_gecko(void)
     EnterCriticalSection(&cs_load_gecko);
 
     if(!loading_thread) {
-        loading_thread = GetCurrentThreadId();
+        WCHAR *gecko_path;
 
-#ifdef __REACTOS__
-        if(load_wine_gecko(gre_path))
-#else
-        if(load_wine_gecko(gre_path)
-           || (install_wine_gecko() && load_wine_gecko(gre_path)))
+        loading_thread = GetCurrentThreadId();
+#ifndef __REACTOS__
+        if(!(gecko_path = find_wine_gecko_reg())
+           && !(gecko_path = find_wine_gecko_datadir())
+           && !(gecko_path = find_wine_gecko_unix(INSTALL_DATADIR "/wine/gecko/" GECKO_DIR_NAME))
+           && (!strcmp(INSTALL_DATADIR, "/usr/share") ||
+               !(gecko_path = find_wine_gecko_unix("/usr/share/wine/gecko/" GECKO_DIR_NAME)))
+           && !(gecko_path = find_wine_gecko_unix("/opt/wine/gecko/" GECKO_DIR_NAME))
+           && install_wine_gecko())
 #endif
-            ret = init_xpcom(gre_path);
-        else
-           MESSAGE("Could not load wine-gecko. HTML rendering will be disabled.\n");
+            gecko_path = find_wine_gecko_reg();
+
+        if(gecko_path) {
+            ret = load_xul(gecko_path);
+            free(gecko_path);
+        }else {
+           MESSAGE("Could not find Wine Gecko. HTML rendering will be disabled.\n");
+        }
     }else {
-        ret = pCompMgr != NULL;
+        FIXME("Gecko can only be used from one thread.\n");
+        ret = FALSE;
     }
 
     LeaveCriticalSection(&cs_load_gecko);
@@ -833,6 +891,11 @@ UINT32 nsAString_GetData(const nsAString *str, const PRUnichar **data)
     return NS_StringGetData(str, data, NULL);
 }
 
+void nsAString_SetData(nsAString *str, const PRUnichar *data)
+{
+    NS_StringSetData(str, data, PR_UINT32_MAX);
+}
+
 void nsAString_Finish(nsAString *str)
 {
     NS_StringContainerFinish(str);
@@ -855,13 +918,10 @@ HRESULT map_nsresult(nsresult nsres)
         return E_INVALIDARG;
     case NS_ERROR_UNEXPECTED:
         return E_UNEXPECTED;
-#ifndef __REACTOS__
-    /* FIXME: These are not yet defined for ReactOS */
     case NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR:
         return 0x80700007; /* according to tests */
     case NS_ERROR_DOM_SYNTAX_ERR:
         return E_INVALIDARG; /* FIXME: Throw SyntaxError for IE9+ modes */
-#endif
     case NS_BINDING_ABORTED:
         return E_ABORT;
     }
@@ -871,11 +931,12 @@ HRESULT map_nsresult(nsresult nsres)
 HRESULT return_nsstr(nsresult nsres, nsAString *nsstr, BSTR *p)
 {
     const PRUnichar *str;
+    HRESULT hres = S_OK;
 
     if(NS_FAILED(nsres)) {
-        ERR("failed: %08x\n", nsres);
+        WARN("failed: %08lx\n", nsres);
         nsAString_Finish(nsstr);
-        return E_FAIL;
+        return map_nsresult(nsres);
     }
 
     nsAString_GetData(nsstr, &str);
@@ -883,12 +944,112 @@ HRESULT return_nsstr(nsresult nsres, nsAString *nsstr, BSTR *p)
     if(*str) {
         *p = SysAllocString(str);
         if(!*p)
-            return E_OUTOFMEMORY;
+            hres = E_OUTOFMEMORY;
     }else {
         *p = NULL;
     }
 
     nsAString_Finish(nsstr);
+    return hres;
+}
+
+HRESULT return_nsstr_variant(nsresult nsres, nsAString *nsstr, unsigned flags, VARIANT *p)
+{
+    HRESULT hres = S_OK;
+
+    if(NS_FAILED(nsres)) {
+        ERR("failed: %08lx\n", nsres);
+        nsAString_Finish(nsstr);
+        return map_nsresult(nsres);
+    }
+
+    if(NS_StringGetIsVoid(nsstr)) {
+        V_VT(p) = VT_NULL;
+    }else {
+        const WCHAR *str;
+        size_t len;
+        nsAString_GetData(nsstr, &str);
+        len = wcslen(str);
+        if(flags & NSSTR_IMPLICIT_PX) {
+            const WCHAR *iter;
+            if(len > 2 && !wcscmp(str + len - 2, L"px"))
+                len -= 2;
+            for(iter = str; iter < str + len && is_digit(*iter); iter++);
+            if(*iter == '.') {
+                const WCHAR *dot = iter++;
+                while(iter < str + len && is_digit(*iter)) iter++;
+                if(iter == str + len && dot) len = dot - str;
+            }
+        }
+        if(flags & NSSTR_COLOR) {
+            hres = nscolor_to_str(str, &V_BSTR(p));
+        }else if(*str) {
+            V_BSTR(p) = SysAllocStringLen(str, len);
+            if(!V_BSTR(p))
+                hres = E_OUTOFMEMORY;
+        }else {
+            V_BSTR(p) = NULL;
+        }
+        if(SUCCEEDED(hres))
+            V_VT(p) = VT_BSTR;
+    }
+
+    nsAString_Finish(nsstr);
+    if(FAILED(hres))
+        return hres;
+    TRACE("ret %s\n", debugstr_variant(p));
+    return S_OK;
+}
+
+/*
+ * Converts VARIANT to string and stores the result in nsAString. To avoid useless
+ * allocations, the function uses an existing string if available, so caller must
+ * ensure that passed VARIANT is unchanged as long as its string representation is used
+ */
+HRESULT variant_to_nsstr(VARIANT *v, BOOL hex_int, nsAString *nsstr)
+{
+    WCHAR buf[32];
+
+    switch(V_VT(v)) {
+    case VT_EMPTY:
+    case VT_NULL:
+        nsAString_InitDepend(nsstr, NULL);
+        return S_OK;
+
+    case VT_BSTR:
+        nsAString_InitDepend(nsstr, V_BSTR(v));
+        break;
+
+    case VT_BSTR|VT_BYREF:
+        nsAString_InitDepend(nsstr, *V_BSTRREF(v));
+        break;
+
+    case VT_I4:
+        wsprintfW(buf, hex_int ? L"#%06x" : L"%d", V_I4(v));
+        nsAString_Init(nsstr, buf);
+        break;
+
+    case VT_R8:
+    case VT_DISPATCH: {
+        VARIANT strv;
+        HRESULT hres;
+
+        V_VT(&strv) = VT_EMPTY;
+        hres = VariantChangeTypeEx(&strv, v, MAKELCID(MAKELANGID(LANG_ENGLISH,SUBLANG_ENGLISH_US),SORT_DEFAULT),
+                                   0, VT_BSTR);
+        if(FAILED(hres))
+            return hres;
+
+        nsAString_Init(nsstr, V_BSTR(&strv));
+        SysFreeString(V_BSTR(&strv));
+        break;
+    }
+
+    default:
+        FIXME("not implemented for %s\n", debugstr_variant(v));
+        return E_NOTIMPL;
+
+    }
     return S_OK;
 }
 
@@ -961,14 +1122,14 @@ static HRESULT nsnode_to_nsstring_rec(nsIContentSerializer *serializer, nsIDOMNo
 
     nsres = nsIDOMNode_GetNodeType(nsnode, &type);
     if(NS_FAILED(nsres)) {
-        ERR("GetType failed: %08x\n", nsres);
+        ERR("GetType failed: %08lx\n", nsres);
         return E_FAIL;
     }
 
     if(type != DOCUMENT_NODE) {
         nsres = nsIDOMNode_QueryInterface(nsnode, &IID_nsIContent, (void**)&nscontent);
         if(NS_FAILED(nsres)) {
-            ERR("Could not get nsIContent interface: %08x\n", nsres);
+            ERR("Could not get nsIContent interface: %08lx\n", nsres);
             return E_FAIL;
         }
     }
@@ -981,7 +1142,7 @@ static HRESULT nsnode_to_nsstring_rec(nsIContentSerializer *serializer, nsIDOMNo
         nsIContentSerializer_AppendText(serializer, nscontent, 0, -1, str);
         break;
     case COMMENT_NODE:
-        nsres = nsIContentSerializer_AppendComment(serializer, nscontent, 0, -1, str);
+        nsIContentSerializer_AppendComment(serializer, nscontent, 0, -1, str);
         break;
     case DOCUMENT_NODE: {
         nsIDocument *nsdoc;
@@ -1012,7 +1173,7 @@ static HRESULT nsnode_to_nsstring_rec(nsIContentSerializer *serializer, nsIDOMNo
                 nsnode_to_nsstring_rec(serializer, child_node, str);
                 nsIDOMNode_Release(child_node);
             }else {
-                ERR("Item failed: %08x\n", nsres);
+                ERR("Item failed: %08lx\n", nsres);
             }
         }
 
@@ -1037,53 +1198,46 @@ HRESULT nsnode_to_nsstring(nsIDOMNode *nsnode, nsAString *str)
             NS_HTMLSERIALIZER_CONTRACTID, NULL, &IID_nsIContentSerializer,
             (void**)&serializer);
     if(NS_FAILED(nsres)) {
-        ERR("Could not get nsIContentSerializer: %08x\n", nsres);
+        ERR("Could not get nsIContentSerializer: %08lx\n", nsres);
         return E_FAIL;
     }
 
     nsres = nsIContentSerializer_Init(serializer, 0, 100, NULL, FALSE, FALSE /* FIXME */);
     if(NS_FAILED(nsres))
-        ERR("Init failed: %08x\n", nsres);
+        ERR("Init failed: %08lx\n", nsres);
 
     hres = nsnode_to_nsstring_rec(serializer, nsnode, str);
     if(SUCCEEDED(hres)) {
         nsres = nsIContentSerializer_Flush(serializer, str);
         if(NS_FAILED(nsres))
-            ERR("Flush failed: %08x\n", nsres);
+            ERR("Flush failed: %08lx\n", nsres);
     }
 
     nsIContentSerializer_Release(serializer);
     return hres;
 }
 
-void get_editor_controller(NSContainer *This)
+void setup_editor_controller(GeckoBrowser *This)
 {
     nsIEditingSession *editing_session = NULL;
     nsIControllerContext *ctrlctx;
     nsresult nsres;
 
-    if(This->editor) {
-        nsIEditor_Release(This->editor);
-        This->editor = NULL;
-    }
-
-    if(This->editor_controller) {
-        nsIController_Release(This->editor_controller);
-        This->editor_controller = NULL;
-    }
+    unlink_ref(&This->editor);
+    unlink_ref(&This->editor_controller);
 
     nsres = get_nsinterface((nsISupports*)This->webbrowser, &IID_nsIEditingSession,
             (void**)&editing_session);
     if(NS_FAILED(nsres)) {
-        ERR("Could not get nsIEditingSession: %08x\n", nsres);
+        ERR("Could not get nsIEditingSession: %08lx\n", nsres);
         return;
     }
 
     nsres = nsIEditingSession_GetEditorForWindow(editing_session,
-            This->doc->basedoc.window->nswindow, &This->editor);
+            This->doc->window->window_proxy, &This->editor);
     nsIEditingSession_Release(editing_session);
     if(NS_FAILED(nsres)) {
-        ERR("Could not get editor: %08x\n", nsres);
+        ERR("Could not get editor: %08lx\n", nsres);
         return;
     }
 
@@ -1092,14 +1246,14 @@ void get_editor_controller(NSContainer *This)
     if(NS_SUCCEEDED(nsres)) {
         nsres = nsIControllerContext_SetCommandContext(ctrlctx, (nsISupports *)This->editor);
         if(NS_FAILED(nsres))
-            ERR("SetCommandContext failed: %08x\n", nsres);
+            ERR("SetCommandContext failed: %08lx\n", nsres);
         nsres = nsIControllerContext_QueryInterface(ctrlctx, &IID_nsIController,
                 (void**)&This->editor_controller);
         nsIControllerContext_Release(ctrlctx);
         if(NS_FAILED(nsres))
-            ERR("Could not get nsIController interface: %08x\n", nsres);
+            ERR("Could not get nsIController interface: %08lx\n", nsres);
     }else {
-        ERR("Could not create edit controller: %08x\n", nsres);
+        ERR("Could not create edit controller: %08lx\n", nsres);
     }
 }
 
@@ -1140,8 +1294,8 @@ BOOL is_gecko_path(const char *path)
     WCHAR *buf, *ptr;
     BOOL ret;
 
-    buf = heap_strdupUtoW(path);
-    if(!buf || strlenW(buf) < gecko_path_len)
+    buf = strdupUtoW(path);
+    if(!buf || lstrlenW(buf) < gecko_path_len)
         return FALSE;
 
     for(ptr = buf; *ptr; ptr++) {
@@ -1149,15 +1303,15 @@ BOOL is_gecko_path(const char *path)
             *ptr = '/';
     }
 
-    UrlUnescapeW(buf, NULL, NULL, URL_UNESCAPE_INPLACE);
+    UrlUnescapeW(buf, NULL, NULL, URL_UNESCAPE_INPLACE | URL_UNESCAPE_AS_UTF8);
     buf[gecko_path_len] = 0;
 
-    ret = !strcmpiW(buf, gecko_path);
-    heap_free(buf);
+    ret = !wcsicmp(buf, gecko_path);
+    free(buf);
     return ret;
 }
 
-void set_viewer_zoom(NSContainer *nscontainer, float factor)
+void set_viewer_zoom(GeckoBrowser *browser, float factor)
 {
     nsIContentViewer *content_viewer;
     nsIDocShell *doc_shell;
@@ -1165,7 +1319,7 @@ void set_viewer_zoom(NSContainer *nscontainer, float factor)
 
     TRACE("Setting to %f\n", factor);
 
-    nsres = get_nsinterface((nsISupports*)nscontainer->navigation, &IID_nsIDocShell, (void**)&doc_shell);
+    nsres = get_nsinterface((nsISupports*)browser->navigation, &IID_nsIDocShell, (void**)&doc_shell);
     assert(nsres == NS_OK);
 
     nsres = nsIDocShell_GetContentViewer(doc_shell, &content_viewer);
@@ -1174,9 +1328,32 @@ void set_viewer_zoom(NSContainer *nscontainer, float factor)
 
     nsres = nsIContentViewer_SetFullZoom(content_viewer, factor);
     if(NS_FAILED(nsres))
-        ERR("SetFullZoom failed: %08x\n", nsres);
+        ERR("SetFullZoom failed: %08lx\n", nsres);
 
     nsIContentViewer_Release(content_viewer);
+}
+
+float get_viewer_zoom(GeckoBrowser *browser)
+{
+    nsIContentViewer *content_viewer;
+    nsIDocShell *doc_shell;
+    nsresult nsres;
+    float factor;
+
+    nsres = get_nsinterface((nsISupports*)browser->navigation, &IID_nsIDocShell, (void**)&doc_shell);
+    assert(nsres == NS_OK);
+
+    nsres = nsIDocShell_GetContentViewer(doc_shell, &content_viewer);
+    assert(nsres == NS_OK && content_viewer);
+    nsIDocShell_Release(doc_shell);
+
+    nsres = nsIContentViewer_GetFullZoom(content_viewer, &factor);
+    if(NS_FAILED(nsres))
+        ERR("GetFullZoom failed: %08lx\n", nsres);
+    TRACE("Got %f\n", factor);
+
+    nsIContentViewer_Release(content_viewer);
+    return factor;
 }
 
 struct nsWeakReference {
@@ -1184,7 +1361,7 @@ struct nsWeakReference {
 
     LONG ref;
 
-    NSContainer *nscontainer;
+    GeckoBrowser *browser;
 };
 
 static inline nsWeakReference *impl_from_nsIWeakReference(nsIWeakReference *iface)
@@ -1218,7 +1395,7 @@ static nsrefcnt NSAPI nsWeakReference_AddRef(nsIWeakReference *iface)
     nsWeakReference *This = impl_from_nsIWeakReference(iface);
     LONG ref = InterlockedIncrement(&This->ref);
 
-    TRACE("(%p) ref=%d\n", This, ref);
+    TRACE("(%p) ref=%ld\n", This, ref);
 
     return ref;
 }
@@ -1226,13 +1403,13 @@ static nsrefcnt NSAPI nsWeakReference_AddRef(nsIWeakReference *iface)
 static nsrefcnt NSAPI nsWeakReference_Release(nsIWeakReference *iface)
 {
     nsWeakReference *This = impl_from_nsIWeakReference(iface);
-    LONG ref = InterlockedIncrement(&This->ref);
+    LONG ref = InterlockedDecrement(&This->ref);
 
-    TRACE("(%p) ref=%d\n", This, ref);
+    TRACE("(%p) ref=%ld\n", This, ref);
 
     if(!ref) {
-        assert(!This->nscontainer);
-        heap_free(This);
+        assert(!This->browser);
+        free(This);
     }
 
     return ref;
@@ -1243,10 +1420,10 @@ static nsresult NSAPI nsWeakReference_QueryReferent(nsIWeakReference *iface,
 {
     nsWeakReference *This = impl_from_nsIWeakReference(iface);
 
-    if(!This->nscontainer)
+    if(!This->browser)
         return NS_ERROR_NULL_POINTER;
 
-    return nsIWebBrowserChrome_QueryInterface(&This->nscontainer->nsIWebBrowserChrome_iface, riid, result);
+    return nsIWebBrowserChrome_QueryInterface(&This->browser->nsIWebBrowserChrome_iface, riid, result);
 }
 
 static const nsIWeakReferenceVtbl nsWeakReferenceVtbl = {
@@ -1260,15 +1437,15 @@ static const nsIWeakReferenceVtbl nsWeakReferenceVtbl = {
  *      nsIWebBrowserChrome interface
  */
 
-static inline NSContainer *impl_from_nsIWebBrowserChrome(nsIWebBrowserChrome *iface)
+static inline GeckoBrowser *impl_from_nsIWebBrowserChrome(nsIWebBrowserChrome *iface)
 {
-    return CONTAINING_RECORD(iface, NSContainer, nsIWebBrowserChrome_iface);
+    return CONTAINING_RECORD(iface, GeckoBrowser, nsIWebBrowserChrome_iface);
 }
 
 static nsresult NSAPI nsWebBrowserChrome_QueryInterface(nsIWebBrowserChrome *iface,
         nsIIDRef riid, void **result)
 {
-    NSContainer *This = impl_from_nsIWebBrowserChrome(iface);
+    GeckoBrowser *This = impl_from_nsIWebBrowserChrome(iface);
 
     *result = NULL;
     if(IsEqualGUID(&IID_nsISupports, riid)) {
@@ -1308,29 +1485,29 @@ static nsresult NSAPI nsWebBrowserChrome_QueryInterface(nsIWebBrowserChrome *ifa
 
 static nsrefcnt NSAPI nsWebBrowserChrome_AddRef(nsIWebBrowserChrome *iface)
 {
-    NSContainer *This = impl_from_nsIWebBrowserChrome(iface);
+    GeckoBrowser *This = impl_from_nsIWebBrowserChrome(iface);
     LONG ref = InterlockedIncrement(&This->ref);
 
-    TRACE("(%p) ref=%d\n", This, ref);
+    TRACE("(%p) ref=%ld\n", This, ref);
 
     return ref;
 }
 
 static nsrefcnt NSAPI nsWebBrowserChrome_Release(nsIWebBrowserChrome *iface)
 {
-    NSContainer *This = impl_from_nsIWebBrowserChrome(iface);
+    GeckoBrowser *This = impl_from_nsIWebBrowserChrome(iface);
     LONG ref = InterlockedDecrement(&This->ref);
 
-    TRACE("(%p) ref=%d\n", This, ref);
+    TRACE("(%p) ref=%ld\n", This, ref);
 
     if(!ref) {
-        if(This->parent)
-            nsIWebBrowserChrome_Release(&This->parent->nsIWebBrowserChrome_iface);
+        if(This->doc)
+            detach_gecko_browser(This);
         if(This->weak_reference) {
-            This->weak_reference->nscontainer = NULL;
+            This->weak_reference->browser = NULL;
             nsIWeakReference_Release(&This->weak_reference->nsIWeakReference_iface);
         }
-        heap_free(This);
+        free(This);
     }
 
     return ref;
@@ -1339,7 +1516,7 @@ static nsrefcnt NSAPI nsWebBrowserChrome_Release(nsIWebBrowserChrome *iface)
 static nsresult NSAPI nsWebBrowserChrome_SetStatus(nsIWebBrowserChrome *iface,
         UINT32 statusType, const PRUnichar *status)
 {
-    NSContainer *This = impl_from_nsIWebBrowserChrome(iface);
+    GeckoBrowser *This = impl_from_nsIWebBrowserChrome(iface);
     TRACE("(%p)->(%d %s)\n", This, statusType, debugstr_w(status));
     return NS_OK;
 }
@@ -1347,7 +1524,7 @@ static nsresult NSAPI nsWebBrowserChrome_SetStatus(nsIWebBrowserChrome *iface,
 static nsresult NSAPI nsWebBrowserChrome_GetWebBrowser(nsIWebBrowserChrome *iface,
         nsIWebBrowser **aWebBrowser)
 {
-    NSContainer *This = impl_from_nsIWebBrowserChrome(iface);
+    GeckoBrowser *This = impl_from_nsIWebBrowserChrome(iface);
 
     TRACE("(%p)->(%p)\n", This, aWebBrowser);
 
@@ -1363,7 +1540,7 @@ static nsresult NSAPI nsWebBrowserChrome_GetWebBrowser(nsIWebBrowserChrome *ifac
 static nsresult NSAPI nsWebBrowserChrome_SetWebBrowser(nsIWebBrowserChrome *iface,
         nsIWebBrowser *aWebBrowser)
 {
-    NSContainer *This = impl_from_nsIWebBrowserChrome(iface);
+    GeckoBrowser *This = impl_from_nsIWebBrowserChrome(iface);
 
     TRACE("(%p)->(%p)\n", This, aWebBrowser);
 
@@ -1376,7 +1553,7 @@ static nsresult NSAPI nsWebBrowserChrome_SetWebBrowser(nsIWebBrowserChrome *ifac
 static nsresult NSAPI nsWebBrowserChrome_GetChromeFlags(nsIWebBrowserChrome *iface,
         UINT32 *aChromeFlags)
 {
-    NSContainer *This = impl_from_nsIWebBrowserChrome(iface);
+    GeckoBrowser *This = impl_from_nsIWebBrowserChrome(iface);
     WARN("(%p)->(%p)\n", This, aChromeFlags);
     return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -1384,14 +1561,14 @@ static nsresult NSAPI nsWebBrowserChrome_GetChromeFlags(nsIWebBrowserChrome *ifa
 static nsresult NSAPI nsWebBrowserChrome_SetChromeFlags(nsIWebBrowserChrome *iface,
         UINT32 aChromeFlags)
 {
-    NSContainer *This = impl_from_nsIWebBrowserChrome(iface);
+    GeckoBrowser *This = impl_from_nsIWebBrowserChrome(iface);
     WARN("(%p)->(%08x)\n", This, aChromeFlags);
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 static nsresult NSAPI nsWebBrowserChrome_DestroyBrowserWindow(nsIWebBrowserChrome *iface)
 {
-    NSContainer *This = impl_from_nsIWebBrowserChrome(iface);
+    GeckoBrowser *This = impl_from_nsIWebBrowserChrome(iface);
     TRACE("(%p)\n", This);
     return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -1399,21 +1576,21 @@ static nsresult NSAPI nsWebBrowserChrome_DestroyBrowserWindow(nsIWebBrowserChrom
 static nsresult NSAPI nsWebBrowserChrome_SizeBrowserTo(nsIWebBrowserChrome *iface,
         LONG aCX, LONG aCY)
 {
-    NSContainer *This = impl_from_nsIWebBrowserChrome(iface);
-    WARN("(%p)->(%d %d)\n", This, aCX, aCY);
+    GeckoBrowser *This = impl_from_nsIWebBrowserChrome(iface);
+    WARN("(%p)->(%ld %ld)\n", This, aCX, aCY);
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 static nsresult NSAPI nsWebBrowserChrome_ShowAsModal(nsIWebBrowserChrome *iface)
 {
-    NSContainer *This = impl_from_nsIWebBrowserChrome(iface);
+    GeckoBrowser *This = impl_from_nsIWebBrowserChrome(iface);
     WARN("(%p)\n", This);
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 static nsresult NSAPI nsWebBrowserChrome_IsWindowModal(nsIWebBrowserChrome *iface, cpp_bool *_retval)
 {
-    NSContainer *This = impl_from_nsIWebBrowserChrome(iface);
+    GeckoBrowser *This = impl_from_nsIWebBrowserChrome(iface);
     WARN("(%p)->(%p)\n", This, _retval);
     return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -1421,8 +1598,8 @@ static nsresult NSAPI nsWebBrowserChrome_IsWindowModal(nsIWebBrowserChrome *ifac
 static nsresult NSAPI nsWebBrowserChrome_ExitModalEventLoop(nsIWebBrowserChrome *iface,
         nsresult aStatus)
 {
-    NSContainer *This = impl_from_nsIWebBrowserChrome(iface);
-    WARN("(%p)->(%08x)\n", This, aStatus);
+    GeckoBrowser *This = impl_from_nsIWebBrowserChrome(iface);
+    WARN("(%p)->(%08lx)\n", This, aStatus);
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -1446,36 +1623,37 @@ static const nsIWebBrowserChromeVtbl nsWebBrowserChromeVtbl = {
  *      nsIContextMenuListener interface
  */
 
-static inline NSContainer *impl_from_nsIContextMenuListener(nsIContextMenuListener *iface)
+static inline GeckoBrowser *impl_from_nsIContextMenuListener(nsIContextMenuListener *iface)
 {
-    return CONTAINING_RECORD(iface, NSContainer, nsIContextMenuListener_iface);
+    return CONTAINING_RECORD(iface, GeckoBrowser, nsIContextMenuListener_iface);
 }
 
 static nsresult NSAPI nsContextMenuListener_QueryInterface(nsIContextMenuListener *iface,
         nsIIDRef riid, void **result)
 {
-    NSContainer *This = impl_from_nsIContextMenuListener(iface);
+    GeckoBrowser *This = impl_from_nsIContextMenuListener(iface);
     return nsIWebBrowserChrome_QueryInterface(&This->nsIWebBrowserChrome_iface, riid, result);
 }
 
 static nsrefcnt NSAPI nsContextMenuListener_AddRef(nsIContextMenuListener *iface)
 {
-    NSContainer *This = impl_from_nsIContextMenuListener(iface);
+    GeckoBrowser *This = impl_from_nsIContextMenuListener(iface);
     return nsIWebBrowserChrome_AddRef(&This->nsIWebBrowserChrome_iface);
 }
 
 static nsrefcnt NSAPI nsContextMenuListener_Release(nsIContextMenuListener *iface)
 {
-    NSContainer *This = impl_from_nsIContextMenuListener(iface);
+    GeckoBrowser *This = impl_from_nsIContextMenuListener(iface);
     return nsIWebBrowserChrome_Release(&This->nsIWebBrowserChrome_iface);
 }
 
 static nsresult NSAPI nsContextMenuListener_OnShowContextMenu(nsIContextMenuListener *iface,
         UINT32 aContextFlags, nsIDOMEvent *aEvent, nsIDOMNode *aNode)
 {
-    NSContainer *This = impl_from_nsIContextMenuListener(iface);
-    nsIDOMMouseEvent *event;
+    GeckoBrowser *This = impl_from_nsIContextMenuListener(iface);
+    nsIDOMMouseEvent *mouse_event;
     HTMLDOMNode *node;
+    DOMEvent *event;
     POINT pt;
     DWORD dwID = CONTEXT_MENU_DEFAULT;
     nsresult nsres;
@@ -1483,17 +1661,26 @@ static nsresult NSAPI nsContextMenuListener_OnShowContextMenu(nsIContextMenuList
 
     TRACE("(%p)->(%08x %p %p)\n", This, aContextFlags, aEvent, aNode);
 
-    fire_event(This->doc->basedoc.doc_node /* FIXME */, EVENTID_CONTEXTMENU, TRUE, aNode, aEvent, NULL);
+    if (!aNode)
+        return NS_ERROR_FAILURE;
 
-    nsres = nsIDOMEvent_QueryInterface(aEvent, &IID_nsIDOMMouseEvent, (void**)&event);
-    if(NS_FAILED(nsres)) {
-        ERR("Could not get nsIDOMMouseEvent interface: %08x\n", nsres);
-        return nsres;
+    hres = get_node(aNode, TRUE, &node);
+    if(FAILED(hres))
+        return NS_ERROR_FAILURE;
+
+    hres = create_event_from_nsevent(aEvent, This->doc->doc_node->script_global,
+                                     dispex_compat_mode(&node->event_target.dispex), &event);
+    if(SUCCEEDED(hres)) {
+        dispatch_event(&node->event_target, event);
+        IDOMEvent_Release(&event->IDOMEvent_iface);
     }
 
-    nsIDOMMouseEvent_GetScreenX(event, &pt.x);
-    nsIDOMMouseEvent_GetScreenY(event, &pt.y);
-    nsIDOMMouseEvent_Release(event);
+    nsres = nsIDOMEvent_QueryInterface(aEvent, &IID_nsIDOMMouseEvent, (void**)&mouse_event);
+    assert(NS_SUCCEEDED(nsres));
+
+    nsIDOMMouseEvent_GetScreenX(mouse_event, &pt.x);
+    nsIDOMMouseEvent_GetScreenY(mouse_event, &pt.y);
+    nsIDOMMouseEvent_Release(mouse_event);
 
     switch(aContextFlags) {
     case CONTEXT_NONE:
@@ -1501,7 +1688,12 @@ static nsresult NSAPI nsContextMenuListener_OnShowContextMenu(nsIContextMenuList
     case CONTEXT_TEXT: {
         nsISelection *selection;
 
-        nsres = nsIDOMHTMLDocument_GetSelection(This->doc->basedoc.doc_node->nsdoc, &selection);
+        if(!This->doc->doc_node->html_document) {
+            FIXME("Not implemented for XML document\n");
+            break;
+        }
+
+        nsres = nsIDOMHTMLDocument_GetSelection(This->doc->doc_node->html_document, &selection);
         if(NS_SUCCEEDED(nsres) && selection) {
             cpp_bool is_collapsed;
 
@@ -1527,10 +1719,6 @@ static nsresult NSAPI nsContextMenuListener_OnShowContextMenu(nsIContextMenuList
         FIXME("aContextFlags=%08x\n", aContextFlags);
     };
 
-    hres = get_node(This->doc->basedoc.doc_node, aNode, TRUE, &node);
-    if(FAILED(hres))
-        return NS_ERROR_FAILURE;
-
     show_context_menu(This->doc, dwID, &pt, (IDispatch*)&node->IHTMLDOMNode_iface);
     node_release(node);
     return NS_OK;
@@ -1547,37 +1735,36 @@ static const nsIContextMenuListenerVtbl nsContextMenuListenerVtbl = {
  *      nsIURIContentListener interface
  */
 
-static inline NSContainer *impl_from_nsIURIContentListener(nsIURIContentListener *iface)
+static inline GeckoBrowser *impl_from_nsIURIContentListener(nsIURIContentListener *iface)
 {
-    return CONTAINING_RECORD(iface, NSContainer, nsIURIContentListener_iface);
+    return CONTAINING_RECORD(iface, GeckoBrowser, nsIURIContentListener_iface);
 }
 
 static nsresult NSAPI nsURIContentListener_QueryInterface(nsIURIContentListener *iface,
         nsIIDRef riid, void **result)
 {
-    NSContainer *This = impl_from_nsIURIContentListener(iface);
+    GeckoBrowser *This = impl_from_nsIURIContentListener(iface);
     return nsIWebBrowserChrome_QueryInterface(&This->nsIWebBrowserChrome_iface, riid, result);
 }
 
 static nsrefcnt NSAPI nsURIContentListener_AddRef(nsIURIContentListener *iface)
 {
-    NSContainer *This = impl_from_nsIURIContentListener(iface);
+    GeckoBrowser *This = impl_from_nsIURIContentListener(iface);
     return nsIWebBrowserChrome_AddRef(&This->nsIWebBrowserChrome_iface);
 }
 
 static nsrefcnt NSAPI nsURIContentListener_Release(nsIURIContentListener *iface)
 {
-    NSContainer *This = impl_from_nsIURIContentListener(iface);
+    GeckoBrowser *This = impl_from_nsIURIContentListener(iface);
     return nsIWebBrowserChrome_Release(&This->nsIWebBrowserChrome_iface);
 }
 
 static nsresult NSAPI nsURIContentListener_OnStartURIOpen(nsIURIContentListener *iface,
                                                           nsIURI *aURI, cpp_bool *_retval)
 {
-    NSContainer *This = impl_from_nsIURIContentListener(iface);
+    GeckoBrowser *This = impl_from_nsIURIContentListener(iface);
     nsACString spec_str;
     const char *spec;
-    nsresult nsres;
 
     nsACString_Init(&spec_str, NULL);
     nsIURI_GetSpec(aURI, &spec_str);
@@ -1587,11 +1774,7 @@ static nsresult NSAPI nsURIContentListener_OnStartURIOpen(nsIURIContentListener 
 
     nsACString_Finish(&spec_str);
 
-    nsres = on_start_uri_open(This, aURI, _retval);
-    if(NS_FAILED(nsres))
-        return nsres;
-
-    return !*_retval && This->content_listener
+    return This->content_listener
         ? nsIURIContentListener_OnStartURIOpen(This->content_listener, aURI, _retval)
         : NS_OK;
 }
@@ -1600,7 +1783,7 @@ static nsresult NSAPI nsURIContentListener_DoContent(nsIURIContentListener *ifac
         const nsACString *aContentType, cpp_bool aIsContentPreferred, nsIRequest *aRequest,
         nsIStreamListener **aContentHandler, cpp_bool *_retval)
 {
-    NSContainer *This = impl_from_nsIURIContentListener(iface);
+    GeckoBrowser *This = impl_from_nsIURIContentListener(iface);
 
     TRACE("(%p)->(%p %x %p %p %p)\n", This, aContentType, aIsContentPreferred,
             aRequest, aContentHandler, _retval);
@@ -1614,7 +1797,7 @@ static nsresult NSAPI nsURIContentListener_DoContent(nsIURIContentListener *ifac
 static nsresult NSAPI nsURIContentListener_IsPreferred(nsIURIContentListener *iface,
         const char *aContentType, char **aDesiredContentType, cpp_bool *_retval)
 {
-    NSContainer *This = impl_from_nsIURIContentListener(iface);
+    GeckoBrowser *This = impl_from_nsIURIContentListener(iface);
 
     TRACE("(%p)->(%s %p %p)\n", This, debugstr_a(aContentType), aDesiredContentType, _retval);
 
@@ -1631,7 +1814,7 @@ static nsresult NSAPI nsURIContentListener_CanHandleContent(nsIURIContentListene
         const char *aContentType, cpp_bool aIsContentPreferred, char **aDesiredContentType,
         cpp_bool *_retval)
 {
-    NSContainer *This = impl_from_nsIURIContentListener(iface);
+    GeckoBrowser *This = impl_from_nsIURIContentListener(iface);
 
     TRACE("(%p)->(%s %x %p %p)\n", This, debugstr_a(aContentType), aIsContentPreferred,
             aDesiredContentType, _retval);
@@ -1645,7 +1828,7 @@ static nsresult NSAPI nsURIContentListener_CanHandleContent(nsIURIContentListene
 static nsresult NSAPI nsURIContentListener_GetLoadCookie(nsIURIContentListener *iface,
         nsISupports **aLoadCookie)
 {
-    NSContainer *This = impl_from_nsIURIContentListener(iface);
+    GeckoBrowser *This = impl_from_nsIURIContentListener(iface);
 
     WARN("(%p)->(%p)\n", This, aLoadCookie);
 
@@ -1657,7 +1840,7 @@ static nsresult NSAPI nsURIContentListener_GetLoadCookie(nsIURIContentListener *
 static nsresult NSAPI nsURIContentListener_SetLoadCookie(nsIURIContentListener *iface,
         nsISupports *aLoadCookie)
 {
-    NSContainer *This = impl_from_nsIURIContentListener(iface);
+    GeckoBrowser *This = impl_from_nsIURIContentListener(iface);
 
     WARN("(%p)->(%p)\n", This, aLoadCookie);
 
@@ -1669,7 +1852,7 @@ static nsresult NSAPI nsURIContentListener_SetLoadCookie(nsIURIContentListener *
 static nsresult NSAPI nsURIContentListener_GetParentContentListener(nsIURIContentListener *iface,
         nsIURIContentListener **aParentContentListener)
 {
-    NSContainer *This = impl_from_nsIURIContentListener(iface);
+    GeckoBrowser *This = impl_from_nsIURIContentListener(iface);
 
     TRACE("(%p)->(%p)\n", This, aParentContentListener);
 
@@ -1683,7 +1866,7 @@ static nsresult NSAPI nsURIContentListener_GetParentContentListener(nsIURIConten
 static nsresult NSAPI nsURIContentListener_SetParentContentListener(nsIURIContentListener *iface,
         nsIURIContentListener *aParentContentListener)
 {
-    NSContainer *This = impl_from_nsIURIContentListener(iface);
+    GeckoBrowser *This = impl_from_nsIURIContentListener(iface);
 
     TRACE("(%p)->(%p)\n", This, aParentContentListener);
 
@@ -1718,42 +1901,42 @@ static const nsIURIContentListenerVtbl nsURIContentListenerVtbl = {
  *      nsIEmbeddinSiteWindow interface
  */
 
-static inline NSContainer *impl_from_nsIEmbeddingSiteWindow(nsIEmbeddingSiteWindow *iface)
+static inline GeckoBrowser *impl_from_nsIEmbeddingSiteWindow(nsIEmbeddingSiteWindow *iface)
 {
-    return CONTAINING_RECORD(iface, NSContainer, nsIEmbeddingSiteWindow_iface);
+    return CONTAINING_RECORD(iface, GeckoBrowser, nsIEmbeddingSiteWindow_iface);
 }
 
 static nsresult NSAPI nsEmbeddingSiteWindow_QueryInterface(nsIEmbeddingSiteWindow *iface,
         nsIIDRef riid, void **result)
 {
-    NSContainer *This = impl_from_nsIEmbeddingSiteWindow(iface);
+    GeckoBrowser *This = impl_from_nsIEmbeddingSiteWindow(iface);
     return nsIWebBrowserChrome_QueryInterface(&This->nsIWebBrowserChrome_iface, riid, result);
 }
 
 static nsrefcnt NSAPI nsEmbeddingSiteWindow_AddRef(nsIEmbeddingSiteWindow *iface)
 {
-    NSContainer *This = impl_from_nsIEmbeddingSiteWindow(iface);
+    GeckoBrowser *This = impl_from_nsIEmbeddingSiteWindow(iface);
     return nsIWebBrowserChrome_AddRef(&This->nsIWebBrowserChrome_iface);
 }
 
 static nsrefcnt NSAPI nsEmbeddingSiteWindow_Release(nsIEmbeddingSiteWindow *iface)
 {
-    NSContainer *This = impl_from_nsIEmbeddingSiteWindow(iface);
+    GeckoBrowser *This = impl_from_nsIEmbeddingSiteWindow(iface);
     return nsIWebBrowserChrome_Release(&This->nsIWebBrowserChrome_iface);
 }
 
 static nsresult NSAPI nsEmbeddingSiteWindow_SetDimensions(nsIEmbeddingSiteWindow *iface,
         UINT32 flags, LONG x, LONG y, LONG cx, LONG cy)
 {
-    NSContainer *This = impl_from_nsIEmbeddingSiteWindow(iface);
-    WARN("(%p)->(%08x %d %d %d %d)\n", This, flags, x, y, cx, cy);
+    GeckoBrowser *This = impl_from_nsIEmbeddingSiteWindow(iface);
+    WARN("(%p)->(%08x %ld %ld %ld %ld)\n", This, flags, x, y, cx, cy);
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 static nsresult NSAPI nsEmbeddingSiteWindow_GetDimensions(nsIEmbeddingSiteWindow *iface,
         UINT32 flags, LONG *x, LONG *y, LONG *cx, LONG *cy)
 {
-    NSContainer *This = impl_from_nsIEmbeddingSiteWindow(iface);
+    GeckoBrowser *This = impl_from_nsIEmbeddingSiteWindow(iface);
     RECT r;
 
     TRACE("(%p)->(%x %p %p %p %p)\n", This, flags, x, y, cx, cy);
@@ -1776,7 +1959,7 @@ static nsresult NSAPI nsEmbeddingSiteWindow_GetDimensions(nsIEmbeddingSiteWindow
 
 static nsresult NSAPI nsEmbeddingSiteWindow_SetFocus(nsIEmbeddingSiteWindow *iface)
 {
-    NSContainer *This = impl_from_nsIEmbeddingSiteWindow(iface);
+    GeckoBrowser *This = impl_from_nsIEmbeddingSiteWindow(iface);
 
     TRACE("(%p)\n", This);
 
@@ -1786,7 +1969,7 @@ static nsresult NSAPI nsEmbeddingSiteWindow_SetFocus(nsIEmbeddingSiteWindow *ifa
 static nsresult NSAPI nsEmbeddingSiteWindow_GetVisibility(nsIEmbeddingSiteWindow *iface,
         cpp_bool *aVisibility)
 {
-    NSContainer *This = impl_from_nsIEmbeddingSiteWindow(iface);
+    GeckoBrowser *This = impl_from_nsIEmbeddingSiteWindow(iface);
 
     TRACE("(%p)->(%p)\n", This, aVisibility);
 
@@ -1797,7 +1980,7 @@ static nsresult NSAPI nsEmbeddingSiteWindow_GetVisibility(nsIEmbeddingSiteWindow
 static nsresult NSAPI nsEmbeddingSiteWindow_SetVisibility(nsIEmbeddingSiteWindow *iface,
         cpp_bool aVisibility)
 {
-    NSContainer *This = impl_from_nsIEmbeddingSiteWindow(iface);
+    GeckoBrowser *This = impl_from_nsIEmbeddingSiteWindow(iface);
 
     TRACE("(%p)->(%x)\n", This, aVisibility);
 
@@ -1807,7 +1990,7 @@ static nsresult NSAPI nsEmbeddingSiteWindow_SetVisibility(nsIEmbeddingSiteWindow
 static nsresult NSAPI nsEmbeddingSiteWindow_GetTitle(nsIEmbeddingSiteWindow *iface,
         PRUnichar **aTitle)
 {
-    NSContainer *This = impl_from_nsIEmbeddingSiteWindow(iface);
+    GeckoBrowser *This = impl_from_nsIEmbeddingSiteWindow(iface);
     WARN("(%p)->(%p)\n", This, aTitle);
     return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -1815,7 +1998,7 @@ static nsresult NSAPI nsEmbeddingSiteWindow_GetTitle(nsIEmbeddingSiteWindow *ifa
 static nsresult NSAPI nsEmbeddingSiteWindow_SetTitle(nsIEmbeddingSiteWindow *iface,
         const PRUnichar *aTitle)
 {
-    NSContainer *This = impl_from_nsIEmbeddingSiteWindow(iface);
+    GeckoBrowser *This = impl_from_nsIEmbeddingSiteWindow(iface);
     WARN("(%p)->(%s)\n", This, debugstr_w(aTitle));
     return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -1823,7 +2006,7 @@ static nsresult NSAPI nsEmbeddingSiteWindow_SetTitle(nsIEmbeddingSiteWindow *ifa
 static nsresult NSAPI nsEmbeddingSiteWindow_GetSiteWindow(nsIEmbeddingSiteWindow *iface,
         void **aSiteWindow)
 {
-    NSContainer *This = impl_from_nsIEmbeddingSiteWindow(iface);
+    GeckoBrowser *This = impl_from_nsIEmbeddingSiteWindow(iface);
 
     TRACE("(%p)->(%p)\n", This, aSiteWindow);
 
@@ -1845,34 +2028,34 @@ static const nsIEmbeddingSiteWindowVtbl nsEmbeddingSiteWindowVtbl = {
     nsEmbeddingSiteWindow_GetSiteWindow
 };
 
-static inline NSContainer *impl_from_nsITooltipListener(nsITooltipListener *iface)
+static inline GeckoBrowser *impl_from_nsITooltipListener(nsITooltipListener *iface)
 {
-    return CONTAINING_RECORD(iface, NSContainer, nsITooltipListener_iface);
+    return CONTAINING_RECORD(iface, GeckoBrowser, nsITooltipListener_iface);
 }
 
 static nsresult NSAPI nsTooltipListener_QueryInterface(nsITooltipListener *iface, nsIIDRef riid,
         void **result)
 {
-    NSContainer *This = impl_from_nsITooltipListener(iface);
+    GeckoBrowser *This = impl_from_nsITooltipListener(iface);
     return nsIWebBrowserChrome_QueryInterface(&This->nsIWebBrowserChrome_iface, riid, result);
 }
 
 static nsrefcnt NSAPI nsTooltipListener_AddRef(nsITooltipListener *iface)
 {
-    NSContainer *This = impl_from_nsITooltipListener(iface);
+    GeckoBrowser *This = impl_from_nsITooltipListener(iface);
     return nsIWebBrowserChrome_AddRef(&This->nsIWebBrowserChrome_iface);
 }
 
 static nsrefcnt NSAPI nsTooltipListener_Release(nsITooltipListener *iface)
 {
-    NSContainer *This = impl_from_nsITooltipListener(iface);
+    GeckoBrowser *This = impl_from_nsITooltipListener(iface);
     return nsIWebBrowserChrome_Release(&This->nsIWebBrowserChrome_iface);
 }
 
 static nsresult NSAPI nsTooltipListener_OnShowTooltip(nsITooltipListener *iface,
         LONG aXCoord, LONG aYCoord, const PRUnichar *aTipText)
 {
-    NSContainer *This = impl_from_nsITooltipListener(iface);
+    GeckoBrowser *This = impl_from_nsITooltipListener(iface);
 
     if (This->doc)
         show_tooltip(This->doc, aXCoord, aYCoord, aTipText);
@@ -1882,7 +2065,7 @@ static nsresult NSAPI nsTooltipListener_OnShowTooltip(nsITooltipListener *iface,
 
 static nsresult NSAPI nsTooltipListener_OnHideTooltip(nsITooltipListener *iface)
 {
-    NSContainer *This = impl_from_nsITooltipListener(iface);
+    GeckoBrowser *This = impl_from_nsITooltipListener(iface);
 
     if (This->doc)
         hide_tooltip(This->doc);
@@ -1898,38 +2081,38 @@ static const nsITooltipListenerVtbl nsTooltipListenerVtbl = {
     nsTooltipListener_OnHideTooltip
 };
 
-static inline NSContainer *impl_from_nsIInterfaceRequestor(nsIInterfaceRequestor *iface)
+static inline GeckoBrowser *impl_from_nsIInterfaceRequestor(nsIInterfaceRequestor *iface)
 {
-    return CONTAINING_RECORD(iface, NSContainer, nsIInterfaceRequestor_iface);
+    return CONTAINING_RECORD(iface, GeckoBrowser, nsIInterfaceRequestor_iface);
 }
 
 static nsresult NSAPI nsInterfaceRequestor_QueryInterface(nsIInterfaceRequestor *iface,
         nsIIDRef riid, void **result)
 {
-    NSContainer *This = impl_from_nsIInterfaceRequestor(iface);
+    GeckoBrowser *This = impl_from_nsIInterfaceRequestor(iface);
     return nsIWebBrowserChrome_QueryInterface(&This->nsIWebBrowserChrome_iface, riid, result);
 }
 
 static nsrefcnt NSAPI nsInterfaceRequestor_AddRef(nsIInterfaceRequestor *iface)
 {
-    NSContainer *This = impl_from_nsIInterfaceRequestor(iface);
+    GeckoBrowser *This = impl_from_nsIInterfaceRequestor(iface);
     return nsIWebBrowserChrome_AddRef(&This->nsIWebBrowserChrome_iface);
 }
 
 static nsrefcnt NSAPI nsInterfaceRequestor_Release(nsIInterfaceRequestor *iface)
 {
-    NSContainer *This = impl_from_nsIInterfaceRequestor(iface);
+    GeckoBrowser *This = impl_from_nsIInterfaceRequestor(iface);
     return nsIWebBrowserChrome_Release(&This->nsIWebBrowserChrome_iface);
 }
 
 static nsresult NSAPI nsInterfaceRequestor_GetInterface(nsIInterfaceRequestor *iface,
         nsIIDRef riid, void **result)
 {
-    NSContainer *This = impl_from_nsIInterfaceRequestor(iface);
+    GeckoBrowser *This = impl_from_nsIInterfaceRequestor(iface);
 
-    if(IsEqualGUID(&IID_nsIDOMWindow, riid)) {
+    if(IsEqualGUID(&IID_mozIDOMWindowProxy, riid)) {
         TRACE("(%p)->(IID_nsIDOMWindow %p)\n", This, result);
-        return nsIWebBrowser_GetContentDOMWindow(This->webbrowser, (nsIDOMWindow**)result);
+        return nsIWebBrowser_GetContentDOMWindow(This->webbrowser, (mozIDOMWindowProxy**)result);
     }
 
     return nsIWebBrowserChrome_QueryInterface(&This->nsIWebBrowserChrome_iface, riid, result);
@@ -1942,45 +2125,45 @@ static const nsIInterfaceRequestorVtbl nsInterfaceRequestorVtbl = {
     nsInterfaceRequestor_GetInterface
 };
 
-static inline NSContainer *impl_from_nsISupportsWeakReference(nsISupportsWeakReference *iface)
+static inline GeckoBrowser *impl_from_nsISupportsWeakReference(nsISupportsWeakReference *iface)
 {
-    return CONTAINING_RECORD(iface, NSContainer, nsISupportsWeakReference_iface);
+    return CONTAINING_RECORD(iface, GeckoBrowser, nsISupportsWeakReference_iface);
 }
 
 static nsresult NSAPI nsSupportsWeakReference_QueryInterface(nsISupportsWeakReference *iface,
         nsIIDRef riid, void **result)
 {
-    NSContainer *This = impl_from_nsISupportsWeakReference(iface);
+    GeckoBrowser *This = impl_from_nsISupportsWeakReference(iface);
     return nsIWebBrowserChrome_QueryInterface(&This->nsIWebBrowserChrome_iface, riid, result);
 }
 
 static nsrefcnt NSAPI nsSupportsWeakReference_AddRef(nsISupportsWeakReference *iface)
 {
-    NSContainer *This = impl_from_nsISupportsWeakReference(iface);
+    GeckoBrowser *This = impl_from_nsISupportsWeakReference(iface);
     return nsIWebBrowserChrome_AddRef(&This->nsIWebBrowserChrome_iface);
 }
 
 static nsrefcnt NSAPI nsSupportsWeakReference_Release(nsISupportsWeakReference *iface)
 {
-    NSContainer *This = impl_from_nsISupportsWeakReference(iface);
+    GeckoBrowser *This = impl_from_nsISupportsWeakReference(iface);
     return nsIWebBrowserChrome_Release(&This->nsIWebBrowserChrome_iface);
 }
 
 static nsresult NSAPI nsSupportsWeakReference_GetWeakReference(nsISupportsWeakReference *iface,
         nsIWeakReference **_retval)
 {
-    NSContainer *This = impl_from_nsISupportsWeakReference(iface);
+    GeckoBrowser *This = impl_from_nsISupportsWeakReference(iface);
 
     TRACE("(%p)->(%p)\n", This, _retval);
 
     if(!This->weak_reference) {
-        This->weak_reference = heap_alloc(sizeof(nsWeakReference));
+        This->weak_reference = malloc(sizeof(nsWeakReference));
         if(!This->weak_reference)
             return NS_ERROR_OUT_OF_MEMORY;
 
         This->weak_reference->nsIWeakReference_iface.lpVtbl = &nsWeakReferenceVtbl;
         This->weak_reference->ref = 1;
-        This->weak_reference->nscontainer = This;
+        This->weak_reference->browser = This;
     }
 
     *_retval = &This->weak_reference->nsIWeakReference_iface;
@@ -1995,39 +2178,41 @@ static const nsISupportsWeakReferenceVtbl nsSupportsWeakReferenceVtbl = {
     nsSupportsWeakReference_GetWeakReference
 };
 
-static HRESULT init_nscontainer(NSContainer *nscontainer)
+static HRESULT init_browser(GeckoBrowser *browser)
 {
+    mozIDOMWindowProxy *mozwindow;
     nsIWebBrowserSetup *wbsetup;
     nsIScrollable *scrollable;
     nsresult nsres;
+    HRESULT hres;
 
     nsres = nsIComponentManager_CreateInstanceByContractID(pCompMgr, NS_WEBBROWSER_CONTRACTID,
-            NULL, &IID_nsIWebBrowser, (void**)&nscontainer->webbrowser);
+            NULL, &IID_nsIWebBrowser, (void**)&browser->webbrowser);
     if(NS_FAILED(nsres)) {
-        ERR("Creating WebBrowser failed: %08x\n", nsres);
+        ERR("Creating WebBrowser failed: %08lx\n", nsres);
         return E_FAIL;
     }
 
-    nsres = nsIWebBrowser_SetContainerWindow(nscontainer->webbrowser, &nscontainer->nsIWebBrowserChrome_iface);
+    nsres = nsIWebBrowser_SetContainerWindow(browser->webbrowser, &browser->nsIWebBrowserChrome_iface);
     if(NS_FAILED(nsres)) {
-        ERR("SetContainerWindow failed: %08x\n", nsres);
+        ERR("SetContainerWindow failed: %08lx\n", nsres);
         return E_FAIL;
     }
 
-    nsres = nsIWebBrowser_QueryInterface(nscontainer->webbrowser, &IID_nsIBaseWindow,
-            (void**)&nscontainer->window);
+    nsres = nsIWebBrowser_QueryInterface(browser->webbrowser, &IID_nsIBaseWindow,
+            (void**)&browser->window);
     if(NS_FAILED(nsres)) {
-        ERR("Could not get nsIBaseWindow interface: %08x\n", nsres);
+        ERR("Could not get nsIBaseWindow interface: %08lx\n", nsres);
         return E_FAIL;
     }
 
-    nsres = nsIWebBrowser_QueryInterface(nscontainer->webbrowser, &IID_nsIWebBrowserSetup,
+    nsres = nsIWebBrowser_QueryInterface(browser->webbrowser, &IID_nsIWebBrowserSetup,
                                          (void**)&wbsetup);
     if(NS_SUCCEEDED(nsres)) {
         nsres = nsIWebBrowserSetup_SetProperty(wbsetup, SETUP_IS_CHROME_WRAPPER, FALSE);
         nsIWebBrowserSetup_Release(wbsetup);
         if(NS_FAILED(nsres)) {
-            ERR("SetProperty(SETUP_IS_CHROME_WRAPPER) failed: %08x\n", nsres);
+            ERR("SetProperty(SETUP_IS_CHROME_WRAPPER) failed: %08lx\n", nsres);
             return E_FAIL;
         }
     }else {
@@ -2035,83 +2220,91 @@ static HRESULT init_nscontainer(NSContainer *nscontainer)
         return E_FAIL;
     }
 
-    nsres = nsIWebBrowser_QueryInterface(nscontainer->webbrowser, &IID_nsIWebNavigation,
-            (void**)&nscontainer->navigation);
+    nsres = nsIWebBrowser_QueryInterface(browser->webbrowser, &IID_nsIWebNavigation,
+            (void**)&browser->navigation);
     if(NS_FAILED(nsres)) {
-        ERR("Could not get nsIWebNavigation interface: %08x\n", nsres);
+        ERR("Could not get nsIWebNavigation interface: %08lx\n", nsres);
         return E_FAIL;
     }
 
-    nsres = nsIWebBrowser_QueryInterface(nscontainer->webbrowser, &IID_nsIWebBrowserFocus,
-            (void**)&nscontainer->focus);
+    nsres = nsIWebBrowser_QueryInterface(browser->webbrowser, &IID_nsIWebBrowserFocus,
+            (void**)&browser->focus);
     if(NS_FAILED(nsres)) {
-        ERR("Could not get nsIWebBrowserFocus interface: %08x\n", nsres);
+        ERR("Could not get nsIWebBrowserFocus interface: %08lx\n", nsres);
         return E_FAIL;
     }
 
-    if(!nscontainer_class) {
-        register_nscontainer_class();
-        if(!nscontainer_class)
+    if(!browser_class) {
+        register_browser_class();
+        if(!browser_class)
             return E_FAIL;
     }
 
-    nscontainer->hwnd = CreateWindowExW(0, wszNsContainer, NULL,
+    browser->hwnd = CreateWindowExW(0, L"NsContainer", NULL,
             WS_CHILD | WS_CLIPSIBLINGS | WS_CLIPCHILDREN, 0, 0, 100, 100,
-            GetDesktopWindow(), NULL, hInst, nscontainer);
-    if(!nscontainer->hwnd) {
+            GetDesktopWindow(), NULL, hInst, browser);
+    if(!browser->hwnd) {
         WARN("Could not create window\n");
         return E_FAIL;
     }
 
-    nsres = nsIBaseWindow_InitWindow(nscontainer->window, nscontainer->hwnd, NULL, 0, 0, 100, 100);
+    nsres = nsIBaseWindow_InitWindow(browser->window, browser->hwnd, NULL, 0, 0, 100, 100);
     if(NS_SUCCEEDED(nsres)) {
-        nsres = nsIBaseWindow_Create(nscontainer->window);
+        nsres = nsIBaseWindow_Create(browser->window);
         if(NS_FAILED(nsres)) {
-            WARN("Creating window failed: %08x\n", nsres);
+            WARN("Creating window failed: %08lx\n", nsres);
             return E_FAIL;
         }
 
-        nsIBaseWindow_SetVisibility(nscontainer->window, FALSE);
-        nsIBaseWindow_SetEnabled(nscontainer->window, FALSE);
+        nsIBaseWindow_SetVisibility(browser->window, FALSE);
+        nsIBaseWindow_SetEnabled(browser->window, FALSE);
     }else {
-        ERR("InitWindow failed: %08x\n", nsres);
+        ERR("InitWindow failed: %08lx\n", nsres);
         return E_FAIL;
     }
 
-    nsres = nsIWebBrowser_SetParentURIContentListener(nscontainer->webbrowser,
-            &nscontainer->nsIURIContentListener_iface);
+    nsres = nsIWebBrowser_SetParentURIContentListener(browser->webbrowser,
+            &browser->nsIURIContentListener_iface);
     if(NS_FAILED(nsres))
-        ERR("SetParentURIContentListener failed: %08x\n", nsres);
+        ERR("SetParentURIContentListener failed: %08lx\n", nsres);
 
-    nsres = nsIWebBrowser_QueryInterface(nscontainer->webbrowser, &IID_nsIScrollable, (void**)&scrollable);
+    nsres = nsIWebBrowser_QueryInterface(browser->webbrowser, &IID_nsIScrollable, (void**)&scrollable);
     if(NS_SUCCEEDED(nsres)) {
         nsres = nsIScrollable_SetDefaultScrollbarPreferences(scrollable,
-                ScrollOrientation_Y, Scrollbar_Always);
+                ScrollOrientation_Y, Scrollbar_Auto);
         if(NS_FAILED(nsres))
-            ERR("Could not set default Y scrollbar prefs: %08x\n", nsres);
+            ERR("Could not set default Y scrollbar prefs: %08lx\n", nsres);
 
         nsres = nsIScrollable_SetDefaultScrollbarPreferences(scrollable,
                 ScrollOrientation_X, Scrollbar_Auto);
         if(NS_FAILED(nsres))
-            ERR("Could not set default X scrollbar prefs: %08x\n", nsres);
+            ERR("Could not set default X scrollbar prefs: %08lx\n", nsres);
 
         nsIScrollable_Release(scrollable);
     }else {
-        ERR("Could not get nsIScrollable: %08x\n", nsres);
+        ERR("Could not get nsIScrollable: %08lx\n", nsres);
     }
 
-    return S_OK;
+    nsres = nsIWebBrowser_GetContentDOMWindow(browser->webbrowser, &mozwindow);
+    if(NS_FAILED(nsres)) {
+        ERR("GetContentDOMWindow failed: %08lx\n", nsres);
+        return E_FAIL;
+    }
+
+    hres = create_outer_window(browser, mozwindow, NULL, &browser->content_window);
+    mozIDOMWindowProxy_Release(mozwindow);
+    return hres;
 }
 
-HRESULT create_nscontainer(HTMLDocumentObj *doc, NSContainer **_ret)
+HRESULT create_gecko_browser(HTMLDocumentObj *doc, GeckoBrowser **_ret)
 {
-    NSContainer *ret;
+    GeckoBrowser *ret;
     HRESULT hres;
 
     if(!load_gecko())
         return CLASS_E_CLASSNOTAVAILABLE;
 
-    ret = heap_alloc_zero(sizeof(NSContainer));
+    ret = calloc(1, sizeof(GeckoBrowser));
     if(!ret)
         return E_OUTOFMEMORY;
 
@@ -2125,8 +2318,12 @@ HRESULT create_nscontainer(HTMLDocumentObj *doc, NSContainer **_ret)
 
     ret->doc = doc;
     ret->ref = 1;
+    ret->script_mode = SCRIPTMODE_ACTIVESCRIPT;
+    ret->usermode = UNKNOWN_USERMODE;
+    list_init(&ret->document_nodes);
+    list_init(&ret->outer_windows);
 
-    hres = init_nscontainer(ret);
+    hres = init_browser(ret);
     if(SUCCEEDED(hres))
         *_ret = ret;
     else
@@ -2134,11 +2331,31 @@ HRESULT create_nscontainer(HTMLDocumentObj *doc, NSContainer **_ret)
     return hres;
 }
 
-void NSContainer_Release(NSContainer *This)
+void detach_gecko_browser(GeckoBrowser *This)
 {
+    nsIDOMWindowUtils *window_utils = NULL;
+
     TRACE("(%p)\n", This);
 
     This->doc = NULL;
+
+    if(This->content_window) {
+        get_nsinterface((nsISupports*)This->content_window->nswindow, &IID_nsIDOMWindowUtils, (void**)&window_utils);
+
+        IHTMLWindow2_Release(&This->content_window->base.IHTMLWindow2_iface);
+        This->content_window = NULL;
+    }
+
+    while(!list_empty(&This->document_nodes)) {
+        HTMLDocumentNode *doc = LIST_ENTRY(list_head(&This->document_nodes), HTMLDocumentNode, browser_entry);
+        detach_document_node(doc);
+    }
+
+    while(!list_empty(&This->outer_windows)) {
+        HTMLOuterWindow *window = LIST_ENTRY(list_head(&This->outer_windows), HTMLOuterWindow, browser_entry);
+        list_remove(&window->browser_entry);
+        window->browser = NULL;
+    }
 
     ShowWindow(This->hwnd, SW_HIDE);
     SetParent(This->hwnd, NULL);
@@ -2181,52 +2398,82 @@ void NSContainer_Release(NSContainer *This)
     }
 
     nsIWebBrowserChrome_Release(&This->nsIWebBrowserChrome_iface);
+
+    /* Force cycle collection */
+    if(window_utils) {
+        nsIDOMWindowUtils_CycleCollect(window_utils, NULL, 0);
+        nsIDOMWindowUtils_Release(window_utils);
+    }
 }
+
+/*
+ * FIXME: nsIScriptObjectPrincipal uses thiscall calling convention, so we need this hack on i386.
+ * This will be removed after the next Gecko update, that will change calling convention on Gecko side.
+ */
+#ifdef __i386__
+#if defined(__REACTOS__) && defined(_MSC_VER) /* FIXME: Inspect */
+__declspec(naked) void call_thiscall_func_impl(void)
+{
+    __asm
+    {
+        pop eax
+        pop edx
+        pop ecx
+        push eax
+        jmp edx
+    }
+}
+void *call_thiscall_func = (void *)call_thiscall_func_impl;
+#else
+__ASM_GLOBAL_FUNC(call_thiscall_func,
+        "popl %eax\n\t"
+        "popl %edx\n\t"
+        "popl %ecx\n\t"
+        "pushl %eax\n\t"
+        "jmp *%edx\n\t")
+#endif
+#define nsIScriptObjectPrincipal_GetPrincipal(this) ((void* (WINAPI*)(void*,void*))&call_thiscall_func)((this)->lpVtbl->GetPrincipal,this)
+#endif
 
 nsIXMLHttpRequest *create_nsxhr(nsIDOMWindow *nswindow)
 {
-    nsIScriptSecurityManager *secman;
-    nsIPrincipal             *nspri;
-    nsIGlobalObject          *nsglo;
-    nsIXMLHttpRequest        *nsxhr;
-    nsresult                  nsres;
+    nsIScriptObjectPrincipal *sop;
+    mozIDOMWindow *inner_window;
+    nsIPrincipal *nspri;
+    nsIGlobalObject *nsglo;
+    nsIXMLHttpRequest *nsxhr;
+    nsresult nsres;
 
-    nsres = nsIServiceManager_GetServiceByContractID(pServMgr,
-            NS_SCRIPTSECURITYMANAGER_CONTRACTID,
-            &IID_nsIScriptSecurityManager, (void**)&secman);
+    nsres = nsIDOMWindow_GetInnerWindow(nswindow, &inner_window);
     if(NS_FAILED(nsres)) {
-        ERR("Could not get sec manager service: %08x\n", nsres);
+        ERR("Could not get inner window: %08lx\n", nsres);
         return NULL;
     }
 
-    nsres = nsIScriptSecurityManager_GetSystemPrincipal(secman, &nspri);
-    nsIScriptSecurityManager_Release(secman);
-    if(NS_FAILED(nsres)) {
-        ERR("GetSystemPrincipal failed: %08x\n", nsres);
-        return NULL;
-    }
-
-    nsres = nsIDOMWindow_QueryInterface(nswindow, &IID_nsIGlobalObject, (void **)&nsglo);
+    nsres = mozIDOMWindow_QueryInterface(inner_window, &IID_nsIGlobalObject, (void **)&nsglo);
+    mozIDOMWindow_Release(inner_window);
     assert(nsres == NS_OK);
+
+    nsres = nsIGlobalObject_QueryInterface(nsglo, &IID_nsIScriptObjectPrincipal, (void**)&sop);
+    assert(nsres == NS_OK);
+
+    /* The returned principal is *not* AddRef'd */
+    nspri = nsIScriptObjectPrincipal_GetPrincipal(sop);
+    nsIScriptObjectPrincipal_Release(sop);
 
     nsres = nsIComponentManager_CreateInstanceByContractID(pCompMgr,
             NS_XMLHTTPREQUEST_CONTRACTID, NULL, &IID_nsIXMLHttpRequest,
             (void**)&nsxhr);
-    if(NS_FAILED(nsres)) {
-        ERR("Could not get nsIXMLHttpRequest: %08x\n", nsres);
-        nsISupports_Release(nspri);
-        nsIGlobalObject_Release(nsglo);
-        return NULL;
+    if(NS_SUCCEEDED(nsres)) {
+        nsres = nsIXMLHttpRequest_Init(nsxhr, nspri, NULL, nsglo, NULL, NULL);
+        if(NS_FAILED(nsres))
+            nsIXMLHttpRequest_Release(nsxhr);
     }
-
-    nsres = nsIXMLHttpRequest_Init(nsxhr, nspri, NULL, nsglo, NULL, NULL);
-
-    nsISupports_Release(nspri);
     nsIGlobalObject_Release(nsglo);
     if(NS_FAILED(nsres)) {
-        ERR("nsIXMLHttpRequest_Init failed: %08x\n", nsres);
-        nsIXMLHttpRequest_Release(nsxhr);
+        ERR("nsIXMLHttpRequest_Init failed: %08lx\n", nsres);
         return NULL;
     }
+
     return nsxhr;
 }

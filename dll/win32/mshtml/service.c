@@ -16,7 +16,22 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include <stdarg.h>
+#include <stdio.h>
+
+#define COBJMACROS
+
+#include "windef.h"
+#include "winbase.h"
+#include "winuser.h"
+#include "ole2.h"
+
+#include "wine/debug.h"
+
 #include "mshtml_private.h"
+#include "htmlscript.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(mshtml);
 
 typedef struct {
     IOleUndoManager IOleUndoManager_iface;
@@ -54,7 +69,7 @@ static ULONG WINAPI OleUndoManager_AddRef(IOleUndoManager *iface)
     UndoManager *This = impl_from_IOleUndoManager(iface);
     LONG ref = InterlockedIncrement(&This->ref);
 
-    TRACE("(%p) ref=%d\n", This, ref);
+    TRACE("(%p) ref=%ld\n", This, ref);
 
     return ref;
 }
@@ -64,10 +79,10 @@ static ULONG WINAPI OleUndoManager_Release(IOleUndoManager *iface)
     UndoManager *This = impl_from_IOleUndoManager(iface);
     LONG ref = InterlockedDecrement(&This->ref);
 
-    TRACE("(%p) ref=%d\n", This, ref);
+    TRACE("(%p) ref=%ld\n", This, ref);
 
     if(!ref)
-        heap_free(This);
+        free(This);
 
     return ref;
 }
@@ -179,7 +194,7 @@ static const IOleUndoManagerVtbl OleUndoManagerVtbl = {
 
 static IOleUndoManager *create_undomgr(void)
 {
-    UndoManager *ret = heap_alloc(sizeof(UndoManager));
+    UndoManager *ret = malloc(sizeof(UndoManager));
 
     if (!ret) return NULL;
 
@@ -224,7 +239,7 @@ static ULONG WINAPI editsvcs_AddRef(IHTMLEditServices *iface)
     editsvcs *This = impl_from_IHTMLEditServices(iface);
     LONG ref = InterlockedIncrement(&This->ref);
 
-    TRACE("(%p) ref=%d\n", This, ref);
+    TRACE("(%p) ref=%ld\n", This, ref);
     return ref;
 }
 
@@ -233,10 +248,10 @@ static ULONG WINAPI editsvcs_Release(IHTMLEditServices *iface)
     editsvcs *This = impl_from_IHTMLEditServices(iface);
     LONG ref = InterlockedDecrement(&This->ref);
 
-    TRACE("(%p) ref=%d\n", This, ref);
+    TRACE("(%p) ref=%ld\n", This, ref);
 
     if(!ref)
-        heap_free(This);
+        free(This);
 
     return ref;
 }
@@ -303,7 +318,7 @@ static const IHTMLEditServicesVtbl editsvcsVtbl = {
 
 static IHTMLEditServices *create_editsvcs(void)
 {
-    editsvcs *ret = heap_alloc(sizeof(*ret));
+    editsvcs *ret = malloc(sizeof(*ret));
 
     if (ret) {
         ret->IHTMLEditServices_iface.lpVtbl = &editsvcsVtbl;
@@ -318,33 +333,96 @@ static IHTMLEditServices *create_editsvcs(void)
  * IServiceProvider implementation
  */
 
-static inline HTMLDocument *impl_from_IServiceProvider(IServiceProvider *iface)
+static inline HTMLDocumentNode *HTMLDocumentNode_from_IServiceProvider(IServiceProvider *iface)
 {
-    return CONTAINING_RECORD(iface, HTMLDocument, IServiceProvider_iface);
+    return CONTAINING_RECORD(iface, HTMLDocumentNode, IServiceProvider_iface);
 }
 
-static HRESULT WINAPI ServiceProvider_QueryInterface(IServiceProvider *iface, REFIID riid, void **ppv)
+static HRESULT WINAPI DocNodeServiceProvider_QueryInterface(IServiceProvider *iface, REFIID riid, void **ppv)
 {
-    HTMLDocument *This = impl_from_IServiceProvider(iface);
-    return htmldoc_query_interface(This, riid, ppv);
+    HTMLDocumentNode *This = HTMLDocumentNode_from_IServiceProvider(iface);
+    return IHTMLDOMNode_QueryInterface(&This->node.IHTMLDOMNode_iface, riid, ppv);
 }
 
-static ULONG WINAPI ServiceProvider_AddRef(IServiceProvider *iface)
+static ULONG WINAPI DocNodeServiceProvider_AddRef(IServiceProvider *iface)
 {
-    HTMLDocument *This = impl_from_IServiceProvider(iface);
-    return htmldoc_addref(This);
+    HTMLDocumentNode *This = HTMLDocumentNode_from_IServiceProvider(iface);
+    return IHTMLDOMNode_AddRef(&This->node.IHTMLDOMNode_iface);
 }
 
-static ULONG WINAPI ServiceProvider_Release(IServiceProvider *iface)
+static ULONG WINAPI DocNodeServiceProvider_Release(IServiceProvider *iface)
 {
-    HTMLDocument *This = impl_from_IServiceProvider(iface);
-    return htmldoc_release(This);
+    HTMLDocumentNode *This = HTMLDocumentNode_from_IServiceProvider(iface);
+    return IHTMLDOMNode_Release(&This->node.IHTMLDOMNode_iface);
 }
 
-static HRESULT WINAPI ServiceProvider_QueryService(IServiceProvider *iface, REFGUID guidService,
+static HRESULT WINAPI DocNodeServiceProvider_QueryService(IServiceProvider *iface, REFGUID guidService,
         REFIID riid, void **ppv)
 {
-    HTMLDocument *This = impl_from_IServiceProvider(iface);
+    HTMLDocumentNode *This = HTMLDocumentNode_from_IServiceProvider(iface);
+
+    if(IsEqualGUID(&IID_IActiveScriptSite, guidService)) {
+        IActiveScriptSite *site;
+
+        TRACE("IID_IActiveScriptSite\n");
+
+        if(!This->window) {
+            FIXME("No window\n");
+            return E_NOTIMPL;
+        }
+
+        if(!(site = get_first_script_site(This->window)))
+            return E_OUTOFMEMORY;
+        return IActiveScriptSite_QueryInterface(site, riid, ppv);
+    }
+
+    if(IsEqualGUID(&SID_SInternetHostSecurityManager, guidService)) {
+        TRACE("SID_SInternetHostSecurityManager\n");
+        return IInternetHostSecurityManager_QueryInterface(&This->IInternetHostSecurityManager_iface, riid, ppv);
+    }
+
+    if(IsEqualGUID(&SID_SContainerDispatch, guidService)) {
+        TRACE("SID_SContainerDispatch\n");
+        return IHTMLDocument2_QueryInterface(&This->IHTMLDocument2_iface, riid, ppv);
+    }
+
+    return IServiceProvider_QueryService(&This->doc_obj->IServiceProvider_iface, guidService, riid, ppv);
+}
+
+static const IServiceProviderVtbl DocNodeServiceProviderVtbl = {
+    DocNodeServiceProvider_QueryInterface,
+    DocNodeServiceProvider_AddRef,
+    DocNodeServiceProvider_Release,
+    DocNodeServiceProvider_QueryService
+};
+
+static inline HTMLDocumentObj *HTMLDocumentObj_from_IServiceProvider(IServiceProvider *iface)
+{
+    return CONTAINING_RECORD(iface, HTMLDocumentObj, IServiceProvider_iface);
+}
+
+static HRESULT WINAPI DocObjServiceProvider_QueryInterface(IServiceProvider *iface, REFIID riid, void **ppv)
+{
+    HTMLDocumentObj *This = HTMLDocumentObj_from_IServiceProvider(iface);
+    return IUnknown_QueryInterface(This->outer_unk, riid, ppv);
+}
+
+static ULONG WINAPI DocObjServiceProvider_AddRef(IServiceProvider *iface)
+{
+    HTMLDocumentObj *This = HTMLDocumentObj_from_IServiceProvider(iface);
+    return IUnknown_AddRef(This->outer_unk);
+}
+
+static ULONG WINAPI DocObjServiceProvider_Release(IServiceProvider *iface)
+{
+    HTMLDocumentObj *This = HTMLDocumentObj_from_IServiceProvider(iface);
+    return IUnknown_Release(This->outer_unk);
+}
+
+static HRESULT WINAPI DocObjServiceProvider_QueryService(IServiceProvider *iface, REFGUID guidService,
+        REFIID riid, void **ppv)
+{
+    HTMLDocumentObj *This = HTMLDocumentObj_from_IServiceProvider(iface);
 
     if(IsEqualGUID(&CLSID_CMarkup, guidService)) {
         FIXME("(%p)->(CLSID_CMarkup %s %p)\n", This, debugstr_guid(riid), ppv);
@@ -354,13 +432,18 @@ static HRESULT WINAPI ServiceProvider_QueryService(IServiceProvider *iface, REFG
     if(IsEqualGUID(&SID_SOleUndoManager, guidService)) {
         TRACE("SID_SOleUndoManager\n");
 
-        if(!This->doc_obj->undomgr)
-            This->doc_obj->undomgr = create_undomgr();
+        if(!This->undomgr)
+            This->undomgr = create_undomgr();
 
-        if (!This->doc_obj->undomgr)
+        if (!This->undomgr)
             return E_OUTOFMEMORY;
 
-        return IOleUndoManager_QueryInterface(This->doc_obj->undomgr, riid, ppv);
+        return IOleUndoManager_QueryInterface(This->undomgr, riid, ppv);
+    }
+
+    if(IsEqualGUID(&SID_SInternetHostSecurityManager, guidService)) {
+        TRACE("SID_SInternetHostSecurityManager\n");
+        return IInternetHostSecurityManager_QueryInterface(&This->doc_node->IInternetHostSecurityManager_iface, riid, ppv);
     }
 
     if(IsEqualGUID(&SID_SContainerDispatch, guidService)) {
@@ -370,27 +453,27 @@ static HRESULT WINAPI ServiceProvider_QueryService(IServiceProvider *iface, REFG
 
     if(IsEqualGUID(&IID_IWindowForBindingUI, guidService)) {
         TRACE("IID_IWindowForBindingUI\n");
-        return IWindowForBindingUI_QueryInterface(&This->doc_obj->IWindowForBindingUI_iface, riid, ppv);
+        return IWindowForBindingUI_QueryInterface(&This->IWindowForBindingUI_iface, riid, ppv);
     }
 
     if(IsEqualGUID(&SID_SHTMLEditServices, guidService)) {
         TRACE("SID_SHTMLEditServices\n");
 
-        if(!This->doc_obj->editsvcs)
-            This->doc_obj->editsvcs = create_editsvcs();
+        if(!This->editsvcs)
+            This->editsvcs = create_editsvcs();
 
-        if (!This->doc_obj->editsvcs)
+        if (!This->editsvcs)
             return E_OUTOFMEMORY;
 
-        return IHTMLEditServices_QueryInterface(This->doc_obj->editsvcs, riid, ppv);
+        return IHTMLEditServices_QueryInterface(This->editsvcs, riid, ppv);
     }
 
     TRACE("(%p)->(%s %s %p)\n", This, debugstr_guid(guidService), debugstr_guid(riid), ppv);
 
-    if(This->doc_obj->client) {
+    if(This->client) {
         HRESULT hres;
 
-        hres = do_query_service((IUnknown*)This->doc_obj->client, guidService, riid, ppv);
+        hres = do_query_service((IUnknown*)This->client, guidService, riid, ppv);
         if(SUCCEEDED(hres))
             return hres;
     }
@@ -399,14 +482,19 @@ static HRESULT WINAPI ServiceProvider_QueryService(IServiceProvider *iface, REFG
     return E_NOINTERFACE;
 }
 
-static const IServiceProviderVtbl ServiceProviderVtbl = {
-    ServiceProvider_QueryInterface,
-    ServiceProvider_AddRef,
-    ServiceProvider_Release,
-    ServiceProvider_QueryService
+static const IServiceProviderVtbl DocObjServiceProviderVtbl = {
+    DocObjServiceProvider_QueryInterface,
+    DocObjServiceProvider_AddRef,
+    DocObjServiceProvider_Release,
+    DocObjServiceProvider_QueryService
 };
 
-void HTMLDocument_Service_Init(HTMLDocument *This)
+void HTMLDocumentNode_Service_Init(HTMLDocumentNode *This)
 {
-    This->IServiceProvider_iface.lpVtbl = &ServiceProviderVtbl;
+    This->IServiceProvider_iface.lpVtbl = &DocNodeServiceProviderVtbl;
+}
+
+void HTMLDocumentObj_Service_Init(HTMLDocumentObj *This)
+{
+    This->IServiceProvider_iface.lpVtbl = &DocObjServiceProviderVtbl;
 }

@@ -16,64 +16,27 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#if 0
+#pragma makedep arm64ec_x64
+#endif
+
+#include <stdarg.h>
+
+#define COBJMACROS
+
+#include "windef.h"
+#include "winbase.h"
+#include "winuser.h"
+#include "ole2.h"
+
+#include "wine/asm.h"
+#include "wine/debug.h"
+
 #include "mshtml_private.h"
-#include <wine/asm.h>
-
-/*
- * This object wraps any unrecognized interface overriding its IUnknown methods, allowing
- * us to return external interface from our QI implementation preserving COM rules.
- * This can't be done right and it seems to be broken by design.
- */
-typedef struct {
-    IUnknown IUnknown_iface;
-    IUnknown *iface;
-    IUnknown *ref_unk;
-    LONG ref;
-} iface_wrapper_t;
-
-static inline iface_wrapper_t *impl_from_IUnknown(IUnknown *iface)
-{
-    return CONTAINING_RECORD(iface, iface_wrapper_t, IUnknown_iface);
-}
-
-static HRESULT WINAPI wrapper_QueryInterface(IUnknown *iface, REFIID riid, void **ppv)
-{
-    iface_wrapper_t *This = impl_from_IUnknown(iface);
-
-    TRACE("(%p)->(%s %p)\n", This, debugstr_mshtml_guid(riid), ppv);
-
-    return IUnknown_QueryInterface(This->ref_unk, riid, ppv);
-}
-
-static HRESULT WINAPI wrapper_AddRef(IUnknown *iface)
-{
-    iface_wrapper_t *This = impl_from_IUnknown(iface);
-    LONG ref = InterlockedIncrement(&This->ref);
-
-    TRACE("(%p) ref=%d\n", This, ref);
-
-    return ref;
-}
-
-static HRESULT WINAPI wrapper_Release(IUnknown *iface)
-{
-    iface_wrapper_t *This = impl_from_IUnknown(iface);
-    LONG ref = InterlockedDecrement(&This->ref);
-
-    TRACE("(%p) ref=%d\n", This, ref);
-
-    if(!ref) {
-        IUnknown_Release(This->iface);
-        IUnknown_Release(This->ref_unk);
-        heap_free(This);
-    }
-
-    return ref;
-}
 
 #ifdef __i386__
 
-#ifdef _MSC_VER
+#if defined(__REACTOS__) && defined(_MSC_VER)
 #define DEFINE_WRAPPER_FUNC(n, off, x) HRESULT wrapper_func_##n(IUnknown*);
 #else
 #define DEFINE_WRAPPER_FUNC(n, off, x)          \
@@ -96,6 +59,8 @@ static HRESULT WINAPI wrapper_Release(IUnknown *iface)
         "jmp *" #off "(%rax)\n\t")
 
 #else
+
+WINE_DEFAULT_DEBUG_CHANNEL(mshtml);
 
 #define DEFINE_WRAPPER_FUNC(n, x, off)                           \
     static HRESULT WINAPI wrapper_func_##n(IUnknown *iface) {    \
@@ -205,7 +170,7 @@ DEFINE_WRAPPER_FUNC(98, 392, 784)
 DEFINE_WRAPPER_FUNC(99, 396, 792)
 
 /* The size was found by testing when calls start crashing. It looks like MS wraps up to 100 functions. */
-static const void *wrapper_vtbl[] = {
+const void *iface_wrapper_vtbl[] = {
     wrapper_QueryInterface,
     wrapper_AddRef,
     wrapper_Release,
@@ -307,24 +272,3 @@ static const void *wrapper_vtbl[] = {
     wrapper_func_98,
     wrapper_func_99
 };
-
-HRESULT wrap_iface(IUnknown *iface, IUnknown *ref_unk, IUnknown **ret)
-{
-    iface_wrapper_t *wrapper;
-
-    wrapper = heap_alloc(sizeof(*wrapper));
-    if(!wrapper)
-        return E_OUTOFMEMORY;
-
-    wrapper->IUnknown_iface.lpVtbl = (const IUnknownVtbl*)wrapper_vtbl;
-    wrapper->ref = 1;
-
-    IUnknown_AddRef(iface);
-    wrapper->iface = iface;
-
-    IUnknown_AddRef(ref_unk);
-    wrapper->ref_unk = ref_unk;
-
-    *ret = &wrapper->IUnknown_iface;
-    return S_OK;
-}
