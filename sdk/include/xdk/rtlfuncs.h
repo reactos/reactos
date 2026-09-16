@@ -2487,49 +2487,6 @@ NTAPI
 RtlNumberOfSetBitsUlongPtr(
   _In_ ULONG_PTR Target);
 
-NTSYSAPI
-ULONGLONG
-NTAPI
-RtlIoDecodeMemIoResource(
-  _In_ struct _IO_RESOURCE_DESCRIPTOR *Descriptor,
-  _Out_opt_ PULONGLONG Alignment,
-  _Out_opt_ PULONGLONG MinimumAddress,
-  _Out_opt_ PULONGLONG MaximumAddress);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-RtlIoEncodeMemIoResource(
-  _In_ struct _IO_RESOURCE_DESCRIPTOR *Descriptor,
-  _In_ UCHAR Type,
-  _In_ ULONGLONG Length,
-  _In_ ULONGLONG Alignment,
-  _In_ ULONGLONG MinimumAddress,
-  _In_ ULONGLONG MaximumAddress);
-
-NTSYSAPI
-ULONGLONG
-NTAPI
-RtlCmDecodeMemIoResource(
-  _In_ struct _CM_PARTIAL_RESOURCE_DESCRIPTOR *Descriptor,
-  _Out_opt_ PULONGLONG Start);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-RtlFindClosestEncodableLength(
-  _In_ ULONGLONG SourceLength,
-  _Out_ PULONGLONG TargetLength);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-RtlCmEncodeMemIoResource(
-  _In_ PCM_PARTIAL_RESOURCE_DESCRIPTOR Descriptor,
-  _In_ UCHAR Type,
-  _In_ ULONGLONG Length,
-  _In_ ULONGLONG Start);
-
 $endif (_WDMDDK_)
 $if (_NTDDK_)
 
@@ -2649,6 +2606,56 @@ RtlCompareAltitudes(
 $endif (_NTIFS_)
 
 #endif /* (NTDDI_VERSION >= NTDDI_VISTA) */
+
+#if (NTDDI_VERSION >= NTDDI_VISTA) || defined(__REACTOS__)
+
+$if (_WDMDDK_)
+NTSYSAPI
+ULONGLONG
+NTAPI
+RtlCmDecodeMemIoResource(
+  _In_ struct _CM_PARTIAL_RESOURCE_DESCRIPTOR *Descriptor,
+  _Out_opt_ PULONGLONG Start);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlCmEncodeMemIoResource(
+  _In_ PCM_PARTIAL_RESOURCE_DESCRIPTOR Descriptor,
+  _In_ UCHAR Type,
+  _In_ ULONGLONG Length,
+  _In_ ULONGLONG Start);
+
+NTSYSAPI
+ULONGLONG
+NTAPI
+RtlIoDecodeMemIoResource(
+  _In_ struct _IO_RESOURCE_DESCRIPTOR *Descriptor,
+  _Out_opt_ PULONGLONG Alignment,
+  _Out_opt_ PULONGLONG MinimumAddress,
+  _Out_opt_ PULONGLONG MaximumAddress);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlIoEncodeMemIoResource(
+  _In_ struct _IO_RESOURCE_DESCRIPTOR *Descriptor,
+  _In_ UCHAR Type,
+  _In_ ULONGLONG Length,
+  _In_ ULONGLONG Alignment,
+  _In_ ULONGLONG MinimumAddress,
+  _In_ ULONGLONG MaximumAddress);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlFindClosestEncodableLength(
+  _In_ ULONGLONG SourceLength,
+  _Out_ PULONGLONG TargetLength);
+
+$endif (_WDMDDK_)
+
+#endif /* (NTDDI_VERSION >= NTDDI_VISTA) || defined(__REACTOS__) */
 
 #if (NTDDI_VERSION >= NTDDI_WIN7)
 
