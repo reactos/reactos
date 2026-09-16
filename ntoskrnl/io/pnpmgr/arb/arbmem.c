@@ -393,6 +393,263 @@ IopArbMemFindSuitableRange(
     return ArbiterLibFindSuitableRange(Arbiter, ArbState);
 }
 
+/* Hardware IDs of PCI and PCI Express host bridges */
+static const PCWSTR IopArbMemHostBridgeIds[] =
+{
+    L"ACPI\\PNP0A03",
+    L"ACPI\\PNP0A08",
+};
+
+/* Checks one ID of a hardware ID list against the host bridge IDs */
+static
+BOOLEAN
+NTAPI
+IopArbMemIsHostBridgeId(
+    _In_ PCWSTR Id)
+{
+    ULONG Index;
+
+    for (Index = 0; Index < RTL_NUMBER_OF(IopArbMemHostBridgeIds); Index++)
+    {
+        if (_wcsicmp(Id, IopArbMemHostBridgeIds[Index]) == 0)
+            return TRUE;
+    }
+
+    return FALSE;
+}
+
+/**
+ * @brief
+ * Checks if a device is a PCI host bridge from the HardwareID value of its
+ * instance key. A list that is not terminated is only read up to its end.
+ */
+static
+BOOLEAN
+NTAPI
+IopArbMemIsHostBridge(
+    _In_ PDEVICE_OBJECT PhysicalDeviceObject)
+{
+    UNICODE_STRING EnumRoot = RTL_CONSTANT_STRING(ENUM_ROOT);
+    PDEVICE_NODE DeviceNode = IopGetDeviceNode(PhysicalDeviceObject);
+    PKEY_VALUE_FULL_INFORMATION Value;
+    BOOLEAN IsHostBridge = FALSE;
+    HANDLE EnumKey;
+    HANDLE InstanceKey;
+    NTSTATUS Status;
+
+    PAGED_CODE();
+
+    if (DeviceNode == NULL || DeviceNode->InstancePath.Length == 0)
+        return FALSE;
+
+    Status = IopOpenRegistryKeyEx(&EnumKey, NULL, &EnumRoot, KEY_ENUMERATE_SUB_KEYS);
+    if (!NT_SUCCESS(Status))
+        return FALSE;
+
+    Status = IopOpenRegistryKeyEx(&InstanceKey,
+                                  EnumKey,
+                                  &DeviceNode->InstancePath,
+                                  KEY_QUERY_VALUE);
+    ZwClose(EnumKey);
+    if (!NT_SUCCESS(Status))
+        return FALSE;
+
+    Status = IopGetRegistryValue(InstanceKey, L"HardwareID", &Value);
+    ZwClose(InstanceKey);
+    if (!NT_SUCCESS(Status))
+        return FALSE;
+
+    if (Value->Type == REG_MULTI_SZ)
+    {
+        PCWSTR Id = (PCWSTR)((PUCHAR)Value + Value->DataOffset);
+        PCWSTR End = Id + Value->DataLength / sizeof(WCHAR);
+
+        while (Id < End && *Id != UNICODE_NULL && !IsHostBridge)
+        {
+            PCWSTR Next = Id;
+
+            while (Next < End && *Next != UNICODE_NULL)
+                Next++;
+
+            if (Next == End)
+                break;
+
+            IsHostBridge = IopArbMemIsHostBridgeId(Id);
+            Id = Next + 1;
+        }
+    }
+
+    ExFreePool(Value);
+    return IsHostBridge;
+}
+
+/**
+ * @brief
+ * Removes the conflicts inside the PCI configuration space window from the
+ * conflicts of a host bridge. Its memory window contains the configuration
+ * space window, which is reserved at initialization.
+ */
+static
+VOID
+NTAPI
+IopArbMemRemoveMmConfigConflicts(
+    _In_ PDEVICE_OBJECT PhysicalDeviceObject,
+    _Inout_ PULONG ConflictCount,
+    _Inout_updates_opt_(*ConflictCount) PARBITER_CONFLICT_INFO Conflicts)
+{
+    ULONG Count = *ConflictCount;
+    ULONG Index;
+
+    PAGED_CODE();
+
+    if (Conflicts == NULL || Count == 0)
+        return;
+
+    if (!IopArbMemIsHostBridge(PhysicalDeviceObject))
+        return;
+
+    for (Index = Count; Index > 0; Index--)
+    {
+        PARBITER_CONFLICT_INFO Conflict = &Conflicts[Index - 1];
+
+        if (ArbiterLibIsConflictWithMmConfigRange(Conflict->Start, Conflict->End))
+            *Conflict = Conflicts[--Count];
+    }
+
+    *ConflictCount = Count;
+}
+
+/* The QueryConflict callback of the Root Memory arbiter */
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+static
+NTSTATUS
+NTAPI
+IopArbMemQueryConflict(
+    _In_ PARBITER_INSTANCE Arbiter,
+    _Inout_ PARBITER_QUERY_CONFLICT_PARAMETERS Parameters)
+{
+    NTSTATUS Status;
+
+    PAGED_CODE();
+
+    Status = ArbiterLibQueryConflict(Arbiter, Parameters);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    IopArbMemRemoveMmConfigConflicts(Parameters->PhysicalDeviceObject,
+                                     Parameters->ConflictCount,
+                                     *Parameters->Conflicts);
+
+    return STATUS_SUCCESS;
+}
+#else
+static
+NTSTATUS
+NTAPI
+IopArbMemQueryConflict(
+    _In_ PARBITER_INSTANCE Arbiter,
+    _In_ PDEVICE_OBJECT PhysicalDeviceObject,
+    _In_ PIO_RESOURCE_DESCRIPTOR ConflictingResource,
+    _Out_ PULONG ConflictCount,
+    _Out_ PARBITER_CONFLICT_INFO *Conflicts)
+{
+    NTSTATUS Status;
+
+    PAGED_CODE();
+
+    Status = ArbiterLibQueryConflict(Arbiter,
+                                     PhysicalDeviceObject,
+                                     ConflictingResource,
+                                     ConflictCount,
+                                     Conflicts);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    IopArbMemRemoveMmConfigConflicts(PhysicalDeviceObject, ConflictCount, *Conflicts);
+
+    return STATUS_SUCCESS;
+}
+#endif
+
+/* Returns the width of the physical addresses the kernel can map */
+static
+ULONG
+NTAPI
+IopArbMemPhysicalAddressBits(VOID)
+{
+#if defined(_M_IX86)
+    /* The x86 kernel has no PAE, so nothing above 4 GB can be mapped */
+    return 32;
+#elif defined(_M_AMD64)
+    CPU_INFO CpuInfo;
+
+    KiCpuId(&CpuInfo, 0x80000000);
+    if (CpuInfo.Eax < 0x80000008)
+        return 36;
+
+    KiCpuId(&CpuInfo, 0x80000008);
+    return CpuInfo.Eax & 0xFF;
+#else
+    return 64;
+#endif
+}
+
+/**
+ * @brief
+ * Records the physical addresses above the reach of the kernel as
+ * Arbiters\InaccessibleRange\PhysicalAddress, for the memory arbiter to keep.
+ */
+static
+VOID
+NTAPI
+IopArbMemPublishInaccessibleRange(VOID)
+{
+    UNICODE_STRING KeyName = RTL_CONSTANT_STRING(
+        L"\\Registry\\Machine\\System\\CurrentControlSet\\Control\\Arbiters\\InaccessibleRange");
+    UNICODE_STRING ValueName = RTL_CONSTANT_STRING(L"PhysicalAddress");
+    IO_RESOURCE_REQUIREMENTS_LIST Requirements;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    ULONG Bits = IopArbMemPhysicalAddressBits();
+    NTSTATUS Status;
+    HANDLE Key;
+
+    if (Bits == 0 || Bits >= 64)
+        return;
+
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &KeyName,
+                               OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE,
+                               NULL,
+                               NULL);
+    Status = ZwCreateKey(&Key,
+                         KEY_SET_VALUE,
+                         &ObjectAttributes,
+                         0,
+                         NULL,
+                         REG_OPTION_VOLATILE,
+                         NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to create the inaccessible range key (Status 0x%08lx)\n", Status);
+        return;
+    }
+
+    RtlZeroMemory(&Requirements, sizeof(Requirements));
+    Requirements.ListSize = sizeof(Requirements);
+    Requirements.AlternativeLists = 1;
+    Requirements.List[0].Count = 1;
+    Requirements.List[0].Descriptors[0].Type = CmResourceTypeMemory;
+    Requirements.List[0].Descriptors[0].u.Memory.MinimumAddress.QuadPart = 1LL << Bits;
+    Requirements.List[0].Descriptors[0].u.Memory.MaximumAddress.QuadPart = -1LL;
+
+    Status = ZwSetValueKey(Key, &ValueName, 0, REG_RESOURCE_REQUIREMENTS_LIST,
+                           &Requirements, sizeof(Requirements));
+    if (!NT_SUCCESS(Status))
+        DPRINT1("Failed to record the inaccessible range (Status 0x%08lx)\n", Status);
+
+    ZwClose(Key);
+}
+
 /**
  * @brief Initialize the RootMemoryArbiter
  *
@@ -404,6 +661,9 @@ IopArbMemFindSuitableRange(
  * availability mask can hand it out: the real-mode interrupt vector table and
  * the BIOS data area live there, and a device decoding over them corrupts the
  * machine rather than merely failing.
+ *
+ * The PCI configuration space window is reserved as a boot allocated range,
+ * and the addresses above the reach of the processor are never handed out.
  *
  * @return NTSTATUS
  * @retval STATUS_SUCCESS
@@ -418,12 +678,15 @@ IopArbMemInitialize(VOID)
 
     PAGED_CODE();
 
+    IopArbMemPublishInaccessibleRange();
+
     IopRootMemArbiter.Name = L"RootMemory";
     IopRootMemArbiter.UnpackRequirement = IopArbMemUnpackRequirements;
     IopRootMemArbiter.PackResource = IopArbMemPackResource;
     IopRootMemArbiter.UnpackResource = IopArbMemUnpackResource;
     IopRootMemArbiter.ScoreRequirement = IopArbMemScoreRequirement;
     IopRootMemArbiter.FindSuitableRange = IopArbMemFindSuitableRange;
+    IopRootMemArbiter.QueryConflict = IopArbMemQueryConflict;
 
     Status = ArbiterLibInitializeInstance(&IopRootMemArbiter,
                                           NULL,
@@ -441,7 +704,22 @@ IopArbMemInitialize(VOID)
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("IopArbMemInitialize: Reserving page 0 failed with %X\n", Status);
+        return Status;
     }
+
+    Status = ArbiterLibAddInaccessibleAllocationRange(&IopRootMemArbiter,
+                                                      L"PhysicalAddress",
+                                                      IopRootMemArbiter.Allocation);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("IopArbMemInitialize: Reserving the inaccessible range failed with %X\n", Status);
+        return Status;
+    }
+
+    Status = ArbiterLibAddMmConfigRangeAsBootReserved(&IopRootMemArbiter,
+                                                     IopRootMemArbiter.Allocation);
+    if (!NT_SUCCESS(Status))
+        DPRINT1("IopArbMemInitialize: Reserving MmConfigRange failed with %X\n", Status);
 
     return Status;
 }
