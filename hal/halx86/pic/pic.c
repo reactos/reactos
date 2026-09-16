@@ -1292,6 +1292,57 @@ HalpGrantVector(
     UNREFERENCED_PARAMETER(Vector);
 }
 
+/* ACPI POWER MANAGEMENT ******************************************************/
+
+/* There is no I/O APIC to report */
+ULONG
+NTAPI
+HalpGetInterruptControllerVersion(
+    _In_ ULONG InterruptBase)
+{
+    UNREFERENCED_PARAMETER(InterruptBase);
+
+    return 0;
+}
+
+BOOLEAN
+NTAPI
+HalpIsInterruptInputValid(
+    _In_ ULONG Input)
+{
+    return (Input < 16);
+}
+
+/* Starts the PICs over and puts the trigger modes and the masks back */
+VOID
+NTAPI
+HalpRestoreInterruptController(VOID)
+{
+    PKPCR Pcr = KeGetPcr();
+    PIC_MASK PicMask;
+    ULONG_PTR EFlags;
+
+    EFlags = __readeflags();
+    _disable();
+
+    HalpInitializeLegacyPICs();
+
+    /* Zero means boot rejected the ELCR or found every IRQ edge, so leave it alone */
+    if (HalpEisaELCR != 0)
+    {
+        __outbyte(EISA_ELCR_MASTER, (UCHAR)HalpEisaELCR);
+        __outbyte(EISA_ELCR_SLAVE, (UCHAR)(HalpEisaELCR >> 8));
+    }
+
+    /* Mask off both the IRQs below the current IRQL and the disabled ones */
+    PicMask.Both = (KiI8259MaskTable[Pcr->Irql] | Pcr->IDR) & 0xFFFF;
+    __outbyte(PIC1_DATA_PORT, PicMask.Master);
+    __outbyte(PIC2_DATA_PORT, PicMask.Slave);
+
+    __writeeflags(EFlags);
+}
+
+
 #else /* _MINIHAL_ */
 
 KIRQL
