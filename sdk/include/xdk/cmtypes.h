@@ -189,6 +189,16 @@ typedef struct _CM_PARTIAL_RESOURCE_DESCRIPTOR {
       ULONG Port;
       ULONG Reserved1;
     } Dma;
+#if (NTDDI_VERSION >= NTDDI_WIN8) || defined(__REACTOS__)
+    struct {
+      ULONG Channel;
+      ULONG RequestLine;
+      UCHAR TransferWidth;
+      UCHAR Reserved1;
+      UCHAR Reserved2;
+      UCHAR Reserved3;
+    } DmaV3;
+#endif /* NTDDI_WIN8 || __REACTOS__ */
     struct {
       ULONG Data[3];
     } DevicePrivate;

@@ -1408,6 +1408,10 @@ IoReportHalResourceUsage(
                            ResourceListSize);
     ZwClose(DescriptionKey);
 
+    /* The arbiters reserve the raw resources once their buses exist */
+    if (NT_SUCCESS(Status))
+        IopSaveHalResources(RawResourceList, ResourceListSize);
+
     return Status;
 }
 

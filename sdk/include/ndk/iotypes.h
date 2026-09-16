@@ -1043,7 +1043,7 @@ typedef struct _DEVICE_NODE
         struct _DEVICE_NODE *NextResourceDeviceNode;
     } OverUsed2;
     PCM_RESOURCE_LIST BootResources;
-#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+#if (NTDDI_VERSION >= NTDDI_LONGHORN) || defined(__REACTOS__)
     PCM_RESOURCE_LIST BootResourcesTranslated;
 #endif
     ULONG CapabilityFlags;
