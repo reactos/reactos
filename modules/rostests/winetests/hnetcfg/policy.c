@@ -29,11 +29,13 @@
 #include "netfw.h"
 #include "natupnp.h"
 
+#ifndef __REACTOS__
 static ULONG get_refcount(IUnknown *unk)
 {
     IUnknown_AddRef(unk);
     return IUnknown_Release(unk);
 }
+#endif
 
 static void test_policy2_rules(INetFwPolicy2 *policy2)
 {
@@ -66,8 +68,10 @@ static void test_policy2_rules(INetFwPolicy2 *policy2)
         INetFwServiceRestriction_Release(restriction);
     }
 
+#ifndef __REACTOS__
     hr = INetFwRules_get__NewEnum(rules, NULL);
     ok(hr == E_POINTER, "got %08lx\n", hr);
+#endif
 
     INetFwRules_Release(rules);
     INetFwRules_Release(rules2);
@@ -170,6 +174,7 @@ static void test_NetFwAuthorizedApplication(void)
     INetFwAuthorizedApplication_Release(app);
 }
 
+#ifndef __REACTOS__
 static void test_static_port_mapping_collection( IStaticPortMappingCollection *ports )
 {
     LONG i, count, count2, expected_count, external_port;
@@ -327,6 +332,7 @@ static void test_IUPnPNAT(void)
 
     IUPnPNAT_Release(nat);
 }
+#endif
 
 START_TEST(policy)
 {
@@ -348,7 +354,9 @@ START_TEST(policy)
 
     test_interfaces();
     test_NetFwAuthorizedApplication();
+#ifndef __REACTOS__ /* Causes hang, see https://reactos.org/testman/detail.php?id=92110046&prev=92100597 */
     test_IUPnPNAT();
+#endif
 
     CoUninitialize();
 }
