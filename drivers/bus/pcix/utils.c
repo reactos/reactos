@@ -1182,7 +1182,8 @@ PciCreateIoDescriptorFromBarLimit(
     _In_ ULONG NextBar,
     _In_ BOOLEAN Rom)
 {
-    ULONGLONG Address, Length;
+    ULONGLONG AddressBits, Length, Alignment;
+    ULONGLONG MinimumAddress, MaximumAddress;
     UCHAR Type;
     BOOLEAN Is64BitBar = FALSE;
 
@@ -1197,7 +1198,7 @@ PciCreateIoDescriptorFromBarLimit(
     /* Set default flag */
     ResourceDescriptor->Flags = 0;
 
-    /* Check for ROM Address */
+    /* Check for ROM AddressBits */
     if (Rom)
     {
         /* Clean up the BAR to get just the address */
@@ -1219,18 +1220,18 @@ PciCreateIoDescriptorFromBarLimit(
         /* Set this as an I/O Port descriptor */
         Type = CmResourceTypePort;
         ResourceDescriptor->Flags = CM_RESOURCE_PORT_IO;
-        Address = Bar & PCI_ADDRESS_IO_ADDRESS_MASK;
+        AddressBits = Bar & PCI_ADDRESS_IO_ADDRESS_MASK;
     }
     else
     {
         /* Set this as a memory descriptor */
         Type = CmResourceTypeMemory;
-        Address = Bar & PCI_ADDRESS_MEMORY_ADDRESS_MASK;
+        AddressBits = Bar & PCI_ADDRESS_MEMORY_ADDRESS_MASK;
 
         /* A 64-bit BAR takes the high half of its address from the next BAR */
         if ((Bar & PCI_ADDRESS_MEMORY_TYPE_MASK) == PCI_TYPE_64BIT)
         {
-            Address |= (ULONGLONG)NextBar << 32;
+            AddressBits |= (ULONGLONG)NextBar << 32;
             Is64BitBar = TRUE;
         }
 
@@ -1242,23 +1243,28 @@ PciCreateIoDescriptorFromBarLimit(
         }
     }
 
-    /* The probe clears the bits below the size, so the lowest bit still set is the length */
-    Length = Address & (~Address + 1);
+    /* The probe leaves only the bits the BAR implements, so the lowest one is its length */
+    Length = AddressBits & (~AddressBits + 1);
 
     /* A legacy memory BAR can only be placed below 1MB */
     if ((Type == CmResourceTypeMemory) &&
         ((Bar & PCI_ADDRESS_MEMORY_TYPE_MASK) == PCI_TYPE_20BIT))
     {
-        Address &= 0xFFFFF;
+        AddressBits &= 0xFFFFF;
     }
+
+    /* A BAR aligns to its own length and decodes nothing above the bits it implements */
+    Alignment = Length;
+    MinimumAddress = 0;
+    MaximumAddress = AddressBits | (Length - 1);
 
     /* A length of 4GB or more takes the large memory form */
     if (!NT_SUCCESS(RtlIoEncodeMemIoResource(ResourceDescriptor,
                                              Type,
                                              Length,
-                                             Length,
-                                             0,
-                                             Address | (Length - 1))))
+                                             Alignment,
+                                             MinimumAddress,
+                                             MaximumAddress)))
     {
         /* Fail this descriptor */
         ResourceDescriptor->Type = CmResourceTypeNull;
