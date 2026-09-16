@@ -1412,6 +1412,7 @@ UserSendKeyboardInput(KEYBDINPUT *pKbdInput, BOOL bInjected)
  */
 VOID NTAPI
 UserProcessKeyboardInput(
+    PINPUT_DEVICE_INFO pDeviceInfo,
     PKEYBOARD_INPUT_DATA pKbdInputData)
 {
     WORD wScanCode, wVk;
