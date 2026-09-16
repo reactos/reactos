@@ -146,6 +146,13 @@ typedef enum _APIC_TGM
     APIC_TGM_Level
 } APIC_TGM;
 
+/* ICR level bit, only an INIT uses APIC_LEVEL_Deassert */
+typedef enum _APIC_LEVEL
+{
+    APIC_LEVEL_Deassert,
+    APIC_LEVEL_Assert
+} APIC_LEVEL;
+
 /* Destination Mode */
 typedef enum _APIC_DM
 {
