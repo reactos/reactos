@@ -20,3 +20,15 @@ HalpLegacyPCQueryArbInterface(
     _Out_writes_bytes_(Size) PVOID Interface,
     _In_ ULONG Size,
     _Out_ PULONG Length);
+
+BOOLEAN
+NTAPI
+HalpLegacyPCArbitratesIrqs(VOID);
+
+CODE_SEG("PAGE")
+NTSTATUS
+NTAPI
+HalpLegacyPCQueryIrqTranslator(
+    _Out_writes_bytes_(Size) PVOID Interface,
+    _In_ ULONG Size,
+    _Out_ PULONG Length);

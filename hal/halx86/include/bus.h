@@ -651,6 +651,9 @@ HalpGetSystemInterruptVector(
 );
 
 extern ULONG HalpBusType;
+
+/* Lines used by PCI devices, defined in legacy/bussupp.c */
+extern ULONG HalpPciIrqMask;
 extern BOOLEAN HalpPCIConfigInitialized;
 extern ULONG HalpMinPciBus, HalpMaxPciBus;
 extern LIST_ENTRY HalpAllBusHandlers;

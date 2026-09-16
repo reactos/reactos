@@ -184,17 +184,27 @@ HalpQueryInterface(IN PDEVICE_OBJECT DeviceObject,
     {
         //TODO: Does PC98 Have PIR? Or does it needs it's own Arbiter?
 #if !defined(SARCH_XBOX) && !defined(SARCH_PC98)
-        if (!IsEqualIID(InterfaceType, &GUID_ARBITER_INTERFACE_STANDARD) ||
-            ((CM_RESOURCE_TYPE)(ULONG_PTR)InterfaceSpecificData != CmResourceTypeInterrupt))
-        {
+        if ((CM_RESOURCE_TYPE)(ULONG_PTR)InterfaceSpecificData != CmResourceTypeInterrupt)
             return Status;
+
+        if (IsEqualIID(InterfaceType, &GUID_ARBITER_INTERFACE_STANDARD))
+        {
+            /* Without this, lines are translated to vectors first and the root arbitrates them */
+            if (!HalpLegacyPCArbitratesIrqs())
+                return Status;
+
+            Status = HalpLegacyPCCreateArbiter(DeviceObject);
+            if (NT_SUCCESS(Status))
+                Status = HalpLegacyPCQueryArbInterface(Interface, InterfaceBufferSize, Length);
+        }
+        else if (IsEqualIID(InterfaceType, &GUID_TRANSLATOR_INTERFACE_STANDARD))
+        {
+            Status = HalpLegacyPCQueryIrqTranslator(Interface,
+                                                    InterfaceBufferSize,
+                                                    Length);
         }
 
-        Status = HalpLegacyPCCreateArbiter(DeviceObject);
-        if (NT_SUCCESS(Status))
-        {
-            HalpLegacyPCQueryArbInterface(Interface, InterfaceBufferSize, Length);
-        }
+        return Status;
 #endif
     }
 
@@ -243,6 +253,32 @@ HalpQueryInterface(IN PDEVICE_OBJECT DeviceObject,
 
     return Status;
 }
+
+#if !defined(SARCH_XBOX) && !defined(SARCH_PC98)
+/* The bus FDO provides ISA bus 0, so resources no bus driver translates reach
+   its arbiter and translator */
+static
+NTSTATUS
+NTAPI
+HalpQueryLegacyBusInformation(
+    _Out_ PLEGACY_BUS_INFORMATION *Information)
+{
+    PLEGACY_BUS_INFORMATION BusInformation;
+
+    PAGED_CODE();
+
+    BusInformation = ExAllocatePoolWithTag(PagedPool, sizeof(*BusInformation), TAG_HAL);
+    if (!BusInformation)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
+    BusInformation->BusTypeGuid = GUID_BUS_TYPE_INTERNAL;
+    BusInformation->LegacyBusType = Isa;
+    BusInformation->BusNumber = 0;
+
+    *Information = BusInformation;
+    return STATUS_SUCCESS;
+}
+#endif
 
 NTSTATUS
 NTAPI
@@ -737,9 +773,9 @@ HalpDispatchPnp(IN PDEVICE_OBJECT DeviceObject,
                 DPRINT("Querying interface for FDO\n");
                 Status = HalpQueryInterface(DeviceObject,
                                             IoStackLocation->Parameters.QueryInterface.InterfaceType,
-                                            IoStackLocation->Parameters.QueryInterface.Size,
-                                            IoStackLocation->Parameters.QueryInterface.InterfaceSpecificData,
                                             IoStackLocation->Parameters.QueryInterface.Version,
+                                            IoStackLocation->Parameters.QueryInterface.InterfaceSpecificData,
+                                            IoStackLocation->Parameters.QueryInterface.Size,
                                             IoStackLocation->Parameters.QueryInterface.Interface,
                                             (PVOID)&Irp->IoStatus.Information);
                 break;
@@ -760,6 +796,13 @@ HalpDispatchPnp(IN PDEVICE_OBJECT DeviceObject,
                 Status = HalpQueryCapabilities(DeviceObject,
                                                IoStackLocation->Parameters.DeviceCapabilities.Capabilities);
                 break;
+
+#if !defined(SARCH_XBOX) && !defined(SARCH_PC98)
+            case IRP_MN_QUERY_LEGACY_BUS_INFORMATION:
+
+                Status = HalpQueryLegacyBusInformation((PVOID)&Irp->IoStatus.Information);
+                break;
+#endif
 
             default:
 
@@ -836,9 +879,9 @@ HalpDispatchPnp(IN PDEVICE_OBJECT DeviceObject,
                 DPRINT("Querying interface for PDO\n");
                 Status = HalpQueryInterface(DeviceObject,
                                             IoStackLocation->Parameters.QueryInterface.InterfaceType,
-                                            IoStackLocation->Parameters.QueryInterface.Size,
-                                            IoStackLocation->Parameters.QueryInterface.InterfaceSpecificData,
                                             IoStackLocation->Parameters.QueryInterface.Version,
+                                            IoStackLocation->Parameters.QueryInterface.InterfaceSpecificData,
+                                            IoStackLocation->Parameters.QueryInterface.Size,
                                             IoStackLocation->Parameters.QueryInterface.Interface,
                                             (PVOID)&Irp->IoStatus.Information);
                 break;
