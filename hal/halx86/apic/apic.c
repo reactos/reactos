@@ -1169,6 +1169,10 @@ HalDisableSystemInterrupt(
         ReDirReg.Mask = 1;
         ApicWriteIORedirectionEntry(Index, ReDirReg);
     }
+    else
+    {
+        HalpReleaseMessageMark(Vector);
+    }
 
     HalpReleaseVectorLock(OldIrql);
 }
@@ -1235,6 +1239,376 @@ HalEndSystemInterrupt(
 
     /* Restore the old IRQL */
     ApicLowerIrql(OldIrql);
+}
+
+
+/* INTERRUPT CONNECTION *******************************************************/
+
+/* Physical mode names one processor, so a line settles for the lowest of the set */
+static
+NTSTATUS
+NTAPI
+HalpBuildLineDestination(
+    _In_ KAFFINITY TargetProcessors,
+    _Out_ PBOOLEAN Logical,
+    _Out_ PUCHAR Destination)
+{
+    NTSTATUS Status;
+
+    Status = HalpBuildInterruptDestination(TargetProcessors, Logical, Destination);
+    if (!NT_SUCCESS(Status) && (TargetProcessors & (TargetProcessors - 1)))
+    {
+        TargetProcessors &= (0 - TargetProcessors);
+        Status = HalpBuildInterruptDestination(TargetProcessors, Logical, Destination);
+    }
+
+    return Status;
+}
+
+/**
+ * @brief
+ * Points an I/O APIC input at a vector and unmasks it. The caller holds the
+ * vector lock.
+ *
+ * @param[in] Input
+ * Global system interrupt to program.
+ *
+ * @param[in] Vector
+ * Vector the input delivers.
+ *
+ * @param[in] Mode
+ * Level or edge triggered.
+ *
+ * @param[in] Polarity
+ * Polarity of the input. InterruptPolarityUnknown takes active low for a level
+ * input and active high for an edge one.
+ *
+ * @param[in] Logical
+ * TRUE when Destination holds logical IDs.
+ *
+ * @param[in] Destination
+ * Destination field of the redirection entry.
+ */
+static
+VOID
+NTAPI
+HalpProgramInterruptInput(
+    _In_ ULONG Input,
+    _In_ ULONG Vector,
+    _In_ KINTERRUPT_MODE Mode,
+    _In_ KINTERRUPT_POLARITY Polarity,
+    _In_ BOOLEAN Logical,
+    _In_ UCHAR Destination)
+{
+    IOAPIC_REDIRECTION_REGISTER ReDirReg;
+
+    Polarity = HalpGetInputPolarity(Input, Mode, Polarity);
+
+    ReDirReg = ApicReadIORedirectionEntry(Input);
+    ReDirReg.Vector = Vector;
+    ReDirReg.Destination = Destination;
+    if (Logical)
+    {
+        ReDirReg.MessageType = APIC_MT_LowestPriority;
+        ReDirReg.DestinationMode = APIC_DM_Logical;
+    }
+    else
+    {
+        ReDirReg.MessageType = APIC_MT_Fixed;
+        ReDirReg.DestinationMode = APIC_DM_Physical;
+    }
+    ReDirReg.TriggerMode = (Mode == LevelSensitive) ? APIC_TGM_Level : APIC_TGM_Edge;
+    ReDirReg.Polarity = (Polarity == InterruptActiveLow);
+    ReDirReg.Mask = 0;
+    ApicWriteIORedirectionEntry(Input, ReDirReg);
+}
+
+/**
+ * @brief
+ * Enables the interrupt a connection data block describes. Only blocks holding
+ * a single vector are accepted.
+ */
+NTSTATUS
+NTAPI
+HalEnableInterrupt(
+    _In_ PINTERRUPT_CONNECTION_DATA ConnectionData)
+{
+    PINTERRUPT_VECTOR_DATA VectorData;
+    PHALP_IOAPIC_UNIT Unit;
+    ULONG Vector, Input;
+    UCHAR Index, Previous, Destination;
+    BOOLEAN Logical;
+    NTSTATUS Status;
+    KIRQL OldIrql;
+
+    if ((ConnectionData == NULL) || (ConnectionData->Count != 1))
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    VectorData = &ConnectionData->Vectors[0];
+    Vector = VectorData->Vector;
+    if (Vector > 0xFF)
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* The vector alone decides the IRQL, so the caller cannot ask for another */
+    if (VectorData->Irql != HalpVectorToIrql((UCHAR)Vector))
+    {
+        DPRINT1("Vector 0x%lx cannot run at IRQL %u\n", Vector, VectorData->Irql);
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    switch (VectorData->Type)
+    {
+        case InterruptTypeXapicMessage:
+        case InterruptTypeHypertransport:
+        case InterruptTypeMessageRequest:
+        {
+            /* The vector has to be free or already carrying messages */
+            Status = STATUS_SUCCESS;
+            OldIrql = HalpAcquireVectorLock();
+            Index = HalpVectorToIndex[Vector];
+            if (Index == APIC_FREE_VECTOR)
+                HalpVectorToIndex[Vector] = APIC_MSI_VECTOR;
+            else if (Index != APIC_MSI_VECTOR)
+                Status = STATUS_INVALID_PARAMETER;
+            HalpReleaseVectorLock(OldIrql);
+            return Status;
+        }
+
+        case InterruptTypeControllerInput:
+        {
+            Input = VectorData->ControllerInput.Gsiv;
+            if (!HalpFindIoApicInput(Input, &Unit) ||
+                (VectorData->TargetProcessors.Group != 0))
+            {
+                return STATUS_INVALID_PARAMETER;
+            }
+
+            /* Settle the destination before anything is committed */
+            Status = HalpBuildLineDestination(VectorData->TargetProcessors.Mask,
+                                              &Logical,
+                                              &Destination);
+            if (!NT_SUCCESS(Status))
+                return Status;
+
+            OldIrql = HalpAcquireVectorLock();
+
+            Index = HalpVectorToIndex[Vector];
+            if (Index == APIC_FREE_VECTOR)
+            {
+                /* Give up the vector this input was handed earlier */
+                Previous = HalpIrqToVector((UCHAR)Input);
+                if (Previous != APIC_FREE_VECTOR)
+                    HalpVectorToIndex[Previous] = APIC_FREE_VECTOR;
+
+                HalpVectorToIndex[Vector] = (UCHAR)Input;
+                HalpGsivToVector[Input] = (UCHAR)Vector;
+            }
+            else if (Index != Input)
+            {
+                HalpReleaseVectorLock(OldIrql);
+                return STATUS_INVALID_PARAMETER;
+            }
+
+            HalpProgramInterruptInput(Input,
+                                      Vector,
+                                      VectorData->Mode,
+                                      VectorData->Polarity,
+                                      Logical,
+                                      Destination);
+
+            HalpReleaseVectorLock(OldIrql);
+            return STATUS_SUCCESS;
+        }
+
+        default:
+            return STATUS_INVALID_PARAMETER;
+    }
+}
+
+/**
+ * @brief
+ * Turns off an interrupt enabled through HalEnableInterrupt. A message vector
+ * from a HAL message block stays allocated until its owner gives it back.
+ */
+NTSTATUS
+NTAPI
+HalDisableInterrupt(
+    _In_ PINTERRUPT_CONNECTION_DATA ConnectionData)
+{
+    PINTERRUPT_VECTOR_DATA VectorData;
+    IOAPIC_REDIRECTION_REGISTER ReDirReg;
+    PHALP_IOAPIC_UNIT Unit;
+    ULONG Vector, Input;
+    NTSTATUS Status;
+    KIRQL OldIrql;
+
+    if ((ConnectionData == NULL) || (ConnectionData->Count != 1))
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    VectorData = &ConnectionData->Vectors[0];
+    Vector = VectorData->Vector;
+    if (Vector > 0xFF)
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    switch (VectorData->Type)
+    {
+        case InterruptTypeXapicMessage:
+        case InterruptTypeHypertransport:
+        case InterruptTypeMessageRequest:
+            OldIrql = HalpAcquireVectorLock();
+            HalpReleaseMessageMark(Vector);
+            HalpReleaseVectorLock(OldIrql);
+            return STATUS_SUCCESS;
+
+        case InterruptTypeControllerInput:
+        {
+            Input = VectorData->ControllerInput.Gsiv;
+            if (!HalpFindIoApicInput(Input, &Unit))
+            {
+                return STATUS_INVALID_PARAMETER;
+            }
+
+            Status = STATUS_INVALID_PARAMETER;
+            OldIrql = HalpAcquireVectorLock();
+            if (HalpVectorToIndex[Vector] == Input)
+            {
+                ReDirReg = ApicReadIORedirectionEntry(Input);
+                ReDirReg.Mask = 1;
+                ApicWriteIORedirectionEntry(Input, ReDirReg);
+                Status = STATUS_SUCCESS;
+            }
+            HalpReleaseVectorLock(OldIrql);
+            return Status;
+        }
+
+        default:
+            return STATUS_INVALID_PARAMETER;
+    }
+}
+
+/**
+ * @brief
+ * Reports the input a vector arrives on and the polarity that input carries.
+ * The private dispatch override answers instead when one is installed.
+ */
+NTSTATUS
+NTAPI
+HalGetVectorInput(
+    _In_ ULONG Vector,
+    _In_ KAFFINITY Affinity,
+    _Out_ PULONG Input,
+    _Out_ PKINTERRUPT_POLARITY Polarity)
+{
+    IOAPIC_REDIRECTION_REGISTER ReDirReg;
+    UCHAR Index;
+    KIRQL OldIrql;
+
+    /* The override calls out of the HAL, so it runs without the lock */
+    if (HalGetVectorInputOverride != NULL)
+    {
+        return HalGetVectorInputOverride(Vector, Affinity, Input, Polarity);
+    }
+
+    *Input = 0;
+    *Polarity = InterruptPolarityUnknown;
+
+    if (Vector > 0xFF)
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    OldIrql = HalpAcquireVectorLock();
+    Index = HalpVectorToIndex[Vector];
+    if (Index >= HalpMaxGsi)
+    {
+        HalpReleaseVectorLock(OldIrql);
+        return STATUS_NOT_FOUND;
+    }
+
+    ReDirReg = ApicReadIORedirectionEntry(Index);
+    HalpReleaseVectorLock(OldIrql);
+
+    *Input = Index;
+    *Polarity = ReDirReg.Polarity ? InterruptActiveLow : InterruptActiveHigh;
+    return STATUS_SUCCESS;
+}
+
+/* ACPI POWER MANAGEMENT ******************************************************/
+
+/**
+ * @brief
+ * Returns the version register of the I/O APIC whose first input is
+ * InterruptBase, or zero when no I/O APIC starts there. The reserved high byte
+ * carries the number of inputs instead.
+ */
+ULONG
+NTAPI
+HalpGetInterruptControllerVersion(
+    _In_ ULONG InterruptBase)
+{
+    PHALP_IOAPIC_UNIT Unit;
+    ULONG Version;
+    KIRQL OldIrql;
+
+    for (Unit = HalpIoApics; Unit < HalpIoApics + HalpIoApicCount; Unit++)
+    {
+        if (Unit->InputBase != InterruptBase)
+        {
+            continue;
+        }
+
+        OldIrql = HalpAcquireVectorLock();
+        Version = IOApicRead(Unit->Base, IOAPIC_VER);
+        HalpReleaseVectorLock(OldIrql);
+
+        /* Report the inputs in use, which may be fewer than the unit has */
+        Version &= 0xFF;
+        Version |= (Unit->InputCount - 1) << 16;
+        Version |= Unit->InputCount << 24;
+        return Version;
+    }
+
+    return 0;
+}
+
+BOOLEAN
+NTAPI
+HalpIsInterruptInputValid(
+    _In_ ULONG Input)
+{
+    PHALP_IOAPIC_UNIT Unit;
+
+    return HalpFindIoApicInput(Input, &Unit);
+}
+
+/* Writes every redirection entry back from the shadow table */
+VOID
+NTAPI
+HalpRestoreInterruptController(VOID)
+{
+    PHALP_IOAPIC_UNIT Unit;
+    ULONG Input;
+    KIRQL OldIrql;
+
+    OldIrql = HalpAcquireVectorLock();
+
+    for (Unit = HalpIoApics; Unit < HalpIoApics + HalpIoApicCount; Unit++)
+    {
+        for (Input = Unit->InputBase; Input < Unit->InputBase + Unit->InputCount; Input++)
+        {
+            ApicWriteIORedirectionEntry(Input, HalpIoApicShadow[Input]);
+        }
+    }
+
+    HalpReleaseVectorLock(OldIrql);
 }
 
 
