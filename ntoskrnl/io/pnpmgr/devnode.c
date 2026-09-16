@@ -331,6 +331,10 @@ IopFreeDeviceNode(
     KIRQL OldIrql;
     PDEVICE_NODE PrevSibling = NULL;
 
+    /* A legacy claim ends with the device object it was made for */
+    if (DeviceNode->Flags & DNF_LEGACY_RESOURCE_DEVICENODE)
+        IopReleaseLegacyDeviceNode(DeviceNode);
+
     /* The arbiters must not keep ranges owned by a device that is gone */
     IopDropDeviceNodeResources(DeviceNode);
 
