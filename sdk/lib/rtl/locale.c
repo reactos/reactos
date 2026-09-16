@@ -505,6 +505,11 @@ static const LOCALE_ENTRY RtlpLocaleTable[] =
 // This table will be sorted by LCID at runtime
 static USHORT RtlpLocaleIndexTable[_ARRAYSIZE(RtlpLocaleTable)];
 
+/**
+ * @brief
+ * Initializes the locale index table, that maps the LCIDs to their
+ * indexes in the alphabetical table, and is sorted by LCID.
+ **/
 NTSTATUS
 NTAPI
 RtlpInitializeLocaleTable(VOID)
