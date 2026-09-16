@@ -103,34 +103,65 @@ DoTheScreenSaver(VOID)
  */
 static
 NTSTATUS NTAPI
-OpenInputDevice(PHANDLE pHandle, PFILE_OBJECT *ppObject, CONST WCHAR *pszDeviceName)
+OpenInputDevice(
+    _In_ PINPUT_DEVICE_INFO DeviceInfo)
 {
-    UNICODE_STRING DeviceName;
     OBJECT_ATTRIBUTES ObjectAttributes;
     NTSTATUS Status;
     IO_STATUS_BLOCK Iosb;
 
-    RtlInitUnicodeString(&DeviceName, pszDeviceName);
-
     InitializeObjectAttributes(&ObjectAttributes,
-                               &DeviceName,
+                               &DeviceInfo->DeviceName,
                                OBJ_KERNEL_HANDLE,
                                NULL,
                                NULL);
 
-    Status = ZwOpenFile(pHandle,
+    Status = ZwOpenFile(&DeviceInfo->Handle,
                         FILE_ALL_ACCESS,
                         &ObjectAttributes,
                         &Iosb,
                         0,
                         0);
-    if (NT_SUCCESS(Status) && ppObject)
+    if (!NT_SUCCESS(Status))
     {
-        Status = ObReferenceObjectByHandle(*pHandle, SYNCHRONIZE, NULL, KernelMode, (PVOID*)ppObject, NULL);
-        ASSERT(NT_SUCCESS(Status));
+        ERR("ZwOpenFile('%wZ') failed with status 0x%08x\n", &DeviceInfo->DeviceName, Status);
+        return Status;
     }
 
-    return Status;
+    if (DeviceInfo->DeviceType == RIM_TYPEKEYBOARD)
+    {
+        Status = ZwDeviceIoControlFile(DeviceInfo->Handle,
+                                       NULL,
+                                       NULL,
+                                       NULL,
+                                       &DeviceInfo->Iosb,
+                                       IOCTL_KEYBOARD_QUERY_ATTRIBUTES,
+                                       NULL, 0,
+                                       &DeviceInfo->Keyboard.Attributes,
+                                       sizeof(DeviceInfo->Keyboard.Attributes));
+        if (!NT_SUCCESS(Status))
+        {
+          ERR("ZwDeviceIoControlFile('%wZ', IOCTL_KEYBOARD_QUERY_ATTRIBUTES) failed with status 0x%08x\n", &DeviceInfo->DeviceName, Status);
+        }
+    }
+    else if (DeviceInfo->DeviceType == RIM_TYPEMOUSE)
+    {
+        Status = ZwDeviceIoControlFile(DeviceInfo->Handle,
+                                       NULL,
+                                       NULL,
+                                       NULL,
+                                       &DeviceInfo->Iosb,
+                                       IOCTL_MOUSE_QUERY_ATTRIBUTES,
+                                       NULL, 0,
+                                       &DeviceInfo->Mouse.Attributes,
+                                       sizeof(DeviceInfo->Mouse.Attributes));
+        if (!NT_SUCCESS(Status))
+        {
+          ERR("ZwDeviceIoControlFile('%wZ', IOCTL_MOUSE_QUERY_ATTRIBUTES) failed with status 0x%08x\n", &DeviceInfo->DeviceName, Status);
+        }
+    }
+
+    return STATUS_SUCCESS;
 }
 
 /*
@@ -159,7 +190,6 @@ RawInputThreadMain(VOID)
     RtlZeroMemory(&Mouse, sizeof(Mouse));
     Mouse.DeviceType = RIM_TYPEMOUSE;
     RtlInitUnicodeString(&Mouse.DeviceName, L"\\Device\\PointerClass0");
-    Mouse.Mouse.Attributes.NumberOfButtons = 2;
 
     RtlZeroMemory(&Keyboard, sizeof(Keyboard));
     Keyboard.DeviceType = RIM_TYPEKEYBOARD;
@@ -212,28 +242,33 @@ RawInputThreadMain(VOID)
         if (!ghMouseDevice)
         {
             /* Check if mouse device already exists */
-            Status = OpenInputDevice(&ghMouseDevice, &pMouDevice, Mouse.DeviceName.Buffer);
+            Status = OpenInputDevice(&Mouse);
             if (NT_SUCCESS(Status))
             {
                 ++cMaxWaitObjects;
                 TRACE("Mouse connected!\n");
                 Mouse.pNextDeviceInfo = gpInputDeviceInfo;
                 gpInputDeviceInfo = &Mouse;
+                ghMouseDevice = Mouse.Handle;
+                Status = ObReferenceObjectByHandle(Mouse.Handle, SYNCHRONIZE, NULL, KernelMode, (PVOID*)&pMouDevice, NULL);
+                ASSERT(NT_SUCCESS(Status));
             }
         }
         if (!ghKeyboardDevice)
         {
             /* Check if keyboard device already exists */
-            Status = OpenInputDevice(&ghKeyboardDevice, &pKbdDevice, Keyboard.DeviceName.Buffer);
+            Status = OpenInputDevice(&Keyboard);
             if (NT_SUCCESS(Status))
             {
                 ++cMaxWaitObjects;
                 TRACE("Keyboard connected!\n");
                 Keyboard.pNextDeviceInfo = gpInputDeviceInfo;
                 gpInputDeviceInfo = &Keyboard;
+                ghKeyboardDevice = Keyboard.Handle;
+                Status = ObReferenceObjectByHandle(Keyboard.Handle, SYNCHRONIZE, NULL, KernelMode, (PVOID*)&pKbdDevice, NULL);
+                ASSERT(NT_SUCCESS(Status));
                 // Get and load keyboard attributes.
                 UserInitKeyboard(ghKeyboardDevice);
-                Keyboard.Keyboard.Attributes = gKeyboardInfo;
                 UserEnterExclusive();
                 // Register the Window hotkey.
                 UserRegisterHotKey(PWND_BOTTOM, IDHK_WINKEY, MOD_WIN, 0);
