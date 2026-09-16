@@ -199,6 +199,19 @@ OpenInputDevice(
     return STATUS_SUCCESS;
 }
 
+static
+VOID
+CloseInputDevice(
+    _In_ PINPUT_DEVICE_INFO DeviceInfo)
+{
+    ASSERT(DeviceInfo->Handle);
+    (void)ZwCancelIoFile(DeviceInfo->Handle, &DeviceInfo->Iosb);
+    ObCloseHandle(DeviceInfo->Handle, KernelMode);
+
+    if (DeviceInfo->Handle == ghKeyboardDevice)
+        ghKeyboardDevice = NULL;
+}
+
 /*
  * RawInputThreadMain
  *
@@ -207,6 +220,7 @@ OpenInputDevice(
 VOID NTAPI
 RawInputThreadMain(VOID)
 {
+    PINPUT_DEVICE_INFO DeviceInfo;
     NTSTATUS MouStatus = STATUS_UNSUCCESSFUL, KbdStatus = STATUS_UNSUCCESSFUL, Status;
     PFILE_OBJECT pKbdDevice = NULL, pMouDevice = NULL;
     LARGE_INTEGER ByteOffset;
@@ -432,20 +446,20 @@ RawInputThreadMain(VOID)
     }
 
     if (ghMouseDevice)
-    {
-        (void)ZwCancelIoFile(ghMouseDevice, &Mouse->Iosb);
-        ObCloseHandle(ghMouseDevice, KernelMode);
         ObDereferenceObject(pMouDevice);
-        ghMouseDevice = NULL;
-    }
-
     if (ghKeyboardDevice)
-    {
-        (void)ZwCancelIoFile(ghKeyboardDevice, &Keyboard->Iosb);
-        ObCloseHandle(ghKeyboardDevice, KernelMode);
         ObDereferenceObject(pKbdDevice);
-        ghKeyboardDevice = NULL;
+
+    AcquireDeviceInfoListMutex();
+    while (gpInputDeviceInfo)
+    {
+        DeviceInfo = gpInputDeviceInfo;
+        gpInputDeviceInfo = DeviceInfo->pNextDeviceInfo;
+        CloseInputDevice(DeviceInfo);
+        ExFreePoolWithTag(DeviceInfo, USERTAG_PNP);
     }
+    gpInputDeviceInfo = NULL;
+    ReleaseDeviceInfoListMutex();
 
     ExDeleteResourceLite(gpDeviceInfoListMutex);
     ExFreePoolWithTag(gpDeviceInfoListMutex, USERTAG_SYSTEM);
