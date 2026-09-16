@@ -1,0 +1,334 @@
+; NETE100.INF
+
+; Installation file for Intel PRO/100 NICs
+
+[Version]
+Signature  = "$Windows NT$"
+;Signature  = "$ReactOS$"
+LayoutFile = layout.inf
+Class      = Net
+ClassGUID  = {4D36E972-E325-11CE-BFC1-08002BE10318}
+Provider   = %ReactOS%
+DriverVer  = 08/22/2026,1.00
+
+[DestinationDirs]
+DefaultDestDir=12
+
+[Manufacturer]
+%IntelMfg%=IntelMfg
+
+[ControlFlags]
+ExcludeFromSelect=*
+
+[IntelMfg]
+%i557%=E557.ndi,PCI\VEN_8086&DEV_1229&REV_01
+%i557%=E557.ndi,PCI\VEN_8086&DEV_1229&REV_02
+%i557%=E557.ndi,PCI\VEN_8086&DEV_1229&REV_03
+%i558%=E100.ndi,PCI\VEN_8086&DEV_1229&REV_04
+%i558%=E100.ndi,PCI\VEN_8086&DEV_1229&REV_05
+%i559%=E100.ndi,PCI\VEN_8086&DEV_1229&REV_06
+%i559%=E100.ndi,PCI\VEN_8086&DEV_1229&REV_07
+%i559%=E101.ndi,PCI\VEN_8086&DEV_1229&REV_08
+%i55xER%=E101.ndi,PCI\VEN_8086&DEV_1229&REV_09
+%i550%=E550.ndi,PCI\VEN_8086&DEV_1229&REV_0C
+%i550%=E550.ndi,PCI\VEN_8086&DEV_1229&REV_0D
+%i550%=E550.ndi,PCI\VEN_8086&DEV_1229&REV_0E
+%i551%=E550.ndi,PCI\VEN_8086&DEV_1229&REV_0F
+%i551%=E550.ndi,PCI\VEN_8086&DEV_1229&REV_10
+%i557%=E550.ndi,PCI\VEN_8086&DEV_1229
+%i55xER%=E550.ndi,PCI\VEN_8086&DEV_1209
+%i559%=E550.ndi,PCI\VEN_8086&DEV_1029
+%i559%=E550.ndi,PCI\VEN_8086&DEV_1030
+%i551QM%=E550.ndi,PCI\VEN_8086&DEV_1059
+%i552%=ICH.ndi,PCI\VEN_8086&DEV_10FE
+%ICH2%=ICH.ndi,PCI\VEN_8086&DEV_2449
+%ICH3%=ICH.ndi,PCI\VEN_8086&DEV_1031
+%ICH3%=ICH.ndi,PCI\VEN_8086&DEV_1032
+%ICH3%=ICH.ndi,PCI\VEN_8086&DEV_1033
+%ICH3%=ICH.ndi,PCI\VEN_8086&DEV_1034
+%ICH3%=ICH.ndi,PCI\VEN_8086&DEV_1035
+%ICH3%=ICH.ndi,PCI\VEN_8086&DEV_1036
+%ICH3%=ICH.ndi,PCI\VEN_8086&DEV_1037
+%ICH3%=ICH.ndi,PCI\VEN_8086&DEV_1038
+%ICH4%=ICH.ndi,PCI\VEN_8086&DEV_1039
+%ICH4%=ICH.ndi,PCI\VEN_8086&DEV_103A
+%ICH4%=ICH.ndi,PCI\VEN_8086&DEV_103B
+%ICH4%=ICH.ndi,PCI\VEN_8086&DEV_103C
+%ICH4%=ICH.ndi,PCI\VEN_8086&DEV_103D
+%ICH4%=ICH.ndi,PCI\VEN_8086&DEV_103E
+%ICH5%=ICH.ndi,PCI\VEN_8086&DEV_1050
+%ICH5%=ICH.ndi,PCI\VEN_8086&DEV_1051
+%ICH5%=ICH.ndi,PCI\VEN_8086&DEV_1052
+%ICH5%=ICH.ndi,PCI\VEN_8086&DEV_1053
+%ICH5%=ICH.ndi,PCI\VEN_8086&DEV_1054
+%ICH5%=ICH.ndi,PCI\VEN_8086&DEV_1055
+%ICH5%=ICH.ndi,PCI\VEN_8086&DEV_1056
+%ICH5%=ICH.ndi,PCI\VEN_8086&DEV_1057
+%CICH%=ICH.ndi,PCI\VEN_8086&DEV_2459
+%CICH%=ICH.ndi,PCI\VEN_8086&DEV_245D
+%ICH6%=ICH.ndi,PCI\VEN_8086&DEV_1064
+%ICH6%=ICH.ndi,PCI\VEN_8086&DEV_1065
+%ICH6%=ICH.ndi,PCI\VEN_8086&DEV_1066
+%ICH6%=ICH.ndi,PCI\VEN_8086&DEV_1067
+%ICH6%=ICH.ndi,PCI\VEN_8086&DEV_1068
+%ICH6%=ICH.ndi,PCI\VEN_8086&DEV_1069
+%ICH6%=ICH.ndi,PCI\VEN_8086&DEV_106A
+%ICH6%=ICH.ndi,PCI\VEN_8086&DEV_106B
+%ICH6%=ICH.ndi,PCI\VEN_8086&DEV_266C
+%ICH7%=ICH.ndi,PCI\VEN_8086&DEV_1091
+%ICH7%=ICH.ndi,PCI\VEN_8086&DEV_1092
+%ICH7%=ICH.ndi,PCI\VEN_8086&DEV_1093
+%ICH7%=ICH.ndi,PCI\VEN_8086&DEV_1094
+%ICH7%=ICH.ndi,PCI\VEN_8086&DEV_1095
+%ICH7%=ICH.ndi,PCI\VEN_8086&DEV_27DC
+
+[E557.ndi.NT]
+Characteristics=0x84
+BusType=5
+CopyFiles=E100_CopyFiles.NT
+AddReg=E100_COMMON
+
+[E100.ndi.NT]
+Characteristics=0x84
+BusType=5
+CopyFiles=E100_CopyFiles.NT
+AddReg=E100_COMMON, E100_FLOW_WOL, E100_UCODE
+
+[E101.ndi.NT]
+Characteristics=0x84
+BusType=5
+CopyFiles=E100_CopyFiles.NT
+AddReg=E100_COMMON, E100_FLOW_WOL, E100_UCODE, E100_CSUM
+
+[E550.ndi.NT]
+Characteristics=0x84
+BusType=5
+CopyFiles=E100_CopyFiles.NT
+AddReg=E100_COMMON, E100_FLOW_WOL, E100_UCODE, E100_CSUM, E100_IPCB
+
+[ICH.ndi.NT]
+Characteristics=0x84
+BusType=5
+CopyFiles=E100_CopyFiles.NT
+AddReg=E100_COMMON, E100_FLOW_WOL, E100_CSUM
+
+[E100_CopyFiles.NT]
+e100.sys
+
+[E557.ndi.NT.Services]
+AddService=e100, 2, E100_Service_Inst, E100_EventLog
+
+[E100.ndi.NT.Services]
+AddService=e100, 2, E100_Service_Inst, E100_EventLog
+
+[E101.ndi.NT.Services]
+AddService=e100, 2, E100_Service_Inst, E100_EventLog
+
+[E550.ndi.NT.Services]
+AddService=e100, 2, E100_Service_Inst, E100_EventLog
+
+[ICH.ndi.NT.Services]
+AddService=e100, 2, E100_Service_Inst, E100_EventLog
+
+[E100_COMMON]
+HKR,Ndi,            Service,    0, "e100"
+HKR,Ndi\Interfaces, UpperRange, 0, "ndis5"
+HKR,Ndi\Interfaces, LowerRange, 0, "ethernet"
+
+HKR,Ndi\params\NetworkAddress, ParamDesc, 0, %NA%
+HKR,Ndi\params\NetworkAddress, type,      0, "edit"
+HKR,Ndi\params\NetworkAddress, LimitText, 0, "12"
+HKR,Ndi\params\NetworkAddress, UpperCase, 0, "1"
+HKR,Ndi\params\NetworkAddress, default,   0, " "
+HKR,Ndi\params\NetworkAddress, optional,  0, "1"
+
+HKR,Ndi\params\SpeedDuplex,      ParamDesc, 0, %SD%
+HKR,Ndi\params\SpeedDuplex,      type,      0, "enum"
+HKR,Ndi\params\SpeedDuplex,      default,   0, "0"
+HKR,Ndi\params\SpeedDuplex\enum, "0",       0, "%Auto%"
+HKR,Ndi\params\SpeedDuplex\enum, "1",       0, "10HD"
+HKR,Ndi\params\SpeedDuplex\enum, "2",       0, "10FD"
+HKR,Ndi\params\SpeedDuplex\enum, "3",       0, "100HD"
+HKR,Ndi\params\SpeedDuplex\enum, "4",       0, "100FD"
+
+HKR,Ndi\params\TcbNum, ParamDesc, 0, %TCB%
+HKR,Ndi\params\TcbNum, type,      0, "int"
+HKR,Ndi\params\TcbNum, default,   0, "128"
+HKR,Ndi\params\TcbNum, min,       0, "8"
+HKR,Ndi\params\TcbNum, max,       0, "128"
+HKR,Ndi\params\TcbNum, step,      0, "1"
+HKR,Ndi\params\TcbNum, base,      0, "10"
+
+HKR,Ndi\params\RfdNum, ParamDesc, 0, %RFD%
+HKR,Ndi\params\RfdNum, type,      0, "int"
+HKR,Ndi\params\RfdNum, default,   0, "64"
+HKR,Ndi\params\RfdNum, min,       0, "8"
+HKR,Ndi\params\RfdNum, max,       0, "256"
+HKR,Ndi\params\RfdNum, step,      0, "1"
+HKR,Ndi\params\RfdNum, base,      0, "10"
+
+[E100_FLOW_WOL]
+HKR,Ndi\params\FlowControl,      ParamDesc, 0, %FC%
+HKR,Ndi\params\FlowControl,      type,      0, "enum"
+HKR,Ndi\params\FlowControl,      default,   0, "1"
+HKR,Ndi\params\FlowControl\enum, "0",       0, "%No%"
+HKR,Ndi\params\FlowControl\enum, "1",       0, "%Auto%"
+HKR,Ndi\params\FlowControl\enum, "2",       0, "%FR%"
+HKR,Ndi\params\FlowControl\enum, "3",       0, "%FT%"
+HKR,Ndi\params\FlowControl\enum, "4",       0, "%FRT%"
+
+HKR,Ndi\params\WolLinkSpeed,      ParamDesc, 0, %WSPD%
+HKR,Ndi\params\WolLinkSpeed,      type,      0, "enum"
+HKR,Ndi\params\WolLinkSpeed,      default,   0, "1"
+HKR,Ndi\params\WolLinkSpeed\enum, "0",       0, "%Auto%"
+HKR,Ndi\params\WolLinkSpeed\enum, "1",       0, "10MB"
+
+[E100_CSUM]
+HKR,Ndi\params\ChecksumOffload,      ParamDesc, 0, %CO%
+HKR,Ndi\params\ChecksumOffload,      type,      0, "enum"
+HKR,Ndi\params\ChecksumOffload,      default,   0, "1"
+HKR,Ndi\params\ChecksumOffload\enum, "0",       0, "%No%"
+HKR,Ndi\params\ChecksumOffload\enum, "1",       0, "%Yes%"
+
+[E100_UCODE]
+HKR,Ndi\params\UCodeIntDelay, ParamDesc, 0, %IDEL%
+HKR,Ndi\params\UCodeIntDelay, type,      0, "int"
+HKR,Ndi\params\UCodeIntDelay, default,   0, "1536"
+HKR,Ndi\params\UCodeIntDelay, min,       0, "0"
+HKR,Ndi\params\UCodeIntDelay, max,       0, "65535"
+HKR,Ndi\params\UCodeIntDelay, step,      0, "1"
+HKR,Ndi\params\UCodeIntDelay, base,      0, "10"
+
+HKR,Ndi\params\UCodeBundleMax, ParamDesc, 0, %BMAX%
+HKR,Ndi\params\UCodeBundleMax, type,      0, "int"
+HKR,Ndi\params\UCodeBundleMax, default,   0, "6"
+HKR,Ndi\params\UCodeBundleMax, min,       0, "1"
+HKR,Ndi\params\UCodeBundleMax, max,       0, "65535"
+HKR,Ndi\params\UCodeBundleMax, step,      0, "1"
+HKR,Ndi\params\UCodeBundleMax, base,      0, "10"
+
+HKR,Ndi\params\UCodeBundleSmall,      ParamDesc, 0, %BSML%
+HKR,Ndi\params\UCodeBundleSmall,      type,      0, "enum"
+HKR,Ndi\params\UCodeBundleSmall,      default,   0, "1"
+HKR,Ndi\params\UCodeBundleSmall\enum, "0",       0, "%No%"
+HKR,Ndi\params\UCodeBundleSmall\enum, "1",       0, "%Yes%"
+
+[E100_IPCB]
+HKR,Ndi\params\VlanPrio,      ParamDesc, 0, %PP%
+HKR,Ndi\params\VlanPrio,      type,      0, "enum"
+HKR,Ndi\params\VlanPrio,      default,   0, "1"
+HKR,Ndi\params\VlanPrio\enum, "0",       0, "%No%"
+HKR,Ndi\params\VlanPrio\enum, "1",       0, "%Yes%"
+
+HKR,Ndi\params\VlanTag,      ParamDesc, 0, %VT%
+HKR,Ndi\params\VlanTag,      type,      0, "enum"
+HKR,Ndi\params\VlanTag,      default,   0, "1"
+HKR,Ndi\params\VlanTag\enum, "0",       0, "%No%"
+HKR,Ndi\params\VlanTag\enum, "1",       0, "%Yes%"
+
+HKR,Ndi\params\VlanID, ParamDesc, 0, %VI%
+HKR,Ndi\params\VlanID, type,      0, "long"
+HKR,Ndi\params\VlanID, default,   0, "0"
+HKR,Ndi\params\VlanID, min,       0, "0"
+HKR,Ndi\params\VlanID, max,       0, "4095"
+HKR,Ndi\params\VlanID, step,      0, "1"
+HKR,Ndi\params\VlanID, base,      0, "10"
+
+HKR,Ndi\params\LargeSendOffload,      ParamDesc, 0, %LS%
+HKR,Ndi\params\LargeSendOffload,      type,      0, "enum"
+HKR,Ndi\params\LargeSendOffload,      default,   0, "1"
+HKR,Ndi\params\LargeSendOffload\enum, "0",       0, "%No%"
+HKR,Ndi\params\LargeSendOffload\enum, "1",       0, "%Yes%"
+
+[E100_Service_Inst]
+ServiceType=1
+StartType=3
+ErrorControl=1
+ServiceBinary=%12%\e100.sys
+LoadOrderGroup=NDIS
+
+[E100_EventLog]
+AddReg=E100_EventLog_AddReg
+
+[E100_EventLog_AddReg]
+HKR,,EventMessageFile, 0x00020000, "%%SystemRoot%%\System32\netevent.dll"
+HKR,,TypesSupported,   0x00010001, 7
+
+[Strings]
+; Non-localizable
+ReactOS="ReactOS Team"
+IntelMfg="Intel"
+VI="VLAN ID"
+
+NA="Network Address"
+SD="Speed & Duplex"
+Auto="Auto"
+No="No"
+Yes="Yes"
+FC="Flow Control"
+FR="Rx Pause"
+FT="Tx Pause"
+FRT="Rx & Tx Pause"
+IDEL="Interrupt Delay"
+BMAX="Max Frames Per Interrupt"
+BSML="Bundle Small Frames"
+TCB="Transmit Buffers"
+RFD="Receive Buffers"
+PP="Packet Priority"
+VT="VLAN Tagging"
+WSPD="WOL Link Speed"
+CO="Checksum Offload"
+LS="Large Send Offload"
+
+i557="Intel 82557 PRO/100 Ethernet Controller"
+i558="Intel 82558 PRO/100 Ethernet Controller"
+i559="Intel 82559 PRO/100 Ethernet Controller"
+i550="Intel 82550 PRO/100 Ethernet Controller"
+i551="Intel 82551 PRO/100 Ethernet Controller"
+i55xER="Intel 8255xER PRO/100 Ethernet Controller"
+i551QM="Intel 82551QM PRO/100 M Mobile Ethernet Controller"
+i552="Intel 82552 PRO/100 Ethernet Controller"
+ICH2="Intel ICH2 PRO/100 Ethernet Controller"
+ICH3="Intel ICH3 PRO/100 Ethernet Controller"
+ICH4="Intel ICH4 PRO/100 Ethernet Controller"
+ICH5="Intel ICH5 PRO/100 Ethernet Controller"
+CICH="Intel C-ICH PRO/100 Ethernet Controller"
+ICH6="Intel ICH6 PRO/100 Ethernet Controller"
+ICH7="Intel ICH7 PRO/100 Ethernet Controller"
+
+[Strings.0419]
+NA="Сетевой адрес"
+SD="Скорость и дуплекс"
+Auto="Авто"
+No="Нет"
+Yes="Да"
+FC="Управление потоком"
+FR="Кадры паузы приема"
+FT="Кадры паузы передачи"
+FRT="Кадры паузы приема и передачи"
+IDEL="Задержка прерывания"
+BMAX="Максимальное число кадров на прерывание"
+BSML="Компоновать короткие кадры"
+TCB="Буферы передачи"
+RFD="Буферы приема"
+PP="Приоритет кадров"
+VT="Маркировка кадров"
+WSPD="Скорость соединения после выключения"
+CO="Разгрузка контрольной суммы"
+LS="Разгрузка при большой отправке"
+
+i557="Intel 82557 PRO/100 сетевой контроллер"
+i558="Intel 82558 PRO/100 сетевой контроллер"
+i559="Intel 82559 PRO/100 сетевой контроллер"
+i550="Intel 82550 PRO/100 сетевой контроллер"
+i551="Intel 82551 PRO/100 сетевой контроллер"
+i55xER="Intel 8255xER PRO/100 сетевой контроллер"
+i551QM="Intel 82551QM PRO/100 M Mobile сетевой контроллер"
+i552="Intel 82552 PRO/100 сетевой контроллер"
+ICH2="Intel ICH2 PRO/100 сетевой контроллер"
+ICH3="Intel ICH3 PRO/100 сетевой контроллер"
+ICH4="Intel ICH4 PRO/100 сетевой контроллер"
+ICH5="Intel ICH5 PRO/100 сетевой контроллер"
+CICH="Intel C-ICH PRO/100 сетевой контроллер"
+ICH6="Intel ICH6 PRO/100 сетевой контроллер"
+ICH7="Intel ICH7 PRO/100 сетевой контроллер"
