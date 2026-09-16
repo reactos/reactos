@@ -1246,6 +1246,13 @@ PciCreateIoDescriptorFromBarLimit(
     /* The probe leaves only the bits the BAR implements, so the lowest one is its length */
     Length = AddressBits & (~AddressBits + 1);
 
+    /* A BAR that implements no address bits is not there */
+    if (!Length)
+    {
+        ResourceDescriptor->Type = CmResourceTypeNull;
+        return FALSE;
+    }
+
     /* A legacy memory BAR can only be placed below 1MB */
     if ((Type == CmResourceTypeMemory) &&
         ((Bar & PCI_ADDRESS_MEMORY_TYPE_MASK) == PCI_TYPE_20BIT))
