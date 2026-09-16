@@ -330,7 +330,7 @@ C_ASSERT( (SYMCRYPT_ALIGN_VALUE & (SYMCRYPT_ALIGN_VALUE - 1 )) == 0 );
 // Memcpy is not supported as it limits what the library is allowed to do.
 // Where needed the library provides for copy functions of its internal data structures.
 //
-#if SYMCRYPT_DEBUG
+#if SYMCRYPT_DEBUG && !defined(__REACTOS__)
     #define SYMCRYPT_MAGIC_ENABLED
 #endif
 
