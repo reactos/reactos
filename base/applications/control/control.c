@@ -104,7 +104,7 @@ RunControlPanel(LPCWSTR lpCmd)
 }
 
 static BOOL
-OpenUserAccounts()
+OpenUserAccounts(VOID)
 {
     WCHAR szPath[MAX_PATH];
 
