@@ -17,6 +17,13 @@ DBG_DEFAULT_CHANNEL(UserInput);
 #define LAST_RIT_EVENT_UPDATE_INTERVAL 1000UL
 #endif
 
+static
+VOID NTAPI
+RITReadApc(
+    _In_ PVOID ApcContext,
+    _In_ PIO_STATUS_BLOCK IoStatusBlock,
+    _In_ ULONG Reserved);
+
 /* GLOBALS *******************************************************************/
 
 PTHREADINFO ptiRawInput;
@@ -210,6 +217,17 @@ CloseInputDevice(
 
     if (DeviceInfo->Handle == ghKeyboardDevice)
         ghKeyboardDevice = NULL;
+}
+
+static
+VOID NTAPI
+RITReadApc(
+    _In_ PVOID ApcContext,
+    _In_ PIO_STATUS_BLOCK IoStatusBlock,
+    _In_ ULONG Reserved)
+{
+    PKEVENT Event = ApcContext;
+    KeSetEvent(Event, EVENT_INCREMENT, FALSE);
 }
 
 static
@@ -413,8 +431,8 @@ RawInputThreadMain(VOID)
             {
                 MouStatus = ZwReadFile(ghMouseDevice,
                                        NULL,
-                                       NULL,
-                                       NULL,
+                                       RITReadApc,
+                                       &pMouDevice->Event,
                                        &Mouse->Iosb,
                                        &Mouse->Mouse.Data,
                                        sizeof(MOUSE_INPUT_DATA),
@@ -433,8 +451,8 @@ RawInputThreadMain(VOID)
             {
                 KbdStatus = ZwReadFile(ghKeyboardDevice,
                                        NULL,
-                                       NULL,
-                                       NULL,
+                                       RITReadApc,
+                                       &pKbdDevice->Event,
                                        &Keyboard->Iosb,
                                        &Keyboard->Keyboard.Data,
                                        sizeof(KEYBOARD_INPUT_DATA),
