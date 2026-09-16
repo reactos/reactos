@@ -97,6 +97,41 @@ DoTheScreenSaver(VOID)
 }
 
 /*
+ * CreateInputDevice
+ *
+ * Create input device structure
+ *
+ */
+static
+PINPUT_DEVICE_INFO
+CreateInputDevice(
+    _In_ UCHAR DeviceType,
+    _In_ PUNICODE_STRING DeviceName)
+{
+    PINPUT_DEVICE_INFO DeviceInfo;
+
+    DeviceInfo = ExAllocatePoolWithTag(PagedPool, sizeof(*DeviceInfo) + DeviceName->Length + sizeof(UNICODE_NULL), USERTAG_PNP);
+    if (!DeviceInfo)
+    {
+        ERR("Failed to allocate memory for INPUT_DEVICE_INFO\n");
+        return NULL;
+    }
+
+    RtlZeroMemory(DeviceInfo, sizeof(*DeviceInfo));
+    DeviceInfo->DeviceType = DeviceType;
+    DeviceInfo->DeviceName.Buffer = (PWCH)(DeviceInfo + 1);
+    DeviceInfo->DeviceName.MaximumLength = DeviceName->Length + sizeof(UNICODE_NULL);
+    RtlCopyUnicodeString(&DeviceInfo->DeviceName, DeviceName);
+
+    AcquireDeviceInfoListMutex();
+    DeviceInfo->pNextDeviceInfo = gpInputDeviceInfo;
+    gpInputDeviceInfo = DeviceInfo;
+    ReleaseDeviceInfoListMutex();
+
+    return DeviceInfo;
+}
+
+/*
  * OpenInputDevice
  *
  * Opens input device for asynchronous access
@@ -173,27 +208,18 @@ VOID NTAPI
 RawInputThreadMain(VOID)
 {
     NTSTATUS MouStatus = STATUS_UNSUCCESSFUL, KbdStatus = STATUS_UNSUCCESSFUL, Status;
-    IO_STATUS_BLOCK MouIosb, KbdIosb;
     PFILE_OBJECT pKbdDevice = NULL, pMouDevice = NULL;
     LARGE_INTEGER ByteOffset;
     //LARGE_INTEGER WaitTimeout;
     PVOID WaitObjects[4], pSignaledObject = NULL;
     KWAIT_BLOCK WaitBlockArray[RTL_NUMBER_OF(WaitObjects)];
     ULONG cWaitObjects = 0, cMaxWaitObjects = 2;
-    MOUSE_INPUT_DATA MouseInput;
-    KEYBOARD_INPUT_DATA KeyInput;
     PVOID ShutdownEvent;
     HWINSTA hWinSta;
-    INPUT_DEVICE_INFO Mouse;
-    INPUT_DEVICE_INFO Keyboard;
-
-    RtlZeroMemory(&Mouse, sizeof(Mouse));
-    Mouse.DeviceType = RIM_TYPEMOUSE;
-    RtlInitUnicodeString(&Mouse.DeviceName, L"\\Device\\PointerClass0");
-
-    RtlZeroMemory(&Keyboard, sizeof(Keyboard));
-    Keyboard.DeviceType = RIM_TYPEKEYBOARD;
-    RtlInitUnicodeString(&Keyboard.DeviceName, L"\\Device\\KeyboardClass0");
+    PINPUT_DEVICE_INFO Mouse;
+    PINPUT_DEVICE_INFO Keyboard;
+    UNICODE_STRING LegacyMouseName = RTL_CONSTANT_STRING(L"\\Device\\PointerClass0");
+    UNICODE_STRING LegacyKeyboardName = RTL_CONSTANT_STRING(L"\\Device\\KeyboardClass0");
 
     ByteOffset.QuadPart = (LONGLONG)0;
     //WaitTimeout.QuadPart = (LONGLONG)(-10000000);
@@ -229,6 +255,11 @@ RawInputThreadMain(VOID)
     Status = ExInitializeResourceLite(gpDeviceInfoListMutex);
     ASSERT(NT_SUCCESS(Status));
 
+    Mouse = CreateInputDevice(RIM_TYPEMOUSE, &LegacyMouseName);
+    ASSERT(Mouse);
+    Keyboard = CreateInputDevice(RIM_TYPEKEYBOARD, &LegacyKeyboardName);
+    ASSERT(Keyboard);
+
     UserEnterExclusive();
     StartTheTimers();
     UserLeave();
@@ -242,30 +273,26 @@ RawInputThreadMain(VOID)
         if (!ghMouseDevice)
         {
             /* Check if mouse device already exists */
-            Status = OpenInputDevice(&Mouse);
+            Status = OpenInputDevice(Mouse);
             if (NT_SUCCESS(Status))
             {
                 ++cMaxWaitObjects;
                 TRACE("Mouse connected!\n");
-                Mouse.pNextDeviceInfo = gpInputDeviceInfo;
-                gpInputDeviceInfo = &Mouse;
-                ghMouseDevice = Mouse.Handle;
-                Status = ObReferenceObjectByHandle(Mouse.Handle, SYNCHRONIZE, NULL, KernelMode, (PVOID*)&pMouDevice, NULL);
+                ghMouseDevice = Mouse->Handle;
+                Status = ObReferenceObjectByHandle(Mouse->Handle, SYNCHRONIZE, NULL, KernelMode, (PVOID*)&pMouDevice, NULL);
                 ASSERT(NT_SUCCESS(Status));
             }
         }
         if (!ghKeyboardDevice)
         {
             /* Check if keyboard device already exists */
-            Status = OpenInputDevice(&Keyboard);
+            Status = OpenInputDevice(Keyboard);
             if (NT_SUCCESS(Status))
             {
                 ++cMaxWaitObjects;
                 TRACE("Keyboard connected!\n");
-                Keyboard.pNextDeviceInfo = gpInputDeviceInfo;
-                gpInputDeviceInfo = &Keyboard;
-                ghKeyboardDevice = Keyboard.Handle;
-                Status = ObReferenceObjectByHandle(Keyboard.Handle, SYNCHRONIZE, NULL, KernelMode, (PVOID*)&pKbdDevice, NULL);
+                ghKeyboardDevice = Keyboard->Handle;
+                Status = ObReferenceObjectByHandle(Keyboard->Handle, SYNCHRONIZE, NULL, KernelMode, (PVOID*)&pKbdDevice, NULL);
                 ASSERT(NT_SUCCESS(Status));
                 // Get and load keyboard attributes.
                 UserInitKeyboard(ghKeyboardDevice);
@@ -297,8 +324,8 @@ RawInputThreadMain(VOID)
                                        NULL,
                                        NULL,
                                        NULL,
-                                       &MouIosb,
-                                       &MouseInput,
+                                       &Mouse->Iosb,
+                                       &Mouse->Mouse.Data,
                                        sizeof(MOUSE_INPUT_DATA),
                                        &ByteOffset,
                                        NULL);
@@ -317,8 +344,8 @@ RawInputThreadMain(VOID)
                                        NULL,
                                        NULL,
                                        NULL,
-                                       &KbdIosb,
-                                       &KeyInput,
+                                       &Keyboard->Iosb,
+                                       &Keyboard->Keyboard.Data,
                                        sizeof(KEYBOARD_INPUT_DATA),
                                        &ByteOffset,
                                        NULL);
@@ -350,12 +377,12 @@ RawInputThreadMain(VOID)
                 if ((MouStatus == STATUS_PENDING) &&
                     (pSignaledObject == &pMouDevice->Event))
                 {
-                    MouStatus = MouIosb.Status;
+                    MouStatus = Mouse->Iosb.Status;
                 }
                 else if ((KbdStatus == STATUS_PENDING) &&
                          (pSignaledObject == &pKbdDevice->Event))
                 {
-                    KbdStatus = KbdIosb.Status;
+                    KbdStatus = Keyboard->Iosb.Status;
                 }
                 else if (pSignaledObject == MasterTimer)
                 {
@@ -379,7 +406,7 @@ RawInputThreadMain(VOID)
 
             /* Process data */
             UserEnterExclusive();
-            UserProcessMouseInput(&Mouse, &MouseInput);
+            UserProcessMouseInput(Mouse, &Mouse->Mouse.Data);
             UserLeave();
         }
         else if (MouStatus != STATUS_PENDING)
@@ -389,15 +416,15 @@ RawInputThreadMain(VOID)
         if (NT_SUCCESS(KbdStatus) && KbdStatus != STATUS_PENDING)
         {
             TRACE("KeyboardEvent: %s %04x\n",
-                  (KeyInput.Flags & KEY_BREAK) ? "up" : "down",
-                  KeyInput.MakeCode);
+                  (Keyboard->Keyboard.Data.Flags & KEY_BREAK) ? "up" : "down",
+                  Keyboard->Keyboard.Data.MakeCode);
 
             /* Set LastInputTick */
             IntLastInputTick(TRUE);
 
             /* Process data */
             UserEnterExclusive();
-            UserProcessKeyboardInput(&Keyboard, &KeyInput);
+            UserProcessKeyboardInput(Keyboard, &Keyboard->Keyboard.Data);
             UserLeave();
         }
         else if (KbdStatus != STATUS_PENDING)
@@ -406,7 +433,7 @@ RawInputThreadMain(VOID)
 
     if (ghMouseDevice)
     {
-        (void)ZwCancelIoFile(ghMouseDevice, &MouIosb);
+        (void)ZwCancelIoFile(ghMouseDevice, &Mouse->Iosb);
         ObCloseHandle(ghMouseDevice, KernelMode);
         ObDereferenceObject(pMouDevice);
         ghMouseDevice = NULL;
@@ -414,7 +441,7 @@ RawInputThreadMain(VOID)
 
     if (ghKeyboardDevice)
     {
-        (void)ZwCancelIoFile(ghKeyboardDevice, &KbdIosb);
+        (void)ZwCancelIoFile(ghKeyboardDevice, &Keyboard->Iosb);
         ObCloseHandle(ghKeyboardDevice, KernelMode);
         ObDereferenceObject(pKbdDevice);
         ghKeyboardDevice = NULL;
