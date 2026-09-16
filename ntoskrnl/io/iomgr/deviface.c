@@ -566,6 +566,20 @@ Quit:
     return Status;
 }
 
+NTSTATUS
+IopOpenDeviceInterfaceKeys(
+    _In_ PCUNICODE_STRING SymbolicLinkName,
+    _In_ ACCESS_MASK DesiredAccess,
+    _Out_opt_ PHANDLE DeviceKey,
+    _Out_opt_ PHANDLE InstanceKey)
+{
+    return OpenRegistryHandlesFromSymbolicLink(SymbolicLinkName,
+                                               DesiredAccess,
+                                               NULL,
+                                               DeviceKey,
+                                               InstanceKey);
+}
+
 /*++
  * @name IoOpenDeviceInterfaceRegistryKey
  * @unimplemented

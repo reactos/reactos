@@ -5150,13 +5150,14 @@ RtlConvertLCIDToString(
     _Out_writes_(Size) PWSTR pResultBuf,
     _In_ ULONG Size);
 
-_Success_(return != FALSE)
 NTSYSAPI
-BOOLEAN
+NTSTATUS
 NTAPI
-RtlCultureNameToLCID(
-    _In_ PCUNICODE_STRING String,
-    _Out_ PLCID Lcid);
+RtlLcidToLocaleName(
+    _In_ LCID Lcid,
+    _Inout_ PUNICODE_STRING LocaleName,
+    _In_ ULONG Flags,
+    _In_ BOOLEAN AllocateDestinationString);
 
 NTSYSAPI
 NTSTATUS
@@ -5172,6 +5173,9 @@ NTAPI
 RtlIsValidLocaleName(
     _In_ LPCWSTR LocaleName,
     _In_ ULONG Flags);
+
+// Flags for RtlLocaleNameToLcid / RtlLcidToLocaleName / RtlIsValidLocaleName
+#define RTL_LOCALE_ALLOW_NEUTRAL_NAMES 0x00000002 // Return locales like "en" or "de"
 
 #endif /* Win Vista or ReactOS Ntdll build */
 
@@ -5191,7 +5195,16 @@ RtlTryAcquireSRWLockExclusive(PRTL_SRWLOCK SRWLock);
 
 #endif // NTOS_MODE_USER
 
-#if (_WIN32_WINNT >= _WIN32_WINNT_VISTA) || defined(__REACTOS__)
+#if (defined(NTOS_MODE_USER) && (_WIN32_WINNT >= _WIN32_WINNT_VISTA)) || \
+    (_WIN32_WINNT >= _WIN32_WINNT_WIN8) || defined(__REACTOS__)
+
+_Success_(return != FALSE)
+NTSYSAPI
+BOOLEAN
+NTAPI
+RtlCultureNameToLCID(
+    _In_ PCUNICODE_STRING String,
+    _Out_ PLCID Lcid);
 
 _Success_(return != FALSE)
 NTSYSAPI
@@ -5201,18 +5214,7 @@ RtlLCIDToCultureName(
     _In_ LCID Lcid,
     _Inout_ PUNICODE_STRING String);
 
-NTSYSAPI
-NTSTATUS
-NTAPI
-RtlLcidToLocaleName(
-    _In_ LCID Lcid,
-    _Inout_ PUNICODE_STRING LocaleName,
-    _In_ ULONG Flags,
-    _In_ BOOLEAN AllocateDestinationString);
-
-#define RTL_LOCALE_ALLOW_NEUTRAL_NAMES 0x00000002
-
-#endif /* Win Vista or ReactOS */
+#endif /* Vista+ ntdll, Win8+ ntoskrnl, or ReactOS */
 
 NTSYSAPI
 NTSTATUS

@@ -3,5 +3,6 @@
 #include <wdm.h>
 #include <initguid.h>
 #include <poclass.h>
+#include <devpkey.h>
 
 /* NO CODE HERE, THIS IS JUST REQUIRED FOR THE GUID DEFINITIONS */
