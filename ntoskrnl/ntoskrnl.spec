@@ -405,6 +405,7 @@
 @ stdcall IoFreeIrp(ptr)
 @ stdcall IoFreeMdl(ptr)
 @ stdcall IoFreeWorkItem(ptr)
+@ stdcall -version=0x601+ IoGetAffinityInterrupt(ptr ptr)
 @ stdcall IoGetAttachedDevice(ptr)
 @ stdcall IoGetAttachedDeviceReference(ptr)
 @ stdcall IoGetBaseFileSystemDeviceObject(ptr)
