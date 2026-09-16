@@ -8,6 +8,7 @@
  */
 
 #include <win32k.h>
+#include <wdmguid.h>
 DBG_DEFAULT_CHANNEL(UserInput);
 
 /* LastRITEventTickCount update cycle has been adjusted from 60s to 1s since NT6 */
@@ -35,6 +36,7 @@ PINPUT_DEVICE_INFO gpInputDeviceInfo = NULL;
 PERESOURCE gpDeviceInfoListMutex = NULL;
 
 static DWORD LastInputTick = 0;
+static PDRIVER_OBJECT gpRITDriverObject;
 static PKEVENT gDeviceListChangedEvent;
 
 /* FUNCTIONS *****************************************************************/
@@ -256,6 +258,41 @@ StartReadInputDevice(
         NULL);
 }
 
+/*
+ * RawInputDriverEntry
+ *
+ * Very simple driver, only to get a pointer to a PDRIVER_OBJECT
+ */
+static
+NTSTATUS NTAPI
+RawInputDriverEntry(
+    _In_ PDRIVER_OBJECT DriverObject,
+    _In_ PUNICODE_STRING RegistryPath)
+{
+    gpRITDriverObject = DriverObject;
+    return STATUS_SUCCESS;
+}
+
+static
+NTSTATUS NTAPI
+RITDeviceInterfaceNotify(
+    _In_ PVOID NotificationStructure,
+    _Inout_opt_ PVOID Context)
+{
+    PDEVICE_INTERFACE_CHANGE_NOTIFICATION Notification = NotificationStructure;
+    UCHAR DeviceType = PtrToUlong(Context);
+
+    if (IsEqualGUID(&Notification->Event, &GUID_DEVICE_INTERFACE_ARRIVAL))
+    {
+        TRACE("Arrival of %wZ (type %d)\n", Notification->SymbolicLinkName, DeviceType);
+    }
+    else if (IsEqualGUID(&Notification->Event, &GUID_DEVICE_INTERFACE_REMOVAL))
+    {
+        TRACE("Removal of %wZ\n", Notification->SymbolicLinkName);
+    }
+    return STATUS_SUCCESS;
+}
+
 static
 VOID NTAPI
 RITReadApc(
@@ -415,6 +452,8 @@ RawInputThreadMain(VOID)
     KWAIT_BLOCK WaitBlockArray[RTL_NUMBER_OF(WaitObjects)];
     PVOID ShutdownEvent;
     HWINSTA hWinSta;
+    UNICODE_STRING ustrDriverName = RTL_CONSTANT_STRING(L"\\Driver\\Win32k");
+    PVOID Notification;
     PINPUT_DEVICE_INFO Mouse;
     PINPUT_DEVICE_INFO Keyboard;
     UNICODE_STRING LegacyMouseName = RTL_CONSTANT_STRING(L"\\Device\\PointerClass0");
@@ -455,6 +494,29 @@ RawInputThreadMain(VOID)
     gpDeviceInfoListMutex = ExAllocatePoolWithTag(NonPagedPool, sizeof(*gpDeviceInfoListMutex), USERTAG_SYSTEM);
     ASSERT(gpDeviceInfoListMutex);
     Status = ExInitializeResourceLite(gpDeviceInfoListMutex);
+    ASSERT(NT_SUCCESS(Status));
+
+    Status = IoCreateDriver(&ustrDriverName, RawInputDriverEntry);
+    ASSERT(NT_SUCCESS(Status));
+
+    Status = IoRegisterPlugPlayNotification(
+        EventCategoryDeviceInterfaceChange,
+        PNPNOTIFY_DEVICE_INTERFACE_INCLUDE_EXISTING_INTERFACES,
+        (PVOID)&GUID_DEVINTERFACE_KEYBOARD,
+        gpRITDriverObject,
+        RITDeviceInterfaceNotify,
+        ULongToPtr(RIM_TYPEKEYBOARD),
+        &Notification);
+    ASSERT(NT_SUCCESS(Status));
+
+    Status = IoRegisterPlugPlayNotification(
+        EventCategoryDeviceInterfaceChange,
+        PNPNOTIFY_DEVICE_INTERFACE_INCLUDE_EXISTING_INTERFACES,
+        (PVOID)&GUID_DEVINTERFACE_MOUSE,
+        gpRITDriverObject,
+        RITDeviceInterfaceNotify,
+        ULongToPtr(RIM_TYPEMOUSE),
+        &Notification);
     ASSERT(NT_SUCCESS(Status));
 
     Mouse = CreateInputDevice(RIM_TYPEMOUSE, &LegacyMouseName);
