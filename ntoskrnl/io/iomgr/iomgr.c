@@ -626,6 +626,9 @@ IoInitSystem(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     /* Initialize HAL Root Bus Driver */
     HalInitPnpDriver();
 
+    /* The device the HAL reported owns the resources the HAL uses */
+    IopMarkHalDeviceNode();
+
     /* Reenumerate what HAL has added (synchronously)
      * This function call should eventually become a 2nd stage of the PnP initialization */
     PiQueueDeviceAction(IopRootDeviceNode->PhysicalDeviceObject,
