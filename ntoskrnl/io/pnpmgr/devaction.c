@@ -1200,6 +1200,7 @@ PiInitializeDevNode(
     IO_STATUS_BLOCK IoStatusBlock;
     NTSTATUS Status;
     HANDLE InstanceKey = NULL;
+    BOOLEAN IsBootConfigQueried;
     UNICODE_STRING InstancePathU;
     PDEVICE_OBJECT OldDeviceObject;
 
@@ -1287,21 +1288,28 @@ PiInitializeDevNode(
         DeviceNode->ChildBusTypeIndex = -1;
     }
 
-    DPRINT("Sending IRP_MN_QUERY_RESOURCES to device stack\n");
-
-    Status = IopInitiatePnpIrp(DeviceNode->PhysicalDeviceObject,
-                               &IoStatusBlock,
-                               IRP_MN_QUERY_RESOURCES,
-                               NULL);
-    if (NT_SUCCESS(Status) && IoStatusBlock.Information)
+    /* Free the requirements left from a previous initialization */
+    if (DeviceNode->ResourceRequirements != NULL)
     {
-        DeviceNode->BootResources = (PCM_RESOURCE_LIST)IoStatusBlock.Information;
-        IopDeviceNodeSetFlag(DeviceNode, DNF_HAS_BOOT_CONFIG);
+        ExFreePool(DeviceNode->ResourceRequirements);
+        DeviceNode->ResourceRequirements = NULL;
     }
-    else
+
+    /* A boot configuration that is already known is kept */
+    IsBootConfigQueried = (DeviceNode->BootResources == NULL);
+    if (IsBootConfigQueried)
     {
-        DPRINT("IopInitiatePnpIrp() failed (Status %x) or IoStatusBlock.Information=NULL\n", Status);
-        DeviceNode->BootResources = NULL;
+        DPRINT("Sending IRP_MN_QUERY_RESOURCES to device stack\n");
+
+        Status = IopInitiatePnpIrp(DeviceNode->PhysicalDeviceObject,
+                                   &IoStatusBlock,
+                                   IRP_MN_QUERY_RESOURCES,
+                                   NULL);
+        if (NT_SUCCESS(Status) && IoStatusBlock.Information)
+            DeviceNode->BootResources = (PCM_RESOURCE_LIST)IoStatusBlock.Information;
+        else
+            DPRINT("IopInitiatePnpIrp() failed (Status %x) or IoStatusBlock.Information=NULL\n",
+                   Status);
     }
 
     DPRINT("Sending IRP_MN_QUERY_RESOURCE_REQUIREMENTS to device stack\n");
@@ -1323,6 +1331,17 @@ PiInitializeDevNode(
     if (InstanceKey != NULL)
     {
         IopSetDeviceInstanceData(InstanceKey, DeviceNode);
+    }
+
+    /* Keep other devices from being assigned the boot configuration */
+    if (IsBootConfigQueried && DeviceNode->BootResources != NULL)
+    {
+        Status = IopReserveBootConfig(DeviceNode);
+        if (NT_SUCCESS(Status))
+            IopDeviceNodeSetFlag(DeviceNode, DNF_HAS_BOOT_CONFIG);
+        else
+            DPRINT1("Failed to reserve the boot config of %wZ (Status 0x%08lx)\n",
+                    &DeviceNode->InstancePath, Status);
     }
 
     // Try installing a critical device, so its Service key is populated
@@ -2404,8 +2423,10 @@ PiDevNodeStateMachine(
                 }
                 else
                 {
-                    // TODO: IopDoDeferredSetInterfaceState and IopAllocateLegacyBootResources
-                    // are called here too
+                    // TODO: IopDoDeferredSetInterfaceState is called here too
+
+                    // the legacy bus of a started bus can take the boot configs held for it
+                    IopReserveLegacyBusBootConfigs(currentNode);
 
                     PiSetDevNodeState(currentNode, DeviceNodeStartPostWork);
                 }

@@ -1467,8 +1467,7 @@ IoGetDeviceProperty(IN PDEVICE_OBJECT DeviceObject,
         case DevicePropertyBootConfigurationTranslated:
 
             /* Validate we have resources */
-            if (!DeviceNode->BootResources)
-//            if (!DeviceNode->BootResourcesTranslated) // FIXFIX: Need this field
+            if (!DeviceNode->BootResourcesTranslated)
             {
                 /* No resources will still fake success, but with 0 bytes */
                 *ResultLength = 0;
@@ -1476,8 +1475,8 @@ IoGetDeviceProperty(IN PDEVICE_OBJECT DeviceObject,
             }
 
             /* This is the format of the returned data */
-            PIP_RETURN_DATA(PnpDetermineResourceListSize(DeviceNode->BootResources), // FIXFIX: Should use BootResourcesTranslated
-                            DeviceNode->BootResources); // FIXFIX: Should use BootResourcesTranslated
+            PIP_RETURN_DATA(PnpDetermineResourceListSize(DeviceNode->BootResourcesTranslated),
+                            DeviceNode->BootResourcesTranslated);
 
         case DevicePropertyPhysicalDeviceObjectName:
 
