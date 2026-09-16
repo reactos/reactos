@@ -87,6 +87,7 @@ Author:
 #define CmResourceTypeDevicePrivate             129
 #define CmResourceTypePcCardConfig              130
 #define CmResourceTypeMfCardConfig              131
+#define CmResourceTypeConnection                132
 
 
 //
