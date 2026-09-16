@@ -35,7 +35,6 @@ PINPUT_DEVICE_INFO gpInputDeviceInfo = NULL;
 PERESOURCE gpDeviceInfoListMutex = NULL;
 
 static DWORD LastInputTick = 0;
-static HANDLE ghMouseDevice;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -220,14 +219,81 @@ CloseInputDevice(
 }
 
 static
+VOID
+StartReadInputDevice(
+    _In_ PINPUT_DEVICE_INFO DeviceInfo)
+{
+    PVOID Buffer;
+    SIZE_T BufferSize;
+    LARGE_INTEGER ByteOffset;
+
+    ByteOffset.QuadPart = (LONGLONG)0;
+
+    if (DeviceInfo->DeviceType == RIM_TYPEKEYBOARD)
+    {
+        Buffer = &DeviceInfo->Keyboard.Data,
+        BufferSize = sizeof(DeviceInfo->Keyboard.Data);
+    }
+    else if (DeviceInfo->DeviceType == RIM_TYPEMOUSE)
+    {
+        Buffer = &DeviceInfo->Mouse.Data,
+        BufferSize = sizeof(DeviceInfo->Mouse.Data);
+    }
+    else
+        return;
+
+    DeviceInfo->Status = ZwReadFile(
+        DeviceInfo->Handle,
+        NULL,
+        RITReadApc,
+        DeviceInfo,
+        &DeviceInfo->Iosb,
+        Buffer,
+        BufferSize,
+        &ByteOffset,
+        NULL);
+}
+
+static
 VOID NTAPI
 RITReadApc(
     _In_ PVOID ApcContext,
     _In_ PIO_STATUS_BLOCK IoStatusBlock,
     _In_ ULONG Reserved)
 {
-    PKEVENT Event = ApcContext;
-    KeSetEvent(Event, EVENT_INCREMENT, FALSE);
+    PINPUT_DEVICE_INFO DeviceInfo = ApcContext;
+
+    if (DeviceInfo->Handle && NT_SUCCESS(IoStatusBlock->Status))
+    {
+        if (DeviceInfo->DeviceType == RIM_TYPEKEYBOARD)
+        {
+            TRACE("KeyboardEvent: %s %04x\n",
+                  (DeviceInfo->Keyboard.Data.Flags & KEY_BREAK) ? "up" : "down",
+                  DeviceInfo->Keyboard.Data.MakeCode);
+
+            /* Set LastInputTick */
+            IntLastInputTick(TRUE);
+
+            /* Process data */
+            UserEnterExclusive();
+            UserProcessKeyboardInput(DeviceInfo, &DeviceInfo->Keyboard.Data);
+            UserLeave();
+        }
+        else if (DeviceInfo->DeviceType == RIM_TYPEMOUSE)
+        {
+            TRACE("MouseEvent\n");
+
+            /* Set LastInputTick */
+            IntLastInputTick(TRUE);
+
+            /* Process data */
+            UserEnterExclusive();
+            UserProcessMouseInput(DeviceInfo, &DeviceInfo->Mouse.Data);
+            UserLeave();
+        }
+    }
+
+    StartReadInputDevice(DeviceInfo);
 }
 
 static
@@ -277,6 +343,7 @@ ProcessDeviceChanges(
                 {
                     TRACE("Mouse connected!\n");
                 }
+                StartReadInputDevice(DeviceInfo);
             }
         }
 
@@ -340,13 +407,10 @@ VOID NTAPI
 RawInputThreadMain(VOID)
 {
     PINPUT_DEVICE_INFO DeviceInfo;
-    NTSTATUS MouStatus = STATUS_UNSUCCESSFUL, KbdStatus = STATUS_UNSUCCESSFUL, Status;
-    PFILE_OBJECT pKbdDevice = NULL, pMouDevice = NULL;
-    LARGE_INTEGER ByteOffset;
+    NTSTATUS Status;
     //LARGE_INTEGER WaitTimeout;
-    PVOID WaitObjects[4], pSignaledObject = NULL;
+    PVOID WaitObjects[2], pSignaledObject = NULL;
     KWAIT_BLOCK WaitBlockArray[RTL_NUMBER_OF(WaitObjects)];
-    ULONG cWaitObjects = 0, cMaxWaitObjects = 2;
     PVOID ShutdownEvent;
     HWINSTA hWinSta;
     PINPUT_DEVICE_INFO Mouse;
@@ -354,7 +418,6 @@ RawInputThreadMain(VOID)
     UNICODE_STRING LegacyMouseName = RTL_CONSTANT_STRING(L"\\Device\\PointerClass0");
     UNICODE_STRING LegacyKeyboardName = RTL_CONSTANT_STRING(L"\\Device\\KeyboardClass0");
 
-    ByteOffset.QuadPart = (LONGLONG)0;
     //WaitTimeout.QuadPart = (LONGLONG)(-10000000);
 
     ptiRawInput = GetW32ThreadInfo();
@@ -398,152 +461,42 @@ RawInputThreadMain(VOID)
     StartTheTimers();
     UserLeave();
 
-    NT_ASSERT(ghMouseDevice == NULL);
     NT_ASSERT(ghKeyboardDevice == NULL);
+    ghKeyboardDevice = Keyboard->Handle;
 
     PoRequestShutdownEvent(&ShutdownEvent);
     for (;;)
     {
-        if (!ghMouseDevice && Mouse->Handle)
-        {
-            ++cMaxWaitObjects;
-            ghMouseDevice = Mouse->Handle;
-            Status = ObReferenceObjectByHandle(Mouse->Handle, SYNCHRONIZE, NULL, KernelMode, (PVOID*)&pMouDevice, NULL);
-            ASSERT(NT_SUCCESS(Status));
-        }
-        if (!ghKeyboardDevice && Keyboard->Handle)
-        {
-            ++cMaxWaitObjects;
-            ghKeyboardDevice = Keyboard->Handle;
-            Status = ObReferenceObjectByHandle(Keyboard->Handle, SYNCHRONIZE, NULL, KernelMode, (PVOID*)&pKbdDevice, NULL);
-            ASSERT(NT_SUCCESS(Status));
-        }
-
         /* Reset WaitHandles array */
-        cWaitObjects = 0;
-        WaitObjects[cWaitObjects++] = ShutdownEvent;
-        WaitObjects[cWaitObjects++] = MasterTimer;
+        WaitObjects[0] = ShutdownEvent;
+        WaitObjects[1] = MasterTimer;
 
-        if (ghMouseDevice)
+        Status = KeWaitForMultipleObjects(RTL_NUMBER_OF(WaitObjects),
+                                          WaitObjects,
+                                          WaitAny,
+                                          UserRequest,
+                                          KernelMode,
+                                          TRUE,
+                                          NULL,//&WaitTimeout,
+                                          WaitBlockArray);
+
+        if ((Status >= STATUS_WAIT_0) &&
+            (Status < (STATUS_WAIT_0 + RTL_NUMBER_OF(WaitObjects))))
         {
-            /* Try to read from mouse if previous reading is not pending */
-            if (MouStatus != STATUS_PENDING)
+            /* Some device has finished reading */
+            pSignaledObject = WaitObjects[Status - STATUS_WAIT_0];
+
+            if (pSignaledObject == MasterTimer)
             {
-                MouStatus = ZwReadFile(ghMouseDevice,
-                                       NULL,
-                                       RITReadApc,
-                                       &pMouDevice->Event,
-                                       &Mouse->Iosb,
-                                       &Mouse->Mouse.Data,
-                                       sizeof(MOUSE_INPUT_DATA),
-                                       &ByteOffset,
-                                       NULL);
+                ProcessTimers();
             }
-
-            if (MouStatus == STATUS_PENDING)
-                WaitObjects[cWaitObjects++] = &pMouDevice->Event;
-        }
-
-        if (ghKeyboardDevice)
-        {
-            /* Try to read from keyboard if previous reading is not pending */
-            if (KbdStatus != STATUS_PENDING)
+            else if (pSignaledObject == ShutdownEvent)
             {
-                KbdStatus = ZwReadFile(ghKeyboardDevice,
-                                       NULL,
-                                       RITReadApc,
-                                       &pKbdDevice->Event,
-                                       &Keyboard->Iosb,
-                                       &Keyboard->Keyboard.Data,
-                                       sizeof(KEYBOARD_INPUT_DATA),
-                                       &ByteOffset,
-                                       NULL);
-
+                break;
             }
-            if (KbdStatus == STATUS_PENDING)
-                WaitObjects[cWaitObjects++] = &pKbdDevice->Event;
+            else ASSERT(FALSE);
         }
-
-        /* If all objects are pending, wait for them */
-        if (cWaitObjects == cMaxWaitObjects)
-        {
-            Status = KeWaitForMultipleObjects(cWaitObjects,
-                                              WaitObjects,
-                                              WaitAny,
-                                              UserRequest,
-                                              KernelMode,
-                                              TRUE,
-                                              NULL,//&WaitTimeout,
-                                              WaitBlockArray);
-
-            if ((Status >= STATUS_WAIT_0) &&
-                (Status < (STATUS_WAIT_0 + (LONG)cWaitObjects)))
-            {
-                /* Some device has finished reading */
-                pSignaledObject = WaitObjects[Status - STATUS_WAIT_0];
-
-                /* Check if it is mouse or keyboard and update status */
-                if ((MouStatus == STATUS_PENDING) &&
-                    (pSignaledObject == &pMouDevice->Event))
-                {
-                    MouStatus = Mouse->Iosb.Status;
-                }
-                else if ((KbdStatus == STATUS_PENDING) &&
-                         (pSignaledObject == &pKbdDevice->Event))
-                {
-                    KbdStatus = Keyboard->Iosb.Status;
-                }
-                else if (pSignaledObject == MasterTimer)
-                {
-                    ProcessTimers();
-                }
-                else if (pSignaledObject == ShutdownEvent)
-                {
-                    break;
-                }
-                else ASSERT(FALSE);
-            }
-        }
-
-        /* Have we successed reading from mouse? */
-        if (NT_SUCCESS(MouStatus) && MouStatus != STATUS_PENDING)
-        {
-            TRACE("MouseEvent\n");
-
-            /* Set LastInputTick */
-            IntLastInputTick(TRUE);
-
-            /* Process data */
-            UserEnterExclusive();
-            UserProcessMouseInput(Mouse, &Mouse->Mouse.Data);
-            UserLeave();
-        }
-        else if (MouStatus != STATUS_PENDING)
-            ERR("Failed to read from mouse: %x.\n", MouStatus);
-
-        /* Have we successed reading from keyboard? */
-        if (NT_SUCCESS(KbdStatus) && KbdStatus != STATUS_PENDING)
-        {
-            TRACE("KeyboardEvent: %s %04x\n",
-                  (Keyboard->Keyboard.Data.Flags & KEY_BREAK) ? "up" : "down",
-                  Keyboard->Keyboard.Data.MakeCode);
-
-            /* Set LastInputTick */
-            IntLastInputTick(TRUE);
-
-            /* Process data */
-            UserEnterExclusive();
-            UserProcessKeyboardInput(Keyboard, &Keyboard->Keyboard.Data);
-            UserLeave();
-        }
-        else if (KbdStatus != STATUS_PENDING)
-            ERR("Failed to read from keyboard: %x.\n", KbdStatus);
     }
-
-    if (ghMouseDevice)
-        ObDereferenceObject(pMouDevice);
-    if (ghKeyboardDevice)
-        ObDereferenceObject(pKbdDevice);
 
     AcquireDeviceInfoListMutex();
     while (gpInputDeviceInfo)
