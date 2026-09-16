@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS CRT library
  * LICENSE:     MIT (https://spdx.org/licenses/MIT)
  * PURPOSE:     Call an exception filter funclet with the frame pointer set up
- * COPYRIGHT:   Copyright 2026 Yausen <yuyi2439@qq.com>
+ * COPYRIGHT:   Copyright 2026 Fushen Yuan <yuyi2439@qq.com>
  */
 
 /* INCLUDES ******************************************************************/
