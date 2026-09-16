@@ -35,6 +35,7 @@ PINPUT_DEVICE_INFO gpInputDeviceInfo = NULL;
 PERESOURCE gpDeviceInfoListMutex = NULL;
 
 static DWORD LastInputTick = 0;
+static PKEVENT gDeviceListChangedEvent;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -134,6 +135,7 @@ CreateInputDevice(
     gpInputDeviceInfo = DeviceInfo;
     ReleaseDeviceInfoListMutex();
 
+    KeSetEvent(gDeviceListChangedEvent, EVENT_INCREMENT, FALSE);
     return DeviceInfo;
 }
 
@@ -409,7 +411,7 @@ RawInputThreadMain(VOID)
     PINPUT_DEVICE_INFO DeviceInfo;
     NTSTATUS Status;
     //LARGE_INTEGER WaitTimeout;
-    PVOID WaitObjects[2], pSignaledObject = NULL;
+    PVOID WaitObjects[3], pSignaledObject = NULL;
     KWAIT_BLOCK WaitBlockArray[RTL_NUMBER_OF(WaitObjects)];
     PVOID ShutdownEvent;
     HWINSTA hWinSta;
@@ -417,6 +419,10 @@ RawInputThreadMain(VOID)
     PINPUT_DEVICE_INFO Keyboard;
     UNICODE_STRING LegacyMouseName = RTL_CONSTANT_STRING(L"\\Device\\PointerClass0");
     UNICODE_STRING LegacyKeyboardName = RTL_CONSTANT_STRING(L"\\Device\\KeyboardClass0");
+
+    gDeviceListChangedEvent = ExAllocatePoolWithTag(NonPagedPool, sizeof(*gDeviceListChangedEvent), USERTAG_PNP);
+    ASSERT(gDeviceListChangedEvent);
+    KeInitializeEvent(gDeviceListChangedEvent, SynchronizationEvent, FALSE);
 
     //WaitTimeout.QuadPart = (LONGLONG)(-10000000);
 
@@ -455,7 +461,6 @@ RawInputThreadMain(VOID)
     ASSERT(Mouse);
     Keyboard = CreateInputDevice(RIM_TYPEKEYBOARD, &LegacyKeyboardName);
     ASSERT(Keyboard);
-    ProcessDeviceChanges();
 
     UserEnterExclusive();
     StartTheTimers();
@@ -470,6 +475,7 @@ RawInputThreadMain(VOID)
         /* Reset WaitHandles array */
         WaitObjects[0] = ShutdownEvent;
         WaitObjects[1] = MasterTimer;
+        WaitObjects[2] = gDeviceListChangedEvent;
 
         Status = KeWaitForMultipleObjects(RTL_NUMBER_OF(WaitObjects),
                                           WaitObjects,
@@ -486,7 +492,11 @@ RawInputThreadMain(VOID)
             /* Some device has finished reading */
             pSignaledObject = WaitObjects[Status - STATUS_WAIT_0];
 
-            if (pSignaledObject == MasterTimer)
+            if (pSignaledObject == gDeviceListChangedEvent)
+            {
+                ProcessDeviceChanges();
+            }
+            else if (pSignaledObject == MasterTimer)
             {
                 ProcessTimers();
             }
@@ -511,6 +521,7 @@ RawInputThreadMain(VOID)
 
     ExDeleteResourceLite(gpDeviceInfoListMutex);
     ExFreePoolWithTag(gpDeviceInfoListMutex, USERTAG_SYSTEM);
+    ExFreePoolWithTag(gDeviceListChangedEvent, USERTAG_PNP);
 
     ERR("Raw Input Thread Exit!\n");
 }
