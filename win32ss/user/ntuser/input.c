@@ -212,6 +212,107 @@ CloseInputDevice(
         ghKeyboardDevice = NULL;
 }
 
+static
+VOID
+ProcessDeviceChanges(
+    VOID)
+{
+    PINPUT_DEVICE_INFO DeviceInfo;
+    NTSTATUS Status;
+    DWORD NumberOfMice = 0;
+    DWORD MaxNumberOfButtons = 0;
+    BOOL HasMouseWheel = FALSE;
+#if (_WIN32_WINNT >= 0x0600)
+    BOOL HasHorizontalMouseWheel = FALSE;
+#endif
+    DWORD MaxFunctionKeys = 0;
+
+    AcquireDeviceInfoListMutex();
+    for (DeviceInfo = gpInputDeviceInfo; DeviceInfo; DeviceInfo = DeviceInfo->pNextDeviceInfo)
+    {
+        if (!DeviceInfo->Handle)
+        {
+            Status = OpenInputDevice(DeviceInfo);
+            if (NT_SUCCESS(Status))
+            {
+                if (DeviceInfo->DeviceType == RIM_TYPEKEYBOARD)
+                {
+                  TRACE("Keyboard connected!\n");
+                  if (!ghKeyboardDevice)
+                  {
+                      // Get and load keyboard attributes.
+                      UserInitKeyboard(DeviceInfo->Handle);
+                      UserEnterExclusive();
+                      // Register the Window hotkey.
+                      UserRegisterHotKey(PWND_BOTTOM, IDHK_WINKEY, MOD_WIN, 0);
+                      // Register the Window Snap hotkey.
+                      UserRegisterHotKey(PWND_BOTTOM, IDHK_SNAP_LEFT, MOD_WIN, VK_LEFT);
+                      UserRegisterHotKey(PWND_BOTTOM, IDHK_SNAP_RIGHT, MOD_WIN, VK_RIGHT);
+                      UserRegisterHotKey(PWND_BOTTOM, IDHK_SNAP_UP, MOD_WIN, VK_UP);
+                      UserRegisterHotKey(PWND_BOTTOM, IDHK_SNAP_DOWN, MOD_WIN, VK_DOWN);
+                      // Register the debug hotkeys.
+                      SetDebugHotKeys();
+                      UserLeave();
+                    }
+                }
+                else if (DeviceInfo->DeviceType == RIM_TYPEMOUSE)
+                {
+                    TRACE("Mouse connected!\n");
+                }
+            }
+        }
+
+        if (DeviceInfo->DeviceType == RIM_TYPEKEYBOARD)
+        {
+            if (DeviceInfo->Keyboard.Attributes.KeyboardIdentifier.Type == 4 /* Enhanced 101- or 102-key keyboard */ ||
+                DeviceInfo->Keyboard.Attributes.KeyboardIdentifier.Type == 7 /* Japanese keyboard */ ||
+                DeviceInfo->Keyboard.Attributes.KeyboardIdentifier.Type == 8 /* Korean keyboard */)
+            {
+                DWORD FunctionKeys = DeviceInfo->Keyboard.Attributes.NumberOfFunctionKeys;
+                /* Keep current keyboard description */
+                gKeyboardInfo = DeviceInfo->Keyboard.Attributes;
+                if (FunctionKeys > MaxFunctionKeys)
+                    MaxFunctionKeys = FunctionKeys;
+            }
+        }
+        else if (DeviceInfo->DeviceType == RIM_TYPEMOUSE)
+        {
+            DWORD MouseIdentifier = DeviceInfo->Mouse.Attributes.MouseIdentifier & ~HORIZONTAL_WHEEL_PRESENT;
+            DWORD NumberOfButtons = DeviceInfo->Mouse.Attributes.NumberOfButtons;
+
+            NumberOfMice++;
+            if (NumberOfButtons > MaxNumberOfButtons)
+                MaxNumberOfButtons = NumberOfButtons;
+            HasMouseWheel |= MouseIdentifier == WHEELMOUSE_I8042_HARDWARE
+                          || MouseIdentifier == WHEELMOUSE_SERIAL_HARDWARE
+                          || MouseIdentifier == WHEELMOUSE_HID_HARDWARE;
+#if (_WIN32_WINNT >= 0x0600)
+            HasHorizontalMouseWheel |= DeviceInfo->Mouse.Attributes.MouseIdentifier & HORIZONTAL_WHEEL_PRESENT;
+#endif
+        }
+    }
+    ReleaseDeviceInfoListMutex();
+
+    /* Update metrics */
+    gpsi->aiSysMet[SM_MOUSEPRESENT] = NumberOfMice > 0 ? 1 : 0;
+    gpsi->aiSysMet[SM_CMOUSEBUTTONS] = MaxNumberOfButtons;
+    gpsi->aiSysMet[SM_MOUSEWHEELPRESENT] = HasMouseWheel ? 1 : 0;
+#if (_WIN32_WINNT >= 0x0600)
+    gpsi->aiSysMet[SM_MOUSEHORIZONTALWHEELPRESENT] = HasHorizontalMouseWheel ? 1 : 0;
+#endif
+    /* FIXME: show/hide cursor depending of mouse presence */
+    TRACE("Mouse present %u, buttons %u, wheel %u\n",
+          gpsi->aiSysMet[SM_MOUSEPRESENT],
+          gpsi->aiSysMet[SM_CMOUSEBUTTONS],
+          gpsi->aiSysMet[SM_MOUSEWHEELPRESENT]);
+
+    gKeyboardInfo.NumberOfFunctionKeys = MaxFunctionKeys;
+    TRACE("Keyboard type %u, subtype %u and number of func keys %u\n",
+          gKeyboardInfo.KeyboardIdentifier.Type,
+          gKeyboardInfo.KeyboardIdentifier.Subtype,
+          gKeyboardInfo.NumberOfFunctionKeys);
+}
+
 /*
  * RawInputThreadMain
  *
@@ -273,6 +374,7 @@ RawInputThreadMain(VOID)
     ASSERT(Mouse);
     Keyboard = CreateInputDevice(RIM_TYPEKEYBOARD, &LegacyKeyboardName);
     ASSERT(Keyboard);
+    ProcessDeviceChanges();
 
     UserEnterExclusive();
     StartTheTimers();
@@ -284,44 +386,19 @@ RawInputThreadMain(VOID)
     PoRequestShutdownEvent(&ShutdownEvent);
     for (;;)
     {
-        if (!ghMouseDevice)
+        if (!ghMouseDevice && Mouse->Handle)
         {
-            /* Check if mouse device already exists */
-            Status = OpenInputDevice(Mouse);
-            if (NT_SUCCESS(Status))
-            {
-                ++cMaxWaitObjects;
-                TRACE("Mouse connected!\n");
-                ghMouseDevice = Mouse->Handle;
-                Status = ObReferenceObjectByHandle(Mouse->Handle, SYNCHRONIZE, NULL, KernelMode, (PVOID*)&pMouDevice, NULL);
-                ASSERT(NT_SUCCESS(Status));
-            }
+            ++cMaxWaitObjects;
+            ghMouseDevice = Mouse->Handle;
+            Status = ObReferenceObjectByHandle(Mouse->Handle, SYNCHRONIZE, NULL, KernelMode, (PVOID*)&pMouDevice, NULL);
+            ASSERT(NT_SUCCESS(Status));
         }
-        if (!ghKeyboardDevice)
+        if (!ghKeyboardDevice && Keyboard->Handle)
         {
-            /* Check if keyboard device already exists */
-            Status = OpenInputDevice(Keyboard);
-            if (NT_SUCCESS(Status))
-            {
-                ++cMaxWaitObjects;
-                TRACE("Keyboard connected!\n");
-                ghKeyboardDevice = Keyboard->Handle;
-                Status = ObReferenceObjectByHandle(Keyboard->Handle, SYNCHRONIZE, NULL, KernelMode, (PVOID*)&pKbdDevice, NULL);
-                ASSERT(NT_SUCCESS(Status));
-                // Get and load keyboard attributes.
-                UserInitKeyboard(ghKeyboardDevice);
-                UserEnterExclusive();
-                // Register the Window hotkey.
-                UserRegisterHotKey(PWND_BOTTOM, IDHK_WINKEY, MOD_WIN, 0);
-                // Register the Window Snap hotkey.
-                UserRegisterHotKey(PWND_BOTTOM, IDHK_SNAP_LEFT, MOD_WIN, VK_LEFT);
-                UserRegisterHotKey(PWND_BOTTOM, IDHK_SNAP_RIGHT, MOD_WIN, VK_RIGHT);
-                UserRegisterHotKey(PWND_BOTTOM, IDHK_SNAP_UP, MOD_WIN, VK_UP);
-                UserRegisterHotKey(PWND_BOTTOM, IDHK_SNAP_DOWN, MOD_WIN, VK_DOWN);
-                // Register the debug hotkeys.
-                SetDebugHotKeys();
-                UserLeave();
-            }
+            ++cMaxWaitObjects;
+            ghKeyboardDevice = Keyboard->Handle;
+            Status = ObReferenceObjectByHandle(Keyboard->Handle, SYNCHRONIZE, NULL, KernelMode, (PVOID*)&pKbdDevice, NULL);
+            ASSERT(NT_SUCCESS(Status));
         }
 
         /* Reset WaitHandles array */
