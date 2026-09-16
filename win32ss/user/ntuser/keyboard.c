@@ -205,25 +205,6 @@ UserInitKeyboard(HANDLE hKeyboardDevice)
                    gIndicators.LedFlags & KEYBOARD_NUM_LOCK_ON);
     SET_KEY_LOCKED(gafAsyncKeyState, VK_SCROLL,
                    gIndicators.LedFlags & KEYBOARD_SCROLL_LOCK_ON);
-
-    // FIXME: Need device driver to work! HID support more than one!!!!
-    Status = ZwDeviceIoControlFile(hKeyboardDevice,
-                                   NULL,
-                                   NULL,
-                                   NULL,
-                                   &Block,
-                                   IOCTL_KEYBOARD_QUERY_ATTRIBUTES,
-                                   NULL, 0,
-                                   &gKeyboardInfo, sizeof(gKeyboardInfo));
-
-    if (!NT_SUCCESS(Status))
-    {
-        ERR("NtDeviceIoControlFile() failed, ignored\n");
-    }
-    TRACE("Keyboard type %u, subtype %u and number of func keys %u\n",
-             gKeyboardInfo.KeyboardIdentifier.Type,
-             gKeyboardInfo.KeyboardIdentifier.Subtype,
-             gKeyboardInfo.NumberOfFunctionKeys);
 }
 
 /*
