@@ -543,15 +543,24 @@ HalpGetRootInterruptVector(
             /* Loop allowed IRQL range */
             for (Irql = CLOCK_LEVEL - 1; Irql >= CMCI_LEVEL; Irql--)
             {
+                /* Profile level is not a device level, and on x86 several
+                   device IRQLs share one priority. Each priority is tried once */
+                if ((IrqlToTpr(Irql) >= IrqlToTpr(PROFILE_LEVEL)) ||
+                    (IrqlToTpr(Irql) == IrqlToTpr(Irql + 1)))
+                {
+                    continue;
+                }
+
                 /* Calculate the vactor */
                 Vector = IrqlToTpr(Irql) + Offset;
 
                 /* Check if the vector is free */
                 if (HalpVectorToIrq(Vector) == APIC_FREE_VECTOR)
                 {
-                    /* Found one, allocate the interrupt */
+                    /* Found one, allocate the interrupt. The IRQL is the one
+                       the vector's priority maps to, as later lookups report */
                     Vector = HalpAllocateSystemInterrupt(BusInterruptLevel, Vector);
-                    *OutIrql = Irql;
+                    *OutIrql = HalpVectorToIrql(Vector);
                     goto Exit;
                 }
             }
