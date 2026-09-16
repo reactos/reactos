@@ -161,6 +161,7 @@ list(APPEND SOURCE
     ${REACTOS_SOURCE_DIR}/ntoskrnl/io/pnpmgr/pnpmap.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/io/pnpmgr/pnpmgr.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/io/pnpmgr/pnpnotify.c
+    ${REACTOS_SOURCE_DIR}/ntoskrnl/io/pnpmgr/pnpprop.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/io/pnpmgr/pnpreport.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/io/pnpmgr/pnpres.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/io/pnpmgr/pnproot.c

@@ -59,6 +59,8 @@ IopDeleteDevice(IN PVOID ObjectBody)
     if (DeviceNode)
         IopFreeDeviceNode(DeviceNode);
 
+    PiPropReleaseDevice(DeviceObject);
+
     /* Dereference the driver object, referenced in IoCreateDevice */
     if (DeviceObject->DriverObject)
         ObDereferenceObject(DeviceObject->DriverObject);
