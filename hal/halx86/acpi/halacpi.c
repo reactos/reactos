@@ -44,6 +44,10 @@ BOOLEAN HalDisableFirmwareMapper = TRUE;
 PWCHAR HalHardwareIdString = L"acpipic_up";
 PWCHAR HalName = L"ACPI Compatible Eisa/Isa HAL";
 
+/* PM timer handed over by the ACPI driver */
+static ULONG HalpPmTimerPort;
+static BOOLEAN HalpPmTimerValExt;
+
 /* PRIVATE FUNCTIONS **********************************************************/
 
 PDESCRIPTION_HEADER
@@ -768,22 +772,25 @@ HalpAcpiTableCacheInit(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 
 VOID
 NTAPI
-HaliAcpiTimerInit(IN ULONG TimerPort,
-                  IN ULONG TimerValExt)
+HaliAcpiTimerInit(
+    _In_ ULONG TimerPort,
+    _In_ BOOLEAN TimerValExt)
 {
     PAGED_CODE();
 
-    /* Is this in the init phase? */
-    if (!TimerPort)
+    /* No port means the FADT values */
+    if (TimerPort == 0)
     {
-        /* Get the data from the FADT */
-        TimerPort = HalpFixedAcpiDescTable.pm_tmr_blk_io_port;
-        TimerValExt = HalpFixedAcpiDescTable.flags & ACPI_TMR_VAL_EXT;
-        DPRINT1("ACPI Timer at: %lXh (EXT: %lu)\n", TimerPort, TimerValExt);
+        HalpPmTimerPort = HalpFixedAcpiDescTable.pm_tmr_blk_io_port;
+        HalpPmTimerValExt = (HalpFixedAcpiDescTable.flags & ACPI_TMR_VAL_EXT) ? TRUE : FALSE;
+
+        DPRINT1("ACPI timer at 0x%lX (%u-bit)\n", HalpPmTimerPort, HalpPmTimerValExt ? 32 : 24);
+        return;
     }
 
-    /* FIXME: Now proceed to the timer initialization */
-    //HalaAcpiTimerInit(TimerPort, TimerValExt);
+    /* FIXME: timekeeping does not use the PM timer yet */
+    HalpPmTimerPort = TimerPort;
+    HalpPmTimerValExt = TimerValExt;
 }
 
 CODE_SEG("INIT")
@@ -842,8 +849,8 @@ HalpSetupAcpiPhase0(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
         HalpPhysicalMemoryMayAppearAbove4GB = TRUE;
     }
 
-    /* Setup the ACPI timer */
-    HaliAcpiTimerInit(0, 0);
+    /* Set up the ACPI timer from the FADT */
+    HaliAcpiTimerInit(0, FALSE);
 
     /* Do we have a low stub address yet? */
     if (!HalpLowStubPhysicalAddress.QuadPart)
@@ -867,6 +874,12 @@ HalpSetupAcpiPhase0(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 
     /* Route ISA interrupts through the translator */
     HalGetInterruptTranslator = HalpGetInterruptTranslator;
+
+    /* The power management entry exists from dispatch table version 3 on */
+    if (HalDispatchTableVersion >= 3)
+    {
+        HalInitPowerManagement = HaliInitPowerManagement;
+    }
 
     /* Don't do this again */
     HalpProcessedACPIPhase0 = TRUE;

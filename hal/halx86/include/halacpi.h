@@ -27,6 +27,28 @@ HalpAcpiGetTable(
 /* The Fixed ACPI Description Table, parsed at phase 0 */
 extern FADT HalpFixedAcpiDescTable;
 
+/* PM timer setup, a zero TimerPort takes the FADT values */
+VOID
+NTAPI
+HaliAcpiTimerInit(
+    _In_ ULONG TimerPort,
+    _In_ BOOLEAN TimerValExt
+);
+
+/* ACPI power management services (acpi/acpidisp.c) */
+NTSTATUS
+NTAPI
+HaliInitPowerManagement(
+    _In_ PPM_DISPATCH_TABLE PmDriverDispatchTable,
+    _Out_ PPM_DISPATCH_TABLE *PmHalDispatchTable
+);
+
+VOID
+NTAPI
+HalpAcpiPollPowerButton(
+    VOID
+);
+
 /* acpi/irqtrans.c */
 CODE_SEG("PAGE")
 NTSTATUS
