@@ -355,6 +355,7 @@ typedef struct _ADAPTER_OBJECT {
    BOOLEAN IgnoreCount;
    BOOLEAN Dma32BitAddresses;
    BOOLEAN Dma64BitAddresses;
+   ULONG DmaAddressWidth;
    LIST_ENTRY AdapterList;
 } ADAPTER_OBJECT;
 
