@@ -9,6 +9,8 @@
 #include <winbase.h>
 #include <objbase.h>
 #include <initguid.h>
+#include <mshtml.h>
+#include <mshtmhst.h>
 #include <dispex.h>
 #include <test_tlb.h>
 
