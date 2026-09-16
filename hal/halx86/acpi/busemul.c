@@ -35,8 +35,8 @@ HalpRegisterKdSupportFunctions(VOID)
     KdUnmapVirtualAddress = HalpUnmapVirtualAddress;
 #endif
 
-    /* Register ACPI stub */
-    KdCheckPowerButton = HalpCheckPowerButton;
+    /* Register the ACPI power button check */
+    KdCheckPowerButton = HalpAcpiPollPowerButton;
 }
 #endif // !_MINIHAL_
 
