@@ -331,6 +331,9 @@ IopFreeDeviceNode(
     KIRQL OldIrql;
     PDEVICE_NODE PrevSibling = NULL;
 
+    /* The arbiters must not keep ranges owned by a device that is gone */
+    IopDropDeviceNodeResources(DeviceNode);
+
     ASSERT(DeviceNode->PhysicalDeviceObject);
     /* All children must be deleted before a parent is deleted */
     ASSERT(DeviceNode->Child == NULL);

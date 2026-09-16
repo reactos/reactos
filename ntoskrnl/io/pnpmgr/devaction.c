@@ -1321,6 +1321,7 @@ PiInitializeDevNode(
     if (NT_SUCCESS(Status))
     {
         DeviceNode->ResourceRequirements = (PIO_RESOURCE_REQUIREMENTS_LIST)IoStatusBlock.Information;
+        IopDeviceNodeSetFlag(DeviceNode, DNF_RESOURCE_REQUIREMENTS_NEED_FILTERED);
     }
     else
     {
@@ -1737,9 +1738,26 @@ PiIrpSendRemoveCheckVpb(
     return IopSynchronousCall(targetDevice, &stack, &info);
 }
 
-NTSTATUS
-IopUpdateResourceMapForPnPDevice(
-    IN PDEVICE_NODE DeviceNode);
+/* Checks if a device and its parents are still present */
+static
+BOOLEAN
+NTAPI
+PiIsDeviceStillPresent(
+    _In_ PDEVICE_NODE DeviceNode)
+{
+    PDEVICE_NODE Node;
+
+    if (!(DeviceNode->Flags & DNF_ENUMERATED))
+        return FALSE;
+
+    for (Node = DeviceNode; Node != NULL; Node = Node->Parent)
+    {
+        if (Node->Flags & DNF_DEVICE_GONE)
+            return FALSE;
+    }
+
+    return TRUE;
+}
 
 static
 VOID
@@ -1756,15 +1774,8 @@ IopSendRemoveDevice(IN PDEVICE_OBJECT DeviceObject)
     /* Drivers should never fail a IRP_MN_REMOVE_DEVICE request */
     PiIrpSendRemoveCheckVpb(DeviceObject, IRP_MN_REMOVE_DEVICE);
 
-    /* Start of HACK: update resources stored in registry, so IopDetectResourceConflict works */
-    if (DeviceNode->ResourceList)
-    {
-        ASSERT(DeviceNode->ResourceListTranslated);
-        DeviceNode->ResourceList->Count = 0;
-        DeviceNode->ResourceListTranslated->Count = 0;
-        IopUpdateResourceMapForPnPDevice(DeviceNode);
-    }
-    /* End of HACK */
+    /* Give the resources of the device back to the arbiters */
+    IopFreeDeviceResources(DeviceNode, PiIsDeviceStillPresent(DeviceNode));
 
     PiSetDevNodeState(DeviceNode, DeviceNodeRemoved);
     PiNotifyTargetDeviceChange(&GUID_TARGET_DEVICE_REMOVE_COMPLETE, DeviceObject, NULL);
@@ -2114,6 +2125,9 @@ IopRemoveDevice(PDEVICE_NODE DeviceNode)
     {
         IopSendSurpriseRemoval(DeviceNode->PhysicalDeviceObject);
         IopQueueTargetDeviceEvent(&GUID_DEVICE_SURPRISE_REMOVAL, &DeviceNode->InstancePath);
+
+        /* The hardware is gone, so its resources can be given to others */
+        IopFreeDeviceResources(DeviceNode, FALSE);
     }
 
     if (NT_SUCCESS(Status))
@@ -2332,21 +2346,60 @@ PiFakeResourceRebalance(
 {
     ASSERT(DeviceNode->Flags & DNF_RESOURCE_REQUIREMENTS_CHANGED);
 
-    PCM_RESOURCE_LIST bootConfig = NULL;
     PIO_RESOURCE_REQUIREMENTS_LIST resourceRequirements = NULL;
 
-    PiIrpQueryResources(DeviceNode, &bootConfig);
+    /* Only the requirements change, the boot configuration stays */
     PiIrpQueryResourceRequirements(DeviceNode, &resourceRequirements);
 
-    DeviceNode->BootResources = bootConfig;
-    DeviceNode->ResourceRequirements = resourceRequirements;
+    /* The new requirements replace the old ones */
+    if (DeviceNode->ResourceRequirements)
+        ExFreePool(DeviceNode->ResourceRequirements);
 
-    if (bootConfig)
-    {
-        DeviceNode->Flags |= DNF_HAS_BOOT_CONFIG;
-    }
+    DeviceNode->ResourceRequirements = resourceRequirements;
+    DeviceNode->Flags |= DNF_RESOURCE_REQUIREMENTS_NEED_FILTERED;
 
     DeviceNode->Flags &= ~DNF_RESOURCE_REQUIREMENTS_CHANGED;
+}
+
+/**
+ * @brief
+ * Gives new resources to a started device whose requirements changed, and
+ * starts it again with them.
+ */
+static
+VOID
+NTAPI
+PiReallocateStartedDevice(
+    _In_ PDEVICE_NODE DeviceNode)
+{
+    PIO_RESOURCE_REQUIREMENTS_LIST Requirements = NULL;
+    ULONG Problem;
+
+    PiIrpQueryResourceRequirements(DeviceNode, &Requirements);
+
+    if (DeviceNode->ResourceRequirements)
+        ExFreePool(DeviceNode->ResourceRequirements);
+
+    DeviceNode->ResourceRequirements = Requirements;
+    IopDeviceNodeSetFlag(DeviceNode, DNF_RESOURCE_REQUIREMENTS_NEED_FILTERED);
+
+    if (IopReallocateDeviceResources(DeviceNode, &Problem))
+    {
+        // the new resources reach the driver with another start request
+        IopUncacheResourceHandlers(DeviceNode);
+        PiSetDevNodeState(DeviceNode, DeviceNodeResourcesAssigned);
+
+        if (NT_SUCCESS(PiIrpStartDevice(DeviceNode)))
+            PiSetDevNodeState(DeviceNode, DeviceNodeStarted);
+        else
+            Problem = CM_PROB_NORMAL_CONFLICT;
+    }
+
+    if (Problem != 0)
+    {
+        PiSetDevNodeProblem(DeviceNode, Problem);
+        PiSetDevNodeState(DeviceNode, DeviceNodeAwaitingQueuedRemoval);
+    }
 }
 
 static
@@ -2391,8 +2444,10 @@ PiDevNodeStateMachine(
                 break;
             case DeviceNodeDriversAdded:
                 DPRINT("DeviceNodeDriversAdded %wZ\n", &currentNode->InstancePath);
-                status = IopAssignDeviceResources(currentNode);
-                doProcessAgain = NT_SUCCESS(status);
+                // all devices of the subtree waiting for resources are assigned together
+                IopAssignResourcesToSubtree(RootNode);
+                doProcessAgain = (currentNode->State != DeviceNodeDriversAdded ||
+                                  (currentNode->Flags & DNF_HAS_PROBLEM));
                 break;
             case DeviceNodeResourcesAssigned:
                 DPRINT("DeviceNodeResourcesAssigned %wZ\n", &currentNode->InstancePath);
@@ -2452,8 +2507,9 @@ PiDevNodeStateMachine(
                 {
                     if (currentNode->Flags & DNF_NON_STOPPED_REBALANCE)
                     {
-                        PiFakeResourceRebalance(currentNode);
-                        currentNode->Flags &= ~DNF_NON_STOPPED_REBALANCE;
+                        PiReallocateStartedDevice(currentNode);
+                        currentNode->Flags &= ~(DNF_RESOURCE_REQUIREMENTS_CHANGED |
+                                                DNF_NON_STOPPED_REBALANCE);
                     }
                     else
                     {
@@ -2549,6 +2605,10 @@ skipEnum:
             KeReleaseSpinLock(&IopDeviceTreeLock, OldIrql);
         }
         ObDereferenceObject(referencedObject);
+
+        // devices that waited for others to get resources are tried once more
+        if (!doProcessAgain && currentNode == RootNode && IopTakeAssignmentRetry())
+            doProcessAgain = TRUE;
     } while (doProcessAgain || currentNode != RootNode);
 }
 
@@ -2572,6 +2632,8 @@ ActionToStr(
             return "PiActionStartDevice";
         case PiActionQueryState:
             return "PiActionQueryState";
+        case PiActionAssignResources:
+            return "PiActionAssignResources";
         default:
             return "(request unknown)";
     }
@@ -2648,6 +2710,12 @@ PipDeviceActionWorker(
                             &deviceNode->InstancePath);
                     status = STATUS_UNSUCCESSFUL;
                 }
+                break;
+
+            case PiActionAssignResources:
+                // resources were freed, so the devices that failed to get some try again
+                IopClearResourceConflictProblems();
+                PiDevNodeStateMachine(deviceNode);
                 break;
 
             case PiActionQueryState:
