@@ -168,6 +168,9 @@ IoReportDetectedDevice(
     ULONG IdLength;
     ULONG LegacyValue;
     ULONG DeviceReported = 1;
+    PCM_RESOURCE_LIST BootResources = NULL;
+    PIO_RESOURCE_REQUIREMENTS_LIST Requirements = NULL;
+    ULONG ListSize;
 
     DPRINT("IoReportDetectedDevice (DeviceObject %p, *DeviceObject %p)\n",
            DeviceObject, DeviceObject ? *DeviceObject : NULL);
@@ -185,6 +188,31 @@ IoReportDetectedDevice(
     /* If NULL is returned then it's a bad type */
     if (!IfString)
         return STATUS_INVALID_PARAMETER;
+
+    /* The device node keeps its own copies, the driver frees its lists */
+    if (ResourceList)
+    {
+        ListSize = PnpDetermineResourceListSize(ResourceList);
+        BootResources = ExAllocatePoolWithTag(PagedPool, ListSize, TAG_IO);
+        if (!BootResources)
+            return STATUS_INSUFFICIENT_RESOURCES;
+
+        RtlCopyMemory(BootResources, ResourceList, ListSize);
+    }
+
+    if (ResourceRequirements)
+    {
+        Requirements = ExAllocatePoolWithTag(PagedPool, ResourceRequirements->ListSize, TAG_IO);
+        if (!Requirements)
+        {
+            if (BootResources)
+                ExFreePoolWithTag(BootResources, TAG_IO);
+
+            return STATUS_INSUFFICIENT_RESOURCES;
+        }
+
+        RtlCopyMemory(Requirements, ResourceRequirements, ResourceRequirements->ListSize);
+    }
 
     /*
      * Drivers that have been created via a direct IoCreateDriver() call
@@ -235,7 +263,7 @@ IoReportDetectedDevice(
         if (!NT_SUCCESS(Status))
         {
             DPRINT("PnpRootCreateDevice() failed (Status 0x%08lx)\n", Status);
-            return Status;
+            goto FreeLists;
         }
     }
 
@@ -244,7 +272,8 @@ IoReportDetectedDevice(
     if (!DeviceNode)
     {
         DPRINT("PipAllocateDeviceNode() failed\n");
-        return STATUS_INSUFFICIENT_RESOURCES;
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto FreeLists;
     }
 
     // The string comes from PnpRootCreateDevice, so it can be used right away
@@ -253,7 +282,7 @@ IoReportDetectedDevice(
     /* Open a handle to the instance path key */
     Status = IopCreateDeviceKeyPath(&DeviceNode->InstancePath, REG_OPTION_NON_VOLATILE, &InstanceKey);
     if (!NT_SUCCESS(Status))
-        return Status;
+        goto FreeLists;
 
     /* Save the driver name */
     RtlInitUnicodeString(&ValueName, L"Service");
@@ -329,39 +358,22 @@ IoReportDetectedDevice(
     {
         DPRINT("Failed to write the compatible IDs: 0x%x\n", Status);
         ZwClose(InstanceKey);
-        return Status;
+        goto FreeLists;
     }
 
     // Set the device's DeviceDesc and LocationInformation fields
     PiSetDevNodeText(DeviceNode, InstanceKey);
 
-    /* Assign the resources to the device node */
-    DeviceNode->BootResources = ResourceList;
-    DeviceNode->ResourceRequirements = ResourceRequirements;
+    /* From here on the device node frees the lists */
+    DeviceNode->BootResources = BootResources;
+    DeviceNode->ResourceRequirements = Requirements;
 
     /* Set appropriate flags */
     if (DeviceNode->BootResources)
         IopDeviceNodeSetFlag(DeviceNode, DNF_HAS_BOOT_CONFIG);
 
-    if (!DeviceNode->ResourceRequirements && !DeviceNode->BootResources)
-        IopDeviceNodeSetFlag(DeviceNode, DNF_NO_RESOURCE_REQUIRED);
-
     /* Write the resource information to the registry */
     IopSetDeviceInstanceData(InstanceKey, DeviceNode);
-
-    /* If the caller didn't get the resources assigned for us, do it now */
-    if (!ResourceAssigned)
-    {
-        Status = IopAssignDeviceResources(DeviceNode);
-
-        /* See if we failed */
-        if (!NT_SUCCESS(Status))
-        {
-            DPRINT("Assigning resources failed: 0x%x\n", Status);
-            ZwClose(InstanceKey);
-            return Status;
-        }
-    }
 
     /* Close the instance key handle */
     ZwClose(InstanceKey);
@@ -376,6 +388,21 @@ IoReportDetectedDevice(
     // we still need to query IDs, send events and reenumerate this node
     PiSetDevNodeState(DeviceNode, DeviceNodeStartPostWork);
 
+    /* The boot configuration waits for the legacy bus it is on, like for other made up devices */
+    if (DeviceNode->BootResources && !NT_SUCCESS(IopReserveBootConfig(DeviceNode)))
+        IopDeviceNodeClearFlag(DeviceNode, DNF_HAS_BOOT_CONFIG);
+
+    /* The resources the driver did not assign itself are claimed for it */
+    Status = IopReportDetectedResources(DeviceNode, ResourceList, ResourceAssigned);
+    if (!NT_SUCCESS(Status))
+    {
+        /* The device stays in the tree with the conflict as its problem */
+        DPRINT1("The resources of %wZ conflict (Status 0x%08lx)\n",
+                &DeviceNode->InstancePath, Status);
+        PiSetDevNodeProblem(DeviceNode, CM_PROB_NORMAL_CONFLICT);
+        return STATUS_INVALID_DEVICE_STATE;
+    }
+
     DPRINT("Reported device: %S (%wZ)\n", HardwareId, &DeviceNode->InstancePath);
 
     PiQueueDeviceAction(Pdo, PiActionEnumDeviceTree, NULL, NULL);
@@ -384,10 +411,18 @@ IoReportDetectedDevice(
     if (DeviceObject) *DeviceObject = Pdo;
 
     return STATUS_SUCCESS;
+
+FreeLists:
+    if (BootResources)
+        ExFreePoolWithTag(BootResources, TAG_IO);
+    if (Requirements)
+        ExFreePoolWithTag(Requirements, TAG_IO);
+
+    return Status;
 }
 
 /*
- * @halfplemented
+ * @implemented
  */
 NTSTATUS
 NTAPI
@@ -400,34 +435,34 @@ IoReportResourceForDetection(IN PDRIVER_OBJECT DriverObject,
                              OUT PBOOLEAN ConflictDetected)
 {
     PCM_RESOURCE_LIST ResourceList;
-    NTSTATUS Status;
+    PDEVICE_NODE DeviceNode;
 
-    *ConflictDetected = FALSE;
-
-    if (!DriverList && !DeviceList)
-        return STATUS_INVALID_PARAMETER;
+    /* A PnP device gets its resources assigned, it does not detect them */
+    if (DeviceObject)
+    {
+        DeviceNode = IopGetDeviceNode(DeviceObject);
+        if (DeviceNode && !(DeviceNode->Flags & DNF_LEGACY_RESOURCE_DEVICENODE))
+        {
+            KeBugCheckEx(PNP_DETECTED_FATAL_ERROR,
+                         0x2,
+                         (ULONG_PTR)DeviceObject,
+                         (ULONG_PTR)DriverObject,
+                         0);
+        }
+    }
 
     /* Find the real list */
-    if (!DriverList)
+    if (DeviceList)
         ResourceList = DeviceList;
     else
         ResourceList = DriverList;
 
-    /* Look for a resource conflict */
-    Status = IopDetectResourceConflict(ResourceList, TRUE, NULL);
-    if (Status == STATUS_CONFLICTING_ADDRESSES)
-    {
-        /* Oh noes */
-        *ConflictDetected = TRUE;
-    }
-    else if (NT_SUCCESS(Status))
-    {
-        /* Looks like we're good to go */
-
-        /* TODO: Claim the resources in the ResourceMap */
-    }
-
-    return Status;
+    /* Claim the resources in the arbiters, a NULL list frees the previous claim */
+    return IopLegacyReportResources(ArbiterRequestPnpDetected,
+                                    DriverObject,
+                                    DeviceObject,
+                                    ResourceList,
+                                    ConflictDetected);
 }
 
 VOID
