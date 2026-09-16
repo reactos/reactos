@@ -1230,6 +1230,77 @@ HalEndSystemInterrupt(
 }
 
 
+/* ACPI POWER MANAGEMENT ******************************************************/
+
+/**
+ * @brief
+ * Returns the version register of the I/O APIC whose first input is
+ * InterruptBase, or zero when no I/O APIC starts there. The reserved high byte
+ * carries the number of inputs instead.
+ */
+ULONG
+NTAPI
+HalpGetInterruptControllerVersion(
+    _In_ ULONG InterruptBase)
+{
+    PHALP_IOAPIC_UNIT Unit;
+    ULONG Version;
+    KIRQL OldIrql;
+
+    for (Unit = HalpIoApics; Unit < HalpIoApics + HalpIoApicCount; Unit++)
+    {
+        if (Unit->InputBase != InterruptBase)
+        {
+            continue;
+        }
+
+        OldIrql = HalpAcquireVectorLock();
+        Version = IOApicRead(Unit->Base, IOAPIC_VER);
+        HalpReleaseVectorLock(OldIrql);
+
+        /* Report the inputs in use, which may be fewer than the unit has */
+        Version &= 0xFF;
+        Version |= (Unit->InputCount - 1) << 16;
+        Version |= Unit->InputCount << 24;
+        return Version;
+    }
+
+    return 0;
+}
+
+BOOLEAN
+NTAPI
+HalpIsInterruptInputValid(
+    _In_ ULONG Input)
+{
+    PHALP_IOAPIC_UNIT Unit;
+
+    return HalpFindIoApicInput(Input, &Unit);
+}
+
+/* Writes every redirection entry back from the shadow table */
+VOID
+NTAPI
+HalpRestoreInterruptController(VOID)
+{
+    PHALP_IOAPIC_UNIT Unit;
+    ULONG Input;
+    KIRQL OldIrql;
+
+    OldIrql = HalpAcquireVectorLock();
+
+    for (Unit = HalpIoApics; Unit < HalpIoApics + HalpIoApicCount; Unit++)
+    {
+        for (Input = Unit->InputBase; Input < Unit->InputBase + Unit->InputCount; Input++)
+        {
+            ApicWriteIORedirectionEntry(Input, HalpIoApicShadow[Input]);
+        }
+    }
+
+    HalpReleaseVectorLock(OldIrql);
+}
+
+
 /* IRQL MANAGEMENT ************************************************************/
 
 #ifndef _M_AMD64
