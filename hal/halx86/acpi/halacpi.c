@@ -969,6 +969,9 @@ HalpInitializePciBus(VOID)
     /* Setup the PCI stub support */
     HalpInitializePciStubs();
 
+    /* Tell the resource arbiters where the configuration windows are */
+    HalpPublishMmConfigRanges();
+
     /* Set the NMI crash flag */
     HalpGetNMICrashFlag();
 }
