@@ -412,3 +412,8 @@ HalpBuildInterruptDestination(
 VOID
 NTAPI
 HalpInitializeMessageInterrupts(VOID);
+
+VOID
+NTAPI
+HalpReleaseMessageMark(
+    _In_ ULONG Vector);
