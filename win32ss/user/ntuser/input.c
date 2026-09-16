@@ -285,6 +285,7 @@ RITDeviceInterfaceNotify(
     if (IsEqualGUID(&Notification->Event, &GUID_DEVICE_INTERFACE_ARRIVAL))
     {
         TRACE("Arrival of %wZ (type %d)\n", Notification->SymbolicLinkName, DeviceType);
+        CreateInputDevice(DeviceType, Notification->SymbolicLinkName);
     }
     else if (IsEqualGUID(&Notification->Event, &GUID_DEVICE_INTERFACE_REMOVAL))
     {
@@ -363,6 +364,7 @@ ProcessDeviceChanges(
                   TRACE("Keyboard connected!\n");
                   if (!ghKeyboardDevice)
                   {
+                      ghKeyboardDevice = DeviceInfo->Handle;
                       // Get and load keyboard attributes.
                       UserInitKeyboard(DeviceInfo->Handle);
                       UserEnterExclusive();
@@ -454,10 +456,6 @@ RawInputThreadMain(VOID)
     HWINSTA hWinSta;
     UNICODE_STRING ustrDriverName = RTL_CONSTANT_STRING(L"\\Driver\\Win32k");
     PVOID Notification;
-    PINPUT_DEVICE_INFO Mouse;
-    PINPUT_DEVICE_INFO Keyboard;
-    UNICODE_STRING LegacyMouseName = RTL_CONSTANT_STRING(L"\\Device\\PointerClass0");
-    UNICODE_STRING LegacyKeyboardName = RTL_CONSTANT_STRING(L"\\Device\\KeyboardClass0");
 
     gDeviceListChangedEvent = ExAllocatePoolWithTag(NonPagedPool, sizeof(*gDeviceListChangedEvent), USERTAG_PNP);
     ASSERT(gDeviceListChangedEvent);
@@ -519,17 +517,9 @@ RawInputThreadMain(VOID)
         &Notification);
     ASSERT(NT_SUCCESS(Status));
 
-    Mouse = CreateInputDevice(RIM_TYPEMOUSE, &LegacyMouseName);
-    ASSERT(Mouse);
-    Keyboard = CreateInputDevice(RIM_TYPEKEYBOARD, &LegacyKeyboardName);
-    ASSERT(Keyboard);
-
     UserEnterExclusive();
     StartTheTimers();
     UserLeave();
-
-    NT_ASSERT(ghKeyboardDevice == NULL);
-    ghKeyboardDevice = Keyboard->Handle;
 
     PoRequestShutdownEvent(&ShutdownEvent);
     for (;;)
