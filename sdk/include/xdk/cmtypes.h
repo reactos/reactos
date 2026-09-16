@@ -18,6 +18,7 @@ typedef int CM_RESOURCE_TYPE;
 #define CmResourceTypeDevicePrivate     129
 #define CmResourceTypePcCardConfig      130
 #define CmResourceTypeMfCardConfig      131
+#define CmResourceTypeConnection        132
 
 /* KEY_VALUE_Xxx.Type */
 #define REG_NONE                           0
@@ -244,6 +245,7 @@ typedef struct _CM_PARTIAL_RESOURCE_DESCRIPTOR {
 #define CmResourceTypeDevicePrivate       129
 #define CmResourceTypePcCardConfig        130
 #define CmResourceTypeMfCardConfig        131
+#define CmResourceTypeConnection          132
 
 /* CM_PARTIAL_RESOURCE_DESCRIPTOR.ShareDisposition */
 typedef enum _CM_SHARE_DISPOSITION {
