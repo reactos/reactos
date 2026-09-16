@@ -1262,6 +1262,8 @@ HalpGetRootInterruptVector(IN ULONG BusInterruptLevel,
     return SystemVector;
 }
 
+/* INTERRUPT CONNECTION *******************************************************/
+
 /* Returns the IRQL a device vector runs at */
 KIRQL
 NTAPI
@@ -1292,7 +1294,108 @@ HalpGrantVector(
     UNREFERENCED_PARAMETER(Vector);
 }
 
-/* The PIC HALs have no local APIC to aim message-signaled interrupts at */
+/**
+ * @brief
+ * Enables the interrupt a connection data block describes. The PIC only serves
+ * its own inputs, and each of them owns a fixed vector.
+ */
+NTSTATUS
+NTAPI
+HalEnableInterrupt(
+    _In_ PINTERRUPT_CONNECTION_DATA ConnectionData)
+{
+    PINTERRUPT_VECTOR_DATA VectorData;
+
+    if ((ConnectionData == NULL) || (ConnectionData->Count != 1))
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    VectorData = &ConnectionData->Vectors[0];
+    if (VectorData->Type != InterruptTypeControllerInput)
+    {
+        return STATUS_NOT_SUPPORTED;
+    }
+
+    if ((VectorData->ControllerInput.Gsiv >= 16) ||
+        (VectorData->Vector != HalpIrqToVector((UCHAR)VectorData->ControllerInput.Gsiv)) ||
+        (VectorData->Irql != HalpVectorToIrql((UCHAR)VectorData->Vector)))
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    if (!HalEnableSystemInterrupt(VectorData->Vector,
+                                  VectorData->Irql,
+                                  VectorData->Mode))
+    {
+        return STATUS_UNSUCCESSFUL;
+    }
+
+    return STATUS_SUCCESS;
+}
+
+/* Turns off an interrupt enabled through HalEnableInterrupt */
+NTSTATUS
+NTAPI
+HalDisableInterrupt(
+    _In_ PINTERRUPT_CONNECTION_DATA ConnectionData)
+{
+    PINTERRUPT_VECTOR_DATA VectorData;
+
+    if ((ConnectionData == NULL) || (ConnectionData->Count != 1))
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    VectorData = &ConnectionData->Vectors[0];
+    if (VectorData->Type != InterruptTypeControllerInput)
+    {
+        return STATUS_NOT_SUPPORTED;
+    }
+
+    if ((VectorData->ControllerInput.Gsiv >= 16) ||
+        (VectorData->Vector != HalpIrqToVector((UCHAR)VectorData->ControllerInput.Gsiv)))
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    HalDisableSystemInterrupt(VectorData->Vector, VectorData->Irql);
+    return STATUS_SUCCESS;
+}
+
+/**
+ * @brief
+ * Reports the IRQ a vector arrives on and the polarity that IRQ carries. The
+ * private dispatch override answers instead when one is installed.
+ */
+NTSTATUS
+NTAPI
+HalGetVectorInput(
+    _In_ ULONG Vector,
+    _In_ KAFFINITY Affinity,
+    _Out_ PULONG Input,
+    _Out_ PKINTERRUPT_POLARITY Polarity)
+{
+    ULONG Irq;
+
+    if (HalGetVectorInputOverride != NULL)
+    {
+        return HalGetVectorInputOverride(Vector, Affinity, Input, Polarity);
+    }
+
+    if ((Vector < PRIMARY_VECTOR_BASE) || (Vector >= PRIMARY_VECTOR_BASE + 16))
+    {
+        return STATUS_NOT_FOUND;
+    }
+
+    /* A level triggered IRQ is active low, an edge triggered one active high */
+    Irq = Vector - PRIMARY_VECTOR_BASE;
+    *Input = Irq;
+    *Polarity = (HalpEisaELCR & (1 << Irq)) ? InterruptActiveLow : InterruptActiveHigh;
+    return STATUS_SUCCESS;
+}
+
+/* A single processor taking everything physically, and no message interrupts */
 NTSTATUS
 NTAPI
 HalGetInterruptTargetInformation(
@@ -1300,13 +1403,31 @@ HalGetInterruptTargetInformation(
     _In_ ULONG Id,
     _Out_ PHAL_INTERRUPT_TARGET_DESCRIPTOR Information)
 {
-    UNREFERENCED_PARAMETER(Type);
-    UNREFERENCED_PARAMETER(Id);
-
     RtlZeroMemory(Information, sizeof(*Information));
-    return STATUS_NOT_SUPPORTED;
+
+#if (NTDDI_VERSION >= NTDDI_WIN7)
+    if ((Type != TargetGlobal) && (Type != TargetApic))
+#else
+    if (Type != TargetApic)
+#endif
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    Information->TargetType = Type;
+    Information->Capabilities = HAL_TARGET_FIXED_DESTINATIONS;
+    Information->ApicRouting.DestinationFormat = ApicDestinationModePhysical;
+
+    /* Processor 0 carries ID 0, and the processor field is zeroed already */
+    if ((Type == TargetApic) && (Id != 0))
+    {
+        return STATUS_NOT_FOUND;
+    }
+
+    return STATUS_SUCCESS;
 }
 
+/* The PIC cannot deliver a message-signaled interrupt */
 NTSTATUS
 NTAPI
 HalGetMessageRoutingInfo(
@@ -1319,16 +1440,20 @@ HalGetMessageRoutingInfo(
     return STATUS_NOT_SUPPORTED;
 }
 
+/* Processor 0 is the only one, and it carries ID 0 */
 NTSTATUS
 NTAPI
 HalGetProcessorIdByNtNumber(
     _In_ ULONG ProcessorNumber,
     _Out_ PULONG ProcessorId)
 {
-    UNREFERENCED_PARAMETER(ProcessorNumber);
+    if (ProcessorNumber != 0)
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
 
     *ProcessorId = 0;
-    return STATUS_NOT_SUPPORTED;
+    return STATUS_SUCCESS;
 }
 
 /* ACPI POWER MANAGEMENT ******************************************************/
