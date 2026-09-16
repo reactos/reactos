@@ -344,7 +344,7 @@ RawInputThreadMain(VOID)
 
             /* Process data */
             UserEnterExclusive();
-            UserProcessMouseInput(&MouseInput);
+            UserProcessMouseInput(&Mouse, &MouseInput);
             UserLeave();
         }
         else if (MouStatus != STATUS_PENDING)
@@ -362,7 +362,7 @@ RawInputThreadMain(VOID)
 
             /* Process data */
             UserEnterExclusive();
-            UserProcessKeyboardInput(&KeyInput);
+            UserProcessKeyboardInput(&Keyboard, &KeyInput);
             UserLeave();
         }
         else if (KbdStatus != STATUS_PENDING)

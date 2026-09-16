@@ -37,7 +37,7 @@ UserGetMouseButtonsState(VOID)
  * Process raw mouse input data
  */
 VOID NTAPI
-UserProcessMouseInput(PMOUSE_INPUT_DATA mid)
+UserProcessMouseInput(PINPUT_DEVICE_INFO pDeviceInfo, PMOUSE_INPUT_DATA mid)
 {
     MOUSEINPUT mi;
 
