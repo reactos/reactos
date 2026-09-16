@@ -49,6 +49,14 @@ HalpGetInterruptTranslator(
     _Out_ PULONG BridgeBusNumber
 );
 
+/* acpi/mmconfig.c */
+CODE_SEG("INIT")
+NTSTATUS
+NTAPI
+HalpPublishMmConfigRanges(
+    VOID
+);
+
 CODE_SEG("INIT")
 NTSTATUS
 NTAPI
