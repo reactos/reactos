@@ -208,6 +208,7 @@ typedef struct _TW_STUCKRECTS2
             DWORD AlwaysOnTop : 1;
             DWORD SmSmallIcons : 1; // Start menu Small Icons
             DWORD HideClock : 1;
+            DWORD NoText : 1;
         };
     };
     DWORD Position;
@@ -223,6 +224,7 @@ struct TaskbarSettings
     BOOL bPreferDate;
     BOOL bHideInactiveIcons;
     BOOL bSmallIcons;
+    BOOL bNoText;
     TrayIconsMode eCompactTrayIcons;
     BOOL bShowDesktopButton;
     TW_STRUCKRECTS2 sr;
