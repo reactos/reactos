@@ -8,6 +8,7 @@
 #include <precomp.h>
 #include <winnt.h>
 
+
 _CRTIMP
 EXCEPTION_DISPOSITION
 __cdecl
