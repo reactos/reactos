@@ -873,7 +873,7 @@ BEGIN
     IDS_PERSONAL "Eigene Dateien"
     IDS_FAVORITES "Favoriten"
     IDS_STARTUP "Startmenü\\Programme\\Autostart"
-    IDS_RECENT "Dokumente"
+    IDS_RECENT "Recent"
     IDS_SENDTO "Senden an"
     IDS_STARTMENU "Startmenü"
     IDS_MYMUSIC "Eigene Musik"

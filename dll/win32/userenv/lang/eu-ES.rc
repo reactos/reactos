@@ -32,7 +32,7 @@ BEGIN
     IDS_RECENT "Arestikoak"
     IDS_SENDTO "Bidali hona"
     IDS_TEMPLATES "Txantioiak"
-    IDS_STARTMENU "Hasi menua"
+    IDS_STARTMENU "Hasi Menua"
     IDS_PROGRAMS "Hasi Menua\\Programak"
     IDS_STARTUP "Hasi Menua\\Programak\\Hasi"
     IDS_LOCALSETTINGS "Lokal konfigurazioa"
