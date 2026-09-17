@@ -50,7 +50,9 @@
 #define IDM_WINDOWS_TILE       1202
 #define IDM_WINDOWS_ARRANGE    1203
 
-#define IDM_HELP_ABOUT         1251
+#define IDM_HELP_TOPICS        1250
+#define IDM_HELP_ABOUT_MMC     1251
+#define IDM_HELP_ABOUT_SNAPIN  1252
 #define IDM_MDI_FIRSTCHILD     9500
 
 #define IDM_TB_UNDO            1500
