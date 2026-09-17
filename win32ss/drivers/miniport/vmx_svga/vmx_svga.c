@@ -179,11 +179,16 @@ VmxGetAdapterResources(IN PHW_DEVICE_EXTENSION DeviceExtension)
         return ERROR_DEV_NOT_EXIST;
     }
 
-    DeviceExtension->IndexPort = (PULONG)(DeviceExtension->IoPorts.Mapped + SVGA_INDEX_PORT);
-    DeviceExtension->ValuePort = (PULONG)(DeviceExtension->IoPorts.Mapped + SVGA_VALUE_PORT);
+    DeviceExtension->IndexPort =
+        (PULONG)(DeviceExtension->IoPorts.Mapped + SVGA_INDEX_PORT);
+    DeviceExtension->ValuePort =
+        (PULONG)(DeviceExtension->IoPorts.Mapped + SVGA_VALUE_PORT);
 
     if (DeviceExtension->IoPorts.RangeLength >= (SVGA_IRQSTATUS_PORT + sizeof(ULONG)))
-        DeviceExtension->InterruptPort = (PULONG)(DeviceExtension->IoPorts.Mapped + SVGA_IRQSTATUS_PORT);
+    {
+        DeviceExtension->InterruptPort =
+            (PULONG)(DeviceExtension->IoPorts.Mapped + SVGA_IRQSTATUS_PORT);
+    }
 
     return NO_ERROR;
 }
@@ -290,6 +295,16 @@ VmxInitDevice(IN PHW_DEVICE_EXTENSION DeviceExtension)
     DeviceExtension->Fifo = (PULONG)DeviceExtension->FifoRange.Mapped;
 
     DeviceExtension->Capabilities = VmxReadUlong(DeviceExtension, SVGA_REG_CAPABILITIES);
+    if ((DeviceExtension->Capabilities & SVGA_CAP_IRQMASK) &&
+        DeviceExtension->InterruptPort)
+    {
+        /* Start with device interrupts masked and no stale pending status. */
+        VmxWriteUlong(DeviceExtension, SVGA_REG_IRQMASK, 0);
+        VideoPortWritePortUlong(DeviceExtension->InterruptPort,
+                                SVGA_IRQSTATUS_CLEAR_ALL);
+        DeviceExtension->InterruptState = 0;
+    }
+
     DeviceExtension->MaxWidth = VmxReadUlong(DeviceExtension, SVGA_REG_MAX_WIDTH);
     DeviceExtension->MaxHeight = VmxReadUlong(DeviceExtension, SVGA_REG_MAX_HEIGHT);
 
@@ -556,7 +571,9 @@ VmxFifoSubmitUpdate(IN PHW_DEVICE_EXTENSION DeviceExtension,
 
     for (Index = 0; Index < sizeof(Values) / sizeof(Values[0]); Index++)
     {
-        VideoPortWriteRegisterUlong((PULONG)(DeviceExtension->FifoRange.Mapped + Next), Values[Index]);
+        VideoPortWriteRegisterUlong(
+            (PULONG)(DeviceExtension->FifoRange.Mapped + Next),
+            Values[Index]);
         Next += sizeof(ULONG);
         if (Next == Maximum)
             Next = Minimum;
@@ -624,7 +641,8 @@ VmxMapVideoMemory(IN PHW_DEVICE_EXTENSION DeviceExtension,
         return FALSE;
     }
 
-    MapInformation->FrameBufferBase = (PUCHAR)MapInformation->VideoRamBase + DeviceExtension->FrameBufferOffset;
+    MapInformation->FrameBufferBase =
+        (PUCHAR)MapInformation->VideoRamBase + DeviceExtension->FrameBufferOffset;
     MapInformation->FrameBufferLength = FrameBufferLength;
     StatusBlock->Status = NO_ERROR;
     StatusBlock->Information = sizeof(*MapInformation);
@@ -893,7 +911,10 @@ VmxFindAdapter(IN PVOID HwDeviceExtension,
     }
 
     if (VmxIsMultiMon(DeviceExtension))
-        DPRINT1("VMX: multiple displays detected; baseline driver exposes the primary display only\n");
+    {
+        DPRINT1("VMX: multiple displays detected; "
+                "baseline driver exposes the primary display only\n");
+    }
 
     VideoPortSetRegistryParameters(DeviceExtension,
                                    L"HardwareInformation.ChipType",
@@ -1128,6 +1149,8 @@ VmxInterrupt(IN PVOID HwDeviceExtension)
     if (InterruptState == 0)
         return FALSE;
 
+    /* IRQSTATUS uses write-one-to-clear semantics for the pending flags. */
+    VideoPortWritePortUlong(DeviceExtension->InterruptPort, InterruptState);
     DeviceExtension->InterruptState |= InterruptState;
     return TRUE;
 }

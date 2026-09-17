@@ -96,7 +96,13 @@ HSURF APIENTRY DrvEnableSurface(IN DHPDEV dhpdev);
 VOID APIENTRY DrvDisableSurface(IN DHPDEV dhpdev);
 BOOL APIENTRY DrvAssertMode(IN DHPDEV dhpdev, IN BOOL bEnable);
 ULONG APIENTRY DrvGetModes(IN HANDLE hDriver, IN ULONG cjSize, OUT DEVMODEW *pdm);
-BOOL APIENTRY DrvSetPalette(IN DHPDEV dhpdev, IN PALOBJ *ppalo, IN FLONG fl, IN ULONG iStart, IN ULONG cColors);
+BOOL APIENTRY
+DrvSetPalette(
+    IN DHPDEV dhpdev,
+    IN PALOBJ *ppalo,
+    IN FLONG fl,
+    IN ULONG iStart,
+    IN ULONG cColors);
 
 ULONG APIENTRY
 DrvSetPointerShape(

@@ -54,6 +54,7 @@
 #define SVGA_VALUE_PORT             0x1
 #define SVGA_BIOS_PORT              0x2
 #define SVGA_IRQSTATUS_PORT         0x8
+#define SVGA_IRQSTATUS_CLEAR_ALL    0xFF
 
 #define SVGA_INVALID_DISPLAY_ID     0xFFFFFFFFUL
 #define SVGA_MAX_BITS_PER_PIXEL     32
