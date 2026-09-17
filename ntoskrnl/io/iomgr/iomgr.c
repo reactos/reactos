@@ -503,6 +503,8 @@ IopMarkBootPartition(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 
     Timeout = IopGetBootPartitionTimeout();
     Interval.QuadPart = Int32x32To64(IOP_BOOT_PARTITION_POLL_INTERVAL, -10000);
+    if (Timeout > 0)
+        DPRINT1("Polling up to %ld ms for the boot device\n", Timeout);
 
     /* A boot disk behind a USB hub can still be enumerating, so name the disks
        that arrived since the last pass and try again until the timeout runs out */
