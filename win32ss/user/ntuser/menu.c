@@ -5755,7 +5755,7 @@ Exit:
 /*
  * @implemented
  */
-BOOLEAN APIENTRY
+SYSCALL_RETURN_SMALL(BOOLEAN) APIENTRY
 NtUserGetTitleBarInfo(
     HWND hwnd,
     PTITLEBARINFO bti)
@@ -5811,7 +5811,7 @@ NtUserGetTitleBarInfo(
 Exit:
     UserLeave();
     TRACE("Leave NtUserGetTitleBarInfo, ret=%u\n", retValue);
-    return retValue;
+    return (ULONG)retValue;
 }
 
 /*

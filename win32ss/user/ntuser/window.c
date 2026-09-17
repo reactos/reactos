@@ -3037,7 +3037,7 @@ BOOLEAN co_UserDestroyWindow(PVOID Object)
 /*
  * @implemented
  */
-BOOLEAN APIENTRY
+SYSCALL_RETURN_SMALL(BOOLEAN) APIENTRY
 NtUserDestroyWindow(HWND Wnd)
 {
    PWND Window;
@@ -3057,7 +3057,7 @@ NtUserDestroyWindow(HWND Wnd)
 
    TRACE("Leave NtUserDestroyWindow, ret=%u\n", ret);
    UserLeave();
-   return ret;
+   return (ULONG)ret;
 }
 
 
@@ -4119,7 +4119,7 @@ NtUserAlterWindowStyle(HWND hWnd, DWORD Index, LONG NewValue)
  *    @implemented
  */
 
-WORD APIENTRY
+SYSCALL_RETURN_SMALL(WORD) APIENTRY
 NtUserSetWindowWord(HWND hWnd, INT Index, WORD NewValue)
 {
    PWND Window;
@@ -4145,7 +4145,7 @@ NtUserSetWindowWord(HWND hWnd, INT Index, WORD NewValue)
       case GWL_ID:
       case GWL_HINSTANCE:
       case GWL_HWNDPARENT:
-         Ret = (WORD)co_UserSetWindowLong(UserHMGetHandle(Window), Index, (UINT)NewValue, TRUE);
+         Ret = (DWORD)(WORD)co_UserSetWindowLong(UserHMGetHandle(Window), Index, (UINT)NewValue, TRUE);
          goto Exit;
 
       default:
@@ -4165,12 +4165,12 @@ NtUserSetWindowWord(HWND hWnd, INT Index, WORD NewValue)
    OldValue = *((WORD *)((PCHAR)(Window + 1) + Index));
    *((WORD *)((PCHAR)(Window + 1) + Index)) = NewValue;
 
-   Ret = OldValue;
+   Ret = (DWORD)(WORD)OldValue;
 
 Exit:
    TRACE("Leave NtUserSetWindowWord, ret=%u\n", Ret);
    UserLeave();
-   return Ret;
+   return (DWORD)(WORD)Ret;
 }
 
 /*

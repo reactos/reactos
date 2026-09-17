@@ -2557,7 +2557,7 @@ MsqReleaseModifierKeys(PUSER_MESSAGE_QUEUE MessageQueue)
     }
 }
 
-SHORT
+SYSCALL_RETURN_SMALL(SHORT)
 APIENTRY
 NtUserGetKeyState(INT key)
 {
@@ -2569,7 +2569,7 @@ NtUserGetKeyState(INT key)
 
    UserLeave();
 
-   return (SHORT)Ret;
+   return (DWORD)(USHORT)Ret;
 }
 
 
