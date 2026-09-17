@@ -235,9 +235,14 @@ static inline BOOL is_consonant( int type )
     return (type == lex_Ra || type == lex_Consonant);
 }
 
-static inline unsigned short get_table_entry( const unsigned short *table, WCHAR ch )
+static inline unsigned short get_table_entry_16( const unsigned short *table, WCHAR ch )
 {
     return table[table[table[ch >> 8] + ((ch >> 4) & 0x0f)] + (ch & 0xf)];
+}
+
+static inline unsigned short get_table_entry_32( const unsigned short *table, UINT ch )
+{
+    return table[table[table[table[ch >> 12] + ((ch >> 8) & 0x0f)] + ((ch >> 4) & 0x0f)] + (ch & 0xf)];
 }
 
 typedef int (*lexical_function)(WCHAR c);
@@ -248,40 +253,61 @@ typedef void (*reorder_function)(WCHAR *chars, IndicSyllable *syllable, lexical_
 #define BIDI_WEAK    2
 #define BIDI_NEUTRAL 0
 
-BOOL usp10_array_reserve(void **elements, SIZE_T *capacity, SIZE_T count, SIZE_T size) DECLSPEC_HIDDEN;
-int USP10_FindGlyphInLogClust(const WORD* pwLogClust, int cChars, WORD target) DECLSPEC_HIDDEN;
+BOOL usp10_array_reserve(void **elements, SIZE_T *capacity, SIZE_T count, SIZE_T size);
+int USP10_FindGlyphInLogClust(const WORD* pwLogClust, int cChars, WORD target);
 
 BOOL BIDI_DetermineLevels(const WCHAR *string, unsigned int count, const SCRIPT_STATE *s,
-        const SCRIPT_CONTROL *c, WORD *levels, WORD *overrides) DECLSPEC_HIDDEN;
+        const SCRIPT_CONTROL *c, WORD *levels, WORD *overrides);
 BOOL BIDI_GetStrengths(const WCHAR *string, unsigned int count,
-        const SCRIPT_CONTROL *c, WORD *strength) DECLSPEC_HIDDEN;
-INT BIDI_ReorderV2lLevel(int level, int *pIndexs, const BYTE* plevel, int cch, BOOL fReverse) DECLSPEC_HIDDEN;
-INT BIDI_ReorderL2vLevel(int level, int *pIndexs, const BYTE* plevel, int cch, BOOL fReverse) DECLSPEC_HIDDEN;
-void SHAPE_ContextualShaping(HDC hdc, ScriptCache *psc, SCRIPT_ANALYSIS *psa, WCHAR* pwcChars, INT cChars, WORD* pwOutGlyphs, INT* pcGlyphs, INT cMaxGlyphs, WORD *pwLogClust) DECLSPEC_HIDDEN;
-void SHAPE_ApplyDefaultOpentypeFeatures(HDC hdc, ScriptCache *psc, SCRIPT_ANALYSIS *psa, WORD* pwOutGlyphs, INT* pcGlyphs, INT cMaxGlyphs, INT cChars, WORD *pwLogClust) DECLSPEC_HIDDEN;
-void SHAPE_ApplyOpenTypePositions(HDC hdc, ScriptCache *psc, SCRIPT_ANALYSIS *psa, const WORD* pwGlyphs, INT cGlyphs, int *piAdvance, GOFFSET *pGoffset ) DECLSPEC_HIDDEN;
-HRESULT SHAPE_CheckFontForRequiredFeatures(HDC hdc, ScriptCache *psc, SCRIPT_ANALYSIS *psa) DECLSPEC_HIDDEN;
-void SHAPE_CharGlyphProp(HDC hdc, ScriptCache *psc, SCRIPT_ANALYSIS *psa, const WCHAR* pwcChars, const INT cChars, const WORD* pwGlyphs, const INT cGlyphs, WORD *pwLogClust, SCRIPT_CHARPROP *pCharProp, SCRIPT_GLYPHPROP *pGlyphProp) DECLSPEC_HIDDEN;
-INT SHAPE_does_GSUB_feature_apply_to_chars(HDC hdc, SCRIPT_ANALYSIS *psa, ScriptCache* psc, const WCHAR *chars, INT write_dir, INT count, const char* feature) DECLSPEC_HIDDEN;
-HRESULT SHAPE_GetFontScriptTags( HDC hdc, ScriptCache *psc, SCRIPT_ANALYSIS *psa, int cMaxTags, OPENTYPE_TAG *pScriptTags, int *pcTags) DECLSPEC_HIDDEN;
-HRESULT SHAPE_GetFontLanguageTags( HDC hdc, ScriptCache *psc, SCRIPT_ANALYSIS *psa, OPENTYPE_TAG tagScript, int cMaxTags, OPENTYPE_TAG *pLangSysTags, int *pcTags) DECLSPEC_HIDDEN;
-HRESULT SHAPE_GetFontFeatureTags( HDC hdc, ScriptCache *psc, SCRIPT_ANALYSIS *psa, OPENTYPE_TAG tagScript, OPENTYPE_TAG tagLangSys, int cMaxTags, OPENTYPE_TAG *pFeatureTags, int *pcTags) DECLSPEC_HIDDEN;
+        const SCRIPT_CONTROL *c, WORD *strength);
+INT BIDI_ReorderV2lLevel(int level, int *pIndices, const BYTE* plevel, int cch, BOOL fReverse);
+INT BIDI_ReorderL2vLevel(int level, int *pIndices, const BYTE* plevel, int cch, BOOL fReverse);
+HRESULT SHAPE_ContextualShaping(HDC hdc, ScriptCache *psc, SCRIPT_ANALYSIS *psa, WCHAR* pwcChars,
+                             INT cChars, WORD* pwOutGlyphs, INT* pcGlyphs, INT cMaxGlyphs,
+                             WORD *pwLogClust);
+void SHAPE_ApplyDefaultOpentypeFeatures(HDC hdc, ScriptCache *psc, SCRIPT_ANALYSIS *psa,
+                                        WORD *pwOutGlyphs, INT* pcGlyphs, INT cMaxGlyphs,
+                                        INT cChars, WORD *pwLogClust);
+void SHAPE_ApplyOpenTypePositions(HDC hdc, ScriptCache *psc, SCRIPT_ANALYSIS *psa,
+                                  const WORD *glyphs, INT cGlyphs, int *piAdvance, GOFFSET *goffset );
+HRESULT SHAPE_CheckFontForRequiredFeatures(HDC hdc, ScriptCache *psc, SCRIPT_ANALYSIS *psa);
+void SHAPE_CharGlyphProp(HDC hdc, ScriptCache *psc, SCRIPT_ANALYSIS *psa, const WCHAR *pwcChars,
+                         const INT cChars, const WORD* pwGlyphs, const INT cGlyphs, WORD *pwLogClust,
+                         SCRIPT_CHARPROP *pCharProp, SCRIPT_GLYPHPROP *pGlyphProp);
+INT SHAPE_does_GSUB_feature_apply_to_chars(HDC hdc, SCRIPT_ANALYSIS *psa, ScriptCache *psc,
+                                           const WCHAR *chars, INT write_dir, INT count,
+                                           const char* feature);
+HRESULT SHAPE_GetFontScriptTags(HDC hdc, ScriptCache *psc, SCRIPT_ANALYSIS *psa, int cMaxTags,
+                                OPENTYPE_TAG *pScriptTags, int *pcTags);
+HRESULT SHAPE_GetFontLanguageTags(HDC hdc, ScriptCache *psc, SCRIPT_ANALYSIS *psa,
+                                  OPENTYPE_TAG tagScript, int cMaxTags,
+                                  OPENTYPE_TAG *pLangSysTags, int *pcTags);
+HRESULT SHAPE_GetFontFeatureTags(HDC hdc, ScriptCache *psc, SCRIPT_ANALYSIS *psa,
+                                 OPENTYPE_TAG tagScript, OPENTYPE_TAG tagLangSys,
+                                 int cMaxTags, OPENTYPE_TAG *pFeatureTags, int *pcTags);
 
-void Indic_ReorderCharacters(HDC hdc, SCRIPT_ANALYSIS *psa, ScriptCache *psc, WCHAR *input, unsigned int cChars,
-        IndicSyllable **syllables, int *syllable_count, lexical_function lexical_f,
-        reorder_function reorder_f, BOOL modern) DECLSPEC_HIDDEN;
-void Indic_ParseSyllables(HDC hdc, SCRIPT_ANALYSIS *psa, ScriptCache* psc, const WCHAR *input, unsigned int cChar,
-        IndicSyllable **syllables, int *syllable_count, lexical_function lex, BOOL modern) DECLSPEC_HIDDEN;
+void Indic_ReorderCharacters(HDC hdc, SCRIPT_ANALYSIS *psa, ScriptCache *psc, WCHAR *input,
+                             unsigned int cChars, IndicSyllable **syllables, int *syllable_count,
+                             lexical_function lexical_f, reorder_function reorder_f, BOOL modern);
+void Indic_ParseSyllables(HDC hdc, SCRIPT_ANALYSIS *psa, ScriptCache *psc, const WCHAR *input,
+                          unsigned int cChar, IndicSyllable **syllables, int *syllable_count,
+                          lexical_function lex, BOOL modern);
 
-void BREAK_line(const WCHAR *chars, int count, const SCRIPT_ANALYSIS *sa, SCRIPT_LOGATTR *la) DECLSPEC_HIDDEN;
+void BREAK_line(const WCHAR *chars, int count, const SCRIPT_ANALYSIS *sa, SCRIPT_LOGATTR *la);
 
-DWORD OpenType_CMAP_GetGlyphIndex(HDC hdc, ScriptCache *psc, DWORD utf32c, LPWORD pgi, DWORD flags) DECLSPEC_HIDDEN;
-void OpenType_GDEF_UpdateGlyphProps(ScriptCache *psc, const WORD *pwGlyphs, const WORD cGlyphs, WORD* pwLogClust, const WORD cChars, SCRIPT_GLYPHPROP *pGlyphProp) DECLSPEC_HIDDEN;
+DWORD OpenType_CMAP_GetGlyphIndex(HDC hdc, ScriptCache *psc, DWORD utf32c, LPWORD pgi, DWORD flags);
+void OpenType_GDEF_UpdateGlyphProps(ScriptCache *psc, const WORD *pwGlyphs, const WORD cGlyphs,
+                                    WORD *pwLogClust, const WORD cChars, SCRIPT_GLYPHPROP *pGlyphProp);
 int OpenType_apply_GSUB_lookup(const void *table, unsigned int lookup_index, WORD *glyphs,
-        unsigned int glyph_index, int write_dir, int *glyph_count) DECLSPEC_HIDDEN;
+                               unsigned int glyph_index, int write_dir, int *glyph_count);
 unsigned int OpenType_apply_GPOS_lookup(const ScriptCache *psc, const OUTLINETEXTMETRICW *otm,
         const LOGFONTW *logfont, const SCRIPT_ANALYSIS *analysis, int *advance, unsigned int lookup_index,
-        const WORD *glyphs, unsigned int glyph_index, unsigned int glyph_count, GOFFSET *goffset) DECLSPEC_HIDDEN;
-HRESULT OpenType_GetFontScriptTags(ScriptCache *psc, OPENTYPE_TAG searchingFor, int cMaxTags, OPENTYPE_TAG *pScriptTags, int *pcTags) DECLSPEC_HIDDEN;
-HRESULT OpenType_GetFontLanguageTags(ScriptCache *psc, OPENTYPE_TAG script_tag, OPENTYPE_TAG searchingFor, int cMaxTags, OPENTYPE_TAG *pLanguageTags, int *pcTags) DECLSPEC_HIDDEN;
-HRESULT OpenType_GetFontFeatureTags(ScriptCache *psc, OPENTYPE_TAG script_tag, OPENTYPE_TAG language_tag, BOOL filtered, OPENTYPE_TAG searchingFor, char tableType, int cMaxTags, OPENTYPE_TAG *pFeatureTags, int *pcTags, LoadedFeature** feature) DECLSPEC_HIDDEN;
+        const WORD *glyphs, unsigned int glyph_index, unsigned int glyph_count, GOFFSET *goffset);
+HRESULT OpenType_GetFontScriptTags(ScriptCache *psc, OPENTYPE_TAG searchingFor, int cMaxTags,
+                                   OPENTYPE_TAG *pScriptTags, int *pcTags);
+HRESULT OpenType_GetFontLanguageTags(ScriptCache *psc, OPENTYPE_TAG script_tag, OPENTYPE_TAG searchingFor,
+                                     int cMaxTags, OPENTYPE_TAG *pLanguageTags, int *pcTags);
+HRESULT OpenType_GetFontFeatureTags(ScriptCache *psc, OPENTYPE_TAG script_tag, OPENTYPE_TAG language_tag,
+                                    BOOL filtered, OPENTYPE_TAG searchingFor, char tableType,
+                                    int cMaxTags, OPENTYPE_TAG *pFeatureTags, int *pcTags,
+                                    LoadedFeature **feature);

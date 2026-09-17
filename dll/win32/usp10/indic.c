@@ -32,7 +32,6 @@
 #include "winternl.h"
 
 #include "wine/debug.h"
-#include "wine/heap.h"
 #include "usp10_internal.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(uniscribe);
@@ -347,10 +346,7 @@ void Indic_ParseSyllables(HDC hdc, SCRIPT_ANALYSIS *psa, ScriptCache *psc, const
         next = Indic_process_next_syllable(input, cChar, 0, &center, index, lex);
         if (next != -1)
         {
-            if (*syllable_count)
-                *syllables = HeapReAlloc(GetProcessHeap(),0,*syllables, sizeof(IndicSyllable)*(*syllable_count+1));
-            else
-                *syllables = heap_alloc(sizeof(**syllables));
+            *syllables = realloc(*syllables, sizeof(IndicSyllable)*(*syllable_count+1));
             (*syllables)[*syllable_count].start = index;
             (*syllables)[*syllable_count].base = center;
             (*syllables)[*syllable_count].ralf = -1;
