@@ -13,5 +13,5 @@ add_library(netplwiz MODULE
 
 set_module_type(netplwiz win32dll UNICODE)
 target_link_libraries(netplwiz wine)
-add_importlibs(netplwiz comctl32 mpr ole32 user32 msvcrt kernel32 ntdll)
+add_importlibs(netplwiz comctl32 mpr ole32 shell32 user32 msvcrt kernel32 ntdll)
 add_cd_file(TARGET netplwiz DESTINATION reactos/system32 FOR all)
