@@ -588,17 +588,16 @@ function(add_linker_script _target _linker_script_file)
     else()
         # Generate at compile-time a linker response file and append it
         # to the linker command-line.
+        # ("#Alt": Alternative solution if not using TARGET PRE_LINK.)
         add_custom_command(
-            # OUTPUT ${_generated_file}
-            TARGET ${_target} PRE_LINK # PRE_BUILD
+            #OUTPUT ${_generated_file} #Alt
+            TARGET ${_target} PRE_LINK
             COMMAND ${CMAKE_C_COMPILER} /nologo ${_no_std_includes_flag} /D__LINKER__ /EP /c "${_file_full_path}" > "${_generated_file}"
-            DEPENDS ${_file_full_path}
+            #DEPENDS ${_file_full_path} #Alt
             VERBATIM)
         set_source_files_properties(${_generated_file} PROPERTIES GENERATED TRUE)
-        # add_custom_target("${_target}_${_file_name}" ALL DEPENDS ${_generated_file})
-        # add_dependencies(${_target} "${_target}_${_file_name}")
-        target_link_options(${_target} PRIVATE "@${_generated_file}")
-        set_property(TARGET ${_target} APPEND PROPERTY LINK_DEPENDS ${_file_full_path})
+        target_link_options(${_target} PRIVATE "@\"${_generated_file}\"")
+        set_property(TARGET ${_target} APPEND PROPERTY LINK_DEPENDS ${_file_full_path}) # ${_generated_file}
     endif()
 endfunction()
 
