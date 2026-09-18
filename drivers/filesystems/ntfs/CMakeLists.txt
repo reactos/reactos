@@ -10,6 +10,7 @@ list(APPEND SOURCE
     dirctl.c
     dispatch.c
     fastio.c
+    flush.c
     fcb.c
     finfo.c
     fsctl.c

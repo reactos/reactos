@@ -70,7 +70,7 @@ PrintAllVCNs(PDEVICE_EXTENSION Vcb,
             continue;
         }
 
-        DPRINT1("Node #%d, VCN: %I64u\n", Count, CurrentNode->VCN);
+        DPRINT("Node #%d, VCN: %I64u\n", Count, CurrentNode->VCN);
 
         CurrentNode = (PINDEX_BUFFER)((ULONG_PTR)CurrentNode + NodeSize);
         CurrentOffset += NodeSize;
@@ -133,7 +133,7 @@ AllocateIndexNode(PDEVICE_EXTENSION DeviceExt,
     ULONG BytesNeeded;
     LARGE_INTEGER DataSize;
 
-    DPRINT1("AllocateIndexNode(%p, %p, %lu, %p, %lu, %p) called.\n", DeviceExt,
+    DPRINT("AllocateIndexNode(%p, %p, %lu, %p, %lu, %p) called.\n", DeviceExt,
             FileRecord,
             IndexBufferSize,
             IndexAllocationCtx,
@@ -190,8 +190,9 @@ AllocateIndexNode(PDEVICE_EXTENSION DeviceExt,
     // Read the existing bitmap data
     Status = ReadAttribute(DeviceExt, BitmapCtx, 0, (PCHAR)BitmapPtr, BitmapLength);
 
-    // Initialize bitmap
-    RtlInitializeBitMap(&Bitmap, BitmapPtr, NextNodeNumber);
+    // Initialize bitmap. It has to describe the node we are about to add, so
+    // it needs NextNodeNumber + 1 bits, not NextNodeNumber.
+    RtlInitializeBitMap(&Bitmap, BitmapPtr, NextNodeNumber + 1);
 
     // Do we need to enlarge the bitmap?
     if (BytesNeeded > BitmapLength)
@@ -262,8 +263,12 @@ AllocateIndexNode(PDEVICE_EXTENSION DeviceExt,
         DPRINT1("ERROR: Unable to write to $I30 bitmap attribute!\n");
     }
 
-    // Calculate VCN of new node number
-    *NewVCN = NextNodeNumber * (IndexBufferSize / DeviceExt->NtfsInfo.BytesPerCluster);
+    // Calculate VCN of new node number. An index record smaller than a cluster is addressed
+    // in sectors; dividing by the cluster size would give every node a VCN of zero.
+    if (IndexBufferSize < DeviceExt->NtfsInfo.BytesPerCluster)
+        *NewVCN = NextNodeNumber * (IndexBufferSize / DeviceExt->NtfsInfo.BytesPerSector);
+    else
+        *NewVCN = NextNodeNumber * (IndexBufferSize / DeviceExt->NtfsInfo.BytesPerCluster);
 
     DPRINT("New VCN: %I64u\n", *NewVCN);
 
@@ -351,7 +356,7 @@ CreateEmptyBTree(PB_TREE *NewTree)
     PB_TREE_FILENAME_NODE RootNode = ExAllocatePoolWithTag(NonPagedPool, sizeof(B_TREE_FILENAME_NODE), TAG_NTFS);
     PB_TREE_KEY DummyKey;
 
-    DPRINT1("CreateEmptyBTree(%p) called\n", NewTree);
+    DPRINT("CreateEmptyBTree(%p) called\n", NewTree);
 
     if (!Tree || !RootNode)
     {
@@ -972,7 +977,7 @@ CreateIndexRootFromBTree(PDEVICE_EXTENSION DeviceExt,
         // Copy the index entry
         RtlCopyMemory(CurrentNodeEntry, CurrentKey->IndexEntry, CurrentKey->IndexEntry->Length);
 
-        DPRINT1("Index Node Entry Stream Length: %u\nIndex Node Entry Length: %u\n",
+        DPRINT("Index Node Entry Stream Length: %u\nIndex Node Entry Length: %u\n",
                 CurrentNodeEntry->KeyLength,
                 CurrentNodeEntry->Length);
 
@@ -1215,7 +1220,7 @@ UpdateIndexAllocation(PDEVICE_EXTENSION DeviceExt,
             {
                 // We need to add an index allocation to the file record
                 PNTFS_ATTR_RECORD EndMarker = (PNTFS_ATTR_RECORD)((ULONG_PTR)FileRecord + FileRecord->BytesInUse - (sizeof(ULONG) * 2));
-                DPRINT1("Adding index allocation...\n");
+                DPRINT("Adding index allocation...\n");
 
                 // Add index allocation to the very end of the file record
                 Status = AddIndexAllocation(DeviceExt,
@@ -1732,12 +1737,19 @@ NtfsInsertKey(PB_TREE Tree,
         // Should the New Key go before the current key?
         LONG Comparison = CompareTreeKeys(NewKey, CurrentKey, CaseSensitive);
 
+        /* The name is already in this index. Inserting it again would leave
+         * two entries the lookup code can never tell apart, so refuse. */
         if (Comparison == 0)
         {
-            DPRINT1("\t\tComparison == 0: %.*S\n", NewKey->IndexEntry->FileName.NameLength, NewKey->IndexEntry->FileName.Name);
-            DPRINT1("\t\tComparison == 0: %.*S\n", CurrentKey->IndexEntry->FileName.NameLength, CurrentKey->IndexEntry->FileName.Name);
+            DPRINT1("Refusing duplicate index entry '%.*S' (existing file reference 0x%I64x)\n",
+                    NewKey->IndexEntry->FileName.NameLength,
+                    NewKey->IndexEntry->FileName.Name,
+                    CurrentKey->IndexEntry->Data.Directory.IndexedFile);
+
+            DestroyBTreeKey(NewKey);
+
+            return STATUS_OBJECT_NAME_COLLISION;
         }
-        ASSERT(Comparison != 0);
 
         // Is NewKey < CurrentKey?
         if (Comparison < 0)
@@ -1845,6 +1857,243 @@ NtfsInsertKey(PB_TREE Tree,
     return Status;
 }
 
+/**
+* @name FindLargestKeyInSubtree
+* @implemented
+*
+* Finds the greatest key in the subtree rooted at Node, along with the node holding it and the
+* key that precedes it in that node's list.
+*
+* @param Node
+* Root of the subtree to search.
+*
+* @param OwnerNode
+* Receives the node containing the greatest key, or NULL if the subtree holds no filenames.
+*
+* @param PreviousKey
+* Receives the key before the greatest key in OwnerNode's list, or NULL if it's the first.
+*
+* @param LargestKey
+* Receives the greatest key, or NULL if the subtree holds no filenames.
+*
+* @remarks
+* An end marker's child holds everything sorting after the last real key, so the greatest key
+* of a subtree is the last real key of the rightmost node reachable through end markers.
+*/
+static
+VOID
+FindLargestKeyInSubtree(PB_TREE_FILENAME_NODE Node,
+                        PB_TREE_FILENAME_NODE *OwnerNode,
+                        PB_TREE_KEY *PreviousKey,
+                        PB_TREE_KEY *LargestKey)
+{
+    PB_TREE_KEY CurrentKey = Node->FirstKey;
+    PB_TREE_KEY Previous = NULL;
+    PB_TREE_KEY BeforePrevious = NULL;
+
+    *OwnerNode = NULL;
+    *PreviousKey = NULL;
+    *LargestKey = NULL;
+
+    while (CurrentKey != NULL &&
+           !BooleanFlagOn(CurrentKey->IndexEntry->Flags, NTFS_INDEX_ENTRY_END))
+    {
+        BeforePrevious = Previous;
+        Previous = CurrentKey;
+        CurrentKey = CurrentKey->NextKey;
+    }
+
+    // Anything greater than the last real key lives beneath the end marker
+    if (CurrentKey != NULL && CurrentKey->LesserChild != NULL)
+    {
+        FindLargestKeyInSubtree(CurrentKey->LesserChild, OwnerNode, PreviousKey, LargestKey);
+        if (*LargestKey != NULL)
+            return;
+    }
+
+    // Nothing but an end marker: this subtree holds no filenames
+    if (Previous == NULL)
+        return;
+
+    *OwnerNode = Node;
+    *PreviousKey = BeforePrevious;
+    *LargestKey = Previous;
+}
+
+/**
+* @name ReplaceKeyIndexEntry
+* @implemented
+*
+* Replaces the index entry of Key with a copy of Source's, leaving Key's child pointer alone.
+*
+* @param Key
+* Key whose index entry will be replaced. It keeps whatever child it had.
+*
+* @param Source
+* Key to copy the file reference and $FILE_NAME from.
+*
+* @return
+* STATUS_SUCCESS on success, STATUS_INSUFFICIENT_RESOURCES if the allocation fails.
+*
+* @remarks
+* Key always has a child here, so the replacement is built with room for the VCN and with
+* NTFS_INDEX_ENTRY_NODE set. UpdateIndexAllocation() only grows an entry to make room for a
+* VCN, never the reverse.
+*/
+static
+NTSTATUS
+ReplaceKeyIndexEntry(PB_TREE_KEY Key, PB_TREE_KEY Source)
+{
+    PINDEX_ENTRY_ATTRIBUTE NewEntry;
+    ULONG AttributeSize = GetFileNameAttributeLength(&Source->IndexEntry->FileName);
+    ULONG EntrySize = ALIGN_UP_BY(AttributeSize + FIELD_OFFSET(INDEX_ENTRY_ATTRIBUTE, FileName), 8);
+
+    EntrySize += sizeof(ULONGLONG); // for the VCN of the child Key retains
+
+    NewEntry = ExAllocatePoolWithTag(NonPagedPool, EntrySize, TAG_NTFS);
+    if (!NewEntry)
+    {
+        DPRINT1("ERROR: Failed to allocate memory for replacement index entry!\n");
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    RtlZeroMemory(NewEntry, EntrySize);
+    NewEntry->Data.Directory.IndexedFile = Source->IndexEntry->Data.Directory.IndexedFile;
+    NewEntry->Length = EntrySize;
+    NewEntry->KeyLength = AttributeSize;
+    NewEntry->Flags = NTFS_INDEX_ENTRY_NODE;
+    RtlCopyMemory(&NewEntry->FileName, &Source->IndexEntry->FileName, AttributeSize);
+
+    ExFreePoolWithTag(Key->IndexEntry, TAG_NTFS);
+    Key->IndexEntry = NewEntry;
+
+    return STATUS_SUCCESS;
+}
+
+/**
+* @name RemoveKeyFromNode
+* @implemented
+*
+* Removes a key that has already been located from the node that holds it.
+*
+* @param Node
+* Node containing Key.
+*
+* @param PreviousKey
+* The key before Key in Node's list, or NULL if Key is the first key.
+*
+* @param Key
+* The key to remove.
+*
+* @return
+* STATUS_SUCCESS on success, STATUS_INSUFFICIENT_RESOURCES if an allocation fails.
+*/
+static
+NTSTATUS
+RemoveKeyFromNode(PB_TREE_FILENAME_NODE Node,
+                  PB_TREE_KEY PreviousKey,
+                  PB_TREE_KEY Key)
+{
+    NTSTATUS Status;
+
+    if (Key->LesserChild != NULL)
+    {
+        PB_TREE_FILENAME_NODE OwnerNode;
+        PB_TREE_KEY PreviousLargest;
+        PB_TREE_KEY LargestKey;
+
+        FindLargestKeyInSubtree(Key->LesserChild, &OwnerNode, &PreviousLargest, &LargestKey);
+
+        if (LargestKey != NULL)
+        {
+            // Unlinking an interior key would orphan its child, so promote the greatest key
+            // beneath it and remove that one instead
+            Status = ReplaceKeyIndexEntry(Key, LargestKey);
+            if (!NT_SUCCESS(Status))
+                return Status;
+
+            return RemoveKeyFromNode(OwnerNode, PreviousLargest, LargestKey);
+        }
+
+        // The child holds no filenames, so there is nothing to promote; DestroyBTreeKey()
+        // frees the empty child along with the key
+    }
+
+    if (PreviousKey == NULL)
+        Node->FirstKey = Key->NextKey;
+    else
+        PreviousKey->NextKey = Key->NextKey;
+
+    Node->KeyCount--;
+
+    Key->NextKey = NULL;
+    DestroyBTreeKey(Key);
+
+    return STATUS_SUCCESS;
+}
+
+/**
+* @name NtfsRemoveKey
+* @implemented
+*
+* Removes the key matching a given filename from a B-Tree.
+*
+* @param Node
+* Node to search. Callers start at the root node of the tree.
+*
+* @param SearchKey
+* Key describing the filename to remove. Only its $FILE_NAME is used, for comparison.
+*
+* @param CaseSensitive
+* Boolean indicating if the function should operate in case-sensitive mode. This will be TRUE
+* if an application created the file with the FILE_FLAG_POSIX_SEMANTICS flag.
+*
+* @return
+* STATUS_SUCCESS if the key was found and removed.
+* STATUS_OBJECT_NAME_NOT_FOUND if no key in the tree matches.
+* STATUS_INSUFFICIENT_RESOURCES if an allocation fails.
+*
+* @remarks
+* A node left holding only its end marker is left in place. Readers descend into it and come
+* back empty, whereas collapsing it would free an index buffer a parent VCN still points at.
+*/
+NTSTATUS
+NtfsRemoveKey(PB_TREE_FILENAME_NODE Node,
+              PB_TREE_KEY SearchKey,
+              BOOLEAN CaseSensitive)
+{
+    PB_TREE_KEY PreviousKey = NULL;
+    PB_TREE_KEY CurrentKey = Node->FirstKey;
+    ULONG i;
+
+    for (i = 0; i < Node->KeyCount; i++)
+    {
+        LONG Comparison;
+
+        if (CurrentKey == NULL)
+            break;
+
+        if (BooleanFlagOn(CurrentKey->IndexEntry->Flags, NTFS_INDEX_ENTRY_END))
+            break;
+
+        Comparison = CompareTreeKeys(SearchKey, CurrentKey, CaseSensitive);
+
+        if (Comparison == 0)
+            return RemoveKeyFromNode(Node, PreviousKey, CurrentKey);
+
+        // Everything that sorts before CurrentKey is beneath it
+        if (Comparison < 0)
+            break;
+
+        PreviousKey = CurrentKey;
+        CurrentKey = CurrentKey->NextKey;
+    }
+
+    if (CurrentKey != NULL && CurrentKey->LesserChild != NULL)
+        return NtfsRemoveKey(CurrentKey->LesserChild, SearchKey, CaseSensitive);
+
+    return STATUS_OBJECT_NAME_NOT_FOUND;
+}
 
 
 /**
@@ -1952,8 +2201,8 @@ SplitBTreeNode(PB_TREE Tree,
     *MedianKey = LastKeyBeforeMedian->NextKey;
     FirstKeyAfterMedian = (*MedianKey)->NextKey;
 
-    DPRINT1("%lu keys, %lu median\n", Node->KeyCount, MedianKeyIndex);
-    DPRINT1("\t\tMedian: %.*S\n", (*MedianKey)->IndexEntry->FileName.NameLength, (*MedianKey)->IndexEntry->FileName.Name);
+    DPRINT("%lu keys, %lu median\n", Node->KeyCount, MedianKeyIndex);
+    DPRINT("\t\tMedian: %.*S\n", (*MedianKey)->IndexEntry->FileName.NameLength, (*MedianKey)->IndexEntry->FileName.Name);
 
     // "Node" will be the left hand sibling after the split, containing all keys prior to the median key
 
