@@ -50,6 +50,6 @@ target_include_directories(setuplib INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
 
 add_dependencies(setuplib xdk) # psdk
 set_module_type(setuplib nativedll)
-target_link_libraries(setuplib ext2lib vfatlib btrfslib ${PSEH_LIB})
+target_link_libraries(setuplib ntfslib ext2lib vfatlib btrfslib ${PSEH_LIB})
 add_importlibs(setuplib ntdll)
 add_cd_file(TARGET setuplib DESTINATION reactos/system32 NO_CAB FOR bootcd regtest)
