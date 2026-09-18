@@ -1,3 +1,10 @@
+/*
+ * PROJECT:     ReactOS Setup Wizard
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Portuguese (Brazilian) resource file for ReactOS Setup Wizard
+ * TRANSLATORS: Copyright 2026 Felipe Cordeiro <felipecsouza0503@gmail.com>
+ */
+
 LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE_BRAZILIAN
 
 /* Dialogs */
