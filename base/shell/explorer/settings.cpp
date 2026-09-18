@@ -33,7 +33,7 @@ BOOL TaskbarSettings::Save()
     sr.cbSize = sizeof(sr);
     SHSetValueW(hkExplorer, L"Advanced", L"TaskbarSmallIcons", REG_DWORD, &bSmallIcons, sizeof(bSmallIcons));
     SHSetValueW(hkExplorer, L"Advanced", L"TaskbarSd", REG_DWORD, &bShowDesktopButton, sizeof(bShowDesktopButton));
-    SHSetValueW(hkExplorer, L"Advanced", L"TaskBarNoText", REG_DWORD, &bNoText, sizeof(bSmallIcons));
+    SHSetValueW(hkExplorer, L"Advanced", L"TaskbarNoText", REG_DWORD, &bNoText, sizeof(bSmallIcons));
     SHSetValueW(hkExplorer, L"StuckRects2", L"Settings", REG_BINARY, &sr, sizeof(sr));
 
     /* TODO: AutoHide writes something to HKEY_CURRENT_USER\Software\Microsoft\Internet Explorer\Desktop\Components\0 figure out what and why */
