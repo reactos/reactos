@@ -25,6 +25,10 @@ class CSnapin
 private:
     CSnapinCacheEntry *m_CacheEntry;
     CAtlString m_DisplayName;
+    CAtlList<CSnapin*> m_SubNodes;
+
+    void RemoveAllSubnodes();
+
 
 public:
     CSnapin(CSnapinCacheEntry *CacheEntry, PWSTR displayName = NULL);

@@ -115,6 +115,7 @@ typedef struct _CM_PARTIAL_RESOURCE_LIST {
 
 #define CM_RESOURCE_INTERRUPT_LEVEL_SENSITIVE 0x0000
 #define CM_RESOURCE_INTERRUPT_LATCHED         0x0001
+#define CM_RESOURCE_INTERRUPT_MESSAGE         0x0002
 
 typedef enum _INTERFACE_TYPE {
   InterfaceTypeUndefined = -1,

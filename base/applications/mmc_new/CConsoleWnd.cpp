@@ -128,10 +128,9 @@
 
             if (snapinCount > 0)
                 m_TreeView.Expand(hTreeItem, TVE_EXPAND);
-            
-            if (Node == m_SelectedNode)
-                m_TreeView.SelectItem(hTreeItem);
 #endif
+            if (Node == m_ViewSelectedNode)
+                m_TreeView.SelectItem(hTreeItem);
         }
     }
 
@@ -249,6 +248,7 @@
 
     VOID CConsoleWnd::UpdateView()
     {
+        UpdateTreeView();
     }
 
     // +IConsole

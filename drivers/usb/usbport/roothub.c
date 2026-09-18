@@ -1006,9 +1006,9 @@ USBPORT_RootHubPowerAndChirpAllCcPorts(IN PDEVICE_OBJECT FdoDevice)
              NumController < CompanionControllersList->Count;
              NumController++)
         {
-            CompanionPacket = &FdoExtension->MiniPortInterface->Packet;
-
             CompanionFdoExtension = (*Entry)->DeviceExtension;
+
+            CompanionPacket = &CompanionFdoExtension->MiniPortInterface->Packet;
 
             CompanionPacket->RH_GetRootHubData(CompanionFdoExtension->MiniPortExt,
                                                &RootHubData);

@@ -13,6 +13,7 @@
 #include <winuser.h>
 #include <winnetwk.h>
 #include <commctrl.h>
+#include <shellapi.h>
 
 #include <strsafe.h>
 

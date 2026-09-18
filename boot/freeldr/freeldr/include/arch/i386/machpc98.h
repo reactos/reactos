@@ -95,7 +95,9 @@ PFREELDR_MEMORY_DESCRIPTOR Pc98MemGetMemoryMap(ULONG *MemoryMapSize);
 
 /* hwpci.c */
 BOOLEAN
-PcFindPciBios(
+PcDetectPciBus(
+    _In_ PCONFIGURATION_COMPONENT_DATA SystemKey,
+    _Inout_ PULONG BusNumber,
     _Out_ PPCI_REGISTRY_INFO BusData);
 
 /*

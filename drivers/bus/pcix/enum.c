@@ -117,6 +117,7 @@ PciComputeNewCurrentSettings(IN PPCI_PDO_EXTENSION PdoExtension,
                 /* Base BAR resources */
                 case CmResourceTypePort:
                 case CmResourceTypeMemory:
+                case CmResourceTypeMemoryLarge:
                 {
                     /*
                      * Skip legacy/shared resources (e.g., VGA ports 0x3B0-0x3DF, memory 0xA0000).
@@ -214,7 +215,8 @@ PciComputeNewCurrentSettings(IN PPCI_PDO_EXTENSION PdoExtension,
             ((Partial->Type != CmResourceTypeNull) &&
              ((Partial->u.Generic.Start.QuadPart !=
                CurrentDescriptor->u.Generic.Start.QuadPart) ||
-              (Partial->u.Generic.Length != CurrentDescriptor->u.Generic.Length))))
+              (RtlCmDecodeMemIoResource(Partial, NULL) !=
+               RtlCmDecodeMemIoResource(CurrentDescriptor, NULL)))))
         {
             /* Record a change */
             RangeChange = TRUE;
@@ -238,6 +240,7 @@ PciComputeNewCurrentSettings(IN PPCI_PDO_EXTENSION PdoExtension,
 
             /* Update to new range */
             CurrentDescriptor->Type = Partial->Type;
+            CurrentDescriptor->Flags = Partial->Flags;
             CurrentDescriptor->u.Generic.Start = Partial->u.Generic.Start;
             CurrentDescriptor->u.Generic.Length = Partial->u.Generic.Length;
         }
@@ -401,8 +404,10 @@ PciQueryResources(IN PPCI_PDO_EXTENSION PdoExtension,
     {
         /* Check if the decode for this descriptor is actually turned on */
         Partial = &PciResources->Current[i];
-        if (((HaveMemSpace) && (Partial->Type == CmResourceTypeMemory)) ||
-            ((HaveIoSpace) && (Partial->Type == CmResourceTypePort)))
+        if ((HaveMemSpace &&
+             ((Partial->Type == CmResourceTypeMemory) ||
+              (Partial->Type == CmResourceTypeMemoryLarge))) ||
+            (HaveIoSpace && (Partial->Type == CmResourceTypePort)))
         {
             /* One more fully active descriptor */
             Count++;
@@ -453,8 +458,10 @@ PciQueryResources(IN PPCI_PDO_EXTENSION PdoExtension,
     {
         /* Check if the decode for this descriptor is actually turned on */
         Partial = &PciResources->Current[i];
-        if (((HaveMemSpace) && (Partial->Type == CmResourceTypeMemory)) ||
-            ((HaveIoSpace) && (Partial->Type == CmResourceTypePort)))
+        if ((HaveMemSpace &&
+             ((Partial->Type == CmResourceTypeMemory) ||
+              (Partial->Type == CmResourceTypeMemoryLarge))) ||
+            (HaveIoSpace && (Partial->Type == CmResourceTypePort)))
         {
             /* Copy the descriptor into the resource list */
             *Resource++ = *Partial;
@@ -1365,6 +1372,9 @@ PciGetEnhancedCapabilities(IN PPCI_PDO_EXTENSION PdoExtension,
         }
     }
 
+    /* Now find out whether this is an Express function, and what kind */
+    PciGetExpressCapabilities(PdoExtension);
+
     /* At the very end of all this, does this device not have power management? */
     if (PdoExtension->HackFlags & PCI_HACK_NO_PM_CAPS)
     {
@@ -1783,12 +1793,17 @@ PciScanBus(IN PPCI_FDO_EXTENSION DeviceExtension)
             /* Check if this device is considered critical by the OS */
             if (PciIsCriticalDeviceClass(PciData->BaseClass, PciData->SubClass))
             {
-                /* Check if normally the decodes would be disabled */
-                if (!(HackFlags & PCI_HACK_DONT_DISABLE_DECODES))
+                /* The hack database can take a device out of its critical class */
+                if (!(HackFlags & PCI_HACK_NOT_CRITICAL_DEVICE))
                 {
-                    /* Because this device is critical, don't disable them */
                     DPRINT1("Not allowing PM Because device is critical\n");
-                    HackFlags |= PCI_HACK_CRITICAL_DEVICE;
+
+                    /* Probe it with the system held, and keep it decoding while stopped */
+                    HackFlags |= PCI_HACK_CRITICAL_DEVICE | PCI_HACK_KEEP_DECODES_ON_STOP;
+
+                    /* Only the display can still be powered down */
+                    if (PciData->BaseClass != PCI_CLASS_DISPLAY_CTLR)
+                        HackFlags |= PCI_HACK_NEVER_POWER_DOWN;
                 }
             }
 
@@ -1796,11 +1811,11 @@ PciScanBus(IN PPCI_FDO_EXTENSION DeviceExtension)
             if ((PciData->BaseClass == PCI_CLASS_BRIDGE_DEV) &&
                 (PciData->SubClass == PCI_SUBCLASS_BR_PCI_TO_PCI) &&
                 (PciData->u.type1.BridgeControl & PCI_ENABLE_BRIDGE_VGA) &&
-               !(HackFlags & PCI_HACK_DONT_DISABLE_DECODES))
+               !(HackFlags & PCI_HACK_NOT_CRITICAL_DEVICE))
             {
-                /* Do not disable their decodes either */
+                /* They follow the adapter behind them, so they can still be powered down */
                 DPRINT1("Not allowing PM because device is VGA\n");
-                HackFlags |= PCI_HACK_CRITICAL_DEVICE;
+                HackFlags |= PCI_HACK_CRITICAL_DEVICE | PCI_HACK_KEEP_DECODES_ON_STOP;
             }
 
             /* Check if the device should be skipped for whatever reason */

@@ -343,7 +343,7 @@ CMainWnd::OnWindowsArrange(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHand
 }
 
 LRESULT
-CMainWnd::OnHelpAbout(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
+CMainWnd::OnHelpAboutMMC(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
 {
     HICON hIcon = LoadIcon(_AtlBaseModule.GetModuleInstance(), MAKEINTRESOURCE(IDI_MAINAPP));
     CAtlString AboutTitle(MAKEINTRESOURCE(IDS_ABOUTTITLE));

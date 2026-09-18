@@ -1696,7 +1696,7 @@ PcHwDetect(
     GetHarddiskConfigurationData = PcGetHarddiskConfigurationData;
 
     /* Detect buses */
-    DetectPciBios(SystemKey, &BusNumber, PcFindPciBios);
+    DetectPciBus(SystemKey, &BusNumber, PcDetectPciBus);
     DetectApmBios(SystemKey, &BusNumber);
     DetectPnpBios(SystemKey, &BusNumber);
     DetectIsaBios(Options, SystemKey, &BusNumber); // TODO: Detect first EISA or MCA, before ISA

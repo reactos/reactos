@@ -11,7 +11,7 @@ BEGIN
     END
     POPUP "&Help"
     BEGIN
-        MENUITEM "&About ReactOS Management Console", IDM_HELP_ABOUT
+        MENUITEM "&About ReactOS Management Console", IDM_HELP_ABOUT_MMC
     END
 END
 
@@ -24,7 +24,7 @@ BEGIN
         MENUITEM "&Save", IDM_FILE_SAVE
         MENUITEM "Save &As...", IDM_FILE_SAVEAS
         MENUITEM SEPARATOR
-        MENUITEM "Add &Module...\tCtrl+M", IDM_FILE_ADD
+        MENUITEM "Add/Remove Snap-in...\tCtrl+M", IDM_FILE_ADD
         MENUITEM "Options...", IDM_FILE_OPTIONS
         MENUITEM SEPARATOR
         MENUITEM "E&xit\tAlt+F4", IDM_FILE_EXIT
@@ -62,23 +62,26 @@ BEGIN
     END
     POPUP "&Help"
     BEGIN
-        MENUITEM "&About ReactOS Management Console", IDM_HELP_ABOUT
+        MENUITEM "&Help Topics", IDM_HELP_TOPICS
+        MENUITEM SEPARATOR
+        MENUITEM "&About ReactOS Management Console", IDM_HELP_ABOUT_MMC
+        MENUITEM "A&bout Snapin...", IDM_HELP_ABOUT_SNAPIN
     END
 END
 
 IDD_DIALOG_ADD DIALOGEX 0, 0, 351, 224
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Add or remove modules"
+CAPTION "Add or remove Snap-ins"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     CONTROL         "",IDC_LIST_AVAILABLE,"SysListView32",LVS_REPORT | LVS_SINGLESEL | LVS_EX_FULLROWSELECT | LVS_SHOWSELALWAYS | LVS_SORTASCENDING | LVS_SHAREIMAGELISTS | LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP,6,18,138,126
-    LTEXT           "Available modules:",IDC_STATIC,6,6,60,8
+    LTEXT           "Available Snap-ins:",IDC_STATIC,6,6,126,8
     EDITTEXT        IDC_DESCRIPTION, 6, 168, 336, 28, ES_READONLY | ES_MULTILINE | WS_VSCROLL | WS_BORDER
     LTEXT           "Description:",IDC_STATIC,6,156,39,8
     PUSHBUTTON      "&Add >",IDC_BUTTON_ADD,150,18,50,14,WS_TABSTOP
     PUSHBUTTON      "< &Remove",IDC_BUTTON_REMOVE,150,36,50,14,WS_TABSTOP
     CONTROL         "", IDC_LIST_SELECTED, "SysTreeView32", TVS_HASBUTTONS | TVS_HASLINES | TVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 204, 18, 138, 126
-    LTEXT           "Selected modules:",IDC_STATIC,174,6,59,8
+    LTEXT           "Selected Snap-ins:",IDC_STATIC,204,6,138,8
     DEFPUSHBUTTON   "OK",IDOK,240,204,50,14,WS_TABSTOP
     PUSHBUTTON      "Cancel",IDCANCEL,294,204,50,14,WS_TABSTOP
 END

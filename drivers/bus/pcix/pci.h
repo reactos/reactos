@@ -72,6 +72,11 @@
 #define PCI_HACK_FIXUP_BEFORE_UPDATE        0x03
 
 //
+// PCI Legacy Configuration Space Length
+//
+#define PCI_LEGACY_CONFIG_LENGTH            0x100
+
+//
 // PCI Arbiter Interface Version
 //
 #define ARBITER_INTERFACE_VERSION           0
@@ -323,6 +328,9 @@ typedef struct _PCI_PDO_EXTENSION
     BOOLEAN TargetAgpCapabilityId;
     USHORT CommandEnables;
     USHORT InitialCommand;
+    USHORT ExpressCapabilityPtr;
+    UCHAR ExpressDeviceType;
+    BOOLEAN IsExtendedConfigReachable;
 } PCI_PDO_EXTENSION, *PPCI_PDO_EXTENSION;
 
 //
@@ -1146,10 +1154,10 @@ PciExecuteCriticalSystemRoutine(
 BOOLEAN
 NTAPI
 PciCreateIoDescriptorFromBarLimit(
-    PIO_RESOURCE_DESCRIPTOR ResourceDescriptor,
-    IN PULONG BarArray,
-    IN BOOLEAN Rom
-);
+    _Out_ PIO_RESOURCE_DESCRIPTOR ResourceDescriptor,
+    _In_ ULONG Bar,
+    _In_ ULONG NextBar,
+    _In_ BOOLEAN Rom);
 
 BOOLEAN
 NTAPI
@@ -1188,6 +1196,34 @@ NTAPI
 PciGetConfigHandlers(
     IN PPCI_FDO_EXTENSION FdoExtension
 );
+
+VOID
+NTAPI
+PciInitializeEcam(
+    _In_ PPCI_FDO_EXTENSION FdoExtension);
+
+ULONG
+NTAPI
+PciReadDeviceExtendedCapability(
+    _In_ PPCI_PDO_EXTENSION DeviceExtension,
+    _In_ ULONG CapabilityId,
+    _Out_writes_bytes_(Length) PPCI_EXPRESS_ENHANCED_CAPABILITY_HEADER Buffer,
+    _In_ ULONG Length);
+
+VOID
+NTAPI
+PciGetExpressCapabilities(
+    _Inout_ PPCI_PDO_EXTENSION PdoExtension);
+
+BOOLEAN
+NTAPI
+PciEcamReadWriteConfig(
+    _In_ ULONG Bus,
+    _In_ PCI_SLOT_NUMBER Slot,
+    _Inout_updates_bytes_(Length) PVOID Buffer,
+    _In_ ULONG Offset,
+    _In_ ULONG Length,
+    _In_ BOOLEAN Read);
 
 VOID
 NTAPI
@@ -1919,6 +1955,7 @@ PciCacheLegacyDeviceRouting(
 extern SINGLE_LIST_ENTRY PciFdoExtensionListHead;
 extern KEVENT PciGlobalLock;
 extern PPCI_INTERFACE PciInterfaces[];
+extern BOOLEAN PciEcamVerified;
 extern PCI_INTERFACE ArbiterInterfaceBusNumber;
 extern PCI_INTERFACE ArbiterInterfaceMemory;
 extern PCI_INTERFACE ArbiterInterfaceIo;
