@@ -276,4 +276,8 @@ BEGIN
     IDS_SAVEERROR "次のファイルとして画像を保存するのに失敗しました:\n\n%s"
     IDS_CANTSENDMAIL "メール送信に失敗しました。"
     IDS_LOSECOLOR "この操作を行うと色情報が失われます。続行しますか？"
+    IDS_MONOBMP "Monochrome Bitmap (*.bmp;*.dib)"
+    IDS_4BPPBMP "16-Color Bitmap (*.bmp;*.dib)"
+    IDS_8BPPBMP "256-Color Bitmap (*.bmp;*.dib)"
+    IDS_24BPPBMP "24-bit Color Bitmap (*.bmp;*.dib)"
 END
