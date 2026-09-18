@@ -312,3 +312,9 @@ Path: sdk/include/ddk/d3dkmthk.h
 Used Version: git commit 045831e
 License: MIT (https://spdx.org/licenses/MIT.html)
 URL: https://github.com/microsoft/libdxg
+
+Title: WpfGfx
+Path: win32ss/dwm/milcore
+Used Version: aa4abb88d4daf54717d3b576234289c214035ae9
+License: MIT (https://spdx.org/licenses/MIT.html)
+URL: https://github.com/dotnet/wpf/tree/main/src/Microsoft.DotNet.Wpf/src/WpfGfx
