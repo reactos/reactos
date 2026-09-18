@@ -560,15 +560,19 @@ function(add_linker_script _target _linker_script_file)
         set(_no_std_includes_flag "/X")
     endif()
     if(MSVC_IDE)
-        # MSBuild, via the VS IDE, uses response files when calling CL or LINK.
+        # MSBuild (and the VS IDE) uses response files when invoking CL or LINK.
         # We cannot specify a custom response file on the linker command-line,
-        # since specifying response files from within response files is forbidden.
-        # We therefore have to pre-process, at configuration time, the linker
-        # script so as to retrieve the custom linker options to be appended
-        # to the linker command-line.
+        # because it would instead be included in the MSBuild's auto-generated
+        # response file, which does not support this.
+        # We therefore make the configuration step depend on the linker script
+        # and pre-process it during configuration, so as to retrieve the custom
+        # linker options that will be appended to the linker command-line.
+        set_property(DIRECTORY #"${CMAKE_CURRENT_SOURCE_DIR}"
+                     APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${_file_full_path}")
+        # ("#Alt": Alternative solution if not using OUTPUT_VARIABLE.)
         execute_process(
             COMMAND ${CMAKE_C_COMPILER} /nologo ${_no_std_includes_flag} /D__LINKER__ /EP /c "${_file_full_path}"
-            # OUTPUT_FILE "${_gen_rsp_file}"
+            #OUTPUT_FILE "${_gen_rsp_file}" #Alt
             OUTPUT_VARIABLE linker_options
             ERROR_QUIET
             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
@@ -577,8 +581,9 @@ function(add_linker_script _target _linker_script_file)
         if(NOT linker_rsp_result EQUAL 0)
             message(FATAL_ERROR "Generating pre-processed linker options for target '${_target}' failed with error ${linker_rsp_result}.")
         endif()
-        # file(STRINGS ${_gen_rsp_file} linker_options NEWLINE_CONSUME)
+        #file(STRINGS ${_gen_rsp_file} linker_options) #Alt
         string(REGEX REPLACE "[\r\n]+" ";" linker_options "${linker_options}")
+        string(STRIP "${linker_options}" linker_options)
         target_link_options(${_target} PRIVATE ${linker_options})
     else()
         # Generate at compile-time a linker response file and append it
