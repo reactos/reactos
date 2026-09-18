@@ -208,22 +208,22 @@ public:
     STDMETHODIMP OnPopContext(_In_ ITfContext *pic) override;
 
 protected:
-    LONG m_cRefs;
+    LONG m_cRefs = 1;
 
     /* Aggregation */
-    ITfCompartmentMgr *m_CompartmentMgr;
+    ITfCompartmentMgr* m_CompartmentMgr = NULL;
 
-    ITfDocumentMgr *m_focus;
-    LONG m_activationCount;
+    ITfDocumentMgr* m_focus = NULL;
+    LONG m_activationCount = 1;
 
-    ITfKeyEventSink *m_foregroundKeyEventSink;
-    CLSID m_foregroundTextService;
+    ITfKeyEventSink* m_foregroundKeyEventSink = NULL;
+    CLSID m_foregroundTextService = GUID_NULL;
 
-    struct list m_CurrentPreservedKeys;
-    struct list m_CreatedDocumentMgrs;
+    struct list m_CurrentPreservedKeys = {};
+    struct list m_CreatedDocumentMgrs = {};
 
-    struct list m_AssociatedFocusWindows;
-    HHOOK  m_focusHook;
+    struct list m_AssociatedFocusWindows = {};
+    HHOOK m_focusHook = NULL;
 
     /* kept as separate lists to reduce unnecessary iterations */
     struct list m_ActiveLanguageProfileNotifySink;
@@ -247,7 +247,6 @@ class CEnumTfDocumentMgr
     : public IEnumTfDocumentMgrs
 {
 public:
-    CEnumTfDocumentMgr();
     virtual ~CEnumTfDocumentMgr();
 
     static HRESULT CreateInstance(struct list* head, CEnumTfDocumentMgr **ppOut);
@@ -267,27 +266,19 @@ public:
     STDMETHODIMP Skip(_In_ ULONG ulCount) override;
 
 protected:
-    LONG m_cRefs;
-    struct list *m_index;
-    struct list *m_head;
+    LONG m_cRefs = 1;
+    struct list* m_index = NULL;
+    struct list* m_head = NULL;
 };
 
 ////////////////////////////////////////////////////////////////////////////
 
 CThreadMgr::CThreadMgr()
-    : m_cRefs(1)
-    , m_CompartmentMgr(NULL)
-    , m_focus(NULL)
-    , m_activationCount(0)
-    , m_foregroundKeyEventSink(NULL)
 {
-    m_foregroundTextService = GUID_NULL;
-
     list_init(&m_CurrentPreservedKeys);
     list_init(&m_CreatedDocumentMgrs);
 
     list_init(&m_AssociatedFocusWindows);
-    m_focusHook = NULL;
 
     /* kept as separate lists to reduce unnecessary iterations */
     list_init(&m_ActiveLanguageProfileNotifySink);
@@ -1255,13 +1246,6 @@ void CThreadMgr::OnDocumentMgrDestruction(ITfDocumentMgr *mgr)
 }
 
 ////////////////////////////////////////////////////////////////////////////
-
-CEnumTfDocumentMgr::CEnumTfDocumentMgr()
-    : m_cRefs(1)
-    , m_index(NULL)
-    , m_head(NULL)
-{
-}
 
 CEnumTfDocumentMgr::~CEnumTfDocumentMgr()
 {

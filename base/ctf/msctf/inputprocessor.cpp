@@ -157,9 +157,9 @@ public:
         _Out_ TF_INPUTPROCESSORPROFILE *pProfile) override;
 
 protected:
-    LONG m_cRefs;
-    LANGID m_currentLanguage;
-    struct list m_LanguageProfileNotifySink;
+    LONG m_cRefs = 1;
+    LANGID m_currentLanguage = 0;
+    struct list m_LanguageProfileNotifySink = {};
 };
 
 ////////////////////////////////////////////////////////////////////////////
@@ -168,8 +168,10 @@ class CProfilesEnumGuid
     : public IEnumGUID
 {
 public:
-    CProfilesEnumGuid();
-    virtual ~CProfilesEnumGuid();
+    virtual ~CProfilesEnumGuid()
+    {
+        RegCloseKey(m_key);
+    }
 
     static HRESULT CreateInstance(CProfilesEnumGuid **ppOut);
 
@@ -188,9 +190,9 @@ public:
     STDMETHODIMP Clone(_Out_ IEnumGUID **ppenum) override;
 
 protected:
-    LONG m_cRefs;
-    HKEY m_key;
-    DWORD m_next_index;
+    LONG m_cRefs = 1;
+    HKEY m_key = NULL;
+    DWORD m_next_index = 0;
 };
 
 ////////////////////////////////////////////////////////////////////////////
@@ -199,7 +201,7 @@ class CEnumTfLanguageProfiles
     : public IEnumTfLanguageProfiles
 {
 public:
-    CEnumTfLanguageProfiles(LANGID langid);
+    CEnumTfLanguageProfiles(LANGID langid) : m_langid(langid) { }
     virtual ~CEnumTfLanguageProfiles();
 
     static HRESULT CreateInstance(LANGID langid, CEnumTfLanguageProfiles **out);
@@ -219,14 +221,14 @@ public:
     STDMETHODIMP Skip(_In_ ULONG ulCount) override;
 
 protected:
-    LONG m_cRefs;
-    HKEY m_tipkey;
-    DWORD m_tip_index;
-    WCHAR m_szwCurrentClsid[39];
-    HKEY m_langkey;
-    DWORD m_lang_index;
-    LANGID m_langid;
-    ITfCategoryMgr *m_catmgr;
+    LONG m_cRefs = 1;
+    HKEY m_tipkey = NULL;
+    DWORD m_tip_index = 0;
+    WCHAR m_szwCurrentClsid[39] = { 0 };
+    HKEY m_langkey = NULL;
+    DWORD m_lang_index = 0;
+    LANGID m_langid = 0;
+    ITfCategoryMgr* m_catmgr = NULL;
 
     INT next_LanguageProfile(CLSID clsid, TF_LANGUAGEPROFILE *tflp);
 };
@@ -237,8 +239,7 @@ class CEnumTfInputProcessorProfiles
     : public IEnumTfInputProcessorProfiles
 {
 public:
-    CEnumTfInputProcessorProfiles();
-    virtual ~CEnumTfInputProcessorProfiles();
+    virtual ~CEnumTfInputProcessorProfiles() { }
 
     // ** IUnknown methods **
     STDMETHODIMP QueryInterface(REFIID iid, LPVOID *ppvObj) override;
@@ -255,7 +256,7 @@ public:
     STDMETHODIMP Skip(_In_ ULONG ulCount) override;
 
 protected:
-    LONG m_cRefs;
+    LONG m_cRefs = 1;
 };
 
 ////////////////////////////////////////////////////////////////////////////
@@ -291,15 +292,13 @@ add_userkey(_In_ REFCLSID rclsid, _In_ LANGID langid, _In_ REFGUID guidProfile)
 ////////////////////////////////////////////////////////////////////////////
 
 CInputProcessorProfiles::CInputProcessorProfiles()
-    : m_cRefs(1)
-    , m_currentLanguage(::GetUserDefaultLCID())
+    : m_currentLanguage(::GetUserDefaultLCID())
 {
     list_init(&m_LanguageProfileNotifySink);
 }
 
 CInputProcessorProfiles::~CInputProcessorProfiles()
 {
-    TRACE("destroying %p\n", this);
     free_sinks(&m_LanguageProfileNotifySink);
 }
 
@@ -897,19 +896,6 @@ HRESULT CInputProcessorProfiles::CreateInstance(IUnknown *pUnkOuter, CInputProce
 
 ////////////////////////////////////////////////////////////////////////////
 
-CProfilesEnumGuid::CProfilesEnumGuid()
-    : m_cRefs(1)
-    , m_key(NULL)
-    , m_next_index(0)
-{
-}
-
-CProfilesEnumGuid::~CProfilesEnumGuid()
-{
-    TRACE("destroying %p\n", this);
-    RegCloseKey(m_key);
-}
-
 STDMETHODIMP CProfilesEnumGuid::QueryInterface(REFIID iid, LPVOID *ppvObj)
 {
     *ppvObj = NULL;
@@ -1034,12 +1020,6 @@ HRESULT CProfilesEnumGuid::CreateInstance(CProfilesEnumGuid **ppOut)
 }
 
 ////////////////////////////////////////////////////////////////////////////
-
-CEnumTfLanguageProfiles::CEnumTfLanguageProfiles(LANGID langid)
-    : m_cRefs(1)
-    , m_langid(langid)
-{
-}
 
 CEnumTfLanguageProfiles::~CEnumTfLanguageProfiles()
 {
@@ -1255,15 +1235,6 @@ STDMETHODIMP CEnumTfLanguageProfiles::Clone(_Out_ IEnumTfLanguageProfiles **ppEn
 }
 
 ////////////////////////////////////////////////////////////////////////////
-
-CEnumTfInputProcessorProfiles::CEnumTfInputProcessorProfiles()
-    : m_cRefs(1)
-{
-}
-
-CEnumTfInputProcessorProfiles::~CEnumTfInputProcessorProfiles()
-{
-}
 
 STDMETHODIMP CEnumTfInputProcessorProfiles::QueryInterface(REFIID iid, LPVOID *ppvObj)
 {

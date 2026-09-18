@@ -168,8 +168,6 @@ STDMETHODIMP_(void) CCompButtonFrameWindow::OnCreate(HWND hWnd)
 {
     ::SetWindowTheme(hWnd, L"TOOLBAR", NULL);
 
-    ZeroMemory(&m_Margins, sizeof(m_Margins));
-
     CUIFTheme theme;
     theme.m_hTheme = NULL;
     theme.m_iPartId = 1;
@@ -456,6 +454,7 @@ void COMPWND::_ClientToScreen(LPRECT prc)
 
 /// @unimplemented
 UIComposition::UIComposition(HWND hwndParent)
+    : m_hwndParent(hwndParent)
 {
 }
 
@@ -465,24 +464,11 @@ UIComposition::~UIComposition()
     DestroyCompositionWindow();
 
     if (m_hFont1)
-    {
         ::DeleteObject(m_hFont1);
-        m_hFont1 = NULL;
-    }
-
     if (m_hFont2)
-    {
         ::DeleteObject(m_hFont2);
-        m_hFont2 = NULL;
-    }
-
     if (m_strCompStr)
-    {
         cicMemFree(m_strCompStr);
-        m_strCompStr = NULL;
-    }
-
-    m_cchCompStr = 0;
 }
 
 // @implemented
@@ -872,11 +858,6 @@ HRESULT UIComposition::OnImeSetContextAfter(CicIMCLock& imcLock)
 #define UI_GWLP_HIMC 0
 #define UI_GWLP_UI   sizeof(HIMC)
 #define UI_GWLP_SIZE (UI_GWLP_UI + sizeof(UI*))
-
-/// @implemented
-UI::UI(HWND hWnd) : m_hWnd(hWnd)
-{
-}
 
 /// @implemented
 UI::~UI()

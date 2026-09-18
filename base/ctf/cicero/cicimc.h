@@ -17,7 +17,7 @@ class CicInputContext;
 
 typedef struct tagCTFIMECONTEXT
 {
-    CicInputContext *m_pCicIC;
+    CicInputContext* m_pCicIC;
     DWORD m_dwCicFlags;
 } CTFIMECONTEXT, *PCTFIMECONTEXT;
 
@@ -25,17 +25,15 @@ template <typename T_DATA>
 class CIC_IMCC_LOCK
 {
 protected:
-    T_DATA *m_pIMCC;
+    T_DATA* m_pIMCC = NULL;
 
 public:
-    HIMCC m_hIMCC;
-    HRESULT m_hr;
+    HIMCC m_hIMCC = NULL;
+    HRESULT m_hr = S_OK;
 
     CIC_IMCC_LOCK(HIMCC hIMCC)
+        : m_hIMCC(hIMCC)
     {
-        m_pIMCC = NULL;
-        m_hr = S_OK;
-        m_hIMCC = hIMCC;
     }
 };
 
@@ -89,19 +87,16 @@ protected:
 class CIC_IMC_LOCK
 {
 protected:
-    LPINPUTCONTEXTDX m_pIC;
+    LPINPUTCONTEXTDX m_pIC = NULL;
 
 public:
-    HIMC m_hIMC;
-    HRESULT m_hr;
-    DWORD m_dw3;
+    HIMC m_hIMC = NULL;
+    HRESULT m_hr = S_OK;
+    DWORD m_dw3 = 0;
 
     CIC_IMC_LOCK(HIMC hIMC)
+        : m_hIMC(hIMC)
     {
-        m_pIC = NULL;
-        m_hIMC = hIMC;
-        m_hr = S_OK;
-        m_dw3 = 0;
     }
 
     BOOL Invalid() const

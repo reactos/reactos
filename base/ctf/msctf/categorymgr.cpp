@@ -17,7 +17,6 @@ class CCategoryMgr
     : public ITfCategoryMgr
 {
 public:
-    CCategoryMgr();
     virtual ~CCategoryMgr();
 
     // ** IUnknown methods **
@@ -78,15 +77,10 @@ public:
         _Out_ BOOL *pfEqual) override;
 
 protected:
-    LONG m_cRefs;
+    LONG m_cRefs = 1;
 };
 
 ////////////////////////////////////////////////////////////////////////////
-
-CCategoryMgr::CCategoryMgr()
-    : m_cRefs(1)
-{
-}
 
 CCategoryMgr::~CCategoryMgr()
 {

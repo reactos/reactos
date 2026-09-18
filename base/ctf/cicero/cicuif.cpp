@@ -7,6 +7,7 @@
 
 #include "precomp.h"
 #include "cicuif.h"
+#include <cstdlib> // __max
 
 /////////////////////////////////////////////////////////////////////////////
 // static members
@@ -220,44 +221,25 @@ CUIFTheme::SetActiveTheme(LPCWSTR pszClassList, INT iPartId, INT iStateId)
 /// @unimplemented
 CUIFObject::CUIFObject(CUIFObject *pParent, DWORD nObjectID, LPCRECT prc, DWORD style)
 {
-    m_pszClassList = NULL;
-    m_hTheme = NULL;
     m_pParent = pParent;
     m_nObjectID = nObjectID;
     m_style = style;
 
     if (prc)
         m_rc = *prc;
-    else
-        m_rc = { 0, 0, 0, 0 };
 
     if (m_pParent)
     {
         m_pWindow = m_pParent->m_pWindow;
         m_pScheme = m_pParent->m_pScheme;
     }
-    else
-    {
-        m_pWindow = NULL;
-        m_pScheme = NULL;
-    }
-
-    m_bEnable = m_bVisible = TRUE;
-
-    m_hFont = (HFONT)::GetStockObject(DEFAULT_GUI_FONT);
-    m_bHasCustomFont = FALSE;
-
-    m_pszToolTip = NULL;
-
-    m_dwUnknown4[0] = -1; //FIXME: name
-    m_dwUnknown4[1] = -1; //FIXME: name
 }
 
 CUIFObject::~CUIFObject()
 {
     if (m_pWindow)
     {
-        CUIFToolTip *pToolTip = m_pWindow->m_pToolTip;
+        CUIFToolTip* pToolTip = m_pWindow->m_pToolTip;
         if (pToolTip && pToolTip->m_pToolTipTarget == this)
             pToolTip->m_pToolTipTarget = NULL;
     }
@@ -1045,9 +1027,6 @@ HIMAGELIST CUIFIcon::GetImageList(BOOL bMirror)
 
 CUIFBitmapDC::CUIFBitmapDC(BOOL bMemory)
 {
-    m_hBitmap = NULL;
-    m_hOldBitmap = NULL;
-    m_hOldObject = NULL;
     if (bMemory)
         m_hDC = ::CreateCompatibleDC(NULL);
     else
@@ -1429,20 +1408,7 @@ CUIFWindow::CUIFWindow(HINSTANCE hInst, DWORD style)
     : CUIFObject(NULL, 0, NULL, style)
 {
     m_hInst = hInst;
-    m_nLeft = 200;
-    m_nTop = 200;
-    m_nWidth = 200;
-    m_nHeight = 200;
-    m_hWnd = 0;
     m_pWindow = this;
-    m_pCaptured = NULL;
-    m_pTimerObject = NULL;
-    m_pPointed = NULL;
-    m_bPointing = FALSE;
-    m_pToolTip = NULL;
-    m_pShadow = NULL;
-    m_bShowShadow = TRUE;
-    m_pBehindModal = NULL;
     CUIFWindow::CreateScheme();
 }
 
@@ -2208,11 +2174,6 @@ CUIFShadow::CUIFShadow(HINSTANCE hInst, DWORD style, CUIFWindow *pShadowOwner)
     : CUIFWindow(hInst, (style | UIF_WINDOW_TOOLWINDOW))
 {
     m_pShadowOwner = pShadowOwner;
-    m_rgbShadowColor = RGB(0, 0, 0);
-    m_dwUnknown11[0] = 0;
-    m_dwUnknown11[1] = 0;
-    m_xShadowDelta = m_yShadowDelta = 0;
-    m_bLayerAvailable = FALSE;
 }
 
 CUIFShadow::~CUIFShadow()
@@ -2339,21 +2300,6 @@ CUIFToolTip::CUIFToolTip(HINSTANCE hInst, DWORD style, CUIFWindow *pToolTipOwner
     : CUIFWindow(hInst, style)
 {
     m_pToolTipOwner = pToolTipOwner;
-    m_rcToolTipMargin.left = 2;
-    m_rcToolTipMargin.top = 2;
-    m_rcToolTipMargin.right = 2;
-    m_rcToolTipMargin.bottom = 2;
-    m_pToolTipTarget = NULL;
-    m_pszToolTipText = NULL;
-    m_dwUnknown10 = 0; //FIXME: name and type
-    m_nDelayTimeType2 = -1;
-    m_nDelayTimeType3 = -1;
-    m_nDelayTimeType1 = -1;
-    m_cxToolTipWidth = -1;
-    m_bToolTipHasBkColor = 0;
-    m_bToolTipHasTextColor = 0;
-    m_rgbToolTipBkColor = 0;
-    m_rgbToolTipTextColor = 0;
 }
 
 CUIFToolTip::~CUIFToolTip()
@@ -2705,23 +2651,12 @@ CUIFButton::CUIFButton(
     LPCRECT prc,
     DWORD style) : CUIFObject(pParent, nObjectID, prc, style)
 {
-    m_ButtonIcon.m_hIcon = NULL;
-    m_ButtonIcon.m_hImageList = NULL;
-    m_dwUnknown9 = 0;
-    m_uButtonStatus = 0;
-    m_bPressed = FALSE;
-    m_hbmButton1 = NULL;
-    m_hbmButton2 = NULL;
-    m_pszButtonText = NULL;
 }
 
 CUIFButton::~CUIFButton()
 {
     if (m_pszButtonText)
-    {
         delete[] m_pszButtonText;
-        m_pszButtonText = NULL;
-    }
 
     if (m_ButtonIcon.m_hImageList)
         ImageList_Destroy(m_ButtonIcon.m_hImageList);
@@ -3288,10 +3223,6 @@ CUIFGripper::CUIFGripper(CUIFObject *pParent, LPCRECT prc, DWORD style)
         m_iPartId = RP_GRIPPER;
 }
 
-CUIFGripper::~CUIFGripper()
-{
-}
-
 STDMETHODIMP_(void)
 CUIFGripper::OnMouseMove(LONG x, LONG y)
 {
@@ -3625,8 +3556,6 @@ CUIFWndFrame::CUIFWndFrame(
     m_iPartId = 7;
     m_iStateId = 0;
     m_pszClassList = L"WINDOW";
-    m_dwHitTest = 0;
-    m_cxFrame = m_cyFrame = 0;
 
     if (m_pScheme)
     {
@@ -3811,7 +3740,6 @@ CUIFBalloonButton::CUIFBalloonButton(
     LPCRECT prc,
     DWORD style) : CUIFButton(pParent, nObjectID, prc, style)
 {
-    m_nCommandID = 0;
 }
 
 STDMETHODIMP_(void)
@@ -3921,36 +3849,12 @@ CUIFBalloonButton::DrawTextProc(HDC hDC, LPCRECT prc, BOOL bPressed)
 
 CUIFBalloonWindow::CUIFBalloonWindow(HINSTANCE hInst, DWORD style) : CUIFWindow(hInst, style)
 {
-    m_dwUnknown6 = -1;
-    m_nActionID = -1;
-    m_hRgn = NULL;
-    m_pszBalloonText = NULL;
-    m_bHasBkColor = m_bHasTextColor = FALSE;
-    m_rgbBkColor = 0;
-    m_rgbTextColor = 0;
-    m_ptTarget.x = m_ptTarget.y = 0;
-    ZeroMemory(&m_rcExclude, sizeof(m_rcExclude));
-    m_dwUnknown7 = 0;
-    m_nBalloonType = 0;
-    m_dwUnknown8[0] = 0;
-    m_dwUnknown8[1] = 0;
-    m_ptBalloon.x = m_ptBalloon.y = 0;
-    m_cButtons = 0;
-    m_hwndNotif = NULL;
-    m_uNotifMsg = 0;
-    m_rcMargin.left = 8;
-    m_rcMargin.top = 8;
-    m_rcMargin.right = 8;
-    m_rcMargin.bottom = 8;
 }
 
 CUIFBalloonWindow::~CUIFBalloonWindow()
 {
     if (m_pszBalloonText)
-    {
         delete[] m_pszBalloonText;
-        m_pszBalloonText = NULL;
-    }
 }
 
 STDMETHODIMP_(BOOL)
@@ -4367,7 +4271,6 @@ CUIFMenu::CUIFMenu(
     DWORD style,
     DWORD dwUnknown14) : CUIFWindow(hInst, style)
 {
-    m_nSelectedID = -1;
     m_dwUnknown14 = dwUnknown14;
     SetMenuFont();
 }
@@ -4508,7 +4411,7 @@ CUIFMenu::InitShow(CUIFWindow *pWindow, LPCRECT prc, BOOL bFlag, BOOL bDoAnimati
         INT cxItem = m_cxyMargin + pItem->m_MenuLeftExtent.cx;
         if (cxMax < cxItem)
             cxMax = cxItem;
-        m_cxMenuExtent = max(m_cxMenuExtent, pItem->m_MenuRightExtent.cx);
+        m_cxMenuExtent = __max(m_cxMenuExtent, pItem->m_MenuRightExtent.cx);
         if (!m_bHasMargin && pItem->m_hbmColor && pItem->IsCheck())
             m_bHasMargin = TRUE;
     }
@@ -4790,8 +4693,8 @@ void CUIFMenu::SetMenuFont()
 
     m_hMenuFont = ::CreateFontW(height, 0, 0, 0, FW_NORMAL, 0, 0, 0, SYMBOL_CHARSET,
                                 0, 0, 0, 0, L"Marlett");
-    INT cxSmallIcon = ::GetSystemMetrics(SM_CXSMICON);
-    m_cxyMargin = max(height, cxSmallIcon) + 2;
+    LONG cxSmallIcon = ::GetSystemMetrics(SM_CXSMICON);
+    m_cxyMargin = __max(height, cxSmallIcon) + 2;
 }
 
 void CUIFMenu::SetSelectedId(UINT nSelectID)
@@ -4876,13 +4779,6 @@ CUIFMenuItem::CUIFMenuItem(
     CUIFMenu *pMenu,
     BOOL bDisabled) : CUIFObject(pMenu, 0, NULL, 0)
 {
-    m_ichMenuItemPrefix = -1;
-    m_nMenuItemID = 0;
-    m_pszMenuItemLeft = m_pszMenuItemRight = NULL;
-    m_cchMenuItemLeft = m_cchMenuItemRight = 0;
-    m_nMenuItemVKey = 0;
-    m_hbmColor = m_hbmMask = NULL;
-    m_bMenuItemChecked = m_bMenuItemGrayed = FALSE;
     m_bMenuItemDisabled = bDisabled;
     m_pMenu = pMenu;
 }
@@ -4890,22 +4786,11 @@ CUIFMenuItem::CUIFMenuItem(
 CUIFMenuItem::~CUIFMenuItem()
 {
     if (m_pszMenuItemLeft)
-    {
         delete[] m_pszMenuItemLeft;
-        m_pszMenuItemLeft = NULL;
-    }
-
     if (m_pszMenuItemRight)
-    {
         delete[] m_pszMenuItemRight;
-        m_pszMenuItemRight = NULL;
-    }
-
     if (m_pSubMenu)
-    {
         delete m_pSubMenu;
-        m_pSubMenu = NULL;
-    }
 }
 
 BOOL CUIFMenuItem::Init(UINT nMenuItemID, LPCWSTR pszText)

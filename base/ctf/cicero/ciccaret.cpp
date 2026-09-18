@@ -27,7 +27,6 @@ CicCaret::~CicCaret()
 {
     HideCaret();
     ::KillTimer(m_hWnd, m_uCaretBlinkTimerID);
-    m_uCaretBlinkTimerID = 0;
 }
 
 /**

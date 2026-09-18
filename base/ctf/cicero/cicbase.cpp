@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS Cicero
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     Cicero base
- * COPYRIGHT:   Copyright 2023-2024 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
+ * COPYRIGHT:   Copyright 2023-2026 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
 #include "precomp.h"
@@ -12,31 +12,7 @@
 #include <string.h>
 #include <tchar.h>
 #include <strsafe.h>
-
-void* operator new(size_t size, const CicNoThrow&) noexcept
-{
-    return cicMemAllocClear(size);
-}
-void* operator new[](size_t size, const CicNoThrow&) noexcept
-{
-    return cicMemAllocClear(size);
-}
-void operator delete(void* ptr) noexcept
-{
-    cicMemFree(ptr);
-}
-void operator delete[](void* ptr) noexcept
-{
-    cicMemFree(ptr);
-}
-void operator delete(void* ptr, size_t size) noexcept
-{
-    cicMemFree(ptr);
-}
-void operator delete[](void* ptr, size_t size) noexcept
-{
-    cicMemFree(ptr);
-}
+#include <cjkcode.h>
 
 LPVOID cicMemReCalloc(LPVOID mem, SIZE_T num, SIZE_T size) noexcept
 {
@@ -128,10 +104,10 @@ void cicGetOSInfo(LPUINT puACP, LPDWORD pdwOSInfo)
     *puACP = GetACP();
     switch (*puACP)
     {
-        case 932: /* Japanese (Japan) */
-        case 936: /* Chinese (PRC, Singapore) */
-        case 949: /* Korean (Korea) */
-        case 950: /* Chinese (Taiwan, Hong Kong) */
+        case CP_SHIFTJIS:
+        case CP_GB2312:
+        case CP_HANGUL:
+        case CP_BIG5:
             *pdwOSInfo |= CIC_OSINFO_CJK;
             break;
     }

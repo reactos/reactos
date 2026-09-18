@@ -37,7 +37,7 @@ BOOL RegisterMSIMEMessage(VOID);
 class CDefCompFrameGripper : public CUIFGripper
 {
 public:
-    CDefCompFrameWindow *m_pDefCompFrameWindow;
+    CDefCompFrameWindow* m_pDefCompFrameWindow = NULL;
 
     CDefCompFrameGripper(CDefCompFrameWindow *pDefCompFrameWindow, LPCRECT prc, DWORD style);
 };
@@ -47,7 +47,7 @@ public:
 class CCompFinalizeButton : public CUIFToolbarButton
 {
 public:
-    CCompFrameWindow *m_pCompFrameWindow;
+    CCompFrameWindow* m_pCompFrameWindow = NULL;
 
     CCompFinalizeButton(
         CCompFrameWindow *pParent,
@@ -66,8 +66,7 @@ public:
 class CCompFrameWindow : public CUIFWindow
 {
 public:
-    HIMC m_hIMC;
-
+    HIMC m_hIMC = NULL;
     CCompFrameWindow(HIMC hIMC, DWORD style);
 };
 
@@ -76,8 +75,8 @@ public:
 class CCompButtonFrameWindow : public CCompFrameWindow
 {
 public:
-    MARGINS m_Margins;
-    CCompFinalizeButton *m_pFinalizeButton;
+    MARGINS m_Margins = {};
+    CCompFinalizeButton* m_pFinalizeButton = NULL;
 
     CCompButtonFrameWindow(HIMC hIMC, DWORD style);
 
@@ -92,10 +91,10 @@ public:
 class CDefCompFrameWindow : public CCompFrameWindow
 {
 public:
-    HWND m_hwndCompStr;
-    CDefCompFrameGripper *m_pGripper;
-    CCompFinalizeButton *m_pFinalizeButton;
-    MARGINS m_Margins;
+    HWND m_hwndCompStr = NULL;
+    CDefCompFrameGripper* m_pGripper = NULL;
+    CCompFinalizeButton* m_pFinalizeButton = NULL;
+    MARGINS m_Margins = {};
 
 public:
     CDefCompFrameWindow(HIMC hIMC, DWORD style);
@@ -146,21 +145,21 @@ struct COMPWND
 class UIComposition
 {
 public:
-    HWND m_hwndParent;
-    BOOL m_bHasCompWnd;
-    COMPWND m_CompStrs[4];
-    HFONT m_hFont1;
-    DWORD m_dwUnknown54;
-    HFONT m_hFont2;
-    DWORD m_dwUnknown55;
-    SIZE m_CaretSize;
-    DWORD m_dwUnknown56[2];
-    LPWSTR m_strCompStr;
-    INT m_cchCompStr;
-    BOOL m_bInComposition;
-    BOOL m_bHasCompStr;
-    CDefCompFrameWindow *m_pDefCompFrameWindow;
-    CCompButtonFrameWindow *m_pCompButtonFrameWindow;
+    HWND m_hwndParent = NULL;
+    BOOL m_bHasCompWnd = FALSE;
+    COMPWND m_CompStrs[4] = {};
+    HFONT m_hFont1 = NULL;
+    DWORD m_dwUnknown54 = 0;
+    HFONT m_hFont2 = NULL;
+    DWORD m_dwUnknown55 = 0;
+    SIZE m_CaretSize = {};
+    DWORD m_dwUnknown56[2] = { 0 };
+    LPWSTR m_strCompStr = NULL;
+    INT m_cchCompStr = 0;
+    BOOL m_bInComposition = FALSE;
+    BOOL m_bHasCompStr = FALSE;
+    CDefCompFrameWindow* m_pDefCompFrameWindow = NULL;
+    CCompButtonFrameWindow* m_pCompButtonFrameWindow = NULL;
 
 public:
     UIComposition(HWND hwndParent);
@@ -198,10 +197,10 @@ public:
 
 struct UI
 {
-    HWND m_hWnd;
-    UIComposition *m_pComp;
+    HWND m_hWnd = NULL;
+    UIComposition* m_pComp = NULL;
 
-    UI(HWND hWnd);
+    UI(HWND hWnd) : m_hWnd(hWnd) { }
     virtual ~UI();
 
     HRESULT _Create();

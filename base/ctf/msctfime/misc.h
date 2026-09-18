@@ -62,9 +62,7 @@ ClearCompartment(
 class CModeBias
 {
 public:
-    GUID m_guid;
-
-    CModeBias() : m_guid(GUID_NULL) { }
+    GUID m_guid = GUID_NULL;
 
     GUID ConvertModeBias(LONG bias);
     LONG ConvertModeBias(REFGUID guid);
@@ -112,11 +110,10 @@ public:
 
 class CFnDocFeed : public IAImmFnDocFeed
 {
-    LONG m_cRefs;
+    LONG m_cRefs = 1;
 
 public:
-    CFnDocFeed();
-    virtual ~CFnDocFeed();
+    virtual ~CFnDocFeed() { }
 
     // IUnknown interface
     STDMETHODIMP QueryInterface(_In_ REFIID riid, _Out_ LPVOID* ppvObj) override;
