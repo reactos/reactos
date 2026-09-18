@@ -65,6 +65,7 @@ typedef union _IP_HEADER {
 #define IPv4_FRAGOFS_MASK       0x1FFF /* Fragment offset mask (host byte order) */
 #define IPv4_MF_MASK            0x2000 /* More fragments (host byte order) */
 #define IPv4_DF_MASK            0x4000 /* Don't fragment (host byte order) */
+#define IPv4_MAX_PACKET_SIZE    65535
 #define IPv4_MAX_HEADER_SIZE    60
 
 /* Packet completion handler prototype */

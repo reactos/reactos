@@ -208,6 +208,25 @@ ReassembleDatagram(
   TI_DbgPrint(DEBUG_IP, ("IPDR->HeaderSize = %d\n", IPDR->HeaderSize));
   TI_DbgPrint(DEBUG_IP, ("IPDR->DataSize = %d\n", IPDR->DataSize));
 
+  if (IPDR->HeaderSize < sizeof(IPv4_HEADER) || IPDR->HeaderSize > IPv4_MAX_HEADER_SIZE || IPDR->DataSize > IPv4_MAX_PACKET_SIZE - IPDR->HeaderSize)
+  {
+    TI_DbgPrint(MIN_TRACE, ("Invalid reassembled datagram size.\n"));
+    return FALSE;
+  }
+
+  CurrentEntry = IPDR->FragmentListHead.Flink;
+  while (CurrentEntry != &IPDR->FragmentListHead)
+  {
+    Fragment = CONTAINING_RECORD(CurrentEntry, IP_FRAGMENT, ListEntry);
+    if (Fragment->Size > IPDR->DataSize || Fragment->Offset > IPDR->DataSize - Fragment->Size)
+    {
+      TI_DbgPrint(MIN_TRACE, ("Invalid fragment range in reassembled datagram.\n"));
+      return FALSE;
+    }
+
+    CurrentEntry = CurrentEntry->Flink;
+  }
+
   IPPacket->TotalSize  = IPDR->HeaderSize + IPDR->DataSize;
   IPPacket->HeaderSize = IPDR->HeaderSize;
 
@@ -285,8 +304,10 @@ VOID ProcessFragment(
   PIPDATAGRAM_REASSEMBLY IPDR;
   PLIST_ENTRY CurrentEntry;
   PIPDATAGRAM_HOLE Hole, NewHole;
-  USHORT FragFirst;
-  USHORT FragLast;
+  UINT FragFirst;
+  UINT FragLast;
+  UINT FragmentSize;
+  UINT FlagsFragOfs;
   BOOLEAN MoreFragments;
   PIPv4_HEADER IPv4Header;
   IP_PACKET Datagram;
@@ -296,6 +317,24 @@ VOID ProcessFragment(
   /* FIXME: Assume IPv4 */
 
   IPv4Header = (PIPv4_HEADER)IPPacket->Header;
+  FlagsFragOfs = WN2H(IPv4Header->FlagsFragOfs);
+  FragFirst = (FlagsFragOfs & IPv4_FRAGOFS_MASK) << 3;
+  FragmentSize = IPPacket->TotalSize - IPPacket->HeaderSize;
+  MoreFragments = (FlagsFragOfs & IPv4_MF_MASK) > 0;
+
+  if (FragmentSize > IPv4_MAX_PACKET_SIZE - FragFirst)
+  {
+      TI_DbgPrint(MIN_TRACE, ("Discarding IPv4 fragment with invalid size (%u, %u).\n", FragFirst, FragmentSize));
+      return;
+  }
+
+  if (FragmentSize == 0 && (FragFirst != 0 || MoreFragments))
+  {
+      TI_DbgPrint(MIN_TRACE, ("Discarding empty IPv4 fragment (%u).\n", FragFirst));
+      return;
+  }
+
+  FragLast = FragmentSize ? FragFirst + FragmentSize - 1 : FragFirst;
 
   /* Check if we already have an reassembly structure for this datagram */
   IPDR = GetReassemblyInfo(IPPacket);
@@ -343,10 +382,6 @@ VOID ProcessFragment(
 	&IPDR->ListEntry,
 	&ReassemblyListLock);
   }
-
-  FragFirst     = (WN2H(IPv4Header->FlagsFragOfs) & IPv4_FRAGOFS_MASK) << 3;
-  FragLast      = FragFirst + WN2H(IPv4Header->TotalLength);
-  MoreFragments = (WN2H(IPv4Header->FlagsFragOfs) & IPv4_MF_MASK) > 0;
 
   CurrentEntry = IPDR->HoleListHead.Flink;
   for (;;) {
@@ -429,7 +464,7 @@ VOID ProcessFragment(
 
     TI_DbgPrint(DEBUG_IP, ("Fragment descriptor allocated at (0x%X).\n", Fragment));
 
-    Fragment->Size = IPPacket->TotalSize - IPPacket->HeaderSize;
+    Fragment->Size = FragmentSize;
     Fragment->Packet = IPPacket->NdisPacket;
     Fragment->ReturnPacket = IPPacket->ReturnPacket;
     Fragment->PacketOffset = IPPacket->Position + IPPacket->HeaderSize;
@@ -440,7 +475,7 @@ VOID ProcessFragment(
 
     /* If this is the last fragment, compute and save the datagram data size */
     if (!MoreFragments)
-      IPDR->DataSize = FragFirst + Fragment->Size;
+      IPDR->DataSize = FragFirst + FragmentSize;
 
     /* Put the fragment in the list */
     InsertTailList(&IPDR->FragmentListHead, &Fragment->ListEntry);
@@ -580,7 +615,8 @@ VOID IPv4Receive(PIP_INTERFACE IF, PIP_PACKET IPPacket)
     IPPacket->HeaderSize = (FirstByte & 0x0F) << 2;
     TI_DbgPrint(DEBUG_IP, ("IPPacket->HeaderSize = %d\n", IPPacket->HeaderSize));
 
-    if (IPPacket->HeaderSize > IPv4_MAX_HEADER_SIZE) {
+    if (IPPacket->HeaderSize < sizeof(IPv4_HEADER) || IPPacket->HeaderSize > IPv4_MAX_HEADER_SIZE)
+    {
         TI_DbgPrint(MIN_TRACE, ("Datagram received with incorrect header size (%d).\n",
 	      IPPacket->HeaderSize));
         /* Discard packet */
@@ -620,6 +656,12 @@ VOID IPv4Receive(PIP_INTERFACE IF, PIP_PACKET IPPacket)
     }
 
     IPPacket->TotalSize = WN2H(((PIPv4_HEADER)IPPacket->Header)->TotalLength);
+    if (IPPacket->TotalSize < IPPacket->HeaderSize)
+    {
+        TI_DbgPrint(MIN_TRACE, ("Datagram received with incorrect total size (%d).\n", IPPacket->TotalSize));
+        /* Discard packet */
+        return;
+    }
 
     AddrInitIPv4(&IPPacket->SrcAddr, ((PIPv4_HEADER)IPPacket->Header)->SrcAddr);
     AddrInitIPv4(&IPPacket->DstAddr, ((PIPv4_HEADER)IPPacket->Header)->DstAddr);
