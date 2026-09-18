@@ -826,6 +826,22 @@ RtlCallVectoredContinueHandlers(_In_ PEXCEPTION_RECORD ExceptionRecord,
     return;
 }
 
+NTSTATUS
+NTAPI
+RtlQueryActivationContextApplicationSettingsLibSupp(
+    DWORD flags,
+    HANDLE handle,
+    const WCHAR *ns,
+    const WCHAR *settings,
+    WCHAR *buffer,
+    SIZE_T size,
+    SIZE_T *written
+)
+{
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+
 #ifdef _M_AMD64
 
 PRUNTIME_FUNCTION
