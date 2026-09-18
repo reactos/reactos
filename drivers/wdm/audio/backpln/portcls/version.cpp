@@ -60,7 +60,7 @@ DWORD
 NTAPI
 CPortClsVersion::GetVersion()
 {
-    return kVersionWinXP_UAAQFE;
+    return kVersionWinServer2003_UAAQFE;
 }
 
 NTSTATUS NewPortClsVersion(
