@@ -297,7 +297,8 @@ PPBridge_SaveCurrentSettings(IN PPCI_CONFIGURATOR_CONTEXT Context)
                 else
                 {
                     /* This is a memory BAR, set the correct base */
-                    ASSERT(CmDescriptor->Type == CmResourceTypeMemory);
+                    ASSERT((CmDescriptor->Type == CmResourceTypeMemory) ||
+                           (CmDescriptor->Type == CmResourceTypeMemoryLarge));
                     BarMask = PCI_ADDRESS_MEMORY_ADDRESS_MASK;
 
                     /* IS this a 64-bit BAR? */
@@ -482,8 +483,10 @@ PPBridge_SaveLimits(IN PPCI_CONFIGURATOR_CONTEXT Context)
     /* First of all, loop all the BARs */
     for (i = 0; i < PCI_TYPE1_ADDRESSES; i++)
     {
-        /* Create a descriptor for their limits */
-        if (PciCreateIoDescriptorFromBarLimit(&Limit[i], &BarArray[i], FALSE))
+        /* Create a descriptor for their limits, the second BAR has no BAR after it */
+        ULONG NextBar = ((i + 1) < PCI_TYPE1_ADDRESSES) ? BarArray[i + 1] : 0;
+
+        if (PciCreateIoDescriptorFromBarLimit(&Limit[i], BarArray[i], NextBar, FALSE))
         {
             /* This was a 64-bit descriptor, make sure there's space */
             ASSERT((i + 1) < PCI_TYPE1_ADDRESSES);
@@ -571,9 +574,7 @@ PPBridge_SaveLimits(IN PPCI_CONFIGURATOR_CONTEXT Context)
     if (Working->u.type1.ROMBaseAddress & PCI_ROMADDRESS_ENABLED)
     {
         /* Build a limit for it as well */
-        PciCreateIoDescriptorFromBarLimit(&Limit[i],
-                                          &Working->u.type1.ROMBaseAddress,
-                                          TRUE);
+        PciCreateIoDescriptorFromBarLimit(&Limit[i], Working->u.type1.ROMBaseAddress, 0, TRUE);
     }
 }
 

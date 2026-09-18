@@ -347,8 +347,13 @@ ArbpSeedRangeList(
         ULONGLONG Start, Length;
         ULONG Insert;
 
-        if (Resources[Index].Type != (UCHAR)Arbiter->ResourceType)
+        /* A memory window of 4GB or more comes in the large memory form */
+        if ((Resources[Index].Type != (UCHAR)Arbiter->ResourceType) &&
+            !((Resources[Index].Type == CmResourceTypeMemoryLarge) &&
+              (Arbiter->ResourceType == CmResourceTypeMemory)))
+        {
             continue;
+        }
 
         Arbiter->UnpackResource(&Resources[Index], &Start, &Length);
         if (Length == 0)

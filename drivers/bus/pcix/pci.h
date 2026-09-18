@@ -1154,10 +1154,10 @@ PciExecuteCriticalSystemRoutine(
 BOOLEAN
 NTAPI
 PciCreateIoDescriptorFromBarLimit(
-    PIO_RESOURCE_DESCRIPTOR ResourceDescriptor,
-    IN PULONG BarArray,
-    IN BOOLEAN Rom
-);
+    _Out_ PIO_RESOURCE_DESCRIPTOR ResourceDescriptor,
+    _In_ ULONG Bar,
+    _In_ ULONG NextBar,
+    _In_ BOOLEAN Rom);
 
 BOOLEAN
 NTAPI

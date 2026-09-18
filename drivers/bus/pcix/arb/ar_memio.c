@@ -225,14 +225,18 @@ armem_UnpackRequirement(_In_ PIO_RESOURCE_DESCRIPTOR Descriptor,
                         _Out_ PULONGLONG Length,
                         _Out_ PULONGLONG Alignment)
 {
-    /* This arbiter is only ever handed device memory descriptors */
-    if (Descriptor->Type != CmResourceTypeMemory) return STATUS_INVALID_PARAMETER;
+    /* This arbiter is only ever handed device memory descriptors, large ones included */
+    if ((Descriptor->Type != CmResourceTypeMemory) &&
+        (Descriptor->Type != CmResourceTypeMemoryLarge))
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
 
     /* An alignment of zero would place the range nowhere, so make it one byte */
-    *Minimum = (ULONGLONG)Descriptor->u.Memory.MinimumAddress.QuadPart;
-    *Maximum = (ULONGLONG)Descriptor->u.Memory.MaximumAddress.QuadPart;
-    *Length = Descriptor->u.Memory.Length;
-    *Alignment = Descriptor->u.Memory.Alignment ? Descriptor->u.Memory.Alignment : 1;
+    *Length = RtlIoDecodeMemIoResource(Descriptor, Alignment, Minimum, Maximum);
+    if (!*Alignment)
+        *Alignment = 1;
+
     return STATUS_SUCCESS;
 }
 
@@ -243,9 +247,14 @@ armem_PackResource(_In_ PIO_RESOURCE_DESCRIPTOR Descriptor,
                    _Out_ PCM_PARTIAL_RESOURCE_DESCRIPTOR Resource)
 {
     /* Turn the placement the engine settled on back into a memory resource */
-    if (Descriptor->Type != CmResourceTypeMemory) return STATUS_INVALID_PARAMETER;
+    if ((Descriptor->Type != CmResourceTypeMemory) &&
+        (Descriptor->Type != CmResourceTypeMemoryLarge))
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
 
-    Resource->Type = CmResourceTypeMemory;
+    /* The flags say how a large length is scaled, so both come across unchanged */
+    Resource->Type = Descriptor->Type;
     Resource->Flags = Descriptor->Flags;
     Resource->ShareDisposition = Descriptor->ShareDisposition;
     Resource->u.Memory.Start.QuadPart = (LONGLONG)Start;
@@ -260,10 +269,13 @@ armem_UnpackResource(_In_ PCM_PARTIAL_RESOURCE_DESCRIPTOR Resource,
                      _Out_ PULONGLONG Length)
 {
     /* Read a previously packed memory resource back out */
-    if (Resource->Type != CmResourceTypeMemory) return STATUS_INVALID_PARAMETER;
+    if ((Resource->Type != CmResourceTypeMemory) &&
+        (Resource->Type != CmResourceTypeMemoryLarge))
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
 
-    *Start = (ULONGLONG)Resource->u.Memory.Start.QuadPart;
-    *Length = Resource->u.Memory.Length;
+    *Length = RtlCmDecodeMemIoResource(Resource, Start);
     return STATUS_SUCCESS;
 }
 
