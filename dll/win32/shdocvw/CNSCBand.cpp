@@ -1400,15 +1400,24 @@ STDMETHODIMP CNSCBand::HasFocusIO()
 STDMETHODIMP CNSCBand::TranslateAcceleratorIO(LPMSG lpMsg)
 {
     BOOL SkipAccelerators = m_isEditing || (!IsChild(lpMsg->hwnd) && lpMsg->hwnd != m_hWnd);
-    if (lpMsg->message == WM_KEYDOWN && lpMsg->wParam == VK_F2 && !SkipAccelerators)
+    if (lpMsg->message == WM_KEYDOWN && !SkipAccelerators)
     {
         if (HTREEITEM hItem = m_hwndTreeView.GetNextItem(NULL, TVGN_CARET))
         {
-            if (_GetAttributesOfItem(_GetItemData(hItem), SFGAO_CANRENAME))
+            CItemData *pItem = _GetItemData(hItem);
+            if (lpMsg->wParam == VK_F2 && _GetAttributesOfItem(pItem, SFGAO_CANRENAME))
             {
                 m_hwndTreeView.SetFocus();
                 m_hwndTreeView.EditLabel(hItem);
                 return S_OK;
+            }
+            if (lpMsg->wParam == VK_DELETE && _GetAttributesOfItem(pItem, SFGAO_CANDELETE))
+            {
+                CComPtr<IShellFolder> pFolder;
+                LPCITEMIDLIST pidlChild;
+                if (FAILED(SHBindToParent(pItem->absolutePidl, IID_PPV_ARG(IShellFolder, &pFolder), &pidlChild)))
+                    return S_FALSE;
+                return SHInvokeCommand(m_hWnd, pFolder, pidlChild, "delete");
             }
         }
     }
