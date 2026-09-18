@@ -4,6 +4,7 @@
  * PURPOSE:     Portuguese (Brazilian) resource file
  * TRANSLATORS: Copyright 2009 Wagner Leandro Bueno Angelo <wagner.snake@gmail.com>
  *              Copyright 2011 Matheus Macabu <mkbu95@gmail.com>
+ *              2026 Felipe Cordeiro <felipecsouza0503@gmail.com> (felipinho/FelipeC-itch)
  */
 
 LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE_BRAZILIAN
@@ -19,19 +20,19 @@ BEGIN
         MENUITEM "&Salvar\tCtrl+S", IDM_FILESAVE
         MENUITEM "Salvar &como...", IDM_FILESAVEAS
         MENUITEM SEPARATOR
-        MENUITEM "From Scanner or Camera...", IDM_FILEFROMSCANNERORCAMERA
+        MENUITEM "Do Scanner ou Câmera...", IDM_FILEFROMSCANNERORCAMERA
         MENUITEM SEPARATOR
-        MENUITEM "Page View", IDM_FILEPAGEVIEW
-        MENUITEM "Page Setup...", IDM_FILEPAGESETUP
-        MENUITEM "Print...\tCtrl+P", IDM_FILEPRINT
+        MENUITEM "Visualização de Página", IDM_FILEPAGEVIEW
+        MENUITEM "Configuração de página...", IDM_FILEPAGESETUP
+        MENUITEM "Imprimir...\tCtrl+P", IDM_FILEPRINT
         MENUITEM SEPARATOR
-        MENUITEM "Send...", IDM_FILESEND
+        MENUITEM "Enviar...", IDM_FILESEND
         MENUITEM SEPARATOR
         MENUITEM "Definir como plano de fundo (Lado a lado)", IDM_FILEASWALLPAPERPLANE
         MENUITEM "Definir como plano de fundo (Centralizado)", IDM_FILEASWALLPAPERCENTERED
         MENUITEM "Definir como plano de fundo (Esticado)", IDM_FILEASWALLPAPERSTRETCHED
         MENUITEM SEPARATOR
-        MENUITEM "Most recently used file", IDM_FILEMOSTRECENTLYUSEDFILE, GRAYED
+        MENUITEM "Arquivo mais recente", IDM_FILEMOSTRECENTLYUSEDFILE, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "Sai&r\tAlt+F4", IDM_FILEEXIT
     END
@@ -44,7 +45,7 @@ BEGIN
         MENUITEM "&Copiar\tCtrl+C", IDM_EDITCOPY
         MENUITEM "C&olar\tCtrl+V", IDM_EDITPASTE
         MENUITEM SEPARATOR
-        MENUITEM "Crop &selection", IDM_CROPSELECTION
+        MENUITEM "Cortar &seleção", IDM_CROPSELECTION
         MENUITEM "&Limpar seleção\tDel", IDM_EDITDELETESELECTION
         MENUITEM "&Inverter seleção", IDM_EDITINVERTSELECTION
         MENUITEM "Selecionar &tudo\tCtrl+A", IDM_EDITSELECTALL
@@ -91,10 +92,10 @@ BEGIN
     BEGIN
         MENUITEM "&Editar cores...", IDM_COLORSEDITPALETTE
         MENUITEM SEPARATOR
-        MENUITEM "Modern palette", IDM_COLORSMODERNPALETTE
-        MENUITEM "Old palette", IDM_COLORSOLDPALETTE
-        MENUITEM "Grayscale palette", IDM_COLORSGRAYSCALE
-        MENUITEM "Monochrome palette", IDM_COLORSMONOCHROME
+        MENUITEM "Paleta moderna", IDM_COLORSMODERNPALETTE
+        MENUITEM "Paleta antiga", IDM_COLORSOLDPALETTE
+        MENUITEM "Paleta de tons de cinza", IDM_COLORSGRAYSCALE
+        MENUITEM "Paleta monocromática", IDM_COLORSMONOCHROME
     END
     POPUP "&Ajuda"
     BEGIN
@@ -198,9 +199,9 @@ END
 IDD_STRETCHSKEW DIALOGEX 100, 100, 225, 150
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
-CAPTION "Stretch and skew image"
+CAPTION "Esticar e inclinar imagem"
 BEGIN
-    GROUPBOX "Stretch", IDD_STRETCHSKEWGROUPSTRETCH, 6, 6, 158, 66
+    GROUPBOX "Esticar", IDD_STRETCHSKEWGROUPSTRETCH, 6, 6, 158, 66
     ICON IDI_HORZSTRETCH, IDD_STRETCHSKEWICONHSTRETCH, 12, 18, 32, 32
     LTEXT "Horizontal:", IDD_STRETCHSKEWTEXTHSTRETCH, 45, 24, 40, 10
     EDITTEXT IDD_STRETCHSKEWEDITHSTRETCH, 90, 23, 32, 12
@@ -209,15 +210,15 @@ BEGIN
     LTEXT "Vertical:", IDD_STRETCHSKEWTEXTVSTRETCH, 45, 49, 40, 10
     EDITTEXT IDD_STRETCHSKEWEDITVSTRETCH, 90, 48, 32, 12
     LTEXT "%", IDD_STRETCHSKEWTEXTVPERCENT, 125, 49, 15, 10
-    GROUPBOX "Skew", IDD_STRETCHSKEWGROUPSKEW, 6, 76, 158, 66
+    GROUPBOX "Inclinar", IDD_STRETCHSKEWGROUPSKEW, 6, 76, 158, 66
     ICON IDI_HORZSKEW, IDD_STRETCHSKEWICONHSKEW, 12, 88, 32, 32
     LTEXT "Horizontal:", IDD_STRETCHSKEWTEXTHSKEW, 45, 94, 40, 10
     EDITTEXT IDD_STRETCHSKEWEDITHSKEW, 90, 93, 32, 12
-    LTEXT "degrees", IDD_STRETCHSKEWTEXTHDEG, 125, 94, 30, 10
+    LTEXT "graus", IDD_STRETCHSKEWTEXTHDEG, 125, 94, 30, 10
     ICON IDI_VERTSKEW, IDD_STRETCHSKEWICONVSKEW, 12, 113, 32, 32
     LTEXT "Vertical:", IDD_STRETCHSKEWTEXTVSKEW, 45, 119, 40, 10
     EDITTEXT IDD_STRETCHSKEWEDITVSKEW, 90, 118, 32, 12
-    LTEXT "degrees", IDD_STRETCHSKEWTEXTVDEG, 125, 119, 30, 10
+    LTEXT "graus", IDD_STRETCHSKEWTEXTVDEG, 125, 119, 30, 10
     DEFPUSHBUTTON "OK", IDOK, 170, 8, 48, 14
     PUSHBUTTON "Cancelar", IDCANCEL, 170, 24, 48, 14
 END
@@ -252,27 +253,27 @@ BEGIN
     IDS_TOOLTIP8 "Pincel"
     IDS_TOOLTIP9 "Spray"
     IDS_TOOLTIP10 "Texto"
-    IDS_TOOLTIP11 "Linnha"
+    IDS_TOOLTIP11 "Linha"
     IDS_TOOLTIP12 "Curva"
     IDS_TOOLTIP13 "Retângulo"
     IDS_TOOLTIP14 "Polígono"
     IDS_TOOLTIP15 "Ellipse"
     IDS_TOOLTIP16 "Retângulo arredondado"
     IDS_ALLFILES "Todos os arquivos"
-    IDS_ALLPICTUREFILES "All Picture Files"
+    IDS_ALLPICTUREFILES "Todos os arquivos de imagem"
     IDS_FILESIZE "%d bytes"
-    IDS_INTNUMBERS "Please enter integral numbers only!"
-    IDS_PERCENTAGE "The percentage must be between 1 and 500."
-    IDS_ANGLE "The angle must be between -89 and 89."
-    IDS_LOADERRORTEXT "The file %s could not be loaded."
-    IDS_ENLARGEPROMPTTEXT "The image in the clipboard is larger than the bitmap.\nWould you like the bitmap enlarged?"
-    IDS_BOLD "Bold"
-    IDS_ITALIC "Italic"
-    IDS_UNDERLINE "Underline"
+    IDS_INTNUMBERS "Por favor digitar apenas números inteiros!"
+    IDS_PERCENTAGE "A porcentagem deve estar entre 1 e 500."
+    IDS_ANGLE "O ângulo deve estar entre -89 e 89."
+    IDS_LOADERRORTEXT "O arquivo %s não pôde ser carregado."
+    IDS_ENLARGEPROMPTTEXT "A imagem na área de transferência é maior que o bitmap.\nVocê quer aumentar o tamanho do bitmap?"
+    IDS_BOLD "Negrito"
+    IDS_ITALIC "Itálico"
+    IDS_UNDERLINE "Sublinhado"
     IDS_VERTICAL "Vertical"
     IDS_PRINTRES "%d x %d pixel/cm"
-    IDS_CANTPASTE "Failed to paste from the clipboard. The data format is either incorrect or not supported."
-    IDS_SAVEERROR "Failed to save the bitmap to file:\n\n%s"
-    IDS_CANTSENDMAIL "Failed to send a mail."
-    IDS_LOSECOLOR "The color information will be lost in this operation. Are you sure to proceed?"
+    IDS_CANTPASTE "Falha ao colar da área de transferência. O formato dos dados está incorreto ou não é suportado."
+    IDS_SAVEERROR "Falha ao salvar o bitmap no arquivo:\n\n%s"
+    IDS_CANTSENDMAIL "Falha ao enviar o e-mail"
+    IDS_LOSECOLOR "As informações de cor serão perdidas nesta operação. Tem certeza de que quer continuar?"
 END
