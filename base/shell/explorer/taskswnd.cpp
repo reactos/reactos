@@ -625,9 +625,13 @@ public:
             tbbi.fsState |= TBSTATE_WRAP;
         }
 
-        if (GetWndTextFromTaskItem(TaskItem, windowText, _countof(windowText)) > 0)
+        if (!(g_TaskbarSettings.bNoText) && GetWndTextFromTaskItem(TaskItem, windowText, _countof(windowText)) > 0)
         {
             tbbi.pszText = windowText;
+        }
+        else
+        {
+            tbbi.pszText = const_cast<LPWSTR>(L"");
         }
 
         icon = GetWndIcon(TaskItem->hWnd);
@@ -2112,6 +2116,12 @@ public:
         {
             bSettingsChanged = TRUE;
             g_TaskbarSettings.bSmallIcons = newSettings->bSmallIcons;
+        }
+
+        if(newSettings->bNoText != g_TaskbarSettings.bNoText)
+        {
+            bSettingsChanged = TRUE;
+            g_TaskbarSettings.bNoText = newSettings->bNoText;
         }
 
         if (bSettingsChanged)
