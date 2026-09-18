@@ -44,6 +44,17 @@ HRESULT TrayWindowCtxMenuCreator(ITrayWindow * TrayWnd, IN HWND hWndOwner, ICont
 #define IDHK_DESKTOP 0x1fe
 #define IDHK_PAGER 0x1ff
 
+#define IDHK_TASK_1 0x200
+#define IDHK_TASK_2 0x201
+#define IDHK_TASK_3 0x202
+#define IDHK_TASK_4 0x203
+#define IDHK_TASK_5 0x204
+#define IDHK_TASK_6 0x205
+#define IDHK_TASK_7 0x206
+#define IDHK_TASK_8 0x207
+#define IDHK_TASK_9 0x208
+#define IDHK_TASK_10 0x209
+
 enum { NONE, TILED, CASCADED } g_Arrangement = NONE;
 
 struct WINDOWPOSBACKUPDATA
@@ -797,6 +808,18 @@ public:
             ToggleDesktop();
             break;
         case IDHK_PAGER:
+            break;
+        case IDHK_TASK_1:
+        case IDHK_TASK_2:
+        case IDHK_TASK_3:
+        case IDHK_TASK_4:
+        case IDHK_TASK_5:
+        case IDHK_TASK_6:
+        case IDHK_TASK_7:
+        case IDHK_TASK_8:
+        case IDHK_TASK_9:
+        case IDHK_TASK_10:
+            ::SendMessageW(m_TaskSwitch, TSWM_ACTIVATETASKINDEX, 0, id - IDHK_TASK_1);
             break;
         }
 
@@ -2437,6 +2460,16 @@ ChangePos:
             MAKELONG(IDHK_SYS_PROPERTIES, MAKEWORD(VK_PAUSE, MOD_WIN)),
             MAKELONG(IDHK_DESKTOP,        MAKEWORD('D', MOD_WIN)),
             MAKELONG(IDHK_PAGER,          MAKEWORD('B', MOD_WIN)),
+            MAKELONG(IDHK_TASK_1,         MAKEWORD('1', MOD_WIN)),
+            MAKELONG(IDHK_TASK_2,         MAKEWORD('2', MOD_WIN)),
+            MAKELONG(IDHK_TASK_3,         MAKEWORD('3', MOD_WIN)),
+            MAKELONG(IDHK_TASK_4,         MAKEWORD('4', MOD_WIN)),
+            MAKELONG(IDHK_TASK_5,         MAKEWORD('5', MOD_WIN)),
+            MAKELONG(IDHK_TASK_6,         MAKEWORD('6', MOD_WIN)),
+            MAKELONG(IDHK_TASK_7,         MAKEWORD('7', MOD_WIN)),
+            MAKELONG(IDHK_TASK_8,         MAKEWORD('8', MOD_WIN)),
+            MAKELONG(IDHK_TASK_9,         MAKEWORD('9', MOD_WIN)),
+            MAKELONG(IDHK_TASK_10,        MAKEWORD('0', MOD_WIN)),
         };
         if (!SHRestricted(REST_NOWINKEYS))
         {
