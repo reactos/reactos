@@ -8,6 +8,7 @@
 
 KMT_TESTFUNC Test_CcCopyRead;
 KMT_TESTFUNC Test_CcCopyWrite;
+KMT_TESTFUNC Test_CcGetFlushedValidData;
 KMT_TESTFUNC Test_CcMapData;
 KMT_TESTFUNC Test_CcPinMappedData;
 KMT_TESTFUNC Test_CcPinRead;
@@ -44,6 +45,7 @@ const KMT_TEST TestList[] =
 {
     { "-CcCopyRead",                   Test_CcCopyRead },   // TODO: Crashes on TestWHS
     { "-CcCopyWrite",                  Test_CcCopyWrite },  // TODO: Crashes on TestWHS
+    { "-CcGetFlushedValidData",        Test_CcGetFlushedValidData },
     { "-CcMapData",                    Test_CcMapData },
     { "-CcPinMappedData",              Test_CcPinMappedData },
     { "-CcPinRead",                    Test_CcPinRead },
