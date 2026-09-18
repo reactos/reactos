@@ -50,7 +50,7 @@ StorpAssignTagToSrb(
      */
     Srb->QueueTag = (UCHAR)(NewTag % PdoExtension->OutstandingRequestMax);
 
-    DPRINT(__FUNCTION__ "Assigned Tag %x, TagCounter was %x\n", Srb->QueueTag, NewTag);
+    DPRINT("StorpAssignTagToSrb: Assigned Tag %x, TagCounter was %x\n", Srb->QueueTag, NewTag);
 
     return TRUE;
 }
@@ -214,7 +214,7 @@ PortPdoAfterBuildingScatterGatherList(
     while (0);
 
     /* Restore IRQL */
-    KfLowerIrql(OldIrql);
+    KeLowerIrql(OldIrql);
 }
 
 
@@ -332,7 +332,7 @@ PortPdoIssueRequest(
                                  RequestReference->WriteToDevice);
         
         /* Restore IRQL */
-        KfLowerIrql(OldIrql);
+        KeLowerIrql(OldIrql);
     } else {
         /* Otherwise just start the IO with a NULL scatter gather list */
         PortPdoAfterBuildingScatterGatherList(FdoExtension->Device,
@@ -857,7 +857,11 @@ PdoHandleQueryInstanceId(
     LPWSTR InstanceId;
 
     // use instance count and LUN
-    swprintf(Buffer, L"%x%x%x", PdoExtension->Bus, PdoExtension->Target, PdoExtension->Lun);
+    _swprintf(Buffer,
+              L"%x%x%x",
+              PdoExtension->Bus,
+              PdoExtension->Target,
+              PdoExtension->Lun);
 
     Length = wcslen(Buffer) + 1;
 
