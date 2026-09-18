@@ -2129,7 +2129,7 @@ public:
             g_TaskbarSettings.bSmallIcons = newSettings->bSmallIcons;
         }
 
-        if(newSettings->bNoText != g_TaskbarSettings.bNoText)
+        if (newSettings->bNoText != g_TaskbarSettings.bNoText)
         {
             bSettingsChanged = TRUE;
             g_TaskbarSettings.bNoText = newSettings->bNoText;
