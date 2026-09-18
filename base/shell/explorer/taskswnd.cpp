@@ -4,6 +4,7 @@
  * PURPOSE:     Task window implementation
  * COPYRIGHT:   Copyright 2006-2007 Thomas Weidenmueller <w3seek@reactos.org>
  *              Copyright 2026 Vitaly Orekhov <vkvo2000@vivaldi.net>
+ *              Copyright 2026 Ethan Seren <ethan.boi.dev.615@gmail.com>
  */
 
 #include "precomp.h"
@@ -1408,7 +1409,16 @@ public:
                     uiMax = GetSystemMetrics(SM_CXMINIMIZED);
 
                     /* Calculate the ideal width and make sure it's within the allowed range */
-                    NewBtnSize = (rcClient.right - (uiBtnsPerLine * cxButtonSpacing)) / uiBtnsPerLine;
+                    if(g_TaskbarSettings.bNoText)
+                    {
+                        int widthSize = GetSystemMetrics(g_TaskbarSettings.bSmallIcons ? SM_CXSMICON : SM_CXICON);
+
+                        NewBtnSize = widthSize + (2 * GetSystemMetrics(SM_CXEDGE) + 7);
+                    }
+                    else
+                    {
+                        NewBtnSize = (rcClient.right - (uiBtnsPerLine * cxButtonSpacing)) / uiBtnsPerLine;
+                    }
 
                     if (NewBtnSize < (LONG) uiMin)
                         NewBtnSize = uiMin;
