@@ -626,7 +626,7 @@ public:
             tbbi.fsState |= TBSTATE_WRAP;
         }
 
-        if (!(g_TaskbarSettings.bNoText) && GetWndTextFromTaskItem(TaskItem, windowText, _countof(windowText)) > 0)
+        if (g_TaskbarSettings.glomLevel != 0 && GetWndTextFromTaskItem(TaskItem, windowText, _countof(windowText)) > 0)
         {
             tbbi.pszText = windowText;
         }
@@ -1409,7 +1409,7 @@ public:
                     uiMax = GetSystemMetrics(SM_CXMINIMIZED);
 
                     /* Calculate the ideal width and make sure it's within the allowed range */
-                    if (g_TaskbarSettings.bNoText)
+                    if (g_TaskbarSettings.glomLevel == 0)
                     {
                         int widthSize = GetSystemMetrics(g_TaskbarSettings.bSmallIcons ? SM_CXSMICON : SM_CXICON);
 
@@ -1432,7 +1432,7 @@ public:
                 }
                 else
                 {
-                    // TODO - putting the taskbar vertically pushes the icons to the side when bNoText is true, please fix later
+                    // TODO - putting the taskbar vertically pushes the icons to the side when glomLevel is 0, please fix later
                     NewBtnSize = uiMax = rcClient.right;
                 }
 
@@ -2129,10 +2129,10 @@ public:
             g_TaskbarSettings.bSmallIcons = newSettings->bSmallIcons;
         }
 
-        if (newSettings->bNoText != g_TaskbarSettings.bNoText)
+        if (newSettings->glomLevel != g_TaskbarSettings.glomLevel)
         {
             bSettingsChanged = TRUE;
-            g_TaskbarSettings.bNoText = newSettings->bNoText;
+            g_TaskbarSettings.glomLevel = newSettings->glomLevel;
         }
 
         if (bSettingsChanged)

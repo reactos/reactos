@@ -112,7 +112,7 @@ public:
         CheckDlgButton(IDC_TASKBARPROP_GROUP, g_TaskbarSettings.bGroupButtons ? BST_CHECKED : BST_UNCHECKED);
         //CheckDlgButton(IDC_TASKBARPROP_SHOWQL, g_TaskbarSettings.bShowQuickLaunch ? BST_CHECKED : BST_UNCHECKED);
         CheckDlgButton(IDC_TASKBARPROP_SMALLICONS, g_TaskbarSettings.bSmallIcons ? BST_CHECKED : BST_UNCHECKED);
-        CheckDlgButton(IDC_TASKBARPROP_NOTEXT, g_TaskbarSettings.bNoText ? BST_CHECKED : BST_UNCHECKED);
+        CheckDlgButton(IDC_TASKBARPROP_NOTEXT, g_TaskbarSettings.glomLevel == 0 ? BST_CHECKED : BST_UNCHECKED);
 
         _UpdateDialog();
         return TRUE;
@@ -135,7 +135,7 @@ public:
         newSettings.bGroupButtons = IsDlgButtonChecked(IDC_TASKBARPROP_GROUP);
         //newSettings.bShowQuickLaunch = IsDlgButtonChecked(IDC_TASKBARPROP_SHOWQL);
         newSettings.bSmallIcons = IsDlgButtonChecked(IDC_TASKBARPROP_SMALLICONS);
-        newSettings.bNoText = IsDlgButtonChecked(IDC_TASKBARPROP_NOTEXT);
+        newSettings.glomLevel = IsDlgButtonChecked(IDC_TASKBARPROP_NOTEXT) ? 0 : 2;
 
         SendMessage(m_hwndTaskbar, TWM_SETTINGSCHANGED, 0, (LPARAM)&newSettings);
 
