@@ -1409,7 +1409,7 @@ public:
                     uiMax = GetSystemMetrics(SM_CXMINIMIZED);
 
                     /* Calculate the ideal width and make sure it's within the allowed range */
-                    if(g_TaskbarSettings.bNoText)
+                    if (g_TaskbarSettings.bNoText)
                     {
                         int widthSize = GetSystemMetrics(g_TaskbarSettings.bSmallIcons ? SM_CXSMICON : SM_CXICON);
 
@@ -1432,6 +1432,7 @@ public:
                 }
                 else
                 {
+                    // TODO - putting the taskbar vertically pushes the icons to the side when bNoText is true, please fix later
                     NewBtnSize = uiMax = rcClient.right;
                 }
 
