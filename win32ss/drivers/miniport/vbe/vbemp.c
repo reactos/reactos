@@ -780,6 +780,7 @@ VBEMapVideoMemory(
    if (DeviceExtension->ModeInfo[DeviceExtension->CurrentMode].ModeAttributes &
        VBE_MODEATTR_LINEAR)
    {
+      inIoSpace |= VIDEO_MEMORY_SPACE_P6CACHE;
       FrameBuffer.QuadPart =
          DeviceExtension->ModeInfo[DeviceExtension->CurrentMode].PhysBasePtr;
       MapInformation->VideoRamBase = RequestedAddress->RequestedVirtualAddress;
