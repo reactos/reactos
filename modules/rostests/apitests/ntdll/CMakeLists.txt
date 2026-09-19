@@ -110,6 +110,7 @@ list(APPEND SOURCE
     RtlDosSearchPath_U.c
     RtlDosSearchPath_Ustr.c
     RtlFirstFreeAce.c
+    RtlFls.c
     RtlGenerate8dot3Name.c
     RtlGetFullPathName_U.c
     RtlGetFullPathName_Ustr.c
