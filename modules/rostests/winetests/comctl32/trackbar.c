@@ -25,7 +25,12 @@
 #include "msg.h"
 #include "v6util.h"
 
-#define expect(expected, got) ok(got == expected, "Expected %d, got %d\n", expected, got)
+#define expect(expected,got) expect_(__LINE__, expected, got)
+static inline void expect_(unsigned line, DWORD expected, DWORD got)
+{
+    ok_(__FILE__, line)(expected == got, "Expected %ld, got %ld\n", expected, got);
+}
+
 #define NUM_MSG_SEQUENCE 2
 #define PARENT_SEQ_INDEX 0
 #define TRACKBAR_SEQ_INDEX 1
@@ -45,7 +50,53 @@ static LRESULT WINAPI trackbar_no_wmpaint_proc(HWND hwnd, UINT message, WPARAM w
 
 static struct msg_sequence *sequences[NUM_MSG_SEQUENCE];
 
+static void CALLBACK msg_winevent_proc(HWINEVENTHOOK hevent,
+                                       DWORD event,
+                                       HWND hwnd,
+                                       LONG object_id,
+                                       LONG child_id,
+                                       DWORD thread_id,
+                                       DWORD event_time)
+{
+    struct message msg = {0};
+    char class_name[256];
+
+    /* ignore window and other system events */
+    if (object_id != OBJID_CLIENT) return;
+
+    /* ignore events not from a progress bar control */
+    if (!GetClassNameA(hwnd, class_name, ARRAY_SIZE(class_name)) ||
+        strcmp(class_name, TRACKBAR_CLASSA) != 0)
+        return;
+
+    msg.message = event;
+    msg.flags = winevent_hook|wparam|lparam;
+    msg.wParam = object_id;
+    msg.lParam = child_id;
+    add_message(sequences, TRACKBAR_SEQ_INDEX, &msg);
+}
+
+static void init_winevent_hook(void) {
+    hwineventhook = SetWinEventHook(EVENT_MIN, EVENT_MAX, GetModuleHandleA(0), msg_winevent_proc,
+                                    0, GetCurrentThreadId(), WINEVENT_INCONTEXT);
+    if (!hwineventhook)
+        win_skip( "no win event hook support\n" );
+}
+
+static void uninit_winevent_hook(void) {
+    if (!hwineventhook)
+        return;
+
+    UnhookWinEvent(hwineventhook);
+    hwineventhook = 0;
+}
+
 static const struct message empty_seq[] = {
+    {0}
+};
+
+static const struct message create_trackbar_wnd_seq[] = {
+    { EVENT_OBJECT_FOCUS, winevent_hook|wparam|lparam, OBJID_CLIENT, 0 },
     {0}
 };
 
@@ -125,10 +176,14 @@ static const struct message position_test_seq[] = {
     { TBM_GETPOS, sent},
     { TBM_SETPOS, sent|wparam|lparam, TRUE, 5},
     { WM_PAINT, sent|defwinproc},
+    { EVENT_OBJECT_STATECHANGE, winevent_hook|wparam|lparam|optional, OBJID_CLIENT, 3 }, /* v6 only */
+    { EVENT_OBJECT_VALUECHANGE, winevent_hook|wparam|lparam, OBJID_CLIENT, 0 },
     { TBM_GETPOS, sent},
     { TBM_SETPOS, sent|wparam|lparam, TRUE, 5},
     { TBM_SETPOS, sent|wparam|lparam, TRUE, 1000},
     { WM_PAINT, sent|defwinproc},
+    { EVENT_OBJECT_STATECHANGE, winevent_hook|wparam|lparam|optional, OBJID_CLIENT, 3 }, /* v6 only */
+    { EVENT_OBJECT_VALUECHANGE, winevent_hook|wparam|lparam, OBJID_CLIENT, 0 },
     { TBM_GETPOS, sent},
     { TBM_SETPOS, sent|wparam|lparam, FALSE, 20},
     { TBM_GETPOS, sent},
@@ -717,21 +772,21 @@ static void test_position(void)
     r = SendMessageA(hWndTrackbar, TBM_GETPOS, 0, 0);
     ok(r == 25, "got %d\n", r);
     SendMessageA(hWndTrackbar, TBM_GETTHUMBRECT, 0, (LPARAM)&rect2);
-    ok(rect.left == rect2.left, "got %d\n", rect.left);
+    ok(rect.left == rect2.left, "got %ld\n", rect.left);
 
     /* with repaint */
     SendMessageA(hWndTrackbar, TBM_SETPOS, TRUE, 30);
     r = SendMessageA(hWndTrackbar, TBM_GETPOS, 0, 0);
     ok(r == 30, "got %d\n", r);
     SendMessageA(hWndTrackbar, TBM_GETTHUMBRECT, 0, (LPARAM)&rect2);
-    ok(rect.left != rect2.left, "got %d, expected %d\n", rect2.left, rect.left);
+    ok(rect.left != rect2.left, "got %ld, expected %ld\n", rect2.left, rect.left);
 
     /* now move it with keys */
     SendMessageA(hWndTrackbar, WM_KEYDOWN, VK_END, 0);
     r = SendMessageA(hWndTrackbar, TBM_GETPOS, 0, 0);
     ok(r == 100, "got %d\n", r);
     SendMessageA(hWndTrackbar, TBM_GETTHUMBRECT, 0, (LPARAM)&rect);
-    ok(rect.left != rect2.left, "got %d, expected %d\n", rect.left, rect2.left);
+    ok(rect.left != rect2.left, "got %ld, expected %ld\n", rect.left, rect2.left);
 
     DestroyWindow(hWndTrackbar);
 }
@@ -1109,7 +1164,7 @@ static void test_tic_placement(void)
     SendMessageA(hWndTrackbar, TBM_SETTICFREQ, 1, 0);
 
     numtics = SendMessageA(hWndTrackbar, TBM_GETNUMTICS, 0, 0);
-    ok(numtics == 6, "Expected 6, got %d\n", numtics);
+    ok(numtics == 6, "Expected 6, got %ld\n", numtics);
 
     flush_sequences(sequences, NUM_MSG_SEQUENCE);
     /* test TBM_GETPTICS */
@@ -1350,7 +1405,7 @@ static void test_create(void)
 
     hWndTrackbar = create_trackbar(defaultstyle, hWndParent);
     ok(hWndTrackbar != NULL, "Expected non NULL value\n");
-    ok_sequence(sequences, TRACKBAR_SEQ_INDEX, empty_seq, "create Trackbar Window", FALSE);
+    ok_sequence(sequences, TRACKBAR_SEQ_INDEX, create_trackbar_wnd_seq, "create Trackbar Window", FALSE);
     ok_sequence(sequences, PARENT_SEQ_INDEX, parent_create_trackbar_wnd_seq, "parent trackbar window", TRUE);
 
     DestroyWindow(hWndTrackbar);
@@ -1380,6 +1435,8 @@ START_TEST(trackbar)
         skip("parent window not present\n");
         return;
     }
+
+    init_winevent_hook();
 
     test_create();
     test_trackbar_buddy();
@@ -1414,6 +1471,8 @@ START_TEST(trackbar)
     test_TBS_AUTOTICKS();
     test_ignore_selection();
     test_initial_state();
+
+    uninit_winevent_hook();
 
     unload_v6_module(cookie, ctxt);
 
