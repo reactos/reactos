@@ -48,8 +48,6 @@ static BOOL init_functionpointers(void)
     HMODULE hfusion;
     HMODULE hmscoree;
 
-    static const WCHAR szFusion[] = {'f','u','s','i','o','n','.','d','l','l',0};
-
     hmscoree = LoadLibraryA("mscoree.dll");
     if (!hmscoree)
         return FALSE;
@@ -61,7 +59,7 @@ static BOOL init_functionpointers(void)
         return FALSE;
     }
 
-    hr = pLoadLibraryShim(szFusion, NULL, NULL, &hfusion);
+    hr = pLoadLibraryShim(L"fusion.dll", NULL, NULL, &hfusion);
     if (FAILED(hr))
         return FALSE;
 
@@ -359,20 +357,20 @@ static void test_assembly_name_props_line(IAssemblyName *name,
         ok(hr == vals[i].hr ||
            broken(i >= ASM_NAME_CONFIG_MASK && hr == E_INVALIDARG) || /* .NET 1.1 */
            broken(i >= ASM_NAME_FILE_MAJOR_VERSION && hr == E_INVALIDARG), /* .NET 1.0 */
-           "%d: prop %d: Expected %08x, got %08x\n", line, i, vals[i].hr, hr);
+           "%d: prop %ld: Expected %08lx, got %08lx\n", line, i, vals[i].hr, hr);
         if (hr != E_INVALIDARG)
         {
-            ok(size == vals[i].size, "%d: prop %d: Expected %d, got %d\n", line, i, vals[i].size, size);
+            ok(size == vals[i].size, "%d: prop %ld: Expected %ld, got %ld\n", line, i, vals[i].size, size);
             if (!size)
             {
-                ok(str[0] == 0xcccc, "%d: prop %d: str[0] = %x\n", line, i, str[0]);
+                ok(str[0] == 0xcccc, "%d: prop %ld: str[0] = %x\n", line, i, str[0]);
             }
             else if (size != MAX_PATH)
             {
                 if (i != ASM_NAME_NAME && i != ASM_NAME_CULTURE)
-                    ok( !memcmp( vals[i].val, str, size ), "%d: prop %d: wrong value\n", line, i );
+                    ok( !memcmp( vals[i].val, str, size ), "%d: prop %ld: wrong value\n", line, i );
                 else
-                    ok( !lstrcmpW( expect, str ), "%d: prop %d: Expected %s, got %s\n",
+                    ok( !lstrcmpW( expect, str ), "%d: prop %ld: Expected %s, got %s\n",
                         line, i, wine_dbgstr_w(expect), wine_dbgstr_w(str) );
             }
 
@@ -381,8 +379,8 @@ static void test_assembly_name_props_line(IAssemblyName *name,
                 size--;
                 hr = IAssemblyName_GetProperty(name, i, str, &size);
                 ok(hr == STRSAFE_E_INSUFFICIENT_BUFFER,
-                        "%d: prop %d: Expected STRSAFE_E_INSUFFICIENT_BUFFER, got %08x\n", line, i, hr);
-                ok(size == vals[i].size, "%d: prop %d: Expected %d, got %d\n", line, i, vals[i].size, size);
+                        "%d: prop %ld: Expected STRSAFE_E_INSUFFICIENT_BUFFER, got %08lx\n", line, i, hr);
+                ok(size == vals[i].size, "%d: prop %ld: Expected %ld, got %ld\n", line, i, vals[i].size, size);
             }
         }
     }
@@ -400,23 +398,21 @@ static void test_CreateAssemblyNameObject(void)
     PEKIND arch;
     HRESULT hr;
 
-    static const WCHAR empty[] = {0};
-
     /* NULL ppAssemblyNameObj */
     to_widechar(namestr, "wine.dll");
     hr = pCreateAssemblyNameObject(NULL, namestr, 0, NULL);
-    ok(hr == E_INVALIDARG, "Expected E_INVALIDARG, got %08x\n", hr);
+    ok(hr == E_INVALIDARG, "Expected E_INVALIDARG, got %08lx\n", hr);
 
     /* NULL szAssemblyName, CANOF_PARSE_DISPLAY_NAME */
     name = (IAssemblyName *)0xdeadbeef;
     hr = pCreateAssemblyNameObject(&name, NULL, CANOF_PARSE_DISPLAY_NAME, NULL);
-    ok(hr == E_INVALIDARG, "Expected E_INVALIDARG, got %08x\n", hr);
+    ok(hr == E_INVALIDARG, "Expected E_INVALIDARG, got %08lx\n", hr);
     ok(name == (IAssemblyName *)0xdeadbeef, "Expected 0xdeadbeef, got %p\n", name);
 
     /* empty szAssemblyName, CANOF_PARSE_DISPLAY_NAME */
     name = (IAssemblyName *)0xdeadbeef;
-    hr = pCreateAssemblyNameObject(&name, empty, CANOF_PARSE_DISPLAY_NAME, NULL);
-    ok(hr == E_INVALIDARG, "Expected E_INVALIDARG, got %08x\n", hr);
+    hr = pCreateAssemblyNameObject(&name, L"", CANOF_PARSE_DISPLAY_NAME, NULL);
+    ok(hr == E_INVALIDARG, "Expected E_INVALIDARG, got %08lx\n", hr);
     ok(name == (IAssemblyName *)0xdeadbeef, "Expected 0xdeadbeef, got %p\n", name);
 
     /* check the contents of the AssemblyName for default values */
@@ -424,30 +420,30 @@ static void test_CreateAssemblyNameObject(void)
     /* NULL szAssemblyName */
     name = NULL;
     hr = pCreateAssemblyNameObject(&name, NULL, CANOF_SET_DEFAULT_VALUES, NULL);
-    ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
+    ok(hr == S_OK, "Expected S_OK, got %08lx\n", hr);
     ok(name != NULL, "Expected non-NULL name\n");
 
     size = MAX_PATH;
     hr = IAssemblyName_GetDisplayName(name, str, &size, ASM_DISPLAYF_FULL);
     ok(hr == FUSION_E_INVALID_NAME ||
        broken(hr == E_INVALIDARG), /* .NET 1.x */
-       "Expected FUSION_E_INVALID_NAME, got %08x\n", hr);
+       "Expected FUSION_E_INVALID_NAME, got %08lx\n", hr);
 
     str[0] = 'a';
     size = MAX_PATH;
     hr = IAssemblyName_GetName(name, &size, str);
-    ok(hr == S_OK, "got %08x\n", hr);
+    ok(hr == S_OK, "got %08lx\n", hr);
     ok(str[0] == 'a', "got %c\n", str[0]);
-    ok(!size, "got %u\n", size);
+    ok(!size, "got %lu\n", size);
 
     hi = 0xbeefcace;
     lo = 0xcafebabe;
     hr = IAssemblyName_GetVersion(name, &hi, &lo);
     ok(hr == FUSION_E_INVALID_NAME ||
        broken(hr == S_OK), /* .NET 1.x */
-       "Expected FUSION_E_INVALID_NAME, got %08x\n", hr);
-    ok(hi == 0, "Expected 0, got %08x\n", hi);
-    ok(lo == 0, "Expected 0, got %08x\n", lo);
+       "Expected FUSION_E_INVALID_NAME, got %08lx\n", hr);
+    ok(hi == 0, "Expected 0, got %08lx\n", hi);
+    ok(lo == 0, "Expected 0, got %08lx\n", lo);
 
     if (hr == S_OK)
         win_skip(".NET 1.x doesn't handle ASM_NAME_PROCESSOR_ID_ARRAY"
@@ -459,51 +455,51 @@ static void test_CreateAssemblyNameObject(void)
 
     /* empty szAssemblyName */
     name = NULL;
-    hr = pCreateAssemblyNameObject(&name, empty, CANOF_SET_DEFAULT_VALUES, NULL);
-    ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
+    hr = pCreateAssemblyNameObject(&name, L"", CANOF_SET_DEFAULT_VALUES, NULL);
+    ok(hr == S_OK, "Expected S_OK, got %08lx\n", hr);
     ok(name != NULL, "Expected non-NULL name\n");
 
     size = MAX_PATH;
     hr = IAssemblyName_GetDisplayName(name, str, &size, ASM_DISPLAYF_FULL);
     ok(hr == FUSION_E_INVALID_NAME ||
        broken(hr == S_OK), /* .NET 1.x */
-       "Expected FUSION_E_INVALID_NAME, got %08x\n", hr);
+       "Expected FUSION_E_INVALID_NAME, got %08lx\n", hr);
 
     size = 0;
     hr = IAssemblyName_GetName(name, &size, NULL);
-    ok(hr == E_NOT_SUFFICIENT_BUFFER, "got %08x\n", hr);
-    ok(size == 1, "got %u\n", size);
+    ok(hr == E_NOT_SUFFICIENT_BUFFER, "got %08lx\n", hr);
+    ok(size == 1, "got %lu\n", size);
 
     if (0) /* crash */
     {
     str[0] = '\0';
     hr = IAssemblyName_GetName(name, NULL, str);
-    ok(hr == E_NOT_SUFFICIENT_BUFFER, "got %08x\n", hr);
+    ok(hr == E_NOT_SUFFICIENT_BUFFER, "got %08lx\n", hr);
     ok(!str[0], "got %c\n", str[0]);
     }
 
     size = 0;
     str[0] = '\0';
     hr = IAssemblyName_GetName(name, &size, str);
-    ok(hr == E_NOT_SUFFICIENT_BUFFER, "got %08x\n", hr);
+    ok(hr == E_NOT_SUFFICIENT_BUFFER, "got %08lx\n", hr);
     ok(!str[0], "got %c\n", str[0]);
-    ok(size == 1, "got %u\n", size);
+    ok(size == 1, "got %lu\n", size);
 
     size = MAX_PATH;
     str[0] = '\0';
     hr = IAssemblyName_GetName(name, &size, str);
-    ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
+    ok(hr == S_OK, "Expected S_OK, got %08lx\n", hr);
     ok(!str[0], "Expected empty name\n");
-    ok(size == 1, "Expected 1, got %d\n", size);
+    ok(size == 1, "Expected 1, got %ld\n", size);
 
     hi = 0xbeefcace;
     lo = 0xcafebabe;
     hr = IAssemblyName_GetVersion(name, &hi, &lo);
     ok(hr == FUSION_E_INVALID_NAME ||
        broken(hr == S_OK), /* .NET 1.x */
-       "Expected FUSION_E_INVALID_NAME, got %08x\n", hr);
-    ok(hi == 0, "Expected 0, got %08x\n", hi);
-    ok(lo == 0, "Expected 0, got %08x\n", lo);
+       "Expected FUSION_E_INVALID_NAME, got %08lx\n", hr);
+    ok(hi == 0, "Expected 0, got %08lx\n", hi);
+    ok(lo == 0, "Expected 0, got %08lx\n", lo);
 
     if (hr == S_OK)
         win_skip(".NET 1.x doesn't handle ASM_NAME_PROCESSOR_ID_ARRAY"
@@ -517,61 +513,61 @@ static void test_CreateAssemblyNameObject(void)
     to_widechar(namestr, "wine");
     name = NULL;
     hr = pCreateAssemblyNameObject(&name, namestr, CANOF_SET_DEFAULT_VALUES, NULL);
-    ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
+    ok(hr == S_OK, "Expected S_OK, got %08lx\n", hr);
     ok(name != NULL, "Expected non-NULL name\n");
 
     size = 0;
     hr = IAssemblyName_GetDisplayName(name, NULL, &size, 0);
-    ok(hr == E_NOT_SUFFICIENT_BUFFER, "got %08x\n", hr);
-    ok(size == 5, "got %u\n", size);
+    ok(hr == E_NOT_SUFFICIENT_BUFFER, "got %08lx\n", hr);
+    ok(size == 5, "got %lu\n", size);
 
     size = 3;
     hr = IAssemblyName_GetDisplayName(name, NULL, &size, 0);
-    ok(hr == E_NOT_SUFFICIENT_BUFFER || broken(hr == E_INVALIDARG), "got %08x\n", hr);
-    ok(size == 5 || broken(size == 3), "got %u\n", size);
+    ok(hr == E_NOT_SUFFICIENT_BUFFER || broken(hr == E_INVALIDARG), "got %08lx\n", hr);
+    ok(size == 5 || broken(size == 3), "got %lu\n", size);
 
     size = 3;
     str[0] = 'a';
     hr = IAssemblyName_GetDisplayName(name, str, &size, 0);
-    ok(hr == E_NOT_SUFFICIENT_BUFFER, "got %08x\n", hr);
+    ok(hr == E_NOT_SUFFICIENT_BUFFER, "got %08lx\n", hr);
     ok(str[0] == 'a', "got %c\n", str[0]);
-    ok(size == 5, "got %u\n", size);
+    ok(size == 5, "got %lu\n", size);
 
     size = 0;
     str[0] = 'a';
     hr = IAssemblyName_GetDisplayName(name, str, &size, ASM_DISPLAYF_FULL);
-    ok(hr == E_NOT_SUFFICIENT_BUFFER, "got %08x\n", hr);
+    ok(hr == E_NOT_SUFFICIENT_BUFFER, "got %08lx\n", hr);
     ok(str[0] == 'a', "got %c\n", str[0]);
-    ok(size == 5, "Wrong size %u\n", size);
+    ok(size == 5, "Wrong size %lu\n", size);
 
     size = MAX_PATH;
     hr = IAssemblyName_GetDisplayName(name, str, &size, ASM_DISPLAYF_FULL);
-    ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
+    ok(hr == S_OK, "Expected S_OK, got %08lx\n", hr);
     ok_aw("wine", str);
-    ok(size == 5, "Expected 5, got %d\n", size);
+    ok(size == 5, "Expected 5, got %ld\n", size);
 
     size = 0;
     str[0] = 0;
     hr = IAssemblyName_GetName(name, &size, str);
-    ok(hr == E_NOT_SUFFICIENT_BUFFER, "got %08x\n", hr);
+    ok(hr == E_NOT_SUFFICIENT_BUFFER, "got %08lx\n", hr);
     ok(!str[0], "got %c\n", str[0]);
-    ok(size == 5, "got %u\n", size);
+    ok(size == 5, "got %lu\n", size);
 
     size = MAX_PATH;
     str[0] = '\0';
     hr = IAssemblyName_GetName(name, &size, str);
-    ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
+    ok(hr == S_OK, "Expected S_OK, got %08lx\n", hr);
     ok_aw("wine", str);
-    ok(size == 5, "Expected 5, got %d\n", size);
+    ok(size == 5, "Expected 5, got %ld\n", size);
 
     hi = 0xbeefcace;
     lo = 0xcafebabe;
     hr = IAssemblyName_GetVersion(name, &hi, &lo);
     ok(hr == FUSION_E_INVALID_NAME ||
        broken(hr == S_OK), /* .NET 1.x */
-       "Expected FUSION_E_INVALID_NAME, got %08x\n", hr);
-    ok(hi == 0, "Expected 0, got %08x\n", hi);
-    ok(lo == 0, "Expected 0, got %08x\n", lo);
+       "Expected FUSION_E_INVALID_NAME, got %08lx\n", hr);
+    ok(hi == 0, "Expected 0, got %08lx\n", hi);
+    ok(lo == 0, "Expected 0, got %08lx\n", lo);
 
     if (hr == S_OK)
         win_skip(".NET 1.x doesn't handle ASM_NAME_PROCESSOR_ID_ARRAY"
@@ -587,30 +583,30 @@ static void test_CreateAssemblyNameObject(void)
     to_widechar(namestr, "wine");
     name = NULL;
     hr = pCreateAssemblyNameObject(&name, namestr, CANOF_PARSE_DISPLAY_NAME, NULL);
-    ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
+    ok(hr == S_OK, "Expected S_OK, got %08lx\n", hr);
     ok(name != NULL, "Expected non-NULL name\n");
 
     size = MAX_PATH;
     hr = IAssemblyName_GetDisplayName(name, str, &size, ASM_DISPLAYF_FULL);
-    ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
+    ok(hr == S_OK, "Expected S_OK, got %08lx\n", hr);
     ok_aw("wine", str);
-    ok(size == 5, "Expected 5, got %d\n", size);
+    ok(size == 5, "Expected 5, got %ld\n", size);
 
     size = MAX_PATH;
     str[0] = '\0';
     hr = IAssemblyName_GetName(name, &size, str);
-    ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
+    ok(hr == S_OK, "Expected S_OK, got %08lx\n", hr);
     ok_aw("wine", str);
-    ok(size == 5, "Expected 5, got %d\n", size);
+    ok(size == 5, "Expected 5, got %ld\n", size);
 
     hi = 0xbeefcace;
     lo = 0xcafebabe;
     hr = IAssemblyName_GetVersion(name, &hi, &lo);
     ok(hr == FUSION_E_INVALID_NAME ||
        broken(hr == S_OK), /* .NET 1.x */
-       "Expected FUSION_E_INVALID_NAME, got %08x\n", hr);
-    ok(hi == 0, "Expected 0, got %08x\n", hi);
-    ok(lo == 0, "Expected 0, got %08x\n", lo);
+       "Expected FUSION_E_INVALID_NAME, got %08lx\n", hr);
+    ok(hi == 0, "Expected 0, got %08lx\n", hi);
+    ok(lo == 0, "Expected 0, got %08lx\n", lo);
 
     test_assembly_name_props(name, winename);
 
@@ -620,28 +616,28 @@ static void test_CreateAssemblyNameObject(void)
     to_widechar(namestr, "wine, Version=1.2.3.4");
     name = NULL;
     hr = pCreateAssemblyNameObject(&name, namestr, CANOF_PARSE_DISPLAY_NAME, NULL);
-    ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
+    ok(hr == S_OK, "Expected S_OK, got %08lx\n", hr);
     ok(name != NULL, "Expected non-NULL name\n");
 
     size = MAX_PATH;
     hr = IAssemblyName_GetDisplayName(name, str, &size, ASM_DISPLAYF_FULL);
-    ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
+    ok(hr == S_OK, "Expected S_OK, got %08lx\n", hr);
     ok_aw("wine, Version=1.2.3.4", str);
-    ok(size == 22, "Expected 22, got %d\n", size);
+    ok(size == 22, "Expected 22, got %ld\n", size);
 
     size = MAX_PATH;
     str[0] = '\0';
     hr = IAssemblyName_GetName(name, &size, str);
-    ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
+    ok(hr == S_OK, "Expected S_OK, got %08lx\n", hr);
     ok_aw("wine", str);
-    ok(size == 5, "Expected 5, got %d\n", size);
+    ok(size == 5, "Expected 5, got %ld\n", size);
 
     hi = 0xbeefcace;
     lo = 0xcafebabe;
     hr = IAssemblyName_GetVersion(name, &hi, &lo);
-    ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
-    ok(hi == 0x00010002, "Expected 0x00010002, got %08x\n", hi);
-    ok(lo == 0x00030004, "Expected 0x00030004, got %08x\n", lo);
+    ok(hr == S_OK, "Expected S_OK, got %08lx\n", hr);
+    ok(hi == 0x00010002, "Expected 0x00010002, got %08lx\n", hi);
+    ok(lo == 0x00030004, "Expected 0x00030004, got %08lx\n", lo);
 
     test_assembly_name_props(name, vername);
 
@@ -651,32 +647,32 @@ static void test_CreateAssemblyNameObject(void)
     to_widechar(namestr, "wine, Version=1.5");
     name = NULL;
     hr = pCreateAssemblyNameObject(&name, namestr, CANOF_PARSE_DISPLAY_NAME, NULL);
-    ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
+    ok(hr == S_OK, "Expected S_OK, got %08lx\n", hr);
     ok(name != NULL, "Expected non-NULL name\n");
 
     size = MAX_PATH;
     hr = IAssemblyName_GetDisplayName(name, str, &size, ASM_DISPLAYF_FULL);
-    ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
+    ok(hr == S_OK, "Expected S_OK, got %08lx\n", hr);
     ok_aw("wine, Version=1.5", str);
-    ok(size == 18, "Expected 18, got %d\n", size);
+    ok(size == 18, "Expected 18, got %ld\n", size);
 
     size = MAX_PATH;
     str[0] = '\0';
     hr = IAssemblyName_GetName(name, &size, str);
-    ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
+    ok(hr == S_OK, "Expected S_OK, got %08lx\n", hr);
     ok_aw("wine", str);
-    ok(size == 5, "Expected 5, got %d\n", size);
+    ok(size == 5, "Expected 5, got %ld\n", size);
 
     hi = 0xbeefcace;
     lo = 0xcafebabe;
     hr = IAssemblyName_GetVersion(name, &hi, &lo);
     ok(hr == FUSION_E_INVALID_NAME ||
        broken(hr == S_OK), /* .NET 1.x */
-       "Expected FUSION_E_INVALID_NAME, got %08x\n", hr);
+       "Expected FUSION_E_INVALID_NAME, got %08lx\n", hr);
     ok(hi == 0 ||
        broken(hi == 0x10005), /* .NET 1.x */
-       "Expected 0, got %08x\n", hi);
-    ok(lo == 0, "Expected 0, got %08x\n", lo);
+       "Expected 0, got %08lx\n", hi);
+    ok(lo == 0, "Expected 0, got %08lx\n", lo);
 
     test_assembly_name_props(name, badvername);
 
@@ -686,30 +682,30 @@ static void test_CreateAssemblyNameObject(void)
     to_widechar(namestr, "wine, Culture=neutral");
     name = NULL;
     hr = pCreateAssemblyNameObject(&name, namestr, CANOF_PARSE_DISPLAY_NAME, NULL);
-    ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
+    ok(hr == S_OK, "Expected S_OK, got %08lx\n", hr);
     ok(name != NULL, "Expected non-NULL name\n");
 
     size = MAX_PATH;
     hr = IAssemblyName_GetDisplayName(name, str, &size, ASM_DISPLAYF_FULL);
-    ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
+    ok(hr == S_OK, "Expected S_OK, got %08lx\n", hr);
     ok_aw("wine, Culture=neutral", str);
-    ok(size == 22, "Expected 22, got %d\n", size);
+    ok(size == 22, "Expected 22, got %ld\n", size);
 
     size = MAX_PATH;
     str[0] = '\0';
     hr = IAssemblyName_GetName(name, &size, str);
-    ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
+    ok(hr == S_OK, "Expected S_OK, got %08lx\n", hr);
     ok_aw("wine", str);
-    ok(size == 5, "Expected 5, got %d\n", size);
+    ok(size == 5, "Expected 5, got %ld\n", size);
 
     hi = 0xbeefcace;
     lo = 0xcafebabe;
     hr = IAssemblyName_GetVersion(name, &hi, &lo);
     ok(hr == FUSION_E_INVALID_NAME ||
        broken(hr == S_OK), /* .NET 1.x */
-       "Expected FUSION_E_INVALID_NAME, got %08x\n", hr);
-    ok(hi == 0, "Expected 0, got %08x\n", hi);
-    ok(lo == 0, "Expected 0, got %08x\n", lo);
+       "Expected FUSION_E_INVALID_NAME, got %08lx\n", hr);
+    ok(hi == 0, "Expected 0, got %08lx\n", hi);
+    ok(lo == 0, "Expected 0, got %08lx\n", lo);
 
     test_assembly_name_props(name, neutralname);
 
@@ -719,30 +715,30 @@ static void test_CreateAssemblyNameObject(void)
     to_widechar(namestr, "wine, Culture=en");
     name = NULL;
     hr = pCreateAssemblyNameObject(&name, namestr, CANOF_PARSE_DISPLAY_NAME, NULL);
-    ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
+    ok(hr == S_OK, "Expected S_OK, got %08lx\n", hr);
     ok(name != NULL, "Expected non-NULL name\n");
 
     size = MAX_PATH;
     hr = IAssemblyName_GetDisplayName(name, str, &size, ASM_DISPLAYF_FULL);
-    ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
+    ok(hr == S_OK, "Expected S_OK, got %08lx\n", hr);
     ok_aw("wine, Culture=en", str);
-    ok(size == 17, "Expected 17, got %d\n", size);
+    ok(size == 17, "Expected 17, got %ld\n", size);
 
     size = MAX_PATH;
     str[0] = '\0';
     hr = IAssemblyName_GetName(name, &size, str);
-    ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
+    ok(hr == S_OK, "Expected S_OK, got %08lx\n", hr);
     ok_aw("wine", str);
-    ok(size == 5, "Expected 5, got %d\n", size);
+    ok(size == 5, "Expected 5, got %ld\n", size);
 
     hi = 0xbeefcace;
     lo = 0xcafebabe;
     hr = IAssemblyName_GetVersion(name, &hi, &lo);
     ok(hr == FUSION_E_INVALID_NAME ||
        broken(hr == S_OK), /* .NET 1.x */
-       "Expected FUSION_E_INVALID_NAME, got %08x\n", hr);
-    ok(hi == 0, "Expected 0, got %08x\n", hi);
-    ok(lo == 0, "Expected 0, got %08x\n", lo);
+       "Expected FUSION_E_INVALID_NAME, got %08lx\n", hr);
+    ok(hi == 0, "Expected 0, got %08lx\n", hi);
+    ok(lo == 0, "Expected 0, got %08lx\n", lo);
 
     test_assembly_name_props(name, enname);
 
@@ -752,30 +748,30 @@ static void test_CreateAssemblyNameObject(void)
     to_widechar(namestr, "wine, PublicKeyToken=01234567890abcde");
     name = NULL;
     hr = pCreateAssemblyNameObject(&name, namestr, CANOF_PARSE_DISPLAY_NAME, NULL);
-    ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
+    ok(hr == S_OK, "Expected S_OK, got %08lx\n", hr);
     ok(name != NULL, "Expected non-NULL name\n");
 
     size = MAX_PATH;
     hr = IAssemblyName_GetDisplayName(name, str, &size, ASM_DISPLAYF_FULL);
-    ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
+    ok(hr == S_OK, "Expected S_OK, got %08lx\n", hr);
     ok_aw("wine, PublicKeyToken=01234567890abcde", str);
-    ok(size == 38, "Expected 38, got %d\n", size);
+    ok(size == 38, "Expected 38, got %ld\n", size);
 
     size = MAX_PATH;
     str[0] = '\0';
     hr = IAssemblyName_GetName(name, &size, str);
-    ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
+    ok(hr == S_OK, "Expected S_OK, got %08lx\n", hr);
     ok_aw("wine", str);
-    ok(size == 5, "Expected 5, got %d\n", size);
+    ok(size == 5, "Expected 5, got %ld\n", size);
 
     hi = 0xbeefcace;
     lo = 0xcafebabe;
     hr = IAssemblyName_GetVersion(name, &hi, &lo);
     ok(hr == FUSION_E_INVALID_NAME ||
        broken(hr == S_OK), /* .NET 1.x */
-       "Expected FUSION_E_INVALID_NAME, got %08x\n", hr);
-    ok(hi == 0, "Expected 0, got %08x\n", hi);
-    ok(lo == 0, "Expected 0, got %08x\n", lo);
+       "Expected FUSION_E_INVALID_NAME, got %08lx\n", hr);
+    ok(hi == 0, "Expected 0, got %08lx\n", hi);
+    ok(lo == 0, "Expected 0, got %08lx\n", lo);
 
     test_assembly_name_props(name, pubkeyname);
 
@@ -785,13 +781,13 @@ static void test_CreateAssemblyNameObject(void)
     to_widechar(namestr, "wine, processorArchitecture=x86");
     name = NULL;
     hr = pCreateAssemblyNameObject(&name, namestr, CANOF_PARSE_DISPLAY_NAME, NULL);
-    ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
+    ok(hr == S_OK, "Expected S_OK, got %08lx\n", hr);
 
     ok(name != NULL, "Expected non-NULL name\n");
 
     size = MAX_PATH;
     hr = IAssemblyName_GetDisplayName(name, str, &size, ASM_DISPLAYF_PROCESSORARCHITECTURE);
-    ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
+    ok(hr == S_OK, "Expected S_OK, got %08lx\n", hr);
 
     WideCharToMultiByte(CP_ACP, 0, str, -1, string1, MAX_PATH, NULL, NULL);
 
@@ -800,13 +796,13 @@ static void test_CreateAssemblyNameObject(void)
     else
     {
         ok_aw("wine, processorArchitecture=x86", str);
-        ok(size == 32, "Expected 32, got %d\n", size);
+        ok(size == 32, "Expected 32, got %ld\n", size);
 
         size = sizeof(arch);
         hr = IAssemblyName_GetProperty(name, ASM_NAME_ARCHITECTURE, &arch, &size);
-        ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
+        ok(hr == S_OK, "Expected S_OK, got %08lx\n", hr);
         ok(arch == peI386, "Expected peI386, got %d\n", arch);
-        ok(size == sizeof(arch), "Wrong size %d\n", size);
+        ok(size == sizeof(arch), "Wrong size %ld\n", size);
 
         IAssemblyName_Release(name);
 
@@ -814,19 +810,19 @@ static void test_CreateAssemblyNameObject(void)
         to_widechar(namestr, "wine, processorArchitecture=AMD64");
         name = NULL;
         hr = pCreateAssemblyNameObject(&name, namestr, CANOF_PARSE_DISPLAY_NAME, NULL);
-        ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
+        ok(hr == S_OK, "Expected S_OK, got %08lx\n", hr);
 
         size = MAX_PATH;
         hr = IAssemblyName_GetDisplayName(name, str, &size, ASM_DISPLAYF_PROCESSORARCHITECTURE);
-        ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
+        ok(hr == S_OK, "Expected S_OK, got %08lx\n", hr);
         ok_aw("wine, processorArchitecture=AMD64", str);
-        ok(size == 34, "Expected 34, got %d\n", size);
+        ok(size == 34, "Expected 34, got %ld\n", size);
 
         size = sizeof(arch);
         hr = IAssemblyName_GetProperty(name, ASM_NAME_ARCHITECTURE, &arch, &size);
-        ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
+        ok(hr == S_OK, "Expected S_OK, got %08lx\n", hr);
         ok(arch == peAMD64, "Expected peAMD64, got %d\n", arch);
-        ok(size == sizeof(arch), "Wrong size %d\n", size);
+        ok(size == sizeof(arch), "Wrong size %ld\n", size);
 
         IAssemblyName_Release(name);
 
@@ -834,19 +830,19 @@ static void test_CreateAssemblyNameObject(void)
         to_widechar(namestr, "wine, processorArchitecture=IA64");
         name = NULL;
         hr = pCreateAssemblyNameObject(&name, namestr, CANOF_PARSE_DISPLAY_NAME, NULL);
-        ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
+        ok(hr == S_OK, "Expected S_OK, got %08lx\n", hr);
 
         size = MAX_PATH;
         hr = IAssemblyName_GetDisplayName(name, str, &size, ASM_DISPLAYF_PROCESSORARCHITECTURE);
-        ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
+        ok(hr == S_OK, "Expected S_OK, got %08lx\n", hr);
         ok_aw("wine, processorArchitecture=IA64", str);
-        ok(size == 33, "Expected 33, got %d\n", size);
+        ok(size == 33, "Expected 33, got %ld\n", size);
 
         size = sizeof(arch);
         hr = IAssemblyName_GetProperty(name, ASM_NAME_ARCHITECTURE, &arch, &size);
-        ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
+        ok(hr == S_OK, "Expected S_OK, got %08lx\n", hr);
         ok(arch == peIA64, "Expected peIA64, got %d\n", arch);
-        ok(size == sizeof(arch), "Wrong size %d\n", size);
+        ok(size == sizeof(arch), "Wrong size %ld\n", size);
 
         IAssemblyName_Release(name);
 
@@ -854,19 +850,19 @@ static void test_CreateAssemblyNameObject(void)
         to_widechar(namestr, "wine, processorArchitecture=MSIL");
         name = NULL;
         hr = pCreateAssemblyNameObject(&name, namestr, CANOF_PARSE_DISPLAY_NAME, NULL);
-        ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
+        ok(hr == S_OK, "Expected S_OK, got %08lx\n", hr);
 
         size = MAX_PATH;
         hr = IAssemblyName_GetDisplayName(name, str, &size, ASM_DISPLAYF_PROCESSORARCHITECTURE);
-        ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
+        ok(hr == S_OK, "Expected S_OK, got %08lx\n", hr);
         ok_aw("wine, processorArchitecture=MSIL", str);
-        ok(size == 33, "Expected 33, got %d\n", size);
+        ok(size == 33, "Expected 33, got %ld\n", size);
 
         size = sizeof(arch);
         hr = IAssemblyName_GetProperty(name, ASM_NAME_ARCHITECTURE, &arch, &size);
-        ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
+        ok(hr == S_OK, "Expected S_OK, got %08lx\n", hr);
         ok(arch == peMSIL, "Expected peMSIL, got %d\n", arch);
-        ok(size == sizeof(arch), "Wrong size %d\n", size);
+        ok(size == sizeof(arch), "Wrong size %ld\n", size);
 
         IAssemblyName_Release(name);
     }
@@ -875,26 +871,26 @@ static void test_CreateAssemblyNameObject(void)
     to_widechar(namestr, "wine, Version=1.2.3.4, Culture=en, PublicKeyToken=1234567890abcdef");
     name = NULL;
     hr = pCreateAssemblyNameObject(&name, namestr, CANOF_PARSE_DISPLAY_NAME, NULL);
-    ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
+    ok(hr == S_OK, "Expected S_OK, got %08lx\n", hr);
     ok(name != NULL, "Expected non-NULL name\n");
 
     size = MAX_PATH;
     hr = IAssemblyName_GetDisplayName(name, str, &size, ASM_DISPLAYF_VERSION | ASM_DISPLAYF_CULTURE);
-    ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
+    ok(hr == S_OK, "Expected S_OK, got %08lx\n", hr);
     ok_aw("wine, Version=1.2.3.4, Culture=en", str);
-    ok(size == 34, "Expected 34, got %d\n", size);
+    ok(size == 34, "Expected 34, got %ld\n", size);
 
     size = MAX_PATH;
     hr = IAssemblyName_GetDisplayName(name, str, &size, ASM_DISPLAYF_CULTURE | ASM_DISPLAYF_PUBLIC_KEY_TOKEN);
-    ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
+    ok(hr == S_OK, "Expected S_OK, got %08lx\n", hr);
     ok_aw("wine, Culture=en, PublicKeyToken=1234567890abcdef", str);
-    ok(size == 50, "Expected 50, got %d\n", size);
+    ok(size == 50, "Expected 50, got %ld\n", size);
 
     size = MAX_PATH;
     hr = IAssemblyName_GetDisplayName(name, str, &size, ASM_DISPLAYF_FULL);
-    ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
+    ok(hr == S_OK, "Expected S_OK, got %08lx\n", hr);
     ok_aw("wine, Version=1.2.3.4, Culture=en, PublicKeyToken=1234567890abcdef", str);
-    ok(size == 67, "Expected 67, got %d\n", size);
+    ok(size == 67, "Expected 67, got %ld\n", size);
 
     IAssemblyName_Release(name);
 
@@ -902,31 +898,31 @@ static void test_CreateAssemblyNameObject(void)
     to_widechar(namestr, "wine, BadProp=42");
     name = NULL;
     hr = pCreateAssemblyNameObject(&name, namestr, CANOF_PARSE_DISPLAY_NAME, NULL);
-    ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
+    ok(hr == S_OK, "Expected S_OK, got %08lx\n", hr);
     ok(name != NULL, "Expected non-NULL name\n");
 
     size = MAX_PATH;
     str[0] = '\0';
     hr = IAssemblyName_GetDisplayName(name, str, &size, ASM_DISPLAYF_FULL);
-    ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
+    ok(hr == S_OK, "Expected S_OK, got %08lx\n", hr);
     ok_aw("wine", str);
-    ok(size == 5, "Expected 5, got %d\n", size);
+    ok(size == 5, "Expected 5, got %ld\n", size);
 
     size = MAX_PATH;
     str[0] = '\0';
     hr = IAssemblyName_GetName(name, &size, str);
-    ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
+    ok(hr == S_OK, "Expected S_OK, got %08lx\n", hr);
     ok_aw("wine", str);
-    ok(size == 5, "Expected 5, got %d\n", size);
+    ok(size == 5, "Expected 5, got %ld\n", size);
 
     hi = 0xbeefcace;
     lo = 0xcafebabe;
     hr = IAssemblyName_GetVersion(name, &hi, &lo);
     ok(hr == FUSION_E_INVALID_NAME ||
        broken(hr == S_OK), /* .NET 1.x */
-       "Expected FUSION_E_INVALID_NAME, got %08x\n", hr);
-    ok(hi == 0, "Expected 0, got %08x\n", hi);
-    ok(lo == 0, "Expected 0, got %08x\n", lo);
+       "Expected FUSION_E_INVALID_NAME, got %08lx\n", hr);
+    ok(hi == 0, "Expected 0, got %08lx\n", hi);
+    ok(lo == 0, "Expected 0, got %08lx\n", lo);
 
     test_assembly_name_props(name, winename);
 
@@ -943,7 +939,7 @@ static void test_CreateAssemblyNameObject(void)
         return;
     }
     ok(hr == FUSION_E_INVALID_NAME,
-       "Expected FUSION_E_INVALID_NAME, got %08x\n", hr);
+       "Expected FUSION_E_INVALID_NAME, got %08lx\n", hr);
     ok(name == (IAssemblyName *)0xdeadbeef, "Expected 0xdeadbeef, got %p\n", name);
 
     /* PublicKeyToken contains invalid chars */
@@ -951,7 +947,7 @@ static void test_CreateAssemblyNameObject(void)
     name = (IAssemblyName *)0xdeadbeef;
     hr = pCreateAssemblyNameObject(&name, namestr, CANOF_PARSE_DISPLAY_NAME, NULL);
     ok(hr == FUSION_E_INVALID_NAME,
-       "Expected FUSION_E_INVALID_NAME, got %08x\n", hr);
+       "Expected FUSION_E_INVALID_NAME, got %08lx\n", hr);
     ok(name == (IAssemblyName *)0xdeadbeef, "Expected 0xdeadbeef, got %p\n", name);
 
     /* no comma separator */
@@ -959,7 +955,7 @@ static void test_CreateAssemblyNameObject(void)
     name = (IAssemblyName *)0xdeadbeef;
     hr = pCreateAssemblyNameObject(&name, namestr, CANOF_PARSE_DISPLAY_NAME, NULL);
     ok(hr == FUSION_E_INVALID_NAME,
-       "Expected FUSION_E_INVALID_NAME, got %08x\n", hr);
+       "Expected FUSION_E_INVALID_NAME, got %08lx\n", hr);
     ok(name == (IAssemblyName *)0xdeadbeef, "Expected 0xdeadbeef, got %p\n", name);
     if(SUCCEEDED(hr)) IAssemblyName_Release(name);
 
@@ -968,7 +964,7 @@ static void test_CreateAssemblyNameObject(void)
     name = (IAssemblyName *)0xdeadbeef;
     hr = pCreateAssemblyNameObject(&name, namestr, CANOF_PARSE_DISPLAY_NAME, NULL);
     ok(hr == FUSION_E_INVALID_NAME,
-       "Expected FUSION_E_INVALID_NAME, got %08x\n", hr);
+       "Expected FUSION_E_INVALID_NAME, got %08lx\n", hr);
     ok(name == (IAssemblyName *)0xdeadbeef, "Expected 0xdeadbeef, got %p\n", name);
 
     /* no value */
@@ -976,106 +972,95 @@ static void test_CreateAssemblyNameObject(void)
     name = (IAssemblyName *)0xdeadbeef;
     hr = pCreateAssemblyNameObject(&name, namestr, CANOF_PARSE_DISPLAY_NAME, NULL);
     ok(hr == FUSION_E_INVALID_NAME,
-       "Expected FUSION_E_INVALID_NAME, got %08x\n", hr);
+       "Expected FUSION_E_INVALID_NAME, got %08lx\n", hr);
     ok(name == (IAssemblyName *)0xdeadbeef, "Expected 0xdeadbeef, got %p\n", name);
 
     /* no spaces */
     to_widechar(namestr, "wine,version=1.0.0.0");
     name = (IAssemblyName *)0xdeadbeef;
     hr = pCreateAssemblyNameObject(&name, namestr, CANOF_PARSE_DISPLAY_NAME, NULL);
-    ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
+    ok(hr == S_OK, "Expected S_OK, got %08lx\n", hr);
     ok(name != NULL, "Expected non-NULL name\n");
     hi = lo = 0xdeadbeef;
     hr = IAssemblyName_GetVersion(name, &hi, &lo);
-    ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
-    ok(hi == 65536, "Expected 536, got %u\n", hi);
-    ok(lo == 0, "Expected 0, got %u\n", lo);
+    ok(hr == S_OK, "Expected S_OK, got %08lx\n", hr);
+    ok(hi == 65536, "Expected 536, got %lu\n", hi);
+    ok(lo == 0, "Expected 0, got %lu\n", lo);
     IAssemblyName_Release(name);
 
     /* quoted values */
     to_widechar(namestr, "wine, version=\"1.0.0.0\",culture=\"en\"");
     name = (IAssemblyName *)0xdeadbeef;
     hr = pCreateAssemblyNameObject(&name, namestr, CANOF_PARSE_DISPLAY_NAME, NULL);
-    ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
+    ok(hr == S_OK, "Expected S_OK, got %08lx\n", hr);
     ok(name != NULL, "Expected non-NULL name\n");
     hi = lo = 0xdeadbeef;
     hr = IAssemblyName_GetVersion(name, &hi, &lo);
-    ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
-    ok(hi == 65536, "Expected 65536, got %u\n", hi);
-    ok(lo == 0, "Expected 0, got %u\n", lo);
+    ok(hr == S_OK, "Expected S_OK, got %08lx\n", hr);
+    ok(hi == 65536, "Expected 65536, got %lu\n", hi);
+    ok(lo == 0, "Expected 0, got %lu\n", lo);
     IAssemblyName_Release(name);
 }
 
 static void test_IAssemblyName_IsEqual(void)
 {
-    static const WCHAR wine1[] =
-        {'w','i','n','e',0};
-    static const WCHAR wine2[] =
-        {'w','i','n','e',',','v','e','r','s','i','o','n','=','1','.','0','.','0','.','0',0};
-    static const WCHAR wine3[] =
-        {'w','i','n','e',',','v','e','r','s','i','o','n','=','1','.','0','.','0','.','0',',',
-         'c','u','l','t','u','r','e','=','n','e','u','t','r','a','l',0};
-    static const WCHAR wine4[] =
-        {'w','i','n','e',',','v','e','r','s','i','o','n','=','1','.','0','.','0','.','0',',',
-         'c','u','l','t','u','r','e','=','e','n',0};
-    static const WCHAR wine5[] =
-        {'w','i','n','e',',','v','e','r','s','i','o','n','=','1','.','0','.','0','.','0',',',
-         'p','u','b','l','i','c','K','e','y','T','o','k','e','n','=','1','2','3','4','5','6',
-         '7','8','9','0','a','b','c','d','e','f',0};
     HRESULT hr;
     IAssemblyName *name1, *name2;
 
-    hr = pCreateAssemblyNameObject( &name1, wine1, CANOF_PARSE_DISPLAY_NAME, NULL );
-    ok( hr == S_OK, "got %08x\n", hr );
+    hr = pCreateAssemblyNameObject( &name1, L"wine", CANOF_PARSE_DISPLAY_NAME, NULL );
+    ok( hr == S_OK, "got %08lx\n", hr );
 
-    hr = pCreateAssemblyNameObject( &name2, wine1, CANOF_PARSE_DISPLAY_NAME, NULL );
-    ok( hr == S_OK, "got %08x\n", hr );
+    hr = pCreateAssemblyNameObject( &name2, L"wine", CANOF_PARSE_DISPLAY_NAME, NULL );
+    ok( hr == S_OK, "got %08lx\n", hr );
 
     if (0) { /* crashes on some old version */
     hr = IAssemblyName_IsEqual( name1, NULL, 0 );
-    ok( hr == S_FALSE, "got %08x\n", hr );
+    ok( hr == S_FALSE, "got %08lx\n", hr );
 
     hr = IAssemblyName_IsEqual( name1, NULL, ASM_CMPF_IL_ALL );
-    ok( hr == S_FALSE, "got %08x\n", hr );
+    ok( hr == S_FALSE, "got %08lx\n", hr );
     }
 
     hr = IAssemblyName_IsEqual( name1, name1, ASM_CMPF_IL_ALL );
-    ok( hr == S_OK, "got %08x\n", hr );
+    ok( hr == S_OK, "got %08lx\n", hr );
 
     hr = IAssemblyName_IsEqual( name1, name2, ASM_CMPF_IL_ALL );
-    ok( hr == S_OK, "got %08x\n", hr );
+    ok( hr == S_OK, "got %08lx\n", hr );
 
     IAssemblyName_Release( name2 );
-    hr = pCreateAssemblyNameObject( &name2, wine2, CANOF_PARSE_DISPLAY_NAME, NULL );
-    ok( hr == S_OK, "got %08x\n", hr );
+    hr = pCreateAssemblyNameObject( &name2, L"wine,version=1.0.0.0", CANOF_PARSE_DISPLAY_NAME, NULL );
+    ok( hr == S_OK, "got %08lx\n", hr );
 
     hr = IAssemblyName_IsEqual( name1, name2, ASM_CMPF_IL_ALL );
-    ok( hr == S_OK, "got %08x\n", hr );
+    ok( hr == S_OK, "got %08lx\n", hr );
 
     IAssemblyName_Release( name2 );
-    hr = pCreateAssemblyNameObject( &name2, wine3, CANOF_PARSE_DISPLAY_NAME, NULL );
-    ok( hr == S_OK, "got %08x\n", hr );
+    hr = pCreateAssemblyNameObject( &name2, L"wine,version=1.0.0.0,culture=neutral",
+                                    CANOF_PARSE_DISPLAY_NAME, NULL );
+    ok( hr == S_OK, "got %08lx\n", hr );
 
     hr = IAssemblyName_IsEqual( name1, name2, ASM_CMPF_IL_ALL );
-    ok( hr == S_OK, "got %08x\n", hr );
+    ok( hr == S_OK, "got %08lx\n", hr );
 
     IAssemblyName_Release( name1 );
-    hr = pCreateAssemblyNameObject( &name1, wine4, CANOF_PARSE_DISPLAY_NAME, NULL );
-    ok( hr == S_OK, "got %08x\n", hr );
+    hr = pCreateAssemblyNameObject( &name1, L"wine,version=1.0.0.0,culture=en",
+                                    CANOF_PARSE_DISPLAY_NAME, NULL );
+    ok( hr == S_OK, "got %08lx\n", hr );
 
     hr = IAssemblyName_IsEqual( name1, name2, ASM_CMPF_IL_ALL );
-    ok( hr == S_FALSE, "got %08x\n", hr );
+    ok( hr == S_FALSE, "got %08lx\n", hr );
 
     IAssemblyName_Release( name1 );
-    hr = pCreateAssemblyNameObject( &name1, wine1, CANOF_PARSE_DISPLAY_NAME, NULL );
-    ok( hr == S_OK, "got %08x\n", hr );
+    hr = pCreateAssemblyNameObject( &name1, L"wine", CANOF_PARSE_DISPLAY_NAME, NULL );
+    ok( hr == S_OK, "got %08lx\n", hr );
 
     IAssemblyName_Release( name2 );
-    hr = pCreateAssemblyNameObject( &name2, wine5, CANOF_PARSE_DISPLAY_NAME, NULL );
-    ok( hr == S_OK, "got %08x\n", hr );
+    hr = pCreateAssemblyNameObject( &name2, L"wine,version=1.0.0.0,publicKeyToken=1234567890abcdef",
+                                    CANOF_PARSE_DISPLAY_NAME, NULL );
+    ok( hr == S_OK, "got %08lx\n", hr );
 
     hr = IAssemblyName_IsEqual( name1, name2, ASM_CMPF_IL_ALL );
-    ok( hr == S_OK, "got %08x\n", hr );
+    ok( hr == S_OK, "got %08lx\n", hr );
 
     IAssemblyName_Release( name1 );
     IAssemblyName_Release( name2 );
