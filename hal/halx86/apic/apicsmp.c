@@ -123,12 +123,22 @@ ApicStartApplicationProcessor(
     ApicRequestGlobalInterrupt(HalpProcessorIdentity[NTProcessorNumber].LapicId, 0,
         APIC_MT_INIT, APIC_TGM_Level, APIC_DSH_Destination);
 
-    /* Stall execution for a bit to give APIC time: MPS Spec - B.4 */
-    KeStallExecutionProcessor(200);
+    /* Give the APIC time to latch INIT before the first SIPI: MPS Spec - B.4 */
+    KeStallExecutionProcessor(10000);
 
-    /* Startup IPI */
+    /* First Startup IPI */
     ApicRequestGlobalInterrupt(HalpProcessorIdentity[NTProcessorNumber].LapicId, (StartupLoc.LowPart) >> 12,
         APIC_MT_Startup, APIC_TGM_Edge, APIC_DSH_Destination);
+
+    /* Stall between SIPIs: MPS Spec - B.4 */
+    KeStallExecutionProcessor(200);
+
+    /* Second Startup IPI, required unconditionally by the MP Spec */
+    ApicRequestGlobalInterrupt(HalpProcessorIdentity[NTProcessorNumber].LapicId, (StartupLoc.LowPart) >> 12,
+        APIC_MT_Startup, APIC_TGM_Edge, APIC_DSH_Destination);
+
+    /* Give the AP time to come up before returning */
+    KeStallExecutionProcessor(200);
 }
 
 /* HAL IPI FUNCTIONS **********************************************************/
