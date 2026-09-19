@@ -13,6 +13,7 @@
 /* INCLUDES */
 
 #include "afd.h"
+#include "wdm.h"
 
 #if DBG
 
@@ -1006,6 +1007,9 @@ AfdDispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
         case IOCTL_AFD_ACCEPT:
             return AfdAccept( DeviceObject, Irp, IrpSp );
 
+        case IOCTL_AFD_SUPER_ACCEPT:
+            return AfdSuperAccept( DeviceObject, Irp, IrpSp );
+
         case IOCTL_AFD_DISCONNECT:
             return AfdDisconnect( DeviceObject, Irp, IrpSp );
 
@@ -1247,6 +1251,10 @@ AfdCancelHandler(PDEVICE_OBJECT DeviceObject,
             Function = FUNCTION_PREACCEPT;
             break;
 
+        case IOCTL_AFD_SUPER_ACCEPT:
+            Function = FUNCTION_PREACCEPT;
+            break;
+
         case IOCTL_AFD_SELECT:
             KeAcquireSpinLock(&DeviceExt->Lock, &OldIrql);
 
@@ -1294,6 +1302,26 @@ AfdCancelHandler(PDEVICE_OBJECT DeviceObject,
         {
             RemoveEntryList(CurrentEntry);
             CleanupPendingIrp(FCB, Irp, IrpSp, NULL);
+            if (Function == FUNCTION_PREACCEPT)
+            {
+                /* Unlock the acceptor socket so that it can be reused */
+                PFILE_OBJECT NewFileObject = (PFILE_OBJECT)Irp->Tail.Overlay.DriverContext[2];
+                if (NewFileObject)
+                {
+                    PAFD_FCB FCB2 = NewFileObject->FsContext;
+                    FCB2->SharedData.State = SOCKET_STATE_CREATED;
+                    
+                    ObfDereferenceObject(NewFileObject);
+                    Irp->Tail.Overlay.DriverContext[2] = NULL;
+                }
+
+                if (Irp->Tail.Overlay.DriverContext[3])
+                {
+                    MmUnlockPages((PMDL)Irp->Tail.Overlay.DriverContext[3]);
+                    IoFreeMdl((PMDL)Irp->Tail.Overlay.DriverContext[3]);
+                    Irp->Tail.Overlay.DriverContext[3] = NULL;
+                }
+            }
             UnlockAndMaybeComplete(FCB, STATUS_CANCELLED, Irp, 0);
             return;
         }
