@@ -395,6 +395,7 @@ HRESULT CSysPagerWnd_CreateInstance(HWND hwndParent, REFIID riid, void **ppv);
  */
 
 #define TSWM_UPDATETASKBARPOS   (WM_USER + 2)
+#define TSWM_ACTIVATETASKINDEX  (WM_USER + 3)
 
 HRESULT CTaskSwitchWnd_CreateInstance(IN HWND hWndParent, IN OUT ITrayWindow *Tray, REFIID riid, void **ppv);
 
