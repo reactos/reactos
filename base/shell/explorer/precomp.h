@@ -208,6 +208,7 @@ typedef struct _TW_STUCKRECTS2
             DWORD AlwaysOnTop : 1;
             DWORD SmSmallIcons : 1; // Start menu Small Icons
             DWORD HideClock : 1;
+            DWORD glglomLevel : 2;
         };
     };
     DWORD Position;
@@ -217,6 +218,7 @@ typedef struct _TW_STUCKRECTS2
 
 struct TaskbarSettings
 {
+    DWORD glomLevel;
     BOOL bLock;
     BOOL bGroupButtons;
     BOOL bShowSeconds;

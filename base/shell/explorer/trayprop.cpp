@@ -3,6 +3,7 @@
  *
  * Copyright 2006 - 2007 Thomas Weidenmueller <w3seek@reactos.org>
  *                  2015 Robert Naumann <gonzomdx@gmail.com>
+ *                  2026 Ethan Seren <ethan.boi.dev.615@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -111,6 +112,7 @@ public:
         CheckDlgButton(IDC_TASKBARPROP_GROUP, g_TaskbarSettings.bGroupButtons ? BST_CHECKED : BST_UNCHECKED);
         //CheckDlgButton(IDC_TASKBARPROP_SHOWQL, g_TaskbarSettings.bShowQuickLaunch ? BST_CHECKED : BST_UNCHECKED);
         CheckDlgButton(IDC_TASKBARPROP_SMALLICONS, g_TaskbarSettings.bSmallIcons ? BST_CHECKED : BST_UNCHECKED);
+        CheckDlgButton(IDC_TASKBARPROP_NOTEXT, g_TaskbarSettings.glomLevel == 0 ? BST_CHECKED : BST_UNCHECKED);
 
         _UpdateDialog();
         return TRUE;
@@ -133,6 +135,7 @@ public:
         newSettings.bGroupButtons = IsDlgButtonChecked(IDC_TASKBARPROP_GROUP);
         //newSettings.bShowQuickLaunch = IsDlgButtonChecked(IDC_TASKBARPROP_SHOWQL);
         newSettings.bSmallIcons = IsDlgButtonChecked(IDC_TASKBARPROP_SMALLICONS);
+        newSettings.glomLevel = IsDlgButtonChecked(IDC_TASKBARPROP_NOTEXT) ? 0 : 2;
 
         SendMessage(m_hwndTaskbar, TWM_SETTINGSCHANGED, 0, (LPARAM)&newSettings);
 
