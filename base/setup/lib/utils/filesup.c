@@ -11,6 +11,7 @@
 #include "precomp.h"
 #include "filesup.h"
 #include <pseh/pseh2.h>
+#include <ndk/umfuncs.h> /* Ldr */
 
 #define NDEBUG
 #include <debug.h>
@@ -1071,6 +1072,86 @@ UnMapFile(
     }
 
     return Success;
+}
+
+static UINT
+GetWin32DriveTypeOfDriveNumber(
+    _In_ USHORT DriveNumber)
+{
+    PROCESS_DEVICEMAP_INFORMATION DeviceMap;
+    NTSTATUS Status;
+    Status = NtQueryInformationProcess(NtCurrentProcess(),
+                                       ProcessDeviceMap,
+                                       &DeviceMap.Query,
+                                       sizeof(DeviceMap.Query),
+                                       NULL);
+    if (NT_SUCCESS(Status) && ((1 << DriveNumber) & DeviceMap.Query.DriveMap) != 0)
+    {
+        UINT Type = DeviceMap.Query.DriveType[DriveNumber];
+        if (Type <= DRIVE_RAMDISK)
+            return Type;
+    }
+    return DRIVE_UNKNOWN;
+}
+
+UINT
+GetNtDevicePathOfDriveNumber(
+    _In_ USHORT DriveNumber,
+    _Out_ PUNICODE_STRING pOutput)
+{
+    WCHAR szDosDevPath[] = { L'A' + DriveNumber, L':', UNICODE_NULL };
+    UINT Result = DRIVE_UNKNOWN, Type;
+    HANDLE DirectoryHandle, DeviceHandle, Kernel32;
+    UINT (WINAPI *pfnQueryDosDeviceW)(PCWSTR,PWSTR,DWORD);
+    UNICODE_STRING String;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    ULONG ReturnLength;
+    NTSTATUS Status;
+
+    Type = GetWin32DriveTypeOfDriveNumber(DriveNumber);
+    if (Type <= DRIVE_NO_ROOT_DIR)
+        return Type;
+
+    /* Use Win32 directly if available so we match UAC etc */
+    RtlInitUnicodeString(&String, L"KERNEL32");
+    Status = LdrGetDllHandle(NULL, NULL, &String, &Kernel32);
+    if (NT_SUCCESS(Status))
+    {
+        ANSI_STRING AnsiString;
+        RtlInitAnsiString(&AnsiString, "QueryDosDeviceW");
+        Status = LdrGetProcedureAddress(Kernel32, &AnsiString, 0, (PVOID*)&pfnQueryDosDeviceW);
+    }
+    if (NT_SUCCESS(Status))
+    {
+        UINT cch = pfnQueryDosDeviceW(szDosDevPath, pOutput->Buffer, pOutput->MaximumLength / sizeof(WCHAR));
+        pOutput->Length = (cch - 1) * sizeof(WCHAR);
+        if (cch)
+            return Type;
+    }
+
+    /* Use the object directory symlink target */
+    RtlInitUnicodeString(&String, L"\\??");
+    InitializeObjectAttributes(&ObjectAttributes, &String, OBJ_CASE_INSENSITIVE, NULL, NULL);
+    Status = NtOpenDirectoryObject(&DirectoryHandle, DIRECTORY_QUERY, &ObjectAttributes);
+    if (!NT_SUCCESS(Status))
+        return Result;
+
+    DeviceHandle = NULL;
+    RtlInitUnicodeString(&String, szDosDevPath);
+    InitializeObjectAttributes(&ObjectAttributes, &String, OBJ_CASE_INSENSITIVE, DirectoryHandle, NULL);
+    Status = NtOpenSymbolicLinkObject(&DeviceHandle, SYMBOLIC_LINK_QUERY, &ObjectAttributes);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    Status = NtQuerySymbolicLinkObject(DeviceHandle, pOutput, &ReturnLength);
+    if (SUCCEEDED(Status))
+        Result = Type;
+
+done:
+    if (DeviceHandle)
+        NtClose(DeviceHandle);
+    NtClose(DirectoryHandle);
+    return Result;
 }
 
 /* EOF */

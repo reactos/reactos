@@ -5,6 +5,7 @@
  * PURPOSE:         Setup Library - Main initialization helpers
  * PROGRAMMERS:     Casper S. Hornstrup (chorns@users.sourceforge.net)
  *                  Hermes Belusca-Maito (hermes.belusca@sfr.fr)
+ *                  Whindmar Saksit <whindsaks@proton.me>
  */
 
 /* INCLUDES *****************************************************************/
@@ -24,8 +25,122 @@
 
 HANDLE ProcessHeap;
 BOOLEAN IsUnattendedSetup = FALSE;
+PCWSTR InfUnattendSignature = L"$ReactOS$";
 
 /* FUNCTIONS ****************************************************************/
+
+static int
+CompareInfFirstLineString(
+    _In_ HINF hInf,
+    _In_ PCWSTR Section,
+    _In_ PCWSTR Name,
+    _In_ PCWSTR String)
+{
+    INFCONTEXT Context;
+    PCWSTR Value;
+    int Result = STATUS_UNSUCCESSFUL;
+
+    if (!SpInfFindFirstLine(hInf, Section, Name, &Context))
+        return Result;
+
+    if (!INF_GetData(&Context, NULL, &Value))
+        return Result;
+
+    Result = _wcsicmp(Value, String);
+
+    INF_FreeData(Value);
+    return Result;
+}
+
+static BOOLEAN
+IsInfUnattendSetupEnabled(
+    _In_ PUSETUP_DATA pSetupData,
+    _In_ PCWSTR InfPath,
+    _In_ BOOLEAN CheckDetached)
+{
+    HINF hInf;
+    BOOLEAN Result = FALSE;
+    UINT ErrorLine;
+
+    if (!DoesFileExist(NULL, InfPath))
+        return Result;
+
+    hInf = SpInfOpenInfFile(InfPath,
+                                   NULL,
+                                   INF_STYLE_OLDNT,
+                                   pSetupData->LanguageId,
+                                   &ErrorLine);
+    if (hInf == INVALID_HANDLE_VALUE)
+        return Result;
+
+    if (CompareInfFirstLineString(hInf, L"Unattend", L"UnattendSetupEnabled", L"yes"))
+    {
+        goto abort;
+    }
+
+    /* Extra safety check for inf files not on the ISO */
+    if (CheckDetached && CompareInfFirstLineString(hInf, L"Unattend", L"UnattendForDetached", L"yes"))
+    {
+        goto abort;
+    }
+
+    if (CompareInfFirstLineString(hInf, L"Unattend", L"Signature", InfUnattendSignature))
+    {
+        DPRINT("Signature not %ls\n", InfUnattendSignature);
+        goto abort;
+    }
+
+    Result = TRUE;
+abort:
+    SpInfCloseInfFile(hInf);
+    return Result;
+}
+
+static void
+GetDefaultUnattendInfPath(
+    _In_ PUSETUP_DATA pSetupData,
+    _Out_writes_(cch) PWSTR InfPath,
+    _In_ SIZE_T cch)
+{
+    CombinePaths(InfPath, cch, 2, pSetupData->SourcePath.Buffer, L"unattend.inf");
+}
+
+static BOOLEAN
+GetUnattendInfPath(
+    _In_ PUSETUP_DATA pSetupData,
+    _Out_ PWSTR InfPath,
+    _In_ SIZE_T cch)
+{
+    WCHAR Drive;
+    UINT DriveType, Types;
+
+    GetDefaultUnattendInfPath(pSetupData, InfPath, cch);
+    if (IsInfUnattendSetupEnabled(pSetupData, InfPath, FALSE))
+        return TRUE;
+
+    /* Check all DOS volumes, non-fixed first, then fixed */
+    for (Types = 0; Types <= 1; ++Types)
+    {
+        for (Drive = 'A'; Drive <= 'Z'; ++Drive)
+        {
+            WCHAR szInf[MAX_PATH], szBuffer[MAX_PATH];
+            UNICODE_STRING NtDrive;
+
+            NtDrive.Buffer = szBuffer;
+            NtDrive.MaximumLength = sizeof(szBuffer);
+            DriveType = GetNtDevicePathOfDriveNumber(Drive - 'A', &NtDrive);
+            if (DriveType <= DRIVE_NO_ROOT_DIR)
+                continue;
+            if (Types == 0 && DriveType == DRIVE_FIXED)
+                continue;
+
+            CombinePaths(szInf, ARRAYSIZE(szInf), 2, NtDrive.Buffer, L"unattend.inf");
+            if (IsInfUnattendSetupEnabled(pSetupData, szInf, TRUE))
+                return NT_SUCCESS(RtlStringCchCopyW(InfPath, cch, szInf));
+        }
+    }
+    return FALSE;
+}
 
 BOOLEAN
 NTAPI
@@ -39,12 +154,10 @@ CheckUnattendedSetup(
     PCWSTR Value;
     WCHAR UnattendInfPath[MAX_PATH];
 
-    CombinePaths(UnattendInfPath, ARRAYSIZE(UnattendInfPath), 2,
-                 pSetupData->SourcePath.Buffer, L"unattend.inf");
-
+    GetDefaultUnattendInfPath(pSetupData, UnattendInfPath, ARRAYSIZE(UnattendInfPath));
     DPRINT("UnattendInf path: '%S'\n", UnattendInfPath);
 
-    if (DoesFileExist(NULL, UnattendInfPath) == FALSE)
+    if (!GetUnattendInfPath(pSetupData, UnattendInfPath, ARRAYSIZE(UnattendInfPath)))
     {
         DPRINT("Does not exist: %S\n", UnattendInfPath);
         return IsUnattendedSetup;
@@ -77,9 +190,9 @@ CheckUnattendedSetup(
     }
 
     /* Check 'Signature' string */
-    if (_wcsicmp(Value, L"$ReactOS$") != 0)
+    if (_wcsicmp(Value, InfUnattendSignature) != 0)
     {
-        DPRINT("Signature not $ReactOS$\n");
+        DPRINT("Signature not %ls\n", InfUnattendSignature);
         INF_FreeData(Value);
         goto Quit;
     }
@@ -269,9 +382,7 @@ InstallSetupInfFile(
 #if 0
 
     /* TODO: Append the standard unattend.inf file */
-    CombinePaths(UnattendInfPath, ARRAYSIZE(UnattendInfPath), 2,
-                 pSetupData->SourcePath.Buffer, L"unattend.inf");
-    if (DoesFileExist(NULL, UnattendInfPath) == FALSE)
+    if (!GetUnattendInfPath(pSetupData, UnattendInfPath, ARRAYSIZE(UnattendInfPath)))
     {
         DPRINT("Does not exist: %S\n", UnattendInfPath);
         goto Quit;
@@ -300,9 +411,7 @@ Quit:
     IniCacheDestroy(IniCache);
 
     /* TODO: Append the standard unattend.inf file */
-    CombinePaths(UnattendInfPath, ARRAYSIZE(UnattendInfPath), 2,
-                 pSetupData->SourcePath.Buffer, L"unattend.inf");
-    if (DoesFileExist(NULL, UnattendInfPath) == FALSE)
+    if (!GetUnattendInfPath(pSetupData, UnattendInfPath, ARRAYSIZE(UnattendInfPath)))
     {
         DPRINT("Does not exist: %S\n", UnattendInfPath);
         return;
