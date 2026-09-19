@@ -21,6 +21,7 @@
 
 #ifndef DO_NO_IMPORTS
 import "bits.idl";
+import "bits2_0.idl";
 #endif
 
 [
@@ -31,4 +32,40 @@ interface IBackgroundCopyCallback2 : IBackgroundCopyCallback
 {
     HRESULT FileTransferred([in] IBackgroundCopyJob *job,
                             [in] IBackgroundCopyFile *file);
+}
+
+[
+    uuid(659cdeae-489e-11d9-a9cd-000d56965251),
+    odl
+]
+interface IBackgroundCopyJob4 : IBackgroundCopyJob3
+{
+cpp_quote("#define BG_JOB_ENABLE_PEERCACHING_CLIENT 0x0001")
+cpp_quote("#define BG_JOB_ENABLE_PEERCACHING_SERVER 0x0002")
+cpp_quote("#define BG_JOB_DISABLE_BRANCH_CACHE      0x0004")
+
+    HRESULT SetPeerCachingFlags(DWORD flags);
+    HRESULT GetPeerCachingFlags([out, ref] DWORD *flags);
+    HRESULT GetOwnerIntegrityLevel([out, ref] ULONG *level);
+    HRESULT GetOwnerElevationState([out, ref] BOOL *elevated);
+    HRESULT SetMaximumDownloadTime(ULONG timeout);
+    HRESULT GetMaximumDownloadTime([out,ref] ULONG *timeout);
+}
+
+[
+    uuid(659cdea6-489e-11d9-a9cd-000d56965251),
+    lcid(0x0000),
+    version(1.0)
+]
+library BackgroundCopyManager3_0
+{
+    [
+        uuid(659cdea7-489e-11d9-a9cd-000d56965251)
+    ]
+    coclass BackgroundCopyManager3_0
+    {
+        [default] interface IBackgroundCopyManager;
+    };
+
+    interface IBackgroundCopyJob4;
 }
