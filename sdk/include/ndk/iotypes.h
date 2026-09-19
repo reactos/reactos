@@ -1098,6 +1098,11 @@ typedef struct _EXTENDED_DEVOBJ_EXTENSION
     LONG StartIoKey;
     ULONG StartIoFlags;
     struct _VPB *Vpb;
+#if (NTDDI_VERSION >= NTDDI_WIN10) || defined(__REACTOS__)
+    PVOID DependencyNode;
+    PVOID InterruptContext;
+    PVOID VerifierContext;
+#endif
 } EXTENDED_DEVOBJ_EXTENSION, *PEXTENDED_DEVOBJ_EXTENSION;
 
 //

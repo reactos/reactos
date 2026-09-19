@@ -132,6 +132,35 @@ IopQueueDeviceInstallEvent(
     return STATUS_SUCCESS;
 }
 
+NTSTATUS
+IopQueueDevicePropertyChangeEvent(
+    _In_ PCUNICODE_STRING DeviceId)
+{
+    PPNP_EVENT_ENTRY EventEntry;
+    ULONG TotalSize, EntrySize;
+
+    TotalSize = FIELD_OFFSET(PLUGPLAY_EVENT_BLOCK, TargetDevice.DeviceIds) +
+                DeviceId->Length + sizeof(UNICODE_NULL);
+    EntrySize = FIELD_OFFSET(PNP_EVENT_ENTRY, Event) + TotalSize;
+
+    EventEntry = ExAllocatePoolZero(NonPagedPool, EntrySize, TAG_IO);
+    if (!EventEntry)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
+    EventEntry->Event.EventGuid = GUID_PNP_PROPERTY_UPDATE;
+    EventEntry->Event.EventCategory = DevicePropertyChangeEvent;
+    EventEntry->Event.TotalSize = TotalSize;
+
+    RtlCopyMemory(EventEntry->Event.TargetDevice.DeviceIds,
+                  DeviceId->Buffer,
+                  DeviceId->Length);
+
+    InsertHeadList(&IopPnpEventQueueHead, &EventEntry->ListEntry);
+    KeSetEvent(&IopPnpNotifyEvent, 0, FALSE);
+
+    return STATUS_SUCCESS;
+}
+
 
 NTSTATUS
 IopQueueTargetDeviceEvent(const GUID *Guid,
@@ -873,8 +902,9 @@ PiIsDevNodeStarted(
             DeviceNode->State == DeviceNodeRestartCompletion);
 }
 
-static ULONG
-IopGetDeviceNodeStatus(PDEVICE_NODE DeviceNode)
+ULONG
+IopGetDeviceNodeStatus(
+    _In_ PDEVICE_NODE DeviceNode)
 {
     ULONG Output = DN_NT_ENUMERATOR | DN_NT_DRIVER;
 
