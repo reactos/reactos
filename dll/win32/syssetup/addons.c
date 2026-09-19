@@ -27,7 +27,7 @@ typedef const ADDON_INSTALL_DATA* PCADDON_INSTALL_DATA;
 /* TODO: Move this out of code and into an .inf or something. */
 static const ADDON_INSTALL_DATA Addons[] = {
 #ifdef _M_IX86
-    {L"Wine Gecko", L"%SystemRoot%\\wine_gecko-2.40-x86.msi", L"msiexec.exe /i \"%s\" /qn /norestart", L"gecko"},
+    {L"Wine Gecko", L"%SystemRoot%\\wine-gecko-2.47.4-x86.msi", L"msiexec.exe /i \"%s\" /qn /norestart", L"gecko"},
     {L"WineVDM", L"%SystemRoot%\\winevdm_setup.exe", L"\"%s\" /VERYSILENT", L"winevdm"},
 #endif
     {NULL, NULL, NULL}

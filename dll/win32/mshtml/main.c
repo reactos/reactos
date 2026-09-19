@@ -20,54 +20,332 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "mshtml_private.h"
+#include <stdarg.h>
+#include <stdio.h>
 
-#include <advpub.h>
-#include <rpcproxy.h>
-#include <mlang.h>
-#include <initguid.h>
+#define COBJMACROS
+
+#include "windef.h"
+#include "winbase.h"
+#include "winuser.h"
+#include "winreg.h"
+#include "ole2.h"
+#include "advpub.h"
+#include "shlwapi.h"
+#include "optary.h"
+#include "rpcproxy.h"
+#include "shlguid.h"
+#include "mlang.h"
+#include "wininet.h"
+
+#include "wine/debug.h"
+
+#define INIT_GUID
+#include "mshtml_private.h"
+#include "resource.h"
+#include "pluginhost.h"
+#include "mscoree.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(mshtml);
 
 HINSTANCE hInst;
 DWORD mshtml_tls = TLS_OUT_OF_INDEXES;
 
 void (__cdecl *ccp_init)(ExternalCycleCollectionParticipant*,const CCObjCallback*);
-nsrefcnt (__cdecl *ccref_incr)(nsCycleCollectingAutoRefCnt*,nsISupports*);
 nsrefcnt (__cdecl *ccref_decr)(nsCycleCollectingAutoRefCnt*,nsISupports*,ExternalCycleCollectionParticipant*);
+nsrefcnt (__cdecl *ccref_incr)(nsCycleCollectingAutoRefCnt*,nsISupports*);
 void (__cdecl *ccref_init)(nsCycleCollectingAutoRefCnt*,nsrefcnt);
 void (__cdecl *describe_cc_node)(nsCycleCollectingAutoRefCnt*,const char*,nsCycleCollectionTraversalCallback*);
 void (__cdecl *note_cc_edge)(nsISupports*,const char*,nsCycleCollectionTraversalCallback*);
 
 static HINSTANCE shdoclc = NULL;
-static HDC display_dc;
 static WCHAR *status_strings[IDS_STATUS_LAST-IDS_STATUS_FIRST+1];
 static IMultiLanguage2 *mlang;
+static IInternetSecurityManager *security_manager;
+static unsigned global_max_compat_mode = COMPAT_MODE_IE11;
+static struct list compat_config = LIST_INIT(compat_config);
+
+typedef struct {
+    struct list entry;
+    compat_mode_t max_compat_mode;
+    WCHAR host[1];
+} compat_config_t;
+
+static BOOL ensure_mlang(void)
+{
+    IMultiLanguage2 *new_mlang;
+    HRESULT hres;
+
+    if(mlang)
+        return TRUE;
+
+    hres = CoCreateInstance(&CLSID_CMultiLanguage, NULL, CLSCTX_INPROC_SERVER,
+            &IID_IMultiLanguage2, (void**)&new_mlang);
+    if(FAILED(hres)) {
+        ERR("Could not create CMultiLanguage instance\n");
+        return FALSE;
+    }
+
+    if(InterlockedCompareExchangePointer((void**)&mlang, new_mlang, NULL))
+        IMultiLanguage2_Release(new_mlang);
+
+    return TRUE;
+}
 
 UINT cp_from_charset_string(BSTR charset)
 {
     MIMECSETINFO info;
     HRESULT hres;
 
-    if(!mlang) {
-        IMultiLanguage2 *new_mlang;
-
-        hres = CoCreateInstance(&CLSID_CMultiLanguage, NULL, CLSCTX_INPROC_SERVER,
-                &IID_IMultiLanguage2, (void**)&new_mlang);
-        if(FAILED(hres)) {
-            ERR("Could not create CMultiLanguage instance\n");
-            return CP_UTF8;
-        }
-
-        if(InterlockedCompareExchangePointer((void**)&mlang, new_mlang, NULL))
-            IMultiLanguage2_Release(new_mlang);
-    }
+    if(!ensure_mlang())
+        return CP_UTF8;
 
     hres = IMultiLanguage2_GetCharsetInfo(mlang, charset, &info);
     if(FAILED(hres)) {
-        FIXME("GetCharsetInfo failed: %08x\n", hres);
+        FIXME("GetCharsetInfo failed: %08lx\n", hres);
         return CP_UTF8;
     }
 
     return info.uiInternetEncoding;
+}
+
+BSTR charset_string_from_cp(UINT cp)
+{
+    MIMECPINFO info;
+    HRESULT hres;
+
+    if(!ensure_mlang())
+        return SysAllocString(NULL);
+
+    hres = IMultiLanguage2_GetCodePageInfo(mlang, cp, GetUserDefaultUILanguage(), &info);
+    if(FAILED(hres)) {
+        ERR("GetCodePageInfo failed: %08lx\n", hres);
+        return SysAllocString(NULL);
+    }
+
+    return SysAllocString(info.wszWebCharset);
+}
+
+HRESULT get_mime_type_display_name(const WCHAR *content_type, BSTR *ret)
+{
+    /* undocumented */
+    extern BOOL WINAPI GetMIMETypeSubKeyW(LPCWSTR,LPWSTR,DWORD);
+
+    WCHAR buffer[128], ext[128], *str, *progid;
+    DWORD type, len;
+    HKEY key = NULL;
+    LSTATUS status;
+    HRESULT hres;
+    CLSID clsid;
+
+    str = buffer;
+    if(!GetMIMETypeSubKeyW(content_type, buffer, ARRAY_SIZE(buffer))) {
+        len = wcslen(content_type) + 32;
+        for(;;) {
+            if(!(str = malloc(len * sizeof(WCHAR))))
+                return E_OUTOFMEMORY;
+            if(GetMIMETypeSubKeyW(content_type, str, len))
+                break;
+            free(str);
+            len *= 2;
+        }
+    }
+
+    status = RegOpenKeyExW(HKEY_CLASSES_ROOT, str, 0, KEY_QUERY_VALUE, &key);
+    if(str != buffer)
+        free(str);
+    if(status != ERROR_SUCCESS)
+        goto fail;
+
+    len = sizeof(ext);
+    status = RegQueryValueExW(key, L"Extension", NULL, &type, (BYTE*)ext, &len);
+    if(status != ERROR_SUCCESS || type != REG_SZ) {
+        len = sizeof(buffer);
+        status = RegQueryValueExW(key, L"CLSID", NULL, &type, (BYTE*)buffer, &len);
+        if(status != ERROR_SUCCESS || type != REG_SZ || CLSIDFromString(buffer, &clsid) != S_OK)
+            goto fail;
+
+        hres = ProgIDFromCLSID(&clsid, &progid);
+        if(hres == E_OUTOFMEMORY) {
+            RegCloseKey(key);
+            return hres;
+        }
+        if(hres != S_OK)
+            goto fail;
+    }else {
+        progid = ext;
+    }
+
+    len = ARRAY_SIZE(buffer);
+    str = buffer;
+    for(;;) {
+        hres = AssocQueryStringW(ASSOCF_NOTRUNCATE, ASSOCSTR_FRIENDLYDOCNAME, progid, NULL, str, &len);
+        if(hres == S_OK && len)
+            break;
+        if(str != buffer)
+            free(str);
+        if(hres != E_POINTER) {
+            if(progid != ext) {
+                CoTaskMemFree(progid);
+                goto fail;
+            }
+
+            /* Try from CLSID */
+            len = sizeof(buffer);
+            status = RegQueryValueExW(key, L"CLSID", NULL, &type, (BYTE*)buffer, &len);
+            if(status != ERROR_SUCCESS || type != REG_SZ || CLSIDFromString(buffer, &clsid) != S_OK)
+                goto fail;
+
+            hres = ProgIDFromCLSID(&clsid, &progid);
+            if(hres == E_OUTOFMEMORY) {
+                RegCloseKey(key);
+                return hres;
+            }
+            if(hres != S_OK)
+                goto fail;
+
+            len = ARRAY_SIZE(buffer);
+            str = buffer;
+            continue;
+        }
+        str = malloc(len * sizeof(WCHAR));
+    }
+    if(progid != ext)
+        CoTaskMemFree(progid);
+    RegCloseKey(key);
+
+    *ret = SysAllocString(str);
+    if(str != buffer)
+        free(str);
+    return *ret ? S_OK : E_OUTOFMEMORY;
+
+fail:
+    RegCloseKey(key);
+
+    WARN("Did not find MIME in database for %s\n", debugstr_w(content_type));
+
+    /* native seems to return "File" when it doesn't know the content type */
+    *ret = SysAllocString(L"File");
+    return *ret ? S_OK : E_OUTOFMEMORY;
+}
+
+IInternetSecurityManager *get_security_manager(void)
+{
+    if(!security_manager) {
+        IInternetSecurityManager *manager;
+        HRESULT hres;
+
+        hres = CoInternetCreateSecurityManager(NULL, &manager, 0);
+        if(FAILED(hres))
+            return NULL;
+
+        if(InterlockedCompareExchangePointer((void**)&security_manager, manager, NULL))
+            IInternetSecurityManager_Release(manager);
+    }
+
+    return security_manager;
+}
+
+static BOOL read_compat_mode(HKEY key, compat_mode_t *r)
+{
+    WCHAR version[32];
+    DWORD type, size;
+    LSTATUS status;
+
+    size = sizeof(version);
+    status = RegQueryValueExW(key, L"MaxCompatMode", NULL, &type, (BYTE*)version, &size);
+    if(status != ERROR_SUCCESS || type != REG_SZ)
+        return FALSE;
+
+    return parse_compat_version(version, r) != NULL;
+}
+
+static BOOL WINAPI load_compat_settings(INIT_ONCE *once, void *param, void **context)
+{
+    WCHAR key_name[INTERNET_MAX_HOST_NAME_LENGTH];
+    DWORD index = 0, name_size;
+    compat_config_t *new_entry;
+    compat_mode_t max_compat_mode;
+    HKEY key, host_key;
+    DWORD res;
+
+    /* @@ Wine registry key: HKCU\Software\Wine\MSHTML\CompatMode */
+    res = RegOpenKeyW(HKEY_CURRENT_USER, L"Software\\Wine\\MSHTML\\CompatMode", &key);
+    if(res != ERROR_SUCCESS)
+        return TRUE;
+
+    if(read_compat_mode(key, &max_compat_mode)) {
+        TRACE("Setting global max compat mode to %u\n", max_compat_mode);
+        global_max_compat_mode = max_compat_mode;
+    }
+
+    while(1) {
+        res = RegEnumKeyW(key, index, key_name, ARRAY_SIZE(key_name));
+        if(res == ERROR_NO_MORE_ITEMS)
+            break;
+        index++;
+        if(res != ERROR_SUCCESS) {
+            WARN("RegEnumKey failed: %lu\n", GetLastError());
+            continue;
+        }
+
+        name_size = lstrlenW(key_name) + 1;
+        new_entry = malloc(FIELD_OFFSET(compat_config_t, host[name_size]));
+        if(!new_entry)
+            continue;
+
+        new_entry->max_compat_mode = COMPAT_MODE_IE11;
+        memcpy(new_entry->host, key_name, name_size * sizeof(WCHAR));
+        list_add_tail(&compat_config, &new_entry->entry);
+
+        res = RegOpenKeyW(key, key_name, &host_key);
+        if(res != ERROR_SUCCESS)
+            continue;
+
+        if(read_compat_mode(host_key, &max_compat_mode)) {
+            TRACE("Setting max compat mode for %s to %u\n", debugstr_w(key_name), max_compat_mode);
+            new_entry->max_compat_mode = max_compat_mode;
+        }
+
+        RegCloseKey(host_key);
+    }
+
+    RegCloseKey(key);
+    return TRUE;
+}
+
+compat_mode_t get_max_compat_mode(IUri *uri)
+{
+    compat_config_t *iter;
+    size_t len, iter_len;
+    BSTR host = NULL;
+    HRESULT hres;
+
+    static INIT_ONCE init_once = INIT_ONCE_STATIC_INIT;
+    InitOnceExecuteOnce(&init_once, load_compat_settings, NULL, NULL);
+
+    if(!uri)
+        return global_max_compat_mode;
+    hres = IUri_GetHost(uri, &host);
+    if(hres != S_OK) {
+        SysFreeString(host);
+        return global_max_compat_mode;
+    }
+    len = SysStringLen(host);
+
+    LIST_FOR_EACH_ENTRY(iter, &compat_config, compat_config_t, entry) {
+        iter_len = lstrlenW(iter->host);
+        /* If configured host starts with '.', we also match subdomains */
+        if((len == iter_len || (iter->host[0] == '.' && len > iter_len))
+           && !memcmp(host + len - iter_len, iter->host, iter_len * sizeof(WCHAR))) {
+            TRACE("Found max mode %u\n", iter->max_compat_mode);
+            return iter->max_compat_mode;
+        }
+    }
+
+    SysFreeString(host);
+    TRACE("Using global max mode %u\n", global_max_compat_mode);
+    return global_max_compat_mode;
 }
 
 static void thread_detach(void)
@@ -81,29 +359,38 @@ static void thread_detach(void)
     if(thread_data->thread_hwnd)
         DestroyWindow(thread_data->thread_hwnd);
 
-    heap_free(thread_data);
+    destroy_session_storage(thread_data);
+    free(thread_data);
 }
 
 static void free_strings(void)
 {
     unsigned int i;
-    for(i = 0; i < sizeof(status_strings)/sizeof(*status_strings); i++)
-        heap_free(status_strings[i]);
+    for(i = 0; i < ARRAY_SIZE(status_strings); i++)
+        free(status_strings[i]);
 }
 
 static void process_detach(void)
 {
+    compat_config_t *config;
+
     close_gecko();
     release_typelib();
+
+    while(!list_empty(&compat_config)) {
+        config = LIST_ENTRY(list_head(&compat_config), compat_config_t, entry);
+        list_remove(&config->entry);
+        free(config);
+    }
 
     if(shdoclc)
         FreeLibrary(shdoclc);
     if(mshtml_tls != TLS_OUT_OF_INDEXES)
         TlsFree(mshtml_tls);
-    if(display_dc)
-        DeleteObject(display_dc);
     if(mlang)
         IMultiLanguage2_Release(mlang);
+    if(security_manager)
+        IInternetSecurityManager_Release(security_manager);
 
     free_strings();
 }
@@ -119,11 +406,12 @@ void set_statustext(HTMLDocumentObj* doc, INT id, LPCWSTR arg)
 
     if(!p) {
         len = 255;
-        p = heap_alloc(len * sizeof(WCHAR));
+        p = malloc(len * sizeof(WCHAR));
+        if (!p) return;
         len = LoadStringW(hInst, id, p, len) + 1;
-        p = heap_realloc(p, len * sizeof(WCHAR));
+        p = realloc(p, len * sizeof(WCHAR));
         if(InterlockedCompareExchangePointer((void**)&status_strings[index], p, NULL)) {
-            heap_free(p);
+            free(p);
             p = status_strings[index];
         }
     }
@@ -132,9 +420,10 @@ void set_statustext(HTMLDocumentObj* doc, INT id, LPCWSTR arg)
         WCHAR *buf;
 
         len = lstrlenW(p) + lstrlenW(arg) - 1;
-        buf = heap_alloc(len * sizeof(WCHAR));
+        buf = malloc(len * sizeof(WCHAR));
+        if (!buf) return;
 
-        snprintfW(buf, len, p, arg);
+        swprintf(buf, len, p, arg);
 
         p = buf;
     }
@@ -142,7 +431,7 @@ void set_statustext(HTMLDocumentObj* doc, INT id, LPCWSTR arg)
     IOleInPlaceFrame_SetStatusText(doc->frame, p);
 
     if(arg)
-        heap_free(p);
+        free(p);
 }
 
 HRESULT do_query_service(IUnknown *unk, REFGUID guid_service, REFIID riid, void **ppv)
@@ -161,28 +450,10 @@ HRESULT do_query_service(IUnknown *unk, REFGUID guid_service, REFIID riid, void 
 
 HINSTANCE get_shdoclc(void)
 {
-    static const WCHAR wszShdoclc[] =
-        {'s','h','d','o','c','l','c','.','d','l','l',0};
-
     if(shdoclc)
         return shdoclc;
 
-    return shdoclc = LoadLibraryExW(wszShdoclc, NULL, LOAD_LIBRARY_AS_DATAFILE);
-}
-
-HDC get_display_dc(void)
-{
-    static const WCHAR displayW[] = {'D','I','S','P','L','A','Y',0};
-
-    if(!display_dc) {
-        HDC hdc;
-
-        hdc = CreateICW(displayW, NULL, NULL, NULL);
-        if(InterlockedCompareExchangePointer((void**)&display_dc, hdc, NULL))
-            DeleteObject(hdc);
-    }
-
-    return display_dc;
+    return shdoclc = LoadLibraryExW(L"shdoclc.dll", NULL, LOAD_LIBRARY_AS_DATAFILE);
 }
 
 BOOL WINAPI DllMain(HINSTANCE hInstDLL, DWORD fdwReason, LPVOID reserved)
@@ -234,7 +505,7 @@ static ULONG WINAPI ClassFactory_AddRef(IClassFactory *iface)
 {
     ClassFactory *This = impl_from_IClassFactory(iface);
     ULONG ref = InterlockedIncrement(&This->ref);
-    TRACE("(%p) ref = %u\n", This, ref);
+    TRACE("(%p) ref = %lu\n", This, ref);
     return ref;
 }
 
@@ -243,10 +514,10 @@ static ULONG WINAPI ClassFactory_Release(IClassFactory *iface)
     ClassFactory *This = impl_from_IClassFactory(iface);
     ULONG ref = InterlockedDecrement(&This->ref);
 
-    TRACE("(%p) ref = %u\n", This, ref);
+    TRACE("(%p) ref = %lu\n", This, ref);
 
     if(!ref) {
-        heap_free(This);
+        free(This);
     }
 
     return ref;
@@ -277,7 +548,7 @@ static const IClassFactoryVtbl HTMLClassFactoryVtbl = {
 
 static HRESULT ClassFactory_Create(REFIID riid, void **ppv, CreateInstanceFunc fnCreateInstance)
 {
-    ClassFactory *ret = heap_alloc(sizeof(ClassFactory));
+    ClassFactory *ret = malloc(sizeof(ClassFactory));
     HRESULT hres;
 
     ret->IClassFactory_iface.lpVtbl = &HTMLClassFactoryVtbl;
@@ -286,7 +557,7 @@ static HRESULT ClassFactory_Create(REFIID riid, void **ppv, CreateInstanceFunc f
 
     hres = IClassFactory_QueryInterface(&ret->IClassFactory_iface, riid, ppv);
     if(FAILED(hres)) {
-        heap_free(ret);
+        free(ret);
         *ppv = NULL;
     }
     return hres;
@@ -300,6 +571,9 @@ HRESULT WINAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID *ppv)
     if(IsEqualGUID(&CLSID_HTMLDocument, rclsid)) {
         TRACE("(CLSID_HTMLDocument %s %p)\n", debugstr_mshtml_guid(riid), ppv);
         return ClassFactory_Create(riid, ppv, HTMLDocument_Create);
+    }else if(IsEqualGUID(&CLSID_MHTMLDocument, rclsid)) {
+        TRACE("(CLSID_MHTMLDocument %s %p)\n", debugstr_mshtml_guid(riid), ppv);
+        return ClassFactory_Create(riid, ppv, MHTMLDocument_Create);
     }else if(IsEqualGUID(&CLSID_AboutProtocol, rclsid)) {
         TRACE("(CLSID_AboutProtocol %s %p)\n", debugstr_mshtml_guid(riid), ppv);
         return ProtocolFactory_Create(rclsid, riid, ppv);
@@ -324,16 +598,6 @@ HRESULT WINAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID *ppv)
     return CLASS_E_CLASSNOTAVAILABLE;
 }
 
-/******************************************************************
- *              DllCanUnloadNow (MSHTML.@)
- */
-HRESULT WINAPI DllCanUnloadNow(void)
-{
-    TRACE("()\n");
-    /* The cost of keeping this DLL in memory is small. */
-    return S_FALSE;
-}
-
 /***********************************************************************
  *          RunHTMLApplication (MSHTML.@)
  *
@@ -343,7 +607,7 @@ HRESULT WINAPI RunHTMLApplication( HINSTANCE hinst, HINSTANCE hPrevInst,
                                LPSTR szCmdLine, INT nCmdShow )
 {
     FIXME("%p %p %s %d\n", hinst, hPrevInst, debugstr_a(szCmdLine), nCmdShow );
-    return 0;
+    return S_OK;
 }
 
 /***********************************************************************
@@ -358,9 +622,15 @@ DWORD WINAPI RNIGetCompatibleVersion(void)
 /***********************************************************************
  *          DllInstall (MSHTML.@)
  */
-HRESULT WINAPI DllInstall(BOOL bInstall, LPCWSTR cmdline)
+HRESULT WINAPI DllInstall(BOOL install, const WCHAR *cmdline)
 {
-    FIXME("stub %d %s: returning S_OK\n", bInstall, debugstr_w(cmdline));
+    TRACE("(%x %s)\n", install, debugstr_w(cmdline));
+
+    if(cmdline && *cmdline)
+        FIXME("unsupported cmdline: %s\n", debugstr_w(cmdline));
+    else if(install)
+        load_gecko();
+
     return S_OK;
 }
 
@@ -402,7 +672,6 @@ DEFINE_GUID(CLSID_HTMLServerDoc, 0x3050F4E7, 0x98B5, 0x11CF, 0xBB,0x82, 0x00,0xA
 DEFINE_GUID(CLSID_IImageDecodeFilter, 0x607FD4E8, 0x0A03, 0x11D1, 0xAB,0x1D, 0x00,0xC0,0x4F,0xC9,0xB3,0x04);
 DEFINE_GUID(CLSID_IImgCtx, 0x3050F3D6, 0x98B5, 0x11CF, 0xBB,0x82, 0x00,0xAA,0x00,0xBD,0xCE,0x0B);
 DEFINE_GUID(CLSID_IntDitherer, 0x05F6FE1A, 0xECEF, 0x11D0, 0xAA,0xE7, 0x00,0xC0,0x4F,0xC9,0xB3,0x04);
-DEFINE_GUID(CLSID_MHTMLDocument, 0x3050F3D9, 0x98B5, 0x11CF, 0xBB,0x82, 0x00,0xAA,0x00,0xBD,0xCE,0x0B);
 DEFINE_GUID(CLSID_TridentAPI, 0x429AF92C, 0xA51F, 0x11D2, 0x86,0x1E, 0x00,0xC0,0x4F,0xA3,0x5C,0x89);
 
 #define INF_SET_ID(id)            \
@@ -425,8 +694,6 @@ static HRESULT register_server(BOOL do_register)
     STRENTRYA pse[35];
     static CLSID const *clsids[35];
     unsigned int i = 0;
-
-    static const WCHAR wszAdvpack[] = {'a','d','v','p','a','c','k','.','d','l','l',0};
 
     TRACE("(%x)\n", do_register);
 
@@ -466,46 +733,29 @@ static HRESULT register_server(BOOL do_register)
     INF_SET_CLSID(TridentAPI);
     INF_SET_ID(LIBID_MSHTML);
 
-    for(i=0; i < sizeof(pse)/sizeof(pse[0]); i++) {
-        pse[i].pszValue = heap_alloc(39);
-        sprintf(pse[i].pszValue, "{%08X-%04X-%04X-%02X%02X-%02X%02X%02X%02X%02X%02X}",
+    for(i=0; i < ARRAY_SIZE(pse); i++) {
+        pse[i].pszValue = malloc(39);
+        sprintf(pse[i].pszValue, "{%08lX-%04X-%04X-%02X%02X-%02X%02X%02X%02X%02X%02X}",
                 clsids[i]->Data1, clsids[i]->Data2, clsids[i]->Data3, clsids[i]->Data4[0],
                 clsids[i]->Data4[1], clsids[i]->Data4[2], clsids[i]->Data4[3], clsids[i]->Data4[4],
                 clsids[i]->Data4[5], clsids[i]->Data4[6], clsids[i]->Data4[7]);
     }
 
-    strtable.cEntries = sizeof(pse)/sizeof(pse[0]);
+    strtable.cEntries = ARRAY_SIZE(pse);
     strtable.pse = pse;
 
-    hAdvpack = LoadLibraryW(wszAdvpack);
+    hAdvpack = LoadLibraryW(L"advpack.dll");
     pRegInstall = (void *)GetProcAddress(hAdvpack, "RegInstall");
 
     hres = pRegInstall(hInst, do_register ? "RegisterDll" : "UnregisterDll", &strtable);
 
     FreeLibrary(hAdvpack);
 
-    for(i=0; i < sizeof(pse)/sizeof(pse[0]); i++)
-        heap_free(pse[i].pszValue);
-
-    if(FAILED(hres)) {
-        ERR("RegInstall failed: %08x\n", hres);
-        return hres;
-    }
-
-    if(do_register) {
-        ITypeLib *typelib;
-
-        static const WCHAR wszMSHTML[] = {'m','s','h','t','m','l','.','t','l','b',0};
-
-        hres = LoadTypeLibEx(wszMSHTML, REGKIND_REGISTER, &typelib);
-        if(SUCCEEDED(hres))
-            ITypeLib_Release(typelib);
-    }else {
-        hres = UnRegisterTypeLib(&LIBID_MSHTML, 4, 0, LOCALE_SYSTEM_DEFAULT, SYS_WIN32);
-    }
+    for(i=0; i < ARRAY_SIZE(pse); i++)
+        free(pse[i].pszValue);
 
     if(FAILED(hres))
-        ERR("typelib registration failed: %08x\n", hres);
+        ERR("RegInstall failed: %08lx\n", hres);
 
     return hres;
 }
@@ -520,12 +770,9 @@ HRESULT WINAPI DllRegisterServer(void)
 {
     HRESULT hres;
 
-    hres = __wine_register_resources( hInst );
+    hres = __wine_register_resources();
     if(SUCCEEDED(hres))
         hres = register_server(TRUE);
-    if(SUCCEEDED(hres))
-        load_gecko();
-
     return hres;
 }
 
@@ -534,7 +781,7 @@ HRESULT WINAPI DllRegisterServer(void)
  */
 HRESULT WINAPI DllUnregisterServer(void)
 {
-    HRESULT hres = __wine_unregister_resources( hInst );
+    HRESULT hres = __wine_unregister_resources();
     if(SUCCEEDED(hres)) hres = register_server(FALSE);
     return hres;
 }
@@ -553,6 +800,7 @@ const char *debugstr_mshtml_guid(const GUID *iid)
     X(IID_IDispatch);
     X(IID_IDispatchEx);
     X(IID_IDispatchJS);
+    X(IID_IDisplayServices);
     X(IID_UndocumentedScriptIface);
     X(IID_IEnumConnections);
     X(IID_IEnumVARIANT);
@@ -564,6 +812,12 @@ const char *debugstr_mshtml_guid(const GUID *iid)
     X(IID_IHTMLPrivateWindow);
     X(IID_IHtmlLoadOptions);
     X(IID_IInternetHostSecurityManager);
+    X(IID_IInternetProtocol);
+    X(IID_IInternetProtocolRoot);
+    X(IID_IManagedObject);
+    X(IID_IMarkupContainer);
+    X(IID_IMarkupServices);
+    X(IID_IMarshal);
     X(IID_IMonikerProp);
     X(IID_IObjectIdentity);
     X(IID_IObjectSafety);
@@ -588,6 +842,8 @@ const char *debugstr_mshtml_guid(const GUID *iid)
     X(IID_IPersistStreamInit);
     X(IID_IPropertyNotifySink);
     X(IID_IProvideClassInfo);
+    X(IID_IProvideClassInfo2);
+    X(IID_IProvideMultipleClassInfo);
     X(IID_IServiceProvider);
     X(IID_ISupportErrorInfo);
     X(IID_ITargetContainer);

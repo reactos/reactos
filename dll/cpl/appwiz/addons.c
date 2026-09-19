@@ -26,11 +26,11 @@
 
 #include <msi.h>
 
-#define GECKO_VERSION "2.40"
+#define GECKO_VERSION "2.47.4"
 
 #ifdef __i386__
 #define ARCH_STRING "x86"
-#define GECKO_SHA "8a3adedf3707973d1ed4ac3b2e791486abf814bd"
+#define GECKO_SHA "6194b6fe55a68deccb7260a0626a614eddae850e"
 #else
 #define ARCH_STRING ""
 #define GECKO_SHA "???"
@@ -48,7 +48,7 @@ typedef struct {
 static const addon_info_t addons_info[] = {
     {
         GECKO_VERSION,
-        "wine_gecko-" GECKO_VERSION "-" ARCH_STRING ".msi",
+        "wine-gecko-" GECKO_VERSION "-" ARCH_STRING ".msi",
         GECKO_SHA,
         "MSHTML",
         "GeckoCabDir",
@@ -62,7 +62,7 @@ static HWND install_dialog = NULL;
 static CRITICAL_SECTION csLock;
 static IBinding *download_binding = NULL;
 
-static WCHAR GeckoUrl[] = L"https://svn.reactos.org/amine/wine_gecko-2.40-x86.msi";
+static WCHAR GeckoUrl[] = L"https://svn.reactos.org/amine/wine-gecko-2.47.4-x86.msi";
 
 /* SHA definitions are copied from advapi32. They aren't available in headers. */
 

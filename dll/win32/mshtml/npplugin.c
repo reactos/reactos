@@ -16,7 +16,22 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include <stdarg.h>
+
+#define COBJMACROS
+
+#include "windef.h"
+#include "winbase.h"
+#include "winuser.h"
+#include "ole2.h"
+#include "shlobj.h"
+
 #include "mshtml_private.h"
+#include "pluginhost.h"
+
+#include "wine/debug.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(mshtml);
 
 /* Parts of npapi.h */
 
@@ -194,55 +209,47 @@ typedef struct _NPPluginFuncs {
     NPP_LostFocusPtr lostfocus;
 } NPPluginFuncs;
 
-static nsIDOMHTMLElement *get_dom_element(NPP instance)
+static nsIDOMElement *get_dom_element(NPP instance)
 {
     nsISupports *instance_unk = (nsISupports*)instance->ndata;
     nsIPluginInstance *plugin_instance;
-    nsIDOMHTMLElement *html_elem;
     nsIDOMElement *elem;
     nsresult nsres;
 
     nsres = nsISupports_QueryInterface(instance_unk, &IID_nsIPluginInstance, (void**)&plugin_instance);
     if(NS_FAILED(nsres)) {
-        ERR("Could not get nsIPluginInstance interface: %08x\n", nsres);
+        ERR("Could not get nsIPluginInstance interface: %08lx\n", nsres);
         return NULL;
     }
 
     nsres = nsIPluginInstance_GetDOMElement(plugin_instance, &elem);
     nsIPluginInstance_Release(plugin_instance);
     if(NS_FAILED(nsres)) {
-        ERR("GetDOMElement failed: %08x\n", nsres);
+        ERR("GetDOMElement failed: %08lx\n", nsres);
         return NULL;
     }
 
-    nsres = nsIDOMElement_QueryInterface(elem, &IID_nsIDOMHTMLElement, (void**)&html_elem);
-    nsIDOMElement_Release(elem);
-    if(NS_FAILED(nsres)) {
-        ERR("Could not get nsIDOMHTMLElement iface: %08x\n", nsres);
-        return NULL;
-    }
-
-    return html_elem;
+    return elem;
 }
 
-static HTMLInnerWindow *get_elem_window(nsIDOMHTMLElement *elem)
+static HTMLInnerWindow *get_elem_window(nsIDOMElement *elem)
 {
-    nsIDOMWindow *nswindow;
+    mozIDOMWindowProxy *mozwindow;
     nsIDOMDocument *nsdoc;
     HTMLOuterWindow *window;
     nsresult nsres;
 
-    nsres = nsIDOMHTMLElement_GetOwnerDocument(elem, &nsdoc);
+    nsres = nsIDOMElement_GetOwnerDocument(elem, &nsdoc);
     if(NS_FAILED(nsres))
         return NULL;
 
-    nsres = nsIDOMDocument_GetDefaultView(nsdoc, &nswindow);
+    nsres = nsIDOMDocument_GetDefaultView(nsdoc, &mozwindow);
     nsIDOMDocument_Release(nsdoc);
-    if(NS_FAILED(nsres) || !nswindow)
+    if(NS_FAILED(nsres) || !mozwindow)
         return NULL;
 
-    window = nswindow_to_window(nswindow);
-    nsIDOMWindow_Release(nswindow);
+    window = mozwindow_to_window(mozwindow);
+    mozIDOMWindowProxy_Release(mozwindow);
 
     return window->base.inner_window;
 }
@@ -251,7 +258,7 @@ static NPError CDECL NPP_New(NPMIMEType pluginType, NPP instance, UINT16 mode, I
         char **argv, NPSavedData *saved)
 {
     HTMLPluginContainer *container;
-    nsIDOMHTMLElement *nselem;
+    nsIDOMElement *nselem;
     HTMLInnerWindow *window;
     HTMLDOMNode *node;
     NPError err = NPERR_NO_ERROR;
@@ -268,12 +275,12 @@ static NPError CDECL NPP_New(NPMIMEType pluginType, NPP instance, UINT16 mode, I
     window = get_elem_window(nselem);
     if(!window) {
         ERR("Could not get element's window object\n");
-        nsIDOMHTMLElement_Release(nselem);
+        nsIDOMElement_Release(nselem);
         return NPERR_GENERIC_ERROR;
     }
 
-    hres = get_node(window->doc, (nsIDOMNode*)nselem, TRUE, &node);
-    nsIDOMHTMLElement_Release(nselem);
+    hres = get_node((nsIDOMNode*)nselem, TRUE, &node);
+    nsIDOMElement_Release(nselem);
     if(FAILED(hres))
         return NPERR_GENERIC_ERROR;
 
@@ -294,6 +301,8 @@ static NPError CDECL NPP_New(NPMIMEType pluginType, NPP instance, UINT16 mode, I
     }
 
     instance->pdata = container->plugin_host;
+    if(container->plugin_host)
+        IOleClientSite_AddRef(&container->plugin_host->IOleClientSite_iface);
 
     node_release(&container->element.node);
     return err;

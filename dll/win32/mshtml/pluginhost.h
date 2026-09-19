@@ -16,8 +16,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#pragma once
-
 typedef struct HTMLPluginContainer HTMLPluginContainer;
 typedef struct PHEventSink PHEventSink;
 
@@ -50,31 +48,36 @@ typedef struct {
     HTMLPluginContainer *element;
 } PluginHost;
 
+struct plugin_prop
+{
+    DISPID id;
+    WCHAR name[1];
+};
+
 struct HTMLPluginContainer {
     HTMLElement element;
 
     PluginHost *plugin_host;
 
-    DISPID *props;
+    struct plugin_prop **props;
     DWORD props_size;
     DWORD props_len;
 };
 
 DEFINE_GUID(IID_HTMLPluginContainer, 0xbd7a6050,0xb373,0x4f6f,0xa4,0x93,0xdd,0x40,0xc5,0x23,0xa8,0x6a);
 
-extern const IID IID_HTMLPluginContainer DECLSPEC_HIDDEN;
+extern const IID IID_HTMLPluginContainer;
 
-HRESULT create_plugin_host(HTMLDocumentNode*,HTMLPluginContainer*) DECLSPEC_HIDDEN;
-void update_plugin_window(PluginHost*,HWND,const RECT*) DECLSPEC_HIDDEN;
-void detach_plugin_host(PluginHost*) DECLSPEC_HIDDEN;
+HRESULT create_plugin_host(HTMLDocumentNode*,HTMLPluginContainer*);
+void update_plugin_window(PluginHost*,HWND,const RECT*);
+void detach_plugin_host(PluginHost*);
 
-HRESULT create_param_prop_bag(nsIDOMHTMLElement*,IPropertyBag**) DECLSPEC_HIDDEN;
+HRESULT get_plugin_disp(HTMLPluginContainer*,IDispatch**);
+void notif_container_change(HTMLPluginContainer*,DISPID);
+void bind_activex_event(HTMLDocumentNode*,HTMLPluginContainer*,WCHAR*,IDispatch*);
 
-HRESULT create_ip_window(IOleInPlaceUIWindow**) DECLSPEC_HIDDEN;
-HRESULT create_ip_frame(IOleInPlaceFrame**) DECLSPEC_HIDDEN;
-
-HRESULT get_plugin_disp(HTMLPluginContainer*,IDispatch**) DECLSPEC_HIDDEN;
-HRESULT get_plugin_dispid(HTMLPluginContainer*,WCHAR*,DISPID*) DECLSPEC_HIDDEN;
-HRESULT invoke_plugin_prop(HTMLPluginContainer*,DISPID,LCID,WORD,DISPPARAMS*,VARIANT*,EXCEPINFO*) DECLSPEC_HIDDEN;
-void notif_container_change(HTMLPluginContainer*,DISPID) DECLSPEC_HIDDEN;
-void bind_activex_event(HTMLDocumentNode*,HTMLPluginContainer*,WCHAR*,IDispatch*) DECLSPEC_HIDDEN;
+void HTMLPluginContainer_destructor(DispatchEx *dispex);
+HRESULT HTMLPluginContainer_get_dispid(DispatchEx *dispex, const WCHAR *name, DWORD grfdex, DISPID *dispid);
+HRESULT HTMLPluginContainer_invoke(DispatchEx *dispex, DISPID id, LCID lcid, WORD flags, DISPPARAMS *params,
+                                   VARIANT *res, EXCEPINFO *ei, IServiceProvider *caller);
+HRESULT HTMLPluginContainer_get_prop_desc(DispatchEx *dispex, DISPID id, struct property_info *desc);

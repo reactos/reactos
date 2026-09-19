@@ -123,5 +123,3 @@ REGINST REGINST mshtml.inf
 
 /* @makedep: blank.htm */
 blank.htm HTML "blank.htm"
-
-1 WINE_REGISTRY "mshtml_classes.rgs"
