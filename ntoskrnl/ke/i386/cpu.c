@@ -395,256 +395,42 @@ NTAPI
 KiGetCacheInformation(VOID)
 {
     PKIPCR Pcr = (PKIPCR)KeGetPcr();
-    CPU_INFO CpuInfo;
-    ULONG CacheRequests = 0, i;
-    ULONG CurrentRegister;
-    UCHAR RegisterByte, Associativity = 0;
-    ULONG Size, CacheLine = 64, CurrentSize = 0;
-    BOOLEAN FirstPass = TRUE;
+    ULONG CacheCount;
 
     /* Set default L2 size */
     Pcr->SecondLevelCacheSize = 0;
 
-    /* Check the Vendor ID */
-    switch (KiGetCpuVendor())
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+    /* Retrieve the cache descriptors */
+    PKPRCB Prcb = KeGetCurrentPrcb();
+    CacheCount = KiGetCpuCacheDescriptors(Prcb->Cache,
+                                          ARRAYSIZE(Prcb->Cache),
+                                          KiGetCpuVendor());
+    Prcb->CacheCount = CacheCount;
+#else
+    /* Retrieve the cache descriptors */
+    CACHE_DESCRIPTOR CacheDescriptors[5];
+    CacheCount = KiGetCpuCacheDescriptors(CacheDescriptors,
+                                          ARRAYSIZE(CacheDescriptors),
+                                          KiGetCpuVendor());
+#endif
+
+    /* Loop the descriptors to find the L2 cache size */
+    for (ULONG i = 0; i < CacheCount; i++)
     {
-        /* Handle Intel case */
-        case CPU_INTEL:
-
-            /* Check if we support CPUID 2 */
-            KiCpuId(&CpuInfo, 0);
-            if (CpuInfo.Eax >= 2)
-            {
-                /* We need to loop for the number of times CPUID will tell us to */
-                do
-                {
-                    /* Do the CPUID call */
-                    KiCpuId(&CpuInfo, 2);
-
-                    /* Check if it was the first call */
-                    if (FirstPass)
-                    {
-                        /*
-                         * The number of times to loop is the first byte. Read
-                         * it and then destroy it so we don't get confused.
-                         */
-                        CacheRequests = CpuInfo.Eax & 0xFF;
-                        CpuInfo.Eax &= 0xFFFFFF00;
-
-                        /* Don't go over this again */
-                        FirstPass = FALSE;
-                    }
-
-                    /* Loop all 4 registers */
-                    for (i = 0; i < 4; i++)
-                    {
-                        /* Get the current register */
-                        CurrentRegister = CpuInfo.AsUINT32[i];
-
-                        /*
-                         * If the upper bit is set, then this register should
-                         * be skipped.
-                         */
-                        if (CurrentRegister & 0x80000000) continue;
-
-                        /* Keep looping for every byte inside this register */
-                        while (CurrentRegister)
-                        {
-                            /* Read a byte, skip a byte. */
-                            RegisterByte = (UCHAR)(CurrentRegister & 0xFF);
-                            CurrentRegister >>= 8;
-                            if (!RegisterByte) continue;
-
-                            Size = 0;
-                            switch (RegisterByte)
-                            {
-                                case 0x06:
-                                case 0x08:
-                                    KePrefetchNTAGranularity = 32;
-                                    break;
-                                case 0x09:
-                                    KePrefetchNTAGranularity = 64;
-                                    break;
-                                case 0x0a:
-                                case 0x0c:
-                                    KePrefetchNTAGranularity = 32;
-                                    break;
-                                case 0x0d:
-                                case 0x0e:
-                                    KePrefetchNTAGranularity = 64;
-                                    break;
-                                case 0x1d:
-                                    Size = 128 * 1024;
-                                    Associativity = 2;
-                                    break;
-                                case 0x21:
-                                    Size = 256 * 1024;
-                                    Associativity = 8;
-                                    break;
-                                case 0x24:
-                                    Size = 1024 * 1024;
-                                    Associativity = 16;
-                                    break;
-                                case 0x2c:
-                                case 0x30:
-                                    KePrefetchNTAGranularity = 64;
-                                    break;
-                                case 0x41:
-                                case 0x42:
-                                case 0x43:
-                                case 0x44:
-                                case 0x45:
-                                    Size = (1 << (RegisterByte - 0x41)) * 128 * 1024;
-                                    Associativity = 4;
-                                    break;
-                                case 0x48:
-                                    Size = 3 * 1024 * 1024;
-                                    Associativity = 12;
-                                    break;
-                                case 0x49:
-                                    Size = 4 * 1024 * 1024;
-                                    Associativity = 16;
-                                    break;
-                                case 0x4e:
-                                    Size = 6 * 1024 * 1024;
-                                    Associativity = 24;
-                                    break;
-                                case 0x60:
-                                case 0x66:
-                                case 0x67:
-                                case 0x68:
-                                    KePrefetchNTAGranularity = 64;
-                                    break;
-                                case 0x78:
-                                    Size = 1024 * 1024;
-                                    Associativity = 4;
-                                    break;
-                                case 0x79:
-                                case 0x7a:
-                                case 0x7b:
-                                case 0x7c:
-                                case 0x7d:
-                                    Size = (1 << (RegisterByte - 0x79)) * 128 * 1024;
-                                    Associativity = 8;
-                                    break;
-                                case 0x7f:
-                                    Size = 512 * 1024;
-                                    Associativity = 2;
-                                    break;
-                                case 0x80:
-                                    Size = 512 * 1024;
-                                    Associativity = 8;
-                                    break;
-                                case 0x82:
-                                case 0x83:
-                                case 0x84:
-                                case 0x85:
-                                    Size = (1 << (RegisterByte - 0x82)) * 256 * 1024;
-                                    Associativity = 8;
-                                    break;
-                                case 0x86:
-                                    Size = 512 * 1024;
-                                    Associativity = 4;
-                                    break;
-                                case 0x87:
-                                    Size = 1024 * 1024;
-                                    Associativity = 8;
-                                    break;
-                                case 0xf0:
-                                    KePrefetchNTAGranularity = 64;
-                                    break;
-                                case 0xf1:
-                                    KePrefetchNTAGranularity = 128;
-                                    break;
-                            }
-                            if (Size && (Size / Associativity) > CurrentSize)
-                            {
-                                /* Set the L2 Cache Size and Associativity */
-                                CurrentSize = Size / Associativity;
-                                Pcr->SecondLevelCacheSize = Size;
-                                Pcr->SecondLevelCacheAssociativity = Associativity;
-                            }
-                        }
-                    }
-                } while (--CacheRequests);
-            }
-            break;
-
-        case CPU_AMD:
-
-            /* Check if we support CPUID 0x80000005 */
-            KiCpuId(&CpuInfo, 0x80000000);
-            if (CpuInfo.Eax >= 0x80000005)
-            {
-                /* Get L1 size first */
-                KiCpuId(&CpuInfo, 0x80000005);
-                KePrefetchNTAGranularity = CpuInfo.Ecx & 0xFF;
-
-                /* Check if we support CPUID 0x80000006 */
-                KiCpuId(&CpuInfo, 0x80000000);
-                if (CpuInfo.Eax >= 0x80000006)
-                {
-                    /* Get 2nd level cache and tlb size */
-                    KiCpuId(&CpuInfo, 0x80000006);
-
-                    /* Cache line size */
-                    CacheLine = CpuInfo.Ecx & 0xFF;
-
-                    /* Hardcode associativity */
-                    RegisterByte = (CpuInfo.Ecx >> 12) & 0xFF;
-                    switch (RegisterByte)
-                    {
-                        case 2:
-                            Associativity = 2;
-                            break;
-
-                        case 4:
-                            Associativity = 4;
-                            break;
-
-                        case 6:
-                            Associativity = 8;
-                            break;
-
-                        case 8:
-                        case 15:
-                            Associativity = 16;
-                            break;
-
-                        default:
-                            Associativity = 1;
-                            break;
-                    }
-
-                    /* Compute size */
-                    Size = (CpuInfo.Ecx >> 16) << 10;
-
-                    /* Hack for Model 6, Steping 300 */
-                    if ((KeGetCurrentPrcb()->CpuType == 6) &&
-                        (KeGetCurrentPrcb()->CpuStep == 0x300))
-                    {
-                        /* Stick 64K in there */
-                        Size = 64 * 1024;
-                    }
-
-                    /* Set the L2 Cache Size and associativity */
-                    Pcr->SecondLevelCacheSize = Size;
-                    Pcr->SecondLevelCacheAssociativity = Associativity;
-                }
-            }
-            break;
-
-        case CPU_CYRIX:
-        case CPU_TRANSMETA:
-        case CPU_CENTAUR:
-        case CPU_RISE:
-
-            /* FIXME */
-            break;
+        KeLargestCacheLine = max(KeLargestCacheLine, CacheDescriptors[i].LineSize);
+        if ((CacheDescriptors[i].Level == 1) && (CacheDescriptors[i].Type != CacheInstruction))
+        {
+            KePrefetchNTAGranularity = CacheDescriptors[i].LineSize;
+        }
+        else if (CacheDescriptors[i].Level == 2)
+        {
+            Pcr->SecondLevelCacheSize = CacheDescriptors[i].Size;
+            Pcr->SecondLevelCacheAssociativity = CacheDescriptors[i].Associativity;
+        }
     }
 
     /* Set the cache line */
-    if (CacheLine > KeLargestCacheLine) KeLargestCacheLine = CacheLine;
     DPRINT1("Prefetch Cache: %lu bytes\tL2 Cache: %lu bytes\tL2 Cache Line: %lu bytes\tL2 Cache Associativity: %lu\n",
             KePrefetchNTAGranularity,
             Pcr->SecondLevelCacheSize,
