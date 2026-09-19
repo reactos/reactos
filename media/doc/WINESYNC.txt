@@ -22,6 +22,7 @@ sdk/tools/widl                  # Synced to Wine-10.0
 sdk/tools/wpp                   # Synced to Wine-10.0 (Module was moved into wrc tool)
 
 The following headers are shared with Wine.
+sdk/include/psdk/knownfolders.h # Synced to Wine-11.0
 sdk/include/psdk/rpcproxy.h     # Synced to Wine-10.0
 
 The following libraries are shared with Wine.
