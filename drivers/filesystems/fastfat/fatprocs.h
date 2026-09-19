@@ -1971,6 +1971,11 @@ FatVerifyVcb (
     IN PVCB Vcb
     );
 
+BOOLEAN
+FatMarkDevForVerifyIfVcbMounted (
+    IN PVCB Vcb
+    );
+
 _Requires_lock_held_(_Global_critical_region_)
 VOID
 FatVerifyFcb (
