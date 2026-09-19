@@ -392,8 +392,18 @@ class CApplicationView : public CUiWindow<CWindowImpl<CApplicationView>>
     SetRedraw(BOOL bRedraw);
     void
     RefreshAvailableItem(PCWSTR PackageName);
+    enum FocusSelectionMode
+    {
+        FocusSelectUnchanged = 0,
+        FocusSelectAll = MAKELONG(0, 0x7fff),
+        FocusSelectNoneCaretEnd = MAKELONG(0x7fff, 0x7fff),
+    };
     void
-    SetFocusOnSearchBar();
+    SetFocusOnSearchBar(FocusSelectionMode SetSel = FocusSelectUnchanged);
+    void
+    SetSearchText(LPCWSTR Str);
+    void
+    SelectItem(CAppInfo *pAI);
     BOOL
     SetDisplayAppType(APPLICATION_VIEW_TYPE AppType);
 
