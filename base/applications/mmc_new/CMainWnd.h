@@ -28,7 +28,9 @@ private:
     CAtlString m_ConsoleTitle;
     HMENU m_hMenuConsoleSmall;
     HMENU m_hMenuConsoleLarge;
-    CONSOLE_MODE m_ConsoleMode;
+    DOCUMENT_MODE m_DocumentMode;
+    BOOL m_LogicalReadOnly;
+    BOOL m_PreventViewCustomization;
 
     CToolbar<DWORD_PTR> m_ToolBar;
     int m_iToolBarHeight;
@@ -204,7 +206,11 @@ public:
     HIMAGELIST SnapinImageList();
     int RegisterView(CConsoleWnd *pView);
     void UnregisterView(CConsoleWnd *pView);
-    CONSOLE_MODE GetConsoleMode();
-    void SetConsoleMode(CONSOLE_MODE ConsoleMode);
+    DOCUMENT_MODE GetDocumentMode();
+    void SetDocumentMode(DOCUMENT_MODE DocumentMode);
+    BOOL GetLogicalReadOnly();
+    void SetLogicalReadOnly(BOOL LogicalReadOnly);
+    BOOL GetPreventViewCustomization();
+    void SetPreventViewCustomization(BOOL PreventCustomization);
 };
 

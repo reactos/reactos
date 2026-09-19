@@ -7,6 +7,7 @@ add_definitions(-D_ATL_NO_EXCEPTIONS)
 list(APPEND CPP_SOURCE
     CConsoleWnd.cpp
     CMainWnd.cpp
+    COptionsDialog.cpp
     CSnapin.cpp
     CSnapinCacheEntry.cpp
     mmc.cpp

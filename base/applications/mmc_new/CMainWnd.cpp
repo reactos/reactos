@@ -25,7 +25,9 @@ static TBBUTTON TbButtons[] =
 
 CMainWnd::CMainWnd()
     : m_nConsoleNumber(0)
-    , m_ConsoleMode(AuthorMode)
+    , m_DocumentMode(DocumentMode_Author)
+    , m_LogicalReadOnly(FALSE)
+    , m_PreventViewCustomization(FALSE)
     , m_bToolBarVisible(true)
     , m_NextViewId(1)
     , m_RootNode(NULL)
@@ -543,14 +545,39 @@ CMainWnd::UpdateLayout()
     m_MDIClient.SetWindowPos(NULL, rcClient.left, rcClient.top, rcClient.right, rcClient.bottom, SWP_NOZORDER);
 }
 
-CONSOLE_MODE
-CMainWnd::GetConsoleMode()
+DOCUMENT_MODE
+CMainWnd::GetDocumentMode()
 {
-    return m_ConsoleMode;
+    return m_DocumentMode;
 }
 
 void
-CMainWnd::SetConsoleMode(CONSOLE_MODE ConsoleMode)
+CMainWnd::SetDocumentMode(DOCUMENT_MODE DocumentMode)
 {
-    m_ConsoleMode = ConsoleMode;
+    m_DocumentMode = DocumentMode;
 }
+
+BOOL
+CMainWnd::GetLogicalReadOnly()
+{
+    return m_LogicalReadOnly;
+}
+
+void
+CMainWnd::SetLogicalReadOnly(BOOL LogicalReadOnly)
+{
+    m_LogicalReadOnly = LogicalReadOnly;
+}
+
+BOOL
+CMainWnd::GetPreventViewCustomization()
+{
+    return m_PreventViewCustomization;
+}
+
+void
+CMainWnd::SetPreventViewCustomization(BOOL PreventCustomization)
+{
+    m_PreventViewCustomization = PreventCustomization;
+}
+

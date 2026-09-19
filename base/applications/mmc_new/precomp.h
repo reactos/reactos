@@ -38,13 +38,13 @@
 
 #include "resource.h"
 
-typedef enum _CONSOLE_MODE
+typedef enum _DOCUMENT_MODE
 {
-    AuthorMode = 0,
-    UserModeFull,
-    UserModeMultiple,
-    UserModeSingle
-} CONSOLE_MODE, *PCONSOLE_MODE;
+    DocumentMode_Author = 0,
+    DocumentMode_User,
+    DocumentMode_UserMDI,
+    DocumentMode_UserSDI
+} DOCUMENT_MODE, *PDOCUMENT_MODE;
 
 
 #include "CSnapinCacheEntry.h"
