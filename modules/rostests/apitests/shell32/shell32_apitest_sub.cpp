@@ -5,7 +5,7 @@
  * COPYRIGHT:   Copyright 2020-2024 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 
-// This program is used in SHChangeNotify and ShellExecCmdLine testcases.
+// This program is used in SHChangeNotify, ShellExecCmdLine, and ShellState testcases.
 
 #include "shelltest.h"
 #include "shell32_apitest_sub.h"
@@ -308,6 +308,29 @@ static INT_PTR OnShellNotify(HWND hwnd, WPARAM wParam, LPARAM lParam)
     return TRUE;
 }
 
+static LRESULT OnCopyData(HWND hwnd, LPARAM lParam)
+{
+    COPYDATASTRUCT *cds = (COPYDATASTRUCT*)lParam;
+
+    if (!cds || hwnd != 0 || cds->dwData != ID_SHSTATE)
+        return 0;
+
+    PSHELLSTATE_SUB sub = (PSHELLSTATE_SUB)cds->lpData;
+    if (sub->bGetSet && sub->dwMask == SSF_NOCONFIRMRECYCLE)
+    {
+        SHGetSetSettings(&sub->ss, sub->dwMask, FALSE);
+        // Flip the flag
+        sub->ss.fNoConfirmRecycle = !sub->ss.fNoConfirmRecycle;
+        SHGetSetSettings(&sub->ss, sub->dwMask, TRUE);
+        // Flip back
+        sub->ss.fNoConfirmRecycle = !sub->ss.fNoConfirmRecycle;
+        SHGetSetSettings(&sub->ss, sub->dwMask, TRUE);
+        return 1;
+    }
+    SHGetSetSettings(&sub->ss, sub->dwMask, sub->bSet);
+    return 1;
+}
+
 static LRESULT CALLBACK SubWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     switch (uMsg)
@@ -321,6 +344,9 @@ static LRESULT CALLBACK SubWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARA
 
         case WM_SHELL_NOTIFY:
             return OnShellNotify(hwnd, wParam, lParam);
+
+        case WM_COPYDATA:
+            return OnCopyData((HWND)wParam, lParam);
 
         case WM_DESTROY:
             OnDestroy(hwnd);
