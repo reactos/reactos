@@ -134,6 +134,7 @@ INT cmd_time(LPTSTR param)
     LPTSTR* arg;
     INT argc;
     INT i;
+    BOOL bLineComplete;
     INT nTimeString = -1;
     TCHAR szTime[40];
 
@@ -177,14 +178,14 @@ INT cmd_time(LPTSTR param)
         if (nTimeString == -1)
         {
             ConOutResPuts(STRING_TIME_HELP2);
-            ConInString(szTime, ARRAYSIZE(szTime));
+            bLineComplete = ConInString(szTime, ARRAYSIZE(szTime));
 
             TRACE("\'%s\'\n", debugstr_aw(szTime));
 
             while (*szTime && szTime[_tcslen(szTime) - 1] < _T(' '))
                 szTime[_tcslen(szTime) - 1] = _T('\0');
 
-            if (ParseTime(szTime))
+            if (bLineComplete && ParseTime(szTime))
             {
                 freep(arg);
                 return 0;
