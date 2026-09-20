@@ -149,9 +149,11 @@ PciComputeNewCurrentSettings(IN PPCI_PDO_EXTENSION PdoExtension,
                 /* Interrupt resource */
                 case CmResourceTypeInterrupt:
 
-                    /* Make sure it's the only PCI interrupt */
-                    ASSERT(InterruptResource == NULL);
-                    InterruptResource = Partial;
+                    /* MSI-X grants one descriptor per message, a line comes alone */
+                    ASSERT((InterruptResource == NULL) ||
+                           (Partial->Flags & CM_RESOURCE_INTERRUPT_MESSAGE));
+                    if (InterruptResource == NULL)
+                        InterruptResource = Partial;
 
                     /* A message grant packs its message count into the level and
                      * has no line to report, it gets programmed at start instead */
@@ -751,6 +753,226 @@ PciAddCurrentPlacementRequirement(
     return 1;
 }
 
+static
+VOID
+NTAPI
+PciFillMessageRequirement(
+    _Out_ PIO_RESOURCE_DESCRIPTOR Descriptor,
+    _In_ ULONG MessageCount,
+    _In_ BOOLEAN HasLineFallback)
+{
+    Descriptor->Type = CmResourceTypeInterrupt;
+    Descriptor->ShareDisposition = CmResourceShareDeviceExclusive;
+    Descriptor->Flags = CM_RESOURCE_INTERRUPT_LATCHED | CM_RESOURCE_INTERRUPT_MESSAGE;
+
+    /* Otherwise the arbiter ranks the wired line ahead of the messages */
+    if (HasLineFallback)
+        Descriptor->Option = IO_RESOURCE_PREFERRED;
+
+    Descriptor->u.Interrupt.MinimumVector = CM_RESOURCE_INTERRUPT_MESSAGE_TOKEN - MessageCount + 1;
+    Descriptor->u.Interrupt.MaximumVector = CM_RESOURCE_INTERRUPT_MESSAGE_TOKEN;
+}
+
+/* The second list starts right after the descriptors of the first one */
+static
+PIO_RESOURCE_REQUIREMENTS_LIST
+NTAPI
+PciAllocateTwoIoRequirementsLists(
+    _In_ ULONG FirstCount,
+    _In_ ULONG SecondCount,
+    _In_ ULONG BusNumber,
+    _In_ ULONG SlotNumber)
+{
+    PIO_RESOURCE_REQUIREMENTS_LIST RequirementsList;
+    PIO_RESOURCE_LIST Second;
+    SIZE_T Size;
+
+    Size = FIELD_OFFSET(IO_RESOURCE_REQUIREMENTS_LIST, List[0].Descriptors) +
+           (FirstCount * sizeof(IO_RESOURCE_DESCRIPTOR)) +
+           FIELD_OFFSET(IO_RESOURCE_LIST, Descriptors) +
+           (SecondCount * sizeof(IO_RESOURCE_DESCRIPTOR));
+
+    RequirementsList = ExAllocatePoolWithTag(PagedPool, Size, 'BicP');
+    if (!RequirementsList)
+        return NULL;
+
+    RtlZeroMemory(RequirementsList, Size);
+    RequirementsList->AlternativeLists = 2;
+    RequirementsList->BusNumber = BusNumber;
+    RequirementsList->SlotNumber = SlotNumber;
+    RequirementsList->InterfaceType = PCIBus;
+    RequirementsList->ListSize = (ULONG)Size;
+    RequirementsList->List[0].Count = FirstCount;
+    RequirementsList->List[0].Version = 1;
+    RequirementsList->List[0].Revision = 1;
+
+    Second = (PIO_RESOURCE_LIST)&RequirementsList->List[0].Descriptors[FirstCount];
+    Second->Count = SecondCount;
+    Second->Version = 1;
+    Second->Revision = 1;
+
+    return RequirementsList;
+}
+
+/* Writes the BAR requirements, or only counts them when Descriptor is NULL */
+static
+ULONG
+NTAPI
+PciAddBarRequirements(
+    _In_ PPCI_PDO_EXTENSION PdoExtension,
+    _In_ PPCI_COMMON_HEADER PciData,
+    _Out_opt_ PIO_RESOURCE_DESCRIPTOR Descriptor)
+{
+    PIO_RESOURCE_DESCRIPTOR Limit, Current, First, Next;
+    ULONG Count = 0, i;
+
+    if (!PdoExtension->Resources)
+        return 0;
+
+    Limit = PdoExtension->Resources->Limit;
+    Current = Descriptor;
+    for (i = 0; i < (PCI_TYPE0_ADDRESSES + 1); i++)
+    {
+        /* Skip unimplemented BARs and bridge windows, neither asks for a range */
+        if (!PciIsRequirementDescriptor(&Limit[i]))
+            continue;
+
+        if (!Descriptor)
+        {
+            /* A resizable BAR also asks for larger sizes, a decoding one to keep its range */
+            Count++;
+            Count += PciAddResizableBarRequirements(PdoExtension, i, &Limit[i], NULL);
+            Count += PciAddCurrentPlacementRequirement(PdoExtension, PciData->Command, i, NULL);
+            continue;
+        }
+
+        /* Larger resizable sizes, then the current placement, then the default size */
+        First = Current;
+        Current += PciAddResizableBarRequirements(PdoExtension, i, &Limit[i], Current);
+        Current += PciAddCurrentPlacementRequirement(PdoExtension, PciData->Command, i, Current);
+
+        /* A BAR decodes for one function only, so it cannot be shared */
+        *Current = Limit[i];
+        Current->ShareDisposition = CmResourceShareDeviceExclusive;
+        Current++;
+
+        /* The first choice for the BAR is preferred and every later one is its alternative */
+        First->Option |= IO_RESOURCE_PREFERRED;
+        for (Next = First + 1; Next < Current; Next++)
+            Next->Option |= IO_RESOURCE_ALTERNATIVE;
+    }
+
+    return Descriptor ? (ULONG)(Current - Descriptor) : Count;
+}
+
+/**
+ * @brief
+ * Writes the interrupt requirements, or only counts them when Descriptor is NULL.
+ *
+ * @param[out] Descriptor
+ * The first descriptor to write, NULL to count.
+ *
+ * @param[in] Messages
+ * The number of messages to ask for, 0 for a wired line only.
+ *
+ * @param[in] PerMessage
+ * TRUE for an MSI-X run, one descriptor per message and no line fallback.
+ * Otherwise a run is a single ranged descriptor followed by its fallbacks.
+ *
+ * @param[in] HaveInterrupt
+ * TRUE if the function also has a wired line.
+ *
+ * @return
+ * The number of descriptors.
+ */
+static
+ULONG
+NTAPI
+PciAddInterruptRequirements(
+    _Out_opt_ PIO_RESOURCE_DESCRIPTOR Descriptor,
+    _In_ ULONG Messages,
+    _In_ BOOLEAN PerMessage,
+    _In_ BOOLEAN HaveInterrupt)
+{
+    ULONG Count = 0;
+
+    if (PerMessage)
+    {
+        for (Count = 0; Count < Messages; Count++)
+        {
+            if (Descriptor)
+                PciFillMessageRequirement(&Descriptor[Count], 1, FALSE);
+        }
+
+        return Count;
+    }
+
+    /* The message count is the span below the message token */
+    if (Messages > 1)
+    {
+        if (Descriptor)
+            PciFillMessageRequirement(&Descriptor[Count], Messages, HaveInterrupt);
+        Count++;
+    }
+
+    if (Messages)
+    {
+        if (Descriptor)
+        {
+            PciFillMessageRequirement(&Descriptor[Count], 1, HaveInterrupt);
+            if (Messages > 1)
+                Descriptor[Count].Option = IO_RESOURCE_ALTERNATIVE;
+        }
+        Count++;
+    }
+
+    /* The wired line becomes the last resort once messages are offered */
+    if (HaveInterrupt)
+    {
+        if (Descriptor)
+        {
+            Descriptor[Count].Type = CmResourceTypeInterrupt;
+            Descriptor[Count].ShareDisposition = CmResourceShareShared;
+            Descriptor[Count].Flags = CM_RESOURCE_INTERRUPT_LEVEL_SENSITIVE;
+            if (Messages)
+                Descriptor[Count].Option = IO_RESOURCE_ALTERNATIVE;
+            Descriptor[Count].u.Interrupt.MinimumVector = 0;
+            Descriptor[Count].u.Interrupt.MaximumVector = MAXULONG;
+        }
+        Count++;
+    }
+
+    return Count;
+}
+
+static
+VOID
+NTAPI
+PciFillRequirementList(
+    _In_ PPCI_PDO_EXTENSION PdoExtension,
+    _In_ PPCI_COMMON_HEADER PciData,
+    _Out_ PIO_RESOURCE_LIST List,
+    _In_ ULONG Messages,
+    _In_ BOOLEAN PerMessage,
+    _In_ BOOLEAN HaveInterrupt)
+{
+    PIO_RESOURCE_DESCRIPTOR Descriptor = List->Descriptors;
+    PCI_CONFIGURATOR_CONTEXT Context;
+
+    Descriptor += PciAddBarRequirements(PdoExtension, PciData, Descriptor);
+    Descriptor += PciAddInterruptRequirements(Descriptor, Messages, PerMessage, HaveInterrupt);
+
+    /* And finally any extra ranges this kind of function decodes on the side */
+    if (PdoExtension->AdditionalResourceCount)
+    {
+        RtlZeroMemory(&Context, sizeof(Context));
+        Context.PdoExtension = PdoExtension;
+        Context.Current = PciData;
+        PciConfigurators[PdoExtension->HeaderType].
+            GetAdditionalResourceDescriptors(&Context, PciData, Descriptor);
+    }
+}
+
 NTSTATUS
 NTAPI
 PciBuildRequirementsList(IN PPCI_PDO_EXTENSION PdoExtension,
@@ -758,42 +980,25 @@ PciBuildRequirementsList(IN PPCI_PDO_EXTENSION PdoExtension,
                          OUT PIO_RESOURCE_REQUIREMENTS_LIST* Buffer)
 {
     PIO_RESOURCE_REQUIREMENTS_LIST RequirementsList;
-    PIO_RESOURCE_DESCRIPTOR Descriptor, Limit, First, Next;
-    PCI_CONFIGURATOR_CONTEXT Context;
-    ULONG Count, i;
-    BOOLEAN HaveInterrupt;
+    ULONG Count, SecondCount, Bars, Messages;
+    BOOLEAN HaveInterrupt, PerMessage;
 
     PAGED_CODE();
-
-    /* Count the BAR limits that resource discovery found for this function */
-    Count = 0;
-    if (PdoExtension->Resources)
-    {
-        for (i = 0; i < (PCI_TYPE0_ADDRESSES + 1); i++)
-        {
-            if (!PciIsRequirementDescriptor(&PdoExtension->Resources->Limit[i]))
-                continue;
-
-            /* A resizable BAR also asks for the larger sizes it can decode */
-            Count++;
-            Count += PciAddResizableBarRequirements(PdoExtension,
-                                                    i,
-                                                    &PdoExtension->Resources->Limit[i],
-                                                    NULL);
-
-            /* And a BAR that already decodes a range also asks to keep it */
-            Count += PciAddCurrentPlacementRequirement(PdoExtension, PciData->Command, i, NULL);
-        }
-    }
 
     /* A device with an interrupt pin also needs a line routed to it */
     HaveInterrupt = (PdoExtension->InterruptPin) &&
                     !(PdoExtension->HackFlags & PCI_HACK_NO_ENUM_AT_ALL);
-    if (HaveInterrupt)
-        Count++;
 
-    /* And a bridge with legacy decodes enabled needs those ranges locked down */
-    Count += PdoExtension->AdditionalResourceCount;
+    /* An MSI-X run asks for one descriptor per message in a list of its own,
+     * a second list then keeps a single message with the line as its fallback */
+    Messages = PciGetRequestableMessageCount(PdoExtension, HaveInterrupt);
+    PerMessage = (PdoExtension->MessageInfo.Type == PciMessageMsiX) && (Messages > 1);
+
+    /* The BARs, the interrupts and any legacy decodes a bridge has to lock down */
+    Bars = PciAddBarRequirements(PdoExtension, PciData, NULL);
+    Count = Bars +
+            PciAddInterruptRequirements(NULL, Messages, PerMessage, HaveInterrupt) +
+            PdoExtension->AdditionalResourceCount;
 
     /* Check if the function turned out to need nothing after all */
     if (!Count)
@@ -815,62 +1020,42 @@ PciBuildRequirementsList(IN PPCI_PDO_EXTENSION PdoExtension,
         return STATUS_SUCCESS;
     }
 
-    RequirementsList = PciAllocateIoRequirementsList(Count,
-                                                     PdoExtension->ParentFdoExtension->BaseBus,
-                                                     PdoExtension->Slot.u.AsULONG);
+    if (PerMessage)
+    {
+        SecondCount = Bars +
+                      PciAddInterruptRequirements(NULL, 1, FALSE, HaveInterrupt) +
+                      PdoExtension->AdditionalResourceCount;
+
+        RequirementsList = PciAllocateTwoIoRequirementsLists(Count,
+                                                             SecondCount,
+                                                             PdoExtension->ParentFdoExtension->BaseBus,
+                                                             PdoExtension->Slot.u.AsULONG);
+    }
+    else
+    {
+        RequirementsList = PciAllocateIoRequirementsList(Count,
+                                                         PdoExtension->ParentFdoExtension->BaseBus,
+                                                         PdoExtension->Slot.u.AsULONG);
+    }
+
     if (!RequirementsList)
         return STATUS_INSUFFICIENT_RESOURCES;
 
-    Descriptor = RequirementsList->List[0].Descriptors;
+    PciFillRequirementList(PdoExtension,
+                           PciData,
+                           &RequirementsList->List[0],
+                           Messages,
+                           PerMessage,
+                           HaveInterrupt);
 
-    /* Emit the requirements of each BAR that decoded something during discovery */
-    if (PdoExtension->Resources)
+    if (PerMessage)
     {
-        Limit = PdoExtension->Resources->Limit;
-        for (i = 0; i < (PCI_TYPE0_ADDRESSES + 1); i++)
-        {
-            /* Skip unimplemented BARs and bridge windows, neither asks for a range */
-            if (!PciIsRequirementDescriptor(&Limit[i]))
-                continue;
-
-            /* Larger resizable sizes, then the current placement, then the default size */
-            First = Descriptor;
-            Descriptor += PciAddResizableBarRequirements(PdoExtension, i, &Limit[i], Descriptor);
-            Descriptor += PciAddCurrentPlacementRequirement(PdoExtension,
-                                                            PciData->Command,
-                                                            i,
-                                                            Descriptor);
-
-            /* A BAR decodes for one function only, so it cannot be shared */
-            *Descriptor = Limit[i];
-            Descriptor->ShareDisposition = CmResourceShareDeviceExclusive;
-            Descriptor++;
-
-            /* The first choice for the BAR is preferred and every later one is its alternative */
-            First->Option |= IO_RESOURCE_PREFERRED;
-            for (Next = First + 1; Next < Descriptor; Next++)
-                Next->Option |= IO_RESOURCE_ALTERNATIVE;
-        }
-    }
-
-    if (HaveInterrupt)
-    {
-        Descriptor->Type = CmResourceTypeInterrupt;
-        Descriptor->ShareDisposition = CmResourceShareShared;
-        Descriptor->Flags = CM_RESOURCE_INTERRUPT_LEVEL_SENSITIVE;
-        Descriptor->u.Interrupt.MinimumVector = 0;
-        Descriptor->u.Interrupt.MaximumVector = MAXULONG;
-        Descriptor++;
-    }
-
-    /* And finally any extra ranges this kind of function decodes on the side */
-    if (PdoExtension->AdditionalResourceCount)
-    {
-        RtlZeroMemory(&Context, sizeof(Context));
-        Context.PdoExtension = PdoExtension;
-        Context.Current = PciData;
-        PciConfigurators[PdoExtension->HeaderType].
-            GetAdditionalResourceDescriptors(&Context, PciData, Descriptor);
+        PciFillRequirementList(PdoExtension,
+                               PciData,
+                               (PIO_RESOURCE_LIST)&RequirementsList->List[0].Descriptors[Count],
+                               1,
+                               FALSE,
+                               HaveInterrupt);
     }
 
     *Buffer = RequirementsList;
@@ -1556,6 +1741,9 @@ PciGetEnhancedCapabilities(IN PPCI_PDO_EXTENSION PdoExtension,
     /* And whether any of its BARs can be resized */
     PciGetResizableBarCapability(PdoExtension);
 
+    /* And whether it can raise message interrupts instead of a wired line */
+    PciGetMessageCapabilities(PdoExtension);
+
     /* At the very end of all this, does this device not have power management? */
     if (PdoExtension->HackFlags & PCI_HACK_NO_PM_CAPS)
     {
@@ -2182,6 +2370,9 @@ PciScanBus(IN PPCI_FDO_EXTENSION DeviceExtension)
 
             /* Now configure the BARs */
             Status = PciGetFunctionLimits(NewExtension, PciData, HackFlags);
+
+            /* With the BAR limits known, pick MSI-X or MSI */
+            PciSelectMessageType(NewExtension);
 
             /* Power up the device */
             PciSetPowerManagedDevicePowerState(NewExtension, PowerDeviceD0, FALSE);

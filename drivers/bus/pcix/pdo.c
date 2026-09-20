@@ -237,6 +237,15 @@ PciPdoIrpStartDevice(IN PIRP Irp,
 
     /* Update resource information now that the device is powered up and active */
     Status = PciSetResources(DeviceExtension, DoReset, TRUE);
+
+    /* With the windows decoding, the granted interrupt can be programmed */
+    if (NT_SUCCESS(Status))
+    {
+        Status = PciProgramGrantedInterrupt(DeviceExtension,
+                                            IoStackLocation->Parameters.
+                                            StartDevice.AllocatedResources);
+    }
+
     if (!NT_SUCCESS(Status))
     {
         /* That failed, so cancel the transition */
