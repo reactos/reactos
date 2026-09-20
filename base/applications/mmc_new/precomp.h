@@ -29,8 +29,8 @@
 #include <reactos/debug.h>
 #include <shellutils.h>
 #include <shellapi.h>
+#include <msxml2.h>
 #include <mmc.h>
-
 
 #define WM_USER_CLOSE_CHILD (WM_USER + 1)
 
@@ -46,6 +46,7 @@ typedef enum _DOCUMENT_MODE
     DocumentMode_UserSDI
 } DOCUMENT_MODE, *PDOCUMENT_MODE;
 
+#include "mscfile.h"
 
 #include "CSnapinCacheEntry.h"
 #include "CSnapin.h"

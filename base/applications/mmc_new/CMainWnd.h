@@ -24,7 +24,7 @@ class CMainWnd :
 private:
     CWndProcThunk m_FrameThunk;
 
-    int m_nConsoleNumber;
+    int m_ConsoleNumber;
     CAtlString m_ConsoleTitle;
     HMENU m_hMenuConsoleSmall;
     HMENU m_hMenuConsoleLarge;
@@ -48,6 +48,7 @@ private:
 
 public:
     CWindow m_MDIClient;
+    CAtlString m_Filename;
 
 public:
 
@@ -146,7 +147,7 @@ private:
 
     void CreateNewConsoleTitle(CAtlString& str)
     {
-        DWORD_PTR args[1] = { (DWORD_PTR)(m_nConsoleNumber) };
+        DWORD_PTR args[1] = { (DWORD_PTR)(m_ConsoleNumber) };
         str.LoadString(IDS_CONSOLETITLE);
 
         LPTSTR lpTarget = NULL;
@@ -191,6 +192,10 @@ private:
     LRESULT LoadSnapinCache();
     void UpdateLayout();
     void UpdateViews();
+
+    DWORD CreateNewFilename(PWSTR pBuffer, DWORD dwSize, DWORD Number);
+    LPWSTR ProgramModeToString();
+    LRESULT SaveMscFile(CAtlString &FileName);
 
 public:
     CAtlString *GetConsoleTitle();

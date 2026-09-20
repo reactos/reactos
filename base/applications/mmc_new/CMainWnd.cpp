@@ -24,7 +24,7 @@ static TBBUTTON TbButtons[] =
 };
 
 CMainWnd::CMainWnd()
-    : m_nConsoleNumber(0)
+    : m_ConsoleNumber(0)
     , m_DocumentMode(DocumentMode_Author)
     , m_LogicalReadOnly(FALSE)
     , m_PreventViewCustomization(FALSE)
@@ -190,7 +190,7 @@ CMainWnd::OnFileNew(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
     hChild = (HWND)m_MDIClient.SendMessage(WM_MDICREATE, 0, (LONG_PTR)&mcs);
     if (hChild)
     {
-        m_nConsoleNumber++;
+        m_ConsoleNumber++;
     }
     else
     {
@@ -211,47 +211,51 @@ CMainWnd::OnFileSave(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
     CConsoleWnd* child = GetActiveChildInfo();
     if (child == NULL)
         return 0;
-    if (child->m_Filename.IsEmpty())
+
+    if (m_Filename.IsEmpty())
         return OnFileSaveAs(wNotifyCode, wID, hWndCtl, bHandled);
-    // save, and if fails clear pFileName
-    return 0;
+
+    return SaveMscFile(m_Filename);
 }
 
 LRESULT
 CMainWnd::OnFileSaveAs(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
 {
     OPENFILENAME saveas;
-    TCHAR szPath[MAX_PATH];
+    WCHAR szPath[MAX_PATH];
+
     CConsoleWnd* child = GetActiveChildInfo();
     if (child == NULL)
         return 0;
+
     ZeroMemory(&saveas, sizeof(saveas));
-    if (!child->m_Filename.IsEmpty())
+    if (!m_Filename.IsEmpty())
     {
-        _tcscpy(szPath, child->m_Filename);
+        wcscpy(szPath, m_Filename);
     }
     else
     {
         child->GetWindowText(szPath, MAX_PATH);
-        _tcscat(szPath, TEXT(".msc"));
+        CreateNewFilename(szPath, MAX_PATH, (DWORD)m_ConsoleNumber);
+        wcscat(szPath, L".msc");
     }
+
     saveas.lStructSize = sizeof(OPENFILENAME);
     saveas.hwndOwner = m_hWnd;
     saveas.hInstance = _AtlBaseModule.GetModuleInstance();
-    saveas.lpstrFilter = L"MSC Files\0*.msc\0";
+    saveas.lpstrFilter = L"MSC Files (*.msc)\0*.msc\0All Files (*.*)\0*.*\0";
     saveas.lpstrFile = szPath;
     saveas.nMaxFile = MAX_PATH;
-    saveas.Flags = OFN_HIDEREADONLY | OFN_PATHMUSTEXIST | OFN_OVERWRITEPROMPT;
+    saveas.Flags = OFN_EXPLORER | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT;
     saveas.lpstrDefExt = L"msc";
-    if (GetSaveFileName(&saveas))
+
+    if (GetSaveFileNameW(&saveas))
     {
-        child->m_Filename = szPath;
-        return OnFileSave(wNotifyCode, wID, hWndCtl, bHandled);
+        m_Filename = szPath;
+        return SaveMscFile(m_Filename);
     }
-    else
-    {
-        return 0;
-    }
+
+    return 0;
 }
 
 LRESULT
@@ -581,3 +585,136 @@ CMainWnd::SetPreventViewCustomization(BOOL PreventCustomization)
     m_PreventViewCustomization = PreventCustomization;
 }
 
+DWORD
+CMainWnd::CreateNewFilename(PWSTR pBuffer, DWORD dwSize, DWORD Number)
+{
+    DWORD_PTR args[1] = { (DWORD_PTR)Number };
+    CAtlString str;
+
+    str.LoadString(IDS_CONSOLETITLE);
+
+    return FormatMessageW(FORMAT_MESSAGE_FROM_STRING | FORMAT_MESSAGE_ARGUMENT_ARRAY,
+                            str.GetString(), 0, 0, pBuffer, dwSize, (va_list*)args);
+}
+
+LPWSTR
+CMainWnd::ProgramModeToString()
+{
+    switch (m_DocumentMode)
+    {
+        case DocumentMode_Author:
+            return (LPWSTR)L"Author";
+
+        case DocumentMode_User:
+            return (LPWSTR)L"User";
+
+        case DocumentMode_UserMDI:
+            return (LPWSTR)L"UserMDI";
+
+        case DocumentMode_UserSDI:
+            return (LPWSTR)L"UserSDI";
+
+        default:
+            return (LPWSTR)L"";
+    }
+}
+
+HRESULT
+CMainWnd::SaveMscFile(CAtlString &FileName)
+{
+    IXMLDOMElement *pRootNode = NULL;
+    IXMLDOMElement *pNode = NULL;
+    IXMLDOMElement *pFrameStateNode = NULL;
+    IXMLDOMElement *pViewsNode = NULL;
+    IXMLDOMElement *pScopeTreeNode = NULL;
+    IXMLDOMElement *pSnapinCacheNode = NULL;
+    IXMLDOMElement *pSnapinNode = NULL;
+    IXMLDOMElement *pNodesNode = NULL;
+    POSITION pos;
+    CConsoleWnd* console;
+    HRESULT hr = S_OK;
+
+    MscFile *mscFile = new MscFile(FileName.GetString());
+
+    CHK_HR(mscFile->CreateAndInitDOM());
+
+    /* <?xml version="1.0"?> */
+    CHK_HR(mscFile->CreateAndAddPINode(L"xml", L"version='1.0'"));
+
+    /* <MMC_ConsoleFile ConsoleVersion="2.0" ProgramMode="Author"> */
+    CHK_HR(mscFile->CreateElement(L"MMC_ConsoleFile", &pRootNode));
+    CHK_HR(mscFile->CreateAndAddAttributeNode(L"ConsoleVersion", L"2.0", pRootNode));
+    CHK_HR(mscFile->CreateAndAddAttributeNode(L"ProgramMode", ProgramModeToString(), pRootNode));
+
+    /* <ConsoleFileID> */
+    CHK_HR(mscFile->CreateAndAddElementNode(L"ConsoleFileID", pRootNode, &pNode));
+    CHK_HR(mscFile->CreateAndAddTextNode(L"{Random GUID}", pNode));
+    SAFE_RELEASE(pNode); /* </ConsoleFileID> */
+
+    /* <FrameState> */
+    CHK_HR(mscFile->CreateAndAddElementNode(L"FrameState", pRootNode, &pFrameStateNode));
+    CHK_HR(mscFile->CreateAndAddAttributeNode(L"ShowStatusBar", L"true", pFrameStateNode));
+    if ((m_DocumentMode != DocumentMode_Author) && (m_LogicalReadOnly))
+        CHK_HR(mscFile->CreateAndAddAttributeNode(L"LogicalReadOnly", L"true", pFrameStateNode));
+    if ((m_DocumentMode != DocumentMode_Author) && (m_PreventViewCustomization))
+        CHK_HR(mscFile->CreateAndAddAttributeNode(L"PreventViewCustomization", L"true", pFrameStateNode));
+
+    mscFile->SaveWindowPlacement(this, pFrameStateNode);
+
+    SAFE_RELEASE(pFrameStateNode); /* </FrameState> */
+
+    /* <Views> */
+    CHK_HR(mscFile->CreateAndAddElementNode(L"Views", pRootNode, &pViewsNode));
+    pos = m_ViewList.GetHeadPosition();
+    do
+    {
+        console = (CConsoleWnd*)m_ViewList.GetNext(pos);
+        if (console)
+            console->SaveView(mscFile, pViewsNode);
+
+    } while (pos != NULL);
+    SAFE_RELEASE(pViewsNode); /* </Views> */
+
+    /* <ScopeTree> */
+    CHK_HR(mscFile->CreateAndAddElementNode(L"ScopeTree", pRootNode, &pScopeTreeNode));
+
+    /* <SnapinCache> */
+    CHK_HR(mscFile->CreateAndAddElementNode(L"SnapinCache", pScopeTreeNode, &pSnapinCacheNode));
+
+    for (int i = 0; i < GetSnapinCacheCount(); i++)
+    {
+        CSnapinCacheEntry *entry = GetSnapinCacheEntry(i);
+        if (entry)
+        {
+            /* <Snapin> */
+            CHK_HR(mscFile->CreateAndAddElementNode(L"Snapin", pSnapinCacheNode, &pSnapinNode));
+            CHK_HR(mscFile->CreateAndAddAttributeNode(L"CLSID", entry->GuidString().GetString(), pSnapinNode));
+            CHK_HR(mscFile->CreateAndAddAttributeNode(L"AllExtensionsEnabled", L"true", pSnapinNode)); /* FIXME */
+            CHK_HR(mscFile->CreateAndAddAttributeNode(L"Name", entry->Name().GetString(), pSnapinNode));
+            CHK_HR(mscFile->CreateAndAddAttributeNode(L"Provider", entry->Provider().GetString(), pSnapinNode));
+            SAFE_RELEASE(pSnapinNode); /* </Snapin> */
+        }
+    }
+    SAFE_RELEASE(pSnapinCacheNode); /* </SnapinCache> */
+
+    /* <Nodes> */
+    CHK_HR(mscFile->CreateAndAddElementNode(L"Nodes", pScopeTreeNode, &pNodesNode));
+#if 0
+    if (m_RootNode)
+        m_RootNode->SaveNode(mscFile, pNodesNode);
+#endif
+    SAFE_RELEASE(pNodesNode); /* </Nodes> */
+
+    SAFE_RELEASE(pScopeTreeNode); /* </ScopeTree> */
+
+    CHK_HR(mscFile->AppendChildToParent(pRootNode));
+
+    CHK_HR(mscFile->SaveDOM());
+
+CleanUp:
+    SAFE_RELEASE(pRootNode); /* </MMC_ConsoleFile> */
+
+    delete mscFile;
+
+    return hr;
+}

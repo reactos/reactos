@@ -38,10 +38,6 @@ private:
     CSnapin *m_ViewSelectedNode;
 
 public:
-    CAtlString m_Filename;
-
-public:
-
     BEGIN_MSG_MAP(CConsoleWnd)
         MESSAGE_HANDLER(WM_CREATE, OnCreate)
         MESSAGE_HANDLER(WM_DESTROY, OnDestroy)
@@ -102,6 +98,8 @@ public:
     VOID SetActionsPaneVisible(BOOL bVisible);
 
     VOID UpdateView();
+
+    VOID SaveView(MscFile *mscFile, IXMLDOMElement *pParentElement);
 
     // +IConsole
     STDMETHODIMP QueryInterface(REFIID riid, void **ppvObject);

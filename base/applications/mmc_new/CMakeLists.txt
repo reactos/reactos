@@ -10,6 +10,7 @@ list(APPEND CPP_SOURCE
     COptionsDialog.cpp
     CSnapin.cpp
     CSnapinCacheEntry.cpp
+    mscfile.cpp
     mmc.cpp
     # This is here so that they show up in visual studio:
     CAddDialog.h
@@ -26,7 +27,7 @@ add_rc_deps(mmc.rc ${CMAKE_CURRENT_SOURCE_DIR}/resources/mmc.ico)
 add_executable(mmc_new ${CPP_SOURCE} mmc.rc)
 set_module_type(mmc_new win32gui UNICODE)
 target_link_libraries(mmc_new uuid cpprt mmc_uuids)
-add_importlibs(mmc_new ole32 shlwapi shell32 advapi32 comdlg32 comctl32 user32 gdi32 msvcrt kernel32 ntdll)
+add_importlibs(mmc_new oleaut32 ole32 shlwapi shell32 advapi32 comdlg32 comctl32 user32 gdi32 msvcrt kernel32 ntdll)
 add_pch(mmc_new precomp.h CPP_SOURCE)
 add_dependencies(mmc_new psdk)
 add_cd_file(TARGET mmc_new DESTINATION reactos/system32 FOR all)

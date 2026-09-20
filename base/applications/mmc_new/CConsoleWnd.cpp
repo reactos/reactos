@@ -251,6 +251,41 @@
         UpdateTreeView();
     }
 
+    VOID CConsoleWnd::SaveView(MscFile *mscFile, IXMLDOMElement *pParentElement)
+    {
+        IXMLDOMElement *pViewElement = NULL;
+        IXMLDOMElement *pViewOptionsElement = NULL;
+        WCHAR szBuffer[32];
+        HRESULT hr = S_OK;
+
+        /* <View ID="1" ScopePaneWidth="292" ActionsPaneWidth="-1"> */
+        CHK_HR(mscFile->CreateAndAddElementNode(L"View", pParentElement, &pViewElement));
+        _swprintf(szBuffer, L"%d", m_ViewId);
+        CHK_HR(mscFile->CreateAndAddAttributeNode(L"ID", szBuffer, pViewElement));
+        _swprintf(szBuffer, L"%d", m_iTreeViewWidth);
+        CHK_HR(mscFile->CreateAndAddAttributeNode(L"ScopePaneWidth", szBuffer, pViewElement));
+        _swprintf(szBuffer, L"%d", m_iActionsPaneWidth);
+        CHK_HR(mscFile->CreateAndAddAttributeNode(L"ActionsPaneWidth", szBuffer, pViewElement));
+
+        mscFile->SaveWindowPlacement(this, pViewElement);
+
+        /* <ViewOptions ViewMode="Report" ScopePaneVisible="true" ActionsPaneVisible="true" DescriptionBarVisible="false" DefaultColumn0Width="200" DefaultColumn1Width="0"/> */
+        CHK_HR(mscFile->CreateAndAddElementNode(L"ViewOptions", pViewElement, &pViewOptionsElement));
+        CHK_HR(mscFile->CreateAndAddAttributeNode(L"ViewMode", L"Report", pViewOptionsElement)); /* FIXME */
+        CHK_HR(mscFile->CreateAndAddAttributeNode(L"ScopePaneVisible", IsTreeViewVisible() ? L"true" : L"false", pViewOptionsElement));
+        if (!IsStatusBarVisible())
+            CHK_HR(mscFile->CreateAndAddAttributeNode(L"NoStatusBar", L"true", pViewOptionsElement));
+        CHK_HR(mscFile->CreateAndAddAttributeNode(L"ActionsPaneVisible", IsActionsPaneVisible() ? L"true" : L"false", pViewOptionsElement));
+        CHK_HR(mscFile->CreateAndAddAttributeNode(L"DescriptionBarVisible", IsDescriptionBarVisible() ? L"true" : L"false", pViewOptionsElement));
+        CHK_HR(mscFile->CreateAndAddAttributeNode(L"DefaultColumn0Width", L"200", pViewOptionsElement)); /* FIXME */
+        CHK_HR(mscFile->CreateAndAddAttributeNode(L"DefaultColumn1Width", L"0", pViewOptionsElement)); /* FIXME */
+        SAFE_RELEASE(pViewOptionsElement); /* </ViewOptions> */
+
+    CleanUp:
+        SAFE_RELEASE(pViewElement); /* </View> */
+    }
+
+
     // +IConsole
     STDMETHODIMP CConsoleWnd::QueryInterface(REFIID riid, void **ppvObject)
     {
