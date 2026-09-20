@@ -94,7 +94,7 @@ PspInitializeProcessSecurity(IN PEPROCESS Process,
         /* Set the new Token */
         if (NT_SUCCESS(Status))
         {
-            /* Initailize the fast reference */
+            /* Initialize the fast reference */
             ObInitializeFastReference(&Process->Token, NewToken);
         }
     }
