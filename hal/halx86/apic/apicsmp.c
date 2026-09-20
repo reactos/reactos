@@ -111,6 +111,8 @@ ApicStartApplicationProcessor(
     _In_ ULONG NTProcessorNumber,
     _In_ PHYSICAL_ADDRESS StartupLoc)
 {
+    APIC_VERSION_REGISTER ApicVersion;
+
     ASSERT(StartupLoc.HighPart == 0);
     ASSERT((StartupLoc.QuadPart & 0xFFF) == 0);
     ASSERT((StartupLoc.QuadPart & 0xFFF00FFF) == 0);
@@ -126,19 +128,24 @@ ApicStartApplicationProcessor(
     /* Give the APIC time to latch INIT before the first SIPI: MPS Spec - B.4 */
     KeStallExecutionProcessor(10000);
 
-    /* First Startup IPI */
-    ApicRequestGlobalInterrupt(HalpProcessorIdentity[NTProcessorNumber].LapicId, (StartupLoc.LowPart) >> 12,
-        APIC_MT_Startup, APIC_TGM_Edge, APIC_DSH_Destination);
+    /* 82489DX APICs don't support the STARTUP IPI: MPS Spec - B.4 */
+    ApicVersion.Long = ApicRead(APIC_VER);
+    if (ApicVersion.Version >= 0x10)
+    {
+        /* First Startup IPI */
+        ApicRequestGlobalInterrupt(HalpProcessorIdentity[NTProcessorNumber].LapicId, (StartupLoc.LowPart) >> 12,
+            APIC_MT_Startup, APIC_TGM_Edge, APIC_DSH_Destination);
 
-    /* Stall between SIPIs: MPS Spec - B.4 */
-    KeStallExecutionProcessor(200);
+        /* Stall between SIPIs: MPS Spec - B.4 */
+        KeStallExecutionProcessor(200);
 
-    /* Second Startup IPI, required unconditionally by the MP Spec */
-    ApicRequestGlobalInterrupt(HalpProcessorIdentity[NTProcessorNumber].LapicId, (StartupLoc.LowPart) >> 12,
-        APIC_MT_Startup, APIC_TGM_Edge, APIC_DSH_Destination);
+        /* Second Startup IPI, required unconditionally by the MP Spec */
+        ApicRequestGlobalInterrupt(HalpProcessorIdentity[NTProcessorNumber].LapicId, (StartupLoc.LowPart) >> 12,
+            APIC_MT_Startup, APIC_TGM_Edge, APIC_DSH_Destination);
 
-    /* Give the AP time to come up before returning */
-    KeStallExecutionProcessor(200);
+        /* Give the AP time to come up before returning */
+        KeStallExecutionProcessor(200);
+    }
 }
 
 /* HAL IPI FUNCTIONS **********************************************************/
