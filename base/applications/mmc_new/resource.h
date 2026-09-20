@@ -29,7 +29,12 @@
 #define IDM_FILE_SAVEAS        1013
 #define IDM_FILE_ADD           1014
 #define IDM_FILE_OPTIONS       1015
-#define IDM_FILE_EXIT          1016
+#define IDM_FILE_RECENT1       1016
+#define IDM_FILE_RECENT2       1017
+#define IDM_FILE_RECENT3       1018
+#define IDM_FILE_RECENT4       1019
+#define IDM_FILE_RECENT_SEP    1020
+#define IDM_FILE_EXIT          1021
 
 #define IDM_ACTION_NEW         1050
 #define IDM_ACTION_RENAME      1051

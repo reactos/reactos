@@ -46,6 +46,8 @@ private:
 
     CSnapin *m_RootNode;
 
+    CAtlList<CAtlString> m_RecentFilesList;
+
 public:
     CWindow m_MDIClient;
     CAtlString m_Filename;
@@ -123,6 +125,7 @@ private:
             SetMenu(m_hMenuConsoleSmall);
         else
             SetMenu(m_hMenuConsoleLarge);
+        UpdateRecentFilesMenu();
     }
 
     void UpdateTitle()
@@ -193,6 +196,9 @@ private:
     void UpdateLayout();
     void UpdateViews();
 
+    VOID UpdateRecentFilesMenu();
+    VOID LoadRecentFiles();
+    VOID AddToRecentFiles(CAtlString &FileName);
     DWORD CreateNewFilename(PWSTR pBuffer, DWORD dwSize, DWORD Number);
     LPWSTR ProgramModeToString();
     LRESULT SaveMscFile(CAtlString &FileName);

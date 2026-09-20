@@ -56,6 +56,7 @@ CMainWnd::CMainWnd()
     DeleteObject(hToolBarBitmap);
 
     LoadSnapinCache();
+    LoadRecentFiles();
 }
 
 CMainWnd::~CMainWnd()
@@ -252,7 +253,10 @@ CMainWnd::OnFileSaveAs(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
     if (GetSaveFileNameW(&saveas))
     {
         m_Filename = szPath;
-        return SaveMscFile(m_Filename);
+        LRESULT ret = SaveMscFile(m_Filename);
+        if (ret == ERROR_SUCCESS)
+            AddToRecentFiles(m_Filename);
+        return ret;
     }
 
     return 0;
@@ -583,6 +587,119 @@ void
 CMainWnd::SetPreventViewCustomization(BOOL PreventCustomization)
 {
     m_PreventViewCustomization = PreventCustomization;
+}
+
+VOID
+CMainWnd::UpdateRecentFilesMenu()
+{
+    MENUITEMINFOW mi;
+    HMENU hMenu = GetMenu();
+
+    mi.cbSize = sizeof(MENUITEMINFOW);
+    mi.fMask = MIIM_ID | MIIM_STRING | MIIM_FTYPE;
+    mi.fType = MFT_STRING;
+    mi.wID = IDM_FILE_RECENT1;
+
+    RemoveMenu(hMenu, IDM_FILE_RECENT_SEP, MF_BYCOMMAND);
+
+    INT i = 0;
+    CAtlString ValueName;
+    POSITION pos = m_RecentFilesList.GetHeadPosition();
+    while (pos != NULL)
+    {
+        RemoveMenu(hMenu, IDM_FILE_RECENT1 + i, MF_BYCOMMAND);
+
+        CAtlString ValueData = m_RecentFilesList.GetNext(pos);
+
+        mi.dwTypeData = ValueData.GetString();
+
+        InsertMenuItemW(hMenu, IDM_FILE_EXIT, FALSE, &mi);
+        mi.wID++;
+
+        i++;
+        if (i >= 4)
+            break;
+    }
+
+    mi.fType = MFT_SEPARATOR;
+    mi.fMask = MIIM_FTYPE | MIIM_ID;
+    InsertMenuItemW(hMenu, IDM_FILE_EXIT, FALSE, &mi);
+}
+
+VOID
+CMainWnd::LoadRecentFiles()
+{
+    CRegKey RecentFilesKey;
+    if (ERROR_SUCCESS == RecentFilesKey.Open(HKEY_CURRENT_USER, L"SOFTWARE\\Microsoft\\MMC_NEW\\Recent Files List", KEY_READ))
+    {
+        WCHAR pathBuf[MAX_PATH];
+        ULONG pathLength, i;
+        DWORD err;
+
+        CAtlString valueName;
+        CAtlString fileName;
+
+        for (i = 0; i < 4; i++)
+        {
+            valueName.Format(L"File%u", i + 1);
+            pathLength = _countof(pathBuf);
+            err = RecentFilesKey.QueryStringValue(valueName.GetString(),
+                                                  pathBuf,
+                                                  &pathLength);
+            if (err == ERROR_SUCCESS)
+            {
+                CAtlString fileName(pathBuf);
+                m_RecentFilesList.AddTail(fileName);
+            }
+        }
+
+        RecentFilesKey.Close();
+    }
+
+    UpdateRecentFilesMenu();
+}
+
+VOID
+CMainWnd::AddToRecentFiles(CAtlString &FileName)
+{
+    POSITION pos = m_RecentFilesList.Find(FileName);
+    if (pos == NULL)
+    {
+        /* Insert at top */
+        m_RecentFilesList.AddHead(FileName);
+        if (m_RecentFilesList.GetCount() > 4)
+            m_RecentFilesList.RemoveTail();
+    }
+    else
+    {
+        /* Move to top */
+        /* m_RecentFilesList.MoveToHead(pos); */
+        CAtlString str = m_RecentFilesList.GetAt(pos);
+        m_RecentFilesList.RemoveAt(pos);
+        m_RecentFilesList.AddHead(str);
+    }
+
+    /* Update the registry key */
+    CRegKey RecentFilesKey;
+    if (ERROR_SUCCESS == RecentFilesKey.Create(HKEY_CURRENT_USER, L"SOFTWARE\\Microsoft\\MMC_NEW\\Recent Files List"))
+    {
+        INT count = 1;
+        CAtlString ValueName;
+        pos = m_RecentFilesList.GetHeadPosition();
+        while (pos != NULL)
+        {
+            CAtlString ValueData = m_RecentFilesList.GetNext(pos);
+            ValueName.Format(L"File%u", count);
+            RecentFilesKey.SetStringValue(ValueName, ValueData);
+            count++;
+            if (count >= 5)
+                break;
+        }
+
+        RecentFilesKey.Close();
+    }
+
+    UpdateRecentFilesMenu();
 }
 
 DWORD
