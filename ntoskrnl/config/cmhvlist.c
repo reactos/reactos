@@ -1,9 +1,8 @@
 /*
- * PROJECT:         ReactOS Kernel
- * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            ntoskrnl/config/cmhvlist.c
- * PURPOSE:         Configuration Manager - Hives file list management
- * PROGRAMMERS:     Hermes BELUSCA - MAITO
+ * PROJECT:     ReactOS Kernel
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Configuration Manager - Hives file list management
+ * COPYRIGHT:   Copyright 2012-2026 Hermès Bélusca-Maïto <hermes.belusca-maito@reactos.org>
  */
 
 /* INCLUDES *******************************************************************/
@@ -80,7 +79,6 @@ CmpGetHiveName(
     HiveName->Buffer = ExAllocatePoolWithTag(PagedPool, NameSize, TAG_CM);
     if (!HiveName->Buffer)
     {
-        /* Fail */
         DPRINT1("CmpGetHiveName: Unable to allocate memory\n");
         return FALSE;
     }
@@ -130,7 +128,7 @@ CmpGetHiveName(
 NTSTATUS
 NTAPI
 CmpAddToHiveFileList(
-    _In_ PCMHIVE Hive)
+    _Inout_ PCMHIVE Hive)
 {
     NTSTATUS Status;
     OBJECT_ATTRIBUTES ObjectAttributes;
@@ -138,7 +136,6 @@ CmpAddToHiveFileList(
     UNICODE_STRING HivePath;
     PWSTR FilePath;
     ULONG Length;
-    OBJECT_NAME_INFORMATION DummyNameInfo;
     POBJECT_NAME_INFORMATION FileNameInfo;
 
     HivePath.Buffer = NULL;
@@ -151,7 +148,7 @@ CmpAddToHiveFileList(
                                NULL,
                                NULL);
     Status = ZwCreateKey(&KeyHandle,
-                         KEY_READ | KEY_WRITE,
+                         KEY_SET_VALUE,
                          &ObjectAttributes,
                          0,
                          NULL,
@@ -159,16 +156,17 @@ CmpAddToHiveFileList(
                          NULL);
     if (!NT_SUCCESS(Status))
     {
-        /* Fail */
         DPRINT1("CmpAddToHiveFileList: Failed to create or open the hive list (Status: 0x%08lx)\n", Status);
         return Status;
     }
 
-    /* Retrieve the name of the hive */
+    /* Retrieve the hive path.
+     * NOTE: On Vista+, the hive path is constructed in CmpLinkHiveToMaster().
+     * In ReactOS, its construction is instead deferred to this point, when
+     * the hive is added to the hive file list. */
     if (!CmpGetHiveName(Hive, &HivePath))
     {
-        /* Fail */
-        DPRINT1("CmpAddToHiveFileList: Unable to retrieve the hive name\n");
+        DPRINT1("CmpAddToHiveFileList: Unable to retrieve the hive path\n");
         Status = STATUS_NO_MEMORY;
         goto Quit;
     }
@@ -177,6 +175,7 @@ CmpAddToHiveFileList(
     if (!(Hive->Hive.HiveFlags & HIVE_VOLATILE))
     {
         /* Determine the right buffer size and allocate */
+        OBJECT_NAME_INFORMATION DummyNameInfo;
         Status = ZwQueryObject(Hive->FileHandles[HFILE_TYPE_PRIMARY],
                                ObjectNameInformation,
                                &DummyNameInfo,
@@ -213,7 +212,6 @@ CmpAddToHiveFileList(
         }
         else
         {
-            /* Fail */
             DPRINT1("CmpAddToHiveFileList: Hive file name query failed (Status: 0x%08lx)\n", Status);
             goto Quit;
         }
@@ -234,20 +232,20 @@ CmpAddToHiveFileList(
                            Length);
     if (!NT_SUCCESS(Status))
     {
-        /* Fail */
         DPRINT1("CmpAddToHiveFileList: Failed to add an entry in the hive list (Status: 0x%08lx)\n", Status);
     }
+
+    /* Capture the hive path and reset the local buffer so it doesn't get freed */
+    Hive->HiveRootPath = HivePath;
+    HivePath.Buffer = NULL;
 
 Quit:
     /* Cleanup and return status */
     if (HivePath.Buffer)
-    {
         ExFreePoolWithTag(HivePath.Buffer, TAG_CM);
-    }
     if (FileNameInfo)
-    {
         ExFreePoolWithTag(FileNameInfo, TAG_CM);
-    }
+
     ObCloseHandle(KeyHandle, KernelMode);
     return Status;
 }
@@ -255,12 +253,15 @@ Quit:
 VOID
 NTAPI
 CmpRemoveFromHiveFileList(
-    _In_ PCMHIVE Hive)
+    _Inout_ PCMHIVE Hive)
 {
     NTSTATUS Status;
     OBJECT_ATTRIBUTES ObjectAttributes;
     HANDLE KeyHandle;
-    UNICODE_STRING HivePath;
+
+    /* Do nothing if no hive path was captured, e.g. CmpAddToHiveFileList() failed */
+    if (Hive->HiveRootPath.Buffer == NULL)
+        return;
 
     /* Open the hive list key */
     InitializeObjectAttributes(&ObjectAttributes,
@@ -269,23 +270,22 @@ CmpRemoveFromHiveFileList(
                                NULL,
                                NULL);
     Status = ZwOpenKey(&KeyHandle,
-                       KEY_READ | KEY_WRITE,
+                       KEY_SET_VALUE,
                        &ObjectAttributes);
     if (!NT_SUCCESS(Status))
     {
-        /* Fail */
         DPRINT1("CmpRemoveFromHiveFileList: Failed to open the hive list (Status: 0x%08lx)\n", Status);
         return;
     }
 
-    /* Get the hive path name */
-    CmpGetHiveName(Hive, &HivePath);
+    /* Delete the hive path from the list */
+    ZwDeleteValueKey(KeyHandle, &Hive->HiveRootPath);
 
-    /* Delete the hive path name from the list */
-    ZwDeleteValueKey(KeyHandle, &HivePath);
+    /* Free the captured hive path */
+    ExFreePoolWithTag(Hive->HiveRootPath.Buffer, TAG_CM);
+    RtlInitEmptyUnicodeString(&Hive->HiveRootPath, NULL, 0);
 
-    /* Cleanup allocation and handle */
-    ExFreePoolWithTag(HivePath.Buffer, TAG_CM);
+    /* Close the key and exit */
     ObCloseHandle(KeyHandle, KernelMode);
 }
 

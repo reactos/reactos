@@ -604,12 +604,12 @@ CmpCompareNewValueDataAgainstKCBCache(
 NTSTATUS
 NTAPI
 CmpAddToHiveFileList(
-    _In_ PCMHIVE Hive);
+    _Inout_ PCMHIVE Hive);
 
 VOID
 NTAPI
 CmpRemoveFromHiveFileList(
-    _In_ PCMHIVE Hive);
+    _Inout_ PCMHIVE Hive);
 
 //
 // Quota Routines

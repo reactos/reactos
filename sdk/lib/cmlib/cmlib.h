@@ -339,6 +339,9 @@ typedef struct _CMHIVE
     PFILE_OBJECT FileObject;
     UNICODE_STRING FileFullPath;
     UNICODE_STRING FileUserName;
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+    UNICODE_STRING HiveRootPath;
+#endif
     USHORT MappedViews;
     USHORT PinnedViews;
     ULONG UseCount;
@@ -363,6 +366,12 @@ typedef struct _CMHIVE
     ULONG FlushCount;
     BOOLEAN HiveIsLoading;
     PKTHREAD CreatorOwner;
+    //
+    // ReactOS-specific fields
+    //
+#if (NTDDI_VERSION < NTDDI_VISTA) && defined(__REACTOS__)
+    UNICODE_STRING HiveRootPath;
+#endif
 } CMHIVE, *PCMHIVE;
 
 typedef struct _HV_HIVE_CELL_PAIR
