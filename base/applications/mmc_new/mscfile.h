@@ -38,5 +38,6 @@ public:
 
     HRESULT SaveWindowPlacement(CWindow *pWindow, IXMLDOMElement *pParentNode);
 
+    HRESULT LoadDOM();
     HRESULT SaveDOM();
 };

@@ -311,6 +311,29 @@ CleanUp:
 }
 
 HRESULT
+MscFile::LoadDOM()
+{
+    IXMLDOMParseError *pXMLErr = NULL;
+    BSTR bstrErr = NULL;
+    VARIANT_BOOL varStatus;
+    HRESULT hr = S_OK;
+
+    hr = m_pDocument->load(m_varFileName, &varStatus);
+    if (varStatus != VARIANT_TRUE)
+    {
+        // Failed to load xml, get last parsing error
+        CHK_HR(m_pDocument->get_parseError(&pXMLErr));
+        CHK_HR(pXMLErr->get_reason(&bstrErr));
+    }
+
+CleanUp:
+    SAFE_RELEASE(pXMLErr);
+    SysFreeString(bstrErr);
+
+    return hr;
+}
+
+HRESULT
 MscFile::SaveDOM()
 {
     return m_pDocument->save(m_varFileName);

@@ -207,6 +207,39 @@ CMainWnd::OnFileNew(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
 }
 
 LRESULT
+CMainWnd::OnFileOpen(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
+{
+    OPENFILENAME openas;
+    WCHAR szPath[MAX_PATH];
+
+    CConsoleWnd* child = GetActiveChildInfo();
+    if (child == NULL)
+        return 0;
+
+    ZeroMemory(&openas, sizeof(openas));
+    wcscpy(szPath, L"");
+
+    openas.lStructSize = sizeof(OPENFILENAME);
+    openas.hwndOwner = m_hWnd;
+    openas.hInstance = _AtlBaseModule.GetModuleInstance();
+    openas.lpstrFilter = L"MSC Files (*.msc)\0*.msc\0All Files (*.*)\0*.*\0";
+    openas.lpstrFile = szPath;
+    openas.nMaxFile = MAX_PATH;
+    openas.Flags = OFN_EXPLORER | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY;
+    openas.lpstrDefExt = L"msc";
+
+    if (GetOpenFileNameW(&openas))
+    {
+        m_Filename = szPath;
+        LRESULT ret = LoadMscFile(m_Filename);
+        if (ret == ERROR_SUCCESS)
+            AddToRecentFiles(m_Filename);
+    }
+
+    return 0;
+}
+
+LRESULT
 CMainWnd::OnFileSave(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
 {
     CConsoleWnd* child = GetActiveChildInfo();
@@ -830,6 +863,26 @@ CMainWnd::SaveMscFile(CAtlString &FileName)
 
 CleanUp:
     SAFE_RELEASE(pRootNode); /* </MMC_ConsoleFile> */
+
+    delete mscFile;
+
+    return 0;
+}
+
+LRESULT
+CMainWnd::LoadMscFile(CAtlString &FileName)
+{
+    HRESULT hr = S_OK;
+
+    MscFile *mscFile = new MscFile(FileName.GetString());
+
+    CHK_HR(mscFile->CreateAndInitDOM());
+
+    CHK_HR(mscFile->LoadDOM());
+
+    /* FIXME: Parse the dom and set up the app, the views and the snapin tree */
+
+CleanUp:
 
     delete mscFile;
 

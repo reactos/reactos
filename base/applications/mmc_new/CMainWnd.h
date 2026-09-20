@@ -62,6 +62,7 @@ public:
         MESSAGE_HANDLER(WM_USER_CLOSE_CHILD, OnCloseChild)
 
         COMMAND_ID_HANDLER(IDM_FILE_NEW, OnFileNew)
+        COMMAND_ID_HANDLER(IDM_FILE_OPEN, OnFileOpen)
         COMMAND_ID_HANDLER(IDM_FILE_SAVE, OnFileSave)
         COMMAND_ID_HANDLER(IDM_FILE_SAVEAS, OnFileSaveAs)
         COMMAND_ID_HANDLER(IDM_FILE_ADD, OnFileAdd)
@@ -176,6 +177,7 @@ public:
     LRESULT OnClose(UINT nMessage, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 
     LRESULT OnFileNew(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
+    LRESULT OnFileOpen(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
     LRESULT OnFileSave(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
     LRESULT OnFileSaveAs(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
     LRESULT OnFileAdd(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
@@ -202,6 +204,7 @@ private:
     DWORD CreateNewFilename(PWSTR pBuffer, DWORD dwSize, DWORD Number);
     LPWSTR ProgramModeToString();
     LRESULT SaveMscFile(CAtlString &FileName);
+    LRESULT LoadMscFile(CAtlString &FileName);
 
 public:
     CAtlString *GetConsoleTitle();
