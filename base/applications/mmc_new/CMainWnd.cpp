@@ -619,7 +619,7 @@ CMainWnd::ProgramModeToString()
     }
 }
 
-HRESULT
+LRESULT
 CMainWnd::SaveMscFile(CAtlString &FileName)
 {
     IXMLDOMElement *pRootNode = NULL;
@@ -716,5 +716,5 @@ CleanUp:
 
     delete mscFile;
 
-    return hr;
+    return 0;
 }
