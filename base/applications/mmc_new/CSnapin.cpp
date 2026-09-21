@@ -105,3 +105,67 @@ CSnapin::OnAccept(IConsole* console)
     }
 #endif
 }
+
+VOID
+CSnapin::SaveNode(MscFile *mscFile, IXMLDOMElement *pParentNode)
+{
+    IXMLDOMElement *pNodeElement = NULL;
+    IXMLDOMElement *pNodesElement = NULL;
+    IXMLDOMElement *pStringElement = NULL;
+    IXMLDOMElement *pBitmapsElement = NULL;
+    IXMLDOMElement *pComponentDatasElement = NULL;
+    IXMLDOMElement *pComponentDataElement = NULL;
+    IXMLDOMElement *pComponentsElement = NULL;
+    POSITION pos;
+    CSnapin *SubNode;
+    HRESULT hr = S_OK;
+
+    /* <Node ID="3" ImageIdx="0" CLSID="{C96401CC-0E17-11D3-885B-00C04F72C717}" Preload="true"> */
+    CHK_HR(mscFile->CreateAndAddElementNode(L"Node", pParentNode, &pNodeElement));
+    CHK_HR(mscFile->CreateAndAddAttributeNode(L"ID", L"0", pNodeElement)); /* FIXME */
+    CHK_HR(mscFile->CreateAndAddAttributeNode(L"ImageIdx", L"0", pNodeElement)); /* FIXME */
+    CHK_HR(mscFile->CreateAndAddAttributeNode(L"CLSID", GetCacheEntry()->GuidString().GetString(), pNodeElement));
+    CHK_HR(mscFile->CreateAndAddAttributeNode(L"Preload", L"true", pNodeElement)); /* FIXME */
+
+    /* <Nodes> */
+    CHK_HR(mscFile->CreateAndAddElementNode(L"Nodes", pNodeElement, &pNodesElement));
+    pos = m_SubNodes.GetHeadPosition();
+    while (pos != NULL)
+    {
+        SubNode = (CSnapin*)m_SubNodes.GetNext(pos);
+        if (SubNode)
+            SubNode->SaveNode(mscFile, pNodesElement);
+    }
+    SAFE_RELEASE(pNodesElement); /* </Nodes> */
+
+    /* <String Name="Name" ID="2"/> */
+    CHK_HR(mscFile->CreateAndAddElementNode(L"String", pNodeElement, &pStringElement));
+    CHK_HR(mscFile->CreateAndAddAttributeNode(L"Name", m_DisplayName.GetString(), pStringElement)); /* FIXME */
+    SAFE_RELEASE(pStringElement); /* </String> */
+
+    /* <Bitmaps> */
+    CHK_HR(mscFile->CreateAndAddElementNode(L"Bitmaps", pNodeElement, &pBitmapsElement));
+/*
+        <BinaryData Name="Small" BinaryRefIndex="3"/>
+        <BinaryData Name="Large" BinaryRefIndex="4"/>
+*/
+    SAFE_RELEASE(pBitmapsElement); /* </Bitmaps> */
+
+    /* <ComponentDatas> */
+    CHK_HR(mscFile->CreateAndAddElementNode(L"ComponentDatas", pNodeElement, &pComponentDatasElement));
+    /* <ComponentData> */
+    CHK_HR(mscFile->CreateAndAddElementNode(L"ComponentData", pComponentDatasElement, &pComponentDataElement));
+/*
+        <GUID Name="Snapin">{C96401CC-0E17-11D3-885B-00C04F72C717}</GUID>
+        <Stream BinaryRefIndex="5"/>
+*/
+    SAFE_RELEASE(pComponentDataElement); /* </ComponentData> */
+    SAFE_RELEASE(pComponentDatasElement); /* </ComponentDatas> */
+
+    /* <Components /> */
+    CHK_HR(mscFile->CreateAndAddElementNode(L"Components", pNodeElement, &pComponentsElement));
+    SAFE_RELEASE(pComponentsElement); /* </Components> */
+
+CleanUp:
+    SAFE_RELEASE(pNodeElement); /* </Node> */
+}

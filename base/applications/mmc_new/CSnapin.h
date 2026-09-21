@@ -44,4 +44,6 @@ public:
 
     void OnAdd(IConsole* console);
     void OnAccept(IConsole* console);
+
+    VOID SaveNode(MscFile *mscFile, IXMLDOMElement *pParentNode);
 };

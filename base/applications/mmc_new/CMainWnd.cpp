@@ -849,10 +849,8 @@ CMainWnd::SaveMscFile(CAtlString &FileName)
 
     /* <Nodes> */
     CHK_HR(mscFile->CreateAndAddElementNode(L"Nodes", pScopeTreeNode, &pNodesNode));
-#if 0
     if (m_RootNode)
         m_RootNode->SaveNode(mscFile, pNodesNode);
-#endif
     SAFE_RELEASE(pNodesNode); /* </Nodes> */
 
     SAFE_RELEASE(pScopeTreeNode); /* </ScopeTree> */
