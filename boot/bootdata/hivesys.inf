@@ -1868,8 +1868,8 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Ndis","ImagePath",0x00020000,"system32\d
 HKLM,"SYSTEM\CurrentControlSet\Services\Ndis","Start",0x00010001,0x00000000
 HKLM,"SYSTEM\CurrentControlSet\Services\Ndis","Type",0x00010001,0x00000001
 
-; NDIS user-mode I/O protocol, the transport the WLAN service uses. Without a
-; Linkage\Bind value NDIS binds it to every adapter.
+; NDIS user-mode I/O protocol, the transport the WLAN service uses.
+; Without a Linkage\Bind value, NDIS binds it to every adapter.
 HKLM,"SYSTEM\CurrentControlSet\Services\Ndisuio","ErrorControl",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\Ndisuio","Group",0x00000000,"NDIS"
 HKLM,"SYSTEM\CurrentControlSet\Services\Ndisuio","ImagePath",0x00020000,"system32\drivers\ndisuio.sys"

@@ -406,8 +406,8 @@ BindAdapterByName(PNDIS_STRING DeviceName)
     InitializeListHead(&AdapterContext->OpenEntryList);
     AdapterContext->OpenCount = 0;
 
-    /* Store the name without a terminator, so an open matches whether or not
-       the caller passes one */
+    /* Store the name without a terminator, so an open matches
+     * whether or not the caller passes one */
     NameLength = DeviceName->Length;
     if (NameLength >= sizeof(WCHAR) &&
         DeviceName->Buffer[NameLength / sizeof(WCHAR) - 1] == UNICODE_NULL)
