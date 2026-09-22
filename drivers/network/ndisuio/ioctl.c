@@ -307,6 +307,14 @@ OpenDeviceReadWrite(PIRP Irp, PIO_STACK_LOCATION IrpSp)
         DeviceName.MaximumLength = DeviceName.Length = NameLength;
         DeviceName.Buffer = Irp->AssociatedIrp.SystemBuffer;
 
+        /* The bound name is a counted string with no terminator, so drop one
+         * the caller may have included before matching */
+        if (DeviceName.Length >= sizeof(WCHAR) &&
+            DeviceName.Buffer[DeviceName.Length / sizeof(WCHAR) - 1] == UNICODE_NULL)
+        {
+            DeviceName.Length -= sizeof(WCHAR);
+        }
+
         /* Check if this already has a context */
         AdapterContext = FindAdapterContextByName(&DeviceName);
         if (AdapterContext != NULL)
