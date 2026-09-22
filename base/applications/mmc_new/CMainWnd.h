@@ -18,6 +18,8 @@
 #define BTN_HELP            5
 #define BTN_ACTIONS_PANE    6
 
+#define MAX_RECENT_FILES    4
+
 class CMainWnd :
     public CWindowImpl<CMainWnd>
 {
@@ -46,7 +48,7 @@ private:
 
     CSnapin *m_RootNode;
 
-    CAtlList<CAtlString> m_RecentFilesList;
+    CAtlList<CRecentFileEntry *> m_RecentFilesList;
 
 public:
     CWindow m_MDIClient;

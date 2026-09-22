@@ -48,6 +48,7 @@ typedef enum _DOCUMENT_MODE
 
 #include "mscfile.h"
 
+#include "CRecentFileEntry.h"
 #include "CSnapinCacheEntry.h"
 #include "CSnapin.h"
 #include "CConsoleWnd.h"

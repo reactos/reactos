@@ -8,6 +8,7 @@ list(APPEND CPP_SOURCE
     CConsoleWnd.cpp
     CMainWnd.cpp
     COptionsDialog.cpp
+    CRecentFileEntry.cpp
     CSnapin.cpp
     CSnapinCacheEntry.cpp
     mscfile.cpp
