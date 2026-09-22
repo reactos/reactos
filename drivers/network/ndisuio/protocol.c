@@ -388,6 +388,7 @@ BindAdapterByName(PNDIS_STRING DeviceName)
     UINT SelectedMedium;
     NDIS_STATUS Status;
     NDIS_REQUEST Request;
+    ULONG NameLength;
 
     /* Allocate the adapter context */
     AdapterContext = ExAllocatePool(NonPagedPool, sizeof(*AdapterContext));
@@ -405,9 +406,18 @@ BindAdapterByName(PNDIS_STRING DeviceName)
     InitializeListHead(&AdapterContext->OpenEntryList);
     AdapterContext->OpenCount = 0;
 
+    /* Store the name without a terminator, so an open matches whether or not
+       the caller passes one */
+    NameLength = DeviceName->Length;
+    if (NameLength >= sizeof(WCHAR) &&
+        DeviceName->Buffer[NameLength / sizeof(WCHAR) - 1] == UNICODE_NULL)
+    {
+        NameLength -= sizeof(WCHAR);
+    }
+
     AdapterContext->DeviceName.Length =
-    AdapterContext->DeviceName.MaximumLength = DeviceName->Length;
-    AdapterContext->DeviceName.Buffer = ExAllocatePool(NonPagedPool, DeviceName->Length);
+    AdapterContext->DeviceName.MaximumLength = (USHORT)NameLength;
+    AdapterContext->DeviceName.Buffer = ExAllocatePool(NonPagedPool, NameLength);
     if (!AdapterContext->DeviceName.Buffer)
     {
         ExFreePool(AdapterContext);
@@ -415,7 +425,7 @@ BindAdapterByName(PNDIS_STRING DeviceName)
     }
 
     /* Copy the device name into the adapter context */
-    RtlCopyMemory(AdapterContext->DeviceName.Buffer, DeviceName->Buffer, DeviceName->Length);
+    RtlCopyMemory(AdapterContext->DeviceName.Buffer, DeviceName->Buffer, NameLength);
 
     DPRINT("Binding adapter %wZ\n", &AdapterContext->DeviceName);
 
