@@ -362,7 +362,7 @@ static void test_aggregation(void)
 static void test_media_types(void)
 {
     IBaseFilter *filter = create_null_renderer();
-    AM_MEDIA_TYPE mt = {}, *pmt;
+    AM_MEDIA_TYPE mt = {0}, *pmt;
     IEnumMediaTypes *enummt;
     HRESULT hr;
     ULONG ref;

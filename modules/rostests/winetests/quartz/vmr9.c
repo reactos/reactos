@@ -2756,7 +2756,7 @@ static void test_allocate_surface_helper(void)
     };
     IBaseFilter *filter = create_vmr9(VMR9Mode_Renderless);
     IVMRSurfaceAllocatorNotify9 *notify;
-    IDirect3DSurface9 *surfaces[2] = {};
+    IDirect3DSurface9 *surfaces[2] = {0};
     IDirect3DDevice9 *device, *device2;
     RECT rect = {0, 0, 640, 480};
     IDirect3DTexture9 *container;
