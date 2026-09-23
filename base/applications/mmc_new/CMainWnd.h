@@ -69,6 +69,10 @@ public:
         COMMAND_ID_HANDLER(IDM_FILE_SAVEAS, OnFileSaveAs)
         COMMAND_ID_HANDLER(IDM_FILE_ADD, OnFileAdd)
         COMMAND_ID_HANDLER(IDM_FILE_OPTIONS, OnFileOptions)
+        COMMAND_ID_HANDLER(IDM_FILE_RECENT1, OnFileRecent)
+        COMMAND_ID_HANDLER(IDM_FILE_RECENT2, OnFileRecent)
+        COMMAND_ID_HANDLER(IDM_FILE_RECENT3, OnFileRecent)
+        COMMAND_ID_HANDLER(IDM_FILE_RECENT4, OnFileRecent)
         COMMAND_ID_HANDLER(IDM_FILE_EXIT, OnFileExit)
 
         COMMAND_ID_HANDLER(IDM_VIEW_CUSTOMIZE, OnViewCustomize)
@@ -184,6 +188,7 @@ public:
     LRESULT OnFileSaveAs(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
     LRESULT OnFileAdd(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
     LRESULT OnFileOptions(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
+    LRESULT OnFileRecent(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
     LRESULT OnFileExit(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
     LRESULT OnViewCustomize(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
     LRESULT OnWindowsNew(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
@@ -202,11 +207,11 @@ private:
 
     VOID UpdateRecentFilesMenu();
     VOID LoadRecentFiles();
-    VOID AddToRecentFiles(CAtlString &FileName);
+    VOID AddToRecentFiles(const CAtlString &FileName);
     DWORD CreateNewFilename(PWSTR pBuffer, DWORD dwSize, DWORD Number);
     LPWSTR ProgramModeToString();
-    LRESULT SaveMscFile(CAtlString &FileName);
-    LRESULT LoadMscFile(CAtlString &FileName);
+    LRESULT SaveMscFile(const CAtlString &FileName);
+    LRESULT LoadMscFile(const CAtlString &FileName);
 
 public:
     CAtlString *GetConsoleTitle();

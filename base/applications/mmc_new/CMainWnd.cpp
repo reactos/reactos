@@ -318,6 +318,25 @@ CMainWnd::OnFileOptions(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled
 }
 
 LRESULT
+CMainWnd::OnFileRecent(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
+{
+    MENUITEMINFOW mi;
+
+    mi.cbSize = sizeof(MENUITEMINFOW);
+    mi.fMask = MIIM_DATA;
+    if (GetMenuItemInfoW(GetMenu(), wID, FALSE, &mi))
+    {
+        CRecentFileEntry *FileEntry = (CRecentFileEntry *)mi.dwItemData;
+
+        LRESULT ret = LoadMscFile(FileEntry->FileName());
+        if (ret == ERROR_SUCCESS)
+            AddToRecentFiles(FileEntry->FileName());
+    }
+
+    return 0;
+}
+
+LRESULT
 CMainWnd::OnFileExit(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
 {
     PostMessage(WM_CLOSE, 0, 0);
@@ -629,7 +648,7 @@ CMainWnd::UpdateRecentFilesMenu()
     HMENU hMenu = GetMenu();
 
     mi.cbSize = sizeof(MENUITEMINFOW);
-    mi.fMask = MIIM_ID | MIIM_STRING | MIIM_FTYPE;
+    mi.fMask = MIIM_ID | MIIM_STRING | MIIM_FTYPE | MIIM_DATA;
     mi.fType = MFT_STRING;
     mi.wID = IDM_FILE_RECENT1;
 
@@ -642,9 +661,10 @@ CMainWnd::UpdateRecentFilesMenu()
     {
         RemoveMenu(hMenu, IDM_FILE_RECENT1 + i, MF_BYCOMMAND);
 
-        CRecentFileEntry *ValueData = m_RecentFilesList.GetNext(pos);
-        ValueName.Format(L"%d %s", i + 1, ValueData->DisplayName().GetString());
+        CRecentFileEntry *FileEntry = m_RecentFilesList.GetNext(pos);
+        ValueName.Format(L"%d %s", i + 1, FileEntry->DisplayName().GetString());
         mi.dwTypeData = ValueName.GetString();
+        mi.dwItemData = (ULONG_PTR)FileEntry;
 
         InsertMenuItemW(hMenu, IDM_FILE_EXIT, FALSE, &mi);
         mi.wID++;
@@ -693,7 +713,7 @@ CMainWnd::LoadRecentFiles()
 }
 
 VOID
-CMainWnd::AddToRecentFiles(CAtlString &FileName)
+CMainWnd::AddToRecentFiles(const CAtlString &FileName)
 {
     POSITION pos = m_RecentFilesList.GetHeadPosition();
     while (pos != NULL)
@@ -779,7 +799,7 @@ CMainWnd::ProgramModeToString()
 }
 
 LRESULT
-CMainWnd::SaveMscFile(CAtlString &FileName)
+CMainWnd::SaveMscFile(const CAtlString &FileName)
 {
     IXMLDOMElement *pRootNode = NULL;
     IXMLDOMElement *pNode = NULL;
@@ -877,7 +897,7 @@ CleanUp:
 }
 
 LRESULT
-CMainWnd::LoadMscFile(CAtlString &FileName)
+CMainWnd::LoadMscFile(const CAtlString &FileName)
 {
     HRESULT hr = S_OK;
 
