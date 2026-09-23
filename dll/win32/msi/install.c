@@ -33,7 +33,7 @@
 #include "oleauto.h"
 
 #include "msipriv.h"
-#include "winemsi_s.h"
+#include "winemsi.h"
 #include "wine/debug.h"
 #include "wine/exception.h"
 
@@ -925,7 +925,10 @@ UINT MSI_SetFeatureStateW( MSIPACKAGE *package, LPCWSTR szFeature, INSTALLSTATE 
 
     if (iState == INSTALLSTATE_ADVERTISED &&
         feature->Attributes & msidbFeatureAttributesDisallowAdvertise)
-        return ERROR_FUNCTION_FAILED;
+    {
+        TRACE("Advertising is disallowed; making feature absent\n");
+        iState = INSTALLSTATE_ABSENT;
+    }
 
     feature->ActionRequest = iState;
 
