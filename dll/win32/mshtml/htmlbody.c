@@ -16,53 +16,54 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include <stdarg.h>
+#include <stdio.h>
+
+#define COBJMACROS
+
+#include "windef.h"
+#include "winbase.h"
+#include "winuser.h"
+#include "ole2.h"
+#include "mshtmdid.h"
+
+#include "wine/debug.h"
+
 #include "mshtml_private.h"
+#include "htmlevent.h"
+#include "htmlstyle.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(mshtml);
 
 typedef struct {
-    HTMLTextContainer textcont;
+    HTMLElement element;
 
     IHTMLBodyElement IHTMLBodyElement_iface;
+    IHTMLTextContainer IHTMLTextContainer_iface;
 
     nsIDOMHTMLBodyElement *nsbody;
 } HTMLBodyElement;
-
-static const WCHAR aquaW[] = {'a','q','u','a',0};
-static const WCHAR blackW[] = {'b','l','a','c','k',0};
-static const WCHAR blueW[] = {'b','l','u','e',0};
-static const WCHAR fuchsiaW[] = {'f','u','s','h','s','i','a',0};
-static const WCHAR grayW[] = {'g','r','a','y',0};
-static const WCHAR greenW[] = {'g','r','e','e','n',0};
-static const WCHAR limeW[] = {'l','i','m','e',0};
-static const WCHAR maroonW[] = {'m','a','r','o','o','n',0};
-static const WCHAR navyW[] = {'n','a','v','y',0};
-static const WCHAR oliveW[] = {'o','l','i','v','e',0};
-static const WCHAR purpleW[] = {'p','u','r','p','l','e',0};
-static const WCHAR redW[] = {'r','e','d',0};
-static const WCHAR silverW[] = {'s','i','l','v','e','r',0};
-static const WCHAR tealW[] = {'t','e','a','l',0};
-static const WCHAR whiteW[] = {'w','h','i','t','e',0};
-static const WCHAR yellowW[] = {'y','e','l','l','o','w',0};
 
 static const struct {
     LPCWSTR keyword;
     DWORD rgb;
 } keyword_table[] = {
-    {aquaW,     0x00ffff},
-    {blackW,    0x000000},
-    {blueW,     0x0000ff},
-    {fuchsiaW,  0xff00ff},
-    {grayW,     0x808080},
-    {greenW,    0x008000},
-    {limeW,     0x00ff00},
-    {maroonW,   0x800000},
-    {navyW,     0x000080},
-    {oliveW,    0x808000},
-    {purpleW,   0x800080},
-    {redW,      0xff0000},
-    {silverW,   0xc0c0c0},
-    {tealW,     0x008080},
-    {whiteW,    0xffffff},
-    {yellowW,   0xffff00}
+    {L"aqua",     0x00ffff},
+    {L"black",    0x000000},
+    {L"blue",     0x0000ff},
+    {L"fuchsia",  0xff00ff},
+    {L"gray",     0x808080},
+    {L"green",    0x008000},
+    {L"lime",     0x00ff00},
+    {L"maroon",   0x800000},
+    {L"navy",     0x000080},
+    {L"olive",    0x808000},
+    {L"purple",   0x800080},
+    {L"red",      0xff0000},
+    {L"silver",   0xc0c0c0},
+    {L"teal",     0x008080},
+    {L"white",    0xffffff},
+    {L"yellow",   0xffff00}
 };
 
 static int comp_value(const WCHAR *ptr, int dpc)
@@ -76,7 +77,7 @@ static int comp_value(const WCHAR *ptr, int dpc)
     while(dpc--) {
         if(!*ptr)
             ret *= 16;
-        else if(isdigitW(ch = *ptr++))
+        else if(is_digit(ch = *ptr++))
             ret = ret*16 + (ch-'0');
         else if('a' <= ch && ch <= 'f')
             ret = ret*16 + (ch-'a') + 10;
@@ -94,7 +95,7 @@ static int loose_hex_to_rgb(const WCHAR *hex)
 {
     int len, dpc;
 
-    len = strlenW(hex);
+    len = lstrlenW(hex);
     if(*hex == '#') {
         hex++;
         len--;
@@ -113,16 +114,14 @@ HRESULT nscolor_to_str(LPCWSTR color, BSTR *ret)
     unsigned int i;
     int rgb = -1;
 
-    static const WCHAR formatW[] = {'#','%','0','2','x','%','0','2','x','%','0','2','x',0};
-
     if(!color || !*color) {
         *ret = NULL;
         return S_OK;
     }
 
     if(*color != '#') {
-        for(i=0; i < sizeof(keyword_table)/sizeof(keyword_table[0]); i++) {
-            if(!strcmpiW(color, keyword_table[i].keyword))
+        for(i=0; i < ARRAY_SIZE(keyword_table); i++) {
+            if(!wcsicmp(color, keyword_table[i].keyword))
                 rgb = keyword_table[i].rgb;
         }
     }
@@ -133,7 +132,7 @@ HRESULT nscolor_to_str(LPCWSTR color, BSTR *ret)
     if(!*ret)
         return E_OUTOFMEMORY;
 
-    sprintfW(*ret, formatW, rgb>>16, (rgb>>8)&0xff, rgb&0xff);
+    swprintf(*ret, 8, L"#%02x%02x%02x", rgb>>16, (rgb>>8)&0xff, rgb&0xff);
 
     TRACE("%s -> %s\n", debugstr_w(color), debugstr_w(*ret));
     return S_OK;
@@ -148,9 +147,8 @@ BOOL variant_to_nscolor(const VARIANT *v, nsAString *nsstr)
 
     case VT_I4: {
         PRUnichar buf[10];
-        static const WCHAR formatW[] = {'#','%','x',0};
 
-        wsprintfW(buf, formatW, V_I4(v));
+        wsprintfW(buf, L"#%x", V_I4(v));
         nsAString_Init(nsstr, buf);
         return TRUE;
     }
@@ -168,7 +166,7 @@ static HRESULT return_nscolor(nsresult nsres, nsAString *nsstr, VARIANT *p)
     const PRUnichar *color;
 
     if(NS_FAILED(nsres)) {
-        ERR("failed: %08x\n", nsres);
+        ERR("failed: %08lx\n", nsres);
         nsAString_Finish(nsstr);
         return E_FAIL;
     }
@@ -177,7 +175,7 @@ static HRESULT return_nscolor(nsresult nsres, nsAString *nsstr, VARIANT *p)
 
     if(*color == '#') {
         V_VT(p) = VT_I4;
-        V_I4(p) = strtolW(color+1, NULL, 16);
+        V_I4(p) = wcstol(color+1, NULL, 16);
     }else {
         V_VT(p) = VT_BSTR;
         V_BSTR(p) = SysAllocString(color);
@@ -197,60 +195,8 @@ static inline HTMLBodyElement *impl_from_IHTMLBodyElement(IHTMLBodyElement *ifac
     return CONTAINING_RECORD(iface, HTMLBodyElement, IHTMLBodyElement_iface);
 }
 
-static HRESULT WINAPI HTMLBodyElement_QueryInterface(IHTMLBodyElement *iface,
-                                                     REFIID riid, void **ppv)
-{
-    HTMLBodyElement *This = impl_from_IHTMLBodyElement(iface);
-
-    return IHTMLDOMNode_QueryInterface(&This->textcont.element.node.IHTMLDOMNode_iface, riid, ppv);
-}
-
-static ULONG WINAPI HTMLBodyElement_AddRef(IHTMLBodyElement *iface)
-{
-    HTMLBodyElement *This = impl_from_IHTMLBodyElement(iface);
-
-    return IHTMLDOMNode_AddRef(&This->textcont.element.node.IHTMLDOMNode_iface);
-}
-
-static ULONG WINAPI HTMLBodyElement_Release(IHTMLBodyElement *iface)
-{
-    HTMLBodyElement *This = impl_from_IHTMLBodyElement(iface);
-
-    return IHTMLDOMNode_Release(&This->textcont.element.node.IHTMLDOMNode_iface);
-}
-
-static HRESULT WINAPI HTMLBodyElement_GetTypeInfoCount(IHTMLBodyElement *iface, UINT *pctinfo)
-{
-    HTMLBodyElement *This = impl_from_IHTMLBodyElement(iface);
-    return IDispatchEx_GetTypeInfoCount(&This->textcont.element.node.event_target.dispex.IDispatchEx_iface,
-            pctinfo);
-}
-
-static HRESULT WINAPI HTMLBodyElement_GetTypeInfo(IHTMLBodyElement *iface, UINT iTInfo,
-                                              LCID lcid, ITypeInfo **ppTInfo)
-{
-    HTMLBodyElement *This = impl_from_IHTMLBodyElement(iface);
-    return IDispatchEx_GetTypeInfo(&This->textcont.element.node.event_target.dispex.IDispatchEx_iface, iTInfo,
-            lcid, ppTInfo);
-}
-
-static HRESULT WINAPI HTMLBodyElement_GetIDsOfNames(IHTMLBodyElement *iface, REFIID riid,
-                                                LPOLESTR *rgszNames, UINT cNames,
-                                                LCID lcid, DISPID *rgDispId)
-{
-    HTMLBodyElement *This = impl_from_IHTMLBodyElement(iface);
-    return IDispatchEx_GetIDsOfNames(&This->textcont.element.node.event_target.dispex.IDispatchEx_iface, riid,
-            rgszNames, cNames, lcid, rgDispId);
-}
-
-static HRESULT WINAPI HTMLBodyElement_Invoke(IHTMLBodyElement *iface, DISPID dispIdMember,
-                            REFIID riid, LCID lcid, WORD wFlags, DISPPARAMS *pDispParams,
-                            VARIANT *pVarResult, EXCEPINFO *pExcepInfo, UINT *puArgErr)
-{
-    HTMLBodyElement *This = impl_from_IHTMLBodyElement(iface);
-    return IDispatchEx_Invoke(&This->textcont.element.node.event_target.dispex.IDispatchEx_iface, dispIdMember,
-            riid, lcid, wFlags, pDispParams, pVarResult, pExcepInfo, puArgErr);
-}
+DISPEX_IDISPATCH_IMPL(HTMLBodyElement, IHTMLBodyElement,
+                      impl_from_IHTMLBodyElement(iface)->element.node.event_target.dispex)
 
 static HRESULT WINAPI HTMLBodyElement_put_background(IHTMLBodyElement *iface, BSTR v)
 {
@@ -380,7 +326,7 @@ static HRESULT WINAPI HTMLBodyElement_put_bgColor(IHTMLBodyElement *iface, VARIA
     nsres = nsIDOMHTMLBodyElement_SetBgColor(This->nsbody, &strColor);
     nsAString_Finish(&strColor);
     if(NS_FAILED(nsres))
-        ERR("SetBgColor failed: %08x\n", nsres);
+        ERR("SetBgColor failed: %08lx\n", nsres);
 
     return S_OK;
 }
@@ -388,27 +334,14 @@ static HRESULT WINAPI HTMLBodyElement_put_bgColor(IHTMLBodyElement *iface, VARIA
 static HRESULT WINAPI HTMLBodyElement_get_bgColor(IHTMLBodyElement *iface, VARIANT *p)
 {
     HTMLBodyElement *This = impl_from_IHTMLBodyElement(iface);
-    nsAString strColor;
+    nsAString nsstr;
     nsresult nsres;
-    HRESULT hres;
 
     TRACE("(%p)->(%p)\n", This, p);
 
-    nsAString_Init(&strColor, NULL);
-    nsres = nsIDOMHTMLBodyElement_GetBgColor(This->nsbody, &strColor);
-    if(NS_SUCCEEDED(nsres)) {
-        const PRUnichar *color;
-
-        nsAString_GetData(&strColor, &color);
-        V_VT(p) = VT_BSTR;
-        hres = nscolor_to_str(color, &V_BSTR(p));
-    }else {
-        ERR("SetBgColor failed: %08x\n", nsres);
-        hres = E_FAIL;
-    }
-
-    nsAString_Finish(&strColor);
-    return hres;
+    nsAString_Init(&nsstr, NULL);
+    nsres = nsIDOMHTMLBodyElement_GetBgColor(This->nsbody, &nsstr);
+    return return_nsstr_variant(nsres, &nsstr, NSSTR_COLOR, p);
 }
 
 static HRESULT WINAPI HTMLBodyElement_put_text(IHTMLBodyElement *iface, VARIANT v)
@@ -425,7 +358,7 @@ static HRESULT WINAPI HTMLBodyElement_put_text(IHTMLBodyElement *iface, VARIANT 
     nsres = nsIDOMHTMLBodyElement_SetText(This->nsbody, &text);
     nsAString_Finish(&text);
     if(NS_FAILED(nsres)) {
-        ERR("SetText failed: %08x\n", nsres);
+        ERR("SetText failed: %08lx\n", nsres);
         return E_FAIL;
     }
 
@@ -450,7 +383,7 @@ static HRESULT WINAPI HTMLBodyElement_get_text(IHTMLBodyElement *iface, VARIANT 
         V_VT(p) = VT_BSTR;
         hres = nscolor_to_str(color, &V_BSTR(p));
     }else {
-        ERR("GetText failed: %08x\n", nsres);
+        ERR("GetText failed: %08lx\n", nsres);
         hres = E_FAIL;
     }
 
@@ -473,7 +406,7 @@ static HRESULT WINAPI HTMLBodyElement_put_link(IHTMLBodyElement *iface, VARIANT 
     nsres = nsIDOMHTMLBodyElement_SetLink(This->nsbody, &link_str);
     nsAString_Finish(&link_str);
     if(NS_FAILED(nsres))
-        ERR("SetLink failed: %08x\n", nsres);
+        ERR("SetLink failed: %08lx\n", nsres);
 
     return S_OK;
 }
@@ -505,7 +438,7 @@ static HRESULT WINAPI HTMLBodyElement_put_vLink(IHTMLBodyElement *iface, VARIANT
     nsres = nsIDOMHTMLBodyElement_SetVLink(This->nsbody, &vlink_str);
     nsAString_Finish(&vlink_str);
     if(NS_FAILED(nsres))
-        ERR("SetLink failed: %08x\n", nsres);
+        ERR("SetLink failed: %08lx\n", nsres);
 
     return S_OK;
 }
@@ -537,7 +470,7 @@ static HRESULT WINAPI HTMLBodyElement_put_aLink(IHTMLBodyElement *iface, VARIANT
     nsres = nsIDOMHTMLBodyElement_SetALink(This->nsbody, &alink_str);
     nsAString_Finish(&alink_str);
     if(NS_FAILED(nsres))
-        ERR("SetALink failed: %08x\n", nsres);
+        ERR("SetALink failed: %08lx\n", nsres);
 
     return S_OK;
 }
@@ -561,7 +494,7 @@ static HRESULT WINAPI HTMLBodyElement_put_onload(IHTMLBodyElement *iface, VARIAN
 
     TRACE("(%p)->(%s)\n", This, debugstr_variant(&v));
 
-    return set_node_event(&This->textcont.element.node, EVENTID_LOAD, &v);
+    return set_node_event(&This->element.node, EVENTID_LOAD, &v);
 }
 
 static HRESULT WINAPI HTMLBodyElement_get_onload(IHTMLBodyElement *iface, VARIANT *p)
@@ -570,7 +503,7 @@ static HRESULT WINAPI HTMLBodyElement_get_onload(IHTMLBodyElement *iface, VARIAN
 
     TRACE("(%p)->(%p)\n", This, p);
 
-    return get_node_event(&This->textcont.element.node, EVENTID_LOAD, p);
+    return get_node_event(&This->element.node, EVENTID_LOAD, p);
 }
 
 static HRESULT WINAPI HTMLBodyElement_put_onunload(IHTMLBodyElement *iface, VARIANT v)
@@ -587,13 +520,6 @@ static HRESULT WINAPI HTMLBodyElement_get_onunload(IHTMLBodyElement *iface, VARI
     return E_NOTIMPL;
 }
 
-static const WCHAR autoW[] = {'a','u','t','o',0};
-static const WCHAR hiddenW[] = {'h','i','d','d','e','n',0};
-static const WCHAR scrollW[] = {'s','c','r','o','l','l',0};
-static const WCHAR visibleW[] = {'v','i','s','i','b','l','e',0};
-static const WCHAR yesW[] = {'y','e','s',0};
-static const WCHAR noW[] = {'n','o',0};
-
 static HRESULT WINAPI HTMLBodyElement_put_scroll(IHTMLBodyElement *iface, BSTR v)
 {
     HTMLBodyElement *This = impl_from_IHTMLBodyElement(iface);
@@ -602,18 +528,18 @@ static HRESULT WINAPI HTMLBodyElement_put_scroll(IHTMLBodyElement *iface, BSTR v
     TRACE("(%p)->(%s)\n", This, debugstr_w(v));
 
     /* Emulate with CSS visibility attribute */
-    if(!strcmpW(v, yesW)) {
-        val = scrollW;
-    }else if(!strcmpW(v, autoW)) {
-        val = visibleW;
-    }else if(!strcmpW(v, noW)) {
-        val = hiddenW;
+    if(!wcscmp(v, L"yes")) {
+        val = L"scroll";
+    }else if(!wcscmp(v, L"auto")) {
+        val = L"visible";
+    }else if(!wcscmp(v, L"no")) {
+        val = L"hidden";
     }else {
         WARN("Invalid argument %s\n", debugstr_w(v));
         return E_INVALIDARG;
     }
 
-    return set_elem_style(&This->textcont.element, STYLEID_OVERFLOW, val);
+    return set_elem_style(&This->element, STYLEID_OVERFLOW, val);
 }
 
 static HRESULT WINAPI HTMLBodyElement_get_scroll(IHTMLBodyElement *iface, BSTR *p)
@@ -626,19 +552,19 @@ static HRESULT WINAPI HTMLBodyElement_get_scroll(IHTMLBodyElement *iface, BSTR *
     TRACE("(%p)->(%p)\n", This, p);
 
     /* Emulate with CSS visibility attribute */
-    hres = get_elem_style(&This->textcont.element, STYLEID_OVERFLOW, &overflow);
+    hres = get_elem_style(&This->element, STYLEID_OVERFLOW, &overflow);
     if(FAILED(hres))
         return hres;
 
     if(!overflow || !*overflow) {
         *p = NULL;
         hres = S_OK;
-    }else if(!strcmpW(overflow, visibleW) || !strcmpW(overflow, autoW)) {
-        ret = autoW;
-    }else if(!strcmpW(overflow, scrollW)) {
-        ret = yesW;
-    }else if(!strcmpW(overflow, hiddenW)) {
-        ret = noW;
+    }else if(!wcscmp(overflow, L"visible") || !wcscmp(overflow, L"auto")) {
+        ret = L"auto";
+    }else if(!wcscmp(overflow, L"scroll")) {
+        ret = L"yes";
+    }else if(!wcscmp(overflow, L"hidden")) {
+        ret = L"no";
     }else {
         TRACE("Defaulting %s to NULL\n", debugstr_w(overflow));
         *p = NULL;
@@ -691,21 +617,21 @@ static HRESULT WINAPI HTMLBodyElement_createTextRange(IHTMLBodyElement *iface, I
 
     TRACE("(%p)->(%p)\n", This, range);
 
-    if(!This->textcont.element.node.doc->nsdoc) {
-        WARN("No nsdoc\n");
+    if(!This->element.node.doc->dom_document) {
+        WARN("No dom_document\n");
         return E_UNEXPECTED;
     }
 
-    nsres = nsIDOMHTMLDocument_CreateRange(This->textcont.element.node.doc->nsdoc, &nsrange);
+    nsres = nsIDOMDocument_CreateRange(This->element.node.doc->dom_document, &nsrange);
     if(NS_SUCCEEDED(nsres)) {
-        nsres = nsIDOMRange_SelectNodeContents(nsrange, This->textcont.element.node.nsnode);
+        nsres = nsIDOMRange_SelectNodeContents(nsrange, This->element.node.nsnode);
         if(NS_FAILED(nsres))
-            ERR("SelectNodeContents failed: %08x\n", nsres);
+            ERR("SelectNodeContents failed: %08lx\n", nsres);
     }else {
-        ERR("CreateRange failed: %08x\n", nsres);
+        ERR("CreateRange failed: %08lx\n", nsres);
     }
 
-    hres = HTMLTxtRange_Create(This->textcont.element.node.doc->basedoc.doc_node, nsrange, range);
+    hres = HTMLTxtRange_Create(This->element.node.doc, nsrange, range);
 
     nsIDOMRange_Release(nsrange);
     return hres;
@@ -756,70 +682,178 @@ static const IHTMLBodyElementVtbl HTMLBodyElementVtbl = {
     HTMLBodyElement_createTextRange
 };
 
+static inline HTMLBodyElement *impl_from_IHTMLTextContainer(IHTMLTextContainer *iface)
+{
+    return CONTAINING_RECORD(iface, HTMLBodyElement, IHTMLTextContainer_iface);
+}
+
+DISPEX_IDISPATCH_IMPL(HTMLTextContainer, IHTMLTextContainer,
+                      impl_from_IHTMLTextContainer(iface)->element.node.event_target.dispex)
+
+static HRESULT WINAPI HTMLTextContainer_createControlRange(IHTMLTextContainer *iface,
+                                                           IDispatch **range)
+{
+    HTMLBodyElement *This = impl_from_IHTMLTextContainer(iface);
+    FIXME("(%p)->(%p)\n", This, range);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI HTMLTextContainer_get_scrollHeight(IHTMLTextContainer *iface, LONG *p)
+{
+    HTMLBodyElement *This = impl_from_IHTMLTextContainer(iface);
+
+    TRACE("(%p)->(%p)\n", This, p);
+
+    return IHTMLElement2_get_scrollHeight(&This->element.IHTMLElement2_iface, p);
+}
+
+static HRESULT WINAPI HTMLTextContainer_get_scrollWidth(IHTMLTextContainer *iface, LONG *p)
+{
+    HTMLBodyElement *This = impl_from_IHTMLTextContainer(iface);
+
+    TRACE("(%p)->(%p)\n", This, p);
+
+    return IHTMLElement2_get_scrollWidth(&This->element.IHTMLElement2_iface, p);
+}
+
+static HRESULT WINAPI HTMLTextContainer_put_scrollTop(IHTMLTextContainer *iface, LONG v)
+{
+    HTMLBodyElement *This = impl_from_IHTMLTextContainer(iface);
+
+    TRACE("(%p)->(%ld)\n", This, v);
+
+    return IHTMLElement2_put_scrollTop(&This->element.IHTMLElement2_iface, v);
+}
+
+static HRESULT WINAPI HTMLTextContainer_get_scrollTop(IHTMLTextContainer *iface, LONG *p)
+{
+    HTMLBodyElement *This = impl_from_IHTMLTextContainer(iface);
+
+    TRACE("(%p)->(%p)\n", This, p);
+
+    return IHTMLElement2_get_scrollTop(&This->element.IHTMLElement2_iface, p);
+}
+
+static HRESULT WINAPI HTMLTextContainer_put_scrollLeft(IHTMLTextContainer *iface, LONG v)
+{
+    HTMLBodyElement *This = impl_from_IHTMLTextContainer(iface);
+
+    TRACE("(%p)->(%ld)\n", This, v);
+
+    return IHTMLElement2_put_scrollLeft(&This->element.IHTMLElement2_iface, v);
+}
+
+static HRESULT WINAPI HTMLTextContainer_get_scrollLeft(IHTMLTextContainer *iface, LONG *p)
+{
+    HTMLBodyElement *This = impl_from_IHTMLTextContainer(iface);
+
+    TRACE("(%p)->(%p)\n", This, p);
+
+    return IHTMLElement2_get_scrollLeft(&This->element.IHTMLElement2_iface, p);
+}
+
+static HRESULT WINAPI HTMLTextContainer_put_onscroll(IHTMLTextContainer *iface, VARIANT v)
+{
+    HTMLBodyElement *This = impl_from_IHTMLTextContainer(iface);
+    FIXME("(%p)->()\n", This);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI HTMLTextContainer_get_onscroll(IHTMLTextContainer *iface, VARIANT *p)
+{
+    HTMLBodyElement *This = impl_from_IHTMLTextContainer(iface);
+    FIXME("(%p)->(%p)\n", This, p);
+    return E_NOTIMPL;
+}
+
+static const IHTMLTextContainerVtbl HTMLTextContainerVtbl = {
+    HTMLTextContainer_QueryInterface,
+    HTMLTextContainer_AddRef,
+    HTMLTextContainer_Release,
+    HTMLTextContainer_GetTypeInfoCount,
+    HTMLTextContainer_GetTypeInfo,
+    HTMLTextContainer_GetIDsOfNames,
+    HTMLTextContainer_Invoke,
+    HTMLTextContainer_createControlRange,
+    HTMLTextContainer_get_scrollHeight,
+    HTMLTextContainer_get_scrollWidth,
+    HTMLTextContainer_put_scrollTop,
+    HTMLTextContainer_get_scrollTop,
+    HTMLTextContainer_put_scrollLeft,
+    HTMLTextContainer_get_scrollLeft,
+    HTMLTextContainer_put_onscroll,
+    HTMLTextContainer_get_onscroll
+};
+
 static inline HTMLBodyElement *impl_from_HTMLDOMNode(HTMLDOMNode *iface)
 {
-    return CONTAINING_RECORD(iface, HTMLBodyElement, textcont.element.node);
+    return CONTAINING_RECORD(iface, HTMLBodyElement, element.node);
 }
 
-static HRESULT HTMLBodyElement_QI(HTMLDOMNode *iface, REFIID riid, void **ppv)
+static EventTarget *HTMLBodyElement_get_event_prop_target(HTMLDOMNode *iface, int event_id)
 {
     HTMLBodyElement *This = impl_from_HTMLDOMNode(iface);
 
-    *ppv = NULL;
-
-    if(IsEqualGUID(&IID_IUnknown, riid)) {
-        TRACE("(%p)->(IID_IUnknown %p)\n", This, ppv);
-        *ppv = &This->IHTMLBodyElement_iface;
-    }else if(IsEqualGUID(&IID_IDispatch, riid)) {
-        TRACE("(%p)->(IID_IDispatch %p)\n", This, ppv);
-        *ppv = &This->IHTMLBodyElement_iface;
-    }else if(IsEqualGUID(&IID_IHTMLBodyElement, riid)) {
-        TRACE("(%p)->(IID_IHTMLBodyElement %p)\n", This, ppv);
-        *ppv = &This->IHTMLBodyElement_iface;
-    }else if(IsEqualGUID(&IID_IHTMLTextContainer, riid)) {
-        TRACE("(%p)->(IID_IHTMLTextContainer %p)\n", &This->textcont, ppv);
-        *ppv = &This->textcont.IHTMLTextContainer_iface;
+    switch(event_id) {
+    case EVENTID_BLUR:
+    case EVENTID_ERROR:
+    case EVENTID_FOCUS:
+    case EVENTID_LOAD:
+    case EVENTID_SCROLL:
+        return This->element.node.doc && This->element.node.doc->window
+            ? &This->element.node.doc->window->event_target
+            : &This->element.node.event_target;
+    default:
+        return &This->element.node.event_target;
     }
-
-    if(*ppv) {
-        IUnknown_AddRef((IUnknown*)*ppv);
-        return S_OK;
-    }
-
-    return HTMLElement_QI(&This->textcont.element.node, riid, ppv);
-}
-
-static void HTMLBodyElement_traverse(HTMLDOMNode *iface, nsCycleCollectionTraversalCallback *cb)
-{
-    HTMLBodyElement *This = impl_from_HTMLDOMNode(iface);
-
-    if(This->nsbody)
-        note_cc_edge((nsISupports*)This->nsbody, "This->nsbody", cb);
-}
-
-static void HTMLBodyElement_unlink(HTMLDOMNode *iface)
-{
-    HTMLBodyElement *This = impl_from_HTMLDOMNode(iface);
-
-    if(This->nsbody) {
-        nsIDOMHTMLBodyElement *nsbody = This->nsbody;
-        This->nsbody = NULL;
-        nsIDOMHTMLBodyElement_Release(nsbody);
-    }
-}
-
-static event_target_t **HTMLBodyElement_get_event_target_ptr(HTMLDOMNode *iface)
-{
-    HTMLBodyElement *This = impl_from_HTMLDOMNode(iface);
-
-    return This->textcont.element.node.doc
-        ? &This->textcont.element.node.doc->body_event_target
-        : &This->textcont.element.node.event_target.ptr;
 }
 
 static BOOL HTMLBodyElement_is_text_edit(HTMLDOMNode *iface)
 {
     return TRUE;
+}
+
+static BOOL HTMLBodyElement_is_settable(HTMLDOMNode *iface, DISPID dispid)
+{
+    switch(dispid) {
+    case DISPID_IHTMLELEMENT_OUTERTEXT:
+        return FALSE;
+    default:
+        return TRUE;
+    }
+}
+
+static inline HTMLBodyElement *impl_from_DispatchEx(DispatchEx *iface)
+{
+    return CONTAINING_RECORD(iface, HTMLBodyElement, element.node.event_target.dispex);
+}
+
+static void *HTMLBodyElement_query_interface(DispatchEx *dispex, REFIID riid)
+{
+    HTMLBodyElement *This = impl_from_DispatchEx(dispex);
+
+    if(IsEqualGUID(&IID_IHTMLBodyElement, riid))
+        return &This->IHTMLBodyElement_iface;
+    if(IsEqualGUID(&IID_IHTMLTextContainer, riid))
+        return &This->IHTMLTextContainer_iface;
+
+    return HTMLElement_query_interface(&This->element.node.event_target.dispex, riid);
+}
+
+static void HTMLBodyElement_traverse(DispatchEx *dispex, nsCycleCollectionTraversalCallback *cb)
+{
+    HTMLBodyElement *This = impl_from_DispatchEx(dispex);
+    HTMLElement_traverse(dispex, cb);
+
+    if(This->nsbody)
+        note_cc_edge((nsISupports*)This->nsbody, "nsbody", cb);
+}
+
+static void HTMLBodyElement_unlink(DispatchEx *dispex)
+{
+    HTMLBodyElement *This = impl_from_DispatchEx(dispex);
+    HTMLElement_unlink(dispex);
+    unlink_ref(&This->nsbody);
 }
 
 static const cpc_entry_t HTMLBodyElement_cpc[] = {
@@ -830,63 +864,61 @@ static const cpc_entry_t HTMLBodyElement_cpc[] = {
 };
 
 static const NodeImplVtbl HTMLBodyElementImplVtbl = {
-    HTMLBodyElement_QI,
-    HTMLElement_destructor,
-    HTMLBodyElement_cpc,
-    HTMLElement_clone,
-    HTMLElement_handle_event,
-    HTMLElement_get_attr_col,
-    HTMLBodyElement_get_event_target_ptr,
-    NULL,
-    NULL,
-    NULL,
-    NULL,
-    NULL,
-    NULL,
-    NULL,
-    NULL,
-    HTMLBodyElement_traverse,
-    HTMLBodyElement_unlink,
-    HTMLBodyElement_is_text_edit
+    .clsid                 = &CLSID_HTMLBody,
+    .cpc_entries           = HTMLBodyElement_cpc,
+    .clone                 = HTMLElement_clone,
+    .get_attr_col          = HTMLElement_get_attr_col,
+    .get_event_prop_target = HTMLBodyElement_get_event_prop_target,
+    .is_text_edit          = HTMLBodyElement_is_text_edit,
+    .is_settable           = HTMLBodyElement_is_settable
+};
+
+static const event_target_vtbl_t HTMLBodyElement_event_target_vtbl = {
+    {
+        HTMLELEMENT_DISPEX_VTBL_ENTRIES,
+        .query_interface= HTMLBodyElement_query_interface,
+        .destructor     = HTMLElement_destructor,
+        .traverse       = HTMLBodyElement_traverse,
+        .unlink         = HTMLBodyElement_unlink
+    },
+    HTMLELEMENT_EVENT_TARGET_VTBL_ENTRIES,
+    .handle_event       = HTMLElement_handle_event
 };
 
 static const tid_t HTMLBodyElement_iface_tids[] = {
     IHTMLBodyElement_tid,
     IHTMLBodyElement2_tid,
-    HTMLELEMENT_TIDS,
     IHTMLTextContainer_tid,
-    IHTMLUniqueName_tid,
     0
 };
 
-static dispex_static_data_t HTMLBodyElement_dispex = {
-    NULL,
-    DispHTMLBody_tid,
-    NULL,
-    HTMLBodyElement_iface_tids
+dispex_static_data_t HTMLBodyElement_dispex = {
+    .id           = PROT_HTMLBodyElement,
+    .prototype_id = PROT_HTMLElement,
+    .vtbl         = &HTMLBodyElement_event_target_vtbl.dispex_vtbl,
+    .disp_tid     = DispHTMLBody_tid,
+    .iface_tids   = HTMLBodyElement_iface_tids,
+    .init_info    = HTMLElement_init_dispex_info,
 };
 
-HRESULT HTMLBodyElement_Create(HTMLDocumentNode *doc, nsIDOMHTMLElement *nselem, HTMLElement **elem)
+HRESULT HTMLBodyElement_Create(HTMLDocumentNode *doc, nsIDOMElement *nselem, HTMLElement **elem)
 {
     HTMLBodyElement *ret;
     nsresult nsres;
 
-    ret = heap_alloc_zero(sizeof(HTMLBodyElement));
+    ret = calloc(1, sizeof(HTMLBodyElement));
     if(!ret)
         return E_OUTOFMEMORY;
 
     ret->IHTMLBodyElement_iface.lpVtbl = &HTMLBodyElementVtbl;
-    ret->textcont.element.node.vtbl = &HTMLBodyElementImplVtbl;
+    ret->IHTMLTextContainer_iface.lpVtbl = &HTMLTextContainerVtbl;
+    ret->element.node.vtbl = &HTMLBodyElementImplVtbl;
 
-    nsres = nsIDOMHTMLElement_QueryInterface(nselem, &IID_nsIDOMHTMLBodyElement, (void**)&ret->nsbody);
-    if(NS_FAILED(nsres)) {
-        ERR("Could not get nsDOMHTMLBodyElement: %08x\n", nsres);
-        heap_free(ret);
-        return E_OUTOFMEMORY;
-    }
+    HTMLElement_Init(&ret->element, doc, nselem, &HTMLBodyElement_dispex);
 
-    HTMLTextContainer_Init(&ret->textcont, doc, nselem, &HTMLBodyElement_dispex);
+    nsres = nsIDOMElement_QueryInterface(nselem, &IID_nsIDOMHTMLBodyElement, (void**)&ret->nsbody);
+    assert(nsres == NS_OK);
 
-    *elem = &ret->textcont.element;
+    *elem = &ret->element;
     return S_OK;
 }

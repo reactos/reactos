@@ -16,7 +16,22 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include <stdarg.h>
+#include <stdio.h>
+
+#define COBJMACROS
+
+#include "windef.h"
+#include "winbase.h"
+#include "winuser.h"
+#include "ole2.h"
+#include "optary.h"
+
+#include "wine/debug.h"
+
 #include "mshtml_private.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(mshtml);
 
 typedef struct load_opt {
     DWORD option;
@@ -67,7 +82,7 @@ static ULONG WINAPI HtmlLoadOptions_AddRef(IHtmlLoadOptions *iface)
     HTMLLoadOptions *This = impl_from_IHtmlLoadOptions(iface);
     LONG ref = InterlockedIncrement(&This->ref);
 
-    TRACE("(%p) ref=%d\n", This, ref);
+    TRACE("(%p) ref=%ld\n", This, ref);
 
     return ref;
 }
@@ -77,7 +92,7 @@ static ULONG WINAPI HtmlLoadOptions_Release(IHtmlLoadOptions *iface)
     HTMLLoadOptions *This = impl_from_IHtmlLoadOptions(iface);
     LONG ref = InterlockedDecrement(&This->ref);
 
-    TRACE("(%p) ref=%d\n", This, ref);
+    TRACE("(%p) ref=%ld\n", This, ref);
 
     if(!ref) {
         load_opt *iter = This->opts, *last;
@@ -86,11 +101,11 @@ static ULONG WINAPI HtmlLoadOptions_Release(IHtmlLoadOptions *iface)
             last = iter;
             iter = iter->next;
 
-            heap_free(last->buffer);
-            heap_free(last);
+            free(last->buffer);
+            free(last);
         }
 
-        heap_free(This);
+        free(This);
     }
 
     return ref;
@@ -102,7 +117,7 @@ static HRESULT WINAPI HtmlLoadOptions_QueryOption(IHtmlLoadOptions *iface, DWORD
     HTMLLoadOptions *This = impl_from_IHtmlLoadOptions(iface);
     load_opt *iter;
 
-    TRACE("(%p)->(%d %p %p)\n", This, dwOption, pBuffer, pcbBuf);
+    TRACE("(%p)->(%ld %p %p)\n", This, dwOption, pBuffer, pcbBuf);
 
     for(iter = This->opts; iter; iter = iter->next) {
         if(iter->option == dwOption)
@@ -131,7 +146,7 @@ static HRESULT WINAPI HtmlLoadOptions_SetOption(IHtmlLoadOptions *iface, DWORD d
     HTMLLoadOptions *This = impl_from_IHtmlLoadOptions(iface);
     load_opt *iter = NULL;
 
-    TRACE("(%p)->(%d %p %d)\n", This, dwOption, pBuffer, cbBuf);
+    TRACE("(%p)->(%ld %p %ld)\n", This, dwOption, pBuffer, cbBuf);
 
     for(iter = This->opts; iter; iter = iter->next) {
         if(iter->option == dwOption)
@@ -139,13 +154,13 @@ static HRESULT WINAPI HtmlLoadOptions_SetOption(IHtmlLoadOptions *iface, DWORD d
     }
 
     if(!iter) {
-        iter = heap_alloc(sizeof(load_opt));
+        iter = malloc(sizeof(load_opt));
         iter->next = This->opts;
         This->opts = iter;
 
         iter->option = dwOption;
     }else {
-        heap_free(iter->buffer);
+        free(iter->buffer);
     }
 
     if(!cbBuf) {
@@ -156,7 +171,7 @@ static HRESULT WINAPI HtmlLoadOptions_SetOption(IHtmlLoadOptions *iface, DWORD d
     }
 
     iter->size = cbBuf;
-    iter->buffer = heap_alloc(cbBuf);
+    iter->buffer = malloc(cbBuf);
     memcpy(iter->buffer, pBuffer, iter->size);
 
     return S_OK;
@@ -177,7 +192,7 @@ HRESULT HTMLLoadOptions_Create(IUnknown *pUnkOuter, REFIID riid, void** ppv)
 
     TRACE("(%p %s %p)\n", pUnkOuter, debugstr_mshtml_guid(riid), ppv);
 
-    ret = heap_alloc(sizeof(HTMLLoadOptions));
+    ret = malloc(sizeof(HTMLLoadOptions));
     if(!ret)
         return E_OUTOFMEMORY;
 

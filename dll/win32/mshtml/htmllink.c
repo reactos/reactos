@@ -16,77 +16,36 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "mshtml_private.h"
+#include <stdarg.h>
 
-typedef struct {
+#define COBJMACROS
+
+#include "windef.h"
+#include "winbase.h"
+#include "winuser.h"
+#include "ole2.h"
+
+#include "wine/debug.h"
+
+#include "mshtml_private.h"
+#include "htmlevent.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(mshtml);
+
+struct HTMLLinkElement {
     HTMLElement element;
     IHTMLLinkElement IHTMLLinkElement_iface;
 
     nsIDOMHTMLLinkElement *nslink;
-} HTMLLinkElement;
+};
 
 static inline HTMLLinkElement *impl_from_IHTMLLinkElement(IHTMLLinkElement *iface)
 {
     return CONTAINING_RECORD(iface, HTMLLinkElement, IHTMLLinkElement_iface);
 }
 
-static HRESULT WINAPI HTMLLinkElement_QueryInterface(IHTMLLinkElement *iface,
-                                                         REFIID riid, void **ppv)
-{
-    HTMLLinkElement *This = impl_from_IHTMLLinkElement(iface);
-
-    return IHTMLDOMNode_QueryInterface(&This->element.node.IHTMLDOMNode_iface, riid, ppv);
-}
-
-static ULONG WINAPI HTMLLinkElement_AddRef(IHTMLLinkElement *iface)
-{
-    HTMLLinkElement *This = impl_from_IHTMLLinkElement(iface);
-
-    return IHTMLDOMNode_AddRef(&This->element.node.IHTMLDOMNode_iface);
-}
-
-static ULONG WINAPI HTMLLinkElement_Release(IHTMLLinkElement *iface)
-{
-    HTMLLinkElement *This = impl_from_IHTMLLinkElement(iface);
-
-    return IHTMLDOMNode_Release(&This->element.node.IHTMLDOMNode_iface);
-}
-
-static HRESULT WINAPI HTMLLinkElement_GetTypeInfoCount(IHTMLLinkElement *iface, UINT *pctinfo)
-{
-    HTMLLinkElement *This = impl_from_IHTMLLinkElement(iface);
-
-    return IDispatchEx_GetTypeInfoCount(&This->element.node.event_target.dispex.IDispatchEx_iface, pctinfo);
-}
-
-static HRESULT WINAPI HTMLLinkElement_GetTypeInfo(IHTMLLinkElement *iface, UINT iTInfo,
-                                              LCID lcid, ITypeInfo **ppTInfo)
-{
-    HTMLLinkElement *This = impl_from_IHTMLLinkElement(iface);
-
-    return IDispatchEx_GetTypeInfo(&This->element.node.event_target.dispex.IDispatchEx_iface, iTInfo, lcid,
-            ppTInfo);
-}
-
-static HRESULT WINAPI HTMLLinkElement_GetIDsOfNames(IHTMLLinkElement *iface, REFIID riid,
-                                                LPOLESTR *rgszNames, UINT cNames,
-                                                LCID lcid, DISPID *rgDispId)
-{
-    HTMLLinkElement *This = impl_from_IHTMLLinkElement(iface);
-
-    return IDispatchEx_GetIDsOfNames(&This->element.node.event_target.dispex.IDispatchEx_iface, riid, rgszNames,
-            cNames, lcid, rgDispId);
-}
-
-static HRESULT WINAPI HTMLLinkElement_Invoke(IHTMLLinkElement *iface, DISPID dispIdMember,
-                            REFIID riid, LCID lcid, WORD wFlags, DISPPARAMS *pDispParams,
-                            VARIANT *pVarResult, EXCEPINFO *pExcepInfo, UINT *puArgErr)
-{
-    HTMLLinkElement *This = impl_from_IHTMLLinkElement(iface);
-
-    return IDispatchEx_Invoke(&This->element.node.event_target.dispex.IDispatchEx_iface, dispIdMember, riid,
-            lcid, wFlags, pDispParams, pVarResult, pExcepInfo, puArgErr);
-}
+DISPEX_IDISPATCH_IMPL(HTMLLinkElement, IHTMLLinkElement,
+                      impl_from_IHTMLLinkElement(iface)->element.node.event_target.dispex)
 
 static HRESULT WINAPI HTMLLinkElement_put_href(IHTMLLinkElement *iface, BSTR v)
 {
@@ -156,7 +115,7 @@ static HRESULT WINAPI HTMLLinkElement_put_rev(IHTMLLinkElement *iface, BSTR v)
     nsres = nsIDOMHTMLLinkElement_SetRev(This->nslink, &nsstr);
     nsAString_Finish(&nsstr);
     if(NS_FAILED(nsres)) {
-        ERR("SetRev failed: %08x\n", nsres);
+        ERR("SetRev failed: %08lx\n", nsres);
         return E_FAIL;
     }
 
@@ -228,15 +187,19 @@ static HRESULT WINAPI HTMLLinkElement_get_onreadystatechange(IHTMLLinkElement *i
 static HRESULT WINAPI HTMLLinkElement_put_onload(IHTMLLinkElement *iface, VARIANT v)
 {
     HTMLLinkElement *This = impl_from_IHTMLLinkElement(iface);
-    FIXME("(%p)->(%s)\n", This, debugstr_variant(&v));
-    return E_NOTIMPL;
+
+    TRACE("(%p)->(%s)\n", This, debugstr_variant(&v));
+
+    return set_node_event(&This->element.node, EVENTID_LOAD, &v);
 }
 
 static HRESULT WINAPI HTMLLinkElement_get_onload(IHTMLLinkElement *iface, VARIANT *p)
 {
     HTMLLinkElement *This = impl_from_IHTMLLinkElement(iface);
-    FIXME("(%p)->(%p)\n", This, p);
-    return E_NOTIMPL;
+
+    TRACE("(%p)->(%p)\n", This, p);
+
+    return get_node_event(&This->element.node, EVENTID_LOAD, p);
 }
 
 static HRESULT WINAPI HTMLLinkElement_put_onerror(IHTMLLinkElement *iface, VARIANT v)
@@ -283,7 +246,7 @@ static HRESULT WINAPI HTMLLinkElement_get_disabled(IHTMLLinkElement *iface, VARI
     if(NS_FAILED(nsres))
         return E_FAIL;
 
-    *p = ret ? VARIANT_TRUE : VARIANT_FALSE;
+    *p = variant_bool(ret);
     return S_OK;
 }
 
@@ -301,7 +264,7 @@ static HRESULT WINAPI HTMLLinkElement_put_media(IHTMLLinkElement *iface, BSTR v)
     nsAString_Finish(&str);
 
     if(NS_FAILED(nsres)) {
-        ERR("Set Media(%s) failed: %08x\n", debugstr_w(v), nsres);
+        ERR("Set Media(%s) failed: %08lx\n", debugstr_w(v), nsres);
         return E_FAIL;
     }
     return S_OK;
@@ -356,21 +319,6 @@ static inline HTMLLinkElement *impl_from_HTMLDOMNode(HTMLDOMNode *iface)
     return CONTAINING_RECORD(iface, HTMLLinkElement, element.node);
 }
 
-static HRESULT HTMLLinkElement_QI(HTMLDOMNode *iface, REFIID riid, void **ppv)
-{
-    HTMLLinkElement *This = impl_from_HTMLDOMNode(iface);
-
-    if(IsEqualGUID(&IID_IHTMLLinkElement, riid)) {
-        TRACE("(%p)->(IID_IHTMLLinkElement %p)\n", This, ppv);
-        *ppv = &This->IHTMLLinkElement_iface;
-    }else {
-        return HTMLElement_QI(&This->element.node, riid, ppv);
-    }
-
-    IUnknown_AddRef((IUnknown*)*ppv);
-    return S_OK;
-}
-
 static HRESULT HTMLLinkElementImpl_put_disabled(HTMLDOMNode *iface, VARIANT_BOOL v)
 {
     HTMLLinkElement *This = impl_from_HTMLDOMNode(iface);
@@ -383,63 +331,76 @@ static HRESULT HTMLLinkElementImpl_get_disabled(HTMLDOMNode *iface, VARIANT_BOOL
     return IHTMLLinkElement_get_disabled(&This->IHTMLLinkElement_iface, p);
 }
 
-static void HTMLLinkElement_traverse(HTMLDOMNode *iface, nsCycleCollectionTraversalCallback *cb)
+static inline HTMLLinkElement *impl_from_DispatchEx(DispatchEx *iface)
 {
-    HTMLLinkElement *This = impl_from_HTMLDOMNode(iface);
+    return CONTAINING_RECORD(iface, HTMLLinkElement, element.node.event_target.dispex);
+}
+
+static void *HTMLLinkElement_query_interface(DispatchEx *dispex, REFIID riid)
+{
+    HTMLLinkElement *This = impl_from_DispatchEx(dispex);
+
+    if(IsEqualGUID(&IID_IHTMLLinkElement, riid))
+        return &This->IHTMLLinkElement_iface;
+
+    return HTMLElement_query_interface(&This->element.node.event_target.dispex, riid);
+}
+
+static void HTMLLinkElement_traverse(DispatchEx *dispex, nsCycleCollectionTraversalCallback *cb)
+{
+    HTMLLinkElement *This = impl_from_DispatchEx(dispex);
+    HTMLElement_traverse(dispex, cb);
 
     if(This->nslink)
-        note_cc_edge((nsISupports*)This->nslink, "This->nslink", cb);
+        note_cc_edge((nsISupports*)This->nslink, "nslink", cb);
 }
 
-static void HTMLLinkElement_unlink(HTMLDOMNode *iface)
+static void HTMLLinkElement_unlink(DispatchEx *dispex)
 {
-    HTMLLinkElement *This = impl_from_HTMLDOMNode(iface);
-
-    if(This->nslink) {
-        nsIDOMHTMLLinkElement *nslink = This->nslink;
-
-        This->nslink = NULL;
-        nsIDOMHTMLLinkElement_Release(nslink);
-    }
+    HTMLLinkElement *This = impl_from_DispatchEx(dispex);
+    HTMLElement_unlink(dispex);
+    unlink_ref(&This->nslink);
 }
 static const NodeImplVtbl HTMLLinkElementImplVtbl = {
-    HTMLLinkElement_QI,
-    HTMLElement_destructor,
-    HTMLElement_cpc,
-    HTMLElement_clone,
-    HTMLElement_handle_event,
-    HTMLElement_get_attr_col,
-    NULL,
-    NULL,
-    HTMLLinkElementImpl_put_disabled,
-    HTMLLinkElementImpl_get_disabled,
-    NULL,
-    NULL,
-    NULL,
-    NULL,
-    NULL,
-    HTMLLinkElement_traverse,
-    HTMLLinkElement_unlink
+    .clsid                 = &CLSID_HTMLLinkElement,
+    .cpc_entries           = HTMLElement_cpc,
+    .clone                 = HTMLElement_clone,
+    .get_attr_col          = HTMLElement_get_attr_col,
+    .put_disabled          = HTMLLinkElementImpl_put_disabled,
+    .get_disabled          = HTMLLinkElementImpl_get_disabled,
+};
+
+static const event_target_vtbl_t HTMLLinkElement_event_target_vtbl = {
+    {
+        HTMLELEMENT_DISPEX_VTBL_ENTRIES,
+        .query_interface= HTMLLinkElement_query_interface,
+        .destructor     = HTMLElement_destructor,
+        .traverse       = HTMLLinkElement_traverse,
+        .unlink         = HTMLLinkElement_unlink
+    },
+    HTMLELEMENT_EVENT_TARGET_VTBL_ENTRIES,
+    .handle_event       = HTMLElement_handle_event
 };
 
 static const tid_t HTMLLinkElement_iface_tids[] = {
-    HTMLELEMENT_TIDS,
     IHTMLLinkElement_tid,
     0
 };
-static dispex_static_data_t HTMLLinkElement_dispex = {
-    NULL,
-    DispHTMLLinkElement_tid,
-    NULL,
-    HTMLLinkElement_iface_tids
+dispex_static_data_t HTMLLinkElement_dispex = {
+    .id           = PROT_HTMLLinkElement,
+    .prototype_id = PROT_HTMLElement,
+    .vtbl         = &HTMLLinkElement_event_target_vtbl.dispex_vtbl,
+    .disp_tid     = DispHTMLLinkElement_tid,
+    .iface_tids   = HTMLLinkElement_iface_tids,
+    .init_info    = HTMLElement_init_dispex_info,
 };
 
-HRESULT HTMLLinkElement_Create(HTMLDocumentNode *doc, nsIDOMHTMLElement *nselem, HTMLElement **elem)
+HRESULT HTMLLinkElement_Create(HTMLDocumentNode *doc, nsIDOMElement *nselem, HTMLElement **elem)
 {
     HTMLLinkElement *ret;
     nsresult nsres;
 
-    ret = heap_alloc_zero(sizeof(*ret));
+    ret = calloc(1, sizeof(*ret));
     if(!ret)
         return E_OUTOFMEMORY;
 
@@ -448,7 +409,7 @@ HRESULT HTMLLinkElement_Create(HTMLDocumentNode *doc, nsIDOMHTMLElement *nselem,
 
     HTMLElement_Init(&ret->element, doc, nselem, &HTMLLinkElement_dispex);
 
-    nsres = nsIDOMHTMLElement_QueryInterface(nselem, &IID_nsIDOMHTMLLinkElement, (void**)&ret->nslink);
+    nsres = nsIDOMElement_QueryInterface(nselem, &IID_nsIDOMHTMLLinkElement, (void**)&ret->nslink);
     assert(nsres == NS_OK);
 
     *elem = &ret->element;

@@ -1,0 +1,316 @@
+/*
+ * Copyright 2021      Paul Gofman for CodeWeavers
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+#pragma makedep typelib
+
+#include <mshtmdid.h>
+
+import "ocidl.idl";
+import "mshtml.idl";
+
+[
+    version(1.0),
+    hidden,
+    uuid(90de541e-380b-4530-94a9-97367fe49d8d)
+]
+library MSHTML_private
+{
+
+importlib("stdole2.tlb");
+
+[
+    odl,
+    oleautomation,
+    dual,
+    hidden,
+    uuid(fd55b4b6-2813-4fb4-829d-380099474ab1)
+]
+interface IWineMSHTMLConsole : IDispatch
+{
+    [id(1)]
+    HRESULT assert([in] VARIANT_BOOL *assertion,
+                   [in, optional] VARIANT *varargStart);
+    [id(2)]
+    HRESULT clear();
+    [id(3)]
+    HRESULT count([in, optional] VARIANT *label);
+    [id(4)]
+    HRESULT debug([in, optional] VARIANT *varargStart);
+    [id(5)]
+    HRESULT dir([in, optional] VARIANT *object);
+    [id(6)]
+    HRESULT dirxml([in, optional] VARIANT *object);
+    [id(7)]
+    HRESULT error([in, optional] VARIANT *varargStart);
+    [id(8)]
+    HRESULT group([in, optional] VARIANT *label);
+    [id(9)]
+    HRESULT groupCollapsed([in, optional] VARIANT *label);
+    [id(10)]
+    HRESULT groupEnd();
+    [id(11)]
+    HRESULT info([in, optional] VARIANT *varargStart);
+    [id(12)]
+    HRESULT log([in, optional] VARIANT *varargStart);
+    [id(13)]
+    HRESULT time([in, optional] VARIANT *label);
+    [id(14)]
+    HRESULT timeEnd([in, optional] VARIANT *label);
+    [id(15)]
+    HRESULT trace([in, optional] VARIANT *varargStart);
+    [id(16)]
+    HRESULT warn([in, optional] VARIANT *varargStart);
+}
+
+[
+    odl,
+    oleautomation,
+    dual,
+    hidden,
+    uuid(6ac5491e-1758-4b82-98a2-83e31a7c8871)
+]
+interface IWineMSHTMLMutationObserver : IDispatch
+{
+    [id(1)]
+    HRESULT disconnect();
+    [id(2)]
+    HRESULT observe([in] IHTMLDOMNode *target, [in] IDispatch *options);
+    [id(3)]
+    HRESULT takeRecords([retval, out] IDispatch **records);
+}
+
+[
+    odl,
+    oleautomation,
+    dual,
+    hidden,
+    uuid(fd55b4b6-2813-4fb4-829d-380099474ab0)
+]
+interface IWineMSHTMLMediaQueryList : IDispatch
+{
+    [propget, id(1)]
+    HRESULT media([retval, out] BSTR *p);
+    [propget, id(2)]
+    HRESULT matches([retval, out] VARIANT_BOOL *p);
+    [id(3)]
+    HRESULT addListener([in] VARIANT *listener);
+    [id(4)]
+    HRESULT removeListener([in] VARIANT *listener);
+}
+
+[
+    odl,
+    oleautomation,
+    dual,
+    hidden,
+    uuid(1b5939fc-8f84-43f3-8d89-f9a92069fad7)
+]
+interface IWineHTMLWindowPrivate : IDispatch
+{
+    [id(50)]
+    HRESULT requestAnimationFrame([in] VARIANT *expr, [retval, out] VARIANT *timer_id);
+    [id(51)]
+    HRESULT cancelAnimationFrame([in] VARIANT timer_id);
+    [propget, id(52)]
+    HRESULT console([retval, out] IDispatch **console);
+    [id(53)]
+    HRESULT matchMedia([in] BSTR media_query, [retval, out] IDispatch **media_query_list);
+}
+
+[
+    odl,
+    oleautomation,
+    dual,
+    hidden,
+    uuid(1b5939fc-8f84-43f3-8d89-f9a92069fad6)
+]
+interface IWineHTMLWindowCompatPrivate : IDispatch
+{
+    [propput, id(DISPID_IHTMLWINDOW7_PERFORMANCE)]
+    HRESULT performance([in] VARIANT v);
+
+    [propget, id(DISPID_IHTMLWINDOW7_PERFORMANCE)]
+    HRESULT performance([out, retval] VARIANT *p);
+}
+
+[
+    odl,
+    oleautomation,
+    dual,
+    hidden,
+    uuid(465908fd-f394-489f-b7a3-4c00fbbe9eea)
+]
+interface IWineHTMLDOMNodePrivate : IDispatch
+{
+    [id(DISPID_IHTMLELEMENT6_IE9_HASATTRIBUTES)]
+    HRESULT hasAttributes([retval, out] VARIANT_BOOL *p);
+    [id(DISPID_IHTMLELEMENT4_NORMALIZE)]
+    HRESULT normalize();
+}
+
+[
+    odl,
+    oleautomation,
+    dual,
+    hidden,
+    uuid(465908fd-f394-489f-b7a3-4c00fbbe9eeb)
+]
+interface IWineHTMLCharacterData : IDispatch
+{
+    [propput, id(32)]
+    HRESULT data([in] BSTR v);
+    [propget, id(32)]
+    HRESULT data([out, retval] BSTR *p);
+    [propget, id(33)]
+    HRESULT length([out, retval] LONG *p);
+    [id(34)]
+    HRESULT substringData([in] LONG offset, [in] LONG count, [out, retval] BSTR *p);
+    [id(35)]
+    HRESULT appendData([in] BSTR string);
+    [id(36)]
+    HRESULT insertData([in] LONG offset, [in] BSTR string);
+    [id(37)]
+    HRESULT deleteData([in] LONG offset, [in] LONG count);
+    [id(38)]
+    HRESULT replaceData([in] LONG offset, [in] LONG count, [in] BSTR string);
+}
+
+[
+    odl,
+    oleautomation,
+    dual,
+    hidden,
+    uuid(465908fd-f394-489f-b7a3-4c00fbbe9eec)
+]
+interface IWineHTMLElementPrivate : IDispatch
+{
+    [propget, id(1)]
+    HRESULT classList([retval, out] IDispatch **class_list);
+}
+
+[
+    odl,
+    oleautomation,
+    dual,
+    hidden,
+    uuid(465908fd-f394-489f-b7a3-4c00fbbe9eed)
+]
+interface IWineCSSProperties : IDispatch
+{
+    [id(DISPID_IHTMLSTYLE_SETATTRIBUTE)]
+    HRESULT setAttribute([in] BSTR name, [in] VARIANT value, [defaultvalue(1), in] LONG flags);
+    [id(DISPID_IHTMLSTYLE_GETATTRIBUTE)]
+    HRESULT getAttribute([in] BSTR name, [defaultvalue(0), in] LONG flags, [out, retval] VARIANT *p);
+    [id(DISPID_IHTMLSTYLE_REMOVEATTRIBUTE)]
+    HRESULT removeAttribute([in] BSTR name, [defaultvalue(1), in] LONG flags, [out, retval] VARIANT_BOOL *p);
+}
+
+[
+    odl,
+    oleautomation,
+    dual,
+    hidden,
+    uuid(08ef0edd-5fb8-4178-a2f0-9f686e00441b)
+]
+interface IWineDOMTokenList : IDispatch
+{
+    [id(1)]
+    HRESULT add([in] BSTR token);
+    [id(2)]
+    HRESULT remove([in] BSTR token);
+    [id(3)]
+    HRESULT toggle([in] BSTR token, [retval, out] VARIANT_BOOL *p);
+    [id(4)]
+    HRESULT contains([in] BSTR token, [retval, out] VARIANT_BOOL *p);
+    [propget, id(5)]
+    HRESULT length([retval, out] LONG *p);
+    [id(6)]
+    HRESULT item([in] LONG index, [retval, out] VARIANT *p);
+    [id(7)]
+    HRESULT toString([retval, out] BSTR *String);
+}
+
+[
+    odl,
+    oleautomation,
+    dual,
+    hidden,
+    uuid(25508c5d-6a54-6888-8f41-75ff3ae8706b)
+]
+interface IWinePageTransitionEvent : IDispatch
+{
+    [propget, id(1)]
+    HRESULT persisted([retval, out] VARIANT_BOOL *ret);
+}
+
+
+const long DISPID_IWINEXMLHTTPREQUESTPRIVATE_RESPONSE = 1;
+const long DISPID_IWINEXMLHTTPREQUESTPRIVATE_RESPONSETYPE = 2;
+const long DISPID_IWINEXMLHTTPREQUESTPRIVATE_UPLOAD = 3;
+const long DISPID_IWINEXMLHTTPREQUESTPRIVATE_WITHCREDENTIALS = 4;
+const long DISPID_IWINEXMLHTTPREQUESTPRIVATE_OVERRIDEMIMETYPE = 5;
+[
+    odl,
+    oleautomation,
+    dual,
+    hidden,
+    uuid(08ef0edd-5fb8-4178-a2f0-9f686e00441c)
+]
+interface IWineXMLHttpRequestPrivate : IDispatch
+{
+    [propget, id(DISPID_IWINEXMLHTTPREQUESTPRIVATE_RESPONSE)]
+    HRESULT response([retval, out] VARIANT *p);
+    [propput, id(DISPID_IWINEXMLHTTPREQUESTPRIVATE_RESPONSETYPE)]
+    HRESULT responseType([in] BSTR v);
+    [propget, id(DISPID_IWINEXMLHTTPREQUESTPRIVATE_RESPONSETYPE)]
+    HRESULT responseType([retval, out] BSTR *p);
+    [propget, id(DISPID_IWINEXMLHTTPREQUESTPRIVATE_UPLOAD)]
+    HRESULT upload([retval, out] IDispatch **p);
+    [propput, id(DISPID_IWINEXMLHTTPREQUESTPRIVATE_WITHCREDENTIALS)]
+    HRESULT withCredentials([in] VARIANT_BOOL v);
+    [propget, id(DISPID_IWINEXMLHTTPREQUESTPRIVATE_WITHCREDENTIALS)]
+    HRESULT withCredentials([retval, out] VARIANT_BOOL *p);
+    [id(DISPID_IWINEXMLHTTPREQUESTPRIVATE_OVERRIDEMIMETYPE)]
+    HRESULT overrideMimeType([in] BSTR mimeType);
+    [propput, id(DISPID_EVPROP_ONERROR)]
+    HRESULT onerror([in] VARIANT v);
+    [propget, id(DISPID_EVPROP_ONERROR)]
+    HRESULT onerror([retval, out] VARIANT *p);
+    [propput, id(DISPID_EVPROP_ONABORT)]
+    HRESULT onabort([in] VARIANT v);
+    [propget, id(DISPID_EVPROP_ONABORT)]
+    HRESULT onabort([retval, out] VARIANT *p);
+    [propput, id(DISPID_EVPROP_PROGRESS)]
+    HRESULT onprogress([in] VARIANT v);
+    [propget, id(DISPID_EVPROP_PROGRESS)]
+    HRESULT onprogress([retval, out] VARIANT *p);
+    [propput, id(DISPID_EVPROP_LOADSTART)]
+    HRESULT onloadstart([in] VARIANT v);
+    [propget, id(DISPID_EVPROP_LOADSTART)]
+    HRESULT onloadstart([retval, out] VARIANT *p);
+    [propput, id(DISPID_EVPROP_LOADEND)]
+    HRESULT onloadend([in] VARIANT v);
+    [propget, id(DISPID_EVPROP_LOADEND)]
+    HRESULT onloadend([retval, out] VARIANT *p);
+    [propput, id(DISPID_EVPROP_ONLOAD)]
+    HRESULT onload([in] VARIANT v);
+    [propget, id(DISPID_EVPROP_ONLOAD)]
+    HRESULT onload([retval, out] VARIANT *p);
+}
+
+} /* library MSHTML_private */

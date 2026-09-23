@@ -16,14 +16,25 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include <stdarg.h>
+#include <stdio.h>
+
+#define COBJMACROS
+
+#include "windef.h"
+#include "winbase.h"
+#include "winuser.h"
+#include "ole2.h"
+#include "activscp.h"
+
+#include "wine/debug.h"
+
 #include "mshtml_private.h"
 
-#include <activscp.h>
-
-static const WCHAR about_blankW[] = {'a','b','o','u','t',':','b','l','a','n','k',0};
+WINE_DEFAULT_DEBUG_CHANNEL(mshtml);
 
 /* Defined as extern in urlmon.idl, but not exported by uuid.lib */
-DECLSPEC_HIDDEN const GUID GUID_CUSTOM_CONFIRMOBJECTSAFETY =
+const GUID GUID_CUSTOM_CONFIRMOBJECTSAFETY =
     {0x10200490,0xfa38,0x11d0,{0xac,0x0e,0x00,0xa0,0xc9,0xf,0xff,0xc0}};
 
 static inline HTMLDocumentNode *impl_from_IInternetHostSecurityManager(IInternetHostSecurityManager *iface)
@@ -53,7 +64,7 @@ static HRESULT WINAPI InternetHostSecurityManager_GetSecurityId(IInternetHostSec
         DWORD *pcbSecurityId, DWORD_PTR dwReserved)
 {
     HTMLDocumentNode *This = impl_from_IInternetHostSecurityManager(iface);
-    FIXME("(%p)->(%p %p %lx)\n", This, pbSecurityId, pcbSecurityId, dwReserved);
+    FIXME("(%p)->(%p %p %Ix)\n", This, pbSecurityId, pcbSecurityId, dwReserved);
     return E_NOTIMPL;
 }
 
@@ -63,14 +74,14 @@ static HRESULT WINAPI InternetHostSecurityManager_ProcessUrlAction(IInternetHost
     HTMLDocumentNode *This = impl_from_IInternetHostSecurityManager(iface);
     const WCHAR *url;
 
-    TRACE("(%p)->(%d %p %d %p %d %x %x)\n", This, dwAction, pPolicy, cbPolicy, pContext, cbContext, dwFlags, dwReserved);
+    TRACE("(%p)->(%ld %p %ld %p %ld %lx %lx)\n", This, dwAction, pPolicy, cbPolicy, pContext, cbContext, dwFlags, dwReserved);
 
-    if(!This->basedoc.window)
+    if(!This->window || !This->window->base.outer_window)
         return E_UNEXPECTED;
 
-    url = This->basedoc.window->url ? This->basedoc.window->url : about_blankW;
+    url = This->window->base.outer_window->url ? This->window->base.outer_window->url : L"about:blank";
 
-    return IInternetSecurityManager_ProcessUrlAction(This->basedoc.window->secmgr, url, dwAction, pPolicy, cbPolicy,
+    return IInternetSecurityManager_ProcessUrlAction(get_security_manager(), url, dwAction, pPolicy, cbPolicy,
             pContext, cbContext, dwFlags, dwReserved);
 }
 
@@ -106,7 +117,7 @@ static HRESULT confirm_safety(HTMLDocumentNode *This, const WCHAR *url, struct C
 
     /* FIXME: Check URLACTION_ACTIVEX_OVERRIDE_SCRIPT_SAFETY */
 
-    hres = IInternetSecurityManager_ProcessUrlAction(This->basedoc.window->secmgr, url, URLACTION_SCRIPT_SAFE_ACTIVEX,
+    hres = IInternetSecurityManager_ProcessUrlAction(get_security_manager(), url, URLACTION_SCRIPT_SAFE_ACTIVEX,
             (BYTE*)&policy, sizeof(policy), NULL, 0, 0, 0);
     if(FAILED(hres) || policy != URLPOLICY_ALLOW) {
         *ret = URLPOLICY_DISALLOW;
@@ -168,14 +179,14 @@ static HRESULT WINAPI InternetHostSecurityManager_QueryCustomPolicy(IInternetHos
     const WCHAR *url;
     HRESULT hres;
 
-    TRACE("(%p)->(%s %p %p %p %d %x)\n", This, debugstr_guid(guidKey), ppPolicy, pcbPolicy, pContext, cbContext, dwReserved);
+    TRACE("(%p)->(%s %p %p %p %ld %lx)\n", This, debugstr_guid(guidKey), ppPolicy, pcbPolicy, pContext, cbContext, dwReserved);
 
-    if(!This->basedoc.window)
+    if(!This->window || !This->window->base.outer_window)
         return E_UNEXPECTED;
 
-    url = This->basedoc.window->url ? This->basedoc.window->url : about_blankW;
+    url = This->window->base.outer_window->url ? This->window->base.outer_window->url : L"about:blank";
 
-    hres = IInternetSecurityManager_QueryCustomPolicy(This->basedoc.window->secmgr, url, guidKey, ppPolicy, pcbPolicy,
+    hres = IInternetSecurityManager_QueryCustomPolicy(get_security_manager(), url, guidKey, ppPolicy, pcbPolicy,
             pContext, cbContext, dwReserved);
     if(hres != HRESULT_FROM_WIN32(ERROR_NOT_FOUND))
         return hres;
@@ -191,7 +202,7 @@ static HRESULT WINAPI InternetHostSecurityManager_QueryCustomPolicy(IInternetHos
         }
 
         cs = (struct CONFIRMSAFETY*)pContext;
-        TRACE("cs = {%s %p %x}\n", debugstr_guid(&cs->clsid), cs->pUnk, cs->dwFlags);
+        TRACE("cs = {%s %p %lx}\n", debugstr_guid(&cs->clsid), cs->pUnk, cs->dwFlags);
 
         hres = IUnknown_QueryInterface(cs->pUnk, &IID_IActiveScript, (void**)&active_script);
         if(SUCCEEDED(hres)) {
@@ -210,7 +221,7 @@ static HRESULT WINAPI InternetHostSecurityManager_QueryCustomPolicy(IInternetHos
 
         *(DWORD*)*ppPolicy = policy;
         *pcbPolicy = sizeof(policy);
-        TRACE("policy %x\n", policy);
+        TRACE("policy %lx\n", policy);
         return S_OK;
     }
 

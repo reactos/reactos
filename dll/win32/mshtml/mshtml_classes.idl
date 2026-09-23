@@ -296,6 +296,15 @@ coclass ResProtocol { }
 coclass Scriptlet { }
 
 [
+    helpstring("SVG Document"),
+    progid("svgfile"),
+    threading(apartment),
+    version(1.0),
+    uuid(30590066-98b5-11cf-bb82-00aa00bdce0b)
+]
+coclass SVGDocumentClass { }
+
+[
     helpstring("Microsoft HTML Resource Pluggable Protocol"),
     threading(apartment),
     uuid(76e67a63-06e9-11d2-a840-006008059382)
@@ -308,3 +317,12 @@ coclass SysimageProtocol { }
     uuid(429af92c-a51f-11d2-861e-00c04fa35c89)
 ]
 coclass TridentAPI { }
+
+[
+    helpstring("XHTML Document"),
+    progid("xhtmlfile"),
+    threading(apartment),
+    version(1.0),
+    uuid(30590067-98b5-11cf-bb82-00aa00bdce0b)
+]
+coclass XHTMLDocumentClass { }

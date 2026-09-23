@@ -16,9 +16,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#pragma once
+#include "activscp.h"
 
-typedef struct {
+struct HTMLScriptElement {
     HTMLElement element;
 
     IHTMLScriptElement IHTMLScriptElement_iface;
@@ -28,21 +28,28 @@ typedef struct {
     BOOL parse_on_bind;
     BOOL pending_readystatechange_event;
     READYSTATE readystate;
-} HTMLScriptElement;
+    WCHAR *src_text; /* sctipt text downloaded from src */
+    BSCallback *binding; /* weak reference to current binding */
+};
 
 typedef struct {
     struct list entry;
     HTMLScriptElement *script;
 } script_queue_entry_t;
 
-HRESULT script_elem_from_nsscript(HTMLDocumentNode*,nsIDOMHTMLScriptElement*,HTMLScriptElement**) DECLSPEC_HIDDEN;
-void bind_event_scripts(HTMLDocumentNode*) DECLSPEC_HIDDEN;
+HRESULT script_elem_from_nsscript(nsIDOMHTMLScriptElement*,HTMLScriptElement**);
+void bind_event_scripts(HTMLDocumentNode*);
+HRESULT load_script(HTMLScriptElement*,const WCHAR*,BOOL);
 
-void release_script_hosts(HTMLInnerWindow*) DECLSPEC_HIDDEN;
-void connect_scripts(HTMLInnerWindow*) DECLSPEC_HIDDEN;
-void doc_insert_script(HTMLInnerWindow*,HTMLScriptElement*) DECLSPEC_HIDDEN;
-IDispatch *script_parse_event(HTMLInnerWindow*,LPCWSTR) DECLSPEC_HIDDEN;
-HRESULT exec_script(HTMLInnerWindow*,const WCHAR*,const WCHAR*,VARIANT*) DECLSPEC_HIDDEN;
-void set_script_mode(HTMLOuterWindow*,SCRIPTMODE) DECLSPEC_HIDDEN;
-BOOL find_global_prop(HTMLInnerWindow*,BSTR,DWORD,ScriptHost**,DISPID*) DECLSPEC_HIDDEN;
-IDispatch *get_script_disp(ScriptHost*) DECLSPEC_HIDDEN;
+void release_script_hosts(HTMLInnerWindow*);
+void connect_scripts(HTMLInnerWindow*);
+void doc_insert_script(HTMLInnerWindow*,HTMLScriptElement*,BOOL);
+IDispatch *script_parse_event(HTMLInnerWindow*,LPCWSTR);
+HRESULT exec_script(HTMLInnerWindow*,const WCHAR*,const WCHAR*,VARIANT*);
+void update_browser_script_mode(GeckoBrowser*,IUri*);
+BOOL find_global_prop(HTMLInnerWindow*,const WCHAR*,DWORD,ScriptHost**,DISPID*);
+HRESULT global_prop_still_exists(HTMLInnerWindow*,global_prop_t*);
+IDispatch *get_script_disp(ScriptHost*);
+IWineJSDispatch *get_script_jsdisp(ScriptHost*);
+IActiveScriptSite *get_first_script_site(HTMLInnerWindow*);
+void initialize_script_global(HTMLInnerWindow*);
