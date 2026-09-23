@@ -34,10 +34,9 @@
 #include "oleauto.h"
 
 #include "msipriv.h"
-#include "winemsi_s.h"
+#include "winemsi.h"
 #include "wine/asm.h"
 #include "wine/debug.h"
-#include "wine/unicode.h"
 #include "wine/exception.h"
 
 #ifdef __REACTOS__

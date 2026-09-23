@@ -53,6 +53,7 @@ set(OLD_IDL_FLAGS ${IDL_FLAGS})
 set(IDL_FLAGS ${IDL_FLAGS} --prefix-server=s_)
 add_rpc_files(client winemsi.idl)
 add_rpc_files(server winemsi.idl)
+add_idl_headers(msi_idlheader msiserver.idl winemsi.idl)
 set(IDL_FLAGS ${OLD_IDL_FLAGS})
 
 list(APPEND PCH_SKIP_SOURCE
@@ -78,10 +79,12 @@ if(MSVC)
     # Disable warning C4312: 'type cast': conversion from 'unsigned int' to 'HANDLE' of greater size
     target_compile_options(msi PRIVATE /wd4090 /wd4133 /wd4146 /wd4312)
 endif()
+if(CMAKE_C_COMPILER_ID STREQUAL "GNU" OR CMAKE_C_COMPILER_ID STREQUAL "Clang")
+    target_compile_options(msi PRIVATE -Wno-incompatible-pointer-types) # error: passing argument 1 of 'RtlGetVersion' from incompatible pointer type
+endif()
 
-add_idl_headers(msi_idlheader msiserver.idl winemsi.idl)
-add_typelib(msiserver.idl winemsi.idl)
-set_source_files_properties(msi.rc PROPERTIES OBJECT_DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/msiserver.tlb;${CMAKE_CURRENT_BINARY_DIR}/winemsi.tlb")
+add_idl_reg_scripts(msi regtypelib msiserver.idl)
+add_idl_reg_scripts(msi registry msiserver.idl)
 set_module_type(msi win32dll)
 target_link_libraries(msi uuid ${PSEH_LIB} wine_dll_register oldnames)
 add_dependencies(msi msi_idlheader)
