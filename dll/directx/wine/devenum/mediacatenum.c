@@ -205,7 +205,11 @@ static HRESULT WINAPI property_bag_Read(IPropertyBag *iface,
             StringFromGUID2(&moniker->class, path + wcslen(path), CHARS_IN_GUID);
             wcscat(path, L"\\Instance");
         }
+#ifdef __REACTOS__
+        if ((ret = RegOpenKeyExW(HKEY_CLASSES_ROOT, path, 0, KEY_ENUMERATE_SUB_KEYS, &parent)))
+#else
         if ((ret = RegOpenKeyExW(HKEY_CLASSES_ROOT, path, 0, 0, &parent)))
+#endif
             return HRESULT_FROM_WIN32(ret);
         break;
 
@@ -213,7 +217,11 @@ static HRESULT WINAPI property_bag_Read(IPropertyBag *iface,
         wcscpy(path, L"Software\\Microsoft\\ActiveMovie\\devenum\\");
         if (moniker->has_class)
             StringFromGUID2(&moniker->class, path + wcslen(path), CHARS_IN_GUID);
+#ifdef __REACTOS__
+        if ((ret = RegOpenKeyExW(HKEY_CURRENT_USER, path, 0, KEY_ENUMERATE_SUB_KEYS, &parent)))
+#else
         if ((ret = RegOpenKeyExW(HKEY_CURRENT_USER, path, 0, 0, &parent)))
+#endif
             return HRESULT_FROM_WIN32(ret);
         break;
 
@@ -317,7 +325,11 @@ static HRESULT WINAPI property_bag_Write(IPropertyBag *iface, const WCHAR *name,
             StringFromGUID2(&moniker->class, path + wcslen(path), CHARS_IN_GUID);
             wcscat(path, L"\\Instance");
         }
+#ifdef __REACTOS__ /* ReactOS denies zero access opens */
+        if ((ret = RegCreateKeyExW(HKEY_CLASSES_ROOT, path, 0, NULL, 0, KEY_CREATE_SUB_KEY, NULL, &parent, NULL)))
+#else
         if ((ret = RegCreateKeyExW(HKEY_CLASSES_ROOT, path, 0, NULL, 0, 0, NULL, &parent, NULL)))
+#endif
             return HRESULT_FROM_WIN32(ret);
         break;
 
@@ -325,7 +337,11 @@ static HRESULT WINAPI property_bag_Write(IPropertyBag *iface, const WCHAR *name,
         wcscpy(path, L"Software\\Microsoft\\ActiveMovie\\devenum\\");
         if (moniker->has_class)
             StringFromGUID2(&moniker->class, path + wcslen(path), CHARS_IN_GUID);
+#ifdef __REACTOS__ /* ReactOS denies zero access opens */
+        if ((ret = RegCreateKeyExW(HKEY_CURRENT_USER, path, 0, NULL, 0, KEY_CREATE_SUB_KEY, NULL, &parent, NULL)))
+#else
         if ((ret = RegCreateKeyExW(HKEY_CURRENT_USER, path, 0, NULL, 0, 0, NULL, &parent, NULL)))
+#endif
             return HRESULT_FROM_WIN32(ret);
         break;
 

@@ -1562,10 +1562,11 @@ static lpGroupData DP_FindAnyGroup( IDirectPlayImpl *This, DPID dpid )
   {
     return This->dp2->lpSysGroup;
   }
-  else
-  {
-    DPQ_FIND_ENTRY( This->dp2->lpSysGroup->groups, groups, lpGData->dpid, ==, dpid, lpGroups );
-  }
+
+  if( This->dp2->lpSysGroup == NULL )
+    return NULL;
+
+  DPQ_FIND_ENTRY( This->dp2->lpSysGroup->groups, groups, lpGData->dpid, ==, dpid, lpGroups );
 
   if( lpGroups == NULL )
   {
@@ -3845,6 +3846,7 @@ static HRESULT DP_SecureOpen( IDirectPlayImpl *This, const DPSESSIONDESC2 *lpsd,
         data.lpISP = This->dp2->spData.lpISP;
         (*This->dp2->spData.lpCB->CloseEx)( &data );
       }
+      return hr;
     }
   }
 

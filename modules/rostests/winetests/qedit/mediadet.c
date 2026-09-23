@@ -531,6 +531,14 @@ static void test_mediadet(void)
     hr = IMediaDet_put_Filename(pM, filename);
     ok(hr == S_OK, "Got hr %#lx.\n", hr);
     SysFreeString(filename);
+#ifdef __REACTOS__
+    if (FAILED(hr))
+    {
+        skip("Failed to open file, hr %#lx.\n", hr);
+        IMediaDet_Release(pM);
+        return;
+    }
+#endif
 
     index = -1;
     /* The stream defaults to 0.  */
@@ -636,6 +644,14 @@ static void test_mediadet(void)
     hr = IMediaDet_put_Filename(pM, filename);
     ok(hr == S_OK, "Got hr %#lx.\n", hr);
     SysFreeString(filename);
+#ifdef __REACTOS__
+    if (FAILED(hr))
+    {
+        skip("Failed to open file, hr %#lx.\n", hr);
+        IMediaDet_Release(pM);
+        return;
+    }
+#endif
 
     hr = IMediaDet_get_OutputStreams(pM, &count);
     ok(hr == S_OK, "Got hr %#lx.\n", hr);
@@ -836,6 +852,14 @@ static void test_put_filter(void)
     hr = IMediaDet_put_Filename(detector, filename);
     ok(hr == S_OK, "Got hr %#lx.\n", hr);
     SysFreeString(filename);
+#ifdef __REACTOS__
+    if (FAILED(hr))
+    {
+        skip("Failed to open file, hr %#lx.\n", hr);
+        IMediaDet_Release(detector);
+        return;
+    }
+#endif
 
     hr = IMediaDet_get_StreamMediaType(detector, &mt);
     ok(hr == S_OK, "Got hr %#lx.\n", hr);
