@@ -43,7 +43,6 @@
 #include "shdeprecated.h"
 #include "docobjectservice.h"
 
-#include "wine/heap.h"
 #include "wine/list.h"
 
 typedef struct ConnectionPoint ConnectionPoint;
@@ -176,6 +175,7 @@ struct DocHost {
 };
 
 struct WebBrowser {
+    IUnknown                 IUnknown_inner;
     IWebBrowser2             IWebBrowser2_iface;
     IOleObject               IOleObject_iface;
     IOleInPlaceObject        IOleInPlaceObject_iface;
@@ -204,6 +204,8 @@ struct WebBrowser {
     DWORD sink_aspects;
     DWORD sink_flags;
 
+    IOleAdviseHolder *advise_holder;
+
     /* window context */
 
     HWND frame_hwnd;
@@ -212,6 +214,8 @@ struct WebBrowser {
     RECT clip_rect;
     OLEINPLACEFRAMEINFO frameinfo;
     SIZEL extent;
+
+    BOOL ui_activated;
 
     HWND shell_embedding_hwnd;
 
@@ -246,62 +250,65 @@ struct InternetExplorer {
     struct list entry;
 };
 
-void WebBrowser_OleObject_Init(WebBrowser*) DECLSPEC_HIDDEN;
-void WebBrowser_ViewObject_Init(WebBrowser*) DECLSPEC_HIDDEN;
-void WebBrowser_Persist_Init(WebBrowser*) DECLSPEC_HIDDEN;
-void WebBrowser_ClassInfo_Init(WebBrowser*) DECLSPEC_HIDDEN;
+void WebBrowser_OleObject_Init(WebBrowser*);
+void WebBrowser_ViewObject_Init(WebBrowser*);
+void WebBrowser_Persist_Init(WebBrowser*);
+void WebBrowser_ClassInfo_Init(WebBrowser*);
 
-void WebBrowser_OleObject_Destroy(WebBrowser*) DECLSPEC_HIDDEN;
+void WebBrowser_OleObject_Destroy(WebBrowser*);
 
-void DocHost_Init(DocHost*,IWebBrowser2*,const IDocHostContainerVtbl*) DECLSPEC_HIDDEN;
-void DocHost_Release(DocHost*) DECLSPEC_HIDDEN;
-void DocHost_ClientSite_Init(DocHost*) DECLSPEC_HIDDEN;
-void DocHost_ClientSite_Release(DocHost*) DECLSPEC_HIDDEN;
-void DocHost_Frame_Init(DocHost*) DECLSPEC_HIDDEN;
-void release_dochost_client(DocHost*) DECLSPEC_HIDDEN;
+void DocHost_Init(DocHost*,IWebBrowser2*,const IDocHostContainerVtbl*);
+void DocHost_Release(DocHost*);
+void DocHost_ClientSite_Init(DocHost*);
+void DocHost_ClientSite_Release(DocHost*);
+void DocHost_Frame_Init(DocHost*);
+void release_dochost_client(DocHost*);
 
-void IEHTMLWindow_Init(DocHost*) DECLSPEC_HIDDEN;
-void NewWindowManager_Init(DocHost*) DECLSPEC_HIDDEN;
+void IEHTMLWindow_Init(DocHost*);
+void NewWindowManager_Init(DocHost*);
 
-void HlinkFrame_Init(HlinkFrame*,IUnknown*,DocHost*) DECLSPEC_HIDDEN;
-BOOL HlinkFrame_QI(HlinkFrame*,REFIID,void**) DECLSPEC_HIDDEN;
+void HlinkFrame_Init(HlinkFrame*,IUnknown*,DocHost*);
+BOOL HlinkFrame_QI(HlinkFrame*,REFIID,void**);
 
-HRESULT create_browser_service(DocHost*,ShellBrowser**) DECLSPEC_HIDDEN;
-void detach_browser_service(ShellBrowser*) DECLSPEC_HIDDEN;
-HRESULT create_shell_ui_helper(IShellUIHelper2**) DECLSPEC_HIDDEN;
+HRESULT create_browser_service(DocHost*,ShellBrowser**);
+void detach_browser_service(ShellBrowser*);
+HRESULT create_shell_ui_helper(IShellUIHelper2**);
 
-void ConnectionPointContainer_Init(ConnectionPointContainer*,IUnknown*) DECLSPEC_HIDDEN;
-void ConnectionPointContainer_Destroy(ConnectionPointContainer*) DECLSPEC_HIDDEN;
+void ConnectionPointContainer_Init(ConnectionPointContainer*,IUnknown*);
+void ConnectionPointContainer_Destroy(ConnectionPointContainer*);
 
-void call_sink(ConnectionPoint*,DISPID,DISPPARAMS*) DECLSPEC_HIDDEN;
-HRESULT navigate_url(DocHost*,LPCWSTR,const VARIANT*,const VARIANT*,VARIANT*,VARIANT*) DECLSPEC_HIDDEN;
-HRESULT go_home(DocHost*) DECLSPEC_HIDDEN;
-HRESULT go_back(DocHost*) DECLSPEC_HIDDEN;
-HRESULT go_forward(DocHost*) DECLSPEC_HIDDEN;
-HRESULT refresh_document(DocHost*,const VARIANT*) DECLSPEC_HIDDEN;
-HRESULT get_location_url(DocHost*,BSTR*) DECLSPEC_HIDDEN;
-HRESULT set_dochost_url(DocHost*,const WCHAR*) DECLSPEC_HIDDEN;
-void handle_navigation_error(DocHost*,HRESULT,BSTR,IHTMLWindow2*) DECLSPEC_HIDDEN;
-HRESULT dochost_object_available(DocHost*,IUnknown*) DECLSPEC_HIDDEN;
-void set_doc_state(DocHost*,READYSTATE) DECLSPEC_HIDDEN;
-void deactivate_document(DocHost*) DECLSPEC_HIDDEN;
-void create_doc_view_hwnd(DocHost*) DECLSPEC_HIDDEN;
-void on_commandstate_change(DocHost*,LONG,BOOL) DECLSPEC_HIDDEN;
-void notify_download_state(DocHost*,BOOL) DECLSPEC_HIDDEN;
-void update_navigation_commands(DocHost *dochost) DECLSPEC_HIDDEN;
+void call_sink(ConnectionPoint*,DISPID,DISPPARAMS*);
+HRESULT navigate_url(DocHost*,LPCWSTR,const VARIANT*,const VARIANT*,VARIANT*,VARIANT*);
+HRESULT go_home(DocHost*);
+HRESULT go_back(DocHost*);
+HRESULT go_forward(DocHost*);
+HRESULT refresh_document(DocHost*,const VARIANT*);
+HRESULT get_window(DocHost*,IHTMLWindow2**);
+HRESULT get_location_url(DocHost*,BSTR*);
+HRESULT set_dochost_url(DocHost*,const WCHAR*);
+void handle_navigation_error(DocHost*,HRESULT,BSTR,IHTMLWindow2*);
+const WCHAR *error_url_frag(const WCHAR*);
+HRESULT dochost_object_available(DocHost*,IUnknown*);
+void set_doc_state(DocHost*,READYSTATE);
+void activate_document(DocHost*);
+void deactivate_document(DocHost*);
+void create_doc_view_hwnd(DocHost*);
+void on_commandstate_change(DocHost*,LONG,BOOL);
+void notify_download_state(DocHost*,BOOL);
+void update_navigation_commands(DocHost *dochost);
 
 #define WM_DOCHOSTTASK (WM_USER+0x300)
-void push_dochost_task(DocHost*,task_header_t*,task_proc_t,task_destr_t,BOOL) DECLSPEC_HIDDEN;
-void abort_dochost_tasks(DocHost*,task_proc_t) DECLSPEC_HIDDEN;
-LRESULT process_dochost_tasks(DocHost*) DECLSPEC_HIDDEN;
+void push_dochost_task(DocHost*,task_header_t*,task_proc_t,task_destr_t,BOOL);
+void abort_dochost_tasks(DocHost*,task_proc_t);
+LRESULT process_dochost_tasks(DocHost*);
 
-void InternetExplorer_WebBrowser_Init(InternetExplorer*) DECLSPEC_HIDDEN;
-HRESULT update_ie_statustext(InternetExplorer*, LPCWSTR) DECLSPEC_HIDDEN;
-void released_obj(void) DECLSPEC_HIDDEN;
-DWORD release_extern_ref(InternetExplorer*,BOOL) DECLSPEC_HIDDEN;
+void InternetExplorer_WebBrowser_Init(InternetExplorer*);
+HRESULT update_ie_statustext(InternetExplorer*, LPCWSTR);
+void released_obj(void);
+DWORD release_extern_ref(InternetExplorer*,BOOL);
 
-void register_iewindow_class(void) DECLSPEC_HIDDEN;
-void unregister_iewindow_class(void) DECLSPEC_HIDDEN;
+void register_iewindow_class(void);
+void unregister_iewindow_class(void);
 
 #define TID_LIST \
     XCLSID(WebBrowser) \
@@ -317,20 +324,20 @@ TID_LIST
     LAST_tid
 } tid_t;
 
-HRESULT get_typeinfo(tid_t,ITypeInfo**) DECLSPEC_HIDDEN;
+HRESULT get_typeinfo(tid_t,ITypeInfo**);
 
-HRESULT WINAPI CUrlHistory_Create(IClassFactory*,IUnknown*,REFIID,void**) DECLSPEC_HIDDEN;
-HRESULT WINAPI InternetExplorer_Create(IClassFactory*,IUnknown*,REFIID,void**) DECLSPEC_HIDDEN;
-HRESULT WINAPI InternetShortcut_Create(IClassFactory*,IUnknown*,REFIID,void**) DECLSPEC_HIDDEN;
-HRESULT WINAPI WebBrowser_Create(IClassFactory*,IUnknown*,REFIID,void**) DECLSPEC_HIDDEN;
-HRESULT WINAPI WebBrowserV1_Create(IClassFactory*,IUnknown*,REFIID,void**) DECLSPEC_HIDDEN;
-HRESULT WINAPI InternetExplorerManager_Create(IClassFactory*,IUnknown*,REFIID,void**) DECLSPEC_HIDDEN;
+HRESULT WINAPI CUrlHistory_Create(IClassFactory*,IUnknown*,REFIID,void**);
+HRESULT WINAPI InternetExplorer_Create(IClassFactory*,IUnknown*,REFIID,void**);
+HRESULT WINAPI InternetShortcut_Create(IClassFactory*,IUnknown*,REFIID,void**);
+HRESULT WINAPI WebBrowser_Create(IClassFactory*,IUnknown*,REFIID,void**);
+HRESULT WINAPI WebBrowserV1_Create(IClassFactory*,IUnknown*,REFIID,void**);
+HRESULT WINAPI InternetExplorerManager_Create(IClassFactory*,IUnknown*,REFIID,void**);
 
-extern IClassFactory InternetExplorerFactory DECLSPEC_HIDDEN;
-extern IClassFactory InternetExplorerManagerFactory DECLSPEC_HIDDEN;
+extern IClassFactory InternetExplorerFactory;
+extern IClassFactory InternetExplorerManagerFactory;
 
-extern LONG module_ref DECLSPEC_HIDDEN;
-extern HINSTANCE ieframe_instance DECLSPEC_HIDDEN;
+extern LONG module_ref;
+extern HINSTANCE ieframe_instance;
 
 static inline void lock_module(void) {
     InterlockedIncrement(&module_ref);
@@ -338,22 +345,6 @@ static inline void lock_module(void) {
 
 static inline void unlock_module(void) {
     InterlockedDecrement(&module_ref);
-}
-
-static inline LPWSTR heap_strdupW(LPCWSTR str)
-{
-    LPWSTR ret = NULL;
-
-    if(str) {
-        DWORD size;
-
-        size = (lstrlenW(str)+1)*sizeof(WCHAR);
-        ret = heap_alloc(size);
-        if(ret)
-            memcpy(ret, str, size);
-    }
-
-    return ret;
 }
 
 static inline LPWSTR co_strdupW(LPCWSTR str)
@@ -385,3 +376,12 @@ static inline LPSTR co_strdupWtoA(LPCWSTR str)
         WideCharToMultiByte(CP_ACP, 0, str, -1, ret, len, 0, 0);
     return ret;
 }
+
+enum SessionOp
+{
+    SESSION_QUERY,
+    SESSION_INCREMENT,
+    SESSION_DECREMENT
+};
+
+LONG WINAPI SetQueryNetSessionCount(DWORD session_op);

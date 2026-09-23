@@ -74,7 +74,7 @@ static ULONG WINAPI InternetExplorer_AddRef(IWebBrowser2 *iface)
 {
     InternetExplorer *This = impl_from_IWebBrowser2(iface);
     LONG ref = InterlockedIncrement(&This->ref);
-    TRACE("(%p) ref=%d\n", This, ref);
+    TRACE("(%p) ref=%ld\n", This, ref);
     return ref;
 }
 
@@ -83,7 +83,7 @@ static ULONG WINAPI InternetExplorer_Release(IWebBrowser2 *iface)
     InternetExplorer *This = impl_from_IWebBrowser2(iface);
     LONG ref = InterlockedDecrement(&This->ref);
 
-    TRACE("(%p) ref=%d\n", This, ref);
+    TRACE("(%p) ref=%ld\n", This, ref);
 
     if(!ref) {
         deactivate_document(&This->doc_host);
@@ -92,7 +92,7 @@ static ULONG WINAPI InternetExplorer_Release(IWebBrowser2 *iface)
         if(This->frame_hwnd)
             DestroyWindow(This->frame_hwnd);
         list_remove(&This->entry);
-        heap_free(This);
+        free(This);
 
         released_obj();
     }
@@ -117,7 +117,7 @@ static HRESULT WINAPI InternetExplorer_GetTypeInfo(IWebBrowser2 *iface, UINT iTI
     ITypeInfo *typeinfo;
     HRESULT hres;
 
-    TRACE("(%p)->(%d %d %p)\n", This, iTInfo, lcid, ppTInfo);
+    TRACE("(%p)->(%d %ld %p)\n", This, iTInfo, lcid, ppTInfo);
 
     hres = get_typeinfo(IWebBrowser2_tid, &typeinfo);
     if(FAILED(hres))
@@ -136,7 +136,7 @@ static HRESULT WINAPI InternetExplorer_GetIDsOfNames(IWebBrowser2 *iface, REFIID
     ITypeInfo *typeinfo;
     HRESULT hres;
 
-    TRACE("(%p)->(%s %p %d %d %p)\n", This, debugstr_guid(riid), rgszNames, cNames,
+    TRACE("(%p)->(%s %p %d %ld %p)\n", This, debugstr_guid(riid), rgszNames, cNames,
           lcid, rgDispId);
 
     hres = get_typeinfo(IWebBrowser2_tid, &typeinfo);
@@ -155,7 +155,7 @@ static HRESULT WINAPI InternetExplorer_Invoke(IWebBrowser2 *iface, DISPID dispId
     ITypeInfo *typeinfo;
     HRESULT hres;
 
-    TRACE("(%p)->(%d %s %d %08x %p %p %p %p)\n", This, dispIdMember, debugstr_guid(riid),
+    TRACE("(%p)->(%ld %s %ld %08x %p %p %p %p)\n", This, dispIdMember, debugstr_guid(riid),
             lcid, wFlags, pDispParams, pVarResult, pExepInfo, puArgErr);
 
     hres = get_typeinfo(IWebBrowser2_tid, &typeinfo);
@@ -283,7 +283,7 @@ static HRESULT WINAPI InternetExplorer_get_Left(IWebBrowser2 *iface, LONG *pl)
 static HRESULT WINAPI InternetExplorer_put_Left(IWebBrowser2 *iface, LONG Left)
 {
     InternetExplorer *This = impl_from_IWebBrowser2(iface);
-    FIXME("(%p)->(%d)\n", This, Left);
+    FIXME("(%p)->(%ld)\n", This, Left);
     return E_NOTIMPL;
 }
 
@@ -297,7 +297,7 @@ static HRESULT WINAPI InternetExplorer_get_Top(IWebBrowser2 *iface, LONG *pl)
 static HRESULT WINAPI InternetExplorer_put_Top(IWebBrowser2 *iface, LONG Top)
 {
     InternetExplorer *This = impl_from_IWebBrowser2(iface);
-    FIXME("(%p)->(%d)\n", This, Top);
+    FIXME("(%p)->(%ld)\n", This, Top);
     return E_NOTIMPL;
 }
 
@@ -311,7 +311,7 @@ static HRESULT WINAPI InternetExplorer_get_Width(IWebBrowser2 *iface, LONG *pl)
 static HRESULT WINAPI InternetExplorer_put_Width(IWebBrowser2 *iface, LONG Width)
 {
     InternetExplorer *This = impl_from_IWebBrowser2(iface);
-    FIXME("(%p)->(%d)\n", This, Width);
+    FIXME("(%p)->(%ld)\n", This, Width);
     return E_NOTIMPL;
 }
 
@@ -325,7 +325,7 @@ static HRESULT WINAPI InternetExplorer_get_Height(IWebBrowser2 *iface, LONG *pl)
 static HRESULT WINAPI InternetExplorer_put_Height(IWebBrowser2 *iface, LONG Height)
 {
     InternetExplorer *This = impl_from_IWebBrowser2(iface);
-    FIXME("(%p)->(%d)\n", This, Height);
+    FIXME("(%p)->(%ld)\n", This, Height);
     return E_NOTIMPL;
 }
 
@@ -757,7 +757,7 @@ DWORD release_extern_ref(InternetExplorer *This, BOOL last_closes)
 {
     LONG ref = InterlockedDecrement(&This->extern_ref);
 
-    TRACE("ref = %d\n", ref);
+    TRACE("ref = %ld\n", ref);
 
     if(ref)
         return ref;
@@ -793,7 +793,7 @@ static DWORD WINAPI ExternalConnection_AddConnection(IExternalConnection *iface,
 {
     InternetExplorer *This = impl_from_IExternalConnection(iface);
 
-    TRACE("(%p)->(%x %x)\n", This, extconn, reserved);
+    TRACE("(%p)->(%lx %lx)\n", This, extconn, reserved);
 
     if(extconn != EXTCONN_STRONG)
         return 0;
@@ -806,7 +806,7 @@ static DWORD WINAPI ExternalConnection_ReleaseConnection(IExternalConnection *if
 {
     InternetExplorer *This = impl_from_IExternalConnection(iface);
 
-    TRACE("(%p)->(%x %x %x)\n", This, extconn, reserved, fLastReleaseCloses);
+    TRACE("(%p)->(%lx %lx %x)\n", This, extconn, reserved, fLastReleaseCloses);
 
     if(extconn != EXTCONN_STRONG)
         return 0;
@@ -874,4 +874,10 @@ void InternetExplorer_WebBrowser_Init(InternetExplorer *This)
     This->IWebBrowser2_iface.lpVtbl = &InternetExplorerVtbl;
     This->IExternalConnection_iface.lpVtbl = &ExternalConnectionVtbl;
     This->IServiceProvider_iface.lpVtbl = &ServiceProviderVtbl;
+}
+
+HRESULT WINAPI IERefreshElevationPolicy(void)
+{
+    FIXME("(): stub\n");
+    return S_OK;
 }
