@@ -25,7 +25,7 @@
 
 HANDLE ProcessHeap;
 BOOLEAN IsUnattendedSetup = FALSE;
-PCWSTR InfUnattendSignature = L"$ReactOS$";
+static PCWSTR InfUnattendSignature = L"$ReactOS$";
 
 /* FUNCTIONS ****************************************************************/
 
@@ -59,86 +59,104 @@ IsInfUnattendSetupEnabled(
     _In_ BOOLEAN CheckDetached)
 {
     HINF hInf;
-    BOOLEAN Result = FALSE;
     UINT ErrorLine;
-
-    if (!DoesFileExist(NULL, InfPath))
-        return Result;
+    BOOLEAN Result = FALSE;
 
     hInf = SpInfOpenInfFile(InfPath,
-                                   NULL,
-                                   INF_STYLE_OLDNT,
-                                   pSetupData->LanguageId,
-                                   &ErrorLine);
+                            NULL,
+                            INF_STYLE_OLDNT,
+                            pSetupData->LanguageId,
+                            &ErrorLine);
     if (hInf == INVALID_HANDLE_VALUE)
         return Result;
 
-    if (CompareInfFirstLineString(hInf, L"Unattend", L"UnattendSetupEnabled", L"yes"))
-    {
-        goto abort;
-    }
-
-    /* Extra safety check for inf files not on the ISO */
-    if (CheckDetached && CompareInfFirstLineString(hInf, L"Unattend", L"UnattendForDetached", L"yes"))
-    {
-        goto abort;
-    }
-
-    if (CompareInfFirstLineString(hInf, L"Unattend", L"Signature", InfUnattendSignature))
+    /* Verify supported inf 'Signature' key */
+    if (CompareInfFirstLineString(hInf, L"Unattend", L"Signature", InfUnattendSignature) != 0)
     {
         DPRINT("Signature not %ls\n", InfUnattendSignature);
-        goto abort;
+        goto Quit;
     }
 
+    /* Check whether unattended setup is enabled */
+    if (CompareInfFirstLineString(hInf, L"Unattend", L"UnattendSetupEnabled", L"yes") != 0)
+        goto Quit;
+
+    /* Extra safety check for inf files not on the ISO */
+    if (CheckDetached && CompareInfFirstLineString(hInf, L"Unattend", L"UnattendForDetached", L"yes") != 0)
+        goto Quit;
+
     Result = TRUE;
-abort:
+Quit:
     SpInfCloseInfFile(hInf);
     return Result;
-}
-
-static void
-GetDefaultUnattendInfPath(
-    _In_ PUSETUP_DATA pSetupData,
-    _Out_writes_(cch) PWSTR InfPath,
-    _In_ SIZE_T cch)
-{
-    CombinePaths(InfPath, cch, 2, pSetupData->SourcePath.Buffer, L"unattend.inf");
 }
 
 static BOOLEAN
 GetUnattendInfPath(
     _In_ PUSETUP_DATA pSetupData,
-    _Out_ PWSTR InfPath,
+    _Out_writes_z_(cch) PWSTR InfPath,
     _In_ SIZE_T cch)
 {
-    WCHAR Drive;
-    UINT DriveType, Types;
+    static WCHAR UnattendInfPath[MAX_PATH] = {UNICODE_NULL};
+    static BOOLEAN UnattendInfLookedUp = FALSE;
+    NTSTATUS Status;
+    USHORT Types;
 
-    GetDefaultUnattendInfPath(pSetupData, InfPath, cch);
-    if (IsInfUnattendSetupEnabled(pSetupData, InfPath, FALSE))
-        return TRUE;
+    /* If the unattend.inf file has already been looked for, return
+     * its cached path if it was found, or fail otherwise. */
+    if (UnattendInfLookedUp)
+        goto Quit;
 
-    /* Check all DOS volumes, non-fixed first, then fixed */
+    UnattendInfLookedUp = TRUE;
+
+    /* Find first the default unattend.inf file on the installation media.
+     * If it specifies an unattended setup, we have found it. */
+    Status = CombinePaths(UnattendInfPath, _countof(UnattendInfPath), 2,
+                          pSetupData->SourcePath.Buffer, L"unattend.inf");
+    if (NT_SUCCESS(Status) && DoesFileExist(NULL, UnattendInfPath) &&
+        IsInfUnattendSetupEnabled(pSetupData, UnattendInfPath, FALSE))
+    {
+        return NT_SUCCESS(RtlStringCchCopyW(InfPath, cch, UnattendInfPath));
+    }
+
+    /*
+     * The default unattend.inf file does not exist, or does not enable an
+     * unattended setup. Check all DOS volumes, non-fixed first, then fixed,
+     * for an alternative unattend.inf that enables unattended setup.
+     * If we find one, use it; otherwise, return the default unattend.inf
+     * path, if it exists.
+     */
     for (Types = 0; Types <= 1; ++Types)
     {
+        CHAR Drive;
         for (Drive = 'A'; Drive <= 'Z'; ++Drive)
         {
-            WCHAR szInf[MAX_PATH], szBuffer[MAX_PATH];
-            UNICODE_STRING NtDrive;
+            UCHAR DriveType;
+            WCHAR szInf[MAX_PATH];
+            UNICODE_STRING NtDrive = {0, sizeof(szInf), szInf};
 
-            NtDrive.Buffer = szBuffer;
-            NtDrive.MaximumLength = sizeof(szBuffer);
             DriveType = GetNtDevicePathOfDriveNumber(Drive - 'A', &NtDrive);
             if (DriveType <= DRIVE_NO_ROOT_DIR)
                 continue;
             if (Types == 0 && DriveType == DRIVE_FIXED)
                 continue;
 
-            CombinePaths(szInf, ARRAYSIZE(szInf), 2, NtDrive.Buffer, L"unattend.inf");
-            if (IsInfUnattendSetupEnabled(pSetupData, szInf, TRUE))
+            Status = ConcatPaths(szInf, _countof(szInf), 1, L"unattend.inf");
+            if (NT_SUCCESS(Status) && DoesFileExist(NULL, szInf) &&
+                IsInfUnattendSetupEnabled(pSetupData, szInf, TRUE))
+            {
+                /* Cache the alternative unattend.inf path and return it */
+                (void)RtlStringCchCopyW(UnattendInfPath, _countof(UnattendInfPath), szInf);
                 return NT_SUCCESS(RtlStringCchCopyW(InfPath, cch, szInf));
+            }
         }
     }
+    /* Fall back to the default unattend.inf path */
+
+Quit:
+    /* Return the cached unattend.inf path if it was found, or fail otherwise */
+    if (*UnattendInfPath)
+        return NT_SUCCESS(RtlStringCchCopyW(InfPath, cch, UnattendInfPath));
     return FALSE;
 }
 
@@ -154,14 +172,12 @@ CheckUnattendedSetup(
     PCWSTR Value;
     WCHAR UnattendInfPath[MAX_PATH];
 
-    GetDefaultUnattendInfPath(pSetupData, UnattendInfPath, ARRAYSIZE(UnattendInfPath));
-    DPRINT("UnattendInf path: '%S'\n", UnattendInfPath);
-
     if (!GetUnattendInfPath(pSetupData, UnattendInfPath, ARRAYSIZE(UnattendInfPath)))
     {
         DPRINT("Does not exist: %S\n", UnattendInfPath);
         return IsUnattendedSetup;
     }
+    DPRINT1("UnattendInf path: '%S'\n", UnattendInfPath);
 
     /* Load 'unattend.inf' from installation media */
     UnattendInf = SpInfOpenInfFile(UnattendInfPath,
