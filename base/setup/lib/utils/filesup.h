@@ -124,9 +124,9 @@ do {    \
     NtClose(FileHandle);                        \
 } while (0)
 
-UINT
+UCHAR
 GetNtDevicePathOfDriveNumber(
     _In_ USHORT DriveNumber,
-    _Out_ PUNICODE_STRING pOutput);
+    _Out_ PUNICODE_STRING DevicePath);
 
 /* EOF */

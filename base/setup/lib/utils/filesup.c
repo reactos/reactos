@@ -11,7 +11,7 @@
 #include "precomp.h"
 #include "filesup.h"
 #include <pseh/pseh2.h>
-#include <ndk/umfuncs.h> /* Ldr */
+#include <ndk/umfuncs.h> // Ldr* functions
 
 #define NDEBUG
 #include <debug.h>
@@ -1074,59 +1074,63 @@ UnMapFile(
     return Success;
 }
 
-static UINT
+static UCHAR
 GetWin32DriveTypeOfDriveNumber(
     _In_ USHORT DriveNumber)
 {
     PROCESS_DEVICEMAP_INFORMATION DeviceMap;
     NTSTATUS Status;
+
     Status = NtQueryInformationProcess(NtCurrentProcess(),
                                        ProcessDeviceMap,
                                        &DeviceMap.Query,
                                        sizeof(DeviceMap.Query),
                                        NULL);
-    if (NT_SUCCESS(Status) && ((1 << DriveNumber) & DeviceMap.Query.DriveMap) != 0)
+    if (NT_SUCCESS(Status) && (DeviceMap.Query.DriveMap & (1 << DriveNumber)) != 0)
     {
-        UINT Type = DeviceMap.Query.DriveType[DriveNumber];
+        UCHAR Type = DeviceMap.Query.DriveType[DriveNumber];
         if (Type <= DRIVE_RAMDISK)
             return Type;
     }
     return DRIVE_UNKNOWN;
 }
 
-UINT
+UCHAR
 GetNtDevicePathOfDriveNumber(
     _In_ USHORT DriveNumber,
-    _Out_ PUNICODE_STRING pOutput)
+    _Out_ PUNICODE_STRING DevicePath)
 {
-    WCHAR szDosDevPath[] = { L'A' + DriveNumber, L':', UNICODE_NULL };
-    UINT Result = DRIVE_UNKNOWN, Type;
-    HANDLE DirectoryHandle, DeviceHandle, Kernel32;
-    UINT (WINAPI *pfnQueryDosDeviceW)(PCWSTR,PWSTR,DWORD);
+    WCHAR szDosDevPath[] = {L'A' + DriveNumber, L':', UNICODE_NULL};
+    UCHAR Type;
+    ULONG (WINAPI *pfnQueryDosDeviceW)(PCWSTR, PWSTR, ULONG) = NULL;
+    HANDLE hKernel32;
+    HANDLE DirectoryHandle, DeviceHandle;
     UNICODE_STRING String;
     OBJECT_ATTRIBUTES ObjectAttributes;
-    ULONG ReturnLength;
     NTSTATUS Status;
 
+    /* Retrieve the drive type; if we fail, bail out early */
     Type = GetWin32DriveTypeOfDriveNumber(DriveNumber);
     if (Type <= DRIVE_NO_ROOT_DIR)
         return Type;
 
-    /* Use Win32 directly if available so we match UAC etc */
-    RtlInitUnicodeString(&String, L"KERNEL32");
-    Status = LdrGetDllHandle(NULL, NULL, &String, &Kernel32);
+    /* Lookup the drive. Use Win32 directly if available so we match UAC, etc. */
+    RtlInitUnicodeString(&String, L"kernel32");
+    Status = LdrGetDllHandle(NULL, NULL, &String, &hKernel32);
     if (NT_SUCCESS(Status))
     {
-        ANSI_STRING AnsiString;
-        RtlInitAnsiString(&AnsiString, "QueryDosDeviceW");
-        Status = LdrGetProcedureAddress(Kernel32, &AnsiString, 0, (PVOID*)&pfnQueryDosDeviceW);
+        ANSI_STRING AnsiString = RTL_CONSTANT_STRING("QueryDosDeviceW");
+        Status = LdrGetProcedureAddress(hKernel32, &AnsiString, 0, (PVOID*)&pfnQueryDosDeviceW);
     }
     if (NT_SUCCESS(Status))
     {
-        UINT cch = pfnQueryDosDeviceW(szDosDevPath, pOutput->Buffer, pOutput->MaximumLength / sizeof(WCHAR));
-        pOutput->Length = (cch - 1) * sizeof(WCHAR);
+        ULONG cch = pfnQueryDosDeviceW(szDosDevPath, DevicePath->Buffer,
+                                       DevicePath->MaximumLength / sizeof(WCHAR));
         if (cch)
+        {
+            DevicePath->Length = (cch - 1) * sizeof(WCHAR);
             return Type;
+        }
     }
 
     /* Use the object directory symlink target */
@@ -1134,24 +1138,23 @@ GetNtDevicePathOfDriveNumber(
     InitializeObjectAttributes(&ObjectAttributes, &String, OBJ_CASE_INSENSITIVE, NULL, NULL);
     Status = NtOpenDirectoryObject(&DirectoryHandle, DIRECTORY_QUERY, &ObjectAttributes);
     if (!NT_SUCCESS(Status))
-        return Result;
+        return DRIVE_UNKNOWN;
 
-    DeviceHandle = NULL;
     RtlInitUnicodeString(&String, szDosDevPath);
     InitializeObjectAttributes(&ObjectAttributes, &String, OBJ_CASE_INSENSITIVE, DirectoryHandle, NULL);
     Status = NtOpenSymbolicLinkObject(&DeviceHandle, SYMBOLIC_LINK_QUERY, &ObjectAttributes);
-    if (!NT_SUCCESS(Status))
-        goto done;
-
-    Status = NtQuerySymbolicLinkObject(DeviceHandle, pOutput, &ReturnLength);
-    if (SUCCEEDED(Status))
-        Result = Type;
-
-done:
-    if (DeviceHandle)
-        NtClose(DeviceHandle);
     NtClose(DirectoryHandle);
-    return Result;
+    if (NT_SUCCESS(Status))
+    {
+        ULONG ReturnLength;
+        Status = NtQuerySymbolicLinkObject(DeviceHandle, DevicePath, &ReturnLength);
+        NtClose(DeviceHandle);
+    }
+
+    if (NT_SUCCESS(Status))
+        return Type;
+    else
+        return DRIVE_UNKNOWN;
 }
 
 /* EOF */
