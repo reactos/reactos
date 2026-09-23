@@ -116,7 +116,7 @@ static void free_fav_menu_data(HMENU menu)
     int i;
 
     for(i = 0; (url = get_fav_url_from_id(menu, ID_BROWSE_GOTOFAV_FIRST + i)); i++)
-        heap_free( url );
+        free( url );
 }
 
 static int get_menu_item_count(HMENU menu)
@@ -152,7 +152,7 @@ static void add_fav_to_menu(HMENU favmenu, HMENU menu, LPWSTR title, LPCWSTR url
         return;
     }
 
-    urlbuf = heap_alloc((lstrlenW(url) + 1) * sizeof(WCHAR));
+    urlbuf = malloc((wcslen(url) + 1) * sizeof(WCHAR));
 
     if(!urlbuf)
         return;
@@ -478,7 +478,7 @@ static void create_rebar(InternetExplorer *ie)
     add_tb_button(ie, 4, ID_BROWSE_HOME, IDS_TB_HOME);
     add_tb_separator(ie);
     add_tb_button(ie, 5, ID_BROWSE_PRINT, IDS_TB_PRINT);
-    SendMessageW(ie->toolbar_hwnd, TB_SETBUTTONSIZE, 0, MAKELPARAM(65,50));
+    SendMessageW(ie->toolbar_hwnd, TB_SETBUTTONSIZE, 0, MAKELPARAM(70,50));
     SendMessageW(ie->toolbar_hwnd, TB_GETMAXSIZE, 0, (LPARAM)&toolbar_size);
 
     bandinf.cbSize = sizeof(bandinf);
@@ -685,7 +685,7 @@ static LRESULT WINAPI ie_window_proc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM 
         ShowWindow(hwnd, SW_HIDE);
         return 0;
     case WM_SHOWWINDOW:
-        TRACE("WM_SHOWWINDOW %lx\n", wparam);
+        TRACE("WM_SHOWWINDOW %Ix\n", wparam);
         if(wparam) {
             IWebBrowser2_AddRef(&This->IWebBrowser2_iface);
             InterlockedIncrement(&This->extern_ref);
@@ -796,6 +796,10 @@ static void DocHostContainer_on_command_state_change(DocHost *iface, LONG comman
 static void DocHostContainer_set_url(DocHost* iface, const WCHAR *url)
 {
     InternetExplorer *This = impl_from_DocHost(iface);
+    const WCHAR *orig_url = error_url_frag(url);
+
+    if(orig_url)
+        url = orig_url;
 
     This->nohome = FALSE;
     SendMessageW(This->frame_hwnd, WM_UPDATEADDRBAR, 0, (LPARAM)url);
@@ -814,7 +818,7 @@ static HRESULT create_ie(InternetExplorer **ret_obj)
 {
     InternetExplorer *ret;
 
-    ret = heap_alloc_zero(sizeof(InternetExplorer));
+    ret = calloc(1, sizeof(InternetExplorer));
     if(!ret)
         return E_OUTOFMEMORY;
 
@@ -887,7 +891,7 @@ static ULONG WINAPI InternetExplorerManager_AddRef(IInternetExplorerManager *ifa
     InternetExplorerManager *This = impl_from_IInternetExplorerManager(iface);
     ULONG ref = InterlockedIncrement(&This->ref);
 
-    TRACE("(%p) increasing refcount to %u\n", iface, ref);
+    TRACE("(%p) increasing refcount to %lu\n", iface, ref);
 
     return ref;
 }
@@ -897,11 +901,11 @@ static ULONG WINAPI InternetExplorerManager_Release(IInternetExplorerManager *if
     InternetExplorerManager *This = impl_from_IInternetExplorerManager(iface);
     ULONG ref = InterlockedDecrement(&This->ref);
 
-    TRACE("(%p) decreasing refcount to %u\n", iface, ref);
+    TRACE("(%p) decreasing refcount to %lu\n", iface, ref);
 
     if (ref == 0)
     {
-        HeapFree(GetProcessHeap(), 0, This);
+        free(This);
         released_obj();
     }
 
@@ -910,7 +914,7 @@ static ULONG WINAPI InternetExplorerManager_Release(IInternetExplorerManager *if
 
 static HRESULT WINAPI InternetExplorerManager_CreateObject(IInternetExplorerManager *iface, DWORD config, LPCWSTR url, REFIID riid, void **ppv)
 {
-    FIXME("(%p)->(0x%x, %s, %s, %p) stub!\n", iface, config, debugstr_w(url), debugstr_guid(riid), ppv);
+    FIXME("(%p)->(0x%lx, %s, %s, %p) stub!\n", iface, config, debugstr_w(url), debugstr_guid(riid), ppv);
 
     return E_NOTIMPL;
 }
@@ -930,7 +934,7 @@ HRESULT WINAPI InternetExplorerManager_Create(IClassFactory *iface, IUnknown *pO
 
     TRACE("(%p %s %p)\n", pOuter, debugstr_guid(riid), ppv);
 
-    if (!(ret = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*ret))))
+    if (!(ret = calloc(1, sizeof(*ret))))
         return E_OUTOFMEMORY;
 
     ret->IInternetExplorerManager_iface.lpVtbl = &InternetExplorerManager_vtbl;
@@ -1040,10 +1044,12 @@ static HDDEDATA open_dde_url(WCHAR *dde_url)
     }
 
     hres = IWebBrowser2_Navigate2(&ie->IWebBrowser2_iface, &urlv, NULL, NULL, NULL, NULL);
+
+    SysFreeString(V_BSTR(&urlv));
+    IWebBrowser2_Release(&ie->IWebBrowser2_iface);
+
     if(FAILED(hres))
         return 0;
-
-    IWebBrowser2_Release(&ie->IWebBrowser2_iface);
     return ULongToHandle(DDE_FACK);
 }
 
@@ -1068,19 +1074,19 @@ static HDDEDATA WINAPI dde_proc(UINT type, UINT uFmt, HCONV hConv, HSZ hsz1, HSZ
             break;
         }
 
-        url = heap_alloc(size);
+        url = malloc(size);
         if(!url)
             break;
 
         if(DdeGetData(data, (BYTE*)url, size, 0) != size) {
             ERR("error during read\n");
-            heap_free(url);
+            free(url);
             break;
         }
 
         ret = open_dde_url(url);
 
-        heap_free(url);
+        free(url);
         return ret;
     }
 
@@ -1138,10 +1144,13 @@ static void release_dde(void)
  */
 DWORD WINAPI IEWinMain(const WCHAR *cmdline, int nShowWindow)
 {
+    BOOL embedding = FALSE, nohome = FALSE, manager = FALSE, activated = FALSE;
     MSG msg;
     HRESULT hres;
-    BOOL embedding = FALSE, nohome = FALSE, manager = FALSE;
-    DWORD reg_cookie;
+    HANDLE context = INVALID_HANDLE_VALUE;
+    DWORD reg_cookie, ret = 1;
+    ULONG_PTR context_cookie;
+    ACTCTXW actctx;
 
     static const WCHAR embeddingW[] = {'-','e','m','b','e','d','d','i','n','g',0};
     static const WCHAR nohomeW[] = {'-','n','o','h','o','m','e',0};
@@ -1150,6 +1159,15 @@ DWORD WINAPI IEWinMain(const WCHAR *cmdline, int nShowWindow)
     TRACE("%s %d\n", debugstr_w(cmdline), nShowWindow);
 
     CoInitialize(NULL);
+
+    memset(&actctx, 0, sizeof(actctx));
+    actctx.cbSize = sizeof(actctx);
+    actctx.hModule = ieframe_instance;
+    actctx.lpResourceName = MAKEINTRESOURCEW(123);
+    actctx.dwFlags = ACTCTX_FLAG_HMODULE_VALID | ACTCTX_FLAG_RESOURCE_NAME_VALID;
+    context = CreateActCtxW(&actctx);
+    if (context != INVALID_HANDLE_VALUE)
+        activated = ActivateActCtx(context, &context_cookie);
 
     init_dde();
 
@@ -1162,11 +1180,11 @@ DWORD WINAPI IEWinMain(const WCHAR *cmdline, int nShowWindow)
 
         while (cmdline[length] && cmdline[length] != ' ' && cmdline[length] != '\t') length++;
 
-        if (!_wcsnicmp(cmdline, embeddingW, length))
+        if (!wcsnicmp(cmdline, embeddingW, length))
             embedding = TRUE;
-        else if (!_wcsnicmp(cmdline, nohomeW, length))
+        else if (!wcsnicmp(cmdline, nohomeW, length))
             nohome = TRUE;
-        else if (!_wcsnicmp(cmdline, startmanagerW, length))
+        else if (!wcsnicmp(cmdline, startmanagerW, length))
             manager = TRUE;
         else
             break;
@@ -1185,18 +1203,14 @@ DWORD WINAPI IEWinMain(const WCHAR *cmdline, int nShowWindow)
 
     if (FAILED(hres))
     {
-        ERR("failed to register CLSID_InternetExplorer%s: %08x\n", manager ? "Manager" : "", hres);
-        CoUninitialize();
-        ExitProcess(1);
+        ERR("failed to register CLSID_InternetExplorer%s: %08lx\n", manager ? "Manager" : "", hres);
+        goto done;
     }
 
     if (!embedding)
     {
         if(!create_ie_window(nohome, cmdline))
-        {
-            CoUninitialize();
-            ExitProcess(1);
-        }
+            goto done;
     }
 
     /* run the message loop for this thread */
@@ -1209,8 +1223,11 @@ DWORD WINAPI IEWinMain(const WCHAR *cmdline, int nShowWindow)
     CoRevokeClassObject(reg_cookie);
     release_dde();
 
+    ret = 0;
+done:
     CoUninitialize();
-
-    ExitProcess(0);
-    return 0;
+    if (activated)
+        DeactivateActCtx(0, context_cookie);
+    ReleaseActCtx(context);
+    ExitProcess(ret);
 }

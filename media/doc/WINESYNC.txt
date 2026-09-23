@@ -119,7 +119,7 @@ dll/win32/hhctrl.ocx          # Synced to Wine-10.0
 dll/win32/hlink               # Synced to Wine-10.0
 dll/win32/hnetcfg             # Synced to Wine-10.0
 dll/win32/iccvid              # Synced to Wine-10.0
-dll/win32/ieframe             # Synced to WineStaging-4.18
+dll/win32/ieframe             # Synced to Wine-10.0
 dll/win32/imaadp32.acm        # Synced to Wine-10.0
 dll/win32/imagehlp            # Synced to Wine-10.0
 dll/win32/inetcomm            # Synced to Wine-10.0

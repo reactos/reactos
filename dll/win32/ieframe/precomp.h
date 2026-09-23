@@ -8,9 +8,6 @@
 #define _INC_WINDOWS
 #define COM_NO_WINDOWS_H
 
-#define NONAMELESSUNION
-#define NONAMELESSSTRUCT
-
 #include "ieframe.h"
 
 #include <wingdi.h>

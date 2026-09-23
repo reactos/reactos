@@ -40,8 +40,10 @@ IDR_BROWSE_MAIN_MENU MENU
 
 STRINGTABLE
 {
+#ifdef __REACTOS__
     IDS_INTERNET "Penjelajah Internet"
     IDS_INTERNET_DESCRIPTION "Buka Penjelajah web dan tampilkan informasi pada Internet."
+#endif
 
     IDS_TB_BACK             "Kembali"
     IDS_TB_FORWARD          "Maju"

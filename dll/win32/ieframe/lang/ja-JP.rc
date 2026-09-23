@@ -40,8 +40,10 @@ IDR_BROWSE_MAIN_MENU MENU
 
 STRINGTABLE
 {
+#ifdef __REACTOS__
     IDS_INTERNET "インターネット ブラウザ"
     IDS_INTERNET_DESCRIPTION "ウェブブラウザを開き、インターネットの情報を表示します。"
+#endif
 
     IDS_TB_BACK             "戻る"
     IDS_TB_FORWARD          "進む"
