@@ -42,8 +42,10 @@ IDR_BROWSE_MAIN_MENU MENU
 
 STRINGTABLE
 {
+#ifdef __REACTOS__
     IDS_INTERNET "Интернет браузер"
     IDS_INTERNET_DESCRIPTION "Открывает веб-браузер для поиска и отображения информации и веб-узлов в Интернете."
+#endif
 
     IDS_TB_BACK             "Назад"
     IDS_TB_FORWARD          "Вперед"

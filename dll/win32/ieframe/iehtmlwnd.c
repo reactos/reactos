@@ -22,6 +22,25 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(ieframe);
 
+HRESULT get_window(DocHost *doc_host, IHTMLWindow2 **ret)
+{
+    IHTMLDocument2 *doc_obj;
+    HRESULT hres;
+
+    if(!doc_host->document) {
+        *ret = NULL;
+        return S_OK;
+    }
+
+    hres = IUnknown_QueryInterface(doc_host->document, &IID_IHTMLDocument2, (void**)&doc_obj);
+    if(FAILED(hres))
+        return hres;
+
+    hres = IHTMLDocument2_get_parentWindow(doc_obj, ret);
+    IHTMLDocument2_Release(doc_obj);
+    return hres;
+}
+
 static inline IEHTMLWindow *impl_from_IHTMLWindow2(IHTMLWindow2 *iface)
 {
     return CONTAINING_RECORD(iface, IEHTMLWindow, IHTMLWindow2_iface);
@@ -157,14 +176,14 @@ static HRESULT WINAPI IEHTMLWindow2_setTimeout(IHTMLWindow2 *iface, BSTR express
         LONG msec, VARIANT *language, LONG *timerID)
 {
     IEHTMLWindow *This = impl_from_IHTMLWindow2(iface);
-    FIXME("(%p)->(%s %d %s %p)\n", This, debugstr_w(expression), msec, debugstr_variant(language), timerID);
+    FIXME("(%p)->(%s %ld %s %p)\n", This, debugstr_w(expression), msec, debugstr_variant(language), timerID);
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI IEHTMLWindow2_clearTimeout(IHTMLWindow2 *iface, LONG timerID)
 {
     IEHTMLWindow *This = impl_from_IHTMLWindow2(iface);
-    FIXME("(%p)->(%d)\n", This, timerID);
+    FIXME("(%p)->(%ld)\n", This, timerID);
     return E_NOTIMPL;
 }
 
@@ -432,8 +451,22 @@ static HRESULT WINAPI IEHTMLWindow2_get_onscroll(IHTMLWindow2 *iface, VARIANT *p
 static HRESULT WINAPI IEHTMLWindow2_get_document(IHTMLWindow2 *iface, IHTMLDocument2 **p)
 {
     IEHTMLWindow *This = impl_from_IHTMLWindow2(iface);
-    FIXME("(%p)->(%p)\n", This, p);
-    return E_NOTIMPL;
+    IHTMLWindow2 *window;
+    HRESULT hres;
+
+    TRACE("(%p)->(%p)\n", This, p);
+
+    hres = get_window(This->doc_host, &window);
+    if(FAILED(hres))
+        return hres;
+
+    if(!window)
+        *p = NULL;
+    else {
+        hres = IHTMLWindow2_get_document(window, p);
+        IHTMLWindow2_Release(window);
+    }
+    return hres;
 }
 
 static HRESULT WINAPI IEHTMLWindow2_get_event(IHTMLWindow2 *iface, IHTMLEventObj **p)
@@ -505,7 +538,7 @@ static HRESULT WINAPI IEHTMLWindow2_blur(IHTMLWindow2 *iface)
 static HRESULT WINAPI IEHTMLWindow2_scroll(IHTMLWindow2 *iface, LONG x, LONG y)
 {
     IEHTMLWindow *This = impl_from_IHTMLWindow2(iface);
-    FIXME("(%p)->(%d %d)\n", This, x, y);
+    FIXME("(%p)->(%ld %ld)\n", This, x, y);
     return E_NOTIMPL;
 }
 
@@ -520,14 +553,14 @@ static HRESULT WINAPI IEHTMLWindow2_setInterval(IHTMLWindow2 *iface, BSTR expres
         LONG msec, VARIANT *language, LONG *timerID)
 {
     IEHTMLWindow *This = impl_from_IHTMLWindow2(iface);
-    FIXME("(%p)->(%s %d %s %p)\n", This, debugstr_w(expression), msec, debugstr_variant(language), timerID);
+    FIXME("(%p)->(%s %ld %s %p)\n", This, debugstr_w(expression), msec, debugstr_variant(language), timerID);
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI IEHTMLWindow2_clearInterval(IHTMLWindow2 *iface, LONG timerID)
 {
     IEHTMLWindow *This = impl_from_IHTMLWindow2(iface);
-    FIXME("(%p)->(%d)\n", This, timerID);
+    FIXME("(%p)->(%ld)\n", This, timerID);
     return E_NOTIMPL;
 }
 
@@ -563,42 +596,42 @@ static HRESULT WINAPI IEHTMLWindow2_toString(IHTMLWindow2 *iface, BSTR *String)
 static HRESULT WINAPI IEHTMLWindow2_scrollBy(IHTMLWindow2 *iface, LONG x, LONG y)
 {
     IEHTMLWindow *This = impl_from_IHTMLWindow2(iface);
-    FIXME("(%p)->(%d %d)\n", This, x, y);
+    FIXME("(%p)->(%ld %ld)\n", This, x, y);
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI IEHTMLWindow2_scrollTo(IHTMLWindow2 *iface, LONG x, LONG y)
 {
     IEHTMLWindow *This = impl_from_IHTMLWindow2(iface);
-    FIXME("(%p)->(%d %d)\n", This, x, y);
+    FIXME("(%p)->(%ld %ld)\n", This, x, y);
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI IEHTMLWindow2_moveTo(IHTMLWindow2 *iface, LONG x, LONG y)
 {
     IEHTMLWindow *This = impl_from_IHTMLWindow2(iface);
-    FIXME("(%p)->(%d %d)\n", This, x, y);
+    FIXME("(%p)->(%ld %ld)\n", This, x, y);
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI IEHTMLWindow2_moveBy(IHTMLWindow2 *iface, LONG x, LONG y)
 {
     IEHTMLWindow *This = impl_from_IHTMLWindow2(iface);
-    FIXME("(%p)->(%d %d)\n", This, x, y);
+    FIXME("(%p)->(%ld %ld)\n", This, x, y);
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI IEHTMLWindow2_resizeTo(IHTMLWindow2 *iface, LONG x, LONG y)
 {
     IEHTMLWindow *This = impl_from_IHTMLWindow2(iface);
-    FIXME("(%p)->(%d %d)\n", This, x, y);
+    FIXME("(%p)->(%ld %ld)\n", This, x, y);
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI IEHTMLWindow2_resizeBy(IHTMLWindow2 *iface, LONG x, LONG y)
 {
     IEHTMLWindow *This = impl_from_IHTMLWindow2(iface);
-    FIXME("(%p)->(%d %d)\n", This, x, y);
+    FIXME("(%p)->(%ld %ld)\n", This, x, y);
     return E_NOTIMPL;
 }
 
