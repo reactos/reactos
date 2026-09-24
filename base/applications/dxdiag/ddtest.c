@@ -114,7 +114,7 @@ VOID DDTests(GUID *lpDevice)
 }
 
 BOOL DDPrimarySurfaceTest(GUID *lpDevice, HWND hWnd){
-    UINT TimerID;
+    UINT_PTR TimerID;
     MSG msg;
 
     LPDIRECTDRAW lpDD = NULL;
@@ -143,7 +143,7 @@ BOOL DDPrimarySurfaceTest(GUID *lpDevice, HWND hWnd){
         return FALSE;
     }
 
-    TimerID = SetTimer(hWnd, -1, (UINT)TEST_DURATION, NULL);
+    TimerID = SetTimer(hWnd, 1, (UINT)TEST_DURATION, NULL);
 
     while (TRUE)
     {
@@ -284,7 +284,7 @@ BOOL DDOffscreenBufferTest(GUID *lpDevice, HWND hWnd, BOOL Fullscreen){
     }
 
     /* set our timers, TimerID - for test timeout, TimerIDUpdate - for frame updating */
-    TimerID = SetTimer(hWnd, -1, (UINT)TEST_DURATION, NULL);
+    TimerID = SetTimer(hWnd, 1, (UINT)TEST_DURATION, NULL);
     TimerIDUpdate = SetTimer(hWnd, 2, (UINT)10, NULL);
     (void)TimerIDUpdate;
 
