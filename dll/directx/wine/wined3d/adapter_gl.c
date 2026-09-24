@@ -5016,7 +5016,12 @@ static DWORD WINAPI wined3d_no_3d_warning_proc(void *param)
 
 static void wined3d_warn_no_3d(void)
 {
+    static LONG warned;
     HANDLE thread;
+
+    /* Only warn once per process */
+    if (InterlockedCompareExchange(&warned, 1, 0))
+        return;
 
     if ((thread = CreateThread(NULL, 0, wined3d_no_3d_warning_proc, NULL, 0, NULL)))
         CloseHandle(thread);
