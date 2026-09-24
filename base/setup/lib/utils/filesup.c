@@ -1100,11 +1100,11 @@ GetNtDevicePathOfDriveNumber(
     _In_ USHORT DriveNumber,
     _Out_ PUNICODE_STRING DevicePath)
 {
-    WCHAR szDosDevPath[] = {L'A' + DriveNumber, L':', UNICODE_NULL};
+    WCHAR szDosDevPath[] = {'\\','?','?','\\', 'A'+DriveNumber,':', UNICODE_NULL};
     UCHAR Type;
     ULONG (WINAPI *pfnQueryDosDeviceW)(PCWSTR, PWSTR, ULONG) = NULL;
     HANDLE hKernel32;
-    HANDLE DirectoryHandle, DeviceHandle;
+    HANDLE DeviceHandle;
     UNICODE_STRING String;
     OBJECT_ATTRIBUTES ObjectAttributes;
     NTSTATUS Status;
@@ -1124,7 +1124,8 @@ GetNtDevicePathOfDriveNumber(
     }
     if (NT_SUCCESS(Status))
     {
-        ULONG cch = pfnQueryDosDeviceW(szDosDevPath, DevicePath->Buffer,
+        /* "+ 4" to start at the drive letter itself */
+        ULONG cch = pfnQueryDosDeviceW(szDosDevPath + 4, DevicePath->Buffer,
                                        DevicePath->MaximumLength / sizeof(WCHAR));
         if (cch)
         {
@@ -1133,17 +1134,10 @@ GetNtDevicePathOfDriveNumber(
         }
     }
 
-    /* Use the object directory symlink target */
-    RtlInitUnicodeString(&String, L"\\??");
-    InitializeObjectAttributes(&ObjectAttributes, &String, OBJ_CASE_INSENSITIVE, NULL, NULL);
-    Status = NtOpenDirectoryObject(&DirectoryHandle, DIRECTORY_QUERY, &ObjectAttributes);
-    if (!NT_SUCCESS(Status))
-        return DRIVE_UNKNOWN;
-
+    /* Retrieve the DOS device symlink target */
     RtlInitUnicodeString(&String, szDosDevPath);
-    InitializeObjectAttributes(&ObjectAttributes, &String, OBJ_CASE_INSENSITIVE, DirectoryHandle, NULL);
+    InitializeObjectAttributes(&ObjectAttributes, &String, OBJ_CASE_INSENSITIVE, NULL, NULL);
     Status = NtOpenSymbolicLinkObject(&DeviceHandle, SYMBOLIC_LINK_QUERY, &ObjectAttributes);
-    NtClose(DirectoryHandle);
     if (NT_SUCCESS(Status))
     {
         ULONG ReturnLength;
@@ -1151,10 +1145,8 @@ GetNtDevicePathOfDriveNumber(
         NtClose(DeviceHandle);
     }
 
-    if (NT_SUCCESS(Status))
-        return Type;
-    else
-        return DRIVE_UNKNOWN;
+    /* Return the drive type if success, or unknown if failure */
+    return (NT_SUCCESS(Status) ? Type : DRIVE_UNKNOWN);
 }
 
 /* EOF */
