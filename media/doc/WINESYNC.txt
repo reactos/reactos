@@ -108,11 +108,7 @@ dll/win32/cryptnet            # Synced to Wine-10.0
 dll/win32/cryptui             # Synced to Wine-10.0
 dll/win32/dbgeng              # Synced to Wine-10.0
 dll/win32/dbghelp             # Synced to WineStaging-5.16
-<<<<<<< HEAD
-dll/win32/dciman32            # Synced to Wine-10.0
-=======
-dll/win32/dciman32            # Synced to wine-10.1-dev (b00c7619f1b)
->>>>>>> dd6c348432c ([DIRECTX:WINE][SDK][WIN32S] pass at building Wine-10.0)
+dll/win32/dciman32            # Synced to Wine-10.1-dev (b00c7619f1b)
 dll/win32/dwmapi              # Synced to Wine-8.14
 dll/win32/faultrep            # Synced to Wine-10.0
 dll/win32/feclient            # Synced to Wine-10.0
