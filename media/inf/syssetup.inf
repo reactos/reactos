@@ -81,6 +81,7 @@ AddReg=Classes
 11,,hlink.dll,1
 11,,hnetcfg.dll,1
 11,,ieframe.dll,1
+11,,ieproxy.dll,1
 11,,inetcomm.dll,1
 11,,inseng.dll,1
 11,,itss.dll,1
