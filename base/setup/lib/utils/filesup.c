@@ -11,6 +11,7 @@
 #include "precomp.h"
 #include "filesup.h"
 #include <pseh/pseh2.h>
+#include <ndk/umfuncs.h> // Ldr* functions
 
 #define NDEBUG
 #include <debug.h>
@@ -1071,6 +1072,81 @@ UnMapFile(
     }
 
     return Success;
+}
+
+static UCHAR
+GetWin32DriveTypeOfDriveNumber(
+    _In_ USHORT DriveNumber)
+{
+    PROCESS_DEVICEMAP_INFORMATION DeviceMap;
+    NTSTATUS Status;
+
+    Status = NtQueryInformationProcess(NtCurrentProcess(),
+                                       ProcessDeviceMap,
+                                       &DeviceMap.Query,
+                                       sizeof(DeviceMap.Query),
+                                       NULL);
+    if (NT_SUCCESS(Status) && (DeviceMap.Query.DriveMap & (1 << DriveNumber)) != 0)
+    {
+        UCHAR Type = DeviceMap.Query.DriveType[DriveNumber];
+        if (Type <= DRIVE_RAMDISK)
+            return Type;
+    }
+    return DRIVE_UNKNOWN;
+}
+
+UCHAR
+GetNtDevicePathOfDriveNumber(
+    _In_ USHORT DriveNumber,
+    _Out_ PUNICODE_STRING DevicePath)
+{
+    WCHAR szDosDevPath[] = {'\\','?','?','\\', 'A'+DriveNumber,':', UNICODE_NULL};
+    UCHAR Type;
+    ULONG (WINAPI *pfnQueryDosDeviceW)(PCWSTR, PWSTR, ULONG) = NULL;
+    HANDLE hKernel32;
+    HANDLE DeviceHandle;
+    UNICODE_STRING String;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    NTSTATUS Status;
+
+    /* Retrieve the drive type; if we fail, bail out early */
+    Type = GetWin32DriveTypeOfDriveNumber(DriveNumber);
+    if (Type <= DRIVE_NO_ROOT_DIR)
+        return Type;
+
+    /* Lookup the drive. Use Win32 directly if available so we match UAC, etc. */
+    RtlInitUnicodeString(&String, L"kernel32");
+    Status = LdrGetDllHandle(NULL, NULL, &String, &hKernel32);
+    if (NT_SUCCESS(Status))
+    {
+        ANSI_STRING AnsiString = RTL_CONSTANT_STRING("QueryDosDeviceW");
+        Status = LdrGetProcedureAddress(hKernel32, &AnsiString, 0, (PVOID*)&pfnQueryDosDeviceW);
+    }
+    if (NT_SUCCESS(Status))
+    {
+        /* "+ 4" to start at the drive letter itself */
+        ULONG cch = pfnQueryDosDeviceW(szDosDevPath + 4, DevicePath->Buffer,
+                                       DevicePath->MaximumLength / sizeof(WCHAR));
+        if (cch)
+        {
+            DevicePath->Length = (cch - 1) * sizeof(WCHAR);
+            return Type;
+        }
+    }
+
+    /* Retrieve the DOS device symlink target */
+    RtlInitUnicodeString(&String, szDosDevPath);
+    InitializeObjectAttributes(&ObjectAttributes, &String, OBJ_CASE_INSENSITIVE, NULL, NULL);
+    Status = NtOpenSymbolicLinkObject(&DeviceHandle, SYMBOLIC_LINK_QUERY, &ObjectAttributes);
+    if (NT_SUCCESS(Status))
+    {
+        ULONG ReturnLength;
+        Status = NtQuerySymbolicLinkObject(DeviceHandle, DevicePath, &ReturnLength);
+        NtClose(DeviceHandle);
+    }
+
+    /* Return the drive type if success, or unknown if failure */
+    return (NT_SUCCESS(Status) ? Type : DRIVE_UNKNOWN);
 }
 
 /* EOF */
