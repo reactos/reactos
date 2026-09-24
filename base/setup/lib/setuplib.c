@@ -121,7 +121,7 @@ GetUnattendInfPath(
 
     /*
      * The default unattend.inf file does not exist, or does not enable an
-     * unattended setup. Check all DOS volumes, non-fixed first, then fixed,
+     * unattended setup. Check all DOS drives, removable first, then fixed,
      * for an alternative unattend.inf that enables unattended setup.
      * If we find one, use it; otherwise, return the default unattend.inf
      * path, if it exists.
@@ -137,9 +137,9 @@ GetUnattendInfPath(
 
             DriveType = GetNtDevicePathOfDriveNumber(Drive - 'A', &NtDrive);
             if (DriveType <= DRIVE_NO_ROOT_DIR)
-                continue;
-            if (Types == 0 && DriveType == DRIVE_FIXED)
-                continue;
+                continue; /* Invalid drive */
+            if ((Types == 0) != (DriveType == DRIVE_REMOVABLE || DriveType == DRIVE_CDROM))
+                continue; /* Not the expected drive type */
 
             Status = ConcatPaths(szInf, _countof(szInf), 1, L"unattend.inf");
             if (NT_SUCCESS(Status) && DoesFileExist(NULL, szInf) &&
