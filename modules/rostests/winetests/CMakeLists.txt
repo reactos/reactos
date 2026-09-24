@@ -96,7 +96,7 @@ add_subdirectory(propsys)
 add_subdirectory(psapi)
 add_subdirectory(qedit)
 add_subdirectory(qmgr)
-add_subdirectory(quartz)
+# add_subdirectory(quartz) #OpenGL 2.0+ Required
 add_subdirectory(rasapi32)
 add_subdirectory(reg)
 add_subdirectory(regedit)
