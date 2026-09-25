@@ -19,6 +19,14 @@ static PARTITION_STYLE DiskPartitionType[MaxDriveNumber + 1];
 
 #include "part_mbr.h" // FIXME: For MASTER_BOOT_RECORD
 
+static BOOLEAN
+DiskGetPartitionEntryEx(
+    _In_ UCHAR DriveNumber,
+    _In_opt_ ULONG SectorSize,
+    _In_ ULONG PartitionNumber,
+    _Out_ PPARTITION_INFORMATION PartitionEntry,
+    _In_ BOOLEAN IgnoreUnusedFlag);
+
 BOOLEAN
 DiskReadBootRecord(
     IN UCHAR DriveNumber,
@@ -119,51 +127,73 @@ DiskDetectPartitionType(
 }
 
 // FIXME: This function is specific to BIOS-based PC platform.
+static
+BOOLEAN
+DiskGetActivePartitionEntry(
+    _In_ UCHAR DriveNumber,
+    _Out_ PPARTITION_INFORMATION PartitionEntry,
+    _Out_ PULONG ActivePartition)
+{
+    ULONG SectorSize;
+    ULONG BootablePartitionCount = 0;
+    ULONG PartitionNumber = 0;
+
+    GEOMETRY Geometry;
+    if (!MachDiskGetDriveGeometry(DriveNumber, &Geometry))
+        return FALSE;
+
+    SectorSize = Geometry.BytesPerSector;
+
+    *ActivePartition = 0;
+
+    while (DiskGetPartitionEntryEx(DriveNumber, SectorSize, ++PartitionNumber, PartitionEntry, TRUE))
+    {
+        if (PartitionEntry->PartitionType == PARTITION_XINT13_EXTENDED ||
+            PartitionEntry->PartitionType == PARTITION_EXTENDED ||
+            PartitionEntry->PartitionType == PARTITION_ENTRY_UNUSED)
+            continue;
+
+        if (PartitionEntry->BootIndicator)
+        {
+            *ActivePartition = PartitionNumber;
+            BootablePartitionCount++;
+        }
+    }
+
+    /* Make sure there was only one bootable partition */
+    if (BootablePartitionCount == 0)
+    {
+        ERR("No bootable (active) partitions found.\n");
+        return FALSE;
+    }
+    else if (BootablePartitionCount != 1)
+    {
+        ERR("Too many bootable (active) partitions found.\n");
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+// FIXME: This function is specific to BIOS-based PC platform.
 BOOLEAN
 DiskGetBootPartitionEntry(
     _In_ UCHAR DriveNumber,
     _Out_opt_ PPARTITION_INFORMATION PartitionEntry,
     _Out_ PULONG BootPartition)
 {
-#if 0
-    GEOMETRY Geometry;
-    if (!MachDiskGetDriveGeometry(DriveNumber, &Geometry))
-        return FALSE;
-#endif
-
     switch (DiskPartitionType[DriveNumber])
     {
-        case PARTITION_STYLE_MBR:
-        {
-            return DiskGetActivePartitionEntry(DriveNumber,
-            /* MBR partition table always uses 512-byte sectors per specification */
-                                               512, // Geometry.BytesPerSector
-                                               PartitionEntry, BootPartition);
-        }
-        case PARTITION_STYLE_GPT:
-        {
-            FIXME("DiskGetBootPartitionEntry() unimplemented for GPT\n");
-            return FALSE;
-        }
         case PARTITION_STYLE_RAW:
         {
             FIXME("DiskGetBootPartitionEntry() unimplemented for RAW\n");
             return FALSE;
         }
+        case PARTITION_STYLE_MBR:
+        case PARTITION_STYLE_GPT:
         case PARTITION_STYLE_BRFR:
         {
-            PARTITION_INFORMATION TempPartitionEntry;
-            if (!PartitionEntry)
-                PartitionEntry = &TempPartitionEntry;
-            if (DiskGetBrfrPartitionEntry(DriveNumber,
-                                          512, // Geometry.BytesPerSector
-                                          FATX_DATA_PARTITION,
-                                          PartitionEntry))
-            {
-                *BootPartition = FATX_DATA_PARTITION;
-                return TRUE;
-            }
-            return FALSE;
+            return DiskGetActivePartitionEntry(DriveNumber, PartitionEntry, BootPartition);
         }
         default:
         {
@@ -174,12 +204,13 @@ DiskGetBootPartitionEntry(
     return FALSE;
 }
 
-BOOLEAN
-DiskGetPartitionEntry(
+static BOOLEAN
+DiskGetPartitionEntryEx(
     _In_ UCHAR DriveNumber,
     _In_opt_ ULONG SectorSize,
     _In_ ULONG PartitionNumber,
-    _Out_ PPARTITION_INFORMATION PartitionEntry)
+    _Out_ PPARTITION_INFORMATION PartitionEntry,
+    _In_ BOOLEAN IgnoreUnusedFlag)
 {
     if (SectorSize == 0)
     {
@@ -198,18 +229,11 @@ DiskGetPartitionEntry(
     {
         case PARTITION_STYLE_MBR:
         {
-            return DiskGetMbrPartitionEntry(DriveNumber,
-            /* MBR partition table always uses 512-byte sectors per specification */
-                                            512, // SectorSize
-                                            PartitionNumber,
-                                            PartitionEntry);
+            return DiskGetMbrPartitionEntry(DriveNumber, SectorSize, PartitionNumber, PartitionEntry, IgnoreUnusedFlag);
         }
         case PARTITION_STYLE_GPT:
         {
-            return DiskGetGptPartitionEntry(DriveNumber,
-                                            SectorSize,
-                                            PartitionNumber,
-                                            PartitionEntry);
+            return DiskGetGptPartitionEntry(DriveNumber, SectorSize, PartitionNumber, PartitionEntry, IgnoreUnusedFlag);
         }
         case PARTITION_STYLE_RAW:
         {
@@ -218,10 +242,7 @@ DiskGetPartitionEntry(
         }
         case PARTITION_STYLE_BRFR:
         {
-            return DiskGetBrfrPartitionEntry(DriveNumber,
-                                             512, // SectorSize
-                                             PartitionNumber,
-                                             PartitionEntry);
+            return DiskGetBrfrPartitionEntry(DriveNumber, SectorSize, PartitionNumber, PartitionEntry, IgnoreUnusedFlag);
         }
         default:
         {
@@ -230,6 +251,16 @@ DiskGetPartitionEntry(
         }
     }
     return FALSE;
+}
+
+BOOLEAN
+DiskGetPartitionEntry(
+    _In_ UCHAR DriveNumber,
+    _In_opt_ ULONG SectorSize,
+    _In_ ULONG PartitionNumber,
+    _Out_ PPARTITION_INFORMATION PartitionEntry)
+{
+    return DiskGetPartitionEntryEx(DriveNumber, SectorSize, PartitionNumber, PartitionEntry, FALSE);
 }
 
 #endif
