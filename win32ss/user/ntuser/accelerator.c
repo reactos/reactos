@@ -335,7 +335,7 @@ UserDestroyAccelTable(PVOID Object)
     return TRUE;
 }
 
-BOOLEAN
+SYSCALL_RETURN_SMALL(BOOLEAN)
 APIENTRY
 NtUserDestroyAcceleratorTable(
     HACCEL hAccel)
@@ -359,7 +359,7 @@ NtUserDestroyAcceleratorTable(
 
     TRACE("Leave NtUserDestroyAcceleratorTable(Table %p) = %u\n", hAccel, Ret);
     UserLeave();
-    return Ret;
+    return (ULONG)Ret;
 }
 
 int
