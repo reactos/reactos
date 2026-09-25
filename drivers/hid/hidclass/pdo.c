@@ -741,7 +741,7 @@ HidClassPDO_CreatePDO(
         //
         PDODeviceExtension->Common.HidDeviceExtension.MiniDeviceExtension = FDODeviceExtension->Common.HidDeviceExtension.MiniDeviceExtension;
         PDODeviceExtension->Common.HidDeviceExtension.NextDeviceObject = FDODeviceExtension->Common.HidDeviceExtension.NextDeviceObject;
-        PDODeviceExtension->Common.HidDeviceExtension.PhysicalDeviceObject = FDODeviceExtension->Common.HidDeviceExtension.PhysicalDeviceObject;
+        PDODeviceExtension->Common.HidDeviceExtension.PhysicalDeviceObject = PDODeviceObject;
         PDODeviceExtension->Common.IsFDO = FALSE;
         PDODeviceExtension->FDODeviceExtension = FDODeviceExtension;
         PDODeviceExtension->FDODeviceObject = DeviceObject;
