@@ -274,6 +274,19 @@ ScriptItemize(
 _Check_return_
 HRESULT
 WINAPI
+ScriptItemizeOpenType(
+  _In_reads_(cInChars) const WCHAR *pwcInChars,
+  _In_ int cInChars,
+  _In_ int cMaxItems,
+  _In_reads_opt_(1) const SCRIPT_CONTROL *psControl,
+  _In_reads_opt_(1) const SCRIPT_STATE *psState,
+  _Out_writes_to_(cMaxItems, *pcItems) SCRIPT_ITEM  *pItems,
+  _Out_writes_(cMaxItems) OPENTYPE_TAG *pScriptTags,
+  _Out_writes_(1) int *pcItems);
+
+_Check_return_
+HRESULT
+WINAPI
 ScriptGetCMap(
   _In_ HDC hdc,
   _Inout_updates_(1) SCRIPT_CACHE *psc,
@@ -285,10 +298,46 @@ ScriptGetCMap(
 _Check_return_
 HRESULT
 WINAPI
+ScriptGetFontFeatureTags(
+  _In_ HDC hdc,
+  _Inout_updates_(1) SCRIPT_CACHE *psc,
+  _Inout_updates_(1) SCRIPT_ANALYSIS *psa,
+  _In_ OPENTYPE_TAG tagScript,
+  _In_ OPENTYPE_TAG tagLangSys,
+  _In_ int cMaxTags,
+  _Out_writes_(cMaxTags) OPENTYPE_TAG *pFeatureTags,
+  _Out_writes_(1) int *pcTags);
+
+_Check_return_
+HRESULT
+WINAPI
 ScriptGetFontProperties(
   _In_ HDC hdc,
   _Inout_updates_(1) SCRIPT_CACHE *psc,
   _Out_writes_(1) SCRIPT_FONTPROPERTIES *sfp);
+
+_Check_return_
+HRESULT
+WINAPI
+ScriptGetFontScriptTags(
+  _In_ HDC hdc,
+  _Inout_updates_(1) SCRIPT_CACHE *psc,
+  _Inout_updates_(1) SCRIPT_ANALYSIS *psa,
+  _In_ int cMaxTags,
+  _Out_writes_(cMaxTags) OPENTYPE_TAG *pScriptTags,
+  _Out_writes_(1) int *pcTags);
+
+_Check_return_
+HRESULT
+WINAPI
+ScriptGetFontLanguageTags(
+  _In_ HDC hdc,
+  _Inout_updates_(1) SCRIPT_CACHE *psc,
+  _Inout_updates_(1) SCRIPT_ANALYSIS *psa,
+  _In_ OPENTYPE_TAG tagScript,
+  _In_ int cMaxTags,
+  _Out_writes_(cMaxTags) OPENTYPE_TAG *pLangsysTags,
+  _Out_writes_(1) int *pcTags);
 
 _Check_return_
 HRESULT
@@ -400,6 +449,27 @@ ScriptShape(
 _Check_return_
 HRESULT
 WINAPI
+ScriptShapeOpenType(
+  _In_ HDC hdc,
+  _Inout_updates_(1) SCRIPT_CACHE *psc,
+  _Inout_updates_(1) SCRIPT_ANALYSIS *psa,
+  _In_ OPENTYPE_TAG tagScript,
+  _In_ OPENTYPE_TAG tagLangSys,
+  _In_reads_(cRanges) int *rcRangeChars,
+  _In_reads_(cRanges) TEXTRANGE_PROPERTIES **rpRangeProperties,
+  _In_ int cRanges,
+  _In_reads_(cChars) const WCHAR *pwcChars,
+  _In_ int cChars,
+  _In_ int cMaxGlyphs,
+  _In_reads_(cChars) WORD *pwLogClust,
+  _In_reads_(cChars) SCRIPT_CHARPROP *pCharProps,
+  _Out_writes_to_(cMaxGlyphs, *pcGlyphs) WORD *pwOutGlyphs,
+  _Out_writes_to_(cMaxGlyphs, *pcGlyphs) SCRIPT_GLYPHPROP *pOutGlyphProps,
+  _Out_writes_(1) int *pcGlyphs);
+
+_Check_return_
+HRESULT
+WINAPI
 ScriptPlace(
   _In_ HDC hdc,
   _Inout_updates_(1) SCRIPT_CACHE *psc,
@@ -407,6 +477,29 @@ ScriptPlace(
   _In_ int cGlyphs,
   _In_reads_(cGlyphs) const SCRIPT_VISATTR *psva,
   _Inout_updates_(1) SCRIPT_ANALYSIS *psa,
+  _Out_writes_all_(cGlyphs) int *piAdvance,
+  _Out_writes_all_opt_(cGlyphs) GOFFSET *pGoffset,
+  _Out_writes_(1) ABC *pABC);
+
+_Check_return_
+HRESULT
+WINAPI
+ScriptPlaceOpenType(
+  _In_ HDC hdc,
+  _Inout_updates_(1) SCRIPT_CACHE *psc,
+  _Inout_updates_(1) SCRIPT_ANALYSIS *psa,
+  _In_ OPENTYPE_TAG tagScript,
+  _In_ OPENTYPE_TAG tagLangSys,
+  _In_reads_(cRanges) int *rcRangeChars,
+  _In_reads_(cRanges) TEXTRANGE_PROPERTIES **rpRangeProperties,
+  _In_ int cRanges,
+  _In_reads_(cChars) const WCHAR *pwcChars,
+  _In_reads_(cChars) WORD *pwLogClust,
+  _In_reads_(cChars) SCRIPT_CHARPROP *pCharProps,
+  _In_ int cChars,
+  _In_reads_(cGlyphs) const WORD *pwGlyphs,
+  _In_reads_(cGlyphs) const SCRIPT_GLYPHPROP *pGlyphProps,
+  _In_ int cGlyphs,
   _Out_writes_all_(cGlyphs) int *piAdvance,
   _Out_writes_all_opt_(cGlyphs) GOFFSET *pGoffset,
   _Out_writes_(1) ABC *pABC);
