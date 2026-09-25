@@ -18,13 +18,21 @@
 
 #include "mshtml_private.h"
 
+#ifdef __REACTOS__
+struct HTMLSelectElement {
+#else
 typedef struct {
+#endif
     HTMLElement element;
 
     IHTMLSelectElement IHTMLSelectElement_iface;
 
     nsIDOMHTMLSelectElement *nsselect;
+#ifdef __REACTOS__
+};
+#else
 } HTMLSelectElement;
+#endif
 
 static inline HTMLSelectElement *impl_from_IHTMLSelectElement(IHTMLSelectElement *iface)
 {
