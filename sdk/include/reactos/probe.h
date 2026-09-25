@@ -137,6 +137,9 @@ ProbeArrayForWrite(IN OUT PVOID ArrayPtr,
 }
 #endif /* _WIN32K_ */
 
+#ifdef __GNUC__
+__attribute__((unused))
+#endif
 static __inline
 NTSTATUS
 ProbeAndCaptureUnicodeString(OUT PUNICODE_STRING Dest,
