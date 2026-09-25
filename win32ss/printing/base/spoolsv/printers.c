@@ -30,8 +30,29 @@ _RpcAbortPrinter(WINSPOOL_PRINTER_HANDLE hPrinter)
 DWORD
 _RpcAddPrinter(WINSPOOL_HANDLE pName, WINSPOOL_PRINTER_CONTAINER* pPrinterContainer, WINSPOOL_DEVMODE_CONTAINER* pDevModeContainer, WINSPOOL_SECURITY_CONTAINER* pSecurityContainer, WINSPOOL_PRINTER_HANDLE* pHandle)
 {
-    UNIMPLEMENTED;
-    return ERROR_INVALID_FUNCTION;
+    DWORD dwErrorCode;
+
+    dwErrorCode = RpcImpersonateClient(NULL);
+    if (dwErrorCode != ERROR_SUCCESS)
+    {
+        ERR("RpcImpersonateClient failed with error %lu!\n", dwErrorCode);
+        return dwErrorCode;
+    }
+
+    // The spoolss router only supports Level 2 so far, and we must not access the wrong union member.
+    if (pPrinterContainer->Level != 2)
+    {
+        RpcRevertToSelf();
+        SetLastError(ERROR_INVALID_LEVEL);
+        return ERROR_INVALID_LEVEL;
+    }
+
+    *pHandle = AddPrinterW(pName, pPrinterContainer->Level, (LPBYTE)pPrinterContainer->PrinterInfo.pPrinterInfo2);
+    if (!*pHandle)
+        dwErrorCode = GetLastError();
+
+    RpcRevertToSelf();
+    return dwErrorCode;
 }
 
 DWORD
