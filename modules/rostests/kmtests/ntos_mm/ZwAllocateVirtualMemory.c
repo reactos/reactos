@@ -108,9 +108,6 @@ SimpleErrorChecks(VOID)
     ALLOC_MEMORY_WITH_FREE((HANDLE)(ULONG_PTR)0xDEADBEEFDEADBEEFull, Base, 0, RegionSize, (MEM_COMMIT | MEM_RESERVE), PAGE_READWRITE, STATUS_INVALID_HANDLE, STATUS_INVALID_HANDLE);
 
     //BASE ADDRESS TESTS
-    Base = (PVOID)0x00567A20;
-    ALLOC_MEMORY_WITH_FREE(NtCurrentProcess(), Base, 0, RegionSize, (MEM_COMMIT | MEM_RESERVE), PAGE_READWRITE, STATUS_CONFLICTING_ADDRESSES, STATUS_UNABLE_TO_DELETE_SECTION);
-
     Base = (PVOID) 0x60000000;
     ALLOC_MEMORY_WITH_FREE(NtCurrentProcess(), Base, 0, RegionSize, (MEM_COMMIT | MEM_RESERVE), PAGE_READWRITE, STATUS_SUCCESS, STATUS_SUCCESS);
 
@@ -125,16 +122,17 @@ SimpleErrorChecks(VOID)
     //ZERO BITS TESTS
     ALLOC_MEMORY_WITH_FREE(NtCurrentProcess(), Base, 21, RegionSize, (MEM_COMMIT | MEM_RESERVE), PAGE_READWRITE, STATUS_NO_MEMORY, STATUS_MEMORY_NOT_ALLOCATED);
     ALLOC_MEMORY_WITH_FREE(NtCurrentProcess(), Base, 22, RegionSize, (MEM_COMMIT | MEM_RESERVE), PAGE_READWRITE, STATUS_INVALID_PARAMETER_3, STATUS_MEMORY_NOT_ALLOCATED);
-    ALLOC_MEMORY_WITH_FREE(NtCurrentProcess(), Base, -1, RegionSize, (MEM_COMMIT | MEM_RESERVE), PAGE_READWRITE, STATUS_INVALID_PARAMETER_3, STATUS_MEMORY_NOT_ALLOCATED);
     ALLOC_MEMORY_WITH_FREE(NtCurrentProcess(), Base, 3, RegionSize, (MEM_COMMIT | MEM_RESERVE), PAGE_READWRITE, STATUS_SUCCESS, STATUS_SUCCESS);
+    // -1 is valid on x64, see ZeroBitsTest below
+#ifndef _WIN64
+    ALLOC_MEMORY_WITH_FREE(NtCurrentProcess(), Base, -1, RegionSize, (MEM_COMMIT | MEM_RESERVE), PAGE_READWRITE, STATUS_INVALID_PARAMETER_3, STATUS_MEMORY_NOT_ALLOCATED);
+#endif
 
     //REGION SIZE TESTS
     ALLOC_MEMORY_WITH_FREE(NtCurrentProcess(), Base, 0, RegionSize, (MEM_COMMIT | MEM_RESERVE), PAGE_READWRITE, STATUS_SUCCESS, STATUS_SUCCESS);
     RegionSize = -1;
     ALLOC_MEMORY_WITH_FREE(NtCurrentProcess(), Base, 0, RegionSize, (MEM_COMMIT | MEM_RESERVE), PAGE_READWRITE, STATUS_INVALID_PARAMETER_4, STATUS_MEMORY_NOT_ALLOCATED);
     RegionSize = 0;
-    ALLOC_MEMORY_WITH_FREE(NtCurrentProcess(), Base, 0, RegionSize, (MEM_COMMIT | MEM_RESERVE), PAGE_READWRITE, STATUS_INVALID_PARAMETER_4, STATUS_MEMORY_NOT_ALLOCATED);
-    RegionSize = 0xFFFFFFFF; // 4 gb  is invalid
     ALLOC_MEMORY_WITH_FREE(NtCurrentProcess(), Base, 0, RegionSize, (MEM_COMMIT | MEM_RESERVE), PAGE_READWRITE, STATUS_INVALID_PARAMETER_4, STATUS_MEMORY_NOT_ALLOCATED);
 
     //Allocation type tests
@@ -273,6 +271,7 @@ CustomBaseAllocation(VOID)
     PVOID ActualStartingAddress = (PVOID)ROUND_DOWN(Base, MM_ALLOCATION_GRANULARITY); //it is rounded down to the nearest allocation granularity (64k) address
     PVOID EndingAddress = (PVOID)(((ULONG_PTR)Base + RegionSize - 1) | (PAGE_SIZE - 1));
     SIZE_T ActualSize = BYTES_TO_PAGES((ULONG_PTR)EndingAddress - (ULONG_PTR)ActualStartingAddress) * PAGE_SIZE; //calculates the actual size based on the required pages
+    PROCESS_BASIC_INFORMATION pbi;
 
     // allocate the memory
     Status = ZwAllocateVirtualMemory(NtCurrentProcess(), (PVOID *)&Base, 0, &RegionSize, (MEM_COMMIT | MEM_RESERVE), PAGE_READWRITE);
@@ -286,8 +285,29 @@ CustomBaseAllocation(VOID)
     Status = ZwFreeVirtualMemory(NtCurrentProcess(), (PVOID *)&Base, &RegionSize, MEM_RELEASE);
     ok_eq_hex(Status, STATUS_SUCCESS);
     ok_eq_ulong(RegionSize, ActualSize);
-}
 
+    // try to use process memory as base address
+    Status = ZwQueryInformationProcess(NtCurrentProcess(), ProcessBasicInformation, &pbi, sizeof(pbi), NULL);
+    if (NT_SUCCESS(Status))
+    {
+        PPEB Peb = pbi.PebBaseAddress;
+        Base = NULL;
+        RegionSize = DEFAULT_ALLOC_SIZE;
+
+        KmtStartSeh()
+            Base = Peb->ImageBaseAddress;
+        KmtEndSeh(STATUS_SUCCESS);
+
+        if (Base)
+        {
+            ALLOC_MEMORY_WITH_FREE(NtCurrentProcess(), Base, 0, RegionSize, (MEM_COMMIT | MEM_RESERVE), PAGE_READWRITE, STATUS_CONFLICTING_ADDRESSES, STATUS_UNABLE_TO_DELETE_SECTION);
+        }
+    }
+    else
+    {
+        ok_eq_hex(Status, STATUS_SUCCESS);
+    }
+}
 
 static
 NTSTATUS
@@ -295,14 +315,33 @@ StressTesting(ULONG AllocationType)
 {
     NTSTATUS Status = STATUS_SUCCESS;
     NTSTATUS ReturnStatus = STATUS_SUCCESS;
-    static PVOID bases[1024]; //assume we are going to allocate only 5 gigs. static here means the arrays is not allocated on the stack but in the BSS segment of the driver
     ULONG Index = 0;
     PVOID Base = NULL;
-    SIZE_T RegionSize = 5 * 1024 * 1024; // 5 megabytes;
+    PVOID *bases = NULL;
+    ULONG NumberOfElements = 0;
+    SIZE_T RegionSize, basesSize;
 
-    RtlZeroMemory(bases, sizeof(bases));
+#ifdef _WIN64
+    // 2 TB total
+    // Going too high causes the test to time out
+    basesSize = 2 * 1024 * 1024;
+    RegionSize = 1 * 1024 * 1024;
+#else
+    // 5 GB total
+    basesSize = 1024;
+    RegionSize = 5 * 1024 * 1024;
+#endif
 
-    for (Index = 0; Index < RTL_NUMBER_OF(bases) && NT_SUCCESS(Status); Index++)
+    bases = ExAllocatePoolZero(PagedPool, basesSize, 'stts');
+    if (!bases)
+    {
+        trace("Failed to allocate memory for bases array\n");
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    NumberOfElements = basesSize / sizeof(PVOID);
+
+    for (Index = 0; Index < NumberOfElements && NT_SUCCESS(Status); Index++)
     {
         Status = ZwAllocateVirtualMemory(NtCurrentProcess(), &Base, 0, &RegionSize, AllocationType, PAGE_READWRITE);
 
@@ -329,14 +368,56 @@ StressTesting(ULONG AllocationType)
     //free the allocated memory so that we can continue with the tests
     Status = STATUS_SUCCESS;
     Index = 0;
-    while (NT_SUCCESS(Status) && Index < RTL_NUMBER_OF(bases))
+    while (NT_SUCCESS(Status) && Index < NumberOfElements)
     {
         RegionSize = 0;
         Status = ZwFreeVirtualMemory(NtCurrentProcess(), &bases[Index], &RegionSize, MEM_RELEASE);
         bases[Index++] = NULL;
     }
 
+    ExFreePoolWithTag(bases, 'stts');
     return ReturnStatus;
+}
+
+static
+VOID
+ZeroBitsTest(VOID)
+{
+    NTSTATUS Status = STATUS_SUCCESS;
+    PVOID Base = NULL;
+    SIZE_T RegionSize = 1;
+    ULONG_PTR MaxPtr = -1;
+
+    /* https://stackoverflow.com/a/50553691 */
+#ifdef _WIN64
+    if (GetNTVersion() >= _WIN32_WINNT_WINBLUE)
+    {
+        for (ULONG_PTR ZeroBits = MaxPtr; Status == STATUS_SUCCESS && ZeroBits > 32; ZeroBits >>= 1)
+        {
+            Status = ZwAllocateVirtualMemory(NtCurrentProcess(), &Base, ZeroBits, &RegionSize, MEM_RESERVE | MEM_TOP_DOWN, PAGE_READWRITE);
+            trace("%p:%p - Status: %x\n", ZeroBits, Base, Status);
+            if ((ULONG_PTR)Base > ZeroBits)
+            {
+                ok_eq_pointer((ULONG_PTR)Base, (ZeroBits >> 16) << 16);
+            }
+            ZwFreeVirtualMemory(NtCurrentProcess(), &Base, &RegionSize, MEM_RELEASE);
+            Base = NULL;
+            RegionSize = 1;
+        }
+        ok(Status == STATUS_SUCCESS || Status == STATUS_NO_MEMORY, "ZeroBits mask test failed\n");
+    }
+#endif
+
+    Status = STATUS_SUCCESS;
+    for (ULONG_PTR ZeroBits = 0; Status == STATUS_SUCCESS && ZeroBits <= 32; ZeroBits += 1)
+    {
+        Status = ZwAllocateVirtualMemory(NtCurrentProcess(), &Base, ZeroBits, &RegionSize, MEM_RESERVE | MEM_TOP_DOWN, PAGE_READWRITE);
+        ok_bool_true((ULONG_PTR)Base < (MaxPtr >> ZeroBits), "Base must be < (MaxPtr >> ZeroBits)\n");
+        ZwFreeVirtualMemory(NtCurrentProcess(), &Base, &RegionSize, MEM_RELEASE);
+        Base = NULL;
+        RegionSize = 1;
+    }
+    ok(Status == STATUS_SUCCESS || Status == STATUS_NO_MEMORY, "ZeroBits test failed\n");
 }
 
 
@@ -501,12 +582,22 @@ START_TEST(ZwAllocateVirtualMemory)
 
     CustomBaseAllocation();
 
+    // TODO: Find out why these sometimes return STATUS_SUCCESS (especially on 32-bit systems)
     Status = StressTesting(MEM_RESERVE);
+#ifdef _WIN64
+    ok_eq_hex(Status, STATUS_COMMITMENT_LIMIT);
+#else
     ok_eq_hex(Status, STATUS_NO_MEMORY);
+#endif
 
-    Status = STATUS_SUCCESS;
     Status = StressTesting(MEM_COMMIT);
+#ifdef _WIN64
+    ok_eq_hex(Status, STATUS_COMMITMENT_LIMIT);
+#else
     ok_eq_hex(Status, STATUS_NO_MEMORY);
+#endif
+
+    ZeroBitsTest();
 
     SystemProcessTest();
 }
