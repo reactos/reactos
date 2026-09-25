@@ -157,8 +157,9 @@ KsTopologyPropertyHandler(
 
     DPRINT("KsTopologyPropertyHandler Irp %p Property %p Data %p Topology %p OutputLength %lu PropertyId %lu\n", Irp, Property, Data, Topology, IoStack->Parameters.DeviceIoControl.OutputBufferLength, Property->Id);
 
-    if (Property->Flags != KSPROPERTY_TYPE_GET)
+    if ((Property->Flags & (KSPROPERTY_TYPE_GET | KSPROPERTY_TYPE_SET)) != KSPROPERTY_TYPE_GET)
     {
+        UNIMPLEMENTED;
         Irp->IoStatus.Status = STATUS_NOT_IMPLEMENTED;
         Irp->IoStatus.Information = 0;
         return STATUS_NOT_IMPLEMENTED;
