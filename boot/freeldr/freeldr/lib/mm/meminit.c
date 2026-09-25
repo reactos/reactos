@@ -23,6 +23,9 @@
 #include <debug.h>
 DBG_DEFAULT_CHANNEL(MEMORY);
 
+/* For some weird reason windows vista doesn't work when loading stuff on first 1MB */
+#define MM_RESERVED_PAGES MM_SIZE_TO_PAGES(0x100000)
+
 PVOID    PageLookupTableAddress = NULL;
 PFN_NUMBER TotalPagesInLookupTable = 0;
 PFN_NUMBER FreePagesInLookupTable = 0;
@@ -600,7 +603,7 @@ PFN_NUMBER MmFindAvailablePages(PVOID PageLookupTable, PFN_NUMBER TotalPageCount
     if (FromEnd)
     {
         /* Allocate "high" (from end) pages */
-        for (Index=LastFreePageHint-1; Index>0; Index--)
+        for (Index=LastFreePageHint-1; Index>MM_RESERVED_PAGES; Index--)
         {
             if (RealPageLookupTable[Index].PageAllocated != LoaderFree)
             {
@@ -622,7 +625,7 @@ PFN_NUMBER MmFindAvailablePages(PVOID PageLookupTable, PFN_NUMBER TotalPageCount
     {
         TRACE("Alloc low memory, LastFreePageHint 0x%x, TPC 0x%x\n", LastFreePageHint, TotalPageCount);
         /* Allocate "low" pages */
-        for (Index=1; Index < LastFreePageHint; Index++)
+        for (Index=max(1,MM_RESERVED_PAGES); Index < LastFreePageHint; Index++)
         {
             if (RealPageLookupTable[Index].PageAllocated != LoaderFree)
             {
@@ -656,7 +659,7 @@ PFN_NUMBER MmFindAvailablePagesBeforePage(PVOID PageLookupTable, PFN_NUMBER Tota
     }
 
     AvailablePagesSoFar = 0;
-    for (Index=LastPage-1; Index>0; Index--)
+    for (Index=LastPage-1; Index>MM_RESERVED_PAGES; Index--)
     {
         if (RealPageLookupTable[Index].PageAllocated != LoaderFree)
         {
@@ -682,7 +685,7 @@ VOID MmUpdateLastFreePageHint(PVOID PageLookupTable, PFN_NUMBER TotalPageCount)
     PPAGE_LOOKUP_TABLE_ITEM        RealPageLookupTable = (PPAGE_LOOKUP_TABLE_ITEM)PageLookupTable;
     PFN_NUMBER                            Index;
 
-    for (Index=TotalPageCount-1; Index>0; Index--)
+    for (Index=TotalPageCount-1; Index>MM_RESERVED_PAGES; Index--)
     {
         if (RealPageLookupTable[Index].PageAllocated == LoaderFree)
         {
