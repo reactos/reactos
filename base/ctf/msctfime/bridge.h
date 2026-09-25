@@ -13,17 +13,17 @@
 class CicBridge : public ITfSysHookSink
 {
 protected:
-    LONG m_cRefs;
-    BOOL m_bImmxInited;
-    BOOL m_bUnknown1;
-    BOOL m_bDeactivating;
-    DWORD m_cActivateLocks;
-    ITfKeystrokeMgr *m_pKeystrokeMgr;
-    ITfDocumentMgr *m_pDocMgr;
-    CThreadMgrEventSink *m_pThreadMgrEventSink;
-    TfClientId m_cliendId;
-    CIC_LIBTHREAD m_LibThread;
-    BOOL m_bUnknown2;
+    LONG m_cRefs = 1;
+    BOOL m_bImmxInited = FALSE;
+    BOOL m_bUnknown1 = FALSE;
+    BOOL m_bDeactivating = FALSE;
+    DWORD m_cActivateLocks = 0;
+    ITfKeystrokeMgr* m_pKeystrokeMgr = NULL;
+    ITfDocumentMgr* m_pDocMgr = NULL;
+    CThreadMgrEventSink* m_pThreadMgrEventSink = NULL;
+    TfClientId m_cliendId = 0;
+    CIC_LIBTHREAD m_LibThread = {};
+    BOOL m_bUnknown2 = 0;
 
     static BOOL CALLBACK EnumCreateInputContextCallback(HIMC hIMC, LPARAM lParam);
     static BOOL CALLBACK EnumDestroyInputContextCallback(HIMC hIMC, LPARAM lParam);
@@ -31,7 +31,6 @@ protected:
     LRESULT EscHanjaMode(TLS *pTLS, HIMC hIMC, LPVOID lpData);
 
 public:
-    CicBridge();
     virtual ~CicBridge();
 
     // IUnknown interface

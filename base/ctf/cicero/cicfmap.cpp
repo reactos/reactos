@@ -10,12 +10,6 @@
 
 CicFileMapping::CicFileMapping(LPCTSTR pszName, CicMutex *pMutex)
 {
-    m_pszName = NULL;
-    m_pView = NULL;
-    m_hMapping = NULL;
-    m_bCreated = FALSE;
-    m_bHasMutex = FALSE;
-    m_pMutex = NULL;
     Init(pszName, pMutex);
 }
 

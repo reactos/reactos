@@ -11,13 +11,10 @@
 
 class CicMutex
 {
-    HANDLE m_hMutex;
-    BOOL m_bInit;
+    HANDLE m_hMutex = NULL;
+    BOOL m_bInit = FALSE;
 
 public:
-    CicMutex() : m_hMutex(NULL), m_bInit(FALSE)
-    {
-    }
     ~CicMutex()
     {
         Uninit();

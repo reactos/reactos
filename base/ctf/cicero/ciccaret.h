@@ -10,12 +10,12 @@
 class CicCaret
 {
 protected:
-    HWND m_hWnd;
-    UINT m_uCaretBlinkTimerID;
-    POINT m_pt;
-    SIZE m_size;
-    BOOL m_bCaretBlinking;
-    BOOL m_bCaretVisible;
+    HWND m_hWnd = NULL;
+    UINT m_uCaretBlinkTimerID = 0;
+    POINT m_pt = { 0 };
+    SIZE m_size = { 0 };
+    BOOL m_bCaretBlinking = FALSE;
+    BOOL m_bCaretVisible = FALSE;
 
 public:
     enum { TIMER_ID = 0x4F83AF91 };

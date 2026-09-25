@@ -15,13 +15,8 @@ WINE_DEFAULT_DEBUG_CHANNEL(msctf);
 ////////////////////////////////////////////////////////////////////////////
 
 CDocumentMgr::CDocumentMgr(ITfThreadMgrEventSink *threadMgrSink)
-    : m_cRefs(1)
-    , m_pCompartmentMgr(NULL)
-    , m_initialContext(NULL)
-    , m_pThreadMgrSink(threadMgrSink)
+    : m_pThreadMgrSink(threadMgrSink)
 {
-    m_contextStack[1] = m_contextStack[0] = NULL;
-
     list_init(&m_transitoryExtensionSink);
 
     ITfDocumentMgr *pDocMgr = static_cast<ITfDocumentMgr *>(this);
@@ -54,10 +49,7 @@ CDocumentMgr::~CDocumentMgr()
     free_sinks(&m_transitoryExtensionSink);
 
     if (m_pCompartmentMgr)
-    {
         m_pCompartmentMgr->Release();
-        m_pCompartmentMgr = NULL;
-    }
 }
 
 HRESULT
@@ -309,9 +301,7 @@ STDMETHODIMP CDocumentMgr::UnadviseSink(DWORD pdwCookie)
 ////////////////////////////////////////////////////////////////////////////
 
 CEnumTfContext::CEnumTfContext(_In_opt_ CDocumentMgr *mgr)
-    : m_cRefs(1)
-    , m_index(0)
-    , m_pDocMgr(mgr)
+    : m_pDocMgr(mgr)
 {
     if (mgr)
         mgr->AddRef();
@@ -320,10 +310,7 @@ CEnumTfContext::CEnumTfContext(_In_opt_ CDocumentMgr *mgr)
 CEnumTfContext::~CEnumTfContext()
 {
     if (m_pDocMgr)
-    {
         m_pDocMgr->Release();
-        m_pDocMgr = NULL;
-    }
 }
 
 HRESULT CEnumTfContext::CreateInstance(_In_opt_ CDocumentMgr *mgr, _Out_ IEnumTfContexts **ppOut)
