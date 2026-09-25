@@ -12,7 +12,6 @@ list(APPEND PCH_SKIP_SOURCE
 
 add_executable(pathcch_static_unittest ${SOURCE} ${PCH_SKIP_SOURCE})
 add_pch(pathcch_static_unittest precomp.h ${PCH_SKIP_SOURCE})
-target_compile_definitions(pathcch_static_unittest PRIVATE STATIC_PATHCCH)
 set_module_type(pathcch_static_unittest win32cui)
 add_dependencies(pathcch_static_unittest psdk)
 target_link_libraries(pathcch_static_unittest pathcch_static)
