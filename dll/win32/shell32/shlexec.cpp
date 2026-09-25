@@ -23,6 +23,7 @@
 #include "precomp.h"
 #include <winbase_undoc.h>
 #include <undocshell.h>
+#include <shellapi.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(exec);
 
@@ -2092,6 +2093,106 @@ SHELL_InvokePidl(
     hr = pCM->InvokeCommand(&ici);
 
     return !FAILED_UNEXPECTEDLY(hr);
+}
+
+EXTERN_C BOOL
+WINAPI
+SHInvokePrinterCommandW(HWND hwnd,
+                        UINT uAction,
+                        LPCWSTR lpBuf1,
+                        LPCWSTR lpBuf2,
+                        BOOL fModal)
+{
+    SHELLEXECUTEINFOW sei;
+    LPCWSTR lpVerb;
+
+    TRACE("SHInvokePrinterCommandW(%p, %u, %s, %s, %d)\n",
+          hwnd, uAction, debugstr_w(lpBuf1), debugstr_w(lpBuf2), fModal);
+
+    if (!lpBuf1)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    switch (uAction)
+    {
+        case PRINTACTION_OPEN:
+        case PRINTACTION_OPENNETPRN:
+            lpVerb = L"open";
+            break;
+
+        case PRINTACTION_PROPERTIES:
+            lpVerb = L"properties";
+            break;
+
+        case PRINTACTION_NETINSTALL:
+            lpVerb = L"install";
+            break;
+
+        case PRINTACTION_NETINSTALLLINK:
+            lpVerb = L"createshortcut";
+            break;
+
+        case PRINTACTION_TESTPAGE:
+            lpVerb = L"testpage";
+            break;
+
+        case PRINTACTION_DOCUMENTDEFAULTS:
+            lpVerb = L"documentdefaults";
+            break;
+
+        case PRINTACTION_SERVERPROPERTIES:
+            lpVerb = L"properties";
+            break;
+
+        default:
+            FIXME("Unhandled uAction %u\n", uAction);
+            SetLastError(ERROR_INVALID_PARAMETER);
+            return FALSE;
+    }
+
+    ZeroMemory(&sei, sizeof(sei));
+    sei.cbSize = sizeof(sei);
+    sei.hwnd = hwnd;
+    sei.lpVerb = lpVerb;
+    sei.lpFile = lpBuf1;
+    sei.lpParameters = (uAction == PRINTACTION_PROPERTIES || uAction == PRINTACTION_NETINSTALLLINK) ? lpBuf2 : NULL;
+    sei.nShow = SW_SHOWNORMAL;
+    sei.fMask = SEE_MASK_FLAG_DDEWAIT;
+
+    if (fModal)
+    {
+        sei.fMask |= SEE_MASK_NOASYNC;
+    }
+
+    return ShellExecuteExW(&sei);
+}
+
+EXTERN_C BOOL
+WINAPI
+SHInvokePrinterCommandA(HWND hwnd,
+                        UINT uAction,
+                        LPCSTR lpBuf1,
+                        LPCSTR lpBuf2,
+                        BOOL fModal)
+{
+    WCHAR szBuf1[MAX_PATH], szBuf2[MAX_PATH];
+
+    if (!lpBuf1)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    SHAnsiToUnicode(lpBuf1, szBuf1, _countof(szBuf1));
+
+    if (lpBuf2)
+    {
+        SHAnsiToUnicode(lpBuf2, szBuf2, _countof(szBuf2));
+    }
+
+    return SHInvokePrinterCommandW(hwnd, uAction, szBuf1, lpBuf2 ? szBuf2 : NULL, fModal);
 }
 
 static UINT_PTR SHELL_quote_and_execute(LPCWSTR wcmd, LPCWSTR wszParameters, LPCWSTR wszKeyname, LPCWSTR wszApplicationName, LPWSTR env, LPSHELLEXECUTEINFOW psei, LPSHELLEXECUTEINFOW psei_out, SHELL_ExecuteW32 execfunc)

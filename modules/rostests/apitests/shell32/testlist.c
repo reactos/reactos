@@ -54,6 +54,7 @@ extern void func_SHGetComputerDisplayNameW(void);
 extern void func_SHGetFileInfo(void);
 extern void func_SHGetUnreadMailCountW(void);
 extern void func_SHGetUserDisplayName(void);
+extern void func_SHInvokePrinterCommand(void);
 extern void func_SHIsBadInterfacePtr(void);
 extern void func_SHLimitInputEdit(void);
 extern void func_SHParseDisplayName(void);
@@ -117,6 +118,7 @@ const struct test winetest_testlist[] =
     { "SHGetFileInfo", func_SHGetFileInfo },
     { "SHGetUnreadMailCountW", func_SHGetUnreadMailCountW },
     { "SHGetUserDisplayName", func_SHGetUserDisplayName },
+    { "SHInvokePrinterCommand", func_SHInvokePrinterCommand },
     { "SHIsBadInterfacePtr", func_SHIsBadInterfacePtr },
     { "SHLimitInputEdit", func_SHLimitInputEdit },
     { "SHParseDisplayName", func_SHParseDisplayName },
