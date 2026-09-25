@@ -684,6 +684,14 @@ FdoIoctlDiskSetDriveLayout(
         return STATUS_INFO_LENGTH_MISMATCH;
     }
 
+    // The updated layout is written back into the same buffer, and this
+    // call reports layoutSize bytes to the I/O manager, so the output
+    // buffer has to be able to hold it too.
+    if (!VerifyIrpOutBufferSize(Irp, layoutSize))
+    {
+        return STATUS_BUFFER_TOO_SMALL;
+    }
+
     PDRIVE_LAYOUT_INFORMATION_EX layoutEx = PartMgrConvertLayoutToExtended(layoutInfo);
 
     if (layoutEx == NULL)
@@ -777,6 +785,14 @@ FdoIoctlDiskSetDriveLayoutEx(
     if (!VerifyIrpInBufferSize(Irp, layoutSize))
     {
         return STATUS_INFO_LENGTH_MISMATCH;
+    }
+
+    // The updated layout is written back into the same buffer, and this
+    // call reports layoutSize bytes to the I/O manager, so the output
+    // buffer has to be able to hold it too.
+    if (!VerifyIrpOutBufferSize(Irp, layoutSize))
+    {
+        return STATUS_BUFFER_TOO_SMALL;
     }
 
     // we need to copy the structure from the IRP input buffer
