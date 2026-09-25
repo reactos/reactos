@@ -23,7 +23,7 @@
 #define NET_CLR_TOTAL       RGB(0, 255, 0)
 #define NET_CLR_SENT        RGB(255, 0, 0)
 #define NET_CLR_RECEIVED    RGB(255, 255, 0)
-#define NET_CLR_TEXT        RGB(0, 255, 0)
+#define NET_CLR_TEXT        RGB(255, 255, 0)
 
 typedef enum _NET_SERIES
 {
@@ -64,10 +64,10 @@ static const NET_COLUMN_INFO NetColumns[NET_COLUMN_COUNT] =
     { IDS_NET_COL_BYTESRECV,    80, LVCFMT_RIGHT },
 };
 
-/* Available graph scales: 0.1%, 0.5%, 1%, 5%, 10%, 25%, 50%, 100% */
+/* Available graph scales: 1%, 5%, 10%, 25%, 50%, 100% */
 static const ULONG NetScales[] =
 {
-    100, 500, 1000, 5000, 10000, 25000, 50000, 100000
+    1000, 5000, 10000, 25000, 50000, 100000
 };
 
 typedef struct _NET_ADAPTER
@@ -90,6 +90,7 @@ typedef struct _NET_ADAPTER
     DWORD     AdminStatus;
     ULONG     Utilization;          /* 1/1000 % */
 
+    BOOL      NameResolved;
     WCHAR     szName[MAX_INTERFACE_NAME_LEN];
 
     UINT      HistoryHead;          /* Index of the newest sample */
@@ -100,8 +101,28 @@ typedef struct _NET_ADAPTER
 
 HWND hNetworkPage;                  /* Networking Property Page */
 HWND hNetworkPageListCtrl;          /* Network adapters list */
-static HWND hNetworkHistoryFrame;   /* Graph group box */
-static HWND hNetworkGraph;          /* Owner-drawn graph */
+static HWND hNetScrollBar;          /* Scrolls the graphs when they don't fit */
+
+/*
+ * One graph "slot": a group box with an owner-drawn graph inside.
+ * Like in Windows XP, every adapter gets its own graph. Slot 0 comes from
+ * the dialog template, the others are created on demand. Slot N shows the
+ * adapter at position (NetFirstVisible + N).
+ */
+#define NET_MAX_SLOTS       16
+#define NET_SLOT_ID_BASE    0x6000
+#define NET_MIN_SLOT_DLU    50      /* Minimum graph slot height, dialog units */
+
+typedef struct _NET_GRAPH_SLOT
+{
+    HWND hFrame;
+    HWND hGraph;
+} NET_GRAPH_SLOT;
+
+static NET_GRAPH_SLOT NetSlots[NET_MAX_SLOTS];
+static UINT NetSlotCount;           /* Slots created */
+static UINT NetSlotsUsed;           /* Slots currently shown */
+static UINT NetFirstVisible;        /* Adapter shown in the first slot */
 
 static PNET_ADAPTER *NetAdapters;
 static UINT NetAdapterCount;
@@ -124,6 +145,9 @@ static HBRUSH hNetBrushBack;
 /* Layout captured from the dialog template, in pixels */
 static INT  nNetMargin;
 static INT  nNetListHeight;
+static INT  cyNetMinSlot;
+static INT  nNetPageWidth;
+static INT  nNetPageHeight;
 static RECT rcNetGraphInset;
 
 static WCHAR szNetDecimal[4] = L".";
@@ -333,27 +357,100 @@ NetPage_CounterDelta(DWORD Current, DWORD Previous, DWORD IntervalMs, DWORD Spee
     return Delta;
 }
 
-static void
-NetPage_SampleAdapter(PNET_ADAPTER Adapter, const MIB_IFROW *Row, DWORD Tick)
+#define NET_GUID_LENGTH     38  /* {xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx} */
+
+/* Finds an adapter GUID string inside the given text */
+static BOOL
+NetPage_ExtractGuid(LPCWSTR pszText, LPWSTR pszGuid, SIZE_T cchGuid)
 {
-    ULONG Sent = 0, Received = 0;
-    WCHAR szName[MAX_INTERFACE_NAME_LEN];
+    LPCWSTR pszStart = wcschr(pszText, L'{');
+
+    while (pszStart)
+    {
+        if (wcslen(pszStart) >= NET_GUID_LENGTH &&
+            pszStart[NET_GUID_LENGTH - 1] == L'}' &&
+            cchGuid > NET_GUID_LENGTH)
+        {
+            StringCchCopyNW(pszGuid, cchGuid, pszStart, NET_GUID_LENGTH);
+            return TRUE;
+        }
+        pszStart = wcschr(pszStart + 1, L'{');
+    }
+    return FALSE;
+}
+
+/* Reads the connection name (e.g. "Network Connection") of the adapter */
+static BOOL
+NetPage_GetConnectionName(LPCWSTR pszGuid, LPWSTR pszName, DWORD cchName)
+{
+    WCHAR szKey[160];
+    HKEY hKey;
+    DWORD dwType, cbData = (cchName - 1) * sizeof(WCHAR);
+    LONG lError;
+
+    StringCchPrintfW(szKey, _countof(szKey),
+                     L"SYSTEM\\CurrentControlSet\\Control\\Network\\"
+                     L"{4D36E972-E325-11CE-BFC1-08002BE10318}\\%s\\Connection",
+                     pszGuid);
+
+    if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, szKey, 0, KEY_QUERY_VALUE, &hKey) != ERROR_SUCCESS)
+        return FALSE;
+
+    ZeroMemory(pszName, cchName * sizeof(WCHAR));
+    lError = RegQueryValueExW(hKey, L"Name", NULL, &dwType, (LPBYTE)pszName, &cbData);
+    RegCloseKey(hKey);
+
+    return (lError == ERROR_SUCCESS && dwType == REG_SZ && pszName[0] != UNICODE_NULL);
+}
+
+/* Builds a user-friendly adapter name */
+static void
+NetPage_ResolveName(PNET_ADAPTER Adapter, const MIB_IFROW *Row)
+{
+    WCHAR szDescr[MAX_INTERFACE_NAME_LEN];
+    WCHAR szGuid[NET_GUID_LENGTH + 1];
+    WCHAR szWideName[MAX_INTERFACE_NAME_LEN + 1];
     int cchDescr, cchName = 0;
 
-    /* Adapter name: the description is ANSI and may not be NUL-terminated */
+    /* The description is ANSI and may not be NUL-terminated */
     cchDescr = (int)min(Row->dwDescrLen, (DWORD)MAXLEN_IFDESCR);
     while (cchDescr > 0 && Row->bDescr[cchDescr - 1] == '\0')
         cchDescr--;
 
     if (cchDescr > 0)
         cchName = MultiByteToWideChar(CP_ACP, 0, (LPCSTR)Row->bDescr, cchDescr,
-                                      szName, _countof(szName) - 1);
+                                      szDescr, _countof(szDescr) - 1);
+    szDescr[max(cchName, 0)] = UNICODE_NULL;
 
-    if (cchName > 0)
-        szName[cchName] = UNICODE_NULL;
+    /* wszName is not guaranteed to be NUL-terminated either */
+    CopyMemory(szWideName, Row->wszName, sizeof(Row->wszName));
+    szWideName[MAX_INTERFACE_NAME_LEN] = UNICODE_NULL;
+
+    /* Prefer the connection name, as shown in the Network Connections folder */
+    if ((NetPage_ExtractGuid(szDescr, szGuid, _countof(szGuid)) ||
+         NetPage_ExtractGuid(szWideName, szGuid, _countof(szGuid))) &&
+        NetPage_GetConnectionName(szGuid, Adapter->szName, _countof(Adapter->szName)))
+    {
+        return;
+    }
+
+    if (szDescr[0] != UNICODE_NULL)
+        StringCchCopyW(Adapter->szName, _countof(Adapter->szName), szDescr);
     else
-        StringCchPrintfW(szName, _countof(szName), L"#%lu", Row->dwIndex);
-    StringCchCopyW(Adapter->szName, _countof(Adapter->szName), szName);
+        StringCchPrintfW(Adapter->szName, _countof(Adapter->szName), L"#%lu", Row->dwIndex);
+}
+
+static void
+NetPage_SampleAdapter(PNET_ADAPTER Adapter, const MIB_IFROW *Row, DWORD Tick)
+{
+    ULONG Sent = 0, Received = 0;
+
+    /* The name is looked up once, the registry is not read on every refresh */
+    if (!Adapter->NameResolved)
+    {
+        NetPage_ResolveName(Adapter, Row);
+        Adapter->NameResolved = TRUE;
+    }
 
     Adapter->Speed = Row->dwSpeed;
     Adapter->OperStatus = Row->dwOperStatus;
@@ -470,7 +567,9 @@ NetPage_UpdateAdapters(void)
         if (!NetAdapters[i]->Seen)
         {
             HeapFree(GetProcessHeap(), 0, NetAdapters[i]);
-            NetAdapters[i] = NetAdapters[--NetAdapterCount];
+            MoveMemory(&NetAdapters[i], &NetAdapters[i + 1],
+                       (NetAdapterCount - i - 1) * sizeof(PNET_ADAPTER));
+            NetAdapterCount--;
             bChanged = TRUE;
         }
         else
@@ -480,14 +579,6 @@ NetPage_UpdateAdapters(void)
     }
 
     return bChanged;
-}
-
-static PNET_ADAPTER
-NetPage_GetSelectedAdapter(void)
-{
-    if (!NetHasSelection)
-        return NULL;
-    return NetPage_FindAdapter(NetSelectedIfIndex);
 }
 
 /* ------------------------------------------------------------------------ */
@@ -534,13 +625,8 @@ NetPage_UpdateListItem(int iItem, PNET_ADAPTER Adapter)
     NetPage_SetItemText(iItem, NET_COLUMN_BYTESRECV, szText);
 }
 
-static void
-NetPage_UpdateFrameTitle(void)
-{
-    PNET_ADAPTER Adapter = NetPage_GetSelectedAdapter();
-
-    SetWindowTextW(hNetworkHistoryFrame, Adapter ? Adapter->szName : szNetHistoryTitle);
-}
+static void NetPage_LayoutGraphs(void);
+static void NetPage_EnsureAdapterVisible(DWORD IfIndex);
 
 static void
 NetPage_RebuildList(void)
@@ -590,7 +676,8 @@ NetPage_RebuildList(void)
     InvalidateRect(hNetworkPageListCtrl, NULL, TRUE);
     NetRebuildingList = FALSE;
 
-    NetPage_UpdateFrameTitle();
+    /* The number of graphs follows the number of adapters */
+    NetPage_LayoutGraphs();
 }
 
 static void
@@ -605,8 +692,9 @@ NetPage_OnListItemChanged(LPNMLISTVIEW pnmv)
     {
         NetSelectedIfIndex = (DWORD)pnmv->lParam;
         NetHasSelection = TRUE;
-        NetPage_UpdateFrameTitle();
-        InvalidateRect(hNetworkGraph, NULL, FALSE);
+
+        /* Scroll the graphs so the selected adapter is visible */
+        NetPage_EnsureAdapterVisible(NetSelectedIfIndex);
     }
 }
 
@@ -806,6 +894,7 @@ NetPage_DrawGraph(LPDRAWITEMSTRUCT pdis)
     HBITMAP hbmMem, hbmOld;
     HFONT hFont, hFontOld = NULL;
     RECT rc, rcPlot;
+    UINT i;
     int cx = pdis->rcItem.right - pdis->rcItem.left;
     int cy = pdis->rcItem.bottom - pdis->rcItem.top;
 
@@ -830,7 +919,17 @@ NetPage_DrawGraph(LPDRAWITEMSTRUCT pdis)
     SetRect(&rc, 0, 0, cx, cy);
     FillRect(hdcMem, &rc, hNetBrushBack);
 
-    Adapter = NetPage_GetSelectedAdapter();
+    Adapter = NULL;
+    for (i = 0; i < NetSlotsUsed; i++)
+    {
+        if (NetSlots[i].hGraph == pdis->hwndItem)
+        {
+            if (NetFirstVisible + i < NetAdapterCount)
+                Adapter = NetAdapters[NetFirstVisible + i];
+            break;
+        }
+    }
+
     if (!Adapter)
     {
         NetPage_DrawGrid(hdcMem, &rc);
@@ -896,10 +995,10 @@ NetPage_GetChildRect(HWND hDlg, HWND hCtrl, LPRECT prc)
 static void
 NetPage_CaptureLayout(HWND hDlg)
 {
-    RECT rcFrame, rcGraph, rcList;
+    RECT rcFrame, rcGraph, rcList, rcMin;
 
-    NetPage_GetChildRect(hDlg, hNetworkHistoryFrame, &rcFrame);
-    NetPage_GetChildRect(hDlg, hNetworkGraph, &rcGraph);
+    NetPage_GetChildRect(hDlg, NetSlots[0].hFrame, &rcFrame);
+    NetPage_GetChildRect(hDlg, NetSlots[0].hGraph, &rcGraph);
     NetPage_GetChildRect(hDlg, hNetworkPageListCtrl, &rcList);
 
     nNetMargin = rcFrame.left;
@@ -909,40 +1008,252 @@ NetPage_CaptureLayout(HWND hDlg)
     rcNetGraphInset.top = rcGraph.top - rcFrame.top;
     rcNetGraphInset.right = rcFrame.right - rcGraph.right;
     rcNetGraphInset.bottom = rcFrame.bottom - rcGraph.bottom;
+
+    SetRect(&rcMin, 0, 0, 0, NET_MIN_SLOT_DLU);
+    MapDialogRect(hDlg, &rcMin);
+    cyNetMinSlot = max(rcMin.bottom, rcNetGraphInset.top + rcNetGraphInset.bottom + 20);
+}
+
+/* Creates the group box and the graph of an additional slot */
+static BOOL
+NetPage_CreateSlot(UINT Slot)
+{
+    HFONT hFont = (HFONT)SendMessageW(hNetworkPage, WM_GETFONT, 0, 0);
+    HWND hFrame, hGraph;
+
+    hFrame = CreateWindowExW(WS_EX_TRANSPARENT, WC_BUTTONW, L"",
+                             WS_CHILD | BS_GROUPBOX,
+                             0, 0, 0, 0, hNetworkPage,
+                             (HMENU)(UINT_PTR)(NET_SLOT_ID_BASE + Slot * 2),
+                             hInst, NULL);
+    hGraph = CreateWindowExW(WS_EX_CLIENTEDGE, WC_STATICW, L"",
+                             WS_CHILD | SS_OWNERDRAW,
+                             0, 0, 0, 0, hNetworkPage,
+                             (HMENU)(UINT_PTR)(NET_SLOT_ID_BASE + Slot * 2 + 1),
+                             hInst, NULL);
+    if (!hFrame || !hGraph)
+    {
+        if (hFrame) DestroyWindow(hFrame);
+        if (hGraph) DestroyWindow(hGraph);
+        return FALSE;
+    }
+
+    SendMessageW(hFrame, WM_SETFONT, (WPARAM)hFont, FALSE);
+
+    NetSlots[Slot].hFrame = hFrame;
+    NetSlots[Slot].hGraph = hGraph;
+    NetSlotCount = Slot + 1;
+    return TRUE;
+}
+
+static void
+NetPage_InvalidateGraphs(void)
+{
+    UINT i;
+
+    for (i = 0; i < NetSlotsUsed; i++)
+        InvalidateRect(NetSlots[i].hGraph, NULL, FALSE);
+}
+
+/* Shows the adapter names above the graphs */
+static void
+NetPage_UpdateSlotTitles(void)
+{
+    WCHAR szOld[MAX_INTERFACE_NAME_LEN];
+    LPCWSTR pszTitle;
+    UINT i;
+
+    for (i = 0; i < NetSlotsUsed; i++)
+    {
+        if (NetFirstVisible + i < NetAdapterCount)
+            pszTitle = NetAdapters[NetFirstVisible + i]->szName;
+        else
+            pszTitle = szNetHistoryTitle;
+
+        szOld[0] = UNICODE_NULL;
+        GetWindowTextW(NetSlots[i].hFrame, szOld, _countof(szOld));
+        if (wcscmp(szOld, pszTitle) != 0)
+            SetWindowTextW(NetSlots[i].hFrame, pszTitle);
+    }
+}
+
+static void
+NetPage_UpdateScrollBar(void)
+{
+    SCROLLINFO si;
+
+    ZeroMemory(&si, sizeof(si));
+    si.cbSize = sizeof(si);
+    si.fMask = SIF_RANGE | SIF_PAGE | SIF_POS;
+    si.nMin = 0;
+    si.nMax = (int)max(NetAdapterCount, 1) - 1;
+    si.nPage = NetSlotsUsed;
+    si.nPos = (int)NetFirstVisible;
+    SetScrollInfo(hNetScrollBar, SB_CTL, &si, TRUE);
+}
+
+static void
+NetPage_ScrollTo(int Position)
+{
+    int MaxPosition = (int)NetAdapterCount - (int)NetSlotsUsed;
+
+    if (Position > MaxPosition)
+        Position = MaxPosition;
+    if (Position < 0)
+        Position = 0;
+
+    if ((UINT)Position == NetFirstVisible)
+        return;
+
+    NetFirstVisible = (UINT)Position;
+    NetPage_UpdateScrollBar();
+    NetPage_UpdateSlotTitles();
+    NetPage_InvalidateGraphs();
+}
+
+static void
+NetPage_OnVScroll(WORD Code)
+{
+    SCROLLINFO si;
+    int Position = (int)NetFirstVisible;
+
+    ZeroMemory(&si, sizeof(si));
+    si.cbSize = sizeof(si);
+    si.fMask = SIF_TRACKPOS;
+    GetScrollInfo(hNetScrollBar, SB_CTL, &si);
+
+    switch (Code)
+    {
+        case SB_LINEUP:        Position--; break;
+        case SB_LINEDOWN:      Position++; break;
+        case SB_PAGEUP:        Position -= (int)NetSlotsUsed; break;
+        case SB_PAGEDOWN:      Position += (int)NetSlotsUsed; break;
+        case SB_TOP:           Position = 0; break;
+        case SB_BOTTOM:        Position = (int)NetAdapterCount; break;
+        case SB_THUMBTRACK:
+        case SB_THUMBPOSITION: Position = si.nTrackPos; break;
+        default:               return;
+    }
+
+    NetPage_ScrollTo(Position);
+}
+
+static void
+NetPage_EnsureAdapterVisible(DWORD IfIndex)
+{
+    UINT i;
+
+    for (i = 0; i < NetAdapterCount; i++)
+    {
+        if (NetAdapters[i]->IfIndex != IfIndex)
+            continue;
+
+        if (i < NetFirstVisible)
+            NetPage_ScrollTo((int)i);
+        else if (i >= NetFirstVisible + NetSlotsUsed)
+            NetPage_ScrollTo((int)(i - NetSlotsUsed + 1));
+        break;
+    }
+}
+
+/*
+ * Arranges one graph per adapter above the adapters list. When the graphs
+ * don't fit with at least the minimum height, a scroll bar is shown.
+ */
+static void
+NetPage_LayoutGraphs(void)
+{
+    int cx = nNetPageWidth, cy = nNetPageHeight;
+    int cyArea, cxArea, cxScroll, yList, yTop, yBottom, cyFrame;
+    UINT nTotal, nFit, nUsed, i;
+    BOOL bScroll;
+    HDWP hdwp;
+
+    if (!NetSlotCount || cx <= 0 || cy <= 0)
+        return;
+
+    cyArea = max(cy - nNetListHeight - 3 * nNetMargin, cyNetMinSlot);
+    yList = 2 * nNetMargin + cyArea;
+
+    /* Even without adapters one (empty) graph is shown */
+    nTotal = max(NetAdapterCount, 1);
+    nFit = (UINT)max(cyArea / max(cyNetMinSlot, 1), 1);
+    nFit = min(nFit, NET_MAX_SLOTS);
+
+    bScroll = (nTotal > nFit);
+    nUsed = bScroll ? nFit : nTotal;
+
+    /* Create the missing slots */
+    while (NetSlotCount < nUsed)
+    {
+        if (!NetPage_CreateSlot(NetSlotCount))
+            break;
+    }
+    nUsed = min(nUsed, NetSlotCount);
+    NetSlotsUsed = nUsed;
+
+    if (NetFirstVisible + nUsed > nTotal)
+        NetFirstVisible = nTotal - nUsed;
+
+    cxScroll = bScroll ? GetSystemMetrics(SM_CXVSCROLL) + nNetMargin : 0;
+    cxArea = max(cx - 2 * nNetMargin - cxScroll, 1);
+
+    hdwp = BeginDeferWindowPos(NetSlotCount * 2 + 2);
+
+    for (i = 0; hdwp && i < NetSlotCount; i++)
+    {
+        if (i >= nUsed)
+        {
+            hdwp = DeferWindowPos(hdwp, NetSlots[i].hFrame, NULL, 0, 0, 0, 0,
+                                  SWP_HIDEWINDOW | SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);
+            if (hdwp)
+                hdwp = DeferWindowPos(hdwp, NetSlots[i].hGraph, NULL, 0, 0, 0, 0,
+                                      SWP_HIDEWINDOW | SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);
+            continue;
+        }
+
+        /* Split the area evenly, leaving a margin between the frames */
+        yTop = nNetMargin + (cyArea + nNetMargin) * (int)i / (int)nUsed;
+        yBottom = nNetMargin + (cyArea + nNetMargin) * (int)(i + 1) / (int)nUsed - nNetMargin;
+        cyFrame = max(yBottom - yTop, rcNetGraphInset.top + rcNetGraphInset.bottom + 1);
+
+        hdwp = DeferWindowPos(hdwp, NetSlots[i].hFrame, NULL,
+                              nNetMargin, yTop, cxArea, cyFrame,
+                              SWP_SHOWWINDOW | SWP_NOZORDER | SWP_NOACTIVATE);
+        if (hdwp)
+            hdwp = DeferWindowPos(hdwp, NetSlots[i].hGraph, NULL,
+                                  nNetMargin + rcNetGraphInset.left,
+                                  yTop + rcNetGraphInset.top,
+                                  max(cxArea - rcNetGraphInset.left - rcNetGraphInset.right, 1),
+                                  max(cyFrame - rcNetGraphInset.top - rcNetGraphInset.bottom, 1),
+                                  SWP_SHOWWINDOW | SWP_NOZORDER | SWP_NOACTIVATE);
+    }
+
+    if (hdwp)
+        hdwp = DeferWindowPos(hdwp, hNetScrollBar, NULL,
+                              cx - nNetMargin - GetSystemMetrics(SM_CXVSCROLL), nNetMargin,
+                              GetSystemMetrics(SM_CXVSCROLL), cyArea,
+                              (bScroll ? SWP_SHOWWINDOW : SWP_HIDEWINDOW) | SWP_NOZORDER | SWP_NOACTIVATE);
+    if (hdwp)
+        hdwp = DeferWindowPos(hdwp, hNetworkPageListCtrl, NULL,
+                              nNetMargin, yList, max(cx - 2 * nNetMargin, 1), nNetListHeight,
+                              SWP_NOZORDER | SWP_NOACTIVATE);
+    if (hdwp)
+        EndDeferWindowPos(hdwp);
+
+    NetPage_UpdateScrollBar();
+    NetPage_UpdateSlotTitles();
+
+    /* Repaint the page background too, otherwise old frame pieces stay visible */
+    RedrawWindow(hNetworkPage, NULL, NULL, RDW_INVALIDATE | RDW_ERASE | RDW_ALLCHILDREN);
 }
 
 static void
 NetPage_Layout(int cx, int cy)
 {
-    HDWP hdwp;
-    int cxInner = max(cx - 2 * nNetMargin, 1);
-    int cyFrame = max(cy - nNetListHeight - 3 * nNetMargin,
-                      rcNetGraphInset.top + rcNetGraphInset.bottom + 1);
-    int yList = nNetMargin * 2 + cyFrame;
-
-    hdwp = BeginDeferWindowPos(3);
-    if (!hdwp)
-        return;
-
-    hdwp = DeferWindowPos(hdwp, hNetworkHistoryFrame, NULL,
-                          nNetMargin, nNetMargin, cxInner, cyFrame,
-                          SWP_NOZORDER | SWP_NOACTIVATE);
-    if (hdwp)
-        hdwp = DeferWindowPos(hdwp, hNetworkGraph, NULL,
-                              nNetMargin + rcNetGraphInset.left,
-                              nNetMargin + rcNetGraphInset.top,
-                              max(cxInner - rcNetGraphInset.left - rcNetGraphInset.right, 1),
-                              max(cyFrame - rcNetGraphInset.top - rcNetGraphInset.bottom, 1),
-                              SWP_NOZORDER | SWP_NOACTIVATE);
-    if (hdwp)
-        hdwp = DeferWindowPos(hdwp, hNetworkPageListCtrl, NULL,
-                              nNetMargin, yList, cxInner, nNetListHeight,
-                              SWP_NOZORDER | SWP_NOACTIVATE);
-    if (hdwp)
-        EndDeferWindowPos(hdwp);
-
-    InvalidateRect(hNetworkHistoryFrame, NULL, TRUE);
-    InvalidateRect(hNetworkGraph, NULL, FALSE);
+    nNetPageWidth = cx;
+    nNetPageHeight = cy;
+    NetPage_LayoutGraphs();
 }
 
 /* ------------------------------------------------------------------------ */
@@ -998,14 +1309,23 @@ NetworkPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
     {
         case WM_INITDIALOG:
         {
+            RECT rc;
+
             hNetworkPage = hDlg;
 
             /* Update window position */
             SetWindowPos(hDlg, NULL, 15, 30, 0, 0, SWP_NOACTIVATE|SWP_NOOWNERZORDER|SWP_NOSIZE|SWP_NOZORDER);
 
-            hNetworkHistoryFrame = GetDlgItem(hDlg, IDC_NETWORK_HISTORY_FRAME);
-            hNetworkGraph = GetDlgItem(hDlg, IDC_NETWORK_GRAPH);
+            NetSlots[0].hFrame = GetDlgItem(hDlg, IDC_NETWORK_HISTORY_FRAME);
+            NetSlots[0].hGraph = GetDlgItem(hDlg, IDC_NETWORK_GRAPH);
+            NetSlotCount = NetSlotsUsed = 1;
+            NetFirstVisible = 0;
             hNetworkPageListCtrl = GetDlgItem(hDlg, IDC_NETWORK_ADAPTERS);
+
+            hNetScrollBar = CreateWindowExW(0, WC_SCROLLBARW, NULL, WS_CHILD | SBS_VERT,
+                                            0, 0, 0, 0, hDlg,
+                                            (HMENU)(UINT_PTR)(NET_SLOT_ID_BASE - 1),
+                                            hInst, NULL);
 
             NetPage_LoadStrings();
             if (!NetPage_CreateGdiObjects())
@@ -1017,6 +1337,10 @@ NetworkPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
             NetPage_CaptureLayout(hDlg);
             NetPage_SetupColumns();
 
+            GetClientRect(hDlg, &rc);
+            nNetPageWidth = rc.right;
+            nNetPageHeight = rc.bottom;
+
             /* Take the first sample so the next refresh has something to compare with */
             NetPage_UpdateAdapters();
             NetPage_RebuildList();
@@ -1024,6 +1348,7 @@ NetworkPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
         }
 
         case WM_DESTROY:
+            NetSlotCount = NetSlotsUsed = 0;
             NetPage_FreeAdapters();
             NetPage_DeleteGdiObjects();
             if (NetIfTable)
@@ -1043,7 +1368,8 @@ NetworkPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
         {
             LPDRAWITEMSTRUCT pdis = (LPDRAWITEMSTRUCT)lParam;
 
-            if (pdis->CtlID == IDC_NETWORK_GRAPH)
+            if (pdis->CtlType == ODT_STATIC &&
+                (pdis->CtlID == IDC_NETWORK_GRAPH || pdis->CtlID >= NET_SLOT_ID_BASE))
             {
                 NetPage_DrawGraph(pdis);
                 SetWindowLongPtrW(hDlg, DWLP_MSGRESULT, TRUE);
@@ -1051,6 +1377,14 @@ NetworkPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
             }
             break;
         }
+
+        case WM_VSCROLL:
+            if ((HWND)lParam == hNetScrollBar)
+            {
+                NetPage_OnVScroll(LOWORD(wParam));
+                return 0;
+            }
+            break;
 
         case WM_NOTIFY:
         {
@@ -1081,13 +1415,12 @@ void RefreshNetworkPage(void)
     {
         for (i = 0; i < NetAdapterCount; i++)
             NetPage_UpdateListItem(i, NetAdapters[i]);
-        NetPage_UpdateFrameTitle();
     }
 
     NetGridShift = (NetGridShift + PLOT_SHIFT) % NET_GRID_CELL;
 
     if (IsWindowVisible(hNetworkPage))
-        InvalidateRect(hNetworkGraph, NULL, FALSE);
+        NetPage_InvalidateGraphs();
 }
 
 static void
@@ -1155,5 +1488,5 @@ void NetworkPage_OnViewHistoryOption(UINT idCmd)
     if (hViewMenu)
         NetPage_UpdateViewMenuChecks(hViewMenu);
 
-    InvalidateRect(hNetworkGraph, NULL, FALSE);
+    NetPage_InvalidateGraphs();
 }
