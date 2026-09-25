@@ -32,6 +32,21 @@ target_compile_definitions(cccopywrite_drv PRIVATE KMT_STANDALONE_DRIVER)
 add_rostests_file(TARGET cccopywrite_drv)
 
 #
+# CcGetFlushedValidData
+#
+list(APPEND CCGETFLUSHEDVALIDDATA_DRV_SOURCE
+    ../kmtest_drv/kmtest_standalone.c
+    CcGetFlushedValidData_drv.c)
+
+add_library(ccgetflushedvaliddata_drv MODULE ${CCGETFLUSHEDVALIDDATA_DRV_SOURCE})
+set_module_type(ccgetflushedvaliddata_drv kernelmodedriver)
+target_link_libraries(ccgetflushedvaliddata_drv kmtest_printf ${PSEH_LIB})
+add_importlibs(ccgetflushedvaliddata_drv ntoskrnl hal)
+target_compile_definitions(ccgetflushedvaliddata_drv PRIVATE KMT_STANDALONE_DRIVER)
+#add_pch(ccgetflushedvaliddata_drv ../include/kmt_test.h)
+add_rostests_file(TARGET ccgetflushedvaliddata_drv)
+
+#
 # CcMapData
 #
 list(APPEND CCMAPDATA_DRV_SOURCE
