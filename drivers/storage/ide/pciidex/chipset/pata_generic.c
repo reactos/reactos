@@ -571,14 +571,25 @@ PciIdeControllerInitDma(
 
     if (!(Controller->Pci.Command & PCI_ENABLE_BUS_MASTER))
     {
-        INFO("PCI bus mastering disabled\n");
+        WARN("%04X:%04X.%02X: PCI bus mastering disabled\n",
+             Controller->Pci.VendorID,
+             Controller->Pci.DeviceID,
+             Controller->Pci.RevisionID);
         return FALSE;
     }
 
+    /*
+     * Assume that all RAID controllers are DMA capable.
+     * (ProgIF can be initialized to 0 on VIA VT6421)
+     */
     if ((Controller->Pci.BaseClass == PCI_CLASS_MASS_STORAGE_CTLR) &&
+        (Controller->Pci.SubClass == PCI_SUBCLASS_MSC_IDE_CTLR) &&
         !(Controller->Pci.ProgIf & PCIIDE_PROGIF_DMA_CAPABLE))
     {
-        INFO("Non DMA capable controller detected\n");
+        WARN("%04X:%04X.%02X: Non DMA capable controller detected\n",
+             Controller->Pci.VendorID,
+             Controller->Pci.DeviceID,
+             Controller->Pci.RevisionID);
         return FALSE;
     }
 
@@ -1143,6 +1154,9 @@ PciIdeGetControllerProperties(
             if (Status == STATUS_NO_MATCH)
                 Status = Sil680GetControllerProperties(Controller);
             break;
+        case PCI_VEN_HIGHPOINT:
+            Status = HptGetControllerProperties(Controller);
+            break;
         case PCI_VEN_INTEL:
             Status = IntelGetControllerProperties(Controller);
             break;
@@ -1173,7 +1187,10 @@ PciIdeGetControllerProperties(
             ((Controller->Pci.SubClass != PCI_SUBCLASS_MSC_IDE_CTLR) &&
              (Controller->Pci.SubClass != PCI_SUBCLASS_MSC_RAID_CTLR)))
         {
-            ERR("Unsupported controller\n");
+            ERR("%04X:%04X.%02X: Unsupported controller\n",
+                Controller->Pci.VendorID,
+                Controller->Pci.DeviceID,
+                Controller->Pci.RevisionID);
             return Status;
         }
 

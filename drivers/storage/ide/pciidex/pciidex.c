@@ -447,10 +447,18 @@ PciIdeXAddDeviceEx(
             ERR("No PCI bus interface 0x%lx\n", Status);
             goto Failure;
         }
-
         FdoExtension->Controller.BusInterfaceContext = BusInterface.Context;
         FdoExtension->Controller.SetBusData = BusInterface.SetBusData;
         FdoExtension->Controller.GetBusData = BusInterface.GetBusData;
+
+        /* We need this for PCI devices only ((DeviceNumber << 16) | Function) */
+        Status = PciIdexGetBusLocation(FdoExtension->MiniControllerExtension,
+                                       &FdoExtension->Controller.BusLocation);
+        if (!NT_SUCCESS(Status))
+        {
+            ERR("Failed to retrieve bus location 0x%lx\n", Status);
+            goto Failure;
+        }
     }
 
     Fdo->Flags &= ~DO_DEVICE_INITIALIZING;
