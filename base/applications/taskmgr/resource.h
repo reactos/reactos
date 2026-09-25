@@ -30,6 +30,7 @@
 #define IDD_AFFINITY_DIALOG           142
 #define IDD_COLUMNS_DIALOG            143
 #define IDR_PROCESS_PAGE_CONTEXT      144
+#define IDD_NETWORK_PAGE              145
 #define IDB_TRAYMASK                  150
 #define IDB_TRAYICON                  153
 
@@ -125,6 +126,9 @@
 #define IDC_MEM_USAGE_HISTORY_GRAPH      1049
 #define IDC_CPU_USAGE_HISTORY_GRAPH      1050
 #define IDC_CPU31                        1051
+#define IDC_NETWORK_HISTORY_FRAME        1052
+#define IDC_NETWORK_GRAPH                1053
+#define IDC_NETWORK_ADAPTERS             1054
 
 #define IDS_TOTALS_HANDLE_COUNT          1060
 #define IDS_TOTALS_THREAD_COUNT          1061
@@ -186,6 +190,11 @@
 #define ID_PROCESS_PAGE_SETPRIORITY_LOW         32814
 #define ID_PROCESS_PAGE_PROPERTIES              32825
 #define ID_PROCESS_PAGE_OPENFILELOCATION        32826
+
+#define ID_VIEW_NETHISTORY_SENT     32827
+#define ID_VIEW_NETHISTORY_RECEIVED 32828
+#define ID_VIEW_NETHISTORY_TOTAL    32829
+#define ID_VIEW_NET_SHOWSCALE       32830
 
 #define ID_SHUTDOWN_STANDBY         32816
 #define ID_SHUTDOWN_HIBERNATE       32817
@@ -262,3 +271,25 @@
 #define IDS_STATUS_PROCESSES 365
 #define IDS_NOT_RESPONDING   366
 #define IDS_RUNNING          367
+
+#define IDS_TAB_NETWORKING           370
+#define IDS_NET_HISTORY              371
+#define IDS_NET_NOADAPTERS           372
+#define IDS_NET_COL_ADAPTER          373
+#define IDS_NET_COL_UTILIZATION      374
+#define IDS_NET_COL_LINKSPEED        375
+#define IDS_NET_COL_STATE            376
+#define IDS_NET_COL_SENDRATE         377
+#define IDS_NET_COL_RECVRATE         378
+#define IDS_NET_COL_BYTESSENT        379
+#define IDS_NET_COL_BYTESRECV        380
+#define IDS_NET_STATE_CONNECTED      381
+#define IDS_NET_STATE_DISCONNECTED   382
+#define IDS_NET_STATE_CONNECTING     383
+#define IDS_NET_STATE_DISABLED       384
+#define IDS_NET_RATE_FORMAT          385
+#define IDS_MENU_NETHISTORY          386
+#define IDS_MENU_BYTESSENT           387
+#define IDS_MENU_BYTESRECEIVED       388
+#define IDS_MENU_BYTESTOTAL          389
+#define IDS_MENU_SHOWSCALE           390

@@ -235,6 +235,12 @@ TaskManagerWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
         case ID_VIEW_CPUHISTORY_ONEGRAPHALL:
             PerformancePage_OnViewCPUHistoryOneGraphAll();
             break;
+        case ID_VIEW_NETHISTORY_SENT:
+        case ID_VIEW_NETHISTORY_RECEIVED:
+        case ID_VIEW_NETHISTORY_TOTAL:
+        case ID_VIEW_NET_SHOWSCALE:
+            NetworkPage_OnViewHistoryOption(LOWORD(wParam));
+            break;
         case ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU:
             PerformancePage_OnViewCPUHistoryOneGraphPerCPU();
             break;
@@ -470,6 +476,7 @@ TaskManagerWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
         RefreshApplicationPage();
         RefreshProcessPage();
         RefreshPerformancePage();
+        RefreshNetworkPage();
         TrayIcon_UpdateIcon();
         break;
 
@@ -554,10 +561,12 @@ BOOL OnCreate(HWND hWnd)
     hApplicationPage = CreateDialogW(hInst, MAKEINTRESOURCEW(IDD_APPLICATION_PAGE), hWnd, ApplicationPageWndProc); EnableDialogTheme(hApplicationPage);
     hProcessPage = CreateDialogW(hInst, MAKEINTRESOURCEW(IDD_PROCESS_PAGE), hWnd, ProcessPageWndProc); EnableDialogTheme(hProcessPage);
     hPerformancePage = CreateDialogW(hInst, MAKEINTRESOURCEW(IDD_PERFORMANCE_PAGE), hWnd, PerformancePageWndProc); EnableDialogTheme(hPerformancePage);
+    hNetworkPage = CreateDialogW(hInst, MAKEINTRESOURCEW(IDD_NETWORK_PAGE), hWnd, NetworkPageWndProc); EnableDialogTheme(hNetworkPage);
 #else
     hApplicationPage = CreateDialogW(hInst, MAKEINTRESOURCEW(IDD_APPLICATION_PAGE), hTabWnd, ApplicationPageWndProc); EnableDialogTheme(hApplicationPage);
     hProcessPage = CreateDialogW(hInst, MAKEINTRESOURCEW(IDD_PROCESS_PAGE), hTabWnd, ProcessPageWndProc); EnableDialogTheme(hProcessPage);
     hPerformancePage = CreateDialogW(hInst, MAKEINTRESOURCEW(IDD_PERFORMANCE_PAGE), hTabWnd, PerformancePageWndProc); EnableDialogTheme(hPerformancePage);
+    hNetworkPage = CreateDialogW(hInst, MAKEINTRESOURCEW(IDD_NETWORK_PAGE), hTabWnd, NetworkPageWndProc); EnableDialogTheme(hNetworkPage);
 #endif
 
     /* Insert tabs */
@@ -576,6 +585,11 @@ BOOL OnCreate(HWND hWnd)
     item.mask = TCIF_TEXT;
     item.pszText = szTemp;
     (void)TabCtrl_InsertItem(hTabWnd, 2, &item);
+    LoadStringW(hInst, IDS_TAB_NETWORKING, szTemp, 256);
+    memset(&item, 0, sizeof(TCITEM));
+    item.mask = TCIF_TEXT;
+    item.pszText = szTemp;
+    (void)TabCtrl_InsertItem(hTabWnd, 3, &item);
 
     /* Size everything correctly */
     GetClientRect(hWnd, &rc);
@@ -658,6 +672,7 @@ BOOL OnCreate(HWND hWnd)
     TabCtrl_SetCurFocus/*Sel*/(hTabWnd, 0);
     TabCtrl_SetCurFocus/*Sel*/(hTabWnd, 1);
     TabCtrl_SetCurFocus/*Sel*/(hTabWnd, 2);
+    TabCtrl_SetCurFocus/*Sel*/(hTabWnd, 3);
     TabCtrl_SetCurFocus/*Sel*/(hTabWnd, nActivePage);
 
     /* Set the username in the "Log Off %s" item of the Shutdown menu */
@@ -778,6 +793,12 @@ void OnSize( WPARAM nType, int cx, int cy )
     cx = (rc.right - rc.left) + nXDifference;
     cy = (rc.bottom - rc.top) + nYDifference;
     SetWindowPos(hPerformancePage, NULL, 0, 0, cx, cy, SWP_NOACTIVATE|SWP_NOOWNERZORDER|SWP_NOMOVE|SWP_NOZORDER);
+
+    /* Resize the networking page */
+    GetWindowRect(hNetworkPage, &rc);
+    cx = (rc.right - rc.left) + nXDifference;
+    cy = (rc.bottom - rc.top) + nYDifference;
+    SetWindowPos(hNetworkPage, NULL, 0, 0, cx, cy, SWP_NOACTIVATE|SWP_NOOWNERZORDER|SWP_NOMOVE|SWP_NOZORDER);
 }
 
 void LoadSettings(void)
@@ -824,6 +845,12 @@ void LoadSettings(void)
     /* Performance page settings */
     TaskManagerSettings.CPUHistory_OneGraphPerCPU = TRUE;
     TaskManagerSettings.ShowKernelTimes = FALSE;
+
+    /* Networking page settings */
+    TaskManagerSettings.NetShowBytesSent = FALSE;
+    TaskManagerSettings.NetShowBytesReceived = FALSE;
+    TaskManagerSettings.NetShowBytesTotal = TRUE;
+    TaskManagerSettings.NetShowScale = TRUE;
 
     /* Open the key */
     if (RegOpenKeyExW(HKEY_CURRENT_USER, szSubKey, 0, KEY_READ, &hKey) != ERROR_SUCCESS)
@@ -953,6 +980,7 @@ void TaskManager_OnTabWndSelChange(void)
         ShowWindow(hApplicationPage, SW_SHOW);
         ShowWindow(hProcessPage, SW_HIDE);
         ShowWindow(hPerformancePage, SW_HIDE);
+        ShowWindow(hNetworkPage, SW_HIDE);
         BringWindowToTop(hApplicationPage);
 
         LoadStringW(hInst, IDS_MENU_LARGEICONS, szTemp, 256);
@@ -985,6 +1013,7 @@ void TaskManager_OnTabWndSelChange(void)
         ShowWindow(hApplicationPage, SW_HIDE);
         ShowWindow(hProcessPage, SW_SHOW);
         ShowWindow(hPerformancePage, SW_HIDE);
+        ShowWindow(hNetworkPage, SW_HIDE);
         BringWindowToTop(hProcessPage);
 
         LoadStringW(hInst, IDS_MENU_SELECTCOLUMNS, szTemp, 256);
@@ -1011,6 +1040,7 @@ void TaskManager_OnTabWndSelChange(void)
         ShowWindow(hApplicationPage, SW_HIDE);
         ShowWindow(hProcessPage, SW_HIDE);
         ShowWindow(hPerformancePage, SW_SHOW);
+        ShowWindow(hNetworkPage, SW_HIDE);
         BringWindowToTop(hPerformancePage);
         if (GetMenuItemCount(hMenu) > 5) {
             DeleteMenu(hMenu, 3, MF_BYPOSITION);
@@ -1052,6 +1082,29 @@ void TaskManager_OnTabWndSelChange(void)
          */
         if (!bWasKeyboardInput)
             SetFocus(hTabWnd);
+        break;
+
+    case 3:
+        ShowWindow(hApplicationPage, SW_HIDE);
+        ShowWindow(hProcessPage, SW_HIDE);
+        ShowWindow(hPerformancePage, SW_HIDE);
+        ShowWindow(hNetworkPage, SW_SHOW);
+        BringWindowToTop(hNetworkPage);
+        if (GetMenuItemCount(hMenu) > 5) {
+            DeleteMenu(hMenu, 3, MF_BYPOSITION);
+            DrawMenuBar(hMainWnd);
+        }
+
+        NetworkPage_AppendViewMenu(hViewMenu);
+
+        /* Redraw the graph with the latest data */
+        InvalidateRect(GetDlgItem(hNetworkPage, IDC_NETWORK_GRAPH), NULL, FALSE);
+
+        /*
+         * Give the adapters list control focus
+         */
+        if (!bWasKeyboardInput)
+            SetFocus(hNetworkPageListCtrl);
         break;
     }
 }

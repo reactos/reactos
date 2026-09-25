@@ -230,6 +230,16 @@ BEGIN
     PUSHBUTTON "Historie využití paměti", IDC_MEM_USAGE_HISTORY_GRAPH, 81, 75, 153, 37, NOT WS_TABSTOP, WS_EX_CLIENTEDGE
 END
 
+IDD_NETWORK_PAGE DIALOGEX 0, 0, 247, 210
+STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX "Network History", IDC_NETWORK_HISTORY_FRAME, 5, 5, 237, 118, 0, WS_EX_TRANSPARENT
+    CONTROL "", IDC_NETWORK_GRAPH, "Static", SS_OWNERDRAW, 12, 17, 223, 99, WS_EX_CLIENTEDGE
+    CONTROL "", IDC_NETWORK_ADAPTERS, "SysListView32", LVS_REPORT | LVS_SINGLESEL |
+            LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 5, 128, 237, 77
+END
+
 IDD_AFFINITY_DIALOG DIALOGEX 0, 0, 231, 154
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Afinita procesoru"
@@ -433,4 +443,33 @@ BEGIN
     IDS_STATUS_PROCESSES "Procesy: %d"
     IDS_NOT_RESPONDING "Neodpovídá"
     IDS_RUNNING "Běží"
+END
+
+STRINGTABLE
+BEGIN
+    ID_VIEW_NETHISTORY_SENT "Displays the amount of data sent over the selected adapter"
+    ID_VIEW_NETHISTORY_RECEIVED "Displays the amount of data received over the selected adapter"
+    ID_VIEW_NETHISTORY_TOTAL "Displays the total amount of data transferred over the selected adapter"
+    ID_VIEW_NET_SHOWSCALE "Displays the scale of the network history graph"
+    IDS_TAB_NETWORKING "Networking"
+    IDS_NET_HISTORY "Network History"
+    IDS_NET_NOADAPTERS "No active network adapters found"
+    IDS_NET_COL_ADAPTER "Adapter Name"
+    IDS_NET_COL_UTILIZATION "Network Utilization"
+    IDS_NET_COL_LINKSPEED "Link Speed"
+    IDS_NET_COL_STATE "State"
+    IDS_NET_COL_SENDRATE "Send Rate"
+    IDS_NET_COL_RECVRATE "Receive Rate"
+    IDS_NET_COL_BYTESSENT "Bytes Sent"
+    IDS_NET_COL_BYTESRECV "Bytes Received"
+    IDS_NET_STATE_CONNECTED "Connected"
+    IDS_NET_STATE_DISCONNECTED "Disconnected"
+    IDS_NET_STATE_CONNECTING "Connecting"
+    IDS_NET_STATE_DISABLED "Disabled"
+    IDS_NET_RATE_FORMAT "%s/s"
+    IDS_MENU_NETHISTORY "&Network Adapter History"
+    IDS_MENU_BYTESSENT "Bytes &Sent"
+    IDS_MENU_BYTESRECEIVED "Bytes &Received"
+    IDS_MENU_BYTESTOTAL "Bytes &Total"
+    IDS_MENU_SHOWSCALE "Show &Scale"
 END
