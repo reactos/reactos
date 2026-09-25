@@ -213,6 +213,23 @@ mylex_array.DeviceDesc = "Mylex RAID дисковое устройство"
 
 VHD_Generic_FriendlyName = "Microsoft виртуальный диск"
 
+;Turkish
+[Strings.041F]
+MSFT="Microsoft"
+DiskClassName="Disk sürücüleri"
+GenManufacturer="(Standart disk sürücüleri)"
+Compaq="Compaq"
+Mylex="Mylex"
+
+disk_devdesc="Disk sürücüsü"
+opticaldisk_devdesc="Optik disk sürücüsü"
+
+disk_ServiceDesc="Disk Sürücüsü"
+compaq_array.DeviceDesc = "Compaq SCSI Sürücü Dizisi"
+mylex_array.DeviceDesc = "Mylex RAID Disk Aygıtı"
+
+VHD_Generic_FriendlyName = "Microsoft Sanal Disk"
+
 ;Chinese(Taiwan)
 [Strings.0404]
 MSFT="Microsoft"
