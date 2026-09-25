@@ -890,6 +890,7 @@ BEGIN
     IDS_TEMPLATES "Şabloane"
     IDS_APPDATA "Date de aplicație"
     IDS_PRINTHOOD "Imprimante"
+// FIXME: Check ț vs. ț , and ș vs. ş !! Discrepancy with userenv
     IDS_LOCAL_APPDATA "Preferințe locale\\Date de aplicație"
     IDS_INTERNET_CACHE "Preferințe locale\\Fişiere de Internet temporare"
     IDS_COOKIES "Cookie-uri"

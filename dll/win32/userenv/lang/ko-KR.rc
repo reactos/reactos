@@ -1,8 +1,8 @@
-LANGUAGE LANG_DANISH, SUBLANG_DEFAULT
+LANGUAGE LANG_KOREAN, SUBLANG_DEFAULT
 
 IDD_ERRORDLG DIALOGEX 0, 0, 250, 95
 STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION
-CAPTION "User Profile"
+CAPTION "User Profile" // "User Environment"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_USERENV, IDC_STATIC, 6, 10, 18, 20
@@ -17,21 +17,21 @@ STRINGTABLE
 BEGIN
     IDS_PROFILEPATH "%SystemDrive%\\Documents and Settings"
     IDS_APPDATA "Application Data"
-    IDS_DESKTOP "Skrivebord"
-    IDS_FAVORITES "Favoritter"
-    IDS_MYDOCUMENTS "Mine Dokumenter"
+    IDS_DESKTOP "Desktop" // FIXME: or "바탕 화면" ?
+    IDS_FAVORITES "Favorites"
+    IDS_MYDOCUMENTS "내 문서"
     IDS_NETHOOD "NetHood"
     IDS_PRINTHOOD "PrintHood"
-    IDS_RECENT "Midlertidige"
-    IDS_SENDTO "Send Til"
-    IDS_TEMPLATES "Skabeloner"
+    IDS_RECENT "Recent"
+    IDS_SENDTO "SendTo"
+    IDS_TEMPLATES "Templates"
     IDS_STARTMENU "Start Menu"
-    IDS_PROGRAMS "Start Menu\\Programmer"
-    IDS_STARTUP "Start Menu\\Programmer\\Opstart"
-    IDS_LOCALSETTINGS "Lokale Indstillinger"
-    IDS_LOCALAPPDATA "Lokale Indstillinger\\Application Data"
-    IDS_TEMP "Lokale Indstillinger\\Temp" /* See also TEMP_DIR in boot/bootdata/hivedef.inf */
-    IDS_CACHE "Lokale Indstillinger\\Midlertidige Internet Filer"
-    IDS_HISTORY "Lokale Indstillinger\\Historie"
+    IDS_PROGRAMS "Start Menu\\Programs"
+    IDS_STARTUP "Start Menu\\Programs\\Startup"
+    IDS_LOCALSETTINGS "Local Settings"
+    IDS_LOCALAPPDATA "Local Settings\\Application Data"
+    IDS_TEMP "Local Settings\\Temp" /* See also TEMP_DIR in boot/bootdata/hivedef.inf */
+    IDS_CACHE "Local Settings\\Temporary Internet Files"
+    IDS_HISTORY "Local Settings\\History"
     IDS_COOKIES "Cookies"
 END

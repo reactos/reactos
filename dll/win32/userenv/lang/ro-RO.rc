@@ -36,6 +36,7 @@ BEGIN
     IDS_STARTMENU "Meniul Pornire"
     IDS_PROGRAMS "Meniul Pornire\\Programe"
     IDS_STARTUP "Meniul Pornire\\Programe\\Autolansate"
+// FIXME: Check ț vs. ț , and ș vs. ş !! Discrepancy with shell32
     IDS_LOCALSETTINGS "Preferințe locale"
     IDS_LOCALAPPDATA "Preferințe locale\\Date de aplicație"
     IDS_TEMP "Preferințe locale\\Temp" /* See also TEMP_DIR in boot/bootdata/hivedef.inf */
