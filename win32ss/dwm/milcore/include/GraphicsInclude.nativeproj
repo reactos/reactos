@@ -1,0 +1,39 @@
+﻿<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="dogfood">
+
+  <Import Project="$(_NTDRIVE)$(_NTROOT)\wpf\src\Microsoft.WPF.Product.Settings.targets" />
+
+  <PropertyGroup> 
+    <TargetType>PROGRAM</TargetType>    
+    <MidlDefines>_MIDL_USE_GUIDDEF_;__RPCNDR_H__;__RPC_H__;RPC_NO_WINDOWS_H;COM_NO_WINDOWS_H;GUID_DEFS_ONLY;$(MidlDefines)</MidlDefines>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <SchemaFile Include="wgx_core_types.w" />
+    <SchemaFile Include="wgx_av_types.w" />
+  </ItemGroup>
+
+  <Import Project="$(_NTDRIVE)$(_NTROOT)\tools\Microsoft.DevDiv.Native.targets" />
+
+  <PropertyGroup>
+    <PrepareForBuildDependsOn>$(PrepareForBuildDependsOn);GenerateCodeFromSchemas;</PrepareForBuildDependsOn>
+  </PropertyGroup>
+
+  <!-- Process schema files with code generator -->
+  <Target Name="GenerateCodeFromSchemas"
+    Inputs="@(SchemaFile);gencode.pl"
+    Outputs="$(IntermediateOutputDirectory)\%(SchemaFile.FileName).h;$(IntermediateOutputDirectory)\%(SchemaFile.FileName).cs;$(WpfIntraGraphicsIncPath)\%(SchemaFile.FileName).cs">
+
+    <MakeDir Condition="!Exists('$(IntermediateOutputDirectory)')" Directories="$(IntermediateOutputDirectory)" />
+
+    <Exec Command="$(PerlCommand) -w gencode.pl -template=%(SchemaFile.Identity) -cppfile=$(IntermediateOutputDirectory)\%(FileName).h -csfile=$(IntermediateOutputDirectory)\%(FileName).cs" 
+      StandardOutputImportance="normal" />
+
+    <!-- 
+      Publish the generates .cs files to the WPF intra-partition inc path so that 
+      the presentation core project can reference them 
+    -->
+    <Copy SourceFiles="$(IntermediateOutputDirectory)\%(SchemaFile.FileName).h" DestinationFolder="$(WpfIntraGraphicsIncPath)" /> 
+    <Copy SourceFiles="$(IntermediateOutputDirectory)\%(SchemaFile.FileName).cs" DestinationFolder="$(WpfIntraGraphicsIncPath)" /> 
+  </Target>
+
+</Project>
