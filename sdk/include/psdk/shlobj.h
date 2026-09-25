@@ -197,6 +197,35 @@ SHGetFolderPathAndSubDirW(
   _In_opt_ LPCWSTR,
   _Out_writes_(MAX_PATH) LPWSTR);
 
+#if (NTDDI_VERSION >= NTDDI_VISTA) || defined(__REACTOS__)
+HRESULT
+WINAPI
+SHGetKnownFolderIDList(
+    _In_ REFKNOWNFOLDERID rfid,
+    _In_ DWORD dwFlags,
+    _In_ HANDLE hToken,
+    _Outptr_ PIDLIST_ABSOLUTE* ppidl);
+
+HRESULT
+WINAPI
+SHGetKnownFolderPath(
+    _In_ REFKNOWNFOLDERID rfid,
+    _In_ DWORD dwFlags,
+    _In_opt_ HANDLE hToken,
+    _Outptr_ PWSTR* ppszPath);
+#endif
+
+#if (NTDDI_VERSION >= NTDDI_WIN7) || defined(__REACTOS__)
+HRESULT
+WINAPI
+SHGetKnownFolderItem(
+    _In_ REFKNOWNFOLDERID rfid,
+    _In_ KNOWN_FOLDER_FLAG flags,
+    _In_ HANDLE hToken,
+    _In_ REFIID riid,
+    _Outptr_ LPVOID* ppv);
+#endif
+
 #define SHGetFolderPathAndSubDir WINELIB_NAME_AW(SHGetFolderPathAndSubDir)
 
 HRESULT WINAPI
