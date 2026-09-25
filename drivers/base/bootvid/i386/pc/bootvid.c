@@ -22,10 +22,6 @@ VgaInterpretCmdStream(
     UCHAR Value;
     USHORT ShortValue;
 
-    /* First make sure that we have a Command Stream */
-    if (!CmdStream)
-        return TRUE;
-
     /* Loop as long as we have commands */
     while (*CmdStream != EOD)
     {
