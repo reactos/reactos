@@ -31,13 +31,77 @@ UserGetMouseButtonsState(VOID)
     return wRet;
 }
 
+VOID NTAPI
+UserRawInputMouseProcess(PINPUT_DEVICE_INFO pDeviceInfo, PMOUSE_INPUT_DATA mid)
+{
+    PTHREADINFO pti;
+    HWND hwndTarget;
+    WPARAM wParam;
+    HRAWINPUT hRawInput;
+    RAWMOUSE rm = {0};
+    MSG Msg = {0};
+
+    if (!UserGetRawInputTarget(RIM_TYPEMOUSE, &pti, &hwndTarget, &wParam))
+        return;
+
+    if (mid->LastX != 0 || mid->LastY != 0)
+    {
+        rm.usFlags |= MOUSE_MOVE_RELATIVE;
+    }
+
+    /* Flags for absolute move */
+    if (mid->Flags & MOUSE_MOVE_ABSOLUTE)
+        rm.usFlags |= MOUSE_MOVE_ABSOLUTE;
+    if (mid->Flags & MOUSE_VIRTUAL_DESKTOP)
+        rm.usFlags |= MOUSE_VIRTUAL_DESKTOP;
+
+    /* Left button */
+    if (mid->ButtonFlags & MOUSE_LEFT_BUTTON_DOWN)
+        rm.usButtonFlags |= RI_MOUSE_LEFT_BUTTON_DOWN;
+    if (mid->ButtonFlags & MOUSE_LEFT_BUTTON_UP)
+        rm.usButtonFlags |= RI_MOUSE_LEFT_BUTTON_UP;
+
+    /* Middle button */
+    if (mid->ButtonFlags & MOUSE_MIDDLE_BUTTON_DOWN)
+        rm.usButtonFlags |= RI_MOUSE_MIDDLE_BUTTON_DOWN;
+    if (mid->ButtonFlags & MOUSE_MIDDLE_BUTTON_UP)
+        rm.usButtonFlags |= RI_MOUSE_MIDDLE_BUTTON_UP;
+
+    /* Right button */
+    if (mid->ButtonFlags & MOUSE_RIGHT_BUTTON_DOWN)
+        rm.usButtonFlags |= RI_MOUSE_RIGHT_BUTTON_DOWN;
+    if (mid->ButtonFlags & MOUSE_RIGHT_BUTTON_UP)
+        rm.usButtonFlags |= RI_MOUSE_RIGHT_BUTTON_UP;
+    rm.lLastX   = mid->LastX;
+    rm.lLastY   = mid->LastY;
+
+    hRawInput = UserCreateRawInput(pti,
+                                   RIM_TYPEMOUSE,
+                                   (HANDLE)pDeviceInfo,
+                                   wParam,
+                                   &rm,
+                                   sizeof(rm));
+    if (!hRawInput)
+        return;
+
+    Msg.hwnd = hwndTarget;
+    Msg.message = WM_INPUT;
+    Msg.wParam = wParam;
+    Msg.lParam = (LPARAM)hRawInput;
+    Msg.time = EngGetTickCount32();
+    Msg.pt = gpsi->ptCursor;
+
+    if (!MsqPostMessage(pti, &Msg, TRUE, QS_RAWINPUT, 0, 0))
+        UserFreeRawInput(pti->MessageQueue, hRawInput);
+}
+
 /*
  * UserProcessMouseInput
  *
  * Process raw mouse input data
  */
 VOID NTAPI
-UserProcessMouseInput(PMOUSE_INPUT_DATA mid)
+UserProcessMouseInput(PINPUT_DEVICE_INFO pDeviceInfo, PMOUSE_INPUT_DATA mid)
 {
     MOUSEINPUT mi;
 
@@ -48,6 +112,9 @@ UserProcessMouseInput(PMOUSE_INPUT_DATA mid)
     mi.dwFlags = 0;
     mi.time = 0;
     mi.dwExtraInfo = mid->ExtraInformation;
+
+    if (RawInputEnabled == TRUE)
+        UserRawInputMouseProcess(pDeviceInfo, mid);
 
     /* Mouse position */
     if (mi.dx != 0 || mi.dy != 0)

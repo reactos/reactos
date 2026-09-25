@@ -1333,7 +1333,7 @@ co_MsqSendMessage(PTHREADINFO ptirec,
    return WaitStatus;
 }
 
-VOID FASTCALL
+BOOL FASTCALL
 MsqPostMessage(PTHREADINFO pti,
                MSG* Msg,
                BOOLEAN HardwareMessage,
@@ -1349,12 +1349,12 @@ MsqPostMessage(PTHREADINFO pti,
    if ((pti->TIF_flags & TIF_INCLEANUP) || (MessageQueue->QF_flags & QF_INDESTROY))
    {
       ERR("Post Msg; Thread or Q is Dead!\n");
-      return;
+      return FALSE;
    }
 
    Message = MsqCreateMessage(Msg);
    if (!Message)
-      return;
+      return FALSE;
 
    if (Msg->message == WM_HOTKEY)
       MessageBits |= QS_HOTKEY;
@@ -1375,6 +1375,7 @@ MsqPostMessage(PTHREADINFO pti,
 
    MsqWakeQueue(pti, MessageBits, TRUE);
    TRACE("Post Message %d\n", PostMsgCount);
+   return TRUE;
 }
 
 VOID FASTCALL
@@ -1914,12 +1915,12 @@ filter_contains_hw_range( UINT first, UINT last )
 {
    /* hardware message ranges are (in numerical order):
     *   WM_NCMOUSEFIRST .. WM_NCMOUSELAST
-    *   WM_KEYFIRST .. WM_KEYLAST
+    *   WM_INPUT .. WM_KEYLAST
     *   WM_MOUSEFIRST .. WM_MOUSELAST
     */
     if (!last) --last;
     if (last < WM_NCMOUSEFIRST) return 0;
-    if (first > WM_NCMOUSELAST && last < WM_KEYFIRST) return 0;
+    if (first > WM_NCMOUSELAST && last < WM_INPUT) return 0;
     if (first > WM_KEYLAST && last < WM_MOUSEFIRST) return 0;
     if (first > WM_MOUSELAST) return 0;
     return 1;
@@ -2201,6 +2202,8 @@ BOOLEAN FASTCALL
 MsqInitializeMessageQueue(PTHREADINFO pti, PUSER_MESSAGE_QUEUE MessageQueue)
 {
    InitializeListHead(&MessageQueue->HardwareMessagesListHead); // Keep here!
+   InitializeListHead(&MessageQueue->RawInputListHead);
+   MessageQueue->cRawInput = 0;
    MessageQueue->spwndFocus = NULL;
    MessageQueue->iCursorLevel = 0;
    MessageQueue->CursorObject = SYSTEMCUR(WAIT); // See test_initial_cursor.
@@ -2339,6 +2342,12 @@ MsqCleanupMessageQueue(PTHREADINFO pti)
    MessageQueue = pti->MessageQueue;
    MessageQueue->cThreads--;
 
+   if (pti->hPrevRawInput)
+   {
+      UserFreeRawInput(MessageQueue, pti->hPrevRawInput);
+      pti->hPrevRawInput = NULL;
+   }
+
    if (MessageQueue->cThreads)
    {
       if (MessageQueue->ptiSysLock == pti) MessageQueue->ptiSysLock = NULL;
@@ -2354,6 +2363,8 @@ MsqCleanupMessageQueue(PTHREADINFO pti)
          ERR("MQ Cleanup Post Messages %p\n",CurrentMessage);
          MsqDestroyMessage(CurrentMessage);
       }
+
+      UserCleanupRawInput(MessageQueue);
    } ////
 
    if (MessageQueue->CursorObject)
