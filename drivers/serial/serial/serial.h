@@ -4,7 +4,7 @@
  * FILE:            drivers/dd/serial/serial.h
  * PURPOSE:         Serial driver header
  *
- * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.org)
+ * PROGRAMMERS:     HervÃ© Poussineau (hpoussin@reactos.org)
  */
 
 #ifndef _SERIAL_PCH_
