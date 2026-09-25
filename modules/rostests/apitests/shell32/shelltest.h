@@ -17,7 +17,14 @@
 // Vista's shell32 is buggy so we need to skip some tests there.
 static const BOOL g_bVista = (GetNTVersion() == _WIN32_WINNT_VISTA);
 
-VOID PathToIDList(LPCWSTR pszPath, ITEMIDLIST** ppidl);
+HRESULT PathToIDList(LPCWSTR pszPath, ITEMIDLIST** ppidl);
+
+static inline LPITEMIDLIST SHELL_SimpleIDListFromPath(LPCWSTR pszPath)
+{
+    ITEMIDLIST *pidl = NULL;
+    HRESULT hr = PathToIDList(pszPath, &pidl);
+    return SUCCEEDED(hr) ? pidl : NULL;
+}
 
 static inline LPCWSTR RegNameDisp(LPCWSTR s)
 {

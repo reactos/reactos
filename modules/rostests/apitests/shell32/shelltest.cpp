@@ -79,7 +79,7 @@ CreateFileSysBindCtx(_Outptr_ IBindCtx **ppbc)
     return hr;
 }
 
-VOID
+HRESULT
 PathToIDList(LPCWSTR pszPath, ITEMIDLIST** ppidl)
 {
     CComPtr<IBindCtx> spbc;
@@ -90,6 +90,7 @@ PathToIDList(LPCWSTR pszPath, ITEMIDLIST** ppidl)
         hr = SHParseDisplayName(pszPath, spbc, ppidl, 0, NULL);
         ok(hr == S_OK, "hr = %lx\n", hr);
     }
+    return hr;
 }
 
 // - Adapted from https://devblogs.microsoft.com/oldnewthing/20130503-00/?p=4463

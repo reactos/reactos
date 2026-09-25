@@ -34,6 +34,7 @@
 #include <shlwapi.h>
 #include <commdlg.h>
 #include <commoncontrols.h>
+#include <strsafe.h>
 #include "../shellrecyclebin/recyclebin.h"
 
 #include <wine/debug.h>
@@ -72,6 +73,8 @@ extern INT    WINAPI AddMRUData(HANDLE hList, LPCVOID lpData, DWORD cbData);
 extern INT    WINAPI FindMRUData(HANDLE hList, LPCVOID lpData, DWORD cbData, LPINT lpRegNum);
 extern INT    WINAPI EnumMRUListA(HANDLE hList, INT nItemPos, LPVOID lpBuffer, DWORD nBufferSize);
 #endif
+
+EXTERN_C HRESULT SHGetNameAndFlagsW(LPCITEMIDLIST pidl, DWORD Shgdn, LPWSTR pszText, UINT cchBuf, DWORD *pSfgao);
 
 /*************************************************************************
  * ParseFieldA					[internal]
@@ -2644,48 +2647,87 @@ BOOL WINAPI SHGetNewLinkInfoA(LPCSTR pszLinkTo, LPCSTR pszDir, LPSTR pszName, BO
 BOOL WINAPI SHGetNewLinkInfoW(LPCWSTR pszLinkTo, LPCWSTR pszDir, LPWSTR pszName, BOOL *pfMustCopy,
                               UINT uFlags)
 {
-    const WCHAR *basename;
-    WCHAR *dst_basename;
+    enum { HANDLEDFLAGS = SHGNLI_PIDL | SHGNLI_NOUNIQUE | SHGNLI_NOLNK | SHGNLI_NOLOCNAME | SHGNLI_USEURLEXT };
+    const WCHAR *basename, *pszDotForExt = L".", *pszExt = (uFlags & SHGNLI_USEURLEXT) ? L"url" : L"lnk";
+    WCHAR *dst_basename, szTarget[MAX_PATH];
     int i=2;
+    LPCITEMIDLIST pidl = (uFlags & SHGNLI_PIDL) ? (LPCITEMIDLIST)pszLinkTo : NULL;
+    SHFILEINFO fi;
+    BOOL UseDisplayName = FALSE;
+    UINT SHGFIPidlFlag = pidl ? SHGFI_PIDL : 0;
 
     TRACE("(%s, %s, %p, %p, 0x%08x)\n", debugstr_w(pszLinkTo), debugstr_w(pszDir),
           pszName, pfMustCopy, uFlags);
 
+    if (uFlags & ~HANDLEDFLAGS)
+        FIXME("ignoring flags: 0x%08x\n", uFlags & ~HANDLEDFLAGS);
+
     *pfMustCopy = FALSE;
+    fi.dwAttributes = SFGAO_FILESYSTEM | SFGAO_LINK;
+    if (SHGetFileInfoW(pszLinkTo, 0, &fi, sizeof(fi), SHGFI_DISPLAYNAME | SHGFI_ATTRIBUTES | SHGFI_ATTR_SPECIFIED | SHGFIPidlFlag))
+        UseDisplayName = TRUE;
 
-    if (uFlags & SHGNLI_PIDL)
+    if (pidl)
     {
-        FIXME("SHGNLI_PIDL flag unsupported\n");
-        return FALSE;
-    }
+        if (!UseDisplayName)
+            return FALSE;
 
-    if (uFlags)
-        FIXME("ignoring flags: 0x%08x\n", uFlags);
+        pszLinkTo = fi.szDisplayName;
+        UINT shgdn = (uFlags & SHGNLI_NOLOCNAME) ? SHGDN_FORPARSING : SHGDN_NORMAL;
+        if ((fi.dwAttributes & SFGAO_LINK) && SUCCEEDED(SHGetNameAndFlagsW(pidl, shgdn | SHGDN_INFOLDER,
+                                                                           szTarget, _countof(szTarget), NULL)))
+        {
+            StringCchCopyW(fi.szDisplayName, _countof(fi.szDisplayName), szTarget); // Including possible .lnk extension
+        }
+
+        if (SUCCEEDED(SHGetNameAndFlagsW(pidl, SHGDN_FORPARSING, szTarget, _countof(szTarget), NULL)))
+            pszLinkTo = szTarget;
+        else
+            fi.dwAttributes &= ~SFGAO_FILESYSTEM; // We can't validate this PIDL as a path
+    }
+    else if (uFlags & SHGNLI_NOLOCNAME)
+    {
+        UseDisplayName = FALSE;
+    }
 
     /* FIXME: should test if the file is a shortcut or DOS program */
-    if (GetFileAttributesW(pszLinkTo) == INVALID_FILE_ATTRIBUTES)
+    if ((fi.dwAttributes & SFGAO_FILESYSTEM) && GetFileAttributesW(pszLinkTo) == INVALID_FILE_ATTRIBUTES)
         return FALSE;
 
-    basename = strrchrW(pszLinkTo, '\\');
-    if (basename)
-        basename = basename+1;
-    else
-        basename = pszLinkTo;
-
-    lstrcpynW(pszName, pszDir, MAX_PATH);
-    if (!PathAddBackslashW(pszName))
-        return FALSE;
-
-    dst_basename = pszName + strlenW(pszName);
-
-    snprintfW(dst_basename, pszName + MAX_PATH - dst_basename, L"%s.lnk", basename);
-
-    while (GetFileAttributesW(pszName) != INVALID_FILE_ATTRIBUTES)
+    if (fi.dwAttributes & SFGAO_LINK)
     {
-        snprintfW(dst_basename, pszName + MAX_PATH - dst_basename, L"%s (%d).lnk", basename, i);
-        i++;
+        *pfMustCopy = TRUE; // The caller is not supposed to create a .lnk pointing to a .lnk
+
+        // Remove the "inputname.lnk" extension so that the "(%d)" handling can add it back correctly
+        uFlags &= ~SHGNLI_NOLNK;
+        pszExt = PathFindExtensionW(pszLinkTo);
+        pszDotForExt = L"";
+        UseDisplayName = TRUE;
+        if (pszLinkTo != fi.szDisplayName)
+            StringCchCopyW(fi.szDisplayName, _countof(fi.szDisplayName), pszLinkTo);
+        if (*pszExt)
+            PathRemoveExtension(fi.szDisplayName);
     }
 
+    if (uFlags & SHGNLI_NOLNK)
+        pszDotForExt = pszExt = L""; // The caller does not want us to append an extension
+
+    basename = PathFindFileNameW(UseDisplayName ? fi.szDisplayName : pszLinkTo);
+    *pszName = UNICODE_NULL;
+    if (!(uFlags & SHGNLI_NOUNIQUE)) // SHGNLI_NOUNIQUE does not prefix the directory
+    {
+        StringCchCopyW(pszName, MAX_PATH, pszDir);
+        if (!PathAddBackslashW(pszName))
+            return FALSE;
+    }
+    dst_basename = pszName + strlenW(pszName);
+
+    snprintfW(dst_basename, pszName + MAX_PATH - dst_basename, L"%s%s%s", basename, pszDotForExt, pszExt);
+    while (!(uFlags & SHGNLI_NOUNIQUE) && GetFileAttributesW(pszName) != INVALID_FILE_ATTRIBUTES)
+    {
+        snprintfW(dst_basename, pszName + MAX_PATH - dst_basename, L"%s (%d)%s%s", basename, i, pszDotForExt, pszExt);
+        i++;
+    }
     return TRUE;
 }
 
