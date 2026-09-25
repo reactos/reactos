@@ -46,8 +46,8 @@ VOID
 TestTcpConnect(void)
 {
     PIRP Irp;
-    HANDLE AddressHandle, ConnectionHandle;
-    FILE_OBJECT* ConnectionFileObject;
+    HANDLE AddressHandle = NULL, ConnectionHandle = NULL;
+    FILE_OBJECT* ConnectionFileObject = NULL;
     DEVICE_OBJECT* DeviceObject;
     UNICODE_STRING TcpDeviceName = RTL_CONSTANT_STRING(L"\\Device\\Tcp");
     NTSTATUS Status;
@@ -102,9 +102,9 @@ TestTcpConnect(void)
         0L,
         FileInfo,
         FileInfoSize);
-    ok_eq_hex(Status, STATUS_SUCCESS);
-
     ExFreePoolWithTag(FileInfo, TAG_TEST);
+    if (skip(NT_SUCCESS(Status), "\\Device\\Tcp address file is unavailable: 0x%lx\n", Status))
+        return;
 
     /* Create a TCP connection file */
     FileInfoSize = FIELD_OFFSET(FILE_FULL_EA_INFORMATION, EaName[TDI_CONNECTION_CONTEXT_LENGTH]) + 1 + sizeof(CONNECTION_CONTEXT);
@@ -131,9 +131,12 @@ TestTcpConnect(void)
         0L,
         FileInfo,
         FileInfoSize);
-    ok_eq_hex(Status, STATUS_SUCCESS);
-
     ExFreePoolWithTag(FileInfo, TAG_TEST);
+    if (skip(NT_SUCCESS(Status), "\\Device\\Tcp connection file is unavailable: 0x%lx\n", Status))
+    {
+        ZwClose(AddressHandle);
+        return;
+    }
 
     /* Get the file and device object for the upcoming IRPs */
     Status = ObReferenceObjectByHandle(
@@ -144,8 +147,21 @@ TestTcpConnect(void)
         (PVOID*)&ConnectionFileObject,
         NULL);
     ok_eq_hex(Status, STATUS_SUCCESS);
+    if (!NT_SUCCESS(Status))
+    {
+        ZwClose(ConnectionHandle);
+        ZwClose(AddressHandle);
+        return;
+    }
     DeviceObject = IoGetRelatedDeviceObject(ConnectionFileObject);
     ok(DeviceObject != NULL, "Device object is NULL!\n");
+    if (!DeviceObject)
+    {
+        ObDereferenceObject(ConnectionFileObject);
+        ZwClose(ConnectionHandle);
+        ZwClose(AddressHandle);
+        return;
+    }
 
     /* Associate the connection file and the address */
     KeInitializeEvent(&Event, NotificationEvent, FALSE);

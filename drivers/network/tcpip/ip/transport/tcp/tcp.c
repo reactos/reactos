@@ -403,6 +403,7 @@ NTSTATUS TCPConnect
 
     Bucket->Request.RequestNotifyObject = (PVOID)Complete;
     Bucket->Request.RequestContext = Context;
+    Bucket->ReturnInfo = ReturnInfo;
 
     InsertTailList( &Connection->ConnectRequest, &Bucket->Entry );
 
@@ -684,6 +685,8 @@ NTSTATUS TCPGetSockAddress
 
     UnlockObject(Connection);
 
+    AddressIP->Address[0].Address[0].sin_port =
+        WH2N(AddressIP->Address[0].Address[0].sin_port);
     AddressIP->Address[0].Address[0].in_addr = ipaddr.addr;
 
     RtlZeroMemory(&AddressIP->Address[0].Address[0].sin_zero,
