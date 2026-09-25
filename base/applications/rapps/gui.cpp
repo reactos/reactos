@@ -627,7 +627,7 @@ CMainWindow::OnCommand(WPARAM wParam, LPARAM lParam)
             }
 
             case ID_HELP:
-                MessageBoxW(L"Help not implemented yet", NULL, MB_OK);
+                ShellExecuteW(m_hWnd, L"open", L"https://reactos.org/wiki/ReactOS_Applications_Manager", NULL, NULL, SW_SHOWNORMAL);
                 break;
 
             case ID_ABOUT:
