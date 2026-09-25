@@ -30,7 +30,7 @@
 #include <commctrl.h>
 #include <stdlib.h>
 #define _USE_MATH_DEFINES /* for M_PI */
-#include <math.h>
+#include <cmath>
 #include <shellapi.h>
 #include <htmlhelp.h>
 #include <strsafe.h>
@@ -152,3 +152,6 @@ extern CToolSettingsWindow toolSettingsWindow;
 extern CPaletteWindow paletteWindow;
 extern CCanvasWindow canvasWindow;
 extern CTextEditWindow textEditWindow;
+
+void FloydSteinberg(const BYTE* srcBuf, INT srcStride, SIZE_T W, SIZE_T H,
+                    const RGBQUAD* palette, INT nColors, PBYTE indexImg);

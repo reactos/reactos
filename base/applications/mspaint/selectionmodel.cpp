@@ -96,12 +96,29 @@ HBITMAP SelectionModel::GetSelectionContents()
     if (!hbmPart)
         return NULL;
 
+    BITMAP bm;
+    GetObject(hbmPart, sizeof(bm), &bm);
+    if (bm.bmBitsPixel == 1) // Monochrome?
+    {
+        HDC hdc = CreateCompatibleDC(NULL);
+        HGDIOBJ old = SelectObject(hdc, hbmPart);
+        RGBQUAD colors[2];
+        colors[0] = RGBValueToQuad(paletteModel.GetPrimaryColor());
+        colors[1] = RGBValueToQuad(paletteModel.GetSecondaryColor());
+        SetDIBColorTable(hdc, 0, 2, colors);
+        SelectObject(hdc, old);
+        DeleteDC(hdc);
+        return hbmPart;
+    }
+
     CRect rc = { 0, 0, m_rc.Width(), m_rc.Height() };
+    HBITMAP hbmNew = imageModel.CloneDIB(rc.Width(), rc.Height(), paletteModel.GetBgColor());
+    if (!hbmNew)
+        return NULL;
 
     HDC hdcMem = ::CreateCompatibleDC(NULL);
-    HBITMAP hbmNew = CreateColorDIB(rc.Width(), rc.Height(), paletteModel.GetBgColor());
     HGDIOBJ hbmOld = ::SelectObject(hdcMem, hbmNew);
-    selectionModel.DrawSelection(hdcMem, paletteModel.GetBgColor(), TRUE, rc, hbmPart);
+    DrawSelection(hdcMem, paletteModel.GetBgColor(), TRUE, rc, hbmPart);
     ::SelectObject(hdcMem, hbmOld);
     ::DeleteDC(hdcMem);
 
@@ -240,19 +257,21 @@ void SelectionModel::RotateNTimes90Degrees(int iN)
 
             if (m_hbmColor)
             {
-                hbmOld = ::SelectObject(hdcMem, m_hbmColor);
-                hbm = Rotate90DegreeBlt(hdcMem, m_rc.Width(), m_rc.Height(), iN == 1, FALSE);
-                ::SelectObject(hdcMem, hbmOld);
-                ::DeleteObject(m_hbmColor);
-                m_hbmColor = hbm;
+                hbm = Rotate90DegreeBitmap(m_hbmColor, iN == 1);
+                if (hbm)
+                {
+                    ::DeleteObject(m_hbmColor);
+                    m_hbmColor = hbm;
+                }
             }
             if (m_hbmMask)
             {
-                hbmOld = ::SelectObject(hdcMem, m_hbmMask);
-                hbm = Rotate90DegreeBlt(hdcMem, m_rc.Width(), m_rc.Height(), iN == 1, TRUE);
-                ::SelectObject(hdcMem, hbmOld);
-                ::DeleteObject(m_hbmMask);
-                m_hbmMask = hbm;
+                hbm = Rotate90DegreeBitmap(m_hbmMask, iN == 1);
+                if (hbm)
+                {
+                    ::DeleteObject(m_hbmMask);
+                    m_hbmMask = hbm;
+                }
             }
 
             SwapWidthAndHeight();
@@ -312,28 +331,17 @@ void SelectionModel::StretchSkew(int nStretchPercentX, int nStretchPercentY, int
         AttachHBITMAP(&hbmMask, CopyMonoImage(hbmMask, newWidth, newHeight));
     }
 
-    HGDIOBJ hbmOld;
-    HDC hDC = ::CreateCompatibleDC(NULL);
-
     if (nSkewDegX)
     {
-        hbmOld = ::SelectObject(hDC, hbmColor);
-        AttachHBITMAP(&hbmColor, SkewDIB(hDC, hbmColor, nSkewDegX, FALSE));
-        ::SelectObject(hDC, hbmMask);
-        AttachHBITMAP(&hbmMask, SkewDIB(hDC, hbmMask, nSkewDegX, FALSE, TRUE));
-        ::SelectObject(hDC, hbmOld);
+        AttachHBITMAP(&hbmColor, SkewDIB(hbmColor, nSkewDegX, FALSE));
+        AttachHBITMAP(&hbmMask, SkewDIB(hbmMask, nSkewDegX, FALSE));
     }
 
     if (nSkewDegY)
     {
-        hbmOld = ::SelectObject(hDC, hbmColor);
-        AttachHBITMAP(&hbmColor, SkewDIB(hDC, hbmColor, nSkewDegY, TRUE));
-        ::SelectObject(hDC, hbmMask);
-        AttachHBITMAP(&hbmMask, SkewDIB(hDC, hbmMask, nSkewDegY, TRUE, TRUE));
-        ::SelectObject(hDC, hbmOld);
+        AttachHBITMAP(&hbmColor, SkewDIB(hbmColor, nSkewDegY, TRUE));
+        AttachHBITMAP(&hbmMask, SkewDIB(hbmMask, nSkewDegY, TRUE));
     }
-
-    ::DeleteDC(hDC);
 
     InsertFromHBITMAP(hbmColor, m_rc.left, m_rc.top, hbmMask);
 

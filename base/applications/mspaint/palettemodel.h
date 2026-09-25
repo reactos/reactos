@@ -3,6 +3,7 @@
  * LICENSE:    LGPL-2.0-or-later (https://spdx.org/licenses/LGPL-2.0-or-later)
  * PURPOSE:    Keep track of palette data, notify listeners
  * COPYRIGHT:  Copyright 2015 Benedikt Freisen <b.freisen@gmx.net>
+ *             Copyright 2021-2026 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
 #pragma once
@@ -26,9 +27,13 @@ private:
     PAL_TYPE m_nSelectedPalette;
     COLORREF m_fgColor;
     COLORREF m_bgColor;
+    UINT m_bpp = 24;
+    COLORREF m_primaryColor = RGB(0, 0, 0);
+    COLORREF m_secondaryColor = RGB(255, 255, 255);
 
     void NotifyColorChanged();
     void NotifyPaletteChanged();
+    void SetColorTable(UINT bpp, UINT cColors, RGBQUAD* colors);
 
 public:
     PaletteModel();
@@ -40,4 +45,10 @@ public:
     void SetFgColor(COLORREF newColor);
     COLORREF GetBgColor() const;
     void SetBgColor(COLORREF newColor);
+    void SetColorInfo(HBITMAP hbm);
+    void SetPrimaryColors(COLORREF color0, COLORREF color1);
+    UINT GetBpp() const { return m_bpp; }
+    COLORREF GetPrimaryColor() const { return m_primaryColor; }
+    COLORREF GetSecondaryColor() const { return m_secondaryColor; }
+    BOOL IsEditable() const;
 };

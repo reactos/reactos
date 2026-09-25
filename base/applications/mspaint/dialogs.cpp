@@ -206,17 +206,17 @@ LRESULT CAttributesDialog::OnEdit1(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOO
         if (IsDlgButtonChecked(IDD_ATTRIBUTESRB1))
         {
             GetDlgItemText(IDD_ATTRIBUTESEDIT1, tempS, _countof(tempS));
-            newWidth = max(1, (int)(wcstod(tempS, NULL) * g_xDpi));
+            newWidth = __max(1, (int)(wcstod(tempS, NULL) * g_xDpi));
         }
         else if (IsDlgButtonChecked(IDD_ATTRIBUTESRB2))
         {
             GetDlgItemText(IDD_ATTRIBUTESEDIT1, tempS, _countof(tempS));
-            newWidth = max(1, (int)(wcstod(tempS, NULL) * PpcmFromDpi(g_xDpi)));
+            newWidth = __max(1, (int)(wcstod(tempS, NULL) * PpcmFromDpi(g_xDpi)));
         }
         else if (IsDlgButtonChecked(IDD_ATTRIBUTESRB3))
         {
             GetDlgItemText(IDD_ATTRIBUTESEDIT1, tempS, _countof(tempS));
-            newWidth = max(1, _wtoi(tempS));
+            newWidth = __max(1, _wtoi(tempS));
         }
         Edit_SetModify(hWndCtl, FALSE);
     }
@@ -231,17 +231,17 @@ LRESULT CAttributesDialog::OnEdit2(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOO
         if (IsDlgButtonChecked(IDD_ATTRIBUTESRB1))
         {
             GetDlgItemText(IDD_ATTRIBUTESEDIT2, tempS, _countof(tempS));
-            newHeight = max(1, (int)(wcstod(tempS, NULL) * g_yDpi));
+            newHeight = __max(1, (int)(wcstod(tempS, NULL) * g_yDpi));
         }
         else if (IsDlgButtonChecked(IDD_ATTRIBUTESRB2))
         {
             GetDlgItemText(IDD_ATTRIBUTESEDIT2, tempS, _countof(tempS));
-            newHeight = max(1, (int)(wcstod(tempS, NULL) * PpcmFromDpi(g_yDpi)));
+            newHeight = __max(1, (int)(wcstod(tempS, NULL) * PpcmFromDpi(g_yDpi)));
         }
         else if (IsDlgButtonChecked(IDD_ATTRIBUTESRB3))
         {
             GetDlgItemText(IDD_ATTRIBUTESEDIT2, tempS, _countof(tempS));
-            newHeight = max(1, _wtoi(tempS));
+            newHeight = __max(1, _wtoi(tempS));
         }
         Edit_SetModify(hWndCtl, FALSE);
     }
@@ -375,7 +375,7 @@ void CFontsDialog::InitToolbar()
     ::SendMessageW(hwndToolbar, TB_BUTTONSTRUCTSIZE, sizeof(TBBUTTON), 0);
     ::SendMessageW(hwndToolbar, TB_SETBITMAPSIZE, 0, MAKELPARAM(16, 16));
     ::SendMessageW(hwndToolbar, TB_SETBUTTONWIDTH, 0, MAKELPARAM(20, 20));
-    
+
     TBADDBITMAP AddBitmap;
     AddBitmap.hInst = g_hinstExe;
     AddBitmap.nID = IDB_FONTSTOOLBAR;
