@@ -1854,15 +1854,13 @@ WSPAcceptEx(
     _Out_ LPDWORD lpdwBytesReceived,
     _Inout_ LPOVERLAPPED lpOverlapped)
 {
-    PSOCKET_INFORMATION   ListenSocket = NULL;
-    PSOCKET_INFORMATION   AcceptSocket = NULL;
+    PSOCKET_INFORMATION   ListenSocket = GetSocketStructure(sListenSocket);
+    PSOCKET_INFORMATION   AcceptSocket = GetSocketStructure(sAcceptSocket);
     AFD_SUPER_ACCEPT_INFO AcceptInfo;
     NTSTATUS              Status;
     PIO_STATUS_BLOCK      IoStatusBlock = (PIO_STATUS_BLOCK)lpOverlapped;
 
     /* Validate sockets */
-    ListenSocket = GetSocketStructure(sListenSocket);
-    AcceptSocket = GetSocketStructure(sAcceptSocket);
     if (!ListenSocket || !AcceptSocket)
     {
        SetLastError(WSAENOTSOCK);

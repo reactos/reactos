@@ -106,89 +106,89 @@ static NTSTATUS SatisfySuperAccept(PAFD_FCB FCB, PIRP Irp, PAFD_TDI_OBJECT_QELT 
     Irp->Tail.Overlay.DriverContext[2] = NULL;
 
     BYTE *BufferPtr = MmGetSystemAddressForMdlSafe((PMDL)Irp->Tail.Overlay.DriverContext[3], NormalPagePriority);
-    if (BufferPtr)
+    if (!BufferPtr)
+        goto end;
+
+    /* Query TCPIP to find the local address of the socket */
+    LONG RequestSize = (FIELD_OFFSET(TDI_ADDRESS_INFO, Address.Address[0].Address) + FCB->LocalAddress->Address[0].AddressLength);
+    PTRANSPORT_ADDRESS RemoteAddress = (PTRANSPORT_ADDRESS)Qelt->ConnInfo->RemoteAddress;
+    PTDI_ADDRESS_INFO Buffer = ExAllocatePoolWithTag(NonPagedPool, RequestSize, 'bufT');
+    if (Buffer == NULL)
     {
-        /* Query TCPIP to find the local address of the socket */
-        LONG RequestSize = (FIELD_OFFSET(TDI_ADDRESS_INFO, Address.Address[0].Address) + FCB->LocalAddress->Address[0].AddressLength);
-        PTRANSPORT_ADDRESS RemoteAddress = (PTRANSPORT_ADDRESS)Qelt->ConnInfo->RemoteAddress;
-        PTDI_ADDRESS_INFO Buffer = ExAllocatePoolWithTag(NonPagedPool, RequestSize, 'bufT');
-        if (Buffer == NULL)
-        {
-            Status = STATUS_INSUFFICIENT_RESOURCES;
-            goto end;
-        }
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto end;
+    }
 
-        PMDL Mdl = IoAllocateMdl(Buffer, RequestSize, FALSE, FALSE, NULL);
-        if (Mdl == NULL)
-        {
-            ExFreePool(Buffer);
-            Status = STATUS_INSUFFICIENT_RESOURCES;
-            goto end;
-        }
-
-        _SEH2_TRY
-        {
-            /* TCP eventually calls MmUnlockPages and IoFreeMdl*/
-            MmProbeAndLockPages(Mdl, KernelMode, IoModifyAccess);
-        }
-        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-        {
-            Status = _SEH2_GetExceptionCode();
-            ExFreePool(Buffer);
-            goto end;
-        }
-        _SEH2_END;
-
-        Status = TdiQueryInformation(
-            Qelt->Object.Object, TDI_QUERY_ADDRESS_INFO, Mdl);
-        if (!NT_SUCCESS(Status))
-            goto end;
-
-        /* Write the local address */
-        LONG LocalAddressLength = min(AcceptInfo->LocalAddressLength, Buffer->Address.Address->AddressLength);
-        BufferPtr += AcceptInfo->ReceiveDataLength;
-        RtlCopyMemory(BufferPtr, &Buffer->Address.Address->AddressType, LocalAddressLength);
-        *(USHORT *)(BufferPtr + AcceptInfo->LocalAddressLength - sizeof(USHORT)) = LocalAddressLength;
+    PMDL Mdl = IoAllocateMdl(Buffer, RequestSize, FALSE, FALSE, NULL);
+    if (Mdl == NULL)
+    {
         ExFreePool(Buffer);
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto end;
+    }
 
-        /* Write the remote address*/
-        LONG RemoteAddressLength = min(AcceptInfo->RemoteAddressLength, RemoteAddress->Address[0].AddressLength);
-        BufferPtr += AcceptInfo->LocalAddressLength;
-        RtlCopyMemory(BufferPtr, &RemoteAddress->Address[0].AddressType, RemoteAddressLength);
+    _SEH2_TRY
+    {
+        /* TCP eventually calls MmUnlockPages and IoFreeMdl*/
+        MmProbeAndLockPages(Mdl, KernelMode, IoModifyAccess);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = _SEH2_GetExceptionCode();
+        ExFreePool(Buffer);
+        goto end;
+    }
+    _SEH2_END;
 
-        *(USHORT *)(BufferPtr + AcceptInfo->RemoteAddressLength - sizeof(USHORT)) = RemoteAddressLength;
+    Status = TdiQueryInformation(
+        Qelt->Object.Object, TDI_QUERY_ADDRESS_INFO, Mdl);
+    if (!NT_SUCCESS(Status))
+        goto end;
 
-        if (AcceptInfo->ReceiveDataLength)
-        {
-            /* Save this IRP so that it can be completed once the data is receive */
-            FCB2->AcceptIrp = Irp;
+    /* Write the local address */
+    LONG LocalAddressLength = min(AcceptInfo->LocalAddressLength, Buffer->Address.Address->AddressLength);
+    BufferPtr += AcceptInfo->ReceiveDataLength;
+    RtlCopyMemory(BufferPtr, &Buffer->Address.Address->AddressType, LocalAddressLength);
+    *(USHORT *)(BufferPtr + AcceptInfo->LocalAddressLength - sizeof(USHORT)) = LocalAddressLength;
+    ExFreePool(Buffer);
 
-            Status = TdiReceive(&FCB2->ReceiveIrp.InFlightRequest,
-                                FCB2->Connection.Object, TDI_RECEIVE_NORMAL,
-                                (PCHAR)BufferPtr,
-                                AcceptInfo->ReceiveDataLength,
-                                AcceptExReceiveComplete,
-                                FCB2);
+    /* Write the remote address*/
+    LONG RemoteAddressLength = min(AcceptInfo->RemoteAddressLength, RemoteAddress->Address[0].AddressLength);
+    BufferPtr += AcceptInfo->LocalAddressLength;
+    RtlCopyMemory(BufferPtr, &RemoteAddress->Address[0].AddressType, RemoteAddressLength);
 
-            if (Status == STATUS_PENDING)
-                Status = STATUS_SUCCESS;
-            return Status;
-        }
-        else
-        {
-            /* Begin receive buffer */
-            Status = TdiReceive(
-                &FCB2->ReceiveIrp.InFlightRequest,
-                FCB2->Connection.Object,
-                TDI_RECEIVE_NORMAL,
-                FCB2->Recv.Window,
-                FCB2->Recv.Size,
-                ReceiveComplete,
-                FCB2);
+    *(USHORT *)(BufferPtr + AcceptInfo->RemoteAddressLength - sizeof(USHORT)) = RemoteAddressLength;
 
-            if (Status == STATUS_PENDING)
-                Status = STATUS_SUCCESS;
-        }
+    if (AcceptInfo->ReceiveDataLength)
+    {
+        /* Save this IRP so that it can be completed once the data is received */
+        FCB2->AcceptIrp = Irp;
+
+        Status = TdiReceive(&FCB2->ReceiveIrp.InFlightRequest,
+                            FCB2->Connection.Object, TDI_RECEIVE_NORMAL,
+                            (PCHAR)BufferPtr,
+                            AcceptInfo->ReceiveDataLength,
+                            AcceptExReceiveComplete,
+                            FCB2);
+
+        if (Status == STATUS_PENDING)
+            Status = STATUS_SUCCESS;
+        return Status;
+    }
+    else
+    {
+        /* Begin receive buffer */
+        Status = TdiReceive(
+            &FCB2->ReceiveIrp.InFlightRequest,
+            FCB2->Connection.Object,
+            TDI_RECEIVE_NORMAL,
+            FCB2->Recv.Window,
+            FCB2->Recv.Size,
+            ReceiveComplete,
+            FCB2);
+
+        if (Status == STATUS_PENDING)
+            Status = STATUS_SUCCESS;
     }
 
 end:
