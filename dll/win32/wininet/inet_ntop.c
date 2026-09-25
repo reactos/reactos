@@ -16,6 +16,21 @@
  * SOFTWARE.
  */
 
+#ifdef __REACTOS__
+#ifndef _WIN32_WINNT
+#define _WIN32_WINNT 0x600
+#endif
+
+#include <windef.h>
+#include <ws2tcpip.h>
+#include <stdio.h>
+#include <string.h>
+
+#if DLL_EXPORT_VERSION < 0x600
+#define inet_ntop wininet_inet_ntop
+#endif
+#endif
+
 #ifndef IN6ADDRSZ
 #define	IN6ADDRSZ	16
 #endif
@@ -191,4 +206,3 @@ inet_ntop6(const u_char *src, char *dst, socklen_t size)
 	return (dst);
 }
 #endif
-
