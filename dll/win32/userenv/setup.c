@@ -18,7 +18,6 @@ typedef struct _FOLDERDATA
 {
     LPWSTR lpValueName;
     LPWSTR lpPath;
-    UINT uId;
     BOOL bHidden;
     BOOL bShellFolder;
     BOOL bUserShellFolder;
@@ -29,45 +28,45 @@ typedef struct _FOLDERDATA
 static FOLDERDATA
 UserShellFolders[] =
 {
-    {L"AppData", L"AppData\\Roaming", IDS_ROAMINGAPPDATA, FALSE, TRUE, TRUE, FALSE},
-    {L"Desktop", L"Desktop", IDS_DESKTOP, FALSE, TRUE, TRUE, FALSE},
-    {L"{374DE290-123F-4565-9164-39C4925E467B}", L"Downloads", IDS_DESKTOP, FALSE, TRUE, TRUE, FALSE},
-    {L"Favorites", L"Favorites", IDS_FAVORITES, FALSE, TRUE, TRUE, FALSE},
-    {L"Personal", L"Documents", IDS_MYDOCUMENTS, FALSE, TRUE, TRUE, FALSE},
-    {L"My Music", L"Music", IDS_MYDOCUMENTS, FALSE, TRUE, TRUE, FALSE},
-    {L"My Pictures", L"Music", IDS_MYDOCUMENTS, FALSE, TRUE, TRUE, FALSE},
-    {L"My Video", L"Videos", IDS_MYDOCUMENTS, FALSE, TRUE, TRUE, FALSE},
-    {L"NetHood", L"AppData\\Roaming\\Microsoft\\Windows\\Network Shortcuts", IDS_NETHOOD, TRUE, TRUE, TRUE, FALSE},
-    {L"PrintHood", L"AppData\\Roaming\\Microsoft\\Windows\\Printer Shortcuts", IDS_PRINTHOOD, TRUE, TRUE, TRUE, FALSE},
-    {L"Recent", L"AppData\\Roaming\\Microsoft\\Windows\\Recent", IDS_RECENT, TRUE, TRUE, TRUE, FALSE},
-    {L"SendTo", L"AppData\\Roaming\\Microsoft\\Windows\\SendTo", IDS_SENDTO, FALSE, TRUE, TRUE, FALSE},
-    {L"CD Burning", L"AppData\\Roaming\\Microsoft\\Windows\\Burn\\Burn", IDS_SENDTO, FALSE, TRUE, TRUE, FALSE},
-    {L"Templates", L"Templates", IDS_TEMPLATES, FALSE, TRUE, TRUE, FALSE},
-    {L"Start Menu", L"AppData\\Roaming\\Microsoft\\Windows\\Start Menu", IDS_STARTMENU, FALSE, TRUE, TRUE, FALSE},
-    {L"Programs", L"AppData\\Roaming\\Microsoft\\Windows\\Start Menu\\Programs", IDS_PROGRAMS, FALSE, TRUE, TRUE, FALSE},
-    {L"Administrative Tools", L"AppData\\Roaming\\Microsoft\\Windows\\Start Menu\\Programs\\Administrative Tools", IDS_PROGRAMS, FALSE, TRUE, TRUE, FALSE},
-    {L"Startup", L"AppData\\Roaming\\Microsoft\\Windows\\Start Menu\\Programs\\Startup", IDS_STARTUP, FALSE, TRUE, TRUE, FALSE},
-    {L"Local AppData", L"AppData\\Local", IDS_LOCALSETTINGS, FALSE, TRUE, TRUE, FALSE},
-    {L"{A520A1A4-1780-4FF6-BD18-167343C5AF16}", L"AppData\\LocalLow", IDS_LOCALLOWAPPDATA, FALSE, FALSE, FALSE, FALSE},
-    {L"Temp", L"Appdata\\Local\\Temp", IDS_TEMP, FALSE, FALSE, FALSE, FALSE},
-    {L"Cache", L"Appdata\\Local\\Temporary Internet Files", IDS_CACHE, FALSE, TRUE, TRUE, FALSE},
-    {L"History", L"AppData\\Local\\Microsoft\\Windows\\History", IDS_HISTORY, FALSE, TRUE, TRUE, FALSE},
-    {L"Cookies", L"AppData\\Local\\Microsoft\\Windows\\INetCookies", IDS_COOKIES, FALSE, TRUE, TRUE, FALSE},
-    {NULL, NULL, -1, FALSE, FALSE, FALSE, FALSE}
+    {L"AppData", L"AppData\\Roaming", FALSE, TRUE, TRUE, FALSE},
+    {L"Desktop", L"Desktop", FALSE, TRUE, TRUE, FALSE},
+    {L"{374DE290-123F-4565-9164-39C4925E467B}", L"Downloads", FALSE, TRUE, TRUE, FALSE},
+    {L"Favorites", L"Favorites", FALSE, TRUE, TRUE, FALSE},
+    {L"Personal", L"Documents", FALSE, TRUE, TRUE, FALSE},
+    {L"My Music", L"Music", FALSE, TRUE, TRUE, FALSE},
+    {L"My Pictures", L"Music", FALSE, TRUE, TRUE, FALSE},
+    {L"My Video", L"Videos", FALSE, TRUE, TRUE, FALSE},
+    {L"NetHood", L"AppData\\Roaming\\Microsoft\\Windows\\Network Shortcuts", TRUE, TRUE, TRUE, FALSE},
+    {L"PrintHood", L"AppData\\Roaming\\Microsoft\\Windows\\Printer Shortcuts", TRUE, TRUE, TRUE, FALSE},
+    {L"Recent", L"AppData\\Roaming\\Microsoft\\Windows\\Recent", TRUE, TRUE, TRUE, FALSE},
+    {L"SendTo", L"AppData\\Roaming\\Microsoft\\Windows\\SendTo", FALSE, TRUE, TRUE, FALSE},
+    {L"CD Burning", L"AppData\\Roaming\\Microsoft\\Windows\\Burn\\Burn", FALSE, TRUE, TRUE, FALSE},
+    {L"Templates", L"Templates", FALSE, TRUE, TRUE, FALSE},
+    {L"Start Menu", L"AppData\\Roaming\\Microsoft\\Windows\\Start Menu", FALSE, TRUE, TRUE, FALSE},
+    {L"Programs", L"AppData\\Roaming\\Microsoft\\Windows\\Start Menu\\Programs", FALSE, TRUE, TRUE, FALSE},
+    {L"Administrative Tools", L"AppData\\Roaming\\Microsoft\\Windows\\Start Menu\\Programs\\Administrative Tools", FALSE, TRUE, TRUE, FALSE},
+    {L"Startup", L"AppData\\Roaming\\Microsoft\\Windows\\Start Menu\\Programs\\Startup", FALSE, TRUE, TRUE, FALSE},
+    {L"Local AppData", L"AppData\\Local", FALSE, TRUE, TRUE, FALSE},
+    {L"{A520A1A4-1780-4FF6-BD18-167343C5AF16}", L"AppData\\LocalLow", FALSE, FALSE, FALSE, FALSE},
+    {L"Temp", L"Appdata\\Local\\Temp", FALSE, FALSE, FALSE, FALSE},
+    {L"Cache", L"Appdata\\Local\\Temporary Internet Files", FALSE, TRUE, TRUE, FALSE},
+    {L"History", L"AppData\\Local\\Microsoft\\Windows\\History", FALSE, TRUE, TRUE, FALSE},
+    {L"Cookies", L"AppData\\Local\\Microsoft\\Windows\\INetCookies", FALSE, TRUE, TRUE, FALSE},
+    {NULL, NULL, FALSE, FALSE, FALSE, FALSE}
 };
 
 
 static FOLDERDATA
 CommonShellFolders[] =
 {
-    {L"Common Desktop", L"Desktop", IDS_DESKTOP, FALSE, TRUE, TRUE, FALSE},
-    {L"Common Favorites", L"Favorites", IDS_FAVORITES, FALSE, TRUE, TRUE, FALSE},
-    {L"Common Documents", L"Documents", IDS_MYDOCUMENTS, FALSE, TRUE, TRUE, FALSE},
-    {L"Common Templates", L"Microsoft\\Windows\\Templates", IDS_TEMPLATES, TRUE, TRUE, TRUE, TRUE},
-    {L"Common Start Menu", L"Microsoft\\Windows\\Start Menu", IDS_STARTMENU, FALSE, TRUE, TRUE, TRUE},
-    {L"Common Programs", L"Microsoft\\Windows\\Start Menu\\Programs", IDS_PROGRAMS, FALSE, TRUE, TRUE, TRUE},
-    {L"Common Startup", L"Microsoft\\Windows\\Start Menu\\Programs\\Startup", IDS_STARTUP, FALSE, TRUE, TRUE, TRUE},
-    {NULL, NULL, -1, FALSE, FALSE, FALSE, FALSE}
+    {L"Common Desktop", L"Desktop", FALSE, TRUE, TRUE, FALSE},
+    {L"Common Favorites", L"Favorites", FALSE, TRUE, TRUE, FALSE},
+    {L"Common Documents", L"Documents", FALSE, TRUE, TRUE, FALSE},
+    {L"Common Templates", L"Microsoft\\Windows\\Templates", TRUE, TRUE, TRUE, TRUE},
+    {L"Common Start Menu", L"Microsoft\\Windows\\Start Menu", FALSE, TRUE, TRUE, TRUE},
+    {L"Common Programs", L"Microsoft\\Windows\\Start Menu\\Programs", FALSE, TRUE, TRUE, TRUE},
+    {L"Common Startup", L"Microsoft\\Windows\\Start Menu\\Programs\\Startup", FALSE, TRUE, TRUE, TRUE},
+    {NULL, NULL, FALSE, FALSE, FALSE, FALSE}
 };
 
 
