@@ -7,6 +7,12 @@
 
 #pragma once
 
+#ifndef IDC_STATIC
+#define IDC_STATIC -1
+#endif
+
+#define IDA_ACCEL   1
+
 #define IDS_IDLE_PROCESS              102
 #define IDD_TASKMGR_DIALOG            102
 #define IDS_APP_TITLE                 103
@@ -122,8 +128,8 @@
 #define IDC_MEM_USAGE_GRAPH2             1048
 #define IDC_MEM_USAGE_GRAPH              1048
 #define IDC_CPU30                        1049
-#define IDC_MEM_USAGE_HISTORY_GRAPH      1049
-#define IDC_CPU_USAGE_HISTORY_GRAPH      1050
+#define IDC_CPU_USAGE_HISTORY_GRAPH      1049
+#define IDC_MEM_USAGE_HISTORY_GRAPH      1050
 #define IDC_CPU31                        1051
 
 #define IDS_TOTALS_HANDLE_COUNT          1060
@@ -196,8 +202,6 @@
 #define ID_SHUTDOWN_LOCKCOMPUTER    32822
 #define ID_SHUTDOWN_DISCONNECT      32823
 #define ID_SHUTDOWN_EJECT_COMPUTER  32824
-
-#define IDC_STATIC -1
 
 #define IDS_TAB_APPS          310
 #define IDS_TAB_PROCESSES     311

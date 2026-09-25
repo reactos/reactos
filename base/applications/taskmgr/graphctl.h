@@ -12,10 +12,6 @@
 #define NUM_PLOTS    2
 #define PLOT_SHIFT   2
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 typedef struct _TM_GRAPH_CONTROL
 {
     HWND     hParentWnd;
@@ -54,15 +50,11 @@ typedef struct _TM_FORMAT
 }
 TM_FORMAT, *PTM_FORMAT;
 
-extern WNDPROC OldGraphCtrlWndProc;
-INT_PTR CALLBACK GraphCtrl_WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
+INT_PTR CALLBACK GraphCtrl_OnSize(HWND hWnd, PTM_GRAPH_CONTROL graph, WPARAM wParam, LPARAM lParam);
+INT_PTR CALLBACK GraphCtrl_OnDraw(HWND hWnd, PTM_GRAPH_CONTROL graph, WPARAM wParam, LPARAM lParam);
 
 BOOL GraphCtrl_Create(PTM_GRAPH_CONTROL inst, HWND hWnd, HWND hParentWnd, PTM_FORMAT fmt);
 void GraphCtrl_Dispose(PTM_GRAPH_CONTROL inst);
 void GraphCtrl_AddPoint(PTM_GRAPH_CONTROL inst, BYTE val0, BYTE val1);
 void GraphCtrl_RedrawOnHeightChange(PTM_GRAPH_CONTROL inst, INT nh);
 void GraphCtrl_RedrawBitmap(PTM_GRAPH_CONTROL inst, INT h);
-
-#ifdef __cplusplus
-}
-#endif
