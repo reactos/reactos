@@ -283,12 +283,9 @@ NTAPI
 KeIsWaitListEmpty(
     _In_ PVOID Object)
 {
-    PDISPATCHER_HEADER Header = Object;
-
     /* Make sure we see a consistent snapshot of the list head */
     KeMemoryBarrier();
-
-    return IsListEmpty(&Header->WaitListHead);
+    return IsListEmpty(&((PDISPATCHER_HEADER)Object)->WaitListHead);
 }
 
 /*
