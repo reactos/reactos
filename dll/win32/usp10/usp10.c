@@ -866,6 +866,9 @@ static inline BOOL set_cache_glyph_widths(SCRIPT_CACHE *psc, WORD glyph, ABC *ab
 static HRESULT init_script_cache(const HDC hdc, SCRIPT_CACHE *psc)
 {
     ScriptCache *sc;
+#ifdef __REACTOS__
+    ScriptCache *old_sc;
+#endif
     unsigned size;
     LOGFONTW lf;
 
@@ -882,13 +885,29 @@ static HRESULT init_script_cache(const HDC hdc, SCRIPT_CACHE *psc)
     memset(lf.lfFaceName + size, 0, sizeof(lf.lfFaceName) - size * sizeof(WCHAR));
 
     EnterCriticalSection(&cs_script_cache);
+#ifdef __REACTOS__
+    LIST_FOR_EACH_ENTRY(old_sc, &script_cache_list, ScriptCache, entry)
+#else
     LIST_FOR_EACH_ENTRY(sc, &script_cache_list, ScriptCache, entry)
+#endif
     {
+#ifdef __REACTOS__
+        if (!memcmp(&old_sc->lf, &lf, sizeof(lf)))
+#else
         if (!memcmp(&sc->lf, &lf, sizeof(lf)))
+#endif
         {
+#ifdef __REACTOS__
+            old_sc->refcount++;
+#else
             sc->refcount++;
+#endif
             LeaveCriticalSection(&cs_script_cache);
+#ifdef __REACTOS__
+            *psc = old_sc;
+#else
             *psc = sc;
+#endif
             return S_OK;
         }
     }
@@ -919,16 +938,33 @@ static HRESULT init_script_cache(const HDC hdc, SCRIPT_CACHE *psc)
 
     EnterCriticalSection(&cs_script_cache);
     list_add_head(&script_cache_list, &sc->entry);
+#ifdef __REACTOS__
+    LIST_FOR_EACH_ENTRY(old_sc, &script_cache_list, ScriptCache, entry)
+#else
     LIST_FOR_EACH_ENTRY(sc, &script_cache_list, ScriptCache, entry)
+#endif
     {
+#ifdef __REACTOS__
+        if (old_sc != sc && !memcmp(&old_sc->lf, &lf, sizeof(lf)))
+#else
         if (sc != *psc && !memcmp(&sc->lf, &lf, sizeof(lf)))
+#endif
         {
             /* Another thread won the race. Use their cache instead of ours */
             list_remove(&sc->entry);
+#ifdef __REACTOS__
+            old_sc->refcount++;
+#else
             sc->refcount++;
+#endif
             LeaveCriticalSection(&cs_script_cache);
+#ifdef __REACTOS__
+            heap_free(sc);
+            *psc = old_sc;
+#else
             heap_free(*psc);
             *psc = sc;
+#endif
             return S_OK;
         }
     }
