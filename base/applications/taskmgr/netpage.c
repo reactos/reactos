@@ -1250,9 +1250,7 @@ NetPage_Layout(int cx, int cy)
     NetPage_LayoutGraphs();
 }
 
-/* ------------------------------------------------------------------------ */
-/* Page procedure and public interface                                       */
-/* ------------------------------------------------------------------------ */
+/* PAGE PROCEDURE / PUBLIC INTERFACE ****************************************/
 
 static void
 NetPage_LoadStrings(void)
