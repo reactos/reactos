@@ -33,6 +33,7 @@
 #include "column.h"
 #include "taskmgr.h"
 #include "perfdata.h"
+#include "netpage.h"
 #include "procpage.h"
 #include "applpage.h"
 #include "endproc.h"
