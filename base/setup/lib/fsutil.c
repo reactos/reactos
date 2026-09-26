@@ -23,8 +23,8 @@
 
 #include <fslib/vfatlib.h>
 #include <fslib/btrfslib.h>
+#include <fslib/ntfslib.h>
 // #include <fslib/ext2lib.h>
-// #include <fslib/ntfslib.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -162,9 +162,9 @@ static FILE_SYSTEM RegisteredFileSystems[] =
      * determine whether to use FAT12/16 or FAT32. */
     { L"FAT"  , VfatFormat, VfatChkdsk },
     { L"FAT32", VfatFormat, VfatChkdsk },
+    { L"NTFS" , NtfsFormat, NtfsChkdsk },
 #if 0
     { L"FATX" , VfatxFormat, VfatxChkdsk },
-    { L"NTFS" , NtfsFormat, NtfsChkdsk },
 #endif
     { L"BTRFS", BtrfsFormat, BtrfsChkdsk },
 #if 0
