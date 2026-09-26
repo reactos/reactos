@@ -4,6 +4,7 @@
  * PURPOSE:     Task window implementation
  * COPYRIGHT:   Copyright 2006-2007 Thomas Weidenmueller <w3seek@reactos.org>
  *              Copyright 2026 Vitaly Orekhov <vkvo2000@vivaldi.net>
+ *              Copyright 2026 Ethan Seren <ethan.boi.dev.615@gmail.com>
  */
 
 #include "precomp.h"
@@ -625,9 +626,13 @@ public:
             tbbi.fsState |= TBSTATE_WRAP;
         }
 
-        if (GetWndTextFromTaskItem(TaskItem, windowText, _countof(windowText)) > 0)
+        if (g_TaskbarSettings.glomLevel != 0 && GetWndTextFromTaskItem(TaskItem, windowText, _countof(windowText)) > 0)
         {
             tbbi.pszText = windowText;
+        }
+        else
+        {
+            tbbi.pszText = const_cast<LPWSTR>(L"");
         }
 
         icon = GetWndIcon(TaskItem->hWnd);
@@ -1404,7 +1409,16 @@ public:
                     uiMax = GetSystemMetrics(SM_CXMINIMIZED);
 
                     /* Calculate the ideal width and make sure it's within the allowed range */
-                    NewBtnSize = (rcClient.right - (uiBtnsPerLine * cxButtonSpacing)) / uiBtnsPerLine;
+                    if (g_TaskbarSettings.glomLevel == 0)
+                    {
+                        int widthSize = GetSystemMetrics(g_TaskbarSettings.bSmallIcons ? SM_CXSMICON : SM_CXICON);
+
+                        NewBtnSize = widthSize + (2 * GetSystemMetrics(SM_CXEDGE) + 7);
+                    }
+                    else
+                    {
+                        NewBtnSize = (rcClient.right - (uiBtnsPerLine * cxButtonSpacing)) / uiBtnsPerLine;
+                    }
 
                     if (NewBtnSize < (LONG) uiMin)
                         NewBtnSize = uiMin;
@@ -1418,6 +1432,7 @@ public:
                 }
                 else
                 {
+                    // TODO - putting the taskbar vertically pushes the icons to the side when glomLevel is 0, please fix later
                     NewBtnSize = uiMax = rcClient.right;
                 }
 
@@ -2112,6 +2127,12 @@ public:
         {
             bSettingsChanged = TRUE;
             g_TaskbarSettings.bSmallIcons = newSettings->bSmallIcons;
+        }
+
+        if (newSettings->glomLevel != g_TaskbarSettings.glomLevel)
+        {
+            bSettingsChanged = TRUE;
+            g_TaskbarSettings.glomLevel = newSettings->glomLevel;
         }
 
         if (bSettingsChanged)

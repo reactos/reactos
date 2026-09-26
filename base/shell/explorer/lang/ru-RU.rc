@@ -75,7 +75,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Панель задач"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
-    GROUPBOX "Свойства панели задач", IDC_STATIC, 6, 6, 240, 120
+    GROUPBOX "Свойства панели задач", IDC_STATIC, 6, 6, 240, 133
     CONTROL "", IDC_TASKBARPROP_TASKBARBITMAP, "Static", SS_BITMAP | SS_SUNKEN | SS_CENTERIMAGE, 12, 18, 229, 24
     AUTOCHECKBOX "&Закрепить панель задач", IDC_TASKBARPROP_LOCK, 13, 45, 200, 10
     AUTOCHECKBOX "&Автоматически скрывать панель задач", IDC_TASKBARPROP_HIDE, 13, 58, 200, 10
@@ -83,6 +83,7 @@ BEGIN
     AUTOCHECKBOX "&Группировать схожие кнопки панели задач", IDC_TASKBARPROP_GROUP, 13, 84, 200, 10
     AUTOCHECKBOX "Отображать панель &быстрого запуска", IDC_TASKBARPROP_SHOWQL, 13, 97, 200, 10
     AUTOCHECKBOX "&Использовать маленькие значки", IDC_TASKBARPROP_SMALLICONS, 13, 110, 200, 10
+    AUTOCHECKBOX "&Icon only", IDC_TASKBARPROP_NOTEXT, 13, 123, 200, 10
 END
 
 IDD_TASKBARPROP_STARTMENU DIALOGEX 0, 0, 252, 218

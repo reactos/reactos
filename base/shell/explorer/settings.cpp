@@ -33,6 +33,7 @@ BOOL TaskbarSettings::Save()
     sr.cbSize = sizeof(sr);
     SHSetValueW(hkExplorer, L"Advanced", L"TaskbarSmallIcons", REG_DWORD, &bSmallIcons, sizeof(bSmallIcons));
     SHSetValueW(hkExplorer, L"Advanced", L"TaskbarSd", REG_DWORD, &bShowDesktopButton, sizeof(bShowDesktopButton));
+    SHSetValueW(hkExplorer, L"Advanced", L"TaskbarGlomLevel", REG_DWORD, &glomLevel, sizeof(glomLevel));
     SHSetValueW(hkExplorer, L"StuckRects2", L"Settings", REG_BINARY, &sr, sizeof(sr));
 
     /* TODO: AutoHide writes something to HKEY_CURRENT_USER\Software\Microsoft\Internet Explorer\Desktop\Components\0 figure out what and why */
@@ -71,6 +72,9 @@ BOOL TaskbarSettings::Load()
     dwRet = SHGetValueW(hkExplorer, L"Advanced", L"TaskbarSd", NULL, &dwValue, &cbSize);
     bShowDesktopButton = (dwRet == ERROR_SUCCESS) ? (dwValue != 0) : TRUE;
 
+    dwRet = SHGetValueW(hkExplorer, L"Advanced", L"TaskbarGlomLevel", NULL, &dwValue, &cbSize);
+    glomLevel = (dwRet == ERROR_SUCCESS) ? dwValue : 2;
+
     cbSize = sizeof(sr);
     dwRet = SHGetValueW(hkExplorer, L"StuckRects2", L"Settings", NULL, &sr, &cbSize);
 
@@ -82,6 +86,7 @@ BOOL TaskbarSettings::Load()
         sr.AlwaysOnTop = TRUE;
         sr.SmSmallIcons = FALSE;
         sr.HideClock = FALSE;
+        sr.glglomLevel = 2;
         sr.Rect.left = sr.Rect.top = 0;
         sr.Rect.bottom = sr.Rect.right = 1;
         sr.Size.cx = sr.Size.cy = 0;
