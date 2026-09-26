@@ -10,7 +10,7 @@
 #include <shlwapi.h>
 #include <iphlpapi.h>
 
-/* Utilization is stored in 1/1000 of a percent, so 100% == 100000 */
+/* Usage is stored in 1/1000 of a percent, so 100% == 100000 */
 #define NET_UTIL_UNIT       1000
 #define NET_UTIL_MAX        (100 * NET_UTIL_UNIT)
 
