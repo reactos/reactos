@@ -95,7 +95,7 @@ StandardProfiles[] =
         L".Default\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\User Shell Folders"
     },
     {
-        L"Public", L"PublicProfile",
+        L"Public", L"Public",
         L"PUBLIC", L"%PUBLIC%",
         CommonShellFolders,
         HKEY_LOCAL_MACHINE,
@@ -201,22 +201,6 @@ CreateStandardProfile(
                 return FALSE;
             }
         }
-    }
-
-    /* Set 'DefaultUserProfile' / 'AllUsersProfile' value */
-    /* Store the default user / all users profile path in the registry */
-    dwLength = (wcslen(szBuffer) + 1) * sizeof(WCHAR);
-    Error = RegSetValueExW(hProfileListKey,
-                           pProfileParams->pszProfileRegValue,
-                           0,
-                           REG_SZ,
-                           (LPBYTE)szBuffer,
-                           dwLength);
-    if (Error != ERROR_SUCCESS)
-    {
-        DPRINT1("Error: %lu\n", Error);
-        SetLastError((DWORD)Error);
-        return FALSE;
     }
 
     /* Set 'Default User' / 'All Users' profile */

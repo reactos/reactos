@@ -951,6 +951,15 @@ CreateUserProfileExW(
         return FALSE;
     }
 
+    if (!ExpandEnvironmentStringsW(szBuffer,
+                                   szDefaultUserPath,
+                                   ARRAYSIZE(szDefaultUserPath)))
+    {
+        DPRINT1("Error: %lu\n", GetLastError());
+        RegCloseKey(hKey);
+        return FALSE;
+    }
+
     RegCloseKey(hKey);
 
     StringCbCopyW(szUserProfileName, sizeof(szUserProfileName), lpUserName);
@@ -991,10 +1000,6 @@ CreateUserProfileExW(
     }
 
     /* Copy default user directory */
-
-    StringCbCopyW(szDefaultUserPath, sizeof(szDefaultUserPath), szProfilesPath);
-    StringCbCatW(szDefaultUserPath, sizeof(szDefaultUserPath), L"\\");
-    StringCbCatW(szDefaultUserPath, sizeof(szDefaultUserPath), szBuffer);
 
     // FIXME: Security!
     if (!CopyDirectory(szUserProfilePath, szDefaultUserPath))
@@ -1335,18 +1340,18 @@ GetAllUsersProfileDirectoryW(
         return FALSE;
     }
 
-    /* Get profiles path */
+    /* Get Public profile path */
     dwLength = sizeof(szBuffer);
     Error = RegQueryValueExW(hKey,
-                             L"ProfilesDirectory",
+                             L"ProgramData",
                              NULL,
                              &dwType,
                              (LPBYTE)szBuffer,
                              &dwLength);
+    RegCloseKey(hKey);
     if ((Error != ERROR_SUCCESS) || (dwType != REG_SZ && dwType != REG_EXPAND_SZ))
     {
         DPRINT1("Error: %lu\n", Error);
-        RegCloseKey(hKey);
         SetLastError((DWORD)Error);
         return FALSE;
     }
@@ -1357,30 +1362,8 @@ GetAllUsersProfileDirectoryW(
                                    ARRAYSIZE(szProfilePath)))
     {
         DPRINT1("Error: %lu\n", GetLastError());
-        RegCloseKey(hKey);
         return FALSE;
     }
-
-    /* Get 'AllUsersProfile' name */
-    dwLength = sizeof(szBuffer);
-    Error = RegQueryValueExW(hKey,
-                             L"AllUsersProfile",
-                             NULL,
-                             &dwType,
-                             (LPBYTE)szBuffer,
-                             &dwLength);
-    if ((Error != ERROR_SUCCESS) || (dwType != REG_SZ && dwType != REG_EXPAND_SZ))
-    {
-        DPRINT1("Error: %lu\n", Error);
-        RegCloseKey(hKey);
-        SetLastError((DWORD)Error);
-        return FALSE;
-    }
-
-    RegCloseKey(hKey);
-
-    StringCbCatW(szProfilePath, sizeof(szProfilePath), L"\\");
-    StringCbCatW(szProfilePath, sizeof(szProfilePath), szBuffer);
 
     dwLength = wcslen(szProfilePath) + 1;
     if (lpProfileDir && (*lpcchSize >= dwLength))
@@ -1471,15 +1454,15 @@ GetDefaultUserProfileDirectoryW(
     /* Get profiles path */
     dwLength = sizeof(szBuffer);
     Error = RegQueryValueExW(hKey,
-                             L"ProfilesDirectory",
+                             L"Default",
                              NULL,
                              &dwType,
                              (LPBYTE)szBuffer,
                              &dwLength);
+    RegCloseKey(hKey);
     if ((Error != ERROR_SUCCESS) || (dwType != REG_SZ && dwType != REG_EXPAND_SZ))
     {
         DPRINT1("Error: %lu\n", Error);
-        RegCloseKey(hKey);
         SetLastError((DWORD)Error);
         return FALSE;
     }
@@ -1490,30 +1473,8 @@ GetDefaultUserProfileDirectoryW(
                                    ARRAYSIZE(szProfilePath)))
     {
         DPRINT1("Error: %lu\n", GetLastError());
-        RegCloseKey(hKey);
         return FALSE;
     }
-
-    /* Get 'Default' name */
-    dwLength = sizeof(szBuffer);
-    Error = RegQueryValueExW(hKey,
-                             L"Default",
-                             NULL,
-                             &dwType,
-                             (LPBYTE)szBuffer,
-                             &dwLength);
-    if ((Error != ERROR_SUCCESS) || (dwType != REG_SZ && dwType != REG_EXPAND_SZ))
-    {
-        DPRINT1("Error: %lu\n", Error);
-        RegCloseKey(hKey);
-        SetLastError((DWORD)Error);
-        return FALSE;
-    }
-
-    RegCloseKey(hKey);
-
-    StringCbCatW(szProfilePath, sizeof(szProfilePath), L"\\");
-    StringCbCatW(szProfilePath, sizeof(szProfilePath), szBuffer);
 
     dwLength = wcslen(szProfilePath) + 1;
     if (lpProfileDir && (*lpcchSize >= dwLength))
