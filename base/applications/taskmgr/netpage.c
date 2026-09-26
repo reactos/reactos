@@ -292,7 +292,7 @@ NetPage_AddAdapter(DWORD IfIndex)
         NetAdapterCapacity = NewCapacity;
     }
 
-    Adapter = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(NET_ADAPTER));
+    Adapter = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*Adapter));
     if (!Adapter)
         return NULL;
 
