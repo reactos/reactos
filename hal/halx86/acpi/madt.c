@@ -94,6 +94,9 @@ VOID
 HalpMadtAddIoApic(
     _In_ ACPI_MADT_IO_APIC *IoApic)
 {
+    C_ASSERT(RTL_FIELD_SIZE(ACPI_MADT_IO_APIC, Id) == 1 &&
+             RTL_NUMBER_OF_FIELD(HALP_APIC_INFO_TABLE, IoApicPA) >= 256);
+
     /* Keep the first unit when an ID is duplicated, because apparently this happens on Dell PowerEdge's sometimes. */
     if ((IoApic->Address == 0) || (HalpApicInfoTable.IoApicPA[IoApic->Id] != 0))
     {
@@ -101,7 +104,6 @@ HalpMadtAddIoApic(
         return;
     }
 
-    C_ASSERT(sizeof(IoApic->Id) == 1 && ARRAYSIZE(HalpApicInfoTable.IoApicPA) >= 256);
     HalpApicInfoTable.IoApicPA[IoApic->Id] = IoApic->Address;
     HalpApicInfoTable.IoApicIrqBase[IoApic->Id] = IoApic->GlobalIrqBase;
     HalpApicInfoTable.IOAPICCount++;
