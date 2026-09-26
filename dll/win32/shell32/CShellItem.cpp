@@ -560,11 +560,6 @@ SHCreateItemInKnownFolder(
     _In_ REFIID riid,
     _Out_ void **ppv)
 {
-    TRACE("(%s,%lx,%s,%s,%p)\n", debugstr_guid(&kfid), dwFlags, debugstr_w(pszFileName),
-          debugstr_guid(&riid), ppv);
-    return E_NOTIMPL;
-    //TODO: Import SHGetKnownFolderIDList from wine
-#if 0
     CComPtr<IShellItem> parent;
     CComHeapPtr<ITEMIDLIST> pidl;
     HRESULT hr;
@@ -590,7 +585,6 @@ SHCreateItemInKnownFolder(
         hr = parent->QueryInterface(riid, ppv);
 
     return hr;
-#endif
 }
 
 /***********************************************************************

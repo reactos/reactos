@@ -439,7 +439,7 @@ BOOL HCR_GetClassNameW(REFIID riid, LPWSTR szDest, DWORD len)
         if (StringFromCLSID(riid, &pStr) == S_OK)
         {
             DWORD dwLen = buflen * sizeof(WCHAR);
-            swprintf(szName, L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\CLSID\\%s", pStr);
+            _swprintf(szName, L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\CLSID\\%s", pStr);
             if (!RegGetValueW(HKEY_CURRENT_USER, szName, NULL, RRF_RT_REG_SZ, NULL, (PVOID)szDest, &dwLen))
             {
                 ret = TRUE;
