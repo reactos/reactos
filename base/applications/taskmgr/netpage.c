@@ -716,9 +716,7 @@ NetPage_SetupColumns(void)
     }
 }
 
-/* ------------------------------------------------------------------------ */
-/* History graph                                                             */
-/* ------------------------------------------------------------------------ */
+/* HISTORY GRAPH ************************************************************/
 
 static ULONG
 NetPage_GetSample(PNET_ADAPTER Adapter, UINT Index, NET_SERIES Series)
