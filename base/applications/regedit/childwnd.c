@@ -99,9 +99,8 @@ extern void ResizeWnd(int cx, int cy)
     HDWP hdwp = BeginDeferWindowPos(4);
     RECT rt, rs, rb, re;
     TBBUTTONINFO tbInfo;
-    const int nButtonHeight = 26;
-    const int nAddressEditHeight = 22;
-    const int nAddressEditPadding = 2;
+    const int nButtonHeight = 30;
+    const int nEditPadding = 3;
     int cyEdge = GetSystemMetrics(SM_CYEDGE);
     const UINT uFlags = SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOCOPYBITS;
 
@@ -112,8 +111,6 @@ extern void ResizeWnd(int cx, int cy)
         cy = rs.bottom - rs.top;
     }
 
-    SendMessageW(g_pChildWnd->hAddressToolBarWnd, TB_GETITEMRECT, 1, (LPARAM)&rb);
-
     GetClientRect(g_pChildWnd->hWnd, &rt);
     RedrawWindow(g_pChildWnd->hWnd, &rt, NULL, RDW_INVALIDATE | RDW_NOCHILDREN);
 
@@ -123,19 +120,8 @@ extern void ResizeWnd(int cx, int cy)
     if (hdwp)
         hdwp = DeferWindowPos(hdwp, g_pChildWnd->hAddressToolBarWnd, NULL,
                               rt.left, rt.top,
-                              rt.right - rt.left, nButtonHeight,
-                              uFlags);
-    tbInfo.cbSize = sizeof(tbInfo);
-    tbInfo.dwMask = TBIF_BYINDEX | TBIF_SIZE;
-    tbInfo.cx = rt.right - rt.left - (rb.right - rb.left);
-    SendMessageW(g_pChildWnd->hAddressToolBarWnd, TB_SETBUTTONINFO, 0, (LPARAM)&tbInfo);
-    SendMessageW(g_pChildWnd->hAddressToolBarWnd, TB_AUTOSIZE, 0, 0);
-
-    SendMessageW(g_pChildWnd->hAddressToolBarWnd, TB_GETITEMRECT, 0, (LPARAM)&re);
-    if (hdwp)
-        hdwp = DeferWindowPos(hdwp, g_pChildWnd->hAddressBarWnd, NULL,
-                              re.left, re.top + nAddressEditPadding,
-                              re.right - re.left, nAddressEditHeight,
+                              rt.right - rt.left,
+                              nButtonHeight,
                               uFlags);
     if (hdwp)
         hdwp = DeferWindowPos(hdwp, g_pChildWnd->hTreeWnd, NULL,
@@ -153,6 +139,20 @@ extern void ResizeWnd(int cx, int cy)
                               uFlags);
     if (hdwp)
         EndDeferWindowPos(hdwp);
+
+    SendMessageW(g_pChildWnd->hAddressToolBarWnd, TB_GETITEMRECT, 1, (LPARAM)&rb);
+    tbInfo.cbSize = sizeof(tbInfo);
+    tbInfo.dwMask = TBIF_BYINDEX | TBIF_SIZE;
+    tbInfo.cx = rt.right - rt.left - (rb.right - rb.left);
+    SendMessageW(g_pChildWnd->hAddressToolBarWnd, TB_SETBUTTONINFO, 0, (LPARAM)&tbInfo);
+    SendMessageW(g_pChildWnd->hAddressToolBarWnd, TB_AUTOSIZE, 0, 0);
+    SendMessageW(g_pChildWnd->hAddressToolBarWnd, TB_GETITEMRECT, 0, (LPARAM)&re);
+    SetWindowPos(g_pChildWnd->hAddressBarWnd, NULL,
+                 re.left,
+                 re.top + nEditPadding,
+                 re.right - re.left,
+                 re.bottom - re.top - 2 * nEditPadding,
+                 uFlags);
 }
 
 /*******************************************************************************
