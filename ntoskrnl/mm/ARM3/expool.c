@@ -1576,6 +1576,62 @@ ExpReallocateBigPageTable(
     return TRUE;
 }
 
+PPOOL_TRACKER_BIG_PAGES
+NTAPI
+ExpFindBigPageEntry(IN PVOID Va,
+                    OUT PKIRQL OldIrql)
+{
+    BOOLEAN FirstTry = TRUE;
+    SIZE_T TableSize;
+    ULONG Hash;
+    ASSERT(((ULONG_PTR)Va & POOL_BIG_TABLE_ENTRY_FREE) == 0);
+
+    /*
+     * As the table is expandable, these values must only be read after acquiring
+     * the lock to avoid a teared access during an expansion
+     */
+    Hash = ExpComputePartialHashForAddress(Va);
+    KeAcquireSpinLock(&ExpLargePoolTableLock, OldIrql);
+    Hash &= PoolBigPageTableHash;
+    TableSize = PoolBigPageTableSize;
+
+    /*
+     * Loop while trying to find this big page allocation
+     */
+    while (PoolBigPageTable[Hash].Va != Va)
+    {
+        /*
+         * Increment the size until we go past the end of the table
+         */
+        if (++Hash >= TableSize)
+        {
+            /*
+             * Is this the second time we've tried?
+             */
+            if (!FirstTry)
+            {
+                /*
+                 * It's not tracked in the table so we release the lock and bail
+                 */
+                KeReleaseSpinLock(&ExpLargePoolTableLock, *OldIrql);
+                return NULL;
+            }
+
+            /*
+             * The first time this happens, reset the hash index and try again
+             */
+            Hash = 0;
+            FirstTry = FALSE;
+        }
+    }
+
+    /*
+     * Found it, return with the lock held so the caller can safely
+     * read or modify the entry
+     */
+    return &PoolBigPageTable[Hash];
+}
+
 BOOLEAN
 NTAPI
 ExpAddTagForBigPages(IN PVOID Va,
@@ -1683,61 +1739,27 @@ ExpFindAndRemoveTagBigPages(IN PVOID Va,
                             OUT PULONG_PTR BigPages,
                             IN POOL_TYPE PoolType)
 {
-    BOOLEAN FirstTry = TRUE;
-    SIZE_T TableSize;
     KIRQL OldIrql;
-    ULONG PoolTag, Hash;
+    ULONG PoolTag;
     PPOOL_TRACKER_BIG_PAGES Entry;
-    ASSERT(((ULONG_PTR)Va & POOL_BIG_TABLE_ENTRY_FREE) == 0);
     ASSERT(!(PoolType & SESSION_POOL_MASK));
 
-    //
-    // As the table is expandable, these values must only be read after acquiring
-    // the lock to avoid a teared access during an expansion
-    //
-    Hash = ExpComputePartialHashForAddress(Va);
-    KeAcquireSpinLock(&ExpLargePoolTableLock, &OldIrql);
-    Hash &= PoolBigPageTableHash;
-    TableSize = PoolBigPageTableSize;
-
-    //
-    // Loop while trying to find this big page allocation
-    //
-    while (PoolBigPageTable[Hash].Va != Va)
+    Entry = ExpFindBigPageEntry(Va, &OldIrql);
+    if (Entry == NULL)
     {
         //
-        // Increment the size until we go past the end of the table
+        // This means it was never inserted into the pool table and it
+        // received the special "BIG" tag -- return that and return 0
+        // so that the code can ask Mm for the page count instead
         //
-        if (++Hash >= TableSize)
-        {
-            //
-            // Is this the second time we've tried?
-            //
-            if (!FirstTry)
-            {
-                //
-                // This means it was never inserted into the pool table and it
-                // received the special "BIG" tag -- return that and return 0
-                // so that the code can ask Mm for the page count instead
-                //
-                KeReleaseSpinLock(&ExpLargePoolTableLock, OldIrql);
-                *BigPages = 0;
-                return ' GIB';
-            }
-
-            //
-            // The first time this happens, reset the hash index and try again
-            //
-            Hash = 0;
-            FirstTry = FALSE;
-        }
+        *BigPages = 0;
+        return ' GIB';
     }
 
     //
     // Now capture all the information we need from the entry, since after we
     // release the lock, the data can change
     //
-    Entry = &PoolBigPageTable[Hash];
     *BigPages = Entry->NumberOfPages;
     PoolTag = Entry->Key;
 
@@ -2926,18 +2948,66 @@ ExFreePool(PVOID P)
 }
 
 /*
- * @unimplemented
+ * @implemented
+ *
+ * @param[in] PoolBlock
+ * Pointer to the start of a pool allocation that is returned by
+ * ExAllocatePoolWithTag
+ *
+ * @param[out] QuotaCharged
+ * Gets TRUE if the allocation was charged against the calling
+ * process pool quota, FALSE otherwise.
+ *
+ * @return
+ * The size in bytes of the pool block. Returns 0 if the block is a
+ * big page allocation that could not be found
  */
 SIZE_T
 NTAPI
-ExQueryPoolBlockSize(IN PVOID PoolBlock,
-                     OUT PBOOLEAN QuotaCharged)
+ExQueryPoolBlockSize(_In_ PVOID PoolBlock,
+                     _Out_ PBOOLEAN QuotaCharged)
 {
-    //
-    // Not implemented
-    //
-    UNIMPLEMENTED;
-    return FALSE;
+    PPOOL_HEADER Entry;
+    PPOOL_TRACKER_BIG_PAGES BigPageEntry;
+    KIRQL OldIrql;
+
+    /*
+     * Special pool blocks don't have a normal pool header next to them
+     * and can be page-aligned or not depending on whether they are under/overrun
+     * catched, so they need to be checked before anything else
+     */
+    if ((ExpPoolFlags & POOL_FLAG_SPECIAL_POOL) && MmIsSpecialPoolAddress(PoolBlock))
+    {
+        return MmGetSpecialPoolBlockSize(PoolBlock, QuotaCharged);
+    }
+
+    /*
+     * Since big page allocations are page-aligned and have no pool header,
+     * look them up in the big page tracking table instead
+     */
+    if (PAGE_ALIGN(PoolBlock) == PoolBlock)
+    {
+        BigPageEntry = ExpFindBigPageEntry(PoolBlock, &OldIrql);
+        if (BigPageEntry != NULL)
+        {
+            SIZE_T NumberOfPages = BigPageEntry->NumberOfPages;
+            KeReleaseSpinLock(&ExpLargePoolTableLock, OldIrql);
+
+            /* Big page allocations are never quota charged */
+            *QuotaCharged = FALSE;
+            return NumberOfPages * PAGE_SIZE;
+        }
+
+        /* It isn't tracked so we can't find out its size */
+        *QuotaCharged = FALSE;
+        return 0;
+    }
+
+    /* Regular pool block. The size lives in the header right before it */
+    Entry = PoolBlock;
+    Entry--;
+    *QuotaCharged = ((Entry->PoolType - 1) & QUOTA_POOL_MASK) ? TRUE : FALSE;
+    return Entry->BlockSize * POOL_BLOCK_SIZE;
 }
 
 /*
