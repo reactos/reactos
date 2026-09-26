@@ -377,7 +377,10 @@
 377 stdcall GetEnhMetaFileW(wstr)
 378 stdcall GetFontAssocStatus(ptr)
 379 stdcall GetFontData(long long long ptr long)
+@ stdcall GetFontFileData(long long int64 ptr long)
+@ stdcall GetFontFileInfo(long long ptr long ptr)
 380 stdcall GetFontLanguageInfo(long)
+@ stdcall GetFontRealizationInfo(ptr ptr)
 381 stdcall GetFontResourceInfoW(str ptr ptr long)
 382 stdcall GetFontUnicodeRanges(ptr ptr) NtGdiGetFontUnicodeRanges
 383 stdcall GetGlyphIndicesA(long ptr long ptr long)

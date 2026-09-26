@@ -1218,6 +1218,42 @@ NtGdiGetRealizationInfo(
   return Ret;
 }
 
+DWORD
+APIENTRY
+NtGdiGetFontFileData(
+    _In_ UINT uFileCollectionID,
+    _In_ UINT uFileIndex,
+    _In_ PULONGLONG pullFileOffset,
+    _Out_writes_bytes_(cjBuf) PVOID pvBuf,
+    _In_ SIZE_T cjBuf)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
+DWORD
+APIENTRY
+NtGdiGetFontFileInfo(
+    _In_ UINT uFileCollectionID,
+    _In_ UINT uFileIndex,
+    _Out_writes_bytes_(cjSize) PFONT_FILE_INFO pffi,
+    _In_ SIZE_T cjSize,
+    _Out_opt_ PSIZE_T pcjActualSize)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
+BOOL
+APIENTRY
+NtGdiGetFontRealizationInfo(
+    _In_ HDC hdc,
+    _Out_ FONT_REALIZATION_INFO* info)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
 HFONT
 APIENTRY
 HfontCreate(

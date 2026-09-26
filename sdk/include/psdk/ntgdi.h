@@ -100,6 +100,26 @@ typedef struct _HLSURF_INFORMATION_PROBE {
 } HLSURF_INFORMATION_PROBE, *PHLSURF_INFORMATION_PROBE;
 #endif // 0
 
+/* NtGdiGetFontRealizationInfo */
+typedef struct _FONT_REALIZATION_INFO
+{
+    DWORD size;          /* could be 16 or 24 */
+    DWORD flags;         /* 1 for bitmap fonts, 3 for scalable fonts */
+    DWORD cache_num;     /* keeps incrementing */
+    DWORD instance_id;   /* identifies a realized font instance */
+    DWORD file_count;    /* number of files that make up this font */
+    WORD  face_index;    /* face index in case of font collections */
+    WORD  simulations;   /* 0 bit - bold simulation, 1 bit - oblique simulation */
+} FONT_REALIZATION_INFO, *PFONT_REALIZATION_INFO;
+
+/* NtGdiGetFontFileInfo */
+typedef struct _FONT_FILE_INFO
+{
+    FILETIME writetime;
+    LARGE_INTEGER size;
+    WCHAR path[1];
+} FONT_FILE_INFO, *PFONT_FILE_INFO;
+
 __kernel_entry
 W32KAPI
 BOOL
@@ -2045,7 +2065,7 @@ NtGdiGetFontFileData(
     _Out_writes_bytes_(cjBuf) PVOID pvBuf,
     _In_ SIZE_T cjBuf);
 
-#if (_WIN32_WINNT >= _WIN32_WINNT_WIN7)
+#if (_WIN32_WINNT >= _WIN32_WINNT_WIN7) || defined(__REACTOS__)
 __kernel_entry
 W32KAPI
 DWORD
@@ -2056,6 +2076,14 @@ NtGdiGetFontFileInfo(
     _Out_writes_bytes_(cjSize) PFONT_FILE_INFO pffi,
     _In_ SIZE_T cjSize,
     _Out_opt_ PSIZE_T pcjActualSize);
+
+__kernel_entry
+W32KAPI
+BOOL
+APIENTRY
+NtGdiGetFontRealizationInfo(
+    _In_ HDC hdc,
+    _Out_ PFONT_REALIZATION_INFO info);
 #endif /* (_WIN32_WINNT >= _WIN32_WINNT_WIN7) */
 
 __kernel_entry

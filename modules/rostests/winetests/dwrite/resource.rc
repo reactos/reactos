@@ -1,9 +1,7 @@
 /*
- * DirectX 10 GUID definitions
+ * Resources for dwrite test suite.
  *
- * Copyright 2000 Alexandre Julliard
- * Copyright 2000 Francois Gouget
- * Copyright 2003 Raphael Junqueira
+ * Copyright 2010 Dmitry Timoshkov
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -20,24 +18,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <stdarg.h>
-
 #include "windef.h"
-#include "winbase.h"
-#include "wingdi.h"
-#include "winuser.h"
 
-#include "objbase.h"
-#include "olectl.h"
-#include "initguid.h"
-
-#include "dxgi1_6.h"
-#include "d3d10_1.h"
-#include "d3d11_4.h"
-#include "d3d12.h"
-#include "d3dx10.h"
-#include "d3d10_1shader.h"
-#include "d3d11shader.h"
-
-#include "d2d1_3.h"
-#include "d2d1effectauthor.h"
+/* @makedep: wine_test.ttf */
+1 RCDATA "wine_test.ttf"
