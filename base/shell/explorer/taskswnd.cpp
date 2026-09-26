@@ -11,6 +11,7 @@
 #include <commoncontrols.h>
 #include <regstr.h>
 #include <shlwapi_undoc.h>
+#include <psapi.h>
 
 /* Set DUMP_TASKS to 1 to enable a dump of the tasks and task groups every
    5 seconds */
@@ -99,6 +100,23 @@ SHELL_IsRudeWindow(_In_opt_ HMONITOR hMonitor, _In_ HWND hWnd, _In_ BOOL bDontCh
     ::UnionRect(&rcUnion, &rcWnd, &rcMonitor);
 
     return ::EqualRect(&rcUnion, &rcWnd) && (bDontCheckActive || SHELL_IsRudeWindowActive(hWnd));
+}
+
+static BOOL
+SHELL_GetImageFileNameByWindow(_In_ HWND hWnd, _Out_cap_(cchPath) LPWSTR pszPath, _In_ DWORD cchPath)
+{
+    DWORD dwProcessId = 0;
+    HANDLE hProcess = NULL;
+    BOOL bSuccess = TRUE;
+    if (GetWindowThreadProcessId(hWnd, &dwProcessId) == 0)
+        return FALSE;
+    // TODO: Switch to PROCESS_QUERY_LIMITED_INFORMATION once NT6 kernel32 support is implemented.
+    hProcess = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, dwProcessId);
+    if (hProcess == NULL)
+        return FALSE;
+    bSuccess = GetModuleFileNameExW(hProcess, NULL, pszPath, cchPath) != 0;
+    CloseHandle(hProcess);
+    return bSuccess;
 }
 
 ////////////////////////////////////////////////////////////////
@@ -2096,6 +2114,72 @@ public:
         return TRUE;
     }
 
+    LRESULT OnActivateTaskIndex(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+    {
+        DWORD dwAccelerators = HIWORD(wParam);
+        WCHAR szExecutablePath[MAX_PATH];
+
+        PTASK_ITEM pTaskItem = FindTaskItemByIndex(LOWORD(wParam));
+        if (pTaskItem && ::IsWindow(pTaskItem->hWnd))
+        {
+            // Win+Shift: New instance
+            if ((dwAccelerators & MOD_SHIFT) == MOD_SHIFT)
+            {
+                if (!SHELL_GetImageFileNameByWindow(pTaskItem->hWnd,
+                                                    szExecutablePath,
+                                                    _countof(szExecutablePath)))
+                {
+                    return FALSE;
+                }
+                // Win+Shift+Ctrl is used for creating a new instance of a task as Administrator
+                LPCWSTR szVerb = L"open";
+                if ((dwAccelerators & MOD_CONTROL) == MOD_CONTROL)
+                    szVerb = L"runas";
+                ShellExecuteW(NULL, szVerb, szExecutablePath, NULL, NULL, SW_SHOWNORMAL);
+                return TRUE;
+            }
+            // Win+Alt: Jump list
+            else if ((dwAccelerators & MOD_ALT) == MOD_ALT)
+            {
+                // TODO: Use JumpList once implemented
+
+                // Find TaskItem's position on the screen
+                RECT rcItem, rcToolbar;
+                m_TaskBar.GetItemRect(pTaskItem->Index, &rcItem);
+                m_TaskBar.GetWindowRect(&rcToolbar);
+                OffsetRect(&rcItem, rcToolbar.left, rcToolbar.top);
+
+                ::SendMessageCallbackW(pTaskItem->hWnd, WM_POPUPSYSTEMMENU, 0, MAKELPARAM(rcItem.left, rcItem.top),
+                               SendAsyncProc, (ULONG_PTR)pTaskItem);
+            }
+            // Win+Ctrl: Switch to last window of a task
+            else if ((dwAccelerators & MOD_CONTROL) == MOD_CONTROL)
+            {
+                // TODO: Implement once Superbar is implemented.
+                return FALSE;
+            }
+            // No modifier: just switch to the task
+            else
+            {
+                // TODO: This should launch a pinned task once Superbar is implemented
+
+                BOOL bIsMinimized = ::IsIconic(pTaskItem->hWnd);
+                BOOL bIsActive = (pTaskItem == m_ActiveTaskItem);
+
+                if (!bIsMinimized && bIsActive)
+                {
+                    if (!::IsHungAppWindow(pTaskItem->hWnd))
+                        ::ShowWindowAsync(pTaskItem->hWnd, SW_MINIMIZE);
+                }
+                else
+                {
+                    ::SwitchToThisWindow(pTaskItem->hWnd, TRUE);
+                }
+            }
+        }
+        return TRUE;
+    }
+
     LRESULT OnTaskbarSettingsChanged(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
         BOOL bSettingsChanged = FALSE;
@@ -2277,6 +2361,7 @@ public:
         MESSAGE_HANDLER(WM_COMMAND, OnCommand)
         MESSAGE_HANDLER(WM_NOTIFY, OnNotify)
         MESSAGE_HANDLER(TSWM_UPDATETASKBARPOS, OnUpdateTaskbarPos)
+        MESSAGE_HANDLER(TSWM_ACTIVATETASKINDEX, OnActivateTaskIndex)
         MESSAGE_HANDLER(TWM_SETTINGSCHANGED, OnTaskbarSettingsChanged)
         MESSAGE_HANDLER(WM_CONTEXTMENU, OnContextMenu)
         MESSAGE_HANDLER(WM_TIMER, OnTimer)
