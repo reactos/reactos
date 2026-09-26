@@ -234,7 +234,7 @@ AtaPdoQueryStorageDeviceTrimProperty(
     TrimDescriptor = Irp->AssociatedIrp.SystemBuffer;
     TrimDescriptor->Version = sizeof(*TrimDescriptor);
     TrimDescriptor->Size = sizeof(*TrimDescriptor);
-    TrimDescriptor->TrimEnabled = AtaDevHasTrimFunction(&DevExt->IdentifyDeviceData);
+    TrimDescriptor->TrimEnabled = AtaDevCanUseDsmTrim(DevExt);
 
     Irp->IoStatus.Information = sizeof(*TrimDescriptor);
     return STATUS_SUCCESS;
@@ -404,8 +404,8 @@ AtaPdoHandleStorageManageDataSetAttributes(
 {
     PAGED_CODE();
 
-    // TODO: Implement
-    return Irp->IoStatus.Status;
+    /* Let classpnp fall back to translating DSM trim requests to SCSI UNMAP. */
+    return STATUS_NOT_SUPPORTED;
 }
 
 static

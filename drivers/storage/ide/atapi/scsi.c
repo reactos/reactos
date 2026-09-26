@@ -167,7 +167,8 @@ AtaReqRequeueRequest(
 
     ASSERT(!(Request->Flags & (REQUEST_FLAG_HAS_SG_LIST |
                                REQUEST_FLAG_HAS_MDL |
-                               REQUEST_FLAG_HAS_RESERVED_MAPPING)));
+                               REQUEST_FLAG_HAS_RESERVED_MAPPING |
+                               REQUEST_FLAG_OWNS_DATA_BUFFER)));
 
     /* Place the Srb back into the queue */
     if (AtaReqDeviceQueueAddSrb(Device, Request->Srb) != STATUS_PENDING)
@@ -243,6 +244,13 @@ AtaReqReleaseResources(
         IoFreeMdl(Request->Mdl);
     }
 
+    if (Request->Flags & REQUEST_FLAG_OWNS_DATA_BUFFER)
+    {
+        ASSERT(Request->DataBuffer);
+        ExFreePoolWithTag(Request->DataBuffer, ATAPORT_TAG);
+        Request->DataBuffer = NULL;
+    }
+
 #if DBG
     Request->Mdl = NULL;
     Request->SgList = NULL;
@@ -250,7 +258,8 @@ AtaReqReleaseResources(
 
     Request->Flags &= ~(REQUEST_FLAG_HAS_SG_LIST |
                         REQUEST_FLAG_HAS_MDL |
-                        REQUEST_FLAG_HAS_RESERVED_MAPPING);
+                        REQUEST_FLAG_HAS_RESERVED_MAPPING |
+                        REQUEST_FLAG_OWNS_DATA_BUFFER);
 }
 
 static
@@ -373,7 +382,8 @@ AtaReqCompleteRequest(
 
     ASSERT(!(Request->Flags & (REQUEST_FLAG_HAS_SG_LIST |
                                REQUEST_FLAG_HAS_MDL |
-                               REQUEST_FLAG_HAS_RESERVED_MAPPING)));
+                               REQUEST_FLAG_HAS_RESERVED_MAPPING |
+                               REQUEST_FLAG_OWNS_DATA_BUFFER)));
 
     SrbStatus = Request->SrbStatus;
 
