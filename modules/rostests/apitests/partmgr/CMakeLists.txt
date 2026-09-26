@@ -1,5 +1,6 @@
 
 list(APPEND SOURCE
+    DiskGeometry.c
     StorDeviceNumber.c)
 
 list(APPEND PCH_SKIP_SOURCE
