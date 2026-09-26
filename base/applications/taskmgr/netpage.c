@@ -283,7 +283,7 @@ NetPage_AddAdapter(DWORD IfIndex)
         if (NetAdapters)
             NewArray = HeapReAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, NetAdapters, NewCapacity * sizeof(*NewArray));
         else
-            NewArray = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, NewCapacity * sizeof(PNET_ADAPTER));
+            NewArray = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, NewCapacity * sizeof(*NewArray));
 
         if (!NewArray)
             return NULL;
