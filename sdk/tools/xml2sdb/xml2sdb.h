@@ -18,6 +18,10 @@
 #include "sdbwrite.h"
 #include <sdbtagid.h>
 
+#if _LIBCPP_VERSION >= 170000
+#include "char_traits.h"
+#endif
+
 namespace tinyxml2
 {
 class XMLHandle;
