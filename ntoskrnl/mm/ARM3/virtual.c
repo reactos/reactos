@@ -5571,98 +5571,98 @@ NtFreeVirtualMemory(IN HANDLE ProcessHandle,
         //
         MiDeleteVirtualAddresses(StartingAddress, EndingAddress, NULL);
         MiUnlockProcessWorkingSetUnsafe(Process, CurrentThread);
-        Status = STATUS_SUCCESS;
-
-FinalPath:
-        //
-        // Update the process counters
-        //
-        PRegionSize = EndingAddress - StartingAddress + 1;
-        Process->CommitCharge -= CommitReduction;
-        if (FreeType & MEM_RELEASE) Process->VirtualSize -= PRegionSize;
-
-        //
-        // Unlock the address space and free the VAD in failure cases. Next,
-        // detach from the target process so we can write the region size and the
-        // base address to the correct source process, and dereference the target
-        // process.
-        //
-        MmUnlockAddressSpace(AddressSpace);
-        if (Vad) ExFreePool(Vad);
-        if (Attached) KeUnstackDetachProcess(&ApcState);
-        if (ProcessHandle != NtCurrentProcess()) ObDereferenceObject(Process);
-
-        //
-        // Use SEH to safely return the region size and the base address of the
-        // deallocation. If we get an access violation, don't return a failure code
-        // as the deallocation *has* happened. The caller will just have to figure
-        // out another way to find out where it is (such as VirtualQuery).
-        //
-        _SEH2_TRY
-        {
-            *URegionSize = PRegionSize;
-            *UBaseAddress = (PVOID)StartingAddress;
-        }
-        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-        {
-        }
-        _SEH2_END;
-        return Status;
     }
-
-    //
-    // This is the decommit path. You cannot decommit from the following VADs in
-    // Windows, so fail the vall
-    //
-    if ((Vad->u.VadFlags.VadType == VadAwe) ||
-        (Vad->u.VadFlags.VadType == VadLargePages) ||
-        (Vad->u.VadFlags.VadType == VadRotatePhysical))
+    else
     {
-        DPRINT1("Trying to decommit from invalid VAD\n");
-        Status = STATUS_MEMORY_NOT_ALLOCATED;
-        goto FailPath;
-    }
-
-    //
-    // If the caller did not specify a region size, first make sure that this
-    // region is actually committed. If it is, then compute the ending address
-    // based on the VAD.
-    //
-    if (!PRegionSize)
-    {
-        if (((ULONG_PTR)PBaseAddress >> PAGE_SHIFT) != Vad->StartingVpn)
+        //
+        // This is the decommit path. You cannot decommit from the following VADs in
+        // Windows, so fail the vall
+        //
+        if ((Vad->u.VadFlags.VadType == VadAwe) ||
+            (Vad->u.VadFlags.VadType == VadLargePages) ||
+            (Vad->u.VadFlags.VadType == VadRotatePhysical))
         {
-            DPRINT1("Decomitting non-committed memory\n");
-            Status = STATUS_FREE_VM_NOT_AT_BASE;
+            DPRINT1("Trying to decommit from invalid VAD\n");
+            Status = STATUS_MEMORY_NOT_ALLOCATED;
             goto FailPath;
         }
-        EndingAddress = (Vad->EndingVpn << PAGE_SHIFT) | (PAGE_SIZE - 1);
+
+        //
+        // If the caller did not specify a region size, first make sure that this
+        // region is actually committed. If it is, then compute the ending address
+        // based on the VAD.
+        //
+        if (!PRegionSize)
+        {
+            if (((ULONG_PTR)PBaseAddress >> PAGE_SHIFT) != Vad->StartingVpn)
+            {
+                DPRINT1("Decomitting non-committed memory\n");
+                Status = STATUS_FREE_VM_NOT_AT_BASE;
+                goto FailPath;
+            }
+            EndingAddress = (Vad->EndingVpn << PAGE_SHIFT) | (PAGE_SIZE - 1);
+        }
+
+        //
+        // Decommit the PTEs for the range plus the actual backing pages for the
+        // range, then reduce that amount from the commit charge in the VAD
+        //
+        AlreadyDecommitted = MiDecommitPages((PVOID)StartingAddress,
+                                             MiAddressToPte(EndingAddress),
+                                             Process,
+                                             Vad);
+        CommitReduction = MiAddressToPte(EndingAddress) -
+                          MiAddressToPte(StartingAddress) +
+                          1 -
+                          AlreadyDecommitted;
+
+        ASSERT(CommitReduction >= 0);
+        ASSERT(Vad->u.VadFlags.CommitCharge >= CommitReduction);
+        Vad->u.VadFlags.CommitCharge -= CommitReduction;
+
+        //
+        // We are done, go to the exit path without freeing the VAD as it remains
+        // valid since we have not released the allocation.
+        //
+        Vad = NULL;
     }
 
-    //
-    // Decommit the PTEs for the range plus the actual backing pages for the
-    // range, then reduce that amount from the commit charge in the VAD
-    //
-    AlreadyDecommitted = MiDecommitPages((PVOID)StartingAddress,
-                                         MiAddressToPte(EndingAddress),
-                                         Process,
-                                         Vad);
-    CommitReduction = MiAddressToPte(EndingAddress) -
-                      MiAddressToPte(StartingAddress) +
-                      1 -
-                      AlreadyDecommitted;
-
-    ASSERT(CommitReduction >= 0);
-    ASSERT(Vad->u.VadFlags.CommitCharge >= CommitReduction);
-    Vad->u.VadFlags.CommitCharge -= CommitReduction;
-
-    //
-    // We are done, go to the exit path without freeing the VAD as it remains
-    // valid since we have not released the allocation.
-    //
-    Vad = NULL;
     Status = STATUS_SUCCESS;
-    goto FinalPath;
+
+    //
+    // Update the process counters
+    //
+    PRegionSize = EndingAddress - StartingAddress + 1;
+    Process->CommitCharge -= CommitReduction;
+    if (FreeType & MEM_RELEASE) Process->VirtualSize -= PRegionSize;
+
+    //
+    // Unlock the address space and free the VAD in failure cases. Next,
+    // detach from the target process so we can write the region size and the
+    // base address to the correct source process, and dereference the target
+    // process.
+    //
+    MmUnlockAddressSpace(AddressSpace);
+    if (Vad) ExFreePool(Vad);
+    if (Attached) KeUnstackDetachProcess(&ApcState);
+    if (ProcessHandle != NtCurrentProcess()) ObDereferenceObject(Process);
+
+    //
+    // Use SEH to safely return the region size and the base address of the
+    // deallocation. If we get an access violation, don't return a failure code
+    // as the deallocation *has* happened. The caller will just have to figure
+    // out another way to find out where it is (such as VirtualQuery).
+    //
+    _SEH2_TRY
+    {
+        *URegionSize = PRegionSize;
+        *UBaseAddress = (PVOID)StartingAddress;
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+    }
+    _SEH2_END;
+    return Status;
 
     //
     // In the failure path, we detach and dereference the target process, and
