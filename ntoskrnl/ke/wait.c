@@ -267,12 +267,25 @@ Quickie:
 
 /* PUBLIC FUNCTIONS **********************************************************/
 
+/**
+ * @brief
+ * Determines whether there are waiters waiting on the specified
+ * dispatcher object.
+ *
+ * @param[in] Object
+ * Pointer to a dispatcher object.
+ *
+ * @return
+ * TRUE if no thread is currently waiting on the object, FALSE otherwise.
+ **/
 BOOLEAN
 NTAPI
-KeIsWaitListEmpty(IN PVOID Object)
+KeIsWaitListEmpty(
+    _In_ PVOID Object)
 {
-    UNIMPLEMENTED;
-    return FALSE;
+    /* Make sure we see a consistent snapshot of the list head */
+    KeMemoryBarrier();
+    return IsListEmpty(&((PDISPATCHER_HEADER)Object)->WaitListHead);
 }
 
 /*
