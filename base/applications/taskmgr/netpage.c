@@ -35,7 +35,7 @@ typedef enum _NET_SERIES
 typedef enum _NET_COLUMN
 {
     NET_COLUMN_NAME,
-    NET_COLUMN_UTILIZATION,
+    NET_COLUMN_USAGE,
     NET_COLUMN_LINKSPEED,
     NET_COLUMN_STATE,
     NET_COLUMN_SENDRATE,
@@ -55,7 +55,7 @@ typedef struct _NET_COLUMN_INFO
 static const NET_COLUMN_INFO NetColumns[NET_COLUMN_COUNT] =
 {
     { IDS_NET_COL_ADAPTER,     150, LVCFMT_LEFT  },
-    { IDS_NET_COL_UTILIZATION,  80, LVCFMT_RIGHT },
+    { IDS_NET_COL_USAGE,        80, LVCFMT_RIGHT },
     { IDS_NET_COL_LINKSPEED,    70, LVCFMT_RIGHT },
     { IDS_NET_COL_STATE,        80, LVCFMT_LEFT  },
     { IDS_NET_COL_SENDRATE,     80, LVCFMT_RIGHT },
@@ -598,7 +598,7 @@ NetPage_UpdateListItem(int iItem, PNET_ADAPTER Adapter)
     NetPage_SetItemText(iItem, NET_COLUMN_NAME, Adapter->szName);
 
     NetPage_FormatPercent(Adapter->Utilization, 2, FALSE, szText, _countof(szText));
-    NetPage_SetItemText(iItem, NET_COLUMN_UTILIZATION, szText);
+    NetPage_SetItemText(iItem, NET_COLUMN_USAGE, szText);
 
     NetPage_FormatLinkSpeed(Adapter->Speed, szText, _countof(szText));
     NetPage_SetItemText(iItem, NET_COLUMN_LINKSPEED, szText);

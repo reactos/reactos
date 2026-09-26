@@ -457,7 +457,7 @@ BEGIN
     IDS_NET_HISTORY "Сетевая активность"
     IDS_NET_NOADAPTERS "Активные сетевые адаптеры не найдены"
     IDS_NET_COL_ADAPTER "Адаптер"
-    IDS_NET_COL_UTILIZATION "Использование сети"
+    IDS_NET_COL_USAGE "Использование сети"
     IDS_NET_COL_LINKSPEED "Скорость линии"
     IDS_NET_COL_STATE "Состояние"
     IDS_NET_COL_SENDRATE "Скорость отправки"

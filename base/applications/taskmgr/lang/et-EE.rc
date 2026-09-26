@@ -461,7 +461,7 @@ BEGIN
     IDS_NET_HISTORY "Network History"
     IDS_NET_NOADAPTERS "No active network adapters found"
     IDS_NET_COL_ADAPTER "Adapter Name"
-    IDS_NET_COL_UTILIZATION "Network Utilization"
+    IDS_NET_COL_USAGE "Network Utilization"
     IDS_NET_COL_LINKSPEED "Link Speed"
     IDS_NET_COL_STATE "State"
     IDS_NET_COL_SENDRATE "Send Rate"

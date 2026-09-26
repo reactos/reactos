@@ -276,7 +276,7 @@
 #define IDS_NET_HISTORY              371
 #define IDS_NET_NOADAPTERS           372
 #define IDS_NET_COL_ADAPTER          373
-#define IDS_NET_COL_UTILIZATION      374
+#define IDS_NET_COL_USAGE            374
 #define IDS_NET_COL_LINKSPEED        375
 #define IDS_NET_COL_STATE            376
 #define IDS_NET_COL_SENDRATE         377
