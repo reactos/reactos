@@ -2404,35 +2404,6 @@ IoRequestDeviceEjectEx(
   _In_opt_ PVOID Context,
   _In_opt_ PDRIVER_OBJECT DriverObject);
 
-_IRQL_requires_max_(PASSIVE_LEVEL)
-_Must_inspect_result_
-NTKRNLVISTAAPI
-NTSTATUS
-NTAPI
-IoSetDevicePropertyData(
-  _In_ PDEVICE_OBJECT Pdo,
-  _In_ CONST DEVPROPKEY *PropertyKey,
-  _In_ LCID Lcid,
-  _In_ ULONG Flags,
-  _In_ DEVPROPTYPE Type,
-  _In_ ULONG Size,
-  _In_opt_ PVOID Data);
-
-_IRQL_requires_max_(PASSIVE_LEVEL)
-_Must_inspect_result_
-NTKRNLVISTAAPI
-NTSTATUS
-NTAPI
-IoGetDevicePropertyData(
-  _In_ PDEVICE_OBJECT Pdo,
-  _In_ CONST DEVPROPKEY *PropertyKey,
-  _In_ LCID Lcid,
-  _Reserved_ ULONG Flags,
-  _In_ ULONG Size,
-  _Out_ PVOID Data,
-  _Out_ PULONG RequiredSize,
-  _Out_ PDEVPROPTYPE Type);
-
 $endif (_WDMDDK_)
 $if (_NTDDK_)
 NTKERNELAPI
@@ -2603,11 +2574,55 @@ $endif (_NTIFS_)
 
 #if (NTDDI_VERSION >= NTDDI_WIN8)
 
+$if (_NTDDK_)
+
+NTKRNLVISTAAPI
+VOID
+IoSetMasterIrpStatus(
+  _Inout_ PIRP MasterIrp,
+  _In_ NTSTATUS Status);
+$endif (_NTDDK_)
+
+#endif /* (NTDDI_VERSION >= NTDDI_WIN8) */
+
 $if (_WDMDDK_)
+#if (NTDDI_VERSION >= NTDDI_VISTA) || defined(__REACTOS__)
 _IRQL_requires_max_(PASSIVE_LEVEL)
 _Must_inspect_result_
-NTKRNLVISTAAPI
+NTKERNELAPI
 NTSTATUS
+NTAPI
+IoSetDevicePropertyData(
+  _In_ PDEVICE_OBJECT Pdo,
+  _In_ CONST DEVPROPKEY *PropertyKey,
+  _In_ LCID Lcid,
+  _In_ ULONG Flags,
+  _In_ DEVPROPTYPE Type,
+  _In_ ULONG Size,
+  _In_opt_ PVOID Data);
+
+_IRQL_requires_max_(PASSIVE_LEVEL)
+_Must_inspect_result_
+NTKERNELAPI
+NTSTATUS
+NTAPI
+IoGetDevicePropertyData(
+  _In_ PDEVICE_OBJECT Pdo,
+  _In_ CONST DEVPROPKEY *PropertyKey,
+  _In_ LCID Lcid,
+  _Reserved_ ULONG Flags,
+  _In_ ULONG Size,
+  _Out_ PVOID Data,
+  _Out_ PULONG RequiredSize,
+  _Out_ PDEVPROPTYPE Type);
+#endif /* (NTDDI_VERSION >= NTDDI_VISTA) || defined(__REACTOS__) */
+
+#if (NTDDI_VERSION >= NTDDI_WIN8) || defined(__REACTOS__)
+_IRQL_requires_max_(PASSIVE_LEVEL)
+_Must_inspect_result_
+NTKERNELAPI
+NTSTATUS
+NTAPI
 IoSetDeviceInterfacePropertyData(
   _In_ PUNICODE_STRING SymbolicLinkName,
   _In_ CONST DEVPROPKEY *PropertyKey,
@@ -2621,7 +2636,8 @@ _IRQL_requires_max_(PASSIVE_LEVEL)
 _Must_inspect_result_
 NTKERNELAPI
 NTSTATUS
-IoGetDeviceInterfacePropertyData (
+NTAPI
+IoGetDeviceInterfacePropertyData(
   _In_ PUNICODE_STRING SymbolicLinkName,
   _In_ CONST DEVPROPKEY *PropertyKey,
   _In_ LCID Lcid,
@@ -2630,17 +2646,8 @@ IoGetDeviceInterfacePropertyData (
   _Out_writes_bytes_to_(Size, *RequiredSize) PVOID Data,
   _Out_ PULONG RequiredSize,
   _Out_ PDEVPROPTYPE Type);
+#endif /* (NTDDI_VERSION >= NTDDI_WIN8) || defined(__REACTOS__) */
 $endif (_WDMDDK_)
-$if (_NTDDK_)
-
-NTKRNLVISTAAPI
-VOID
-IoSetMasterIrpStatus(
-  _Inout_ PIRP MasterIrp,
-  _In_ NTSTATUS Status);
-$endif (_NTDDK_)
-
-#endif /* (NTDDI_VERSION >= NTDDI_WIN8) */
 
 $if (_WDMDDK_)
 #if defined(_WIN64)

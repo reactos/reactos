@@ -505,62 +505,26 @@ static const LOCALE_ENTRY RtlpLocaleTable[] =
 // This table will be sorted by LCID at runtime
 static USHORT RtlpLocaleIndexTable[_ARRAYSIZE(RtlpLocaleTable)];
 
-typedef struct _SORT_ENTRY
-{
-    LCID Lcid;
-    USHORT Index;
-} SORT_ENTRY, *PSORT_ENTRY;
-
-// Callback function for qsort to sort the SORT_ENTRY table by LCID
-static int __cdecl LcidSortEntryCompare(const void* a, const void* b)
-{
-    PSORT_ENTRY SortEntryA = (PSORT_ENTRY)a;
-    PSORT_ENTRY SortEntryB = (PSORT_ENTRY)b;
-    return SortEntryA->Lcid - SortEntryB->Lcid;
-}
-
-//
-// Creates a temporary table, that maps the LCIDs to the index in the
-// alphabetical table. This table is then sorted by LCID and the indices
-// are used to create the final table.
-//
 NTSTATUS
 NTAPI
 RtlpInitializeLocaleTable(VOID)
 {
-    PSORT_ENTRY SortTable;
-    SIZE_T SortTableSize;
-
     NtQueryDefaultLocale(TRUE, &RtlpUserDefaultLcid);
     NtQueryDefaultLocale(FALSE, &RtlpSystemDefaultLcid);
 
-    SortTableSize = sizeof(SortTable[0]) * ARRAYSIZE(RtlpLocaleTable);
-    SortTable = RtlAllocateHeap(RtlGetProcessHeap(), 0, SortTableSize);
-    if (SortTable == NULL)
-    {
-        return STATUS_INSUFFICIENT_RESOURCES;
-    }
-
-    /* Copy the LCIDs and the index */
     for (USHORT i = 0; i < ARRAYSIZE(RtlpLocaleTable); i++)
     {
-        SortTable[i].Lcid = RtlpLocaleTable[i].Lcid;
-        SortTable[i].Index = i;
+        LCID Lcid = RtlpLocaleTable[i].Lcid;
+        USHORT j = i;
+
+        while ((j > 0) && (RtlpLocaleTable[RtlpLocaleIndexTable[j - 1]].Lcid > Lcid))
+        {
+            RtlpLocaleIndexTable[j] = RtlpLocaleIndexTable[j - 1];
+            j--;
+        }
+
+        RtlpLocaleIndexTable[j] = i;
     }
-
-    /* Sort the table by LCID */
-    qsort(SortTable,
-          ARRAYSIZE(RtlpLocaleTable),
-          sizeof(SortTable[0]),
-          LcidSortEntryCompare);
-
-    /* Copy the sorted indices to the global table */
-    for (USHORT i = 0; i < ARRAYSIZE(RtlpLocaleTable); i++)
-    {
-        RtlpLocaleIndexTable[i] = SortTable[i].Index;
-    }
-
-    RtlFreeHeap(RtlGetProcessHeap(), 0, SortTable);
 
     return STATUS_SUCCESS;
 }
