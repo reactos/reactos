@@ -159,9 +159,7 @@ static WCHAR szNetStateDisconnected[64];
 static WCHAR szNetStateConnecting[64];
 static WCHAR szNetStateDisabled[64];
 
-/* ------------------------------------------------------------------------ */
-/* Formatting helpers                                                        */
-/* ------------------------------------------------------------------------ */
+/* FORMATTING HELPERS *******************************************************/
 
 /* Formats a value in 1/1000 of a percent, e.g. 1250 -> "1.25 %" */
 static void
