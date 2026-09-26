@@ -502,7 +502,6 @@ NetPage_QueryIfTable(void)
         dwError = GetIfTable(NetIfTable, &Size, TRUE);
         if (dwError == NO_ERROR)
             return TRUE;
-
         if (dwError != ERROR_INSUFFICIENT_BUFFER)
             return FALSE;
 
