@@ -28,6 +28,7 @@ typedef struct _FOLDERDATA
 static FOLDERDATA
 UserShellFolders[] =
 {
+    {L"AppData Root", L"AppData", TRUE, FALSE, FALSE, FALSE},
     {L"AppData", L"AppData\\Roaming", FALSE, TRUE, TRUE, FALSE},
     {L"Desktop", L"Desktop", FALSE, TRUE, TRUE, FALSE},
     {L"{374DE290-123F-4565-9164-39C4925E467B}", L"Downloads", FALSE, TRUE, TRUE, FALSE},
@@ -49,7 +50,7 @@ UserShellFolders[] =
     {L"Local AppData", L"AppData\\Local", FALSE, TRUE, TRUE, FALSE},
     {L"{A520A1A4-1780-4FF6-BD18-167343C5AF16}", L"AppData\\LocalLow", FALSE, FALSE, FALSE, FALSE},
     {L"Temp", L"Appdata\\Local\\Temp", FALSE, FALSE, FALSE, FALSE},
-    {L"Cache", L"Appdata\\Local\\Temporary Internet Files", FALSE, TRUE, TRUE, FALSE},
+    {L"Cache", L"Appdata\\Local\\Microsoft\\Windows\\INetCache", FALSE, TRUE, TRUE, FALSE},
     {L"History", L"AppData\\Local\\Microsoft\\Windows\\History", FALSE, TRUE, TRUE, FALSE},
     {L"Cookies", L"AppData\\Local\\Microsoft\\Windows\\INetCookies", FALSE, TRUE, TRUE, FALSE},
     {NULL, NULL, FALSE, FALSE, FALSE, FALSE}
