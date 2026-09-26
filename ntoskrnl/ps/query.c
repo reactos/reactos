@@ -2995,6 +2995,75 @@ NtSetInformationThread(
             ObDereferenceObject(Thread);
             break;
         }
+
+        case ThreadExplicitCaseSensitivity:
+        {
+            ULONG CaseSensitivity;
+
+            /* Check buffer length */
+            if (ThreadInformationLength != sizeof(ULONG))
+            {
+                Status = STATUS_INFO_LENGTH_MISMATCH;
+                break;
+            }
+
+            /* Enter SEH for direct buffer read */
+            _SEH2_TRY
+            {
+                CaseSensitivity = *(PULONG)ThreadInformation;
+            }
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+            {
+                /* Get exception code */
+                CaseSensitivity = 0;
+                Status = _SEH2_GetExceptionCode();
+                _SEH2_YIELD(break);
+            }
+            _SEH2_END;
+
+            /* Setting 'Explicit Case Sensitivity' requires the SeDebugPrivilege */
+            if (!SeSinglePrivilegeCheck(SeDebugPrivilege, PreviousMode))
+            {
+                /* We don't hold the privilege, bail out */
+                Status = STATUS_PRIVILEGE_NOT_HELD;
+                break;
+            }
+#if 0
+            // 0x51: {Type: 1, Audit: 0, Signer: 5}: PPL at Windows signing level
+            if (!RtlTestProtectedAccess(Process->Protection, (PS_PROTECTION)0x51))
+            {
+                /* The thread's process doesn't have the necessary protection, bail out */
+                Status = STATUS_ACCESS_DENIED;
+                break;
+            }
+#endif
+
+            /* Reference the thread */
+            Status = ObReferenceObjectByHandle(ThreadHandle,
+                                               THREAD_SET_INFORMATION,
+                                               PsThreadType,
+                                               PreviousMode,
+                                               (PVOID*)&Thread,
+                                               NULL);
+            if (!NT_SUCCESS(Status))
+                break;
+
+            /* Set or clear the flag */
+            if (CaseSensitivity)
+            {
+                //PspSetCrossThreadFlag(Thread, CT_EXPLICIT_CASE_SENSITIVITY_BIT);
+                Thread->ExplicitCaseSensitivity = TRUE;
+            }
+            else
+            {
+                //PspClearCrossThreadFlag(Thread, CT_EXPLICIT_CASE_SENSITIVITY_BIT);
+                Thread->ExplicitCaseSensitivity = FALSE;
+            }
+
+            /* Dereference the thread */
+            ObDereferenceObject(Thread);
+            break;
+        }
 #endif /* (NTDDI_VERSION >= NTDDI_WIN10_RS1) || defined(__REACTOS__) */
 
         /* Anything else */
@@ -3566,6 +3635,43 @@ NtQueryInformationThread(
             _SEH2_END;
 
             PspUnlockThreadSecurityShared(Thread);
+
+            /* Dereference the thread */
+            ObDereferenceObject(Thread);
+            break;
+        }
+
+        case ThreadExplicitCaseSensitivity:
+        {
+            /* Set the return length */
+            Length = sizeof(ULONG);
+
+            if (ThreadInformationLength != Length)
+            {
+                Status = STATUS_INFO_LENGTH_MISMATCH;
+                break;
+            }
+
+            /* Reference the thread */
+            Status = ObReferenceObjectByHandle(ThreadHandle,
+            // FIXME: Use THREAD_QUERY_LIMITED_INFORMATION when implemented
+                                               THREAD_QUERY_INFORMATION,
+                                               PsThreadType,
+                                               PreviousMode,
+                                               (PVOID*)&Thread,
+                                               NULL);
+            if (!NT_SUCCESS(Status))
+                break;
+
+            _SEH2_TRY
+            {
+                *(PULONG)ThreadInformation = Thread->ExplicitCaseSensitivity;
+            }
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+            {
+                Status = _SEH2_GetExceptionCode();
+            }
+            _SEH2_END;
 
             /* Dereference the thread */
             ObDereferenceObject(Thread);
