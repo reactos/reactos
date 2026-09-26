@@ -115,6 +115,36 @@ static HANDLE complete_event, conn_close_event, conn_wait_event, server_req_rec_
 static DWORD req_error;
 static BOOL is_ie7plus = TRUE;
 
+#ifdef __REACTOS__
+/* Fail infinite waits before rosautotest's process-activity watchdog and
+ * report the stalled object. */
+#define WININET_TEST_WAIT_TIMEOUT (2 * 60 * 1000u)
+
+static DWORD wait_for_single_object_(HANDLE object, DWORD timeout,
+                                     const char *object_name, unsigned line)
+{
+    DWORD effective_timeout =
+        timeout == INFINITE ? WININET_TEST_WAIT_TIMEOUT : timeout;
+    DWORD result = WaitForSingleObject(object, effective_timeout);
+
+    if (timeout != INFINITE || result == WAIT_OBJECT_0)
+        return result;
+
+    if (result == WAIT_TIMEOUT)
+        ok_(__FILE__, line)(FALSE, "Timed out waiting for %s after %u ms\n",
+                            object_name, WININET_TEST_WAIT_TIMEOUT);
+    else
+        ok_(__FILE__, line)(FALSE, "WaitForSingleObject(%s) failed: %lu, error %lu\n",
+                            object_name, result, GetLastError());
+
+    fflush(stdout);
+    ExitProcess(1);
+}
+
+#define WaitForSingleObject(object, timeout) \
+    wait_for_single_object_((object), (timeout), #object, __LINE__)
+#endif
+
 #define TESTF_REDIRECT      0x01
 #define TESTF_COMPRESSED    0x02
 #define TESTF_CHUNKED       0x04
@@ -7995,12 +8025,6 @@ static void test_cert_string(void)
 START_TEST(http)
 {
     HMODULE hdll;
-
-    if (!winetest_interactive)
-    {
-        win_skip("Skipping wininet:http due to hang ROSTESTS-357\n");
-        return;
-    }
 
     hdll = GetModuleHandleA("wininet.dll");
 
