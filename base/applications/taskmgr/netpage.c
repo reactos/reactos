@@ -577,9 +577,7 @@ NetPage_UpdateAdapters(void)
     return bChanged;
 }
 
-/* ------------------------------------------------------------------------ */
-/* Adapter list view                                                         */
-/* ------------------------------------------------------------------------ */
+/* ADAPTER LIST VIEW ********************************************************/
 
 static void
 NetPage_SetItemText(int iItem, int iSubItem, LPCWSTR pszText)
