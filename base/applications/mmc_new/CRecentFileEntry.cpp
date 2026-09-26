@@ -48,8 +48,8 @@ CRecentFileEntry::BuildDisplayName()
 
         if (pBackslash1 && pBackslash2 && pBackslash3 && (pBackslash2 != pBackslash3))
         {
-            int Length = pBackslash2 - m_FileName.GetString();
-            CAtlString str(m_FileName.Left(Length + 1));
+            int prefixLength = pBackslash2 - m_FileName.GetString();
+            CAtlString str(m_FileName.Left(prefixLength + 1));
             str.Append(L"...");
             str.Append(pBackslash3);
             m_DisplayName = str;
