@@ -1048,9 +1048,9 @@ NetPage_InvalidateGraphs(void)
 static void
 NetPage_UpdateSlotTitles(void)
 {
-    WCHAR szOld[MAX_INTERFACE_NAME_LEN];
     LPCWSTR pszTitle;
     UINT i;
+    WCHAR szOld[MAX_INTERFACE_NAME_LEN];
 
     for (i = 0; i < NetSlotsUsed; i++)
     {
