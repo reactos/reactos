@@ -492,12 +492,12 @@ NetPage_SampleAdapter(PNET_ADAPTER Adapter, const MIB_IFROW *Row, DWORD Tick)
 static BOOL
 NetPage_QueryIfTable(void)
 {
-    DWORD dwError;
     UINT Tries;
 
     for (Tries = 0; Tries < 3; Tries++)
     {
         ULONG Size = NetIfTableSize;
+        DWORD dwError;
 
         dwError = GetIfTable(NetIfTable, &Size, TRUE);
         if (dwError == NO_ERROR)
@@ -624,7 +624,6 @@ static void NetPage_EnsureAdapterVisible(DWORD IfIndex);
 static void
 NetPage_RebuildList(void)
 {
-    LVITEMW item;
     int iSelect = -1;
     UINT i;
 
@@ -635,6 +634,8 @@ NetPage_RebuildList(void)
 
     for (i = 0; i < NetAdapterCount; i++)
     {
+        LVITEMW item;
+
         ZeroMemory(&item, sizeof(item));
         item.mask = LVIF_TEXT | LVIF_PARAM;
         item.iItem = i;
@@ -694,8 +695,6 @@ NetPage_OnListItemChanged(LPNMLISTVIEW pnmv)
 static void
 NetPage_SetupColumns(void)
 {
-    LVCOLUMNW column;
-    WCHAR szText[128];
     UINT i;
 
     ListView_SetExtendedListViewStyle(hNetworkPageListCtrl,
@@ -703,6 +702,9 @@ NetPage_SetupColumns(void)
 
     for (i = 0; i < NET_COLUMN_COUNT; i++)
     {
+        LVCOLUMNW column;
+        WCHAR szText[128];
+
         LoadStringW(hInst, NetColumns[i].idString, szText, _countof(szText));
 
         ZeroMemory(&column, sizeof(column));
