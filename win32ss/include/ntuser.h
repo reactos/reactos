@@ -1485,13 +1485,13 @@ NtUserBlockInput(
 NTSTATUS
 NTAPI
 NtUserBuildHwndList(
-    HDESK hDesktop,
-    HWND hwndParent,
-    BOOLEAN bChildren,
-    ULONG dwThreadId,
-    ULONG cHwnd,
-    HWND *phwndList,
-    ULONG *pcHwndNeeded);
+    _In_ HDESK hDesktop,
+    _In_ HWND hwndParent,
+    _In_ BOOLEAN bChildren,
+    _In_ ULONG dwThreadId,
+    _In_ ULONG cHwnd,
+    _Out_ HWND *phwndList,
+    _Out_ ULONG *pcHwndNeeded);
 
 NTSTATUS
 NTAPI
