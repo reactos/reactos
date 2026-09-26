@@ -1007,8 +1007,8 @@ NetPage_CaptureLayout(HWND hDlg)
 static BOOL
 NetPage_CreateSlot(UINT Slot)
 {
-    HFONT hFont = (HFONT)SendMessageW(hNetworkPage, WM_GETFONT, 0, 0);
     HWND hFrame, hGraph;
+    HFONT hFont;
 
     hFrame = CreateWindowExW(WS_EX_TRANSPARENT, WC_BUTTONW, L"",
                              WS_CHILD | BS_GROUPBOX,
