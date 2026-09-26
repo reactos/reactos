@@ -112,23 +112,21 @@
 
         hTreeItem = m_TreeView.AddItem(hParentTreeItem,
                                        (LPWSTR)Node->DisplayName().GetString(),
-                                       Node->GetCacheEntry()->NormalImageIndex(),
-                                       Node->GetCacheEntry()->OpenImageIndex(),
+                                       Node->CacheEntry()->NormalImageIndex(),
+                                       Node->CacheEntry()->OpenImageIndex(),
                                        (LPARAM)Node);
         if (hTreeItem)
         {
-#if 0
-            int snapinCount = Node->GetNodeCount();
-            for (int i = 0; i < snapinCount; i++)
+            POSITION pos = Node->m_SubNodes.GetHeadPosition();
+            while (pos)
             {
-                CSnapinNode *ChildNode = Node->GetNode(i);
+                CSnapin *ChildNode = (CSnapin*)Node->m_SubNodes.GetNext(pos);
                 if (ChildNode)
                     AddTreeViewItemRecursive(hTreeItem, ChildNode);
             }
 
-            if (snapinCount > 0)
-                m_TreeView.Expand(hTreeItem, TVE_EXPAND);
-#endif
+            m_TreeView.Expand(hTreeItem, TVE_EXPAND);
+
             if (Node == m_ViewSelectedNode)
                 m_TreeView.SelectItem(hTreeItem);
         }

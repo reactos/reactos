@@ -39,7 +39,7 @@ const CAtlString& CSnapin::Description() const { return m_CacheEntry->Descriptio
 const CAtlString& CSnapin::Version() const { return m_CacheEntry->Version(); }
 const CAtlString& CSnapin::DisplayName() const { return m_DisplayName; }
 
-CSnapinCacheEntry *CSnapin::GetCacheEntry()
+CSnapinCacheEntry *CSnapin::CacheEntry()
 {
     return m_CacheEntry;
 }
@@ -124,7 +124,7 @@ CSnapin::SaveNode(MscFile *mscFile, IXMLDOMElement *pParentNode)
     CHK_HR(mscFile->CreateAndAddElementNode(L"Node", pParentNode, &pNodeElement));
     CHK_HR(mscFile->CreateAndAddAttributeNode(L"ID", L"0", pNodeElement)); /* FIXME */
     CHK_HR(mscFile->CreateAndAddAttributeNode(L"ImageIdx", L"0", pNodeElement)); /* FIXME */
-    CHK_HR(mscFile->CreateAndAddAttributeNode(L"CLSID", GetCacheEntry()->GuidString().GetString(), pNodeElement));
+    CHK_HR(mscFile->CreateAndAddAttributeNode(L"CLSID", CacheEntry()->GuidString().GetString(), pNodeElement));
     CHK_HR(mscFile->CreateAndAddAttributeNode(L"Preload", L"true", pNodeElement)); /* FIXME */
 
     /* <Nodes> */

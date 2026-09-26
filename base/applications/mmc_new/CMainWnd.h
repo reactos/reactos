@@ -225,6 +225,9 @@ public:
     CSnapinCacheEntry *GetSnapinCacheEntry(int nIndex);
     CSnapinCacheEntry *GetSnapinCacheEntryByGuid(PWSTR pszGuid);
     HIMAGELIST SnapinImageList();
+
+    CSnapin *GetRootSnapin();
+
     int RegisterView(CConsoleWnd *pView);
     void UnregisterView(CConsoleWnd *pView);
     DOCUMENT_MODE GetDocumentMode();

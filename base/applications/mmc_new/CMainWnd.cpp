@@ -302,7 +302,11 @@ CMainWnd::OnFileAdd(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
     if (child == NULL)
         return 0;
     CAddDialog dlg(this, child);
-    dlg.DoModal(m_hWnd, (LPARAM)child);
+    if (dlg.DoModal(m_hWnd, (LPARAM)child) == IDOK)
+    {
+        UpdateViews();
+    }
+
     return 0;
 }
 
@@ -546,6 +550,12 @@ HIMAGELIST
 CMainWnd::SnapinImageList()
 {
     return m_hSnapinImageList;
+}
+
+CSnapin *
+CMainWnd::GetRootSnapin()
+{
+    return m_RootNode;
 }
 
 int

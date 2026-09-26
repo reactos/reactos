@@ -5,12 +5,14 @@ include_directories(${REACTOS_SOURCE_DIR}/sdk/lib/atl)
 add_definitions(-D_ATL_NO_EXCEPTIONS)
 
 list(APPEND CPP_SOURCE
+    CAddDialog.cpp
     CConsoleWnd.cpp
     CMainWnd.cpp
     COptionsDialog.cpp
     CRecentFileEntry.cpp
     CSnapin.cpp
     CSnapinCacheEntry.cpp
+    CSnapinAlias.cpp
     mscfile.cpp
     mmc.cpp
     # This is here so that they show up in visual studio:

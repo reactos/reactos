@@ -25,7 +25,6 @@ class CSnapin
 private:
     CSnapinCacheEntry *m_CacheEntry;
     CAtlString m_DisplayName;
-    CAtlList<CSnapin*> m_SubNodes;
 
     void RemoveAllSubnodes();
 
@@ -40,7 +39,9 @@ public:
     const CAtlString& Version() const;
     const CAtlString& DisplayName() const;
 
-    CSnapinCacheEntry *GetCacheEntry();
+    CAtlList<CSnapin*> m_SubNodes;
+
+    CSnapinCacheEntry *CacheEntry();
 
     void OnAdd(IConsole* console);
     void OnAccept(IConsole* console);
