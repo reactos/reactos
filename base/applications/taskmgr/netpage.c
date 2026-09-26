@@ -975,9 +975,7 @@ NetPage_DrawGraph(LPDRAWITEMSTRUCT pdis)
     DeleteDC(hdcMem);
 }
 
-/* ------------------------------------------------------------------------ */
-/* Page layout                                                               */
-/* ------------------------------------------------------------------------ */
+/* PAGE LAYOUT **************************************************************/
 
 static void
 NetPage_GetChildRect(HWND hDlg, HWND hCtrl, LPRECT prc)
