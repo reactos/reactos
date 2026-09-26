@@ -366,6 +366,14 @@ RamdiskCreateDiskDevice(IN PRAMDISK_BUS_EXTENSION DeviceExtension,
     LARGE_INTEGER CurrentOffset, CylinderSize, DiskLength;
     ULONG CylinderCount, SizeByCylinders;
 
+    /* Registry and memory-mapped RAM disks are not implemented yet */
+    Status = STATUS_NOT_IMPLEMENTED;
+    DeviceObject = NULL;
+    RtlZeroMemory(&SymbolicLinkName, sizeof(SymbolicLinkName));
+    RtlZeroMemory(&GuidString, sizeof(GuidString));
+    RtlZeroMemory(&DeviceName, sizeof(DeviceName));
+    *NewDriveExtension = NULL;
+
     /* Check if we're a boot RAM disk */
     DiskType = Input->DiskType;
     if (DiskType >= RAMDISK_BOOT_DISK)
@@ -482,26 +490,6 @@ RamdiskCreateDiskDevice(IN PRAMDISK_BUS_EXTENSION DeviceExtension,
                 Input->Options.NoDosDevice = TRUE;
             }
 
-            /* Is this an ISO boot ramdisk? */
-            if (Input->DiskType == RAMDISK_BOOT_DISK)
-            {
-                /* Does it need a drive letter? */
-                if (!Input->Options.NoDriveLetter)
-                {
-                    /* Build it and take over the existing symbolic link */
-                    _snwprintf(LocalBuffer,
-                               30,
-                               L"\\DosDevices\\%wc:",
-                               Input->DriveLetter);
-                    RtlInitUnicodeString(&DriveString, LocalBuffer);
-                    IoDeleteSymbolicLink(&DriveString);
-                    IoCreateSymbolicLink(&DriveString, &DeviceName);
-
-                    /* Save the drive letter */
-                    DriveExtension->DriveLetter = Input->DriveLetter;
-                }
-            }
-
         }
 
         /* Setup the device object flags */
@@ -509,14 +497,10 @@ RamdiskCreateDiskDevice(IN PRAMDISK_BUS_EXTENSION DeviceExtension,
         DeviceObject->AlignmentRequirement = 1;
 
         /* Build the drive FDO */
-        *NewDriveExtension = DriveExtension;
         DriveExtension->Type = RamdiskDrive;
         DiskLength = Input->DiskLength;
         ExInitializeFastMutex(&DriveExtension->DiskListLock);
         IoInitializeRemoveLock(&DriveExtension->RemoveLock, 'dmaR', 1, 0);
-        DriveExtension->DriveDeviceName = DeviceName;
-        DriveExtension->SymbolicLinkName = SymbolicLinkName;
-        DriveExtension->GuidString = GuidString;
         DriveExtension->DiskGuid = Input->DiskGuid;
         DriveExtension->PhysicalDeviceObject = DeviceObject;
         DriveExtension->DeviceObject = RamdiskBusFdo;
@@ -529,11 +513,6 @@ RamdiskCreateDiskDevice(IN PRAMDISK_BUS_EXTENSION DeviceExtension,
         DriveExtension->BytesPerSector = 0;
         DriveExtension->SectorsPerTrack = 0;
         DriveExtension->NumberOfHeads = 0;
-
-        /* Make sure we don't free it later */
-        DeviceName.Buffer = NULL;
-        SymbolicLinkName.Buffer = NULL;
-        GuidString.Buffer = NULL;
 
         /* Check if this is a boot disk, or a registry ram drive */
         if (!(Input->Options.ExportAsCd) &&
@@ -610,6 +589,34 @@ RamdiskCreateDiskDevice(IN PRAMDISK_BUS_EXTENSION DeviceExtension,
             DriveExtension->Cylinders++;
         }
 
+        /* Assign the boot RAM disk drive letter after fallible setup */
+        if ((Input->DiskType == RAMDISK_BOOT_DISK) &&
+            !Input->Options.NoDriveLetter)
+        {
+            /* Build it and take over the existing symbolic link */
+            _snwprintf(LocalBuffer,
+                       30,
+                       L"\\DosDevices\\%wc:",
+                       Input->DriveLetter);
+            RtlInitUnicodeString(&DriveString, LocalBuffer);
+            IoDeleteSymbolicLink(&DriveString);
+            IoCreateSymbolicLink(&DriveString, &DeviceName);
+
+            /* Save the drive letter */
+            DriveExtension->DriveLetter = Input->DriveLetter;
+        }
+
+        /* Transfer ownership of the allocated names to the drive extension */
+        *NewDriveExtension = DriveExtension;
+        DriveExtension->DriveDeviceName = DeviceName;
+        DriveExtension->SymbolicLinkName = SymbolicLinkName;
+        DriveExtension->GuidString = GuidString;
+
+        /* Make sure the failure path doesn't free transferred resources */
+        DeviceName.Buffer = NULL;
+        SymbolicLinkName.Buffer = NULL;
+        GuidString.Buffer = NULL;
+
         /* Acquire the disk lock */
         KeEnterCriticalRegion();
         ExAcquireFastMutex(&DeviceExtension->DiskListLock);
@@ -627,8 +634,28 @@ RamdiskCreateDiskDevice(IN PRAMDISK_BUS_EXTENSION DeviceExtension,
     }
 
 FailCreate:
-    UNIMPLEMENTED_DBGBREAK();
-    return STATUS_SUCCESS;
+    if (SymbolicLinkName.Buffer)
+    {
+        IoDeleteSymbolicLink(&SymbolicLinkName);
+        ExFreePool(SymbolicLinkName.Buffer);
+    }
+
+    if (DeviceObject)
+    {
+        IoDeleteDevice(DeviceObject);
+    }
+
+    if (DeviceName.Buffer)
+    {
+        ExFreePool(DeviceName.Buffer);
+    }
+
+    if (GuidString.Buffer)
+    {
+        RtlFreeUnicodeString(&GuidString);
+    }
+
+    return Status;
 }
 
 NTSTATUS
