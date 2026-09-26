@@ -1027,6 +1027,7 @@ NetPage_CreateSlot(UINT Slot)
         return FALSE;
     }
 
+    hFont = (HFONT)SendMessageW(hNetworkPage, WM_GETFONT, 0, 0);
     SendMessageW(hFrame, WM_SETFONT, (WPARAM)hFont, FALSE);
 
     NetSlots[Slot].hFrame = hFrame;
