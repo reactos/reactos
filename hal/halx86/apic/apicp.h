@@ -58,9 +58,14 @@
     #define APIC_PROFILE_LEVEL HIGH_LEVEL
 #endif
 
-#define APIC_MAX_IRQ 24
 #define APIC_FREE_VECTOR 0xFF
 #define APIC_RESERVED_VECTOR 0xFE
+#define APIC_MSI_VECTOR 0xFD
+
+/* Inputs are stored in HalpVectorToIndex, so they stay below the special values */
+#define HALP_MAX_INPUTS 0xFD
+#define HALP_MAX_IOAPICS 8
+#define HALP_IOAPIC_MAX_ENTRIES 120
 
 /* The IMCR is supported by two read/writable or write-only I/O ports,
    22h and 23h, which receive address and data respectively.
@@ -225,6 +230,20 @@ typedef union _APIC_VERSION_REGISTER
     };
 } APIC_VERSION_REGISTER;
 
+typedef union _APIC_EXTENDED_FEATURE_REGISTER
+{
+    UINT32 Long;
+    struct
+    {
+        UINT32 InterruptEnableCapable:1;
+        UINT32 SEOICapable:1;
+        UINT32 ExtApicIdCapable:1;
+        UINT32 ReservedMBZ:13;
+        UINT32 ExtLvtCount:8;
+        UINT32 ReservedMBZ1:8;
+    };
+} APIC_EXTENDED_FEATURE_REGISTER;
+
 typedef union _APIC_EXTENDED_CONTROL_REGISTER
 {
     UINT32 Long;
@@ -340,3 +359,4 @@ NTAPI
 HalpInitApicInfo(IN PLOADER_PARAMETER_BLOCK KeLoaderBlock);
 
 VOID __cdecl ApicSpuriousService(VOID);
+VOID __cdecl ApicErrorService(VOID);

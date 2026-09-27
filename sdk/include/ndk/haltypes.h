@@ -153,7 +153,8 @@ typedef struct _INTERRUPT_CONNECTION_DATA
 } INTERRUPT_CONNECTION_DATA, *PINTERRUPT_CONNECTION_DATA;
 
 //FIXME: Check ARM64?
-typedef enum _INTERRUPT_TARGET_TYPE {
+typedef enum _INTERRUPT_TARGET_TYPE
+{
     TargetApic =        0,
     TargetApicRequest = 1,
 #if (NTDDI_VERSION >= NTDDI_WIN7)
@@ -161,7 +162,8 @@ typedef enum _INTERRUPT_TARGET_TYPE {
 #endif
 } INTERRUPT_TARGET_TYPE;
 
-typedef struct _HAL_MESSAGE_SIGNAL_TARGET_REQUEST {
+typedef struct _HAL_MESSAGE_SIGNAL_TARGET_REQUEST
+{
     INTERRUPT_TARGET_TYPE InterruptTargetType;
     struct {
         ULONG InterruptVector;

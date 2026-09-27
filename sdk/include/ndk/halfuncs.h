@@ -378,7 +378,7 @@ HalSystemVectorDispatchEntry(
 );
 
 //
-// NT6.0+ Style Interrupt Functions
+// NT6+ Style Interrupt Functions
 //
 NTHALAPI
 KIRQL
@@ -429,7 +429,7 @@ HalGetMessageRoutingInfo(
 );
 
 //
-// Processor Functions (NT 6+ surface)
+// Processor Functions (NT 6 interface)
 //
 NTHALAPI
 NTSTATUS
