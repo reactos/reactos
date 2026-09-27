@@ -37,6 +37,8 @@
 
 #define PARAMETERS_KEY L"Parameters"     /* The parameters subkey under the device-specific key */
 
+extern ULONG NdisEnableTxRxFlowControl;
+
 /*
  * @implemented
  */
@@ -449,6 +451,49 @@ NdisReadConfiguration(
     {
        NDIS_DbgPrint(MIN_TRACE,("invalid parameter ConfigurationContext (0x%x)\n",ConfigurationContext));
        return;
+    }
+
+    if (ParameterType == NdisParameterInteger)
+    {
+        const UNICODE_STRING FlowControlKey = RTL_CONSTANT_STRING(L"*FlowControl");
+
+        if (!NdisEnableTxRxFlowControl && RtlEqualUnicodeString(Keyword, &FlowControlKey, TRUE))
+        {
+            NDIS_DbgPrint(MID_TRACE, ("Disable TX/RX flow control for this miniport\n"));
+
+            *ParameterValue = ExAllocatePool(PagedPool, sizeof(*ParameterValue));
+            if (!*ParameterValue)
+            {
+                NDIS_DbgPrint(MIN_TRACE,("Insufficient resources.\n"));
+                *Status = NDIS_STATUS_RESOURCES;
+                return;
+            }
+
+            MiniportResource = ExAllocatePool(PagedPool, sizeof(*MiniportResource));
+            if (!MiniportResource)
+            {
+                NDIS_DbgPrint(MIN_TRACE,("Insufficient resources.\n"));
+                ExFreePool(*ParameterValue);
+                *ParameterValue = NULL;
+                *Status = NDIS_STATUS_RESOURCES;
+                return;
+            }
+
+            MiniportResource->ResourceType = MINIPORT_RESOURCE_TYPE_REGISTRY_DATA;
+            MiniportResource->Resource = *ParameterValue;
+
+            NDIS_DbgPrint(MID_TRACE,("inserting 0x%x into the resource list\n",
+                MiniportResource->Resource));
+
+            ExInterlockedInsertTailList(&ConfigurationContext->ResourceListHead,
+                                        &MiniportResource->ListEntry,
+                                        &ConfigurationContext->ResourceLock);
+
+            (*ParameterValue)->ParameterType = NdisParameterInteger;
+            (*ParameterValue)->ParameterData.IntegerData = 0;
+            *Status = NDIS_STATUS_SUCCESS;
+            return;
+        }
     }
 
     if(!wcsncmp(Keyword->Buffer, L"Environment", Keyword->Length/sizeof(WCHAR)) &&
