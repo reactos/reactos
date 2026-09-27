@@ -1031,7 +1031,8 @@ NTAPI
 HalpIsAcpiDeviceVectorFree(
     _In_ ULONG Vector)
 {
-    return !(HalpIDTUsageFlags[Vector].Flags & IDT_REGISTERED);
+    return !(HalpIDTUsageFlags[Vector].Flags & IDT_REGISTERED) &&
+           HalpIsVectorGrantable(Vector);
 }
 
 VOID
@@ -1094,6 +1095,8 @@ HalpBuildAcpiResourceList(IN PIO_RESOURCE_REQUIREMENTS_LIST ResourceList)
             Descriptor->u.Interrupt.MaximumVector = Vector;
             Descriptor++;
             ResourceList->List[0].Count++;
+
+            HalpGrantVector(Vector);
         }
 
         return STATUS_SUCCESS;
