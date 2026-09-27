@@ -23,6 +23,15 @@ PUBLIC ApicSpuriousService
 ApicSpuriousService:
     iretq
 
+APIC_ESR = HEX(0FFFFFFFFFFFE0280)
+
+/* Rearm the error status register, then end the interrupt */
+PUBLIC ApicErrorService
+ApicErrorService:
+    mov dword ptr [APIC_ESR], 0
+    mov dword ptr [APIC_EOI], 0
+    iretq
+
 #else
 #include <ks386.inc>
 #include <internal/i386/asmmacro.S>
@@ -37,6 +46,17 @@ TRAP_ENTRY HalpDispatchInterrupt, KI_PUSH_FAKE_ERROR_CODE
 
 PUBLIC _ApicSpuriousService
 _ApicSpuriousService:
+    iret
+
+APIC_ESR = HEX(0FFFE0280)
+APIC_EOI = HEX(0FFFE00B0)
+
+/* Rearm the error status register, then end the interrupt. SS is used
+   because DS is not valid when the interrupt arrives in V86 mode */
+PUBLIC _ApicErrorService
+_ApicErrorService:
+    mov dword ptr ss:[APIC_ESR], 0
+    mov dword ptr ss:[APIC_EOI], 0
     iret
 
 #endif
