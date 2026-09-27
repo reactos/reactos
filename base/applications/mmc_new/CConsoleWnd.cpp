@@ -202,6 +202,41 @@ CConsoleWnd::OnNotify(UINT nMessage, WPARAM wParam, LPARAM lParam, BOOL& bHandle
 }
 
 LRESULT
+CConsoleWnd::OnActionNewWindow(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
+{
+    HTREEITEM hTreeItem = m_TreeView.GetSelection();
+    if (!hTreeItem)
+        return 0;
+
+    CSnapin *Snapin = (CSnapin *)m_TreeView.GetItemData(hTreeItem);
+    if (!Snapin)
+        return 0;
+
+    MDICREATESTRUCT mcs;
+    HWND hChild;
+    CAtlString title;
+
+    mcs.szTitle = Snapin->DisplayName();
+    mcs.szClass = CConsoleWnd::GetWndClassName();
+    mcs.hOwner = _AtlBaseModule.GetModuleInstance();
+    mcs.x = mcs.cx = CW_USEDEFAULT;
+    mcs.y = mcs.cy = CW_USEDEFAULT;
+    mcs.style = MDIS_ALLCHILDSTYLES;
+
+    CConsoleWnd* child = new CConsoleWnd(m_MainWnd, Snapin);
+    BOOL bMaximized = FALSE;
+    HWND hWndOld = (HWND)m_MainWnd->m_MDIClient.SendMessage(WM_MDIGETACTIVE, 0, (LPARAM)&bMaximized);
+    mcs.lParam = bMaximized || !hWndOld;
+    hChild = (HWND)m_MainWnd->m_MDIClient.SendMessage(WM_MDICREATE, 0, (LONG)&mcs);
+    if (!hChild)
+    {
+        delete child;
+    }
+
+    return 0;
+}
+
+LRESULT
 CConsoleWnd::OnActionRename(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
 {
     m_TreeView.EditLabel(m_TreeView.GetSelection());

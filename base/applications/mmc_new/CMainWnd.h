@@ -75,6 +75,7 @@ public:
         COMMAND_ID_HANDLER(IDM_FILE_RECENT4, OnFileRecent)
         COMMAND_ID_HANDLER(IDM_FILE_EXIT, OnFileExit)
 
+        COMMAND_ID_HANDLER(IDM_ACTION_NEW, OnActionNewWindow)
         COMMAND_ID_HANDLER(IDM_ACTION_RENAME, OnActionRename)
 
         COMMAND_ID_HANDLER(IDM_VIEW_CUSTOMIZE, OnViewCustomize)
@@ -192,6 +193,7 @@ public:
     LRESULT OnFileOptions(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
     LRESULT OnFileRecent(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
     LRESULT OnFileExit(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
+    LRESULT OnActionNewWindow(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
     LRESULT OnActionRename(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
     LRESULT OnViewCustomize(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
     LRESULT OnWindowsNew(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
