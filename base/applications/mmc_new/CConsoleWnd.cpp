@@ -227,7 +227,7 @@ CConsoleWnd::OnActionNewWindow(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& b
     BOOL bMaximized = FALSE;
     HWND hWndOld = (HWND)m_MainWnd->m_MDIClient.SendMessage(WM_MDIGETACTIVE, 0, (LPARAM)&bMaximized);
     mcs.lParam = bMaximized || !hWndOld;
-    hChild = (HWND)m_MainWnd->m_MDIClient.SendMessage(WM_MDICREATE, 0, (LONG)&mcs);
+    hChild = (HWND)m_MainWnd->m_MDIClient.SendMessage(WM_MDICREATE, 0, (LONG_PTR)&mcs);
     if (!hChild)
     {
         delete child;
