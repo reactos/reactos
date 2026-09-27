@@ -1274,6 +1274,24 @@ HalConvertDeviceIdtToIrql(
     return HalpVectorToIrql((UCHAR)IdtEntry);
 }
 
+/* The PIC HALs grant the ACPI driver its SCI line, not IDT entries */
+BOOLEAN
+NTAPI
+HalpIsVectorGrantable(
+    _In_ ULONG Vector)
+{
+    UNREFERENCED_PARAMETER(Vector);
+    return FALSE;
+}
+
+VOID
+NTAPI
+HalpGrantVector(
+    _In_ ULONG Vector)
+{
+    UNREFERENCED_PARAMETER(Vector);
+}
+
 #else /* _MINIHAL_ */
 
 KIRQL
