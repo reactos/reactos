@@ -39,6 +39,8 @@ public:
     const CAtlString& Version() const;
     const CAtlString& DisplayName() const;
 
+    void SetDisplayName(LPWSTR pszName);
+
     CAtlList<CSnapin*> m_SubNodes;
 
     CSnapinCacheEntry *CacheEntry();

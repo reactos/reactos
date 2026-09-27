@@ -43,6 +43,7 @@ public:
         MESSAGE_HANDLER(WM_DESTROY, OnDestroy)
         MESSAGE_HANDLER(WM_SIZE, OnSize)
         MESSAGE_HANDLER(WM_DRAWITEM, OnDrawItem)
+        MESSAGE_HANDLER(WM_NOTIFY, OnNotify)
     END_MSG_MAP()
 
 
@@ -87,6 +88,9 @@ public:
     LRESULT OnDestroy(UINT nMessage, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnSize(UINT nMessage, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnDrawItem(UINT nMessage, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+    LRESULT OnNotify(UINT nMessage, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+
+    VOID OnActionRename();
 
     BOOL IsTreeViewVisible();
     VOID SetTreeViewVisible(BOOL bVisible);

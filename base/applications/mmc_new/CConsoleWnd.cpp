@@ -106,6 +106,44 @@
         return TRUE;
     }
 
+    LRESULT CConsoleWnd::OnNotify(UINT nMessage, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+    {
+
+        NMHDR *phdr = (NMHDR *)lParam;
+        switch (phdr->code)
+        {
+            case TVN_BEGINLABELEDIT:
+                return FALSE;
+
+            case TVN_ENDLABELEDIT:
+                {
+                    TV_DISPINFO *pNM = (TV_DISPINFO *)lParam;
+                    LPWSTR pszText = pNM->item.pszText;
+                    CSnapin *Snapin = (CSnapin *)pNM->item.lParam;
+                    Snapin->SetDisplayName(pszText);
+                    TreeView_SetItem(pNM->hdr.hwndFrom, &pNM->item);
+                    m_DescriptionBar.SetWindowText(Snapin->DisplayName());
+                }
+                return FALSE;
+
+            case TVN_SELCHANGED:
+                {
+                    LPNMTREEVIEW pNmTreeview = (LPNMTREEVIEW)lParam;
+                    CSnapin *Snapin = (CSnapin *)pNmTreeview->itemNew.lParam;
+
+                    m_DescriptionBar.SetWindowText(Snapin->DisplayName());
+                }
+                return FALSE;
+        }
+
+        return 0;
+    }
+
+    VOID CConsoleWnd::OnActionRename()
+    {
+        m_TreeView.EditLabel(m_TreeView.GetSelection());
+    }
+
     VOID CConsoleWnd::AddTreeViewItemRecursive(HTREEITEM hParentTreeItem, CSnapin *Node)
     {
         HTREEITEM hTreeItem;

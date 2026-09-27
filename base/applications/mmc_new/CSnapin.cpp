@@ -39,6 +39,11 @@ const CAtlString& CSnapin::Description() const { return m_CacheEntry->Descriptio
 const CAtlString& CSnapin::Version() const { return m_CacheEntry->Version(); }
 const CAtlString& CSnapin::DisplayName() const { return m_DisplayName; }
 
+void CSnapin::SetDisplayName(LPWSTR pszName)
+{
+    m_DisplayName = pszName;
+}
+
 CSnapinCacheEntry *CSnapin::CacheEntry()
 {
     return m_CacheEntry;
