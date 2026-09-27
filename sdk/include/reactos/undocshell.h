@@ -490,13 +490,13 @@ HRESULT WINAPI SHRegisterDragDrop(
 
 HRESULT WINAPI SHRevokeDragDrop(HWND hWnd);
 
-BOOL WINAPI DAD_DragEnter(HWND hWnd);
+BOOL WINAPI DAD_DragEnter(_In_ HWND hWnd);
 
 BOOL WINAPI DAD_SetDragImageFromListView(
     HWND hWnd,
     POINT pt);
 
-BOOL WINAPI DAD_ShowDragImage(BOOL bShow);
+BOOL WINAPI DAD_ShowDragImage(_In_ BOOL bShow);
 
 /****************************************************************************
  * Path Manipulation Routines
