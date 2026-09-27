@@ -593,6 +593,18 @@ Exit:
     return Vector;
 }
 
+/* Returns the IRQL a device vector runs at */
+KIRQL
+NTAPI
+HalConvertDeviceIdtToIrql(
+    _In_ ULONG IdtEntry)
+{
+    if (IdtEntry > 0xFF)
+        return PASSIVE_LEVEL;
+
+    return HalpVectorToIrql((UCHAR)IdtEntry);
+}
+
 /**
  * @brief
  * Maps an I/O APIC and adds it to the units in use.
