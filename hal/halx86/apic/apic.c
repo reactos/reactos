@@ -534,6 +534,14 @@ HalpGrantVector(
         HalpAcpiGrantedVector[Vector] = TRUE;
 }
 
+BOOLEAN
+NTAPI
+HalpIsVectorGranted(
+    _In_ ULONG Vector)
+{
+    return (Vector <= 0xFF) && HalpAcpiGrantedVector[Vector];
+}
+
 UCHAR
 NTAPI
 HalpAllocateSystemInterrupt(
