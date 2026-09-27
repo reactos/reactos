@@ -69,6 +69,34 @@ BEGIN
     END
 END
 
+IDM_TREEVIEW_CONTEXT MENU
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "New &Window from Here", IDM_ACTION_NEW
+        MENUITEM SEPARATOR
+        MENUITEM "Rena&me", IDM_ACTION_RENAME
+    END
+
+    POPUP ""
+    BEGIN
+        POPUP "View"
+        BEGIN
+            MENUITEM "Add/Remove Colums", IDM_VIEW_COLUMNS
+            MENUITEM SEPARATOR
+            MENUITEM "Large Icons", IDM_VIEW_LARGE_ICONS
+            MENUITEM "Small Icons", IDM_VIEW_SMALL_ICONS
+            MENUITEM "List", IDM_VIEW_LIST
+            MENUITEM "Details", IDM_VIEW_DETAILS
+            MENUITEM SEPARATOR
+            MENUITEM "Customize...", IDM_VIEW_CUSTOMIZE
+        END
+        MENUITEM "New &Window from Here", IDM_ACTION_NEW
+        MENUITEM SEPARATOR
+        MENUITEM "Rena&me", IDM_ACTION_RENAME
+    END
+END
+
 IDD_DIALOG_ADD DIALOGEX 0, 0, 351, 224
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Add or remove Snap-ins"

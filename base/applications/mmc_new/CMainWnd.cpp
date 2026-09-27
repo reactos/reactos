@@ -354,7 +354,7 @@ CMainWnd::OnActionRename(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandle
     if (child == NULL)
         return 0;
 
-    child->OnActionRename();
+    child->OnActionRename(wNotifyCode, wID, hWndCtl, bHandled);
 
     return 0;
 }

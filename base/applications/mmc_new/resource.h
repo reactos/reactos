@@ -22,6 +22,7 @@
 
 #define IDM_CONSOLE_SMALL      1000
 #define IDM_CONSOLE_LARGE      1001
+#define IDM_TREEVIEW_CONTEXT   1002
 
 #define IDM_FILE_NEW           1010
 #define IDM_FILE_OPEN          1011

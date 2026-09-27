@@ -16,6 +16,8 @@
         m_ViewSelectedNode = RootNode;
         m_pfnSuperWindowProc = DefMDIChildProc;
 
+        m_hMenuTreeView = LoadMenu(_AtlBaseModule.GetModuleInstance(), MAKEINTRESOURCE(IDM_TREEVIEW_CONTEXT));
+
         if (!m_thunk.Init(NULL, NULL))
             return;
         _AtlWinModule.AddCreateWndData(&m_thunk.cd, this);
@@ -23,6 +25,7 @@
 
     CConsoleWnd::~CConsoleWnd()
     {
+        DestroyMenu(m_hMenuTreeView);
     }
 
     LRESULT CConsoleWnd::OnCreate(UINT nMessage, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
@@ -86,6 +89,59 @@
         return DefMDIChildProc(this->m_hWnd, WM_SIZE, wParam, lParam);
     }
 
+    LRESULT CConsoleWnd::OnContextMenu(UINT nMessage, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+    {
+        POINT pt;
+
+        if ((HWND)wParam == m_TreeView.m_hWnd)
+        {
+            TVHITTESTINFO hti;
+            int nPos = 0;
+
+            pt.x = (short) LOWORD(lParam);
+            pt.y = (short) HIWORD(lParam);
+
+            if (pt.x == -1 && pt.y == -1)
+            {
+                RECT rc;
+                hti.hItem = m_TreeView.GetSelection();
+                if (hti.hItem != NULL)
+                {
+                    TreeView_GetItemRect(m_TreeView.m_hWnd, hti.hItem, &rc, TRUE);
+                    pt.x = rc.left + 8;
+                    pt.y = rc.top + 8;
+                    m_TreeView.ClientToScreen(&pt);
+                    hti.flags = TVHT_ONITEM;
+                }
+                else
+                {
+                    hti.flags = 0;
+                }
+            }
+            else
+            {
+                hti.pt.x = pt.x;
+                hti.pt.y = pt.y;
+                m_TreeView.ScreenToClient(&hti.pt);
+                m_TreeView.HitTest(&hti);
+
+                if (hti.hItem)
+                {
+                    if (hti.hItem == m_TreeView.GetSelection())
+                    {
+                        nPos = 1;
+                    }
+                }
+            }
+
+            if (hti.flags & TVHT_ONITEM)
+            {
+                TrackPopupMenu(GetSubMenu(m_hMenuTreeView, nPos), TPM_RIGHTBUTTON, pt.x, pt.y, 0, this->m_hWnd, NULL);
+            }
+        }
+        return 0;
+    }
+
     LRESULT CConsoleWnd::OnDrawItem(UINT nMessage, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
         LPDRAWITEMSTRUCT lpDrawItem = (LPDRAWITEMSTRUCT)lParam;
@@ -139,9 +195,15 @@
         return 0;
     }
 
-    VOID CConsoleWnd::OnActionRename()
+    LRESULT CConsoleWnd::OnActionRename(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
     {
         m_TreeView.EditLabel(m_TreeView.GetSelection());
+        return 0;
+    }
+
+    LRESULT CConsoleWnd::OnViewCustomize(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
+    {
+        return m_MainWnd->OnViewCustomize(wNotifyCode, wID, hWndCtl, bHandled);
     }
 
     VOID CConsoleWnd::AddTreeViewItemRecursive(HTREEITEM hParentTreeItem, CSnapin *Node)
