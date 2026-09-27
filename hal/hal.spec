@@ -15,6 +15,7 @@
 @ stdcall HalCalibratePerformanceCounter(ptr long long)
 ;@ stdcall -arch=x86_64 HalCallBios()
 @ fastcall HalClearSoftwareInterrupt(long)
+@ stdcall -arch=i386,x86_64 HalConvertDeviceIdtToIrql(long)
 @ stdcall HalDisableSystemInterrupt(long long)
 @ stdcall HalDisplayString(str)
 @ stdcall HalEnableSystemInterrupt(long long long)

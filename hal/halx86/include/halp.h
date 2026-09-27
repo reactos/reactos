@@ -635,3 +635,8 @@ extern IDTUsageFlags HalpIDTUsageFlags[MAXIMUM_IDTVECTOR+1];
 
 extern BOOLEAN HalBootViaEfi;
 extern const USHORT HalpBuildType;
+
+/* Interrupt controller this HAL drives, the PIC one being the default */
+#define HALP_INTERRUPT_CONTROLLER_PIC   0
+#define HALP_INTERRUPT_CONTROLLER_APIC  1
+extern ULONG HalpInterruptControllerType;
