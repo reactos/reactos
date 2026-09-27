@@ -37,7 +37,7 @@ LIST_ENTRY HalpAcpiTableMatchList;
 
 ULONG HalpInvalidAcpiTable;
 
-ULONG HalpPicVectorRedirect[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
+ULONG HalpIsaIrqToGsi[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
 
 /* This determines the HAL type */
 BOOLEAN HalDisableFirmwareMapper = TRUE;
@@ -865,6 +865,9 @@ HalpSetupAcpiPhase0(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     HalpVirtAddrForFlush = HalpMapPhysicalMemory64(PhysicalAddress, 1);
     HalpPteForFlush = HalAddressToPte(HalpVirtAddrForFlush);
 
+    /* Route ISA interrupts through the translator */
+    HalGetInterruptTranslator = HalpGetInterruptTranslator;
+
     /* Don't do this again */
     HalpProcessedACPIPhase0 = TRUE;
 
@@ -1015,11 +1018,39 @@ HalpIs16BitPortDecodeSupported(VOID)
     return CM_RESOURCE_PORT_16_BIT_DECODE;
 }
 
+/* IDT entries the APIC HALs give to the ACPI driver for device interrupts */
+#define HALP_ACPI_DEVICE_VECTOR_FIRST 0x51
+#define HALP_ACPI_DEVICE_VECTOR_LAST  0xBE
+
+static
+BOOLEAN
+NTAPI
+HalpIsAcpiDeviceVectorFree(
+    _In_ ULONG Vector)
+{
+    return !(HalpIDTUsageFlags[Vector].Flags & IDT_REGISTERED);
+}
+
 VOID
 NTAPI
 HalpAcpiDetectResourceListSize(OUT PULONG ListSize)
 {
+    ULONG Vector;
+
     PAGED_CODE();
+
+    if (HalpInterruptControllerType == HALP_INTERRUPT_CONTROLLER_APIC)
+    {
+        *ListSize = 0;
+        for (Vector = HALP_ACPI_DEVICE_VECTOR_FIRST;
+             Vector <= HALP_ACPI_DEVICE_VECTOR_LAST;
+             Vector++)
+        {
+            if (HalpIsAcpiDeviceVectorFree(Vector))
+                (*ListSize)++;
+        }
+        return;
+    }
 
     /* One element if there is a SCI */
     *ListSize = HalpFixedAcpiDescTable.sci_int_vector ? 1: 0;
@@ -1029,7 +1060,9 @@ NTSTATUS
 NTAPI
 HalpBuildAcpiResourceList(IN PIO_RESOURCE_REQUIREMENTS_LIST ResourceList)
 {
+    PIO_RESOURCE_DESCRIPTOR Descriptor;
     ULONG Interrupt;
+    ULONG Vector;
     PAGED_CODE();
     ASSERT(ResourceList != NULL);
 
@@ -1041,6 +1074,28 @@ HalpBuildAcpiResourceList(IN PIO_RESOURCE_REQUIREMENTS_LIST ResourceList)
     ResourceList->List[0].Revision = 1;
     ResourceList->List[0].Count = 0;
 
+    /* The APIC HALs hand the ACPI driver a block of IDT entries it assigns to devices */
+    if (HalpInterruptControllerType == HALP_INTERRUPT_CONTROLLER_APIC)
+    {
+        Descriptor = ResourceList->List[0].Descriptors;
+        for (Vector = HALP_ACPI_DEVICE_VECTOR_FIRST;
+             Vector <= HALP_ACPI_DEVICE_VECTOR_LAST;
+             Vector++)
+        {
+            if (!HalpIsAcpiDeviceVectorFree(Vector))
+                continue;
+
+            Descriptor->Type = CmResourceTypeInterrupt;
+            Descriptor->ShareDisposition = CmResourceShareDeviceExclusive;
+            Descriptor->u.Interrupt.MinimumVector = Vector;
+            Descriptor->u.Interrupt.MaximumVector = Vector;
+            Descriptor++;
+            ResourceList->List[0].Count++;
+        }
+
+        return STATUS_SUCCESS;
+    }
+
     /* Is there a SCI? */
     if (HalpFixedAcpiDescTable.sci_int_vector)
     {
@@ -1050,7 +1105,7 @@ HalpBuildAcpiResourceList(IN PIO_RESOURCE_REQUIREMENTS_LIST ResourceList)
         ResourceList->List[0].Descriptors[0].ShareDisposition = CmResourceShareShared;
 
         /* Get the interrupt number */
-        Interrupt = HalpPicVectorRedirect[HalpFixedAcpiDescTable.sci_int_vector];
+        Interrupt = HalpIsaIrqToGsi[HalpFixedAcpiDescTable.sci_int_vector];
         ResourceList->List[0].Descriptors[0].u.Interrupt.MinimumVector = Interrupt;
         ResourceList->List[0].Descriptors[0].u.Interrupt.MaximumVector = Interrupt;
 
