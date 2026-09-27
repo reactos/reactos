@@ -14,10 +14,6 @@
 #define NDEBUG
 #include <debug.h>
 
-/* GLOBALS *******************************************************************/
-
-extern PPROCESSOR_IDENTITY HalpProcessorIdentity;
-
 /* FUNCTIONS *****************************************************************/
 
 VOID

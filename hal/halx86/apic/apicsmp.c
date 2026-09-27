@@ -15,9 +15,6 @@
 #define NDEBUG
 #include <debug.h>
 
-
-extern PPROCESSOR_IDENTITY HalpProcessorIdentity;
-
 /* INTERNAL FUNCTIONS *********************************************************/
 
 /*!

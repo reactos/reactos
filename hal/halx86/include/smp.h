@@ -10,12 +10,14 @@
 /* This table is filled for each physical processor on system */
 typedef struct _PROCESSOR_IDENTITY
 {
-    UCHAR ProcessorId;
-    UCHAR LapicId;
+    ULONG ProcessorId;
+    ULONG LapicId;
     BOOLEAN ProcessorStarted;
     BOOLEAN BSPCheck;
     PKPRCB ProcessorPrcb;
 } PROCESSOR_IDENTITY, *PPROCESSOR_IDENTITY;
+
+extern PROCESSOR_IDENTITY HalpProcessorIdentity[MAXIMUM_PROCESSORS];
 
 /* This table is counter of the overall APIC constants acquired from madt */
 #define HALP_APIC_INFO_TABLE_IOAPIC_NUMBER 256 // ACPI_MADT_IO_APIC.Id is a UINT8.
