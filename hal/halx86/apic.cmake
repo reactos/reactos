@@ -7,6 +7,7 @@ list(APPEND HAL_APIC_SOURCE
     apic/apic.c
     apic/apictimer.c
     apic/halinit.c
+    apic/msi.c
     apic/processor.c
     apic/rtctimer.c
     apic/tsc.c)

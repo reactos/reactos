@@ -62,6 +62,18 @@
 #define APIC_RESERVED_VECTOR 0xFE
 #define APIC_MSI_VECTOR 0xFD
 
+/* Local APIC address a device writes to raise a message-signaled interrupt */
+#define APIC_MSI_ADDRESS_BASE       0xFEE00000
+#define APIC_MSI_ADDRESS_LOGICAL    0x00000004
+#define APIC_MSI_ADDRESS_REDIRHINT  0x00000008
+
+/* Message data: bits 10-8 carry the delivery mode and bit 14 the level assert.
+   Bit 11 is reserved for MSI and matches the destination mode bit of an I/O
+   APIC redirection entry */
+#define APIC_MSI_DATA_LOWEST_PRIORITY   0x00000100
+#define APIC_MSI_DATA_LOGICAL           0x00000800
+#define APIC_MSI_DATA_ASSERT            0x00004000
+
 /* Inputs are stored in HalpVectorToIndex, so they stay below the special values */
 #define HALP_MAX_INPUTS 0xFD
 #define HALP_MAX_IOAPICS 8
@@ -367,3 +379,36 @@ HalpInitApicInfo(IN PLOADER_PARAMETER_BLOCK KeLoaderBlock);
 
 VOID __cdecl ApicSpuriousService(VOID);
 VOID __cdecl ApicErrorService(VOID);
+
+/* apic.c */
+extern UCHAR HalpVectorToIndex[256];
+#ifndef _M_AMD64
+extern const UCHAR HalpIRQLtoTPR[32];
+extern const KIRQL HalVectorToIRQL[16];
+#endif
+
+KIRQL
+NTAPI
+HalpAcquireVectorLock(VOID);
+
+VOID
+NTAPI
+HalpReleaseVectorLock(
+    _In_ KIRQL OldIrql);
+
+BOOLEAN
+NTAPI
+HalpIsVectorGranted(
+    _In_ ULONG Vector);
+
+/* msi.c */
+NTSTATUS
+NTAPI
+HalpBuildInterruptDestination(
+    _In_ KAFFINITY TargetProcessors,
+    _Out_ PBOOLEAN Logical,
+    _Out_ PUCHAR Destination);
+
+VOID
+NTAPI
+HalpInitializeMessageInterrupts(VOID);

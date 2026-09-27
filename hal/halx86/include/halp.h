@@ -653,3 +653,15 @@ extern const USHORT HalpBuildType;
 #define HALP_INTERRUPT_CONTROLLER_PIC   0
 #define HALP_INTERRUPT_CONTROLLER_APIC  1
 extern ULONG HalpInterruptControllerType;
+
+/* Device vectors given to the ACPI driver, see HalpBuildAcpiResourceList */
+BOOLEAN
+NTAPI
+HalpIsVectorGrantable(
+    _In_ ULONG Vector);
+
+VOID
+NTAPI
+HalpGrantVector(
+    _In_ ULONG Vector);
+

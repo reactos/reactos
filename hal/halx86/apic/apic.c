@@ -55,6 +55,12 @@ ULONG HalpMaxGsi;
  */
 IOAPIC_REDIRECTION_REGISTER HalpIoApicShadow[HALP_MAX_INPUTS];
 
+/* Guards the vector tables, the shadow table and the IOREGSEL/IOWIN window */
+static KSPIN_LOCK HalpVectorLock;
+
+/* Vectors handed to the ACPI driver, kept out of the HAL's own allocations */
+static BOOLEAN HalpAcpiGrantedVector[256];
+
 #ifndef _M_AMD64
 const UCHAR
 HalpIRQLtoTPR[32] =
@@ -482,6 +488,60 @@ ApicInitializeLocalApic(
 #endif
 }
 
+/* Raises to HIGH_LEVEL, since HalEnableSystemInterrupt runs above DISPATCH_LEVEL */
+KIRQL
+NTAPI
+HalpAcquireVectorLock(VOID)
+{
+    KIRQL OldIrql;
+
+    KeRaiseIrql(HIGH_LEVEL, &OldIrql);
+    KeAcquireSpinLockAtDpcLevel(&HalpVectorLock);
+    return OldIrql;
+}
+
+VOID
+NTAPI
+HalpReleaseVectorLock(
+    _In_ KIRQL OldIrql)
+{
+    KeReleaseSpinLockFromDpcLevel(&HalpVectorLock);
+    KeLowerIrql(OldIrql);
+}
+
+/**
+ * @brief
+ * Tells whether a vector can go to the ACPI driver. It can when the HAL has not
+ * handed it out, or when the ACPI driver already holds it from an earlier query.
+ */
+BOOLEAN
+NTAPI
+HalpIsVectorGrantable(
+    _In_ ULONG Vector)
+{
+    if (Vector > 0xFF)
+        return FALSE;
+
+    return HalpAcpiGrantedVector[Vector] || (HalpVectorToIndex[Vector] == APIC_FREE_VECTOR);
+}
+
+VOID
+NTAPI
+HalpGrantVector(
+    _In_ ULONG Vector)
+{
+    if (Vector <= 0xFF)
+        HalpAcpiGrantedVector[Vector] = TRUE;
+}
+
+BOOLEAN
+NTAPI
+HalpIsVectorGranted(
+    _In_ ULONG Vector)
+{
+    return (Vector <= 0xFF) && HalpAcpiGrantedVector[Vector];
+}
+
 UCHAR
 NTAPI
 HalpAllocateSystemInterrupt(
@@ -525,7 +585,7 @@ HalpGetRootInterruptVector(
 {
     PHALP_IOAPIC_UNIT Unit;
     UCHAR Vector;
-    KIRQL Irql;
+    KIRQL Irql, OldIrql;
 
     /* Resources that already hold a system vector are translated here too, so stay quiet */
     if (!HalpFindIoApicInput(BusInterruptLevel, &Unit))
@@ -535,6 +595,8 @@ HalpGetRootInterruptVector(
         *OutIrql = 0;
         return 0;
     }
+
+    OldIrql = HalpAcquireVectorLock();
 
     /* Get the vector currently registered */
     Vector = HalpIrqToVector(BusInterruptLevel);
@@ -567,8 +629,9 @@ HalpGetRootInterruptVector(
                 /* Calculate the vactor */
                 Vector = IrqlToTpr(Irql) + Offset;
 
-                /* Check if the vector is free */
-                if (HalpVectorToIrq(Vector) == APIC_FREE_VECTOR)
+                /* Check if the vector is free, granted ones are the ACPI driver's to hand out */
+                if ((HalpVectorToIrq(Vector) == APIC_FREE_VECTOR) &&
+                    !HalpAcpiGrantedVector[Vector])
                 {
                     /* Found one, allocate the interrupt. The IRQL is the one
                        the vector's priority maps to, as later lookups report */
@@ -579,6 +642,7 @@ HalpGetRootInterruptVector(
             }
         }
 
+        HalpReleaseVectorLock(OldIrql);
         DPRINT1("Failed to get an interrupt vector for IRQ %lu\n", BusInterruptLevel);
         *OutAffinity = 0;
         *OutIrql = 0;
@@ -586,6 +650,7 @@ HalpGetRootInterruptVector(
     }
 
 Exit:
+    HalpReleaseVectorLock(OldIrql);
 
     *OutAffinity = HalpDefaultInterruptAffinity;
     ASSERT(HalpDefaultInterruptAffinity);
@@ -669,6 +734,8 @@ ApicInitializeIOApic(VOID)
     IOAPIC_REDIRECTION_REGISTER ReDirReg, Current;
     ULONG Index, Vector, Input;
     UCHAR Register;
+
+    KeInitializeSpinLock(&HalpVectorLock);
 
     /* Use the I/O APICs from the MADT, or the default one without it */
     for (Index = 0; Index < HALP_APIC_INFO_TABLE_IOAPIC_NUMBER; Index++)
@@ -994,6 +1061,7 @@ HalEnableSystemInterrupt(
     NTSTATUS Status;
     ULONG Input;
     UCHAR Index;
+    KIRQL OldIrql;
     ASSERT(Irql <= HIGH_LEVEL);
     ASSERT((IrqlToTpr(Irql) & 0xF0) == (Vector & 0xF0));
 
@@ -1006,20 +1074,33 @@ HalEnableSystemInterrupt(
         return TRUE;
     }
 
-    /* The ACPI driver allocates vectors itself when it arbitrates interrupts */
+    /* The ACPI driver allocates vectors itself when it arbitrates interrupts.
+       Ask it before taking the lock, since this calls out of the HAL */
     Polarity = InterruptPolarityUnknown;
+    Status = STATUS_NOT_FOUND;
+    Input = 0;
     if (Index == APIC_FREE_VECTOR)
     {
         Status = HalpQueryVectorInput(Vector, &Input, &Polarity);
+    }
+
+    OldIrql = HalpAcquireVectorLock();
+
+    /* Another processor may have claimed the vector while the lock was not held */
+    Index = HalpVectorToIndex[Vector];
+    if (Index == APIC_FREE_VECTOR)
+    {
         if (Status == STATUS_INVALID_PARAMETER)
         {
             HalpVectorToIndex[Vector] = APIC_MSI_VECTOR;
+            HalpReleaseVectorLock(OldIrql);
             return TRUE;
         }
 
         /* Don't take over an input that belongs to another vector */
         if (!NT_SUCCESS(Status) || (HalpGsivToVector[Input] != APIC_FREE_VECTOR))
         {
+            HalpReleaseVectorLock(OldIrql);
             DPRINT1("No free input for vector 0x%lx, status 0x%lx\n", Vector, Status);
             return FALSE;
         }
@@ -1031,8 +1112,9 @@ HalEnableSystemInterrupt(
     /* Check if its valid */
     if (Index >= HalpMaxGsi)
     {
-        /* Interrupt is not in use */
-        return FALSE;
+        /* Message-signaled vectors have nothing to unmask, others are not in use */
+        HalpReleaseVectorLock(OldIrql);
+        return (Index == APIC_MSI_VECTOR);
     }
 
     /* Read the redirection entry */
@@ -1043,6 +1125,7 @@ HalEnableSystemInterrupt(
     {
         /* If the vector matches, there is nothing more to do,
            otherwise something is wrong. */
+        HalpReleaseVectorLock(OldIrql);
         return (ReDirReg.Vector == Vector);
     }
 
@@ -1060,6 +1143,7 @@ HalEnableSystemInterrupt(
     /* Write back the entry */
     ApicWriteIORedirectionEntry(Index, ReDirReg);
 
+    HalpReleaseVectorLock(OldIrql);
     return TRUE;
 }
 
@@ -1071,19 +1155,22 @@ HalDisableSystemInterrupt(
 {
     IOAPIC_REDIRECTION_REGISTER ReDirReg;
     UCHAR Index;
+    KIRQL OldIrql;
     ASSERT(Irql <= HIGH_LEVEL);
     ASSERT(Vector < RTL_NUMBER_OF(HalpVectorToIndex));
 
-    Index = HalpVectorToIndex[Vector];
+    OldIrql = HalpAcquireVectorLock();
 
     /* Message-signaled and reserved vectors have no entry to mask */
-    if (Index >= HalpMaxGsi)
-        return;
+    Index = HalpVectorToIndex[Vector];
+    if (Index < HalpMaxGsi)
+    {
+        ReDirReg = ApicReadIORedirectionEntry(Index);
+        ReDirReg.Mask = 1;
+        ApicWriteIORedirectionEntry(Index, ReDirReg);
+    }
 
-    /* Mask the redirection entry */
-    ReDirReg = ApicReadIORedirectionEntry(Index);
-    ReDirReg.Mask = 1;
-    ApicWriteIORedirectionEntry(Index, ReDirReg);
+    HalpReleaseVectorLock(OldIrql);
 }
 
 BOOLEAN
