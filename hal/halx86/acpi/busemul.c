@@ -242,6 +242,17 @@ HalGetInterruptVector(IN INTERFACE_TYPE InterfaceType,
                       OUT PKIRQL Irql,
                       OUT PKAFFINITY Affinity)
 {
+    /* Once the ACPI driver takes over device vectors, the answer is its own */
+    if (HalGetInterruptVectorOverride != NULL)
+    {
+        return HalGetInterruptVectorOverride(InterfaceType,
+                                             BusNumber,
+                                             BusInterruptLevel,
+                                             BusInterruptVector,
+                                             Irql,
+                                             Affinity);
+    }
+
     /* Call the system bus translator */
     return HalpGetRootInterruptVector(BusInterruptLevel,
                                       BusInterruptVector,

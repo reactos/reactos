@@ -53,6 +53,9 @@ HalpInitPhase0(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 
     HalpInterruptControllerType = HALP_INTERRUPT_CONTROLLER_APIC;
 
+    /* Set up message-signaled interrupt support */
+    HalpInitializeMessageInterrupts();
+
     /* Enable clock interrupt handler */
     HalpEnableInterruptHandler(IDT_INTERNAL,
                                0,

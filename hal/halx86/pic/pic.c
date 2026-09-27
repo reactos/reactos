@@ -1274,6 +1274,63 @@ HalConvertDeviceIdtToIrql(
     return HalpVectorToIrql((UCHAR)IdtEntry);
 }
 
+/* The PIC HALs grant the ACPI driver its SCI line, not IDT entries */
+BOOLEAN
+NTAPI
+HalpIsVectorGrantable(
+    _In_ ULONG Vector)
+{
+    UNREFERENCED_PARAMETER(Vector);
+    return FALSE;
+}
+
+VOID
+NTAPI
+HalpGrantVector(
+    _In_ ULONG Vector)
+{
+    UNREFERENCED_PARAMETER(Vector);
+}
+
+/* The PIC HALs have no local APIC to aim message-signaled interrupts at */
+NTSTATUS
+NTAPI
+HalGetInterruptTargetInformation(
+    _In_ INTERRUPT_TARGET_TYPE Type,
+    _In_ ULONG Id,
+    _Out_ PHAL_INTERRUPT_TARGET_DESCRIPTOR Information)
+{
+    UNREFERENCED_PARAMETER(Type);
+    UNREFERENCED_PARAMETER(Id);
+
+    RtlZeroMemory(Information, sizeof(*Information));
+    return STATUS_NOT_SUPPORTED;
+}
+
+NTSTATUS
+NTAPI
+HalGetMessageRoutingInfo(
+    _In_ PHAL_MESSAGE_SIGNAL_TARGET_REQUEST Request,
+    _Out_ PINTERRUPT_CONNECTION_DATA ConnectionData)
+{
+    UNREFERENCED_PARAMETER(Request);
+
+    ConnectionData->Count = 0;
+    return STATUS_NOT_SUPPORTED;
+}
+
+NTSTATUS
+NTAPI
+HalGetProcessorIdByNtNumber(
+    _In_ ULONG ProcessorNumber,
+    _Out_ PULONG ProcessorId)
+{
+    UNREFERENCED_PARAMETER(ProcessorNumber);
+
+    *ProcessorId = 0;
+    return STATUS_NOT_SUPPORTED;
+}
+
 #else /* _MINIHAL_ */
 
 KIRQL
