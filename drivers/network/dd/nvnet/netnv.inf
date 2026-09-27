@@ -150,32 +150,32 @@ HKR, Ndi\params\NetworkAddress,        UpperCase, 0, "1"
 HKR, Ndi\params\NetworkAddress,        default,   0, " "
 HKR, Ndi\params\NetworkAddress,        optional,  0, "1"
 
-HKR, Ndi\params\SpeedDuplex,           ParamDesc, 0, %SD%
-HKR, Ndi\params\SpeedDuplex,           type,      0, "enum"
-HKR, Ndi\params\SpeedDuplex,           default,   0, "0"
-HKR, Ndi\params\SpeedDuplex\enum,      "0",       0, "%Auto%"
-HKR, Ndi\params\SpeedDuplex\enum,      "1",       0, "10HD"
-HKR, Ndi\params\SpeedDuplex\enum,      "2",       0, "10FD"
-HKR, Ndi\params\SpeedDuplex\enum,      "3",       0, "100HD"
-HKR, Ndi\params\SpeedDuplex\enum,      "4",       0, "100FD"
+HKR,Ndi\params\*SpeedDuplex,      ParamDesc, 0, %SD%
+HKR,Ndi\params\*SpeedDuplex,      type,      0, "enum"
+HKR,Ndi\params\*SpeedDuplex,      default,   0, "0"
+HKR,Ndi\params\*SpeedDuplex\enum, "0",       0, "%Auto%"
+HKR,Ndi\params\*SpeedDuplex\enum, "1",       0, "10HD"
+HKR,Ndi\params\*SpeedDuplex\enum, "2",       0, "10FD"
+HKR,Ndi\params\*SpeedDuplex\enum, "3",       0, "100HD"
+HKR,Ndi\params\*SpeedDuplex\enum, "4",       0, "100FD"
 
 [NVNET_Flow]
-HKR, Ndi\params\FlowControl,           ParamDesc, 0, %FC%
-HKR, Ndi\params\FlowControl,           type,      0, "enum"
-HKR, Ndi\params\FlowControl,           default,   0, "1"
-HKR, Ndi\params\FlowControl\enum,      "0",       0, "%No%"
-HKR, Ndi\params\FlowControl\enum,      "1",       0, "%Auto%"
-HKR, Ndi\params\FlowControl\enum,      "2",       0, "%FlowRx%"
+HKR,Ndi\params\*FlowControl,      ParamDesc, 0, %FC%
+HKR,Ndi\params\*FlowControl,      type,      0, "enum"
+HKR,Ndi\params\*FlowControl,      default,   0, "4"
+HKR,Ndi\params\*FlowControl\enum, "0",       0, "%No%"
+HKR,Ndi\params\*FlowControl\enum, "2",       0, "%FlowRx%"
+HKR,Ndi\params\*FlowControl\enum, "4",       0, "%Auto%"
 
 [NVNET_Flow_V2]
-HKR, Ndi\params\FlowControl,           ParamDesc, 0, %FC%
-HKR, Ndi\params\FlowControl,           type,      0, "enum"
-HKR, Ndi\params\FlowControl,           default,   0, "1"
-HKR, Ndi\params\FlowControl\enum,      "0",       0, "%No%"
-HKR, Ndi\params\FlowControl\enum,      "1",       0, "%Auto%"
-HKR, Ndi\params\FlowControl\enum,      "2",       0, "%FRx%"
-HKR, Ndi\params\FlowControl\enum,      "3",       0, "%FTx%"
-HKR, Ndi\params\FlowControl\enum,      "4",       0, "%FBoth%"
+HKR,Ndi\params\*FlowControl,      ParamDesc, 0, %FC%
+HKR,Ndi\params\*FlowControl,      type,      0, "enum"
+HKR,Ndi\params\*FlowControl,      default,   0, "4"
+HKR,Ndi\params\*FlowControl\enum, "0",       0, "%No%"
+HKR,Ndi\params\*FlowControl\enum, "1",       0, "%FTx%"
+HKR,Ndi\params\*FlowControl\enum, "2",       0, "%FRx%"
+HKR,Ndi\params\*FlowControl\enum, "3",       0, "%FBoth%"
+HKR,Ndi\params\*FlowControl\enum, "4",       0, "%Auto%"
 
 [NVNET_Offload]
 HKR, Ndi\params\ChecksumOffload,       ParamDesc, 0, %CO%
@@ -184,33 +184,29 @@ HKR, Ndi\params\ChecksumOffload,       default,   0, "1"
 HKR, Ndi\params\ChecksumOffload\enum,  "0",       0, "%No%"
 HKR, Ndi\params\ChecksumOffload\enum,  "1",       0, "%Yes%"
 
-HKR, Ndi\params\LargeSendOffload,       ParamDesc, 0, %LS%
-HKR, Ndi\params\LargeSendOffload,       type,      0, "enum"
-HKR, Ndi\params\LargeSendOffload,       default,   0, "1"
-HKR, Ndi\params\LargeSendOffload\enum,  "0",       0, "%No%"
-HKR, Ndi\params\LargeSendOffload\enum,  "1",       0, "%Yes%"
+HKR,Ndi\params\*LsoV1IPv4,      ParamDesc, 0, %LS%
+HKR,Ndi\params\*LsoV1IPv4,      type,      0, "enum"
+HKR,Ndi\params\*LsoV1IPv4,      default,   0, "1"
+HKR,Ndi\params\*LsoV1IPv4\enum, "0",       0, "%No%"
+HKR,Ndi\params\*LsoV1IPv4\enum, "1",       0, "%Yes%"
 
 [NVNET_Jumbo]
-HKR, Ndi\params\JumboSize,             ParamDesc, 0, %JF%
-HKR, Ndi\params\JumboSize,             type,      0, "int"
-HKR, Ndi\params\JumboSize,             default,   0, "1514"
-HKR, Ndi\params\JumboSize,             min,       0, "1514"
-HKR, Ndi\params\JumboSize,             max,       0, "9014"
-HKR, Ndi\params\JumboSize,             step,      0, "1"
-HKR, Ndi\params\JumboSize,             base,      0, "10"
+HKR,Ndi\params\*JumboPacket, ParamDesc, 0, %JF%
+HKR,Ndi\params\*JumboPacket, type,      0, "int"
+HKR,Ndi\params\*JumboPacket, default,   0, "1514"
+HKR,Ndi\params\*JumboPacket, min,       0, "1514"
+HKR,Ndi\params\*JumboPacket, max,       0, "9014"
+HKR,Ndi\params\*JumboPacket, step,      0, "1"
+HKR,Ndi\params\*JumboPacket, base,      0, "10"
 
 [NVNET_VLAN]
-HKR, Ndi\params\Priority,              ParamDesc, 0, %PP%
-HKR, Ndi\params\Priority,              type,      0, "enum"
-HKR, Ndi\params\Priority,              default,   0, "1"
-HKR, Ndi\params\Priority\enum,         "0",       0, "%No%"
-HKR, Ndi\params\Priority\enum,         "1",       0, "%Yes%"
-
-HKR, Ndi\params\VlanTag,               ParamDesc, 0, %VT%
-HKR, Ndi\params\VlanTag,               type,      0, "enum"
-HKR, Ndi\params\VlanTag,               default,   0, "1"
-HKR, Ndi\params\VlanTag\enum,          "0",       0, "%No%"
-HKR, Ndi\params\VlanTag\enum,          "1",       0, "%Yes%"
+HKR,Ndi\params\*PriorityVLANTag,      ParamDesc, 0, %PVT%
+HKR,Ndi\params\*PriorityVLANTag,      type,      0, "enum"
+HKR,Ndi\params\*PriorityVLANTag,      default,   0, "3"
+HKR,Ndi\params\*PriorityVLANTag\enum, "0",       0, "%No%"
+HKR,Ndi\params\*PriorityVLANTag\enum, "1",       0, "%PP%"
+HKR,Ndi\params\*PriorityVLANTag\enum, "2",       0, "%VT%"
+HKR,Ndi\params\*PriorityVLANTag\enum, "3",       0, "%PVT%"
 
 HKR, Ndi\params\VlanID,                ParamDesc, 0, %VI%
 HKR, Ndi\params\VlanID,                type,      0, "long"
@@ -239,8 +235,8 @@ HKR, , TypesSupported,   0x00010001, 7
 [Strings]
 ; Non-localizable
 ReactOS = "ReactOS Project"
-
 nVidiaMfg = "nVidia"
+VI = "VLAN ID"
 
 ; Localizable
 OM = "Optimization Mode"
@@ -258,9 +254,9 @@ FTx = "Tx Pause"
 FBoth = "Rx & Tx Pause"
 No = "No"
 Yes = "Yes"
+PVT = "Packet Priority & VLAN"
 PP = "Packet Priority"
-VT = "VLAN Tagging"
-VI = "VLAN ID"
+VT = "VLAN"
 JF = "Jumbo Frame"
 
 nForce.DeviceDesc = "nVidia nForce PCI Ethernet Controller"
@@ -294,8 +290,8 @@ FTx = "Кадры паузы передачи"
 FBoth = "Кадры паузы приема и передачи"
 No = "Нет"
 Yes = "Да"
+PVT = "Приоритет кадров & VLAN"
 PP = "Приоритет кадров"
-VT = "Маркировка кадров"
 JF = "Кадры большого размера"
 
 nForce.DeviceDesc = "nVidia nForce PCI сетевой контроллер"
