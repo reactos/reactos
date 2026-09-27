@@ -37,6 +37,8 @@
 
 #define PARAMETERS_KEY L"Parameters"     /* The parameters subkey under the device-specific key */
 
+extern ULONG NdisEnableTxRxFlowControl;
+
 static
 PMINIPORT_CONFIGURATION_CONTEXT
 AllocateConfigurationContext(
@@ -452,13 +454,23 @@ NdisReadConfiguration(
     static const UNICODE_STRING NdisVersionKey = RTL_CONSTANT_STRING(L"NdisVersion");
     static const UNICODE_STRING EnvironmentKey = RTL_CONSTANT_STRING(L"Environment");
     static const UNICODE_STRING ProcessorTypeKey = RTL_CONSTANT_STRING(L"ProcessorType");
+    static const UNICODE_STRING FlowControlKey = RTL_CONSTANT_STRING(L"*FlowControl");
 
     NDIS_DbgPrint(MAX_TRACE, ("requested read type %d of '%wZ'\n", ParameterType, Keyword));
 
     ASSERT(ConfigurationContext);
 
     /* Check for predefined entry names */
-    if (RtlEqualUnicodeString(Keyword, &NdisVersionKey, TRUE))
+    if (!NdisEnableTxRxFlowControl && RtlEqualUnicodeString(Keyword, &FlowControlKey, TRUE))
+    {
+        NDIS_DbgPrint(MID_TRACE, ("Disable TX/RX flow control for this miniport\n"));
+        LocalUlong = 0;
+
+        RegType = REG_DWORD;
+        RegData = &LocalUlong;
+        RegDataLength = sizeof(LocalUlong);
+    }
+    else if (RtlEqualUnicodeString(Keyword, &NdisVersionKey, TRUE))
     {
         LocalUlong = NDIS_VERSION;
 
