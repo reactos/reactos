@@ -74,6 +74,8 @@
 #define IDC_LIST_AVAILABLE            3003
 #define IDC_LIST_SELECTED             3004
 #define IDC_DESCRIPTION               3005
+#define IDC_BUTTON_UP                 3006
+#define IDC_BUTTON_DOWN               3007
 
 #define IDD_CUSTOMIZE                 3100
 #define IDC_CUSTOMIZE_SCOPEPANE       3101
