@@ -697,7 +697,7 @@ typedef struct _CM_PARTIAL_RESOURCE_DESCRIPTOR
             ULONG Reserved1;
             ULONG Reserved2;
         } DeviceSpecificData;
-#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+#if (NTDDI_VERSION >= NTDDI_LONGHORN) || defined(__REACTOS__)
         struct
         {
             PHYSICAL_ADDRESS Start;
