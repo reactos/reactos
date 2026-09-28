@@ -827,7 +827,8 @@ IopTranslateRequirement(
  * Translates an assigned resource to the resource the processor uses, with the
  * translators cached on the device node and above it. When the root is
  * reached, the translation continues from the bus that provides the legacy bus
- * of the resource, unless the resource was reported by the HAL.
+ * of the resource. HAL reported resources start at the root, and skip the
+ * legacy bus when internal.
  *
  * @param[in] DeviceNode
  * The device the resource is assigned to, or NULL to start at the legacy bus.
@@ -850,6 +851,7 @@ IopTranslateResourceToRoot(
 {
     PDEVICE_OBJECT PhysicalDeviceObject = NULL;
     CM_PARTIAL_RESOURCE_DESCRIPTOR Current = *Raw;
+    BOOLEAN IsHalReported = (RequestSource == ArbiterRequestHalReported);
     NTSTATUS Status = STATUS_SUCCESS;
     IOP_RESOURCE_PATH Path;
     PDEVICE_NODE Node;
@@ -860,18 +862,19 @@ IopTranslateResourceToRoot(
     Path.BusNumber = BusNumber;
     Path.ListInterfaceType = InterfaceType;
 
-    /* The HAL reports resources as the processor sees them */
-    Path.CanUseLegacyBus = (RequestSource != ArbiterRequestHalReported);
+    /* The HAL knows when a resource is on the internal bus */
+    Path.CanUseLegacyBus = !(IsHalReported && InterfaceType == Internal);
 
     if (DeviceNode != NULL)
-    {
-        Node = DeviceNode;
         PhysicalDeviceObject = DeviceNode->PhysicalDeviceObject;
-    }
+
+    /* HAL reported resources were arbitrated at the root, so they are translated from there */
+    if (IsHalReported)
+        Node = IopRootDeviceNode;
+    else if (DeviceNode != NULL)
+        Node = DeviceNode;
     else
-    {
         Node = IopLookupLegacyBus(InterfaceType, BusNumber);
-    }
 
     for (Node = IopResourcePathNode(&Path, Node);
          Node != NULL && Status != STATUS_TRANSLATION_COMPLETE;
