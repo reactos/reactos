@@ -95,7 +95,7 @@ PoQueueShutdownWorkItem(
 #endif
 $endif (_NTIFS_)
 $if (_WDMDDK_)
-#if (NTDDI_VERSION >= NTDDI_VISTA)
+#if (NTDDI_VERSION >= NTDDI_VISTA) || defined(__REACTOS__)
 
 _IRQL_requires_max_(DISPATCH_LEVEL)
 NTKRNLVISTAAPI
