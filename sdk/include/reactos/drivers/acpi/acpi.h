@@ -46,7 +46,9 @@ typedef struct _ACPI_BIOS_MULTI_NODE
 //
 // FADT Flags
 //
+#ifndef ACPI_TMR_VAL_EXT
 #define ACPI_TMR_VAL_EXT        0x100
+#endif
 
 //
 // BGRT Flags
