@@ -1,10 +1,6 @@
 
-remove_definitions(-D_WIN32_WINNT=0x502 -DWINVER=0x502)
-# uACPI-NT is built against the Vista interfaces
+# Built like the rest of the tree, so shared structures such as ARBITER_INSTANCE match
 add_definitions(
-    -D_WIN32_WINNT=0x600
-    -DWINVER=0x600
-    -DNTDDI_VERSION=0x06000000
     -DNT_TARGET_ID="reactos"
     -DNT_TARGET_NAME="ReactOS")
 
