@@ -12,6 +12,7 @@
 #include <uacpi/internal/event.h>
 #include <uacpi/internal/notify.h>
 #include <uacpi/internal/osi.h>
+#include <uacpi/internal/mutex.h>
 #include <uacpi/internal/registers.h>
 
 struct uacpi_runtime_context g_uacpi_rt_ctx = { 0 };
@@ -125,6 +126,8 @@ const uacpi_char *uacpi_status_to_string(uacpi_status st)
         return "hanging AML while loop";
     case UACPI_STATUS_AML_CALL_STACK_DEPTH_LIMIT:
         return "reached maximum AML call stack depth";
+    case UACPI_STATUS_AML_REFERENCE_CYCLE:
+        return "AML attempted to create a reference cycle";
     default:
         return "<invalid status>";
     }
@@ -133,9 +136,18 @@ const uacpi_char *uacpi_status_to_string(uacpi_status st)
 void uacpi_state_reset(void)
 {
 #ifndef UACPI_BAREBONES_MODE
+    /*
+     * Get rid of everything that is able to produce deferred work first, and
+     * then make sure there's none left, be it a GPE handler or a notification.
+     * Neither would survive the namespace being torn down underneath it.
+     */
+    uacpi_deinitialize_events();
+
+    if (g_uacpi_rt_ctx.init_level >= UACPI_INIT_LEVEL_SUBSYSTEM_INITIALIZED)
+        uacpi_kernel_wait_for_work_completion();
+
     uacpi_deinitialize_namespace();
     uacpi_deinitialize_interfaces();
-    uacpi_deinitialize_events();
     uacpi_deinitialize_notify();
     uacpi_deinitialize_opregion();
 #endif
@@ -153,7 +165,7 @@ void uacpi_state_reset(void)
 
 #ifndef UACPI_REDUCED_HARDWARE
     if (g_uacpi_rt_ctx.global_lock_event)
-        uacpi_kernel_free_event(g_uacpi_rt_ctx.global_lock_event);
+        uacpi_free_native_event(g_uacpi_rt_ctx.global_lock_event);
     if (g_uacpi_rt_ctx.global_lock_spinlock)
         uacpi_kernel_free_spinlock(g_uacpi_rt_ctx.global_lock_spinlock);
 #endif

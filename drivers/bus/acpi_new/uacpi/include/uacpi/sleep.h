@@ -55,6 +55,12 @@ uacpi_status uacpi_prepare_for_wake_from_sleep_state(uacpi_sleep_state);
 
 /**
  * Wake from the given sleep state.
+ *
+ * Note that this discards a pending press of the power & sleep buttons, as
+ * that is most likely what has woken the system up, and enables the fixed
+ * event of either one if it has a handler installed. The latter is the case
+ * even if the event was disabled via uacpi_disable_fixed_event prior to going
+ * to sleep.
  */
 uacpi_status uacpi_wake_from_sleep_state(uacpi_sleep_state);
 

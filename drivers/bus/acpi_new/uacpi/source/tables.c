@@ -340,7 +340,7 @@ uacpi_status uacpi_initialize_tables(void)
         }
     }
 
-    table_mutex = uacpi_kernel_create_mutex();
+    table_mutex = uacpi_create_native_mutex();
     if (uacpi_unlikely(table_mutex == UACPI_NULL))
         return UACPI_STATUS_OUT_OF_MEMORY;
 
@@ -383,7 +383,7 @@ void uacpi_deinitialize_tables(void)
 
 #ifndef UACPI_BAREBONES_MODE
     if (table_mutex)
-        uacpi_kernel_free_mutex(table_mutex);
+        uacpi_free_native_mutex(table_mutex);
 
     table_mutex = UACPI_NULL;
 #endif
@@ -767,14 +767,14 @@ static uacpi_status handle_table_override(
     uacpi_status ret;
 
     switch (disposition) {
-    case UACPI_TABLE_INSTALLATION_DISPOSITON_VIRTUAL_OVERRIDE:
+    case UACPI_TABLE_INSTALLATION_DISPOSITION_VIRTUAL_OVERRIDE:
         ret = table_install_with_origin_unlocked(
             UACPI_VIRT_ADDR_TO_PTR((uacpi_virt_addr)address),
             UACPI_TABLE_ORIGIN_HOST_VIRTUAL,
             out_table
         );
         return ret;
-    case UACPI_TABLE_INSTALLATION_DISPOSITON_PHYSICAL_OVERRIDE:
+    case UACPI_TABLE_INSTALLATION_DISPOSITION_PHYSICAL_OVERRIDE:
         return table_install_physical_with_origin_unlocked(
             (uacpi_phys_addr)address,
             UACPI_TABLE_ORIGIN_HOST_PHYSICAL,
@@ -782,7 +782,7 @@ static uacpi_status handle_table_override(
             out_table
         );
     default:
-        uacpi_error("invalid table installation disposition %d", disposition);
+        uacpi_error("invalid table installation disposition %u", disposition);
         return UACPI_STATUS_INTERNAL_ERROR;
     }
 }
@@ -827,9 +827,9 @@ static uacpi_status table_install_physical_with_origin_unlocked(
         disposition = installation_handler(virt, &override);
 
         switch (disposition) {
-        case UACPI_TABLE_INSTALLATION_DISPOSITON_ALLOW:
+        case UACPI_TABLE_INSTALLATION_DISPOSITION_ALLOW:
             break;
-        case UACPI_TABLE_INSTALLATION_DISPOSITON_DENY:
+        case UACPI_TABLE_INSTALLATION_DISPOSITION_DENY:
             uacpi_info(
                 "table '%.4s' (0x%016"UACPI_PRIX64") installation denied "
                 "by host", hdr.signature, UACPI_FMT64(phys)
@@ -901,9 +901,9 @@ static uacpi_status table_install_with_origin_unlocked(
         disposition = installation_handler(virt, &override);
 
         switch (disposition) {
-        case UACPI_TABLE_INSTALLATION_DISPOSITON_ALLOW:
+        case UACPI_TABLE_INSTALLATION_DISPOSITION_ALLOW:
             break;
-        case UACPI_TABLE_INSTALLATION_DISPOSITON_DENY:
+        case UACPI_TABLE_INSTALLATION_DISPOSITION_DENY:
             uacpi_info(
                 "table "UACPI_PRI_TBL_HDR" installation denied by host",
                 UACPI_FMT_TBL_HDR(hdr)

@@ -23,3 +23,7 @@ UACPI_STUB_IF_REDUCED_HARDWARE(
 UACPI_ALWAYS_ERROR_FOR_REDUCED_HARDWARE(
     uacpi_status uacpi_clear_all_events(void)
 )
+
+UACPI_STUB_IF_REDUCED_HARDWARE(
+    void uacpi_events_restore_buttons_post_wake(void)
+)

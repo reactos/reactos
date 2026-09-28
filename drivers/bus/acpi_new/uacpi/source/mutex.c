@@ -86,7 +86,7 @@ static uacpi_status uacpi_acquire_global_lock_from_firmware(void)
         );
         uacpi_kernel_unlock_spinlock(g_uacpi_rt_ctx.global_lock_spinlock, flags);
 
-        uacpi_kernel_wait_for_event(g_uacpi_rt_ctx.global_lock_event, 0xFFFF);
+        uacpi_wait_for_native_event(g_uacpi_rt_ctx.global_lock_event, 0xFFFF);
         flags = uacpi_kernel_lock_spinlock(g_uacpi_rt_ctx.global_lock_spinlock);
     }
 
@@ -133,7 +133,7 @@ uacpi_status uacpi_acquire_native_mutex_with_timeout(
     if (uacpi_unlikely(mtx == UACPI_NULL))
         return UACPI_STATUS_INVALID_ARGUMENT;
 
-    ret = uacpi_kernel_acquire_mutex(mtx, timeout);
+    ret = uacpi_kernel_wait_for_semaphore(mtx, timeout);
     if (uacpi_likely_success(ret))
         return ret;
 
@@ -168,10 +168,7 @@ uacpi_status uacpi_acquire_global_lock(uacpi_u16 timeout, uacpi_u32 *out_seq)
         return ret;
     }
 
-    if (uacpi_unlikely(g_uacpi_rt_ctx.global_lock_seq_num == 0xFFFFFFFF))
-        g_uacpi_rt_ctx.global_lock_seq_num = 0;
-
-    *out_seq = g_uacpi_rt_ctx.global_lock_seq_num++;
+    *out_seq = ++g_uacpi_rt_ctx.global_lock_seq_num;
     g_uacpi_rt_ctx.global_lock_acquired = UACPI_TRUE;
     return UACPI_STATUS_OK;
 }
@@ -255,7 +252,7 @@ uacpi_status uacpi_release_aml_mutex(uacpi_mutex *mutex)
 
 uacpi_status uacpi_recursive_lock_init(struct uacpi_recursive_lock *lock)
 {
-    lock->mutex = uacpi_kernel_create_mutex();
+    lock->mutex = uacpi_create_native_mutex();
     if (uacpi_unlikely(lock->mutex == UACPI_NULL))
         return UACPI_STATUS_OUT_OF_MEMORY;
 
@@ -278,7 +275,7 @@ uacpi_status uacpi_recursive_lock_deinit(struct uacpi_recursive_lock *lock)
     lock->owner = UACPI_THREAD_ID_NONE;
 
     if (lock->mutex != UACPI_NULL) {
-        uacpi_kernel_free_mutex(lock->mutex);
+        uacpi_free_native_mutex(lock->mutex);
         lock->mutex = UACPI_NULL;
     }
 
@@ -316,13 +313,13 @@ uacpi_status uacpi_recursive_lock_release(struct uacpi_recursive_lock *lock)
 
 uacpi_status uacpi_rw_lock_init(struct uacpi_rw_lock *lock)
 {
-    lock->read_mutex = uacpi_kernel_create_mutex();
+    lock->read_mutex = uacpi_create_native_mutex();
     if (uacpi_unlikely(lock->read_mutex == UACPI_NULL))
         return UACPI_STATUS_OUT_OF_MEMORY;
 
-    lock->write_mutex = uacpi_kernel_create_mutex();
+    lock->write_mutex = uacpi_create_native_mutex();
     if (uacpi_unlikely(lock->write_mutex == UACPI_NULL)) {
-        uacpi_kernel_free_mutex(lock->read_mutex);
+        uacpi_free_native_mutex(lock->read_mutex);
         lock->read_mutex = UACPI_NULL;
         return UACPI_STATUS_OUT_OF_MEMORY;
     }
@@ -340,11 +337,11 @@ uacpi_status uacpi_rw_lock_deinit(struct uacpi_rw_lock *lock)
     }
 
     if (lock->read_mutex != UACPI_NULL) {
-        uacpi_kernel_free_mutex(lock->read_mutex);
+        uacpi_free_native_mutex(lock->read_mutex);
         lock->read_mutex = UACPI_NULL;
     }
     if (lock->write_mutex != UACPI_NULL) {
-        uacpi_kernel_free_mutex(lock->write_mutex);
+        uacpi_free_native_mutex(lock->write_mutex);
         lock->write_mutex = UACPI_NULL;
     }
 
@@ -365,7 +362,7 @@ uacpi_status uacpi_rw_lock_read(struct uacpi_rw_lock *lock)
             lock->num_readers = 0;
     }
 
-    uacpi_kernel_release_mutex(lock->read_mutex);
+    uacpi_release_native_mutex(lock->read_mutex);
     return ret;
 }
 
@@ -380,7 +377,7 @@ uacpi_status uacpi_rw_unlock_read(struct uacpi_rw_lock *lock)
     if (lock->num_readers-- == 1)
         uacpi_release_native_mutex(lock->write_mutex);
 
-    uacpi_kernel_release_mutex(lock->read_mutex);
+    uacpi_release_native_mutex(lock->read_mutex);
     return ret;
 }
 

@@ -188,6 +188,8 @@ static uacpi_status wake_from_sleep_state_hw_full(uacpi_u8 state)
         UACPI_REGISTER_FIELD_WAK_STS, ACPI_PM1_STS_CLEAR
     );
 
+    uacpi_events_restore_buttons_post_wake();
+
     // Now that we're awake set the status to 1 (running)
     eval_sst(1);
 

@@ -1060,7 +1060,16 @@ UACPI_INVALID_OPCODE(0xEF)                                       \
 UACPI_INVALID_OPCODE(0xF0)                                       \
 UACPI_INVALID_OPCODE(0xF1)                                       \
 UACPI_INVALID_OPCODE(0xF2)                                       \
-UACPI_INVALID_OPCODE(0xF3)                                       \
+UACPI_OP(                                                        \
+    InternalOpDerefNamedObject, 0xF3,                            \
+    UACPI_OP_PROPERTY_TERM_ARG |                                 \
+    UACPI_OP_PROPERTY_INTERNAL,                                  \
+    {                                                            \
+        UACPI_PARSE_OP_OBJECT_ALLOC,                             \
+        UACPI_PARSE_OP_INVOKE_HANDLER,                           \
+        UACPI_PARSE_OP_OBJECT_TRANSFER_TO_PREV,                  \
+    }                                                            \
+)                                                                \
 UACPI_OP(                                                        \
     InternalOpReadFieldAsBuffer, 0xF4,                           \
     UACPI_OP_PROPERTY_TERM_ARG |                                 \

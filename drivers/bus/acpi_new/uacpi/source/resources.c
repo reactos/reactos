@@ -2131,7 +2131,7 @@ uacpi_status uacpi_for_each_resource(
         }
 
         if (uacpi_unlikely(current->type > UACPI_RESOURCE_TYPE_MAX)) {
-            uacpi_error("invalid resource type %d", current->type);
+            uacpi_error("invalid resource type %u", current->type);
             return UACPI_STATUS_INVALID_ARGUMENT;
         }
 
@@ -2410,7 +2410,7 @@ static uacpi_iteration_decision do_native_resource_to_aml(
             if (uacpi_unlikely(resource->type !=
                                aml_serial_to_native_type(serial_type))) {
                 uacpi_error(
-                    "native serial resource type %d doesn't match expected %d",
+                    "native serial resource type %u doesn't match expected %u",
                     resource->type, aml_serial_to_native_type(serial_type)
                 );
                 ctx->st = UACPI_STATUS_INVALID_ARGUMENT;

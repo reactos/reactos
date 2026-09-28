@@ -138,10 +138,10 @@ UACPI_BUILD_BUG_ON_WITH_MSG(
  * This mode is primarily designed for these three use-cases:
  * - Bootloader/pre-kernel environments that need to parse ACPI tables, but
  *   don't actually need a fully-featured AML interpreter, and everything else
- *   that a full APCI implementation entails.
+ *   that a full ACPI implementation entails.
  * - A micro-kernel that has the full AML interpreter running in userspace, but
  *   still needs to parse ACPI tables to bootstrap allocators, timers, SMP etc.
- * - A WIP kernel that needs to parse ACPI tables for bootrapping SMP/timers,
+ * - A WIP kernel that needs to parse ACPI tables for bootstrapping SMP/timers,
  *   ECAM, etc., but doesn't yet have enough subsystems implemented in order
  *   to run a fully-featured AML interpreter.
  */

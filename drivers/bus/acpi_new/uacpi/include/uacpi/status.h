@@ -42,6 +42,7 @@ typedef enum uacpi_status {
     UACPI_STATUS_AML_INVALID_RESOURCE = 0x0EFF0008,
     UACPI_STATUS_AML_LOOP_TIMEOUT = 0x0EFF0009,
     UACPI_STATUS_AML_CALL_STACK_DEPTH_LIMIT = 0x0EFF000A,
+    UACPI_STATUS_AML_REFERENCE_CYCLE = 0x0EFF000B,
 } uacpi_status;
 
 const uacpi_char *uacpi_status_to_string(uacpi_status);

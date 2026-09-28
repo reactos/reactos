@@ -407,6 +407,16 @@ typedef struct uacpi_generic_region_info {
 } uacpi_generic_region_info;
 
 typedef struct uacpi_pcc_region_info {
+    /*
+     * Mirrors the shared memory region of the subspace, starting right after
+     * its signature, which is what a PCC operation region is defined to cover
+     * (see ACPI 6.6: 5.5.2.4.8. Declaring PCC Operation Regions).
+     *
+     * This is what AML reads from & writes to. The handler is expected to
+     * copy it to the shared memory at an offset of 4 bytes as it's told to
+     * send a command, and to replace it with what is there the very same way
+     * once the command is complete.
+     */
     uacpi_data_view buffer;
     uacpi_u8 subspace_id;
 } uacpi_pcc_region_info;

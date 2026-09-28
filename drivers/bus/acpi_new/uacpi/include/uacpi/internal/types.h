@@ -113,6 +113,9 @@ typedef struct uacpi_handlers {
 // This region was successfully attached to a handler
 #define UACPI_OP_REGION_STATE_ATTACHED (1 << 1)
 
+// This region is being disconnected by _REG, and is about to lose its handler
+#define UACPI_OP_REGION_STATE_DISCONNECTING (1 << 2)
+
 typedef struct uacpi_operation_region {
     struct uacpi_shareable shareable;
     uacpi_address_space_handler *handler;
@@ -249,6 +252,13 @@ typedef struct uacpi_object {
     uacpi_u8 type;
     uacpi_u8 flags;
 
+    /*
+     * Set for the duration of a walk over a graph of objects by whoever is
+     * doing it, so that an object that is reachable in more than one way is
+     * only looked at once. Protected by the namespace lock.
+     */
+    uacpi_bool visited;
+
     union {
         uacpi_u64 integer;
         uacpi_package *package;
@@ -302,6 +312,7 @@ uacpi_mutex *uacpi_create_mutex(void);
 void uacpi_mutex_unref(uacpi_mutex*);
 
 void uacpi_method_unref(uacpi_control_method*);
+void uacpi_field_unit_unref(uacpi_field_unit*);
 
 void uacpi_address_space_handler_unref(uacpi_address_space_handler *handler);
 

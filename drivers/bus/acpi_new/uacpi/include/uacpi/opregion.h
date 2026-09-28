@@ -22,11 +22,16 @@ uacpi_status uacpi_install_address_space_handler(
 );
 
 /**
- * Uninstall the handler of type 'space' from a given device node.
+ * Uninstall a handler of type 'space' previously installed to a device node.
+ *
+ * 'handler' must be the handler that is currently installed there, otherwise
+ * nothing is uninstalled, and UACPI_STATUS_INVALID_ARGUMENT is returned. This
+ * makes sure that a handler that was installed by somebody else in the
+ * meantime is not uninstalled by mistake.
  */
 uacpi_status uacpi_uninstall_address_space_handler(
-    uacpi_namespace_node *device_node,
-    enum uacpi_address_space space
+    uacpi_namespace_node *device_node, enum uacpi_address_space space,
+    uacpi_region_handler handler
 );
 
 /**

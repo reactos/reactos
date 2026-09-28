@@ -138,26 +138,26 @@ uacpi_status uacpi_table_fadt(struct acpi_fadt**);
 
 typedef enum uacpi_table_installation_disposition {
     // Allow the table to be installed as-is
-    UACPI_TABLE_INSTALLATION_DISPOSITON_ALLOW = 0,
+    UACPI_TABLE_INSTALLATION_DISPOSITION_ALLOW = 0,
 
     /**
      * Deny the table from being installed completely. This is useful for
      * debugging various problems, e.g. AML loading bad SSDTs that cause the
      * system to hang or enter an undesired state.
      */
-    UACPI_TABLE_INSTALLATION_DISPOSITON_DENY,
+    UACPI_TABLE_INSTALLATION_DISPOSITION_DENY,
 
     /**
      * Override the table being installed with the table at the virtual address
      * returned in 'out_override_address'.
      */
-    UACPI_TABLE_INSTALLATION_DISPOSITON_VIRTUAL_OVERRIDE,
+    UACPI_TABLE_INSTALLATION_DISPOSITION_VIRTUAL_OVERRIDE,
 
     /**
      * Override the table being installed with the table at the physical address
      * returned in 'out_override_address'.
      */
-    UACPI_TABLE_INSTALLATION_DISPOSITON_PHYSICAL_OVERRIDE,
+    UACPI_TABLE_INSTALLATION_DISPOSITION_PHYSICAL_OVERRIDE,
 } uacpi_table_installation_disposition;
 
 typedef uacpi_table_installation_disposition (*uacpi_table_installation_handler)

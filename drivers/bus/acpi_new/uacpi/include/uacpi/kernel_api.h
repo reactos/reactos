@@ -87,9 +87,10 @@ void uacpi_kernel_deinitialize(void);
  *
  * The device at 'address' might not actually exist on the system, in this case
  * the api is allowed to return UACPI_STATUS_NOT_FOUND to indicate that, this
- * error is handled gracefully by creating a dummy device internally that always
- * returns 0xFF on reads and is no-op for writes. This is to support a common
- * pattern in AML that probes for 0xFF reads to detect whether a device exists.
+ * error is handled gracefully by returning 0xFF on reads and ignoring writes.
+ * This is to support a common pattern in AML that probes for 0xFF reads to
+ * detect whether a device exists. The open is attempted again on the next
+ * access to the device, to support hotplug & wake-from-suspend.
  *
  * The handle returned via 'out_handle' is used to perform IO on the
  * configuration space of the device.
@@ -230,16 +231,22 @@ void uacpi_kernel_stall(uacpi_u8 usec);
 void uacpi_kernel_sleep(uacpi_u64 msec);
 
 /**
- * Create/free an opaque non-recursive kernel mutex object.
+ * Create/free an opaque kernel counting semaphore object that starts out with
+ * 'initial_units' units available.
+ *
+ * This is the only blocking synchronization primitive that uACPI relies upon,
+ * it's used for two things:
+ * - As a lock, in which case it's created with 1 unit, and never has more
+ *   than that.
+ * - As an event, in which case it's created with 0 units, and there's no
+ *   limit on how many of them it may accumulate. A kernel whose semaphore
+ *   requires one should use the largest value that it supports.
+ *
+ * A semaphore is never freed while there's a thread waiting on it, as long as
+ * uacpi_state_reset is not called with another thread still inside of uACPI.
  */
-uacpi_handle uacpi_kernel_create_mutex(void);
-void uacpi_kernel_free_mutex(uacpi_handle);
-
-/**
- * Create/free an opaque kernel (semaphore-like) event object.
- */
-uacpi_handle uacpi_kernel_create_event(void);
-void uacpi_kernel_free_event(uacpi_handle);
+uacpi_handle uacpi_kernel_create_semaphore(uacpi_u32 initial_units);
+void uacpi_kernel_free_semaphore(uacpi_handle);
 
 /**
  * Returns a unique identifier of the currently executing thread.
@@ -266,45 +273,37 @@ uacpi_interrupt_state uacpi_kernel_disable_interrupts(void);
 void uacpi_kernel_restore_interrupts(uacpi_interrupt_state state);
 
 /**
- * Try to acquire the mutex with a millisecond timeout.
+ * Try to take one unit from the semaphore with a millisecond timeout.
  *
  * The timeout value has the following meanings:
- * 0x0000 - Attempt to acquire the mutex once, in a non-blocking manner
- * 0x0001...0xFFFE - Attempt to acquire the mutex for at least 'timeout'
- *                   milliseconds
- * 0xFFFF - Infinite wait, block until the mutex is acquired
+ * 0x0000 - Attempt to take a unit once, in a non-blocking manner
+ * 0x0001...0xFFFE - Attempt to take a unit for at least 'timeout' milliseconds
+ * 0xFFFF - Infinite wait, block until a unit is available
  *
  * The following are possible return values:
- * 1. UACPI_STATUS_OK - successful acquire operation
- * 2. UACPI_STATUS_TIMEOUT - timeout reached while attempting to acquire (or the
- *                           single attempt to acquire was not successful for
+ * 1. UACPI_STATUS_OK - a unit was taken
+ * 2. UACPI_STATUS_TIMEOUT - timeout reached while waiting for a unit (or the
+ *                           single attempt to take one was not successful for
  *                           calls with timeout=0)
  * 3. Any other value - signifies a host internal error and is treated as such
+ *
+ * This function is never used in interrupt contexts, unless that's where the
+ * kernel chooses to execute deferred work, see uacpi_kernel_schedule_work.
  */
-uacpi_status uacpi_kernel_acquire_mutex(uacpi_handle, uacpi_u16);
-void uacpi_kernel_release_mutex(uacpi_handle);
+uacpi_status uacpi_kernel_wait_for_semaphore(uacpi_handle, uacpi_u16);
 
 /**
- * Try to wait for an event (counter > 0) with a millisecond timeout.
- * A timeout value of 0xFFFF implies infinite wait.
+ * Give one unit to the semaphore, waking up one of the threads that are
+ * waiting for it, if any.
  *
- * The internal counter is decremented by 1 if wait was successful.
+ * A semaphore has no notion of an owner: the unit may be given by a thread
+ * other than the one that took it.
  *
- * A successful wait is indicated by returning UACPI_TRUE.
+ * This function may be used in interrupt contexts, as well as with interrupts
+ * disabled and a spinlock held, and therefore must not sleep. Note that this
+ * applies to every semaphore, including those that are used as locks.
  */
-uacpi_bool uacpi_kernel_wait_for_event(uacpi_handle, uacpi_u16);
-
-/**
- * Signal the event object by incrementing its internal counter by 1.
- *
- * This function may be used in interrupt contexts.
- */
-void uacpi_kernel_signal_event(uacpi_handle);
-
-/**
- * Reset the event counter to 0.
- */
-void uacpi_kernel_reset_event(uacpi_handle);
+void uacpi_kernel_signal_semaphore(uacpi_handle);
 
 /**
  * Handle a firmware request.
@@ -371,19 +370,59 @@ typedef enum uacpi_work_type {
 typedef void (*uacpi_work_handler)(uacpi_handle);
 
 /**
- * Schedules deferred work for execution.
- * Might be invoked from an interrupt context.
+ * Create/free an opaque kernel work item object, which is what a piece of
+ * deferred work is scheduled with, see uacpi_kernel_schedule_work.
+ *
+ * A work item is always created ahead of the time that it's needed, so that
+ * scheduling it doesn't require any memory to be allocated. It might end up
+ * never being scheduled at all.
+ *
+ * A kernel that has no use for a work item, e.g. because it executes all of
+ * the work right away, may return any value other than UACPI_NULL without
+ * allocating anything.
+ *
+ * Both of these might be invoked by the deferred work itself, but are never
+ * used in interrupt contexts, unless that's where the kernel chooses to
+ * execute said work.
  */
-uacpi_status uacpi_kernel_schedule_work(
-    uacpi_work_type, uacpi_work_handler, uacpi_handle ctx
+uacpi_handle uacpi_kernel_create_work_item(void);
+void uacpi_kernel_free_work_item(uacpi_handle);
+
+/**
+ * Schedules 'handler' to be invoked with 'ctx' as its only argument.
+ * Might be invoked from an interrupt context.
+ *
+ * 'work_item' is there for the kernel to keep track of this work with, it's
+ * never scheduled while still pending, that is before the handler that it was
+ * last scheduled with has been invoked.
+ *
+ * Once that happens the work item may be reused: the handler is allowed to
+ * schedule it again, possibly as a different type of work, or to free it. The
+ * kernel therefore must not access a work item after it has invoked the
+ * handler, which means that both 'handler' and 'ctx' have to be taken out of
+ * it, and any of its state updated, before the handler is invoked and not
+ * after it returns.
+ */
+void uacpi_kernel_schedule_work(
+    uacpi_work_type, uacpi_handle work_item, uacpi_work_handler handler,
+    uacpi_handle ctx
 );
 
 /**
  * Waits for two types of work to finish:
  * 1. All in-flight interrupts installed via uacpi_kernel_install_interrupt_handler
- * 2. All work scheduled via uacpi_kernel_schedule_work
+ * 2. All work scheduled via uacpi_kernel_schedule_work, including whatever
+ *    was scheduled by the work that is being waited for
  *
  * Note that the waits must be done in this order specifically.
+ *
+ * uACPI never calls this from an interrupt handler or from deferred work, so
+ * it's free to sleep, and never ends up waiting for its own caller. This
+ * relies on the host not calling any API that is documented as off limits to
+ * those from there.
+ *
+ * NOTE: if any of the work is executed synchronously, this must wait for the
+ *       work that another thread is in the middle of executing that way too.
  */
 uacpi_status uacpi_kernel_wait_for_work_completion(void);
 

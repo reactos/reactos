@@ -53,6 +53,17 @@ uacpi_status uacpi_write_field_unit(
     uacpi_data_view *wtr_response
 );
 
+/*
+ * Writes the source one field-sized chunk at a time, every chunk being a
+ * complete write of the field, the last one zero-extended. Nothing is written
+ * if the source is empty. This is how NT stores a String or a Buffer to a
+ * field. Fields that take a buffer, e.g. GenericSerialBus, get it in one go.
+ */
+uacpi_status uacpi_write_field_unit_in_chunks(
+    uacpi_field_unit *field, const void *src, uacpi_size size,
+    uacpi_data_view *wtr_response
+);
+
 #ifdef UACPI_NATIVE_MMIO
 #define uacpi_mmio_read8 uacpi_kernel_mmio_read8
 #define uacpi_mmio_read16 uacpi_kernel_mmio_read16

@@ -19,7 +19,6 @@ list(APPEND UACPI_SOURCE
      uacpi/source/osi.c
      uacpi/source/registers.c
      uacpi/source/resources.c
-     uacpi/source/shareable.c
      uacpi/source/sleep.c
      uacpi/source/stdlib.c
      uacpi/source/tables.c

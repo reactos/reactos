@@ -119,8 +119,9 @@ static uacpi_bool space_needs_reg(enum uacpi_address_space space)
     return UACPI_TRUE;
 }
 
-static uacpi_status region_run_reg(
-    uacpi_namespace_node *node, uacpi_u8 connection_code
+// Returns UACPI_STATUS_NOT_FOUND if 'scope' has no _REG
+static uacpi_status run_reg(
+    uacpi_namespace_node *scope, uacpi_u16 space, uacpi_u8 connection_code
 )
 {
     uacpi_status ret;
@@ -129,7 +130,7 @@ static uacpi_status region_run_reg(
     uacpi_object *reg_obj, *args[2];
 
     ret = uacpi_namespace_node_resolve(
-        node->parent, "_REG", UACPI_SHOULD_LOCK_NO,
+        scope, "_REG", UACPI_SHOULD_LOCK_NO,
         UACPI_MAY_SEARCH_ABOVE_PARENT_NO, UACPI_PERMANENT_ONLY_NO, &reg_node
     );
     if (uacpi_unlikely_error(ret))
@@ -151,7 +152,7 @@ static uacpi_status region_run_reg(
         return UACPI_STATUS_OUT_OF_MEMORY;
     }
 
-    args[0]->integer = uacpi_namespace_node_get_object(node)->op_region->space;
+    args[0]->integer = space;
     args[1]->integer = connection_code;
     method_args.objects = args;
     method_args.count = 2;
@@ -159,8 +160,16 @@ static uacpi_status region_run_reg(
     ret = uacpi_execute_control_method(
         reg_node, reg_obj->method, &method_args, UACPI_NULL
     );
-    if (uacpi_unlikely_error(ret))
-        uacpi_trace_region_error(node, "error during _REG execution for", ret);
+    if (uacpi_unlikely_error(ret)) {
+        const uacpi_char *path;
+
+        path = uacpi_namespace_node_generate_absolute_path(scope);
+        uacpi_error(
+            "error during _REG execution for %s (%s): %s", path,
+            uacpi_address_space_to_string(space), uacpi_status_to_string(ret)
+        );
+        uacpi_free_dynamic_string(path);
+    }
 
     uacpi_object_unref(args[0]);
     uacpi_object_unref(args[1]);
@@ -278,29 +287,76 @@ uacpi_status uacpi_opregion_attach(uacpi_namespace_node *node)
 
     attach_data.handler_context = handler->user_context;
 
+    /*
+     * The handler is invoked with the namespace unlocked, and is free to do
+     * whatever it wants in the meantime, which includes evaluating a method
+     * that gets rid of the region, as well as uninstalling itself. Keep both
+     * of them alive until we're done.
+     */
     uacpi_object_ref(obj);
+    uacpi_shareable_ref(handler);
+
     uacpi_namespace_write_unlock();
     ret = handler->callback(UACPI_REGION_OP_ATTACH, &attach_data);
     uacpi_namespace_write_lock();
 
-    if (uacpi_unlikely_error(ret)) {
-        uacpi_object_unref(obj);
-        return ret;
+    if (uacpi_unlikely_error(ret))
+        goto out;
+
+    if (uacpi_unlikely(region->handler != handler)) {
+        uacpi_region_detach_data detach_data = { 0 };
+
+        /*
+         * The region was taken away from the handler before it was done
+         * attaching it. This is not something that the handler was told
+         * about, as the region was not attached at the time, so do it now:
+         * a region that was attached is always detached as well.
+         */
+        detach_data.region_node = node;
+        detach_data.region_context = attach_data.out_region_context;
+        detach_data.handler_context = handler->user_context;
+
+        uacpi_namespace_write_unlock();
+        handler->callback(UACPI_REGION_OP_DETACH, &detach_data);
+        uacpi_namespace_write_lock();
+
+        ret = UACPI_STATUS_NO_HANDLER;
+        goto out;
+    }
+
+    if (uacpi_unlikely(region->state_flags & UACPI_OP_REGION_STATE_ATTACHED)) {
+        uacpi_region_detach_data detach_data = { 0 };
+
+        /*
+         * The region was attached once more in the meantime, which is what
+         * happens if the handler ends up accessing the region that it's still
+         * in the middle of attaching. It only gets to be attached once, and
+         * that one was there first, so this is the one to be undone.
+         */
+        detach_data.region_node = node;
+        detach_data.region_context = attach_data.out_region_context;
+        detach_data.handler_context = handler->user_context;
+
+        uacpi_namespace_write_unlock();
+        handler->callback(UACPI_REGION_OP_DETACH, &detach_data);
+        uacpi_namespace_write_lock();
+
+        goto out;
     }
 
     region->state_flags |= UACPI_OP_REGION_STATE_ATTACHED;
     region->user_context = attach_data.out_region_context;
+
+out:
+    uacpi_address_space_handler_unref(handler);
     uacpi_object_unref(obj);
     return ret;
 }
 
 static void region_install_handler(
-    uacpi_namespace_node *node, uacpi_address_space_handler *handler
+    uacpi_operation_region *region, uacpi_address_space_handler *handler
 )
 {
-    uacpi_operation_region *region;
-
-    region = uacpi_namespace_node_get_object(node)->op_region;
     region->handler = handler;
     uacpi_shareable_ref(handler);
 
@@ -321,6 +377,7 @@ static void region_uninstall_handler(
     uacpi_object *obj;
     uacpi_address_space_handler *handler;
     uacpi_operation_region *region, *link;
+    uacpi_bool was_attached;
 
     obj = uacpi_namespace_node_get_object_typed(
         node, UACPI_OBJECT_OPERATION_REGION_BIT
@@ -332,6 +389,10 @@ static void region_uninstall_handler(
 
     handler = region->handler;
     if (handler == UACPI_NULL)
+        return;
+
+    // We're in the middle of doing this already, see below
+    if (region->state_flags & UACPI_OP_REGION_STATE_DISCONNECTING)
         return;
 
     link = find_previous_region_link(region);
@@ -347,7 +408,42 @@ static void region_uninstall_handler(
     }
 
 out:
-    if (region->state_flags & UACPI_OP_REGION_STATE_ATTACHED) {
+    /*
+     * Both the _REG method and the handler are free to do whatever they want
+     * to the region once we invoke them, which includes getting rid of it,
+     * e.g. by overwriting it via CopyObject. That leads right back here, so
+     * make sure there's nothing left to do if it happens. It's also up to us
+     * to keep the region alive until we're done.
+     */
+    uacpi_object_ref(obj);
+
+    /*
+     * This is done while the region still has its handler, as _REG is what
+     * lets AML know that it's about to lose access to the region, and is
+     * thus its last chance to make use of it.
+     */
+    if ((region->state_flags & UACPI_OP_REGION_STATE_REG_EXECUTED) &&
+        unreg == UNREG_YES) {
+        region->state_flags &= ~UACPI_OP_REGION_STATE_REG_EXECUTED;
+        region->state_flags |= UACPI_OP_REGION_STATE_DISCONNECTING;
+
+        run_reg(node->parent, region->space, ACPI_REG_DISCONNECT);
+
+        region->state_flags &= ~UACPI_OP_REGION_STATE_DISCONNECTING;
+    }
+
+    /*
+     * The region has no handler as far as anyone else is concerned from this
+     * point on, which includes whatever the handler decides to do while it's
+     * detaching it. Note that the region might've only been attached by the
+     * _REG method above, so this is not something to check any earlier.
+     */
+    was_attached = region->state_flags & UACPI_OP_REGION_STATE_ATTACHED;
+
+    region->handler = UACPI_NULL;
+    region->state_flags &= ~UACPI_OP_REGION_STATE_ATTACHED;
+
+    if (was_attached) {
         uacpi_region_detach_data detach_data = { 0 };
 
         detach_data.region_node = node;
@@ -369,15 +465,8 @@ out:
         }
     }
 
-    if ((region->state_flags & UACPI_OP_REGION_STATE_REG_EXECUTED) &&
-        unreg == UNREG_YES) {
-        region_run_reg(node, ACPI_REG_DISCONNECT);
-        region->state_flags &= ~UACPI_OP_REGION_STATE_REG_EXECUTED;
-    }
-
-    uacpi_address_space_handler_unref(region->handler);
-    region->handler = UACPI_NULL;
-    region->state_flags &= ~UACPI_OP_REGION_STATE_ATTACHED;
+    uacpi_address_space_handler_unref(handler);
+    uacpi_object_unref(obj);
 }
 
 uacpi_status uacpi_upgrade_to_opregion_lock(void)
@@ -425,7 +514,15 @@ enum opregion_iter_action {
 struct opregion_iter_ctx {
     enum opregion_iter_action action;
     uacpi_address_space_handler *handler;
+
+    // The handlers of the device that the above is installed for
+    uacpi_address_space_handlers *handlers;
 };
+
+static uacpi_bool handler_is_installed(struct opregion_iter_ctx *ctx)
+{
+    return find_handler(ctx->handlers, ctx->handler->space) == ctx->handler;
+}
 
 static uacpi_iteration_decision do_install_or_uninstall_handler(
     uacpi_handle opaque, uacpi_namespace_node *node, uacpi_u32 depth
@@ -445,11 +542,46 @@ static uacpi_iteration_decision do_install_or_uninstall_handler(
             return UACPI_ITERATION_DECISION_CONTINUE;
 
         if (ctx->action == OPREGION_ITER_ACTION_INSTALL) {
-            if (region->handler)
+            if (region->handler) {
                 region_uninstall_handler(node, UNREG_NO);
 
-            region_install_handler(node, ctx->handler);
+                /*
+                 * The previous handler was invoked by the above, and might've
+                 * uninstalled the one that we're in the middle of installing.
+                 * There's nothing left for us to do in that case.
+                 */
+                if (uacpi_unlikely(!handler_is_installed(ctx)))
+                    return UACPI_ITERATION_DECISION_BREAK;
+
+                /*
+                 * The previous handler was just told that the region is being
+                 * detached, and is free to have done whatever it wanted to it
+                 * in response, which includes getting rid of it. Make sure
+                 * that there's still something to install the handler for.
+                 */
+                object = uacpi_namespace_node_get_object_typed(
+                    node, UACPI_OBJECT_OPERATION_REGION_BIT
+                );
+                if (uacpi_unlikely(object == UACPI_NULL))
+                    return UACPI_ITERATION_DECISION_CONTINUE;
+
+                region = object->op_region;
+                if (uacpi_unlikely(region->space != ctx->handler->space ||
+                                   region->handler != UACPI_NULL))
+                    return UACPI_ITERATION_DECISION_CONTINUE;
+            }
+
+            region_install_handler(region, ctx->handler);
         } else {
+            /*
+             * A region that has no handler is not ours to uninstall, and is
+             * nothing to complain about either: it's one that was left this
+             * way by a closer handler that is gone by now, or one that is in
+             * the middle of being detached by whoever has called us.
+             */
+            if (region->handler == UACPI_NULL)
+                return UACPI_ITERATION_DECISION_CONTINUE;
+
             if (uacpi_unlikely(region->handler != ctx->handler)) {
                 uacpi_trace_region_error(
                     node, "handler mismatch for",
@@ -458,7 +590,7 @@ static uacpi_iteration_decision do_install_or_uninstall_handler(
                 return UACPI_ITERATION_DECISION_CONTINUE;
             }
 
-            region_uninstall_handler(node, UNREG_NO);
+            region_uninstall_handler(node, UNREG_YES);
         }
 
         return UACPI_ITERATION_DECISION_CONTINUE;
@@ -477,7 +609,6 @@ static uacpi_iteration_decision do_install_or_uninstall_handler(
 
 struct reg_run_ctx {
     uacpi_u8 space;
-    uacpi_u8 connection_code;
     uacpi_size reg_executed;
     uacpi_size reg_errors;
 };
@@ -487,83 +618,209 @@ static uacpi_iteration_decision do_run_reg(
 )
 {
     struct reg_run_ctx *ctx = opaque;
+    uacpi_object *obj;
     uacpi_operation_region *region;
     uacpi_status ret;
-    uacpi_bool was_regged;
 
     UACPI_UNUSED(depth);
 
-    region = uacpi_namespace_node_get_object(node)->op_region;
+    obj = uacpi_namespace_node_get_object(node);
+    region = obj->op_region;
 
     if (region->space != ctx->space)
         return UACPI_ITERATION_DECISION_CONTINUE;
 
-    was_regged = region->state_flags & UACPI_OP_REGION_STATE_REG_EXECUTED;
-    if (was_regged == (ctx->connection_code == ACPI_REG_CONNECT))
+    if (region->state_flags & UACPI_OP_REGION_STATE_REG_EXECUTED)
         return UACPI_ITERATION_DECISION_CONTINUE;
 
-    ret = region_run_reg(node, ctx->connection_code);
-    if (ctx->connection_code == ACPI_REG_DISCONNECT)
-        region->state_flags &= ~UACPI_OP_REGION_STATE_REG_EXECUTED;
+    /*
+     * A region that has no handler is not accessible, so there's nothing for
+     * it to be connected to. The same goes for one that is in the middle of
+     * being disconnected, as its handler is about to be gone.
+     */
+    if (region->handler == UACPI_NULL ||
+        (region->state_flags & UACPI_OP_REGION_STATE_DISCONNECTING))
+        return UACPI_ITERATION_DECISION_CONTINUE;
 
+    /*
+     * The _REG method is free to do whatever it wants to the region, which
+     * includes getting rid of it, e.g. by overwriting it via CopyObject. Keep
+     * it alive until we're done with it.
+     */
+    uacpi_object_ref(obj);
+
+    ret = run_reg(node->parent, region->space, ACPI_REG_CONNECT);
     if (ret == UACPI_STATUS_NOT_FOUND)
-        return UACPI_ITERATION_DECISION_CONTINUE;
+        goto out;
 
-    if (ctx->connection_code == ACPI_REG_CONNECT)
-        region->state_flags |= UACPI_OP_REGION_STATE_REG_EXECUTED;
-
+    region->state_flags |= UACPI_OP_REGION_STATE_REG_EXECUTED;
     ctx->reg_executed++;
 
-    if (uacpi_unlikely_error(ret)) {
+    if (uacpi_unlikely_error(ret))
         ctx->reg_errors++;
-        return UACPI_ITERATION_DECISION_CONTINUE;
-    }
 
+out:
+    uacpi_object_unref(obj);
     return UACPI_ITERATION_DECISION_CONTINUE;
 }
 
-static uacpi_status reg_or_unreg_all_opregions(
-    uacpi_namespace_node *device_node, enum uacpi_address_space space,
-    uacpi_u8 connection_code
+/*
+ * Firmware might expect _REG to be executed for an address space that it has
+ * no regions of, e.g. for an EC that it only ever accesses via SystemMemory.
+ */
+static void run_orphan_reg(
+    uacpi_namespace_node *node, enum uacpi_address_space space
+)
+{
+    uacpi_namespace_node *child = UACPI_NULL;
+
+    for (;;) {
+        uacpi_status ret;
+
+        ret = uacpi_namespace_node_next_typed_unlocked(
+            node, &child, UACPI_OBJECT_OPERATION_REGION_BIT
+        );
+        if (ret != UACPI_STATUS_OK)
+            /*
+             * No opregion child of this device is of this address space, so
+             * this _REG is indeed orphan as far as we're concerned.
+             */
+            break;
+
+        if (uacpi_namespace_node_get_object(child)->op_region->space == space)
+            return;
+    }
+
+    run_reg(node, space, ACPI_REG_CONNECT);
+}
+
+static uacpi_bool node_has_handler(
+    uacpi_namespace_node *node, enum uacpi_address_space space
 )
 {
     uacpi_address_space_handlers *handlers;
-    uacpi_bool is_connect;
-    enum uacpi_permanent_only perm_only;
+
+    handlers = uacpi_node_get_address_space_handlers(node);
+    if (handlers == UACPI_NULL)
+        return UACPI_FALSE;
+
+    return find_handler(handlers, space) != UACPI_NULL;
+}
+
+static uacpi_iteration_decision do_run_orphan_ec_reg(
+    void *opaque, uacpi_namespace_node *node, uacpi_u32 depth
+)
+{
+    static const uacpi_char *const ec_ids[] = { "PNP0C09", UACPI_NULL };
+    uacpi_namespace_node *device_node = opaque;
+    uacpi_bool has_own_handler = UACPI_FALSE;
+
+    UACPI_UNUSED(depth);
+
+    if (uacpi_unlikely_error(uacpi_namespace_write_lock()))
+        return UACPI_ITERATION_DECISION_BREAK;
+
+    if (node != device_node) {
+        has_own_handler = node_has_handler(
+            node, UACPI_ADDRESS_SPACE_EMBEDDED_CONTROLLER
+        );
+    }
+    uacpi_namespace_write_unlock();
+
+    // That handler takes care of everything underneath it
+    if (has_own_handler)
+        return UACPI_ITERATION_DECISION_NEXT_PEER;
+
+    // This might execute AML, so it's done with the namespace unlocked
+    if (!uacpi_device_matches_pnp_id(node, ec_ids))
+        return UACPI_ITERATION_DECISION_CONTINUE;
+
+    if (uacpi_unlikely_error(uacpi_namespace_write_lock()))
+        return UACPI_ITERATION_DECISION_BREAK;
+
+    // The handler might've been uninstalled while the namespace was unlocked
+    has_own_handler = node_has_handler(
+        device_node, UACPI_ADDRESS_SPACE_EMBEDDED_CONTROLLER
+    );
+
+    if (has_own_handler)
+        run_orphan_reg(node, UACPI_ADDRESS_SPACE_EMBEDDED_CONTROLLER);
+
+    uacpi_namespace_write_unlock();
+    return UACPI_ITERATION_DECISION_CONTINUE;
+}
+
+/*
+ * An embedded controller is looked for by its PNP id, as the handler that it
+ * uses is not necessarily installed to the EC device itself, e.g. it might be
+ * installed to the root instead, so that the regions outside of the EC device
+ * are covered as well.
+ *
+ * Must be called with the namespace write-locked. The lock is dropped while
+ * the devices are looked at, and is held again by the time this returns.
+ */
+static void run_orphan_ec_regs(uacpi_namespace_node *device_node)
+{
+    uacpi_iteration_decision decision;
+
+    uacpi_namespace_write_unlock();
+
+    decision = do_run_orphan_ec_reg(device_node, device_node, 0);
+    if (decision == UACPI_ITERATION_DECISION_CONTINUE) {
+        uacpi_namespace_do_for_each_child(
+            device_node, do_run_orphan_ec_reg, UACPI_NULL,
+            UACPI_OBJECT_DEVICE_BIT, UACPI_MAX_DEPTH_ANY,
+            UACPI_SHOULD_LOCK_YES, UACPI_PERMANENT_ONLY_YES, device_node
+        );
+    }
+
+    uacpi_namespace_write_lock();
+}
+
+static uacpi_status reg_all_opregions(
+    uacpi_namespace_node *device_node, enum uacpi_address_space space
+)
+{
+    uacpi_address_space_handlers *handlers;
     struct reg_run_ctx ctx = { 0 };
 
     ctx.space = space;
-    ctx.connection_code = connection_code;
 
     handlers = uacpi_node_get_address_space_handlers(device_node);
     if (uacpi_unlikely(handlers == UACPI_NULL))
         return UACPI_STATUS_INVALID_ARGUMENT;
 
-    is_connect = connection_code == ACPI_REG_CONNECT;
-    if (uacpi_unlikely(is_connect &&
-                       find_handler(handlers, space) == UACPI_NULL))
+    if (uacpi_unlikely(find_handler(handlers, space) == UACPI_NULL))
         return UACPI_STATUS_NO_HANDLER;
 
     /*
-     * We want to unreg non-permanent opregions as well, however,
-     * registering them is handled separately and should not be
-     * done by us.
+     * Registering non-permanent opregions is handled separately and should
+     * not be done by us.
      */
-    perm_only = is_connect ? UACPI_PERMANENT_ONLY_YES : UACPI_PERMANENT_ONLY_NO;
-
     uacpi_namespace_do_for_each_child(
         device_node, do_run_reg, UACPI_NULL,
         UACPI_OBJECT_OPERATION_REGION_BIT, UACPI_MAX_DEPTH_ANY,
-        UACPI_SHOULD_LOCK_NO, perm_only, &ctx
+        UACPI_SHOULD_LOCK_NO, UACPI_PERMANENT_ONLY_YES, &ctx
     );
 
     uacpi_trace(
-        "%sactivated all '%s' opregions controlled by '%.4s', "
+        "activated all '%s' opregions controlled by '%.4s', "
         "%zu _REG() calls (%zu errors)",
-        connection_code == ACPI_REG_CONNECT ? "" : "de",
         uacpi_address_space_to_string(space),
         device_node->name.text, ctx.reg_executed, ctx.reg_errors
     );
+
+    if (space == UACPI_ADDRESS_SPACE_EMBEDDED_CONTROLLER)
+        run_orphan_ec_regs(device_node);
+
+    /*
+     * Unlike an EC, a GPIO controller has no common PNP id to be looked for
+     * by. Its handler is normally installed to the controller itself though,
+     * so that is the only one that is checked.
+     */
+    if (space == UACPI_ADDRESS_SPACE_GENERAL_PURPOSE_IO)
+        run_orphan_reg(device_node, space);
+
     return UACPI_STATUS_OK;
 }
 
@@ -614,7 +871,7 @@ uacpi_status uacpi_reg_all_opregions(
         goto out;
     }
 
-    ret = reg_or_unreg_all_opregions(device_node, space, ACPI_REG_CONNECT);
+    ret = reg_all_opregions(device_node, space);
 
 out:
     uacpi_namespace_write_unlock();
@@ -670,7 +927,16 @@ uacpi_status uacpi_install_address_space_handler_with_flags(
     new_handler->flags = flags;
     handlers->head = new_handler;
 
+    /*
+     * The handlers that some of the regions already have are invoked as the
+     * regions are taken away from them below, and are free to do whatever they
+     * want in response, which includes uninstalling the handler that we have
+     * just put on the list. Keep it alive until we're done.
+     */
+    uacpi_shareable_ref(new_handler);
+
     iter_ctx.handler = new_handler;
+    iter_ctx.handlers = handlers;
     iter_ctx.action = OPREGION_ITER_ACTION_INSTALL;
 
     uacpi_namespace_do_for_each_child(
@@ -679,8 +945,13 @@ uacpi_status uacpi_install_address_space_handler_with_flags(
         UACPI_PERMANENT_ONLY_YES, &iter_ctx
     );
 
+    if (uacpi_unlikely(!handler_is_installed(&iter_ctx))) {
+        ret = UACPI_STATUS_NO_HANDLER;
+        goto out_unref;
+    }
+
     if (!space_needs_reg(space))
-        goto out;
+        goto out_unref;
 
      /*
       * Installing an early address space handler, obviously not possible to
@@ -690,13 +961,13 @@ uacpi_status uacpi_install_address_space_handler_with_flags(
       * the namespace.
       */
     if (g_uacpi_rt_ctx.init_level < UACPI_INIT_LEVEL_NAMESPACE_LOADED)
-        goto out;
+        goto out_unref;
 
     // Init level is NAMESPACE_INITIALIZED, so we can safely run _REG now
-    ret = reg_or_unreg_all_opregions(
-        device_node, space, ACPI_REG_CONNECT
-    );
+    ret = reg_all_opregions(device_node, space);
 
+out_unref:
+    uacpi_address_space_handler_unref(new_handler);
 out:
     uacpi_namespace_write_unlock();
     uacpi_recursive_lock_release(&g_opregion_lock);
@@ -714,13 +985,13 @@ uacpi_status uacpi_install_address_space_handler(
 }
 
 uacpi_status uacpi_uninstall_address_space_handler(
-    uacpi_namespace_node *device_node,
-    enum uacpi_address_space space
+    uacpi_namespace_node *device_node, enum uacpi_address_space space,
+    uacpi_region_handler handler
 )
 {
     uacpi_status ret;
     uacpi_address_space_handlers *handlers;
-    uacpi_address_space_handler *handler = UACPI_NULL, *prev_handler;
+    uacpi_address_space_handler *this_handler, *prev_handler;
     struct opregion_iter_ctx iter_ctx;
 
     ret = uacpi_recursive_lock_acquire(&g_opregion_lock);
@@ -739,13 +1010,42 @@ uacpi_status uacpi_uninstall_address_space_handler(
         goto out;
     }
 
-    handler = find_handler(handlers, space);
-    if (uacpi_unlikely(handler == UACPI_NULL)) {
+    this_handler = find_handler(handlers, space);
+    if (uacpi_unlikely(this_handler == UACPI_NULL)) {
         ret = UACPI_STATUS_NO_HANDLER;
         goto out;
     }
 
-    iter_ctx.handler = handler;
+    // This is somebody else's handler, and is thus not ours to uninstall
+    if (uacpi_unlikely(this_handler->callback != handler)) {
+        ret = UACPI_STATUS_INVALID_ARGUMENT;
+        goto out;
+    }
+
+    /*
+     * Both the handler and the _REG methods are invoked as the regions are
+     * taken away below, and are free to do whatever they want in response.
+     * Make sure that the handler is no longer there to be found by then, be
+     * it by a region that is created in the meantime, or by the handler
+     * itself in case it decides to uninstall itself as it's told to detach
+     * a region. The reference that the device had is now ours, which is what
+     * keeps the handler alive until we're done.
+     */
+    prev_handler = handlers->head;
+
+    // Are we the last linked handler?
+    if (prev_handler == this_handler) {
+        handlers->head = this_handler->next;
+    } else {
+        // Nope, we're somewhere in the middle. Do a search.
+        while (prev_handler->next != this_handler)
+            prev_handler = prev_handler->next;
+
+        prev_handler->next = this_handler->next;
+    }
+
+    iter_ctx.handler = this_handler;
+    iter_ctx.handlers = handlers;
     iter_ctx.action = OPREGION_ITER_ACTION_UNINSTALL;
 
     uacpi_namespace_do_for_each_child(
@@ -754,32 +1054,9 @@ uacpi_status uacpi_uninstall_address_space_handler(
         UACPI_PERMANENT_ONLY_NO, &iter_ctx
     );
 
-    prev_handler = handlers->head;
-
-    // Are we the last linked handler?
-    if (prev_handler == handler) {
-        handlers->head = handler->next;
-        goto out_unreg;
-    }
-
-    // Nope, we're somewhere in the middle. Do a search.
-    while (prev_handler) {
-        if (prev_handler->next == handler) {
-            prev_handler->next = handler->next;
-            goto out;
-        }
-
-        prev_handler = prev_handler->next;
-    }
-
-out_unreg:
-    if (space_needs_reg(space))
-        reg_or_unreg_all_opregions(device_node, space, ACPI_REG_DISCONNECT);
+    uacpi_address_space_handler_unref(this_handler);
 
 out:
-    if (handler != UACPI_NULL)
-        uacpi_address_space_handler_unref(handler);
-
     uacpi_namespace_write_unlock();
     uacpi_recursive_lock_release(&g_opregion_lock);
     return ret;
@@ -806,7 +1083,7 @@ uacpi_status uacpi_initialize_opregion_node(uacpi_namespace_node *node)
             handler = find_handler(handlers, region->space);
 
             if (handler != UACPI_NULL) {
-                region_install_handler(node, handler);
+                region_install_handler(region, handler);
                 ret = UACPI_STATUS_OK;
                 break;
             }
@@ -822,7 +1099,8 @@ uacpi_status uacpi_initialize_opregion_node(uacpi_namespace_node *node)
     if (uacpi_get_current_init_level() < UACPI_INIT_LEVEL_NAMESPACE_LOADED)
         goto out;
 
-    if (region_run_reg(node, ACPI_REG_CONNECT) != UACPI_STATUS_NOT_FOUND)
+    if (run_reg(node->parent, region->space, ACPI_REG_CONNECT) !=
+        UACPI_STATUS_NOT_FOUND)
         region->state_flags |= UACPI_OP_REGION_STATE_REG_EXECUTED;
 
 out:
@@ -848,6 +1126,37 @@ static uacpi_bool space_needs_bounds_checking(uacpi_address_space space)
 {
     return !uacpi_is_buffer_access_address_space(space) &&
         space != UACPI_ADDRESS_SPACE_GENERAL_PURPOSE_IO;
+}
+
+/*
+ * A command is sent over a PCC subspace as soon as its command field is
+ * written, which is any field that starts where the command does: it doesn't
+ * have to be as wide, nor is it limited to it.
+ *
+ * A field is written one access at a time though, and a PCC one is only
+ * supposed to be accessed byte by byte, so what was written is not all there
+ * until the last access of the field. That's the only one to send it for.
+ */
+#define PCC_COMMAND_OFFSET 8
+#define PCC_COMMAND_SIZE 4
+
+static uacpi_bool pcc_write_completes_command(
+    uacpi_field_unit *field, uacpi_u32 offset
+)
+{
+    uacpi_u32 access_bits, last_bit, last_offset;
+
+    if (field->byte_offset < PCC_COMMAND_OFFSET ||
+        field->byte_offset >= PCC_COMMAND_OFFSET + PCC_COMMAND_SIZE)
+        return UACPI_FALSE;
+
+    access_bits = field->access_width_bytes * 8;
+    last_bit = field->bit_offset_within_first_byte + field->bit_length - 1;
+
+    last_offset = field->byte_offset;
+    last_offset += (last_bit / access_bits) * field->access_width_bytes;
+
+    return offset == last_offset;
 }
 
 uacpi_status uacpi_dispatch_opregion_io(
@@ -939,8 +1248,12 @@ uacpi_status uacpi_dispatch_opregion_io(
          * Dispatch a PCC send command if this was a write to the command field
          *
          * ACPI 6.5: 14.3. Extended PCC Subspace Shared Memory Region
+         *
+         * Note that a PCC region covers whatever follows the signature that
+         * the shared memory region starts with, so the offset of every field
+         * is 4 bytes less than what it is there.
          */
-        if (offset >= 12 && offset < 16) {
+        if (pcc_write_completes_command(field, offset)) {
             uacpi_memzero(&handler_data.pcc.buffer, sizeof(handler_data.pcc.buffer));
             handler_data.pcc.buffer.bytes = region->internal_buffer;
             handler_data.pcc.buffer.length = region->length;
@@ -1027,7 +1340,7 @@ io_done:
     }
 
     if (orig_op == UACPI_REGION_OP_READ) {
-        switch (region->space) {
+        switch (space) {
         case UACPI_ADDRESS_SPACE_PCC:
         case UACPI_ADDRESS_SPACE_IPMI:
         case UACPI_ADDRESS_SPACE_FFIXEDHW:

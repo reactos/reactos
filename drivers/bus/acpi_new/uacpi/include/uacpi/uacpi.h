@@ -5,9 +5,9 @@
 #include <uacpi/kernel_api.h>
 #include <uacpi/namespace.h>
 
-#define UACPI_MAJOR 6
+#define UACPI_MAJOR 7
 #define UACPI_MINOR 0
-#define UACPI_PATCH 1
+#define UACPI_PATCH 0
 
 #ifdef UACPI_REDUCED_HARDWARE
 #define UACPI_MAKE_STUB_FOR_REDUCED_HARDWARE(fn, ret) \
@@ -281,6 +281,15 @@ uacpi_status uacpi_release_global_lock(uacpi_u32 seq);
  * This is called by uACPI automatically if a fatal error occurs during a call
  * to uacpi_initialize/uacpi_namespace_load etc. in order to prevent accidental
  * use of partially uninitialized subsystems.
+ *
+ * NOTE:
+ * - This waits for all of the in-flight interrupts & deferred work to
+ *   complete, see uacpi_kernel_wait_for_work_completion, and therefore must
+ *   not be called from an interrupt handler, nor from any work that was
+ *   scheduled via uacpi_kernel_schedule_work
+ * - That is all it waits for: it's up to the caller to make sure that no
+ *   other thread is in the middle of a call into uACPI, or is about to make
+ *   one, as everything that such a call relies on is gone once this returns
  */
 void uacpi_state_reset(void);
 

@@ -545,7 +545,7 @@ uacpi_status uacpi_write_register_field(
 
     flags = uacpi_kernel_lock_spinlock(g_reg_lock);
 
-    if (reg->kind == REGISTER_ACCESS_KIND_WRITE_TO_CLEAR) {
+    if (reg->access_kind == REGISTER_ACCESS_KIND_WRITE_TO_CLEAR) {
         if (in_value == 0) {
             ret = UACPI_STATUS_OK;
             goto out;

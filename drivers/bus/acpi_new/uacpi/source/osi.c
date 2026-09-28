@@ -93,7 +93,7 @@ uacpi_status uacpi_initialize_interfaces(void)
 
     registered_interfaces = &predefined_interfaces[0];
 
-    interface_mutex = uacpi_kernel_create_mutex();
+    interface_mutex = uacpi_create_native_mutex();
     if (uacpi_unlikely(interface_mutex == UACPI_NULL))
         return UACPI_STATUS_OUT_OF_MEMORY;
 
@@ -125,7 +125,7 @@ void uacpi_deinitialize_interfaces(void)
     }
 
     if (interface_mutex)
-        uacpi_kernel_free_mutex(interface_mutex);
+        uacpi_free_native_mutex(interface_mutex);
 
     interface_mutex = UACPI_NULL;
     interface_handler = UACPI_NULL;

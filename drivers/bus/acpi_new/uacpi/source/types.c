@@ -4,6 +4,7 @@
 #include <uacpi/internal/shareable.h>
 #include <uacpi/internal/dynamic_array.h>
 #include <uacpi/internal/log.h>
+#include <uacpi/internal/mutex.h>
 #include <uacpi/internal/namespace.h>
 #include <uacpi/internal/tables.h>
 #include <uacpi/kernel_api.h>
@@ -188,7 +189,7 @@ uacpi_mutex *uacpi_create_mutex(void)
 
     mutex->owner = UACPI_THREAD_ID_NONE;
 
-    mutex->handle = uacpi_kernel_create_mutex();
+    mutex->handle = uacpi_create_native_mutex();
     if (mutex->handle == UACPI_NULL) {
         uacpi_free(mutex, sizeof(*mutex));
         return UACPI_NULL;
@@ -212,7 +213,7 @@ static uacpi_bool event_alloc(uacpi_object *obj)
     if (uacpi_unlikely(event == UACPI_NULL))
         return UACPI_FALSE;
 
-    event->handle = uacpi_kernel_create_event();
+    event->handle = uacpi_create_native_event();
     if (event->handle == UACPI_NULL) {
         uacpi_free(event, sizeof(*event));
         return UACPI_FALSE;
@@ -488,7 +489,7 @@ static void free_mutex(uacpi_handle handle)
 {
     uacpi_mutex *mutex = handle;
 
-    uacpi_kernel_free_mutex(mutex->handle);
+    uacpi_free_native_mutex(mutex->handle);
     uacpi_free(mutex, sizeof(*mutex));
 }
 
@@ -504,7 +505,7 @@ static void free_event(uacpi_handle handle)
 {
     uacpi_event *event = handle;
 
-    uacpi_kernel_free_event(event->handle);
+    uacpi_free_native_event(event->handle);
     uacpi_free(event, sizeof(*event));
 }
 
@@ -620,17 +621,11 @@ static void free_field_unit(uacpi_handle handle)
         break;
     case UACPI_FIELD_UNIT_KIND_BANK:
         uacpi_namespace_node_unref(field_unit->bank_region);
-        uacpi_shareable_unref_and_delete_if_last(
-            field_unit->bank_selection, free_field_unit
-        );
+        uacpi_field_unit_unref(field_unit->bank_selection);
         break;
     case UACPI_FIELD_UNIT_KIND_INDEX:
-        uacpi_shareable_unref_and_delete_if_last(
-            field_unit->index, free_field_unit
-        );
-        uacpi_shareable_unref_and_delete_if_last(
-            field_unit->data, free_field_unit
-        );
+        uacpi_field_unit_unref(field_unit->index);
+        uacpi_field_unit_unref(field_unit->data);
         break;
     default:
         break;
@@ -657,6 +652,11 @@ void uacpi_method_unref(uacpi_control_method *method)
     uacpi_shareable_unref_and_delete_if_last(method, free_method);
 }
 
+void uacpi_field_unit_unref(uacpi_field_unit *field_unit)
+{
+    uacpi_shareable_unref_and_delete_if_last(field_unit, free_field_unit);
+}
+
 static void free_object_storage(uacpi_object *obj)
 {
     switch (obj->type) {
@@ -680,8 +680,7 @@ static void free_object_storage(uacpi_object *obj)
                                                  free_package);
         break;
     case UACPI_OBJECT_FIELD_UNIT:
-        uacpi_shareable_unref_and_delete_if_last(obj->field_unit,
-                                                 free_field_unit);
+        uacpi_field_unit_unref(obj->field_unit);
         break;
     case UACPI_OBJECT_MUTEX:
         uacpi_mutex_unref(obj->mutex);
@@ -1377,24 +1376,10 @@ uacpi_status uacpi_object_assign(uacpi_object *dst, uacpi_object *src,
     if (src == dst)
         return ret;
 
-    switch (dst->type) {
-    case UACPI_OBJECT_REFERENCE:
+    if (dst->type == UACPI_OBJECT_REFERENCE)
         uacpi_object_detach_child(dst);
-        break;
-    case UACPI_OBJECT_STRING:
-    case UACPI_OBJECT_BUFFER:
-    case UACPI_OBJECT_METHOD:
-    case UACPI_OBJECT_PACKAGE:
-    case UACPI_OBJECT_MUTEX:
-    case UACPI_OBJECT_EVENT:
-    case UACPI_OBJECT_PROCESSOR:
-    case UACPI_OBJECT_DEVICE:
-    case UACPI_OBJECT_THERMAL_ZONE:
+    else
         free_object_storage(dst);
-        break;
-    default:
-        break;
-    }
 
     switch (src->type) {
     case UACPI_OBJECT_UNINITIALIZED:

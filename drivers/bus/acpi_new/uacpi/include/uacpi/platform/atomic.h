@@ -31,7 +31,7 @@
     {                                                                           \
         type current;                                                           \
                                                                                 \
-        current = _InterlockedCompareExchange##suffix(ptr, *expected, desired); \
+        current = _InterlockedCompareExchange##suffix(ptr, desired, *expected); \
         if (current != *expected) {                                             \
             *expected = current;                                                \
             return 0;                                                           \
