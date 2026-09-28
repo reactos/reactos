@@ -1276,6 +1276,15 @@ EnumStart:
 
                     USBH_SyncResetPort(HubExtension, Port);
 
+                    /* The device can come back at another speed after the reset */
+                    if (NT_SUCCESS(USBH_SyncGetPortStatus(HubExtension,
+                                                          Port,
+                                                          &PortData->PortStatus,
+                                                          sizeof(USB_PORT_STATUS_AND_CHANGE))))
+                    {
+                        UsbPortStatus = PortData->PortStatus.PortStatus;
+                    }
+
                     ix++;
                 }
 
