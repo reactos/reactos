@@ -3363,20 +3363,18 @@ NTAPI
 EHCI_Get32BitFrameNumber(IN PVOID ehciExtension)
 {
     PEHCI_EXTENSION EhciExtension = ehciExtension;
-    ULONG FrameIdx;
-    ULONG FrameIndex;
-    ULONG FrameNumber;
+    ULONG HighPart;
+    ULONG Frame;
 
     //DPRINT_EHCI("EHCI_Get32BitFrameNumber: EhciExtension - %p\n", EhciExtension);
 
-    FrameIdx = EhciExtension->FrameIndex;
-    FrameIndex = READ_REGISTER_ULONG(&EhciExtension->OperationalRegs->FrameIndex);
+    HighPart = EhciExtension->FrameHighPart;
+    Frame = READ_REGISTER_ULONG(&EhciExtension->OperationalRegs->FrameIndex) / EHCI_MICROFRAMES;
+    Frame &= EHCI_FRINDEX_FRAME_MASK;
 
-    FrameNumber = (USHORT)FrameIdx ^ ((FrameIndex / EHCI_MICROFRAMES) & EHCI_FRINDEX_FRAME_MASK);
-    FrameNumber &= EHCI_FRAME_LIST_MAX_ENTRIES;
-    FrameNumber += FrameIndex | ((FrameIndex / EHCI_MICROFRAMES) & EHCI_FRINDEX_INDEX_MASK);
-
-    return FrameNumber;
+    /* The ISR keeps bit 10 of HighPart in step with the frame list half, so a flip it has not seen yet carries */
+    return ((Frame & EHCI_FRINDEX_INDEX_MASK) | HighPart) +
+           ((Frame ^ HighPart) & EHCI_FRAME_LIST_MAX_ENTRIES);
 }
 
 VOID
