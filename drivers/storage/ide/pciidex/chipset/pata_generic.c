@@ -411,7 +411,6 @@ PciIdeBiosSetTransferMode(
     }
 }
 
-static
 VOID
 PciIdeGenericSetTransferMode(
     _In_ PATA_CONTROLLER Controller,

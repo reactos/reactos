@@ -122,8 +122,6 @@ AtaCtrlSetTransferMode(
         NT_VERIFY(_BitScanReverse(&Device->PioMode, Device->SupportedModes & PIO_ALL));
     }
 
-    KeAcquireSpinLock(&Controller->Lock, &OldIrql);
-
     /*
      * _GTF should be executed after _STM has been evaluated,
      * because it is expected that ACPI BIOS will use the identity data buffers
@@ -144,9 +142,16 @@ AtaCtrlSetTransferMode(
                              DeviceList[1] ? DeviceList[1]->IdentifyDeviceData : NULL);
     }
 
-    /* Set the PATA transfer timings */
-    ChanData->SetTransferMode(Controller, ChanData->Channel, DeviceList);
+    /* ACPI evaluations can pend, so they cannot run under the controller lock */
+    if (ChanData->SetTransferMode == PciIdeGenericSetTransferMode)
+    {
+        ChanData->SetTransferMode(Controller, ChanData->Channel, DeviceList);
+        return;
+    }
 
+    /* Set the PATA transfer timings */
+    KeAcquireSpinLock(&Controller->Lock, &OldIrql);
+    ChanData->SetTransferMode(Controller, ChanData->Channel, DeviceList);
     KeReleaseSpinLock(&Controller->Lock, OldIrql);
 }
 
