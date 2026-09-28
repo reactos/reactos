@@ -17,9 +17,9 @@ static TBBUTTON TbButtons[] =
     { BTN_UP, IDM_TB_UP, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0 },
     { BTN_SCOPE_PANE, IDM_TB_SCOPE_PANE, TBSTATE_ENABLED | TBSTATE_CHECKED, BTNS_CHECK, {0}, 0, 0 },
     { 4, IDC_STATIC, TBSTATE_ENABLED, BTNS_SEP, {0}, 0, 0 },
-//    { BTN_EXPORT_LIST, IDM_TB_EXPORT_LIST, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0 },
+    { BTN_EXPORT_LIST, IDM_TB_EXPORT_LIST, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0 },
     { 4, IDC_STATIC, TBSTATE_ENABLED, BTNS_SEP, {0}, 0, 0 },
-//    { BTN_HELP, IDM_TB_HELP, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0 },
+    { BTN_HELP, IDM_TB_HELP, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0 },
     { BTN_ACTIONS_PANE, IDM_TB_ACTIONS_PANE, TBSTATE_ENABLED, BTNS_CHECK, {0}, 0, 0 }
 };
 
@@ -80,7 +80,7 @@ CMainWnd::OnCreate(UINT nMessage, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     /* Create and initialize the Toolbar */
     m_bToolBarVisible = TRUE;
     m_ToolBar.Create(m_hWnd,
-                     WS_CHILD | WS_VISIBLE | WS_CLIPCHILDREN | TBSTYLE_FLAT,
+                     WS_CHILD | WS_VISIBLE | WS_CLIPCHILDREN | TBSTYLE_FLAT | TBSTYLE_TOOLTIPS,
                      0);
 
     m_ToolBar.SendMessageW(TB_SETBITMAPSIZE, 0, MAKELONG(16, 16));
@@ -137,6 +137,25 @@ LRESULT
 CMainWnd::OnClose(UINT nMessage, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     DestroyWindow();
+    return 0;
+}
+
+LRESULT
+CMainWnd::OnNotify(UINT nMessage, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    NMHDR *phdr = (NMHDR *)lParam;
+    switch (phdr->code)
+    {
+        case TBN_GETINFOTIP:
+            {
+                LPNMTBGETINFOTIP lptbgit = (LPNMTBGETINFOTIP) lParam;
+
+                CAtlString toolTipText(MAKEINTRESOURCE(lptbgit->iItem));
+                wcscpy(lptbgit->pszText, toolTipText.GetString());
+            }
+            break;
+    }
+
     return 0;
 }
 

@@ -178,5 +178,15 @@ BEGIN
     IDS_USERMODE_FULL_DESC "Prevents useres from adding or removing snap-ins or changing snap-in console properties. Users have full access to the tree."
     IDS_USERMODE_MULTIPLE_DESC "Prevents users from accessing areas of the tree that are not visible in snap-in console windows."
     IDS_USERMODE_SINGLE_DESC "Opens the snap-in console in single-window mode and prevents users from accessing areas of the tree that are not visible in that snap-in console window."
+END
 
+STRINGTABLE
+BEGIN
+    IDM_TB_UNDO         "Undo"
+    IDM_TB_REDO         "Redo"
+    IDM_TB_UP           "Up One Level"
+    IDM_TB_SCOPE_PANE   "Show/Hide Console Tree"
+    IDM_TB_EXPORT_LIST  "Export List"
+    IDM_TB_HELP         "Help"
+    IDM_TB_ACTIONS_PANE "Show/Hide Actions Pane"
 END

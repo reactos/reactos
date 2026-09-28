@@ -65,8 +65,9 @@
 #define IDM_TB_REDO            1501
 #define IDM_TB_UP              1502
 #define IDM_TB_SCOPE_PANE      1503
-#define IDM_TB_HELP            1504
-#define IDM_TB_ACTIONS_PANE    1505
+#define IDM_TB_EXPORT_LIST     1504
+#define IDM_TB_HELP            1505
+#define IDM_TB_ACTIONS_PANE    1506
 
 #define IDD_DIALOG_ADD                3000
 #define IDC_BUTTON_ADD                3001
