@@ -105,6 +105,9 @@ typedef struct _INTERRUPT_VECTOR_DATA
         ULONG WakeInterrupt : 1;
         ULONG ReservedFlags : 31;
     } ControllerInput;
+#if (NTDDI_VERSION >= NTDDI_WIN10_TH2)
+    ULONGLONG HvDeviceId;
+#endif
     union {
 #else
     union {
@@ -148,6 +151,69 @@ typedef struct _INTERRUPT_CONNECTION_DATA
 #endif
     INTERRUPT_VECTOR_DATA Vectors[1];
 } INTERRUPT_CONNECTION_DATA, *PINTERRUPT_CONNECTION_DATA;
+
+//FIXME: Check ARM64?
+typedef enum _INTERRUPT_TARGET_TYPE {
+    TargetApic =        0,
+    TargetApicRequest = 1,
+#if (NTDDI_VERSION >= NTDDI_WIN7)
+    TargetGlobal =      2
+#endif
+} INTERRUPT_TARGET_TYPE;
+
+typedef struct _HAL_MESSAGE_SIGNAL_TARGET_REQUEST {
+    INTERRUPT_TARGET_TYPE InterruptTargetType;
+    struct {
+        ULONG InterruptVector;
+#if (NTDDI_VERSION >= NTDDI_WIN7)
+        GROUP_AFFINITY TargetProcessors;
+        HAL_APIC_DESTINATION_MODE ApicDestinationMode;
+        INTERRUPT_REMAPPING_INFO InterruptRemapInfo;
+#else
+        KAFFINITY TargetProcessors;
+        HAL_APIC_DESTINATION_MODE ApicDestinationMode;
+#endif
+    } ApicTarget;
+} HAL_MESSAGE_SIGNAL_TARGET_REQUEST, *PHAL_MESSAGE_SIGNAL_TARGET_REQUEST;
+
+//
+// HAL_INTERRUPT_TARGET_DESCRIPTOR.Capabilities
+//
+#define HAL_TARGET_MSI_CAPABLE                  0x00000001
+#define HAL_TARGET_LOGICAL_DESTINATION_VALID    0x00000002
+#define HAL_TARGET_FIXED_DESTINATIONS           0x00000010
+
+typedef struct _HAL_INTERRUPT_TARGET_DESCRIPTOR
+{
+    INTERRUPT_TARGET_TYPE TargetType;
+#if (NTDDI_VERSION >= NTDDI_WIN7)
+    PROCESSOR_NUMBER Processor;
+    ULONG Capabilities;
+    union
+    {
+        struct
+        {
+            ULONG LogicalDestination;
+            ULONG ClusterDestination;
+            HAL_APIC_DESTINATION_MODE DestinationFormat;
+        } ApicRouting;
+        struct
+        {
+            UCHAR Present;
+            ULONG LowestEntry;
+            ULONG HighestEntry;
+        } RemapTable;
+    };
+#else
+    ULONG ProcessorIndex;
+    ULONG Capabilities;
+    struct
+    {
+        ULONG LogicalDestination;
+        HAL_APIC_DESTINATION_MODE DestinationFormat;
+    } ApicRouting;
+#endif
+} HAL_INTERRUPT_TARGET_DESCRIPTOR, *PHAL_INTERRUPT_TARGET_DESCRIPTOR;
 
 //
 // HalShutdownSystem Types
@@ -1633,7 +1699,7 @@ typedef struct _HAL_PRIVATE_DISPATCH
     pKdMapPhysicalMemory64 KdMapPhysicalMemory64;
     pKdUnmapVirtualAddress KdUnmapVirtualAddress;
 #endif
-#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+#if (NTDDI_VERSION >= NTDDI_LONGHORN) || defined(__REACTOS__)
     pKdGetPciDataByOffset KdGetPciDataByOffset;
     pKdSetPciDataByOffset KdSetPciDataByOffset;
     pHalGetInterruptVector HalGetInterruptVectorOverride;
@@ -1642,7 +1708,7 @@ typedef struct _HAL_PRIVATE_DISPATCH
     pHalUnloadMicrocode HalUnloadMicrocode;
     pHalPostMicrocodeUpdate HalPostMicrocodeUpdate;
 #endif
-#if (NTDDI_VERSION >= NTDDI_VISTASP1)
+#if (NTDDI_VERSION >= NTDDI_VISTASP1) || defined(__REACTOS__)
     pHalAllocateMessageTarget HalAllocateMessageTargetOverride;
     pHalFreeMessageTarget HalFreeMessageTargetOverride;
     pHalDpReplaceBegin HalDpReplaceBegin;
@@ -1658,7 +1724,7 @@ typedef struct _HAL_PRIVATE_DISPATCH
     pHalWheaInitProcessorGenericSection HalWheaInitProcessorGenericSection;
     pHalStopLegacyUsbInterrupts HalStopLegacyUsbInterrupts;
 #endif
-#if (NTDDI_VERSION >= NTDDI_VISTASP2)
+#if (NTDDI_VERSION >= NTDDI_VISTASP2) || defined(__REACTOS__)
     pHalReadWheaPhysicalMemory HalReadWheaPhysicalMemory;
     pHalWriteWheaPhysicalMemory HalWriteWheaPhysicalMemory;
 #endif
