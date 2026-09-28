@@ -29,6 +29,7 @@
 #define ACPI_RHCT_SIGNATURE "RHCT"
 #define ACPI_DMAR_SIGNATURE "DMAR"
 #define ACPI_WAET_SIGNATURE "WAET"
+#define ACPI_HMAT_SIGNATURE "HMAT"
 
 #define ACPI_AS_ID_SYS_MEM       0x00
 #define ACPI_AS_ID_SYS_IO        0x01
@@ -1719,3 +1720,118 @@ UACPI_PACKED(struct acpi_waet {
     uacpi_u32 flags;
 })
 UACPI_EXPECT_SIZEOF(struct acpi_waet, 40);
+
+UACPI_PACKED(struct acpi_hmat_entry_hdr {
+    uacpi_u16 type;
+    uacpi_u16 rsvd;
+    uacpi_u32 length;
+})
+UACPI_EXPECT_SIZEOF(struct acpi_hmat_entry_hdr, 8);
+
+// acpi_hmat_entry_hdr->type
+enum acpi_hmat_entry_type {
+    ACPI_HMAT_ENTRY_TYPE_PROXIMITY_DOMAIN = 0,
+    ACPI_HMAT_ENTRY_TYPE_LOCALITY = 1,
+    ACPI_HMAT_ENTRY_TYPE_CACHE = 2,
+};
+
+UACPI_PACKED(struct acpi_hmat {
+    struct acpi_sdt_hdr hdr;
+    uacpi_u32 rsvd;
+    struct acpi_hmat_entry_hdr entries[];
+})
+UACPI_EXPECT_SIZEOF(struct acpi_hmat, 40);
+
+// acpi_hmat_proximity_domain->flags
+#define ACPI_HMAT_PROXIMITY_DOMAIN_INITIATOR_VALID (1 << 0)
+#define ACPI_HMAT_PROXIMITY_DOMAIN_MEMORY_VALID (1 << 1)
+#define ACPI_HMAT_RESERVATION_HINT (1 << 2)
+
+UACPI_PACKED(struct acpi_hmat_proximity_domain {
+    struct acpi_hmat_entry_hdr hdr;
+    uacpi_u16 flags;
+    uacpi_u16 rsvd0;
+    uacpi_u32 initiator_proximity_domain;
+    uacpi_u32 memory_proximity_domain;
+    uacpi_u32 rsvd1;
+    union {
+        uacpi_u64 start_address_deprecated; // deprecated in ACPI 6.3
+        uacpi_u64 rsvd2;
+    };
+    union {
+        uacpi_u64 range_length_deprecated; // deprecated in ACPI 6.3
+        uacpi_u64 rsvd3;
+    };
+})
+UACPI_EXPECT_SIZEOF(struct acpi_hmat_proximity_domain, 40);
+
+// acpi_hmat_locality->flags
+#define ACPI_HMAT_LOCALITY_MEM_HIERARCHY_MASK 0x0F
+#define ACPI_HMAT_LOCALITY_MEM_HIERARCHY_MEMORY 0x00
+#define ACPI_HMAT_LOCALITY_MEM_HIERARCHY_L1 0x01
+#define ACPI_HMAT_LOCALITY_MEM_HIERARCHY_L2 0x02
+#define ACPI_HMAT_LOCALITY_MEM_HIERARCHY_L3 0x03
+
+#define ACPI_HMAT_LOCALITY_MIN_TRANSFER_SIZE_VALID 0x10
+#define ACPI_HMAT_LOCALITY_NON_SEQUENTIAL_TRANSFERS 0x20
+
+// acpi_hmat_locality->data_type
+#define ACPI_HMAT_LOCALITY_DATA_TYPE_ACCESS_LATENCY 0x00
+#define ACPI_HMAT_LOCALITY_DATA_TYPE_READ_LATENCY 0x01
+#define ACPI_HMAT_LOCALITY_DATA_TYPE_WRITE_LATENCY 0x02
+#define ACPI_HMAT_LOCALITY_DATA_TYPE_ACCESS_BANDWIDTH 0x03
+#define ACPI_HMAT_LOCALITY_DATA_TYPE_READ_BANDWIDTH 0x04
+#define ACPI_HMAT_LOCALITY_DATA_TYPE_WRITE_BANDWIDTH 0x05
+
+UACPI_PACKED(struct acpi_hmat_locality {
+    struct acpi_hmat_entry_hdr hdr;
+    uacpi_u8 flags;
+    uacpi_u8 data_type;
+    uacpi_u16 min_transfer_size;
+    uacpi_u32 num_initiator_proximity_domains;
+    uacpi_u32 num_target_proximity_domains;
+    uacpi_u32 rsvd;
+    uacpi_u64 entry_base_unit;
+    /**
+     * Variable length fields below:
+     *    uacpi_u32 initiator_domains[num_initiator_proximity_domains];
+     *    uacpi_u32 target_domains[num_target_proximity_domains];
+     *    uacpi_u16 latency_bandwidth_vals
+     *       [num_initiator_proximity_domains][num_target_proximity_domains];
+     */
+})
+UACPI_EXPECT_SIZEOF(struct acpi_hmat_locality, 32);
+
+// acpi_hmat_cache->cache_attributes
+#define ACPI_HMAT_CACHE_TOTAL_LEVELS_MASK 0xF
+#define ACPI_HMAT_CACHE_TOTAL_LEVELS_SHIFT 0
+
+#define ACPI_HMAT_CACHE_LEVEL_MASK 0xF
+#define ACPI_HMAT_CACHE_LEVEL_SHIFT 4
+
+#define ACPI_HMAT_CACHE_ASSOCIATIVITY_MASK 0xF
+#define ACPI_HMAT_CACHE_ASSOCIATIVITY_SHIFT 8
+#define ACPI_HMAT_CACHE_ASSOCIATIVITY_NONE 0x00
+#define ACPI_HMAT_CACHE_ASSOCIATIVITY_DIRECT 0x01
+#define ACPI_HMAT_CACHE_ASSOCIATIVITY_COMPLEX 0x02
+
+#define ACPI_HMAT_CACHE_WRITE_POLICY_MASK 0xF
+#define ACPI_HMAT_CACHE_WRITE_POLICY_SHIFT 12
+#define ACPI_HMAT_CACHE_WRITE_POLICY_NONE 0x00
+#define ACPI_HMAT_CACHE_WRITE_POLICY_WB 0x01
+#define ACPI_HMAT_CACHE_WRITE_POLICY_WT 0x02
+
+#define ACPI_HMAT_CACHE_LINE_SIZE_MASK 0xFFFF
+#define ACPI_HMAT_CACHE_LINE_SIZE_SHIFT 16
+
+UACPI_PACKED(struct acpi_hmat_cache {
+    struct acpi_hmat_entry_hdr hdr;
+    uacpi_u32 memory_proximity_domain;
+    uacpi_u32 rsvd0;
+    uacpi_u64 cache_size;
+    uacpi_u32 cache_attributes;
+    uacpi_u16 rsvd1;
+    uacpi_u16 num_smbios_handles;
+    uacpi_u16 smbios_handles[];
+})
+UACPI_EXPECT_SIZEOF(struct acpi_hmat_cache, 32);

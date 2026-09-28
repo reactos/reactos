@@ -4917,7 +4917,7 @@ static void trace_named_object_lookup_or_creation_failure(
     const uacpi_char *middle_part = UACPI_NULL;
     const uacpi_char *prefix_path = UACPI_NULL;
     uacpi_char *requested_path = UACPI_NULL;
-    uacpi_size length;
+    uacpi_size length = 0;
     uacpi_bool is_create;
 
     is_create = op == UACPI_PARSE_OP_CREATE_NAMESTRING ||
@@ -5724,7 +5724,8 @@ static uacpi_status exec_op(struct execution_context *ctx)
                     ret = UACPI_STATUS_AML_UNDEFINED_REFERENCE;
             }
 
-            if (behavior == RESOLVE_CREATE_LAST_NAMESEG_FAIL_IF_EXISTS &&
+            if (uacpi_likely_success(ret) &&
+                behavior == RESOLVE_CREATE_LAST_NAMESEG_FAIL_IF_EXISTS &&
                 !frame->method->named_objects_persist)
                 item->node->flags |= UACPI_NAMESPACE_NODE_FLAG_TEMPORARY;
 
