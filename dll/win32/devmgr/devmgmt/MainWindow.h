@@ -17,6 +17,7 @@ class CDeviceManager
     HMENU m_hMenu;
     int m_CmdShow;
     BOOL m_RefreshPending;
+    bool m_ClosePending;
 
 public:
     CDeviceManager(void);
