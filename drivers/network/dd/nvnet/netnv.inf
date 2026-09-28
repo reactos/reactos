@@ -136,19 +136,19 @@ HKR, Ndi\Interfaces, UpperRange, 0, "ndis5"
 HKR, Ndi\Interfaces, LowerRange, 0, "ethernet"
 
 [NVNET_Generic]
-HKR, Ndi\params\OptimizationMode,      ParamDesc, 0, %OM%
-HKR, Ndi\params\OptimizationMode,      type,      0, "enum"
-HKR, Ndi\params\OptimizationMode,      default,   0, "0"
-HKR, Ndi\params\OptimizationMode\enum, "0",       0, "%M1%"
-HKR, Ndi\params\OptimizationMode\enum, "1",       0, "%M2%"
-HKR, Ndi\params\OptimizationMode\enum, "2",       0, "%M3%"
+HKR,Ndi\params\OptimizationMode,      ParamDesc, 0, %OM%
+HKR,Ndi\params\OptimizationMode,      type,      0, "enum"
+HKR,Ndi\params\OptimizationMode,      default,   0, "0"
+HKR,Ndi\params\OptimizationMode\enum, "0",       0, "%M1%"
+HKR,Ndi\params\OptimizationMode\enum, "1",       0, "%M2%"
+HKR,Ndi\params\OptimizationMode\enum, "2",       0, "%M3%"
 
-HKR, Ndi\params\NetworkAddress,        ParamDesc, 0, %NA%
-HKR, Ndi\params\NetworkAddress,        type,      0, "edit"
-HKR, Ndi\params\NetworkAddress,        LimitText, 0, "12"
-HKR, Ndi\params\NetworkAddress,        UpperCase, 0, "1"
-HKR, Ndi\params\NetworkAddress,        default,   0, " "
-HKR, Ndi\params\NetworkAddress,        optional,  0, "1"
+HKR,Ndi\params\NetworkAddress, ParamDesc, 0, %NA%
+HKR,Ndi\params\NetworkAddress, type,      0, "edit"
+HKR,Ndi\params\NetworkAddress, LimitText, 0, "12"
+HKR,Ndi\params\NetworkAddress, UpperCase, 0, "1"
+HKR,Ndi\params\NetworkAddress, default,   0, " "
+HKR,Ndi\params\NetworkAddress, optional,  0, "1"
 
 HKR,Ndi\params\*SpeedDuplex,      ParamDesc, 0, %SD%
 HKR,Ndi\params\*SpeedDuplex,      type,      0, "enum"
@@ -178,11 +178,11 @@ HKR,Ndi\params\*FlowControl\enum, "3",       0, "%FBoth%"
 HKR,Ndi\params\*FlowControl\enum, "4",       0, "%Auto%"
 
 [NVNET_Offload]
-HKR, Ndi\params\ChecksumOffload,       ParamDesc, 0, %CO%
-HKR, Ndi\params\ChecksumOffload,       type,      0, "enum"
-HKR, Ndi\params\ChecksumOffload,       default,   0, "1"
-HKR, Ndi\params\ChecksumOffload\enum,  "0",       0, "%No%"
-HKR, Ndi\params\ChecksumOffload\enum,  "1",       0, "%Yes%"
+HKR,Ndi\params\ChecksumOffload,       ParamDesc, 0, %CO%
+HKR,Ndi\params\ChecksumOffload,       type,      0, "enum"
+HKR,Ndi\params\ChecksumOffload,       default,   0, "1"
+HKR,Ndi\params\ChecksumOffload\enum,  "0",       0, "%No%"
+HKR,Ndi\params\ChecksumOffload\enum,  "1",       0, "%Yes%"
 
 HKR,Ndi\params\*LsoV1IPv4,      ParamDesc, 0, %LS%
 HKR,Ndi\params\*LsoV1IPv4,      type,      0, "enum"
@@ -208,13 +208,13 @@ HKR,Ndi\params\*PriorityVLANTag\enum, "1",       0, "%PP%"
 HKR,Ndi\params\*PriorityVLANTag\enum, "2",       0, "%VT%"
 HKR,Ndi\params\*PriorityVLANTag\enum, "3",       0, "%PVT%"
 
-HKR, Ndi\params\VlanID,                ParamDesc, 0, %VI%
-HKR, Ndi\params\VlanID,                type,      0, "long"
-HKR, Ndi\params\VlanID,                default,   0, "0"
-HKR, Ndi\params\VlanID,                min,       0, "0"
-HKR, Ndi\params\VlanID,                max,       0, "4095"
-HKR, Ndi\params\VlanID,                step,      0, "1"
-HKR, Ndi\params\VlanID,                base,      0, "10"
+HKR,Ndi\params\VlanID, ParamDesc, 0, %VI%
+HKR,Ndi\params\VlanID, type,      0, "long"
+HKR,Ndi\params\VlanID, default,   0, "0"
+HKR,Ndi\params\VlanID, min,       0, "0"
+HKR,Ndi\params\VlanID, max,       0, "4095"
+HKR,Ndi\params\VlanID, step,      0, "1"
+HKR,Ndi\params\VlanID, base,      0, "10"
 
 [NVNET_Service_Inst]
 ServiceType   = 1
