@@ -405,6 +405,12 @@ CConsoleWnd::UpdateView()
 }
 
 VOID
+CConsoleWnd::SetStatusBarText(LPWSTR pszStatusText)
+{
+     m_StatusBar.SetText(pszStatusText);
+}
+
+VOID
 CConsoleWnd::SaveView(MscFile *mscFile, IXMLDOMElement *pParentElement)
 {
     IXMLDOMElement *pViewElement = NULL;

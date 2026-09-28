@@ -21,7 +21,7 @@ BEGIN
     BEGIN
         MENUITEM "&New\tCtrl+N", IDM_FILE_NEW
         MENUITEM "&Open...\tCtrl+O", IDM_FILE_OPEN
-        MENUITEM "&Save", IDM_FILE_SAVE
+        MENUITEM "&Save\tCtrl+S", IDM_FILE_SAVE
         MENUITEM "Save &As...", IDM_FILE_SAVEAS
         MENUITEM SEPARATOR
         MENUITEM "Add/Remove Snap-in...\tCtrl+M", IDM_FILE_ADD
@@ -189,4 +189,42 @@ BEGIN
     IDM_TB_EXPORT_LIST  "Export List"
     IDM_TB_HELP         "Help"
     IDM_TB_ACTIONS_PANE "Show/Hide Actions Pane"
+END
+
+STRINGTABLE
+BEGIN
+    IDM_FILE_NEW      "Create a new console."
+    IDM_FILE_OPEN     "Open an existing console."
+    IDM_FILE_SAVE     "Save the current console."
+    IDM_FILE_SAVEAS   "Save a copy of the current console in a separate file."
+    IDM_FILE_ADD      "Enables you to add snap-ins or remove them from the snap-in console."
+    IDM_FILE_OPTIONS  "Changes the options for the user and/or the snapin-console."
+    IDM_FILE_RECENT1  "Opens this snap-in console."
+    IDM_FILE_RECENT2       "Opens this snap-in console."
+    IDM_FILE_RECENT3       "Opens this snap-in console."
+    IDM_FILE_RECENT4       "Opens this snap-in console."
+    IDM_FILE_EXIT          "Quits the program and prompts to save documents."
+
+    IDM_ACTION_NEW         "Opens a new window rooted at this node."
+    IDM_ACTION_RENAME      "Renames the current selection."
+    IDM_ACTION_EXPORT_LIST "Exports the current list to a file."
+
+    IDM_VIEW_COLUMNS       "Opens a dialog box in which you can modify the columns in result pane."
+    IDM_VIEW_LARGE_ICONS   "Displays items by using large icons."
+    IDM_VIEW_SMALL_ICONS   "Displays items by using small icons."
+    IDM_VIEW_LIST          "Displays items in a list."
+    IDM_VIEW_DETAILS       "Displays information about each item in a window."
+    IDM_VIEW_CUSTOMIZE     "Changes the options for the view."
+
+    IDM_FAVORITES_ADD      "Adds the current view to your Favorites list."
+    IDM_FAVORITES_ORGANIZE "Enables you to organize your Favorites into folders."
+
+    IDM_WINDOWS_NEW        "New Window."
+    IDM_WINDOWS_CASCADE    "Arranges windows so they overlap."
+    IDM_WINDOWS_TILE       "Arranges windows as tiles."
+    IDM_WINDOWS_ARRANGE    "Arranges icons at the bottom of the window."
+
+    IDM_HELP_TOPICS        "Opens Help."
+    IDM_HELP_ABOUT_MMC     "Display program information, version number, and copyright."
+    IDM_HELP_ABOUT_SNAPIN  "Display snap-in information, version number, and copyright."
 END

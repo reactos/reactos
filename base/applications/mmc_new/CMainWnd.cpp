@@ -160,6 +160,21 @@ CMainWnd::OnNotify(UINT nMessage, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 }
 
 LRESULT
+CMainWnd::OnMenuSelect(UINT nMessage, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    CConsoleWnd* child = GetActiveChildInfo();
+    if (child == NULL)
+        return 0;
+
+    UINT menuItem = LOWORD(wParam);
+//    UINT flags = HIWORD(wParam);
+//    HMENU hMenu = (HMENU)lParam;
+    CAtlString menuText(MAKEINTRESOURCE(menuItem));
+    child->SetStatusBarText(menuText.GetString());
+    return 0;
+}
+
+LRESULT
 CMainWnd::OnFileNew(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
 {
     MDICREATESTRUCT mcs;

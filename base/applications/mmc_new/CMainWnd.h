@@ -63,6 +63,7 @@ public:
         MESSAGE_HANDLER(WM_SIZE, OnSize)
         MESSAGE_HANDLER(WM_USER_CLOSE_CHILD, OnCloseChild)
         MESSAGE_HANDLER(WM_NOTIFY, OnNotify)
+        MESSAGE_HANDLER(WM_MENUSELECT, OnMenuSelect)
 
         COMMAND_ID_HANDLER(IDM_FILE_NEW, OnFileNew)
         COMMAND_ID_HANDLER(IDM_FILE_OPEN, OnFileOpen)
@@ -186,6 +187,7 @@ public:
     LRESULT OnDestroy(UINT nMessage, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnClose(UINT nMessage, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnNotify(UINT nMessage, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+    LRESULT OnMenuSelect(UINT nMessage, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 
     LRESULT OnFileNew(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
     LRESULT OnFileOpen(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);

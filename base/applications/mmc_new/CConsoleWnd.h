@@ -112,6 +112,7 @@ public:
     VOID SetActionsPaneVisible(BOOL bVisible);
 
     VOID UpdateView();
+    VOID SetStatusBarText(LPWSTR pszStatusText);
 
     VOID SaveView(MscFile *mscFile, IXMLDOMElement *pParentElement);
 
