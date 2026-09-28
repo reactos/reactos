@@ -28,9 +28,21 @@ AtaAcpiEvaluateObject(
     KEVENT Event;
     NTSTATUS Status;
     PDEVICE_OBJECT TopDeviceObject;
+    PVOID SystemBuffer;
+    ULONG SystemBufferLength;
 
     /* Get the ACPI bus filter device for this DO */
     TopDeviceObject = IoGetAttachedDeviceReference(DeviceObject);
+
+    /* METHOD_BUFFERED returns the result in place, so the buffer must fit both directions */
+    SystemBufferLength = max(InputBufferLength, OutputBufferLength);
+    SystemBuffer = ExAllocatePoolZero(NonPagedPool, SystemBufferLength, TAG_PCIIDEX);
+    if (!SystemBuffer)
+    {
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto Exit;
+    }
+    RtlCopyMemory(SystemBuffer, InputBuffer, InputBufferLength);
 
     /*
      * We could be called at DISPATCH_LEVEL,
@@ -39,10 +51,11 @@ AtaAcpiEvaluateObject(
     Irp = IoAllocateIrp(TopDeviceObject->StackSize, 0);
     if (!Irp)
     {
+        ExFreePoolWithTag(SystemBuffer, TAG_PCIIDEX);
         Status = STATUS_INSUFFICIENT_RESOURCES;
         goto Exit;
     }
-    Irp->AssociatedIrp.SystemBuffer = InputBuffer;
+    Irp->AssociatedIrp.SystemBuffer = SystemBuffer;
     Irp->UserBuffer = OutputBuffer;
     Irp->Flags |= IRP_BUFFERED_IO | IRP_INPUT_OPERATION;
     Irp->IoStatus.Status = STATUS_NOT_SUPPORTED;
@@ -74,7 +87,11 @@ AtaAcpiEvaluateObject(
         Status = Irp->IoStatus.Status;
     }
 
-    RtlCopyMemory(OutputBuffer, InputBuffer, min(Irp->IoStatus.Information, OutputBufferLength));
+    if (OutputBuffer)
+        RtlCopyMemory(OutputBuffer, SystemBuffer, min(Irp->IoStatus.Information, OutputBufferLength));
+
+    IoFreeIrp(Irp);
+    ExFreePoolWithTag(SystemBuffer, TAG_PCIIDEX);
 
     if (OutputBuffer && NT_SUCCESS(Status))
     {
