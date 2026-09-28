@@ -2751,6 +2751,36 @@ typedef struct _IO_RESOURCE_DESCRIPTOR {
       ULONG Reserved1;
       ULONG Reserved2;
     } ConfigData;
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+    struct {
+      ULONG Length40;
+      ULONG Alignment40;
+      PHYSICAL_ADDRESS MinimumAddress;
+      PHYSICAL_ADDRESS MaximumAddress;
+    } Memory40;
+    struct {
+      ULONG Length48;
+      ULONG Alignment48;
+      PHYSICAL_ADDRESS MinimumAddress;
+      PHYSICAL_ADDRESS MaximumAddress;
+    } Memory48;
+    struct {
+      ULONG Length64;
+      ULONG Alignment64;
+      PHYSICAL_ADDRESS MinimumAddress;
+      PHYSICAL_ADDRESS MaximumAddress;
+    } Memory64;
+#endif
+#if (NTDDI_VERSION >= NTDDI_WIN8) || defined(__REACTOS__)
+    struct {
+      UCHAR Class;
+      UCHAR Type;
+      UCHAR Reserved1;
+      UCHAR Reserved2;
+      ULONG IdLowPart;
+      ULONG IdHighPart;
+    } Connection;
+#endif
   } u;
 } IO_RESOURCE_DESCRIPTOR, *PIO_RESOURCE_DESCRIPTOR;
 
@@ -5344,6 +5374,11 @@ typedef VOID
   _In_ PVOID Context,
   _In_ BOOLEAN EnableWake);
 
+typedef VOID
+(NTAPI PCI_PREPARE_MULTISTAGE_RESUME)(
+  _In_ PVOID Context);
+typedef PCI_PREPARE_MULTISTAGE_RESUME *PPCI_PREPARE_MULTISTAGE_RESUME;
+
 typedef struct _PCI_BUS_INTERFACE_STANDARD {
   USHORT Size;
   USHORT Version;
@@ -5356,9 +5391,12 @@ typedef struct _PCI_BUS_INTERFACE_STANDARD {
   PCI_LINE_TO_PIN LineToPin;
   PCI_ROOT_BUS_CAPABILITY RootBusCapability;
   PCI_EXPRESS_WAKE_CONTROL ExpressWakeControl;
+  PPCI_PREPARE_MULTISTAGE_RESUME PrepareMultistageResume;
 } PCI_BUS_INTERFACE_STANDARD, *PPCI_BUS_INTERFACE_STANDARD;
 
-#define PCI_BUS_INTERFACE_STANDARD_VERSION 1
+#define PCI_BUS_INTERFACE_STANDARD_VERSION 2
+#define PCI_BUS_INTERFACE_STANDARD_VERSION_1_LENGTH \
+  FIELD_OFFSET(PCI_BUS_INTERFACE_STANDARD, PrepareMultistageResume)
 
 #endif /* _PCIINTRF_X_ */
 
