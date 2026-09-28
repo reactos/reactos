@@ -65,20 +65,20 @@ list(APPEND SOURCE
      uacpi-host/uacpi_host.c
      uacpi-host/uacpi_isr.c)
 
-add_library(uacpint MODULE
+add_library(acpi MODULE
             ${SOURCE}
             sys/acpi.rc)
 
-set_module_type(uacpint kernelmodedriver)
-target_link_libraries(uacpint uacpi arbiter ntoskrnl_vista wdmguid memcmp ${PSEH_LIB})
-add_importlibs(uacpint wmilib ntoskrnl hal)
-add_cd_file(TARGET uacpint DESTINATION reactos/system32/drivers NO_CAB FOR all)
+set_module_type(acpi kernelmodedriver)
+target_link_libraries(acpi uacpi arbiter ntoskrnl_vista wdmguid memcmp ${PSEH_LIB})
+add_importlibs(acpi wmilib ntoskrnl hal)
+add_cd_file(TARGET acpi DESTINATION reactos/system32/drivers NO_CAB FOR all)
 
-set_target_properties(uacpi uacpint PROPERTIES C_STANDARD 11 C_STANDARD_REQUIRED ON)
+set_target_properties(uacpi acpi PROPERTIES C_STANDARD 11 C_STANDARD_REQUIRED ON)
 
 if(MSVC)
     target_compile_options(uacpi PRIVATE /std:c11)
-    target_compile_options(uacpint PRIVATE /std:c11)
+    target_compile_options(acpi PRIVATE /std:c11)
 
     target_compile_options(uacpi PRIVATE
         /wd4189 /wd4244 /wd4267 /wd4310 /wd4324 /wd4389 /wd4701 /wd4703)
