@@ -1550,8 +1550,9 @@ IoGetDeviceProperty(IN PDEVICE_OBJECT DeviceObject,
     /* Assume failure */
     *ResultLength = 0;
 
-    /* Only PDOs can call this */
-    if (!DeviceNode) return STATUS_INVALID_DEVICE_REQUEST;
+    /* Only PDOs can call this, legacy resource claim nodes are not PDOs */
+    if (!DeviceNode || (DeviceNode->Flags & DNF_LEGACY_RESOURCE_DEVICENODE))
+        return STATUS_INVALID_DEVICE_REQUEST;
 
     /* Handle all properties */
     switch (DeviceProperty)
