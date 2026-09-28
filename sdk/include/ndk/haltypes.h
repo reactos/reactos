@@ -97,8 +97,12 @@ typedef struct _INTERRUPT_VECTOR_DATA
     KIRQL Irql;
     KINTERRUPT_POLARITY Polarity;
     KINTERRUPT_MODE Mode;
+#if (NTDDI_VERSION >= NTDDI_WIN7)
     GROUP_AFFINITY TargetProcessors;
     INTERRUPT_REMAPPING_INFO IntRemapInfo;
+#else
+    KAFFINITY TargetProcessors;
+#endif
 #if (NTDDI_VERSION >= NTDDI_WIN10)
     struct {
         ULONG Gsiv;
@@ -113,8 +117,10 @@ typedef struct _INTERRUPT_VECTOR_DATA
     union {
         struct {
             ULONG Gsiv;
+#if (NTDDI_VERSION >= NTDDI_WINBLUE)
             ULONG WakeInterrupt : 1;
             ULONG ReservedFlags : 31;
+#endif
         } ControllerInput;
 #endif
         struct {
@@ -137,7 +143,7 @@ typedef struct _INTERRUPT_VECTOR_DATA
 typedef struct _INTERRUPT_CONNECTION_DATA
 {
     ULONG Count;
-#if (NTDDI_VERSION < NTDDI_WIN10)
+#if (NTDDI_VERSION >= NTDDI_WINBLUE) && (NTDDI_VERSION < NTDDI_WIN10)
     GROUP_AFFINITY OriginalAffinity;
     LIST_ENTRY SteeringListEntry;
     VOID* SteeringListRoot;
@@ -1141,12 +1147,21 @@ ULONG
     _In_ ULONG Vector
 );
 
+#if (NTDDI_VERSION >= NTDDI_WIN10)
 typedef
 NTSTATUS
 (NTAPI *pHalSecondaryInterruptQueryPrimaryInformation)(
     _In_ PINTERRUPT_VECTOR_DATA VectorData,
     _Out_ PULONG PrimaryGsiv
 );
+#else
+typedef
+NTSTATUS
+(NTAPI *pHalSecondaryInterruptQueryPrimaryInformation)(
+    _In_ PINTERRUPT_CONNECTION_DATA ConnectionData,
+    _Out_ PULONG PrimaryGsiv
+);
+#endif
 
 typedef
 BOOLEAN

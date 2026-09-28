@@ -1,11 +1,19 @@
-set(CMAKE_C_STANDARD 11)
+
+remove_definitions(-D_WIN32_WINNT=0x502 -DWINVER=0x502)
+# uACPI-NT is built against the Vista interfaces
+add_definitions(
+    -D_WIN32_WINNT=0x600
+    -DWINVER=0x600
+    -DNTDDI_VERSION=0x06000000
+    -DNT_TARGET_ID="reactos"
+    -DNT_TARGET_NAME="ReactOS")
 
 include_directories(
-    uacpi/include
-    uacpi/include/uacpi/
-    uacpi/include/uacpi/platform
-    uacpi/include/uacpi/internal)
-    
+    include
+    reactos
+    uacpi-host
+    uacpi/include)
+
 list(APPEND UACPI_SOURCE
      uacpi/source/default_handlers.c
      uacpi/source/event.c
@@ -28,19 +36,54 @@ list(APPEND UACPI_SOURCE
      uacpi/source/utilities.c)
 
 add_library(uacpi ${UACPI_SOURCE})
-add_pch(uacpi uacpi/include/uacpi/acpi.h "${UACPI_SOURCE}")
+target_compile_definitions(uacpi PUBLIC UACPI_OVERRIDE_LIBC)
+add_dependencies(uacpi xdk)
 
-list(APPEND ACPI_SOURCE
-     uacpiosl.c
-     main.c)
+list(APPEND SOURCE
+     drivers/applaunch.c
+     drivers/button.c
+     drivers/devif.c
+     drivers/ec.c
+     drivers/fan.c
+     drivers/processor.c
+     drivers/thermal.c
+     sys/driver.c
+     sys/enum.c
+     sys/fdo.c
+     sys/filter.c
+     sys/glue.c
+     sys/guid.c
+     sys/hal.c
+     sys/interfaces.c
+     sys/ioctl.c
+     sys/irqarb.c
+     sys/irqlib.c
+     sys/pdo.c
+     sys/power.c
+     sys/powerres.c
+     sys/reg.c
+     sys/resarb.c
+     sys/reshub.c
+     sys/resource.c
+     sys/sleep.c
+     uacpi-host/uacpi_host.c
+     uacpi-host/uacpi_isr.c)
 
-add_library(acpi MODULE
-            ${ACPI_SOURCE}
-            acpi.rc)
+add_library(uacpint MODULE
+            ${SOURCE}
+            sys/acpi.rc)
 
-target_link_libraries(acpi wdmguid uacpi memcmp strtol ${PSEH_LIB})
-set_module_type(acpi kernelmodedriver)
-add_importlibs(acpi ntoskrnl hal)
-add_pch(acpi precomp.h ACPI_SOURCE)
-add_cd_file(TARGET acpi DESTINATION reactos/system32/drivers NO_CAB FOR all)
-add_driver_inf(acpi acpi.inf)
+set_module_type(uacpint kernelmodedriver)
+target_link_libraries(uacpint uacpi arbiter ntoskrnl_vista wdmguid memcmp ${PSEH_LIB})
+add_importlibs(uacpint wmilib ntoskrnl hal)
+add_cd_file(TARGET uacpint DESTINATION reactos/system32/drivers NO_CAB FOR all)
+
+set_target_properties(uacpi uacpint PROPERTIES C_STANDARD 11 C_STANDARD_REQUIRED ON)
+
+if(MSVC)
+    target_compile_options(uacpi PRIVATE /std:c11)
+    target_compile_options(uacpint PRIVATE /std:c11)
+
+    target_compile_options(uacpi PRIVATE
+        /wd4189 /wd4244 /wd4267 /wd4310 /wd4324 /wd4389 /wd4701 /wd4703)
+endif()

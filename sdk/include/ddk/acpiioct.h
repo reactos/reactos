@@ -201,6 +201,33 @@ typedef ACPI_ENUM_CHILDREN_OUTPUT_BUFFER UNALIGNED *PACPI_ENUM_CHILDREN_OUTPUT_B
 #define IOCTL_ACPI_ENUM_CHILDREN        CTL_CODE(FILE_DEVICE_ACPI, 8, METHOD_BUFFERED, FILE_READ_ACCESS | FILE_WRITE_ACCESS)
 #endif
 
+typedef struct _ACPI_DEVICE_INFORMATION_OUTPUT_BUFFER {
+  ULONG Signature;
+  USHORT Size;
+  UCHAR Revision;
+  UCHAR Reserved0;
+  USHORT VendorIdStringOffset;
+  USHORT VendorStringLength;
+  USHORT DeviceIdStringOffset;
+  USHORT SubSystemIdStringOffset;
+  USHORT SubSystemStringLength;
+  USHORT SubDeviceIdStringOffset;
+  USHORT InstanceIdLength;
+  USHORT InstanceIdOffset;
+  USHORT BaseClassCode;
+  USHORT HardwareRevision;
+  UCHAR ProgrammingInterface;
+  UCHAR Reserved1;
+  USHORT SubClassCode;
+} ACPI_DEVICE_INFORMATION_OUTPUT_BUFFER, *PACPI_DEVICE_INFORMATION_OUTPUT_BUFFER;
+
+typedef struct _ACPI_GET_DEVICE_SPECIFIC_DATA {
+  ULONG Signature;
+  GUID Section;
+  ULONG PropertyNameLength;
+  _Field_size_bytes_(PropertyNameLength) _Null_terminated_ UCHAR PropertyName[ANYSIZE_ARRAY];
+} ACPI_GET_DEVICE_SPECIFIC_DATA, *PACPI_GET_DEVICE_SPECIFIC_DATA;
+
 #ifdef __cplusplus
 }
 #endif

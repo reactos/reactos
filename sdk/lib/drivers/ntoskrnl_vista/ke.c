@@ -55,3 +55,30 @@ KeSetCoalescableTimer(
 {
     return KeSetTimerEx(Timer, DueTime, Period, Dpc);
 }
+
+/* Returns 0, the value for a thread that was running with its user affinity */
+_IRQL_requires_min_(PASSIVE_LEVEL)
+_IRQL_requires_max_(APC_LEVEL)
+NTKRNLVISTAAPI
+KAFFINITY
+NTAPI
+KeSetSystemAffinityThreadEx(
+    _In_ KAFFINITY Affinity)
+{
+    KeSetSystemAffinityThread(Affinity);
+    return 0;
+}
+
+_IRQL_requires_min_(PASSIVE_LEVEL)
+_IRQL_requires_max_(APC_LEVEL)
+NTKRNLVISTAAPI
+VOID
+NTAPI
+KeRevertToUserAffinityThreadEx(
+    _In_ KAFFINITY Affinity)
+{
+    if (Affinity == 0)
+        KeRevertToUserAffinityThread();
+    else
+        KeSetSystemAffinityThread(Affinity);
+}
