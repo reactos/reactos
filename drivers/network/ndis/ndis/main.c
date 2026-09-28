@@ -52,7 +52,7 @@ NdisReadRegistryEntries(VOID)
      *
      * When the debugger stops at a breakpoint the NIC keeps frame reception,
      * which could eventually cause the receiver to run out of buffers.
-     * At this point, the NIC may begin start spamming pause frames.
+     * At this point, the NIC may start spamming pause frames.
      * This is undesirable for some use cases.
      */
     if (!KD_DEBUGGER_ENABLED)
