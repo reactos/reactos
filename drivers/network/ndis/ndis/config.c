@@ -418,7 +418,7 @@ ReturnKeywordValue(
 {
     PMINIPORT_RESOURCE MiniportResource;
 
-    *ParameterValue = ExAllocatePool(PagedPool, sizeof(NDIS_CONFIGURATION_PARAMETER));
+    *ParameterValue = ExAllocatePool(PagedPool, sizeof(**ParameterValue));
     if (!*ParameterValue)
     {
         NDIS_DbgPrint(MIN_TRACE,("Insufficient resources.\n"));
