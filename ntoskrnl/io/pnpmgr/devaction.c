@@ -303,15 +303,20 @@ IopCreateDeviceInstancePath(
         }
     }
 
+    UNICODE_STRING DefaultInstanceId = RTL_CONSTANT_STRING(L"0000");
+    PUNICODE_STRING TargetInstanceId;
+
     RtlInitUnicodeString(&InstanceId,
                          (PWSTR)IoStatusBlock.Information);
+
+    TargetInstanceId = (InstanceId.Length > 0) ? &InstanceId : &DefaultInstanceId;
 
     InstancePath->Length = 0;
     InstancePath->MaximumLength = DeviceId.Length + sizeof(WCHAR) +
                                   ParentIdPrefix.Length +
-                                  InstanceId.Length +
+                                  TargetInstanceId->Length +
                                   sizeof(UNICODE_NULL);
-    if (ParentIdPrefix.Length && InstanceId.Length)
+    if (ParentIdPrefix.Length && TargetInstanceId->Length)
     {
         InstancePath->MaximumLength += sizeof(WCHAR);
     }
@@ -333,13 +338,13 @@ IopCreateDeviceInstancePath(
 
     /* Add information from parent bus device to InstancePath */
     RtlAppendUnicodeStringToString(InstancePath, &ParentIdPrefix);
-    if (ParentIdPrefix.Length && InstanceId.Length)
+    if (ParentIdPrefix.Length && TargetInstanceId->Length)
     {
         RtlAppendUnicodeToString(InstancePath, L"&");
     }
 
     /* Finally, add the id returned by the driver stack */
-    RtlAppendUnicodeStringToString(InstancePath, &InstanceId);
+    RtlAppendUnicodeStringToString(InstancePath, TargetInstanceId);
 
     /*
      * FIXME: Check for valid characters, if there is invalid characters

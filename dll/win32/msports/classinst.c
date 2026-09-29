@@ -700,7 +700,34 @@ GetPortType(IN HDEVINFO DeviceInfoSet,
         else
             PortType = SerialPort;
     }
+if (PortType == UnknownPort)
+    {
+        HKEY hDevKey;
 
+        hDevKey = SetupDiOpenDevRegKey(DeviceInfoSet,
+                                       DeviceInfoData,
+                                       DICS_FLAG_GLOBAL,
+                                       0,
+                                       DIREG_DEV,
+                                       KEY_READ);
+        if (hDevKey != INVALID_HANDLE_VALUE)
+        {
+            WCHAR szName[16];
+            dwSize = sizeof(szName);
+            if (RegQueryValueExW(hDevKey, L"PortName", NULL, NULL, (PBYTE)szName, &dwSize) == ERROR_SUCCESS)
+            {
+                if (_wcsnicmp(szName, L"LPT", 3) == 0)
+                    PortType = ParallelPort;
+                else
+                    PortType = SerialPort;
+            }
+            RegCloseKey(hDevKey);
+        }
+
+        /* Default fallback: any non-parallel port in the Ports class is a SerialPort */
+        if (PortType == UnknownPort)
+            PortType = SerialPort;
+    }
 done:
     if (hKey != NULL)
         RegCloseKey(hKey);

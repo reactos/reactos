@@ -138,18 +138,10 @@ ReadPortSettings(
                               &dwSize);
     RegCloseKey(hKey);
 
-    if (lError != ERROR_SUCCESS)
+    if (lError != ERROR_SUCCESS || dwType != REG_SZ || dwSize > sizeof(szPortData))
     {
-        ERR("RegQueryValueExW failed (Error %lu)\n", lError);
-        return;
+        wcscpy(szPortData, L"9600,n,8,1");
     }
-
-    if ((dwType != REG_SZ) || (dwSize > sizeof(szPortData)))
-    {
-        ERR("Wrong type or size\n");
-        return;
-    }
-
     TRACE("szPortData: '%S'\n", szPortData);
 
     /* Replace commas by spaces */
@@ -362,6 +354,8 @@ OnInitDialog(
     HWND hwndControl;
 
     TRACE("OnInitDialog()\n");
+    
+    EnableWindow(hwnd, TRUE);
 
     pPortData = (PPORT_DATA)((LPPROPSHEETPAGEW)lParam)->lParam;
     if (pPortData == NULL)

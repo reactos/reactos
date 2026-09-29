@@ -646,9 +646,91 @@ SetupDiGetClassInstallParamsW(
     IN DWORD ClassInstallParamsSize,
     OUT PDWORD RequiredSize OPTIONAL)
 {
-    FIXME("SetupDiGetClassInstallParamsW(%p %p %p %lu %p) Stub\n",
-        DeviceInfoSet, DeviceInfoData, ClassInstallParams, ClassInstallParamsSize, RequiredSize);
-    return FALSE;
+    struct DeviceInfoSet *list = (struct DeviceInfoSet *)DeviceInfoSet;
+    struct ClassInstallParams *params;
+    SP_DEVINSTALL_PARAMS_W InstallParams;
+    DWORD i;
+    BOOL ret = FALSE;
+
+    TRACE("%p %p %p %lu %p\n",
+          DeviceInfoSet, DeviceInfoData, ClassInstallParams, ClassInstallParamsSize, RequiredSize);
+
+    if (!DeviceInfoSet || DeviceInfoSet == INVALID_HANDLE_VALUE)
+    {
+        SetLastError(ERROR_INVALID_HANDLE);
+        return FALSE;
+    }
+
+    if (list->magic != SETUP_DEVICE_INFO_SET_MAGIC)
+    {
+        SetLastError(ERROR_INVALID_HANDLE);
+        return FALSE;
+    }
+
+    if (DeviceInfoData && DeviceInfoData->cbSize != sizeof(SP_DEVINFO_DATA))
+    {
+        SetLastError(ERROR_INVALID_USER_BUFFER);
+        return FALSE;
+    }
+
+    InstallParams.cbSize = sizeof(SP_DEVINSTALL_PARAMS_W);
+    if (!SetupDiGetDeviceInstallParamsW(DeviceInfoSet, DeviceInfoData, &InstallParams))
+        return FALSE;
+
+    if (!(InstallParams.Flags & DI_CLASSINSTALLPARAMS))
+    {
+        SetLastError(ERROR_NO_CLASSINSTALL_PARAMS);
+        return FALSE;
+    }
+
+    if (!DeviceInfoData)
+    {
+        params = &list->ClassInstallParams;
+    }
+    else
+    {
+        struct DeviceInfo *deviceInfo = (struct DeviceInfo *)DeviceInfoData->Reserved;
+        params = &deviceInfo->ClassInstallParams;
+    }
+
+    for (i = 0; i < sizeof(InstallParamsData) / sizeof(InstallParamsData[0]); i++)
+    {
+        PVOID *storedPtr = (PVOID *)((PBYTE)params + InstallParamsData[i].FieldOffset);
+        if (*storedPtr)
+        {
+            if (RequiredSize)
+                *RequiredSize = InstallParamsData[i].ParamsSize;
+
+            if (!ClassInstallParams)
+            {
+                SetLastError(ERROR_INSUFFICIENT_BUFFER);
+                return FALSE;
+            }
+
+            if (ClassInstallParamsSize < InstallParamsData[i].ParamsSize)
+            {
+                SetLastError(ERROR_INSUFFICIENT_BUFFER);
+                return FALSE;
+            }
+
+            if (ClassInstallParams->cbSize != sizeof(SP_CLASSINSTALL_HEADER))
+            {
+                SetLastError(ERROR_INVALID_USER_BUFFER);
+                return FALSE;
+            }
+
+            memcpy(ClassInstallParams, *storedPtr, InstallParamsData[i].ParamsSize);
+            ret = TRUE;
+            break;
+        }
+    }
+
+    if (!ret && GetLastError() == ERROR_SUCCESS)
+    {
+        SetLastError(ERROR_NO_CLASSINSTALL_PARAMS);
+    }
+
+    return ret;
 }
 
 /***********************************************************************
@@ -924,7 +1006,7 @@ SETUP_PropertyAddPropertyAdvancedHandler(
     PSP_ADDPROPERTYPAGE_DATA AddPropertyPageData = (PSP_ADDPROPERTYPAGE_DATA)ClassInstallParams;
     BOOL ret = FALSE;
 
-    if (ClassInstallParamsSize != sizeof(SP_PROPCHANGE_PARAMS))
+    if (ClassInstallParamsSize != sizeof(SP_ADDPROPERTYPAGE_DATA))
         SetLastError(ERROR_INVALID_PARAMETER);
     else if (AddPropertyPageData && AddPropertyPageData->Flags != 0)
         SetLastError(ERROR_INVALID_FLAGS);
@@ -1145,8 +1227,7 @@ SETUP_GetValueString(
     return ERROR_SUCCESS;
 }
 
-static
-BOOL
+static BOOL
 SETUP_CallInstaller(
     IN DI_FUNCTION InstallFunction,
     IN HDEVINFO DeviceInfoSet,
@@ -1157,6 +1238,7 @@ SETUP_CallInstaller(
     DWORD dwSize = 0;
     DWORD dwError;
     BOOL ret = TRUE;
+    BOOL bHadOldParams = FALSE;
 
     /* Get the size of the old class install parameters */
     if (!SetupDiGetClassInstallParams(DeviceInfoSet,
@@ -1166,31 +1248,43 @@ SETUP_CallInstaller(
                                       &dwSize))
     {
         dwError = GetLastError();
-        if (dwError != ERROR_INSUFFICIENT_BUFFER)
+        if (dwError == ERROR_INSUFFICIENT_BUFFER)
+        {
+            bHadOldParams = TRUE;
+        }
+        else if (dwError == ERROR_NO_CLASSINSTALL_PARAMS)
+        {
+            /* Normal condition: no previous parameters were set */
+            bHadOldParams = FALSE;
+        }
+        else
         {
             ERR("SetupDiGetClassInstallParams failed (Error %lu)\n", dwError);
             return FALSE;
         }
     }
 
-    /* Allocate a buffer for the old class install parameters */
-    pClassInstallParams = HeapAlloc(GetProcessHeap(), 0, dwSize);
-    if (pClassInstallParams == NULL)
+    if (bHadOldParams)
     {
-        ERR("Failed to allocate the parameters buffer!\n");
-        return FALSE;
-    }
+        /* Allocate a buffer for the old class install parameters */
+        pClassInstallParams = HeapAlloc(GetProcessHeap(), 0, dwSize);
+        if (pClassInstallParams == NULL)
+        {
+            ERR("Failed to allocate the parameters buffer!\n");
+            return FALSE;
+        }
 
-    /* Save the old class install parameters */
-    if (!SetupDiGetClassInstallParams(DeviceInfoSet,
-                                      DeviceInfoData,
-                                      pClassInstallParams,
-                                      dwSize,
-                                      &dwSize))
-    {
-        ERR("SetupDiGetClassInstallParams failed (Error %lu)\n", GetLastError());
-        ret = FALSE;
-        goto done;
+        /* Save the old class install parameters */
+        if (!SetupDiGetClassInstallParams(DeviceInfoSet,
+                                          DeviceInfoData,
+                                          pClassInstallParams,
+                                          dwSize,
+                                          &dwSize))
+        {
+            ERR("SetupDiGetClassInstallParams failed (Error %lu)\n", GetLastError());
+            ret = FALSE;
+            goto done;
+        }
     }
 
     /* Set the new class install parameters */
@@ -1199,7 +1293,7 @@ SETUP_CallInstaller(
                                       &PageData->ClassInstallHeader,
                                       sizeof(SP_ADDPROPERTYPAGE_DATA)))
     {
-        ERR("SetupDiSetClassInstallParams failed (Error %lu)\n", dwError);
+        ERR("SetupDiSetClassInstallParams failed (Error %lu)\n", GetLastError());
         ret = FALSE;
         goto done;
     }
@@ -1214,7 +1308,7 @@ SETUP_CallInstaller(
         goto done;
     }
 
-    /* Read the new class installer parameters */
+    /* Read the new class installer parameters (with the added pages) */
     if (!SetupDiGetClassInstallParams(DeviceInfoSet,
                                       DeviceInfoData,
                                       &PageData->ClassInstallHeader,
@@ -1227,8 +1321,8 @@ SETUP_CallInstaller(
     }
 
 done:
-    /* Restore and free the old class install parameters */
-    if (pClassInstallParams != NULL)
+    /* Restore old parameters or clear temporary parameters */
+    if (bHadOldParams && pClassInstallParams != NULL)
     {
         SetupDiSetClassInstallParams(DeviceInfoSet,
                                      DeviceInfoData,
@@ -1236,6 +1330,13 @@ done:
                                      dwSize);
 
         HeapFree(GetProcessHeap(), 0, pClassInstallParams);
+    }
+    else
+    {
+        SetupDiSetClassInstallParams(DeviceInfoSet,
+                                     DeviceInfoData,
+                                     NULL,
+                                     0);
     }
 
     return ret;

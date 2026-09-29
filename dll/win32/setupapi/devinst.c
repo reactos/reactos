@@ -2688,7 +2688,7 @@ BOOL WINAPI SetupDiGetDeviceInfoListDetailA(
         return FALSE;
     }
     memcpy(&DevInfoData->ClassGuid, &set->ClassGuid, sizeof(GUID));
-    DevInfoData->RemoteMachineHandle = set->hMachine;
+    DevInfoData->RemoteMachineHandle = set->MachineName ? set->hMachine : NULL;
     if (set->MachineName)
     {
         FIXME("Stub\n");
@@ -2729,7 +2729,7 @@ BOOL WINAPI SetupDiGetDeviceInfoListDetailW(
         return FALSE;
     }
     memcpy(&DevInfoData->ClassGuid, &set->ClassGuid, sizeof(GUID));
-    DevInfoData->RemoteMachineHandle = set->hMachine;
+    DevInfoData->RemoteMachineHandle = set->MachineName ? set->hMachine : NULL;
     if (set->MachineName)
         strcpyW(DevInfoData->RemoteMachineName, set->MachineName + 2);
     else
