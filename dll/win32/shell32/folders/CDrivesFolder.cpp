@@ -304,20 +304,9 @@ static HRESULT DoFormatDriveAsync(HWND hwnd, UINT nDrive)
     return succ ? S_OK : E_FAIL;
 }
 
-// custom command IDs
-#if 0 // Disabled until our menu building system is fixed
-#define CMDID_FORMAT        0
-#define CMDID_EJECT         1
-#define CMDID_DISCONNECT    2
-#else
-/* FIXME: These IDs should start from 0, however there is difference
- * between ours and Windows' menu building systems, which should be fixed. */
-#define CMDID_FORMAT        1
-#define CMDID_EJECT         2
-#define CMDID_DISCONNECT    3
-#endif
-
-static const CMVERBMAP g_VerbMap[] = {
+enum { CMDID_FORMAT, CMDID_EJECT, CMDID_DISCONNECT };
+static const CMVERBMAP g_VerbMap[] =
+{
     { "format", CMDID_FORMAT },
     { "eject", CMDID_EJECT },
     { "disconnect", CMDID_DISCONNECT },
@@ -387,11 +376,7 @@ HRESULT CALLBACK DrivesContextMenuCallback(IShellFolder *psf,
         }
 
         if (idCmd)
-#if 0 // see FIXME above
-            pqcminfo->idCmdFirst = ++idCmd;
-#else
-            pqcminfo->idCmdFirst = (idCmd + 2);
-#endif
+            pqcminfo->idCmdFirst = ++idCmd; // Note: This assumes the items above are added in ascending id order
         hr = S_OK;
     }
     else if (uMsg == DFM_INVOKECOMMAND)
@@ -442,6 +427,10 @@ HRESULT CALLBACK DrivesContextMenuCallback(IShellFolder *psf,
                 {
                     nStringID = IDS_CANTDISCONNECT;
                 }
+            }
+            else if (hr == S_OK)
+            {
+                hr = E_INVALIDARG; // Don't eat DFM_CMD_* in CDefaultContextMenu::Do*
             }
         }
 
