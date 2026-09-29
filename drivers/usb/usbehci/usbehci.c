@@ -3372,7 +3372,7 @@ EHCI_Get32BitFrameNumber(IN PVOID ehciExtension)
     Frame = READ_REGISTER_ULONG(&EhciExtension->OperationalRegs->FrameIndex) / EHCI_MICROFRAMES;
     Frame &= EHCI_FRINDEX_FRAME_MASK;
 
-    /* The ISR keeps bit 10 of HighPart in step with the frame list half, so a flip it has not seen yet carries */
+    /* The ISR keeps bit 10 of HighPart in step with the frame list half */
     return ((Frame & EHCI_FRINDEX_INDEX_MASK) | HighPart) +
            ((Frame ^ HighPart) & EHCI_FRAME_LIST_MAX_ENTRIES);
 }

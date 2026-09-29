@@ -1163,7 +1163,7 @@ ExitWithError:
 
     if (Endpoint)
     {
-        /* A timed out endpoint is still queued for the ISR DPC and open in the miniport */
+        /* A timed out endpoint is still queued for the ISR DPC and opened in the miniport */
         KeAcquireSpinLock(&FdoExtension->EpStateChangeSpinLock, &OldIrql);
 
         if (Endpoint->StateChangeLink.Flink != NULL &&
