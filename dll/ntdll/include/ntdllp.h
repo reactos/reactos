@@ -105,7 +105,8 @@ NTSTATUS
 NTAPI
 LdrpCorValidateImage(
     _In_ PVOID ImageBase,
-    _In_ LPCWSTR FileName);
+    _In_ PIMAGE_COR20_HEADER CorHeader,
+    _In_ ULONG CorHeaderSize);
 
 /* ldrpe.c */
 NTSTATUS

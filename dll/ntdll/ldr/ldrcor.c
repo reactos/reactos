@@ -3,6 +3,7 @@
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Support for .NET (CLR) images in the loader
  * COPYRIGHT:   Copyright 2025 Justin Miller <justin.miller@reactos.org>
+ *              Copyright 2026 Abdias Joel Moya Perez <abdi.moya@gmail.com>
  */
 
 /* INCLUDES *****************************************************************/
@@ -23,6 +24,19 @@ static BOOLEAN LdrpCorMscoreeAttempted;
 
 typedef HRESULT (WINAPI *PFN_CorValidateImage)(PVOID* ImageBase, LPCWSTR ImageName);
 typedef VOID (WINAPI *PFN_CorImageUnloading)(PVOID);
+
+/* Start of the metadata that the COM descriptor points to. The version string follows it. */
+typedef struct _LDRP_COR_METADATA_ROOT
+{
+    ULONG Signature;
+    USHORT MajorVersion;
+    USHORT MinorVersion;
+    ULONG Reserved;
+    ULONG VersionLength;
+} LDRP_COR_METADATA_ROOT, *PLDRP_COR_METADATA_ROOT;
+C_ASSERT(sizeof(LDRP_COR_METADATA_ROOT) == 16);
+
+#define LDRP_COR_METADATA_SIGNATURE 0x424A5342 /* "BSJB" */
 
 /* FUNCTIONS ****************************************************************/
 
@@ -178,13 +192,48 @@ LdrpIsILOnlyImage(
 
 /**
  * @brief
+ * Tells whether a range lies inside an image.
+ *
+ * @param[in] Rva
+ * Relative virtual address of the start of the range.
+ *
+ * @param[in] Size
+ * Size of the range in bytes.
+ *
+ * @param[in] ImageSize
+ * Size of the image in bytes.
+ *
+ * @return
+ * TRUE if the range from Rva to Rva + Size is inside the image, FALSE otherwise.
+ * The sum is done in 64 bits, so it cannot overflow.
+ */
+static
+BOOLEAN
+LdrpCorRangeInImage(
+    _In_ ULONG Rva,
+    _In_ ULONG Size,
+    _In_ ULONG ImageSize)
+{
+    return ((ULONG64)Rva + Size) <= ImageSize;
+}
+
+/**
+ * @brief
  * Validates an image with a COM descriptor without help from mscoree.
  *
- * @param[in] ImageBase
- * Base address of the mapped image.
+ * The image is not trusted, so every RVA is checked against SizeOfImage before it is read.
+ * Images with a TLS directory are refused. The COM descriptor must lie inside the image, be at
+ * least as large as IMAGE_COR20_HEADER and declare runtime version 2 or later. The metadata must
+ * start with the BSJB signature and have a version string that fits.
  *
- * @param[in] FileName
- * Name of the image file. Not used.
+ * @param[in] ImageBase
+ * Base address of the mapped image. It must have a COM descriptor.
+ *
+ * @param[in] CorHeader
+ * The COM descriptor of the image, as RtlImageDirectoryEntryToData returns it.
+ *
+ * @param[in] CorHeaderSize
+ * The size of the COM descriptor, as RtlImageDirectoryEntryToData returns it.
  *
  * @return
  * STATUS_SUCCESS if the image is acceptable, STATUS_INVALID_IMAGE_FORMAT otherwise.
@@ -193,15 +242,44 @@ NTSTATUS
 NTAPI
 LdrpCorValidateImage(
     _In_ PVOID ImageBase,
-    _In_ LPCWSTR FileName)
+    _In_ PIMAGE_COR20_HEADER CorHeader,
+    _In_ ULONG CorHeaderSize)
 {
-    ULONG Size;
+    PLDRP_COR_METADATA_ROOT Root;
+    ULONG CorHeaderRva, ImageSize, Size;
 
-    UNREFERENCED_PARAMETER(FileName);
-
-    /* Minimal validation: reject images that have a TLS directory */
     if (RtlImageDirectoryEntryToData(ImageBase, TRUE, IMAGE_DIRECTORY_ENTRY_TLS, &Size))
         return STATUS_INVALID_IMAGE_FORMAT;
+
+    CorHeaderRva = (ULONG)((PUCHAR)CorHeader - (PUCHAR)ImageBase);
+    ImageSize = RtlImageNtHeader(ImageBase)->OptionalHeader.SizeOfImage;
+    if (CorHeaderSize < sizeof(IMAGE_COR20_HEADER) ||
+        !LdrpCorRangeInImage(CorHeaderRva, CorHeaderSize, ImageSize))
+    {
+        return STATUS_INVALID_IMAGE_FORMAT;
+    }
+
+    if (CorHeader->cb < sizeof(IMAGE_COR20_HEADER) ||
+        CorHeader->MajorRuntimeVersion < COR_VERSION_MAJOR_V2)
+    {
+        return STATUS_INVALID_IMAGE_FORMAT;
+    }
+
+    /* The metadata root, its version string, and 2 bytes each of flags and stream count */
+    if (CorHeader->MetaData.Size < sizeof(*Root) + 4 ||
+        !LdrpCorRangeInImage(CorHeader->MetaData.VirtualAddress,
+                             CorHeader->MetaData.Size,
+                             ImageSize))
+    {
+        return STATUS_INVALID_IMAGE_FORMAT;
+    }
+
+    Root = (PLDRP_COR_METADATA_ROOT)((PUCHAR)ImageBase + CorHeader->MetaData.VirtualAddress);
+    if (Root->Signature != LDRP_COR_METADATA_SIGNATURE ||
+        Root->VersionLength > CorHeader->MetaData.Size - sizeof(*Root) - 4)
+    {
+        return STATUS_INVALID_IMAGE_FORMAT;
+    }
 
     return STATUS_SUCCESS;
 }

@@ -1212,7 +1212,7 @@ SkipCheck:
             if (!UsedMscoree || !NT_SUCCESS(CorStatus))
             {
                 /* Fall back to local validation when mscoree is not usable */
-                CorStatus = LdrpCorValidateImage(ViewBase, FullDllName.Buffer);
+                CorStatus = LdrpCorValidateImage(ViewBase, CorDir, CorSectionSize);
             }
             if (!NT_SUCCESS(CorStatus))
             {
