@@ -1586,7 +1586,7 @@ NoRelocNeeded:
         }
     }
 
-    // FIXME: LdrpCheckCorImage() is missing
+    /* Images with a COM descriptor were validated above, before their entry was allocated */
 
     /* Check if this is an SMP Machine and a DLL */
     if ((LdrpNumberOfProcessors > 1) &&
@@ -1596,7 +1596,7 @@ NoRelocNeeded:
         LdrpValidateImageForMp(LdrEntry);
     }
 
-    // FIXME: LdrpCorUnloadImage() is missing
+    /* The CLR is not told about an image when it is mapped, so there is nothing to undo here */
 
     /* Close section and return status */
     NtClose(SectionHandle);
