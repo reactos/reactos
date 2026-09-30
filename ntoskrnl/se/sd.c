@@ -229,7 +229,7 @@ SeSetWorldSecurityDescriptor(
 
         Status = RtlAddAccessAllowedAce(Dacl,
                                         ACL_REVISION,
-                                        GENERIC_ALL,
+                                        FILE_ALL_ACCESS,
                                         SeWorldSid);
         if (!NT_SUCCESS(Status))
             return Status;
