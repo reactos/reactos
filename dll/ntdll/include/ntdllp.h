@@ -89,6 +89,11 @@ PVOID
 NTAPI
 LdrpCorGetCorDllMain(VOID);
 
+VOID
+NTAPI
+LdrpCorImageUnloading(
+    _In_ PVOID ImageBase);
+
 BOOLEAN
 NTAPI
 LdrpIsILOnlyImage(

@@ -1516,15 +1516,14 @@ LdrUnloadDll(
         LdrpSendDllNotifications(CurrentEntry, LDR_DLL_NOTIFICATION_REASON_UNLOADED);
 #endif
 
-        /* Check if this is a .NET executable */
+        /* Check if this is a .NET image and tell the CLR that it is going away */
         CorImageData = RtlImageDirectoryEntryToData(LdrEntry->DllBase,
                                                     TRUE,
                                                     IMAGE_DIRECTORY_ENTRY_COM_DESCRIPTOR,
                                                     &ComSectionSize);
         if (CorImageData)
         {
-            /* FIXME */
-            DPRINT1(".NET Images are not supported yet\n");
+            LdrpCorImageUnloading(LdrEntry->DllBase);
         }
 
         /* Check if we should unmap*/

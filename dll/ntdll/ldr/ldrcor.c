@@ -131,6 +131,30 @@ LdrpCorGetCorDllMain(VOID)
 
 /**
  * @brief
+ * Tells the CLR that a .NET image is about to be unmapped.
+ *
+ * This calls mscoree's _CorImageUnloading, but only if mscoree.dll is already loaded, so that
+ * unloading an image never loads it.
+ *
+ * @param[in] ImageBase
+ * Base address of the image that is being unloaded.
+ */
+VOID
+NTAPI
+LdrpCorImageUnloading(
+    _In_ PVOID ImageBase)
+{
+    PFN_CorImageUnloading ImageUnloading;
+
+    if (!LdrpCorMscoreeHandle || !LdrpCorEncodedImageUnloading)
+        return;
+
+    ImageUnloading = (PFN_CorImageUnloading)RtlDecodeSystemPointer(LdrpCorEncodedImageUnloading);
+    ImageUnloading(ImageBase);
+}
+
+/**
+ * @brief
  * Tells whether a CLR image contains only IL and no native code.
  *
  * @param[in] BaseAddress
