@@ -1196,7 +1196,49 @@ SkipCheck:
         return STATUS_INVALID_IMAGE_FORMAT;
     }
 
-    // FIXME: .NET support is missing
+    /* Detect and validate .NET (CLR) images early */
+    {
+        ULONG CorSectionSize = 0;
+        PVOID CorDir = RtlImageDirectoryEntryToData(ViewBase,
+                                                    TRUE,
+                                                    IMAGE_DIRECTORY_ENTRY_COM_DESCRIPTOR,
+                                                    &CorSectionSize);
+        if (CorDir)
+        {
+            NTSTATUS CorStatus = STATUS_SUCCESS;
+            BOOLEAN UsedMscoree;
+
+            UsedMscoree = LdrpCorTryValidateViaMscoree(&ViewBase, FullDllName.Buffer, &CorStatus);
+            if (!UsedMscoree || !NT_SUCCESS(CorStatus))
+            {
+                /* Fall back to local validation when mscoree is not usable */
+                CorStatus = LdrpCorValidateImage(ViewBase, FullDllName.Buffer);
+            }
+            if (!NT_SUCCESS(CorStatus))
+            {
+                NtUnmapViewOfSection(NtCurrentProcess(), ViewBase);
+                NtClose(SectionHandle);
+                return CorStatus;
+            }
+
+            /* If this is a pure IL image and we have no real CLR entrypoint, fail the load */
+            if (LdrpIsILOnlyImage(ViewBase))
+            {
+                PVOID CorDllMain = LdrpCorGetCorDllMain();
+                if (!CorDllMain)
+                {
+                    if (NT_SUCCESS(LdrpCorEnsureMscoreeLoaded()))
+                        CorDllMain = LdrpCorGetCorDllMain();
+                }
+                if (!CorDllMain)
+                {
+                    NtUnmapViewOfSection(NtCurrentProcess(), ViewBase);
+                    NtClose(SectionHandle);
+                    return STATUS_INVALID_IMAGE_FORMAT;
+                }
+            }
+        }
+    }
 
     /* Allocate an entry */
     if (!(LdrEntry = LdrpAllocateDataTableEntry(ViewBase)))
@@ -1214,6 +1256,51 @@ SkipCheck:
     LdrEntry->FullDllName = FullDllName;
     LdrEntry->BaseDllName = BaseDllName;
     LdrEntry->EntryPoint = LdrpFetchAddressOfEntryPoint(LdrEntry->DllBase);
+
+    /* Mark CLR images and avoid native DllMain for IL-only */
+    {
+        ULONG CorSectionSize = 0;
+        PVOID CorDir = RtlImageDirectoryEntryToData(LdrEntry->DllBase,
+                                                    TRUE,
+                                                    IMAGE_DIRECTORY_ENTRY_COM_DESCRIPTOR,
+                                                    &CorSectionSize);
+        if (CorDir)
+        {
+            LdrEntry->Flags |= LDRP_COR_IMAGE;
+            if (LdrpIsILOnlyImage(LdrEntry->DllBase))
+            {
+                /* For IL-only images, prefer CorDllMain if available */
+                PVOID CorDllMain = LdrpCorGetCorDllMain();
+                if (!CorDllMain)
+                {
+                    if (NT_SUCCESS(LdrpCorEnsureMscoreeLoaded()))
+                        CorDllMain = LdrpCorGetCorDllMain();
+                }
+                /* May be NULL, but the early check prevents an IL-only image without a CLR */
+                LdrEntry->EntryPoint = (PDLL_INIT_ROUTINE)CorDllMain;
+            }
+            else
+            {
+                /* Mixed-mode (native) assemblies may use _CorDllMain if available */
+                PVOID CorDllMain = LdrpCorGetCorDllMain();
+                if (!CorDllMain)
+                {
+                    /* Try load mscoree lazily and resolve _CorDllMain */
+                    if (NT_SUCCESS(LdrpCorEnsureMscoreeLoaded()))
+                    {
+                        CorDllMain = LdrpCorGetCorDllMain();
+                    }
+                }
+
+                if (CorDllMain)
+                {
+                    LdrEntry->EntryPoint = (PDLL_INIT_ROUTINE)CorDllMain;
+                    /* Avoid unmapping if the CLR takes ownership */
+                    LdrEntry->Flags |= LDR_COR_OWNS_UNMAP;
+                }
+            }
+        }
+    }
 
     /* Show debug message */
     if (ShowSnaps)

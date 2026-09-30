@@ -80,6 +80,33 @@ VOID NTAPI LdrpInitFailure(NTSTATUS Status);
 VOID NTAPI LdrpValidateImageForMp(IN PLDR_DATA_TABLE_ENTRY LdrDataTableEntry);
 VOID NTAPI LdrpEnsureLoaderLockIsHeld(VOID);
 
+/* ldrcor.c */
+NTSTATUS
+NTAPI
+LdrpCorEnsureMscoreeLoaded(VOID);
+
+PVOID
+NTAPI
+LdrpCorGetCorDllMain(VOID);
+
+BOOLEAN
+NTAPI
+LdrpCorTryValidateViaMscoree(
+    _Inout_ PVOID* ImageBase,
+    _In_ LPCWSTR FileName,
+    _Out_opt_ NTSTATUS* StatusOptional);
+
+BOOLEAN
+NTAPI
+LdrpIsILOnlyImage(
+    _In_ PVOID BaseAddress);
+
+NTSTATUS
+NTAPI
+LdrpCorValidateImage(
+    _In_ PVOID ImageBase,
+    _In_ LPCWSTR FileName);
+
 /* ldrpe.c */
 NTSTATUS
 NTAPI
