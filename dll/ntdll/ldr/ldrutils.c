@@ -1205,17 +1205,12 @@ SkipCheck:
                                                     &CorSectionSize);
         if (CorDir)
         {
-            NTSTATUS CorStatus = STATUS_SUCCESS;
-            BOOLEAN UsedMscoree;
+            NTSTATUS CorStatus;
 
-            UsedMscoree = LdrpCorTryValidateViaMscoree(&ViewBase, FullDllName.Buffer, &CorStatus);
-            if (!UsedMscoree || !NT_SUCCESS(CorStatus))
-            {
-                /* Fall back to local validation when mscoree is not usable */
-                CorStatus = LdrpCorValidateImage(ViewBase, CorDir, CorSectionSize);
-            }
+            CorStatus = LdrpCorValidateImage(ViewBase, CorDir, CorSectionSize);
             if (!NT_SUCCESS(CorStatus))
             {
+                DPRINT1("LDR: %wZ has an invalid COR header (0x%08lx)\n", &FullDllName, CorStatus);
                 NtUnmapViewOfSection(NtCurrentProcess(), ViewBase);
                 NtClose(SectionHandle);
                 return CorStatus;
@@ -1232,6 +1227,8 @@ SkipCheck:
                 }
                 if (!CorDllMain)
                 {
+                    DPRINT1("LDR: %wZ is an IL-only image, but mscoree's _CorDllMain is missing\n",
+                            &FullDllName);
                     NtUnmapViewOfSection(NtCurrentProcess(), ViewBase);
                     NtClose(SectionHandle);
                     return STATUS_INVALID_IMAGE_FORMAT;

@@ -17,12 +17,10 @@
 
 /* Optional MSCOREE handoff */
 static PVOID LdrpCorMscoreeHandle;
-static PVOID LdrpCorEncodedValidateImage;
 static PVOID LdrpCorEncodedDllMain;
 static PVOID LdrpCorEncodedImageUnloading;
 static BOOLEAN LdrpCorMscoreeAttempted;
 
-typedef HRESULT (WINAPI *PFN_CorValidateImage)(PVOID* ImageBase, LPCWSTR ImageName);
 typedef VOID (WINAPI *PFN_CorImageUnloading)(PVOID);
 
 /* Start of the metadata that the COM descriptor points to. The version string follows it. */
@@ -70,12 +68,6 @@ LdrpCorEnsureMscoreeLoadedInternal(VOID)
     LdrpCorMscoreeHandle = Base;
 
     /* Resolve optional exports */
-    RtlInitAnsiString(&Name, "_CorValidateImage");
-    if (NT_SUCCESS(LdrGetProcedureAddress(Base, &Name, 0, &LdrpCorEncodedValidateImage)))
-        LdrpCorEncodedValidateImage = RtlEncodeSystemPointer(LdrpCorEncodedValidateImage);
-    else
-        LdrpCorEncodedValidateImage = NULL;
-
     RtlInitAnsiString(&Name, "_CorDllMain");
     if (NT_SUCCESS(LdrGetProcedureAddress(Base, &Name, 0, &LdrpCorEncodedDllMain)))
         LdrpCorEncodedDllMain = RtlEncodeSystemPointer(LdrpCorEncodedDllMain);
@@ -120,46 +112,6 @@ LdrpCorGetCorDllMain(VOID)
         return NULL;
 
     return RtlDecodeSystemPointer(LdrpCorEncodedDllMain);
-}
-
-/**
- * @brief
- * Asks mscoree's _CorValidateImage whether an image with a COM descriptor is acceptable.
- *
- * @param[in,out] ImageBase
- * Pointer to the base address of the mapped image, passed on to _CorValidateImage.
- *
- * @param[in] FileName
- * Name of the image file.
- *
- * @param[out] StatusOptional
- * Optional. Receives STATUS_SUCCESS if mscoree accepted the image, an error status otherwise.
- * Only valid if the function returns TRUE.
- *
- * @return
- * TRUE if mscoree could be asked, FALSE if mscoree.dll or _CorValidateImage is not available.
- */
-BOOLEAN
-NTAPI
-LdrpCorTryValidateViaMscoree(
-    _Inout_ PVOID* ImageBase,
-    _In_ LPCWSTR FileName,
-    _Out_opt_ NTSTATUS* StatusOptional)
-{
-    NTSTATUS LoadStatus;
-    PFN_CorValidateImage ValidateImage;
-    HRESULT Result;
-
-    LoadStatus = LdrpCorEnsureMscoreeLoadedInternal();
-    if (!NT_SUCCESS(LoadStatus) || !LdrpCorEncodedValidateImage)
-        return FALSE;
-
-    ValidateImage = (PFN_CorValidateImage)RtlDecodeSystemPointer(LdrpCorEncodedValidateImage);
-    Result = ValidateImage(ImageBase, FileName);
-    if (StatusOptional)
-        *StatusOptional = SUCCEEDED(Result) ? STATUS_SUCCESS : (NTSTATUS)Result;
-
-    return TRUE;
 }
 
 /**

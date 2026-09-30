@@ -91,13 +91,6 @@ LdrpCorGetCorDllMain(VOID);
 
 BOOLEAN
 NTAPI
-LdrpCorTryValidateViaMscoree(
-    _Inout_ PVOID* ImageBase,
-    _In_ LPCWSTR FileName,
-    _Out_opt_ NTSTATUS* StatusOptional);
-
-BOOLEAN
-NTAPI
 LdrpIsILOnlyImage(
     _In_ PVOID BaseAddress);
 
