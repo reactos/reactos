@@ -40,18 +40,48 @@ C_ASSERT(sizeof(LDRP_COR_METADATA_ROOT) == 16);
 
 /**
  * @brief
- * Loads mscoree.dll on the first call and resolves the CLR entry points that the loader uses.
+ * Looks up an export of mscoree.dll and encodes its address for storage.
+ *
+ * @param[in] Base
+ * Base address of mscoree.dll.
+ *
+ * @param[in] ExportName
+ * Name of the export.
+ *
+ * @return
+ * The encoded address of the export, or NULL if mscoree.dll does not export it.
+ */
+static
+PVOID
+LdrpCorGetEncodedExport(
+    _In_ PVOID Base,
+    _In_ PCSTR ExportName)
+{
+    ANSI_STRING Name;
+    PVOID Address;
+
+    RtlInitAnsiString(&Name, ExportName);
+    if (!NT_SUCCESS(LdrGetProcedureAddress(Base, &Name, 0, &Address)))
+        return NULL;
+
+    return RtlEncodeSystemPointer(Address);
+}
+
+/**
+ * @brief
+ * Loads mscoree.dll from the system directory on the first call and resolves the CLR entry
+ * points that the loader uses.
  *
  * @return
  * STATUS_SUCCESS if mscoree.dll is loaded, an error status if it could not be loaded.
  * A failed attempt is remembered and not repeated.
  */
-static
 NTSTATUS
-LdrpCorEnsureMscoreeLoadedInternal(VOID)
+NTAPI
+LdrpCorEnsureMscoreeLoaded(VOID)
 {
-    UNICODE_STRING Mscoree;
-    ANSI_STRING Name;
+    WCHAR DllPathBuffer[MAX_PATH + 10];
+    UNICODE_STRING DllPath, Mscoree;
     PVOID Base = NULL;
     NTSTATUS Status;
 
@@ -60,41 +90,26 @@ LdrpCorEnsureMscoreeLoadedInternal(VOID)
 
     LdrpCorMscoreeAttempted = TRUE;
 
+    /* Search the system directory only, not the directories that the application controls */
+    RtlInitEmptyUnicodeString(&DllPath, DllPathBuffer, sizeof(DllPathBuffer));
+    Status = RtlAppendUnicodeToString(&DllPath, SharedUserData->NtSystemRoot);
+    if (NT_SUCCESS(Status))
+        Status = RtlAppendUnicodeToString(&DllPath, L"\\System32");
+    if (!NT_SUCCESS(Status))
+        return Status;
+
     RtlInitUnicodeString(&Mscoree, L"mscoree.dll");
-    Status = LdrLoadDll(NULL, NULL, &Mscoree, &Base);
+    Status = LdrLoadDll(DllPath.Buffer, NULL, &Mscoree, &Base);
     if (!NT_SUCCESS(Status))
         return Status;
 
     LdrpCorMscoreeHandle = Base;
 
     /* Resolve optional exports */
-    RtlInitAnsiString(&Name, "_CorDllMain");
-    if (NT_SUCCESS(LdrGetProcedureAddress(Base, &Name, 0, &LdrpCorEncodedDllMain)))
-        LdrpCorEncodedDllMain = RtlEncodeSystemPointer(LdrpCorEncodedDllMain);
-    else
-        LdrpCorEncodedDllMain = NULL;
-
-    RtlInitAnsiString(&Name, "_CorImageUnloading");
-    if (NT_SUCCESS(LdrGetProcedureAddress(Base, &Name, 0, &LdrpCorEncodedImageUnloading)))
-        LdrpCorEncodedImageUnloading = RtlEncodeSystemPointer(LdrpCorEncodedImageUnloading);
-    else
-        LdrpCorEncodedImageUnloading = NULL;
+    LdrpCorEncodedDllMain = LdrpCorGetEncodedExport(Base, "_CorDllMain");
+    LdrpCorEncodedImageUnloading = LdrpCorGetEncodedExport(Base, "_CorImageUnloading");
 
     return STATUS_SUCCESS;
-}
-
-/**
- * @brief
- * Loads mscoree.dll if that has not been tried yet.
- *
- * @return
- * STATUS_SUCCESS if mscoree.dll is loaded, an error status otherwise.
- */
-NTSTATUS
-NTAPI
-LdrpCorEnsureMscoreeLoaded(VOID)
-{
-    return LdrpCorEnsureMscoreeLoadedInternal();
 }
 
 /**
