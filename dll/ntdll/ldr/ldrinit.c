@@ -2328,12 +2328,6 @@ LdrpInitializeProcess(IN PCONTEXT Context,
 
     }
 
-    if (IsDotNetImage)
-    {
-        /* FIXME */
-        DPRINT1("We don't support .NET applications yet\n");
-    }
-
     if (NtHeader->OptionalHeader.Subsystem == IMAGE_SUBSYSTEM_WINDOWS_GUI ||
         NtHeader->OptionalHeader.Subsystem == IMAGE_SUBSYSTEM_WINDOWS_CUI)
     {
@@ -2378,6 +2372,13 @@ LdrpInitializeProcess(IN PCONTEXT Context,
 
     /* Walk the IAT and load all the DLLs */
     ImportStatus = LdrpWalkImportDescriptor(LdrpDefaultPath.Buffer, LdrpImageEntry);
+
+    /*
+     * The .NET executables ReactOS can start today are x86 IL-only images, as the C# compilers
+     * emit them. They import mscoree!_CorExeMain and their entry point is a stub jumping through
+     * that import, so the walk above has loaded mscoree, and _CorExeMain hosts the runtime.
+     * IsDotNetImage only marks the image's loader entry.
+     */
 
     /* Check if relocation is needed */
     if (Peb->ImageBaseAddress != (PVOID)NtHeader->OptionalHeader.ImageBase)
