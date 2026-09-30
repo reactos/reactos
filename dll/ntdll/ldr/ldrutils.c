@@ -1254,45 +1254,23 @@ SkipCheck:
     LdrEntry->BaseDllName = BaseDllName;
     LdrEntry->EntryPoint = LdrpFetchAddressOfEntryPoint(LdrEntry->DllBase);
 
-    /* Mark IL-only CLR images and give them the CLR's entry point instead of their native one */
+    /*
+     * IL-only images have no native code and no native imports, so they get the CLR's entry point
+     * instead of their own, and LdrpLoadDll may skip the import walk for them (LDRP_COR_IMAGE).
+     * The check above made sure that mscoree exports that entry point.
+     *
+     * Anything else is a mixed-mode image: a native DLL that also carries CLR data.
+     * It is loaded like any other DLL. Its native imports are resolved, its own entry
+     * point runs (the CRT startup and DllMain of a C++/CLI module, which reaches the
+     * CLR through its mscoree!_CorDllMain import, and mscoree's _CorDllMain in turn
+     * calls on to a native entry point that the COR header names), and the loader
+     * unmaps it on unload. Substituting mscoree's entry point here would skip the
+     * module's own native initialization, and nothing else would unmap the image.
+     */
+    if (LdrpIsILOnlyImage(LdrEntry->DllBase))
     {
-        ULONG CorSectionSize = 0;
-        PVOID CorDir = RtlImageDirectoryEntryToData(LdrEntry->DllBase,
-                                                    TRUE,
-                                                    IMAGE_DIRECTORY_ENTRY_COM_DESCRIPTOR,
-                                                    &CorSectionSize);
-        if (CorDir)
-        {
-            if (LdrpIsILOnlyImage(LdrEntry->DllBase))
-            {
-                PVOID CorDllMain = LdrpCorGetCorDllMain();
-
-                /*
-                 * IL-only images have no native imports, so LdrpLoadDll may skip the
-                 * import walk for them. Mixed-mode images do have some and must not
-                 * get this flag.
-                 */
-                LdrEntry->Flags |= LDRP_COR_IMAGE;
-
-                /* For IL-only images, prefer CorDllMain if available */
-                if (!CorDllMain)
-                {
-                    if (NT_SUCCESS(LdrpCorEnsureMscoreeLoaded()))
-                        CorDllMain = LdrpCorGetCorDllMain();
-                }
-                /* May be NULL, but the early check prevents an IL-only image without a CLR */
-                LdrEntry->EntryPoint = (PDLL_INIT_ROUTINE)CorDllMain;
-            }
-            /*
-             * Anything else is a mixed-mode image: a native DLL that also carries CLR data.
-             * It is loaded like any other DLL. Its native imports are resolved, its own entry
-             * point runs (the CRT startup and DllMain of a C++/CLI module, which reaches the
-             * CLR through its mscoree!_CorDllMain import, and mscoree's _CorDllMain in turn
-             * calls on to a native entry point that the COR header names), and the loader
-             * unmaps it on unload. Substituting mscoree's entry point here would skip the
-             * module's own native initialization, and nothing else would unmap the image.
-             */
-        }
+        LdrEntry->Flags |= LDRP_COR_IMAGE;
+        LdrEntry->EntryPoint = (PDLL_INIT_ROUTINE)LdrpCorGetCorDllMain();
     }
 
     /* Show debug message */
