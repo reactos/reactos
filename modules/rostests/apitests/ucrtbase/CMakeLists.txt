@@ -24,6 +24,7 @@ list(APPEND SOURCE
     ../crt/system.c
     ../crt/tan.c
     ../crt/wctomb.c
+    float_conversion.c
     testlist.c
 )
 
