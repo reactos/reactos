@@ -98,6 +98,10 @@
 #define IDC_CONSOLENOSAVE             3206
 #define IDC_CONSOLECUSTOM             3207
 
+#define IDD_ABOUT_SNAPIN              3300
+#define IDC_ABOUT_ICON                3301
+#define IDC_ABOUT_INFO                3302
+#define IDC_ABOUT_DESCRIPTION         3303
 
 #define IDS_CONSOLEROOT               5010
 
@@ -111,6 +115,8 @@
 #define IDS_USERMODE_MULTIPLE_DESC    5106
 #define IDS_USERMODE_SINGLE_DESC      5107
 
+#define IDS_ABOUT_VERSION             5501
+#define IDS_ABOUT_SNAPIN              5502
 
 
 #ifndef IDC_STATIC

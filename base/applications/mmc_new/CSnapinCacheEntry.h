@@ -24,6 +24,8 @@ private:
     int m_ImageNormal;
     int m_ImageOpen;
 
+    HICON m_hIcon;
+
     BOOL m_Loaded;
 
 public:
@@ -36,6 +38,8 @@ public:
     const CAtlString& Provider() const { return m_Provider; }
     const CAtlString& Description() const { return m_Description; }
     const CAtlString& Version() const { return m_Version; }
+
+    HICON Icon() { return m_hIcon; }
 
     int NormalImageIndex() { return m_ImageNormal; }
     int OpenImageIndex() { return m_ImageOpen; }

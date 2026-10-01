@@ -55,6 +55,7 @@ typedef enum _DOCUMENT_MODE
 #include "CConsoleWnd.h"
 #include "CMainWnd.h"
 
+#include "CAboutSnapinDialog.h"
 #include "CAddDialog.h"
 #include "CCustomizeDialog.h"
 #include "COptionsDialog.h"
