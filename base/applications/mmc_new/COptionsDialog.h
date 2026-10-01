@@ -34,6 +34,7 @@ private:
     CMainWnd *m_MainWnd;
     CComPtr<CConsoleWnd> m_Console;
 
+    HICON m_AppIcon;
     DOCUMENT_MODE m_DocumentMode;
     BOOL m_LogicalReadOnly;
     BOOL m_PreventViewCustomization;
