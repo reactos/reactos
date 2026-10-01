@@ -1,6 +1,5 @@
 
 add_definitions(
-    -D_CRT_NON_CONFORMING_SWPRINTFS
     -DENTRY_PREFIX=STI_
     -DPROXY_DELEGATION
     -DWINE_REGISTER_DLL)
@@ -24,7 +23,8 @@ add_library(sti MODULE
     ${CMAKE_CURRENT_BINARY_DIR}/sti.def)
 
 set_module_type(sti win32dll)
-target_link_libraries(sti wine uuid ${PSEH_LIB})
+add_idl_reg_scripts(sti registry sti_wia.idl)
+target_link_libraries(sti wine wine_dll_register wine_dll_canunload uuid ${PSEH_LIB})
 add_importlibs(sti ole32 oleaut32 rpcrt4 advapi32 msvcrt kernel32 ntdll)
 add_pch(sti precomp.h "${PCH_SKIP_SOURCE}")
 add_cd_file(TARGET sti DESTINATION reactos/system32 FOR all)

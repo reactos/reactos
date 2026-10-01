@@ -1,6 +1,3 @@
-#ifdef __REACTOS__
-#include "precomp.h"
-#else
 /*
  * Copyright 2016 Paul Gofman
  *
@@ -25,15 +22,8 @@
 #include <float.h>
 #include <math.h>
 #include <assert.h>
-#endif /* __REACTOS__ */
 
 WINE_DEFAULT_DEBUG_CHANNEL(d3dx);
-
-#ifdef __REACTOS__
-/* ReactOS FIXME: Insect */
-#define fmin min
-#define fmax max
-#endif
 
 enum pres_ops
 {
@@ -212,6 +202,7 @@ table_info[] =
 {
     {sizeof(double), PRES_VT_DOUBLE}, /* PRES_REGTAB_IMMED */
     {sizeof(float),  PRES_VT_FLOAT }, /* PRES_REGTAB_CONST */
+    {sizeof(float),  PRES_VT_FLOAT }, /* PRES_REGTAB_INPUT */
     {sizeof(float),  PRES_VT_FLOAT }, /* PRES_REGTAB_OCONST */
     {sizeof(BOOL),   PRES_VT_BOOL  }, /* PRES_REGTAB_OBCONST */
     {sizeof(int),    PRES_VT_INT,  }, /* PRES_REGTAB_OICONST */
@@ -221,7 +212,7 @@ table_info[] =
 
 static const char *table_symbol[] =
 {
-    "imm", "c", "oc", "ob", "oi", "r", "(null)",
+    "imm", "c", "v", "oc", "ob", "oi", "r", "(null)",
 };
 
 static const enum pres_reg_tables pres_regset2table[] =
@@ -317,7 +308,7 @@ static HRESULT regstore_alloc_table(struct d3dx_regstore *rs, unsigned int table
     size = get_offset_reg(table, rs->table_sizes[table]) * table_info[table].component_size;
     if (size)
     {
-        rs->tables[table] = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, size);
+        rs->tables[table] = calloc(1, size);
         if (!rs->tables[table])
             return E_OUTOFMEMORY;
     }
@@ -330,7 +321,7 @@ static void regstore_free_tables(struct d3dx_regstore *rs)
 
     for (i = 0; i < PRES_REGTAB_COUNT; ++i)
     {
-        HeapFree(GetProcessHeap(), 0, rs->tables[i]);
+        free(rs->tables[i]);
     }
 }
 
@@ -424,7 +415,7 @@ static unsigned int *parse_pres_reg(unsigned int *ptr, struct d3dx_pres_reg *reg
 {
     static const enum pres_reg_tables reg_table[8] =
     {
-        PRES_REGTAB_COUNT, PRES_REGTAB_IMMED, PRES_REGTAB_CONST, PRES_REGTAB_COUNT,
+        PRES_REGTAB_COUNT, PRES_REGTAB_IMMED, PRES_REGTAB_CONST, PRES_REGTAB_INPUT,
         PRES_REGTAB_OCONST, PRES_REGTAB_OBCONST, PRES_REGTAB_OICONST, PRES_REGTAB_TEMP
     };
 
@@ -602,7 +593,7 @@ static HRESULT append_const_set(struct d3dx_const_tab *const_tab, struct d3dx_co
         if (!const_tab->const_set_size)
         {
             new_size = INITIAL_CONST_SET_SIZE;
-            new_alloc = HeapAlloc(GetProcessHeap(), 0, sizeof(*const_tab->const_set) * new_size);
+            new_alloc = malloc(sizeof(*const_tab->const_set) * new_size);
             if (!new_alloc)
             {
                 ERR("Out of memory.\n");
@@ -612,8 +603,7 @@ static HRESULT append_const_set(struct d3dx_const_tab *const_tab, struct d3dx_co
         else
         {
             new_size = const_tab->const_set_size * 2;
-            new_alloc = HeapReAlloc(GetProcessHeap(), 0, const_tab->const_set,
-                    sizeof(*const_tab->const_set) * new_size);
+            new_alloc = realloc(const_tab->const_set, sizeof(*const_tab->const_set) * new_size);
             if (!new_alloc)
             {
                 ERR("Out of memory.\n");
@@ -860,7 +850,7 @@ static HRESULT init_set_constants_param(struct d3dx_const_tab *const_tab, ID3DXC
 }
 
 static HRESULT get_constants_desc(unsigned int *byte_code, struct d3dx_const_tab *out,
-        struct d3dx_effect *effect, const char **skip_constants,
+        struct d3dx_parameters_store *parameters, const char **skip_constants,
         unsigned int skip_constants_count, struct d3dx_preshader *pres)
 {
     ID3DXConstantTable *ctab;
@@ -871,21 +861,21 @@ static HRESULT get_constants_desc(unsigned int *byte_code, struct d3dx_const_tab
     D3DXHANDLE hc;
     unsigned int i, j;
 
-    hr = D3DXGetShaderConstantTable(byte_code, &ctab);
+    hr = D3DXGetShaderConstantTable((DWORD *)byte_code, &ctab);
     if (FAILED(hr) || !ctab)
     {
-        TRACE("Could not get CTAB data, hr %#x.\n", hr);
+        TRACE("Could not get CTAB data, hr %#lx.\n", hr);
         /* returning OK, shaders and preshaders without CTAB are valid */
         return D3D_OK;
     }
     if (FAILED(hr = ID3DXConstantTable_GetDesc(ctab, &desc)))
     {
-        FIXME("Could not get CTAB desc, hr %#x.\n", hr);
+        FIXME("Could not get CTAB desc, hr %#lx.\n", hr);
         goto cleanup;
     }
 
-    out->inputs = cdesc = HeapAlloc(GetProcessHeap(), 0, sizeof(*cdesc) * desc.Constants);
-    out->inputs_param = inputs_param = HeapAlloc(GetProcessHeap(), 0, sizeof(*inputs_param) * desc.Constants);
+    out->inputs = cdesc = malloc(sizeof(*cdesc) * desc.Constants);
+    out->inputs_param = inputs_param = malloc(sizeof(*inputs_param) * desc.Constants);
     if (!cdesc || !inputs_param)
     {
         hr = E_OUTOFMEMORY;
@@ -905,7 +895,7 @@ static HRESULT get_constants_desc(unsigned int *byte_code, struct d3dx_const_tab
         }
         if (FAILED(hr = get_ctab_constant_desc(ctab, hc, &cdesc[index], &constantinfo_reserved)))
             goto cleanup;
-        inputs_param[index] = get_parameter_by_name(effect, NULL, cdesc[index].Name);
+        inputs_param[index] = get_parameter_by_name(parameters, NULL, cdesc[index].Name);
         if (!inputs_param[index])
         {
             WARN("Could not find parameter %s in effect.\n", cdesc[index].Name);
@@ -989,8 +979,7 @@ static HRESULT get_constants_desc(unsigned int *byte_code, struct d3dx_const_tab
             }
         }
 
-        new_alloc = HeapReAlloc(GetProcessHeap(), 0, out->const_set,
-                sizeof(*out->const_set) * out->const_set_count);
+        new_alloc = realloc(out->const_set, sizeof(*out->const_set) * out->const_set_count);
         if (new_alloc)
         {
             out->const_set = new_alloc;
@@ -1029,7 +1018,7 @@ static void update_table_sizes_consts(unsigned int *table_sizes, struct d3dx_con
 static void dump_arg(struct d3dx_regstore *rs, const struct d3dx_pres_operand *arg, int component_count)
 {
     static const char *xyzw_str = "xyzw";
-    unsigned int i, table;
+    unsigned int i, table, reg_offset;
 
     table = arg->reg.table;
     if (table == PRES_REGTAB_IMMED && arg->index_reg.table == PRES_REGTAB_COUNT)
@@ -1042,16 +1031,21 @@ static void dump_arg(struct d3dx_regstore *rs, const struct d3dx_pres_operand *a
     }
     else
     {
+        reg_offset = get_reg_offset(table, arg->reg.offset);
+
         if (arg->index_reg.table == PRES_REGTAB_COUNT)
         {
-            TRACE("%s%u.", table_symbol[table], get_reg_offset(table, arg->reg.offset));
+            if (table == PRES_REGTAB_INPUT && reg_offset < 2)
+                TRACE("%s%s.", table_symbol[table], reg_offset ? "PSize" : "Pos");
+            else
+                TRACE("%s%u.", table_symbol[table], reg_offset);
         }
         else
         {
             unsigned int index_reg;
 
             index_reg = get_reg_offset(arg->index_reg.table, arg->index_reg.offset);
-            TRACE("%s[%u + %s%u.%c].", table_symbol[table], get_reg_offset(table, arg->reg.offset),
+            TRACE("%s[%u + %s%u.%c].", table_symbol[table], reg_offset,
                     table_symbol[arg->index_reg.table], index_reg,
                     xyzw_str[arg->index_reg.offset - get_offset_reg(arg->index_reg.table, index_reg)]);
         }
@@ -1110,16 +1104,19 @@ static void dump_preshader(struct d3dx_preshader *pres)
         dump_ins(&pres->regs, &pres->ins[i]);
 }
 
-static HRESULT parse_preshader(struct d3dx_preshader *pres, unsigned int *ptr, unsigned int count, struct d3dx_effect *effect)
+static HRESULT parse_preshader(struct d3dx_preshader *pres, unsigned int *ptr, unsigned int count,
+        struct d3dx_parameters_store *parameters)
 {
     unsigned int *p;
-    unsigned int i, j, const_count;
+    unsigned int i, j, const_count, magic;
     double *dconst;
     HRESULT hr;
     unsigned int saved_word;
     unsigned int section_size;
 
-    TRACE("Preshader version %#x.\n", *ptr & 0xffff);
+    magic = *ptr;
+
+    TRACE("Preshader version %#x.\n", *ptr);
 
     if (!count)
     {
@@ -1159,7 +1156,7 @@ static HRESULT parse_preshader(struct d3dx_preshader *pres, unsigned int *ptr, u
         return D3DXERR_INVALIDDATA;
     }
     TRACE("%u instructions.\n", pres->ins_count);
-    pres->ins = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*pres->ins) * pres->ins_count);
+    pres->ins = calloc(pres->ins_count, sizeof(*pres->ins));
     if (!pres->ins)
         return E_OUTOFMEMORY;
     for (i = 0; i < pres->ins_count; ++i)
@@ -1177,7 +1174,7 @@ static HRESULT parse_preshader(struct d3dx_preshader *pres, unsigned int *ptr, u
 
     saved_word = *ptr;
     *ptr = 0xfffe0000;
-    hr = get_constants_desc(ptr, &pres->inputs, effect, NULL, 0, NULL);
+    hr = get_constants_desc(ptr, &pres->inputs, parameters, NULL, 0, NULL);
     *ptr = saved_word;
     if (FAILED(hr))
         return hr;
@@ -1189,6 +1186,8 @@ static HRESULT parse_preshader(struct d3dx_preshader *pres, unsigned int *ptr, u
         return D3DXERR_INVALIDDATA;
     }
     pres->regs.table_sizes[PRES_REGTAB_IMMED] = get_reg_offset(PRES_REGTAB_IMMED, const_count);
+    if (magic == FOURCC_TX_1)
+        pres->regs.table_sizes[PRES_REGTAB_INPUT] = 2;
 
     update_table_sizes_consts(pres->regs.table_sizes, &pres->inputs);
     for (i = 0; i < pres->ins_count; ++i)
@@ -1230,7 +1229,7 @@ static HRESULT parse_preshader(struct d3dx_preshader *pres, unsigned int *ptr, u
     return D3D_OK;
 }
 
-HRESULT d3dx_create_param_eval(struct d3dx_effect *effect, void *byte_code, unsigned int byte_code_size,
+HRESULT d3dx_create_param_eval(struct d3dx_parameters_store *parameters, void *byte_code, unsigned int byte_code_size,
         D3DXPARAMETER_TYPE type, struct d3dx_param_eval **peval_out, ULONG64 *version_counter,
         const char **skip_constants, unsigned int skip_constants_count)
 {
@@ -1241,8 +1240,8 @@ HRESULT d3dx_create_param_eval(struct d3dx_effect *effect, void *byte_code, unsi
     unsigned int count, pres_size;
     HRESULT ret;
 
-    TRACE("effect %p, byte_code %p, byte_code_size %u, type %u, peval_out %p.\n",
-            effect, byte_code, byte_code_size, type, peval_out);
+    TRACE("parameters %p, byte_code %p, byte_code_size %u, type %u, peval_out %p.\n",
+            parameters, byte_code, byte_code_size, type, peval_out);
 
     count = byte_code_size / sizeof(unsigned int);
     if (!byte_code || !count)
@@ -1251,7 +1250,7 @@ HRESULT d3dx_create_param_eval(struct d3dx_effect *effect, void *byte_code, unsi
         return D3D_OK;
     }
 
-    peval = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*peval));
+    peval = calloc(1, sizeof(*peval));
     if (!peval)
     {
         ret = E_OUTOFMEMORY;
@@ -1292,7 +1291,7 @@ HRESULT d3dx_create_param_eval(struct d3dx_effect *effect, void *byte_code, unsi
         pres_size = count;
     }
 
-    if (ptr && FAILED(ret = parse_preshader(&peval->pres, ptr, pres_size, effect)))
+    if (ptr && FAILED(ret = parse_preshader(&peval->pres, ptr, pres_size, parameters)))
     {
         FIXME("Failed parsing preshader, byte code for analysis follows.\n");
         dump_bytecode(byte_code, byte_code_size);
@@ -1301,10 +1300,10 @@ HRESULT d3dx_create_param_eval(struct d3dx_effect *effect, void *byte_code, unsi
 
     if (shader)
     {
-        if (FAILED(ret = get_constants_desc(shader_ptr, &peval->shader_inputs, effect,
+        if (FAILED(ret = get_constants_desc(shader_ptr, &peval->shader_inputs, parameters,
                 skip_constants, skip_constants_count, &peval->pres)))
         {
-            TRACE("Could not get shader constant table, hr %#x.\n", ret);
+            TRACE("Could not get shader constant table, hr %#lx.\n", ret);
             goto err_out;
         }
         update_table_sizes_consts(peval->pres.regs.table_sizes, &peval->shader_inputs);
@@ -1342,14 +1341,14 @@ err_out:
 
 static void d3dx_free_const_tab(struct d3dx_const_tab *ctab)
 {
-    HeapFree(GetProcessHeap(), 0, ctab->inputs);
-    HeapFree(GetProcessHeap(), 0, ctab->inputs_param);
-    HeapFree(GetProcessHeap(), 0, ctab->const_set);
+    free(ctab->inputs);
+    free(ctab->inputs_param);
+    free(ctab->const_set);
 }
 
 static void d3dx_free_preshader(struct d3dx_preshader *pres)
 {
-    HeapFree(GetProcessHeap(), 0, pres->ins);
+    free(pres->ins);
 
     regstore_free_tables(&pres->regs);
     d3dx_free_const_tab(&pres->inputs);
@@ -1364,7 +1363,7 @@ void d3dx_free_param_eval(struct d3dx_param_eval *peval)
 
     d3dx_free_preshader(&peval->pres);
     d3dx_free_const_tab(&peval->shader_inputs);
-    HeapFree(GetProcessHeap(), 0, peval);
+    free(peval);
 }
 
 static void pres_int_from_float(void *out, const void *in, unsigned int count)
@@ -1726,16 +1725,20 @@ HRESULT d3dx_evaluate_parameter(struct d3dx_param_eval *peval, const struct d3dx
     HRESULT hr;
     unsigned int i;
     unsigned int elements, elements_param, elements_table;
+    BOOL is_dirty;
     float *oc;
 
     TRACE("peval %p, param %p, param_value %p.\n", peval, param, param_value);
 
-    if (is_const_tab_input_dirty(&peval->pres.inputs, ULONG64_MAX))
+    if ((is_dirty = is_const_tab_input_dirty(&peval->pres.inputs, ULONG64_MAX)))
     {
         set_constants(&peval->pres.regs, &peval->pres.inputs,
-                next_update_version(peval->version_counter),
-                NULL, NULL, peval->param_type, FALSE, FALSE);
+                next_update_version(peval->version_counter), NULL, NULL,
+                peval->param_type, FALSE, FALSE);
+    }
 
+    if (is_dirty || peval->pres.regs.table_sizes[PRES_REGTAB_INPUT])
+    {
         if (FAILED(hr = execute_preshader(&peval->pres)))
             return hr;
     }

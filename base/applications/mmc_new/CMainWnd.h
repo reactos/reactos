@@ -18,17 +18,21 @@
 #define BTN_HELP            5
 #define BTN_ACTIONS_PANE    6
 
+#define MAX_RECENT_FILES    4
+
 class CMainWnd :
     public CWindowImpl<CMainWnd>
 {
 private:
     CWndProcThunk m_FrameThunk;
 
-    int m_nConsoleNumber;
+    int m_ConsoleNumber;
     CAtlString m_ConsoleTitle;
     HMENU m_hMenuConsoleSmall;
     HMENU m_hMenuConsoleLarge;
-    CONSOLE_MODE m_ConsoleMode;
+    DOCUMENT_MODE m_DocumentMode;
+    BOOL m_LogicalReadOnly;
+    BOOL m_PreventViewCustomization;
 
     CToolbar<DWORD_PTR> m_ToolBar;
     int m_iToolBarHeight;
@@ -44,8 +48,11 @@ private:
 
     CSnapin *m_RootNode;
 
+    CAtlList<CRecentFileEntry *> m_RecentFilesList;
+
 public:
     CWindow m_MDIClient;
+    CAtlString m_Filename;
 
 public:
 
@@ -55,13 +62,23 @@ public:
         MESSAGE_HANDLER(WM_CLOSE, OnClose)
         MESSAGE_HANDLER(WM_SIZE, OnSize)
         MESSAGE_HANDLER(WM_USER_CLOSE_CHILD, OnCloseChild)
+        MESSAGE_HANDLER(WM_NOTIFY, OnNotify)
+        MESSAGE_HANDLER(WM_MENUSELECT, OnMenuSelect)
 
         COMMAND_ID_HANDLER(IDM_FILE_NEW, OnFileNew)
+        COMMAND_ID_HANDLER(IDM_FILE_OPEN, OnFileOpen)
         COMMAND_ID_HANDLER(IDM_FILE_SAVE, OnFileSave)
         COMMAND_ID_HANDLER(IDM_FILE_SAVEAS, OnFileSaveAs)
         COMMAND_ID_HANDLER(IDM_FILE_ADD, OnFileAdd)
         COMMAND_ID_HANDLER(IDM_FILE_OPTIONS, OnFileOptions)
+        COMMAND_ID_HANDLER(IDM_FILE_RECENT1, OnFileRecent)
+        COMMAND_ID_HANDLER(IDM_FILE_RECENT2, OnFileRecent)
+        COMMAND_ID_HANDLER(IDM_FILE_RECENT3, OnFileRecent)
+        COMMAND_ID_HANDLER(IDM_FILE_RECENT4, OnFileRecent)
         COMMAND_ID_HANDLER(IDM_FILE_EXIT, OnFileExit)
+
+        COMMAND_ID_HANDLER(IDM_ACTION_NEW, OnActionNewWindow)
+        COMMAND_ID_HANDLER(IDM_ACTION_RENAME, OnActionRename)
 
         COMMAND_ID_HANDLER(IDM_VIEW_CUSTOMIZE, OnViewCustomize)
 
@@ -120,6 +137,7 @@ private:
             SetMenu(m_hMenuConsoleSmall);
         else
             SetMenu(m_hMenuConsoleLarge);
+        UpdateRecentFilesMenu();
     }
 
     void UpdateTitle()
@@ -144,7 +162,7 @@ private:
 
     void CreateNewConsoleTitle(CAtlString& str)
     {
-        DWORD_PTR args[1] = { (DWORD_PTR)(m_nConsoleNumber) };
+        DWORD_PTR args[1] = { (DWORD_PTR)(m_ConsoleNumber) };
         str.LoadString(IDS_CONSOLETITLE);
 
         LPTSTR lpTarget = NULL;
@@ -168,13 +186,19 @@ public:
     LRESULT OnCloseChild(UINT nMessage, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnDestroy(UINT nMessage, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnClose(UINT nMessage, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+    LRESULT OnNotify(UINT nMessage, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+    LRESULT OnMenuSelect(UINT nMessage, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 
     LRESULT OnFileNew(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
+    LRESULT OnFileOpen(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
     LRESULT OnFileSave(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
     LRESULT OnFileSaveAs(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
     LRESULT OnFileAdd(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
     LRESULT OnFileOptions(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
+    LRESULT OnFileRecent(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
     LRESULT OnFileExit(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
+    LRESULT OnActionNewWindow(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
+    LRESULT OnActionRename(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
     LRESULT OnViewCustomize(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
     LRESULT OnWindowsNew(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
     LRESULT OnWindowsCascade(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
@@ -190,6 +214,14 @@ private:
     void UpdateLayout();
     void UpdateViews();
 
+    VOID UpdateRecentFilesMenu();
+    VOID LoadRecentFiles();
+    VOID AddToRecentFiles(const CAtlString &FileName);
+    DWORD CreateNewFilename(PWSTR pBuffer, DWORD dwSize, DWORD Number);
+    LPWSTR ProgramModeToString();
+    LRESULT SaveMscFile(const CAtlString &FileName);
+    LRESULT LoadMscFile(const CAtlString &FileName);
+
 public:
     CAtlString *GetConsoleTitle();
     void SetConsoleTitle(CAtlString consoleTitle);
@@ -202,9 +234,16 @@ public:
     CSnapinCacheEntry *GetSnapinCacheEntry(int nIndex);
     CSnapinCacheEntry *GetSnapinCacheEntryByGuid(PWSTR pszGuid);
     HIMAGELIST SnapinImageList();
+
+    CSnapin *GetRootSnapin();
+
     int RegisterView(CConsoleWnd *pView);
     void UnregisterView(CConsoleWnd *pView);
-    CONSOLE_MODE GetConsoleMode();
-    void SetConsoleMode(CONSOLE_MODE ConsoleMode);
+    DOCUMENT_MODE GetDocumentMode();
+    void SetDocumentMode(DOCUMENT_MODE DocumentMode);
+    BOOL GetLogicalReadOnly();
+    void SetLogicalReadOnly(BOOL LogicalReadOnly);
+    BOOL GetPreventViewCustomization();
+    void SetPreventViewCustomization(BOOL PreventCustomization);
 };
 

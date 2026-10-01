@@ -15,7 +15,7 @@ add_library(msvfw32 MODULE
     ${CMAKE_CURRENT_BINARY_DIR}/msvfw32.def)
 
 set_module_type(msvfw32 win32dll)
-target_link_libraries(msvfw32 wine)
+target_link_libraries(msvfw32 wine oldnames)
 add_importlibs(msvfw32 winmm comctl32 user32 gdi32 advapi32 msvcrt kernel32 ntdll)
 add_pch(msvfw32 precomp.h SOURCE)
 add_cd_file(TARGET msvfw32 DESTINATION reactos/system32 FOR all)

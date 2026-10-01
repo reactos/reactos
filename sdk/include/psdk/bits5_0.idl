@@ -1,0 +1,59 @@
+/*
+ * Background Intelligent Transfer Service (BITS) 5.0 interface
+ *
+ * Copyright 2020 Aaron Hill
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ *
+ */
+
+#ifndef DO_NO_IMPORTS
+import "bits.idl";
+import "bits1_5.idl";
+import "bits2_0.idl";
+import "bits2_5.idl";
+import "bits3_0.idl";
+#endif
+
+cpp_quote("#define BITS_COST_STATE_TRANSFER_ALWAYS 0x800000ff")
+
+[
+    uuid(e847030c-bbba-4657-af6d-484aa42bf1fe),
+    odl
+]
+interface IBackgroundCopyJob5: IBackgroundCopyJob4
+{
+    typedef enum {
+        BITS_JOB_PROPERTY_ID_COST_FLAGS = 1,
+        BITS_JOB_PROPERTY_NOTIFICATION_CLSID = 2,
+        BITS_JOB_PROPERTY_DYNAMIC_CONTENT = 3,
+        BITS_JOB_PROPERTY_HIGH_PERFORMANCE = 4,
+        BITS_JOB_PROPERTY_MAX_DOWNLOAD_SIZE = 5,
+        BITS_JOB_PROPERTY_USE_STORED_CREDENTIALS = 7,
+        BITS_JOB_PROPERTY_MINIMUM_NOTIFICATION_INTERVAL_MS = 9,
+        BITS_JOB_PROPERTY_ON_DEMAND_MODE = 10,
+    } BITS_JOB_PROPERTY_ID;
+
+    typedef union _BITS_JOB_PROPERTY_VALUE {
+        DWORD Dword;
+        GUID ClsID;
+        BOOL Enable;
+        UINT64 Uint64;
+        BG_AUTH_TARGET Target;
+    } BITS_JOB_PROPERTY_VALUE;
+
+    HRESULT SetProperty(BITS_JOB_PROPERTY_ID id, BITS_JOB_PROPERTY_VALUE value);
+    HRESULT GetProperty(BITS_JOB_PROPERTY_ID id, [out, ref] BITS_JOB_PROPERTY_VALUE *value);
+}

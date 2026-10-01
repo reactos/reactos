@@ -1037,7 +1037,7 @@ static LRESULT MSRLE32_DecompressRLE8(const CodecInfo *pi, LPCBITMAPINFOHEADER l
 	break;
       default: /* absolute mode */
 	if (pixel_ptr/bytes_per_pixel + code1 > lpbi->biWidth) {
-          WARN("aborted absolute: (%d=%d/%d+%d) > %d\n",pixel_ptr/bytes_per_pixel + code1,pixel_ptr,bytes_per_pixel,code1,lpbi->biWidth);
+          WARN("aborted absolute: (%d=%d/%d+%d) > %ld\n",pixel_ptr/bytes_per_pixel + code1,pixel_ptr,bytes_per_pixel,code1,lpbi->biWidth);
 	  return ICERR_ERROR;
 	}
 	extra_byte = code1 & 0x01;
@@ -1065,7 +1065,7 @@ static LRESULT MSRLE32_DecompressRLE8(const CodecInfo *pi, LPCBITMAPINFOHEADER l
     } else {
       /* coded mode */
       if (pixel_ptr/bytes_per_pixel + code0 > lpbi->biWidth) {
-	WARN("aborted coded: (%d=%d/%d+%d) > %d\n",pixel_ptr/bytes_per_pixel + code1,pixel_ptr,bytes_per_pixel,code1,lpbi->biWidth);
+	WARN("aborted coded: (%d=%d/%d+%d) > %ld\n",pixel_ptr/bytes_per_pixel + code1,pixel_ptr,bytes_per_pixel,code1,lpbi->biWidth);
 	return ICERR_ERROR;
       }
 
@@ -1113,7 +1113,7 @@ static CodecInfo* Open(LPICOPEN icinfo)
 
   if (compare_fourcc(icinfo->fccType, ICTYPE_VIDEO)) return NULL;
 
-  TRACE("(%p = {%u,0x%08X(%4.4s),0x%08X(%4.4s),0x%X,0x%X,...})\n", icinfo,
+  TRACE("(%p = {%lu,0x%08lX(%4.4s),0x%08lX(%4.4s),0x%lX,0x%lX,...})\n", icinfo,
 	icinfo->dwSize,	icinfo->fccType, (char*)&icinfo->fccType,
 	icinfo->fccHandler, (char*)&icinfo->fccHandler,
 	icinfo->dwVersion,icinfo->dwFlags);
@@ -1128,7 +1128,7 @@ static CodecInfo* Open(LPICOPEN icinfo)
     icinfo->fccHandler = FOURCC_MRLE;
     break;
   default:
-    WARN("unknown FOURCC = 0x%08X(%4.4s) !\n",
+    WARN("unknown FOURCC = 0x%08lX(%4.4s) !\n",
 	 icinfo->fccHandler,(char*)&icinfo->fccHandler);
     return NULL;
   }
@@ -1179,7 +1179,7 @@ static LRESULT GetInfo(const CodecInfo *pi, ICINFO *icinfo, DWORD dwSize)
   icinfo->dwSize       = sizeof(ICINFO);
   icinfo->fccType      = ICTYPE_VIDEO;
   icinfo->fccHandler   = (pi != NULL ? pi->fccHandler : FOURCC_MRLE);
-  icinfo->dwFlags      = VIDCF_QUALITY | VIDCF_TEMPORAL | VIDCF_CRUNCH | VIDCF_FASTTEMPORALC;
+  icinfo->dwFlags      = VIDCF_QUALITY | VIDCF_TEMPORAL | VIDCF_CRUNCH;
   icinfo->dwVersion    = ICVERSION;
   icinfo->dwVersionICM = ICVERSION;
 
@@ -1420,7 +1420,7 @@ static LRESULT Compress(CodecInfo *pi, ICCOMPRESS* lpic, DWORD dwSize)
   BOOL is_key;
   int i;
 
-  TRACE("(%p,%p,%u)\n",pi,lpic,dwSize);
+  TRACE("(%p,%p,%lu)\n",pi,lpic,dwSize);
 
   /* pre-condition */
   assert(pi != NULL);
@@ -1432,7 +1432,7 @@ static LRESULT Compress(CodecInfo *pi, ICCOMPRESS* lpic, DWORD dwSize)
       !lpic->lpbiInput  || !lpic->lpInput)
     return ICERR_BADPARAM;
 
-  TRACE("lpic={0x%X,%p,%p,%p,%p,%p,%p,%d,%u,%u,%p,%p}\n",lpic->dwFlags,lpic->lpbiOutput,lpic->lpOutput,lpic->lpbiInput,lpic->lpInput,lpic->lpckid,lpic->lpdwFlags,lpic->lFrameNum,lpic->dwFrameSize,lpic->dwQuality,lpic->lpbiPrev,lpic->lpPrev);
+  TRACE("lpic={0x%lX,%p,%p,%p,%p,%p,%p,%ld,%lu,%lu,%p,%p}\n",lpic->dwFlags,lpic->lpbiOutput,lpic->lpOutput,lpic->lpbiInput,lpic->lpInput,lpic->lpckid,lpic->lpdwFlags,lpic->lFrameNum,lpic->dwFrameSize,lpic->dwQuality,lpic->lpbiPrev,lpic->lpPrev);
 
   if (! pi->bCompress) {
     LRESULT hr = CompressBegin(pi, lpic->lpbiInput, lpic->lpbiOutput);
@@ -1456,13 +1456,13 @@ static LRESULT Compress(CodecInfo *pi, ICCOMPRESS* lpic, DWORD dwSize)
   } else if ((lpic->dwFlags & ICCOMPRESS_KEYFRAME) == 0) {
     LPWORD pTmp;
 
-    WARN(": prev=%d cur=%d gone back? -- untested\n",pi->nPrevFrame,lpic->lFrameNum);
+    WARN(": prev=%ld cur=%ld gone back? -- untested\n",pi->nPrevFrame,lpic->lFrameNum);
     if (lpic->lpbiPrev == NULL || lpic->lpPrev == NULL)
       return ICERR_GOTOKEYFRAME; /* Need a keyframe if you go back */
     if (CompressQuery(pi, lpic->lpbiPrev, lpic->lpbiOutput) != ICERR_OK)
       return ICERR_BADFORMAT;
 
-    WARN(": prev=%d cur=%d compute swapped -- untested\n",pi->nPrevFrame,lpic->lFrameNum);
+    WARN(": prev=%ld cur=%ld compute swapped -- untested\n",pi->nPrevFrame,lpic->lFrameNum);
     computeInternalFrame(pi, lpic->lpbiPrev, lpic->lpPrev);
 
     /* swap buffers for current and previous frame */
@@ -1716,7 +1716,7 @@ static LRESULT DecompressBegin(CodecInfo *pi, LPCBITMAPINFOHEADER lpbiIn,
 
 static LRESULT Decompress(CodecInfo *pi, ICDECOMPRESS *pic, DWORD dwSize)
 {
-  TRACE("(%p,%p,%u)\n",pi,pic,dwSize);
+  TRACE("(%p,%p,%lu)\n",pi,pic,dwSize);
 
   /* pre-condition */
   assert(pi != NULL);
@@ -1811,7 +1811,7 @@ LRESULT CALLBACK MSRLE32_DriverProc(DWORD_PTR dwDrvID, HDRVR hDrv, UINT uMsg,
 {
   CodecInfo *pi = (CodecInfo*)dwDrvID;
 
-  TRACE("(%lx,%p,0x%04X,0x%08lX,0x%08lX)\n", dwDrvID, hDrv, uMsg, lParam1, lParam2);
+  TRACE("(%Ix,%p,0x%04X,0x%08IX,0x%08IX)\n", dwDrvID, hDrv, uMsg, lParam1, lParam2);
 
   switch (uMsg) {
     /* standard driver messages */
@@ -1838,7 +1838,7 @@ LRESULT CALLBACK MSRLE32_DriverProc(DWORD_PTR dwDrvID, HDRVR hDrv, UINT uMsg,
 
     /* installable compression manager messages */
   case ICM_CONFIGURE:
-    FIXME("ICM_CONFIGURE (%ld)\n",lParam1);
+    FIXME("ICM_CONFIGURE (%Id)\n",lParam1);
     if (lParam1 == -1)
       return ICERR_UNSUPPORTED; /* FIXME */
     else
@@ -1902,7 +1902,7 @@ LRESULT CALLBACK MSRLE32_DriverProc(DWORD_PTR dwDrvID, HDRVR hDrv, UINT uMsg,
     if (uMsg < DRV_USER)
       return DefDriverProc(dwDrvID, hDrv, uMsg, lParam1, lParam2);
     else
-      FIXME("Unknown message uMsg=0x%08X lParam1=0x%08lX lParam2=0x%08lX\n",uMsg,lParam1,lParam2);
+      FIXME("Unknown message uMsg=0x%08X lParam1=0x%08IX lParam2=0x%08IX\n",uMsg,lParam1,lParam2);
   };
 
   return ICERR_UNSUPPORTED;
@@ -1911,7 +1911,7 @@ LRESULT CALLBACK MSRLE32_DriverProc(DWORD_PTR dwDrvID, HDRVR hDrv, UINT uMsg,
 /* DllMain - library initialization code */
 BOOL WINAPI DllMain(HINSTANCE hModule, DWORD dwReason, LPVOID lpReserved)
 {
-  TRACE("(%p,%d,%p)\n",hModule,dwReason,lpReserved);
+  TRACE("(%p,%ld,%p)\n",hModule,dwReason,lpReserved);
 
   switch (dwReason) {
   case DLL_PROCESS_ATTACH:

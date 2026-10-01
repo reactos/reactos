@@ -69,7 +69,7 @@ SCODE WINAPI ScInitMapiUtil(ULONG ulReserved)
     if (mapiFunctions.ScInitMapiUtil)
         return mapiFunctions.ScInitMapiUtil(ulReserved);
 
-    FIXME("(0x%08x)stub!\n", ulReserved);
+    FIXME("(0x%08lx)stub!\n", ulReserved);
     if (ulReserved)
         return MAPI_E_INVALID_PARAMETER;
     return S_OK;
@@ -126,7 +126,7 @@ SCODE WINAPI MAPIAllocateBuffer(ULONG cbSize, LPVOID *lppBuffer)
 {
     LPMAPIALLOCBUFFER lpBuff;
 
-    TRACE("(%d,%p)\n", cbSize, lppBuffer);
+    TRACE("(%ld,%p)\n", cbSize, lppBuffer);
 
     if (mapiFunctions.MAPIAllocateBuffer)
         return mapiFunctions.MAPIAllocateBuffer(cbSize, lppBuffer);
@@ -169,7 +169,7 @@ SCODE WINAPI MAPIAllocateMore(ULONG cbSize, LPVOID lpOrig, LPVOID *lppBuffer)
 {
     LPMAPIALLOCBUFFER lpBuff = lpOrig;
 
-    TRACE("(%d,%p,%p)\n", cbSize, lpOrig, lppBuffer);
+    TRACE("(%ld,%p,%p)\n", cbSize, lpOrig, lppBuffer);
 
     if (mapiFunctions.MAPIAllocateMore)
         return mapiFunctions.MAPIAllocateMore(cbSize, lpOrig, lppBuffer);
@@ -242,7 +242,7 @@ HRESULT WINAPI WrapProgress(PVOID unk1, PVOID unk2, PVOID unk3, PVOID unk4, PVOI
  */
 HRESULT WINAPI HrDispatchNotifications(ULONG flags)
 {
-    FIXME("(%08x)\n", flags);
+    FIXME("(%08lx)\n", flags);
     return S_OK;
 }
 
@@ -465,7 +465,7 @@ INT WINAPI MNLS_CompareStringW(DWORD dwCp, LPCWSTR lpszLeft, LPCWSTR lpszRight)
 {
     INT ret;
 
-    TRACE("0x%08x,%s,%s\n", dwCp, debugstr_w(lpszLeft), debugstr_w(lpszRight));
+    TRACE("0x%08lx,%s,%s\n", dwCp, debugstr_w(lpszLeft), debugstr_w(lpszRight));
     ret = MNLS_lstrcmpW(lpszLeft, lpszRight);
     return ret < 0 ? CSTR_LESS_THAN : ret ? CSTR_GREATER_THAN : CSTR_EQUAL;
 }
@@ -717,7 +717,7 @@ HRESULT WINAPI OpenStreamOnFile(LPALLOCATEBUFFER lpAlloc, LPFREEBUFFER lpFree,
     DWORD dwMode = STGM_READWRITE, dwAttributes = 0;
     HRESULT hRet;
 
-    TRACE("(%p,%p,0x%08x,%s,%s,%p)\n", lpAlloc, lpFree, ulFlags,
+    TRACE("(%p,%p,0x%08lx,%s,%s,%p)\n", lpAlloc, lpFree, ulFlags,
           debugstr_a((LPSTR)lpszPath), debugstr_a((LPSTR)lpszPrefix), lppStream);
 
     if (mapiFunctions.OpenStreamOnFile)
@@ -883,7 +883,7 @@ BOOL WINAPI FGetComponentPath(LPCSTR component, LPCSTR qualifier, LPSTR dll_path
     BOOL ret = FALSE;
     HMODULE hmsi;
 
-    TRACE("%s %s %p %u %d\n", component, qualifier, dll_path, dll_path_length, install);
+    TRACE("%s %s %p %lu %d\n", component, qualifier, dll_path, dll_path_length, install);
 
     if (mapiFunctions.FGetComponentPath)
         return mapiFunctions.FGetComponentPath(component, qualifier, dll_path, dll_path_length, install);
@@ -937,7 +937,7 @@ HRESULT WINAPI HrQueryAllRows(LPMAPITABLE lpTable, LPSPropTagArray lpPropTags,
     if (mapiFunctions.HrQueryAllRows)
         return mapiFunctions.HrQueryAllRows(lpTable, lpPropTags, lpRestriction, lpSortOrderSet, crowsMax, lppRows);
 
-    FIXME("(%p, %p, %p, %p, %d, %p): stub\n", lpTable, lpPropTags, lpRestriction, lpSortOrderSet, crowsMax, lppRows);
+    FIXME("(%p, %p, %p, %p, %ld, %p): stub\n", lpTable, lpPropTags, lpRestriction, lpSortOrderSet, crowsMax, lppRows);
     *lppRows = NULL;
     return MAPI_E_CALL_FAILED;
 }
@@ -950,7 +950,7 @@ HRESULT WINAPI WrapCompressedRTFStream(LPSTREAM compressed, ULONG flags, LPSTREA
     if (mapiFunctions.WrapCompressedRTFStream)
         return mapiFunctions.WrapCompressedRTFStream(compressed, flags, uncompressed);
 
-    FIXME("(%p, 0x%08x, %p): stub\n", compressed, flags, uncompressed);
+    FIXME("(%p, 0x%08lx, %p): stub\n", compressed, flags, uncompressed);
     return MAPI_E_NO_SUPPORT;
 }
 
@@ -966,8 +966,6 @@ static HMODULE mapi_ex_provider;
  */
 static void load_mapi_provider(HKEY hkeyMail, LPCWSTR valueName, HMODULE *mapi_provider)
 {
-    static const WCHAR mapi32_dll[] = {'m','a','p','i','3','2','.','d','l','l',0 };
-
     DWORD dwType, dwLen = 0;
     LPWSTR dllPath;
 
@@ -982,7 +980,7 @@ static void load_mapi_provider(HKEY hkeyMail, LPCWSTR valueName, HMODULE *mapi_p
             RegQueryValueExW(hkeyMail, valueName, NULL, NULL, (LPBYTE)dllPath, &dwLen);
 
             /* Check that this value doesn't refer to mapi32.dll (eg, as Outlook does) */
-            if (lstrcmpiW(dllPath, mapi32_dll) != 0)
+            if (lstrcmpiW(dllPath, L"mapi32.dll") != 0)
             {
                 if (dwType == REG_EXPAND_SZ)
                 {
@@ -1022,13 +1020,7 @@ static void load_mapi_provider(HKEY hkeyMail, LPCWSTR valueName, HMODULE *mapi_p
  */
 void load_mapi_providers(void)
 {
-    static const WCHAR regkey_mail[] = {
-        'S','o','f','t','w','a','r','e','\\','C','l','i','e','n','t','s','\\',
-        'M','a','i','l',0 };
-
-    static const WCHAR regkey_dllpath[] = {'D','L','L','P','a','t','h',0 };
-    static const WCHAR regkey_dllpath_ex[] = {'D','L','L','P','a','t','h','E','x',0 };
-    static const WCHAR regkey_backslash[] = { '\\', 0 };
+    static const WCHAR regkey_mail[] = L"Software\\Clients\\Mail";
 
     HKEY hkeyMail;
     DWORD dwType, dwLen = 0;
@@ -1056,13 +1048,13 @@ void load_mapi_providers(void)
     TRACE("appName: %s\n", debugstr_w(appName));
 
     appKey = HeapAlloc(GetProcessHeap(), 0, sizeof(WCHAR) * (lstrlenW(regkey_mail) +
-        lstrlenW(regkey_backslash) + lstrlenW(appName) + 1));
+        lstrlenW(L"\\") + lstrlenW(appName) + 1));
 
     if (!appKey)
         goto cleanUp;
 
     lstrcpyW(appKey, regkey_mail);
-    lstrcatW(appKey, regkey_backslash);
+    lstrcatW(appKey, L"\\");
     lstrcatW(appKey, appName);
 
     RegCloseKey(hkeyMail);
@@ -1074,8 +1066,8 @@ void load_mapi_providers(void)
         goto cleanUp;
 
     /* Try to load the providers */
-    load_mapi_provider(hkeyMail, regkey_dllpath, &mapi_provider);
-    load_mapi_provider(hkeyMail, regkey_dllpath_ex, &mapi_ex_provider);
+    load_mapi_provider(hkeyMail, L"DLLPath", &mapi_provider);
+    load_mapi_provider(hkeyMail, L"DLLPathEx", &mapi_ex_provider);
 
     /* Now try to load our function pointers */
     ZeroMemory(&mapiFunctions, sizeof(mapiFunctions));

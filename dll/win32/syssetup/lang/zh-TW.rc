@@ -4,7 +4,7 @@
  * PURPOSE:     Chinese (Traditional) resource file
  * TRANSLATORS: Copyright 2016 Henry Tang Ih <henrytang2@hotmail.com>
  *              Copyright 2018 Luke Luo <njlyf2011@hotmail.com>
- *              Copyright 2020-2021 Chan Chilung <eason066@gmail.com>
+ *              Copyright 2020-2026 Chan Chilung <eason066@gmail.com>
  */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
@@ -14,8 +14,8 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "ReactOS 安裝程式"
 FONT 9, "新細明體"
 BEGIN
-    LTEXT "歡迎使用 ReactOS 安裝程式精靈", IDC_WELCOMETITLE, 115, 8, 195, 24
-    LTEXT "安裝程式將在電腦上安裝 ReactOS 作業系統。\n它需要收集有關您和您的電腦的資訊以正確安裝 ReactOS。", IDC_STATIC, 115, 40, 195, 50
+    LTEXT "歡迎使用 ReactOS 安裝精靈", IDC_WELCOMETITLE, 115, 8, 195, 24
+    LTEXT "安裝精靈將在您的電腦上安裝 ReactOS 作業系統。\n它需要收集有關您和您的電腦的資訊以正確安裝 ReactOS。", IDC_STATIC, 115, 40, 195, 50
     LTEXT "按［下一步］繼續安裝程式。", IDC_STATIC, 115, 169, 195, 17
 END
 
@@ -37,10 +37,10 @@ CAPTION "ReactOS 安裝程式"
 FONT 9, "新細明體"
 BEGIN
     ICON "", IDC_INSTALLATION_ICON, 5, 5, 20, 20
-    LTEXT "Please choose an installation type:", IDC_STATIC, 35, 7, 230, 12
-    LTEXT "Installation &Types:", IDC_STATIC, 5, 32, 85, 10
+    LTEXT "請選擇一個您想安裝的版本：", IDC_STATIC, 35, 7, 230, 12
+    LTEXT "要安裝的版本(&T)：", IDC_STATIC, 5, 32, 85, 10
     COMBOBOX IDC_INSTALLATION_TYPES, 95, 30, 205, 300, CBS_HASSTRINGS | CBS_AUTOHSCROLL | CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    GROUPBOX "Installation Summary", IDC_STATIC, 5, 50, 305, 85
+    GROUPBOX "安裝概要", IDC_STATIC, 5, 50, 305, 85
     LTEXT "說明︰", IDC_STATIC, 20, 65, 70, 10
     EDITTEXT IDC_INSTALLATION_DESCRIPTION, 95, 65, 205, 60, ES_READONLY | ES_AUTOVSCROLL | ES_MULTILINE | WS_VSCROLL
 END
@@ -68,7 +68,7 @@ BEGIN
     LTEXT "電腦名稱(&C)︰", IDC_STATIC, 54, 38, 75, 8
     EDITTEXT IDC_COMPUTERNAME, 132, 35, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL | ES_UPPERCASE
     ICON IDI_ICON5, IDC_STATIC, 21, 57, 20, 20
-    LTEXT "安裝程式會建立一個稱為 Administrator (系統管理員) 的帳戶。當需要完全控制電腦時，可以使用這個帳戶。.", IDC_STATIC, 54, 57, 241, 25
+    LTEXT "安裝程式會建立一個稱為 Administrator (系統管理員) 的帳戶。當需要完全控制電腦時，可以使用這個帳戶。", IDC_STATIC, 54, 57, 241, 25
     LTEXT "請輸入不超過 127 個字元的系統管理員密碼。", IDC_STATIC, 54, 87, 241, 8
     LTEXT "系統管理員密碼(&A)︰", IDC_STATIC, 54, 104, 75, 8
     EDITTEXT IDC_ADMINPASSWORD1, 132, 101, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
@@ -121,10 +121,10 @@ CAPTION "ReactOS 安裝程式"
 FONT 9, "新細明體"
 BEGIN
     LTEXT "正在登錄元件", IDC_TASKTEXT1, 65, 27, 232, 8
-    LTEXT "Installing start menu items", IDC_TASKTEXT2, 65, 39, 232, 8
-    LTEXT "Saving settings", IDC_TASKTEXT3, 65, 51, 232, 8
-    LTEXT "Installing optional components", IDC_TASKTEXT4, 65, 63, 232, 8
-    LTEXT "Removing temporary files", IDC_TASKTEXT5, 65, 75, 232, 8
+    LTEXT "正在安裝開始功能表項目", IDC_TASKTEXT2, 65, 39, 232, 8
+    LTEXT "正在儲存設定", IDC_TASKTEXT3, 65, 51, 232, 8
+    LTEXT "正在安裝選用元件", IDC_TASKTEXT4, 65, 63, 232, 8
+    LTEXT "正在移除暫存檔案", IDC_TASKTEXT5, 65, 75, 232, 8
     LTEXT "", IDC_ITEM, 21, 85, 275, 8
     CONTROL "", IDC_PROCESSPROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 21, 97, 275, 11
     ICON "", IDC_CHECK1, 48, 26, 10, 10, SS_REALSIZEIMAGE
@@ -139,9 +139,9 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "ReactOS 安裝程式"
 FONT 9, "新細明體"
 BEGIN
-    LTEXT "正在完成 ReactOS 安裝程式", IDC_FINISHTITLE, 115, 8, 195, 24
-    LTEXT "ReactOS 安裝程式已順利完成。\n\n如果光碟機裡還有光碟，請將其取出。然後按［完成］，重新啟動您的電腦。", IDC_STATIC, 115, 40, 195, 48
-    LTEXT "Your computer will automatically restart in 15 seconds.", IDC_STATIC, 115, 110, 195, 24
+    LTEXT "正在完成 ReactOS 安裝精靈", IDC_FINISHTITLE, 115, 8, 195, 24
+    LTEXT "您已完成安裝 ReactOS。\n\n如果光碟機裡還有光碟，請將其取出。然後按［完成］，重新啟動您的電腦。", IDC_STATIC, 115, 40, 195, 48
+    LTEXT "您的電腦會在 15 秒後自動重新開機。", IDC_STATIC, 115, 110, 195, 24
     CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 135, 188, 12
 END
 
@@ -268,24 +268,24 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_INSTALLATIONTITLE "選擇軟體版本"
-    IDS_INSTALLATIONSUBTITLE "您可以選擇要安裝的軟體版本。這會對系統的一些功能造成影響。"
+    IDS_INSTALLATIONTITLE "選擇版本"
+    IDS_INSTALLATIONSUBTITLE "您可以選擇要安裝的版本。這會對系統的一些功能造成影響。"
     IDS_INSTALLATIONSERVERNAME "ReactOS Server"
     IDS_INSTALLATIONSERVERINFO "系統將識別為一個伺服器。私人資料夾「我的圖片」、「我的影片」和「我的音樂」會獨立於「我的文件」。"
     IDS_INSTALLATIONWORKSTATIONNAME "ReactOS Workstation"
     IDS_INSTALLATIONWORKSTATIONINFO "系統將識別為一個工作站。私人資料夾「我的圖片」、「我的影片」和「我的音樂」會在「我的文件」資料夾內。"
     IDS_INSTALLATIONSERVERCORENAME "ReactOS Server Core"
-    IDS_INSTALLATIONSERVERCOREINFO "The system will be recognized as a server. The graphical shell is not installed, and the system starts in a command-line environment to reduce resource usage and attack surface."
+    IDS_INSTALLATIONSERVERCOREINFO "系統將識別為一個伺服器。這個選項不會安裝圖型介面，系統會以命令列環境啟動以減少資源消耗和攻擊面。"
     /* Reserved for future use
      * IDS_INSTALLATIONNANOSERVERNAME "ReactOS Nano Server"
-     * IDS_INSTALLATIONNANOSERVERINFO "The system will be recognized as a server. The system is entirely in text mode. You are expected to manage this system remotely."
+     * IDS_INSTALLATIONNANOSERVERINFO "系統將識別為一個伺服器。整個系統將以文字模式執行。您應該從遠端控制這個電腦。"
      */
-    IDS_DEFAULT "（預設）"
+    IDS_DEFAULT "(預設)"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_INSTALLADDONSCAPTION "Optional Components"
-    IDS_INSTALLADDONSMESSAGE "Optional components are available to improve application compatibility.\n\nWould you like to download and install them?"
-    IDS_INSTALLADDONSFAILEDMESSAGE "One or more optional components failed to install."
+    IDS_INSTALLADDONSCAPTION "選用元件"
+    IDS_INSTALLADDONSMESSAGE "您可以安裝選用元件來改善軟體的相容性。\n\n您是否要下載和安裝這些元件？"
+    IDS_INSTALLADDONSFAILEDMESSAGE "有一個或多個選用元件安裝失敗。"
 END

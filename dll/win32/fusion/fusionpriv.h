@@ -23,14 +23,10 @@
 
 #include <stdarg.h>
 
-#include "ntstatus.h"
-#define WIN32_NO_STATUS
-#include "windef.h"
 #include "windef.h"
 #include "winbase.h"
 #include "winuser.h"
 #include "winver.h"
-#include "wine/heap.h"
 
 #ifdef __REACTOS__
 #include <objbase.h>
@@ -437,31 +433,18 @@ typedef struct
 struct tagASSEMBLY;
 typedef struct tagASSEMBLY ASSEMBLY;
 
-HRESULT assembly_create(ASSEMBLY **out, LPCWSTR file) DECLSPEC_HIDDEN;
-HRESULT assembly_release(ASSEMBLY *assembly) DECLSPEC_HIDDEN;
-HRESULT assembly_get_name(ASSEMBLY *assembly, LPWSTR *name) DECLSPEC_HIDDEN;
-HRESULT assembly_get_path(const ASSEMBLY *assembly, LPWSTR *path) DECLSPEC_HIDDEN;
-HRESULT assembly_get_version(ASSEMBLY *assembly, LPWSTR *version) DECLSPEC_HIDDEN;
-PEKIND assembly_get_architecture(ASSEMBLY *assembly) DECLSPEC_HIDDEN;
-HRESULT assembly_get_pubkey_token(ASSEMBLY *assembly, LPWSTR *token) DECLSPEC_HIDDEN;
-HRESULT assembly_get_runtime_version(ASSEMBLY *assembly, LPSTR *version) DECLSPEC_HIDDEN;
-HRESULT assembly_get_external_files(ASSEMBLY *assembly, LPWSTR **files, DWORD *count) DECLSPEC_HIDDEN;
+HRESULT assembly_create(ASSEMBLY **out, LPCWSTR file);
+HRESULT assembly_release(ASSEMBLY *assembly);
+HRESULT assembly_get_name(ASSEMBLY *assembly, LPWSTR *name);
+HRESULT assembly_get_path(const ASSEMBLY *assembly, LPWSTR *path);
+HRESULT assembly_get_version(ASSEMBLY *assembly, LPWSTR *version);
+PEKIND assembly_get_architecture(ASSEMBLY *assembly);
+HRESULT assembly_get_pubkey_token(ASSEMBLY *assembly, LPWSTR *token);
+HRESULT assembly_get_runtime_version(ASSEMBLY *assembly, LPSTR *version);
+HRESULT assembly_get_external_files(ASSEMBLY *assembly, LPWSTR **files, DWORD *count);
 
-extern HRESULT IAssemblyName_SetPath(IAssemblyName *iface, LPCWSTR path) DECLSPEC_HIDDEN;
-extern HRESULT IAssemblyName_GetPath(IAssemblyName *iface, LPWSTR buf, ULONG *len) DECLSPEC_HIDDEN;
-
-static inline LPWSTR strdupW(LPCWSTR src)
-{
-    LPWSTR dest;
-
-    if (!src)
-        return NULL;
-
-    if ((dest = heap_alloc((lstrlenW(src) + 1) * sizeof(WCHAR))))
-        lstrcpyW(dest, src);
-
-    return dest;
-}
+extern HRESULT IAssemblyName_SetPath(IAssemblyName *iface, LPCWSTR path);
+extern HRESULT IAssemblyName_GetPath(IAssemblyName *iface, LPWSTR buf, ULONG *len);
 
 #define BYTES_PER_TOKEN 8
 #define CHARS_PER_BYTE  2

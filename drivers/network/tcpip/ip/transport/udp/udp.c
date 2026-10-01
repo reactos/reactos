@@ -147,6 +147,47 @@ NTSTATUS BuildUDPPacket(
     return STATUS_SUCCESS;
 }
 
+/**
+ * @brief
+ * Checks whether an address is the limited broadcast address or the
+ * directed broadcast address of a non-loopback interface.
+ *
+ * @param[in] Address
+ * Destination address to check.
+ *
+ * @return
+ * TRUE if the address is a broadcast address, FALSE otherwise.
+ */
+static
+BOOLEAN
+UDPIsBroadcastAddress(
+    _In_ PIP_ADDRESS Address)
+{
+    BOOLEAN IsBroadcast = FALSE;
+    KIRQL OldIrql;
+    IF_LIST_ITER(CurrentIF);
+
+    if (Address->Type != IP_ADDRESS_V4)
+        return FALSE;
+
+    if (Address->Address.IPv4Address == 0xFFFFFFFF)
+        return TRUE;
+
+    TcpipAcquireSpinLock(&InterfaceListLock, &OldIrql);
+
+    ForEachInterface(CurrentIF) {
+        if (CurrentIF != Loopback && AddrIsEqual(&CurrentIF->Broadcast, Address))
+        {
+            IsBroadcast = TRUE;
+            break;
+        }
+    } EndFor(CurrentIF);
+
+    TcpipReleaseSpinLock(&InterfaceListLock, OldIrql);
+
+    return IsBroadcast;
+}
+
 NTSTATUS UDPSendDatagram(
     PADDRESS_FILE AddrFile,
     PTDI_CONNECTION_INFORMATION ConnInfo,
@@ -171,6 +212,8 @@ NTSTATUS UDPSendDatagram(
     USHORT RemotePort;
     NTSTATUS Status;
     PNEIGHBOR_CACHE_ENTRY NCE;
+    IP_PACKET LoopPacket;
+    PNEIGHBOR_CACHE_ENTRY LoopNCE = NULL;
 
     LockObject(AddrFile);
 
@@ -222,12 +265,39 @@ NTSTATUS UDPSendDatagram(
 							 BufferData,
 							 DataSize );
 
+    if (!NT_SUCCESS(Status))
+    {
+        UnlockObject(AddrFile);
+        return Status;
+    }
+
+    /* NDIS does not loop broadcasts back to the sender, so deliver a local copy */
+    if (Loopback != NULL &&
+        NCE->Interface != Loopback &&
+        UDPIsBroadcastAddress(&RemoteAddress))
+    {
+        LoopNCE = NBLocateNeighbor(&Loopback->Unicast, Loopback);
+        if (LoopNCE != NULL &&
+            !NT_SUCCESS(BuildUDPPacket(AddrFile,
+                                       &LoopPacket,
+                                       &RemoteAddress,
+                                       RemotePort,
+                                       &LocalAddress,
+                                       AddrFile->Port,
+                                       BufferData,
+                                       DataSize)))
+        {
+            LoopNCE = NULL;
+        }
+    }
+
     UnlockObject(AddrFile);
 
-    if( !NT_SUCCESS(Status) )
-		return Status;
-
     Status = IPSendDatagram(&Packet, NCE);
+
+    if (LoopNCE != NULL)
+        IPSendDatagram(&LoopPacket, LoopNCE);
+
     if (!NT_SUCCESS(Status))
         return Status;
 

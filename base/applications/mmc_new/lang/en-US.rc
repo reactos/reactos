@@ -21,7 +21,7 @@ BEGIN
     BEGIN
         MENUITEM "&New\tCtrl+N", IDM_FILE_NEW
         MENUITEM "&Open...\tCtrl+O", IDM_FILE_OPEN
-        MENUITEM "&Save", IDM_FILE_SAVE
+        MENUITEM "&Save\tCtrl+S", IDM_FILE_SAVE
         MENUITEM "Save &As...", IDM_FILE_SAVEAS
         MENUITEM SEPARATOR
         MENUITEM "Add/Remove Snap-in...\tCtrl+M", IDM_FILE_ADD
@@ -69,21 +69,52 @@ BEGIN
     END
 END
 
-IDD_DIALOG_ADD DIALOGEX 0, 0, 351, 224
-STYLE DS_SETFONT | DS_FIXEDSYS | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+IDM_TREEVIEW_CONTEXT MENU
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "New &Window from Here", IDM_ACTION_NEW
+        MENUITEM SEPARATOR
+        MENUITEM "Rena&me", IDM_ACTION_RENAME
+    END
+
+    POPUP ""
+    BEGIN
+        POPUP "View"
+        BEGIN
+            MENUITEM "Add/Remove Colums", IDM_VIEW_COLUMNS
+            MENUITEM SEPARATOR
+            MENUITEM "Large Icons", IDM_VIEW_LARGE_ICONS
+            MENUITEM "Small Icons", IDM_VIEW_SMALL_ICONS
+            MENUITEM "List", IDM_VIEW_LIST
+            MENUITEM "Details", IDM_VIEW_DETAILS
+            MENUITEM SEPARATOR
+            MENUITEM "Customize...", IDM_VIEW_CUSTOMIZE
+        END
+        MENUITEM "New &Window from Here", IDM_ACTION_NEW
+        MENUITEM SEPARATOR
+        MENUITEM "Rena&me", IDM_ACTION_RENAME
+    END
+END
+
+IDD_DIALOG_ADD DIALOGEX 0, 0, 471, 274
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_VISIBLE | WS_CAPTION
 CAPTION "Add or remove Snap-ins"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
-    CONTROL         "",IDC_LIST_AVAILABLE,"SysListView32",LVS_REPORT | LVS_SINGLESEL | LVS_EX_FULLROWSELECT | LVS_SHOWSELALWAYS | LVS_SORTASCENDING | LVS_SHAREIMAGELISTS | LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP,6,18,138,126
-    LTEXT           "Available Snap-ins:",IDC_STATIC,6,6,126,8
-    EDITTEXT        IDC_DESCRIPTION, 6, 168, 336, 28, ES_READONLY | ES_MULTILINE | WS_VSCROLL | WS_BORDER
-    LTEXT           "Description:",IDC_STATIC,6,156,39,8
-    PUSHBUTTON      "&Add >",IDC_BUTTON_ADD,150,18,50,14,WS_TABSTOP
-    PUSHBUTTON      "< &Remove",IDC_BUTTON_REMOVE,150,36,50,14,WS_TABSTOP
-    CONTROL         "", IDC_LIST_SELECTED, "SysTreeView32", TVS_HASBUTTONS | TVS_HASLINES | TVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 204, 18, 138, 126
-    LTEXT           "Selected Snap-ins:",IDC_STATIC,204,6,138,8
-    DEFPUSHBUTTON   "OK",IDOK,240,204,50,14,WS_TABSTOP
-    PUSHBUTTON      "Cancel",IDCANCEL,294,204,50,14,WS_TABSTOP
+    LTEXT           "You can select snap-ins for this console from those available on your computer and configure the selected set of snap-ins. For extensible snap-ins, you can configure which extensions are enabled.", IDC_STATIC, 8, 7, 457, 23 
+    LTEXT           "Available Snap-ins:", IDC_STATIC, 7, 30, 163, 8
+    CONTROL         "", IDC_LIST_AVAILABLE, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_EX_FULLROWSELECT | LVS_SHOWSELALWAYS | LVS_SORTASCENDING | LVS_SHAREIMAGELISTS | LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP, 7, 40, 163, 157
+    PUSHBUTTON      "&Add >", IDC_BUTTON_ADD, 175, 40, 72, 14
+    PUSHBUTTON      "< &Remove", IDC_BUTTON_REMOVE, 175, 58, 72, 14
+    LTEXT           "Selected Snap-ins:", IDC_STATIC, 256, 30, 127, 8
+    CONTROL         "", IDC_LIST_SELECTED, "SysTreeView32", TVS_HASBUTTONS | TVS_HASLINES | TVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 256, 40, 127, 157
+    PUSHBUTTON      "Move &Up", IDC_BUTTON_UP, 392, 40, 72, 14
+    PUSHBUTTON      "Move &Down", IDC_BUTTON_DOWN, 392, 58, 72, 14
+    LTEXT           "Description:", IDC_STATIC, 7, 204, 162, 8
+    EDITTEXT        IDC_DESCRIPTION, 7, 214, 457, 33, ES_READONLY | ES_MULTILINE | WS_VSCROLL | WS_BORDER
+    DEFPUSHBUTTON   "OK", IDOK, 357, 254, 50, 14
+    PUSHBUTTON      "Cancel", IDCANCEL, 414, 254, 50, 14
 END
 
 IDD_CUSTOMIZE DIALOGEX 0, 0, 214, 223
@@ -147,5 +178,53 @@ BEGIN
     IDS_USERMODE_FULL_DESC "Prevents useres from adding or removing snap-ins or changing snap-in console properties. Users have full access to the tree."
     IDS_USERMODE_MULTIPLE_DESC "Prevents users from accessing areas of the tree that are not visible in snap-in console windows."
     IDS_USERMODE_SINGLE_DESC "Opens the snap-in console in single-window mode and prevents users from accessing areas of the tree that are not visible in that snap-in console window."
+END
 
+STRINGTABLE
+BEGIN
+    IDM_TB_UNDO         "Undo"
+    IDM_TB_REDO         "Redo"
+    IDM_TB_UP           "Up One Level"
+    IDM_TB_SCOPE_PANE   "Show/Hide Console Tree"
+    IDM_TB_EXPORT_LIST  "Export List"
+    IDM_TB_HELP         "Help"
+    IDM_TB_ACTIONS_PANE "Show/Hide Actions Pane"
+END
+
+STRINGTABLE
+BEGIN
+    IDM_FILE_NEW      "Create a new console."
+    IDM_FILE_OPEN     "Open an existing console."
+    IDM_FILE_SAVE     "Save the current console."
+    IDM_FILE_SAVEAS   "Save a copy of the current console in a separate file."
+    IDM_FILE_ADD      "Enables you to add snap-ins or remove them from the snap-in console."
+    IDM_FILE_OPTIONS  "Changes the options for the user and/or the snapin-console."
+    IDM_FILE_RECENT1  "Opens this snap-in console."
+    IDM_FILE_RECENT2       "Opens this snap-in console."
+    IDM_FILE_RECENT3       "Opens this snap-in console."
+    IDM_FILE_RECENT4       "Opens this snap-in console."
+    IDM_FILE_EXIT          "Quits the program and prompts to save documents."
+
+    IDM_ACTION_NEW         "Opens a new window rooted at this node."
+    IDM_ACTION_RENAME      "Renames the current selection."
+    IDM_ACTION_EXPORT_LIST "Exports the current list to a file."
+
+    IDM_VIEW_COLUMNS       "Opens a dialog box in which you can modify the columns in result pane."
+    IDM_VIEW_LARGE_ICONS   "Displays items by using large icons."
+    IDM_VIEW_SMALL_ICONS   "Displays items by using small icons."
+    IDM_VIEW_LIST          "Displays items in a list."
+    IDM_VIEW_DETAILS       "Displays information about each item in a window."
+    IDM_VIEW_CUSTOMIZE     "Changes the options for the view."
+
+    IDM_FAVORITES_ADD      "Adds the current view to your Favorites list."
+    IDM_FAVORITES_ORGANIZE "Enables you to organize your Favorites into folders."
+
+    IDM_WINDOWS_NEW        "New Window."
+    IDM_WINDOWS_CASCADE    "Arranges windows so they overlap."
+    IDM_WINDOWS_TILE       "Arranges windows as tiles."
+    IDM_WINDOWS_ARRANGE    "Arranges icons at the bottom of the window."
+
+    IDM_HELP_TOPICS        "Opens Help."
+    IDM_HELP_ABOUT_MMC     "Display program information, version number, and copyright."
+    IDM_HELP_ABOUT_SNAPIN  "Display snap-in information, version number, and copyright."
 END

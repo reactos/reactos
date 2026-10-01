@@ -9,474 +9,695 @@
 
 #include "precomp.h"
 
-    CConsoleWnd::CConsoleWnd(CMainWnd *MainWnd, CSnapin *RootNode)
+CConsoleWnd::CConsoleWnd(CMainWnd *MainWnd, CSnapin *RootNode)
+{
+    m_MainWnd = MainWnd;
+    m_ViewRootNode = RootNode;
+    m_ViewSelectedNode = RootNode;
+    m_pfnSuperWindowProc = DefMDIChildProc;
+
+    m_hMenuTreeView = LoadMenu(_AtlBaseModule.GetModuleInstance(), MAKEINTRESOURCE(IDM_TREEVIEW_CONTEXT));
+
+    if (!m_thunk.Init(NULL, NULL))
+        return;
+    _AtlWinModule.AddCreateWndData(&m_thunk.cd, this);
+}
+
+CConsoleWnd::~CConsoleWnd()
+{
+    DestroyMenu(m_hMenuTreeView);
+}
+
+LRESULT
+CConsoleWnd::OnCreate(UINT nMessage, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    SetWindowLongPtr(0, (LONG_PTR)this);
+
+    m_bStatusBarVisible = TRUE;
+    m_bDescriptionBarVisible = FALSE;
+    m_bTreeViewVisible = TRUE;
+    m_bActionsPaneVisible = FALSE;
+
+    m_iSplitterWidth = 4;
+    m_iSplitSide = 0;
+
+    RECT Rect;
+    GetClientRect(&Rect);
+    m_iTreeViewWidth = (Rect.right - Rect.left) / 4;
+    m_iActionsPaneWidth = (Rect.right - Rect.left) / 4;
+
+    m_StatusBar.Create(this->m_hWnd, NULL);
+    m_StatusBar.GetClientRect(&Rect);
+    m_iStatusBarHeight = Rect.bottom - Rect.top;
+
+    Rect.right = 0;
+    Rect.left = 0;
+    Rect.top = 0;
+    Rect.bottom = 0;
+    m_DescriptionBar.Create(L"Static", this->m_hWnd, &Rect, L"Description",
+                            WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | SS_OWNERDRAW,
+                            WS_EX_STATICEDGE);
+    m_DescriptionBar.SetWindowText(L"Test");
+
+    m_TreeView.Create(this->m_hWnd,
+                        WS_CHILD | WS_VISIBLE | TVS_HASLINES | TVS_SHOWSELALWAYS | TVS_EDITLABELS);
+
+    m_TreeView.SetImageList(m_MainWnd->SnapinImageList(), TVSIL_NORMAL);
+
+    m_ListView.Create(this->m_hWnd, &Rect, NULL, WS_CHILD | WS_VISIBLE, WS_EX_CLIENTEDGE);
+
+    m_ViewId = m_MainWnd->RegisterView(this);
+
+    UpdateTreeView();
+
+    LPMDICREATESTRUCT mdicreate = reinterpret_cast<LPMDICREATESTRUCT>(reinterpret_cast<LPCREATESTRUCT>(lParam)->lpCreateParams);
+    if (mdicreate->lParam)
+        PostMessage(WM_SYSCOMMAND, SC_MAXIMIZE, 0);
+
+    return 0;
+}
+
+LRESULT
+CConsoleWnd::OnDestroy(UINT nMessage, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    m_MainWnd->UnregisterView(this);
+    m_MainWnd->PostMessage(WM_USER_CLOSE_CHILD, 0, 0);
+    return 0;
+}
+
+LRESULT
+CConsoleWnd::OnSize(UINT nMessage, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    UpdateLayout();
+    return DefMDIChildProc(this->m_hWnd, WM_SIZE, wParam, lParam);
+}
+
+LRESULT
+CConsoleWnd::OnContextMenu(UINT nMessage, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    POINT pt;
+
+    if ((HWND)wParam == m_TreeView.m_hWnd)
     {
-        m_MainWnd = MainWnd;
-        m_ViewRootNode = RootNode;
-        m_ViewSelectedNode = RootNode;
-        m_pfnSuperWindowProc = DefMDIChildProc;
+        TVHITTESTINFO hti;
+        int nPos = 0;
 
-        if (!m_thunk.Init(NULL, NULL))
-            return;
-        _AtlWinModule.AddCreateWndData(&m_thunk.cd, this);
-    }
+        pt.x = (short) LOWORD(lParam);
+        pt.y = (short) HIWORD(lParam);
 
-    CConsoleWnd::~CConsoleWnd()
-    {
-    }
-
-    LRESULT CConsoleWnd::OnCreate(UINT nMessage, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
-    {
-        SetWindowLongPtr(0, (LONG_PTR)this);
-
-        m_bStatusBarVisible = TRUE;
-        m_bDescriptionBarVisible = FALSE;
-        m_bTreeViewVisible = TRUE;
-        m_bActionsPaneVisible = FALSE;
-
-        m_iSplitterWidth = 4;
-        m_iSplitSide = 0;
-
-        RECT Rect;
-        GetClientRect(&Rect);
-        m_iTreeViewWidth = (Rect.right - Rect.left) / 4;
-        m_iActionsPaneWidth = (Rect.right - Rect.left) / 4;
-
-        m_StatusBar.Create(this->m_hWnd, NULL);
-        m_StatusBar.GetClientRect(&Rect);
-        m_iStatusBarHeight = Rect.bottom - Rect.top;
-
-        Rect.right = 0;
-        Rect.left = 0;
-        Rect.top = 0;
-        Rect.bottom = 0;
-        m_DescriptionBar.Create(L"Static", this->m_hWnd, &Rect, L"Description",
-                                WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | SS_OWNERDRAW,
-                                WS_EX_STATICEDGE);
-        m_DescriptionBar.SetWindowText(L"Test");
-
-        m_TreeView.Create(this->m_hWnd,
-                          WS_CHILD | WS_VISIBLE | TVS_HASLINES | TVS_SHOWSELALWAYS | TVS_EDITLABELS);
-
-        m_TreeView.SetImageList(m_MainWnd->SnapinImageList(), TVSIL_NORMAL);
-
-        m_ListView.Create(this->m_hWnd, &Rect, NULL, WS_CHILD | WS_VISIBLE, WS_EX_CLIENTEDGE);
-
-        m_ViewId = m_MainWnd->RegisterView(this);
-
-        UpdateTreeView();
-
-        LPMDICREATESTRUCT mdicreate = reinterpret_cast<LPMDICREATESTRUCT>(reinterpret_cast<LPCREATESTRUCT>(lParam)->lpCreateParams);
-        if (mdicreate->lParam)
-            PostMessage(WM_SYSCOMMAND, SC_MAXIMIZE, 0);
-
-        return 0;
-    }
-
-    LRESULT CConsoleWnd::OnDestroy(UINT nMessage, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
-    {
-        m_MainWnd->UnregisterView(this);
-        m_MainWnd->PostMessage(WM_USER_CLOSE_CHILD, 0, 0);
-        return 0;
-    }
-
-    LRESULT CConsoleWnd::OnSize(UINT nMessage, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
-    {
-        UpdateLayout();
-        return DefMDIChildProc(this->m_hWnd, WM_SIZE, wParam, lParam);
-    }
-
-    LRESULT CConsoleWnd::OnDrawItem(UINT nMessage, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
-    {
-        LPDRAWITEMSTRUCT lpDrawItem = (LPDRAWITEMSTRUCT)lParam;
-        WCHAR WindowText[256];
-
-        HBRUSH hBrush = GetSysColorBrush(COLOR_3DDKSHADOW);
-        FillRect(lpDrawItem->hDC, &lpDrawItem->rcItem, hBrush);
-
-        ::SetTextColor(lpDrawItem->hDC, GetSysColor(COLOR_3DHILIGHT));
-
-        ::GetWindowTextW(lpDrawItem->hwndItem, WindowText, ARRAYSIZE(WindowText));
-        ::SetBkMode(lpDrawItem->hDC, TRANSPARENT);
-
-        lpDrawItem->rcItem.left += 4;
-        DrawTextW(lpDrawItem->hDC, (LPCWSTR)WindowText, -1, &lpDrawItem->rcItem,
-                  DT_LEFT | DT_VCENTER | DT_SINGLELINE | DT_MODIFYSTRING | DT_END_ELLIPSIS | DT_NOPREFIX);
-
-        return TRUE;
-    }
-
-    VOID CConsoleWnd::AddTreeViewItemRecursive(HTREEITEM hParentTreeItem, CSnapin *Node)
-    {
-        HTREEITEM hTreeItem;
-
-        hTreeItem = m_TreeView.AddItem(hParentTreeItem,
-                                       (LPWSTR)Node->DisplayName().GetString(),
-                                       Node->GetCacheEntry()->NormalImageIndex(),
-                                       Node->GetCacheEntry()->OpenImageIndex(),
-                                       (LPARAM)Node);
-        if (hTreeItem)
+        if (pt.x == -1 && pt.y == -1)
         {
-#if 0
-            int snapinCount = Node->GetNodeCount();
-            for (int i = 0; i < snapinCount; i++)
+            RECT rc;
+            hti.hItem = m_TreeView.GetSelection();
+            if (hti.hItem != NULL)
             {
-                CSnapinNode *ChildNode = Node->GetNode(i);
-                if (ChildNode)
-                    AddTreeViewItemRecursive(hTreeItem, ChildNode);
+                TreeView_GetItemRect(m_TreeView.m_hWnd, hti.hItem, &rc, TRUE);
+                pt.x = rc.left + 8;
+                pt.y = rc.top + 8;
+                m_TreeView.ClientToScreen(&pt);
+                hti.flags = TVHT_ONITEM;
             }
-
-            if (snapinCount > 0)
-                m_TreeView.Expand(hTreeItem, TVE_EXPAND);
-#endif
-            if (Node == m_ViewSelectedNode)
-                m_TreeView.SelectItem(hTreeItem);
-        }
-    }
-
-    VOID CConsoleWnd::UpdateTreeView()
-    {
-        m_TreeView.DeleteItem(TVI_ROOT);
-        AddTreeViewItemRecursive(TVI_ROOT, m_ViewRootNode);
-    }
-
-    BOOL CConsoleWnd::IsTreeViewVisible()
-    {
-        return m_bTreeViewVisible;
-    }
-
-    VOID CConsoleWnd::SetTreeViewVisible(BOOL bVisible)
-    {
-        m_bTreeViewVisible = bVisible;
-        UpdateLayout();
-    }
-
-    BOOL CConsoleWnd::IsStatusBarVisible()
-    {
-        return m_bStatusBarVisible;
-    }
-
-    VOID CConsoleWnd::SetStatusBarVisible(BOOL bVisible)
-    {
-        m_bStatusBarVisible = bVisible;
-        UpdateLayout();
-    }
-
-    BOOL CConsoleWnd::IsDescriptionBarVisible()
-    {
-        return m_bDescriptionBarVisible;
-    }
-
-    VOID CConsoleWnd::SetDescriptionBarVisible(BOOL bVisible)
-    {
-        m_bDescriptionBarVisible = bVisible;
-        UpdateLayout();
-    }
-
-    BOOL CConsoleWnd::IsActionsPaneVisible()
-    {
-        return m_bActionsPaneVisible;
-    }
-
-    VOID CConsoleWnd::SetActionsPaneVisible(BOOL bVisible)
-    {
-        m_bActionsPaneVisible = bVisible;
-        UpdateLayout();
-    }
-
-    VOID CConsoleWnd::UpdateLayout()
-    {
-        RECT Rect;
-        int iTreeViewWidth, iTreeViewHeight;
-        int iListViewPosX, iListViewPosY = 0;
-        int iListViewWidth, iListViewHeight;
-
-        GetClientRect(&Rect);
-        int iClientHeight = Rect.bottom - Rect.top;
-        int iClientWidth = Rect.right - Rect.left;
-
-        int iStatusHeight = 0;
-
-        int iDescriptionBarHeight = 0;
-
-        if (m_bTreeViewVisible)
-        {
-            iTreeViewWidth = m_iTreeViewWidth;
-            iListViewPosX = m_iTreeViewWidth + m_iSplitterWidth;
-            iListViewWidth = iClientWidth - m_iTreeViewWidth - m_iSplitterWidth;
-        }
-        else
-        {
-            iTreeViewWidth = 0;
-            iListViewPosX = 0;
-            iListViewWidth = iClientWidth;
-        }
-
-        iTreeViewHeight = iClientHeight;
-        iListViewHeight = iClientHeight;
-
-        if (m_bStatusBarVisible)
-        {
-            iStatusHeight = m_iStatusBarHeight;
-            iTreeViewHeight -= iStatusHeight;
-            iListViewHeight -= iStatusHeight;
-        }
-
-        if (m_bDescriptionBarVisible)
-        {
-            iDescriptionBarHeight = 24;
-            iListViewPosY += iDescriptionBarHeight;
-            iListViewHeight -= iDescriptionBarHeight;
-        }
-
-        if (m_bActionsPaneVisible)
-        {
-            iListViewWidth -= (m_iActionsPaneWidth + m_iSplitterWidth);
-        }
-
-        /* Move the status bar */
-        m_StatusBar.MoveWindow(0, iClientHeight - iStatusHeight, iClientWidth, iStatusHeight);
-
-        /* Move the tree view */
-        m_TreeView.MoveWindow(0, 0, iTreeViewWidth, iTreeViewHeight);
-
-        /* Move the list view */
-        m_ListView.MoveWindow(iListViewPosX, iListViewPosY, iListViewWidth, iListViewHeight);
-
-        m_DescriptionBar.MoveWindow(iListViewPosX, 0, iListViewWidth, iDescriptionBarHeight);
-    }
-
-    VOID CConsoleWnd::UpdateView()
-    {
-        UpdateTreeView();
-    }
-
-    // +IConsole
-    STDMETHODIMP CConsoleWnd::QueryInterface(REFIID riid, void **ppvObject)
-    {
-        if (riid == IID_IUnknown || riid == IID_IConsole)
-        {
-            *ppvObject = static_cast<IConsole*>(this);
-            AddRef();
-            return S_OK;
-        }
-        else if (riid == IID_IConsole2)
-        {
-            *ppvObject = static_cast<IConsole2*>(this);
-            AddRef();
-            return S_OK;
-        }
-        else if (riid == IID_IConsoleNameSpace)
-        {
-            *ppvObject = static_cast<IConsoleNameSpace*>(this);
-            AddRef();
-            return S_OK;
-        }
-        else if (riid == IID_IConsoleNameSpace2)
-        {
-            *ppvObject = static_cast<IConsoleNameSpace2*>(this);
-            AddRef();
-            return S_OK;
-        }
-        else
-        {
-            CComHeapPtr<OLECHAR> guidstr;
-            HRESULT hr = StringFromCLSID(riid, &guidstr);
-            if (SUCCEEDED(hr))
-                DPRINT1("Unhandled riid: %S\n", (PCWSTR)guidstr);
             else
-                DPRINT1("Unhandled riid\n");
+            {
+                hti.flags = 0;
+            }
+        }
+        else
+        {
+            hti.pt.x = pt.x;
+            hti.pt.y = pt.y;
+            m_TreeView.ScreenToClient(&hti.pt);
+            m_TreeView.HitTest(&hti);
+
+            if (hti.hItem)
+            {
+                if (hti.hItem == m_TreeView.GetSelection())
+                {
+                    nPos = 1;
+                }
+            }
         }
 
+        if (hti.flags & TVHT_ONITEM)
+        {
+            TrackPopupMenu(GetSubMenu(m_hMenuTreeView, nPos), TPM_RIGHTBUTTON, pt.x, pt.y, 0, this->m_hWnd, NULL);
+        }
+    }
+    return 0;
+}
 
-        *ppvObject = NULL;
-        return E_NOINTERFACE;
+LRESULT
+CConsoleWnd::OnDrawItem(UINT nMessage, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    LPDRAWITEMSTRUCT lpDrawItem = (LPDRAWITEMSTRUCT)lParam;
+    WCHAR WindowText[256];
+
+    HBRUSH hBrush = GetSysColorBrush(COLOR_3DDKSHADOW);
+    FillRect(lpDrawItem->hDC, &lpDrawItem->rcItem, hBrush);
+
+    ::SetTextColor(lpDrawItem->hDC, GetSysColor(COLOR_3DHILIGHT));
+
+    ::GetWindowTextW(lpDrawItem->hwndItem, WindowText, ARRAYSIZE(WindowText));
+    ::SetBkMode(lpDrawItem->hDC, TRANSPARENT);
+
+    lpDrawItem->rcItem.left += 4;
+    DrawTextW(lpDrawItem->hDC, (LPCWSTR)WindowText, -1, &lpDrawItem->rcItem,
+                DT_LEFT | DT_VCENTER | DT_SINGLELINE | DT_MODIFYSTRING | DT_END_ELLIPSIS | DT_NOPREFIX);
+
+    return TRUE;
+}
+
+LRESULT
+CConsoleWnd::OnNotify(UINT nMessage, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+
+    NMHDR *phdr = (NMHDR *)lParam;
+    switch (phdr->code)
+    {
+        case TVN_BEGINLABELEDIT:
+            return FALSE;
+
+        case TVN_ENDLABELEDIT:
+            {
+                TV_DISPINFO *pNM = (TV_DISPINFO *)lParam;
+                LPWSTR pszText = pNM->item.pszText;
+                CSnapin *Snapin = (CSnapin *)pNM->item.lParam;
+                Snapin->SetDisplayName(pszText);
+                TreeView_SetItem(pNM->hdr.hwndFrom, &pNM->item);
+                m_DescriptionBar.SetWindowText(Snapin->DisplayName());
+            }
+            return FALSE;
+
+        case TVN_SELCHANGED:
+            {
+                LPNMTREEVIEW pNmTreeview = (LPNMTREEVIEW)lParam;
+                CSnapin *Snapin = (CSnapin *)pNmTreeview->itemNew.lParam;
+
+                m_DescriptionBar.SetWindowText(Snapin->DisplayName());
+            }
+            return FALSE;
     }
 
-    STDMETHODIMP_(ULONG) CConsoleWnd::AddRef()
+    return 0;
+}
+
+LRESULT
+CConsoleWnd::OnActionNewWindow(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
+{
+    HTREEITEM hTreeItem = m_TreeView.GetSelection();
+    if (!hTreeItem)
+        return 0;
+
+    CSnapin *Snapin = (CSnapin *)m_TreeView.GetItemData(hTreeItem);
+    if (!Snapin)
+        return 0;
+
+    MDICREATESTRUCT mcs;
+    HWND hChild;
+    CAtlString title;
+
+    mcs.szTitle = Snapin->DisplayName();
+    mcs.szClass = CConsoleWnd::GetWndClassName();
+    mcs.hOwner = _AtlBaseModule.GetModuleInstance();
+    mcs.x = mcs.cx = CW_USEDEFAULT;
+    mcs.y = mcs.cy = CW_USEDEFAULT;
+    mcs.style = MDIS_ALLCHILDSTYLES;
+
+    CConsoleWnd* child = new CConsoleWnd(m_MainWnd, Snapin);
+    BOOL bMaximized = FALSE;
+    HWND hWndOld = (HWND)m_MainWnd->m_MDIClient.SendMessage(WM_MDIGETACTIVE, 0, (LPARAM)&bMaximized);
+    mcs.lParam = bMaximized || !hWndOld;
+    hChild = (HWND)m_MainWnd->m_MDIClient.SendMessage(WM_MDICREATE, 0, (LONG_PTR)&mcs);
+    if (!hChild)
     {
-        DPRINT("%s()\n", __FUNCTION__);
-        return 2;
+        delete child;
     }
 
-    STDMETHODIMP_(ULONG) CConsoleWnd::Release()
+    return 0;
+}
+
+LRESULT
+CConsoleWnd::OnActionRename(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
+{
+    m_TreeView.EditLabel(m_TreeView.GetSelection());
+    return 0;
+}
+
+LRESULT
+CConsoleWnd::OnViewCustomize(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
+{
+    return m_MainWnd->OnViewCustomize(wNotifyCode, wID, hWndCtl, bHandled);
+}
+
+VOID
+CConsoleWnd::AddTreeViewItemRecursive(HTREEITEM hParentTreeItem, CSnapin *Node)
+{
+    HTREEITEM hTreeItem;
+
+    hTreeItem = m_TreeView.AddItem(hParentTreeItem,
+                                    (LPWSTR)Node->DisplayName().GetString(),
+                                    Node->CacheEntry()->NormalImageIndex(),
+                                    Node->CacheEntry()->OpenImageIndex(),
+                                    (LPARAM)Node);
+    if (hTreeItem)
     {
-        DPRINT("%s()\n", __FUNCTION__);
-        return 1;
+        POSITION pos = Node->m_SubNodes.GetHeadPosition();
+        while (pos)
+        {
+            CSnapin *ChildNode = (CSnapin*)Node->m_SubNodes.GetNext(pos);
+            if (ChildNode)
+                AddTreeViewItemRecursive(hTreeItem, ChildNode);
+        }
+
+        m_TreeView.Expand(hTreeItem, TVE_EXPAND);
+
+        if (Node == m_ViewSelectedNode)
+            m_TreeView.SelectItem(hTreeItem);
+    }
+}
+
+VOID
+CConsoleWnd::UpdateTreeView()
+{
+    m_TreeView.DeleteItem(TVI_ROOT);
+    AddTreeViewItemRecursive(TVI_ROOT, m_ViewRootNode);
+}
+
+BOOL
+CConsoleWnd::IsTreeViewVisible()
+{
+    return m_bTreeViewVisible;
+}
+
+VOID
+CConsoleWnd::SetTreeViewVisible(BOOL bVisible)
+{
+    m_bTreeViewVisible = bVisible;
+    UpdateLayout();
+}
+
+BOOL
+CConsoleWnd::IsStatusBarVisible()
+{
+    return m_bStatusBarVisible;
+}
+
+VOID
+CConsoleWnd::SetStatusBarVisible(BOOL bVisible)
+{
+    m_bStatusBarVisible = bVisible;
+    UpdateLayout();
+}
+
+BOOL
+CConsoleWnd::IsDescriptionBarVisible()
+{
+    return m_bDescriptionBarVisible;
+}
+
+VOID
+CConsoleWnd::SetDescriptionBarVisible(BOOL bVisible)
+{
+    m_bDescriptionBarVisible = bVisible;
+    UpdateLayout();
+}
+
+BOOL
+CConsoleWnd::IsActionsPaneVisible()
+{
+    return m_bActionsPaneVisible;
+}
+
+VOID
+CConsoleWnd::SetActionsPaneVisible(BOOL bVisible)
+{
+    m_bActionsPaneVisible = bVisible;
+    UpdateLayout();
+}
+
+VOID
+CConsoleWnd::UpdateLayout()
+{
+    RECT Rect;
+    int iTreeViewWidth, iTreeViewHeight;
+    int iListViewPosX, iListViewPosY = 0;
+    int iListViewWidth, iListViewHeight;
+
+    GetClientRect(&Rect);
+    int iClientHeight = Rect.bottom - Rect.top;
+    int iClientWidth = Rect.right - Rect.left;
+
+    int iStatusHeight = 0;
+
+    int iDescriptionBarHeight = 0;
+
+    if (m_bTreeViewVisible)
+    {
+        iTreeViewWidth = m_iTreeViewWidth;
+        iListViewPosX = m_iTreeViewWidth + m_iSplitterWidth;
+        iListViewWidth = iClientWidth - m_iTreeViewWidth - m_iSplitterWidth;
+    }
+    else
+    {
+        iTreeViewWidth = 0;
+        iListViewPosX = 0;
+        iListViewWidth = iClientWidth;
     }
 
+    iTreeViewHeight = iClientHeight;
+    iListViewHeight = iClientHeight;
 
-    STDMETHODIMP CConsoleWnd::SetHeader(LPHEADERCTRL pHeader)
+    if (m_bStatusBarVisible)
     {
-        DPRINT("%s()\n", __FUNCTION__);
-        __debugbreak();
-        return E_NOTIMPL;
+        iStatusHeight = m_iStatusBarHeight;
+        iTreeViewHeight -= iStatusHeight;
+        iListViewHeight -= iStatusHeight;
     }
 
-    STDMETHODIMP CConsoleWnd::SetToolbar(LPTOOLBAR pToolbar)
+    if (m_bDescriptionBarVisible)
     {
-        DPRINT("%s()\n", __FUNCTION__);
-        __debugbreak();
-        return E_NOTIMPL;
+        iDescriptionBarHeight = 24;
+        iListViewPosY += iDescriptionBarHeight;
+        iListViewHeight -= iDescriptionBarHeight;
     }
 
-    STDMETHODIMP CConsoleWnd::QueryResultView(LPUNKNOWN *pUnknown)
+    if (m_bActionsPaneVisible)
     {
-        DPRINT("%s()\n", __FUNCTION__);
-        __debugbreak();
-        return E_NOTIMPL;
+        iListViewWidth -= (m_iActionsPaneWidth + m_iSplitterWidth);
     }
 
-    STDMETHODIMP CConsoleWnd::QueryScopeImageList(LPIMAGELIST *ppImageList)
-    {
-        DPRINT("%s(%p)\n", __FUNCTION__);
-        if (!ppImageList)
-            return E_INVALIDARG;
+    /* Move the status bar */
+    m_StatusBar.MoveWindow(0, iClientHeight - iStatusHeight, iClientWidth, iStatusHeight);
 
-        __debugbreak();
-        //*ppImageList = m_ScopeImageList;
+    /* Move the tree view */
+    m_TreeView.MoveWindow(0, 0, iTreeViewWidth, iTreeViewHeight);
+
+    /* Move the list view */
+    m_ListView.MoveWindow(iListViewPosX, iListViewPosY, iListViewWidth, iListViewHeight);
+
+    m_DescriptionBar.MoveWindow(iListViewPosX, 0, iListViewWidth, iDescriptionBarHeight);
+}
+
+VOID
+CConsoleWnd::UpdateView()
+{
+    UpdateTreeView();
+}
+
+VOID
+CConsoleWnd::SetStatusBarText(LPWSTR pszStatusText)
+{
+     m_StatusBar.SetText(pszStatusText);
+}
+
+VOID
+CConsoleWnd::SaveView(MscFile *mscFile, IXMLDOMElement *pParentElement)
+{
+    IXMLDOMElement *pViewElement = NULL;
+    IXMLDOMElement *pViewOptionsElement = NULL;
+    WCHAR szBuffer[32];
+    HRESULT hr = S_OK;
+
+    /* <View ID="1" ScopePaneWidth="292" ActionsPaneWidth="-1"> */
+    CHK_HR(mscFile->CreateAndAddElementNode(L"View", pParentElement, &pViewElement));
+    _swprintf(szBuffer, L"%d", m_ViewId);
+    CHK_HR(mscFile->CreateAndAddAttributeNode(L"ID", szBuffer, pViewElement));
+    _swprintf(szBuffer, L"%d", m_iTreeViewWidth);
+    CHK_HR(mscFile->CreateAndAddAttributeNode(L"ScopePaneWidth", szBuffer, pViewElement));
+    _swprintf(szBuffer, L"%d", m_iActionsPaneWidth);
+    CHK_HR(mscFile->CreateAndAddAttributeNode(L"ActionsPaneWidth", szBuffer, pViewElement));
+
+    mscFile->SaveWindowPlacement(this, pViewElement);
+
+    /* <ViewOptions ViewMode="Report" ScopePaneVisible="true" ActionsPaneVisible="true" DescriptionBarVisible="false" DefaultColumn0Width="200" DefaultColumn1Width="0"/> */
+    CHK_HR(mscFile->CreateAndAddElementNode(L"ViewOptions", pViewElement, &pViewOptionsElement));
+    CHK_HR(mscFile->CreateAndAddAttributeNode(L"ViewMode", L"Report", pViewOptionsElement)); /* FIXME */
+    CHK_HR(mscFile->CreateAndAddAttributeNode(L"ScopePaneVisible", IsTreeViewVisible() ? L"true" : L"false", pViewOptionsElement));
+    if (!IsStatusBarVisible())
+        CHK_HR(mscFile->CreateAndAddAttributeNode(L"NoStatusBar", L"true", pViewOptionsElement));
+    CHK_HR(mscFile->CreateAndAddAttributeNode(L"ActionsPaneVisible", IsActionsPaneVisible() ? L"true" : L"false", pViewOptionsElement));
+    CHK_HR(mscFile->CreateAndAddAttributeNode(L"DescriptionBarVisible", IsDescriptionBarVisible() ? L"true" : L"false", pViewOptionsElement));
+    CHK_HR(mscFile->CreateAndAddAttributeNode(L"DefaultColumn0Width", L"200", pViewOptionsElement)); /* FIXME */
+    CHK_HR(mscFile->CreateAndAddAttributeNode(L"DefaultColumn1Width", L"0", pViewOptionsElement)); /* FIXME */
+    SAFE_RELEASE(pViewOptionsElement); /* </ViewOptions> */
+
+CleanUp:
+    SAFE_RELEASE(pViewElement); /* </View> */
+}
+
+
+// +IConsole
+STDMETHODIMP
+CConsoleWnd::QueryInterface(REFIID riid, void **ppvObject)
+{
+    if (riid == IID_IUnknown || riid == IID_IConsole)
+    {
+        *ppvObject = static_cast<IConsole*>(this);
+        AddRef();
         return S_OK;
     }
-
-    STDMETHODIMP CConsoleWnd::QueryResultImageList(LPIMAGELIST *ppImageList)
+    else if (riid == IID_IConsole2)
     {
-        DPRINT("%s()\n", __FUNCTION__);
-        __debugbreak();
-        return E_NOTIMPL;
+        *ppvObject = static_cast<IConsole2*>(this);
+        AddRef();
+        return S_OK;
     }
-
-    STDMETHODIMP CConsoleWnd::UpdateAllViews(LPDATAOBJECT lpDataObject, LPARAM data, LONG_PTR hint)
+    else if (riid == IID_IConsoleNameSpace)
     {
-        DPRINT("%s()\n", __FUNCTION__);
-        __debugbreak();
-        return E_NOTIMPL;
+        *ppvObject = static_cast<IConsoleNameSpace*>(this);
+        AddRef();
+        return S_OK;
     }
-
-    STDMETHODIMP CConsoleWnd::MessageBox(LPCWSTR lpszText, LPCWSTR lpszTitle, UINT fuStyle, int *piRetval)
+    else if (riid == IID_IConsoleNameSpace2)
     {
-        DPRINT("%s()\n", __FUNCTION__);
-        __debugbreak();
-        return E_NOTIMPL;
+        *ppvObject = static_cast<IConsoleNameSpace2*>(this);
+        AddRef();
+        return S_OK;
     }
-
-    STDMETHODIMP CConsoleWnd::QueryConsoleVerb(LPCONSOLEVERB *ppConsoleVerb)
+    else
     {
-        DPRINT("%s()\n", __FUNCTION__);
-        __debugbreak();
-        return E_NOTIMPL;
-    }
-
-    STDMETHODIMP CConsoleWnd::SelectScopeItem(HSCOPEITEM hScopeItem)
-    {
-        DPRINT("%s()\n", __FUNCTION__);
-        __debugbreak();
-        return E_NOTIMPL;
-    }
-
-    STDMETHODIMP CConsoleWnd::GetMainWindow(HWND *phwnd)
-    {
-        DPRINT("%s()\n", __FUNCTION__);
-        __debugbreak();
-        return E_NOTIMPL;
-    }
-
-    STDMETHODIMP CConsoleWnd::NewWindow(HSCOPEITEM hScopeItem, ULONG lOptions)
-    {
-        DPRINT("%s()\n", __FUNCTION__);
-        __debugbreak();
-        return E_NOTIMPL;
-    }
-    // -IConsole
-
-    // +IConsole2
-    STDMETHODIMP CConsoleWnd::Expand(HSCOPEITEM hItem, BOOL bExpand)
-    {
-        DPRINT("%s()\n", __FUNCTION__);
-        __debugbreak();
-        return E_NOTIMPL;
-    }
-
-    STDMETHODIMP CConsoleWnd::IsTaskpadViewPreferred()
-    {
-        DPRINT("%s()\n", __FUNCTION__);
-        __debugbreak();
-        return E_NOTIMPL;
+        CComHeapPtr<OLECHAR> guidstr;
+        HRESULT hr = StringFromCLSID(riid, &guidstr);
+        if (SUCCEEDED(hr))
+            DPRINT1("Unhandled riid: %S\n", (PCWSTR)guidstr);
+        else
+            DPRINT1("Unhandled riid\n");
     }
 
 
-    STDMETHODIMP CConsoleWnd::SetStatusText(LPOLESTR pszStatusText)
-    {
-        DPRINT("%s()\n", __FUNCTION__);
-        __debugbreak();
-        return E_NOTIMPL;
-    }
-    // -IConsole2
+    *ppvObject = NULL;
+    return E_NOINTERFACE;
+}
 
-    // +IConsoleNameSpace
-    STDMETHODIMP CConsoleWnd::InsertItem(LPSCOPEDATAITEM item)
-    {
-        DPRINT("%s()\n", __FUNCTION__);
-        __debugbreak();
-        return E_NOTIMPL;
-    }
+STDMETHODIMP_(ULONG)
+CConsoleWnd::AddRef()
+{
+    DPRINT("%s()\n", __FUNCTION__);
+    return 2;
+}
 
-    STDMETHODIMP CConsoleWnd::DeleteItem(HSCOPEITEM hItem, LONG fDeleteThis)
-    {
-        DPRINT("%s()\n", __FUNCTION__);
-        __debugbreak();
-        return E_NOTIMPL;
-    }
-
-    STDMETHODIMP CConsoleWnd::SetItem(LPSCOPEDATAITEM item)
-    {
-        DPRINT("%s()\n", __FUNCTION__);
-        __debugbreak();
-        return E_NOTIMPL;
-    }
-
-    STDMETHODIMP CConsoleWnd::GetItem(LPSCOPEDATAITEM item)
-    {
-        DPRINT("%s()\n", __FUNCTION__);
-        __debugbreak();
-        return E_NOTIMPL;
-    }
-
-    STDMETHODIMP CConsoleWnd::GetChildItem(HSCOPEITEM item, HSCOPEITEM *pItemChild, LONG *plCookie)
-    {
-        DPRINT("%s()\n", __FUNCTION__);
-        __debugbreak();
-        return E_NOTIMPL;
-    }
-
-    STDMETHODIMP CConsoleWnd::GetNextItem(HSCOPEITEM item, HSCOPEITEM *pItemNext, LONG *plCookie)
-    {
-        DPRINT("%s()\n", __FUNCTION__);
-        __debugbreak();
-        return E_NOTIMPL;
-    }
-
-    STDMETHODIMP CConsoleWnd::GetParentItem(HSCOPEITEM item, HSCOPEITEM *pItemParent, LONG *plCookie)
-    {
-        DPRINT("%s()\n", __FUNCTION__);
-        __debugbreak();
-        return E_NOTIMPL;
-    }
-    // -IConsoleNameSpace
+STDMETHODIMP_(ULONG)
+CConsoleWnd::Release()
+{
+    DPRINT("%s()\n", __FUNCTION__);
+    return 1;
+}
 
 
+STDMETHODIMP
+CConsoleWnd::SetHeader(LPHEADERCTRL pHeader)
+{
+    DPRINT("%s()\n", __FUNCTION__);
+    __debugbreak();
+    return E_NOTIMPL;
+}
 
-    // +IConsoleNameSpace2
-    STDMETHODIMP CConsoleWnd::Expand(HSCOPEITEM hItem)
-    {
-        DPRINT("%s()\n", __FUNCTION__);
-        __debugbreak();
-        return E_NOTIMPL;
-    }
+STDMETHODIMP
+CConsoleWnd::SetToolbar(LPTOOLBAR pToolbar)
+{
+    DPRINT("%s()\n", __FUNCTION__);
+    __debugbreak();
+    return E_NOTIMPL;
+}
 
-    STDMETHODIMP CConsoleWnd::AddExtension(HSCOPEITEM hItem, LPCLSID lpClsid)
-    {
-        DPRINT("%s()\n", __FUNCTION__);
-        __debugbreak();
-        return E_NOTIMPL;
-    }
-    // -IConsoleNameSpace2
+STDMETHODIMP
+CConsoleWnd::QueryResultView(LPUNKNOWN *pUnknown)
+{
+    DPRINT("%s()\n", __FUNCTION__);
+    __debugbreak();
+    return E_NOTIMPL;
+}
+
+STDMETHODIMP
+CConsoleWnd::QueryScopeImageList(LPIMAGELIST *ppImageList)
+{
+    DPRINT("%s(%p)\n", __FUNCTION__);
+    if (!ppImageList)
+        return E_INVALIDARG;
+
+    __debugbreak();
+    //*ppImageList = m_ScopeImageList;
+    return S_OK;
+}
+
+STDMETHODIMP
+CConsoleWnd::QueryResultImageList(LPIMAGELIST *ppImageList)
+{
+    DPRINT("%s()\n", __FUNCTION__);
+    __debugbreak();
+    return E_NOTIMPL;
+}
+
+STDMETHODIMP
+CConsoleWnd::UpdateAllViews(LPDATAOBJECT lpDataObject, LPARAM data, LONG_PTR hint)
+{
+    DPRINT("%s()\n", __FUNCTION__);
+    __debugbreak();
+    return E_NOTIMPL;
+}
+
+STDMETHODIMP
+CConsoleWnd::MessageBox(LPCWSTR lpszText, LPCWSTR lpszTitle, UINT fuStyle, int *piRetval)
+{
+    DPRINT("%s()\n", __FUNCTION__);
+    __debugbreak();
+    return E_NOTIMPL;
+}
+
+STDMETHODIMP
+CConsoleWnd::QueryConsoleVerb(LPCONSOLEVERB *ppConsoleVerb)
+{
+    DPRINT("%s()\n", __FUNCTION__);
+    __debugbreak();
+    return E_NOTIMPL;
+}
+
+STDMETHODIMP
+CConsoleWnd::SelectScopeItem(HSCOPEITEM hScopeItem)
+{
+    DPRINT("%s()\n", __FUNCTION__);
+    __debugbreak();
+    return E_NOTIMPL;
+}
+
+STDMETHODIMP
+CConsoleWnd::GetMainWindow(HWND *phwnd)
+{
+    DPRINT("%s()\n", __FUNCTION__);
+    __debugbreak();
+    return E_NOTIMPL;
+}
+
+STDMETHODIMP
+CConsoleWnd::NewWindow(HSCOPEITEM hScopeItem, ULONG lOptions)
+{
+    DPRINT("%s()\n", __FUNCTION__);
+    __debugbreak();
+    return E_NOTIMPL;
+}
+// -IConsole
+
+// +IConsole2
+STDMETHODIMP
+CConsoleWnd::Expand(HSCOPEITEM hItem, BOOL bExpand)
+{
+    DPRINT("%s()\n", __FUNCTION__);
+    __debugbreak();
+    return E_NOTIMPL;
+}
+
+STDMETHODIMP
+CConsoleWnd::IsTaskpadViewPreferred()
+{
+    DPRINT("%s()\n", __FUNCTION__);
+    __debugbreak();
+    return E_NOTIMPL;
+}
+
+
+STDMETHODIMP
+CConsoleWnd::SetStatusText(LPOLESTR pszStatusText)
+{
+    DPRINT("%s()\n", __FUNCTION__);
+    __debugbreak();
+    return E_NOTIMPL;
+}
+// -IConsole2
+
+// +IConsoleNameSpace
+STDMETHODIMP
+CConsoleWnd::InsertItem(LPSCOPEDATAITEM item)
+{
+    DPRINT("%s()\n", __FUNCTION__);
+    __debugbreak();
+    return E_NOTIMPL;
+}
+
+STDMETHODIMP
+CConsoleWnd::DeleteItem(HSCOPEITEM hItem, LONG fDeleteThis)
+{
+    DPRINT("%s()\n", __FUNCTION__);
+    __debugbreak();
+    return E_NOTIMPL;
+}
+
+STDMETHODIMP
+CConsoleWnd::SetItem(LPSCOPEDATAITEM item)
+{
+    DPRINT("%s()\n", __FUNCTION__);
+    __debugbreak();
+    return E_NOTIMPL;
+}
+
+STDMETHODIMP
+CConsoleWnd::GetItem(LPSCOPEDATAITEM item)
+{
+    DPRINT("%s()\n", __FUNCTION__);
+    __debugbreak();
+    return E_NOTIMPL;
+}
+
+STDMETHODIMP
+CConsoleWnd::GetChildItem(HSCOPEITEM item, HSCOPEITEM *pItemChild, LONG *plCookie)
+{
+    DPRINT("%s()\n", __FUNCTION__);
+    __debugbreak();
+    return E_NOTIMPL;
+}
+
+STDMETHODIMP
+CConsoleWnd::GetNextItem(HSCOPEITEM item, HSCOPEITEM *pItemNext, LONG *plCookie)
+{
+    DPRINT("%s()\n", __FUNCTION__);
+    __debugbreak();
+    return E_NOTIMPL;
+}
+
+STDMETHODIMP
+CConsoleWnd::GetParentItem(HSCOPEITEM item, HSCOPEITEM *pItemParent, LONG *plCookie)
+{
+    DPRINT("%s()\n", __FUNCTION__);
+    __debugbreak();
+    return E_NOTIMPL;
+}
+// -IConsoleNameSpace
+
+
+
+// +IConsoleNameSpace2
+STDMETHODIMP
+CConsoleWnd::Expand(HSCOPEITEM hItem)
+{
+    DPRINT("%s()\n", __FUNCTION__);
+    __debugbreak();
+    return E_NOTIMPL;
+}
+
+STDMETHODIMP
+CConsoleWnd::AddExtension(HSCOPEITEM hItem, LPCLSID lpClsid)
+{
+    DPRINT("%s()\n", __FUNCTION__);
+    __debugbreak();
+    return E_NOTIMPL;
+}
+// -IConsoleNameSpace2

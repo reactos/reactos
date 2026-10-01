@@ -28,32 +28,32 @@
 #include "dplayx_messages.h"
 #include "dplay_global.h"
 
-void NS_SetLocalComputerAsNameServer( LPCDPSESSIONDESC2 lpsd, LPVOID lpNSInfo ) DECLSPEC_HIDDEN;
+void NS_SetLocalComputerAsNameServer( LPCDPSESSIONDESC2 lpsd, LPVOID lpNSInfo );
 void NS_AddRemoteComputerAsNameServer( LPCVOID lpNSAddrHdr,
                                        DWORD dwHdrSize,
                                        LPCDPMSG_ENUMSESSIONSREPLY lpcMsg,
-                                       LPVOID lpNSInfo ) DECLSPEC_HIDDEN;
-LPVOID NS_GetNSAddr( LPVOID lpNSInfo ) DECLSPEC_HIDDEN;
-DWORD NS_GetNsMagic( LPVOID lpNSInfo ) DECLSPEC_HIDDEN;
-void NS_SetLocalAddr( LPVOID lpNSInfo, LPCVOID lpHdr, DWORD dwHdrSize ) DECLSPEC_HIDDEN;
+                                       DWORD msgSize,
+                                       LPVOID lpNSInfo );
+void NS_SetLocalAddr( LPVOID lpNSInfo, LPCVOID lpHdr, DWORD dwHdrSize );
 
 void NS_ReplyToEnumSessionsRequest( LPCVOID lpcMsg,
                                     LPVOID* lplpReplyData,
                                     LPDWORD lpdwReplySize,
-                                    IDirectPlayImpl *lpDP ) DECLSPEC_HIDDEN;
+                                    IDirectPlayImpl *lpDP );
 
 HRESULT NS_SendSessionRequestBroadcast( LPCGUID lpcGuid,
                                         DWORD dwFlags,
-                                        const SPINITDATA *lpSpData ) DECLSPEC_HIDDEN;
+                                        WCHAR *password,
+                                        const SPINITDATA *lpSpData );
 
 
-BOOL NS_InitializeSessionCache( LPVOID* lplpNSInfo ) DECLSPEC_HIDDEN;
-void NS_DeleteSessionCache( LPVOID lpNSInfo ) DECLSPEC_HIDDEN;
-void NS_InvalidateSessionCache( LPVOID lpNSInfo ) DECLSPEC_HIDDEN;
+BOOL NS_InitializeSessionCache( LPVOID* lplpNSInfo );
+void NS_DeleteSessionCache( LPVOID lpNSInfo );
+void NS_InvalidateSessionCache( LPVOID lpNSInfo );
 
 
-void NS_ResetSessionEnumeration( LPVOID lpNSInfo ) DECLSPEC_HIDDEN;
-LPDPSESSIONDESC2 NS_WalkSessions( LPVOID lpNSInfo ) DECLSPEC_HIDDEN;
-void NS_PruneSessionCache( LPVOID lpNSInfo ) DECLSPEC_HIDDEN;
+void NS_ResetSessionEnumeration( LPVOID lpNSInfo );
+LPDPSESSIONDESC2 NS_WalkSessions( LPVOID lpNSInfo, void **spMessageHeader, BOOL ansi );
+void NS_PruneSessionCache( LPVOID lpNSInfo );
 
 #endif /* __WINE_DPLAYX_NAMESERVER */

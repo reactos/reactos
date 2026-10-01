@@ -1,6 +1,3 @@
-#ifdef __REACTOS__
-#include "precomp.h"
-#else
 /*
  * Copyright 2010 Christian Costa
  *
@@ -22,7 +19,6 @@
 
 
 #include "d3dx9_private.h"
-#endif /* __REACTOS__ */
 
 WINE_DEFAULT_DEBUG_CHANNEL(d3dx);
 
@@ -33,6 +29,7 @@ struct d3dx9_line
 
     IDirect3DDevice9 *device;
     IDirect3DStateBlock9 *state;
+    float width;
 };
 
 static inline struct d3dx9_line *impl_from_ID3DXLine(ID3DXLine *iface)
@@ -63,7 +60,7 @@ static ULONG WINAPI d3dx9_line_AddRef(ID3DXLine *iface)
     struct d3dx9_line *line = impl_from_ID3DXLine(iface);
     ULONG refcount = InterlockedIncrement(&line->ref);
 
-    TRACE("%p increasing refcount to %u.\n", line, refcount);
+    TRACE("%p increasing refcount to %lu.\n", line, refcount);
 
     return refcount;
 }
@@ -73,12 +70,12 @@ static ULONG WINAPI d3dx9_line_Release(ID3DXLine *iface)
     struct d3dx9_line *line = impl_from_ID3DXLine(iface);
     ULONG refcount = InterlockedDecrement(&line->ref);
 
-    TRACE("%p decreasing refcount to %u.\n", line, refcount);
+    TRACE("%p decreasing refcount to %lu.\n", line, refcount);
 
     if (!refcount)
     {
         IDirect3DDevice9_Release(line->device);
-        HeapFree(GetProcessHeap(), 0, line);
+        free(line);
     }
 
     return refcount;
@@ -151,7 +148,7 @@ failed:
 static HRESULT WINAPI d3dx9_line_Draw(ID3DXLine *iface, const D3DXVECTOR2 *vertex_list,
         DWORD vertex_list_count, D3DCOLOR color)
 {
-    FIXME("iface %p, vertex_list %p, vertex_list_count %u, color 0x%08x stub!\n",
+    FIXME("iface %p, vertex_list %p, vertex_list_count %lu, color 0x%08lx stub!\n",
             iface, vertex_list, vertex_list_count, color);
 
     return E_NOTIMPL;
@@ -160,7 +157,7 @@ static HRESULT WINAPI d3dx9_line_Draw(ID3DXLine *iface, const D3DXVECTOR2 *verte
 static HRESULT WINAPI d3dx9_line_DrawTransform(ID3DXLine *iface, const D3DXVECTOR3 *vertex_list,
         DWORD vertex_list_count, const D3DXMATRIX *transform, D3DCOLOR color)
 {
-    FIXME("iface %p, vertex_list %p, vertex_list_count %u, transform %p, color 0x%08x stub!\n",
+    FIXME("iface %p, vertex_list %p, vertex_list_count %lu, transform %p, color 0x%08lx stub!\n",
             iface, vertex_list, vertex_list_count, transform, color);
 
     return E_NOTIMPL;
@@ -168,7 +165,7 @@ static HRESULT WINAPI d3dx9_line_DrawTransform(ID3DXLine *iface, const D3DXVECTO
 
 static HRESULT WINAPI d3dx9_line_SetPattern(ID3DXLine *iface, DWORD pattern)
 {
-    FIXME("iface %p, pattern 0x%08x stub!\n", iface, pattern);
+    FIXME("iface %p, pattern 0x%08lx stub!\n", iface, pattern);
 
     return E_NOTIMPL;
 }
@@ -196,16 +193,25 @@ static float WINAPI d3dx9_line_GetPatternScale(ID3DXLine *iface)
 
 static HRESULT WINAPI d3dx9_line_SetWidth(ID3DXLine *iface, float width)
 {
-    FIXME("iface %p, width %.8e stub!\n", iface, width);
+    struct d3dx9_line *line = impl_from_ID3DXLine(iface);
 
-    return E_NOTIMPL;
+    TRACE("iface %p, width %.8e.\n", iface, width);
+
+    if (width <= 0.0f)
+        return D3DERR_INVALIDCALL;
+
+    line->width = width;
+
+    return D3D_OK;
 }
 
 static float WINAPI d3dx9_line_GetWidth(ID3DXLine *iface)
 {
-    FIXME("iface %p stub!\n", iface);
+    struct d3dx9_line *line = impl_from_ID3DXLine(iface);
 
-    return 1.0f;
+    TRACE("iface %p.\n", iface);
+
+    return line->width;
 }
 
 static HRESULT WINAPI d3dx9_line_SetAntialias(ID3DXLine *iface, BOOL antialias)
@@ -303,13 +309,14 @@ HRESULT WINAPI D3DXCreateLine(struct IDirect3DDevice9 *device, struct ID3DXLine 
     if (!device || !line)
         return D3DERR_INVALIDCALL;
 
-    if (!(object = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*object))))
+    if (!(object = calloc(1, sizeof(*object))))
         return E_OUTOFMEMORY;
 
     object->ID3DXLine_iface.lpVtbl = &d3dx9_line_vtbl;
     object->ref = 1;
     object->device = device;
     IDirect3DDevice9_AddRef(device);
+    object->width = 1.0f;
 
     *line = &object->ID3DXLine_iface;
 

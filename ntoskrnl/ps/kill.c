@@ -132,7 +132,7 @@ PsTerminateProcess(IN PEPROCESS Process,
 
 VOID
 NTAPI
-PspShutdownProcessManager(VOID)
+PsShutdownSystem(VOID)
 {
     PEPROCESS Process = NULL;
 

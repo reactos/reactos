@@ -601,24 +601,15 @@ CmpCompareNewValueDataAgainstKCBCache(
 //
 // Hive List Routines
 //
-BOOLEAN
-NTAPI
-CmpGetHiveName(
-    IN  PCMHIVE Hive,
-    OUT PUNICODE_STRING HiveName
-);
-
 NTSTATUS
 NTAPI
 CmpAddToHiveFileList(
-    IN PCMHIVE Hive
-);
+    _Inout_ PCMHIVE Hive);
 
 VOID
 NTAPI
 CmpRemoveFromHiveFileList(
-    IN PCMHIVE Hive
-);
+    _Inout_ PCMHIVE Hive);
 
 //
 // Quota Routines
@@ -1070,7 +1061,7 @@ CmpGetNextName(
 );
 
 //
-// Command Routines (Flush, Open, Close, Init);
+// Command Routines (Flush, Open, Close, Init)
 //
 BOOLEAN
 NTAPI

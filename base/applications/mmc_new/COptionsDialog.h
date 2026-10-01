@@ -34,93 +34,13 @@ private:
     CMainWnd *m_MainWnd;
     CComPtr<CConsoleWnd> m_Console;
 
-    CONSOLE_MODE m_consoleMode;
+    DOCUMENT_MODE m_DocumentMode;
+    BOOL m_LogicalReadOnly;
+    BOOL m_PreventViewCustomization;
 
 public:
-
-    COptionsDialog(CMainWnd *MainWnd, CConsoleWnd* console)
-    {
-        m_MainWnd = MainWnd;
-        m_Console = console;
-        m_consoleMode = m_MainWnd->GetConsoleMode();
-    }
-
-    ~COptionsDialog()
-    {
-    }
-
-    LRESULT OnInitDialog(UINT nMessage, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
-    {
-        CenterWindow(m_Console->m_hWnd);
-
-//        m_ConsoleIcon.Attach(GetDlgItem(IDC_CONSOLEICON));
-        m_ConsoleName.Attach(GetDlgItem(IDC_CONSOLENAME));
-        m_ConsoleSymbol.Attach(GetDlgItem(IDC_CONSOLESYMBOL));
-        m_ConsoleMode.Attach(GetDlgItem(IDC_CONSOLEMODE));
-        m_ConsoleDescription.Attach(GetDlgItem(IDC_CONSOLEDESCRIPTION));
-        m_ConsoleNoSave.Attach(GetDlgItem(IDC_CONSOLENOSAVE));
-        m_ConsoleCustom.Attach(GetDlgItem(IDC_CONSOLECUSTOM));
-
-//        m_ConsoleIcon.SetIcon();
-
-        m_ConsoleName.SetWindowText(m_MainWnd->GetConsoleTitle()->GetString());
-
-        m_ConsoleSymbol.EnableWindow(FALSE);
-
-        CAtlString AuthorMode(MAKEINTRESOURCE(IDS_AUTHORMODE));
-        m_ConsoleMode.SendMessage(CB_ADDSTRING, 0, (LPARAM)AuthorMode.GetString());
-
-        CAtlString UserModeFull(MAKEINTRESOURCE(IDS_USERMODE_FULL));
-        m_ConsoleMode.SendMessage(CB_ADDSTRING, 0, (LPARAM)UserModeFull.GetString());
-
-        CAtlString UserModeMultiple(MAKEINTRESOURCE(IDS_USERMODE_MULTIPLE));
-        m_ConsoleMode.SendMessage(CB_ADDSTRING, 0, (LPARAM)UserModeMultiple.GetString());
-
-        CAtlString UserModeSingle(MAKEINTRESOURCE(IDS_USERMODE_SINGLE));
-        m_ConsoleMode.SendMessage(CB_ADDSTRING, 0, (LPARAM)UserModeSingle.GetString());
-
-        m_ConsoleMode.SendMessage(CB_SETCURSEL, m_consoleMode, 0);
-
-        CAtlString ModeDescription(MAKEINTRESOURCE(IDS_AUTHORMODE_DESC + m_consoleMode));
-        m_ConsoleDescription.SetWindowText(ModeDescription.GetString());
-
-        m_ConsoleNoSave.EnableWindow(m_consoleMode != 0);
-        m_ConsoleCustom.EnableWindow(m_consoleMode != 0);
-
-        return 0;
-    }
-
-    LRESULT OnCommand(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
-    {
-        switch (wID)
-        {
-            case IDC_CONSOLEMODE:
-                {
-                    m_consoleMode = (CONSOLE_MODE)m_ConsoleMode.SendMessage(CB_GETCURSEL, 0, 0);
-
-                    CAtlString ModeDescription(MAKEINTRESOURCE(IDS_AUTHORMODE_DESC + m_consoleMode));
-                    m_ConsoleDescription.SetWindowText(ModeDescription.GetString());
-                    m_ConsoleNoSave.EnableWindow(m_consoleMode != 0);
-                    m_ConsoleCustom.EnableWindow(m_consoleMode != 0);
-                }
-                return 0;
-
-            case IDOK:
-                {
-                    CAtlString consoleTitle;
-                    m_ConsoleName.GetWindowText(consoleTitle);
-                    m_MainWnd->SetConsoleTitle(consoleTitle);
-
-                    m_MainWnd->SetConsoleMode(m_consoleMode);
-                    EndDialog(IDOK);
-                }
-                return 0;
-
-            case IDCANCEL:
-                EndDialog(IDCANCEL);
-                return 0;
-        }
-
-        return 0;
-    }
+    COptionsDialog(CMainWnd *MainWnd, CConsoleWnd* console);
+    ~COptionsDialog();
+    LRESULT OnInitDialog(UINT nMessage, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+    LRESULT OnCommand(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
 };

@@ -23,7 +23,12 @@
 
 #include "windef.h"
 #include "winbase.h"
-#include "wingdi.h"
+#ifdef __REACTOS__
+#include <wingdi.h>
+#include "wine-compat.h"
+#else
+#include "ntgdi.h"
+#endif
 #include "winuser.h"
 #include "winnls.h"
 #include "usp10.h"
@@ -32,7 +37,6 @@
 #include "usp10_internal.h"
 
 #include "wine/debug.h"
-#include "wine/heap.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(uniscribe);
 
@@ -632,11 +636,11 @@ static VOID *load_CMAP_format12_table(HDC hdc, ScriptCache *psc)
 
     if (!psc->CMAP_Table)
     {
-        length = GetFontData(hdc, CMAP_TAG , 0, NULL, 0);
+        length = NtGdiGetFontData(hdc, CMAP_TAG , 0, NULL, 0);
         if (length != GDI_ERROR)
         {
-            psc->CMAP_Table = heap_alloc(length);
-            GetFontData(hdc, CMAP_TAG , 0, psc->CMAP_Table, length);
+            psc->CMAP_Table = malloc(length);
+            NtGdiGetFontData(hdc, CMAP_TAG , 0, psc->CMAP_Table, length);
             TRACE("Loaded cmap table of %i bytes\n",length);
         }
         else
@@ -676,7 +680,7 @@ DWORD OpenType_CMAP_GetGlyphIndex(HDC hdc, ScriptCache *psc, DWORD utf32c, WORD 
     if (utf32c < 0x10000)
     {
         WCHAR ch = utf32c;
-        return GetGlyphIndicesW(hdc, &ch, 1, glyph_index, flags);
+        return NtGdiGetGlyphIndicesW(hdc, &ch, 1, glyph_index, flags);
     }
 
     if (!psc->CMAP_format12_Table)
@@ -1638,7 +1642,7 @@ static void GPOS_convert_design_units_to_device(const OUTLINETEXTMETRICW *otm, c
 {
     int emHeight = otm->otmTextMetrics.tmAscent + otm->otmTextMetrics.tmDescent - otm->otmTextMetrics.tmInternalLeading;
 
-    TRACE("emHeight %i lfWidth %i\n",emHeight, logfont->lfWidth);
+    TRACE("emHeight %i lfWidth %li\n",emHeight, logfont->lfWidth);
     *devX = (desX * emHeight) / (double)otm->otmEMSquare;
     *devY = (desY * emHeight) / (double)otm->otmEMSquare;
     if (logfont->lfWidth)
@@ -2092,8 +2096,14 @@ static BOOL GPOS_apply_MarkToMark(const OT_LookupTable *look, const SCRIPT_ANALY
             if (mark_index != -1)
             {
                 int mark2_index;
+                unsigned int prev_glyph_index = glyph_index - write_dir;
+                if (prev_glyph_index >= glyph_count)
+                {
+                    TRACE("Mark looking outside range\n");
+                    return FALSE;
+                }
                 offset = GET_BE_WORD(mmpf1->Mark2Coverage);
-                mark2_index = GSUB_is_glyph_covered((const BYTE*)mmpf1+offset, glyphs[glyph_index - write_dir]);
+                mark2_index = GSUB_is_glyph_covered((const BYTE*)mmpf1+offset, glyphs[prev_glyph_index]);
                 if (mark2_index != -1)
                 {
                     const GPOS_MarkArray *ma;
@@ -2105,7 +2115,7 @@ static BOOL GPOS_apply_MarkToMark(const OT_LookupTable *look, const SCRIPT_ANALY
                     int mark2record_size;
                     POINT mark2_pt;
                     POINT mark_pt;
-                    TRACE("Mark %x(%i) and Mark2 %x(%i)\n",glyphs[glyph_index], mark_index, glyphs[glyph_index - write_dir], mark2_index);
+                    TRACE("Mark %x(%i) and Mark2 %x(%i)\n",glyphs[glyph_index], mark_index, glyphs[prev_glyph_index], mark2_index);
                     offset = GET_BE_WORD(mmpf1->Mark1Array);
                     ma = (const GPOS_MarkArray*)((const BYTE*)mmpf1 + offset);
                     if (mark_index > GET_BE_WORD(ma->MarkCount))
@@ -2207,8 +2217,12 @@ static unsigned int GPOS_apply_ContextPos(const ScriptCache *script_cache, const
 
                     for (l = 0; l < g_count-1; l++)
                     {
-                        int g_class = OT_get_glyph_class(glyph_class_table, glyphs[glyph_index + (write_dir * (l+1))]);
-                        if (g_class != GET_BE_WORD(pr->Class[l])) break;
+                        g = glyph_index + (write_dir * (l+1));
+                        if (g < glyph_count)
+                        {
+                            int g_class = OT_get_glyph_class(glyph_class_table, glyphs[g]);
+                            if (g_class != GET_BE_WORD(pr->Class[l])) break;
+                        }
                     }
 
                     if (l < g_count-1)
@@ -2320,9 +2334,12 @@ static unsigned int GPOS_apply_ChainContextPos(const ScriptCache *script_cache, 
 
             for (k = 0; k < backtrack_count; ++k)
             {
+                unsigned int prev_glyph_index;
                 offset = GET_BE_WORD(backtrack->Coverage[k]);
-                if (GSUB_is_glyph_covered((const BYTE *)backtrack + offset,
-                        glyphs[glyph_index + (dirBacktrack * (k + 1))]) == -1)
+                prev_glyph_index = glyph_index + (dirBacktrack * (k + 1));
+                if (prev_glyph_index >= glyph_count)
+                    continue;
+                if (GSUB_is_glyph_covered((const BYTE *)backtrack + offset, glyphs[prev_glyph_index]) == -1)
                     break;
             }
             if (k != backtrack_count)
@@ -2331,9 +2348,12 @@ static unsigned int GPOS_apply_ChainContextPos(const ScriptCache *script_cache, 
 
             for (k = 0; k < input_count; ++k)
             {
+                unsigned int next_glyph_index = glyph_index + (write_dir * k);
+                if (next_glyph_index >= glyph_count)
+                    continue;
                 offset = GET_BE_WORD(input->Coverage[k]);
                 if (GSUB_is_glyph_covered((const BYTE *)backtrack + offset,
-                        glyphs[glyph_index + (write_dir * k)]) == -1)
+                        glyphs[next_glyph_index]) == -1)
                     break;
             }
             if (k != input_count)
@@ -2342,9 +2362,12 @@ static unsigned int GPOS_apply_ChainContextPos(const ScriptCache *script_cache, 
 
             for (k = 0; k < lookahead_count; ++k)
             {
+                unsigned int next_glyph_index = glyph_index + (dirLookahead * (input_count + k));
+                if (next_glyph_index >= glyph_count)
+                    continue;
                 offset = GET_BE_WORD(lookahead->Coverage[k]);
                 if (GSUB_is_glyph_covered((const BYTE *)backtrack + offset,
-                        glyphs[glyph_index + (dirLookahead * (input_count + k))]) == -1)
+                        glyphs[next_glyph_index]) == -1)
                     break;
             }
             if (k != lookahead_count)
@@ -2447,6 +2470,12 @@ static unsigned int GPOS_apply_lookup(const ScriptCache *script_cache, const OUT
             int index_offset;
             int write_dir = (analysis->fRTL && !analysis->fLogicalOrder) ? -1 : 1;
             int offset_sign = (analysis->fRTL && analysis->fLogicalOrder) ? -1 : 1;
+            unsigned int next_glyph_index = glyph_index + write_dir;
+            if (next_glyph_index >= glyph_count)
+            {
+                WARN("Skipping invalid glyph index %u, write dir %d.\n", glyph_index, write_dir);
+                break;
+            }
 
             index_offset = GPOS_apply_PairAdjustment(look, analysis, glyphs,
                     glyph_index, glyph_count, ppem, adjust, advance);
@@ -2464,13 +2493,13 @@ static unsigned int GPOS_apply_lookup(const ScriptCache *script_cache, const OUT
             if (adjust[1].x || adjust[1].y)
             {
                 GPOS_convert_design_units_to_device(lpotm, lplogfont, adjust[1].x, adjust[1].y, &devX, &devY);
-                pGoffset[glyph_index + write_dir].du += round(devX) * offset_sign;
-                pGoffset[glyph_index + write_dir].dv += round(devY);
+                pGoffset[next_glyph_index].du += round(devX) * offset_sign;
+                pGoffset[next_glyph_index].dv += round(devY);
             }
             if (advance[1].x || advance[1].y)
             {
                 GPOS_convert_design_units_to_device(lpotm, lplogfont, advance[1].x, advance[1].y, &devX, &devY);
-                piAdvance[glyph_index + write_dir] += round(devX);
+                piAdvance[next_glyph_index] += round(devX);
             }
             return index_offset;
         }
@@ -2480,13 +2509,19 @@ static unsigned int GPOS_apply_lookup(const ScriptCache *script_cache, const OUT
             POINT desU = {0,0};
             double devX, devY;
             int write_dir = (analysis->fRTL && !analysis->fLogicalOrder) ? -1 : 1;
+            unsigned int next_glyph_index = glyph_index + write_dir;
+            if (next_glyph_index >= glyph_count)
+            {
+                WARN("Skipping invalid glyph index %u, write dir %d.\n", glyph_index, write_dir);
+                break;
+            }
 
             GPOS_apply_CursiveAttachment(look, analysis, glyphs, glyph_index, glyph_count, ppem, &desU);
             if (desU.x || desU.y)
             {
                 GPOS_convert_design_units_to_device(lpotm, lplogfont, desU.x, desU.y, &devX, &devY);
                 /* Windows does not appear to apply X offsets here */
-                pGoffset[glyph_index].dv = round(devY) + pGoffset[glyph_index+write_dir].dv;
+                pGoffset[glyph_index].dv = round(devY) + pGoffset[next_glyph_index].dv;
             }
             break;
         }
@@ -2530,12 +2565,19 @@ static unsigned int GPOS_apply_lookup(const ScriptCache *script_cache, const OUT
             double devX, devY;
             POINT desU = {0,0};
             int write_dir = (analysis->fRTL && !analysis->fLogicalOrder) ? -1 : 1;
+            unsigned int prev_glyph_index = glyph_index - write_dir;
+            if (prev_glyph_index >= glyph_count)
+            {
+                WARN("Skipping invalid glyph index %u, write dir %d.\n", glyph_index, write_dir);
+                break;
+            }
+
             if (GPOS_apply_MarkToMark(look, analysis, glyphs, glyph_index, glyph_count, ppem, &desU))
             {
                 GPOS_convert_design_units_to_device(lpotm, lplogfont, desU.x, desU.y, &devX, &devY);
                 if (analysis->fRTL && analysis->fLogicalOrder) devX *= -1;
-                pGoffset[glyph_index].du = round(devX) + pGoffset[glyph_index - write_dir].du;
-                pGoffset[glyph_index].dv = round(devY) + pGoffset[glyph_index - write_dir].dv;
+                pGoffset[glyph_index].du = round(devX) + pGoffset[prev_glyph_index].du;
+                pGoffset[glyph_index].dv = round(devY) + pGoffset[prev_glyph_index].dv;
             }
             break;
         }
@@ -2607,7 +2649,7 @@ static void usp10_script_cache_add_script_list(ScriptCache *script_cache,
     if (!(count = GET_BE_WORD(list->ScriptCount)))
         return;
 
-    TRACE("Adding %lu scripts.\n", count);
+    TRACE("Adding %Iu scripts.\n", count);
 
     initial_count = script_cache->script_count;
     for (i = 0; i < count; ++i)
@@ -2725,7 +2767,7 @@ static void usp10_script_add_language_list(LoadedScript *script,
     if (!(count = GET_BE_WORD(list->LangSysCount)))
         return;
 
-    TRACE("Adding %lu languages.\n", count);
+    TRACE("Adding %Iu languages.\n", count);
 
     initial_count = script->language_count;
     for (i = 0; i < count; ++i)
@@ -2837,7 +2879,7 @@ static void usp10_language_add_feature_list(LoadedLanguage *language, char table
         loaded_feature->tableType = table_type;
         loaded_feature->feature = feature;
         loaded_feature->lookup_count = GET_BE_WORD(feature->LookupCount);
-        loaded_feature->lookups = heap_calloc(loaded_feature->lookup_count, sizeof(*loaded_feature->lookups));
+        loaded_feature->lookups = calloc(loaded_feature->lookup_count, sizeof(*loaded_feature->lookups));
         for (j = 0; j < loaded_feature->lookup_count; ++j)
             loaded_feature->lookups[j] = GET_BE_WORD(feature->LookupListIndex[j]);
     }

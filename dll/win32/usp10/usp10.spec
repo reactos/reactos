@@ -6,7 +6,7 @@
 @ stdcall ScriptCacheGetHeight(ptr ptr ptr)
 @ stdcall ScriptFreeCache(ptr)
 @ stdcall ScriptGetCMap(ptr ptr ptr long long ptr)
-@ stub ScriptGetFontAlternateGlyphs
+@ stdcall ScriptGetFontAlternateGlyphs(long ptr ptr long long long long long ptr ptr)
 @ stdcall ScriptGetFontFeatureTags(long ptr ptr long long long ptr ptr)
 @ stdcall ScriptGetFontLanguageTags(long ptr ptr long long ptr ptr)
 @ stdcall ScriptGetFontProperties(long ptr ptr)

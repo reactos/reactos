@@ -89,7 +89,7 @@ CAvailableApplicationInfo::ShowAppInfo(CAppRichEdit *RichEdit)
     RichEdit->LoadAndInsertText(IDS_AINFO_PACKAGE_NAME, szIdentifier, 0);
 }
 
-int
+static int
 CompareVersion(const CStringW &left, const CStringW &right)
 {
     int nLeft = 0, nRight = 0;
@@ -115,7 +115,7 @@ CompareVersion(const CStringW &left, const CStringW &right)
 
         if (leftVal > rightVal)
             return 1;
-        if (rightVal < leftVal)
+        if (leftVal < rightVal)
             return -1;
     }
 }

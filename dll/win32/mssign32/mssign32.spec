@@ -1,5 +1,5 @@
-@ stub -private DllRegisterServer
-@ stub -private DllUnregisterServer
+@ stdcall -private DllRegisterServer()
+@ stdcall -private DllUnregisterServer()
 @ stub FreeCryptProvFromCert
 @ stub GetCryptProvFromCert
 @ stdcall PvkFreeCryptProv(ptr wstr long wstr)
@@ -23,7 +23,7 @@
 @ stub SignerAddTimeStampResponseEx
 @ stub SignerCreateTimeStampRequest
 @ stdcall SignerFreeSignerContext(ptr)
-@ stub SignerSign
+@ stdcall SignerSign(ptr ptr ptr ptr wstr ptr ptr)
 @ stdcall SignerSignEx(long ptr ptr ptr ptr wstr ptr ptr ptr)
 @ stub SignerTimeStamp
 @ stub SignerTimeStampEx

@@ -34,7 +34,7 @@
 #include "oleauto.h"
 
 #include "msipriv.h"
-#include "winemsi_s.h"
+#include "winemsi.h"
 #include "wine/exception.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(msi);
@@ -844,7 +844,6 @@ UINT MSI_FormatRecordW( MSIPACKAGE* package, MSIRECORD* record, LPWSTR buffer,
     MSIRECORD *record_deformated;
     int field_count, i;
 
-    TRACE("%p %p %p %p\n", package, record, buffer, size);
     dump_record(record);
 
     if (!(format = msi_dup_record_field( record, 0 )))

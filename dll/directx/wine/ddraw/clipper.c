@@ -19,16 +19,36 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
-#include "wine/port.h"
-
 #include "ddraw_private.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(ddraw);
 
+static const struct IDirectDrawClipperVtbl ddraw_clipper_vtbl;
+
 static inline struct ddraw_clipper *impl_from_IDirectDrawClipper(IDirectDrawClipper *iface)
 {
     return CONTAINING_RECORD(iface, struct ddraw_clipper, IDirectDrawClipper_iface);
+}
+
+BOOL ddraw_clipper_is_valid(const struct ddraw_clipper *clipper)
+{
+    /* Native is very lenient when you invoke the clipper methods with a clipper pointer that
+     * points to something that is either not accessible or not a clipper, or if you break
+     * a clipper after assigning it to a surface. Deus Ex: Goty depends on this. */
+
+    if (IsBadReadPtr(clipper, sizeof(*clipper)))
+    {
+        WARN("The application gave us an invalid clipper pointer %p.\n", clipper);
+        return FALSE;
+    }
+    if (clipper->IDirectDrawClipper_iface.lpVtbl != &ddraw_clipper_vtbl)
+    {
+        WARN("The clipper vtable is modified: %p, expected %p.\n",
+                clipper->IDirectDrawClipper_iface.lpVtbl, &ddraw_clipper_vtbl);
+        return FALSE;
+    }
+
+    return TRUE;
 }
 
 static HRESULT WINAPI ddraw_clipper_QueryInterface(IDirectDrawClipper *iface, REFIID iid, void **object)
@@ -36,6 +56,9 @@ static HRESULT WINAPI ddraw_clipper_QueryInterface(IDirectDrawClipper *iface, RE
     struct ddraw_clipper *clipper = impl_from_IDirectDrawClipper(iface);
 
     TRACE("iface %p, iid %s, object %p.\n", iface, debugstr_guid(iid), object);
+
+    if (!ddraw_clipper_is_valid(clipper))
+        return DDERR_INVALIDPARAMS;
 
     if (IsEqualGUID(&IID_IDirectDrawClipper, iid)
             || IsEqualGUID(&IID_IUnknown, iid))
@@ -54,25 +77,42 @@ static HRESULT WINAPI ddraw_clipper_QueryInterface(IDirectDrawClipper *iface, RE
 static ULONG WINAPI ddraw_clipper_AddRef(IDirectDrawClipper *iface)
 {
     struct ddraw_clipper *clipper = impl_from_IDirectDrawClipper(iface);
-    ULONG refcount = InterlockedIncrement(&clipper->ref);
+    ULONG refcount;
 
-    TRACE("%p increasing refcount to %u.\n", clipper, refcount);
+    if (!ddraw_clipper_is_valid(clipper))
+    {
+        WARN("Invalid clipper, returning 0.\n");
+        return 0;
+    }
 
+    refcount = InterlockedIncrement(&clipper->ref);
+    TRACE("%p increasing refcount to %lu.\n", clipper, refcount);
     return refcount;
 }
 
 static ULONG WINAPI ddraw_clipper_Release(IDirectDrawClipper *iface)
 {
     struct ddraw_clipper *clipper = impl_from_IDirectDrawClipper(iface);
-    ULONG refcount = InterlockedDecrement(&clipper->ref);
+    ULONG refcount;
 
-    TRACE("%p decreasing refcount to %u.\n", clipper, refcount);
+    if (!ddraw_clipper_is_valid(clipper))
+    {
+        WARN("Invalid clipper, returning 0.\n");
+        return 0;
+    }
+
+    refcount = InterlockedDecrement(&clipper->ref);
+
+    TRACE("%p decreasing refcount to %lu.\n", clipper, refcount);
 
     if (!refcount)
     {
         if (clipper->region)
             DeleteObject(clipper->region);
-        heap_free(clipper);
+        /* make sure the object is no longer considered valid */
+        SecureZeroMemory( &clipper->IDirectDrawClipper_iface.lpVtbl,
+                          sizeof(clipper->IDirectDrawClipper_iface.lpVtbl) );
+        free(clipper);
     }
 
     return refcount;
@@ -82,11 +122,14 @@ static HRESULT WINAPI ddraw_clipper_SetHWnd(IDirectDrawClipper *iface, DWORD fla
 {
     struct ddraw_clipper *clipper = impl_from_IDirectDrawClipper(iface);
 
-    TRACE("iface %p, flags %#x, window %p.\n", iface, flags, window);
+    TRACE("iface %p, flags %#lx, window %p.\n", iface, flags, window);
+
+    if (!ddraw_clipper_is_valid(clipper))
+        return DDERR_INVALIDPARAMS;
 
     if (flags)
     {
-        FIXME("flags %#x, not supported.\n", flags);
+        FIXME("flags %#lx, not supported.\n", flags);
         return DDERR_INVALIDPARAMS;
     }
 
@@ -160,6 +203,9 @@ static HRESULT WINAPI ddraw_clipper_GetClipList(IDirectDrawClipper *iface, RECT 
 
     TRACE("iface %p, rect %s, clip_list %p, clip_list_size %p.\n",
             iface, wine_dbgstr_rect(rect), clip_list, clip_list_size);
+
+    if (!ddraw_clipper_is_valid(clipper))
+        return DDERR_INVALIDPARAMS;
 
     wined3d_mutex_lock();
 
@@ -236,7 +282,10 @@ static HRESULT WINAPI ddraw_clipper_SetClipList(IDirectDrawClipper *iface, RGNDA
 {
     struct ddraw_clipper *clipper = impl_from_IDirectDrawClipper(iface);
 
-    TRACE("iface %p, region %p, flags %#x.\n", iface, region, flags);
+    TRACE("iface %p, region %p, flags %#lx.\n", iface, region, flags);
+
+    if (!ddraw_clipper_is_valid(clipper))
+        return DDERR_INVALIDPARAMS;
 
     wined3d_mutex_lock();
 
@@ -268,6 +317,9 @@ static HRESULT WINAPI ddraw_clipper_GetHWnd(IDirectDrawClipper *iface, HWND *win
 
     TRACE("iface %p, window %p.\n", iface, window);
 
+    if (!ddraw_clipper_is_valid(clipper))
+        return DDERR_INVALIDPARAMS;
+
     wined3d_mutex_lock();
     *window = clipper->window;
     wined3d_mutex_unlock();
@@ -280,7 +332,10 @@ static HRESULT WINAPI ddraw_clipper_Initialize(IDirectDrawClipper *iface,
 {
     struct ddraw_clipper *clipper = impl_from_IDirectDrawClipper(iface);
 
-    TRACE("iface %p, ddraw %p, flags %#x.\n", iface, ddraw, flags);
+    TRACE("iface %p, ddraw %p, flags %#lx.\n", iface, ddraw, flags);
+
+    if (!ddraw_clipper_is_valid(clipper))
+        return DDERR_INVALIDPARAMS;
 
     wined3d_mutex_lock();
     if (clipper->initialized)
@@ -297,7 +352,12 @@ static HRESULT WINAPI ddraw_clipper_Initialize(IDirectDrawClipper *iface,
 
 static HRESULT WINAPI ddraw_clipper_IsClipListChanged(IDirectDrawClipper *iface, BOOL *changed)
 {
+    struct ddraw_clipper *clipper = impl_from_IDirectDrawClipper(iface);
+
     FIXME("iface %p, changed %p stub!\n", iface, changed);
+
+    if (!ddraw_clipper_is_valid(clipper))
+        return DDERR_INVALIDPARAMS;
 
     /* XXX What is safest? */
     *changed = FALSE;

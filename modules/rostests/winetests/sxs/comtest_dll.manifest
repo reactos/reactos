@@ -11,6 +11,11 @@
         name="DLL.Test"
         runtimeVersion="v4.0.0.0">
     </clrClass>
+    <clrSurrogate
+        clsid="{2e106e50-e7a4-4489-8538-83643f100fdd}"
+        name="Surrogate.Test"
+        runtimeVersion="v4.0.0.1">
+    </clrSurrogate>
     <file name="comtest.dll">
     </file>
 </assembly>

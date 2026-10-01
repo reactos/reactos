@@ -89,6 +89,9 @@ AfdBindSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     if( !(BindReq = LockRequest( Irp, IrpSp, FALSE, NULL )) )
         return UnlockAndMaybeComplete( FCB, STATUS_NO_MEMORY,
                                        Irp, 0 );
+    
+    if (FCB->SharedData.State != SOCKET_STATE_CREATED)
+        return UnlockAndMaybeComplete(FCB, STATUS_INVALID_PARAMETER, Irp, 0);
 
     if (FCB->LocalAddress)
     {

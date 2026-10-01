@@ -1,0 +1,37 @@
+/*
+ * COM Classes for dmband
+ *
+ * Copyright 2010 Alexandre Julliard
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+#pragma makedep register
+
+[
+    threading(both),
+    progid("Microsoft.DirectMusicBand.1"),
+    vi_progid("Microsoft.DirectMusicBand"),
+    uuid(79ba9e00-b6ee-11d1-86be-00c04fbf8fef)
+]
+coclass DirectMusicBand { interface IDirectMusicBand; }
+
+[
+    threading(both),
+    progid("Microsoft.DirectMusicBandTrack.1"),
+    vi_progid("Microsoft.DirectMusicBandTrack"),
+    uuid(d2ac2894-b39b-11d1-8704-00600893b1bd)
+]
+coclass DirectMusicBandTrack { interface IDirectMusicBandTrack; }

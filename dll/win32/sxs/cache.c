@@ -19,9 +19,6 @@
  */
 
 #include <stdarg.h>
-#ifdef __REACTOS__
-#include <wchar.h>
-#endif
 
 #define COBJMACROS
 #define INITGUID
@@ -38,12 +35,7 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(sxs);
 
-static const WCHAR cache_mutex_nameW[] =
-    {'_','_','W','I','N','E','_','S','X','S','_','C','A','C','H','E','_','M','U','T','E','X','_','_',0};
-
-static const WCHAR win32W[] = {'w','i','n','3','2',0};
-static const WCHAR win32_policyW[] = {'w','i','n','3','2','-','p','o','l','i','c','y',0};
-static const WCHAR backslashW[] = {'\\',0};
+static const WCHAR cache_mutex_nameW[] = L"__WINE_SXS_CACHE_MUTEX__";
 
 struct cache
 {
@@ -60,19 +52,17 @@ static inline struct cache *impl_from_IAssemblyCache(IAssemblyCache *iface)
 static HRESULT WINAPI cache_QueryInterface(
     IAssemblyCache *iface,
     REFIID riid,
-    void **obj )
+    void **ret_iface )
 {
-    struct cache *cache = impl_from_IAssemblyCache(iface);
+    TRACE("%p, %s, %p\n", iface, debugstr_guid(riid), ret_iface);
 
-    TRACE("%p, %s, %p\n", cache, debugstr_guid(riid), obj);
-
-    *obj = NULL;
+    *ret_iface = NULL;
 
     if (IsEqualIID(riid, &IID_IUnknown) ||
         IsEqualIID(riid, &IID_IAssemblyCache))
     {
         IAssemblyCache_AddRef( iface );
-        *obj = cache;
+        *ret_iface = iface;
         return S_OK;
     }
 
@@ -94,14 +84,14 @@ static ULONG WINAPI cache_Release( IAssemblyCache *iface )
     {
         TRACE("destroying %p\n", cache);
         CloseHandle( cache->lock );
-        HeapFree( GetProcessHeap(), 0, cache );
+        free( cache );
     }
     return refs;
 }
 
 static unsigned int build_sxs_path( WCHAR *path )
 {
-    static const WCHAR winsxsW[] = {'\\','w','i','n','s','x','s','\\',0};
+    static const WCHAR winsxsW[] = L"\\winsxs\\";
     unsigned int len = GetWindowsDirectoryW( path, MAX_PATH );
 
     memcpy( path + len, winsxsW, sizeof(winsxsW) );
@@ -111,8 +101,7 @@ static unsigned int build_sxs_path( WCHAR *path )
 static WCHAR *build_assembly_name( const WCHAR *arch, const WCHAR *name, const WCHAR *token,
                                    const WCHAR *version, unsigned int *len )
 {
-    static const WCHAR fmtW[] =
-        {'%','s','_','%','s','_','%','s','_','%','s','_','n','o','n','e','_','d','e','a','d','b','e','e','f',0};
+    static const WCHAR fmtW[] = L"%s_%s_%s_%s_none_deadbeef";
     unsigned int buflen = ARRAY_SIZE(fmtW);
     WCHAR *ret;
 
@@ -120,53 +109,50 @@ static WCHAR *build_assembly_name( const WCHAR *arch, const WCHAR *name, const W
     buflen += lstrlenW( name );
     buflen += lstrlenW( token );
     buflen += lstrlenW( version );
-    if (!(ret = HeapAlloc( GetProcessHeap(), 0, buflen * sizeof(WCHAR) ))) return NULL;
-    *len = swprintf( ret, fmtW, arch, name, token, version );
-    return _wcslwr( ret );
+    if (!(ret = malloc( buflen * sizeof(WCHAR) ))) return NULL;
+    *len = swprintf( ret, buflen, fmtW, arch, name, token, version );
+    return wcslwr( ret );
 }
 
-static WCHAR *build_manifest_path( const WCHAR *arch, const WCHAR *name, const WCHAR *token,
-                                   const WCHAR *version )
+static WCHAR *build_dll_path( const WCHAR *arch, const WCHAR *name, const WCHAR *token,
+                              const WCHAR *version )
 {
-    static const WCHAR fmtW[] =
-        {'%','s','m','a','n','i','f','e','s','t','s','\\','%','s','.','m','a','n','i','f','e','s','t',0};
     WCHAR *path = NULL, *ret, sxsdir[MAX_PATH];
     unsigned int len;
 
     if (!(path = build_assembly_name( arch, name, token, version, &len ))) return NULL;
-    len += ARRAY_SIZE(fmtW);
-    len += build_sxs_path( sxsdir );
-    if (!(ret = HeapAlloc( GetProcessHeap(), 0, len * sizeof(WCHAR) )))
+    len += build_sxs_path( sxsdir ) + 2;
+    if (!(ret = malloc( len * sizeof(WCHAR) )))
     {
-        HeapFree( GetProcessHeap(), 0, path );
+        free( path );
         return NULL;
     }
-    swprintf( ret, fmtW, sxsdir, path );
-    HeapFree( GetProcessHeap(), 0, path );
+    lstrcpyW( ret, sxsdir );
+    lstrcatW( ret, path );
+    lstrcatW( ret, L"\\" );
+    free( path );
     return ret;
 }
 
 static WCHAR *build_policy_name( const WCHAR *arch, const WCHAR *name, const WCHAR *token,
                                  unsigned int *len )
 {
-    static const WCHAR fmtW[] =
-        {'%','s','_','%','s','_','%','s','_','n','o','n','e','_','d','e','a','d','b','e','e','f',0};
+    static const WCHAR fmtW[] = L"%s_%s_%s_none_deadbeef";
     unsigned int buflen = ARRAY_SIZE(fmtW);
     WCHAR *ret;
 
     buflen += lstrlenW( arch );
     buflen += lstrlenW( name );
     buflen += lstrlenW( token );
-    if (!(ret = HeapAlloc( GetProcessHeap(), 0, buflen * sizeof(WCHAR) ))) return NULL;
-    *len = swprintf( ret, fmtW, arch, name, token );
-    return _wcslwr( ret );
+    if (!(ret = malloc( buflen * sizeof(WCHAR) ))) return NULL;
+    *len = swprintf( ret, buflen, fmtW, arch, name, token );
+    return wcslwr( ret );
 }
 
 static WCHAR *build_policy_path( const WCHAR *arch, const WCHAR *name, const WCHAR *token,
                                  const WCHAR *version )
 {
-    static const WCHAR fmtW[] =
-        {'%','s','p','o','l','i','c','i','e','s','\\','%','s','\\','%','s','.','p','o','l','i','c','y',0};
+    static const WCHAR fmtW[] = L"%spolicies\\%s\\%s.policy";
     WCHAR *path = NULL, *ret, sxsdir[MAX_PATH];
     unsigned int len;
 
@@ -174,13 +160,13 @@ static WCHAR *build_policy_path( const WCHAR *arch, const WCHAR *name, const WCH
     len += ARRAY_SIZE(fmtW);
     len += build_sxs_path( sxsdir );
     len += lstrlenW( version );
-    if (!(ret = HeapAlloc( GetProcessHeap(), 0, len * sizeof(WCHAR) )))
+    if (!(ret = malloc( len * sizeof(WCHAR) )))
     {
-        HeapFree( GetProcessHeap(), 0, path );
+        free( path );
         return NULL;
     }
-    swprintf( ret, fmtW, sxsdir, path, version );
-    HeapFree( GetProcessHeap(), 0, path );
+    swprintf( ret, len, fmtW, sxsdir, path, version );
+    free( path );
     return ret;
 }
 
@@ -205,11 +191,11 @@ static HRESULT WINAPI cache_QueryAssemblyInfo(
     struct cache *cache = impl_from_IAssemblyCache( iface );
     IAssemblyName *name_obj;
     const WCHAR *arch, *name, *token, *type, *version;
-    WCHAR *p, *path = NULL;
+    WCHAR *path = NULL;
     unsigned int len;
     HRESULT hr;
 
-    TRACE("%p, 0x%08x, %s, %p\n", iface, flags, debugstr_w(assembly_name), info);
+    TRACE("%p, 0x%08lx, %s, %p\n", iface, flags, debugstr_w(assembly_name), info);
 
     if (flags || (info && info->cbAssemblyInfo != sizeof(*info)))
         return E_INVALIDARG;
@@ -235,8 +221,8 @@ static HRESULT WINAPI cache_QueryAssemblyInfo(
     }
     cache_lock( cache );
 
-    if (!wcscmp( type, win32W )) path = build_manifest_path( arch, name, token, version );
-    else if (!wcscmp( type, win32_policyW )) path = build_policy_path( arch, name, token, version );
+    if (!wcscmp( type, L"win32" )) path = build_dll_path( arch, name, token, version );
+    else if (!wcscmp( type, L"win32-policy" )) path = build_policy_path( arch, name, token, version );
     else
     {
         hr = HRESULT_FROM_WIN32( ERROR_SXS_INVALID_IDENTITY_ATTRIBUTE_VALUE );
@@ -253,7 +239,6 @@ static HRESULT WINAPI cache_QueryAssemblyInfo(
         info->dwAssemblyFlags = ASSEMBLYINFO_FLAG_INSTALLED;
         TRACE("assembly is installed\n");
     }
-    if ((p = wcsrchr( path, '\\' ))) *p = 0;
     len = lstrlenW( path ) + 1;
     if (info->pszCurrentAssemblyPathBuf)
     {
@@ -266,7 +251,7 @@ static HRESULT WINAPI cache_QueryAssemblyInfo(
     }
 
 done:
-    HeapFree( GetProcessHeap(), 0, path );
+    free( path );
     IAssemblyName_Release( name_obj );
     cache_unlock( cache );
     return hr;
@@ -279,7 +264,7 @@ static HRESULT WINAPI cache_CreateAssemblyCacheItem(
     IAssemblyCacheItem **item,
     LPCWSTR name )
 {
-    FIXME("%p, 0x%08x, %p, %p, %s\n", iface, flags, reserved, item, debugstr_w(name));
+    FIXME("%p, 0x%08lx, %p, %p, %s\n", iface, flags, reserved, item, debugstr_w(name));
     return E_NOTIMPL;
 }
 
@@ -346,15 +331,13 @@ static void free_assembly( struct assembly *assembly )
         struct file *file = LIST_ENTRY( item, struct file, entry );
         list_remove( &file->entry );
         SysFreeString( file->name );
-        HeapFree( GetProcessHeap(), 0, file );
+        free( file );
     }
-    HeapFree( GetProcessHeap(), 0, assembly );
+    free( assembly );
 }
 
 static HRESULT parse_files( IXMLDOMDocument *doc, struct assembly *assembly )
 {
-    static const WCHAR fileW[] = {'f','i','l','e',0};
-    static const WCHAR nameW[] = {'n','a','m','e',0};
     IXMLDOMNamedNodeMap *attrs;
     IXMLDOMNodeList *list;
     IXMLDOMNode *node;
@@ -363,14 +346,14 @@ static HRESULT parse_files( IXMLDOMDocument *doc, struct assembly *assembly )
     HRESULT hr;
     LONG len;
 
-    str = SysAllocString( fileW );
+    str = SysAllocString( L"file" );
     hr = IXMLDOMDocument_getElementsByTagName( doc, str, &list );
     SysFreeString( str );
     if (hr != S_OK) return hr;
 
     hr = IXMLDOMNodeList_get_length( list, &len );
     if (hr != S_OK) goto done;
-    TRACE("found %d files\n", len);
+    TRACE("found %ld files\n", len);
     if (!len)
     {
         hr = ERROR_SXS_MANIFEST_FORMAT_ERROR;
@@ -393,18 +376,18 @@ static HRESULT parse_files( IXMLDOMDocument *doc, struct assembly *assembly )
         if (hr != S_OK)
             goto done;
 
-        if (!(f = HeapAlloc( GetProcessHeap(), 0, sizeof(struct file) )))
+        if (!(f = malloc( sizeof(*f) )))
         {
             IXMLDOMNamedNodeMap_Release( attrs );
             hr = E_OUTOFMEMORY;
             goto done;
         }
 
-        f->name = get_attribute_value( attrs, nameW );
+        f->name = get_attribute_value( attrs, L"name" );
         IXMLDOMNamedNodeMap_Release( attrs );
         if (!f->name)
         {
-            HeapFree( GetProcessHeap(), 0, f );
+            free( f );
             hr = ERROR_SXS_MANIFEST_FORMAT_ERROR;
             goto done;
         }
@@ -424,12 +407,6 @@ done:
 
 static HRESULT parse_assembly( IXMLDOMDocument *doc, struct assembly **assembly )
 {
-    static const WCHAR identityW[] = {'a','s','s','e','m','b','l','y','I','d','e','n','t','i','t','y',0};
-    static const WCHAR typeW[] = {'t','y','p','e',0};
-    static const WCHAR nameW[] = {'n','a','m','e',0};
-    static const WCHAR versionW[] = {'v','e','r','s','i','o','n',0};
-    static const WCHAR architectureW[] = {'p','r','o','c','e','s','s','o','r','A','r','c','h','i','t','e','c','t','u','r','e',0};
-    static const WCHAR tokenW[] = {'p','u','b','l','i','c','K','e','y','T','o','k','e','n',0};
     IXMLDOMNodeList *list = NULL;
     IXMLDOMNode *node = NULL;
     IXMLDOMNamedNodeMap *attrs = NULL;
@@ -438,7 +415,7 @@ static HRESULT parse_assembly( IXMLDOMDocument *doc, struct assembly **assembly 
     HRESULT hr;
     LONG len;
 
-    str = SysAllocString( identityW );
+    str = SysAllocString( L"assemblyIdentity" );
     hr = IXMLDOMDocument_getElementsByTagName( doc, str, &list );
     SysFreeString( str );
     if (hr != S_OK) goto done;
@@ -457,7 +434,7 @@ static HRESULT parse_assembly( IXMLDOMDocument *doc, struct assembly **assembly 
         hr = ERROR_SXS_MANIFEST_FORMAT_ERROR;
         goto done;
     }
-    if (!(a = HeapAlloc( GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(struct assembly) )))
+    if (!(a = calloc(1, sizeof(*a) )))
     {
         hr = E_OUTOFMEMORY;
         goto done;
@@ -467,20 +444,20 @@ static HRESULT parse_assembly( IXMLDOMDocument *doc, struct assembly **assembly 
     hr = IXMLDOMNode_get_attributes( node, &attrs );
     if (hr != S_OK) goto done;
 
-    a->type    = get_attribute_value( attrs, typeW );
-    a->name    = get_attribute_value( attrs, nameW );
-    a->version = get_attribute_value( attrs, versionW );
-    a->arch    = get_attribute_value( attrs, architectureW );
-    a->token   = get_attribute_value( attrs, tokenW );
+    a->type    = get_attribute_value( attrs, L"type" );
+    a->name    = get_attribute_value( attrs, L"name" );
+    a->version = get_attribute_value( attrs, L"version" );
+    a->arch    = get_attribute_value( attrs, L"processorArchitecture" );
+    a->token   = get_attribute_value( attrs, L"publicKeyToken" );
 
-    if (!a->type || (wcscmp( a->type, win32W ) && wcscmp( a->type, win32_policyW )) ||
+    if (!a->type || (wcscmp( a->type, L"win32" ) && wcscmp( a->type, L"win32-policy" )) ||
         !a->name || !a->version || !a->arch || !a->token)
     {
         WARN("invalid win32 assembly\n");
         hr = ERROR_SXS_MANIFEST_FORMAT_ERROR;
         goto done;
     }
-    if (!wcscmp( a->type, win32W )) hr = parse_files( doc, a );
+    if (!wcscmp( a->type, L"win32" )) hr = parse_files( doc, a );
 
 done:
     if (attrs) IXMLDOMNamedNodeMap_Release( attrs );
@@ -494,8 +471,8 @@ done:
 static WCHAR *build_policy_filename( const WCHAR *arch, const WCHAR *name, const WCHAR *token,
                                      const WCHAR *version )
 {
-    static const WCHAR policiesW[] = {'p','o','l','i','c','i','e','s','\\',0};
-    static const WCHAR suffixW[] = {'.','p','o','l','i','c','y',0};
+    static const WCHAR policiesW[] = L"policies\\";
+    static const WCHAR suffixW[] = L".policy";
     WCHAR sxsdir[MAX_PATH], *ret, *fullname;
     unsigned int len;
 
@@ -504,9 +481,9 @@ static WCHAR *build_policy_filename( const WCHAR *arch, const WCHAR *name, const
     len += ARRAY_SIZE(policiesW) - 1;
     len += lstrlenW( version );
     len += ARRAY_SIZE(suffixW) - 1;
-    if (!(ret = HeapAlloc( GetProcessHeap(), 0, (len + 1) * sizeof(WCHAR) )))
+    if (!(ret = malloc( (len + 1) * sizeof(WCHAR) )))
     {
-        HeapFree( GetProcessHeap(), 0, fullname );
+        free( fullname );
         return NULL;
     }
     lstrcpyW( ret, sxsdir );
@@ -514,11 +491,11 @@ static WCHAR *build_policy_filename( const WCHAR *arch, const WCHAR *name, const
     CreateDirectoryW( ret, NULL );
     lstrcatW( ret, name );
     CreateDirectoryW( ret, NULL );
-    lstrcatW( ret, backslashW );
+    lstrcatW( ret, L"\\" );
     lstrcatW( ret, version );
     lstrcatW( ret, suffixW );
 
-    HeapFree( GetProcessHeap(), 0, fullname );
+    free( fullname );
     return ret;
 }
 
@@ -533,11 +510,11 @@ static HRESULT install_policy( const WCHAR *manifest, struct assembly *assembly 
     if (!dst) return E_OUTOFMEMORY;
 
     ret = CopyFileW( manifest, dst, FALSE );
-    HeapFree( GetProcessHeap(), 0, dst );
+    free( dst );
     if (!ret)
     {
         HRESULT hr = HRESULT_FROM_WIN32( GetLastError() );
-        WARN("failed to copy policy manifest file 0x%08x\n", hr);
+        WARN("failed to copy policy manifest file 0x%08lx\n", hr);
         return hr;
     }
     return S_OK;
@@ -551,10 +528,10 @@ static WCHAR *build_source_filename( const WCHAR *manifest, struct file *file )
 
     p = wcsrchr( manifest, '\\' );
     if (!p) p = wcsrchr( manifest, '/' );
-    if (!p) return strdupW( manifest );
+    if (!p) return wcsdup( manifest );
 
     len = p - manifest + 1;
-    if (!(src = HeapAlloc( GetProcessHeap(), 0, (len + lstrlenW( file->name ) + 1) * sizeof(WCHAR) )))
+    if (!(src = malloc( (len + lstrlenW( file->name ) + 1) * sizeof(WCHAR) )))
         return NULL;
 
     memcpy( src, manifest, len * sizeof(WCHAR) );
@@ -565,8 +542,8 @@ static WCHAR *build_source_filename( const WCHAR *manifest, struct file *file )
 static WCHAR *build_manifest_filename( const WCHAR *arch, const WCHAR *name, const WCHAR *token,
                                        const WCHAR *version )
 {
-    static const WCHAR manifestsW[] = {'m','a','n','i','f','e','s','t','s','\\',0};
-    static const WCHAR suffixW[] = {'.','m','a','n','i','f','e','s','t',0};
+    static const WCHAR manifestsW[] = L"manifests\\";
+    static const WCHAR suffixW[] = L".manifest";
     WCHAR sxsdir[MAX_PATH], *ret, *fullname;
     unsigned int len;
 
@@ -574,9 +551,9 @@ static WCHAR *build_manifest_filename( const WCHAR *arch, const WCHAR *name, con
     len += build_sxs_path( sxsdir );
     len += ARRAY_SIZE(manifestsW) - 1;
     len += ARRAY_SIZE(suffixW) - 1;
-    if (!(ret = HeapAlloc( GetProcessHeap(), 0, (len + 1) * sizeof(WCHAR) )))
+    if (!(ret = malloc( (len + 1) * sizeof(WCHAR) )))
     {
-        HeapFree( GetProcessHeap(), 0, fullname );
+        free( fullname );
         return NULL;
     }
     lstrcpyW( ret, sxsdir );
@@ -584,7 +561,7 @@ static WCHAR *build_manifest_filename( const WCHAR *arch, const WCHAR *name, con
     lstrcatW( ret, fullname );
     lstrcatW( ret, suffixW );
 
-    HeapFree( GetProcessHeap(), 0, fullname );
+    free( fullname );
     return ret;
 }
 
@@ -621,12 +598,19 @@ static HRESULT install_assembly( const WCHAR *manifest, struct assembly *assembl
     dst = build_manifest_filename( assembly->arch, assembly->name, assembly->token, assembly->version );
     if (!dst) return E_OUTOFMEMORY;
 
+    if (GetFileAttributesW( dst ) != INVALID_FILE_ATTRIBUTES)
+    {
+        free( dst );
+        TRACE("manifest exists, skipping install\n");
+        return S_OK;
+    }
+
     ret = CopyFileW( manifest, dst, FALSE );
-    HeapFree( GetProcessHeap(), 0, dst );
+    free( dst );
     if (!ret)
     {
         hr = HRESULT_FROM_WIN32( GetLastError() );
-        WARN("failed to copy manifest file 0x%08x\n", hr);
+        WARN("failed to copy manifest file 0x%08lx\n", hr);
         return hr;
     }
 
@@ -640,33 +624,33 @@ static HRESULT install_assembly( const WCHAR *manifest, struct assembly *assembl
         if (!(src = build_source_filename( manifest, file ))) goto done;
 
         len = len_sxsdir + len_name + lstrlenW( file->name );
-        if (!(dst = HeapAlloc( GetProcessHeap(), 0, (len + 2) * sizeof(WCHAR) )))
+        if (!(dst = malloc( (len + 2) * sizeof(WCHAR) )))
         {
-            HeapFree( GetProcessHeap(), 0, src );
+            free( src );
             goto done;
         }
         lstrcpyW( dst, sxsdir );
         lstrcatW( dst, name );
         CreateDirectoryW( dst, NULL );
 
-        lstrcatW( dst, backslashW );
+        lstrcatW( dst, L"\\" );
         lstrcatW( dst, file->name );
         for (p = dst; *p; p++) *p = towlower( *p );
 
         ret = CopyFileW( src, dst, FALSE );
-        HeapFree( GetProcessHeap(), 0, src );
-        HeapFree( GetProcessHeap(), 0, dst );
+        free( src );
+        free( dst );
         if (!ret)
         {
             hr = HRESULT_FROM_WIN32( GetLastError() );
-            WARN("failed to copy file 0x%08x\n", hr);
+            WARN("failed to copy file 0x%08lx\n", hr);
             goto done;
         }
     }
     hr = S_OK;
 
 done:
-    HeapFree( GetProcessHeap(), 0, name );
+    free( name );
     return hr;
 }
 
@@ -681,7 +665,7 @@ static HRESULT WINAPI cache_InstallAssembly(
     IXMLDOMDocument *doc = NULL;
     struct assembly *assembly = NULL;
 
-    TRACE("%p, 0x%08x, %s, %p\n", iface, flags, debugstr_w(path), ref);
+    TRACE("%p, 0x%08lx, %s, %p\n", iface, flags, debugstr_w(path), ref);
 
     cache_lock( cache );
     init = CoInitialize( NULL );
@@ -695,7 +679,7 @@ static HRESULT WINAPI cache_InstallAssembly(
 
     /* FIXME: verify name attributes */
 
-    if (!wcscmp( assembly->type, win32_policyW ))
+    if (!wcscmp( assembly->type, L"win32-policy" ))
         hr = install_policy( path, assembly );
     else
         hr = install_assembly( path, assembly );
@@ -718,7 +702,7 @@ static HRESULT uninstall_assembly( struct assembly *assembly )
     name = build_assembly_name( assembly->arch, assembly->name, assembly->token, assembly->version,
                                 &len_name );
     if (!name) return E_OUTOFMEMORY;
-    if (!(dirname = HeapAlloc( GetProcessHeap(), 0, (len_sxsdir + len_name + 1) * sizeof(WCHAR) )))
+    if (!(dirname = malloc( (len_sxsdir + len_name + 1) * sizeof(WCHAR) )))
         goto done;
     lstrcpyW( dirname, sxsdir );
     lstrcpyW( dirname + len_sxsdir, name );
@@ -726,20 +710,20 @@ static HRESULT uninstall_assembly( struct assembly *assembly )
     LIST_FOR_EACH_ENTRY( file, &assembly->files, struct file, entry )
     {
         len = len_sxsdir + len_name + 1 + lstrlenW( file->name );
-        if (!(filename = HeapAlloc( GetProcessHeap(), 0, (len + 1) * sizeof(WCHAR) ))) goto done;
+        if (!(filename = malloc( (len + 1) * sizeof(WCHAR) ))) goto done;
         lstrcpyW( filename, dirname );
-        lstrcatW( filename, backslashW );
+        lstrcatW( filename, L"\\" );
         lstrcatW( filename, file->name );
 
-        if (!DeleteFileW( filename )) WARN( "failed to delete file %u\n", GetLastError() );
-        HeapFree( GetProcessHeap(), 0, filename );
+        if (!DeleteFileW( filename )) WARN( "failed to delete file %lu\n", GetLastError() );
+        free( filename );
     }
     RemoveDirectoryW( dirname );
     hr = S_OK;
 
 done:
-    HeapFree( GetProcessHeap(), 0, dirname );
-    HeapFree( GetProcessHeap(), 0, name );
+    free( dirname );
+    free( name );
     return hr;
 }
 
@@ -758,7 +742,7 @@ static HRESULT WINAPI cache_UninstallAssembly(
     const WCHAR *arch, *name, *token, *type, *version;
     WCHAR *p, *path = NULL;
 
-    TRACE("%p, 0x%08x, %s, %p, %p\n", iface, flags, debugstr_w(assembly_name), ref, disp);
+    TRACE("%p, 0x%08lx, %s, %p, %p\n", iface, flags, debugstr_w(assembly_name), ref, disp);
 
     if (ref)
     {
@@ -782,8 +766,8 @@ static HRESULT WINAPI cache_UninstallAssembly(
         hr = E_INVALIDARG;
         goto done;
     }
-    if (!wcscmp( type, win32W )) path = build_manifest_filename( arch, name, token, version );
-    else if (!wcscmp( type, win32_policyW )) path = build_policy_filename( arch, name, token, version );
+    if (!wcscmp( type, L"win32" )) path = build_manifest_filename( arch, name, token, version );
+    else if (!wcscmp( type, L"win32-policy" )) path = build_policy_filename( arch, name, token, version );
     else
     {
         hr = E_INVALIDARG;
@@ -797,17 +781,17 @@ static HRESULT WINAPI cache_UninstallAssembly(
     if ((hr = load_manifest( doc, path )) != S_OK) goto done;
     if ((hr = parse_assembly( doc, &assembly )) != S_OK) goto done;
 
-    if (!DeleteFileW( path )) WARN( "unable to remove manifest file %u\n", GetLastError() );
+    if (!DeleteFileW( path )) WARN( "unable to remove manifest file %lu\n", GetLastError() );
     else if ((p = wcsrchr( path, '\\' )))
     {
         *p = 0;
         RemoveDirectoryW( path );
     }
-    if (!wcscmp( assembly->type, win32W )) hr = uninstall_assembly( assembly );
+    if (!wcscmp( assembly->type, L"win32" )) hr = uninstall_assembly( assembly );
 
 done:
     if (name_obj) IAssemblyName_Release( name_obj );
-    HeapFree( GetProcessHeap(), 0, path );
+    free( path );
     free_assembly( assembly );
     if (doc) IXMLDOMDocument_Release( doc );
     if (SUCCEEDED(init)) CoUninitialize();
@@ -834,14 +818,14 @@ HRESULT WINAPI CreateAssemblyCache( IAssemblyCache **obj, DWORD reserved )
 {
     struct cache *cache;
 
-    TRACE("%p, %u\n", obj, reserved);
+    TRACE("%p, %lu\n", obj, reserved);
 
     if (!obj)
         return E_INVALIDARG;
 
     *obj = NULL;
 
-    cache = HeapAlloc( GetProcessHeap(), 0, sizeof(struct cache) );
+    cache = malloc( sizeof(*cache) );
     if (!cache)
         return E_OUTOFMEMORY;
 
@@ -850,7 +834,7 @@ HRESULT WINAPI CreateAssemblyCache( IAssemblyCache **obj, DWORD reserved )
     cache->lock = CreateMutexW( NULL, FALSE, cache_mutex_nameW );
     if (!cache->lock)
     {
-        HeapFree( GetProcessHeap(), 0, cache );
+        free( cache );
         return HRESULT_FROM_WIN32( GetLastError() );
     }
     *obj = &cache->IAssemblyCache_iface;

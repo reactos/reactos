@@ -17,7 +17,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
 #include "d3d8_private.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(d3d8);
@@ -26,7 +25,7 @@ static void STDMETHODCALLTYPE d3d8_vertexshader_wined3d_object_destroyed(void *p
 {
     struct d3d8_vertex_shader *shader = parent;
     d3d8_vertex_declaration_destroy(shader->vertex_declaration);
-    heap_free(shader);
+    free(shader);
 }
 
 void d3d8_vertex_shader_destroy(struct d3d8_vertex_shader *shader)
@@ -56,17 +55,17 @@ static HRESULT d3d8_vertexshader_create_vertexdeclaration(struct d3d8_device *de
     struct d3d8_vertex_declaration *object;
     HRESULT hr;
 
-    TRACE("device %p, declaration %p, shader_handle %#x, decl_ptr %p.\n",
+    TRACE("device %p, declaration %p, shader_handle %#lx, decl_ptr %p.\n",
             device, declaration, shader_handle, decl_ptr);
 
-    if (!(object = heap_alloc_zero(sizeof(*object))))
+    if (!(object = calloc(1, sizeof(*object))))
         return E_OUTOFMEMORY;
 
     hr = d3d8_vertex_declaration_init(object, device, declaration, shader_handle);
     if (FAILED(hr))
     {
-        WARN("Failed to initialize vertex declaration, hr %#x.\n", hr);
-        heap_free(object);
+        WARN("Failed to initialize vertex declaration, hr %#lx.\n", hr);
+        free(object);
         return hr;
     }
 
@@ -104,7 +103,7 @@ HRESULT d3d8_vertex_shader_init(struct d3d8_vertex_shader *shader, struct d3d8_d
     hr = d3d8_vertexshader_create_vertexdeclaration(device, declaration, shader_handle, &shader->vertex_declaration);
     if (FAILED(hr))
     {
-        WARN("Failed to create vertex declaration, hr %#x.\n", hr);
+        WARN("Failed to create vertex declaration, hr %#lx.\n", hr);
         return hr;
     }
 
@@ -113,15 +112,10 @@ HRESULT d3d8_vertex_shader_init(struct d3d8_vertex_shader *shader, struct d3d8_d
         struct wined3d_shader_desc desc;
 
         if (usage)
-            FIXME("Usage %#x not implemented.\n", usage);
+            FIXME("Usage %#lx not implemented.\n", usage);
 
         desc.byte_code = byte_code;
         desc.byte_code_size = ~(size_t)0;
-        desc.format = WINED3D_SHADER_BYTE_CODE_FORMAT_SM1;
-        desc.input_signature.element_count = 0;
-        desc.output_signature.element_count = 0;
-        desc.patch_constant_signature.element_count = 0;
-        desc.max_version = 1;
 
         wined3d_mutex_lock();
         hr = wined3d_shader_create_vs(device->wined3d_device, &desc, shader,
@@ -129,7 +123,7 @@ HRESULT d3d8_vertex_shader_init(struct d3d8_vertex_shader *shader, struct d3d8_d
         wined3d_mutex_unlock();
         if (FAILED(hr))
         {
-            WARN("Failed to create wined3d vertex shader, hr %#x.\n", hr);
+            WARN("Failed to create wined3d vertex shader, hr %#lx.\n", hr);
             d3d8_vertex_declaration_destroy(shader->vertex_declaration);
             return hr;
         }
@@ -142,7 +136,7 @@ HRESULT d3d8_vertex_shader_init(struct d3d8_vertex_shader *shader, struct d3d8_d
 
 static void STDMETHODCALLTYPE d3d8_pixelshader_wined3d_object_destroyed(void *parent)
 {
-    heap_free(parent);
+    free(parent);
 }
 
 void d3d8_pixel_shader_destroy(struct d3d8_pixel_shader *shader)
@@ -169,11 +163,6 @@ HRESULT d3d8_pixel_shader_init(struct d3d8_pixel_shader *shader, struct d3d8_dev
 
     desc.byte_code = byte_code;
     desc.byte_code_size = ~(size_t)0;
-    desc.format = WINED3D_SHADER_BYTE_CODE_FORMAT_SM1;
-    desc.input_signature.element_count = 0;
-    desc.output_signature.element_count = 0;
-    desc.patch_constant_signature.element_count = 0;
-    desc.max_version = 1;
 
     wined3d_mutex_lock();
     hr = wined3d_shader_create_ps(device->wined3d_device, &desc, shader,
@@ -181,7 +170,7 @@ HRESULT d3d8_pixel_shader_init(struct d3d8_pixel_shader *shader, struct d3d8_dev
     wined3d_mutex_unlock();
     if (FAILED(hr))
     {
-        WARN("Failed to create wined3d pixel shader, hr %#x.\n", hr);
+        WARN("Failed to create wined3d pixel shader, hr %#lx.\n", hr);
         return hr;
     }
 

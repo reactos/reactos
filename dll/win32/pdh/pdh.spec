@@ -18,7 +18,7 @@
 @ stdcall PdhCollectQueryDataWithTime(ptr ptr)
 @ stdcall PdhCollectQueryDataEx(ptr long ptr)
 @ stub PdhComputeCounterStatistics
-@ stub PdhConnectMachineA
+@ stdcall PdhConnectMachineA(str)
 @ stub PdhConnectMachineW
 @ stub PdhCreateSQLTablesA
 @ stub PdhCreateSQLTablesW
@@ -145,7 +145,7 @@
 @ stub PdhVbCreateCounterPathList
 @ stub PdhVbGetCounterPathElements
 @ stub PdhVbGetCounterPathFromList
-@ stub PdhVbGetDoubleCounterValue
+@ stdcall PdhVbGetDoubleCounterValue(ptr ptr)
 @ stub PdhVbGetLogFileSize
 @ stub PdhVbGetOneCounterPath
 @ stub PdhVbIsGoodStatus

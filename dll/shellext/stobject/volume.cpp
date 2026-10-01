@@ -1,9 +1,9 @@
 /*
  * PROJECT:     ReactOS system libraries
- * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        dll/shellext/stobject/volume.cpp
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Volume notification icon handler
- * PROGRAMMERS: David Quintana <gigaherz@gmail.com>
+ * COPYRIGHT:   Copyright 2014-2015 David Quintana <gigaherz@gmail.com>
+ *              Copyright 2026 Vitaly Orekhov <vkvo2000@vivaldi.net>
  */
 
 #include "precomp.h"
@@ -14,7 +14,6 @@ HICON g_hIconVolume;
 HICON g_hIconMute;
 
 HMIXER g_hMixer;
-UINT   g_mixerId;
 DWORD  g_mixerLineID;
 DWORD  g_muteControlID;
 
@@ -30,6 +29,10 @@ static HRESULT __stdcall Volume_FindMixerControl(CSysTray * pSysTray)
     DWORD param2 = 0;
 
     TRACE("Volume_FindDefaultMixerID\n");
+
+    if (g_hMixer)
+        mixerClose(g_hMixer);
+    g_hMixer = NULL;
 
     result = waveOutMessage((HWAVEOUT)UlongToHandle(WAVE_MAPPER), DRVM_MAPPER_PREFERRED_GET, (DWORD_PTR)&waveOutId, (DWORD_PTR)&param2);
     if (result)
@@ -52,10 +55,6 @@ static HRESULT __stdcall Volume_FindMixerControl(CSysTray * pSysTray)
         TRACE("mixerId for waveOut default device is %d\n", mixerId);
     }
 
-    g_mixerId = mixerId;
-    return S_OK;
-
-    MIXERCAPS mixerCaps;
     MIXERLINE mixerLine;
     MIXERCONTROL mixerControl;
     MIXERLINECONTROLS mixerLineControls;
@@ -63,32 +62,23 @@ static HRESULT __stdcall Volume_FindMixerControl(CSysTray * pSysTray)
     g_mixerLineID = -1;
     g_muteControlID = -1;
 
-    if (mixerGetDevCapsW(g_mixerId, &mixerCaps, sizeof(mixerCaps)))
-        return E_FAIL;
-
-    if (mixerCaps.cDestinations == 0)
-        return S_FALSE;
-
-    TRACE("mixerCaps.cDestinations %d\n", mixerCaps.cDestinations);
-
-    DWORD idx;
-    for (idx = 0; idx < mixerCaps.cDestinations; idx++)
+    result = mixerOpen(&g_hMixer, mixerId, (DWORD_PTR)pSysTray->m_hWnd, 0, MIXER_OBJECTF_HMIXER | CALLBACK_WINDOW);
+    if (result)
     {
-        mixerLine.cbStruct = sizeof(mixerLine);
-        mixerLine.dwDestination = idx;
-        if (!mixerGetLineInfoW((HMIXEROBJ)UlongToHandle(g_mixerId), &mixerLine, 0))
-        {
-            if (mixerLine.dwComponentType >= MIXERLINE_COMPONENTTYPE_DST_SPEAKERS &&
-                mixerLine.dwComponentType <= MIXERLINE_COMPONENTTYPE_DST_HEADPHONES)
-                break;
-            TRACE("Destination %d was not speakers or headphones.\n");
-        }
+        ERR("mixerOpen failed (%lu)\n", result);
+        return E_FAIL;
     }
 
-    if (idx >= mixerCaps.cDestinations)
-        return E_FAIL;
+    mixerLine.cbStruct = sizeof(mixerLine);
+    mixerLine.dwComponentType = MIXERLINE_COMPONENTTYPE_DST_SPEAKERS;
 
-    TRACE("Valid destination %d found.\n");
+    result = mixerGetLineInfoW((HMIXEROBJ)g_hMixer, &mixerLine,
+                               MIXER_OBJECTF_HMIXER | MIXER_GETLINEINFOF_COMPONENTTYPE);
+    if (result)
+    {
+        ERR("mixerGetLineInfoW failed (%lu)\n", result);
+        return E_FAIL;
+    }
 
     g_mixerLineID = mixerLine.dwLineID;
 
@@ -99,10 +89,13 @@ static HRESULT __stdcall Volume_FindMixerControl(CSysTray * pSysTray)
     mixerLineControls.pamxctrl = &mixerControl;
     mixerLineControls.cbmxctrl = sizeof(mixerControl);
 
-    if (mixerGetLineControlsW((HMIXEROBJ)UlongToHandle(g_mixerId), &mixerLineControls, MIXER_GETLINECONTROLSF_ONEBYTYPE))
+    if (mixerGetLineControlsW((HMIXEROBJ)g_hMixer, &mixerLineControls, MIXER_OBJECTF_HMIXER | MIXER_GETLINECONTROLSF_ONEBYTYPE))
+    {
+        ERR("mixerGetLineControlsW failed (%lu)\n", result);
         return E_FAIL;
+    }
 
-    TRACE("Found control id %d for mute: %d\n", mixerControl.dwControlID);
+    TRACE("Found control id %d for mute\n", mixerControl.dwControlID);
 
     g_muteControlID = mixerControl.dwControlID;
 
@@ -113,7 +106,7 @@ HRESULT Volume_IsMute()
 {
     MIXERCONTROLDETAILS mixerControlDetails;
 
-    if (g_mixerId != (UINT)-1 && g_muteControlID != (DWORD)-1)
+    if (g_hMixer != NULL && g_muteControlID != (DWORD)-1)
     {
         BOOL detailsResult = 0;
         mixerControlDetails.cbStruct = sizeof(mixerControlDetails);
@@ -122,7 +115,7 @@ HRESULT Volume_IsMute()
         mixerControlDetails.cChannels = 1;
         mixerControlDetails.paDetails = &detailsResult;
         mixerControlDetails.cbDetails = sizeof(detailsResult);
-        if (mixerGetControlDetailsW((HMIXEROBJ)UlongToHandle(g_mixerId), &mixerControlDetails, 0))
+        if (mixerGetControlDetailsW((HMIXEROBJ)g_hMixer, &mixerControlDetails, MIXER_OBJECTF_HMIXER | MIXER_GETCONTROLDETAILSF_VALUE))
             return E_FAIL;
 
         TRACE("Obtained mute status %d\n", detailsResult);
@@ -301,8 +294,6 @@ HRESULT STDMETHODCALLTYPE Volume_Message(_In_ CSysTray * pSysTray, UINT uMsg, WP
         case ID_ICON_VOLUME:
             TRACE("Volume_Message uMsg=%d, w=%x, l=%x\n", uMsg, wParam, lParam);
 
-            Volume_Update(pSysTray);
-
             switch (lParam)
             {
                 case WM_LBUTTONDOWN:
@@ -330,6 +321,10 @@ HRESULT STDMETHODCALLTYPE Volume_Message(_In_ CSysTray * pSysTray, UINT uMsg, WP
                 case WM_MOUSEMOVE:
                     break;
             }
+            return S_OK;
+
+        case MM_MIXM_LINE_CHANGE:
+            Volume_Update(pSysTray);
             return S_OK;
 
         default:

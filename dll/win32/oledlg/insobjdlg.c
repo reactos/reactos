@@ -24,7 +24,7 @@
 #include "windef.h"
 #include "winbase.h"
 #include "winreg.h"
-#include "wine/winternl.h"
+#include "winternl.h"
 #include "winerror.h"
 #include "wingdi.h"
 #include "winuser.h"

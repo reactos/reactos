@@ -3,4 +3,4 @@
 @ stdcall -private DllGetClassObject(ptr ptr ptr)
 @ stdcall -private DllRegisterServer()
 @ stdcall -private DllUnregisterServer()
-@ stub DoOpenPipeStream
+@ stdcall DoOpenPipeStream(long long ptr)

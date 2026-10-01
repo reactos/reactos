@@ -2,7 +2,6 @@
 spec2def(npptools.dll npptools.spec)
 
 add_library(npptools MODULE
-    main.c
     ${CMAKE_CURRENT_BINARY_DIR}/npptools_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/npptools.def)
 
