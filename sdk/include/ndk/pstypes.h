@@ -1498,6 +1498,15 @@ typedef struct _ETHREAD
 //
 // Executive Process (EPROCESS)
 //
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+typedef struct _ALPC_PROCESS_CONTEXT
+{
+    EX_PUSH_LOCK Lock;
+    LIST_ENTRY ViewListHead;
+    volatile ULONG_PTR PagedPoolQuotaCache;
+} ALPC_PROCESS_CONTEXT, *PALPC_PROCESS_CONTEXT;
+#endif
+
 typedef struct _EPROCESS
 {
     KPROCESS Pcb;
@@ -1507,8 +1516,8 @@ typedef struct _EPROCESS
     EX_RUNDOWN_REF RundownProtect;
     HANDLE UniqueProcessId;
     LIST_ENTRY ActiveProcessLinks;
-    SIZE_T QuotaUsage[PsQuotaTypes];
-    SIZE_T QuotaPeak[PsQuotaTypes];
+    SIZE_T QuotaUsage[PsPageFile + 1];
+    SIZE_T QuotaPeak[PsPageFile + 1];
     SIZE_T CommitCharge;
     SIZE_T PeakVirtualSize;
     SIZE_T VirtualSize;
@@ -1619,8 +1628,14 @@ typedef struct _EPROCESS
             ULONG NumaAware:1;
             ULONG ProtectedProcess:1;
             ULONG DefaultPagePriority:3;
-            ULONG ProcessDeleteSelf:1;
+            ULONG PrimaryTokenFrozen:1;
             ULONG ProcessVerifierTarget:1;
+            ULONG StackRandomizationDisabled:1;
+#if (NTDDI_VERSION >= NTDDI_VISTASP1)
+            ULONG AffinityPermanent:1;
+            ULONG AffinityUpdateEnable:1;
+            ULONG CrossSessionCreate:1;
+#endif
         };
         ULONG Flags2;
     };
@@ -1667,7 +1682,12 @@ typedef struct _EPROCESS
 #endif
             ULONG DefaultIoPriority:3;
 #if (NTDDI_VERSION >= NTDDI_LONGHORN)
+#if (NTDDI_VERSION >= NTDDI_VISTASP1)
+            ULONG ProcessSelfDelete:1;
+            ULONG SpareProcessFlags:1;
+#else
             ULONG SparePsFlags1:2;
+#endif
 #else
             ULONG Spare1:1;
             ULONG Spare2:1;
@@ -1693,7 +1713,10 @@ typedef struct _EPROCESS
     UCHAR PriorityClass;
     MM_AVL_TABLE VadRoot;
     ULONG Cookie;
-#if defined(__REACTOS__)
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+    ALPC_PROCESS_CONTEXT AlpcContext;
+#endif
+#if defined(__REACTOS__) && (NTDDI_VERSION < NTDDI_LONGHORN)
     // Temp HACK until we switch to NTDDI_VISTA, when this moves to KPROCESS
     ULONGLONG CycleTime;
 #endif // ]
