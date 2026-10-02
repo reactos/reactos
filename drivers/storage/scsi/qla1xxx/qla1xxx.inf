@@ -1,0 +1,62 @@
+; QLA1XXX.INF
+
+; Installation file for QLogic ISP SCSI controllers
+
+[Version]
+Signature  = "$Windows NT$"
+;Signature  = "$ReactOS$"
+LayoutFile = layout.inf
+Class      = SCSIAdapter
+ClassGUID  = {4D36E97B-E325-11CE-BFC1-08002BE10318}
+Provider   = %ReactOS%
+DriverVer  = 05/17/2026,1.00
+
+[DestinationDirs]
+DefaultDestDir=12
+
+[Manufacturer]
+%QLogicMfg%=QLogicMfg
+
+[ControlFlags]
+ExcludeFromSelect=*
+
+[QLogicMfg]
+%ISP1040%=qla1xxx_Inst,PCI\VEN_1077&DEV_1020
+%ISP1240%=qla1xxx_Inst,PCI\VEN_1077&DEV_1240
+%ISP1080%=qla1xxx_Inst,PCI\VEN_1077&DEV_1080
+%ISP1280%=qla1xxx_Inst,PCI\VEN_1077&DEV_1280
+%ISP10160%=qla1xxx_Inst,PCI\VEN_1077&DEV_1016
+%ISP12160%=qla1xxx_Inst,PCI\VEN_1077&DEV_1216
+
+[qla1xxx_Inst.NT]
+CopyFiles=@qla1xxx.sys
+
+[qla1xxx_Inst.NT.Services]
+AddService=qla1xxx,0x00000002,qla1xxx_Service_Inst
+
+[qla1xxx_Service_Inst]
+ServiceType=1
+StartType=0
+ErrorControl=1
+ServiceBinary=%12%\qla1xxx.sys
+LoadOrderGroup=SCSI Miniport
+
+[Strings]
+; Non-localizable
+ReactOS="ReactOS Team"
+QLogicMfg="QLogic"
+
+ISP1040="QLogic ISP1020/1040 Ultra SCSI HBA"
+ISP1240="QLogic ISP1240 Dual Ultra SCSI HBA"
+ISP1080="QLogic ISP1080 Ultra2 SCSI HBA"
+ISP1280="QLogic ISP1280 Dual Ultra2 SCSI HBA"
+ISP10160="QLogic ISP10160 Ultra3 SCSI HBA"
+ISP12160="QLogic ISP12160 Dual Ultra3 SCSI HBA"
+
+[Strings.0419]
+ISP1040="QLogic ISP1020/1040 Ultra SCSI хост-адаптер"
+ISP1240="QLogic ISP1240 Dual Ultra SCSI хост-адаптер"
+ISP1080="QLogic ISP1080 Ultra2 SCSI хост-адаптер"
+ISP1280="QLogic ISP1280 Dual Ultra2 SCSI хост-адаптер"
+ISP10160="QLogic ISP10160 Ultra3 SCSI хост-адаптер"
+ISP12160="QLogic ISP12160 Dual Ultra3 SCSI хост-адаптер"
