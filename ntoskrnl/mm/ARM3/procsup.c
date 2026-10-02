@@ -24,6 +24,67 @@ ULONG MmRotatingUniprocessorNumber = 0;
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
+VOID
+NTAPI
+MiInitializeProcessAddressSpaceLock(
+    _Out_ PEPROCESS Process)
+{
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+    ExInitializePushLock(&Process->AddressCreationLock);
+#else
+    KeInitializeGuardedMutex(&Process->AddressCreationLock);
+#endif
+}
+
+VOID
+NTAPI
+MiLockProcessAddressSpace(
+    _Inout_ PEPROCESS Process)
+{
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+    KeEnterGuardedRegion();
+    ExAcquirePushLockExclusive(&Process->AddressCreationLock);
+    PsGetCurrentThread()->OwnsProcessAddressSpaceExclusive = TRUE;
+#else
+    KeAcquireGuardedMutex(&Process->AddressCreationLock);
+#endif
+}
+
+BOOLEAN
+NTAPI
+MiTryToLockProcessAddressSpace(
+    _Inout_ PEPROCESS Process)
+{
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+    KeEnterGuardedRegion();
+    if (!ExTryToAcquirePushLockExclusive(&Process->AddressCreationLock))
+    {
+        KeLeaveGuardedRegion();
+        return FALSE;
+    }
+
+    PsGetCurrentThread()->OwnsProcessAddressSpaceExclusive = TRUE;
+    return TRUE;
+#else
+    return KeTryToAcquireGuardedMutex(&Process->AddressCreationLock);
+#endif
+}
+
+VOID
+NTAPI
+MiUnlockProcessAddressSpace(
+    _Inout_ PEPROCESS Process)
+{
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+    ASSERT(PsGetCurrentThread()->OwnsProcessAddressSpaceExclusive);
+    PsGetCurrentThread()->OwnsProcessAddressSpaceExclusive = FALSE;
+    ExReleasePushLockExclusive(&Process->AddressCreationLock);
+    KeLeaveGuardedRegion();
+#else
+    KeReleaseGuardedMutex(&Process->AddressCreationLock);
+#endif
+}
+
 NTSTATUS
 NTAPI
 MiCreatePebOrTeb(IN PEPROCESS Process,
@@ -191,7 +252,7 @@ MmDeleteTeb(IN PEPROCESS Process,
     KeAttachProcess(&Process->Pcb);
 
     /* Lock the process address space */
-    KeAcquireGuardedMutex(&Process->AddressCreationLock);
+    MiLockProcessAddressSpace(Process);
 
     /* Find the VAD, make sure it's a TEB VAD */
     Vad = MiLocateAddress(Teb);
@@ -232,7 +293,7 @@ MmDeleteTeb(IN PEPROCESS Process,
     }
 
     /* Release the address space lock */
-    KeReleaseGuardedMutex(&Process->AddressCreationLock);
+    MiUnlockProcessAddressSpace(Process);
 
     /* Detach */
     KeDetachProcess();
@@ -1023,7 +1084,7 @@ MmInitializeProcessAddressSpace(IN PEPROCESS Process,
     Process->AddressSpaceInitialized = 2;
 
     /* Initialize the Addresss Space lock */
-    KeInitializeGuardedMutex(&Process->AddressCreationLock);
+    MiInitializeProcessAddressSpaceLock(Process);
     Process->Vm.WorkingSetExpansionLinks.Flink = NULL;
 
     /* Initialize AVL tree */
@@ -1188,7 +1249,7 @@ MmInitializeHandBuiltProcess(IN PEPROCESS Process,
     DirectoryTableBase[1] = PsGetCurrentProcess()->Pcb.DirectoryTableBase[1];
 
     /* Initialize the Addresss Space */
-    KeInitializeGuardedMutex(&Process->AddressCreationLock);
+    MiInitializeProcessAddressSpaceLock(Process);
     KeInitializeSpinLock(&Process->HyperSpaceLock);
     Process->Vm.WorkingSetExpansionLinks.Flink = NULL;
     ASSERT(Process->VadRoot.NumberGenericTableElements == 0);

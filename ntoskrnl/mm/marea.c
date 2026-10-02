@@ -265,7 +265,7 @@ MmFreeMemoryArea(
     PVOID EndAddress;
 
     /* Make sure we own the address space lock! */
-    ASSERT(CONTAINING_RECORD(AddressSpace, EPROCESS, Vm)->AddressCreationLock.Owner == KeGetCurrentThread());
+    ASSERT(MiIsProcessAddressSpaceLockOwner(CONTAINING_RECORD(AddressSpace, EPROCESS, Vm)));
 
     /* Check magic */
     ASSERT(MemoryArea->Magic == 'erAM');

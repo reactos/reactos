@@ -62,7 +62,7 @@ MiDbgAssertIsLockedForRead(_In_ PMM_AVL_TABLE Table)
            the idle process' AddressCreationLock */
         ASSERT(PsGetCurrentThread()->OwnsSystemWorkingSetExclusive ||
                PsGetCurrentThread()->OwnsSystemWorkingSetShared ||
-               (PsIdleProcess->AddressCreationLock.Owner == KeGetCurrentThread()));
+               MiIsProcessAddressSpaceLockOwner(PsIdleProcess));
     }
     else
     {
@@ -70,7 +70,7 @@ MiDbgAssertIsLockedForRead(_In_ PMM_AVL_TABLE Table)
            the current process' AddressCreationLock */
         PEPROCESS Process = CONTAINING_RECORD(Table, EPROCESS, VadRoot);
         ASSERT(MI_WS_OWNER(Process) ||
-               (Process->AddressCreationLock.Owner == KeGetCurrentThread()));
+               MiIsProcessAddressSpaceLockOwner(Process));
     }
 }
 
@@ -88,7 +88,7 @@ MiDbgAssertIsLockedForWrite(_In_ PMM_AVL_TABLE Table)
         /* Need to hold both the system working-set lock exclusive and
            the idle process' AddressCreationLock */
         ASSERT(PsGetCurrentThread()->OwnsSystemWorkingSetExclusive);
-        ASSERT(PsIdleProcess->AddressCreationLock.Owner == KeGetCurrentThread());
+        ASSERT(MiIsProcessAddressSpaceLockOwner(PsIdleProcess));
     }
     else
     {
@@ -97,7 +97,7 @@ MiDbgAssertIsLockedForWrite(_In_ PMM_AVL_TABLE Table)
         PEPROCESS Process = CONTAINING_RECORD(Table, EPROCESS, VadRoot);
         ASSERT(Process == PsGetCurrentProcess());
         ASSERT(PsGetCurrentThread()->OwnsProcessWorkingSetExclusive);
-        ASSERT(Process->AddressCreationLock.Owner == KeGetCurrentThread());
+        ASSERT(MiIsProcessAddressSpaceLockOwner(Process));
     }
 }
 
@@ -263,10 +263,10 @@ MiInsertVadEx(
     CurrentProcess = PsGetCurrentProcess();
 
     /* Acquire the address creation lock and make sure the process is alive */
-    KeAcquireGuardedMutex(&CurrentProcess->AddressCreationLock);
+    MiLockProcessAddressSpace(CurrentProcess);
     if (CurrentProcess->VmDeleted)
     {
-        KeReleaseGuardedMutex(&CurrentProcess->AddressCreationLock);
+        MiUnlockProcessAddressSpace(CurrentProcess);
         DPRINT1("The process is dying\n");
         return STATUS_PROCESS_IS_TERMINATING;
     }
@@ -305,7 +305,7 @@ MiInsertVadEx(
         if ((Result == TableFoundNode) || (EndingAddress > HighestAddress))
         {
             DPRINT1("Not enough free space to insert this VAD node!\n");
-            KeReleaseGuardedMutex(&CurrentProcess->AddressCreationLock);
+            MiUnlockProcessAddressSpace(CurrentProcess);
             return STATUS_NO_MEMORY;
         }
 
@@ -327,7 +327,7 @@ MiInsertVadEx(
         if (Result == TableFoundNode)
         {
             DPRINT("Given address conflicts with existing node\n");
-            KeReleaseGuardedMutex(&CurrentProcess->AddressCreationLock);
+            MiUnlockProcessAddressSpace(CurrentProcess);
             return STATUS_CONFLICTING_ADDRESSES;
         }
     }
@@ -375,7 +375,7 @@ MiInsertVadEx(
     }
 
     /* Unlock the address space */
-    KeReleaseGuardedMutex(&CurrentProcess->AddressCreationLock);
+    MiUnlockProcessAddressSpace(CurrentProcess);
 
     *BaseAddress = StartingAddress;
     return STATUS_SUCCESS;
