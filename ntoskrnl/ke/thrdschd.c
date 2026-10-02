@@ -190,8 +190,8 @@ KiDeferredReadyThread(IN PKTHREAD Thread)
         }
 
         /* We need 4 quanta, make sure we have them, then decrease by one */
-        if (Thread->Quantum < 4) Thread->Quantum = 4;
-        Thread->Quantum--;
+        if (KiThreadQuantum(Thread) < 4) KiThreadQuantum(Thread) = 4;
+        KiThreadQuantum(Thread)--;
 
         /* Make sure the priority is still valid */
         ASSERT((Thread->Priority >= 0) && (Thread->Priority <= HIGH_PRIORITY));
@@ -210,7 +210,7 @@ KiDeferredReadyThread(IN PKTHREAD Thread)
             if (Thread->BasePriority >= (LOW_REALTIME_PRIORITY - 2))
             {
                 /* It is, so simply reset its quantum */
-                Thread->Quantum = Thread->QuantumReset;
+                KiThreadQuantum(Thread) = Thread->QuantumReset;
             }
             else
             {
@@ -218,17 +218,17 @@ KiDeferredReadyThread(IN PKTHREAD Thread)
                 if (!(Thread->PriorityDecrement) && (Thread->AdjustIncrement))
                 {
                     /* Yes, reset its quantum */
-                    Thread->Quantum = Thread->QuantumReset;
+                    KiThreadQuantum(Thread) = Thread->QuantumReset;
                 }
 
                 /* Wait code already handles quantum adjustment during APCs */
                 if (Thread->WaitStatus != STATUS_KERNEL_APC)
                 {
                     /* Decrease the quantum by one and check if we're out */
-                    if (--Thread->Quantum <= 0)
+                    if (--KiThreadQuantum(Thread) <= 0)
                     {
                         /* We are, reset the quantum and get a new priority */
-                        Thread->Quantum = Thread->QuantumReset;
+                        KiThreadQuantum(Thread) = Thread->QuantumReset;
                         Thread->Priority = KiComputeNewPriority(Thread, 1);
                     }
                 }
@@ -283,7 +283,7 @@ KiDeferredReadyThread(IN PKTHREAD Thread)
         else
         {
             /* It's a real-time thread, so just reset its quantum */
-            Thread->Quantum = Thread->QuantumReset;
+            KiThreadQuantum(Thread) = Thread->QuantumReset;
         }
 
         /* Make sure the priority makes sense */
@@ -545,10 +545,10 @@ KiAdjustQuantumThread(IN PKTHREAD Thread)
         (Thread->BasePriority < (LOW_REALTIME_PRIORITY - 2)))
     {
         /* Decrease Quantum by one and see if we've ran out */
-        if (--Thread->Quantum <= 0)
+        if (--KiThreadQuantum(Thread) <= 0)
         {
             /* Return quantum */
-            Thread->Quantum = Thread->QuantumReset;
+            KiThreadQuantum(Thread) = Thread->QuantumReset;
 
             /* Calculate new Priority */
             Thread->Priority = KiComputeNewPriority(Thread, 1);
@@ -919,7 +919,7 @@ NtYieldExecution(VOID)
         if (NextThread)
         {
             /* Reset quantum and recalculate priority */
-            Thread->Quantum = Thread->QuantumReset;
+            KiThreadQuantum(Thread) = Thread->QuantumReset;
             Thread->Priority = KiComputeNewPriority(Thread, 1);
 
             /* Release the thread lock */

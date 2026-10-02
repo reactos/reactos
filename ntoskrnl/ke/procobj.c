@@ -432,7 +432,7 @@ KeSetPriorityAndQuantumProcess(IN PKPROCESS Process,
 
                 /* Update priority and quantum */
                 Thread->BasePriority = (SCHAR)NewPriority;
-                Thread->Quantum = Thread->QuantumReset;
+                KiThreadQuantum(Thread) = Thread->QuantumReset;
 
                 /* Disable decrements and update priority */
                 Thread->PriorityDecrement = 0;
@@ -494,7 +494,7 @@ KeSetPriorityAndQuantumProcess(IN PKPROCESS Process,
 
                 /* Update priority and quantum */
                 Thread->BasePriority = (SCHAR)NewPriority;
-                Thread->Quantum = Thread->QuantumReset;
+                KiThreadQuantum(Thread) = Thread->QuantumReset;
 
                 /* Disable decrements and update priority */
                 Thread->PriorityDecrement = 0;

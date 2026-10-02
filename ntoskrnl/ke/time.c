@@ -230,10 +230,10 @@ KeUpdateRunTime(IN PKTRAP_FRAME TrapFrame,
     }
 
     /* Decrement the thread quantum */
-    Thread->Quantum -= CLOCK_QUANTUM_DECREMENT;
+    KiThreadQuantum(Thread) -= CLOCK_QUANTUM_DECREMENT;
 
     /* Check if the time expired */
-    if ((Thread->Quantum <= 0) && (Thread != Prcb->IdleThread))
+    if ((KiThreadQuantum(Thread) <= 0) && (Thread != Prcb->IdleThread))
     {
         /* Schedule a quantum end */
         Prcb->QuantumEnd = 1;

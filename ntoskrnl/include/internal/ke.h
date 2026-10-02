@@ -168,6 +168,15 @@ extern VOID __cdecl KiInterruptTemplate(VOID);
 /* One of the Reserved Wait Blocks, this one is for the Thread's Timer */
 #define TIMER_WAIT_BLOCK 0x3L
 
+/* Tick based quantum and IOPL live in the ReactOS part of ETHREAD on Vista */
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+#define KiThreadQuantum(Thread) (((PETHREAD)(Thread))->Quantum)
+#define KiThreadIopl(Thread) (((PETHREAD)(Thread))->Iopl)
+#else
+#define KiThreadQuantum(Thread) ((Thread)->Quantum)
+#define KiThreadIopl(Thread) ((Thread)->Iopl)
+#endif
+
 /* INTERNAL KERNEL FUNCTIONS ************************************************/
 
 /* Finds a new thread to run */
