@@ -727,7 +727,12 @@ typedef struct _KPRCB
 #else
     UINT64 PrcbPad00[4];
 #endif
-    KSPIN_LOCK_QUEUE LockQueue[LockQueueMaximumLock]; // 2003: 33, vista:49
+#if (NTDDI_VERSION >= NTDDI_VISTASP1)
+    /* Sized for 32 timer table locks, only LockQueueMaximumLock entries are used */
+    KSPIN_LOCK_QUEUE LockQueue[LockQueueTimerTableLock + 32];
+#else
+    KSPIN_LOCK_QUEUE LockQueue[LockQueueMaximumLock];
+#endif
     PP_LOOKASIDE_LIST PPLookasideList[16];
     GENERAL_LOOKASIDE_POOL PPNPagedLookasideList[NUMBER_POOL_LOOKASIDE_LISTS];
     GENERAL_LOOKASIDE_POOL PPPagedLookasideList[NUMBER_POOL_LOOKASIDE_LISTS];
@@ -794,8 +799,16 @@ typedef struct _KPRCB
     UCHAR DpcThreadRequested;
     UCHAR DpcRoutineActive;
     UCHAR DpcThreadActive;
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+    union
+    {
+        UINT64 TimerHand;
+        UINT64 TimerRequest;
+    };
+#else
     UINT64 TimerHand;
     UINT64 TimerRequest;
+#endif
     LONG TickOffset;
     LONG MasterOffset;
     ULONG DpcLastCount;
@@ -956,6 +969,11 @@ typedef struct _KPRCB
 #if (NTDDI_VERSION < NTDDI_LONGHORN)
     UINT64 StartCycles;
     UINT64 CycleTime;
+#else
+    PPROCESSOR_IDLE_FUNCTION IdleFunction;
+    ULONG Idle0KernelTimeLimit;
+    UCHAR CurrentThrottle;
+    UCHAR CurrentThrottleIndex;
 #endif
 #if  (NTDDI_VERSION < NTDDI_WINBLUE)
     // On Win 8.1+ the FeatureBits field is extended to 64 bits

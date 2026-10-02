@@ -1797,7 +1797,7 @@ typedef struct _KTHREAD
 #elif (NTDDI_VERSION >= NTDDI_LONGHORN) // ][
     PVOID MdlForLockedTeb;
 #endif // ]
-#if defined(__REACTOS__) && defined(_M_AMD64) // HACK!
+#if defined(__REACTOS__) && defined(_M_AMD64) && (NTDDI_VERSION < NTDDI_LONGHORN) // HACK!
     XSAVE_FORMAT* StateSaveArea;
 #endif
 } KTHREAD;
@@ -2257,7 +2257,11 @@ typedef struct _KPROCESS
     ULONG UserTime;
     LIST_ENTRY ReadyListHead;
     SINGLE_LIST_ENTRY SwapListEntry;
+#if defined(_M_AMD64) && (NTDDI_VERSION >= NTDDI_LONGHORN)
+    PVOID InstrumentationCallback;
+#else
     PVOID VdmTrapcHandler;
+#endif
     LIST_ENTRY ThreadListHead;
     KSPIN_LOCK ProcessLock;
     KAFFINITY Affinity;
@@ -2284,7 +2288,11 @@ typedef struct _KPROCESS
         KEXECUTE_OPTIONS Flags;
         UCHAR ExecuteOptions;
     };
+#if (NTDDI_VERSION >= NTDDI_LONGHORN) // [
+    ULONG_PTR StackCount;
+#else // ][
     ULONG StackCount;
+#endif // ]
     LIST_ENTRY ProcessListEntry;
 #if (NTDDI_VERSION >= NTDDI_LONGHORN) // [
     ULONGLONG CycleTime;

@@ -3,6 +3,7 @@ if(ARCH STREQUAL "amd64")
     add_library(ndk_tests
         win2003_x64.c
         winvista_x64.c
+        winvistasp2_x64.c
         win7_x64.c
         win8_x64.c
         win81_x64.c

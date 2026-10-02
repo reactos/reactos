@@ -1357,7 +1357,7 @@ typedef struct _ETHREAD
     UCHAR CacheManagerActive;
     UCHAR DisablePageFaultClustering;
     UCHAR ActiveFaultCount;
-    ULONG AlpcMessageId;
+    ULONG_PTR AlpcMessageId;
     union
     {
         PVOID AlpcMessage;
@@ -1492,6 +1492,10 @@ typedef struct _ETHREAD
     /* Kept in KTHREAD before Vista */
     SCHAR Quantum;
     UCHAR Iopl;
+#if defined(_M_AMD64) && (NTDDI_VERSION < NTDDI_WIN8)
+    /* KTHREAD only has this starting with Win8 */
+    XSAVE_FORMAT* StateSaveArea;
+#endif
 #else
     // Temp HACK until we switch to NTDDI_VISTA, when these move to KTHREAD
     volatile ULONGLONG CycleTime;
@@ -1611,7 +1615,7 @@ typedef struct _EPROCESS
     PVOID AweInfo;
     SE_AUDIT_PROCESS_CREATION_INFO SeAuditProcessCreationInfo;
     MMSUPPORT Vm;
-#ifdef _M_AMD64
+#if defined(_M_AMD64) && (NTDDI_VERSION < NTDDI_LONGHORN)
     ULONG Spares[2];
 #else
     LIST_ENTRY MmProcessLinks;
