@@ -309,7 +309,7 @@ IncreaseMftSize(PDEVICE_EXTENSION Vcb, BOOLEAN CanWait)
     ULONG i;
     NTSTATUS Status;
 
-    DPRINT1("IncreaseMftSize(%p, %s)\n", Vcb, CanWait ? "TRUE" : "FALSE");
+    DPRINT("IncreaseMftSize(%p, %s)\n", Vcb, CanWait ? "TRUE" : "FALSE");
 
     // We need exclusive access to the mft while we change its size
     if (!ExAcquireResourceExclusiveLite(&(Vcb->DirResource), CanWait))
@@ -551,7 +551,7 @@ InternalSetResidentAttributeLength(PDEVICE_EXTENSION DeviceExt,
     ULONG OldAttributeLength = Destination->Length;
     ULONG NextAttributeOffset;
 
-    DPRINT1("InternalSetResidentAttributeLength( %p, %p, %p, %lu, %lu )\n", DeviceExt, AttrContext, FileRecord, AttrOffset, DataSize);
+    DPRINT("InternalSetResidentAttributeLength( %p, %p, %p, %lu, %lu )\n", DeviceExt, AttrContext, FileRecord, AttrOffset, DataSize);
 
     ASSERT(!AttrContext->pRecord->IsNonResident);
 
@@ -621,7 +621,7 @@ SetAttributeDataLength(PFILE_OBJECT FileObject,
 {
     NTSTATUS Status = STATUS_SUCCESS;
 
-    DPRINT1("SetAttributeDataLength(%p, %p, %p, %lu, %p, %I64u)\n",
+    DPRINT("SetAttributeDataLength(%p, %p, %p, %lu, %p, %I64u)\n",
             FileObject,
             Fcb,
             AttrContext,
@@ -925,7 +925,7 @@ SetResidentAttributeDataLength(PDEVICE_EXTENSION Vcb,
                 ULONG EndAttributeOffset;
                 ULONG LengthWritten;
 
-                DPRINT1("Converting attribute to non-resident.\n");
+                DPRINT("Converting attribute to non-resident.\n");
 
                 AttribDataSize.QuadPart = AttrContext->pRecord->Resident.ValueLength;
 
@@ -1061,25 +1061,243 @@ SetResidentAttributeDataLength(PDEVICE_EXTENSION Vcb,
     return STATUS_SUCCESS;
 }
 
-ULONG
-ReadAttribute(PDEVICE_EXTENSION Vcb,
-              PNTFS_ATTR_CONTEXT Context,
-              ULONGLONG Offset,
-              PCHAR Buffer,
-              ULONG Length)
+/**
+* @name NtfsMapAttributeRuns
+* @implemented
+*
+* Maps a byte range of a non-resident attribute onto the volume, collecting the
+* physically contiguous runs it spans into a run list.
+*
+* @param Vcb
+* Volume the attribute lives on
+*
+* @param Context
+* Attribute to map. Its data run cache is updated to reflect where the mapping
+* stopped.
+*
+* @param Offset
+* Byte offset into the attribute to start mapping at
+*
+* @param Length
+* How many bytes to map
+*
+* @param RunList
+* Receives the runs. Must have been initialized by NtfsInitIoRunList().
+*
+* @param MappedLength
+* Receives how many bytes were actually mapped, which is less than Length if
+* the attribute's allocation ends first.
+*
+* @return
+* STATUS_SUCCESS if the range was mapped, STATUS_END_OF_FILE if Offset lies
+* beyond the last allocated cluster, or STATUS_INSUFFICIENT_RESOURCES.
+*
+* @remarks Holes are recorded as NTFS_SPARSE_LBO runs rather than rejected
+* here: reads satisfy them by zeroing and writes fail on them, so the policy
+* belongs to the caller.
+*
+*/
+static
+NTSTATUS
+NtfsMapAttributeRuns(PDEVICE_EXTENSION Vcb,
+                     PNTFS_ATTR_CONTEXT Context,
+                     ULONGLONG Offset,
+                     ULONG Length,
+                     PNTFS_IO_RUN_LIST RunList,
+                     PULONG MappedLength)
 {
-    ULONGLONG LastLCN;
+    ULONGLONG LastLCN = 0;
+    ULONGLONG CurrentOffset = 0;
     PUCHAR DataRun;
     LONGLONG DataRunOffset;
-    ULONGLONG DataRunLength;
-    LONGLONG DataRunStartLCN;
-    ULONGLONG CurrentOffset;
-    ULONG ReadLength;
-    ULONG AlreadyRead;
-    NTSTATUS Status;
+    ULONGLONG DataRunLength = 0;
+    LONGLONG DataRunStartLCN = -1;
+    ULONG RunLength;
+    ULONG Mapped = 0;
+    ULONG UsedBufferSize;
+    NTSTATUS Status = STATUS_SUCCESS;
 
     //TEMPTEMP
     PUCHAR TempBuffer;
+
+    *MappedLength = 0;
+
+    // This will be rewritten in the next iteration to just use the DataRuns MCB directly
+    TempBuffer = ExAllocatePoolWithTag(NonPagedPool, Vcb->NtfsInfo.BytesPerFileRecord, TAG_NTFS);
+    if (TempBuffer == NULL)
+    {
+        DPRINT1("Not enough memory!\n");
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    ConvertLargeMCBToDataRuns(&Context->DataRunsMCB,
+                              TempBuffer,
+                              Vcb->NtfsInfo.BytesPerFileRecord,
+                              &UsedBufferSize);
+
+    DataRun = TempBuffer;
+
+    // I. Walk forward to the data run that holds Offset.
+    while (1)
+    {
+        DataRun = DecodeRun(DataRun, &DataRunOffset, &DataRunLength);
+        if (DataRunOffset != (LONGLONG)-1)
+        {
+            /* Normal data run. */
+            DataRunStartLCN = LastLCN + DataRunOffset;
+            LastLCN = DataRunStartLCN;
+        }
+        else
+        {
+            /* Sparse data run. */
+            DataRunStartLCN = -1;
+        }
+
+        if (Offset >= CurrentOffset &&
+            Offset < CurrentOffset + (DataRunLength * Vcb->NtfsInfo.BytesPerCluster))
+        {
+            break;
+        }
+
+        if (*DataRun == 0)
+        {
+            /* Offset is past the last cluster the attribute has allocated. */
+            Status = STATUS_END_OF_FILE;
+            goto Cleanup;
+        }
+
+        CurrentOffset += DataRunLength * Vcb->NtfsInfo.BytesPerCluster;
+    }
+
+    // II. Collect the runs. The first is special only in that the request
+    // usually starts partway into it.
+
+    RunLength = (ULONG)min(DataRunLength * Vcb->NtfsInfo.BytesPerCluster - (Offset - CurrentOffset), Length);
+
+    Status = NtfsAddIoRun(RunList,
+                          (DataRunStartLCN == -1) ? NTFS_SPARSE_LBO :
+                              DataRunStartLCN * Vcb->NtfsInfo.BytesPerCluster + Offset - CurrentOffset,
+                          RunLength);
+    if (!NT_SUCCESS(Status))
+        goto Cleanup;
+
+    Length -= RunLength;
+    Mapped += RunLength;
+
+    /* Did that consume the rest of this data run? */
+    if (RunLength == DataRunLength * Vcb->NtfsInfo.BytesPerCluster - (Offset - CurrentOffset))
+    {
+        CurrentOffset += DataRunLength * Vcb->NtfsInfo.BytesPerCluster;
+        DataRun = DecodeRun(DataRun, &DataRunOffset, &DataRunLength);
+        if (DataRunOffset != (LONGLONG)-1)
+        {
+            DataRunStartLCN = LastLCN + DataRunOffset;
+            LastLCN = DataRunStartLCN;
+        }
+        else
+            DataRunStartLCN = -1;
+    }
+
+    while (Length > 0)
+    {
+        RunLength = (ULONG)min(DataRunLength * Vcb->NtfsInfo.BytesPerCluster, Length);
+
+        Status = NtfsAddIoRun(RunList,
+                              (DataRunStartLCN == -1) ? NTFS_SPARSE_LBO :
+                                  DataRunStartLCN * Vcb->NtfsInfo.BytesPerCluster,
+                              RunLength);
+        if (!NT_SUCCESS(Status))
+            goto Cleanup;
+
+        Length -= RunLength;
+        Mapped += RunLength;
+
+        /* We satisfied the request, but there is still data in this run. */
+        if (Length == 0 && RunLength != DataRunLength * Vcb->NtfsInfo.BytesPerCluster)
+            break;
+
+        /* Last run the attribute has, so the caller gets a short map */
+        if (*DataRun == 0)
+            break;
+
+        CurrentOffset += DataRunLength * Vcb->NtfsInfo.BytesPerCluster;
+        DataRun = DecodeRun(DataRun, &DataRunOffset, &DataRunLength);
+        if (DataRunOffset != (LONGLONG)-1)
+        {
+            /* Normal data run. */
+            DataRunStartLCN = LastLCN + DataRunOffset;
+            LastLCN = DataRunStartLCN;
+        }
+        else
+        {
+            /* Sparse data run. */
+            DataRunStartLCN = -1;
+        }
+    }
+
+Cleanup:
+    Context->CacheRun = DataRun;
+    Context->CacheRunOffset = Offset + Mapped;
+    Context->CacheRunStartLCN = DataRunStartLCN;
+    Context->CacheRunLength = DataRunLength;
+    Context->CacheRunLastLCN = LastLCN;
+    Context->CacheRunCurrentOffset = CurrentOffset;
+
+    //TEMPTEMP
+    ExFreePoolWithTag(TempBuffer, TAG_NTFS);
+
+    *MappedLength = Mapped;
+
+    return Status;
+}
+
+/**
+* @name ReadAttributeToIrp
+* @implemented
+*
+* Reads a range of an attribute, serving it out of the given IRP where the
+* shape of the request allows it.
+*
+* @param Vcb
+* Volume the attribute lives on
+*
+* @param Context
+* Attribute to read from
+*
+* @param Offset
+* Byte offset into the attribute to start reading at
+*
+* @param Buffer
+* System-space buffer receiving the data
+*
+* @param Length
+* How much to read, in bytes
+*
+* @param Irp
+* The request being served, or NULL. When supplied and the range is a single
+* aligned contiguous piece of the volume, the IRP goes straight to the storage
+* stack and the disk transfers directly into the caller's pages.
+*
+* @return
+* The number of bytes read, or zero on failure.
+*
+* @remarks An IRP may only be passed when Buffer is the start of that IRP's
+* buffer and nothing has been realigned or bounced, since a forwarded transfer
+* lands at the beginning of the IRP's MDL.
+*
+*/
+ULONG
+ReadAttributeToIrp(PDEVICE_EXTENSION Vcb,
+                   PNTFS_ATTR_CONTEXT Context,
+                   ULONGLONG Offset,
+                   PCHAR Buffer,
+                   ULONG Length,
+                   PIRP Irp)
+{
+    ULONG AlreadyRead = 0;
+    ULONG Transferred = 0;
+    NTSTATUS Status;
+    NTFS_IO_RUN_LIST RunList;
 
     if (!Context->pRecord->IsNonResident)
     {
@@ -1098,175 +1316,53 @@ ReadAttribute(PDEVICE_EXTENSION Vcb,
     }
 
     /*
-     * Non-resident attribute
+     * Non-resident attribute: map the requested range onto the volume, then
+     * issue every run it spans in a single parallel batch.
      */
 
-    /*
-     * I. Find the corresponding start data run.
-     */
+    NtfsInitIoRunList(&RunList);
 
-    AlreadyRead = 0;
+    Status = NtfsMapAttributeRuns(Vcb, Context, Offset, Length, &RunList, &AlreadyRead);
 
-    // FIXME: Cache seems to be non-working. Disable it for now
-    //if(Context->CacheRunOffset <= Offset && Offset < Context->CacheRunOffset + Context->CacheRunLength * Volume->ClusterSize)
-    if (0)
+    if (NT_SUCCESS(Status) && AlreadyRead != 0)
     {
-        DataRun = Context->CacheRun;
-        LastLCN = Context->CacheRunLastLCN;
-        DataRunStartLCN = Context->CacheRunStartLCN;
-        DataRunLength = Context->CacheRunLength;
-        CurrentOffset = Context->CacheRunCurrentOffset;
-    }
-    else
-    {
-        //TEMPTEMP
-        ULONG UsedBufferSize;
-        TempBuffer = ExAllocatePoolWithTag(NonPagedPool, Vcb->NtfsInfo.BytesPerFileRecord, TAG_NTFS);
-        if (TempBuffer == NULL)
-        {
-            return STATUS_INSUFFICIENT_RESOURCES;
-        }
-
-        LastLCN = 0;
-        CurrentOffset = 0;
-
-        // This will be rewritten in the next iteration to just use the DataRuns MCB directly
-        ConvertLargeMCBToDataRuns(&Context->DataRunsMCB,
-                                  TempBuffer,
-                                  Vcb->NtfsInfo.BytesPerFileRecord,
-                                  &UsedBufferSize);
-
-        DataRun = TempBuffer;
-
-        while (1)
-        {
-            DataRun = DecodeRun(DataRun, &DataRunOffset, &DataRunLength);
-            if (DataRunOffset != -1)
-            {
-                /* Normal data run. */
-                DataRunStartLCN = LastLCN + DataRunOffset;
-                LastLCN = DataRunStartLCN;
-            }
-            else
-            {
-                /* Sparse data run. */
-                DataRunStartLCN = -1;
-            }
-
-            if (Offset >= CurrentOffset &&
-                Offset < CurrentOffset + (DataRunLength * Vcb->NtfsInfo.BytesPerCluster))
-            {
-                break;
-            }
-
-            if (*DataRun == 0)
-            {
-                ExFreePoolWithTag(TempBuffer, TAG_NTFS);
-                return AlreadyRead;
-            }
-
-            CurrentOffset += DataRunLength * Vcb->NtfsInfo.BytesPerCluster;
-        }
-    }
-
-    /*
-     * II. Go through the run list and read the data
-     */
-
-    ReadLength = (ULONG)min(DataRunLength * Vcb->NtfsInfo.BytesPerCluster - (Offset - CurrentOffset), Length);
-    if (DataRunStartLCN == -1)
-    {
-        RtlZeroMemory(Buffer, ReadLength);
-        Status = STATUS_SUCCESS;
-    }
-    else
-    {
-        Status = NtfsReadDisk(Vcb->StorageDevice,
-                              DataRunStartLCN * Vcb->NtfsInfo.BytesPerCluster + Offset - CurrentOffset,
-                              ReadLength,
-                              Vcb->NtfsInfo.BytesPerSector,
-                              (PVOID)Buffer,
-                              FALSE);
-    }
-    if (NT_SUCCESS(Status))
-    {
-        Length -= ReadLength;
-        Buffer += ReadLength;
-        AlreadyRead += ReadLength;
-
-        if (ReadLength == DataRunLength * Vcb->NtfsInfo.BytesPerCluster - (Offset - CurrentOffset))
-        {
-            CurrentOffset += DataRunLength * Vcb->NtfsInfo.BytesPerCluster;
-            DataRun = DecodeRun(DataRun, &DataRunOffset, &DataRunLength);
-            if (DataRunOffset != (ULONGLONG)-1)
-            {
-                DataRunStartLCN = LastLCN + DataRunOffset;
-                LastLCN = DataRunStartLCN;
-            }
-            else
-                DataRunStartLCN = -1;
-        }
-
-        while (Length > 0)
-        {
-            ReadLength = (ULONG)min(DataRunLength * Vcb->NtfsInfo.BytesPerCluster, Length);
-            if (DataRunStartLCN == -1)
-                RtlZeroMemory(Buffer, ReadLength);
-            else
-            {
-                Status = NtfsReadDisk(Vcb->StorageDevice,
-                                      DataRunStartLCN * Vcb->NtfsInfo.BytesPerCluster,
-                                      ReadLength,
+        Status = NtfsPerformIrpIoRuns(Vcb->StorageDevice,
+                                      IRP_MJ_READ,
                                       Vcb->NtfsInfo.BytesPerSector,
-                                      (PVOID)Buffer,
-                                      FALSE);
-                if (!NT_SUCCESS(Status))
-                    break;
-            }
+                                      Irp,
+                                      (PUCHAR)Buffer,
+                                      &RunList,
+                                      FALSE,
+                                      &Transferred);
+    }
 
-            Length -= ReadLength;
-            Buffer += ReadLength;
-            AlreadyRead += ReadLength;
+    NtfsFreeIoRunList(&RunList);
 
-            /* We finished this request, but there still data in this data run. */
-            if (Length == 0 && ReadLength != DataRunLength * Vcb->NtfsInfo.BytesPerCluster)
-                break;
+    if (!NT_SUCCESS(Status))
+    {
+        /* Our callers read the return value as a byte count and treat zero as
+         * failure, so we cannot report a partial transfer here. */
+        DPRINT1("Read failure (Status %lx)\n", Status);
+        return 0;
+    }
 
-            /*
-             * Go to next run in the list.
-             */
-
-            if (*DataRun == 0)
-                break;
-            CurrentOffset += DataRunLength * Vcb->NtfsInfo.BytesPerCluster;
-            DataRun = DecodeRun(DataRun, &DataRunOffset, &DataRunLength);
-            if (DataRunOffset != -1)
-            {
-                /* Normal data run. */
-                DataRunStartLCN = LastLCN + DataRunOffset;
-                LastLCN = DataRunStartLCN;
-            }
-            else
-            {
-                /* Sparse data run. */
-                DataRunStartLCN = -1;
-            }
-        } /* while */
-
-    } /* if Disk */
-
-    // TEMPTEMP
-    if (Context->pRecord->IsNonResident)
-        ExFreePoolWithTag(TempBuffer, TAG_NTFS);
-
-    Context->CacheRun = DataRun;
-    Context->CacheRunOffset = Offset + AlreadyRead;
-    Context->CacheRunStartLCN = DataRunStartLCN;
-    Context->CacheRunLength = DataRunLength;
-    Context->CacheRunLastLCN = LastLCN;
-    Context->CacheRunCurrentOffset = CurrentOffset;
+    if (Transferred < AlreadyRead)
+    {
+        DPRINT1("Short read: expected %lu bytes, got %lu\n", AlreadyRead, Transferred);
+        AlreadyRead = Transferred;
+    }
 
     return AlreadyRead;
+}
+
+ULONG
+ReadAttribute(PDEVICE_EXTENSION Vcb,
+              PNTFS_ATTR_CONTEXT Context,
+              ULONGLONG Offset,
+              PCHAR Buffer,
+              ULONG Length)
+{
+    return ReadAttributeToIrp(Vcb, Context, Offset, Buffer, Length, NULL);
 }
 
 
@@ -1312,33 +1408,26 @@ ReadAttribute(PDEVICE_EXTENSION Vcb,
 */
 
 NTSTATUS
-WriteAttribute(PDEVICE_EXTENSION Vcb,
-               PNTFS_ATTR_CONTEXT Context,
-               ULONGLONG Offset,
-               const PUCHAR Buffer,
-               ULONG Length,
-               PULONG RealLengthWritten,
-               PFILE_RECORD_HEADER FileRecord)
+WriteAttributeFromIrp(PDEVICE_EXTENSION Vcb,
+                      PNTFS_ATTR_CONTEXT Context,
+                      ULONGLONG Offset,
+                      const PUCHAR Buffer,
+                      ULONG Length,
+                      PULONG RealLengthWritten,
+                      PFILE_RECORD_HEADER FileRecord,
+                      PIRP Irp)
 {
-    ULONGLONG LastLCN;
-    PUCHAR DataRun;
-    LONGLONG DataRunOffset;
-    ULONGLONG DataRunLength;
-    LONGLONG DataRunStartLCN;
-    ULONGLONG CurrentOffset;
-    ULONG WriteLength;
+    ULONG MappedLength = 0;
+    ULONG Transferred = 0;
     NTSTATUS Status;
-    PUCHAR SourceBuffer = Buffer;
-    LONGLONG StartingOffset;
     BOOLEAN FileRecordAllocated = FALSE;
-
-    //TEMPTEMP
-    PUCHAR TempBuffer;
+    NTFS_IO_RUN_LIST RunList;
 
 
     DPRINT("WriteAttribute(%p, %p, %I64u, %p, %lu, %p, %p)\n", Vcb, Context, Offset, Buffer, Length, RealLengthWritten, FileRecord);
 
     *RealLengthWritten = 0;
+    NtfsInitIoRunList(&RunList);
 
     // is this a resident attribute?
     if (!Context->pRecord->IsNonResident)
@@ -1421,210 +1510,160 @@ WriteAttribute(PDEVICE_EXTENSION Vcb,
         return Status;
     }
 
-    // This is a non-resident attribute.
+    // This is a non-resident attribute: map the requested range onto the
+    // volume, then issue every run it spans in a single parallel batch.
 
-    // I. Find the corresponding start data run.
+    Status = NtfsMapAttributeRuns(Vcb, Context, Offset, Length, &RunList, &MappedLength);
 
-    // FIXME: Cache seems to be non-working. Disable it for now
-    //if(Context->CacheRunOffset <= Offset && Offset < Context->CacheRunOffset + Context->CacheRunLength * Volume->ClusterSize)
-    /*if (0)
+    if (NT_SUCCESS(Status) && MappedLength < Length)
     {
-    DataRun = Context->CacheRun;
-    LastLCN = Context->CacheRunLastLCN;
-    DataRunStartLCN = Context->CacheRunStartLCN;
-    DataRunLength = Context->CacheRunLength;
-    CurrentOffset = Context->CacheRunCurrentOffset;
-    }
-    else*/
-    {
-        ULONG UsedBufferSize;
-        LastLCN = 0;
-        CurrentOffset = 0;
-
-        // This will be rewritten in the next iteration to just use the DataRuns MCB directly
-        TempBuffer = ExAllocatePoolWithTag(NonPagedPool, Vcb->NtfsInfo.BytesPerFileRecord, TAG_NTFS);
-        if (TempBuffer == NULL)
-        {
-            return STATUS_INSUFFICIENT_RESOURCES;
-        }
-
-        ConvertLargeMCBToDataRuns(&Context->DataRunsMCB,
-                                  TempBuffer,
-                                  Vcb->NtfsInfo.BytesPerFileRecord,
-                                  &UsedBufferSize);
-
-        DataRun = TempBuffer;
-
-        while (1)
-        {
-            DataRun = DecodeRun(DataRun, &DataRunOffset, &DataRunLength);
-            if (DataRunOffset != -1)
-            {
-                // Normal data run.
-                // DPRINT1("Writing to normal data run, LastLCN %I64u DataRunOffset %I64d\n", LastLCN, DataRunOffset);
-                DataRunStartLCN = LastLCN + DataRunOffset;
-                LastLCN = DataRunStartLCN;
-            }
-            else
-            {
-                // Sparse data run. We can't support writing to sparse files yet
-                // (it may require increasing the allocation size).
-                DataRunStartLCN = -1;
-                DPRINT1("FIXME: Writing to sparse files is not supported yet!\n");
-                Status = STATUS_NOT_IMPLEMENTED;
-                goto Cleanup;
-            }
-
-            // Have we reached the data run we're trying to write to?
-            if (Offset >= CurrentOffset &&
-                Offset < CurrentOffset + (DataRunLength * Vcb->NtfsInfo.BytesPerCluster))
-            {
-                break;
-            }
-
-            if (*DataRun == 0)
-            {
-                // We reached the last assigned cluster
-                // TODO: assign new clusters to the end of the file.
-                // (Presently, this code will rarely be reached, the write will usually have already failed by now)
-                // [We can reach here by creating a new file record when the MFT isn't large enough]
-                DPRINT1("FIXME: Master File Table needs to be enlarged.\n");
-                Status = STATUS_END_OF_FILE;
-                goto Cleanup;
-            }
-
-            CurrentOffset += DataRunLength * Vcb->NtfsInfo.BytesPerCluster;
-        }
+        // The attribute's allocation ends before the request does.
+        // TODO: assign new clusters to the end of the file.
+        // [We can reach here by creating a new file record when the MFT isn't large enough]
+        DPRINT1("FIXME: Attribute needs to be enlarged (mapped %lu of %lu bytes).\n",
+                MappedLength, Length);
+        Status = STATUS_END_OF_FILE;
     }
 
-    // II. Go through the run list and write the data
+    if (NT_SUCCESS(Status))
+    {
+        // Writing into a hole would mean allocating clusters, which we cannot
+        // do here; NtfsPerformIrpIoRuns() rejects sparse runs on IRP_MJ_WRITE.
+        Status = NtfsPerformIrpIoRuns(Vcb->StorageDevice,
+                                      IRP_MJ_WRITE,
+                                      Vcb->NtfsInfo.BytesPerSector,
+                                      Irp,
+                                      Buffer,
+                                      &RunList,
+                                      FALSE,
+                                      &Transferred);
+    }
 
-    /* REVIEWME -- As adapted from NtfsReadAttribute():
-    We seem to be making a special case for the first applicable data run, but I'm not sure why.
-    Does it have something to do with (not) caching? Is this strategy equally applicable to writing? */
+    NtfsFreeIoRunList(&RunList);
 
-    WriteLength = (ULONG)min(DataRunLength * Vcb->NtfsInfo.BytesPerCluster - (Offset - CurrentOffset), Length);
-
-    StartingOffset = DataRunStartLCN * Vcb->NtfsInfo.BytesPerCluster + Offset - CurrentOffset;
-
-    // Write the data to the disk
-    Status = NtfsWriteDisk(Vcb->StorageDevice,
-                           StartingOffset,
-                           WriteLength,
-                           Vcb->NtfsInfo.BytesPerSector,
-                           (PVOID)SourceBuffer);
-
-    // Did the write fail?
     if (!NT_SUCCESS(Status))
     {
-        Context->CacheRun = DataRun;
-        Context->CacheRunOffset = Offset;
-        Context->CacheRunStartLCN = DataRunStartLCN;
-        Context->CacheRunLength = DataRunLength;
-        Context->CacheRunLastLCN = LastLCN;
-        Context->CacheRunCurrentOffset = CurrentOffset;
-
-        goto Cleanup;
+        DPRINT1("Write failure (Status %lx)\n", Status);
+        *RealLengthWritten = 0;
+        return Status;
     }
 
-    Length -= WriteLength;
-    SourceBuffer += WriteLength;
-    *RealLengthWritten += WriteLength;
+    *RealLengthWritten = Transferred;
 
-    // Did we write to the end of the data run?
-    if (WriteLength == DataRunLength * Vcb->NtfsInfo.BytesPerCluster - (Offset - CurrentOffset))
+    if (Transferred < Length)
     {
-        // Advance to the next data run
-        CurrentOffset += DataRunLength * Vcb->NtfsInfo.BytesPerCluster;
-        DataRun = DecodeRun(DataRun, &DataRunOffset, &DataRunLength);
-
-        if (DataRunOffset != (ULONGLONG)-1)
-        {
-            DataRunStartLCN = LastLCN + DataRunOffset;
-            LastLCN = DataRunStartLCN;
-        }
-        else
-            DataRunStartLCN = -1;
+        DPRINT1("Short write: expected %lu bytes, wrote %lu\n", Length, Transferred);
+        Status = STATUS_UNEXPECTED_IO_ERROR;
     }
-
-    // Do we have more data to write?
-    while (Length > 0)
-    {
-        // Make sure we don't write past the end of the current data run
-        WriteLength = (ULONG)min(DataRunLength * Vcb->NtfsInfo.BytesPerCluster, Length);
-
-        // Are we dealing with a sparse data run?
-        if (DataRunStartLCN == -1)
-        {
-            DPRINT1("FIXME: Don't know how to write to sparse files yet! (DataRunStartLCN == -1)\n");
-            Status = STATUS_NOT_IMPLEMENTED;
-            goto Cleanup;
-        }
-        else
-        {
-            // write the data to the disk
-            Status = NtfsWriteDisk(Vcb->StorageDevice,
-                                   DataRunStartLCN * Vcb->NtfsInfo.BytesPerCluster,
-                                   WriteLength,
-                                   Vcb->NtfsInfo.BytesPerSector,
-                                   (PVOID)SourceBuffer);
-            if (!NT_SUCCESS(Status))
-                break;
-        }
-
-        Length -= WriteLength;
-        SourceBuffer += WriteLength;
-        *RealLengthWritten += WriteLength;
-
-        // We finished this request, but there's still data in this data run.
-        if (Length == 0 && WriteLength != DataRunLength * Vcb->NtfsInfo.BytesPerCluster)
-            break;
-
-        // Go to next run in the list.
-
-        if (*DataRun == 0)
-        {
-            // that was the last run
-            if (Length > 0)
-            {
-                // Failed sanity check.
-                DPRINT1("Encountered EOF before expected!\n");
-                Status = STATUS_END_OF_FILE;
-                goto Cleanup;
-            }
-
-            break;
-        }
-
-        // Advance to the next data run
-        CurrentOffset += DataRunLength * Vcb->NtfsInfo.BytesPerCluster;
-        DataRun = DecodeRun(DataRun, &DataRunOffset, &DataRunLength);
-        if (DataRunOffset != -1)
-        {
-            // Normal data run.
-            DataRunStartLCN = LastLCN + DataRunOffset;
-            LastLCN = DataRunStartLCN;
-        }
-        else
-        {
-            // Sparse data run.
-            DataRunStartLCN = -1;
-        }
-    } // end while (Length > 0) [more data to write]
-
-    Context->CacheRun = DataRun;
-    Context->CacheRunOffset = Offset + *RealLengthWritten;
-    Context->CacheRunStartLCN = DataRunStartLCN;
-    Context->CacheRunLength = DataRunLength;
-    Context->CacheRunLastLCN = LastLCN;
-    Context->CacheRunCurrentOffset = CurrentOffset;
-
-Cleanup:
-    // TEMPTEMP
-    if (Context->pRecord->IsNonResident)
-        ExFreePoolWithTag(TempBuffer, TAG_NTFS);
 
     return Status;
+}
+
+NTSTATUS
+WriteAttribute(PDEVICE_EXTENSION Vcb,
+               PNTFS_ATTR_CONTEXT Context,
+               ULONGLONG Offset,
+               const PUCHAR Buffer,
+               ULONG Length,
+               PULONG RealLengthWritten,
+               PFILE_RECORD_HEADER FileRecord)
+{
+    return WriteAttributeFromIrp(Vcb,
+                                 Context,
+                                 Offset,
+                                 Buffer,
+                                 Length,
+                                 RealLengthWritten,
+                                 FileRecord,
+                                 NULL);
+}
+
+/**
+* @name NtfsReadUpCaseTable
+* @implemented
+*
+* Loads the volume's $UpCase file, which defines how NTFS folds case.
+*
+* @param Vcb
+* Volume to load the table for
+*
+* @return
+* STATUS_SUCCESS if the table was loaded, otherwise the failure that stopped
+* us. A volume without a usable $UpCase is not a valid NTFS volume.
+*
+* @remarks Every NTFS volume carries this file at a fixed MFT index. It is one
+* upcased code point per UCS-2 value, so exactly 128 KB.
+*
+*/
+static
+NTSTATUS
+NtfsReadUpCaseTable(PDEVICE_EXTENSION Vcb)
+{
+    PFILE_RECORD_HEADER FileRecord;
+    PNTFS_ATTR_CONTEXT DataContext;
+    NTSTATUS Status;
+    ULONGLONG Size;
+    ULONG Read;
+
+    FileRecord = ExAllocateFromNPagedLookasideList(&Vcb->FileRecLookasideList);
+    if (FileRecord == NULL)
+    {
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    Status = ReadFileRecord(Vcb, NTFS_FILE_UPCASE, FileRecord);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Couldn't read the $UpCase file record!\n");
+        ExFreeToNPagedLookasideList(&Vcb->FileRecLookasideList, FileRecord);
+        return Status;
+    }
+
+    Status = FindAttribute(Vcb, FileRecord, AttributeData, L"", 0, &DataContext, NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("$UpCase has no data stream!\n");
+        ExFreeToNPagedLookasideList(&Vcb->FileRecLookasideList, FileRecord);
+        return Status;
+    }
+
+    Size = AttributeDataLength(DataContext->pRecord);
+    if (Size != (0x10000 * sizeof(WCHAR)))
+    {
+        DPRINT1("$UpCase is %I64u bytes, expected %u\n", Size, 0x10000 * sizeof(WCHAR));
+        ReleaseAttributeContext(DataContext);
+        ExFreeToNPagedLookasideList(&Vcb->FileRecLookasideList, FileRecord);
+        return STATUS_UNRECOGNIZED_VOLUME;
+    }
+
+    Vcb->UpCaseTable = ExAllocatePoolWithTag(NonPagedPool, (ULONG)Size, TAG_NTFS);
+    if (Vcb->UpCaseTable == NULL)
+    {
+        ReleaseAttributeContext(DataContext);
+        ExFreeToNPagedLookasideList(&Vcb->FileRecLookasideList, FileRecord);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    Read = ReadAttribute(Vcb, DataContext, 0, (PCHAR)Vcb->UpCaseTable, (ULONG)Size);
+
+    ReleaseAttributeContext(DataContext);
+    ExFreeToNPagedLookasideList(&Vcb->FileRecLookasideList, FileRecord);
+
+    if (Read != Size)
+    {
+        DPRINT1("Short read of $UpCase: %lu of %I64u bytes\n", Read, Size);
+        ExFreePoolWithTag(Vcb->UpCaseTable, TAG_NTFS);
+        Vcb->UpCaseTable = NULL;
+        return STATUS_UNSUCCESSFUL;
+    }
+
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+NtfsLoadUpCaseTable(PDEVICE_EXTENSION Vcb)
+{
+    return NtfsReadUpCaseTable(Vcb);
 }
 
 NTSTATUS
@@ -1650,9 +1689,125 @@ ReadFileRecord(PDEVICE_EXTENSION Vcb,
 
 
 /**
+* @name NtfsUpdateDuplicatedInformation
+* @implemented
+*
+* Pushes the fields NTFS keeps in more than one place out to all of them.
+*
+* @param Vcb
+* Volume the file lives on
+*
+* @param FileRecord
+* The file's record, already holding the new values in $STANDARD_INFORMATION
+* and its $DATA attribute
+*
+* @param MFTIndex
+* MFT index of the file
+*
+* @param Flags
+* Which groups of fields changed; see NTFS_FILENAME_UPDATE_*
+*
+* @param CaseSensitive
+* Whether the parent's index should be searched case-sensitively
+*
+* @return
+* STATUS_SUCCESS once every copy agrees, or the status of the failing update.
+*
+* @remarks NTFS stores a file's sizes, timestamps and attributes three times:
+* in $STANDARD_INFORMATION, in the record's own $FILE_NAME, and again in the
+* parent directory's index entry. Windows funnels all three through one
+* routine (NtfsUpdateDuplicateInfo) precisely so they cannot drift; this is
+* that funnel. Callers change $STANDARD_INFORMATION and then say what moved.
+*
+* The file record is written back here, so callers need not write it again.
+*
+* The directory flag is the one field that does not come from
+* $STANDARD_INFORMATION -- NTFS masks it out of there and keeps it in the
+* record header -- so it is restored from the header on the way past.
+*/
+NTSTATUS
+NtfsUpdateDuplicatedInformation(PDEVICE_EXTENSION Vcb,
+                                PFILE_RECORD_HEADER FileRecord,
+                                ULONGLONG MFTIndex,
+                                ULONG Flags,
+                                BOOLEAN CaseSensitive)
+{
+    NTFS_FILENAME_UPDATE Update;
+    PSTANDARD_INFORMATION StdInfo;
+    PFILENAME_ATTRIBUTE FileName;
+    UNICODE_STRING Name;
+    ULONGLONG ParentMFTIndex;
+    ULONG DirFlag;
+    NTSTATUS Status;
+
+    if (Flags == 0)
+        return STATUS_SUCCESS;
+
+    StdInfo = GetStandardInformationFromRecord(Vcb, FileRecord);
+    FileName = GetBestFileNameFromRecord(Vcb, FileRecord);
+    if (StdInfo == NULL || FileName == NULL)
+    {
+        DPRINT1("Record %I64u is missing $STANDARD_INFORMATION or $FILE_NAME\n", MFTIndex);
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    DirFlag = (FileRecord->Flags & FRH_DIRECTORY) ? NTFS_FILE_TYPE_DIRECTORY : 0;
+
+    RtlZeroMemory(&Update, sizeof(Update));
+    Update.Flags = Flags;
+
+    if (Flags & NTFS_FILENAME_UPDATE_TIMES)
+    {
+        Update.CreationTime = StdInfo->CreationTime;
+        Update.LastWriteTime = StdInfo->LastWriteTime;
+        Update.ChangeTime = StdInfo->ChangeTime;
+        Update.LastAccessTime = StdInfo->LastAccessTime;
+
+        FileName->CreationTime = StdInfo->CreationTime;
+        FileName->LastWriteTime = StdInfo->LastWriteTime;
+        FileName->ChangeTime = StdInfo->ChangeTime;
+        FileName->LastAccessTime = StdInfo->LastAccessTime;
+    }
+
+    if (Flags & NTFS_FILENAME_UPDATE_ATTRS)
+    {
+        Update.FileAttributes = StdInfo->FileAttribute | DirFlag;
+        FileName->FileAttributes = Update.FileAttributes;
+    }
+
+    if (Flags & NTFS_FILENAME_UPDATE_SIZES)
+    {
+        /* Sizes come from the unnamed $DATA attribute, the same way the times
+         * come from $STANDARD_INFORMATION: one source of truth per field. */
+        Update.DataSize = NtfsGetFileSize(Vcb, FileRecord, L"", 0, &Update.AllocatedSize);
+
+        FileName->DataSize = Update.DataSize;
+        FileName->AllocatedSize = Update.AllocatedSize;
+    }
+
+    /* Persist the $FILE_NAME just modified. Callers have no reason to write the record again,
+     * and leaving it unwritten would let the copy in the parent index disagree with it. */
+    Status = UpdateFileRecord(Vcb, MFTIndex, FileRecord);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to write file record %I64u (Status %lx)\n", MFTIndex, Status);
+        return Status;
+    }
+
+    /* Now the parent's index entry, which carries the same values */
+    ParentMFTIndex = FileName->DirectoryFileReferenceNumber & NTFS_MFT_MASK;
+
+    Name.Buffer = FileName->Name;
+    Name.Length = FileName->NameLength * sizeof(WCHAR);
+    Name.MaximumLength = Name.Length;
+
+    return UpdateFileNameRecord(Vcb, ParentMFTIndex, &Name, FALSE, &Update, CaseSensitive);
+}
+
+/**
 * Searches a file's parent directory (given the parent's index in the mft)
-* for the given file. Upon finding an index entry for that file, updates
-* Data Size and Allocated Size values in the $FILE_NAME attribute of that entry.
+* for the given file. Upon finding an index entry for that file, refreshes the
+* fields of that entry's $FILE_NAME attribute named by Update->Flags.
 *
 * (Most of this code was copied from NtfsFindMftRecord)
 */
@@ -1661,8 +1816,7 @@ UpdateFileNameRecord(PDEVICE_EXTENSION Vcb,
                      ULONGLONG ParentMFTIndex,
                      PUNICODE_STRING FileName,
                      BOOLEAN DirSearch,
-                     ULONGLONG NewDataSize,
-                     ULONGLONG NewAllocationSize,
+                     PNTFS_FILENAME_UPDATE Update,
                      BOOLEAN CaseSensitive)
 {
     PFILE_RECORD_HEADER MftRecord;
@@ -1673,14 +1827,16 @@ UpdateFileNameRecord(PDEVICE_EXTENSION Vcb,
     NTSTATUS Status;
     ULONG CurrentEntry = 0;
 
-    DPRINT("UpdateFileNameRecord(%p, %I64d, %wZ, %s, %I64u, %I64u, %s)\n",
+    DPRINT("UpdateFileNameRecord(%p, %I64d, %wZ, %s, %lx, %s)\n",
            Vcb,
            ParentMFTIndex,
            FileName,
            DirSearch ? "TRUE" : "FALSE",
-           NewDataSize,
-           NewAllocationSize,
+           Update->Flags,
            CaseSensitive ? "TRUE" : "FALSE");
+
+    if (Update->Flags == 0)
+        return STATUS_SUCCESS;
 
     MftRecord = ExAllocateFromNPagedLookasideList(&Vcb->FileRecLookasideList);
     if (MftRecord == NULL)
@@ -1724,23 +1880,24 @@ UpdateFileNameRecord(PDEVICE_EXTENSION Vcb,
     IndexRoot = (PINDEX_ROOT_ATTRIBUTE)IndexRecord;
     IndexEntry = (PINDEX_ENTRY_ATTRIBUTE)((PCHAR)&IndexRoot->Header + IndexRoot->Header.FirstEntryOffset);
     // Index root is always resident.
-    IndexEntryEnd = (PINDEX_ENTRY_ATTRIBUTE)(IndexRecord + IndexRoot->Header.TotalSizeOfEntries);
+    /* TotalSizeOfEntries is measured from the index header, not from the
+     * start of the attribute, and FirstEntryOffset above already is. */
+    IndexEntryEnd = (PINDEX_ENTRY_ATTRIBUTE)((ULONG_PTR)&IndexRoot->Header + IndexRoot->Header.TotalSizeOfEntries);
 
     DPRINT("IndexRecordSize: %x IndexBlockSize: %x\n", Vcb->NtfsInfo.BytesPerIndexRecord, IndexRoot->SizeOfEntry);
 
-    Status = UpdateIndexEntryFileNameSize(Vcb,
-                                          MftRecord,
-                                          IndexRecord,
-                                          IndexRoot->SizeOfEntry,
-                                          IndexEntry,
-                                          IndexEntryEnd,
-                                          FileName,
-                                          &CurrentEntry,
-                                          &CurrentEntry,
-                                          DirSearch,
-                                          NewDataSize,
-                                          NewAllocationSize,
-                                          CaseSensitive);
+    Status = UpdateIndexEntryFileName(Vcb,
+                                      MftRecord,
+                                      IndexRecord,
+                                      IndexRoot->SizeOfEntry,
+                                      IndexEntry,
+                                      IndexEntryEnd,
+                                      FileName,
+                                      &CurrentEntry,
+                                      &CurrentEntry,
+                                      DirSearch,
+                                      Update,
+                                      CaseSensitive);
 
     if (Status == STATUS_PENDING)
     {
@@ -1762,24 +1919,23 @@ UpdateFileNameRecord(PDEVICE_EXTENSION Vcb,
 }
 
 /**
-* Recursively searches directory index and applies the size update to the $FILE_NAME attribute of the
-* proper index entry.
+* Recursively searches a directory index and applies the requested update to the $FILE_NAME
+* attribute of the proper index entry.
 * (Heavily based on BrowseIndexEntries)
 */
 NTSTATUS
-UpdateIndexEntryFileNameSize(PDEVICE_EXTENSION Vcb,
-                             PFILE_RECORD_HEADER MftRecord,
-                             PCHAR IndexRecord,
-                             ULONG IndexBlockSize,
-                             PINDEX_ENTRY_ATTRIBUTE FirstEntry,
-                             PINDEX_ENTRY_ATTRIBUTE LastEntry,
-                             PUNICODE_STRING FileName,
-                             PULONG StartEntry,
-                             PULONG CurrentEntry,
-                             BOOLEAN DirSearch,
-                             ULONGLONG NewDataSize,
-                             ULONGLONG NewAllocatedSize,
-                             BOOLEAN CaseSensitive)
+UpdateIndexEntryFileName(PDEVICE_EXTENSION Vcb,
+                         PFILE_RECORD_HEADER MftRecord,
+                         PCHAR IndexRecord,
+                         ULONG IndexBlockSize,
+                         PINDEX_ENTRY_ATTRIBUTE FirstEntry,
+                         PINDEX_ENTRY_ATTRIBUTE LastEntry,
+                         PUNICODE_STRING FileName,
+                         PULONG StartEntry,
+                         PULONG CurrentEntry,
+                         BOOLEAN DirSearch,
+                         PNTFS_FILENAME_UPDATE Update,
+                         BOOLEAN CaseSensitive)
 {
     NTSTATUS Status;
     ULONG RecordOffset;
@@ -1788,7 +1944,7 @@ UpdateIndexEntryFileNameSize(PDEVICE_EXTENSION Vcb,
     ULONGLONG IndexAllocationSize;
     PINDEX_BUFFER IndexBuffer;
 
-    DPRINT("UpdateIndexEntrySize(%p, %p, %p, %lu, %p, %p, %wZ, %lu, %lu, %s, %I64u, %I64u, %s)\n",
+    DPRINT("UpdateIndexEntryFileName(%p, %p, %p, %lu, %p, %p, %wZ, %lu, %lu, %s, %lx, %s)\n",
            Vcb,
            MftRecord,
            IndexRecord,
@@ -1799,8 +1955,7 @@ UpdateIndexEntryFileNameSize(PDEVICE_EXTENSION Vcb,
            *StartEntry,
            *CurrentEntry,
            DirSearch ? "TRUE" : "FALSE",
-           NewDataSize,
-           NewAllocatedSize,
+           Update->Flags,
            CaseSensitive ? "TRUE" : "FALSE");
 
     // find the index entry responsible for the file we're trying to update
@@ -1811,11 +1966,29 @@ UpdateIndexEntryFileNameSize(PDEVICE_EXTENSION Vcb,
         if ((IndexEntry->Data.Directory.IndexedFile & NTFS_MFT_MASK) > NTFS_FILE_FIRST_USER_FILE &&
             *CurrentEntry >= *StartEntry &&
             IndexEntry->FileName.NameType != NTFS_FILE_NAME_DOS &&
-            CompareFileName(FileName, IndexEntry, DirSearch, CaseSensitive))
+            CompareFileName(Vcb, FileName, IndexEntry, DirSearch, CaseSensitive))
         {
             *StartEntry = *CurrentEntry;
-            IndexEntry->FileName.DataSize = NewDataSize;
-            IndexEntry->FileName.AllocatedSize = NewAllocatedSize;
+
+            if (Update->Flags & NTFS_FILENAME_UPDATE_SIZES)
+            {
+                IndexEntry->FileName.DataSize = Update->DataSize;
+                IndexEntry->FileName.AllocatedSize = Update->AllocatedSize;
+            }
+
+            if (Update->Flags & NTFS_FILENAME_UPDATE_TIMES)
+            {
+                IndexEntry->FileName.CreationTime = Update->CreationTime;
+                IndexEntry->FileName.ChangeTime = Update->ChangeTime;
+                IndexEntry->FileName.LastWriteTime = Update->LastWriteTime;
+                IndexEntry->FileName.LastAccessTime = Update->LastAccessTime;
+            }
+
+            if (Update->Flags & NTFS_FILENAME_UPDATE_ATTRS)
+            {
+                IndexEntry->FileName.FileAttributes = Update->FileAttributes;
+            }
+
             // indicate that the caller will still need to write the structure to the disk
             return STATUS_PENDING;
         }
@@ -1862,19 +2035,18 @@ UpdateIndexEntryFileNameSize(PDEVICE_EXTENSION Vcb,
         LastEntry = (PINDEX_ENTRY_ATTRIBUTE)((ULONG_PTR)&IndexBuffer->Header + IndexBuffer->Header.TotalSizeOfEntries);
         ASSERT(LastEntry <= (PINDEX_ENTRY_ATTRIBUTE)((ULONG_PTR)IndexBuffer + IndexBlockSize));
 
-        Status = UpdateIndexEntryFileNameSize(NULL,
-                                              NULL,
-                                              NULL,
-                                              0,
-                                              FirstEntry,
-                                              LastEntry,
-                                              FileName,
-                                              StartEntry,
-                                              CurrentEntry,
-                                              DirSearch,
-                                              NewDataSize,
-                                              NewAllocatedSize,
-                                              CaseSensitive);
+        Status = UpdateIndexEntryFileName(NULL,
+                                          NULL,
+                                          NULL,
+                                          0,
+                                          FirstEntry,
+                                          LastEntry,
+                                          FileName,
+                                          StartEntry,
+                                          CurrentEntry,
+                                          DirSearch,
+                                          Update,
+                                          CaseSensitive);
         if (Status == STATUS_PENDING)
         {
             // write the index record back to disk
@@ -2036,7 +2208,7 @@ AddNewMftEntry(PFILE_RECORD_HEADER FileRecord,
     LARGE_INTEGER BitmapBits;
     UCHAR SystemReservedBits;
 
-    DPRINT1("AddNewMftEntry(%p, %p, %p, %s)\n", FileRecord, DeviceExt, DestinationIndex, CanWait ? "TRUE" : "FALSE");
+    DPRINT("AddNewMftEntry(%p, %p, %p, %s)\n", FileRecord, DeviceExt, DestinationIndex, CanWait ? "TRUE" : "FALSE");
 
     // First, we have to read the mft's $Bitmap attribute
 
@@ -2115,7 +2287,7 @@ AddNewMftEntry(PFILE_RECORD_HEADER FileRecord,
         return AddNewMftEntry(FileRecord, DeviceExt, DestinationIndex, CanWait);
     }
 
-    DPRINT1("Creating file record at MFT index: %I64u\n", MftIndex);
+    DPRINT("Creating file record at MFT index: %I64u\n", MftIndex);
 
     // update file record with index
     FileRecord->MFTRecordNumber = MftIndex;
@@ -2331,7 +2503,11 @@ NtfsAddFilenameToDirectory(PDEVICE_EXTENSION DeviceExt,
                            &NewRightHandNode);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("ERROR: Failed to insert key into B-Tree!\n");
+        DPRINT1("ERROR: Failed to insert '%.*S' into the index of MFT record %I64u (Status %lx)\n",
+                FilenameAttribute->NameLength,
+                FilenameAttribute->Name,
+                DirectoryMftIndex,
+                Status);
         DestroyBTree(NewTree);
         ReleaseAttributeContext(IndexRootContext);
         ExFreePoolWithTag(I30IndexRoot, TAG_NTFS);
@@ -2436,7 +2612,7 @@ NtfsAddFilenameToDirectory(PDEVICE_EXTENSION DeviceExt,
     NodeSize = GetSizeOfIndexEntries(NewTree->RootNode);
     if (NodeSize > NewMaxIndexRootSize)
     {
-        DPRINT1("Demoting index root.\nNodeSize: 0x%lx\nNewMaxIndexRootSize: 0x%lx\n", NodeSize, NewMaxIndexRootSize);
+        DPRINT("Demoting index root.\nNodeSize: 0x%lx\nNewMaxIndexRootSize: 0x%lx\n", NodeSize, NewMaxIndexRootSize);
 
         Status = DemoteBTreeRoot(NewTree);
         if (!NT_SUCCESS(Status))
@@ -2599,6 +2775,511 @@ NtfsAddFilenameToDirectory(PDEVICE_EXTENSION DeviceExt,
     return Status;
 }
 
+/**
+* @name NtfsRemoveFilenameFromDirectory
+* @implemented
+*
+* Removes a $FILE_NAME attribute from a given directory index.
+*
+* @param DeviceExt
+* Points to the target disk's DEVICE_EXTENSION.
+*
+* @param DirectoryMftIndex
+* Mft index of the parent directory the file is being removed from.
+*
+* @param FilenameAttribute
+* Pointer to the FILENAME_ATTRIBUTE of the file being removed from the directory.
+*
+* @param CaseSensitive
+* Boolean indicating if the function should operate in case-sensitive mode. This will be TRUE
+* if an application created the file with the FILE_FLAG_POSIX_SEMANTICS flag.
+*
+* @return
+* STATUS_SUCCESS on success.
+* STATUS_OBJECT_NAME_NOT_FOUND if the name isn't in the directory's index.
+* STATUS_INSUFFICIENT_RESOURCES if an allocation fails.
+*
+* @remarks
+* The inverse of NtfsAddFilenameToDirectory(). One $FILE_NAME attribute is indexed per link, so
+* a file carrying both a long name and an 8.3 name needs one call for each.
+*/
+NTSTATUS
+NtfsRemoveFilenameFromDirectory(PDEVICE_EXTENSION DeviceExt,
+                                ULONGLONG DirectoryMftIndex,
+                                PFILENAME_ATTRIBUTE FilenameAttribute,
+                                BOOLEAN CaseSensitive)
+{
+    NTSTATUS Status;
+    PFILE_RECORD_HEADER ParentFileRecord;
+    PNTFS_ATTR_CONTEXT IndexRootContext;
+    PINDEX_ROOT_ATTRIBUTE I30IndexRoot;
+    PINDEX_ROOT_ATTRIBUTE NewIndexRoot;
+    ULONG IndexRootOffset;
+    ULONGLONG I30IndexRootLength;
+    ULONG LengthWritten;
+    ULONG AttributeLength;
+    ULONG BtreeIndexLength;
+    ULONG MaxIndexRootSize;
+    PNTFS_ATTR_RECORD NextAttribute;
+    PB_TREE Tree;
+    PB_TREE_KEY SearchKey;
+
+    DPRINT("NtfsRemoveFilenameFromDirectory(%p, %I64u, %p, %s)\n",
+           DeviceExt, DirectoryMftIndex, FilenameAttribute, CaseSensitive ? "TRUE" : "FALSE");
+
+    ParentFileRecord = ExAllocateFromNPagedLookasideList(&DeviceExt->FileRecLookasideList);
+    if (!ParentFileRecord)
+    {
+        DPRINT1("ERROR: Couldn't allocate memory for file record!\n");
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    Status = ReadFileRecord(DeviceExt, DirectoryMftIndex, ParentFileRecord);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("ERROR: Couldn't read parent directory with index %I64u\n", DirectoryMftIndex);
+        ExFreeToNPagedLookasideList(&DeviceExt->FileRecLookasideList, ParentFileRecord);
+        return Status;
+    }
+
+    Status = FindAttribute(DeviceExt,
+                           ParentFileRecord,
+                           AttributeIndexRoot,
+                           L"$I30",
+                           4,
+                           &IndexRootContext,
+                           &IndexRootOffset);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("ERROR: Couldn't find $I30 $INDEX_ROOT attribute for parent directory with MFT #: %I64u!\n",
+                DirectoryMftIndex);
+        ExFreeToNPagedLookasideList(&DeviceExt->FileRecLookasideList, ParentFileRecord);
+        return Status;
+    }
+
+    I30IndexRootLength = AttributeDataLength(IndexRootContext->pRecord);
+    I30IndexRoot = ExAllocatePoolWithTag(NonPagedPool, I30IndexRootLength, TAG_NTFS);
+    if (!I30IndexRoot)
+    {
+        DPRINT1("ERROR: Couldn't allocate memory for index root attribute!\n");
+        ReleaseAttributeContext(IndexRootContext);
+        ExFreeToNPagedLookasideList(&DeviceExt->FileRecLookasideList, ParentFileRecord);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    Status = ReadAttribute(DeviceExt, IndexRootContext, 0, (PCHAR)I30IndexRoot, I30IndexRootLength);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("ERROR: Couldn't read index root attribute for Mft index #%I64u\n", DirectoryMftIndex);
+        ReleaseAttributeContext(IndexRootContext);
+        ExFreePoolWithTag(I30IndexRoot, TAG_NTFS);
+        ExFreeToNPagedLookasideList(&DeviceExt->FileRecLookasideList, ParentFileRecord);
+        return Status;
+    }
+
+    Status = CreateBTreeFromIndex(DeviceExt, ParentFileRecord, IndexRootContext, I30IndexRoot, &Tree);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("ERROR: Failed to create B-Tree from Index!\n");
+        ReleaseAttributeContext(IndexRootContext);
+        ExFreePoolWithTag(I30IndexRoot, TAG_NTFS);
+        ExFreeToNPagedLookasideList(&DeviceExt->FileRecLookasideList, ParentFileRecord);
+        return Status;
+    }
+
+    // NtfsRemoveKey() compares filenames, so the file reference here is only a placeholder
+    SearchKey = CreateBTreeKeyFromFilename(0, FilenameAttribute);
+    if (!SearchKey)
+    {
+        DestroyBTree(Tree);
+        ReleaseAttributeContext(IndexRootContext);
+        ExFreePoolWithTag(I30IndexRoot, TAG_NTFS);
+        ExFreeToNPagedLookasideList(&DeviceExt->FileRecLookasideList, ParentFileRecord);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    Status = NtfsRemoveKey(Tree->RootNode, SearchKey, CaseSensitive);
+
+    DestroyBTreeKey(SearchKey);
+
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("ERROR: Failed to remove '%.*S' from the index of MFT record %I64u (Status %lx)\n",
+                FilenameAttribute->NameLength,
+                FilenameAttribute->Name,
+                DirectoryMftIndex,
+                Status);
+        DestroyBTree(Tree);
+        ReleaseAttributeContext(IndexRootContext);
+        ExFreePoolWithTag(I30IndexRoot, TAG_NTFS);
+        ExFreeToNPagedLookasideList(&DeviceExt->FileRecLookasideList, ParentFileRecord);
+        return Status;
+    }
+
+    // Push the tree back out to the index allocation before sizing the index root, for the same
+    // reason the insert path does: growing or shrinking the allocation changes how much of the
+    // file record is left for the root.
+    Status = UpdateIndexAllocation(DeviceExt, Tree, I30IndexRoot->SizeOfEntry, ParentFileRecord);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("ERROR: Failed to update index allocation from B-Tree!\n");
+        DestroyBTree(Tree);
+        ReleaseAttributeContext(IndexRootContext);
+        ExFreePoolWithTag(I30IndexRoot, TAG_NTFS);
+        ExFreeToNPagedLookasideList(&DeviceExt->FileRecLookasideList, ParentFileRecord);
+        return Status;
+    }
+
+    // Find the maximum index root size given what the file record can hold
+    MaxIndexRootSize = DeviceExt->NtfsInfo.BytesPerFileRecord
+                       - IndexRootOffset
+                       - IndexRootContext->pRecord->Resident.ValueOffset
+                       - sizeof(INDEX_ROOT_ATTRIBUTE)
+                       - (sizeof(ULONG) * 2);
+
+    NextAttribute = (PNTFS_ATTR_RECORD)((ULONG_PTR)ParentFileRecord + IndexRootOffset + IndexRootContext->pRecord->Length);
+    if (NextAttribute->Type != AttributeEnd)
+    {
+        ULONG LengthOfAttributes = 0;
+        PNTFS_ATTR_RECORD CurrentAttribute = NextAttribute;
+        while (CurrentAttribute->Type != AttributeEnd)
+        {
+            LengthOfAttributes += CurrentAttribute->Length;
+            CurrentAttribute = (PNTFS_ATTR_RECORD)((ULONG_PTR)CurrentAttribute + CurrentAttribute->Length);
+        }
+
+        MaxIndexRootSize -= LengthOfAttributes;
+    }
+
+    Status = CreateIndexRootFromBTree(DeviceExt, Tree, MaxIndexRootSize, &NewIndexRoot, &BtreeIndexLength);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("ERROR: Failed to create Index root from B-Tree!\n");
+        DestroyBTree(Tree);
+        ReleaseAttributeContext(IndexRootContext);
+        ExFreePoolWithTag(I30IndexRoot, TAG_NTFS);
+        ExFreeToNPagedLookasideList(&DeviceExt->FileRecLookasideList, ParentFileRecord);
+        return Status;
+    }
+
+    DestroyBTree(Tree);
+
+    // $INDEX_ROOT must always be resident, so its length is set directly rather than through
+    // the usual attribute-resizing path.
+    AttributeLength = NewIndexRoot->Header.AllocatedSize + FIELD_OFFSET(INDEX_ROOT_ATTRIBUTE, Header);
+
+    if (AttributeLength != IndexRootContext->pRecord->Resident.ValueLength)
+    {
+        Status = InternalSetResidentAttributeLength(DeviceExt,
+                                                    IndexRootContext,
+                                                    ParentFileRecord,
+                                                    IndexRootOffset,
+                                                    AttributeLength);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("ERROR: Unable to set resident attribute length!\n");
+            ExFreePoolWithTag(NewIndexRoot, TAG_NTFS);
+            ReleaseAttributeContext(IndexRootContext);
+            ExFreePoolWithTag(I30IndexRoot, TAG_NTFS);
+            ExFreeToNPagedLookasideList(&DeviceExt->FileRecLookasideList, ParentFileRecord);
+            return Status;
+        }
+    }
+
+    NT_ASSERT(ParentFileRecord->BytesInUse <= DeviceExt->NtfsInfo.BytesPerFileRecord);
+
+    Status = UpdateFileRecord(DeviceExt, DirectoryMftIndex, ParentFileRecord);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("ERROR: Failed to update file record of directory with index: %I64x\n", DirectoryMftIndex);
+        ExFreePoolWithTag(NewIndexRoot, TAG_NTFS);
+        ReleaseAttributeContext(IndexRootContext);
+        ExFreePoolWithTag(I30IndexRoot, TAG_NTFS);
+        ExFreeToNPagedLookasideList(&DeviceExt->FileRecLookasideList, ParentFileRecord);
+        return Status;
+    }
+
+    Status = WriteAttribute(DeviceExt,
+                            IndexRootContext,
+                            0,
+                            (PUCHAR)NewIndexRoot,
+                            AttributeLength,
+                            &LengthWritten,
+                            ParentFileRecord);
+    if (!NT_SUCCESS(Status) || LengthWritten != AttributeLength)
+    {
+        DPRINT1("ERROR: Unable to write new index root attribute to parent directory!\n");
+        if (NT_SUCCESS(Status))
+            Status = STATUS_UNSUCCESSFUL;
+    }
+
+    ExFreePoolWithTag(NewIndexRoot, TAG_NTFS);
+    ReleaseAttributeContext(IndexRootContext);
+    ExFreePoolWithTag(I30IndexRoot, TAG_NTFS);
+    ExFreeToNPagedLookasideList(&DeviceExt->FileRecLookasideList, ParentFileRecord);
+
+    return Status;
+}
+
+/**
+* @name FreeMftEntry
+* @implemented
+*
+* Releases an MFT record back to the volume, clearing its bit in the master file table's $Bitmap
+* attribute and marking the record itself as no longer in use.
+*
+* @param DeviceExt
+* Points to the target disk's DEVICE_EXTENSION.
+*
+* @param MftIndex
+* Mft index of the record to release.
+*
+* @return
+* STATUS_SUCCESS on success.
+* STATUS_OBJECT_NAME_NOT_FOUND if the master file table has no $Bitmap attribute.
+* STATUS_INSUFFICIENT_RESOURCES if an allocation fails.
+*
+* @remarks
+* The record's sequence number is incremented before it's written back, so any file reference
+* still pointing at the old incarnation can be recognised as stale.
+*/
+NTSTATUS
+FreeMftEntry(PDEVICE_EXTENSION DeviceExt,
+             ULONGLONG MftIndex)
+{
+    NTSTATUS Status;
+    RTL_BITMAP Bitmap;
+    ULONGLONG BitmapDataSize;
+    ULONGLONG AttrBytesRead;
+    PUCHAR BitmapData;
+    PUCHAR BitmapBuffer;
+    ULONG LengthWritten;
+    PNTFS_ATTR_CONTEXT BitmapContext;
+    LARGE_INTEGER BitmapBits;
+    PFILE_RECORD_HEADER FileRecord;
+
+    DPRINT("FreeMftEntry(%p, %I64u)\n", DeviceExt, MftIndex);
+
+    // Mark the record itself as free first, so a bitmap bit is never handed out for a record
+    // that still looks in use.
+    FileRecord = ExAllocateFromNPagedLookasideList(&DeviceExt->FileRecLookasideList);
+    if (!FileRecord)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
+    Status = ReadFileRecord(DeviceExt, MftIndex, FileRecord);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("ERROR: Couldn't read file record %I64u to free it!\n", MftIndex);
+        ExFreeToNPagedLookasideList(&DeviceExt->FileRecLookasideList, FileRecord);
+        return Status;
+    }
+
+    FileRecord->Flags &= ~FRH_IN_USE;
+    FileRecord->SequenceNumber++;
+
+    // Sequence number zero is reserved to mean "no reference"
+    if (FileRecord->SequenceNumber == 0)
+        FileRecord->SequenceNumber = 1;
+
+    Status = UpdateFileRecord(DeviceExt, MftIndex, FileRecord);
+    ExFreeToNPagedLookasideList(&DeviceExt->FileRecLookasideList, FileRecord);
+
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("ERROR: Couldn't write file record %I64u while freeing it!\n", MftIndex);
+        return Status;
+    }
+
+    Status = FindAttribute(DeviceExt, DeviceExt->MasterFileTable, AttributeBitmap, L"", 0, &BitmapContext, NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("ERROR: Couldn't find $Bitmap attribute of master file table!\n");
+        return Status;
+    }
+
+    BitmapDataSize = AttributeDataLength(BitmapContext->pRecord);
+
+    // RtlInitializeBitmap wants a ULONG-aligned pointer and a ULONG-multiple of memory
+    BitmapBuffer = ExAllocatePoolWithTag(NonPagedPool, BitmapDataSize + sizeof(ULONG), TAG_NTFS);
+    if (!BitmapBuffer)
+    {
+        ReleaseAttributeContext(BitmapContext);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+    RtlZeroMemory(BitmapBuffer, BitmapDataSize + sizeof(ULONG));
+
+    BitmapData = (PUCHAR)ALIGN_UP_BY((ULONG_PTR)BitmapBuffer, sizeof(ULONG));
+
+    AttrBytesRead = ReadAttribute(DeviceExt, BitmapContext, 0, (PCHAR)BitmapData, BitmapDataSize);
+    if (AttrBytesRead != BitmapDataSize)
+    {
+        DPRINT1("ERROR: Unable to read $Bitmap attribute of master file table!\n");
+        ExFreePoolWithTag(BitmapBuffer, TAG_NTFS);
+        ReleaseAttributeContext(BitmapContext);
+        return STATUS_OBJECT_NAME_NOT_FOUND;
+    }
+
+    BitmapBits.QuadPart = AttributeDataLength(DeviceExt->MFTContext->pRecord) /
+                          DeviceExt->NtfsInfo.BytesPerFileRecord;
+    if (BitmapBits.HighPart != 0)
+    {
+        DPRINT1("\tFIXME: bitmap sizes beyond 32bits are not yet supported! (Your NTFS volume is too large)\n");
+        ExFreePoolWithTag(BitmapBuffer, TAG_NTFS);
+        ReleaseAttributeContext(BitmapContext);
+        return STATUS_NOT_IMPLEMENTED;
+    }
+
+    if (MftIndex >= BitmapBits.QuadPart)
+    {
+        DPRINT1("ERROR: Mft index %I64u is beyond the end of the master file table!\n", MftIndex);
+        ExFreePoolWithTag(BitmapBuffer, TAG_NTFS);
+        ReleaseAttributeContext(BitmapContext);
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    RtlInitializeBitMap(&Bitmap, (PULONG)BitmapData, BitmapBits.LowPart);
+    RtlClearBits(&Bitmap, (ULONG)MftIndex, 1);
+
+    Status = WriteAttribute(DeviceExt, BitmapContext, 0, BitmapData, BitmapDataSize, &LengthWritten, NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("ERROR encountered when writing $Bitmap attribute!\n");
+    }
+
+    ExFreePoolWithTag(BitmapBuffer, TAG_NTFS);
+    ReleaseAttributeContext(BitmapContext);
+
+    return Status;
+}
+
+/**
+* @name NtfsDeleteFileRecord
+* @implemented
+*
+* Deletes a file or empty directory: releases every cluster its non-resident attributes hold,
+* removes each of its names from the parent index, and frees its MFT record.
+*
+* @param DeviceExt
+* Points to the target disk's DEVICE_EXTENSION.
+*
+* @param MftIndex
+* Mft index of the file to delete.
+*
+* @param CaseSensitive
+* Boolean indicating if the function should operate in case-sensitive mode. This will be TRUE
+* if an application created the file with the FILE_FLAG_POSIX_SEMANTICS flag.
+*
+* @return
+* STATUS_SUCCESS on success.
+*
+* @remarks
+* Callers must have established that the file may be deleted, in particular that a directory
+* is empty. Clusters are released before the names, so a failure part-way through leaves a
+* reachable file rather than orphaned allocation.
+*/
+NTSTATUS
+NtfsDeleteFileRecord(PDEVICE_EXTENSION DeviceExt,
+                     ULONGLONG MftIndex,
+                     BOOLEAN CaseSensitive)
+{
+    NTSTATUS Status;
+    PFILE_RECORD_HEADER FileRecord;
+    PNTFS_ATTR_RECORD Attribute;
+    PNTFS_ATTR_CONTEXT AttributeContext;
+    ULONG AttributeOffset;
+
+    DPRINT("NtfsDeleteFileRecord(%p, %I64u, %s)\n", DeviceExt, MftIndex, CaseSensitive ? "TRUE" : "FALSE");
+
+    FileRecord = ExAllocateFromNPagedLookasideList(&DeviceExt->FileRecLookasideList);
+    if (!FileRecord)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
+    Status = ReadFileRecord(DeviceExt, MftIndex, FileRecord);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("ERROR: Couldn't read file record %I64u to delete it!\n", MftIndex);
+        ExFreeToNPagedLookasideList(&DeviceExt->FileRecLookasideList, FileRecord);
+        return Status;
+    }
+
+    // Release the clusters held by every non-resident attribute
+    Attribute = (PNTFS_ATTR_RECORD)((ULONG_PTR)FileRecord + FileRecord->AttributeOffset);
+    AttributeOffset = FileRecord->AttributeOffset;
+
+    while (AttributeOffset < DeviceExt->NtfsInfo.BytesPerFileRecord &&
+           Attribute->Type != AttributeEnd)
+    {
+        if (Attribute->IsNonResident)
+        {
+            Status = FindAttribute(DeviceExt,
+                                   FileRecord,
+                                   Attribute->Type,
+                                   (PCWSTR)((ULONG_PTR)Attribute + Attribute->NameOffset),
+                                   Attribute->NameLength,
+                                   &AttributeContext,
+                                   NULL);
+            if (NT_SUCCESS(Status))
+            {
+                ULONGLONG ClusterCount = Attribute->NonResident.HighestVCN - Attribute->NonResident.LowestVCN + 1;
+
+                Status = FreeClusters(DeviceExt, AttributeContext, AttributeOffset, FileRecord, (ULONG)ClusterCount);
+                if (!NT_SUCCESS(Status))
+                {
+                    DPRINT1("ERROR: Failed to free clusters of attribute 0x%lx of file %I64u!\n",
+                            Attribute->Type, MftIndex);
+                }
+
+                ReleaseAttributeContext(AttributeContext);
+            }
+        }
+
+        if (Attribute->Length == 0)
+            break;
+
+        AttributeOffset += Attribute->Length;
+        Attribute = (PNTFS_ATTR_RECORD)((ULONG_PTR)FileRecord + AttributeOffset);
+    }
+
+    // Remove every name this file has from its parent's index. A file with both a long name and
+    // an 8.3 name is indexed twice, and both parents are named by the attributes themselves.
+    Attribute = (PNTFS_ATTR_RECORD)((ULONG_PTR)FileRecord + FileRecord->AttributeOffset);
+    AttributeOffset = FileRecord->AttributeOffset;
+
+    while (AttributeOffset < DeviceExt->NtfsInfo.BytesPerFileRecord &&
+           Attribute->Type != AttributeEnd)
+    {
+        if (Attribute->Type == AttributeFileName && !Attribute->IsNonResident)
+        {
+            PFILENAME_ATTRIBUTE FileName =
+                (PFILENAME_ATTRIBUTE)((ULONG_PTR)Attribute + Attribute->Resident.ValueOffset);
+
+            Status = NtfsRemoveFilenameFromDirectory(DeviceExt,
+                                                     FileName->DirectoryFileReferenceNumber & NTFS_MFT_MASK,
+                                                     FileName,
+                                                     CaseSensitive);
+            if (!NT_SUCCESS(Status))
+            {
+                DPRINT1("ERROR: Failed to remove '%.*S' from directory %I64u!\n",
+                        FileName->NameLength,
+                        FileName->Name,
+                        FileName->DirectoryFileReferenceNumber & NTFS_MFT_MASK);
+                ExFreeToNPagedLookasideList(&DeviceExt->FileRecLookasideList, FileRecord);
+                return Status;
+            }
+        }
+
+        if (Attribute->Length == 0)
+            break;
+
+        AttributeOffset += Attribute->Length;
+        Attribute = (PNTFS_ATTR_RECORD)((ULONG_PTR)FileRecord + AttributeOffset);
+    }
+
+    ExFreeToNPagedLookasideList(&DeviceExt->FileRecLookasideList, FileRecord);
+
+    return FreeMftEntry(DeviceExt, MftIndex);
+}
+
 NTSTATUS
 AddFixupArray(PDEVICE_EXTENSION Vcb,
               PNTFS_RECORD_HEADER Record)
@@ -2647,7 +3328,8 @@ ReadLCN(PDEVICE_EXTENSION Vcb,
 
 
 BOOLEAN
-CompareFileName(PUNICODE_STRING FileName,
+CompareFileName(PDEVICE_EXTENSION Vcb,
+                PUNICODE_STRING FileName,
                 PINDEX_ENTRY_ATTRIBUTE IndexEntry,
                 BOOLEAN DirSearch,
                 BOOLEAN CaseSensitive)
@@ -2672,7 +3354,10 @@ CompareFileName(PUNICODE_STRING FileName,
             IntFileName = *FileName;
         }
 
-        Ret = FsRtlIsNameInExpression(&IntFileName, &EntryName, !CaseSensitive, NULL);
+        /* With a real upcase table the matcher folds both sides through it,
+         * which is what NTFS means by case-insensitive. */
+        Ret = FsRtlIsNameInExpression(&IntFileName, &EntryName, !CaseSensitive,
+                                      Vcb ? Vcb->UpCaseTable : NULL);
 
         if (Alloc)
         {
@@ -2873,8 +3558,12 @@ BrowseSubNodeIndexEntries(PNTFS_VCB Vcb,
            CaseSensitive ? "TRUE" : "FALSE",
            OutMFTIndex);
 
-    // Calculate node number as VCN / Clusters per index record
-    NodeNumber = VCN / (Vcb->NtfsInfo.BytesPerIndexRecord / Vcb->NtfsInfo.BytesPerCluster);
+    // Calculate node number as VCN / Clusters per index record. An index record smaller than
+    // a cluster is addressed in sectors, matching GetAllocationOffsetFromVCN().
+    if (IndexBlockSize < Vcb->NtfsInfo.BytesPerCluster)
+        NodeNumber = VCN / (IndexBlockSize / Vcb->NtfsInfo.BytesPerSector);
+    else
+        NodeNumber = VCN / (IndexBlockSize / Vcb->NtfsInfo.BytesPerCluster);
 
     // Is the bit for this node clear in the bitmap?
     if (!RtlCheckBit(Bitmap, NodeNumber))
@@ -2891,8 +3580,8 @@ BrowseSubNodeIndexEntries(PNTFS_VCB Vcb,
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-    // Calculate offset of index record
-    Offset = VCN * Vcb->NtfsInfo.BytesPerCluster;
+    // Calculate offset of index record, using the same helper the write path does
+    Offset = GetAllocationOffsetFromVCN(Vcb, IndexBlockSize, VCN);
 
     // Read the index record
     BytesRead = ReadAttribute(Vcb, IndexAllocationContext, Offset, (PCHAR)IndexRecord, IndexBlockSize);
@@ -2903,8 +3592,20 @@ BrowseSubNodeIndexEntries(PNTFS_VCB Vcb,
         return STATUS_UNSUCCESSFUL;
     }
 
-    // Assert that we're dealing with an index record here
-    ASSERT(IndexRecord->Ntfs.Type == NRH_INDX_TYPE);
+    if (IndexRecord->Ntfs.Type != NRH_INDX_TYPE)
+    {
+        DPRINT1("File system corruption detected, no index record at VCN %I64u of MFT record %I64u "
+                "(offset 0x%I64x, block size %lu, cluster %lu, index record %lu, signature 0x%08lx)\n",
+                VCN,
+                MftRecord->MFTRecordNumber & NTFS_MFT_MASK,
+                Offset,
+                IndexBlockSize,
+                Vcb->NtfsInfo.BytesPerCluster,
+                Vcb->NtfsInfo.BytesPerIndexRecord,
+                IndexRecord->Ntfs.Type);
+        ExFreePoolWithTag(IndexRecord, TAG_NTFS);
+        return STATUS_DATA_ERROR;
+    }
 
     // Apply the fixup array to the index record
     Status = FixupUpdateSequenceArray(Vcb, &((PFILE_RECORD_HEADER)IndexRecord)->Ntfs);
@@ -2961,7 +3662,7 @@ BrowseSubNodeIndexEntries(PNTFS_VCB Vcb,
         if ((IndexEntry->Data.Directory.IndexedFile & NTFS_MFT_MASK) >= NTFS_FILE_FIRST_USER_FILE &&
             *CurrentEntry >= *StartEntry &&
             IndexEntry->FileName.NameType != NTFS_FILE_NAME_DOS &&
-            CompareFileName(FileName, IndexEntry, DirSearch, CaseSensitive))
+            CompareFileName(Vcb, FileName, IndexEntry, DirSearch, CaseSensitive))
         {
             *StartEntry = *CurrentEntry;
             *OutMFTIndex = (IndexEntry->Data.Directory.IndexedFile & NTFS_MFT_MASK);
@@ -3095,6 +3796,15 @@ BrowseIndexEntries(PDEVICE_EXTENSION Vcb,
                                                    DirSearch,
                                                    CaseSensitive,
                                                    OutMFTIndex);
+
+                /* Anything other than "not in this subtree" means we gave up on
+                 * a subtree that may well have held the entry */
+                if (!NT_SUCCESS(Status) && Status != STATUS_OBJECT_PATH_NOT_FOUND)
+                {
+                    DPRINT1("Sub-node at VCN %I64u abandoned while looking for '%wZ' (Status %lx)\n",
+                            GetIndexEntryVCN(IndexEntry), FileName, Status);
+                }
+
                 if (NT_SUCCESS(Status))
                 {
                     ExFreePoolWithTag(BitmapMem, TAG_NTFS);
@@ -3113,7 +3823,7 @@ BrowseIndexEntries(PDEVICE_EXTENSION Vcb,
         if ((IndexEntry->Data.Directory.IndexedFile & NTFS_MFT_MASK) >= NTFS_FILE_FIRST_USER_FILE &&
             *CurrentEntry >= *StartEntry &&
             IndexEntry->FileName.NameType != NTFS_FILE_NAME_DOS &&
-            CompareFileName(FileName, IndexEntry, DirSearch, CaseSensitive))
+            CompareFileName(Vcb, FileName, IndexEntry, DirSearch, CaseSensitive))
         {
             *StartEntry = *CurrentEntry;
             *OutMFTIndex = (IndexEntry->Data.Directory.IndexedFile & NTFS_MFT_MASK);
@@ -3134,6 +3844,10 @@ BrowseIndexEntries(PDEVICE_EXTENSION Vcb,
 
     if (IndexAllocationContext)
     {
+        DPRINT("'%wZ' not found after scanning %lu entries of MFT record %I64u "
+               "(index allocation present)\n",
+               FileName, *CurrentEntry, MftRecord->MFTRecordNumber & NTFS_MFT_MASK);
+
         ExFreePoolWithTag(BitmapMem, TAG_NTFS);
         ReleaseAttributeContext(BitmapContext);
         ReleaseAttributeContext(IndexAllocationContext);
@@ -3201,7 +3915,9 @@ NtfsFindMftRecord(PDEVICE_EXTENSION Vcb,
     IndexRoot = (PINDEX_ROOT_ATTRIBUTE)IndexRecord;
     IndexEntry = (PINDEX_ENTRY_ATTRIBUTE)((PCHAR)&IndexRoot->Header + IndexRoot->Header.FirstEntryOffset);
     /* Index root is always resident. */
-    IndexEntryEnd = (PINDEX_ENTRY_ATTRIBUTE)(IndexRecord + IndexRoot->Header.TotalSizeOfEntries);
+    /* TotalSizeOfEntries is measured from the index header, not from the
+     * start of the attribute, and FirstEntryOffset above already is. */
+    IndexEntryEnd = (PINDEX_ENTRY_ATTRIBUTE)((ULONG_PTR)&IndexRoot->Header + IndexRoot->Header.TotalSizeOfEntries);
     ReleaseAttributeContext(IndexRootCtx);
 
     DPRINT("IndexRecordSize: %x IndexBlockSize: %x\n", Vcb->NtfsInfo.BytesPerIndexRecord, IndexRoot->SizeOfEntry);
@@ -3260,7 +3976,8 @@ NtfsLookupFileAt(PDEVICE_EXTENSION Vcb,
         if (Remaining.Length == 0)
             break;
 
-        FsRtlDissectName(Current, &Current, &Remaining);
+        /* Split what is left of the path, not the component we just resolved */
+        FsRtlDissectName(Remaining, &Current, &Remaining);
     }
 
     *FileRecord = ExAllocateFromNPagedLookasideList(&Vcb->FileRecLookasideList);

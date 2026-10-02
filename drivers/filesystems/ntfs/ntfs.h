@@ -15,6 +15,7 @@
 #define TAG_IRP_CTXT 'iftN'
 #define TAG_ATT_CTXT 'aftN'
 #define TAG_FILE_REC 'rftN'
+#define TAG_IO_RUNS 'RftN'
 
 #define ROUND_UP(N, S) ((((N) + (S) - 1) / (S)) * (S))
 #define ROUND_DOWN(N, S) ((N) - ((N) % (S)))
@@ -118,6 +119,11 @@ typedef struct
 
     NPAGED_LOOKASIDE_LIST FileRecLookasideList;
 
+    /* $UpCase, one upcased code point per UCS-2 value. NTFS defines its
+     * own case folding through this file, so comparisons must use it
+     * rather than the Rtl table. */
+    PWCHAR UpCaseTable;
+
     ULONG MftDataOffset;
     ULONG Flags;
     ULONG OpenHandleCount;
@@ -125,6 +131,8 @@ typedef struct
 } DEVICE_EXTENSION, *PDEVICE_EXTENSION, NTFS_VCB, *PNTFS_VCB;
 
 #define VCB_VOLUME_LOCKED       0x0001
+/* Volume dismounted: everything but raw volume access is refused */
+#define VCB_VOLUME_DISMOUNTED   0x0002
 
 typedef struct
 {
@@ -138,7 +146,13 @@ typedef struct
     PWCHAR DirectorySearchPattern;
     ULONG LastCluster;
     ULONG LastOffset;
+    ULONG Flags;
 } NTFS_CCB, *PNTFS_CCB;
+
+/* NTFS has no "." or ".." in its indices, so directory enumeration makes them
+ * up. These record which of the two a scan has already handed out. */
+#define CCB_RETURNED_DOT        0x0001
+#define CCB_RETURNED_DOTDOT     0x0002
 
 typedef struct
 {
@@ -328,8 +342,8 @@ typedef struct
 typedef struct
 {
     ULONGLONG CreationTime;
-    ULONGLONG ChangeTime;
     ULONGLONG LastWriteTime;
+    ULONGLONG ChangeTime;
     ULONGLONG LastAccessTime;
     ULONG FileAttribute;
     ULONG AlignmentOrReserved[3];
@@ -359,8 +373,8 @@ typedef struct
 {
     ULONGLONG DirectoryFileReferenceNumber;
     ULONGLONG CreationTime;
-    ULONGLONG ChangeTime;
     ULONGLONG LastWriteTime;
+    ULONGLONG ChangeTime;
     ULONGLONG LastAccessTime;
     ULONGLONG AllocatedSize;
     ULONGLONG DataSize;
@@ -475,6 +489,50 @@ typedef struct {
 #define IRPCONTEXT_COMPLETE 0x2
 #define IRPCONTEXT_QUEUE 0x4
 
+/* A run with no backing storage: zeroed on read, rejected on write */
+#define NTFS_SPARSE_LBO ((LONGLONG)-1)
+
+/* How many runs a request may span before the run list spills into pool. */
+#define NTFS_MAX_IO_RUNS_ON_STACK 8
+
+/* One physically contiguous piece of a transfer. Runs tile the caller's buffer:
+ * Runs[i].BufferOffset + Runs[i].ByteCount == Runs[i + 1].BufferOffset. */
+typedef struct _NTFS_IO_RUN
+{
+    LONGLONG Lbo;           /* Byte offset on the volume, or NTFS_SPARSE_LBO */
+    ULONG BufferOffset;     /* Byte offset into the caller's buffer */
+    ULONG ByteCount;
+    PIRP SavedIrp;          /* The IRP issued for this run; owned by blockdev.c */
+} NTFS_IO_RUN, *PNTFS_IO_RUN;
+
+/* Small requests stay on the caller's stack; fragmented ones spill into pool */
+typedef struct _NTFS_IO_RUN_LIST
+{
+    PNTFS_IO_RUN Runs;
+    ULONG Count;
+    ULONG Capacity;
+    ULONG TotalLength;
+    NTFS_IO_RUN StackRuns[NTFS_MAX_IO_RUNS_ON_STACK];
+} NTFS_IO_RUN_LIST, *PNTFS_IO_RUN_LIST;
+
+/* Shared between the issuing thread and every run's completion routine. The
+ * issuer waits on SyncEvent, which the last completing run sets. */
+typedef struct _NTFS_IO_CONTEXT
+{
+    volatile LONG IrpCount;         /* Runs still in flight */
+    volatile LONG Status;           /* First error seen, else STATUS_SUCCESS */
+    volatile LONG BytesTransferred;
+
+    /* Covers the whole transfer; every run cuts a partial MDL from it. Either
+     * borrowed from the caller's IRP or built here; we only lock and release
+     * it in the latter case. */
+    PMDL MasterMdl;
+    PVOID MasterVa;                 /* Base address MasterMdl describes */
+    BOOLEAN OwnsMasterMdl;
+
+    KEVENT SyncEvent;
+} NTFS_IO_CONTEXT, *PNTFS_IO_CONTEXT;
+
 typedef struct
 {
     NTFSIDENTIFIER Identifier;
@@ -508,6 +566,7 @@ typedef struct _NTFS_ATTR_CONTEXT
 #define FCB_CACHE_INITIALIZED   0x0001
 #define FCB_IS_VOLUME_STREAM    0x0002
 #define FCB_IS_VOLUME           0x0004
+#define FCB_DELETE_PENDING      0x0008
 #define MAX_PATH                260
 
 typedef struct _FCB
@@ -535,6 +594,7 @@ typedef struct _FCB
     LONG RefCount;
     ULONG Flags;
     ULONG OpenHandleCount;
+    SHARE_ACCESS ShareAccess;
 
     ULONGLONG MFTIndex;
     USHORT LinkCount;
@@ -707,6 +767,36 @@ FreeClusters(PNTFS_VCB Vcb,
 
 /* blockdev.c */
 
+VOID
+NtfsInitIoRunList(OUT PNTFS_IO_RUN_LIST RunList);
+
+NTSTATUS
+NtfsAddIoRun(IN OUT PNTFS_IO_RUN_LIST RunList,
+             IN LONGLONG Lbo,
+             IN ULONG ByteCount);
+
+VOID
+NtfsFreeIoRunList(IN OUT PNTFS_IO_RUN_LIST RunList);
+
+NTSTATUS
+NtfsPerformIoRuns(IN PDEVICE_OBJECT DeviceObject,
+                  IN UCHAR MajorFunction,
+                  IN ULONG SectorSize,
+                  IN OUT PUCHAR Buffer,
+                  IN PNTFS_IO_RUN_LIST RunList,
+                  IN BOOLEAN Override,
+                  OUT PULONG BytesTransferred OPTIONAL);
+
+NTSTATUS
+NtfsPerformIrpIoRuns(IN PDEVICE_OBJECT DeviceObject,
+                     IN UCHAR MajorFunction,
+                     IN ULONG SectorSize,
+                     IN PIRP Irp,
+                     IN OUT PUCHAR Buffer,
+                     IN PNTFS_IO_RUN_LIST RunList,
+                     IN BOOLEAN Override,
+                     OUT PULONG BytesTransferred);
+
 NTSTATUS
 NtfsReadDisk(IN PDEVICE_OBJECT DeviceObject,
              IN LONGLONG StartingOffset,
@@ -721,6 +811,9 @@ NtfsWriteDisk(IN PDEVICE_OBJECT DeviceObject,
               IN ULONG Length,
               IN ULONG SectorSize,
               IN const PUCHAR Buffer);
+
+NTSTATUS
+NtfsFlushDevice(IN PDEVICE_OBJECT DeviceObject);
 
 NTSTATUS
 NtfsReadSectors(IN PDEVICE_OBJECT DeviceObject,
@@ -765,8 +858,15 @@ CreateIndexRootFromBTree(PDEVICE_EXTENSION DeviceExt,
 NTSTATUS
 DemoteBTreeRoot(PB_TREE Tree);
 
+PB_TREE_KEY
+CreateBTreeKeyFromFilename(ULONGLONG FileReference,
+                           PFILENAME_ATTRIBUTE FileNameAttribute);
+
 VOID
 DestroyBTree(PB_TREE Tree);
+
+VOID
+DestroyBTreeKey(PB_TREE_KEY Key);
 
 VOID
 DestroyBTreeNode(PB_TREE_FILENAME_NODE Node);
@@ -810,6 +910,11 @@ NtfsInsertKey(PB_TREE Tree,
               ULONG IndexRecordSize,
               PB_TREE_KEY *MedianKey,
               PB_TREE_FILENAME_NODE *NewRightHandSibling);
+
+NTSTATUS
+NtfsRemoveKey(PB_TREE_FILENAME_NODE Node,
+              PB_TREE_KEY SearchKey,
+              BOOLEAN CaseSensitive);
 
 NTSTATUS
 SplitBTreeNode(PB_TREE Tree,
@@ -1018,6 +1123,11 @@ NtfsSetInformation(PNTFS_IRP_CONTEXT IrpContext);
 NTSTATUS
 NtfsFileSystemControl(PNTFS_IRP_CONTEXT IrpContext);
 
+/* flush.c */
+
+NTSTATUS
+NtfsFlushBuffers(PNTFS_IRP_CONTEXT IrpContext);
+
 
 /* mft.c */
 NTSTATUS
@@ -1026,6 +1136,21 @@ NtfsAddFilenameToDirectory(PDEVICE_EXTENSION DeviceExt,
                            ULONGLONG FileReferenceNumber,
                            PFILENAME_ATTRIBUTE FilenameAttribute,
                            BOOLEAN CaseSensitive);
+
+NTSTATUS
+NtfsRemoveFilenameFromDirectory(PDEVICE_EXTENSION DeviceExt,
+                                ULONGLONG DirectoryMftIndex,
+                                PFILENAME_ATTRIBUTE FilenameAttribute,
+                                BOOLEAN CaseSensitive);
+
+NTSTATUS
+FreeMftEntry(PDEVICE_EXTENSION DeviceExt,
+             ULONGLONG MftIndex);
+
+NTSTATUS
+NtfsDeleteFileRecord(PDEVICE_EXTENSION DeviceExt,
+                     ULONGLONG MftIndex,
+                     BOOLEAN CaseSensitive);
 
 NTSTATUS
 AddNewMftEntry(PFILE_RECORD_HEADER FileRecord,
@@ -1049,6 +1174,14 @@ ReadAttribute(PDEVICE_EXTENSION Vcb,
               PCHAR Buffer,
               ULONG Length);
 
+ULONG
+ReadAttributeToIrp(PDEVICE_EXTENSION Vcb,
+                   PNTFS_ATTR_CONTEXT Context,
+                   ULONGLONG Offset,
+                   PCHAR Buffer,
+                   ULONG Length,
+                   PIRP Irp);
+
 NTSTATUS
 WriteAttribute(PDEVICE_EXTENSION Vcb,
                PNTFS_ATTR_CONTEXT Context,
@@ -1057,6 +1190,16 @@ WriteAttribute(PDEVICE_EXTENSION Vcb,
                ULONG Length,
                PULONG LengthWritten,
                PFILE_RECORD_HEADER FileRecord);
+
+NTSTATUS
+WriteAttributeFromIrp(PDEVICE_EXTENSION Vcb,
+                      PNTFS_ATTR_CONTEXT Context,
+                      ULONGLONG Offset,
+                      const PUCHAR Buffer,
+                      ULONG Length,
+                      PULONG LengthWritten,
+                      PFILE_RECORD_HEADER FileRecord,
+                      PIRP Irp);
 
 ULONGLONG
 AttributeDataLength(PNTFS_ATTR_RECORD AttrRecord);
@@ -1105,7 +1248,8 @@ ULONGLONG
 AttributeAllocatedLength(PNTFS_ATTR_RECORD AttrRecord);
 
 BOOLEAN
-CompareFileName(PUNICODE_STRING FileName,
+CompareFileName(PDEVICE_EXTENSION Vcb,
+                PUNICODE_STRING FileName,
                 PINDEX_ENTRY_ATTRIBUTE IndexEntry,
                 BOOLEAN DirSearch,
                 BOOLEAN CaseSensitive);
@@ -1114,32 +1258,66 @@ NTSTATUS
 UpdateMftMirror(PNTFS_VCB Vcb);
 
 NTSTATUS
+NtfsLoadUpCaseTable(PDEVICE_EXTENSION Vcb);
+
+NTSTATUS
 ReadFileRecord(PDEVICE_EXTENSION Vcb,
                ULONGLONG index,
                PFILE_RECORD_HEADER file);
 
+/* NTFS duplicates a file's sizes, timestamps and attributes into the $FILE_NAME
+ * of its entry in the parent directory's index, so a directory can be
+ * enumerated without reading every file record. These flags say which of them
+ * the caller changed and so need refreshing there. */
+#define NTFS_FILENAME_UPDATE_SIZES  0x1
+#define NTFS_FILENAME_UPDATE_TIMES  0x2
+#define NTFS_FILENAME_UPDATE_ATTRS  0x4
+
+typedef struct _NTFS_FILENAME_UPDATE
+{
+    ULONG Flags;
+
+    /* NTFS_FILENAME_UPDATE_SIZES */
+    ULONGLONG DataSize;
+    ULONGLONG AllocatedSize;
+
+    /* NTFS_FILENAME_UPDATE_TIMES */
+    ULONGLONG CreationTime;
+    ULONGLONG LastWriteTime;
+    ULONGLONG ChangeTime;
+    ULONGLONG LastAccessTime;
+
+    /* NTFS_FILENAME_UPDATE_ATTRS */
+    ULONG FileAttributes;
+} NTFS_FILENAME_UPDATE, *PNTFS_FILENAME_UPDATE;
+
 NTSTATUS
-UpdateIndexEntryFileNameSize(PDEVICE_EXTENSION Vcb,
-                             PFILE_RECORD_HEADER MftRecord,
-                             PCHAR IndexRecord,
-                             ULONG IndexBlockSize,
-                             PINDEX_ENTRY_ATTRIBUTE FirstEntry,
-                             PINDEX_ENTRY_ATTRIBUTE LastEntry,
-                             PUNICODE_STRING FileName,
-                             PULONG StartEntry,
-                             PULONG CurrentEntry,
-                             BOOLEAN DirSearch,
-                             ULONGLONG NewDataSize,
-                             ULONGLONG NewAllocatedSize,
-                             BOOLEAN CaseSensitive);
+UpdateIndexEntryFileName(PDEVICE_EXTENSION Vcb,
+                         PFILE_RECORD_HEADER MftRecord,
+                         PCHAR IndexRecord,
+                         ULONG IndexBlockSize,
+                         PINDEX_ENTRY_ATTRIBUTE FirstEntry,
+                         PINDEX_ENTRY_ATTRIBUTE LastEntry,
+                         PUNICODE_STRING FileName,
+                         PULONG StartEntry,
+                         PULONG CurrentEntry,
+                         BOOLEAN DirSearch,
+                         PNTFS_FILENAME_UPDATE Update,
+                         BOOLEAN CaseSensitive);
+
+NTSTATUS
+NtfsUpdateDuplicatedInformation(PDEVICE_EXTENSION Vcb,
+                                PFILE_RECORD_HEADER FileRecord,
+                                ULONGLONG MFTIndex,
+                                ULONG Flags,
+                                BOOLEAN CaseSensitive);
 
 NTSTATUS
 UpdateFileNameRecord(PDEVICE_EXTENSION Vcb,
                      ULONGLONG ParentMFTIndex,
                      PUNICODE_STRING FileName,
                      BOOLEAN DirSearch,
-                     ULONGLONG NewDataSize,
-                     ULONGLONG NewAllocationSize,
+                     PNTFS_FILENAME_UPDATE Update,
                      BOOLEAN CaseSensitive);
 
 NTSTATUS
