@@ -22,7 +22,7 @@
 
 /* DDK headers */
 #undef NTDDI_VERSION
-#define NTDDI_VERSION NTDDI_WS03SP1
+#define NTDDI_VERSION NTDDI_VISTA
 #include <ntifs.h>
 #include <ntddkbd.h>
 #include <ntddmou.h>
