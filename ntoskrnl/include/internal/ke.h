@@ -186,6 +186,13 @@ extern VOID __cdecl KiInterruptTemplate(VOID);
 #define KiProcessHyperSpacePageTable(Process) ((Process)->DirectoryTableBase[1])
 #endif
 
+/* The ReactOS idle function lives in the ReactOS part of the PRCB on Vista */
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+#define KiPrcbIdleFunction(Prcb) ((Prcb)->IdleFunction)
+#else
+#define KiPrcbIdleFunction(Prcb) ((Prcb)->PowerState.IdleFunction)
+#endif
+
 /* The DPC watchdog tick count was renamed in Vista */
 #if (NTDDI_VERSION >= NTDDI_LONGHORN)
 #define KiPrcbDpcTimeCount(Prcb) ((Prcb)->DpcTimeCount)

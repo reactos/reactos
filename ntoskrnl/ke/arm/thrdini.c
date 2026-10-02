@@ -209,7 +209,7 @@ KiIdleLoop(VOID)
         else
         {
             /* Continue staying idle. Note the HAL returns with interrupts on */
-            Prcb->PowerState.IdleFunction(&Prcb->PowerState);
+            KiPrcbIdleFunction(Prcb)(&Prcb->PowerState);
         }
     }
 }
