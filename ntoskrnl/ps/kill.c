@@ -473,8 +473,10 @@ PspExitThread(IN NTSTATUS ExitStatus)
     PTEB Teb;
     PEPROCESS CurrentProcess;
     PETHREAD Thread, OtherThread, PreviousThread = NULL;
+#if (NTDDI_VERSION < NTDDI_LONGHORN)
     PVOID DeallocationStack;
     SIZE_T Dummy;
+#endif
     BOOLEAN Last = FALSE;
     PTERMINATION_PORT TerminationPort, NextPort;
     PLIST_ENTRY FirstEntry, CurrentEntry;
