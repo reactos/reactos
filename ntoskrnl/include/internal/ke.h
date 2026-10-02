@@ -177,6 +177,15 @@ extern VOID __cdecl KiInterruptTemplate(VOID);
 #define KiThreadIopl(Thread) ((Thread)->Iopl)
 #endif
 
+/* Vista keeps a single directory table base, ReactOS keeps its hyperspace page table in EPROCESS */
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+#define KiProcessDirectoryTableBase(Process) ((Process)->DirectoryTableBase)
+#define KiProcessHyperSpacePageTable(Process) (CONTAINING_RECORD((Process), EPROCESS, Pcb)->HyperSpacePageTable)
+#else
+#define KiProcessDirectoryTableBase(Process) ((Process)->DirectoryTableBase[0])
+#define KiProcessHyperSpacePageTable(Process) ((Process)->DirectoryTableBase[1])
+#endif
+
 /* The DPC watchdog tick count was renamed in Vista */
 #if (NTDDI_VERSION >= NTDDI_LONGHORN)
 #define KiPrcbDpcTimeCount(Prcb) ((Prcb)->DpcTimeCount)

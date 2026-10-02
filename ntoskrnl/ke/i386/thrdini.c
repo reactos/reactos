@@ -356,7 +356,7 @@ KiSwapContextExit(IN PKTHREAD OldThread,
         }
 
         /* Switch address space and flush TLB */
-        __writecr3(NewProcess->DirectoryTableBase[0]);
+        __writecr3(KiProcessDirectoryTableBase(NewProcess));
     }
 
     /* Update the old thread's cycle time */

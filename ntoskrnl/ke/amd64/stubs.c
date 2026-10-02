@@ -178,7 +178,7 @@ KiSwapProcess(IN PKPROCESS NewProcess,
 #endif
 
     /* Update CR3 */
-    __writecr3(NewProcess->DirectoryTableBase[0]);
+    __writecr3(KiProcessDirectoryTableBase(NewProcess));
 
     /* Update IOPM offset */
     Pcr->TssBase->IoMapBase = NewProcess->IopmOffset;

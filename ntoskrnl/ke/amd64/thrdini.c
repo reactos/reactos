@@ -232,7 +232,7 @@ KiSwapContextResume(
     if (OldProcess != NewProcess)
     {
         /* Switch address space and flush TLB */
-        __writecr3(NewProcess->DirectoryTableBase[0]);
+        __writecr3(KiProcessDirectoryTableBase(NewProcess));
 
         /* Set new TSS fields */
         //Pcr->TssBase->IoMapBase = NewProcess->IopmOffset;

@@ -692,8 +692,8 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
 
 #if MI_TRACE_PFNS
     /* Copy the process name now that we have it */
-    memcpy(MiGetPfnEntry(Process->Pcb.DirectoryTableBase[0] >> PAGE_SHIFT)->ProcessName, Process->ImageFileName, 16);
-    if (Process->Pcb.DirectoryTableBase[1]) memcpy(MiGetPfnEntry(Process->Pcb.DirectoryTableBase[1] >> PAGE_SHIFT)->ProcessName, Process->ImageFileName, 16);
+    memcpy(MiGetPfnEntry(KiProcessDirectoryTableBase(&Process->Pcb) >> PAGE_SHIFT)->ProcessName, Process->ImageFileName, 16);
+    if (KiProcessHyperSpacePageTable(&Process->Pcb)) memcpy(MiGetPfnEntry(KiProcessHyperSpacePageTable(&Process->Pcb) >> PAGE_SHIFT)->ProcessName, Process->ImageFileName, 16);
     if (Process->WorkingSetPage) memcpy(MiGetPfnEntry(Process->WorkingSetPage)->ProcessName, Process->ImageFileName, 16);
 #endif
 

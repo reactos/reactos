@@ -232,7 +232,7 @@ KiSwapContextExit(IN PKTHREAD OldThread,
     NewProcess = NewThread->ApcState.Process;
     if (OldProcess != NewProcess)
     {
-        TtbRegister.AsUlong = NewProcess->DirectoryTableBase[0];
+        TtbRegister.AsUlong = KiProcessDirectoryTableBase(NewProcess);
         ASSERT(TtbRegister.Reserved == 0);
         KeArmTranslationTableRegisterSet(TtbRegister);
     }

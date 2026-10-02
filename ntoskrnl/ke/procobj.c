@@ -134,8 +134,8 @@ KeInitializeProcess(IN OUT PKPROCESS Process,
     Process->Affinity = Affinity;
     Process->BasePriority = (CHAR)Priority;
     Process->QuantumReset = 6;
-    Process->DirectoryTableBase[0] = DirectoryTableBase[0];
-    Process->DirectoryTableBase[1] = DirectoryTableBase[1];
+    KiProcessDirectoryTableBase(Process) = DirectoryTableBase[0];
+    KiProcessHyperSpacePageTable(Process) = DirectoryTableBase[1];
     Process->AutoAlignment = Enable;
 #if defined(_M_IX86)
     Process->IopmOffset = KiComputeIopmOffset(IO_ACCESS_MAP_NONE);
