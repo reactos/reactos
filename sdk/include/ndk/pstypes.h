@@ -1485,6 +1485,9 @@ typedef struct _ETHREAD
     };
     /* Replaced by ClientSecurity in Vista */
     PPS_IMPERSONATION_INFORMATION ImpersonationInfo;
+    /* Kept in KTHREAD before Vista */
+    SCHAR Quantum;
+    UCHAR Iopl;
 #else
     // Temp HACK until we switch to NTDDI_VISTA, when these move to KTHREAD
     volatile ULONGLONG CycleTime;
