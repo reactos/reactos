@@ -21,8 +21,6 @@
 #include <intrin.h>
 
 /* DDK headers */
-#undef NTDDI_VERSION
-#define NTDDI_VERSION NTDDI_VISTA
 #include <ntifs.h>
 #include <ntddkbd.h>
 #include <ntddmou.h>
