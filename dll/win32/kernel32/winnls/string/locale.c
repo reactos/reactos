@@ -2216,7 +2216,6 @@ void init_locale( HMODULE module )
     RtlInitCodePageTable( ansi_ptr, &ansi_cpinfo );
     RtlInitCodePageTable( oem_ptr, &oem_cpinfo );
 
-#ifndef __REACTOS__
     RegCreateKeyExW( HKEY_LOCAL_MACHINE, L"System\\CurrentControlSet\\Control\\Nls",
                      0, NULL, REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS, NULL, &nls_key, NULL );
     RegCreateKeyExW( HKEY_LOCAL_MACHINE, L"Software\\Microsoft\\Windows NT\\CurrentVersion\\Time Zones",
@@ -2224,6 +2223,7 @@ void init_locale( HMODULE module )
     RegCreateKeyExW( HKEY_CURRENT_USER, L"Control Panel\\International",
                      0, NULL, REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS, NULL, &intl_key, NULL );
 
+#ifndef __REACTOS__
     current_locale_sort = get_language_sort( LOCALE_NAME_USER_DEFAULT );
 
     if (GetDynamicTimeZoneInformation( &timezone ) != TIME_ZONE_ID_INVALID &&
@@ -5911,6 +5911,8 @@ static CRITICAL_SECTION_DEBUG tzname_section_debug =
       0, 0, { (DWORD_PTR)(__FILE__ ": tzname_section") }
 };
 static CRITICAL_SECTION tzname_section = { &tzname_section_debug, -1, 0, 0, 0, 0 };
+
+#if (__REACTOS__ && DLL_EXPORT_VERSION >= 0x600)
 static struct {
     LCID lcid;
     WCHAR key_name[128];
@@ -5918,7 +5920,6 @@ static struct {
     WCHAR daylight_name[32];
 } cached_tzname;
 
-#if (__REACTOS__ && DLL_EXPORT_VERSION >= 0x600)
 /***********************************************************************
  *	GetDynamicTimeZoneInformation   (kernelbase.@)
  */
