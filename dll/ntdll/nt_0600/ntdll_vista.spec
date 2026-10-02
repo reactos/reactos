@@ -33,6 +33,8 @@
 @ stdcall RtlLcidToLocaleName(long ptr long long)
 @ stdcall RtlLocaleNameToLcid(wstr ptr long)
 @ stdcall RtlCompareUnicodeStrings(wstr long wstr long long)
+@ stdcall RtlGetLocaleFileMappingAddress(ptr ptr ptr)
+@ stdcall RtlNormalizeString(long long long long ptr)
 @ stdcall RtlGetCurrentProcessorNumberEx(ptr)
 @ stdcall -arch=i386 RtlInterlockedPushListSListEx(ptr ptr ptr long)
 @ stdcall -arch=!i386 RtlInterlockedPushListSListEx(ptr ptr ptr long) ntdll.RtlInterlockedPushListSList
