@@ -36,6 +36,18 @@
     InterlockedAnd((PLONG)&Process->Flags, ~Flag)
 
 FORCEINLINE
+PEPROCESS
+PspGetThreadProcess(
+    _In_ PETHREAD Thread)
+{
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+    return CONTAINING_RECORD(Thread->Tcb.Process, EPROCESS, Pcb);
+#else
+    return Thread->ThreadsProcess;
+#endif
+}
+
+FORCEINLINE
 VOID
 PspRunCreateThreadNotifyRoutines(IN PETHREAD CurrentThread,
                                  IN BOOLEAN Create)

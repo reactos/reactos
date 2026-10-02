@@ -402,7 +402,7 @@ NTAPI
 PspDeleteThread(IN PVOID ObjectBody)
 {
     PETHREAD Thread = (PETHREAD)ObjectBody;
-    PEPROCESS Process = Thread->ThreadsProcess;
+    PEPROCESS Process = PspGetThreadProcess(Thread);
     PAGED_CODE();
     PSTRACE(PS_KILL_DEBUG, "ObjectBody: %p\n", ObjectBody);
     PSREFTRACE(Thread);
@@ -485,7 +485,7 @@ PspExitThread(IN NTSTATUS ExitStatus)
 
     /* Get the Current Thread and Process */
     Thread = PsGetCurrentThread();
-    CurrentProcess = Thread->ThreadsProcess;
+    CurrentProcess = PspGetThreadProcess(Thread);
     ASSERT((Thread) == PsGetCurrentThread());
 
     /* Can't terminate a thread if it attached another process */
@@ -1026,7 +1026,7 @@ PspTerminateThreadByPointer(IN PETHREAD Thread,
         /* Break to debugger */
         PspCatchCriticalBreak("Terminating critical thread 0x%p (in %s)\n",
                               Thread,
-                              Thread->ThreadsProcess->ImageFileName);
+                              PspGetThreadProcess(Thread)->ImageFileName);
     }
 
     /* Check if we are already inside the thread */

@@ -105,7 +105,7 @@ MiCheckForUserStackOverflow(IN PVOID Address,
 
 #if defined(_WIN64) && defined(BUILD_WOW64_ENABLED)
             /* Update WOW64 32-bit TEB stack limit */
-            if (CurrentThread->ThreadsProcess->Wow64Process != NULL)
+            if (PspGetThreadProcess(CurrentThread)->Wow64Process != NULL)
             {
                 PS_GET_TEB32_FROM_TEB(Teb)->NtTib.StackLimit = PtrToUlong(Teb->NtTib.StackLimit);
             }
@@ -127,7 +127,7 @@ MiCheckForUserStackOverflow(IN PVOID Address,
 
 #if defined(_WIN64) && defined(BUILD_WOW64_ENABLED)
     /* Update WOW64 32-bit TEB stack limit */
-    if (CurrentThread->ThreadsProcess->Wow64Process != NULL)
+    if (PspGetThreadProcess(CurrentThread)->Wow64Process != NULL)
     {
         PS_GET_TEB32_FROM_TEB(Teb)->NtTib.StackLimit = PtrToUlong(Teb->NtTib.StackLimit);
     }

@@ -2502,7 +2502,7 @@ NtSetInformationThread(
                 break;
 
             /* Get the process */
-            Process = Thread->ThreadsProcess;
+            Process = PspGetThreadProcess(Thread);
 
             /* Try to acquire rundown */
             if (ExAcquireRundownProtection(&Process->RundownProtect))
@@ -2778,7 +2778,7 @@ NtSetInformationThread(
             }
 
             /* Get the process */
-            Process = Thread->ThreadsProcess;
+            Process = PspGetThreadProcess(Thread);
 
             /* Loop the threads */
             ProcThread = PsGetNextProcessThread(Process, NULL);
@@ -3260,9 +3260,9 @@ NtQueryInformationThread(
             _SEH2_TRY
             {
                 /* Return whether or not we are the last thread */
-                *(PULONG)ThreadInformation = ((Thread->ThreadsProcess->
+                *(PULONG)ThreadInformation = ((PspGetThreadProcess(Thread)->
                                                ThreadListHead.Flink->Flink ==
-                                               &Thread->ThreadsProcess->
+                                               &PspGetThreadProcess(Thread)->
                                                ThreadListHead) ?
                                               TRUE : FALSE);
             }

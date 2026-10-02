@@ -1020,7 +1020,7 @@ PsLookupProcessThreadByCid(IN PCLIENT_ID Cid,
                 if (Process)
                 {
                     /* Return it and reference it */
-                    *Process = FoundThread->ThreadsProcess;
+                    *Process = PspGetThreadProcess(FoundThread);
                     ObReferenceObject(*Process);
                 }
             }

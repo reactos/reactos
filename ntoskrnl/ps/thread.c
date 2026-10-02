@@ -269,7 +269,11 @@ PspCreateThread(OUT PHANDLE ThreadHandle,
     Thread->ExitStatus = STATUS_PENDING;
 
     /* Set the Process CID */
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+    Thread->Tcb.Process = &Process->Pcb;
+#else
     Thread->ThreadsProcess = Process;
+#endif
     Thread->Cid.UniqueProcess = Process->UniqueProcessId;
 
     /* Create Cid Handle */
@@ -381,7 +385,7 @@ PspCreateThread(OUT PHANDLE ThreadHandle,
     /* Check if the thread was ours, terminated and it was user mode */
     if ((Thread->Terminated) &&
         (ThreadContext) &&
-        (Thread->ThreadsProcess == Process))
+        (PspGetThreadProcess(Thread) == Process))
     {
         /* Cleanup, we don't want to start it up and context switch */
         goto Quickie;
@@ -724,7 +728,7 @@ PEPROCESS
 NTAPI
 PsGetThreadProcess(IN PETHREAD Thread)
 {
-    return Thread->ThreadsProcess;
+    return PspGetThreadProcess(Thread);
 }
 
 /*
@@ -734,7 +738,7 @@ PEPROCESS
 NTAPI
 PsGetCurrentThreadProcess(VOID)
 {
-    return PsGetCurrentThread()->ThreadsProcess;
+    return PspGetThreadProcess(PsGetCurrentThread());
 }
 
 /*
@@ -764,7 +768,7 @@ ULONG
 NTAPI
 PsGetThreadSessionId(IN PETHREAD Thread)
 {
-    return MmGetSessionId(Thread->ThreadsProcess);
+    return MmGetSessionId(PspGetThreadProcess(Thread));
 }
 
 /*
