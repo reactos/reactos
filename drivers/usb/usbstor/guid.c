@@ -1,7 +1,6 @@
 /* DO NOT USE THE PRECOMPILED HEADER FOR THIS FILE! */
 
-#include <ntdef.h>
-#include <miniport.h>
+#include <wdm.h>
 #include <usb.h>
 #include <initguid.h>
 #include <usbbusif.h>
