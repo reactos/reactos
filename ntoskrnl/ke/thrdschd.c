@@ -871,7 +871,7 @@ KiSetAffinityThread(IN PKTHREAD Thread,
 // We need this per-arch because sometimes it's Prcb and sometimes PrcbData, and
 // because on x86 it's FS, and on x64 it's GS (not sure what it is on ARM/PPC).
 //
-#ifdef _M_IX86
+#if defined(_M_IX86) && (NTDDI_VERSION < NTDDI_LONGHORN)
 #define KiGetCurrentReadySummary() __readfsdword(FIELD_OFFSET(KIPCR, PrcbData.ReadySummary))
 #elif _M_AMD64
 #define KiGetCurrentReadySummary() __readgsdword(FIELD_OFFSET(KIPCR, Prcb.ReadySummary))
