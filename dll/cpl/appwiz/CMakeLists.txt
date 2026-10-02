@@ -1,6 +1,4 @@
 
-remove_definitions(-D_WIN32_WINNT=0x502)
-add_definitions(-D_WIN32_WINNT=0x600)
 
 add_definitions(-D_CRT_DECLARE_NONSTDC_NAMES=1)
 spec2def(appwiz.cpl appwiz.spec)
