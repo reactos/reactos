@@ -1496,6 +1496,10 @@ typedef struct _ETHREAD
     /* KTHREAD only has this starting with Win8 */
     XSAVE_FORMAT* StateSaveArea;
 #endif
+#ifdef _WIN64
+    /* The 64 bit KTHREAD has no service table */
+    PVOID ServiceTable;
+#endif
 #else
     // Temp HACK until we switch to NTDDI_VISTA, when these move to KTHREAD
     volatile ULONGLONG CycleTime;
