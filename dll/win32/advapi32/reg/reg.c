@@ -27,6 +27,8 @@ WINE_DEFAULT_DEBUG_CHANNEL(reg);
 #define MAX_DEFAULT_HANDLES   6
 #define REG_MAX_NAME_SIZE     256
 #define REG_MAX_DATA_SIZE     2048
+#define HeapAlloc RtlAllocateHeap
+#define HeapFree RtlFreeHeap
 
 /* GLOBALS ******************************************************************/
 
