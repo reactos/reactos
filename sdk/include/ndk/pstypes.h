@@ -262,7 +262,11 @@ extern POBJECT_TYPE NTSYSAPI PsJobType;
 // Cross Thread Flags
 //
 #define CT_TERMINATED_BIT                       0x1
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+#define CT_THREAD_INSERTED_BIT                  0x2
+#else
 #define CT_DEAD_THREAD_BIT                      0x2
+#endif
 #define CT_HIDE_FROM_DEBUGGER_BIT               0x4
 #define CT_ACTIVE_IMPERSONATION_INFO_BIT        0x8
 #define CT_SYSTEM_THREAD_BIT                    0x10
