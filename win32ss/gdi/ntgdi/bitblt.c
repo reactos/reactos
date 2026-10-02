@@ -779,6 +779,7 @@ GreStretchBltMask(
                               BitmapMask ? &MaskPoint : NULL,
                               &DCDest->eboFill.BrushObject,
                               &BrushOrigin,
+                              pdcattr->jStretchBltMode,
                               rop4);
     if (UsesSource)
     {

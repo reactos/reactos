@@ -1949,6 +1949,7 @@ NoAlpha:
                                NULL,
                                NULL,
                                NULL,
+                               COLORONCOLOR,
                                rop4);
 
         EXLATEOBJ_vCleanup(&exlo);
@@ -1979,6 +1980,7 @@ NoAlpha:
                                    NULL,
                                    NULL,
                                    NULL,
+                                   COLORONCOLOR,
                                    rop4);
 
             EXLATEOBJ_vCleanup(&exlo);
@@ -2008,6 +2010,7 @@ NoAlpha:
                                    NULL,
                                    NULL,
                                    NULL,
+                                   COLORONCOLOR,
                                    rop4);
 
             EXLATEOBJ_vCleanup(&exlo);

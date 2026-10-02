@@ -222,6 +222,7 @@ BOOLEAN Dummy_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
                          POINTL* MaskOrigin, BRUSHOBJ* Brush,
                          POINTL* BrushOrign,
                          XLATEOBJ *ColorTranslation,
+                         ULONG Mode,
                          ROP4 Rop)
 {
   return FALSE;

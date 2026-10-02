@@ -19,10 +19,10 @@ BOOLEAN DIB_XXBPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf, SURFOBJ *Ma
                             RECTL *DestRect, RECTL *SourceRect,
                             POINTL *MaskOrigin, BRUSHOBJ *Brush,
                             POINTL *BrushOrigin, XLATEOBJ *ColorTranslation,
-                            ROP4 ROP)
+                            ULONG Mode, ROP4 ROP)
 {
-  LONG sx = 0;
-  LONG sy = 0;
+  LONG sx = 0, sxNext = 0;
+  LONG sy = 0, syNext = 0;
   LONG DesX;
   LONG DesY;
 
@@ -37,6 +37,7 @@ BOOLEAN DIB_XXBPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf, SURFOBJ *Ma
   ULONG Dest, Source = 0, Pattern = 0;
   ULONG xxBPPMask;
   BOOLEAN CanDraw;
+  BOOLEAN bCombineScans;
 
   PFN_DIB_GetPixel fnSource_GetPixel = NULL;
   PFN_DIB_GetPixel fnDest_GetPixel = NULL;
@@ -135,6 +136,20 @@ BOOLEAN DIB_XXBPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf, SURFOBJ *Ma
     DPRINT("PatternSurface is not NULL.\n");
   }
 
+  /* STRETCH_ANDSCANS/STRETCH_ORSCANS (the BLACKONWHITE/WHITEONBLACK modes,
+   * which are also what Windows defaults a DC to) must combine every source
+   * pixel that maps onto a given destination pixel instead of picking a
+   * single (nearest-neighbour) sample. Simple point sampling drops most of
+   * the source pixels when shrinking, which is barely noticeable on
+   * photographic/color images but produces very visible banding/aliasing
+   * glitches on 1bpp (monochrome) surfaces, since there are no in-between
+   * shades to hide the error. Only do this when we are actually shrinking,
+   * matching real StretchBlt behavior; for 1:1 or enlarging blits the
+   * original point-sampling result is already correct. */
+  bCombineScans = UsesSource &&
+                  ((Mode == STRETCH_ANDSCANS) || (Mode == STRETCH_ORSCANS)) &&
+                  ((abs(DstWidth) < abs(SrcWidth)) || (abs(DstHeight) < abs(SrcHeight)));
+
   DPRINT("bLeftToRight is '%d' and bTopToBottom is '%d'.\n", bLeftToRight, bTopToBottom);
 
   for (DesY = DestRect->top; DesY < DestRect->bottom; DesY++)
@@ -152,10 +167,12 @@ BOOLEAN DIB_XXBPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf, SURFOBJ *Ma
       if (bTopToBottom)
       {
         sy = SourceRect->bottom-(DesY - DestRect->top) * SrcHeight / DstHeight;  // flips about the x-axis
+        syNext = SourceRect->bottom-(DesY + 1 - DestRect->top) * SrcHeight / DstHeight;
       }
       else
       {
         sy = SourceRect->top+(DesY - DestRect->top) * SrcHeight / DstHeight;
+        syNext = SourceRect->top+(DesY + 1 - DestRect->top) * SrcHeight / DstHeight;
       }
     }
 
@@ -186,12 +203,61 @@ BOOLEAN DIB_XXBPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf, SURFOBJ *Ma
         if (bLeftToRight)
         {
           sx = SourceRect->right-(DesX - DestRect->left) * SrcWidth / DstWidth;  // flips about the y-axis
+          sxNext = SourceRect->right-(DesX + 1 - DestRect->left) * SrcWidth / DstWidth;
         }
         else
         {
           sx = SourceRect->left + (DesX - DestRect->left) * SrcWidth / DstWidth;
+          sxNext = SourceRect->left + (DesX + 1 - DestRect->left) * SrcWidth / DstWidth;
         }
-        if (sx >= 0 && sy >= 0 &&
+
+        if (bCombineScans)
+        {
+          LONG sxLo = min(sx, sxNext), sxHi = max(sx, sxNext);
+          LONG syLo = min(sy, syNext), syHi = max(sy, syNext);
+          LONG ix, iy;
+          BOOLEAN bAny = FALSE;
+
+          if (sxHi <= sxLo) sxHi = sxLo + 1;
+          if (syHi <= syLo) syHi = syLo + 1;
+
+          for (iy = syLo; iy < syHi; iy++)
+          {
+            if (iy < 0 || iy >= SourceCy)
+              continue;
+
+            for (ix = sxLo; ix < sxHi; ix++)
+            {
+              ULONG PixelColor;
+
+              if (ix < 0 || ix >= SourceSurf->sizlBitmap.cx)
+                continue;
+
+              PixelColor = XLATEOBJ_iXlate(ColorTranslation, fnSource_GetPixel(SourceSurf, ix, iy));
+
+              if (!bAny)
+              {
+                Source = PixelColor;
+                bAny = TRUE;
+              }
+              else if (Mode == STRETCH_ANDSCANS)
+              {
+                Source &= PixelColor;
+              }
+              else
+              {
+                Source |= PixelColor;
+              }
+            }
+          }
+
+          if (!bAny)
+          {
+            Source = 0;
+            CanDraw = ((ROP & 0xFF) != R3_OPINDEX_SRCCOPY);
+          }
+        }
+        else if (sx >= 0 && sy >= 0 &&
           SourceSurf->sizlBitmap.cx > sx && SourceCy > sy)
         {
           Source = XLATEOBJ_iXlate(ColorTranslation, fnSource_GetPixel(SourceSurf, sx, sy));
