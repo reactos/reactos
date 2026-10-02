@@ -1723,6 +1723,11 @@ typedef struct _EPROCESS
 #if (NTDDI_VERSION >= NTDDI_LONGHORN)
     ALPC_PROCESS_CONTEXT AlpcContext;
 #endif
+#if defined(__REACTOS__) && (NTDDI_VERSION >= NTDDI_LONGHORN)
+    /* Kept in KPROCESS::DirectoryTableBase[1] and EPROCESS before Vista */
+    ULONG_PTR HyperSpacePageTable;
+    KSPIN_LOCK HyperSpaceLock;
+#endif
 #if defined(__REACTOS__) && (NTDDI_VERSION < NTDDI_LONGHORN)
     // Temp HACK until we switch to NTDDI_VISTA, when this moves to KPROCESS
     ULONGLONG CycleTime;
