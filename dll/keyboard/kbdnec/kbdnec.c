@@ -1,139 +1,39 @@
 /*
- * NEC PC-9800 Japanese keyboard layout (kbdnec.dll)
- *
- * Reconstructed from the layout tables of the original kbdnec.dll
- * (Windows XP SP3, version 5.1.2600.5512), laid out in the style of
- * ReactOS's kbdus.c.  Every table below was extracted from the binary.
- *
- * Differences from kbdus.c:
- *  - 6 and 8 modifier-state tables: the KANA state is a modifier
- *    (bit 0x08), selected by the Kana lock (VK_KANA).
- *  - NLS (FE) tables: VK_F / KBDNLSTABLES, exported via
- *    KbdNlsLayerDescriptor().
- *  - KBDTABLES carries dwType / dwSubType after pLigature.
+ * PROJECT:     ReactOS Keyboard Layouts
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     NEC PC-9801 Japanese keyboard layout
+ * COPYRIGHT:   Copyright 2026 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
 #define WIN32_NO_STATUS
-#include <stdarg.h>
 #include <windef.h>
 #include <winuser.h>
 #include <ndk/kbd.h>
 
 #ifdef _M_IA64
-#define ROSDATA static __declspec(allocate(".data"))
+  #define ROSDATA static __declspec(allocate(".data"))
 #else
-#ifdef _MSC_VER
-#pragma data_seg(".data")
-#define ROSDATA static
-#else
-#define ROSDATA static __attribute__((section(".data")))
-#endif
+  #ifdef _MSC_VER
+    #pragma data_seg(".data")
+    #define ROSDATA static
+  #else
+    #define ROSDATA static __attribute__((section(".data")))
+  #endif
 #endif
 
 #define VK_EMPTY  0xff   /* The non-existent VK */
 
-#define KNUMS     KBDNUMPAD|KBDSPECIAL /* Special + number pad */
-#define KMEXT     KBDEXT|KBDMULTIVK    /* Multi + ext */
+#define KNUMS  (KBDNUMPAD | KBDSPECIAL) /* Special + number pad */
+#define KMEXT  (KBDEXT | KBDMULTIVK)    /* Multi + ext */
 
 #ifndef VK_OEM_NEC_EQUAL
-#define VK_OEM_NEC_EQUAL 0x92          /* '=' key on the NEC numpad */
-#endif
-#ifndef VK_DBE_ALPHANUMERIC
-#define VK_DBE_ALPHANUMERIC            0xf0
-#endif
-#ifndef VK_DBE_KATAKANA
-#define VK_DBE_KATAKANA                0xf1
-#endif
-#ifndef VK_DBE_HIRAGANA
-#define VK_DBE_HIRAGANA                0xf2
-#endif
-#ifndef VK_DBE_SBCSCHAR
-#define VK_DBE_SBCSCHAR                0xf3
-#endif
-#ifndef VK_DBE_ENTERWORDREGISTERMODE
-#define VK_DBE_ENTERWORDREGISTERMODE   0xf7
-#endif
-#ifndef VK_DBE_ENTERIMECONFIGMODE
-#define VK_DBE_ENTERIMECONFIGMODE      0xf8
-#endif
-#ifndef VK_DBE_FLUSHSTRING
-#define VK_DBE_FLUSHSTRING             0xf9
-#endif
-#ifndef VK_DBE_CODEINPUT
-#define VK_DBE_CODEINPUT               0xfa
-#endif
-#ifndef VK_DBE_NOCODEINPUT
-#define VK_DBE_NOCODEINPUT             0xfb
-#endif
-#ifndef VK_DBE_DETERMINESTRING
-#define VK_DBE_DETERMINESTRING         0xfc
-#endif
-#ifndef VK_ABNT_C2
-#define VK_ABNT_C2             0xc2
+  #define VK_OEM_NEC_EQUAL  0x92  /* '=' key on the NEC numpad */
 #endif
 
 /* Kana modifier (selected by the Kana lock) */
 #ifndef KBDKANA
-#define KBDKANA   0x08
+  #define KBDKANA  0x08
 #endif
-
-/* ------------------------------------------------------------------ */
-/* NLS (Far-East) definitions, not present in ndk/kbd.h               */
-/* ------------------------------------------------------------------ */
-#define KBDNLS_TYPE_NULL    0
-#define KBDNLS_TYPE_NORMAL  1
-#define KBDNLS_TYPE_TOGGLE  2
-
-#define KBDNLS_INDEX_NORMAL 1
-#define KBDNLS_INDEX_ALT    2
-
-/* NLSFEProcIndex values */
-#define KBDNLS_NULL             0  /* invalid */
-#define KBDNLS_NOEVENT          1  /* swallow the key */
-#define KBDNLS_SEND_BASE_VK     2  /* send the base VK */
-#define KBDNLS_SEND_PARAM_VK    3  /* send the VK in the parameter */
-#define KBDNLS_KANALOCK         4
-#define KBDNLS_ALPHANUM         5
-#define KBDNLS_HIRAGANA         6
-#define KBDNLS_KATAKANA         7
-#define KBDNLS_SBCSDBCS         8
-#define KBDNLS_ROMAN            9
-#define KBDNLS_CODEINPUT       10
-#define KBDNLS_HELP_OR_END     11
-#define KBDNLS_HOME_OR_CLEAR   12
-#define KBDNLS_NUMPAD          13
-#define KBDNLS_KANAEVENT       14
-#define KBDNLS_CONV_OR_NONCONV 15
-
-typedef struct _VK_FPARAM {
-  BYTE  NLSFEProcIndex;
-  ULONG NLSFEProcParam;
-} VK_FPARAM, *PVK_FPARAM;
-
-typedef struct _VK_F {
-  BYTE      Vk;
-  BYTE      NLSFEProcType;
-  BYTE      NLSFEProcCurrent;
-  BYTE      NLSFEProcSwitch;
-  VK_FPARAM NLSFEProc[8];
-  VK_FPARAM NLSFEProcAlt[8];
-} VK_F, *PVK_F;
-
-typedef struct _KBDNLSTABLES {
-  USHORT OEMIdentifier;
-  USHORT LayoutInformation;
-  ULONG  NumOfVkToF;
-  PVK_F  pVkToF;
-  INT    NumOfMouseVKey;
-  PUSHORT pusMouseVKey;
-} KBDNLSTABLES, *PKBDNLSTABLES;
-
-/* KBDTABLES as used by the FE layouts: dwType/dwSubType follow pLigature */
-typedef struct _KBDTABLES_FE {
-  KBDTABLES Base;
-  DWORD     dwType;
-  DWORD     dwSubType;
-} KBDTABLES_FE;
 
 /* ------------------------------------------------------------------ */
 /* Scan code -> virtual key                                           */
@@ -436,7 +336,7 @@ ROSDATA VSC_LPWSTR key_names[] = {
   { 0x0f, L"Tab" },
   { 0x1c, L"Enter" },
   { 0x1d, L"Ctrl" },
-  { 0x29, L"\x534a\x89d2/\x5168\x89d2" },  /* 半角/全角 */
+  { 0x29, L"\x534a\x89d2/\x5168\x89d2" },  /* Hankaku/Zenkaku */
   { 0x2a, L"Shift" },
   { 0x36, L"Right Shift" },
   { 0x37, L"Num *" },
@@ -476,7 +376,7 @@ ROSDATA VSC_LPWSTR key_names[] = {
   { 0x5d, L"F13" },
   { 0x5e, L"F14" },
   { 0x5f, L"F15" },
-  { 0x70, L"\xff76\xff85" },  /* ｶﾅ */
+  { 0x70, L"\xff76\xff85" },  /* "Kana" */
   { 0x79, L"XFER" },
   { 0x7b, L"NFER" },
   { 0, NULL },
@@ -652,7 +552,7 @@ ROSDATA KBDTABLES_FE keyboard_layout_table = {
     NULL
   },
   7,      /* dwType: Japanese keyboard */
-  0x0d02  /* dwSubType: NEC PC-9800 */
+  0x0D02  /* dwSubType: NEC PC-9801 */
 };
 
 PKBDTABLES WINAPI KbdLayerDescriptor(VOID)
