@@ -676,7 +676,7 @@ User32EnumWindows(HDESK hDesktop,
                                  dwCount,
                                  NULL,
                                  &dwCount);
-    if (!NT_SUCCESS(Status))
+    if (!NT_SUCCESS(Status) && Status != STATUS_BUFFER_TOO_SMALL)
         return FALSE;
 
     if (!dwCount)
