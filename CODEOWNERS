@@ -229,6 +229,11 @@
 #   S: Maintained
 /hal/halx86/apic/   @tkreuzer
 
+# HAL / x2APIC
+#   M: MuerteSeguraZ, Alex Mendoza
+#   S: Maintained
+/hal/halx86/x2apic/   @MuerteSeguraZ
+
 # HID Drivers
 #   M:
 #   R: ThFabba, Thomas Faber
