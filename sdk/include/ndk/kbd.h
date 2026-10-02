@@ -130,6 +130,47 @@ typedef struct _LIGATURE ## i { \
 #define SCANCODE_CTRL    0x1D
 #define SCANCODE_ALT     0x38
 
+/* KBDTABLE_DESC.dwType */
+#define KBD_TYPE_IBM_ENHANCED 4
+#define KBD_TYPE_JAPANESE     7
+#define KBD_TYPE_KOREAN       8
+
+/* KBDTABLE_DESC.dwSubType (values seen in kbdjpn.dll / kbdkor.dll) */
+#define KBD_SUBTYPE_ENGLISH_101  0
+#define KBD_SUBTYPE_JAPANESE_106 2
+#define KBD_SUBTYPE_KOREAN_103   6
+#define KBD_SUBTYPE_JAPANESE_NEC 0x0D02
+
+#define KBDTABLE_DLL_NAME_MAX 32
+#define KBDTABLE_MULTI_MAX 8
+
+typedef struct tagKBDTABLE_DESC
+{
+    WCHAR wszDllName[KBDTABLE_DLL_NAME_MAX];
+    DWORD dwType;     /* KBD_TYPE_... */
+    DWORD dwSubType;  /* KBD_SUBTYPE_... */
+} KBDTABLE_DESC, *PKBDTABLE_DESC;
+
+typedef struct tagKBDTABLE_MULTI
+{
+    UINT nTables;
+    KBDTABLE_DESC aKbdTables[KBDTABLE_MULTI_MAX];
+} KBDTABLE_MULTI, *PKBDTABLE_MULTI;
+
+typedef struct tagCLIENTKEYBOARDTYPE
+{
+    ULONG Type;
+    ULONG SubType;
+    ULONG FunctionKey;
+} CLIENTKEYBOARDTYPE, *PCLIENTKEYBOARDTYPE;
+
+#define I8042PRT_PARAMS \
+    L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\i8042prt\\Parameters"
+#define TS_KBDTYPE_MAPPING \
+    L"\\Registry\\Machine\\System\\CurrentControlSet\\Control\\Terminal Server\\KeyboardType Mapping\\"
+#define KBD_DYNAMIC_TABLES_KEY \
+    L"\\Registry\\Machine\\System\\CurrentControlSet\\Control\\Keyboard Layout\\Dynamic Tables\\"
+
 #ifdef __cplusplus
 };
 #endif//__KBD_H
