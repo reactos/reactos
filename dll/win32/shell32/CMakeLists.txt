@@ -83,6 +83,7 @@ list(APPEND SOURCE
     COpenWithMenu.cpp
     CNewMenu.cpp
     CSendToMenu.cpp
+    CShellBagCache.cpp
     CCopyMoveToMenu.cpp
     CCopyAsPathMenu.cpp
     CShellDispatch.cpp
