@@ -69,6 +69,12 @@ if(NOT MSVC_IDE)
     add_compile_options(/FS)
 endif()
 
+# For Ninja builds with MSVC, serialize link operations to avoid PDB contention
+if(CMAKE_GENERATOR STREQUAL "Ninja" AND CMAKE_C_COMPILER_ID STREQUAL "MSVC")
+    set_property(GLOBAL APPEND PROPERTY JOB_POOLS link_pool=1)
+    set(CMAKE_JOB_POOL_LINK link_pool)
+endif()
+
 # VS14+ tries to use thread-safe initialization
 add_compile_options(/Zc:threadSafeInit-)
 
