@@ -18,16 +18,16 @@ protected:
         TF_LANGUAGEPROFILE profile;
     } LANG_PROF_ENUM_ARG, *PLANG_PROF_ENUM_ARG;
 
-    ITfInputProcessorProfiles *m_pIPProfiles;
-    CActiveLanguageProfileNotifySink *m_pActiveLanguageProfileNotifySink;
-    LANGID  m_LangID1;
-    WORD    m_padding1;
-    DWORD   m_dwFlags;
-    UINT    m_nCodePage;
-    LANGID  m_LangID2;
-    WORD    m_padding2;
-    DWORD   m_dwUnknown1;
-    LONG    m_cRefs;
+    ITfInputProcessorProfiles* m_pIPProfiles = NULL;
+    CActiveLanguageProfileNotifySink* m_pActiveLanguageProfileNotifySink = NULL;
+    LANGID  m_LangID1 = 0;
+    WORD    m_padding1 = 0;
+    DWORD   m_dwFlags = 0;
+    UINT    m_nCodePage = CP_ACP;
+    LANGID  m_LangID2 = 0;
+    WORD    m_padding2 = 0;
+    DWORD   m_dwUnknown1 = 0;
+    LONG    m_cRefs = 1;
 
     static INT CALLBACK
     ActiveLanguageProfileNotifySinkCallback(
@@ -37,7 +37,6 @@ protected:
         LPVOID pUserData);
 
 public:
-    CicProfile();
     virtual ~CicProfile();
 
     // IUnknown interface

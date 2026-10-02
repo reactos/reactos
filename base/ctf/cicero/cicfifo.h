@@ -14,18 +14,14 @@ template <typename T_ITEM>
 class CicFirstInFirstOut
 {
 protected:
-    T_ITEM* m_pItems;
-    size_t m_cItems;
-    size_t m_iBack;
-    size_t m_iFront;
+    T_ITEM* m_pItems = NULL;
+    size_t m_cItems = 0;
+    size_t m_iBack = 0;
+    size_t m_iFront = 0;
     //static_assert(std::is_trivially_copyable<T_ITEM>::value, ""); // FIXME
 
 public:
     CicFirstInFirstOut(size_t cInitial = 0)
-        : m_pItems(NULL)
-        , m_cItems(0)
-        , m_iBack(0)
-        , m_iFront(0)
     {
         if (cInitial)
             GrowBuffer(cInitial);

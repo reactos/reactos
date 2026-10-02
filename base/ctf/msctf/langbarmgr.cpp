@@ -16,8 +16,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(msctf);
 class CLangBarMgr : public ITfLangBarMgr_P
 {
 public:
-    CLangBarMgr();
-    virtual ~CLangBarMgr();
+    virtual ~CLangBarMgr() { }
 
     // ** IUnknown interface **
     STDMETHODIMP QueryInterface(_In_ REFIID riid, _Out_ PVOID *ppvObj) override;
@@ -56,7 +55,7 @@ public:
     STDMETHODIMP GetPrevShowFloatingStatus(_Inout_ DWORD* pdwStatus) override;
 
 protected:
-    LONG m_cRefs;
+    LONG m_cRefs = 1;
 
     static BOOL CheckFloatingBits(_In_ DWORD dwBits);
     static HRESULT s_GetShowFloatingStatus(_Out_ DWORD *pdwFlags);
@@ -79,13 +78,6 @@ IsSingleBitSet(DWORD dwValue)
 
 //*****************************************************************************************
 
-CLangBarMgr::CLangBarMgr() : m_cRefs(1)
-{
-}
-
-CLangBarMgr::~CLangBarMgr()
-{
-}
 
 BOOL CLangBarMgr::CheckFloatingBits(_In_ DWORD dwBits)
 {

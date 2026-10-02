@@ -7,8 +7,7 @@ class CDisplayAttributeMgr
     , public ITfDisplayAttributeCollectionMgr
 {
 public:
-    CDisplayAttributeMgr();
-    virtual ~CDisplayAttributeMgr();
+    virtual ~CDisplayAttributeMgr() { }
 
     // ** IUnknown methods **
     STDMETHODIMP QueryInterface(REFIID riid, void **ppvObj) override;
@@ -27,7 +26,7 @@ public:
     STDMETHODIMP UnknownMethod(_In_ DWORD unused) override; // FIXME
 
 protected:
-    LONG m_cRefs;
+    LONG m_cRefs = 1;
     CicArray<IUnknown *> m_array1;
     CicArray<DWORD> m_array2;
 

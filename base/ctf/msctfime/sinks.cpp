@@ -12,14 +12,8 @@ WINE_DEFAULT_DEBUG_CHANNEL(msctfime);
 /// @implemented
 CCompartmentEventSink::CCompartmentEventSink(FN_EVENTSINK fnEventSink, LPVOID pUserData)
     : m_array()
-    , m_cRefs(1)
     , m_fnEventSink(fnEventSink)
     , m_pUserData(pUserData)
-{
-}
-
-/// @implemented
-CCompartmentEventSink::~CCompartmentEventSink()
 {
 }
 
@@ -132,18 +126,8 @@ HRESULT CCompartmentEventSink::_Unadvise()
 /// @implemented
 CTextEventSink::CTextEventSink(FN_ENDEDIT fnEndEdit, LPVOID pCallbackPV)
 {
-    m_cRefs = 1;
-    m_pUnknown = NULL;
-    m_dwEditSinkCookie = (DWORD)-1;
-    m_dwLayoutSinkCookie = (DWORD)-1;
-    m_fnLayoutChange = NULL;
     m_fnEndEdit = fnEndEdit;
     m_pCallbackPV = pCallbackPV;
-}
-
-/// @implemented
-CTextEventSink::~CTextEventSink()
-{
 }
 
 /// @implemented
@@ -178,8 +162,8 @@ STDMETHODIMP_(ULONG) CTextEventSink::Release()
 struct TEXT_EVENT_SINK_END_EDIT
 {
     TfEditCookie m_ecReadOnly;
-    ITfEditRecord *m_pEditRecord;
-    ITfContext *m_pContext;
+    ITfEditRecord* m_pEditRecord;
+    ITfContext* m_pContext;
 };
 
 /// @implemented
@@ -279,7 +263,6 @@ CThreadMgrEventSink::CThreadMgrEventSink(
     m_fnInit = fnInit;
     m_fnPushPop = fnPushPop;
     m_pCallbackPV = pvCallbackPV;
-    m_cRefs = 1;
 }
 
 /// @implemented
@@ -417,13 +400,7 @@ CActiveLanguageProfileNotifySink::CActiveLanguageProfileNotifySink(
 {
     m_dwConnection = (DWORD)-1;
     m_fnCompare = fnCompare;
-    m_cRefs = 1;
     m_pUserData = pUserData;
-}
-
-/// @implemented
-CActiveLanguageProfileNotifySink::~CActiveLanguageProfileNotifySink()
-{
 }
 
 /// @implemented
