@@ -719,12 +719,15 @@ Return Value:
                 NOTHING;
             } _SEH2_END;
 
-            FatReleaseVcb( IrpContext, Vcb);
+            FatReleaseVcb( IrpContext, Vcb );
         }
     }
-
+    
+    if (Irp == NULL || Irp->Type != IO_TYPE_IRP) {
+        return ExceptionCode;
+    }
+    
     FatCompleteRequest( IrpContext, Irp, ExceptionCode );
-
     return ExceptionCode;
 }
 
