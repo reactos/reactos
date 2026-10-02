@@ -1169,9 +1169,11 @@ StorPortNotification(
             HwDpcRoutine = (PHW_DPC_ROUTINE)va_arg(ap, PHW_DPC_ROUTINE);
             DPRINT1("HwDpcRoutine %p\n", HwDpcRoutine);
 
+            /* The DeferredContext becomes the miniport's HwDeviceExtension
+             * argument (see PHW_DPC_ROUTINE) */
             KeInitializeDpc((PRKDPC)&Dpc->Dpc,
                             (PKDEFERRED_ROUTINE)HwDpcRoutine,
-                            (PVOID)DeviceExtension);
+                            (PVOID)HwDeviceExtension);
             KeInitializeSpinLock(&Dpc->Lock);
             break;
 
