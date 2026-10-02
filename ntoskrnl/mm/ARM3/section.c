@@ -209,8 +209,15 @@ MiMakeProtectionMask(IN ULONG Protect)
         /* Don't allow on no-access pages */
         if (ProtectMask == MM_NOACCESS) return MM_INVALID_PROTECTION;
 
-        /* This actually turns on write-combine in this scenario! */
-        ProtectMask |= MM_NOACCESS;
+        /* Select write-combining, or safely fall back if PAT is unavailable. */
+#if defined(_M_IX86)
+        if (KeFeatureBits & KF_PAT)
+            ProtectMask |= MM_WRITECOMBINE;
+        else
+            ProtectMask |= MM_NOCACHE;
+#else
+        ProtectMask |= MM_WRITECOMBINE;
+#endif
     }
 
     /* Return the final MM PTE protection mask */
