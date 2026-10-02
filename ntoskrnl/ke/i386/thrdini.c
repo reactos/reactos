@@ -362,9 +362,9 @@ KiSwapContextExit(IN PKTHREAD OldThread,
     /* Update the old thread's cycle time */
     CurrentCycleTime = __rdtsc();
     ElapsedCycles = CurrentCycleTime - Pcr->PrcbData.StartCycles;
-    NewCycleTime = ((PETHREAD)OldThread)->CycleTime + ElapsedCycles;
+    NewCycleTime = KiReadThreadCycleTime(OldThread) + ElapsedCycles;
     KiWriteThreadCycleTime(OldThread, NewCycleTime);
-    InterlockedAdd64((PLONG64)&((PEPROCESS)OldProcess)->CycleTime, ElapsedCycles);
+    KiAddProcessCycleTime(OldProcess, ElapsedCycles);
     Pcr->PrcbData.StartCycles = CurrentCycleTime;
 
     /* Clear GS */

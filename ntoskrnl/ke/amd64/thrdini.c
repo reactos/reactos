@@ -241,8 +241,8 @@ KiSwapContextResume(
     /* Update the old thread's cycle time */
     CurrentCycleTime = __rdtsc();
     ElapsedCycles = CurrentCycleTime - Pcr->Prcb.StartCycles;
-    ((PETHREAD)OldThread)->CycleTime += ElapsedCycles;
-    InterlockedAdd64((PLONG64)&((PEPROCESS)OldProcess)->CycleTime, ElapsedCycles);
+    KiWriteThreadCycleTime(OldThread, KiReadThreadCycleTime(OldThread) + ElapsedCycles);
+    KiAddProcessCycleTime(OldProcess, ElapsedCycles);
     Pcr->Prcb.StartCycles = CurrentCycleTime;
 
     /* Set TEB pointer and GS base */

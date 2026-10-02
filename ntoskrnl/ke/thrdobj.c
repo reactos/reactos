@@ -1468,7 +1468,7 @@ KeQueryTotalCycleTimeThread(
 
         /* Get the thread's cycle time from the last preemption.
            We don't need synchronization here, since only the thread itself updates its cycle time. */
-        ThreadCycles = ((PETHREAD)Thread)->CycleTime;
+        ThreadCycles = KiReadThreadCycleTime(Thread);
 
         /* Enable interrupts */
         KeRestoreInterrupts(TRUE);
