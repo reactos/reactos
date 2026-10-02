@@ -1,0 +1,322 @@
+LANGUAGE LANG_ARABIC, SUBLANG_ARABIC_EG
+
+/* Dialogs */
+
+IDD_STARTPAGE DIALOGEX 0, 0, 317, 193
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "ReactOS تثبيت"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "مرحبًا بكم في في مساعد إعداد ReactOS", IDC_STARTTITLE, 115, 8, 195, 24
+    LTEXT "سيقوم هذا المساعد بتثبيت نظام ReactOS أو تحديثه على جهاز الكمبيوتر الخاص بك، \
+وإعداد الجزء الثاني من عملية التثبيت.", IDC_STATIC, 115, 40, 195, 27
+////
+    GROUPBOX " معلومات مهمة ", IDC_WARNTEXT1, 115, 70, 195, 90, BS_CENTER
+    LTEXT "ReactOS حاليًا في مرحلة ألفا: فهو لا يحتوي على جميع الميزات ولا يزال \
+قيد التطوير المكثف. يُنصح باستخدامه فقط لأغراض \
+التقييم والاختبار، وليس كنظام تشغيل للاستخدام اليومي.\n\
+قد يؤدي ذلك إلى إتلاف بياناتك أو إلحاق الضرر بأجهزتك.", IDC_WARNTEXT2, 120, 80, 185, 50, SS_CENTER
+    LTEXT "قم بعمل نسخة احتياطية من بياناتك أو قم بإجراء الاختبار على جهاز كمبيوتر ثانوي \
+إذا كنت تنوي تشغيل ReactOS على أجهزة حقيقية.", IDC_WARNTEXT3, 120, 130, 185, 27, SS_CENTER
+////
+    LTEXT "اضغط على التالي لمتابعة عملية الإعداد.", IDC_STATIC, 115, 169, 195, 17
+END
+
+IDD_TYPEPAGE DIALOGEX 0, 0, 317, 143
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "ReactOS تثبيت"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    AUTORADIOBUTTON "&تثبيت ReactOS", IDC_INSTALL, 7, 20, 277, 10, WS_GROUP | WS_TABSTOP
+    LTEXT "قم بتثبيت نسخة جديدة من ReactOS. لا يحافظ هذا الخيار على ملفاتك وإعداداتك وبرامجك. يمكنك إجراء تغييرات على الأقراص والأقسام.", IDC_INSTALLTEXT, 19, 36, 279, 27, NOT WS_GROUP
+    AUTORADIOBUTTON "&تحديث أو إصلاح ReactOS", IDC_UPDATE, 7, 80, 277, 10
+    LTEXT "تحديث أو إصلاح نسخة مثبتة من ReactOS. يحافظ هذا الخيار على ملفاتك وإعداداتك وبرامجك. لا يتوفر هذا الخيار إلا إذا كان ReactOS مثبتًا بالفعل على هذا الكمبيوتر.", IDC_UPDATETEXT, 19, 96, 279, 27, NOT WS_GROUP
+END
+
+IDD_UPDATEREPAIRPAGE DIALOGEX 0, 0, 317, 143
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "ReactOS تثبيت"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT       "يمكن لبرنامج الإعداد ترقية أحد تثبيتات ReactOS المتاحة المذكورة أدناه، أو، في حالة تلف أحد تثبيتات ReactOS، يمكن لبرنامج الإعداد محاولة إصلاحه.", IDC_STATIC, 6, 6, 303, 18
+    CONTROL     "", IDC_NTOSLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP, 6, 30, 303, 90
+    PUSHBUTTON  "&لا تقم بالترقية", IDC_SKIPUPGRADE, 230, 128, 80, 14
+    LTEXT       "انقر فوق التالي لترقية تثبيت نظام التشغيل المحدد، أو انقر فوق لا تقم بالترقية لإجراء تثبيت جديد.", IDC_STATIC, 7, 124, 222, 16
+END
+
+IDD_DEVICEPAGE DIALOGEX 0, 0, 317, 143
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "ReactOS تثبيت"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "الكمبيوتر:", IDC_STATIC, 20, 15, 80, 10
+    COMBOBOX IDC_COMPUTER, 100, 15, 180, 80, WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST
+    LTEXT "العرض:", IDC_STATIC, 20, 35, 80, 10
+    COMBOBOX IDC_DISPLAY, 100, 35, 180, 80, WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST
+    LTEXT "لوحة المفاتيح:", IDC_STATIC, 20, 55, 80, 10
+    COMBOBOX IDC_KEYBOARD, 100, 55, 180, 80, WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST
+    LTEXT "أضغط التالي لمواصلة اعداد التثبيت.", IDC_STATIC, 7, 128, 297, 8
+END
+
+IDD_DRIVEPAGE DIALOGEX 0, 0, 317, 143
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "ReactOS تثبيت"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL "", IDC_PARTITION, "SysTreeList32", WS_BORDER | WS_VISIBLE | WS_TABSTOP | LVS_REPORT | LVS_SINGLESEL, 7, 7, 303, 112
+    PUSHBUTTON "&بدء التهيئة", IDC_INITDISK, 7, 122, 50, 14 // NOTE: At same position as IDC_PARTCREATE
+    PUSHBUTTON "&أنشاء", IDC_PARTCREATE, 7, 122, 50, 14
+    PUSHBUTTON "&تهيئة", IDC_PARTFORMAT, 7, 122, 50, 14 // NOTE: At same position as IDC_PARTCREATE
+    PUSHBUTTON "&حذف", IDC_PARTDELETE, 63, 122, 50, 14
+    PUSHBUTTON "&برنامج التشغيل", IDC_DEVICEDRIVER, 174, 122, 50, 14, WS_DISABLED
+    PUSHBUTTON "&خيارات متقدمة...", IDC_PARTMOREOPTS, 230, 122, 80, 14
+    // LTEXT "اضغط على التالي لعرض الملخص.", IDC_STATIC, 7, 128, 277, 8
+END
+
+IDD_PARTITION DIALOGEX 0, 0, 200, 120
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "أنشاء وتهيئة القسم"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "&الحجم:", IDC_STATIC, 7, 9, 70, 9
+    EDITTEXT IDC_EDIT_PARTSIZE, 82, 7, 47, 13, ES_RIGHT | ES_NUMBER | WS_GROUP
+    CONTROL "", IDC_UPDOWN_PARTSIZE, UPDOWN_CLASS, UDS_SETBUDDYINT | UDS_ALIGNRIGHT |
+            UDS_AUTOBUDDY | UDS_ARROWKEYS | WS_GROUP, 120, 22, 9, 13
+    LTEXT "MB", IDC_UNIT, 134, 9, 14, 9
+    AUTOCHECKBOX "&قسم ممتد", IDC_CHECK_MBREXTPART, 7, 22, 180, 14
+    LTEXT "&نظام الملفات:", IDC_FS_STATIC, 7, 46, 70, 9
+    COMBOBOX IDC_FSTYPE, 82, 44, 100, 50, CBS_DROPDOWNLIST | WS_TABSTOP
+    AUTOCHECKBOX "&تهية سريعة", IDC_CHECK_QUICKFMT, 7, 59, 180, 14
+    PUSHBUTTON "موافق", IDOK, 88, 98, 50, 14
+    PUSHBUTTON "إلغاء", IDCANCEL, 143, 98, 50, 14
+END
+
+IDD_FORMAT DIALOGEX 0, 0, 200, 83
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "تهئية القسم"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "&نظام الملفات:", IDC_FS_STATIC, 7, 9, 70, 9
+    COMBOBOX IDC_FSTYPE, 82, 7, 100, 50, CBS_DROPDOWNLIST | WS_TABSTOP
+    AUTOCHECKBOX "&تهية سريعة", IDC_CHECK_QUICKFMT, 7, 22, 180, 14
+    PUSHBUTTON "موافق", IDOK, 88, 61, 50, 14
+    PUSHBUTTON "إلغاء", IDCANCEL, 143, 61, 50, 14
+END
+
+IDD_ADVINSTOPTS DIALOGEX 0, 0, 305, 135
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "خيارات التثبيت المتقدمة"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "اختر &المجلد الذي تريد تثبيت ReactOS فيه:", IDC_STATIC, 7, 9, 291, 10
+    EDITTEXT IDC_PATH, 7, 23, 291, 13
+    GROUPBOX "برنامج أقلاع النظام", IDC_STATIC, 7, 45, 291, 60
+    LTEXT "حدد الموقع الذي يجب تثبيت برنامج الأقلاع فيه.\n\nبشكل افتراضي، يتم تثبيته على قسم النظام في قرص التمهيد (وإما في سجل التمهيد الرئيسي أو سجل التمهيد الخاص بالوحدة التخزينية في أجهزة الكمبيوتر التي تعمل بنظام BIOS).", IDC_STATIC, 13, 57, 279, 44
+    COMBOBOX IDC_INSTFREELDR, 150, 58, 142, 45, WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST
+    DEFPUSHBUTTON "موافق", IDOK, 193, 113, 50, 14
+    PUSHBUTTON "إلغاء", IDCANCEL, 248, 113, 50, 14
+END
+
+IDD_SUMMARYPAGE DIALOGEX 0, 0, 317, 143
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "ReactOS تثبيت"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "نوع التثبيت:", IDC_STATIC, 18, 5, 74, 11
+    EDITTEXT IDC_INSTALLTYPE, 95, 4, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
+    LTEXT "مصدر التثبيت:", IDC_STATIC, 18, 17, 74, 11
+    EDITTEXT IDC_INSTALLSOURCE, 95, 16, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
+    LTEXT "المعمارية:", IDC_STATIC, 18, 29, 74, 11
+    EDITTEXT IDC_ARCHITECTURE, 95, 28, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
+    LTEXT "الكمبيوتر:", IDC_STATIC, 18, 41, 74, 11
+    EDITTEXT IDC_COMPUTER, 95, 40, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
+    LTEXT "العرض:", IDC_STATIC, 18, 53, 74, 11
+    EDITTEXT IDC_DISPLAY, 95, 52, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
+    LTEXT "لوحة المفاتيح:", IDC_STATIC, 18, 65, 74, 11
+    EDITTEXT IDC_KEYBOARD, 95, 64, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
+    LTEXT "القرص المحدد:", IDC_STATIC, 18, 77, 74, 11
+    EDITTEXT IDC_DESTDRIVE, 95, 76, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
+    LTEXT "المجلد المحدد:", IDC_STATIC, 18, 89, 74, 11
+    EDITTEXT IDC_PATH, 95, 88, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
+    AUTOCHECKBOX "أؤكد أن جميع إعدادات التثبيت صحيحة. كما أقرّ بأن\nReactOS هو برنامج في مرحلة ألفا وقد يتعطل جهازي أو يتسبب في تلف بياناتي.",
+        IDC_CONFIRM_INSTALL, 7, 104, 303, 18, BS_MULTILINE | WS_TABSTOP
+    LTEXT "يرجى التأكد من صحة جميع إعدادات التثبيت،\ثم انقر فوق تثبيت لبدء عملية التثبيت.", IDC_STATIC, 7, 124, 303, 18
+END
+
+IDD_PROCESSPAGE DIALOGEX 0, 0, 317, 143
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "ReactOS تثبيت"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "تثبيت الملفات...", IDC_ACTIVITY, 20, 50, 277, 10
+    LTEXT "test.txt", IDC_ITEM, 30, 80, 257, 10
+    CONTROL "", IDC_PROCESSPROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 7, 120, 303, 8
+END
+
+IDD_FINISHPAGE DIALOGEX 0, 0, 317, 193
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "ReactOS تثبيت"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "إعادة تشغيل النظام", IDC_FINISHTITLE, 115, 8, 195, 24
+    LTEXT "اكتملت الخطوة الأولى من عملية تثبيت ReactOS بنجاح.", IDC_STATIC, 115, 40, 195, 24
+    // The following text can be replaced by IDS_FINISH_NO_REBOOT at runtime;
+    // please ensure it can hold in the text control!
+    LTEXT "سيقوم برنامج الإعداد الآن بإعادة تشغيل جهاز الكمبيوتر الخاص بك لمواصلة الخطوة الثانية من عملية التثبيت.\n\nسيتم إعادة تشغيل جهاز الكمبيوتر تلقائيًا بعد 15 ثانية أو عند النقر فوق إعادة التشغيل.", IDC_FINISHTEXT, 115, 78, 195, 56
+    CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 135, 188, 12
+END
+
+IDD_ABORTPAGE DIALOGEX 0, 0, 317, 193
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "ReactOS تثبيت"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "تم إنهاء معالج إعداد ReactOS بشكل مفاجئ", IDC_FINISHTITLE, 115, 8, 195, 24
+    LTEXT "انتهت الخطوة الأولى من تثبيت ReactOS قبل الأوان بسبب حدوث خطأ أو لأنك قمت بإلغائها.\n\nسيكون بإمكانك تشغيل معالج الإعداد لاحقًا لتثبيت ReactOS أو تحديثه.", IDC_STATIC, 115, 40, 195, 48
+    // The following text can be replaced by IDS_ABORT_NO_REBOOT at runtime;
+    // please ensure it can hold in the text control!
+    LTEXT "سيتم إعادة تشغيل جهاز الكمبيوتر الخاص بك تلقائيًا بعد 15 ثانية أو عند النقر فوق «إعادة التشغيل».", IDC_FINISHTEXT, 115, 110, 195, 24
+    CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 135, 188, 12
+END
+
+/* Strings */
+
+STRINGTABLE
+BEGIN
+    IDS_CAPTION "ReactOS تثبيت"
+    IDS_TYPETITLE "نوع التثبيت"
+    IDS_TYPESUBTITLE "يمكنك إعداد تثبيت جديد لنظام ReactOS، أو تحديث تثبيت موجود أو إصلاحه."
+    IDS_UPDATETITLE "تحديث أو إصلاح ReactOS"
+    IDS_UPDATESUBTITLE "اختر ReactOS الحالي الذي تريد تحديثه أو إصلاحه."
+    IDS_DEVICETITLE "إعداد الأجهزة الأساسية"
+    IDS_DEVICESUBTITLE "اضبط إعدادات الشاشة ولوحة المفاتيح."
+    IDS_DRIVETITLE "إعداد القرص المخصص للتثبيت ومجلد النظام"
+    IDS_DRIVESUBTITLE "قم بإعداد قسم التثبيت ومجلد النظام ومحمل الإقلاع."
+    IDS_SUMMARYTITLE "ملخص التثبيت"
+    IDS_SUMMARYSUBTITLE "قائمة خصائص التثبيت التي يجب التحقق منها قبل تطبيقها على الجهاز"
+    IDS_PROCESSTITLE "تهيئة القسم، نسخ الملفات، وتهيئة النظام"
+    IDS_PROCESSSUBTITLE "إنشاء القسم وتهيئته، ونسخ الملفات، وتثبيت برنامج تحميل التشغيل وإعداده."
+    IDS_ABORTSETUP "لم يتم تثبيت ReactOS بالكامل على جهاز الكمبيوتر الخاص بك. إذا قمت بإنهاء برنامج التثبيت الآن، فستحتاج إلى تشغيله مرة أخرى لتثبيت ReactOS. هل تريد الإنهاء حقًا؟"
+    IDS_ABORTSETUP2 "الغاء التثبيت؟"
+    IDS_NO_TXTSETUP_SIF "تعذر العثور على الملف 'txtsetup.sif'.\nيتعذر على برنامج الإعداد متابعة العملية."
+    IDS_FINISH_NO_REBOOT "يتطلب برنامج التثبيت إعادة تشغيل جهاز الكمبيوتر الخاص بك لمتابعة الخطوة الثانية من عملية التثبيت.\n\nانقر فوق إعادة التشغيل لإعادة تشغيل جهاز الكمبيوتر على الفور.\nانقر فوق تأجيل لإنهاء برنامج التثبيت وإعادة تشغيل الجهاز في وقت لاحق."
+    IDS_ABORT_NO_REBOOT "انقر فوق إعادة التشغيل لإعادة تشغيل الجهاز على الفور.\nانقر فوق إغلاق لإنهاء عمل برنامج التثبيت."
+    IDS_INSTALLBTN "&تثبيت"
+    IDS_RESTARTBTN "&اعادة التشغيل"
+    IDS_POSTPONEBTN "&تأجيل"
+    IDS_VOLUME_NOFORMAT "غير منسق"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_INSTALLATION_NAME "الاسم"
+    IDS_INSTALLATION_PATH "مسار التثبيت"
+    IDS_INSTALLATION_VENDOR "اسم المورد"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_PARTITION_NAME "الأسم"
+    IDS_PARTITION_TYPE "النوع"
+    IDS_PARTITION_SIZE "الحجم"
+    IDS_PARTITION_STATUS "الحالة"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_BOOTLOADER_NOINST "لا يوجد تثبيت"
+    IDS_BOOTLOADER_REMOVABLE "وسائط قابلة للإزالة"
+    IDS_BOOTLOADER_SYSTEM "قسم النظام (افتراضي)"
+    IDS_BOOTLOADER_MBRVBR "MBR و VBR (افتراضي)"
+    IDS_BOOTLOADER_VBRONLY "VBR فقط"
+END
+
+/* Progress Strings */
+
+STRINGTABLE
+BEGIN
+    IDS_FORMATTING_PROGRESS1 "جارٍ تهيئة القسم %c: (%s) إلى %s..."
+    IDS_FORMATTING_PROGRESS2 "جارٍ تهيئة القسم %s إلى %s..."
+
+    IDS_CHECKING_PROGRESS1 "جارٍ فحص الحجم %c: (%s)..."
+    IDS_CHECKING_PROGRESS2 "جارٍ فحص الحجم %s..."
+
+    IDS_COPYING  "جارٍ نسخ %s"
+    IDS_MOVING   "جارٍ نقل %s إلى %s"
+    IDS_RENAMING "جارٍ إعادة تسمية %s إلى %s"
+    IDS_DELETING "جارٍ حذف %s"
+
+    IDS_CONFIG_SYSTEM_PARTITION "تهيئة قسم النظام..."
+    IDS_PREPARE_PARTITIONS "جارٍ إعداد الأقسام..."
+    IDS_PREPARE_FILES "جارٍ إعداد قائمة الملفات التي سيتم نسخها، يرجى الانتظار..."
+    IDS_COPYING_FILES "جارٍ نسخ الملفات..."
+
+    IDS_CREATE_REGISTRY "إنشاء سجل النظام..."
+    IDS_UPDATE_REGISTRY "تحديث سجل النظام..."
+
+    // IDS_INSTALL_FINALIZE "جارٍ إتمام التثبيت..."
+    IDS_INSTALL_BOOTLOADER "جارٍ تثبيت الأقلاع..."
+END
+
+// Note to translators: please refer to the corresponding usetup/lang/*.h translations.
+STRINGTABLE
+BEGIN
+    IDS_REG_DONE "تم"
+    IDS_REG_REGHIVEUPDATE "تحديث فروع السجل"
+    IDS_REG_IMPORTFILE "استيراد %s"
+    IDS_REG_DISPLAYSETTINGSUPDATE "تحديث إعدادات سجل العرض"
+    IDS_REG_LOCALESETTINGSUPDATE "تحديث إعدادات اللغة والمنطقة"
+    IDS_REG_ADDKBLAYOUTS "إضافة تخطيطات لوحة المفاتيح"
+    IDS_REG_KEYBOARDSETTINGSUPDATE "تحديث إعدادات تخطيط لوحة المفاتيح"
+    IDS_REG_CODEPAGEINFOUPDATE "إضافة معلومات صفحة الرمز"
+    IDS_REG_UNKNOWN "حالة غير معروفة %d"
+END
+
+/* Error Strings */
+
+STRINGTABLE
+BEGIN
+    IDS_ERROR_INVALID_INSTALLDIR_CHAR_TITLE "حرف غير صحيح"
+    IDS_ERROR_INVALID_INSTALLDIR_CHAR "الأحرف المسموح بها هي:\n\
+الأحرف الأبجدية الرقمية (a-z، A-Z، 0-9)، و\n . \\ - _\n\
+لا يُسمح باستخدام المسافات."
+
+    IDS_ERROR_DIRECTORY_NAME_TITLE "مسار التثبيت غير صحيح."
+    IDS_ERROR_DIRECTORY_NAME "يجب أن يتبع مسار تثبيت ReactOS نظام التسمية DOS 8.3، \
+وأن يحتوي فقط على أحرف وأرقام وشرطات ونقاط. ولا يُسمح باستخدام المسافات."
+
+    IDS_ERROR_CREATE_PARTITION_TITLE "إنشاء قسم جديد"
+    IDS_ERROR_CREATE_PARTITION "فشل إنشاء قسم جديد."
+
+    IDS_WARN_DELETE_PARTITION_TITLE "حذف القسم؟"
+    IDS_WARN_DELETE_PARTITION "هل أنت متأكد من حذف هذا القسم؟"
+    IDS_WARN_DELETE_MBR_EXTENDED_PARTITION "هل أنت متأكد من حذف القسم الممتد المُحدد، بما يحتويه من أقسام منطقية بالكامل؟"
+
+    IDS_ERROR_WRITE_PTABLE "فشل الإعداد في كتابة جداول الأقسام."
+
+    IDS_ERROR_SYSTEM_PARTITION "لم يتمكن برنامج تثبيت ReactOS من العثور على قسم نظام مدعوم\n\
+على جهازك أو لم يتمكن من إنشاء قسم جديد. وبدون وجود مثل هذا القسم\n\
+لا يمكن لبرنامج التثبيت تثبيت ReactOS.\
+\nانقر على موافق للعودة إلى قائمة اختيار الأقسام."
+
+    IDS_ERROR_FORMAT_UNRECOGNIZED_VOLUME "وحدة تخزين غير معترف بها أثناء محاولة تهيئة القسم."
+
+    IDS_ERROR_COULD_NOT_FORMAT "لا يستطيع برنامج التثبيت حاليًا تهيئة قسم في %s.\n\
+\nانقر فوق موافق لمتابعة عملية التثبيت.\
+\nانقر فوق إلغاء لإنهاء عملية التثبيت."
+
+    IDS_ERROR_FORMATTING_PARTITION "Setup is unable to format the partition:\n %s\n"
+
+    IDS_ERROR_COULD_NOT_CHECK "لا يستطيع برنامج التثبيت حاليًا التحقق من قسم تم تهيئته بتنسيق %s.\n\
+\nانقر فوق موافق لمتابعة عملية التثبيت.\
+\nانقر فوق إلغاء لإنهاء عملية التثبيت."
+
+    IDS_ERROR_CHECKING_PARTITION "اكتشف برنامج ChkDsk بعض الأخطاء في القرص.\n(الحالة 0x%08lx)."
+
+    IDS_ERROR_WRITE_BOOT "فشل برنامج الإعداد في تثبيت رمز التمهيد %s على قسم النظام."
+    IDS_ERROR_INSTALL_BOOTCODE "فشل برنامج الإعداد في تثبيت رمز التمهيد %s على قرص التمهيد."
+    IDS_ERROR_INSTALL_BOOTCODE_REMOVABLE "فشل برنامج الإعداد في تثبيت رمز التمهيد على الوسائط القابلة للإزالة."
+    IDS_ERROR_BOOTLDR_ARCH_UNSUPPORTED "لا يدعم برنامج الإعداد حاليًا تثبيت محمل الأقلاع التشغيل على الكمبيوتر الذي تستخدمه.\
+\nانقر فوق موافق للمتابعة على أي حال."
+    IDS_ERROR_BOOTLDR_FAILED "تعذر على برنامج الإعداد تثبيت محمل الإقلاع (الحالة 0x%08lx)."
+END
