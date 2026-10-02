@@ -1252,19 +1252,154 @@ typedef struct {
 #endif
 } KSAUDIO_POSITION, *PKSAUDIO_POSITION;
 
-typedef struct {
-    ULONG   FifoSize;
-    ULONG   ChipsetDelay;
-    ULONG   CodecDelay;
+//===========================================================================
+
+#if (NTDDI_VERSION >= NTDDI_WINXP)
+
+#if defined(_NTDDK_)
+typedef NTSTATUS(
+    CALLBACK *PRTAUDIOGETPOSITION)(_In_ PFILE_OBJECT PinFileObject, _Out_ PUCHAR *ppPlayPosition, _Out_ PLONG plOffset);
+#endif // defined(_NTDDK_)
+
+#define STATIC_KSPROPSETID_RtAudio 0xa855a48c, 0x2f78, 0x4729, 0x90, 0x51, 0x19, 0x68, 0x74, 0x6b, 0x9e, 0xef
+DEFINE_GUIDSTRUCT("A855A48C-2F78-4729-9051-1968746B9EEF", KSPROPSETID_RtAudio);
+#define KSPROPSETID_RtAudio DEFINE_GUIDNAMED(KSPROPSETID_RtAudio)
+
+typedef enum
+{
+    KSPROPERTY_RTAUDIO_GETPOSITIONFUNCTION,
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+    KSPROPERTY_RTAUDIO_BUFFER,
+    KSPROPERTY_RTAUDIO_HWLATENCY,
+    KSPROPERTY_RTAUDIO_POSITIONREGISTER,
+    KSPROPERTY_RTAUDIO_CLOCKREGISTER,
+    KSPROPERTY_RTAUDIO_BUFFER_WITH_NOTIFICATION,
+    KSPROPERTY_RTAUDIO_REGISTER_NOTIFICATION_EVENT,
+    KSPROPERTY_RTAUDIO_UNREGISTER_NOTIFICATION_EVENT,
+#endif
+#if (NTDDI_VERSION >= NTDDI_WIN7)
+    KSPROPERTY_RTAUDIO_QUERY_NOTIFICATION_SUPPORT,
+#endif
+#if (NTDDI_VERSION >= NTDDI_THRESHOLD)
+    KSPROPERTY_RTAUDIO_PACKETCOUNT,
+    KSPROPERTY_RTAUDIO_PRESENTATION_POSITION,
+    KSPROPERTY_RTAUDIO_GETREADPACKET,
+    KSPROPERTY_RTAUDIO_SETWRITEPACKET
+#endif
+} KSPROPERTY_RTAUDIO;
+
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+typedef struct
+{
+    KSPROPERTY Property;
+    PVOID BaseAddress;
+    ULONG RequestedBufferSize;
+} KSRTAUDIO_BUFFER_PROPERTY, *PKSRTAUDIO_BUFFER_PROPERTY;
+
+typedef struct
+{
+    KSPROPERTY Property;
+    ULONG BaseAddress;
+    ULONG RequestedBufferSize;
+} KSRTAUDIO_BUFFER_PROPERTY32, *PKSRTAUDIO_BUFFER_PROPERTY32;
+
+typedef struct
+{
+    KSPROPERTY Property;
+    PVOID BaseAddress;
+    ULONG RequestedBufferSize;
+    ULONG NotificationCount;
+} KSRTAUDIO_BUFFER_PROPERTY_WITH_NOTIFICATION, *PKSRTAUDIO_BUFFER_PROPERTY_WITH_NOTIFICATION;
+
+typedef struct
+{
+    KSPROPERTY Property;
+    ULONG BaseAddress;
+    ULONG RequestedBufferSize;
+    ULONG NotificationCount;
+} KSRTAUDIO_BUFFER_PROPERTY_WITH_NOTIFICATION32, *PKSRTAUDIO_BUFFER_PROPERTY_WITH_NOTIFICATION32;
+
+typedef struct
+{
+    PVOID BufferAddress;
+    ULONG ActualBufferSize;
+    BOOL CallMemoryBarrier;
+} KSRTAUDIO_BUFFER, *PKSRTAUDIO_BUFFER;
+
+typedef struct
+{
+    ULONG BufferAddress;
+    ULONG ActualBufferSize;
+    BOOL CallMemoryBarrier;
+} KSRTAUDIO_BUFFER32, *PKSRTAUDIO_BUFFER32;
+
+typedef struct
+{
+    ULONG FifoSize;
+    ULONG ChipsetDelay;
+    ULONG CodecDelay;
 } KSRTAUDIO_HWLATENCY, *PKSRTAUDIO_HWLATENCY;
 
-typedef struct {
-    PVOID       Register;
-    ULONG       Width;
-    ULONGLONG   Numerator;
-    ULONGLONG   Denominator;
-    ULONG       Accuracy;
+typedef struct
+{
+    KSPROPERTY Property;
+    PVOID BaseAddress;
+} KSRTAUDIO_HWREGISTER_PROPERTY, *PKSRTAUDIO_HWREGISTER_PROPERTY;
+
+typedef struct
+{
+    KSPROPERTY Property;
+    ULONG BaseAddress;
+} KSRTAUDIO_HWREGISTER_PROPERTY32, *PKSRTAUDIO_HWREGISTER_PROPERTY32;
+
+typedef struct
+{
+    PVOID Register;
+    ULONG Width;
+    ULONGLONG Numerator;
+    ULONGLONG Denominator;
+    ULONG Accuracy;
 } KSRTAUDIO_HWREGISTER, *PKSRTAUDIO_HWREGISTER;
+
+typedef struct
+{
+    ULONG Register;
+    ULONG Width;
+    ULONGLONG Numerator;
+    ULONGLONG Denominator;
+    ULONG Accuracy;
+} KSRTAUDIO_HWREGISTER32, *PKSRTAUDIO_HWREGISTER32;
+
+typedef struct
+{
+    KSPROPERTY Property;
+    HANDLE NotificationEvent;
+} KSRTAUDIO_NOTIFICATION_EVENT_PROPERTY, *PKSRTAUDIO_NOTIFICATION_EVENT_PROPERTY;
+
+typedef struct
+{
+    KSPROPERTY Property;
+    ULONG NotificationEvent;
+} KSRTAUDIO_NOTIFICATION_EVENT_PROPERTY32, *PKSRTAUDIO_NOTIFICATION_EVENT_PROPERTY32;
+#endif
+
+#if (NTDDI_VERSION >= NTDDI_THRESHOLD)
+typedef struct
+{
+    ULONG PacketNumber;
+    DWORD Flags;
+    ULONG64 PerformanceCounterValue;
+    BOOL MoreData;
+} KSRTAUDIO_GETREADPACKET_INFO, *PKSRTAUDIO_GETREADPACKET_INFO;
+
+typedef struct
+{
+    ULONG PacketNumber;
+    DWORD Flags;
+    ULONG EosPacketLength;
+} KSRTAUDIO_SETWRITEPACKET_INFO, *PKSRTAUDIO_SETWRITEPACKET_INFO;
+#endif
+#endif
 
 #define KSNODEPIN_STANDARD_IN       1
 #define KSNODEPIN_STANDARD_OUT      0
