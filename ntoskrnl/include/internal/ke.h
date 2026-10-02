@@ -186,6 +186,13 @@ extern VOID __cdecl KiInterruptTemplate(VOID);
 #define KiProcessHyperSpacePageTable(Process) ((Process)->DirectoryTableBase[1])
 #endif
 
+/* KTHREAD only gained StateSaveArea in Win8, Vista keeps it in the ReactOS part of ETHREAD */
+#if defined(_M_AMD64) && (NTDDI_VERSION >= NTDDI_LONGHORN) && (NTDDI_VERSION < NTDDI_WIN8)
+#define KiThreadStateSaveArea(Thread) (((PETHREAD)(Thread))->StateSaveArea)
+#else
+#define KiThreadStateSaveArea(Thread) ((Thread)->StateSaveArea)
+#endif
+
 /* The ReactOS idle function lives in the ReactOS part of the PRCB on Vista */
 #if (NTDDI_VERSION >= NTDDI_LONGHORN)
 #define KiPrcbIdleFunction(Prcb) ((Prcb)->IdleFunction)

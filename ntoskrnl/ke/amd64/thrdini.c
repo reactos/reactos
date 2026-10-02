@@ -59,16 +59,16 @@ KiInitializeContextThread(IN PKTHREAD Thread,
     Thread->InitialStack = InitialStack;
 
     /* Initialize the state save area */
-    Thread->StateSaveArea = InitialStack;
-    RtlZeroMemory(Thread->StateSaveArea, KeXStateLength);
-    Thread->StateSaveArea->MxCsr = INITIAL_MXCSR;
-    Thread->StateSaveArea->ControlWord = INITIAL_FPCSR;
+    KiThreadStateSaveArea(Thread) = InitialStack;
+    RtlZeroMemory(KiThreadStateSaveArea(Thread), KeXStateLength);
+    KiThreadStateSaveArea(Thread)->MxCsr = INITIAL_MXCSR;
+    KiThreadStateSaveArea(Thread)->ControlWord = INITIAL_FPCSR;
 
     /* Check if we use XSAVE */
     if (KeFeatureBits & KF_XSTATE)
     {
         /* Enable the mask for legacy floating point state */
-        PXSAVE_AREA XSaveArea = (PXSAVE_AREA)Thread->StateSaveArea;
+        PXSAVE_AREA XSaveArea = (PXSAVE_AREA)KiThreadStateSaveArea(Thread);
         XSaveArea->Header.Mask |= XSTATE_MASK_LEGACY_FLOATING_POINT;
 
         /* Special initialization for XSAVES */
@@ -217,13 +217,13 @@ KiSwapContextResume(
     /* Save old thread's extended state */
     if (OldThread->NpxState != 0)
     {
-        KiSaveXState(OldThread->StateSaveArea, OldThread->NpxState);
+        KiSaveXState(KiThreadStateSaveArea(OldThread), OldThread->NpxState);
     }
 
     /* Load new thread's extended state */
     if (NewThread->NpxState != 0)
     {
-        KiRestoreXState(NewThread->StateSaveArea, NewThread->NpxState);
+        KiRestoreXState(KiThreadStateSaveArea(NewThread), NewThread->NpxState);
     }
 
     /* Now we are the new thread. Check if it's in a new process */

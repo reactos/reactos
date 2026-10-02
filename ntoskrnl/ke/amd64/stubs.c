@@ -77,7 +77,7 @@ KiSwitchKernelStack(PVOID StackBase, PVOID StackLimit)
                                           StackOffset);
 
     /* Switch StateSaveArea */
-    CurrentThread->StateSaveArea = Add2Ptr(CurrentThread->StateSaveArea,
+    KiThreadStateSaveArea(CurrentThread) = Add2Ptr(KiThreadStateSaveArea(CurrentThread),
                                            StackOffset);
 
     /* Set the new stack limits */
