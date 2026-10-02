@@ -796,7 +796,7 @@ KeInitThread(IN OUT PKTHREAD Thread,
     KeInitializeSpinLock(&Thread->ThreadLock);
 
     /* Setup the Service Descriptor Table for Native Calls */
-    Thread->ServiceTable = KeServiceDescriptorTable;
+    KiThreadServiceTable(Thread) = KeServiceDescriptorTable;
 
     /* Setup APC Fields */
     InitializeListHead(&Thread->ApcState.ApcListHead[KernelMode]);

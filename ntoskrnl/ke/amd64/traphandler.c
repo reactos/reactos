@@ -201,14 +201,14 @@ KiSystemCallHandler(
     }
 
     /* Get descriptor table */
-    DescriptorTable = &((PKSERVICE_TABLE_DESCRIPTOR)Thread->ServiceTable)[TableIndex];
+    DescriptorTable = &((PKSERVICE_TABLE_DESCRIPTOR)KiThreadServiceTable(Thread))[TableIndex];
 
     /* Validate the system call number */
     if (ServiceNumber >= DescriptorTable->Limit)
     {
         /* Check if this is a GUI call and this is not a GUI thread yet */
         if ((TableIndex == WIN32K_SERVICE_INDEX) &&
-            (Thread->ServiceTable == KeServiceDescriptorTable))
+            (KiThreadServiceTable(Thread) == KeServiceDescriptorTable))
         {
             /* Convert this thread to a GUI thread.
                It is invalid to change the stack in the middle of a C function,

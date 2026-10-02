@@ -193,6 +193,13 @@ extern VOID __cdecl KiInterruptTemplate(VOID);
 #define KiThreadStateSaveArea(Thread) ((Thread)->StateSaveArea)
 #endif
 
+/* The 64 bit KTHREAD has no service table on Vista, ReactOS keeps it in ETHREAD */
+#if defined(_WIN64) && (NTDDI_VERSION >= NTDDI_LONGHORN)
+#define KiThreadServiceTable(Thread) (((PETHREAD)(Thread))->ServiceTable)
+#else
+#define KiThreadServiceTable(Thread) ((Thread)->ServiceTable)
+#endif
+
 /* The ReactOS idle function lives in the ReactOS part of the PRCB on Vista */
 #if (NTDDI_VERSION >= NTDDI_LONGHORN)
 #define KiPrcbIdleFunction(Prcb) ((Prcb)->IdleFunction)
