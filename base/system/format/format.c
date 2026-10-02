@@ -58,6 +58,8 @@
 
 #define FMIFS_IMPORT_DLL
 
+#define LABEL_INPUT_LENGTH (11 + 1)
+
 // Globals
 BOOL    Error = FALSE;
 
@@ -71,7 +73,6 @@ PWCHAR  Drive = NULL;
 PWCHAR  FileSystem = L"FAT";
 
 WCHAR   RootDirectory[MAX_PATH];
-WCHAR   LabelString[12];
 
 #ifndef FMIFS_IMPORT_DLL
 //
@@ -598,9 +599,14 @@ int wmain(int argc, WCHAR *argv[])
     //
     if (!GotALabel)
     {
+        SIZE_T len;
+
         ConResPuts(StdOut, STRING_ENTER_LABEL);
-        fgetws(input, ARRAYSIZE(LabelString), stdin);
-        input[wcslen(input) - 1] = UNICODE_NULL;
+        fgetws(input, LABEL_INPUT_LENGTH, stdin);
+        // Remove ending LF, if present.
+        len = wcslen(input);
+        if (len && input[len - 1] == L'\n')
+            input[len - 1] = UNICODE_NULL;
 
         if (!SetVolumeLabelW(RootDirectory, input))
         {
