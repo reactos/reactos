@@ -197,13 +197,4 @@ SaveDesktopSettings(PDESKTOP_DATA pData);
 VOID
 SetDesktopSettings(PDESKTOP_DATA pData);
 
-LONG
-RegLoadMUIStringW(IN HKEY hKey,
-                  IN LPCWSTR pszValue  OPTIONAL,
-                  OUT LPWSTR pszOutBuf,
-                  IN DWORD cbOutBuf,
-                  OUT LPDWORD pcbData OPTIONAL,
-                  IN DWORD Flags,
-                  IN LPCWSTR pszDirectory  OPTIONAL);
-
 #endif /* _DESK_H */
