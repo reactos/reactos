@@ -446,6 +446,7 @@ endfunction()
 
 macro(macro_mc FLAG FILE)
     set(COMMAND_MC ${CMAKE_MC_COMPILER} -u ${FLAG} -b -h ${CMAKE_CURRENT_BINARY_DIR}/ -r ${CMAKE_CURRENT_BINARY_DIR}/ ${FILE})
+    set(COMMAND_MC_DEPENDS "")
 endmacro()
 
 # PSEH workaround
