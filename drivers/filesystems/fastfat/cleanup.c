@@ -465,7 +465,15 @@ Return Value:
 
             if (FlagOn( Ccb->Flags, CCB_FLAG_COMPLETE_DISMOUNT )) {
 
-                FatCheckForDismount( IrpContext, Vcb, TRUE );
+                //
+                //  If the volume was remounted before this handle closed, the
+                //  VCB is good again and should not be torn down.
+                //
+
+                if (Vcb->VcbCondition == VcbBad) {
+
+                    FatCheckForDismount( IrpContext, Vcb, TRUE );
+                }
 
             //
             //  If this handle had write access, and actually wrote something,

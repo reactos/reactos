@@ -3352,17 +3352,6 @@ IoUpdateShareAccess(IN PFILE_OBJECT FileObject,
 {
     PAGED_CODE();
 
-    /* Check if the file has an extension */
-    if (FileObject->Flags & FO_FILE_OBJECT_HAS_EXTENSION)
-    {
-        /* Check if caller specified to ignore access checks */
-        //if (FileObject->FoExtFlags & IO_IGNORE_SHARE_ACCESS_CHECK)
-        {
-            /* Don't update share access */
-            return;
-        }
-    }
-
     /* Otherwise, check if there's any access present */
     if ((FileObject->ReadAccess) ||
         (FileObject->WriteAccess) ||
@@ -3409,17 +3398,6 @@ IoCheckShareAccess(IN ACCESS_MASK DesiredAccess,
     FileObject->ReadAccess = ReadAccess;
     FileObject->WriteAccess = WriteAccess;
     FileObject->DeleteAccess = DeleteAccess;
-
-    /* Check if the file has an extension */
-    if (FileObject->Flags & FO_FILE_OBJECT_HAS_EXTENSION)
-    {
-        /* Check if caller specified to ignore access checks */
-        //if (FileObject->FoExtFlags & IO_IGNORE_SHARE_ACCESS_CHECK)
-        {
-            /* Don't check share access */
-            return STATUS_SUCCESS;
-        }
-    }
 
     /* Check if we have any access */
     if ((ReadAccess) || (WriteAccess) || (DeleteAccess))
@@ -3479,17 +3457,6 @@ IoRemoveShareAccess(IN PFILE_OBJECT FileObject,
 {
     PAGED_CODE();
 
-    /* Check if the file has an extension */
-    if (FileObject->Flags & FO_FILE_OBJECT_HAS_EXTENSION)
-    {
-        /* Check if caller specified to ignore access checks */
-        //if (FileObject->FoExtFlags & IO_IGNORE_SHARE_ACCESS_CHECK)
-        {
-            /* Don't update share access */
-            return;
-        }
-    }
-
     /* Otherwise, check if there's any access present */
     if ((FileObject->ReadAccess) ||
         (FileObject->WriteAccess) ||
@@ -3531,21 +3498,21 @@ IoSetShareAccess(IN ACCESS_MASK DesiredAccess,
     WriteAccess = (DesiredAccess & (FILE_WRITE_DATA | FILE_APPEND_DATA)) != 0;
     DeleteAccess = (DesiredAccess & DELETE) != 0;
 
-    /* Check if the file has an extension */
-    if (FileObject->Flags & FO_FILE_OBJECT_HAS_EXTENSION)
-    {
-        /* Check if caller specified to ignore access checks */
-        //if (FileObject->FoExtFlags & IO_IGNORE_SHARE_ACCESS_CHECK)
-        {
-            /* Don't update share access */
-            Update = FALSE;
-        }
-    }
-
     /* Update basic access */
     FileObject->ReadAccess = ReadAccess;
     FileObject->WriteAccess = WriteAccess;
     FileObject->DeleteAccess = DeleteAccess;
+
+    /*
+     *  File objects that carry an extension but have no actual I/O access
+     *  are typically auxiliary objects (e.g. stream objects or hint opens).
+     *  Don't clear or reset the share counts for these.
+     */
+    if ((FileObject->Flags & FO_FILE_OBJECT_HAS_EXTENSION) &&
+        !(ReadAccess) && !(WriteAccess) && !(DeleteAccess))
+    {
+        return;
+    }
 
     /* Check if we have no access as all */
     if (!(ReadAccess) && !(WriteAccess) && !(DeleteAccess))
