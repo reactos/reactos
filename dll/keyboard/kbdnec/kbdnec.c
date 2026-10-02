@@ -37,7 +37,6 @@
 
 /* ------------------------------------------------------------------ */
 /* Scan code -> virtual key                                           */
-/* ------------------------------------------------------------------ */
 ROSDATA USHORT scancode_to_vk[] = {
   /* 00 */ VK_EMPTY,
   /* 01 */ VK_ESCAPE,
@@ -336,7 +335,7 @@ ROSDATA VSC_LPWSTR key_names[] = {
   { 0x0f, L"Tab" },
   { 0x1c, L"Enter" },
   { 0x1d, L"Ctrl" },
-  { 0x29, L"\x534a\x89d2/\x5168\x89d2" },  /* Hankaku/Zenkaku */
+  { 0x29, L"\x534a\x89d2/\x5168\x89d2" },  /* Hankaku / Zenkaku */
   { 0x2a, L"Shift" },
   { 0x36, L"Right Shift" },
   { 0x37, L"Num *" },
@@ -376,7 +375,7 @@ ROSDATA VSC_LPWSTR key_names[] = {
   { 0x5d, L"F13" },
   { 0x5e, L"F14" },
   { 0x5f, L"F15" },
-  { 0x70, L"\xff76\xff85" },  /* "Kana" */
+  { 0x70, L"\xff76\xff85" },  /* Kana */
   { 0x79, L"XFER" },
   { 0x7b, L"NFER" },
   { 0, NULL },
@@ -408,10 +407,9 @@ ROSDATA VSC_LPWSTR extended_key_names[] = {
 
 /* ------------------------------------------------------------------ */
 /* NLS tables                                                         */
-/* ------------------------------------------------------------------ */
 ROSDATA VK_F vk_to_f[] = {
   { VK_DBE_SBCSCHAR, KBDNLS_TYPE_NORMAL, KBDNLS_INDEX_NORMAL, 0,
-    {  /* Normal, Shift, Kana?, ... (indexed by modifier column) */
+    {
       { KBDNLS_SBCSDBCS, 0 },
       { KBDNLS_SBCSDBCS, 0 },
       { KBDNLS_SBCSDBCS, 0 },
@@ -424,7 +422,7 @@ ROSDATA VK_F vk_to_f[] = {
     { { 0 } }  /* alternate table: unused */
   },
   { VK_NONCONVERT, KBDNLS_TYPE_NORMAL, KBDNLS_INDEX_NORMAL, 0,
-    {  /* Normal, Shift, Kana?, ... (indexed by modifier column) */
+    {
       { KBDNLS_SEND_BASE_VK, 0 },
       { KBDNLS_SEND_BASE_VK, 0 },
       { KBDNLS_SEND_PARAM_VK, VK_DBE_ALPHANUMERIC },
@@ -437,7 +435,7 @@ ROSDATA VK_F vk_to_f[] = {
     { { 0 } }  /* alternate table: unused */
   },
   { VK_CONVERT, KBDNLS_TYPE_NORMAL, KBDNLS_INDEX_NORMAL, 0,
-    {  /* Normal, Shift, Kana?, ... (indexed by modifier column) */
+    {
       { KBDNLS_SEND_BASE_VK, 0 },
       { KBDNLS_SEND_BASE_VK, 0 },
       { KBDNLS_SEND_PARAM_VK, 0x19 },
@@ -450,7 +448,7 @@ ROSDATA VK_F vk_to_f[] = {
     { { 0 } }  /* alternate table: unused */
   },
   { VK_OEM_NEC_EQUAL, KBDNLS_TYPE_NORMAL, KBDNLS_INDEX_NORMAL, 0,
-    {  /* Normal, Shift, Kana?, ... (indexed by modifier column) */
+    {
       { KBDNLS_SEND_BASE_VK, 0 },
       { KBDNLS_SEND_BASE_VK, 0 },
       { KBDNLS_SEND_PARAM_VK, 0x91 },
@@ -463,7 +461,7 @@ ROSDATA VK_F vk_to_f[] = {
     { { 0 } }  /* alternate table: unused */
   },
   { VK_HOME, KBDNLS_TYPE_NORMAL, KBDNLS_INDEX_NORMAL, 0,
-    {  /* Normal, Shift, Kana?, ... (indexed by modifier column) */
+    {
       { KBDNLS_HOME_OR_CLEAR, 0 },
       { KBDNLS_SEND_BASE_VK, 0 },
       { KBDNLS_HOME_OR_CLEAR, 0 },
@@ -476,7 +474,7 @@ ROSDATA VK_F vk_to_f[] = {
     { { 0 } }  /* alternate table: unused */
   },
   { VK_END, KBDNLS_TYPE_NORMAL, KBDNLS_INDEX_NORMAL, 0,
-    {  /* Normal, Shift, Kana?, ... (indexed by modifier column) */
+    {
       { KBDNLS_HELP_OR_END, 0 },
       { KBDNLS_HELP_OR_END, 0 },
       { KBDNLS_HELP_OR_END, 0 },
@@ -521,7 +519,6 @@ ROSDATA KBDNLSTABLES nls_tables[] = {
 
 /* ------------------------------------------------------------------ */
 /* Finally, the master table                                          */
-/* ------------------------------------------------------------------ */
 ROSDATA KBDTABLES_FE keyboard_layout_table = {
   {
     /* modifier assignments */
@@ -552,7 +549,7 @@ ROSDATA KBDTABLES_FE keyboard_layout_table = {
     NULL
   },
   7,      /* dwType: Japanese keyboard */
-  0x0D02  /* dwSubType: NEC PC-9801 */
+  0x0d02  /* dwSubType: NEC PC-9801 */
 };
 
 PKBDTABLES WINAPI KbdLayerDescriptor(VOID)
