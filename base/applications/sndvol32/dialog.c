@@ -681,17 +681,82 @@ LoadDialogCtrls(
     WCHAR szBuffer[64];
     HWND hDlgCtrl;
     RECT statusRect;
+	RECT workArea;
     UINT i;
     LONG dy;
+    INT ContentWidth, MaxClientWidth;
+    LONG_PTR WindowStyle;
+    SCROLLINFO ScrollInfo;
 
     /* set dialog count to zero */
     PrefContext->MixerWindow->DialogCount = 0;
     PrefContext->MixerWindow->bHasExtendedControls = FALSE;
+	PrefContext->MixerWindow->ScrollPos = 0;
     SetRectEmpty(&PrefContext->MixerWindow->rect);
 
     /* enumerate controls */
     SndMixerEnumConnections(PrefContext->MixerWindow->Mixer, PrefContext->SelectedLine, EnumConnectionsCallback, (PVOID)PrefContext);
 
+    /* Calculate total content width */
+    ContentWidth = PrefContext->MixerWindow->rect.right - PrefContext->MixerWindow->rect.left;
+
+    /* Determine whether a horizontal scrollbar is needed */
+    if (SystemParametersInfo(SPI_GETWORKAREA, 0, &workArea, 0))
+        MaxClientWidth = (workArea.right - workArea.left) - 40;
+    else
+        MaxClientWidth = ContentWidth;
+
+    if (MaxClientWidth < 200)
+        MaxClientWidth = 200;
+
+    /* Update window style */
+    WindowStyle = GetWindowLongPtr(PrefContext->MixerWindow->hWnd, GWL_STYLE);
+
+    if (ContentWidth > MaxClientWidth)
+    {
+        /* Need horizontal scrollbar */
+        WindowStyle |= WS_HSCROLL;
+
+        PrefContext->MixerWindow->ContentWidth = ContentWidth;
+        PrefContext->MixerWindow->ClientWidth  = MaxClientWidth;
+
+        /* Limit the visible client width */
+        PrefContext->MixerWindow->rect.right = PrefContext->MixerWindow->rect.left + MaxClientWidth;
+		
+        /* Reserve room for the horizontal scrollbar */
+        PrefContext->MixerWindow->rect.bottom += GetSystemMetrics(SM_CYHSCROLL);
+    }
+    else
+    {
+        /* No horizontal scrollbar needed */
+        WindowStyle &= ~WS_HSCROLL;
+
+        PrefContext->MixerWindow->ContentWidth = ContentWidth;
+        PrefContext->MixerWindow->ClientWidth  = ContentWidth;
+    }
+    PrefContext->MixerWindow->ScrollPos = 0;
+
+    SetWindowLongPtr(PrefContext->MixerWindow->hWnd, GWL_STYLE, WindowStyle);
+    SetWindowPos(PrefContext->MixerWindow->hWnd, NULL, 0, 0, 0, 0,
+                 SWP_FRAMECHANGED | SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);
+
+    /* Configure or disable the horizontal scrollbar */
+    ScrollInfo.cbSize = sizeof(ScrollInfo);
+    ScrollInfo.fMask  = SIF_RANGE | SIF_POS | SIF_PAGE;
+    ScrollInfo.nMin   = 0;
+    ScrollInfo.nPos   = 0;
+
+    if (ContentWidth > MaxClientWidth)
+    {
+        ScrollInfo.nMax  = ContentWidth;
+        ScrollInfo.nPage = PrefContext->MixerWindow->ClientWidth;
+    }
+    else
+    {
+        ScrollInfo.nMax  = 0;
+        ScrollInfo.nPage = 0;
+    }
+    SetScrollInfo(PrefContext->MixerWindow->hWnd, SB_HORZ, &ScrollInfo, TRUE);
     /* Update the 'Advanced Controls' menu item */
     EnableMenuItem(GetMenu(PrefContext->MixerWindow->hWnd),
                    IDM_ADVANCED_CONTROLS,
