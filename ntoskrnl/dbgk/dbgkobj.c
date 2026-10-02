@@ -345,7 +345,7 @@ DbgkForwardException(IN PEXCEPTION_RECORD ExceptionRecord,
     else
     {
         /* Otherwise, use the exception port */
-        Port = Process->ExceptionPort;
+        Port = PspGetProcessExceptionPort(Process);
         ApiMessage.h.u2.ZeroInit = 0;
         ApiMessage.h.u2.s2.Type = LPC_EXCEPTION;
         UseLpc = TRUE;

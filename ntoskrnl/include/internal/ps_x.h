@@ -47,6 +47,46 @@ PspGetThreadProcess(
 #endif
 }
 
+/* On Vista the low bits of the exception port hold its state */
+#define PSP_EXCEPTION_PORT_STATE_MASK 0x7
+
+FORCEINLINE
+PVOID
+PspGetProcessExceptionPort(
+    _In_ PEPROCESS Process)
+{
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+    return (PVOID)((ULONG_PTR)Process->ExceptionPortData & ~(ULONG_PTR)PSP_EXCEPTION_PORT_STATE_MASK);
+#else
+    return Process->ExceptionPort;
+#endif
+}
+
+FORCEINLINE
+VOID
+PspSetProcessExceptionPort(
+    _Inout_ PEPROCESS Process,
+    _In_opt_ PVOID Port)
+{
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+    Process->ExceptionPortData = Port;
+#else
+    Process->ExceptionPort = Port;
+#endif
+}
+
+FORCEINLINE
+PVOID volatile *
+PspGetProcessExceptionPortAddress(
+    _In_ PEPROCESS Process)
+{
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+    return &Process->ExceptionPortData;
+#else
+    return &Process->ExceptionPort;
+#endif
+}
+
 /* On Vista a thread that never got inserted is the dead one */
 FORCEINLINE
 BOOLEAN

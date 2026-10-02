@@ -552,7 +552,7 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
         if (!NT_SUCCESS(Status)) goto CleanupWithRef;
 
         /* Save the exception port */
-        Process->ExceptionPort = ExceptionPortObject;
+        PspSetProcessExceptionPort(Process, ExceptionPortObject);
     }
 
     /* Save the pointer to the section object */

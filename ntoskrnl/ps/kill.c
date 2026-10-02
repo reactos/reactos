@@ -301,11 +301,11 @@ PspDeleteProcess(IN PVOID ObjectBody)
     }
 
     /* Check if we have an exception port */
-    if (Process->ExceptionPort)
+    if (PspGetProcessExceptionPort(Process))
     {
         /* Deference the Exception Port */
-        ObDereferenceObject(Process->ExceptionPort);
-        Process->ExceptionPort = NULL;
+        ObDereferenceObject(PspGetProcessExceptionPort(Process));
+        PspSetProcessExceptionPort(Process, NULL);
     }
 
     /* Check if we have a section object */
@@ -736,7 +736,7 @@ PspExitThread(IN NTSTATUS ExitStatus)
                                             sizeof(PORT_MESSAGE);
 
         /* Make sure the process has an exception port */
-        if (CurrentProcess->ExceptionPort)
+        if (PspGetProcessExceptionPort(CurrentProcess))
         {
             /* Save the Create Time */
             TerminationMsg.CreateTime = Thread->CreateTime;
@@ -745,7 +745,7 @@ PspExitThread(IN NTSTATUS ExitStatus)
             while (TRUE)
             {
                 /* Send the LPC Message */
-                Status = LpcRequestPort(CurrentProcess->ExceptionPort,
+                Status = LpcRequestPort(PspGetProcessExceptionPort(CurrentProcess),
                                         &TerminationMsg.h);
                 if ((Status == STATUS_NO_MEMORY) ||
                     (Status == STATUS_INSUFFICIENT_RESOURCES))

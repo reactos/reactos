@@ -1575,7 +1575,7 @@ NtSetInformationProcess(
             if (!NT_SUCCESS(Status)) break;
 
             /* Change the pointer */
-            if (InterlockedCompareExchangePointer(&Process->ExceptionPort,
+            if (InterlockedCompareExchangePointer(PspGetProcessExceptionPortAddress(Process),
                                                   ExceptionPort,
                                                   NULL))
             {
