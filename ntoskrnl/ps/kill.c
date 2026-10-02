@@ -707,8 +707,8 @@ PspExitThread(IN NTSTATUS ExitStatus)
         } while (TerminationPort);
     }
     else if (((ExitStatus == STATUS_THREAD_IS_TERMINATING) &&
-              (Thread->DeadThread)) ||
-             !(Thread->DeadThread))
+              PspIsThreadDead(Thread)) ||
+             !PspIsThreadDead(Thread))
     {
         /*
          * This case is special and deserves some extra comments. What
@@ -794,7 +794,7 @@ PspExitThread(IN NTSTATUS ExitStatus)
     if (Teb)
     {
         /* Check if the thread is still alive */
-        if (!Thread->DeadThread)
+        if (!PspIsThreadDead(Thread))
         {
 #if (NTDDI_VERSION < NTDDI_LONGHORN)
             /*

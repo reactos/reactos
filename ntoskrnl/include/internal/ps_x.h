@@ -47,6 +47,55 @@ PspGetThreadProcess(
 #endif
 }
 
+/* On Vista a thread that never got inserted is the dead one */
+FORCEINLINE
+BOOLEAN
+PspIsThreadDead(
+    _In_ PETHREAD Thread)
+{
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+    return !Thread->ThreadInserted;
+#else
+    return (BOOLEAN)Thread->DeadThread;
+#endif
+}
+
+FORCEINLINE
+BOOLEAN
+PspIsThreadCreated(
+    _In_ PETHREAD Thread)
+{
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+    return (BOOLEAN)Thread->ThreadInserted;
+#else
+    return (Thread->GrantedAccess != 0);
+#endif
+}
+
+FORCEINLINE
+VOID
+PspMarkThreadDead(
+    _Inout_ PETHREAD Thread)
+{
+#if (NTDDI_VERSION < NTDDI_LONGHORN)
+    PspSetCrossThreadFlag(Thread, CT_DEAD_THREAD_BIT);
+#else
+    ASSERT(!Thread->ThreadInserted);
+#endif
+}
+
+FORCEINLINE
+VOID
+PspMarkThreadInserted(
+    _Inout_ PETHREAD Thread)
+{
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+    PspSetCrossThreadFlag(Thread, CT_THREAD_INSERTED_BIT);
+#else
+    UNREFERENCED_PARAMETER(Thread);
+#endif
+}
+
 FORCEINLINE
 VOID
 PspRunCreateThreadNotifyRoutines(IN PETHREAD CurrentThread,
