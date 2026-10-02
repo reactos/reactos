@@ -23,6 +23,7 @@
 
 #define IDB_BITMAP_128x15       10
 #define IDB_BITMAP_80x15        11
+#define IDB_BITMAP_1x1_32BPP    12
 
 #define IDS_TBADD1      16
 #define IDS_TBADD2      17
@@ -48,6 +49,5 @@
 
 #define IDC_PS_COMBO1 1020
 #define IDC_PS_PUSHBUTTON1 1021
-
 
 #endif  /* __WINE_COMCTL32_TEST_RESOURCES_H */

@@ -23,15 +23,66 @@
 #include "winbase.h"
 #include "wingdi.h"
 #include "winuser.h"
-#include "commctrl.h" 
+#include "commctrl.h"
+#include "vssym32.h"
 
 #include "wine/test.h"
-
 #include "v6util.h"
+#include "msg.h"
 
 static HWND hProgressParentWnd;
 static const char progressTestClass[] = "ProgressBarTestClass";
 static BOOL (WINAPI *pInitCommonControlsEx)(const INITCOMMONCONTROLSEX*);
+
+/* For message tests */
+enum seq_index
+{
+    CHILD_SEQ_INDEX,
+    NUM_MSG_SEQUENCES
+};
+
+static struct msg_sequence *sequences[NUM_MSG_SEQUENCES];
+
+static void CALLBACK msg_winevent_proc(HWINEVENTHOOK hevent,
+                                       DWORD event,
+                                       HWND hwnd,
+                                       LONG object_id,
+                                       LONG child_id,
+                                       DWORD thread_id,
+                                       DWORD event_time)
+{
+    struct message msg = {0};
+    char class_name[256];
+
+    /* ignore window and other system events */
+    if (object_id != OBJID_CLIENT) return;
+
+    /* ignore events not from a progress bar control */
+    if (!GetClassNameA(hwnd, class_name, ARRAY_SIZE(class_name)) ||
+        strcmp(class_name, PROGRESS_CLASSA) != 0)
+        return;
+
+    msg.message = event;
+    msg.flags = winevent_hook|wparam|lparam;
+    msg.wParam = object_id;
+    msg.lParam = child_id;
+    add_message(sequences, CHILD_SEQ_INDEX, &msg);
+}
+
+static void init_winevent_hook(void) {
+    hwineventhook = SetWinEventHook(EVENT_MIN, EVENT_MAX, GetModuleHandleA(0), msg_winevent_proc,
+                                    0, GetCurrentThreadId(), WINEVENT_INCONTEXT);
+    if (!hwineventhook)
+        win_skip( "no win event hook support\n" );
+}
+
+static void uninit_winevent_hook(void) {
+    if (!hwineventhook)
+        return;
+
+    UnhookWinEvent(hwineventhook);
+    hwineventhook = 0;
+}
 
 static HWND create_progress(DWORD style)
 {
@@ -222,22 +273,22 @@ static void test_setcolors(void)
     progress = create_progress(PBS_SMOOTH);
 
     clr = SendMessageA(progress, PBM_SETBARCOLOR, 0, 0);
-    ok(clr == CLR_DEFAULT, "got %x\n", clr);
+    ok(clr == CLR_DEFAULT, "got %lx\n", clr);
 
     clr = SendMessageA(progress, PBM_SETBARCOLOR, 0, RGB(0, 255, 0));
-    ok(clr == 0, "got %x\n", clr);
+    ok(clr == 0, "got %lx\n", clr);
 
     clr = SendMessageA(progress, PBM_SETBARCOLOR, 0, CLR_DEFAULT);
-    ok(clr == RGB(0, 255, 0), "got %x\n", clr);
+    ok(clr == RGB(0, 255, 0), "got %lx\n", clr);
 
     clr = SendMessageA(progress, PBM_SETBKCOLOR, 0, 0);
-    ok(clr == CLR_DEFAULT, "got %x\n", clr);
+    ok(clr == CLR_DEFAULT, "got %lx\n", clr);
 
     clr = SendMessageA(progress, PBM_SETBKCOLOR, 0, RGB(255, 0, 0));
-    ok(clr == 0, "got %x\n", clr);
+    ok(clr == 0, "got %lx\n", clr);
 
     clr = SendMessageA(progress, PBM_SETBKCOLOR, 0, CLR_DEFAULT);
-    ok(clr == RGB(255, 0, 0), "got %x\n", clr);
+    ok(clr == RGB(255, 0, 0), "got %lx\n", clr);
 
     DestroyWindow(progress);
 }
@@ -308,6 +359,146 @@ static void test_PBM_STEPIT(void)
     }
 }
 
+static WNDPROC old_proc;
+
+static const struct message paint_pbm_setstate_seq[] =
+{
+    {PBM_SETSTATE, sent},
+    {EVENT_OBJECT_STATECHANGE, winevent_hook|wparam|lparam, OBJID_CLIENT, 0},
+    {WM_PAINT, sent},
+    {WM_ERASEBKGND, sent | defwinproc},
+    {0}
+};
+
+static const struct message pbm_setstate_seq[] =
+{
+    {PBM_SETSTATE, sent},
+    {0}
+};
+
+static LRESULT WINAPI test_pbm_setstate_proc(HWND hwnd, UINT message, WPARAM wp, LPARAM lp)
+{
+    static int defwndproc_counter = 0;
+    struct message msg = {0};
+    LRESULT ret;
+
+    if (message == PBM_SETSTATE
+        || message == WM_PAINT
+        || message == WM_ERASEBKGND)
+    {
+        msg.message = message;
+        msg.flags = sent | wparam | lparam;
+        if (defwndproc_counter)
+            msg.flags |= defwinproc;
+        msg.wParam = wp;
+        msg.lParam = lp;
+        add_message(sequences, CHILD_SEQ_INDEX, &msg);
+    }
+
+    ++defwndproc_counter;
+    ret = CallWindowProcA(old_proc, hwnd, message, wp, lp);
+    --defwndproc_counter;
+    return ret;
+}
+
+void test_bar_states(void)
+{
+    HWND progress_bar;
+    int state;
+
+    static const struct
+    {
+        DWORD state;
+        DWORD previous_state;
+        const struct message *expected_seq;
+        BOOL error;
+    }
+    tests[] =
+    {
+        {0, PBST_NORMAL, pbm_setstate_seq, 1},
+        {PBST_NORMAL, PBST_NORMAL, pbm_setstate_seq, 0},
+        {PBST_PAUSED, PBST_NORMAL, paint_pbm_setstate_seq, 0},
+        {PBST_PAUSED, PBST_PAUSED, pbm_setstate_seq, 0},
+        {PBST_ERROR, PBST_PAUSED, paint_pbm_setstate_seq, 0},
+        {PBST_ERROR, PBST_ERROR, pbm_setstate_seq, 0},
+        {PBFS_PARTIAL, PBST_ERROR, pbm_setstate_seq, 1}
+    };
+
+    progress_bar = create_progress(0);
+
+    old_proc = (WNDPROC)SetWindowLongPtrA(progress_bar, GWLP_WNDPROC, (LONG_PTR)test_pbm_setstate_proc);
+    flush_events();
+    flush_sequences(sequences, NUM_MSG_SEQUENCES);
+
+    for (int i = 0; i < ARRAY_SIZE(tests); i++)
+    {
+        state = SendMessageA(progress_bar, PBM_SETSTATE, tests[i].state, 0);
+        flush_events();
+        ok_sequence(sequences, CHILD_SEQ_INDEX, tests[i].expected_seq, "PBM_SETSTATE", FALSE);
+        ok(state == (tests[i].error ? 0 : tests[i].previous_state), "Expected %ld, but got %d.\n", tests[i].previous_state, state);
+        state = SendMessageA(progress_bar, PBM_GETSTATE, 0, 0);
+        ok(state == (tests[i].error ? tests[i].previous_state : tests[i].state), "Expected %ld, but got %d.\n", tests[i].state, state);
+    }
+
+    DestroyWindow(progress_bar);
+}
+
+static const struct message step_seq[] =
+{
+    {PBM_SETRANGE, sent},
+    {PBM_SETPOS, sent},
+    {EVENT_OBJECT_VALUECHANGE, winevent_hook, OBJID_CLIENT, 0},
+    {PBM_SETPOS, sent},
+    {PBM_SETSTEP, sent},
+    {0}
+};
+
+static LRESULT WINAPI test_pbm_step_proc(HWND hwnd, UINT message, WPARAM wp, LPARAM lp)
+{
+    static int defwndproc_counter = 0;
+    struct message msg = {0};
+    LRESULT ret;
+
+    if (message == PBM_SETSTEP
+        || message == PBM_SETRANGE
+        || message == PBM_SETPOS)
+    {
+        msg.message = message;
+        msg.flags = sent | wparam | lparam;
+        if (defwndproc_counter)
+            msg.flags |= defwinproc;
+        msg.wParam = wp;
+        msg.lParam = lp;
+        add_message(sequences, CHILD_SEQ_INDEX, &msg);
+    }
+
+    ++defwndproc_counter;
+    ret = CallWindowProcA(old_proc, hwnd, message, wp, lp);
+    --defwndproc_counter;
+    return ret;
+}
+
+void test_step_messages(void)
+{
+    HWND progress_bar;
+
+    progress_bar = create_progress(0);
+
+    old_proc = (WNDPROC)SetWindowLongPtrA(progress_bar, GWLP_WNDPROC, (LONG_PTR)test_pbm_step_proc);
+
+    flush_events();
+    flush_sequences(sequences, NUM_MSG_SEQUENCES);
+
+    SendMessageA(progress_bar, PBM_SETRANGE, 0, MAKELPARAM(0, 100));
+    SendMessageA(progress_bar, PBM_SETPOS, 10, 0);
+    SendMessageA(progress_bar, PBM_SETPOS, 10, 0);
+    SendMessageA(progress_bar, PBM_SETSTEP, 20, 0);
+
+    ok_sequence(sequences, CHILD_SEQ_INDEX, step_seq, "step_seq", FALSE);
+
+    DestroyWindow(progress_bar);
+}
+
 static void init_functions(void)
 {
     HMODULE hComCtl32 = LoadLibraryA("comctl32.dll");
@@ -337,9 +528,16 @@ START_TEST(progress)
 
     if (!load_v6_module(&ctx_cookie, &hCtx))
         return;
+    init_msg_sequences(sequences, NUM_MSG_SEQUENCES);
+
+    init_winevent_hook();
 
     test_setcolors();
     test_PBM_STEPIT();
+    test_bar_states();
+    test_step_messages();
+
+    uninit_winevent_hook();
 
     unload_v6_module(ctx_cookie, hCtx);
 
