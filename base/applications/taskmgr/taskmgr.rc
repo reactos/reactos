@@ -16,13 +16,34 @@
 #define REACTOS_STR_ORIGINAL_FILENAME "taskmgr.exe"
 #include <reactos/version.rc>
 
+#include <reactos/manifest_exe.rc>
+
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+
+/* Icons / Bitmaps */
 IDI_TASKMANAGER ICON "res/taskmgr.ico"
-IDI_WINDOW ICON "res/window.ico"
+IDI_WINDOW   ICON "res/window.ico"
 IDI_WINDOWSM ICON "res/windowsm.ico"
 IDB_TRAYMASK BITMAP "res/traymask.bmp"
 IDB_TRAYICON BITMAP "res/trayicon.bmp"
 
-#include <reactos/manifest_exe.rc>
+/* Accelerators */
+IDA_ACCEL ACCELERATORS
+BEGIN
+    /* Page navigation */
+    // VK_TAB,   IDC_NEXTPAGE, VIRTKEY, CONTROL, NOINVERT
+    // VK_TAB,   IDC_PREVPAGE, VIRTKEY, CONTROL, SHIFT, NOINVERT
+    // VK_PRIOR, IDC_PREVPAGE, VIRTKEY, CONTROL, NOINVERT
+    // VK_NEXT,  IDC_NEXTPAGE, VIRTKEY, CONTROL, NOINVERT
+
+    /* Commands */
+    VK_DELETE, IDC_ENDTASK,     VIRTKEY, NOINVERT
+    VK_ESCAPE, SC_MINIMIZE,     VIRTKEY, SHIFT, NOINVERT // IDM_HIDE
+    VK_F1,     ID_HELP_ABOUT,   VIRTKEY, NOINVERT
+    VK_F5,     ID_VIEW_REFRESH, VIRTKEY, NOINVERT
+    VK_RETURN, IDC_SWITCHTO,    VIRTKEY, NOINVERT
+    VK_RETURN, ID_WINDOWS_BRINGTOFRONT, VIRTKEY, SHIFT, NOINVERT
+END
 
 /* UTF-8 */
 #pragma code_page(65001)
