@@ -789,6 +789,9 @@ static inline BOOL set_cache_glyph_widths(SCRIPT_CACHE *psc, WORD glyph, ABC *ab
 static HRESULT init_script_cache(const HDC hdc, SCRIPT_CACHE *psc)
 {
     ScriptCache *sc;
+#ifdef __REACTOS__
+    ScriptCache *new_sc;
+#endif
     unsigned size;
     LOGFONTW lf;
 
@@ -817,6 +820,30 @@ static HRESULT init_script_cache(const HDC hdc, SCRIPT_CACHE *psc)
     }
     LeaveCriticalSection(&cs_script_cache);
 
+#ifdef __REACTOS__
+    if (!(new_sc = calloc(1, sizeof(ScriptCache)))) return E_OUTOFMEMORY;
+    if (!GetTextMetricsW(hdc, &new_sc->tm))
+    {
+        free(new_sc);
+        return E_INVALIDARG;
+    }
+    size = GetOutlineTextMetricsW(hdc, 0, NULL);
+    if (size)
+    {
+        new_sc->otm = malloc(size);
+        new_sc->otm->otmSize = size;
+        GetOutlineTextMetricsW(hdc, size, new_sc->otm);
+    }
+    new_sc->sfnt = (NtGdiGetFontData(hdc, MS_MAKE_TAG('h','e','a','d'), 0, NULL, 0) != GDI_ERROR);
+    if (!set_cache_font_properties(hdc, new_sc))
+    {
+        free(new_sc);
+        return E_INVALIDARG;
+    }
+    new_sc->lf = lf;
+    new_sc->refcount = 1;
+    *psc = new_sc;
+#else
     if (!(sc = calloc(1, sizeof(ScriptCache)))) return E_OUTOFMEMORY;
     if (!GetTextMetricsW(hdc, &sc->tm))
     {
@@ -839,24 +866,45 @@ static HRESULT init_script_cache(const HDC hdc, SCRIPT_CACHE *psc)
     sc->lf = lf;
     sc->refcount = 1;
     *psc = sc;
+#endif
 
     EnterCriticalSection(&cs_script_cache);
+#ifdef __REACTOS__
+    list_add_head(&script_cache_list, &new_sc->entry);
+#else
     list_add_head(&script_cache_list, &sc->entry);
+#endif
     LIST_FOR_EACH_ENTRY(sc, &script_cache_list, ScriptCache, entry)
     {
+#ifdef __REACTOS__
+        if (sc != new_sc && !memcmp(&sc->lf, &lf, sizeof(lf)))
+#else
         if (sc != *psc && !memcmp(&sc->lf, &lf, sizeof(lf)))
+#endif
         {
             /* Another thread won the race. Use their cache instead of ours */
+#ifdef __REACTOS__
+            list_remove(&new_sc->entry);
+#else
             list_remove(&sc->entry);
+#endif
             sc->refcount++;
             LeaveCriticalSection(&cs_script_cache);
+#ifdef __REACTOS__
+            free(new_sc);
+#else
             free(*psc);
+#endif
             *psc = sc;
             return S_OK;
         }
     }
     LeaveCriticalSection(&cs_script_cache);
+#ifdef __REACTOS__
+    TRACE("<- %p\n", new_sc);
+#else
     TRACE("<- %p\n", sc);
+#endif
     return S_OK;
 }
 
