@@ -227,7 +227,7 @@ KiTimerExpiration(IN PKDPC Dpc,
                     {
 #if DBG
                         /* Clear DPC Time */
-                        Prcb->DebugDpcTime = 0;
+                        KiPrcbDpcTimeCount(Prcb) = 0;
 #endif
 
                         /* Call the DPC */
@@ -275,7 +275,7 @@ KiTimerExpiration(IN PKDPC Dpc,
                     {
 #if DBG
                         /* Clear DPC Time */
-                        Prcb->DebugDpcTime = 0;
+                        KiPrcbDpcTimeCount(Prcb) = 0;
 #endif
 
                         /* Call the DPC */
@@ -313,7 +313,7 @@ KiTimerExpiration(IN PKDPC Dpc,
         {
 #if DBG
             /* Clear DPC Time */
-            Prcb->DebugDpcTime = 0;
+            KiPrcbDpcTimeCount(Prcb) = 0;
 #endif
 
             /* Call the DPC */
@@ -440,7 +440,7 @@ KiTimerListExpire(IN PLIST_ENTRY ExpiredListHead,
         {
 #if DBG
             /* Clear DPC Time */
-            Prcb->DebugDpcTime = 0;
+            KiPrcbDpcTimeCount(Prcb) = 0;
 #endif
 
             /* Call the DPC */
@@ -620,7 +620,7 @@ KiRetireDpcList(IN PKPRCB Prcb)
 
 #if DBG
                 /* Clear DPC Time */
-                Prcb->DebugDpcTime = 0;
+                KiPrcbDpcTimeCount(Prcb) = 0;
 #endif
 
                 /* Release the lock */

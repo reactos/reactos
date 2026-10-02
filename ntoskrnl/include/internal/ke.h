@@ -177,6 +177,13 @@ extern VOID __cdecl KiInterruptTemplate(VOID);
 #define KiThreadIopl(Thread) ((Thread)->Iopl)
 #endif
 
+/* The DPC watchdog tick count was renamed in Vista */
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+#define KiPrcbDpcTimeCount(Prcb) ((Prcb)->DpcTimeCount)
+#else
+#define KiPrcbDpcTimeCount(Prcb) ((Prcb)->DebugDpcTime)
+#endif
+
 /* INTERNAL KERNEL FUNCTIONS ************************************************/
 
 /* Finds a new thread to run */

@@ -176,10 +176,10 @@ KeUpdateRunTime(IN PKTRAP_FRAME TrapFrame,
 
 #if DBG
             /* Update the DPC time */
-            Prcb->DebugDpcTime++;
+            KiPrcbDpcTimeCount(Prcb)++;
 
             /* Check if we have timed out */
-            if (Prcb->DebugDpcTime == KiDPCTimeout)
+            if (KiPrcbDpcTimeCount(Prcb) == KiDPCTimeout)
             {
                 /* We did! */
                 DbgPrint("*** DPC routine > 1 sec --- This is not a break in KeUpdateSystemTime\n");
@@ -188,7 +188,7 @@ KeUpdateRunTime(IN PKTRAP_FRAME TrapFrame,
                 if (KdDebuggerEnabled) DbgBreakPoint();
 
                 /* Clear state */
-                Prcb->DebugDpcTime = 0;
+                KiPrcbDpcTimeCount(Prcb) = 0;
             }
 #endif
         }
