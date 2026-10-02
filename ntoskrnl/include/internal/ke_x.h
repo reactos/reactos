@@ -1782,6 +1782,18 @@ KiWriteThreadCycleTime(
 }
 
 FORCEINLINE
+ULONG64
+KiQueryProcessCycleTime(
+    _In_ PKPROCESS Process)
+{
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+    return Process->CycleTime;
+#else
+    return ((PEPROCESS)Process)->CycleTime;
+#endif
+}
+
+FORCEINLINE
 VOID
 KiAddProcessCycleTime(
     _Inout_ PKPROCESS Process,

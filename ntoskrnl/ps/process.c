@@ -1671,7 +1671,7 @@ PsQueryTotalCycleTimeProcess(
     CurrentCycleTime = KxQueryProcessorCycleTime();
 
     /* Get the process' cycle time */
-    TotalCycleTime = Process->CycleTime;
+    TotalCycleTime = KiQueryProcessCycleTime(&Process->Pcb);
 
     /* Check if this is the current process */
     if (Process == PsGetCurrentProcess())
