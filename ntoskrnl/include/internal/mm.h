@@ -1814,6 +1814,13 @@ VOID
 NTAPI
 MiInitializeWorkingSetList(_Inout_ PMMSUPPORT WorkingSet);
 
+/* pagfault.c ***************************************************************/
+
+NTSTATUS
+NTAPI
+MiMakeKernelPageTableValid(
+    _In_ PVOID Address);
+
 #ifdef __cplusplus
 } // extern "C"
 
