@@ -117,6 +117,7 @@ static BOOL NLS_RegEnumValue(HANDLE hKey, UINT ulIndex,
     return TRUE;
 }
 
+#ifndef __REACTOS__
 static BOOL NLS_RegGetDword(HANDLE hKey, LPCWSTR szValueName, DWORD *lpVal)
 {
     BYTE buffer[128];
@@ -137,6 +138,7 @@ static BOOL NLS_RegGetDword(HANDLE hKey, LPCWSTR szValueName, DWORD *lpVal)
 
     return FALSE;
 }
+#endif
 
 #include "nls.h"
 
@@ -435,8 +437,10 @@ static const NLS_LOCALE_DATA *system_locale;
 static const NLS_LOCALE_DATA *user_locale;
 static const NLS_LOCALE_DATA *user_ui_locale;
 
+#ifndef __REACTOS__
 static CPTABLEINFO codepages[128];
 static unsigned int nb_codepages;
+#endif
 
 static struct norm_table *norm_info;
 
@@ -2417,6 +2421,7 @@ static const WCHAR *get_decomposition( WCHAR ch, unsigned int *ret_len )
 }
 
 
+#ifndef __REACTOS__
 static WCHAR compose_chars( WCHAR ch1, WCHAR ch2 )
 {
     const USHORT *table = (const USHORT *)norm_info + norm_info->comp_hash;
@@ -2438,6 +2443,7 @@ static WCHAR compose_chars( WCHAR ch1, WCHAR ch2 )
     }
     return 0;
 }
+#endif
 
 
 static UINT get_locale_codepage( const NLS_LOCALE_DATA *locale, ULONG flags )
@@ -2461,6 +2467,7 @@ static UINT get_lcid_codepage( LCID lcid, ULONG flags )
 }
 
 
+#ifndef __REACTOS__
 static const CPTABLEINFO *get_codepage_table( UINT codepage )
 {
     static const CPTABLEINFO utf7_cpinfo = { CP_UTF7, 5, '?', 0xfffd, '?', '?' };
@@ -2509,6 +2516,7 @@ done:
     RtlLeaveCriticalSection( &locale_section );
     return &codepages[i];
 }
+#endif
 
 
 static const WCHAR *get_ligature( WCHAR wc )
@@ -2624,6 +2632,7 @@ static NTSTATUS fold_string( DWORD flags, const WCHAR *src, int srclen, WCHAR *d
 }
 
 
+#ifndef __REACTOS__
 static int mbstowcs_cpsymbol( DWORD flags, const char *src, int srclen, WCHAR *dst, int dstlen )
 {
     int len, i;
@@ -2770,6 +2779,7 @@ static int mbstowcs_utf8( DWORD flags, const char *src, int srclen, WCHAR *dst, 
 
     return reslen / sizeof(WCHAR);
 }
+#endif
 
 
 static inline int is_private_use_area_char( WCHAR code )
@@ -2778,6 +2788,7 @@ static inline int is_private_use_area_char( WCHAR code )
 }
 
 
+#ifndef __REACTOS__
 static int check_invalid_chars( const CPTABLEINFO *info, const unsigned char *src, int srclen )
 {
     if (info->DBCSOffsets)
@@ -3534,6 +3545,7 @@ static int wcstombs_codepage( const CPTABLEINFO *info, DWORD flags, const WCHAR 
     else
         return wcstombs_sbcs( info, src, srclen, dst, dstlen );
 }
+#endif
 
 
 struct sortkey
