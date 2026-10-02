@@ -5301,12 +5301,7 @@ static void test_GetCPInfo(void)
     ok( !ret, "GetCPInfoExW succeeeded\n" );
     ok( GetLastError() == ERROR_INVALID_PARAMETER, "wrong error %lu\n", GetLastError() );
 
-#if defined(__REACTOS__) && DLL_EXPORT_VERSION >= 0x600
-    /* FIXME: NtGetNlsSectionPtr is a STUB on ReactOS! */
-    if (!is_reactos() && pNtGetNlsSectionPtr)
-#else
     if (pNtGetNlsSectionPtr)
-#endif
     {
         CPTABLEINFO table;
         NTSTATUS status;
@@ -7244,12 +7239,7 @@ static void test_FindNLSStringEx(void)
     };
     unsigned int i;
 
-#if defined(__REACTOS__) && DLL_EXPORT_VERSION >= 0x600
-    /* FIXME: FindNLSStringEx is a STUB on ReactOS! */
-    if (is_reactos() || !pFindNLSStringEx)
-#else
     if (!pFindNLSStringEx)
-#endif
     {
         win_skip("FindNLSStringEx is not available.\n");
         return;
@@ -8166,12 +8156,7 @@ static void test_NLSVersion(void)
     ok( !ret, "GetNLSVersion succeeded\n" );
     ok( GetLastError() == ERROR_INVALID_PARAMETER, "wrong error %lu\n", GetLastError() );
 
-#ifdef __REACTOS__
-    /* HACK: ReactOS's implementation for GetNLSVersionEx is a STUB! */
-    if (pGetNLSVersionEx && !is_reactos())
-#else
     if (pGetNLSVersionEx)
-#endif
     {
         SetLastError( 0xdeadbeef );
         memset( &info, 0xcc, sizeof(info) );
