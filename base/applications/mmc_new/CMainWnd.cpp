@@ -17,9 +17,9 @@ static TBBUTTON TbButtons[] =
     { BTN_UP, IDM_TB_UP, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0 },
     { BTN_SCOPE_PANE, IDM_TB_SCOPE_PANE, TBSTATE_ENABLED | TBSTATE_CHECKED, BTNS_CHECK, {0}, 0, 0 },
     { 4, IDC_STATIC, TBSTATE_ENABLED, BTNS_SEP, {0}, 0, 0 },
-//    { BTN_EXPORT_LIST, IDM_TB_EXPORT_LIST, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0 },
+    { BTN_EXPORT_LIST, IDM_TB_EXPORT_LIST, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0 },
     { 4, IDC_STATIC, TBSTATE_ENABLED, BTNS_SEP, {0}, 0, 0 },
-//    { BTN_HELP, IDM_TB_HELP, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0 },
+    { BTN_HELP, IDM_TB_HELP, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0 },
     { BTN_ACTIONS_PANE, IDM_TB_ACTIONS_PANE, TBSTATE_ENABLED, BTNS_CHECK, {0}, 0, 0 }
 };
 
@@ -80,7 +80,7 @@ CMainWnd::OnCreate(UINT nMessage, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     /* Create and initialize the Toolbar */
     m_bToolBarVisible = TRUE;
     m_ToolBar.Create(m_hWnd,
-                     WS_CHILD | WS_VISIBLE | WS_CLIPCHILDREN | TBSTYLE_FLAT,
+                     WS_CHILD | WS_VISIBLE | WS_CLIPCHILDREN | TBSTYLE_FLAT | TBSTYLE_TOOLTIPS,
                      0);
 
     m_ToolBar.SendMessageW(TB_SETBITMAPSIZE, 0, MAKELONG(16, 16));
@@ -137,6 +137,40 @@ LRESULT
 CMainWnd::OnClose(UINT nMessage, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     DestroyWindow();
+    return 0;
+}
+
+LRESULT
+CMainWnd::OnNotify(UINT nMessage, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    NMHDR *phdr = (NMHDR *)lParam;
+    switch (phdr->code)
+    {
+        case TBN_GETINFOTIP:
+            {
+                LPNMTBGETINFOTIP lptbgit = (LPNMTBGETINFOTIP) lParam;
+
+                CAtlString toolTipText(MAKEINTRESOURCE(lptbgit->iItem));
+                wcscpy(lptbgit->pszText, toolTipText.GetString());
+            }
+            break;
+    }
+
+    return 0;
+}
+
+LRESULT
+CMainWnd::OnMenuSelect(UINT nMessage, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    CConsoleWnd* child = GetActiveChildInfo();
+    if (child == NULL)
+        return 0;
+
+    UINT menuItem = LOWORD(wParam);
+//    UINT flags = HIWORD(wParam);
+//    HMENU hMenu = (HMENU)lParam;
+    CAtlString menuText(MAKEINTRESOURCE(menuItem));
+    child->SetStatusBarText(menuText.GetString());
     return 0;
 }
 
@@ -348,6 +382,18 @@ CMainWnd::OnFileExit(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
 }
 
 LRESULT
+CMainWnd::OnActionNewWindow(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
+{
+    CConsoleWnd* child = GetActiveChildInfo();
+    if (child == NULL)
+        return 0;
+
+    child->OnActionNewWindow(wNotifyCode, wID, hWndCtl, bHandled);
+
+    return 0;
+}
+
+LRESULT
 CMainWnd::OnActionRename(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
 {
     CConsoleWnd* child = GetActiveChildInfo();
@@ -433,6 +479,24 @@ CMainWnd::OnHelpAboutMMC(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandle
     TitleString += AppTitle;
 
     ::ShellAboutW(this->m_hWnd, (LPWSTR)TitleString.GetString(), NULL, hIcon);
+
+    return 0;
+}
+
+LRESULT
+CMainWnd::OnHelpAboutSnapin(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
+{
+    MENUITEMINFOW mi;
+
+    mi.cbSize = sizeof(MENUITEMINFOW);
+    mi.fMask = MIIM_DATA;
+    if (GetMenuItemInfoW(GetMenu(), wID, FALSE, &mi))
+    {
+        CSnapin *Snapin = (CSnapin *)mi.dwItemData;
+
+        CAboutSnapinDialog dlg(this, Snapin);
+        dlg.DoModal(m_hWnd, (LPARAM)0);
+    }
 
     return 0;
 }
@@ -661,6 +725,34 @@ void
 CMainWnd::SetPreventViewCustomization(BOOL PreventCustomization)
 {
     m_PreventViewCustomization = PreventCustomization;
+}
+
+VOID
+CMainWnd::UpdateAboutSnapinMenu(CSnapin *Snapin)
+{
+    HMENU hMenu = GetMenu();
+
+    RemoveMenu(hMenu, IDM_HELP_ABOUT_SNAPIN, MF_BYCOMMAND);
+
+    if (Snapin)
+    {
+        MENUITEMINFOW mi;
+        CAtlString ValueName;
+        CAtlString AboutString(MAKEINTRESOURCE(IDS_ABOUT_SNAPIN));
+
+        ValueName.Format(AboutString.GetString(), Snapin->Name().GetString());
+
+        mi.cbSize = sizeof(MENUITEMINFOW);
+        mi.fMask = MIIM_ID | MIIM_STRING | MIIM_FTYPE | MIIM_DATA;
+        mi.fType = MFT_STRING;
+        mi.wID = IDM_HELP_ABOUT_SNAPIN;
+
+        mi.dwTypeData = ValueName.GetString();
+        mi.dwItemData = (ULONG_PTR)Snapin;
+
+        /* FIXME: Append this menu item */
+        InsertMenuItemW(hMenu, IDM_HELP_ABOUT_MMC, FALSE, &mi);
+    }
 }
 
 VOID

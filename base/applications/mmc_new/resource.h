@@ -65,8 +65,9 @@
 #define IDM_TB_REDO            1501
 #define IDM_TB_UP              1502
 #define IDM_TB_SCOPE_PANE      1503
-#define IDM_TB_HELP            1504
-#define IDM_TB_ACTIONS_PANE    1505
+#define IDM_TB_EXPORT_LIST     1504
+#define IDM_TB_HELP            1505
+#define IDM_TB_ACTIONS_PANE    1506
 
 #define IDD_DIALOG_ADD                3000
 #define IDC_BUTTON_ADD                3001
@@ -74,6 +75,8 @@
 #define IDC_LIST_AVAILABLE            3003
 #define IDC_LIST_SELECTED             3004
 #define IDC_DESCRIPTION               3005
+#define IDC_BUTTON_UP                 3006
+#define IDC_BUTTON_DOWN               3007
 
 #define IDD_CUSTOMIZE                 3100
 #define IDC_CUSTOMIZE_SCOPEPANE       3101
@@ -95,6 +98,10 @@
 #define IDC_CONSOLENOSAVE             3206
 #define IDC_CONSOLECUSTOM             3207
 
+#define IDD_ABOUT_SNAPIN              3300
+#define IDC_ABOUT_ICON                3301
+#define IDC_ABOUT_INFO                3302
+#define IDC_ABOUT_DESCRIPTION         3303
 
 #define IDS_CONSOLEROOT               5010
 
@@ -108,6 +115,8 @@
 #define IDS_USERMODE_MULTIPLE_DESC    5106
 #define IDS_USERMODE_SINGLE_DESC      5107
 
+#define IDS_ABOUT_VERSION             5501
+#define IDS_ABOUT_SNAPIN              5502
 
 
 #ifndef IDC_STATIC

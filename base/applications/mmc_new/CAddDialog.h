@@ -21,6 +21,8 @@ public:
         COMMAND_ID_HANDLER(IDOK, OnCommand)
         COMMAND_ID_HANDLER(IDC_BUTTON_ADD, OnCommand)
         COMMAND_ID_HANDLER(IDC_BUTTON_REMOVE, OnCommand)
+        COMMAND_ID_HANDLER(IDC_BUTTON_UP, OnCommand)
+        COMMAND_ID_HANDLER(IDC_BUTTON_DOWN, OnCommand)
 
         NOTIFY_CODE_HANDLER(LVN_ITEMCHANGED, OnItemChanged)
         NOTIFY_CODE_HANDLER(TVN_SELCHANGED,  OnSelectionChanged)
@@ -32,6 +34,8 @@ private:
     CTreeView m_Selected;
     CWindow m_BtnAdd;
     CWindow m_BtnRemove;
+    CWindow m_BtnUp;
+    CWindow m_BtnDown;
     CWindow m_Description;
 
     CMainWnd *m_MainWnd;
@@ -39,6 +43,7 @@ private:
 
     CSnapin *m_RootSnapin;
     CSnapinAlias *m_RootAlias;
+    HTREEITEM m_RootTreeItem;
 
     void CreateSnapinAliases(CSnapinAlias *ParentAlias, CSnapin *ParentSnapin);
     void ReconnectSnapins(CSnapinAlias *ParentAlias, CSnapin *ParentSnapin);

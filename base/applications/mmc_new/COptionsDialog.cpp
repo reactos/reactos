@@ -25,7 +25,7 @@ COptionsDialog::OnInitDialog(UINT nMessage, WPARAM wParam, LPARAM lParam, BOOL& 
 {
     CenterWindow(m_Console->m_hWnd);
 
-//        m_ConsoleIcon.Attach(GetDlgItem(IDC_CONSOLEICON));
+    m_ConsoleIcon.Attach(GetDlgItem(IDC_CONSOLEICON));
     m_ConsoleName.Attach(GetDlgItem(IDC_CONSOLENAME));
     m_ConsoleSymbol.Attach(GetDlgItem(IDC_CONSOLESYMBOL));
     m_ConsoleMode.Attach(GetDlgItem(IDC_CONSOLEMODE));
@@ -33,7 +33,8 @@ COptionsDialog::OnInitDialog(UINT nMessage, WPARAM wParam, LPARAM lParam, BOOL& 
     m_ConsoleNoSave.Attach(GetDlgItem(IDC_CONSOLENOSAVE));
     m_ConsoleCustom.Attach(GetDlgItem(IDC_CONSOLECUSTOM));
 
-//        m_ConsoleIcon.SetIcon();
+    m_AppIcon = LoadIcon(_AtlBaseModule.GetModuleInstance(), MAKEINTRESOURCE(IDI_MAINAPP));
+    m_ConsoleIcon.SendMessage(STM_SETIMAGE, IMAGE_ICON, (LPARAM)m_AppIcon);
 
     m_ConsoleName.SetWindowText(m_MainWnd->GetConsoleTitle()->GetString());
 
