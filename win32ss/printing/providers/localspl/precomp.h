@@ -342,6 +342,8 @@ BOOL WINAPI LocalWritePrinter(HANDLE hPrinter, LPVOID pBuf, DWORD cbBuf, LPDWORD
 BOOL WINAPI LocalEndPagePrinter(HANDLE hPrinter);
 BOOL WINAPI LocalEndDocPrinter(HANDLE hPrinter);
 BOOL WINAPI LocalClosePrinter(HANDLE hPrinter);
+HANDLE WINAPI LocalAddPrinter(LPWSTR pName, DWORD level, LPBYTE pPrinterInfo);
+BOOL WINAPI LocalDeletePrinter(HANDLE hPrinter);
 VOID BroadcastChange(PLOCAL_HANDLE pHandle);
 
 // printingthread.c
