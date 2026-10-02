@@ -140,6 +140,9 @@ Quit:
     return Status;
 }
 
+
+extern void init_locale(void);
+
 /**
  * @name NlsInit
  *
@@ -208,6 +211,7 @@ NlsInit(VOID)
                          &OemCodePage.CodePageTable);
     OemCodePage.CodePage = OemCodePage.CodePageTable.CodePage;
     InsertTailList(&CodePageListHead, &OemCodePage.Entry);
+    init_locale();
 
     return TRUE;
 }
@@ -2582,47 +2586,6 @@ NlsGetCacheUpdateCount(VOID)
 {
     STUB;
     return 0;
-}
-
-/*
- * @unimplemented
- */
-BOOL
-WINAPI
-IsNLSDefinedString(IN NLS_FUNCTION Function,
-                   IN DWORD dwFlags,
-                   IN LPNLSVERSIONINFO lpVersionInformation,
-                   IN LPCWSTR lpString,
-                   IN INT cchStr)
-{
-    STUB;
-    return TRUE;
-}
-
-/*
- * @unimplemented
- */
-BOOL
-WINAPI
-GetNLSVersion(IN NLS_FUNCTION Function,
-              IN LCID Locale,
-              IN OUT LPNLSVERSIONINFO lpVersionInformation)
-{
-    STUB;
-    return TRUE;
-}
-
-/*
- * @unimplemented
- */
-BOOL
-WINAPI
-GetNLSVersionEx(IN NLS_FUNCTION function,
-                IN LPCWSTR lpLocaleName,
-                IN OUT LPNLSVERSIONINFOEX lpVersionInformation)
-{
-    STUB;
-    return TRUE;
 }
 
 /* EOF */
