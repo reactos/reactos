@@ -101,6 +101,8 @@ class CMainWindow : public CWindowImpl<CMainWindow, CWindow, CFrameWinTraits>
     RemoveSelectedAppFromRegistry();
     BOOL
     UninstallSelectedApp(BOOL bModify);
+    VOID
+    UninstallAvailableApp(CAvailableApplicationInfo *pAvail);
 
     BOOL
     ProcessWindowMessage(HWND hwnd, UINT Msg, WPARAM wParam, LPARAM lParam, LRESULT &theResult, DWORD dwMapId);
