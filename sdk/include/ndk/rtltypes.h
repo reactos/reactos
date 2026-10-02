@@ -1763,6 +1763,19 @@ typedef struct _RTL_TIME_ZONE_INFORMATION
     LONG DaylightBias;
 } RTL_TIME_ZONE_INFORMATION, *PRTL_TIME_ZONE_INFORMATION;
 
+typedef struct _RTL_DYNAMIC_TIME_ZONE_INFORMATION
+{
+    LONG Bias;
+    WCHAR StandardName[32];
+    TIME_FIELDS StandardDate;
+    LONG StandardBias;
+    WCHAR DaylightName[32];
+    TIME_FIELDS DaylightDate;
+    LONG DaylightBias;
+    WCHAR TimeZoneKeyName[0x80];
+    BOOLEAN DynamicDaylightTimeDisabled;
+} RTL_DYNAMIC_TIME_ZONE_INFORMATION, *PRTL_DYNAMIC_TIME_ZONE_INFORMATION;
+
 //
 // Hotpatch Header
 //
