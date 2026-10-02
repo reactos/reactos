@@ -339,7 +339,7 @@ extern "C" {
 // #define LOAD_PACKAGED_LIBRARY                       0x00000004 // Internal use only.
 #define LOAD_WITH_ALTERED_SEARCH_PATH               0x00000008
 #define LOAD_IGNORE_CODE_AUTHZ_LEVEL                0x00000010
-#if (_WIN32_WINNT >= _WIN32_WINNT_VISTA)
+#if (_WIN32_WINNT >= _WIN32_WINNT_VISTA) || defined(__REACTOS__)
 #define LOAD_LIBRARY_AS_IMAGE_RESOURCE              0x00000020
 #define LOAD_LIBRARY_AS_DATAFILE_EXCLUSIVE          0x00000040
 #define LOAD_LIBRARY_REQUIRE_SIGNED_TARGET          0x00000080

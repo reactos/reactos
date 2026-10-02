@@ -61,7 +61,7 @@ FileTimeToSystemTime(
     CONST FILETIME *,
     LPSYSTEMTIME);
 
-#if (_WIN32_WINNT >= _WIN32_WINNT_VISTA)
+#if (_WIN32_WINNT >= _WIN32_WINNT_VISTA) || defined(__REACTOS__)
 WINBASEAPI
 _Success_(return != TIME_ZONE_ID_INVALID)
 DWORD
@@ -87,7 +87,7 @@ WINAPI
 GetTimeZoneInformation(
     LPTIME_ZONE_INFORMATION);
 
-#if (_WIN32_WINNT >= _WIN32_WINNT_WIN7)
+#if (_WIN32_WINNT >= _WIN32_WINNT_WIN7) || defined(__REACTOS__)
 _Success_(return != FALSE)
 BOOL
 WINAPI
@@ -119,7 +119,7 @@ LocalSystemTimeToLocalFileTime(
     _Out_ FILETIME* localFileTime);
 #endif /* NTDDI_VERSION >= NTDDI_WIN10_RS5 */
 
-#if (_WIN32_WINNT >= _WIN32_WINNT_VISTA)
+#if (_WIN32_WINNT >= _WIN32_WINNT_VISTA) || defined(__REACTOS__)
 WINBASEAPI
 BOOL
 WINAPI
