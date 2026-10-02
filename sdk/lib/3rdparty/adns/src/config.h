@@ -39,6 +39,8 @@
 
 #ifdef HAVE_POLL
 #include <sys/poll.h>
+#elif defined(__REACTOS__) && (_WIN32_WINNT >= 0x0600)
+/* winsock2.h provides struct pollfd and the POLL flags */
 #else
 /* kludge it up */
 struct pollfd { int fd; short events; short revents; };
