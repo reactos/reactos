@@ -5,17 +5,58 @@ jobs:
   build-linux:
     strategy:
       matrix:
+        os: [ubuntu-22.04, ubuntu-latest]
         compiler: [gcc, clang]
         arch: [i386, amd64]
         config: [Debug, Release]
         dllver: ['0x502', '0x600']
+        wip: [false]
         exclude:
+          # (RosBE) gcc: only ubuntu-latest.
+          - os: ubuntu-22.04
+            compiler: gcc
+          # upstream clang 13(-16): last available on ubuntu-22.04.
+          # upstream clang 17(-20): last available on ubuntu-24.04.
+          # upstream clang 21+: see below for specific re-inclusion.
+          - os: ubuntu-latest
+            compiler: clang
+          # future 0x600: only gcc.
           - dllver: 0x600
             compiler: clang
+          # future 0x600: only Debug.
           - dllver: 0x600
             config: Release
+        include:
+          # wip clang 17: only 1 i386 build.
+          - os: ubuntu-24.04
+            compiler: clang
+            arch: i386
+            config: Debug
+            dllver: '0x502'
+            wip: true # CORE-20324.
+          # wip clang 17: only 1 amd64 build.
+          - os: ubuntu-24.04
+            compiler: clang
+            arch: amd64
+            config: Debug
+            dllver: '0x502'
+            wip: true # CORE-20324.
+          # wip clang 21: only 1 i386 build.
+          - os: ubuntu-latest
+            compiler: clang
+            arch: i386
+            config: Debug
+            dllver: '0x502'
+            wip: true # CORE-20324.
+          # wip clang 21: only 1 amd64 build.
+          - os: ubuntu-latest
+            compiler: clang
+            arch: amd64
+            config: Debug
+            dllver: '0x502'
+            wip: true # CORE-20324.
       fail-fast: false
-    runs-on: ubuntu-22.04
+    runs-on: ${{matrix.os}}
     steps:
     - name: Get RosBE build specifics
       id: get_rosbe_spec
@@ -41,10 +82,26 @@ jobs:
         ./build_rosbe_ci.sh ${{github.workspace}}/RosBE-CI
     - name: Install ccache
       run: sudo apt install ccache
-    - name: Install LLVM
-      if: ${{ matrix.compiler == 'clang' }}
+    - name: Install LLVM (ubuntu-22.04)
+      if: ${{ matrix.os == 'ubuntu-22.04' && matrix.compiler == 'clang' }}
       run: |
         export LLVM_VERSION=13
+        wget https://apt.llvm.org/llvm.sh
+        chmod +x llvm.sh
+        sudo ./llvm.sh $LLVM_VERSION
+        echo "D_CLANG_VERSION=-DCLANG_VERSION=$LLVM_VERSION" >> $GITHUB_ENV
+    - name: Install LLVM (ubuntu-24.04)
+      if: ${{ matrix.os == 'ubuntu-24.04' && matrix.compiler == 'clang' }}
+      run: |
+        export LLVM_VERSION=17
+        wget https://apt.llvm.org/llvm.sh
+        chmod +x llvm.sh
+        sudo ./llvm.sh $LLVM_VERSION
+        echo "D_CLANG_VERSION=-DCLANG_VERSION=$LLVM_VERSION" >> $GITHUB_ENV
+    - name: Install LLVM (ubuntu-latest)
+      if: ${{ matrix.os == 'ubuntu-latest' && matrix.compiler == 'clang' }}
+      run: |
+        export LLVM_VERSION=21
         wget https://apt.llvm.org/llvm.sh
         chmod +x llvm.sh
         sudo ./llvm.sh $LLVM_VERSION
@@ -57,9 +114,9 @@ jobs:
       uses: actions/cache@v5
       with:
         path: ccache
-        key: ccache-${{matrix.compiler}}-${{matrix.arch}}-${{matrix.config}}-${{matrix.dllver}}-${{github.sha}}
+        key: ccache-${{matrix.os}}-${{matrix.compiler}}-${{matrix.arch}}-${{matrix.config}}-${{matrix.dllver}}-${{github.sha}}
         restore-keys: |
-          ccache-${{matrix.compiler}}-${{matrix.arch}}-${{matrix.config}}-${{matrix.dllver}}-
+          ccache-${{matrix.os}}-${{matrix.compiler}}-${{matrix.arch}}-${{matrix.config}}-${{matrix.dllver}}-
     - name: Set ccache settings
       run: |
         echo "CCACHE_BASEDIR=${{github.workspace}}" >> $GITHUB_ENV
@@ -75,15 +132,34 @@ jobs:
       run: echo 'cmake -S ${{github.workspace}}/src -B ${{github.workspace}}/build -G Ninja -DCMAKE_TOOLCHAIN_FILE:FILEPATH=toolchain-${{matrix.compiler}}.cmake -DARCH:STRING=${{matrix.arch}} -DCMAKE_BUILD_TYPE=${{matrix.config}} -DDLL_EXPORT_VERSION=${{matrix.dllver}} -DENABLE_CCACHE=1 -DENABLE_ROSTESTS=1 -DENABLE_ROSAPPS=1 ${{env.D_CLANG_VERSION}}' | ${{github.workspace}}/RosBE-CI/RosBE.sh . 0 ${{matrix.arch}}
     # GCC and Clang use relative file paths for error messages, use sed to convert these to absolute paths so that GitHub could parse them
     - name: Build
+      continue-on-error: ${{ matrix.wip }}
       run: set -o pipefail && echo 'cmake --build ${{github.workspace}}/build -- -k0' | ${{github.workspace}}/RosBE-CI/RosBE.sh . 0 ${{matrix.arch}} 2>&1 | sed 's|^\.\./src/|${{github.workspace}}/src/|'
     - name: Generate ISOs
+      continue-on-error: ${{ matrix.wip }}
       run: echo 'cmake --build ${{github.workspace}}/build --target bootcd' | ${{github.workspace}}/RosBE-CI/RosBE.sh . 0 ${{matrix.arch}}
     - name: Print ccache statistics
       run: ccache -s
-    - name: Upload ISOs
+    - name: Upload ISOs (clang 13, gcc)
+      if: ${{ matrix.os == 'ubuntu-22.04' || matrix.compiler == 'gcc' }} # Exclude clang 17 and 21.
       uses: actions/upload-artifact@v7
       with:
         name: reactos-${{matrix.compiler}}-${{matrix.arch}}-${{matrix.config}}-${{matrix.dllver}}-${{github.sha}}
+        path: |
+          build/bootcd.iso
+    - name: Upload ISOs (clang 17)
+      if: ${{ matrix.os == 'ubuntu-24.04' && matrix.compiler == 'clang' }} # Do not conflict with clang 13.
+      continue-on-error: ${{ matrix.wip }}
+      uses: actions/upload-artifact@v7
+      with:
+        name: reactos-${{matrix.compiler}}17-${{matrix.arch}}-${{matrix.config}}-${{matrix.dllver}}-${{github.sha}}
+        path: |
+          build/bootcd.iso
+    - name: Upload ISOs (clang 21)
+      if: ${{ matrix.os == 'ubuntu-latest' && matrix.compiler == 'clang' }} # Do not conflict with clang 13.
+      continue-on-error: ${{ matrix.wip }}
+      uses: actions/upload-artifact@v7
+      with:
+        name: reactos-${{matrix.compiler}}21-${{matrix.arch}}-${{matrix.config}}-${{matrix.dllver}}-${{github.sha}}
         path: |
           build/bootcd.iso
 
