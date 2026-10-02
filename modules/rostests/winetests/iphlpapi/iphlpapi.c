@@ -1471,10 +1471,10 @@ static void testIcmpSendEcho(void)
     /*
        NOTE: Supplying both event and apc has varying behavior across Windows versions, so not tested.
     */
-#if defined(__REACTOS__) && defined(_MSC_VER)
+#if defined(__REACTOS__)
     /* The call to IcmpSendEcho2() below with the invalid APC context causes
-     * stack corruption on WS03 and ReactOS when compiled with MSVC but not GCC. */
-    if (LOBYTE(LOWORD(GetVersion())) >= 6) {
+     * stack corruption on WS03 (causes crash in MSVC builds with /RTC1). */
+    if (is_reactos() || LOBYTE(LOWORD(GetVersion())) >= 6) {
 #endif
     ret = IcmpSendEcho2(icmp, NULL, apc, (void*)0xdeadc0de, address, senddata, sizeof(senddata), NULL, replydata2, replysz, 1000);
     error = GetLastError();
@@ -1490,7 +1490,7 @@ static void testIcmpSendEcho(void)
     ok(reply->DataSize == sizeof(senddata), "Got size: %d\n", reply->DataSize);
     /* pre-Vista, reply->Data is an offset; otherwise it's a pointer, so hardcode the offset */
     ok(!memcmp(senddata, reply + 1, min(sizeof(senddata), reply->DataSize)), "Data mismatch\n");
-#if defined(__REACTOS__) && defined(_MSC_VER)
+#if defined(__REACTOS__)
     }
 #endif
 
