@@ -194,6 +194,7 @@
 @ stdcall FsRtlAllocatePoolWithQuotaTag(long long long)
 @ stdcall FsRtlAllocatePoolWithTag(long long long)
 @ stdcall FsRtlAllocateResource()
+@ stdcall -version=0x600+ FsRtlAreVolumeStartupApplicationsComplete()
 @ stdcall FsRtlAreNamesEqual(ptr ptr long wstr)
 @ stdcall FsRtlBalanceReads(ptr)
 @ stdcall FsRtlCheckLockForReadAccess(ptr ptr)
