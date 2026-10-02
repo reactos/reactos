@@ -235,6 +235,62 @@ TestPoolQuota(VOID)
 
 static
 VOID
+TestQueryPoolBlockSize(VOID)
+{
+    PVOID Memory;
+    SIZE_T Size;
+    BOOLEAN QuotaCharged;
+
+    /* Regular small block, not quota charged */
+    Memory = ExAllocatePoolWithTag(NonPagedPool, 8, 'tQbK');
+    ok(Memory != NULL, "ExAllocatePoolWithTag returned NULL\n");
+    if (!skip(Memory != NULL, "No memory\n"))
+    {
+        Size = ExQueryPoolBlockSize(Memory, &QuotaCharged);
+        ok(Size >= 8, "Size = %lu\n", (ULONG)Size);
+        ok_eq_bool(QuotaCharged, FALSE);
+        ExFreePoolWithTag(Memory, 'tQbK');
+    }
+
+    /* Quota charged block */
+    Memory = ExAllocatePoolWithQuotaTag(PagedPool | POOL_QUOTA_FAIL_INSTEAD_OF_RAISE,
+                                        sizeof(LIST_ENTRY),
+                                        'tQbK');
+    ok(Memory != NULL, "ExAllocatePoolWithQuotaTag returned NULL\n");
+    if (!skip(Memory != NULL, "No memory\n"))
+    {
+        Size = ExQueryPoolBlockSize(Memory, &QuotaCharged);
+        ok(Size >= sizeof(LIST_ENTRY), "Size = %lu\n", (ULONG)Size);
+        ok_eq_bool(QuotaCharged, TRUE);
+        ExFreePoolWithTag(Memory, 'tQbK');
+    }
+
+    /* Big page allocation, page-aligned and tracked in the big page table */
+    Memory = ExAllocatePoolWithTag(NonPagedPool, PAGE_SIZE, 'tQbK');
+    ok(Memory != NULL, "ExAllocatePoolWithTag returned NULL\n");
+    if (!skip(Memory != NULL, "No memory\n"))
+    {
+        ok((ULONG_PTR)Memory % PAGE_SIZE == 0, "Allocation %p is not page-aligned\n", Memory);
+        Size = ExQueryPoolBlockSize(Memory, &QuotaCharged);
+        ok_eq_size(Size, PAGE_SIZE);
+        ok_eq_bool(QuotaCharged, FALSE);
+        ExFreePoolWithTag(Memory, 'tQbK');
+    }
+
+    /* A multi-page big allocation should be rounded up to whole pages */
+    Memory = ExAllocatePoolWithTag(NonPagedPool, PAGE_SIZE + 1, 'tQbK');
+    ok(Memory != NULL, "ExAllocatePoolWithTag returned NULL\n");
+    if (!skip(Memory != NULL, "No memory\n"))
+    {
+        Size = ExQueryPoolBlockSize(Memory, &QuotaCharged);
+        ok_eq_size(Size, 2 * PAGE_SIZE);
+        ok_eq_bool(QuotaCharged, FALSE);
+        ExFreePoolWithTag(Memory, 'tQbK');
+    }
+}
+
+static
+VOID
 TestBigPoolExpansion(VOID)
 {
     POOL_TYPE PoolType;
@@ -279,5 +335,6 @@ START_TEST(ExPools)
     PoolsTest();
     TestPoolTags();
     TestPoolQuota();
+    TestQueryPoolBlockSize();
     TestBigPoolExpansion();
 }

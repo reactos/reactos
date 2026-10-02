@@ -118,6 +118,46 @@ MmIsSpecialPoolAddressFree(PVOID P)
     return TRUE;
 }
 
+/*************************************************************************
+ *                MmGetSpecialPoolBlockSize
+ *
+ * @param[in] PoolBlock
+ * Pointer to the start of a special pool allocation
+ *
+ * @param[out] QuotaCharged
+ * Always set to FALSE since special pool allocations are never quota
+ * charged
+ *
+ * @return
+ * The size in bytes of the requested allocation
+ *
+ */
+SIZE_T
+NTAPI
+MmGetSpecialPoolBlockSize(
+    _In_ PVOID PoolBlock,
+    _Out_ PBOOLEAN QuotaCharged)
+{
+    PPOOL_HEADER Header;
+
+    ASSERT(MmIsSpecialPoolAddress(PoolBlock));
+
+    /* Data sits at the start or the end of the page depending on if
+       we are catching underruns or overruns */
+    if (PAGE_ALIGN(PoolBlock) == PoolBlock)
+    {
+        Header = (PPOOL_HEADER)((PUCHAR)PoolBlock + PAGE_SIZE - sizeof(POOL_HEADER));
+    }
+    else
+    {
+        Header = PAGE_ALIGN(PoolBlock);
+    }
+
+    /* Special pool allocations are never quota charged */
+    *QuotaCharged = FALSE;
+    return Header->Ulong1 & ~SPECIAL_POOL_PAGED & 0xFFFF;
+}
+
 VOID
 NTAPI
 MiInitializeSpecialPool(VOID)
