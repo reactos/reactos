@@ -219,10 +219,13 @@ PspSetPrimaryToken(IN PEPROCESS Process,
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     BOOLEAN IsChildOrSibling;
     PACCESS_TOKEN NewToken = Token;
-    NTSTATUS Status, AccessStatus;
+    NTSTATUS Status;
+#if (NTDDI_VERSION < NTDDI_LONGHORN)
+    NTSTATUS AccessStatus;
     BOOLEAN Result, SdAllocated;
     PSECURITY_DESCRIPTOR SecurityDescriptor = NULL;
     SECURITY_SUBJECT_CONTEXT SubjectContext;
+#endif
 
     PSTRACE(PS_SECURITY_DEBUG, "Process: %p Token: %p\n", Process, Token);
 
@@ -278,6 +281,7 @@ PspSetPrimaryToken(IN PEPROCESS Process,
     Status = PspAssignPrimaryToken(Process, NULL, NewToken);
     if (NT_SUCCESS(Status))
     {
+#if (NTDDI_VERSION < NTDDI_LONGHORN)
         /*
          * We need to completely reverify if the process still has access to
          * itself under this new token.
@@ -325,6 +329,7 @@ PspSetPrimaryToken(IN PEPROCESS Process,
                                        STANDARD_RIGHTS_ALL |
                                        PROCESS_SET_QUOTA);
         }
+#endif
 
         /*
          * In case LUID device maps are enable, we may not be using

@@ -521,7 +521,11 @@ ObReferenceObjectByHandle(IN HANDLE Handle,
             {
                 /* Get the current process and granted access */
                 CurrentProcess = PsGetCurrentProcess();
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+                GrantedAccess = PROCESS_ALL_ACCESS;
+#else
                 GrantedAccess = CurrentProcess->GrantedAccess;
+#endif
 
                 /* Validate access */
                 /* ~GrantedAccess = RefusedAccess.*/
@@ -569,7 +573,11 @@ ObReferenceObjectByHandle(IN HANDLE Handle,
             {
                 /* Get the current process and granted access */
                 CurrentThread = PsGetCurrentThread();
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+                GrantedAccess = THREAD_ALL_ACCESS;
+#else
                 GrantedAccess = CurrentThread->GrantedAccess;
+#endif
 
                 /* Validate access */
                 /* ~GrantedAccess = RefusedAccess.*/

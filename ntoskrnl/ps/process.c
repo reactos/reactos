@@ -359,7 +359,7 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
     PVOID ExceptionPortObject;
     PDEBUG_OBJECT DebugObject;
     PSECTION SectionObject;
-    NTSTATUS Status, AccessStatus;
+    NTSTATUS Status;
     ULONG_PTR DirectoryTableBase[2] = {0,0};
     KAFFINITY Affinity;
     HANDLE_TABLE_ENTRY CidEntry;
@@ -371,9 +371,12 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
     PACCESS_STATE AccessState = &LocalAccessState;
     AUX_ACCESS_DATA AuxData;
     UCHAR Quantum;
+#if (NTDDI_VERSION < NTDDI_LONGHORN)
+    NTSTATUS AccessStatus;
     BOOLEAN Result, SdAllocated;
     PSECURITY_DESCRIPTOR SecurityDescriptor;
     SECURITY_SUBJECT_CONTEXT SubjectContext;
+#endif
     BOOLEAN NeedsPeb = FALSE;
     INITIAL_PEB InitialPeb;
 
@@ -815,6 +818,7 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
                                             &Quantum);
     Process->Pcb.QuantumReset = Quantum;
 
+#if (NTDDI_VERSION < NTDDI_LONGHORN)
     /* Check if we have a parent other then the initial system process */
     Process->GrantedAccess = PROCESS_TERMINATE;
     if ((Parent) && (Parent != PsInitialSystemProcess))
@@ -873,6 +877,7 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
         /* Set full granted access */
         Process->GrantedAccess = PROCESS_ALL_ACCESS;
     }
+#endif
 
     /* Set the Creation Time */
     KeQuerySystemTime(&Process->CreateTime);
