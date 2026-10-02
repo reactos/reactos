@@ -19,9 +19,17 @@ C_ASSERT(FIELD_OFFSET(FIBER, StackBase) == 0x08);
 C_ASSERT(FIELD_OFFSET(FIBER, StackLimit) == 0x0C);
 C_ASSERT(FIELD_OFFSET(FIBER, DeallocationStack) == 0x10);
 C_ASSERT(FIELD_OFFSET(FIBER, FiberContext) == 0x14);
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+C_ASSERT(FIELD_OFFSET(FIBER, Wx86Tib) == 0x2E0);
+C_ASSERT(FIELD_OFFSET(FIBER, ActivationContextStackPointer) == 0x2E4);
+C_ASSERT(FIELD_OFFSET(FIBER, FlsData) == 0x2E8);
+C_ASSERT(FIELD_OFFSET(FIBER, GuaranteedStackBytes) == 0x2EC);
+C_ASSERT(FIELD_OFFSET(FIBER, TebFlags) == 0x2F0);
+#else
 C_ASSERT(FIELD_OFFSET(FIBER, GuaranteedStackBytes) == 0x2E0);
 C_ASSERT(FIELD_OFFSET(FIBER, FlsData) == 0x2E4);
 C_ASSERT(FIELD_OFFSET(FIBER, ActivationContextStackPointer) == 0x2E8);
+#endif
 C_ASSERT(RTL_FLS_MAXIMUM_AVAILABLE == FLS_MAXIMUM_AVAILABLE);
 #endif // _M_IX86
 
@@ -152,6 +160,10 @@ ConvertThreadToFiberEx(_In_opt_ LPVOID lpParameter,
     Fiber->FlsData = Teb->FlsData;
     Fiber->GuaranteedStackBytes = Teb->GuaranteedStackBytes;
     Fiber->ActivationContextStackPointer = Teb->ActivationContextStackPointer;
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+    Fiber->Wx86Tib = NULL;
+    Fiber->TebFlags = 0;
+#endif
 
     /* Save FPU State if requested, otherwise just the basic registers */
     Fiber->FiberContext.ContextFlags = (dwFlags & FIBER_FLAG_FLOAT_SWITCH) ?
@@ -281,6 +293,10 @@ CreateFiberEx(_In_ SIZE_T dwStackCommitSize,
     Fiber->GuaranteedStackBytes = 0;
     Fiber->FlsData = NULL;
     Fiber->ActivationContextStackPointer = ActivationContextStackPointer;
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+    Fiber->Wx86Tib = NULL;
+    Fiber->TebFlags = 0;
+#endif
 
     /* Save FPU State if requested, otherwise just the basic registers */
     Fiber->FiberContext.ContextFlags = (dwFlags & FIBER_FLAG_FLOAT_SWITCH) ?
