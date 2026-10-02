@@ -1,4 +1,5 @@
 add_subdirectory(biditext)
+add_subdirectory(controls)
 add_subdirectory(dialog_initvisible)
 add_subdirectory(editalign)
 add_subdirectory(menuaccels)
