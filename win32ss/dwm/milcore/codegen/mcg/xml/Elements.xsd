@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+ Licensed to the .NET Foundation under one or more agreements.
+ The .NET Foundation licenses this file to you under the MIT license.
+ See the LICENSE file in the project root for more information.
+-->
+<xs:schema id="Api" xmlns="" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+
+  <!-- "CG" is the root node for the codegen input.  An OutputDirectory property will automatically
+        be added and will default to %sdxroot%\wpf -->
+  <xs:element name="CG" msdata:IsDataSet="true" msdata:UseCurrentLocale="true">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="Elements">
+          <xs:complexType>
+            <xs:sequence>
+              <!-- DataElement corresponds to an elements for which we want
+                   to generate a partial class. -->
+              <xs:element name="Element" minOccurs="0" maxOccurs="unbounded">
+                <xs:complexType>
+                  <!-- The name of the element (e.g., "UIElement") -->
+                  <xs:attribute name="Name" type="xs:string" />
+                  <!-- The namespace in which the element appears (e.g., "System.Windows") -->
+                  <xs:attribute name="Namespace" type="xs:string" />
+                  <!-- The path where the generator should output the code
+                       relative to %sdxroot%\wpf (e.g., "src\Core\CSharp\System\Windows\Generated")
+                       This path should end in a "\Generated" subdir by convention. -->
+                  <xs:attribute name="ManagedDestinationDir" type="xs:string" />
+                  <!-- Whether the element should implement the IAnimatable interface -->
+                  <xs:attribute name="ImplementsIAnimatable" type="xs:boolean" />
+                </xs:complexType>
+              </xs:element>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="Events">
+          <xs:complexType>
+            <xs:sequence>
+              <!-- DataEvent corresponds to a routed event which should be
+                    registered per DataElement. -->
+              <xs:element name="Event" minOccurs="0" maxOccurs="unbounded">
+                <xs:complexType>
+                  <!-- The name of the event less the "Event" suffix (e.g., "MouseLeftButtonDown") -->
+                  <xs:attribute name="Name" type="xs:string" />
+                  <!-- The type of the event's handler (e.g., "MouseButtonEventHandler") -->
+                  <xs:attribute name="HandlerType" type="xs:string" />
+                  <!-- If the event should be registered for handled events as well -->
+                  <xs:attribute name="HandledToo" type="xs:boolean" />
+                  <!-- If we CommandManager.TranslateInput needs to preprocess the event. -->
+                  <xs:attribute name="TranslateInput" type="xs:boolean" />
+                  <!-- True if the event iinvokes the CommandManager instead of the a virtual on the element instance. -->
+                  <xs:attribute name="Commanding" type="xs:boolean" />
+                  <!-- A comment describing the event.  Will be displayed in the form "An event reporting ..." -->
+                  <xs:attribute name="Comment" type="xs:string" />
+                  <!-- An SRID to be used with CustomCategoryAttribute to define the category of the event. (SRID.Example) -->
+                  <xs:attribute name="CategoryID" type="xs:string" />
+                </xs:complexType>
+              </xs:element>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="Properties">
+          <xs:complexType>
+            <xs:sequence>
+              <!-- DataProperty corresponds to a dependency property which
+                   should be registered per DataElement. -->
+              <xs:element name="Property" minOccurs="0" maxOccurs="unbounded">
+                <xs:complexType>
+                  <!-- The name of the property (e.g., "IsMouseOver") -->
+                  <xs:attribute name="Name" type="xs:string" />
+                  <!-- The type of the property (e.g., "bool") -->
+                  <xs:attribute name="Type" type="xs:string" />
+                  <!-- The default value of the property (e.g., "BooleanBoxes.FalseBox") -->
+                  <xs:attribute name="DefaultValue" type="xs:string" />
+                  <!-- True if the property is readonly -->
+                  <xs:attribute name="IsReadOnly" type="xs:boolean" />
+                  <!-- True if the default changed event (e.g., "IsMouseOverChanged") should be generated for this property. -->
+                  <xs:attribute name="ChangedEvent" type="xs:boolean" />
+                  <!-- True if this is a reverse inherited property. -->
+                  <xs:attribute name="ReverseInherit" type="xs:boolean" />
+                </xs:complexType>
+              </xs:element>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>
+

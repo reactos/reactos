@@ -1,0 +1,350 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<!--
+ Licensed to the .NET Foundation under one or more agreements.
+ The .NET Foundation licenses this file to you under the MIT license.
+ See the LICENSE file in the project root for more information.
+-->
+<!-- This is a manifest for standalone use with XPerfInfo for describing old ETW events. -->
+<!-- This manifest WILL NOT work as a fullfledged application manifest. Use the Crimson specification/guidelines to write a fullfledged application manifest. -->
+<!-- Attribute "manifestVersion" is currently ignored by XPerfInfo, but is required for fullfledged application manifests. -->
+
+<assembly xmlns="urn:schemas-microsoft-com:asm.v1" manifestVersion="1.0">
+  <instrumentation xmlns="urn:schemas-microsoft-com:asm.v1">
+
+    <!-- Attribute "componentType" is ignored by XPerfInfo, but is required for fullfledged application manifests. -->
+
+    <events componentType="application">
+
+      <event eventID="1" message="$(string.ImageId)" guid="{e599988e-7a01-4fba-943e-8bd2c8e6001a}" level="1">
+
+        <diagnosticInstance version="0">
+          <classification subType="Start" />
+          <classification subType="End" />
+            <template>
+              <VBlank_GPC_>
+              </VBlank_GPC_>
+            </template>
+
+        </diagnosticInstance>
+      </event>
+
+      <event eventID="1" message="$(string.ImageId)" guid="{14e72457-3735-4205-bae8-1b9151b3c08e}" level="1">
+
+        <diagnosticInstance version="0">
+          <classification subType="Start" />
+          <classification subType="End" />
+            <template>
+              <VBlank_GPS_>
+              </VBlank_GPS_>
+            </template>
+
+          <classification subType="Info" />
+            <template>
+              <VBlank_GPS_>
+              <cAdapters>%UInt32;</cAdapters>
+              <PresentCount>%UInt32;</PresentCount>
+              <PresentRefreshCount>%UInt32;</PresentRefreshCount>
+              <SyncRefreshCount>%UInt32;</SyncRefreshCount>
+              <SyncQPC>%UInt64;</SyncQPC>
+              </VBlank_GPS_>
+            </template>
+
+        </diagnosticInstance>
+      </event>
+
+      <event eventID="1" message="$(string.ImageId)" guid="{383d3582-be4f-4f59-8f99-0c7fac671f12}" level="1">
+
+        <diagnosticInstance version="0">
+          <classification subType="Start" />
+            <template>
+              <VBlank_WFVB_>
+              </VBlank_WFVB_>
+            </template>
+          <classification subType="End" />
+            <template>
+              <VBlank_WFVB_>
+	      <fUseSleep>%UInt32;</fUseSleep>
+	      <dwSleep>%UInt32;</dwSleep>
+              </VBlank_WFVB_>
+            </template>
+
+        </diagnosticInstance>
+      </event>
+
+      <event eventID="1" message="$(string.ImageId)" guid="{14d1a24a-a581-4f66-9edb-ee13f4578170}" level="1">
+
+        <diagnosticInstance version="0">
+          <classification subType="Start" />
+            <template>
+              <VBlank_WFW_>
+              </VBlank_WFW_>
+            </template>
+          <classification subType="End" />
+            <template>
+              <VBlank_WFW_>
+	        <WorkType>%UInt32;</WorkType>
+              </VBlank_WFW_>
+            </template>
+
+        </diagnosticInstance>
+      </event>
+
+      <event eventID="1" message="$(string.ImageId)" guid="{cdbf3ddb-afcc-4001-af16-9c792d4a4335}" level="1">
+
+        <diagnosticInstance version="0">
+          <classification subType="Start" />
+          <classification subType="End" />
+            <template>
+              <VBlank_ProcessFrame_>
+              </VBlank_ProcessFrame_>
+            </template>
+          <classification subType="Info" />
+            <template>
+              <VBlank_ProcessFrame_>
+	        <fRenderTime>%UInt32;</fRenderTime>
+	        <fPresentNeeded>%UInt32;</fPresentNeeded>
+              </VBlank_ProcessFrame_>
+            </template>
+
+        </diagnosticInstance>
+      </event>
+
+      <event eventID="1" message="$(string.ImageId)" guid="{966def4f-25fb-488a-b3d1-8760ab28a8c0}" level="1">
+
+        <diagnosticInstance version="0">
+          <classification subType="Start" />
+            <template>
+              <VBlank_Render_>
+              </VBlank_Render_>
+            </template>
+          <classification subType="End" />
+            <template>
+              <VBlank_Render_>
+	        <fPresentNeeded>%UInt32;</fPresentNeeded>
+              </VBlank_Render_>
+            </template>
+
+        </diagnosticInstance>
+      </event>
+
+      <event eventID="1" message="$(string.ImageId)" guid="{0de25c99-dda4-4074-b914-be14980cd237}" level="1">
+
+        <diagnosticInstance version="0">
+          <classification subType="Start" />
+            <template>
+              <VBlank_Present_>
+	      <tCurrent>%UInt64;</tCurrent>
+	      <tPresent>%UInt64;</tPresent>
+	      <cRefreshCurrent>%UInt64;</cRefreshCurrent>
+	      <cRefreshPresent>%UInt64;</cRefreshPresent>
+	      <fForce>%UInt32;</fForce>
+              </VBlank_Present_>
+            </template>
+          <classification subType="End" />
+            <template>
+              <VBlank_Present_>
+              </VBlank_Present_>
+            </template>
+
+        </diagnosticInstance>
+      </event>
+
+      <event eventID="1" message="$(string.ImageId)" guid="{c3eae4c4-d971-4b92-8850-2df061ecaa2d}" level="1">
+
+        <diagnosticInstance version="0">
+          <classification subType="Info" />
+            <template>
+              <VBlank_Tuning_>
+	         <cGlitch>%UInt32;</cGlitch>
+		 <cBudget>%UInt32;</cBudget>
+		 <cEarly>%UInt32;</cEarly>
+		 <cSamplesRecorded>%UInt32;</cSamplesRecorded>
+              </VBlank_Tuning_>
+            </template>
+
+        </diagnosticInstance>
+      </event>
+
+      <event eventID="1" message="$(string.ImageId)" guid="{ad0dfbfe-bf4b-4c01-8ae4-50526bb5da25}" level="1">
+
+        <diagnosticInstance version="0">
+          <classification subType="Info" />
+            <template>
+              <VBlank_Statistics_>
+	         <cGlitchPredicted>%UInt32;</cGlitchPredicted>
+	         <cGlitchActual>%UInt32;</cGlitchActual>
+		 <cBudget>%UInt32;</cBudget>
+		 <cEarly>%UInt32;</cEarly>
+		 <cSamplesRecorded>%UInt64;</cSamplesRecorded>
+              </VBlank_Statistics_>
+            </template>
+
+        </diagnosticInstance>
+      </event>
+
+      <event eventID="1" message="$(string.ImageId)" guid="{cb06234d-e3cc-46de-82ac-7a20aeac068c}" level="1">
+
+        <diagnosticInstance version="0">
+          <classification subType="Info" />
+            <template>
+              <VBlank_Rate_>
+	      <rateRefresh_Numerator>%UInt32;</rateRefresh_Numerator>
+	      <rateRefresh_Denominator>%UInt32;</rateRefresh_Denominator>
+	      <tPeriodRefresh>%UInt64;</tPeriodRefresh>
+	      <qpcPeriodRefresh>%UInt64;</qpcPeriodRefresh>
+	      <cRefreshesPerFrame>%UInt32;</cRefreshesPerFrame>
+	      <p1>%UInt32;</p1>
+	      <rateCompose_Numerator>%UInt32;</rateCompose_Numerator>
+	      <rateCompose_Denominator>%UInt32;</rateCompose_Denominator>
+	      <tPeriodFrame>%UInt64;</tPeriodFrame>
+              </VBlank_Rate_>
+            </template>
+
+        </diagnosticInstance>
+      </event>
+
+      <event eventID="1" message="$(string.ImageId)" guid="{f3ffcf91-5dd9-4df8-8247-18e4bbc73c73}" level="1">
+        <diagnosticInstance version="0">
+          <classification subType="Info" />
+            <template>
+              <VBlank_Frame_>
+	      <cFrame>%UInt64;</cFrame>
+	      <cDXPresent>%UInt32;</cDXPresent>
+	      <p1>%UInt32;</p1>
+	      <tFrame>%UInt64;</tFrame>
+	      <qpcFrame>%UInt64;</qpcFrame>
+	      <cRefreshesPerFrame>%UInt64;</cRefreshesPerFrame>
+	      <cRefreshFrame>%UInt64;</cRefreshFrame>
+	      <cRefreshPresent>%UInt64;</cRefreshPresent>
+	      <tPresentAfter>%UInt64;</tPresentAfter>
+	      <cRefresh>%UInt64;</cRefresh>
+	      <cDXRefresh>%UInt32;</cDXRefresh>
+	      <p3>%UInt32;</p3>
+	      <tRefresh>%UInt64;</tRefresh>
+	      <qpcRefresh>%UInt64;</qpcRefresh>
+	      <cRefreshDelta>%UInt64;</cRefreshDelta>
+	      <tBegin>%UInt64;</tBegin>
+	      <qpcBegin>%UInt64;</qpcBegin>
+	      <tEnd>%UInt64;</tEnd>
+	      <tElapsed>%UInt64;</tElapsed>
+	      <tAvailable>%UInt64;</tAvailable>
+	      <tDelta>%UInt64;</tDelta>
+	      <tLatency>%UInt64;</tLatency>
+	      <fRendered>%UInt32;</fRendered>
+	      <fPresented>%UInt32;</fPresented>
+	      <qpcPresented>%UInt64;</qpcPresented>
+	      <fConfirmed>%UInt32;</fConfirmed>
+	      <p4>%UInt32;</p4>
+	      <qpcConfirmed>%UInt64;</qpcConfirmed>
+	      <tEarly>%UInt64;</tEarly>
+	      <tBudget>%UInt64;</tBudget>
+	      <tGlitch>%UInt64;</tGlitch>
+              </VBlank_Frame_>
+            </template>
+
+        </diagnosticInstance>
+      </event>
+
+      <event eventID="1" message="$(string.ImageId)" guid="{3542b3f7-ab3f-4dfc-9c97-01c433144338}" level="1">
+
+        <diagnosticInstance version="0">
+          <classification subType="Info" />
+            <template>
+              <VBlank_Time_>
+	       <tCurrent>%UInt64;</tCurrent>
+	       <tElapsed>%UInt64;</tElapsed>
+	       <qpcCurrent>%UInt64;</qpcCurrent>
+	       <qpcLast>%UInt64;</qpcLast>
+	       <cFramesRendered>%UInt64;</cFramesRendered>
+              </VBlank_Time_>
+            </template>
+
+        </diagnosticInstance>
+      </event>
+
+
+
+      <event eventID="1" message="$(string.ImageId)" guid="{36b0c7f9-2763-454d-bc6e-09c5f3bfcf69}" level="1">
+
+        <diagnosticInstance version="0">
+          <classification subType="Info" />
+            <template>
+              <VBlank_Scheme_Request_>
+	      <Scheme>%UInt32;</Scheme>
+	      <fEnable>%UInt32;</fEnable>
+	      <SchemeCurrent>%UInt32;</SchemeCurrent>
+	      <SchemeNew>%UInt32;</SchemeNew>
+              </VBlank_Scheme_Request_>
+            </template>
+
+          <classification subType="Checkpoint" />
+            <template>
+              <VBlank_Scheme_Change_>
+	      <SchemeCurrent>%UInt32;</SchemeCurrent>
+	      <SchemeNew>%UInt32;</SchemeNew>
+              </VBlank_Scheme_Change_>
+            </template>
+        </diagnosticInstance>
+      </event>
+
+      <event eventID="1" message="$(string.ImageId)" guid="{25d4bd80-ecba-4d58-815b-d70af79f8d9d}" level="1">
+
+        <diagnosticInstance version="0">
+          <classification subType="Info" />
+            <template>
+              <VBlank_Glitch_>
+	      <cFrame>%UInt64;</cFrame>
+	      <tVSyncLatency>%UInt64;</tVSyncLatency>
+	      <tElapsed>%UInt64;</tElapsed>
+	      <qpcPresented>%UInt64;</qpcPresented>
+	      <qpcConfirmed>%UInt64;</qpcConfirmed>
+	      <tPresentLatency>%UInt64;</tPresentLatency>
+	      <qpcFrame>%UInt64;</qpcFrame>
+	      <tGlitch>%UInt64;</tGlitch>
+	      <qpcFrequency>%UInt64;</qpcFrequency>
+	      <qpcPeriod>%UInt64;</qpcPeriod>
+	      <cMonitors>%UInt32;</cMonitors>
+              <cDXRefreshM1>%UInt32;</cDXRefreshM1>
+              <cDXRefreshConfirmedM1>%UInt32;</cDXRefreshConfirmedM1>
+              <cDXRefreshM2>%UInt32;</cDXRefreshM2>
+              <cDXRefreshConfirmedM2>%UInt32;</cDXRefreshConfirmedM2>
+              <cDXRefreshM3>%UInt32;</cDXRefreshM3>
+              <cDXRefreshConfirmedM3>%UInt32;</cDXRefreshConfirmedM3>
+              <cDXRefreshM4>%UInt32;</cDXRefreshM4>
+              <cDXRefreshConfirmedM4>%UInt32;</cDXRefreshConfirmedM4>
+              </VBlank_Glitch_>
+            </template>
+
+        </diagnosticInstance>
+
+      </event>
+
+      <event eventID="1" message="$(string.ImageId)" guid="{ba8e0e31-a12a-4392-91d9-0ba32ad2923c}" level="1">
+
+        <diagnosticInstance version="0">
+          <classification subType="Start" />
+          <classification subType="End" />
+            <template>
+              <VBlank_Reset_>
+              </VBlank_Reset_>
+            </template>
+
+        </diagnosticInstance>
+      </event>
+
+      <event eventID="1" message="$(string.ImageId)" guid="{aa88f073-45f1-43eb-aaf6-1797c66a52fb}" level="1">
+
+        <diagnosticInstance version="0">
+          <classification subType="Info" />
+            <template>
+              <VBlank_QPC_FAILURE_>
+              </VBlank_QPC_FAILURE_>
+            </template>
+
+        </diagnosticInstance>
+      </event>
+
+ </events>
+</instrumentation>
+</assembly>
+

@@ -1,0 +1,33 @@
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="dogfood" >
+
+  <PropertyGroup>
+    <AllowCrossTargeting>true</AllowCrossTargeting>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <CrossTargetWinFXRefsVersion>v3.5</CrossTargetWinFXRefsVersion>
+    <CrossTargetWinFXToolsVersion>v3.5</CrossTargetWinFXToolsVersion>
+  </PropertyGroup>
+
+  <Import Project="$(_NTDRIVE)$(_NTROOT)\wpf\src\Microsoft.wpf.Product.Settings.targets" />
+
+  <PropertyGroup>
+    <AssemblyName>csp</AssemblyName>
+    <OutputType>exe</OutputType>
+    <PlatformTarget>x86</PlatformTarget>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="MainClass.cs" />
+    <Compile Include="Project.cs" />
+    <Compile Include="TempDirectory.cs" />
+    <Compile Include="CsPrimeParser.cs" />
+    <Compile Include="CsPrimeRuntime.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="System"/>
+    <Reference Include="System.Windows.Forms"/>
+  </ItemGroup>
+
+  <Import Project="$(WpfProductRoot)\Microsoft.Wpf.Product.targets" />
+
+</Project>

@@ -1,0 +1,13 @@
+<Project ToolsVersion="14.0" InitialTargets="D3DXUsageWarning" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <!-- wpf\src\graphics\shared\inc\always.h: warning C4273: 'strdup': inconsistent dll linkage -->
+      <!-- always.h declares strdup as __declspec(deprecated), as does <string.h>, but there is a  -->
+      <!-- small difference between the two definitions. The version in the UCRT <string.h>        -->
+      <!-- incorporates a warning text, but the one in "always.h" does not. Thsi results in a      -->
+      <!-- mismatched redefinition. Because the mismatch is in the __declspec(deprecated) portion, -->
+      <!-- it is reported as a C4273 warning                                                       -->
+      <DisableSpecificWarnings>%(DisableSpecificWarnings);4273</DisableSpecificWarnings>
+    </ClCompile>
+  </ItemDefinitionGroup>
+</Project>

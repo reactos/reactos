@@ -5,6 +5,7 @@ set(USE_DIBLIB FALSE)
 PROJECT(WIN32SS)
 
 add_subdirectory(drivers)
+add_subdirectory(dwm)
 
 if(USE_DIBLIB)
     add_subdirectory(gdi/diblib)

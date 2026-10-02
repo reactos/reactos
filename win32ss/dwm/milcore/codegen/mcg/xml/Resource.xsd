@@ -1,0 +1,783 @@
+<!--
+ Licensed to the .NET Foundation under one or more agreements.
+ The .NET Foundation licenses this file to you under the MIT license.
+ See the LICENSE file in the project root for more information.
+-->
+
+
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+    <xs:annotation>
+        <xs:documentation xml:lang="en">
+            UCE Resource
+        </xs:documentation>
+    </xs:annotation>
+
+
+    <!--
+        The types are divided into "primitive", "struct", "enum" and "resource" types. These names
+        are fairly arbitrary at the moment (i.e. not intuitive). Main reasons:
+        * "Animatable primitives" are in the "Resources" section, not in "Primitives".
+        * "Structs" only contains structures which don't have resources wrapped around them.
+    -->
+
+    <xs:element name="MilTypes">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="Primitives" minOccurs="0" maxOccurs="unbounded">
+                    <xs:complexType>
+                        <xs:sequence>
+                            <xs:element name="Primitive" type="Primitive" minOccurs="0" maxOccurs="unbounded" />
+                        </xs:sequence>
+                    </xs:complexType>
+                </xs:element>
+
+                <xs:element name="Structs" minOccurs="0" maxOccurs="unbounded">
+                    <xs:complexType>
+                        <xs:sequence>
+                            <xs:element name="Struct" type="Struct" minOccurs="1" maxOccurs="unbounded" />
+                        </xs:sequence>
+                    </xs:complexType>
+                </xs:element>
+
+                <xs:element name="Enums" minOccurs="0" maxOccurs="unbounded">
+                    <xs:complexType>
+                        <xs:sequence>
+                            <xs:element name="Namespaces" minOccurs="0" maxOccurs="unbounded">
+                                <xs:complexType>
+                                    <xs:sequence>
+                                        <xs:element name="Namespace" type="Namespace" minOccurs="0" maxOccurs="unbounded" />
+                                    </xs:sequence>
+                                </xs:complexType>
+                            </xs:element>
+                            <xs:element name="Enum" type="Enum" minOccurs="1" maxOccurs="unbounded" />
+                        </xs:sequence>
+                        <xs:attribute name="ManagedNamespace" type="xs:string"/>
+                    </xs:complexType>
+                </xs:element>
+
+                <xs:element name="Commands" minOccurs="0" maxOccurs="unbounded">
+                    <xs:complexType>
+                        <xs:sequence>
+                            <xs:element name="Command" type="Command" minOccurs="0" maxOccurs="unbounded" />
+                        </xs:sequence>
+                    </xs:complexType>
+                </xs:element>
+
+                <xs:element name="Resources" minOccurs="0" maxOccurs="unbounded">
+                    <xs:complexType>
+                        <xs:sequence>
+                            <xs:element name="Namespaces" minOccurs="0" maxOccurs="unbounded">
+                                <xs:complexType>
+                                    <xs:sequence>
+                                        <xs:element name="Namespace" type="Namespace" minOccurs="0" maxOccurs="unbounded" />
+                                    </xs:sequence>
+                                </xs:complexType>
+                            </xs:element>
+                            <xs:element name="Resource" type="Resource" minOccurs="0" maxOccurs="unbounded" />
+                        </xs:sequence>
+                        <xs:attribute name="ManagedNamespace" type="xs:string"/>
+                    </xs:complexType>
+                    <xs:keyref name="dummy" refer="ResourceNameKey">
+                        <xs:selector xpath="Resource"/>
+                        <xs:field xpath="@Name"/>
+                    </xs:keyref>
+                </xs:element>
+
+                <xs:element name="RenderDataInstructions" minOccurs="0" maxOccurs="1">
+                    <xs:complexType>
+                        <xs:sequence>
+                           <xs:element name="Namespaces" minOccurs="0" maxOccurs="unbounded">
+                                <xs:complexType>
+                                    <xs:sequence>
+                                        <xs:element name="Namespace" type="Namespace" minOccurs="0" maxOccurs="unbounded" />
+                                    </xs:sequence>
+                                </xs:complexType>
+                            </xs:element>
+                            <xs:element name="RenderDataInstruction" type="RenderDataInstruction" minOccurs="0" maxOccurs="unbounded" />
+                        </xs:sequence>
+                        <xs:attribute name="ManagedNamespace" type="xs:string"/>
+                        <xs:attribute name="ManagedDestinationDir" type="xs:string"/>
+                        <xs:attribute name="NativeDestinationDir" type="xs:string"/>
+                        <xs:attribute name="ExportDestinationDir" type="xs:string"/>
+                    </xs:complexType>
+                </xs:element>
+
+                <!-- This section controls which parts of the resource model are generated. -->
+                <xs:element name="GenerationControl" minOccurs="0" maxOccurs="unbounded">
+                    <xs:complexType>
+                        <xs:sequence>
+                            <xs:element name="Generate" type="Generate" minOccurs="0" maxOccurs="unbounded" />
+                        </xs:sequence>
+                        <!--
+                            Turns on generation of SynchronizeAnimatedFields() methods in the UCE Data classes.
+                            Causes the resource's ::Type() method to return the actual type (rather than the base type).
+                        -->
+                        <xs:attribute name="OldStyle" type="xs:boolean"/>
+                        <xs:attribute name="ManagedDestinationDir" type="xs:string"/>
+                        <xs:attribute name="ConverterDestinationDir" type="xs:string"/>
+                        <xs:attribute name="ManagedSharedDestinationDir" type="xs:string"/>
+                        <xs:attribute name="NativeDestinationDir" type="xs:string"/>
+                    </xs:complexType>
+                </xs:element>
+
+                <!-- This section controls generation of template-based sources. -->
+                <xs:element name="TemplateGenerationControl" minOccurs="0" maxOccurs="unbounded">
+                    <xs:complexType>
+                        <xs:sequence>
+                            <!-- The name of the template to invoke -->
+                            <xs:element name="Template" type="Template" minOccurs="0" maxOccurs="unbounded" />
+                        </xs:sequence>
+                    </xs:complexType>
+                </xs:element>
+
+            </xs:sequence>
+        </xs:complexType>
+
+        <xs:key name="ResourceNameKey">
+            <xs:selector xpath="Resources/Resource"/>
+            <xs:field xpath="@Name"/>
+        </xs:key>
+    </xs:element>
+
+    <xs:complexType name="Namespace">
+        <xs:attribute name="Name" type="xs:string" use="required"/>
+    </xs:complexType>
+
+    <xs:complexType name="Primitive">
+        <xs:attribute name="Name" type="xs:string" use="required"/>
+        <xs:attribute name="ManagedType" type="xs:string"/>
+        <xs:attribute name="UnmanagedName" type="xs:string" use="required"/>
+        <!-- MarshalAs is the managed type to use in the struct data that is packaged
+                 for sending to the UCE.  In some cases this is different than the managed
+                 property type, for instance, an BitmapPalette sends an IMILPalette* (IntPtr)
+                 when being marshalled.  This is optional and if not specified is taken to
+                 be the unmanaged type.
+        -->
+        <xs:attribute name="MarshalAs" type="xs:string"/>
+        <xs:attribute name="SameSize" type="xs:boolean"/>
+        <!-- IsValueType
+                Value types are marshalled differently than reference types.  This flag causes
+                the correct marshalling code to be generated for the specified type.
+        -->
+        <xs:attribute name="IsValueType" type="xs:boolean"/>
+        <xs:attribute name="NeedsConvert" type="xs:boolean"/>
+        <xs:attribute name="MarshaledSize" type="xs:integer"/>
+
+        <!--
+            Setting the ParseMethod will specify a method which matches this signature:
+                [[type]] [[method]](string token, IFormatProvider formatProvider)
+
+            and will be called by any containing type while parsing to convert a token to
+            an instance of the resource's type.  If not specified, and if fields are present,
+            the generation code will assume that a field-wise parse will produce the correct results.
+            -->
+
+        <xs:attribute name="ParseMethod" type="xs:string"/>
+    </xs:complexType>
+
+    <xs:complexType name="Struct">
+        <xs:sequence>
+            <xs:element name="Field" type="Field" minOccurs="0" maxOccurs="unbounded" />
+        </xs:sequence>
+        <xs:attribute name="Name" type="xs:string" use="required"/>
+        <xs:attribute name="ManagedType" type="xs:string"/>
+        <xs:attribute name="UnmanagedName" type="xs:string"/>
+        <xs:attribute name="Extends" type="xs:string"/>
+        <!-- IsValueType
+                Value types are marshalled differently than reference types.  This flag causes
+                the correct marshalling code to be generated for the specified type.
+        -->
+        <xs:attribute name="IsValueType" type="xs:boolean"/>
+        <xs:attribute name="NeedsConvert" type="xs:boolean"/>
+        <xs:attribute name="MarshaledSize" type="xs:integer"/>
+        <!--
+               Specifying the MarshaledSize implies that the struct data isn't necessarily
+               accurately defined by the fields and should be treated as a black box.
+               Therefore use MarshaledAlignment to state the required alignment of the
+               black box structure.
+         -->
+        <xs:attribute name="MarshaledAlignment" type="xs:integer" use="optional"/>
+
+         <!--
+            Setting the ParseMethod will specify a method which matches this signature:
+                [[type]] [[method]](string token, IFormatProvider formatProvider)
+
+            and will be called by any containing type while parsing to convert a token to
+            an instance of the resource's type.  If not specified, and if fields are present,
+            the generation code will assume that a field-wise parse will produce the correct results.
+            -->
+
+        <xs:attribute name="ParseMethod" type="xs:string"/>
+    </xs:complexType>
+
+    <xs:complexType name="Enum">
+        <xs:sequence minOccurs="0" maxOccurs="unbounded">
+            <xs:choice>
+                <xs:element name="Field" type="EnumValue" />
+                <xs:element name="BlockCommentedFields" type="BlockCommentedEnumValues" />
+            </xs:choice>
+        </xs:sequence>
+        <xs:attribute name="Name" type="xs:string" use="required"/>
+        <xs:attribute name="ManagedType" type="xs:string" />
+        <xs:attribute name="UnmanagedName" type="xs:string" />
+        <xs:attribute name="Guid" type="xs:string" use="optional"/>
+        <xs:attribute name="Comment" type="xs:string" use="optional"/>
+        <xs:attribute name="NeedsValidateValueCallback" type="xs:boolean" use="optional"/>
+        <xs:attribute name="MarshaledSize" type="xs:integer" use="optional"/>
+        <xs:attribute name="Flags" type="xs:boolean" use="optional"/>
+
+        <!--
+            Setting the ParseMethod will specify a method which matches this signature:
+                [[type]] [[method]](string token, IFormatProvider formatProvider)
+
+            and will be called by any containing type while parsing to convert a token to
+            an instance of the resource's type.  If not specified, and if fields are present,
+            the generation code will assume that a field-wise parse will produce the correct results.
+            -->
+
+        <xs:attribute name="ParseMethod" type="xs:string"/>
+
+        <!--
+            This option only makes a difference in the generation of native
+            code. Some enums need to be defined without a namespace so that they
+            can be referred to directly. For example suppose we have an enum
+            ExampleEnum with a value ExampleValue. Normally we'd refer to the
+            value using the syntax "ExampleEnum::ExampleValue". With a flat
+            enum, you can refer to the value using just "ExampleValue".
+            -->
+
+        <xs:attribute name="UseFlatEnum" type="xs:boolean" use="optional" />
+    </xs:complexType>
+
+
+    <!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+        Commands
+
+        Commands are messages sent to resources. Creation commands are handled
+        by resources themselves.
+
+    - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+
+    <xs:complexType name="Command">
+        <xs:sequence>
+            <xs:element name="Fields" minOccurs="1" maxOccurs="1">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="Field" type="Field" minOccurs="0" maxOccurs="unbounded" />
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+        </xs:sequence>
+        <xs:attribute name="Domain" type="xs:string" use="optional" default="Mil"/>
+        <xs:attribute name="Target" type="xs:string" use="optional" default=""/>
+        <xs:attribute name="Name" type="xs:string" use="required"/>
+        <xs:attribute name="ManagedType" type="xs:string"/>
+        <xs:attribute name="UnmanagedName" type="xs:string"/>
+        <xs:attribute name="Comment" type="xs:string" use="optional"/>
+        <xs:attribute name="UnmanagedOnly" type="xs:boolean" use="optional" default="false"/>
+        <xs:attribute name="HasPayload" type="xs:boolean" use="optional" default="false"/>
+        <xs:attribute name="FailIfCommandTransportDenied" type="xs:boolean" use="optional" default="true"/>
+        <xs:attribute name="SecurityComment" type="xs:string" use="optional" default=""/>
+        <xs:attribute name="IsSecurityCritical" type="xs:boolean" use="optional" default="true"/>
+    </xs:complexType>
+
+
+    <!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+        Resources
+
+    - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+
+    <xs:complexType name="Resource">
+        <xs:sequence>
+            <xs:element name="Fields" minOccurs="0" maxOccurs="1">
+                <xs:complexType>
+                    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+                        <xs:choice>
+                            <xs:element name="Field" type="Field" />
+                            <xs:element name="Union" type="Union" />
+                            <xs:element name="BlockCommentedFields" type="BlockCommentedFields" />
+                            <xs:element name="Constant" type="Constant" />
+                        </xs:choice>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="Lists" minOccurs="0" maxOccurs="1">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="List" type="List" minOccurs="0" maxOccurs="unbounded" />
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <!--
+
+                The EmptyField element describes the special Empty property
+                used by structs and some classes as a sentinel for a
+                null/default/empty state.
+
+                If the type is an object (i.e., not a value type) adding
+                this attribute will cause an internal empty class to be
+                emitted automatically.
+
+            -->
+            <xs:element name="EmptyField" minOccurs="0" maxOccurs="1">
+                <xs:complexType>
+                    <!--
+
+                        The Name attribute controls the name of the static
+                        property which returns the empty sentinel, the property
+                        used to check if the current instance is empty, and
+                        for managed classes the name of the internal EmptyClass.
+                        The formula is:
+
+                        Empty property:     <Name>          (e.g., Model3D.Empty)
+                        IsEmpty property:   Is<Name>        (e.g., Model3D.IsEmpty)
+                        Empty class:        <Type><Name>    (e.g., Model3DEmpty)
+
+                        The GenerateClass attribute can be used to override the
+                        default behavior of automatically generated an internal
+                        *Empty class (but has no effect on value types). It
+                        defaults to "true".
+                    -->
+                    <xs:attribute name="Name" type="xs:string" use="required"/>
+                    <xs:attribute name="GenerateClass" type="xs:boolean" use="optional"/>
+                    <!--
+
+                          The Distinguished attribute controls whether
+                          there is a special "distinguished" version
+                          of the empty class which might be used
+                          without valid coefficients.  This is
+                          detected using a private IsDistinguishedName
+                          function.
+                    -->
+            <xs:attribute name="Distinguished" type="xs:boolean" use="optional"/>
+
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="Realization" type="Realization" minOccurs="0" maxOccurs="1" />
+            <xs:element name="API" type="RealizationAPI" minOccurs="0" maxOccurs="1" /> <!-- or should maxOccurs be "unbounded"? -->
+        </xs:sequence>
+        <xs:attribute name="Name" type="xs:string" use="required"/>
+        <xs:attribute name="ManagedType" type="xs:string"/>
+        <xs:attribute name="UnmanagedName" type="xs:string"/>
+        <!-- UnmanagedResourceAlias
+                Some resources are exposed as unique managed API classes but are implemented
+                in the composition engine by other resources of similar footprint. A good
+                example of this is Vector3D and Point3D, both of which are identical other
+                than in how they are used. If this attribute is specified then all native
+                references use the aliased type.
+        -->
+        <xs:attribute name="UnmanagedResourceAlias" type="xs:string" use="optional"/>
+        <xs:attribute name="Extends" type="xs:string"/>
+        <xs:attribute name="IsAbstract" type="xs:boolean"/>
+        <xs:attribute name="CreateInstanceCoreViaActivator" type="xs:boolean"/>
+        <!-- IsFreezable
+                This flag denotes whether or not this object is a Freezable.  When this flag is set
+                on a type, it's generated class definition will derive from Freezable.  Also, any
+                properties of other types that are of this type will have Freezable logic applied
+                to them.  For example, their CloneCore will contain logic to perform deep clones
+                of the subproperty, and EmbeddedChangeableReader/Writer will be called in the
+                property's get/set methods.
+
+                MilCodeGen assumes that reference types derive from Freezable by default.  Thus,
+                this flag defaults to 'true' for reference types and 'false' for value types.  It
+                is invalid to specify a type as a Freezable ValueType (i.e., IsFreezable='true' &&
+                IsValueType='true') because Freezable is a reference type, but it is valid to
+                specify non-Freezable reference types (i.e., IsFreezable='false' &&
+                IsValueType='false'
+        -->
+        <xs:attribute name="IsFreezable" type="xs:boolean"/>
+        <xs:attribute name="CanIntroduceCycles" type="xs:boolean" default="true"/>
+        <xs:attribute name="IsAnimatable" type="xs:boolean"/>
+        <xs:attribute name="ExposeData" type="xs:boolean"/>
+        <xs:attribute name="SkipProperties" type="xs:boolean"/>
+        <xs:attribute name="SkipToString" type="xs:boolean"/>
+        <xs:attribute name="SkipFields" type="xs:boolean"/>
+
+        <!-- IsAlwaysSerializableAsString
+                If this flag is set to true, then codegen can omit calls to "CanSerializeToString",
+                because this type is always serializable to string.  Typically, this will be set
+                for value types and collections of value types.
+        -->
+        <xs:attribute name="IsAlwaysSerializableAsString" type="xs:boolean"/>
+
+        <!-- IsValueType
+                Value types are marshalled differently than reference types.  This flag causes
+                the correct marshalling code to be generated for the specified type.
+        -->
+        <xs:attribute name="IsValueType" type="xs:boolean"/>
+        <xs:attribute name="NeedsConvert" type="xs:boolean"/>
+        <xs:attribute name="MarshaledSize" type="xs:integer"/>
+        <!--
+               Specifying the MarshaledSize implies that the struct data isn't necessarily
+               accurately defined by the fields and should be treated as a black box.
+               Therefore use MarshaledAlignment to state the required alignment of the
+               black box structure.
+         -->
+        <xs:attribute name="MarshaledAlignment" type="xs:integer" use="optional"/>
+
+        <!--
+               All generated classes are sealed by default.  Set this bool to true to
+               leave a class open for 3rd party extension.
+        -->
+        <xs:attribute name="LeaveUnsealed" type="xs:boolean"/>
+
+        <xs:attribute name="Comment" type="xs:string" use="optional"/>
+        <xs:attribute name="CollectionType" type="xs:string"/>
+        <xs:attribute name="ToInstanceDescriptor" type="xs:boolean"/>
+        <xs:attribute name="ToString" type="xs:boolean"/>
+        <xs:attribute name="ToCultureAwareString" type="xs:boolean"/>
+
+        <!--
+            Setting the ParseMethod will specify a method which matches this signature:
+                [[type]] [[method]](string token, IFormatProvider formatProvider)
+
+            and will be called by any containing type while parsing to convert a token to
+            an instance of the resource's type.  If not specified, and if fields are present,
+            the generation code will assume that a field-wise parse will produce the correct results.
+            -->
+
+        <xs:attribute name="ParseMethod" type="xs:string"/>
+        <xs:attribute name="HasUnmanagedResource" type="xs:boolean"/>
+        <xs:attribute name="SkipUpdate" type="xs:boolean"/>
+        <xs:attribute name="UseProcessUpdateWrapper" type="xs:boolean"/>
+        <xs:attribute name="UseStaticInitialize" type="xs:boolean"/>
+        <xs:attribute name="UseOnChannelCoreWrapper" type="xs:boolean"/>
+        <xs:attribute name="GenerateDefaultConstructor" type="xs:boolean"/>
+        <xs:attribute name="GenerateSerializerAttribute" type="xs:boolean"/>
+        <xs:attribute name="NeedsPointerArray" type="xs:boolean"/>
+        <!--
+               Setting NeedsPointerArray to true, will allocate a dynarray of pointers for
+               the unmanaged data class corresponding to the collection field we set the flag on. It
+               will also generate RegisterCollectionNotifiers calls for that class.
+         -->
+        <!--
+               Setting AddCloneHooks to true, will add calls to the copy code that will call into
+               the non-generated code to allow the class to do anything extra not natively supported
+               by codegen. There will be one call made pre-copy and one post-copy.
+         -->
+        <xs:attribute name="AddCloneHooks" type="xs:boolean"/>
+        <!--
+               Set this to true for IResources that do not have a full unmanaged representation.
+               For example, GradientStops, because they are marshalled as an array by their parent.
+         -->
+        <xs:attribute name="InlinedUnmanagedResource" type="xs:boolean"/>
+        <xs:attribute name="CallProcessUpdateCore" type="xs:boolean" use="optional" default="false"/>
+
+        <!--
+               When Marshalling the handle of a property during UpdateResource, marshall ResourceHandle.Null
+               if the properties' reference is equal to this evaluated string.  E.g., when marshalling
+               a Transform, ResourceHandle.Null is set when the Transform property is equal to
+               Transform.Identity.
+
+               A 'NotSupportedException' will be thrown if the type doesn't have a handle (i.e.,
+               IsValueType is 'true').
+         -->
+        <xs:attribute name="MarshalledIdentity" type="xs:string" />
+
+        <!--
+               AllowsNullEntries Property - bool
+               If false, this means that it is illegal to add null to the collection.
+               Defaults to true.
+               This flag is currently used in ProcessUpdate to validate the collection packet.
+        -->
+        <xs:attribute name="AllowsNullEntries" type="xs:boolean" use="optional" default="true"/>
+
+        <!--
+               If non-null, Specifies that the type should be declared inside a
+               #pragma pack(push,val)
+               #pragma pack(pop)
+               pair. (The value of PragmaPack is used in place of val)
+
+               This attribute is invalid for managed types.
+        -->
+        <xs:attribute name="PragmaPack" type="xs:string" use="optional"/>
+    </xs:complexType>
+
+    <!--  A NoOp group includes a list of Fields such that, if all fields in any given collection
+          are null, the instruction can be ignored. -->
+    <xs:complexType name="NoOpGroupMember">
+        <xs:attribute name="FieldName" type="xs:string" use="required"/>
+    </xs:complexType>
+
+    <xs:complexType name="NoOpGroup">
+        <xs:sequence>
+            <xs:element name="NoOpGroupMember" type="NoOpGroupMember" minOccurs="1" maxOccurs="unbounded"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="RenderDataInstruction">
+        <xs:sequence>
+            <xs:element name="Fields" minOccurs="0" maxOccurs="1">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="Field" type="Field" minOccurs="0" maxOccurs="unbounded" />
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="NoOpGroups" minOccurs="0" maxOccurs="unbounded">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="NoOpGroup" type="NoOpGroup" minOccurs="1" maxOccurs="unbounded" />
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="Lists" minOccurs="0" maxOccurs="1">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="List" type="List" minOccurs="0" maxOccurs="unbounded" />
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+        </xs:sequence>
+        <xs:attribute name="Name" type="xs:string" use="required"/>
+        <xs:attribute name="UnmanagedName" type="xs:string"/>
+        <xs:attribute name="Comment" type="xs:string" use="optional"/>
+        <!-- 2/6/2003 - adsmith
+             943036 - Remove legacy exports and rename *_New methods once we can checkin breaking changes to milcore.h
+             The attribute allows an optional suffix to be appended to imports/exports so as not to
+             collide with legacy versions of this API -->
+        <xs:attribute name="Modifier" type="xs:string" use="optional"/>
+    </xs:complexType>
+
+    <!-- Provide a syntax for representing array types -->
+    <xs:complexType name="Type">
+        <xs:sequence>
+            <xs:element name="ArrayDimension" minOccurs="0" maxOccurs="unbounded">
+                <xs:complexType>
+                    <xs:attribute name="Size" type="xs:string" use="optional"/>
+                </xs:complexType>
+            </xs:element>
+        </xs:sequence>
+        <xs:attribute name="Name" type="xs:string" use="required"/>
+    </xs:complexType>
+
+    <xs:complexType name="Field">
+        <xs:sequence>
+            <xs:element name="Type" type="Type" minOccurs="0" maxOccurs="1" />
+        </xs:sequence>
+        <xs:attribute name="Name" type="xs:string" use="required"/>
+
+        <!-- Due to the current (dis)organization, some types use different
+             field names for managed and unmanaged. This field allows us to
+             specify a different unmanaged name, so that the same markup can
+             be used to generate both the managed and the unmanaged type
+             declarations. -->
+        <xs:attribute name="UnmanagedName" type="xs:string" use="optional"/>
+
+        <xs:attribute name="Type" type="xs:string" use="optional"/>
+        <xs:attribute name="Comment" type="xs:string" use="optional"/>
+        <xs:attribute name="ReadOnly" type="xs:boolean" use="optional"/>
+
+        <!-- "ManagedOnly": If true, this field only exists on the managed side.
+               It does not get marshalled down to the UCE. -->
+        <xs:attribute name="ManagedOnly" type="xs:boolean" use="optional"/>
+
+        <!-- "UnmanagedOnly": If true, this field exists in the resource but does not
+               get API exposure on the managed side. -->
+        <xs:attribute name="UnmanagedOnly" type="xs:boolean" use="optional"/>
+
+        <!-- "Animate": Only valid for resource types which can be passed by value.
+             Specifies that the value may be animated, so we will pass it using a base value
+             and an optional animation resource. -->
+        <xs:attribute name="Animate" type="xs:boolean" default="false" />
+
+        <!-- "PropertyAlias":
+             Specifies that this property, which must be attached, is already declared elsewhere.
+             The original location is specified by the string value of this attribute.
+        -->
+        <xs:attribute name="PropertyAlias" type="xs:string" use="optional" />
+
+        <!-- "Validate": This means there is special logic in the partial class to validate the value.
+                It will call the method Is<propertyname>Valid(<propertytype> value).
+                NOTE: The current plan is this attribute will be
+                removed eventually because the validation logic it's being used for will be removed.
+                Instead of validating the input range, we'll always clamp the input to a valid range.
+                THEREFORE DO NOT USE THIS ATTRIBUTE IF YOU CAN HELP IT. -->
+        <xs:attribute name="Validate" type="xs:boolean" />
+
+        <xs:attribute name="IsNew" type="xs:boolean" />
+        <xs:attribute name="Default" type="xs:string" />
+
+        <xs:attribute name="IsInternal" type="xs:boolean" use="optional"/>
+        <xs:attribute name="IsProtected" type="xs:boolean" use="optional"/>
+
+        <!-- If this is true, a method called
+             [PropertyName]PropertyChangedHook(DependencyPropertyChangedEventArgs) will
+             be called to allow you to insert your own custom code -->
+        <xs:attribute name="PropertyChangedHook" type="xs:boolean" use="optional" />
+
+        <!-- "IsCommonlySet": If this is true, we expect that this field tends to be set
+                              sufficiently often on instances of this type, such that we
+                              should reserve space for it.  At this time, it's used for
+                              setting EffectiveValuesInitialSize, though it should also
+                              be usable for optimizing UCE transport and storage. -->
+        <xs:attribute name="IsCommonlySet" type="xs:boolean" use="optional" />
+
+        <!-- If this is true, the string value will be registered as
+             a coercion callback. -->
+        <xs:attribute name="CoerceValueCallback" type="xs:string" use="optional" />
+        <xs:attribute name="SerializationVisibility" type="xs:boolean" use="optional" />
+
+        <!-- This is the fully qualified name of the type to use as a TypeConverter 
+              for this field. e.g. "System.Windows.FontStyleConverter" -->
+        <xs:attribute name="TypeConverter" type="xs:string" use="optional" />
+
+
+        <!-- If this is true, the current value of the DP will be cached locally. This
+             does incurr a working set hit but may be worth it for DPs that are read a
+             lot (i.e. Transform3D DPs) -->
+    <xs:attribute name="CachedLocally" type="xs:boolean" use="optional" />
+
+    </xs:complexType>
+
+    <!-- Represent a C/C++ union -->
+    <xs:complexType name="Union">
+        <xs:sequence>
+            <xs:element name="Field" type="Field" minOccurs="1" maxOccurs="unbounded" />
+        </xs:sequence>
+    </xs:complexType>
+
+    <!-- Fields are often commented in block. This construct allows us to
+    generate fields in blocks, with a comment to refer to the entire group. -->
+    <xs:complexType name="BlockCommentedFields">
+        <xs:sequence>
+            <xs:element name="Field" type="Field" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+        <xs:attribute name="Comment" type="xs:string" use="required"/>
+    </xs:complexType>
+
+    <xs:complexType name="Constant">
+        <xs:attribute name="Name"           type="xs:string"    use="required" />
+        <xs:attribute name="Value"          type="xs:string"    use="required" />
+    </xs:complexType>
+
+    <xs:complexType name="EnumValue">
+        <xs:attribute name="Name" type="xs:string" use="required"/>
+        <xs:attribute name="UnmanagedOnly" type="xs:boolean" use="optional"/>
+        <xs:attribute name="Comment" type="xs:string" use="optional"/>
+        <xs:attribute name="Value" type="xs:string" use="optional"/>
+    </xs:complexType>
+
+    <!-- Enum values are often commented in block. This construct allows us to
+    generate enums in blocks, with a comment to refer to the entire group. -->
+    <xs:complexType name="BlockCommentedEnumValues">
+        <xs:sequence>
+            <xs:element name="Field" type="EnumValue" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+        <xs:attribute name="Comment" type="xs:string" use="required"/>
+    </xs:complexType>
+
+    <xs:complexType name="List">
+            <xs:attribute name="Type" type="xs:string" use="required"/>
+        <xs:attribute name="PropertyName" type="xs:string" use="required"/>
+        <xs:attribute name="FieldName" type="xs:string" use="required"/>
+        <xs:attribute name="DesignerVisibility" type="xs:string"/>
+    </xs:complexType>
+
+    <xs:complexType name="Realization">
+        <xs:attribute name="RealizationType" type="xs:string" use="required"/>
+        <xs:attribute name="RealizationTypeName" type="xs:string" use="required"/>
+        <xs:attribute name="RefCountRealization" type="xs:boolean"/>
+        <xs:attribute name="CacheRealization" type="xs:boolean"/>
+    </xs:complexType>
+
+    <xs:complexType name="RealizationAPI">
+        <xs:sequence>
+            <xs:element name="Param" type="RealizationAPIParam" minOccurs="0" maxOccurs="1" />
+        </xs:sequence>
+        <xs:attribute name="Name" type="xs:string" use="required"/>
+    </xs:complexType>
+
+    <xs:complexType name="RealizationAPIParam">
+        <xs:attribute name="Name" type="xs:string" use="required"/>
+        <xs:attribute name="Type" type="xs:string" use="required"/>
+    </xs:complexType>
+
+    <xs:complexType name="Generate">
+        <xs:attribute name="Name" type="xs:string" use="required"/>
+
+        <!-- The following list of attributes needs to be kept in sync with
+             MS.Internal.MilCodeGen.ResourceModel.CodeSections enumeration -->
+
+        <!-- "NativeIncludingKernel": generate the native (i.e. unmanaged) code for this type
+             and don't ifdef it out from MILCORE_KERNEL_COMPONENT -->
+        <xs:attribute name="NativeIncludingKernel" type="xs:boolean" use="optional"/>
+
+        <!-- "NativeNotInKernel": generate the native (i.e. unmanaged) code for this type
+             but ifdef it out from MILCORE_KERNEL_COMPONENT -->
+        <xs:attribute name="NativeNotInKernel" type="xs:boolean" use="optional" />
+
+        <!-- "NativeWincodecPrivate": generate the native (i.e. unmanaged) code for
+             this type in wincodec_private_generated.h -->
+        <xs:attribute name="NativeWincodecPrivate" type="xs:boolean" use="optional" />
+
+        <!-- "NativeMilRenderTypes": generate the native (i.e. unmanaged) code for
+             this type in wgx_render_types_generated.h -->
+        <xs:attribute name="NativeMilRenderTypes" type="xs:boolean" use="optional" />
+
+        <!-- "NativeDuce": Whether to generate the native DUCE resource for this type -->
+        <xs:attribute name="NativeDuce" type="xs:boolean" use="optional"/>
+
+        <!-- "NativeRetriever": Used to indicate that a retriever should be generated even if "Native=false" -->
+        <xs:attribute name="NativeRetriever" type="xs:boolean" use="optional"/>
+
+        <!-- "Managed": Whether to generate the managed code for this type -->
+        <xs:attribute name="Managed" type="xs:boolean" use="optional"/>
+
+        <!-- "ManagedClass": Whether to generate the managed class for this type -->
+        <xs:attribute name="ManagedClass" type="xs:boolean" use="optional" default="false"/>
+
+        <!-- "ManagedValueMethods": Whether to generate equality operators and other standard value-type methods.
+                                    Only valid if ManagedClass is "true" -->
+        <xs:attribute name="ManagedValueMethods" type="xs:boolean" use="optional"/>
+
+        <!-- "ManagedTypeConverter": Whether to generate a type converter.
+                                     Only valid if ManagedClass is "true" -->
+        <xs:attribute name="ManagedTypeConverter" type="xs:boolean" use="optional"/>
+
+        <!-- "ManagedTypeConverterContext": When generating a type converter that calls a Parse() method, include the ITypeDescriptorContext as
+                                     a parameter to Parse().
+                                     Only valid if ManagedTypeConverter is "true" -->
+        <xs:attribute name="ManagedTypeConverterContext" type="xs:boolean" use="optional"/>
+
+        <!-- "EmptyClass": Whether to generate an empty class (e.g., EmptyMaterial).
+                           Only valid if ManagedClass is "true" -->
+        <xs:attribute name="EmptyClass" type="xs:boolean" use="optional"/>
+
+        <!-- "AnimationResource": Whether to generate a Resource which combines a base value
+                                  with an AnimationClock and handles updates to the resource.
+                                  Only valid if Name refers to a value type. -->
+        <xs:attribute name="AnimationResource" type="xs:boolean" use="optional"/>
+
+        <!-- "CustomFreezeCoreOverride": Whether to generate an override of FreezeCore.  This should be set true
+                                         when the non-generated partial class already has a FreezeCore override implemented -->
+
+        <xs:attribute name="CustomFreezeCoreOverride" type="xs:boolean" use="optional"/>
+
+        <!-- "NativeRedirection": Whether to generate this type as native redirection type -->
+        <xs:attribute name="NativeRedirection" type="xs:boolean" use="optional" default="false"/>
+
+        <!-- "SkipLegacyUce": Skips legacy UpdateResource & ResourceHandle code on the managed
+                              side.  Turn this one when your resource is 100% DUCE. -->
+        <xs:attribute name="SkipLegacyUce" type="xs:boolean" use="optional"/>
+    </xs:complexType>
+
+    <xs:complexType name="Template">
+        <xs:sequence>
+            <!-- The name of the template to invoke -->
+            <xs:element name="TemplateInstance" type="TemplateInstance" minOccurs="0" maxOccurs="unbounded" />
+        </xs:sequence>
+        <!-- The name of the template to apply -->
+        <xs:attribute name="Name" type="xs:string" use="required"/>
+    </xs:complexType>
+
+    <xs:complexType name="TemplateInstance">
+        <!-- We have no idea what attributes will be used here, and thus cannot perform schema-level
+        validation -->
+        <xs:anyAttribute processContents="skip"/>
+    </xs:complexType>
+
+</xs:schema>
+
