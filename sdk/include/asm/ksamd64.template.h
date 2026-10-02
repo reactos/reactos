@@ -467,7 +467,7 @@ OFFSET(PbIdleThread, KPRCB, IdleThread),
 OFFSET(PbNestingLevel, KPRCB, NestingLevel),
 OFFSET(PbRspBase, KPRCB, RspBase),
 OFFSET(PbPrcbLock, KPRCB, PrcbLock),
-#if (NTDDI_VERSION >= NTDDI_VISTA)
+#if (NTDDI_VERSION >= NTDDI_WIN7)
 OFFSET(PbPriorityState, KPRCB, PriorityState),
 #endif /* (NTDDI_VERSION >= NTDDI_VISTA) */
 OFFSET(PbSetMember, KPRCB, SetMember), // not Win 10
@@ -859,14 +859,14 @@ SIZE(XsaHeaderLength, XSAVE_AREA_HEADER),
 //CONSTANT(CFlushSize),
 
 HEADER("KTHREAD offsets"),
-#if (NTDDI_VERSION >= NTDDI_VISTA)
+#if (NTDDI_VERSION >= NTDDI_WIN7)
 OFFSET(ThTebMappedLowVa, KTHREAD, TebMappedLowVa), // not Win 10
 OFFSET(ThUcb, KTHREAD, Ucb),
 //OFFSET(ThBase, KTHREAD, Base?),
 //OFFSET(ThLimit, KTHREAD, Limit?),
 #endif
 
-#if (NTDDI_VERSION >= NTDDI_VISTA)
+#if (NTDDI_VERSION >= NTDDI_WIN7)
 HEADER("KPROCESS offsets"),
 OFFSET(PrLdtSystemDescriptor, KPROCESS, LdtSystemDescriptor), // not Win 10
 OFFSET(PrLdtBaseAddress, KPROCESS, LdtBaseAddress), // not Win 10
