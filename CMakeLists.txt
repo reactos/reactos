@@ -238,6 +238,7 @@ Enable this if the module uses typeid or dynamic_cast. You will probably need to
     add_definitions(-DWINVER=0x600
                     -D_WIN32_IE=0x603
                     -D_WIN32_WINNT=0x600
+                    -DNTDDI_VERSION=0x06000200 # Vista SP2
                     -D_WIN32_WINDOWS=0x600
                     -D_SETUPAPI_VER=0x600
                     -DMINGW_HAS_SECURE_API=1
