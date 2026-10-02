@@ -1,0 +1,546 @@
+/*
+ * PROJECT:     ReactOS Command shell
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Dutch (Netherlands) resource file
+ * TRANSLATOR:  Copyright 2026 Hans Kramer <hanskramer_666@hotmail.com>
+ */
+
+LANGUAGE LANG_DUTCH, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+    STRING_ASSOC_HELP "Wijzigt bestandsextensie-associaties.\n\n\
+assoc [.ext[=[BestandsType]]]\n\n\
+assoc (toon alle associaties)\n\
+assoc .ext (toon specifieke associatie)\n\
+assoc .ext= (verwijder specifieke associatie)\n\
+assoc .ext=BestandsType (voeg nieuwe associatie toe)\n"
+    STRING_ALIAS_HELP "Stelt aliassen in, verwijdert ze of toont ze.\n\n\
+ALIAS [alias=[command]]\n\n\
+  alias    Naam voor een alias.\n\
+  command  Tekst die wordt vervangen door een alias.\n\n\
+Om alle aliassen weer te geven:\n\
+  ALIAS\n\n\
+Om een nieuwe alias in te stellen of een bestaande te vervangen:\n\
+  ALIAS da=dir a:\n\n\
+Om een alias uit de aliaslijst te verwijderen:\n\
+  ALIAS da="
+    STRING_BEEP_HELP "Laat de speaker piepen.\n\nBEEP\n"
+    STRING_CALL_HELP "Roep een batchprogramma vanuit een ander batchprogramma aan.\n\n\
+CALL [drive:][path]bestandsnaam [batch-parameter]\n\n\
+  batch-parameter  Geeft informatie op de opdrachtregel door die het\n\
+                   batchprogramma nodig heeft.\n"
+    STRING_CD_HELP "Wijzigt de huidige map of toont de naam ervan.\n\n\
+CHDIR [/D][drive:][path]\n\
+CHDIR[..|.]\n\
+CD [/D][drive:][path]\n\
+CD[..|.]\n\n\
+  ..   bovenliggende map\n\
+  .    huidige map\n\n\
+  /D   Wijzigt het huidige station en de huidige map.\n\n\
+Typ CD drive: om de huidige map op het opgegeven station weer te geven.\n\
+Typ CD zonder parameter om het huidige station en de map weer te geven.\n"
+    STRING_CHOICE_HELP "Wacht op de gebruiker om een keuze uit een reeks te maken.\n\n\
+CHOICE  [/C[:]opties][/N][/S][/T[:]c,nn][text]\n\n\
+  /C[:]opties   Geeft toegestane toetsen op. Standaard is Y of N.\n\
+  /N            Toont geen keuzes en ? aan het einde van de prompttekst.\n\
+  /S            Maakt keuze-toetsen hoofdlettergevoelig.\n\
+  /T[:]c,nn     Stelt standaardkeuze in op c na nn seconden.\n\
+  text          Prompttekst die wordt weergegeven.\n\n\
+ERRORLEVEL wordt ingesteld op de nummer van de toets die de gebruiker\n\
+heeft ingedrukt.\n"
+    STRING_CLS_HELP "Maakt het scherm leeg.\n\nCLS\n"
+    STRING_CMD_HELP1 "\nInterne opdrachten beschikbaar:\n"
+    STRING_CMD_HELP2 "\nBeschikbare functies:"
+    STRING_CMD_HELP3 "  [aliassen]"
+    STRING_CMD_HELP4 "  [geschiedenis]"
+    STRING_CMD_HELP5 "  [Bash bestandsnaam voltooiing]"
+    STRING_CMD_HELP6 "  [mappenstapel]"
+    STRING_CMD_HELP7 "  [omleidingen en pijpen]"
+    STRING_CMD_HELP8 "Start een nieuw exemplaar van de ReactOS opdrachtregelinterpreter.\n\n\
+CMD [/[C|K] command][/P][/Q][/T:bf]\n\n\
+  /C command  Voert de opgegeven opdracht uit en beëindigt.\n\
+  /K command  Voert de opgegeven opdracht uit en blijft actief.\n\
+  /P          CMD wordt permanent en voert autoexec.bat uit\n\
+              (kan niet worden beëindigd).\n\
+  /T:bf       Stel achtergrond/voorgrondkleur in (zie het COLOR-commando).\n"
+    STRING_COLOR_HELP1 "Stelt de standaard voorgrond- en achtergrondkleur in.\n\n\
+COLOR [attr [/-F]]\n\n\
+  attr        Geeft het kleurattribuut van de console-uitvoer op.\n\
+  /-F         Vult de lege console-ruimte niet met het kleurattribuut.\n\n\
+Er zijn drie manieren om de kleuren op te geven:\n\
+1) [felle] naam op [felle] naam  (alleen de eerste drie letters zijn nodig)\n\
+2) decimaal op decimaal\n\
+3) twee hexadecimale cijfers\n\n\
+Kleuren zijn:\n\
+dec  hex  naam       dec  hex  naam\n\
+0    0    Zwart       8   8    Grijs (Fel zwart)\n\
+1    1    Blauw       9   9    Fel blauw\n\
+2    2    Groen      10   A    Fel groen\n\
+3    3    Cyaan      11   B    Fel cyaan\n\
+4    4    Rood       12   C    Fel rood\n\
+5    5    Magenta    13   D    Fel magenta\n\
+6    6    Geel       14   E    Fel geel\n\
+7    7    Wit        15   F    Fel wit\n"
+    STRING_COPY_HELP1 "Overschrijven %s (Ja/Nee/Alles)? "
+    STRING_COPY_HELP2 "Kopieert een of meer bestanden naar een andere locatie.\n\n\
+COPY [/V][/Y|/-Y][/A|/B] bron [/A|/B]\n\
+     [+ bron [/A|/B] [+ ...]] [doel [/A|/B]]\n\n\
+  bron         Geeft het bestand of de bestanden op om te kopiëren.\n\
+  /A           Geeft aan dat het een ASCII-tekstbestand is.\n\
+  /B           Geeft aan dat het een binair bestand is.\n\n\
+  doel         Geeft de map en/of bestandsnaam op voor het nieuwe bestand of de nieuwe bestanden.\n\
+  /V           Controleert of nieuwe bestanden correct zijn geschreven.\n\
+  /Y           Onderdrukt vragen of u een bestaand doelbestand wilt\n\
+               overschrijven.\n\
+  /-Y          Vraagt om bevestiging voordat een bestaand doelbestand\n\
+               wordt overschreven.\n\n\
+De optie /Y kan aanwezig zijn in de COPYCMD omgevingsvariabele.\n"
+    STRING_CTTY_HELP "Wijzigt het standaard I/O terminalapparaat naar een hulpapparaat.\n\n\
+CTTY device\n\n\
+  device    Het terminalapparaat dat u wilt gebruiken als nieuwe standaard\n\
+            I/O-apparaat. Deze naam moet verwijzen naar een geldig\n\
+            karakterapparaat:\n\
+            AUX, COMx (x=1..N), CON, LPTx (x=1..N), PRN, NUL.\n\
+            CON is gewoonlijk het standaard I/O-apparaat.\n\n\
+Om de controle terug te geven aan de standaardconsole, typt u: CTTY CON op\n\
+het hulpapparaat.\n"
+    STRING_DATE_HELP1 "Stel een nieuwe datum in (mm%cdd%cyyyy): "
+    STRING_DATE_HELP2 "Stel een nieuwe datum in (dd%cmm%cyyyy): "
+    STRING_DATE_HELP3 "Stel een nieuwe datum in (yyyy%cmm%cdd): "
+    STRING_DATE_HELP4 "Toont of stelt de datum in.\n\n\
+DATE [/T][date]\n\n\
+  /T    alleen weergeven\n\n\
+Typ DATE zonder parameters om de huidige datuminstelling weer te geven en\n\
+een prompt voor een nieuwe datum. Druk op ENTER om dezelfde datum te behouden.\n"
+    STRING_DEL_HELP1 "Verwijdert één of meer bestanden.\n\n\
+DEL [/N /P /T /Q /S /W /Y /Z /A[[:]attributes]] file ...\n\
+DELETE [/N /P /T /Q /S /W /Y /Z /A[[:]attributes]] file ...\n\
+ERASE [/N /P /T /Q /S /W /Y /Z /A[[:]attributes]] file ...\n\n\
+      file  Geeft het bestand of de bestanden op om te verwijderen.\n\n\
+  /N    Niets.\n\
+  /P    Prompt. Vraagt voordat elk bestand wordt verwijderd.\n\
+  /T    Totaal. Toont het totaal aantal verwijderde bestanden en vrijgemaakt\n\
+        schijfruimte.\n\
+  /Q    Stil.\n\
+  /W    Wissen. Overschrijft het bestand met willekeurige cijfers voordat het\n\
+        wordt verwijderd.\n\
+  /Y    Ja. Verwijder zelfs *.* zonder te vragen.\n\
+  /F    Forceer verwijderen van verborgen, alleen-lezen en systeembestanden.\n\
+  /S    Verwijder bestanden uit alle submappen\n\
+  /A    Selecteer bestanden op basis van attributen.\n\
+        attributen\n\
+        R     Alleen-lezen bestanden\n\
+        S     Systeembestanden\n\
+        A     Archiveerbare bestanden\n\
+        H     Verborgen bestanden\n\
+        -     voorvoegsel die het tegenovergestelde betekent\n"
+    STRING_DEL_HELP2 "Alle bestanden in de map worden verwijderd!\nWeet u het zeker (J/N)? "
+    STRING_DEL_HELP3 "    %lu bestand verwijderd\n"
+    STRING_DEL_HELP4 "    %lu bestanden verwijderd\n"
+    STRING_DELAY_HELP "Pauzeer voor n seconden of milliseconden.\n\n\
+DELAY [/m]n\n\n\
+  /m          Geeft aan dat n in milliseconden is, anders is n in seconden.\n"
+    STRING_DIR_HELP1 "DIR [drive:][path][filename] [/A[[:]attributes]] [/B] [/C] [/D] [/L] [/N]\n\
+  [/O[[:]sortorder]] [/P] [/Q] [/R] [/S] [/T[[:]timefield]] [/W] [/X] [/4]\n\n\
+  [drive:][path][filename]\n\
+              Geeft het station, map en/of bestanden op om weer te geven.\n\n\
+  /A          Toont bestanden met opgegeven attributen.\n\
+  attributes   D  Mappen                 R  Alleen-lezen bestanden\n\
+               H  Verborgen bestanden    A  Bestanden klaar om te archiveren\n\
+               S  Systeembestanden       -  voorvoegsel die omgekeerde betekenis geeft\n\
+  /B          Gebruikt een kaal format (geen koptekst of samenvatting).\n\
+  /C          Toont duizendtalscheiding in bestandsgroottes. Dit is de\n\
+              standaard. Gebruik /-C om de scheiding uit te schakelen.\n\
+  /D          Zelfde als breed, maar bestanden worden kolomgewijs gesorteerd.\n\
+  /L          Gebruikt kleine letters.\n\
+  /N          Nieuw lange lijstindeling waarbij bestandsnamen rechts staan.\n\
+  /O          Toont bestanden in gesorteerde volgorde.\n\
+  sortorder    N  Op naam (alfabetisch)      S  Op grootte (kleinste eerst)\n\
+               E  Op extensie (alfabetisch)  D  Op datum/tijd (oudste eerst)\n\
+               G  Mappen eerst               -  voorvoegsel om de volgorde om te keren\n\
+  /P          Pauzeert na elk scherm vol.\n\
+  /Q          Toont de eigenaar van het bestand.\n\
+  /R          Toont alternatieve datastrromen van de bestanden.\n\
+  /S          Toont bestanden in de opgegeven map en alle submappen.\n\
+  /T          Bepaalt welk tijdveld wordt weergegeven of gebruikt voor sorteren\n\
+  timefield   C  Aanmaak\n\
+              A  Laatste toegang\n\
+              W  Laatst geschreven\n\
+  /W          Gebruikt breed formaat.\n\
+  /X          Toont de korte namen die zijn gegenereerd voor niet-8.3\n\
+              bestandsnamen. Het formaat is gelijk aan /N met de korte naam\n\
+              vóór de lange naam. Als er geen korte naam aanwezig is, worden\n\
+              spaties weergegeven.\n\
+  /4          Toont viercijferige jaren\n\n\
+Schakelaars kunnen worden voorgeconfigureerd in de DIRCMD omgevingsvariabele.\n\
+Overschrijf vooraf ingestelde schakelaars door een - (koppelteken) voor een\n\
+schakelaar te plaatsen, bijvoorbeeld /-W.\n"
+    STRING_DIR_HELP2 " Schijf in station %c is %s\n"
+    STRING_DIR_HELP3 " Schijf in station %c heeft geen label.\n"
+    STRING_DIR_HELP4 " Volume-Serienummer is %04X-%04X\n"
+    STRING_DIR_HELP5 "\n     Totaal aantal bestanden weergegeven:\n%16i Bestand(en) %14s bytes\n"
+    STRING_DIR_HELP6 "%16i Map(pen)  %14s bytes vrij\n"
+    STRING_DIR_HELP7 "\n Map van %s\n\n"
+    STRING_DIR_HELP8 "%16i Bestand(en) %14s bytes\n"
+    STRING_DIRSTACK_HELP1 "Slaat de huidige map op voor gebruik door het POPD-commando en\n\
+wijzigt daarna naar de opgegeven map.\n\n\
+PUSHD [path | ..]\n\n\
+  path        Geeft de map op waarnaar moet worden gewisseld\n"
+    STRING_DIRSTACK_HELP2 "Wijzigt naar de map die is opgeslagen door het PUSHD-commando.\n\nPOPD"
+    STRING_DIRSTACK_HELP3 "Toont de inhoud van de mappenstapel.\n\nDIRS"
+    STRING_DIRSTACK_HELP4 "Mappenstapel leeg"
+    STRING_ECHO_HELP1 "Geeft een bericht weer zonder afsluitende carriage return en line feed.\n\n\
+  ECHOS message"
+    STRING_ECHO_HELP2 "Geeft een bericht weer op de standaardfoutenuitvoer.\n\n\
+  ECHOERR message\n\
+  ECHOERR.           toont een lege regel"
+    STRING_ECHO_HELP3 "Geeft een bericht weer op de standaardfoutenuitvoer zonder afsluitende\n\
+carriage return en line feed.\n\n\
+  ECHOSERR message"
+    STRING_ECHO_HELP4 "Geeft een bericht weer of schakelt de weergave van commando's aan of uit.\n\n\
+  ECHO [ON | OFF]\n\
+  ECHO [message]\n\
+  ECHO.             toont een lege regel\n\n\
+Typ ECHO zonder parameter om de huidige ECHO-instelling weer te geven.\n"
+    STRING_ECHO_HELP5 "ECHO is %s.\n"
+    STRING_EXIT_HELP "Verlaat de opdrachtregelinterpreter.\n\nEXIT [/b] [ExitCode]\n\n\
+  /B            Verlaat alleen een batchbestand.\n\
+                Als het buiten een batchbestand wordt uitgevoerd, sluit het\n\
+                cmd.exe af\n\
+  ExitCode      Deze waarde wordt toegewezen aan ERRORLEVEL bij afsluiten\n"
+    STRING_FOR_HELP1 "Voert een opgegeven commando uit voor elk bestand in een set bestanden.\n\n\
+FOR %variable IN (set) DO command [parameters]\n\
+FOR /L %variable IN (start,step,end) DO command [parameters]\n\
+FOR /D %variable IN (set) DO command [parameters]\n\
+FOR /R [[drive:]path] IN (set) DO command [parameters]\n\
+FOR /F [""options""] IN (set) DO command [parameters]\n\n\
+  /L    Genereert een getallenreeks van begin tot eind met stapgrootte.\n\
+  /D    Wijzigt de set zodat deze naar mappen verwijst in plaats van bestanden.\n\
+  /R    Voert het commando uit voor bestanden in de set in het opgegeven pad\n\
+        (of de huidige map als niets is opgegeven) en elke map daaronder.\n\
+  /F    Wijzigt de set zodat deze naar de inhoud van de bestanden verwijst.\n\
+  %variable  Geeft een vervangbare parameter op.\n\
+  (set)      Geeft een set van een of meer bestanden op. Wildcards kunnen\n\
+             worden gebruikt.\n\
+  command    Geeft het commando op om uit te voeren voor elk bestand.\n\
+  parameters Geeef parameters of schakelaars op voor het opgegeven commando.\n\n\
+  options    Ondersteunde opties zijn: eol, skip, delims, tokens en usebackq.\n\n\
+Vervangbare parameters kunnen worden aangepast door een ~ en een optionele\n\
+kwalificatie na de % en voor de naam toe te voegen (bijvoorbeeld %~X).\n\
+Ondersteunde kwalificaties zijn: f,d,p,n,x,s,a,t,z.\n\n\
+Om de FOR-opdracht in een batchprogramma te gebruiken, gebruikt u %%variable\n\
+in plaats van %variable.\n"
+    STRING_FREE_HELP1 "\nSchijf in station %s is %-11s\n\
+ Serienummer is %s\n\
+  %16s bytes totale schijfruimte\n\
+  %16s bytes gebruikte schijfruimte\n\
+  %16s bytes vrije schijfruimte\n"
+    STRING_FREE_HELP2 "Toont stationinformatie.\n\nFREE [drive: ...]\n"
+    STRING_GOTO_HELP1 "Springt naar een gelabelde regel in een batchscript.\n\n\
+GOTO label\n\n\
+  label  Geeft een tekststring op die in een batchscript als label wordt\n\
+         gebruikt.\n\n\
+U typt een label op een regel voor zichzelf, beginnend met een dubbele punt.\n"
+    STRING_IF_HELP1 "Voert voorwaardelijke verwerking uit in batchprogramma's.\n\n\
+  IF [NOT] ERRORLEVEL number command\n\
+  IF [NOT] string1==string2 command\n\
+  IF [NOT] EXIST filename command\n\
+  IF [NOT] DEFINED variable command\n\n\
+NOT               Geeft aan dat CMD het commando alleen moet uitvoeren als\n\
+                  de voorwaarde onwaar is\n\
+ERRORLEVEL number Geeft een ware voorwaarde als het laatste programma een\n\
+                  eindcode retourneert die gelijk is aan of groter is dan het\n\
+                  opgegeven nummer.\n\
+command           Geeft het commando op dat moet worden uitgevoerd als de\n\
+                  voorwaarde waar is.\n\
+string1==string2  Geeft een ware voorwaarde als de opgegeven tekststrings\n\
+                  overeenkomen.\n\
+EXIST filename    Geeft een ware voorwaarde als de opgegeven bestandsnaam\n\
+                  bestaat.\n\
+DEFINED variable  Geeft een ware voorwaarde als de variabele is gedefinieerd.\n"
+    STRING_DATE_NOW "De huidige datum is: "
+    STRING_TIME_NOW "Huidige tijd is: "
+    STRING_MKDIR_HELP "Maakt een map.\n\n\
+MKDIR [drive:]path\nMD [drive:]path"
+    STRING_MKLINK_HELP "Maakt een bestandssysteemsnelkoppeling.\n\n\
+MKLINK [/D | /H | /J] linkname target\n\n\
+  /D  Geeft aan dat het doel van de snelkoppeling een map is.\n\
+  /H  Maakt een harde koppeling.\n\
+  /J  Maakt een junction.\n\n\
+Als noch /H noch /J is opgegeven, wordt een symbolische koppeling gemaakt.\n"
+    STRING_MEMORY_HELP1 "Toont de hoeveelheid systeemgeheugen.\n\nMEMORY"
+    STRING_MEMORY_HELP2 "\n  %12s%% geheugenbelasting.\n\n\
+  %13s bytes fysiek RAM totaal.\n\
+  %13s bytes beschikbaar fysiek RAM.\n\n\
+  %13s bytes totaal wisselbestand.\n\
+  %13s bytes beschikbaar wisselbestand.\n\n\
+  %13s bytes totaal virtueel geheugen.\n\
+  %13s bytes beschikbaar virtueel geheugen.\n"
+    STRING_MISC_HELP1 "Druk op een toets om door te gaan..."
+    STRING_MOVE_HELP1 "Overschrijven %s (Ja/Nee/Alles)? "
+    STRING_MOVE_HELP2 "Verplaatst bestanden en hernoemt bestanden en mappen.\n\n\
+Om een of meer bestanden te verplaatsen:\n\
+MOVE [/N][/Y|/-Y][drive:][path]filename1[,...] destination\n\n\
+Om een map te hernoemen:\n\
+MOVE [/N][/Y|/-Y][drive:][path]dirname1 dirname2\n\n\
+  [drive:][path]filename1  Geeft de locatie en naam op van het\n\
+                           bestand of de bestanden die u wilt verplaatsen.\n\
+  /N                    Niets. Voer alles uit behalve het verplaatsen van\n\
+                        bestanden of mappen.\n\n\
+Huidige beperkingen:\n\
+  - U kunt een bestand of map niet verplaatsen van het ene station naar het\n\
+    andere.\n"
+    STRING_MSGBOX_HELP "Toont een berichtvenster en retourneert de gebruikersrespons\n\n\
+MSGBOX type ['title'] prompt\n\n\
+type          knop weergegeven\n\
+              mogelijke waarden zijn: OK, OKCANCEL,\n\
+              YESNO, YESNOCANCEL\n\
+title         Titel van het berichtvenster\n\
+prompt        Tekst die in het berichtvenster wordt weergegeven\n\n\n\
+ERRORLEVEL wordt ingesteld volgens de knop die is ingedrukt:\n\n\
+YES  :  10    |  NO      :  11\n\
+OK   :  10    |  CANCEL  :  12\n"
+    STRING_PATH_HELP1 "Toont of stelt het zoekpad voor uitvoerbare bestanden in.\n\n\
+PATH [[drive:]path[;...]]\nPATH ;\n\n\
+Typ PATH ; om alle zoekpadinstellingen te wissen en de opdrachtprompt\n\
+alleen in de huidige map te laten zoeken.\n\
+Typ PATH zonder parameters om het huidige pad weer te geven.\n"
+    STRING_PAUSE_HELP1 "Pauzeert de uitvoering van een batchbestand en toont het volgende\n\
+bericht:\n\
+'Druk op een toets om door te gaan...' of een door de gebruiker gedefinieerd\n\
+bericht.\n\n\
+PAUSE [message]"
+    STRING_PROMPT_HELP1 "Wijzigt de opdrachtprompt.\n\n\
+PROMPT [text]\n\n\
+  text    Geeft een nieuwe opdrachtprompt op.\n\n\
+Prompt kan bestaan uit normale tekens en de volgende speciale codes:\n\n\
+  $A   & (Ampersand)\n\
+  $B   | (pijpteken)\n\
+  $C   ( (Linkerhaken)\n\
+  $D   Huidige datum\n\
+  $E   Escapecode (ASCII-code 27)\n\
+  $F   ) (Rechterhaken)\n\
+  $G   > (groter-dan-teken)\n\
+  $H   Backspace (wist het vorige teken)\n\
+  $I   Informatielijn\n\
+  $L   < (kleiner-dan-teken)\n\
+  $N   Huidig station\n\
+  $P   Huidig station en pad\n\
+  $Q   = (gelijkteken)\n\
+  $S   (spatie)\n\
+  $T   Huidige tijd\n\
+  $V   OS-versienummer\n\
+  $_   Carriage return en linefeed\n\
+  $$   $ (dollar-teken)\n"
+    STRING_PROMPT_HELP2 "  $+   Toont de huidige diepte van de mappenstapel"
+    STRING_PROMPT_HELP3 "\nTyp PROMPT zonder parameters om de prompt terug te zetten naar de\n\
+standaardinstelling."
+    STRING_REM_HELP "Start een commentaarregel in een batchbestand.\n\n\
+REM [Comment]"
+    STRING_RMDIR_HELP "Verwijdert een map.\n\n\
+RMDIR [/S] [/Q] [drive:]path\nRD [/S] [/Q] [drive:]path\n\
+  /S    Verwijdert alle bestanden en mappen in het doel.\n\
+  /Q    Vraagt niet om bevestiging.\n"
+    STRING_RMDIR_HELP2 "Map is niet leeg!\n"
+    STRING_REN_HELP1 "Hernoemt een bestand/map of bestanden/mappen.\n\n\
+RENAME [/E /N /P /Q /S /T] old_name ... new_name\n\n\
+REN [/E /N /P /Q /S /T] old_name ... new_name\n\n\
+  /E    Geen foutmeldingen.\n\
+  /N    Niets.\n\
+  /P    Vraagt om bevestiging voordat elk bestand wordt hernoemd.\n\
+        (Nog niet geïmplementeerd!)\n\n\
+  /Q    Stil.\n\
+  /S    Hernoemt submappen.\n\
+  /T    Toont het aantal hernoemde bestanden.\n\n\
+Let op: u kunt geen nieuw station of pad opgeven voor de bestemming.\n\
+Gebruik het MOVE-commando daarvoor.\n"
+    STRING_REN_HELP2 "    %lu bestand hernoemd\n"
+    STRING_REN_HELP3 "    %lu bestanden hernoemd\n"
+    STRING_SHIFT_HELP "Wijzigt de positie van vervangbare parameters in een batchbestand.\n\n\
+SHIFT [DOWN]"
+    STRING_SCREEN_HELP "Verplaats cursor en geef optioneel tekst weer\n\n\
+SCREEN row col [text]\n\n\
+  row         rij waarheen de cursor moet worden verplaatst\n\
+  col         kolom waarheen de cursor moet worden verplaatst"
+    STRING_SET_HELP "Toont, stelt in of verwijdert omgevingsvariabelen.\n\n\
+SET [variable[=][string]]\n\n\
+  variable  Geeft de naam van de omgevingsvariabele op.\n\
+  string    Geeft een reeks tekens op om aan de variabele toe te wijzen.\n\n\
+Typ SET zonder parameters om de huidige omgevingsvariabelen weer te geven.\n"
+    STRING_START_HELP1 "Start een commando.\n\n\
+  START [""title""] [/D path] [/I] [/B] [/MIN] [/MAX] [/WAIT]\n\
+      [command/program] [parameters]\n\n\
+    ""title""     Titel van het venster.\n\
+  path        Geeft de startmap op.\n\
+  I           Gebruikt de oorspronkelijke omgeving die aan cmd.exe\n\
+              is gegeven, in plaats van de huidige omgeving.\n\
+  B           Start het commando of programma zonder een venster te\n\
+              openen.\n\
+  MIN         Start in geminimaliseerde toestand.\n\
+  MAX         Start in gemaximaliseerde toestand.\n\
+  WAIT        Start het commando of programma en wacht op beëindiging.\n\
+  command     Geeft het commando of programma op om uit te voeren.\n\
+  parameters  Geeft de parameters op voor het commando of programma.\n"
+    STRING_TITLE_HELP "Stelt de venstertitel voor het opdrachtpromptvenster in.\n\n\
+TITLE [string]\n\n\
+string       Geeft de titel op voor het opdrachtpromptvenster.\n"
+    STRING_TIME_HELP1 "Toont of stelt de systeemtijd in.\n\n\
+TIME [/T][time]\n\n\
+  /T    alleen weergeven\n\n\
+Typ TIME zonder parameters om de huidige tijdinstelling weer te geven en\n\
+een prompt voor een nieuwe tijd. Druk ENTER om dezelfde tijd te behouden.\n"
+    STRING_TIME_HELP2 "Voer nieuwe tijd in: "
+    STRING_TIMER_HELP1 "Verstreken %d msecs\n"
+    STRING_TIMER_HELP2 "Verstreken %02d%c%02d%c%02d%c%02d\n"
+    STRING_TIMER_HELP3 "Maakt het mogelijk om tien stopwatches te gebruiken.\n\n\
+TIMER  [ON|OFF] [/S] [/n] [/Fn]\n\n\
+  ON          zet stopwatch AAN\n\
+  OFF         zet stopwatch UIT\n\
+  /S          Splitst tijd. Geeft stopwatch split-tijd terug zonder de\n\
+              waarde te wijzigen\n\
+  /n          Geeft het stopwatchnummer op.\n\
+              Stopwatches zijn beschikbaar van 0 tot 9\n\
+              Als het niet is opgegeven is de standaard 1\n\
+  /Fn         Formaat voor weergave\n\
+              n kan zijn:\n\
+                    0    milliseconden\n\
+                    1    hh%cmm%css%cdd\n\n\
+als geen ON, OFF of /S is opgegeven zal de stopwatch schakelen.\n\n"
+    STRING_TYPE_HELP1 "Toont de inhoud van tekstbestanden.\n\n\
+TYPE [drive:][path]filename\n\
+  /P          Toont één scherm met uitvoer per keer.\n"
+    STRING_VERIFY_HELP1 "Dit commando is slechts een dummy!!\n\
+Stelt in of gecontroleerd moet worden of uw bestanden correct naar een\n\
+schijf worden geschreven.\n\n\
+VERIFY [ON | OFF]\n\n\
+Typ VERIFY zonder parameter om de huidige VERIFY-instelling weer te geven.\n"
+    STRING_VERIFY_HELP2 "VERIFY is %s.\n"
+    STRING_VERIFY_HELP3 "Moet ON of OFF specificeren.\n"
+    STRING_VERSION_HELP1 "Toont shellversie-informatie\n\n\
+VER [/C][/R][/W]\n\n\
+  /C  Toont credits.\n\
+  /R  Toont herdistributieinformatie.\n\
+  /W  Toont garantie-informatie.\n"
+    STRING_VERSION_HELP2 " komt met ABSOLUUT GEEN GARANTIE; voor details\n\
+type: `ver /w'. Dit is vrije software, en u mag deze herdistribueren\n\
+onder bepaalde voorwaarden; typ `ver /r' voor details. Typ `ver /c' voor\n\
+een lijst van credits.\n"
+    STRING_VERSION_HELP3 "\nDit programma wordt verspreid in de hoop dat het nuttig zal zijn,\n\
+maar ZONDER ENIGE GARANTIE; zonder zelfs de stilzwijgende garantie van\n\
+VERKOOPBAARHEID of GESCHIKTHEID VOOR EEN BEPAALD DOEL. Zie de GNU \n\
+General Public License voor meer details.\n"
+    STRING_VERSION_HELP4 "\nDit programma is vrije software; u mag het verspreiden en/of\n\
+veranderen onder de voorwaarden van de GNU General Public License zoals\n\
+uitgegeven door de Free Software Foundation; ofwel versie 2 van de\n\
+Licentie, of (naar uw keuze) een latere versie.\n"
+    STRING_VERSION_HELP5 "\nStuur foutmeldingen naar <ros-dev@reactos.org>.\n\
+Updates zijn beschikbaar op: https://reactos.org"
+    STRING_VERSION_HELP6 "\nFreeDOS-versie geschreven door:\n"
+    STRING_VERSION_HELP7 "\nReactOS-versie geschreven door:\n"
+    STRING_VOL_HELP1 " Volume in station %c is %s\n"
+    STRING_VOL_HELP2 " Volume in station %c heeft geen label.\n"
+    STRING_VOL_HELP3 " Volume Serienummer is %04X-%04X\n"
+    STRING_VOL_HELP4 "Toont het volume label en serienummer, indien aanwezig.\n\n\
+VOL [drive:]"
+    STRING_WINDOW_HELP1 "verander console vensteraspect\n\n\
+WINDOW [/POS[=]left,top,width,height]\n\
+              [MIN|MAX|RESTORE] ['title']\n\n\
+/POS          geef vensterplaatsing en afmetingen op\n\
+MIN           minimaliseren\n\
+MAX           maximaliseren\n\
+RESTORE       herstellen\n"
+    STRING_WINDOW_HELP2 "verander console vensteraspect\n\n\
+ACTIVATE 'window' [/POS[=]left,top,width,height]\n\
+              [MIN|MAX|RESTORE] ['title']\n\n\
+window        titel van het venster waarop de actie moet worden uitgevoerd\n\
+/POS          geef vensterplaatsing en afmetingen op\n\
+MIN           minimaliseren\n\
+MAX           maximaliseren\n\
+RESTORE       herstellen\n\
+title         nieuwe titel\n"
+    STRING_CHOICE_OPTION "JN"
+    STRING_COPY_OPTION "JNA"
+    STRING_ALIAS_ERROR "Opdrachtregel te lang na aliasuitbreiding!\n"
+    STRING_ASSOC_ERROR "Bestandsassociatie voor extensie %s niet gevonden\n"
+    STRING_BATCH_ERROR "Fout bij het openen van batchbestand\n"
+    STRING_CHOICE_ERROR "Ongeldige optie. Verwacht formaat: /C[:]options\n"
+    STRING_CHOICE_ERROR_TXT "Ongeldige optie. Verwacht formaat: /T[:]c,nn\n"
+    STRING_CHOICE_ERROR_OPTION "Illegale optie: %s\n"
+    STRING_CMD_ERROR1 "Kan geen invoer omleiden vanaf bestand %s\n"
+    STRING_CMD_ERROR2 "Fout bij het maken van tijdelijk bestand voor pipegegevens\n"
+    STRING_CMD_ERROR3 "Kan niet omleiden naar bestand %s\n"
+    STRING_CMD_ERROR4 "Bezig met uitvoeren %s...\n"
+    STRING_CMD_ERROR5 "Bezig met uitvoeren cmdexit.bat...\n"
+    STRING_COLOR_ERROR1 "Zelfde kleuren fout! (Achtergrond en voorgrond kunnen niet dezelfde kleur hebben)\n"
+    STRING_COLOR_ERROR2 "Fout in kleur specificatie\n"
+    STRING_CONSOLE_ERROR "Onbekende fout: %d\n"
+    STRING_COPY_ERROR1 "Fout: Bron kan niet worden geopend - %s!\n"
+    STRING_COPY_ERROR2 "Fout: Kan niet op zichzelf kopiëren!\n"
+    STRING_COPY_ERROR3 "Fout bij schrijven naar doel!\n"
+    STRING_COPY_ERROR4 "Fout: Nog niet geïmplementeerd!\n"
+    STRING_DATE_ERROR "Ongeldige datum.\n"
+    STRING_DEL_ERROR5 "Het bestand %s wordt verwijderd! "
+    STRING_DEL_ERROR6 "Weet u het zeker (J/N)? "
+    STRING_DEL_ERROR7 "Verwijderen: %s\n"
+    STRING_ERROR_ERROR1 "Onbekende fout! Foutcode: 0x%lx\n"
+    STRING_ERROR_ERROR2 "Syntaxfout"
+    STRING_FOR_ERROR1 "'in' ontbreekt in for statement.\n"
+    STRING_FOR_ERROR2 "geen haakjes gevonden.\n"
+    STRING_FOR_ERROR3 "'do' ontbreekt.\n"
+    STRING_FOR_ERROR4 "geen commando na 'do'.\n"
+    STRING_FREE_ERROR1 "Ongeldig station"
+    STRING_FREE_ERROR2 "zonder label"
+    STRING_GOTO_ERROR1 "Geen label opgegeven voor GOTO\n"
+    STRING_GOTO_ERROR2 "Label '%s' niet gevonden\n"
+    STRING_MD_ERROR "Een submap of bestand %s bestaat al.\n"
+    STRING_MD_ERROR2 "Het pad naar de nieuwe map bestaat niet.\n"
+    STRING_MOVE_ERROR1 "[OK]\n"
+    STRING_MOVE_ERROR2 "[Fout]\n"
+    STRING_REN_ERROR "MoveFile() mislukt. Fout: %lu\n"
+    STRING_TIME_ERROR "Ongeldige tijd.\n"
+    STRING_TYPE_ERROR "Ongeldige optie '/%s'\n"
+    STRING_WINDOW_ERROR "Venster niet gevonden\n"
+    STRING_ERROR_PARAMETERF_ERROR "Parameterformaat niet correct - %c\n"
+    STRING_ERROR_INVALID_SWITCH "Ongeldige schakelaar - /%c\n"
+    STRING_ERROR_TOO_MANY_PARAMETERS "Te veel parameters - %s\n"
+    STRING_ERROR_PATH_NOT_FOUND "Pad niet gevonden\n"
+    STRING_ERROR_FILE_NOT_FOUND "Bestand niet gevonden\n"
+    STRING_ERROR_REQ_PARAM_MISSING "Vereiste parameter ontbreekt\n"
+    STRING_ERROR_INVALID_DRIVE "Ongeldige stationspecificatie\n"
+    STRING_ERROR_INVALID_PARAM_FORMAT "Ongeldig parameterformaat - %s\n"
+    STRING_ERROR_BADCOMMAND "Ongeldig commando of bestandsnaam - %s\n"
+    STRING_ERROR_OUT_OF_MEMORY "Niet genoeg geheugen beschikbaar.\n"
+    STRING_ERROR_CANNOTPIPE "Fout! Kan niet pipen! Kan tijdelijk bestand niet openen!\n"
+    STRING_ERROR_D_PAUSEMSG "Druk op een toets om door te gaan . . . "
+    STRING_ERROR_DRIVER_NOT_READY "Station niet klaar"
+    STRING_ERROR_INVALID_NUMBER1 "Ongeldig nummer. Numerieke constanten zijn ofwel decimaal (42), hexadecimaal (0x2A), of octaal (052).\n"
+    STRING_ERROR_INVALID_NUMBER2 "Ongeldig nummer. Getallen zijn beperkt tot 32-bits precisie.\n"
+    STRING_ERROR_DIVISION_BY_ZERO "Deling door nul fout.\n"
+    STRING_ERROR_INVALID_DEVICE L"Ongeldig apparaat '%s'\n"
+    STRING_ERROR_CALL_BAD_LABEL "Ongeldige poging om batchlabel buiten batchscript aan te roepen.\n"
+    STRING_ERROR_UNEXPECTED "%s was onverwacht.\n"
+    STRING_ERROR_WHILE_PROCESSING "Fout opgetreden tijdens verwerking: %s.\n"
+    STRING_SET_ENV_ERROR "Omgevingsvariabele '%s' is niet gedefinieerd\n"
+    STRING_CMD_INFOLINE "  ReactOS Opdrachtprompt                                      Typ HELP = Help  "
+    STRING_CMD_COPYRIGHT "(C) Copyright 1996-%s ReactOS Team.\n"
+    STRING_REACTOS_VERSION "ReactOS [Versie %s %s]\n"
+    STRING_CMD_SHELLINFO "\nReactOS Opdrachtregelinterpreter\nVersie %s %s"
+    STRING_VERSION_RUNNING_ON "Draait op: "
+    STRING_VERSION_RUNVER "%s [Versie %d.%d.%d] %s"
+    STRING_COPY_FILE "        %d bestand(en) gekopieerd\n"
+    STRING_DELETE_WIPE "gewist"
+    STRING_FOR_ERROR "ongeldige variabelenspecificatie.\n"
+    STRING_SCREEN_COL "ongeldige waarde voor kolom\n"
+    STRING_SCREEN_ROW "ongeldige waarde voor rij\n"
+    STRING_TIMER_TIME "Timer %d is %s: "
+    STRING_MKLINK_CREATED_SYMBOLIC "Symbolische koppeling gemaakt voor %s <<===>> %s\n"
+    STRING_MKLINK_CREATED_HARD "Harde koppeling gemaakt voor %s <<===>> %s\n"
+    STRING_MKLINK_CREATED_JUNCTION "Junction gemaakt voor %s <<===>> %s\n"
+    STRING_MORE "Meer? "
+    STRING_CANCEL_BATCH_FILE "\r\nCtrl-Break ingedrukt. Batchbestand annuleren? (Ja/Nee/Alles) "
+    STRING_INVALID_OPERAND "Ongeldige operand.\n"
+    STRING_EXPECTED_CLOSE_PAREN "')' verwacht.\n"
+    STRING_EXPECTED_NUMBER_OR_VARIABLE "Nummer of variabelenaam verwacht.\n"
+    STRING_SYNTAX_COMMAND_INCORRECT "De syntax van het commando is onjuist.\n"
+END
