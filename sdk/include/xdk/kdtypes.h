@@ -144,7 +144,7 @@ typedef PVOID
 typedef VOID
 (NTAPI *pKdCheckPowerButton)(VOID);
 
-#if (NTDDI_VERSION >= NTDDI_VISTASP1)
+#if (NTDDI_VERSION >= NTDDI_VISTA)
 typedef PVOID
 (NTAPI *pKdMapPhysicalMemory64)(
   _In_ PHYSICAL_ADDRESS PhysicalAddress,
