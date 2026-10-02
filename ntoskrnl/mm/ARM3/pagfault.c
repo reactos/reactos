@@ -41,7 +41,11 @@ MiCheckForUserStackOverflow(IN PVOID Address,
     NTSTATUS Status;
 
     /* Do we own the address space lock? */
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+    if (CurrentThread->OwnsProcessAddressSpaceExclusive)
+#else
     if (CurrentThread->AddressSpaceOwner == 1)
+#endif
     {
         /* This isn't valid */
         DPRINT1("Process owns address space lock\n");
@@ -2451,7 +2455,9 @@ UserFault:
 
             /* Not supported */
             ASSERT(ProtoPte == NULL);
+#if (NTDDI_VERSION < NTDDI_LONGHORN)
             ASSERT(CurrentThread->ApcNeeded == 0);
+#endif
 
             /* Drop the working set lock */
             MiUnlockProcessWorkingSet(CurrentProcess, CurrentThread);
@@ -2621,7 +2627,9 @@ UserFault:
         if (Status != STATUS_SUCCESS)
         {
             /* Not supported */
+#if (NTDDI_VERSION < NTDDI_LONGHORN)
             ASSERT(CurrentThread->ApcNeeded == 0);
+#endif
 
             /* Drop the working set lock */
             MiUnlockProcessWorkingSet(CurrentProcess, CurrentThread);
