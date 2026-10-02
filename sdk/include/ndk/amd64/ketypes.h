@@ -649,8 +649,11 @@ typedef struct _KREQUEST_PACKET
 typedef struct _REQUEST_MAILBOX
 {
     INT64 RequestSummary;
-    KREQUEST_PACKET RequestPacket;
-    PVOID Virtual[7];
+    union
+    {
+        KREQUEST_PACKET RequestPacket;
+        PVOID Virtual[7];
+    };
 } REQUEST_MAILBOX, *PREQUEST_MAILBOX;
 
 //
