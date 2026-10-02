@@ -91,20 +91,9 @@ list(APPEND SOURCE
     wine/muldiv.c
     wine/profile.c
     wine/res.c
-    wine/timezone.c
-    winnls/string/casemap.c
-    winnls/string/collation.c
-    winnls/string/digitmap.c
-    winnls/string/fold.c
-    winnls/string/format_msg.c
-    winnls/string/japanese.c
-    winnls/string/locale.c
     winnls/string/localeansi.c
-    winnls/string/lcformat.c
-    winnls/string/lcformatansi.c
     winnls/string/lstring.c
     winnls/string/nls.c
-    winnls/string/sortkey.c
     k32.h)
 
 if(MSVC)
@@ -145,7 +134,7 @@ set_module_type(kernel32 win32dll ENTRYPOINT DllMain 12)
 set_subsystem(kernel32 console)
 ################# END  HACK #################
 
-target_link_libraries(kernel32 psapi_static kernel32_vista_static kernel32_shared wine chkstk ${PSEH_LIB})
+target_link_libraries(kernel32 psapi_static win32_registry kernel32_vista_static kernel32_shared wine chkstk ${PSEH_LIB})
 add_importlibs(kernel32 ntdll)
 add_pch(kernel32 k32.h SOURCE)
 add_dependencies(kernel32 psdk errcodes asm)
