@@ -42,6 +42,8 @@ extern SIZE_T MmTotalCommittedPages;
 extern SIZE_T MmSharedCommit;
 extern SIZE_T MmDriverCommit;
 extern SIZE_T MmProcessCommit;
+extern ULONG MmBadPagesDetected;
+extern ULONG MmZeroedPageSingleBitErrorsDetected;
 extern SIZE_T MmPagedPoolCommit;
 extern SIZE_T MmPeakCommitment;
 extern SIZE_T MmtotalCommitLimitMaximum;
