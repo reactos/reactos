@@ -1,6 +1,10 @@
-/* FILE:        applications/charmap/lang/cs-CZ.rc
- * TRANSLATOR:  Radek Liska aka Black_Fox (radekliska at gmail dot com)
- * UPDATED:     2011-03-31
+/*
+ * PROJECT:     ReactOS Character Map
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Czech resource file
+ * TRANSLATORS: Copyright 2008-2011 Radek Liška (Black_Fox) <radekliska@gmail.com>
+ *              Copyright 2011 Kamil Horníček <kamil.hornicek@reactos.org>
+ *              Copyright 2026 Václav Zouzalík (Venca24) <vaclav.zouzalik@seznam.cz>
  */
 
 LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
@@ -53,9 +57,9 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_LICENSE "This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.\r\n\r\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.\r\n\r\nYou should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
+    IDS_LICENSE "Tento program je svobodný software; můžete ho šířit a/nebo upravovat za podmínek licence GNU General Public License publikované Free Software Foundation; buď verze 2 této licence, nebo (podle vašeho uvážení) jakékoli pozdější verze.\r\n\r\nTento program je šířen s nadějí, že bude užitečný, ale BEZ JAKÉKOLI ZÁRUKY; a to i bez zákonné záruky PRODEJNOSTI nebo VHODNOSTI PRO DANÝ ÚČEL.  Pro více informací viz licenci GNU General Public License.\r\n\r\nKopii licence GNU General Public License jste měli obdržet spolu s tímto programem; pokud ne, napište na Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
     IDS_ABOUT "&O programu..."
     IDS_TITLE "Mapa znaků"
     IDS_UNICODE "Unicode"
-    IDS_ALL "All"
+    IDS_ALL "Všechny"
 END
