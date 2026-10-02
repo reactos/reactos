@@ -136,7 +136,28 @@ void Test_GetDIBits()
     ok(GetDIBits((HDC)2345, hbmp, 0, 15, NULL, pbi, 0) == 0, "\n");
     ok_err(ERROR_INVALID_PARAMETER);
 
-
+    /* Test partly "uninitialized" BITMAPINFO (from wine's gdiplus!GdipCreateBitmapFromHBITMAP) */
+    memset(pbi, 0xCC, bisize);
+    HBITMAP hbm = CreateBitmap(16, 16, 1, 32, NULL);
+    pbi->bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+    pbi->bmiHeader.biBitCount = 0;
+    ok_eq_int(GetDIBits(hdcScreen, hbm, 0, 0, NULL, pbi, DIB_RGB_COLORS), 1);
+    ok_eq_int(pbi->bmiHeader.biWidth, 16);
+    ok_eq_int(pbi->bmiHeader.biHeight, 16);
+    ok_eq_int(pbi->bmiHeader.biPlanes, 1);
+    ok_eq_int(pbi->bmiHeader.biBitCount, 32);
+    ok_eq_int(pbi->bmiHeader.biCompression, BI_BITFIELDS);
+    ok_eq_int(pbi->bmiHeader.biSizeImage, 0x400);
+    ok_eq_int(pbi->bmiHeader.biXPelsPerMeter, 0);
+    ok_eq_int(pbi->bmiHeader.biYPelsPerMeter, 0);
+    ok_eq_int(pbi->bmiHeader.biClrUsed, 0);
+    ok_eq_int(pbi->bmiHeader.biClrImportant, 0);
+    ok_eq_int(*(PULONG)&pbi->bmiColors[0], 0x00FF0000);
+    ok_eq_int(*(PULONG)&pbi->bmiColors[1], 0x0000FF00);
+    ok_eq_int(*(PULONG)&pbi->bmiColors[2], 0x000000FF);
+    ok_eq_int(*(PULONG)&pbi->bmiColors[3], 0xCCCCCCCC);
+    ok_eq_int(*(PULONG)&pbi->bmiColors[255], 0xCCCCCCCC);
+    DeleteObject(hbm);
 
     /* null hdc */
     SetLastError(ERROR_SUCCESS);
