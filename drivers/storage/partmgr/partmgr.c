@@ -829,7 +829,7 @@ FdoIoctlDiskSetDriveLayoutEx(
             // set updated partition numbers
             for (UINT32 i = 0; i < layoutEx->PartitionCount; i++)
             {
-                PPARTITION_INFORMATION_EX part = &layoutEx->PartitionEntry[i];
+                PPARTITION_INFORMATION_EX part = &layoutUser->PartitionEntry[i];
 
                 part->PartitionNumber = layoutEx->PartitionEntry[i].PartitionNumber;
             }
