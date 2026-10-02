@@ -990,7 +990,7 @@ typedef struct _SYNCH_COUNTERS
 //
 typedef struct _KDPC_DATA
 {
-#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+#if (NTDDI_VERSION >= NTDDI_WINBLUE)
     KDPC_LIST DpcList;
 #else
     LIST_ENTRY DpcListHead;
@@ -1002,7 +1002,7 @@ typedef struct _KDPC_DATA
     volatile ULONG DpcQueueDepth;
 #endif
     ULONG DpcCount;
-#if (NTDDI_VERSION >= NTDDI_LONGHORN) || defined(_M_ARM)
+#if (NTDDI_VERSION >= NTDDI_WINBLUE) || defined(_M_ARM)
     PKDPC ActiveDpc;
 #endif
 } KDPC_DATA, *PKDPC_DATA;
@@ -1443,7 +1443,12 @@ typedef struct _KTHREAD
             ULONG SystemAffinityActive:1;
             ULONG Alertable:1;
             ULONG GdiFlushActive:1;
+#if (NTDDI_VERSION >= NTDDI_VISTASP1) // [
+            ULONG UserStackWalkActive:1;
+            ULONG Reserved:24;
+#else // ][
             ULONG Reserved:25;
+#endif // ]
         };
         LONG MiscFlags;
     };
@@ -1644,7 +1649,7 @@ typedef struct _KTHREAD
     CHAR Saturation;
 #if (NTDDI_VERSION >= NTDDI_LONGHORN) // [
     ULONG SystemCallNumber;
-#if (NTDDI_VERSION >= NTDDI_WIN7) // [
+#if (NTDDI_VERSION >= NTDDI_VISTASP1) // [
     ULONG FreezeCount;
 #else // ][
     ULONG Spare02;
@@ -1670,6 +1675,8 @@ typedef struct _KTHREAD
             UCHAR SavedApcStateFill[FIELD_OFFSET(KAPC_STATE, UserApcPending) + 1];
 #if (NTDDI_VERSION >= NTDDI_WIN7) // [
             UCHAR WaitReason;
+#elif (NTDDI_VERSION >= NTDDI_VISTASP1) // ][
+            UCHAR Spare02;
 #else // ][
             CCHAR FreezeCount;
 #endif // ]
