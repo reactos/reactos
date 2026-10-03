@@ -1048,8 +1048,8 @@ RamdiskReadWrite(IN PDEVICE_OBJECT DeviceObject,
                  IN PIRP Irp)
 {
     PRAMDISK_DRIVE_EXTENSION DeviceExtension;
-    // ULONG Length;
-    // LARGE_INTEGER ByteOffset;
+    ULONG Length;
+    LARGE_INTEGER ByteOffset;
     PIO_STACK_LOCATION IoStackLocation;
     NTSTATUS Status, ReturnStatus;
 
@@ -1064,12 +1064,26 @@ RamdiskReadWrite(IN PDEVICE_OBJECT DeviceObject,
 
     /* Capture parameters */
     IoStackLocation = IoGetCurrentIrpStackLocation(Irp);
-    // Length = IoStackLocation->Parameters.Read.Length;
-    // ByteOffset = IoStackLocation->Parameters.Read.ByteOffset;
+    Length = IoStackLocation->Parameters.Read.Length;
+    ByteOffset = IoStackLocation->Parameters.Read.ByteOffset;
 
-    /* FIXME: Validate offset */
+    /* Validate that the transfer stays within the RAM disk. */
+    if ((ByteOffset.QuadPart < 0) ||
+        (ByteOffset.QuadPart > DeviceExtension->DiskLength.QuadPart) ||
+        (Length > DeviceExtension->DiskLength.QuadPart - ByteOffset.QuadPart))
+    {
+        Status = STATUS_INVALID_PARAMETER;
+        goto Complete;
+    }
 
-    /* FIXME: Validate sector */
+    /* RAM disk transfers must start and end on sector boundaries. */
+    if ((DeviceExtension->BytesPerSector == 0) ||
+        ((ByteOffset.QuadPart % DeviceExtension->BytesPerSector) != 0) ||
+        ((Length % DeviceExtension->BytesPerSector) != 0))
+    {
+        Status = STATUS_INVALID_PARAMETER;
+        goto Complete;
+    }
 
     /* Validate write */
     if ((IoStackLocation->MajorFunction == IRP_MJ_WRITE) &&
