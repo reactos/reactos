@@ -19,10 +19,11 @@ public:
 
         COMMAND_ID_HANDLER(IDCANCEL, OnCommand)
         COMMAND_ID_HANDLER(IDOK, OnCommand)
-        COMMAND_ID_HANDLER(IDC_BUTTON_ADD, OnCommand)
-        COMMAND_ID_HANDLER(IDC_BUTTON_REMOVE, OnCommand)
-        COMMAND_ID_HANDLER(IDC_BUTTON_UP, OnCommand)
-        COMMAND_ID_HANDLER(IDC_BUTTON_DOWN, OnCommand)
+        COMMAND_ID_HANDLER(IDC_ADD_BUTTON_ADD, OnCommand)
+        COMMAND_ID_HANDLER(IDC_ADD_BUTTON_REMOVE, OnCommand)
+        COMMAND_ID_HANDLER(IDC_ADD_BUTTON_UP, OnCommand)
+        COMMAND_ID_HANDLER(IDC_ADD_BUTTON_DOWN, OnCommand)
+        COMMAND_ID_HANDLER(IDC_ADD_ADVANCED, OnCommand)
 
         NOTIFY_CODE_HANDLER(LVN_ITEMCHANGED, OnItemChanged)
         NOTIFY_CODE_HANDLER(TVN_SELCHANGED,  OnSelectionChanged)
@@ -37,6 +38,11 @@ private:
     CWindow m_BtnUp;
     CWindow m_BtnDown;
     CWindow m_Description;
+    CWindow m_SelectedText;
+    CWindow m_ParentText;
+    CWindow m_ParentList;
+
+    BOOL m_Advanced;
 
     CMainWnd *m_MainWnd;
     CComPtr<CConsoleWnd> m_Console;
@@ -63,4 +69,6 @@ public:
     LRESULT OnSelectionChanged(INT uCode, LPNMHDR hdr, BOOL& bHandled);
     LRESULT OnItemDblClicked(INT uCode, LPNMHDR hdr, BOOL& bHandled);
     void UpdateButtons();
+    BOOL GetAdvanced();
+    VOID SetAdvanced(BOOL Advanced);
 };

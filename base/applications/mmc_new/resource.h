@@ -70,13 +70,17 @@
 #define IDM_TB_ACTIONS_PANE    1506
 
 #define IDD_DIALOG_ADD                3000
-#define IDC_BUTTON_ADD                3001
-#define IDC_BUTTON_REMOVE             3002
-#define IDC_LIST_AVAILABLE            3003
-#define IDC_LIST_SELECTED             3004
-#define IDC_DESCRIPTION               3005
-#define IDC_BUTTON_UP                 3006
-#define IDC_BUTTON_DOWN               3007
+#define IDC_ADD_BUTTON_ADD            3001
+#define IDC_ADD_BUTTON_REMOVE         3002
+#define IDC_ADD_LIST_AVAILABLE        3003
+#define IDC_ADD_LIST_SELECTED         3004
+#define IDC_ADD_DESCRIPTION           3005
+#define IDC_ADD_BUTTON_UP             3006
+#define IDC_ADD_BUTTON_DOWN           3007
+#define IDC_ADD_ADVANCED              3008
+#define IDC_ADD_TEXT_SELECTED         3009
+#define IDC_ADD_TEXT_PARENT           3010
+#define IDC_ADD_LIST_PARENT           3011
 
 #define IDD_CUSTOMIZE                 3100
 #define IDC_CUSTOMIZE_SCOPEPANE       3101
@@ -102,6 +106,9 @@
 #define IDC_ABOUT_ICON                3301
 #define IDC_ABOUT_INFO                3302
 #define IDC_ABOUT_DESCRIPTION         3303
+
+#define IDD_ADVANCED                  3400
+#define IDC_ADVANCED_CHECK            3401
 
 #define IDS_CONSOLEROOT               5010
 

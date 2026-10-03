@@ -12,6 +12,7 @@ CAddDialog::CAddDialog(CMainWnd *MainWnd, CConsoleWnd* Console)
 {
     m_MainWnd = MainWnd;
     m_Console = Console;
+    m_Advanced = FALSE;
 }
 
 CAddDialog::~CAddDialog()
@@ -76,13 +77,16 @@ CAddDialog::OnInitDialog(UINT nMessage, WPARAM wParam, LPARAM lParam, BOOL& bHan
 {
     CenterWindow(m_Console->m_hWnd);
 
-    m_Available.Attach(GetDlgItem(IDC_LIST_AVAILABLE));
-    m_Selected.Attach(GetDlgItem(IDC_LIST_SELECTED));
-    m_BtnAdd.Attach(GetDlgItem(IDC_BUTTON_ADD));
-    m_BtnRemove.Attach(GetDlgItem(IDC_BUTTON_REMOVE));
-    m_BtnUp.Attach(GetDlgItem(IDC_BUTTON_UP));
-    m_BtnDown.Attach(GetDlgItem(IDC_BUTTON_DOWN));
-    m_Description.Attach(GetDlgItem(IDC_DESCRIPTION));
+    m_Available.Attach(GetDlgItem(IDC_ADD_LIST_AVAILABLE));
+    m_Selected.Attach(GetDlgItem(IDC_ADD_LIST_SELECTED));
+    m_BtnAdd.Attach(GetDlgItem(IDC_ADD_BUTTON_ADD));
+    m_BtnRemove.Attach(GetDlgItem(IDC_ADD_BUTTON_REMOVE));
+    m_BtnUp.Attach(GetDlgItem(IDC_ADD_BUTTON_UP));
+    m_BtnDown.Attach(GetDlgItem(IDC_ADD_BUTTON_DOWN));
+    m_Description.Attach(GetDlgItem(IDC_ADD_DESCRIPTION));
+    m_SelectedText.Attach(GetDlgItem(IDC_ADD_TEXT_SELECTED));
+    m_ParentText.Attach(GetDlgItem(IDC_ADD_TEXT_PARENT));
+    m_ParentList.Attach(GetDlgItem(IDC_ADD_LIST_PARENT));
 
     InitLV(m_Available);
     InitTV(m_Selected);
@@ -123,7 +127,7 @@ CAddDialog::OnCommand(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
 {
     switch (wID)
     {
-        case IDC_BUTTON_ADD:
+        case IDC_ADD_BUTTON_ADD:
         {
             int iItem = m_Available.GetNextItem(-1, LVNI_SELECTED);
             if (iItem != -1)
@@ -141,7 +145,7 @@ CAddDialog::OnCommand(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
         }
         break;
 
-        case IDC_BUTTON_REMOVE:
+        case IDC_ADD_BUTTON_REMOVE:
         {
             HTREEITEM hTreeItem = m_Selected.GetSelection();
             if (hTreeItem != NULL)
@@ -156,7 +160,7 @@ CAddDialog::OnCommand(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
         }
         break;
 
-        case IDC_BUTTON_UP:
+        case IDC_ADD_BUTTON_UP:
         {
             HTREEITEM hSelectItem = m_Selected.GetSelection();
             if (hSelectItem != NULL)
@@ -185,7 +189,7 @@ CAddDialog::OnCommand(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
         }
         break;
 
-        case IDC_BUTTON_DOWN:
+        case IDC_ADD_BUTTON_DOWN:
         {
             HTREEITEM hSelectItem = m_Selected.GetSelection();
             if (hSelectItem != NULL)
@@ -205,6 +209,54 @@ CAddDialog::OnCommand(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
                         Alias->hTreeItem = InsertTreeItem(m_Selected, Alias, m_RootTreeItem, hNextItem);
                         m_Selected.SelectItem(Alias->hTreeItem);
                     }
+                }
+            }
+        }
+        break;
+
+        case IDC_ADD_ADVANCED:
+        {
+            CAddAdvancedDialog AdvancedDialog(this);
+            if (AdvancedDialog.DoModal(m_hWnd, (LPARAM)0) == IDOK)
+            {
+                RECT rc;
+                int Offset = 50;
+
+//                Offset = HIWORD(::GetDialogBaseUnits()) * 20;
+
+                ::GetWindowRect(m_Selected.m_hWnd, &rc);
+                ::MapWindowPoints(HWND_DESKTOP, this->m_hWnd, (LPPOINT)&rc, 2);
+                if (m_Advanced)
+                    rc.top += Offset;
+                else
+                    rc.top -= Offset;
+
+                ::MoveWindow(m_Selected.m_hWnd, rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top, TRUE);
+
+                ::GetWindowRect(m_SelectedText.m_hWnd, &rc);
+                ::MapWindowPoints(HWND_DESKTOP, this->m_hWnd, (LPPOINT)&rc, 2);
+                if (m_Advanced)
+                {
+                    rc.top += Offset;
+                    rc.bottom += Offset;
+                }
+                else
+                {
+                    rc.top -= Offset;
+                    rc.bottom -= Offset;
+                }
+
+                ::MoveWindow(m_SelectedText.m_hWnd, rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top, TRUE);
+
+                if (m_Advanced)
+                {
+                    m_ParentText.ShowWindow(SW_SHOW);
+                    m_ParentList.ShowWindow(SW_SHOW);
+                }
+                else
+                {
+                    m_ParentText.ShowWindow(SW_HIDE);
+                    m_ParentList.ShowWindow(SW_HIDE);
                 }
             }
         }
@@ -371,4 +423,16 @@ CAddDialog::DeleteSnapinAliases(BOOL RemoveDeletedSnapins)
         delete m_RootAlias;
         m_RootAlias = NULL;
     }
+}
+
+BOOL
+CAddDialog::GetAdvanced()
+{
+    return m_Advanced;
+}
+
+VOID
+CAddDialog::SetAdvanced(BOOL Advanced)
+{
+    m_Advanced = Advanced;
 }
