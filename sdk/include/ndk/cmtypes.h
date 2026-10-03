@@ -276,6 +276,10 @@ typedef enum _PLUGPLAY_EVENT_CATEGORY
     PowerEvent,
     VetoEvent,
     BlockedDriverEvent,
+#if (NTDDI_VERSION >= NTDDI_VISTA) || defined(__REACTOS__)
+    InvalidDeviceIdEvent,
+    DevicePropertyChangeEvent,
+#endif
     MaxPlugEventCategory
 } PLUGPLAY_EVENT_CATEGORY;
 

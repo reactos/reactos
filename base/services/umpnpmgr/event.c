@@ -302,6 +302,11 @@ PnpEventThread(
 //            case PowerEvent:
 //            case VetoEvent:
 //            case BlockedDriverEvent:
+//            case InvalidDeviceIdEvent:
+
+            case DevicePropertyChangeEvent:
+                DPRINT("Device property changed: %S\n", PnpEvent->TargetDevice.DeviceIds);
+                break;
 
             default:
                 DPRINT1("Unsupported Event Category: %lu\n", PnpEvent->EventCategory);
