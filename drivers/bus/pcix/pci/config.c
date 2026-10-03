@@ -265,6 +265,7 @@ NTSTATUS
 NTAPI
 PciGetConfigHandlers(IN PPCI_FDO_EXTENSION FdoExtension)
 {
+    PPCI_BUS_INTERFACE_STANDARD PciInterface;
     PBUS_HANDLER BusHandler;
     NTSTATUS Status;
     ASSERT(FdoExtension->BusHandler == NULL);
@@ -284,6 +285,21 @@ PciGetConfigHandlers(IN PPCI_FDO_EXTENSION FdoExtension)
         {
             /* ACPI detected, PCI Bus Driver will reconfigure bus numbers*/
             PciAssignBusNumbers = TRUE;
+
+            /* The driver below owns _OSC and reports what the firmware granted */
+            PciInterface = FdoExtension->PciBusInterface;
+            if ((PciInterface->Size >= RTL_SIZEOF_THROUGH_FIELD(PCI_BUS_INTERFACE_STANDARD,
+                                                                RootBusCapability)) &&
+                (PciInterface->RootBusCapability))
+            {
+                PciInterface->RootBusCapability(PciInterface->Context,
+                                                &FdoExtension->RootBusHardwareCapability);
+
+                DPRINT1("PCI - Root bus interface %d, _OSC support 0x%08lx, granted 0x%08lx\n",
+                        FdoExtension->RootBusHardwareCapability.SecondaryInterface,
+                        FdoExtension->RootBusHardwareCapability.OscFeatureSupport.u.AsULONG,
+                        FdoExtension->RootBusHardwareCapability.OscControlGranted.u.AsULONG);
+            }
         }
     }
     else
