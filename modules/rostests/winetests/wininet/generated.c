@@ -29,7 +29,7 @@
 
 #if defined(_MSC_VER) && (_MSC_VER >= 1300) && defined(__cplusplus)
 # define _TYPE_ALIGNMENT(type) __alignof(type)
-#elif defined(__GNUC__)
+#elif defined(__GNUC__) || defined(__clang__)
 # define _TYPE_ALIGNMENT(type) __alignof__(type)
 #else
 /*

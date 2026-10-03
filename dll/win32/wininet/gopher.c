@@ -1,6 +1,4 @@
-#ifdef __REACTOS__
-#include "precomp.h"
-#else/*
+/*
  * WININET - Gopher implementation
  *
  * Copyright 2003 Kirill Smelkov
@@ -27,7 +25,6 @@
 #include "wininet.h"
 
 #include "wine/debug.h"
-#endif /* defined(__REACTOS__) */
 
 WINE_DEFAULT_DEBUG_CHANNEL(wininet);
 
