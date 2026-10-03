@@ -191,10 +191,13 @@ CConsoleWnd::OnNotify(UINT nMessage, WPARAM wParam, LPARAM lParam, BOOL& bHandle
         case TVN_SELCHANGED:
             {
                 LPNMTREEVIEW pNmTreeview = (LPNMTREEVIEW)lParam;
-                CSnapin *Snapin = (CSnapin *)pNmTreeview->itemNew.lParam;
+                CSnapin *OldSnapin = (CSnapin *)pNmTreeview->itemOld.lParam;
+                CSnapin *NewSnapin = (CSnapin *)pNmTreeview->itemNew.lParam;
 
-                m_DescriptionBar.SetWindowText(Snapin->DisplayName());
-                m_MainWnd->UpdateAboutSnapinMenu((Snapin == m_MainWnd->GetRootSnapin()) ? NULL : Snapin);
+                m_DescriptionBar.SetWindowText(NewSnapin->DisplayName());
+                m_MainWnd->UpdateAboutSnapinMenu((NewSnapin == m_MainWnd->GetRootSnapin()) ? NULL : NewSnapin);
+                if ((OldSnapin == m_MainWnd->GetRootSnapin()) != (NewSnapin == m_MainWnd->GetRootSnapin()))
+                    m_MainWnd->UpdateUpToolButton((NewSnapin == m_MainWnd->GetRootSnapin()) ? FALSE : TRUE);
             }
             return FALSE;
     }
@@ -409,6 +412,21 @@ VOID
 CConsoleWnd::SetStatusBarText(LPWSTR pszStatusText)
 {
      m_StatusBar.SetText(pszStatusText);
+}
+
+VOID
+CConsoleWnd::SelectParent()
+{
+    HTREEITEM hItem = m_TreeView.GetSelection();
+    if (hItem == NULL)
+        return;
+
+    if (hItem == m_TreeView.GetNextItem(hItem, TVGN_ROOT))
+        return;
+
+    HTREEITEM hParent = m_TreeView.GetNextItem(hItem, TVGN_PARENT);
+    if (hParent)
+        m_TreeView.SelectItem(hParent);
 }
 
 VOID

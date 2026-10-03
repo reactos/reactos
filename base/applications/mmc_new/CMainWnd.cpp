@@ -502,6 +502,17 @@ CMainWnd::OnHelpAboutSnapin(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHan
 }
 
 LRESULT
+CMainWnd::OnToolbarSelectParent(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
+{
+    CConsoleWnd* child = GetActiveChildInfo();
+    if (child == NULL)
+        return 0;
+
+    child->SelectParent();
+    return 0;
+}
+
+LRESULT
 CMainWnd::OnToolbarScopePane(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
 {
     CConsoleWnd* child = GetActiveChildInfo();
@@ -752,6 +763,20 @@ CMainWnd::UpdateAboutSnapinMenu(CSnapin *Snapin)
 
         /* FIXME: Append this menu item */
         InsertMenuItemW(hMenu, IDM_HELP_ABOUT_MMC, FALSE, &mi);
+    }
+}
+
+VOID
+CMainWnd::UpdateUpToolButton(BOOL bShow)
+{
+    if (bShow)
+        m_ToolBar.InsertButton(3, &TbButtons[3]);
+    else
+    {
+        TBBUTTON ToolButton;
+        m_ToolBar.GetButton(3, &ToolButton);
+        if (ToolButton.idCommand == IDM_TB_UP)
+            m_ToolBar.DeleteButton(3);
     }
 }
 

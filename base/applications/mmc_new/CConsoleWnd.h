@@ -113,6 +113,7 @@ public:
 
     VOID UpdateView();
     VOID SetStatusBarText(LPWSTR pszStatusText);
+    VOID SelectParent();
 
     VOID SaveView(MscFile *mscFile, IXMLDOMElement *pParentElement);
 
