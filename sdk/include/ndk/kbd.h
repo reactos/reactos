@@ -194,7 +194,7 @@ typedef struct _VK_TO_FUNCTION_TABLE
     VK_FPARAM NLSFEProcAlt[8];
 } VK_F, *PVK_F;
 
-typedef struct tagKBDNLSTABLES
+typedef struct tagKbdNlsLayer
 {
     USHORT OEMIdentifier;
     USHORT LayoutInformation;
