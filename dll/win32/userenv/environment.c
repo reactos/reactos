@@ -514,6 +514,7 @@ CreateEnvironmentBlock(OUT LPVOID *lpEnvironment,
     LPWSTR lpUserName = NULL;
     LPWSTR lpDomainName = NULL;
     WCHAR Buffer[MAX_PATH];
+    WCHAR PublicDirectory[MAX_PATH];
     WCHAR szValue[1024];
 
     DPRINT("CreateEnvironmentBlock() called\n");
@@ -576,6 +577,10 @@ CreateEnvironmentBlock(OUT LPVOID *lpEnvironment,
                                    L"ALLUSERSPROFILE",
                                    Buffer,
                                    FALSE);
+        SetUserEnvironmentVariable(Environment,
+                            L"ProgramData",
+                            Buffer,
+                            FALSE);
     }
 
     /* Set 'USERPROFILE' variable to the default users profile */
@@ -625,6 +630,37 @@ CreateEnvironmentBlock(OUT LPVOID *lpEnvironment,
                                        FALSE);
         }
 
+        RegCloseKey(hKey);
+    }
+
+    /* Set 'PUBLIC' variable to the public user directory */
+    lError = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                        L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\ProfileList",
+                        0,
+                        KEY_READ,
+                        &hKey);
+    if (lError == ERROR_SUCCESS)
+    {
+        Length = sizeof(szValue);
+        lError = RegQueryValueExW(hKey,
+                                  L"Public",
+                                  NULL,
+                                  &dwType,
+                                  (LPBYTE)szValue,
+                                  &Length);
+        if (lError == ERROR_SUCCESS)
+        {
+            if (!ExpandEnvironmentStringsW(szValue,
+                                            PublicDirectory,
+                                            ARRAYSIZE(PublicDirectory)))
+            {
+                DPRINT1("Error: %lu\n", GetLastError());
+                RegCloseKey(hKey);
+                return FALSE;
+            }
+
+            SetUserEnvironmentVariable(Environment, L"PUBLIC", PublicDirectory, FALSE);
+        }
         RegCloseKey(hKey);
     }
 

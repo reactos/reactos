@@ -161,7 +161,7 @@ SHCreateSessionKey(REGSAM samDesired, PHKEY phKey)
 
             if (GetTokenInformation(hToken, TokenStatistics, &Stats, sizeof(Stats), &ReturnLength))
             {
-                swprintf(wszSessionKey,
+                _swprintf(wszSessionKey,
                          L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\SessionInfo\\%08x%08x",
                          Stats.AuthenticationId.HighPart, Stats.AuthenticationId.LowPart);
             }

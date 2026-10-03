@@ -25,6 +25,7 @@
  *
  */
 
+#ifdef __REACTOS__
 #define WIN32_NO_STATUS
 #define _INC_WINDOWS
 #define COBJMACROS
@@ -51,59 +52,43 @@
 #include "shell32_main.h"
 #include "shresdef.h"
 
-#undef _WIN32_WINNT
-#define _WIN32_WINNT _WIN32_WINNT_WS03
+#else
+#define COBJMACROS
+
+#include <stdio.h>
+#include <stdarg.h>
+#include <string.h>
+#include <ctype.h>
+
+#include "windef.h"
+#include "winbase.h"
+#include "winternl.h"
+#include "winnls.h"
+#include "winreg.h"
+#include "wingdi.h"
+#include "winuser.h"
+#include "winioctl.h"
+#define WINE_MOUNTMGR_EXTENSIONS
+#include "ddk/mountmgr.h"
+
+#include "shlobj.h"
+#include "shtypes.h"
+#include "shresdef.h"
+#include "shell32_main.h"
+#include "pidl.h"
+#include "shlwapi.h"
+#include "sddl.h"
+#include "knownfolders.h"
+#include "initguid.h"
+#include "shobjidl.h"
+#include "wine/debug.h"
+#endif
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
 static const BOOL is_win64 = sizeof(void *) > sizeof(int);
 
-/* FIXME: Remove this */
-typedef enum _NT_PRODUCT_TYPE
-{
-    NtProductWinNt = 1,
-    NtProductLanManNt,
-    NtProductServer
-} NT_PRODUCT_TYPE, *PNT_PRODUCT_TYPE;
-
-/* FIXME: We cannot refresh the RtlGetNtProductType value before reboot. */
-static BOOL
-DoGetProductType(PNT_PRODUCT_TYPE ProductType)
-{
-    HKEY hKey;
-    LONG error;
-    WCHAR szValue[9];
-    DWORD cbValue;
-    static DWORD s_dwProductType = 0;
-
-    if (s_dwProductType != 0)
-    {
-        *ProductType = s_dwProductType;
-        return TRUE;
-    }
-
-    *ProductType = NtProductServer;
-
-    error = RegOpenKeyExW(HKEY_LOCAL_MACHINE, L"SYSTEM\\CurrentControlSet\\Control\\ProductOptions", 0, KEY_READ, &hKey);
-    if (error)
-        return FALSE;
-
-    cbValue = sizeof(szValue);
-    error = RegGetValueW(hKey, NULL, L"ProductType", RRF_RT_REG_SZ, NULL, (PVOID)szValue, &cbValue);
-    if (!error)
-    {
-        if (lstrcmpW(szValue, L"WinNT") == 0)
-            *ProductType = NtProductWinNt;
-        else if (lstrcmpW(szValue, L"LanmanNT") == 0)
-            *ProductType = NtProductLanManNt;
-    }
-
-    s_dwProductType = *ProductType;
-
-    RegCloseKey(hKey);
-    return TRUE;
-}
-
+#ifdef __REACTOS__
 BOOL APIENTRY IsRemovableDrive(DWORD iDrive)
 {
     WCHAR szRoot[] = L"C:\\";
@@ -401,6 +386,32 @@ PathQualifyExW(_Inout_ LPWSTR pszPath, _Inout_opt_ LPCWSTR pszDir, _In_ DWORD dw
     }
 }
 
+BOOL SHELL_GetUserProfileDirectoryW(HANDLE hToken, LPWSTR szPath, LPDWORD lpcchPath)
+{
+    BOOL result;
+    if (!hToken)
+    {
+        OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &hToken);
+        result = GetUserProfileDirectoryW(hToken, szPath, lpcchPath);
+        CloseHandle(hToken);
+    }
+    else if ((INT) hToken == -1)
+    {
+        result = GetDefaultUserProfileDirectoryW(szPath, lpcchPath);
+    }
+    else
+    {
+        result = GetUserProfileDirectoryW(hToken, szPath, lpcchPath);
+    }
+    TRACE("SHELL_GetUserProfileDirectoryW returning %S\n", szPath);
+    return result;
+}
+#endif
+
+/*
+	########## Combining and Constructing paths ##########
+*/
+
 /*************************************************************************
  * PathAppend		[SHELL32.36]
  */
@@ -411,6 +422,64 @@ BOOL WINAPI PathAppendAW(
 	if (SHELL_OsIsUnicode())
 	  return PathAppendW(lpszPath1, lpszPath2);
 	return PathAppendA(lpszPath1, lpszPath2);
+}
+
+/*************************************************************************
+ * PathCombine	 [SHELL32.37]
+ */
+LPVOID WINAPI PathCombineAW(
+	LPVOID szDest,
+	LPCVOID lpszDir,
+	LPCVOID lpszFile)
+{
+	if (SHELL_OsIsUnicode())
+	  return PathCombineW( szDest, lpszDir, lpszFile );
+	return PathCombineA( szDest, lpszDir, lpszFile );
+}
+
+/*************************************************************************
+ * PathAddBackslash		[SHELL32.32]
+ */
+LPVOID WINAPI PathAddBackslashAW(LPVOID lpszPath)
+{
+	if(SHELL_OsIsUnicode())
+	  return PathAddBackslashW(lpszPath);
+	return PathAddBackslashA(lpszPath);
+}
+
+/*************************************************************************
+ * PathBuildRoot		[SHELL32.30]
+ */
+LPVOID WINAPI PathBuildRootAW(LPVOID lpszPath, int drive)
+{
+	if(SHELL_OsIsUnicode())
+	  return PathBuildRootW(lpszPath, drive);
+	return PathBuildRootA(lpszPath, drive);
+}
+
+/*
+	Extracting Component Parts
+*/
+
+/*************************************************************************
+ * PathFindFileName	[SHELL32.34]
+ */
+LPVOID WINAPI PathFindFileNameAW(LPCVOID lpszPath)
+{
+	if(SHELL_OsIsUnicode())
+	  return PathFindFileNameW(lpszPath);
+	return PathFindFileNameA(lpszPath);
+}
+
+/*************************************************************************
+ * PathFindExtension		[SHELL32.31]
+ */
+LPVOID WINAPI PathFindExtensionAW(LPCVOID lpszPath)
+{
+	if (SHELL_OsIsUnicode())
+	  return PathFindExtensionW(lpszPath);
+	return PathFindExtensionA(lpszPath);
+
 }
 
 /*************************************************************************
@@ -440,11 +509,33 @@ static LPWSTR PathGetExtensionW(LPCWSTR lpszPath)
 }
 
 /*************************************************************************
- * SHPathGetExtension        [SHELL32.158]
+ * PathGetExtension		[SHELL32.158]
  */
-LPVOID WINAPI SHPathGetExtensionW(LPCWSTR lpszPath, DWORD void1, DWORD void2)
+LPVOID WINAPI PathGetExtensionAW(LPCVOID lpszPath,DWORD void1, DWORD void2)
 {
-    return PathGetExtensionW(lpszPath);
+	if (SHELL_OsIsUnicode())
+	  return PathGetExtensionW(lpszPath);
+	return PathGetExtensionA(lpszPath);
+}
+
+/*************************************************************************
+ * PathGetArgs	[SHELL32.52]
+ */
+LPVOID WINAPI PathGetArgsAW(LPVOID lpszPath)
+{
+	if (SHELL_OsIsUnicode())
+	  return PathGetArgsW(lpszPath);
+	return PathGetArgsA(lpszPath);
+}
+
+/*************************************************************************
+ * PathGetDriveNumber	[SHELL32.57]
+ */
+int WINAPI PathGetDriveNumberAW(LPVOID lpszPath)
+{
+	if (SHELL_OsIsUnicode())
+	  return PathGetDriveNumberW(lpszPath);
+	return PathGetDriveNumberA(lpszPath);
 }
 
 /*************************************************************************
@@ -456,6 +547,50 @@ BOOL WINAPI PathRemoveFileSpecAW(LPVOID lpszPath)
 	  return PathRemoveFileSpecW(lpszPath);
 	return PathRemoveFileSpecA(lpszPath);
 }
+
+/*************************************************************************
+ * PathStripPath	[SHELL32.38]
+ */
+void WINAPI PathStripPathAW(LPVOID lpszPath)
+{
+	if (SHELL_OsIsUnicode())
+            PathStripPathW(lpszPath);
+        else
+            PathStripPathA(lpszPath);
+}
+
+/*************************************************************************
+ * PathStripToRoot	[SHELL32.50]
+ */
+BOOL WINAPI PathStripToRootAW(LPVOID lpszPath)
+{
+	if (SHELL_OsIsUnicode())
+	  return PathStripToRootW(lpszPath);
+	return PathStripToRootA(lpszPath);
+}
+
+/*************************************************************************
+ * PathRemoveArgs	[SHELL32.251]
+ */
+void WINAPI PathRemoveArgsAW(LPVOID lpszPath)
+{
+	if (SHELL_OsIsUnicode())
+            PathRemoveArgsW(lpszPath);
+        else
+            PathRemoveArgsA(lpszPath);
+}
+
+/*************************************************************************
+ * PathRemoveExtension	[SHELL32.250]
+ */
+void WINAPI PathRemoveExtensionAW(LPVOID lpszPath)
+{
+	if (SHELL_OsIsUnicode())
+            PathRemoveExtensionW(lpszPath);
+        else
+            PathRemoveExtensionA(lpszPath);
+}
+
 
 /*
 	Path Manipulations
@@ -501,9 +636,71 @@ VOID WINAPI PathGetShortPathAW(LPVOID pszPath)
 	PathGetShortPathA(pszPath);
 }
 
+/*************************************************************************
+ * PathRemoveBlanks [SHELL32.33]
+ */
+void WINAPI PathRemoveBlanksAW(LPVOID str)
+{
+	if(SHELL_OsIsUnicode())
+            PathRemoveBlanksW(str);
+        else
+            PathRemoveBlanksA(str);
+}
+
+/*************************************************************************
+ * PathQuoteSpaces [SHELL32.55]
+ */
+VOID WINAPI PathQuoteSpacesAW (LPVOID lpszPath)
+{
+	if(SHELL_OsIsUnicode())
+            PathQuoteSpacesW(lpszPath);
+        else
+            PathQuoteSpacesA(lpszPath);
+}
+
+/*************************************************************************
+ * PathUnquoteSpaces [SHELL32.56]
+ */
+VOID WINAPI PathUnquoteSpacesAW(LPVOID str)
+{
+	if(SHELL_OsIsUnicode())
+	  PathUnquoteSpacesW(str);
+	else
+	  PathUnquoteSpacesA(str);
+}
+
+/*************************************************************************
+ * PathParseIconLocation	[SHELL32.249]
+ */
+int WINAPI PathParseIconLocationAW (LPVOID lpszPath)
+{
+	if(SHELL_OsIsUnicode())
+	  return PathParseIconLocationW(lpszPath);
+	return PathParseIconLocationA(lpszPath);
+}
+
 /*
 	########## Path Testing ##########
 */
+/*************************************************************************
+ * PathIsUNC		[SHELL32.39]
+ */
+BOOL WINAPI PathIsUNCAW (LPCVOID lpszPath)
+{
+	if (SHELL_OsIsUnicode())
+	  return PathIsUNCW( lpszPath );
+	return PathIsUNCA( lpszPath );
+}
+
+/*************************************************************************
+ *  PathIsRelative	[SHELL32.40]
+ */
+BOOL WINAPI PathIsRelativeAW (LPCVOID lpszPath)
+{
+	if (SHELL_OsIsUnicode())
+	  return PathIsRelativeW( lpszPath );
+	return PathIsRelativeA( lpszPath );
+}
 
 /*************************************************************************
  * PathIsRoot		[SHELL32.29]
@@ -536,12 +733,16 @@ static BOOL PathIsExeA (LPCSTR lpszPath)
 /*************************************************************************
  *  PathIsExeW		[internal]
  */
+#ifdef __REACTOS__
 BOOL PathIsExeW (LPCWSTR lpszPath)
+#else
+static BOOL PathIsExeW (LPCWSTR lpszPath)
+#endif
 {
 	LPCWSTR lpszExtension = PathGetExtensionW(lpszPath);
         int i;
         static const WCHAR lpszExtensions[][4] =
-            {L"exe", L"com", L"pif", L"cmd", L"bat", L"scf", L"scr", L"" };
+            {L"exe", L"com", L"pif",L"cmd", L"bat", L"scf",L"scr",L"" };
 
 	TRACE("path=%s\n",debugstr_w(lpszPath));
 
@@ -562,6 +763,16 @@ BOOL WINAPI PathIsExeAW (LPCVOID path)
 }
 
 /*************************************************************************
+ * PathIsDirectory	[SHELL32.159]
+ */
+BOOL WINAPI PathIsDirectoryAW (LPCVOID lpszPath)
+{
+	if (SHELL_OsIsUnicode())
+	  return PathIsDirectoryW (lpszPath);
+	return PathIsDirectoryA (lpszPath);
+}
+
+/*************************************************************************
  * PathFileExists	[SHELL32.45]
  */
 BOOL WINAPI PathFileExistsAW (LPCVOID lpszPath)
@@ -572,17 +783,35 @@ BOOL WINAPI PathFileExistsAW (LPCVOID lpszPath)
 }
 
 /*************************************************************************
+ * PathMatchSpec	[SHELL32.46]
+ */
+BOOL WINAPI PathMatchSpecAW(LPVOID name, LPVOID mask)
+{
+	if (SHELL_OsIsUnicode())
+	  return PathMatchSpecW( name, mask );
+	return PathMatchSpecA( name, mask );
+}
+
+/*************************************************************************
+ * PathIsSameRoot	[SHELL32.650]
+ */
+BOOL WINAPI PathIsSameRootAW(LPCVOID lpszPath1, LPCVOID lpszPath2)
+{
+	if (SHELL_OsIsUnicode())
+	  return PathIsSameRootW(lpszPath1, lpszPath2);
+	return PathIsSameRootA(lpszPath1, lpszPath2);
+}
+
+/*************************************************************************
  * IsLFNDriveA		[SHELL32.41]
  */
 BOOL WINAPI IsLFNDriveA(LPCSTR lpszPath)
 {
-    WCHAR szBuffW[MAX_PATH], *pszW = NULL;
-    if (lpszPath)
-    {
-        SHAnsiToUnicode(lpszPath, szBuffW, _countof(szBuffW));
-        pszW = szBuffW;
-    }
-    return IsLFNDriveW(pszW);
+    DWORD	fnlen;
+
+    if (!GetVolumeInformationA(lpszPath, NULL, 0, NULL, &fnlen, NULL, NULL, 0))
+	return FALSE;
+    return fnlen > 12;
 }
 
 /*************************************************************************
@@ -590,47 +819,11 @@ BOOL WINAPI IsLFNDriveA(LPCSTR lpszPath)
  */
 BOOL WINAPI IsLFNDriveW(LPCWSTR lpszPath)
 {
-    DWORD cchMaxFileName, iDrive;
-    WCHAR szRoot[MAX_PATH];
+    DWORD	fnlen;
 
-    if (lpszPath == NULL || lpszPath[0] == UNICODE_NULL)
-    {
-        szRoot[0] = 0;
-        GetWindowsDirectoryW(szRoot, _countof(szRoot));
-        lpszPath = szRoot;
-    }
-
-    if (PathIsUNCW(lpszPath))
-    {
-        StringCchCopyW(szRoot, _countof(szRoot), lpszPath);
-        PathStripToRootW(szRoot);
-
-        if (StrChrW(szRoot + 2, L'\\') == NULL)
-            return TRUE; /* LFN */
-
-        StringCchCatW(szRoot, _countof(szRoot), L"\\"); /* Add a backslash */
-    }
-    else
-    {
-        iDrive = ((lpszPath[0] - L'A') & 0x1F);
-        PathBuildRootW(szRoot, iDrive);
-
-        if (!IsRemovableDrive(iDrive))
-        {
-            /* FIXME: Cache correctly */
-        }
-    }
-
-#define MSDOS_8DOT3_LEN 12 /* MS-DOS 8.3 filename == length 12 */
-
-    /* GetVolumeInformation requires a root path */
-    if (!GetVolumeInformationW(szRoot, NULL, 0, NULL, &cchMaxFileName, NULL, NULL, 0))
-    {
-        /* Don't return FALSE when GetVolumeInformationW fails. */
-        return TRUE;
-    }
-
-    return cchMaxFileName > MSDOS_8DOT3_LEN;
+    if (!GetVolumeInformationW(lpszPath, NULL, 0, NULL, &fnlen, NULL, NULL, 0))
+	return FALSE;
+    return fnlen > 12;
 }
 
 /*************************************************************************
@@ -656,7 +849,7 @@ static BOOL PathMakeUniqueNameA(
 	LPCSTR lpszLongName,
 	LPCSTR lpszPathName)
 {
-	FIXME("%p %u %s %s %s stub\n",
+	FIXME("%p %lu %s %s %s stub\n",
 	 lpszBuffer, dwBuffSize, debugstr_a(lpszShortName),
 	 debugstr_a(lpszLongName), debugstr_a(lpszPathName));
 	return TRUE;
@@ -820,7 +1013,7 @@ static BOOL PathMakeUniqueNameW(
 	LPCWSTR lpszLongName,
 	LPCWSTR lpszPathName)
 {
-	FIXME("%p %u %s %s %s stub\n",
+	FIXME("%p %lu %s %s %s stub\n",
 	 lpszBuffer, dwBuffSize, debugstr_w(lpszShortName),
 	 debugstr_w(lpszLongName), debugstr_w(lpszPathName));
 	return TRUE;
@@ -855,7 +1048,7 @@ BOOL WINAPI PathYetAnotherMakeUniqueName(LPWSTR buffer, LPCWSTR path, LPCWSTR sh
 
     file = longname ? longname : shortname;
     PathCombineW(pathW, path, file);
-    strcpyW(retW, pathW);
+    lstrcpyW(retW, pathW);
     PathRemoveExtensionW(pathW);
 
     ext = PathFindExtensionW(file);
@@ -863,11 +1056,11 @@ BOOL WINAPI PathYetAnotherMakeUniqueName(LPWSTR buffer, LPCWSTR path, LPCWSTR sh
     /* now try to make it unique */
     while (PathFileExistsW(retW))
     {
-        sprintfW(retW, L"%s (%d)%s", pathW, i, ext);
+        swprintf(retW, ARRAY_SIZE(retW), L"%s (%d)%s", pathW, i, ext);
         i++;
     }
 
-    strcpyW(buffer, retW);
+    lstrcpyW(buffer, retW);
     TRACE("ret - %s\n", debugstr_w(buffer));
 
     return TRUE;
@@ -876,6 +1069,16 @@ BOOL WINAPI PathYetAnotherMakeUniqueName(LPWSTR buffer, LPCWSTR path, LPCWSTR sh
 /*
 	########## cleaning and resolving paths ##########
  */
+
+/*************************************************************************
+ * PathFindOnPath	[SHELL32.145]
+ */
+BOOL WINAPI PathFindOnPathAW(LPVOID sFile, LPCVOID *sOtherDirs)
+{
+	if (SHELL_OsIsUnicode())
+	  return PathFindOnPathW(sFile, (LPCWSTR *)sOtherDirs);
+	return PathFindOnPathA(sFile, (LPCSTR *)sOtherDirs);
+}
 
 /*************************************************************************
  * PathCleanupSpec	[SHELL32.171]
@@ -895,7 +1098,7 @@ int WINAPI PathCleanupSpec( LPCWSTR lpszPathW, LPWSTR lpszFileW )
         TRACE("Cleanup %s\n",debugstr_w(lpszFileW));
 
         if (lpszPathW)
-            length = strlenW(lpszPathW);
+            length = lstrlenW(lpszPathW);
 
         while (*p)
         {
@@ -951,9 +1154,7 @@ int WINAPI PathCleanupSpec( LPCWSTR lpszPathW, LPWSTR lpszFileW )
     return rc;
 }
 
-/*************************************************************************
- * PathQualifyA		[SHELL32]
- */
+#ifdef __REACTOS__
 VOID WINAPI PathQualifyA(LPSTR pszPath)
 {
     WCHAR szPath[MAX_PATH];
@@ -982,7 +1183,6 @@ VOID WINAPI PathQualifyAW(LPVOID pszPath)
     else
         PathQualifyA(pszPath);
 }
-
 BOOL WINAPI PathResolveA(LPSTR path, LPCSTR *dirs, DWORD flags)
 {
     BOOL ret = FALSE;
@@ -1113,6 +1313,116 @@ BOOL WINAPI PathResolveAW(LPVOID path, LPCVOID *paths, DWORD flags)
     else
         return PathResolveA(path, (LPCSTR*)paths, flags);
 }
+#else
+/*************************************************************************
+ * PathQualifyA		[SHELL32]
+ */
+static BOOL PathQualifyA(LPCSTR pszPath)
+{
+	FIXME("%s\n",pszPath);
+	return FALSE;
+}
+
+/*************************************************************************
+ * PathQualifyW		[SHELL32]
+ */
+static BOOL PathQualifyW(LPCWSTR pszPath)
+{
+	FIXME("%s\n",debugstr_w(pszPath));
+	return FALSE;
+}
+
+/*************************************************************************
+ * PathQualify	[SHELL32.49]
+ */
+BOOL WINAPI PathQualifyAW(LPCVOID pszPath)
+{
+	if (SHELL_OsIsUnicode())
+	  return PathQualifyW(pszPath);
+	return PathQualifyA(pszPath);
+}
+
+static BOOL PathResolveA(char *path, const char **dirs, DWORD flags)
+{
+    BOOL is_file_spec = PathIsFileSpecA(path);
+    DWORD dwWhich = flags & PRF_DONTFINDLNK ? 0xf : 0xbf;
+
+    TRACE("(%s,%p,0x%08lx)\n", debugstr_a(path), dirs, flags);
+
+    if (flags & PRF_VERIFYEXISTS)
+    {
+        if (PathFindOnPathExA(path, dirs, dwWhich))
+        {
+            if (!PathIsFileSpecA(path)) GetFullPathNameA(path, MAX_PATH, path, NULL);
+            return TRUE;
+        }
+        if (!is_file_spec)
+        {
+            GetFullPathNameA(path, MAX_PATH, path, NULL);
+            if (PathFileExistsDefExtA(path, dwWhich))
+                return TRUE;
+        }
+        SetLastError(ERROR_FILE_NOT_FOUND);
+        return FALSE;
+    }
+
+    if (is_file_spec)
+    {
+        SetLastError(ERROR_FILE_NOT_FOUND);
+        return FALSE;
+    }
+
+    GetFullPathNameA(path, MAX_PATH, path, NULL);
+
+    return TRUE;
+}
+
+BOOL WINAPI PathResolveW(WCHAR *path, const WCHAR **dirs, DWORD flags)
+{
+    BOOL is_file_spec = PathIsFileSpecW(path);
+    DWORD dwWhich = flags & PRF_DONTFINDLNK ? 0xf : 0xbf;
+
+    TRACE("(%s,%p,0x%08lx)\n", debugstr_w(path), dirs, flags);
+
+    if (flags & PRF_VERIFYEXISTS)
+    {
+        if (PathFindOnPathExW(path, dirs, dwWhich))
+        {
+            if (!PathIsFileSpecW(path)) GetFullPathNameW(path, MAX_PATH, path, NULL);
+            return TRUE;
+        }
+        if (!is_file_spec)
+        {
+            GetFullPathNameW(path, MAX_PATH, path, NULL);
+            if (PathFileExistsDefExtW(path, dwWhich))
+                return TRUE;
+        }
+        SetLastError(ERROR_FILE_NOT_FOUND);
+        return FALSE;
+    }
+
+    if (is_file_spec)
+    {
+        SetLastError(ERROR_FILE_NOT_FOUND);
+        return FALSE;
+    }
+
+    GetFullPathNameW(path, MAX_PATH, path, NULL);
+
+    return TRUE;
+}
+
+/*************************************************************************
+ * PathResolve [SHELL32.51]
+ */
+BOOL WINAPI PathResolveAW(void *path, const void **paths, DWORD flags)
+{
+    if (SHELL_OsIsUnicode())
+        return PathResolveW(path, (const WCHAR **)paths, flags);
+    else
+        return PathResolveA(path, (const char **)paths, flags);
+}
+#endif
 
 /*************************************************************************
 *	PathProcessCommandA
@@ -1123,7 +1433,7 @@ static LONG PathProcessCommandA (
 	DWORD dwBuffSize,
 	DWORD dwFlags)
 {
-	FIXME("%s %p 0x%04x 0x%04x stub\n",
+	FIXME("%s %p 0x%04lx 0x%04lx stub\n",
 	lpszPath, lpszBuff, dwBuffSize, dwFlags);
 	if(!lpszPath) return -1;
 	if(lpszBuff) strcpy(lpszBuff, lpszPath);
@@ -1140,11 +1450,11 @@ static LONG PathProcessCommandW (
 	DWORD dwBuffSize,
 	DWORD dwFlags)
 {
-	FIXME("(%s, %p, 0x%04x, 0x%04x) stub\n",
+	FIXME("(%s, %p, 0x%04lx, 0x%04lx) stub\n",
 	debugstr_w(lpszPath), lpszBuff, dwBuffSize, dwFlags);
 	if(!lpszPath) return -1;
-	if(lpszBuff) strcpyW(lpszBuff, lpszPath);
-	return strlenW(lpszPath);
+	if(lpszBuff) lstrcpyW(lpszBuff, lpszPath);
+	return lstrlenW(lpszPath);
 }
 #endif
 
@@ -1166,34 +1476,19 @@ LONG WINAPI PathProcessCommandAW (
 	########## special ##########
 */
 
-/* !! MISSING Win2k3-compatible paths from the list below; absent from Wine !! */
-#ifndef __REACTOS__
-static const WCHAR Application_DataW[] = L"Application Data";
-static const WCHAR Local_Settings_Application_DataW[] = L"Local Settings\\Application Data";
-static const WCHAR Local_Settings_HistoryW[] = L"Local Settings\\History";
-static const WCHAR Local_Settings_Temporary_Internet_FilesW[] = L"Local Settings\\Temporary Internet Files";
-static const WCHAR MusicW[] = L"Music";
-static const WCHAR PicturesW[] = L"Pictures";
-static const WCHAR Program_FilesW[] = L"Program Files";
-static const WCHAR Program_Files_Common_FilesW[] = L"Program Files\\Common Files";
-static const WCHAR Start_Menu_ProgramsW[] = L"Start Menu\\Programs";
-static const WCHAR Start_Menu_Admin_ToolsW[] = L"Start Menu\\Programs\\Administrative Tools";
-static const WCHAR Start_Menu_StartupW[] = L"Start Menu\\Programs\\StartUp";
-#endif
-
-/* Long strings that are repeated many times: keep them here */
-static const WCHAR szSHFolders[] = L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders";
-static const WCHAR szSHUserFolders[] = L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\User Shell Folders";
-#ifndef __REACTOS__
-static const WCHAR szKnownFolderDescriptions[] = L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\FolderDescriptions";
-static const WCHAR szKnownFolderRedirections[] = L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\User Shell Folders";
-#endif
+/*************************************************************************
+ * PathSetDlgItemPath (SHELL32.48)
+ */
+VOID WINAPI PathSetDlgItemPathAW(HWND hDlg, int id, LPCVOID pszPath)
+{
+	if (SHELL_OsIsUnicode())
+            PathSetDlgItemPathW(hDlg, id, pszPath);
+        else
+            PathSetDlgItemPathA(hDlg, id, pszPath);
+}
 
 typedef enum _CSIDL_Type {
     CSIDL_Type_User,
-#ifdef __REACTOS__
-    CSIDL_Type_InMyDocuments,
-#endif
     CSIDL_Type_AllUsers,
     CSIDL_Type_CurrVer,
     CSIDL_Type_Disallowed,
@@ -1204,772 +1499,1359 @@ typedef enum _CSIDL_Type {
     CSIDL_Type_ProgramData
 } CSIDL_Type;
 
-/* Cannot use #if _WIN32_WINNT >= 0x0600 because _WIN32_WINNT == 0x0600 here. */
-#ifndef __REACTOS__
 #define CSIDL_CONTACTS         0x0043
 #define CSIDL_DOWNLOADS        0x0047
 #define CSIDL_LINKS            0x004d
 #define CSIDL_APPDATA_LOCALLOW 0x004e
 #define CSIDL_SAVED_GAMES      0x0062
 #define CSIDL_SEARCHES         0x0063
-#endif
+
+typedef struct
+{
+    IApplicationDestinations IApplicationDestinations_iface;
+    LONG ref;
+} IApplicationDestinationsImpl;
+
+static inline IApplicationDestinationsImpl *impl_from_IApplicationDestinations( IApplicationDestinations *iface )
+{
+    return CONTAINING_RECORD(iface, IApplicationDestinationsImpl, IApplicationDestinations_iface);
+}
+
+static HRESULT WINAPI ApplicationDestinations_QueryInterface(IApplicationDestinations *iface, REFIID riid,
+                                                             LPVOID *ppv)
+{
+    IApplicationDestinationsImpl *This = impl_from_IApplicationDestinations(iface);
+
+    TRACE("(%p, %s, %p)\n", This, debugstr_guid(riid), ppv);
+
+    if (ppv == NULL)
+        return E_POINTER;
+
+    if (IsEqualGUID(&IID_IUnknown, riid) || IsEqualGUID(&IID_IApplicationDestinations, riid))
+    {
+        *ppv = &This->IApplicationDestinations_iface;
+        IUnknown_AddRef((IUnknown*)*ppv);
+
+        TRACE("Returning IApplicationDestinations: %p\n", *ppv);
+        return S_OK;
+    }
+
+    *ppv = NULL;
+    FIXME("(%p)->(%s, %p) interface not supported.\n", This, debugstr_guid(riid), ppv);
+
+    return E_NOINTERFACE;
+}
+
+static ULONG WINAPI ApplicationDestinations_AddRef(IApplicationDestinations *iface)
+{
+    IApplicationDestinationsImpl *This = impl_from_IApplicationDestinations(iface);
+    ULONG ref = InterlockedIncrement(&This->ref);
+
+    TRACE("(%p), new refcount=%li\n", This, ref);
+
+    return ref;
+}
+
+static ULONG WINAPI ApplicationDestinations_Release(IApplicationDestinations *iface)
+{
+    IApplicationDestinationsImpl *This = impl_from_IApplicationDestinations(iface);
+    ULONG ref = InterlockedDecrement(&This->ref);
+
+    TRACE("(%p), new refcount=%li\n", This, ref);
+
+    if (ref == 0)
+        free(This);
+
+    return ref;
+}
+
+static HRESULT WINAPI ApplicationDestinations_SetAppID(IApplicationDestinations *iface, const WCHAR *appid)
+{
+    IApplicationDestinationsImpl *This = impl_from_IApplicationDestinations(iface);
+
+    FIXME("(%p, %s) stub!\n", This, debugstr_w(appid));
+
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ApplicationDestinations_RemoveDestination(IApplicationDestinations *iface, IUnknown *punk)
+{
+    IApplicationDestinationsImpl *This = impl_from_IApplicationDestinations(iface);
+
+    FIXME("(%p, %p) stub!\n", This, punk);
+
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ApplicationDestinations_RemoveAllDestinations(IApplicationDestinations *iface)
+{
+    IApplicationDestinationsImpl *This = impl_from_IApplicationDestinations(iface);
+
+    FIXME("(%p) stub!\n", This);
+
+    return E_NOTIMPL;
+}
+
+static const IApplicationDestinationsVtbl ApplicationDestinationsVtbl =
+{
+    ApplicationDestinations_QueryInterface,
+    ApplicationDestinations_AddRef,
+    ApplicationDestinations_Release,
+    ApplicationDestinations_SetAppID,
+    ApplicationDestinations_RemoveDestination,
+    ApplicationDestinations_RemoveAllDestinations
+};
+
+HRESULT WINAPI ApplicationDestinations_Constructor(IUnknown *outer, REFIID riid, LPVOID *ppv)
+{
+    IApplicationDestinationsImpl *This;
+    HRESULT hr;
+
+    TRACE("(%p, %s, %p)\n", outer, debugstr_guid(riid), ppv);
+
+    if (outer)
+        return CLASS_E_NOAGGREGATION;
+
+    if (!(This = SHAlloc(sizeof(*This))))
+        return E_OUTOFMEMORY;
+
+    This->IApplicationDestinations_iface.lpVtbl = &ApplicationDestinationsVtbl;
+    This->ref = 0;
+
+    hr = IUnknown_QueryInterface(&This->IApplicationDestinations_iface, riid, ppv);
+    if (FAILED(hr))
+        SHFree(This);
+
+    return hr;
+}
+
+typedef struct
+{
+    IApplicationDocumentLists IApplicationDocumentLists_iface;
+    LONG ref;
+} IApplicationDocumentListsImpl;
+
+static inline IApplicationDocumentListsImpl *impl_from_IApplicationDocumentLists( IApplicationDocumentLists *iface )
+{
+    return CONTAINING_RECORD(iface, IApplicationDocumentListsImpl, IApplicationDocumentLists_iface);
+}
+
+static HRESULT WINAPI ApplicationDocumentLists_QueryInterface(IApplicationDocumentLists *iface,
+                                                              REFIID riid, LPVOID *ppv)
+{
+    IApplicationDocumentListsImpl *This = impl_from_IApplicationDocumentLists(iface);
+
+    TRACE("(%p, %s, %p)\n", This, debugstr_guid(riid), ppv);
+
+    if (ppv == NULL)
+        return E_POINTER;
+
+    if (IsEqualGUID(&IID_IUnknown, riid) || IsEqualGUID(&IID_IApplicationDocumentLists, riid))
+    {
+        *ppv = &This->IApplicationDocumentLists_iface;
+        IUnknown_AddRef((IUnknown*)*ppv);
+
+        TRACE("Returning IApplicationDocumentLists: %p\n", *ppv);
+        return S_OK;
+    }
+
+    *ppv = NULL;
+    FIXME("(%p)->(%s, %p) interface not supported.\n", This, debugstr_guid(riid), ppv);
+
+    return E_NOINTERFACE;
+}
+
+static ULONG WINAPI ApplicationDocumentLists_AddRef(IApplicationDocumentLists *iface)
+{
+    IApplicationDocumentListsImpl *This = impl_from_IApplicationDocumentLists(iface);
+    ULONG ref = InterlockedIncrement(&This->ref);
+
+    TRACE("(%p), new refcount=%li\n", This, ref);
+
+    return ref;
+}
+
+static ULONG WINAPI ApplicationDocumentLists_Release(IApplicationDocumentLists *iface)
+{
+    IApplicationDocumentListsImpl *This = impl_from_IApplicationDocumentLists(iface);
+    ULONG ref = InterlockedDecrement(&This->ref);
+
+    TRACE("(%p), new refcount=%li\n", This, ref);
+
+    if (ref == 0)
+        free(This);
+
+    return ref;
+}
+
+static HRESULT WINAPI ApplicationDocumentLists_SetAppID(IApplicationDocumentLists *iface,
+                                                        const WCHAR *appid)
+{
+    IApplicationDocumentListsImpl *This = impl_from_IApplicationDocumentLists(iface);
+
+    FIXME("(%p, %s) stub!\n", This, debugstr_w(appid));
+
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ApplicationDocumentLists_GetList(IApplicationDocumentLists *iface,
+                                                       APPDOCLISTTYPE list_type, UINT item_count,
+                                                       REFIID riid, void **obj)
+{
+    IApplicationDocumentListsImpl *This = impl_from_IApplicationDocumentLists(iface);
+
+    FIXME("(%p, %u, %u, %s, %p): stub\n", This, list_type, item_count, debugstr_guid(riid), obj);
+
+    return E_NOTIMPL;
+}
+
+static const IApplicationDocumentListsVtbl ApplicationDocumentListsVtbl =
+{
+    ApplicationDocumentLists_QueryInterface,
+    ApplicationDocumentLists_AddRef,
+    ApplicationDocumentLists_Release,
+    ApplicationDocumentLists_SetAppID,
+    ApplicationDocumentLists_GetList
+};
+
+HRESULT WINAPI ApplicationDocumentLists_Constructor(IUnknown *outer, REFIID riid, LPVOID *ppv)
+{
+    IApplicationDocumentListsImpl *This;
+    HRESULT hr;
+
+    TRACE("(%p, %s, %p)\n", outer, debugstr_guid(riid), ppv);
+
+    if (outer)
+        return CLASS_E_NOAGGREGATION;
+
+    if (!(This = SHAlloc(sizeof(*This))))
+        return E_OUTOFMEMORY;
+
+    This->IApplicationDocumentLists_iface.lpVtbl = &ApplicationDocumentListsVtbl;
+    This->ref = 0;
+
+    hr = IUnknown_QueryInterface(&This->IApplicationDocumentLists_iface, riid, ppv);
+    if (FAILED(hr))
+        SHFree(This);
+
+    return hr;
+}
 
 typedef struct
 {
     const KNOWNFOLDERID *id;
     CSIDL_Type type;
-    LPCWSTR    szValueName;
-    LPCWSTR    szDefaultPath; /* fallback string or resource ID */
+    const WCHAR *value;
+    const WCHAR *def_path; /* fallback string or resource ID */
+    KF_CATEGORY category;
+    const WCHAR *name;
+    const KNOWNFOLDERID *parent;
+const WCHAR *path;
+    const WCHAR *parsing;
+    DWORD attributes;
+    KF_DEFINITION_FLAGS flags;
+    const FOLDERTYPEID *typeid;
+#ifdef __REACTOS__
     INT        nShell32IconIndex;
+#endif
 } CSIDL_DATA;
 
 static const CSIDL_DATA CSIDL_Data[] =
 {
     { /* 0x00 - CSIDL_DESKTOP */
-        &FOLDERID_Desktop,
-        CSIDL_Type_User,
-        L"Desktop",
-        MAKEINTRESOURCEW(IDS_DESKTOPDIRECTORY),
-        0
+        .id         = &FOLDERID_Desktop,
+        .type       = CSIDL_Type_User,
+        .value      = L"Desktop",
+        .category   = KF_CATEGORY_PERUSER,
+        .name       = L"Desktop",
+        .path       = L"Desktop",
+        .attributes = FILE_ATTRIBUTE_READONLY,
     },
     { /* 0x01 - CSIDL_INTERNET */
-        &FOLDERID_InternetFolder,
-        CSIDL_Type_Disallowed,
-        NULL,
-        NULL
+        .id         = &FOLDERID_InternetFolder,
+        .type       = CSIDL_Type_Disallowed,
+        .category   = KF_CATEGORY_VIRTUAL,
+        .name       = L"InternetFolder",
+        .parsing    = L"::{871C5380-42A0-1069-A2EA-08002B30309D}",
     },
     { /* 0x02 - CSIDL_PROGRAMS */
-        &FOLDERID_Programs,
-        CSIDL_Type_User,
-        L"Programs",
-        MAKEINTRESOURCEW(IDS_PROGRAMS),
-        0
+        .id         = &FOLDERID_Programs,
+        .type       = CSIDL_Type_User,
+        .value      = L"Programs",
+        .category   = KF_CATEGORY_PERUSER,
+        .name       = L"Programs",
+        .parent     = &FOLDERID_StartMenu,
+        .path       = L"Programs",
+        .attributes = FILE_ATTRIBUTE_READONLY,
     },
     { /* 0x03 - CSIDL_CONTROLS (.CPL files) */
-        &FOLDERID_ControlPanelFolder,
-        CSIDL_Type_SystemPath,
-        L"ControlPanelFolder",
-        NULL,
-        -IDI_SHELL_CONTROL_PANEL
+        .id         = &FOLDERID_ControlPanelFolder,
+        .type       = CSIDL_Type_SystemPath,
+        .category   = KF_CATEGORY_VIRTUAL,
+        .name       = L"ControlPanelFolder",
+        .path       = L"::{21EC2020-3AEA-1069-A2DD-08002B30309D}",
+        .parsing    = L"::{26EE0668-A00A-44D7-9371-BEB064C98683}\\0",
+#ifdef __REACTOS__
+        .nShell32IconIndex = -IDI_SHELL_CONTROL_PANEL
+#endif
     },
     { /* 0x04 - CSIDL_PRINTERS */
-        &FOLDERID_PrintersFolder,
-        CSIDL_Type_SystemPath,
-        L"PrintersFolder",
-        NULL,
-        -IDI_SHELL_PRINTERS_FOLDER
+        .id         = &FOLDERID_PrintersFolder,
+        .type       = CSIDL_Type_SystemPath,
+        .category   = KF_CATEGORY_VIRTUAL,
+        .name       = L"PrintersFolder",
+        .parsing    = L"::{21EC2020-3AEA-1069-A2DD-08002B30309D}\\::{2227A280-3AEA-1069-A2DE-08002B30309D}",
+#ifdef __REACTOS__
+        .nShell32IconIndex = -IDI_SHELL_PRINTERS_FOLDER
+#endif
     },
     { /* 0x05 - CSIDL_PERSONAL */
-        &FOLDERID_Documents,
-        CSIDL_Type_User,
-        L"Personal",
-        MAKEINTRESOURCEW(IDS_PERSONAL),
-        -IDI_SHELL_MY_DOCUMENTS
+        .id         = &FOLDERID_Documents,
+        .type       = CSIDL_Type_User,
+        .value      = L"Personal",
+        .category   = KF_CATEGORY_PERUSER,
+        .name       = L"Personal",
+        .parent     = &FOLDERID_Profile,
+        .path       = L"Documents",
+        .parsing    = L"::{59031a47-3f72-44a7-89c5-5595fe6b30ee}\\{FDD39AD0-238F-46AF-ADB4-6C85480369C7}",
+        .attributes = FILE_ATTRIBUTE_READONLY,
+        .flags      = KFDF_ROAMABLE | KFDF_PRECREATE,
+#ifdef __REACTOS__
+        .nShell32IconIndex = -IDI_SHELL_MY_DOCUMENTS
+#endif
     },
     { /* 0x06 - CSIDL_FAVORITES */
-        &FOLDERID_Favorites,
-        CSIDL_Type_User,
-        L"Favorites",
-        MAKEINTRESOURCEW(IDS_FAVORITES),
-        -IDI_SHELL_FAVORITES
+        .id         = &FOLDERID_Favorites,
+        .type       = CSIDL_Type_User,
+        .value      = L"Favorites",
+        .category   = KF_CATEGORY_PERUSER,
+        .name       = L"Favorites",
+        .path       = L"Favorites",
+        .attributes = FILE_ATTRIBUTE_READONLY,
+        .flags      = KFDF_ROAMABLE | KFDF_PRECREATE | KFDF_PUBLISHEXPANDEDPATH,
+#ifdef __REACTOS__
+        .nShell32IconIndex = -IDI_SHELL_FAVORITES
+#endif
     },
     { /* 0x07 - CSIDL_STARTUP */
-        &FOLDERID_Startup,
-        CSIDL_Type_User,
-        L"StartUp",
-        MAKEINTRESOURCEW(IDS_STARTUP)
+        .id         = &FOLDERID_Startup,
+        .type       = CSIDL_Type_User,
+        .value      = L"StartUp",
+        .category   = KF_CATEGORY_PERUSER,
+        .name       = L"Startup",
+        .parent     = &FOLDERID_Programs,
+        .path       = L"StartUp",
+        .attributes = FILE_ATTRIBUTE_READONLY,
+        .flags      = KFDF_PRECREATE,
     },
     { /* 0x08 - CSIDL_RECENT */
-        &FOLDERID_Recent,
-        CSIDL_Type_User,
-        L"Recent",
-        MAKEINTRESOURCEW(IDS_RECENT),
-        -IDI_SHELL_RECENT_DOCUMENTS
+        .id         = &FOLDERID_Recent,
+        .type       = CSIDL_Type_User,
+        .value      = L"Recent",
+        .category   = KF_CATEGORY_PERUSER,
+        .name       = L"Recent",
+        .parent     = &FOLDERID_RoamingAppData,
+        .path       = L"Microsoft\\Windows\\Recent",
+        .attributes = FILE_ATTRIBUTE_READONLY,
+        .flags      = KFDF_PRECREATE,
+#ifdef __REACTOS__
+        .nShell32IconIndex = -IDI_SHELL_RECENT_DOCUMENTS
+#endif
     },
     { /* 0x09 - CSIDL_SENDTO */
-        &FOLDERID_SendTo,
-        CSIDL_Type_User,
-        L"SendTo",
-        MAKEINTRESOURCEW(IDS_SENDTO)
+        .id         = &FOLDERID_SendTo,
+        .type       = CSIDL_Type_User,
+        .value      = L"SendTo",
+        .category   = KF_CATEGORY_PERUSER,
+        .name       = L"SendTo",
+        .parent     = &FOLDERID_RoamingAppData,
+        .path       = L"Microsoft\\Windows\\SendTo",
+        .flags      = KFDF_PRECREATE,
     },
     { /* 0x0a - CSIDL_BITBUCKET - Recycle Bin */
-        &FOLDERID_RecycleBinFolder,
-        CSIDL_Type_Disallowed,
-        L"RecycleBinFolder",
-        NULL
+        .id         = &FOLDERID_RecycleBinFolder,
+        .type       = CSIDL_Type_Disallowed,
+        .category   = KF_CATEGORY_VIRTUAL,
+        .name       = L"RecycleBinFolder",
+        .parsing    = L"::{645FF040-5081-101B-9F08-00AA002F954E}",
     },
     { /* 0x0b - CSIDL_STARTMENU */
-        &FOLDERID_StartMenu,
-        CSIDL_Type_User,
-        L"Start Menu",
-        MAKEINTRESOURCEW(IDS_STARTMENU),
-        -IDI_SHELL_TSKBAR_STARTMENU
+        .id         = &FOLDERID_StartMenu,
+        .type       = CSIDL_Type_User,
+        .value      = L"Start Menu",
+        .category   = KF_CATEGORY_PERUSER,
+        .name       = L"Start Menu",
+        .parent     = &FOLDERID_RoamingAppData,
+        .path       = L"Microsoft\\Windows\\Start Menu",
+        .attributes = FILE_ATTRIBUTE_READONLY,
+        .flags      = KFDF_PRECREATE,
+#ifdef __REACTOS__
+        .nShell32IconIndex = -IDI_SHELL_TSKBAR_STARTMENU
+#endif
     },
     { /* 0x0c - CSIDL_MYDOCUMENTS */
-        &GUID_NULL,
-        CSIDL_Type_Disallowed, /* matches WinXP--can't get its path */
-        NULL,
-        NULL,
-        -IDI_SHELL_MY_DOCUMENTS
+        .id         = &GUID_NULL,
+        .type       = CSIDL_Type_Disallowed, /* matches WinXP--can't get its path */
+#ifdef __REACTOS__
+        .nShell32IconIndex = -IDI_SHELL_MY_DOCUMENTS
+#endif
     },
     { /* 0x0d - CSIDL_MYMUSIC */
-        &FOLDERID_Music,
+        .id         = &FOLDERID_Music,
+        .type       = CSIDL_Type_User,
+        .value      = L"My Music",
+        .category   = KF_CATEGORY_PERUSER,
+        .name       = L"My Music",
+        .parent     = &FOLDERID_Profile,
+        .path       = L"Music",
+        .parsing    = L"::{59031a47-3f72-44a7-89c5-5595fe6b30ee}\\{4BD8D571-6D19-48D3-BE97-422220080E43}",
+        .attributes = FILE_ATTRIBUTE_READONLY,
+        .flags      = KFDF_ROAMABLE | KFDF_PRECREATE,
 #ifdef __REACTOS__
-        CSIDL_Type_InMyDocuments,
-#else
-        CSIDL_Type_User,
+        .nShell32IconIndex = -IDI_SHELL_MY_MUSIC
 #endif
-        L"My Music",
-        MAKEINTRESOURCEW(IDS_MYMUSIC),
-        -IDI_SHELL_MY_MUSIC
     },
     { /* 0x0e - CSIDL_MYVIDEO */
-        &FOLDERID_Videos,
+        .id         = &FOLDERID_Videos,
+        .type       = CSIDL_Type_User,
+        .value      = L"My Videos",
+        .category   = KF_CATEGORY_PERUSER,
+        .name       = L"My Video",
+        .parent     = &FOLDERID_Profile,
+        .path       = L"Videos",
+        .parsing    = L"::{59031a47-3f72-44a7-89c5-5595fe6b30ee}\\{18989B1D-99B5-455B-841C-AB7C74E4DDFC}",
+        .attributes = FILE_ATTRIBUTE_READONLY,
+        .flags      = KFDF_ROAMABLE | KFDF_PRECREATE,
 #ifdef __REACTOS__
-        CSIDL_Type_InMyDocuments,
-#else
-        CSIDL_Type_User,
+        .nShell32IconIndex = -IDI_SHELL_MY_MOVIES
 #endif
-        L"My Video",
-        MAKEINTRESOURCEW(IDS_MYVIDEO),
-        -IDI_SHELL_MY_MOVIES
     },
     { /* 0x0f - unassigned */
-        &GUID_NULL,
-        CSIDL_Type_Disallowed,
-        NULL,
-        NULL,
+        .id         = &GUID_NULL,
+        .type       = CSIDL_Type_Disallowed,
     },
     { /* 0x10 - CSIDL_DESKTOPDIRECTORY */
-        &FOLDERID_Desktop,
-        CSIDL_Type_User,
-        L"Desktop",
-        MAKEINTRESOURCEW(IDS_DESKTOPDIRECTORY),
-        0
+        .id         = &FOLDERID_Desktop,
+        .type       = CSIDL_Type_User,
+        .value      = L"Desktop",
+        .category   = KF_CATEGORY_PERUSER,
+        .name       = L"Desktop",
+        .parent     = &FOLDERID_Profile,
+        .path       = L"Desktop",
+        .attributes = FILE_ATTRIBUTE_READONLY,
+        .flags      = KFDF_ROAMABLE | KFDF_PRECREATE | KFDF_PUBLISHEXPANDEDPATH,
+#ifdef __REACTOS__
+        .nShell32IconIndex = 0
+#endif
     },
     { /* 0x11 - CSIDL_DRIVES */
-        &FOLDERID_ComputerFolder,
-        CSIDL_Type_Disallowed,
-        L"MyComputerFolder",
-        NULL,
-        -IDI_SHELL_COMPUTER_FOLDER
+        .id         = &FOLDERID_ComputerFolder,
+        .type       = CSIDL_Type_Disallowed,
+        .category   = KF_CATEGORY_VIRTUAL,
+        .name       = L"MyComputerFolder",
+        .parsing    = L"::{20D04FE0-3AEA-1069-A2D8-08002B30309D}",
+#ifdef __REACTOS__
+        .nShell32IconIndex = -IDI_SHELL_COMPUTER_FOLDER
+#endif
     },
     { /* 0x12 - CSIDL_NETWORK */
-        &FOLDERID_NetworkFolder,
-        CSIDL_Type_Disallowed,
-        L"NetworkPlacesFolder",
-        NULL,
-        -IDI_SHELL_NETWORK_FOLDER
+        .id         = &FOLDERID_NetworkFolder,
+        .type       = CSIDL_Type_Disallowed,
+        .category   = KF_CATEGORY_VIRTUAL,
+        .name       = L"NetworkPlacesFolder",
+        .parsing    = L"::{F02C1A0D-BE21-4350-88B0-7367FC96EF3C}",
+#ifdef __REACTOS__
+        .nShell32IconIndex = -IDI_SHELL_NETWORK_FOLDER
+#endif
     },
     { /* 0x13 - CSIDL_NETHOOD */
-        &FOLDERID_NetHood,
-        CSIDL_Type_User,
-        L"NetHood",
-        MAKEINTRESOURCEW(IDS_NETHOOD),
-        -IDI_SHELL_NETWORK
+        .id         = &FOLDERID_NetHood,
+        .type       = CSIDL_Type_User,
+        .value      = L"NetHood",
+        .category   = KF_CATEGORY_PERUSER,
+        .name       = L"NetHood",
+        .parent     = &FOLDERID_RoamingAppData,
+        .path       = L"Microsoft\\Windows\\Network Shortcuts",
+#ifdef __REACTOS__
+        .nShell32IconIndex = -IDI_SHELL_NETWORK
+#endif
     },
     { /* 0x14 - CSIDL_FONTS */
-        &FOLDERID_Fonts,
-        CSIDL_Type_WindowsPath,
-        L"Fonts",
-        L"Fonts",
-        -IDI_SHELL_FONTS_FOLDER
+        .id         = &FOLDERID_Fonts,
+        .type       = CSIDL_Type_WindowsPath,
+        .value      = L"Fonts",
+        .def_path   = L"Fonts",
+        .category   = KF_CATEGORY_FIXED,
+        .name       = L"Fonts",
+        .parent     = &FOLDERID_Windows,
+        .typeid     = &FOLDERID_Windows,
+#ifdef __REACTOS__
+        .nShell32IconIndex = -IDI_SHELL_FONTS_FOLDER
+#endif
     },
     { /* 0x15 - CSIDL_TEMPLATES */
-        &FOLDERID_Templates,
-        CSIDL_Type_User,
-        L"Templates",
-        MAKEINTRESOURCEW(IDS_TEMPLATES)
+        .id         = &FOLDERID_Templates,
+        .type       = CSIDL_Type_User,
+        .value      = L"Templates",
+        .category   = KF_CATEGORY_PERUSER,
+        .name       = L"Templates",
+        .parent     = &FOLDERID_RoamingAppData,
+        .path       = L"Microsoft\\Windows\\Templates",
     },
     { /* 0x16 - CSIDL_COMMON_STARTMENU */
-        &FOLDERID_CommonStartMenu,
-        CSIDL_Type_AllUsers,
-        L"Common Start Menu",
-        MAKEINTRESOURCEW(IDS_STARTMENU),
-        -IDI_SHELL_TSKBAR_STARTMENU
+        .id         = &FOLDERID_CommonStartMenu,
+        .type       = CSIDL_Type_ProgramData,
+        .value      = L"Common Start Menu",
+        .category   = KF_CATEGORY_COMMON,
+        .name       = L"Common Start Menu",
+        .parent     = &FOLDERID_ProgramData,
+        .path       = L"Microsoft\\Windows\\Start Menu",
+        .attributes = FILE_ATTRIBUTE_READONLY,
+#ifdef __REACTOS__
+        .nShell32IconIndex = -IDI_SHELL_TSKBAR_STARTMENU
+#endif
     },
     { /* 0x17 - CSIDL_COMMON_PROGRAMS */
-        &FOLDERID_CommonPrograms,
-        CSIDL_Type_AllUsers,
-        L"Common Programs",
-        MAKEINTRESOURCEW(IDS_PROGRAMS),
-        0
+        .id         = &FOLDERID_CommonPrograms,
+        .type       = CSIDL_Type_ProgramData,
+        .value      = L"Common Programs",
+        .category   = KF_CATEGORY_COMMON,
+        .name       = L"Common Programs",
+        .parent     = &FOLDERID_CommonStartMenu,
+        .path       = L"Programs",
+        .attributes = FILE_ATTRIBUTE_READONLY,
     },
     { /* 0x18 - CSIDL_COMMON_STARTUP */
-        &FOLDERID_CommonStartup,
-        CSIDL_Type_AllUsers,
-        L"Common StartUp",
-        MAKEINTRESOURCEW(IDS_STARTUP)
+        .id         = &FOLDERID_CommonStartup,
+        .type       = CSIDL_Type_ProgramData,
+        .value      = L"Common StartUp",
+        .category   = KF_CATEGORY_COMMON,
+        .name       = L"Common Startup",
+        .parent     = &FOLDERID_CommonPrograms,
+        .path       = L"StartUp",
+        .attributes = FILE_ATTRIBUTE_READONLY,
+        .flags      = KFDF_PRECREATE,
     },
     { /* 0x19 - CSIDL_COMMON_DESKTOPDIRECTORY */
-        &FOLDERID_PublicDesktop,
-        CSIDL_Type_AllUsers,
-        L"Common Desktop",
-        MAKEINTRESOURCEW(IDS_DESKTOPDIRECTORY),
-        0
+        .id         = &FOLDERID_PublicDesktop,
+        .type       = CSIDL_Type_AllUsers,
+        .value      = L"Common Desktop",
+        .category   = KF_CATEGORY_COMMON,
+        .name       = L"Common Desktop",
+        .parent     = &FOLDERID_Public,
+        .path       = L"Desktop",
+        .attributes = FILE_ATTRIBUTE_READONLY | FILE_ATTRIBUTE_HIDDEN,
+        .flags      = KFDF_PRECREATE,
     },
     { /* 0x1a - CSIDL_APPDATA */
-        &FOLDERID_RoamingAppData,
-        CSIDL_Type_User,
-        L"AppData",
-        MAKEINTRESOURCEW(IDS_APPDATA)
+        .id         = &FOLDERID_RoamingAppData,
+        .type       = CSIDL_Type_User,
+        .value      = L"AppData",
+        .category   = KF_CATEGORY_PERUSER,
+        .name       = L"AppData",
+        .parent     = &FOLDERID_Profile,
+        .path       = L"AppData\\Roaming",
     },
     { /* 0x1b - CSIDL_PRINTHOOD */
-        &FOLDERID_PrintHood,
-        CSIDL_Type_User,
-        L"PrintHood",
-        MAKEINTRESOURCEW(IDS_PRINTHOOD),
-        -IDI_SHELL_PRINTERS_FOLDER
+        .id         = &FOLDERID_PrintHood,
+        .type       = CSIDL_Type_User,
+        .value      = L"PrintHood",
+        .category   = KF_CATEGORY_PERUSER,
+        .name       = L"PrintHood",
+        .parent     = &FOLDERID_RoamingAppData,
+        .path       = L"Microsoft\\Windows\\Printer Shortcuts",
+#ifdef __REACTOS__
+        .nShell32IconIndex = -IDI_SHELL_PRINTERS_FOLDER
+#endif
     },
     { /* 0x1c - CSIDL_LOCAL_APPDATA */
-        &FOLDERID_LocalAppData,
-        CSIDL_Type_User,
-        L"Local AppData",
-        MAKEINTRESOURCEW(IDS_LOCAL_APPDATA)
+        .id         = &FOLDERID_LocalAppData,
+        .type       = CSIDL_Type_User,
+        .value      = L"Local AppData",
+        .category   = KF_CATEGORY_PERUSER,
+        .name       = L"Local AppData",
+        .parent     = &FOLDERID_Profile,
+        .path       = L"AppData\\Local",
+        .flags      = KFDF_LOCAL_REDIRECT_ONLY | KFDF_PUBLISHEXPANDEDPATH,
     },
     { /* 0x1d - CSIDL_ALTSTARTUP */
-        &GUID_NULL,
-        CSIDL_Type_NonExistent,
-        NULL,
-        NULL
+        .id         = &GUID_NULL,
+        .type       = CSIDL_Type_NonExistent,
     },
     { /* 0x1e - CSIDL_COMMON_ALTSTARTUP */
-        &GUID_NULL,
-        CSIDL_Type_NonExistent,
-        NULL,
-        NULL
+        .id         = &GUID_NULL,
+        .type       = CSIDL_Type_NonExistent,
     },
     { /* 0x1f - CSIDL_COMMON_FAVORITES */
-        &FOLDERID_Favorites,
-        CSIDL_Type_AllUsers,
-        L"Common Favorites",
-        MAKEINTRESOURCEW(IDS_FAVORITES),
-        -IDI_SHELL_FAVORITES
+        .id         = &FOLDERID_Favorites,
+        .type       = CSIDL_Type_AllUsers,
+        .value      = L"Common Favorites",
+        .category   = KF_CATEGORY_PERUSER,
+        .name       = L"Favorites",
+        .parent     = &FOLDERID_Profile,
+        .path       = L"Favorites",
+        .attributes = FILE_ATTRIBUTE_READONLY,
+        .flags      = KFDF_ROAMABLE | KFDF_PRECREATE | KFDF_PUBLISHEXPANDEDPATH,
+#ifdef __REACTOS__
+        .nShell32IconIndex = -IDI_SHELL_FAVORITES
+#endif
     },
     { /* 0x20 - CSIDL_INTERNET_CACHE */
-        &FOLDERID_InternetCache,
-        CSIDL_Type_User,
-        L"Cache",
-        MAKEINTRESOURCEW(IDS_INTERNET_CACHE)
+        .id         = &FOLDERID_InternetCache,
+        .type       = CSIDL_Type_User,
+        .value      = L"Cache",
+        .category   = KF_CATEGORY_PERUSER,
+        .name       = L"Cache",
+        .parent     = &FOLDERID_LocalAppData,
+        .path       = L"Microsoft\\Windows\\INetCache",
+        .flags      = KFDF_LOCAL_REDIRECT_ONLY,
     },
     { /* 0x21 - CSIDL_COOKIES */
-        &FOLDERID_Cookies,
-        CSIDL_Type_User,
-        L"Cookies",
-        MAKEINTRESOURCEW(IDS_COOKIES)
+        .id         = &FOLDERID_Cookies,
+        .type       = CSIDL_Type_User,
+        .value      = L"Cookies",
+        .category   = KF_CATEGORY_PERUSER,
+        .name       = L"Cookies",
+        .parent     = &FOLDERID_LocalAppData,
+        .path       = L"Microsoft\\Windows\\INetCookies",
     },
     { /* 0x22 - CSIDL_HISTORY */
-        &FOLDERID_History,
-        CSIDL_Type_User,
-        L"History",
-        MAKEINTRESOURCEW(IDS_HISTORY)
+        .id         = &FOLDERID_History,
+        .type       = CSIDL_Type_User,
+        .value      = L"History",
+        .category   = KF_CATEGORY_PERUSER,
+        .name       = L"History",
+        .parent     = &FOLDERID_LocalAppData,
+        .path       = L"Microsoft\\Windows\\History",
+        .flags      = KFDF_LOCAL_REDIRECT_ONLY,
     },
     { /* 0x23 - CSIDL_COMMON_APPDATA */
-        &FOLDERID_ProgramData,
-        CSIDL_Type_AllUsers,
-        L"Common AppData",
-        MAKEINTRESOURCEW(IDS_APPDATA)
+        .id         = &FOLDERID_ProgramData,
+        .type       = CSIDL_Type_ProgramData,
+        .value      = L"Common AppData",
+        .category   = KF_CATEGORY_FIXED,
+        .name       = L"Common AppData",
     },
     { /* 0x24 - CSIDL_WINDOWS */
-        &FOLDERID_Windows,
-        CSIDL_Type_WindowsPath,
-        L"Windows",
-        NULL,
-        0
+        .id         = &FOLDERID_Windows,
+        .type       = CSIDL_Type_WindowsPath,
+        .category   = KF_CATEGORY_FIXED,
+        .name       = L"Windows",
     },
     { /* 0x25 - CSIDL_SYSTEM */
-        &FOLDERID_System,
-        CSIDL_Type_SystemPath,
-        L"System",
-        NULL,
-        0
+        .id         = &FOLDERID_System,
+        .type       = CSIDL_Type_SystemPath,
+        .category   = KF_CATEGORY_FIXED,
+        .name       = L"System",
     },
     { /* 0x26 - CSIDL_PROGRAM_FILES */
-        &FOLDERID_ProgramFiles,
-        CSIDL_Type_CurrVer,
-        L"ProgramFiles",
-        MAKEINTRESOURCEW(IDS_PROGRAM_FILES),
-        0
+        .id         = &FOLDERID_ProgramFiles,
+        .type       = CSIDL_Type_CurrVer,
+        .value      = L"ProgramFilesDir",
+        .def_path   = L"Program Files",
+        .category   = KF_CATEGORY_FIXED,
+        .name       = L"ProgramFiles",
+        .attributes = FILE_ATTRIBUTE_READONLY,
     },
     { /* 0x27 - CSIDL_MYPICTURES */
-        &FOLDERID_Pictures,
+        .id         = &FOLDERID_Pictures,
+        .type       = CSIDL_Type_User,
+        .value      = L"My Pictures",
+        .category   = KF_CATEGORY_PERUSER,
+        .name       = L"My Pictures",
+        .parent     = &FOLDERID_Profile,
+        .path       = L"Pictures",
+        .parsing    = L"::{59031a47-3f72-44a7-89c5-5595fe6b30ee}\\{33E28130-4E1E-4676-835A-98395C3BC3BB}",
+        .attributes = FILE_ATTRIBUTE_READONLY,
+        .flags      = KFDF_ROAMABLE | KFDF_PRECREATE,
 #ifdef __REACTOS__
-        CSIDL_Type_InMyDocuments,
-#else
-        CSIDL_Type_User,
+        .nShell32IconIndex = -IDI_SHELL_MY_PICTURES
 #endif
-        L"My Pictures",
-        MAKEINTRESOURCEW(IDS_MYPICTURES),
-        -IDI_SHELL_MY_PICTURES
     },
     { /* 0x28 - CSIDL_PROFILE */
-        &FOLDERID_Profile,
-        CSIDL_Type_User,
-        NULL,
-        NULL
+        .id         = &FOLDERID_Profile,
+        .type       = CSIDL_Type_User,
+        .category   = KF_CATEGORY_FIXED,
+        .name       = L"Profile",
     },
     { /* 0x29 - CSIDL_SYSTEMX86 */
-        &FOLDERID_SystemX86,
-        CSIDL_Type_SystemX86Path,
-        NULL,
-        NULL,
-        -IDI_SHELL_SYSTEM_GEAR
+        .id         = &FOLDERID_SystemX86,
+        .type       = CSIDL_Type_SystemX86Path,
+        .category   = KF_CATEGORY_FIXED,
+        .name       = L"SystemX86",
+#ifdef __REACTOS__
+        .nShell32IconIndex = -IDI_SHELL_SYSTEM_GEAR
+#endif
     },
     { /* 0x2a - CSIDL_PROGRAM_FILESX86 */
-        &FOLDERID_ProgramFilesX86,
-        CSIDL_Type_CurrVer,
-        L"ProgramFilesX86",
-        L"Program Files (x86)",
-        0
+        .id         = &FOLDERID_ProgramFilesX86,
+        .type       = CSIDL_Type_CurrVer,
+        .value      = L"ProgramFilesDir (x86)",
+        .def_path   = L"Program Files (x86)",
+        .category   = KF_CATEGORY_FIXED,
+        .name       = L"ProgramFilesX86",
+        .attributes = FILE_ATTRIBUTE_READONLY,
     },
     { /* 0x2b - CSIDL_PROGRAM_FILES_COMMON */
-        &FOLDERID_ProgramFilesCommon,
-        CSIDL_Type_CurrVer,
-        L"ProgramFilesCommon",
-        MAKEINTRESOURCEW(IDS_PROGRAM_FILES_COMMON),
-        0
+        .id         = &FOLDERID_ProgramFilesCommon,
+        .type       = CSIDL_Type_CurrVer,
+        .value      = L"CommonFilesDir",
+        .def_path   = L"Program Files\\Common Files",
+        .category   = KF_CATEGORY_FIXED,
+        .name       = L"ProgramFilesCommon",
     },
     { /* 0x2c - CSIDL_PROGRAM_FILES_COMMONX86 */
-        &FOLDERID_ProgramFilesCommonX86,
-        CSIDL_Type_CurrVer,
-        L"ProgramFilesCommonX86",
-        L"Program Files (x86)\\Common Files",
-        0
+        .id         = &FOLDERID_ProgramFilesCommonX86,
+        .type       = CSIDL_Type_CurrVer,
+        .value      = L"CommonFilesDir (x86)",
+        .def_path   = L"Program Files (x86)\\Common Files",
+        .category   = KF_CATEGORY_FIXED,
+        .name       = L"ProgramFilesCommonX86",
     },
     { /* 0x2d - CSIDL_COMMON_TEMPLATES */
-        &FOLDERID_CommonTemplates,
-        CSIDL_Type_AllUsers,
-        L"Common Templates",
-        MAKEINTRESOURCEW(IDS_TEMPLATES)
+        .id         = &FOLDERID_CommonTemplates,
+        .type       = CSIDL_Type_ProgramData,
+        .value      = L"Common Templates",
+        .category   = KF_CATEGORY_COMMON,
+        .name       = L"Common Templates",
+        .parent     = &FOLDERID_ProgramData,
+        .path       = L"Microsoft\\Windows\\Templates",
     },
     { /* 0x2e - CSIDL_COMMON_DOCUMENTS */
-        &FOLDERID_PublicDocuments,
-        CSIDL_Type_AllUsers,
-        L"Common Documents",
-        MAKEINTRESOURCEW(IDS_PERSONAL),
-        -IDI_SHELL_MY_DOCUMENTS
+        .id         = &FOLDERID_PublicDocuments,
+        .type       = CSIDL_Type_AllUsers,
+        .value      = L"Common Documents",
+        .category   = KF_CATEGORY_COMMON,
+        .name       = L"Common Documents",
+        .parent     = &FOLDERID_Public,
+        .path       = L"Documents",
+        .attributes = FILE_ATTRIBUTE_READONLY,
+        .flags      = KFDF_PRECREATE,
+#ifdef __REACTOS__
+        .nShell32IconIndex = -IDI_SHELL_MY_DOCUMENTS
+#endif
     },
     { /* 0x2f - CSIDL_COMMON_ADMINTOOLS */
-        &FOLDERID_CommonAdminTools,
-        CSIDL_Type_AllUsers,
-        L"Common Administrative Tools",
-        MAKEINTRESOURCEW(IDS_ADMINTOOLS)
+        .id         = &FOLDERID_CommonAdminTools,
+        .type       = CSIDL_Type_ProgramData,
+        .value      = L"Common Administrative Tools",
+        .category   = KF_CATEGORY_COMMON,
+        .name       = L"Common Administrative Tools",
+        .parent     = &FOLDERID_CommonPrograms,
+        .path       = L"Administrative Tools",
+        .attributes = FILE_ATTRIBUTE_READONLY,
+        .flags      = KFDF_PRECREATE,
     },
     { /* 0x30 - CSIDL_ADMINTOOLS */
-        &FOLDERID_AdminTools,
-        CSIDL_Type_User,
-        L"Administrative Tools",
-        MAKEINTRESOURCEW(IDS_ADMINTOOLS)
+        .id         = &FOLDERID_AdminTools,
+        .type       = CSIDL_Type_User,
+        .value      = L"Administrative Tools",
+        .category   = KF_CATEGORY_PERUSER,
+        .name       = L"Administrative Tools",
+        .parent     = &FOLDERID_Programs,
+        .path       = L"Administrative Tools",
+        .attributes = FILE_ATTRIBUTE_READONLY,
+        .flags      = KFDF_PRECREATE,
     },
     { /* 0x31 - CSIDL_CONNECTIONS */
-        &FOLDERID_ConnectionsFolder,
-        CSIDL_Type_Disallowed,
-        L"ConnectionsFolder",
-        NULL,
-        -IDI_SHELL_NETWORK_CONNECTIONS
+        .id         = &FOLDERID_ConnectionsFolder,
+        .type       = CSIDL_Type_Disallowed,
+        .category   = KF_CATEGORY_VIRTUAL,
+        .name       = L"ConnectionsFolder",
+        .path       = L"Administrative Tools",
+        .parsing    = L"::{21EC2020-3AEA-1069-A2DD-08002B30309D}\\::{7007ACC7-3202-11D1-AAD2-00805FC1270E}",
     },
     { /* 0x32 - unassigned */
-        &GUID_NULL,
-        CSIDL_Type_Disallowed,
-        NULL,
-        NULL
+        .id         = &GUID_NULL,
+        .type       = CSIDL_Type_Disallowed,
     },
     { /* 0x33 - unassigned */
-        &GUID_NULL,
-        CSIDL_Type_Disallowed,
-        NULL,
-        NULL
+        .id         = &GUID_NULL,
+        .type       = CSIDL_Type_Disallowed,
     },
     { /* 0x34 - unassigned */
-        &GUID_NULL,
-        CSIDL_Type_Disallowed,
-        NULL,
-        NULL
+        .id         = &GUID_NULL,
+        .type       = CSIDL_Type_Disallowed,
     },
     { /* 0x35 - CSIDL_COMMON_MUSIC */
-        &FOLDERID_PublicMusic,
-        CSIDL_Type_AllUsers,
-        L"CommonMusic",
-        MAKEINTRESOURCEW(IDS_COMMON_MUSIC),
-        -IDI_SHELL_MY_MUSIC
+        .id         = &FOLDERID_PublicMusic,
+        .type       = CSIDL_Type_AllUsers,
+        .value      = L"CommonMusic",
+        .category   = KF_CATEGORY_COMMON,
+        .name       = L"CommonMusic",
+        .parent     = &FOLDERID_Public,
+        .path       = L"Music",
+        .attributes = FILE_ATTRIBUTE_READONLY,
+        .flags      = KFDF_PRECREATE,
+#ifdef __REACTOS__
+        .nShell32IconIndex = -IDI_SHELL_MY_MUSIC
+#endif
     },
     { /* 0x36 - CSIDL_COMMON_PICTURES */
-        &FOLDERID_PublicPictures,
-        CSIDL_Type_AllUsers,
-        L"CommonPictures",
-        MAKEINTRESOURCEW(IDS_COMMON_PICTURES),
-        -IDI_SHELL_MY_PICTURES
+        .id         = &FOLDERID_PublicPictures,
+        .type       = CSIDL_Type_AllUsers,
+        .value      = L"CommonPictures",
+        .category   = KF_CATEGORY_COMMON,
+        .name       = L"CommonPictures",
+        .parent     = &FOLDERID_Public,
+        .path       = L"Pictures",
+        .attributes = FILE_ATTRIBUTE_READONLY,
+        .flags      = KFDF_PRECREATE,
+#ifdef __REACTOS__
+        .nShell32IconIndex = -IDI_SHELL_MY_PICTURES
+#endif
     },
     { /* 0x37 - CSIDL_COMMON_VIDEO */
-        &FOLDERID_PublicVideos,
-        CSIDL_Type_AllUsers,
-        L"CommonVideo",
-        MAKEINTRESOURCEW(IDS_COMMON_VIDEO),
-        -IDI_SHELL_MY_MOVIES
+        .id         = &FOLDERID_PublicVideos,
+        .type       = CSIDL_Type_AllUsers,
+        .value      = L"CommonVideo",
+        .category   = KF_CATEGORY_COMMON,
+        .name       = L"CommonVideo",
+        .parent     = &FOLDERID_Public,
+        .path       = L"Videos",
+        .attributes = FILE_ATTRIBUTE_READONLY,
+        .flags      = KFDF_PRECREATE,
+#ifdef __REACTOS__
+        .nShell32IconIndex = -IDI_SHELL_MY_MOVIES
+#endif
     },
     { /* 0x38 - CSIDL_RESOURCES */
-        &FOLDERID_ResourceDir,
-        CSIDL_Type_WindowsPath,
-        NULL,
-        L"Resources"
+        .id         = &FOLDERID_ResourceDir,
+        .type       = CSIDL_Type_WindowsPath,
+        .def_path   = L"Resources",
+        .category   = KF_CATEGORY_FIXED,
+        .name       = L"ResourceDir",
     },
     { /* 0x39 - CSIDL_RESOURCES_LOCALIZED */
-        &FOLDERID_LocalizedResourcesDir,
-        CSIDL_Type_NonExistent,
-        NULL,
-        NULL
+        .id         = &FOLDERID_LocalizedResourcesDir,
+        .type       = CSIDL_Type_NonExistent,
+        .category   = KF_CATEGORY_FIXED,
+        .name       = L"LocalizedResourcesDir",
     },
     { /* 0x3a - CSIDL_COMMON_OEM_LINKS */
-        &FOLDERID_CommonOEMLinks,
-        CSIDL_Type_AllUsers,
-        NULL,
-        L"OEM Links"
+        .id         = &FOLDERID_CommonOEMLinks,
+        .type       = CSIDL_Type_ProgramData,
+        .category   = KF_CATEGORY_COMMON,
+        .name       = L"OEM Links",
+        .parent     = &FOLDERID_ProgramData,
+        .path       = L"OEM Links",
     },
     { /* 0x3b - CSIDL_CDBURN_AREA */
-        &FOLDERID_CDBurning,
-        CSIDL_Type_User,
-        L"CD Burning",
-        L"Local Settings\\Application Data\\Microsoft\\CD Burning"
+        .id         = &FOLDERID_CDBurning,
+        .type       = CSIDL_Type_User,
+        .value      = L"CD Burning",
+        .category   = KF_CATEGORY_PERUSER,
+        .name       = L"CD Burning",
+        .parent     = &FOLDERID_LocalAppData,
+        .path       = L"Microsoft\\Windows\\Burn\\Burn",
+        .attributes = FILE_ATTRIBUTE_READONLY,
+        .flags      = KFDF_LOCAL_REDIRECT_ONLY,
     },
     { /* 0x3c unassigned */
-        &GUID_NULL,
-        CSIDL_Type_Disallowed,
-        NULL,
-        NULL
+        .id         = &GUID_NULL,
+        .type       = CSIDL_Type_Disallowed,
     },
     { /* 0x3d - CSIDL_COMPUTERSNEARME */
-        &GUID_NULL,
-        CSIDL_Type_Disallowed, /* FIXME */
-        NULL,
-        NULL
+        .id         = &GUID_NULL,
+        .type       = CSIDL_Type_Disallowed, /* FIXME */
     },
     { /* 0x3e - CSIDL_PROFILES */
-        &GUID_NULL,
-        CSIDL_Type_Disallowed, /* oddly, this matches WinXP */
-        NULL,
-        NULL
+        .id         = &GUID_NULL,
+        .type       = CSIDL_Type_Disallowed, /* oddly, this matches WinXP */
     },
-/* Cannot use #if _WIN32_WINNT >= 0x0600 because _WIN32_WINNT == 0x0600 here. */
-#ifndef __REACTOS__
     { /* 0x3f */
-        &FOLDERID_AddNewPrograms,
-        CSIDL_Type_Disallowed,
-        NULL,
-        NULL
+        .id         = &FOLDERID_AddNewPrograms,
+        .type       = CSIDL_Type_Disallowed,
+        .category   = KF_CATEGORY_VIRTUAL,
+        .name       = L"AddNewProgramsFolder",
+        .parsing    = L"::{21EC2020-3AEA-1069-A2DD-08002B30309D}\\::{15eae92e-f17a-4431-9f28-805e482dafd4}",
     },
     { /* 0x40 */
-        &FOLDERID_AppUpdates,
-        CSIDL_Type_Disallowed,
-        NULL,
-        NULL
+        .id         = &FOLDERID_AppUpdates,
+        .type       = CSIDL_Type_Disallowed,
+        .category   = KF_CATEGORY_VIRTUAL,
+        .name       = L"AppUpdatesFolder",
+        .parsing    = L"::{21EC2020-3AEA-1069-A2DD-08002B30309D}\\::{7b81be6a-ce2b-4676-a29e-eb907a5126c5}\\::{d450a8a1-9568-45c7-9c0e-b4f9fb4537bd}",
     },
     { /* 0x41 */
-        &FOLDERID_ChangeRemovePrograms,
-        CSIDL_Type_Disallowed,
-        NULL,
-        NULL
+        .id         = &FOLDERID_ChangeRemovePrograms,
+        .type       = CSIDL_Type_Disallowed,
+        .category   = KF_CATEGORY_VIRTUAL,
+        .name       = L"ChangeRemoveProgramsFolder",
+        .parsing    = L"::{21EC2020-3AEA-1069-A2DD-08002B30309D}\\::{7b81be6a-ce2b-4676-a29e-eb907a5126c5}",
     },
     { /* 0x42 */
-        &FOLDERID_ConflictFolder,
-        CSIDL_Type_Disallowed,
-        NULL,
-        NULL
+        .id         = &FOLDERID_ConflictFolder,
+        .type       = CSIDL_Type_Disallowed,
+        .category   = KF_CATEGORY_VIRTUAL,
+        .name       = L"ConflictFolder",
+        .parsing    = L"::{21EC2020-3AEA-1069-A2DD-08002B30309D}\\::{9C73F5E5-7AE7-4E32-A8E8-8D23B85255BF}\\::{E413D040-6788-4C22-957E-175D1C513A34},",
     },
     { /* 0x43 - CSIDL_CONTACTS */
-        &FOLDERID_Contacts,
-        CSIDL_Type_User,
-        NULL,
-        L"Contacts"
+        .id         = &FOLDERID_Contacts,
+        .type       = CSIDL_Type_User,
+        .category   = KF_CATEGORY_PERUSER,
+        .name       = L"Contacts",
+        .parent     = &FOLDERID_Profile,
+        .path       = L"Contacts",
+        .parsing    = L"::{59031a47-3f72-44a7-89c5-5595fe6b30ee}\\{56784854-C6CB-462B-8169-88E350ACB882}",
+        .attributes = FILE_ATTRIBUTE_READONLY,
+        .flags      = KFDF_ROAMABLE | KFDF_PRECREATE | KFDF_PUBLISHEXPANDEDPATH,
     },
     { /* 0x44 */
-        &FOLDERID_DeviceMetadataStore,
-        CSIDL_Type_Disallowed, /* FIXME */
-        NULL,
-        NULL
+        .id         = &FOLDERID_DeviceMetadataStore,
+        .type       = CSIDL_Type_Disallowed, /* FIXME */
+        .category   = KF_CATEGORY_COMMON,
+        .name       = L"Device Metadata Store",
+        .parent     = &FOLDERID_ProgramData,
+        .path       = L"Microsoft\\Windows\\DeviceMetadataStore",
     },
     { /* 0x45 */
-        &GUID_NULL,
-        CSIDL_Type_User,
-        NULL,
-        L"Documents"
+        .id         = &GUID_NULL,
+        .type       = CSIDL_Type_Disallowed,
     },
     { /* 0x46 */
-        &FOLDERID_DocumentsLibrary,
-        CSIDL_Type_Disallowed, /* FIXME */
-        NULL,
-        NULL
+        .id         = &FOLDERID_DocumentsLibrary,
+        .type       = CSIDL_Type_Disallowed, /* FIXME */
+        .category   = KF_CATEGORY_PERUSER,
+        .name       = L"DocumentsLibrary",
+        .parent     = &FOLDERID_Libraries,
+        .path       = L"Documents.library-ms",
+        .parsing    = L"::{031E4825-7B94-4dc3-B131-E946B44C8DD5}\\{7b0db17d-9cd2-4a93-9733-46cc89022e7c}",
+        .flags      = KFDF_PRECREATE | KFDF_STREAM,
     },
     { /* 0x47 - CSIDL_DOWNLOADS */
-        &FOLDERID_Downloads,
-#ifdef __REACTOS__
-        CSIDL_Type_InMyDocuments,
-#else
-        CSIDL_Type_User,
-#endif
-        NULL,
-        L"Downloads"
+        .id         = &FOLDERID_Downloads,
+        .type       = CSIDL_Type_User,
+        .category   = KF_CATEGORY_PERUSER,
+        .name       = L"Downloads",
+        .parent     = &FOLDERID_Profile,
+        .path       = L"Downloads",
+        .attributes = FILE_ATTRIBUTE_READONLY,
+        .flags      = KFDF_ROAMABLE | KFDF_PRECREATE | KFDF_PUBLISHEXPANDEDPATH,
     },
     { /* 0x48 */
-        &FOLDERID_Games,
-        CSIDL_Type_Disallowed,
-        NULL,
-        NULL
+        .id         = &FOLDERID_Games,
+        .type       = CSIDL_Type_Disallowed,
+        .category   = KF_CATEGORY_VIRTUAL,
+        .name       = L"Games",
+        .parsing    = L"::{ED228FDF-9EA8-4870-83b1-96b02CFE0D52}",
     },
     { /* 0x49 */
-        &FOLDERID_GameTasks,
-        CSIDL_Type_Disallowed, /* FIXME */
-        NULL,
-        NULL
+        .id         = &FOLDERID_GameTasks,
+        .type       = CSIDL_Type_Disallowed, /* FIXME */
+        .category   = KF_CATEGORY_PERUSER,
+        .name       = L"GameTasks",
+        .parent     = &FOLDERID_LocalAppData,
+        .path       = L"Microsoft\\Windows\\GameExplorer",
+        .flags      = KFDF_LOCAL_REDIRECT_ONLY,
     },
     { /* 0x4a */
-        &FOLDERID_HomeGroup,
-        CSIDL_Type_Disallowed,
-        NULL,
-        NULL
+        .id         = &FOLDERID_HomeGroup,
+        .type       = CSIDL_Type_Disallowed,
+        .category   = KF_CATEGORY_VIRTUAL,
+        .name       = L"HomeGroupFolder",
+        .parsing    = L"::{B4FB3F98-C1EA-428d-A78A-D1F5659CBA93}",
     },
     { /* 0x4b */
-        &FOLDERID_ImplicitAppShortcuts,
-        CSIDL_Type_Disallowed, /* FIXME */
-        NULL,
-        NULL
+        .id         = &FOLDERID_ImplicitAppShortcuts,
+        .type       = CSIDL_Type_User,
+        .category   = KF_CATEGORY_PERUSER,
+        .name       = L"ImplicitAppShortcuts",
+        .parent     = &FOLDERID_UserPinned,
+        .path       = L"ImplicitAppShortcuts",
+        .flags      = KFDF_PRECREATE,
     },
     { /* 0x4c */
-        &FOLDERID_Libraries,
-        CSIDL_Type_Disallowed, /* FIXME */
-        NULL,
-        NULL
+        .id         = &FOLDERID_Libraries,
+        .type       = CSIDL_Type_Disallowed, /* FIXME */
+        .category   = KF_CATEGORY_PERUSER,
+        .name       = L"Libraries",
+        .parent     = &FOLDERID_RoamingAppData,
+        .path       = L"Microsoft\\Windows\\Libraries",
+        .flags      = KFDF_PRECREATE | KFDF_PUBLISHEXPANDEDPATH,
     },
     { /* 0x4d - CSIDL_LINKS */
-        &FOLDERID_Links,
-        CSIDL_Type_User,
-        NULL,
-        L"Links"
+        .id         = &FOLDERID_Links,
+        .type       = CSIDL_Type_User,
+        .category   = KF_CATEGORY_PERUSER,
+        .name       = L"Links",
+        .parent     = &FOLDERID_Profile,
+        .path       = L"Links",
+        .parsing    = L"::{59031a47-3f72-44a7-89c5-5595fe6b30ee}\\{bfb9d5e0-c6a9-404c-b2b2-ae6db6af4968}",
+        .attributes = FILE_ATTRIBUTE_READONLY,
+        .flags      = KFDF_ROAMABLE | KFDF_PRECREATE | KFDF_PUBLISHEXPANDEDPATH,
     },
     { /* 0x4e - CSIDL_APPDATA_LOCALLOW */
-        &FOLDERID_LocalAppDataLow,
-        CSIDL_Type_User,
-        NULL,
-        L"AppData\\LocalLow"
+        .id         = &FOLDERID_LocalAppDataLow,
+        .type       = CSIDL_Type_User,
+        .category   = KF_CATEGORY_PERUSER,
+        .name       = L"LocalAppDataLow",
+        .parent     = &FOLDERID_Profile,
+        .path       = L"AppData\\LocalLow",
+        .attributes = FILE_ATTRIBUTE_NOT_CONTENT_INDEXED,
+        .flags      = KFDF_LOCAL_REDIRECT_ONLY | KFDF_PRECREATE | KFDF_PUBLISHEXPANDEDPATH,
     },
     { /* 0x4f */
-        &FOLDERID_MusicLibrary,
-        CSIDL_Type_Disallowed, /* FIXME */
-        NULL,
-        NULL
+        .id         = &FOLDERID_MusicLibrary,
+        .type       = CSIDL_Type_Disallowed, /* FIXME */
+        .category   = KF_CATEGORY_PERUSER,
+        .name       = L"MusicLibrary",
+        .parent     = &FOLDERID_Libraries,
+        .path       = L"Music.library-ms",
+        .parsing    = L"::{031E4825-7B94-4dc3-B131-E946B44C8DD5}\\{2112AB0A-C86A-4ffe-A368-0DE96E47012E}",
+        .flags      = KFDF_PRECREATE | KFDF_STREAM,
     },
     { /* 0x50 */
-        &FOLDERID_OriginalImages,
-        CSIDL_Type_Disallowed, /* FIXME */
-        NULL,
-        NULL
+        .id         = &FOLDERID_OriginalImages,
+        .type       = CSIDL_Type_Disallowed, /* FIXME */
+        .category   = KF_CATEGORY_PERUSER,
+        .name       = L"Original Images",
+        .parent     = &FOLDERID_LocalAppData,
+        .path       = L"Microsoft\\Windows Photo Gallery\\Original Images",
     },
     { /* 0x51 */
-        &FOLDERID_PhotoAlbums,
-        CSIDL_Type_User,
-        NULL,
-        L"Pictures\\Slide Shows"
+        .id         = &FOLDERID_PhotoAlbums,
+        .type       = CSIDL_Type_User,
+        .category   = KF_CATEGORY_PERUSER,
+        .name       = L"PhotoAlbums",
+        .parent     = &FOLDERID_Pictures,
+        .path       = L"Slide Shows",
+        .attributes = FILE_ATTRIBUTE_READONLY,
     },
     { /* 0x52 */
-        &FOLDERID_PicturesLibrary,
-        CSIDL_Type_Disallowed, /* FIXME */
-        NULL,
-        NULL
+        .id         = &FOLDERID_PicturesLibrary,
+        .type       = CSIDL_Type_Disallowed, /* FIXME */
+        .category   = KF_CATEGORY_PERUSER,
+        .name       = L"PicturesLibrary",
+        .parent     = &FOLDERID_Libraries,
+        .path       = L"Pictures.library-ms",
+        .parsing    = L"::{031E4825-7B94-4dc3-B131-E946B44C8DD5}\\{A990AE9F-A03B-4e80-94BC-9912D7504104}",
+        .flags      = KFDF_PRECREATE | KFDF_STREAM,
     },
     { /* 0x53 */
-        &FOLDERID_Playlists,
-        CSIDL_Type_User,
-        NULL,
-        L"Music\\Playlists"
+        .id         = &FOLDERID_Playlists,
+        .type       = CSIDL_Type_User,
+        .category   = KF_CATEGORY_PERUSER,
+        .name       = L"Playlists",
+        .parent     = &FOLDERID_Music,
+        .path       = L"Playlists",
+        .attributes = FILE_ATTRIBUTE_READONLY,
     },
     { /* 0x54 */
-        &FOLDERID_ProgramFilesX64,
-        CSIDL_Type_NonExistent,
-        NULL,
-        NULL
+        .id         = &FOLDERID_ProgramFilesX64,
+#ifdef _WIN64
+        .type       = CSIDL_Type_CurrVer,
+        .value      = L"ProgramFilesDir",
+        .def_path   = L"Program Files",
+#else
+        .type       = CSIDL_Type_NonExistent,
+#endif
+        .category   = KF_CATEGORY_FIXED,
+        .name       = L"ProgramFilesX64",
     },
     { /* 0x55 */
-        &FOLDERID_ProgramFilesCommonX64,
-        CSIDL_Type_NonExistent,
-        NULL,
-        NULL
+        .id         = &FOLDERID_ProgramFilesCommonX64,
+#ifdef _WIN64
+        .type       = CSIDL_Type_CurrVer,
+        .value      = L"ProgramFilesCommonX64",
+        .def_path   = L"Program Files\\Common Files",
+#else
+        .type       = CSIDL_Type_NonExistent,
+#endif
+        .category   = KF_CATEGORY_FIXED,
+        .name       = L"ProgramFilesCommonX64",
     },
     { /* 0x56 */
-        &FOLDERID_Public,
-        CSIDL_Type_CurrVer, /* FIXME */
-        NULL,
-        L"Users\\Public"
+        .id         = &FOLDERID_Public,
+        .type       = CSIDL_Type_AllUsers,
+        .category   = KF_CATEGORY_FIXED,
+        .name       = L"Public",
+        .parsing    = L"::{4336a54d-038b-4685-ab02-99bb52d3fb8b}",
+        .attributes = FILE_ATTRIBUTE_READONLY,
+        .flags      = KFDF_PRECREATE,
     },
     { /* 0x57 */
-        &FOLDERID_PublicDownloads,
-        CSIDL_Type_AllUsers,
-        NULL,
-        L"Downloads"
+        .id         = &FOLDERID_PublicDownloads,
+        .type       = CSIDL_Type_AllUsers,
+        .category   = KF_CATEGORY_COMMON,
+        .name       = L"CommonDownloads",
+        .parent     = &FOLDERID_Public,
+        .path       = L"Downloads",
+        .attributes = FILE_ATTRIBUTE_READONLY,
+        .flags      = KFDF_PRECREATE,
     },
     { /* 0x58 */
-        &FOLDERID_PublicGameTasks,
-        CSIDL_Type_AllUsers,
-        NULL,
-        L"Microsoft\\Windows\\GameExplorer"
+        .id         = &FOLDERID_PublicGameTasks,
+        .type       = CSIDL_Type_ProgramData,
+        .category   = KF_CATEGORY_COMMON,
+        .name       = L"PublicGameTasks",
+        .parent     = &FOLDERID_ProgramData,
+        .path       = L"Microsoft\\Windows\\GameExplorer",
+        .flags      = KFDF_LOCAL_REDIRECT_ONLY,
     },
     { /* 0x59 */
-        &FOLDERID_PublicLibraries,
-        CSIDL_Type_AllUsers,
-        NULL,
-        L"Microsoft\\Windows\\Libraries"
+        .id         = &FOLDERID_PublicLibraries,
+        .type       = CSIDL_Type_AllUsers,
+        .category   = KF_CATEGORY_COMMON,
+        .name       = L"PublicLibraries",
+        .parent     = &FOLDERID_Public,
+        .path       = L"Libraries",
+        .attributes = FILE_ATTRIBUTE_READONLY | FILE_ATTRIBUTE_HIDDEN,
+        .flags      = KFDF_PRECREATE,
     },
     { /* 0x5a */
-        &FOLDERID_PublicRingtones,
-        CSIDL_Type_AllUsers,
-        NULL,
-        L"Microsoft\\Windows\\Ringtones"
+        .id         = &FOLDERID_PublicRingtones,
+        .type       = CSIDL_Type_ProgramData,
+        .category   = KF_CATEGORY_COMMON,
+        .name       = L"CommonRingtones",
+        .parent     = &FOLDERID_ProgramData,
+        .path       = L"Microsoft\\Windows\\Ringtones",
+        .flags      = KFDF_PRECREATE,
     },
     { /* 0x5b */
-        &FOLDERID_QuickLaunch,
-        CSIDL_Type_Disallowed, /* FIXME */
-        NULL,
-        NULL
+        .id         = &FOLDERID_QuickLaunch,
+        .type       = CSIDL_Type_User,
+        .category   = KF_CATEGORY_PERUSER,
+        .name       = L"Quick Launch",
+        .parent     = &FOLDERID_RoamingAppData,
+        .path       = L"Microsoft\\Internet Explorer\\Quick Launch",
     },
     { /* 0x5c */
-        &FOLDERID_RecordedTVLibrary,
-        CSIDL_Type_Disallowed, /* FIXME */
-        NULL,
-        NULL
+        .id         = &FOLDERID_RecordedTVLibrary,
+        .type       = CSIDL_Type_Disallowed, /* FIXME */
+        .category   = KF_CATEGORY_COMMON,
+        .name       = L"RecordedTVLibrary",
+        .parent     = &FOLDERID_PublicLibraries,
+        .path       = L"RecordedTV.library-ms",
+        .flags      = KFDF_PRECREATE | KFDF_STREAM,
     },
     { /* 0x5d */
-        &FOLDERID_Ringtones,
-        CSIDL_Type_Disallowed, /* FIXME */
-        NULL,
-        NULL
+        .id         = &FOLDERID_Ringtones,
+        .type       = CSIDL_Type_Disallowed, /* FIXME */
+        .category   = KF_CATEGORY_PERUSER,
+        .name       = L"Ringtones",
+        .parent     = &FOLDERID_LocalAppData,
+        .path       = L"Microsoft\\Windows\\Ringtones",
+        .flags      = KFDF_PRECREATE,
     },
     { /* 0x5e */
-        &FOLDERID_SampleMusic,
-        CSIDL_Type_AllUsers,
-        NULL,
-        L"Music\\Sample Music"
+        .id         = &FOLDERID_SampleMusic,
+        .type       = CSIDL_Type_AllUsers,
+        .category   = KF_CATEGORY_COMMON,
+        .name       = L"SampleMusic",
+        .parent     = &FOLDERID_PublicMusic,
+        .path       = L"Sample Music",
+        .attributes = FILE_ATTRIBUTE_READONLY,
+        .flags      = KFDF_PRECREATE,
     },
     { /* 0x5f */
-        &FOLDERID_SamplePictures,
-        CSIDL_Type_AllUsers,
-        NULL,
-        L"Pictures\\Sample Pictures"
+        .id         = &FOLDERID_SamplePictures,
+        .type       = CSIDL_Type_AllUsers,
+        .category   = KF_CATEGORY_COMMON,
+        .name       = L"SamplePictures",
+        .parent     = &FOLDERID_PublicPictures,
+        .path       = L"Sample Pictures",
+        .attributes = FILE_ATTRIBUTE_READONLY,
+        .flags      = KFDF_PRECREATE,
     },
     { /* 0x60 */
-        &FOLDERID_SamplePlaylists,
-        CSIDL_Type_AllUsers,
-        NULL,
-        L"Music\\Sample Playlists"
+        .id         = &FOLDERID_SamplePlaylists,
+        .type       = CSIDL_Type_AllUsers,
+        .category   = KF_CATEGORY_COMMON,
+        .name       = L"SamplePlaylists",
+        .parent     = &FOLDERID_PublicMusic,
+        .path       = L"Sample Playlists",
+        .attributes = FILE_ATTRIBUTE_READONLY,
+        .flags      = KFDF_PRECREATE,
     },
     { /* 0x61 */
-        &FOLDERID_SampleVideos,
-        CSIDL_Type_AllUsers,
-        NULL,
-        L"Videos\\Sample Videos"
+        .id         = &FOLDERID_SampleVideos,
+        .type       = CSIDL_Type_AllUsers,
+        .category   = KF_CATEGORY_COMMON,
+        .name       = L"SampleVideos",
+        .parent     = &FOLDERID_PublicVideos,
+        .path       = L"Sample Videos",
+        .attributes = FILE_ATTRIBUTE_READONLY,
+        .flags      = KFDF_PRECREATE,
     },
     { /* 0x62 - CSIDL_SAVED_GAMES */
-        &FOLDERID_SavedGames,
-        CSIDL_Type_User,
-        NULL,
-        L"Saved Games"
+        .id         = &FOLDERID_SavedGames,
+        .type       = CSIDL_Type_User,
+        .category   = KF_CATEGORY_PERUSER,
+        .name       = L"SavedGames",
+        .parent     = &FOLDERID_Profile,
+        .path       = L"Saved Games",
+        .parsing    = L"::{59031a47-3f72-44a7-89c5-5595fe6b30ee}\\{4C5C32FF-BB9D-43b0-B5B4-2D72E54EAAA4}",
+        .attributes = FILE_ATTRIBUTE_READONLY,
+        .flags      = KFDF_ROAMABLE | KFDF_PRECREATE | KFDF_PUBLISHEXPANDEDPATH,
     },
     { /* 0x63 - CSIDL_SEARCHES */
-        &FOLDERID_SavedSearches,
-        CSIDL_Type_User,
-        NULL,
-        L"Searches"
+        .id         = &FOLDERID_SavedSearches,
+        .type       = CSIDL_Type_User,
+        .category   = KF_CATEGORY_PERUSER,
+        .name       = L"Searches",
+        .parent     = &FOLDERID_Profile,
+        .path       = L"Searches",
+        .parsing    = L"::{59031a47-3f72-44a7-89c5-5595fe6b30ee}\\{7d1d3a04-debb-4115-95cf-2f29da2920da}",
+        .attributes = FILE_ATTRIBUTE_READONLY,
+        .flags      = KFDF_PRECREATE | KFDF_PUBLISHEXPANDEDPATH,
     },
     { /* 0x64 */
-        &FOLDERID_SEARCH_CSC,
-        CSIDL_Type_Disallowed,
-        NULL,
-        NULL
+        .id         = &FOLDERID_SEARCH_CSC,
+        .type       = CSIDL_Type_Disallowed,
+        .category   = KF_CATEGORY_VIRTUAL,
+        .name       = L"CSCFolder",
+        .parsing    = L"shell:::{BD7A2E7B-21CB-41b2-A086-B309680C6B7E}\\*",
     },
     { /* 0x65 */
-        &FOLDERID_SEARCH_MAPI,
-        CSIDL_Type_Disallowed,
-        NULL,
-        NULL
+        .id         = &FOLDERID_SEARCH_MAPI,
+        .type       = CSIDL_Type_Disallowed,
+        .category   = KF_CATEGORY_VIRTUAL,
+        .name       = L"MAPIFolder",
+        .parsing    = L"shell:::{89D83576-6BD1-4C86-9454-BEB04E94C819}\\*",
     },
     { /* 0x66 */
-        &FOLDERID_SearchHome,
-        CSIDL_Type_Disallowed,
-        NULL,
-        NULL
+        .id         = &FOLDERID_SearchHome,
+        .type       = CSIDL_Type_Disallowed,
+        .category   = KF_CATEGORY_VIRTUAL,
+        .name       = L"SearchHomeFolder",
+        .parsing    = L"::{9343812e-1c37-4a49-a12e-4b2d810d956b}",
     },
     { /* 0x67 */
-        &FOLDERID_SidebarDefaultParts,
-        CSIDL_Type_Disallowed, /* FIXME */
-        NULL,
-        NULL
+        .id         = &FOLDERID_SidebarDefaultParts,
+        .type       = CSIDL_Type_Disallowed, /* FIXME */
+        .category   = KF_CATEGORY_COMMON,
+        .name       = L"Default Gadgets",
+        .parent     = &FOLDERID_ProgramFiles,
+        .path       = L"Windows Sidebar\\Gadgets",
     },
     { /* 0x68 */
-        &FOLDERID_SidebarParts,
-        CSIDL_Type_Disallowed, /* FIXME */
-        NULL,
-        NULL
+        .id         = &FOLDERID_SidebarParts,
+        .type       = CSIDL_Type_Disallowed, /* FIXME */
+        .category   = KF_CATEGORY_PERUSER,
+        .name       = L"Gadgets",
+        .parent     = &FOLDERID_LocalAppData,
+        .path       = L"Microsoft\\Windows Sidebar\\Gadgets",
     },
     { /* 0x69 */
-        &FOLDERID_SyncManagerFolder,
-        CSIDL_Type_Disallowed,
-        NULL,
-        NULL
+        .id         = &FOLDERID_SyncManagerFolder,
+        .type       = CSIDL_Type_Disallowed,
+        .category   = KF_CATEGORY_VIRTUAL,
+        .name       = L"SyncCenterFolder",
+        .parsing    = L"::{21EC2020-3AEA-1069-A2DD-08002B30309D}\\::{9C73F5E5-7AE7-4E32-A8E8-8D23B85255BF}",
     },
     { /* 0x6a */
-        &FOLDERID_SyncResultsFolder,
-        CSIDL_Type_Disallowed,
-        NULL,
-        NULL
+        .id         = &FOLDERID_SyncResultsFolder,
+        .type       = CSIDL_Type_Disallowed,
+        .category   = KF_CATEGORY_VIRTUAL,
+        .name       = L"SyncResultsFolder",
+        .parsing    = L"::{21EC2020-3AEA-1069-A2DD-08002B30309D}\\::{9C73F5E5-7AE7-4E32-A8E8-8D23B85255BF}\\::{BC48B32F-5910-47F5-8570-5074A8A5636A},",
     },
     { /* 0x6b */
-        &FOLDERID_SyncSetupFolder,
-        CSIDL_Type_Disallowed,
-        NULL,
-        NULL
+        .id         = &FOLDERID_SyncSetupFolder,
+        .type       = CSIDL_Type_Disallowed,
+        .category   = KF_CATEGORY_VIRTUAL,
+        .name       = L"SyncSetupFolder",
+        .parsing    = L"::{21EC2020-3AEA-1069-A2DD-08002B30309D}\\::{9C73F5E5-7AE7-4E32-A8E8-8D23B85255BF}\\::{F1390A9A-A3F4-4E5D-9C5F-98F3BD8D935C},",
     },
     { /* 0x6c */
-        &FOLDERID_UserPinned,
-        CSIDL_Type_Disallowed, /* FIXME */
-        NULL,
-        NULL
+        .id         = &FOLDERID_UserPinned,
+        .type       = CSIDL_Type_User,
+        .category   = KF_CATEGORY_PERUSER,
+        .name       = L"User Pinned",
+        .parent     = &FOLDERID_QuickLaunch,
+        .path       = L"User Pinned",
+        .attributes = FILE_ATTRIBUTE_HIDDEN,
+        .flags      = KFDF_PRECREATE,
     },
     { /* 0x6d */
-        &FOLDERID_UserProfiles,
-        CSIDL_Type_CurrVer,
-        L"Users",
-        L"Users"
+        .id         = &FOLDERID_UserProfiles,
+        .type       = CSIDL_Type_CurrVer,
+        .value      = L"Users",
+        .def_path   = L"Users",
+        .category   = KF_CATEGORY_FIXED,
+        .name       = L"UserProfiles",
+        .attributes = FILE_ATTRIBUTE_READONLY,
+        .flags      = KFDF_PRECREATE,
     },
     { /* 0x6e */
-        &FOLDERID_UserProgramFiles,
-        CSIDL_Type_Disallowed, /* FIXME */
-        NULL,
-        NULL
+        .id         = &FOLDERID_UserProgramFiles,
+        .type       = CSIDL_Type_User,
+        .category   = KF_CATEGORY_PERUSER,
+        .name       = L"UserProgramFiles",
+        .parent     = &FOLDERID_LocalAppData,
+        .path       = L"Programs",
     },
     { /* 0x6f */
-        &FOLDERID_UserProgramFilesCommon,
-        CSIDL_Type_Disallowed, /* FIXME */
-        NULL,
-        NULL
+        .id         = &FOLDERID_UserProgramFilesCommon,
+        .type       = CSIDL_Type_Disallowed, /* FIXME */
+        .category   = KF_CATEGORY_PERUSER,
+        .name       = L"UserProgramFilesCommon",
+        .parent     = &FOLDERID_UserProgramFiles,
+        .path       = L"Common",
     },
     { /* 0x70 */
-        &FOLDERID_UsersFiles,
-        CSIDL_Type_Disallowed,
-        NULL,
-        NULL
+        .id         = &FOLDERID_UsersFiles,
+        .type       = CSIDL_Type_Disallowed,
+        .category   = KF_CATEGORY_VIRTUAL,
+        .name       = L"UsersFilesFolder",
+        .parsing    = L"::{59031a47-3f72-44a7-89c5-5595fe6b30ee}",
     },
     { /* 0x71 */
-        &FOLDERID_UsersLibraries,
-        CSIDL_Type_Disallowed,
-        NULL,
-        NULL
+        .id         = &FOLDERID_UsersLibraries,
+        .type       = CSIDL_Type_Disallowed,
+        .category   = KF_CATEGORY_VIRTUAL,
+        .name       = L"UsersLibrariesFolder",
+        .parsing    = L"::{031E4825-7B94-4dc3-B131-E946B44C8DD5}",
     },
     { /* 0x72 */
-        &FOLDERID_VideosLibrary,
-        CSIDL_Type_Disallowed, /* FIXME */
-        NULL,
-        NULL
-    }
-#endif
+        .id         = &FOLDERID_VideosLibrary,
+        .type       = CSIDL_Type_Disallowed, /* FIXME */
+        .category   = KF_CATEGORY_PERUSER,
+        .name       = L"VideosLibrary",
+        .path       = L"Videos.library-ms",
+        .parsing    = L"::{031E4825-7B94-4dc3-B131-E946B44C8DD5}\\{491E922F-5643-4af4-A7EB-4E7A138D8174}",
+    },
+    { /* 0x73 */
+        .id         = &FOLDERID_AccountPictures,
+        .type       = CSIDL_Type_User,
+        .category   = KF_CATEGORY_PERUSER,
+        .name       = L"AccountPictures",
+        .parent     = &FOLDERID_RoamingAppData,
+        .path       = L"Microsoft\\Windows\\AccountPictures",
+        .attributes = FILE_ATTRIBUTE_READONLY,
+        .flags      = KFDF_PRECREATE | KFDF_ROAMABLE,
+    },
+    { /* 0x74 */
+        .id         = &FOLDERID_Screenshots,
+        .type       = CSIDL_Type_User,
+        .category   = KF_CATEGORY_PERUSER,
+        .name       = L"Screenshots",
+        .parent     = &FOLDERID_Pictures,
+        .path       = L"Screenshots",
+        .flags      = KFDF_PRECREATE | KFDF_ROAMABLE,
+    },
+    { /* 0x75 */
+        .id         = &FOLDERID_AppDataDocuments,
+        .type       = CSIDL_Type_User,
+        .category   = KF_CATEGORY_PERUSER,
+        .name       = L"AppDataDocuments",
+        .parent     = &FOLDERID_LocalAppData,
+        .path       = L"Documents",
+        .flags      = KFDF_PRECREATE | KFDF_ROAMABLE,
+    },
 };
 
+static int csidl_from_id( const KNOWNFOLDERID *id )
+{
+    int i;
+    for (i = 0; i < ARRAY_SIZE(CSIDL_Data); i++)
+        if (IsEqualGUID( CSIDL_Data[i].id, id )) return i;
+    return -1;
+}
+
+#ifdef __REACTOS__
 INT SHGetSpecialFolderID(_In_ LPCWSTR pszName)
 {
     UINT csidl;
@@ -1977,7 +2859,7 @@ INT SHGetSpecialFolderID(_In_ LPCWSTR pszName)
     for (csidl = 0; csidl < _countof(CSIDL_Data); ++csidl)
     {
         const CSIDL_DATA *pData = &CSIDL_Data[csidl];
-        if (pData->szValueName && lstrcmpiW(pszName, pData->szValueName) == 0)
+        if (pData->name && lstrcmpiW(pszName, pData->name) == 0)
             return csidl;
     }
 
@@ -1994,7 +2876,7 @@ INT Shell_ParseSpecialFolder(_In_ LPCWSTR pszStart, _Out_ LPWSTR *ppch, _Out_ IN
     {
         *ppch = (LPWSTR)(pchBackslash + 1);
         *pcch = (pchBackslash - pszStart) + 1;
-        StrCpyNW(szPath, pszStart, min(*pcch, _countof(szPath)));
+        StrCpyNW(szPath, pszStart, max(*pcch, _countof(szPath)));
         pszPath = szPath;
     }
     else
@@ -2006,6 +2888,7 @@ INT Shell_ParseSpecialFolder(_In_ LPCWSTR pszStart, _Out_ LPWSTR *ppch, _Out_ IN
 
     return SHGetSpecialFolderID(pszPath);
 }
+#endif
 
 #ifndef __REACTOS__
 static HRESULT _SHExpandEnvironmentStrings(LPCWSTR szSrc, LPWSTR szDest);
@@ -2040,19 +2923,19 @@ static HRESULT _SHGetUserShellFolderPath(HKEY rootKey, HANDLE hToken, LPCWSTR us
 
     if (userPrefix)
     {
-        strcpyW(shellFolderPath, userPrefix);
+        lstrcpyW(shellFolderPath, userPrefix);
         PathAddBackslashW(shellFolderPath);
-        strcatW(shellFolderPath, szSHFolders);
+        lstrcatW(shellFolderPath, L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders");
         pShellFolderPath = shellFolderPath;
-        strcpyW(userShellFolderPath, userPrefix);
+        lstrcpyW(userShellFolderPath, userPrefix);
         PathAddBackslashW(userShellFolderPath);
-        strcatW(userShellFolderPath, szSHUserFolders);
+        lstrcatW(userShellFolderPath, L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\User Shell Folders");
         pUserShellFolderPath = userShellFolderPath;
     }
     else
     {
-        pUserShellFolderPath = szSHUserFolders;
-        pShellFolderPath = szSHFolders;
+        pUserShellFolderPath = L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\User Shell Folders";
+        pShellFolderPath = L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders";
     }
 
     if (RegCreateKeyW(rootKey, pShellFolderPath, &shellFolderKey))
@@ -2089,7 +2972,7 @@ static HRESULT _SHGetUserShellFolderPath(HKEY rootKey, HANDLE hToken, LPCWSTR us
             lstrcpynW(path, szTemp, MAX_PATH);
         }
         ret = RegSetValueExW(shellFolderKey, value, 0, REG_SZ, (LPBYTE)path,
-         (strlenW(path) + 1) * sizeof(WCHAR));
+         (lstrlenW(path) + 1) * sizeof(WCHAR));
         if (ret != ERROR_SUCCESS)
             hr = HRESULT_FROM_WIN32(ret);
         else
@@ -2102,36 +2985,26 @@ end:
 #endif
     RegCloseKey(shellFolderKey);
     RegCloseKey(userShellFolderKey);
-    TRACE("returning 0x%08x\n", hr);
+    TRACE("returning 0x%08lx\n", hr);
     return hr;
 }
 
-BOOL _SHGetUserProfileDirectoryW(HANDLE hToken, LPWSTR szPath, LPDWORD lpcchPath)
+static void append_relative_path(BYTE folder, WCHAR *pszPath)
 {
-    BOOL result;
-    if (!hToken)
+    if (CSIDL_Data[folder].path)
     {
-        OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &hToken);
-        result = GetUserProfileDirectoryW(hToken, szPath, lpcchPath);
-        CloseHandle(hToken);
+        PathAddBackslashW(pszPath);
+        lstrcatW(pszPath, CSIDL_Data[folder].path);
     }
-    else if ((INT) hToken == -1)
+    else if (CSIDL_Data[folder].def_path)
     {
-        result = GetDefaultUserProfileDirectoryW(szPath, lpcchPath);
+        PathAddBackslashW(pszPath);
+        lstrcatW(pszPath, CSIDL_Data[folder].def_path);
     }
-    else
-    {
-        result = GetUserProfileDirectoryW(hToken, szPath, lpcchPath);
-    }
-    TRACE("_SHGetUserProfileDirectoryW returning %S\n", szPath);
-    return result;
 }
 
 /* Gets a 'semi-expanded' default value of the CSIDL with index folder into
  * pszPath, based on the entries in CSIDL_Data.  By semi-expanded, I mean:
- * - The entry's szDefaultPath may be either a string value or an integer
- *   resource identifier.  In the latter case, the string value of the resource
- *   is written.
  * - Depending on the entry's type, the path may begin with an (unexpanded)
  *   environment variable name.  The caller is responsible for expanding
  *   environment strings if so desired.
@@ -2148,10 +3021,6 @@ static HRESULT _SHGetDefaultValue(HANDLE hToken, BYTE folder, LPWSTR pszPath)
 #endif
 {
     HRESULT hr;
-    WCHAR resourcePath[MAX_PATH];
-#ifdef __REACTOS__
-    NT_PRODUCT_TYPE ProductType;
-#endif
 
     TRACE("0x%02x,%p\n", folder, pszPath);
 
@@ -2187,68 +3056,40 @@ static HRESULT _SHGetDefaultValue(HANDLE hToken, BYTE folder, LPWSTR pszPath)
         }
     }
 
-    switch (CSIDL_Data[folder].type)
+    if (!CSIDL_Data[folder].parent)
     {
-        case CSIDL_Type_User:
-            strcpyW(pszPath, L"%USERPROFILE%");
-            break;
+        /* hit the root, sub in env var */
+        switch (CSIDL_Data[folder].type)
+        {
+            case CSIDL_Type_User:
+                lstrcpyW(pszPath, L"%USERPROFILE%");
+                break;
+            case CSIDL_Type_AllUsers:
+                lstrcpyW(pszPath, L"%PUBLIC%");
+                break;
+            case CSIDL_Type_ProgramData:
+                lstrcpyW(pszPath, L"%ProgramData%");
+                break;
+            case CSIDL_Type_CurrVer:
+                lstrcpyW(pszPath, L"%SystemDrive%");
+                break;
+            default:
+                ; /* no corresponding env. var, do nothing */
+        }
+        hr = S_OK;
+    }else{
+        /* prepend with parent */
 #ifdef __REACTOS__
-        case CSIDL_Type_InMyDocuments:
-            strcpyW(pszPath, L"%USERPROFILE%");
-            if (DoGetProductType(&ProductType) && ProductType == NtProductWinNt)
-            {
-                if (IS_INTRESOURCE(CSIDL_Data[CSIDL_MYDOCUMENTS].szDefaultPath))
-                {
-                    WCHAR szItem[MAX_PATH];
-                    LoadStringW(shell32_hInstance,
-                                LOWORD(CSIDL_Data[CSIDL_MYDOCUMENTS].szDefaultPath),
-                                szItem, ARRAY_SIZE(szItem));
-                    PathAppendW(pszPath, szItem);
-                }
-                else
-                {
-                    PathAppendW(pszPath, CSIDL_Data[CSIDL_MYDOCUMENTS].szDefaultPath);
-                }
-            }
-            break;
-#endif
-        case CSIDL_Type_AllUsers:
-#ifndef __REACTOS__
-            strcpyW(pszPath, L"%PUBLIC%");
+        hr = _SHGetDefaultValue(NULL, csidl_from_id(CSIDL_Data[folder].parent), pszPath);
 #else
-            strcpyW(pszPath, L"%ALLUSERSPROFILE%");
+        hr = _SHGetDefaultValue(csidl_from_id(CSIDL_Data[folder].parent), pszPath);
 #endif
-            break;
-        case CSIDL_Type_CurrVer:
-            strcpyW(pszPath, L"%SystemDrive%");
-            break;
-        default:
-            ; /* no corresponding env. var, do nothing */
     }
 
-    hr = S_OK;
-    if (CSIDL_Data[folder].szDefaultPath)
-    {
-        if (IS_INTRESOURCE(CSIDL_Data[folder].szDefaultPath))
-        {
-            if (LoadStringW(shell32_hInstance,
-                LOWORD(CSIDL_Data[folder].szDefaultPath), resourcePath, MAX_PATH))
-            {
-                PathAppendW(pszPath, resourcePath);
-            }
-            else
-            {
-                ERR("(%d,%s), LoadString failed, missing translation?\n", folder,
-                      debugstr_w(pszPath));
-                hr = E_FAIL;
-            }
-        }
-        else
-        {
-            PathAppendW(pszPath, CSIDL_Data[folder].szDefaultPath);
-        }
-    }
-    TRACE("returning 0x%08x\n", hr);
+    if (SUCCEEDED(hr))
+        append_relative_path(folder, pszPath);
+
+    TRACE("returning 0x%08lx\n", hr);
     return hr;
 }
 
@@ -2263,7 +3104,7 @@ static HRESULT _SHGetCurrentVersionPath(DWORD dwFlags, BYTE folder,
 {
     HRESULT hr;
 
-    TRACE("0x%08x,0x%02x,%p\n", dwFlags, folder, pszPath);
+    TRACE("0x%08lx,0x%02x,%p\n", dwFlags, folder, pszPath);
 
     if (folder >= ARRAY_SIZE(CSIDL_Data))
         return E_INVALIDARG;
@@ -2288,7 +3129,7 @@ static HRESULT _SHGetCurrentVersionPath(DWORD dwFlags, BYTE folder,
         {
             DWORD dwType, dwPathLen = MAX_PATH * sizeof(WCHAR);
 
-            if (RegQueryValueExW(hKey, CSIDL_Data[folder].szValueName, NULL,
+            if (RegQueryValueExW(hKey, CSIDL_Data[folder].value, NULL,
              &dwType, (LPBYTE)pszPath, &dwPathLen) ||
              (dwType != REG_SZ && dwType != REG_EXPAND_SZ))
             {
@@ -2311,8 +3152,8 @@ static HRESULT _SHGetCurrentVersionPath(DWORD dwFlags, BYTE folder,
                     }
                     /* fall through */
                 default:
-                    RegSetValueExW(hKey, CSIDL_Data[folder].szValueName, 0, dwType,
-                                   (LPBYTE)pszPath, (strlenW(pszPath)+1)*sizeof(WCHAR));
+                    RegSetValueExW(hKey, CSIDL_Data[folder].value, 0, dwType,
+                                   (LPBYTE)pszPath, (lstrlenW(pszPath)+1)*sizeof(WCHAR));
                 }
             }
             else
@@ -2323,7 +3164,7 @@ static HRESULT _SHGetCurrentVersionPath(DWORD dwFlags, BYTE folder,
             RegCloseKey(hKey);
         }
     }
-    TRACE("returning 0x%08x (output path is %s)\n", hr, debugstr_w(pszPath));
+    TRACE("returning 0x%08lx (output path is %s)\n", hr, debugstr_w(pszPath));
     return hr;
 }
 
@@ -2340,13 +3181,13 @@ static LPWSTR _GetUserSidStringFromToken(HANDLE Token)
     {
         if (GetLastError() != ERROR_INSUFFICIENT_BUFFER)
             return NULL;
-        UserInfo = HeapAlloc(GetProcessHeap(), 0, InfoSize);
+        UserInfo = malloc(InfoSize);
         if (UserInfo == NULL)
             return NULL;
         if (! GetTokenInformation(Token, TokenUser, UserInfo, InfoSize,
                                   &InfoSize))
         {
-            HeapFree(GetProcessHeap(), 0, UserInfo);
+            free(UserInfo);
             return NULL;
         }
     }
@@ -2355,7 +3196,7 @@ static LPWSTR _GetUserSidStringFromToken(HANDLE Token)
         SidStr = NULL;
 
     if (UserInfo != (PTOKEN_USER) InfoBuffer)
-        HeapFree(GetProcessHeap(), 0, UserInfo);
+        free(UserInfo);
 
     return SidStr;
 }
@@ -2375,25 +3216,23 @@ static HRESULT _SHGetUserProfilePath(HANDLE hToken, DWORD dwFlags, BYTE folder,
     WCHAR buffer[40];
     HRESULT hr;
 
-    TRACE("%p,0x%08x,0x%02x,%p\n", hToken, dwFlags, folder, pszPath);
+    TRACE("%p,0x%08lx,0x%02x,%p\n", hToken, dwFlags, folder, pszPath);
 
     if (folder >= ARRAY_SIZE(CSIDL_Data))
         return E_INVALIDARG;
-#ifdef __REACTOS__
-    if (CSIDL_Data[folder].type != CSIDL_Type_User &&
-        CSIDL_Data[folder].type != CSIDL_Type_InMyDocuments)
-#else
     if (CSIDL_Data[folder].type != CSIDL_Type_User)
-#endif
-    {
         return E_INVALIDARG;
-    }
     if (!pszPath)
         return E_INVALIDARG;
 
     if (dwFlags & SHGFP_TYPE_DEFAULT)
     {
 #ifndef __REACTOS__
+        if (hToken != NULL && hToken != (HANDLE)-1)
+        {
+            FIXME("unsupported for user other than current or default\n");
+            return E_FAIL;
+        }
         hr = _SHGetDefaultValue(folder, pszPath);
 #else
         hr = _SHGetDefaultValue(hToken, folder, pszPath);
@@ -2424,7 +3263,7 @@ static HRESULT _SHGetUserProfilePath(HANDLE hToken, DWORD dwFlags, BYTE folder,
         }
 
         /* For CSIDL_Type_User we also use the GUID if no szValueName is provided */
-        szValueName = CSIDL_Data[folder].szValueName;
+        szValueName = CSIDL_Data[folder].value;
         if (!szValueName)
         {
             StringFromGUID2( CSIDL_Data[folder].id, buffer, 39 );
@@ -2448,7 +3287,7 @@ static HRESULT _SHGetUserProfilePath(HANDLE hToken, DWORD dwFlags, BYTE folder,
             LocalFree((HLOCAL) userPrefix);
     }
 error:
-    TRACE("returning 0x%08x (output path is %s)\n", hr, debugstr_w(pszPath));
+    TRACE("returning 0x%08lx (output path is %s)\n", hr, debugstr_w(pszPath));
     return hr;
 }
 
@@ -2462,11 +3301,11 @@ static HRESULT _SHGetAllUsersProfilePath(DWORD dwFlags, BYTE folder,
 {
     HRESULT hr;
 
-    TRACE("0x%08x,0x%02x,%p\n", dwFlags, folder, pszPath);
+    TRACE("0x%08lx,0x%02x,%p\n", dwFlags, folder, pszPath);
 
     if (folder >= ARRAY_SIZE(CSIDL_Data))
         return E_INVALIDARG;
-    if (CSIDL_Data[folder].type != CSIDL_Type_AllUsers)
+    if (CSIDL_Data[folder].type != CSIDL_Type_AllUsers && CSIDL_Data[folder].type != CSIDL_Type_ProgramData)
         return E_INVALIDARG;
     if (!pszPath)
         return E_INVALIDARG;
@@ -2484,7 +3323,7 @@ static HRESULT _SHGetAllUsersProfilePath(DWORD dwFlags, BYTE folder,
 #else
         hr = _SHGetUserShellFolderPath(HKEY_LOCAL_MACHINE, NULL, NULL,
 #endif
-         CSIDL_Data[folder].szValueName, pszPath);
+         CSIDL_Data[folder].value, pszPath);
         if (FAILED(hr))
 #ifndef __REACTOS__
             hr = _SHGetDefaultValue(folder, pszPath);
@@ -2492,11 +3331,10 @@ static HRESULT _SHGetAllUsersProfilePath(DWORD dwFlags, BYTE folder,
             hr = _SHGetDefaultValue(NULL, folder, pszPath);
 #endif
     }
-    TRACE("returning 0x%08x (output path is %s)\n", hr, debugstr_w(pszPath));
+    TRACE("returning 0x%08lx (output path is %s)\n", hr, debugstr_w(pszPath));
     return hr;
 }
 
-#ifndef __REACTOS__
 static HRESULT _SHOpenProfilesKey(PHKEY pKey)
 {
     LONG lRet;
@@ -2538,16 +3376,15 @@ static HRESULT _SHGetProfilesValue(HKEY profilesKey, LPCWSTR szValueName,
                                                   debugstr_w(szValue));
         lRet = RegSetValueExW(profilesKey, szValueName, 0, REG_EXPAND_SZ,
                               (LPBYTE)szValue,
-                              (strlenW(szValue) + 1) * sizeof(WCHAR));
+                              (lstrlenW(szValue) + 1) * sizeof(WCHAR));
         if (lRet)
             hr = HRESULT_FROM_WIN32(lRet);
         else
             hr = S_OK;
     }
-    TRACE("returning 0x%08x (output value is %s)\n", hr, debugstr_w(szValue));
+    TRACE("returning 0x%08lx (output value is %s)\n", hr, debugstr_w(szValue));
     return hr;
 }
-#endif
 
 /* Attempts to expand environment variables from szSrc into szDest, which is
  * assumed to be MAX_PATH characters in length.  Before referring to the
@@ -2568,12 +3405,8 @@ static HRESULT _SHExpandEnvironmentStrings(HANDLE hToken, LPCWSTR szSrc, LPWSTR 
 #endif
 {
     HRESULT hr;
-#ifndef __REACTOS__
     WCHAR szTemp[MAX_PATH], szProfilesPrefix[MAX_PATH] = { 0 };
     HKEY key = NULL;
-#else
-    WCHAR szTemp[MAX_PATH];
-#endif
 
     TRACE("%s, %p\n", debugstr_w(szSrc), szDest);
 
@@ -2582,11 +3415,11 @@ static HRESULT _SHExpandEnvironmentStrings(HANDLE hToken, LPCWSTR szSrc, LPWSTR 
     /* short-circuit if there's nothing to expand */
     if (szSrc[0] != '%')
     {
-        strcpyW(szDest, szSrc);
+        lstrcpyW(szDest, szSrc);
         hr = S_OK;
         goto end;
     }
-#ifndef __REACTOS__
+
     /* Get the profile prefix, we'll probably be needing it */
     hr = _SHOpenProfilesKey(&key);
     if (SUCCEEDED(hr))
@@ -2595,63 +3428,86 @@ static HRESULT _SHExpandEnvironmentStrings(HANDLE hToken, LPCWSTR szSrc, LPWSTR 
 
         /* get the system drive */
         GetSystemDirectoryW(def_val, MAX_PATH);
-        strcpyW( def_val + 3, L"Users" );
+        lstrcpyW( def_val + 3, L"users" );
 
         hr = _SHGetProfilesValue(key, L"ProfilesDirectory", szProfilesPrefix, def_val );
     }
-#else
-    hr = S_OK;
-#endif
 
     *szDest = 0;
-    strcpyW(szTemp, szSrc);
+    lstrcpyW(szTemp, szSrc);
     while (SUCCEEDED(hr) && szTemp[0] == '%')
     {
-        if (!strncmpiW(szTemp, L"%ALLUSERSPROFILE%", ARRAY_SIZE(L"%ALLUSERSPROFILE%")-1))
+        if (!wcsnicmp(szTemp, L"%ALLUSERSPROFILE%", lstrlenW(L"%ALLUSERSPROFILE%")))
         {
 #ifndef __REACTOS__
-            WCHAR szAllUsers[MAX_PATH];
+            WCHAR szAllUsers[MAX_PATH], def_val[MAX_PATH];
 
-            strcpyW(szDest, szProfilesPrefix);
-            hr = _SHGetProfilesValue(key, L"AllUsersProfile", szAllUsers, L"Public");
+            GetSystemDirectoryW(def_val, MAX_PATH);
+            lstrcpyW( def_val + 3, L"users\\Public" );
+
+            hr = _SHGetProfilesValue(key, L"Public", szAllUsers, def_val);
             PathAppendW(szDest, szAllUsers);
 #else
             DWORD cchSize = cchDest;
             if (!GetAllUsersProfileDirectoryW(szDest, &cchSize))
                 goto fallback_expand;
 #endif
-            PathAppendW(szDest, szTemp + ARRAY_SIZE(L"%ALLUSERSPROFILE%")-1);
+            PathAppendW(szDest, szTemp + lstrlenW(L"%ALLUSERSPROFILE%"));
         }
-#ifndef __REACTOS__
-        else if (!strncmpiW(szTemp, L"%PUBLIC%", ARRAY_SIZE(L"%PUBLIC%")-1))
+        else if (!wcsnicmp(szTemp, L"%PUBLIC%", lstrlenW(L"%PUBLIC%")))
         {
             WCHAR szAllUsers[MAX_PATH], def_val[MAX_PATH];
 
             GetSystemDirectoryW(def_val, MAX_PATH);
-            strcpyW( def_val + 3, L"Users\\Public" );
+            lstrcpyW( def_val + 3, L"users\\Public" );
 
             hr = _SHGetProfilesValue(key, L"Public", szAllUsers, def_val);
             PathAppendW(szDest, szAllUsers);
-            PathAppendW(szDest, szTemp + ARRAY_SIZE(L"%PUBLIC%")-1);
+            PathAppendW(szDest, szTemp + lstrlenW(L"%PUBLIC%"));
         }
-#endif
-        else if (!strncmpiW(szTemp, L"%USERPROFILE%", ARRAY_SIZE(L"%USERPROFILE%")-1))
+        else if (!wcsnicmp(szTemp, L"%ProgramData%", lstrlenW(L"%ProgramData%")))
+        {
+            WCHAR szProgramData[MAX_PATH], def_val[MAX_PATH];
+            HKEY shellFolderKey;
+            DWORD dwType, dwPathLen = sizeof(def_val);
+            BOOL in_registry = FALSE;
+
+            if (!RegCreateKeyW(HKEY_LOCAL_MACHINE, L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders", &shellFolderKey))
+            {
+                if (!RegQueryValueExW(shellFolderKey, L"Common AppData", NULL, &dwType,
+                    (LPBYTE)def_val, &dwPathLen) && (dwType == REG_EXPAND_SZ || dwType == REG_SZ))
+                    in_registry = TRUE;
+
+                RegCloseKey(shellFolderKey);
+            }
+
+            if (!in_registry)
+            {
+                GetSystemDirectoryW(def_val, MAX_PATH);
+                lstrcpyW( def_val + 3, L"ProgramData" );
+            }
+
+            hr = _SHGetProfilesValue(key, L"ProgramData", szProgramData, def_val);
+            PathAppendW(szDest, szProgramData);
+            PathAppendW(szDest, szTemp + lstrlenW(L"%ProgramData%"));
+        }
+        else if (!wcsnicmp(szTemp, L"%USERPROFILE%", lstrlenW(L"%USERPROFILE%")))
         {
 #ifndef __REACTOS__
             WCHAR userName[MAX_PATH];
             DWORD userLen = MAX_PATH;
 
-            strcpyW(szDest, szProfilesPrefix);
+            lstrcpyW(szDest, szProfilesPrefix);
             GetUserNameW(userName, &userLen);
             PathAppendW(szDest, userName);
 #else
             DWORD cchSize = cchDest;
-            if (!_SHGetUserProfileDirectoryW(hToken, szDest, &cchSize))
+            if (!SHELL_GetUserProfileDirectoryW(hToken, szDest, &cchSize))
                 goto fallback_expand;
 #endif
-            PathAppendW(szDest, szTemp + ARRAY_SIZE(L"%USERPROFILE%")-1);
+            PathAppendW(szDest, szTemp + lstrlenW(L"%USERPROFILE%"));
         }
-        else if (!strncmpiW(szTemp, L"%SystemDrive%", ARRAY_SIZE(L"%SystemDrive%")-1))
+        else if (!wcsnicmp(szTemp, L"%SystemDrive%", lstrlenW(L"%SystemDrive%")))
         {
 #ifndef __REACTOS__
             GetSystemDirectoryW(szDest, MAX_PATH);
@@ -2659,7 +3515,7 @@ static HRESULT _SHExpandEnvironmentStrings(HANDLE hToken, LPCWSTR szSrc, LPWSTR 
             if (!GetSystemDirectoryW(szDest, cchDest))
                 goto fallback_expand;
 #endif
-            strcpyW(szDest + 3, szTemp + ARRAY_SIZE(L"%SystemDrive%")-1 + 1);
+            lstrcpyW(szDest + 3, szTemp + lstrlenW(L"%SystemDrive%") + 1);
         }
         else
 #ifdef __REACTOS__
@@ -2680,24 +3536,200 @@ fallback_expand:
                 hr = E_NOT_SUFFICIENT_BUFFER;
             else if (ret == 0)
                 hr = HRESULT_FROM_WIN32(GetLastError());
-            else if (!strcmpW( szTemp, szDest )) break;  /* nothing expanded */
+            else if (!wcscmp( szTemp, szDest )) break;  /* nothing expanded */
         }
-        if (SUCCEEDED(hr)) strcpyW(szTemp, szDest);
+        if (SUCCEEDED(hr)) lstrcpyW(szTemp, szDest);
     }
 end:
 #ifndef __REACTOS__
     if (key)
         RegCloseKey(key);
 #endif
-    TRACE("returning 0x%08x (input was %s, output is %s)\n", hr,
+    TRACE("returning 0x%08lx (input was %s, output is %s)\n", hr,
      debugstr_w(szSrc), debugstr_w(szDest));
     return hr;
 }
 
-/*************************************************************************
+#ifndef __REACTOS__
+static char *xdg_config;
+static DWORD xdg_config_len;
+
+static BOOL WINAPI init_xdg_dirs( INIT_ONCE *once, void *param, void **context )
+{
+    const WCHAR *var, *fmt = L"\\??\\unix%s/user-dirs.dirs";
+    char *p;
+    WCHAR *name, *ptr;
+    HANDLE file;
+    DWORD len;
+
+    if (!(var = _wgetenv( L"WINE_HOST_XDG_CONFIG_HOME" )) || var[0] != '/')
+    {
+        if (!(var = _wgetenv( L"WINEHOMEDIR" ))) return TRUE;
+        fmt = L"%s/.config/user-dirs.dirs";
+    }
+    len = lstrlenW(var) + lstrlenW(fmt);
+    name = malloc( len * sizeof(WCHAR) );
+    swprintf( name, len, fmt, var );
+    name[1] = '\\';  /* change \??\ to \\?\ */
+    for (ptr = name; *ptr; ptr++) if (*ptr == '/') *ptr = '\\';
+
+    file = CreateFileW( name, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, 0 );
+    free( name );
+    if (file != INVALID_HANDLE_VALUE)
+    {
+        len = GetFileSize( file, NULL );
+        if (!(xdg_config = malloc( len + 1 ))) return TRUE;
+        if (!ReadFile( file, xdg_config, len, &xdg_config_len, NULL ))
+        {
+            free( xdg_config );
+            xdg_config = NULL;
+        }
+        else
+        {
+            for (p = xdg_config; p < xdg_config + xdg_config_len; p++) if (*p == '\n') *p = 0;
+            *p = 0;  /* append null to simplify string parsing */
+        }
+        CloseHandle( file );
+    }
+    return TRUE;
+}
+
+static char *get_xdg_path( const char *var )
+{
+    static INIT_ONCE once;
+    char *p, *ret = NULL;
+    int i;
+
+    InitOnceExecuteOnce( &once, init_xdg_dirs, NULL, NULL );
+    if (!xdg_config) return NULL;
+
+    for (p = xdg_config; p < xdg_config + xdg_config_len; p += strlen(p) + 1)
+    {
+        while (*p == ' ' || *p == '\t') p++;
+        if (strncmp( p, var, strlen(var) )) continue;
+        p += strlen(var);
+        while (*p == ' ' || *p == '\t') p++;
+        if (*p != '=') continue;
+        p++;
+        while (*p == ' ' || *p == '\t') p++;
+        if (*p != '"') continue;
+        p++;
+        if (*p != '/' && strncmp( p, "$HOME/", 6 )) continue;
+
+        if (!(ret = malloc( strlen(p) + 1 ))) break;
+        for (i = 0; *p && *p != '"'; i++, p++)
+        {
+            if (*p == '\\' && p[1]) p++;
+            ret[i] = *p;
+        }
+        ret[i] = 0;
+        if (*p != '"')
+        {
+            free( ret );
+            ret = NULL;
+        }
+        break;
+    }
+    return ret;
+}
+
+static BOOL link_folder( HANDLE mgr, const UNICODE_STRING *path, const char *link )
+{
+    struct mountmgr_shell_folder *ioctl;
+    DWORD len = sizeof(*ioctl) + path->Length + strlen(link) + 1;
+    BOOL ret;
+
+    if (!(ioctl = malloc( len ))) return FALSE;
+    ioctl->create_backup = FALSE;
+    ioctl->folder_offset = sizeof(*ioctl);
+    ioctl->folder_size = path->Length;
+    memcpy( (char *)ioctl + ioctl->folder_offset, path->Buffer, ioctl->folder_size );
+    ioctl->symlink_offset = ioctl->folder_offset + ioctl->folder_size;
+    strcpy( (char *)ioctl + ioctl->symlink_offset, link );
+
+    ret = DeviceIoControl( mgr, IOCTL_MOUNTMGR_DEFINE_SHELL_FOLDER, ioctl, len, NULL, 0, NULL, NULL );
+    free( ioctl );
+    return ret;
+}
+
+/******************************************************************************
+ * create_link
+ *
+ * Sets up a symbolic link for one of the 'My Whatever' shell folders to point
+ * into the corresponding XDG directory.
+ */
+static void create_link( const WCHAR *path, const char *xdg_name, const char *default_name )
+{
+    UNICODE_STRING nt_name;
+    char *target = NULL;
+    HANDLE mgr;
+
+    if ((mgr = CreateFileW( MOUNTMGR_DOS_DEVICE_NAME, GENERIC_READ | GENERIC_WRITE,
+                            FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING,
+                            0, 0 )) == INVALID_HANDLE_VALUE)
+    {
+        FIXME( "failed to connect to mount manager\n" );
+        return;
+    }
+
+    nt_name.Buffer = NULL;
+    if (!RtlDosPathNameToNtPathName_U( path, &nt_name, NULL, NULL )) goto done;
+
+    if ((target = get_xdg_path( xdg_name )))
+    {
+        if (link_folder( mgr, &nt_name, target )) goto done;
+    }
+    link_folder( mgr, &nt_name, default_name );
+
+done:
+    RtlFreeUnicodeString( &nt_name );
+    free( target );
+    CloseHandle( mgr );
+}
+
+/******************************************************************************
+ * _SHCreateSymbolicLink  [Internal]
+ *
+ * Sets up a symbolic link for one of the special shell folders to point into
+ * the users home directory.
+ *
+ * PARAMS
+ *  nFolder [I] CSIDL identifying the folder.
+ */
+static void _SHCreateSymbolicLink(int nFolder, const WCHAR *path)
+{
+    DWORD folder = nFolder & CSIDL_FOLDER_MASK;
+
+    switch (folder) {
+        case CSIDL_PERSONAL:
+            create_link( path, "XDG_DOCUMENTS_DIR", "$HOME/Documents" );
+            break;
+        case CSIDL_DESKTOPDIRECTORY:
+            create_link( path, "XDG_DESKTOP_DIR", "$HOME/Desktop" );
+            break;
+        case CSIDL_MYPICTURES:
+            create_link( path, "XDG_PICTURES_DIR", "$HOME/Pictures" );
+            break;
+        case CSIDL_MYVIDEO:
+            create_link( path, "XDG_VIDEOS_DIR", "$HOME/Movies" );
+            break;
+        case CSIDL_MYMUSIC:
+            create_link( path, "XDG_MUSIC_DIR", "$HOME/Music" );
+            break;
+        case CSIDL_DOWNLOADS:
+            create_link( path, "XDG_DOWNLOAD_DIR", "$HOME/Downloads" );
+            break;
+        case CSIDL_TEMPLATES:
+            create_link( path, "XDG_TEMPLATES_DIR", "$HOME/Templates" );
+            break;
+    }
+}
+#endif
+
+/******************************************************************************
  * SHGetFolderPathW			[SHELL32.@]
  *
- * Convert nFolder to path.  
+ * Convert nFolder to path.
  *
  * RETURNS
  *  Success: S_OK
@@ -2740,16 +3772,16 @@ HRESULT WINAPI SHGetFolderPathAndSubDirA(
     LPWSTR pszSubPathW = NULL;
     LPWSTR pszPathW = NULL;
 
-    TRACE("%p,%#x,%p,%#x,%s,%p\n", hwndOwner, nFolder, hToken, dwFlags, debugstr_a(pszSubPath), pszPath);
+    TRACE("%p,%#x,%p,%#lx,%s,%p\n", hwndOwner, nFolder, hToken, dwFlags, debugstr_a(pszSubPath), pszPath);
 
     if(pszPath) {
-        pszPathW = HeapAlloc(GetProcessHeap(), 0, MAX_PATH * sizeof(WCHAR));
+        pszPathW = malloc(MAX_PATH * sizeof(WCHAR));
         if(!pszPathW) {
             hr = HRESULT_FROM_WIN32(ERROR_NOT_ENOUGH_MEMORY);
             goto cleanup;
         }
     }
-    TRACE("%08x,%08x,%s\n",nFolder, dwFlags, debugstr_w(pszSubPathW));
+    TRACE("%08x,%08lx,%s\n",nFolder, dwFlags, debugstr_w(pszSubPathW));
 
     /* SHGetFolderPathAndSubDirW does not distinguish if pszSubPath isn't
      * set (null), or an empty string.therefore call it without the parameter set
@@ -2757,7 +3789,7 @@ HRESULT WINAPI SHGetFolderPathAndSubDirA(
      */
     if (pszSubPath && pszSubPath[0]) {
         length = MultiByteToWideChar(CP_ACP, 0, pszSubPath, -1, NULL, 0);
-        pszSubPathW = HeapAlloc(GetProcessHeap(), 0, length * sizeof(WCHAR));
+        pszSubPathW = malloc(length * sizeof(WCHAR));
         if(!pszSubPathW) {
             hr = HRESULT_FROM_WIN32(ERROR_NOT_ENOUGH_MEMORY);
             goto cleanup;
@@ -2771,8 +3803,8 @@ HRESULT WINAPI SHGetFolderPathAndSubDirA(
         WideCharToMultiByte(CP_ACP, 0, pszPathW, -1, pszPath, MAX_PATH, NULL, NULL);
 
 cleanup:
-    HeapFree(GetProcessHeap(), 0, pszPathW);
-    HeapFree(GetProcessHeap(), 0, pszSubPathW);
+    free(pszPathW);
+    free(pszSubPathW);
     return hr;
 }
 
@@ -2792,8 +3824,8 @@ HRESULT WINAPI SHGetFolderPathAndSubDirW(
     DWORD      folder = nFolder & CSIDL_FOLDER_MASK;
     CSIDL_Type type;
     int        ret;
-    
-    TRACE("%p,%#x,%p,%#x,%s,%p\n", hwndOwner, nFolder, hToken, dwFlags, debugstr_w(pszSubPath), pszPath);
+
+    TRACE("%p,%#x,%p,%#lx,%s,%p\n", hwndOwner, nFolder, hToken, dwFlags, debugstr_w(pszSubPath), pszPath);
 
     /* Windows always NULL-terminates the resulting path regardless of success
      * or failure, so do so first
@@ -2817,47 +3849,27 @@ HRESULT WINAPI SHGetFolderPathAndSubDirW(
             break;
         case CSIDL_Type_WindowsPath:
             GetWindowsDirectoryW(szTemp, MAX_PATH);
-            if (CSIDL_Data[folder].szDefaultPath &&
-             !IS_INTRESOURCE(CSIDL_Data[folder].szDefaultPath) &&
-             *CSIDL_Data[folder].szDefaultPath)
-            {
-                PathAddBackslashW(szTemp);
-                strcatW(szTemp, CSIDL_Data[folder].szDefaultPath);
-            }
+            append_relative_path(folder, szTemp);
             hr = S_OK;
             break;
         case CSIDL_Type_SystemPath:
             GetSystemDirectoryW(szTemp, MAX_PATH);
-            if (CSIDL_Data[folder].szDefaultPath &&
-             !IS_INTRESOURCE(CSIDL_Data[folder].szDefaultPath) &&
-             *CSIDL_Data[folder].szDefaultPath)
-            {
-                PathAddBackslashW(szTemp);
-                strcatW(szTemp, CSIDL_Data[folder].szDefaultPath);
-            }
+            append_relative_path(folder, szTemp);
             hr = S_OK;
             break;
         case CSIDL_Type_SystemX86Path:
             if (!GetSystemWow64DirectoryW(szTemp, MAX_PATH)) GetSystemDirectoryW(szTemp, MAX_PATH);
-            if (CSIDL_Data[folder].szDefaultPath &&
-             !IS_INTRESOURCE(CSIDL_Data[folder].szDefaultPath) &&
-             *CSIDL_Data[folder].szDefaultPath)
-            {
-                PathAddBackslashW(szTemp);
-                strcatW(szTemp, CSIDL_Data[folder].szDefaultPath);
-            }
+            append_relative_path(folder, szTemp);
             hr = S_OK;
             break;
         case CSIDL_Type_CurrVer:
             hr = _SHGetCurrentVersionPath(dwFlags, folder, szTemp);
             break;
         case CSIDL_Type_User:
-#ifdef __REACTOS__
-        case CSIDL_Type_InMyDocuments:
-#endif
             hr = _SHGetUserProfilePath(hToken, dwFlags, folder, szTemp);
             break;
         case CSIDL_Type_AllUsers:
+        case CSIDL_Type_ProgramData:
             hr = _SHGetAllUsersProfilePath(dwFlags, folder, szTemp);
             break;
         default:
@@ -2874,7 +3886,7 @@ HRESULT WINAPI SHGetFolderPathAndSubDirW(
         hr = _SHExpandEnvironmentStrings(hToken, szTemp, szBuildPath, _countof(szBuildPath));
 #endif
     else
-        strcpyW(szBuildPath, szTemp);
+        lstrcpyW(szBuildPath, szTemp);
 
     if (FAILED(hr)) goto end;
 
@@ -2890,7 +3902,7 @@ HRESULT WINAPI SHGetFolderPathAndSubDirW(
     }
     /* Copy the path if it's available before we might return */
     if (SUCCEEDED(hr) && pszPath)
-        strcpyW(pszPath, szBuildPath);
+        lstrcpyW(pszPath, szBuildPath);
 
     /* if we don't care about existing directories we are ready */
     if(nFolder & CSIDL_FLAG_DONT_VERIFY) goto end;
@@ -2906,6 +3918,13 @@ HRESULT WINAPI SHGetFolderPathAndSubDirW(
         goto end;
     }
 
+#ifndef __REACTOS__
+    /* create symbolic links rather than directories for specific
+     * user shell folders */
+    if (!pszSubPath)
+        _SHCreateSymbolicLink(folder, szBuildPath);
+#endif
+
     /* create directory/directories */
     ret = SHCreateDirectoryExW(hwndOwner, szBuildPath, NULL);
     if (ret && ret != ERROR_ALREADY_EXISTS)
@@ -2916,7 +3935,6 @@ HRESULT WINAPI SHGetFolderPathAndSubDirW(
     }
 
     TRACE("Created missing system directory %s\n", debugstr_w(szBuildPath));
-
 end:
 #ifdef __REACTOS__
     /* create desktop.ini for custom icon */
@@ -2951,8 +3969,7 @@ end:
         SetFileAttributesW(szBuildPath, dwAttributes);
     }
 #endif
-
-    TRACE("returning 0x%08x (final path is %s)\n", hr, debugstr_w(szBuildPath));
+    TRACE("returning 0x%08lx (final path is %s)\n", hr, debugstr_w(szBuildPath));
     return hr;
 }
 
@@ -2971,7 +3988,7 @@ HRESULT WINAPI SHGetFolderPathA(
     WCHAR szTemp[MAX_PATH];
     HRESULT hr;
 
-    TRACE("%p,%d,%p,%#x,%p\n", hwndOwner, nFolder, hToken, dwFlags, pszPath);
+    TRACE("%p,%d,%p,%#lx,%p\n", hwndOwner, nFolder, hToken, dwFlags, pszPath);
 
     if (pszPath)
         *pszPath = '\0';
@@ -3021,67 +4038,54 @@ static HRESULT _SHRegisterFolders(HKEY hRootKey, HANDLE hToken,
         dwPathLen = MAX_PATH * sizeof(WCHAR);
 
         /* For CSIDL_Type_User we also use the GUID if no szValueName is provided */
-        szValueName = CSIDL_Data[folders[i]].szValueName;
-#ifdef __REACTOS__
-        if (!szValueName &&
-            (CSIDL_Data[folders[i]].type == CSIDL_Type_User ||
-             CSIDL_Data[folders[i]].type == CSIDL_Type_InMyDocuments))
-#else
+        szValueName = CSIDL_Data[folders[i]].value;
         if (!szValueName && CSIDL_Data[folders[i]].type == CSIDL_Type_User)
-#endif
         {
             StringFromGUID2( CSIDL_Data[folders[i]].id, buffer, 39 );
             szValueName = &buffer[0];
         }
 
-        if (!RegQueryValueExW(hUserKey, szValueName, NULL,
-                              &dwType, (LPBYTE)path, &dwPathLen) &&
-            (dwType == REG_SZ || dwType == REG_EXPAND_SZ))
-        {
-            hr = SHGetFolderPathW(NULL, folders[i] | CSIDL_FLAG_CREATE,
-                                  hToken, SHGFP_TYPE_CURRENT, path);
-        }
-        else
+        if (RegQueryValueExW(hUserKey, szValueName, NULL,
+         &dwType, (LPBYTE)path, &dwPathLen) || (dwType != REG_SZ &&
+         dwType != REG_EXPAND_SZ))
         {
             *path = '\0';
-#ifdef __REACTOS__
-            if (CSIDL_Data[folders[i]].type == CSIDL_Type_User ||
-                CSIDL_Data[folders[i]].type == CSIDL_Type_InMyDocuments)
-#else
             if (CSIDL_Data[folders[i]].type == CSIDL_Type_User)
-#endif
-                _SHGetUserProfilePath(hToken, SHGFP_TYPE_CURRENT, folders[i],
+                _SHGetUserProfilePath(hToken, SHGFP_TYPE_DEFAULT, folders[i],
                  path);
-            else if (CSIDL_Data[folders[i]].type == CSIDL_Type_AllUsers)
-                _SHGetAllUsersProfilePath(SHGFP_TYPE_CURRENT, folders[i], path);
+            else if (CSIDL_Data[folders[i]].type == CSIDL_Type_AllUsers ||
+                     CSIDL_Data[folders[i]].type == CSIDL_Type_ProgramData)
+                _SHGetAllUsersProfilePath(SHGFP_TYPE_DEFAULT, folders[i], path);
             else if (CSIDL_Data[folders[i]].type == CSIDL_Type_WindowsPath)
             {
                 GetWindowsDirectoryW(path, MAX_PATH);
-                if (CSIDL_Data[folders[i]].szDefaultPath &&
-                    !IS_INTRESOURCE(CSIDL_Data[folders[i]].szDefaultPath))
-                {
-                    PathAddBackslashW(path);
-                    strcatW(path, CSIDL_Data[folders[i]].szDefaultPath);
-                }
+                append_relative_path(folders[i], path);
             }
             else
                 hr = E_FAIL;
             if (*path)
             {
                 ret = RegSetValueExW(hUserKey, szValueName, 0, REG_EXPAND_SZ,
-                 (LPBYTE)path, (strlenW(path) + 1) * sizeof(WCHAR));
+                 (LPBYTE)path, (lstrlenW(path) + 1) * sizeof(WCHAR));
                 if (ret)
                     hr = HRESULT_FROM_WIN32(ret);
                 else
                 {
                     hr = SHGetFolderPathW(NULL, folders[i] | CSIDL_FLAG_CREATE,
-                     hToken, SHGFP_TYPE_CURRENT, path);
+                     hToken, SHGFP_TYPE_DEFAULT, path);
                     ret = RegSetValueExW(hKey, szValueName, 0, REG_SZ,
-                     (LPBYTE)path, (strlenW(path) + 1) * sizeof(WCHAR));
+                     (LPBYTE)path, (lstrlenW(path) + 1) * sizeof(WCHAR));
                     if (ret)
                         hr = HRESULT_FROM_WIN32(ret);
                 }
             }
+        }
+        else
+        {
+            /* create the default dir, which may be different from the path
+             * stored in the registry. */
+            SHGetFolderPathW(NULL, folders[i] | CSIDL_FLAG_CREATE,
+             hToken, SHGFP_TYPE_DEFAULT, path);
         }
     }
     if (hUserKey)
@@ -3089,7 +4093,7 @@ static HRESULT _SHRegisterFolders(HKEY hRootKey, HANDLE hToken,
     if (hKey)
         RegCloseKey(hKey);
 
-    TRACE("returning 0x%08x\n", hr);
+    TRACE("returning 0x%08lx\n", hr);
     return hr;
 }
 
@@ -3117,15 +4121,12 @@ static HRESULT _SHRegisterUserShellFolders(BOOL bDefault)
      CSIDL_MYPICTURES,
      CSIDL_FONTS,
      CSIDL_ADMINTOOLS,
-/* Cannot use #if _WIN32_WINNT >= 0x0600 because _WIN32_WINNT == 0x0600 here. */
-#ifndef __REACTOS__
      CSIDL_CONTACTS,
      CSIDL_DOWNLOADS,
      CSIDL_LINKS,
      CSIDL_APPDATA_LOCALLOW,
      CSIDL_SAVED_GAMES,
      CSIDL_SEARCHES
-#endif
     };
     WCHAR userShellFolderPath[MAX_PATH], shellFolderPath[MAX_PATH];
     LPCWSTR pUserShellFolderPath, pShellFolderPath;
@@ -3138,26 +4139,26 @@ static HRESULT _SHRegisterUserShellFolders(BOOL bDefault)
     {
         hToken = (HANDLE)-1;
         hRootKey = HKEY_USERS;
-        strcpyW(userShellFolderPath, L".Default");
+        lstrcpyW(userShellFolderPath, L".Default");
         PathAddBackslashW(userShellFolderPath);
-        strcatW(userShellFolderPath, szSHUserFolders);
+        lstrcatW(userShellFolderPath, L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\User Shell Folders");
         pUserShellFolderPath = userShellFolderPath;
-        strcpyW(shellFolderPath, L".Default");
+        lstrcpyW(shellFolderPath, L".Default");
         PathAddBackslashW(shellFolderPath);
-        strcatW(shellFolderPath, szSHFolders);
+        lstrcatW(shellFolderPath, L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders");
         pShellFolderPath = shellFolderPath;
     }
     else
     {
         hToken = NULL;
         hRootKey = HKEY_CURRENT_USER;
-        pUserShellFolderPath = szSHUserFolders;
-        pShellFolderPath = szSHFolders;
+        pUserShellFolderPath = L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\User Shell Folders";
+        pShellFolderPath = L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders";
     }
 
     hr = _SHRegisterFolders(hRootKey, hToken, pUserShellFolderPath,
      pShellFolderPath, folders, ARRAY_SIZE(folders));
-    TRACE("returning 0x%08x\n", hr);
+    TRACE("returning 0x%08lx\n", hr);
     return hr;
 }
 
@@ -3180,25 +4181,131 @@ static HRESULT _SHRegisterCommonShellFolders(void)
     HRESULT hr;
 
     TRACE("\n");
-    hr = _SHRegisterFolders(HKEY_LOCAL_MACHINE, NULL, szSHUserFolders,
-     szSHFolders, folders, ARRAY_SIZE(folders));
-    TRACE("returning 0x%08x\n", hr);
+    hr = _SHRegisterFolders(HKEY_LOCAL_MACHINE, NULL,
+                            L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\User Shell Folders",
+                            L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders",
+                            folders, ARRAY_SIZE(folders));
+    TRACE("returning 0x%08lx\n", hr);
     return hr;
 }
 
-/* Register the default values in the registry, as some apps seem to depend
- * on their presence.  The set registered was taken from Windows XP.
+#ifndef __REACTOS__
+/******************************************************************************
+ * create_extra_folders  [Internal]
+ *
+ * Create some extra folders that don't have a standard CSIDL definition.
  */
-HRESULT SHELL_RegisterShellFolders(void)
+static HRESULT create_extra_folders(void)
 {
+    WCHAR path[MAX_PATH+5];
     HRESULT hr;
+    HKEY hkey;
+    DWORD type, size, ret;
 
-    hr = _SHRegisterUserShellFolders(TRUE);
+    ret = RegCreateKeyW( HKEY_CURRENT_USER, L"Environment", &hkey );
+    if (ret) return HRESULT_FROM_WIN32( ret );
+
+    hr = SHGetFolderPathAndSubDirW( 0, CSIDL_LOCAL_APPDATA | CSIDL_FLAG_CREATE, NULL,
+                                    SHGFP_TYPE_DEFAULT, L"Temp", path );
     if (SUCCEEDED(hr))
-        hr = _SHRegisterUserShellFolders(FALSE);
+    {
+        size = sizeof(path);
+        if (RegQueryValueExW( hkey, L"TEMP", NULL, &type, (LPBYTE)path, &size ))
+            RegSetValueExW( hkey, L"TEMP", 0, REG_SZ, (LPBYTE)path, (lstrlenW(path) + 1) * sizeof(WCHAR) );
+        size = sizeof(path);
+        if (RegQueryValueExW( hkey, L"TMP", NULL, &type, (LPBYTE)path, &size ))
+            RegSetValueExW( hkey, L"TMP", 0, REG_SZ, (LPBYTE)path, (lstrlenW(path) + 1) * sizeof(WCHAR) );
+    }
+    RegCloseKey( hkey );
+
     if (SUCCEEDED(hr))
-        hr = _SHRegisterCommonShellFolders();
+    {
+        hr = SHGetFolderPathAndSubDirW( 0, CSIDL_COMMON_APPDATA | CSIDL_FLAG_CREATE, NULL,
+                                        SHGFP_TYPE_DEFAULT, L"Microsoft", path );
+    }
+    if (SUCCEEDED(hr))
+    {
+        hr = SHGetFolderPathAndSubDirW(0, CSIDL_APPDATA | CSIDL_FLAG_CREATE, NULL,
+                                       SHGFP_TYPE_DEFAULT, L"Microsoft\\Windows\\Themes", path);
+    }
+    if (SUCCEEDED(hr))
+    {
+        hr = SHGetFolderPathAndSubDirW(0, CSIDL_APPDATA | CSIDL_FLAG_CREATE, NULL,
+                                       SHGFP_TYPE_DEFAULT, L"Microsoft\\Windows\\AccountPictures", path);
+    }
+    if (SUCCEEDED(hr))
+    {
+        hr = SHGetFolderPathAndSubDirW(0, CSIDL_MYPICTURES | CSIDL_FLAG_CREATE, NULL,
+                                       SHGFP_TYPE_DEFAULT, L"Screenshots", path);
+    }
     return hr;
+}
+#endif
+
+
+/******************************************************************************
+ * set_folder_attributes
+ *
+ * Set the various folder attributes registry keys.
+ */
+static HRESULT set_folder_attributes(void)
+{
+    static const struct
+    {
+        const CLSID *clsid;
+        unsigned int wfparsing : 1;
+        unsigned int wfdisplay : 1;
+        unsigned int hideasdel : 1;
+        DWORD attr;
+        DWORD call_for_attr;
+    } folders[] =
+    {
+#ifndef __REACTOS__
+        { &CLSID_UnixFolder, TRUE, FALSE, FALSE },
+        { &CLSID_UnixDosFolder, TRUE, FALSE, FALSE,
+          SFGAO_FILESYSANCESTOR|SFGAO_FOLDER|SFGAO_HASSUBFOLDER, SFGAO_FILESYSTEM },
+#endif
+        { &CLSID_FolderShortcut, FALSE, FALSE, FALSE,
+          SFGAO_FILESYSTEM|SFGAO_FOLDER|SFGAO_LINK,
+          SFGAO_HASSUBFOLDER|SFGAO_FILESYSTEM|SFGAO_FOLDER|SFGAO_FILESYSANCESTOR },
+        { &CLSID_MyDocuments, TRUE, FALSE, FALSE,
+          SFGAO_FILESYSANCESTOR|SFGAO_FOLDER|SFGAO_HASSUBFOLDER, SFGAO_FILESYSTEM },
+        { &CLSID_RecycleBin, FALSE, FALSE, FALSE,
+          SFGAO_FOLDER|SFGAO_DROPTARGET|SFGAO_HASPROPSHEET },
+        { &CLSID_ControlPanel, FALSE, TRUE, TRUE,
+          SFGAO_FOLDER|SFGAO_HASSUBFOLDER },
+        { &CLSID_Printers, FALSE, FALSE, FALSE,
+          SFGAO_FOLDER|SFGAO_CANLINK }
+    };
+
+    unsigned int i;
+    WCHAR buffer[39 + ARRAY_SIZE(L"CLSID\\") + ARRAY_SIZE(L"\\ShellFolder")];
+    LONG res;
+    HKEY hkey;
+
+    for (i = 0; i < ARRAY_SIZE(folders); i++)
+    {
+        lstrcpyW( buffer, L"CLSID\\" );
+        StringFromGUID2( folders[i].clsid, buffer + lstrlenW(buffer), 39 );
+        lstrcatW( buffer, L"\\ShellFolder" );
+        res = RegCreateKeyExW( HKEY_CLASSES_ROOT, buffer, 0, NULL, 0,
+                               KEY_READ | KEY_WRITE, NULL, &hkey, NULL);
+        if (res) return HRESULT_FROM_WIN32( res );
+        if (folders[i].wfparsing)
+            res = RegSetValueExW( hkey, L"WantsFORPARSING", 0, REG_SZ, (const BYTE *)L"", sizeof(WCHAR) );
+        if (folders[i].wfdisplay)
+            res = RegSetValueExW( hkey, L"WantsFORDISPLAY", 0, REG_SZ, (const BYTE *)L"", sizeof(WCHAR) );
+        if (folders[i].hideasdel)
+            res = RegSetValueExW( hkey, L"HideAsDeletePerUser", 0, REG_SZ, (const BYTE *)L"", sizeof(WCHAR) );
+        if (folders[i].attr)
+            res = RegSetValueExW( hkey, L"Attributes", 0, REG_DWORD,
+                                  (const BYTE *)&folders[i].attr, sizeof(DWORD));
+        if (folders[i].call_for_attr)
+            res = RegSetValueExW( hkey, L"CallForAttributes", 0, REG_DWORD,
+                                 (const BYTE *)&folders[i].call_for_attr, sizeof(DWORD));
+        RegCloseKey( hkey );
+    }
+    return S_OK;
 }
 
 /*************************************************************************
@@ -3254,6 +4361,21 @@ HRESULT SHGetFolderLocationHelper(HWND hwnd, int nFolder, REFCLSID clsid, LPITEM
 #endif
 
 /*************************************************************************
+ * SHGetSpecialFolderPath (SHELL32.175)
+ */
+BOOL WINAPI SHGetSpecialFolderPathAW (
+	HWND hwndOwner,
+	LPVOID szPath,
+	int nFolder,
+	BOOL bCreate)
+
+{
+	if (SHELL_OsIsUnicode())
+	  return SHGetSpecialFolderPathW (hwndOwner, szPath, nFolder, bCreate);
+	return SHGetSpecialFolderPathA (hwndOwner, szPath, nFolder, bCreate);
+}
+
+/*************************************************************************
  * SHGetFolderLocation [SHELL32.@]
  *
  * Gets the folder locations from the registry and creates a pidl.
@@ -3287,7 +4409,7 @@ HRESULT WINAPI SHGetFolderLocation(
     WCHAR szPath[MAX_PATH];
 #endif
 
-    TRACE("%p 0x%08x %p 0x%08x %p\n",
+    TRACE("%p 0x%08x %p 0x%08lx %p\n",
      hwndOwner, nFolder, hToken, dwReserved, ppidl);
     
     if (!ppidl)
@@ -3395,5 +4517,1192 @@ HRESULT WINAPI SHGetSpecialFolderLocation(
         return E_INVALIDARG;
 
     hr = SHGetFolderLocation(hwndOwner, nFolder, NULL, 0, ppidl);
+    return hr;
+}
+
+/*************************************************************************
+ * SHGetKnownFolderPath           [SHELL32.@]
+ */
+HRESULT WINAPI SHGetKnownFolderPath(REFKNOWNFOLDERID rfid, DWORD flags, HANDLE token, WCHAR **ret_path)
+{
+    WCHAR pathW[MAX_PATH];
+    HRESULT    hr;
+    int folder = csidl_from_id(rfid), shgfp_flags;
+
+    TRACE("%s, 0x%08lx, %p, %p\n", debugstr_guid(rfid), flags, token, ret_path);
+
+    *ret_path = NULL;
+
+    if (folder < 0)
+        return HRESULT_FROM_WIN32( ERROR_FILE_NOT_FOUND );
+
+    if (flags & ~(KF_FLAG_CREATE|KF_FLAG_SIMPLE_IDLIST|KF_FLAG_DONT_UNEXPAND|
+        KF_FLAG_DONT_VERIFY|KF_FLAG_NO_ALIAS|KF_FLAG_INIT|KF_FLAG_DEFAULT_PATH|KF_FLAG_NOT_PARENT_RELATIVE))
+    {
+        FIXME("flags 0x%08lx not supported\n", flags);
+        return E_INVALIDARG;
+    }
+
+    if ((flags & (KF_FLAG_DEFAULT_PATH | KF_FLAG_NOT_PARENT_RELATIVE)) == KF_FLAG_NOT_PARENT_RELATIVE)
+    {
+        WARN("Invalid flags mask %#lx.\n", flags);
+        return E_INVALIDARG;
+    }
+
+    if (flags & KF_FLAG_NOT_PARENT_RELATIVE)
+    {
+        FIXME("Ignoring KF_FLAG_NOT_PARENT_RELATIVE.\n");
+        flags &= ~KF_FLAG_NOT_PARENT_RELATIVE;
+    }
+
+    folder |= flags & CSIDL_FLAG_MASK;
+    shgfp_flags = flags & KF_FLAG_DEFAULT_PATH ? SHGFP_TYPE_DEFAULT : SHGFP_TYPE_CURRENT;
+
+    hr = SHGetFolderPathAndSubDirW( 0, folder, token, shgfp_flags, NULL, pathW );
+    if (FAILED( hr ))
+    {
+        TRACE("Failed to get folder path, %#lx.\n", hr);
+        return hr;
+    }
+
+    TRACE("Final path is %s, %#lx\n", debugstr_w(pathW), hr);
+
+    *ret_path = CoTaskMemAlloc((lstrlenW(pathW) + 1) * sizeof(WCHAR));
+    if (!*ret_path)
+        return E_OUTOFMEMORY;
+    lstrcpyW(*ret_path, pathW);
+
+    return hr;
+}
+
+/*************************************************************************
+ * SHGetFolderPathEx           [SHELL32.@]
+ */
+HRESULT WINAPI SHGetFolderPathEx(REFKNOWNFOLDERID rfid, DWORD flags, HANDLE token, LPWSTR path, DWORD len)
+{
+    HRESULT hr;
+    WCHAR *buffer;
+
+    TRACE("%s, 0x%08lx, %p, %p, %lu\n", debugstr_guid(rfid), flags, token, path, len);
+
+    if (!path || !len) return E_INVALIDARG;
+
+    hr = SHGetKnownFolderPath( rfid, flags, token, &buffer );
+    if (SUCCEEDED( hr ))
+    {
+        if (lstrlenW( buffer ) + 1 > len)
+        {
+            CoTaskMemFree( buffer );
+            return HRESULT_FROM_WIN32( ERROR_INSUFFICIENT_BUFFER );
+        }
+        lstrcpyW( path, buffer );
+        CoTaskMemFree( buffer );
+    }
+    return hr;
+}
+
+/*
+ * Internal function to convert known folder identifier to path of registry key
+ * associated with known folder.
+ *
+ * Parameters:
+ *  rfid            [I] pointer to known folder identifier (may be NULL)
+ *  lpStringGuid    [I] string with known folder identifier (used when rfid is NULL)
+ *  lpPath          [O] place to store string address. String should be
+ *                      later freed using HeapFree(GetProcessHeap(),0, ... )
+ */
+static HRESULT get_known_folder_registry_path(
+    REFKNOWNFOLDERID rfid,
+    LPWSTR lpStringGuid,
+    LPWSTR *lpPath)
+{
+    HRESULT hr = S_OK;
+    int length;
+    WCHAR sGuid[50];
+
+    TRACE("(%s, %s, %p)\n", debugstr_guid(rfid), debugstr_w(lpStringGuid), lpPath);
+
+    if(rfid)
+        StringFromGUID2(rfid, sGuid, ARRAY_SIZE(sGuid));
+    else
+        lstrcpyW(sGuid, lpStringGuid);
+
+    length = lstrlenW(L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\FolderDescriptions")+51;
+    *lpPath = malloc(length * sizeof(WCHAR));
+    if(!(*lpPath))
+        hr = E_OUTOFMEMORY;
+
+    if(SUCCEEDED(hr))
+    {
+        lstrcpyW(*lpPath, L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\FolderDescriptions\\");
+        lstrcatW(*lpPath, sGuid);
+    }
+
+    return hr;
+}
+
+static HRESULT get_known_folder_wstr(const WCHAR *regpath, const WCHAR *value, WCHAR **out)
+{
+    DWORD size = 0;
+    HRESULT hr;
+
+    size = 0;
+    hr = HRESULT_FROM_WIN32(RegGetValueW(HKEY_LOCAL_MACHINE, regpath, value, RRF_RT_REG_SZ, NULL, NULL, &size));
+    if(FAILED(hr))
+        return hr;
+
+    *out = CoTaskMemAlloc(size);
+    if(!*out)
+        return E_OUTOFMEMORY;
+
+    hr = HRESULT_FROM_WIN32(RegGetValueW(HKEY_LOCAL_MACHINE, regpath, value, RRF_RT_REG_SZ, NULL, *out, &size));
+    if(FAILED(hr)){
+        CoTaskMemFree(*out);
+        *out = NULL;
+    }
+
+    return hr;
+}
+
+static HRESULT get_known_folder_dword(const WCHAR *registryPath, const WCHAR *value, DWORD *out)
+{
+    DWORD dwSize = sizeof(DWORD);
+    DWORD dwType;
+    return HRESULT_FROM_WIN32(RegGetValueW(HKEY_LOCAL_MACHINE, registryPath, value, RRF_RT_DWORD, &dwType, out, &dwSize));
+}
+
+/*
+ * Internal function to get place where folder redirection information are stored.
+ *
+ * Parameters:
+ *  rfid            [I] pointer to known folder identifier (may be NULL)
+ *  rootKey         [O] root key where the redirection information are stored
+ *                      It can be HKLM for COMMON folders, and HKCU for PERUSER folders.
+ */
+static HRESULT get_known_folder_redirection_place(
+    REFKNOWNFOLDERID rfid,
+    HKEY *rootKey)
+{
+    HRESULT hr;
+    LPWSTR lpRegistryPath = NULL;
+    DWORD category;
+
+    /* first, get known folder's category */
+    hr = get_known_folder_registry_path(rfid, NULL, &lpRegistryPath);
+
+    if(SUCCEEDED(hr))
+        hr = get_known_folder_dword(lpRegistryPath, L"Category", &category);
+
+    if(SUCCEEDED(hr))
+    {
+        if(category == KF_CATEGORY_COMMON)
+        {
+            *rootKey = HKEY_LOCAL_MACHINE;
+            hr = S_OK;
+        }
+        else if(category == KF_CATEGORY_PERUSER)
+        {
+            *rootKey = HKEY_CURRENT_USER;
+            hr = S_OK;
+        }
+        else
+            hr = E_FAIL;
+    }
+
+    free(lpRegistryPath);
+    return hr;
+}
+
+static HRESULT get_known_folder_path_by_id(REFKNOWNFOLDERID folderId, LPWSTR lpRegistryPath, DWORD dwFlags, LPWSTR *ppszPath);
+
+static HRESULT redirect_known_folder(
+    REFKNOWNFOLDERID rfid,
+    HWND hwnd,
+    KF_REDIRECT_FLAGS flags,
+    LPCWSTR pszTargetPath,
+    UINT cFolders,
+    KNOWNFOLDERID const *pExclusion,
+    LPWSTR *ppszError)
+{
+    HRESULT hr;
+    HKEY rootKey = HKEY_LOCAL_MACHINE, hKey;
+    WCHAR sGuid[39];
+    LPWSTR lpRegistryPath = NULL, lpSrcPath = NULL;
+    TRACE("(%s, %p, 0x%08x, %s, %d, %p, %p)\n", debugstr_guid(rfid), hwnd, flags, debugstr_w(pszTargetPath), cFolders, pExclusion, ppszError);
+
+    if (ppszError) *ppszError = NULL;
+
+    hr = get_known_folder_registry_path(rfid, NULL, &lpRegistryPath);
+
+    if(SUCCEEDED(hr))
+        hr = get_known_folder_path_by_id(rfid, lpRegistryPath, 0, &lpSrcPath);
+
+    free(lpRegistryPath);
+
+    /* get path to redirection storage */
+    if(SUCCEEDED(hr))
+        hr = get_known_folder_redirection_place(rfid, &rootKey);
+
+    /* write redirection information */
+    if(SUCCEEDED(hr))
+        hr = HRESULT_FROM_WIN32(RegCreateKeyExW(rootKey, L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\User Shell Folders", 0, NULL, 0, KEY_WRITE, NULL, &hKey, NULL));
+
+    if(SUCCEEDED(hr))
+    {
+        StringFromGUID2(rfid, sGuid, ARRAY_SIZE(sGuid));
+
+        hr = HRESULT_FROM_WIN32(RegSetValueExW(hKey, sGuid, 0, REG_SZ, (LPBYTE)pszTargetPath, (lstrlenW(pszTargetPath)+1)*sizeof(WCHAR)));
+
+        RegCloseKey(hKey);
+    }
+
+    /* make sure destination path exists */
+    SHCreateDirectory(NULL, pszTargetPath);
+
+    /* copy content if required */
+    if(SUCCEEDED(hr) && (flags & KF_REDIRECT_COPY_CONTENTS) )
+    {
+        WCHAR srcPath[MAX_PATH+1], dstPath[MAX_PATH+1];
+        SHFILEOPSTRUCTW fileOp;
+
+        ZeroMemory(srcPath, sizeof(srcPath));
+        lstrcpyW(srcPath, lpSrcPath);
+        lstrcatW(srcPath, L"\\*");
+
+        ZeroMemory(dstPath, sizeof(dstPath));
+        lstrcpyW(dstPath, pszTargetPath);
+
+        ZeroMemory(&fileOp, sizeof(fileOp));
+
+        if(flags & KF_REDIRECT_DEL_SOURCE_CONTENTS)
+            fileOp.wFunc = FO_MOVE;
+        else
+            fileOp.wFunc = FO_COPY;
+
+        fileOp.pFrom = srcPath;
+        fileOp.pTo = dstPath;
+        fileOp.fFlags = FOF_NO_UI;
+
+        hr = (SHFileOperationW(&fileOp)==0 ? S_OK : E_FAIL);
+
+        if(flags & KF_REDIRECT_DEL_SOURCE_CONTENTS)
+        {
+            ZeroMemory(srcPath, sizeof(srcPath));
+            lstrcpyW(srcPath, lpSrcPath);
+
+            ZeroMemory(&fileOp, sizeof(fileOp));
+            fileOp.wFunc = FO_DELETE;
+            fileOp.pFrom = srcPath;
+            fileOp.fFlags = FOF_NO_UI;
+
+            hr = (SHFileOperationW(&fileOp)==0 ? S_OK : E_FAIL);
+        }
+    }
+
+    CoTaskMemFree(lpSrcPath);
+
+    return hr;
+}
+
+
+struct knownfolder
+{
+    IKnownFolder IKnownFolder_iface;
+    LONG refs;
+    KNOWNFOLDERID id;
+    LPWSTR registryPath;
+};
+
+static inline struct knownfolder *impl_from_IKnownFolder( IKnownFolder *iface )
+{
+    return CONTAINING_RECORD( iface, struct knownfolder, IKnownFolder_iface );
+}
+
+static ULONG WINAPI knownfolder_AddRef(
+    IKnownFolder *iface )
+{
+    struct knownfolder *knownfolder = impl_from_IKnownFolder( iface );
+    return InterlockedIncrement( &knownfolder->refs );
+}
+
+static ULONG WINAPI knownfolder_Release(
+    IKnownFolder *iface )
+{
+    struct knownfolder *knownfolder = impl_from_IKnownFolder( iface );
+    LONG refs = InterlockedDecrement( &knownfolder->refs );
+    if (!refs)
+    {
+        TRACE("destroying %p\n", knownfolder);
+        free( knownfolder->registryPath );
+        free( knownfolder );
+    }
+    return refs;
+}
+
+static HRESULT WINAPI knownfolder_QueryInterface(
+    IKnownFolder *iface,
+    REFIID riid,
+    void **ppv )
+{
+    struct knownfolder *This = impl_from_IKnownFolder( iface );
+
+    TRACE("%p %s %p\n", This, debugstr_guid( riid ), ppv );
+
+    *ppv = NULL;
+    if ( IsEqualGUID( riid, &IID_IKnownFolder ) ||
+         IsEqualGUID( riid, &IID_IUnknown ) )
+    {
+        *ppv = iface;
+    }
+    else if ( IsEqualGUID( riid, &IID_IMarshal ) )
+    {
+        TRACE("IID_IMarshal returning NULL.\n");
+        return E_NOINTERFACE;
+    }
+    else
+    {
+        FIXME("interface %s not implemented\n", debugstr_guid(riid));
+        return E_NOINTERFACE;
+    }
+    IKnownFolder_AddRef( iface );
+    return S_OK;
+}
+
+static HRESULT knownfolder_set_id(
+    struct knownfolder *knownfolder,
+    const KNOWNFOLDERID *kfid)
+{
+    HKEY hKey;
+    HRESULT hr;
+
+    TRACE("%s\n", debugstr_guid(kfid));
+
+    knownfolder->id = *kfid;
+
+    /* check is it registry-registered folder */
+    hr = get_known_folder_registry_path(kfid, NULL, &knownfolder->registryPath);
+    if(SUCCEEDED(hr))
+        hr = HRESULT_FROM_WIN32(RegOpenKeyExW(HKEY_LOCAL_MACHINE, knownfolder->registryPath, 0, KEY_ENUMERATE_SUB_KEYS, &hKey));
+
+    if(SUCCEEDED(hr))
+    {
+        hr = S_OK;
+        RegCloseKey(hKey);
+    }
+    else
+    {
+        /* This known folder is not registered. To mark it, we set registryPath to NULL */
+        free(knownfolder->registryPath);
+        knownfolder->registryPath = NULL;
+        hr = S_OK;
+    }
+
+    return hr;
+}
+
+static HRESULT WINAPI knownfolder_GetId(
+    IKnownFolder *iface,
+    KNOWNFOLDERID *pkfid)
+{
+    struct knownfolder *knownfolder = impl_from_IKnownFolder( iface );
+
+    TRACE("%p\n", pkfid);
+
+    *pkfid = knownfolder->id;
+    return S_OK;
+}
+
+static HRESULT WINAPI knownfolder_GetCategory(
+    IKnownFolder *iface,
+    KF_CATEGORY *pCategory)
+{
+    struct knownfolder *knownfolder = impl_from_IKnownFolder(iface);
+    HRESULT hr = S_OK;
+
+    TRACE("%p, %p\n", knownfolder, pCategory);
+
+    /* we cannot get a category for a folder which is not registered */
+    if(!knownfolder->registryPath)
+        hr = E_FAIL;
+
+    if(SUCCEEDED(hr))
+        hr = get_known_folder_dword(knownfolder->registryPath, L"Category", (DWORD *)pCategory);
+
+    return hr;
+}
+
+static HRESULT WINAPI knownfolder_GetShellItem(
+    IKnownFolder *iface,
+    DWORD flags,
+    REFIID riid,
+    void **ppv)
+{
+    struct knownfolder *knownfolder = impl_from_IKnownFolder(iface);
+    TRACE("(%p, 0x%08lx, %s, %p)\n", knownfolder, flags, debugstr_guid(riid), ppv);
+    return SHGetKnownFolderItem(&knownfolder->id, flags, NULL, riid, ppv);
+}
+
+static HRESULT get_known_folder_path(
+    LPWSTR sFolderId,
+    LPWSTR registryPath,
+    LPWSTR *ppszPath)
+{
+    HRESULT hr;
+    DWORD dwSize, dwType;
+    WCHAR path[MAX_PATH] = {0};
+    WCHAR parentGuid[39];
+    DWORD category;
+    LPWSTR parentRegistryPath, parentPath;
+    HKEY hRedirectionRootKey = NULL;
+
+    TRACE("(%s, %p)\n", debugstr_w(registryPath), ppszPath);
+    *ppszPath = NULL;
+
+    /* check if folder has parent */
+    dwSize = sizeof(parentGuid);
+    hr = HRESULT_FROM_WIN32(RegGetValueW(HKEY_LOCAL_MACHINE, registryPath, L"ParentFolder", RRF_RT_REG_SZ, &dwType, parentGuid, &dwSize));
+    if(hr == HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND)) hr = S_FALSE;
+
+    if(hr == S_OK)
+    {
+        /* get parent's known folder path (recursive) */
+        hr = get_known_folder_registry_path(NULL, parentGuid, &parentRegistryPath);
+        if(FAILED(hr)) return hr;
+
+        hr = get_known_folder_path(parentGuid, parentRegistryPath, &parentPath);
+        if(FAILED(hr)) {
+            free(parentRegistryPath);
+            return hr;
+        }
+
+        lstrcatW(path, parentPath);
+        lstrcatW(path, L"\\");
+
+        free(parentRegistryPath);
+        free(parentPath);
+    }
+
+    /* check, if folder was redirected */
+    if(SUCCEEDED(hr))
+        hr = get_known_folder_dword(registryPath, L"Category", &category);
+
+    if(SUCCEEDED(hr))
+    {
+        if(category == KF_CATEGORY_COMMON)
+            hRedirectionRootKey = HKEY_LOCAL_MACHINE;
+        else if(category == KF_CATEGORY_PERUSER)
+            hRedirectionRootKey = HKEY_CURRENT_USER;
+
+        if(hRedirectionRootKey)
+        {
+            hr = HRESULT_FROM_WIN32(RegGetValueW(hRedirectionRootKey, L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\User Shell Folders", sFolderId, RRF_RT_REG_SZ, NULL, NULL, &dwSize));
+
+            if(SUCCEEDED(hr))
+            {
+                *ppszPath = CoTaskMemAlloc(dwSize+(lstrlenW(path)+1)*sizeof(WCHAR));
+                if(!*ppszPath) hr = E_OUTOFMEMORY;
+            }
+
+            if(SUCCEEDED(hr))
+            {
+                lstrcpyW(*ppszPath, path);
+                hr = HRESULT_FROM_WIN32(RegGetValueW(hRedirectionRootKey, L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\User Shell Folders", sFolderId, RRF_RT_REG_SZ, NULL, *ppszPath + lstrlenW(path), &dwSize));
+            }
+        }
+
+        if(!*ppszPath)
+        {
+            /* no redirection, use previous way - read the relative path from folder definition */
+            hr = HRESULT_FROM_WIN32(RegGetValueW(HKEY_LOCAL_MACHINE, registryPath, L"RelativePath", RRF_RT_REG_SZ, &dwType, NULL, &dwSize));
+
+            if(SUCCEEDED(hr))
+            {
+                *ppszPath = CoTaskMemAlloc(dwSize+(lstrlenW(path)+1)*sizeof(WCHAR));
+                if(!*ppszPath) hr = E_OUTOFMEMORY;
+            }
+
+            if(SUCCEEDED(hr))
+            {
+                lstrcpyW(*ppszPath, path);
+                hr = HRESULT_FROM_WIN32(RegGetValueW(HKEY_LOCAL_MACHINE, registryPath, L"RelativePath", RRF_RT_REG_SZ, &dwType, *ppszPath + lstrlenW(path), &dwSize));
+            }
+        }
+    }
+
+    TRACE("returning path: %s\n", debugstr_w(*ppszPath));
+    return hr;
+}
+
+static HRESULT get_known_folder_path_by_id(
+    REFKNOWNFOLDERID folderId,
+    LPWSTR lpRegistryPath,
+    DWORD dwFlags,
+    LPWSTR *ppszPath)
+{
+    HRESULT hr = E_FAIL;
+    WCHAR sGuid[39];
+    DWORD dwAttributes;
+
+    TRACE("(%s, %s, 0x%08lx, %p)\n", debugstr_guid(folderId), debugstr_w(lpRegistryPath), dwFlags, ppszPath);
+
+    /* if this is registry-registered known folder, get path from registry */
+    if(lpRegistryPath)
+    {
+        StringFromGUID2(folderId, sGuid, ARRAY_SIZE(sGuid));
+
+        hr = get_known_folder_path(sGuid, lpRegistryPath, ppszPath);
+    }
+    /* in other case, use older way */
+
+    if(FAILED(hr))
+        hr = SHGetKnownFolderPath( folderId, dwFlags, NULL, ppszPath );
+
+    if (FAILED(hr)) return hr;
+
+    /* check if known folder really exists */
+    dwAttributes = GetFileAttributesW(*ppszPath);
+    if(dwAttributes == INVALID_FILE_ATTRIBUTES || !(dwAttributes & FILE_ATTRIBUTE_DIRECTORY) )
+    {
+        TRACE("directory %s not found\n", debugstr_w(*ppszPath));
+        CoTaskMemFree(*ppszPath);
+        *ppszPath = NULL;
+        hr = HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
+    }
+
+    return hr;
+}
+
+static HRESULT WINAPI knownfolder_GetPath(
+    IKnownFolder *iface,
+    DWORD dwFlags,
+    LPWSTR *ppszPath)
+{
+    struct knownfolder *knownfolder = impl_from_IKnownFolder( iface );
+    TRACE("(%p, 0x%08lx, %p)\n", knownfolder, dwFlags, ppszPath);
+
+    return get_known_folder_path_by_id(&knownfolder->id, knownfolder->registryPath, dwFlags, ppszPath);
+}
+
+static HRESULT WINAPI knownfolder_SetPath(
+    IKnownFolder *iface,
+    DWORD dwFlags,
+    LPCWSTR pszPath)
+{
+    struct knownfolder *knownfolder = impl_from_IKnownFolder( iface );
+    HRESULT hr = S_OK;
+
+    TRACE("(%p, 0x%08lx, %s)\n", knownfolder, dwFlags, debugstr_w(pszPath));
+
+    /* check if the known folder is registered */
+    if(!knownfolder->registryPath)
+        hr = E_FAIL;
+
+    if(SUCCEEDED(hr))
+        hr = redirect_known_folder(&knownfolder->id, NULL, 0, pszPath, 0, NULL, NULL);
+
+    return hr;
+}
+
+static HRESULT WINAPI knownfolder_GetIDList(
+    IKnownFolder *iface,
+    DWORD flags,
+    PIDLIST_ABSOLUTE *ppidl)
+{
+    struct knownfolder *knownfolder = impl_from_IKnownFolder( iface );
+    TRACE("(%p, 0x%08lx, %p)\n", knownfolder, flags, ppidl);
+    return SHGetKnownFolderIDList(&knownfolder->id, flags, NULL, ppidl);
+}
+
+static HRESULT WINAPI knownfolder_GetFolderType(
+    IKnownFolder *iface,
+    FOLDERTYPEID *pftid)
+{
+    FIXME("%p\n", pftid);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI knownfolder_GetRedirectionCapabilities(
+    IKnownFolder *iface,
+    KF_REDIRECTION_CAPABILITIES *pCapabilities)
+{
+    FIXME("%p stub\n", pCapabilities);
+    if(!pCapabilities) return E_INVALIDARG;
+    *pCapabilities = KF_REDIRECTION_CAPABILITIES_DENY_ALL;
+    return S_OK;
+}
+
+static HRESULT WINAPI knownfolder_GetFolderDefinition(
+    IKnownFolder *iface,
+    KNOWNFOLDER_DEFINITION *pKFD)
+{
+    struct knownfolder *knownfolder = impl_from_IKnownFolder( iface );
+    HRESULT hr;
+    DWORD dwSize;
+    WCHAR parentGuid[39];
+    TRACE("(%p, %p)\n", knownfolder, pKFD);
+
+    if(!pKFD) return E_INVALIDARG;
+
+    ZeroMemory(pKFD, sizeof(*pKFD));
+
+    /* required fields */
+    hr = get_known_folder_dword(knownfolder->registryPath, L"Category", (DWORD *)&pKFD->category);
+    if(FAILED(hr))
+        return hr;
+
+    hr = get_known_folder_wstr(knownfolder->registryPath, L"Name", &pKFD->pszName);
+    if(FAILED(hr))
+        return hr;
+
+    /* optional fields */
+    dwSize = sizeof(parentGuid);
+    hr = HRESULT_FROM_WIN32(RegGetValueW(HKEY_LOCAL_MACHINE, knownfolder->registryPath, L"ParentFolder",
+                RRF_RT_REG_SZ, NULL, parentGuid, &dwSize));
+    if(SUCCEEDED(hr))
+    {
+        hr = IIDFromString(parentGuid, &pKFD->fidParent);
+        if(FAILED(hr))
+            return hr;
+    }
+
+    get_known_folder_dword(knownfolder->registryPath, L"Attributes", &pKFD->dwAttributes);
+
+    get_known_folder_wstr(knownfolder->registryPath, L"RelativePath", &pKFD->pszRelativePath);
+
+    get_known_folder_wstr(knownfolder->registryPath, L"ParsingName", &pKFD->pszParsingName);
+
+    return S_OK;
+}
+
+static const struct IKnownFolderVtbl knownfolder_vtbl =
+{
+    knownfolder_QueryInterface,
+    knownfolder_AddRef,
+    knownfolder_Release,
+    knownfolder_GetId,
+    knownfolder_GetCategory,
+    knownfolder_GetShellItem,
+    knownfolder_GetPath,
+    knownfolder_SetPath,
+    knownfolder_GetIDList,
+    knownfolder_GetFolderType,
+    knownfolder_GetRedirectionCapabilities,
+    knownfolder_GetFolderDefinition
+};
+
+static HRESULT knownfolder_create( struct knownfolder **knownfolder )
+{
+    struct knownfolder *kf;
+
+    kf = malloc( sizeof(*kf) );
+    if (!kf) return E_OUTOFMEMORY;
+
+    kf->IKnownFolder_iface.lpVtbl = &knownfolder_vtbl;
+    kf->refs = 1;
+    memset( &kf->id, 0, sizeof(kf->id) );
+    kf->registryPath = NULL;
+
+    *knownfolder = kf;
+
+    TRACE("returning iface %p\n", &kf->IKnownFolder_iface);
+    return S_OK;
+}
+
+struct foldermanager
+{
+    IKnownFolderManager IKnownFolderManager_iface;
+    LONG refs;
+    UINT num_ids;
+    KNOWNFOLDERID *ids;
+};
+
+static inline struct foldermanager *impl_from_IKnownFolderManager( IKnownFolderManager *iface )
+{
+    return CONTAINING_RECORD( iface, struct foldermanager, IKnownFolderManager_iface );
+}
+
+static ULONG WINAPI foldermanager_AddRef(
+    IKnownFolderManager *iface )
+{
+    struct foldermanager *foldermanager = impl_from_IKnownFolderManager( iface );
+    return InterlockedIncrement( &foldermanager->refs );
+}
+
+static ULONG WINAPI foldermanager_Release(
+    IKnownFolderManager *iface )
+{
+    struct foldermanager *foldermanager = impl_from_IKnownFolderManager( iface );
+    LONG refs = InterlockedDecrement( &foldermanager->refs );
+    if (!refs)
+    {
+        TRACE("destroying %p\n", foldermanager);
+        free( foldermanager->ids );
+        free( foldermanager );
+    }
+    return refs;
+}
+
+static HRESULT WINAPI foldermanager_QueryInterface(
+    IKnownFolderManager *iface,
+    REFIID riid,
+    void **ppv )
+{
+    struct foldermanager *This = impl_from_IKnownFolderManager( iface );
+
+    TRACE("%p %s %p\n", This, debugstr_guid( riid ), ppv );
+
+    *ppv = NULL;
+    if ( IsEqualGUID( riid, &IID_IKnownFolderManager ) ||
+         IsEqualGUID( riid, &IID_IUnknown ) )
+    {
+        *ppv = iface;
+    }
+    else if ( IsEqualGUID( riid, &IID_IMarshal ) )
+    {
+        TRACE("IID_IMarshal returning NULL.\n");
+        return E_NOINTERFACE;
+    }
+    else
+    {
+        FIXME("interface %s not implemented\n", debugstr_guid(riid));
+        return E_NOINTERFACE;
+    }
+    IKnownFolderManager_AddRef( iface );
+    return S_OK;
+}
+
+static HRESULT WINAPI foldermanager_FolderIdFromCsidl(
+    IKnownFolderManager *iface,
+    int nCsidl,
+    KNOWNFOLDERID *pfid)
+{
+    TRACE("%d, %p\n", nCsidl, pfid);
+
+    if (nCsidl >= ARRAY_SIZE(CSIDL_Data))
+        return E_INVALIDARG;
+    *pfid = *CSIDL_Data[nCsidl].id;
+    return S_OK;
+}
+
+static HRESULT WINAPI foldermanager_FolderIdToCsidl(
+    IKnownFolderManager *iface,
+    REFKNOWNFOLDERID rfid,
+    int *pnCsidl)
+{
+    int csidl;
+
+    TRACE("%s, %p\n", debugstr_guid(rfid), pnCsidl);
+
+    csidl = csidl_from_id( rfid );
+    if (csidl == -1) return E_INVALIDARG;
+    *pnCsidl = csidl;
+    return S_OK;
+}
+
+static HRESULT WINAPI foldermanager_GetFolderIds(
+    IKnownFolderManager *iface,
+    KNOWNFOLDERID **ppKFId,
+    UINT *pCount)
+{
+    struct foldermanager *fm = impl_from_IKnownFolderManager( iface );
+
+    TRACE("%p, %p\n", ppKFId, pCount);
+
+    *ppKFId = CoTaskMemAlloc(fm->num_ids * sizeof(KNOWNFOLDERID));
+    memcpy(*ppKFId, fm->ids, fm->num_ids * sizeof(KNOWNFOLDERID));
+    *pCount = fm->num_ids;
+    return S_OK;
+}
+
+static BOOL is_knownfolder( struct foldermanager *fm, const KNOWNFOLDERID *id )
+{
+    UINT i;
+    HRESULT hr;
+    LPWSTR registryPath = NULL;
+    HKEY hKey;
+
+    /* TODO: move all entries from "CSIDL_Data" static array to registry known folder descriptions */
+    for (i = 0; i < fm->num_ids; i++)
+        if (IsEqualGUID( &fm->ids[i], id )) return TRUE;
+
+    hr = get_known_folder_registry_path(id, NULL, &registryPath);
+    if(SUCCEEDED(hr))
+    {
+        hr = HRESULT_FROM_WIN32(RegOpenKeyExW(HKEY_LOCAL_MACHINE, registryPath, 0, KEY_ENUMERATE_SUB_KEYS, &hKey));
+        free(registryPath);
+    }
+
+    if(SUCCEEDED(hr))
+    {
+        hr = S_OK;
+        RegCloseKey(hKey);
+    }
+
+    return hr == S_OK;
+}
+
+static HRESULT WINAPI foldermanager_GetFolder(
+    IKnownFolderManager *iface,
+    REFKNOWNFOLDERID rfid,
+    IKnownFolder **ppkf)
+{
+    struct foldermanager *fm = impl_from_IKnownFolderManager( iface );
+    struct knownfolder *kf;
+    HRESULT hr;
+
+    TRACE("%s, %p\n", debugstr_guid(rfid), ppkf);
+
+    if (!is_knownfolder( fm, rfid ))
+    {
+        WARN("unknown folder\n");
+        return E_INVALIDARG;
+    }
+    hr = knownfolder_create( &kf );
+    if (SUCCEEDED( hr ))
+    {
+        hr = knownfolder_set_id( kf, rfid );
+        *ppkf = &kf->IKnownFolder_iface;
+    }
+    else
+        *ppkf = NULL;
+
+    return hr;
+}
+
+static HRESULT WINAPI foldermanager_GetFolderByName(
+    IKnownFolderManager *iface,
+    LPCWSTR pszCanonicalName,
+    IKnownFolder **ppkf)
+{
+    struct foldermanager *fm = impl_from_IKnownFolderManager( iface );
+    struct knownfolder *kf;
+    BOOL found = FALSE;
+    HRESULT hr;
+    UINT i;
+
+    TRACE( "%s, %p\n", debugstr_w(pszCanonicalName), ppkf );
+
+    for (i = 0; i < fm->num_ids; i++)
+    {
+        WCHAR *path, *name;
+        hr = get_known_folder_registry_path( &fm->ids[i], NULL, &path );
+        if (FAILED( hr )) return hr;
+
+        hr = get_known_folder_wstr( path, L"Name", &name );
+        free( path );
+        if (FAILED( hr )) return hr;
+
+        found = !wcsicmp( pszCanonicalName, name );
+        CoTaskMemFree( name );
+        if (found) break;
+    }
+
+    if (found)
+    {
+        hr = knownfolder_create( &kf );
+        if (FAILED( hr )) return hr;
+
+        hr = knownfolder_set_id( kf, &fm->ids[i] );
+        if (FAILED( hr ))
+        {
+            IKnownFolder_Release( &kf->IKnownFolder_iface );
+            return hr;
+        }
+        *ppkf = &kf->IKnownFolder_iface;
+    }
+    else
+    {
+        hr = HRESULT_FROM_WIN32( ERROR_FILE_NOT_FOUND );
+        *ppkf = NULL;
+    }
+
+    return hr;
+}
+
+static HRESULT register_folder(const KNOWNFOLDERID *rfid, const KNOWNFOLDER_DEFINITION *pKFD)
+{
+    HRESULT hr;
+    HKEY hKey = NULL;
+    DWORD dwDisp;
+    LPWSTR registryPath = NULL;
+
+    hr = get_known_folder_registry_path(rfid, NULL, &registryPath);
+    TRACE("registry path: %s\n", debugstr_w(registryPath));
+
+    if(SUCCEEDED(hr))
+        hr = HRESULT_FROM_WIN32(RegCreateKeyExW(HKEY_LOCAL_MACHINE, registryPath, 0, NULL, 0, KEY_WRITE, 0, &hKey, &dwDisp));
+
+    if(SUCCEEDED(hr))
+    {
+        hr = HRESULT_FROM_WIN32(RegSetValueExW(hKey, L"Category", 0, REG_DWORD, (LPBYTE)&pKFD->category, sizeof(pKFD->category)));
+
+        if(SUCCEEDED(hr) && pKFD->dwAttributes != 0)
+            hr = HRESULT_FROM_WIN32(RegSetValueExW(hKey, L"Attributes", 0, REG_DWORD, (LPBYTE)&pKFD->dwAttributes, sizeof(pKFD->dwAttributes)));
+
+        if(SUCCEEDED(hr))
+            hr = HRESULT_FROM_WIN32(RegSetValueExW(hKey, L"Name", 0, REG_SZ, (LPBYTE)pKFD->pszName, (lstrlenW(pKFD->pszName)+1)*sizeof(WCHAR) ));
+
+        if(SUCCEEDED(hr) && pKFD->pszParsingName)
+            hr = HRESULT_FROM_WIN32(RegSetValueExW(hKey, L"ParsingName", 0, REG_SZ, (LPBYTE)pKFD->pszParsingName, (lstrlenW(pKFD->pszParsingName)+1)*sizeof(WCHAR) ));
+
+        if(SUCCEEDED(hr) && !IsEqualGUID(&pKFD->fidParent, &GUID_NULL))
+        {
+            WCHAR sParentGuid[39];
+            StringFromGUID2(&pKFD->fidParent, sParentGuid, ARRAY_SIZE(sParentGuid));
+
+            /* this known folder has parent folder */
+            hr = HRESULT_FROM_WIN32(RegSetValueExW(hKey, L"ParentFolder", 0, REG_SZ, (LPBYTE)sParentGuid, sizeof(sParentGuid)));
+        }
+
+        if(SUCCEEDED(hr) && pKFD->category != KF_CATEGORY_VIRTUAL && pKFD->pszRelativePath)
+            hr = HRESULT_FROM_WIN32(RegSetValueExW(hKey, L"RelativePath", 0, REG_SZ, (LPBYTE)pKFD->pszRelativePath, (lstrlenW(pKFD->pszRelativePath)+1)*sizeof(WCHAR) ));
+
+        RegCloseKey(hKey);
+
+        if(FAILED(hr))
+            SHDeleteKeyW(HKEY_LOCAL_MACHINE, registryPath);
+    }
+
+    free(registryPath);
+    return hr;
+}
+
+static HRESULT WINAPI foldermanager_RegisterFolder(
+    IKnownFolderManager *iface,
+    REFKNOWNFOLDERID rfid,
+    KNOWNFOLDER_DEFINITION const *pKFD)
+{
+    TRACE("(%p, %s, %p)\n", iface, debugstr_guid(rfid), pKFD);
+    return register_folder(rfid, pKFD);
+}
+
+static HRESULT WINAPI foldermanager_UnregisterFolder(
+    IKnownFolderManager *iface,
+    REFKNOWNFOLDERID rfid)
+{
+    HRESULT hr;
+    LPWSTR registryPath = NULL;
+    TRACE("(%p, %s)\n", iface, debugstr_guid(rfid));
+
+    hr = get_known_folder_registry_path(rfid, NULL, &registryPath);
+
+    if(SUCCEEDED(hr))
+        hr = HRESULT_FROM_WIN32(SHDeleteKeyW(HKEY_LOCAL_MACHINE, registryPath));
+
+    free(registryPath);
+    return hr;
+}
+
+static HRESULT WINAPI foldermanager_FindFolderFromPath(
+    IKnownFolderManager *iface,
+    LPCWSTR pszPath,
+    FFFP_MODE mode,
+    IKnownFolder **ppkf)
+{
+    FIXME("%s, 0x%08x, %p\n", debugstr_w(pszPath), mode, ppkf);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI foldermanager_FindFolderFromIDList(
+    IKnownFolderManager *iface,
+    PCIDLIST_ABSOLUTE pidl,
+    IKnownFolder **ppkf)
+{
+    FIXME("%p, %p\n", pidl, ppkf);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI foldermanager_Redirect(
+    IKnownFolderManager *iface,
+    REFKNOWNFOLDERID rfid,
+    HWND hwnd,
+    KF_REDIRECT_FLAGS flags,
+    LPCWSTR pszTargetPath,
+    UINT cFolders,
+    KNOWNFOLDERID const *pExclusion,
+    LPWSTR *ppszError)
+{
+    return redirect_known_folder(rfid, hwnd, flags, pszTargetPath, cFolders, pExclusion, ppszError);
+}
+
+static const struct IKnownFolderManagerVtbl foldermanager_vtbl =
+{
+    foldermanager_QueryInterface,
+    foldermanager_AddRef,
+    foldermanager_Release,
+    foldermanager_FolderIdFromCsidl,
+    foldermanager_FolderIdToCsidl,
+    foldermanager_GetFolderIds,
+    foldermanager_GetFolder,
+    foldermanager_GetFolderByName,
+    foldermanager_RegisterFolder,
+    foldermanager_UnregisterFolder,
+    foldermanager_FindFolderFromPath,
+    foldermanager_FindFolderFromIDList,
+    foldermanager_Redirect
+};
+
+static HRESULT foldermanager_create( void **ppv )
+{
+    UINT i, j;
+    struct foldermanager *fm;
+
+    fm = malloc( sizeof(*fm) );
+    if (!fm) return E_OUTOFMEMORY;
+
+    fm->IKnownFolderManager_iface.lpVtbl = &foldermanager_vtbl;
+    fm->refs = 1;
+    fm->num_ids = 0;
+
+    for (i = 0; i < ARRAY_SIZE(CSIDL_Data); i++)
+    {
+        if (!IsEqualGUID( CSIDL_Data[i].id, &GUID_NULL )) fm->num_ids++;
+    }
+    fm->ids = malloc( fm->num_ids * sizeof(KNOWNFOLDERID) );
+    if (!fm->ids)
+    {
+        free( fm );
+        return E_OUTOFMEMORY;
+    }
+    for (i = j = 0; i < ARRAY_SIZE(CSIDL_Data); i++)
+    {
+        if (!IsEqualGUID( CSIDL_Data[i].id, &GUID_NULL ))
+        {
+            fm->ids[j] = *CSIDL_Data[i].id;
+            j++;
+        }
+    }
+    TRACE("found %u known folders\n", fm->num_ids);
+    *ppv = &fm->IKnownFolderManager_iface;
+
+    TRACE("returning iface %p\n", *ppv);
+    return S_OK;
+}
+
+HRESULT WINAPI KnownFolderManager_Constructor( IUnknown *punk, REFIID riid, void **ppv )
+{
+    TRACE("%p, %s, %p\n", punk, debugstr_guid(riid), ppv);
+
+    if (!ppv)
+        return E_POINTER;
+    if (punk)
+        return CLASS_E_NOAGGREGATION;
+
+    return foldermanager_create( ppv );
+}
+
+HRESULT WINAPI SHGetKnownFolderIDList(REFKNOWNFOLDERID rfid, DWORD flags, HANDLE token, PIDLIST_ABSOLUTE *pidl)
+{
+    TRACE("%s, 0x%08lx, %p, %p\n", debugstr_guid(rfid), flags, token, pidl);
+
+    if (!pidl)
+        return E_INVALIDARG;
+
+    if (flags)
+        FIXME("unsupported flags: 0x%08lx\n", flags);
+
+    if (token)
+        FIXME("user token is not used.\n");
+
+    *pidl = NULL;
+    if (IsEqualIID(rfid, &FOLDERID_Desktop))
+        *pidl = _ILCreateDesktop();
+    else if (IsEqualIID(rfid, &FOLDERID_RecycleBinFolder))
+        *pidl = _ILCreateBitBucket();
+    else if (IsEqualIID(rfid, &FOLDERID_ComputerFolder))
+        *pidl = _ILCreateMyComputer();
+    else if (IsEqualIID(rfid, &FOLDERID_PrintersFolder))
+        *pidl = _ILCreatePrinters();
+    else if (IsEqualIID(rfid, &FOLDERID_ControlPanelFolder))
+        *pidl = _ILCreateControlPanel();
+    else if (IsEqualIID(rfid, &FOLDERID_NetworkFolder))
+        *pidl = _ILCreateNetwork();
+    else if (IsEqualIID(rfid, &FOLDERID_Documents))
+        *pidl = _ILCreateMyDocuments();
+    else
+    {
+        DWORD attributes = 0;
+        WCHAR *pathW;
+        HRESULT hr;
+
+        hr = SHGetKnownFolderPath(rfid, flags, token, &pathW);
+        if (FAILED(hr))
+            return hr;
+
+        hr = SHILCreateFromPathW(pathW, pidl, &attributes);
+        CoTaskMemFree(pathW);
+        return hr;
+    }
+
+    return *pidl ? S_OK : E_FAIL;
+}
+
+HRESULT WINAPI SHGetKnownFolderItem(REFKNOWNFOLDERID rfid, KNOWN_FOLDER_FLAG flags, HANDLE hToken,
+    REFIID riid, void **ppv)
+{
+    PIDLIST_ABSOLUTE pidl;
+    HRESULT hr;
+
+    TRACE("%s, 0x%08x, %p, %s, %p\n", debugstr_guid(rfid), flags, hToken, debugstr_guid(riid), ppv);
+
+    hr = SHGetKnownFolderIDList(rfid, flags, hToken, &pidl);
+    if (FAILED(hr))
+    {
+        *ppv = NULL;
+        return hr;
+    }
+
+    hr = SHCreateItemFromIDList(pidl, riid, ppv);
+    CoTaskMemFree(pidl);
+    return hr;
+}
+
+static void register_system_knownfolders(void)
+{
+    int i;
+
+    for (i = 0; i < ARRAY_SIZE(CSIDL_Data); ++i)
+    {
+        const CSIDL_DATA *folder = &CSIDL_Data[i];
+        if(folder->name){
+            KNOWNFOLDER_DEFINITION kfd;
+
+            /* register_folder won't modify kfd, so cast away const instead of
+             * reallocating */
+            kfd.category         = folder->category;
+            kfd.pszName          = (WCHAR *)folder->name;
+            kfd.pszDescription   = NULL;
+            kfd.fidParent        = folder->parent ? *folder->parent : GUID_NULL;
+            kfd.pszRelativePath  = (WCHAR *)folder->path;
+            kfd.pszParsingName   = (WCHAR *)folder->parsing;
+            kfd.pszTooltip       = NULL;
+            kfd.pszLocalizedName = NULL;
+            kfd.pszIcon          = NULL;
+            kfd.pszSecurity      = NULL;
+            kfd.dwAttributes     = folder->attributes;
+            kfd.kfdFlags         = folder->flags;
+            kfd.ftidType         = folder->typeid ? *folder->typeid : GUID_NULL;
+            register_folder(folder->id, &kfd);
+        }
+    }
+}
+
+HRESULT SHELL_RegisterShellFolders(void)
+{
+    HRESULT hr;
+
+    hr = _SHRegisterUserShellFolders(TRUE);
+    if (SUCCEEDED(hr))
+        hr = _SHRegisterUserShellFolders(FALSE);
+    if (SUCCEEDED(hr))
+        hr = _SHRegisterCommonShellFolders();
+#ifndef __REACTOS__
+    if (SUCCEEDED(hr))
+        hr = create_extra_folders();
+#endif
+    if (SUCCEEDED(hr))
+        hr = set_folder_attributes();
+    if (SUCCEEDED(hr))
+        register_system_knownfolders();
     return hr;
 }
