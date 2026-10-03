@@ -700,19 +700,11 @@ __forceinline uint32_t __cdecl count_sequential_high_zeroes(uint32_t const u) th
             add edx, ecx
         }
         #else // ^^^ _MSC_VER ^^^ // vvv !_MSC_VER vvv //
-	    uint64_t retval;
-	    __asm__(
-            "mull %[multiplier]\n"
-            "movl %%eax, %%ecx\n"
-            "movl %[multiplicand_lo], %%eax\n"
-            "mull %[multiplier]\n"
-            "addl %%ecx, %%edx\n"
-            : "=A" (retval)
-            : [multiplicand_hi] "a" ((uint32_t)((multiplicand >> 32) & 0xFFFFFFFF)),
-              [multiplicand_lo] "rm" ((uint32_t)((multiplicand >>  0) & 0xFFFFFFFF)),
-              [multiplier] "rm" (multiplier)
-            : "ecx" );
-        return retval;
+        /*
+         * Plain C. With an "rm" constraint on the multiplier, GCC could address it through EDX,
+         * which the first MUL had already overwritten by the time the second one read it.
+         */
+        return multiplicand * multiplier;
         #endif // !_MSC_VER
     }
 #else

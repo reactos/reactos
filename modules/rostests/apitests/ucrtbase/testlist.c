@@ -12,6 +12,7 @@ extern void func_atan(void);
 extern void func_ceil(void);
 extern void func_cos(void);
 extern void func_exp(void);
+extern void func_float_conversion(void);
 extern void func_log(void);
 extern void func_log10(void);
 extern void func_round(void);
@@ -34,6 +35,7 @@ const struct test winetest_testlist[] =
     { "ceil", func_ceil },
     { "cos", func_cos },
     { "exp", func_exp },
+    { "float_conversion", func_float_conversion },
     { "log", func_log },
     { "log10", func_log10 },
     { "round", func_round },
