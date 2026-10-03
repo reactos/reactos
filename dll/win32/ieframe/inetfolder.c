@@ -5,8 +5,6 @@
  * COPYRIGHT:   Copyright 2025 Whindmar Saksit <whindsaks@proton.me>
  */
 
-#define NONAMELESSUNION
-
 #include "ieframe.h"
 
 #include "shlobj.h"

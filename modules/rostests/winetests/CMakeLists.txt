@@ -51,7 +51,7 @@ add_subdirectory(gdiplus)
 add_subdirectory(hid)
 add_subdirectory(hlink)
 add_subdirectory(hnetcfg)
-add_subdirectory(ieframe)
+#add_subdirectory(ieframe) # Gecko not installed
 add_subdirectory(imagehlp)
 add_subdirectory(imm32)
 add_subdirectory(inetcomm)
