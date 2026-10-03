@@ -20,19 +20,21 @@ list(APPEND UEFILDR_ARC_SOURCE
     arch/uefi/uefisetup.c
     arch/uefi/uefiutil.c
     arch/uefi/uefivid.c
-    arch/hwpci.c
     arch/vidfb.c
     arch/vgafont.c)
 
 if(ARCH STREQUAL "i386")
-    list(APPEND UEFILDR_ARC_SOURCE
-        arch/i386/i386idt.c)
     list(APPEND UEFILDR_COMMON_ASM_SOURCE
         arch/uefi/i386/uefiasm.S
         arch/i386/i386trap.S)
+    list(APPEND UEFILDR_ARC_SOURCE
+        arch/i386/i386idt.c
+        arch/hwpci.c)
 elseif(ARCH STREQUAL "amd64")
     list(APPEND UEFILDR_COMMON_ASM_SOURCE
         arch/uefi/amd64/uefiasm.S)
+    list(APPEND UEFILDR_ARC_SOURCE
+        arch/hwpci.c)
 elseif(ARCH STREQUAL "arm")
     list(APPEND UEFILDR_ARC_SOURCE
         arch/arm/macharm.c
