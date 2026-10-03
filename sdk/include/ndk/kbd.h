@@ -212,7 +212,7 @@ typedef struct tagKBDTABLES_FE
     DWORD     dwSubType;
 } KBDTABLES_FE, *PKBDTABLES_FE;
 
-#if NTDDI_VERSION >= NTDDI_WINXP
+#if (NTDDI_VERSION >= NTDDI_WINXP)
 #define VK_DBE_ALPHANUMERIC           0xF0
 #define VK_DBE_KATAKANA               0xF1
 #define VK_DBE_HIRAGANA               0xF2
