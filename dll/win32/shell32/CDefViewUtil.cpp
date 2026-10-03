@@ -20,7 +20,7 @@ ShellCanPaste(const CComPtr<IShellFolder> &pSF)
     BOOL bRet = FALSE;
     CComPtr<IDataObject> pDataObj;
 
-    if (pSF)
+    if (pSF.p)
     {
         // If the folder doesn't have a drop target we can't paste
         CComPtr<IDropTarget> pdt;
@@ -44,7 +44,7 @@ ShellCanPaste(const CComPtr<IShellFolder> &pSF)
 }
 
 HRESULT
-ShellViewIdToFolderViewMode(const SHELLVIEWID *pVid)
+ShellViewIdToFolderViewMode(const SHELLVIEWID *pVid) 
 {
     if (IsEqualIID(*pVid, VID_LargeIcons))
         return FVM_ICON;
