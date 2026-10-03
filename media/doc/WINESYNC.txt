@@ -209,7 +209,7 @@ dll/win32/riched20            # Synced to Wine-10.0
 dll/win32/riched32            # Synced to Wine-10.0
 dll/win32/rpcrt4              # Synced to Wine-10.0
 dll/win32/rsabase             # Synced to Wine-10.0
-dll/win32/rsaenh              # Synced to WineStaging-2.9
+dll/win32/rsaenh              # Synced to Wine-11.19
 dll/win32/rtworkq             # Synced to Wine-10.0
 dll/win32/sccbase             # Synced to Wine-10.0
 dll/win32/schannel            # Synced to WineStaging-3.3
