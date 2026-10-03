@@ -37,6 +37,7 @@ add_dependencies(ntdll_crt_test_lib psdk)
 
 list(APPEND SOURCE
     DllLoadNotification.c
+    LdrCorImage.c
     LdrEnumResources.c
     LdrFindResource_U.c
     LdrLoadDll.c
