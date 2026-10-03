@@ -492,7 +492,7 @@ ReadMemorySendHandler(
     {
         /* Only do this if Ps is initialized */
         if (ProcessListHead->Flink)
-            __writecr3(PsGetCurrentProcess()->Pcb.DirectoryTableBase[0]);
+            __writecr3(PsGetCurrentProcess()->Pcb.DirectoryTableBase);
     }
 
     return TRUE;
@@ -532,7 +532,7 @@ handle_gdb_read_mem(
             KDDBGPRINT("The current GDB debug thread is invalid!");
             return LOOP_IF_SUCCESS(send_gdb_packet("E03"));
         }
-        __writecr3(AttachedProcess->DirectoryTableBase[0]);
+        __writecr3(AttachedProcess->DirectoryTableBase);
     }
 #else
     if ((gdb_dbg_pid != 0) && gdb_pid_to_handle(gdb_dbg_pid) != PsGetCurrentProcessId())
@@ -545,7 +545,7 @@ handle_gdb_read_mem(
         }
         /* Only do this if Ps is initialized */
         if (ProcessListHead->Flink)
-            __writecr3(AttachedProcess->Pcb.DirectoryTableBase[0]);
+            __writecr3(AttachedProcess->Pcb.DirectoryTableBase);
     }
 #endif
 
@@ -596,7 +596,7 @@ WriteMemorySendHandler(
     {
         /* Only do this if Ps is initialized */
         if (ProcessListHead->Flink)
-            __writecr3(PsGetCurrentProcess()->Pcb.DirectoryTableBase[0]);
+            __writecr3(PsGetCurrentProcess()->Pcb.DirectoryTableBase);
     }
     return TRUE;
 }
@@ -638,7 +638,7 @@ handle_gdb_write_mem(
             KDDBGPRINT("The current GDB debug thread is invalid!");
             return LOOP_IF_SUCCESS(send_gdb_packet("E03"));
         }
-        __writecr3(AttachedProcess->DirectoryTableBase[0]);
+        __writecr3(AttachedProcess->DirectoryTableBase);
     }
 #else
     if ((gdb_dbg_pid != 0) && gdb_pid_to_handle(gdb_dbg_pid) != PsGetCurrentProcessId())
@@ -651,7 +651,7 @@ handle_gdb_write_mem(
         }
         /* Only do this if Ps is initialized */
         if (ProcessListHead->Flink)
-            __writecr3(AttachedProcess->Pcb.DirectoryTableBase[0]);
+            __writecr3(AttachedProcess->Pcb.DirectoryTableBase);
     }
 #endif
 

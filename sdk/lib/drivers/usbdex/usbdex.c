@@ -4,8 +4,6 @@
 #include <usbdlib.h>
 #include <debug.h>
 
-DECLARE_HANDLE(USBD_HANDLE);
-
 NTSTATUS
 USBD_QueryUsbCapability(
     _In_ USBD_HANDLE USBDHandle,

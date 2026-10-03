@@ -262,7 +262,11 @@ extern POBJECT_TYPE NTSYSAPI PsJobType;
 // Cross Thread Flags
 //
 #define CT_TERMINATED_BIT                       0x1
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+#define CT_THREAD_INSERTED_BIT                  0x2
+#else
 #define CT_DEAD_THREAD_BIT                      0x2
+#endif
 #define CT_HIDE_FROM_DEBUGGER_BIT               0x4
 #define CT_ACTIVE_IMPERSONATION_INFO_BIT        0x8
 #define CT_SYSTEM_THREAD_BIT                    0x10
@@ -1223,10 +1227,145 @@ typedef struct _PSP_RATE_APC
 //
 // Executive Thread (ETHREAD)
 //
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+typedef union _PS_CLIENT_SECURITY_CONTEXT
+{
+    ULONG_PTR ImpersonationData;
+    PVOID ImpersonationToken;
+    struct
+    {
+        ULONG_PTR ImpersonationLevel:2;
+        ULONG_PTR EffectiveOnly:1;
+    };
+} PS_CLIENT_SECURITY_CONTEXT, *PPS_CLIENT_SECURITY_CONTEXT;
+#endif
+
 typedef struct _ETHREAD
 {
     KTHREAD Tcb;
     LARGE_INTEGER CreateTime;
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+    union
+    {
+        LARGE_INTEGER ExitTime;
+        LIST_ENTRY KeyedWaitChain;
+    };
+    union
+    {
+        NTSTATUS ExitStatus;
+        PVOID OfsChain;
+    };
+    union
+    {
+        LIST_ENTRY PostBlockList;
+        struct
+        {
+            PVOID ForwardLinkShadow;
+            PVOID StartAddress;
+        };
+    };
+    union
+    {
+        struct _TERMINATION_PORT *TerminationPort;
+        struct _ETHREAD *ReaperLink;
+        PVOID KeyedWaitValue;
+        PVOID Win32StartParameter;
+    };
+    KSPIN_LOCK ActiveTimerListLock;
+    LIST_ENTRY ActiveTimerListHead;
+    CLIENT_ID Cid;
+    union
+    {
+        KSEMAPHORE KeyedWaitSemaphore;
+        KSEMAPHORE AlpcWaitSemaphore;
+    };
+    PS_CLIENT_SECURITY_CONTEXT ClientSecurity;
+    LIST_ENTRY IrpList;
+    ULONG_PTR TopLevelIrp;
+    PDEVICE_OBJECT DeviceToVerify;
+    PPSP_RATE_APC RateControlApc;
+    PVOID Win32StartAddress;
+    PVOID SparePtr0;
+    LIST_ENTRY ThreadListEntry;
+    EX_RUNDOWN_REF RundownProtect;
+    EX_PUSH_LOCK ThreadLock;
+    ULONG ReadClusterSize;
+    volatile LONG MmLockOrdering;
+    union
+    {
+        struct
+        {
+           ULONG Terminated:1;
+           ULONG ThreadInserted:1;
+           ULONG HideFromDebugger:1;
+           ULONG ActiveImpersonationInfo:1;
+           ULONG SystemThread:1;
+           ULONG HardErrorsAreDisabled:1;
+           ULONG BreakOnTermination:1;
+           ULONG SkipCreationMsg:1;
+           ULONG SkipTerminationMsg:1;
+           ULONG CopyTokenOnOpen:1;
+           ULONG ThreadIoPriority:3;
+           ULONG ThreadPagePriority:3;
+           ULONG RundownFail:1;
+        };
+        ULONG CrossThreadFlags;
+    };
+    union
+    {
+        struct
+        {
+           ULONG ActiveExWorker:1;
+           ULONG ExWorkerCanWaitUser:1;
+           ULONG MemoryMaker:1;
+           ULONG ClonedThread:1;
+           ULONG KeyedEventInUse:1;
+           ULONG RateApcState:2;
+           ULONG SelfTerminate:1;
+        };
+        ULONG SameThreadPassiveFlags;
+    };
+    union
+    {
+        struct
+        {
+           UCHAR Spare:1;
+           volatile UCHAR StartAddressInvalid:1;
+           UCHAR EtwPageFaultCalloutActive:1;
+           UCHAR OwnsProcessWorkingSetExclusive:1;
+           UCHAR OwnsProcessWorkingSetShared:1;
+           UCHAR OwnsSystemWorkingSetExclusive:1;
+           UCHAR OwnsSystemWorkingSetShared:1;
+           UCHAR OwnsSessionWorkingSetExclusive:1;
+           UCHAR OwnsSessionWorkingSetShared:1;
+           UCHAR OwnsProcessAddressSpaceExclusive:1;
+           UCHAR OwnsProcessAddressSpaceShared:1;
+           UCHAR SuppressSymbolLoad:1;
+           UCHAR Prefetching:1;
+           UCHAR OwnsDynamicMemoryShared:1;
+           UCHAR OwnsChangeControlAreaExclusive:1;
+           UCHAR OwnsChangeControlAreaShared:1;
+#if (NTDDI_VERSION >= NTDDI_VISTASP1)
+           UCHAR Spare1:8;
+           UCHAR PriorityRegionActive;
+#else
+           USHORT PriorityRegionActive:4;
+#endif
+        };
+        ULONG SameThreadApcFlags;
+    };
+    UCHAR CacheManagerActive;
+    UCHAR DisablePageFaultClustering;
+    UCHAR ActiveFaultCount;
+    ULONG_PTR AlpcMessageId;
+    union
+    {
+        PVOID AlpcMessage;
+        ULONG AlpcReceiveAttributeSet;
+    };
+    LIST_ENTRY AlpcWaitListEntry;
+    ULONG CacheManagerCount;
+#else
     union
     {
         LARGE_INTEGER ExitTime;
@@ -1244,16 +1383,10 @@ typedef struct _ETHREAD
         struct _TERMINATION_PORT *TerminationPort;
         struct _ETHREAD *ReaperLink;
         PVOID KeyedWaitValue;
-#if (NTDDI_VERSION >= NTDDI_LONGHORN)
-        PVOID Win32StartParameter;
-#endif
     };
     KSPIN_LOCK ActiveTimerListLock;
     LIST_ENTRY ActiveTimerListHead;
     CLIENT_ID Cid;
-#if (NTDDI_VERSION >= NTDDI_LONGHORN)
-    KSEMAPHORE KeyedWaitSemaphore;
-#else
     union
     {
         KSEMAPHORE LpcReplySemaphore;
@@ -1264,16 +1397,11 @@ typedef struct _ETHREAD
         PVOID LpcReplyMessage;
         PVOID LpcWaitingOnPort;
     };
-#endif
     PPS_IMPERSONATION_INFORMATION ImpersonationInfo;
     LIST_ENTRY IrpList;
     ULONG_PTR TopLevelIrp;
     PDEVICE_OBJECT DeviceToVerify;
-#if (NTDDI_VERSION >= NTDDI_LONGHORN)
-    PPSP_RATE_APC RateControlApc;
-#else
     struct _EPROCESS *ThreadsProcess;
-#endif
     PVOID Win32StartAddress;
     union
     {
@@ -1283,25 +1411,15 @@ typedef struct _ETHREAD
     LIST_ENTRY ThreadListEntry;
     EX_RUNDOWN_REF RundownProtect;
     EX_PUSH_LOCK ThreadLock;
-#if (NTDDI_VERSION < NTDDI_LONGHORN)
     ULONG LpcReplyMessageId;
-#endif
     ULONG ReadClusterSize;
-#if (NTDDI_VERSION >= NTDDI_LONGHORN)
-    ULONG SpareUlong0;
-#else
     ACCESS_MASK GrantedAccess;
-#endif
     union
     {
         struct
         {
            ULONG Terminated:1;
-#if (NTDDI_VERSION >= NTDDI_LONGHORN)
-           ULONG ThreadInserted:1;
-#else
            ULONG DeadThread:1;
-#endif
            ULONG HideFromDebugger:1;
            ULONG ActiveImpersonationInfo:1;
            ULONG SystemThread:1;
@@ -1309,12 +1427,6 @@ typedef struct _ETHREAD
            ULONG BreakOnTermination:1;
            ULONG SkipCreationMsg:1;
            ULONG SkipTerminationMsg:1;
-#if (NTDDI_VERSION >= NTDDI_LONGHORN)
-           ULONG CreateMsgSent:1;
-           ULONG ThreadIoPriority:3;
-           ULONG ThreadPagePriority:3;
-           ULONG PendingRatecontrol:1;
-#endif
         };
         ULONG CrossThreadFlags;
     };
@@ -1326,9 +1438,6 @@ typedef struct _ETHREAD
            ULONG ExWorkerCanWaitUser:1;
            ULONG MemoryMaker:1;
            ULONG KeyedEventInUse:1;
-#if (NTDDI_VERSION >= NTDDI_LONGHORN)
-           ULONG RateApcState:2;
-#endif
         };
         ULONG SameThreadPassiveFlags;
     };
@@ -1338,55 +1447,65 @@ typedef struct _ETHREAD
         {
            ULONG LpcReceivedMsgIdValid:1;
            ULONG LpcExitThreadCalled:1;
-#if (NTDDI_VERSION >= NTDDI_LONGHORN)
-           ULONG Spare:1;
-#else
            ULONG AddressSpaceOwner:1;
-#endif
            ULONG OwnsProcessWorkingSetExclusive:1;
            ULONG OwnsProcessWorkingSetShared:1;
            ULONG OwnsSystemWorkingSetExclusive:1;
            ULONG OwnsSystemWorkingSetShared:1;
            ULONG OwnsSessionWorkingSetExclusive:1;
            ULONG OwnsSessionWorkingSetShared:1;
-#if (NTDDI_VERSION >= NTDDI_LONGHORN)
-           ULONG SuppressSymbolLoad:1;
-           ULONG Spare1:3;
-           ULONG PriorityRegionActive:4;
-#else
            ULONG ApcNeeded:1;
-#endif
         };
         ULONG SameThreadApcFlags;
     };
-#if (NTDDI_VERSION >= NTDDI_LONGHORN)
-    UCHAR CacheManagerActive;
-#else
     UCHAR ForwardClusterOnly;
-#endif
     UCHAR DisablePageFaultClustering;
     UCHAR ActiveFaultCount;
-#if (NTDDI_VERSION >= NTDDI_LONGHORN)
-    ULONG AlpcMessageId;
-    union
-    {
-        PVOID AlpcMessage;
-        ULONG AlpcReceiveAttributeSet;
-    };
-    LIST_ENTRY AlpcWaitListEntry;
-    KSEMAPHORE AlpcWaitSemaphore;
-    ULONG CacheManagerCount;
 #endif
-    // TODO: Missing Vista+ members
 #if (NTDDI_VERSION >= NTDDI_WIN10_RS1) || defined(__REACTOS__)
     PUNICODE_STRING ThreadName;
     // TODO: Missing Win10+ members
 #endif
 #if defined(__REACTOS__)
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+    /* LPC was replaced by ALPC in Vista, ReactOS still implements LPC */
+    KSEMAPHORE LpcReplySemaphore;
+    union
+    {
+        PVOID LpcReplyMessage;
+        PVOID LpcWaitingOnPort;
+    };
+    LIST_ENTRY LpcReplyChain;
+    ULONG LpcReplyMessageId;
+    ULONG LpcReceivedMessageId;
+    union
+    {
+        struct
+        {
+            ULONG LpcReceivedMsgIdValid:1;
+            ULONG LpcExitThreadCalled:1;
+        };
+        ULONG LpcFlags;
+    };
+    /* Replaced by ClientSecurity in Vista */
+    PPS_IMPERSONATION_INFORMATION ImpersonationInfo;
+    /* Kept in KTHREAD before Vista */
+    SCHAR Quantum;
+    UCHAR Iopl;
+#if defined(_M_AMD64) && (NTDDI_VERSION < NTDDI_WIN8)
+    /* KTHREAD only has this starting with Win8 */
+    XSAVE_FORMAT* StateSaveArea;
+#endif
+#ifdef _WIN64
+    /* The 64 bit KTHREAD has no service table */
+    PVOID ServiceTable;
+#endif
+#else
     // Temp HACK until we switch to NTDDI_VISTA, when these move to KTHREAD
     volatile ULONGLONG CycleTime;
 #ifndef _WIN64
     volatile ULONG CycleTimeHigh;
+#endif
 #endif
 #endif
 } ETHREAD;
@@ -1394,6 +1513,15 @@ typedef struct _ETHREAD
 //
 // Executive Process (EPROCESS)
 //
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+typedef struct _ALPC_PROCESS_CONTEXT
+{
+    EX_PUSH_LOCK Lock;
+    LIST_ENTRY ViewListHead;
+    volatile ULONG_PTR PagedPoolQuotaCache;
+} ALPC_PROCESS_CONTEXT, *PALPC_PROCESS_CONTEXT;
+#endif
+
 typedef struct _EPROCESS
 {
     KPROCESS Pcb;
@@ -1403,8 +1531,8 @@ typedef struct _EPROCESS
     EX_RUNDOWN_REF RundownProtect;
     HANDLE UniqueProcessId;
     LIST_ENTRY ActiveProcessLinks;
-    SIZE_T QuotaUsage[PsQuotaTypes];
-    SIZE_T QuotaPeak[PsQuotaTypes];
+    SIZE_T QuotaUsage[PsPageFile + 1];
+    SIZE_T QuotaPeak[PsPageFile + 1];
     SIZE_T CommitCharge;
     SIZE_T PeakVirtualSize;
     SIZE_T VirtualSize;
@@ -1491,7 +1619,7 @@ typedef struct _EPROCESS
     PVOID AweInfo;
     SE_AUDIT_PROCESS_CREATION_INFO SeAuditProcessCreationInfo;
     MMSUPPORT Vm;
-#ifdef _M_AMD64
+#if defined(_M_AMD64) && (NTDDI_VERSION < NTDDI_LONGHORN)
     ULONG Spares[2];
 #else
     LIST_ENTRY MmProcessLinks;
@@ -1515,8 +1643,14 @@ typedef struct _EPROCESS
             ULONG NumaAware:1;
             ULONG ProtectedProcess:1;
             ULONG DefaultPagePriority:3;
-            ULONG ProcessDeleteSelf:1;
+            ULONG PrimaryTokenFrozen:1;
             ULONG ProcessVerifierTarget:1;
+            ULONG StackRandomizationDisabled:1;
+#if (NTDDI_VERSION >= NTDDI_VISTASP1)
+            ULONG AffinityPermanent:1;
+            ULONG AffinityUpdateEnable:1;
+            ULONG CrossSessionCreate:1;
+#endif
         };
         ULONG Flags2;
     };
@@ -1563,7 +1697,12 @@ typedef struct _EPROCESS
 #endif
             ULONG DefaultIoPriority:3;
 #if (NTDDI_VERSION >= NTDDI_LONGHORN)
+#if (NTDDI_VERSION >= NTDDI_VISTASP1)
+            ULONG ProcessSelfDelete:1;
+            ULONG SpareProcessFlags:1;
+#else
             ULONG SparePsFlags1:2;
+#endif
 #else
             ULONG Spare1:1;
             ULONG Spare2:1;
@@ -1589,7 +1728,15 @@ typedef struct _EPROCESS
     UCHAR PriorityClass;
     MM_AVL_TABLE VadRoot;
     ULONG Cookie;
-#if defined(__REACTOS__)
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+    ALPC_PROCESS_CONTEXT AlpcContext;
+#endif
+#if defined(__REACTOS__) && (NTDDI_VERSION >= NTDDI_LONGHORN)
+    /* Kept in KPROCESS::DirectoryTableBase[1] and EPROCESS before Vista */
+    ULONG_PTR HyperSpacePageTable;
+    KSPIN_LOCK HyperSpaceLock;
+#endif
+#if defined(__REACTOS__) && (NTDDI_VERSION < NTDDI_LONGHORN)
     // Temp HACK until we switch to NTDDI_VISTA, when this moves to KPROCESS
     ULONGLONG CycleTime;
 #endif // ]

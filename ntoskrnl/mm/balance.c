@@ -299,7 +299,7 @@ VOID
 NTAPI
 MmRebalanceMemoryConsumersAndWait(VOID)
 {
-    ASSERT(PsGetCurrentProcess()->AddressCreationLock.Owner != KeGetCurrentThread());
+    ASSERT(!MiIsProcessAddressSpaceLockOwner(PsGetCurrentProcess()));
     ASSERT(!MM_ANY_WS_LOCK_HELD(PsGetCurrentThread()));
     ASSERT(KeGetCurrentIrql() < DISPATCH_LEVEL);
 

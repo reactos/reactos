@@ -176,10 +176,10 @@ KeUpdateRunTime(IN PKTRAP_FRAME TrapFrame,
 
 #if DBG
             /* Update the DPC time */
-            Prcb->DebugDpcTime++;
+            KiPrcbDpcTimeCount(Prcb)++;
 
             /* Check if we have timed out */
-            if (Prcb->DebugDpcTime == KiDPCTimeout)
+            if (KiPrcbDpcTimeCount(Prcb) == KiDPCTimeout)
             {
                 /* We did! */
                 DbgPrint("*** DPC routine > 1 sec --- This is not a break in KeUpdateSystemTime\n");
@@ -188,7 +188,7 @@ KeUpdateRunTime(IN PKTRAP_FRAME TrapFrame,
                 if (KdDebuggerEnabled) DbgBreakPoint();
 
                 /* Clear state */
-                Prcb->DebugDpcTime = 0;
+                KiPrcbDpcTimeCount(Prcb) = 0;
             }
 #endif
         }
@@ -230,10 +230,10 @@ KeUpdateRunTime(IN PKTRAP_FRAME TrapFrame,
     }
 
     /* Decrement the thread quantum */
-    Thread->Quantum -= CLOCK_QUANTUM_DECREMENT;
+    KiThreadQuantum(Thread) -= CLOCK_QUANTUM_DECREMENT;
 
     /* Check if the time expired */
-    if ((Thread->Quantum <= 0) && (Thread != Prcb->IdleThread))
+    if ((KiThreadQuantum(Thread) <= 0) && (Thread != Prcb->IdleThread))
     {
         /* Schedule a quantum end */
         Prcb->QuantumEnd = 1;

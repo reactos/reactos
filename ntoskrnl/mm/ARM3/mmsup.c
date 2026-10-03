@@ -235,7 +235,11 @@ MmIsRecursiveIoFault(VOID)
     //
     // If any of these is true, this is a recursive fault
     //
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+    return ((Thread->DisablePageFaultClustering) | (Thread->CacheManagerActive));
+#else
     return ((Thread->DisablePageFaultClustering) | (Thread->ForwardClusterOnly));
+#endif
 }
 
 /*

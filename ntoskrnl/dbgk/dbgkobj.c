@@ -345,7 +345,7 @@ DbgkForwardException(IN PEXCEPTION_RECORD ExceptionRecord,
     else
     {
         /* Otherwise, use the exception port */
-        Port = Process->ExceptionPort;
+        Port = PspGetProcessExceptionPort(Process);
         ApiMessage.h.u2.ZeroInit = 0;
         ApiMessage.h.u2.s2.Type = LPC_EXCEPTION;
         UseLpc = TRUE;
@@ -666,7 +666,7 @@ DbgkpPostFakeThreadMessages(IN PEPROCESS Process,
         if ((IsFirstThread) &&
             !(Flags & DEBUG_EVENT_PROTECT_FAILED) &&
             !(ThisThread->SystemThread) &&
-            (ThisThread->GrantedAccess))
+            PspIsThreadCreated(ThisThread))
         {
             /* It is, save the flag */
             First = TRUE;
@@ -1330,7 +1330,7 @@ ThreadScan:
 
             /* Check if the status is success */
             if ((MsgStatus == STATUS_SUCCESS) &&
-                (EventThread->GrantedAccess) &&
+                PspIsThreadCreated(EventThread) &&
                 (!EventThread->SystemThread))
             {
                 /* Check if we couldn't acquire rundown for it */

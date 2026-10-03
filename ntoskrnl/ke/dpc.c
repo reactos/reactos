@@ -227,7 +227,7 @@ KiTimerExpiration(IN PKDPC Dpc,
                     {
 #if DBG
                         /* Clear DPC Time */
-                        Prcb->DebugDpcTime = 0;
+                        KiPrcbDpcTimeCount(Prcb) = 0;
 #endif
 
                         /* Call the DPC */
@@ -275,7 +275,7 @@ KiTimerExpiration(IN PKDPC Dpc,
                     {
 #if DBG
                         /* Clear DPC Time */
-                        Prcb->DebugDpcTime = 0;
+                        KiPrcbDpcTimeCount(Prcb) = 0;
 #endif
 
                         /* Call the DPC */
@@ -313,7 +313,7 @@ KiTimerExpiration(IN PKDPC Dpc,
         {
 #if DBG
             /* Clear DPC Time */
-            Prcb->DebugDpcTime = 0;
+            KiPrcbDpcTimeCount(Prcb) = 0;
 #endif
 
             /* Call the DPC */
@@ -440,7 +440,7 @@ KiTimerListExpire(IN PLIST_ENTRY ExpiredListHead,
         {
 #if DBG
             /* Clear DPC Time */
-            Prcb->DebugDpcTime = 0;
+            KiPrcbDpcTimeCount(Prcb) = 0;
 #endif
 
             /* Call the DPC */
@@ -481,19 +481,19 @@ KiQuantumEnd(VOID)
     KiAcquirePrcbLock(Prcb);
 
     /* Check if Quantum expired */
-    if (Thread->Quantum <= 0)
+    if (KiThreadQuantum(Thread) <= 0)
     {
         /* Check if we're real-time and with quantums disabled */
         if ((Thread->Priority >= LOW_REALTIME_PRIORITY) &&
             (Thread->ApcState.Process->DisableQuantum))
         {
             /* Otherwise, set maximum quantum */
-            Thread->Quantum = MAX_QUANTUM;
+            KiThreadQuantum(Thread) = MAX_QUANTUM;
         }
         else
         {
             /* Reset the new Quantum */
-            Thread->Quantum = Thread->QuantumReset;
+            KiThreadQuantum(Thread) = Thread->QuantumReset;
 
             /* Calculate new priority */
             Thread->Priority = KiComputeNewPriority(Thread, 1);
@@ -620,7 +620,7 @@ KiRetireDpcList(IN PKPRCB Prcb)
 
 #if DBG
                 /* Clear DPC Time */
-                Prcb->DebugDpcTime = 0;
+                KiPrcbDpcTimeCount(Prcb) = 0;
 #endif
 
                 /* Release the lock */

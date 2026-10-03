@@ -39,7 +39,7 @@ PspUserThreadStartup(IN PKSTART_ROUTINE StartRoutine,
     Thread = PsGetCurrentThread();
 
     /* Check if the thread is dead */
-    if (Thread->DeadThread)
+    if (PspIsThreadDead(Thread))
     {
         /* Remember that we're dead */
         DeadThread = TRUE;
@@ -53,7 +53,7 @@ PspUserThreadStartup(IN PKSTART_ROUTINE StartRoutine,
     }
 
     /* Check if this is a dead thread, or if we're hiding */
-    if (!(Thread->DeadThread) && !(Thread->HideFromDebugger))
+    if (!PspIsThreadDead(Thread) && !(Thread->HideFromDebugger))
     {
         /* We're not, so notify the debugger */
         DbgkCreateThread(Thread, StartContext);
@@ -150,7 +150,7 @@ PspSystemThreadStartup(IN PKSTART_ROUTINE StartRoutine,
     /* Make sure the thread isn't gone */
     _SEH2_TRY
     {
-        if (!(Thread->Terminated) && !(Thread->DeadThread))
+        if (!(Thread->Terminated) && !PspIsThreadDead(Thread))
         {
             /* Call the Start Routine */
             StartRoutine(StartContext);
@@ -186,14 +186,17 @@ PspCreateThread(OUT PHANDLE ThreadHandle,
     PETHREAD Thread;
     PTEB TebBase = NULL;
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
-    NTSTATUS Status, AccessStatus;
+    NTSTATUS Status;
     HANDLE_TABLE_ENTRY CidEntry;
     ACCESS_STATE LocalAccessState;
     PACCESS_STATE AccessState = &LocalAccessState;
     AUX_ACCESS_DATA AuxData;
+#if (NTDDI_VERSION < NTDDI_LONGHORN)
+    NTSTATUS AccessStatus;
     BOOLEAN Result, SdAllocated;
     PSECURITY_DESCRIPTOR SecurityDescriptor;
     SECURITY_SUBJECT_CONTEXT SubjectContext;
+#endif
     PAGED_CODE();
     PSTRACE(PS_THREAD_DEBUG,
             "ThreadContext: %p TargetProcess: %p ProcessHandle: %p\n",
@@ -269,7 +272,11 @@ PspCreateThread(OUT PHANDLE ThreadHandle,
     Thread->ExitStatus = STATUS_PENDING;
 
     /* Set the Process CID */
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+    Thread->Tcb.Process = &Process->Pcb;
+#else
     Thread->ThreadsProcess = Process;
+#endif
     Thread->Cid.UniqueProcess = Process->UniqueProcessId;
 
     /* Create Cid Handle */
@@ -381,7 +388,7 @@ PspCreateThread(OUT PHANDLE ThreadHandle,
     /* Check if the thread was ours, terminated and it was user mode */
     if ((Thread->Terminated) &&
         (ThreadContext) &&
-        (Thread->ThreadsProcess == Process))
+        (PspGetThreadProcess(Thread) == Process))
     {
         /* Cleanup, we don't want to start it up and context switch */
         goto Quickie;
@@ -432,7 +439,7 @@ PspCreateThread(OUT PHANDLE ThreadHandle,
     if (!NT_SUCCESS(Status))
     {
         /* Access state failed, thread is dead */
-        PspSetCrossThreadFlag(Thread, CT_DEAD_THREAD_BIT);
+        PspMarkThreadDead(Thread);
 
         /* If we were suspended, wake it up */
         if (CreateSuspended) KeResumeThread(&Thread->Tcb);
@@ -469,7 +476,7 @@ PspCreateThread(OUT PHANDLE ThreadHandle,
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
             /* Thread insertion failed, thread is dead */
-            PspSetCrossThreadFlag(Thread, CT_DEAD_THREAD_BIT);
+            PspMarkThreadDead(Thread);
 
             /* If we were suspended, wake it up */
             if (CreateSuspended) KeResumeThread(&Thread->Tcb);
@@ -487,11 +494,14 @@ PspCreateThread(OUT PHANDLE ThreadHandle,
             _SEH2_YIELD(return _SEH2_GetExceptionCode());
         }
         _SEH2_END;
+
+        /* The thread is fully created */
+        PspMarkThreadInserted(Thread);
     }
     else
     {
         /* Thread insertion failed, thread is dead */
-        PspSetCrossThreadFlag(Thread, CT_DEAD_THREAD_BIT);
+        PspMarkThreadDead(Thread);
 
         /* If we were suspended, wake it up */
         if (CreateSuspended) KeResumeThread(&Thread->Tcb);
@@ -501,8 +511,9 @@ PspCreateThread(OUT PHANDLE ThreadHandle,
     KeQuerySystemTime(&Thread->CreateTime);
     ASSERT(!(Thread->CreateTime.HighPart & 0xF0000000));
 
+#if (NTDDI_VERSION < NTDDI_LONGHORN)
     /* Make sure the thread isn't dead */
-    if (!Thread->DeadThread)
+    if (!PspIsThreadDead(Thread))
     {
         /* Get the thread's SD */
         Status = ObGetObjectSecurity(Thread,
@@ -511,7 +522,7 @@ PspCreateThread(OUT PHANDLE ThreadHandle,
         if (!NT_SUCCESS(Status))
         {
             /* Thread insertion failed, thread is dead */
-            PspSetCrossThreadFlag(Thread, CT_DEAD_THREAD_BIT);
+            PspMarkThreadDead(Thread);
 
             /* If we were suspended, wake it up */
             if (CreateSuspended) KeResumeThread(&Thread->Tcb);
@@ -562,6 +573,7 @@ PspCreateThread(OUT PHANDLE ThreadHandle,
         /* Set the thread access mask to maximum */
         Thread->GrantedAccess = THREAD_ALL_ACCESS;
     }
+#endif
 
     /* Dispatch thread */
     KeReadyThread(&Thread->Tcb);
@@ -724,7 +736,7 @@ PEPROCESS
 NTAPI
 PsGetThreadProcess(IN PETHREAD Thread)
 {
-    return Thread->ThreadsProcess;
+    return PspGetThreadProcess(Thread);
 }
 
 /*
@@ -734,7 +746,7 @@ PEPROCESS
 NTAPI
 PsGetCurrentThreadProcess(VOID)
 {
-    return PsGetCurrentThread()->ThreadsProcess;
+    return PspGetThreadProcess(PsGetCurrentThread());
 }
 
 /*
@@ -764,7 +776,7 @@ ULONG
 NTAPI
 PsGetThreadSessionId(IN PETHREAD Thread)
 {
-    return MmGetSessionId(Thread->ThreadsProcess);
+    return MmGetSessionId(PspGetThreadProcess(Thread));
 }
 
 /*

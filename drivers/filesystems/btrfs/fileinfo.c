@@ -5266,7 +5266,7 @@ static NTSTATUS query_info(device_extension* Vcb, PFILE_OBJECT FileObject, PIRP 
             break;
         }
 
-#if (NTDDI_VERSION >= NTDDI_VISTA)
+#if (NTDDI_VERSION >= NTDDI_VISTA) && !defined(__REACTOS__)
         case FileHardLinkInformation:
         {
             FILE_LINKS_INFORMATION* fli = Irp->AssociatedIrp.SystemBuffer;

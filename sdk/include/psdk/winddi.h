@@ -2322,14 +2322,14 @@ APIENTRY
 EngReleaseSemaphore(
     _Inout_ HSEMAPHORE hsem);
 
-#if defined(_M_AMD64) && (NTDDI_VERSION >= NTDDI_VISTA)
+#if defined(_M_AMD64) && (NTDDI_VERSION >= NTDDI_VISTA) && !defined(_WIN32K_)
 
 _Check_return_
 _Success_(return)
 _Kernel_float_restored_
 _At_(*pBuffer, _Kernel_requires_resource_held_(EngFloatState)
                _Kernel_releases_resource_(EngFloatState))
-ENGAPI
+FORCEINLINE
 BOOL
 APIENTRY
 EngRestoreFloatingPointState(
@@ -2346,7 +2346,7 @@ _Success_(((pBuffer != NULL && cjBufferSize != 0) && return == 1) ||
 _When_(pBuffer != NULL && cjBufferSize != 0 && return == 1, _Kernel_float_saved_
     _At_(*pBuffer, _Post_valid_ _Kernel_acquires_resource_(EngFloatState)))
 _On_failure_(_Post_satisfies_(return == 0))
-ENGAPI
+FORCEINLINE
 ULONG
 APIENTRY
 EngSaveFloatingPointState(
@@ -2357,7 +2357,7 @@ EngSaveFloatingPointState(
     return ((((pBuffer) == NULL) || ((cjBufferSize) == 0)) ? 8 : TRUE);
 }
 
-#else /* !(defined(_M_AMD64) && (NTDDI_VERSION >= NTDDI_VISTA)) */
+#else /* !(defined(_M_AMD64) && (NTDDI_VERSION >= NTDDI_VISTA) && !defined(_WIN32K_)) */
 
 _Check_return_
 _Success_(return)
@@ -2385,7 +2385,7 @@ EngSaveFloatingPointState(
     _Inout_ ULONG cjBufferSize);
 
 
-#endif /* defined(_M_AMD64) && (NTDDI_VERSION >= NTDDI_VISTA) */
+#endif /* defined(_M_AMD64) && (NTDDI_VERSION >= NTDDI_VISTA) && !defined(_WIN32K_) */
 
 ENGAPI
 HANDLE

@@ -1062,7 +1062,7 @@ CreateNTOSEntry(
         PNTOS_OPTIONS Options = (PNTOS_OPTIONS)&BootEntry->OsOptions;
 
         /* BootType, SystemPath and Options */
-        IniAddKey(IniSection, L"BootType", L"Windows2003");
+        IniAddKey(IniSection, L"BootType", L"WindowsVista");
         IniAddKey(IniSection, L"SystemPath", Options->OsLoadPath);
         IniAddKey(IniSection, L"Options", Options->OsLoadOptions);
     }
@@ -1489,10 +1489,12 @@ FreeLdrEnumerateBootEntries(
         }
 
         // TODO: What to do with "Windows" ; "WindowsNT40" ; "ReactOSSetup" ?
-        if ((_wcsicmp(KeyData, L"Windows2003")     == 0) ||
-            (_wcsicmp(KeyData, L"\"Windows2003\"") == 0))
+        if ((_wcsicmp(KeyData, L"WindowsVista")     == 0) ||
+            (_wcsicmp(KeyData, L"\"WindowsVista\"") == 0) ||
+            (_wcsicmp(KeyData, L"Windows2003")      == 0) ||
+            (_wcsicmp(KeyData, L"\"Windows2003\"")  == 0))
         {
-            /* BootType is Windows2003 */
+            /* BootType is WindowsVista or Windows2003 */
             PNTOS_OPTIONS Options = (PNTOS_OPTIONS)&BootEntry->OsOptions;
 
             DPRINT("This is a '%S' boot entry\n", KeyData);

@@ -602,7 +602,7 @@ Ke386SetIOPL(VOID)
 
     /* IOPL was enabled for this process/thread */
     Process->Iopl = TRUE;
-    Thread->Iopl = TRUE;
+    KiThreadIopl(Thread) = TRUE;
 
     /* Get the trap frame on exit */
     TrapFrame = KeGetTrapFrame(Thread);

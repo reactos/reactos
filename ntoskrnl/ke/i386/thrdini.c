@@ -316,7 +316,7 @@ KiIdleLoop(VOID)
         else
         {
             /* Continue staying idle. Note the HAL returns with interrupts on */
-            Prcb->PowerState.IdleFunction(&Prcb->PowerState);
+            KiPrcbIdleFunction(Prcb)(&Prcb->PowerState);
         }
     }
 }
@@ -356,15 +356,15 @@ KiSwapContextExit(IN PKTHREAD OldThread,
         }
 
         /* Switch address space and flush TLB */
-        __writecr3(NewProcess->DirectoryTableBase[0]);
+        __writecr3(KiProcessDirectoryTableBase(NewProcess));
     }
 
     /* Update the old thread's cycle time */
     CurrentCycleTime = __rdtsc();
     ElapsedCycles = CurrentCycleTime - Pcr->PrcbData.StartCycles;
-    NewCycleTime = ((PETHREAD)OldThread)->CycleTime + ElapsedCycles;
+    NewCycleTime = KiReadThreadCycleTime(OldThread) + ElapsedCycles;
     KiWriteThreadCycleTime(OldThread, NewCycleTime);
-    InterlockedAdd64((PLONG64)&((PEPROCESS)OldProcess)->CycleTime, ElapsedCycles);
+    KiAddProcessCycleTime(OldProcess, ElapsedCycles);
     Pcr->PrcbData.StartCycles = CurrentCycleTime;
 
     /* Clear GS */

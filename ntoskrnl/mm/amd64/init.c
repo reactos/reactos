@@ -209,7 +209,7 @@ MiInitializePageTable(VOID)
     ASSERT(PxePhysicalAddress == __readcr3());
 
     /* Set directory base for the system process */
-    PsGetCurrentProcess()->Pcb.DirectoryTableBase[0] = PxePhysicalAddress;
+    KiProcessDirectoryTableBase(&PsGetCurrentProcess()->Pcb) = PxePhysicalAddress;
 
     /* Enable global pages */
     __writecr4(__readcr4() | CR4_PGE);
@@ -253,7 +253,7 @@ MiInitializePageTable(VOID)
         }
     }
     PxePfn = PFN_FROM_PXE(MiAddressToPxe((PVOID)HYPER_SPACE));
-    PsGetCurrentProcess()->Pcb.DirectoryTableBase[1] = PxePfn << PAGE_SHIFT;
+    KiProcessHyperSpacePageTable(&PsGetCurrentProcess()->Pcb) = PxePfn << PAGE_SHIFT;
 
     /* Map PPEs for paged pool */
     MiMapPPEs(MmPagedPoolStart, MmPagedPoolEnd);

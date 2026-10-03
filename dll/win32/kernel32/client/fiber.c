@@ -19,9 +19,17 @@ C_ASSERT(FIELD_OFFSET(FIBER, StackBase) == 0x08);
 C_ASSERT(FIELD_OFFSET(FIBER, StackLimit) == 0x0C);
 C_ASSERT(FIELD_OFFSET(FIBER, DeallocationStack) == 0x10);
 C_ASSERT(FIELD_OFFSET(FIBER, FiberContext) == 0x14);
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+C_ASSERT(FIELD_OFFSET(FIBER, Wx86Tib) == 0x2E0);
+C_ASSERT(FIELD_OFFSET(FIBER, ActivationContextStackPointer) == 0x2E4);
+C_ASSERT(FIELD_OFFSET(FIBER, FlsData) == 0x2E8);
+C_ASSERT(FIELD_OFFSET(FIBER, GuaranteedStackBytes) == 0x2EC);
+C_ASSERT(FIELD_OFFSET(FIBER, TebFlags) == 0x2F0);
+#else
 C_ASSERT(FIELD_OFFSET(FIBER, GuaranteedStackBytes) == 0x2E0);
 C_ASSERT(FIELD_OFFSET(FIBER, FlsData) == 0x2E4);
 C_ASSERT(FIELD_OFFSET(FIBER, ActivationContextStackPointer) == 0x2E8);
+#endif
 C_ASSERT(RTL_FLS_MAXIMUM_AVAILABLE == FLS_MAXIMUM_AVAILABLE);
 #endif // _M_IX86
 
@@ -69,7 +77,11 @@ ConvertFiberToThread(VOID)
 
     /* Check if the thread is already not a fiber */
     Teb = NtCurrentTeb();
+#if (NTDDI_VERSION < NTDDI_LONGHORN)
     if (!Teb->HasFiberData)
+#else
+    if (!Teb->DbgHasFiberData)
+#endif
     {
         /* Fail */
         SetLastError(ERROR_ALREADY_THREAD);
@@ -77,7 +89,11 @@ ConvertFiberToThread(VOID)
     }
 
     /* This thread won't run a fiber anymore */
+#if (NTDDI_VERSION < NTDDI_LONGHORN)
     Teb->HasFiberData = FALSE;
+#else
+    Teb->DbgHasFiberData = FALSE;
+#endif
     FiberData = Teb->NtTib.FiberData;
     Teb->NtTib.FiberData = NULL;
 
@@ -113,7 +129,11 @@ ConvertThreadToFiberEx(_In_opt_ LPVOID lpParameter,
 
     /* Are we already a fiber? */
     Teb = NtCurrentTeb();
+#if (NTDDI_VERSION < NTDDI_LONGHORN)
     if (Teb->HasFiberData)
+#else
+    if (Teb->DbgHasFiberData)
+#endif
     {
         /* Fail */
         SetLastError(ERROR_ALREADY_FIBER);
@@ -140,6 +160,10 @@ ConvertThreadToFiberEx(_In_opt_ LPVOID lpParameter,
     Fiber->FlsData = Teb->FlsData;
     Fiber->GuaranteedStackBytes = Teb->GuaranteedStackBytes;
     Fiber->ActivationContextStackPointer = Teb->ActivationContextStackPointer;
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+    Fiber->Wx86Tib = NULL;
+    Fiber->TebFlags = 0;
+#endif
 
     /* Save FPU State if requested, otherwise just the basic registers */
     Fiber->FiberContext.ContextFlags = (dwFlags & FIBER_FLAG_FLOAT_SWITCH) ?
@@ -148,7 +172,11 @@ ConvertThreadToFiberEx(_In_opt_ LPVOID lpParameter,
 
     /* Associate the fiber to the current thread */
     Teb->NtTib.FiberData = Fiber;
+#if (NTDDI_VERSION < NTDDI_LONGHORN)
     Teb->HasFiberData = TRUE;
+#else
+    Teb->DbgHasFiberData = TRUE;
+#endif
 
     /* Return opaque fiber data */
     return (LPVOID)Fiber;
@@ -265,6 +293,10 @@ CreateFiberEx(_In_ SIZE_T dwStackCommitSize,
     Fiber->GuaranteedStackBytes = 0;
     Fiber->FlsData = NULL;
     Fiber->ActivationContextStackPointer = ActivationContextStackPointer;
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+    Fiber->Wx86Tib = NULL;
+    Fiber->TebFlags = 0;
+#endif
 
     /* Save FPU State if requested, otherwise just the basic registers */
     Fiber->FiberContext.ContextFlags = (dwFlags & FIBER_FLAG_FLOAT_SWITCH) ?
@@ -296,8 +328,14 @@ DeleteFiber(_In_ LPVOID lpFiber)
     /* Are we deleting ourselves? */
     Teb = NtCurrentTeb();
     Fiber = (PFIBER)lpFiber;
-    if ((Teb->HasFiberData) &&
+
+#if (NTDDI_VERSION < NTDDI_LONGHORN)
+    if ((!Teb->HasFiberData) &&
         (Teb->NtTib.FiberData == Fiber))
+#else
+    if ((!Teb->DbgHasFiberData) &&
+        (Teb->NtTib.FiberData == Fiber))
+#endif
     {
         /* Just exit */
         ExitThread(1);
@@ -330,7 +368,11 @@ WINAPI
 IsThreadAFiber(VOID)
 {
     /* Return flag in the TEB */
+#if (NTDDI_VERSION < NTDDI_LONGHORN)
     return NtCurrentTeb()->HasFiberData;
+#else
+    return NtCurrentTeb()->DbgHasFiberData;
+#endif
 }
 
 /*

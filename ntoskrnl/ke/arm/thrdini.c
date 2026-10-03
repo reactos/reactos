@@ -209,7 +209,7 @@ KiIdleLoop(VOID)
         else
         {
             /* Continue staying idle. Note the HAL returns with interrupts on */
-            Prcb->PowerState.IdleFunction(&Prcb->PowerState);
+            KiPrcbIdleFunction(Prcb)(&Prcb->PowerState);
         }
     }
 }
@@ -232,7 +232,7 @@ KiSwapContextExit(IN PKTHREAD OldThread,
     NewProcess = NewThread->ApcState.Process;
     if (OldProcess != NewProcess)
     {
-        TtbRegister.AsUlong = NewProcess->DirectoryTableBase[0];
+        TtbRegister.AsUlong = KiProcessDirectoryTableBase(NewProcess);
         ASSERT(TtbRegister.Reserved == 0);
         KeArmTranslationTableRegisterSet(TtbRegister);
     }

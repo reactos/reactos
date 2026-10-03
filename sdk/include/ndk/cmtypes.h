@@ -409,6 +409,16 @@ typedef struct _KEY_BASIC_INFORMATION
     WCHAR Name[1];
 } KEY_BASIC_INFORMATION, *PKEY_BASIC_INFORMATION;
 
+#elif (NTDDI_VERSION >= NTDDI_VISTA)
+
+//
+// The DDK stopped declaring this in Vista but the kernel still handles it
+//
+typedef struct _KEY_USER_FLAGS_INFORMATION
+{
+    ULONG UserFlags;
+} KEY_USER_FLAGS_INFORMATION, *PKEY_USER_FLAGS_INFORMATION;
+
 #endif
 
 //

@@ -120,6 +120,46 @@ typedef struct PSP_QUERY_JOB_PROCESS_ID_CONTEXT
     SIZE_T RemainingLength;
 } PSP_QUERY_JOB_PROCESS_ID_CONTEXT, *PPSP_QUERY_JOB_PROCESS_ID_CONTEXT;
 
+/* Vista turned the memory limits lock into a push lock, APCs are already disabled by the callers */
+static
+FORCEINLINE
+VOID
+PspInitializeJobMemoryLimitsLock(
+    _Out_ PEJOB Job)
+{
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+    ExInitializePushLock(&Job->MemoryLimitsLock);
+#else
+    KeInitializeGuardedMutex(&Job->MemoryLimitsLock);
+#endif
+}
+
+static
+FORCEINLINE
+VOID
+PspLockJobMemoryLimitsUnsafe(
+    _Inout_ PEJOB Job)
+{
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+    ExAcquirePushLockExclusive(&Job->MemoryLimitsLock);
+#else
+    KeAcquireGuardedMutexUnsafe(&Job->MemoryLimitsLock);
+#endif
+}
+
+static
+FORCEINLINE
+VOID
+PspUnlockJobMemoryLimitsUnsafe(
+    _Inout_ PEJOB Job)
+{
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+    ExReleasePushLockExclusive(&Job->MemoryLimitsLock);
+#else
+    KeReleaseGuardedMutexUnsafe(&Job->MemoryLimitsLock);
+#endif
+}
+
 /* FUNCTIONS *****************************************************************/
 
 CODE_SEG("INIT")
@@ -580,7 +620,7 @@ PspDeactivateProcessFromJobLocked(
 
     ASSERT(ExIsResourceAcquiredExclusiveLite(&Job->JobLock) != 0);
 
-    if (FlagOn(Process->JobStatus, PSP_JOB_NOT_REALLY_ACTIVE))
+    if (FlagOn(PspProcessJobStatus(Process), PSP_JOB_NOT_REALLY_ACTIVE))
     {
         return FALSE;
     }
@@ -589,7 +629,7 @@ PspDeactivateProcessFromJobLocked(
 
     Job->ActiveProcesses--;
 
-    InterlockedOr((PLONG)&Process->JobStatus, PSP_JOB_NOT_REALLY_ACTIVE);
+    InterlockedOr((PLONG)&PspProcessJobStatus(Process), PSP_JOB_NOT_REALLY_ACTIVE);
 
     return Job->ActiveProcesses == 0;
 }
@@ -726,7 +766,7 @@ PspTerminateProcessCallback(
        completed its active job transition */
     ExEnterCriticalRegionAndAcquireResourceExclusive(&Job->JobLock);
 
-    if (FlagOn(Process->JobStatus, PSP_JOB_NOT_REALLY_ACTIVE))
+    if (FlagOn(PspProcessJobStatus(Process), PSP_JOB_NOT_REALLY_ACTIVE))
     {
         goto Exit;
     }
@@ -1122,7 +1162,7 @@ PspSetJobLimitsBasicOrExtended(
      */
 
     /* Acquire the memory limits lock */
-    KeAcquireGuardedMutexUnsafe(&Job->MemoryLimitsLock);
+    PspLockJobMemoryLimitsUnsafe(Job);
 
     if (ExtendedLimit->BasicLimitInformation.LimitFlags & JOB_OBJECT_LIMIT_PROCESS_MEMORY)
     {
@@ -1141,7 +1181,7 @@ PspSetJobLimitsBasicOrExtended(
 
     /* Release locks */
 
-    KeReleaseGuardedMutexUnsafe(&Job->MemoryLimitsLock);
+    PspUnlockJobMemoryLimitsUnsafe(Job);
 
 ExitFromBasicLimits:
 
@@ -1185,7 +1225,7 @@ PspAssociateCompletionPortCallback(
     ASSERT(ExIsResourceAcquiredExclusiveLite(&Job->JobLock) != 0);
 
     /* Ensure the process is active and has a valid unique process ID */
-    if (!FlagOn(Process->JobStatus, PSP_JOB_NOT_REALLY_ACTIVE) &&
+    if (!FlagOn(PspProcessJobStatus(Process), PSP_JOB_NOT_REALLY_ACTIVE) &&
         Process->UniqueProcessId)
     {
         (VOID)PspSendJobMessageLocked(Job,
@@ -1334,7 +1374,7 @@ PspQueryJobBasicAccountingInfo(
         PEPROCESS Process = CONTAINING_RECORD(NextEntry, EPROCESS, JobLinks);
 
         /* Skip folded accounting processes */
-        if (!FlagOn(Process->JobStatus, PSP_JOB_ACCOUNTING_FOLDED))
+        if (!FlagOn(PspProcessJobStatus(Process), PSP_JOB_ACCOUNTING_FOLDED))
         {
             KeQueryValuesProcess(&Process->Pcb, &Values);
 
@@ -1402,14 +1442,14 @@ PspQueryJobLimitInformation(
     /* If extended limits are requested, include memory limits */
     if (Extended)
     {
-        KeAcquireGuardedMutexUnsafe(&Job->MemoryLimitsLock);
+        PspLockJobMemoryLimitsUnsafe(Job);
 
         ExtendedLimit->ProcessMemoryLimit = Job->ProcessMemoryLimit << PAGE_SHIFT;
         ExtendedLimit->JobMemoryLimit = Job->JobMemoryLimit << PAGE_SHIFT;
         ExtendedLimit->PeakProcessMemoryUsed = Job->PeakProcessMemoryUsed << PAGE_SHIFT;
         ExtendedLimit->PeakJobMemoryUsed = Job->PeakJobMemoryUsed << PAGE_SHIFT;
 
-        KeReleaseGuardedMutexUnsafe(&Job->MemoryLimitsLock);
+        PspUnlockJobMemoryLimitsUnsafe(Job);
 
         /* Zero out IoInfo to avoid kernel memory leaks */
         RtlZeroMemory(&ExtendedLimit->IoInfo, sizeof(ExtendedLimit->IoInfo));
@@ -1450,7 +1490,7 @@ PspQueryJobProcessIdListCallback(
     PPSP_QUERY_JOB_PROCESS_ID_CONTEXT QueryContext = (PPSP_QUERY_JOB_PROCESS_ID_CONTEXT)Context;
 
     /* Skip processes that are not really active */
-    if (FlagOn(Process->JobStatus, PSP_JOB_NOT_REALLY_ACTIVE))
+    if (FlagOn(PspProcessJobStatus(Process), PSP_JOB_NOT_REALLY_ACTIVE))
     {
         /* Continue to the next process */
         return STATUS_SUCCESS;
@@ -1788,7 +1828,7 @@ NtCreateJobObject(
     Job->SessionId = PsGetProcessSessionId(CurrentProcess);
 
     /* Initialize the job limits lock */
-    KeInitializeGuardedMutex(&Job->MemoryLimitsLock);
+    PspInitializeJobMemoryLimitsLock(Job);
 
     /* Initialize the job lock */
     (VOID)ExInitializeResource(&Job->JobLock);
