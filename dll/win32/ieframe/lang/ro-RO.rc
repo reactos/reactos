@@ -48,8 +48,10 @@ IDR_BROWSE_MAIN_MENU MENU
 
 STRINGTABLE
 {
+#ifdef __REACTOS__
     IDS_INTERNET "Browserul de Internet"
     IDS_INTERNET_DESCRIPTION "Deschide un browser Web și afișează informații de pe Internet."
+#endif
 
     IDS_TB_BACK             "Înapoi"
     IDS_TB_FORWARD          "Înainte"

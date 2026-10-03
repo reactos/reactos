@@ -42,13 +42,6 @@ HKCR
             Control
         }
     }
-    NoRemove Interface
-    {
-        '{acc84351-04ff-44f9-b23f-655ed168c6d5}'
-        {
-            ProxyStubClsid32 = s '{a4a1a128-768f-41e0-bf75-e4fddd701cba}'
-        }
-    }
     'InternetShortcut'
     {
         val 'EditFlags' = s '2'

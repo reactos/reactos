@@ -29,20 +29,17 @@ add_library(ieframe MODULE
     ieframe.rc
     ${CMAKE_CURRENT_BINARY_DIR}/ieframe.def)
 
-add_typelib(ieframe_v1.idl)
-
 list(APPEND ieframe_rc_deps
     ${CMAKE_CURRENT_SOURCE_DIR}/ieframe.rgs
-    ${CMAKE_CURRENT_SOURCE_DIR}/ieframe_v1.rgs
     ${CMAKE_CURRENT_SOURCE_DIR}/resources/ietoolbar.bmp
-    ${CMAKE_CURRENT_SOURCE_DIR}/resources/pages.ico
-    ${CMAKE_CURRENT_BINARY_DIR}/ieframe_v1.tlb)
+    ${CMAKE_CURRENT_SOURCE_DIR}/resources/pages.ico)
 
 set_source_files_properties(ieframe.rc PROPERTIES OBJECT_DEPENDS "${ieframe_rc_deps}")
 add_dependencies(ieframe stdole2)
 set_module_type(ieframe win32dll)
-target_compile_definitions(ieframe PRIVATE _CRT_NON_CONFORMING_SWPRINTFS)
-target_link_libraries(ieframe uuid wine)
+add_idl_reg_scripts(ieframe registry ieframe_v1.idl)
+add_idl_reg_scripts(ieframe regtypelib ieframe_v1.idl)
+target_link_libraries(ieframe uuid wine wine_dll_register wine_dll_canunload oldnames)
 add_importlibs(ieframe urlmon shell32 comctl32 shlwapi oleaut32 ole32 user32 gdi32 advapi32 msvcrt kernel32 ntdll)
 add_pch(ieframe precomp.h SOURCE)
 add_cd_file(TARGET ieframe DESTINATION reactos/system32 FOR all)
