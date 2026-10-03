@@ -194,6 +194,7 @@ CConsoleWnd::OnNotify(UINT nMessage, WPARAM wParam, LPARAM lParam, BOOL& bHandle
                 CSnapin *Snapin = (CSnapin *)pNmTreeview->itemNew.lParam;
 
                 m_DescriptionBar.SetWindowText(Snapin->DisplayName());
+                m_MainWnd->UpdateAboutSnapinMenu((Snapin == m_MainWnd->GetRootSnapin()) ? NULL : Snapin);
             }
             return FALSE;
     }

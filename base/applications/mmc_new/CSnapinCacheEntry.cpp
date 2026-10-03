@@ -70,9 +70,12 @@ CSnapinCacheEntry::CSnapinCacheEntry(const CAtlString& guidString, const CAtlStr
             DeleteObject(hSmallImageOpen);
             DeleteObject(hLargeImage);
         }
+
+        hr = pSnapinAbout->GetSnapinImage(&m_hIcon);
     }
 }
 
 CSnapinCacheEntry::~CSnapinCacheEntry()
 {
+    DeleteObject(m_hIcon);
 }

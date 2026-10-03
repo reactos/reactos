@@ -484,6 +484,24 @@ CMainWnd::OnHelpAboutMMC(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandle
 }
 
 LRESULT
+CMainWnd::OnHelpAboutSnapin(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
+{
+    MENUITEMINFOW mi;
+
+    mi.cbSize = sizeof(MENUITEMINFOW);
+    mi.fMask = MIIM_DATA;
+    if (GetMenuItemInfoW(GetMenu(), wID, FALSE, &mi))
+    {
+        CSnapin *Snapin = (CSnapin *)mi.dwItemData;
+
+        CAboutSnapinDialog dlg(this, Snapin);
+        dlg.DoModal(m_hWnd, (LPARAM)0);
+    }
+
+    return 0;
+}
+
+LRESULT
 CMainWnd::OnToolbarScopePane(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
 {
     CConsoleWnd* child = GetActiveChildInfo();
@@ -707,6 +725,34 @@ void
 CMainWnd::SetPreventViewCustomization(BOOL PreventCustomization)
 {
     m_PreventViewCustomization = PreventCustomization;
+}
+
+VOID
+CMainWnd::UpdateAboutSnapinMenu(CSnapin *Snapin)
+{
+    HMENU hMenu = GetMenu();
+
+    RemoveMenu(hMenu, IDM_HELP_ABOUT_SNAPIN, MF_BYCOMMAND);
+
+    if (Snapin)
+    {
+        MENUITEMINFOW mi;
+        CAtlString ValueName;
+        CAtlString AboutString(MAKEINTRESOURCE(IDS_ABOUT_SNAPIN));
+
+        ValueName.Format(AboutString.GetString(), Snapin->Name().GetString());
+
+        mi.cbSize = sizeof(MENUITEMINFOW);
+        mi.fMask = MIIM_ID | MIIM_STRING | MIIM_FTYPE | MIIM_DATA;
+        mi.fType = MFT_STRING;
+        mi.wID = IDM_HELP_ABOUT_SNAPIN;
+
+        mi.dwTypeData = ValueName.GetString();
+        mi.dwItemData = (ULONG_PTR)Snapin;
+
+        /* FIXME: Append this menu item */
+        InsertMenuItemW(hMenu, IDM_HELP_ABOUT_MMC, FALSE, &mi);
+    }
 }
 
 VOID

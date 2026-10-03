@@ -5,6 +5,7 @@ include_directories(${REACTOS_SOURCE_DIR}/sdk/lib/atl)
 add_definitions(-D_ATL_NO_EXCEPTIONS)
 
 list(APPEND CPP_SOURCE
+    CAboutSnapinDialog.cpp
     CAddDialog.cpp
     CConsoleWnd.cpp
     CMainWnd.cpp

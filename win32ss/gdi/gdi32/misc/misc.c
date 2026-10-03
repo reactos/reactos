@@ -1024,6 +1024,38 @@ GdiRealizationInfo(HDC hdc,
     return NtGdiGetRealizationInfo(hdc, pri, (HFONT) NULL);
 }
 
+BOOL
+WINAPI
+GetFontFileData(
+    _In_ DWORD uFileCollectionID,
+    _In_ DWORD uFileIndex,
+    _In_ UINT64 pullFileOffset,
+    _Out_writes_bytes_(cjBuf) PVOID pvBuf,
+    _In_ SIZE_T cjBuf)
+{
+    return NtGdiGetFontFileData(uFileCollectionID, uFileIndex, &pullFileOffset, pvBuf, cjBuf);
+}
+
+BOOL
+WINAPI
+GetFontFileInfo(
+    _In_ DWORD uFileCollectionID,
+    _In_ DWORD uFileIndex,
+    _Out_writes_bytes_(cjSize) PFONT_FILE_INFO pffi,
+    _In_ SIZE_T cjSize,
+    _Out_opt_ PSIZE_T pcjActualSize)
+{
+    return NtGdiGetFontFileInfo(uFileCollectionID, uFileIndex, pffi, cjSize, pcjActualSize);
+}
+
+BOOL
+WINAPI
+GetFontRealizationInfo(
+    _In_ HDC hdc,
+    _Out_ PFONT_REALIZATION_INFO info)
+{
+    return NtGdiGetFontRealizationInfo(hdc, info);
+}
 
 /*
  * @halfplemented

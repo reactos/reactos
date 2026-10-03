@@ -65,7 +65,6 @@ BEGIN
         MENUITEM "&Help Topics", IDM_HELP_TOPICS
         MENUITEM SEPARATOR
         MENUITEM "&About ReactOS Management Console", IDM_HELP_ABOUT_MMC
-        MENUITEM "A&bout Snapin...", IDM_HELP_ABOUT_SNAPIN
     END
 END
 
@@ -159,6 +158,17 @@ BEGIN
     PUSHBUTTON      "Cancel",IDCANCEL,194,197,50,14,WS_TABSTOP
 END
 
+IDD_ABOUT_SNAPIN DIALOGEX 0, 0, 206, 127
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Info"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON "", IDC_ABOUT_ICON, 9, 9, 20, 20
+    EDITTEXT IDC_ABOUT_INFO, 53, 9, 136, 31, NOT WS_BORDER | ES_LEFT | ES_MULTILINE | ES_READONLY | ES_WANTRETURN | WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    EDITTEXT IDC_ABOUT_DESCRIPTION, 9, 52, 188, 51, NOT WS_BORDER | ES_LEFT | ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | ES_WANTRETURN | WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_TABSTOP
+    DEFPUSHBUTTON "OK", IDOK, 149, 106, 50, 14 
+END
+
 STRINGTABLE
 BEGIN
     IDS_APPTITLE "ReactOS Management Console"
@@ -178,6 +188,9 @@ BEGIN
     IDS_USERMODE_FULL_DESC "Prevents useres from adding or removing snap-ins or changing snap-in console properties. Users have full access to the tree."
     IDS_USERMODE_MULTIPLE_DESC "Prevents users from accessing areas of the tree that are not visible in snap-in console windows."
     IDS_USERMODE_SINGLE_DESC "Opens the snap-in console in single-window mode and prevents users from accessing areas of the tree that are not visible in that snap-in console window."
+
+    IDS_ABOUT_VERSION "Version: "
+    IDS_ABOUT_SNAPIN "A&bout %s..."
 END
 
 STRINGTABLE
