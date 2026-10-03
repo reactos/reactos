@@ -227,7 +227,7 @@ typedef struct tagKBDTABLES_FE
 #define VK_DBE_NOCODEINPUT            0xFB
 #define VK_DBE_DETERMINESTRING        0xFC
 #define VK_DBE_ENTERDLGCONVERSIONMODE 0xFD
-#endif
+#endif // (NTDDI_VERSION >= NTDDI_WINXP)
 
 #ifdef __cplusplus
 } // extern "C"
