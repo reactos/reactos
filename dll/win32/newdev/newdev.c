@@ -46,20 +46,20 @@ UpdateDriverForPlugAndPlayDevicesW(
     OUT PBOOL bRebootRequired OPTIONAL)
 {
     DEVINSTDATA DevInstData;
+    SP_DEVINSTALL_PARAMS InstallParams;
     DWORD i;
     LPWSTR Buffer = NULL;
     DWORD BufferSize;
     LPCWSTR CurrentHardwareId; /* Pointer into Buffer */
     DWORD Property;
     BOOL FoundHardwareId, FoundAtLeastOneDevice = FALSE;
+    BOOL RebootRequired = FALSE;
     BOOL ret = FALSE;
 
     DevInstData.hDevInfo = INVALID_HANDLE_VALUE;
 
     TRACE("UpdateDriverForPlugAndPlayDevicesW(%p %s %s 0x%x %p)\n",
         hwndParent, debugstr_w(HardwareId), debugstr_w(FullInfPath), InstallFlags, bRebootRequired);
-
-    /* FIXME: InstallFlags bRebootRequired ignored! */
 
     /* Check flags */
     if (InstallFlags & ~(INSTALLFLAG_FORCE | INSTALLFLAG_READONLY | INSTALLFLAG_NONINTERACTIVE))
@@ -187,11 +187,24 @@ UpdateDriverForPlugAndPlayDevicesW(
             continue;
         }
 
+        /* Do we need to reboot? */
+        InstallParams.cbSize = sizeof(InstallParams);
+        if (SetupDiGetDeviceInstallParams(DevInstData.hDevInfo,
+                                          &DevInstData.devInfoData,
+                                          &InstallParams))
+        {
+            if (InstallParams.Flags & (DI_NEEDRESTART | DI_NEEDREBOOT))
+                RebootRequired = TRUE;
+        }
+
         FoundAtLeastOneDevice = TRUE;
     }
 
     if (FoundAtLeastOneDevice)
     {
+        if (bRebootRequired)
+            *bRebootRequired = RebootRequired;
+
         SetLastError(NO_ERROR);
         ret = TRUE;
     }

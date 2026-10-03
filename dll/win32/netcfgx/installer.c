@@ -166,7 +166,7 @@ InstallNetDevice(
     HKEY hConnectionKey = NULL;
     DWORD dwShowIcon, dwLength, dwValue;
     PWSTR pszNameBuffer = NULL;
-    PWSTR ptr;
+    DWORD dwRegType;
 
     DeviceInstallParams.cbSize = sizeof(DeviceInstallParams);
     if (!SetupDiGetDeviceInstallParamsW(DeviceInfoSet,
@@ -220,19 +220,6 @@ InstallNetDevice(
         ERR("SetupDiGetDeviceInstanceIdW() failed with error 0x%lx\n", rc);
         goto cleanup;
     }
-
-    ComponentId = HeapAlloc(GetProcessHeap(), 0, dwLength * sizeof(WCHAR));
-    if (!ComponentId)
-    {
-        ERR("HeapAlloc() failed\n");
-        rc = ERROR_NOT_ENOUGH_MEMORY;
-        goto cleanup;
-    }
-
-    wcscpy(ComponentId, InstanceId);
-    ptr = wcsrchr(ComponentId, L'\\');
-    if (ptr != NULL)
-        *ptr = UNICODE_NULL;
 
     /* Create device name */
     DeviceName = HeapAlloc(GetProcessHeap(), 0, (wcslen(L"\\Device\\") + wcslen(UuidString)) * sizeof(WCHAR) + sizeof(UNICODE_NULL));
@@ -330,7 +317,34 @@ InstallNetDevice(
         goto cleanup;
     }
 
-    rc = RegSetValueExW(hKey, L"ComponentId", 0, REG_SZ, (const BYTE*)ComponentId, (wcslen(ComponentId) + 1) * sizeof(WCHAR));
+    /* Get ComponentId (from MatchingDeviceId value) */
+    rc = RegQueryValueExW(hKey, L"MatchingDeviceId", 0, &dwRegType, NULL, &dwLength);
+    if (rc != ERROR_SUCCESS)
+    {
+        ERR("RegQueryValueExW() failed with error 0x%lx\n", rc);
+        goto cleanup;
+    }
+    if (dwRegType != REG_SZ)
+    {
+        ERR("Invalid registry type for 'MatchingDeviceId'\n");
+        rc = ERROR_GEN_FAILURE;
+        goto cleanup;
+    }
+    ComponentId = HeapAlloc(GetProcessHeap(), 0, dwLength);
+    if (!ComponentId)
+    {
+        ERR("HeapAlloc() failed\n");
+        rc = ERROR_NOT_ENOUGH_MEMORY;
+        goto cleanup;
+    }
+    rc = RegQueryValueExW(hKey, L"MatchingDeviceId", 0, &dwRegType, (BYTE*)ComponentId, &dwLength);
+    if (rc != ERROR_SUCCESS)
+    {
+        ERR("RegQueryValueExW() failed with error 0x%lx\n", rc);
+        goto cleanup;
+    }
+
+    rc = RegSetValueExW(hKey, L"ComponentId", 0, REG_SZ, (const BYTE*)ComponentId, dwLength);
     if (rc != ERROR_SUCCESS)
     {
         ERR("RegSetValueExW() failed with error 0x%lx\n", rc);
