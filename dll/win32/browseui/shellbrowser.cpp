@@ -4006,25 +4006,24 @@ HRESULT GetFavsLocation(HWND hWnd, LPITEMIDLIST *pPidl)
     return hr;
 }
 
+static HRESULT AddItemToFavorites(HWND hWnd, IShellFolder *psf, LPCITEMIDLIST pidlLast)
+{
+    CComHeapPtr<WCHAR> pszURL, pszTitle;
+    HRESULT hr = SHELL_GetDisplayNameOf(psf, pidlLast, SHGDN_FORPARSING, &pszURL);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    SHELL_GetDisplayNameOf(psf, pidlLast, SHGDN_NORMAL | SHGDN_INFOLDER, &pszTitle);
+    return AddUrlToFavorites(hWnd, pszURL, pszTitle ? pszTitle : PathFindFileNameW(pszURL), TRUE);
+}
+
 LRESULT CShellBrowser::OnAddToFavorites(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled)
 {
     CComPtr<IShellFolder> pParent;
     LPCITEMIDLIST pidlLast;
     HRESULT hr = SHBindToParent(fCurrentDirectoryPIDL, IID_PPV_ARG(IShellFolder, &pParent), &pidlLast);
-    if (FAILED_UNEXPECTEDLY(hr))
-        return hr;
-
-    STRRET strret;
-    hr = pParent->GetDisplayNameOf(pidlLast, SHGDN_FORPARSING, &strret);
-    if (FAILED_UNEXPECTEDLY(hr))
-        return 0;
-
-    CComHeapPtr<WCHAR> pszURL;
-    hr = StrRetToStrW(&strret, NULL, &pszURL);
-    if (FAILED_UNEXPECTEDLY(hr))
-        return 0;
-
-    AddUrlToFavorites(m_hWnd, pszURL, NULL, TRUE);
+    if (!FAILED_UNEXPECTEDLY(hr))
+        AddItemToFavorites(m_hWnd, pParent, pidlLast);
     return 0;
 }
 
