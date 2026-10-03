@@ -7,6 +7,7 @@
 
 /* INCLUDES *******************************************************************/
 
+#include "ntdef.h"
 #include "precomp.h"
 
 #define NDEBUG
@@ -318,6 +319,52 @@ AllocateAddressMapping(
     Mapping->BusNumber = BusNumber;
 
     return STATUS_SUCCESS;
+}
+
+
+VOID
+NTAPI
+SimpleTimerCallbackDpcRoutine(
+    PKDPC Dpc,
+    PVOID DeferredContext,
+    PVOID SystemArgument1,
+    PVOID SystemArgument2)
+{
+    UNREFERENCED_PARAMETER(Dpc);
+    UNREFERENCED_PARAMETER(SystemArgument1);
+    UNREFERENCED_PARAMETER(SystemArgument2);
+
+    PFDO_DEVICE_EXTENSION FdoExtension = (PFDO_DEVICE_EXTENSION)DeferredContext;
+
+    NT_ASSERT(FdoExtension);
+    NT_ASSERT(FdoExtension->Miniport.MiniportExtension);
+
+    FdoExtension->TimerCallback(&FdoExtension->Miniport.MiniportExtension->HwDeviceExtension);
+}
+
+
+VOID
+NTAPI
+TimerCallbackDpcRoutine(
+    PKDPC Dpc,
+    PVOID DeferredContext,
+    PVOID SystemArgument1,
+    PVOID SystemArgument2)
+{
+    UNREFERENCED_PARAMETER(Dpc);
+    UNREFERENCED_PARAMETER(SystemArgument1);
+    UNREFERENCED_PARAMETER(SystemArgument2);
+
+    PTIMER_ENTRY TimerEntry = (PTIMER_ENTRY)DeferredContext;
+
+    /*
+     * Miniport can schedule a new timer event inside of callback, we should clear timer activated
+     * status here to ensure timer can be correctly scheduled
+     */
+    TimerEntry->TimerAlreadySet = 0;
+
+    TimerEntry->TimerCallback(TimerEntry->HwDeviceExtension,
+                              TimerEntry->Context);
 }
 
 /* EOF */
