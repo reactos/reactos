@@ -178,7 +178,7 @@ typedef struct tagKBDTABLE_MULTI
 #define KBDNLS_KANAEVENT       14
 #define KBDNLS_CONV_OR_NONCONV 15
 
-typedef struct tagVK_FPARAM
+typedef struct _VK_FUNCTION_PARAM
 {
     BYTE  NLSFEProcIndex;
     ULONG NLSFEProcParam;
