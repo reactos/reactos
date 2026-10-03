@@ -184,7 +184,7 @@ typedef struct tagVK_FPARAM
     ULONG NLSFEProcParam;
 } VK_FPARAM, *PVK_FPARAM;
 
-typedef struct tagVK_F
+typedef struct _VK_TO_FUNCTION_TABLE
 {
     BYTE      Vk;
     BYTE      NLSFEProcType;
