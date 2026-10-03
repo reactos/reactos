@@ -14,36 +14,6 @@ WINE_DEFAULT_DEBUG_CHANNEL(cursor);
 WINE_DECLARE_DEBUG_CHANNEL(icon);
 //WINE_DECLARE_DEBUG_CHANNEL(resource);
 
-#include <pshpack1.h>
-typedef struct _CURSORICONFILEDIRENTRY
-{
-    BYTE bWidth;
-    BYTE bHeight;
-    BYTE bColorCount;
-    BYTE bReserved;
-    union
-    {
-        WORD wPlanes; /* For icons */
-        WORD xHotspot; /* For cursors */
-    };
-    union
-    {
-        WORD wBitCount; /* For icons */
-        WORD yHotspot; /* For cursors */
-    };
-    DWORD dwDIBSize;
-    DWORD dwDIBOffset;
-} CURSORICONFILEDIRENTRY;
-
-typedef struct _CURSORICONFILEDIR
-{
-    WORD idReserved;
-    WORD idType;
-    WORD idCount;
-    CURSORICONFILEDIRENTRY idEntries[1];
-} CURSORICONFILEDIR;
-#include <poppack.h>
-
 #define PNG_CHECK_SIG_SIZE 8 /* Check signature size */
 
 /* libpng helpers */
