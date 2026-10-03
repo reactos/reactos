@@ -7,23 +7,17 @@ include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/subsys ..)
 spec2def(kernel32_vista.dll kernel32_vista.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
-    EnumSystemLocalesEx.c
     firmware.c
-    GetLocaleInfoEx.c
     GetFileInformationByHandleEx.c
     GetFinalPathNameByHandle.c
     GetNamedPipeClientProcessId.c
-    GetSystemDefaultLocaleName.c
     GetTickCount64.c
-    GetUserDefaultLocaleName.c
     InitOnce.c
-    IsValidLocaleName.c
-    LCIDToLocaleName.c
-    LocaleNameToLCID.c
     sync.c
     ThreadDescription.c
     threadpool.c
-    vista.c)
+    vista.c
+    ../winnls/string/locale.c)
 
 # These functions are not exported from kernel32_vista (yet).
 # They are only used when NT6 exports in kernel32 are enabled.
@@ -33,7 +27,7 @@ if(DLL_EXPORT_VERSION GREATER_EQUAL 0x600)
 endif()
 
 add_library(kernel32_vista_static ${SOURCE})
-target_link_libraries(kernel32_vista_static ${PSEH_LIB})
+target_link_libraries(kernel32_vista_static win32_registry wine ${PSEH_LIB}) # wine needed for win32_registry
 add_dependencies(kernel32_vista_static psdk)
 
 add_library(kernel32_vista MODULE

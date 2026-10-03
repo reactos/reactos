@@ -34,15 +34,6 @@
 #include "nfs41_np.h"
 #include "nfs41_debug.h"
 
-#if defined(__REACTOS__) && (NTDDI_VERSION < NTDDI_WIN7)
-NTSTATUS NTAPI RtlUnicodeToUTF8N(CHAR *utf8_dest, ULONG utf8_bytes_max,
-                                 ULONG *utf8_bytes_written,
-                                 const WCHAR *uni_src, ULONG uni_bytes);
-NTSTATUS NTAPI RtlUTF8ToUnicodeN(WCHAR *uni_dest, ULONG uni_bytes_max,
-                                 ULONG *uni_bytes_written,
-                                 const CHAR *utf8_src, ULONG utf8_bytes);
-#endif /* defined(__REACTOS__) && (NTDDI_VERSION < NTDDI_WIN7) */
-
 #define USE_MOUNT_SEC_CONTEXT
 
 /* debugging printout defines */
