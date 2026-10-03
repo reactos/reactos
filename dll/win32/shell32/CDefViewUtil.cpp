@@ -20,7 +20,7 @@ ShellCanPaste(const CComPtr<IShellFolder> &pSF)
     BOOL bRet = FALSE;
     CComPtr<IDataObject> pDataObj;
 
-    if (pSF.p)
+    if (pSF)
     {
         // If the folder doesn't have a drop target we can't paste
         CComPtr<IDropTarget> pdt;
