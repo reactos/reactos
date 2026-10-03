@@ -22,7 +22,7 @@ BEGIN
     IDS_MYDOCUMENTS "マイ ドキュメント"
     IDS_NETHOOD "近くのネットワーク"
     IDS_PRINTHOOD "近くのプリンタ"
-    IDS_RECENT "最近使った項目"
+    IDS_RECENT "最近使った項目" // FIXME: or "最近使ったドキュメント" ?
     IDS_SENDTO "送る"
     IDS_TEMPLATES "テンプレート"
     IDS_STARTMENU "スタート メニュー"

@@ -873,7 +873,7 @@ BEGIN
     IDS_FAVORITES "Обране"
     IDS_STARTUP "Головне меню\\Програми\\Автозапуск"
     IDS_RECENT "Останні документи"
-    IDS_SENDTO "Надіслати"
+    IDS_SENDTO "Надіслати" // FIXME: or "Відправити"?
     IDS_STARTMENU "Головне меню"
     IDS_MYMUSIC "Моя музика"
     IDS_MYVIDEO "Мої відеозаписи"

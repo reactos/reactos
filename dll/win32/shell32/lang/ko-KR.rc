@@ -884,7 +884,7 @@ BEGIN
     IDS_STARTMENU "Start Menu"
     IDS_MYMUSIC "My Music"
     IDS_MYVIDEO "My Videos"
-    IDS_DESKTOPDIRECTORY "Desktop"
+    IDS_DESKTOPDIRECTORY "Desktop" // FIXME: or "바탕 화면" ?
     IDS_NETHOOD "NetHood"
     IDS_TEMPLATES "Templates"
     IDS_APPDATA "Application Data"
