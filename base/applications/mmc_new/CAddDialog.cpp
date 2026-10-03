@@ -72,6 +72,49 @@ CAddDialog::InsertTreeItem(CTreeView& treeView, CSnapinAlias *Alias, HTREEITEM h
     return treeView.InsertItem(&Insert);
 }
 
+VOID
+CAddDialog::InitCB(CWindow& comboBox)
+{
+    comboBox.SendMessage(CBEM_SETIMAGELIST, 0, (LPARAM)m_MainWnd->SnapinImageList());
+}
+
+VOID
+CAddDialog::AppendComboBoxItem(CWindow& comboBox, CSnapinAlias *Alias, int iIndent)
+{
+    COMBOBOXEXITEMW Item;
+
+    ZeroMemory(&Item, sizeof(COMBOBOXEXITEMW));
+
+    Item.mask = CBEIF_TEXT | CBEIF_IMAGE | CBEIF_SELECTEDIMAGE | CBEIF_INDENT | CBEIF_LPARAM;
+    Item.iItem = -1;
+    Item.pszText = (LPWSTR)Alias->Snapin()->DisplayName().GetString();
+    Item.cchTextMax = -1;
+    Item.iImage = Alias->Snapin()->CacheEntry()->NormalImageIndex();
+    Item.iSelectedImage = Alias->Snapin()->CacheEntry()->NormalImageIndex();
+    Item.iIndent = iIndent;
+    Item.lParam = (LPARAM)Alias;
+
+    comboBox.SendMessage(CBEM_INSERTITEM, 0, (LPARAM)&Item);
+}
+
+VOID
+CAddDialog::InsertSnapinAliasesRecursive(CSnapinAlias *ParentAlias, INT Indent)
+{
+    POSITION pos = ParentAlias->m_SubNodes.GetHeadPosition();
+    while (pos)
+    {
+        CSnapinAlias *Alias = (CSnapinAlias*)ParentAlias->m_SubNodes.GetNext(pos);
+        if (Alias)
+        {
+            Alias->hTreeItem = InsertTreeItem(m_Selected, Alias, ParentAlias->hTreeItem);
+            AppendComboBoxItem(m_ParentList, Alias, Indent);
+            InsertSnapinAliasesRecursive(Alias, Indent + 1);
+        }
+    }
+    m_Selected.Expand(ParentAlias->hTreeItem, TVE_EXPAND);
+}
+
+
 LRESULT
 CAddDialog::OnInitDialog(UINT nMessage, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
@@ -88,8 +131,12 @@ CAddDialog::OnInitDialog(UINT nMessage, WPARAM wParam, LPARAM lParam, BOOL& bHan
     m_ParentText.Attach(GetDlgItem(IDC_ADD_TEXT_PARENT));
     m_ParentList.Attach(GetDlgItem(IDC_ADD_LIST_PARENT));
 
+    m_ParentText.ShowWindow(SW_HIDE);
+    m_ParentList.ShowWindow(SW_HIDE);
+
     InitLV(m_Available);
     InitTV(m_Selected);
+    InitCB(m_ParentList);
 
     /* Get Snapins from the Cache */
     for (int i = 0; i < m_MainWnd->GetSnapinCacheCount(); i++)
@@ -100,22 +147,18 @@ CAddDialog::OnInitDialog(UINT nMessage, WPARAM wParam, LPARAM lParam, BOOL& bHan
     /* Create the snapin alias tree */
     m_RootSnapin = m_MainWnd->GetRootSnapin();
     m_RootAlias = new CSnapinAlias(NULL, m_RootSnapin);
+    m_ParentAlias = m_RootAlias;
 
     CreateSnapinAliases(m_RootAlias, m_RootSnapin);
 
-    m_RootTreeItem = InsertTreeItem(m_Selected, m_RootAlias, TVI_ROOT);
-    m_RootAlias->hTreeItem = m_RootTreeItem;
+    m_RootAlias->hTreeItem = InsertTreeItem(m_Selected, m_RootAlias, TVI_ROOT);
 
-    POSITION pos = m_RootAlias->m_SubNodes.GetHeadPosition();
-    while (pos)
-    {
-        CSnapinAlias *Alias = (CSnapinAlias*)m_RootAlias->m_SubNodes.GetNext(pos);
-        if (Alias)
-        {
-            Alias->hTreeItem = InsertTreeItem(m_Selected, Alias, m_RootTreeItem);
-        }
-    }
-    m_Selected.Expand(m_RootTreeItem, TVE_EXPAND);
+    AppendComboBoxItem(m_ParentList, m_RootAlias, 0);
+
+    InsertSnapinAliasesRecursive(m_RootAlias, 1);
+    m_Selected.Expand(m_RootAlias->hTreeItem, TVE_EXPAND);
+
+    m_ParentList.SendMessage(CB_SETCURSEL, 0, 0);
 
     UpdateButtons();
 
@@ -135,11 +178,11 @@ CAddDialog::OnCommand(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
                 CSnapinCacheEntry *CacheEntry = (CSnapinCacheEntry*)m_Available.GetItemData(iItem);
                 if (CacheEntry)
                 {
-                    CSnapinAlias *Alias = new CSnapinAlias(m_RootAlias, new CSnapin(CacheEntry));
-                    m_RootAlias->m_SubNodes.AddTail(Alias);
+                    CSnapinAlias *Alias = new CSnapinAlias(m_ParentAlias, new CSnapin(CacheEntry));
+                    m_ParentAlias->m_SubNodes.AddTail(Alias);
 //                    Alias->Snapin()->OnAdd(m_Console);
-                    Alias->hTreeItem = InsertTreeItem(m_Selected, Alias, m_RootTreeItem);
-                    m_Selected.Expand(m_RootTreeItem, TVE_EXPAND);
+                    Alias->hTreeItem = InsertTreeItem(m_Selected, Alias, m_ParentAlias->hTreeItem);
+                    m_Selected.Expand(m_ParentAlias->hTreeItem, TVE_EXPAND);
                 }
             }
         }
@@ -165,24 +208,29 @@ CAddDialog::OnCommand(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
             HTREEITEM hSelectItem = m_Selected.GetSelection();
             if (hSelectItem != NULL)
             {
-                CSnapinAlias *Alias = (CSnapinAlias *)m_Selected.GetItemData(hSelectItem);
-                if (Alias)
+                HTREEITEM hParentItem = m_Selected.GetNextItem(hSelectItem, TVGN_PARENT);
+                if (hParentItem != NULL)
                 {
-                    HTREEITEM hPrevItem = m_Selected.GetNextItem(hSelectItem, TVGN_PREVIOUS);
-                    if (hPrevItem)
+                    CSnapinAlias *ParentAlias = (CSnapinAlias *)m_Selected.GetItemData(hParentItem);
+                    CSnapinAlias *Alias = (CSnapinAlias *)m_Selected.GetItemData(hSelectItem);
+                    if (ParentAlias && Alias)
                     {
-                        hPrevItem = m_Selected.GetNextItem(hPrevItem, TVGN_PREVIOUS);
-                        if (hPrevItem == NULL)
-                            hPrevItem = TVI_FIRST;
+                        HTREEITEM hPrevItem = m_Selected.GetNextItem(hSelectItem, TVGN_PREVIOUS);
+                        if (hPrevItem)
+                        {
+                            hPrevItem = m_Selected.GetNextItem(hPrevItem, TVGN_PREVIOUS);
+                            if (hPrevItem == NULL)
+                                hPrevItem = TVI_FIRST;
 
-                        POSITION pos = m_RootAlias->m_SubNodes.Find(Alias);
-                        POSITION prev = pos;
-                        m_RootAlias->m_SubNodes.GetPrev(prev);
-                        m_RootAlias->m_SubNodes.SwapElements(pos, prev);
+                            POSITION pos = ParentAlias->m_SubNodes.Find(Alias);
+                            POSITION prev = pos;
+                            ParentAlias->m_SubNodes.GetPrev(prev);
+                            ParentAlias->m_SubNodes.SwapElements(pos, prev);
 
-                        m_Selected.DeleteItem(hSelectItem);
-                        Alias->hTreeItem = InsertTreeItem(m_Selected, Alias, m_RootTreeItem, hPrevItem);
-                        m_Selected.SelectItem(Alias->hTreeItem);
+                            m_Selected.DeleteItem(hSelectItem);
+                            Alias->hTreeItem = InsertTreeItem(m_Selected, Alias, hParentItem, hPrevItem);
+                            m_Selected.SelectItem(Alias->hTreeItem);
+                        }
                     }
                 }
             }
@@ -194,20 +242,25 @@ CAddDialog::OnCommand(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
             HTREEITEM hSelectItem = m_Selected.GetSelection();
             if (hSelectItem != NULL)
             {
-                CSnapinAlias *Alias = (CSnapinAlias *)m_Selected.GetItemData(hSelectItem);
-                if (Alias)
+                HTREEITEM hParentItem = m_Selected.GetNextItem(hSelectItem, TVGN_PARENT);
+                if (hParentItem != NULL)
                 {
-                    HTREEITEM hNextItem = m_Selected.GetNextItem(hSelectItem, TVGN_NEXT);
-                    if (hNextItem)
+                    CSnapinAlias *ParentAlias = (CSnapinAlias *)m_Selected.GetItemData(hParentItem);
+                    CSnapinAlias *Alias = (CSnapinAlias *)m_Selected.GetItemData(hSelectItem);
+                    if (ParentAlias && Alias)
                     {
-                        POSITION pos = m_RootAlias->m_SubNodes.Find(Alias);
-                        POSITION next = pos;
-                        m_RootAlias->m_SubNodes.GetNext(next);
-                        m_RootAlias->m_SubNodes.SwapElements(pos, next);
+                        HTREEITEM hNextItem = m_Selected.GetNextItem(hSelectItem, TVGN_NEXT);
+                        if (hNextItem)
+                        {
+                            POSITION pos = ParentAlias->m_SubNodes.Find(Alias);
+                            POSITION next = pos;
+                            ParentAlias->m_SubNodes.GetNext(next);
+                            ParentAlias->m_SubNodes.SwapElements(pos, next);
 
-                        m_Selected.DeleteItem(hSelectItem);
-                        Alias->hTreeItem = InsertTreeItem(m_Selected, Alias, m_RootTreeItem, hNextItem);
-                        m_Selected.SelectItem(Alias->hTreeItem);
+                            m_Selected.DeleteItem(hSelectItem);
+                            Alias->hTreeItem = InsertTreeItem(m_Selected, Alias, hParentItem, hNextItem);
+                            m_Selected.SelectItem(Alias->hTreeItem);
+                        }
                     }
                 }
             }
@@ -258,6 +311,16 @@ CAddDialog::OnCommand(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
                     m_ParentText.ShowWindow(SW_HIDE);
                     m_ParentList.ShowWindow(SW_HIDE);
                 }
+            }
+        }
+        break;
+
+        case IDC_ADD_LIST_PARENT:
+        {
+            INT iItem = SendMessage(m_ParentList, CB_GETCURSEL, 0, 0);
+            if (iItem != CB_ERR)
+            {
+                m_ParentAlias = (CSnapinAlias*)SendMessage(m_ParentList, CB_GETITEMDATA, iItem, 0);
             }
         }
         break;
@@ -320,11 +383,11 @@ CAddDialog::OnItemDblClicked(INT uCode, LPNMHDR hdr, BOOL& bHandled)
             CSnapinCacheEntry* CacheEntry = (CSnapinCacheEntry*)m_Available.GetItemData(lpnmitem->iItem);
             if (CacheEntry)
             {
-                CSnapinAlias *Alias = new CSnapinAlias(m_RootAlias, new CSnapin(CacheEntry));
-                m_RootAlias->m_SubNodes.AddTail(Alias);
+                CSnapinAlias *Alias = new CSnapinAlias(m_ParentAlias, new CSnapin(CacheEntry));
+                m_ParentAlias->m_SubNodes.AddTail(Alias);
 //                Alias->Snapin()->OnAdd(m_Console);
-                Alias->hTreeItem = InsertTreeItem(m_Selected, Alias, m_RootTreeItem);
-                m_Selected.Expand(m_RootTreeItem, TVE_EXPAND);
+                Alias->hTreeItem = InsertTreeItem(m_Selected, Alias, m_ParentAlias->hTreeItem);
+                m_Selected.Expand(m_ParentAlias->hTreeItem, TVE_EXPAND);
             }
         }
     }

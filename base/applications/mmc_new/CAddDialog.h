@@ -24,6 +24,7 @@ public:
         COMMAND_ID_HANDLER(IDC_ADD_BUTTON_UP, OnCommand)
         COMMAND_ID_HANDLER(IDC_ADD_BUTTON_DOWN, OnCommand)
         COMMAND_ID_HANDLER(IDC_ADD_ADVANCED, OnCommand)
+        COMMAND_ID_HANDLER(IDC_ADD_LIST_PARENT, OnCommand)
 
         NOTIFY_CODE_HANDLER(LVN_ITEMCHANGED, OnItemChanged)
         NOTIFY_CODE_HANDLER(TVN_SELCHANGED,  OnSelectionChanged)
@@ -49,7 +50,7 @@ private:
 
     CSnapin *m_RootSnapin;
     CSnapinAlias *m_RootAlias;
-    HTREEITEM m_RootTreeItem;
+    CSnapinAlias *m_ParentAlias;
 
     void CreateSnapinAliases(CSnapinAlias *ParentAlias, CSnapin *ParentSnapin);
     void ReconnectSnapins(CSnapinAlias *ParentAlias, CSnapin *ParentSnapin);
@@ -63,6 +64,10 @@ public:
     void InsertListItem(CListView& listView, CSnapinCacheEntry *CacheEntry);
     void InitTV(CTreeView& treeView);
     HTREEITEM InsertTreeItem(CTreeView& treeView, CSnapinAlias *Alias, HTREEITEM hParent = NULL, HTREEITEM hInsertAfter = TVI_LAST);
+    VOID InitCB(CWindow& comboBox);
+    VOID AppendComboBoxItem(CWindow& comboBox, CSnapinAlias *Alias, int iIndent);
+    VOID InsertSnapinAliasesRecursive(CSnapinAlias *ParentAlias, INT Indent);
+
     LRESULT OnInitDialog(UINT nMessage, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnCommand(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
     LRESULT OnItemChanged(INT uCode, LPNMHDR hdr, BOOL& bHandled);
