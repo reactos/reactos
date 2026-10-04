@@ -2095,23 +2095,79 @@ SHELL_InvokePidl(
     return !FAILED_UNEXPECTEDLY(hr);
 }
 
+typedef VOID (WINAPI *PRINTUIENTRYW)(HWND, HINSTANCE, LPCWSTR, INT);
+
+typedef struct _PRINTCMD
+{
+    HWND hwnd;
+    WCHAR szCmd[2 * MAX_PATH];
+} PRINTCMD, *PPRINTCMD;
+
+static DWORD WINAPI
+SHELL_PrintUIThread(_In_ LPVOID pParam)
+{
+    PPRINTCMD pCmd = (PPRINTCMD)pParam;
+    HMODULE hPrintUI;
+    PRINTUIENTRYW pfnEntry;
+
+    hPrintUI = LoadLibraryW(L"printui.dll");
+    if (hPrintUI)
+    {
+        pfnEntry = (PRINTUIENTRYW)GetProcAddress(hPrintUI, "PrintUIEntryW");
+        if (pfnEntry)
+            pfnEntry(pCmd->hwnd, hPrintUI, pCmd->szCmd, SW_SHOWNORMAL);
+
+        FreeLibrary(hPrintUI);
+    }
+
+    LocalFree(pCmd);
+    return 0;
+}
+
+/**
+ * @brief
+ * Runs a printer command through printui.dll.
+ *
+ * @param[in] hwnd
+ * Owner window.
+ *
+ * @param[in] uAction
+ * One of the PRINTACTION_* values.
+ *
+ * @param[in] lpBuf1
+ * Printer name, or server name for PRINTACTION_SERVERPROPERTIES.
+ *
+ * @param[in] lpBuf2
+ * Action specific. Currently unused.
+ *
+ * @param[in] fModal
+ * TRUE to wait until the command finishes.
+ *
+ * @return
+ * TRUE if the command was started, FALSE if it failed.
+ **/
 EXTERN_C BOOL
 WINAPI
-SHInvokePrinterCommandW(HWND hwnd,
-                        UINT uAction,
-                        LPCWSTR lpBuf1,
-                        LPCWSTR lpBuf2,
-                        BOOL fModal)
+SHInvokePrinterCommandW(
+    _In_opt_ HWND hwnd,
+    _In_ UINT uAction,
+    _In_ LPCWSTR lpBuf1,
+    _In_opt_ LPCWSTR lpBuf2,
+    _In_ BOOL fModal)
 {
-    SHELLEXECUTEINFOW sei;
-    LPCWSTR lpVerb;
+    PPRINTCMD pCmd;
+    LPCWSTR pszSwitch;
+    HRESULT hr;
+
+    UNREFERENCED_PARAMETER(lpBuf2);
 
     TRACE("SHInvokePrinterCommandW(%p, %u, %s, %s, %d)\n",
           hwnd, uAction, debugstr_w(lpBuf1), debugstr_w(lpBuf2), fModal);
 
+    // Windows doesn't set an error here
     if (!lpBuf1)
     {
-        SetLastError(ERROR_INVALID_PARAMETER);
+        SetLastError(ERROR_SUCCESS);
         return FALSE;
     }
 
@@ -2119,80 +2175,112 @@ SHInvokePrinterCommandW(HWND hwnd,
     {
         case PRINTACTION_OPEN:
         case PRINTACTION_OPENNETPRN:
-            lpVerb = L"open";
+            pszSwitch = L"/o /n";
             break;
 
         case PRINTACTION_PROPERTIES:
-            lpVerb = L"properties";
+            pszSwitch = L"/p /n";
             break;
 
         case PRINTACTION_NETINSTALL:
-            lpVerb = L"install";
+            pszSwitch = L"/in /n";
             break;
 
         case PRINTACTION_NETINSTALLLINK:
-            lpVerb = L"createshortcut";
-            break;
+            FIXME("Call SHCreateLinks\n");
+            SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+            return FALSE;
 
         case PRINTACTION_TESTPAGE:
-            lpVerb = L"testpage";
+            pszSwitch = L"/k /n";
             break;
 
         case PRINTACTION_DOCUMENTDEFAULTS:
-            lpVerb = L"documentdefaults";
+            pszSwitch = L"/e /n";
             break;
 
         case PRINTACTION_SERVERPROPERTIES:
-            lpVerb = L"properties";
+            pszSwitch = L"/s /t1 /c";
             break;
 
         default:
-            FIXME("Unhandled uAction %u\n", uAction);
-            SetLastError(ERROR_INVALID_PARAMETER);
-            return FALSE;
+            // Windows ignores unknown actions
+            SetLastError(ERROR_SUCCESS);
+            return TRUE;
     }
 
-    ZeroMemory(&sei, sizeof(sei));
-    sei.cbSize = sizeof(sei);
-    sei.hwnd = hwnd;
-    sei.lpVerb = lpVerb;
-    sei.lpFile = lpBuf1;
-    sei.lpParameters = (uAction == PRINTACTION_PROPERTIES || uAction == PRINTACTION_NETINSTALLLINK) ? lpBuf2 : NULL;
-    sei.nShow = SW_SHOWNORMAL;
-    sei.fMask = SEE_MASK_FLAG_DDEWAIT;
+    pCmd = (PPRINTCMD)LocalAlloc(LMEM_FIXED | LMEM_ZEROINIT, sizeof(*pCmd));
+    if (!pCmd)
+        return FALSE;
 
-    if (fModal)
+    pCmd->hwnd = hwnd;
+    hr = StringCchPrintfW(pCmd->szCmd, ARRAYSIZE(pCmd->szCmd), L"%s\"%s\"", pszSwitch, lpBuf1);
+    if (FAILED(hr))
     {
-        sei.fMask |= SEE_MASK_NOASYNC;
-    }
-
-    return ShellExecuteExW(&sei);
-}
-
-EXTERN_C BOOL
-WINAPI
-SHInvokePrinterCommandA(HWND hwnd,
-                        UINT uAction,
-                        LPCSTR lpBuf1,
-                        LPCSTR lpBuf2,
-                        BOOL fModal)
-{
-    WCHAR szBuf1[MAX_PATH], szBuf2[MAX_PATH];
-
-    if (!lpBuf1)
-    {
-        SetLastError(ERROR_INVALID_PARAMETER);
+        LocalFree(pCmd);
+        SetLastError(ERROR_INSUFFICIENT_BUFFER);
         return FALSE;
     }
 
-    SHAnsiToUnicode(lpBuf1, szBuf1, _countof(szBuf1));
-
-    if (lpBuf2)
+    if (fModal)
     {
-        SHAnsiToUnicode(lpBuf2, szBuf2, _countof(szBuf2));
+        SHELL_PrintUIThread(pCmd);
+        return TRUE;
     }
 
-    return SHInvokePrinterCommandW(hwnd, uAction, szBuf1, lpBuf2 ? szBuf2 : NULL, fModal);
+    if (!SHCreateThread(SHELL_PrintUIThread, pCmd, CTF_COINIT | CTF_PROCESS_REF, NULL))
+    {
+        LocalFree(pCmd);
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+/**
+ * @brief
+ * ANSI version of SHInvokePrinterCommandW.
+ *
+ * @param[in] hwnd
+ * Owner window.
+ *
+ * @param[in] uAction
+ * One of the PRINTACTION_* values.
+ *
+ * @param[in] lpBuf1
+ * Printer name, or server name for PRINTACTION_SERVERPROPERTIES.
+ *
+ * @param[in] lpBuf2
+ * Action specific.
+ *
+ * @param[in] fModal
+ * TRUE to wait until the command finishes.
+ *
+ * @return
+ * TRUE if the command was started, FALSE if it failed.
+ **/
+EXTERN_C BOOL
+WINAPI
+SHInvokePrinterCommandA(
+    _In_opt_ HWND hwnd,
+    _In_ UINT uAction,
+    _In_ LPCSTR lpBuf1,
+    _In_opt_ LPCSTR lpBuf2,
+    _In_ BOOL fModal)
+{
+    WCHAR szBuf1[MAX_PATH], szBuf2[MAX_PATH];
+
+    if (lpBuf1)
+        SHAnsiToUnicode(lpBuf1, szBuf1, ARRAYSIZE(szBuf1));
+
+    if (lpBuf2)
+        SHAnsiToUnicode(lpBuf2, szBuf2, ARRAYSIZE(szBuf2));
+
+    return SHInvokePrinterCommandW(hwnd,
+                                   uAction,
+                                   lpBuf1 ? szBuf1 : NULL,
+                                   lpBuf2 ? szBuf2 : NULL,
+                                   fModal);
 }
 
 static UINT_PTR SHELL_quote_and_execute(LPCWSTR wcmd, LPCWSTR wszParameters, LPCWSTR wszKeyname, LPCWSTR wszApplicationName, LPWSTR env, LPSHELLEXECUTEINFOW psei, LPSHELLEXECUTEINFOW psei_out, SHELL_ExecuteW32 execfunc)
