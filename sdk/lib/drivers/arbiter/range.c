@@ -16,8 +16,6 @@
 
 /* RANGE WALKER ***************************************************************/
 
-#define ARBITER_RESERVED_PASS_DONE  0xFFFFFFFF
-
 /**
  * @brief
  * The OverrideConflict default, the last of the conflict escapes:
@@ -106,9 +104,9 @@ ArbiterLibOverrideConflict(
  * The alternative whose priority is written. Ordinary priorities
  * are ordering-list indices biased by one, negated for
  * IO_RESOURCE_PREFERRED alternatives so they sort first. Once the
- * orderings are exhausted the alternative is given one final
- * full-range pass at (PREFERRED_)RESERVED priority, after which
- * it goes EXHAUSTED.
+ * orderings are exhausted the alternative is given one pass over
+ * its own whole window at (PREFERRED_)RESERVED priority, after
+ * which it goes EXHAUSTED.
  */
 CODE_SEG("PAGE")
 static
@@ -128,12 +126,11 @@ ArbpWritePriority(
     if (Priority == ARBITER_PRIORITY_EXHAUSTED)
         return;
 
+    /* The whole-window pass is the last one; it is spent by the time we are back. */
     if (Priority == ARBITER_PRIORITY_RESERVED ||
         Priority == ARBITER_PRIORITY_PREFERRED_RESERVED)
     {
-        /* Stay in the reserved pass until its final whole-window try is spent. */
-        if (Alternative->Reserved[0] == ARBITER_RESERVED_PASS_DONE)
-            Alternative->Priority = ARBITER_PRIORITY_EXHAUSTED;
+        Alternative->Priority = ARBITER_PRIORITY_EXHAUSTED;
         return;
     }
 
@@ -155,7 +152,6 @@ ArbpWritePriority(
         Index = (Priority < 0) ? (ULONG)(-(Priority + 1)) : (ULONG)(Priority - 1);
         if (Index >= Arbiter->OrderingList.Count)
         {
-            Alternative->Reserved[0] = 0;
             Alternative->Priority = Preferred ? ARBITER_PRIORITY_PREFERRED_RESERVED
                                               : ARBITER_PRIORITY_RESERVED;
             return;
@@ -185,28 +181,35 @@ ArbpWritePriority(
         }
     }
 
-    Alternative->Reserved[0] = 0;
     Alternative->Priority = Preferred ? ARBITER_PRIORITY_PREFERRED_RESERVED
                                       : ARBITER_PRIORITY_RESERVED;
 }
 
 /**
  * @brief
- * Determines whether a device is enumerated by the root enumerator.
+ * Reads whether a device is enumerated by the root enumerator.
  *
  * @param[in] DeviceObject
- * The physical device object to examine. May be NULL, in which
- * case the device is not considered root-enumerated.
+ * The physical device object to examine. May be NULL, which reads
+ * as no answer.
+ *
+ * @param[out] IsRoot
+ * Receives TRUE if the enumerator name is "ROOT". Untouched when
+ * the name could not be read.
  *
  * @return
- * Returns TRUE if the device's enumerator name is "ROOT",
- * FALSE otherwise or if the property cannot be read.
+ * Returns FALSE if the device has no readable enumerator name.
+ *
+ * @remarks
+ * The two answers are kept apart because an unreadable name does
+ * not disqualify a device from sharing; see ArbpShareDriverExclusive.
  */
 CODE_SEG("PAGE")
 static
 BOOLEAN
-ArbpIsRootEnumerated(
-    _In_ PDEVICE_OBJECT DeviceObject)
+ArbpReadRootEnumerated(
+    _In_opt_ PDEVICE_OBJECT DeviceObject,
+    _Out_ PBOOLEAN IsRoot)
 {
     WCHAR Buffer[16];
     UNICODE_STRING Name;
@@ -225,7 +228,8 @@ ArbpIsRootEnumerated(
     }
 
     RtlInitUnicodeString(&Name, Buffer);
-    return RtlEqualUnicodeString(&Root, &Name, TRUE);
+    *IsRoot = RtlEqualUnicodeString(&Root, &Name, TRUE);
+    return TRUE;
 }
 
 /**
@@ -293,6 +297,11 @@ ArbpSharesDriverStack(
  * device claims a resource the HAL/firmware reports for the same
  * hardware Example: the ports the kernel debugger reserves, which
  * the HAL marks DriverExclusive.
+ *
+ * An owner whose enumerator cannot be read does not break the root
+ * path: a root requester shares with it. An owner that reads back
+ * as something other than the root enumerator ends the root path
+ * for the rest of the walk, not only for that range.
  */
 CODE_SEG("PAGE")
 static
@@ -305,7 +314,8 @@ ArbpShareDriverExclusive(
     PDEVICE_OBJECT Requester;
     RTL_RANGE_LIST_ITERATOR Iterator;
     PRTL_RANGE Range;
-    BOOLEAN RequesterIsRoot;
+    BOOLEAN RootPathOpen = FALSE;
+    BOOLEAN IsRoot;
 
     PAGED_CODE();
 
@@ -316,7 +326,8 @@ ArbpShareDriverExclusive(
     }
 
     Requester = Entry->PhysicalDeviceObject;
-    RequesterIsRoot = ArbpIsRootEnumerated(Requester);
+    if (ArbpReadRootEnumerated(Requester, &IsRoot))
+        RootPathOpen = IsRoot;
 
     if (!NT_SUCCESS(RtlGetFirstRange(Arbiter->PossibleAllocation, &Iterator, &Range)))
         return FALSE;
@@ -337,10 +348,16 @@ ArbpShareDriverExclusive(
             PDEVICE_OBJECT Owner = (PDEVICE_OBJECT)Range->Owner;
             BOOLEAN Share = FALSE;
 
-            /* Two root-enumerated devices may share; else only a shared driver. */
-            if (RequesterIsRoot && ArbpIsRootEnumerated(Owner))
-                Share = TRUE;
-            else if (ArbpSharesDriverStack(Requester, Owner))
+            if (RootPathOpen)
+            {
+                /* An owner that is known not to be root closes the path for good. */
+                if (ArbpReadRootEnumerated(Owner, &IsRoot) && !IsRoot)
+                    RootPathOpen = FALSE;
+                else
+                    Share = TRUE;
+            }
+
+            if (!Share && ArbpSharesDriverStack(Requester, Owner))
                 Share = TRUE;
 
             if (Share)
@@ -358,179 +375,6 @@ ArbpShareDriverExclusive(
 
         if (!NT_SUCCESS(RtlGetNextRange(&Iterator, &Range, TRUE)))
             break;
-    }
-
-    return FALSE;
-}
-
-/**
- * @brief
- * Hands a device back its own already routed IRQ instead of
- * searching for a fresh one, on legacy-PIC / no-ACPI interrupt
- * routing setups.
- *
- * @param[in] Arbiter
- * The arbiter instance. The routine is a no-op for every resource
- * type other than CmResourceTypeInterrupt.
- *
- * @param[in,out] ArbState
- * The allocation state of the requirement. On success, Start and
- * End receive the vector this device already owns in the committed
- * allocation list.
- *
- * @return
- * Returns TRUE if an owned vector inside the requested window was
- * found and reused, FALSE otherwise.
- *
- * @remarks
- * pci.sys emits line-based interrupt requirement of
- * (MinimumVector 0, MaximumVector 0xFFFFFFFF) which expects an upstream
- * ACPI _PRT arbiter to clamp it to the routed GSIV.
- * With no ACPI the root IRQ arbiter is the only one in the tree,
- * and RtlFindRange searches top-down so a loose window resolves to 0xFFFFFFFF.
- * But the BIOS already handled each device's IRQ which pci.sys reports
- * as the device's boot config; the boot reservation recorded it as
- * a [Vector, Vector] range owned by this PDO in the committed
- * list, and every later commit re-records the assigned vector the
- * same way. Reusing that vector keeps the device on the interrupt
- * the firmware wired it to.
- */
-CODE_SEG("PAGE")
-static
-BOOLEAN
-ArbpReuseOwnedInterrupt(
-    _In_ PARBITER_INSTANCE Arbiter,
-    _Inout_ PARBITER_ALLOCATION_STATE ArbState)
-{
-    PARBITER_LIST_ENTRY Entry = ArbState->Entry;
-    PARBITER_ALTERNATIVE Alternative = ArbState->CurrentAlternative;
-    RTL_RANGE_LIST_ITERATOR Iterator;
-    PRTL_RANGE Range;
-
-    PAGED_CODE();
-
-    if (Arbiter->ResourceType != CmResourceTypeInterrupt)
-        return FALSE;
-
-    if (Entry == NULL || Entry->PhysicalDeviceObject == NULL || Alternative == NULL)
-        return FALSE;
-
-    if (!NT_SUCCESS(RtlGetFirstRange(Arbiter->Allocation, &Iterator, &Range)))
-        return FALSE;
-
-    while (Range != NULL)
-    {
-        if ((PDEVICE_OBJECT)Range->Owner == Entry->PhysicalDeviceObject &&
-            Range->Start >= ArbState->CurrentMinimum &&
-            Range->Start <= ArbState->CurrentMaximum &&
-            Range->End <= ArbState->CurrentMaximum &&
-            (Range->End - Range->Start + 1) >= Alternative->Length)
-        {
-            ArbState->Start = Range->Start;
-            ArbState->End = Range->Start + Alternative->Length - 1;
-            return TRUE;
-        }
-
-        if (!NT_SUCCESS(RtlGetNextRange(&Iterator, &Range, TRUE)))
-            break;
-    }
-
-    return FALSE;
-}
-
-/**
- * @brief
- * Takes the next window of the reserved (last-resort) pass for an
- * alternative: each ReservedList range intersecting the
- * requirement in turn, then one final try over the whole
- * requirement window.
- *
- * @param[in] Arbiter
- * The arbiter instance whose ReservedList supplies the windows.
- *
- * @param[in,out] Alternative
- * The alternative in its reserved pass. Reserved[0] holds the
- * pass cursor: the next ReservedList index to consider, or
- * ARBITER_RESERVED_PASS_DONE once the whole-window try is spent.
- *
- * @param[out] Minimum
- * Receives the start of the produced window.
- *
- * @param[out] Maximum
- * Receives the end of the produced window.
- *
- * @return
- * Returns TRUE with a window to try, FALSE when the pass is spent.
- *
- * @remarks
- * Once ReservedResources data populates the ReservedList, its
- * windows are only ever offered here.
- */
-CODE_SEG("PAGE")
-static
-BOOLEAN
-ArbpTakeReservedWindow(
-    _In_ PARBITER_INSTANCE Arbiter,
-    _Inout_ PARBITER_ALTERNATIVE Alternative,
-    _Out_ PUINT64 Minimum,
-    _Out_ PUINT64 Maximum)
-{
-    ULONG Index;
-
-    PAGED_CODE();
-
-    if (Alternative->Reserved[0] == ARBITER_RESERVED_PASS_DONE)
-        return FALSE;
-
-    for (Index = Alternative->Reserved[0];
-         Index < Arbiter->ReservedList.Count;
-         ++Index)
-    {
-        PARBITER_ORDERING Window = &Arbiter->ReservedList.Orderings[Index];
-        UINT64 Lo, Hi;
-
-        if (Window->Start > Alternative->Maximum ||
-            Alternative->Minimum > Window->End)
-        {
-            continue;  /* No intersection with this alternative's window */
-        }
-
-        Lo = max(Alternative->Minimum, Window->Start);
-        Hi = min(Alternative->Maximum, Window->End);
-        if ((Hi - Lo + 1) < Alternative->Length)
-            continue;
-
-        Alternative->Reserved[0] = Index + 1;
-        *Minimum = Lo;
-        *Maximum = Hi;
-        return TRUE;
-    }
-
-    /*
-     * Reserved windows exhausted. A final whole-window pass follows
-     * turns on FIXED, and either answer is wrong for the other case.
-     *
-     * A flexible alternative must not get one: [Minimum, Maximum] ignores both
-     * the ordering and the reserved list, re-granting the ranges the reserved
-     * pass had just punched out. A bridge's [0, 0xFFFFFFFF] memory window
-     * searched against an empty pool resolves to 0, placing the window on top
-     * of RAM.
-     *
-     * A fixed alternative must get one: it has a single possible placement, so
-     * the whole window is that candidate. Withholding it goes straight to
-     * EXHAUSTED without ever calling FindSuitableRange, so neither the
-     * boot-allocated availability mask nor OverrideConflict can grant the
-     * device its own firmware configuration. That is fatal whenever no
-     * ordering window spans the requirement, as the root port list's does not
-     * below 0x100.
-     */
-    Alternative->Reserved[0] = ARBITER_RESERVED_PASS_DONE;
-
-    if (Alternative->Flags & ARBITER_ALTERNATIVE_FLAG_FIXED)
-    {
-        *Minimum = Alternative->Minimum;
-        *Maximum = Alternative->Maximum;
-        return TRUE;
     }
 
     return FALSE;
@@ -607,21 +451,11 @@ ArbiterLibGetNextAllocationRange(
             Lowest->Priority == ARBITER_PRIORITY_PREFERRED_RESERVED)
         {
             /*
-             * Last-resort pass: the reserved windows in turn, then the whole
-             * requirement window (see ArbpTakeReservedWindow).
+             * Last pass: the whole window the requirement asked for, with no
+             * ordering applied. Reserved windows are reachable only here.
              */
-            if (!ArbpTakeReservedWindow(Arbiter, Lowest, &Minimum, &Maximum))
-            {
-                /*
-                 * CurrentAlternative must be set before looping. While it is
-                 * still NULL, the top of the loop re-seeds every alternative's
-                 * priority back to ARBITER_PRIORITY_NULL, which would discard
-                 * the EXHAUSTED just recorded and spin forever.
-                 */
-                Lowest->Priority = ARBITER_PRIORITY_EXHAUSTED;
-                ArbState->CurrentAlternative = Lowest;
-                continue;
-            }
+            Minimum = Lowest->Minimum;
+            Maximum = Lowest->Maximum;
         }
         else
         {
@@ -666,11 +500,6 @@ ArbiterLibGetNextAllocationRange(
                 continue;
             }
             Maximum = AlignedMax + LengthMinusOne;
-        }
-        else
-        {
-            Minimum = Lowest->Minimum;
-            Maximum = Lowest->Maximum;
         }
 
         if (Minimum != ArbState->CurrentMinimum ||
@@ -736,13 +565,6 @@ ArbiterLibFindSuitableRange(
         ArbState->End = ArbState->CurrentMinimum;
         return TRUE;
     }
-
-    /*
-     * Interrupt retention: give the device back its firmware-routed vector rather
-     * than letting the top-down search pick an untranslatable one
-     */
-    if (ArbpReuseOwnedInterrupt(Arbiter, ArbState))
-        return TRUE;
 
     /* Legacy requests consider preallocated (boot) ranges available. */
     if (ArbState->Entry != NULL &&
