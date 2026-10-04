@@ -15,6 +15,7 @@ list(APPEND CPP_SOURCE
     CSnapin.cpp
     CSnapinCacheEntry.cpp
     CSnapinAlias.cpp
+    misc.cpp
     mscfile.cpp
     mmc.cpp
     # This is here so that they show up in visual studio:

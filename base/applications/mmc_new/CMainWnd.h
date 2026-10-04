@@ -80,6 +80,10 @@ public:
         COMMAND_ID_HANDLER(IDM_ACTION_NEW, OnActionNewWindow)
         COMMAND_ID_HANDLER(IDM_ACTION_RENAME, OnActionRename)
 
+        COMMAND_ID_HANDLER(IDM_VIEW_LARGE_ICONS, OnViewMode)
+        COMMAND_ID_HANDLER(IDM_VIEW_SMALL_ICONS, OnViewMode)
+        COMMAND_ID_HANDLER(IDM_VIEW_LIST, OnViewMode)
+        COMMAND_ID_HANDLER(IDM_VIEW_DETAILS, OnViewMode)
         COMMAND_ID_HANDLER(IDM_VIEW_CUSTOMIZE, OnViewCustomize)
 
         COMMAND_ID_HANDLER(IDM_WINDOWS_NEW, OnWindowsNew)
@@ -201,6 +205,7 @@ public:
     LRESULT OnFileExit(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
     LRESULT OnActionNewWindow(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
     LRESULT OnActionRename(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
+    LRESULT OnViewMode(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
     LRESULT OnViewCustomize(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
     LRESULT OnWindowsNew(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
     LRESULT OnWindowsCascade(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
@@ -236,6 +241,7 @@ public:
     VOID SetStandardMenusVisible(BOOL bVisible);
 
     VOID UpdateAboutSnapinMenu(CSnapin *Snapin);
+    VOID UpdateViewMenu(LISTVIEW_MODE ListViewMode);
     VOID UpdateUpToolButton(BOOL bShow);
 
     int GetSnapinCacheCount();

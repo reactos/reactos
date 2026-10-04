@@ -14,6 +14,7 @@ CConsoleWnd::CConsoleWnd(CMainWnd *MainWnd, CSnapin *RootNode)
     m_MainWnd = MainWnd;
     m_ViewRootNode = RootNode;
     m_ViewSelectedNode = RootNode;
+    m_ListViewMode = ListView_Detail;
     m_pfnSuperWindowProc = DefMDIChildProc;
 
     m_hMenuTreeView = LoadMenu(_AtlBaseModule.GetModuleInstance(), MAKEINTRESOURCE(IDM_TREEVIEW_CONTEXT));
@@ -64,7 +65,7 @@ CConsoleWnd::OnCreate(UINT nMessage, WPARAM wParam, LPARAM lParam, BOOL& bHandle
 
     m_TreeView.SetImageList(m_MainWnd->SnapinImageList(), TVSIL_NORMAL);
 
-    m_ListView.Create(this->m_hWnd, &Rect, NULL, WS_CHILD | WS_VISIBLE, WS_EX_CLIENTEDGE);
+    m_ListView.Create(this->m_hWnd, &Rect, NULL, WS_CHILD | WS_VISIBLE | ViewModeToStyle(m_ListViewMode), WS_EX_CLIENTEDGE);
 
     m_ViewId = m_MainWnd->RegisterView(this);
 
@@ -140,7 +141,16 @@ CConsoleWnd::OnContextMenu(UINT nMessage, WPARAM wParam, LPARAM lParam, BOOL& bH
 
         if (hti.flags & TVHT_ONITEM)
         {
-            TrackPopupMenu(GetSubMenu(m_hMenuTreeView, nPos), TPM_RIGHTBUTTON, pt.x, pt.y, 0, this->m_hWnd, NULL);
+            HMENU hContextMenu = GetSubMenu(m_hMenuTreeView, nPos);
+            if (nPos == 1)
+            {
+                CheckMenuRadioItem(hContextMenu,
+                                   IDM_VIEW_LARGE_ICONS,
+                                   IDM_VIEW_DETAILS,
+                                   ViewModeToCmdId(m_ListViewMode),
+                                   MF_BYCOMMAND);
+            }
+            TrackPopupMenu(hContextMenu, TPM_RIGHTBUTTON, pt.x, pt.y, 0, this->m_hWnd, NULL);
         }
     }
     return 0;
@@ -206,6 +216,14 @@ CConsoleWnd::OnNotify(UINT nMessage, WPARAM wParam, LPARAM lParam, BOOL& bHandle
 }
 
 LRESULT
+CConsoleWnd::OnActivate(UINT nMessage, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+//    m_MainWnd->UpdateToolbuttons(m_bTreeViewVisible, m_bActionsPaneVisible);
+    m_MainWnd->UpdateViewMenu(m_ListViewMode);
+    return 0;
+}
+
+LRESULT
 CConsoleWnd::OnActionNewWindow(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
 {
     HTREEITEM hTreeItem = m_TreeView.GetSelection();
@@ -245,6 +263,12 @@ CConsoleWnd::OnActionRename(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHan
 {
     m_TreeView.EditLabel(m_TreeView.GetSelection());
     return 0;
+}
+
+LRESULT
+CConsoleWnd::OnViewMode(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
+{
+    return m_MainWnd->OnViewMode(wNotifyCode, wID, hWndCtl, bHandled);
 }
 
 LRESULT
@@ -429,6 +453,19 @@ CConsoleWnd::SelectParent()
         m_TreeView.SelectItem(hParent);
 }
 
+LISTVIEW_MODE
+CConsoleWnd::GetListViewMode()
+{
+    return m_ListViewMode;
+}
+
+VOID
+CConsoleWnd::SetListViewMode(LISTVIEW_MODE ListViewMode)
+{
+    m_ListViewMode = ListViewMode;
+    ::SetWindowLong(m_ListView.m_hWnd, GWL_STYLE, (::GetWindowLong(m_ListView.m_hWnd, GWL_STYLE) & ~LVS_TYPEMASK) | ViewModeToStyle(m_ListViewMode));
+}
+
 VOID
 CConsoleWnd::SaveView(MscFile *mscFile, IXMLDOMElement *pParentElement)
 {
@@ -450,7 +487,7 @@ CConsoleWnd::SaveView(MscFile *mscFile, IXMLDOMElement *pParentElement)
 
     /* <ViewOptions ViewMode="Report" ScopePaneVisible="true" ActionsPaneVisible="true" DescriptionBarVisible="false" DefaultColumn0Width="200" DefaultColumn1Width="0"/> */
     CHK_HR(mscFile->CreateAndAddElementNode(L"ViewOptions", pViewElement, &pViewOptionsElement));
-    CHK_HR(mscFile->CreateAndAddAttributeNode(L"ViewMode", L"Report", pViewOptionsElement)); /* FIXME */
+    CHK_HR(mscFile->CreateAndAddAttributeNode(L"ViewMode", ViewModeToString(m_ListViewMode), pViewOptionsElement));
     CHK_HR(mscFile->CreateAndAddAttributeNode(L"ScopePaneVisible", IsTreeViewVisible() ? L"true" : L"false", pViewOptionsElement));
     if (!IsStatusBarVisible())
         CHK_HR(mscFile->CreateAndAddAttributeNode(L"NoStatusBar", L"true", pViewOptionsElement));

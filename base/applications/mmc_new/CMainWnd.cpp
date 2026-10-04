@@ -406,6 +406,23 @@ CMainWnd::OnActionRename(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandle
 }
 
 LRESULT
+CMainWnd::OnViewMode(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
+{
+    CConsoleWnd* child = GetActiveChildInfo();
+    if (child == NULL)
+        return 0;
+
+    child->SetListViewMode(CmdIdToViewMode(wID));
+    CheckMenuRadioItem(GetMenu(),
+                       IDM_VIEW_LARGE_ICONS,
+                       IDM_VIEW_DETAILS,
+                       wID,
+                       MF_BYCOMMAND);
+
+    return 0;
+}
+
+LRESULT
 CMainWnd::OnViewCustomize(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
 {
     CConsoleWnd* child = GetActiveChildInfo();
@@ -764,6 +781,16 @@ CMainWnd::UpdateAboutSnapinMenu(CSnapin *Snapin)
         /* FIXME: Append this menu item */
         InsertMenuItemW(hMenu, IDM_HELP_ABOUT_MMC, FALSE, &mi);
     }
+}
+
+VOID
+CMainWnd::UpdateViewMenu(LISTVIEW_MODE ListViewMode)
+{
+    CheckMenuRadioItem(GetMenu(),
+                       IDM_VIEW_LARGE_ICONS,
+                       IDM_VIEW_DETAILS,
+                       ViewModeToCmdId(ListViewMode),
+                       MF_BYCOMMAND);
 }
 
 VOID
