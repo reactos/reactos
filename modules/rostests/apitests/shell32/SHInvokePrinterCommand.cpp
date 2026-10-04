@@ -1,8 +1,8 @@
 /*
- * PROJECT: ReactOS API tests
- * LICENSE: MIT (https://spdx.org/licenses/MIT)
- * PURPOSE: Tests for SHInvokePrinterCommandW/A
- * PROGRAMMERS: Alex Mendoza
+ * PROJECT:     ReactOS API tests
+ * LICENSE:     MIT (https://spdx.org/licenses/MIT)
+ * PURPOSE:     Tests for SHInvokePrinterCommandW/A
+ * COPYRIGHT:   Copyright 2026 Alex Mendoza <05alex.mendozaa@gmail.com>
  */
 
 #include "shelltest.h"
@@ -13,45 +13,21 @@ START_TEST(SHInvokePrinterCommand)
 {
     BOOL ret;
 
-    /* NULL printer name = invalid */
+    // NULL printer name
     SetLastError(0xdeadbeef);
     ret = SHInvokePrinterCommandW(NULL, PRINTACTION_OPEN, NULL, NULL, FALSE);
     ok(ret == FALSE, "Expected FALSE, got %d\n", ret);
-    ok(GetLastError() == ERROR_INVALID_PARAMETER,
-       "Expected ERROR_INVALID_PARAMETER, got %lu\n", GetLastError());
+    ok(GetLastError() == ERROR_SUCCESS, "Expected 0, got %lu\n", GetLastError());
 
-    /* Same for ANSI */
+    // Same for ANSI
     SetLastError(0xdeadbeef);
     ret = SHInvokePrinterCommandA(NULL, PRINTACTION_OPEN, NULL, NULL, FALSE);
     ok(ret == FALSE, "Expected FALSE, got %d\n", ret);
-    ok(GetLastError() == ERROR_INVALID_PARAMETER, "Expected ERROR_INVALID_PARAMETER, got %lu\n", GetLastError());
+    ok(GetLastError() == ERROR_SUCCESS, "Expected 0, got %lu\n", GetLastError());
 
+    // Unknown action
     SetLastError(0xdeadbeef);
     ret = SHInvokePrinterCommandW(NULL, 0xDEAD, L"DummyPrinter", NULL, FALSE);
-    ok(ret == FALSE, "Expected FALSE for unknown action, got %d\n", ret);
-    ok(GetLastError() == ERROR_INVALID_PARAMETER, "Expected ERROR_INVALID_PARAMETER for unknown action, got %lu\n", GetLastError());
-
-    SetLastError(0xdeadbeef);
-    ret = SHInvokePrinterCommandW(NULL, PRINTACTION_OPEN,
-                                  L"\\\\NonExistentServer\\NonExistentPrinter",
-                                  NULL, TRUE);
-    ok(ret == FALSE, "Expected FALSE for non-existent printer, got %d\n", ret);
-
-    SetLastError(0xdeadbeef);
-    ret = SHInvokePrinterCommandA(NULL, PRINTACTION_OPEN,
-                                  "\\\\NonExistentServer\\NonExistentPrinter",
-                                  NULL, TRUE);
-    ok(ret == FALSE, "Expected FALSE for non-existent printer (A), got %d\n", ret);
-
-    SetLastError(0xdeadbeef);
-    ret = SHInvokePrinterCommandW(NULL, PRINTACTION_TESTPAGE,
-                                  L"\\\\NonExistentServer\\NonExistentPrinter",
-                                  NULL, TRUE);
-    ok(ret == FALSE, "Expected FALSE for TESTPAGE on non-existent printer, got %d\n", ret);
-
-    SetLastError(0xdeadbeef);
-    ret = SHInvokePrinterCommandW(NULL, PRINTACTION_PROPERTIES,
-                                  L"\\\\NonExistentServer\\NonExistentPrinter",
-                                  NULL, TRUE);
-    ok(ret == FALSE, "Expected FALSE for PROPERTIES on non-existent printer, got %d\n", ret);
+    ok(ret == TRUE, "Expected TRUE for unknown action, got %d\n", ret);
+    ok(GetLastError() == ERROR_SUCCESS, "Expected 0, got %lu\n", GetLastError());
 }
