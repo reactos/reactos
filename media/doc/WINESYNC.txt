@@ -90,7 +90,7 @@ dll/win32/atl80               # Synced to Wine-10.0
 dll/win32/atl100              # Synced to Wine-10.0
 dll/win32/avifil32            # Synced to Wine-10.0
 dll/win32/avrt                # Synced to Wine-10.0
-dll/win32/bcrypt              # Synced to WineStaging-10.6 (+ winetest synced to d9148e48a3257ae80361f02f0bb7a2d607ef18ec)
+dll/win32/bcrypt              # Synced to Wine-11.19
 dll/win32/bcryptprimitives    # Synced to Wine-10.0
 dll/win32/bluetoothapis       # Synced to Wine-10.0
 dll/win32/cabinet             # Synced to Wine-10.0
@@ -177,6 +177,7 @@ dll/win32/msxml2              # Synced to Wine-10.0
 dll/win32/msxml3              # Synced to Wine-10.0
 dll/win32/msxml4              # Synced to Wine-10.0
 dll/win32/msxml6              # Synced to Wine-10.0
+dll/win32/ncrypt              # Synced to Wine-11.19
 dll/win32/nddeapi             # Synced to Wine-10.0
 dll/win32/netapi32            # Forked at Wine-1.3.34
 dll/win32/netutils            # Synced to Wine-10.0
