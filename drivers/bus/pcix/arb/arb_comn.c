@@ -25,6 +25,56 @@ PCHAR PciArbiterNames[] =
 
 /* FUNCTIONS ******************************************************************/
 
+/**
+ * @brief
+ * Sets the range attributes of one arbitration entry before the engine looks
+ * for a placement for it.
+ *
+ * @param[in] Arbiter
+ * The arbiter instance placing the entry.
+ *
+ * @param[in,out] State
+ * The allocation state of the entry.
+ *
+ * @return
+ * STATUS_SUCCESS.
+ *
+ * @remarks
+ * Boot configs and legacy claims treat boot reservations as free.
+ * Positive decode ports ignore ISA alias ranges.
+ */
+NTSTATUS
+NTAPI
+PciArbiter_PreprocessEntry(
+    _In_ PARBITER_INSTANCE Arbiter,
+    _Inout_ PARBITER_ALLOCATION_STATE State)
+{
+    PIO_RESOURCE_DESCRIPTOR Descriptor;
+
+    UNREFERENCED_PARAMETER(Arbiter);
+
+    PAGED_CODE();
+
+    if (!State->Entry)
+        return STATUS_SUCCESS;
+
+    if ((State->Entry->Flags & ARBITER_FLAG_BOOT_CONFIG) ||
+        (State->Entry->RequestSource == ArbiterRequestLegacyReported) ||
+        (State->Entry->RequestSource == ArbiterRequestLegacyAssigned))
+    {
+        State->RangeAvailableAttributes |= ARBITER_RANGE_BOOT_ALLOCATED;
+    }
+
+    /* CurrentAlternative is not set yet, use the first alternative */
+    Descriptor = State->Alternatives ? State->Alternatives->Descriptor : NULL;
+    if (Descriptor &&
+        (Descriptor->Type == CmResourceTypePort) &&
+        (Descriptor->Flags & CM_RESOURCE_PORT_POSITIVE_DECODE))
+        State->RangeAvailableAttributes |= ARBITER_RANGE_PORT_ALIAS;
+
+    return STATUS_SUCCESS;
+}
+
 VOID
 NTAPI
 PciArbiter_Reference(_In_ PVOID Context)
