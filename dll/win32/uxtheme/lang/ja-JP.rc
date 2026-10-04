@@ -11,9 +11,9 @@ LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    IDS_MESSAGEBOX "ƒƒbƒZ[ƒWƒ{ƒbƒNƒX"
-    IDS_ACTIVEWIN "ƒAƒNƒeƒBƒu ƒEƒBƒ“ƒhƒE"
-    IDS_INACTIVEWIN "”ñƒAƒNƒeƒBƒu ƒEƒBƒ“ƒhƒE"
+    IDS_MESSAGEBOX "ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸ãƒœãƒƒã‚¯ã‚¹"
+    IDS_ACTIVEWIN "ã‚¢ã‚¯ãƒ†ã‚£ãƒ– ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦"
+    IDS_INACTIVEWIN "éžã‚¢ã‚¯ãƒ†ã‚£ãƒ– ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦"
     IDS_OK "OK"
-    IDS_WINTEXT "ƒEƒBƒ“ƒhƒE ƒeƒLƒXƒg"
+    IDS_WINTEXT "ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ ãƒ†ã‚­ã‚¹ãƒˆ"
 END
