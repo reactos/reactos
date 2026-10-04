@@ -1,1 +1,5 @@
-@ stdcall KbdLayerDescriptor()
+1 stdcall KbdLayerDescriptor()
+2 stdcall KbdNlsLayerDescriptor()
+3 stdcall KbdLayerRealDllFileNT4(ptr)
+5 stdcall KbdLayerRealDllFile(ptr ptr ptr ptr)
+6 stdcall KbdLayerMultiDescriptor(ptr)
