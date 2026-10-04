@@ -286,7 +286,7 @@ static HRESULT GetFriendlyVerb(_In_ PCWSTR pszVerb, _Out_ PWSTR pszBuf, _In_ SIZ
 }
 
 
-extern BOOL ShellCanPaste(const CComPtr<IShellFolder> &pSF);
+extern BOOL ShellCanPaste(IShellFolder *pSF);
 
 class CDefaultContextMenu :
     public CComObjectRootEx<CComMultiThreadModelNoCS>,

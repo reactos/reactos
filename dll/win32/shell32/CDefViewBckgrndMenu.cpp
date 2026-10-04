@@ -10,7 +10,7 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
-extern BOOL ShellCanPaste(const CComPtr<IShellFolder> &pSF);
+extern BOOL ShellCanPaste(IShellFolder *pSF);
 
 
 class CDefViewBckgrndMenu :

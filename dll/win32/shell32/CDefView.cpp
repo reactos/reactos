@@ -218,7 +218,7 @@ static inline COLORREF GetViewColor(COLORREF Clr, UINT SysFallback)
 #define VID_Default ( *(const SHELLVIEWID*)&IID_CDefView )
 extern HRESULT ShellViewIdToFolderViewMode(const SHELLVIEWID *pVid);
 extern const SHELLVIEWID* FolderViewModeToShellViewId(UINT FVM);
-extern BOOL ShellCanPaste(const CComPtr<IShellFolder> &pSF);
+extern BOOL ShellCanPaste(IShellFolder *pSF);
 
 class CDefView :
     public CWindowImpl<CDefView, CWindow, CControlWinTraits>,
