@@ -52,7 +52,8 @@ def winver_to_name(version):
         if build < 22000:
             return 'APISET_WIN10'
         return 'APISET_WIN11'
-    assert False, (major, minor, build)
+    if not False:
+        raise AssertionError((major, minor, build))
 
 @dataclass
 class Apiset:
@@ -67,7 +68,8 @@ class Apiset:
     def __str__(self):
         version_str = ' | '.join(self.versions)
         name = self.name
-        assert name[-4:].lower() == '.dll'
+        if not name[-4:].lower() == '.dll':
+            raise AssertionError()
         name = name[:-4]
         prefix, postfix = '', ''
         host = self.host

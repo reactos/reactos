@@ -330,7 +330,8 @@ class MemoryLayout(object):
     def update(self, priorities):
         # sort addresses, should only contain reserved modules at this point!
         for key, reserved in self.reserved.items():
-            assert reserved[1] != 0, key
+            if reserved[1] == 0:
+                raise AssertionError(key)
         for curr in priorities:
             if not curr in self.found:
                 print('# Did not find', curr, '!')
@@ -364,7 +365,8 @@ def get_target_file(ntdll_path):
         elif count > 3:
             return 'baseaddress_dwarf.cmake'
         else:
-            assert False, "Unknown"
+            if not False:
+                raise AssertionError("Unknown")
     return None
 
 def run_dir(target):
