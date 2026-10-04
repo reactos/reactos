@@ -56,41 +56,6 @@ extern PATTACHINFO gpai;
 /* lParam bits */
 #define LP_DO_NOT_CARE_BIT (1<<25) // For GetKeyNameText
 
-/* General */
-CODE_SEG("INIT") NTSTATUS NTAPI InitInputImpl(VOID);
-VOID NTAPI RawInputThreadMain(VOID);
-BOOL FASTCALL IntBlockInput(PTHREADINFO W32Thread, BOOL BlockIt);
-NTSTATUS FASTCALL UserAttachThreadInput(PTHREADINFO,PTHREADINFO,BOOL);
-BOOL FASTCALL IsRemoveAttachThread(PTHREADINFO);
-VOID FASTCALL DoTheScreenSaver(VOID);
-#define ThreadHasInputAccess(W32Thread) (TRUE)
-
-/* Keyboard */
-CODE_SEG("INIT") NTSTATUS NTAPI InitKeyboardImpl(VOID);
-VOID NTAPI UserInitKeyboard(HANDLE hKeyboardDevice);
-PKL W32kGetDefaultKeyLayout(VOID);
-VOID NTAPI UserProcessKeyboardInput(PKEYBOARD_INPUT_DATA pKeyInput);
-BOOL NTAPI UserSendKeyboardInput(KEYBDINPUT *pKbdInput, BOOL bInjected);
-PKL NTAPI UserHklToKbl(HKL hKl);
-BOOL NTAPI UserSetDefaultInputLang(HKL hKl);
-extern DWORD gdwLanguageToggleKey;
-extern DWORD gdwLayoutToggleKey;
-extern BOOL gbEnableHexNumpad;
-
-/* Mouse */
-WORD FASTCALL UserGetMouseButtonsState(VOID);
-VOID NTAPI UserProcessMouseInput(PMOUSE_INPUT_DATA pMouseInputData);
-BOOL NTAPI UserSendMouseInput(MOUSEINPUT *pMouseInput, BOOL bInjected);
-
-/* IMM */
-UINT FASTCALL IntImmProcessKey(
-    _In_ PUSER_MESSAGE_QUEUE MessageQueue,
-    _In_ PWND pWnd,
-    _In_ UINT uMsg,
-    _In_ WPARAM wParam,
-    _In_ LPARAM lParam);
-VOID FASTCALL IntFreeImeHotKeys(VOID);
-
 /* Input devices */
 typedef struct _MOUSE_DEVICE_INFO
 {
@@ -126,6 +91,41 @@ typedef struct _INPUT_DEVICE_INFO
         HID_DEVICE_INFO Hid;
     };
 } INPUT_DEVICE_INFO, *PINPUT_DEVICE_INFO;
+
+/* General */
+CODE_SEG("INIT") NTSTATUS NTAPI InitInputImpl(VOID);
+VOID NTAPI RawInputThreadMain(VOID);
+BOOL FASTCALL IntBlockInput(PTHREADINFO W32Thread, BOOL BlockIt);
+NTSTATUS FASTCALL UserAttachThreadInput(PTHREADINFO,PTHREADINFO,BOOL);
+BOOL FASTCALL IsRemoveAttachThread(PTHREADINFO);
+VOID FASTCALL DoTheScreenSaver(VOID);
+#define ThreadHasInputAccess(W32Thread) (TRUE)
+
+/* Keyboard */
+CODE_SEG("INIT") NTSTATUS NTAPI InitKeyboardImpl(VOID);
+VOID NTAPI UserInitKeyboard(HANDLE hKeyboardDevice);
+PKL W32kGetDefaultKeyLayout(VOID);
+VOID NTAPI UserProcessKeyboardInput(PINPUT_DEVICE_INFO pDeviceInfo, PKEYBOARD_INPUT_DATA pKeyInput);
+BOOL NTAPI UserSendKeyboardInput(KEYBDINPUT *pKbdInput, BOOL bInjected);
+PKL NTAPI UserHklToKbl(HKL hKl);
+BOOL NTAPI UserSetDefaultInputLang(HKL hKl);
+extern DWORD gdwLanguageToggleKey;
+extern DWORD gdwLayoutToggleKey;
+extern BOOL gbEnableHexNumpad;
+
+/* Mouse */
+WORD FASTCALL UserGetMouseButtonsState(VOID);
+VOID NTAPI UserProcessMouseInput(PINPUT_DEVICE_INFO pDeviceInfo, PMOUSE_INPUT_DATA pMouseInputData);
+BOOL NTAPI UserSendMouseInput(MOUSEINPUT *pMouseInput, BOOL bInjected);
+
+/* IMM */
+UINT FASTCALL IntImmProcessKey(
+    _In_ PUSER_MESSAGE_QUEUE MessageQueue,
+    _In_ PWND pWnd,
+    _In_ UINT uMsg,
+    _In_ WPARAM wParam,
+    _In_ LPARAM lParam);
+VOID FASTCALL IntFreeImeHotKeys(VOID);
 
 extern DWORD gSystemFS;
 extern UINT gSystemCPCharSet; 
