@@ -17,8 +17,8 @@
  * The arbiter allocation engine walks the alternatives in increasing priority.
  * An ordinary alternative's priority is its ordering-list index biased by one
  * (except for IO_RESOURCE_PREFERRED, so preferred ranges sort first).
- * Once the orderings are exhausted it gets one final whole-window pass
- * at (PREFERRED_)RESERVED before getting set to EXHAUSTED.
+ * Once the orderings are exhausted it gets one final pass over its own whole
+ * window at (PREFERRED_)RESERVED before getting set to EXHAUSTED.
  *
  * Public as any driver can modify these of any range that's passed down.
  */
@@ -60,6 +60,7 @@
 #define ARBITER_STATE_FLAG_NULL_CONFLICT_OK 0x0008  // a NULL-owner conflict is OK
 #define ARBITER_STATE_FLAG_WORKSPACE        0x0010  // WorkSpace holds a pool block to free
 #define ARBITER_STATE_FLAG_MCFG_CONFLICT    0x0020  // blocked by the MMCONFIG window
+#define ARBITER_STATE_FLAG_NO_RETRY         0x0040  // the placement must not be varied
 
 typedef struct _ARBITER_ALTERNATIVE
 {
