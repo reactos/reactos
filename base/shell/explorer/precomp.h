@@ -208,7 +208,7 @@ typedef struct _TW_STUCKRECTS2
             DWORD AlwaysOnTop : 1;
             DWORD SmSmallIcons : 1; // Start menu Small Icons
             DWORD HideClock : 1;
-            DWORD SmGlomLevel : 2;
+            DWORD GlomLevel : 2;
         };
     };
     DWORD Position;

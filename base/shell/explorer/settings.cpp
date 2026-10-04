@@ -86,7 +86,7 @@ BOOL TaskbarSettings::Load()
         sr.AlwaysOnTop = TRUE;
         sr.SmSmallIcons = FALSE;
         sr.HideClock = FALSE;
-        sr.SmGlomLevel = 2;
+        sr.GlomLevel = 2;
         sr.Rect.left = sr.Rect.top = 0;
         sr.Rect.bottom = sr.Rect.right = 1;
         sr.Size.cx = sr.Size.cy = 0;
