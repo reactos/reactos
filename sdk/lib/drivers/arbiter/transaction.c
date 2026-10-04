@@ -31,9 +31,9 @@
  *
  * @param[out] Alternative
  * Receives the decoded window, length, alignment and the derived
- * FIXED / SHARED / INVALID flags. The minimum is rounded up to the
- * requested alignment first, so a misaligned window base does not
- * later affect the range search.
+ * FIXED / SHARED / INVALID flags. The window is taken exactly as
+ * the requirement states it; alignment is applied where a
+ * placement is chosen, not here.
  *
  * @return
  * Returns STATUS_SUCCESS, or the UnpackRequirement failure status.
@@ -73,18 +73,13 @@ ArbpBuildAlternative(
     Alternative->Alignment = (UINT32)Alignment;
 #endif
 
-    if (Alignment != 0 && (Alternative->Minimum % Alignment) != 0)
-        Alternative->Minimum += Alignment - (Alternative->Minimum % Alignment);
-
     Alternative->Flags = 0;
     Alternative->Priority = ARBITER_PRIORITY_NULL;
 
     if (Descriptor->ShareDisposition == CmResourceShareShared)
         Alternative->Flags |= ARBITER_ALTERNATIVE_FLAG_SHARED;
 
-    if (Alternative->Maximum < Alternative->Minimum)
-        Alternative->Flags |= ARBITER_ALTERNATIVE_FLAG_BADRANGE;
-    else if ((Alternative->Maximum - Alternative->Minimum + 1) == Alternative->Length)
+    if ((Alternative->Maximum - Alternative->Minimum + 1) == Alternative->Length)
         Alternative->Flags |= ARBITER_ALTERNATIVE_FLAG_FIXED;
 
     if ((Descriptor->Type == CmResourceTypeMemory ||
@@ -93,6 +88,9 @@ ArbpBuildAlternative(
     {
         Alternative->Flags |= ARBITER_ALTERNATIVE_FLAG_INACCESSIBLE_OK;
     }
+
+    if (Alternative->Maximum < Alternative->Minimum)
+        Alternative->Flags |= ARBITER_ALTERNATIVE_FLAG_BADRANGE;
 
     return STATUS_SUCCESS;
 }
@@ -215,6 +213,14 @@ ArbpBuildAllocationStack(
  * first, so a device does not conflict with itself (its boot
  * configuration in particular).
  *
+ * @param[in] AllocateFromCount
+ * The number of descriptors in AllocateFrom.
+ *
+ * @param[in] AllocateFrom
+ * The space to allocate out of, instead of whatever the committed
+ * allocation leaves free. Nothing is owned there yet, so no
+ * device's own ranges are withdrawn first.
+ *
  * @return
  * Returns STATUS_SUCCESS with the solution recorded in
  * PossibleAllocation, STATUS_DEVICE_CONFIGURATION_ERROR for a
@@ -226,7 +232,9 @@ static
 NTSTATUS
 ArbpTestAllocation(
     _In_ PARBITER_INSTANCE Arbiter,
-    _In_ PLIST_ENTRY ArbitrationList)
+    _In_ PLIST_ENTRY ArbitrationList,
+    _In_ ULONG AllocateFromCount,
+    _In_reads_opt_(AllocateFromCount) PCM_PARTIAL_RESOURCE_DESCRIPTOR AllocateFrom)
 {
     PLIST_ENTRY ListEntry;
     PVOID PreviousOwner = NULL;
@@ -235,10 +243,27 @@ ArbpTestAllocation(
 
     PAGED_CODE();
 
-    /* Start the tentative allocation as a copy of the committed one. */
-    RtlFreeRangeList(Arbiter->PossibleAllocation);
-    RtlInitializeRangeList(Arbiter->PossibleAllocation);
-    Status = RtlCopyRangeList(Arbiter->PossibleAllocation, Arbiter->Allocation);
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+    if (AllocateFrom != NULL)
+    {
+        /*
+         * The caller named the space to allocate out of, so the committed
+         * allocation says nothing about it and nothing is already owned there.
+         */
+        Status = Arbiter->InitializeRangeList(Arbiter,
+                                             AllocateFromCount,
+                                             AllocateFrom,
+                                             Arbiter->PossibleAllocation);
+    }
+    else
+#endif
+    {
+        /* Start the tentative allocation as a copy of the committed one. */
+        RtlFreeRangeList(Arbiter->PossibleAllocation);
+        RtlInitializeRangeList(Arbiter->PossibleAllocation);
+        Status = RtlCopyRangeList(Arbiter->PossibleAllocation, Arbiter->Allocation);
+    }
+
     if (!NT_SUCCESS(Status))
         goto Failure;
 
@@ -256,7 +281,7 @@ ArbpTestAllocation(
          * reassignment - remove it from the working list so the device does not
          * conflict with itself (its boot config in particular).
          */
-        if (Entry->PhysicalDeviceObject != PreviousOwner)
+        if (AllocateFrom == NULL && Entry->PhysicalDeviceObject != PreviousOwner)
         {
             PreviousOwner = Entry->PhysicalDeviceObject;
             RtlDeleteOwnersRanges(Arbiter->PossibleAllocation, Entry->PhysicalDeviceObject);
@@ -449,7 +474,10 @@ ArbiterLibTestAllocation(
     _Inout_ PARBITER_TEST_ALLOCATION_PARAMETERS Parameters)
 {
     PAGED_CODE();
-    return ArbpTestAllocation(Arbiter, Parameters->ArbitrationList);
+    return ArbpTestAllocation(Arbiter,
+                              Parameters->ArbitrationList,
+                              Parameters->AllocateFromCount,
+                              Parameters->AllocateFrom);
 }
 #else
 ArbiterLibTestAllocation(
@@ -457,7 +485,7 @@ ArbiterLibTestAllocation(
     _Inout_ PLIST_ENTRY ArbitrationList)
 {
     PAGED_CODE();
-    return ArbpTestAllocation(Arbiter, ArbitrationList);
+    return ArbpTestAllocation(Arbiter, ArbitrationList, 0, NULL);
 }
 #endif
 
@@ -636,8 +664,14 @@ ArbpBootAllocation(
         State.Start = State.CurrentMinimum = Alternative.Minimum;
         State.End = State.CurrentMaximum = Alternative.Maximum;
 
-        if (!NT_SUCCESS(Arbiter->PreprocessEntry(Arbiter, &State)))
-            continue;
+        /* A rejected entry is not a malformed one, so nothing is reserved at all. */
+        Status = Arbiter->PreprocessEntry(Arbiter, &State);
+        if (!NT_SUCCESS(Status))
+        {
+            RtlFreeRangeList(Arbiter->PossibleAllocation);
+            RtlInitializeRangeList(Arbiter->PossibleAllocation);
+            return Status;
+        }
 
         Arbiter->AddAllocation(Arbiter, &State);
 
