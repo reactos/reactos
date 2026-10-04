@@ -1,0 +1,19 @@
+/*
+ * PROJECT:     ReactOS uxtheme.dll
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     Japanese (Japan) resource file
+ * TRANSLATORS: Copyright 2026 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
+ */
+
+LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
+
+/* Strings */
+
+STRINGTABLE
+BEGIN
+    IDS_MESSAGEBOX "メッセージボックス"
+    IDS_ACTIVEWIN "アクティブ ウィンドウ"
+    IDS_INACTIVEWIN "非アクティブ ウィンドウ"
+    IDS_OK "OK"
+    IDS_WINTEXT "ウィンドウ テキスト"
+END
