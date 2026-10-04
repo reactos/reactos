@@ -285,6 +285,16 @@ ArbiterLibAllocateEntry(
             Arbiter->BacktrackAllocation(Arbiter, Current);
 
             /*
+             * An arbiter that had only one placement to offer says so here, and
+             * the entry fails rather than being offered a different window.
+             */
+            if (Current->Flags & ARBITER_STATE_FLAG_NO_RETRY)
+            {
+                Current->Flags &= ~ARBITER_STATE_FLAG_NO_RETRY;
+                goto Backtrack;
+            }
+
+            /*
              * Retrying one placement lower walks the window down an alignment
              * unit at a time, so it has to be bounded, or searching a bridge's
              * multi-gigabyte window will hang the system.
