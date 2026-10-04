@@ -357,12 +357,12 @@ PciScanFunction(
     _In_ UCHAR Bus,
     _In_ UCHAR Device,
     _In_ UCHAR Function,
-    _Inout_updates_(PCI_MAX_BUSES) BOOLEAN *ScannedBuses,
-    _Inout_updates_(PCI_MAX_BUSES) UCHAR *PendingBuses,
-    _Inout_ ULONG *PendingCount)
+    _Out_ PUCHAR MaxBridgeBusNumber)
 {
     ULONG VendorDevice, HeaderTypeDword;
     UCHAR HeaderType;
+
+    *MaxBridgeBusNumber = 0;
 
     VendorDevice = PciReadConfigDword(Bus, Device, Function, 0x00);
     if ((VendorDevice & 0xFFFF) == 0xFFFF)
@@ -377,18 +377,15 @@ PciScanFunction(
         UCHAR SecondaryBus = (UCHAR)((BridgeBusNumbers >> 8) & 0xFF);
         UCHAR SubordinateBus = (UCHAR)((BridgeBusNumbers >> 16) & 0xFF);
 
-        if (SecondaryBus != 0 && SecondaryBus != Bus && SubordinateBus >= SecondaryBus)
+        if (SecondaryBus > SubordinateBus)
         {
-            USHORT b;
-            for (b = SecondaryBus; b <= SubordinateBus && b < PCI_MAX_BUSES; b++)
-            {
-                if (!ScannedBuses[b] && (*PendingCount < PCI_MAX_BUSES))
-                {
-                    ScannedBuses[b] = TRUE;
-                    PendingBuses[(*PendingCount)++] = (UCHAR)b;
-                }
-            }
+            ERR("Misconfigured PCI bridge: SecondaryBus (%u) > SubordinateBus (%u)\n",
+                SecondaryBus, SubordinateBus);
+            return FALSE;
         }
+
+        //if (SecondaryBus != 0 && SecondaryBus != Bus && SubordinateBus >= SecondaryBus)
+        *MaxBridgeBusNumber = SubordinateBus;
     }
 
     return TRUE;
@@ -402,13 +399,8 @@ UefiDetectPciBus(
     _Out_ PPCI_REGISTRY_INFO BusData)
 {
     PMCFG_TABLE Mcfg;
-    BOOLEAN ScannedBuses[PCI_MAX_BUSES];
-    UCHAR PendingBuses[PCI_MAX_BUSES];
-    ULONG PendingCount = 0;
-    ULONG QueueHead = 0;
-    UCHAR Bus, HighestBus;
+    UCHAR Bus = 0, HighestBus;
     USHORT Device, Function;
-    ULONG HeaderTypeDword;
     BOOLEAN AnyFound = FALSE;
 
     UNREFERENCED_PARAMETER(SystemKey);
@@ -450,50 +442,35 @@ UefiDetectPciBus(
         }
     }
 
+    /* Supposing we only have one single PCI root bus (#0),
+     * loop over each device, and for every PCI bridge encountered,
+     * check its SubordinateBus. */
     HighestBus = 0;
 
-    RtlZeroMemory(ScannedBuses, sizeof(ScannedBuses));
-    ScannedBuses[0] = TRUE;
-    PendingBuses[PendingCount++] = 0;
-
-    while (QueueHead < PendingCount)
+    /* Loop through all devices */
+    for (Device = 0; Device < PCI_MAX_DEVICES; ++Device)
     {
-        Bus = PendingBuses[QueueHead++];
+        ULONG HeaderTypeDword;
+        UCHAR SubordinateBus = 0;
 
-        /* Loop through all devices */
-        for (Device = 0; Device < PCI_MAX_DEVICES; ++Device)
+        if (!PciScanFunction(Bus, (UCHAR)Device, 0, &SubordinateBus))
+            continue;
+
+        AnyFound = TRUE;
+        HighestBus = max(HighestBus, SubordinateBus);
+
+        HeaderTypeDword = PciReadConfigDword(Bus, (UCHAR)Device, 0, 0x0C);
+        if (!((HeaderTypeDword >> 16) & PCI_MULTIFUNCTION))
+            continue;
+
+        /* Loop through all functions */
+        for (Function = 1; Function < PCI_MAX_FUNCTION; ++Function)
         {
-            if (!PciScanFunction(Bus, (UCHAR)Device, 0,
-                                 ScannedBuses, PendingBuses, &PendingCount))
+            if (PciScanFunction(Bus, (UCHAR)Device, (UCHAR)Function, &SubordinateBus))
             {
-                continue;
+                AnyFound = TRUE;
+                HighestBus = max(HighestBus, SubordinateBus);
             }
-
-            AnyFound = TRUE;
-            HighestBus = max(HighestBus, Bus);
-
-            HeaderTypeDword = PciReadConfigDword(Bus, (UCHAR)Device, 0, 0x0C);
-            if (!((HeaderTypeDword >> 16) & PCI_MULTIFUNCTION))
-                continue;
-
-            /* Loop through all functions */
-            for (Function = 1; Function < PCI_MAX_FUNCTION; ++Function)
-            {
-                if (PciScanFunction(Bus, (UCHAR)Device, (UCHAR)Function,
-                                    ScannedBuses, PendingBuses, &PendingCount))
-                {
-                    AnyFound = TRUE;
-                }
-            }
-        }
-    }
-
-    for (Bus = PCI_MAX_BUSES - 1; Bus > HighestBus; --Bus)
-    {
-        if (ScannedBuses[Bus])
-        {
-            HighestBus = Bus;
-            break;
         }
     }
 
