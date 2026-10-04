@@ -80,6 +80,10 @@ public:
         COMMAND_ID_HANDLER(IDM_ACTION_NEW, OnActionNewWindow)
         COMMAND_ID_HANDLER(IDM_ACTION_RENAME, OnActionRename)
 
+        COMMAND_ID_HANDLER(IDM_VIEW_LARGE_ICONS, OnViewMode)
+        COMMAND_ID_HANDLER(IDM_VIEW_SMALL_ICONS, OnViewMode)
+        COMMAND_ID_HANDLER(IDM_VIEW_LIST, OnViewMode)
+        COMMAND_ID_HANDLER(IDM_VIEW_DETAILS, OnViewMode)
         COMMAND_ID_HANDLER(IDM_VIEW_CUSTOMIZE, OnViewCustomize)
 
         COMMAND_ID_HANDLER(IDM_WINDOWS_NEW, OnWindowsNew)
@@ -88,7 +92,9 @@ public:
         COMMAND_ID_HANDLER(IDM_WINDOWS_ARRANGE, OnWindowsArrange)
 
         COMMAND_ID_HANDLER(IDM_HELP_ABOUT_MMC, OnHelpAboutMMC)
+        COMMAND_ID_HANDLER(IDM_HELP_ABOUT_SNAPIN, OnHelpAboutSnapin)
 
+        COMMAND_ID_HANDLER(IDM_TB_UP, OnToolbarSelectParent)
         COMMAND_ID_HANDLER(IDM_TB_SCOPE_PANE, OnToolbarScopePane)
         COMMAND_ID_HANDLER(IDM_TB_ACTIONS_PANE, OnToolbarActionsPane)
 
@@ -199,12 +205,16 @@ public:
     LRESULT OnFileExit(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
     LRESULT OnActionNewWindow(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
     LRESULT OnActionRename(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
+    LRESULT OnViewMode(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
     LRESULT OnViewCustomize(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
     LRESULT OnWindowsNew(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
     LRESULT OnWindowsCascade(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
     LRESULT OnWindowsTile(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
     LRESULT OnWindowsArrange(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
     LRESULT OnHelpAboutMMC(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
+    LRESULT OnHelpAboutSnapin(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
+
+    LRESULT OnToolbarSelectParent(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
     LRESULT OnToolbarScopePane(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
     LRESULT OnToolbarActionsPane(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
     LRESULT OnMDIForward(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
@@ -229,6 +239,10 @@ public:
     VOID SetToolBarVisible(BOOL bVisible);
     BOOL AreStandardMenusVisible();
     VOID SetStandardMenusVisible(BOOL bVisible);
+
+    VOID UpdateAboutSnapinMenu(CSnapin *Snapin);
+    VOID UpdateViewMenu(LISTVIEW_MODE ListViewMode);
+    VOID UpdateUpToolButton(BOOL bShow);
 
     int GetSnapinCacheCount();
     CSnapinCacheEntry *GetSnapinCacheEntry(int nIndex);

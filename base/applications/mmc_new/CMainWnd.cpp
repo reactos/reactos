@@ -406,6 +406,23 @@ CMainWnd::OnActionRename(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandle
 }
 
 LRESULT
+CMainWnd::OnViewMode(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
+{
+    CConsoleWnd* child = GetActiveChildInfo();
+    if (child == NULL)
+        return 0;
+
+    child->SetListViewMode(CmdIdToViewMode(wID));
+    CheckMenuRadioItem(GetMenu(),
+                       IDM_VIEW_LARGE_ICONS,
+                       IDM_VIEW_DETAILS,
+                       wID,
+                       MF_BYCOMMAND);
+
+    return 0;
+}
+
+LRESULT
 CMainWnd::OnViewCustomize(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
 {
     CConsoleWnd* child = GetActiveChildInfo();
@@ -480,6 +497,35 @@ CMainWnd::OnHelpAboutMMC(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandle
 
     ::ShellAboutW(this->m_hWnd, (LPWSTR)TitleString.GetString(), NULL, hIcon);
 
+    return 0;
+}
+
+LRESULT
+CMainWnd::OnHelpAboutSnapin(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
+{
+    MENUITEMINFOW mi;
+
+    mi.cbSize = sizeof(MENUITEMINFOW);
+    mi.fMask = MIIM_DATA;
+    if (GetMenuItemInfoW(GetMenu(), wID, FALSE, &mi))
+    {
+        CSnapin *Snapin = (CSnapin *)mi.dwItemData;
+
+        CAboutSnapinDialog dlg(this, Snapin);
+        dlg.DoModal(m_hWnd, (LPARAM)0);
+    }
+
+    return 0;
+}
+
+LRESULT
+CMainWnd::OnToolbarSelectParent(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
+{
+    CConsoleWnd* child = GetActiveChildInfo();
+    if (child == NULL)
+        return 0;
+
+    child->SelectParent();
     return 0;
 }
 
@@ -707,6 +753,58 @@ void
 CMainWnd::SetPreventViewCustomization(BOOL PreventCustomization)
 {
     m_PreventViewCustomization = PreventCustomization;
+}
+
+VOID
+CMainWnd::UpdateAboutSnapinMenu(CSnapin *Snapin)
+{
+    HMENU hMenu = GetMenu();
+
+    RemoveMenu(hMenu, IDM_HELP_ABOUT_SNAPIN, MF_BYCOMMAND);
+
+    if (Snapin)
+    {
+        MENUITEMINFOW mi;
+        CAtlString ValueName;
+        CAtlString AboutString(MAKEINTRESOURCE(IDS_ABOUT_SNAPIN));
+
+        ValueName.Format(AboutString.GetString(), Snapin->Name().GetString());
+
+        mi.cbSize = sizeof(MENUITEMINFOW);
+        mi.fMask = MIIM_ID | MIIM_STRING | MIIM_FTYPE | MIIM_DATA;
+        mi.fType = MFT_STRING;
+        mi.wID = IDM_HELP_ABOUT_SNAPIN;
+
+        mi.dwTypeData = ValueName.GetString();
+        mi.dwItemData = (ULONG_PTR)Snapin;
+
+        /* FIXME: Append this menu item */
+        InsertMenuItemW(hMenu, IDM_HELP_ABOUT_MMC, FALSE, &mi);
+    }
+}
+
+VOID
+CMainWnd::UpdateViewMenu(LISTVIEW_MODE ListViewMode)
+{
+    CheckMenuRadioItem(GetMenu(),
+                       IDM_VIEW_LARGE_ICONS,
+                       IDM_VIEW_DETAILS,
+                       ViewModeToCmdId(ListViewMode),
+                       MF_BYCOMMAND);
+}
+
+VOID
+CMainWnd::UpdateUpToolButton(BOOL bShow)
+{
+    if (bShow)
+        m_ToolBar.InsertButton(3, &TbButtons[3]);
+    else
+    {
+        TBBUTTON ToolButton;
+        m_ToolBar.GetButton(3, &ToolButton);
+        if (ToolButton.idCommand == IDM_TB_UP)
+            m_ToolBar.DeleteButton(3);
+    }
 }
 
 VOID

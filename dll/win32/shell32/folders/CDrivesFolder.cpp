@@ -304,6 +304,14 @@ static HRESULT DoFormatDriveAsync(HWND hwnd, UINT nDrive)
     return succ ? S_OK : E_FAIL;
 }
 
+enum { CMDID_FORMAT, CMDID_EJECT, CMDID_DISCONNECT };
+static const CMVERBMAP g_VerbMap[] =
+{
+    { "format", CMDID_FORMAT },
+    { "eject", CMDID_EJECT },
+    { "disconnect", CMDID_DISCONNECT },
+};
+
 HRESULT CALLBACK DrivesContextMenuCallback(IShellFolder *psf,
                                            HWND         hwnd,
                                            IDataObject  *pdtobj,
@@ -311,7 +319,7 @@ HRESULT CALLBACK DrivesContextMenuCallback(IShellFolder *psf,
                                            WPARAM       wParam,
                                            LPARAM       lParam)
 {
-    if (uMsg != DFM_MERGECONTEXTMENU && uMsg != DFM_INVOKECOMMAND)
+    if (uMsg != DFM_MERGECONTEXTMENU && uMsg != DFM_INVOKECOMMAND && uMsg != DFM_MAPCOMMANDNAME)
         return SHELL32_DefaultContextMenuCallBack(psf, pdtobj, uMsg);
 
     PIDLIST_ABSOLUTE pidlFolder;
@@ -338,19 +346,6 @@ HRESULT CALLBACK DrivesContextMenuCallback(IShellFolder *psf,
         else
             dwFlags = 0; // Assume drive with unknown filesystem, allow format
     }
-
-// custom command IDs
-#if 0 // Disabled until our menu building system is fixed
-#define CMDID_FORMAT        0
-#define CMDID_EJECT         1
-#define CMDID_DISCONNECT    2
-#else
-/* FIXME: These IDs should start from 0, however there is difference
- * between ours and Windows' menu building systems, which should be fixed. */
-#define CMDID_FORMAT        1
-#define CMDID_EJECT         2
-#define CMDID_DISCONNECT    3
-#endif
 
     if (uMsg == DFM_MERGECONTEXTMENU)
     {
@@ -381,11 +376,7 @@ HRESULT CALLBACK DrivesContextMenuCallback(IShellFolder *psf,
         }
 
         if (idCmd)
-#if 0 // see FIXME above
-            pqcminfo->idCmdFirst = ++idCmd;
-#else
-            pqcminfo->idCmdFirst = (idCmd + 2);
-#endif
+            pqcminfo->idCmdFirst = ++idCmd; // Note: This assumes the items above are added in ascending id order
         hr = S_OK;
     }
     else if (uMsg == DFM_INVOKECOMMAND)
@@ -437,6 +428,10 @@ HRESULT CALLBACK DrivesContextMenuCallback(IShellFolder *psf,
                     nStringID = IDS_CANTDISCONNECT;
                 }
             }
+            else if (hr == S_OK)
+            {
+                hr = E_INVALIDARG; // Don't eat DFM_CMD_* in CDefaultContextMenu::Do*
+            }
         }
 
         if (nStringID != 0)
@@ -446,6 +441,16 @@ HRESULT CALLBACK DrivesContextMenuCallback(IShellFolder *psf,
             LoadStringW(shell32_hInstance, nStringID, szFormat, _countof(szFormat));
             wsprintfW(szMessage, szFormat, dwError);
             MessageBoxW(hwnd, szMessage, NULL, MB_ICONERROR);
+        }
+    }
+    else if (uMsg == DFM_MAPCOMMANDNAME)
+    {
+        CMINVOKECOMMANDINFOEX ici = { sizeof(ici), CMIC_MASK_UNICODE };
+        ici.lpVerbW = (PWSTR)lParam;
+        if (SUCCEEDED(hr = SHELL_MapContextMenuVerbToCmdId((CMINVOKECOMMANDINFO*)&ici, g_VerbMap)))
+        {
+            *(int*)wParam = hr;
+            hr = S_OK;
         }
     }
 

@@ -1022,7 +1022,7 @@ GetUserDefaultLocaleName(
 LCID WINAPI GetUserDefaultLCID(void);
 GEOID WINAPI GetUserGeoID(_In_ GEOCLASS);
 
-#if (WINVER >= 0x0600)
+#if (WINVER >= 0x0600) || defined(__REACTOS__)
 
 int
 WINAPI

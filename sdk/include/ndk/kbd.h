@@ -1,4 +1,6 @@
+#ifndef __KBD_H
 #define __KBD_H
+#pragma once
 
 #ifdef __cplusplus
 extern "C" {
@@ -87,7 +89,7 @@ typedef struct _LIGATURE ## i { \
   TYPEDEF_LIGATURE(5)
 
 #define KBD_VERSION 1
-#define GET_KBD_VERSION(p) (HIWORD((p)->fLocalFlags))
+#define GET_KBD_VERSION(p) (HIWORD((p)->fLocaleFlags))
 #define KLLF_ALTGR     0x1
 #define KLLF_SHIFTLOCK 0x2
 #define KLLF_LRM_RLM   0x4
@@ -130,6 +132,105 @@ typedef struct _LIGATURE ## i { \
 #define SCANCODE_CTRL    0x1D
 #define SCANCODE_ALT     0x38
 
+/* ------------------------------------------------------------------ */
+/* Multi-table definitions                                            */
+
+typedef struct tagKBDTABLE_DESC
+{
+    WCHAR wszDllName[32];
+    DWORD dwType;
+    DWORD dwSubType;
+} KBDTABLE_DESC, *PKBDTABLE_DESC;
+
+#define KBDTABLE_MULTI_MAX 8
+
+typedef struct tagKBDTABLE_MULTI
+{
+    UINT nTables;
+    KBDTABLE_DESC aKbdTables[KBDTABLE_MULTI_MAX];
+} KBDTABLE_MULTI, *PKBDTABLE_MULTI;
+
+/* ------------------------------------------------------------------ */
+/* NLS (Far-East) definitions                                         */
+
+#define KBDNLS_TYPE_NULL    0
+#define KBDNLS_TYPE_NORMAL  1
+#define KBDNLS_TYPE_TOGGLE  2
+
+#define KBDNLS_INDEX_NORMAL 1
+#define KBDNLS_INDEX_ALT    2
+
+/* NLSFEProcIndex values */
+#define KBDNLS_NULL             0  /* invalid */
+#define KBDNLS_NOEVENT          1  /* swallow the key */
+#define KBDNLS_SEND_BASE_VK     2  /* send the base VK */
+#define KBDNLS_SEND_PARAM_VK    3  /* send the VK in the parameter */
+#define KBDNLS_KANALOCK         4
+#define KBDNLS_ALPHANUM         5
+#define KBDNLS_HIRAGANA         6
+#define KBDNLS_KATAKANA         7
+#define KBDNLS_SBCSDBCS         8
+#define KBDNLS_ROMAN            9
+#define KBDNLS_CODEINPUT       10
+#define KBDNLS_HELP_OR_END     11
+#define KBDNLS_HOME_OR_CLEAR   12
+#define KBDNLS_NUMPAD          13
+#define KBDNLS_KANAEVENT       14
+#define KBDNLS_CONV_OR_NONCONV 15
+
+typedef struct _VK_FUNCTION_PARAM
+{
+    BYTE  NLSFEProcIndex;
+    ULONG NLSFEProcParam;
+} VK_FPARAM, *PVK_FPARAM;
+
+typedef struct _VK_TO_FUNCTION_TABLE
+{
+    BYTE      Vk;
+    BYTE      NLSFEProcType;
+    BYTE      NLSFEProcCurrent;
+    BYTE      NLSFEProcSwitch;
+    VK_FPARAM NLSFEProc[8];
+    VK_FPARAM NLSFEProcAlt[8];
+} VK_F, *PVK_F;
+
+typedef struct tagKbdNlsLayer
+{
+    USHORT OEMIdentifier;
+    USHORT LayoutInformation;
+    ULONG  NumOfVkToF;
+    PVK_F  pVkToF;
+    INT    NumOfMouseVKey;
+    PUSHORT pusMouseVKey;
+} KBDNLSTABLES, *PKBDNLSTABLES;
+
+/* KBDTABLES as used by the FE layouts: dwType/dwSubType follow pLigature */
+typedef struct tagKBDTABLES_FE
+{
+    KBDTABLES Base;
+    DWORD     dwType;
+    DWORD     dwSubType;
+} KBDTABLES_FE, *PKBDTABLES_FE;
+
+#if (NTDDI_VERSION >= NTDDI_WINXP)
+#define VK_DBE_ALPHANUMERIC           0xF0
+#define VK_DBE_KATAKANA               0xF1
+#define VK_DBE_HIRAGANA               0xF2
+#define VK_DBE_SBCSCHAR               0xF3
+#define VK_DBE_DBCSCHAR               0xF4
+#define VK_DBE_ROMAN                  0xF5
+#define VK_DBE_NOROMAN                0xF6
+#define VK_DBE_ENTERWORDREGISTERMODE  0xF7
+#define VK_DBE_ENTERIMECONFIGMODE     0xF8
+#define VK_DBE_FLUSHSTRING            0xF9
+#define VK_DBE_CODEINPUT              0xFA
+#define VK_DBE_NOCODEINPUT            0xFB
+#define VK_DBE_DETERMINESTRING        0xFC
+#define VK_DBE_ENTERDLGCONVERSIONMODE 0xFD
+#endif // (NTDDI_VERSION >= NTDDI_WINXP)
+
 #ifdef __cplusplus
-};
-#endif//__KBD_H
+} // extern "C"
+#endif
+
+#endif /* __KBD_H */
