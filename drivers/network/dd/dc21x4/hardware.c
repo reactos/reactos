@@ -301,16 +301,21 @@ DcSetupFramePerfectFiltering(
     *SetupFrame++ = DC_SETUP_FRAME_ENTRY(MacAddress[1]);
     *SetupFrame++ = DC_SETUP_FRAME_ENTRY(MacAddress[2]);
 
-    /* Store multicast addresses */
-    for (i = 0; i < Adapter->MulticastCount; ++i)
-    {
-        MacAddress = (PUSHORT)Adapter->MulticastList[i].MacAddress;
+    i = 0;
 
-        *SetupFrame++ = DC_SETUP_FRAME_ENTRY(MacAddress[0]);
-        *SetupFrame++ = DC_SETUP_FRAME_ENTRY(MacAddress[1]);
-        *SetupFrame++ = DC_SETUP_FRAME_ENTRY(MacAddress[2]);
+    /* Store multicast addresses */
+    if (Adapter->PacketFilter & NDIS_PACKET_TYPE_MULTICAST)
+    {
+        for (; i < Adapter->MulticastCount; ++i)
+        {
+            MacAddress = (PUSHORT)Adapter->MulticastList[i].MacAddress;
+            *SetupFrame++ = DC_SETUP_FRAME_ENTRY(MacAddress[0]);
+            *SetupFrame++ = DC_SETUP_FRAME_ENTRY(MacAddress[1]);
+            *SetupFrame++ = DC_SETUP_FRAME_ENTRY(MacAddress[2]);
+        }
     }
 
+    /* Account for the physical address entry */
     ++i;
 
     /* Add the broadcast address entry */
@@ -377,8 +382,16 @@ DcUpdateMulticastList(
 {
     BOOLEAN UsePerfectFiltering;
 
-    /* If more than 14 addresses are requested, switch to hash filtering mode */
-    UsePerfectFiltering = (Adapter->MulticastCount <= DC_SETUP_FRAME_ADDRESSES);
+    if (Adapter->PacketFilter & NDIS_PACKET_TYPE_MULTICAST)
+    {
+        /* If more than 14 addresses are requested, switch to hash filtering mode */
+        UsePerfectFiltering = (Adapter->MulticastCount <= DC_SETUP_FRAME_ADDRESSES);
+    }
+    else
+    {
+        /* Disable the multicast filtering mechanism */
+        UsePerfectFiltering = TRUE;
+    }
 
     Adapter->ProgramHashPerfectFilter = UsePerfectFiltering;
     Adapter->OidPending = TRUE;
@@ -402,7 +415,7 @@ DcApplyPacketFilter(
     _In_ PDC21X4_ADAPTER Adapter,
     _In_ ULONG PacketFilter)
 {
-    ULONG OpMode, OldPacketFilter;
+    ULONG OpMode;
 
     INFO("Packet filter value 0x%lx\n", PacketFilter);
 
@@ -424,16 +437,9 @@ DcApplyPacketFilter(
 
     NdisReleaseSpinLock(&Adapter->ModeLock);
 
-    OldPacketFilter = Adapter->PacketFilter;
     Adapter->PacketFilter = PacketFilter;
 
-    /* Program the NIC to receive or reject broadcast frames */
-    if ((OldPacketFilter ^ PacketFilter) & NDIS_PACKET_TYPE_BROADCAST)
-    {
-        return DcUpdateMulticastList(Adapter);
-    }
-
-    return NDIS_STATUS_SUCCESS;
+    return DcUpdateMulticastList(Adapter);
 }
 
 static
