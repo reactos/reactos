@@ -1,5 +1,6 @@
 
 list(APPEND _keyboard_layouts
+    kbd106
     kbda1
     kbda2
     kbda3
