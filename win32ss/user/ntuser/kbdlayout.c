@@ -26,6 +26,7 @@ UINT gSystemCPCharSet = 0;
 HKL ghKLSentToShell = NULL;
 
 typedef PVOID (*PFN_KBDLAYERDESCRIPTOR)(VOID);
+typedef PKBDNLSTABLES (WINAPI *FN_KbdNlsLayerDescriptor)(VOID);
 
 /* PRIVATE FUNCTIONS ******************************************************/
 
@@ -247,9 +248,14 @@ DumpKbdLayout(
 static BOOL
 UserLoadKbdDll(WCHAR *pwszLayoutPath,
                HANDLE *phModule,
-               PKBDTABLES *pKbdTables)
+               PKBDTABLES *ppKbdTables,
+               PKBDNLSTABLES *ppKbdNlsTbl)
 {
     PFN_KBDLAYERDESCRIPTOR pfnKbdLayerDescriptor;
+    FN_KbdNlsLayerDescriptor pfnKbdNlsLayerDescriptor;
+
+    *ppKbdTables = NULL;
+    *ppKbdNlsTbl = NULL;
 
     /* Load keyboard layout DLL */
     TRACE("Loading Keyboard DLL %ws\n", pwszLayoutPath);
@@ -268,15 +274,28 @@ UserLoadKbdDll(WCHAR *pwszLayoutPath,
               It's not safe to kbdlayout DLL in kernel mode! */
 
     if (pfnKbdLayerDescriptor)
-        *pKbdTables = pfnKbdLayerDescriptor();
+        *ppKbdTables = pfnKbdLayerDescriptor();
     else
         ERR("Error: %ws has no KbdLayerDescriptor()\n", pwszLayoutPath);
 
-    if (!pfnKbdLayerDescriptor || !*pKbdTables)
+    if (!pfnKbdLayerDescriptor || !*ppKbdTables)
     {
         ERR("Failed to load the keyboard layout.\n");
         EngUnloadImage(*phModule);
         return FALSE;
+    }
+
+    /* Load NLS table if any */
+    pfnKbdNlsLayerDescriptor = EngFindImageProcAddress(*phModule, "KbdNlsLayerDescriptor");
+    if (pfnKbdNlsLayerDescriptor)
+    {
+        *ppKbdNlsTbl = pfnKbdNlsLayerDescriptor();
+        if (!*ppKbdNlsTbl)
+        {
+            ERR("Failed to load the NLS table.\n");
+            EngUnloadImage(*phModule);
+            return FALSE;
+        }
     }
 
 #if 0 && DBG
@@ -338,7 +357,7 @@ UserLoadKbdFile(PUNICODE_STRING pwszKLID)
     }
 
     /* Load keyboard file now */
-    if (!UserLoadKbdDll(wszLayoutPath, &pkf->hBase, &pkf->pKbdTbl))
+    if (!UserLoadKbdDll(wszLayoutPath, &pkf->hBase, &pkf->pKbdTbl, &pkf->pKbdNlsTbl))
     {
         ERR("Failed to load %ws dll!\n", wszLayoutPath);
         goto cleanup;

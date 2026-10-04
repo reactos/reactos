@@ -91,10 +91,19 @@ list(APPEND _keyboard_layouts
 foreach(_keyboard_layout ${_keyboard_layouts})
     spec2def(${_keyboard_layout}.dll ${_keyboard_layout}/${_keyboard_layout}.spec)
 
-    add_library(${_keyboard_layout} MODULE
-        ${_keyboard_layout}/${_keyboard_layout}.c
-        ${_keyboard_layout}/${_keyboard_layout}.rc
-        ${CMAKE_CURRENT_BINARY_DIR}/${_keyboard_layout}.def)
+    if(_keyboard_layout STREQUAL "kbdjpn" OR _keyboard_layout STREQUAL "kbdkor")
+        # kbdjpn and kbdkor are special keyboard layouts
+        add_library(${_keyboard_layout} MODULE
+            ${_keyboard_layout}/${_keyboard_layout}.c
+            ${_keyboard_layout}/${_keyboard_layout}.rc
+            ${CMAKE_CURRENT_BINARY_DIR}/${_keyboard_layout}.def
+            jpnkor.c)
+    else()
+        add_library(${_keyboard_layout} MODULE
+            ${_keyboard_layout}/${_keyboard_layout}.c
+            ${_keyboard_layout}/${_keyboard_layout}.rc
+            ${CMAKE_CURRENT_BINARY_DIR}/${_keyboard_layout}.def)
+    endif()
 
     set_entrypoint(${_keyboard_layout} 0)
     set_image_base(${_keyboard_layout} 0x5FFF0000)
@@ -120,3 +129,9 @@ foreach(_keyboard_layout ${_keyboard_layouts})
     add_dependencies(${_keyboard_layout} xdk)
     add_cd_file(TARGET ${_keyboard_layout} DESTINATION reactos/system32 FOR all)
 endforeach()
+
+# kbdjpn and kbdkor are special keyboard layouts
+target_compile_definitions(kbdjpn PRIVATE KBD_JAPANESE)
+target_compile_definitions(kbdkor PRIVATE KBD_KOREAN)
+add_importlibs(kbdjpn ntdll)
+add_importlibs(kbdkor ntdll)

@@ -970,6 +970,10 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Network\{4D36E975-E325-11CE-BFC1-08002BE1
 HKLM,"SYSTEM\CurrentControlSet\Control\Network\{4D36E975-E325-11CE-BFC1-08002BE10318}","Class",0x00000000,"NetTrans"
 HKLM,"SYSTEM\CurrentControlSet\Control\NetworkProvider\Order","ProviderOrder",0x00000000,"nfs41_driver"
 
+; Japanese and Korean keyboard settings (used in kbdjpn and kbdkor)
+HKLM,"SYSTEM\CurrentControlSet\Services\i8042prt\Parameters","LayerDriver JPN",0x00000000,"kbd106.dll"
+HKLM,"SYSTEM\CurrentControlSet\Services\i8042prt\Parameters","LayerDriver KOR",0x00000000,"kbd101a.dll"
+
 ; NLS Files
 HKLM,"SYSTEM\CurrentControlSet\Control\Nls\CodePage","37",0x00000000,"c_037.nls"
 HKLM,"SYSTEM\CurrentControlSet\Control\Nls\CodePage","424",0x00000000,"c_424.nls"

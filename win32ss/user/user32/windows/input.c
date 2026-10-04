@@ -26,7 +26,7 @@
  */
 
 #include <user32.h>
-
+#include <ndk/kbd.h>
 #include <strsafe.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(user32);
@@ -699,6 +699,106 @@ VOID GetSystemLibraryPath(LPWSTR pszPath, INT cchPath, LPCWSTR pszFileName)
 
 #define ENGLISH_US MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US)
 
+#define IFN_KbdLayerDescriptor      1
+#define IFN_KbdNlsLayerDescriptor   2
+#define IFN_KbdLayerRealDllFileNT4  3
+#define IFN_KbdLayerRealDllFile     5
+#define IFN_KbdLayerMultiDescriptor 6
+
+typedef struct tagCLIENTKEYBOARDTYPE
+{
+    ULONG Type;
+    ULONG SubType;
+    ULONG FunctionKey;
+} CLIENTKEYBOARDTYPE, *PCLIENTKEYBOARDTYPE;
+
+typedef PKBDTABLES (WINAPI *FN_KbdLayerDescriptor)(VOID);
+typedef PKBDNLSTABLES (WINAPI *FN_KbdNlsLayerDescriptor)(VOID);
+typedef BOOL (WINAPI *FN_KbdLayerRealDllFileNT4)(PWCHAR);
+typedef BOOL (WINAPI *FN_KbdLayerRealDllFile)(HKL, PWCHAR, PCLIENTKEYBOARDTYPE, PVOID);
+typedef BOOL (WINAPI *FN_KbdLayerMultiDescriptor)(PKBDTABLE_MULTI);
+
+static BOOL IntIsValidLayoutFileName(PCWSTR pszPath)
+{
+    if (!*pszPath)
+        return FALSE;
+
+    do
+    {
+        if (*pszPath == L'\\' || *pszPath == L'/' || *pszPath == L':')
+            return FALSE;
+        ++pszPath;
+    } while (*pszPath);
+
+    return TRUE;
+}
+
+static BOOL
+IntCheckLayoutFile(
+    IN HKL hKL,
+    IN OUT PWSTR pszLayoutFile,
+    IN INT cchLayoutFile,
+    IN INT cTrials)
+{
+    FARPROC fn;
+    HINSTANCE hinstLayoutFile;
+    WCHAR szFileName[MAX_PATH];
+
+    if (cTrials >= 2)
+        return FALSE;
+
+    hinstLayoutFile = LoadLibraryW(pszLayoutFile);
+    if (!hinstLayoutFile)
+    {
+        ERR("LoadLibraryW(%S) failed\n", pszLayoutFile);
+        return FALSE;
+    }
+
+    /* Check KbdLayerDescriptor procedure */
+    fn = GetProcAddress(hinstLayoutFile, MAKEINTRESOURCEA(IFN_KbdLayerDescriptor));
+    if (!fn)
+    {
+        ERR("KbdLayerDescriptor not found\n");
+        FreeLibrary(hinstLayoutFile);
+        return FALSE;
+    }
+
+    /* Check KbdLayerRealDllFile procedure */
+    fn = GetProcAddress(hinstLayoutFile, MAKEINTRESOURCEA(IFN_KbdLayerRealDllFile));
+    if (fn)
+    {
+        FN_KbdLayerRealDllFile fnKbdLayerRealDllFile;
+        CopyMemory(&fnKbdLayerRealDllFile, &fn, sizeof(fn));
+        ZeroMemory(szFileName, sizeof(szFileName));
+        if (fnKbdLayerRealDllFile(hKL, szFileName, NULL, NULL))
+            goto RetryWithNewFile;
+        WARN("KbdLayerRealDllFile failed\n");
+    }
+
+    /* Check KbdLayerRealDllFileNT4 procedure */
+    fn = GetProcAddress(hinstLayoutFile, MAKEINTRESOURCEA(IFN_KbdLayerRealDllFileNT4));
+    if (fn)
+    {
+        FN_KbdLayerRealDllFileNT4 fnKbdLayerRealDllFileNT4;
+        CopyMemory(&fnKbdLayerRealDllFileNT4, &fn, sizeof(fn));
+        ZeroMemory(szFileName, sizeof(szFileName));
+        if (fnKbdLayerRealDllFileNT4(szFileName))
+            goto RetryWithNewFile;
+        WARN("KbdLayerRealDllFileNT4 failed\n");
+    }
+
+    FreeLibrary(hinstLayoutFile);
+    return TRUE;
+
+RetryWithNewFile:
+    szFileName[_countof(szFileName) - 1] = UNICODE_NULL; /* Avoid buffer overrun */
+    FreeLibrary(hinstLayoutFile);
+    if (!IntIsValidLayoutFileName(szFileName))
+        return FALSE;
+    GetSystemLibraryPath(pszLayoutFile, cchLayoutFile, szFileName);
+    return IntCheckLayoutFile(hKL, pszLayoutFile, cchLayoutFile, cTrials + 1);
+}
+
 /*
  * @unimplemented
  *
@@ -717,7 +817,8 @@ IntLoadKeyboardLayout(
     UNICODE_STRING ustrKLID;
     WCHAR wszRegKey[256] = L"SYSTEM\\CurrentControlSet\\Control\\Keyboard Layouts\\";
     WCHAR wszLayoutId[10], wszNewKLID[KL_NAMELENGTH], szImeFileName[80];
-    HKL hNewKL;
+    WCHAR wszLayoutFile[MAX_PATH], wszLayoutFilePath[MAX_PATH];
+    HKL hKL, hNewKL;
     HKEY hKey;
     BOOL bIsIME;
     WORD wLow, wHigh;
@@ -745,6 +846,7 @@ IntLoadKeyboardLayout(
                                  &dwSize) == ERROR_SUCCESS &&
                 dwType == REG_SZ)
             {
+                wszNewKLID[_countof(wszNewKLID) - 1] = UNICODE_NULL; /* Avoid buffer overrun */
                 /* Use new KLID value */
                 pwszKLID = wszNewKLID;
                 dwKLID = wcstoul(pwszKLID, NULL, 16);
@@ -760,14 +862,32 @@ IntLoadKeyboardLayout(
     StringCbCatW(wszRegKey, sizeof(wszRegKey), pwszKLID);
 
     /* Open layout registry key for read */
+    wszLayoutFilePath[0] = UNICODE_NULL;
     if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, wszRegKey, 0, KEY_READ, &hKey) == ERROR_SUCCESS)
     {
+        /* Get 'Layout Id' */
         dwSize = sizeof(wszLayoutId);
         if (RegQueryValueExW(hKey, L"Layout Id", NULL, &dwType, (LPBYTE)wszLayoutId,
                              &dwSize) == ERROR_SUCCESS && dwType == REG_SZ)
         {
+            wszLayoutId[_countof(wszLayoutId) - 1] = UNICODE_NULL; /* Avoid buffer overrun */
             /* If Layout Id is specified, use this value | f000 as HIWORD */
             wHigh = (0xF000 | wcstoul(wszLayoutId, NULL, 16));
+        }
+
+        /* Get 'Layout File' */
+        dwSize = sizeof(wszLayoutFile);
+        if (RegQueryValueExW(hKey, L"Layout File", NULL, &dwType, (LPBYTE)wszLayoutFile,
+                             &dwSize) == ERROR_SUCCESS && dwType == REG_SZ)
+        {
+            wszLayoutFile[_countof(wszLayoutFile) - 1] = UNICODE_NULL; /* Avoid buffer overrun */
+            if (!IntIsValidLayoutFileName(wszLayoutFile))
+            {
+                ERR("IntIsValidLayoutFileName failed. pwszKLID: %s\n", debugstr_w(pwszKLID));
+                RegCloseKey(hKey);
+                return UlongToHandle(MAKELONG(ENGLISH_US, ENGLISH_US));
+            }
+            GetSystemLibraryPath(wszLayoutFilePath, _countof(wszLayoutFilePath), wszLayoutFile);
         }
 
         if (bIsIME)
@@ -788,8 +908,8 @@ IntLoadKeyboardLayout(
                 GetSystemLibraryPath(szPath, _countof(szPath), szImeFileName);
 
                 /* We don't allow the invalid "IME File" values due to security reason */
-                if (dwType != REG_SZ || szImeFileName[0] == 0 ||
-                    wcscspn(szImeFileName, L":\\/") != wcslen(szImeFileName) ||
+                if (dwType != REG_SZ ||
+                    !IntIsValidLayoutFileName(szImeFileName) ||
                     GetFileAttributesW(szPath) == INVALID_FILE_ATTRIBUTES) /* Does not exist? */
                 {
                     bIsIME = FALSE;
@@ -805,13 +925,21 @@ IntLoadKeyboardLayout(
     else
     {
         ERR("Could not find keyboard layout %S.\n", pwszKLID);
-        return NULL;
+        return UlongToHandle(MAKELONG(ENGLISH_US, ENGLISH_US));
     }
 
     if (wHigh == 0)
         wHigh = wLow;
 
     dwHKL = MAKELONG(wLow, wHigh);
+    hKL = (HKL)UlongToHandle(dwHKL);
+
+    if (!bIsIME &&
+        !IntCheckLayoutFile(hKL, wszLayoutFilePath, _countof(wszLayoutFilePath), 0))
+    {
+        ERR("Could not validate 'Layout File': %S.\n", wszLayoutFilePath);
+        return UlongToHandle(MAKELONG(ENGLISH_US, ENGLISH_US));
+    }
 
     RtlInitUnicodeString(&ustrKLID, pwszKLID);
     hNewKL = NtUserLoadKeyboardLayoutEx(NULL, 0, NULL, hklUnload, &ustrKLID, dwHKL, Flags);
