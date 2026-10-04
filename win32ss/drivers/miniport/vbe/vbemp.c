@@ -36,11 +36,12 @@
 #define LOWORD(l)	((USHORT)((ULONG_PTR)(l)))
 #define HIWORD(l)	((USHORT)(((ULONG_PTR)(l)>>16)&0xFFFF))
 
+/* The same legacy apertures the adapter, its bridge and VgaSave all decode */
 VIDEO_ACCESS_RANGE VBEAccessRange[] =
 {
-    { {{0x3b0}}, 0x3bb - 0x3b0 + 1, 1, 1, 0 },
-    { {{0x3c0}}, 0x3df - 0x3c0 + 1, 1, 1, 0 },
-    { {{0xa0000}}, 0x20000, 0, 1, 0 },
+    { {{0x3b0}}, 0x3bb - 0x3b0 + 1, 1, 1, 1, VIDEO_RANGE_10_BIT_DECODE },
+    { {{0x3c0}}, 0x3df - 0x3c0 + 1, 1, 1, 1, VIDEO_RANGE_10_BIT_DECODE },
+    { {{0xa0000}}, 0x20000, 0, 1, 1, 0 },
 };
 
 /* PUBLIC AND PRIVATE FUNCTIONS ***********************************************/
