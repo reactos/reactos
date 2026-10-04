@@ -1717,6 +1717,13 @@ PciArbiterConstructor(
 
 NTSTATUS
 NTAPI
+PciArbiter_PreprocessEntry(
+    _In_ PARBITER_INSTANCE Arbiter,
+    _Inout_ PARBITER_ALLOCATION_STATE State
+);
+
+NTSTATUS
+NTAPI
 pcicbintrf_Constructor(
     IN PVOID DeviceExtension,
     IN PVOID Instance,
