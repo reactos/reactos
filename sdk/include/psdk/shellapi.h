@@ -603,6 +603,7 @@ SHGetFileInfoW(
 #define SHGNLI_NOLNK       0x08
 #define SHGNLI_NOLOCNAME   0x10 // WinVista+
 #define SHGNLI_USEURLEXT   0x20 // Win7+
+
 _Success_(return != 0)
 BOOL
 WINAPI

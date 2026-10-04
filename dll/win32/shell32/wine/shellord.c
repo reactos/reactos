@@ -2735,8 +2735,8 @@ BOOL WINAPI SHGetNewLinkInfoA(LPCSTR pszLinkTo, LPCSTR pszDir, LPSTR pszName, BO
 BOOL WINAPI SHGetNewLinkInfoW(LPCWSTR pszLinkTo, LPCWSTR pszDir, LPWSTR pszName, BOOL *pfMustCopy,
                               UINT uFlags)
 {
-    enum { HANDLEDFLAGS = SHGNLI_PIDL | SHGNLI_NOUNIQUE | SHGNLI_NOLNK | SHGNLI_NOLOCNAME | SHGNLI_USEURLEXT };
-    const WCHAR *basename, *pszDotForExt = L".", *pszExt = (uFlags & SHGNLI_USEURLEXT) ? L"url" : L"lnk";
+    const UINT HANDLEDFLAGS = SHGNLI_PIDL | SHGNLI_NOUNIQUE | SHGNLI_NOLNK | SHGNLI_NOLOCNAME | SHGNLI_USEURLEXT;
+    PCWSTR basename, pszDotForExt = L".", pszExt = (uFlags & SHGNLI_USEURLEXT) ? L"url" : L"lnk";
     WCHAR *dst_basename, szTarget[MAX_PATH];
     int i=2;
     LPCITEMIDLIST pidl = (uFlags & SHGNLI_PIDL) ? (LPCITEMIDLIST)pszLinkTo : NULL;
@@ -2762,8 +2762,8 @@ BOOL WINAPI SHGetNewLinkInfoW(LPCWSTR pszLinkTo, LPCWSTR pszDir, LPWSTR pszName,
 
         pszLinkTo = fi.szDisplayName;
         UINT shgdn = (uFlags & SHGNLI_NOLOCNAME) ? SHGDN_FORPARSING : SHGDN_NORMAL;
-        if ((fi.dwAttributes & SFGAO_LINK) && SUCCEEDED(SHGetNameAndFlagsW(pidl, shgdn | SHGDN_INFOLDER,
-                                                                           szTarget, _countof(szTarget), NULL)))
+        if ((fi.dwAttributes & SFGAO_LINK) &&
+            SUCCEEDED(SHGetNameAndFlagsW(pidl, shgdn | SHGDN_INFOLDER, szTarget, _countof(szTarget), NULL)))
         {
             StringCchCopyW(fi.szDisplayName, _countof(fi.szDisplayName), szTarget); // Including possible .lnk extension
         }
@@ -2810,10 +2810,10 @@ BOOL WINAPI SHGetNewLinkInfoW(LPCWSTR pszLinkTo, LPCWSTR pszDir, LPWSTR pszName,
     }
     dst_basename = pszName + strlenW(pszName);
 
-    snprintfW(dst_basename, pszName + MAX_PATH - dst_basename, L"%s%s%s", basename, pszDotForExt, pszExt);
+    StringCchPrintfW(dst_basename, pszName + MAX_PATH - dst_basename, L"%s%s%s", basename, pszDotForExt, pszExt);
     while (!(uFlags & SHGNLI_NOUNIQUE) && GetFileAttributesW(pszName) != INVALID_FILE_ATTRIBUTES)
     {
-        snprintfW(dst_basename, pszName + MAX_PATH - dst_basename, L"%s (%d)%s%s", basename, i, pszDotForExt, pszExt);
+        StringCchPrintfW(dst_basename, pszName + MAX_PATH - dst_basename, L"%s (%d)%s%s", basename, i, pszDotForExt, pszExt);
         i++;
     }
     return TRUE;

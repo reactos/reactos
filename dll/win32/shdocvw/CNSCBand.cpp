@@ -722,7 +722,7 @@ static HRESULT AddItemToFavorites(HWND hWnd, IShellFolder *psf, LPCITEMIDLIST pi
         return hr;
 
     SHELL_GetDisplayNameOf(psf, pidlLast, SHGDN_NORMAL | SHGDN_INFOLDER, &pszTitle);
-    return AddUrlToFavorites(hWnd, pszURL, pszTitle ? pszTitle : PathFindFileNameW(pszURL), TRUE);
+    return AddUrlToFavorites(hWnd, pszURL, pszTitle ? pszTitle : PathFindFileNameW(pszURL), FALSE /*Not silent*/);
 }
 
 HRESULT CNSCBand::_AddFavorite()

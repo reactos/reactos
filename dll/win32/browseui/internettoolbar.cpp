@@ -118,14 +118,14 @@ static HRESULT SHELL_GetAbsolutePidlTryLinkTarget(IShellFolder *psf, LPCITEMIDLI
     return S_OK;
 }
 
-static HRESULT SHELL_BrowseObject(IShellBrowser *psb, IShellFolder *psf, LPCITEMIDLIST pidlChild, UINT SBSP)
+static HRESULT SHELL_BrowseObject(IShellBrowser *psb, IShellFolder *psf, LPCITEMIDLIST pidlChild, UINT BrowseFlags)
 {
     CComHeapPtr<ITEMIDLIST> pidl;
     HRESULT hr = SHELL_GetAbsolutePidlTryLinkTarget(psf, pidlChild, &pidl);
     if (FAILED(hr))
         return hr;
     if (SHELL_GetAttributesOf(pidl, SFGAO_BROWSABLE | SFGAO_FOLDER) & (SFGAO_BROWSABLE | SFGAO_FOLDER))
-        return psb->BrowseObject(pidl, SBSP_ABSOLUTE | (SBSP & ~SBSP_RELATIVE));
+        return psb->BrowseObject(pidl, SBSP_ABSOLUTE | (BrowseFlags & ~SBSP_RELATIVE));
     return HRESULT_FROM_WIN32(ERROR_DIR_NOT_ROOT);
 }
 
@@ -135,7 +135,9 @@ static HRESULT BrowseInplaceOrExecute(HWND hWnd, IShellFolder *psf, LPCITEMIDLIS
     HRESULT hr = IUnknown_QueryService(pSite, SID_IShellBrowser, IID_PPV_ARG(IShellBrowser, &psb));
     if (SUCCEEDED(hr))
         hr = SHELL_BrowseObject(psb, psf, pidlChild, SBSP_SAMEBROWSER);
-    return SUCCEEDED(hr) ? hr : SHInvokeDefaultCommand(hWnd, psf, pidlChild);
+    if (FAILED(hr))
+        hr = SHInvokeDefaultCommand(hWnd, psf, pidlChild);
+    return hr;
 }
 
 HRESULT IUnknown_RelayWinEvent(IUnknown * punk, HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT *theResult)
@@ -573,8 +575,7 @@ HRESULT STDMETHODCALLTYPE CMenuCallback::GetObject(LPSMDATA psmd, REFIID riid, v
         if (FAILED_UNEXPECTEDLY(hResult))
             return hResult;
 
-        // FIXME: Why are SMINIT_ and SMINV_ flags passed here? We perhaps want SMSET_HASEXPANDABLEFOLDERS?
-        hResult = newMenu->SetShellFolder(favoritesFolder, favoritesPIDL, orderRegKey, SMSET_BOTTOM | SMINIT_CACHED | SMINV_ID);
+        hResult = newMenu->SetShellFolder(favoritesFolder, favoritesPIDL, orderRegKey, SMSET_BOTTOM | SMSET_USEBKICONEXTRACTION | SMSET_HASEXPANDABLEFOLDERS);
         if (favoritesPIDL)
             ILFree(favoritesPIDL);
 

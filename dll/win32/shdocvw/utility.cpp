@@ -194,7 +194,8 @@ struct ADDFAVORITEDIALOGDATA
     BOOL IgnoreChanges;
 };
 
-static LRESULT AddFavoriteDialogProc(
+static LRESULT
+AddFavoriteDialogProc(
    _In_ HWND hwnd,
    _In_ UINT uMsg,
    _In_ WPARAM wParam,
@@ -203,7 +204,7 @@ static LRESULT AddFavoriteDialogProc(
     ADDFAVORITEDIALOGDATA &data = *(ADDFAVORITEDIALOGDATA*)GetWindowLongPtrW(hwnd, GWLP_USERDATA);
     NMHDR *pHdr = (NMHDR*)lParam;
     if (uMsg == WM_NOTIFY)
-        data.IgnoreChanges |= pHdr->code == NM_CLICK || pHdr->code == NM_SETFOCUS; // Ignore changes from the tree
+        data.IgnoreChanges |= (pHdr->code == NM_CLICK || pHdr->code == NM_SETFOCUS); // Ignore changes from the tree
     if (uMsg == WM_COMMAND && HIWORD(wParam) == EN_SETFOCUS)
         data.IgnoreChanges = (HWND)lParam != data.hEdit; // Ignore changes in the tree rename edit
     if (uMsg == WM_COMMAND && HIWORD(wParam) == EN_UPDATE && (HWND)lParam == data.hEdit && !data.IgnoreChanges)
@@ -217,7 +218,8 @@ static LRESULT AddFavoriteDialogProc(
     return CallWindowProcW(data.pOrgProc, hwnd, uMsg, wParam, lParam);
 }
 
-static int CALLBACK AddFavoriteDialogCallback(
+static int CALLBACK
+AddFavoriteDialogCallback(
    _In_ HWND hwnd,
    _In_ UINT uMsg,
    _In_ LPARAM lParam,
@@ -256,10 +258,10 @@ AddFavoriteDialog(
         return hr;
 
     ADDFAVORITEDIALOGDATA data = { pszTitle, PathFindFileNameW(pszDir) };
-    UINT bif = BIF_RETURNONLYFSDIRS | BIF_EDITBOX | BIF_USENEWUI;
+    const UINT flags = BIF_RETURNONLYFSDIRS | BIF_EDITBOX | BIF_USENEWUI;
     WCHAR szBuf[MAX_PATH];
     *szBuf = UNICODE_NULL;
-    BROWSEINFOW info = { hwnd, pidlBaseDir, szBuf, pszText, bif, AddFavoriteDialogCallback, (LPARAM)&data };
+    BROWSEINFOW info = { hwnd, pidlBaseDir, szBuf, pszText, flags, AddFavoriteDialogCallback, (LPARAM)&data };
     PIDLIST_ABSOLUTE pidlResult = SHBrowseForFolderW(&info);
     if (!pidlResult)
         return S_FALSE;
@@ -274,10 +276,10 @@ EXTERN_C HRESULT WINAPI
 AddUrlToFavorites(
     _In_ HWND hwnd,
     _In_ LPCWSTR pszUrlW,
-    _In_opt_ LPCWSTR pszTitleW,
-    _In_ BOOL fDisplayUI)
+    _In_ LPCWSTR pszTitleW, // This parameter is not optional on Windows even though MSDN says so
+    _In_ BOOL NoUI)
 {
-    TRACE("%p, %s, %s, %d\n", hwnd, wine_dbgstr_w(pszUrlW), wine_dbgstr_w(pszTitleW), fDisplayUI);
+    TRACE("%p, %s, %s, %d\n", hwnd, wine_dbgstr_w(pszUrlW), wine_dbgstr_w(pszTitleW), NoUI);
 
     if (!pszUrlW || !pszTitleW)
         return E_INVALIDARG;
@@ -285,7 +287,7 @@ AddUrlToFavorites(
     CCoInit CoInit;
     HRESULT hr = S_OK;
     BOOL IsUrl = PathIsURLW(pszUrlW);
-    LPCWSTR pszExt = IsUrl ? L".url" : L".lnk";
+    PCWSTR pszExt = IsUrl ? L".url" : L".lnk";
     WCHAR szTitle[MAX_PATH];
     StringCchCopyW(szTitle, _countof(szTitle), pszTitleW);
 
@@ -293,7 +295,7 @@ AddUrlToFavorites(
     if (!SHGetSpecialFolderPathW(hwnd, szDir, CSIDL_FAVORITES, TRUE))
         return E_FAIL;
 
-    if (fDisplayUI)
+    if (!NoUI)
     {
         PCWSTR pszText = IsUrl ? pszUrlW : PathFindFileNameW(pszUrlW);
         if ((hr = AddFavoriteDialog(hwnd, szDir, szTitle, pszText)) == S_FALSE)
@@ -307,12 +309,13 @@ AddUrlToFavorites(
 
     if (IsUrl && SUCCEEDED(hr))
     {
+        // TODO: For the !NoUI case, we should ask the user if they want to overwrite if the file already exists
         hr = WritePrivateProfileStringW(L"InternetShortcut", L"URL", pszUrlW, szLnk) ? S_OK : E_FAIL;
     }
     else if (SUCCEEDED(hr))
     {
         BOOL bMustCopy;
-        if (!fDisplayUI)
+        if (NoUI)
             hr = SHGetNewLinkInfoW(pszUrlW, szDir, szLnk, &bMustCopy, 0) ? S_OK : E_FAIL;
 
         CComHeapPtr<ITEMIDLIST> pidl;
@@ -322,7 +325,7 @@ AddUrlToFavorites(
             hr = SHDOCVW_CreateShortcut(szLnk, pidl, NULL);
     }
 
-    if (FAILED(hr) && fDisplayUI)
+    if (FAILED(hr) && !NoUI)
         SHELL_ErrorBox(hwnd, hr);
     return hr;
 }
