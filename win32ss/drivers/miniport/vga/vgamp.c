@@ -10,11 +10,16 @@
 #include <dderror.h>
 #include <devioctl.h>
 
+/*
+ * The adapter, the bridge above it and VgaSave all decode the same legacy
+ * apertures, so none of them is exclusive. The port ranges are claimed with a
+ * 10-bit decode, which is all a legacy VGA answers.
+ */
 VIDEO_ACCESS_RANGE VGAAccessRange[] =
 {
-    { {{0x3b0}}, 0x3bb - 0x3b0 + 1, 1, 0, 0 },
-    { {{0x3c0}}, 0x3df - 0x3c0 + 1, 1, 0, 0 },
-    { {{0xa0000}}, 0x20000, 0, 0, 0 },
+    { {{0x3b0}}, 0x3bb - 0x3b0 + 1, 1, 1, 1, VIDEO_RANGE_10_BIT_DECODE },
+    { {{0x3c0}}, 0x3df - 0x3c0 + 1, 1, 1, 1, VIDEO_RANGE_10_BIT_DECODE },
+    { {{0xa0000}}, 0x20000, 0, 0, 1, 0 },
 };
 
 //  -------------------------------------------------------  Public Interface
