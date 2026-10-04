@@ -407,7 +407,7 @@ ArbpForEachRegistryRange(
     return STATUS_SUCCESS;
 }
 
-/* Prepend a registry-described preferred range ahead of the full-range default. */
+/* Records one registry-described preferred window, most-preferred first. */
 CODE_SEG("PAGE")
 static
 VOID
@@ -427,8 +427,7 @@ ArbpAddOrderingCallback(
  * @brief
  * Range callback moving one reserved window into last-resort
  * territory: recorded in the arbiter's ReservedList and pruned
- * out of every ordering window, including the full-range
- * fallback.
+ * out of every ordering window.
  *
  * @param[in] Arbiter
  * The arbiter instance whose lists are adjusted.
@@ -443,10 +442,10 @@ ArbpAddOrderingCallback(
  * The inclusive end of the reserved window.
  *
  * @remarks
- * Once pruned here, the window can only ever be offered by the
- * engine's (PREFERRED_)RESERVED pass, the one that is usable only
- * when nothing else fits. This is what keeps allocations from touching ranges
- * like COM1/COM2 and the VGA windows that the PCStandard policy table
+ * Once pruned here, the window is reachable only from the engine's
+ * (PREFERRED_)RESERVED pass, the one that runs when nothing else
+ * fits. This is what keeps allocations from touching ranges like
+ * COM1/COM2 and the VGA windows that the PCStandard policy table
  * reserves, even though no enumerated device owns them yet.
  */
 CODE_SEG("PAGE")
@@ -552,18 +551,18 @@ ArbpMmConfigCallback(
  *
  * @param[in] ReservedResourcesName
  * The ReservedResources value naming this arbiter's last-resort
- * windows: each is recorded in the ReservedList for the engine's
- * final pass and pruned out of every ordering window, so it is
- * only ever offered once all orderings fail.
+ * windows: each is recorded in the ReservedList and pruned out of
+ * every ordering window, so only the engine's own whole-window
+ * pass can ever reach it.
  *
  * @param[in] TranslateOrderingFunction
  * Optional per-arbiter descriptor translation.
  *
  * @return
  * Returns STATUS_SUCCESS if the ordering was built. Absent
- * registry policy is not a failure; the ordering then holds only
- * the full-range fallback, so the arbiter can always search the
- * whole space.
+ * registry policy is not a failure; the ordering is then empty and
+ * every alternative goes straight to the engine's whole-window
+ * pass.
  */
 CODE_SEG("PAGE")
 NTSTATUS
@@ -594,14 +593,10 @@ ArbiterLibDefaultAssignmentOrdering(
     ArbpForEachRegistryRange(Arbiter, L"AllocationOrder", AllocationOrderName,
                              TranslateOrderingFunction, ArbpAddOrderingCallback, NULL);
 
-    Status = ArbiterLibAddOrdering(&Arbiter->OrderingList, 0, ARBITER_MAXIMUM_ADDRESS);
-    if (!NT_SUCCESS(Status))
-        return Status;
-
     /*
-     * The reserved windows come last, after the fallback is in place, so the
-     * pruning punches them out of the fallback too. Otherwise the fallback
-     * pass would hand them out like any other range.
+     * No full-range entry is appended here. An alternative that no ordering
+     * window can hold is given its own whole window by the engine instead, so
+     * adding one would only duplicate that pass ahead of the preferred windows.
      */
     return ArbpForEachRegistryRange(Arbiter, L"ReservedResources", ReservedResourcesName,
                                     TranslateOrderingFunction, ArbpAddReservedCallback,
