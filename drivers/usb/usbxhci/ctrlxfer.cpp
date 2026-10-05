@@ -553,7 +553,7 @@ XhciControlRing::BuildControlTd(
             KeReleaseSpinLock(&Ring->m_Lock, OldIrql);
         }
 
-        Ring->UpdateInterrupterTarget();
+        Ring->UpdateInterrupterTarget(XhciTransferRing::UrbProcessorIndex(Urb));
 
         if (Transfer->Mechanism != XhciControlMechanism::Dma)
         {

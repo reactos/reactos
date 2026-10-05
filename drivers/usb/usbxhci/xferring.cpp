@@ -1,7 +1,7 @@
 /*
  * PROJECT:     ReactOS xHCI Host Controller Driver
  * LICENSE:     MIT (https://spdx.org/licenses/MIT)
- * PURPOSE:     Transfer ring object shared by the control and bulk transfer types
+ * PURPOSE:     Transfer ring object shared by the control, bulk and isoch transfer types
  * COPYRIGHT:   Copyright 2026 Justin Miller <justinmiller100@gmail.com>
  */
 
@@ -166,6 +166,13 @@ XhciTransferRing::Create(
         if (NoLinkInTd)
             MaxStageSize = XhciRingSingleSegmentStage;
     }
+    else if (TransferType == USB_ENDPOINT_TYPE_ISOCHRONOUS)
+    {
+        WDF_IO_QUEUE_CONFIG_INIT(&QueueConfig, WdfIoQueueDispatchManual);
+        QueueConfig.EvtIoCanceledOnQueue = XhciIsochRing::EvtIoCanceledOnQueue;
+        CompletionDpc = XhciIsochRing::EvtCompletionDpc;
+        SegmentSize = XhciRingSegmentBytes;
+    }
     else
     {
         DPRINT1("Endpoint DCI %lu has transfer type %lu, no transfer ring for it\n",
@@ -205,11 +212,14 @@ XhciTransferRing::Create(
     NewRing->m_Cycle = 1;
     NewRing->m_Controller = Controller;
 
-    if (NewRing->IsBulkOrInterrupt())
+    if (!NewRing->IsControl())
     {
         WDF_WORKITEM_CONFIG WorkConfig;
 
-        Status = WdfIoQueueReadyNotify(Queue, XhciBulkRing::ReadyNotification, NewRing);
+        Status = WdfIoQueueReadyNotify(Queue,
+                                       NewRing->IsIsoch() ? XhciIsochRing::ReadyNotification :
+                                                            XhciBulkRing::ReadyNotification,
+                                       NewRing);
         if (!NT_SUCCESS(Status))
         {
             DPRINT1("Ready notification for DCI %lu stream %lu not registered, 0x%08lx\n",
@@ -273,6 +283,8 @@ XhciTransferRing::Create(
 
     if (NewRing->IsControl())
         Status = XhciControlRing::Initialize(NewRing);
+    else if (NewRing->IsIsoch())
+        Status = XhciIsochRing::Initialize(NewRing);
     else
         Status = XhciBulkRing::Initialize(NewRing);
 
@@ -317,6 +329,12 @@ XhciTransferRing::IsBulkOrInterrupt() const
 {
     return m_TransferType == USB_ENDPOINT_TYPE_BULK ||
            m_TransferType == USB_ENDPOINT_TYPE_INTERRUPT;
+}
+
+BOOLEAN
+XhciTransferRing::IsIsoch() const
+{
+    return m_TransferType == USB_ENDPOINT_TYPE_ISOCHRONOUS;
 }
 
 VOID
@@ -364,6 +382,8 @@ XhciTransferRing::Cleanup()
     m_TypeReady = FALSE;
     if (IsControl())
         XhciControlRing::Cleanup(this);
+    else if (IsIsoch())
+        XhciIsochRing::Cleanup(this);
     else
         XhciBulkRing::Cleanup(this);
 }
@@ -453,6 +473,8 @@ XhciTransferRing::Enable()
 
     if (IsControl())
         XhciControlRing::Enable(this);
+    else if (IsIsoch())
+        XhciIsochRing::Enable(this);
     else
         XhciBulkRing::Enable(this);
 
@@ -518,12 +540,16 @@ XhciTransferRing::Disable(
     LONG Previous;
 
     /* The idle wait is bounded so it cannot hang a single processor at DISPATCH_LEVEL */
-    if (!IsControl())
+    if (IsIsoch())
+        XhciIsochRing::ReleaseParkedMapping(this);
+    else if (!IsControl())
         XhciBulkRing::ReleaseParkedMapping(this);
     WaitForMappingIdle();
 
     if (IsControl())
         XhciControlRing::Disable(this);
+    else if (IsIsoch())
+        XhciIsochRing::Disable(this);
     else
         XhciBulkRing::Disable(this);
 
@@ -566,6 +592,12 @@ XhciTransferRing::EnableForwardProgress(
     PMDL Mdl;
     PMDL Old;
     NTSTATUS Status;
+
+    if (IsIsoch())
+    {
+        DPRINT1("Forward progress asked for isoch DCI %lu, not supported\n", m_Endpoint->Dci());
+        return STATUS_NOT_SUPPORTED;
+    }
 
     if (IsControl())
         Status = XhciControlRing::EnableForwardProgress(this, MaxTransferSize);
@@ -656,6 +688,8 @@ XhciTransferRing::ResumeRingFill()
 {
     if (IsControl())
         XhciControlRing::ResumeRingFill(this);
+    else if (IsIsoch())
+        XhciIsochRing::ResumeRingFill(this);
     else
         XhciBulkRing::ResumeRingFill(this);
 }
@@ -665,6 +699,8 @@ XhciTransferRing::SuspendRingFill()
 {
     if (IsControl())
         XhciControlRing::SuspendRingFill(this);
+    else if (IsIsoch())
+        XhciIsochRing::SuspendRingFill(this);
     else
         XhciBulkRing::SuspendRingFill(this);
 }
@@ -672,7 +708,7 @@ XhciTransferRing::SuspendRingFill()
 VOID
 XhciTransferRing::OnPipeHalted()
 {
-    /* A halted control ring waits for its reset; only bulk rings account for it */
+    /* A halted control ring waits for its reset and an isoch ring never reports a halt */
     if (IsBulkOrInterrupt())
         XhciBulkRing::OnPipeHalted(this);
 }
@@ -680,12 +716,15 @@ XhciTransferRing::OnPipeHalted()
 VOID
 XhciTransferRing::OnClientPipeReset()
 {
-    /* Neither control nor bulk rings have work to do for a client reset */
+    /* Only an isoch ring cares: its next ASAP URB starts a new stream */
+    if (IsIsoch())
+        XhciIsochRing::OnClientPipeReset(this);
 }
 
 VOID
 XhciTransferRing::StoppedEventReceived()
 {
+    /* An isoch ring already tracks the stop through its own events */
     if (IsBulkOrInterrupt())
         XhciBulkRing::StoppedEventReceived(this);
 }
@@ -695,6 +734,8 @@ XhciTransferRing::AllowReclaimOnCancel()
 {
     if (IsControl())
         XhciControlRing::AllowReclaimOnCancel(this);
+    else if (IsIsoch())
+        XhciIsochRing::AllowReclaimOnCancel(this);
     else
         XhciBulkRing::AllowReclaimOnCancel(this);
 }
@@ -704,6 +745,8 @@ XhciTransferRing::ConsumePendingEvents()
 {
     if (IsControl())
         XhciControlRing::ConsumePendingEvents(this);
+    else if (IsIsoch())
+        XhciIsochRing::ConsumePendingEvents(this);
     else
         XhciBulkRing::ConsumePendingEvents(this);
 }
@@ -713,6 +756,8 @@ XhciTransferRing::RecoverTransfers()
 {
     if (IsControl())
         XhciControlRing::RecoverTransfers(this);
+    else if (IsIsoch())
+        XhciIsochRing::RecoverTransfers(this);
     else
         XhciBulkRing::RecoverTransfers(this);
 }
@@ -723,6 +768,9 @@ XhciTransferRing::DoorbellRungSinceFill() const
     if (IsControl())
         return XhciControlRing::DoorbellRungSinceFill(this);
 
+    if (IsIsoch())
+        return XhciIsochRing::DoorbellRungSinceFill(this);
+
     return XhciBulkRing::DoorbellRungSinceFill(this);
 }
 
@@ -731,6 +779,9 @@ XhciTransferRing::HasQueuedWork() const
 {
     if (IsControl())
         return XhciControlRing::HasQueuedWork(this);
+
+    if (IsIsoch())
+        return XhciIsochRing::HasQueuedWork(this);
 
     return XhciBulkRing::HasQueuedWork(this);
 }
@@ -744,6 +795,9 @@ XhciTransferRing::OnTransferEvent(
 
     if (IsBulkOrInterrupt())
         return XhciBulkRing::OnTransferEvent(this, m_Controller, Event);
+
+    if (IsIsoch())
+        return XhciIsochRing::OnTransferEvent(this, Event);
 
     return FALSE;
 }
@@ -889,7 +943,10 @@ XhciTransferRing::GrowSegments()
                 m_Endpoint->Dci(), m_StreamId, Count, Status);
     }
 
-    XhciBulkRing::SegmentsArrived(this, Status);
+    if (IsIsoch())
+        XhciIsochRing::SegmentsArrived(this, Status);
+    else
+        XhciBulkRing::SegmentsArrived(this, Status);
 }
 
 NTSTATUS
@@ -1095,6 +1152,27 @@ XhciTransferRing::UpdateInterrupterTarget()
 {
     m_InterrupterTarget = m_Controller->m_Interrupters.TargetForCurrentProcessor() &
                           XHCI_TRB_INTERRUPTER_MASK;
+}
+
+VOID
+XhciTransferRing::UpdateInterrupterTarget(
+    _In_ ULONG ProcessorIndex)
+{
+    if (ProcessorIndex == XHCI_URB_NO_PROCESSOR)
+    {
+        UpdateInterrupterTarget();
+        return;
+    }
+
+    m_InterrupterTarget = m_Controller->m_Interrupters.TargetForProcessor(ProcessorIndex) &
+                          XHCI_TRB_INTERRUPTER_MASK;
+}
+
+ULONG
+XhciTransferRing::UrbProcessorIndex(
+    _In_ PURB Urb)
+{
+    return *(PULONG)&Urb->UrbControlTransfer.hca;
 }
 
 VOID
