@@ -714,6 +714,25 @@ SmMachine<Machine, Event>::Trace(
     entry->Kind = static_cast<UCHAR>(Kind);
     entry->Depth = m_Depth;
     m_TraceIndex = (m_TraceIndex + 1) & SM_TRACE_MASK;
+
+    /* Define SM_DEBUG_TRANSITIONS to log every state a machine enters */
+#ifdef SM_DEBUG_TRANSITIONS
+    if (Kind == SmTraceEntered || Kind == SmTraceCalled)
+    {
+        DbgPrint("SM %p entered %s on %s\n",
+                 this,
+                 entry->State,
+                 (Ev < static_cast<USHORT>(Event::Count)) ? Machine::EventInfo[Ev].Name : "start");
+    }
+#endif
+
+    if (Kind == SmTraceUnhandled)
+    {
+        DbgPrint("SM %p state %s did not handle %s\n",
+                 this,
+                 entry->State,
+                 (Ev < static_cast<USHORT>(Event::Count)) ? Machine::EventInfo[Ev].Name : "?");
+    }
 }
 
 template <typename Machine, typename Event>
