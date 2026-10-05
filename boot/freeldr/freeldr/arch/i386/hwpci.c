@@ -42,7 +42,7 @@ PcFindPciBios(
 
         BusData->MajorRevision = RegsOut.b.bh;
         BusData->MinorRevision = RegsOut.b.bl;
-        BusData->NoBuses = RegsOut.b.cl + 1;
+        BusData->NoBuses = RegsOut.b.cl + 1; // NOTE: Wraps when HighestBus == 0xFF
         BusData->HardwareMechanism = RegsOut.b.al;
         return TRUE;
     }

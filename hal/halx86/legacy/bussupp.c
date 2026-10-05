@@ -553,8 +553,9 @@ static BOOLEAN WarningsGiven[5];
 CODE_SEG("INIT")
 static BOOLEAN
 NTAPI
-HalpGetPciBridgeConfig(IN ULONG PciType,
-                       IN PUCHAR BusCount)
+HalpGetPciBridgeConfig(
+    _In_ ULONG PciType,
+    _Inout_ PUSHORT BusCount)
 {
     PCI_SLOT_NUMBER PciSlot;
     ULONG i, j, k;
@@ -607,7 +608,8 @@ HalpGetPciBridgeConfig(IN ULONG PciType,
 CODE_SEG("INIT")
 static VOID
 NTAPI
-HalpFixupPciSupportedRanges(IN ULONG BusCount)
+HalpFixupPciSupportedRanges(
+    _In_ USHORT BusCount)
 {
     ULONG i;
     PBUS_HANDLER Bus, ParentBus;
@@ -954,11 +956,11 @@ HalpInitializePciBus(VOID)
     /* Initialize the PCI configuration lock */
     KeInitializeSpinLock(&HalpPCIConfigLock);
 
-    /* Get the type and free the info structure */
+    /* Get the type */
     PciType = PciRegistryInfo->HardwareMechanism & 0xF;
 
     /* Check if this is a type 2 PCI bus with at least one bus */
-    if ((PciRegistryInfo->NoBuses) && (PciType == 2))
+    if (PciRegistryInfo->NoBuses && (PciType == 2))
     {
         /* Setup the PCI slot */
         PciSlot.u.bits.Reserved = 0;
@@ -1007,7 +1009,7 @@ HalpInitializePciBus(VOID)
         /* Go to the next bridge */
     } while (HalpGetPciBridgeConfig(PciType, &PciRegistryInfo->NoBuses));
 
-    /* Now build correct address range informaiton */
+    /* Now build correct address range information */
     HalpFixupPciSupportedRanges(PciRegistryInfo->NoBuses);
 
     /* Loop every bus */

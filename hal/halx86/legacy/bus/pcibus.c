@@ -1194,7 +1194,7 @@ HalpQueryPciRegistryInfo(VOID)
     /* Save the info we got */
     PciRegistryInfo->MajorRevision = PciRegInfo->MajorRevision;
     PciRegistryInfo->MinorRevision = PciRegInfo->MinorRevision;
-    PciRegistryInfo->NoBuses = PciRegInfo->NoBuses;
+    PciRegistryInfo->NoBuses = PCI_GET_NUM_OF_BUSES(PciRegInfo); // Don't use PciRegInfo->NoBuses directly
     PciRegistryInfo->HardwareMechanism = PciRegInfo->HardwareMechanism;
     PciRegistryInfo->ElementCount = ElementCount;
 

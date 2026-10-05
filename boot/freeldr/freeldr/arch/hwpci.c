@@ -13,6 +13,12 @@
 #include <debug.h>
 DBG_DEFAULT_CHANNEL(HWDETECT);
 
+/**
+ * @brief
+ * Detects and reports the PCI buses found on the platform.
+ * Only conventional PCI buses (or PCIe buses on Segment Group #0)
+ * are reported by this routine.
+ **/
 VOID
 DetectPciBus(
     _In_ PCONFIGURATION_COMPONENT_DATA SystemKey,
@@ -24,14 +30,15 @@ DetectPciBus(
     PCM_PARTIAL_RESOURCE_DESCRIPTOR PartialDescriptor;
     PCONFIGURATION_COMPONENT_DATA BusKey;
     ULONG Size;
-    ULONG i;
+    USHORT NoBuses, i;
 
     /* Detect the PCI buses */
     if (!MachDetectPciBus(SystemKey, BusNumber, &BusData))
         return;
+    NoBuses = PCI_GET_NUM_OF_BUSES(&BusData); // Don't use BusData.NoBuses directly
 
     /* Report PCI buses */
-    for (i = 0; i < (ULONG)BusData.NoBuses; i++)
+    for (i = 0; i < NoBuses; ++i)
     {
         /* Check if this is the first bus */
         if (i == 0)
@@ -42,8 +49,8 @@ DetectPciBus(
             PartialResourceList = FrLdrHeapAlloc(Size, TAG_HW_RESOURCE_LIST);
             if (!PartialResourceList)
             {
-                ERR("Failed to allocate resource descriptor! Ignoring remaining PCI buses (i = %lu, NoBuses = %lu)\n",
-                    i, (ULONG)BusData.NoBuses);
+                ERR("Failed to allocate resource descriptor! Ignoring remaining PCI buses (i = %u, NoBuses = %u)\n",
+                    i, NoBuses);
                 return;
             }
 
@@ -68,8 +75,8 @@ DetectPciBus(
             PartialResourceList = FrLdrHeapAlloc(Size, TAG_HW_RESOURCE_LIST);
             if (!PartialResourceList)
             {
-                ERR("Failed to allocate resource descriptor! Ignoring remaining PCI buses (i = %lu, NoBuses = %lu)\n",
-                    i, (ULONG)BusData.NoBuses);
+                ERR("Failed to allocate resource descriptor! Ignoring remaining PCI buses (i = %u, NoBuses = %u)\n",
+                    i, NoBuses);
                 return;
             }
 
