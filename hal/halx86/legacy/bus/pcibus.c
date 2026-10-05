@@ -88,7 +88,7 @@ static PCIPBUSDATA HalpFakePciBusData =
         {0, 0, 0, 0}
     },
     {{0, 0}},
-    32,
+    PCI_MAX_DEVICES,
 };
 
 const BUS_HANDLER HalpFakePciBusHandler =
@@ -1285,14 +1285,9 @@ HalpInitializePciStubs(VOID)
     /* Run a forced bus scan if needed */
     if (MaxPciBusNumber == MAXULONG)
     {
-        /* Initialize the max bus number to 0xFF */
-        HalpMaxPciBus = 0xFF;
-
-        /* Initialize the counter */
+        /* Initialize the counter and loop all possible buses */
         MaxPciBusNumber = 0;
-
-        /* Loop all possible buses */
-        for (i = 0; i < HalpMaxPciBus; i++)
+        for (i = 0; i <= PCI_MAX_BRIDGE_NUMBER; i++)
         {
             /* Loop all devices */
             for (j.u.AsULONG = 0; j.u.AsULONG < BusData->MaxDevice; j.u.AsULONG++)
@@ -1325,4 +1320,3 @@ HalpInitializePciStubs(VOID)
 }
 
 /* EOF */
-
