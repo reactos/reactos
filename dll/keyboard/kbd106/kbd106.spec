@@ -1,1 +1,2 @@
 @ stdcall KbdLayerDescriptor()
+@ stdcall KbdNlsLayerDescriptor()
