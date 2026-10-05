@@ -52,11 +52,11 @@ UcxStubBindClass(VOID)
     Info->ClassName = (PWCHAR)L"Ucx";
     Info->Version.Major = UCX_STUB_MAJOR_VERSION;
     Info->Version.Minor = UCX_STUB_MINOR_VERSION;
-    Info->FunctionTable = (VOID (NTAPI **)(VOID))UcxFunctions;
+    Info->FunctionTable = UcxFunctions;
     Info->FunctionTableCount = UcxFunctionTableNumEntries;
     Info->ClassBindInfo = &UcxDriverGlobals;
 
-    /* The class receives the globals pointer itself, matching what Windows clients pass */
+    /* Typed as PWDF_COMPONENT_GLOBALS*, but clients pass the globals pointer itself */
     Status = WdfVersionBindClass(&BindInfo, (PWDF_COMPONENT_GLOBALS *)WdfDriverGlobals, Info);
     if (!NT_SUCCESS(Status))
     {

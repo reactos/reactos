@@ -12,10 +12,6 @@
 
 extern "C" DRIVER_INITIALIZE DriverEntry;
 
-/*
- * ucx01000 owns no devices. It loads when the first client binds, or at boot
- * for USB boot, and stays resident once registered with the loader.
- */
 extern "C"
 NTSTATUS
 NTAPI

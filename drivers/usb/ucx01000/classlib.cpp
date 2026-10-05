@@ -16,7 +16,7 @@ extern "C"
 {
 WDF_CLASS_LIBRARY_INFO UcxClassLibraryInfo =
 {
-    sizeof(WDF_CLASS_LIBRARY_INFO),
+    sizeof(UcxClassLibraryInfo),
     { UCX_CLASS_MAJOR_VERSION, UCX_CLASS_MINOR_VERSION, 0 },
     UcxOnClassLoad,
     UcxOnClassUnload,
@@ -25,7 +25,6 @@ WDF_CLASS_LIBRARY_INFO UcxClassLibraryInfo =
 };
 }
 
-/** Number of table slots a client built against the given minor expects. */
 static
 ULONG
 NTAPI
@@ -88,10 +87,6 @@ UcxOnClassUnload(VOID)
     PAGED_CODE();
 }
 
-/*
- * ComponentGlobals is the client's PWDF_DRIVER_GLOBALS passed by value, not
- * the address of it. That is what the Windows client stub hands over.
- */
 _IRQL_requires_(PASSIVE_LEVEL)
 NTSTATUS
 NTAPI

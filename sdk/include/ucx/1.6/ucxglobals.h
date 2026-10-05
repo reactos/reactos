@@ -18,7 +18,7 @@ typedef struct _UCX_DRIVER_GLOBALS
 typedef UCX_DRIVER_GLOBALS UCX_GLOBALS;
 typedef PUCX_DRIVER_GLOBALS PUCX_GLOBALS;
 
-typedef VOID (*PFN_UCXFUNC)(VOID);
+typedef VOID (NTAPI *PFN_UCXFUNC)(VOID);
 
 /* Owned by the client stub library, filled in by the class bind */
 extern PFN_UCXFUNC UcxFunctions[];

@@ -15,13 +15,11 @@
 
 #define UCX_POOL_TAG 'xcUR'
 
-/* Version ucx01000 registers. Clients built against any minor up to this one bind. */
 #define UCX_CLASS_MAJOR_VERSION 1
 #define UCX_CLASS_MINOR_VERSION 7
 
 extern "C" WDF_CLASS_LIBRARY_INFO UcxClassLibraryInfo;
 
-/* classlib.cpp */
 
 _IRQL_requires_(PASSIVE_LEVEL)
 NTSTATUS
@@ -46,13 +44,6 @@ NTAPI
 UcxOnClientUnbind(
     _In_ PWDF_CLASS_BIND_INFO ClassBindInfo,
     _In_ PWDF_COMPONENT_GLOBALS *ComponentGlobals);
-
-/*
- * exports.cpp
- *
- * The class functions handed to clients. The public names belong to the
- * client side inline thunks, so the implementations carry a UcxApi prefix.
- */
 
 _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
