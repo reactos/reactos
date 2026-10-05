@@ -89,7 +89,8 @@ static HRESULT __stdcall Volume_FindMixerControl(CSysTray * pSysTray)
     mixerLineControls.pamxctrl = &mixerControl;
     mixerLineControls.cbmxctrl = sizeof(mixerControl);
 
-    if (mixerGetLineControlsW((HMIXEROBJ)g_hMixer, &mixerLineControls, MIXER_OBJECTF_HMIXER | MIXER_GETLINECONTROLSF_ONEBYTYPE))
+    result = mixerGetLineControlsW((HMIXEROBJ)g_hMixer, &mixerLineControls, MIXER_OBJECTF_HMIXER | MIXER_GETLINECONTROLSF_ONEBYTYPE);
+    if (result != MMSYSERR_NOERROR)
     {
         ERR("mixerGetLineControlsW failed (%lu)\n", result);
         return E_FAIL;
