@@ -1,7 +1,7 @@
 /*
  * PROJECT:     ReactOS xHCI Host Controller Driver
  * LICENSE:     MIT (https://spdx.org/licenses/MIT)
- * PURPOSE:     Transfer ring object shared by the control and bulk transfer types
+ * PURPOSE:     Transfer ring object shared by the control, bulk and isoch transfer types
  * COPYRIGHT:   Copyright 2026 Justin Miller <justinmiller100@gmail.com>
  */
 
@@ -11,20 +11,24 @@ class XhciController;
 class XhciUsbDevice;
 class XhciEndpoint;
 
+/** Processor stamp for URBs the driver builds itself; UCX never stamps this value. */
+#define XHCI_URB_NO_PROCESSOR   MAXULONG
+
 /** Mapping permission of a ring. */
 enum class XhciMapState : LONG
 {
     Halted = 0,
     Halting = 1,
     PausedFill = 2,
-    Filling = 3
+    Filling = 3,
+    AwaitingStarve = 4       /**< Isoch only: waiting for an underrun or overrun */
 };
 
 /** One transfer ring, stored as its WDFQUEUE context; the type specific state follows in m_Type. */
 class XhciTransferRing
 {
 public:
-    /** PASSIVE_LEVEL. Fails with STATUS_UNSUCCESSFUL for isochronous endpoints. */
+    /** PASSIVE_LEVEL. */
     static NTSTATUS
     Create(
         _In_ XhciEndpoint* Endpoint,
@@ -141,6 +145,16 @@ public:
     /** Recomputes the 10 bit interrupter target for work issued on this processor. */
     VOID UpdateInterrupterTarget();
 
+    /** Same, for the processor index UCX stamped into the URB; XHCI_URB_NO_PROCESSOR means the current one. */
+    VOID
+    UpdateInterrupterTarget(
+        _In_ ULONG ProcessorIndex);
+
+    /** Processor index UCX stamped into the first ULONG of the URB's HCD area. */
+    static ULONG
+    UrbProcessorIndex(
+        _In_ PURB Urb);
+
     /** Rings this ring's doorbell (DCI and stream id) and records that it was rung. */
     VOID RingDoorbell();
 
@@ -182,6 +196,7 @@ public:
     {
         XhciControlRing Control;
         XhciBulkRing Bulk;
+        XhciIsochRing Isoch;
     } m_Type;
 
     /* Implementation state of the common ring; the type modules do not touch these */
@@ -191,6 +206,7 @@ public:
 
     BOOLEAN IsControl() const;
     BOOLEAN IsBulkOrInterrupt() const;
+    BOOLEAN IsIsoch() const;
 
     _IRQL_requires_max_(DISPATCH_LEVEL)
     VOID WaitForMappingIdle();

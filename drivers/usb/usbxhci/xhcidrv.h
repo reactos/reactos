@@ -28,6 +28,7 @@
 #include "slotdev.h"
 #include "ctrlxfer.h"
 #include "bulkio.h"
+#include "isoxfer.h"
 #include "xferring.h"
 #include "epctx.h"
 #include "reqctx.h"

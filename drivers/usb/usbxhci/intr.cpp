@@ -1415,13 +1415,16 @@ XhciInterrupters::Count() const
 ULONG
 XhciInterrupters::TargetForCurrentProcessor() const
 {
-    ULONG Index;
+    return TargetForProcessor(XhciCurrentProcessorIndex());
+}
 
-    if (m_Lookup == NULL)
+ULONG
+XhciInterrupters::TargetForProcessor(
+    _In_ ULONG ProcessorIndex) const
+{
+    /* Processors added after start are not in the table and use the primary */
+    if (m_Lookup == NULL || ProcessorIndex >= m_LookupSize)
         return 0;
 
-    Index = XhciCurrentProcessorIndex();
-
-    /* Processors added after start are not in the table and use the primary */
-    return (Index < m_LookupSize) ? m_Lookup[Index] : 0;
+    return m_Lookup[ProcessorIndex];
 }
