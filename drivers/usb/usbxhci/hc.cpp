@@ -418,65 +418,77 @@ VOID
 XhciController::QueryErrataDatabase(
     _In_ BOOLEAN AtAddDevice)
 {
+    static const PCWSTR Providers[] = { L"USBXHCI", L"USBXHCI2" };
     PFN_XHCI_QUERY_DEVICE_FLAGS Query = (PFN_XHCI_QUERY_DEVICE_FLAGS)XhciDriver.QueryDeviceFlags;
-    WCHAR Keys[5][96];
-    ULONG KeyCount = 0;
+    PULONG64 Words[] = { &m_Errata, &m_ErrataWord2 };
+    WCHAR Keys[7][96];
+    ULONG KeyCount;
     ULONG64 Flags;
-    ULONG64 Found = 0;
     BOOLEAN Any = FALSE;
     BOOLEAN Pci = (m_Identity.ParentBus != UcxControllerParentBusTypeAcpi);
+    ULONG Provider;
     ULONG Index;
 
     if (Query == NULL)
         return;
 
+    /* Keys go from the broadest match to the most specific one */
+    RtlStringCchCopyW(Keys[0], RTL_NUMBER_OF(Keys[0]), L"USBXHCI:ALL");
     if (Pci)
     {
-        RtlStringCchPrintfW(Keys[0], RTL_NUMBER_OF(Keys[0]), L"USBXHCI:PCI\\VEN_%04X&DEV_%04X",
-                            m_Identity.PciVendorId, m_Identity.PciDeviceId);
-        RtlStringCchPrintfW(Keys[1], RTL_NUMBER_OF(Keys[1]), L"%s&REV_%02X",
-                            Keys[0], m_Identity.PciRevisionId);
+        RtlStringCchPrintfW(Keys[1], RTL_NUMBER_OF(Keys[1]), L"USBXHCI:PCI\\VEN_%04X",
+                            m_Identity.PciVendorId);
+        RtlStringCchPrintfW(Keys[2], RTL_NUMBER_OF(Keys[2]), L"%s&DEV_%04X",
+                            Keys[1], m_Identity.PciDeviceId);
+        RtlStringCchPrintfW(Keys[3], RTL_NUMBER_OF(Keys[3]), L"%s&REV_%02X",
+                            Keys[2], m_Identity.PciRevisionId);
     }
     else
     {
-        RtlStringCchPrintfW(Keys[0], RTL_NUMBER_OF(Keys[0]), L"USBXHCI:ACPI\\VEN_%S&DEV_%S",
-                            m_Identity.AcpiVendorId, m_Identity.AcpiDeviceId);
-        RtlStringCchPrintfW(Keys[1], RTL_NUMBER_OF(Keys[1]), L"%s&REV_%S",
-                            Keys[0], m_Identity.AcpiRevisionId);
+        RtlStringCchPrintfW(Keys[1], RTL_NUMBER_OF(Keys[1]), L"USBXHCI:ACPI\\VEN_%S",
+                            m_Identity.AcpiVendorId);
+        RtlStringCchPrintfW(Keys[2], RTL_NUMBER_OF(Keys[2]), L"%s&DEV_%S",
+                            Keys[1], m_Identity.AcpiDeviceId);
+        RtlStringCchPrintfW(Keys[3], RTL_NUMBER_OF(Keys[3]), L"%s&REV_%S",
+                            Keys[2], m_Identity.AcpiRevisionId);
     }
-    KeyCount = 2;
+    KeyCount = 4;
 
     if (m_Identity.FirmwareVersion != XHCI_FIRMWARE_UNKNOWN)
     {
         RtlStringCchPrintfW(Keys[KeyCount], RTL_NUMBER_OF(Keys[0]), L"%s&%I64X",
-                            Keys[1], m_Identity.FirmwareVersion);
+                            Keys[3], m_Identity.FirmwareVersion);
         KeyCount++;
     }
 
     if (Pci)
     {
         RtlStringCchPrintfW(Keys[KeyCount], RTL_NUMBER_OF(Keys[0]), L"%s&SUBSYS_%04X%04X",
-                            Keys[0], m_Identity.PciSubsystemId, m_Identity.PciSubsystemVendorId);
+                            Keys[2], m_Identity.PciSubsystemId, m_Identity.PciSubsystemVendorId);
         RtlStringCchPrintfW(Keys[KeyCount + 1], RTL_NUMBER_OF(Keys[0]), L"%s&REV_%02X",
                             Keys[KeyCount], m_Identity.PciRevisionId);
         KeyCount += 2;
     }
 
-    for (Index = 0; Index < KeyCount; Index++)
+    for (Provider = 0; Provider < RTL_NUMBER_OF(Providers); Provider++)
     {
-        Flags = 0;
-        if (NT_SUCCESS(Query(Keys[Index], L"USBXHCI", &Flags)))
+        for (Index = 0; Index < KeyCount; Index++)
         {
-            DPRINT("Errata 0x%I64x from %S\n", Flags, Keys[Index]);
-            Found |= Flags;
-            Any = TRUE;
+            Flags = 0;
+            if (!NT_SUCCESS(Query(Keys[Index], Providers[Provider], &Flags)))
+                continue;
+
+            DPRINT("Errata word %lu 0x%I64x from %S\n", Provider + 1, Flags, Keys[Index]);
+            *Words[Provider] |= Flags;
+
+            /* The catch all key does not identify this controller */
+            if (Index != 0)
+                Any = TRUE;
         }
     }
 
     if (!Any)
-        DPRINT1("No errata database entry for this controller\n");
-
-    m_Errata |= Found;
+        DPRINT("No errata database entry for this controller\n");
 
     if (HasErrata(XhciErrata::HostRefuseToStart))
     {
@@ -554,13 +566,14 @@ VOID
 XhciController::PopulateErrata()
 {
     m_Errata = XhciErrataBit(XhciErrata::BootTolerateBiosHold);
+    m_ErrataWord2 = 0;
     QueryErrataDatabase(TRUE);
     ReadRegistryErrata();
     SetInternalFlags();
 
-    DPRINT1("Controller %04lx:%04lx rev %02x errata 0x%I64x internal 0x%I64x\n",
+    DPRINT1("Controller %04lx:%04lx rev %02x errata 0x%I64x 0x%I64x internal 0x%I64x\n",
             m_Identity.PciVendorId, m_Identity.PciDeviceId, m_Identity.PciRevisionId,
-            m_Errata, m_InternalFlags);
+            m_Errata, m_ErrataWord2, m_InternalFlags);
 }
 
 /* Hardware verifier **********************************************************/
@@ -1094,6 +1107,10 @@ XhciEvtDeviceAdd(
         DPRINT1("UcxInitializeDeviceInit failed 0x%lx\n", Status);
         return Status;
     }
+
+    /* Requests UCX forwards into the transfer queues are built by this device, so they get this context */
+    WDF_OBJECT_ATTRIBUTES_INIT_CONTEXT_TYPE(&Attributes, XhciRequestData);
+    WdfDeviceInitSetRequestAttributes(DeviceInit, &Attributes);
 
     WDF_PNPPOWER_EVENT_CALLBACKS_INIT(&PnpPower);
     PnpPower.EvtDevicePrepareHardware = XhciEvtDevicePrepareHardware;

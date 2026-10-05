@@ -58,6 +58,11 @@ public:
     HasErrata(
         _In_ XhciErrata Bit) const
     {
+        ULONG Position = static_cast<ULONG>(Bit);
+
+        if (Position >= 64)
+            return (m_ErrataWord2 & (1ULL << (Position - 64))) != 0;
+
         return (m_Errata & XhciErrataBit(Bit)) != 0;
     }
 
@@ -81,6 +86,7 @@ public:
     PDEVICE_OBJECT m_WdmDevice;
     UCXCONTROLLER m_Ucx;
     ULONG64 m_Errata;
+    ULONG64 m_ErrataWord2;
 
     XhciRegisters m_Registers;
     XhciCommonBuffer m_Buffers;
