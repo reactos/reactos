@@ -267,6 +267,16 @@ PcipUpdateHardware(IN PVOID Context,
                               PCI_ENABLE_MEMORY_SPACE |
                               PCI_ENABLE_BUS_MASTER |
                               PCI_ENABLE_WRITE_AND_INVALIDATE);
+
+        /* A BAR size can only change with the decodes off, before the BAR gets its address */
+        if (PdoExtension->ResizableBarState.CapabilityPtr)
+        {
+            PciWriteDeviceConfig(PdoExtension,
+                                 &PciData->Command,
+                                 FIELD_OFFSET(PCI_COMMON_HEADER, Command),
+                                 sizeof(PciData->Command));
+            PciApplyResizableBarSizes(PdoExtension);
+        }
     }
 
     /* Update the device configuration */
@@ -576,7 +586,7 @@ PciBuildRequirementsList(IN PPCI_PDO_EXTENSION PdoExtension,
     PIO_RESOURCE_REQUIREMENTS_LIST RequirementsList;
     PIO_RESOURCE_DESCRIPTOR Descriptor, Limit;
     PCI_CONFIGURATOR_CONTEXT Context;
-    ULONG Count, i;
+    ULONG Count, i, Resized;
     BOOLEAN HaveInterrupt;
 
     PAGED_CODE();
@@ -587,8 +597,15 @@ PciBuildRequirementsList(IN PPCI_PDO_EXTENSION PdoExtension,
     {
         for (i = 0; i < (PCI_TYPE0_ADDRESSES + 1); i++)
         {
-            if (PdoExtension->Resources->Limit[i].Type != CmResourceTypeNull)
-                Count++;
+            if (PdoExtension->Resources->Limit[i].Type == CmResourceTypeNull)
+                continue;
+
+            /* A resizable BAR also asks for the larger sizes it can decode */
+            Count++;
+            Count += PciAddResizableBarRequirements(PdoExtension,
+                                                    i,
+                                                    &PdoExtension->Resources->Limit[i],
+                                                    NULL);
         }
     }
 
@@ -639,9 +656,15 @@ PciBuildRequirementsList(IN PPCI_PDO_EXTENSION PdoExtension,
             if (Limit[i].Type == CmResourceTypeNull)
                 continue;
 
+            /* The larger sizes of a resizable BAR come first, its default size is the fallback */
+            Resized = PciAddResizableBarRequirements(PdoExtension, i, &Limit[i], Descriptor);
+            Descriptor += Resized;
+
             /* A BAR decodes for one function only, so it cannot be shared */
             *Descriptor = Limit[i];
             Descriptor->ShareDisposition = CmResourceShareDeviceExclusive;
+            if (Resized)
+                Descriptor->Option = IO_RESOURCE_ALTERNATIVE;
             Descriptor++;
         }
     }
@@ -1374,6 +1397,9 @@ PciGetEnhancedCapabilities(IN PPCI_PDO_EXTENSION PdoExtension,
 
     /* Now find out whether this is an Express function, and what kind */
     PciGetExpressCapabilities(PdoExtension);
+
+    /* And whether any of its BARs can be resized */
+    PciGetResizableBarCapability(PdoExtension);
 
     /* At the very end of all this, does this device not have power management? */
     if (PdoExtension->HackFlags & PCI_HACK_NO_PM_CAPS)
@@ -2257,7 +2283,7 @@ PciSetResources(IN PPCI_PDO_EXTENSION PdoExtension,
                 IN BOOLEAN SomethingSomethingDarkSide)
 {
     PPCI_FDO_EXTENSION FdoExtension;
-    UCHAR NewCacheLineSize, NewLatencyTimer;
+    UCHAR NewCacheLineSize, NewLatencyTimer, CacheLineReadBack;
     PCI_COMMON_HEADER PciData;
     BOOLEAN Native;
     PPCI_CONFIGURATOR Configurator;
@@ -2298,8 +2324,40 @@ PciSetResources(IN PPCI_PDO_EXTENSION PdoExtension,
     if ((PdoExtension->NeedsHotPlugConfiguration) &&
         (FdoExtension->HotPlugParameters.Acquired))
     {
-        /* Don't have hotplug devices to test with yet, QEMU 0.14 should */
-        UNIMPLEMENTED_DBGBREAK();
+        /* The firmware never configured this device, so use what _HPP asks for */
+        PdoExtension->SavedLatencyTimer = FdoExtension->HotPlugParameters.LatencyTimer;
+        PdoExtension->SavedCacheLineSize = FdoExtension->HotPlugParameters.CacheLineSize;
+
+        PdoExtension->CommandEnables &= ~(PCI_ENABLE_PARITY | PCI_ENABLE_SERR);
+        if (FdoExtension->HotPlugParameters.EnablePERR)
+        {
+            PdoExtension->CommandEnables |= PCI_ENABLE_PARITY;
+        }
+
+        if (FdoExtension->HotPlugParameters.EnableSERR)
+        {
+            PdoExtension->CommandEnables |= PCI_ENABLE_SERR;
+        }
+
+        /* Only turn on memory write and invalidate if the device keeps the cache line size */
+        PciWriteDeviceConfig(PdoExtension,
+                             &PdoExtension->SavedCacheLineSize,
+                             FIELD_OFFSET(PCI_COMMON_HEADER, CacheLineSize),
+                             sizeof(PdoExtension->SavedCacheLineSize));
+        PciReadDeviceConfig(PdoExtension,
+                            &CacheLineReadBack,
+                            FIELD_OFFSET(PCI_COMMON_HEADER, CacheLineSize),
+                            sizeof(CacheLineReadBack));
+        if ((CacheLineReadBack != 0) &&
+            (CacheLineReadBack == PdoExtension->SavedCacheLineSize))
+        {
+            PdoExtension->CommandEnables |= PCI_ENABLE_WRITE_AND_INVALIDATE;
+        }
+        else
+        {
+            DPRINT1("PCI (pdox %p) cache line size %02x rejected, MWI stays off\n",
+                    PdoExtension, PdoExtension->SavedCacheLineSize);
+        }
     }
 
     /* Locate the correct resource configurator for this type of device */
