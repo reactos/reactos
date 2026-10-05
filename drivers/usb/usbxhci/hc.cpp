@@ -1802,13 +1802,22 @@ XhciController::GetFrameNumber(
     _In_ ULONG Increment)
 {
     ULONG64 Now = NowMs();
-    ULONG Hardware = m_Registers.CurrentFrame(Increment);
     ULONG64 Snapshot = (ULONG64)InterlockedCompareExchange64(&m_FrameSnapshot, 0, 0);
+    ULONG Hardware;
     ULONG Estimate;
     ULONG Result;
     ULONG Low;
 
+    if (!m_FrameSnapshotReady)
+        return 0;
+
     Estimate = (ULONG)((Snapshot & 0x1FFFFF) << 11) + (ULONG)(Now - (Snapshot >> 21));
+
+    /* MFINDEX is meaningless outside D0, so run on the clock and leave the snapshot alone */
+    if (m_PowerState != WdfPowerDeviceD0 || !IsAccessible())
+        return Estimate;
+
+    Hardware = m_Registers.CurrentFrame(Increment);
     Result = (Estimate & ~0x7FFUL) | Hardware;
     Low = Estimate & 0x7FF;
 
@@ -2564,13 +2573,8 @@ XhciEvtControllerGetCurrentFrameNumber(
     _In_ UCXCONTROLLER UcxController,
     _Out_ PULONG FrameNumber)
 {
-    XhciController* Controller = XhciController::FromUcx(UcxController);
-
-    if (Controller->m_PowerState != WdfPowerDeviceD0)
-        *FrameNumber = MAXULONG;
-    else
-        *FrameNumber = Controller->GetFrameNumber(1);
-
+    /* Outside D0 this returns the clock based estimate, since UCX caches the value */
+    *FrameNumber = XhciController::FromUcx(UcxController)->GetFrameNumber(1);
     return STATUS_SUCCESS;
 }
 

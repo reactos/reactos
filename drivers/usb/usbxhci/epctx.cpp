@@ -2376,6 +2376,9 @@ XhciEndpoint::SendClearStall()
     Urb->TransferFlags = USBD_DEFAULT_PIPE_TRANSFER | USB3_URB_RESERVED_RESOURCES;
     Urb->Timeout = XHCI_CLEAR_STALL_TIMEOUT_MS;
 
+    /* UCX never sees this URB, so the control ring picks the current processor's interrupter */
+    *(PULONG)&Urb->hca = XHCI_URB_NO_PROCESSOR;
+
     Setup = reinterpret_cast<PUSB_DEFAULT_PIPE_SETUP_PACKET>(Urb->SetupPacket);
     Setup->bmRequestType.B = BMREQUEST_HOST_TO_DEVICE | (BMREQUEST_STANDARD << 5) | BMREQUEST_TO_ENDPOINT;
     Setup->bRequest = USB_REQUEST_CLEAR_FEATURE;
