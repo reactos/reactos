@@ -863,7 +863,7 @@ MainWindowProc(HWND hwnd,
                LPARAM lParam)
 {
     PMIXER_WINDOW MixerWindow;
-    DWORD CtrlID, LineOffset;
+    DWORD CtrlID, LineOffset, TargetSlider;
     BOOL bRet;
     LRESULT Result = 0;
     SET_VOLUME_CONTEXT Context;
@@ -1066,15 +1066,24 @@ MainWindowProc(HWND hwnd,
             break;
         }
 
+        case WM_HSCROLL:
         case WM_VSCROLL:
+            TargetSlider = uMsg == WM_HSCROLL ? IDC_LINE_SLIDER_HORZ : IDC_LINE_SLIDER_VERT;
+
             switch (LOWORD(wParam))
             {
+                case TB_LINEUP:
+                case TB_LINEDOWN:
+                case TB_PAGEUP:
+                case TB_PAGEDOWN:
+                case TB_TOP:
+                case TB_BOTTOM:
                 case TB_THUMBTRACK:
                     /* get dialog item ctrl */
                     CtrlID = GetDlgCtrlID((HWND)lParam);
 
                     /* get line index */
-                    LineOffset = CtrlID / IDC_LINE_SLIDER_VERT;
+                    LineOffset = CtrlID / TargetSlider;
 
                     /* compute window id of line name static control */
                     CtrlID = LineOffset * IDC_LINE_NAME;
@@ -1090,53 +1099,21 @@ MainWindowProc(HWND hwnd,
                         /* set volume */
                         SndMixerEnumConnections(Preferences.MixerWindow->Mixer, Preferences.SelectedLine, SetVolumeCallback, (LPVOID)&Context);
                     }
-                    break;
-
-                case TB_ENDTRACK:
-                    MixerWindow = GetWindowData(hwnd,
-                                                MIXER_WINDOW);
-
-                    /* get dialog item ctrl */
-                    CtrlID = GetDlgCtrlID((HWND)lParam);
-
-                    /* get line index */
-                    LineOffset = CtrlID / IDC_LINE_SLIDER_VERT;
-
-                    if (LineOffset == 1 && MixerWindow->Mixer->MixerId == 0)
-                        PlaySound((LPCTSTR)SND_ALIAS_SYSTEMDEFAULT, NULL, SND_ASYNC | SND_ALIAS_ID);
                     break;
 
                 default:
                     break;
             }
-            break;
 
-        case WM_HSCROLL:
+            /* One more time to test if we released the slider or was there any other affection */
             switch (LOWORD(wParam))
             {
-                case TB_THUMBTRACK:
-                    /* get dialog item ctrl */
-                    CtrlID = GetDlgCtrlID((HWND)lParam);
-
-                    /* get line index */
-                    LineOffset = CtrlID / IDC_LINE_SLIDER_HORZ;
-
-                    /* compute window id of line name static control */
-                    CtrlID = LineOffset * IDC_LINE_NAME;
-
-                    /* get line name */
-                    if (GetDlgItemTextW(hwnd, CtrlID, Context.LineName, MIXER_LONG_NAME_CHARS) != 0)
-                    {
-                        /* setup context */
-                        Context.SliderPos = LineOffset;
-                        Context.bVertical = TRUE;
-                        Context.bSwitch = FALSE;
-
-                        /* set volume */
-                        SndMixerEnumConnections(Preferences.MixerWindow->Mixer, Preferences.SelectedLine, SetVolumeCallback, (LPVOID)&Context);
-                    }
-                    break;
-
+                case TB_LINEUP:
+                case TB_LINEDOWN:
+                case TB_PAGEUP:
+                case TB_PAGEDOWN:
+                case TB_TOP:
+                case TB_BOTTOM:
                 case TB_ENDTRACK:
                     MixerWindow = GetWindowData(hwnd,
                                                 MIXER_WINDOW);
@@ -1145,7 +1122,7 @@ MainWindowProc(HWND hwnd,
                     CtrlID = GetDlgCtrlID((HWND)lParam);
 
                     /* get line index */
-                    LineOffset = CtrlID / IDC_LINE_SLIDER_HORZ;
+                    LineOffset = CtrlID / TargetSlider;
 
                     if (LineOffset == 1 && MixerWindow->Mixer->MixerId == 0)
                         PlaySound((LPCTSTR)SND_ALIAS_SYSTEMDEFAULT, NULL, SND_ASYNC | SND_ALIAS_ID);

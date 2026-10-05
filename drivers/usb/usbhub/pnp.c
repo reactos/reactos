@@ -1250,11 +1250,11 @@ EnumStart:
                                               &PortData->PortStatus,
                                               sizeof(USB_PORT_STATUS_AND_CHANGE));
 
-            UsbPortStatus = PortData->PortStatus.PortStatus;
-
             if (NT_SUCCESS(NtStatus))
             {
                 ULONG ix = 0;
+
+                UsbPortStatus = PortData->PortStatus.PortStatus;
 
                 for (NtStatus = USBH_CreateDevice(HubExtension, Port, UsbPortStatus, ix);
                      !NT_SUCCESS(NtStatus);
@@ -1275,6 +1275,15 @@ EnumStart:
                     }
 
                     USBH_SyncResetPort(HubExtension, Port);
+
+                    /* The device can come back at another speed after the reset */
+                    if (NT_SUCCESS(USBH_SyncGetPortStatus(HubExtension,
+                                                          Port,
+                                                          &PortData->PortStatus,
+                                                          sizeof(PortData->PortStatus))))
+                    {
+                        UsbPortStatus = PortData->PortStatus.PortStatus;
+                    }
 
                     ix++;
                 }

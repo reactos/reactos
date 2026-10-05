@@ -38,3 +38,6 @@
 #include "d3dx10.h"
 #include "d3d10_1shader.h"
 #include "d3d11shader.h"
+
+#include "d2d1_3.h"
+#include "d2d1effectauthor.h"

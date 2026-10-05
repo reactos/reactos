@@ -881,6 +881,10 @@ INetCfg_fnFindComponent(
     if (!This->bInitialized)
         return NETCFG_E_NOT_INITIALIZED;
 
+    hr = FindNetworkComponent(This->pNet, pszwComponentId, pComponent, iface);
+    if (hr == S_OK)
+        return hr;
+
     hr = FindNetworkComponent(This->pClient, pszwComponentId, pComponent, iface);
     if (hr == S_OK)
         return hr;

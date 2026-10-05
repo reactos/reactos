@@ -23,6 +23,7 @@ list(APPEND SOURCE
     pci/express.c
     pci/id.c
     pci/ppbridge.c
+    pci/rbar.c
     pci/romimage.c
     pci/state.c
     debug.c

@@ -19,10 +19,12 @@ public:
 
         COMMAND_ID_HANDLER(IDCANCEL, OnCommand)
         COMMAND_ID_HANDLER(IDOK, OnCommand)
-        COMMAND_ID_HANDLER(IDC_BUTTON_ADD, OnCommand)
-        COMMAND_ID_HANDLER(IDC_BUTTON_REMOVE, OnCommand)
-        COMMAND_ID_HANDLER(IDC_BUTTON_UP, OnCommand)
-        COMMAND_ID_HANDLER(IDC_BUTTON_DOWN, OnCommand)
+        COMMAND_ID_HANDLER(IDC_ADD_BUTTON_ADD, OnCommand)
+        COMMAND_ID_HANDLER(IDC_ADD_BUTTON_REMOVE, OnCommand)
+        COMMAND_ID_HANDLER(IDC_ADD_BUTTON_UP, OnCommand)
+        COMMAND_ID_HANDLER(IDC_ADD_BUTTON_DOWN, OnCommand)
+        COMMAND_ID_HANDLER(IDC_ADD_ADVANCED, OnCommand)
+        COMMAND_ID_HANDLER(IDC_ADD_LIST_PARENT, OnCommand)
 
         NOTIFY_CODE_HANDLER(LVN_ITEMCHANGED, OnItemChanged)
         NOTIFY_CODE_HANDLER(TVN_SELCHANGED,  OnSelectionChanged)
@@ -37,13 +39,18 @@ private:
     CWindow m_BtnUp;
     CWindow m_BtnDown;
     CWindow m_Description;
+    CWindow m_SelectedText;
+    CWindow m_ParentText;
+    CWindow m_ParentList;
+
+    BOOL m_Advanced;
 
     CMainWnd *m_MainWnd;
     CComPtr<CConsoleWnd> m_Console;
 
     CSnapin *m_RootSnapin;
     CSnapinAlias *m_RootAlias;
-    HTREEITEM m_RootTreeItem;
+    CSnapinAlias *m_ParentAlias;
 
     void CreateSnapinAliases(CSnapinAlias *ParentAlias, CSnapin *ParentSnapin);
     void ReconnectSnapins(CSnapinAlias *ParentAlias, CSnapin *ParentSnapin);
@@ -57,10 +64,16 @@ public:
     void InsertListItem(CListView& listView, CSnapinCacheEntry *CacheEntry);
     void InitTV(CTreeView& treeView);
     HTREEITEM InsertTreeItem(CTreeView& treeView, CSnapinAlias *Alias, HTREEITEM hParent = NULL, HTREEITEM hInsertAfter = TVI_LAST);
+    VOID InitCB(CWindow& comboBox);
+    VOID AppendComboBoxItem(CWindow& comboBox, CSnapinAlias *Alias, int iIndent);
+    VOID InsertSnapinAliasesRecursive(CSnapinAlias *ParentAlias, INT Indent);
+
     LRESULT OnInitDialog(UINT nMessage, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnCommand(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
     LRESULT OnItemChanged(INT uCode, LPNMHDR hdr, BOOL& bHandled);
     LRESULT OnSelectionChanged(INT uCode, LPNMHDR hdr, BOOL& bHandled);
     LRESULT OnItemDblClicked(INT uCode, LPNMHDR hdr, BOOL& bHandled);
     void UpdateButtons();
+    BOOL GetAdvanced();
+    VOID SetAdvanced(BOOL Advanced);
 };

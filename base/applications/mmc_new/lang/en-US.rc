@@ -65,7 +65,6 @@ BEGIN
         MENUITEM "&Help Topics", IDM_HELP_TOPICS
         MENUITEM SEPARATOR
         MENUITEM "&About ReactOS Management Console", IDM_HELP_ABOUT_MMC
-        MENUITEM "A&bout Snapin...", IDM_HELP_ABOUT_SNAPIN
     END
 END
 
@@ -104,15 +103,20 @@ FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     LTEXT           "You can select snap-ins for this console from those available on your computer and configure the selected set of snap-ins. For extensible snap-ins, you can configure which extensions are enabled.", IDC_STATIC, 8, 7, 457, 23 
     LTEXT           "Available Snap-ins:", IDC_STATIC, 7, 30, 163, 8
-    CONTROL         "", IDC_LIST_AVAILABLE, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_EX_FULLROWSELECT | LVS_SHOWSELALWAYS | LVS_SORTASCENDING | LVS_SHAREIMAGELISTS | LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP, 7, 40, 163, 157
-    PUSHBUTTON      "&Add >", IDC_BUTTON_ADD, 175, 40, 72, 14
-    PUSHBUTTON      "< &Remove", IDC_BUTTON_REMOVE, 175, 58, 72, 14
-    LTEXT           "Selected Snap-ins:", IDC_STATIC, 256, 30, 127, 8
-    CONTROL         "", IDC_LIST_SELECTED, "SysTreeView32", TVS_HASBUTTONS | TVS_HASLINES | TVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 256, 40, 127, 157
-    PUSHBUTTON      "Move &Up", IDC_BUTTON_UP, 392, 40, 72, 14
-    PUSHBUTTON      "Move &Down", IDC_BUTTON_DOWN, 392, 58, 72, 14
+    CONTROL         "", IDC_ADD_LIST_AVAILABLE, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_EX_FULLROWSELECT | LVS_SHOWSELALWAYS | LVS_SORTASCENDING | LVS_SHAREIMAGELISTS | LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP, 7, 40, 163, 157
+    PUSHBUTTON      "&Add >", IDC_ADD_BUTTON_ADD, 175, 40, 72, 14
+    PUSHBUTTON      "< &Remove", IDC_ADD_BUTTON_REMOVE, 175, 58, 72, 14
+    LTEXT           "Parent Snap-in:", IDC_ADD_TEXT_PARENT, 256, 30, 127, 8, WS_CHILD | NOT WS_VISIBLE
+    CONTROL         "", IDC_ADD_LIST_PARENT, "ComboBoxEx32", CBS_DROPDOWNLIST | WS_CHILD | WS_VSCROLL | WS_HSCROLL | WS_TABSTOP, 256, 40, 127, 81
+    LTEXT           "Selected Snap-ins:", IDC_ADD_TEXT_SELECTED, 256, 30, 127, 8
+    CONTROL         "", IDC_ADD_LIST_SELECTED, "SysTreeView32", TVS_HASBUTTONS | TVS_HASLINES | TVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 256, 40, 127, 157
+    PUSHBUTTON      "Move &Up", IDC_ADD_BUTTON_UP, 392, 40, 72, 14
+    PUSHBUTTON      "Move &Down", IDC_ADD_BUTTON_DOWN, 392, 58, 72, 14
+
+    PUSHBUTTON      "Advanced...", IDC_ADD_ADVANCED, 392, 183, 72, 14
+
     LTEXT           "Description:", IDC_STATIC, 7, 204, 162, 8
-    EDITTEXT        IDC_DESCRIPTION, 7, 214, 457, 33, ES_READONLY | ES_MULTILINE | WS_VSCROLL | WS_BORDER
+    EDITTEXT        IDC_ADD_DESCRIPTION, 7, 214, 457, 33, ES_READONLY | ES_MULTILINE | WS_VSCROLL | WS_BORDER
     DEFPUSHBUTTON   "OK", IDOK, 357, 254, 50, 14
     PUSHBUTTON      "Cancel", IDCANCEL, 414, 254, 50, 14
 END
@@ -159,6 +163,28 @@ BEGIN
     PUSHBUTTON      "Cancel",IDCANCEL,194,197,50,14,WS_TABSTOP
 END
 
+IDD_ABOUT_SNAPIN DIALOGEX 0, 0, 206, 127
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Info"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON "", IDC_ABOUT_ICON, 9, 9, 20, 20
+    EDITTEXT IDC_ABOUT_INFO, 53, 9, 136, 31, NOT WS_BORDER | ES_LEFT | ES_MULTILINE | ES_READONLY | ES_WANTRETURN | WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    EDITTEXT IDC_ABOUT_DESCRIPTION, 9, 52, 188, 51, NOT WS_BORDER | ES_LEFT | ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | ES_WANTRETURN | WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_TABSTOP
+    DEFPUSHBUTTON "OK", IDOK, 149, 106, 50, 14 
+END
+
+IDD_ADVANCED DIALOGEX 0, 0, 300, 73
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Advanced"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    LTEXT "By default, Snap-Ins are added to the Console Root. When you activate this Checkbox, you can select the Parent Snap-in.", IDC_STATIC, 7, 7, 277, 27
+    AUTOCHECKBOX "Enable change of parent Snap-In", IDC_ADVANCED_CHECK, 7, 37, 278, 10 
+    DEFPUSHBUTTON "OK", IDOK, 189, 53, 50, 14
+    PUSHBUTTON "Cancel", IDCANCEL, 243, 53, 50, 14
+END
+
 STRINGTABLE
 BEGIN
     IDS_APPTITLE "ReactOS Management Console"
@@ -178,6 +204,9 @@ BEGIN
     IDS_USERMODE_FULL_DESC "Prevents useres from adding or removing snap-ins or changing snap-in console properties. Users have full access to the tree."
     IDS_USERMODE_MULTIPLE_DESC "Prevents users from accessing areas of the tree that are not visible in snap-in console windows."
     IDS_USERMODE_SINGLE_DESC "Opens the snap-in console in single-window mode and prevents users from accessing areas of the tree that are not visible in that snap-in console window."
+
+    IDS_ABOUT_VERSION "Version: "
+    IDS_ABOUT_SNAPIN "A&bout %s..."
 END
 
 STRINGTABLE
