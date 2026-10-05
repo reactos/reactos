@@ -37,7 +37,16 @@ public:
     HRESULT CreateAndAddElementNode(PCWSTR wszName, IXMLDOMNode *pParent, IXMLDOMElement **ppElement = NULL);
 
     HRESULT SaveWindowPlacement(CWindow *pWindow, IXMLDOMElement *pParentNode);
+    HRESULT ParseWindowPlacement(CWindow *pWindow, IXMLDOMElement *pParentElement);
 
     HRESULT LoadDOM();
     HRESULT SaveDOM();
+
+    HRESULT CheckMscFile(IXMLDOMElement **ppRootElement);
+
+    HRESULT GetAttribute(IXMLDOMElement *pElement, LPWSTR pszAttributeName, VARIANT *pAttributeValue);
+    HRESULT GetElement(IXMLDOMElement *pParentElement, LPWSTR pszElementName, IXMLDOMElement **ppElement);
+
+    VOID ReleaseNode(IXMLDOMNode *pNode);
+
 };

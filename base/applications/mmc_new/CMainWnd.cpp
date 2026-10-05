@@ -1065,19 +1065,59 @@ CleanUp:
 LRESULT
 CMainWnd::LoadMscFile(const CAtlString &FileName)
 {
+    IXMLDOMElement *pRootElement = NULL;
+    IXMLDOMElement *pFrameStateElement = NULL;
     HRESULT hr = S_OK;
 
     MscFile *mscFile = new MscFile(FileName.GetString());
 
-    CHK_HR(mscFile->CreateAndInitDOM());
+    hr = mscFile->CreateAndInitDOM();
+    if (FAILED(hr))
+        goto done;
 
-    CHK_HR(mscFile->LoadDOM());
+    hr = mscFile->LoadDOM();
+    if (FAILED(hr))
+        goto done;
 
-    /* FIXME: Parse the dom and set up the app, the views and the snapin tree */
+    hr = mscFile->CheckMscFile(&pRootElement);
+    if (hr != S_OK)
+        goto done;
 
-CleanUp:
+    hr = mscFile->GetElement(pRootElement, (LPWSTR)L"FrameState", &pFrameStateElement);
+    if (hr != S_OK)
+        goto done;
+
+    hr = mscFile->ParseWindowPlacement(this, pFrameStateElement);
+    if (hr != S_OK)
+        goto done;
+
+    /* FIXME Parse other frame settings */
+
+    /*
+     * - Parse the ScopeTree Element
+     *    - Check the Snapin cache
+     *    - Build the snapin (nodes) tree
+     */
+
+    /* Parse the Views Element and create the views */
+
+done:
+    if (pFrameStateElement)
+        pFrameStateElement->Release();
+
+    if (pRootElement)
+        pRootElement->Release();
 
     delete mscFile;
+
+    if (hr == S_FALSE)
+    {
+//        ::MessageBox(NULL, L"Invalid file!", FileName.GetString(), MB_OK);
+    }
+    else if (hr != S_OK)
+    {
+//        ::MessageBox(NULL, L"Failure!", FileName.GetString(), MB_OK);
+    }
 
     return 0;
 }
