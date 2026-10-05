@@ -590,12 +590,12 @@ HalpGetPciBridgeConfig(
                 /* Skip if this is an invalid function */
                 if (PciData->VendorID == PCI_INVALID_VENDORID) continue;
 
-                /* Make sure that this is a PCI bridge or a cardbus bridge */
+                /* Make sure that this is a PCI bridge or a CardBUS bridge */
                 if (!HalpIsBridgeDevice(PciData)) continue;
 
-                /* Not supported */
+                // FIXME TODO: Implement
                 if (!WarningsGiven[2]++)
-                    DPRINT1("Your machine has a PCI-to-PCI or CardBUS Bridge. PCI devices may fail!\n");
+                    DPRINT1("UNIMPLEMENTED: Your machine has a PCI-to-PCI or CardBUS Bridge. PCI devices may fail!\n");
                 continue;
             }
         }
@@ -624,9 +624,9 @@ HalpFixupPciSupportedRanges(
         ParentBus = Bus->ParentHandler;
         while (ParentBus)
         {
-            /* Should merge addresses */
+            // FIXME TODO: Should merge addresses
             if (!WarningsGiven[0]++)
-                DPRINT1("Found parent bus (indicating PCI Bridge). PCI devices may fail!\n");
+                DPRINT1("UNIMPLEMENTED: Found parent bus (indicating PCI Bridge). PCI devices may fail!\n");
 
             /* Check the next parent */
             ParentBus = ParentBus->ParentHandler;
@@ -649,9 +649,9 @@ HalpFixupPciSupportedRanges(
                 /* But check only PCI parent buses specifically */
                 if (ParentBus->InterfaceType == PCIBus)
                 {
-                    /* Should trim addresses */
+                    // FIXME TODO: Should trim addresses
                     if (!WarningsGiven[1]++)
-                        DPRINT1("Found parent PCI Bus (indicating PCI-to-PCI Bridge). PCI devices may fail!\n");
+                        DPRINT1("UNIMPLEMENTED: Found parent PCI Bus (indicating PCI-to-PCI Bridge). PCI devices may fail!\n");
                 }
 
                 /* Check the next parent */
@@ -667,6 +667,7 @@ HalpFixupPciSupportedRanges(
         Bus = HalHandlerForBus(PCIBus, i);
 
         /* Sort and combine (trim) bus address range information */
+        // TODO: Implement
         DPRINT("Warning: Bus addresses not being optimized!\n");
     }
 }
@@ -1043,11 +1044,11 @@ HalpInitializePciBus(VOID)
                 /* Print out the entry */
                 HalpDebugPciDumpBus(BusHandler, PciSlot, i, j, k, PciData);
 
-                /* Check if this is a Cardbus bridge */
+                /* Check if this is a CardBUS bridge */
                 if (PCI_CONFIGURATION_TYPE(PciData) == PCI_CARDBUS_BRIDGE_TYPE)
                 {
-                    /* Not supported */
-                    DbgPrint("\tDevice is a PCI Cardbus Bridge. It will not work!\n");
+                    // FIXME TODO: Implement
+                    DbgPrint("\tDevice is a PCI CardBUS Bridge. It will not work!\n");
                     continue;
                 }
 
