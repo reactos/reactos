@@ -12,6 +12,7 @@ list(APPEND SOURCE
     epctx.cpp
     epstate.cpp
     intr.cpp
+    isoxfer.cpp
     mmio.cpp
     rootports.cpp
     xferring.cpp
