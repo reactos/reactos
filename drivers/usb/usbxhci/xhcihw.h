@@ -29,6 +29,7 @@ C_ASSERT(sizeof(XHCI_TRB) == 16);
 
 FORCEINLINE
 ULONG
+NTAPI
 XhciTrbType(
     _In_ const XHCI_TRB* Trb)
 {
@@ -37,6 +38,7 @@ XhciTrbType(
 
 FORCEINLINE
 ULONG
+NTAPI
 XhciTrbCompletionCode(
     _In_ const XHCI_TRB* Trb)
 {
@@ -45,6 +47,7 @@ XhciTrbCompletionCode(
 
 FORCEINLINE
 ULONG
+NTAPI
 XhciTrbSlotId(
     _In_ const XHCI_TRB* Trb)
 {
@@ -53,6 +56,7 @@ XhciTrbSlotId(
 
 FORCEINLINE
 ULONG64
+NTAPI
 XhciTrbPointer(
     _In_ const XHCI_TRB* Trb)
 {
@@ -431,3 +435,213 @@ C_ASSERT(sizeof(XHCI_ERST_ENTRY) == 16);
 
 /** USBLEGCTLSTS write mask: SMI on OS Ownership off, the RW1C bits 31:29 written as 0. */
 #define XHCI_LEGCTLSTS_KEEP_MASK        0x1FFFDFFF
+
+/* Device contexts (xHCI 6.2.1 to 6.2.5) */
+
+/*
+ * Only the first 32 bytes of a context carry fields, even when HCCPARAMS1.CSZ makes it
+ * 64 bytes. Locate a context by the controller context size, then use the layouts below.
+ */
+#define XHCI_CONTEXT_SIZE_32            32
+#define XHCI_CONTEXT_SIZE_64            64
+
+/** Output device context: slot plus DCI 1..31. Input context: control, slot, DCI 1..31. */
+#define XHCI_DEVICE_CONTEXT_COUNT       32
+#define XHCI_INPUT_CONTEXT_COUNT        33
+
+/** Slot Context (xHCI 6.2.2) */
+typedef struct _XHCI_SLOT_CONTEXT
+{
+    ULONG RouteString:20;
+    ULONG Speed:4;
+    ULONG Reserved0:1;
+    ULONG MultiTT:1;
+    ULONG Hub:1;
+    ULONG ContextEntries:5;
+
+    ULONG MaxExitLatency:16;
+    ULONG RootHubPortNumber:8;
+    ULONG NumberOfPorts:8;
+
+    ULONG TTHubSlotId:8;
+    ULONG TTPortNumber:8;
+    ULONG TTThinkTime:2;
+    ULONG Reserved1:4;
+    ULONG InterrupterTarget:10;
+
+    ULONG UsbDeviceAddress:8;
+    ULONG Reserved2:19;
+    ULONG SlotState:5;
+
+    ULONG Reserved3[4];
+} XHCI_SLOT_CONTEXT, *PXHCI_SLOT_CONTEXT;
+
+C_ASSERT(sizeof(XHCI_SLOT_CONTEXT) == XHCI_CONTEXT_SIZE_32);
+
+typedef struct _XHCI_SLOT_CONTEXT64
+{
+    XHCI_SLOT_CONTEXT Context;
+    ULONG Reserved[8];
+} XHCI_SLOT_CONTEXT64, *PXHCI_SLOT_CONTEXT64;
+
+C_ASSERT(sizeof(XHCI_SLOT_CONTEXT64) == XHCI_CONTEXT_SIZE_64);
+
+/* Slot Context Slot State values */
+#define XHCI_SLOT_STATE_DISABLED        0
+#define XHCI_SLOT_STATE_DEFAULT         1
+#define XHCI_SLOT_STATE_ADDRESSED       2
+#define XHCI_SLOT_STATE_CONFIGURED      3
+
+/** Endpoint Context (xHCI 6.2.3). TRDequeuePointer carries DCS in bit 0. */
+typedef struct _XHCI_ENDPOINT_CONTEXT
+{
+    ULONG EndpointState:3;
+    ULONG Reserved0:5;
+    ULONG Mult:2;
+    ULONG MaxPStreams:5;
+    ULONG LinearStreamArray:1;
+    ULONG Interval:8;
+    ULONG MaxEsitPayloadHi:8;
+
+    ULONG Reserved1:1;
+    ULONG ErrorCount:2;
+    ULONG EndpointType:3;
+    ULONG Reserved2:1;
+    ULONG HostInitiateDisable:1;
+    ULONG MaxBurstSize:8;
+    ULONG MaxPacketSize:16;
+
+    ULONG64 TRDequeuePointer;
+
+    ULONG AverageTrbLength:16;
+    ULONG MaxEsitPayloadLo:16;
+
+    ULONG Reserved3[3];
+} XHCI_ENDPOINT_CONTEXT, *PXHCI_ENDPOINT_CONTEXT;
+
+C_ASSERT(sizeof(XHCI_ENDPOINT_CONTEXT) == XHCI_CONTEXT_SIZE_32);
+
+typedef struct _XHCI_ENDPOINT_CONTEXT64
+{
+    XHCI_ENDPOINT_CONTEXT Context;
+    ULONG Reserved[8];
+} XHCI_ENDPOINT_CONTEXT64, *PXHCI_ENDPOINT_CONTEXT64;
+
+C_ASSERT(sizeof(XHCI_ENDPOINT_CONTEXT64) == XHCI_CONTEXT_SIZE_64);
+
+/* Endpoint Context EP State values */
+#define XHCI_ENDPOINT_STATE_DISABLED    0
+#define XHCI_ENDPOINT_STATE_RUNNING     1
+#define XHCI_ENDPOINT_STATE_HALTED      2
+#define XHCI_ENDPOINT_STATE_STOPPED     3
+#define XHCI_ENDPOINT_STATE_ERROR       4
+
+/* Endpoint Context EP Type values */
+#define XHCI_ENDPOINT_TYPE_ISOCH_OUT    1
+#define XHCI_ENDPOINT_TYPE_BULK_OUT     2
+#define XHCI_ENDPOINT_TYPE_INTERRUPT_OUT 3
+#define XHCI_ENDPOINT_TYPE_CONTROL      4
+#define XHCI_ENDPOINT_TYPE_ISOCH_IN     5
+#define XHCI_ENDPOINT_TYPE_BULK_IN      6
+#define XHCI_ENDPOINT_TYPE_INTERRUPT_IN 7
+
+/** Input Control Context (xHCI 6.2.5.1). Bit n of either mask is DCI n, bit 0 the slot. */
+typedef struct _XHCI_INPUT_CONTROL_CONTEXT
+{
+    ULONG DropFlags;
+    ULONG AddFlags;
+    ULONG Reserved0[5];
+    ULONG ConfigurationValue:8;
+    ULONG InterfaceNumber:8;
+    ULONG AlternateSetting:8;
+    ULONG Reserved1:8;
+} XHCI_INPUT_CONTROL_CONTEXT, *PXHCI_INPUT_CONTROL_CONTEXT;
+
+C_ASSERT(sizeof(XHCI_INPUT_CONTROL_CONTEXT) == XHCI_CONTEXT_SIZE_32);
+
+typedef struct _XHCI_INPUT_CONTROL_CONTEXT64
+{
+    XHCI_INPUT_CONTROL_CONTEXT Context;
+    ULONG Reserved[8];
+} XHCI_INPUT_CONTROL_CONTEXT64, *PXHCI_INPUT_CONTROL_CONTEXT64;
+
+C_ASSERT(sizeof(XHCI_INPUT_CONTROL_CONTEXT64) == XHCI_CONTEXT_SIZE_64);
+
+/* Slot command TRB dword 3 fields (xHCI 6.4.3) */
+#define XHCI_CMD_SLOT_TYPE_SHIFT        16
+#define XHCI_CMD_BLOCK_SET_ADDRESS      0x00000200
+#define XHCI_CMD_DECONFIGURE            0x00000200
+
+/* Command Completion Event dword 2 Command Completion Parameter (xHCI 6.4.2.2) */
+#define XHCI_COMPLETION_PARAMETER_MASK  0x00FFFFFF
+
+/* Device Notification Event: Function Wake type and its interface byte (xHCI 6.4.2.7) */
+#define XHCI_NOTIFICATION_FUNCTION_WAKE 1
+#define XHCI_NOTIFICATION_DATA_SHIFT    8
+#define XHCI_NOTIFICATION_DATA_MASK     0x0000FF00
+
+/* Endpoint commands and stream contexts (xHCI 6.2.4, 6.4.3.6 to 6.4.3.9) */
+
+/* Reset Endpoint dword 3 Transfer State Preserve, Stop Endpoint dword 3 Suspend */
+#define XHCI_CMD_TRANSFER_STATE_PRESERVE 0x00000200
+#define XHCI_CMD_SUSPEND                0x00800000
+
+/* Set TR Dequeue Pointer dword 2 Stream ID */
+#define XHCI_CMD_STREAM_ID_SHIFT        16
+
+/* Low bits of a TR dequeue pointer: DCS in bit 0, SCT in bits 3:1 */
+#define XHCI_DEQUEUE_CYCLE              0x0000000000000001ULL
+#define XHCI_DEQUEUE_FLAGS_MASK         0x000000000000000FULL
+
+/** Stream Context (xHCI 6.2.4.1). Dword2 holds the Stopped EDTLA in bits 23:0. */
+typedef struct _XHCI_STREAM_CONTEXT
+{
+    ULONG64 DequeuePointer;
+    ULONG Dword2;
+    ULONG Dword3;
+} XHCI_STREAM_CONTEXT, *PXHCI_STREAM_CONTEXT;
+
+C_ASSERT(sizeof(XHCI_STREAM_CONTEXT) == 16);
+
+#define XHCI_STREAM_EDTLA_MASK          0x00FFFFFF
+
+/* Transfer ring TRB fields and the TR Dequeue Pointer SCT field (xHCI 6.4.1, 6.4.4.1, 6.2.4.1) */
+#define XHCI_TRB_CHAIN                  0x00000010
+#define XHCI_TRB_INTERRUPTER_SHIFT      22
+#define XHCI_TRB_INTERRUPTER_MASK       0x000003FF
+#define XHCI_DEQUEUE_SCT_SHIFT          1
+#define XHCI_SCT_PRIMARY_RING           1
+
+/* URB TransferFlags bit for transfers that must make forward progress */
+#ifndef USB3_URB_RESERVED_RESOURCES
+#define USB3_URB_RESERVED_RESOURCES  0x00000010
+#endif
+
+/* Transfer TRB length, TD Size and flag bits (xHCI 6.4.1) */
+#define XHCI_TRB_LENGTH_MASK            0x0001FFFF
+#define XHCI_TRB_TD_SIZE_SHIFT          17
+#define XHCI_TRB_ENT                    0x00000002
+#define XHCI_TRB_IOC                    0x00000020
+#define XHCI_TRB_IDT                    0x00000040
+#define XHCI_TRB_DIR_IN                 0x00010000
+
+/* Setup Stage TRB Transfer Type (xHCI 6.4.1.2.1) */
+#define XHCI_TRB_TRT_SHIFT              16
+#define XHCI_TRB_TRT_NO_DATA            0
+#define XHCI_TRB_TRT_OUT                2
+#define XHCI_TRB_TRT_IN                 3
+
+/* Transfer Event TRB Transfer Length, dword 2 bits 23:0 (xHCI 6.4.2.1) */
+#define XHCI_TRANSFER_EVENT_LENGTH_MASK 0x00FFFFFF
+
+/* USB4 tunneling: extended capability 0x12 and PORTSC bit 2 (reserved in xHCI 1.2) report a USB 3.x link over USB4 */
+#define XHCI_EXTCAP_USB4_TUNNELING          0x12
+#define XHCI_USB4_CAP_PORTSC_TUNNEL_VALID   0x00010000
+#define XHCI_PORTSC_TUNNELED                0x00000004
+
+/* Vendor tunnel status registers, offsets from the capability registers */
+#define XHCI_VENDOR_PORT_TUNNEL_BASE        0x8AC4
+#define XHCI_VENDOR_PORT_TUNNEL_STRIDE      0x20
+#define XHCI_VENDOR_PORT_TUNNEL_ACTIVE      0x00000010
+#define XHCI_VENDOR_TUNNEL_STATUS           0xCD20
+#define XHCI_VENDOR_TUNNEL_STATUS_ACTIVE    0x00000001
