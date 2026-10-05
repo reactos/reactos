@@ -40,7 +40,7 @@ static HRESULT __stdcall Volume_FindMixerControl(CSysTray * pSysTray)
 
     if (waveOutId == (DWORD)-1)
     {
-        TRACE("WARNING: waveOut has no default device, trying with first available device...\n", waveOutId);
+        TRACE("WARNING: waveOut has no default device, trying with first available device...\n");
 
         mixerId = 0;
     }
