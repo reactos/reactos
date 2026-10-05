@@ -42,6 +42,7 @@ static const ULONG XhciVendorBitRegisters[] = { 0x8904, 0x8A14, 0x8B24 };
 
 static
 VOID
+NTAPI
 XhciSleepMs(
     _In_ ULONG Milliseconds)
 {

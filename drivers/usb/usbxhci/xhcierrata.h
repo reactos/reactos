@@ -76,11 +76,17 @@ enum class XhciErrata : ULONG
     AcpiDsmHsicSuspendDetach = 60,
     CfgMultiTtFromHubData = 61,
     Reserved62 = 62,
-    BootStrictBiosRelease = 63
+    BootStrictBiosRelease = 63,
+
+    /* Second 64 bit errata word, position 64 + bit */
+    Usb4TunnelFromVendorPortReg = 64 + 22,
+    Usb4TunnelFromVendorStatusReg = 64 + 23,
+    Usb4TunnelFromAcpiDsm = 64 + 28
 };
 
 FORCEINLINE
 ULONG64
+NTAPI
 XhciErrataBit(
     _In_ XhciErrata Bit)
 {
