@@ -1,7 +1,7 @@
 /*
  * PROJECT:     ReactOS Keyboard Layouts
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
- * PURPOSE:     Japanese (US 101) keyboard layout
+ * PURPOSE:     (Japanese retro) 101 keyboard layout
  * COPYRIGHT:   Copyright 2026 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
