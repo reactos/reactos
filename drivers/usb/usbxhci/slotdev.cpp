@@ -5,7 +5,7 @@
  * COPYRIGHT:   Copyright 2026 Justin Miller <justinmiller100@gmail.com>
  */
 
-#include "usbxhci.h"
+#include "xhcidrv.h"
 
 #define NDEBUG
 #include <debug.h>
