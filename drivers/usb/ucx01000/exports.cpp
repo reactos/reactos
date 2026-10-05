@@ -5,31 +5,21 @@
  * COPYRIGHT:   Copyright 2026 Justin Miller <justinmiller100@gmail.com>
  */
 
+/*
+ * The public names belong to the client side inline thunks, so the
+ * implementations here carry a UcxApi prefix. Each one only finds the object
+ * and forwards; the globals argument is ignored except by controller create.
+ */
+
 #include "ucx01000.h"
 
 #define NDEBUG
 #include <debug.h>
 
-/* Controller */
+PFN_UCXFUNC UcxExportTable[UcxFunctionTableNumEntries];
 
 _Must_inspect_result_
-_IRQL_requires_(PASSIVE_LEVEL)
-NTSTATUS
-NTAPI
-UcxApiInitializeDeviceInit(
-    _In_ PUCX_DRIVER_GLOBALS DriverGlobals,
-    _Inout_ PWDFDEVICE_INIT DeviceInit)
-{
-    UNREFERENCED_PARAMETER(DriverGlobals);
-    UNREFERENCED_PARAMETER(DeviceInit);
-
-    /* Lets clients get as far as UcxControllerCreate until this is real */
-    UNIMPLEMENTED;
-    return STATUS_SUCCESS;
-}
-
-_Must_inspect_result_
-_IRQL_requires_max_(DISPATCH_LEVEL)
+static
 BOOLEAN
 NTAPI
 UcxApiIoDeviceControl(
@@ -41,18 +31,12 @@ UcxApiIoDeviceControl(
     _In_ ULONG IoControlCode)
 {
     UNREFERENCED_PARAMETER(DriverGlobals);
-    UNREFERENCED_PARAMETER(Device);
-    UNREFERENCED_PARAMETER(Request);
-    UNREFERENCED_PARAMETER(OutputBufferLength);
-    UNREFERENCED_PARAMETER(InputBufferLength);
-    UNREFERENCED_PARAMETER(IoControlCode);
 
-    /* Not claimed; the client completes the request itself */
-    return FALSE;
+    return UcxDispatchUserIoctl(Device, Request, OutputBufferLength, InputBufferLength, IoControlCode);
 }
 
 _Must_inspect_result_
-_IRQL_requires_max_(DISPATCH_LEVEL)
+static
 NTSTATUS
 NTAPI
 UcxApiControllerCreate(
@@ -60,19 +44,12 @@ UcxApiControllerCreate(
     _In_ WDFDEVICE Device,
     _In_ PUCX_CONTROLLER_CONFIG Config,
     _In_opt_ PWDF_OBJECT_ATTRIBUTES Attributes,
-    _Out_ UCXCONTROLLER *Controller)
+    _Out_ UCXCONTROLLER* Controller)
 {
-    UNREFERENCED_PARAMETER(DriverGlobals);
-    UNREFERENCED_PARAMETER(Device);
-    UNREFERENCED_PARAMETER(Config);
-    UNREFERENCED_PARAMETER(Attributes);
-
-    *Controller = NULL;
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    return UcxController::Create(DriverGlobals, Device, Config, Attributes, Controller);
 }
 
-_IRQL_requires_max_(DISPATCH_LEVEL)
+static
 VOID
 NTAPI
 UcxApiControllerNeedsReset(
@@ -80,25 +57,24 @@ UcxApiControllerNeedsReset(
     _In_ UCXCONTROLLER Controller)
 {
     UNREFERENCED_PARAMETER(DriverGlobals);
-    UNREFERENCED_PARAMETER(Controller);
-    UNIMPLEMENTED;
+
+    UcxController::FromHandle(Controller)->NeedsReset();
 }
 
-_IRQL_requires_max_(DISPATCH_LEVEL)
+static
 VOID
 NTAPI
 UcxApiControllerResetComplete(
     _In_ PUCX_DRIVER_GLOBALS DriverGlobals,
     _In_ UCXCONTROLLER Controller,
-    _In_ PUCX_CONTROLLER_RESET_COMPLETE_INFO UcxControllerResetCompleteInfo)
+    _In_ PUCX_CONTROLLER_RESET_COMPLETE_INFO Info)
 {
     UNREFERENCED_PARAMETER(DriverGlobals);
-    UNREFERENCED_PARAMETER(Controller);
-    UNREFERENCED_PARAMETER(UcxControllerResetCompleteInfo);
-    UNIMPLEMENTED;
+
+    UcxController::FromHandle(Controller)->ResetComplete(Info);
 }
 
-_IRQL_requires_max_(DISPATCH_LEVEL)
+static
 VOID
 NTAPI
 UcxApiControllerSetFailed(
@@ -106,48 +82,12 @@ UcxApiControllerSetFailed(
     _In_ UCXCONTROLLER Controller)
 {
     UNREFERENCED_PARAMETER(DriverGlobals);
-    UNREFERENCED_PARAMETER(Controller);
-    UNIMPLEMENTED;
+
+    UcxController::FromHandle(Controller)->SetFailed();
 }
-
-_IRQL_requires_max_(DISPATCH_LEVEL)
-NTSTATUS
-NTAPI
-UcxApiControllerSetIdStrings(
-    _In_ PUCX_DRIVER_GLOBALS DriverGlobals,
-    _In_ UCXCONTROLLER Controller,
-    _In_ PUNICODE_STRING ManufacturerNameString,
-    _In_ PUNICODE_STRING ModelNameString,
-    _In_ PUNICODE_STRING ModelNumberString)
-{
-    UNREFERENCED_PARAMETER(DriverGlobals);
-    UNREFERENCED_PARAMETER(Controller);
-    UNREFERENCED_PARAMETER(ManufacturerNameString);
-    UNREFERENCED_PARAMETER(ModelNameString);
-    UNREFERENCED_PARAMETER(ModelNumberString);
-
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
-}
-
-_IRQL_requires_max_(DISPATCH_LEVEL)
-VOID
-NTAPI
-UcxApiControllerNotifyTransportCharacteristicsChange(
-    _In_ PUCX_DRIVER_GLOBALS DriverGlobals,
-    _In_ UCXCONTROLLER Controller,
-    _In_ PUCX_CONTROLLER_TRANSPORT_CHARACTERISTICS UcxControllerTransportCharacteristics)
-{
-    UNREFERENCED_PARAMETER(DriverGlobals);
-    UNREFERENCED_PARAMETER(Controller);
-    UNREFERENCED_PARAMETER(UcxControllerTransportCharacteristics);
-    UNIMPLEMENTED;
-}
-
-/* Root hub */
 
 _Must_inspect_result_
-_IRQL_requires_max_(DISPATCH_LEVEL)
+static
 NTSTATUS
 NTAPI
 UcxApiRootHubCreate(
@@ -155,67 +95,55 @@ UcxApiRootHubCreate(
     _In_ UCXCONTROLLER Controller,
     _In_ PUCX_ROOTHUB_CONFIG Config,
     _In_opt_ PWDF_OBJECT_ATTRIBUTES Attributes,
-    _Out_ UCXROOTHUB *RootHub)
+    _Out_ UCXROOTHUB* RootHub)
 {
     UNREFERENCED_PARAMETER(DriverGlobals);
-    UNREFERENCED_PARAMETER(Controller);
-    UNREFERENCED_PARAMETER(Config);
-    UNREFERENCED_PARAMETER(Attributes);
 
-    *RootHub = NULL;
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    return UcxRootHub::Create(Controller, Config, Attributes, RootHub);
 }
 
-_IRQL_requires_max_(DISPATCH_LEVEL)
+static
 VOID
 NTAPI
 UcxApiRootHubPortChanged(
     _In_ PUCX_DRIVER_GLOBALS DriverGlobals,
-    _In_ UCXROOTHUB UcxRootHub)
+    _In_ UCXROOTHUB RootHub)
 {
     UNREFERENCED_PARAMETER(DriverGlobals);
-    UNREFERENCED_PARAMETER(UcxRootHub);
-    UNIMPLEMENTED;
+
+    UcxRootHub::FromHandle(RootHub)->PortChanged();
 }
 
-/* USB devices */
-
 _Must_inspect_result_
-_IRQL_requires_(PASSIVE_LEVEL)
+static
 NTSTATUS
 NTAPI
 UcxApiUsbDeviceCreate(
     _In_ PUCX_DRIVER_GLOBALS DriverGlobals,
     _In_ UCXCONTROLLER Controller,
-    _Inout_ PUCXUSBDEVICE_INIT *UsbDeviceInit,
+    _Inout_ PUCXUSBDEVICE_INIT* Init,
     _In_opt_ PWDF_OBJECT_ATTRIBUTES Attributes,
-    _Out_ UCXUSBDEVICE *UsbDevice)
+    _Out_ UCXUSBDEVICE* UsbDevice)
 {
     UNREFERENCED_PARAMETER(DriverGlobals);
-    UNREFERENCED_PARAMETER(Controller);
-    UNREFERENCED_PARAMETER(UsbDeviceInit);
-    UNREFERENCED_PARAMETER(Attributes);
 
-    *UsbDevice = NULL;
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    return UcxUsbDevice::Create(Controller, Init, Attributes, UsbDevice);
 }
 
+static
 VOID
 NTAPI
 UcxApiUsbDeviceInitSetEventCallbacks(
     _In_ PUCX_DRIVER_GLOBALS DriverGlobals,
-    _Inout_ PUCXUSBDEVICE_INIT UsbDeviceInit,
-    _In_ PUCX_USBDEVICE_EVENT_CALLBACKS EventCallbacks)
+    _Inout_ PUCXUSBDEVICE_INIT Init,
+    _In_ PUCX_USBDEVICE_EVENT_CALLBACKS Callbacks)
 {
     UNREFERENCED_PARAMETER(DriverGlobals);
-    UNREFERENCED_PARAMETER(UsbDeviceInit);
-    UNREFERENCED_PARAMETER(EventCallbacks);
-    UNIMPLEMENTED;
+
+    UcxUsbDevice::InitSetEventCallbacks(Init, Callbacks);
 }
 
-_IRQL_requires_max_(DISPATCH_LEVEL)
+static
 VOID
 NTAPI
 UcxApiUsbDeviceRemoteWakeNotification(
@@ -224,36 +152,28 @@ UcxApiUsbDeviceRemoteWakeNotification(
     _In_ ULONG Interface)
 {
     UNREFERENCED_PARAMETER(DriverGlobals);
-    UNREFERENCED_PARAMETER(UsbDevice);
-    UNREFERENCED_PARAMETER(Interface);
-    UNIMPLEMENTED;
+
+    UcxUsbDevice::FromHandle(UsbDevice)->RemoteWakeNotification(Interface);
 }
 
-/* Endpoints */
-
 _Must_inspect_result_
-_IRQL_requires_(PASSIVE_LEVEL)
+static
 NTSTATUS
 NTAPI
 UcxApiEndpointCreate(
     _In_ PUCX_DRIVER_GLOBALS DriverGlobals,
     _In_ UCXUSBDEVICE UsbDevice,
-    _Inout_ PUCXENDPOINT_INIT *EndpointInit,
+    _Inout_ PUCXENDPOINT_INIT* Init,
     _In_opt_ PWDF_OBJECT_ATTRIBUTES Attributes,
-    _Out_ UCXENDPOINT *Endpoint)
+    _Out_ UCXENDPOINT* Endpoint)
 {
     UNREFERENCED_PARAMETER(DriverGlobals);
-    UNREFERENCED_PARAMETER(UsbDevice);
-    UNREFERENCED_PARAMETER(EndpointInit);
-    UNREFERENCED_PARAMETER(Attributes);
 
-    *Endpoint = NULL;
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    return UcxEndpoint::Create(UsbDevice, Init, Attributes, Endpoint);
 }
 
 _Must_inspect_result_
-_IRQL_requires_max_(DISPATCH_LEVEL)
+static
 UCXSSTREAMS
 NTAPI
 UcxApiEndpointGetStaticStreamsReferenced(
@@ -262,14 +182,11 @@ UcxApiEndpointGetStaticStreamsReferenced(
     _In_ PVOID Tag)
 {
     UNREFERENCED_PARAMETER(DriverGlobals);
-    UNREFERENCED_PARAMETER(Endpoint);
-    UNREFERENCED_PARAMETER(Tag);
 
-    UNIMPLEMENTED;
-    return NULL;
+    return UcxEndpoint::FromHandle(Endpoint)->GetStaticStreamsReferenced(Tag);
 }
 
-_IRQL_requires_max_(DISPATCH_LEVEL)
+static
 VOID
 NTAPI
 UcxApiEndpointNeedToCancelTransfers(
@@ -277,50 +194,51 @@ UcxApiEndpointNeedToCancelTransfers(
     _In_ UCXENDPOINT Endpoint)
 {
     UNREFERENCED_PARAMETER(DriverGlobals);
-    UNREFERENCED_PARAMETER(Endpoint);
-    UNIMPLEMENTED;
+
+    UcxEndpoint::FromHandle(Endpoint)->NeedToCancelTransfers();
 }
 
+static
 VOID
 NTAPI
 UcxApiEndpointInitSetEventCallbacks(
     _In_ PUCX_DRIVER_GLOBALS DriverGlobals,
-    _Inout_ PUCXENDPOINT_INIT EndpointInit,
-    _In_ PUCX_ENDPOINT_EVENT_CALLBACKS EventCallbacks)
+    _Inout_ PUCXENDPOINT_INIT Init,
+    _In_ PUCX_ENDPOINT_EVENT_CALLBACKS Callbacks)
 {
     UNREFERENCED_PARAMETER(DriverGlobals);
-    UNREFERENCED_PARAMETER(EndpointInit);
-    UNREFERENCED_PARAMETER(EventCallbacks);
-    UNIMPLEMENTED;
+
+    UcxEndpoint::InitSetEventCallbacks(Init, Callbacks);
 }
 
+static
 VOID
 NTAPI
 UcxApiDefaultEndpointInitSetEventCallbacks(
     _In_ PUCX_DRIVER_GLOBALS DriverGlobals,
-    _Inout_ PUCXENDPOINT_INIT EndpointInit,
-    _In_ PUCX_DEFAULT_ENDPOINT_EVENT_CALLBACKS EventCallbacks)
+    _Inout_ PUCXENDPOINT_INIT Init,
+    _In_ PUCX_DEFAULT_ENDPOINT_EVENT_CALLBACKS Callbacks)
 {
     UNREFERENCED_PARAMETER(DriverGlobals);
-    UNREFERENCED_PARAMETER(EndpointInit);
-    UNREFERENCED_PARAMETER(EventCallbacks);
-    UNIMPLEMENTED;
+
+    UcxEndpoint::InitSetDefaultEventCallbacks(Init, Callbacks);
 }
 
+static
 VOID
 NTAPI
 UcxApiEndpointSetWdfIoQueue(
     _In_ PUCX_DRIVER_GLOBALS DriverGlobals,
     _In_ UCXENDPOINT Endpoint,
-    _In_ WDFQUEUE WdfQueue)
+    _In_ WDFQUEUE Queue)
 {
     UNREFERENCED_PARAMETER(DriverGlobals);
-    UNREFERENCED_PARAMETER(Endpoint);
-    UNREFERENCED_PARAMETER(WdfQueue);
-    UNIMPLEMENTED;
+
+    UcxEndpoint::FromHandle(Endpoint)->SetWdfIoQueue(Queue);
 }
 
-_IRQL_requires_max_(DISPATCH_LEVEL)
+/* Valid from inside EvtEndpointPurge */
+static
 VOID
 NTAPI
 UcxApiEndpointPurgeComplete(
@@ -328,11 +246,12 @@ UcxApiEndpointPurgeComplete(
     _In_ UCXENDPOINT Endpoint)
 {
     UNREFERENCED_PARAMETER(DriverGlobals);
-    UNREFERENCED_PARAMETER(Endpoint);
-    UNIMPLEMENTED;
+
+    UcxEndpoint::FromHandle(Endpoint)->Post(EpEvent::PurgeDone);
 }
 
-_IRQL_requires_max_(DISPATCH_LEVEL)
+/* Valid from inside EvtEndpointAbort */
+static
 VOID
 NTAPI
 UcxApiEndpointAbortComplete(
@@ -340,11 +259,12 @@ UcxApiEndpointAbortComplete(
     _In_ UCXENDPOINT Endpoint)
 {
     UNREFERENCED_PARAMETER(DriverGlobals);
-    UNREFERENCED_PARAMETER(Endpoint);
-    UNIMPLEMENTED;
+
+    UcxEndpoint::FromHandle(Endpoint)->Post(EpEvent::AbortDone);
 }
 
-_IRQL_requires_max_(DISPATCH_LEVEL)
+/* Consumed by the next failing transfer completion on the device */
+static
 VOID
 NTAPI
 UcxApiEndpointNoPingResponseError(
@@ -352,12 +272,11 @@ UcxApiEndpointNoPingResponseError(
     _In_ UCXENDPOINT Endpoint)
 {
     UNREFERENCED_PARAMETER(DriverGlobals);
-    UNREFERENCED_PARAMETER(Endpoint);
-    UNIMPLEMENTED;
+
+    UcxEndpoint::FromHandle(Endpoint)->m_Device->m_PendingNoPingResponse = 1;
 }
 
-/* Static streams */
-
+static
 VOID
 NTAPI
 UcxApiStaticStreamsSetStreamInfo(
@@ -366,28 +285,99 @@ UcxApiStaticStreamsSetStreamInfo(
     _In_ PSTREAM_INFO StreamInfo)
 {
     UNREFERENCED_PARAMETER(DriverGlobals);
-    UNREFERENCED_PARAMETER(StaticStreams);
-    UNREFERENCED_PARAMETER(StreamInfo);
-    UNIMPLEMENTED;
+
+    UcxStaticStreams::FromHandle(StaticStreams)->SetStreamInfo(StreamInfo);
 }
 
 _Must_inspect_result_
-_IRQL_requires_(PASSIVE_LEVEL)
+static
 NTSTATUS
 NTAPI
 UcxApiStaticStreamsCreate(
     _In_ PUCX_DRIVER_GLOBALS DriverGlobals,
     _In_ UCXENDPOINT Endpoint,
-    _Inout_ PUCXSSTREAMS_INIT *StaticStreamsInit,
+    _Inout_ PUCXSSTREAMS_INIT* Init,
     _In_opt_ PWDF_OBJECT_ATTRIBUTES Attributes,
-    _Out_ UCXSSTREAMS *StaticStreams)
+    _Out_ UCXSSTREAMS* StaticStreams)
 {
     UNREFERENCED_PARAMETER(DriverGlobals);
-    UNREFERENCED_PARAMETER(Endpoint);
-    UNREFERENCED_PARAMETER(StaticStreamsInit);
-    UNREFERENCED_PARAMETER(Attributes);
 
-    *StaticStreams = NULL;
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    return UcxStaticStreams::Create(Endpoint, Init, Attributes, StaticStreams);
+}
+
+/* Reserved for future preprocess hooks; UCX never touches the HCD's device init */
+_Must_inspect_result_
+static
+NTSTATUS
+NTAPI
+UcxApiInitializeDeviceInit(
+    _In_ PUCX_DRIVER_GLOBALS DriverGlobals,
+    _Inout_ PWDFDEVICE_INIT DeviceInit)
+{
+    UNREFERENCED_PARAMETER(DriverGlobals);
+    UNREFERENCED_PARAMETER(DeviceInit);
+
+    return STATUS_SUCCESS;
+}
+
+static
+NTSTATUS
+NTAPI
+UcxApiControllerSetIdStrings(
+    _In_ PUCX_DRIVER_GLOBALS DriverGlobals,
+    _In_ UCXCONTROLLER Controller,
+    _In_ PUNICODE_STRING Manufacturer,
+    _In_ PUNICODE_STRING ModelName,
+    _In_ PUNICODE_STRING ModelNumber)
+{
+    UNREFERENCED_PARAMETER(DriverGlobals);
+
+    return UcxController::FromHandle(Controller)->SetIdStrings(Manufacturer, ModelName, ModelNumber);
+}
+
+static
+VOID
+NTAPI
+UcxApiControllerNotifyTransportCharacteristicsChange(
+    _In_ PUCX_DRIVER_GLOBALS DriverGlobals,
+    _In_ UCXCONTROLLER Controller,
+    _In_ PUCX_CONTROLLER_TRANSPORT_CHARACTERISTICS Characteristics)
+{
+    UNREFERENCED_PARAMETER(DriverGlobals);
+
+    UcxController::FromHandle(Controller)->NotifyTransportCharacteristicsChange(Characteristics);
+}
+
+VOID
+NTAPI
+UcxBuildExportTable(VOID)
+{
+    PFN_UCXFUNC* Table = UcxExportTable;
+
+    Table[UcxIoDeviceControlTableIndex] = (PFN_UCXFUNC)UcxApiIoDeviceControl;
+    Table[UcxControllerCreateTableIndex] = (PFN_UCXFUNC)UcxApiControllerCreate;
+    Table[UcxControllerNeedsResetTableIndex] = (PFN_UCXFUNC)UcxApiControllerNeedsReset;
+    Table[UcxControllerResetCompleteTableIndex] = (PFN_UCXFUNC)UcxApiControllerResetComplete;
+    Table[UcxControllerSetFailedTableIndex] = (PFN_UCXFUNC)UcxApiControllerSetFailed;
+    Table[UcxRootHubCreateTableIndex] = (PFN_UCXFUNC)UcxApiRootHubCreate;
+    Table[UcxRootHubPortChangedTableIndex] = (PFN_UCXFUNC)UcxApiRootHubPortChanged;
+    Table[UcxUsbDeviceCreateTableIndex] = (PFN_UCXFUNC)UcxApiUsbDeviceCreate;
+    Table[UcxUsbDeviceInitSetEventCallbacksTableIndex] = (PFN_UCXFUNC)UcxApiUsbDeviceInitSetEventCallbacks;
+    Table[UcxUsbDeviceRemoteWakeNotificationTableIndex] = (PFN_UCXFUNC)UcxApiUsbDeviceRemoteWakeNotification;
+    Table[UcxEndpointCreateTableIndex] = (PFN_UCXFUNC)UcxApiEndpointCreate;
+    Table[UcxEndpointGetStaticStreamsReferencedTableIndex] = (PFN_UCXFUNC)UcxApiEndpointGetStaticStreamsReferenced;
+    Table[UcxEndpointNeedToCancelTransfersTableIndex] = (PFN_UCXFUNC)UcxApiEndpointNeedToCancelTransfers;
+    Table[UcxEndpointInitSetEventCallbacksTableIndex] = (PFN_UCXFUNC)UcxApiEndpointInitSetEventCallbacks;
+    Table[UcxDefaultEndpointInitSetEventCallbacksTableIndex] =
+        (PFN_UCXFUNC)UcxApiDefaultEndpointInitSetEventCallbacks;
+    Table[UcxEndpointSetWdfIoQueueTableIndex] = (PFN_UCXFUNC)UcxApiEndpointSetWdfIoQueue;
+    Table[UcxEndpointPurgeCompleteTableIndex] = (PFN_UCXFUNC)UcxApiEndpointPurgeComplete;
+    Table[UcxEndpointAbortCompleteTableIndex] = (PFN_UCXFUNC)UcxApiEndpointAbortComplete;
+    Table[UcxEndpointNoPingResponseErrorTableIndex] = (PFN_UCXFUNC)UcxApiEndpointNoPingResponseError;
+    Table[UcxStaticStreamsSetStreamInfoTableIndex] = (PFN_UCXFUNC)UcxApiStaticStreamsSetStreamInfo;
+    Table[UcxStaticStreamsCreateTableIndex] = (PFN_UCXFUNC)UcxApiStaticStreamsCreate;
+    Table[UcxInitializeDeviceInitTableIndex] = (PFN_UCXFUNC)UcxApiInitializeDeviceInit;
+    Table[UcxControllerSetIdStringsTableIndex] = (PFN_UCXFUNC)UcxApiControllerSetIdStrings;
+    Table[UcxControllerNotifyTransportCharacteristicsChangeTableIndex] =
+        (PFN_UCXFUNC)UcxApiControllerNotifyTransportCharacteristicsChange;
 }
