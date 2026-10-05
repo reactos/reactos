@@ -188,6 +188,15 @@ XhciSlotTable::DiscardState()
     DisableAll();
 }
 
+static
+XhciUsbDevice*
+NTAPI
+XhciSlotDevice(
+    _In_ PVOID Entry)
+{
+    return static_cast<XhciUsbDevice*>(Entry);
+}
+
 VOID
 XhciSlotTable::DisableAll()
 {
@@ -198,24 +207,39 @@ XhciSlotTable::DisableAll()
         if (m_SlotMap[SlotId] == NULL)
             continue;
 
-        /* No USB device module yet to mark the device disabled, so drop the slot here */
         DPRINT("Slot %lu lost its device %p\n", SlotId, m_SlotMap[SlotId]);
-        SetSlot(SlotId, NULL, 0);
+
+        /* This clears the map entry */
+        XhciSlotDevice(m_SlotMap[SlotId])->SetDisabled();
     }
 }
 
 VOID
 XhciSlotTable::PreReset()
 {
-    /* Endpoints get ControllerResetStarting here once USB devices exist */
+    ULONG SlotId;
+
     DPRINT("Controller reset starting, %lu slots\n", m_SlotCount);
+
+    for (SlotId = 1; IsValidSlot(SlotId); SlotId++)
+    {
+        if (m_SlotMap[SlotId] != NULL)
+            XhciSlotDevice(m_SlotMap[SlotId])->ControllerResetStarting();
+    }
 }
 
 _IRQL_requires_(PASSIVE_LEVEL)
 VOID
 XhciSlotTable::PostReset()
 {
-    /* Endpoints get the reset complete handshake here once USB devices exist */
+    ULONG SlotId;
+
+    for (SlotId = 1; IsValidSlot(SlotId); SlotId++)
+    {
+        if (m_SlotMap[SlotId] != NULL)
+            XhciSlotDevice(m_SlotMap[SlotId])->ControllerResetDone();
+    }
+
     DisableAll();
     ZeroScratchpads();
     Program();
@@ -224,12 +248,19 @@ XhciSlotTable::PostReset()
 VOID
 XhciSlotTable::OnHostLost()
 {
-    /* Endpoints get ControllerRemoved here once USB devices exist */
+    ULONG SlotId;
+
     DPRINT("Controller gone, %lu slots\n", m_SlotCount);
+
+    for (SlotId = 1; IsValidSlot(SlotId); SlotId++)
+    {
+        if (m_SlotMap[SlotId] != NULL)
+            XhciSlotDevice(m_SlotMap[SlotId])->OnHostLost();
+    }
 }
 
 _IRQL_requires_max_(DISPATCH_LEVEL)
-VOID
+NTSTATUS
 XhciSlotTable::SetSlot(
     _In_ ULONG SlotId,
     _In_ PVOID Device,
@@ -240,7 +271,7 @@ XhciSlotTable::SetSlot(
     if (!IsValidSlot(SlotId) || m_Dcbaa == NULL)
     {
         DPRINT1("Slot id %lu is outside the slot table\n", SlotId);
-        return;
+        return STATUS_INVALID_PARAMETER;
     }
 
     Entries = (volatile ULONG64*)m_Dcbaa->VirtualAddress;
@@ -251,21 +282,22 @@ XhciSlotTable::SetSlot(
         ASSERT(Device == NULL || m_SlotMap[SlotId] == Device);
         m_SlotMap[SlotId] = NULL;
         Entries[SlotId] = 0;
-        return;
+        return STATUS_SUCCESS;
     }
 
     /* QUIRK: nothing is recorded while the controller is inaccessible */
     if (!m_Controller->IsAccessible())
-        return;
+        return STATUS_SUCCESS;
 
     if (Entries[SlotId] != 0)
     {
         DPRINT1("DCBAA entry of slot %lu is already 0x%I64x\n", SlotId, (ULONG64)Entries[SlotId]);
-        return;
+        return STATUS_ACCESS_DENIED;
     }
 
     m_SlotMap[SlotId] = Device;
     Entries[SlotId] = OutputContextAddress;
+    return STATUS_SUCCESS;
 }
 
 _IRQL_requires_max_(DISPATCH_LEVEL)
@@ -283,27 +315,35 @@ VOID
 XhciSlotTable::OnTransferEvent(
     _In_ const XHCI_TRB* Event)
 {
-    ULONG SlotId = XhciTrbSlotId(Event);
-    ULONG Endpoint = (Event->Dword[3] & XHCI_TRB_ENDPOINT_MASK) >> XHCI_TRB_ENDPOINT_SHIFT;
-    ULONG Code = XhciTrbCompletionCode(Event);
+    PVOID Device = LookupSlot(XhciTrbSlotId(Event));
 
-    if (LookupSlot(SlotId) == NULL)
+    if (Device != NULL)
     {
-        DPRINT1("Transfer event for slot %lu endpoint %lu code %lu has no device, dropped\n",
-                SlotId, Endpoint, Code);
+        XhciSlotDevice(Device)->OnTransferEvent(Event);
         return;
     }
 
-    DPRINT("Transfer event slot %lu endpoint %lu code %lu dropped\n", SlotId, Endpoint, Code);
+    /* An isochronous endpoint may be torn down with events still on the way */
+    if ((Event->Dword[0] & XHCI_EVENT_DATA_TYPE_MASK) != USB_ENDPOINT_TYPE_ISOCHRONOUS)
+    {
+        DPRINT1("Transfer event for slot %lu endpoint %lu code %lu has no device, dropped\n",
+                XhciTrbSlotId(Event),
+                (Event->Dword[3] & XHCI_TRB_ENDPOINT_MASK) >> XHCI_TRB_ENDPOINT_SHIFT,
+                XhciTrbCompletionCode(Event));
+    }
 }
 
 VOID
 XhciSlotTable::OnDeviceNotificationEvent(
     _In_ const XHCI_TRB* Event)
 {
-    ULONG Type = (Event->Dword[0] & XHCI_NOTIFICATION_TYPE_MASK) >> XHCI_NOTIFICATION_TYPE_SHIFT;
+    PVOID Device = LookupSlot(XhciTrbSlotId(Event));
 
-    /* Function wake would go to UcxUsbDeviceRemoteWakeNotification once devices exist */
-    DPRINT("Device notification slot %lu type %lu code %lu dropped\n",
-           XhciTrbSlotId(Event), Type, XhciTrbCompletionCode(Event));
+    if (Device == NULL)
+    {
+        DPRINT("Device notification for empty slot %lu dropped\n", XhciTrbSlotId(Event));
+        return;
+    }
+
+    XhciSlotDevice(Device)->OnDeviceNotificationEvent(Event);
 }

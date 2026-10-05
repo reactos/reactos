@@ -113,6 +113,7 @@ private:
 /* A LIST_ENTRY with NULL links means "not on any list" throughout this driver */
 FORCEINLINE
 VOID
+NTAPI
 XhciClearListEntry(
     _Out_ PLIST_ENTRY Entry)
 {
@@ -122,6 +123,7 @@ XhciClearListEntry(
 
 FORCEINLINE
 BOOLEAN
+NTAPI
 XhciIsListEntryLinked(
     _In_ const LIST_ENTRY* Entry)
 {
@@ -131,6 +133,7 @@ XhciIsListEntryLinked(
 /** Milliseconds to a relative KeSetTimer/KeDelayExecutionThread interval. */
 FORCEINLINE
 LARGE_INTEGER
+NTAPI
 XhciRelativeMs(
     _In_ ULONG Milliseconds)
 {

@@ -411,7 +411,11 @@ XhciRouteTransferEvent(
              !Isoch &&
              !Controller->HasErrata(XhciErrata::EvtCheckTrbAddress);
 
-    if (!Direct && Controller->m_Slots.LookupSlot(XhciTrbSlotId(Event)) == NULL)
+    /* The transfer ring takes it straight away unless it has to go through the endpoint */
+    if (Direct && XhciTransferRing::OnUntargetedTransferEvent(Controller, Event))
+        return;
+
+    if (Controller->m_Slots.LookupSlot(XhciTrbSlotId(Event)) == NULL)
     {
         if (!Isoch)
         {

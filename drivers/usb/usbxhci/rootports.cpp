@@ -6,6 +6,7 @@
  */
 
 #include "xhcidrv.h"
+#include <drivers/usb3/hubucx.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -61,6 +62,7 @@ WDF_DECLARE_CONTEXT_TYPE_WITH_NAME(XHCI_ROOTHUB_CONTEXT, XhciGetRootHubContext);
 
 FORCEINLINE
 ULONG
+NTAPI
 XhciLinkState(
     _In_ ULONG PortSc)
 {
@@ -69,6 +71,7 @@ XhciLinkState(
 
 FORCEINLINE
 ULONG
+NTAPI
 XhciPortSpeed(
     _In_ ULONG PortSc)
 {
@@ -78,6 +81,7 @@ XhciPortSpeed(
 /** PORTSC bits that move the link to State. */
 FORCEINLINE
 ULONG
+NTAPI
 XhciLinkWrite(
     _In_ ULONG State)
 {
@@ -87,6 +91,7 @@ XhciLinkWrite(
 /** Powered, connected, enabled, no pending connect change and not SS.Disabled. */
 FORCEINLINE
 BOOLEAN
+NTAPI
 XhciPortActive(
     _In_ ULONG PortSc)
 {
@@ -113,6 +118,7 @@ XhciRequestArgument(
 
 FORCEINLINE
 PUSB_DEFAULT_PIPE_SETUP_PACKET
+NTAPI
 XhciSetupOf(
     _In_ PURB Urb)
 {
@@ -212,6 +218,9 @@ XhciRootHub::Create(
                             EvtGet20PortInfo,
                             EvtGet30PortInfo);
 
+    /* UCX gives this context to every request it sends down for the root hub and its devices */
+    WDF_OBJECT_ATTRIBUTES_INIT_CONTEXT_TYPE(&Config.WdfRequestAttributes, XhciRequestData);
+
     WDF_OBJECT_ATTRIBUTES_INIT_CONTEXT_TYPE(&Attributes, XHCI_ROOTHUB_CONTEXT);
 
     Status = UcxRootHubCreate(Controller->m_Ucx, &Config, &Attributes, &Handle);
@@ -270,6 +279,9 @@ XhciRootHub::ParseProtocol(
 
     *Usable = TRUE;
 
+    if (Major == 3)
+        m_FirstUsb30Port = First;
+
     for (Number = First; Number < First + Count; Number++)
     {
         Port* P = &m_Ports[Number - 1];
@@ -325,6 +337,11 @@ XhciRootHub::Prepare()
     Capability = Registers->FindExtendedCapability(XHCI_EXTCAP_DEBUG, 0);
     if (Capability != 0)
         m_DebugCapability = Capability;
+
+    Capability = Registers->FindExtendedCapability(XHCI_EXTCAP_USB4_TUNNELING, 0);
+    m_PortScTunnelValid = Capability != 0 &&
+                          (Registers->ReadExtended32(Capability) & XHCI_USB4_CAP_PORTSC_TUNNEL_VALID) != 0;
+    m_FirstUsb30Port = 0;
 
     if (m_PortCount == 0)
     {
@@ -987,6 +1004,44 @@ XhciRootHub::IsUsb20Port(
     const Port* P = PortAt(PortNumber);
 
     return P != NULL && P->Major == 2;
+}
+
+/* QUIRK: no accessibility check, so a removed controller reads as tunneled */
+UCHAR
+XhciRootHub::QueryTunnelState(
+    _In_ ULONG PortNumber) const
+{
+    const XhciRegisters* Registers = &m_Controller->m_Registers;
+    const Port* P = PortAt(PortNumber);
+    ULONG Value;
+    ULONG Mask;
+
+    if (P == NULL || P->Major != 3)
+        return UCXHUB_TUNNEL_STATE_UNKNOWN;
+
+    if (m_Controller->HasErrata(XhciErrata::Usb4TunnelFromVendorPortReg))
+    {
+        Value = Registers->ReadExtended32(XHCI_VENDOR_PORT_TUNNEL_BASE +
+                                          XHCI_VENDOR_PORT_TUNNEL_STRIDE * (PortNumber - m_FirstUsb30Port));
+        Mask = XHCI_VENDOR_PORT_TUNNEL_ACTIVE;
+    }
+    else if (m_Controller->HasErrata(XhciErrata::Usb4TunnelFromVendorStatusReg))
+    {
+        Value = Registers->ReadExtended32(XHCI_VENDOR_TUNNEL_STATUS);
+        Mask = XHCI_VENDOR_TUNNEL_STATUS_ACTIVE;
+    }
+    else if (m_PortScTunnelValid)
+    {
+        Value = ReadPortSc(P);
+        Mask = XHCI_PORTSC_TUNNELED;
+    }
+    else
+    {
+        return UCXHUB_TUNNEL_STATE_UNKNOWN;
+    }
+
+    DPRINT("Root port %lu tunnel register 0x%08lx\n", PortNumber, Value);
+    return (Value & Mask) ? UCXHUB_TUNNEL_STATE_TUNNELED : UCXHUB_TUNNEL_STATE_NATIVE;
 }
 
 /* Port change events *********************************************************/
