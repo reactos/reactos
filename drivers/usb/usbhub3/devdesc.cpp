@@ -484,6 +484,66 @@ HubCacheMsOs20SetInfoFromBos(
     }
 }
 
+
+/* TRUE when Length bytes at Start lie inside the bytes the device returned */
+static
+BOOLEAN
+NTAPI
+HubBosSpanFits(
+    _In_ const VOID* Start,
+    _In_ ULONG Length,
+    _In_ const UCHAR* End)
+{
+    return (const UCHAR*)Start + Length <= End;
+}
+
+/* The cache routines read each capability in full, so drop any that run past the buffer */
+static
+VOID
+NTAPI
+HubDropCapsPastEnd(
+    _Inout_ HubBosInfo* Info,
+    _In_ const UCHAR* End)
+{
+    if (Info->SuperSpeedPlus != NULL &&
+        !HubBosSpanFits(Info->SuperSpeedPlus,
+                        max((ULONG)Info->SuperSpeedPlus->bLength,
+                            (ULONG)FIELD_OFFSET(USB_DEVICE_CAPABILITY_SUPERSPEEDPLUS_USB_DESCRIPTOR, bmSublinkSpeedAttr)),
+                        End))
+    {
+        DPRINT1("SuperSpeedPlus capability runs past the BOS, ignored\n");
+        Info->SuperSpeedPlus = NULL;
+    }
+
+    if (Info->Billboard != NULL &&
+        !HubBosSpanFits(Info->Billboard,
+                        max((ULONG)Info->Billboard->bLength,
+                            (ULONG)FIELD_OFFSET(USB_DEVICE_CAPABILITY_BILLBOARD_DESCRIPTOR, AlternateMode)),
+                        End))
+    {
+        DPRINT1("Billboard capability runs past the BOS, ignored\n");
+        Info->Billboard = NULL;
+    }
+
+    if (Info->ContainerId != NULL && !HubBosSpanFits(Info->ContainerId, sizeof(*Info->ContainerId), End))
+    {
+        DPRINT1("Container id capability runs past the BOS, ignored\n");
+        Info->ContainerId = NULL;
+    }
+
+    if (Info->PlatformFeatures != NULL && !HubBosSpanFits(Info->PlatformFeatures, sizeof(*Info->PlatformFeatures), End))
+    {
+        DPRINT1("Platform features capability runs past the BOS, ignored\n");
+        Info->PlatformFeatures = NULL;
+    }
+
+    if (Info->MsOs20SetInfo != NULL && !HubBosSpanFits(Info->MsOs20SetInfo, sizeof(*Info->MsOs20SetInfo), End))
+    {
+        DPRINT1("MS OS 2.0 set info runs past the BOS, ignored\n");
+        Info->MsOs20SetInfo = NULL;
+    }
+}
+
 /* QUIRK: with the ignore errata a failed walk still feeds its partial results */
 BOOLEAN
 DeviceMachine::BosValid()
@@ -521,6 +581,8 @@ DeviceMachine::BosValid()
 
     if (!Valid)
         DPRINT1("Device %p BOS is invalid, kept because of its errata\n", Child);
+
+    HubDropCapsPastEnd(&Info, (const UCHAR*)Bos + HubDeviceBytesReturned(Child));
 
     if (Ltm)
         Child->SetProperty(ChildProperty::LtmCapable);
