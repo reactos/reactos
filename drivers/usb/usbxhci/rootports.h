@@ -67,6 +67,11 @@ public:
     IsUsb20Port(
         _In_ ULONG PortNumber) const;
 
+    /** USB4 tunnel state of a root port, one of the UCXHUB_TUNNEL_STATE values. */
+    UCHAR
+    QueryTunnelState(
+        _In_ ULONG PortNumber) const;
+
 private:
     /** One root hub port. Major revision 0 means no protocol capability covers it. */
     struct Port
@@ -245,4 +250,6 @@ private:
     USHORT m_U1ExitLatency;
     USHORT m_U2ExitLatency;
     BOOLEAN m_AwaitingStatusRead;       /**< No interrupt transfer seen since D0 entry */
+    BOOLEAN m_PortScTunnelValid;        /**< PORTSC bit 2 reports USB4 tunneling */
+    ULONG m_FirstUsb30Port;             /**< Compatible Port Offset of the last USB 3 protocol capability */
 };
