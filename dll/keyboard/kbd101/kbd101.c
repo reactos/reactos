@@ -4,7 +4,8 @@
  * PURPOSE:     (Japanese retro) 101 keyboard layout
  * COPYRIGHT:   Copyright 2026 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
-
+/* This keyboard is too old and has limited functionality and also called "English" keyboard
+   in Japan. Actually, it was an English keyboard with kana mode. */
 #define WIN32_NO_STATUS
 #include <windef.h>
 #include <winuser.h>
