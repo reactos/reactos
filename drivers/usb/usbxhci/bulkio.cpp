@@ -1022,7 +1022,7 @@ XhciBulkRing::NextTdSlot(
 
     /* Every stage on the ring shares one event ring so its events stay in order */
     if (Idle)
-        Ring->UpdateInterrupterTarget();
+        Ring->UpdateInterrupterTarget(XhciTransferRing::UrbProcessorIndex((PURB)Transfer->Urb));
 
     KeAcquireSpinLock(&Ring->m_Lock, &OldIrql);
     Stage = AcquireStage(Ring, Transfer);

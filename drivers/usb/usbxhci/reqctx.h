@@ -104,6 +104,7 @@ union XhciRequestData
 
     XhciControlTransfer Control;
     XhciBulkTransfer Bulk;
+    XhciIsochTransfer Isoch;
 };
 
 WDF_DECLARE_CONTEXT_TYPE_WITH_NAME(XhciRequestData, XhciGetRequestData);

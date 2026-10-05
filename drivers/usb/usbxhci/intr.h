@@ -41,6 +41,11 @@ public:
     /** Interrupter target for work issued on the current processor. */
     ULONG TargetForCurrentProcessor() const;
 
+    /** Interrupter target for work issued on the processor with this system wide index. */
+    ULONG
+    TargetForProcessor(
+        _In_ ULONG ProcessorIndex) const;
+
 
     /** Called from EvtDeviceFilterAddResourceRequirements. */
     NTSTATUS
