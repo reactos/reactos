@@ -2,14 +2,19 @@
 remove_definitions(-D_WIN32_WINNT=0x502)
 
 list(APPEND SOURCE
+    bulkio.cpp
     cmdring.cpp
     dmapool.cpp
+    ctrlxfer.cpp
     hc.cpp
     slots.cpp
     xhcientry.cpp
+    epctx.cpp
+    epstate.cpp
     intr.cpp
     mmio.cpp
     rootports.cpp
+    xferring.cpp
     slotdev.cpp
     xhcidrv.h)
 

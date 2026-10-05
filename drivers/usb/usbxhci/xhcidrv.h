@@ -16,6 +16,7 @@
 #include "xhciutil.h"
 #include "xhcihw.h"
 #include "xhcierrata.h"
+#include "epstate.h"
 
 #include "mmio.h"
 #include "dmapool.h"
@@ -24,6 +25,12 @@
 #include "cmdring.h"
 #include "rootports.h"
 #include "hc.h"
+#include "slotdev.h"
+#include "ctrlxfer.h"
+#include "bulkio.h"
+#include "xferring.h"
+#include "epctx.h"
+#include "reqctx.h"
 #include "xhcisvc.h"
 
 /* xhcientry.cpp */
