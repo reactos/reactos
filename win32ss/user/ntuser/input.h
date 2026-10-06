@@ -2,16 +2,6 @@
 
 #include <ndk/kbd.h>
 #include <hidclass.h>
-
-typedef struct tagKBDNLSLAYER
-{
-    USHORT OEMIdentifier;
-    USHORT LayoutInformation;
-    UINT NumOfVkToF;
-    struct _VK_TO_FUNCTION_TABLE *pVkToF;
-    INT NumOfMouseVKey;
-    PUSHORT pusMouseVKey;
-} KBDNLSLAYER, *PKBDNLSLAYER;
  
 typedef struct tagKBDFILE
 {
@@ -21,7 +11,7 @@ typedef struct tagKBDFILE
     HANDLE hBase;
     struct _KBDTABLES *pKbdTbl;
     ULONG Size;
-    PKBDNLSLAYER pKbdNlsTbl;
+    struct tagKbdNlsLayer *pKbdNlsTbl;
 } KBDFILE, *PKBDFILE;
 
 typedef struct tagKL
@@ -32,6 +22,7 @@ typedef struct tagKL
     DWORD dwKL_Flags;
     HKL hkl;
     PKBDFILE spkf;
+    PKBDFILE spkfReal;
     DWORD dwFontSigs;
     UINT iBaseCharset;
     USHORT CodePage;
@@ -110,6 +101,7 @@ VOID NTAPI UserProcessKeyboardInput(PINPUT_DEVICE_INFO pDeviceInfo, PKEYBOARD_IN
 BOOL NTAPI UserSendKeyboardInput(KEYBDINPUT *pKbdInput, BOOL bInjected);
 PKL NTAPI UserHklToKbl(HKL hKl);
 BOOL NTAPI UserSetDefaultInputLang(HKL hKl);
+PKBDTABLES FASTCALL UserGetKeyboardTablesFromKL(PKL pKL);
 extern DWORD gdwLanguageToggleKey;
 extern DWORD gdwLayoutToggleKey;
 extern BOOL gbEnableHexNumpad;

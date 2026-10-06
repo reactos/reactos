@@ -6,7 +6,7 @@
  * COPYRIGHT:       Copyright 2007 Saveliy Tretiakov
  *                  Copyright 2008 Colin Finck
  *                  Copyright 2011 Rafal Harabien
- *                  Copyright 2022 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
+ *                  Copyright 2022-2026 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
 #include <win32k.h>
@@ -25,7 +25,18 @@ DWORD gSystemFS = 0;
 UINT gSystemCPCharSet = 0;
 HKL ghKLSentToShell = NULL;
 
-typedef PVOID (*PFN_KBDLAYERDESCRIPTOR)(VOID);
+typedef struct tagCLIENTKEYBOARDTYPE
+{
+    ULONG Type;
+    ULONG SubType;
+    ULONG FunctionKey;
+} CLIENTKEYBOARDTYPE, *PCLIENTKEYBOARDTYPE;
+
+typedef PVOID (WINAPI *PFN_KBDLAYERDESCRIPTOR)(VOID);
+typedef PVOID (WINAPI *PFN_KbdNlsLayerDescriptor)(VOID);
+typedef BOOL (WINAPI *PFN_KbdLayerMultiDescriptor)(PKBDTABLE_MULTI);
+typedef BOOL (WINAPI *PFN_KbdLayerRealDllFile)(HKL, PWSTR, PCLIENTKEYBOARDTYPE, PVOID);
+typedef BOOL (WINAPI *PFN_KbdLayerRealDllFileNT4)(PWSTR);
 
 /* PRIVATE FUNCTIONS ******************************************************/
 
@@ -238,6 +249,93 @@ DumpKbdLayout(
 
 #endif // DBG
 
+static BOOL IntIsValidLayoutFileName(PCWSTR pszPath)
+{
+#define MAX_VALID_LAYOUT_FILENAME 32
+    SIZE_T cch = 0;
+    if (!*pszPath)
+    {
+        ERR("pszPath was empty\n");
+        return FALSE;
+    }
+
+    for (; *pszPath; ++pszPath)
+    {
+        if (*pszPath == L'\\' || *pszPath == L'/' || *pszPath == L':')
+        {
+            ERR("*pszPath: %c\n", *pszPath);
+            return FALSE;
+        }
+        ++cch;
+        if (cch >= MAX_VALID_LAYOUT_FILENAME)
+        {
+            ERR("Too long\n");
+            return FALSE;
+        }
+    }
+
+    return TRUE;
+}
+
+static BOOL
+UserLoadKbdMultiTable(
+    _In_ HMODULE hModule,
+    _In_ HKL hKL,
+    _In_ PKBDTABLE_MULTI pKbdTableMulti,
+    _Out_writes_z_(cchRealDllName) PWSTR pszRealDllName,
+    _In_ SIZE_T cchRealDllName)
+{
+    PFN_KbdLayerMultiDescriptor pfnKbdLayerMultiDescriptor;
+    PFN_KbdLayerRealDllFile pfnKbdLayerRealDllFile;
+    PFN_KbdLayerRealDllFileNT4 pfnKbdLayerRealDllFileNT4;
+    BOOL bMultiOK;
+
+    /* Get some procedures */
+    pfnKbdLayerMultiDescriptor = EngFindImageProcAddress(hModule, "KbdLayerMultiDescriptor");
+    if (!pfnKbdLayerMultiDescriptor)
+        goto Failure;
+    pfnKbdLayerRealDllFile = EngFindImageProcAddress(hModule, "KbdLayerRealDllFile");
+    pfnKbdLayerRealDllFileNT4 = EngFindImageProcAddress(hModule, "KbdLayerRealDllFileNT4");
+
+    /* Call some procedures */
+    bMultiOK = FALSE;
+    pszRealDllName[0] = UNICODE_NULL;
+    _SEH2_TRY
+    {
+        if (!pfnKbdLayerMultiDescriptor(pKbdTableMulti) ||
+            pKbdTableMulti->nTables >= KBDTABLE_MULTI_MAX)
+        {
+            _SEH2_YIELD(goto Failure);
+        }
+
+        if ((pfnKbdLayerRealDllFile && pfnKbdLayerRealDllFile(hKL, pszRealDllName, NULL, NULL)) ||
+            (pfnKbdLayerRealDllFileNT4 && pfnKbdLayerRealDllFileNT4(pszRealDllName)))
+        {
+            pszRealDllName[cchRealDllName - 1] = UNICODE_NULL; /* Avoid buffer overrun */
+            bMultiOK = TRUE;
+        }
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        ;
+    }
+    _SEH2_END;
+
+    if (!bMultiOK)
+        goto Failure;
+
+    TRACE("pszRealDllName: %S\n", pszRealDllName);
+    return TRUE;
+
+Failure:
+    TRACE("No pKbdTableMulti on %p\n", hModule);
+#if DBG
+    RtlZeroMemory(pKbdTableMulti, sizeof(*pKbdTableMulti));
+#else
+    pKbdTableMulti->nTables = 0;
+#endif
+    return FALSE;
+}
 
 /*
  * UserLoadKbdDll
@@ -245,11 +343,17 @@ DumpKbdLayout(
  * Loads keyboard layout DLL and gets address to KbdTables
  */
 static BOOL
-UserLoadKbdDll(WCHAR *pwszLayoutPath,
+UserLoadKbdDll(HKL hKL,
+               PWSTR pwszLayoutPath,
                HANDLE *phModule,
-               PKBDTABLES *pKbdTables)
+               PKBDTABLES *ppKbdTables,
+               PKBDNLSTABLES *ppKbdNlsTables)
 {
     PFN_KBDLAYERDESCRIPTOR pfnKbdLayerDescriptor;
+    PFN_KbdNlsLayerDescriptor pfnKbdNlsLayerDescriptor;
+
+    *ppKbdTables = NULL;
+    *ppKbdNlsTables = NULL;
 
     /* Load keyboard layout DLL */
     TRACE("Loading Keyboard DLL %ws\n", pwszLayoutPath);
@@ -260,31 +364,54 @@ UserLoadKbdDll(WCHAR *pwszLayoutPath,
         return FALSE;
     }
 
-    /* Find KbdLayerDescriptor function and get layout tables */
     TRACE("Loaded %ws\n", pwszLayoutPath);
     pfnKbdLayerDescriptor = EngFindImageProcAddress(*phModule, "KbdLayerDescriptor");
+    pfnKbdNlsLayerDescriptor = EngFindImageProcAddress(*phModule, "KbdNlsLayerDescriptor");
 
     /* FIXME: Windows reads file instead of executing!
               It's not safe to kbdlayout DLL in kernel mode! */
-
-    if (pfnKbdLayerDescriptor)
-        *pKbdTables = pfnKbdLayerDescriptor();
-    else
-        ERR("Error: %ws has no KbdLayerDescriptor()\n", pwszLayoutPath);
-
-    if (!pfnKbdLayerDescriptor || !*pKbdTables)
+    _SEH2_TRY
     {
-        ERR("Failed to load the keyboard layout.\n");
-        EngUnloadImage(*phModule);
-        return FALSE;
+        if (!pfnKbdLayerDescriptor)
+        {
+            ERR("%ws has no KbdLayerDescriptor()\n", pwszLayoutPath);
+            _SEH2_YIELD(goto Failed);
+        }
+
+        *ppKbdTables = pfnKbdLayerDescriptor();
+        if (!*ppKbdTables)
+        {
+            ERR("KbdLayerDescriptor failed at %ws\n", pwszLayoutPath);
+            goto Failed;
+        }
+
+        if (pfnKbdNlsLayerDescriptor)
+        {
+            *ppKbdNlsTables = pfnKbdNlsLayerDescriptor();
+            if (!*ppKbdNlsTables)
+            {
+                ERR("KbdNlsLayerDescriptor failed at %ws\n", pwszLayoutPath);
+                _SEH2_YIELD(goto Failed);
+            }
+        }
     }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        ERR("Exception!\n");
+        _SEH2_YIELD(goto Failed);
+    }
+    _SEH2_END;
 
 #if 0 && DBG
     /* Dump keyboard layout */
-    DumpKbdLayout(*pKbdTables);
+    DumpKbdLayout(*ppKbdTables);
 #endif
 
     return TRUE;
+
+Failed:
+    EngUnloadImage(*phModule);
+    return FALSE;
 }
 
 /*
@@ -293,18 +420,24 @@ UserLoadKbdDll(WCHAR *pwszLayoutPath,
  * Loads keyboard layout DLL and creates KBDFILE object
  */
 static PKBDFILE
-UserLoadKbdFile(PUNICODE_STRING pwszKLID)
+UserLoadKbdFile(
+    _In_ HKL hKL,
+    _In_ PCUNICODE_STRING pwszKLID,
+    _In_opt_z_ PCWSTR pszLayoutFile,
+    _In_opt_ PKBDFILE *ppkfReal)
 {
     PKBDFILE pkf, pRet = NULL;
     NTSTATUS Status;
-    ULONG cbSize;
-    HKEY hKey = NULL;
-    WCHAR wszLayoutPath[MAX_PATH] = L"\\SystemRoot\\System32\\";
-    WCHAR wszLayoutRegKey[256] = L"\\REGISTRY\\Machine\\SYSTEM\\CurrentControlSet\\"
-                                 L"Control\\Keyboard Layouts\\";
+    WCHAR wszLayoutFile[80], wszLayoutPath[MAX_PATH] = L"\\SystemRoot\\System32\\";
+    WCHAR wszLayoutRegKey[MAX_PATH], wszRealDllName[MAX_PATH];
+    BOOL bTopLayout = !!ppkfReal;
+    KBDTABLE_MULTI kbdTableMulti, *pKbdTableMulti;
+
+    if (ppkfReal)
+        *ppkfReal = NULL;
 
     /* Create keyboard layout file object */
-    pkf = UserCreateObject(gHandleTable, NULL, NULL, NULL, TYPE_KBDFILE, sizeof(KBDFILE));
+    pkf = UserCreateObject(gHandleTable, NULL, NULL, NULL, TYPE_KBDFILE, sizeof(*pkf));
     if (!pkf)
     {
         ERR("Failed to create object!\n");
@@ -314,23 +447,43 @@ UserLoadKbdFile(PUNICODE_STRING pwszKLID)
     /* Set keyboard layout name */
     _swprintf(pkf->awchKF, L"%wZ", pwszKLID);
 
-    /* Open layout registry key */
-    RtlStringCbCatW(wszLayoutRegKey, sizeof(wszLayoutRegKey), pkf->awchKF);
-    Status = RegOpenKey(wszLayoutRegKey, &hKey);
-    if (!NT_SUCCESS(Status))
+    if (!pszLayoutFile)
     {
-        ERR("Failed to open keyboard layouts registry key %ws (%lx)\n", wszLayoutRegKey, Status);
+        ULONG cbSize;
+        HKEY hKey;
+
+        /* Open layout registry key */
+        RtlStringCbPrintfW(wszLayoutRegKey, sizeof(wszLayoutRegKey),
+            L"\\REGISTRY\\Machine\\SYSTEM\\CurrentControlSet\\Control\\Keyboard Layouts\\%s",
+            pkf->awchKF);
+        Status = RegOpenKey(wszLayoutRegKey, &hKey);
+        if (!NT_SUCCESS(Status))
+        {
+            ERR("Failed to open keyboard layouts registry key %ws (%lx)\n", wszLayoutRegKey, Status);
+            goto cleanup;
+        }
+
+        /* Read filename of layout DLL */
+        cbSize = sizeof(wszLayoutFile);
+        Status = RegQueryValue(hKey, L"Layout File", REG_SZ, wszLayoutFile, &cbSize);
+        ZwClose(hKey);
+        if (!NT_SUCCESS(Status))
+        {
+            ERR("Can't get layout filename for %wZ (%lx)\n", pwszKLID, Status);
+            goto cleanup;
+        }
+
+        pszLayoutFile = wszLayoutFile;
+    }
+
+    if (!IntIsValidLayoutFileName(pszLayoutFile))
+    {
+        ERR("Invalid layout filename: %S\n", pszLayoutFile);
         goto cleanup;
     }
 
-    /* Read filename of layout DLL */
-    cbSize = (ULONG)(sizeof(wszLayoutPath) - wcslen(wszLayoutPath)*sizeof(WCHAR));
-    Status = RegQueryValue(hKey,
-                           L"Layout File",
-                           REG_SZ,
-                           wszLayoutPath + wcslen(wszLayoutPath),
-                           &cbSize);
-
+    Status = RtlStringCbPrintfW(wszLayoutPath, sizeof(wszLayoutPath),
+                                L"\\SystemRoot\\System32\\%s", pszLayoutFile);
     if (!NT_SUCCESS(Status))
     {
         ERR("Can't get layout filename for %wZ (%lx)\n", pwszKLID, Status);
@@ -338,10 +491,32 @@ UserLoadKbdFile(PUNICODE_STRING pwszKLID)
     }
 
     /* Load keyboard file now */
-    if (!UserLoadKbdDll(wszLayoutPath, &pkf->hBase, &pkf->pKbdTbl))
+    if (!UserLoadKbdDll(hKL, wszLayoutPath, &pkf->hBase, &pkf->pKbdTbl, &pkf->pKbdNlsTbl))
     {
         ERR("Failed to load %ws dll!\n", wszLayoutPath);
         goto cleanup;
+    }
+
+    RtlZeroMemory(&kbdTableMulti, sizeof(kbdTableMulti));
+    pKbdTableMulti = &kbdTableMulti;
+
+    if (bTopLayout &&
+        UserLoadKbdMultiTable(pkf->hBase, hKL, pKbdTableMulti,
+                              wszRealDllName, _countof(wszRealDllName)))
+    {
+        ULONG iTable;
+        PKBDTABLE_DESC pKbdTables = pKbdTableMulti->aKbdTables;
+        for (iTable = 0; iTable < pKbdTableMulti->nTables; ++iTable)
+        {
+            if (_wcsicmp(wszRealDllName, pKbdTables[iTable].wszDllName) == 0)
+            {
+                TRACE("iTable: %u\n", iTable);
+                *ppkfReal = UserLoadKbdFile(hKL, pwszKLID, wszRealDllName, NULL);
+                break;
+            }
+        }
+        if (!*ppkfReal)
+            goto cleanup;
     }
 
     /* Update next field */
@@ -352,8 +527,6 @@ UserLoadKbdFile(PUNICODE_STRING pwszKLID)
     pRet = pkf;
 
 cleanup:
-    if (hKey)
-        ZwClose(hKey);
     if (pkf)
         UserDereferenceObject(pkf); // we dont need ptr anymore
     if (!pRet)
@@ -364,6 +537,13 @@ cleanup:
     }
 
     return pRet;
+}
+
+PKBDTABLES FASTCALL UserGetKeyboardTablesFromKL(PKL pKL)
+{
+    if (pKL->spkfReal)
+        return pKL->spkfReal->pKbdTbl;
+    return pKL->spkf->pKbdTbl;
 }
 
 /*
@@ -377,6 +557,7 @@ co_UserLoadKbdLayout(PUNICODE_STRING pustrKLID, HKL hKL)
     LCID lCid;
     CHARSETINFO cs;
     PKL pKl;
+    PKBDFILE spkfReal;
 
     /* Create keyboard layout object */
     pKl = UserCreateObject(gHandleTable, NULL, NULL, NULL, TYPE_KBDLAYOUT, sizeof(KL));
@@ -387,7 +568,10 @@ co_UserLoadKbdLayout(PUNICODE_STRING pustrKLID, HKL hKL)
     }
 
     pKl->hkl = hKL;
-    pKl->spkf = UserLoadKbdFile(pustrKLID);
+    pKl->spkf = UserLoadKbdFile(hKL, pustrKLID, NULL, &spkfReal);
+    pKl->spkfReal = spkfReal;
+    if (spkfReal)
+        TRACE("spkfReal: %p\n", spkfReal);
 
     /* Dereference keyboard layout */
     UserDereferenceObject(pKl);
@@ -495,6 +679,8 @@ UserUnloadKbl(PKL pKl)
     pKl->pklPrev->pklNext = pKl->pklNext;
     pKl->pklNext->pklPrev = pKl->pklPrev;
     UnloadKbdFile(pKl->spkf);
+    if (pKl->spkfReal)
+        UnloadKbdFile(pKl->spkfReal);
     if (pKl->piiex)
     {
         ExFreePoolWithTag(pKl->piiex, USERTAG_IME);
@@ -1127,7 +1313,8 @@ NtUserGetKeyboardLayoutName(
 
             /* FIXME: Do not use awchKF */
             ustrNameSafe.Length = 0;
-            Status = RtlAppendUnicodeToString(&ustrNameSafe, pKl->spkf->awchKF);
+            Status = RtlAppendUnicodeToString(&ustrNameSafe,
+                (pKl->spkfReal ? pKl->spkfReal->awchKF : pKl->spkf->awchKF));
         }
 
         if (NT_SUCCESS(Status))

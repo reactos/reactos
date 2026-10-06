@@ -1357,7 +1357,7 @@ UserSendKeyboardInput(KEYBDINPUT *pKbdInput, BOOL bInjected)
         return FALSE;
     }
 
-    pKbdTbl = pKl->spkf->pKbdTbl;
+    pKbdTbl = UserGetKeyboardTablesFromKL(pKl);
 
     /* Note: wScan field is always used */
     wScanCode = pKbdInput->wScan;
@@ -1500,7 +1500,7 @@ UserProcessKeyboardInput(
     if (!pKl)
         return;
 
-    pKbdTbl = pKl->spkf->pKbdTbl;
+    pKbdTbl = UserGetKeyboardTablesFromKL(pKl);
 
     /* Convert scan code to virtual key.
        Note: We could call UserSendKeyboardInput using scan code,
@@ -1590,7 +1590,7 @@ IntTranslateKbdMessage(LPMSG lpMsg,
         if (pDefKL)
         {
             pti->pClientInfo->hKL = pDefKL->hkl;
-            pKbdTbl = pDefKL->spkf->pKbdTbl;
+            pKbdTbl = UserGetKeyboardTablesFromKL(pDefKL);
         }
         else
         {
@@ -1599,7 +1599,7 @@ IntTranslateKbdMessage(LPMSG lpMsg,
         }
     }
     else
-       pKbdTbl = pti->KeyboardLayout->spkf->pKbdTbl;
+       pKbdTbl = UserGetKeyboardTablesFromKL(pti->KeyboardLayout);
     if (!pKbdTbl)
         return FALSE;
 
@@ -1737,7 +1737,7 @@ NtUserMapVirtualKeyEx(UINT uCode, UINT uType, DWORD keyboardId, HKL dwhkl)
 
         pti = PsGetCurrentThreadWin32Thread();
         if (pti && pti->KeyboardLayout)
-            pKbdTbl = pti->KeyboardLayout->spkf->pKbdTbl;
+            pKbdTbl = UserGetKeyboardTablesFromKL(pti->KeyboardLayout);
     }
     else
     {
@@ -1745,7 +1745,7 @@ NtUserMapVirtualKeyEx(UINT uCode, UINT uType, DWORD keyboardId, HKL dwhkl)
 
         pKl = UserHklToKbl(dwhkl);
         if (pKl)
-            pKbdTbl = pKl->spkf->pKbdTbl;
+            pKbdTbl = UserGetKeyboardTablesFromKL(pKl);
     }
 
     if (pKbdTbl)
@@ -1835,8 +1835,7 @@ NtUserToUnicodeEx(
                             pwszBuff,
                             cchBuff,
                             wFlags,
-                            pKl->spkf->pKbdTbl);
-
+                            UserGetKeyboardTablesFromKL(pKl));
         if (iRet)
         {
             Status = MmCopyToCaller(pwszBuffUnsafe, pwszBuff, cchBuff * sizeof(WCHAR));
@@ -1886,7 +1885,7 @@ NtUserGetKeyNameText(LONG lParam, LPWSTR lpString, int cchSize)
 
     /* Get current keyboard layout */
     pti = PsGetCurrentThreadWin32Thread();
-    pKbdTbl = pti ? pti->KeyboardLayout->spkf->pKbdTbl : NULL;
+    pKbdTbl = pti ? UserGetKeyboardTablesFromKL(pti->KeyboardLayout) : NULL;
 
     if (!pKbdTbl || cchSize < 1)
     {
@@ -2022,7 +2021,7 @@ NtUserVkKeyScanEx(
     if (!pKl)
         goto Exit;
 
-    pKbdTbl = pKl->spkf->pKbdTbl;
+    pKbdTbl = UserGetKeyboardTablesFromKL(pKl);
 
     // Interate through all VkToWchar tables while pVkToWchars is not NULL
     for (i = 0; pKbdTbl->pVkToWcharTable[i].pVkToWchars; i++)
