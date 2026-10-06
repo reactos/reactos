@@ -39,7 +39,7 @@ public:
     // IUnknown methods
     STDMETHOD(QueryInterface)(REFIID riid, void **ppvObject) override
     {
-        if (IsEqualGUID(riid, IID_IShellFolder2))
+        if (riid == IID_IShellFolder2)
         {
             if (m_QISF2 && !ppvObject)
             {
@@ -48,7 +48,7 @@ public:
             else if (m_QISF2 > 0)
             {
                 *ppvObject = static_cast<IShellFolder*>(this); // Note: This is a lie, we are just a v1
-                // AddRef();
+                AddRef();
                 return S_OK;
             }
             else if (m_QISF2 < 0)
@@ -65,13 +65,12 @@ public:
     }
     STDMETHOD_(ULONG, AddRef)() override
     {
-        ok_int(TRUE, FALSE);
+        ok(m_QISF2 > 0, "Unexpected unless we implement IShellFolder2\n");
         return 1;
     }
     STDMETHOD_(ULONG, Release)() override
     {
-        if (m_QISF2 <= 0)
-            ok_int(TRUE, FALSE);
+        ok(m_QISF2 > 0, "Unexpected unless we implement IShellFolder2\n");
         return 1;
     }
 
@@ -316,14 +315,16 @@ static void Test_CompareIDs(void)
     ok_long(hr, 0xFEEDF00D);
     ok_int(s_nStep, 14);
 
-    psf->m_QISF2 = -1;
+    psf->m_QISF2 = -1; // No IShellFolder2 support, flags should be masked away
     s_nStep = 12;
-    ok_long(fnIShellFolder_CompareIDs(psf, 0xFFFF1234, NULL, NULL), 0xFEEDF00D);
+    hr = fnIShellFolder_CompareIDs(psf, 0xFFFF1234, NULL, NULL);
+    ok_long(hr, 0xFEEDF00D);
     psf->m_QISF2 = 0;
 
-    psf->m_QISF2 = 1;
+    psf->m_QISF2 = 1; // "Implements" IShellFolder2, we can handle all flags
     s_nStep = 99;
-    ok_long(fnIShellFolder_CompareIDs(psf, 0x87654321, NULL, NULL), 0x87654321);
+    hr = fnIShellFolder_CompareIDs(psf, 0x87654321, NULL, NULL);
+    ok_long(hr, 0x87654321);
     psf->m_QISF2 = 0;
 
     delete psf;
