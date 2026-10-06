@@ -18,6 +18,8 @@ static INT s_nStep = 0;
 class CTestShellFolder : public IShellFolder
 {
 public:
+    int m_QISF2 = 0;
+
     CTestShellFolder() { }
     virtual ~CTestShellFolder() { }
 
@@ -37,6 +39,25 @@ public:
     // IUnknown methods
     STDMETHOD(QueryInterface)(REFIID riid, void **ppvObject) override
     {
+        if (IsEqualGUID(riid, IID_IShellFolder2))
+        {
+            if (m_QISF2 && !ppvObject)
+            {
+                return E_POINTER;
+            }
+            else if (m_QISF2 > 0)
+            {
+                *ppvObject = static_cast<IShellFolder*>(this); // Note: This is a lie, we are just a v1
+                // AddRef();
+                return S_OK;
+            }
+            else if (m_QISF2 < 0)
+            {
+                *ppvObject = NULL;
+                return E_NOINTERFACE;
+            }
+        }
+
         ok_int(s_nStep, 11);
         ok_int(IsEqualGUID(riid, IID_IShellFolder2), TRUE);
         ++s_nStep;
@@ -49,7 +70,8 @@ public:
     }
     STDMETHOD_(ULONG, Release)() override
     {
-        ok_int(TRUE, FALSE);
+        if (m_QISF2 <= 0)
+            ok_int(TRUE, FALSE);
         return 1;
     }
 
@@ -110,6 +132,8 @@ public:
             case 13:
                 ok_long((LONG)lParam, 0x00005678);
                 break;
+            case 99:
+                return lParam;
             default:
                 skip("\n");
                 break;
@@ -291,6 +315,16 @@ static void Test_CompareIDs(void)
         NULL);
     ok_long(hr, 0xFEEDF00D);
     ok_int(s_nStep, 14);
+
+    psf->m_QISF2 = -1;
+    s_nStep = 12;
+    ok_long(fnIShellFolder_CompareIDs(psf, 0xFFFF1234, NULL, NULL), 0xFEEDF00D);
+    psf->m_QISF2 = 0;
+
+    psf->m_QISF2 = 1;
+    s_nStep = 99;
+    ok_long(fnIShellFolder_CompareIDs(psf, 0x87654321, NULL, NULL), 0x87654321);
+    psf->m_QISF2 = 0;
 
     delete psf;
 }
