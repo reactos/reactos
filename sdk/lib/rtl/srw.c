@@ -770,21 +770,37 @@ BOOLEAN
 NTAPI
 RtlTryAcquireSRWLockShared(PRTL_SRWLOCK SRWLock)
 {
+    LONG_PTR CurrentValue, NewValue;
 
-    LONG_PTR CompareValue, NewValue, GotValue;
-
-    do
+    while (1)
     {
-        CompareValue = *(volatile LONG_PTR *)&SRWLock->Ptr;
-        NewValue = ((CompareValue >> RTL_SRWLOCK_BITS) + 1) | RTL_SRWLOCK_SHARED | RTL_SRWLOCK_OWNED;
+        CurrentValue = *(volatile LONG_PTR *)&SRWLock->Ptr;
 
-        /* Only increment shared count if there is no waiter */
-        CompareValue &= ~RTL_SRWLOCK_MASK | RTL_SRWLOCK_SHARED | RTL_SRWLOCK_OWNED;
-    } while (
-        ((GotValue = (LONG_PTR)InterlockedCompareExchangePointer(&SRWLock->Ptr, (LONG_PTR*)NewValue, (LONG_PTR*)CompareValue)) != CompareValue)
-        && (((GotValue & RTL_SRWLOCK_MASK) == (RTL_SRWLOCK_SHARED | RTL_SRWLOCK_OWNED)) || (GotValue == 0)));
+        if (CurrentValue == 0)
+        {
+            /* The lock is free, become its first shared owner */
+            NewValue = ((LONG_PTR)1 << RTL_SRWLOCK_BITS) | RTL_SRWLOCK_SHARED | RTL_SRWLOCK_OWNED;
+        }
+        else if ((CurrentValue & RTL_SRWLOCK_MASK) == (RTL_SRWLOCK_SHARED | RTL_SRWLOCK_OWNED))
+        {
+            /* Shared without waiters, increment the shared count */
+            NewValue = CurrentValue + ((LONG_PTR)1 << RTL_SRWLOCK_BITS);
+        }
+        else
+        {
+            /* Owned exclusively, or there are waiters */
+            return FALSE;
+        }
 
-    return ((GotValue & RTL_SRWLOCK_MASK) == (RTL_SRWLOCK_SHARED | RTL_SRWLOCK_OWNED)) || (GotValue == 0);
+        if ((LONG_PTR)InterlockedCompareExchangePointer(&SRWLock->Ptr,
+                                                        (PVOID)NewValue,
+                                                        (PVOID)CurrentValue) == CurrentValue)
+        {
+            return TRUE;
+        }
+
+        YieldProcessor();
+    }
 }
 
 BOOLEAN
