@@ -1032,7 +1032,7 @@ VOID
 NTAPI
 KiRestoreProcessorState(
     _Out_ PKTRAP_FRAME TrapFrame,
-    _Out_ PKEXCEPTION_FRAME ExceptionFrame);
+    _Out_opt_ PKEXCEPTION_FRAME ExceptionFrame);
 
 VOID
 FASTCALL
