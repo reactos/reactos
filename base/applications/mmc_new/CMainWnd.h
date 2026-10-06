@@ -229,7 +229,6 @@ private:
     VOID LoadRecentFiles();
     VOID AddToRecentFiles(const CAtlString &FileName);
     DWORD CreateNewFilename(PWSTR pBuffer, DWORD dwSize, DWORD Number);
-    LPWSTR ProgramModeToString();
     LRESULT SaveMscFile(const CAtlString &FileName);
     LRESULT LoadMscFile(const CAtlString &FileName);
 

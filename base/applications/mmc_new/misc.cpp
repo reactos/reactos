@@ -201,3 +201,47 @@ ShowCmdFromString(LPWSTR pszString)
         return SW_FORCEMINIMIZE;
     return 0;
 }
+
+LPWSTR
+DocumentModeToString(DOCUMENT_MODE DocumentMode)
+{
+    switch (DocumentMode)
+    {
+        case DocumentMode_Author:
+            return (LPWSTR)L"Author";
+
+        case DocumentMode_User:
+            return (LPWSTR)L"User";
+
+        case DocumentMode_UserMDI:
+            return (LPWSTR)L"UserMDI";
+
+        case DocumentMode_UserSDI:
+            return (LPWSTR)L"UserSDI";
+
+        default:
+            return (LPWSTR)L"";
+    }
+}
+
+HRESULT
+StringToDocumentMode(
+    _In_ LPWSTR pszDocumentMode,
+    _Out_ PDOCUMENT_MODE pDocumentMode)
+{
+    HRESULT hr = S_OK;
+
+    if (_wcsicmp(pszDocumentMode, L"Author") == 0)
+        *pDocumentMode = DocumentMode_Author;
+    else if (_wcsicmp(pszDocumentMode, L"User") == 0)
+        *pDocumentMode = DocumentMode_User;
+    else if (_wcsicmp(pszDocumentMode, L"UserMDI") == 0)
+        *pDocumentMode = DocumentMode_UserMDI;
+    else if (_wcsicmp(pszDocumentMode, L"UserSDI") == 0)
+        *pDocumentMode = DocumentMode_UserSDI;
+    else
+        hr = E_FAIL;
+
+    return hr;
+}
+

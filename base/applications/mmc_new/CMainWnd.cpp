@@ -949,28 +949,6 @@ CMainWnd::CreateNewFilename(PWSTR pBuffer, DWORD dwSize, DWORD Number)
                             str.GetString(), 0, 0, pBuffer, dwSize, (va_list*)args);
 }
 
-LPWSTR
-CMainWnd::ProgramModeToString()
-{
-    switch (m_DocumentMode)
-    {
-        case DocumentMode_Author:
-            return (LPWSTR)L"Author";
-
-        case DocumentMode_User:
-            return (LPWSTR)L"User";
-
-        case DocumentMode_UserMDI:
-            return (LPWSTR)L"UserMDI";
-
-        case DocumentMode_UserSDI:
-            return (LPWSTR)L"UserSDI";
-
-        default:
-            return (LPWSTR)L"";
-    }
-}
-
 LRESULT
 CMainWnd::SaveMscFile(const CAtlString &FileName)
 {
@@ -996,7 +974,7 @@ CMainWnd::SaveMscFile(const CAtlString &FileName)
     /* <MMC_ConsoleFile ConsoleVersion="2.0" ProgramMode="Author"> */
     CHK_HR(mscFile->CreateElement(L"MMC_ConsoleFile", &pRootNode));
     CHK_HR(mscFile->CreateAndAddAttributeNode(L"ConsoleVersion", L"2.0", pRootNode));
-    CHK_HR(mscFile->CreateAndAddAttributeNode(L"ProgramMode", ProgramModeToString(), pRootNode));
+    CHK_HR(mscFile->CreateAndAddAttributeNode(L"ProgramMode", ::DocumentModeToString(m_DocumentMode), pRootNode));
 
     /* <ConsoleFileID> */
     CHK_HR(mscFile->CreateAndAddElementNode(L"ConsoleFileID", pRootNode, &pNode));
