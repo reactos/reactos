@@ -100,27 +100,37 @@ def parse_certificates2(certdata: str) -> list[Certificate]:
             if block == CurrentBlock.Certificate:
                 cert = Certificate(name=name, fingerprint_sha1="", data=b"")
             elif block == CurrentBlock.Trust:
-                assert cert is not None, line
-                assert name == cert.name
+                if cert is None:
+                    raise AssertionError(line)
+                if name != cert.name:
+                    raise AssertionError()
             else:
                 pass
         elif line == "CKA_VALUE MULTILINE_OCTAL":
-            assert cert is not None
+            if cert is None:
+                raise AssertionError()
             temp_value = []
-            assert cert.data == b""
-            assert cert.fingerprint_sha1 == ""
+            if cert.data != b"":
+                raise AssertionError()
+            if cert.fingerprint_sha1 != "":
+                raise AssertionError()
         elif line == "CKA_CERT_SHA1_HASH MULTILINE_OCTAL":
-            assert cert is not None
+            if cert is None:
+                raise AssertionError()
             temp_value = []
-            assert cert.data != b""
-            assert cert.fingerprint_sha1 == ""
+            if cert.data == b"":
+                raise AssertionError()
+            if cert.fingerprint_sha1 != "":
+                raise AssertionError()
         elif temp_value is not None:
-            assert cert is not None
+            if cert is None:
+                raise AssertionError()
             if line == "END":
                 if cert.data == b"":
                     cert.data = bytes(temp_value)
                 else:
-                    assert cert.fingerprint_sha1 == ""
+                    if cert.fingerprint_sha1 != "":
+                        raise AssertionError()
                     cert.fingerprint_sha1 = "".join(f"{b:02X}" for b in temp_value)
                 temp_value = None
             else:
@@ -130,7 +140,8 @@ def parse_certificates2(certdata: str) -> list[Certificate]:
                     temp_value.append(int(number, 8))
 
         elif line.startswith("CKA_TRUST_SERVER_AUTH"):
-            assert cert is not None
+            if cert is None:
+                raise AssertionError()
             if "CKT_NSS_TRUSTED_DELEGATOR" in line:
                 print(f"Trusted cert: {cert.name} ({len(cert.data)} bytes)")
                 result.append(cert)
