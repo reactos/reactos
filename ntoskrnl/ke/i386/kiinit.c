@@ -295,8 +295,9 @@ KiInitializePcr(IN ULONG ProcessorNumber,
     Pcr->NtTib.StackLimit = 0;
     Pcr->NtTib.Self = NULL;
 
-    /* Set the Current Thread */
+    /* Set the Current and Idle Thread, the scheduler can see this PRCB before KiInitializeKernel runs */
     Pcr->PrcbData.CurrentThread = IdleThread;
+    Pcr->PrcbData.IdleThread = IdleThread;
 
     /* Set pointers to ourselves */
     Pcr->SelfPcr = (PKPCR)Pcr;
@@ -535,8 +536,10 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
     }
     else
     {
-        /* FIXME */
         DPRINT1("Starting CPU#%u - you are brave\n", Number);
+
+        /* Lower to DISPATCH_LEVEL, initializing the idle thread raises to SYNCH_LEVEL */
+        KeLowerIrql(DISPATCH_LEVEL);
     }
 
     /* Setup the Idle Thread */
@@ -825,19 +828,11 @@ KiSystemStartup(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     RtlCopyMemory(&Idt[8], &DoubleFaultEntry, sizeof(KIDTENTRY));
 
 AppCpuInit:
-    //TODO: We don't setup IPIs yet so freeze other processors here.
+    /* The jump to AppCpuInit skips KiGetMachineBootPointers, so get our PCR from FS */
     if (Cpu)
-    {
-        KeMemoryBarrier();
-        LoaderBlock->Prcb = 0;
+        Pcr = (PKIPCR)KeGetPcr();
 
-        for (;;)
-        {
-            YieldProcessor();
-        }
-    }
-
-    /* Loop until we can release the freeze lock */
+    /* Acquire the freeze lock, it serializes the processor set updates below */
     do
     {
         /* Loop until execution can continue */
@@ -858,6 +853,13 @@ AppCpuInit:
     /* Set active processors */
     KeActiveProcessors |= __readfsdword(KPCR_SET_MEMBER);
     KeNumberProcessors++;
+
+    /* We are running in the initial process, TB flushes use this mask */
+    InterlockedOr((PLONG)&KiInitialProcess.Pcb.ActiveProcessors,
+                  (LONG)__readfsdword(KPCR_SET_MEMBER));
+
+    /* Release the freeze lock */
+    InterlockedAnd((PLONG)&KiFreezeExecutionLock, 0);
 
     /* Check if this is the boot CPU */
     if (!Cpu)
