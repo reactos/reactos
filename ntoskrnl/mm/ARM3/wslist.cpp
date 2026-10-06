@@ -293,7 +293,7 @@ TrimWsList(PMMWSL WsList)
 
             /* Make this a transition PTE */
             MI_MAKE_TRANSITION_PTE(PointerPte, Page, Protection);
-            KeInvalidateTlbEntry(MiAddressToPte(PointerPte));
+            KeInvalidateTlbEntry(MiPteToAddress(PointerPte));
 
             /* Drop the share count. This will take care of putting it in the standby or modified list. */
             MiDecrementShareCount(Pfn, Page);
