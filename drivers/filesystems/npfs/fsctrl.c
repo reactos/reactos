@@ -752,6 +752,79 @@ Quickie:
 
 NTSTATUS
 NTAPI
+NpGetConnectionAttribute(
+    _In_ PDEVICE_OBJECT DeviceObject,
+    _In_ PIRP Irp)
+{
+    NTSTATUS Status = STATUS_SUCCESS;
+    PIO_STACK_LOCATION IoStackLocation;
+    NODE_TYPE_CODE NodeTypeCode;
+    PNP_CCB Ccb;
+    PCSTR SystemBuffer;
+    ULONG InputBufferLength, OutputBufferLength;
+    PAGED_CODE();
+
+    IoStackLocation = IoGetCurrentIrpStackLocation(Irp);
+
+    NodeTypeCode = NpDecodeFileObject(IoStackLocation->FileObject, 0, &Ccb, 0);
+    if (NodeTypeCode != NPFS_NTC_CCB)
+    {
+        return STATUS_PIPE_DISCONNECTED;
+    }
+
+    SystemBuffer = Irp->AssociatedIrp.SystemBuffer;
+    InputBufferLength = IoStackLocation->Parameters.FileSystemControl.InputBufferLength;
+    OutputBufferLength = IoStackLocation->Parameters.FileSystemControl.OutputBufferLength;
+    if (InputBufferLength == 0 || OutputBufferLength == 0 || SystemBuffer == NULL)
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    ExAcquireResourceExclusiveLite(&Ccb->NonPagedCcb->Lock, TRUE);
+
+    /* TODO: implement "extended attributes" support */
+
+    /* HACK: This should be set as an extended attribute by NpCreateClientEnd,
+     * and we should query the EA instead of returning PID directly. */
+
+    if (Ccb->Process == NULL ||
+        Ccb->NamedPipeState == FILE_PIPE_DISCONNECTED_STATE ||
+        Ccb->NamedPipeState == FILE_PIPE_LISTENING_STATE)
+    {
+        /* ClientProcessId and ClientSessionId are not defined when the process is not set yet */
+        Status = STATUS_NOT_FOUND;
+        goto Cleanup;
+    }
+    else if (OutputBufferLength < sizeof(ULONG))
+    {
+        /* Both ClientProcessId and ClientSessionId are as long as a ULONG.
+         * Other attributes may be different but we don't support anything else. */
+        Status = STATUS_BUFFER_TOO_SMALL;
+        goto Cleanup;
+    }
+
+    if (strncmp(SystemBuffer, "ClientProcessId", InputBufferLength) == 0)
+    {
+        *(PULONG)SystemBuffer = (ULONG)(ULONG_PTR)PsGetProcessId(Ccb->Process);
+        Irp->IoStatus.Information = sizeof(ULONG);
+    }
+    else if (strncmp(SystemBuffer, "ClientSessionId", InputBufferLength) == 0)
+    {
+        *(PULONG)SystemBuffer = (ULONG)(ULONG_PTR)PsGetProcessSessionId(Ccb->Process);
+        Irp->IoStatus.Information = sizeof(ULONG);
+    }
+    else
+    {
+        Status = STATUS_NOT_FOUND;
+    }
+
+Cleanup:
+    ExReleaseResourceLite(&Ccb->NonPagedCcb->Lock);
+    return Status;
+}
+
+NTSTATUS
+NTAPI
 NpCommonFileSystemControl(IN PDEVICE_OBJECT DeviceObject,
                           IN PIRP Irp)
 {
@@ -840,6 +913,11 @@ NpCommonFileSystemControl(IN PDEVICE_OBJECT DeviceObject,
         case FSCTL_PIPE_SET_CLIENT_PROCESS:
             NpAcquireExclusiveVcb();
             Status = NpSetClientProcess(DeviceObject, Irp);
+            break;
+
+        case FSCTL_PIPE_GET_CONNECTION_ATTRIBUTE:
+            NpAcquireSharedVcb();
+            Status = NpGetConnectionAttribute(DeviceObject, Irp);
             break;
 
         default:
