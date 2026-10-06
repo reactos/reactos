@@ -189,9 +189,54 @@ void Tests_Insert_And_Delete()
     ExFreePool(element);
 }
 
+static
+VOID
+Test_InsertByKey(VOID)
+{
+    KDEVICE_QUEUE Queue;
+    KDEVICE_QUEUE_ENTRY First, Entries[3];
+    static const ULONG Keys[3] = { 3, 1, 2 };
+    PKDEVICE_QUEUE_ENTRY Entry;
+    KIRQL OldIrql;
+    ULONG i;
+
+    KeInitializeDeviceQueue(&Queue);
+    KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
+
+    /* An idle queue becomes busy and does not take the entry */
+    First.Inserted = TRUE;
+    ok(!KeInsertByKeyDeviceQueue(&Queue, &First, 0), "Entry was inserted into an idle queue\n");
+    ok(!First.Inserted, "Entry is marked as inserted\n");
+    ok(Queue.Busy, "Queue is not busy\n");
+
+    for (i = 0; i < RTL_NUMBER_OF(Entries); i++)
+    {
+        Entries[i].Inserted = FALSE;
+        ok(KeInsertByKeyDeviceQueue(&Queue, &Entries[i], Keys[i]), "Entry %lu was not inserted\n", i);
+        ok(Entries[i].Inserted, "Entry %lu is not marked as inserted\n", i);
+    }
+
+    /* An entry inserted by key can be removed again */
+    ok(KeRemoveEntryDeviceQueue(&Queue, &Entries[2]), "Entry with key 2 was not removed\n");
+    ok(!Entries[2].Inserted, "Removed entry is still marked as inserted\n");
+    ok(!KeRemoveEntryDeviceQueue(&Queue, &Entries[2]), "Entry with key 2 was removed twice\n");
+
+    Entry = KeRemoveDeviceQueue(&Queue);
+    ok(Entry == &Entries[1], "Got entry %p, expected the one with key 1 (%p)\n", Entry, &Entries[1]);
+    ok(!Entries[1].Inserted, "Removed entry with key 1 is still marked as inserted\n");
+    Entry = KeRemoveDeviceQueue(&Queue);
+    ok(Entry == &Entries[0], "Got entry %p, expected the one with key 3 (%p)\n", Entry, &Entries[0]);
+    ok(!Entries[0].Inserted, "Removed entry with key 3 is still marked as inserted\n");
+    ok(KeRemoveDeviceQueue(&Queue) == NULL, "Queue is not empty\n");
+    ok(!Queue.Busy, "Queue is still busy\n");
+
+    KeLowerIrql(OldIrql);
+}
+
 START_TEST(KeDeviceQueue)
 {
     Test_Initialize();
     Tests_Insert_And_Delete();
+    Test_InsertByKey();
 }
 
