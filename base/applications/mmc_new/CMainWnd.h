@@ -44,9 +44,10 @@ private:
     HIMAGELIST m_hSnapinImageList;
 
     CAtlList<CConsoleWnd*> m_ViewList;
-    int m_NextViewId;
+    UINT m_NextViewId;
 
     CSnapin *m_RootNode;
+    UINT m_NextNodeId;
 
     CAtlList<CRecentFileEntry *> m_RecentFilesList;
 
@@ -251,8 +252,9 @@ public:
 
     CSnapin *GetRootSnapin();
 
-    int RegisterView(CConsoleWnd *pView);
+    UINT RegisterView(CConsoleWnd *pView);
     void UnregisterView(CConsoleWnd *pView);
+    UINT GetNextNodeId();
     DOCUMENT_MODE GetDocumentMode();
     void SetDocumentMode(DOCUMENT_MODE DocumentMode);
     BOOL GetLogicalReadOnly();

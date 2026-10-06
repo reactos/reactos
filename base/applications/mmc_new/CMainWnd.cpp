@@ -31,6 +31,7 @@ CMainWnd::CMainWnd()
     , m_bToolBarVisible(true)
     , m_NextViewId(1)
     , m_RootNode(NULL)
+    , m_NextNodeId(1)
 {
     m_FrameThunk.Init(XDefFrameProc, this);
     m_pfnSuperWindowProc = m_FrameThunk.GetWNDPROC();
@@ -202,7 +203,7 @@ CMainWnd::OnFileNew(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
         return 0;
     }
 
-    m_RootNode = new CSnapin(CacheEntry, rootName.GetString());
+    m_RootNode = new CSnapin(CacheEntry, m_NextNodeId++, rootName.GetString());
     if (!CacheEntry)
     {
         DPRINT1("No root folder!\n");
@@ -662,7 +663,7 @@ CMainWnd::GetRootSnapin()
     return m_RootNode;
 }
 
-int
+UINT
 CMainWnd::RegisterView(CConsoleWnd *pView)
 {
     m_ViewList.AddTail(pView);
@@ -675,6 +676,12 @@ CMainWnd::UnregisterView(CConsoleWnd *pView)
     POSITION pos = m_ViewList.Find(pView);
     if (pos)
         m_ViewList.RemoveAt(pos);
+}
+
+UINT
+CMainWnd::GetNextNodeId()
+{
+    return m_NextNodeId++;
 }
 
 void

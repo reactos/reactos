@@ -19,9 +19,10 @@
 // The snap-in should then cache the returned pointers and use them for calling IConsoleNamespace and IConsole interface methods.
 
 
-CSnapin::CSnapin(CSnapinCacheEntry *CacheEntry, PWSTR displayName)
+CSnapin::CSnapin(CSnapinCacheEntry *CacheEntry, UINT NodeId, PWSTR displayName)
     :m_CacheEntry(CacheEntry)
 {
+    m_NodeId = NodeId;
     if (displayName)
         m_DisplayName = displayName;
     else
@@ -42,6 +43,12 @@ const CAtlString& CSnapin::DisplayName() const { return m_DisplayName; }
 void CSnapin::SetDisplayName(LPWSTR pszName)
 {
     m_DisplayName = pszName;
+}
+
+UINT
+CSnapin::GetNodeId()
+{
+    return m_NodeId;
 }
 
 CSnapinCacheEntry *CSnapin::CacheEntry()
@@ -123,11 +130,13 @@ CSnapin::SaveNode(MscFile *mscFile, IXMLDOMElement *pParentNode)
     IXMLDOMElement *pComponentsElement = NULL;
     POSITION pos;
     CSnapin *SubNode;
+    WCHAR szBuffer[32];
     HRESULT hr = S_OK;
 
     /* <Node ID="3" ImageIdx="0" CLSID="{C96401CC-0E17-11D3-885B-00C04F72C717}" Preload="true"> */
     CHK_HR(mscFile->CreateAndAddElementNode(L"Node", pParentNode, &pNodeElement));
-    CHK_HR(mscFile->CreateAndAddAttributeNode(L"ID", L"0", pNodeElement)); /* FIXME */
+    _swprintf(szBuffer, L"%u", m_NodeId);
+    CHK_HR(mscFile->CreateAndAddAttributeNode(L"ID", szBuffer, pNodeElement));
     CHK_HR(mscFile->CreateAndAddAttributeNode(L"ImageIdx", L"0", pNodeElement)); /* FIXME */
     CHK_HR(mscFile->CreateAndAddAttributeNode(L"CLSID", CacheEntry()->GuidString().GetString(), pNodeElement));
     CHK_HR(mscFile->CreateAndAddAttributeNode(L"Preload", L"true", pNodeElement)); /* FIXME */

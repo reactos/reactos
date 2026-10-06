@@ -471,17 +471,32 @@ CConsoleWnd::SaveView(MscFile *mscFile, IXMLDOMElement *pParentElement)
 {
     IXMLDOMElement *pViewElement = NULL;
     IXMLDOMElement *pViewOptionsElement = NULL;
+    IXMLDOMElement *pBookMarkElement = NULL;
     WCHAR szBuffer[32];
     HRESULT hr = S_OK;
 
     /* <View ID="1" ScopePaneWidth="292" ActionsPaneWidth="-1"> */
     CHK_HR(mscFile->CreateAndAddElementNode(L"View", pParentElement, &pViewElement));
-    _swprintf(szBuffer, L"%d", m_ViewId);
+    _swprintf(szBuffer, L"%u", m_ViewId);
     CHK_HR(mscFile->CreateAndAddAttributeNode(L"ID", szBuffer, pViewElement));
     _swprintf(szBuffer, L"%d", m_iTreeViewWidth);
     CHK_HR(mscFile->CreateAndAddAttributeNode(L"ScopePaneWidth", szBuffer, pViewElement));
     _swprintf(szBuffer, L"%d", m_iActionsPaneWidth);
     CHK_HR(mscFile->CreateAndAddAttributeNode(L"ActionsPaneWidth", szBuffer, pViewElement));
+
+    /* Root Snap-in  <BookMark Name="RootNode" NodeID="1"/> */
+    CHK_HR(mscFile->CreateAndAddElementNode(L"BookMark", pParentElement, &pBookMarkElement));
+    CHK_HR(mscFile->CreateAndAddAttributeNode(L"Name", L"RootNode", pBookMarkElement));
+    _swprintf(szBuffer, L"%u", m_ViewRootNode->GetNodeId());
+    CHK_HR(mscFile->CreateAndAddAttributeNode(L"NodeID", szBuffer, pBookMarkElement));
+    SAFE_RELEASE(pBookMarkElement);
+
+    /* Selected Snap-in <BookMark Name="SelectedNode" NodeID="1"/> */
+    CHK_HR(mscFile->CreateAndAddElementNode(L"BookMark", pParentElement, &pBookMarkElement));
+    CHK_HR(mscFile->CreateAndAddAttributeNode(L"Name", L"SelectedNode", pBookMarkElement));
+    _swprintf(szBuffer, L"%u", m_ViewSelectedNode->GetNodeId());
+    CHK_HR(mscFile->CreateAndAddAttributeNode(L"NodeID", szBuffer, pBookMarkElement));
+    SAFE_RELEASE(pBookMarkElement);
 
     mscFile->SaveWindowPlacement(this, pViewElement);
 

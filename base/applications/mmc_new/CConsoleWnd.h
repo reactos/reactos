@@ -17,7 +17,7 @@ class CConsoleWnd :
     public IConsoleNameSpace2
 {
 private:
-    int m_ViewId;
+    UINT m_ViewId;
     CMainWnd* m_MainWnd;
     CTreeView m_TreeView;
     CListView m_ListView;

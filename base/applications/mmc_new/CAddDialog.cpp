@@ -178,7 +178,7 @@ CAddDialog::OnCommand(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
                 CSnapinCacheEntry *CacheEntry = (CSnapinCacheEntry*)m_Available.GetItemData(iItem);
                 if (CacheEntry)
                 {
-                    CSnapinAlias *Alias = new CSnapinAlias(m_ParentAlias, new CSnapin(CacheEntry));
+                    CSnapinAlias *Alias = new CSnapinAlias(m_ParentAlias, new CSnapin(CacheEntry, m_MainWnd->GetNextNodeId()));
                     m_ParentAlias->m_SubNodes.AddTail(Alias);
 //                    Alias->Snapin()->OnAdd(m_Console);
                     Alias->hTreeItem = InsertTreeItem(m_Selected, Alias, m_ParentAlias->hTreeItem);
@@ -383,7 +383,7 @@ CAddDialog::OnItemDblClicked(INT uCode, LPNMHDR hdr, BOOL& bHandled)
             CSnapinCacheEntry* CacheEntry = (CSnapinCacheEntry*)m_Available.GetItemData(lpnmitem->iItem);
             if (CacheEntry)
             {
-                CSnapinAlias *Alias = new CSnapinAlias(m_ParentAlias, new CSnapin(CacheEntry));
+                CSnapinAlias *Alias = new CSnapinAlias(m_ParentAlias, new CSnapin(CacheEntry, m_MainWnd->GetNextNodeId()));
                 m_ParentAlias->m_SubNodes.AddTail(Alias);
 //                Alias->Snapin()->OnAdd(m_Console);
                 Alias->hTreeItem = InsertTreeItem(m_Selected, Alias, m_ParentAlias->hTreeItem);

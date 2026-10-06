@@ -23,6 +23,7 @@
 class CSnapin
 {
 private:
+    UINT m_NodeId;
     CSnapinCacheEntry *m_CacheEntry;
     CAtlString m_DisplayName;
 
@@ -30,7 +31,7 @@ private:
 
 
 public:
-    CSnapin(CSnapinCacheEntry *CacheEntry, PWSTR displayName = NULL);
+    CSnapin(CSnapinCacheEntry *CacheEntry, UINT NodeId, PWSTR displayName = NULL);
     ~CSnapin();
 
     const CAtlString& Name() const;
@@ -40,6 +41,7 @@ public:
     const CAtlString& DisplayName() const;
 
     void SetDisplayName(LPWSTR pszName);
+    UINT GetNodeId();
 
     CAtlList<CSnapin*> m_SubNodes;
 
