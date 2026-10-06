@@ -55,7 +55,7 @@ KeMemoryBarrier(VOID)
   (VOID)Dummy;
 
 #if defined(__GNUC__)
-  __asm__ __volatile__ ("xchg %%eax, %0" : : "m" (Barrier) : "%eax");
+  __asm__ __volatile__ ("xchg %%eax, %0" : : "m" (Barrier) : "%eax", "memory");
 #elif defined(_MSC_VER)
   __asm xchg [Barrier], eax
 #endif
