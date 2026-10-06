@@ -40,9 +40,7 @@ typedef struct tagCLIENTKEYBOARDTYPE
     L"\\Registry\\Machine\\System\\CurrentControlSet\\Control\\Keyboard Layout\\Dynamic Tables\\"
 
 /* Subkey under "Dynamic Tables". NOTE: the original kbdkor.dll also uses "kbdjpn". */
-#ifndef KBD_DYNAMIC_TABLES_NAME
-    #define KBD_DYNAMIC_TABLES_NAME L"kbdjpn"
-#endif
+#define KBD_DYNAMIC_TABLES_NAME L"kbdjpn"
 
 /* Reads REG_SZ value pwszValueName under pwszKeyPath into pszOut */
 static BOOL
@@ -65,25 +63,21 @@ QueryRealDllName(
         return FALSE;
 
     RtlInitUnicodeString(&KeyName, pwszKeyPath);
-    InitializeObjectAttributes(&oa, &KeyName, OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
-                               NULL, NULL);
-    Status = ZwOpenKey(&hKey, KEY_QUERY_VALUE, &oa);
+    InitializeObjectAttributes(&oa, &KeyName, OBJ_CASE_INSENSITIVE, NULL, NULL);
+    Status = NtOpenKey(&hKey, KEY_QUERY_VALUE, &oa);
     if (!NT_SUCCESS(Status))
         return FALSE;
 
     RtlInitUnicodeString(&ValueName, pwszValueName);
     cbResult = 0;
-    Status = ZwQueryValueKey(hKey, &ValueName, KeyValuePartialInformation,
+    Status = NtQueryValueKey(hKey, &ValueName, KeyValuePartialInformation,
                              &ValueBuffer, sizeof(ValueBuffer), &cbResult);
-    ZwClose(hKey);
+    NtClose(hKey);
     if (!NT_SUCCESS(Status))
         return FALSE;
 
-    if (cbResult < cbHeader ||
-        pInfo->Type != REG_SZ ||
-        !pInfo->DataLength ||
-        pInfo->DataLength > cbResult - cbHeader ||
-        (pInfo->DataLength % sizeof(WCHAR)))
+    if (cbResult < cbHeader || pInfo->Type != REG_SZ || !pInfo->DataLength ||
+        pInfo->DataLength > cbResult - cbHeader || (pInfo->DataLength % sizeof(WCHAR)))
     {
         return FALSE;
     }
@@ -134,9 +128,8 @@ KbdLayerRealDllFileForWBT(
     /* Store the default value */
     if (wLang == LANG_JAPANESE)
         Status = RtlStringCchCopyW(pRealDllName, cchRealDllName, L"kbd101.dll");
-    else
+    else /* LANG_KOREAN */
         Status = RtlStringCchCopyW(pRealDllName, cchRealDllName, L"kbd101a.dll");
-
     return NT_SUCCESS(Status);
 }
 
@@ -152,10 +145,13 @@ KbdLayerRealDllFile(
 {
     WORD wLang;
     PCWSTR suffix;
-    WCHAR wszValue[16];
+    WCHAR wszValue[32];
+    NTSTATUS Status;
 
     UNREFERENCED_PARAMETER(reserved);
 
+    if (!pRealDllName)
+        return FALSE;
     *pRealDllName = UNICODE_NULL;
 
     if (pClientKbdType)
@@ -169,8 +165,9 @@ KbdLayerRealDllFile(
     else
         suffix = L"";
 
-    RtlStringCbCopyW(wszValue, sizeof(wszValue), L"LayerDriver");
-    RtlStringCbCatW(wszValue, sizeof(wszValue), suffix);
+    Status = RtlStringCbPrintfW(wszValue, sizeof(wszValue), L"LayerDriver%s", suffix);
+    if (!NT_SUCCESS(Status))
+        return FALSE;
 
     return QueryRealDllName(I8042PRT_PARAMS, wszValue, pRealDllName, MAX_PATH);
 }
@@ -182,6 +179,8 @@ BOOL WINAPI
 KbdLayerRealDllFileNT4(
     _Out_writes_z_(MAX_PATH) PWSTR pRealDllName)
 {
+    if (!pRealDllName)
+        return FALSE;
     *pRealDllName = UNICODE_NULL;
     return QueryRealDllName(I8042PRT_PARAMS, L"LayerDriver", pRealDllName, MAX_PATH);
 }
@@ -196,21 +195,16 @@ ParseDynamicTableEntry(
     const DWORD *pdwData;
     PWCHAR pch;
 
-    if (cbInfo < sizeof(*pInfo) ||
-        pInfo->Type != REG_BINARY ||
-        !pInfo->NameLength ||
+    if (cbInfo < sizeof(*pInfo) || pInfo->Type != REG_BINARY || !pInfo->NameLength ||
         FIELD_OFFSET(KEY_VALUE_FULL_INFORMATION, Name) + pInfo->NameLength > cbInfo ||
-        pInfo->NameLength >= sizeof(pDesc->wszDllName) ||
-        pInfo->NameLength % sizeof(WCHAR) ||
-        pInfo->DataLength != 3 * sizeof(DWORD) ||
-        pInfo->DataOffset > cbInfo ||
+        pInfo->NameLength >= sizeof(pDesc->wszDllName) || pInfo->NameLength % sizeof(WCHAR) ||
+        pInfo->DataLength != 3 * sizeof(DWORD) || pInfo->DataOffset > cbInfo ||
         cbInfo - pInfo->DataOffset < pInfo->DataLength)
     {
         return FALSE;
     }
 
-    /* Value names are not NUL-terminated. (The original only terminates
-       element [31]; we terminate right after the name.) */
+    /* Make wszDllName NUL-terminated */
     RtlCopyMemory(pDesc->wszDllName, pInfo->Name, pInfo->NameLength);
     pDesc->wszDllName[pInfo->NameLength / sizeof(WCHAR)] = UNICODE_NULL;
 
@@ -219,11 +213,10 @@ ParseDynamicTableEntry(
     if (pch)
         *pch = UNICODE_NULL;
 
-    /* This is the registry value data */
+    /* Get the descriptor from the registry data */
     pdwData = (const DWORD *)((PBYTE)pInfo + pInfo->DataOffset);
-    if (pdwData[0] != 0)
+    if (pdwData[0])
         return FALSE;
-
     pDesc->dwType = pdwData[1];
     pDesc->dwSubType = pdwData[2];
     return TRUE;
@@ -232,7 +225,7 @@ ParseDynamicTableEntry(
 /* TRUE if at least one table was read. A malformed entry discards everything. */
 static BOOL
 LoadDynamicTables(
-    _In_ PCWSTR pwszName,
+    _In_z_ PCWSTR pwszName,
     _Out_ PKBDTABLE_MULTI pMulti)
 {
     WCHAR wszPath[MAX_PATH];
@@ -244,24 +237,21 @@ LoadDynamicTables(
     struct { KEY_VALUE_FULL_INFORMATION; WCHAR Extra[MAX_PATH - 1]; } ValueBuffer;
     PKEY_VALUE_FULL_INFORMATION pInfo = (PVOID)&ValueBuffer;
 
-#if DBG
     RtlZeroMemory(pMulti, sizeof(*pMulti));
-#endif
     Status = RtlStringCbPrintfW(wszPath, sizeof(wszPath), L"%s%s", KBD_DYNAMIC_TABLES_KEY, pwszName);
     if (!NT_SUCCESS(Status))
         return FALSE;
 
     RtlInitUnicodeString(&KeyName, wszPath);
-    InitializeObjectAttributes(&oa, &KeyName, OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
-                               NULL, NULL);
-    Status = ZwOpenKey(&hKey, KEY_READ, &oa);
+    InitializeObjectAttributes(&oa, &KeyName, OBJ_CASE_INSENSITIVE, NULL, NULL);
+    Status = NtOpenKey(&hKey, KEY_READ, &oa);
     if (!NT_SUCCESS(Status))
         return FALSE;
 
     for (pMulti->nTables = 0; pMulti->nTables < KBDTABLE_MULTI_MAX; ++pMulti->nTables)
     {
         cbResult = 0;
-        Status = ZwEnumerateValueKey(hKey, pMulti->nTables, KeyValueFullInformation,
+        Status = NtEnumerateValueKey(hKey, pMulti->nTables, KeyValueFullInformation,
                                      &ValueBuffer, sizeof(ValueBuffer), &cbResult);
         if (Status == STATUS_NO_MORE_ENTRIES)
             break;
@@ -273,8 +263,8 @@ LoadDynamicTables(
         }
     }
 
-    ZwClose(hKey);
-    return pMulti->nTables != 0;
+    NtClose(hKey);
+    return pMulti->nTables > 0;
 }
 
 static const struct { PCWSTR pwszDll; DWORD dwType, dwSubType; } s_Defaults[] =
@@ -296,19 +286,16 @@ static VOID
 SetDefaultTables(
     _Out_ PKBDTABLE_MULTI pMulti)
 {
-    SIZE_T i;
-
-#if DBG
+    SIZE_T iTable;
     RtlZeroMemory(pMulti, sizeof(*pMulti));
-#endif
     pMulti->nTables = RTL_NUMBER_OF(s_Defaults);
-    for (i = 0; i < RTL_NUMBER_OF(s_Defaults); ++i)
+    for (iTable = 0; iTable < RTL_NUMBER_OF(s_Defaults); ++iTable)
     {
-        RtlStringCbCopyW(pMulti->aKbdTables[i].wszDllName,
-                         sizeof(pMulti->aKbdTables[i].wszDllName),
-                         s_Defaults[i].pwszDll);
-        pMulti->aKbdTables[i].dwType = s_Defaults[i].dwType;
-        pMulti->aKbdTables[i].dwSubType = s_Defaults[i].dwSubType;
+        RtlStringCbCopyW(pMulti->aKbdTables[iTable].wszDllName,
+                         sizeof(pMulti->aKbdTables[iTable].wszDllName), 
+                         s_Defaults[iTable].pwszDll);
+        pMulti->aKbdTables[iTable].dwType = s_Defaults[iTable].dwType;
+        pMulti->aKbdTables[iTable].dwSubType = s_Defaults[iTable].dwSubType;
     }
 }
 

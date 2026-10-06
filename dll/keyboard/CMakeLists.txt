@@ -101,7 +101,7 @@ foreach(_keyboard_layout ${_keyboard_layouts})
     if(_keyboard_layout STREQUAL "kbdjpn" OR _keyboard_layout STREQUAL "kbdkor")
         # kbdjpn and kbdkor are special keyboard layouts
         target_sources(${_keyboard_layout} PRIVATE jpnkor.c)
-        add_importlibs(${_keyboard_layout} ntoskrnl)
+        add_importlibs(${_keyboard_layout} ntdll)
     endif()
 
     set_entrypoint(${_keyboard_layout} 0)

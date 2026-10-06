@@ -1316,4 +1316,78 @@ co_ClientImmLoadLayout(
     return ret;
 }
 
-/* EOF */
+BOOL
+APIENTRY
+co_GetKeyboardMultiTable(
+    _In_ PCWSTR pszLayoutFile,
+    _In_ HKL hKL,
+    _Out_ PKBDTABLE_MULTI pKbdTableMulti,
+    _Out_writes_z_(cchRealDllName) PWSTR pszRealDllName,
+    _In_ SIZE_T cchRealDllName)
+{
+    BOOL ret;
+    NTSTATUS Status;
+    GETKEYBOARDMULTITABLE_CALLBACK_ARGUMENTS Common = { hKL };
+    ULONG ResultLength = sizeof(GETKEYBOARDMULTITABLE_CALLBACK_OUTPUT);
+    PGETKEYBOARDMULTITABLE_CALLBACK_OUTPUT ResultPointer = NULL;
+
+    pKbdTableMulti->nTables = 0;
+
+    Status = RtlStringCchCopyW(Common.szLayoutFile, _countof(Common.szLayoutFile),
+                               pszLayoutFile);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("Status: 0x%08X\n", Status);
+        return FALSE;
+    }
+
+    UserLeaveCo();
+    Status = KeUserModeCallback(USER32_CALLBACK_GETKEYBOARDMULTITABLE, &Common, sizeof(Common),
+                                (PVOID*)&ResultPointer, &ResultLength);
+    UserEnterCo();
+
+    if (!NT_SUCCESS(Status) || !ResultPointer || ResultLength != sizeof(*ResultPointer))
+    {
+        ERR("0x%lX, %p, %lu\n", Status, ResultPointer, ResultLength);
+        return FALSE;
+    }
+
+    _SEH2_TRY
+    {
+        ProbeForRead(ResultPointer, ResultLength, 1);
+        ret = ResultPointer->ret;
+        if (ret)
+        {
+            RtlCopyMemory(pKbdTableMulti, &ResultPointer->KbdTableMulti, sizeof(*pKbdTableMulti));
+
+            /* Don't trust data from user-mode */
+            if (pKbdTableMulti->nTables && pKbdTableMulti->nTables < KBDTABLE_MULTI_MAX)
+            {
+                PWSTR pRealName = ResultPointer->szRealName;
+                const SIZE_T cchRealName = _countof(ResultPointer->szRealName);
+                pRealName[cchRealName - 1] = UNICODE_NULL; /* Avoid buffer overrun */
+
+                PKBDTABLE_DESC pKbdTables = pKbdTableMulti->aKbdTables;
+                for (ULONG i = 0; i < pKbdTableMulti->nTables; ++i)
+                {
+                    PWSTR wszDllName = pKbdTables[i].wszDllName;
+                    wszDllName[_countof(pKbdTables[i].wszDllName) - 1] = UNICODE_NULL;
+                }
+
+                Status = RtlStringCchCopyW(pszRealDllName, cchRealDllName, pRealName);
+                ret = NT_SUCCESS(Status);
+            }
+        }
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        ERR("Exception in co_GetKeyboardMultiTable!\n");
+        ret = FALSE;
+    }
+    _SEH2_END;
+
+    if (!ret)
+        pKbdTableMulti->nTables = 0;
+
+    return ret;
+}

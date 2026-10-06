@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS Kernel
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     Defining kernel-to-user32 callback entries
- * COPYRIGHT:   Copyright 2024 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
+ * COPYRIGHT:   Copyright 2024-2026 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
 /* DEFINE_USER32_CALLBACK(id, value, fn) */
@@ -26,3 +26,4 @@ DEFINE_USER32_CALLBACK(USER32_CALLBACK_LPK,                    16, User32CallLPK
 DEFINE_USER32_CALLBACK(USER32_CALLBACK_UMPD,                   17, User32CallUMPDFromKernel)
 DEFINE_USER32_CALLBACK(USER32_CALLBACK_IMMPROCESSKEY,          18, User32CallImmProcessKeyFromKernel)
 DEFINE_USER32_CALLBACK(USER32_CALLBACK_IMMLOADLAYOUT,          19, User32CallImmLoadLayoutFromKernel)
+DEFINE_USER32_CALLBACK(USER32_CALLBACK_GETKEYBOARDMULTITABLE,  20, User32CallGetKeyboardMultiTableFromKernel)

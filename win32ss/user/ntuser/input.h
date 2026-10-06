@@ -22,7 +22,7 @@ typedef struct tagKL
     DWORD dwKL_Flags;
     HKL hkl;
     PKBDFILE spkf;
-    PKBDFILE spkfReal;
+    PKBDFILE spkfSub;
     DWORD dwFontSigs;
     UINT iBaseCharset;
     USHORT CodePage;
@@ -101,7 +101,7 @@ VOID NTAPI UserProcessKeyboardInput(PINPUT_DEVICE_INFO pDeviceInfo, PKEYBOARD_IN
 BOOL NTAPI UserSendKeyboardInput(KEYBDINPUT *pKbdInput, BOOL bInjected);
 PKL NTAPI UserHklToKbl(HKL hKl);
 BOOL NTAPI UserSetDefaultInputLang(HKL hKl);
-PKBDTABLES FASTCALL UserGetKeyboardTablesFromKL(PKL pKL);
+VOID FASTCALL UnloadKbdFile(_In_ PKBDFILE pkf);
 extern DWORD gdwLanguageToggleKey;
 extern DWORD gdwLayoutToggleKey;
 extern BOOL gbEnableHexNumpad;

@@ -16,6 +16,7 @@
 #include "regcontrol.h"
 #include "resource.h"
 #include "ntwrapper.h"
+#include <ndk/kbd.h>
 
 #define IMM_RETURN_VOID(retval) /* empty */
 #define IMM_RETURN_NONVOID(retval) return (retval)
@@ -133,4 +134,10 @@ BOOL WINAPI UpdatePerUserImmEnabling(VOID);
 VOID APIENTRY CliImmInitializeHotKeys(DWORD dwAction, HKL hKL);
 VOID IntLoadPreloadKeyboardLayouts(VOID);
 
-/* EOF */
+BOOL APIENTRY
+User32GetKeyboardMultiTable(
+    _In_ HKL hKL,
+    _In_z_ PCWSTR pszLayoutFile,
+    _Out_ PKBDTABLE_MULTI pKbdTableMulti,
+    _Out_writes_z_(cchRealDllName) PWSTR pszRealDllName,
+    _In_ SIZE_T cchRealDllName);

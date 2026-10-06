@@ -16,7 +16,7 @@ SECTIONS
   {
     SORT(*)(.idata$2)
     SORT(*)(.idata$3)
-    /* These zeroes mark the end of the import list. */
+    /* terminator of the import descriptor list */
     LONG (0); LONG (0); LONG (0); LONG (0); LONG (0);
     SORT(*)(.idata$4)
     SORT(*)(.idata$5)
