@@ -262,6 +262,9 @@ KiIdleLoop(VOID)
     PKPRCB Prcb = KeGetCurrentPrcb();
     PKTHREAD OldThread, NewThread;
 
+    /* This processor is going idle */
+    InterlockedBitTestAndSetAffinity(&KiIdleSummary, Prcb->Number);
+
     /* Now loop forever */
     while (TRUE)
     {
@@ -289,6 +292,17 @@ KiIdleLoop(VOID)
             /* Enable interrupts */
             _enable();
 
+#ifdef CONFIG_SMP
+            /* Do the swap at SYNCH_LEVEL */
+            KfRaiseIrql(SYNCH_LEVEL);
+#endif
+
+            /* This thread is about to be swapped away */
+            KiSetThreadSwapBusy(Prcb->IdleThread);
+
+            /* NextThread is written by other processors under the PRCB lock */
+            KiAcquirePrcbLock(Prcb);
+
             /* Capture current thread data */
             OldThread = Prcb->CurrentThread;
             NewThread = Prcb->NextThread;
@@ -297,16 +311,30 @@ KiIdleLoop(VOID)
             Prcb->NextThread = NULL;
             Prcb->CurrentThread = NewThread;
 
+            /* Release the PRCB lock */
+            KiReleasePrcbLock(Prcb);
+
             /* The thread is now running */
             NewThread->State = Running;
 
-#ifdef CONFIG_SMP
-            /* Do the swap at SYNCH_LEVEL */
-            KfRaiseIrql(SYNCH_LEVEL);
-#endif
+            /* Nothing to do if the idle thread was selected */
+            if (NewThread != OldThread)
+            {
+                InterlockedBitTestAndResetAffinity(&KiIdleSummary,
+                                                   Prcb->Number);
 
-            /* Switch away from the idle thread */
-            KiSwapContext(APC_LEVEL, OldThread);
+                /* Switch away from the idle thread */
+                KiSwapContext(APC_LEVEL, OldThread);
+
+                /* Back in the idle loop */
+                InterlockedBitTestAndSetAffinity(&KiIdleSummary,
+                                                 Prcb->Number);
+            }
+            else
+            {
+                /* Nothing was swapped, so drop the claim taken above */
+                NewThread->SwapBusy = FALSE;
+            }
 
 #ifdef CONFIG_SMP
             /* Go back to DISPATCH_LEVEL */
@@ -334,11 +362,20 @@ KiSwapContextExit(IN PKTHREAD OldThread,
     /* We are on the new thread stack now */
     NewThread = Pcr->PrcbData.CurrentThread;
 
+    /* The old thread's context is saved, so it may be picked up elsewhere */
+    OldThread->SwapBusy = FALSE;
+
     /* Now we are the new thread. Check if it's in a new process */
     OldProcess = OldThread->ApcState.Process;
     NewProcess = NewThread->ApcState.Process;
     if (OldProcess != NewProcess)
     {
+#ifdef CONFIG_SMP
+        /* Update active processor mask, set and clear so an unbalanced switch cannot invert it */
+        InterlockedOr((PLONG)&NewProcess->ActiveProcessors, (LONG)Pcr->SetMember);
+        InterlockedAnd((PLONG)&OldProcess->ActiveProcessors, ~(LONG)Pcr->SetMember);
+#endif
+
         /* Check if there is a different LDT */
         if (*(PULONGLONG)&OldProcess->LdtDescriptor != *(PULONGLONG)&NewProcess->LdtDescriptor)
         {
@@ -450,8 +487,9 @@ KiSwapContextEntry(IN PKSWITCHFRAME SwitchFrame,
     /* Get the old thread and set its kernel stack */
     OldThread->KernelStack = SwitchFrame;
 
-    /* Set swapbusy to false for the new thread */
-    NewThread->SwapBusy = FALSE;
+    /* Wait until the previous processor has finished saving this thread */
+    while (*(volatile BOOLEAN *)&NewThread->SwapBusy)
+        YieldProcessor();
 
     /* ISRs can change FPU state, so disable interrupts while checking */
     _disable();
@@ -536,6 +574,14 @@ KiDispatchInterrupt(VOID)
     {
         /* Acquire the PRCB lock */
         KiAcquirePrcbLock(Prcb);
+
+        /* Another processor may have picked the thread already running here */
+        if (Prcb->NextThread == Prcb->CurrentThread)
+        {
+            Prcb->NextThread = NULL;
+            KiReleasePrcbLock(Prcb);
+            return;
+        }
 
         /* Capture current thread data */
         OldThread = Prcb->CurrentThread;
