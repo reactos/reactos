@@ -83,9 +83,6 @@ HalpInitializeTsc(VOID)
     /* Set the calibration ISR */
     KeRegisterInterruptHandler(APIC_CLOCK_VECTOR, TscCalibrationISR);
 
-    /* Reset TSC value to 0 */
-    __writemsr(MSR_RDTSC, 0);
-
     /* Enable the timer interrupt */
     HalEnableSystemInterrupt(APIC_CLOCK_VECTOR, CLOCK_LEVEL, Latched);
 
