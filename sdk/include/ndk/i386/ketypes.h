@@ -74,12 +74,11 @@ Author:
 //
 #define K0IPCR                  ((ULONG_PTR)(KIP0PCRADDRESS))
 #define PCR                     ((KPCR *)K0IPCR)
-#if defined(CONFIG_SMP) || defined(NT_BUILD)
-//#undef  KeGetPcr
+//
+// Always use the self pointer. PCR is only the boot processor's PCR, and the
+// shared HAL libraries are built without CONFIG_SMP but still run on every processor.
+//
 #define KeGetPcr()              ((KPCR *)__readfsdword(FIELD_OFFSET(KPCR, SelfPcr)))
-#else
-#define KeGetPcr()              PCR
-#endif
 
 //
 // CPU Vendors
