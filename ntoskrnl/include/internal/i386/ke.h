@@ -1032,6 +1032,12 @@ KiGetUserModeStackAddress(void)
     return &(KeGetCurrentThread()->TrapFrame->HardwareEsp);
 }
 
+/** @brief Handles an IPI freeze request. Returns TRUE if this processor was frozen. */
+BOOLEAN
+KiProcessorFreezeHandler(
+    _In_ PKTRAP_FRAME TrapFrame,
+    _In_opt_ PKEXCEPTION_FRAME ExceptionFrame);
+
 #ifdef __cplusplus
 } // extern "C"
 #endif
