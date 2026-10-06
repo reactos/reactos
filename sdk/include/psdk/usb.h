@@ -148,6 +148,12 @@ typedef enum _USB_CONTROLLER_FLAVOR {
 #define URB_FUNCTION_RESERVE_0X002E                     0x002E
 #define URB_FUNCTION_RESERVE_0X002F                     0x002F
 
+/* Bulk streams and chained MDL transfers */
+#define URB_FUNCTION_OPEN_STATIC_STREAMS                          0x0035
+#define URB_FUNCTION_CLOSE_STATIC_STREAMS                         0x0036
+#define URB_FUNCTION_BULK_OR_INTERRUPT_TRANSFER_USING_CHAINED_MDL 0x0037
+#define URB_FUNCTION_ISOCH_TRANSFER_USING_CHAINED_MDL             0x0038
+
 #define URB_FUNCTION_RESET_PIPE                         URB_FUNCTION_SYNC_RESET_PIPE_AND_CLEAR_STALL
 
 #define USBD_TRANSFER_DIRECTION                         0x00000001
@@ -168,6 +174,7 @@ typedef LONG USBD_STATUS;
 #define USBD_PENDING(Status)                            ((ULONG)(Status) >> 30 == 1)
 #define USBD_ERROR(Status)                              ((USBD_STATUS)(Status) < 0)
 #define USBD_STATUS_SUCCESS                             ((USBD_STATUS)0x00000000L)
+#define USBD_STATUS_PORT_OPERATION_PENDING              ((USBD_STATUS)0x00000001L)
 #define USBD_STATUS_PENDING                             ((USBD_STATUS)0x40000000L)
 #define USBD_STATUS_CRC                                 ((USBD_STATUS)0xC0000001L)
 #define USBD_STATUS_BTSTUFF                             ((USBD_STATUS)0xC0000002L)
@@ -187,6 +194,9 @@ typedef LONG USBD_STATUS;
 #define USBD_STATUS_XACT_ERROR                          ((USBD_STATUS)0xC0000011L)
 #define USBD_STATUS_BABBLE_DETECTED                     ((USBD_STATUS)0xC0000012L)
 #define USBD_STATUS_DATA_BUFFER_ERROR                   ((USBD_STATUS)0xC0000013L)
+#define USBD_STATUS_NO_PING_RESPONSE                    ((USBD_STATUS)0xC0000014L)
+#define USBD_STATUS_INVALID_STREAM_TYPE                 ((USBD_STATUS)0xC0000015L)
+#define USBD_STATUS_INVALID_STREAM_ID                   ((USBD_STATUS)0xC0000016L)
 #define USBD_STATUS_ENDPOINT_HALTED                     ((USBD_STATUS)0xC0000030L)
 #define USBD_STATUS_INVALID_URB_FUNCTION                ((USBD_STATUS)0x80000200L)
 #define USBD_STATUS_INVALID_PARAMETER                   ((USBD_STATUS)0x80000300L)
@@ -206,6 +216,7 @@ typedef LONG USBD_STATUS;
 #define USBD_STATUS_BUFFER_TOO_SMALL                    ((USBD_STATUS)0xC0003000L)
 #define USBD_STATUS_INTERFACE_NOT_FOUND                 ((USBD_STATUS)0xC0004000L)
 #define USBD_STATUS_INVALID_PIPE_FLAGS                  ((USBD_STATUS)0xC0005000L)
+#define USBD_STATUS_INAVLID_PIPE_FLAGS                  USBD_STATUS_INVALID_PIPE_FLAGS
 #define USBD_STATUS_TIMEOUT                             ((USBD_STATUS)0xC0006000L)
 #define USBD_STATUS_DEVICE_GONE                         ((USBD_STATUS)0xC0007000L)
 #define USBD_STATUS_STATUS_NOT_MAPPED                   ((USBD_STATUS)0xC0008000L)
@@ -526,6 +537,23 @@ struct _URB_ISOCH_TRANSFER {
   USBD_ISO_PACKET_DESCRIPTOR IsoPacket[1];
 };
 
+/* The stack fills in one pipe handle per stream, which transfers are then addressed to */
+typedef struct _USBD_STREAM_INFORMATION {
+  USBD_PIPE_HANDLE PipeHandle;
+  ULONG StreamID;
+  ULONG MaximumTransferSize;
+  ULONG PipeFlags;
+} USBD_STREAM_INFORMATION, *PUSBD_STREAM_INFORMATION;
+
+struct _URB_OPEN_STATIC_STREAMS {
+  struct _URB_HEADER Hdr;
+  USBD_PIPE_HANDLE PipeHandle;
+  ULONG NumberOfStreams;
+  USHORT StreamInfoVersion;
+  USHORT StreamInfoSize;
+  PUSBD_STREAM_INFORMATION Streams;
+};
+
 typedef struct _URB {
   __GNU_EXTENSION union {
     struct _URB_HEADER UrbHeader;
@@ -541,6 +569,7 @@ typedef struct _URB {
     struct _URB_CONTROL_TRANSFER_EX UrbControlTransferEx;
 #endif
     struct _URB_BULK_OR_INTERRUPT_TRANSFER UrbBulkOrInterruptTransfer;
+    struct _URB_OPEN_STATIC_STREAMS UrbOpenStaticStreams;
     struct _URB_ISOCH_TRANSFER UrbIsochronousTransfer;
     struct _URB_CONTROL_DESCRIPTOR_REQUEST UrbControlDescriptorRequest;
     struct _URB_CONTROL_GET_STATUS_REQUEST UrbControlGetStatusRequest;

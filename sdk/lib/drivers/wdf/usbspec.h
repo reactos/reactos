@@ -10,5 +10,6 @@
 
 #include <usb100.h>
 #include <usb200.h>
+#include <usb300.h>
 
 #endif
