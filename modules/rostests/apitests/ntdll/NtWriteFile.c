@@ -7,6 +7,10 @@
 
 #include "precomp.h"
 
+#ifndef FILE_USE_FILE_POINTER_POSITION
+#define FILE_USE_FILE_POINTER_POSITION 0xfffffffe
+#endif
+
 static
 BOOL
 Is64BitSystem(VOID)
@@ -60,6 +64,111 @@ SizeOfSector(VOID)
     }
 
     return SectorSize;
+}
+
+static
+VOID
+TestAppendOnlyHandle(VOID)
+{
+    NTSTATUS Status;
+    HANDLE FileHandle, AppendHandle;
+    UNICODE_STRING FileName = RTL_CONSTANT_STRING(L"\\SystemRoot\\ntdll-apitest-NtWriteFile-append.bin");
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    IO_STATUS_BLOCK IoStatus;
+    LARGE_INTEGER ByteOffset;
+    FILE_STANDARD_INFORMATION StandardInfo;
+    FILE_DISPOSITION_INFORMATION DispositionInfo;
+    CHAR ReadBuffer[16];
+
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &FileName,
+                               OBJ_CASE_INSENSITIVE,
+                               NULL,
+                               NULL);
+    Status = NtCreateFile(&FileHandle,
+                          FILE_READ_DATA | FILE_WRITE_DATA | DELETE | SYNCHRONIZE,
+                          &ObjectAttributes,
+                          &IoStatus,
+                          NULL,
+                          0,
+                          FILE_SHARE_READ | FILE_SHARE_WRITE,
+                          FILE_SUPERSEDE,
+                          FILE_NON_DIRECTORY_FILE | FILE_SYNCHRONOUS_IO_NONALERT,
+                          NULL,
+                          0);
+    ok_hex(Status, STATUS_SUCCESS);
+    if (!NT_SUCCESS(Status))
+    {
+        skip("Failed to create the test file\n");
+        return;
+    }
+
+    ByteOffset.QuadPart = 0;
+    Status = NtWriteFile(FileHandle, NULL, NULL, NULL, &IoStatus, "AAAA", 4, &ByteOffset, NULL);
+    ok_hex(Status, STATUS_SUCCESS);
+
+    /* FILE_APPEND_DATA without FILE_WRITE_DATA: every write goes to the end of file */
+    Status = NtCreateFile(&AppendHandle,
+                          FILE_APPEND_DATA | SYNCHRONIZE,
+                          &ObjectAttributes,
+                          &IoStatus,
+                          NULL,
+                          0,
+                          FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+                          FILE_OPEN,
+                          FILE_NON_DIRECTORY_FILE | FILE_SYNCHRONOUS_IO_NONALERT,
+                          NULL,
+                          0);
+    ok_hex(Status, STATUS_SUCCESS);
+    if (NT_SUCCESS(Status))
+    {
+        /* No byte offset, i.e. the current file position */
+        Status = NtWriteFile(AppendHandle, NULL, NULL, NULL, &IoStatus, "BB", 2, NULL, NULL);
+        ok_hex(Status, STATUS_SUCCESS);
+        ok_eq_ulongptr(IoStatus.Information, 2);
+
+        /* Again, now that the handle may have a cache map */
+        Status = NtWriteFile(AppendHandle, NULL, NULL, NULL, &IoStatus, "CC", 2, NULL, NULL);
+        ok_hex(Status, STATUS_SUCCESS);
+
+        /* An explicit offset is ignored too */
+        ByteOffset.QuadPart = 0;
+        Status = NtWriteFile(AppendHandle, NULL, NULL, NULL, &IoStatus, "DD", 2, &ByteOffset, NULL);
+        ok_hex(Status, STATUS_SUCCESS);
+
+        ByteOffset.u.LowPart = FILE_USE_FILE_POINTER_POSITION;
+        ByteOffset.u.HighPart = -1;
+        Status = NtWriteFile(AppendHandle, NULL, NULL, NULL, &IoStatus, "EE", 2, &ByteOffset, NULL);
+        ok_hex(Status, STATUS_SUCCESS);
+
+        Status = NtClose(AppendHandle);
+        ok_hex(Status, STATUS_SUCCESS);
+    }
+
+    Status = NtQueryInformationFile(FileHandle,
+                                    &IoStatus,
+                                    &StandardInfo,
+                                    sizeof(StandardInfo),
+                                    FileStandardInformation);
+    ok_hex(Status, STATUS_SUCCESS);
+    ok_eq_longlong(StandardInfo.EndOfFile.QuadPart, 12LL);
+
+    RtlFillMemory(ReadBuffer, sizeof(ReadBuffer), 'X');
+    ByteOffset.QuadPart = 0;
+    Status = NtReadFile(FileHandle, NULL, NULL, NULL, &IoStatus, ReadBuffer, sizeof(ReadBuffer), &ByteOffset, NULL);
+    ok_hex(Status, STATUS_SUCCESS);
+    ok_eq_ulongptr(IoStatus.Information, 12);
+    ok(!memcmp(ReadBuffer, "AAAABBCCDDEE", 12), "File contents are '%.12s', expected 'AAAABBCCDDEE'\n", ReadBuffer);
+
+    DispositionInfo.DeleteFile = TRUE;
+    Status = NtSetInformationFile(FileHandle,
+                                  &IoStatus,
+                                  &DispositionInfo,
+                                  sizeof(DispositionInfo),
+                                  FileDispositionInformation);
+    ok_hex(Status, STATUS_SUCCESS);
+    Status = NtClose(FileHandle);
+    ok_hex(Status, STATUS_SUCCESS);
 }
 
 START_TEST(NtWriteFile)
@@ -349,4 +458,6 @@ START_TEST(NtWriteFile)
                                  &BufferSize,
                                  MEM_RELEASE);
     ok_hex(Status, STATUS_SUCCESS);
+
+    TestAppendOnlyHandle();
 }
