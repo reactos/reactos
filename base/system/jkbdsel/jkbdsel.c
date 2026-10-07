@@ -378,7 +378,7 @@ VOID NTAPI NtProcessStartup(PPEB Peb)
         L"    [Hankaku/Zenkaku] key : for 106 Japanese keyboard\n"
         L"    [Space] key           : for 101 English keyboard\n"
         L"    [S] key               : for other keyboard (use default)\n\n"
-        L"    F3 : Skip\n\n");
+        L"    [F3] key              : Skip\n\n");
 
     c = WaitForChoice();
     //PrintHex(L"JKBDSEL: choice = 0x", (ULONG)c); /* 0:106 1:101 2:OTHER 3:SKIP 4:TIMEOUT 5:ERROR */
@@ -404,7 +404,7 @@ VOID NTAPI NtProcessStartup(PPEB Peb)
             Delay(3000);
             goto quit;
         case C_ERROR:
-            Print(L"JKBDSEL: Errror.\n");
+            Print(L"JKBDSEL: Error.\n");
             goto quit;
         default:
             Print(L"JKBDSEL: Logical error.\n");
