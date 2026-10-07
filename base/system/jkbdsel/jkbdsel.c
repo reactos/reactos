@@ -136,6 +136,7 @@ static BOOL FileExists(PCWSTR path)
                           FILE_OPEN, FILE_SYNCHRONOUS_IO_NONALERT, NULL, 0);
     if (NT_SUCCESS(Status))
         NtClose(h);
+
     return NT_SUCCESS(Status);
 }
 
@@ -149,19 +150,23 @@ static USHORT ReadLangId(HANDLE h, PCWSTR valueName)
     UNICODE_STRING usName, us;
     ULONG buf[16], len, value = 0;
     PKEY_VALUE_PARTIAL_INFORMATION info = (PVOID)buf;
+    NTSTATUS Status;
 
     RtlInitUnicodeString(&usName, valueName);
-    if (!NT_SUCCESS(NtQueryValueKey(h, &usName, KeyValuePartialInformation,
-                                    info, sizeof(buf), &len)))
+    Status = NtQueryValueKey(h, &usName, KeyValuePartialInformation, info, sizeof(buf), &len);
+    if (!NT_SUCCESS(Status))
         return 0;
+
     if (info->Type != REG_SZ || info->DataLength < sizeof(WCHAR))
         return 0;
 
     us.Buffer = (PWSTR)info->Data;
     us.Length = (USHORT)(info->DataLength - sizeof(WCHAR)); /* Excluding NUL */
     us.MaximumLength = (USHORT)info->DataLength;
-    if (!NT_SUCCESS(RtlUnicodeStringToInteger(&us, 16, &value)))
+    Status = RtlUnicodeStringToInteger(&us, 16, &value);
+    if (!NT_SUCCESS(Status))
         return 0;
+
     return (USHORT)value;
 }
 
@@ -169,18 +174,18 @@ static BOOL IsJapaneseSystem(void)
 {
     HANDLE h;
     USHORT lang;
-    BOOL ja = FALSE;
+    BOOL ja;
+    NTSTATUS Status;
 
-    if (!NT_SUCCESS(OpenKey(NLS_LANG_KEY, FALSE, &h)))
+    Status = OpenKey(NLS_LANG_KEY, FALSE, &h);
+    if (!NT_SUCCESS(Status))
         return FALSE;
 
     lang = ReadLangId(h, L"InstallLanguage");
-    if (lang == 0)
+    if (!lang)
         lang = ReadLangId(h, L"Default");
 
-    if (lang != 0 && PRIMARYLANGID(lang) == LANG_JAPANESE)
-        ja = TRUE;
-
+    ja = (PRIMARYLANGID(lang) == LANG_JAPANESE);
     NtClose(h);
     return ja;
 }
@@ -191,16 +196,19 @@ static BOOL IsDone(void)
     UNICODE_STRING usName;
     ULONG buf[8], len;
     PKEY_VALUE_PARTIAL_INFORMATION info = (PVOID)buf;
-    BOOL done = FALSE;
+    BOOL done;
+    NTSTATUS Status;
 
-    if (!NT_SUCCESS(OpenKey(DONE_KEY, FALSE, &h)))
+    Status = OpenKey(DONE_KEY, FALSE, &h);
+    if (!NT_SUCCESS(Status))
         return FALSE;
+
     RtlInitUnicodeString(&usName, L"Done");
-    if (NT_SUCCESS(NtQueryValueKey(h, &usName, KeyValuePartialInformation,
-                                   info, sizeof(buf), &len))
-        && info->Type == REG_DWORD && info->DataLength == sizeof(ULONG)
-        && *(PULONG)info->Data != 0)
-        done = TRUE;
+
+    Status = NtQueryValueKey(h, &usName, KeyValuePartialInformation, info, sizeof(buf), &len);
+    done = (NT_SUCCESS(Status) && info->Type == REG_DWORD && info->DataLength == sizeof(ULONG) &&
+            *(PULONG)info->Data);
+
     NtClose(h);
     return done;
 }
@@ -226,7 +234,8 @@ static BOOL RemoveFromBootExecute(void)
 
     RtlInitUnicodeString(&keyName, SESSION_MANAGER_KEY);
     InitializeObjectAttributes(&oa, &keyName, OBJ_CASE_INSENSITIVE, NULL, NULL);
-    if (!NT_SUCCESS(NtOpenKey(&h, KEY_QUERY_VALUE | KEY_SET_VALUE, &oa)))
+    Status = NtOpenKey(&h, KEY_QUERY_VALUE | KEY_SET_VALUE, &oa);
+    if (!NT_SUCCESS(Status))
         return FALSE;
 
     RtlInitUnicodeString(&valName, L"BootExecute");
@@ -312,7 +321,7 @@ static BOOL WriteDone(void)
     if (!NT_SUCCESS(Status))
     {
         PrintHex(L"JKBDSEL: create DONE_KEY failed: 0x", (ULONG)Status);
-        Delay(5000);
+        Delay(3000);
         return FALSE;
     }
     SetDword(h, L"Done", 1);
