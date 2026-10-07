@@ -8,12 +8,215 @@
 /* INCLUDES *******************************************************************/
 
 #include "precomp.h"
+#include "inline.h"
 
 #define NDEBUG
 #include <debug.h>
 
 
 /* FUNCTIONS ******************************************************************/
+
+/* Starved request queue, a cancel safe queue over STARVED_REQUEST_QUEUE */
+
+static
+VOID
+NTAPI
+PortStarvedCsqInsertIrp(
+    _In_ PIO_CSQ Csq,
+    _In_ PIRP Irp)
+{
+    PSTARVED_REQUEST_QUEUE Queue = CONTAINING_RECORD(Csq, STARVED_REQUEST_QUEUE, Csq);
+
+    InsertTailList(&Queue->ListHead, &Irp->Tail.Overlay.ListEntry);
+}
+
+static
+VOID
+NTAPI
+PortStarvedCsqRemoveIrp(
+    _In_ PIO_CSQ Csq,
+    _In_ PIRP Irp)
+{
+    UNREFERENCED_PARAMETER(Csq);
+
+    RemoveEntryList(&Irp->Tail.Overlay.ListEntry);
+}
+
+static
+PIRP
+NTAPI
+PortStarvedCsqPeekNextIrp(
+    _In_ PIO_CSQ Csq,
+    _In_ PIRP Irp,
+    _In_ PVOID PeekContext)
+{
+    PSTARVED_REQUEST_QUEUE Queue = CONTAINING_RECORD(Csq, STARVED_REQUEST_QUEUE, Csq);
+    PLIST_ENTRY Entry;
+
+    UNREFERENCED_PARAMETER(PeekContext);
+
+    Entry = (Irp == NULL) ? Queue->ListHead.Flink : Irp->Tail.Overlay.ListEntry.Flink;
+
+    if (Entry == &Queue->ListHead)
+    {
+        return NULL;
+    }
+
+    return CONTAINING_RECORD(Entry, IRP, Tail.Overlay.ListEntry);
+}
+
+static
+VOID
+NTAPI
+PortStarvedCsqAcquireLock(
+    _In_ PIO_CSQ Csq,
+    _Out_ PKIRQL Irql)
+{
+    PSTARVED_REQUEST_QUEUE Queue = CONTAINING_RECORD(Csq, STARVED_REQUEST_QUEUE, Csq);
+
+    KeAcquireSpinLock(&Queue->Lock, Irql);
+}
+
+static
+VOID
+NTAPI
+PortStarvedCsqReleaseLock(
+    _In_ PIO_CSQ Csq,
+    _In_ KIRQL Irql)
+{
+    PSTARVED_REQUEST_QUEUE Queue = CONTAINING_RECORD(Csq, STARVED_REQUEST_QUEUE, Csq);
+
+    KeReleaseSpinLock(&Queue->Lock, Irql);
+}
+
+static
+VOID
+NTAPI
+PortStarvedCsqCompleteCanceledIrp(
+    _In_ PIO_CSQ Csq,
+    _In_ PIRP Irp)
+{
+    UNREFERENCED_PARAMETER(Csq);
+
+    StorpCompleteRequest(Irp, SRB_STATUS_ABORTED, STATUS_CANCELLED);
+}
+
+NTSTATUS
+PortInitializeStarvedRequestQueue(
+    _In_ PSTARVED_REQUEST_QUEUE Queue)
+{
+    KeInitializeSpinLock(&Queue->Lock);
+    InitializeListHead(&Queue->ListHead);
+
+    return IoCsqInitialize(&Queue->Csq,
+                           PortStarvedCsqInsertIrp,
+                           PortStarvedCsqRemoveIrp,
+                           PortStarvedCsqPeekNextIrp,
+                           PortStarvedCsqAcquireLock,
+                           PortStarvedCsqReleaseLock,
+                           PortStarvedCsqCompleteCanceledIrp);
+}
+
+/**
+ * @brief Queues a request that could not allocate its private contexts.
+ */
+VOID
+PortQueueStarvedRequest(
+    _In_ PFDO_DEVICE_EXTENSION FdoExtension,
+    _In_ PIRP Irp)
+{
+    IoCsqInsertIrp(&FdoExtension->StarvedRequests.Csq, Irp, NULL);
+}
+
+/**
+ * @brief Retries one queued request, so each completion lets exactly one through.
+ */
+VOID
+PortRetryStarvedRequest(
+    _In_ PFDO_DEVICE_EXTENSION FdoExtension)
+{
+    PIRP Irp;
+
+    Irp = IoCsqRemoveNextIrp(&FdoExtension->StarvedRequests.Csq, NULL);
+    if (Irp == NULL)
+    {
+        return;
+    }
+
+    PortPdoScsi(IoGetCurrentIrpStackLocation(Irp)->DeviceObject, Irp);
+}
+
+/**
+ * @brief Fails every queued request, for when the adapter goes away.
+ */
+VOID
+PortFlushStarvedRequests(
+    _In_ PFDO_DEVICE_EXTENSION FdoExtension)
+{
+    PIRP Irp;
+
+    while ((Irp = IoCsqRemoveNextIrp(&FdoExtension->StarvedRequests.Csq, NULL)) != NULL)
+    {
+        StorpCompleteRequest(Irp, SRB_STATUS_NO_DEVICE, STATUS_NO_SUCH_DEVICE);
+    }
+}
+
+/**
+ * @brief Reserves the memory a single request needs, so IO can still be issued out of pool.
+ */
+VOID
+PortAllocateRequestReserve(
+    _In_ PFDO_DEVICE_EXTENSION FdoExtension)
+{
+    ULONG SrbExtensionSize = FdoExtension->HwInitData->SrbExtensionSize;
+
+    FdoExtension->ReservedRequestReference =
+        ExAllocatePoolWithTag(NonPagedPool,
+                              sizeof(*FdoExtension->ReservedRequestReference),
+                              TAG_QUEUED_REQUEST);
+    if (FdoExtension->ReservedRequestReference == NULL)
+    {
+        DPRINT1("Failed to reserve a request packet\n");
+        return;
+    }
+
+    if (SrbExtensionSize == 0)
+    {
+        return;
+    }
+
+    FdoExtension->ReservedSrbExtension = ExAllocatePoolWithTag(NonPagedPool,
+                                                               SrbExtensionSize,
+                                                               TAG_SRB_EXTENSION);
+    if (FdoExtension->ReservedSrbExtension == NULL)
+    {
+        DPRINT1("Failed to reserve an SRB extension\n");
+
+        /* A packet alone is useless if the miniport wants an SRB extension */
+        ExFreePoolWithTag(FdoExtension->ReservedRequestReference, TAG_QUEUED_REQUEST);
+        FdoExtension->ReservedRequestReference = NULL;
+    }
+}
+
+/**
+ * @brief Releases the reserve. No request may be using it anymore.
+ */
+VOID
+PortFreeRequestReserve(
+    _In_ PFDO_DEVICE_EXTENSION FdoExtension)
+{
+    if (FdoExtension->ReservedSrbExtension != NULL)
+    {
+        ExFreePoolWithTag(FdoExtension->ReservedSrbExtension, TAG_SRB_EXTENSION);
+        FdoExtension->ReservedSrbExtension = NULL;
+    }
+
+    if (FdoExtension->ReservedRequestReference != NULL)
+    {
+        ExFreePoolWithTag(FdoExtension->ReservedRequestReference, TAG_QUEUED_REQUEST);
+        FdoExtension->ReservedRequestReference = NULL;
+    }
+}
 
 static
 BOOLEAN
@@ -249,6 +452,11 @@ PortFdoStartDevice(
     {
         DPRINT1("FdoStartMiniport() failed (Status 0x%08lx)\n", Status);
         DeviceExtension->PnpState = dsStopped;
+    }
+    else
+    {
+        /* SrbExtensionSize is only known once the miniport is up */
+        PortAllocateRequestReserve(DeviceExtension);
     }
 
     /* Claim and increase SCSI port number */
@@ -1064,6 +1272,8 @@ PortFdoPnp(
 
         case IRP_MN_REMOVE_DEVICE: /* 0x02 */
             DPRINT1("IRP_MJ_PNP / IRP_MN_REMOVE_DEVICE\n");
+            PortFlushStarvedRequests(DeviceExtension);
+            PortFreeRequestReserve(DeviceExtension);
             ExDeleteNPagedLookasideList(&DeviceExtension->RequestReferenceLookaside);
             break;
 

@@ -18,6 +18,113 @@
 /* FUNCTIONS ******************************************************************/
 
 /**
+ * @brief Initializes a request reference and sets the SRB => ReqRef link.
+ */
+static
+VOID
+StorpSrbInitRequestReference(
+    _In_ PQUEUED_REQUEST_REFERENCE RequestReference,
+    _In_ PSCSI_REQUEST_BLOCK Srb,
+    _In_ PIRP Irp,
+    _In_ PPDO_DEVICE_EXTENSION PdoExtension)
+{
+    /* Both the lookaside entries and the reserve are recycled, so they need zeroing */
+    RtlZeroMemory(RequestReference, sizeof(*RequestReference));
+
+    Srb->OriginalRequest = (PVOID)RequestReference;
+    RequestReference->Irp = Irp;
+    RequestReference->Srb = Srb;
+    RequestReference->TimeoutCounter = Srb->TimeOutValue;
+
+    RequestReference->PdoExtension = PdoExtension;
+}
+
+/**
+ * @brief Allocates QUEUED_REQUEST_REFERENCE for an SRB that is going to be processed.
+ *
+ * @param Srb
+ * @param Irp
+ * @return PQUEUED_REQUEST_REFERENCE RequestReference structure allocated, or NULL on failure.
+ */
+static
+PQUEUED_REQUEST_REFERENCE
+StorpSrbAllocateRequestReference(
+    _In_ PSCSI_REQUEST_BLOCK Srb,
+    _In_ PIRP Irp,
+    _In_ PPDO_DEVICE_EXTENSION PdoExtension)
+{
+    PQUEUED_REQUEST_REFERENCE RequestReference;
+
+    RequestReference =
+        ExAllocateFromNPagedLookasideList(&PdoExtension->FdoExtension->RequestReferenceLookaside);
+    if (RequestReference == NULL)
+    {
+        return NULL;
+    }
+
+    StorpSrbInitRequestReference(RequestReference, Srb, Irp, PdoExtension);
+
+    return RequestReference;
+}
+
+/**
+ * @brief Takes the adapter reserve, if it is there and nobody else holds it.
+ *
+ * @return PQUEUED_REQUEST_REFERENCE The reserved reference, or NULL if unavailable.
+ */
+static
+PQUEUED_REQUEST_REFERENCE
+StorpSrbAcquireReservedRequestReference(
+    _In_ PSCSI_REQUEST_BLOCK Srb,
+    _In_ PIRP Irp,
+    _In_ PPDO_DEVICE_EXTENSION PdoExtension)
+{
+    PFDO_DEVICE_EXTENSION FdoExtension = PdoExtension->FdoExtension;
+    PQUEUED_REQUEST_REFERENCE RequestReference;
+
+    if (FdoExtension->ReservedRequestReference == NULL ||
+        InterlockedCompareExchange(&FdoExtension->ReserveInUse, 1, 0) != 0)
+    {
+        return NULL;
+    }
+
+    RequestReference = FdoExtension->ReservedRequestReference;
+    StorpSrbInitRequestReference(RequestReference, Srb, Irp, PdoExtension);
+    RequestReference->FromReserve = TRUE;
+
+    return RequestReference;
+}
+
+/**
+ * @brief Frees an SRB's Request Reference and restore Srb->OriginalRequest field to IRP.
+ * This function does not check if Srb->OriginalRequest is actually an request reference, and you
+ * must determine it by other means.
+ *
+ * @param Srb
+ */
+VOID
+StorpSrbFreeRequestReference(
+    _In_ PSCSI_REQUEST_BLOCK Srb)
+{
+    PQUEUED_REQUEST_REFERENCE RequestReference;
+    PFDO_DEVICE_EXTENSION FdoExtension;
+
+    RequestReference = (PQUEUED_REQUEST_REFERENCE)Srb->OriginalRequest;
+    Srb->OriginalRequest = RequestReference->Irp;
+    FdoExtension = RequestReference->PdoExtension->FdoExtension;
+
+    if (RequestReference->FromReserve)
+    {
+        InterlockedExchange(&FdoExtension->ReserveInUse, 0);
+    }
+    else
+    {
+        ExFreeToNPagedLookasideList(&FdoExtension->RequestReferenceLookaside, RequestReference);
+    }
+}
+
+
+/**
  * @brief Assigns a queue tag to a request if it stated it supports one.
  * 
  * @param PdoExtension PDO Device extension
@@ -222,6 +329,31 @@ PortPdoAfterBuildingScatterGatherList(
  * @brief Allocates SRB extension, Request reference. If it fails, the IO will be failed and return.
  * 
  */
+/**
+ * @brief Parks a request that is out of memory, or fails it if there is no reserve to wait for.
+ * Either way the IRP is no longer ours, hence STATUS_PENDING.
+ */
+static
+NTSTATUS
+PortPdoStarveRequest(
+    _In_ PFDO_DEVICE_EXTENSION FdoExtension,
+    _In_ PSCSI_REQUEST_BLOCK Srb,
+    _In_ PIRP Irp)
+{
+    /* Without a reserve nothing guarantees a completion that would retry the request */
+    if (FdoExtension->ReservedRequestReference == NULL)
+    {
+        Srb->InternalStatus = STATUS_INSUFFICIENT_RESOURCES;
+        StorpCompleteRequest(Irp, SRB_STATUS_INTERNAL_ERROR, STATUS_INSUFFICIENT_RESOURCES);
+    }
+    else
+    {
+        PortQueueStarvedRequest(FdoExtension, Irp);
+    }
+
+    return STATUS_PENDING;
+}
+
 NTSTATUS
 PortPdoSrbAllocatePrivateContexts(
     _In_ PSCSI_REQUEST_BLOCK Srb,
@@ -229,34 +361,46 @@ PortPdoSrbAllocatePrivateContexts(
     _In_ PFDO_DEVICE_EXTENSION FdoExtension)
 {
     PQUEUED_REQUEST_REFERENCE RequestReference;
-    NTSTATUS Status;
+    ULONG SrbExtensionSize = FdoExtension->HwInitData->SrbExtensionSize;
     PIRP Irp;
 
     Irp = (PIRP)Srb->OriginalRequest;
 
-    /* Allocate our private data area. It completes the IRP by itself on failure */
+    /* Allocate our private data area, falling back on the reserve when pool is exhausted */
     RequestReference = StorpSrbAllocateRequestReference(Srb, Irp, PdoExtension);
     if (RequestReference == NULL)
     {
-        return STATUS_INSUFFICIENT_RESOURCES;
+        RequestReference = StorpSrbAcquireReservedRequestReference(Srb, Irp, PdoExtension);
+        if (RequestReference == NULL)
+        {
+            return PortPdoStarveRequest(FdoExtension, Srb, Irp);
+        }
     }
 
     /* Allocate SRB extension */
-    if (FdoExtension->HwInitData->SrbExtensionSize != 0)
+    if (SrbExtensionSize == 0)
     {
-        Srb->SrbExtension = ExAllocatePoolWithTag(NonPagedPool,
-                                                  FdoExtension->HwInitData->SrbExtensionSize,
-                                                  TAG_SRB_EXTENSION);
-    } else {
         Srb->SrbExtension = NULL;
-        Status = STATUS_INSUFFICIENT_RESOURCES;
-        StorpSrbFreeRequestReference(Srb);
-        StorpCompleteRequest(Irp, SRB_STATUS_ERROR, Status); /* FIXME: SRB error code? */
-        return Status;
+        return STATUS_SUCCESS;
     }
 
-    Status = STATUS_SUCCESS;
-    return Status;
+    if (RequestReference->FromReserve)
+    {
+        Srb->SrbExtension = FdoExtension->ReservedSrbExtension;
+        RtlZeroMemory(Srb->SrbExtension, SrbExtensionSize);
+        return STATUS_SUCCESS;
+    }
+
+    Srb->SrbExtension = ExAllocatePoolWithTag(NonPagedPool,
+                                              SrbExtensionSize,
+                                              TAG_SRB_EXTENSION);
+    if (Srb->SrbExtension == NULL)
+    {
+        StorpSrbFreeRequestReference(Srb);
+        return PortPdoStarveRequest(FdoExtension, Srb, Irp);
+    }
+
+    return STATUS_SUCCESS;
 }
 
 
@@ -1264,7 +1408,7 @@ PortPdoScsi(
 
             /* Allocate private contexts */
             Status = PortPdoSrbAllocatePrivateContexts(Srb, PdoExtension, FdoExtension);
-            if (!NT_SUCCESS(Status))
+            if (Status != STATUS_SUCCESS)
             {
                 break;
             }
@@ -1312,7 +1456,7 @@ PortPdoScsi(
 
             /* Allocate private contexts */
             Status = PortPdoSrbAllocatePrivateContexts(Srb, PdoExtension, FdoExtension);
-            if (!NT_SUCCESS(Status))
+            if (Status != STATUS_SUCCESS)
             {
                 break;
             }
