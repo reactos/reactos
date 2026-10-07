@@ -7,6 +7,7 @@
 /*
  * This application is launched via the BootExecute value of smss.exe.
  * This application does not use Win32 API.
+ *
  *   Hankaku/Zenkaku (scancode 0x29) : 106 Japanese keyboard
  *   Space           (scancode 0x39) : 101 English keyboard
  *   S               (scancode 0x1F) : Other keyboard
@@ -42,12 +43,15 @@ typedef struct tagKBD_INPUT_DATA
     ULONG  ExtraInformation;
 } KBD_INPUT_DATA;
 
+/* Registry keys */
 #define PARAMS_KEY \
     L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Services\\i8042prt\\Parameters"
 #define DONE_KEY \
     L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Control\\JKBDSEL"
 #define NLS_LANG_KEY \
     L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Control\\Nls\\Language"
+#define SESSION_MANAGER_KEY \
+    L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Control\\Session Manager"
 
 typedef enum { C_106, C_101, C_OTHER, C_TIMEOUT, C_ERROR } CHOICE;
 
@@ -61,14 +65,17 @@ static void Print(PCWSTR str)
 static void PrintHex(PCWSTR label, ULONG value)
 {
     WCHAR buf[8 + 1];
-    INT i;
+    INT ich;
 
     Print(label);
 
-    for (i = CHAR_BIT - 1; i >= 0; --i)
+    for (ich = CHAR_BIT - 1; ich >= 0; --ich)
     {
         ULONG d = (value & 0xF);
-        buf[i] = (WCHAR)(d < 10 ? L'0' + d : L'A' + d - 10);
+        if (d < 10)
+            buf[ich] = L'0' + d;
+        else
+            buf[ich] = L'A' + d - 10;
         value >>= 4;
     }
     buf[8] = UNICODE_NULL;
@@ -161,7 +168,7 @@ static USHORT ReadLangId(HANDLE h, PCWSTR valueName)
         return 0;
 
     us.Buffer = (PWSTR)info->Data;
-    us.Length = (USHORT)(info->DataLength - sizeof(WCHAR)); /* Excluding NUL */
+    us.Length = (USHORT)(info->DataLength - sizeof(UNICODE_NULL));
     us.MaximumLength = (USHORT)info->DataLength;
     Status = RtlUnicodeStringToInteger(&us, 16, &value);
     if (!NT_SUCCESS(Status))
@@ -212,9 +219,6 @@ static BOOL IsDone(void)
     NtClose(h);
     return done;
 }
-
-#define SESSION_MANAGER_KEY \
-    L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Control\\Session Manager"
 
 /*
  * Remove "jkbdsel" from the REG_MULTI_SZ value BootExecute of
@@ -267,12 +271,10 @@ static BOOL RemoveFromBootExecute(void)
 
         for (pch = src; pch < end && *pch; ++pch)
             ;
-
         cch = (ULONG)(pch - src);
 
         item.Buffer = src;
         item.Length = item.MaximumLength = (USHORT)(cch * sizeof(WCHAR));
-
         if (RtlEqualUnicodeString(&item, &target, TRUE))
         {
             removed = TRUE;
@@ -333,7 +335,7 @@ static BOOL WriteDone(void)
     return TRUE;
 }
 
-static BOOL  Apply(CHOICE c)
+static BOOL Apply(CHOICE c)
 {
     HANDLE h;
 
@@ -385,7 +387,7 @@ static CHOICE WaitForChoice(void)
     if (!NT_SUCCESS(Status))
     {
         PrintHex(L"JKBDSEL: open failed: 0x", (ULONG)Status);
-        Delay(5000);
+        Delay(3000);
         return C_ERROR;
     }
 
@@ -393,7 +395,7 @@ static CHOICE WaitForChoice(void)
     if (!NT_SUCCESS(Status))
     {
         PrintHex(L"JKBDSEL: event failed: 0x", (ULONG)Status);
-        Delay(5000);
+        Delay(3000);
         NtClose(hKbd);
         return C_ERROR;
     }
@@ -412,7 +414,7 @@ static CHOICE WaitForChoice(void)
             ret = C_TIMEOUT;
             break;
         }
-        to.QuadPart = -remain * 10000LL; /* negative value == relative */
+        to.QuadPart = -remain * 10000LL; /* negative value = relative */
 
         NtResetEvent(hEvent, NULL);
         offset.QuadPart = 0;
@@ -478,7 +480,7 @@ VOID NTAPI NtProcessStartup(PPEB Peb)
         goto quit;
     }
 
-    /* NOTE: The following text should be easy English. */
+    /* NOTE: The following text should be easy English */
     Print(
         L"\n\n"
         L"  ReactOS - Japanese Keyboard Setup\n"
@@ -497,22 +499,27 @@ VOID NTAPI NtProcessStartup(PPEB Peb)
             Print(L"JKBDSEL: Selected 106.\n");
             bSelected = TRUE;
             break;
+
         case C_101:
             Print(L"JKBDSEL: Selected 101.\n");
             bSelected = TRUE;
             break;
+
         case C_OTHER:
             Print(L"JKBDSEL: Selected other.\n");
             bSelected = TRUE;
             break;
+
         case C_TIMEOUT:
             Print(L"JKBDSEL: Skipped.\n");
             WriteDone();
             Delay(3000);
             goto quit;
+
         case C_ERROR:
             Print(L"JKBDSEL: Error.\n");
             goto quit;
+
         default:
             Print(L"JKBDSEL: Logical error.\n");
             goto quit;
