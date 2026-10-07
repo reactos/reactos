@@ -5,8 +5,7 @@
  * COPYRIGHT:   Copyright 2026 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 /*
- * This application is launched via the BootExecute value of smss.exe.
- * This application does not use Win32 API.
+ * This app is a native app. It is launched via the BootExecute value of smss.exe.
  *
  *   Hankaku/Zenkaku (scancode 0x29) : 106 Japanese keyboard
  *   Space           (scancode 0x39) : 101 English keyboard
@@ -43,17 +42,7 @@ typedef struct tagKBD_INPUT_DATA
     ULONG  ExtraInformation;
 } KBD_INPUT_DATA;
 
-/* Registry keys */
-#define PARAMS_KEY \
-    L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Services\\i8042prt\\Parameters"
-#define DONE_KEY \
-    L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Control\\JKBDSEL"
-#define NLS_LANG_KEY \
-    L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Control\\Nls\\Language"
-#define SESSION_MANAGER_KEY \
-    L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Control\\Session Manager"
-
-typedef enum { C_106, C_101, C_OTHER, C_TIMEOUT, C_ERROR } CHOICE;
+typedef enum { C_106, C_101, C_OTHER, C_TIMEOUT, C_ERROR } CHOICE; /* User's choice */
 
 static void Print(PCWSTR str)
 {
@@ -92,6 +81,17 @@ static void Delay(ULONG ms)
 }
 
 /* ---------- Registry ---------- */
+
+/* Registry keys */
+#define PARAMS_KEY \
+    L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Services\\i8042prt\\Parameters"
+#define DONE_KEY \
+    L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Control\\JKBDSEL"
+#define NLS_LANG_KEY \
+    L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Control\\Nls\\Language"
+#define SESSION_MANAGER_KEY \
+    L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Control\\Session Manager"
+
 static NTSTATUS OpenKey(PCWSTR path, BOOL create, HANDLE *h)
 {
     UNICODE_STRING usName;
