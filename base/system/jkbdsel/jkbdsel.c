@@ -14,7 +14,8 @@
  * It times out after 30 seconds.
  * If no key is pressed for 30 seconds, this app is skipped
  * and will not ask again (HKLM\SYSTEM\CurrentControlSet\Control\JKBDSEL\Done=1).
- * To show this screen again, delete that "Done" value.
+ * Once done, "jkbdsel" is automatically removed from the BootExecute value of
+ * HKLM\SYSTEM\CurrentControlSet\Control\Session Manager.
  *
  * boot/bootdata/hivesys.inf:
  * HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager","BootExecute",0x00010000,"autocheck autochk","jkbdsel"
@@ -76,7 +77,7 @@ static void Delay(ULONG ms)
 }
 
 /* ---------- Registry ---------- */
-static NTSTATUS OpenKey(PCWSTR path, BOOLEAN create, HANDLE *h)
+static NTSTATUS OpenKey(PCWSTR path, BOOL create, HANDLE *h)
 {
     UNICODE_STRING name;
     OBJECT_ATTRIBUTES oa;
@@ -111,26 +112,26 @@ static void DelValue(HANDLE h, PCWSTR name)
     NtDeleteValueKey(h, &n);
 }
 
-static BOOLEAN FileExists(PCWSTR path)
+static BOOL FileExists(PCWSTR path)
 {
     UNICODE_STRING name;
     OBJECT_ATTRIBUTES oa;
     IO_STATUS_BLOCK iosb;
     HANDLE h;
-    NTSTATUS st;
+    NTSTATUS Status;
 
     RtlInitUnicodeString(&name, path);
     InitializeObjectAttributes(&oa, &name, OBJ_CASE_INSENSITIVE, NULL, NULL);
-    st = NtCreateFile(&h, FILE_READ_ATTRIBUTES | SYNCHRONIZE, &oa, &iosb,
+    Status = NtCreateFile(&h, FILE_READ_ATTRIBUTES | SYNCHRONIZE, &oa, &iosb,
                       NULL, FILE_ATTRIBUTE_NORMAL,
                       FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
                       FILE_OPEN, FILE_SYNCHRONOUS_IO_NONALERT, NULL, 0);
-    if (NT_SUCCESS(st))
+    if (NT_SUCCESS(Status))
         NtClose(h);
-    return NT_SUCCESS(st);
+    return NT_SUCCESS(Status);
 }
 
-static BOOLEAN IsUnattended(void)
+static BOOL IsUnattended(void)
 {
     return FileExists(L"\\SystemRoot\\unattend.inf");
 }
@@ -159,11 +160,11 @@ static USHORT ReadLangId(HANDLE h, PCWSTR valueName)
     return (USHORT)val;
 }
 
-static BOOLEAN IsJapaneseSystem(void)
+static BOOL IsJapaneseSystem(void)
 {
     HANDLE h;
     USHORT lang;
-    BOOLEAN ja = FALSE;
+    BOOL ja = FALSE;
 
     if (!NT_SUCCESS(OpenKey(NLS_LANG_KEY, FALSE, &h)))
         return FALSE;
@@ -179,13 +180,13 @@ static BOOLEAN IsJapaneseSystem(void)
     return ja;
 }
 
-static BOOLEAN IsDone(void)
+static BOOL IsDone(void)
 {
     HANDLE h;
     UNICODE_STRING n;
     ULONG buf[8], len;
     PKEY_VALUE_PARTIAL_INFORMATION info = (PVOID)buf;
-    BOOLEAN done = FALSE;
+    BOOL done = FALSE;
 
     if (!NT_SUCCESS(OpenKey(DONE_KEY, FALSE, &h)))
         return FALSE;
@@ -199,23 +200,126 @@ static BOOLEAN IsDone(void)
     return done;
 }
 
-static BOOLEAN WriteDone(void)
+#define SESSION_MANAGER_KEY \
+    L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Control\\Session Manager"
+
+/*
+ * Remove "jkbdsel" from the REG_MULTI_SZ value BootExecute of
+ * HKLM\SYSTEM\CurrentControlSet\Control\Session Manager.
+ */
+static BOOL RemoveFromBootExecute(void)
+{
+    UNICODE_STRING keyName, valName, target, item;
+    OBJECT_ATTRIBUTES oa;
+    HANDLE h;
+    NTSTATUS Status;
+    ULONG len = 0;
+    PKEY_VALUE_PARTIAL_INFORMATION info = NULL;
+    PWCHAR out = NULL, src, end, dst;
+    PVOID heap = RtlGetProcessHeap();
+    BOOL removed = FALSE, ok = FALSE;
+
+    RtlInitUnicodeString(&keyName, SESSION_MANAGER_KEY);
+    InitializeObjectAttributes(&oa, &keyName, OBJ_CASE_INSENSITIVE, NULL, NULL);
+    if (!NT_SUCCESS(NtOpenKey(&h, KEY_QUERY_VALUE | KEY_SET_VALUE, &oa)))
+        return FALSE;
+
+    RtlInitUnicodeString(&valName, L"BootExecute");
+    RtlInitUnicodeString(&target, L"jkbdsel");
+
+    /* Get the required size */
+    Status = NtQueryValueKey(h, &valName, KeyValuePartialInformation, NULL, 0, &len);
+    if ((Status != STATUS_BUFFER_TOO_SMALL && Status != STATUS_BUFFER_OVERFLOW) || !len)
+        goto cleanup;
+
+    info = RtlAllocateHeap(heap, 0, len);
+    out = RtlAllocateHeap(heap, 0, len + 2 * sizeof(WCHAR));
+    if (!info || !out)
+        goto cleanup;
+
+    Status = NtQueryValueKey(h, &valName, KeyValuePartialInformation, info, len, &len);
+    if (!NT_SUCCESS(Status) || info->Type != REG_MULTI_SZ)
+        goto cleanup;
+
+    src = (PWCHAR)info->Data;
+    end = src + info->DataLength / sizeof(WCHAR);
+    dst = out;
+
+    /* Copy every entry except "jkbdsel" */
+    while (src < end && *src)
+    {
+        ULONG cch;
+        PWCHAR pch;
+
+        for (pch = src; pch < end && *pch; ++pch)
+            ;
+
+        cch = (ULONG)(pch - src);
+
+        item.Buffer = src;
+        item.Length = item.MaximumLength = (USHORT)(cch * sizeof(WCHAR));
+
+        if (RtlEqualUnicodeString(&item, &target, TRUE))
+        {
+            removed = TRUE;
+        }
+        else
+        {
+            RtlCopyMemory(dst, src, cch * sizeof(WCHAR));
+            dst += cch;
+            *dst++ = UNICODE_NULL;
+        }
+
+        src = pch + 1;
+    }
+
+    if (!removed)
+    {
+        ok = TRUE; /* Nothing to do */
+        goto cleanup;
+    }
+
+    /* Final terminator (an empty list becomes two NULs) */
+    *dst++ = UNICODE_NULL;
+    if (dst == out + 1)
+        *dst++ = UNICODE_NULL;
+
+    Status = NtSetValueKey(h, &valName, 0, REG_MULTI_SZ, out, (ULONG)((dst - out) * sizeof(WCHAR)));
+    if (NT_SUCCESS(Status))
+    {
+        NtFlushKey(h);
+        ok = TRUE;
+    }
+
+cleanup:
+    if (info)
+        RtlFreeHeap(heap, 0, info);
+    if (out)
+        RtlFreeHeap(heap, 0, out);
+    NtClose(h);
+    return ok;
+}
+
+static BOOL WriteDone(void)
 {
     HANDLE h;
-    NTSTATUS st = OpenKey(DONE_KEY, TRUE, &h);
-    if (!NT_SUCCESS(st))
+    NTSTATUS Status = OpenKey(DONE_KEY, TRUE, &h);
+    if (!NT_SUCCESS(Status))
     {
-        PrintHex(L"JKBDSEL: create DONE_KEY failed: 0x", (ULONG)st);
+        PrintHex(L"JKBDSEL: create DONE_KEY failed: 0x", (ULONG)Status);
         Delay(5000);
         return FALSE;
     }
     SetDword(h, L"Done", 1);
     NtFlushKey(h);
     NtClose(h);
+
+    /* Setup is finished: don't run at the next boot */
+    RemoveFromBootExecute();
     return TRUE;
 }
 
-static BOOLEAN Apply(CHOICE c)
+static BOOL  Apply(CHOICE c)
 {
     HANDLE h;
 
@@ -253,28 +357,28 @@ static CHOICE WaitForChoice(void)
     static KBD_INPUT_DATA kd;
     HANDLE hKbd = NULL, hEvent = NULL;
     LARGE_INTEGER deadline;
-    NTSTATUS st;
+    NTSTATUS Status;
     CHOICE ret = C_ERROR;
     ULONG startTick = NtGetTickCount();
 
     RtlInitUnicodeString(&name, L"\\Device\\KeyboardClass0");
     InitializeObjectAttributes(&oa, &name, OBJ_CASE_INSENSITIVE, NULL, NULL);
 
-    st = NtCreateFile(&hKbd, GENERIC_READ | SYNCHRONIZE, &oa, &iosb, NULL,
+    Status = NtCreateFile(&hKbd, GENERIC_READ | SYNCHRONIZE, &oa, &iosb, NULL,
                       FILE_ATTRIBUTE_NORMAL,
                       FILE_SHARE_READ | FILE_SHARE_WRITE,
                       FILE_OPEN, FILE_SYNCHRONOUS_IO_NONALERT, NULL, 0);
-    if (!NT_SUCCESS(st))
+    if (!NT_SUCCESS(Status))
     {
-        PrintHex(L"JKBDSEL: open failed: 0x", (ULONG)st);
+        PrintHex(L"JKBDSEL: open failed: 0x", (ULONG)Status);
         Delay(5000);
         return C_ERROR;
     }
 
-    st = NtCreateEvent(&hEvent, EVENT_ALL_ACCESS, NULL, SynchronizationEvent, FALSE);
-    if (!NT_SUCCESS(st))
+    Status = NtCreateEvent(&hEvent, EVENT_ALL_ACCESS, NULL, SynchronizationEvent, FALSE);
+    if (!NT_SUCCESS(Status))
     {
-        PrintHex(L"JKBDSEL: event failed: 0x", (ULONG)st);
+        PrintHex(L"JKBDSEL: event failed: 0x", (ULONG)Status);
         Delay(5000);
         NtClose(hKbd);
         return C_ERROR;
@@ -298,25 +402,25 @@ static CHOICE WaitForChoice(void)
 
         NtResetEvent(hEvent, NULL);
         offset.QuadPart = 0;
-        st = NtReadFile(hKbd, hEvent, NULL, NULL, &iosb,
+        Status = NtReadFile(hKbd, hEvent, NULL, NULL, &iosb,
                         &kd, sizeof(kd), &offset, NULL);
-        //PrintHex(L"JKBDSEL: read st: 0x", (ULONG)st);
+        //PrintHex(L"JKBDSEL: read Status: 0x", (ULONG)Status);
 
-        if (st == STATUS_PENDING)
+        if (Status == STATUS_PENDING)
         {
-            st = NtWaitForSingleObject(hEvent, FALSE, &to);
-            //PrintHex(L"JKBDSEL: wait st: 0x", (ULONG)st);
-            if (st == STATUS_TIMEOUT)
+            Status = NtWaitForSingleObject(hEvent, FALSE, &to);
+            //PrintHex(L"JKBDSEL: wait Status: 0x", (ULONG)Status);
+            if (Status == STATUS_TIMEOUT)
             {
                 NtCancelIoFile(hKbd, &iosb);
                 ret = C_TIMEOUT;
                 break;
             }
-            st = iosb.Status;
-            //PrintHex(L"JKBDSEL: iosb st: 0x", (ULONG)st);
+            Status = iosb.Status;
+            //PrintHex(L"JKBDSEL: iosb Status: 0x", (ULONG)Status);
         }
 
-        if (!NT_SUCCESS(st))
+        if (!NT_SUCCESS(Status))
             break;
 
         if ((kd.Flags & KEY_BREAK) || (kd.Flags & KEY_E0))
@@ -336,15 +440,6 @@ done:
     return ret;
 }
 
-#if 0
-static void Reboot(void)
-{
-    BOOLEAN old;
-    RtlAdjustPrivilege(SE_SHUTDOWN_PRIVILEGE, TRUE, FALSE, &old);
-    NtShutdownSystem(ShutdownReboot);
-}
-#endif
-
 /* ---------- Entry ---------- */
 VOID NTAPI NtProcessStartup(PPEB Peb)
 {
@@ -357,7 +452,10 @@ VOID NTAPI NtProcessStartup(PPEB Peb)
         goto quit;
 
     if (IsDone())
+    {
+        RemoveFromBootExecute();
         goto quit;
+    }
 
     if (IsUnattended())
     {
