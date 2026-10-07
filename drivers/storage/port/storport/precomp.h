@@ -267,6 +267,9 @@ typedef struct _FDO_DEVICE_EXTENSION
     /* The requests awaiting completion DPC processing */
     SLIST_HEADER CompletionList;
 
+    /* Backing store for the per request QUEUED_REQUEST_REFERENCE packets */
+    NPAGED_LOOKASIDE_LIST RequestReferenceLookaside;
+
     /*
      * FIXME: It REALLY should be cached here. The function pointers inside are extremely frequently
      * used but Eric didn't put them here. Need review.
@@ -358,25 +361,6 @@ typedef struct _REPORT_LUNS_DATA
     UCHAR Reserved[4];
     LUN_DESCRIPTOR LunDescriptor[1];
 } REPORT_LUNS_DATA, *PREPORT_LUNS_DATA;
-
-/* From SCSIport*/
-/* we need this to be compatible with ReactOS' classpnp (which is compiled with NTDDI_WIN8) */
-typedef struct _STORAGE_ADAPTER_DESCRIPTOR_WIN8 {
-    ULONG Version;
-    ULONG Size;
-    ULONG MaximumTransferLength;
-    ULONG MaximumPhysicalPages;
-    ULONG AlignmentMask;
-    BOOLEAN AdapterUsesPio;
-    BOOLEAN AdapterScansDown;
-    BOOLEAN CommandQueueing;
-    BOOLEAN AcceleratedTransfer;
-    UCHAR BusType;
-    USHORT BusMajorVersion;
-    USHORT BusMinorVersion;
-    UCHAR SrbType;
-    UCHAR AddressType;
-} STORAGE_ADAPTER_DESCRIPTOR_WIN8, *PSTORAGE_ADAPTER_DESCRIPTOR_WIN8;
 
 /* fdo.c */
 
@@ -500,6 +484,14 @@ TimerCallbackDpcRoutine(
     PVOID SystemArgument1,
     PVOID SystemArgument2
 );
+
+PCSTR
+GetDeviceType(
+    _In_ PINQUIRYDATA InquiryData);
+
+PCSTR
+GetGenericType(
+    _In_ PINQUIRYDATA InquiryData);
 
 /* pdo.c */
 

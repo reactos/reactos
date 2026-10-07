@@ -367,7 +367,7 @@ PortCompleteRequest(
     Irp->IoStatus.Information = Srb->DataTransferLength; /* FIXME: hopefully this is correct */
 
     DPRINT("Calling IoCompleteRequest\n");
-    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    IoCompleteRequest(Irp, IO_DISK_INCREMENT);
 }
 
 
@@ -489,6 +489,15 @@ PortAddDevice(
 
     /* Initialize completion list header */
     InitializeSListHead(&DeviceExtension->CompletionList);
+
+    /* Initialize the request reference lookaside list */
+    ExInitializeNPagedLookasideList(&DeviceExtension->RequestReferenceLookaside,
+                                    NULL,
+                                    NULL,
+                                    0,
+                                    sizeof(QUEUED_REQUEST_REFERENCE),
+                                    TAG_QUEUED_REQUEST,
+                                    0);
 
     /* Initialize FDO flow control structure */
     KeInitializeSpinLock(&DeviceExtension->FlowControl.Lock);
