@@ -206,6 +206,11 @@ typedef struct _AFD_FCB {
     LIST_ENTRY PendingIrpList[MAX_FUNCTIONS];
     LIST_ENTRY DatagramList;
     LIST_ENTRY PendingConnections;
+    PIO_WORKITEM RelistenWorkItem;
+    KEVENT RelistenIdle;
+    BOOLEAN Relistening;
+    BOOLEAN ListenConnectionReady;
+    NTSTATUS ListenStatus;
 } AFD_FCB, *PAFD_FCB;
 
 /* bind.c */
@@ -278,6 +283,7 @@ AfdGetPeerName( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 NTSTATUS AfdWaitForListen( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 			   PIO_STACK_LOCATION IrpSp );
 
+VOID FreeListenConnectionInfo(PAFD_FCB FCB);
 NTSTATUS AfdListenSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 			 PIO_STACK_LOCATION IrpSp);
 
