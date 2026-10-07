@@ -214,6 +214,135 @@ end:
 }
 
 static IO_COMPLETION_ROUTINE ListenComplete;
+
+static NTSTATUS IssueListen(PAFD_FCB FCB)
+{
+    NTSTATUS Status;
+
+    Status = TdiBuildNullConnectionInfoInPlace(FCB->ListenIrp.ConnectionCallInfo,
+                                               FCB->LocalAddress->Address[0].AddressType);
+    ASSERT(Status == STATUS_SUCCESS);
+
+    Status = TdiBuildNullConnectionInfoInPlace(FCB->ListenIrp.ConnectionReturnInfo,
+                                               FCB->LocalAddress->Address[0].AddressType);
+    ASSERT(Status == STATUS_SUCCESS);
+
+    Status = TdiListen( &FCB->ListenIrp.InFlightRequest,
+                        FCB->Connection.Object,
+                        &FCB->ListenIrp.ConnectionCallInfo,
+                        &FCB->ListenIrp.ConnectionReturnInfo,
+                        ListenComplete,
+                        FCB );
+
+    if (Status == STATUS_PENDING)
+        Status = STATUS_SUCCESS;
+
+    return Status;
+}
+
+static NTSTATUS ListenAgain(PAFD_FCB FCB)
+{
+    NTSTATUS Status;
+
+    /* Launch new accept socket */
+    Status = WarmSocketForConnection( FCB );
+
+    if (NT_SUCCESS(Status))
+        Status = IssueListen(FCB);
+
+    return Status;
+}
+
+static VOID ReleaseListenConnection(PAFD_FCB FCB)
+{
+    if (FCB->Connection.Object)
+    {
+        TdiDisassociateAddressFile(FCB->Connection.Object);
+        ObDereferenceObject(FCB->Connection.Object);
+        ZwClose(FCB->Connection.Handle);
+        FCB->Connection.Object = NULL;
+        FCB->Connection.Handle = INVALID_HANDLE_VALUE;
+    }
+}
+
+VOID FreeListenConnectionInfo(PAFD_FCB FCB)
+{
+    if (FCB->ListenIrp.ConnectionReturnInfo)
+    {
+        ExFreePoolWithTag(FCB->ListenIrp.ConnectionReturnInfo,
+                          TAG_AFD_TDI_CONNECTION_INFORMATION);
+
+        FCB->ListenIrp.ConnectionReturnInfo = NULL;
+    }
+
+    if (FCB->ListenIrp.ConnectionCallInfo)
+    {
+        ExFreePoolWithTag(FCB->ListenIrp.ConnectionCallInfo,
+                          TAG_AFD_TDI_CONNECTION_INFORMATION);
+
+        FCB->ListenIrp.ConnectionCallInfo = NULL;
+    }
+}
+
+#define AFD_RELISTEN_ATTEMPTS 5
+
+static IO_WORKITEM_ROUTINE RelistenWorker;
+static VOID NTAPI RelistenWorker(PDEVICE_OBJECT DeviceObject, PVOID Context)
+{
+    PAFD_FCB FCB = Context;
+    LARGE_INTEGER Delay;
+    NTSTATUS Status;
+    ULONG Attempt;
+
+    UNREFERENCED_PARAMETER(DeviceObject);
+
+    Delay.QuadPart = -100LL * 10000; /* 100 ms */
+
+    SocketAcquireStateLock(FCB);
+
+    if (FCB->ListenConnectionReady)
+    {
+        /* First listen: AfdListenSocket opened the connection and reports a failure, no retry */
+        FCB->Relistening = TRUE;
+        FCB->ListenStatus = STATUS_SUCCESS;
+        Status = IssueListen(FCB);
+        if (!NT_SUCCESS(Status))
+            FCB->ListenStatus = Status;
+        FCB->ListenConnectionReady = FALSE;
+        FCB->Relistening = FALSE;
+    }
+    else
+    {
+        for (Attempt = 1; FCB->SharedData.State == SOCKET_STATE_LISTENING; Attempt++)
+        {
+            /* A listen that fails before TdiListen returns is retried here, not queued again */
+            FCB->Relistening = TRUE;
+            ReleaseListenConnection(FCB);
+            ListenAgain(FCB);
+            FCB->Relistening = FALSE;
+
+            if (FCB->ListenIrp.InFlightRequest)
+                break;
+
+            if (Attempt == AFD_RELISTEN_ATTEMPTS)
+            {
+                /* The socket is left without a listen, as it was before the retries */
+                AFD_DbgPrint(MIN_TRACE,("Could not listen on %p\n", FCB));
+                break;
+            }
+
+            /* Let a transient failure clear; closing the socket meanwhile ends the retries */
+            SocketStateUnlock(FCB);
+            KeDelayExecutionThread(KernelMode, FALSE, &Delay);
+            SocketAcquireStateLock(FCB);
+        }
+    }
+
+    /* Set under the lock: AfdCloseSocket waits for the event, then for the lock */
+    KeSetEvent(&FCB->RelistenIdle, IO_NO_INCREMENT, FALSE);
+    SocketStateUnlock(FCB);
+}
+
 static NTSTATUS NTAPI ListenComplete( PDEVICE_OBJECT DeviceObject,
                                       PIRP Irp,
                                       PVOID Context ) {
@@ -243,22 +372,7 @@ static NTSTATUS NTAPI ListenComplete( PDEVICE_OBJECT DeviceObject,
            IoCompleteRequest( NextIrp, IO_NETWORK_INCREMENT );
         }
 
-        /* Free ConnectionReturnInfo and ConnectionCallInfo */
-        if (FCB->ListenIrp.ConnectionReturnInfo)
-        {
-            ExFreePoolWithTag(FCB->ListenIrp.ConnectionReturnInfo,
-                              TAG_AFD_TDI_CONNECTION_INFORMATION);
-
-            FCB->ListenIrp.ConnectionReturnInfo = NULL;
-        }
-
-        if (FCB->ListenIrp.ConnectionCallInfo)
-        {
-            ExFreePoolWithTag(FCB->ListenIrp.ConnectionCallInfo,
-                              TAG_AFD_TDI_CONNECTION_INFORMATION);
-
-            FCB->ListenIrp.ConnectionCallInfo = NULL;
-        }
+        FreeListenConnectionInfo(FCB);
 
         SocketStateUnlock( FCB );
         return STATUS_FILE_CLOSED;
@@ -269,6 +383,19 @@ static NTSTATUS NTAPI ListenComplete( PDEVICE_OBJECT DeviceObject,
 
     if (Irp->IoStatus.Status != STATUS_SUCCESS)
     {
+        /* The worker listens again and retries; no TDI call runs in this failure path */
+        if (FCB->Relistening)
+        {
+            /* The worker issued this listen; record a failed first listen for AfdListenSocket */
+            if (FCB->ListenConnectionReady)
+                FCB->ListenStatus = Irp->IoStatus.Status;
+        }
+        else
+        {
+            KeClearEvent(&FCB->RelistenIdle);
+            IoQueueWorkItem(FCB->RelistenWorkItem, RelistenWorker, DelayedWorkQueue, FCB);
+        }
+
         SocketStateUnlock(FCB);
         return Irp->IoStatus.Status;
     }
@@ -284,6 +411,8 @@ static NTSTATUS NTAPI ListenComplete( PDEVICE_OBJECT DeviceObject,
             FCB->LocalAddress->Address[0].AddressType;
 
         Qelt->Object = FCB->Connection;
+        FCB->Connection.Object = NULL;
+        FCB->Connection.Handle = INVALID_HANDLE_VALUE;
         Qelt->Seq = FCB->ConnSeq++;
         AFD_DbgPrint(MID_TRACE,("Address Type: %u (RA %p)\n",
                                 AddressType,
@@ -296,6 +425,9 @@ static NTSTATUS NTAPI ListenComplete( PDEVICE_OBJECT DeviceObject,
                ( Qelt->ConnInfo->RemoteAddress,
                  FCB->ListenIrp.ConnectionReturnInfo->RemoteAddress );
             InsertTailList( &FCB->PendingConnections, &Qelt->ListEntry );
+        } else {
+            FCB->Connection = Qelt->Object;
+            ExFreePoolWithTag(Qelt, TAG_AFD_ACCEPT_QUEUE);
         }
     }
 
@@ -318,28 +450,17 @@ static NTSTATUS NTAPI ListenComplete( PDEVICE_OBJECT DeviceObject,
         }
     }
 
-    /* Launch new accept socket */
-    Status = WarmSocketForConnection( FCB );
+    /* Drop a connection that could not be queued for accept */
+    ReleaseListenConnection(FCB);
 
-    if (NT_SUCCESS(Status))
+    /* tcpip completes a listen from a worker thread, at PASSIVE_LEVEL, so listen again here */
+    Status = ListenAgain(FCB);
+
+    /* The worker retries a listen that could not be issued here */
+    if (!NT_SUCCESS(Status) && !FCB->Relistening)
     {
-        Status = TdiBuildNullConnectionInfoInPlace(FCB->ListenIrp.ConnectionCallInfo,
-                                                   FCB->LocalAddress->Address[0].AddressType);
-        ASSERT(Status == STATUS_SUCCESS);
-
-        Status = TdiBuildNullConnectionInfoInPlace(FCB->ListenIrp.ConnectionReturnInfo,
-                                                   FCB->LocalAddress->Address[0].AddressType);
-        ASSERT(Status == STATUS_SUCCESS);
-
-        Status = TdiListen( &FCB->ListenIrp.InFlightRequest,
-                            FCB->Connection.Object,
-                            &FCB->ListenIrp.ConnectionCallInfo,
-                            &FCB->ListenIrp.ConnectionReturnInfo,
-                            ListenComplete,
-                            FCB );
-
-        if (Status == STATUS_PENDING)
-            Status = STATUS_SUCCESS;
+        KeClearEvent(&FCB->RelistenIdle);
+        IoQueueWorkItem(FCB->RelistenWorkItem, RelistenWorker, DelayedWorkQueue, FCB);
     }
 
     /* Trigger a select return if appropriate */
@@ -362,8 +483,6 @@ NTSTATUS AfdListenSocket( PDEVICE_OBJECT DeviceObject, PIRP Irp,
     PAFD_FCB FCB = FileObject->FsContext;
     PAFD_LISTEN_DATA ListenReq;
 
-    UNREFERENCED_PARAMETER(DeviceObject);
-
     AFD_DbgPrint(MID_TRACE,("Called on %p\n", FCB));
 
     if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp );
@@ -376,6 +495,13 @@ NTSTATUS AfdListenSocket( PDEVICE_OBJECT DeviceObject, PIRP Irp,
         Status = STATUS_INVALID_PARAMETER;
         AFD_DbgPrint(MIN_TRACE,("Could not listen an unbound socket\n"));
         return UnlockAndMaybeComplete( FCB, Status, Irp, 0 );
+    }
+
+    if (!FCB->RelistenWorkItem)
+    {
+        FCB->RelistenWorkItem = IoAllocateWorkItem(DeviceObject);
+        if (!FCB->RelistenWorkItem)
+            return UnlockAndMaybeComplete(FCB, STATUS_INSUFFICIENT_RESOURCES, Irp, 0);
     }
 
     FCB->DelayedAccept = ListenReq->UseDelayedAcceptance;
@@ -409,15 +535,24 @@ NTSTATUS AfdListenSocket( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     FCB->SharedData.State = SOCKET_STATE_LISTENING;
 
-    Status = TdiListen( &FCB->ListenIrp.InFlightRequest,
-                        FCB->Connection.Object,
-                        &FCB->ListenIrp.ConnectionCallInfo,
-                        &FCB->ListenIrp.ConnectionReturnInfo,
-                        ListenComplete,
-                        FCB );
+    /* Listen from a system thread: a listen queued to this thread is cancelled when it exits */
+    FCB->ListenConnectionReady = TRUE;
+    KeClearEvent(&FCB->RelistenIdle);
+    IoQueueWorkItem(FCB->RelistenWorkItem, RelistenWorker, DelayedWorkQueue, FCB);
+    SocketStateUnlock(FCB);
+    KeWaitForSingleObject(&FCB->RelistenIdle, Executive, KernelMode, FALSE, NULL);
 
-    if( Status == STATUS_PENDING )
-        Status = STATUS_SUCCESS;
+    if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp );
+
+    /* A first listen that failed left nothing in flight that could queue the worker again */
+    if (!NT_SUCCESS(FCB->ListenStatus))
+    {
+        /* The worker could not listen: report it and leave the socket bound */
+        Status = FCB->ListenStatus;
+        ReleaseListenConnection(FCB);
+        FreeListenConnectionInfo(FCB);
+        FCB->SharedData.State = SOCKET_STATE_BOUND;
+    }
 
     AFD_DbgPrint(MID_TRACE,("Returning %x\n", Status));
     return UnlockAndMaybeComplete( FCB, Status, Irp, 0 );
