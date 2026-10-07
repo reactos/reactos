@@ -152,8 +152,7 @@ IopQueueDevicePropertyChangeEvent(
     EventEntry->Event.TotalSize = TotalSize;
 
     RtlCopyMemory(EventEntry->Event.TargetDevice.DeviceIds,
-                  DeviceId->Buffer,
-                  DeviceId->Length);
+                  DeviceId->Buffer, DeviceId->Length);
 
     InsertHeadList(&IopPnpEventQueueHead, &EventEntry->ListEntry);
     KeSetEvent(&IopPnpNotifyEvent, 0, FALSE);

@@ -2599,7 +2599,7 @@ IoSetDevicePropertyData(
   _In_ ULONG Flags,
   _In_ DEVPROPTYPE Type,
   _In_ ULONG Size,
-  _In_opt_ PVOID Data);
+  _In_reads_bytes_opt_(Size) PVOID Data);
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
 _Must_inspect_result_
@@ -2612,7 +2612,7 @@ IoGetDevicePropertyData(
   _In_ LCID Lcid,
   _Reserved_ ULONG Flags,
   _In_ ULONG Size,
-  _Out_ PVOID Data,
+  _Out_writes_bytes_to_opt_(Size, *RequiredSize) PVOID Data,
   _Out_ PULONG RequiredSize,
   _Out_ PDEVPROPTYPE Type);
 #endif /* (NTDDI_VERSION >= NTDDI_VISTA) || defined(__REACTOS__) */
@@ -2643,7 +2643,7 @@ IoGetDeviceInterfacePropertyData(
   _In_ LCID Lcid,
   _Reserved_ ULONG Flags,
   _In_ ULONG Size,
-  _Out_writes_bytes_to_(Size, *RequiredSize) PVOID Data,
+  _Out_writes_bytes_to_opt_(Size, *RequiredSize) PVOID Data,
   _Out_ PULONG RequiredSize,
   _Out_ PDEVPROPTYPE Type);
 #endif /* (NTDDI_VERSION >= NTDDI_WIN8) || defined(__REACTOS__) */
