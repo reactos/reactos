@@ -152,6 +152,8 @@ VOID KillSelectsForFCB( PAFD_DEVICE_EXTENSION DeviceExt,
                 (!OnlyExclusive || (OnlyExclusive && Poll->Exclusive)) ) {
                 ZeroEvents( PollReq->Handles, PollReq->HandleCount );
                 SignalSocket( Poll, NULL, PollReq, STATUS_CANCELLED );
+                /* The poll and its request are gone */
+                break;
             }
         }
     }
