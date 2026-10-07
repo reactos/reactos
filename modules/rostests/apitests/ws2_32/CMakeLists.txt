@@ -10,6 +10,7 @@ list(APPEND SOURCE
     getservbyport.c
     helpers.c
     ioctlsocket.c
+    listen.c
     nonblocking.c
     nostartup.c
     open_osfhandle.c
