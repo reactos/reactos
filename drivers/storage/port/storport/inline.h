@@ -28,14 +28,14 @@ StorpSrbAllocateRequestReference(
 {
     PQUEUED_REQUEST_REFERENCE RequestReference;
 
-    RequestReference = ExAllocatePoolWithTag(NonPagedPool,
-                                             sizeof(QUEUED_REQUEST_REFERENCE),
-                                             TAG_QUEUED_REQUEST);
+    RequestReference =
+        ExAllocateFromNPagedLookasideList(&PdoExtension->FdoExtension->RequestReferenceLookaside);
 
     /* Fail request if allocation fails */
     if (RequestReference == NULL)
     {
-        // Srb->SrbStatus = 5; // BUSY?
+        Srb->SrbStatus = SRB_STATUS_INTERNAL_ERROR;
+        Srb->InternalStatus = STATUS_INSUFFICIENT_RESOURCES;
         Irp->IoStatus.Status = STATUS_INSUFFICIENT_RESOURCES;
         Irp->IoStatus.Information = 0;
 
@@ -43,8 +43,8 @@ StorpSrbAllocateRequestReference(
         return NULL;
     }
 
-    /* Does initialization */
-    RtlZeroMemory(RequestReference, sizeof(QUEUED_REQUEST_REFERENCE));
+    /* Does initialization. Lookaside entries are recycled, so they need zeroing */
+    RtlZeroMemory(RequestReference, sizeof(*RequestReference));
 
     Srb->OriginalRequest = (PVOID)RequestReference;
     RequestReference->Irp = Irp;
@@ -70,11 +70,13 @@ StorpSrbFreeRequestReference(
     _In_ PSCSI_REQUEST_BLOCK Srb)
 {
     PQUEUED_REQUEST_REFERENCE RequestReference;
+    PNPAGED_LOOKASIDE_LIST Lookaside;
 
     RequestReference = (PQUEUED_REQUEST_REFERENCE)Srb->OriginalRequest;
     Srb->OriginalRequest = RequestReference->Irp;
+    Lookaside = &RequestReference->PdoExtension->FdoExtension->RequestReferenceLookaside;
 
-    ExFreePoolWithTag(RequestReference, TAG_QUEUED_REQUEST);
+    ExFreeToNPagedLookasideList(Lookaside, RequestReference);
 }
 
 
@@ -89,7 +91,7 @@ StorpCompleteRequest(
     _In_ UCHAR SrbStatus,
     _In_ NTSTATUS IrpStatus)
 {
-    Irp->Tail.Overlay.CurrentStackLocation->Parameters.Scsi.Srb->SrbStatus = SrbStatus;
+    IoGetCurrentIrpStackLocation(Irp)->Parameters.Scsi.Srb->SrbStatus = SrbStatus;
     Irp->IoStatus.Status = IrpStatus;
     Irp->IoStatus.Information = 0;
 
@@ -269,90 +271,6 @@ StorpInterlockedRemoveTailListCounted(
 }
 
 
-
-// see https://docs.microsoft.com/en-us/windows-hardware/drivers/install/identifiers-for-scsi-devices
-// and https://docs.microsoft.com/en-us/windows-hardware/drivers/install/identifiers-for-ide-devices
-
-FORCEINLINE
-PCSTR
-GetDeviceType(
-    _In_ PINQUIRYDATA InquiryData)
-{
-    switch (InquiryData->DeviceType)
-    {
-        case DIRECT_ACCESS_DEVICE:
-            return "Disk";
-        case SEQUENTIAL_ACCESS_DEVICE:
-            return "Sequential";
-        case PRINTER_DEVICE:
-            return "Printer";
-        case PROCESSOR_DEVICE:
-            return "Processor";
-        case WRITE_ONCE_READ_MULTIPLE_DEVICE:
-            return "Worm";
-        case READ_ONLY_DIRECT_ACCESS_DEVICE:
-            return "CdRom";
-        case SCANNER_DEVICE:
-            return "Scanner";
-        case OPTICAL_DEVICE:
-            return "Optical";
-        case MEDIUM_CHANGER:
-            return "Changer";
-        case COMMUNICATION_DEVICE:
-            return "Net";
-        case ARRAY_CONTROLLER_DEVICE:
-            return "Array";
-        case SCSI_ENCLOSURE_DEVICE:
-            return "Enclosure";
-        case REDUCED_BLOCK_DEVICE:
-            return "RBC";
-        case OPTICAL_CARD_READER_WRITER_DEVICE:
-            return "CardReader";
-        case BRIDGE_CONTROLLER_DEVICE:
-            return "Bridge";
-        default:
-            return "Other";
-    }
-}
-
-
-FORCEINLINE
-PCSTR
-GetGenericType(
-    _In_ PINQUIRYDATA InquiryData)
-{
-    switch (InquiryData->DeviceType)
-    {
-        case DIRECT_ACCESS_DEVICE:
-            return "GenDisk";
-        case PRINTER_DEVICE:
-            return "GenPrinter";
-        case WRITE_ONCE_READ_MULTIPLE_DEVICE:
-            return "GenWorm";
-        case READ_ONLY_DIRECT_ACCESS_DEVICE:
-            return "GenCdRom";
-        case SCANNER_DEVICE:
-            return "GenScanner";
-        case OPTICAL_DEVICE:
-            return "GenOptical";
-        case MEDIUM_CHANGER:
-            return "ScsiChanger";
-        case COMMUNICATION_DEVICE:
-            return "ScsiNet";
-        case ARRAY_CONTROLLER_DEVICE:
-            return "ScsiArray";
-        case SCSI_ENCLOSURE_DEVICE:
-            return "ScsiEnclosure";
-        case REDUCED_BLOCK_DEVICE:
-            return "ScsiRBC";
-        case OPTICAL_CARD_READER_WRITER_DEVICE:
-            return "ScsiCardReader";
-        case BRIDGE_CONTROLLER_DEVICE:
-            return "ScsiBridge";
-        default:
-            return "ScsiOther";
-    }
-}
 
 #ifdef DBG
 /**

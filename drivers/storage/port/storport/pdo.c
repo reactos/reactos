@@ -234,13 +234,11 @@ PortPdoSrbAllocatePrivateContexts(
 
     Irp = (PIRP)Srb->OriginalRequest;
 
-    /* Allocate our private data area */
+    /* Allocate our private data area. It completes the IRP by itself on failure */
     RequestReference = StorpSrbAllocateRequestReference(Srb, Irp, PdoExtension);
     if (RequestReference == NULL)
     {
-        Status = STATUS_INSUFFICIENT_RESOURCES;
-        StorpCompleteRequest(Irp, SRB_STATUS_ERROR, Status); /* FIXME: SRB error code? */
-        return Status;
+        return STATUS_INSUFFICIENT_RESOURCES;
     }
 
     /* Allocate SRB extension */
@@ -1341,7 +1339,17 @@ PortPdoScsi(
                 break;
             }
 
-            Srb->DataBuffer = PdoExtension->Device; // FIXME: What does this do?
+            /* The claimed device object is handed back to the class driver here */
+            Srb->DataBuffer = PdoExtension->Device;
+            Status = STATUS_SUCCESS;
+            StorpCompleteRequest(Irp, SRB_STATUS_SUCCESS, Status);
+            break;
+        }
+
+        case SRB_FUNCTION_RELEASE_DEVICE:
+        {
+            InterlockedExchange(&PdoExtension->IsClaimed, 0);
+
             Status = STATUS_SUCCESS;
             StorpCompleteRequest(Irp, SRB_STATUS_SUCCESS, Status);
             break;
@@ -1367,8 +1375,12 @@ PortPdoPnp(
 {
     NTSTATUS Status;
     PIO_STACK_LOCATION Stack;
+    PPDO_DEVICE_EXTENSION DeviceExtension;
 
     DPRINT1("PortPdoPnp(%p %p)\n", DeviceObject, Irp);
+
+    DeviceExtension = (PPDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+    ASSERT(DeviceExtension->ExtensionType == PdoExtension);
 
     Stack = IoGetCurrentIrpStackLocation(Irp);
 
@@ -1377,14 +1389,21 @@ PortPdoPnp(
         case IRP_MN_START_DEVICE:
         {
             // RegistryInitLunKey(lunExt);
+            DeviceExtension->PnpState = dsStarted;
             Status = STATUS_SUCCESS;
             break;
         }
         case IRP_MN_REMOVE_DEVICE:
+        case IRP_MN_SURPRISE_REMOVAL:
+        {
+            DeviceExtension->PnpState = (Stack->MinorFunction == IRP_MN_REMOVE_DEVICE)
+                                        ? dsRemoved : dsSurpriseRemoved;
+            Status = STATUS_SUCCESS;
+            break;
+        }
         case IRP_MN_QUERY_CAPABILITIES:
         case IRP_MN_QUERY_REMOVE_DEVICE:
         case IRP_MN_QUERY_STOP_DEVICE:
-        case IRP_MN_SURPRISE_REMOVAL:
         {
             Status = STATUS_SUCCESS;
             break;

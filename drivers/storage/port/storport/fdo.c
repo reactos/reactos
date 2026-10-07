@@ -405,23 +405,25 @@ PortSendReportLuns(
 
             DPRINT1("PortSendReportLuns(): the queue is frozen at TargetId %d\n", Srb.TargetId);
             /* TODO: What do we do with this crap */
-//            LunExtension = SpiGetLunExtension(DeviceExtension,
-//                                              LunInfo->PathId,
-//                                              LunInfo->TargetId,
-//                                              LunInfo->Lun);
+#if 0
+            LunExtension = SpiGetLunExtension(DeviceExtension,
+                                              LunInfo->PathId,
+                                              LunInfo->TargetId,
+                                              LunInfo->Lun);
 
             /* Clear frozen flag */
-//            LunExtension->Flags &= ~LUNEX_FROZEN_QUEUE;
+            LunExtension->Flags &= ~LUNEX_FROZEN_QUEUE;
 
             /* Acquire the spinlock */
-//            KeAcquireSpinLock(&DeviceExtension->SpinLock, &Irql);
+           KeAcquireSpinLock(&DeviceExtension->SpinLock, &Irql);
 
             /* Process the request */
-//            SpiGetNextRequestFromLun(DeviceObject->DeviceExtension, LunExtension);
+            SpiGetNextRequestFromLun(DeviceObject->DeviceExtension, LunExtension);
 
             /* SpiGetNextRequestFromLun() releases the spinlock,
                 so we just lower irql back to what it was before */
-//            KeLowerIrql(Irql);
+            KeLowerIrql(Irql);
+#endif
         }
 
         /* Check if data overrun happened, then resize buffer once */
@@ -785,48 +787,57 @@ PortFdoQueryBusRelations(
     NTSTATUS Status = STATUS_SUCCESS;
     PDEVICE_RELATIONS DeviceRelations = NULL;
     PPDO_DEVICE_EXTENSION PdoExtension;
+    KLOCK_QUEUE_HANDLE LockHandle;
     PLIST_ENTRY PdoEntry;
-    ULONG PdoIndex = 0;
+    ULONG PdoCount, PdoIndex = 0;
 
     DPRINT("PortFdoQueryBusRelations(%p %p)\n",
             DeviceExtension, Information);
 
     Status = PortFdoScanBus(DeviceExtension);
 
-    DPRINT1("Units found: %lu\n", DeviceExtension->PdoCount);
+    PdoCount = DeviceExtension->PdoCount;
+
+    DPRINT1("Units found: %lu\n", PdoCount);
 
     /* Following part referred to SCSIport */
-    do
+    DeviceRelations = ExAllocatePoolWithTag(PagedPool,
+                                            FIELD_OFFSET(DEVICE_RELATIONS, Objects[PdoCount]),
+                                            TAG_DEVICE_RELATION);
+    if (!DeviceRelations)
     {
-        /* Allocate device relations object */
-        DeviceRelations =
-            ExAllocatePoolWithTag(PagedPool,
-                                  (sizeof(DEVICE_RELATIONS) +
-                                   sizeof(PDEVICE_OBJECT) * (DeviceExtension->PdoCount - 1)),
-                                  TAG_DEVICE_RELATION);
+        *Information = 0;
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
 
-        if (!DeviceRelations)
+    /* Set PDO pointers */
+    KeAcquireInStackQueuedSpinLock(&DeviceExtension->PdoListLock, &LockHandle);
+
+    for (PdoEntry = DeviceExtension->PdoListHead.Flink;
+         PdoEntry != &DeviceExtension->PdoListHead && PdoIndex < PdoCount;
+         PdoEntry = PdoEntry->Flink)
+    {
+        PdoExtension = CONTAINING_RECORD(PdoEntry,
+                                         PDO_DEVICE_EXTENSION,
+                                         PdoListEntry);
+
+        if (PdoExtension->PnpState == dsRemoved ||
+            PdoExtension->PnpState == dsSurpriseRemoved)
         {
-            Status = STATUS_INSUFFICIENT_RESOURCES;
-            break;
+            continue;
         }
 
-        /* Set PDO count and PDO pointers */
-        DeviceRelations->Count = DeviceExtension->PdoCount;
-        PdoEntry = DeviceExtension->PdoListHead.Flink;
-        while (PdoEntry != &DeviceExtension->PdoListHead)
-        {
-            PdoExtension = CONTAINING_RECORD(PdoEntry,
-                                             PDO_DEVICE_EXTENSION,
-                                             PdoListEntry);
+        ObReferenceObject(PdoExtension->Device);
 
-            DeviceRelations->Objects[PdoIndex] = PdoExtension->Device;
+        DeviceRelations->Objects[PdoIndex] = PdoExtension->Device;
 
-            /* Next one */
-            ++PdoIndex;
-            PdoEntry = PdoEntry->Flink;
-        }
-    } while (0);
+        /* Next one */
+        ++PdoIndex;
+    }
+
+    KeReleaseInStackQueuedSpinLock(&LockHandle);
+
+    DeviceRelations->Count = PdoIndex;
 
     *Information = (ULONG_PTR)DeviceRelations;
 
@@ -863,33 +874,28 @@ FdoFindLun(
     _In_ ULONG Target,
     _In_ ULONG Lun)
 {
-    PPDO_DEVICE_EXTENSION PdoExtension = NULL;
+    PPDO_DEVICE_EXTENSION PdoExtension;
     KLOCK_QUEUE_HANDLE LockHandle;
-    PLIST_ENTRY PdoListHead = &FdoExtension->PdoListHead, PdoEntry;
+    PLIST_ENTRY PdoEntry;
 
     KeAcquireInStackQueuedSpinLock(&FdoExtension->PdoListLock, &LockHandle);
 
-    if (!IsListEmpty(&FdoExtension->PdoListHead))
+    for (PdoEntry = FdoExtension->PdoListHead.Flink;
+         PdoEntry != &FdoExtension->PdoListHead;
+         PdoEntry = PdoEntry->Flink)
     {
-        PdoEntry = PdoListHead->Flink;
+        PdoExtension = CONTAINING_RECORD(PdoEntry, PDO_DEVICE_EXTENSION, PdoListEntry);
 
-        do
+        if (PdoExtension->Bus == Bus && PdoExtension->Target == Target &&
+            PdoExtension->Lun == Lun)
         {
-            PdoExtension = CONTAINING_RECORD(PdoEntry, PDO_DEVICE_EXTENSION, PdoListEntry);
-
-            if (PdoExtension->Bus == Bus && PdoExtension->Target == Target &&
-                PdoExtension->Lun == Lun)
-            {
-                break;
-            }
-
-            PdoEntry = PdoEntry->Flink;
+            KeReleaseInStackQueuedSpinLock(&LockHandle);
+            return PdoExtension;
         }
-        while (PdoEntry != PdoListHead);
     }
 
     KeReleaseInStackQueuedSpinLock(&LockHandle);
-    return PdoExtension;
+    return NULL;
 }
 
 
@@ -902,7 +908,7 @@ FdoDeviceControlQueryProperty(
     PIO_STACK_LOCATION IoStack;
     PFDO_DEVICE_EXTENSION FdoExtension;
     PMINIPORT Miniport;
-    PSTORAGE_ADAPTER_DESCRIPTOR_WIN8 AdapterDescriptor;
+    PSTORAGE_ADAPTER_DESCRIPTOR AdapterDescriptor;
     PSTORAGE_PROPERTY_QUERY Query;
     NTSTATUS Status;
 
@@ -946,7 +952,7 @@ FdoDeviceControlQueryProperty(
 
         /* Check buffer length */
         if (IoStack->Parameters.DeviceIoControl.OutputBufferLength <
-            sizeof(STORAGE_ADAPTER_DESCRIPTOR_WIN8))
+            sizeof(*AdapterDescriptor))
         {
             PSTORAGE_DESCRIPTOR_HEADER DescriptorHeader = Irp->AssociatedIrp.SystemBuffer;
 
@@ -959,8 +965,8 @@ FdoDeviceControlQueryProperty(
             }
 
             /* Return required size */
-            DescriptorHeader->Version = sizeof(STORAGE_ADAPTER_DESCRIPTOR_WIN8);
-            DescriptorHeader->Size = sizeof(STORAGE_ADAPTER_DESCRIPTOR_WIN8);
+            DescriptorHeader->Version = sizeof(*AdapterDescriptor);
+            DescriptorHeader->Size = sizeof(*AdapterDescriptor);
             Irp->IoStatus.Information = sizeof(STORAGE_DESCRIPTOR_HEADER);
             Status = STATUS_SUCCESS;
             break;
@@ -968,22 +974,24 @@ FdoDeviceControlQueryProperty(
 
         /* Return AdapterDescriptor */
         AdapterDescriptor = Irp->AssociatedIrp.SystemBuffer;
-        *AdapterDescriptor = (STORAGE_ADAPTER_DESCRIPTOR_WIN8) {
-            .Version = sizeof(STORAGE_ADAPTER_DESCRIPTOR_WIN8),
-            .Size = sizeof(STORAGE_ADAPTER_DESCRIPTOR_WIN8),
-            .MaximumTransferLength = Miniport->PortConfig.MaximumTransferLength,
-            .MaximumPhysicalPages = Miniport->PortConfig.NumberOfPhysicalBreaks,
-            .AlignmentMask = Miniport->PortConfig.AlignmentMask,
-            .AdapterUsesPio = FALSE, /* Storport requirement */
-            .AdapterScansDown = Miniport->PortConfig.AdapterScansDown,
-            .CommandQueueing = TRUE, /* Storport requirement */
-            .AcceleratedTransfer = TRUE,
-            .BusType = BusTypeSata, /* FIXME: ＲＥＡＤ　ＦＲＯＭ　ＲＥＧＩＳＴＲＹ */
-            .BusMajorVersion = 2,
-            .BusMinorVersion = 0,
-            // .SrbType = SRB_TYPE_SCSI_REQUEST_BLOCK /* This is actually important */
-        };
-        Irp->IoStatus.Information = sizeof(STORAGE_ADAPTER_DESCRIPTOR_WIN8);
+
+        /* Classpnp is built for NTDDI_WIN8 and reads SrbType and AddressType past our tail */
+        RtlZeroMemory(AdapterDescriptor, sizeof(*AdapterDescriptor));
+
+        AdapterDescriptor->Version = sizeof(*AdapterDescriptor);
+        AdapterDescriptor->Size = sizeof(*AdapterDescriptor);
+        AdapterDescriptor->MaximumTransferLength = Miniport->PortConfig.MaximumTransferLength;
+        AdapterDescriptor->MaximumPhysicalPages = Miniport->PortConfig.NumberOfPhysicalBreaks;
+        AdapterDescriptor->AlignmentMask = Miniport->PortConfig.AlignmentMask;
+        AdapterDescriptor->AdapterUsesPio = FALSE; /* Storport requirement */
+        AdapterDescriptor->AdapterScansDown = Miniport->PortConfig.AdapterScansDown;
+        AdapterDescriptor->CommandQueueing = TRUE; /* Storport requirement */
+        AdapterDescriptor->AcceleratedTransfer = TRUE;
+        AdapterDescriptor->BusType = BusTypeSata; /* FIXME: ＲＥＡＤ　ＦＲＯＭ　ＲＥＧＩＳＴＲＹ */
+        AdapterDescriptor->BusMajorVersion = 2;
+        AdapterDescriptor->BusMinorVersion = 0;
+
+        Irp->IoStatus.Information = sizeof(*AdapterDescriptor);
         Status = STATUS_SUCCESS;
     }
     while (0);
@@ -1056,6 +1064,7 @@ PortFdoPnp(
 
         case IRP_MN_REMOVE_DEVICE: /* 0x02 */
             DPRINT1("IRP_MJ_PNP / IRP_MN_REMOVE_DEVICE\n");
+            ExDeleteNPagedLookasideList(&DeviceExtension->RequestReferenceLookaside);
             break;
 
         case IRP_MN_CANCEL_REMOVE_DEVICE: /* 0x03 */
@@ -1141,7 +1150,7 @@ PortFdoDeviceControl(
         
         default:
             // __debugbreak();
-            Status = STATUS_NOT_IMPLEMENTED;
+            Status = Irp->IoStatus.Status;
             break;
     }
 
