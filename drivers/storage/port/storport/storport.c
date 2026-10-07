@@ -248,12 +248,16 @@ PortCompleteRequest(
     PPDO_DEVICE_EXTENSION PdoExtension;
     KLOCK_QUEUE_HANDLE LockHandle;
     NTSTATUS IoStatus;
+    BOOLEAN FromReserve;
 
     /* Take out our information */
     Srb = RequestReference->Srb;
     Irp = RequestReference->Irp;
     PdoExtension = RequestReference->PdoExtension;
     FdoExtension = PdoExtension->FdoExtension;
+
+    /* The reference is released further down, so remember this while it is still valid */
+    FromReserve = RequestReference->FromReserve;
 
     /* FIXME: DELETE AFTER DEBUG */
     // if (RequestReference->DumpSpecialRequest)
@@ -347,7 +351,11 @@ PortCompleteRequest(
      */
     if (Srb->SrbExtension)
     {
-        ExFreePoolWithTag(Srb->SrbExtension, TAG_SRB_EXTENSION);
+        /* The reserved one is handed back along with its packet, not freed */
+        if (!FromReserve)
+        {
+            ExFreePoolWithTag(Srb->SrbExtension, TAG_SRB_EXTENSION);
+        }
         Srb->SrbExtension = NULL;
     }
 
@@ -368,6 +376,9 @@ PortCompleteRequest(
 
     DPRINT("Calling IoCompleteRequest\n");
     IoCompleteRequest(Irp, IO_DISK_INCREMENT);
+
+    /* We just gave memory back, so let one request that ran out of it through */
+    PortRetryStarvedRequest(FdoExtension);
 }
 
 
@@ -498,6 +509,9 @@ PortAddDevice(
                                     sizeof(QUEUED_REQUEST_REFERENCE),
                                     TAG_QUEUED_REQUEST,
                                     0);
+
+    /* Initialize the queue for requests waiting on memory */
+    PortInitializeStarvedRequestQueue(&DeviceExtension->StarvedRequests);
 
     /* Initialize FDO flow control structure */
     KeInitializeSpinLock(&DeviceExtension->FlowControl.Lock);

@@ -215,6 +215,14 @@ typedef struct _FDO_IO_FLOW_CONTROL
     LIST_ENTRY FdoBlockedRequestsListHead;
 } FDO_IO_FLOW_CONTROL, *PFDO_IO_FLOW_CONTROL;
 
+/* Requests that could not allocate their private contexts. Cancel safe, as we hold them. */
+typedef struct _STARVED_REQUEST_QUEUE
+{
+    IO_CSQ Csq;
+    KSPIN_LOCK Lock;
+    LIST_ENTRY ListHead;
+} STARVED_REQUEST_QUEUE, *PSTARVED_REQUEST_QUEUE;
+
 typedef struct _FDO_DEVICE_EXTENSION
 {
     EXTENSION_TYPE ExtensionType;
@@ -269,6 +277,12 @@ typedef struct _FDO_DEVICE_EXTENSION
 
     /* Backing store for the per request QUEUED_REQUEST_REFERENCE packets */
     NPAGED_LOOKASIDE_LIST RequestReferenceLookaside;
+
+    /* Memory for one request, reserved at adapter start, for when pool runs out */
+    struct _QUEUED_REQUEST_REFERENCE *ReservedRequestReference;
+    PVOID ReservedSrbExtension;
+    LONG ReserveInUse;
+    STARVED_REQUEST_QUEUE StarvedRequests;
 
     /*
      * FIXME: It REALLY should be cached here. The function pointers inside are extremely frequently
@@ -339,6 +353,9 @@ typedef struct _QUEUED_REQUEST_REFERENCE
     BOOLEAN StrongOrdered;
     BOOLEAN WriteToDevice;
 
+    /* This packet and its SRB extension came from the reserve, not from pool */
+    BOOLEAN FromReserve;
+
     /* FIXME: This is solely for debugging and should be removed */
     BOOLEAN DumpSpecialRequest;
     LONG SpecialRequestId;
@@ -363,6 +380,31 @@ typedef struct _REPORT_LUNS_DATA
 } REPORT_LUNS_DATA, *PREPORT_LUNS_DATA;
 
 /* fdo.c */
+
+NTSTATUS
+PortInitializeStarvedRequestQueue(
+    _In_ PSTARVED_REQUEST_QUEUE Queue);
+
+VOID
+PortQueueStarvedRequest(
+    _In_ PFDO_DEVICE_EXTENSION FdoExtension,
+    _In_ PIRP Irp);
+
+VOID
+PortRetryStarvedRequest(
+    _In_ PFDO_DEVICE_EXTENSION FdoExtension);
+
+VOID
+PortFlushStarvedRequests(
+    _In_ PFDO_DEVICE_EXTENSION FdoExtension);
+
+VOID
+PortAllocateRequestReserve(
+    _In_ PFDO_DEVICE_EXTENSION FdoExtension);
+
+VOID
+PortFreeRequestReserve(
+    _In_ PFDO_DEVICE_EXTENSION FdoExtension);
 
 PPDO_DEVICE_EXTENSION
 FdoFindLun(
@@ -494,6 +536,10 @@ GetGenericType(
     _In_ PINQUIRYDATA InquiryData);
 
 /* pdo.c */
+
+VOID
+StorpSrbFreeRequestReference(
+    _In_ PSCSI_REQUEST_BLOCK Srb);
 
 NTSTATUS
 PortCreatePdo(
