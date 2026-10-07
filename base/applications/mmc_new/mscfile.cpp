@@ -305,8 +305,11 @@ MscFile::ParseWindowPlacement(CWindow *pWindow, IXMLDOMElement *pParentElement)
     for (;;)
     {
         hr = pChildList->nextNode(&pNextElement);
-        if (hr != S_OK)
+        if (hr == S_FALSE)
+        {
+            hr = S_OK;
             break;
+        }
 
         hr = pNextElement->get_nodeType(&NodeType);
         if (hr == S_OK)
