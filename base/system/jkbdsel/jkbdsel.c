@@ -26,6 +26,7 @@
 #include <winnt.h>
 #include <winreg.h>
 #include <wchar.h>
+#include <limits.h>
 #define NTOS_MODE_USER
 #include <ndk/ntndk.h>
 
@@ -41,30 +42,37 @@ typedef struct tagKBD_INPUT_DATA
     ULONG  ExtraInformation;
 } KBD_INPUT_DATA;
 
-#define PARAMS_KEY L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Services\\i8042prt\\Parameters"
-#define DONE_KEY   L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Control\\JKBDSEL"
+#define PARAMS_KEY \
+    L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Services\\i8042prt\\Parameters"
+#define DONE_KEY \
+    L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Control\\JKBDSEL"
+#define NLS_LANG_KEY \
+    L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Control\\Nls\\Language"
 
 typedef enum { C_106, C_101, C_OTHER, C_TIMEOUT, C_ERROR } CHOICE;
 
-static void Print(PCWSTR s)
+static void Print(PCWSTR str)
 {
     UNICODE_STRING us;
-    RtlInitUnicodeString(&us, s);
+    RtlInitUnicodeString(&us, str);
     NtDisplayString(&us);
 }
 
-static void PrintHex(PCWSTR label, ULONG v)
+static void PrintHex(PCWSTR label, ULONG value)
 {
     WCHAR buf[8 + 1];
-    int i;
+    INT i;
+
     Print(label);
-    for (i = 7; i >= 0; --i)
+
+    for (i = CHAR_BIT - 1; i >= 0; --i)
     {
-        ULONG d = v & 0xF;
+        ULONG d = (value & 0xF);
         buf[i] = (WCHAR)(d < 10 ? L'0' + d : L'A' + d - 10);
-        v >>= 4;
+        value >>= 4;
     }
-    buf[8] = 0;
+    buf[8] = UNICODE_NULL;
+
     Print(buf);
     Print(L"\n");
 }
@@ -79,53 +87,53 @@ static void Delay(ULONG ms)
 /* ---------- Registry ---------- */
 static NTSTATUS OpenKey(PCWSTR path, BOOL create, HANDLE *h)
 {
-    UNICODE_STRING name;
+    UNICODE_STRING usName;
     OBJECT_ATTRIBUTES oa;
     ULONG disp;
 
-    RtlInitUnicodeString(&name, path);
-    InitializeObjectAttributes(&oa, &name, OBJ_CASE_INSENSITIVE, NULL, NULL);
+    RtlInitUnicodeString(&usName, path);
+    InitializeObjectAttributes(&oa, &usName, OBJ_CASE_INSENSITIVE, NULL, NULL);
     if (create)
         return NtCreateKey(h, KEY_ALL_ACCESS, &oa, 0, NULL,
                            REG_OPTION_NON_VOLATILE, &disp);
     return NtOpenKey(h, KEY_QUERY_VALUE, &oa);
 }
 
-static void SetDword(HANDLE h, PCWSTR name, ULONG v)
+static void SetDword(HANDLE h, PCWSTR name, ULONG value)
 {
-    UNICODE_STRING n;
-    RtlInitUnicodeString(&n, name);
-    NtSetValueKey(h, &n, 0, REG_DWORD, &v, sizeof(v));
+    UNICODE_STRING usName;
+    RtlInitUnicodeString(&usName, name);
+    NtSetValueKey(h, &usName, 0, REG_DWORD, &value, sizeof(value));
 }
 
-static void SetSz(HANDLE h, PCWSTR name, PCWSTR v)
+static void SetSz(HANDLE h, PCWSTR name, PCWSTR value)
 {
-    UNICODE_STRING n;
-    RtlInitUnicodeString(&n, name);
-    NtSetValueKey(h, &n, 0, REG_SZ, (PVOID)v, (wcslen(v) + 1) * sizeof(WCHAR));
+    UNICODE_STRING usName;
+    RtlInitUnicodeString(&usName, name);
+    NtSetValueKey(h, &usName, 0, REG_SZ, (PVOID)value, (wcslen(value) + 1) * sizeof(WCHAR));
 }
 
 static void DelValue(HANDLE h, PCWSTR name)
 {
-    UNICODE_STRING n;
-    RtlInitUnicodeString(&n, name);
-    NtDeleteValueKey(h, &n);
+    UNICODE_STRING usName;
+    RtlInitUnicodeString(&usName, name);
+    NtDeleteValueKey(h, &usName);
 }
 
 static BOOL FileExists(PCWSTR path)
 {
-    UNICODE_STRING name;
+    UNICODE_STRING usName;
     OBJECT_ATTRIBUTES oa;
     IO_STATUS_BLOCK iosb;
     HANDLE h;
     NTSTATUS Status;
 
-    RtlInitUnicodeString(&name, path);
-    InitializeObjectAttributes(&oa, &name, OBJ_CASE_INSENSITIVE, NULL, NULL);
+    RtlInitUnicodeString(&usName, path);
+    InitializeObjectAttributes(&oa, &usName, OBJ_CASE_INSENSITIVE, NULL, NULL);
     Status = NtCreateFile(&h, FILE_READ_ATTRIBUTES | SYNCHRONIZE, &oa, &iosb,
-                      NULL, FILE_ATTRIBUTE_NORMAL,
-                      FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
-                      FILE_OPEN, FILE_SYNCHRONOUS_IO_NONALERT, NULL, 0);
+                          NULL, FILE_ATTRIBUTE_NORMAL,
+                          FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+                          FILE_OPEN, FILE_SYNCHRONOUS_IO_NONALERT, NULL, 0);
     if (NT_SUCCESS(Status))
         NtClose(h);
     return NT_SUCCESS(Status);
@@ -136,28 +144,25 @@ static BOOL IsUnattended(void)
     return FileExists(L"\\SystemRoot\\unattend.inf");
 }
 
-#define NLS_LANG_KEY \
-    L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Control\\Nls\\Language"
-
 static USHORT ReadLangId(HANDLE h, PCWSTR valueName)
 {
-    UNICODE_STRING n, s;
-    ULONG buf[16], len, val = 0;
+    UNICODE_STRING usName, us;
+    ULONG buf[16], len, value = 0;
     PKEY_VALUE_PARTIAL_INFORMATION info = (PVOID)buf;
 
-    RtlInitUnicodeString(&n, valueName);
-    if (!NT_SUCCESS(NtQueryValueKey(h, &n, KeyValuePartialInformation,
+    RtlInitUnicodeString(&usName, valueName);
+    if (!NT_SUCCESS(NtQueryValueKey(h, &usName, KeyValuePartialInformation,
                                     info, sizeof(buf), &len)))
         return 0;
     if (info->Type != REG_SZ || info->DataLength < sizeof(WCHAR))
         return 0;
 
-    s.Buffer = (PWSTR)info->Data;
-    s.Length = (USHORT)(info->DataLength - sizeof(WCHAR));   /* Excluding NUL */
-    s.MaximumLength = (USHORT)info->DataLength;
-    if (!NT_SUCCESS(RtlUnicodeStringToInteger(&s, 16, &val)))
+    us.Buffer = (PWSTR)info->Data;
+    us.Length = (USHORT)(info->DataLength - sizeof(WCHAR)); /* Excluding NUL */
+    us.MaximumLength = (USHORT)info->DataLength;
+    if (!NT_SUCCESS(RtlUnicodeStringToInteger(&us, 16, &value)))
         return 0;
-    return (USHORT)val;
+    return (USHORT)value;
 }
 
 static BOOL IsJapaneseSystem(void)
@@ -183,15 +188,15 @@ static BOOL IsJapaneseSystem(void)
 static BOOL IsDone(void)
 {
     HANDLE h;
-    UNICODE_STRING n;
+    UNICODE_STRING usName;
     ULONG buf[8], len;
     PKEY_VALUE_PARTIAL_INFORMATION info = (PVOID)buf;
     BOOL done = FALSE;
 
     if (!NT_SUCCESS(OpenKey(DONE_KEY, FALSE, &h)))
         return FALSE;
-    RtlInitUnicodeString(&n, L"Done");
-    if (NT_SUCCESS(NtQueryValueKey(h, &n, KeyValuePartialInformation,
+    RtlInitUnicodeString(&usName, L"Done");
+    if (NT_SUCCESS(NtQueryValueKey(h, &usName, KeyValuePartialInformation,
                                    info, sizeof(buf), &len))
         && info->Type == REG_DWORD && info->DataLength == sizeof(ULONG)
         && *(PULONG)info->Data != 0)
@@ -351,7 +356,7 @@ static BOOL  Apply(CHOICE c)
 
 static CHOICE WaitForChoice(void)
 {
-    UNICODE_STRING name;
+    UNICODE_STRING usName;
     OBJECT_ATTRIBUTES oa;
     static IO_STATUS_BLOCK iosb;
     static KBD_INPUT_DATA kd;
@@ -361,8 +366,8 @@ static CHOICE WaitForChoice(void)
     CHOICE ret = C_ERROR;
     ULONG startTick = NtGetTickCount();
 
-    RtlInitUnicodeString(&name, L"\\Device\\KeyboardClass0");
-    InitializeObjectAttributes(&oa, &name, OBJ_CASE_INSENSITIVE, NULL, NULL);
+    RtlInitUnicodeString(&usName, L"\\Device\\KeyboardClass0");
+    InitializeObjectAttributes(&oa, &usName, OBJ_CASE_INSENSITIVE, NULL, NULL);
 
     Status = NtCreateFile(&hKbd, GENERIC_READ | SYNCHRONIZE, &oa, &iosb, NULL,
                       FILE_ATTRIBUTE_NORMAL,
