@@ -10,10 +10,9 @@
  *   Hankaku/Zenkaku (scancode 0x29) : 106 Japanese keyboard
  *   Space           (scancode 0x39) : 101 English keyboard
  *   S               (scancode 0x1F) : Other keyboard
- *   F3              (scancode 0x3D) : Skip
  *
  * It times out after 30 seconds.
- * If F3 is pressed or no key is pressed for 30 seconds, this app is skipped
+ * If no key is pressed for 30 seconds, this app is skipped
  * and will not ask again (HKLM\SYSTEM\CurrentControlSet\Control\JKBDSEL\Done=1).
  * To show this screen again, delete that "Done" value.
  *
@@ -44,7 +43,7 @@ typedef struct tagKBD_INPUT_DATA
 #define PARAMS_KEY L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Services\\i8042prt\\Parameters"
 #define DONE_KEY   L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Control\\JKBDSEL"
 
-typedef enum { C_106, C_101, C_OTHER, C_SKIP, C_TIMEOUT, C_ERROR } CHOICE;
+typedef enum { C_106, C_101, C_OTHER, C_TIMEOUT, C_ERROR } CHOICE;
 
 static void Print(PCWSTR s)
 {
@@ -328,7 +327,6 @@ static CHOICE WaitForChoice(void)
             case 0x29: ret = C_106;   goto done; /* Hankaku/Zenkaku */
             case 0x39: ret = C_101;   goto done; /* Space */
             case 0x1F: ret = C_OTHER; goto done; /* S */
-            case 0x3D: ret = C_SKIP;  goto done; /* F3 */
         }
     }
 
@@ -363,9 +361,8 @@ VOID NTAPI NtProcessStartup(PPEB Peb)
 
     if (IsUnattended())
     {
-        Print(L"JKBDSEL: Detected unattended\n");
+        Print(L"JKBDSEL: Detected unattended setup\n");
         WriteDone();
-        Delay(3000);
         goto quit;
     }
 
@@ -377,8 +374,7 @@ VOID NTAPI NtProcessStartup(PPEB Peb)
         L"  Please press key on keyboard within 30 seconds:\n\n"
         L"    [Hankaku/Zenkaku] key : for 106 Japanese keyboard\n"
         L"    [Space] key           : for 101 English keyboard\n"
-        L"    [S] key               : for other keyboard (use default)\n\n"
-        L"    [F3] key              : Skip\n\n");
+        L"    [S] key               : for other keyboard (use default)\n\n");
 
     c = WaitForChoice();
     //PrintHex(L"JKBDSEL: choice = 0x", (ULONG)c); /* 0:106 1:101 2:OTHER 3:SKIP 4:TIMEOUT 5:ERROR */
@@ -394,10 +390,9 @@ VOID NTAPI NtProcessStartup(PPEB Peb)
             bSelected = TRUE;
             break;
         case C_OTHER:
-            Print(L"JKBDSEL: Selected Other.\n");
+            Print(L"JKBDSEL: Selected other.\n");
             bSelected = TRUE;
             break;
-        case C_SKIP:
         case C_TIMEOUT:
             Print(L"JKBDSEL: Skipped.\n");
             WriteDone();
@@ -417,6 +412,7 @@ VOID NTAPI NtProcessStartup(PPEB Peb)
             Print(L"JKBDSEL: Keyboard setting saved.\n");
         else
             Print(L"JKBDSEL: Failed to write the registry.\n");
+
         Delay(3000);
     }
 
