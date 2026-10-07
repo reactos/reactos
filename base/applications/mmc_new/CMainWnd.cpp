@@ -1052,7 +1052,14 @@ CMainWnd::LoadMscFile(const CAtlString &FileName)
 {
     IXMLDOMElement *pRootElement = NULL;
     IXMLDOMElement *pFrameStateElement = NULL;
+    VARIANT ProgramMode;
     HRESULT hr = S_OK;
+
+    VariantInit(&ProgramMode);
+
+    m_DocumentMode = DocumentMode_Author;
+    m_LogicalReadOnly = FALSE;
+    m_PreventViewCustomization = FALSE;
 
     MscFile *mscFile = new MscFile(FileName.GetString());
 
@@ -1068,9 +1075,37 @@ CMainWnd::LoadMscFile(const CAtlString &FileName)
     if (hr != S_OK)
         goto done;
 
+    hr = mscFile->GetAttribute(pRootElement, (LPWSTR)L"ProgramMode", &ProgramMode);
+    if (hr != S_OK)
+        goto done;
+
+    hr = ::StringToDocumentMode(V_BSTR(&ProgramMode), &m_DocumentMode);
+    if (hr != S_OK)
+        goto done;
+
     hr = mscFile->GetElement(pRootElement, (LPWSTR)L"FrameState", &pFrameStateElement);
     if (hr != S_OK)
         goto done;
+
+    if (m_DocumentMode != DocumentMode_Author)
+    {
+        VARIANT LogicalReadOnly, PreventViewCustomization;
+
+        VariantInit(&LogicalReadOnly);
+        VariantInit(&PreventViewCustomization);
+
+        hr = mscFile->GetAttribute(pFrameStateElement, (LPWSTR)L"LogicalReadOnly", &LogicalReadOnly);
+        if ((hr == S_OK) && (_wcsicmp(V_BSTR(&LogicalReadOnly), L"true") == 0))
+            m_LogicalReadOnly = TRUE;
+
+        hr = mscFile->GetAttribute(pFrameStateElement, (LPWSTR)L"PreventViewCustomization", &PreventViewCustomization);
+        if ((hr == S_OK) && (_wcsicmp(V_BSTR(&PreventViewCustomization), L"true") == 0))
+                m_PreventViewCustomization = TRUE;
+
+        VariantClear(&LogicalReadOnly);
+        VariantClear(&PreventViewCustomization);
+        hr = S_OK;
+    }
 
     hr = mscFile->ParseWindowPlacement(this, pFrameStateElement);
     if (hr != S_OK)
@@ -1087,6 +1122,8 @@ CMainWnd::LoadMscFile(const CAtlString &FileName)
     /* Parse the Views Element and create the views */
 
 done:
+    VariantClear(&ProgramMode);
+
     if (pFrameStateElement)
         pFrameStateElement->Release();
 
