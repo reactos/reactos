@@ -6,6 +6,7 @@
 
 #include <kmt_test.h>
 
+KMT_TESTFUNC Test_CcPurgeCacheSection;
 KMT_TESTFUNC Test_CmSecurity;
 KMT_TESTFUNC Test_Example;
 KMT_TESTFUNC Test_ExCallback;
@@ -94,6 +95,7 @@ KMT_TESTFUNC Test_ZwWaitForMultipleObjects;
 
 const KMT_TEST TestList[] =
 {
+    { "CcPurgeCacheSection",                Test_CcPurgeCacheSection },
     { "CmSecurity",                         Test_CmSecurity },
     { "ExCallback",                         Test_ExCallback },
     { "ExDoubleList",                       Test_ExDoubleList },
