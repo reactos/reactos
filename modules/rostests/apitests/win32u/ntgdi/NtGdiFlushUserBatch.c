@@ -33,7 +33,11 @@ START_TEST(NtGdiFlushUserBatch)
     ok_ptr(pTeb->GdiTebBatch.HDC, NULL);
 
     /* Set up some bullshit */
+#if (NTDDI_VERSION < NTDDI_LONGHORN)
     pTeb->InDbgPrint = 1;
+#else
+    pTeb->DbgInDebugPrint = 1;
+#endif
     pTeb->GdiBatchCount = 12;
     pTeb->GdiTebBatch.Offset = 21;
     pTeb->GdiTebBatch.HDC = (HDC)123;
