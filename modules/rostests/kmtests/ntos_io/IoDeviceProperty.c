@@ -50,7 +50,7 @@ SetProperty(
     _In_ LCID Lcid,
     _In_ DEVPROPTYPE Type,
     _In_ ULONG Size,
-    _In_opt_ PVOID Data)
+    _In_reads_bytes_opt_(Size) PVOID Data)
 {
     if (Target->Pdo)
         return IoSetDevicePropertyData(Target->Pdo, Key, Lcid, 0, Type, Size, Data);
@@ -65,7 +65,7 @@ GetProperty(
     _In_ const DEVPROPKEY *Key,
     _In_ LCID Lcid,
     _In_ ULONG Size,
-    _Out_opt_ PVOID Data,
+    _Out_writes_bytes_to_opt_(Size, *RequiredSize) PVOID Data,
     _Out_ PULONG RequiredSize,
     _Out_ PDEVPROPTYPE Type)
 {

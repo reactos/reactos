@@ -89,7 +89,7 @@ typedef struct _PIP_BUILTIN_PROPERTY
     PIP_PROP_SOURCE Source;
     ULONG Flags;
     PCWSTR ValueName;
-    ULONG Selector;                     /* REG_xxx, DEVICE_REGISTRY_PROPERTY or PIP_PROP_FIELD */
+    ULONG Selector; /* REG_xxx, DEVICE_REGISTRY_PROPERTY or PIP_PROP_FIELD */
 } PIP_BUILTIN_PROPERTY, *PPIP_BUILTIN_PROPERTY;
 
 /* GLOBALS *******************************************************************/
@@ -145,7 +145,7 @@ static const DEVPROPKEY PiPropInterruptKey =
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
-static
+static inline
 BOOLEAN
 PiPropIsSameKey(
     _In_ const DEVPROPKEY *Key1,
@@ -217,7 +217,8 @@ PiPropCheckElements(
     {
         if (Check == PipCheckBoolean)
         {
-            if ((*Data != (UCHAR)DEVPROP_FALSE) && (*Data != (UCHAR)DEVPROP_TRUE))
+            if ((*(PDEVPROP_BOOLEAN)Data != DEVPROP_FALSE) &&
+                (*(PDEVPROP_BOOLEAN)Data != DEVPROP_TRUE))
                 return FALSE;
         }
         else if (Check == PipCheckFileTime)
@@ -549,17 +550,18 @@ PiPropOpenObjectKey(
 }
 
 static
-VOID
+NTSTATUS
 PiPropBuildValuePath(
     _In_ PPIP_PROP_NAME Name,
     _Out_ PUNICODE_STRING Path,
     _Out_writes_(PIP_PROP_PATH_CHARS) PWCHAR Buffer)
 {
     RtlInitEmptyUnicodeString(Path, Buffer, PIP_PROP_PATH_CHARS * sizeof(WCHAR));
-    RtlAppendUnicodeToString(Path, REGSTR_KEY_DEVICE_PROPERTIES L"\\");
-    RtlAppendUnicodeStringToString(Path, &Name->Fmtid);
-    RtlAppendUnicodeToString(Path, L"\\");
-    RtlAppendUnicodeStringToString(Path, &Name->Pid);
+    return RtlUnicodeStringPrintf(Path,
+                                  L"%s\\%wZ\\%wZ",
+                                  REGSTR_KEY_DEVICE_PROPERTIES,
+                                  &Name->Fmtid,
+                                  &Name->Pid);
 }
 
 static
@@ -584,7 +586,9 @@ PiPropStoreQuery(
     ULONG InfoSize;
     NTSTATUS Status;
 
-    PiPropBuildValuePath(Name, &Path, PathBuffer);
+    Status = PiPropBuildValuePath(Name, &Path, PathBuffer);
+    if (!NT_SUCCESS(Status))
+        return Status;
 
     Status = IopOpenRegistryKeyEx(&PropertyKey, ObjectKey, &Path, KEY_QUERY_VALUE);
     if (!NT_SUCCESS(Status))
@@ -668,7 +672,7 @@ PiPropCreateBranch(
     _In_reads_bytes_opt_(Size) PVOID Data,
     _In_ ULONG Size)
 {
-    ACCESS_MASK Access = KEY_CREATE_SUB_KEY | KEY_SET_VALUE | DELETE;
+    const ACCESS_MASK Access = KEY_CREATE_SUB_KEY | KEY_SET_VALUE | DELETE;
     ULONG Disposition;
     HANDLE Child;
     NTSTATUS Status;
@@ -711,7 +715,9 @@ PiPropStoreWrite(
     HANDLE ValueKey;
     NTSTATUS Status;
 
-    PiPropBuildValuePath(Name, &Path, PathBuffer);
+    Status = PiPropBuildValuePath(Name, &Path, PathBuffer);
+    if (!NT_SUCCESS(Status))
+        return Status;
 
     Status = IopOpenRegistryKeyEx(&ValueKey, ObjectKey, &Path, KEY_SET_VALUE);
     if (!NT_SUCCESS(Status))
@@ -794,7 +800,7 @@ typedef struct _PIP_PROP_SAVED_VALUE
     UCHAR Data[ANYSIZE_ARRAY];
 } PIP_PROP_SAVED_VALUE, *PPIP_PROP_SAVED_VALUE;
 
-static LIST_ENTRY PiPropSavedValues = { &PiPropSavedValues, &PiPropSavedValues };
+static RTL_STATIC_LIST_HEAD(PiPropSavedValues);
 static EX_PUSH_LOCK PiPropSavedLock;
 
 /* Caller holds PiPropSavedLock */
@@ -910,17 +916,19 @@ PiPropFindBuiltin(
 static
 NTSTATUS
 PiPropAllocateBlob(
-    _In_reads_bytes_opt_(Size) PVOID Source,
+    _In_reads_bytes_(Size) PVOID Source,
     _In_ ULONG Size,
-    _Out_ PVOID *Blob)
+    _Outptr_result_bytebuffer_maybenull_(Size) PVOID *Blob)
 {
-    *Blob = ExAllocatePoolWithTag(PagedPool, max(Size, 1), TAG_PNP_PROPERTY);
+    *Blob = NULL;
+    if (Size == 0)
+        return STATUS_INVALID_PARAMETER;
+
+    *Blob = ExAllocatePoolWithTag(PagedPool, Size, TAG_PNP_PROPERTY);
     if (!*Blob)
         return STATUS_INSUFFICIENT_RESOURCES;
 
-    if (Source && Size)
-        RtlCopyMemory(*Blob, Source, Size);
-
+    RtlCopyMemory(*Blob, Source, Size);
     return STATUS_SUCCESS;
 }
 
@@ -930,20 +938,19 @@ PiPropCaptureString(
     _In_reads_bytes_(RawSize) PCWSTR Raw,
     _In_ ULONG RawSize,
     _In_ BOOLEAN IsList,
-    _Out_ PVOID *Blob,
+    _Outptr_result_bytebuffer_maybenull_(*BlobSize) PVOID *Blob,
     _Out_ PULONG BlobSize)
 {
     ULONG RawChars = RawSize / sizeof(WCHAR);
     ULONG Index, Out = 0;
     BOOLEAN InEntry = FALSE;
     PWCHAR String;
-    NTSTATUS Status;
 
-    Status = PiPropAllocateBlob(NULL, (RawChars + 2) * sizeof(WCHAR), Blob);
-    if (!NT_SUCCESS(Status))
-        return Status;
+    String = ExAllocatePoolWithTag(PagedPool, (RawChars + 2) * sizeof(WCHAR), TAG_PNP_PROPERTY);
+    if (!String)
+        return STATUS_INSUFFICIENT_RESOURCES;
 
-    String = *Blob;
+    *Blob = String;
 
     for (Index = 0; Index < RawChars; Index++)
     {
@@ -977,7 +984,7 @@ PiPropReadRegistryValue(
     _In_ PCWSTR ValueName,
     _In_ ULONG RegType,
     _In_ DEVPROPTYPE Type,
-    _Out_ PVOID *Blob,
+    _Outptr_result_bytebuffer_maybenull_(*BlobSize) PVOID *Blob,
     _Out_ PULONG BlobSize)
 {
     PKEY_VALUE_FULL_INFORMATION Info;
@@ -992,6 +999,7 @@ PiPropReadRegistryValue(
     RawData = (PUCHAR)Info + Info->DataOffset;
     RawSize = Info->DataLength;
 
+    /* REG_EXPAND_SZ is accepted where REG_SZ is expected */
     if ((Info->Type != RegType) &&
         !((RegType == REG_SZ) && (Info->Type == REG_EXPAND_SZ)))
     {
@@ -1062,7 +1070,7 @@ PiPropReadKeyValue(
     _In_ PCWSTR ValueName,
     _In_ ULONG RegType,
     _In_ DEVPROPTYPE Type,
-    _Out_ PVOID *Blob,
+    _Outptr_result_bytebuffer_maybenull_(*BlobSize) PVOID *Blob,
     _Out_ PULONG BlobSize)
 {
     HANDLE ObjectKey;
@@ -1082,7 +1090,7 @@ NTSTATUS
 PiPropReadDeviceRegistryProperty(
     _In_ PPIP_PROP_OBJECT Object,
     _In_ const PIP_BUILTIN_PROPERTY *Builtin,
-    _Out_ PVOID *Blob,
+    _Outptr_result_bytebuffer_maybenull_(*BlobSize) PVOID *Blob,
     _Out_ PULONG BlobSize)
 {
     ULONG Length = 128, Needed;
@@ -1142,7 +1150,7 @@ NTSTATUS
 PiPropReadDeviceNodeField(
     _In_ PPIP_PROP_OBJECT Object,
     _In_ PIP_PROP_FIELD Field,
-    _Out_ PVOID *Blob,
+    _Outptr_result_bytebuffer_maybenull_(*BlobSize) PVOID *Blob,
     _Out_ PULONG BlobSize)
 {
     PDEVICE_NODE DeviceNode = Object->DeviceNode;
@@ -1220,7 +1228,7 @@ NTSTATUS
 PiPropReadInterfaceField(
     _In_ PPIP_PROP_OBJECT Object,
     _In_ PIP_PROP_FIELD Field,
-    _Out_ PVOID *Blob,
+    _Outptr_result_bytebuffer_maybenull_(*BlobSize) PVOID *Blob,
     _Out_ PULONG BlobSize)
 {
     UNICODE_STRING ControlName = RTL_CONSTANT_STRING(L"Control");
@@ -1291,7 +1299,7 @@ NTSTATUS
 PiPropReadBuiltin(
     _In_ PPIP_PROP_OBJECT Object,
     _In_ const PIP_BUILTIN_PROPERTY *Builtin,
-    _Out_ PVOID *Blob,
+    _Outptr_result_bytebuffer_maybenull_(*BlobSize) PVOID *Blob,
     _Out_ PULONG BlobSize)
 {
     switch (Builtin->Source)
@@ -1443,9 +1451,7 @@ PiPropReadFromStore(
 {
     HANDLE ObjectKey;
 
-    KeEnterCriticalRegion();
-    ExAcquireResourceSharedLite(&PpRegistryDeviceResource, TRUE);
-
+    /* Writers change one value at a time, and a key deleted under us reads as not found */
     *Status = PiPropOpenObjectKey(Object, KEY_READ, &ObjectKey);
     if (NT_SUCCESS(*Status))
     {
@@ -1453,9 +1459,6 @@ PiPropReadFromStore(
                                    Out->Data, Out->Size, &Out->Required);
         ZwClose(ObjectKey);
     }
-
-    ExReleaseResourceLite(&PpRegistryDeviceResource);
-    KeLeaveCriticalRegion();
 
     return (PiPropNormalizeStatus(*Status) != STATUS_OBJECT_NAME_NOT_FOUND);
 }
@@ -1603,7 +1606,7 @@ PiPropStoreApply(
     return Status;
 }
 
-static
+static inline
 BOOLEAN
 PiPropShouldAnnounce(
     _In_ PDEVICE_NODE DeviceNode)
@@ -1749,7 +1752,7 @@ IoSetDevicePropertyData(
     _In_ ULONG Flags,
     _In_ DEVPROPTYPE Type,
     _In_ ULONG Size,
-    _In_opt_ PVOID Data)
+    _In_reads_bytes_opt_(Size) PVOID Data)
 {
     PIP_PROP_OBJECT Object;
     NTSTATUS Status;
@@ -1786,7 +1789,7 @@ IoGetDevicePropertyData(
     _In_ LCID Lcid,
     _Reserved_ ULONG Flags,
     _In_ ULONG Size,
-    _Out_ PVOID Data,
+    _Out_writes_bytes_to_opt_(Size, *RequiredSize) PVOID Data,
     _Out_ PULONG RequiredSize,
     _Out_ PDEVPROPTYPE Type)
 {
@@ -1855,7 +1858,7 @@ IoGetDeviceInterfacePropertyData(
     _In_ LCID Lcid,
     _Reserved_ ULONG Flags,
     _In_ ULONG Size,
-    _Out_writes_bytes_to_(Size, *RequiredSize) PVOID Data,
+    _Out_writes_bytes_to_opt_(Size, *RequiredSize) PVOID Data,
     _Out_ PULONG RequiredSize,
     _Out_ PDEVPROPTYPE Type)
 {
