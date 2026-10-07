@@ -372,14 +372,13 @@ VOID NTAPI NtProcessStartup(PPEB Peb)
     /* NOTE: The following text should be easy English. */
     Print(
         L"\n\n"
-        L"  ReactOS - Japanese Keyboard Type Setup\n"
-        L"  --------------------------------------n\n"
-        L"  Please press key on your keyboard:\n\n"
-        L"    [Hankaku/Zenkaku] key : For 106 Japanese keyboard\n"
-        L"    [Space] key           : For 101 English keyboard\n"
-        L"    [S] key               : For other keyboard (use default)\n\n"
-        L"  F3 : Skip (will not ask again)\n"
-        L"  (No input for 30 seconds: skip and will not ask again)\n\n");
+        L"  ReactOS - Japanese Keyboard Setup\n"
+        L"  ---------------------------------\n\n"
+        L"  Please press key on your keyboard within 30 seconds:\n\n"
+        L"    [Hankaku/Zenkaku] key : for 106 Japanese keyboard\n"
+        L"    [Space] key           : for 101 English keyboard\n"
+        L"    [S] key               : for other keyboard (use default)\n\n"
+        L"    F3 : Skip\n");
 
     c = WaitForChoice();
     //PrintHex(L"JKBDSEL: choice = 0x", (ULONG)c); /* 0:106 1:101 2:OTHER 3:SKIP 4:TIMEOUT 5:ERROR */
