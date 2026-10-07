@@ -94,65 +94,75 @@ static INT ClampSplitBarX(HWND hWnd, INT x)
     return min(max(x, SPLIT_MIN), rc.right - SPLIT_MIN);
 }
 
-extern void ResizeWnd(int cx, int cy)
+void ResizeWnd(int cx, int cy)
 {
-    HDWP hdwp = BeginDeferWindowPos(4);
-    RECT rt, rs, rb, re;
+    HDWP hdwp;
+    RECT rt, rb, re;
     TBBUTTONINFO tbInfo;
-    const int nButtonHeight = 30;
-    const int nEditPadding = 3;
-    int cyEdge = GetSystemMetrics(SM_CYEDGE);
+    LONG nToolHeight;
+    INT cyBorder = GetSystemMetrics(SM_CYBORDER); // Part of FIXME below.
+    INT cyEdge = GetSystemMetrics(SM_CYEDGE);
     const UINT uFlags = SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOCOPYBITS;
 
-    cy = 0;
-    if (IsWindowVisible(hStatusBar))
-    {
-        GetWindowRect(hStatusBar, &rs);
-        cy = rs.bottom - rs.top;
-    }
+    SetRect(&rt, 0, 0, cx, cy);
+    // Added in commit e6302ccd70 (PR #7747)
+    //GetClientRect(g_pChildWnd->hWnd, &rt);
+    //RedrawWindow(g_pChildWnd->hWnd, &rt, NULL, RDW_INVALIDATE | RDW_NOCHILDREN);
 
-    GetClientRect(g_pChildWnd->hWnd, &rt);
-    RedrawWindow(g_pChildWnd->hWnd, &rt, NULL, RDW_INVALIDATE | RDW_NOCHILDREN);
-
-    g_pChildWnd->nSplitPos = ClampSplitBarX(g_pChildWnd->hWnd, g_pChildWnd->nSplitPos);
-
-    cx = g_pChildWnd->nSplitPos + SPLIT_WIDTH / 2;
-    if (hdwp)
-        hdwp = DeferWindowPos(hdwp, g_pChildWnd->hAddressToolBarWnd, NULL,
-                              rt.left, rt.top,
-                              rt.right - rt.left,
-                              nButtonHeight,
-                              uFlags);
-    if (hdwp)
-        hdwp = DeferWindowPos(hdwp, g_pChildWnd->hTreeWnd, NULL,
-                              rt.left,
-                              rt.top + nButtonHeight + cyEdge,
-                              g_pChildWnd->nSplitPos - SPLIT_WIDTH/2 - rt.left,
-                              rt.bottom - rt.top - cy - 2 * cyEdge,
-                              uFlags);
-    if (hdwp)
-        hdwp = DeferWindowPos(hdwp, g_pChildWnd->hListWnd, NULL,
-                              rt.left + cx,
-                              rt.top + nButtonHeight + cyEdge,
-                              rt.right - cx,
-                              rt.bottom - rt.top - cy - 2 * cyEdge,
-                              uFlags);
-    if (hdwp)
-        EndDeferWindowPos(hdwp);
-
+    /* Use the Go-button height for the address toolbar height */
     SendMessageW(g_pChildWnd->hAddressToolBarWnd, TB_GETITEMRECT, 1, (LPARAM)&rb);
+    nToolHeight = rb.bottom - rb.top;
+
+    /* Resize the separator containing the address bar */
     tbInfo.cbSize = sizeof(tbInfo);
     tbInfo.dwMask = TBIF_BYINDEX | TBIF_SIZE;
     tbInfo.cx = rt.right - rt.left - (rb.right - rb.left);
     SendMessageW(g_pChildWnd->hAddressToolBarWnd, TB_SETBUTTONINFO, 0, (LPARAM)&tbInfo);
-    SendMessageW(g_pChildWnd->hAddressToolBarWnd, TB_AUTOSIZE, 0, 0);
+    //SendMessageW(g_pChildWnd->hAddressToolBarWnd, TB_AUTOSIZE, 0, 0);
+    /* Resize the address bar */
     SendMessageW(g_pChildWnd->hAddressToolBarWnd, TB_GETITEMRECT, 0, (LPARAM)&re);
     SetWindowPos(g_pChildWnd->hAddressBarWnd, NULL,
                  re.left,
-                 re.top + nEditPadding,
+                 re.top + cyEdge,
                  re.right - re.left,
-                 re.bottom - re.top - 2 * nEditPadding,
+                 /*re.bottom - re.top*/nToolHeight - 2 * cyEdge,
                  uFlags);
+
+    cy = 0;
+#if 0 // FIXME: Re-enable once "childwnd" and "framewnd" are unified.
+    if (IsWindowVisible(hStatusBar))
+    {
+        RECT rs;
+        GetWindowRect(hStatusBar, &rs);
+        cy = rs.bottom - rs.top;
+    }
+#endif
+    g_pChildWnd->nSplitPos = ClampSplitBarX(g_pChildWnd->hWnd, g_pChildWnd->nSplitPos);
+
+    cx = g_pChildWnd->nSplitPos + SPLIT_WIDTH/2;
+    hdwp = BeginDeferWindowPos(3);
+    if (hdwp)
+        hdwp = DeferWindowPos(hdwp, g_pChildWnd->hAddressToolBarWnd, NULL,
+                              rt.left, rt.top,
+                              rt.right - rt.left,
+                              nToolHeight,
+                              uFlags);
+    if (hdwp)
+        hdwp = DeferWindowPos(hdwp, g_pChildWnd->hTreeWnd, NULL,
+                              rt.left,
+                              rt.top + nToolHeight,
+                              g_pChildWnd->nSplitPos - SPLIT_WIDTH/2 - rt.left,
+                              rt.bottom - rt.top - cy - nToolHeight + cyBorder,
+                              uFlags);
+    if (hdwp)
+        hdwp = DeferWindowPos(hdwp, g_pChildWnd->hListWnd, NULL,
+                              rt.left + cx,
+                              rt.top + nToolHeight,
+                              rt.right - cx,
+                              rt.bottom - rt.top - cy - nToolHeight + cyBorder,
+                              uFlags);
+    if (hdwp)
+        EndDeferWindowPos(hdwp);
 }
 
 /*******************************************************************************
@@ -412,9 +422,11 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
         g_pChildWnd->nSplitPos = 190;
         g_pChildWnd->hWnd = hWnd;
 
-        style = WS_CHILD | WS_VISIBLE | WS_TABSTOP | TBSTYLE_FLAT | TBSTYLE_LIST;
+        /* The horizontal line above the toolbar is hidden with the CCS_NODIVIDER style */
+        style = WS_CHILD | WS_VISIBLE | WS_TABSTOP | TBSTYLE_FLAT | TBSTYLE_LIST |
+                CCS_NODIVIDER | CCS_NOPARENTALIGN | CCS_NORESIZE | CCS_TOP;
         g_pChildWnd->hAddressToolBarWnd = CreateWindowExW(0, TOOLBARCLASSNAMEW, NULL, style,
-                                                          CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
+                                                          0, 0, 0, 0,
                                                           hWnd, NULL, hInst, NULL);
 
         g_pChildWnd->hGoButtonNormal = ImageList_LoadImageW(hInst, MAKEINTRESOURCEW(IDB_GO_NORMAL),
@@ -432,7 +444,7 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
         /* ES_AUTOHSCROLL style enables horizontal scrolling and shrinking */
         style = WS_CHILD | WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL;
         g_pChildWnd->hAddressBarWnd = CreateWindowExW(WS_EX_CLIENTEDGE, WC_EDITW, NULL, style,
-                                                      CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
+                                                      0, 0, 0, 0,
                                                       g_pChildWnd->hAddressToolBarWnd, NULL, hInst, NULL);
 
         if (SUCCEEDED(CoCreateInstance(&CLSID_AutoComplete, NULL, CLSCTX_INPROC_SERVER, &IID_IAutoComplete, (void**)&pAutoComplete)))
@@ -442,8 +454,8 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
         }
 
         GetClientRect(hWnd, &rc);
-        g_pChildWnd->hTreeWnd = CreateTreeView(hWnd, g_pChildWnd->szPath, (HMENU) TREE_WINDOW);
-        g_pChildWnd->hListWnd = CreateListView(hWnd, (HMENU) LIST_WINDOW, rc.right - g_pChildWnd->nSplitPos);
+        g_pChildWnd->hTreeWnd = CreateTreeView(hWnd, g_pChildWnd->szPath, (HMENU)TREE_WINDOW);
+        g_pChildWnd->hListWnd = CreateListView(hWnd, (HMENU)LIST_WINDOW, rc.right - g_pChildWnd->nSplitPos);
         SetFocus(g_pChildWnd->hTreeWnd);
 
         /* Set the address bar and button font */
