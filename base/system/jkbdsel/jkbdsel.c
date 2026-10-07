@@ -11,12 +11,6 @@
  *   Space           (scancode 0x39) : 101 English keyboard
  *   S               (scancode 0x1F) : Other keyboard
  *
- * It times out after 30 seconds.
- * If no key is pressed for 30 seconds, this app is skipped
- * and will not ask again (HKLM\SYSTEM\CurrentControlSet\Control\JKBDSEL\Done=1).
- * Once done, "jkbdsel" is automatically removed from the BootExecute value of
- * HKLM\SYSTEM\CurrentControlSet\Control\Session Manager.
- *
  * boot/bootdata/hivesys.inf:
  * HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager","BootExecute",0x00010000,"autocheck autochk","jkbdsel"
  */
@@ -85,8 +79,6 @@ static void Delay(ULONG ms)
 /* Registry keys */
 #define PARAMS_KEY \
     L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Services\\i8042prt\\Parameters"
-#define DONE_KEY \
-    L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Control\\JKBDSEL"
 #define NLS_LANG_KEY \
     L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Control\\Nls\\Language"
 #define SESSION_MANAGER_KEY \
@@ -197,29 +189,6 @@ static BOOL IsJapaneseSystem(void)
     return ja;
 }
 
-static BOOL IsDone(void)
-{
-    HANDLE h;
-    UNICODE_STRING usName;
-    ULONG buf[8], len;
-    PKEY_VALUE_PARTIAL_INFORMATION info = (PVOID)buf;
-    BOOL done;
-    NTSTATUS Status;
-
-    Status = OpenKey(DONE_KEY, FALSE, &h);
-    if (!NT_SUCCESS(Status))
-        return FALSE;
-
-    RtlInitUnicodeString(&usName, L"Done");
-
-    Status = NtQueryValueKey(h, &usName, KeyValuePartialInformation, info, sizeof(buf), &len);
-    done = (NT_SUCCESS(Status) && info->Type == REG_DWORD && info->DataLength == sizeof(ULONG) &&
-            *(PULONG)info->Data);
-
-    NtClose(h);
-    return done;
-}
-
 /*
  * Remove "jkbdsel" from the REG_MULTI_SZ value BootExecute of
  * HKLM\SYSTEM\CurrentControlSet\Control\Session Manager.
@@ -316,25 +285,6 @@ cleanup:
     return ok;
 }
 
-static BOOL WriteDone(void)
-{
-    HANDLE h;
-    NTSTATUS Status = OpenKey(DONE_KEY, TRUE, &h);
-    if (!NT_SUCCESS(Status))
-    {
-        PrintHex(L"JKBDSEL: create DONE_KEY failed: 0x", (ULONG)Status);
-        Delay(3000);
-        return FALSE;
-    }
-    SetDword(h, L"Done", 1);
-    NtFlushKey(h);
-    NtClose(h);
-
-    /* Setup is finished: don't run at the next boot */
-    RemoveFromBootExecute();
-    return TRUE;
-}
-
 static BOOL Apply(CHOICE c)
 {
     HANDLE h;
@@ -357,8 +307,7 @@ static BOOL Apply(CHOICE c)
 
     NtFlushKey(h);
     NtClose(h);
-
-    return WriteDone();
+    return TRUE;
 }
 
 /* ---------- Key Input ---------- */
@@ -467,28 +416,20 @@ VOID NTAPI NtProcessStartup(PPEB Peb)
     if (!IsJapaneseSystem())
         goto quit;
 
-    if (IsDone())
-    {
-        RemoveFromBootExecute();
-        goto quit;
-    }
-
     if (IsUnattended())
     {
         Print(L"JKBDSEL: Detected unattended setup\n");
-        WriteDone();
         goto quit;
     }
 
     /* NOTE: The following text should be easy English */
-    Print(
-        L"\n\n"
-        L"  ReactOS - Japanese Keyboard Setup\n"
-        L"  ---------------------------------\n\n"
-        L"  Please press key on keyboard within 30 seconds:\n\n"
-        L"    [Hankaku/Zenkaku] key : for 106 Japanese keyboard\n"
-        L"    [Space] key           : for 101 English keyboard\n"
-        L"    [S] key               : for other keyboard (use default)\n\n");
+    Print(L"\n\n"
+          L"  ReactOS - Japanese Keyboard Setup\n"
+          L"  ---------------------------------\n\n"
+          L"  Please press key on keyboard within 30 seconds:\n\n"
+          L"    [Hankaku/Zenkaku] key : for 106 Japanese keyboard\n"
+          L"    [Space] key           : for 101 English keyboard\n"
+          L"    [S] key               : for other keyboard (use default)\n\n");
 
     c = WaitForChoice();
     //PrintHex(L"JKBDSEL: choice = 0x", (ULONG)c); /* 0:106 1:101 2:OTHER 3:SKIP 4:TIMEOUT 5:ERROR */
@@ -499,27 +440,20 @@ VOID NTAPI NtProcessStartup(PPEB Peb)
             Print(L"JKBDSEL: Selected 106.\n");
             bSelected = TRUE;
             break;
-
         case C_101:
             Print(L"JKBDSEL: Selected 101.\n");
             bSelected = TRUE;
             break;
-
         case C_OTHER:
             Print(L"JKBDSEL: Selected other.\n");
             bSelected = TRUE;
             break;
-
         case C_TIMEOUT:
             Print(L"JKBDSEL: Skipped.\n");
-            WriteDone();
-            Delay(3000);
             goto quit;
-
         case C_ERROR:
             Print(L"JKBDSEL: Error.\n");
             goto quit;
-
         default:
             Print(L"JKBDSEL: Logical error.\n");
             goto quit;
@@ -531,10 +465,9 @@ VOID NTAPI NtProcessStartup(PPEB Peb)
             Print(L"JKBDSEL: Keyboard setting saved.\n");
         else
             Print(L"JKBDSEL: Failed to write the registry.\n");
-
-        Delay(3000);
     }
 
 quit:
+    RemoveFromBootExecute();
     NtTerminateProcess(NtCurrentProcess(), 0);
 }
