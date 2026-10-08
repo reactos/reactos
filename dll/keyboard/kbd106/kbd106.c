@@ -4,6 +4,7 @@
  * PURPOSE:     Japanese (JIS 106) keyboard layout
  * COPYRIGHT:   Copyright 2026 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
+/* See also: https://kbdlayout.info/kbd106 */
 
 #define WIN32_NO_STATUS
 #include <windef.h>
