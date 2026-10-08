@@ -90,6 +90,7 @@ list(APPEND SOURCE
     NtSetInformationProcess.c
     NtSetInformationThread.c
     NtSetInformationToken.c
+    NtSetLdtEntries.c
     NtSetValueKey.c
     NtSetVolumeInformationFile.c
     NtStartProfile.c
