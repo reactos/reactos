@@ -180,21 +180,72 @@ void TestButtonSpacing(void)
     hwnd = CreateWindowExW(0, TOOLBARCLASSNAMEW, L"Test", 0, 0, 0, 0, 0, 0, 0, 0, NULL);
     ok(hwnd != NULL, "CreateWindowEx failed\n");
 
-    memset(&metrics, 0, sizeof(metrics));
+    /* TB_GETMETRICS without a valid structure returns nothing */
+    ZeroMemory(&metrics, sizeof(metrics));
     lres = SendMessageW(hwnd, TB_GETMETRICS, 0, (LPARAM)&metrics);
-    ok (lres == 0, "Got %d result\n", (int)lres);
-    ok (metrics.dwMask == 0, "Got %lu\n", metrics.dwMask);
-    ok (metrics.cxPad == 0, "Got %d\n", metrics.cxPad);
+    ok(lres == 0, "Got %lu result\n", lres);
+    ok(metrics.dwMask == 0, "Got %lu\n", metrics.dwMask);
+    ok(metrics.cxPad == 0, "Got %d\n", metrics.cxPad);
+    /* Retry getting just the padding, while metrics.cbSize is invalid */
+    metrics.dwMask = TBMF_PAD;
+    lres = SendMessageW(hwnd, TB_GETMETRICS, 0, (LPARAM)&metrics);
+    ok(lres == 0, "Got %lu result\n", lres);
+    ok(metrics.cxPad == 0, "Got %d\n", metrics.cxPad);
 
+    /* TB_GETMETRICS with a valid structure returns meaningful data */
+    ZeroMemory(&metrics, sizeof(metrics));
     metrics.cbSize = sizeof(metrics);
     metrics.dwMask = TBMF_PAD|TBMF_BARPAD|TBMF_BUTTONSPACING;
     lres = SendMessageW(hwnd, TB_GETMETRICS, 0, (LPARAM)&metrics);
-    ok (lres == 0, "Got %lu result\n", lres);
-    ok (metrics.dwMask == (TBMF_PAD|TBMF_BARPAD|TBMF_BUTTONSPACING), "Got %lu\n", metrics.dwMask);
-    ok (metrics.cxPad == 7, "Got %d\n", metrics.cxPad);
-    ok (metrics.cyPad == 6, "Got %d\n", metrics.cyPad);
-    ok (metrics.cxButtonSpacing == 0, "Got %d\n", metrics.cxButtonSpacing);
-    ok (metrics.cyButtonSpacing == 0, "Got %d\n", metrics.cyButtonSpacing);
+    ok(lres == 0, "Got %lu result\n", lres);
+    ok(metrics.dwMask == (TBMF_PAD|TBMF_BARPAD|TBMF_BUTTONSPACING), "Got %lu\n", metrics.dwMask);
+    ok(metrics.cxPad == 7, "Got %d\n", metrics.cxPad);
+    ok(metrics.cyPad == 6, "Got %d\n", metrics.cyPad);
+    ok(metrics.cxButtonSpacing == 0, "Got %d\n", metrics.cxButtonSpacing);
+    ok(metrics.cyButtonSpacing == 0, "Got %d\n", metrics.cyButtonSpacing);
+
+    /* TB_SETMETRICS without a valid structure sets nothing */
+    FillMemory(&metrics, sizeof(metrics), 0xDEADBEEF);
+    metrics.cbSize = 0; // Ensure the structure is invalidated
+    metrics.dwMask = TBMF_PAD|TBMF_BARPAD|TBMF_BUTTONSPACING; // Claim we set data
+    lres = SendMessageW(hwnd, TB_SETMETRICS, 0, (LPARAM)&metrics);
+    ok(lres == 0, "Got %lu result\n", lres);
+
+    /* The previous TB_SETMETRICS call should have not modified anything */
+    ZeroMemory(&metrics, sizeof(metrics));
+    metrics.cbSize = sizeof(metrics);
+    metrics.dwMask = TBMF_PAD|TBMF_BARPAD|TBMF_BUTTONSPACING;
+    lres = SendMessageW(hwnd, TB_GETMETRICS, 0, (LPARAM)&metrics);
+    ok(lres == 0, "Got %lu result\n", lres);
+    ok(metrics.dwMask == (TBMF_PAD|TBMF_BARPAD|TBMF_BUTTONSPACING), "Got %lu\n", metrics.dwMask);
+    ok(metrics.cxPad == 7, "Got %d\n", metrics.cxPad);
+    ok(metrics.cyPad == 6, "Got %d\n", metrics.cyPad);
+    ok(metrics.cxButtonSpacing == 0, "Got %d\n", metrics.cxButtonSpacing);
+    ok(metrics.cyButtonSpacing == 0, "Got %d\n", metrics.cyButtonSpacing);
+
+    /* TB_SETMETRICS with a valid structure sets the data */
+    ZeroMemory(&metrics, sizeof(metrics));
+    metrics.cbSize = sizeof(metrics);
+    metrics.dwMask = TBMF_PAD|TBMF_BARPAD|TBMF_BUTTONSPACING;
+    metrics.cxPad = metrics.cyPad = 2;
+    metrics.cxBarPad = metrics.cyBarPad = 3;
+    metrics.cxButtonSpacing = metrics.cyButtonSpacing = 5;
+    lres = SendMessageW(hwnd, TB_SETMETRICS, 0, (LPARAM)&metrics);
+    ok(lres == 0, "Got %lu result\n", lres);
+
+    /* The previous TB_SETMETRICS call should have modified the metrics */
+    ZeroMemory(&metrics, sizeof(metrics));
+    metrics.cbSize = sizeof(metrics);
+    metrics.dwMask = TBMF_PAD|TBMF_BARPAD|TBMF_BUTTONSPACING;
+    lres = SendMessageW(hwnd, TB_GETMETRICS, 0, (LPARAM)&metrics);
+    ok(lres == 0, "Got %lu result\n", lres);
+    ok(metrics.dwMask == (TBMF_PAD|TBMF_BARPAD|TBMF_BUTTONSPACING), "Got %lu\n", metrics.dwMask);
+    ok(metrics.cxPad == 2, "Got %d\n", metrics.cxPad);
+    ok(metrics.cyPad == 2, "Got %d\n", metrics.cyPad);
+    ok(metrics.cxBarPad == 3, "Got %d\n", metrics.cxBarPad);
+    ok(metrics.cyBarPad == 3, "Got %d\n", metrics.cyBarPad);
+    ok(metrics.cxButtonSpacing == 5, "Got %d\n", metrics.cxButtonSpacing);
+    ok(metrics.cyButtonSpacing == 5, "Got %d\n", metrics.cyButtonSpacing);
 
     DestroyWindow(hwnd);
 }
