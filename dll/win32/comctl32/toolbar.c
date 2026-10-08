@@ -5061,7 +5061,7 @@ TOOLBAR_SetMetrics(TOOLBAR_INFO *infoPtr, TBMETRICS *pMetrics)
         changed = TRUE;
     }
 
-    if (pMetrics->dwMask & TBMF_PAD)
+    if (pMetrics->dwMask & TBMF_BARPAD)
     {
         infoPtr->szBarPadding.cx = pMetrics->cxBarPad;
         infoPtr->szBarPadding.cy = pMetrics->cyBarPad;
