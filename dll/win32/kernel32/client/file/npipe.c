@@ -259,6 +259,7 @@ CreateNamedPipeW(LPCWSTR lpName,
     HANDLE PipeHandle;
     ACCESS_MASK DesiredAccess;
     ULONG CreateOptions = 0;
+    ULONG CreateDisposition;
     ULONG WriteModeMessage;
     ULONG ReadModeMessage;
     ULONG NonBlocking;
@@ -317,6 +318,10 @@ CreateNamedPipeW(LPCWSTR lpName,
     DesiredAccess = SYNCHRONIZE | (dwOpenMode & (WRITE_DAC |
                                                  WRITE_OWNER |
                                                  ACCESS_SYSTEM_SECURITY));
+
+    /* A first instance must not join a pipe that exists already. The flag has
+       the value of WRITE_OWNER, so a caller asking for WRITE_OWNER gets it too */
+    CreateDisposition = (dwOpenMode & FILE_FLAG_FIRST_PIPE_INSTANCE) ? FILE_CREATE : FILE_OPEN_IF;
 
     /* Convert to NT Create Flags */
     if (dwOpenMode & FILE_FLAG_WRITE_THROUGH)
@@ -390,7 +395,7 @@ CreateNamedPipeW(LPCWSTR lpName,
                                    &ObjectAttributes,
                                    &Iosb,
                                    ShareAccess,
-                                   FILE_OPEN_IF,
+                                   CreateDisposition,
                                    CreateOptions,
                                    WriteModeMessage,
                                    ReadModeMessage,
