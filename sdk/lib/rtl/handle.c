@@ -94,6 +94,10 @@ RtlAllocateHandle(
             HandleTable->MaxReservedHandles = (PRTL_HANDLE_TABLE_ENTRY)((ULONG_PTR)ArrayPointer + ArraySize);
         }
 
+        /* Fail once the whole reservation is committed */
+        if (HandleTable->UnCommittedHandles >= HandleTable->MaxReservedHandles)
+            return NULL;
+
         /* Commit one reserved handle entry page */
         ArraySize = PAGE_SIZE;
         ArrayPointer = HandleTable->UnCommittedHandles;
