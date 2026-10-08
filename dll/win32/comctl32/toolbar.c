@@ -3760,7 +3760,7 @@ TOOLBAR_GetMaxSize (const TOOLBAR_INFO *infoPtr, LPSIZE lpSize)
 static LRESULT
 TOOLBAR_GetMetrics(const TOOLBAR_INFO *infoPtr, TBMETRICS *pMetrics)
 {
-    if (pMetrics == NULL || pMetrics->cbSize != sizeof(TBMETRICS))
+    if (pMetrics == NULL || pMetrics->cbSize != sizeof(*pMetrics))
         return 0;
 
     if (pMetrics->dwMask & TBMF_PAD)
@@ -5049,10 +5049,8 @@ TOOLBAR_SetMetrics(TOOLBAR_INFO *infoPtr, TBMETRICS *pMetrics)
 {
     BOOL changed = FALSE;
 
-    if (!pMetrics)
-        return FALSE;
-
-    /* TODO: check if cbSize is a valid value */
+    if (pMetrics == NULL || pMetrics->cbSize != sizeof(*pMetrics))
+        return 0;
 
     if (pMetrics->dwMask & TBMF_PAD)
     {
@@ -5078,7 +5076,7 @@ TOOLBAR_SetMetrics(TOOLBAR_INFO *infoPtr, TBMETRICS *pMetrics)
     if (changed)
         TOOLBAR_CalcToolbar(infoPtr);
 
-    return TRUE;
+    return 0;
 }
 #endif
 
