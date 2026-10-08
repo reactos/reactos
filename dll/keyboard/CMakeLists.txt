@@ -56,6 +56,7 @@ list(APPEND _keyboard_layouts
     kbdmac
     kbdne
     kbdnec
+    kbdnec95
     kbdno
     kbdpl
     kbdpl1
