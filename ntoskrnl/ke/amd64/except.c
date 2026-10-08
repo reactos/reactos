@@ -145,8 +145,9 @@ KiDispatchExceptionToUser(
     {
         // FIXME: handle stack overflow
 
-        /* Nothing we can do here */
-        _disable();
+        /* Nothing we can do here. Keep interrupts enabled, the caller goes
+           on to the second-chance path, which can wait and terminate the
+           process. */
         return FALSE;
     }
     _SEH2_END;
