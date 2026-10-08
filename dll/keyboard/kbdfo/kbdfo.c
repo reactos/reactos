@@ -265,7 +265,7 @@ ROSDATA VK_TO_WCHARS4 key_to_chars_4mod[] = {
 };
 
 ROSDATA VK_TO_WCHARS5 key_to_chars_5mod[] = {
-  { '6'           , 0, { '6', '&', WCH_NONE, WCH_NONE, 0x1e } },
+  { '6', 0, { '6', '&', WCH_NONE, WCH_NONE, 0x1e } },
   { 0, 0 }
 };
 
