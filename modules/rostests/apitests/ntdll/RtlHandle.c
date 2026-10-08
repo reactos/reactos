@@ -13,6 +13,103 @@ typedef struct _TEST_HANDLE_ENTRY
     ULONG Data;
 } TEST_HANDLE_ENTRY, *PTEST_HANDLE_ENTRY;
 
+static
+VOID
+TestFullTable(VOID)
+{
+    /* The reservation is exactly 64 KB, so the next 64 KB boundary follows it */
+    const ULONG MaxHandles = 0x10000 / sizeof(TEST_HANDLE_ENTRY);
+    RTL_HANDLE_TABLE Tables[8];
+    PRTL_HANDLE_TABLE HandleTable = NULL;
+    PRTL_HANDLE_TABLE_ENTRY HandleEntry;
+    MEMORY_BASIC_INFORMATION MemoryInfo;
+    PUCHAR HandleBase = NULL, ReserveEnd = NULL;
+    PVOID GuardBase = NULL;
+    SIZE_T GuardSize;
+    NTSTATUS Status = STATUS_UNSUCCESSFUL;
+    ULONG TablesUsed, Count, Outside, i;
+
+    /* Find a table whose following 64 KB can be reserved. Keep the others
+       alive, so that each new table gets a different reservation. */
+    for (TablesUsed = 0; TablesUsed < RTL_NUMBER_OF(Tables); TablesUsed++)
+    {
+        HandleTable = &Tables[TablesUsed];
+        RtlInitializeHandleTable(MaxHandles, sizeof(TEST_HANDLE_ENTRY), HandleTable);
+        HandleEntry = RtlAllocateHandle(HandleTable, NULL);
+        ok(HandleEntry != NULL, "HandleEntry = %p\n", HandleEntry);
+        if (HandleEntry == NULL)
+        {
+            /* The reservation may exist even though the commit failed */
+            TablesUsed++;
+            Status = STATUS_UNSUCCESSFUL;
+            break;
+        }
+
+        HandleBase = (PUCHAR)HandleTable->CommittedHandles;
+        ReserveEnd = (PUCHAR)HandleTable->MaxReservedHandles;
+        ok(ReserveEnd == HandleBase + 0x10000, "MaxReservedHandles = %p, base %p\n", ReserveEnd, HandleBase);
+
+        GuardBase = ReserveEnd;
+        GuardSize = 0x10000;
+        Status = NtAllocateVirtualMemory(NtCurrentProcess(),
+                                         &GuardBase,
+                                         0,
+                                         &GuardSize,
+                                         MEM_RESERVE,
+                                         PAGE_READWRITE);
+        if (NT_SUCCESS(Status))
+        {
+            TablesUsed++;
+            break;
+        }
+        trace("Cannot reserve %p after table %lu: 0x%lx\n", ReserveEnd, TablesUsed, Status);
+    }
+
+    if (!NT_SUCCESS(Status))
+    {
+        skip("No table with a free range after it\n");
+    }
+    else
+    {
+        ok(GuardBase == ReserveEnd, "GuardBase = %p, expected %p\n", GuardBase, ReserveEnd);
+
+        /* Allocate one more than the maximum; an overrun stays inside the guard */
+        Count = 1;
+        Outside = 0;
+        while (Count <= MaxHandles)
+        {
+            HandleEntry = RtlAllocateHandle(HandleTable, NULL);
+            if (HandleEntry == NULL)
+                break;
+            if ((PUCHAR)HandleEntry < HandleBase || (PUCHAR)HandleEntry >= ReserveEnd)
+                Outside++;
+            Count++;
+        }
+        ok(Count == MaxHandles, "Count = %lu, expected %lu\n", Count, MaxHandles);
+        ok(Outside == 0, "%lu handles outside the reservation %p-%p\n", Outside, HandleBase, ReserveEnd);
+        ok((PUCHAR)HandleTable->UnCommittedHandles == ReserveEnd,
+           "UnCommittedHandles = %p, expected %p\n", HandleTable->UnCommittedHandles, ReserveEnd);
+
+        /* The guard range must still be reserved only */
+        Status = NtQueryVirtualMemory(NtCurrentProcess(),
+                                      ReserveEnd,
+                                      MemoryBasicInformation,
+                                      &MemoryInfo,
+                                      sizeof(MemoryInfo),
+                                      NULL);
+        ok(Status == STATUS_SUCCESS, "NtQueryVirtualMemory returned 0x%lx\n", Status);
+        ok(MemoryInfo.State == MEM_RESERVE, "State = 0x%lx\n", MemoryInfo.State);
+        ok(MemoryInfo.RegionSize == 0x10000, "RegionSize = 0x%Ix\n", MemoryInfo.RegionSize);
+
+        GuardSize = 0;
+        Status = NtFreeVirtualMemory(NtCurrentProcess(), &GuardBase, &GuardSize, MEM_RELEASE);
+        ok(Status == STATUS_SUCCESS, "NtFreeVirtualMemory returned 0x%lx\n", Status);
+    }
+
+    for (i = 0; i < TablesUsed; i++)
+        RtlDestroyHandleTable(&Tables[i]);
+}
+
 START_TEST(RtlHandle)
 {
     const ULONG MaxHandles = 2048;
@@ -194,4 +291,6 @@ START_TEST(RtlHandle)
     /* Finally, destroy the table */
     RtlDestroyHandleTable(&HandleTable);
     ok((PUCHAR)HandleTable.CommittedHandles == HandleBase, "CommittedHandles = %p\n", HandleTable.CommittedHandles);
+
+    TestFullTable();
 }
