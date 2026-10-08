@@ -485,14 +485,14 @@ CConsoleWnd::SaveView(MscFile *mscFile, IXMLDOMElement *pParentElement)
     CHK_HR(mscFile->CreateAndAddAttributeNode(L"ActionsPaneWidth", szBuffer, pViewElement));
 
     /* Root Snap-in  <BookMark Name="RootNode" NodeID="1"/> */
-    CHK_HR(mscFile->CreateAndAddElementNode(L"BookMark", pParentElement, &pBookMarkElement));
+    CHK_HR(mscFile->CreateAndAddElementNode(L"BookMark", pViewElement, &pBookMarkElement));
     CHK_HR(mscFile->CreateAndAddAttributeNode(L"Name", L"RootNode", pBookMarkElement));
     _swprintf(szBuffer, L"%u", m_ViewRootNode->GetNodeId());
     CHK_HR(mscFile->CreateAndAddAttributeNode(L"NodeID", szBuffer, pBookMarkElement));
     SAFE_RELEASE(pBookMarkElement);
 
     /* Selected Snap-in <BookMark Name="SelectedNode" NodeID="1"/> */
-    CHK_HR(mscFile->CreateAndAddElementNode(L"BookMark", pParentElement, &pBookMarkElement));
+    CHK_HR(mscFile->CreateAndAddElementNode(L"BookMark", pViewElement, &pBookMarkElement));
     CHK_HR(mscFile->CreateAndAddAttributeNode(L"Name", L"SelectedNode", pBookMarkElement));
     _swprintf(szBuffer, L"%u", m_ViewSelectedNode->GetNodeId());
     CHK_HR(mscFile->CreateAndAddAttributeNode(L"NodeID", szBuffer, pBookMarkElement));
