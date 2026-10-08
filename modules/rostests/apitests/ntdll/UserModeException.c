@@ -40,6 +40,7 @@ typedef void (*PFUNC)(void);
 #define FL_PRIV 0x100
 #define FL_ACC 0x200
 #define FL_INVLS 0x400
+#define FL_STKF 0x800 // access violation from a stack fault (#SS)
 
 typedef struct _TEST_ENTRY
 {
@@ -194,6 +195,9 @@ TEST_ENTRY TestEntries[] =
 #ifdef _M_AMD64
     /* Check non-canonical address access (causes a #GP) */
     { __LINE__, { 0xA0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x10, 0xC3 }, 0, FL_ANY | FL_ACC }, //  MOV AL, [0x1000000000000000]
+
+    /* Check non-canonical stack segment access (causes a #SS) */
+    { __LINE__, { 0x48, 0xB8, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x40, 0x8A, 0x04, 0x04, 0xC3 }, 10, FL_ANY | FL_ACC | FL_STKF }, // MOV RAX, 0x4000000000000000; MOV AL, [RSP + RAX]
 #endif
 
 };
@@ -276,8 +280,17 @@ void Test_SingleInstruction(
     if (Status == STATUS_ACCESS_VIOLATION)
     {
         ok_dec_(__FILE__, TestEntry->Line, ExceptionRecord.NumberParameters, 2);
-        ok_size_t_(__FILE__, TestEntry->Line, ExceptionRecord.ExceptionInformation[0], 0);
-        ok_size_t_(__FILE__, TestEntry->Line, ExceptionRecord.ExceptionInformation[1], (LONG_PTR)-1);
+        if (Flags & FL_STKF)
+        {
+            /* A stack fault reports 3 and 0 */
+            ok_size_t_(__FILE__, TestEntry->Line, ExceptionRecord.ExceptionInformation[0], 3);
+            ok_size_t_(__FILE__, TestEntry->Line, ExceptionRecord.ExceptionInformation[1], 0);
+        }
+        else
+        {
+            ok_size_t_(__FILE__, TestEntry->Line, ExceptionRecord.ExceptionInformation[0], 0);
+            ok_size_t_(__FILE__, TestEntry->Line, ExceptionRecord.ExceptionInformation[1], (LONG_PTR)-1);
+        }
     }
     else
     {
