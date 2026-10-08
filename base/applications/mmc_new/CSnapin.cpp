@@ -189,10 +189,8 @@ CSnapin::ParseSnapin(CMainWnd *pMainWnd, MscFile *mscFile, IXMLDOMElement *pSnap
 {
     VARIANT SnapinID, SnapinCLSID, SnapinDisplayName;
     IXMLDOMElement *pStringElement = NULL;
-#if 0
     IXMLDOMElement *pNodesElement = NULL;
     IXMLDOMNodeList *pChildList = NULL;
-#endif
     PWSTR pwstr;
     CSnapinCacheEntry *pCacheEntry = NULL;
     CSnapin *pSnapin = NULL;
@@ -248,7 +246,6 @@ CSnapin::ParseSnapin(CMainWnd *pMainWnd, MscFile *mscFile, IXMLDOMElement *pSnap
     /* FIXME: Read the ComponentDatas element */
     /* FIXME: Read the Component element */
 
-#if 0
     /* Get the Nodes element */
     hr = mscFile->GetElement(pSnapinNode, (LPWSTR)L"Nodes", &pNodesElement);
     if (hr != S_OK)
@@ -257,7 +254,6 @@ CSnapin::ParseSnapin(CMainWnd *pMainWnd, MscFile *mscFile, IXMLDOMElement *pSnap
     hr = pNodesElement->get_childNodes(&pChildList);
     if (FAILED(hr))
         goto done;
-#endif
 
 done:
     if (pStringElement)
@@ -268,7 +264,6 @@ done:
     VariantInit(&SnapinID);
 
     /* Parse Nodes Element and create Sub-Snapins */
-#if 0
     if (pChildList)
     {
         IXMLDOMNode *nextItem;
@@ -295,8 +290,12 @@ done:
                     {
                         if (_wcsicmp(NodeName, L"Node") == 0)
                         {
-                            /* FIXME: (IXMLDOMElement *)nextItem; */
-
+                            CSnapin *pSubSnapin;
+                            hr = ParseSnapin(pMainWnd, mscFile, (IXMLDOMElement *)nextItem, &pSubSnapin);
+                            if (hr == S_OK)
+                            {
+                                pSnapin->m_SubNodes.AddTail(pSubSnapin);
+                            }
                         }
                         SysFreeString(NodeName);
                         NodeName = NULL;
@@ -315,7 +314,6 @@ done:
 
     if (pNodesElement)
         pNodesElement->Release();
-#endif
 
     *ppSnapin = pSnapin;
 
