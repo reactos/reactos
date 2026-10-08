@@ -188,9 +188,8 @@ NTSTATUS
 NTAPI
 NtSetLdtEntries(ULONG Selector1, LDT_ENTRY LdtEntry1, ULONG Selector2, LDT_ENTRY LdtEntry2)
 {
-    UNIMPLEMENTED;
-    __debugbreak();
-    return STATUS_UNSUCCESSFUL;
+    /* Not supported */
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 NTSTATUS
