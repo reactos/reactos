@@ -10,6 +10,8 @@
 #include <winuser.h>
 #include <ndk/kbd.h>
 
+/* See also: https://kbdlayout.info/kbd103 */
+
 #ifdef _M_IA64
   #define ROSDATA static __declspec(allocate(".data"))
 #else
