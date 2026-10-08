@@ -1364,16 +1364,12 @@ co_GetKeyboardMultiTable(
             if (pKbdTableMulti->nTables && pKbdTableMulti->nTables < KBDTABLE_MULTI_MAX)
             {
                 PWSTR pRealName = ResultPointer->szRealName;
-                const SIZE_T cchRealName = _countof(ResultPointer->szRealName);
-                pRealName[cchRealName - 1] = UNICODE_NULL; /* Avoid buffer overrun */
-
                 PKBDTABLE_DESC pKbdTables = pKbdTableMulti->aKbdTables;
-                for (ULONG i = 0; i < pKbdTableMulti->nTables; ++i)
+                for (ULONG iTable = 0; iTable < pKbdTableMulti->nTables; ++iTable)
                 {
-                    PWSTR wszDllName = pKbdTables[i].wszDllName;
-                    wszDllName[_countof(pKbdTables[i].wszDllName) - 1] = UNICODE_NULL;
+                    PWSTR wszDllName = pKbdTables[iTable].wszDllName;
+                    wszDllName[_countof(pKbdTables[iTable].wszDllName) - 1] = UNICODE_NULL;
                 }
-
                 Status = RtlStringCchCopyW(pszRealDllName, cchRealDllName, pRealName);
                 ret = NT_SUCCESS(Status);
             }
