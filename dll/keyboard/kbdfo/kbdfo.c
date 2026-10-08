@@ -24,10 +24,8 @@
 #endif
 
 #define VK_EMPTY 0xff /* The non-existent VK */
-
-#define KNUMS (KBDNUMPAD | KBDSPECIAL) /* Special + number pad */
-#define KMEXT (KBDEXT | KBDMULTIVK)    /* Multi + ext */
-
+#define KNUMS    (KBDNUMPAD | KBDSPECIAL) /* Special + number pad */
+#define KMEXT    (KBDEXT | KBDMULTIVK)    /* Multi + ext */
 #define DEADTRANS(ch, accent, comp, flags) { MAKELONG(ch, accent), comp, flags }
 
 ROSDATA USHORT scancode_to_vk[] = {
@@ -214,17 +212,18 @@ ROSDATA VK_TO_BIT modifier_keys[] = {
   { 0, 0 }
 };
 
-ROSDATA MODIFIERS modifier_bits = {
+ROSDATA MODIFIERS modifier_bits =
+{
   modifier_keys,
   6,
   {
-    0, /* NONE */
-    1, /* SHIFT */
-    3, /* CTRL */
-    4, /* SHIFT+CTRL */
+    0,            /* NONE */
+    1,            /* SHIFT */
+    3,            /* CTRL */
+    4,            /* SHIFT+CTRL */
     SHFT_INVALID, /* ALT */
     SHFT_INVALID, /* SHIFT+ALT */
-    2, /* CTRL+ALT (AltGr) */
+    2,            /* CTRL+ALT (AltGr) */
   }
 };
 
@@ -232,95 +231,95 @@ ROSDATA MODIFIERS modifier_bits = {
  * (see ModNumber in modifier_bits). A row with VK_EMPTY (0xff)
  * following a WCH_DEAD entry gives the dead character itself. */
 ROSDATA VK_TO_WCHARS3 key_to_chars_3mod[] = {
-  { '2'           , 0, {'2', '\"', '@'} },
-  { '3'           , 0, {'3', '#', 0xa3 /* £ */} },
-  { '4'           , 0, {'4', 0xa4 /* ¤ */, '$'} },
-  { '5'           , 0, {'5', '%', 0x20ac /* € */} },
-  { '7'           , 0, {'7', '/', '{'} },
-  { '8'           , 0, {'8', '(', '['} },
-  { '9'           , 0, {'9', ')', ']'} },
-  { '0'           , 0, {'0', '=', '}'} },
-  { VK_OEM_4      , 0, {WCH_DEAD, WCH_DEAD, '|'} },
-  { VK_EMPTY      , 0, {0xb4 /* ´ */, '`', WCH_NONE} },  /* dead chars of the key above */
-  { 'E'           , CAPLOK, {'e', 'E', 0x20ac /* € */} },
-  { VK_OEM_7      , CAPLOK, {0xf8 /* ø */, 0xd8 /* Ø */, WCH_DEAD} },
-  { VK_EMPTY      , 0, {WCH_NONE, WCH_NONE, '^'} },
-  { 'M'           , CAPLOK, {'m', 'M', 0xb5 /* µ */} },
+  { '2'     , 0,      { '2', '\"', '@' } },
+  { '3'     , 0,      { '3', '#', 0xa3 /* £ */ } },
+  { '4'     , 0,      { '4', 0xa4 /* ¤ */, '$' } },
+  { '5'     , 0,      { '5', '%', 0x20ac /* € */ } },
+  { '7'     , 0,      { '7', '/', '{' } },
+  { '8'     , 0,      { '8', '(', '[' } },
+  { '9'     , 0,      { '9', ')', ']' } },
+  { '0'     , 0,      { '0', '=', '}' } },
+  { VK_OEM_4, 0,      { WCH_DEAD, WCH_DEAD, '|' } },
+  { VK_EMPTY, 0,      { 0xb4 /* ´ */, '`', WCH_NONE } },  /* dead chars of the key above */
+  { 'E'     , CAPLOK, { 'e', 'E', 0x20ac /* € */ } },
+  { VK_OEM_7, CAPLOK, { 0xf8 /* ø */, 0xd8 /* Ø */, WCH_DEAD } },
+  { VK_EMPTY, 0,      { WCH_NONE, WCH_NONE, '^' } },
+  { 'M'     , CAPLOK, { 'm', 'M', 0xb5 /* µ */ } },
   { 0, 0 }
 };
 
 ROSDATA VK_TO_WCHARS4 key_to_chars_4mod[] = {
-  { VK_OEM_5      , 0, {0xbd /* ½ */, 0xa7 /* § */, WCH_NONE, 0x1c} },
-  { VK_OEM_6      , CAPLOK, {0xe5 /* å */, 0xc5 /* Å */, WCH_DEAD, 0x1b} },
-  { VK_EMPTY      , 0, {WCH_NONE, WCH_NONE, 0xa8 /* ¨ */, WCH_NONE} },
-  { VK_OEM_1      , CAPLOK, {0xf0 /* ð */, 0xd0 /* Ð */, WCH_DEAD, 0x1d} },
-  { VK_EMPTY      , 0, {WCH_NONE, WCH_NONE, '~', WCH_NONE} },
-  { VK_OEM_MINUS  , 0, {'-', '_', WCH_NONE, 0x1f} },
-  { VK_OEM_102    , 0, {'<', '>', '\\', 0x1c} },
-  { VK_BACK       , 0, {0x08, 0x08, WCH_NONE, 0x7f} },
-  { VK_ESCAPE     , 0, {0x1b, 0x1b, WCH_NONE, 0x1b} },
-  { VK_RETURN     , 0, {'\r', '\r', WCH_NONE, '\n'} },
-  { VK_SPACE      , 0, {' ', ' ', WCH_NONE, ' '} },
-  { VK_CANCEL     , 0, {0x03, 0x03, WCH_NONE, 0x03} },
+  { VK_OEM_5    , 0,      { 0xbd /* ½ */, 0xa7 /* § */, WCH_NONE, 0x1c } },
+  { VK_OEM_6    , CAPLOK, { 0xe5 /* å */, 0xc5 /* Å */, WCH_DEAD, 0x1b } },
+  { VK_EMPTY    , 0,      { WCH_NONE, WCH_NONE, 0xa8 /* ¨ */, WCH_NONE } },
+  { VK_OEM_1    , CAPLOK, { 0xf0 /* ð */, 0xd0 /* Ð */, WCH_DEAD, 0x1d } },
+  { VK_EMPTY    , 0,      { WCH_NONE, WCH_NONE, '~', WCH_NONE } },
+  { VK_OEM_MINUS, 0,      { '-', '_', WCH_NONE, 0x1f } },
+  { VK_OEM_102  , 0,      { '<', '>', '\\', 0x1c } },
+  { VK_BACK     , 0,      { 0x08, 0x08, WCH_NONE, 0x7f } },
+  { VK_ESCAPE   , 0,      { 0x1b, 0x1b, WCH_NONE, 0x1b } },
+  { VK_RETURN   , 0,      { '\r', '\r', WCH_NONE, '\n' } },
+  { VK_SPACE    , 0,      { ' ', ' ', WCH_NONE, ' ' } },
+  { VK_CANCEL   , 0,      { 0x03, 0x03, WCH_NONE, 0x03 } },
   { 0, 0 }
 };
 
 ROSDATA VK_TO_WCHARS5 key_to_chars_5mod[] = {
-  { '6'           , 0, {'6', '&', WCH_NONE, WCH_NONE, 0x1e} },
+  { '6'           , 0, { '6', '&', WCH_NONE, WCH_NONE, 0x1e } },
   { 0, 0 }
 };
 
 ROSDATA VK_TO_WCHARS2 key_to_chars_2mod[] = {
-  { '1'           , 0, {'1', '!'} },
-  { VK_OEM_PLUS   , 0, {'+', '?'} },
-  { 'Q'           , CAPLOK, {'q', 'Q'} },
-  { 'W'           , CAPLOK, {'w', 'W'} },
-  { 'R'           , CAPLOK, {'r', 'R'} },
-  { 'T'           , CAPLOK, {'t', 'T'} },
-  { 'Y'           , CAPLOK, {'y', 'Y'} },
-  { 'U'           , CAPLOK, {'u', 'U'} },
-  { 'I'           , CAPLOK, {'i', 'I'} },
-  { 'O'           , CAPLOK, {'o', 'O'} },
-  { 'P'           , CAPLOK, {'p', 'P'} },
-  { VK_OEM_2      , 0, {'\'', '*'} },
-  { 'A'           , CAPLOK, {'a', 'A'} },
-  { 'S'           , CAPLOK, {'s', 'S'} },
-  { 'D'           , CAPLOK, {'d', 'D'} },
-  { 'F'           , CAPLOK, {'f', 'F'} },
-  { 'G'           , CAPLOK, {'g', 'G'} },
-  { 'H'           , CAPLOK, {'h', 'H'} },
-  { 'J'           , CAPLOK, {'j', 'J'} },
-  { 'K'           , CAPLOK, {'k', 'K'} },
-  { 'L'           , CAPLOK, {'l', 'L'} },
-  { VK_OEM_3      , CAPLOK, {0xe6 /* æ */, 0xc6 /* Æ */} },
-  { 'Z'           , CAPLOK, {'z', 'Z'} },
-  { 'X'           , CAPLOK, {'x', 'X'} },
-  { 'C'           , CAPLOK, {'c', 'C'} },
-  { 'V'           , CAPLOK, {'v', 'V'} },
-  { 'B'           , CAPLOK, {'b', 'B'} },
-  { 'N'           , CAPLOK, {'n', 'N'} },
-  { VK_OEM_COMMA  , 0, {',', ';'} },
-  { VK_OEM_PERIOD , 0, {'.', ':'} },
-  { VK_DECIMAL    , 0, {',', ','} },
-  { VK_TAB        , 0, {'\t', '\t'} },
-  { VK_ADD        , 0, {'+', '+'} },
-  { VK_DIVIDE     , 0, {'/', '/'} },
-  { VK_MULTIPLY   , 0, {'*', '*'} },
-  { VK_SUBTRACT   , 0, {'-', '-'} },
+  { '1'           , 0,      { '1', '!' } },
+  { VK_OEM_PLUS   , 0,      { '+', '?' } },
+  { 'Q'           , CAPLOK, { 'q', 'Q' } },
+  { 'W'           , CAPLOK, { 'w', 'W' } },
+  { 'R'           , CAPLOK, { 'r', 'R' } },
+  { 'T'           , CAPLOK, { 't', 'T' } },
+  { 'Y'           , CAPLOK, { 'y', 'Y' } },
+  { 'U'           , CAPLOK, { 'u', 'U' } },
+  { 'I'           , CAPLOK, { 'i', 'I' } },
+  { 'O'           , CAPLOK, { 'o', 'O' } },
+  { 'P'           , CAPLOK, { 'p', 'P' } },
+  { VK_OEM_2      , 0,      { '\'', '*' } },
+  { 'A'           , CAPLOK, { 'a', 'A' } },
+  { 'S'           , CAPLOK, { 's', 'S' } },
+  { 'D'           , CAPLOK, { 'd', 'D' } },
+  { 'F'           , CAPLOK, { 'f', 'F' } },
+  { 'G'           , CAPLOK, { 'g', 'G' } },
+  { 'H'           , CAPLOK, { 'h', 'H' } },
+  { 'J'           , CAPLOK, { 'j', 'J' } },
+  { 'K'           , CAPLOK, { 'k', 'K' } },
+  { 'L'           , CAPLOK, { 'l', 'L' } },
+  { VK_OEM_3      , CAPLOK, { 0xe6 /* æ */, 0xc6 /* Æ */ } },
+  { 'Z'           , CAPLOK, { 'z', 'Z' } },
+  { 'X'           , CAPLOK, { 'x', 'X' } },
+  { 'C'           , CAPLOK, { 'c', 'C' } },
+  { 'V'           , CAPLOK, { 'v', 'V' } },
+  { 'B'           , CAPLOK, { 'b', 'B' } },
+  { 'N'           , CAPLOK, { 'n', 'N' } },
+  { VK_OEM_COMMA  , 0,      { ',', ';' } },
+  { VK_OEM_PERIOD , 0,      { '.', ':' } },
+  { VK_DECIMAL    , 0,      { ',', ',' } },
+  { VK_TAB        , 0,      { '\t', '\t' } },
+  { VK_ADD        , 0,      { '+', '+' } },
+  { VK_DIVIDE     , 0,      { '/', '/' } },
+  { VK_MULTIPLY   , 0,      { '*', '*' } },
+  { VK_SUBTRACT   , 0,      { '-', '-' } },
   { 0, 0 }
 };
 
 ROSDATA VK_TO_WCHARS1 key_to_chars_1mod[] = {
-  { VK_NUMPAD0    , 0, {'0'} },
-  { VK_NUMPAD1    , 0, {'1'} },
-  { VK_NUMPAD2    , 0, {'2'} },
-  { VK_NUMPAD3    , 0, {'3'} },
-  { VK_NUMPAD4    , 0, {'4'} },
-  { VK_NUMPAD5    , 0, {'5'} },
-  { VK_NUMPAD6    , 0, {'6'} },
-  { VK_NUMPAD7    , 0, {'7'} },
-  { VK_NUMPAD8    , 0, {'8'} },
-  { VK_NUMPAD9    , 0, {'9'} },
+  { VK_NUMPAD0, 0, { '0' } },
+  { VK_NUMPAD1, 0, { '1' } },
+  { VK_NUMPAD2, 0, { '2' } },
+  { VK_NUMPAD3, 0, { '3' } },
+  { VK_NUMPAD4, 0, { '4' } },
+  { VK_NUMPAD5, 0, { '5' } },
+  { VK_NUMPAD6, 0, { '6' } },
+  { VK_NUMPAD7, 0, { '7' } },
+  { VK_NUMPAD8, 0, { '8' } },
+  { VK_NUMPAD9, 0, { '9' } },
   { 0, 0 }
 };
 
