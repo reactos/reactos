@@ -2195,7 +2195,7 @@ diff -pudN e:\wine\dlls\comctl32/toolbar.c e:\reactos\dll\win32\comctl32/toolbar
 +        changed = TRUE;
 +    }
 +
-+    if (pMetrics->dwMask & TBMF_PAD)
++    if (pMetrics->dwMask & TBMF_BARPAD)
 +    {
 +        infoPtr->szBarPadding.cx = pMetrics->cxBarPad;
 +        infoPtr->szBarPadding.cy = pMetrics->cyBarPad;
