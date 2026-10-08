@@ -183,3 +183,141 @@ CSnapin::SaveNode(MscFile *mscFile, IXMLDOMElement *pParentNode)
 CleanUp:
     SAFE_RELEASE(pNodeElement); /* </Node> */
 }
+
+HRESULT
+CSnapin::ParseSnapin(CMainWnd *pMainWnd, MscFile *mscFile, IXMLDOMElement *pSnapinNode, CSnapin **ppSnapin)
+{
+    VARIANT SnapinID, SnapinCLSID, SnapinDisplayName;
+    IXMLDOMElement *pStringElement = NULL;
+#if 0
+    IXMLDOMElement *pNodesElement = NULL;
+    IXMLDOMNodeList *pChildList = NULL;
+#endif
+    PWSTR pwstr;
+    CSnapinCacheEntry *pCacheEntry = NULL;
+    CSnapin *pSnapin = NULL;
+    HRESULT hr = S_OK;
+
+    VariantInit(&SnapinID);
+    VariantInit(&SnapinCLSID);
+    VariantInit(&SnapinDisplayName);
+
+    /* Read the ID attribute */
+    hr = mscFile->GetAttribute(pSnapinNode, (LPWSTR)L"ID", &SnapinID);
+    if (hr != S_OK)
+        goto done;
+
+    /* Read the CLSID attribute */
+    hr = mscFile->GetAttribute(pSnapinNode, (LPWSTR)L"CLSID", &SnapinCLSID);
+    if (hr != S_OK)
+        goto done;
+
+    /* FIXME: Read the ImageIdx attribute */
+    /* FIXME: Read the Preload attribute */
+
+    /* Open the String Element */
+    hr = mscFile->GetElement(pSnapinNode, (LPWSTR)L"String", &pStringElement);
+    if (hr != S_OK)
+        goto done;
+
+    /* Read the Name attribute */
+    hr = mscFile->GetAttribute(pStringElement, (LPWSTR)L"Name", &SnapinDisplayName);
+    if (hr != S_OK)
+        goto done;
+
+    /* FIXME: Use a string cache and the ID attribute instead of Name later */
+
+    /* Create the Snap-in */
+    pCacheEntry = pMainWnd->GetSnapinCacheEntryByGuid(V_BSTR(&SnapinCLSID));
+    if (pCacheEntry == NULL)
+    {
+        hr = E_FAIL;
+        goto done;
+    }
+
+    pSnapin = new CSnapin(pCacheEntry,
+                          (UINT)wcstoul(V_BSTR(&SnapinID), &pwstr, 10),
+                          V_BSTR(&SnapinDisplayName));
+    if (pSnapin == NULL)
+    {
+        hr = E_FAIL;
+        goto done;
+    }
+
+    /* FIXME: Read the Bitmaps element */
+    /* FIXME: Read the ComponentDatas element */
+    /* FIXME: Read the Component element */
+
+#if 0
+    /* Get the Nodes element */
+    hr = mscFile->GetElement(pSnapinNode, (LPWSTR)L"Nodes", &pNodesElement);
+    if (hr != S_OK)
+        goto done;
+
+    hr = pNodesElement->get_childNodes(&pChildList);
+    if (FAILED(hr))
+        goto done;
+#endif
+
+done:
+    if (pStringElement)
+        pStringElement->Release();
+
+    VariantInit(&SnapinDisplayName);
+    VariantInit(&SnapinCLSID);
+    VariantInit(&SnapinID);
+
+    /* Parse Nodes Element and create Sub-Snapins */
+#if 0
+    if (pChildList)
+    {
+        IXMLDOMNode *nextItem;
+        DOMNodeType NodeType;
+        BSTR NodeName = NULL;
+
+        for (;;)
+        {
+            hr = pChildList->nextNode(&nextItem);
+            if (hr == S_FALSE)
+            {
+                hr = S_OK;
+                break;
+            }
+
+            hr = nextItem->get_nodeType(&NodeType);
+            if (hr == S_OK)
+            {
+                if (NodeType == NODE_ELEMENT)
+                {
+                    NodeName = NULL;
+                    hr = nextItem->get_baseName(&NodeName);
+                    if (hr == S_OK)
+                    {
+                        if (_wcsicmp(NodeName, L"Node") == 0)
+                        {
+                            /* FIXME: (IXMLDOMElement *)nextItem; */
+
+                        }
+                        SysFreeString(NodeName);
+                        NodeName = NULL;
+                    }
+                }
+            }
+
+            nextItem->Release();
+        }
+
+        pChildList->Release();
+
+        if (NodeName)
+            SysFreeString(NodeName);
+    }
+
+    if (pNodesElement)
+        pNodesElement->Release();
+#endif
+
+    *ppSnapin = pSnapin;
+
+    return hr;
+}

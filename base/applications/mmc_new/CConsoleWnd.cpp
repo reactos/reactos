@@ -9,11 +9,11 @@
 
 #include "precomp.h"
 
-CConsoleWnd::CConsoleWnd(CMainWnd *MainWnd, CSnapin *RootNode)
+CConsoleWnd::CConsoleWnd(CMainWnd *MainWnd, CSnapin *RootNode, CSnapin *SelectedNode)
 {
     m_MainWnd = MainWnd;
     m_ViewRootNode = RootNode;
-    m_ViewSelectedNode = RootNode;
+    m_ViewSelectedNode = SelectedNode ? SelectedNode : RootNode;
     m_ListViewMode = ListView_Detail;
     m_pfnSuperWindowProc = DefMDIChildProc;
 

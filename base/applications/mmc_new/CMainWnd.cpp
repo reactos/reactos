@@ -178,8 +178,6 @@ CMainWnd::OnMenuSelect(UINT nMessage, WPARAM wParam, LPARAM lParam, BOOL& bHandl
 LRESULT
 CMainWnd::OnFileNew(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
 {
-    MDICREATESTRUCT mcs;
-    HWND hChild;
     CAtlString rootName(MAKEINTRESOURCE(IDS_CONSOLEROOT));
 //    CAtlString nodeGuid(L"{C96401CC-0E17-11D3-885B-00C04F72C717}");
 
@@ -191,9 +189,7 @@ CMainWnd::OnFileNew(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
         console->SendMessage(WM_CLOSE, 0, 0);
     }
 
-    /* Delete the snapin tree */
-    delete m_RootNode;
-    m_RootNode = NULL;
+    InitMain();
 
     /* Create a new snapin root node */
     CSnapinCacheEntry *CacheEntry = GetSnapinCacheEntryByGuid((PWSTR)L"{C96401CC-0E17-11D3-885B-00C04F72C717}");
@@ -210,33 +206,8 @@ CMainWnd::OnFileNew(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
         return 0;
     }
 
-    /* Create a new view */
-    mcs.szTitle = rootName.GetString();
-    mcs.szClass = CConsoleWnd::GetWndClassName();
-    mcs.hOwner = _AtlBaseModule.GetModuleInstance();
-    mcs.x = mcs.cx = CW_USEDEFAULT;
-    mcs.y = mcs.cy = CW_USEDEFAULT;
-    mcs.style = MDIS_ALLCHILDSTYLES;
-    BOOL bMaximized = FALSE;
-    HWND hWndOld = (HWND)m_MDIClient.SendMessage(WM_MDIGETACTIVE, 0, (LPARAM)&bMaximized);
-    mcs.lParam = bMaximized || !hWndOld;
-    /* This object registers itself in the _AtlWinModule to be assigned to the next window created */
-    CConsoleWnd* child = new CConsoleWnd(this, m_RootNode);
-    /* Ask for a new MDI Child window */
-    hChild = (HWND)m_MDIClient.SendMessage(WM_MDICREATE, 0, (LONG_PTR)&mcs);
-    if (hChild)
-    {
+    if (CreateView(m_RootNode))
         m_ConsoleNumber++;
-    }
-    else
-    {
-        delete child;
-        delete m_RootNode;
-        m_RootNode = NULL;
-    }
-
-    UpdateTitle();
-    UpdateMenu();
 
     return 1;
 }
@@ -246,10 +217,6 @@ CMainWnd::OnFileOpen(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
 {
     OPENFILENAME openas;
     WCHAR szPath[MAX_PATH];
-
-    CConsoleWnd* child = GetActiveChildInfo();
-    if (child == NULL)
-        return 0;
 
     ZeroMemory(&openas, sizeof(openas));
     wcscpy(szPath, L"");
@@ -265,10 +232,25 @@ CMainWnd::OnFileOpen(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
 
     if (GetOpenFileNameW(&openas))
     {
+        /* Close all views */
+        POSITION pos = m_ViewList.GetHeadPosition();
+        while (pos)
+        {
+            CConsoleWnd *console = (CConsoleWnd*)m_ViewList.GetNext(pos);
+            console->SendMessage(WM_CLOSE, 0, 0);
+        }
+
+        InitMain();
+
         m_Filename = szPath;
         LRESULT ret = LoadMscFile(m_Filename);
         if (ret == ERROR_SUCCESS)
+        {
             AddToRecentFiles(m_Filename);
+
+            if (CreateView(m_RootNode))
+                m_ConsoleNumber++;
+        }
     }
 
     return 0;
@@ -367,9 +349,24 @@ CMainWnd::OnFileRecent(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
     {
         CRecentFileEntry *FileEntry = (CRecentFileEntry *)mi.dwItemData;
 
+        /* Close all views */
+        POSITION pos = m_ViewList.GetHeadPosition();
+        while (pos)
+        {
+            CConsoleWnd *console = (CConsoleWnd*)m_ViewList.GetNext(pos);
+            console->SendMessage(WM_CLOSE, 0, 0);
+        }
+
+        InitMain();
+
         LRESULT ret = LoadMscFile(FileEntry->FileName());
         if (ret == ERROR_SUCCESS)
+        {
             AddToRecentFiles(FileEntry->FileName());
+
+            if (CreateView(m_RootNode))
+                m_ConsoleNumber++;
+        }
     }
 
     return 0;
@@ -438,28 +435,7 @@ CMainWnd::OnViewCustomize(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandl
 LRESULT
 CMainWnd::OnWindowsNew(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
 {
-    MDICREATESTRUCT mcs;
-    HWND hChild;
-
-    mcs.szTitle = m_RootNode->DisplayName().GetString();
-    mcs.szClass = CConsoleWnd::GetWndClassName();
-    mcs.hOwner = _AtlBaseModule.GetModuleInstance();
-    mcs.x = mcs.cx = CW_USEDEFAULT;
-    mcs.y = mcs.cy = CW_USEDEFAULT;
-    mcs.style = MDIS_ALLCHILDSTYLES;
-    BOOL bMaximized = FALSE;
-    HWND hWndOld = (HWND)m_MDIClient.SendMessage(WM_MDIGETACTIVE, 0, (LPARAM)&bMaximized);
-    mcs.lParam = bMaximized || !hWndOld;
-    /* This object registers itself in the _AtlWinModule to be assigned to the next window created */
-    CConsoleWnd* child = new CConsoleWnd(this, m_RootNode);
-    /* Ask for a new MDI Child window */
-    hChild = (HWND)m_MDIClient.SendMessage(WM_MDICREATE, 0, (LONG_PTR)&mcs);
-    if (!hChild)
-    {
-        delete child;
-    }
-
-    UpdateMenu();
+    CreateView(m_RootNode);
     return 0;
 }
 
@@ -563,6 +539,37 @@ CMainWnd::OnMDIForward(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
         ::SendMessage(hChild, WM_COMMAND, wParam, lParam);
     }
     return 0;
+}
+
+BOOL
+CMainWnd::CreateView(CSnapin *RootNode, CSnapin *SelectedNode)
+{
+    MDICREATESTRUCT mcs;
+    HWND hChild;
+
+    mcs.szTitle = RootNode->DisplayName().GetString();
+    mcs.szClass = CConsoleWnd::GetWndClassName();
+    mcs.hOwner = _AtlBaseModule.GetModuleInstance();
+    mcs.x = mcs.cx = CW_USEDEFAULT;
+    mcs.y = mcs.cy = CW_USEDEFAULT;
+    mcs.style = MDIS_ALLCHILDSTYLES;
+    BOOL bMaximized = FALSE;
+    HWND hWndOld = (HWND)m_MDIClient.SendMessage(WM_MDIGETACTIVE, 0, (LPARAM)&bMaximized);
+    mcs.lParam = bMaximized || !hWndOld;
+    /* This object registers itself in the _AtlWinModule to be assigned to the next window created */
+    CConsoleWnd* child = new CConsoleWnd(this, RootNode, SelectedNode);
+    /* Ask for a new MDI Child window */
+    hChild = (HWND)m_MDIClient.SendMessage(WM_MDICREATE, 0, (LONG_PTR)&mcs);
+    if (!hChild)
+    {
+        delete child;
+        return FALSE;
+    }
+
+    UpdateTitle();
+    UpdateMenu();
+
+    return TRUE;
 }
 
 CAtlString *CMainWnd::GetConsoleTitle()
@@ -1100,7 +1107,7 @@ CMainWnd::LoadMscFile(const CAtlString &FileName)
 
         hr = mscFile->GetAttribute(pFrameStateElement, (LPWSTR)L"PreventViewCustomization", &PreventViewCustomization);
         if ((hr == S_OK) && (_wcsicmp(V_BSTR(&PreventViewCustomization), L"true") == 0))
-                m_PreventViewCustomization = TRUE;
+            m_PreventViewCustomization = TRUE;
 
         VariantClear(&LogicalReadOnly);
         VariantClear(&PreventViewCustomization);
@@ -1113,11 +1120,9 @@ CMainWnd::LoadMscFile(const CAtlString &FileName)
 
     /* FIXME Parse other frame settings */
 
-    /*
-     * - Parse the ScopeTree Element
-     *    - Check the Snapin cache
-     *    - Build the snapin (nodes) tree
-     */
+    hr = ParseScopeTree(mscFile, pRootElement);
+    if (hr != S_OK)
+        goto done;
 
     /* Parse the Views Element and create the views */
 
@@ -1141,5 +1146,43 @@ done:
 //        ::MessageBox(NULL, L"Failure!", FileName.GetString(), MB_OK);
     }
 
-    return 0;
+    return ERROR_SUCCESS;
+}
+
+HRESULT
+CMainWnd::ParseScopeTree(MscFile *mscFile, IXMLDOMElement *pRootElement)
+{
+    IXMLDOMElement *pScopeTreeElement = NULL;
+    IXMLDOMElement *pNodesElement = NULL;
+    IXMLDOMElement *pNodeElement = NULL;
+    HRESULT hr = S_OK;
+
+    hr = mscFile->GetElement(pRootElement, (LPWSTR)L"ScopeTree", &pScopeTreeElement);
+    if (hr != S_OK)
+        goto done;
+
+    /* Fixme: SnapinCache Element */
+
+    /* Nodes Element */
+    hr = mscFile->GetElement(pScopeTreeElement, (LPWSTR)L"Nodes", &pNodesElement);
+    if (hr != S_OK)
+        goto done;
+
+    hr = mscFile->GetElement(pNodesElement, (LPWSTR)L"Node", &pNodeElement);
+    if (hr != S_OK)
+        goto done;
+
+    hr = CSnapin::ParseSnapin(this, mscFile, pNodeElement, &m_RootNode);
+
+done:
+    if (pNodeElement)
+        pNodeElement->Release();
+
+    if (pNodesElement)
+        pNodesElement->Release();
+
+    if (pScopeTreeElement)
+        pScopeTreeElement->Release();
+
+    return hr;
 }

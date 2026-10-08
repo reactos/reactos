@@ -57,6 +57,8 @@ typedef enum _LISTVIEW_MODE
 #include "mscfile.h"
 #include "misc.h"
 
+class CMainWnd;
+
 #include "CRecentFileEntry.h"
 #include "CSnapinCacheEntry.h"
 #include "CSnapin.h"

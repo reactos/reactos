@@ -95,7 +95,7 @@ private:
     VOID UpdateTreeView();
 
 public:
-    CConsoleWnd(CMainWnd *MainWnd, CSnapin *RootNode);
+    CConsoleWnd(CMainWnd *MainWnd, CSnapin *RootNode, CSnapin *SelectedNode = NULL);
     ~CConsoleWnd();
 
     LRESULT OnCreate(UINT nMessage, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
