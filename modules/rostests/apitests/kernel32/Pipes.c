@@ -107,8 +107,49 @@ VOID StartTestCORE17376(_In_ DWORD adReadBufferSize)
     trace("adReadBufferSize = %lu - COMPLETED\n", adReadBufferSize);
 }
 
+static VOID TestFirstPipeInstance(VOID)
+{
+    WCHAR PipeName[64];
+    HANDLE hFirst, hSecond, hThird;
+
+    _snwprintf(PipeName, _countof(PipeName), L"\\\\.\\pipe\\rostest_first_instance_%lu", GetCurrentProcessId());
+
+    /* Someone else owns the name: a first instance must not join it */
+    hFirst = CreateNamedPipeW(PipeName, PIPE_ACCESS_DUPLEX, PIPE_TYPE_BYTE | PIPE_WAIT,
+                              PIPE_UNLIMITED_INSTANCES, MAXBUFFERSIZE, MAXBUFFERSIZE, 0, NULL);
+    ok(hFirst != INVALID_HANDLE_VALUE, "CreateNamedPipeW failed, last error = 0x%lx\n", GetLastError());
+    if (hFirst == INVALID_HANDLE_VALUE)
+        return;
+
+    SetLastError(0xdeadbeef);
+    hSecond = CreateNamedPipeW(PipeName, PIPE_ACCESS_DUPLEX | FILE_FLAG_FIRST_PIPE_INSTANCE,
+                               PIPE_TYPE_BYTE | PIPE_WAIT, PIPE_UNLIMITED_INSTANCES,
+                               MAXBUFFERSIZE, MAXBUFFERSIZE, 0, NULL);
+    ok(hSecond == INVALID_HANDLE_VALUE, "Instance with FILE_FLAG_FIRST_PIPE_INSTANCE joined an existing pipe\n");
+    ok_hex(GetLastError(), ERROR_ACCESS_DENIED);
+    if (hSecond != INVALID_HANDLE_VALUE)
+        CloseHandle(hSecond);
+
+    /* Without the flag, a further instance is still allowed */
+    hThird = CreateNamedPipeW(PipeName, PIPE_ACCESS_DUPLEX, PIPE_TYPE_BYTE | PIPE_WAIT,
+                              PIPE_UNLIMITED_INSTANCES, MAXBUFFERSIZE, MAXBUFFERSIZE, 0, NULL);
+    ok(hThird != INVALID_HANDLE_VALUE, "Further instance failed, last error = 0x%lx\n", GetLastError());
+    if (hThird != INVALID_HANDLE_VALUE)
+        CloseHandle(hThird);
+    CloseHandle(hFirst);
+
+    /* Once every instance is closed, the name can be taken with the flag again */
+    hFirst = CreateNamedPipeW(PipeName, PIPE_ACCESS_DUPLEX | FILE_FLAG_FIRST_PIPE_INSTANCE,
+                              PIPE_TYPE_BYTE | PIPE_WAIT, PIPE_UNLIMITED_INSTANCES,
+                              MAXBUFFERSIZE, MAXBUFFERSIZE, 0, NULL);
+    ok(hFirst != INVALID_HANDLE_VALUE, "First instance after close failed, last error = 0x%lx\n", GetLastError());
+    if (hFirst != INVALID_HANDLE_VALUE)
+        CloseHandle(hFirst);
+}
+
 START_TEST(Pipes)
 {
+    TestFirstPipeInstance();
     StartTestCORE17376(MINBUFFERSIZE);
     StartTestCORE17376(MAXBUFFERSIZE);
 }
