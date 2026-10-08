@@ -83,7 +83,7 @@ Page1DlgProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 #endif
 
 // Validate struct sizes
-static void test_StructSizes()
+static void test_StructSizes(void)
 {
 #ifdef _M_X64
     CHECK_STRUCT_SIZE(PROPSHEETPAGEA_V1_SIZE, 72);
@@ -122,7 +122,7 @@ static FN_CreatePropertySheetPageW pCreatePropertySheetPageW;
 static FN_PropertySheetW pPropertySheetW;
 
 // Show that the Apply button is not enabled by default
-static void test_ApplyButtonDisabled()
+static void test_ApplyButtonDisabled(void)
 {
     PROPSHEETPAGEW psp = {0};
     PROPSHEETHEADERW header = {0};

@@ -14,7 +14,7 @@
 #include <msgtrace.h>
 #include <user32testhelpers.h>
 
-HANDLE _CreateV5ActCtx()
+HANDLE _CreateV5ActCtx(void)
 {
     ACTCTXW ActCtx = {sizeof(ACTCTX)};
     WCHAR buffer[MAX_PATH] , *separator;
@@ -30,7 +30,7 @@ HANDLE _CreateV5ActCtx()
 }
 
 
-void TestVersionMessage()
+void TestVersionMessage(void)
 {
     HWND hwnd;
     int version;
@@ -62,7 +62,7 @@ void TestVersionMessage()
     DestroyWindow(hwnd);
 }
 
-void TestSetButtonSize()
+void TestSetButtonSize(void)
 {
     HWND hwnd;
     LRESULT bsize;
@@ -96,7 +96,7 @@ void TestSetButtonSize()
     DestroyWindow(hwnd);
 }
 
-void TestPadding()
+void TestPadding(void)
 {
     HWND hwnd;
     LRESULT bsize;
@@ -171,7 +171,7 @@ void TestPadding()
     DestroyWindow(hwnd);
 }
 
-void TestButtonSpacing()
+void TestButtonSpacing(void)
 {
     HWND hwnd;
     TBMETRICS metrics;
@@ -197,7 +197,7 @@ void TestButtonSpacing()
     ok (metrics.cyButtonSpacing == 0, "Got %d\n", metrics.cyButtonSpacing);
 }
 
-void TestV5VersionMessage()
+void TestV5VersionMessage(void)
 {
     HWND hwnd;
     int version;
