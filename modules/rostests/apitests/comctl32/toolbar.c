@@ -195,6 +195,8 @@ void TestButtonSpacing(void)
     ok (metrics.cyPad == 6, "Got %d\n", metrics.cyPad);
     ok (metrics.cxButtonSpacing == 0, "Got %d\n", metrics.cxButtonSpacing);
     ok (metrics.cyButtonSpacing == 0, "Got %d\n", metrics.cyButtonSpacing);
+
+    DestroyWindow(hwnd);
 }
 
 void TestV5VersionMessage(void)
