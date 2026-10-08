@@ -52,6 +52,7 @@ list(APPEND SOURCE
     NtApphelpCacheControl.c
     NtCompareTokens.c
     NtContinue.c
+    NtCreateDirectoryObject.c
     NtCreateFile.c
     NtCreateKey.c
     NtCreateProfile.c
