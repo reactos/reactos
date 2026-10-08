@@ -17,7 +17,7 @@
 #define ok_rect(rc, l,r,t,b) ok((rc.left == (l)) && (rc.right == (r)) && (rc.top == (t)) && (rc.bottom == (b)), "Wrong rect. expected %d, %d, %d, %d got %ld, %ld, %ld, %ld\n", l,t,r,b, rc.left, rc.top, rc.right, rc.bottom)
 #define ok_size(s, width, height) ok((s.cx == (width) && s.cy == (height)), "Expected size (%lu,%lu) got (%lu,%lu)\n", (LONG)width, (LONG)height, s.cx, s.cy)
 
-void Test_TextMargin()
+void Test_TextMargin(void)
 {
     RECT rc;
     BOOL ret;
@@ -69,7 +69,7 @@ void Test_TextMargin()
 
 }
 
-void Test_Imagelist()
+void Test_Imagelist(void)
 {
     HWND hwnd1;
     BOOL ret;
@@ -105,7 +105,7 @@ void Test_Imagelist()
     DestroyWindow(hwnd1);
 }
 
-void Test_GetIdealSizeNoThemes()
+void Test_GetIdealSizeNoThemes(void)
 {
     HWND hwnd1, hwnd2;
     BOOL ret;
@@ -486,7 +486,7 @@ static LRESULT CALLBACK TestProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM 
     return DefWindowProc(hwnd, message, wParam, lParam);
 }
 
-static void FlushMessages()
+static void FlushMessages(void)
 {
     MSG msg;
 
@@ -693,7 +693,7 @@ MSG_ENTRY btnup_stray_sequence[]={
     {2, WM_LBUTTONUP, SENT},
     {0,0}};
 
-void Test_MessagesNonThemed()
+void Test_MessagesNonThemed(void)
 {
     DWORD state;
 
@@ -827,7 +827,7 @@ void Test_MessagesNonThemed()
     DestroyWindow(hWnd2);
 }
 
-void Test_MessagesThemed()
+void Test_MessagesThemed(void)
 {
     DWORD state;
 
@@ -937,4 +937,3 @@ START_TEST(buttonv6)
         skip("No active theme, skipping Test_MessagesThemed\n");
 
 }
-
