@@ -1,7 +1,7 @@
 /*
  * PROJECT:     ReactOS Keyboard Layouts
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
- * PURPOSE:     Faroese (fo-FO) keyboard layout
+ * PURPOSE:     Faeroese (fo-FO) keyboard layout
  * COPYRIGHT:   Copyright 2026 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
