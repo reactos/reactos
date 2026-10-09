@@ -2,6 +2,7 @@
 list(APPEND _keyboard_layouts
     kbd101
     kbd106
+    kbd106n
     kbda1
     kbda2
     kbda3
