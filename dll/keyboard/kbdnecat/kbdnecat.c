@@ -368,7 +368,9 @@ ROSDATA KBDTABLES_FE keyboard_layout_table = {
     extcode1_to_vk,
 
     0, /* fLocaleFlags */
-    0, 0, NULL /* Ligatures -- none */
+
+    /* Ligatures -- none */
+    0, 0, NULL
   },
   7,     /* dwType    : Japanese keyboard */
   0x0d02 /* dwSubType : NEC PC-9800 (PC98-NX) */
@@ -449,7 +451,7 @@ ROSDATA VK_F key_to_function[] = {
 ROSDATA USHORT mouse_vkeys[] = {
   VK_NUMPAD5, VK_NUMPAD9, VK_NUMPAD3, VK_NUMPAD1,
   VK_NUMPAD7, VK_NUMPAD4, VK_NUMPAD8, VK_NUMPAD6,
-  VK_NUMPAD2, VK_NUMPAD0, VK_DECIMAL,  VK_MULTIPLY,
+  VK_NUMPAD2, VK_NUMPAD0, VK_DECIMAL, VK_MULTIPLY,
   VK_ADD,     VK_SUBTRACT,
   VK_DIVIDE | KBDEXT,   /* 0x16f */
   VK_HOME   | KBDEXT    /* 0x124 */
