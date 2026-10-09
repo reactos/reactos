@@ -5906,7 +5906,7 @@ SetupDiInstallDevice(
     if (hKey == INVALID_HANDLE_VALUE)
         goto cleanup;
 
-    /* Install .HW section */
+    /* Install .HW section into device key */
     DoAction = 0;
     if (!(InstallParams.FlagsEx & DI_FLAGSEX_NO_DRVREG_MODIFY))
         DoAction |= SPINST_REGISTRY;
@@ -5918,6 +5918,28 @@ SetupDiInstallDevice(
         DeviceInfoSet, DeviceInfoData);
     if (!Result)
         goto cleanup;
+
+    /* Also install .HW section into "Device Parameters" subkey so drivers can read ConfigData */
+    {
+        HKEY hDevParamKey = INVALID_HANDLE_VALUE;
+        if (RegCreateKeyExW(hKey,
+                            L"Device Parameters",
+                            0,
+                            NULL,
+                            REG_OPTION_NON_VOLATILE,
+                            KEY_ALL_ACCESS,
+                            NULL,
+                            &hDevParamKey,
+                            NULL) == ERROR_SUCCESS)
+        {
+            SetupInstallFromInfSectionW(InstallParams.hwndParent,
+                SelectedDriver->InfFileDetails->hInf, SectionName,
+                DoAction, hDevParamKey, NULL, 0,
+                NULL, NULL,
+                DeviceInfoSet, DeviceInfoData);
+            RegCloseKey(hDevParamKey);
+        }
+    }
 
     /* Write information to enum key */
     TRACE("Write information to enum key\n");

@@ -6,212 +6,219 @@
  *
  * PROGRAMMERS:     Jason Filby (jasonfilby@yahoo.com)
  *                  Filip Navara (xnavara@volny.cz)
- *                  Hervé Poussineau (hpoussin@reactos.org)
+ *                  HervÃ© Poussineau (hpoussin@reactos.org)
  */
 
 #include "serenum.h"
 
 #include <debug.h>
 
+
 static NTSTATUS
-DeviceIoControl(
-	IN PDEVICE_OBJECT DeviceObject,
-	IN ULONG CtlCode,
-	IN PVOID InputBuffer OPTIONAL,
-	IN ULONG_PTR InputBufferSize,
-	IN OUT PVOID OutputBuffer OPTIONAL,
-	IN OUT PULONG_PTR OutputBufferSize)
+DeviceIoControlTimeout(
+        IN PDEVICE_OBJECT DeviceObject,
+        IN ULONG CtlCode,
+        IN PVOID InputBuffer OPTIONAL,
+        IN ULONG_PTR InputBufferSize,
+        IN OUT PVOID OutputBuffer OPTIONAL,
+        IN OUT PULONG_PTR OutputBufferSize)
 {
-	KEVENT Event;
-	PIRP Irp;
-	IO_STATUS_BLOCK IoStatus;
-	NTSTATUS Status;
+        KEVENT Event;
+        PIRP Irp;
+        IO_STATUS_BLOCK IoStatus;
+        NTSTATUS Status;
+        LARGE_INTEGER Timeout;
 
-	KeInitializeEvent (&Event, NotificationEvent, FALSE);
+        KeInitializeEvent(&Event, NotificationEvent, FALSE);
 
-	Irp = IoBuildDeviceIoControlRequest(CtlCode,
-		DeviceObject,
-		InputBuffer,
-		InputBufferSize,
-		OutputBuffer,
-		(OutputBufferSize) ? *OutputBufferSize : 0,
-		FALSE,
-		&Event,
-		&IoStatus);
-	if (Irp == NULL)
-	{
-		WARN_(SERENUM, "IoBuildDeviceIoControlRequest() failed\n");
-		return STATUS_INSUFFICIENT_RESOURCES;
-	}
+        Irp = IoBuildDeviceIoControlRequest(CtlCode,
+                DeviceObject,
+                InputBuffer,
+                InputBufferSize,
+                OutputBuffer,
+                (OutputBufferSize) ? *OutputBufferSize : 0,
+                FALSE,
+                &Event,
+                &IoStatus);
+        if (Irp == NULL)
+        {
+                WARN_(SERENUM, "IoBuildDeviceIoControlRequest() failed\n");
+                return STATUS_INSUFFICIENT_RESOURCES;
+        }
 
-	Status = IoCallDriver(DeviceObject, Irp);
+        Status = IoCallDriver(DeviceObject, Irp);
 
-	if (Status == STATUS_PENDING)
-	{
-		INFO_(SERENUM, "Operation pending\n");
-		KeWaitForSingleObject(&Event, Suspended, KernelMode, FALSE, NULL);
-		Status = IoStatus.Status;
-	}
+        if (Status == STATUS_PENDING)
+        {
+                Timeout.QuadPart = -20000000LL;
+                Status = KeWaitForSingleObject(&Event, Suspended, KernelMode, FALSE, &Timeout);
+                if (Status == STATUS_TIMEOUT)
+                {
+                        IoCancelIrp(Irp);
+                        KeWaitForSingleObject(&Event, Suspended, KernelMode, FALSE, NULL);
+                        Status = STATUS_IO_TIMEOUT;
+                }
+                else
+                {
+                        Status = IoStatus.Status;
+                }
+        }
 
-	if (OutputBufferSize)
-	{
-		*OutputBufferSize = IoStatus.Information;
-	}
+        if (OutputBufferSize)
+        {
+                *OutputBufferSize = IoStatus.Information;
+        }
 
-	return Status;
+        return Status;
 }
 
 static NTSTATUS
+NTAPI
 ReadBytes(
-	IN PDEVICE_OBJECT LowerDevice,
-	OUT PUCHAR Buffer,
-	IN ULONG BufferSize,
-	OUT PULONG_PTR FilledBytes)
+        IN PDEVICE_OBJECT LowerDevice,
+        OUT PUCHAR Buffer,
+        IN ULONG BufferSize,
+        OUT PULONG_PTR FilledBytes)
 {
-	PIRP Irp;
-	IO_STATUS_BLOCK ioStatus;
-	KEVENT event;
-	LARGE_INTEGER zero;
-	LARGE_INTEGER timeout;
-	NTSTATUS Status;
+        PIRP Irp;
+        IO_STATUS_BLOCK ioStatus;
+        KEVENT event;
+        LARGE_INTEGER zero;
+        LARGE_INTEGER timeout;
+        NTSTATUS Status;
 
-	KeInitializeEvent(&event, NotificationEvent, FALSE);
-	zero.QuadPart = 0;
-	Irp = IoBuildSynchronousFsdRequest(
-		IRP_MJ_READ,
-		LowerDevice,
-		Buffer, BufferSize,
-		&zero,
-		&event,
-		&ioStatus);
-	if (!Irp)
-		return STATUS_INSUFFICIENT_RESOURCES;
+        KeInitializeEvent(&event, NotificationEvent, FALSE);
+        zero.QuadPart = 0;
+        Irp = IoBuildSynchronousFsdRequest(
+                IRP_MJ_READ,
+                LowerDevice,
+                Buffer, BufferSize,
+                &zero,
+                &event,
+                &ioStatus);
+        if (!Irp)
+                return STATUS_INSUFFICIENT_RESOURCES;
 
-	Status = IoCallDriver(LowerDevice, Irp);
-	if (Status == STATUS_PENDING)
-	{
-		timeout.QuadPart = -20000000LL;
-		Status = KeWaitForSingleObject(&event, Suspended, KernelMode, FALSE, &timeout);
-		if (Status == STATUS_TIMEOUT)
-		{
-			IoCancelIrp(Irp);
-			KeWaitForSingleObject(&event, Suspended, KernelMode, FALSE, NULL);
-			Status = STATUS_IO_TIMEOUT;
-		}
-		else
-		{
-			Status = ioStatus.Status;
-		}
-	}
-	INFO_(SERENUM, "Bytes received: %lu/%lu\n",
-		ioStatus.Information, BufferSize);
-	*FilledBytes = ioStatus.Information;
-	return Status;
+        Status = IoCallDriver(LowerDevice, Irp);
+        if (Status == STATUS_PENDING)
+        {
+                timeout.QuadPart = -20000000LL;
+                Status = KeWaitForSingleObject(&event, Suspended, KernelMode, FALSE, &timeout);
+                if (Status == STATUS_TIMEOUT)
+                {
+                        IoCancelIrp(Irp);
+                        KeWaitForSingleObject(&event, Suspended, KernelMode, FALSE, NULL);
+                        Status = STATUS_IO_TIMEOUT;
+                }
+                else
+                {
+                        Status = ioStatus.Status;
+                }
+        }
+        INFO_(SERENUM, "Bytes received: %lu/%lu\n",
+                ioStatus.Information, BufferSize);
+        *FilledBytes = ioStatus.Information;
+        return Status;
 }
 
 static NTSTATUS
 ReportDetectedDevice(
-	IN PDEVICE_OBJECT DeviceObject,
-	IN PUNICODE_STRING DeviceDescription,
-	IN PUNICODE_STRING DeviceId,
-	IN PUNICODE_STRING InstanceId,
-	IN PUNICODE_STRING HardwareIds,
-	IN PUNICODE_STRING CompatibleIds)
+        IN PDEVICE_OBJECT DeviceObject,
+        IN PUNICODE_STRING DeviceDescription,
+        IN PUNICODE_STRING DeviceId,
+        IN PUNICODE_STRING InstanceId,
+        IN PUNICODE_STRING HardwareIds,
+        IN PUNICODE_STRING CompatibleIds)
 {
-	PDEVICE_OBJECT Pdo = NULL;
-	PPDO_DEVICE_EXTENSION PdoDeviceExtension = NULL;
-	PFDO_DEVICE_EXTENSION FdoDeviceExtension;
-	NTSTATUS Status;
+        PDEVICE_OBJECT Pdo = NULL;
+        PPDO_DEVICE_EXTENSION PdoDeviceExtension = NULL;
+        PFDO_DEVICE_EXTENSION FdoDeviceExtension;
+        NTSTATUS Status;
 
-	DPRINT("ReportDetectedDevice() called with %wZ (%wZ) detected\n", DeviceId, DeviceDescription);
+        DPRINT("ReportDetectedDevice() called with %wZ (%wZ) detected\n", DeviceId, DeviceDescription);
 
-	Status = IoCreateDevice(
-		DeviceObject->DriverObject,
-		sizeof(PDO_DEVICE_EXTENSION),
-		NULL,
-		FILE_DEVICE_CONTROLLER,
-		FILE_AUTOGENERATED_DEVICE_NAME,
-		FALSE,
-		&Pdo);
-	if (!NT_SUCCESS(Status)) goto ByeBye;
+        Status = IoCreateDevice(
+                DeviceObject->DriverObject,
+                sizeof(PDO_DEVICE_EXTENSION),
+                NULL,
+                FILE_DEVICE_CONTROLLER,
+                FILE_AUTOGENERATED_DEVICE_NAME,
+                FALSE,
+                &Pdo);
+        if (!NT_SUCCESS(Status)) goto ByeBye;
 
-	Pdo->Flags |= DO_BUS_ENUMERATED_DEVICE;
-	Pdo->Flags |= DO_POWER_PAGABLE;
-	PdoDeviceExtension = (PPDO_DEVICE_EXTENSION)Pdo->DeviceExtension;
-	FdoDeviceExtension = (PFDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
-	RtlZeroMemory(PdoDeviceExtension, sizeof(PDO_DEVICE_EXTENSION));
-	PdoDeviceExtension->Common.IsFDO = FALSE;
-	Status = DuplicateUnicodeString(RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE, DeviceDescription, &PdoDeviceExtension->DeviceDescription);
-	if (!NT_SUCCESS(Status)) goto ByeBye;
-	Status = DuplicateUnicodeString(RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE, DeviceId, &PdoDeviceExtension->DeviceId);
-	if (!NT_SUCCESS(Status)) goto ByeBye;
-	Status = DuplicateUnicodeString(RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE, InstanceId, &PdoDeviceExtension->InstanceId);
-	if (!NT_SUCCESS(Status)) goto ByeBye;
-	Status = DuplicateUnicodeString(RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE, HardwareIds, &PdoDeviceExtension->HardwareIds);
-	if (!NT_SUCCESS(Status)) goto ByeBye;
-	Status = DuplicateUnicodeString(RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE, CompatibleIds, &PdoDeviceExtension->CompatibleIds);
-	if (!NT_SUCCESS(Status)) goto ByeBye;
+        Pdo->Flags |= DO_BUS_ENUMERATED_DEVICE;
+        Pdo->Flags |= DO_POWER_PAGABLE;
+        PdoDeviceExtension = (PPDO_DEVICE_EXTENSION)Pdo->DeviceExtension;
+        FdoDeviceExtension = (PFDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+        RtlZeroMemory(PdoDeviceExtension, sizeof(PDO_DEVICE_EXTENSION));
+        PdoDeviceExtension->Common.IsFDO = FALSE;
+        Status = DuplicateUnicodeString(RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE, DeviceDescription, &PdoDeviceExtension->DeviceDescription);
+        if (!NT_SUCCESS(Status)) goto ByeBye;
+        Status = DuplicateUnicodeString(RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE, DeviceId, &PdoDeviceExtension->DeviceId);
+        if (!NT_SUCCESS(Status)) goto ByeBye;
+        Status = DuplicateUnicodeString(RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE, InstanceId, &PdoDeviceExtension->InstanceId);
+        if (!NT_SUCCESS(Status)) goto ByeBye;
+        Status = DuplicateUnicodeString(RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE, HardwareIds, &PdoDeviceExtension->HardwareIds);
+        if (!NT_SUCCESS(Status)) goto ByeBye;
+        Status = DuplicateUnicodeString(RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE, CompatibleIds, &PdoDeviceExtension->CompatibleIds);
+        if (!NT_SUCCESS(Status)) goto ByeBye;
 
-	/* Device attached to serial port (Pdo) may delegate work to
-	 * serial port stack (Fdo = DeviceObject variable) */
-	Pdo->StackSize = DeviceObject->StackSize + 1;
+        Pdo->StackSize = DeviceObject->StackSize + 1;
 
-	FdoDeviceExtension->AttachedPdo = Pdo;
-	PdoDeviceExtension->AttachedFdo = DeviceObject;
+        FdoDeviceExtension->AttachedPdo = Pdo;
+        PdoDeviceExtension->AttachedFdo = DeviceObject;
 
-	Pdo->Flags |= DO_BUFFERED_IO;
-	Pdo->Flags &= ~DO_DEVICE_INITIALIZING;
+        Pdo->Flags |= DO_BUFFERED_IO;
+        Pdo->Flags &= ~DO_DEVICE_INITIALIZING;
 
-	return STATUS_SUCCESS;
+        return STATUS_SUCCESS;
 
 ByeBye:
-	if (Pdo)
-	{
-		ASSERT(PdoDeviceExtension);
-		if (PdoDeviceExtension->DeviceDescription.Buffer)
-			RtlFreeUnicodeString(&PdoDeviceExtension->DeviceDescription);
-		if (PdoDeviceExtension->DeviceId.Buffer)
-			RtlFreeUnicodeString(&PdoDeviceExtension->DeviceId);
-		if (PdoDeviceExtension->InstanceId.Buffer)
-			RtlFreeUnicodeString(&PdoDeviceExtension->InstanceId);
-		if (PdoDeviceExtension->HardwareIds.Buffer)
-			RtlFreeUnicodeString(&PdoDeviceExtension->HardwareIds);
-		if (PdoDeviceExtension->CompatibleIds.Buffer)
-			RtlFreeUnicodeString(&PdoDeviceExtension->CompatibleIds);
-		IoDeleteDevice(Pdo);
-	}
-	return Status;
+        if (Pdo)
+        {
+                ASSERT(PdoDeviceExtension);
+                if (PdoDeviceExtension->DeviceDescription.Buffer)
+                        RtlFreeUnicodeString(&PdoDeviceExtension->DeviceDescription);
+                if (PdoDeviceExtension->DeviceId.Buffer)
+                        RtlFreeUnicodeString(&PdoDeviceExtension->DeviceId);
+                if (PdoDeviceExtension->InstanceId.Buffer)
+                        RtlFreeUnicodeString(&PdoDeviceExtension->InstanceId);
+                if (PdoDeviceExtension->HardwareIds.Buffer)
+                        RtlFreeUnicodeString(&PdoDeviceExtension->HardwareIds);
+                if (PdoDeviceExtension->CompatibleIds.Buffer)
+                        RtlFreeUnicodeString(&PdoDeviceExtension->CompatibleIds);
+                IoDeleteDevice(Pdo);
+        }
+        return Status;
 }
 
 static BOOLEAN
 IsValidPnpIdString(
-	IN PUCHAR Buffer,
-	IN ULONG BufferLength)
+        IN PUCHAR Buffer,
+        IN ULONG BufferLength)
 {
-	ANSI_STRING String;
+        ANSI_STRING String;
 
-	/* FIXME: IsValidPnpIdString not implemented */
-	UNIMPLEMENTED;
-	String.Length = String.MaximumLength = BufferLength;
-	String.Buffer = (PCHAR)Buffer;
-	ERR_(SERENUM, "Buffer %Z\n", &String);
-	return TRUE;
+        UNIMPLEMENTED;
+        String.Length = String.MaximumLength = BufferLength;
+        String.Buffer = (PCHAR)Buffer;
+        ERR_(SERENUM, "Buffer %Z\n", &String);
+        return TRUE;
 }
 
 static NTSTATUS
 ReportDetectedPnpDevice(
-	IN PUCHAR Buffer,
-	IN ULONG BufferLength)
+        IN PUCHAR Buffer,
+        IN ULONG BufferLength)
 {
-	ANSI_STRING String;
+        ANSI_STRING String;
 
-	/* FIXME: ReportDetectedPnpDevice not implemented */
-	UNIMPLEMENTED;
-	String.Length = String.MaximumLength = BufferLength;
-	String.Buffer = (PCHAR)Buffer;
-	ERR_(SERENUM, "Buffer %Z\n", &String);
-	/* Call ReportDetectedDevice */
-	return STATUS_SUCCESS;
+        UNIMPLEMENTED;
+        String.Length = String.MaximumLength = BufferLength;
+        String.Buffer = (PCHAR)Buffer;
+        ERR_(SERENUM, "Buffer %Z\n", &String);
+        return STATUS_SUCCESS;
 }
 
 #define BEGIN_ID '('
@@ -219,398 +226,419 @@ ReportDetectedPnpDevice(
 
 static NTSTATUS
 Wait(
-	IN ULONG milliseconds)
+        IN ULONG milliseconds)
 {
-	KTIMER Timer;
-	LARGE_INTEGER DueTime;
+        KTIMER Timer;
+        LARGE_INTEGER DueTime;
 
-	DueTime.QuadPart = milliseconds * -10;
-	KeInitializeTimer(&Timer);
-	KeSetTimer(&Timer, DueTime, NULL);
-	return KeWaitForSingleObject(&Timer, Executive, KernelMode, FALSE, NULL);
+        DueTime.QuadPart = milliseconds * -10;
+        KeInitializeTimer(&Timer);
+        KeSetTimer(&Timer, DueTime, NULL);
+        return KeWaitForSingleObject(&Timer, Executive, KernelMode, FALSE, NULL);
 }
 
 NTSTATUS
 SerenumDetectPnpDevice(
-	IN PDEVICE_OBJECT DeviceObject,
-	IN PDEVICE_OBJECT LowerDevice)
+        IN PDEVICE_OBJECT DeviceObject,
+        IN PDEVICE_OBJECT LowerDevice)
 {
-	HANDLE Handle = NULL;
-	UCHAR Buffer[256];
-	ULONG BaudRate;
-	ULONG_PTR TotalBytesReceived = 0;
-	ULONG_PTR Size;
-	ULONG Msr, Purge;
-	ULONG i;
-	BOOLEAN BufferContainsBeginId = FALSE;
-	BOOLEAN BufferContainsEndId = FALSE;
-	SERIAL_LINE_CONTROL Lcr;
-	SERIAL_TIMEOUTS Timeouts;
-	SERIALPERF_STATS PerfStats;
-	NTSTATUS Status;
+        HANDLE Handle = NULL;
+        UCHAR Buffer[256];
+        ULONG BaudRate;
+        ULONG_PTR TotalBytesReceived = 0;
+        ULONG_PTR Size;
+        ULONG Msr, Purge;
+        ULONG i;
+        BOOLEAN BufferContainsBeginId = FALSE;
+        BOOLEAN BufferContainsEndId = FALSE;
+        SERIAL_LINE_CONTROL Lcr;
+        SERIAL_TIMEOUTS Timeouts;
+        SERIALPERF_STATS PerfStats;
+        NTSTATUS Status;
+        SERIAL_BAUD_RATE OrigBaudRate;
+        SERIAL_LINE_CONTROL OrigLCR;
+        SERIAL_TIMEOUTS OrigTimeouts;
+        ULONG_PTR OutSize;
+        BOOLEAN HaveOrigSettings = FALSE;
 
-	/* Open port */
-	Status = ObOpenObjectByPointer(
-		LowerDevice,
-		OBJ_KERNEL_HANDLE,
-		NULL,
-		0,
-		NULL,
-		KernelMode,
-		&Handle);
-	if (!NT_SUCCESS(Status)) goto ByeBye;
+        /* Open port */
+        Status = ObOpenObjectByPointer(
+                LowerDevice,
+                OBJ_KERNEL_HANDLE,
+                NULL,
+                0,
+                NULL,
+                KernelMode,
+                &Handle);
+        if (!NT_SUCCESS(Status)) return Status;
 
-	/* 1. COM port initialization, check for device enumerate */
-	DPRINT("COM port initialization, check for device enumerate\n");
-	Status = DeviceIoControl(LowerDevice, IOCTL_SERIAL_CLR_DTR,
-		NULL, 0, NULL, NULL);
-	DPRINT("JUAN_DEBUG: IOCTL_SERIAL_CLR_DTR Status - %x\n", Status);
-	if (!NT_SUCCESS(Status)) goto ByeBye;
-	Status = DeviceIoControl(LowerDevice, IOCTL_SERIAL_CLR_RTS,
-		NULL, 0, NULL, NULL);
-	DPRINT("JUAN_DEBUG: IOCTL_SERIAL_CLR_RTS Status - %x\n", Status);
-	if (!NT_SUCCESS(Status)) goto ByeBye;
-	Wait(200);
-	Size = sizeof(Msr);
-	Status = DeviceIoControl(LowerDevice, IOCTL_SERIAL_GET_MODEMSTATUS,
-		NULL, 0, &Msr, &Size);
-	DPRINT("JUAN_DEBUG: IOCTL_SERIAL_GET_MODEMSTATUS Status - %x, Msr - %x\n", Status, Msr);
-	if (!NT_SUCCESS(Status)) goto ByeBye;
-	if ((Msr & SERIAL_DSR_STATE) == 0) goto DisconnectIdle;
+        /* Save initial clean settings before probing */
+        OutSize = sizeof(OrigBaudRate);
+        if (NT_SUCCESS(DeviceIoControlTimeout(LowerDevice, IOCTL_SERIAL_GET_BAUD_RATE,
+                                              NULL, 0, &OrigBaudRate, &OutSize)) &&
+            (OutSize = sizeof(OrigLCR),
+             NT_SUCCESS(DeviceIoControlTimeout(LowerDevice, IOCTL_SERIAL_GET_LINE_CONTROL,
+                                               NULL, 0, &OrigLCR, &OutSize))))
+        {
+                OutSize = sizeof(OrigTimeouts);
+                DeviceIoControlTimeout(LowerDevice, IOCTL_SERIAL_GET_TIMEOUTS,
+                                       NULL, 0, &OrigTimeouts, &OutSize);
+                HaveOrigSettings = TRUE;
+        }
 
-	/* 2. COM port setup, 1st phase */
-	DPRINT("COM port setup, 1st phase\n");
-	BaudRate = 1200;
-	Status = DeviceIoControl(LowerDevice, IOCTL_SERIAL_SET_BAUD_RATE,
-		&BaudRate, sizeof(BaudRate), NULL, 0);
-	if (!NT_SUCCESS(Status)) goto ByeBye;
-	Lcr.WordLength = 7;
-	Lcr.Parity = NO_PARITY;
-	Lcr.StopBits = STOP_BIT_1;
-	Status = DeviceIoControl(LowerDevice, IOCTL_SERIAL_SET_LINE_CONTROL,
-		&Lcr, sizeof(Lcr), NULL, NULL);
-	if (!NT_SUCCESS(Status)) goto ByeBye;
-	Status = DeviceIoControl(LowerDevice, IOCTL_SERIAL_CLR_DTR,
-		NULL, 0, NULL, NULL);
-	if (!NT_SUCCESS(Status)) goto ByeBye;
-	Status = DeviceIoControl(LowerDevice, IOCTL_SERIAL_CLR_RTS,
-		NULL, 0, NULL, NULL);
-	if (!NT_SUCCESS(Status)) goto ByeBye;
-	Wait(200);
-	Status = DeviceIoControl(LowerDevice, IOCTL_SERIAL_SET_DTR,
-		NULL, 0, NULL, NULL);
-	if (!NT_SUCCESS(Status)) goto ByeBye;
-	Wait(200);
+        /* 1. COM port initialization, check for device enumerate */
+        DPRINT("COM port initialization, check for device enumerate\n");
+        Status = DeviceIoControlTimeout(LowerDevice, IOCTL_SERIAL_CLR_DTR,
+                NULL, 0, NULL, NULL);
+        if (!NT_SUCCESS(Status)) goto ByeBye;
+        Status = DeviceIoControlTimeout(LowerDevice, IOCTL_SERIAL_CLR_RTS,
+                NULL, 0, NULL, NULL);
+        if (!NT_SUCCESS(Status)) goto ByeBye;
+        Wait(200);
+        Size = sizeof(Msr);
+        Status = DeviceIoControlTimeout(LowerDevice, IOCTL_SERIAL_GET_MODEMSTATUS,
+                NULL, 0, &Msr, &Size);
+        if (!NT_SUCCESS(Status)) goto ByeBye;
+        if ((Msr & SERIAL_DSR_STATE) == 0) goto DisconnectIdle;
 
-	/* 3. Wait for response, 1st phase */
-	DPRINT("Wait for response, 1st phase\n");
-	Status = DeviceIoControl(LowerDevice, IOCTL_SERIAL_SET_RTS,
-		NULL, 0, NULL, NULL);
-	if (!NT_SUCCESS(Status)) goto ByeBye;
-	Timeouts.ReadIntervalTimeout = 0;
-	Timeouts.ReadTotalTimeoutMultiplier = 0;
-	Timeouts.ReadTotalTimeoutConstant = 200;
-	Timeouts.WriteTotalTimeoutMultiplier = Timeouts.WriteTotalTimeoutConstant = 0;
-	Status = DeviceIoControl(LowerDevice, IOCTL_SERIAL_SET_TIMEOUTS,
-		&Timeouts, sizeof(Timeouts), NULL, NULL);
-	if (!NT_SUCCESS(Status)) goto ByeBye;
-	Status = ReadBytes(LowerDevice, Buffer, sizeof(Buffer), &Size);
-	if (!NT_SUCCESS(Status)) goto ByeBye;
-	if (Size != 0) goto CollectPnpComDeviceId;
+        /* 2. COM port setup, 1st phase */
+        DPRINT("COM port setup, 1st phase\n");
+        BaudRate = 1200;
+        Status = DeviceIoControlTimeout(LowerDevice, IOCTL_SERIAL_SET_BAUD_RATE,
+                &BaudRate, sizeof(BaudRate), NULL, NULL);
+        if (!NT_SUCCESS(Status)) goto ByeBye;
+        Lcr.WordLength = 7;
+        Lcr.Parity = NO_PARITY;
+        Lcr.StopBits = STOP_BIT_1;
+        Status = DeviceIoControlTimeout(LowerDevice, IOCTL_SERIAL_SET_LINE_CONTROL,
+                &Lcr, sizeof(Lcr), NULL, NULL);
+        if (!NT_SUCCESS(Status)) goto ByeBye;
+        Status = DeviceIoControlTimeout(LowerDevice, IOCTL_SERIAL_CLR_DTR,
+                NULL, 0, NULL, NULL);
+        if (!NT_SUCCESS(Status)) goto ByeBye;
+        Status = DeviceIoControlTimeout(LowerDevice, IOCTL_SERIAL_CLR_RTS,
+                NULL, 0, NULL, NULL);
+        if (!NT_SUCCESS(Status)) goto ByeBye;
+        Wait(200);
+        Status = DeviceIoControlTimeout(LowerDevice, IOCTL_SERIAL_SET_DTR,
+                NULL, 0, NULL, NULL);
+        if (!NT_SUCCESS(Status)) goto ByeBye;
+        Wait(200);
 
-	/* 4. COM port setup, 2nd phase */
-	DPRINT("COM port setup, 2nd phase\n");
-	Status = DeviceIoControl(LowerDevice, IOCTL_SERIAL_CLR_DTR,
-		NULL, 0, NULL, NULL);
-	if (!NT_SUCCESS(Status)) goto ByeBye;
-	Status = DeviceIoControl(LowerDevice, IOCTL_SERIAL_CLR_RTS,
-		NULL, 0, NULL, NULL);
-	if (!NT_SUCCESS(Status)) goto ByeBye;
-	Purge = SERIAL_PURGE_RXABORT | SERIAL_PURGE_RXCLEAR;
-	Status = DeviceIoControl(LowerDevice, IOCTL_SERIAL_PURGE,
-		&Purge, sizeof(ULONG), NULL, NULL);
-	if (!NT_SUCCESS(Status)) goto ByeBye;
-	Wait(200);
+        /* 3. Wait for response, 1st phase */
+        DPRINT("Wait for response, 1st phase\n");
+        Status = DeviceIoControlTimeout(LowerDevice, IOCTL_SERIAL_SET_RTS,
+                NULL, 0, NULL, NULL);
+        if (!NT_SUCCESS(Status)) goto ByeBye;
+        Timeouts.ReadIntervalTimeout = 0;
+        Timeouts.ReadTotalTimeoutMultiplier = 0;
+        Timeouts.ReadTotalTimeoutConstant = 200;
+        Timeouts.WriteTotalTimeoutMultiplier = Timeouts.WriteTotalTimeoutConstant = 0;
+        Status = DeviceIoControlTimeout(LowerDevice, IOCTL_SERIAL_SET_TIMEOUTS,
+                &Timeouts, sizeof(Timeouts), NULL, NULL);
+        if (!NT_SUCCESS(Status)) goto ByeBye;
+        Status = ReadBytes(LowerDevice, Buffer, sizeof(Buffer), &Size);
+        if (!NT_SUCCESS(Status)) goto ByeBye;
+        if (Size != 0) goto CollectPnpComDeviceId;
 
-	/* 5. Wait for response, 2nd phase */
-	DPRINT("Wait for response, 2nd phase\n");
-	Status = DeviceIoControl(LowerDevice, IOCTL_SERIAL_SET_DTR,
-		NULL, 0, NULL, NULL);
-	if (!NT_SUCCESS(Status)) goto ByeBye;
-	Status = DeviceIoControl(LowerDevice, IOCTL_SERIAL_SET_RTS,
-		NULL, 0, NULL, NULL);
-	if (!NT_SUCCESS(Status)) goto ByeBye;
-	Status = ReadBytes(LowerDevice, Buffer, 1, &TotalBytesReceived);
-	if (!NT_SUCCESS(Status)) goto ByeBye;
-	if (TotalBytesReceived != 0) goto CollectPnpComDeviceId;
-	Size = sizeof(Msr);
-	Status = DeviceIoControl(LowerDevice, IOCTL_SERIAL_GET_MODEMSTATUS,
-		NULL, 0, &Msr, &Size);
-	if (!NT_SUCCESS(Status)) goto ByeBye;
-	if ((Msr & SERIAL_DSR_STATE) == 0) goto VerifyDisconnect; else goto ConnectIdle;
+        /* 4. COM port setup, 2nd phase */
+        DPRINT("COM port setup, 2nd phase\n");
+        Status = DeviceIoControlTimeout(LowerDevice, IOCTL_SERIAL_CLR_DTR,
+                NULL, 0, NULL, NULL);
+        if (!NT_SUCCESS(Status)) goto ByeBye;
+        Status = DeviceIoControlTimeout(LowerDevice, IOCTL_SERIAL_CLR_RTS,
+                NULL, 0, NULL, NULL);
+        if (!NT_SUCCESS(Status)) goto ByeBye;
+        Purge = SERIAL_PURGE_RXABORT | SERIAL_PURGE_RXCLEAR;
+        Status = DeviceIoControlTimeout(LowerDevice, IOCTL_SERIAL_PURGE,
+                &Purge, sizeof(ULONG), NULL, NULL);
+        if (!NT_SUCCESS(Status)) goto ByeBye;
+        Wait(200);
 
-	/* 6. Collect PnP COM device ID */
+        /* 5. Wait for response, 2nd phase */
+        DPRINT("Wait for response, 2nd phase\n");
+        Status = DeviceIoControlTimeout(LowerDevice, IOCTL_SERIAL_SET_DTR,
+                NULL, 0, NULL, NULL);
+        if (!NT_SUCCESS(Status)) goto ByeBye;
+        Status = DeviceIoControlTimeout(LowerDevice, IOCTL_SERIAL_SET_RTS,
+                NULL, 0, NULL, NULL);
+        if (!NT_SUCCESS(Status)) goto ByeBye;
+        Status = ReadBytes(LowerDevice, Buffer, 1, &TotalBytesReceived);
+        if (!NT_SUCCESS(Status)) goto ByeBye;
+        if (TotalBytesReceived != 0) goto CollectPnpComDeviceId;
+        Size = sizeof(Msr);
+        Status = DeviceIoControlTimeout(LowerDevice, IOCTL_SERIAL_GET_MODEMSTATUS,
+                NULL, 0, &Msr, &Size);
+        if (!NT_SUCCESS(Status)) goto ByeBye;
+        if ((Msr & SERIAL_DSR_STATE) == 0) goto VerifyDisconnect; else goto ConnectIdle;
+
+        /* 6. Collect PnP COM device ID */
 CollectPnpComDeviceId:
-	DPRINT("Collect PnP COM device ID\n");
-	Timeouts.ReadIntervalTimeout = 200;
-	Timeouts.ReadTotalTimeoutMultiplier = 0;
-	Timeouts.ReadTotalTimeoutConstant = 2200;
-	Status = DeviceIoControl(LowerDevice, IOCTL_SERIAL_SET_TIMEOUTS,
-		&Timeouts, sizeof(Timeouts), NULL, NULL);
-	if (!NT_SUCCESS(Status)) goto ByeBye;
-	Status = ReadBytes(LowerDevice, &Buffer[TotalBytesReceived], sizeof(Buffer) - TotalBytesReceived, &Size);
-	if (!NT_SUCCESS(Status)) goto ByeBye;
-	TotalBytesReceived += Size;
-	Size = sizeof(PerfStats);
-	Status = DeviceIoControl(LowerDevice, IOCTL_SERIAL_GET_STATS,
-		NULL, 0, &PerfStats, &Size);
-	if (!NT_SUCCESS(Status)) goto ByeBye;
-	if (PerfStats.FrameErrorCount + PerfStats.ParityErrorCount != 0) goto ConnectIdle;
-	for (i = 0; i < TotalBytesReceived; i++)
-	{
-		if (Buffer[i] == BEGIN_ID) BufferContainsBeginId = TRUE;
-		if (Buffer[i] == END_ID) BufferContainsEndId = TRUE;
-	}
-	if (TotalBytesReceived == 1 || BufferContainsEndId)
-	{
-		if (IsValidPnpIdString(Buffer, TotalBytesReceived))
-		{
-			Status = ReportDetectedPnpDevice(Buffer, TotalBytesReceived);
-			goto ByeBye;
-		}
-		goto ConnectIdle;
-	}
-	if (!BufferContainsBeginId) goto ConnectIdle;
-	if (!BufferContainsEndId) goto ConnectIdle;
-	Size = sizeof(Msr);
-	Status = DeviceIoControl(LowerDevice, IOCTL_SERIAL_GET_MODEMSTATUS,
-		NULL, 0, &Msr, &Size);
-	if (!NT_SUCCESS(Status)) goto ByeBye;
-	if ((Msr & SERIAL_DSR_STATE) == 0) goto VerifyDisconnect;
+        DPRINT("Collect PnP COM device ID\n");
+        Timeouts.ReadIntervalTimeout = 200;
+        Timeouts.ReadTotalTimeoutMultiplier = 0;
+        Timeouts.ReadTotalTimeoutConstant = 2200;
+        Status = DeviceIoControlTimeout(LowerDevice, IOCTL_SERIAL_SET_TIMEOUTS,
+                &Timeouts, sizeof(Timeouts), NULL, NULL);
+        if (!NT_SUCCESS(Status)) goto ByeBye;
+        Status = ReadBytes(LowerDevice, &Buffer[TotalBytesReceived], sizeof(Buffer) - TotalBytesReceived, &Size);
+        if (!NT_SUCCESS(Status)) goto ByeBye;
+        TotalBytesReceived += Size;
+        Size = sizeof(PerfStats);
+        Status = DeviceIoControlTimeout(LowerDevice, IOCTL_SERIAL_GET_STATS,
+                NULL, 0, &PerfStats, &Size);
+        if (!NT_SUCCESS(Status)) goto ByeBye;
+        if (PerfStats.FrameErrorCount + PerfStats.ParityErrorCount != 0) goto ConnectIdle;
+        for (i = 0; i < TotalBytesReceived; i++)
+        {
+                if (Buffer[i] == BEGIN_ID) BufferContainsBeginId = TRUE;
+                if (Buffer[i] == END_ID) BufferContainsEndId = TRUE;
+        }
+        if (TotalBytesReceived == 1 || BufferContainsEndId)
+        {
+                if (IsValidPnpIdString(Buffer, TotalBytesReceived))
+                {
+                        Status = ReportDetectedPnpDevice(Buffer, TotalBytesReceived);
+                        goto ByeBye;
+                }
+                goto ConnectIdle;
+        }
+        if (!BufferContainsBeginId) goto ConnectIdle;
+        if (!BufferContainsEndId) goto ConnectIdle;
+        Size = sizeof(Msr);
+        Status = DeviceIoControlTimeout(LowerDevice, IOCTL_SERIAL_GET_MODEMSTATUS,
+                NULL, 0, &Msr, &Size);
+        if (!NT_SUCCESS(Status)) goto ByeBye;
+        if ((Msr & SERIAL_DSR_STATE) == 0) goto VerifyDisconnect;
 
-	/* 7. Verify disconnect */
+        /* 7. Verify disconnect */
 VerifyDisconnect:
-	DPRINT("Verify disconnect\n");
-	Status = DeviceIoControl(LowerDevice, IOCTL_SERIAL_SET_DTR,
-		NULL, 0, NULL, NULL);
-	if (!NT_SUCCESS(Status)) goto ByeBye;
-	Status = DeviceIoControl(LowerDevice, IOCTL_SERIAL_CLR_RTS,
-		NULL, 0, NULL, NULL);
-	if (!NT_SUCCESS(Status)) goto ByeBye;
-	Wait(5000);
-	goto DisconnectIdle;
+        DPRINT("Verify disconnect\n");
+        Status = DeviceIoControlTimeout(LowerDevice, IOCTL_SERIAL_SET_DTR,
+                NULL, 0, NULL, NULL);
+        if (!NT_SUCCESS(Status)) goto ByeBye;
+        Status = DeviceIoControlTimeout(LowerDevice, IOCTL_SERIAL_CLR_RTS,
+                NULL, 0, NULL, NULL);
+        if (!NT_SUCCESS(Status)) goto ByeBye;
+        Wait(5000);
+        goto DisconnectIdle;
 
-	/* 8. Connect idle */
+        /* 8. Connect idle */
 ConnectIdle:
-	DPRINT("Connect idle\n");
-	Status = DeviceIoControl(LowerDevice, IOCTL_SERIAL_SET_DTR,
-		NULL, 0, NULL, NULL);
-	if (!NT_SUCCESS(Status)) goto ByeBye;
-	Status = DeviceIoControl(LowerDevice, IOCTL_SERIAL_CLR_RTS,
-		NULL, 0, NULL, NULL);
-	if (!NT_SUCCESS(Status)) goto ByeBye;
-	BaudRate = 300;
-	Status = DeviceIoControl(LowerDevice, IOCTL_SERIAL_SET_BAUD_RATE,
-		&BaudRate, sizeof(BaudRate), NULL, NULL);
-	if (!NT_SUCCESS(Status)) goto ByeBye;
-	Lcr.WordLength = 7;
-	Lcr.Parity = NO_PARITY;
-	Lcr.StopBits = STOP_BIT_1;
-	Status = DeviceIoControl(LowerDevice, IOCTL_SERIAL_SET_LINE_CONTROL,
-		&Lcr, sizeof(Lcr), NULL, NULL);
-	if (!NT_SUCCESS(Status)) goto ByeBye;
-	if (TotalBytesReceived == 0)
-		Status = STATUS_DEVICE_NOT_CONNECTED;
-	else
-		Status = STATUS_SUCCESS;
-	goto ByeBye;
+        DPRINT("Connect idle\n");
+        if (TotalBytesReceived == 0)
+                Status = STATUS_DEVICE_NOT_CONNECTED;
+        else
+                Status = STATUS_SUCCESS;
+        goto ByeBye;
 
-	/* 9. Disconnect idle */
+        /* 9. Disconnect idle */
 DisconnectIdle:
-	DPRINT("Disconnect idle\n");
-	/* FIXME: report to OS device removal, if it was present */
-	Status = DeviceIoControl(LowerDevice, IOCTL_SERIAL_SET_DTR,
-		NULL, 0, NULL, NULL);
-	if (!NT_SUCCESS(Status)) goto ByeBye;
-	Status = DeviceIoControl(LowerDevice, IOCTL_SERIAL_CLR_RTS,
-		NULL, 0, NULL, NULL);
-	if (!NT_SUCCESS(Status)) goto ByeBye;
-	BaudRate = 300;
-	Status = DeviceIoControl(LowerDevice, IOCTL_SERIAL_SET_BAUD_RATE,
-		&BaudRate, sizeof(BaudRate), NULL, NULL);
-	if (!NT_SUCCESS(Status)) goto ByeBye;
-	Lcr.WordLength = 7;
-	Lcr.Parity = NO_PARITY;
-	Lcr.StopBits = STOP_BIT_1;
-	Status = DeviceIoControl(LowerDevice, IOCTL_SERIAL_SET_LINE_CONTROL,
-		&Lcr, sizeof(Lcr), NULL, NULL);
-	if (!NT_SUCCESS(Status)) goto ByeBye;
-	Status = STATUS_DEVICE_NOT_CONNECTED;
+        DPRINT("Disconnect idle\n");
+        Status = STATUS_DEVICE_NOT_CONNECTED;
 
 ByeBye:
-	/* Close port */
-	if (Handle)
-		ZwClose(Handle);
-	return Status;
+        /* Restore clean initial settings if no PnP device claimed the port */
+        if (HaveOrigSettings && Status == STATUS_DEVICE_NOT_CONNECTED)
+        {
+                DeviceIoControlTimeout(LowerDevice, IOCTL_SERIAL_SET_BAUD_RATE,
+                                       &OrigBaudRate.BaudRate, sizeof(OrigBaudRate.BaudRate), NULL, NULL);
+                DeviceIoControlTimeout(LowerDevice, IOCTL_SERIAL_SET_LINE_CONTROL,
+                                       &OrigLCR, sizeof(OrigLCR), NULL, NULL);
+                DeviceIoControlTimeout(LowerDevice, IOCTL_SERIAL_SET_TIMEOUTS,
+                                       &OrigTimeouts, sizeof(OrigTimeouts), NULL, NULL);
+        }
+
+        /* Ensure DTR and RTS are asserted for communication */
+        DeviceIoControlTimeout(LowerDevice, IOCTL_SERIAL_SET_DTR, NULL, 0, NULL, NULL);
+        DeviceIoControlTimeout(LowerDevice, IOCTL_SERIAL_SET_RTS, NULL, 0, NULL, NULL);
+
+        /* Close port */
+        if (Handle)
+                ZwClose(Handle);
+        return Status;
 }
 
 NTSTATUS
 SerenumDetectLegacyDevice(
-	IN PDEVICE_OBJECT DeviceObject,
-	IN PDEVICE_OBJECT LowerDevice)
+        IN PDEVICE_OBJECT DeviceObject,
+        IN PDEVICE_OBJECT LowerDevice)
 {
-	HANDLE Handle = NULL;
-	ULONG Fcr, Mcr;
-	ULONG BaudRate;
-	ULONG Command;
-	SERIAL_TIMEOUTS Timeouts;
-	SERIAL_LINE_CONTROL LCR;
-	ULONG i, Count = 0;
-	UCHAR Buffer[16];
-	UNICODE_STRING DeviceDescription;
-	UNICODE_STRING DeviceId;
-	UNICODE_STRING InstanceId;
-	UNICODE_STRING HardwareIds;
-	UNICODE_STRING CompatibleIds;
-	NTSTATUS Status;
+        HANDLE Handle = NULL;
+        ULONG Fcr, Mcr;
+        ULONG BaudRate;
+        ULONG Command;
+        SERIAL_TIMEOUTS Timeouts;
+        SERIAL_LINE_CONTROL LCR;
+        ULONG i, Count = 0;
+        UCHAR Buffer[16];
+        UNICODE_STRING DeviceDescription;
+        UNICODE_STRING DeviceId;
+        UNICODE_STRING InstanceId;
+        UNICODE_STRING HardwareIds;
+        UNICODE_STRING CompatibleIds;
+        NTSTATUS Status;
+        SERIAL_BAUD_RATE OrigBaudRate;
+        SERIAL_LINE_CONTROL OrigLCR;
+        SERIAL_TIMEOUTS OrigTimeouts;
+        ULONG_PTR OutSize;
+        BOOLEAN HaveOrigSettings = FALSE;
 
-	DPRINT("SerenumDetectLegacyDevice(DeviceObject %p, LowerDevice %p)\n",
-		DeviceObject,
-		LowerDevice);
+        DPRINT("SerenumDetectLegacyDevice(DeviceObject %p, LowerDevice %p)\n",
+                DeviceObject,
+                LowerDevice);
 
-	RtlZeroMemory(Buffer, sizeof(Buffer));
+        RtlZeroMemory(Buffer, sizeof(Buffer));
 
-	/* Open port */
-	Status = ObOpenObjectByPointer(
-		LowerDevice,
-		OBJ_KERNEL_HANDLE,
-		NULL,
-		0,
-		NULL,
-		KernelMode,
-		&Handle);
-	if (!NT_SUCCESS(Status)) return Status;
+        /* Open port */
+        Status = ObOpenObjectByPointer(
+                LowerDevice,
+                OBJ_KERNEL_HANDLE,
+                NULL,
+                0,
+                NULL,
+                KernelMode,
+                &Handle);
+        if (!NT_SUCCESS(Status)) return Status;
 
-	/* Reset UART */
-	DPRINT("Reset UART\n");
-	Mcr = 0; /* MCR: DTR/RTS/OUT2 off */
-	Status = DeviceIoControl(LowerDevice, IOCTL_SERIAL_SET_MODEM_CONTROL,
-		&Mcr, sizeof(Mcr), NULL, NULL);
-	if (!NT_SUCCESS(Status)) goto ByeBye;
+        /* Save original clean settings before probing */
+        OutSize = sizeof(OrigBaudRate);
+        if (NT_SUCCESS(DeviceIoControlTimeout(LowerDevice, IOCTL_SERIAL_GET_BAUD_RATE,
+                                              NULL, 0, &OrigBaudRate, &OutSize)) &&
+            (OutSize = sizeof(OrigLCR),
+             NT_SUCCESS(DeviceIoControlTimeout(LowerDevice, IOCTL_SERIAL_GET_LINE_CONTROL,
+                                               NULL, 0, &OrigLCR, &OutSize))))
+        {
+                OutSize = sizeof(OrigTimeouts);
+                DeviceIoControlTimeout(LowerDevice, IOCTL_SERIAL_GET_TIMEOUTS,
+                                       NULL, 0, &OrigTimeouts, &OutSize);
+                HaveOrigSettings = TRUE;
+        }
 
-	/* Set communications parameters */
-	DPRINT("Set communications parameters\n");
-	/* DLAB off */
-	Fcr = 0;
-	Status = DeviceIoControl(LowerDevice, IOCTL_SERIAL_SET_FIFO_CONTROL,
-		&Fcr, sizeof(Fcr), NULL, NULL);
-	if (!NT_SUCCESS(Status)) goto ByeBye;
-	/* Set serial port speed */
-	BaudRate = 1200;
-	Status = DeviceIoControl(LowerDevice, IOCTL_SERIAL_SET_BAUD_RATE,
-		&BaudRate, sizeof(BaudRate), NULL, NULL);
-	if (!NT_SUCCESS(Status)) goto ByeBye;
-	/* Set LCR */
-	LCR.WordLength = 7;
-	LCR.Parity = NO_PARITY;
-	LCR.StopBits = STOP_BITS_2;
-	Status = DeviceIoControl(LowerDevice, IOCTL_SERIAL_SET_LINE_CONTROL,
-		&LCR, sizeof(LCR), NULL, NULL);
-	if (!NT_SUCCESS(Status)) goto ByeBye;
+        /* Reset UART */
+        DPRINT("Reset UART\n");
+        Mcr = 0; /* MCR: DTR/RTS/OUT2 off */
+        Status = DeviceIoControlTimeout(LowerDevice, IOCTL_SERIAL_SET_MODEM_CONTROL,
+                &Mcr, sizeof(Mcr), NULL, NULL);
+        if (!NT_SUCCESS(Status)) goto ByeBye;
 
-	/* Flush receive buffer */
-	DPRINT("Flush receive buffer\n");
-	Command = SERIAL_PURGE_RXCLEAR;
-	Status = DeviceIoControl(LowerDevice, IOCTL_SERIAL_SET_MODEM_CONTROL,
-		&Command, sizeof(Command), NULL, NULL);
-	if (!NT_SUCCESS(Status)) goto ByeBye;
-	/* Wait 100 ms */
-	Wait(100);
+        /* Set communications parameters */
+        DPRINT("Set communications parameters\n");
+        Fcr = 0;
+        Status = DeviceIoControlTimeout(LowerDevice, IOCTL_SERIAL_SET_FIFO_CONTROL,
+                &Fcr, sizeof(Fcr), NULL, NULL);
+        if (!NT_SUCCESS(Status)) goto ByeBye;
+        BaudRate = 1200;
+        Status = DeviceIoControlTimeout(LowerDevice, IOCTL_SERIAL_SET_BAUD_RATE,
+                &BaudRate, sizeof(BaudRate), NULL, NULL);
+        if (!NT_SUCCESS(Status)) goto ByeBye;
+        LCR.WordLength = 7;
+        LCR.Parity = NO_PARITY;
+        LCR.StopBits = STOP_BITS_2;
+        Status = DeviceIoControlTimeout(LowerDevice, IOCTL_SERIAL_SET_LINE_CONTROL,
+                &LCR, sizeof(LCR), NULL, NULL);
+        if (!NT_SUCCESS(Status)) goto ByeBye;
 
-	/* Enable DTR/RTS */
-	DPRINT("Enable DTR/RTS\n");
-	Status = DeviceIoControl(LowerDevice, IOCTL_SERIAL_SET_DTR,
-		NULL, 0, NULL, NULL);
-	if (!NT_SUCCESS(Status)) goto ByeBye;
-	Status = DeviceIoControl(LowerDevice, IOCTL_SERIAL_SET_RTS,
-		NULL, 0, NULL, NULL);
-	if (!NT_SUCCESS(Status)) goto ByeBye;
+        /* Flush receive buffer */
+        DPRINT("Flush receive buffer\n");
+        Command = SERIAL_PURGE_RXCLEAR;
+        Status = DeviceIoControlTimeout(LowerDevice, IOCTL_SERIAL_PURGE,
+                &Command, sizeof(Command), NULL, NULL);
+        if (!NT_SUCCESS(Status)) goto ByeBye;
+        Wait(100);
 
-	/* Set timeout to 500 microseconds */
-	DPRINT("Set timeout to 500 microseconds\n");
-	Timeouts.ReadIntervalTimeout = 100;
-	Timeouts.ReadTotalTimeoutMultiplier = 0;
-	Timeouts.ReadTotalTimeoutConstant = 500;
-	Timeouts.WriteTotalTimeoutMultiplier = Timeouts.WriteTotalTimeoutConstant = 0;
-	Status = DeviceIoControl(LowerDevice, IOCTL_SERIAL_SET_TIMEOUTS,
-		&Timeouts, sizeof(Timeouts), NULL, NULL);
-	if (!NT_SUCCESS(Status)) goto ByeBye;
+        /* Enable DTR/RTS */
+        DPRINT("Enable DTR/RTS\n");
+        Status = DeviceIoControlTimeout(LowerDevice, IOCTL_SERIAL_SET_DTR,
+                NULL, 0, NULL, NULL);
+        if (!NT_SUCCESS(Status)) goto ByeBye;
+        Status = DeviceIoControlTimeout(LowerDevice, IOCTL_SERIAL_SET_RTS,
+                NULL, 0, NULL, NULL);
+        if (!NT_SUCCESS(Status)) goto ByeBye;
 
-	/* Fill the read buffer */
-	DPRINT("Fill the read buffer\n");
-	Status = ReadBytes(LowerDevice, Buffer, sizeof(Buffer)/sizeof(Buffer[0]), (PVOID)&Count);
-	if (!NT_SUCCESS(Status)) goto ByeBye;
+        /* Set timeout to 500 microseconds */
+        DPRINT("Set timeout to 500 microseconds\n");
+        Timeouts.ReadIntervalTimeout = 100;
+        Timeouts.ReadTotalTimeoutMultiplier = 0;
+        Timeouts.ReadTotalTimeoutConstant = 500;
+        Timeouts.WriteTotalTimeoutMultiplier = Timeouts.WriteTotalTimeoutConstant = 0;
+        Status = DeviceIoControlTimeout(LowerDevice, IOCTL_SERIAL_SET_TIMEOUTS,
+                &Timeouts, sizeof(Timeouts), NULL, NULL);
+        if (!NT_SUCCESS(Status)) goto ByeBye;
 
-	RtlInitUnicodeString(&DeviceId, L"Serenum\\Mouse");
-	RtlInitUnicodeString(&InstanceId, L"0000"); /* FIXME */
-	for (i = 0; i < Count; i++)
-	{
-		if (Buffer[i] == 'B')
-		{
-			/* Sign for Microsoft Ballpoint */
-			/* Hardware id: *PNP0F09
-			 * Compatible id: *PNP0F0F, SERIAL_MOUSE
-			 */
-			RtlInitUnicodeString(&DeviceDescription, L"Microsoft Ballpoint device");
-			SerenumInitMultiSzString(&HardwareIds, "*PNP0F09", NULL);
-			SerenumInitMultiSzString(&CompatibleIds, "*PNP0F0F", "SERIAL_MOUSE", NULL);
-			Status = ReportDetectedDevice(DeviceObject,
-				&DeviceDescription, &DeviceId, &InstanceId, &HardwareIds, &CompatibleIds);
-			RtlFreeUnicodeString(&HardwareIds);
-			RtlFreeUnicodeString(&CompatibleIds);
-			goto ByeBye;
-		}
-		else if (Buffer[i] == 'M')
-		{
-			/* Sign for Microsoft Mouse protocol followed by button specifier */
-			if (i == sizeof(Buffer) - 1)
-			{
-				/* Overflow Error */
-				Status = STATUS_DEVICE_NOT_CONNECTED;
-				goto ByeBye;
-			}
-			switch (Buffer[i + 1])
-			{
-				case '3':
-					/* Hardware id: *PNP0F08
-					 * Compatible id: SERIAL_MOUSE
-					 */
-					RtlInitUnicodeString(&DeviceDescription, L"Microsoft Mouse with 3-buttons");
-					SerenumInitMultiSzString(&HardwareIds, "*PNP0F08", NULL);
-					SerenumInitMultiSzString(&CompatibleIds, "SERIAL_MOUSE", NULL);
-					break;
-				default:
-					/* Hardware id: *PNP0F01
-					 * Compatible id: SERIAL_MOUSE
-					 */
-					RtlInitUnicodeString(&DeviceDescription, L"Microsoft Mouse with 2-buttons or Microsoft Wheel Mouse");
-					SerenumInitMultiSzString(&HardwareIds, "*PNP0F01", NULL);
-					SerenumInitMultiSzString(&CompatibleIds, "SERIAL_MOUSE", NULL);
-					break;
-			}
-			Status = ReportDetectedDevice(DeviceObject,
-				&DeviceDescription, &DeviceId, &InstanceId, &HardwareIds, &CompatibleIds);
-			RtlFreeUnicodeString(&HardwareIds);
-			RtlFreeUnicodeString(&CompatibleIds);
-			goto ByeBye;
-		}
-	}
+        /* Fill the read buffer */
+        DPRINT("Fill the read buffer\n");
+        Status = ReadBytes(LowerDevice, Buffer, sizeof(Buffer)/sizeof(Buffer[0]), (PVOID)&Count);
+        if (!NT_SUCCESS(Status)) goto ByeBye;
 
-	Status = STATUS_DEVICE_NOT_CONNECTED;
+        RtlInitUnicodeString(&DeviceId, L"Serenum\\Mouse");
+        RtlInitUnicodeString(&InstanceId, L"0000");
+        for (i = 0; i < Count; i++)
+        {
+                if (Buffer[i] == 'B')
+                {
+                        RtlInitUnicodeString(&DeviceDescription, L"Microsoft Ballpoint device");
+                        SerenumInitMultiSzString(&HardwareIds, "*PNP0F09", NULL);
+                        SerenumInitMultiSzString(&CompatibleIds, "*PNP0F0F", "SERIAL_MOUSE", NULL);
+                        Status = ReportDetectedDevice(DeviceObject,
+                                &DeviceDescription, &DeviceId, &InstanceId, &HardwareIds, &CompatibleIds);
+                        RtlFreeUnicodeString(&HardwareIds);
+                        RtlFreeUnicodeString(&CompatibleIds);
+                        goto ByeBye;
+                }
+                else if (Buffer[i] == 'M')
+                {
+                        if (i == sizeof(Buffer) - 1)
+                        {
+                                Status = STATUS_DEVICE_NOT_CONNECTED;
+                                goto ByeBye;
+                        }
+                        switch (Buffer[i + 1])
+                        {
+                                case '3':
+                                        RtlInitUnicodeString(&DeviceDescription, L"Microsoft Mouse with 3-buttons");
+                                        SerenumInitMultiSzString(&HardwareIds, "*PNP0F08", NULL);
+                                        SerenumInitMultiSzString(&CompatibleIds, "SERIAL_MOUSE", NULL);
+                                        break;
+                                default:
+                                        RtlInitUnicodeString(&DeviceDescription, L"Microsoft Mouse with 2-buttons or Microsoft Wheel Mouse");
+                                        SerenumInitMultiSzString(&HardwareIds, "*PNP0F01", NULL);
+                                        SerenumInitMultiSzString(&CompatibleIds, "SERIAL_MOUSE", NULL);
+                                        break;
+                        }
+                        Status = ReportDetectedDevice(DeviceObject,
+                                &DeviceDescription, &DeviceId, &InstanceId, &HardwareIds, &CompatibleIds);
+                        RtlFreeUnicodeString(&HardwareIds);
+                        RtlFreeUnicodeString(&CompatibleIds);
+                        goto ByeBye;
+                }
+        }
+
+        Status = STATUS_DEVICE_NOT_CONNECTED;
 
 ByeBye:
-	/* Close port */
-	if (Handle)
-		ZwClose(Handle);
-	return Status;
+        /* Restore clean initial settings if no legacy mouse claimed the port */
+        if (HaveOrigSettings && Status == STATUS_DEVICE_NOT_CONNECTED)
+        {
+                DeviceIoControlTimeout(LowerDevice, IOCTL_SERIAL_SET_BAUD_RATE,
+                                       &OrigBaudRate.BaudRate, sizeof(OrigBaudRate.BaudRate), NULL, NULL);
+                DeviceIoControlTimeout(LowerDevice, IOCTL_SERIAL_SET_LINE_CONTROL,
+                                       &OrigLCR, sizeof(OrigLCR), NULL, NULL);
+                DeviceIoControlTimeout(LowerDevice, IOCTL_SERIAL_SET_TIMEOUTS,
+                                       &OrigTimeouts, sizeof(OrigTimeouts), NULL, NULL);
+        }
+
+        /* Ensure DTR and RTS are asserted for communication */
+        DeviceIoControlTimeout(LowerDevice, IOCTL_SERIAL_SET_DTR, NULL, 0, NULL, NULL);
+        DeviceIoControlTimeout(LowerDevice, IOCTL_SERIAL_SET_RTS, NULL, 0, NULL, NULL);
+
+        /* Re-enable FIFO */
+        Fcr = 1;
+        DeviceIoControlTimeout(LowerDevice, IOCTL_SERIAL_SET_FIFO_CONTROL,
+                               &Fcr, sizeof(Fcr), NULL, NULL);
+
+        /* Close port */
+        if (Handle)
+                ZwClose(Handle);
+        return Status;
 }

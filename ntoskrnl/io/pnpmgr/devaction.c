@@ -304,22 +304,22 @@ IopCreateDeviceInstancePath(
     }
 
     UNICODE_STRING DefaultInstanceId = RTL_CONSTANT_STRING(L"0000");
-    PUNICODE_STRING TargetInstanceId;
+    BOOLEAN UseDefault = FALSE;
 
     RtlInitUnicodeString(&InstanceId,
                          (PWSTR)IoStatusBlock.Information);
 
-    TargetInstanceId = (InstanceId.Length > 0) ? &InstanceId : &DefaultInstanceId;
+    /* Only fallback to 0000 if both ParentIdPrefix and InstanceId are empty */
+    if (ParentIdPrefix.Length == 0 && InstanceId.Length == 0)
+    {
+        UseDefault = TRUE;
+    }
 
     InstancePath->Length = 0;
     InstancePath->MaximumLength = DeviceId.Length + sizeof(WCHAR) +
                                   ParentIdPrefix.Length +
-                                  TargetInstanceId->Length +
+                                  (UseDefault ? DefaultInstanceId.Length : InstanceId.Length) +
                                   sizeof(UNICODE_NULL);
-    if (ParentIdPrefix.Length && TargetInstanceId->Length)
-    {
-        InstancePath->MaximumLength += sizeof(WCHAR);
-    }
 
     InstancePath->Buffer = ExAllocatePoolWithTag(PagedPool,
                                                  InstancePath->MaximumLength,
@@ -338,13 +338,16 @@ IopCreateDeviceInstancePath(
 
     /* Add information from parent bus device to InstancePath */
     RtlAppendUnicodeStringToString(InstancePath, &ParentIdPrefix);
-    if (ParentIdPrefix.Length && TargetInstanceId->Length)
-    {
-        RtlAppendUnicodeToString(InstancePath, L"&");
-    }
 
-    /* Finally, add the id returned by the driver stack */
-    RtlAppendUnicodeStringToString(InstancePath, TargetInstanceId);
+    /* Finally, add the id returned by the driver stack or the fallback */
+    if (UseDefault)
+    {
+        RtlAppendUnicodeStringToString(InstancePath, &DefaultInstanceId);
+    }
+    else
+    {
+        RtlAppendUnicodeStringToString(InstancePath, &InstanceId);
+    }
 
     /*
      * FIXME: Check for valid characters, if there is invalid characters
