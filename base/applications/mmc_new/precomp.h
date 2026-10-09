@@ -63,6 +63,7 @@ class CMainWnd;
 #include "CSnapinCacheEntry.h"
 #include "CSnapin.h"
 #include "CSnapinAlias.h"
+#include "CActionWnd.h"
 #include "CConsoleWnd.h"
 #include "CMainWnd.h"
 

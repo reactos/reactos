@@ -67,6 +67,12 @@ CConsoleWnd::OnCreate(UINT nMessage, WPARAM wParam, LPARAM lParam, BOOL& bHandle
 
     m_ListView.Create(this->m_hWnd, &Rect, NULL, WS_CHILD | WS_VISIBLE | ViewModeToStyle(m_ListViewMode), WS_EX_CLIENTEDGE);
 
+    Rect.right = 0;
+    Rect.left = 0;
+    Rect.top = 0;
+    Rect.bottom = 0;
+    m_ActionsPane.Create(this->m_hWnd, &Rect, L"Actions", WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS, WS_EX_CLIENTEDGE);
+
     m_ViewId = m_MainWnd->RegisterView(this);
 
     UpdateTreeView();
@@ -424,6 +430,8 @@ CConsoleWnd::UpdateLayout()
     m_ListView.MoveWindow(iListViewPosX, iListViewPosY, iListViewWidth, iListViewHeight);
 
     m_DescriptionBar.MoveWindow(iListViewPosX, 0, iListViewWidth, iDescriptionBarHeight);
+
+    m_ActionsPane.MoveWindow(iClientWidth - m_iActionsPaneWidth, 0, m_iActionsPaneWidth, iClientHeight);
 }
 
 VOID

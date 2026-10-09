@@ -23,6 +23,7 @@ private:
     CListView m_ListView;
     CStatusBar m_StatusBar;
     CWindow m_DescriptionBar;
+    CActionWnd m_ActionsPane;
     int m_iTreeViewWidth;
     int m_iActionsPaneWidth;
     int m_iSplitterWidth;
