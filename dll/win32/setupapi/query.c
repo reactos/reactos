@@ -728,7 +728,6 @@ BOOL WINAPI SetupQueryInfVersionInformationW(
     _In_ DWORD ReturnBufferSize,
     _Out_opt_ PDWORD RequiredSize)
 {
-    static const WCHAR wszVersion[] = { 'V','e','r','s','i','o','n',0 };
     HINF hInf;
     INFCONTEXT ctx;
     DWORD needed = 0;
@@ -759,7 +758,7 @@ BOOL WINAPI SetupQueryInfVersionInformationW(
     if (hInf == INVALID_HANDLE_VALUE)
         return FALSE;
 
-    if (SetupFindFirstLineW(hInf, wszVersion, Key, &ctx))
+    if (SetupFindFirstLineW(hInf, L"Version", Key, &ctx))
     {
         do
         {
