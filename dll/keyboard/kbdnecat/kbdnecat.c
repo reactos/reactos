@@ -170,45 +170,45 @@ ROSDATA MODIFIERS modifier_bits = {
 
 /* Normal / Shift / Kana / Kana+Shift */
 ROSDATA VK_TO_WCHARS4 key_to_chars_4mod[] = {
-  { '0',  KANALOK, {'0', '0', 0xff9c, 0xff66} },           /* ﾜ ｦ */
-  { '1',  KANALOK, {'1', '!', 0xff87, 0xff87} },           /* ﾇ */
-  { '3',  KANALOK, {'3', '#', 0xff71, 0xff67} },           /* ｱ ｧ */
-  { '4',  KANALOK, {'4', '$', 0xff73, 0xff69} },           /* ｳ ｩ */
-  { '5',  KANALOK, {'5', '%', 0xff74, 0xff6a} },           /* ｴ ｪ */
-  { '7',  KANALOK, {'7', '\'',0xff94, 0xff6c} },           /* ﾔ ｬ */
-  { '8',  KANALOK, {'8', '(', 0xff95, 0xff6d} },           /* ﾕ ｭ */
-  { '9',  KANALOK, {'9', ')', 0xff96, 0xff6e} },           /* ﾖ ｮ */
-  { 'A',  KANALOK|CAPLOK, {'a', 'A', 0xff81, 0xff81} },    /* ﾁ */
-  { 'B',  KANALOK|CAPLOK, {'b', 'B', 0xff7a, 0xff7a} },    /* ｺ */
-  { 'C',  KANALOK|CAPLOK, {'c', 'C', 0xff7f, 0xff7f} },    /* ｿ */
-  { 'D',  KANALOK|CAPLOK, {'d', 'D', 0xff7c, 0xff7c} },    /* ｼ */
-  { 'E',  KANALOK|CAPLOK, {'e', 'E', 0xff72, 0xff68} },    /* ｲ ｨ */
-  { 'F',  KANALOK|CAPLOK, {'f', 'F', 0xff8a, 0xff8a} },    /* ﾊ */
-  { 'G',  KANALOK|CAPLOK, {'g', 'G', 0xff77, 0xff77} },    /* ｷ */
-  { 'H',  KANALOK|CAPLOK, {'h', 'H', 0xff78, 0xff78} },    /* ｸ */
-  { 'I',  KANALOK|CAPLOK, {'i', 'I', 0xff86, 0xff86} },    /* ﾆ */
-  { 'J',  KANALOK|CAPLOK, {'j', 'J', 0xff8f, 0xff8f} },    /* ﾏ */
-  { 'K',  KANALOK|CAPLOK, {'k', 'K', 0xff89, 0xff89} },    /* ﾉ */
-  { 'L',  KANALOK|CAPLOK, {'l', 'L', 0xff98, 0xff98} },    /* ﾘ */
-  { 'M',  KANALOK|CAPLOK, {'m', 'M', 0xff93, 0xff93} },    /* ﾓ */
-  { 'N',  KANALOK|CAPLOK, {'n', 'N', 0xff90, 0xff90} },    /* ﾐ */
-  { 'O',  KANALOK|CAPLOK, {'o', 'O', 0xff97, 0xff97} },    /* ﾗ */
-  { 'P',  KANALOK|CAPLOK, {'p', 'P', 0xff7e, 0xff7e} },    /* ｾ */
-  { 'Q',  KANALOK|CAPLOK, {'q', 'Q', 0xff80, 0xff80} },    /* ﾀ */
-  { 'R',  KANALOK|CAPLOK, {'r', 'R', 0xff7d, 0xff7d} },    /* ｽ */
-  { 'S',  KANALOK|CAPLOK, {'s', 'S', 0xff84, 0xff84} },    /* ﾄ */
-  { 'T',  KANALOK|CAPLOK, {'t', 'T', 0xff76, 0xff76} },    /* ｶ */
-  { 'U',  KANALOK|CAPLOK, {'u', 'U', 0xff85, 0xff85} },    /* ﾅ */
-  { 'V',  KANALOK|CAPLOK, {'v', 'V', 0xff8b, 0xff8b} },    /* ﾋ */
-  { 'W',  KANALOK|CAPLOK, {'w', 'W', 0xff83, 0xff83} },    /* ﾃ */
-  { 'X',  KANALOK|CAPLOK, {'x', 'X', 0xff7b, 0xff7b} },    /* ｻ */
-  { 'Y',  KANALOK|CAPLOK, {'y', 'Y', 0xff9d, 0xff9d} },    /* ﾝ */
-  { 'Z',  KANALOK|CAPLOK, {'z', 'Z', 0xff82, 0xff6f} },    /* ﾂ ｯ */
-  { VK_OEM_1,      KANALOK, {':', '*', 0xff79, 0xff79} },  /* ｹ  (0xBA) */
-  { VK_OEM_2,      KANALOK, {'/', '?', 0xff92, 0xff65} },  /* ﾒ ･ (0xBF) */
-  { VK_OEM_COMMA,  KANALOK, {',', '<', 0xff88, 0xff64} },  /* ﾈ ､ (0xBC) */
-  { VK_OEM_PERIOD, KANALOK, {'.', '>', 0xff99, 0xff61} },  /* ﾙ ｡ (0xBE) */
-  { VK_OEM_PLUS,   KANALOK, {';', '+', 0xff9a, 0xff9a} },  /* ﾚ  (0xBB) */
+  { '0',  KANALOK, {'0', '0', 0xff9c, 0xff66} },          /* ﾜ ｦ */
+  { '1',  KANALOK, {'1', '!', 0xff87, 0xff87} },          /* ﾇ */
+  { '3',  KANALOK, {'3', '#', 0xff71, 0xff67} },          /* ｱ ｧ */
+  { '4',  KANALOK, {'4', '$', 0xff73, 0xff69} },          /* ｳ ｩ */
+  { '5',  KANALOK, {'5', '%', 0xff74, 0xff6a} },          /* ｴ ｪ */
+  { '7',  KANALOK, {'7', '\'',0xff94, 0xff6c} },          /* ﾔ ｬ */
+  { '8',  KANALOK, {'8', '(', 0xff95, 0xff6d} },          /* ﾕ ｭ */
+  { '9',  KANALOK, {'9', ')', 0xff96, 0xff6e} },          /* ﾖ ｮ */
+  { 'A',  KANALOK|CAPLOK, {'a', 'A', 0xff81, 0xff81} },   /* ﾁ */
+  { 'B',  KANALOK|CAPLOK, {'b', 'B', 0xff7a, 0xff7a} },   /* ｺ */
+  { 'C',  KANALOK|CAPLOK, {'c', 'C', 0xff7f, 0xff7f} },   /* ｿ */
+  { 'D',  KANALOK|CAPLOK, {'d', 'D', 0xff7c, 0xff7c} },   /* ｼ */
+  { 'E',  KANALOK|CAPLOK, {'e', 'E', 0xff72, 0xff68} },   /* ｲ ｨ */
+  { 'F',  KANALOK|CAPLOK, {'f', 'F', 0xff8a, 0xff8a} },   /* ﾊ */
+  { 'G',  KANALOK|CAPLOK, {'g', 'G', 0xff77, 0xff77} },   /* ｷ */
+  { 'H',  KANALOK|CAPLOK, {'h', 'H', 0xff78, 0xff78} },   /* ｸ */
+  { 'I',  KANALOK|CAPLOK, {'i', 'I', 0xff86, 0xff86} },   /* ﾆ */
+  { 'J',  KANALOK|CAPLOK, {'j', 'J', 0xff8f, 0xff8f} },   /* ﾏ */
+  { 'K',  KANALOK|CAPLOK, {'k', 'K', 0xff89, 0xff89} },   /* ﾉ */
+  { 'L',  KANALOK|CAPLOK, {'l', 'L', 0xff98, 0xff98} },   /* ﾘ */
+  { 'M',  KANALOK|CAPLOK, {'m', 'M', 0xff93, 0xff93} },   /* ﾓ */
+  { 'N',  KANALOK|CAPLOK, {'n', 'N', 0xff90, 0xff90} },   /* ﾐ */
+  { 'O',  KANALOK|CAPLOK, {'o', 'O', 0xff97, 0xff97} },   /* ﾗ */
+  { 'P',  KANALOK|CAPLOK, {'p', 'P', 0xff7e, 0xff7e} },   /* ｾ */
+  { 'Q',  KANALOK|CAPLOK, {'q', 'Q', 0xff80, 0xff80} },   /* ﾀ */
+  { 'R',  KANALOK|CAPLOK, {'r', 'R', 0xff7d, 0xff7d} },   /* ｽ */
+  { 'S',  KANALOK|CAPLOK, {'s', 'S', 0xff84, 0xff84} },   /* ﾄ */
+  { 'T',  KANALOK|CAPLOK, {'t', 'T', 0xff76, 0xff76} },   /* ｶ */
+  { 'U',  KANALOK|CAPLOK, {'u', 'U', 0xff85, 0xff85} },   /* ﾅ */
+  { 'V',  KANALOK|CAPLOK, {'v', 'V', 0xff8b, 0xff8b} },   /* ﾋ */
+  { 'W',  KANALOK|CAPLOK, {'w', 'W', 0xff83, 0xff83} },   /* ﾃ */
+  { 'X',  KANALOK|CAPLOK, {'x', 'X', 0xff7b, 0xff7b} },   /* ｻ */
+  { 'Y',  KANALOK|CAPLOK, {'y', 'Y', 0xff9d, 0xff9d} },   /* ﾝ */
+  { 'Z',  KANALOK|CAPLOK, {'z', 'Z', 0xff82, 0xff6f} },   /* ﾂ ｯ */
+  { VK_OEM_1,      KANALOK, {':', '*', 0xff79, 0xff79} }, /* ｹ  (0xBA) */
+  { VK_OEM_2,      KANALOK, {'/', '?', 0xff92, 0xff65} }, /* ﾒ ･ (0xBF) */
+  { VK_OEM_COMMA,  KANALOK, {',', '<', 0xff88, 0xff64} }, /* ﾈ ､ (0xBC) */
+  { VK_OEM_PERIOD, KANALOK, {'.', '>', 0xff99, 0xff61} }, /* ﾙ ｡ (0xBE) */
+  { VK_OEM_PLUS,   KANALOK, {';', '+', 0xff9a, 0xff9a} }, /* ﾚ  (0xBB) */
   { VK_TAB,        0, {'\t', '\t', '\t', '\t'} },
   { VK_ADD,        0, {'+', '+', '+', '+'} },
   { VK_DECIMAL,    0, {'.', '.', '.', '.'} },
@@ -222,25 +222,25 @@ ROSDATA VK_TO_WCHARS4 key_to_chars_4mod[] = {
 
 /* Normal / Shift / Kana / Kana+Shift / Ctrl / Kana+Ctrl */
 ROSDATA VK_TO_WCHARS6 key_to_chars_6mod[] = {
-  { VK_BACK,    0, {0x08, 0x08, 0x08, 0x08, 0x7f, 0x7f} },
-  { VK_CANCEL,  0, {0x03, 0x03, 0x03, 0x03, 0x03, 0x03} },
-  { VK_ESCAPE,  0, {0x1b, 0x1b, 0x1b, 0x1b, 0x1b, 0x1b} },
-  { VK_OEM_3,   KANALOK, {'@',  '~',  0xff9e, 0xff9e, 0x00, 0x00} },   /* ﾞ        (0xC0) */
-  { VK_OEM_4,   KANALOK, {'[',  '{',  0xff9f, 0xff62, 0x1b, 0x1b} },   /* ﾟ ｢      (0xDB) */
-  { VK_OEM_5,   KANALOK, {'\\', '|',  0xff70, 0xff70, 0x1c, 0x1c} },   /* ｰ        (0xDC) */
-  { VK_OEM_6,   KANALOK, {']',  '}',  0xff91, 0xff63, 0x1d, 0x1d} },   /* ﾑ ｣      (0xDD) */
-  { VK_OEM_7,   KANALOK, {'^',  '`',  0xff8d, 0xff8d, 0x1e, 0x1e} },   /* ﾍ        (0xDE) */
-  { VK_OEM_8,   KANALOK, {WCH_NONE, '_', 0xff9b, 0xff9b, 0x1f, 0x1f} },/* ﾛ        (0xDF) */
-  { VK_RETURN,  0, {'\r', '\r', '\r', '\r', '\n', '\n'} },
-  { VK_SPACE,   0, {' ',  ' ',  ' ',  ' ',  ' ',  ' '} },
+  { VK_BACK,   0, {0x08, 0x08, 0x08, 0x08, 0x7f, 0x7f} },
+  { VK_CANCEL, 0, {0x03, 0x03, 0x03, 0x03, 0x03, 0x03} },
+  { VK_ESCAPE, 0, {0x1b, 0x1b, 0x1b, 0x1b, 0x1b, 0x1b} },
+  { VK_OEM_3,  KANALOK, {'@',  '~',  0xff9e, 0xff9e, 0x00, 0x00} },   /* ﾞ   (0xC0) */
+  { VK_OEM_4,  KANALOK, {'[',  '{',  0xff9f, 0xff62, 0x1b, 0x1b} },   /* ﾟ ｢ (0xDB) */
+  { VK_OEM_5,  KANALOK, {'\\', '|',  0xff70, 0xff70, 0x1c, 0x1c} },   /* ｰ   (0xDC) */
+  { VK_OEM_6,  KANALOK, {']',  '}',  0xff91, 0xff63, 0x1d, 0x1d} },   /* ﾑ ｣ (0xDD) */
+  { VK_OEM_7,  KANALOK, {'^',  '`',  0xff8d, 0xff8d, 0x1e, 0x1e} },   /* ﾍ   (0xDE) */
+  { VK_OEM_8,  KANALOK, {WCH_NONE, '_', 0xff9b, 0xff9b, 0x1f, 0x1f} },/* ﾛ   (0xDF) */
+  { VK_RETURN, 0, {'\r', '\r', '\r', '\r', '\n', '\n'} },
+  { VK_SPACE,  0, {' ',  ' ',  ' ',  ' ',  ' ',  ' '} },
   { 0, 0 }
 };
 
 /* Normal / Shift / Kana / Kana+Shift / Ctrl / Kana+Ctrl / Ctrl+Shift / Kana+Ctrl+Shift */
 ROSDATA VK_TO_WCHARS8 key_to_chars_8mod[] = {
-  { '2',          KANALOK, {'2', '"', 0xff8c, 0xff8c, WCH_NONE, WCH_NONE, 0x00, 0x00} },  /* ﾌ */
-  { '6',          KANALOK, {'6', '&', 0xff75, 0xff6b, WCH_NONE, WCH_NONE, 0x1e, 0x1e} },  /* ｵ ｫ */
-  { VK_OEM_MINUS, KANALOK, {'-', '=', 0xff8e, 0xff8e, WCH_NONE, WCH_NONE, 0x1f, 0x1f} },  /* ﾎ */
+  { '2',          KANALOK, {'2', '"', 0xff8c, 0xff8c, WCH_NONE, WCH_NONE, 0x00, 0x00} }, /* ﾌ */
+  { '6',          KANALOK, {'6', '&', 0xff75, 0xff6b, WCH_NONE, WCH_NONE, 0x1e, 0x1e} }, /* ｵ ｫ */
+  { VK_OEM_MINUS, KANALOK, {'-', '=', 0xff8e, 0xff8e, WCH_NONE, WCH_NONE, 0x1f, 0x1f} }, /* ﾎ */
   { 0, 0 }
 };
 
@@ -368,14 +368,10 @@ ROSDATA KBDTABLES_FE keyboard_layout_table = {
     extcode1_to_vk,
 
     0, /* fLocaleFlags */
-
-    /* Ligatures -- none */
-    0,
-    0,
-    NULL
+    0, 0, NULL /* Ligatures -- none */
   },
-  7,      /* dwType    : Japanese keyboard */
-  0x0d02  /* dwSubType : NEC PC-9800 (PC98-NX) */
+  7,     /* dwType    : Japanese keyboard */
+  0x0d02 /* dwSubType : NEC PC-9800 (PC98-NX) */
 };
 
 PKBDTABLES WINAPI KbdLayerDescriptor(VOID) {
