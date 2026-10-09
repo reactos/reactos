@@ -639,20 +639,8 @@ UserLoadKbdFile(
         if (co_GetKeyboardMultiTable(pszLayoutFile, hKL, &kbdTableMulti,
                                      wszRealDllName, _countof(wszRealDllName)))
         {
-            /* Choose the best table and load it as *ppkfReal */
-            ULONG iTable, nTables = kbdTableMulti.nTables;
-            PKBDTABLE_DESC pKbdTables = kbdTableMulti.aKbdTables;
-            for (iTable = 0; iTable < nTables; ++iTable)
-            {
-                if (_wcsicmp(wszRealDllName, pKbdTables[iTable].wszDllName) == 0)
-                {
-                    /* Recurse with new filename */
-                    *ppkfReal = UserLoadKbdFile(hKL, pwszKLID, wszRealDllName, NULL);
-                    break;
-                }
-            }
-            if (!*ppkfReal)
-                *ppkfReal = UserLoadKbdFile(hKL, pwszKLID, pKbdTables[0].wszDllName, NULL);
+            /* Recurse with new filename */
+            *ppkfReal = UserLoadKbdFile(hKL, pwszKLID, wszRealDllName, NULL);
         }
     }
 
