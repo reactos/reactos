@@ -12,3 +12,7 @@ LISTVIEW_MODE CmdIdToViewMode(UINT CmdId);
 LPWSTR ViewModeToString(LISTVIEW_MODE ListViewMode);
 LISTVIEW_MODE StringToViewMode(LPWSTR ViewMode);
 DWORD ViewModeToStyle(LISTVIEW_MODE ListViewMode);
+LPWSTR ShowCmdToString(int nShowCmd);
+int ShowCmdFromString(LPWSTR pszString);
+LPWSTR DocumentModeToString(DOCUMENT_MODE DocumentMode);
+HRESULT StringToDocumentMode(LPWSTR pszDocumentMode, PDOCUMENT_MODE pDocumentMode);

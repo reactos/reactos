@@ -31,7 +31,6 @@ add_library(dwrite SHARED ${SOURCE})
 set_module_type(dwrite win32dll)
 target_link_libraries(dwrite wine uuid oldnames freetype)
 add_dependencies(dwrite psdk)
-set_module_type(dwrite win32dll ENTRYPOINT 0)
-add_importlibs(dwrite shell32 shlwapi oleaut32 ole32 combase user32 user32_vista gdi32 ucrtbase advapi32 advapi32_vista kernel32 kernel32_vista ntdll)
+add_importlibs(dwrite shell32 shlwapi oleaut32 ole32 combase user32 user32_vista gdi32 msvcrt advapi32 advapi32_vista kernel32 kernel32_vista ntdll)
 add_cd_file(TARGET dwrite DESTINATION reactos/system32 FOR all)
 set_wine_module_FIXME(dwrite) # CORE-5743: No ARRAY_SIZE macro

@@ -1,0 +1,5 @@
+#define REACTOS_VERSION_DLL
+#define REACTOS_STR_FILE_DESCRIPTION  "ReactOS Korean (Hangul 101 Type A) Keyboard Layout"
+#define REACTOS_STR_INTERNAL_NAME     "kbd101a"
+#define REACTOS_STR_ORIGINAL_FILENAME "kbd101a.dll"
+#include <reactos/version.rc>

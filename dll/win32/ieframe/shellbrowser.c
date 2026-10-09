@@ -29,6 +29,24 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(ieframe);
 
+const WCHAR *error_url_frag(const WCHAR *url)
+{
+    if(!wcsncmp(url, L"res://", ARRAY_SIZE(L"res://")-1)) {
+        WCHAR buf[MAX_PATH];
+        UINT len = GetSystemDirectoryW(buf, ARRAY_SIZE(buf));
+
+        if(len && !wcsncmp(url + ARRAY_SIZE(L"res://")-1, buf, len)) {
+            len += ARRAY_SIZE(L"res://")-1;
+            if(!wcsncmp(url + len, L"\\shdoclc.dll/ERROR.HTM", ARRAY_SIZE(L"\\shdoclc.dll/ERROR.HTM")-1)) {
+                len += ARRAY_SIZE(L"\\shdoclc.dll/ERROR.HTM")-1;
+                url = wcschr(url + len, '#');
+                return url ? url + 1 : NULL;
+            }
+        }
+    }
+    return NULL;
+}
+
 static inline ShellBrowser *impl_from_IShellBrowser(IShellBrowser *iface)
 {
     return CONTAINING_RECORD(iface, ShellBrowser, IShellBrowser_iface);
@@ -69,7 +87,7 @@ static ULONG WINAPI ShellBrowser_AddRef(
     ShellBrowser *This = impl_from_IShellBrowser(iface);
     LONG ref = InterlockedIncrement(&This->ref);
 
-    TRACE("(%p) ref=%d\n", This, ref);
+    TRACE("(%p) ref=%ld\n", This, ref);
 
     return ref;
 }
@@ -79,11 +97,11 @@ static ULONG WINAPI ShellBrowser_Release(IShellBrowser* iface)
     ShellBrowser *This = impl_from_IShellBrowser(iface);
     LONG ref = InterlockedDecrement(&This->ref);
 
-    TRACE("(%p) ref=%d\n", This, ref);
+    TRACE("(%p) ref=%ld\n", This, ref);
 
     if(!ref) {
         assert(!This->doc_host);
-        heap_free(This);
+        free(This);
     }
 
     return ref;
@@ -181,7 +199,7 @@ static HRESULT WINAPI ShellBrowser_GetViewStateStream(
         IStream **ppStrm)
 {
     ShellBrowser *This = impl_from_IShellBrowser(iface);
-    FIXME("%p %x %p\n", This, grfMode, ppStrm);
+    FIXME("%p %lx %p\n", This, grfMode, ppStrm);
     return E_NOTIMPL;
 }
 
@@ -312,7 +330,7 @@ static HRESULT WINAPI BrowserService_GetTitle(
         DWORD cchName)
 {
     ShellBrowser *This = impl_from_IBrowserService(iface);
-    FIXME("%p %p %p %d\n", This, psv, pszName, cchName);
+    FIXME("%p %p %p %ld\n", This, psv, pszName, cchName);
     return E_NOTIMPL;
 }
 
@@ -382,7 +400,7 @@ static HRESULT WINAPI BrowserService_DisplayParseError(
         LPCWSTR pwszPath)
 {
     ShellBrowser *This = impl_from_IBrowserService(iface);
-    FIXME("%p %x %s\n", This, hres, debugstr_w(pwszPath));
+    FIXME("%p %lx %s\n", This, hres, debugstr_w(pwszPath));
     return E_NOTIMPL;
 }
 
@@ -392,7 +410,7 @@ static HRESULT WINAPI BrowserService_NavigateToPidl(
         DWORD grfHLNF)
 {
     ShellBrowser *This = impl_from_IBrowserService(iface);
-    FIXME("%p %p %d\n", This, pidl, grfHLNF);
+    FIXME("%p %p %ld\n", This, pidl, grfHLNF);
     return E_NOTIMPL;
 }
 
@@ -447,7 +465,7 @@ static HRESULT WINAPI BrowserService_SetFlags(
         DWORD dwFlagMask)
 {
     ShellBrowser *This = impl_from_IBrowserService(iface);
-    FIXME("%p %x %x\n", This, dwFlags, dwFlagMask);
+    FIXME("%p %lx %lx\n", This, dwFlags, dwFlagMask);
     return E_NOTIMPL;
 }
 
@@ -500,7 +518,7 @@ static HRESULT WINAPI BrowserService_GetBrowserByIndex(
         IUnknown **ppunk)
 {
     ShellBrowser *This = impl_from_IBrowserService(iface);
-    FIXME("%p %x %p\n", This, dwID, ppunk);
+    FIXME("%p %lx %p\n", This, dwID, ppunk);
     return E_NOTIMPL;
 }
 
@@ -660,7 +678,7 @@ static HRESULT WINAPI DocObjectService_FireBeforeNavigate2(
     WCHAR file_path[MAX_PATH];
     DWORD file_path_len = ARRAY_SIZE(file_path);
 
-    TRACE("%p %p %s %x %s %p %d %s %d %p\n", This, pDispatch, debugstr_w(lpszUrl),
+    TRACE("%p %p %s %lx %s %p %ld %s %d %p\n", This, pDispatch, debugstr_w(lpszUrl),
             dwFlags, debugstr_w(lpszFrameName), pPostData, cbPostData,
             debugstr_w(lpszHeaders), fPlayNavSound, pfCancel);
 
@@ -740,13 +758,14 @@ static HRESULT WINAPI DocObjectService_FireNavigateComplete2(
     ShellBrowser *This = impl_from_IDocObjectService(iface);
     DocHost *doc_host = This->doc_host;
     IHTMLPrivateWindow *priv_window;
+    const WCHAR *orig_url;
     VARIANTARG params[2];
     DISPPARAMS dp = {params, NULL, 2, 0};
     VARIANT url_var;
     BSTR url;
     HRESULT hres;
 
-    TRACE("%p %p %x\n", This, pHTMLWindow2, dwFlags);
+    TRACE("%p %p %lx\n", This, pHTMLWindow2, dwFlags);
 
     update_navigation_commands(This->doc_host);
 
@@ -767,6 +786,13 @@ static HRESULT WINAPI DocObjectService_FireNavigateComplete2(
 
     TRACE("got URL %s\n", debugstr_w(url));
     set_dochost_url(This->doc_host, url);
+
+    orig_url = error_url_frag(url);
+    if(orig_url) {
+        BSTR tmp = SysAllocString(orig_url);
+        SysFreeString(url);
+        url = tmp;
+    }
 
     V_VT(params) = (VT_BYREF|VT_VARIANT);
     V_VARIANTREF(params) = &url_var;
@@ -813,13 +839,14 @@ static HRESULT WINAPI DocObjectService_FireDocumentComplete(
 {
     ShellBrowser *This = impl_from_IDocObjectService(iface);
     IHTMLPrivateWindow *priv_window;
+    const WCHAR *orig_url;
     VARIANTARG params[2];
     DISPPARAMS dp = {params, NULL, 2, 0};
     VARIANT url_var;
     BSTR url;
     HRESULT hres;
 
-    TRACE("%p %p %x\n", This, pHTMLWindow, dwFlags);
+    TRACE("%p %p %lx\n", This, pHTMLWindow, dwFlags);
 
     hres = IHTMLWindow2_QueryInterface(pHTMLWindow, &IID_IHTMLPrivateWindow, (void**)&priv_window);
     if(FAILED(hres))
@@ -831,6 +858,13 @@ static HRESULT WINAPI DocObjectService_FireDocumentComplete(
         return hres;
 
     TRACE("got URL %s\n", debugstr_w(url));
+
+    orig_url = error_url_frag(url);
+    if(orig_url) {
+        BSTR tmp = SysAllocString(orig_url);
+        SysFreeString(url);
+        url = tmp;
+    }
 
     V_VT(params) = (VT_BYREF|VT_VARIANT);
     V_VARIANTREF(params) = &url_var;
@@ -896,9 +930,10 @@ static HRESULT WINAPI DocObjectService_IsErrorUrl(
         BOOL *pfIsError)
 {
     ShellBrowser *This = impl_from_IDocObjectService(iface);
-    FIXME("%p %s %p\n", This, debugstr_w(lpszUrl), pfIsError);
 
-    *pfIsError = FALSE;
+    TRACE("(%p)->(%s %p)\n", This, debugstr_w(lpszUrl), pfIsError);
+
+    *pfIsError = !!error_url_frag(lpszUrl);
     return S_OK;
 }
 
@@ -922,7 +957,7 @@ HRESULT create_browser_service(DocHost *doc_host, ShellBrowser **ret)
 {
     ShellBrowser *sb;
 
-    sb = heap_alloc(sizeof(ShellBrowser));
+    sb = malloc(sizeof(ShellBrowser));
     if(!sb)
         return E_OUTOFMEMORY;
 
@@ -991,7 +1026,7 @@ static HRESULT WINAPI NewWindowManager_EvaluateNewWindow(INewWindowManager *ifac
         DWORD dwUserActionTime)
 {
     NewWindowManager *This = impl_from_INewWindowManager(iface);
-    FIXME("(%p)->(%s %s %s %s %x %x %d)\n", This, debugstr_w(pszUrl), debugstr_w(pszName), debugstr_w(pszUrlContext),
+    FIXME("(%p)->(%s %s %s %s %x %lx %ld)\n", This, debugstr_w(pszUrl), debugstr_w(pszName), debugstr_w(pszUrlContext),
           debugstr_w(pszFeatures), fReplace, dwFlags, dwUserActionTime);
     return S_OK;
 }

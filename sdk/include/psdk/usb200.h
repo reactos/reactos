@@ -41,7 +41,8 @@ typedef enum _USB_DEVICE_TYPE {
 typedef enum _USB_DEVICE_SPEED {
   UsbLowSpeed = 0,
   UsbFullSpeed,
-  UsbHighSpeed
+  UsbHighSpeed,
+  UsbSuperSpeed
 } USB_DEVICE_SPEED;
 
 #define USB_PORT_STATUS_CONNECT                       0x0001
@@ -110,7 +111,7 @@ typedef union _USB_HIGH_SPEED_MAXPACKET {
     USHORT MaxPacket:11;
     USHORT HSmux:2;
     USHORT Reserved:3;
-  } _MP;
+  };
   USHORT us;
 } USB_HIGH_SPEED_MAXPACKET, *PUSB_HIGH_SPEED_MAXPACKET;
 

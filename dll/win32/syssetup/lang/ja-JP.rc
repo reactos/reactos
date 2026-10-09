@@ -114,7 +114,7 @@ BEGIN
     LTEXT "コンポーネントを登録しています", IDC_TASKTEXT1, 65, 27, 232, 8
     LTEXT "スタートメニュー項目のインストール", IDC_TASKTEXT2, 65, 39, 232, 8
     LTEXT "設定の保存", IDC_TASKTEXT3, 65, 51, 232, 8
-    LTEXT "Installing optional components", IDC_TASKTEXT4, 65, 63, 232, 8
+    LTEXT "オプションのコンポーネント群のインストール", IDC_TASKTEXT4, 65, 63, 232, 8
     LTEXT "一時ファイルの削除", IDC_TASKTEXT5, 65, 75, 232, 8
     LTEXT "", IDC_ITEM, 21, 85, 275, 8
     CONTROL "", IDC_PROCESSPROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 21, 97, 275, 11
@@ -132,7 +132,7 @@ FONT 9, "MS UI Gothic"
 BEGIN
     LTEXT "ReactOS セットアップ ウィザードの完了", IDC_FINISHTITLE, 115, 8, 195, 24
     LTEXT "ReactOS セットアップが正常に完了しました。\n\nドライブに CD がある場合は取り出して下さい。再起動するには [完了] をクリックして下さい。", IDC_STATIC, 115, 40, 195, 48
-    LTEXT "コンピュータは15秒後に自動的に再起動されます。", IDC_STATIC, 115, 110, 195, 24
+    LTEXT "コンピュータは 15 秒後に自動的に再起動されます。", IDC_STATIC, 115, 110, 195, 24
     CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 135, 188, 12
 END
 

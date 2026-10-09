@@ -44,9 +44,10 @@ private:
     HIMAGELIST m_hSnapinImageList;
 
     CAtlList<CConsoleWnd*> m_ViewList;
-    int m_NextViewId;
+    UINT m_NextViewId;
 
     CSnapin *m_RootNode;
+    UINT m_NextNodeId;
 
     CAtlList<CRecentFileEntry *> m_RecentFilesList;
 
@@ -137,6 +138,19 @@ public:
 
 private:
 
+    void InitMain()
+    {
+        delete m_RootNode;
+        m_RootNode = NULL;
+
+        m_DocumentMode = DocumentMode_Author;
+        m_LogicalReadOnly = FALSE;
+        m_PreventViewCustomization = FALSE;
+        m_bToolBarVisible = TRUE;
+        m_NextViewId = 1;
+        m_NextNodeId = 1;
+    }
+
     void UpdateMenu()
     {
         if (m_ViewList.IsEmpty())
@@ -220,6 +234,7 @@ public:
     LRESULT OnMDIForward(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
 
 private:
+    BOOL CreateView(CSnapin *RootNode, CSnapin *SelectedNode = NULL);
     LRESULT LoadSnapinCache();
     void UpdateLayout();
     void UpdateViews();
@@ -228,9 +243,9 @@ private:
     VOID LoadRecentFiles();
     VOID AddToRecentFiles(const CAtlString &FileName);
     DWORD CreateNewFilename(PWSTR pBuffer, DWORD dwSize, DWORD Number);
-    LPWSTR ProgramModeToString();
     LRESULT SaveMscFile(const CAtlString &FileName);
     LRESULT LoadMscFile(const CAtlString &FileName);
+    HRESULT ParseScopeTree(MscFile *mscFile, IXMLDOMElement *pRootElement);
 
 public:
     CAtlString *GetConsoleTitle();
@@ -251,8 +266,10 @@ public:
 
     CSnapin *GetRootSnapin();
 
-    int RegisterView(CConsoleWnd *pView);
+    UINT RegisterView(CConsoleWnd *pView);
     void UnregisterView(CConsoleWnd *pView);
+    UINT GetNextNodeId();
+    VOID UpdateNextNodeId(UINT NodeId);
     DOCUMENT_MODE GetDocumentMode();
     void SetDocumentMode(DOCUMENT_MODE DocumentMode);
     BOOL GetLogicalReadOnly();

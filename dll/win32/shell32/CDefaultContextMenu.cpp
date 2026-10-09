@@ -994,7 +994,7 @@ CDefaultContextMenu::QueryContextMenu(
     {
         UINT added = qcminfo.idCmdFirst - idCmdNext;
         cIds += added;
-        IndexMenu += added;
+        IndexMenu += added; // Note: This is incorrect, forgets about separators and causes CORE-18577. We should build the menu in reverse order like Windows...
         m_iIdCBFirst = m_iIdSHELast;
         m_iIdCBLast = cIds;
         idCmdNext = idCmdFirst + cIds;

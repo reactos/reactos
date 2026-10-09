@@ -113,151 +113,109 @@ CleanUp:
     return hr;
 }
 
-    // Helper function to create and add a comment to a document node.
-    HRESULT MscFile::CreateAndAddCommentNode(PCWSTR wszComment)
-    {
-        HRESULT hr = S_OK;
-        IXMLDOMComment *pComment = NULL;
-
-        BSTR bstrComment = SysAllocString(wszComment);
-        CHK_ALLOC(bstrComment);
-        
-        CHK_HR(m_pDocument->createComment(bstrComment, &pComment));
-        CHK_HR(AppendChildToParent(pComment, m_pDocument));
-
-    CleanUp:
-        SAFE_RELEASE(pComment);
-        SysFreeString(bstrComment);
-        return hr;
-    }
-
-    // Helper function to create and add an attribute to a parent node.
-    HRESULT MscFile::CreateAndAddAttributeNode(PCWSTR wszName, PCWSTR wszValue, IXMLDOMElement *pParent)
-    {
-        HRESULT hr = S_OK;
-        IXMLDOMAttribute *pAttribute = NULL;
-        IXMLDOMAttribute *pAttributeOut = NULL; // Out param that is not used
-
-        BSTR bstrName = NULL;
-        VARIANT varValue;
-        VariantInit(&varValue);
-
-        bstrName = SysAllocString(wszName);
-        CHK_ALLOC(bstrName);
-        CHK_HR(VariantFromString(wszValue, varValue));
-
-        CHK_HR(m_pDocument->createAttribute(bstrName, &pAttribute));
-        CHK_HR(pAttribute->put_value(varValue));
-        CHK_HR(pParent->setAttributeNode(pAttribute, &pAttributeOut));
-
-    CleanUp:
-        SAFE_RELEASE(pAttribute);
-        SAFE_RELEASE(pAttributeOut);
-        SysFreeString(bstrName);
-        VariantClear(&varValue);
-        return hr;
-    }
-
-    // Helper function to create and append a text node to a parent node.
-    HRESULT MscFile::CreateAndAddTextNode(PCWSTR wszText, IXMLDOMNode *pParent)
-    {
-        HRESULT hr = S_OK;    
-        IXMLDOMText *pText = NULL;
-
-        BSTR bstrText = SysAllocString(wszText);
-        CHK_ALLOC(bstrText);
-
-        CHK_HR(m_pDocument->createTextNode(bstrText, &pText));
-        CHK_HR(AppendChildToParent(pText, pParent));
-
-    CleanUp:
-        SAFE_RELEASE(pText);
-        SysFreeString(bstrText);
-        return hr;
-    }
-
-    // Helper function to create and append a CDATA node to a parent node.
-    HRESULT MscFile::CreateAndAddCDATANode(PCWSTR wszCDATA, IXMLDOMNode *pParent)
-    {
-        HRESULT hr = S_OK;
-        IXMLDOMCDATASection *pCDATA = NULL;
-
-        BSTR bstrCDATA = SysAllocString(wszCDATA);
-        CHK_ALLOC(bstrCDATA);
-
-        CHK_HR(m_pDocument->createCDATASection(bstrCDATA, &pCDATA));
-        CHK_HR(AppendChildToParent(pCDATA, pParent));
-
-    CleanUp:
-        SAFE_RELEASE(pCDATA);
-        SysFreeString(bstrCDATA);
-        return hr;
-    }
-
-    // Helper function to create and append an element node to a parent node, and pass the newly created
-    // element node to caller if it wants.
-    HRESULT MscFile::CreateAndAddElementNode(PCWSTR wszName, IXMLDOMNode *pParent, IXMLDOMElement **ppElement)
-    {
-        HRESULT hr = S_OK;
-        IXMLDOMElement* pElement = NULL;
-
-        CHK_HR(CreateElement(wszName, &pElement));
-        CHK_HR(AppendChildToParent(pElement, pParent));
-
-    CleanUp:
-        if (ppElement)
-            *ppElement = pElement;  // Caller is repsonsible to release this element.
-        else
-            SAFE_RELEASE(pElement); // Caller is not interested on this element, so release it.
-
-        return hr;
-    }
-
-
-LPWSTR
-MscFile::ShowCmdToString(
-    int nShowCmd)
+// Helper function to create and add a comment to a document node.
+HRESULT
+MscFile::CreateAndAddCommentNode(PCWSTR wszComment)
 {
-    switch (nShowCmd)
-    {
-        case SW_HIDE:
-            return (LPWSTR)L"SW_HIDE";
+    HRESULT hr = S_OK;
+    IXMLDOMComment *pComment = NULL;
 
-        case SW_SHOWNORMAL:
-            return (LPWSTR)L"SW_SHOWNORMAL";
+    BSTR bstrComment = SysAllocString(wszComment);
+    CHK_ALLOC(bstrComment);
+    
+    CHK_HR(m_pDocument->createComment(bstrComment, &pComment));
+    CHK_HR(AppendChildToParent(pComment, m_pDocument));
 
-        case SW_SHOWMINIMIZED:
-            return (LPWSTR)L"SW_SHOWMINIMIZED";
+CleanUp:
+    SAFE_RELEASE(pComment);
+    SysFreeString(bstrComment);
+    return hr;
+}
 
-        case SW_SHOWMAXIMIZED:
-            return (LPWSTR)L"SW_SHOWMAXIMIZED";
+// Helper function to create and add an attribute to a parent node.
+HRESULT
+MscFile::CreateAndAddAttributeNode(PCWSTR wszName, PCWSTR wszValue, IXMLDOMElement *pParent)
+{
+    HRESULT hr = S_OK;
+    IXMLDOMAttribute *pAttribute = NULL;
+    IXMLDOMAttribute *pAttributeOut = NULL; // Out param that is not used
 
-        case SW_SHOWNOACTIVATE:
-            return (LPWSTR)L"SW_SHOWNOACTIVATE";
+    BSTR bstrName = NULL;
+    VARIANT varValue;
+    VariantInit(&varValue);
 
-        case SW_SHOW:
-            return (LPWSTR)L"SW_SHOW";
+    bstrName = SysAllocString(wszName);
+    CHK_ALLOC(bstrName);
+    CHK_HR(VariantFromString(wszValue, varValue));
 
-        case SW_MINIMIZE:
-            return (LPWSTR)L"SW_MINIMIZE";
-        
-        case SW_SHOWMINNOACTIVE:
-            return (LPWSTR)L"SW_SHOWMINNOACTIVE";
-        
-        case SW_SHOWNA:
-            return (LPWSTR)L"SW_SHOWNA";
+    CHK_HR(m_pDocument->createAttribute(bstrName, &pAttribute));
+    CHK_HR(pAttribute->put_value(varValue));
+    CHK_HR(pParent->setAttributeNode(pAttribute, &pAttributeOut));
 
-        case SW_RESTORE:
-            return (LPWSTR)L"SW_RESTORE";
+CleanUp:
+    SAFE_RELEASE(pAttribute);
+    SAFE_RELEASE(pAttributeOut);
+    SysFreeString(bstrName);
+    VariantClear(&varValue);
+    return hr;
+}
 
-        case SW_SHOWDEFAULT:
-            return (LPWSTR)L"SW_SHOWDEFAULT";
+// Helper function to create and append a text node to a parent node.
+HRESULT
+MscFile::CreateAndAddTextNode(PCWSTR wszText, IXMLDOMNode *pParent)
+{
+    HRESULT hr = S_OK;    
+    IXMLDOMText *pText = NULL;
 
-        case SW_FORCEMINIMIZE:
-            return (LPWSTR)L"SW_FORCEMINIMIZE";
-    }
+    BSTR bstrText = SysAllocString(wszText);
+    CHK_ALLOC(bstrText);
 
-    return (LPWSTR)L"-1";
+    CHK_HR(m_pDocument->createTextNode(bstrText, &pText));
+    CHK_HR(AppendChildToParent(pText, pParent));
+
+CleanUp:
+    SAFE_RELEASE(pText);
+    SysFreeString(bstrText);
+    return hr;
+}
+
+// Helper function to create and append a CDATA node to a parent node.
+HRESULT
+MscFile::CreateAndAddCDATANode(PCWSTR wszCDATA, IXMLDOMNode *pParent)
+{
+    HRESULT hr = S_OK;
+    IXMLDOMCDATASection *pCDATA = NULL;
+
+    BSTR bstrCDATA = SysAllocString(wszCDATA);
+    CHK_ALLOC(bstrCDATA);
+
+    CHK_HR(m_pDocument->createCDATASection(bstrCDATA, &pCDATA));
+    CHK_HR(AppendChildToParent(pCDATA, pParent));
+
+CleanUp:
+    SAFE_RELEASE(pCDATA);
+    SysFreeString(bstrCDATA);
+    return hr;
+}
+
+// Helper function to create and append an element node to a parent node, and pass the newly created
+// element node to caller if it wants.
+HRESULT
+MscFile::CreateAndAddElementNode(PCWSTR wszName, IXMLDOMNode *pParent, IXMLDOMElement **ppElement)
+{
+    HRESULT hr = S_OK;
+    IXMLDOMElement* pElement = NULL;
+
+    CHK_HR(CreateElement(wszName, &pElement));
+    CHK_HR(AppendChildToParent(pElement, pParent));
+
+CleanUp:
+    if (ppElement)
+        *ppElement = pElement;  // Caller is repsonsible to release this element.
+    else
+        SAFE_RELEASE(pElement); // Caller is not interested on this element, so release it.
+
+    return hr;
 }
 
 HRESULT
@@ -273,7 +231,7 @@ MscFile::SaveWindowPlacement(CWindow *pWindow, IXMLDOMElement *pParentNode)
     pWindow->GetWindowPlacement(&wndpl);
 
     CHK_HR(CreateAndAddElementNode(L"WindowPlacement", pParentNode, &pWindowPlacement));
-    CHK_HR(CreateAndAddAttributeNode(L"ShowCommand", ShowCmdToString(wndpl.showCmd), pWindowPlacement));
+    CHK_HR(CreateAndAddAttributeNode(L"ShowCommand", ::ShowCmdToString(wndpl.showCmd), pWindowPlacement));
 
     CHK_HR(CreateAndAddElementNode(L"Point", pWindowPlacement, &pPointElement));
     CHK_HR(CreateAndAddAttributeNode(L"Name", L"MinPosition", pPointElement));
@@ -311,6 +269,132 @@ CleanUp:
 }
 
 HRESULT
+MscFile::ParseWindowPlacement(CWindow *pWindow, IXMLDOMElement *pParentElement)
+{
+    IXMLDOMElement *pWindowPlacementElement = NULL;
+    IXMLDOMNodeList *pChildList = NULL;
+    IXMLDOMNode *pNextElement;
+    DOMNodeType NodeType;
+    BSTR NodeName = NULL;
+    VARIANT ShowCommand;
+    VARIANT NameValue;
+    WINDOWPLACEMENT wndpl;
+    HRESULT hr = S_OK;
+
+    ZeroMemory(&wndpl, sizeof(wndpl));
+    wndpl.length = sizeof(wndpl);
+    wndpl.flags = 0;
+
+    hr = GetElement(pParentElement, (LPWSTR)L"WindowPlacement", &pWindowPlacementElement);
+    if (hr != S_OK)
+        goto done;
+
+    VariantInit(&ShowCommand);
+    hr = GetAttribute(pWindowPlacementElement, (LPWSTR)L"ShowCommand", &ShowCommand);
+    if (hr != S_OK)
+        goto done;
+
+    wndpl.showCmd = ShowCmdFromString(V_BSTR(&ShowCommand));
+
+    VariantClear(&ShowCommand);
+
+    hr = pWindowPlacementElement->get_childNodes(&pChildList);
+    if (FAILED(hr))
+        goto done;
+
+    for (;;)
+    {
+        hr = pChildList->nextNode(&pNextElement);
+        if (hr == S_FALSE)
+        {
+            hr = S_OK;
+            break;
+        }
+
+        hr = pNextElement->get_nodeType(&NodeType);
+        if (hr == S_OK)
+        {
+            if (NodeType == NODE_ELEMENT)
+            {
+                NodeName = NULL;
+                hr = pNextElement->get_baseName(&NodeName);
+                if (hr == S_OK)
+                {
+                    VariantInit(&NameValue);
+
+                    hr = GetAttribute((IXMLDOMElement *)pNextElement, (LPWSTR)L"Name", &NameValue);
+                    if (hr == S_OK)
+                    {
+                        if (_wcsicmp(NodeName, L"Point") == 0)
+                        {
+                            VARIANT PosX, PosY;
+                            VariantInit(&PosX);
+                            VariantInit(&PosY);
+                            hr = GetAttribute((IXMLDOMElement *)pNextElement, (LPWSTR)L"X", &PosX);
+                            hr = GetAttribute((IXMLDOMElement *)pNextElement, (LPWSTR)L"Y", &PosY);
+
+                            if (_wcsicmp(V_BSTR(&NameValue), L"MinPosition") == 0)
+                            {
+                                wndpl.ptMinPosition.x = _wtol(V_BSTR(&PosX));
+                                wndpl.ptMinPosition.y = _wtol(V_BSTR(&PosY));
+                            }
+                            else if (_wcsicmp(V_BSTR(&NameValue), L"MaxPosition") == 0)
+                            {
+                                wndpl.ptMaxPosition.x = _wtol(V_BSTR(&PosX));
+                                wndpl.ptMaxPosition.y = _wtol(V_BSTR(&PosY));
+                            }
+                            VariantClear(&PosX);
+                            VariantClear(&PosY);
+                        }
+                        else if (_wcsicmp(NodeName, L"Rectangle") == 0)
+                        {
+                            VARIANT PosTop, PosBottom, PosLeft, PosRight;
+                            VariantInit(&PosTop);
+                            VariantInit(&PosBottom);
+                            VariantInit(&PosLeft);
+                            VariantInit(&PosRight);
+                            hr = GetAttribute((IXMLDOMElement *)pNextElement, (LPWSTR)L"Top", &PosTop);
+                            hr = GetAttribute((IXMLDOMElement *)pNextElement, (LPWSTR)L"Bottom", &PosBottom);
+                            hr = GetAttribute((IXMLDOMElement *)pNextElement, (LPWSTR)L"Left", &PosLeft);
+                            hr = GetAttribute((IXMLDOMElement *)pNextElement, (LPWSTR)L"Right", &PosRight);
+                            if (_wcsicmp(V_BSTR(&NameValue), L"NormalPosition") == 0)
+                            {
+                                wndpl.rcNormalPosition.top = _wtol(V_BSTR(&PosTop));
+                                wndpl.rcNormalPosition.bottom = _wtol(V_BSTR(&PosBottom));
+                                wndpl.rcNormalPosition.left = _wtol(V_BSTR(&PosLeft));
+                                wndpl.rcNormalPosition.right = _wtol(V_BSTR(&PosRight));
+                            }
+                            VariantClear(&PosTop);
+                            VariantClear(&PosBottom);
+                            VariantClear(&PosLeft);
+                            VariantClear(&PosRight);
+                        }
+
+                        VariantClear(&NameValue);
+                    }
+
+                    SysFreeString(NodeName);
+                    NodeName = NULL;
+                }
+            }
+        }
+
+        pNextElement->Release();
+    }
+
+    pWindow->SetWindowPlacement(&wndpl);
+
+done:
+    if (pChildList)
+        pChildList->Release();
+
+    if (pWindowPlacementElement)
+        pWindowPlacementElement->Release();
+
+    return hr;
+}
+
+HRESULT
 MscFile::LoadDOM()
 {
     IXMLDOMParseError *pXMLErr = NULL;
@@ -337,4 +421,153 @@ HRESULT
 MscFile::SaveDOM()
 {
     return m_pDocument->save(m_varFileName);
+}
+
+HRESULT
+MscFile::CheckMscFile(IXMLDOMElement **ppRootElement)
+{
+    IXMLDOMElement *pRootElement = NULL;
+    BSTR rootName = NULL;
+    VARIANT version;
+    HRESULT hr = S_OK;
+
+    *ppRootElement = NULL;
+
+    VariantInit(&version);
+
+    hr = m_pDocument->get_documentElement(&pRootElement);
+    if (FAILED(hr))
+        goto done;
+
+    hr = pRootElement->get_baseName(&rootName);
+    if (FAILED(hr))
+        goto done;
+
+    if (_wcsicmp(rootName, L"MMC_ConsoleFile"))
+    {
+        hr = S_FALSE;
+        goto done;
+    }
+
+    hr = GetAttribute(pRootElement, (LPWSTR)L"ConsoleVersion", &version);
+    if (FAILED(hr))
+        goto done;
+
+    if (V_VT(&version) == VT_NULL)
+    {
+        hr = S_FALSE;
+        goto done;
+    }
+
+    if (wcscmp(V_BSTR(&version), L"2.0") &&
+        wcscmp(V_BSTR(&version), L"3.0"))
+    {
+        hr = S_FALSE;
+        goto done;
+    }
+
+    *ppRootElement = pRootElement;
+
+done:
+    VariantClear(&version);
+
+    if (rootName)
+        SysFreeString(rootName);
+
+    if ((hr != S_OK) && pRootElement != NULL)
+        pRootElement->Release();
+
+    return hr;
+}
+
+HRESULT
+MscFile::GetAttribute(
+    IXMLDOMElement *pElement,
+    LPWSTR pszAttributeName,
+    VARIANT *pAttributeValue)
+{
+    BSTR bstrAttribute = NULL;
+    HRESULT hr = S_OK;
+
+    bstrAttribute = SysAllocString(pszAttributeName);
+    if (bstrAttribute == NULL)
+    {
+        hr = E_OUTOFMEMORY;
+        goto done;
+    }
+
+    hr = pElement->getAttribute(bstrAttribute, pAttributeValue); 
+
+done:
+    if (bstrAttribute)
+        SysFreeString(bstrAttribute);
+
+    return hr;
+}
+
+HRESULT
+MscFile::GetElement(
+    IXMLDOMElement *pParentElement,
+    LPWSTR pszElementName,
+    IXMLDOMElement **ppElement)
+{
+    IXMLDOMNodeList *pChildList = NULL;
+    IXMLDOMNode *nextItem;
+    DOMNodeType NodeType;
+    BSTR NodeName = NULL;
+    HRESULT hr = S_OK;
+
+    *ppElement = NULL;
+
+    hr = pParentElement->get_childNodes(&pChildList);
+    if (FAILED(hr))
+        goto done;
+
+    for (;;)
+    {
+        hr = pChildList->nextNode(&nextItem);
+        if (hr != S_OK)
+            break;
+
+        hr = nextItem->get_nodeType(&NodeType);
+        if (hr == S_OK)
+        {
+            if (NodeType == NODE_ELEMENT)
+            {
+                NodeName = NULL;
+                hr = nextItem->get_baseName(&NodeName);
+                if (hr == S_OK)
+                {
+                    if (_wcsicmp(NodeName, pszElementName) == 0)
+                    {
+                        *ppElement = (IXMLDOMElement *)nextItem;
+                        break;
+                    }
+                    SysFreeString(NodeName);
+                    NodeName = NULL;
+                }
+            }
+        }
+
+        nextItem->Release();
+    }
+
+done:
+    if (NodeName)
+        SysFreeString(NodeName);
+
+    if (pChildList)
+        pChildList->Release();
+
+    return hr;
+}
+
+VOID
+MscFile::ReleaseNode(IXMLDOMNode *pNode)
+{
+    if (pNode)
+    {
+        pNode->Release();
+        pNode = NULL;
+    }
 }

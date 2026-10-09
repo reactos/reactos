@@ -49,8 +49,10 @@ IDR_BROWSE_MAIN_MENU MENU
 
 STRINGTABLE
 {
+#ifdef __REACTOS__
     IDS_INTERNET "網際網路瀏覽器"
     IDS_INTERNET_DESCRIPTION "開啟網頁瀏覽器，並顯示網際網路上的資訊。"
+#endif
 
     IDS_TB_BACK             "上一頁"
     IDS_TB_FORWARD          "下一頁"

@@ -108,7 +108,7 @@ static HRESULT WINAPI ClientSite_GetMoniker(IOleClientSite *iface, DWORD dwAssig
                                             DWORD dwWhichMoniker, IMoniker **ppmk)
 {
     DocHost *This = impl_from_IOleClientSite(iface);
-    FIXME("(%p)->(%d %d %p)\n", This, dwAssign, dwWhichMoniker, ppmk);
+    FIXME("(%p)->(%ld %ld %p)\n", This, dwAssign, dwWhichMoniker, ppmk);
     return E_NOTIMPL;
 }
 
@@ -246,7 +246,7 @@ static HRESULT WINAPI InPlaceSite_GetWindowContext(IOleInPlaceSiteEx *iface,
 static HRESULT WINAPI InPlaceSite_Scroll(IOleInPlaceSiteEx *iface, SIZE scrollExtent)
 {
     DocHost *This = impl_from_IOleInPlaceSiteEx(iface);
-    FIXME("(%p)->({%d %d})\n", This, scrollExtent.cx, scrollExtent.cy);
+    FIXME("(%p)->({%ld %ld})\n", This, scrollExtent.cx, scrollExtent.cy);
     return E_NOTIMPL;
 }
 
@@ -294,13 +294,13 @@ static HRESULT WINAPI InPlaceSite_OnInPlaceActivateEx(IOleInPlaceSiteEx *iface,
 {
     DocHost *This = impl_from_IOleInPlaceSiteEx(iface);
 
-    TRACE("(%p)->(%p, %x)\n", This, pfNoRedraw, dwFlags);
+    TRACE("(%p)->(%p, %lx)\n", This, pfNoRedraw, dwFlags);
 
     /* FIXME: Avoid redraw, when possible */
     *pfNoRedraw = FALSE;
 
     if (dwFlags) {
-        FIXME("dwFlags not supported (%x)\n", dwFlags);
+        FIXME("dwFlags not supported (%lx)\n", dwFlags);
     }
 
     /* Nothing to do here */
@@ -458,7 +458,7 @@ static HRESULT WINAPI ControlSite_TransformCoords(IOleControlSite *iface, POINTL
                                                   POINTF *pPtfContainer, DWORD dwFlags)
 {
     DocHost *This = impl_from_IOleControlSite(iface);
-    FIXME("(%p)->(%p, %p, %08x)\n", This, pPtlHimetric, pPtfContainer, dwFlags);
+    FIXME("(%p)->(%p, %p, %08lx)\n", This, pPtlHimetric, pPtfContainer, dwFlags);
     return E_NOTIMPL;
 }
 
@@ -471,7 +471,7 @@ static HRESULT WINAPI ControlSite_TranslateAccelerator(IOleControlSite *iface, M
     IOleControlSite *controlsite;
     HRESULT hr;
 
-    TRACE("(%p)->(%p, %08x)\n", This, pMsg, grfModifiers);
+    TRACE("(%p)->(%p, %08lx)\n", This, pMsg, grfModifiers);
 
     hr = IWebBrowser2_QueryInterface(This->wb, &IID_IOleObject, (void**)&wb_obj);
     if(SUCCEEDED(hr)) {
@@ -557,7 +557,7 @@ static HRESULT WINAPI ClDispatch_GetTypeInfo(IDispatch *iface, UINT iTInfo, LCID
 {
     DocHost *This = impl_from_IDispatch(iface);
 
-    TRACE("(%p)->(%u %d %p)\n", This, iTInfo, lcid, ppTInfo);
+    TRACE("(%p)->(%u %ld %p)\n", This, iTInfo, lcid, ppTInfo);
 
     return E_NOTIMPL;
 }
@@ -567,7 +567,7 @@ static HRESULT WINAPI ClDispatch_GetIDsOfNames(IDispatch *iface, REFIID riid, LP
 {
     DocHost *This = impl_from_IDispatch(iface);
 
-    TRACE("(%p)->(%s %p %u %d %p)\n", This, debugstr_guid(riid), rgszNames, cNames,
+    TRACE("(%p)->(%s %p %u %ld %p)\n", This, debugstr_guid(riid), rgszNames, cNames,
           lcid, rgDispId);
 
     return E_NOTIMPL;
@@ -588,7 +588,7 @@ static const char *debugstr_dispid(DISPID dispid)
     }
 #undef CASE_DISPID
 
-    sprintf(buf, "%d", dispid);
+    sprintf(buf, "%ld", dispid);
     return buf;
 }
 
@@ -598,7 +598,7 @@ static HRESULT WINAPI ClDispatch_Invoke(IDispatch *iface, DISPID dispIdMember, R
 {
     DocHost *This = impl_from_IDispatch(iface);
 
-    TRACE("(%p)->(%s %s %d %04x %p %p %p %p)\n", This, debugstr_dispid(dispIdMember),
+    TRACE("(%p)->(%s %s %ld %04x %p %p %p %p)\n", This, debugstr_dispid(dispIdMember),
           debugstr_guid(riid), lcid, wFlags, pDispParams, pVarResult, pExcepInfo, puArgErr);
 
     switch(dispIdMember) {
@@ -620,7 +620,7 @@ static HRESULT WINAPI ClDispatch_Invoke(IDispatch *iface, DISPID dispIdMember, R
         return S_OK;
     }
 
-    FIXME("unhandled dispid %d\n", dispIdMember);
+    FIXME("unhandled dispid %ld\n", dispIdMember);
     return E_NOTIMPL;
 }
 

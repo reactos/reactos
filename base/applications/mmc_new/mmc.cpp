@@ -35,6 +35,12 @@ public:
             return E_FAIL;
         }
 
+        if (!CActionWnd::GetWndClassInfo().Register(&ret))
+        {
+            DPRINT1("ERROR: Failed to register CActionWnd class\n");
+            return E_FAIL;
+        }
+
         LPCWSTR Filename = NULL;
 
         if (!m_MainWnd.Create(NULL, NULL, L"",

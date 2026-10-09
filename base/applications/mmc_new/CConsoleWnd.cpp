@@ -9,11 +9,11 @@
 
 #include "precomp.h"
 
-CConsoleWnd::CConsoleWnd(CMainWnd *MainWnd, CSnapin *RootNode)
+CConsoleWnd::CConsoleWnd(CMainWnd *MainWnd, CSnapin *RootNode, CSnapin *SelectedNode)
 {
     m_MainWnd = MainWnd;
     m_ViewRootNode = RootNode;
-    m_ViewSelectedNode = RootNode;
+    m_ViewSelectedNode = SelectedNode ? SelectedNode : RootNode;
     m_ListViewMode = ListView_Detail;
     m_pfnSuperWindowProc = DefMDIChildProc;
 
@@ -66,6 +66,12 @@ CConsoleWnd::OnCreate(UINT nMessage, WPARAM wParam, LPARAM lParam, BOOL& bHandle
     m_TreeView.SetImageList(m_MainWnd->SnapinImageList(), TVSIL_NORMAL);
 
     m_ListView.Create(this->m_hWnd, &Rect, NULL, WS_CHILD | WS_VISIBLE | ViewModeToStyle(m_ListViewMode), WS_EX_CLIENTEDGE);
+
+    Rect.right = 0;
+    Rect.left = 0;
+    Rect.top = 0;
+    Rect.bottom = 0;
+    m_ActionsPane.Create(this->m_hWnd, &Rect, L"Actions", WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS, WS_EX_CLIENTEDGE);
 
     m_ViewId = m_MainWnd->RegisterView(this);
 
@@ -424,6 +430,8 @@ CConsoleWnd::UpdateLayout()
     m_ListView.MoveWindow(iListViewPosX, iListViewPosY, iListViewWidth, iListViewHeight);
 
     m_DescriptionBar.MoveWindow(iListViewPosX, 0, iListViewWidth, iDescriptionBarHeight);
+
+    m_ActionsPane.MoveWindow(iClientWidth - m_iActionsPaneWidth, 0, m_iActionsPaneWidth, iClientHeight);
 }
 
 VOID
@@ -471,17 +479,32 @@ CConsoleWnd::SaveView(MscFile *mscFile, IXMLDOMElement *pParentElement)
 {
     IXMLDOMElement *pViewElement = NULL;
     IXMLDOMElement *pViewOptionsElement = NULL;
+    IXMLDOMElement *pBookMarkElement = NULL;
     WCHAR szBuffer[32];
     HRESULT hr = S_OK;
 
     /* <View ID="1" ScopePaneWidth="292" ActionsPaneWidth="-1"> */
     CHK_HR(mscFile->CreateAndAddElementNode(L"View", pParentElement, &pViewElement));
-    _swprintf(szBuffer, L"%d", m_ViewId);
+    _swprintf(szBuffer, L"%u", m_ViewId);
     CHK_HR(mscFile->CreateAndAddAttributeNode(L"ID", szBuffer, pViewElement));
     _swprintf(szBuffer, L"%d", m_iTreeViewWidth);
     CHK_HR(mscFile->CreateAndAddAttributeNode(L"ScopePaneWidth", szBuffer, pViewElement));
     _swprintf(szBuffer, L"%d", m_iActionsPaneWidth);
     CHK_HR(mscFile->CreateAndAddAttributeNode(L"ActionsPaneWidth", szBuffer, pViewElement));
+
+    /* Root Snap-in  <BookMark Name="RootNode" NodeID="1"/> */
+    CHK_HR(mscFile->CreateAndAddElementNode(L"BookMark", pViewElement, &pBookMarkElement));
+    CHK_HR(mscFile->CreateAndAddAttributeNode(L"Name", L"RootNode", pBookMarkElement));
+    _swprintf(szBuffer, L"%u", m_ViewRootNode->GetNodeId());
+    CHK_HR(mscFile->CreateAndAddAttributeNode(L"NodeID", szBuffer, pBookMarkElement));
+    SAFE_RELEASE(pBookMarkElement);
+
+    /* Selected Snap-in <BookMark Name="SelectedNode" NodeID="1"/> */
+    CHK_HR(mscFile->CreateAndAddElementNode(L"BookMark", pViewElement, &pBookMarkElement));
+    CHK_HR(mscFile->CreateAndAddAttributeNode(L"Name", L"SelectedNode", pBookMarkElement));
+    _swprintf(szBuffer, L"%u", m_ViewSelectedNode->GetNodeId());
+    CHK_HR(mscFile->CreateAndAddAttributeNode(L"NodeID", szBuffer, pBookMarkElement));
+    SAFE_RELEASE(pBookMarkElement);
 
     mscFile->SaveWindowPlacement(this, pViewElement);
 

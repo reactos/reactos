@@ -1035,6 +1035,15 @@ ObQueryTypeInfo(
 
 /* PUBLIC FUNCTIONS **********************************************************/
 
+POBJECT_TYPE
+FASTCALL
+ObGetObjectType(
+    _In_ PVOID Object)
+{
+    UNIMPLEMENTED;
+    return NULL;
+}
+
 NTSTATUS
 NTAPI
 ObCreateObject(IN KPROCESSOR_MODE ProbeMode OPTIONAL,

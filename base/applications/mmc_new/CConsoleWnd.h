@@ -17,12 +17,13 @@ class CConsoleWnd :
     public IConsoleNameSpace2
 {
 private:
-    int m_ViewId;
+    UINT m_ViewId;
     CMainWnd* m_MainWnd;
     CTreeView m_TreeView;
     CListView m_ListView;
     CStatusBar m_StatusBar;
     CWindow m_DescriptionBar;
+    CActionWnd m_ActionsPane;
     int m_iTreeViewWidth;
     int m_iActionsPaneWidth;
     int m_iSplitterWidth;
@@ -95,7 +96,7 @@ private:
     VOID UpdateTreeView();
 
 public:
-    CConsoleWnd(CMainWnd *MainWnd, CSnapin *RootNode);
+    CConsoleWnd(CMainWnd *MainWnd, CSnapin *RootNode, CSnapin *SelectedNode = NULL);
     ~CConsoleWnd();
 
     LRESULT OnCreate(UINT nMessage, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
