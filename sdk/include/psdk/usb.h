@@ -153,6 +153,7 @@ typedef enum _USB_CONTROLLER_FLAVOR {
 #define URB_FUNCTION_CLOSE_STATIC_STREAMS                         0x0036
 #define URB_FUNCTION_BULK_OR_INTERRUPT_TRANSFER_USING_CHAINED_MDL 0x0037
 #define URB_FUNCTION_ISOCH_TRANSFER_USING_CHAINED_MDL             0x0038
+#define URB_FUNCTION_GET_ISOCH_PIPE_TRANSFER_PATH_DELAYS          0x003D
 
 #define URB_FUNCTION_RESET_PIPE                         URB_FUNCTION_SYNC_RESET_PIPE_AND_CLEAR_STALL
 
@@ -554,6 +555,13 @@ struct _URB_OPEN_STATIC_STREAMS {
   PUSBD_STREAM_INFORMATION Streams;
 };
 
+struct _URB_GET_ISOCH_PIPE_TRANSFER_PATH_DELAYS {
+  struct _URB_HEADER Hdr;
+  USBD_PIPE_HANDLE PipeHandle;
+  ULONG MaximumSendPathDelayInMilliSeconds;
+  ULONG MaximumCompletionPathDelayInMilliSeconds;
+};
+
 typedef struct _URB {
   __GNU_EXTENSION union {
     struct _URB_HEADER UrbHeader;
@@ -570,6 +578,7 @@ typedef struct _URB {
 #endif
     struct _URB_BULK_OR_INTERRUPT_TRANSFER UrbBulkOrInterruptTransfer;
     struct _URB_OPEN_STATIC_STREAMS UrbOpenStaticStreams;
+    struct _URB_GET_ISOCH_PIPE_TRANSFER_PATH_DELAYS UrbGetIsochPipeTransferPathDelays;
     struct _URB_ISOCH_TRANSFER UrbIsochronousTransfer;
     struct _URB_CONTROL_DESCRIPTOR_REQUEST UrbControlDescriptorRequest;
     struct _URB_CONTROL_GET_STATUS_REQUEST UrbControlGetStatusRequest;
