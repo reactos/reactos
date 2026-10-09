@@ -266,15 +266,34 @@ static BOOL IntIsValidLayoutFileName(PCWSTR pszPath)
     #define IMAGE_REL_BASED_DIR64    10
 #endif
 
-#if defined(_M_IX86)
-    #define KBDRAW_MACHINE IMAGE_FILE_MACHINE_I386
+#if defined(_M_IX86) /* x86 */
     #define KBDRAW_RELTYPE IMAGE_REL_BASED_HIGHLOW
-#elif defined(_M_AMD64)
-    #define KBDRAW_MACHINE IMAGE_FILE_MACHINE_AMD64
+#elif defined(_M_AMD64) /* x64 */
+    #define KBDRAW_RELTYPE IMAGE_REL_BASED_DIR64
+#elif defined(_M_ARM64) /* ARM64 */
     #define KBDRAW_RELTYPE IMAGE_REL_BASED_DIR64
 #else
     #error Unsupported architecture
 #endif
+
+#ifdef _M_ARM64 /* ARM64 */
+#define A64_BTI_C(i)        ((i) == 0xD503245F)                  /* bti c */
+#define A64_RET_X30(i)      ((i) == 0xD65F03C0)                  /* ret   */
+#define A64_IS_ADRP(i)      (((i) & 0x9F000000) == 0x90000000)   /* adrp Rd, #page */
+#define A64_ADRP_RD(i)      ((i) & 0x1F)
+#define A64_IS_ADD_IMM64(i) (((i) & 0xFF000000) == 0x91000000)   /* add Rd,Rn,#imm12{,lsl #12} */
+#define A64_ADD_RD(i)       ((i) & 0x1F)
+#define A64_ADD_RN(i)       (((i) >> 5) & 0x1F)
+#define A64_ADD_IMM12(i)    (((i) >> 10) & 0xFFF)
+#define A64_ADD_LSL12(i)    (((i) >> 22) & 1)
+
+static LONG64
+A64_DecodeAdrpImm(ULONG insn)
+{
+    LONG64 imm = (LONG64)((((insn >> 5) & 0x7FFFF) << 2) | ((insn >> 29) & 3));
+    return (imm & 0x100000) ? (imm | ~(LONG64)0x1FFFFF) : imm;
+}
+#endif /* def _M_ARM64 */
 
 /* Decodes the constant return value from a procedure (the code is never executed) */
 static PVOID
@@ -283,25 +302,108 @@ DecodeConstStub(
     _In_ ULONG cbImage,
     _In_opt_ PUCHAR pb)
 {
-    PUCHAR pbEnd = pbBase + cbImage;
+    ULONG_PTR base, addr, rva;
     PVOID pvRet = NULL;
 
-    if (pb < pbBase || pb + 8 > pbEnd)
+    if (!pbBase || !pb || cbImage < sizeof(ULONG))
+        return NULL;
+
+    base = (ULONG_PTR)pbBase;
+    addr = (ULONG_PTR)pb;
+    if (addr < base)
+        return NULL;
+
+    rva = addr - base;
+    if (rva >= cbImage)
         return NULL;
 
 #if defined(_M_IX86)
     /* mov eax, imm32; ret */
+    if (cbImage - rva < 6)
+        return NULL;
+
     if (pb[0] == 0xB8 && pb[5] == 0xC3)
         pvRet = (PVOID)(ULONG_PTR)*(UNALIGNED ULONG *)(pb + 1);
 #elif defined(_M_AMD64)
     /* lea rax,[rip+rel]; ret */
+    if (cbImage - rva < 8)
+        return NULL;
+
     if (pb[0] == 0x48 && pb[1] == 0x8D && pb[2] == 0x05 && pb[7] == 0xC3)
-        pvRet = pb + 7 + *(UNALIGNED LONG *)(pb + 3);
+    {
+        LONG rel = *(UNALIGNED LONG *)(pb + 3);
+        LONG64 target = (LONG64)rva + 7 + rel;
+
+        if (target < 0 || (ULONG64)target > cbImage - sizeof(ULONG))
+            return NULL;
+
+        pvRet = pbBase + (ULONG)target;
+    }
+#elif defined(_M_ARM64)
+    /* adrp Rs, page ; add x0, Rs, #imm ; ret, optionally preceded by BTI C */
+    {
+        ULONG insnAdrp, insnAdd, insnRet;
+        LONG64 pcRva, page, target;
+        ULONG imm12, scratchReg;
+
+        if (rva & 3)
+            return NULL;
+
+#define A64_FETCH(var) do { \
+    if (rva > cbImage || cbImage - rva < sizeof(ULONG)) \
+        return NULL; \
+    (var) = *(UNALIGNED ULONG *)(pbBase + rva); \
+    rva += sizeof(ULONG); \
+} while (0)
+
+        A64_FETCH(insnAdrp);
+
+        if (A64_BTI_C(insnAdrp))
+            A64_FETCH(insnAdrp);
+
+        if (!A64_IS_ADRP(insnAdrp))
+            return NULL;
+
+        scratchReg = A64_ADRP_RD(insnAdrp);
+        if (scratchReg == 31)
+            return NULL;
+
+        pcRva = (LONG64)(rva - sizeof(ULONG));
+        page = (pcRva & ~(LONG64)0xFFF) + A64_DecodeAdrpImm(insnAdrp) * 0x1000;
+
+        A64_FETCH(insnAdd);
+        A64_FETCH(insnRet);
+#undef A64_FETCH
+
+        if (!A64_IS_ADD_IMM64(insnAdd) || !A64_RET_X30(insnRet))
+            return NULL;
+
+        if (A64_ADD_RD(insnAdd) != 0 || A64_ADD_RN(insnAdd) != scratchReg)
+            return NULL;
+
+        imm12 = A64_ADD_IMM12(insnAdd);
+        if (A64_ADD_LSL12(insnAdd))
+            imm12 <<= 12;
+
+        target = page + imm12;
+
+        if (target < 0 || (ULONG64)target > cbImage - sizeof(ULONG))
+            return NULL;
+
+        pvRet = pbBase + (ULONG)target;
+    }
 #else
     #error Unsupported architecture
 #endif
 
-    return ((PUCHAR)pvRet >= pbBase && (PUCHAR)pvRet + 4 <= pbEnd) ? pvRet : NULL;
+    if (!pvRet)
+        return NULL;
+
+    addr = (ULONG_PTR)pvRet;
+    if (addr < base || addr - base > cbImage - sizeof(ULONG))
+        return NULL;
+
+    return pvRet;
 }
 
 /* Applies base relocations so that the copy works at its pool address */
@@ -428,26 +530,65 @@ KbdRawLoadImage(
 
     /* Validate headers (all offsets are checked against the file size) */
     pDos = (PIMAGE_DOS_HEADER)pbFile;
-    if (pDos->e_magic != IMAGE_DOS_SIGNATURE || pDos->e_lfanew <= 0 ||
-        (ULONG)pDos->e_lfanew > cbFile - sizeof(IMAGE_NT_HEADERS))
+    if (pDos->e_magic != IMAGE_DOS_SIGNATURE || pDos->e_lfanew <= 0)
+        goto Quit;
+
+    /* Validate fixed NT headers before accessing OptionalHeader */
+    if ((ULONG)pDos->e_lfanew > cbFile ||
+        cbFile - (ULONG)pDos->e_lfanew <
+            sizeof(ULONG) + sizeof(IMAGE_FILE_HEADER))
     {
         goto Quit;
     }
 
-    pNt = (PIMAGE_NT_HEADERS)(pbFile + pDos->e_lfanew);
-    cbImage = pNt->OptionalHeader.SizeOfImage;
-    cbHeaders = pNt->OptionalHeader.SizeOfHeaders;
-    secOff = (ULONG)((PUCHAR)IMAGE_FIRST_SECTION(pNt) - pbFile);
+    pNt = (PIMAGE_NT_HEADERS)(pbFile + (ULONG)pDos->e_lfanew);
     if (pNt->Signature != IMAGE_NT_SIGNATURE ||
-        pNt->FileHeader.Machine != KBDRAW_MACHINE ||
-        pNt->OptionalHeader.Magic != IMAGE_NT_OPTIONAL_HDR_MAGIC ||
-        cbImage == 0 || cbImage > KBDRAW_MAX_FILE_SIZE ||
-        cbHeaders > cbFile || cbHeaders > cbImage ||
-        (ULONG)pDos->e_lfanew + sizeof(IMAGE_NT_HEADERS) > cbHeaders ||
-        secOff > cbFile ||
-        pNt->FileHeader.NumberOfSections * sizeof(IMAGE_SECTION_HEADER) > cbFile - secOff)
+        pNt->FileHeader.Machine != IMAGE_FILE_MACHINE_NATIVE)
     {
         goto Quit;
+    }
+
+    {
+        ULONG ntOff = (ULONG)pDos->e_lfanew;
+        ULONG optOff = ntOff + sizeof(ULONG) + sizeof(IMAGE_FILE_HEADER);
+        ULONG cbOpt = pNt->FileHeader.SizeOfOptionalHeader;
+        ULONG dirOff = FIELD_OFFSET(IMAGE_OPTIONAL_HEADER, DataDirectory);
+        ULONG cbRequiredOpt =
+            dirOff + (IMAGE_DIRECTORY_ENTRY_BASERELOC + 1) *
+                     sizeof(IMAGE_DATA_DIRECTORY);
+        ULONG cbSectionTable;
+
+        /* OptionalHeader must include the relocation directory */
+        if (optOff > cbFile || cbOpt > cbFile - optOff ||
+            cbOpt < cbRequiredOpt ||
+            pNt->OptionalHeader.Magic != IMAGE_NT_OPTIONAL_HDR_MAGIC ||
+            pNt->OptionalHeader.NumberOfRvaAndSizes <
+                IMAGE_DIRECTORY_ENTRY_BASERELOC + 1 ||
+            pNt->OptionalHeader.NumberOfRvaAndSizes >
+                (cbOpt - dirOff) / sizeof(IMAGE_DATA_DIRECTORY))
+        {
+            goto Quit;
+        }
+
+        cbImage = pNt->OptionalHeader.SizeOfImage;
+        cbHeaders = pNt->OptionalHeader.SizeOfHeaders;
+        secOff = optOff + cbOpt;
+
+        if (!cbImage || cbImage > KBDRAW_MAX_FILE_SIZE ||
+            !cbHeaders || cbHeaders > cbFile || cbHeaders > cbImage ||
+            secOff > cbFile || secOff > cbHeaders ||
+            pNt->FileHeader.NumberOfSections == 0 ||
+            pNt->FileHeader.NumberOfSections >
+                (cbFile - secOff) / sizeof(IMAGE_SECTION_HEADER))
+        {
+            goto Quit;
+        }
+
+        cbSectionTable = pNt->FileHeader.NumberOfSections *
+                         sizeof(IMAGE_SECTION_HEADER);
+
+        if (cbSectionTable > cbHeaders - secOff)
+            goto Quit;
     }
 
     pbImage = ExAllocatePoolWithTag(PagedPool, cbImage, USERTAG_KBDRAW);
@@ -500,6 +641,10 @@ UserLoadKbdDll(
     PVOID pfnMain, pfnNls;
     BOOL bOK = FALSE;
 
+    *ppRawImage = NULL;
+    *ppKbdTables = NULL;
+    *ppKbdNlsTables = NULL;
+
     /* Stub DLLs with user-mode imports (kbdjpn/kbdkor) cannot be loaded by EngLoadImage */
     pbImage = *ppRawImage = KbdRawLoadImage(pwszLayoutPath);
     if (!pbImage)
@@ -510,7 +655,7 @@ UserLoadKbdDll(
         pNt = RtlImageNtHeader(pbImage);
 
         /* Relocations are mandatory: the tables contain absolute pointers */
-        if (KbdRawRelocate(pbImage, pNt->OptionalHeader.SizeOfImage, pNt))
+        if (pNt && KbdRawRelocate(pbImage, pNt->OptionalHeader.SizeOfImage, pNt))
         {
             pfnMain = KbdRawGetProc(pbImage, pNt, IFN_KbdLayerDescriptor);
             if (pfnMain)
