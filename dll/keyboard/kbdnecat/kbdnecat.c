@@ -261,9 +261,9 @@ ROSDATA VK_TO_WCHARS4 keypad_numbers[] = {
 #define vk_master(n, x) { (PVK_TO_WCHARS1)x, n, sizeof(x[0]) }
 
 ROSDATA VK_TO_WCHAR_TABLE vk_to_wchar_master_table[] = {
-  vk_master(4, key_to_chars_4mod),
   vk_master(6, key_to_chars_6mod),
   vk_master(8, key_to_chars_8mod),
+  vk_master(4, key_to_chars_4mod),
   vk_master(4, keypad_numbers),
   { 0, 0, 0 }
 };
