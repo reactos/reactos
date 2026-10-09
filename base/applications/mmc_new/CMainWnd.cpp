@@ -691,6 +691,13 @@ CMainWnd::GetNextNodeId()
     return m_NextNodeId++;
 }
 
+VOID
+CMainWnd::UpdateNextNodeId(UINT NodeId)
+{
+    if (NodeId >= m_NextNodeId)
+        m_NextNodeId = NodeId + 1;
+}
+
 void
 CMainWnd::UpdateViews()
 {

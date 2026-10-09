@@ -194,6 +194,7 @@ CSnapin::ParseSnapin(CMainWnd *pMainWnd, MscFile *mscFile, IXMLDOMElement *pSnap
     PWSTR pwstr;
     CSnapinCacheEntry *pCacheEntry = NULL;
     CSnapin *pSnapin = NULL;
+    UINT uSnapinId;
     HRESULT hr = S_OK;
 
     VariantInit(&SnapinID);
@@ -233,8 +234,11 @@ CSnapin::ParseSnapin(CMainWnd *pMainWnd, MscFile *mscFile, IXMLDOMElement *pSnap
         goto done;
     }
 
+    uSnapinId = (UINT)wcstoul(V_BSTR(&SnapinID), &pwstr, 10);
+    pMainWnd->UpdateNextNodeId(uSnapinId);
+
     pSnapin = new CSnapin(pCacheEntry,
-                          (UINT)wcstoul(V_BSTR(&SnapinID), &pwstr, 10),
+                          uSnapinId,
                           V_BSTR(&SnapinDisplayName));
     if (pSnapin == NULL)
     {

@@ -269,6 +269,7 @@ public:
     UINT RegisterView(CConsoleWnd *pView);
     void UnregisterView(CConsoleWnd *pView);
     UINT GetNextNodeId();
+    VOID UpdateNextNodeId(UINT NodeId);
     DOCUMENT_MODE GetDocumentMode();
     void SetDocumentMode(DOCUMENT_MODE DocumentMode);
     BOOL GetLogicalReadOnly();
