@@ -129,6 +129,14 @@ typedef struct _USBDEVICE_UPDATE
     BOOLEAN Reserved;
 } USBDEVICE_UPDATE, *PUSBDEVICE_UPDATE;
 
+/* The flags spill into a second ULONG; the hub and controller drivers depend on it */
+C_ASSERT(sizeof(USBDEVICE_UPDATE_FLAGS) == 8);
+#ifdef _WIN64
+C_ASSERT(FIELD_OFFSET(USBDEVICE_UPDATE, DeviceDescriptor) == 0x20);
+#else
+C_ASSERT(FIELD_OFFSET(USBDEVICE_UPDATE, DeviceDescriptor) == 0x14);
+#endif
+
 typedef struct _USBDEVICE_HUB_INFO
 {
     UCX_MGMT_HEADER_MEMBER;
