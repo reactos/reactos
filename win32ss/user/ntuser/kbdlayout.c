@@ -355,7 +355,6 @@ DecodeConstStub(
     (var) = *(UNALIGNED ULONG *)(pbBase + rva); \
     rva += sizeof(ULONG); \
 } while (0)
-
         A64_FETCH(insnAdrp);
 
         if (A64_BTI_C(insnAdrp))
@@ -377,7 +376,6 @@ DecodeConstStub(
 
         if (!A64_IS_ADD_IMM64(insnAdd) || !A64_RET_X30(insnRet))
             return NULL;
-
         if (A64_ADD_RD(insnAdd) != 0 || A64_ADD_RN(insnAdd) != scratchReg)
             return NULL;
 
@@ -386,11 +384,8 @@ DecodeConstStub(
             imm12 <<= 12;
 
         target = page + imm12;
-
-        if (target < 0 || (ULONG64)target > cbImage - sizeof(ULONG))
-            return NULL;
-
-        pvRet = pbBase + (ULONG)target;
+        if (0 <= target && (ULONG64)target <= cbImage - sizeof(ULONG))
+            pvRet = pbBase + (ULONG)target;
     }
 #else
     #error Unsupported architecture
