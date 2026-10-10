@@ -1,9 +1,9 @@
 /*
  * PROJECT:     ReactOS Mode Utility
- * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Provides fast mode setup for DOS devices.
- * COPYRIGHT:   Copyright 2002 Robert Dickenson
- *              Copyright 2016-2021 Hermes Belusca-Maito
+ * COPYRIGHT:   Copyright 2002 Robert Dickenson <robd@reactos.org>
+ *              Copyright 2016-2026 Hermès Bélusca-Maïto <hermes.belusca-maito@reactos.org>
  */
 /*
  *  ReactOS mode console command
@@ -661,8 +661,11 @@ ParseModes(PCWSTR argStr, PBYTE Mode)
         argStr += 2;
         *Mode = 3;
     }
-
-    return NULL;
+    else
+    {
+        return NULL;
+    }
+    return argStr;
 }
 
 static PCWSTR
