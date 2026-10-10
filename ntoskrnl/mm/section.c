@@ -4899,6 +4899,25 @@ MmArePagesResident(
 }
 #endif
 
+/* Page tables are created in any order, so look for the one at the highest offset */
+_Requires_exclusive_lock_held_(Segment->Lock)
+static
+LONGLONG
+MiGetSegmentPageTableEnd(
+    _In_ PMM_SECTION_SEGMENT Segment)
+{
+    PCACHE_SECTION_PAGE_TABLE PageTable;
+    PVOID RestartKey = NULL;
+    LONGLONG End = 0;
+
+    while ((PageTable = RtlEnumerateGenericTableWithoutSplaying(&Segment->PageTable, &RestartKey)))
+    {
+        End = max(End, PageTable->FileOffset.QuadPart + (LONGLONG)_countof(PageTable->PageEntries) * PAGE_SIZE);
+    }
+
+    return End;
+}
+
 /* Like CcPurgeCache but for the in-memory segment */
 BOOLEAN
 NTAPI
@@ -4939,8 +4958,7 @@ MmPurgeSegment(
             return TRUE;
         }
 
-        PCACHE_SECTION_PAGE_TABLE PageTable = RtlGetElementGenericTable(&Segment->PageTable, ElemCount - 1);
-        PurgeEnd.QuadPart = PageTable->FileOffset.QuadPart + _countof(PageTable->PageEntries) * PAGE_SIZE;
+        PurgeEnd.QuadPart = MiGetSegmentPageTableEnd(Segment);
     }
 
     /* Find byte offset of the page to start */
@@ -5161,8 +5179,7 @@ MmFlushSegment(
             goto Quit;
         }
 
-        PCACHE_SECTION_PAGE_TABLE PageTable = RtlGetElementGenericTable(&Segment->PageTable, ElemCount - 1);
-        FlushEnd.QuadPart = PageTable->FileOffset.QuadPart + _countof(PageTable->PageEntries) * PAGE_SIZE;
+        FlushEnd.QuadPart = MiGetSegmentPageTableEnd(Segment);
     }
 
     /* Find byte offset of the page to start */
