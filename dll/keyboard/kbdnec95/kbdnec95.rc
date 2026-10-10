@@ -1,0 +1,5 @@
+#define REACTOS_VERSION_DLL
+#define REACTOS_STR_FILE_DESCRIPTION  "ReactOS NEC PC-9801 Windows 95 Japanese Keyboard Layout"
+#define REACTOS_STR_INTERNAL_NAME     "kbdnec95"
+#define REACTOS_STR_ORIGINAL_FILENAME "kbdnec95.dll"
+#include <reactos/version.rc>
