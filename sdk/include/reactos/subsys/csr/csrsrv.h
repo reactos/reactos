@@ -199,8 +199,8 @@ NTSTATUS
 typedef
 VOID
 (NTAPI *PCSR_HARDERROR_CALLBACK)(
-    IN PCSR_THREAD CsrThread,
-    IN PHARDERROR_MSG HardErrorMessage
+    _In_opt_ PCSR_THREAD CsrThread,
+    _In_ PHARDERROR_MSG HardErrorMessage
 );
 
 typedef

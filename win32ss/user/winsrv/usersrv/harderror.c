@@ -1080,8 +1080,8 @@ UserpLogHardError(
 VOID
 NTAPI
 UserServerHardError(
-    IN PCSR_THREAD ThreadData,
-    IN PHARDERROR_MSG Message)
+    _In_opt_ PCSR_THREAD CsrThread,
+    _In_ PHARDERROR_MSG Message)
 {
     ULONG ErrorMode;
     UINT  dwType = 0;
@@ -1091,7 +1091,7 @@ UserServerHardError(
     WCHAR LocalCaptionBuffer[256];
     NTSTATUS Status;
 
-    ASSERT(!ThreadData || ThreadData->Process != NULL);
+    ASSERT(!CsrThread || CsrThread->Process != NULL);
 
     /* Default to not handled */
     Message->Response = ResponseNotHandled;
