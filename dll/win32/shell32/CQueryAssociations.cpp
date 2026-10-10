@@ -1041,81 +1041,54 @@ HRESULT CQueryAssociations::ReturnString(ASSOCF flags, LPWSTR out, DWORD *outlen
 
 STDMETHODIMP CQueryAssociations::EnumElements(ULONG flags, IEnumAssociationElements **ppElement)
 {
-    if (GetProcessOsVersion() >= _WIN32_WINNT_VISTA)
-        return E_NOTIMPL;
-
     FIXME("Stub\n");
     return E_NOTIMPL;
 }
 
 STDMETHODIMP CQueryAssociations::QueryString(ULONG flags, ASSOCQUERY query, PCWSTR key, PWSTR *ppszValue)
 {
-    if (GetProcessOsVersion() >= _WIN32_WINNT_VISTA)
-        return E_NOTIMPL;
-
     FIXME("Stub\n");
     return E_NOTIMPL;
 }
 
 STDMETHODIMP CQueryAssociations::QueryDword(ULONG flags, ASSOCQUERY query, PCWSTR key, DWORD *pdwValue)
 {
-    if (GetProcessOsVersion() >= _WIN32_WINNT_VISTA)
-        return E_NOTIMPL;
-
     FIXME("Stub\n");
     return E_NOTIMPL;
 }
 
 STDMETHODIMP CQueryAssociations::QueryExists(ULONG flags, ASSOCQUERY query, PCWSTR key)
 {
-    if (GetProcessOsVersion() >= _WIN32_WINNT_VISTA)
-        return E_NOTIMPL;
-
     FIXME("Stub\n");
     return E_NOTIMPL;
 }
 
 STDMETHODIMP CQueryAssociations::QueryDirect(ULONG flags, ASSOCQUERY query, PCWSTR key, FLAGGED_BYTE_BLOB **ppBlob)
 {
-    if (GetProcessOsVersion() >= _WIN32_WINNT_VISTA)
-        return E_NOTIMPL;
-
     FIXME("Stub\n");
     return E_NOTIMPL;
 }
 
 STDMETHODIMP CQueryAssociations::QueryObject(ULONG flags, ASSOCQUERY query, PCWSTR key, REFIID riid, PVOID *ppvObj)
 {
-    if (GetProcessOsVersion() >= _WIN32_WINNT_VISTA)
-        return E_NOTIMPL;
-
     FIXME("Stub\n");
     return E_NOTIMPL;
 }
 
 STDMETHODIMP CQueryAssociations::InitClassElements(ULONG flags, PCWSTR pszClass)
 {
-    if (GetProcessOsVersion() >= _WIN32_WINNT_VISTA)
-        return E_NOTIMPL;
-
     FIXME("Stub\n");
     return E_NOTIMPL;
 }
 
 STDMETHODIMP CQueryAssociations::InsertElements(ULONG flags, IEnumAssociationElements *pElements)
 {
-    if (GetProcessOsVersion() >= _WIN32_WINNT_VISTA)
-        return E_NOTIMPL;
-
     FIXME("Stub\n");
     return E_NOTIMPL;
 }
 
 STDMETHODIMP CQueryAssociations::FilterElements(ULONG dwFilter)
 {
-    if (GetProcessOsVersion() >= _WIN32_WINNT_VISTA)
-        return E_NOTIMPL;
-
     FIXME("Stub\n");
     return E_NOTIMPL;
 }
