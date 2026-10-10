@@ -1557,6 +1557,7 @@ Return Value:
             FatSetVcbCondition( OldVcb, VcbGood);
             OldVpb->RealDevice = Vpb->RealDevice;
             ClearFlag( OldVcb->VcbState, VCB_STATE_VPB_NOT_ON_DEVICE);
+            ClearFlag( OldVcb->VcbState, VCB_STATE_FLAG_VOLUME_DISMOUNTED );
 
 #ifdef _MSC_VER
 #pragma prefast( suppress: 28175, "touching Vpb is ok for a filesystem" )
@@ -3815,17 +3816,32 @@ Return Value:
         //  correct error code when operations are attempted via open handles.
         //
 
-        FatSetVcbCondition( Vcb, VcbBad);
+        //
+        //  Mark the VCB as not-mounted-but-valid instead of bad, so the next
+        //  open can remount it cleanly.  Leave VCB_STATE_FLAG_VOLUME_DISMOUNTED
+        //  set so existing handles see STATUS_VOLUME_DISMOUNTED where expected.
+        //
+
+        FatSetVcbCondition( Vcb, VcbNotMounted);
 
         SetFlag( Vcb->VcbState, VCB_STATE_FLAG_VOLUME_DISMOUNTED );
 
         //
-        //  Set a flag in the VPB to let others know that direct volume access is allowed.
+        //  Set a flag in the VPB to let others know that direct volume access is allowed,
+        //  then clear VPB_MOUNTED so the I/O manager re-drives a fresh mount on the next open.
         //
 
         IoAcquireVpbSpinLock( &SavedIrql );
         SetFlag( Vcb->Vpb->Flags, VPB_DIRECT_WRITES_ALLOWED );
+        ClearFlag( Vcb->Vpb->Flags, VPB_MOUNTED );
         IoReleaseVpbSpinLock( SavedIrql );
+
+        //
+        //  Ask the I/O manager to verify this device on the next access, which
+        //  will remount the volume through the fastfat mount path.
+        //
+
+        FatMarkDevForVerifyIfVcbMounted( Vcb );
 
         Status = STATUS_SUCCESS;
 
