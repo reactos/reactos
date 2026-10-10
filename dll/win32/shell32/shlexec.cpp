@@ -23,6 +23,7 @@
 #include "precomp.h"
 #include <winbase_undoc.h>
 #include <undocshell.h>
+#include <shellapi.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(exec);
 
@@ -2092,6 +2093,194 @@ SHELL_InvokePidl(
     hr = pCM->InvokeCommand(&ici);
 
     return !FAILED_UNEXPECTEDLY(hr);
+}
+
+typedef VOID (WINAPI *PRINTUIENTRYW)(HWND, HINSTANCE, LPCWSTR, INT);
+
+typedef struct _PRINTCMD
+{
+    HWND hwnd;
+    WCHAR szCmd[2 * MAX_PATH];
+} PRINTCMD, *PPRINTCMD;
+
+static DWORD WINAPI
+SHELL_PrintUIThread(_In_ LPVOID pParam)
+{
+    PPRINTCMD pCmd = (PPRINTCMD)pParam;
+    HMODULE hPrintUI;
+    PRINTUIENTRYW pfnEntry;
+
+    hPrintUI = LoadLibraryW(L"printui.dll");
+    if (hPrintUI)
+    {
+        pfnEntry = (PRINTUIENTRYW)GetProcAddress(hPrintUI, "PrintUIEntryW");
+        if (pfnEntry)
+            pfnEntry(pCmd->hwnd, hPrintUI, pCmd->szCmd, SW_SHOWNORMAL);
+
+        FreeLibrary(hPrintUI);
+    }
+
+    LocalFree(pCmd);
+    return 0;
+}
+
+/**
+ * @brief
+ * Runs a printer command through printui.dll.
+ *
+ * @param[in] hwnd
+ * Owner window.
+ *
+ * @param[in] uAction
+ * One of the PRINTACTION_* values.
+ *
+ * @param[in] lpBuf1
+ * Printer name, or server name for PRINTACTION_SERVERPROPERTIES.
+ *
+ * @param[in] lpBuf2
+ * Action specific. Currently unused.
+ *
+ * @param[in] fModal
+ * TRUE to wait until the command finishes.
+ *
+ * @return
+ * TRUE if the command was started, FALSE if it failed.
+ **/
+EXTERN_C BOOL
+WINAPI
+SHInvokePrinterCommandW(
+    _In_opt_ HWND hwnd,
+    _In_ UINT uAction,
+    _In_ LPCWSTR lpBuf1,
+    _In_opt_ LPCWSTR lpBuf2,
+    _In_ BOOL fModal)
+{
+    PPRINTCMD pCmd;
+    LPCWSTR pszSwitch;
+    HRESULT hr;
+
+    UNREFERENCED_PARAMETER(lpBuf2);
+
+    TRACE("SHInvokePrinterCommandW(%p, %u, %s, %s, %d)\n",
+          hwnd, uAction, debugstr_w(lpBuf1), debugstr_w(lpBuf2), fModal);
+
+    // Windows doesn't set an error here
+    if (!lpBuf1)
+    {
+        SetLastError(ERROR_SUCCESS);
+        return FALSE;
+    }
+
+    switch (uAction)
+    {
+        case PRINTACTION_OPEN:
+        case PRINTACTION_OPENNETPRN:
+            pszSwitch = L"/o /n";
+            break;
+
+        case PRINTACTION_PROPERTIES:
+            pszSwitch = L"/p /n";
+            break;
+
+        case PRINTACTION_NETINSTALL:
+            pszSwitch = L"/in /n";
+            break;
+
+        case PRINTACTION_NETINSTALLLINK:
+            FIXME("Call SHCreateLinks\n");
+            SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+            return FALSE;
+
+        case PRINTACTION_TESTPAGE:
+            pszSwitch = L"/k /n";
+            break;
+
+        case PRINTACTION_DOCUMENTDEFAULTS:
+            pszSwitch = L"/e /n";
+            break;
+
+        case PRINTACTION_SERVERPROPERTIES:
+            pszSwitch = L"/s /t1 /c";
+            break;
+
+        default:
+            // Windows ignores unknown actions
+            SetLastError(ERROR_SUCCESS);
+            return TRUE;
+    }
+
+    pCmd = (PPRINTCMD)LocalAlloc(LMEM_FIXED | LMEM_ZEROINIT, sizeof(*pCmd));
+    if (!pCmd)
+        return FALSE;
+
+    pCmd->hwnd = hwnd;
+    hr = StringCchPrintfW(pCmd->szCmd, ARRAYSIZE(pCmd->szCmd), L"%s\"%s\"", pszSwitch, lpBuf1);
+    if (FAILED(hr))
+    {
+        LocalFree(pCmd);
+        SetLastError(ERROR_INSUFFICIENT_BUFFER);
+        return FALSE;
+    }
+
+    if (fModal)
+    {
+        SHELL_PrintUIThread(pCmd);
+        return TRUE;
+    }
+
+    if (!SHCreateThread(SHELL_PrintUIThread, pCmd, CTF_COINIT | CTF_PROCESS_REF, NULL))
+    {
+        LocalFree(pCmd);
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+/**
+ * @brief
+ * ANSI version of SHInvokePrinterCommandW.
+ *
+ * @param[in] hwnd
+ * Owner window.
+ *
+ * @param[in] uAction
+ * One of the PRINTACTION_* values.
+ *
+ * @param[in] lpBuf1
+ * Printer name, or server name for PRINTACTION_SERVERPROPERTIES.
+ *
+ * @param[in] lpBuf2
+ * Action specific.
+ *
+ * @param[in] fModal
+ * TRUE to wait until the command finishes.
+ *
+ * @return
+ * TRUE if the command was started, FALSE if it failed.
+ **/
+EXTERN_C BOOL
+WINAPI
+SHInvokePrinterCommandA(
+    _In_opt_ HWND hwnd,
+    _In_ UINT uAction,
+    _In_ LPCSTR lpBuf1,
+    _In_opt_ LPCSTR lpBuf2,
+    _In_ BOOL fModal)
+{
+    WCHAR szBuf1[MAX_PATH], szBuf2[MAX_PATH];
+
+    if (lpBuf1)
+        SHAnsiToUnicode(lpBuf1, szBuf1, ARRAYSIZE(szBuf1));
+
+    if (lpBuf2)
+        SHAnsiToUnicode(lpBuf2, szBuf2, ARRAYSIZE(szBuf2));
+
+    return SHInvokePrinterCommandW(hwnd,
+                                   uAction,
+                                   lpBuf1 ? szBuf1 : NULL,
+                                   lpBuf2 ? szBuf2 : NULL,
+                                   fModal);
 }
 
 static UINT_PTR SHELL_quote_and_execute(LPCWSTR wcmd, LPCWSTR wszParameters, LPCWSTR wszKeyname, LPCWSTR wszApplicationName, LPWSTR env, LPSHELLEXECUTEINFOW psei, LPSHELLEXECUTEINFOW psei_out, SHELL_ExecuteW32 execfunc)
