@@ -40,7 +40,7 @@ CConsoleWnd::OnCreate(UINT nMessage, WPARAM wParam, LPARAM lParam, BOOL& bHandle
     m_bActionsPaneVisible = FALSE;
 
     m_iSplitterWidth = 4;
-    m_iSplitSide = 0;
+    m_iSplitSide = SPLITTER_NONE;
 
     RECT Rect;
     GetClientRect(&Rect);
@@ -97,6 +97,104 @@ CConsoleWnd::OnSize(UINT nMessage, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     UpdateLayout();
     return DefMDIChildProc(this->m_hWnd, WM_SIZE, wParam, lParam);
+}
+
+LRESULT
+CConsoleWnd::OnLButtonDown(UINT nMessage, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    RECT rect;
+    int xPos = (INT)(WORD)LOWORD(lParam);
+
+    GetClientRect(&rect);
+    int iClientWidth = rect.right - rect.left;
+
+    if ((m_bTreeViewVisible) && (xPos >= m_iTreeViewWidth) && (xPos <= m_iTreeViewWidth + m_iSplitterWidth))
+    {
+        m_iSplitOffset = xPos - m_iTreeViewWidth;
+        m_iSplitSide = SPLITTER_LEFT;
+    }
+    else if ((m_bActionsPaneVisible) && (xPos >= (iClientWidth - m_iActionsPaneWidth - m_iSplitterWidth)) && (xPos <= (iClientWidth - m_iActionsPaneWidth)))
+    {
+        m_iSplitOffset = xPos - (iClientWidth - m_iActionsPaneWidth - m_iSplitterWidth);
+        m_iSplitSide = SPLITTER_RIGHT;
+    }
+    else
+    {
+        m_iSplitSide = SPLITTER_NONE;
+    }
+    SetCapture();
+    return 0;
+}
+
+LRESULT
+CConsoleWnd::OnLButtonUp(UINT nMessage, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    m_iSplitSide = SPLITTER_NONE;
+    ReleaseCapture();
+    return 0;
+}
+
+LRESULT
+CConsoleWnd::OnMouseMove(UINT nMessage, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    if ((GetCapture() == m_hWnd) && (m_iSplitSide != SPLITTER_NONE))
+    {
+        RECT rect;
+
+        GetClientRect(&rect);
+        int iClientWidth = rect.right - rect.left;
+
+        if (m_iSplitSide == SPLITTER_LEFT)
+        {
+            m_iTreeViewWidth = (INT)(WORD)LOWORD(lParam) - m_iSplitOffset;
+
+            m_TreeView.GetWindowRect(&rect);
+            ::MapWindowPoints(HWND_DESKTOP, m_hWnd, (LPPOINT)&rect, sizeof(RECT) / sizeof(POINT));
+
+            m_TreeView.MoveWindow(rect.left, rect.top, rect.left + m_iTreeViewWidth, rect.bottom - rect.top);
+
+            m_ListView.GetWindowRect(&rect);
+            ::MapWindowPoints(HWND_DESKTOP, m_hWnd, (LPPOINT)&rect, sizeof(RECT) / sizeof(POINT));
+
+            int xWidth = iClientWidth - (m_iTreeViewWidth + m_iSplitterWidth);
+            if (m_bActionsPaneVisible)
+                xWidth -= (m_iActionsPaneWidth + m_iSplitterWidth);
+
+            m_ListView.MoveWindow(m_iTreeViewWidth + m_iSplitterWidth, rect.top, xWidth, rect.bottom - rect.top);
+
+            m_DescriptionBar.GetWindowRect(&rect);
+            ::MapWindowPoints(HWND_DESKTOP, m_hWnd, (LPPOINT)&rect, sizeof(RECT) / sizeof(POINT));
+
+            m_DescriptionBar.MoveWindow(m_iTreeViewWidth + m_iSplitterWidth, rect.top, xWidth, rect.bottom - rect.top);
+        }
+        else if (m_iSplitSide == SPLITTER_RIGHT)
+        {
+            int xPos = (INT)(WORD)LOWORD(lParam) - m_iSplitOffset;
+            m_iActionsPaneWidth = iClientWidth - (xPos + m_iSplitterWidth);
+
+            m_ListView.GetWindowRect(&rect);
+            ::MapWindowPoints(HWND_DESKTOP, m_hWnd, (LPPOINT)&rect, sizeof(RECT) / sizeof(POINT));
+
+            int xWidth = iClientWidth - (m_iActionsPaneWidth + m_iSplitterWidth);
+            if (m_bTreeViewVisible)
+                xWidth -= rect.left;
+
+            m_ListView.MoveWindow(rect.left, rect.top, xWidth, rect.bottom - rect.top);
+
+            m_DescriptionBar.GetWindowRect(&rect);
+            ::MapWindowPoints(HWND_DESKTOP, m_hWnd, (LPPOINT)&rect, sizeof(RECT) / sizeof(POINT));
+
+            m_DescriptionBar.MoveWindow(rect.left, rect.top, xWidth, rect.bottom - rect.top);
+
+            m_ActionsPane.GetWindowRect(&rect);
+            ::MapWindowPoints(HWND_DESKTOP, m_hWnd, (LPPOINT)&rect, sizeof(RECT) / sizeof(POINT));
+
+            rect.left = iClientWidth - m_iActionsPaneWidth;
+            m_ActionsPane.MoveWindow(rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top);
+        }
+    }
+
+    return 0;
 }
 
 LRESULT
