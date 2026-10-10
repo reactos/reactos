@@ -4,6 +4,7 @@
  * PURPOSE:     IQueryAssociations
  * COPYRIGHT:   Copyright 2002 Jon Griffiths (Wine)
  *              Copyright 2024-2026 Whindmar Saksit <whindsaks@proton.me>
+ *              Copyright 2026 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
 #include "precomp.h"
