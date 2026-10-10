@@ -22,7 +22,7 @@ PciGetDescriptionMessage(IN ULONG Identifier,
                          OUT PULONG Length)
 {
     PMESSAGE_RESOURCE_ENTRY Entry;
-    ULONG TextLength;
+    ULONG MaxCount, Count;
     PWCHAR Description, Buffer;
     ANSI_STRING MessageString;
     UNICODE_STRING UnicodeString;
@@ -40,39 +40,56 @@ PciGetDescriptionMessage(IN ULONG Identifier,
     /* Check if the resource data is Unicode or ANSI */
     if (Entry->Flags & MESSAGE_RESOURCE_UNICODE)
     {
-        /* Subtract one space for the end-of-message terminator */
-        TextLength = Entry->Length -
-                     FIELD_OFFSET(MESSAGE_RESOURCE_ENTRY, Text) -
-                     sizeof(WCHAR);
+        ASSERT(Entry->Length >= FIELD_OFFSET(MESSAGE_RESOURCE_ENTRY, Text));
 
-        /* Grab the text */
+        /* The entry is padded after its terminator, so measure up to the first NUL */
         Description = (PWCHAR)Entry->Text;
+        MaxCount = (Entry->Length - FIELD_OFFSET(MESSAGE_RESOURCE_ENTRY, Text)) / sizeof(*Description);
+        Count = 0;
+        while ((Count < MaxCount) && (Description[Count] != UNICODE_NULL))
+        {
+            Count++;
+        }
 
-        /* Validate the message length, ending with a newline character */
-        ASSERT(TextLength > sizeof(WCHAR));
-        ASSERT(Description[(TextLength / sizeof(WCHAR)) - 1] == L'\n');
+        /* Drop the trailing line break, where there is one */
+        while ((Count) && ((Description[Count - 1] == L'\n') ||
+                           (Description[Count - 1] == L'\r')))
+        {
+            Count--;
+        }
 
         /* Allocate the buffer to hold the message string */
-        Buffer = ExAllocatePoolWithTag(PagedPool, TextLength, 'BicP');
+        Buffer = ExAllocatePoolWithTag(PagedPool,
+                                       (Count + 1) * sizeof(*Buffer),
+                                       'BicP');
         if (!Buffer) return NULL;
 
-        /* Copy the message, minus the newline character, and terminate it */
-        RtlCopyMemory(Buffer, Description, TextLength - sizeof(WCHAR));
-        Buffer[(TextLength / sizeof(WCHAR)) - 1] = UNICODE_NULL;
+        /* Copy the message across and terminate it */
+        RtlCopyMemory(Buffer, Description, Count * sizeof(*Buffer));
+        Buffer[Count] = UNICODE_NULL;
 
         /* Return the length to the caller, minus the terminating NULL */
-        if (Length) *Length = TextLength - sizeof(WCHAR);
+        if (Length)
+            *Length = Count * sizeof(*Buffer);
     }
     else
     {
         /* Initialize the entry as a string */
         RtlInitAnsiString(&MessageString, (PCHAR)Entry->Text);
 
-        /* Remove the newline character */
-        MessageString.Length -= sizeof(CHAR);
+        /* Drop the trailing line break, where there is one */
+        while ((MessageString.Length) &&
+               ((MessageString.Buffer[MessageString.Length - 1] == '\n') ||
+                (MessageString.Buffer[MessageString.Length - 1] == '\r')))
+        {
+            MessageString.Length -= sizeof(*MessageString.Buffer);
+        }
 
         /* Convert it to Unicode */
-        RtlAnsiStringToUnicodeString(&UnicodeString, &MessageString, TRUE);
+        Status = RtlAnsiStringToUnicodeString(&UnicodeString, &MessageString, TRUE);
+        if (!NT_SUCCESS(Status))
+            return NULL;
+
         Buffer = UnicodeString.Buffer;
 
         /* Return the length to the caller */
@@ -186,9 +203,9 @@ PciIdPrintfAppend(IN PPCI_ID_BUFFER IdBuffer,
     /* Calculate the final size of the string, in Unicode */
     Size = RtlAnsiStringToUnicodeSize(AnsiString);
 
-    /* Update the buffer with the size, and update the character pointer */
+    /* Only the growth of this string adds to the total, then move the character pointer */
+    IdBuffer->TotalLength += Size - IdBuffer->StringSize[NextId];
     IdBuffer->StringSize[NextId] = Size;
-    IdBuffer->TotalLength += Size;
     IdBuffer->CharBuffer += Length;
 
     /* Return the size */
@@ -339,12 +356,23 @@ PciQueryId(IN PPCI_PDO_EXTENSION DeviceExtension,
             ParentExtension = DeviceExtension->ParentFdoExtension;
             while (!PCI_IS_ROOT_FDO(ParentExtension))
             {
+                /* Two more digits and their terminator have to fit */
+                if ((IdBuffer.CharBuffer + 2) >
+                    (IdBuffer.BufferData + sizeof(IdBuffer.BufferData)))
+                {
+                    DPRINT1("Bridge chain too deep for an instance ID\n");
+                    return STATUS_BUFFER_OVERFLOW;
+                }
+
                 /* And encode the parent's device and function number as well */
                 PdoExtension = ParentExtension->PhysicalDeviceObject->DeviceExtension;
                 PciIdPrintfAppend(&IdBuffer,
                                   "%02X",
                                   (PdoExtension->Slot.u.bits.DeviceNumber << 3) |
                                   PdoExtension->Slot.u.bits.FunctionNumber);
+
+                /* Move up to the next bridge */
+                ParentExtension = PdoExtension->ParentFdoExtension;
             }
             break;
 
@@ -363,7 +391,7 @@ PciQueryId(IN PPCI_PDO_EXTENSION DeviceExtension,
     if (!StringBuffer) return STATUS_INSUFFICIENT_RESOURCES;
 
     /* Build the UNICODE_STRING structure for it */
-    DPRINT1("PciQueryId(%d)\n", QueryType);
+    DPRINT("PciQueryId(%d)\n", QueryType);
     DestinationString.Buffer = StringBuffer;
     DestinationString.MaximumLength = IdBuffer.TotalLength;
 
@@ -372,7 +400,7 @@ PciQueryId(IN PPCI_PDO_EXTENSION DeviceExtension,
     {
         /* Select the ANSI_STRING for the ID */
         NextString = &IdBuffer.Strings[i];
-        DPRINT1("    <- \"%s\"\n", NextString->Buffer);
+        DPRINT("    <- \"%s\"\n", NextString->Buffer);
 
         /* Convert it to a UNICODE_STRING */
         Status = RtlAnsiStringToUnicodeString(&DestinationString, NextString, FALSE);

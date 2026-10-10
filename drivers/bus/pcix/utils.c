@@ -721,11 +721,9 @@ PciFindPdoByFunction(IN PPCI_FDO_EXTENSION DeviceExtension,
         /* Find only enumerated PDOs */
         if (!PdoExtension->ReportedMissing)
         {
-            /* Check if the function number and header data matches */
+            /* Same slot, and the IDs match as the device's hack flags allow */
             if ((FunctionNumber == PdoExtension->Slot.u.AsULONG) &&
-                (PdoExtension->VendorId == PciData->VendorID) &&
-                (PdoExtension->DeviceId == PciData->DeviceID) &&
-                (PdoExtension->RevisionId == PciData->RevisionID))
+                (PcipIsSameDevice(PdoExtension, PciData)))
             {
                 /* This is considered to be the same PDO */
                 break;
@@ -757,8 +755,7 @@ PciIsDeviceOnDebugPath(IN PPCI_PDO_EXTENSION DeviceExtension)
     ASSERT(PciDebugPortsCount <= MAX_DEBUGGING_DEVICES_SUPPORTED);
     if (!PciDebugPortsCount) return FALSE;
 
-    /* eVb has not been able to test such devices yet */
-    UNIMPLEMENTED_DBGBREAK();
+    /* No debugging device locations are recorded, so there is nothing to match */
     return FALSE;
 }
 
@@ -1306,7 +1303,7 @@ PciDecodeEnable(IN PPCI_PDO_EXTENSION PdoExtension,
         {
             /* Otherwise, read the current command */
             PciReadDeviceConfig(PdoExtension,
-                                &Command,
+                                &CommandValue,
                                 FIELD_OFFSET(PCI_COMMON_HEADER, Command),
                                 sizeof(USHORT));
         }
@@ -1365,23 +1362,23 @@ PciDetermineSlotNumber(IN PPCI_PDO_EXTENSION PdoExtension,
 
     /* Check if a $PIR from the BIOS is used (legacy IRQ routing) */
     ParentExtension = PdoExtension->ParentFdoExtension;
-    DPRINT1("Slot lookup for %d.%u.%u\n",
-            ParentExtension ? ParentExtension->BaseBus : -1,
-            PdoExtension->Slot.u.bits.DeviceNumber,
-            PdoExtension->Slot.u.bits.FunctionNumber);
+    DPRINT("Slot lookup for %d.%u.%u\n",
+           ParentExtension ? ParentExtension->BaseBus : -1,
+           PdoExtension->Slot.u.bits.DeviceNumber,
+           PdoExtension->Slot.u.bits.FunctionNumber);
     if ((PciIrqRoutingTable) && (ParentExtension))
     {
         /* Read every slot information entry */
         SlotInfo = &PciIrqRoutingTable->Slot[0];
-        DPRINT1("$PIR %p is %lx bytes, slot 0 is at: %p\n",
-                PciIrqRoutingTable, PciIrqRoutingTable->TableSize, SlotInfo);
+        DPRINT("$PIR %p is %u bytes, slot 0 is at: %p\n",
+               PciIrqRoutingTable, PciIrqRoutingTable->TableSize, SlotInfo);
         while (SlotInfo < (PSLOT_INFO)((ULONG_PTR)PciIrqRoutingTable +
                                        PciIrqRoutingTable->TableSize))
         {
-            DPRINT1("Slot Info: %u.%u->#%u\n",
-                    SlotInfo->BusNumber,
-                    SlotInfo->DeviceNumber,
-                    SlotInfo->SlotNumber);
+            DPRINT("Slot Info: %u.%u->#%u\n",
+                   SlotInfo->BusNumber,
+                   SlotInfo->DeviceNumber,
+                   SlotInfo->SlotNumber);
 
             /* Check if this slot information matches the PDO being queried */
             if ((ParentExtension->BaseBus == SlotInfo->BusNumber) &&
@@ -1574,8 +1571,8 @@ PciQueryPowerCapabilities(IN PPCI_PDO_EXTENSION PdoExtension,
         }
         else
         {
-            /* Take the minimums? -- need to check with briang at work */
-            UNIMPLEMENTED;
+            /* The bridge above may be in D3 too, which leaves this device in D3cold */
+            DeviceCapability->WakeFromD3 = PdoExtension->PowerCapabilities.Support.PMED3Cold;
         }
     }
 

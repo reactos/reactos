@@ -74,17 +74,28 @@ PCI_MJ_DISPATCH_TABLE PciPdoDispatchTable =
 
 /* FUNCTIONS ******************************************************************/
 
+static
+NTSTATUS
+NTAPI
+PciPdoEnterDevicePowerState(
+    _Inout_ PPCI_PDO_EXTENSION DeviceExtension,
+    _In_ DEVICE_POWER_STATE DeviceState);
+
+static IO_WORKITEM_ROUTINE PciPdoDevicePowerWorker;
+
 NTSTATUS
 NTAPI
 PciPdoWaitWake(IN PIRP Irp,
                IN PIO_STACK_LOCATION IoStackLocation,
                IN PPCI_PDO_EXTENSION DeviceExtension)
 {
-    UNREFERENCED_PARAMETER(Irp);
     UNREFERENCED_PARAMETER(IoStackLocation);
     UNREFERENCED_PARAMETER(DeviceExtension);
 
-    UNIMPLEMENTED_DBGBREAK();
+    /* PME is never armed, so the function cannot wake the system */
+    Irp->IoStatus.Status = STATUS_NOT_SUPPORTED;
+    PoStartNextPowerIrp(Irp);
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
     return STATUS_NOT_SUPPORTED;
 }
 
@@ -94,12 +105,38 @@ PciPdoSetPowerState(IN PIRP Irp,
                     IN PIO_STACK_LOCATION IoStackLocation,
                     IN PPCI_PDO_EXTENSION DeviceExtension)
 {
-    UNREFERENCED_PARAMETER(Irp);
-    UNREFERENCED_PARAMETER(IoStackLocation);
-    UNREFERENCED_PARAMETER(DeviceExtension);
+    POWER_STATE State = IoStackLocation->Parameters.Power.State;
+    PIO_WORKITEM WorkItem;
 
-    UNIMPLEMENTED;
-    return STATUS_NOT_SUPPORTED;
+    /* The function driver follows a system state with a device state request of its own */
+    if (IoStackLocation->Parameters.Power.Type == SystemPowerState)
+    {
+        DeviceExtension->PowerState.CurrentSystemState = State.SystemState;
+        return STATUS_SUCCESS;
+    }
+
+    if ((State.DeviceState < PowerDeviceD0) || (State.DeviceState > PowerDeviceD3))
+        return STATUS_INVALID_PARAMETER;
+
+    if (State.DeviceState == DeviceExtension->PowerState.CurrentDeviceState)
+        return STATUS_SUCCESS;
+
+    /* Configuration cycles cannot reach a function on a bus that is not running */
+    if (DeviceExtension->ParentFdoExtension->DeviceState != PciStarted)
+        return STATUS_NO_SUCH_DEVICE;
+
+    if (KeGetCurrentIrql() < DISPATCH_LEVEL)
+        return PciPdoEnterDevicePowerState(DeviceExtension, State.DeviceState);
+
+    /* D0 may be sent at DISPATCH_LEVEL, and reprogramming the function needs PASSIVE_LEVEL */
+    WorkItem = IoAllocateWorkItem(DeviceExtension->PhysicalDeviceObject);
+    if (!WorkItem)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
+    Irp->Tail.Overlay.DriverContext[0] = WorkItem;
+    IoMarkIrpPending(Irp);
+    IoQueueWorkItem(WorkItem, PciPdoDevicePowerWorker, DelayedWorkQueue, Irp);
+    return STATUS_PENDING;
 }
 
 NTSTATUS
@@ -112,8 +149,8 @@ PciPdoIrpQueryPower(IN PIRP Irp,
     UNREFERENCED_PARAMETER(IoStackLocation);
     UNREFERENCED_PARAMETER(DeviceExtension);
 
-    UNIMPLEMENTED_DBGBREAK();
-    return STATUS_NOT_SUPPORTED;
+    /* Every device state is accepted when set, so none is refused here */
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS
@@ -215,18 +252,307 @@ PciPdoIrpStartDevice(IN PIRP Irp,
     return Status;
 }
 
+/**
+ * @brief
+ * Checks the uses of a function that keep it from being stopped or removed.
+ *
+ * @param[in] DeviceExtension
+ * The PDO extension of the function.
+ *
+ * @return
+ * STATUS_SUCCESS if the function may be given up.
+ */
+static
+NTSTATUS
+NTAPI
+PciPdoValidateRelease(
+    _In_ PPCI_PDO_EXTENSION DeviceExtension)
+{
+    /* Paging, hibernation and dump files, and the debugger, cannot lose their hardware */
+    if ((DeviceExtension->PowerState.Paging) ||
+        (DeviceExtension->PowerState.Hibernate) ||
+        (DeviceExtension->PowerState.CrashDump) ||
+        (DeviceExtension->OnDebugPath))
+    {
+        return STATUS_DEVICE_BUSY;
+    }
+
+    /* A driver that claimed the function outside of PnP will not let go of it */
+    if (DeviceExtension->LegacyDriver)
+        return STATUS_INVALID_DEVICE_REQUEST;
+
+    return STATUS_SUCCESS;
+}
+
+/**
+ * @brief
+ * Checks whether a function may stop decoding for as long as it is stopped or removed.
+ *
+ * @param[in] DeviceExtension
+ * The PDO extension of the function.
+ *
+ * @return
+ * TRUE if the decodes and interrupts of the function can be turned off.
+ */
+static
+BOOLEAN
+NTAPI
+PciPdoCanTurnOff(
+    _In_ PPCI_PDO_EXTENSION DeviceExtension)
+{
+    /* Critical functions, VGA, legacy bridges and the debug path keep decoding */
+    return PciCanDisableDecodes(DeviceExtension, NULL, 0, FALSE);
+}
+
+/**
+ * @brief
+ * Reads the identity back from the slot to learn whether the function is still there.
+ *
+ * @param[in,out] DeviceExtension
+ * The PDO extension of the function. Marked not present if the identity differs.
+ *
+ * @return
+ * TRUE if the same function still answers in the slot.
+ */
+static
+BOOLEAN
+NTAPI
+PciPdoIsPresent(
+    _Inout_ PPCI_PDO_EXTENSION DeviceExtension)
+{
+    PCI_COMMON_HEADER PciData;
+
+    if (DeviceExtension->NotPresent)
+        return FALSE;
+
+    PciReadDeviceConfig(DeviceExtension, &PciData, 0, PCI_COMMON_HDR_LENGTH);
+    if (!PcipIsSameDevice(DeviceExtension, &PciData))
+    {
+        DPRINT1("PCI (pdox %p) no longer answers in its slot\n", DeviceExtension);
+        DeviceExtension->NotPresent = TRUE;
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+/**
+ * @brief
+ * Stops a function from decoding, mastering and raising interrupts, and
+ * optionally moves it to D3.
+ *
+ * @param[in,out] DeviceExtension
+ * The PDO extension of the function.
+ *
+ * @param[in] PowerDown
+ * TRUE to also power the function down.
+ */
+static
+VOID
+NTAPI
+PciPdoTurnOff(
+    _Inout_ PPCI_PDO_EXTENSION DeviceExtension,
+    _In_ BOOLEAN PowerDown)
+{
+    POWER_STATE PowerState;
+    USHORT Command;
+
+    if (!PciPdoCanTurnOff(DeviceExtension))
+        return;
+
+    /* The wired line is masked in the same write that clears the decodes */
+    PciReadDeviceConfig(DeviceExtension,
+                        &Command,
+                        FIELD_OFFSET(PCI_COMMON_HEADER, Command),
+                        sizeof(Command));
+    Command |= PCI_DISABLE_LEVEL_INTERRUPT;
+    PciDecodeEnable(DeviceExtension, FALSE, &Command);
+
+    if ((!PowerDown) ||
+        (DeviceExtension->PowerState.CurrentDeviceState == PowerDeviceD3) ||
+        !(PciCanDisableDecodes(DeviceExtension, NULL, 0, TRUE)))
+    {
+        return;
+    }
+
+    /* Start sees D3, powers the function back up and reprograms it */
+    PciSetPowerManagedDevicePowerState(DeviceExtension, PowerDeviceD3, FALSE);
+    DeviceExtension->PowerState.CurrentDeviceState = PowerDeviceD3;
+
+    PowerState.DeviceState = PowerDeviceD3;
+    PoSetPowerState(DeviceExtension->PhysicalDeviceObject, DevicePowerState, PowerState);
+}
+
+/**
+ * @brief
+ * Checks whether a request for a low power device state may take power from a function.
+ *
+ * @param[in] DeviceExtension
+ * The PDO extension of the function.
+ *
+ * @param[in] DeviceState
+ * The low power state being entered.
+ *
+ * @return
+ * FALSE if the function has to stay in D0 and keep decoding.
+ */
+static
+BOOLEAN
+NTAPI
+PciPdoCanPowerDown(
+    _In_ PPCI_PDO_EXTENSION DeviceExtension,
+    _In_ DEVICE_POWER_STATE DeviceState)
+{
+    SYSTEM_POWER_STATE SystemState = DeviceExtension->PowerState.CurrentSystemState;
+
+    /* Critical functions, VGA and the debug path keep decoding, so they keep power too */
+    if (!PciPdoCanTurnOff(DeviceExtension))
+        return FALSE;
+
+    /* IDE controllers and legacy bridges stay in D0 */
+    if (!PciCanDisableDecodes(DeviceExtension, NULL, 0, TRUE))
+        return FALSE;
+
+    /* The hibernation file and crash dump are written through this function */
+    if ((SystemState == PowerSystemHibernate) &&
+        ((DeviceExtension->PowerState.Hibernate) || (DeviceExtension->PowerState.CrashDump)))
+    {
+        return FALSE;
+    }
+
+    /* On a warm reboot firmware may not power a bridge up again before booting from behind it */
+    if ((SystemState == PowerSystemShutdown) &&
+        (DeviceState == PowerDeviceD3) &&
+        (DeviceExtension->BaseClass == PCI_CLASS_BRIDGE_DEV) &&
+        (DeviceExtension->SubClass == PCI_SUBCLASS_BR_PCI_TO_PCI))
+    {
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+/**
+ * @brief
+ * Moves a function to a device power state and reports it to the power manager.
+ *
+ * @param[in,out] DeviceExtension
+ * The PDO extension of the function.
+ *
+ * @param[in] DeviceState
+ * The state to enter, D0 through D3.
+ *
+ * @return
+ * STATUS_SUCCESS, or the error that kept the function from returning to D0.
+ */
+static
+NTSTATUS
+NTAPI
+PciPdoEnterDevicePowerState(
+    _Inout_ PPCI_PDO_EXTENSION DeviceExtension,
+    _In_ DEVICE_POWER_STATE DeviceState)
+{
+    POWER_STATE PowerState;
+    NTSTATUS Status;
+    PAGED_CODE();
+
+    if (DeviceState == DeviceExtension->PowerState.CurrentDeviceState)
+        return STATUS_SUCCESS;
+
+    PowerState.DeviceState = DeviceState;
+
+    if (DeviceState == PowerDeviceD0)
+    {
+        /* After the settle delay this also writes the configuration and interrupt back */
+        Status = PciSetPowerManagedDevicePowerState(DeviceExtension, PowerDeviceD0, TRUE);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("PCI (pdox %p) failed to return to D0 (0x%08lx)\n", DeviceExtension, Status);
+            return Status;
+        }
+
+        DeviceExtension->PowerState.CurrentDeviceState = PowerDeviceD0;
+        PoSetPowerState(DeviceExtension->PhysicalDeviceObject, DevicePowerState, PowerState);
+        return STATUS_SUCCESS;
+    }
+
+    /* The power manager learns of a power down before the function loses power */
+    PoSetPowerState(DeviceExtension->PhysicalDeviceObject, DevicePowerState, PowerState);
+
+    if (PciPdoCanPowerDown(DeviceExtension, DeviceState))
+    {
+        PciPdoTurnOff(DeviceExtension, FALSE);
+
+        Status = PciSetPowerManagedDevicePowerState(DeviceExtension, DeviceState, FALSE);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("PCI (pdox %p) did not settle in device state %lu (0x%08lx)\n",
+                    DeviceExtension,
+                    DeviceState,
+                    Status);
+        }
+    }
+
+    /* A function kept running is still reprogrammed by the next D0 */
+    DeviceExtension->PowerState.CurrentDeviceState = DeviceState;
+    return STATUS_SUCCESS;
+}
+
+/**
+ * @brief
+ * Completes a device set power request that arrived at raised IRQL.
+ *
+ * @param[in] Context
+ * The pending device power IRP.
+ */
+static
+VOID
+NTAPI
+PciPdoDevicePowerWorker(
+    _In_ PDEVICE_OBJECT DeviceObject,
+    _In_opt_ PVOID Context)
+{
+    PIRP Irp = Context;
+    PIO_STACK_LOCATION IoStackLocation;
+    DEVICE_POWER_STATE DeviceState;
+
+    ASSERT(Irp != NULL);
+
+    IoFreeWorkItem(Irp->Tail.Overlay.DriverContext[0]);
+
+    IoStackLocation = IoGetCurrentIrpStackLocation(Irp);
+    DeviceState = IoStackLocation->Parameters.Power.State.DeviceState;
+
+    Irp->IoStatus.Status = PciPdoEnterDevicePowerState(DeviceObject->DeviceExtension,
+                                                       DeviceState);
+    PoStartNextPowerIrp(Irp);
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+}
+
 NTSTATUS
 NTAPI
 PciPdoIrpQueryRemoveDevice(IN PIRP Irp,
                            IN PIO_STACK_LOCATION IoStackLocation,
                            IN PPCI_PDO_EXTENSION DeviceExtension)
 {
+    NTSTATUS Status;
+    PAGED_CODE();
+
     UNREFERENCED_PARAMETER(Irp);
     UNREFERENCED_PARAMETER(IoStackLocation);
-    UNREFERENCED_PARAMETER(DeviceExtension);
 
-    UNIMPLEMENTED;
-    return STATUS_NOT_SUPPORTED;
+    if (DeviceExtension->HackFlags & PCI_HACK_FAIL_QUERY_REMOVE)
+        return STATUS_DEVICE_BUSY;
+
+    Status = PciPdoValidateRelease(DeviceExtension);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    /* A function that was never started has no state to leave */
+    if (DeviceExtension->DeviceState == PciNotStarted)
+        return STATUS_SUCCESS;
+
+    return PciBeginStateTransition((PVOID)DeviceExtension, PciNotStarted);
 }
 
 NTSTATUS
@@ -235,12 +561,35 @@ PciPdoIrpRemoveDevice(IN PIRP Irp,
                       IN PIO_STACK_LOCATION IoStackLocation,
                       IN PPCI_PDO_EXTENSION DeviceExtension)
 {
+    PAGED_CODE();
+
     UNREFERENCED_PARAMETER(Irp);
     UNREFERENCED_PARAMETER(IoStackLocation);
-    UNREFERENCED_PARAMETER(DeviceExtension);
 
-    UNIMPLEMENTED_DBGBREAK();
-    return STATUS_NOT_SUPPORTED;
+    if (PciPdoIsPresent(DeviceExtension))
+        PciPdoTurnOff(DeviceExtension, TRUE);
+
+    /* A remove without a query still has to take a started function out of that state */
+    if ((DeviceExtension->DeviceState == PciStarted) &&
+        (DeviceExtension->TentativeNextState == PciStarted))
+    {
+        PciBeginStateTransition((PVOID)DeviceExtension, PciNotStarted);
+    }
+
+    if ((DeviceExtension->DeviceState != PciNotStarted) &&
+        (DeviceExtension->TentativeNextState == PciNotStarted))
+    {
+        PciCommitStateTransition((PVOID)DeviceExtension, PciNotStarted);
+    }
+
+    /* A function that left the bus will not come back through this PDO */
+    if ((DeviceExtension->ReportedMissing) &&
+        (NT_SUCCESS(PciBeginStateTransition((PVOID)DeviceExtension, PciDeleted))))
+    {
+        PciCommitStateTransition((PVOID)DeviceExtension, PciDeleted);
+    }
+
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS
@@ -249,12 +598,14 @@ PciPdoIrpCancelRemoveDevice(IN PIRP Irp,
                             IN PIO_STACK_LOCATION IoStackLocation,
                             IN PPCI_PDO_EXTENSION DeviceExtension)
 {
+    PAGED_CODE();
+
     UNREFERENCED_PARAMETER(Irp);
     UNREFERENCED_PARAMETER(IoStackLocation);
-    UNREFERENCED_PARAMETER(DeviceExtension);
 
-    UNIMPLEMENTED_DBGBREAK();
-    return STATUS_NOT_SUPPORTED;
+    /* The remove is off, so the device stays where it was */
+    PciCancelStateTransition((PVOID)DeviceExtension, PciNotStarted);
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS
@@ -263,12 +614,17 @@ PciPdoIrpStopDevice(IN PIRP Irp,
                     IN PIO_STACK_LOCATION IoStackLocation,
                     IN PPCI_PDO_EXTENSION DeviceExtension)
 {
+    PAGED_CODE();
+
     UNREFERENCED_PARAMETER(Irp);
     UNREFERENCED_PARAMETER(IoStackLocation);
-    UNREFERENCED_PARAMETER(DeviceExtension);
 
-    UNIMPLEMENTED_DBGBREAK();
-    return STATUS_NOT_SUPPORTED;
+    /* The device is losing its resources, so it must stop using them first */
+    PciPdoTurnOff(DeviceExtension, FALSE);
+
+    /* The query stop that has to come first already began the transition */
+    PciCommitStateTransition((PVOID)DeviceExtension, PciStopped);
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS
@@ -277,12 +633,21 @@ PciPdoIrpQueryStopDevice(IN PIRP Irp,
                          IN PIO_STACK_LOCATION IoStackLocation,
                          IN PPCI_PDO_EXTENSION DeviceExtension)
 {
+    NTSTATUS Status;
+    PAGED_CODE();
+
     UNREFERENCED_PARAMETER(Irp);
     UNREFERENCED_PARAMETER(IoStackLocation);
-    UNREFERENCED_PARAMETER(DeviceExtension);
 
-    UNIMPLEMENTED_DBGBREAK();
-    return STATUS_NOT_SUPPORTED;
+    Status = PciPdoValidateRelease(DeviceExtension);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    /* New resources are useless if the old ranges keep decoding */
+    if (!PciPdoCanTurnOff(DeviceExtension))
+        return STATUS_INVALID_DEVICE_REQUEST;
+
+    return PciBeginStateTransition((PVOID)DeviceExtension, PciStopped);
 }
 
 NTSTATUS
@@ -291,12 +656,14 @@ PciPdoIrpCancelStopDevice(IN PIRP Irp,
                           IN PIO_STACK_LOCATION IoStackLocation,
                           IN PPCI_PDO_EXTENSION DeviceExtension)
 {
+    PAGED_CODE();
+
     UNREFERENCED_PARAMETER(Irp);
     UNREFERENCED_PARAMETER(IoStackLocation);
-    UNREFERENCED_PARAMETER(DeviceExtension);
 
-    UNIMPLEMENTED_DBGBREAK();
-    return STATUS_NOT_SUPPORTED;
+    /* The stop is off, so the device keeps what it has */
+    PciCancelStateTransition((PVOID)DeviceExtension, PciStopped);
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS
@@ -453,18 +820,98 @@ PciPdoIrpQueryBusInformation(IN PIRP Irp,
                                   IoStatus.Information);
 }
 
+/**
+ * @brief
+ * Serves a driver's read or write of its own function's configuration space.
+ *
+ * @param[in] Read
+ * TRUE to read configuration space, FALSE to write it.
+ *
+ * @return
+ * STATUS_SUCCESS, or the error that kept the access from being made.
+ */
+static
+NTSTATUS
+NTAPI
+PciPdoReadWriteConfig(
+    _Inout_ PIRP Irp,
+    _In_ PIO_STACK_LOCATION IoStackLocation,
+    _In_ PPCI_PDO_EXTENSION DeviceExtension,
+    _In_ BOOLEAN Read)
+{
+    PUCHAR Bounce;
+    ULONG Offset, Length, End, Limit, LineOffset;
+    BOOLEAN CoversLine;
+    PAGED_CODE();
+
+    Irp->IoStatus.Information = 0;
+
+    /* No ROM image is kept, and a ROM can never be written */
+    if (IoStackLocation->Parameters.ReadWriteConfig.WhichSpace == PCI_WHICHSPACE_ROM)
+        return STATUS_INVALID_DEVICE_REQUEST;
+
+    /* Any other space value is taken as configuration space */
+    Offset = IoStackLocation->Parameters.ReadWriteConfig.Offset;
+    Length = IoStackLocation->Parameters.ReadWriteConfig.Length;
+
+    End = Offset + Length;
+    if (End < Offset)
+        return STATUS_INTEGER_OVERFLOW;
+
+    Limit = DeviceExtension->IsExtendedConfigReachable ? PCI_EXTENDED_CONFIG_LENGTH :
+                                                         PCI_LEGACY_CONFIG_LENGTH;
+    if (End > Limit)
+        return STATUS_INVALID_DEVICE_REQUEST;
+
+    if (!Length)
+        return STATUS_SUCCESS;
+
+    /* The caller's buffer may be pageable, and config cycles run at raised IRQL */
+    Bounce = ExAllocatePoolWithTag(NonPagedPool, Length, PCI_POOL_TAG);
+    if (!Bounce)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
+    LineOffset = FIELD_OFFSET(PCI_COMMON_HEADER, u.type0.InterruptLine);
+    CoversLine = (DeviceExtension->InterruptPin != 0) &&
+                 (LineOffset >= Offset) &&
+                 (LineOffset < End);
+
+    if (Read)
+    {
+        PciReadDeviceConfig(DeviceExtension, Bounce, Offset, Length);
+
+        /* Drivers see the line they were assigned */
+        if (CoversLine)
+            Bounce[LineOffset - Offset] = DeviceExtension->AdjustedInterruptLine;
+
+        RtlCopyMemory(IoStackLocation->Parameters.ReadWriteConfig.Buffer, Bounce, Length);
+    }
+    else
+    {
+        RtlCopyMemory(Bounce, IoStackLocation->Parameters.ReadWriteConfig.Buffer, Length);
+
+        /* The register keeps its firmware value */
+        if (CoversLine)
+            Bounce[LineOffset - Offset] = DeviceExtension->RawInterruptLine;
+
+        PciWriteDeviceConfig(DeviceExtension, Bounce, Offset, Length);
+    }
+
+    ExFreePoolWithTag(Bounce, PCI_POOL_TAG);
+
+    Irp->IoStatus.Information = Length;
+    return STATUS_SUCCESS;
+}
+
 NTSTATUS
 NTAPI
 PciPdoIrpReadConfig(IN PIRP Irp,
                     IN PIO_STACK_LOCATION IoStackLocation,
                     IN PPCI_PDO_EXTENSION DeviceExtension)
 {
-    UNREFERENCED_PARAMETER(Irp);
-    UNREFERENCED_PARAMETER(IoStackLocation);
-    UNREFERENCED_PARAMETER(DeviceExtension);
+    PAGED_CODE();
 
-    UNIMPLEMENTED_DBGBREAK();
-    return STATUS_NOT_SUPPORTED;
+    return PciPdoReadWriteConfig(Irp, IoStackLocation, DeviceExtension, TRUE);
 }
 
 NTSTATUS
@@ -473,12 +920,9 @@ PciPdoIrpWriteConfig(IN PIRP Irp,
                      IN PIO_STACK_LOCATION IoStackLocation,
                      IN PPCI_PDO_EXTENSION DeviceExtension)
 {
-    UNREFERENCED_PARAMETER(Irp);
-    UNREFERENCED_PARAMETER(IoStackLocation);
-    UNREFERENCED_PARAMETER(DeviceExtension);
+    PAGED_CODE();
 
-    UNIMPLEMENTED_DBGBREAK();
-    return STATUS_NOT_SUPPORTED;
+    return PciPdoReadWriteConfig(Irp, IoStackLocation, DeviceExtension, FALSE);
 }
 
 NTSTATUS
@@ -487,12 +931,24 @@ PciPdoIrpQueryDeviceState(IN PIRP Irp,
                           IN PIO_STACK_LOCATION IoStackLocation,
                           IN PPCI_PDO_EXTENSION DeviceExtension)
 {
-    UNREFERENCED_PARAMETER(Irp);
-    UNREFERENCED_PARAMETER(IoStackLocation);
-    UNREFERENCED_PARAMETER(DeviceExtension);
+    PNP_DEVICE_STATE State;
+    PAGED_CODE();
 
-    UNIMPLEMENTED;
-    return STATUS_NOT_SUPPORTED;
+    UNREFERENCED_PARAMETER(IoStackLocation);
+
+    /* Whatever the rest of the stack decided about this device still holds */
+    State = (PNP_DEVICE_STATE)Irp->IoStatus.Information;
+
+    /* Host bridges, and anything a query remove would refuse, must not be offered for disabling */
+    if (((DeviceExtension->BaseClass == PCI_CLASS_BRIDGE_DEV) &&
+         (DeviceExtension->SubClass == PCI_SUBCLASS_BR_HOST)) ||
+        (!NT_SUCCESS(PciPdoValidateRelease(DeviceExtension))))
+    {
+        State |= PNP_DEVICE_NOT_DISABLEABLE;
+    }
+
+    Irp->IoStatus.Information = State;
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS
@@ -501,12 +957,18 @@ PciPdoIrpDeviceUsageNotification(IN PIRP Irp,
                                  IN PIO_STACK_LOCATION IoStackLocation,
                                  IN PPCI_PDO_EXTENSION DeviceExtension)
 {
-    UNREFERENCED_PARAMETER(Irp);
-    UNREFERENCED_PARAMETER(IoStackLocation);
-    UNREFERENCED_PARAMETER(DeviceExtension);
+    NTSTATUS Status;
+    PAGED_CODE();
 
-    UNIMPLEMENTED_DBGBREAK();
-    return STATUS_NOT_SUPPORTED;
+    UNREFERENCED_PARAMETER(Irp);
+
+    /* Every bus up to the root has to hold on to the path, so it goes up first */
+    Status = PciSendDeviceUsageToParent(DeviceExtension->ParentFdoExtension,
+                                        IoStackLocation);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    return PciUpdateDeviceUsage(&DeviceExtension->PowerState, IoStackLocation);
 }
 
 NTSTATUS
@@ -515,12 +977,28 @@ PciPdoIrpSurpriseRemoval(IN PIRP Irp,
                          IN PIO_STACK_LOCATION IoStackLocation,
                          IN PPCI_PDO_EXTENSION DeviceExtension)
 {
+    PAGED_CODE();
+
     UNREFERENCED_PARAMETER(Irp);
     UNREFERENCED_PARAMETER(IoStackLocation);
-    UNREFERENCED_PARAMETER(DeviceExtension);
 
-    UNIMPLEMENTED_DBGBREAK();
-    return STATUS_NOT_SUPPORTED;
+    /* This also comes after a failed start, with the function still in its slot */
+    if (PciPdoIsPresent(DeviceExtension))
+        PciPdoTurnOff(DeviceExtension, TRUE);
+
+    if (DeviceExtension->ReportedMissing)
+    {
+        /* The slot is empty, so only the remove is left to come */
+        if (NT_SUCCESS(PciBeginStateTransition((PVOID)DeviceExtension, PciSurpriseRemoved)))
+            PciCommitStateTransition((PVOID)DeviceExtension, PciSurpriseRemoved);
+    }
+    else if (DeviceExtension->DeviceState != PciNotStarted)
+    {
+        /* The remove that follows commits this */
+        PciBeginStateTransition((PVOID)DeviceExtension, PciNotStarted);
+    }
+
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS
@@ -529,11 +1007,13 @@ PciPdoIrpQueryLegacyBusInformation(IN PIRP Irp,
                                    IN PIO_STACK_LOCATION IoStackLocation,
                                    IN PPCI_PDO_EXTENSION DeviceExtension)
 {
+    PAGED_CODE();
+
     UNREFERENCED_PARAMETER(Irp);
     UNREFERENCED_PARAMETER(IoStackLocation);
     UNREFERENCED_PARAMETER(DeviceExtension);
 
-    UNIMPLEMENTED_DBGBREAK();
+    /* A bridge's FDO answers above this, so keep its bus number and buffer intact */
     return STATUS_NOT_SUPPORTED;
 }
 

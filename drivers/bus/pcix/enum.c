@@ -89,8 +89,8 @@ PciComputeNewCurrentSettings(IN PPCI_PDO_EXTENSION PdoExtension,
     /* Print the new specified resource list */
     PciDebugPrintCmResList(ResourceList);
 
-    /* Clear the temporary resource array */
-    for (i = 0; i < 7; i++) ResourceArray[i].Type = CmResourceTypeNull;
+    /* Zero all fields, an unassigned entry still gets copied into the current settings */
+    RtlZeroMemory(ResourceArray, sizeof(ResourceArray));
 
     /* Loop the full resource descriptor */
     FullList = ResourceList->List;
@@ -136,7 +136,7 @@ PciComputeNewCurrentSettings(IN PPCI_PDO_EXTENSION PdoExtension,
                     if (PciResources)
                     {
                         while ((BarIndex < RTL_NUMBER_OF(ResourceArray)) &&
-                               (PciResources->Limit[BarIndex].Type == CmResourceTypeNull))
+                               !PciIsRequirementDescriptor(&PciResources->Limit[BarIndex]))
                         {
                             BarIndex++;
                         }
@@ -174,14 +174,11 @@ PciComputeNewCurrentSettings(IN PPCI_PDO_EXTENSION PdoExtension,
                     /* Check what kind of data this was */
                     switch (Partial->u.DevicePrivate.Data[0])
                     {
-                        /* Not used in the driver yet */
+                        /* Not produced by this driver, so not consumed here */
                         case 1:
-                            UNIMPLEMENTED_DBGBREAK();
-                            break;
-
-                        /* Not used in the driver yet */
                         case 2:
-                            UNIMPLEMENTED_DBGBREAK();
+                            DPRINT1("PCI - ignoring device-private data type %u\n",
+                                    Partial->u.DevicePrivate.Data[0]);
                             break;
 
                         /* A drain request */
@@ -206,6 +203,10 @@ PciComputeNewCurrentSettings(IN PPCI_PDO_EXTENSION PdoExtension,
     /* Loop all the PCI function resources */
     for (i = 0; i < RTL_NUMBER_OF(ResourceArray); i++)
     {
+        /* A bridge window is never asked for, so it keeps the range the firmware gave it */
+        if (!PciIsRequirementDescriptor(&PciResources->Limit[i]))
+            continue;
+
         /* Get the current function resource descriptor, and the new one */
         CurrentDescriptor = &PciResources->Current[i];
         Partial = &ResourceArray[i];
@@ -429,11 +430,13 @@ PciQueryResources(IN PPCI_PDO_EXTENSION PdoExtension,
     {
         /* Read the interrupt line for the pin, add a descriptor if it's valid */
         InterruptLine = PdoExtension->AdjustedInterruptLine;
-        if ((InterruptLine) && (InterruptLine != -1)) Count++;
+        if ((InterruptLine) && (InterruptLine != PCI_INTERRUPT_LINE_UNKNOWN))
+            Count++;
     }
 
-    /* Check for PCI bridge */
-    if (PdoExtension->HeaderType == PCI_BRIDGE_TYPE)
+    /* Check for a PCI-to-PCI or CardBus bridge, both keep the VGA enable at the same place */
+    if ((PdoExtension->HeaderType == PCI_BRIDGE_TYPE) ||
+        (PdoExtension->HeaderType == PCI_CARDBUS_BRIDGE_TYPE))
     {
         /* Read bridge settings, check if VGA is present */
         PciReadDeviceConfig(PdoExtension,
@@ -517,7 +520,7 @@ PciQueryResources(IN PPCI_PDO_EXTENSION PdoExtension,
     {
          /* Read the interrupt line for the pin, check if it's valid */
          InterruptLine = PdoExtension->AdjustedInterruptLine;
-         if ((InterruptLine) && (InterruptLine != -1))
+         if ((InterruptLine) && (InterruptLine != PCI_INTERRUPT_LINE_UNKNOWN))
          {
              /* Make sure there's still space */
              ASSERT(Resource < LastResource);
@@ -564,17 +567,181 @@ PciQueryTargetDeviceRelations(IN PPCI_PDO_EXTENSION PdoExtension,
     return STATUS_SUCCESS;
 }
 
+/**
+ * @brief Finds the other present functions in the same slot as PdoExtension.
+ * When Objects is not NULL, each PDO found is referenced and stored there.
+ * The caller holds the child list lock.
+ */
+static
+ULONG
+NTAPI
+PciGatherOtherFunctions(
+    _In_ PPCI_PDO_EXTENSION PdoExtension,
+    _Out_writes_opt_(_Inexpressible_("function count")) PDEVICE_OBJECT *Objects)
+{
+    PPCI_PDO_EXTENSION Child;
+    ULONG Found = 0;
+
+    for (Child = PdoExtension->ParentFdoExtension->ChildPdoList; Child; Child = Child->Next)
+    {
+        if ((Child == PdoExtension) ||
+            Child->NotPresent ||
+            (Child->Slot.u.bits.DeviceNumber != PdoExtension->Slot.u.bits.DeviceNumber))
+        {
+            continue;
+        }
+
+        if (Objects)
+        {
+            ObReferenceObject(Child->PhysicalDeviceObject);
+            Objects[Found] = Child->PhysicalDeviceObject;
+        }
+        Found++;
+    }
+
+    return Found;
+}
+
 NTSTATUS
 NTAPI
 PciQueryEjectionRelations(IN PPCI_PDO_EXTENSION PdoExtension,
                           IN OUT PDEVICE_RELATIONS *pDeviceRelations)
 {
-    UNREFERENCED_PARAMETER(PdoExtension);
-    UNREFERENCED_PARAMETER(pDeviceRelations);
+    PPCI_FDO_EXTENSION FdoExtension = PdoExtension->ParentFdoExtension;
+    PDEVICE_RELATIONS OldRelations = *pDeviceRelations;
+    PDEVICE_RELATIONS NewRelations = NULL;
+    ULONG OldCount = OldRelations ? OldRelations->Count : 0;
+    ULONG FunctionCount;
+    PAGED_CODE();
 
-    /* Not yet implemented */
-    UNIMPLEMENTED_DBGBREAK();
-    return STATUS_NOT_IMPLEMENTED;
+    KeEnterCriticalRegion();
+    KeWaitForSingleObject(&FdoExtension->ChildListLock, Executive, KernelMode, FALSE, NULL);
+
+    /* The other functions of the same device leave the machine with this one */
+    FunctionCount = PciGatherOtherFunctions(PdoExtension, NULL);
+    if (FunctionCount)
+    {
+        NewRelations = ExAllocatePoolWithTag(NonPagedPool,
+                                             FIELD_OFFSET(DEVICE_RELATIONS, Objects) +
+                                             (OldCount + FunctionCount) * sizeof(*NewRelations->Objects),
+                                             PCI_POOL_TAG);
+    }
+
+    /* Without memory the list from above is kept as it is */
+    if (NewRelations)
+    {
+        if (OldRelations)
+        {
+            RtlCopyMemory(NewRelations->Objects,
+                          OldRelations->Objects,
+                          OldCount * sizeof(*OldRelations->Objects));
+            ExFreePoolWithTag(OldRelations, 0);
+        }
+
+        NewRelations->Count = OldCount +
+                              PciGatherOtherFunctions(PdoExtension, &NewRelations->Objects[OldCount]);
+        ASSERT(NewRelations->Count == OldCount + FunctionCount);
+        *pDeviceRelations = NewRelations;
+    }
+
+    KeSetEvent(&FdoExtension->ChildListLock, IO_NO_INCREMENT, FALSE);
+    KeLeaveCriticalRegion();
+    return STATUS_SUCCESS;
+}
+
+/**
+ * @brief
+ * Tells whether a discovered limit asks the arbiter for a range.
+ *
+ * @param[in] Limit
+ * The limit of one BAR or bridge window.
+ *
+ * @return
+ * TRUE when the limit has a type and a length. A bridge window has no length of its own.
+ */
+BOOLEAN
+NTAPI
+PciIsRequirementDescriptor(
+    _In_ PIO_RESOURCE_DESCRIPTOR Limit)
+{
+    if (Limit->Type == CmResourceTypeNull)
+        return FALSE;
+
+    return (Limit->u.Generic.Length != 0);
+}
+
+/**
+ * @brief
+ * Writes a fixed requirement for the range a BAR is decoding now.
+ *
+ * @param[in] PdoExtension
+ * The PDO extension of the function.
+ *
+ * @param[in] Command
+ * The command register of the function as it reads now.
+ *
+ * @param[in] BarIndex
+ * The BAR to describe.
+ *
+ * @param[out] Descriptor
+ * Receives the requirement, or NULL to only count it.
+ *
+ * @return
+ * 1 when the BAR has such a range, otherwise 0.
+ */
+static
+ULONG
+NTAPI
+PciAddCurrentPlacementRequirement(
+    _In_ PPCI_PDO_EXTENSION PdoExtension,
+    _In_ USHORT Command,
+    _In_ ULONG BarIndex,
+    _Out_opt_ PIO_RESOURCE_DESCRIPTOR Descriptor)
+{
+    PCM_PARTIAL_RESOURCE_DESCRIPTOR Current;
+    PIO_RESOURCE_DESCRIPTOR Limit;
+    IO_RESOURCE_DESCRIPTOR Placement;
+    ULONGLONG Start, End, Length, Maximum;
+    USHORT DecodeBit;
+    PAGED_CODE();
+
+    Current = &PdoExtension->Resources->Current[BarIndex];
+    Limit = &PdoExtension->Resources->Limit[BarIndex];
+
+    if (Current->Type == CmResourceTypePort)
+        DecodeBit = PCI_ENABLE_IO_SPACE;
+    else if ((Current->Type == CmResourceTypeMemory) ||
+             (Current->Type == CmResourceTypeMemoryLarge))
+        DecodeBit = PCI_ENABLE_MEMORY_SPACE;
+    else
+        return 0;
+
+    /* An address is only a placement while the function decodes it */
+    if ((Limit->Type != Current->Type) || !(Command & DecodeBit))
+        return 0;
+
+    /* The range has to be one this BAR can decode, which also rules out bridge windows */
+    Length = RtlCmDecodeMemIoResource(Current, &Start);
+    End = Start + Length - 1;
+    if (!Start ||
+        !Length ||
+        (Length != RtlIoDecodeMemIoResource(Limit, NULL, NULL, &Maximum)) ||
+        (End > Maximum))
+    {
+        return 0;
+    }
+
+    /* Built even when only counting, so a range that cannot be described is never counted */
+    Placement = *Limit;
+    Placement.Option = IO_RESOURCE_PREFERRED;
+    Placement.ShareDisposition = CmResourceShareDeviceExclusive;
+    if (!NT_SUCCESS(RtlIoEncodeMemIoResource(&Placement, Limit->Type, Length, 1, Start, End)))
+        return 0;
+
+    if (Descriptor)
+        *Descriptor = Placement;
+
+    return 1;
 }
 
 NTSTATUS
@@ -584,9 +751,9 @@ PciBuildRequirementsList(IN PPCI_PDO_EXTENSION PdoExtension,
                          OUT PIO_RESOURCE_REQUIREMENTS_LIST* Buffer)
 {
     PIO_RESOURCE_REQUIREMENTS_LIST RequirementsList;
-    PIO_RESOURCE_DESCRIPTOR Descriptor, Limit;
+    PIO_RESOURCE_DESCRIPTOR Descriptor, Limit, First, Next;
     PCI_CONFIGURATOR_CONTEXT Context;
-    ULONG Count, i, Resized;
+    ULONG Count, i;
     BOOLEAN HaveInterrupt;
 
     PAGED_CODE();
@@ -597,7 +764,7 @@ PciBuildRequirementsList(IN PPCI_PDO_EXTENSION PdoExtension,
     {
         for (i = 0; i < (PCI_TYPE0_ADDRESSES + 1); i++)
         {
-            if (PdoExtension->Resources->Limit[i].Type == CmResourceTypeNull)
+            if (!PciIsRequirementDescriptor(&PdoExtension->Resources->Limit[i]))
                 continue;
 
             /* A resizable BAR also asks for the larger sizes it can decode */
@@ -606,6 +773,9 @@ PciBuildRequirementsList(IN PPCI_PDO_EXTENSION PdoExtension,
                                                     i,
                                                     &PdoExtension->Resources->Limit[i],
                                                     NULL);
+
+            /* And a BAR that already decodes a range also asks to keep it */
+            Count += PciAddCurrentPlacementRequirement(PdoExtension, PciData->Command, i, NULL);
         }
     }
 
@@ -646,26 +816,33 @@ PciBuildRequirementsList(IN PPCI_PDO_EXTENSION PdoExtension,
 
     Descriptor = RequirementsList->List[0].Descriptors;
 
-    /* Emit one descriptor per BAR that decoded something during discovery */
+    /* Emit the requirements of each BAR that decoded something during discovery */
     if (PdoExtension->Resources)
     {
         Limit = PdoExtension->Resources->Limit;
         for (i = 0; i < (PCI_TYPE0_ADDRESSES + 1); i++)
         {
-            /* Skip the BARs this function does not implement */
-            if (Limit[i].Type == CmResourceTypeNull)
+            /* Skip unimplemented BARs and bridge windows, neither asks for a range */
+            if (!PciIsRequirementDescriptor(&Limit[i]))
                 continue;
 
-            /* The larger sizes of a resizable BAR come first, its default size is the fallback */
-            Resized = PciAddResizableBarRequirements(PdoExtension, i, &Limit[i], Descriptor);
-            Descriptor += Resized;
+            /* Larger resizable sizes, then the current placement, then the default size */
+            First = Descriptor;
+            Descriptor += PciAddResizableBarRequirements(PdoExtension, i, &Limit[i], Descriptor);
+            Descriptor += PciAddCurrentPlacementRequirement(PdoExtension,
+                                                            PciData->Command,
+                                                            i,
+                                                            Descriptor);
 
             /* A BAR decodes for one function only, so it cannot be shared */
             *Descriptor = Limit[i];
             Descriptor->ShareDisposition = CmResourceShareDeviceExclusive;
-            if (Resized)
-                Descriptor->Option = IO_RESOURCE_ALTERNATIVE;
             Descriptor++;
+
+            /* The first choice for the BAR is preferred and every later one is its alternative */
+            First->Option |= IO_RESOURCE_PREFERRED;
+            for (Next = First + 1; Next < Descriptor; Next++)
+                Next->Option |= IO_RESOURCE_ALTERNATIVE;
         }
     }
 
@@ -702,44 +879,32 @@ PciQueryRequirements(IN PPCI_PDO_EXTENSION PdoExtension,
     PCI_COMMON_HEADER PciHeader;
     PAGED_CODE();
 
-    /* Check if the PDO has any resources, or at least an interrupt pin */
-    if ((PdoExtension->Resources) || (PdoExtension->InterruptPin))
+    /* Build even without a BAR or a pin, bridge legacy decodes need ranges too */
+    PciReadDeviceConfig(PdoExtension, &PciHeader, 0, PCI_COMMON_HDR_LENGTH);
+    Status = PciBuildRequirementsList(PdoExtension, &PciHeader, RequirementsList);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    /* Is this a Compaq PCI Hotplug Controller (r17) on a PAE system ? */
+    if ((PciHeader.VendorID == 0xE11) &&
+        (PciHeader.DeviceID == 0xA0F7) &&
+        (PciHeader.RevisionID == 17) &&
+        (ExIsProcessorFeaturePresent(PF_PAE_ENABLED)))
     {
-        /* Read the current PCI header */
-        PciReadDeviceConfig(PdoExtension, &PciHeader, 0, PCI_COMMON_HDR_LENGTH);
+        /* No fixup is applied for this controller under PAE */
+        DPRINT1("PCI - Compaq hotplug controller PDO ext 0x%p has an unhandled PAE quirk\n",
+                PdoExtension);
+    }
 
-        /* Use it to build a list of requirements */
-        Status = PciBuildRequirementsList(PdoExtension, &PciHeader, RequirementsList);
-        if (!NT_SUCCESS(Status)) return Status;
-
-        /* Is this a Compaq PCI Hotplug Controller (r17) on a PAE system ? */
-        if ((PciHeader.VendorID == 0xE11) &&
-            (PciHeader.DeviceID == 0xA0F7) &&
-            (PciHeader.RevisionID == 17) &&
-            (ExIsProcessorFeaturePresent(PF_PAE_ENABLED)))
-        {
-            /* Have not tested this on eVb's machine yet */
-            UNIMPLEMENTED_DBGBREAK();
-        }
-
-        /* Check if the requirements are actually the zero list */
-        if (*RequirementsList == PciZeroIoResourceRequirements)
-        {
-            /* A simple NULL will suffice for the PnP Manager */
-            *RequirementsList = NULL;
-            DPRINT1("Returning NULL requirements list\n");
-        }
-        else
-        {
-            /* Otherwise, print out the requirements list */
-            PciDebugPrintIoResReqList(*RequirementsList);
-        }
+    /* The shared zero list must never reach PnP, which frees what it is given */
+    if (*RequirementsList == PciZeroIoResourceRequirements)
+    {
+        *RequirementsList = NULL;
+        DPRINT("Returning NULL requirements list\n");
     }
     else
     {
-        /* There aren't any resources, so simply return NULL */
-        DPRINT1("PciQueryRequirements returning NULL requirements list\n");
-        *RequirementsList = NULL;
+        PciDebugPrintIoResReqList(*RequirementsList);
     }
 
     /* This call always succeeds (but maybe with no requirements) */
@@ -1073,8 +1238,8 @@ PciApplyHacks(IN PPCI_FDO_EXTENSION DeviceExtension,
         /*
          * This is called whenever resources are changed and hardware needs to be
          * updated. It is concerned with two highly specific erratas on an IBM
-         * hot-plug docking bridge used on the Thinkpad 600 Series and on Intel's
-         * ICH PCI Bridges.
+         * hot-plug docking bridge used on the Thinkpad 600 Series and on subtractive
+         * decode PCI Bridges.
          */
         case PCI_HACK_FIXUP_BEFORE_UPDATE:
 
@@ -1109,35 +1274,18 @@ PciApplyHacks(IN PPCI_FDO_EXTENSION DeviceExtension,
             }
 
             /*
-             * Check for Intel ICH PCI-to-PCI (i82801) bridges (used on the i810,
-             * i820, i840, i845 Chipsets) that have subtractive decode enabled,
-             * and whose hack flags do not specify that this support is broken.
+             * A subtractive bridge needs no positive windows, except Intel ICH (i82801) and
+             * flagged bridges, which keep the windows their saved header had open.
              */
             if ((PdoExtension->HeaderType == PCI_BRIDGE_TYPE) &&
                 (PdoExtension->Dependent.type1.SubtractiveDecode) &&
-                ((PdoExtension->VendorId == 0x8086) &&
-                 ((PdoExtension->DeviceId == 0x2418) ||
-                  (PdoExtension->DeviceId == 0x2428) ||
-                  (PdoExtension->DeviceId == 0x244E) ||
-                  (PdoExtension->DeviceId == 0x2448))) &&
+                !((PdoExtension->VendorId == 0x8086) &&
+                  ((PdoExtension->DeviceId == 0x2418) ||
+                   (PdoExtension->DeviceId == 0x2428) ||
+                   (PdoExtension->DeviceId == 0x244E) ||
+                   (PdoExtension->DeviceId == 0x2448))) &&
                !(PdoExtension->HackFlags & PCI_HACK_BROKEN_SUBTRACTIVE_DECODE))
             {
-                /*
-                 * The positive decode window shouldn't be used, these values are
-                 * normally all read-only or initialized to 0 by the BIOS, but
-                 * it appears Intel doesn't do this, so the PCI Bus Driver will
-                 * do it in software instead. Note that this is used to prevent
-                 * certain non-compliant PCI devices from breaking down due to the
-                 * fact that these ICH bridges have a known "quirk" (which Intel
-                 * documents as a known "erratum", although it's not not really
-                 * an ICH bug since the PCI specification does allow for it) in
-                 * that they will sometimes send non-zero addresses during special
-                 * cycles (ie: non-zero data during the address phase). These
-                 * broken PCI cards will mistakenly attempt to claim the special
-                 * cycle and corrupt their I/O and RAM ranges. Again, in Intel's
-                 * defense, the PCI specification only requires stable data, not
-                 * necessarily zero data, during the address phase.
-                 */
                 PciData->u.type1.MemoryBase = 0xFFFF;
                 PciData->u.type1.PrefetchBase = 0xFFFF;
                 PciData->u.type1.IOBase = 0xFF;
@@ -1585,8 +1733,8 @@ PcipGetFunctionLimits(IN PPCI_CONFIGURATOR_CONTEXT Context)
         /* This is a null descriptor, have all of them been scanned now? */
         if (IoDescriptor == &PdoExtension->Resources->Limit[0])
         {
-            /* This means the descriptor is NULL, which means discovery failed */
-            DPRINT1("PCI Resources fail!\n");
+            /* Every limit is null, so the function decodes no BAR, which is not an error */
+            DPRINT("PCI function %p decodes no BAR\n", PdoExtension);
 
             /* No resources will be assigned for the device */
             ExFreePoolWithTag(PdoExtension->Resources, 0);
@@ -1640,51 +1788,83 @@ NTAPI
 PciProcessBus(IN PPCI_FDO_EXTENSION DeviceExtension)
 {
     PPCI_PDO_EXTENSION PdoExtension;
+    PPCI_PDO_EXTENSION VgaDecoder;
     PDEVICE_OBJECT PhysicalDeviceObject;
+    BOOLEAN ParentDecodesIsa;
     PAGED_CODE();
 
-    /* Get the PDO Extension */
-    PhysicalDeviceObject = DeviceExtension->PhysicalDeviceObject;
-    PdoExtension = (PPCI_PDO_EXTENSION)PhysicalDeviceObject->DeviceExtension;
-
-    /* Cheeck if this is the root bus */
+    /* The root bus FDO sits on a PDO this driver does not own */
+    PdoExtension = NULL;
     if (!PCI_IS_ROOT_FDO(DeviceExtension))
     {
-        /* Not really handling this year */
-        UNIMPLEMENTED_DBGBREAK();
-
-        /* Check for PCI bridges with the ISA bit set, or required */
-        if ((PdoExtension) &&
-            (PciClassifyDeviceType(PdoExtension) == PciTypePciBridge) &&
-            ((PdoExtension->Dependent.type1.IsaBitRequired) ||
-             (PdoExtension->Dependent.type1.IsaBitSet)))
-        {
-            /* We'll need to do some legacy support */
-            UNIMPLEMENTED_DBGBREAK();
-        }
+        PhysicalDeviceObject = DeviceExtension->PhysicalDeviceObject;
+        PdoExtension = (PPCI_PDO_EXTENSION)PhysicalDeviceObject->DeviceExtension;
+        ASSERT_PDO(PdoExtension);
     }
-    else
+
+    /* Check if the bridge above this bus has the ISA bit set, or required */
+    ParentDecodesIsa = ((PdoExtension) &&
+                        (PciClassifyDeviceType(PdoExtension) == PciTypePciBridge) &&
+                        ((PdoExtension->Dependent.type1.IsaBitRequired) ||
+                         (PdoExtension->Dependent.type1.IsaBitSet)));
+
+    KeEnterCriticalRegion();
+    KeWaitForSingleObject(&DeviceExtension->ChildListLock,
+                          Executive,
+                          KernelMode,
+                          FALSE,
+                          NULL);
+
+    /* Without an ISA parent, a VGA decoding bridge forces the ISA bit onto its siblings */
+    VgaDecoder = NULL;
+    if (!ParentDecodesIsa)
     {
-        /* Scan all of the root bus' children bridges */
         for (PdoExtension = DeviceExtension->ChildBridgePdoList;
              PdoExtension;
              PdoExtension = PdoExtension->NextBridge)
         {
-            /* Find any that have the VGA decode bit on */
             if (PdoExtension->Dependent.type1.VgaBitSet)
             {
-                /* Again, some more legacy support we'll have to do */
-                UNIMPLEMENTED_DBGBREAK();
+                VgaDecoder = PdoExtension;
+                break;
             }
         }
     }
 
-    /* Check for ACPI systems where the OS assigns bus numbers */
+    /* The I/O arbiter does not avoid the ISA aliases yet, so only report these bridges */
+    if ((ParentDecodesIsa) || (VgaDecoder))
+    {
+        for (PdoExtension = DeviceExtension->ChildBridgePdoList;
+             PdoExtension;
+             PdoExtension = PdoExtension->NextBridge)
+        {
+            if ((PdoExtension != VgaDecoder) &&
+                !(PdoExtension->Dependent.type1.IsaBitSet))
+            {
+                DPRINT1("PCI - bridge PDO ext 0x%p needs the ISA bit, which is not applied\n",
+                        PdoExtension);
+            }
+        }
+    }
+
+    /* Bridges the firmware left unnumbered are not renumbered yet, so report them */
     if (PciAssignBusNumbers)
     {
-        /* Not yet supported */
-        UNIMPLEMENTED_DBGBREAK();
+        for (PdoExtension = DeviceExtension->ChildBridgePdoList;
+             PdoExtension;
+             PdoExtension = PdoExtension->NextBridge)
+        {
+            if ((PciClassifyDeviceType(PdoExtension) == PciTypePciBridge) &&
+                !(PciAreBusNumbersConfigured(PdoExtension)))
+            {
+                DPRINT1("PCI - bridge PDO ext 0x%p has no bus numbers assigned\n",
+                        PdoExtension);
+            }
+        }
     }
+
+    KeSetEvent(&DeviceExtension->ChildListLock, IO_NO_INCREMENT, FALSE);
+    KeLeaveCriticalRegion();
 }
 
 NTSTATUS
@@ -1708,8 +1888,12 @@ PciScanBus(IN PPCI_FDO_EXTENSION DeviceExtension)
     PPCI_PDO_EXTENSION* BridgeExtension;
     PWCHAR DescriptionText;
     USHORT SubVendorId, SubSystemId;
-    PCI_CAPABILITIES_HEADER CapHeader, PcixCapHeader;
+    PCI_CAPABILITIES_HEADER PcixCapHeader;
+    /* Holds the largest capability the dump below reads in full */
+    UCHAR CapBuffer[max(sizeof(PCI_PM_CAPABILITY), sizeof(PCI_AGP_CAPABILITY))];
+    PPCI_CAPABILITIES_HEADER CapHeader = (PVOID)CapBuffer;
     UCHAR SecondaryBus;
+    UCHAR BusNumbers[3];
     DPRINT1("PCI Scan Bus: FDO Extension @ 0x%p, Base Bus = 0x%x\n",
             DeviceExtension, DeviceExtension->BaseBus);
 
@@ -1728,9 +1912,18 @@ PciScanBus(IN PPCI_FDO_EXTENSION DeviceExtension)
                             &SecondaryBus,
                             FIELD_OFFSET(PCI_COMMON_HEADER, u.type1.SecondaryBus),
                             sizeof(UCHAR));
-        if (SecondaryBus != PdoExtension->Dependent.type1.SecondaryBus)
+        if (SecondaryBus != DeviceExtension->BaseBus)
         {
-            UNIMPLEMENTED_DBGBREAK("PCI: Bus numbers have been changed!  Restoring originals.\n");
+            DPRINT1("PCI: Bus numbers have been changed!  Restoring originals.\n");
+
+            /* The children were found under these numbers, so the bridge must decode them again */
+            BusNumbers[0] = PdoExtension->ParentFdoExtension->BaseBus;
+            BusNumbers[1] = DeviceExtension->BaseBus;
+            BusNumbers[2] = PdoExtension->Dependent.type1.SubordinateBus;
+            PciWriteDeviceConfig(PdoExtension,
+                                 BusNumbers,
+                                 FIELD_OFFSET(PCI_COMMON_HEADER, u.type1.PrimaryBus),
+                                 sizeof(BusNumbers));
         }
     }
 
@@ -1771,11 +1964,11 @@ PciScanBus(IN PPCI_FDO_EXTENSION DeviceExtension)
                           NULL);
 
             /* Dump device that was found */
-            DPRINT1("Scan Found Device 0x%x (b=0x%x, d=0x%x, f=0x%x)\n",
-                    PciSlot.u.AsULONG,
-                    i,
-                    j,
-                    k);
+            DPRINT("Scan Found Device 0x%x (b=0x%x, d=0x%x, f=0x%x)\n",
+                   PciSlot.u.AsULONG,
+                   i,
+                   j,
+                   k);
 
             /* Dump the device's header */
             PciDebugDumpCommonConfig(PciData);
@@ -1783,15 +1976,22 @@ PciScanBus(IN PPCI_FDO_EXTENSION DeviceExtension)
             /* Find description for this device for the debugger's sake */
             DescriptionText = PciGetDeviceDescriptionMessage(PciData->BaseClass,
                                                              PciData->SubClass);
-            DPRINT1("Device Description \"%S\".\n",
-                    DescriptionText ? DescriptionText : L"(NULL)");
+            DPRINT("Device Description \"%S\".\n",
+                   DescriptionText ? DescriptionText : L"(NULL)");
             if (DescriptionText) ExFreePoolWithTag(DescriptionText, 0);
 
-            /* Check if there is an ACPI Watchdog Table */
-            if (WdTable)
+            /* The hardware watchdog named by the ACPI table on a root bus gets no PDO */
+            if ((WdTable) &&
+                (PCI_IS_ROOT_FDO(DeviceExtension)) &&
+                (WdTable->PciSegment == 0) &&
+                (WdTable->PciBus == i) &&
+                (WdTable->PciDevice == j) &&
+                (WdTable->PciFunction == k) &&
+                (WdTable->PciVendorId == PciData->VendorID) &&
+                (WdTable->PciDeviceId == PciData->DeviceID))
             {
-                /* Check if this PCI device is the ACPI Watchdog Device... */
-                UNIMPLEMENTED_DBGBREAK();
+                DPRINT1("PCI - not enumerating the ACPI watchdog device\n");
+                continue;
             }
 
             /* Check for non-simple devices */
@@ -1860,8 +2060,9 @@ PciScanBus(IN PPCI_FDO_EXTENSION DeviceExtension)
                                                 PciData);
             if (PdoExtension)
             {
-                /* Rescan scenarios are not yet implemented */
-                UNIMPLEMENTED_DBGBREAK();
+                /* Same function as last scan, so its PDO stays and counts as present */
+                PdoExtension->NotPresent = FALSE;
+                continue;
             }
 
             /* Bus processing will need to happen */
@@ -1925,9 +2126,7 @@ PciScanBus(IN PPCI_FDO_EXTENSION DeviceExtension)
             Status = PciGetBiosConfig(NewExtension, BiosData);
             if (NT_SUCCESS(Status))
             {
-                /* This path has not yet been fully tested by eVb */
                 DPRINT1("Have BIOS configuration!\n");
-                UNIMPLEMENTED;
 
                 /* Check if the PCI BIOS configuration has changed */
                 if (!PcipIsSameDevice(NewExtension, BiosData))
@@ -2017,7 +2216,7 @@ PciScanBus(IN PPCI_FDO_EXTENSION DeviceExtension)
                 TempOffset = PciReadDeviceCapability(NewExtension,
                                                      CapOffset,
                                                      0,
-                                                     &CapHeader,
+                                                     CapHeader,
                                                      sizeof(PCI_CAPABILITIES_HEADER));
                 if (TempOffset != CapOffset)
                 {
@@ -2028,7 +2227,7 @@ PciScanBus(IN PPCI_FDO_EXTENSION DeviceExtension)
                 }
 
                 /* Check for capabilities that this driver cares about */
-                switch (CapHeader.CapabilityID)
+                switch (CapHeader->CapabilityID)
                 {
                     /* Power management capability is heavily used by the bus */
                     case PCI_CAPABILITY_ID_POWER_MANAGEMENT:
@@ -2061,8 +2260,8 @@ PciScanBus(IN PPCI_FDO_EXTENSION DeviceExtension)
                     /* Read the whole capability data */
                     TempOffset = PciReadDeviceCapability(NewExtension,
                                                          CapOffset,
-                                                         CapHeader.CapabilityID,
-                                                         &CapHeader,
+                                                         CapHeader->CapabilityID,
+                                                         CapHeader,
                                                          Size);
 
                     if (TempOffset != CapOffset)
@@ -2074,14 +2273,14 @@ PciScanBus(IN PPCI_FDO_EXTENSION DeviceExtension)
                 }
 
                 /* Dump this capability */
-                DPRINT1("CAP @%02x ID %02x (%s)\n",
-                        CapOffset, CapHeader.CapabilityID, Name);
+                DPRINT("CAP @%02x ID %02x (%s)\n",
+                       CapOffset, CapHeader->CapabilityID, Name);
                 for (i = 0; i < Size; i += 2)
-                    DPRINT1("  %04x\n", *(PUSHORT)((ULONG_PTR)&CapHeader + i));
-                DPRINT1("\n");
+                    DPRINT("  %04x\n", *(PUSHORT)((ULONG_PTR)CapBuffer + i));
+                DPRINT("\n");
 
                 /* Check the next capability */
-                CapOffset = CapHeader.Next;
+                CapOffset = CapHeader->Next;
             }
 
             /* Check for IDE controllers */
@@ -2236,9 +2435,9 @@ PciQueryDeviceRelations(IN PPCI_FDO_EXTENSION DeviceExtension,
     }
 
     /* Print out that we're ready to dump relations */
-    DPRINT1("PCI QueryDeviceRelations/BusRelations FDOx %p (bus 0x%02x)\n",
-            DeviceExtension,
-            DeviceExtension->BaseBus);
+    DPRINT("PCI QueryDeviceRelations/BusRelations FDOx %p (bus 0x%02x)\n",
+           DeviceExtension,
+           DeviceExtension->BaseBus);
 
     /* Loop the current PDO children and the device relation object array */
     PdoExtension = DeviceExtension->ChildPdoList;
@@ -2246,11 +2445,11 @@ PciQueryDeviceRelations(IN PPCI_FDO_EXTENSION DeviceExtension,
     while (PdoExtension)
     {
         /* Dump this relation */
-        DPRINT1("  QDR PDO %p (x %p)%s\n",
-                PdoExtension->PhysicalDeviceObject,
-                PdoExtension,
-                PdoExtension->NotPresent ?
-                "<Omitted, device flaged not present>" : "");
+        DPRINT("  QDR PDO %p (x %p)%s\n",
+               PdoExtension->PhysicalDeviceObject,
+               PdoExtension,
+               PdoExtension->NotPresent ?
+               "<Omitted, device flaged not present>" : "");
 
         /* Is this PDO present? */
         if (!PdoExtension->NotPresent)
@@ -2266,13 +2465,16 @@ PciQueryDeviceRelations(IN PPCI_FDO_EXTENSION DeviceExtension,
     }
 
     /* Terminate dumping the relations */
-    DPRINT1("  QDR Total PDO count = %u (%u already in list)\n",
-            NewRelations->Count + PdoCount,
-            NewRelations->Count);
+    DPRINT("  QDR Total PDO count = %u (%u already in list)\n",
+           NewRelations->Count + PdoCount,
+           NewRelations->Count);
 
     /* Return the final count and the new buffer */
     NewRelations->Count += PdoCount;
     *pDeviceRelations = NewRelations;
+
+    /* Let later rescans and PnP state changes begin their own transitions */
+    PciCancelStateTransition(DeviceExtension, PciSynchronizedOperation);
     return STATUS_SUCCESS;
 }
 
@@ -2287,6 +2489,7 @@ PciSetResources(IN PPCI_PDO_EXTENSION PdoExtension,
     PCI_COMMON_HEADER PciData;
     BOOLEAN Native;
     PPCI_CONFIGURATOR Configurator;
+    NTSTATUS Status;
 
     UNREFERENCED_PARAMETER(SomethingSomethingDarkSide);
 
@@ -2363,8 +2566,10 @@ PciSetResources(IN PPCI_PDO_EXTENSION PdoExtension,
     /* Locate the correct resource configurator for this type of device */
     Configurator = &PciConfigurators[PdoExtension->HeaderType];
 
-    /* Apply the settings change */
-    Configurator->ChangeResourceSettings(PdoExtension, &PciData);
+    /* Apply the settings change, nothing reaches the hardware if it is refused */
+    Status = Configurator->ChangeResourceSettings(PdoExtension, &PciData);
+    if (!NT_SUCCESS(Status))
+        return Status;
 
     /* Assume no update needed */
     PdoExtension->UpdateHardware = FALSE;

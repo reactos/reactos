@@ -42,7 +42,7 @@ PciCallDownIrpStack(IN PPCI_FDO_EXTENSION DeviceExtension,
     NTSTATUS Status;
     KEVENT Event;
     PAGED_CODE();
-    DPRINT1("PciCallDownIrpStack ...\n");
+    DPRINT("PciCallDownIrpStack ...\n");
     ASSERT_FDO(DeviceExtension);
 
     /* Initialize the wait event */
@@ -72,7 +72,7 @@ PciPassIrpFromFdoToPdo(IN PPCI_FDO_EXTENSION DeviceExtension,
 {
     PIO_STACK_LOCATION IoStackLocation;
     NTSTATUS Status;
-    DPRINT1("Pci PassIrp ...\n");
+    DPRINT("Pci PassIrp ...\n");
 
     /* Get the stack location to check which function this is */
     IoStackLocation = IoGetCurrentIrpStackLocation(Irp);
@@ -108,7 +108,7 @@ PciDispatchIrp(IN PDEVICE_OBJECT DeviceObject,
     USHORT MaxMinor;
     PCI_DISPATCH_STYLE DispatchStyle = 0;
     PCI_DISPATCH_FUNCTION DispatchFunction = NULL;
-    DPRINT1("PCI: Dispatch IRP\n");
+    DPRINT("PCI: Dispatch IRP\n");
 
     /* Get the extension and I/O stack location for this IRP */
     DeviceExtension = (PPCI_FDO_EXTENSION)DeviceObject->DeviceExtension;

@@ -123,6 +123,7 @@ arbusno_Initializer(IN PVOID Instance)
     Arbiter->CommonInstance.PackResource = arbusno_PackResource;
     Arbiter->CommonInstance.UnpackResource = arbusno_UnpackResource;
     Arbiter->CommonInstance.ScoreRequirement = arbusno_ScoreRequirement;
+    Arbiter->CommonInstance.PreprocessEntry = PciArbiter_PreprocessEntry;
 
     Status = ArbiterLibInitializeInstance(&Arbiter->CommonInstance,
                                           FdoExtension->FunctionalDeviceObject,

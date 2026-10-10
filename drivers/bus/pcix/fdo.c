@@ -71,6 +71,132 @@ PCI_MJ_DISPATCH_TABLE PciFdoDispatchTable =
 
 /* FUNCTIONS ******************************************************************/
 
+/**
+ * @brief Finds the bus number range a root bus decodes in its boot configuration.
+ *
+ * @return TRUE if the list has a bus number descriptor, FALSE otherwise.
+ */
+static
+BOOLEAN
+NTAPI
+PciGetRootBusRange(
+    _In_ PCM_RESOURCE_LIST BootConfig,
+    _Out_ PUCHAR FirstBus,
+    _Out_ PUCHAR LastBus)
+{
+    PCM_FULL_RESOURCE_DESCRIPTOR FullDescriptor;
+    PCM_PARTIAL_RESOURCE_DESCRIPTOR Partial;
+    ULONG FullIndex, PartialIndex;
+    ULONG EndBus;
+    PAGED_CODE();
+
+    FullDescriptor = BootConfig->List;
+    for (FullIndex = 0; FullIndex < BootConfig->Count; FullIndex++)
+    {
+        Partial = FullDescriptor->PartialResourceList.PartialDescriptors;
+        for (PartialIndex = 0;
+             PartialIndex < FullDescriptor->PartialResourceList.Count;
+             PartialIndex++)
+        {
+            if (Partial->Type != CmResourceTypeBusNumber)
+            {
+                Partial = CmiGetNextPartialDescriptor(Partial);
+                continue;
+            }
+
+            /* Bus numbers on a single segment never go past 0xFF */
+            EndBus = Partial->u.BusNumber.Start + Partial->u.BusNumber.Length - 1;
+            ASSERT(Partial->u.BusNumber.Start <= EndBus);
+            ASSERT(EndBus <= 0xFF);
+
+            *FirstBus = (UCHAR)Partial->u.BusNumber.Start;
+            *LastBus = (UCHAR)EndBus;
+            return TRUE;
+        }
+
+        /* The next full descriptor follows the last partial one */
+        FullDescriptor = (PCM_FULL_RESOURCE_DESCRIPTOR)Partial;
+    }
+
+    return FALSE;
+}
+
+/**
+ * @brief Deletes the PDOs of a bus being removed. Each one already had its own remove.
+ */
+static
+VOID
+NTAPI
+PciDeleteBusChildren(
+    _Inout_ PPCI_FDO_EXTENSION FdoExtension)
+{
+    PPCI_PDO_EXTENSION PdoExtension, NextExtension;
+    PAGED_CODE();
+
+    KeEnterCriticalRegion();
+    KeWaitForSingleObject(&FdoExtension->ChildListLock, Executive, KernelMode, FALSE, NULL);
+
+    PdoExtension = FdoExtension->ChildPdoList;
+    FdoExtension->ChildPdoList = NULL;
+    FdoExtension->ChildBridgePdoList = NULL;
+
+    KeSetEvent(&FdoExtension->ChildListLock, IO_NO_INCREMENT, FALSE);
+    KeLeaveCriticalRegion();
+
+    while (PdoExtension)
+    {
+        ASSERT_PDO(PdoExtension);
+        ASSERT(PdoExtension->DeviceState != PciStarted);
+
+        /* The extension goes away with the device object */
+        NextExtension = PdoExtension->Next;
+
+        if (PdoExtension->Resources)
+            ExFreePoolWithTag(PdoExtension->Resources, PCI_POOL_TAG);
+
+        IoDeleteDevice(PdoExtension->PhysicalDeviceObject);
+        PdoExtension = NextExtension;
+    }
+}
+
+/**
+ * @brief Destroys the arbiter instances a bus being removed still holds.
+ */
+static
+VOID
+NTAPI
+PciFreeBusSecondaryExtensions(
+    _Inout_ PPCI_FDO_EXTENSION FdoExtension)
+{
+    VOID (NTAPI *Destructor)(_In_ PVOID Extension);
+    PPCI_SECONDARY_EXTENSION Extension;
+    PSINGLE_LIST_ENTRY Entry;
+    PAGED_CODE();
+
+    KeEnterCriticalRegion();
+    KeWaitForSingleObject(&FdoExtension->SecondaryExtLock, Executive, KernelMode, FALSE, NULL);
+
+    Entry = FdoExtension->SecondaryExtension.Next;
+    FdoExtension->SecondaryExtension.Next = NULL;
+    FdoExtension->ArbitersInitialized = FALSE;
+
+    KeSetEvent(&FdoExtension->SecondaryExtLock, IO_NO_INCREMENT, FALSE);
+    KeLeaveCriticalRegion();
+
+    while (Entry)
+    {
+        Extension = CONTAINING_RECORD(Entry, PCI_SECONDARY_EXTENSION, List);
+        Entry = Entry->Next;
+
+        /* The destructor frees the range lists, the instance itself is freed here */
+        Destructor = Extension->Destructor;
+        if (Destructor)
+            Destructor(Extension);
+
+        ExFreePoolWithTag(Extension, PCI_POOL_TAG);
+    }
+}
+
 NTSTATUS
 NTAPI
 PciFdoIrpStartDevice(IN PIRP Irp,
@@ -88,14 +214,8 @@ PciFdoIrpStartDevice(IN PIRP Irp,
     Status = PciBeginStateTransition(DeviceExtension, PciStarted);
     if (!NT_SUCCESS(Status)) return Status;
 
-    /* Check for any boot-provided resources */
+    /* Only a root bus seeds its arbiters from these, a bus behind a bridge uses its windows */
     Resources = IoStackLocation->Parameters.StartDevice.AllocatedResources;
-    if ((Resources) && !(PCI_IS_ROOT_FDO(DeviceExtension)))
-    {
-        /* These resources would only be for non-root FDOs, unhandled for now */
-        ASSERT(Resources->Count == 1);
-        UNIMPLEMENTED_DBGBREAK();
-    }
 
     /* Initialize the arbiter for this FDO */
     Status = PciInitializeArbiterRanges(DeviceExtension, Resources);
@@ -104,14 +224,6 @@ PciFdoIrpStartDevice(IN PIRP Irp,
         /* Cancel the transition if this failed */
         PciCancelStateTransition(DeviceExtension, PciStarted);
         return Status;
-    }
-
-    /* Again, check for boot-provided resources for non-root FDO */
-    if ((Resources) && !(PCI_IS_ROOT_FDO(DeviceExtension)))
-    {
-        /* Unhandled for now */
-        ASSERT(Resources->Count == 1);
-        UNIMPLEMENTED_DBGBREAK();
     }
 
     /* Commit the transition to the started state */
@@ -125,12 +237,21 @@ PciFdoIrpQueryRemoveDevice(IN PIRP Irp,
                            IN PIO_STACK_LOCATION IoStackLocation,
                            IN PPCI_FDO_EXTENSION DeviceExtension)
 {
+    PAGED_CODE();
+
     UNREFERENCED_PARAMETER(Irp);
     UNREFERENCED_PARAMETER(IoStackLocation);
-    UNREFERENCED_PARAMETER(DeviceExtension);
 
-    UNIMPLEMENTED;
-    return STATUS_NOT_SUPPORTED;
+    /* Paging, hibernation and dump files behind this bus cannot lose their path */
+    if ((DeviceExtension->PowerState.Paging) ||
+        (DeviceExtension->PowerState.Hibernate) ||
+        (DeviceExtension->PowerState.CrashDump))
+    {
+        return STATUS_DEVICE_BUSY;
+    }
+
+    /* The remove that follows commits this */
+    return PciBeginStateTransition(DeviceExtension, PciDeleted);
 }
 
 NTSTATUS
@@ -139,12 +260,61 @@ PciFdoIrpRemoveDevice(IN PIRP Irp,
                       IN PIO_STACK_LOCATION IoStackLocation,
                       IN PPCI_FDO_EXTENSION DeviceExtension)
 {
-    UNREFERENCED_PARAMETER(Irp);
-    UNREFERENCED_PARAMETER(IoStackLocation);
-    UNREFERENCED_PARAMETER(DeviceExtension);
+    PDEVICE_OBJECT DeviceObject, AttachedDeviceObject;
+    PPCI_PDO_EXTENSION BridgeExtension;
+    PSINGLE_LIST_ENTRY Entry;
+    NTSTATUS Status;
+    PAGED_CODE();
 
-    UNIMPLEMENTED_DBGBREAK();
-    return STATUS_NOT_SUPPORTED;
+    UNREFERENCED_PARAMETER(IoStackLocation);
+
+    /* A remove with no query before it, such as after a failed start, begins the deletion here */
+    if (DeviceExtension->TentativeNextState != PciDeleted)
+        PciBeginStateTransition(DeviceExtension, PciDeleted);
+
+    PciCommitStateTransition(DeviceExtension, PciDeleted);
+
+    /* Unlink the bus first so no lookup can reach it while it comes apart */
+    KeEnterCriticalRegion();
+    KeWaitForSingleObject(&PciGlobalLock, Executive, KernelMode, FALSE, NULL);
+
+    for (Entry = &PciFdoExtensionListHead; Entry->Next; Entry = Entry->Next)
+    {
+        if (Entry->Next == &DeviceExtension->List)
+        {
+            Entry->Next = DeviceExtension->List.Next;
+            break;
+        }
+    }
+
+    if (!PCI_IS_ROOT_FDO(DeviceExtension))
+    {
+        BridgeExtension = DeviceExtension->PhysicalDeviceObject->DeviceExtension;
+        ASSERT_PDO(BridgeExtension);
+
+        if (BridgeExtension->BridgeFdoExtension == DeviceExtension)
+            BridgeExtension->BridgeFdoExtension = NULL;
+    }
+
+    KeSetEvent(&PciGlobalLock, IO_NO_INCREMENT, FALSE);
+    KeLeaveCriticalRegion();
+
+    PciDeleteBusChildren(DeviceExtension);
+    PciFreeBusSecondaryExtensions(DeviceExtension);
+
+    if (DeviceExtension->PreservedConfig)
+        ExFreePoolWithTag(DeviceExtension->PreservedConfig, 'PciP');
+
+    /* The lower drivers see the remove before this device leaves the stack */
+    DeviceObject = DeviceExtension->FunctionalDeviceObject;
+    AttachedDeviceObject = DeviceExtension->AttachedDeviceObject;
+
+    Irp->IoStatus.Status = STATUS_SUCCESS;
+    Status = PciPassIrpFromFdoToPdo(DeviceExtension, Irp);
+
+    IoDetachDevice(AttachedDeviceObject);
+    IoDeleteDevice(DeviceObject);
+    return Status;
 }
 
 NTSTATUS
@@ -153,12 +323,14 @@ PciFdoIrpCancelRemoveDevice(IN PIRP Irp,
                             IN PIO_STACK_LOCATION IoStackLocation,
                             IN PPCI_FDO_EXTENSION DeviceExtension)
 {
+    PAGED_CODE();
+
     UNREFERENCED_PARAMETER(Irp);
     UNREFERENCED_PARAMETER(IoStackLocation);
-    UNREFERENCED_PARAMETER(DeviceExtension);
 
-    UNIMPLEMENTED_DBGBREAK();
-    return STATUS_NOT_SUPPORTED;
+    /* The remove is off, so the bus stays where it was */
+    PciCancelStateTransition(DeviceExtension, PciDeleted);
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS
@@ -167,12 +339,16 @@ PciFdoIrpStopDevice(IN PIRP Irp,
                     IN PIO_STACK_LOCATION IoStackLocation,
                     IN PPCI_FDO_EXTENSION DeviceExtension)
 {
+    PAGED_CODE();
+
     UNREFERENCED_PARAMETER(Irp);
     UNREFERENCED_PARAMETER(IoStackLocation);
-    UNREFERENCED_PARAMETER(DeviceExtension);
 
-    UNIMPLEMENTED_DBGBREAK();
-    return STATUS_NOT_SUPPORTED;
+    PciCommitStateTransition(DeviceExtension, PciStopped);
+
+    /* The next start seeds the arbiters again from the windows it is given */
+    DeviceExtension->ArbitersInitialized = FALSE;
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS
@@ -181,12 +357,24 @@ PciFdoIrpQueryStopDevice(IN PIRP Irp,
                          IN PIO_STACK_LOCATION IoStackLocation,
                          IN PPCI_FDO_EXTENSION DeviceExtension)
 {
+    PAGED_CODE();
+
     UNREFERENCED_PARAMETER(Irp);
     UNREFERENCED_PARAMETER(IoStackLocation);
-    UNREFERENCED_PARAMETER(DeviceExtension);
 
-    UNIMPLEMENTED_DBGBREAK();
-    return STATUS_NOT_SUPPORTED;
+    /* Paging, hibernation and dump files behind this bus cannot lose their path */
+    if ((DeviceExtension->PowerState.Paging) ||
+        (DeviceExtension->PowerState.Hibernate) ||
+        (DeviceExtension->PowerState.CrashDump))
+    {
+        return STATUS_DEVICE_BUSY;
+    }
+
+    /* Root bus ranges are fixed, and children would sit outside new bridge windows */
+    if ((PCI_IS_ROOT_FDO(DeviceExtension)) || (DeviceExtension->ChildPdoList))
+        return STATUS_UNSUCCESSFUL;
+
+    return PciBeginStateTransition(DeviceExtension, PciStopped);
 }
 
 NTSTATUS
@@ -195,12 +383,14 @@ PciFdoIrpCancelStopDevice(IN PIRP Irp,
                           IN PIO_STACK_LOCATION IoStackLocation,
                           IN PPCI_FDO_EXTENSION DeviceExtension)
 {
+    PAGED_CODE();
+
     UNREFERENCED_PARAMETER(Irp);
     UNREFERENCED_PARAMETER(IoStackLocation);
-    UNREFERENCED_PARAMETER(DeviceExtension);
 
-    UNIMPLEMENTED_DBGBREAK();
-    return STATUS_NOT_SUPPORTED;
+    /* The stop is off, so the bus keeps its windows */
+    PciCancelStateTransition(DeviceExtension, PciStopped);
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS
@@ -338,12 +528,16 @@ PciFdoIrpDeviceUsageNotification(IN PIRP Irp,
                                  IN PIO_STACK_LOCATION IoStackLocation,
                                  IN PPCI_FDO_EXTENSION DeviceExtension)
 {
-    UNREFERENCED_PARAMETER(Irp);
-    UNREFERENCED_PARAMETER(IoStackLocation);
-    UNREFERENCED_PARAMETER(DeviceExtension);
+    PAGED_CODE();
 
-    UNIMPLEMENTED_DBGBREAK();
-    return STATUS_NOT_SUPPORTED;
+    /* A failure from below stands, but a lower driver that ignored it does not count */
+    if ((!NT_SUCCESS(Irp->IoStatus.Status)) &&
+        (Irp->IoStatus.Status != STATUS_NOT_SUPPORTED))
+    {
+        return Irp->IoStatus.Status;
+    }
+
+    return PciUpdateDeviceUsage(&DeviceExtension->PowerState, IoStackLocation);
 }
 
 NTSTATUS
@@ -352,12 +546,20 @@ PciFdoIrpSurpriseRemoval(IN PIRP Irp,
                          IN PIO_STACK_LOCATION IoStackLocation,
                          IN PPCI_FDO_EXTENSION DeviceExtension)
 {
+    PAGED_CODE();
+
     UNREFERENCED_PARAMETER(Irp);
     UNREFERENCED_PARAMETER(IoStackLocation);
-    UNREFERENCED_PARAMETER(DeviceExtension);
 
-    UNIMPLEMENTED_DBGBREAK();
-    return STATUS_NOT_SUPPORTED;
+    /* Only the remove that follows is left, and it commits the deletion */
+    if (NT_SUCCESS(PciBeginStateTransition(DeviceExtension, PciSurpriseRemoved)))
+    {
+        PciCommitStateTransition(DeviceExtension, PciSurpriseRemoved);
+        PciBeginStateTransition(DeviceExtension, PciDeleted);
+    }
+
+    /* Failing this would keep it from reaching the PDO below */
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS
@@ -366,12 +568,24 @@ PciFdoIrpQueryLegacyBusInformation(IN PIRP Irp,
                                    IN PIO_STACK_LOCATION IoStackLocation,
                                    IN PPCI_FDO_EXTENSION DeviceExtension)
 {
-    UNREFERENCED_PARAMETER(Irp);
-    UNREFERENCED_PARAMETER(IoStackLocation);
-    UNREFERENCED_PARAMETER(DeviceExtension);
+    PLEGACY_BUS_INFORMATION BusInformation;
+    PAGED_CODE();
 
-    UNIMPLEMENTED_DBGBREAK();
-    return STATUS_NOT_SUPPORTED;
+    UNREFERENCED_PARAMETER(IoStackLocation);
+
+    /* The PnP manager frees this once it has recorded the bus */
+    BusInformation = ExAllocatePoolWithTag(PagedPool,
+                                           sizeof(*BusInformation),
+                                           PCI_POOL_TAG);
+    if (!BusInformation)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
+    BusInformation->BusTypeGuid = GUID_BUS_TYPE_PCI;
+    BusInformation->LegacyBusType = PCIBus;
+    BusInformation->BusNumber = DeviceExtension->BaseBus;
+
+    Irp->IoStatus.Information = (ULONG_PTR)BusInformation;
+    return STATUS_SUCCESS;
 }
 
 VOID
@@ -606,17 +820,16 @@ PciAddDevice(IN PDRIVER_OBJECT DriverObject,
                 /* No configuration has been set */
                 Descriptor = NULL;
             }
-            else
-            {
-                /* Root PDO in ReactOS does not assign boot resources */
-                UNIMPLEMENTED_DBGBREAK("Encountered during setup\n");
-                Descriptor = NULL;
-            }
 
-            if (Descriptor)
+            /* The firmware reports the bus numbers this root decodes in its boot config */
+            if ((Descriptor) &&
+                (PciGetRootBusRange(Descriptor,
+                                    &FdoExtension->BaseBus,
+                                    &FdoExtension->MaxSubordinateBus)))
             {
-                /* Root PDO in ReactOS does not assign boot resources */
-                UNIMPLEMENTED_DBGBREAK();
+                DPRINT1("PCI   Root bus range 0x%x to 0x%x.\n",
+                        FdoExtension->BaseBus,
+                        FdoExtension->MaxSubordinateBus);
             }
             else
             {
@@ -635,7 +848,11 @@ PciAddDevice(IN PDRIVER_OBJECT DriverObject,
                 DPRINT1("PCI   Will use default configuration.\n");
                 PciBreakOnDefault = TRUE;
                 FdoExtension->BaseBus = 0;
+                FdoExtension->MaxSubordinateBus = 0xFF;
             }
+
+            if (Descriptor)
+                ExFreePoolWithTag(Descriptor, 0);
 
             /* This is the root bus */
             FdoExtension->BusRootFdoExtension = FdoExtension;
