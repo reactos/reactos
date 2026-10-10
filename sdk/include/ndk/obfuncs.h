@@ -173,6 +173,15 @@ ObSetSecurityObjectByPointer(
     _In_ PSECURITY_DESCRIPTOR SecurityDescriptor
 );
 
+#if (NTDDI_VERSION >= NTDDI_WIN7) || defined(__REACTOS__)
+NTKERNELAPI
+POBJECT_TYPE
+FASTCALL
+ObGetObjectType(
+    _In_ PVOID Object
+);
+#endif
+
 #endif
 
 //

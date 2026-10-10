@@ -18,8 +18,9 @@ CSR_API(SrvDeviceEvent);
 /* harderror.c */
 VOID
 NTAPI
-UserServerHardError(IN PCSR_THREAD ThreadData,
-                    IN PHARDERROR_MSG Message);
+UserServerHardError(
+    _In_opt_ PCSR_THREAD CsrThread,
+    _In_ PHARDERROR_MSG Message);
 
 /* register.c */
 CSR_API(SrvRegisterServicesProcess);

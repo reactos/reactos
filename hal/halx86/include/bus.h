@@ -152,7 +152,7 @@ typedef struct _PCI_REGISTRY_INFO_INTERNAL
 {
     UCHAR MajorRevision;
     UCHAR MinorRevision;
-    UCHAR NoBuses; // Number Of Buses
+    USHORT NoBuses; // Number of buses (max. 256)
     UCHAR HardwareMechanism;
     ULONG ElementCount;
     PCI_CARD_DESCRIPTOR CardList[ANYSIZE_ARRAY];

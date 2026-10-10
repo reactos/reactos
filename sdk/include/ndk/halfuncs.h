@@ -55,7 +55,7 @@ Author:
 #define KdMapPhysicalMemory64                               HALPRIVATEDISPATCH->KdMapPhysicalMemory64
 #define KdUnmapVirtualAddress                               HALPRIVATEDISPATCH->KdUnmapVirtualAddress
 #endif
-#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+#if (NTDDI_VERSION >= NTDDI_LONGHORN) || defined(__REACTOS__)
 #define KdGetPciDataByOffset                                HALPRIVATEDISPATCH->KdGetPciDataByOffset
 #define KdSetPciDataByOffset                                HALPRIVATEDISPATCH->KdSetPciDataByOffset
 #define HalGetInterruptVectorOverride                       HALPRIVATEDISPATCH->HalGetInterruptVectorOverride
@@ -64,7 +64,7 @@ Author:
 #define HalUnloadMicrocode                                  HALPRIVATEDISPATCH->HalUnloadMicrocode
 #define HalPostMicrocodeUpdate                              HALPRIVATEDISPATCH->HalPostMicrocodeUpdate
 #endif
-#if (NTDDI_VERSION >= NTDDI_VISTASP1)
+#if (NTDDI_VERSION >= NTDDI_VISTASP1) || defined(__REACTOS__)
 #define HalAllocateMessageTargetOverride                    HALPRIVATEDISPATCH->HalAllocateMessageTargetOverride
 #define HalFreeMessageTargetOverride                        HALPRIVATEDISPATCH->HalFreeMessageTargetOverride
 #define HalDpReplaceBegin                                   HALPRIVATEDISPATCH->HalDpReplaceBegin
@@ -73,31 +73,31 @@ Author:
 #define HalDpReplaceEnd                                     HALPRIVATEDISPATCH->HalDpReplaceEnd
 #define HalPrepareForBugcheck                               HALPRIVATEDISPATCH->HalPrepareForBugcheck
 #endif
-#if (NTDDI_VERSION >= NTDDI_WIN7)
+#if (NTDDI_VERSION >= NTDDI_WIN7) || defined(__REACTOS__)
 #define HalQueryWakeTime                                    HALPRIVATEDISPATCH->HalQueryWakeTime
 #define HalReportIdleStateUsage                             HALPRIVATEDISPATCH->HalReportIdleStateUsage
 #define HalTscSynchronization                               HALPRIVATEDISPATCH->HalTscSynchronization
 #define HalWheaInitProcessorGenericSection                  HALPRIVATEDISPATCH->HalWheaInitProcessorGenericSection
 #define HalStopLegacyUsbInterrupts                          HALPRIVATEDISPATCH->HalStopLegacyUsbInterrupts
 #endif
-#if (NTDDI_VERSION >= NTDDI_VISTASP2)
+#if (NTDDI_VERSION >= NTDDI_VISTASP2) || defined(__REACTOS__)
 #define HalReadWheaPhysicalMemory                           HALPRIVATEDISPATCH->HalReadWheaPhysicalMemory
 #define HalWriteWheaPhysicalMemory                          HALPRIVATEDISPATCH->HalWriteWheaPhysicalMemory
 #endif
-#if (NTDDI_VERSION >= NTDDI_WIN7)
+#if (NTDDI_VERSION >= NTDDI_WIN7) || defined(__REACTOS__)
 #define HalDpMaskLevelTriggeredInterrupts                   HALPRIVATEDISPATCH->HalDpMaskLevelTriggeredInterrupts
 #define HalDpUnmaskLevelTriggeredInterrupts                 HALPRIVATEDISPATCH->HalDpUnmaskLevelTriggeredInterrupts
 #define HalDpGetInterruptReplayState                        HALPRIVATEDISPATCH->HalDpGetInterruptReplayState
 #define HalDpReplayInterrupts                               HALPRIVATEDISPATCH->HalDpReplayInterrupts
 #define HalQueryIoPortAccessSupported                       HALPRIVATEDISPATCH->HalQueryIoPortAccessSupported
 #endif
-#if (NTDDI_VERSION >= NTDDI_WIN8)
+#if (NTDDI_VERSION >= NTDDI_WIN8) || defined(__REACTOS__)
 #define KdSetupIntegratedDeviceForDebugging                 HALPRIVATEDISPATCH->KdSetupIntegratedDeviceForDebugging
 #define KdReleaseIntegratedDeviceForDebugging               HALPRIVATEDISPATCH->KdReleaseIntegratedDeviceForDebugging
 #define HalGetEnlightenmentInformation                      HALPRIVATEDISPATCH->HalGetEnlightenmentInformation
 #define HalAllocateEarlyPages                               HALPRIVATEDISPATCH->HalAllocateEarlyPages
 #define HalMapEarlyPages                                    HALPRIVATEDISPATCH->HalMapEarlyPages
-#if (NTDDI_VERSION == NTDDI_WIN8)
+#if (NTDDI_VERSION == NTDDI_WIN8) && !defined(__REACTOS__)
 #define HalGetClockOwner                                    HALPRIVATEDISPATCH->HalGetClockOwner
 #define HalGetClockConfiguration                            HALPRIVATEDISPATCH->HalGetClockConfiguration
 #endif
@@ -124,7 +124,7 @@ Author:
 #define HalFreePmcCounterSet                                HALPRIVATEDISPATCH->HalFreePmcCounterSet
 #define HalProcessorHalt                                    HALPRIVATEDISPATCH->HalProcessorHalt
 #define HalTimerQueryCycleCounter                           HALPRIVATEDISPATCH->HalTimerQueryCycleCounter
-#if (NTDDI_VERSION == NTDDI_WIN8)
+#if (NTDDI_VERSION == NTDDI_WIN8) && !defined(__REACTOS__)
 #define HalGetNextTickDuration                              HALPRIVATEDISPATCH->HalGetNextTickDuration
 #endif
 #define HalPciMarkHiberPhase                                HALPRIVATEDISPATCH->HalPciMarkHiberPhase
@@ -141,7 +141,7 @@ Author:
 #define HalDmaFreeCrashDumpRegisters                        HALPRIVATEDISPATCH->HalDmaFreeCrashDumpRegisters
 #define HalAcpiAoacCapable                                  HALPRIVATEDISPATCH->HalAcpiAoacCapable
 #endif
-#if (NTDDI_VERSION >= NTDDI_WINBLUE)
+#if (NTDDI_VERSION >= NTDDI_WINBLUE) || defined(__REACTOS__)
 #define HalInterruptSetDestination                          HALPRIVATEDISPATCH->HalInterruptSetDestination
 #define HalGetClockConfiguration                            HALPRIVATEDISPATCH->HalGetClockConfiguration
 #define HalClockTimerActivate                               HALPRIVATEDISPATCH->HalClockTimerActivate
@@ -158,7 +158,7 @@ Author:
 #define HalTimerWatchdogGeneratedLastReset                  HALPRIVATEDISPATCH->HalTimerWatchdogGeneratedLastReset
 #define HalTimerWatchdogTriggerSystemReset                  HALPRIVATEDISPATCH->HalTimerWatchdogTriggerSystemReset
 #endif
-#if (NTDDI_VERSION >= NTDDI_WIN10)
+#if (NTDDI_VERSION >= NTDDI_WIN10) || defined(__REACTOS__)
 #define HalInterruptVectorDataToGsiv                        HALPRIVATEDISPATCH->HalInterruptVectorDataToGsiv
 #define HalInterruptGetHighestPriorityInterrupt             HALPRIVATEDISPATCH->HalInterruptGetHighestPriorityInterrupt
 #define HalProcessorOn                                      HALPRIVATEDISPATCH->HalProcessorOn
@@ -375,6 +375,68 @@ HalSystemVectorDispatchEntry(
     _In_ ULONG Vector,
     _Out_ PKINTERRUPT_ROUTINE **FlatDispatch,
     _Out_ PKINTERRUPT_ROUTINE *NoConnection
+);
+
+//
+// NT6+ Style Interrupt Functions
+//
+NTHALAPI
+KIRQL
+NTAPI
+HalConvertDeviceIdtToIrql(
+    _In_ ULONG IdtEntry
+);
+
+NTHALAPI
+NTSTATUS
+NTAPI
+HalEnableInterrupt(
+    _In_ PINTERRUPT_CONNECTION_DATA ConnectionData
+);
+
+NTHALAPI
+NTSTATUS
+NTAPI
+HalDisableInterrupt(
+    _In_ PINTERRUPT_CONNECTION_DATA ConnectionData
+);
+
+NTHALAPI
+NTSTATUS
+NTAPI
+HalGetVectorInput(
+    _In_ ULONG Vector,
+    _In_ KAFFINITY Affinity,
+    _Out_ PULONG Input,
+    _Out_ PKINTERRUPT_POLARITY Polarity
+);
+
+NTHALAPI
+NTSTATUS
+NTAPI
+HalGetInterruptTargetInformation(
+    _In_ INTERRUPT_TARGET_TYPE Type,
+    _In_ ULONG Id,
+    _Out_ PHAL_INTERRUPT_TARGET_DESCRIPTOR Information
+);
+
+NTHALAPI
+NTSTATUS
+NTAPI
+HalGetMessageRoutingInfo(
+    _In_ PHAL_MESSAGE_SIGNAL_TARGET_REQUEST Request,
+    _Out_ PINTERRUPT_CONNECTION_DATA ConnectionData
+);
+
+//
+// Processor Functions (NT 6 interface)
+//
+NTHALAPI
+NTSTATUS
+NTAPI
+HalGetProcessorIdByNtNumber(
+    _In_ ULONG ProcessorNumber,
+    _Out_ PULONG ProcessorId
 );
 
 //

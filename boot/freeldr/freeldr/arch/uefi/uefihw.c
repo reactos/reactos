@@ -26,6 +26,13 @@ extern PCM_FRAMEBUF_DEVICE_DATA FrameBufferData;
 BOOLEAN AcpiPresent = FALSE;
 static EFI_EVENT IdleTimerEvent = NULL;
 
+#if defined(_M_IX86) || defined(_M_AMD64)
+#define PCI_MAX_BUSES   (PCI_MAX_BRIDGE_NUMBER + 1) // == 256
+
+#define PCI_HEADER_TYPE_MASK    0x7F
+#define PCI_HEADER_TYPE_BRIDGE  PCI_BRIDGE_TYPE
+#endif
+
 /* FUNCTIONS *****************************************************************/
 
 VOID
@@ -322,6 +329,167 @@ DetectInternal(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
     /* FIXME: Detect more devices */
 }
 
+#if defined(_M_IX86) || defined(_M_AMD64)
+static
+ULONG
+PciReadConfigDword(
+    _In_ UCHAR Bus,
+    _In_ UCHAR Device,
+    _In_ UCHAR Function,
+    _In_ UCHAR Register)
+{
+    PCI_TYPE1_CFG_BITS Cfg;
+
+    Cfg.u.AsULONG = 0;
+    Cfg.u.bits.Enable = 1;
+    Cfg.u.bits.BusNumber = Bus;
+    Cfg.u.bits.DeviceNumber = Device;
+    Cfg.u.bits.FunctionNumber = Function;
+    Cfg.u.bits.RegisterNumber = Register & ~3;
+
+    WRITE_PORT_ULONG(PCI_TYPE1_ADDRESS_PORT, Cfg.u.AsULONG);
+    return READ_PORT_ULONG((PULONG)PCI_TYPE1_DATA_PORT);
+}
+
+static
+BOOLEAN
+PciScanFunction(
+    _In_ UCHAR Bus,
+    _In_ UCHAR Device,
+    _In_ UCHAR Function,
+    _Out_ PUCHAR MaxBridgeBusNumber)
+{
+    ULONG VendorDevice, HeaderTypeDword;
+    UCHAR HeaderType;
+
+    *MaxBridgeBusNumber = 0;
+
+    VendorDevice = PciReadConfigDword(Bus, Device, Function, 0x00);
+    if ((VendorDevice & 0xFFFF) == 0xFFFF)
+        return FALSE;
+
+    HeaderTypeDword = PciReadConfigDword(Bus, Device, Function, 0x0C);
+    HeaderType = (UCHAR)((HeaderTypeDword >> 16) & 0xFF);
+
+    if ((HeaderType & PCI_HEADER_TYPE_MASK) == PCI_HEADER_TYPE_BRIDGE)
+    {
+        ULONG BridgeBusNumbers = PciReadConfigDword(Bus, Device, Function, 0x18);
+        UCHAR SecondaryBus = (UCHAR)((BridgeBusNumbers >> 8) & 0xFF);
+        UCHAR SubordinateBus = (UCHAR)((BridgeBusNumbers >> 16) & 0xFF);
+
+        if (SecondaryBus > SubordinateBus)
+        {
+            ERR("Misconfigured PCI bridge: SecondaryBus (%u) > SubordinateBus (%u)\n",
+                SecondaryBus, SubordinateBus);
+            return FALSE;
+        }
+
+        //if (SecondaryBus != 0 && SecondaryBus != Bus && SubordinateBus >= SecondaryBus)
+        *MaxBridgeBusNumber = SubordinateBus;
+    }
+
+    return TRUE;
+}
+
+static
+BOOLEAN
+UefiDetectPciBus(
+    _In_ PCONFIGURATION_COMPONENT_DATA SystemKey,
+    _Inout_ PULONG BusNumber,
+    _Out_ PPCI_REGISTRY_INFO BusData)
+{
+    PMCFG_TABLE Mcfg;
+    UCHAR Bus = 0, HighestBus;
+    USHORT Device, Function;
+    BOOLEAN AnyFound = FALSE;
+
+    UNREFERENCED_PARAMETER(SystemKey);
+    UNREFERENCED_PARAMETER(BusNumber);
+
+    /* Prefer MCFG since it lists each segment's bus range directly */
+    Mcfg = (PMCFG_TABLE)UefiFindAcpiTable(MCFG_SIGNATURE);
+    if ((Mcfg != NULL) && (Mcfg->Header.Length >= sizeof(MCFG_TABLE)))
+    {
+        ULONG McfgCount, McfgIndex;
+        BOOLEAN FoundMcfgSegment0 = FALSE;
+
+        HighestBus = 0;
+        McfgCount = (Mcfg->Header.Length - FIELD_OFFSET(MCFG_TABLE, Allocation)) / sizeof(MCFG_ALLOCATION);
+        for (McfgIndex = 0; McfgIndex < McfgCount; ++McfgIndex)
+        {
+            PMCFG_ALLOCATION Alloc = &Mcfg->Allocation[McfgIndex];
+
+            /* Only enumerate "legacy" PCI, on segment group #0 */
+            if (Alloc->PciSegmentGroup != 0)
+                continue;
+
+            if (Alloc->EndBusNumber < Alloc->StartBusNumber)
+                continue; /* Malformed entry */
+
+            FoundMcfgSegment0 = TRUE;
+            HighestBus = max(HighestBus, Alloc->EndBusNumber);
+        }
+
+        if (FoundMcfgSegment0)
+        {
+            BusData->MajorRevision = 3;
+            BusData->MinorRevision = 0;
+            BusData->NoBuses = HighestBus + 1; // NOTE: Wraps when HighestBus == 0xFF
+            BusData->HardwareMechanism = 1;
+
+            TRACE("UEFI PCI: %u bus(es) found via MCFG\n", BusData->NoBuses);
+            return TRUE;
+        }
+    }
+
+    /* Supposing we only have one single PCI root bus (#0),
+     * loop over each device, and for every PCI bridge encountered,
+     * check its SubordinateBus. */
+    HighestBus = 0;
+
+    /* Loop through all devices */
+    for (Device = 0; Device < PCI_MAX_DEVICES; ++Device)
+    {
+        ULONG HeaderTypeDword;
+        UCHAR SubordinateBus = 0;
+
+        if (!PciScanFunction(Bus, (UCHAR)Device, 0, &SubordinateBus))
+            continue;
+
+        AnyFound = TRUE;
+        HighestBus = max(HighestBus, SubordinateBus);
+
+        HeaderTypeDword = PciReadConfigDword(Bus, (UCHAR)Device, 0, 0x0C);
+        if (!((HeaderTypeDword >> 16) & PCI_MULTIFUNCTION))
+            continue;
+
+        /* Loop through all functions */
+        for (Function = 1; Function < PCI_MAX_FUNCTION; ++Function)
+        {
+            if (PciScanFunction(Bus, (UCHAR)Device, (UCHAR)Function, &SubordinateBus))
+            {
+                AnyFound = TRUE;
+                HighestBus = max(HighestBus, SubordinateBus);
+            }
+        }
+    }
+
+    if (!AnyFound)
+    {
+        WARN("No PCI devices found\n");
+        return FALSE;
+    }
+
+    BusData->MajorRevision = 3;
+    BusData->MinorRevision = 0;
+    BusData->NoBuses = HighestBus + 1; // NOTE: Wraps when HighestBus == 0xFF
+    BusData->HardwareMechanism = 1;
+
+    TRACE("UEFI PCI probe: %u bus(es) found\n", BusData->NoBuses);
+    return TRUE;
+}
+#endif // _M_IX86 || _M_AMD64
+
 PCONFIGURATION_COMPONENT_DATA
 UefiHwDetect(
     _In_opt_ PCSTR Options)
@@ -344,7 +512,9 @@ UefiHwDetect(
 
     /* Detect buses */
     DetectInternal(SystemKey, &BusNumber);
-    // TODO: DetectPciBus
+#if defined(_M_IX86) || defined(_M_AMD64)
+    DetectPciBus(SystemKey, &BusNumber, UefiDetectPciBus);
+#endif
     DetectAcpiBios(SystemKey, &BusNumber);
 
     TRACE("DetectHardware() Done\n");

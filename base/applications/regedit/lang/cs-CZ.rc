@@ -542,6 +542,7 @@ BEGIN
     IDS_EXPAND "&Rozbalit"
     IDS_COLLAPSE "&Sbalit"
     IDS_GOTO_SUGGESTED_KEY "&Jít na '%s'"
+    IDS_GO "|Jít||"
     IDS_FINISHEDFIND "Prohledávání registru bylo dokončeno."
 END
 

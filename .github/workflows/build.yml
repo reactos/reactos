@@ -28,6 +28,8 @@ jobs:
         wget https://gist.githubusercontent.com/zefklop/b2d6a0b470c70183e93d5285a03f5899/raw/build_rosbe_ci.sh
         # Fallback for GNU file server problems.
         sed -i '/gcc-8.4.0\/gcc-8.4.0.tar.xz/c\wget https://ftpmirror.gnu.org/gcc/gcc-8.4.0/gcc-8.4.0.tar.xz || wget -L https://web.archive.org/web/2025if_/https://ftpmirror.gnu.org/gcc/gcc-8.4.0/gcc-8.4.0.tar.xz' ./build_rosbe_ci.sh
+        # Fallback for SourceForge server problems.
+        sed -i '/mingw-w64-v6.0.0.tar.bz2\/download/c\wget -O mingw-w64-v6.0.0.tar.bz2 https://sourceforge.net/projects/mingw-w64/files/mingw-w64/mingw-w64-release/mingw-w64-v6.0.0.tar.bz2/download && bzip2 -t mingw-w64-v6.0.0.tar.bz2 || (wget -O - https://github.com/mingw-w64/mingw-w64/archive/refs/tags/v6.0.0.tar.gz | tar -xz && mv mingw-w64-6.0.0 mingw-w64-v6.0.0 && tar -cjf mingw-w64-v6.0.0.tar.bz2 mingw-w64-v6.0.0 && rm -rf mingw-w64-v6.0.0)' ./build_rosbe_ci.sh
     - name: Get RosBE
       id: get_rosbe
       uses: actions/cache@v5
@@ -39,6 +41,7 @@ jobs:
       run: |
         chmod +x build_rosbe_ci.sh
         ./build_rosbe_ci.sh ${{github.workspace}}/RosBE-CI
+        test -x ${{github.workspace}}/RosBE-CI/RosBE.sh || { echo "::error::RosBE build failed. see download/build output a bit up"; exit 1; }
     - name: Install ccache
       run: sudo apt install ccache
     - name: Install LLVM

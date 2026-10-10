@@ -138,6 +138,19 @@ public:
 
 private:
 
+    void InitMain()
+    {
+        delete m_RootNode;
+        m_RootNode = NULL;
+
+        m_DocumentMode = DocumentMode_Author;
+        m_LogicalReadOnly = FALSE;
+        m_PreventViewCustomization = FALSE;
+        m_bToolBarVisible = TRUE;
+        m_NextViewId = 1;
+        m_NextNodeId = 1;
+    }
+
     void UpdateMenu()
     {
         if (m_ViewList.IsEmpty())
@@ -221,6 +234,7 @@ public:
     LRESULT OnMDIForward(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
 
 private:
+    BOOL CreateView(CSnapin *RootNode, CSnapin *SelectedNode = NULL);
     LRESULT LoadSnapinCache();
     void UpdateLayout();
     void UpdateViews();
@@ -231,6 +245,7 @@ private:
     DWORD CreateNewFilename(PWSTR pBuffer, DWORD dwSize, DWORD Number);
     LRESULT SaveMscFile(const CAtlString &FileName);
     LRESULT LoadMscFile(const CAtlString &FileName);
+    HRESULT ParseScopeTree(MscFile *mscFile, IXMLDOMElement *pRootElement);
 
 public:
     CAtlString *GetConsoleTitle();
@@ -254,6 +269,7 @@ public:
     UINT RegisterView(CConsoleWnd *pView);
     void UnregisterView(CConsoleWnd *pView);
     UINT GetNextNodeId();
+    VOID UpdateNextNodeId(UINT NodeId);
     DOCUMENT_MODE GetDocumentMode();
     void SetDocumentMode(DOCUMENT_MODE DocumentMode);
     BOOL GetLogicalReadOnly();

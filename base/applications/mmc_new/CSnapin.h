@@ -51,4 +51,6 @@ public:
     void OnAccept(IConsole* console);
 
     VOID SaveNode(MscFile *mscFile, IXMLDOMElement *pParentNode);
+
+    static HRESULT ParseSnapin(CMainWnd *pMainWnd, MscFile *mscFile, IXMLDOMElement *pSnapinNode, CSnapin **ppSnapin);
 };
