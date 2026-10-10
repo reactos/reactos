@@ -2,13 +2,18 @@
  * PROJECT:     ReactOS Kernel
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Kernel Shim Engine implementation
- * COPYRIGHT:   Copyright 2020 Hervé Poussineau (hpoussin@reactos.org)
+ * COPYRIGHT:   Copyright 2020 Hervé Poussineau <hpoussin@reactos.org>
+ *              Copyright 2020-2026 Mark Jansen <mark.jansen@reactos.org>
  */
 
 #include <ntoskrnl.h>
 
 #define NDEBUG
 #include <debug.h>
+
+// http://www.geoffchappell.com/studies/windows/km/ntoskrnl/api/kshim/ksecore/index.htm
+
+#define KSE_MAX_SHIMS_PER_DRIVER    10
 
 
 typedef struct _KSE_PROVIDER
@@ -73,69 +78,199 @@ KsepPoolAllocateNonPaged(
     return NULL;
 }
 
-static NTSTATUS NTAPI
-KsepGetShimForDriver(
-    IN PVOID DriverStart,
-    OUT PKSE_SHIM* Shim)
+static PKSE_SHIM NTAPI
+KsepFindShim(
+    _In_ PCUNICODE_STRING Name)
 {
-    UNIMPLEMENTED_ONCE;
+    PKSE_PROVIDER ProviderEntry;
+    PLIST_ENTRY ListEntry;
+    UNICODE_STRING ShimName;
 
-    *Shim = NULL;
-    return STATUS_NOT_IMPLEMENTED;
+    for (ListEntry = KseEngine.ProvidersListHead.Flink;
+         ListEntry != &KseEngine.ProvidersListHead;
+         ListEntry = ListEntry->Flink)
+    {
+        ProviderEntry = CONTAINING_RECORD(ListEntry, KSE_PROVIDER, ProviderList);
+        if (!ProviderEntry->Shim->ShimName)
+            continue;
+
+        RtlInitUnicodeString(&ShimName, ProviderEntry->Shim->ShimName);
+        if (RtlEqualUnicodeString(&ShimName, Name, TRUE))
+            return ProviderEntry->Shim;
+    }
+
+    return NULL;
+}
+
+static NTSTATUS NTAPI
+KsepMultiSzToShims(
+    IN PKEY_VALUE_FULL_INFORMATION KeyValueInformation,
+    OUT PKSE_SHIM* Shims,
+    OUT PULONG NumberOfShims)
+{
+    PWCHAR Current, End;
+    UNICODE_STRING ShimName;
+    SIZE_T Length;
+
+    *NumberOfShims = 0;
+
+    Current = (PWCHAR)((ULONG_PTR)KeyValueInformation + KeyValueInformation->DataOffset);
+    End = (PWCHAR)((ULONG_PTR)Current + KeyValueInformation->DataLength);
+
+    while (Current < End && *Current)
+    {
+        /* Find the end of this string, without running past the data */
+        for (Length = 0; Current + Length < End && Current[Length]; Length++)
+            ;
+
+        ShimName.Buffer = Current;
+        ShimName.Length = ShimName.MaximumLength = (USHORT)(Length * sizeof(WCHAR));
+
+        if (*NumberOfShims >= KSE_MAX_SHIMS_PER_DRIVER)
+        {
+            DPRINT1("KSE: Too many shims, ignoring %wZ\n", &ShimName);
+        }
+        else
+        {
+            Shims[*NumberOfShims] = KsepFindShim(&ShimName);
+            if (Shims[*NumberOfShims])
+                (*NumberOfShims)++;
+            else
+                DPRINT1("KSE: Shim %wZ not found\n", &ShimName);
+        }
+
+        Current += Length + 1;
+    }
+
+    return *NumberOfShims ? STATUS_SUCCESS : STATUS_NOT_FOUND;
+}
+
+static NTSTATUS NTAPI
+KsepGetShimsFromRegistry(
+    IN PLDR_DATA_TABLE_ENTRY LdrEntry,
+    OUT PKSE_SHIM* Shims,
+    OUT PULONG NumberOfShims)
+{
+    static const UNICODE_STRING ValueName = RTL_CONSTANT_STRING(L"Shims");
+    WCHAR KeyNameBuffer[256];
+    UNICODE_STRING KeyName;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    PKEY_VALUE_FULL_INFORMATION KeyValueInformation;
+    ULONG KeyValueSize = 0x800;
+    HANDLE KeyHandle;
+    NTSTATUS Status;
+
+    *NumberOfShims = 0;
+
+    RtlInitEmptyUnicodeString(&KeyName, KeyNameBuffer, sizeof(KeyNameBuffer));
+    Status = RtlAppendUnicodeToString(&KeyName, L"\\Registry\\Machine\\System\\CurrentControlSet\\Control\\Compatibility\\Driver\\");
+    if (NT_SUCCESS(Status))
+        Status = RtlAppendUnicodeStringToString(&KeyName, &LdrEntry->BaseDllName);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &KeyName,
+                               OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
+                               NULL,
+                               NULL);
+    Status = ZwOpenKey(&KeyHandle, KEY_READ, &ObjectAttributes);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    KeyValueInformation = ExAllocatePoolWithTag(PagedPool, KeyValueSize, TAG_KSE_REGISTRY);
+    if (!KeyValueInformation)
+    {
+        ZwClose(KeyHandle);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    Status = ZwQueryValueKey(KeyHandle,
+                             (PUNICODE_STRING)&ValueName,
+                             KeyValueFullInformation,
+                             KeyValueInformation,
+                             KeyValueSize,
+                             &KeyValueSize);
+    ZwClose(KeyHandle);
+
+    if (NT_SUCCESS(Status))
+    {
+        if (KeyValueInformation->Type == REG_MULTI_SZ && KeyValueInformation->DataLength)
+            Status = KsepMultiSzToShims(KeyValueInformation, Shims, NumberOfShims);
+        else
+            Status = STATUS_OBJECT_TYPE_MISMATCH;
+    }
+
+    ExFreePoolWithTag(KeyValueInformation, TAG_KSE_REGISTRY);
+    return Status;
+}
+
+static NTSTATUS NTAPI
+KsepGetShimsForDriver(
+    _In_ PLDR_DATA_TABLE_ENTRY LdrEntry,
+    _Out_ PKSE_SHIM* Shims,
+    _Out_ PULONG NumberOfShims)
+{
+    /* TODO: Also match against the driver database (drvmain.sdb) */
+    return KsepGetShimsFromRegistry(LdrEntry, Shims, NumberOfShims);
 }
 
 
 static NTSTATUS NTAPI
 KsepGetShimCallbacksForDriver(
-    IN PVOID DriverStart,
-    OUT PKSE_DRIVER_IO_CALLBACKS pIoCallbacks)
+    _In_ PLDR_DATA_TABLE_ENTRY LdrEntry,
+    _Out_ PKSE_DRIVER_IO_CALLBACKS pIoCallbacks)
 {
-    PKSE_SHIM Shim;
+    PKSE_SHIM Shims[KSE_MAX_SHIMS_PER_DRIVER];
+    ULONG NumberOfShims, n;
     PKSE_HOOK_COLLECTION HookCollection;
     PKSE_HOOK Hook;
     NTSTATUS Status;
 
     RtlZeroMemory(pIoCallbacks, sizeof(*pIoCallbacks));
 
-    Status = KsepGetShimForDriver(DriverStart, &Shim);
+    Status = KsepGetShimsForDriver(LdrEntry, Shims, &NumberOfShims);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT("KSE: No Shim found for %p\n", DriverStart);
+        DPRINT("KSE: No Shim found for %wZ\n", &LdrEntry->BaseDllName);
         return Status;
     }
 
-    for (HookCollection = Shim->HookCollectionsArray;
-         HookCollection->Type != KseCollectionInvalid;
-         HookCollection++)
+    for (n = 0; n < NumberOfShims; n++)
     {
-        if (HookCollection->Type != KseCollectionCallback)
-            continue;
-
-        for (Hook = HookCollection->HookArray; Hook->Type != KseHookInvalid; Hook++)
+        for (HookCollection = Shims[n]->HookCollectionsArray;
+             HookCollection->Type != KseCollectionInvalid;
+             HookCollection++)
         {
-            if (Hook->Type != KseHookIRPCallback)
+            if (HookCollection->Type != KseCollectionCallback)
                 continue;
 
-            if (Hook->CallbackId == KseHookCallbackDriverInit)
+            for (Hook = HookCollection->HookArray; Hook->Type != KseHookInvalid; Hook++)
             {
-                pIoCallbacks->DriverInit = Hook->HookFunction;
-            }
-            else if (Hook->CallbackId == KseHookCallbackDriverStartIo)
-            {
-                pIoCallbacks->DriverStartIo = Hook->HookFunction;
-            }
-            else if (Hook->CallbackId == KseHookCallbackDriverUnload)
-            {
-                pIoCallbacks->DriverUnload = Hook->HookFunction;
-            }
-            else if (Hook->CallbackId == KseHookCallbackAddDevice)
-            {
-                pIoCallbacks->AddDevice = Hook->HookFunction;
-            }
-            else if (Hook->CallbackId >= KseHookCallbackMajorFunction &&
-                     Hook->CallbackId <= KseHookCallbackMajorFunction + IRP_MJ_MAXIMUM_FUNCTION)
-            {
-                pIoCallbacks->MajorFunction[Hook->CallbackId - KseHookCallbackMajorFunction] = Hook->HookFunction;
+                if (Hook->Type != KseHookIRPCallback)
+                    continue;
+
+                if (Hook->CallbackId == KseHookCallbackDriverInit)
+                {
+                    pIoCallbacks->DriverInit = Hook->HookFunction;
+                }
+                else if (Hook->CallbackId == KseHookCallbackDriverStartIo)
+                {
+                    pIoCallbacks->DriverStartIo = Hook->HookFunction;
+                }
+                else if (Hook->CallbackId == KseHookCallbackDriverUnload)
+                {
+                    pIoCallbacks->DriverUnload = Hook->HookFunction;
+                }
+                else if (Hook->CallbackId == KseHookCallbackAddDevice)
+                {
+                    pIoCallbacks->AddDevice = Hook->HookFunction;
+                }
+                else if (Hook->CallbackId >= KseHookCallbackMajorFunction &&
+                         Hook->CallbackId <= KseHookCallbackMajorFunction + IRP_MJ_MAXIMUM_FUNCTION)
+                {
+                    pIoCallbacks->MajorFunction[Hook->CallbackId - KseHookCallbackMajorFunction] = Hook->HookFunction;
+                }
             }
         }
     }
@@ -149,11 +284,19 @@ KseShimDriverIoCallbacks(
 {
     KSE_DRIVER_IO_CALLBACKS IoCallbacks;
     PKSE_DRIVER_IO_CALLBACKS KseCallbacks;
+    PLDR_DATA_TABLE_ENTRY LdrEntry;
+    BOOLEAN InKernel;
     ULONG i;
     NTSTATUS Status;
     DPRINT("KseShimDriverIoCallbacks(%wZ)\n", &DriverObject->DriverName);
 
-    Status = KsepGetShimCallbacksForDriver(DriverObject->DriverStart, &IoCallbacks);
+    if (KseEngine.State != KSE_STATE_INITIALIZED)
+        return STATUS_SUCCESS;
+
+    if (!KiPcToFileHeader(DriverObject->DriverStart, &LdrEntry, FALSE, &InKernel))
+        return STATUS_NOT_FOUND;
+
+    Status = KsepGetShimCallbacksForDriver(LdrEntry, &IoCallbacks);
     if (!NT_SUCCESS(Status))
         return Status;
 
@@ -395,19 +538,39 @@ NTAPI
 KseDriverLoadImage(
     _In_ PLDR_DATA_TABLE_ENTRY LdrEntry)
 {
-    PKSE_SHIM Shim;
+    PKSE_SHIM Shims[KSE_MAX_SHIMS_PER_DRIVER];
+    ULONG NumberOfShims, n;
     NTSTATUS Status;
 
-    Status = KsepGetShimForDriver(LdrEntry->DllBase, &Shim);
+    if (KseEngine.State != KSE_STATE_INITIALIZED)
+        return STATUS_SUCCESS;
+
+    Status = KsepGetShimsForDriver(LdrEntry, Shims, &NumberOfShims);
     if (!NT_SUCCESS(Status))
     {
         DPRINT("KSE: No Shim found for %wZ\n", &LdrEntry->BaseDllName);
-        return Status;
+        return STATUS_SUCCESS;
     }
 
-    DPRINT1("KSE: Found Shim 0x%08x for %wZ\n", Shim->ShimGuid->Data1, &LdrEntry->BaseDllName);
+    for (n = 0; n < NumberOfShims; n++)
+    {
+        DPRINT1("KSE: Applying shim %S (0x%08lx) to %wZ\n",
+                Shims[n]->ShimName, Shims[n]->ShimGuid->Data1, &LdrEntry->BaseDllName);
 
-    //KsepGetShimsForDriver();
-    ASSERT(FALSE);
-    return STATUS_NOT_SUPPORTED;
+        /* FIXME: Patch the import table of the driver */
+        DPRINT1("KSE: Import table hooking is not implemented yet\n");
+
+        if (Shims[n]->ShimmedDriverTargetedNotification)
+        {
+            PIMAGE_NT_HEADERS NtHeaders = RtlImageNtHeader(LdrEntry->DllBase);
+
+            Shims[n]->ShimmedDriverTargetedNotification(&LdrEntry->BaseDllName,
+                                                        LdrEntry->DllBase,
+                                                        LdrEntry->SizeOfImage,
+                                                        NtHeaders ? NtHeaders->FileHeader.TimeDateStamp : 0,
+                                                        LdrEntry->CheckSum);
+        }
+    }
+
+    return STATUS_SUCCESS;
 }
