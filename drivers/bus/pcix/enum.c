@@ -149,10 +149,17 @@ PciComputeNewCurrentSettings(IN PPCI_PDO_EXTENSION PdoExtension,
                 /* Interrupt resource */
                 case CmResourceTypeInterrupt:
 
-                    /* Make sure it's a compatible (and the only) PCI interrupt */
+                    /* Make sure it's the only PCI interrupt */
                     ASSERT(InterruptResource == NULL);
-                    ASSERT(Partial->u.Interrupt.Level == Partial->u.Interrupt.Vector);
                     InterruptResource = Partial;
+
+                    /* A message grant packs its message count into the level and
+                     * has no line to report, it gets programmed at start instead */
+                    if (Partial->Flags & CM_RESOURCE_INTERRUPT_MESSAGE)
+                        break;
+
+                    /* Make sure it's a compatible line-based interrupt */
+                    ASSERT(Partial->u.Interrupt.Level == Partial->u.Interrupt.Vector);
 
                     /* Only 255 interrupts on x86/x64 hardware */
                     if (Partial->u.Interrupt.Level < 256)
