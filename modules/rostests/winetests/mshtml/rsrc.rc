@@ -16,11 +16,20 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+/* @makedep: winetest.js */
+winetest.js HTML "winetest.js"
+
 /* @makedep: exectest.html */
 exectest.html HTML "exectest.html"
 
+/* @makedep: asyncscriptload.js */
+asyncscriptload.js HTML "asyncscriptload.js"
+
 /* @makedep: jstest.html */
 jstest.html HTML "jstest.html"
+
+/* @makedep: jstest.html */
+jstest-rtfile.html 2110 "jstest.html"
 
 /* @makedep: vbtest.html */
 vbtest.html HTML "vbtest.html"
@@ -28,11 +37,35 @@ vbtest.html HTML "vbtest.html"
 /* @makedep: events.html */
 events.html HTML "events.html"
 
+/* @makedep: runscript.html */
+runscript.html HTML "runscript.html"
+
+/* @makedep: frame.js */
+frame.js HTML "frame.js"
+
 /* @makedep: externscr.js */
 externscr.js HTML "externscr.js"
 
-/* @makedep: nav_test.html */
-nav_test.html HTML "nav_test.html"
+/* @makedep: navigation.js */
+navigation.js HTML "navigation.js"
+
+/* @makedep: xhr.js */
+xhr.js HTML "xhr.js"
+
+/* @makedep: dom.js */
+dom.js HTML "dom.js"
+
+/* @makedep: es5.js */
+es5.js HTML "es5.js"
+
+/* @makedep: events.js */
+events.js HTML "events.js"
+
+/* @makedep: documentmode.js */
+documentmode.js HTML "documentmode.js"
+
+/* @makedep: reload.js */
+reload.js HTML "reload.js"
 
 /* @makedep: blank.html */
 blank.html HTML "blank.html"
@@ -43,8 +76,20 @@ blank2.html HTML "blank.html"
 /* @makedep: blank.html */
 123 HTML "blank.html"
 
-/* @makedep: test_tlb.tlb */
-1 TYPELIB test_tlb.tlb
+/* @makedep: blank_ie10.html */
+blank_ie10.html HTML "blank_ie10.html"
+
+/* @makedep: doc_with_prop.html */
+doc_with_prop.html HTML "doc_with_prop.html"
+
+/* @makedep: doc_with_prop_ie9.html */
+doc_with_prop_ie9.html HTML "doc_with_prop_ie9.html"
+
+/* @makedep: iframe.html */
+iframe.html HTML "iframe.html"
+
+/* @makedep: xhr_iframe.html */
+xhr_iframe.html HTML "xhr_iframe.html"
 
 /* For res: protocol test: */
 
@@ -53,3 +98,6 @@ res.html test "jstest.html"
 
 /* @makedep: jstest.html */
 dir/dir2/res.html test "jstest.html"
+
+/* @makedep: img.png */
+img.png PNG "img.png"
