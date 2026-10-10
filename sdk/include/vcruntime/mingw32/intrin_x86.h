@@ -79,7 +79,12 @@ __INTRIN_INLINE void* __cdecl memcpy(void* dest, const void* source, size_t num)
 
 /*** Stack frame juggling ***/
 #define _ReturnAddress() (__builtin_return_address(0))
+#ifdef __x86_64__
+/* x64 GCC may push callee-saved registers before setting up the frame pointer */
+#define _AddressOfReturnAddress() ((void *)((char *)__builtin_dwarf_cfa() - sizeof(void *)))
+#else
 #define _AddressOfReturnAddress() (&(((void **)(__builtin_frame_address(0)))[1]))
+#endif
 /* TODO: __getcallerseflags but how??? */
 
 /*** Memory barriers ***/
