@@ -16,9 +16,9 @@ static HINSTANCE hSetupApi = NULL;
 
 /**********************************************************************
  *	LoadStringW		(USER32.@)
- *	Synced with Wine Staging 1.7.55
+ *	Synced with Wine 11.11
  */
-INT WINAPI LoadStringW( HINSTANCE instance, UINT resource_id,
+INT WINAPI DECLSPEC_HOTPATCH LoadStringW( HINSTANCE instance, UINT resource_id,
                             LPWSTR buffer, INT buflen )
 {
     HGLOBAL hmem;
@@ -33,12 +33,13 @@ INT WINAPI LoadStringW( HINSTANCE instance, UINT resource_id,
     if(buffer == NULL)
         return 0;
 
-    /* Use loword (incremented by 1) as resourceid */
-    hrsrc = FindResourceW( instance, MAKEINTRESOURCEW((LOWORD(resource_id) >> 4) + 1),
-                           (LPWSTR)RT_STRING );
-    if (!hrsrc) return 0;
-    hmem = LoadResource( instance, hrsrc );
-    if (!hmem) return 0;
+    if (!(hrsrc = FindResourceW( instance, MAKEINTRESOURCEW((LOWORD(resource_id) >> 4) + 1), (LPWSTR)RT_STRING )) ||
+        !(hmem = LoadResource( instance, hrsrc )))
+    {
+        TRACE( "Failed to load string.\n" );
+        if (buflen > 0) buffer[0] = 0;
+        return 0;
+    }
 
     p = LockResource(hmem);
     string_num = resource_id & 0x000f;
@@ -56,25 +57,18 @@ INT WINAPI LoadStringW( HINSTANCE instance, UINT resource_id,
     }
 
     i = min(buflen - 1, *p);
-    if (i > 0) {
-	memcpy(buffer, p + 1, i * sizeof (WCHAR));
-        buffer[i] = 0;
-    } else {
-	if (buflen > 1) {
-            buffer[0] = 0;
-	    return 0;
-	}
-    }
+    memcpy(buffer, p + 1, i * sizeof(WCHAR));
+    buffer[i] = 0;
 
-    TRACE("%s loaded !\n", debugstr_w(buffer));
+    TRACE("returning %s\n", debugstr_w(buffer));
     return i;
 }
 
 /**********************************************************************
  *	LoadStringA	(USER32.@)
- *	Synced with Wine Staging 1.7.55
+ *	Synced with Wine 11.11
  */
-INT WINAPI LoadStringA( HINSTANCE instance, UINT resource_id, LPSTR buffer, INT buflen )
+INT WINAPI DECLSPEC_HOTPATCH LoadStringA( HINSTANCE instance, UINT resource_id, LPSTR buffer, INT buflen )
 {
     HGLOBAL hmem;
     HRSRC hrsrc;
@@ -95,8 +89,7 @@ INT WINAPI LoadStringA( HINSTANCE instance, UINT resource_id, LPSTR buffer, INT 
 
         while (id--) p += *p + 1;
 
-        if (buflen != 1)
-            RtlUnicodeToMultiByteN( buffer, buflen - 1, &retval, (PWSTR)(p + 1), *p * sizeof(WCHAR) );
+        RtlUnicodeToMultiByteN( buffer, buflen - 1, &retval, p + 1, *p * sizeof(WCHAR) );
     }
     buffer[retval] = 0;
     TRACE("returning %s\n", debugstr_a(buffer));
