@@ -3785,6 +3785,7 @@ NtWriteFile(IN HANDLE FileHandle,
     PFAST_IO_DISPATCH FastIoDispatch;
     IO_STATUS_BLOCK KernelIosb;
     BOOLEAN Success;
+    BOOLEAN AppendOnly = FALSE;
 
     PAGED_CODE();
     CapturedByteOffset.QuadPart = 0;
@@ -3903,6 +3904,7 @@ NtWriteFile(IN HANDLE FileHandle,
         (FILE_APPEND_DATA | FILE_WRITE_DATA)) == FILE_APPEND_DATA)
     {
         /* Give the drivers something to understand */
+        AppendOnly = TRUE;
         CapturedByteOffset.u.LowPart = FILE_WRITE_TO_END_OF_FILE;
         CapturedByteOffset.u.HighPart = -1;
     }
@@ -3940,10 +3942,11 @@ NtWriteFile(IN HANDLE FileHandle,
             return Status;
         }
 
-        /* Check if we don't have a byte offset available */
-        if (!(ByteOffset) ||
-            ((CapturedByteOffset.u.LowPart == FILE_USE_FILE_POINTER_POSITION) &&
-             (CapturedByteOffset.u.HighPart == -1)))
+        /* Check if we don't have a byte offset available (an append-only handle always has one) */
+        if (!(AppendOnly) &&
+            (!(ByteOffset) ||
+             ((CapturedByteOffset.u.LowPart == FILE_USE_FILE_POINTER_POSITION) &&
+              (CapturedByteOffset.u.HighPart == -1))))
         {
             /* Use the Current Byte Offset instead */
             CapturedByteOffset = FileObject->CurrentByteOffset;
