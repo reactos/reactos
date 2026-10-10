@@ -72,42 +72,43 @@ DEFINE_GUID(MOUNTDEV_MOUNTED_DEVICE_GUID, 0x53F5630D, 0xB6BF, 0x11D0, 0x94, 0xF2
   CTL_CODE(MOUNTDEVCONTROLTYPE, 2, METHOD_BUFFERED, FILE_ANY_ACCESS)
 
 /* Check for \DosDevices\X: prefix (drive letter) */
-#define MOUNTMGR_IS_DRIVE_LETTER(s) \
-  ((s)->Length >= 14 * sizeof(WCHAR) && \
-   (s)->Buffer[0] == L'\\' && \
-   (s)->Buffer[1] == L'D' && \
-   (s)->Buffer[2] == L'o' && \
-   (s)->Buffer[3] == L's' && \
-   (s)->Buffer[4] == L'D' && \
-   (s)->Buffer[5] == L'e' && \
-   (s)->Buffer[6] == L'v' && \
-   (s)->Buffer[7] == L'i' && \
-   (s)->Buffer[8] == L'c' && \
-   (s)->Buffer[9] == L'e' && \
-   (s)->Buffer[10] == L's' && \
-   (s)->Buffer[11] == L'\\' && \
-   (s)->Buffer[12] >= L'A' && (s)->Buffer[12] <= L'Z' && \
-   (s)->Buffer[13] == L':')
+#define MOUNTMGR_IS_DRIVE_LETTER(s)   \
+  ((s)->Length == 28 &&               \
+  (s)->Buffer[0] == '\\' &&           \
+  (s)->Buffer[1] == 'D' &&            \
+  (s)->Buffer[2] == 'o' &&            \
+  (s)->Buffer[3] == 's' &&            \
+  (s)->Buffer[4] == 'D' &&            \
+  (s)->Buffer[5] == 'e' &&            \
+  (s)->Buffer[6] == 'v' &&            \
+  (s)->Buffer[7] == 'i' &&            \
+  (s)->Buffer[8] == 'c' &&            \
+  (s)->Buffer[9] == 'e' &&            \
+  (s)->Buffer[10] == 's' &&           \
+  (s)->Buffer[11] == '\\' &&          \
+  (s)->Buffer[12] >= 'A' &&           \
+  (s)->Buffer[12] <= 'Z' &&           \
+  (s)->Buffer[13] == ':')
 
 /* Check for \??\Volume{GUID} prefix */
-#define MOUNTMGR_IS_VOLUME_NAME(s) \
-  ((s)->Length >= 48 * sizeof(WCHAR) && \
-   (s)->Buffer[0] == L'\\' && \
-   ((s)->Buffer[1] == L'?' || (s)->Buffer[1] == L'\\') && \
-   (s)->Buffer[2] == L'?' && \
-   (s)->Buffer[3] == L'\\' && \
-   (s)->Buffer[4] == L'V' && \
-   (s)->Buffer[5] == L'o' && \
-   (s)->Buffer[6] == L'l' && \
-   (s)->Buffer[7] == L'u' && \
-   (s)->Buffer[8] == L'm' && \
-   (s)->Buffer[9] == L'e' && \
-   (s)->Buffer[10] == L'{' && \
-   (s)->Buffer[19] == L'-' && \
-   (s)->Buffer[24] == L'-' && \
-   (s)->Buffer[29] == L'-' && \
-   (s)->Buffer[34] == L'-' && \
-   (s)->Buffer[47] == L'}')
+#define MOUNTMGR_IS_VOLUME_NAME(s)                                         \
+  (((s)->Length == 96 || ((s)->Length == 98 && (s)->Buffer[48] == '\\')) && \
+  (s)->Buffer[0] == '\\' &&                                                \
+  ((s)->Buffer[1] == '?' || (s)->Buffer[1] == '\\') &&                     \
+  (s)->Buffer[2] == '?' &&                                                 \
+  (s)->Buffer[3] == '\\' &&                                                \
+  (s)->Buffer[4] == 'V' &&                                                 \
+  (s)->Buffer[5] == 'o' &&                                                 \
+  (s)->Buffer[6] == 'l' &&                                                 \
+  (s)->Buffer[7] == 'u' &&                                                 \
+  (s)->Buffer[8] == 'm' &&                                                 \
+  (s)->Buffer[9] == 'e' &&                                                 \
+  (s)->Buffer[10] == '{' &&                                                \
+  (s)->Buffer[19] == '-' &&                                                \
+  (s)->Buffer[24] == '-' &&                                                \
+  (s)->Buffer[29] == '-' &&                                                \
+  (s)->Buffer[34] == '-' &&                                                \
+  (s)->Buffer[47] == '}')
 
 typedef struct _MOUNTMGR_CREATE_POINT_INPUT {
   USHORT SymbolicLinkNameOffset;
