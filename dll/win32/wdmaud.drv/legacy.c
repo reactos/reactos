@@ -606,7 +606,8 @@ LegacyCompletionRoutine(
     DeviceInfo = (PWDMAUD_DEVICE_INFO)Overlap->CompletionContext;
 
     /* Call mmebuddy overlap routine */
-    Overlap->OriginalCompletionRoutine(dwErrorCode, DeviceInfo->Header.DataUsed, lpOverlapped);
+    LPSOUND_OVERLAPPED_COMPLETION_ROUTINE CompletionRoutine = (LPSOUND_OVERLAPPED_COMPLETION_ROUTINE)Overlap->OriginalCompletionRoutine;
+    CompletionRoutine(dwErrorCode, DeviceInfo->Header.DataUsed, Overlap);
 
     HeapFree(GetProcessHeap(), 0, DeviceInfo);
 }
@@ -617,7 +618,7 @@ WdmAudCommitWaveBufferByLegacy(
     IN  PVOID OffsetPtr,
     IN  DWORD Length,
     IN  PSOUND_OVERLAPPED Overlap,
-    IN  LPOVERLAPPED_COMPLETION_ROUTINE CompletionRoutine)
+    IN  LPSOUND_OVERLAPPED_COMPLETION_ROUTINE CompletionRoutine)
 {
     HANDLE Handle;
     MMRESULT Result;
