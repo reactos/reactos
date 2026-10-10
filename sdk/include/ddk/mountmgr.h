@@ -71,8 +71,6 @@ DEFINE_GUID(MOUNTDEV_MOUNTED_DEVICE_GUID, 0x53F5630D, 0xB6BF, 0x11D0, 0x94, 0xF2
 #define IOCTL_MOUNTDEV_QUERY_DEVICE_NAME \
   CTL_CODE(MOUNTDEVCONTROLTYPE, 2, METHOD_BUFFERED, FILE_ANY_ACCESS)
 
-/* ----- safer helper macros ----- */
-
 /* Check for \DosDevices\X: prefix (drive letter) */
 #define MOUNTMGR_IS_DRIVE_LETTER(s) \
   ((s)->Length >= 14 * sizeof(WCHAR) && \
@@ -110,8 +108,6 @@ DEFINE_GUID(MOUNTDEV_MOUNTED_DEVICE_GUID, 0x53F5630D, 0xB6BF, 0x11D0, 0x94, 0xF2
    (s)->Buffer[29] == L'-' && \
    (s)->Buffer[34] == L'-' && \
    (s)->Buffer[47] == L'}')
-
-/* ----- structures ----- */
 
 typedef struct _MOUNTMGR_CREATE_POINT_INPUT {
   USHORT SymbolicLinkNameOffset;
@@ -169,34 +165,33 @@ typedef struct _MOUNTDEV_NAME {
   _Field_size_bytes_(NameLength) WCHAR Name[1]; /* variable-length */
 } MOUNTDEV_NAME, *PMOUNTDEV_NAME;
 
-#endif /* NTDDI_WIN2K */
+#endif /* (NTDDI_VERSION >= NTDDI_WIN2K) */
 
 #if (NTDDI_VERSION >= NTDDI_WINXP)
-
-/* DOS vs NT volume name helpers */
-#define MOUNTMGR_IS_DOS_VOLUME_NAME(s) \
-  (MOUNTMGR_IS_VOLUME_NAME(s) && (s)->Buffer[1] == L'\\')
-#define MOUNTMGR_IS_NT_VOLUME_NAME(s) \
-  (MOUNTMGR_IS_VOLUME_NAME(s) && (s)->Buffer[1] == L'?')
-
-/* WB volume name helpers */
-#define MOUNTMGR_IS_DOS_VOLUME_NAME_WB(s) \
-  (MOUNTMGR_IS_VOLUME_NAME(s) && (s)->Length == 98 && (s)->Buffer[1] == L'\\')
-
-#define MOUNTMGR_IS_NT_VOLUME_NAME_WB(s) \
-  (MOUNTMGR_IS_VOLUME_NAME(s) && (s)->Length == 98 && (s)->Buffer[1] == L'?')
 
 #define IOCTL_MOUNTMGR_QUERY_DOS_VOLUME_PATH \
   CTL_CODE(MOUNTMGRCONTROLTYPE, 12, METHOD_BUFFERED, FILE_ANY_ACCESS)
 #define IOCTL_MOUNTMGR_QUERY_DOS_VOLUME_PATHS \
   CTL_CODE(MOUNTMGRCONTROLTYPE, 13, METHOD_BUFFERED, FILE_ANY_ACCESS)
 
+/* DOS vs NT volume name helpers */
+#define MOUNTMGR_IS_DOS_VOLUME_NAME(s) \
+  (MOUNTMGR_IS_VOLUME_NAME(s) && (s)->Length == 96 && (s)->Buffer[1] == '\\')
+#define MOUNTMGR_IS_NT_VOLUME_NAME(s) \
+  (MOUNTMGR_IS_VOLUME_NAME(s) && (s)->Length == 96 && (s)->Buffer[1] == '?')
+
+/* WB volume name helpers */
+#define MOUNTMGR_IS_DOS_VOLUME_NAME_WB(s) \
+  (MOUNTMGR_IS_VOLUME_NAME(s) && (s)->Length == 98 && (s)->Buffer[1] == '\\')
+#define MOUNTMGR_IS_NT_VOLUME_NAME_WB(s) \
+  (MOUNTMGR_IS_VOLUME_NAME(s) && (s)->Length == 98 && (s)->Buffer[1] == '?')
+
 typedef struct _MOUNTMGR_VOLUME_PATHS {
   ULONG MultiSzLength;
   WCHAR MultiSz[1]; /* variable-length multi-sz */
 } MOUNTMGR_VOLUME_PATHS, *PMOUNTMGR_VOLUME_PATHS;
 
-#endif /* NTDDI_WINXP */
+#endif /* (NTDDI_VERSION >= NTDDI_WINXP) */
 
 #if (NTDDI_VERSION >= NTDDI_WS03)
 
@@ -220,7 +215,7 @@ typedef struct _MOUNTMGR_SET_AUTO_MOUNT {
   MOUNTMGR_AUTO_MOUNT_STATE NewState;
 } MOUNTMGR_SET_AUTO_MOUNT, *PMOUNTMGR_SET_AUTO_MOUNT;
 
-#endif /* NTDDI_WS03 */
+#endif /* (NTDDI_VERSION >= NTDDI_WS03) */
 
 #if (NTDDI_VERSION >= NTDDI_WIN7)
 
