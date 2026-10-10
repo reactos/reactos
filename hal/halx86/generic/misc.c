@@ -8,11 +8,15 @@
 /* INCLUDES *******************************************************************/
 
 #include <hal.h>
+#include <smp.h>
 
 #define NDEBUG
 #include <debug.h>
 
 /* GLOBALS  *******************************************************************/
+
+/* Filled from the MADT by acpi/madt.c, which not every APIC HAL links */
+HALP_APIC_INFO_TABLE HalpApicInfoTable;
 
 UCHAR HalpSerialLen;
 CHAR HalpSerialNumber[31];
