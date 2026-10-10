@@ -12,7 +12,7 @@
 /* INCLUDES *****************************************************************/
 
 #include <ntoskrnl.h>
-#define NDEBUG
+//#define NDEBUG
 #include <debug.h>
 
 #ifndef NDEBUG
@@ -886,7 +886,7 @@ IopStoreSystemPartitionInformation(
                                       &ObjectAttributes);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT("Failed to open symlink %wZ, Status=%lx\n", NtSystemPartitionDeviceName, Status);
+        DPRINT1("Failed to open symlink %wZ, Status=%lx\n", NtSystemPartitionDeviceName, Status);
         return;
     }
 
@@ -903,7 +903,7 @@ IopStoreSystemPartitionInformation(
 
     if (!NT_SUCCESS(Status))
     {
-        DPRINT("Failed querying symlink %wZ, Status=%lx\n", NtSystemPartitionDeviceName, Status);
+        DPRINT1("Failed querying symlink %wZ, Status=%lx\n", NtSystemPartitionDeviceName, Status);
         return;
     }
 
@@ -917,7 +917,7 @@ IopStoreSystemPartitionInformation(
                                   KEY_ALL_ACCESS);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT("Failed to open HKLM\\SYSTEM, Status=%lx\n", Status);
+        DPRINT1("Failed to open HKLM\\SYSTEM, Status=%lx\n", Status);
         return;
     }
 
@@ -936,7 +936,7 @@ IopStoreSystemPartitionInformation(
 
     if (!NT_SUCCESS(Status))
     {
-        DPRINT("Failed opening/creating Setup key, Status=%lx\n", Status);
+        DPRINT1("Failed opening/creating Setup key, Status=%lx\n", Status);
         return;
     }
 
@@ -952,7 +952,7 @@ IopStoreSystemPartitionInformation(
                            LinkTarget.Length + sizeof(WCHAR));
     if (!NT_SUCCESS(Status))
     {
-        DPRINT("Failed writing SystemPartition value, Status=%lx\n", Status);
+        DPRINT1("Failed writing SystemPartition value, Status=%lx\n", Status);
     }
 
     /* Prepare for second data writing */
@@ -975,7 +975,7 @@ IopStoreSystemPartitionInformation(
                            OsLoaderPathName->Length + sizeof(UNICODE_NULL));
     if (!NT_SUCCESS(Status))
     {
-        DPRINT("Failed writing OsLoaderPath value, Status=%lx\n", Status);
+        DPRINT1("Failed writing OsLoaderPath value, Status=%lx\n", Status);
     }
 
     /* We're finally done! */
