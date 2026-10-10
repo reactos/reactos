@@ -100,7 +100,7 @@ public:
     ~CQueryAssociations();
 
 #if (DLL_EXPORT_VERSION < _WIN32_WINNT_VISTA)
-    // *** IAssociationArrayOld ***
+    // *** IAssociationArrayOld methods ***
     STDMETHODIMP EnumElements(ULONG flags, IEnumAssociationElements **ppElement) override;
     STDMETHODIMP QueryString(ULONG flags, ASSOCQUERY query, PCWSTR key, PWSTR *ppszValue) override;
     STDMETHODIMP QueryDword(ULONG flags, ASSOCQUERY query, PCWSTR key, DWORD *pdwValue) override;
@@ -108,7 +108,7 @@ public:
     STDMETHODIMP QueryDirect(ULONG flags, ASSOCQUERY query, PCWSTR key, FLAGGED_BYTE_BLOB **ppBlob) override;
     STDMETHODIMP QueryObject(ULONG flags, ASSOCQUERY query, PCWSTR key, REFIID riid, PVOID *ppvObj) override;
 
-    // *** IAssociationArrayInitialize ***
+    // *** IAssociationArrayInitialize methods ***
     STDMETHODIMP InitClassElements(ULONG flags, PCWSTR pszClass) override;
     STDMETHODIMP InsertElements(ULONG flags, IEnumAssociationElements *pElements) override;
     STDMETHODIMP FilterElements(ULONG dwFilter) override;
