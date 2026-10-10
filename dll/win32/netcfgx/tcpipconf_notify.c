@@ -552,7 +552,7 @@ ExtractParameterValue(
         length = wcslen(pStart);
     else
         length = pEnd - pStart;
-	TRACE("length %d\n", length);
+    TRACE("length %d\n", length);
 
     if (length == 0)
         return NULL;
