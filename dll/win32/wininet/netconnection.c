@@ -1,7 +1,3 @@
-#ifdef __REACTOS__
-#define NONAMELESSUNION
-#include "precomp.h"
-#else
 /*
  * Wininet - networking layer
  *
@@ -25,8 +21,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define NONAMELESSUNION
-
 #include "ws2tcpip.h"
 
 #include <time.h>
@@ -43,7 +37,6 @@
 
 #include "wine/debug.h"
 #include "internet.h"
-#endif /* defined(__REACTOS__) */
 
 WINE_DEFAULT_DEBUG_CHANNEL(wininet);
 
@@ -86,7 +79,7 @@ static DWORD netconn_verify_cert(netconn_t *conn, PCCERT_CONTEXT cert, HCERTSTOR
         }
 
         if (chain->TrustStatus.dwErrorStatus & ~supportedErrors) {
-            WARN("error status %x\n", chain->TrustStatus.dwErrorStatus & ~supportedErrors);
+            WARN("error status %lx\n", chain->TrustStatus.dwErrorStatus & ~supportedErrors);
             err = conn->mask_errors && err ? ERROR_INTERNET_SEC_CERT_ERRORS : ERROR_INTERNET_SEC_INVALID_CERT;
             errors &= supportedErrors;
             if(!conn->mask_errors)
@@ -167,7 +160,7 @@ static DWORD netconn_verify_cert(netconn_t *conn, PCCERT_CONTEXT cert, HCERTSTOR
          */
         memcpy(&chainCopy, chain, sizeof(chainCopy));
         chainCopy.TrustStatus.dwErrorStatus = 0;
-        sslExtraPolicyPara.u.cbSize = sizeof(sslExtraPolicyPara);
+        sslExtraPolicyPara.cbSize = sizeof(sslExtraPolicyPara);
         sslExtraPolicyPara.dwAuthType = AUTHTYPE_SERVER;
         sslExtraPolicyPara.pwszServerName = conn->server->name;
         sslExtraPolicyPara.fdwChecks = conn->security_flags;
@@ -186,9 +179,9 @@ static DWORD netconn_verify_cert(netconn_t *conn, PCCERT_CONTEXT cert, HCERTSTOR
                     conn->security_flags |= _SECURITY_FLAG_CERT_INVALID_CN;
                 err = conn->mask_errors && err ? ERROR_INTERNET_SEC_CERT_ERRORS : ERROR_INTERNET_SEC_CERT_CN_INVALID;
             }else if(policyStatus.dwError) {
-                WARN("policyStatus.dwError %x\n", policyStatus.dwError);
+                WARN("policyStatus.dwError %lx\n", policyStatus.dwError);
                 if(conn->mask_errors)
-                    WARN("unknown error flags for policy status %x\n", policyStatus.dwError);
+                    WARN("unknown error flags for policy status %lx\n", policyStatus.dwError);
                 err = conn->mask_errors && err ? ERROR_INTERNET_SEC_CERT_ERRORS : ERROR_INTERNET_SEC_INVALID_CERT;
             }
         }else {
@@ -197,7 +190,7 @@ static DWORD netconn_verify_cert(netconn_t *conn, PCCERT_CONTEXT cert, HCERTSTOR
     }
 
     if(err) {
-        WARN("failed %u\n", err);
+        WARN("failed %lu\n", err);
         CertFreeCertificateChain(chain);
         if(conn->server->cert_chain) {
             CertFreeCertificateChain(conn->server->cert_chain);
@@ -256,7 +249,7 @@ static BOOL ensure_cred_handle(void)
     LeaveCriticalSection(&init_sechandle_cs);
 
     if(res != SEC_E_OK) {
-        WARN("Failed: %08x\n", res);
+        WARN("Failed: %08lx\n", res);
         return FALSE;
     }
 
@@ -270,11 +263,15 @@ static BOOL WINAPI winsock_startup(INIT_ONCE *once, void *param, void **context)
     WSADATA wsa_data;
     DWORD res;
 
+#ifdef __REACTOS__
     res = WSAStartup(MAKEWORD(2,2), &wsa_data);
+#else
+    res = WSAStartup(MAKEWORD(1,1), &wsa_data);
+#endif
     if(res == ERROR_SUCCESS)
         winsock_loaded = TRUE;
     else
-        ERR("WSAStartup failed: %u\n", res);
+        ERR("WSAStartup failed: %lu\n", res);
     return TRUE;
 }
 
@@ -349,7 +346,7 @@ DWORD create_netconn(server_t *server, DWORD security_flags, BOOL mask_errors, D
     netconn_t *netconn;
     int result;
 
-    netconn = heap_alloc_zero(sizeof(*netconn));
+    netconn = calloc(1, sizeof(*netconn));
     if(!netconn)
         return ERROR_OUTOFMEMORY;
 
@@ -361,7 +358,7 @@ DWORD create_netconn(server_t *server, DWORD security_flags, BOOL mask_errors, D
 
     result = create_netconn_socket(server, netconn, timeout);
     if (result != ERROR_SUCCESS) {
-        heap_free(netconn);
+        free(netconn);
         return result;
     }
 
@@ -387,13 +384,13 @@ void free_netconn(netconn_t *netconn)
     server_release(netconn->server);
 
     if (netconn->secure) {
-        heap_free(netconn->peek_msg_mem);
+        free(netconn->peek_msg_mem);
         netconn->peek_msg_mem = NULL;
         netconn->peek_msg = NULL;
         netconn->peek_len = 0;
-        heap_free(netconn->ssl_buf);
+        free(netconn->ssl_buf);
         netconn->ssl_buf = NULL;
-        heap_free(netconn->extra_buf);
+        free(netconn->extra_buf);
         netconn->extra_buf = NULL;
         netconn->extra_len = 0;
     }
@@ -401,7 +398,7 @@ void free_netconn(netconn_t *netconn)
         DeleteSecurityContext(&netconn->ssl_ctx);
 
     close_netconn(netconn);
-    heap_free(netconn);
+    free(netconn);
 }
 
 void NETCON_unload(void)
@@ -464,7 +461,7 @@ static DWORD netcon_secure_connect_setup(netconn_t *connection, BOOL compat_mode
         cred = &compat_cred_handle;
     }
 
-    read_buf = heap_alloc(read_buf_size);
+    read_buf = malloc(read_buf_size);
     if(!read_buf)
         return ERROR_OUTOFMEMORY;
 
@@ -479,7 +476,7 @@ static DWORD netcon_secure_connect_setup(netconn_t *connection, BOOL compat_mode
         if(out_buf.cbBuffer) {
             assert(status == SEC_I_CONTINUE_NEEDED);
 
-            TRACE("sending %u bytes\n", out_buf.cbBuffer);
+            TRACE("sending %lu bytes\n", out_buf.cbBuffer);
 
             size = sock_send(connection->socket, out_buf.pvBuffer, out_buf.cbBuffer, 0);
             if(size != out_buf.cbBuffer) {
@@ -498,19 +495,17 @@ static DWORD netcon_secure_connect_setup(netconn_t *connection, BOOL compat_mode
 
             memmove(read_buf, (BYTE*)in_bufs[0].pvBuffer+in_bufs[0].cbBuffer-in_bufs[1].cbBuffer, in_bufs[1].cbBuffer);
             in_bufs[0].cbBuffer = in_bufs[1].cbBuffer;
-
-            in_bufs[1].BufferType = SECBUFFER_EMPTY;
-            in_bufs[1].cbBuffer = 0;
-            in_bufs[1].pvBuffer = NULL;
         }
 
         assert(in_bufs[0].BufferType == SECBUFFER_TOKEN);
-        assert(in_bufs[1].BufferType == SECBUFFER_EMPTY);
+        in_bufs[1].BufferType = SECBUFFER_EMPTY;
+        in_bufs[1].cbBuffer = 0;
+        in_bufs[1].pvBuffer = NULL;
 
         if(in_bufs[0].cbBuffer + 1024 > read_buf_size) {
             BYTE *new_read_buf;
 
-            new_read_buf = heap_realloc(read_buf, read_buf_size + 1024);
+            new_read_buf = realloc(read_buf, read_buf_size + 1024);
             if(!new_read_buf) {
                 status = E_OUTOFMEMORY;
                 break;
@@ -527,13 +522,13 @@ static DWORD netcon_secure_connect_setup(netconn_t *connection, BOOL compat_mode
             break;
         }
 
-        TRACE("recv %lu bytes\n", size);
+        TRACE("recv %Iu bytes\n", size);
 
         in_bufs[0].cbBuffer += size;
         in_bufs[0].pvBuffer = read_buf;
         status = InitializeSecurityContextW(cred, &ctx, connection->server->name,  isc_req_flags, 0, 0, &in_desc,
                 0, NULL, &out_desc, &attrs, NULL);
-        TRACE("InitializeSecurityContext ret %08x\n", status);
+        TRACE("InitializeSecurityContext ret %08lx\n", status);
 
         if(status == SEC_E_OK) {
             if(SecIsValidHandle(&connection->ssl_ctx))
@@ -554,7 +549,7 @@ static DWORD netcon_secure_connect_setup(netconn_t *connection, BOOL compat_mode
                 res = netconn_verify_cert(connection, cert, cert->hCertStore);
                 CertFreeCertificateContext(cert);
                 if(res != ERROR_SUCCESS) {
-                    WARN("cert verify failed: %u\n", res);
+                    WARN("cert verify failed: %lu\n", res);
                     break;
                 }
             }else {
@@ -562,7 +557,7 @@ static DWORD netcon_secure_connect_setup(netconn_t *connection, BOOL compat_mode
                 break;
             }
 
-            connection->ssl_buf = heap_alloc(connection->ssl_sizes.cbHeader + connection->ssl_sizes.cbMaximumMessage
+            connection->ssl_buf = malloc(connection->ssl_sizes.cbHeader + connection->ssl_sizes.cbMaximumMessage
                     + connection->ssl_sizes.cbTrailer);
             if(!connection->ssl_buf) {
                 res = GetLastError();
@@ -571,11 +566,11 @@ static DWORD netcon_secure_connect_setup(netconn_t *connection, BOOL compat_mode
         }
     }
 
-    heap_free(read_buf);
+    free(read_buf);
 
     if(status != SEC_E_OK || res != ERROR_SUCCESS) {
-        WARN("Failed to establish SSL connection: %08x (%u)\n", status, res);
-        heap_free(connection->ssl_buf);
+        WARN("Failed to establish SSL connection: %08lx (%lu)\n", status, res);
+        free(connection->ssl_buf);
         connection->ssl_buf = NULL;
         return res ? res : ERROR_INTERNET_SECURITY_CHANNEL_ERROR;
     }
@@ -713,7 +708,7 @@ static BOOL read_ssl_chunk(netconn_t *conn, void *buf, SIZE_T buf_size, BOOL blo
         memcpy(conn->ssl_buf, conn->extra_buf, conn->extra_len);
         buf_len = conn->extra_len;
         conn->extra_len = 0;
-        heap_free(conn->extra_buf);
+        free(conn->extra_buf);
         conn->extra_buf = NULL;
     }
 
@@ -765,7 +760,7 @@ static BOOL read_ssl_chunk(netconn_t *conn, void *buf, SIZE_T buf_size, BOOL blo
                     TRACE("would block\n");
 
                     /* FIXME: Optimize extra_buf usage. */
-                    conn->extra_buf = heap_alloc(buf_len);
+                    conn->extra_buf = malloc(buf_len);
                     if(!conn->extra_buf)
                         return ERROR_NOT_ENOUGH_MEMORY;
 
@@ -780,7 +775,7 @@ static BOOL read_ssl_chunk(netconn_t *conn, void *buf, SIZE_T buf_size, BOOL blo
             buf_len += size;
             continue;
         default:
-            WARN("failed: %08x\n", res);
+            WARN("failed: %08lx\n", res);
             return ERROR_INTERNET_CONNECTION_ABORTED;
         }
     } while(res != SEC_E_OK);
@@ -791,7 +786,7 @@ static BOOL read_ssl_chunk(netconn_t *conn, void *buf, SIZE_T buf_size, BOOL blo
             memcpy(buf, bufs[i].pvBuffer, size);
             if(size < bufs[i].cbBuffer) {
                 assert(!conn->peek_len);
-                conn->peek_msg_mem = conn->peek_msg = heap_alloc(bufs[i].cbBuffer - size);
+                conn->peek_msg_mem = conn->peek_msg = malloc(bufs[i].cbBuffer - size);
                 if(!conn->peek_msg)
                     return ERROR_NOT_ENOUGH_MEMORY;
                 conn->peek_len = bufs[i].cbBuffer-size;
@@ -804,7 +799,7 @@ static BOOL read_ssl_chunk(netconn_t *conn, void *buf, SIZE_T buf_size, BOOL blo
 
     for(i = 0; i < ARRAY_SIZE(bufs); i++) {
         if(bufs[i].BufferType == SECBUFFER_EXTRA) {
-            conn->extra_buf = heap_alloc(bufs[i].cbBuffer);
+            conn->extra_buf = malloc(bufs[i].cbBuffer);
             if(!conn->extra_buf)
                 return ERROR_NOT_ENOUGH_MEMORY;
 
@@ -846,7 +841,7 @@ DWORD NETCON_recv(netconn_t *connection, void *buf, size_t len, BOOL blocking, i
             connection->peek_msg += size;
 
             if(!connection->peek_len) {
-                heap_free(connection->peek_msg_mem);
+                free(connection->peek_msg_mem);
                 connection->peek_msg_mem = connection->peek_msg = NULL;
             }
 
@@ -867,7 +862,7 @@ DWORD NETCON_recv(netconn_t *connection, void *buf, size_t len, BOOL blocking, i
             }
         }while(!size && !eof);
 
-        TRACE("received %ld bytes\n", size);
+        TRACE("received %Id bytes\n", size);
         *recvd = size;
         return res;
     }
@@ -903,7 +898,7 @@ int NETCON_GetCipherStrength(netconn_t *connection)
 
     res = QueryContextAttributesW(&connection->ssl_ctx, SECPKG_ATTR_CONNECTION_INFO, (void*)&conn_info);
     if(res != SEC_E_OK)
-        WARN("QueryContextAttributesW failed: %08x\n", res);
+        WARN("QueryContextAttributesW failed: %08lx\n", res);
     return res == SEC_E_OK ? conn_info.dwCipherStrength : 0;
 }
 
