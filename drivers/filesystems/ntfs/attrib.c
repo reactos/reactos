@@ -579,8 +579,8 @@ AddIndexRoot(PNTFS_VCB Vcb,
 * STATUS_INSUFFICIENT_RESOURCES if ConvertDataRunsToLargeMCB() fails or if we fail to allocate a
 * buffer for the new data runs.
 * STATUS_INSUFFICIENT_RESOURCES or STATUS_UNSUCCESSFUL if FsRtlAddLargeMcbEntry() fails.
-* STATUS_BUFFER_TOO_SMALL if ConvertLargeMCBToDataRuns() fails.
 * STATUS_NOT_IMPLEMENTED if we need to migrate the attribute to an attribute list (TODO).
+* Any other failure from ConvertLargeMCBToDataRuns() is returned as-is.
 *
 * @remarks
 * Clusters should have been allocated previously with NtfsAllocateClusters().
@@ -637,12 +637,18 @@ AddRun(PNTFS_VCB Vcb,
 
     // Convert the map control block back to encoded data runs.
     Status = ConvertLargeMCBToDataRuns(&AttrContext->DataRunsMCB, RunBuffer, Vcb->NtfsInfo.BytesPerFileRecord, &RunBufferSize);
-    if (!NT_SUCCESS(Status))
+    if (Status == STATUS_BUFFER_TOO_SMALL)
     {
         // Runs won't fit in a single record; migrating to an $ATTRIBUTE_LIST isn't supported yet.
         DPRINT1("Data runs too large for one file record - $ATTRIBUTE_LIST needed (not implemented)\n");
         ExFreePoolWithTag(RunBuffer, TAG_NTFS);
         return STATUS_NOT_IMPLEMENTED;
+    }
+    else if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("ERROR: Failed to convert data runs! (Status %lx)\n", Status);
+        ExFreePoolWithTag(RunBuffer, TAG_NTFS);
+        return Status;
     }
 
     // Get the amount of free space between the start of the of the first data run and the attribute end

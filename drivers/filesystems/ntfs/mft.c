@@ -2327,6 +2327,57 @@ AddNewMftEntry(PFILE_RECORD_HEADER FileRecord,
 }
 
 /**
+* @name GetMaxIndexRootSize
+* @implemented
+*
+* Calculates how many bytes of index entries the index root can hold, given the space
+* left in the file record.
+*
+* @param DeviceExt
+* Points to the target disk's DEVICE_EXTENSION.
+*
+* @param FileRecord
+* Pointer to the file record containing the index root.
+*
+* @param IndexRootOffset
+* Offset of the index root attribute within FileRecord.
+*
+* @param IndexRootRecord
+* Pointer to the index root attribute record.
+*
+* @return
+* The maximum size of the index root's entries, leaving room for any attributes that
+* follow the index root.
+*/
+static
+ULONG
+GetMaxIndexRootSize(PDEVICE_EXTENSION DeviceExt,
+                    PFILE_RECORD_HEADER FileRecord,
+                    ULONG IndexRootOffset,
+                    PNTFS_ATTR_RECORD IndexRootRecord)
+{
+    ULONG MaxIndexRootSize;
+    PNTFS_ATTR_RECORD CurrentAttribute;
+
+    // First, find the max index size assuming index root is the last attribute
+    MaxIndexRootSize = DeviceExt->NtfsInfo.BytesPerFileRecord   // Start with the size of a file record
+                       - IndexRootOffset                        // Subtract the length of everything that comes before index root
+                       - IndexRootRecord->Resident.ValueOffset  // Subtract the length of the attribute header for index root
+                       - sizeof(INDEX_ROOT_ATTRIBUTE)           // Subtract the length of the index root header
+                       - (sizeof(ULONG) * 2);                   // Subtract the length of the file record end marker and padding
+
+    // Leave room for any attributes after this one, not counting the end marker
+    CurrentAttribute = (PNTFS_ATTR_RECORD)((ULONG_PTR)FileRecord + IndexRootOffset + IndexRootRecord->Length);
+    while (CurrentAttribute->Type != AttributeEnd)
+    {
+        MaxIndexRootSize -= CurrentAttribute->Length;
+        CurrentAttribute = (PNTFS_ATTR_RECORD)((ULONG_PTR)CurrentAttribute + CurrentAttribute->Length);
+    }
+
+    return MaxIndexRootSize;
+}
+
+/**
 * @name NtfsAddFilenameToDirectory
 * @implemented
 *
@@ -2376,7 +2427,6 @@ NtfsAddFilenameToDirectory(PDEVICE_EXTENSION DeviceExt,
     ULONG LengthWritten;
     PINDEX_ROOT_ATTRIBUTE NewIndexRoot;
     ULONG AttributeLength;
-    PNTFS_ATTR_RECORD NextAttribute;
     PB_TREE NewTree;
     ULONG BtreeIndexLength;
     ULONG MaxIndexRootSize;
@@ -2426,29 +2476,7 @@ NtfsAddFilenameToDirectory(PDEVICE_EXTENSION DeviceExt,
     }
 
     // Find the maximum index size given what the file record can hold
-    // First, find the max index size assuming index root is the last attribute
-    MaxIndexRootSize = DeviceExt->NtfsInfo.BytesPerFileRecord               // Start with the size of a file record
-                       - IndexRootOffset                                    // Subtract the length of everything that comes before index root
-                       - IndexRootContext->pRecord->Resident.ValueOffset    // Subtract the length of the attribute header for index root
-                       - sizeof(INDEX_ROOT_ATTRIBUTE)                       // Subtract the length of the index root header
-                       - (sizeof(ULONG) * 2);                               // Subtract the length of the file record end marker and padding
-
-    // Are there attributes after this one?
-    NextAttribute = (PNTFS_ATTR_RECORD)((ULONG_PTR)ParentFileRecord + IndexRootOffset + IndexRootContext->pRecord->Length);
-    if (NextAttribute->Type != AttributeEnd)
-    {
-        // Find the length of all attributes after this one, not counting the end marker
-        ULONG LengthOfAttributes = 0;
-        PNTFS_ATTR_RECORD CurrentAttribute = NextAttribute;
-        while (CurrentAttribute->Type != AttributeEnd)
-        {
-            LengthOfAttributes += CurrentAttribute->Length;
-            CurrentAttribute = (PNTFS_ATTR_RECORD)((ULONG_PTR)CurrentAttribute + CurrentAttribute->Length);
-        }
-
-        // Leave room for the existing attributes
-        MaxIndexRootSize -= LengthOfAttributes;
-    }
+    MaxIndexRootSize = GetMaxIndexRootSize(DeviceExt, ParentFileRecord, IndexRootOffset, IndexRootContext->pRecord);
 
     // Allocate memory for the index root data
     I30IndexRootLength = AttributeDataLength(IndexRootContext->pRecord);
@@ -2582,30 +2610,7 @@ NtfsAddFilenameToDirectory(PDEVICE_EXTENSION DeviceExt,
 #endif
 
     // Find the maximum index root size given what the file record can hold
-    // First, find the max index size assuming index root is the last attribute
-    NewMaxIndexRootSize =
-       DeviceExt->NtfsInfo.BytesPerFileRecord                // Start with the size of a file record
-        - IndexRootOffset                                    // Subtract the length of everything that comes before index root
-        - IndexRootContext->pRecord->Resident.ValueOffset    // Subtract the length of the attribute header for index root
-        - sizeof(INDEX_ROOT_ATTRIBUTE)                       // Subtract the length of the index root header
-        - (sizeof(ULONG) * 2);                               // Subtract the length of the file record end marker and padding
-
-    // Are there attributes after this one?
-    NextAttribute = (PNTFS_ATTR_RECORD)((ULONG_PTR)ParentFileRecord + IndexRootOffset + IndexRootContext->pRecord->Length);
-    if (NextAttribute->Type != AttributeEnd)
-    {
-        // Find the length of all attributes after this one, not counting the end marker
-        ULONG LengthOfAttributes = 0;
-        PNTFS_ATTR_RECORD CurrentAttribute = NextAttribute;
-        while (CurrentAttribute->Type != AttributeEnd)
-        {
-            LengthOfAttributes += CurrentAttribute->Length;
-            CurrentAttribute = (PNTFS_ATTR_RECORD)((ULONG_PTR)CurrentAttribute + CurrentAttribute->Length);
-        }
-
-        // Leave room for the existing attributes
-        NewMaxIndexRootSize -= LengthOfAttributes;
-    }
+    NewMaxIndexRootSize = GetMaxIndexRootSize(DeviceExt, ParentFileRecord, IndexRootOffset, IndexRootContext->pRecord);
 
     // The index allocation and index bitmap may have grown, leaving less room for the index root,
     // so now we need to double-check that index root isn't too large
@@ -2638,33 +2643,7 @@ NtfsAddFilenameToDirectory(PDEVICE_EXTENSION DeviceExt,
         }
 
         // re-recalculate max size of index root
-        NewMaxIndexRootSize =
-            // Find the maximum index size given what the file record can hold
-            // First, find the max index size assuming index root is the last attribute
-            DeviceExt->NtfsInfo.BytesPerFileRecord               // Start with the size of a file record
-            - IndexRootOffset                                    // Subtract the length of everything that comes before index root
-            - IndexRootContext->pRecord->Resident.ValueOffset    // Subtract the length of the attribute header for index root
-            - sizeof(INDEX_ROOT_ATTRIBUTE)                       // Subtract the length of the index root header
-            - (sizeof(ULONG) * 2);                               // Subtract the length of the file record end marker and padding
-
-                                                                 // Are there attributes after this one?
-        NextAttribute = (PNTFS_ATTR_RECORD)((ULONG_PTR)ParentFileRecord + IndexRootOffset + IndexRootContext->pRecord->Length);
-        if (NextAttribute->Type != AttributeEnd)
-        {
-            // Find the length of all attributes after this one, not counting the end marker
-            ULONG LengthOfAttributes = 0;
-            PNTFS_ATTR_RECORD CurrentAttribute = NextAttribute;
-            while (CurrentAttribute->Type != AttributeEnd)
-            {
-                LengthOfAttributes += CurrentAttribute->Length;
-                CurrentAttribute = (PNTFS_ATTR_RECORD)((ULONG_PTR)CurrentAttribute + CurrentAttribute->Length);
-            }
-
-            // Leave room for the existing attributes
-            NewMaxIndexRootSize -= LengthOfAttributes;
-        }
-
-
+        NewMaxIndexRootSize = GetMaxIndexRootSize(DeviceExt, ParentFileRecord, IndexRootOffset, IndexRootContext->pRecord);
     }
 
     // Create the Index Root from the B*Tree
@@ -2820,7 +2799,6 @@ NtfsRemoveFilenameFromDirectory(PDEVICE_EXTENSION DeviceExt,
     ULONG AttributeLength;
     ULONG BtreeIndexLength;
     ULONG MaxIndexRootSize;
-    PNTFS_ATTR_RECORD NextAttribute;
     PB_TREE Tree;
     PB_TREE_KEY SearchKey;
 
@@ -2931,25 +2909,7 @@ NtfsRemoveFilenameFromDirectory(PDEVICE_EXTENSION DeviceExt,
     }
 
     // Find the maximum index root size given what the file record can hold
-    MaxIndexRootSize = DeviceExt->NtfsInfo.BytesPerFileRecord
-                       - IndexRootOffset
-                       - IndexRootContext->pRecord->Resident.ValueOffset
-                       - sizeof(INDEX_ROOT_ATTRIBUTE)
-                       - (sizeof(ULONG) * 2);
-
-    NextAttribute = (PNTFS_ATTR_RECORD)((ULONG_PTR)ParentFileRecord + IndexRootOffset + IndexRootContext->pRecord->Length);
-    if (NextAttribute->Type != AttributeEnd)
-    {
-        ULONG LengthOfAttributes = 0;
-        PNTFS_ATTR_RECORD CurrentAttribute = NextAttribute;
-        while (CurrentAttribute->Type != AttributeEnd)
-        {
-            LengthOfAttributes += CurrentAttribute->Length;
-            CurrentAttribute = (PNTFS_ATTR_RECORD)((ULONG_PTR)CurrentAttribute + CurrentAttribute->Length);
-        }
-
-        MaxIndexRootSize -= LengthOfAttributes;
-    }
+    MaxIndexRootSize = GetMaxIndexRootSize(DeviceExt, ParentFileRecord, IndexRootOffset, IndexRootContext->pRecord);
 
     Status = CreateIndexRootFromBTree(DeviceExt, Tree, MaxIndexRootSize, &NewIndexRoot, &BtreeIndexLength);
     if (!NT_SUCCESS(Status))
