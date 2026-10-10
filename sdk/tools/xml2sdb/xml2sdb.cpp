@@ -2,7 +2,7 @@
  * PROJECT:     xml2sdb
  * LICENSE:     MIT (https://spdx.org/licenses/MIT)
  * PURPOSE:     Conversion functions from xml -> db
- * COPYRIGHT:   Copyright 2016-2025 Mark Jansen <mark.jansen@reactos.org>
+ * COPYRIGHT:   Copyright 2016-2026 Mark Jansen <mark.jansen@reactos.org>
  */
 
 #include "xml2sdb.h"
@@ -15,7 +15,7 @@
 using tinyxml2::XMLText;
 
 static const GUID GUID_NULL = { 0 };
-static const char szCompilerVersion[] = "1.8.0.0";
+static const char szCompilerVersion[] = "1.8.1.0";
 
 #if !defined(C_ASSERT)
 #define C_ASSERT(expr) extern char (*c_assert(void)) [(expr) ? 1 : -1]
@@ -351,20 +351,37 @@ bool ShimRef::fromXml(XMLHandle dbNode)
 {
     Name = ReadStringNode(dbNode, "NAME");
     CommandLine = ReadStringNode(dbNode, "COMMAND_LINE");
-    ReadGeneric(dbNode, InExcludes, "INCLUDE");
-    ReadGeneric(dbNode, InExcludes, "EXCLUDE");
+    KShim = ToNodeName(dbNode) == "KSHIM_REF";
+    if (!KShim)
+    {
+        ReadGeneric(dbNode, InExcludes, "INCLUDE");
+        ReadGeneric(dbNode, InExcludes, "EXCLUDE");
+    }
     return !Name.empty();
 }
 
 bool ShimRef::toSdb(Database& db)
 {
-    TAGID tagid = db.BeginWriteListTag(TAG_SHIM_REF);
+    TAGID tagid = db.BeginWriteListTag(KShim ? TAG_KSHIM_REF : TAG_SHIM_REF);
     db.WriteString(TAG_NAME, Name, true);
     db.WriteString(TAG_COMMAND_LINE, CommandLine);
 
-    if (!ShimTagid)
-        ShimTagid = db.FindShimTagid(Name);
-    db.WriteDWord(TAG_SHIM_TAGID, ShimTagid);
+    if (KShim)
+    {
+        std::string Module = db.FindKShimModule(Name);
+        if (Module.empty())
+        {
+            SHIM_ERR("Unknown kernel shim '%s'\n", Name.c_str());
+            return false;
+        }
+        db.WriteString(TAG_MODULE, Module, true);
+    }
+    else
+    {
+        if (!ShimTagid)
+            ShimTagid = db.FindShimTagid(Name);
+        db.WriteDWord(TAG_SHIM_TAGID, ShimTagid);
+    }
     return !!db.EndWriteListTag(tagid);
 }
 
@@ -399,21 +416,27 @@ bool FlagRef::toSdb(Database& db)
 bool Shim::fromXml(XMLHandle dbNode)
 {
     Name = ReadStringNode(dbNode, "NAME");
-    DllFile = ReadStringNode(dbNode, "DLLFILE");
+    KShim = ToNodeName(dbNode) == "KSHIM";
+    // Kernel shims are implemented in a module (for example 'NT kernel component')
+    DllFile = ReadStringNode(dbNode, KShim ? "MODULE" : "DLLFILE");
     ReadGuidNode(dbNode, "FIX_ID", FixID);
     // GENERAL ?
     // DESCRIPTION_RC_ID
-    ReadGeneric(dbNode, InExcludes, "INCLUDE");
-    ReadGeneric(dbNode, InExcludes, "EXCLUDE");
+    if (!KShim)
+    {
+        ReadGeneric(dbNode, InExcludes, "INCLUDE");
+        ReadGeneric(dbNode, InExcludes, "EXCLUDE");
+    }
     return !Name.empty() && !DllFile.empty();
 }
 
 bool Shim::toSdb(Database& db)
 {
-    Tagid = db.BeginWriteListTag(TAG_SHIM);
-    db.InsertShimTagid(Name, Tagid);
+    Tagid = db.BeginWriteListTag(KShim ? TAG_KSHIM : TAG_SHIM);
+    if (!KShim)
+        db.InsertShimTagid(Name, Tagid);
     db.WriteString(TAG_NAME, Name);
-    db.WriteString(TAG_DLLFILE, DllFile);
+    db.WriteString(KShim ? TAG_MODULE : TAG_DLLFILE, DllFile);
     if (IsEmptyGuid(FixID))
         RandomGuid(FixID);
     db.WriteBinary(TAG_FIX_ID, FixID);
@@ -606,8 +629,16 @@ bool Exe::fromXml(XMLHandle dbNode)
 
     ReadGeneric(dbNode, MatchingFiles, "MATCHING_FILE");
 
-    ReadGeneric(dbNode, ShimRefs, "SHIM_REF");
-    ReadGeneric(dbNode, FlagRefs, "FLAG_REF");
+    KDriver = ToNodeName(dbNode) == "KDRIVER";
+    if (KDriver)
+    {
+        ReadGeneric(dbNode, ShimRefs, "KSHIM_REF");
+    }
+    else
+    {
+        ReadGeneric(dbNode, ShimRefs, "SHIM_REF");
+        ReadGeneric(dbNode, FlagRefs, "FLAG_REF");
+    }
 
     Platform = ReadPlatformNode(dbNode, "RUNTIME_PLATFORM");
 
@@ -616,7 +647,7 @@ bool Exe::fromXml(XMLHandle dbNode)
 
 bool Exe::toSdb(Database& db)
 {
-    Tagid = db.BeginWriteListTag(TAG_EXE);
+    Tagid = db.BeginWriteListTag(KDriver ? TAG_KDRIVER : TAG_EXE);
 
     db.WriteString(TAG_NAME, Name, true);
     if (IsEmptyGuid(ExeID))
@@ -724,6 +755,9 @@ bool Database::fromXml(XMLHandle dbNode)
 
     ReadGeneric(dbNode, Layers, "LAYER", platform);
     ReadGeneric(dbNode, Exes, "EXE", platform);
+
+    ReadGeneric(dbNode, KShims, "KSHIM", platform);
+    ReadGeneric(dbNode, KDrivers, "KDRIVER", platform);
     return true;
 }
 
@@ -763,6 +797,10 @@ bool Database::toSdb(LPCWSTR path)
     if (!WriteGeneric(Layers, *this))
         return false;
     if (!WriteGeneric(Exes, *this))
+        return false;
+    if (!WriteGeneric(KShims, *this))
+        return false;
+    if (!WriteGeneric(KDrivers, *this))
         return false;
     EndWriteListTag(tidDatabase);
 
@@ -822,4 +860,18 @@ void Database::InsertFlagTagid(const sdbstring& name, TAGID tagid)
 TAGID Database::FindFlagTagid(const sdbstring& name)
 {
     return FindTagid(name, KnownFlags);
+}
+
+std::string Database::FindKShimModule(const std::string& name)
+{
+    for (const Shim& shim : KShims)
+    {
+        if (shim.Name.size() == name.size() &&
+            std::equal(name.begin(), name.end(), shim.Name.begin(),
+                       [](char a, char b) { return ::tolower(a) == ::tolower(b); }))
+        {
+            return shim.DllFile;
+        }
+    }
+    return std::string();
 }
