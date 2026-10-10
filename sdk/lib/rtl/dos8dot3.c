@@ -114,7 +114,7 @@ RtlGenerate8dot3Name(IN PUNICODE_STRING Name,
                 if (RtlpIsShortIllegal(Char))
                     Char = L'_';
                 else if (Char >= L'a' && Char <= L'z')
-                    Char = RtlpUpcaseUnicodeChar(Char);
+                    Char = RtlUpcaseUnicodeChar(Char);
 
                 /* Beware of MB OEM codepage */
                 if (NlsMbOemCodePageTag && HIBYTE(NlsUnicodeToMbOemTable[Char]))
@@ -147,7 +147,7 @@ RtlGenerate8dot3Name(IN PUNICODE_STRING Name,
                     if (RtlpIsShortIllegal(Char))
                         Char = L'_';
                     else if (Char >= L'a' && Char <= L'z')
-                        Char = RtlpUpcaseUnicodeChar(Char);
+                        Char = RtlUpcaseUnicodeChar(Char);
 
                     Context->ExtensionBuffer[Context->ExtensionLength++] = Char;
                 }
