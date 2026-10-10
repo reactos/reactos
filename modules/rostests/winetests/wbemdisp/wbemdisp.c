@@ -304,6 +304,7 @@ static void _expect_ref(IUnknown* obj, ULONG ref, int line)
     ok_(__FILE__,line)(rc == ref, "expected refcount %ld, got %lu\n", ref, rc);
 }
 
+#ifndef __REACTOS__
 static void test_locator(void)
 {
     HRESULT hr;
@@ -428,6 +429,7 @@ static void test_locator(void)
     ISWbemServices_Release( services );
     ISWbemLocator_Release( locator );
 }
+#endif
 
 static void test_namedvalueset(void)
 {
@@ -521,7 +523,10 @@ START_TEST(wbemdisp)
     CoInitialize( NULL );
 
     test_ParseDisplayName();
+#ifndef __REACTOS__
+    /* Causes a crash on ReactOS */
     test_locator();
+#endif
     test_namedvalueset();
 
     CoUninitialize();

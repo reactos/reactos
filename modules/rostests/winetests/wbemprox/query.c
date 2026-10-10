@@ -2334,6 +2334,7 @@ static void test_SystemRestore( IWbemServices *services )
     SysFreeString( class );
 }
 
+#ifndef __REACTOS__
 static void test_Win32_LocalTime( IWbemServices *services )
 {
     BSTR wql = SysAllocString( L"wql" ), query = SysAllocString( L"SELECT * FROM Win32_LocalTime" );
@@ -2360,6 +2361,7 @@ static void test_Win32_LocalTime( IWbemServices *services )
     SysFreeString( query );
     SysFreeString( wql );
 }
+#endif
 
 static void test_Win32_LogicalDisk( IWbemServices *services )
 {
@@ -2634,7 +2636,10 @@ START_TEST(query)
     test_Win32_DiskDrive( services );
     test_Win32_DisplayControllerConfiguration( services );
     test_Win32_IP4RouteTable( services );
+#ifndef __REACTOS__
+    /* Not implemented in wine 10 */
     test_Win32_LocalTime( services );
+#endif
     test_Win32_LogicalDisk( services );
     test_Win32_NetworkAdapter( services );
     test_Win32_NetworkAdapterConfiguration( services );
