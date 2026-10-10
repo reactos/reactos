@@ -221,8 +221,8 @@ ReceiveDatagram(
     {
         UINT32 _OptSize = min(Context->RemainingSize, OptionsLength);
 
-        memcpy(Context->CurrentReply + Context->RemainingSize + _OptSize, Options, _OptSize);
-        CurrentReply->Options.OptionsData = CurrentUserBuffer + Context->RemainingSize + _OptSize;
+        memcpy(Context->CurrentReply + Context->RemainingSize - _OptSize, Options, _OptSize);
+        CurrentReply->Options.OptionsData = CurrentUserBuffer + Context->RemainingSize - _OptSize;
         CurrentReply->Options.OptionsSize = _OptSize;
 
         Context->RemainingSize -= _OptSize;
