@@ -286,9 +286,10 @@ ObReferenceFileObjectForWrite(IN HANDLE Handle,
 
             /* No match, deny write access */
             Status = STATUS_ACCESS_DENIED;
-
-            ExUnlockHandleTableEntry(HandleTable, HandleEntry);
         }
+
+        /* Unlock the handle */
+        ExUnlockHandleTableEntry(HandleTable, HandleEntry);
     }
     else
     {
