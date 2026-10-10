@@ -2,7 +2,7 @@
  * PROJECT:     xml2sdb
  * LICENSE:     MIT (https://spdx.org/licenses/MIT)
  * PURPOSE:     Define mapping of all shim database types to xml
- * COPYRIGHT:   Copyright 2016-2025 Mark Jansen <mark.jansen@reactos.org>
+ * COPYRIGHT:   Copyright 2016-2026 Mark Jansen <mark.jansen@reactos.org>
  */
 
 #pragma once
@@ -73,6 +73,7 @@ struct ShimRef
     std::string CommandLine;
     TAGID ShimTagid = 0;
     std::list<InExclude> InExcludes;
+    bool KShim = false;
 };
 
 struct FlagRef
@@ -95,6 +96,7 @@ struct Shim
     TAGID Tagid = 0;
     std::list<InExclude> InExcludes;
     PlatformType Platform = PLATFORM_ANY;
+    bool KShim = false;
 };
 
 struct Flag
@@ -173,6 +175,7 @@ struct Exe
     std::list<ShimRef> ShimRefs;
     std::list<FlagRef> FlagRefs;
     PlatformType Platform = PLATFORM_ANY;
+    bool KDriver = false;
 };
 
 struct Library
@@ -232,12 +235,18 @@ struct Database
         return FindFlagTagid(sdbstring(name.begin(), name.end()));
     }
 
+    std::string FindKShimModule(const std::string& name);
+
     std::string Name;
     GUID ID = {};
 
     struct Library Library;
     std::list<Layer> Layers;
     std::list<Exe> Exes;
+
+    // Driver database (drvmain.sdb)
+    std::list<Exe> KDrivers;
+    std::list<Shim> KShims;
 
 private:
     std::map<sdbstring, TAGID> KnownShims;
