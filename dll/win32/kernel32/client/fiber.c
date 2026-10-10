@@ -9,6 +9,7 @@
 
 #include <k32.h>
 #include <ndk/rtltypes.h>
+#include <ndk/rtlfuncs.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -366,6 +367,19 @@ DWORD
 WINAPI
 FlsAlloc(PFLS_CALLBACK_FUNCTION lpCallback)
 {
+#if (DLL_EXPORT_VERSION >= _WIN32_WINNT_VISTA)
+    NTSTATUS Status;
+    DWORD dwFlsIndex;
+
+    Status = RtlFlsAlloc(lpCallback, &dwFlsIndex);
+    if (!NT_SUCCESS(Status))
+    {
+        BaseSetLastNTError(Status);
+        return FLS_OUT_OF_INDEXES;
+    }
+
+    return dwFlsIndex;
+#else
     DWORD dwFlsIndex;
     PPEB Peb = NtCurrentPeb();
     PRTL_FLS_DATA pFlsData;
@@ -415,6 +429,7 @@ FlsAlloc(PFLS_CALLBACK_FUNCTION lpCallback)
     }
     RtlReleasePebLock();
     return dwFlsIndex;
+#endif
 }
 
 
@@ -425,6 +440,17 @@ BOOL
 WINAPI
 FlsFree(DWORD dwFlsIndex)
 {
+#if (DLL_EXPORT_VERSION >= _WIN32_WINNT_VISTA)
+    NTSTATUS Status;
+    Status = RtlFlsFree(dwFlsIndex);
+    if (!NT_SUCCESS(Status))
+    {
+        BaseSetLastNTError(Status);
+        return FALSE;
+    }
+
+    return TRUE;
+#else
     BOOL ret;
     PPEB Peb = NtCurrentPeb();
 
@@ -475,6 +501,7 @@ FlsFree(DWORD dwFlsIndex)
     _SEH2_END;
 
     return ret;
+#endif
 }
 
 

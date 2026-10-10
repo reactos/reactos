@@ -50,6 +50,7 @@ list(APPEND SOURCE
     env.c
     error.c
     exception.c
+    fls.c
     generictable.c
     handle.c
     heap.c
