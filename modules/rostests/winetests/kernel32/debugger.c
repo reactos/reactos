@@ -2050,9 +2050,9 @@ static void test_debugger(const char *argv0)
          * It happens that on Windows, the exception & exit thread events can be intertwined.
          * So detect this situation.
          */
-#if defined(__REACTOS__) && defined(_WIN64)
+#if defined(__REACTOS__)
         if (GetNTVersion() >= _WIN32_WINNT_WIN8 || is_reactos()) {
-            skip("These tests run far too long on Windows 8+ x64 and ReactOS x64.\n");
+            skip("These tests run far too long on Windows 8+ x64 and ReactOS.\n");
         } else {
 #endif
         for (;;)
@@ -2093,7 +2093,7 @@ static void test_debugger(const char *argv0)
         ok(!worker_cnt, "Missing %u exit thread events\n", worker_cnt);
         ok(event_order == 1 || broken(event_order == 2), "Intertwined exit thread & exception debug events\n");
     }
-#if defined(__REACTOS__) && defined(_WIN64)
+#if defined(__REACTOS__)
     }
 #endif
 
