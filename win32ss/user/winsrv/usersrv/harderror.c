@@ -1091,7 +1091,7 @@ UserServerHardError(
     WCHAR LocalCaptionBuffer[256];
     NTSTATUS Status;
 
-    ASSERT(ThreadData->Process != NULL);
+    ASSERT(!ThreadData || ThreadData->Process != NULL);
 
     /* Default to not handled */
     Message->Response = ResponseNotHandled;
