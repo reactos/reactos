@@ -1,0 +1,49 @@
+; ReactOS reduced legacy VirtIO-blk Storport miniport
+; Supports PCI\VEN_1AF4&DEV_1001 only; modern capability devices are rejected.
+
+[Version]
+Signature="$Windows NT$"
+Class=SCSIAdapter
+ClassGuid={4D36E97B-E325-11CE-BFC1-08002BE10318}
+Provider=%ReactOS%
+DriverVer=08/10/2026,1.0
+
+[DestinationDirs]
+VioStor_CopyFiles=12
+
+[Manufacturer]
+%ReactOS%=VioStor
+
+[VioStor]
+%VIOSTOR.DeviceDesc%=VioStor_Install,PCI\VEN_1AF4&DEV_1001
+
+[VioStor_Install]
+CopyFiles=VioStor_CopyFiles
+
+[VioStor_CopyFiles]
+viostor.sys
+
+[VioStor_Install.Services]
+AddService=viostor,0x00000002,VioStor_Service
+
+[VioStor_Service]
+DisplayName=%VIOSTOR.DeviceDesc%
+ServiceType=1
+StartType=0
+ErrorControl=1
+ServiceBinary=%12%\viostor.sys
+LoadOrderGroup=SCSI Miniport
+
+[Strings]
+ReactOS="ReactOS"
+VIOSTOR.DeviceDesc="VirtIO Block Device"
+
+[AddReg]
+HKLM,"SYSTEM\CurrentControlSet\Services\viostor","ErrorControl",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\viostor","Group",0x00000000,"SCSI Miniport"
+HKLM,"SYSTEM\CurrentControlSet\Services\viostor","ImagePath",0x00020000,"system32\drivers\viostor.sys"
+HKLM,"SYSTEM\CurrentControlSet\Services\viostor","Start",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\viostor","Type",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\viostor","Tag",0x00010001,0x00000010
+HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\PCI#VEN_1AF4&DEV_1001","Service",0x00000000,"viostor"
+HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\PCI#VEN_1AF4&DEV_1001","ClassGUID",0x00000000,"{4D36E97B-E325-11CE-BFC1-08002BE10318}"
