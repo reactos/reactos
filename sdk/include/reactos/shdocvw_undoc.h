@@ -22,9 +22,9 @@ IEILIsEqual(
 HRESULT WINAPI
 AddUrlToFavorites(
     _In_ HWND hwnd,
-    _In_opt_ LPCWSTR pszUrlW,
-    _In_ LPCWSTR pszTitleW,
-    _In_ BOOL fDisplayUI);
+    _In_ LPCWSTR pszUrlW,
+    _In_ LPCWSTR pszTitleW, // This parameter is not optional on Windows even though MSDN says so
+    _In_ BOOL NoUI); // The documented parameter name on MSDN is misleading. The description of the parameter is correct; "A Boolean that specifies FALSE to display the Add Favorite dialog box, or TRUE otherwise."
 
 BOOL WINAPI WinList_Init(VOID);
 VOID WINAPI WinList_Terminate(VOID);
