@@ -74,12 +74,11 @@ Author:
 //
 #define K0IPCR                  ((ULONG_PTR)(KIP0PCRADDRESS))
 #define PCR                     ((KPCR *)K0IPCR)
-#if defined(CONFIG_SMP) || defined(NT_BUILD)
-//#undef  KeGetPcr
+//
+// Always use the self pointer. PCR is only the boot processor's PCR, and the
+// shared HAL libraries are built without CONFIG_SMP but still run on every processor.
+//
 #define KeGetPcr()              ((KPCR *)__readfsdword(FIELD_OFFSET(KPCR, SelfPcr)))
-#else
-#define KeGetPcr()              PCR
-#endif
 
 //
 // CPU Vendors
@@ -204,6 +203,17 @@ typedef enum
 #define IPI_FREEZE              4
 #define IPI_PACKET_READY        8
 #define IPI_SYNCH_REQUEST       16
+
+//
+// Freeze states, as held in KPRCB::IpiFrozen. Only the processor that is
+// currently active in the debugger may change another processor's state.
+//
+#define IPI_FROZEN_STATE_RUNNING 0
+#define IPI_FROZEN_STATE_FROZEN 2
+#define IPI_FROZEN_STATE_THAW 3
+#define IPI_FROZEN_STATE_OWNER 4
+#define IPI_FROZEN_STATE_TARGET_FREEZE 5
+#define IPI_FROZEN_FLAG_ACTIVE 0x20
 
 //
 // PRCB Flags

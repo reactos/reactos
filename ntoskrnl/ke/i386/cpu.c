@@ -1083,6 +1083,29 @@ KiSaveProcessorState(IN PKTRAP_FRAME TrapFrame,
     KiSaveProcessorControlState(&Prcb->ProcessorState);
 }
 
+VOID
+NTAPI
+KiRestoreProcessorState(
+    _Out_ PKTRAP_FRAME TrapFrame,
+    _Out_opt_ PKEXCEPTION_FRAME ExceptionFrame)
+{
+    PKPRCB Prcb = KeGetCurrentPrcb();
+
+    //
+    // Restore full context, flags must match KiSaveProcessorState
+    //
+    KeContextToTrapFrame(&Prcb->ProcessorState.ContextFrame,
+                         ExceptionFrame,
+                         TrapFrame,
+                         CONTEXT_FULL | CONTEXT_DEBUG_REGISTERS,
+                         KernelMode);
+
+    //
+    // Restore control registers
+    //
+    KiRestoreProcessorControlState(&Prcb->ProcessorState);
+}
+
 CODE_SEG("INIT")
 BOOLEAN
 NTAPI
@@ -1504,13 +1527,23 @@ KeFlushEntireTb(IN BOOLEAN Invalid,
 #ifdef CONFIG_SMP
     KAFFINITY TargetAffinity;
     PKPRCB Prcb = KeGetCurrentPrcb();
+    LONG Stamp;
 #endif
 
     /* Raise the IRQL for the TB Flush */
     OldIrql = KeRaiseIrqlToSynchLevel();
 
 #ifdef CONFIG_SMP
-    /* FIXME: Use KiTbFlushTimeStamp to synchronize TB flush */
+    /* An odd flush stamp means a flush is in progress, claim it by making it odd */
+    for (;;)
+    {
+        Stamp = KiTbFlushTimeStamp;
+        if (!(Stamp & 1) &&
+            InterlockedCompareExchange(&KiTbFlushTimeStamp, Stamp | 1, Stamp) == Stamp)
+            break;
+
+        YieldProcessor();
+    }
 
     /* Get the current processor affinity, and exclude ourselves */
     TargetAffinity = KeActiveProcessors;
@@ -1538,12 +1571,16 @@ KeFlushEntireTb(IN BOOLEAN Invalid,
         /* Sanity check */
         ASSERT(Prcb == KeGetCurrentPrcb());
 
-        /* FIXME: TODO */
-        ASSERTMSG("Not yet implemented\n", FALSE);
+        /* Targets clear their bit once they have taken the packet */
+        while (Prcb->TargetSet != 0)
+        {
+            YieldProcessor();
+            KeMemoryBarrier();
+        }
     }
 #endif
 
-    /* Update the flush stamp and return to original IRQL */
+    /* Update the flush stamp, releasing it if we claimed it, and return to original IRQL */
     InterlockedExchangeAdd(&KiTbFlushTimeStamp, 1);
     KeLowerIrql(OldIrql);
 }

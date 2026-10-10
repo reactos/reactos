@@ -88,6 +88,10 @@ HalInitSystem(
     PKPRCB Prcb = KeGetCurrentPrcb();
     NTSTATUS Status;
 
+    /* Both phases are system wide, per processor setup is done by HalInitializeProcessor */
+    if (Prcb->Number != 0)
+        return TRUE;
+
     /* Check the boot phase */
     if (BootPhase == 0)
     {

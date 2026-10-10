@@ -458,6 +458,18 @@ KiSetTebBase(PKPCR Pcr, PNT_TIB TebAddress)
     Ke386SetGdtEntryBase(&Pcr->GDT[KGDT_R3_TEB / sizeof(KGDTENTRY)], TebAddress);
 }
 
+VOID
+NTAPI
+KiInitializeTSS(
+    _Inout_ PKTSS Tss);
+
+CODE_SEG("INIT")
+VOID
+NTAPI
+KiInitializeTSS2(
+    _Inout_ PKTSS Tss,
+    _Inout_opt_ PKGDTENTRY TssEntry);
+
 CODE_SEG("INIT")
 VOID
 FASTCALL
@@ -1019,6 +1031,12 @@ KiGetUserModeStackAddress(void)
 {
     return &(KeGetCurrentThread()->TrapFrame->HardwareEsp);
 }
+
+/** @brief Handles an IPI freeze request. Returns TRUE if this processor was frozen. */
+BOOLEAN
+KiProcessorFreezeHandler(
+    _In_ PKTRAP_FRAME TrapFrame,
+    _In_opt_ PKEXCEPTION_FRAME ExceptionFrame);
 
 #ifdef __cplusplus
 } // extern "C"
