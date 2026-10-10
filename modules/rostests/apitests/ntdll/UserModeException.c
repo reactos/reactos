@@ -194,6 +194,9 @@ TEST_ENTRY TestEntries[] =
 #ifdef _M_AMD64
     /* Check non-canonical address access (causes a #GP) */
     { __LINE__, { 0xA0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x10, 0xC3 }, 0, FL_ANY | FL_ACC }, //  MOV AL, [0x1000000000000000]
+
+    /* Check non-canonical stack segment access (causes a #SS; an emulator may raise a #GP) */
+    { __LINE__, { 0x48, 0xB8, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x40, 0x8A, 0x04, 0x04, 0xC3 }, 10, FL_ANY | FL_ACC }, // MOV RAX, 0x4000000000000000; MOV AL, [RSP + RAX]
 #endif
 
 };
