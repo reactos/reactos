@@ -10,6 +10,7 @@ list(APPEND SOURCE
     DeviceIoControl.c
     dosdev.c
     EnumSystemCodePages.c
+    ExitThread.c
     FindActCtxSectionStringW.c
     FindFiles.c
     FLS.c

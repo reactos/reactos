@@ -3259,12 +3259,8 @@ NtQueryInformationThread(
             /* Protect write with SEH */
             _SEH2_TRY
             {
-                /* Return whether or not we are the last thread */
-                *(PULONG)ThreadInformation = ((Thread->ThreadsProcess->
-                                               ThreadListHead.Flink->Flink ==
-                                               &Thread->ThreadsProcess->
-                                               ThreadListHead) ?
-                                              TRUE : FALSE);
+                /* Return whether or not we are the last thread that has not exited */
+                *(PULONG)ThreadInformation = (Thread->ThreadsProcess->ActiveThreads == 1);
             }
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
