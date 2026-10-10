@@ -81,8 +81,7 @@ HKR,,"FriendlyName",,%ISO_Generic_FriendlyName%
 ;;
 
 [autorun_addreg]
-HKR,,"AutoRun",0x00010003,1
-HKR,,"AutoRunAlwaysDisable", 0x00010008, "NEC     MBR-7   "
+HKR,,"AutoRunAlwaysDisable", 0x00010000, "NEC     MBR-7   "
 HKR,,"AutoRunAlwaysDisable", 0x00010008, "NEC     MBR-7.4 "
 HKR,,"AutoRunAlwaysDisable", 0x00010008, "PIONEER CHANGR DRM-1804X"
 HKR,,"AutoRunAlwaysDisable", 0x00010008, "PIONEER CD-ROM DRM-6324X"
