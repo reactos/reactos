@@ -4,6 +4,7 @@
  * PURPOSE:     IQueryAssociations
  * COPYRIGHT:   Copyright 2002 Jon Griffiths (Wine)
  *              Copyright 2024-2026 Whindmar Saksit <whindsaks@proton.me>
+ *              Copyright 2026 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
 #include "precomp.h"
@@ -1035,3 +1036,61 @@ HRESULT CQueryAssociations::ReturnString(ASSOCF flags, LPWSTR out, DWORD *outlen
 
     return hr;
 }
+
+#if (DLL_EXPORT_VERSION < _WIN32_WINNT_VISTA)
+
+STDMETHODIMP CQueryAssociations::EnumElements(ULONG flags, IEnumAssociationElements **ppElement)
+{
+    FIXME("Stub\n");
+    return E_NOTIMPL;
+}
+
+STDMETHODIMP CQueryAssociations::QueryString(ULONG flags, ASSOCQUERY query, PCWSTR key, PWSTR *ppszValue)
+{
+    FIXME("Stub\n");
+    return E_NOTIMPL;
+}
+
+STDMETHODIMP CQueryAssociations::QueryDword(ULONG flags, ASSOCQUERY query, PCWSTR key, DWORD *pdwValue)
+{
+    FIXME("Stub\n");
+    return E_NOTIMPL;
+}
+
+STDMETHODIMP CQueryAssociations::QueryExists(ULONG flags, ASSOCQUERY query, PCWSTR key)
+{
+    FIXME("Stub\n");
+    return E_NOTIMPL;
+}
+
+STDMETHODIMP CQueryAssociations::QueryDirect(ULONG flags, ASSOCQUERY query, PCWSTR key, FLAGGED_BYTE_BLOB **ppBlob)
+{
+    FIXME("Stub\n");
+    return E_NOTIMPL;
+}
+
+STDMETHODIMP CQueryAssociations::QueryObject(ULONG flags, ASSOCQUERY query, PCWSTR key, REFIID riid, PVOID *ppvObj)
+{
+    FIXME("Stub\n");
+    return E_NOTIMPL;
+}
+
+STDMETHODIMP CQueryAssociations::InitClassElements(ULONG flags, PCWSTR pszClass)
+{
+    FIXME("Stub\n");
+    return E_NOTIMPL;
+}
+
+STDMETHODIMP CQueryAssociations::InsertElements(ULONG flags, IEnumAssociationElements *pElements)
+{
+    FIXME("Stub\n");
+    return E_NOTIMPL;
+}
+
+STDMETHODIMP CQueryAssociations::FilterElements(ULONG dwFilter)
+{
+    FIXME("Stub\n");
+    return E_NOTIMPL;
+}
+
+#endif // DLL_EXPORT_VERSION < _WIN32_WINNT_VISTA

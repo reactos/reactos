@@ -1,8 +1,21 @@
+/*
+ * PROJECT:     ReactOS Shell
+ * LICENSE:     LGPL-2.1+ (https://spdx.org/licenses/LGPL-2.1+)
+ * PURPOSE:     IQueryAssociations
+ * COPYRIGHT:   Copyright 2002 Jon Griffiths (Wine)
+ *              Copyright 2024-2026 Whindmar Saksit <whindsaks@proton.me>
+ *              Copyright 2026 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
+ */
+
 #pragma once
 
 class CQueryAssociations :
     public CComCoClass<CQueryAssociations, &CLSID_QueryAssociations>,
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
+#if (DLL_EXPORT_VERSION < _WIN32_WINNT_VISTA)
+    public IAssociationArrayOld,
+    public IAssociationArrayInitialize,
+#endif
     public IQueryAssociations
 {
 public:
@@ -86,6 +99,21 @@ public:
     CQueryAssociations();
     ~CQueryAssociations();
 
+#if (DLL_EXPORT_VERSION < _WIN32_WINNT_VISTA)
+    // *** IAssociationArrayOld methods ***
+    STDMETHODIMP EnumElements(ULONG flags, IEnumAssociationElements **ppElement) override;
+    STDMETHODIMP QueryString(ULONG flags, ASSOCQUERY query, PCWSTR key, PWSTR *ppszValue) override;
+    STDMETHODIMP QueryDword(ULONG flags, ASSOCQUERY query, PCWSTR key, DWORD *pdwValue) override;
+    STDMETHODIMP QueryExists(ULONG flags, ASSOCQUERY query, PCWSTR key) override;
+    STDMETHODIMP QueryDirect(ULONG flags, ASSOCQUERY query, PCWSTR key, FLAGGED_BYTE_BLOB **ppBlob) override;
+    STDMETHODIMP QueryObject(ULONG flags, ASSOCQUERY query, PCWSTR key, REFIID riid, PVOID *ppvObj) override;
+
+    // *** IAssociationArrayInitialize methods ***
+    STDMETHODIMP InitClassElements(ULONG flags, PCWSTR pszClass) override;
+    STDMETHODIMP InsertElements(ULONG flags, IEnumAssociationElements *pElements) override;
+    STDMETHODIMP FilterElements(ULONG dwFilter) override;
+#endif // DLL_EXPORT_VERSION < _WIN32_WINNT_VISTA
+
     // *** IQueryAssociations methods ***
     STDMETHOD(Init)(ASSOCF flags, LPCWSTR pwszAssoc, HKEY hkProgid, HWND hwnd) override;
     STDMETHOD(GetString)(ASSOCF flags, ASSOCSTR str, LPCWSTR pwszExtra, LPWSTR pwszOut, DWORD *pcchOut) override;
@@ -98,6 +126,10 @@ DECLARE_NOT_AGGREGATABLE(CQueryAssociations)
 DECLARE_PROTECT_FINAL_CONSTRUCT()
 
 BEGIN_COM_MAP(CQueryAssociations)
+    #if (DLL_EXPORT_VERSION < _WIN32_WINNT_VISTA)
+        COM_INTERFACE_ENTRY_IID(IID_IAssociationArrayOld, IAssociationArrayOld)
+        COM_INTERFACE_ENTRY_IID(IID_IAssociationArrayInitialize, IAssociationArrayInitialize)
+    #endif
     COM_INTERFACE_ENTRY_IID(IID_IQueryAssociations, IQueryAssociations)
 END_COM_MAP()
 };
