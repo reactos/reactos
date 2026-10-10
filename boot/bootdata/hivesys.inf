@@ -23,17 +23,17 @@ HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\PCI#CC_0604","Clas
 HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\PCI#CC_0601","Service",0x00000000,"isapnp"
 HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\PCI#CC_0601","ClassGUID",0x00000000,"{4D36E97D-E325-11CE-BFC1-08002BE10318}"
 
+; NEC C-Bus bridge devices have a SubClass ID of 0x80 (other bridge) instead of 0x01 (ISA bridge)
+; TODO: #if defined(_M_IX86)
 HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\PCI#VEN_1033&DEV_0001","Service",0x00000000,"isapnp"
 HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\PCI#VEN_1033&DEV_0001","ClassGUID",0x00000000,"{4D36E97D-E325-11CE-BFC1-08002BE10318}"
-
 HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\PCI#VEN_1033&DEV_002C","Service",0x00000000,"isapnp"
 HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\PCI#VEN_1033&DEV_002C","ClassGUID",0x00000000,"{4D36E97D-E325-11CE-BFC1-08002BE10318}"
-
 HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\PCI#VEN_1033&DEV_002D","Service",0x00000000,"isapnp"
 HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\PCI#VEN_1033&DEV_002D","ClassGUID",0x00000000,"{4D36E97D-E325-11CE-BFC1-08002BE10318}"
-
 HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\PCI#VEN_1033&DEV_003B","Service",0x00000000,"isapnp"
 HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\PCI#VEN_1033&DEV_003B","ClassGUID",0x00000000,"{4D36E97D-E325-11CE-BFC1-08002BE10318}"
+; TODO: #endif
 
 HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\*PNP0C08","Service",0x00000000,"acpi"
 HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\*PNP0C08","ClassGUID",0x00000000,"{4D36E97D-E325-11CE-BFC1-08002BE10318}"
@@ -76,6 +76,12 @@ HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\PCI#CC_0104","Clas
 
 HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\PCI#CC_0106","Service",0x00000000,"pciide"
 HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\PCI#CC_0106","ClassGUID",0x00000000,"{4D36E96A-E325-11CE-BFC1-08002BE10318}"
+
+; Some HighPoint PATA controllers report PCI class as a "Mass storage controller [0180]" in native mode
+HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\PCI#VEN_1103&DEV_0004","Service",0x00000000,"pciide"
+HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\PCI#VEN_1103&DEV_0004","ClassGUID",0x00000000,"{4D36E96A-E325-11CE-BFC1-08002BE10318}"
+HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\PCI#VEN_1103&DEV_0005","Service",0x00000000,"pciide"
+HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\PCI#VEN_1103&DEV_0005","ClassGUID",0x00000000,"{4D36E96A-E325-11CE-BFC1-08002BE10318}"
 
 HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\*PNP0600","Service",0x00000000,"atapi"
 HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\*PNP0600","ClassGUID",0x00000000,"{4D36E96A-E325-11CE-BFC1-08002BE10318}"
@@ -1421,6 +1427,119 @@ HKLM,"SYSTEM\CurrentControlSet\Control\PnP\Pci\CardList","Toshiba",0x00030003,\
 HKLM,"SYSTEM\CurrentControlSet\Control\PnP\Pci\CardList","Ali",0x00030003,\
 01,00,00,00,b9,10,21,15,00,00,00,00,00,00,00,00
 
+; PCI IRQ routing miniport support (legacy, pre-ACPI machines).
+; The IrqMiniports table maps a south-bridge PCI interrupt router.
+; This $PIR table is needed for PCI IRQ Routing without ACPI.
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting","Options",0x00010001,0x0000000F
+
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\00001078","Name",0x00000002,"Cyrix 5520 Rev 0"
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\00001078","Instance",0x00010001,0x0000000E
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\00001078","Parameters",0x00010001,0x00000000
+
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\00020E11","Name",0x00000002,"Compaq CMC-2"
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\00020E11","Instance",0x00010001,0x0000000D
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\00020E11","Parameters",0x00010001,0x00000000
+
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\00021066","Name",0x00000002,"Vesuvius"
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\00021066","Instance",0x00010001,0x00000011
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\00021066","Parameters",0x00010001,0x00000001
+
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\00021078","Name",0x00000002,"Cyrix 5520 Rev 1"
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\00021078","Instance",0x00010001,0x0000000E
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\00021078","Parameters",0x00010001,0x00000000
+
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\00061004","Name",0x00000002,"VLSI"
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\00061004","Instance",0x00010001,0x00000002
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\00061004","Parameters",0x00010001,0x00000000
+
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\00081039","Name",0x00000002,"SiS5503"
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\00081039","Instance",0x00010001,0x00000004
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\00081039","Parameters",0x00010001,0x00000000
+
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\0011100B","Name",0x00000002,"NS 87560"
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\0011100B","Instance",0x00010001,0x00000007
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\0011100B","Parameters",0x00010001,0x00000000
+
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\01021004","Name",0x00000002,"VLSI Eagle"
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\01021004","Instance",0x00010001,0x00000005
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\01021004","Parameters",0x00010001,0x00000000
+
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\04828086","Name",0x00000002,"Intel 82375EB/SB"
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\04828086","Instance",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\04828086","Parameters",0x00010001,0x00000000
+
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\04848086","Name",0x00000002,"Intel 82378"
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\04848086","Instance",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\04848086","Parameters",0x00010001,0x00000000
+
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\05861106","Name",0x00000002,"VT82C586B"
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\05861106","Instance",0x00010001,0x0000000B
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\05861106","Parameters",0x00010001,0x00000000
+
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\05961106","Name",0x00000002,"VT82C596B"
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\05961106","Instance",0x00010001,0x0000000B
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\05961106","Parameters",0x00010001,0x00000000
+
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\06021179","Name",0x00000002,"Toshiba"
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\06021179","Instance",0x00010001,0x0000000F
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\06021179","Parameters",0x00010001,0x00000000
+
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\06861106","Name",0x00000002,"VT82C686B"
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\06861106","Instance",0x00010001,0x0000000B
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\06861106","Parameters",0x00010001,0x00000000
+
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\122E8086","Name",0x00000002,"Intel 82371FB"
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\122E8086","Instance",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\122E8086","Parameters",0x00010001,0x00000000
+
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\12348086","Name",0x00000002,"Intel 82371MX"
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\12348086","Instance",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\12348086","Parameters",0x00010001,0x00000000
+
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\152310B9","Name",0x00000002,"ALi 1523"
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\152310B9","Instance",0x00010001,0x00000006
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\152310B9","Parameters",0x00010001,0x00000000
+
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\153310B9","Name",0x00000002,"ALi 1533"
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\153310B9","Instance",0x00010001,0x00000009
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\153310B9","Parameters",0x00010001,0x00000000
+
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\70008086","Name",0x00000002,"Intel 82371SB"
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\70008086","Instance",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\70008086","Parameters",0x00010001,0x00000000
+
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\71108086","Name",0x00000002,"Intel 82371AB/EB"
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\71108086","Instance",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\71108086","Parameters",0x00010001,0x00000000
+
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\76008086","Name",0x00000002,"Intel 82372FB"
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\76008086","Instance",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\76008086","Parameters",0x00010001,0x00000000
+
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\80021066","Name",0x00000002,"Vesuvius"
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\80021066","Instance",0x00010001,0x00000011
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\80021066","Parameters",0x00010001,0x00000001
+
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\A0F30E11","Name",0x00000002,"Compaq OSB"
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\A0F30E11","Instance",0x00010001,0x0000000C
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\A0F30E11","Parameters",0x00010001,0x00000000
+
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\AE290E11","Name",0x00000002,"Compaq MISC-3"
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\AE290E11","Instance",0x00010001,0x00000008
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\AE290E11","Parameters",0x00010001,0x00000000
+
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\C5581045","Name",0x00000002,"Opti Viper"
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\C5581045","Instance",0x00010001,0x00000003
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\C5581045","Parameters",0x00010001,0x00000000
+
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\C5681045","Name",0x00000002,"Opti Viper Max"
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\C5681045","Instance",0x00010001,0x00000003
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\C5681045","Parameters",0x00010001,0x00000000
+
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\C7001045","Name",0x00000002,"Opti Fire Star"
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\C7001045","Instance",0x00010001,0x0000000A
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\PciIrqRouting\IrqMiniports\C7001045","Parameters",0x00010001,0x00000000
+
 
 ; Printing
 HKLM,"SYSTEM\CurrentControlSet\Control\Print","BeepEnabled",0x00010001,0
@@ -1754,6 +1873,15 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Ndis","Group",0x00000000,"NDIS Wrapper"
 HKLM,"SYSTEM\CurrentControlSet\Services\Ndis","ImagePath",0x00020000,"system32\drivers\ndis.sys"
 HKLM,"SYSTEM\CurrentControlSet\Services\Ndis","Start",0x00010001,0x00000000
 HKLM,"SYSTEM\CurrentControlSet\Services\Ndis","Type",0x00010001,0x00000001
+
+; NDIS user-mode I/O protocol, the transport the WLAN service uses.
+; Without a Linkage\Bind value, NDIS binds it to every adapter.
+HKLM,"SYSTEM\CurrentControlSet\Services\Ndisuio","ErrorControl",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\Ndisuio","Group",0x00000000,"NDIS"
+HKLM,"SYSTEM\CurrentControlSet\Services\Ndisuio","ImagePath",0x00020000,"system32\drivers\ndisuio.sys"
+HKLM,"SYSTEM\CurrentControlSet\Services\Ndisuio","Start",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\Ndisuio","Type",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\Ndisuio","DisplayName",0x00000000,"NDIS Usermode I/O Protocol"
 
 ; NetLogon
 HKLM,"SYSTEM\CurrentControlSet\Services\NetLogon","DisplayName",0x00000000,%NETLOGON_SERVICE%

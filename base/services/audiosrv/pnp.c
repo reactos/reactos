@@ -1,8 +1,9 @@
 /*
  * PROJECT:     ReactOS
- * LICENSE:     GPL - See COPYING in the top level directory
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Audio Service Plug and Play
- * COPYRIGHT:   Copyright 2007 Andrew Greenwood
+ * COPYRIGHT:   Copyright 2007 Andrew Greenwood <silverblade@reactos.org>
+ *              Copyright 2026 Vitaly Orekhov <vkvo2000@vivaldi.net>
  */
 
 #include "audiosrv.h"
@@ -18,6 +19,7 @@
 #include <debug.h>
 
 static HDEVNOTIFY device_notification_handle = NULL;
+static UINT uWinMMDeviceChange = 0;
 
 /*
     Finds all devices within the KSCATEGORY_AUDIO category and puts them
@@ -99,6 +101,11 @@ ProcessExistingDevices(VOID)
 
     SetupDiDestroyDeviceInfoList(dev_info);
 
+    uWinMMDeviceChange = RegisterWindowMessageW(L"winmm_devicechange");
+
+    if (uWinMMDeviceChange == 0)
+        DPRINT1("Failed to register winmm_devicechange window message: GetLastError %u\n", GetLastError());
+
     return TRUE;
 }
 
@@ -114,6 +121,19 @@ ProcessDeviceArrival(DEV_BROADCAST_DEVICEINTERFACE* device)
     list_node = CreateDeviceDescriptor(device->dbcc_name, TRUE);
     AppendAudioDeviceToList(list_node);
     DestroyDeviceDescriptor(list_node);
+
+    DWORD dwInfo = BSM_ALLDESKTOPS | BSM_APPLICATIONS;
+    BroadcastSystemMessageW(BSF_POSTMESSAGE, &dwInfo, uWinMMDeviceChange, 0, 0);
+
+    return NO_ERROR;
+}
+
+DWORD
+ProcessDeviceRemovalComplete(DEV_BROADCAST_DEVICEINTERFACE* device)
+{
+    /* TODO: clean up appended audio devices */
+    DWORD dwInfo = BSM_ALLDESKTOPS | BSM_APPLICATIONS;
+    BroadcastSystemMessageW(BSF_POSTMESSAGE, &dwInfo, uWinMMDeviceChange, 0, 0);
 
     return NO_ERROR;
 }
@@ -183,7 +203,15 @@ HandleDeviceEvent(
             return ProcessDeviceArrival(incoming_device);
         }
 
-        default :
+        case DBT_DEVICEREMOVECOMPLETE:
+        {
+            DEV_BROADCAST_DEVICEINTERFACE* removed_device =
+                (DEV_BROADCAST_DEVICEINTERFACE*)lpEventData;
+            
+            return ProcessDeviceRemovalComplete(removed_device);
+        }
+
+        default:
         {
             break;
         }

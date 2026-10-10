@@ -1163,6 +1163,27 @@ ExitWithError:
 
     if (Endpoint)
     {
+        /* A timed out endpoint is still queued for the ISR DPC and opened in the miniport */
+        KeAcquireSpinLock(&FdoExtension->EpStateChangeSpinLock, &OldIrql);
+
+        if (Endpoint->StateChangeLink.Flink != NULL &&
+            Endpoint->StateChangeLink.Blink != NULL)
+        {
+            RemoveEntryList(&Endpoint->StateChangeLink);
+        }
+
+        Endpoint->StateChangeLink.Flink = NULL;
+        Endpoint->StateChangeLink.Blink = NULL;
+
+        KeReleaseSpinLock(&FdoExtension->EpStateChangeSpinLock, OldIrql);
+
+        MiniportCloseEndpoint(FdoDevice, Endpoint);
+
+        if (Endpoint->HeaderBuffer)
+        {
+            USBPORT_FreeCommonBuffer(FdoDevice, Endpoint->HeaderBuffer);
+        }
+
         if (IsAllocatedBandwidth)
         {
             if (Packet->MiniPortFlags & USB_MINIPORT_FLAGS_USB2)

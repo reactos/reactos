@@ -27,6 +27,7 @@ list(APPEND SOURCE
     interlck.c
     IsDBCSLeadByteEx.c
     JapaneseCalendar.c
+    JobObject.c
     LCMapString.c
     LoadLibraryExW.c
     LocaleNameToLCID.c
@@ -41,6 +42,7 @@ list(APPEND SOURCE
     SetComputerNameExW.c
     SetConsoleWindowInfo.c
     SetCurrentDirectory.c
+    SetSearchPathMode.c
     SetUnhandledExceptionFilter.c
     SystemFirmware.c
     TerminateProcess.c

@@ -28,8 +28,9 @@ class CExeDropHandler :
     public IPersistFile
 {
 private:
-    CLSID *pclsid;
-    LPWSTR sPathTarget;
+    LPWSTR m_PathTarget = NULL;
+    DWORD m_grfKeyState = 0;
+
 public:
     CExeDropHandler();
     ~CExeDropHandler();

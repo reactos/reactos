@@ -17,8 +17,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define NONAMELESSUNION
-
 #include "hhctrl.h"
 #include "stream.h"
 #include "resource.h"
@@ -41,10 +39,10 @@ static void free_content_item(ContentItem *item)
 
         free_content_item(item->child);
 
-        heap_free(item->name);
-        heap_free(item->local);
-        heap_free(item->merge.chm_file);
-        heap_free(item->merge.chm_index);
+        free(item->name);
+        free(item->local);
+        free(item->merge.chm_file);
+        free(item->merge.chm_index);
 
         item = next;
     }
@@ -97,7 +95,7 @@ static void parse_obj_node_param(ContentItem *item, ContentItem *hhc_root, const
 
     if(param == &merge) {
         SetChmPath(&item->merge, hhc_root->merge.chm_file, merge);
-        heap_free(merge);
+        free(merge);
     }
 }
 
@@ -141,16 +139,16 @@ static ContentItem *parse_sitemap_object(HHInfo *info, stream_t *stream, Content
     strbuf_init(&node);
     strbuf_init(&node_name);
 
-    item = heap_alloc_zero(sizeof(ContentItem));
+    item = calloc(1, sizeof(ContentItem));
 
     while(next_node(stream, &node)) {
         get_node_name(&node, &node_name);
 
         TRACE("%s\n", node.buf);
 
-        if(!_strnicmp(node_name.buf, "/object", -1))
+        if(!stricmp(node_name.buf, "/object"))
             break;
-        if(!_strnicmp(node_name.buf, "param", -1))
+        if(!stricmp(node_name.buf, "param"))
             parse_obj_node_param(item, hhc_root, node.buf, info->pCHMInfo->codePage);
 
         strbuf_zero(&node);
@@ -195,7 +193,7 @@ static ContentItem *parse_ul(HHInfo *info, stream_t *stream, ContentItem *hhc_ro
 
         TRACE("%s\n", node.buf);
 
-        if(!_strnicmp(node_name.buf, "object", -1)) {
+        if(!stricmp(node_name.buf, "object")) {
             const char *ptr;
             int len;
 
@@ -210,10 +208,10 @@ static ContentItem *parse_ul(HHInfo *info, stream_t *stream, ContentItem *hhc_ro
                 if(!ret)
                     ret = prev;
             }
-        }else if(!_strnicmp(node_name.buf, "ul", -1)) {
+        }else if(!stricmp(node_name.buf, "ul")) {
             new_item = parse_ul(info, stream, hhc_root);
             insert_item(prev, new_item, INSERT_CHILD);
-        }else if(!_strnicmp(node_name.buf, "/ul", -1)) {
+        }else if(!stricmp(node_name.buf, "/ul")) {
             break;
         }
 
@@ -245,7 +243,7 @@ static ContentItem *parse_hhc(HHInfo *info, IStream *str, ContentItem *hhc_root,
 
         TRACE("%s\n", node.buf);
 
-        if(!_strnicmp(node_name.buf, "ul", -1)) {
+        if(!stricmp(node_name.buf, "ul")) {
             ContentItem *item = parse_ul(info, &stream, hhc_root);
             prev = insert_item(prev, item, INSERT_CHILD);
             if(!ret)
@@ -267,12 +265,12 @@ static void insert_content_item(HWND hwnd, ContentItem *parent, ContentItem *ite
     TVINSERTSTRUCTW tvis;
 
     memset(&tvis, 0, sizeof(tvis));
-    tvis.u.item.mask = TVIF_TEXT|TVIF_PARAM|TVIF_IMAGE|TVIF_SELECTEDIMAGE;
-    tvis.u.item.cchTextMax = lstrlenW(item->name)+1;
-    tvis.u.item.pszText = item->name;
-    tvis.u.item.lParam = (LPARAM)item;
-    tvis.u.item.iImage = item->child ? HHTV_FOLDER : HHTV_DOCUMENT;
-    tvis.u.item.iSelectedImage = item->child ? HHTV_FOLDER : HHTV_DOCUMENT;
+    tvis.item.mask = TVIF_TEXT|TVIF_PARAM|TVIF_IMAGE|TVIF_SELECTEDIMAGE;
+    tvis.item.cchTextMax = lstrlenW(item->name)+1;
+    tvis.item.pszText = item->name;
+    tvis.item.lParam = (LPARAM)item;
+    tvis.item.iImage = item->child ? HHTV_FOLDER : HHTV_DOCUMENT;
+    tvis.item.iSelectedImage = item->child ? HHTV_FOLDER : HHTV_DOCUMENT;
     tvis.hParent = parent ? parent->id : 0;
     tvis.hInsertAfter = TVI_LAST;
 
@@ -306,7 +304,7 @@ void InitContent(HHInfo *info)
     IStream *stream;
     insert_type_t insert_type;
 
-    info->content = heap_alloc_zero(sizeof(ContentItem));
+    info->content = calloc(1, sizeof(ContentItem));
     SetChmPath(&info->content->merge, info->pCHMInfo->szFile, info->WinType.pszToc);
 
     stream = GetChmStream(info->pCHMInfo, info->pCHMInfo->szFile, &info->content->merge);

@@ -52,6 +52,7 @@ extern void func_NtImpersonateAnonymousToken(void);
 extern void func_NtLoadUnloadKey(void);
 extern void func_NtMapViewOfSection(void);
 extern void func_NtMutant(void);
+extern void func_NtNotifyChangeMultipleKeys(void);
 extern void func_NtOpenKey(void);
 extern void func_NtOpenProcessToken(void);
 extern void func_NtOpenThreadToken(void);
@@ -111,8 +112,10 @@ extern void func_RtlHandle(void);
 extern void func_RtlImageDirectoryEntryToData(void);
 extern void func_RtlImageRvaToVa(void);
 extern void func_RtlIntSafe(void);
+extern void func_RtlIsNameInExpression(void);
 extern void func_RtlIsNameLegalDOS8Dot3(void);
 extern void func_RtlLocale(void);
+extern void func_RtlMemIoResource(void);
 extern void func_RtlMemoryStream(void);
 extern void func_RtlMultipleAllocateHeap(void);
 extern void func_RtlNtPathNameToDosPathName(void);
@@ -190,6 +193,7 @@ const struct test winetest_testlist[] =
     { "NtLoadUnloadKey",                func_NtLoadUnloadKey },
     { "NtMapViewOfSection",             func_NtMapViewOfSection },
     { "NtMutant",                       func_NtMutant },
+    { "NtNotifyChangeMultipleKeys",     func_NtNotifyChangeMultipleKeys },
     { "NtOpenKey",                      func_NtOpenKey },
     { "NtOpenProcessToken",             func_NtOpenProcessToken },
     { "NtOpenThreadToken",              func_NtOpenThreadToken },
@@ -248,8 +252,10 @@ const struct test winetest_testlist[] =
     { "RtlImageDirectoryEntryToData",   func_RtlImageDirectoryEntryToData },
     { "RtlImageRvaToVa",                func_RtlImageRvaToVa },
     { "RtlIntSafe",                     func_RtlIntSafe },
+    { "RtlIsNameInExpression",          func_RtlIsNameInExpression},
     { "RtlIsNameLegalDOS8Dot3",         func_RtlIsNameLegalDOS8Dot3 },
     { "RtlLocale",                      func_RtlLocale },
+    { "RtlMemIoResource",               func_RtlMemIoResource },
     { "RtlMemoryStream",                func_RtlMemoryStream },
     { "RtlMultipleAllocateHeap",        func_RtlMultipleAllocateHeap },
     { "RtlNtPathNameToDosPathName",     func_RtlNtPathNameToDosPathName },

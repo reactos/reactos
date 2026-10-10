@@ -196,17 +196,17 @@ VOID CCanvasWindow::ImageToCanvas(RECT& rc)
     ::OffsetRect(&rc, GRIP_SIZE - GetScrollPos(SB_HORZ), GRIP_SIZE - GetScrollPos(SB_VERT));
 }
 
-VOID CCanvasWindow::CanvasToImage(POINT& pt)
+VOID CCanvasWindow::CanvasToImage(POINT& pt, BOOL bRound)
 {
     pt.x -= GRIP_SIZE - GetScrollPos(SB_HORZ);
     pt.y -= GRIP_SIZE - GetScrollPos(SB_VERT);
-    UnZoomed(pt);
+    UnZoomed(pt, bRound);
 }
 
-VOID CCanvasWindow::CanvasToImage(RECT& rc)
+VOID CCanvasWindow::CanvasToImage(RECT& rc, BOOL bRound)
 {
     ::OffsetRect(&rc, GetScrollPos(SB_HORZ) - GRIP_SIZE, GetScrollPos(SB_VERT) - GRIP_SIZE);
-    UnZoomed(rc);
+    UnZoomed(rc, bRound);
 }
 
 VOID CCanvasWindow::GetImageRect(RECT& rc)
@@ -475,7 +475,7 @@ LRESULT CCanvasWindow::OnButtonDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOO
     if (hitSelection != HIT_NONE)
     {
         m_drawing = TRUE;
-        CanvasToImage(pt);
+        CanvasToImage(pt, TRUE);
         SetCapture();
         toolsModel.OnButtonDown(bLeftButton, pt.x, pt.y, FALSE);
         Invalidate();
@@ -507,7 +507,7 @@ LRESULT CCanvasWindow::OnButtonDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOO
         return 0;
     }
 
-    CanvasToImage(pt);
+    CanvasToImage(pt, TRUE);
 
     if (hit == HIT_INNER)
     {
@@ -531,7 +531,7 @@ LRESULT CCanvasWindow::OnButtonDown(UINT nMsg, WPARAM wParam, LPARAM lParam, BOO
 LRESULT CCanvasWindow::OnButtonDblClk(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
-    CanvasToImage(pt);
+    CanvasToImage(pt, TRUE);
 
     m_drawing = FALSE;
     ::ReleaseCapture();
@@ -557,7 +557,7 @@ LRESULT CCanvasWindow::OnMouseMove(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL
         return 0;
     }
 
-    CanvasToImage(pt);
+    CanvasToImage(pt, TRUE);
 
     if (toolsModel.GetActiveTool() == TOOL_ZOOM)
         Invalidate();
@@ -672,7 +672,7 @@ LRESULT CCanvasWindow::OnMouseMove(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL
 LRESULT CCanvasWindow::OnButtonUp(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
-    CanvasToImage(pt);
+    CanvasToImage(pt, TRUE);
 
     ::ReleaseCapture();
 

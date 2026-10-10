@@ -2,9 +2,8 @@
 spec2def(cryptdll.dll cryptdll.spec)
 
 list(APPEND SOURCE
-    cryptdll.c
-    stubs.c
-    ${CMAKE_CURRENT_BINARY_DIR}/cryptdll.def)
+    ${CMAKE_CURRENT_BINARY_DIR}/cryptdll.def
+    ${CMAKE_CURRENT_BINARY_DIR}/cryptdll_stubs.c)
 
 add_library(cryptdll MODULE ${SOURCE})
 set_module_type(cryptdll win32dll)

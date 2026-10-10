@@ -47,18 +47,6 @@ WINE_DEFAULT_DEBUG_CHANNEL(itss);
 static HRESULT ITSS_create(IUnknown *pUnkOuter, LPVOID *ppObj);
 
 LONG dll_count = 0;
-static HINSTANCE hInst;
-
-BOOL WINAPI DllMain(HINSTANCE hInstDLL, DWORD fdwReason, LPVOID lpv)
-{
-    switch(fdwReason) {
-    case DLL_PROCESS_ATTACH:
-        DisableThreadLibraryCalls(hInstDLL);
-        hInst = hInstDLL;
-        break;
-    }
-    return TRUE;
-}
 
 /******************************************************************************
  * ITSS ClassFactory
@@ -243,7 +231,7 @@ static HRESULT WINAPI ITStorageImpl_StgCreateDocfile(
 {
     ITStorageImpl *This = impl_from_IITStorage(iface);
 
-    TRACE("%p %s %u %u %p\n", This,
+    TRACE("%p %s %lu %lu %p\n", This,
           debugstr_w(pwcsName), grfMode, reserved, ppstgOpen );
 
     return ITSS_StgOpenStorage( pwcsName, NULL, grfMode,
@@ -291,7 +279,7 @@ static HRESULT WINAPI ITStorageImpl_StgOpenStorage(
 {
     ITStorageImpl *This = impl_from_IITStorage(iface);
 
-    TRACE("%p %s %p %d %p\n", This, debugstr_w( pwcsName ),
+    TRACE("%p %s %p %ld %p\n", This, debugstr_w( pwcsName ),
            pstgPriority, grfMode, snbExclude );
 
     return ITSS_StgOpenStorage( pwcsName, pstgPriority, grfMode,
@@ -391,22 +379,6 @@ static HRESULT ITSS_create(IUnknown *pUnkOuter, LPVOID *ppObj)
 
 HRESULT WINAPI DllCanUnloadNow(void)
 {
-    TRACE("dll_count = %u\n", dll_count);
+    TRACE("dll_count = %lu\n", dll_count);
     return dll_count ? S_FALSE : S_OK;
-}
-
-/***********************************************************************
- *          DllRegisterServer (ITSS.@)
- */
-HRESULT WINAPI DllRegisterServer(void)
-{
-    return __wine_register_resources( hInst );
-}
-
-/***********************************************************************
- *          DllUnregisterServer (ITSS.@)
- */
-HRESULT WINAPI DllUnregisterServer(void)
-{
-    return __wine_unregister_resources( hInst );
 }

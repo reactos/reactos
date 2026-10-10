@@ -1263,7 +1263,7 @@ static MUI_ENTRY sqALFormatPartitionEntries[] =
     {
         0,
         0,
-        "ENTER = Vazhdo   F3 = Dil",
+        "ENTER = Vazhdo   ESC = Anulo   F3 = Dil",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
         TEXT_ID_STATIC
     },
@@ -2015,12 +2015,6 @@ MUI_ERROR sqALErrorEntries[] =
         // ERROR_CREATE_INSTALL_DIR
         "Instalimi nuk mund t\211 krijoj\211 skedat p\211r instalim.",
         "\211NT\211R = Ristarto kompjuterin"
-    },
-    {
-        //‰RROR_FIND_S‰TUPDATA,
-        "Instalimi d\211shtoi p\211r t\211 gjetur seksionin e 'SetupData'\n"
-        "ne TXTSETUP.SIF.\n",
-        "ENTER = Ristarto kompjuterin"
     },
     {
         // ERROR_WRITE_PTABLE,

@@ -343,7 +343,7 @@ SHInvokeCommandOnContextMenuInternal(
     {
         if (GetVersionMajorMinor() >= _WIN32_WINNT_WIN7)
         {
-            info.fMask |= CMF_OPTIMIZEFORINVOKE;
+            fCMF |= CMF_OPTIMIZEFORINVOKE;
         }
         if (pszVerb && SHAnsiToUnicode(pszVerb, wideverb, _countof(wideverb)))
         {
@@ -815,12 +815,11 @@ IShellFolder_CompareIDs(
 
     if (lParam & ~(SIZE_T)SHCIDS_COLUMNMASK)
     {
-        /* Try as IShellFolder2 if possible */
-        HRESULT hr = psf->QueryInterface(IID_IShellFolder2, (void **)&psf);
-        if (FAILED(hr))
-            lParam &= SHCIDS_COLUMNMASK;
+        IShellFolder2 *psf2;
+        if (FAILED(psf->QueryInterface(IID_IShellFolder2, (void**)&psf2)))
+            lParam &= SHCIDS_COLUMNMASK; /* The folder does not support the new flags */
         else
-            psf->Release();
+            psf2->Release();
     }
 
     return psf->CompareIDs(lParam, pidl1, pidl2);

@@ -182,15 +182,15 @@ wmain(
             if ((index + 1) < argc)
             {
                 index++;
-                pszMachine = HeapAlloc(GetProcessHeap(), 0, (wcslen(argv[index]) + 1) * sizeof(WCHAR));
-                if (pszMachine == NULL)
+                g_pszMachine = HeapAlloc(GetProcessHeap(), 0, (wcslen(argv[index]) + 1) * sizeof(WCHAR));
+                if (g_pszMachine == NULL)
                 {
                     dwError = ERROR_NOT_ENOUGH_MEMORY;
                     PrintError(g_hModule, dwError);
                     goto done;
                 }
 
-                wcscpy(pszMachine, argv[index]);
+                wcscpy(g_pszMachine, argv[index]);
             }
             else
             {
@@ -254,8 +254,8 @@ wmain(
 
 done:
     /* FIXME: Cleanup code goes here */
-    if (pszMachine != NULL)
-        HeapFree(GetProcessHeap(), 0, pszMachine);
+    if (g_pszMachine != NULL)
+        HeapFree(GetProcessHeap(), 0, g_pszMachine);
 
     if (pszCommand != NULL)
         HeapFree(GetProcessHeap(), 0, pszCommand);

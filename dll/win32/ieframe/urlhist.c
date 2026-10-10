@@ -62,21 +62,21 @@ static ULONG WINAPI UrlHistoryStg_Release(IUrlHistoryStg2 *iface)
 static HRESULT WINAPI UrlHistoryStg_AddUrl(IUrlHistoryStg2 *iface, LPCOLESTR lpcsUrl,
         LPCOLESTR pocsTitle, DWORD dwFlags)
 {
-    FIXME("(%s %s %08x)\n", debugstr_w(lpcsUrl), debugstr_w(pocsTitle), dwFlags);
+    FIXME("(%s %s %08lx)\n", debugstr_w(lpcsUrl), debugstr_w(pocsTitle), dwFlags);
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI UrlHistoryStg_DeleteUrl(IUrlHistoryStg2 *iface, LPCOLESTR lpcsUrl,
         DWORD dwFlags)
 {
-    FIXME("(%s %08x)\n", debugstr_w(lpcsUrl), dwFlags);
+    FIXME("(%s %08lx)\n", debugstr_w(lpcsUrl), dwFlags);
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI UrlHistoryStg_QueryUrl(IUrlHistoryStg2 *iface, LPCOLESTR lpcsUrl,
         DWORD dwFlags, LPSTATURL lpSTATURL)
 {
-    FIXME("(%s %08x %p)\n", debugstr_w(lpcsUrl), dwFlags, lpSTATURL);
+    FIXME("(%s %08lx %p)\n", debugstr_w(lpcsUrl), dwFlags, lpSTATURL);
     return E_NOTIMPL;
 }
 
@@ -97,7 +97,7 @@ static HRESULT WINAPI UrlHistoryStg_AddUrlAndNotify(IUrlHistoryStg2 *iface, LPCO
         LPCOLESTR pocsTitle, DWORD dwFlags, BOOL fWriteHistory, IOleCommandTarget *poctNotify,
         IUnknown *punkISFolder)
 {
-    FIXME("(%s %s %08x %x %p %p)\n", debugstr_w(pocsUrl), debugstr_w(pocsTitle),
+    FIXME("(%s %s %08lx %x %p %p)\n", debugstr_w(pocsUrl), debugstr_w(pocsTitle),
           dwFlags, fWriteHistory, poctNotify, punkISFolder);
     return E_NOTIMPL;
 }

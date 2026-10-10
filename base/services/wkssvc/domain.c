@@ -69,16 +69,17 @@ NetpJoinWorkgroup(
 
 NET_API_STATUS
 NetpGetJoinInformation(
-    LPWSTR *NameBuffer,
-    PNETSETUP_JOIN_STATUS BufferType)
+    _Out_ LPWSTR *NameBuffer,
+    _Out_ PNETSETUP_JOIN_STATUS BufferType)
 {
     LSA_OBJECT_ATTRIBUTES ObjectAttributes;
     PPOLICY_PRIMARY_DOMAIN_INFO PrimaryDomainInfo = NULL;
     LSA_HANDLE PolicyHandle = NULL;
+    LPWSTR Name = NULL;
+    NETSETUP_JOIN_STATUS Type = NetSetupUnknownStatus;
     NTSTATUS Status;
 
-    *BufferType = NetSetupUnknownStatus;
-    *NameBuffer = NULL;
+    TRACE("NetpGetJoinInformation(%p, %p)\n", NameBuffer, BufferType);
 
     ZeroMemory(&ObjectAttributes, sizeof(LSA_OBJECT_ATTRIBUTES));
     ObjectAttributes.Length = sizeof(LSA_OBJECT_ATTRIBUTES);
@@ -93,34 +94,66 @@ NetpGetJoinInformation(
     Status = LsaQueryInformationPolicy(PolicyHandle,
                                        PolicyPrimaryDomainInformation,
                                        (PVOID*)&PrimaryDomainInfo);
-    if (LSA_SUCCESS(Status))
+    if (!LSA_SUCCESS(Status))
     {
-        TRACE("Sid: %p\n", PrimaryDomainInfo->Sid);
-        TRACE("Name: %S\n", PrimaryDomainInfo->Name.Buffer);
+        ERR("LsaQueryInformationPolicy failed (Status 0x%lx)\n", Status);
+        goto done;
+    }
 
-        if (PrimaryDomainInfo->Name.Length > 0)
+    TRACE("Sid: %p\n", PrimaryDomainInfo->Sid);
+    TRACE("Name: %hu %S\n", PrimaryDomainInfo->Name.Length, PrimaryDomainInfo->Name.Buffer);
+
+    if (PrimaryDomainInfo->Name.Length > 0)
+    {
+        TRACE("PD name!\n");
+        if (PrimaryDomainInfo->Sid != NULL)
         {
-            if (PrimaryDomainInfo->Sid != NULL)
-                *BufferType = NetSetupDomainName;
-            else
-                *BufferType = NetSetupWorkgroupName;
-
-            *NameBuffer = midl_user_allocate(PrimaryDomainInfo->Name.Length + sizeof(WCHAR));
-            if (*NameBuffer)
-                wcscpy(*NameBuffer, PrimaryDomainInfo->Name.Buffer);
+            TRACE("PD SID! -->Domain\n");
+            Type = NetSetupDomainName;
         }
         else
         {
-            *BufferType = NetSetupUnjoined;
+            TRACE("No PD SID! --> Workgroup\n");
+            Type = NetSetupWorkgroupName;
+        }
+    }
+    else
+    {
+        TRACE("No PD name!\n");
+        Type = NetSetupUnjoined;
+    }
+
+    TRACE("BufferType: %u\n", *BufferType);
+
+    if ((Type != NetSetupUnjoined) && (PrimaryDomainInfo->Name.Length > 0))
+    {
+        Name = midl_user_allocate(PrimaryDomainInfo->Name.Length + sizeof(WCHAR));
+        if (Name == NULL)
+        {
+            Status = STATUS_INSUFFICIENT_RESOURCES;
+            goto done;
         }
 
+        wcscpy(Name, PrimaryDomainInfo->Name.Buffer);
+    }
+
+done:
+    if (PrimaryDomainInfo)
+    {
         if (PrimaryDomainInfo->Sid)
             LsaFreeMemory(PrimaryDomainInfo->Sid);
 
         LsaFreeMemory(PrimaryDomainInfo);
     }
 
-    LsaClose(PolicyHandle);
+    if (PolicyHandle)
+        LsaClose(PolicyHandle);
+
+    if (LSA_SUCCESS(Status))
+    {
+        *NameBuffer = Name;
+        *BufferType = Type;
+    }
 
     return LsaNtStatusToWinError(Status);
 }

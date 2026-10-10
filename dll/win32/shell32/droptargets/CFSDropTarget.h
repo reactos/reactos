@@ -54,6 +54,8 @@ class CFSDropTarget :
         ~CFSDropTarget();
         HRESULT Initialize(LPWSTR PathTarget);
 
+        static UINT TrackPopupMenu(HMENU hMenu, const POINTL &pt);
+
         // IDropTarget
         STDMETHOD(DragEnter)(IDataObject *pDataObject, DWORD dwKeyState, POINTL pt, DWORD *pdwEffect) override;
         STDMETHOD(DragOver)(DWORD dwKeyState, POINTL pt, DWORD *pdwEffect) override;

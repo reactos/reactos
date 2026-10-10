@@ -746,6 +746,37 @@ TCPSetNoDelay(
 }
 
 NTSTATUS
+TCPSetKeepAlive(
+    PCONNECTION_ENDPOINT Connection,
+    BOOLEAN Value)
+{
+    if (!Connection)
+        return STATUS_UNSUCCESSFUL;
+
+    if (Connection->SocketContext == NULL)
+        return STATUS_UNSUCCESSFUL;
+
+    LibTCPSetKeepAlive(Connection->SocketContext, Value);
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+TCPSetKeepAliveValues(
+    PCONNECTION_ENDPOINT Connection,
+    DWORD KeepAliveTime,
+    DWORD KeepAliveInterval)
+{
+    if (!Connection)
+        return STATUS_UNSUCCESSFUL;
+
+    if (Connection->SocketContext == NULL)
+        return STATUS_UNSUCCESSFUL;
+
+    LibTcpSetKeepAliveValues(Connection->SocketContext, KeepAliveTime, KeepAliveInterval);
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
 TCPGetSocketStatus(
     PCONNECTION_ENDPOINT Connection,
     PULONG State)

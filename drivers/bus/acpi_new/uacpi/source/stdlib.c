@@ -146,6 +146,18 @@ uacpi_u8 uacpi_bit_scan_forward(uacpi_u64 value)
     return (uacpi_u8)index + 1;
 #endif
 
+#elif defined(__WATCOMC__)
+    // TODO: Use compiler intrinsics or inline ASM here
+    uacpi_u8 index;
+    uacpi_u64 mask = 1;
+
+    for (index = 1; index <= 64; index++, mask <<= 1) {
+        if (value & mask) {
+            return index;
+        }
+    }
+
+    return 0;
 #else
     return __builtin_ffsll(value);
 #endif
@@ -176,6 +188,18 @@ uacpi_u8 uacpi_bit_scan_backward(uacpi_u64 value)
     return (uacpi_u8)index + 33;
 #endif
 
+#elif defined(__WATCOMC__)
+    // TODO: Use compiler intrinsics or inline ASM here
+    uacpi_u8 index;
+    uacpi_u64 mask = (1ull << 63);
+
+    for (index = 64; index > 0; index--, mask >>= 1) {
+        if (value & mask) {
+            return index;
+        }
+    }
+
+    return 0;
 #else
     if (value == 0)
         return 0;
@@ -477,16 +501,15 @@ uacpi_i32 uacpi_vsnprintf(
     uacpi_va_list vlist
 )
 {
-    struct fmt_buf_state fb_state = {
-        .buffer = buffer,
-        .capacity = capacity,
-        .bytes_written = 0
-    };
-
+    struct fmt_buf_state fb_state = { 0 };
     uacpi_u64 value;
     const uacpi_char *next_conversion;
     uacpi_size next_offset;
     uacpi_char flag;
+
+    fb_state.buffer = buffer;
+    fb_state.capacity = capacity;
+    fb_state.bytes_written = 0;
 
     while (*fmt) {
         struct fmt_spec fm = {
@@ -580,7 +603,7 @@ uacpi_i32 uacpi_vsnprintf(
 
         if (consume(&fmt, "hh")) {
             if (consume(&fmt, "d") || consume(&fmt, "i")) {
-                value = (signed char)uacpi_va_arg(vlist, int);
+                value = (uacpi_u64)uacpi_va_arg(vlist, int);
                 fm.is_signed = UACPI_TRUE;
             } else if (consume_one_of(&fmt, "oxXu", &flag)) {
                 value = (unsigned char)uacpi_va_arg(vlist, int);
@@ -684,22 +707,11 @@ void uacpi_log(uacpi_log_level lvl, const uacpi_char *str, ...)
 
     ret = uacpi_vsnprintf(buf, sizeof(buf), str, vlist);
     if (uacpi_unlikely(ret < 0))
-        return;
-
-    /*
-     * If this log message is too large for the configured buffer size, cut off
-     * the end and transform into "...\n" to indicate that it didn't fit and
-     * prevent the newline from being truncated.
-     */
-    if (uacpi_unlikely(ret >= UACPI_PLAIN_LOG_BUFFER_SIZE)) {
-        buf[UACPI_PLAIN_LOG_BUFFER_SIZE - 5] = '.';
-        buf[UACPI_PLAIN_LOG_BUFFER_SIZE - 4] = '.';
-        buf[UACPI_PLAIN_LOG_BUFFER_SIZE - 3] = '.';
-        buf[UACPI_PLAIN_LOG_BUFFER_SIZE - 2] = '\n';
-    }
+        goto out;
 
     uacpi_kernel_log(lvl, buf);
 
+out:
     uacpi_va_end(vlist);
 }
 #endif

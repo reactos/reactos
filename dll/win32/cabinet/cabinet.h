@@ -29,27 +29,6 @@
 #include "fdi.h"
 #include "fci.h"
 
-/* from msvcrt/sys/stat.h */
-#define _S_IWRITE 0x0080
-#define _S_IREAD  0x0100
-
-/* from msvcrt/fcntl.h */
-#define _O_RDONLY      0
-#define _O_WRONLY      1
-#define _O_RDWR        2
-#define _O_ACCMODE     (_O_RDONLY|_O_WRONLY|_O_RDWR)
-#define _O_APPEND      0x0008
-#define _O_RANDOM      0x0010
-#define _O_SEQUENTIAL  0x0020
-#define _O_TEMPORARY   0x0040
-#define _O_NOINHERIT   0x0080
-#define _O_CREAT       0x0100
-#define _O_TRUNC       0x0200
-#define _O_EXCL        0x0400
-#define _O_SHORT_LIVED 0x1000
-#define _O_TEXT        0x4000
-#define _O_BINARY      0x8000
-
 #define CAB_SPLITMAX (10)
 
 #define CAB_SEARCH_SIZE (32*1024)
@@ -62,7 +41,10 @@ typedef INT32         cab_LONG;  /* 32 bits */
 typedef UINT32        cab_off_t;
 
 /* number of bits in a ULONG */
-#define CAB_ULONG_BITS (sizeof(cab_ULONG) * 8) /* CHAR_BIT */
+#ifndef CHAR_BIT
+# define CHAR_BIT (8)
+#endif
+#define CAB_ULONG_BITS (sizeof(cab_ULONG) * CHAR_BIT)
 
 /* structure offsets */
 #define cfhead_Signature         (0x00)

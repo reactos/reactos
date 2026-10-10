@@ -1,6 +1,8 @@
 /*
  * Object Picker Dialog
  *
+ * Copyright (C) 2002 John K. Hohm
+ * Copyright (C) 2002 Robert Shearman
  * Copyright 2005 Thomas Weidenmueller <w3seek@reactos.com>
  *
  * This library is free software; you can redistribute it and/or
@@ -18,75 +20,19 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "objsel_private.h"
-#include "rpcproxy.h"
+#define COBJMACROS
+#include "objidl.h"
+#include "objsel.h"
 
 #include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(objsel);
 
-LONG dll_refs = 0;
-static HINSTANCE hInstance;
-
-/***********************************************************************
- *		DllEntryPoint
- */
-BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID fImpLoad)
+typedef struct
 {
-    switch(fdwReason)
-    {
-        case DLL_PROCESS_ATTACH:
-            hInstance = hinstDLL;
-            DisableThreadLibraryCalls(hInstance);
-            break;
-    }
-    return TRUE;
-}
-
-
-/***********************************************************************
- *		DllGetClassObject (OBJSEL.@)
- */
-HRESULT WINAPI DllGetClassObject(REFCLSID rclsid, REFIID iid, LPVOID *ppv)
-{
-    TRACE("(%s, %s, %p)\n", debugstr_guid(rclsid), debugstr_guid(iid), ppv);
-
-    *ppv = NULL;
-
-    if (IsEqualGUID(rclsid, &CLSID_DsObjectPicker))
-        return IClassFactory_QueryInterface(&OBJSEL_ClassFactory.IClassFactory_iface, iid, ppv);
-
-    FIXME("CLSID: %s, IID: %s\n", debugstr_guid(rclsid), debugstr_guid(iid));
-    return CLASS_E_CLASSNOTAVAILABLE;
-}
-
-
-/***********************************************************************
- *		DllCanUnloadNow (OBJSEL.@)
- */
-HRESULT WINAPI DllCanUnloadNow(void)
-{
-    return dll_refs != 0 ? S_FALSE : S_OK;
-}
-
-
-/***********************************************************************
- *		DllRegisterServer (OBJSEL.@)
- */
-HRESULT WINAPI DllRegisterServer(void)
-{
-    return __wine_register_resources( hInstance );
-}
-
-
-/***********************************************************************
- *		DllUnregisterServer (OBJSEL.@)
- */
-HRESULT WINAPI DllUnregisterServer(void)
-{
-    return __wine_unregister_resources( hInstance );
-}
-
+    IDsObjectPicker IDsObjectPicker_iface;
+    LONG ref;
+} IDsObjectPickerImpl;
 
 /**********************************************************************
  * OBJSEL_IDsObjectPicker_Destroy (also IUnknown)
@@ -110,20 +56,10 @@ static inline IDsObjectPickerImpl *impl_from_IDsObjectPicker(IDsObjectPicker *if
 static ULONG WINAPI OBJSEL_IDsObjectPicker_AddRef(IDsObjectPicker * iface)
 {
     IDsObjectPickerImpl *This = impl_from_IDsObjectPicker(iface);
-    ULONG ref;
 
     TRACE("\n");
 
-    if (This == NULL) return E_POINTER;
-
-    ref = InterlockedIncrement(&This->ref);
-
-    if (ref == 1)
-    {
-        InterlockedIncrement(&dll_refs);
-    }
-
-    return ref;
+    return InterlockedIncrement(&This->ref);
 }
 
 
@@ -137,15 +73,10 @@ static ULONG WINAPI OBJSEL_IDsObjectPicker_Release(IDsObjectPicker * iface)
 
     TRACE("\n");
 
-    if (This == NULL) return E_POINTER;
-
     ref = InterlockedDecrement(&This->ref);
 
     if (ref == 0)
-    {
-        InterlockedDecrement(&dll_refs);
         OBJSEL_IDsObjectPicker_Destroy(This);
-    }
 
     return ref;
 }
@@ -214,10 +145,7 @@ static IDsObjectPickerVtbl IDsObjectPicker_Vtbl =
 };
 
 
-/**********************************************************************
- * OBJSEL_IDsObjectPicker_Create
- */
-HRESULT WINAPI OBJSEL_IDsObjectPicker_Create(LPVOID *ppvObj)
+static HRESULT object_picker_create(void **ppvObj)
 {
     IDsObjectPickerImpl *Instance = HeapAlloc(GetProcessHeap(),
                                               HEAP_ZERO_MEMORY,
@@ -232,4 +160,115 @@ HRESULT WINAPI OBJSEL_IDsObjectPicker_Create(LPVOID *ppvObj)
     }
     else
         return E_OUTOFMEMORY;
+}
+
+
+struct class_factory
+{
+    IClassFactory IClassFactory_iface;
+    LONG ref;
+};
+
+
+static struct class_factory *impl_from_IClassFactory(IClassFactory *iface)
+{
+    return CONTAINING_RECORD(iface, struct class_factory, IClassFactory_iface);
+}
+
+
+static HRESULT WINAPI class_factory_QueryInterface(IClassFactory *iface, REFIID iid, void **out)
+{
+    TRACE("iid %s, out %p.\n", debugstr_guid(iid), out);
+
+    if (!out)
+        return E_POINTER;
+
+    if (IsEqualGUID(iid, &IID_IUnknown) || IsEqualGUID(iid, &IID_IClassFactory))
+    {
+        *out = iface;
+        IClassFactory_AddRef(iface);
+        return S_OK;
+    }
+
+    WARN("%s not implemented, returning E_NOINTERFACE.\n", debugstr_guid(iid));
+    return E_NOINTERFACE;
+}
+
+
+static ULONG WINAPI class_factory_AddRef(IClassFactory *iface)
+{
+    struct class_factory *factory = impl_from_IClassFactory(iface);
+
+    TRACE("\n");
+
+    return InterlockedIncrement(&factory->ref);
+}
+
+
+static ULONG WINAPI class_factory_Release(IClassFactory *iface)
+{
+    struct class_factory *factory = impl_from_IClassFactory(iface);
+
+    TRACE("\n");
+
+    return InterlockedDecrement(&factory->ref);
+}
+
+
+static HRESULT WINAPI class_factory_CreateInstance(IClassFactory *iface,
+        IUnknown *outer, REFIID iid, void **out)
+{
+    TRACE("outer %p, iid %s, out %p.\n", outer, debugstr_guid(iid), out);
+
+    if (!out)
+        return E_POINTER;
+
+    if (outer)
+        return CLASS_E_NOAGGREGATION;
+
+    if (IsEqualGUID(&IID_IDsObjectPicker, iid))
+        return object_picker_create(out);
+
+    return CLASS_E_CLASSNOTAVAILABLE;
+}
+
+
+static HRESULT WINAPI class_factory_LockServer(IClassFactory *iface, BOOL lock)
+{
+    TRACE("lock %d.\n", lock);
+
+    if (lock)
+        IClassFactory_AddRef(iface);
+    else
+        IClassFactory_Release(iface);
+    return S_OK;
+}
+
+
+static IClassFactoryVtbl class_factory_vtbl =
+{
+    class_factory_QueryInterface,
+    class_factory_AddRef,
+    class_factory_Release,
+    class_factory_CreateInstance,
+    class_factory_LockServer
+};
+
+
+static struct class_factory class_factory = {{&class_factory_vtbl}, 0};
+
+/***********************************************************************
+ *		DllGetClassObject (OBJSEL.@)
+ */
+HRESULT WINAPI DllGetClassObject(REFCLSID clsid, REFIID iid, void **out)
+{
+    TRACE("clsid %s, iid %s, out %p.\n", debugstr_guid(clsid), debugstr_guid(iid), out);
+
+    *out = NULL;
+
+    if (IsEqualGUID(clsid, &CLSID_DsObjectPicker))
+        return IClassFactory_QueryInterface(&class_factory.IClassFactory_iface, iid, out);
+
+    FIXME("%s not available, returning CLASS_E_CLASSNOTAVAILABLE.\n", debugstr_guid(clsid));
+    return CLASS_E_CLASSNOTAVAILABLE;
 }

@@ -241,6 +241,19 @@ BOOL CFSDropTarget::_QueryDrop(DWORD dwKeyState, LPDWORD pdwEffect)
     return FALSE;
 }
 
+UINT CFSDropTarget::TrackPopupMenu(HMENU hMenu, const POINTL &pt)
+{
+    /* We shouldn't use the site window here because the menu should work even when we don't have a site */
+    HWND hwndDummy = CreateWindowEx(0, WC_STATIC, NULL, WS_DISABLED | WS_CLIPSIBLINGS | WS_BORDER,
+                                    pt.x, pt.y, 1, 1, NULL, NULL, NULL, NULL);
+
+    SetForegroundWindow(hwndDummy); // Required for aborting by pressing Esc when dragging from Explorer to desktop
+    UINT uCommand = ::TrackPopupMenu(hMenu, TPM_RETURNCMD | TPM_LEFTBUTTON | TPM_RIGHTBUTTON,
+                                     pt.x, pt.y, 0, hwndDummy, NULL);
+    DestroyWindow(hwndDummy);
+    return uCommand;
+}
+
 HRESULT CFSDropTarget::_GetEffectFromMenu(IDataObject *pDataObject, POINTL pt, DWORD *pdwEffect, DWORD dwAvailableEffects)
 {
     HMENU hmenu = LoadMenuW(shell32_hInstance, MAKEINTRESOURCEW(IDM_DRAGFILE));
@@ -278,26 +291,7 @@ HRESULT CFSDropTarget::_GetEffectFromMenu(IDataObject *pDataObject, POINTL pt, D
         DCMA_InsertMenuItems(hDCMA, hDCIA, pidlFolder, pDataObject, keys, keys, &qcmi, 0, m_site);
     }
 
-    /* We shouldn't use the site window here because the menu should work even when we don't have a site */
-    HWND hwndDummy = CreateWindowEx(0,
-                              WC_STATIC,
-                              NULL,
-                              WS_OVERLAPPED | WS_DISABLED | WS_CLIPSIBLINGS | WS_BORDER | SS_LEFT,
-                              pt.x,
-                              pt.y,
-                              1,
-                              1,
-                              NULL,
-                              NULL,
-                              NULL,
-                              NULL);
-
-    SetForegroundWindow(hwndDummy); // Required for aborting by pressing Esc when dragging from Explorer to desktop
-    UINT uCommand = TrackPopupMenu(hpopupmenu,
-                                   TPM_LEFTALIGN | TPM_RETURNCMD | TPM_LEFTBUTTON | TPM_RIGHTBUTTON | TPM_NONOTIFY,
-                                   pt.x, pt.y, 0, hwndDummy, NULL);
-
-    DestroyWindow(hwndDummy);
+    UINT uCommand = TrackPopupMenu(hpopupmenu, pt);
 
     HRESULT hr = S_FALSE; // S_FALSE means we did not handle the command
     C_ASSERT(IDM_COPYHERE < DROPIDM_EXTFIRST && IDM_MOVEHERE < DROPIDM_EXTFIRST &&

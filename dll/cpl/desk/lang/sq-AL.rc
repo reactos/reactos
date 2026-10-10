@@ -117,7 +117,7 @@ BEGIN
     AUTOCHECKBOX "Përdor metodën e mëposhtme për të zbutë skajet e fonts ekran:", IDC_EFFAPPEARANCE_SMOOTHING, 10, 42, 267, 19//FIXME: add accel. I used "Pë&rdor metodën e mëposhtme për të zbutë skajet e fonts ekran" for the backport. Remember: &P is in use already.
     COMBOBOX IDC_EFFAPPEARANCE_SMOOTHINGTYPE, 20, 62, 95, 19, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | WS_VSCROLL | WS_TABSTOP
-    AUTOCHECKBOX "Përdor ikona të mëdha", IDC_EFFAPPEARANCE_LARGEICONS, 10, 80, 267, 19, WS_TABSTOP | WS_DISABLED//FIXME: add accel. I used "Për&dor ikona të mëdha" for the backport. Keep in mind that &P is in use
+    AUTOCHECKBOX "Përdor ikona të mëdha", IDC_EFFAPPEARANCE_LARGEICONS, 10, 80, 267, 19, WS_TABSTOP //FIXME: add accel. I used "Për&dor ikona të mëdha" for the backport. Keep in mind that &P is in use
     AUTOCHECKBOX "Shfaq hije poshte menus", IDC_EFFAPPEARANCE_SETDROPSHADOW, 10, 95, 267, 19//FIXME: add accel. I used "&Shfaq hije poshte menus" for the backport
     AUTOCHECKBOX "Shfaq &përmbajtjen dritare ndërsa zvarritet", IDC_EFFAPPEARANCE_DRAGFULLWINDOWS, 10, 110, 267, 19//FIXME: accelerator collision &P. I used "S&hfaq përmbajtjen dritare ndërsa zvarritet" for the backport
     AUTOCHECKBOX "Fsheh gërma të nënvizuara për kërkimin e tastierës deri sa të shtypni butonin Alt", IDC_EFFAPPEARANCE_KEYBOARDCUES, 10, 125, 267, 19//FIXME: add accel. I used "Fsh&eh gërma të nënvizuara për kërkimin e tastierës deri sa të shtypni Alt" as shortener for the backport. Keep in mind that &f is currently used by the &flat menus. And keep in mind that the text is currently too long and therefore cut off.

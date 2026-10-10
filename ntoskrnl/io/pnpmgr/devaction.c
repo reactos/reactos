@@ -1558,7 +1558,7 @@ PiUpdateDeviceState(
         // Query resource rebalance
 
         if (PnPFlags & PNP_DEVICE_FAILED)
-            DeviceNode->Flags &= DNF_NON_STOPPED_REBALANCE;
+            DeviceNode->Flags &= ~DNF_NON_STOPPED_REBALANCE;
         else
             DeviceNode->Flags |= DNF_NON_STOPPED_REBALANCE;
 

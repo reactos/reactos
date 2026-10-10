@@ -1,0 +1,619 @@
+/*
+ * Copyright 2022 Ziqing Hui for CodeWeavers
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+ import "d2d1_1.idl";
+
+typedef HRESULT (__stdcall *PD2D1_PROPERTY_SET_FUNCTION)(IUnknown *effect,
+        const BYTE *data, UINT32 data_size);
+
+typedef HRESULT (__stdcall *PD2D1_PROPERTY_GET_FUNCTION)(const IUnknown *effect,
+        BYTE *data, UINT32 data_size, UINT32 *actual_size);
+
+typedef enum D2D1_FILTER
+{
+    D2D1_FILTER_MIN_MAG_MIP_POINT               = 0x00,
+    D2D1_FILTER_MIN_MAG_POINT_MIP_LINEAR        = 0x01,
+    D2D1_FILTER_MIN_POINT_MAG_LINEAR_MIP_POINT  = 0x04,
+    D2D1_FILTER_MIN_POINT_MAG_MIP_LINEAR        = 0x05,
+    D2D1_FILTER_MIN_LINEAR_MAG_MIP_POINT        = 0x10,
+    D2D1_FILTER_MIN_LINEAR_MAG_POINT_MIP_LINEAR = 0x11,
+    D2D1_FILTER_MIN_MAG_LINEAR_MIP_POINT        = 0x14,
+    D2D1_FILTER_MIN_MAG_MIP_LINEAR              = 0x15,
+    D2D1_FILTER_ANISOTROPIC                     = 0x55,
+    D2D1_FILTER_FORCE_DWORD = 0xffffffff
+} D2D1_FILTER;
+
+typedef enum D2D1_FEATURE
+{
+    D2D1_FEATURE_DOUBLES                  = 0x0,
+    D2D1_FEATURE_D3D10_X_HARDWARE_OPTIONS = 0x1,
+    D2D1_FEATURE_FORCE_DWORD = 0xffffffff
+} D2D1_FEATURE;
+
+typedef struct D2D1_PROPERTY_BINDING
+{
+    const WCHAR *propertyName;
+    PD2D1_PROPERTY_SET_FUNCTION setFunction;
+    PD2D1_PROPERTY_GET_FUNCTION getFunction;
+} D2D1_PROPERTY_BINDING;
+
+typedef enum D2D1_CHANNEL_DEPTH
+{
+    D2D1_CHANNEL_DEPTH_DEFAULT = 0x0,
+    D2D1_CHANNEL_DEPTH_1       = 0x1,
+    D2D1_CHANNEL_DEPTH_4       = 0x4,
+    D2D1_CHANNEL_DEPTH_FORCE_DWORD = 0xffffffff
+} D2D1_CHANNEL_DEPTH;
+
+typedef enum D2D1_CHANGE_TYPE
+{
+    D2D1_CHANGE_TYPE_NONE       = 0x0,
+    D2D1_CHANGE_TYPE_PROPERTIES = 0x1,
+    D2D1_CHANGE_TYPE_CONTEXT    = 0x2,
+    D2D1_CHANGE_TYPE_GRAPH      = 0x3,
+    D2D1_CHANGE_TYPE_FORCE_DWORD = 0xffffffff
+} D2D1_CHANGE_TYPE;
+
+typedef enum D2D1_PIXEL_OPTIONS
+{
+    D2D1_PIXEL_OPTIONS_NONE             = 0x0,
+    D2D1_PIXEL_OPTIONS_TRIVIAL_SAMPLING = 0x1,
+    D2D1_PIXEL_OPTIONS_FORCE_DWORD = 0xffffffff
+} D2D1_PIXEL_OPTIONS;
+
+typedef enum D2D1_VERTEX_OPTIONS
+{
+    D2D1_VERTEX_OPTIONS_NONE              = 0x0,
+    D2D1_VERTEX_OPTIONS_DO_NOT_CLEAR      = 0x1,
+    D2D1_VERTEX_OPTIONS_USE_DEPTH_BUFFER  = 0x2,
+    D2D1_VERTEX_OPTIONS_ASSUME_NO_OVERLAP = 0x4,
+    D2D1_VERTEX_OPTIONS_FORCE_DWORD = 0xffffffff
+} D2D1_VERTEX_OPTIONS;
+
+typedef enum D2D1_VERTEX_USAGE
+{
+    D2D1_VERTEX_USAGE_STATIC  = 0x0,
+    D2D1_VERTEX_USAGE_DYNAMIC = 0x1,
+    D2D1_VERTEX_USAGE_FORCE_DWORD = 0xffffffff
+} D2D1_VERTEX_USAGE;
+
+typedef enum D2D1_BLEND_OPERATION
+{
+    D2D1_BLEND_OPERATION_ADD          = 0x1,
+    D2D1_BLEND_OPERATION_SUBTRACT     = 0x2,
+    D2D1_BLEND_OPERATION_REV_SUBTRACT = 0x3,
+    D2D1_BLEND_OPERATION_MIN          = 0x4,
+    D2D1_BLEND_OPERATION_MAX          = 0x5,
+    D2D1_BLEND_OPERATION_FORCE_DWORD = 0xffffffff
+} D2D1_BLEND_OPERATION;
+
+typedef enum D2D1_BLEND
+{
+    D2D1_BLEND_ZERO             = 1,
+    D2D1_BLEND_ONE              = 2,
+    D2D1_BLEND_SRC_COLOR        = 3,
+    D2D1_BLEND_INV_SRC_COLOR    = 4,
+    D2D1_BLEND_SRC_ALPHA        = 5,
+    D2D1_BLEND_INV_SRC_ALPHA    = 6,
+    D2D1_BLEND_DEST_ALPHA       = 7,
+    D2D1_BLEND_INV_DEST_ALPHA   = 8,
+    D2D1_BLEND_DEST_COLOR       = 9,
+    D2D1_BLEND_INV_DEST_COLOR   = 10,
+    D2D1_BLEND_SRC_ALPHA_SAT    = 11,
+    D2D1_BLEND_BLEND_FACTOR     = 14,
+    D2D1_BLEND_INV_BLEND_FACTOR = 15,
+    D2D1_BLEND_FORCE_DWORD = 0xffffffff
+} D2D1_BLEND;
+
+typedef struct D2D1_INPUT_DESCRIPTION
+{
+    D2D1_FILTER filter;
+    UINT32 levelOfDetailCount;
+} D2D1_INPUT_DESCRIPTION;
+
+typedef struct D2D1_VERTEX_RANGE
+{
+    UINT32 startVertex;
+    UINT32 vertexCount;
+} D2D1_VERTEX_RANGE;
+
+typedef struct D2D1_BLEND_DESCRIPTION
+{
+    D2D1_BLEND sourceBlend;
+    D2D1_BLEND destinationBlend;
+    D2D1_BLEND_OPERATION blendOperation;
+    D2D1_BLEND sourceBlendAlpha;
+    D2D1_BLEND destinationBlendAlpha;
+    D2D1_BLEND_OPERATION blendOperationAlpha;
+    float blendFactor[4];
+} D2D1_BLEND_DESCRIPTION;
+
+typedef struct D2D1_RESOURCE_TEXTURE_PROPERTIES
+{
+    const UINT32 *extents;
+    UINT32 dimensions;
+    D2D1_BUFFER_PRECISION bufferPrecision;
+    D2D1_CHANNEL_DEPTH channelDepth;
+    D2D1_FILTER filter;
+    const D2D1_EXTEND_MODE *extendModes;
+} D2D1_RESOURCE_TEXTURE_PROPERTIES;
+
+typedef struct D2D1_INPUT_ELEMENT_DESC
+{
+    const char *semanticName;
+    UINT32 semanticIndex;
+    DXGI_FORMAT format;
+    UINT32 inputSlot;
+    UINT32 alignedByteOffset;
+} D2D1_INPUT_ELEMENT_DESC;
+
+typedef struct D2D1_VERTEX_BUFFER_PROPERTIES
+{
+    UINT32 inputCount;
+    D2D1_VERTEX_USAGE usage;
+    const BYTE *data;
+    UINT32 byteWidth;
+} D2D1_VERTEX_BUFFER_PROPERTIES;
+
+typedef struct D2D1_CUSTOM_VERTEX_BUFFER_PROPERTIES
+{
+    const BYTE *shaderBufferWithInputSignature;
+    UINT32 shaderBufferSize;
+    const D2D1_INPUT_ELEMENT_DESC *inputElements;
+    UINT32 elementCount;
+    UINT32 stride;
+} D2D1_CUSTOM_VERTEX_BUFFER_PROPERTIES;
+
+[
+    object,
+    uuid(9b8b1336-00a5-4668-92b7-ced5d8bf9b7b),
+    local,
+]
+interface ID2D1VertexBuffer : IUnknown
+{
+    HRESULT Map(
+        [out] BYTE **data,
+        [in] UINT32 size
+    );
+    HRESULT Unmap();
+}
+
+[
+    object,
+    uuid(688d15c3-02b0-438d-b13a-d1b44c32c39a),
+    local,
+]
+interface ID2D1ResourceTexture : IUnknown
+{
+    HRESULT Update(
+        [in] const UINT32 *min_extents,
+        [in] const UINT32 *max_extents,
+        [in] const UINT32 *strides,
+        [in] UINT32 dimensions,
+        [in] const BYTE *data,
+        [in] UINT32 data_size
+    );
+}
+
+[
+    object,
+    uuid(519ae1bd-d19a-420d-b849-364f594776b7),
+    local,
+]
+interface ID2D1RenderInfo : IUnknown
+{
+    HRESULT SetInputDescription(
+        [in] UINT32 index,
+        [in] D2D1_INPUT_DESCRIPTION description
+    );
+    HRESULT SetOutputBuffer(
+        [in] D2D1_BUFFER_PRECISION precision,
+        [in] D2D1_CHANNEL_DEPTH depth
+    );
+    void SetCached(
+        [in] BOOL is_cached
+    );
+    void SetInstructionCountHint(
+        [in] UINT32 count
+    );
+}
+
+[
+    object,
+    uuid(693ce632-7f2f-45de-93fe-18d88b37aa21),
+    local,
+]
+interface ID2D1DrawInfo : ID2D1RenderInfo
+{
+    HRESULT SetPixelShaderConstantBuffer(
+        [in] const BYTE *buffer,
+        [in] UINT32 size
+    );
+    HRESULT SetResourceTexture(
+        [in] UINT32 index,
+        [in] ID2D1ResourceTexture *texture
+    );
+    HRESULT SetVertexShaderConstantBuffer(
+        [in] const BYTE *buffer,
+        [in] UINT32 size
+    );
+    HRESULT SetPixelShader(
+        [in] REFGUID id,
+        [in] D2D1_PIXEL_OPTIONS options
+    );
+    HRESULT SetVertexProcessing(
+        [in, optional] ID2D1VertexBuffer *buffer,
+        [in] D2D1_VERTEX_OPTIONS options,
+        [in, optional] const D2D1_BLEND_DESCRIPTION *description,
+        [in, optional] const D2D1_VERTEX_RANGE *range,
+        [in, optional] const GUID *shader
+    );
+}
+
+[
+    object,
+    uuid(5598b14b-9fd7-48b7-9bdb-8f0964eb38bc),
+    local,
+]
+interface ID2D1ComputeInfo : ID2D1RenderInfo
+{
+    HRESULT SetComputeShaderconstantBuffer(
+        [in] const BYTE *buffer,
+        [in] UINT32 size
+    );
+    HRESULT SetComputeShader(
+        [in] REFGUID id
+    );
+    HRESULT SetResourceTexture(
+        [in] UINT32 index,
+        [in] ID2D1ResourceTexture *texture
+    );
+}
+
+[
+    object,
+    uuid(b2efe1e7-729f-4102-949f-505fa21bf666),
+    local,
+]
+interface ID2D1TransformNode : IUnknown
+{
+    UINT32 GetInputCount();
+}
+
+[
+    object,
+    uuid(13d29038-c3e6-4034-9081-13b53a417992),
+    local,
+]
+interface ID2D1TransformGraph : IUnknown
+{
+    UINT32 GetInputCount();
+    HRESULT SetSingleTransformNode(
+        [in] ID2D1TransformNode *node
+    );
+    HRESULT AddNode(
+        [in] ID2D1TransformNode *node
+    );
+    HRESULT RemoveNode(
+        [in] ID2D1TransformNode *node
+    );
+    HRESULT SetOutputNode(
+        [in] ID2D1TransformNode *node
+    );
+    HRESULT ConnectNode(
+        [in] ID2D1TransformNode *from_node,
+        [in] ID2D1TransformNode *to_node,
+        [in] UINT32 index
+    );
+    HRESULT ConnectToEffectInput(
+        [in] UINT32 input_index,
+        [in] ID2D1TransformNode *node,
+        [in] UINT32 node_index
+    );
+    void Clear();
+    HRESULT SetPassthroughGraph(
+        [in] UINT32 index
+    );
+}
+
+[
+    object,
+    uuid(ef1a287d-342a-4f76-8fdb-da0d6ea9f92b),
+    local,
+]
+interface ID2D1Transform : ID2D1TransformNode
+{
+    HRESULT MapOutputRectToInputRects(
+        [in] const D2D1_RECT_L *output_rect,
+        [out] D2D1_RECT_L *input_rects,
+        [in] UINT32 input_rects_count
+    );
+    HRESULT MapInputRectsToOutputRect(
+        [in] const D2D1_RECT_L *input_rects,
+        [in] const D2D1_RECT_L *input_opaque_rects,
+        [in] UINT32 input_rect_count,
+        [out] D2D1_RECT_L *output_rect,
+        [out] D2D1_RECT_L *output_opaque_rect
+    );
+    HRESULT MapInvalidRect(
+        [in] UINT32 index,
+        [in] D2D1_RECT_L input_rect,
+        [out] D2D1_RECT_L *output_rect
+    );
+}
+
+[
+    object,
+    uuid(36bfdcb6-9739-435d-a30d-a653beff6a6f),
+    local,
+]
+interface ID2D1DrawTransform : ID2D1Transform
+{
+    HRESULT SetDrawInfo(
+        [in] ID2D1DrawInfo *info
+    );
+}
+
+[
+    object,
+    uuid(0d85573c-01e3-4f7d-bfd9-0d60608bf3c3),
+    local,
+]
+interface ID2D1ComputeTransform : ID2D1Transform
+{
+    HRESULT SetComputeInfo(
+        [in] ID2D1ComputeInfo *info
+    );
+    HRESULT CalculateThreadgroups(
+        [in] const D2D1_RECT_L *output_rect,
+        [out] UINT32 *dimension_x,
+        [out] UINT32 *dimension_y,
+        [out] UINT32 *dimension_z
+    );
+}
+
+[
+    object,
+    uuid(0359dc30-95e6-4568-9055-27720d130e93),
+    local,
+]
+interface ID2D1AnalysisTransform : IUnknown
+{
+    HRESULT ProcessAnalysisResults(
+        [in] const BYTE *data,
+        [in] UINT32 size
+    );
+}
+
+[
+    object,
+    uuid(db1800dd-0c34-4cf9-be90-31cc0a5653e1),
+    local,
+]
+interface ID2D1SourceTransform : ID2D1Transform
+{
+    HRESULT SetRenderInfo(
+        [in] ID2D1RenderInfo *info
+    );
+    HRESULT Draw(
+        [in] ID2D1Bitmap1 *target,
+        [in] const D2D1_RECT_L *draw_rect,
+        [in] D2D1_POINT_2U target_origin
+    );
+}
+
+[
+    object,
+    uuid(1a799d8a-69f7-4e4c-9fed-437ccc6684cc),
+    local,
+]
+interface ID2D1ConcreteTransform : ID2D1TransformNode
+{
+    HRESULT SetOutputBuffer(
+        [in] D2D1_BUFFER_PRECISION precision,
+        [in] D2D1_CHANNEL_DEPTH depth
+    );
+    void SetCached(
+        [in] BOOL is_cached
+    );
+}
+
+[
+    object,
+    uuid(63ac0b32-ba44-450f-8806-7f4ca1ff2f1b),
+    local,
+]
+interface ID2D1BlendTransform : ID2D1ConcreteTransform
+{
+    void SetDescription(
+        [in] const D2D1_BLEND_DESCRIPTION *description
+    );
+    void GetDescription(
+        [out] D2D1_BLEND_DESCRIPTION *description
+    );
+}
+
+[
+    object,
+    uuid(4998735c-3a19-473c-9781-656847e3a347),
+    local,
+]
+interface ID2D1BorderTransform : ID2D1ConcreteTransform
+{
+    void SetExtendModeX(
+        [in] D2D1_EXTEND_MODE mode
+    );
+    void SetExtendModeY(
+        [in] D2D1_EXTEND_MODE mode
+    );
+    D2D1_EXTEND_MODE GetExtendModeX();
+    D2D1_EXTEND_MODE GetExtendModeY();
+}
+
+[
+    object,
+    uuid(3fe6adea-7643-4f53-bd14-a0ce63f24042),
+    local,
+]
+interface ID2D1OffsetTransform : ID2D1TransformNode
+{
+    void SetOffset(
+        [in] D2D1_POINT_2L offset
+    );
+    D2D1_POINT_2L GetOffset();
+}
+
+[
+    object,
+    uuid(90f732e2-5092-4606-a819-8651970baccd),
+    local,
+]
+interface ID2D1BoundsAdjustmentTransform : ID2D1TransformNode
+{
+    void SetOutputBounds(
+        [in] const D2D1_RECT_L *bounds
+    );
+    void GetOutputBounds(
+        [out] D2D1_RECT_L *bounds
+    );
+}
+
+[
+    object,
+    uuid(3d9f916b-27dc-4ad7-b4f1-64945340f563),
+    local,
+]
+interface ID2D1EffectContext : IUnknown
+{
+    void GetDpi(
+        [out] float *dpi_x,
+        [out] float *dpi_y
+    );
+    HRESULT CreateEffect(
+        [in] REFCLSID clsid,
+        [out] ID2D1Effect **effect
+    );
+    HRESULT GetMaximumSupportedFeatureLevel(
+        [in] const D3D_FEATURE_LEVEL *levels,
+        [in] UINT32 level_count,
+        [out] D3D_FEATURE_LEVEL *max_level
+    );
+    HRESULT CreateTransformNodeFromEffect(
+        [in] ID2D1Effect *effect,
+        [out] ID2D1TransformNode **node
+    );
+    HRESULT CreateBlendTransform(
+        [in] UINT32 num_inputs,
+        [in] const D2D1_BLEND_DESCRIPTION *description,
+        [out] ID2D1BlendTransform **transform
+    );
+    HRESULT CreateBorderTransform(
+        [in] D2D1_EXTEND_MODE mode_x,
+        [in] D2D1_EXTEND_MODE mode_y,
+        [out] ID2D1BorderTransform **transform
+    );
+    HRESULT CreateOffsetTransform(
+        [in] D2D1_POINT_2L offset,
+        [out] ID2D1OffsetTransform **transform
+    );
+    HRESULT CreateBoundsAdjustmentTransform(
+        [in] const D2D1_RECT_L *output_rect,
+        [out] ID2D1BoundsAdjustmentTransform **transform
+    );
+    HRESULT LoadPixelShader(
+        [in] REFGUID shader_id,
+        [in] const BYTE *buffer,
+        [in] UINT32 buffer_size
+    );
+    HRESULT LoadVertexShader(
+        [in] REFGUID shader_id,
+        [in] const BYTE *buffer,
+        [in] UINT32 buffer_size
+    );
+    HRESULT LoadComputeShader(
+        [in] REFGUID shader_id,
+        [in] const BYTE *buffer,
+        [in] UINT32 buffer_size
+    );
+    BOOL IsShaderLoaded(
+        [in] REFGUID shader_id
+    );
+    HRESULT CreateResourceTexture(
+        [in, optional] const GUID *id,
+        [in] const D2D1_RESOURCE_TEXTURE_PROPERTIES *texture_properties,
+        [in] const BYTE *data,
+        [in] const UINT32 *strides,
+        [in] UINT32 data_size,
+        [out] ID2D1ResourceTexture **texture
+    );
+    HRESULT FindResourceTexture(
+        [in] const GUID *id,
+        [out] ID2D1ResourceTexture **texture
+    );
+    HRESULT CreateVertexBuffer(
+        [in] const D2D1_VERTEX_BUFFER_PROPERTIES *buffer_properties,
+        [in, optional] const GUID *id,
+        [in, optional] const D2D1_CUSTOM_VERTEX_BUFFER_PROPERTIES *custom_buffer_properties,
+        [out] ID2D1VertexBuffer **buffer
+    );
+    HRESULT FindVertexBuffer(
+        [in] const GUID *id,
+        [out] ID2D1VertexBuffer **buffer
+    );
+    HRESULT CreateColorContext(
+        [in] D2D1_COLOR_SPACE space,
+        [in] const BYTE *profile,
+        [in] UINT32 profile_size,
+        [out] ID2D1ColorContext **color_context
+    );
+    HRESULT CreateColorContextFromFilename(
+        [in] const WCHAR *filename,
+        [out] ID2D1ColorContext **color_context
+    );
+    HRESULT CreateColorContextFromWicColorContext(
+        [in] IWICColorContext *wic_color_context,
+        [out] ID2D1ColorContext **color_context
+    );
+    HRESULT CheckFeatureSupport(
+        [in] D2D1_FEATURE feature,
+        [out] void *data,
+        [in] UINT32 data_size
+    );
+    BOOL IsBufferPrecisionSupported(
+        [in] D2D1_BUFFER_PRECISION precision
+    );
+}
+
+[
+    object,
+    uuid(a248fd3f-3e6c-4e63-9f03-7f68ecc91db9),
+    local,
+]
+interface ID2D1EffectImpl : IUnknown
+{
+    HRESULT Initialize(
+        [in] ID2D1EffectContext *context,
+        [in] ID2D1TransformGraph *graph
+    );
+    HRESULT PrepareForRender(
+        [in] D2D1_CHANGE_TYPE type
+    );
+    HRESULT SetGraph(
+        [in] ID2D1TransformGraph *graph
+    );
+}

@@ -494,7 +494,7 @@ i8042InitializeKeyboardAttributes(
 
     KeyboardAttributes->KeyboardIdentifier.Type = (UCHAR)Settings->OverrideKeyboardType;
     KeyboardAttributes->KeyboardIdentifier.Subtype = (UCHAR)Settings->OverrideKeyboardSubtype;
-    KeyboardAttributes->NumberOfFunctionKeys = 4;
+    KeyboardAttributes->NumberOfFunctionKeys = 12;
     KeyboardAttributes->NumberOfIndicators = 3;
     KeyboardAttributes->NumberOfKeysTotal = 101;
     KeyboardAttributes->InputDataQueueLength = Settings->KeyboardDataQueueSize;

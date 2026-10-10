@@ -67,6 +67,7 @@ public:
     CFolderItemVerbs();
     virtual ~CFolderItemVerbs();
 
+    HRESULT Init(IContextMenu &cm);
     HRESULT Init(LPCITEMIDLIST idlist);
 
     // *** FolderItemVerbs methods ***

@@ -198,6 +198,67 @@ done:
     return dwError;
 }
 
+static
+PDHCPAPI_PARAMS
+FindParam(
+    _In_ LPDHCPCAPI_PARAMS_ARRAY ParamsArray,
+    _In_ ULONG OptionId,
+    _In_ BOOL IsVendor)
+{
+    ULONG i;
+
+    for (i = 0; i < ParamsArray->nParams; i++)
+    {
+        if ((ParamsArray->Params[i].OptionId == OptionId) &&
+            (ParamsArray->Params[i].IsVendor == IsVendor))
+            return &ParamsArray->Params[i];
+    }
+
+    return NULL;
+}
+
+static
+DWORD
+MapRequestResultData(
+    _In_ LPDHCPCAPI_RESULT_ARRAY Results,
+    _Inout_ LPDHCPCAPI_PARAMS_ARRAY RecdParams,
+    _In_ LPBYTE Buffer,
+    _Inout_ LPDWORD pSize)
+{
+    PDHCPAPI_PARAMS Param;
+    LPBYTE Ptr;
+    ULONG i;
+
+    if (Results->DataSize > *pSize)
+    {
+        *pSize = Results->DataSize;
+        return ERROR_MORE_DATA;
+    }
+
+    Ptr = Buffer;
+    for (i = 0; i < Results->ResultsCount; i++)
+    {
+        Param = FindParam(RecdParams,
+                          Results->Results[i].OptionId,
+                          Results->Results[i].IsVendor);
+        if (Param)
+        {
+            CopyMemory(Ptr,
+                       &Results->Data[Results->Results[i].DataOffset],
+                       Results->Results[i].DataSize);
+
+            Param->nBytesData = Results->Results[i].DataSize;
+            Param->Data = Ptr;
+
+            Ptr += Results->Results[i].DataSize;
+        }
+    }
+
+    *pSize = Results->DataSize;
+
+    return ERROR_SUCCESS;
+}
+
 /*!
  * Initializes the DHCP interface
  *
@@ -667,11 +728,12 @@ DhcpRequestParams(
     _Inout_ LPDWORD pSize,
     _In_ LPWSTR RequestIdStr)
 {
+    LPDHCPCAPI_RESULT_ARRAY Results = NULL;
     DWORD ret = ERROR_SUCCESS;
 
-    DPRINT1("DhcpRequestParams(%lx %p %S %p %lu %p %lu %p %p %p %S)\n",
-            Flags, Reserved, AdapterName, ClassId, SendParams.nParams, SendParams.Params,
-            RecdParams.nParams, RecdParams.Params, Buffer, pSize, RequestIdStr);
+    DPRINT("DhcpRequestParams(%lx %p %S %p %lu %p %lu %p %p %p %S)\n",
+           Flags, Reserved, AdapterName, ClassId, SendParams.nParams, SendParams.Params,
+           RecdParams.nParams, RecdParams.Params, Buffer, pSize, RequestIdStr);
 
     if ((Flags != DHCPCAPI_REQUEST_SYNCHRONOUS) &&
         (Flags != DHCPCAPI_REQUEST_PERSISTENT) &&
@@ -696,20 +758,48 @@ DhcpRequestParams(
     if (RecdParams.Params == NULL)
         return ERROR_INVALID_PARAMETER;
 
-    RpcTryExcept
+    if (Flags & DHCPCAPI_REQUEST_SYNCHRONOUS)
     {
-        ret = Client_RequestParams(NULL,
-                                   AdapterName,
-                                   ClassId,
-                                   &SendParams,
-                                   0,
-                                   0);
+        RpcTryExcept
+        {
+            ret = Client_RequestParams(NULL,
+                                       AdapterName,
+                                       ClassId,
+                                       &SendParams,
+                                       &RecdParams,
+                                       &Results);
+        }
+        RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+        {
+            ret = I_RpcMapWin32Status(RpcExceptionCode());
+        }
+        RpcEndExcept;
     }
-    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+
+    if (Results)
     {
-        ret = I_RpcMapWin32Status(RpcExceptionCode());
+        DPRINT("Results: Count %lu  DataSize %lu\n", Results->ResultsCount, Results->DataSize);
+
+        ret = MapRequestResultData(Results,
+                                   &RecdParams,
+                                   Buffer,
+                                   pSize);
+
+        if (Results->Results)
+            MIDL_user_free(Results->Results);
+        if (Results->Data)
+            MIDL_user_free(Results->Data);
+        MIDL_user_free(Results);
     }
-    RpcEndExcept;
+
+    if (ret != ERROR_SUCCESS)
+        return ret;
+
+    if (Flags & DHCPCAPI_REQUEST_PERSISTENT)
+    {
+        /* FIXME: Store the request */
+        DPRINT1("DHCPCAPI_REQUEST_PERSISTENT is not supported yet!\n");
+    }
 
     return ret;
 }

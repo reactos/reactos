@@ -2302,11 +2302,11 @@ CmUnloadKey(
     /* Release hive lock */
     CmpUnlockRegistry();
 
-    /* Close file handles */
-    CmpCloseHiveFiles(CmHive);
-
     /* Remove the hive from the hive file list */
     CmpRemoveFromHiveFileList(CmHive);
+
+    /* Close file handles */
+    CmpCloseHiveFiles(CmHive);
 
 /**
  ** NOTE:

@@ -1272,7 +1272,7 @@ static MUI_ENTRY nlNLFormatPartitionEntries[] =
     {
         0,
         0,
-        "ENTER = Doorgaan   F3 = Afsluiten",
+        "ENTER = Doorgaan   ESC = Annuleren   F3 = Afsluiten",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
         TEXT_ID_STATIC
     },

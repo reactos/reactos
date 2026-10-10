@@ -54,7 +54,7 @@ static void toolbarcheck( HWND hDlg)
     }
     ok( ctrl != NULL, "could not get the toolbar control\n");
     ret = SendMessageA( ctrl, TB_ADDSTRINGA, 0, (LPARAM)"winetestwinetest\0\0");
-    ok( ret == 0, "addstring returned %d (expected 0)\n", ret);
+    ok( ret == 0, "addstring returned %ld (expected 0)\n", ret);
     maxtextrows = SendMessageA( ctrl, TB_GETTEXTROWS, 0, 0);
     ok( maxtextrows == 0 || broken(maxtextrows == 1),  /* Win2k and below */
         "Get(Max)TextRows returned %d (expected 0)\n", maxtextrows);
@@ -112,25 +112,25 @@ static void test_DialogCancel(void)
 
     PrintDlgA(NULL);
     ok(CDERR_INITIALIZATION == CommDlgExtendedError(),
-       "expected CDERR_INITIALIZATION, got %d\n", CommDlgExtendedError());
+       "expected CDERR_INITIALIZATION, got %ld\n", CommDlgExtendedError());
 
     result = GetOpenFileNameA(&ofn);
     ok(FALSE == result, "expected FALSE, got %d\n", result);
-    ok(0 == CommDlgExtendedError(), "expected 0, got %d\n",
+    ok(0 == CommDlgExtendedError(), "expected 0, got %ld\n",
        CommDlgExtendedError());
 
     PrintDlgA(NULL);
     ok(CDERR_INITIALIZATION == CommDlgExtendedError(),
-       "expected CDERR_INITIALIZATION, got %d\n", CommDlgExtendedError());
+       "expected CDERR_INITIALIZATION, got %ld\n", CommDlgExtendedError());
 
     result = GetSaveFileNameA(&ofn);
     ok(FALSE == result, "expected FALSE, got %d\n", result);
-    ok(0 == CommDlgExtendedError(), "expected 0, got %d\n",
+    ok(0 == CommDlgExtendedError(), "expected 0, got %ld\n",
        CommDlgExtendedError());
 
     PrintDlgA(NULL);
     ok(CDERR_INITIALIZATION == CommDlgExtendedError(),
-       "expected CDERR_INITIALIZATION, got %d\n", CommDlgExtendedError());
+       "expected CDERR_INITIALIZATION, got %ld\n", CommDlgExtendedError());
 
     /* Before passing the ofn to Unicode functions, remove the ANSI strings */
     ofn.lpstrFilter = NULL;
@@ -139,7 +139,7 @@ static void test_DialogCancel(void)
 
     PrintDlgA(NULL);
     ok(CDERR_INITIALIZATION == CommDlgExtendedError(),
-       "expected CDERR_INITIALIZATION, got %d\n", CommDlgExtendedError());
+       "expected CDERR_INITIALIZATION, got %ld\n", CommDlgExtendedError());
 
     SetLastError(0xdeadbeef);
     result = GetOpenFileNameW((LPOPENFILENAMEW) &ofn);
@@ -148,7 +148,7 @@ static void test_DialogCancel(void)
     else
     {
         ok(FALSE == result, "expected FALSE, got %d\n", result);
-        ok(0 == CommDlgExtendedError(), "expected 0, got %d\n", CommDlgExtendedError());
+        ok(0 == CommDlgExtendedError(), "expected 0, got %ld\n", CommDlgExtendedError());
     }
 
     SetLastError(0xdeadbeef);
@@ -158,7 +158,7 @@ static void test_DialogCancel(void)
     else
     {
         ok(FALSE == result, "expected FALSE, got %d\n", result);
-        ok(0 == CommDlgExtendedError(), "expected 0, got %d\n", CommDlgExtendedError());
+        ok(0 == CommDlgExtendedError(), "expected 0, got %ld\n", CommDlgExtendedError());
     }
 }
 
@@ -177,7 +177,7 @@ static UINT_PTR CALLBACK create_view_window2_hook(HWND dlg, UINT msg, WPARAM wPa
             RECT rect = {0, 0, 0, 0};
 
             hr = IShellBrowser_QueryActiveShellView(shell_browser, &shell_view);
-            ok(SUCCEEDED(hr), "QueryActiveShellView returned %#x\n", hr);
+            ok(SUCCEEDED(hr), "QueryActiveShellView returned %#lx\n", hr);
             if (FAILED(hr)) goto cleanup;
 
             hr = IShellView_QueryInterface(shell_view, &IID_IShellView2, (void **)&shell_view2);
@@ -186,11 +186,11 @@ static UINT_PTR CALLBACK create_view_window2_hook(HWND dlg, UINT msg, WPARAM wPa
                 win_skip("IShellView2 not supported\n");
                 goto cleanup;
             }
-            ok(SUCCEEDED(hr), "QueryInterface returned %#x\n", hr);
+            ok(SUCCEEDED(hr), "QueryInterface returned %#lx\n", hr);
             if (FAILED(hr)) goto cleanup;
 
             hr = IShellView2_DestroyViewWindow(shell_view2);
-            ok(SUCCEEDED(hr), "DestroyViewWindow returned %#x\n", hr);
+            ok(SUCCEEDED(hr), "DestroyViewWindow returned %#lx\n", hr);
 
             folder_settings.ViewMode = FVM_LIST;
             folder_settings.fFlags = 0;
@@ -209,17 +209,17 @@ static UINT_PTR CALLBACK create_view_window2_hook(HWND dlg, UINT msg, WPARAM wPa
                 win_skip("CreateViewWindow2 is broken on Vista/W2K8\n");
                 goto cleanup;
             }
-            ok(SUCCEEDED(hr), "CreateViewWindow2 returned %#x\n", hr);
+            ok(SUCCEEDED(hr), "CreateViewWindow2 returned %#lx\n", hr);
             if (FAILED(hr)) goto cleanup;
 
             hr = IShellView2_GetCurrentInfo(shell_view2, &folder_settings);
-            ok(SUCCEEDED(hr), "GetCurrentInfo returned %#x\n", hr);
+            ok(SUCCEEDED(hr), "GetCurrentInfo returned %#lx\n", hr);
             ok(folder_settings.ViewMode == FVM_LIST,
                "view mode is %d, expected FVM_LIST\n",
                folder_settings.ViewMode);
 
             hr = IShellView2_DestroyViewWindow(shell_view2);
-            ok(SUCCEEDED(hr), "DestroyViewWindow returned %#x\n", hr);
+            ok(SUCCEEDED(hr), "DestroyViewWindow returned %#lx\n", hr);
 
             /* XP and W2K3 need this. On W2K the call to DestroyWindow() fails and has
              * no side effects. NT4 doesn't get here. (FIXME: Vista doesn't get here yet).
@@ -228,11 +228,11 @@ static UINT_PTR CALLBACK create_view_window2_hook(HWND dlg, UINT msg, WPARAM wPa
 
             view_params.pvid = &VID_Details;
             hr = IShellView2_CreateViewWindow2(shell_view2, &view_params);
-            ok(SUCCEEDED(hr), "CreateViewWindow2 returned %#x\n", hr);
+            ok(SUCCEEDED(hr), "CreateViewWindow2 returned %#lx\n", hr);
             if (FAILED(hr)) goto cleanup;
 
             hr = IShellView2_GetCurrentInfo(shell_view2, &folder_settings);
-            ok(SUCCEEDED(hr), "GetCurrentInfo returned %#x\n", hr);
+            ok(SUCCEEDED(hr), "GetCurrentInfo returned %#lx\n", hr);
             ok(folder_settings.ViewMode == FVM_DETAILS || broken(folder_settings.ViewMode == FVM_LIST), /* nt4 */
                "view mode is %d, expected FVM_DETAILS\n",
                folder_settings.ViewMode);
@@ -279,9 +279,9 @@ static void test_create_view_window2(void)
     ofn.lpfnHook = create_view_window2_hook;
     ofn.Flags = OFN_ENABLEHOOK | OFN_EXPLORER;
     ret = GetOpenFileNameA(&ofn);
-    ok(!ret, "GetOpenFileNameA returned %#x\n", ret);
+    ok(!ret, "GetOpenFileNameA returned %#lx\n", ret);
     ret = CommDlgExtendedError();
-    ok(!ret, "CommDlgExtendedError returned %#x\n", ret);
+    ok(!ret, "CommDlgExtendedError returned %#lx\n", ret);
 }
 
 static void test_create_view_template(void)
@@ -299,9 +299,9 @@ static void test_create_view_template(void)
     ofn.lpTemplateName = "template1";
     ofn.lpstrFilter="text\0*.txt\0All\0*\0\0";
     ret = GetOpenFileNameA(&ofn);
-    ok(!ret, "GetOpenFileNameA returned %#x\n", ret);
+    ok(!ret, "GetOpenFileNameA returned %#lx\n", ret);
     ret = CommDlgExtendedError();
-    ok(!ret, "CommDlgExtendedError returned %#x\n", ret);
+    ok(!ret, "CommDlgExtendedError returned %#lx\n", ret);
 }
 
 /* test cases for resizing of the file dialog */
@@ -401,10 +401,10 @@ static UINT_PTR WINAPI resize_template_hook(HWND dlg, UINT msg, WPARAM wParam, L
                 GetWindowRect( parent, &rc);
                 todo_wine_if( resize_testcases[index].todo){
                         ok( resize == rc.right - rc.left - initrc.right + initrc.left,
-                            "testid %d size-x change %d expected %d\n", index,
+                            "testid %d size-x change %ld expected %d\n", index,
                             rc.right - rc.left - initrc.right + initrc.left, resize);
                         ok( resize == rc.bottom - rc.top - initrc.bottom + initrc.top,
-                            "testid %d size-y change %d expected %d\n", index,
+                            "testid %d size-y change %ld expected %d\n", index,
                             rc.bottom - rc.top - initrc.bottom + initrc.top, resize);
                     }
                 if( resize_testcases[index].testcontrols) {
@@ -471,7 +471,7 @@ static UINT_PTR WINAPI resize_template_hook(HWND dlg, UINT msg, WPARAM wParam, L
                                 break;
                             /* todo_wine: non moving non sizing controls */
                             case lst1:
-todo_wine
+                                todo_wine
                                 ok( TESTRECTS( rc, ctrlrcs[i], 0, 0, 0, 0),
                                     "control id %03x was moved/resized, before %s after %s\n",
                                     ctrlids[i], wine_dbgstr_rect( &ctrlrcs[i] ),
@@ -536,9 +536,9 @@ static void test_resize(void)
         ofn.Flags = resize_testcases[i].flags |
             OFN_ENABLEHOOK | OFN_EXPLORER| OFN_ENABLETEMPLATE | OFN_SHOWHELP ;
         ret = GetOpenFileNameA(&ofn);
-        ok(!ret, "GetOpenFileName returned %#x\n", ret);
+        ok(!ret, "GetOpenFileName returned %#lx\n", ret);
         ret = CommDlgExtendedError();
-        ok(!ret, "CommDlgExtendedError returned %#x\n", ret);
+        ok(!ret, "CommDlgExtendedError returned %#lx\n", ret);
     }
 }
 
@@ -632,7 +632,7 @@ static void test_ok(void)
     BOOL cdret;
 
     cdret = GetCurrentDirectoryA(sizeof(curdir), curdir);
-    ok(cdret, "Failed to get current dir err %d\n", GetLastError());
+    ok(cdret, "Failed to get current dir err %ld\n", GetLastError());
     if (!GetTempFileNameA(".", "txt", 0, tmpfilename)) {
         skip("Failed to create a temporary file name\n");
         return;
@@ -650,14 +650,14 @@ static void test_ok(void)
         ok( ok_testcases[i].expclose == ok_testcases[i].actclose,
                 "testid %d: Open File dialog should %shave closed.\n", i,
                 ok_testcases[i].expclose ? "" : "NOT ");
-        ok(ret == ok_testcases[i].expclose, "testid %d: GetOpenFileName returned %#x\n", i, ret);
+        ok(ret == ok_testcases[i].expclose, "testid %d: GetOpenFileName returned %#lx\n", i, ret);
         ret = CommDlgExtendedError();
-        ok(!ret, "CommDlgExtendedError returned %#x\n", ret);
+        ok(!ret, "CommDlgExtendedError returned %#lx\n", ret);
         cdret = SetCurrentDirectoryA(curdir);
-        ok(cdret, "Failed to restore current dir err %d\n", GetLastError());
+        ok(cdret, "Failed to restore current dir err %ld\n", GetLastError());
     }
     ret =  DeleteFileA( tmpfilename);
-    ok( ret, "Failed to delete temporary file %s err %d\n", tmpfilename, GetLastError());
+    ok( ret, "Failed to delete temporary file %s err %ld\n", tmpfilename, GetLastError());
 }
 
 /* test arranging with a custom template */
@@ -763,18 +763,18 @@ static UINT_PTR WINAPI template_hook_arrange(HWND dlgChild, UINT msg, WPARAM wPa
             if( !(style & WS_SIZEBOX)) {
                 /* without the OFN_ENABLESIZING flag */
                 ok( wrcParent.bottom - wrcParent.top == expecty,
-                        "Wrong height of dialog %d, expected %d\n",
+                        "Wrong height of dialog %ld, expected %d\n",
                         wrcParent.bottom - wrcParent.top, expecty);
                 ok( wrcParent.right - wrcParent.left == expectx,
-                        "Wrong width of dialog %d, expected %d\n",
+                        "Wrong width of dialog %ld, expected %d\n",
                         wrcParent.right - wrcParent.left, expectx);
             } else {
                 /* with the OFN_ENABLESIZING flag */
                 ok( wrcParent.bottom - wrcParent.top > expecty,
-                        "Wrong height of dialog %d, expected more than %d\n",
+                        "Wrong height of dialog %ld, expected more than %d\n",
                         wrcParent.bottom - wrcParent.top, expecty);
                 ok( wrcParent.right - wrcParent.left > expectx,
-                        "Wrong width of dialog %d, expected more than %d\n",
+                        "Wrong width of dialog %ld, expected more than %d\n",
                         wrcParent.right - wrcParent.left, expectx);
             }
 
@@ -855,9 +855,9 @@ static void test_arrange(void)
         itemtemplateBtn->cx = arrange_tests[i].poszBtn.cx;
         itemtemplateBtn->cy = arrange_tests[i].poszBtn.cy;
         ret = GetOpenFileNameA(&ofn);
-        ok(!ret, "GetOpenFileNameA returned %#x\n", ret);
+        ok(!ret, "GetOpenFileNameA returned %#lx\n", ret);
         ret = CommDlgExtendedError();
-        ok(!ret, "CommDlgExtendedError returned %#x\n", ret);
+        ok(!ret, "CommDlgExtendedError returned %#lx\n", ret);
     }
 }
 
@@ -916,12 +916,12 @@ static void test_getfolderpath(void)
 
     result = GetOpenFileNameA(&ofn);
     ok(FALSE == result, "expected FALSE, got %d\n", result);
-    ok(0 == CommDlgExtendedError(), "expected 0, got %d\n",
+    ok(0 == CommDlgExtendedError(), "expected 0, got %ld\n",
        CommDlgExtendedError());
 
     result = GetSaveFileNameA(&ofn);
     ok(FALSE == result, "expected FALSE, got %d\n", result);
-    ok(0 == CommDlgExtendedError(), "expected 0, got %d\n",
+    ok(0 == CommDlgExtendedError(), "expected 0, got %ld\n",
        CommDlgExtendedError());
 }
 
@@ -946,24 +946,24 @@ static void test_resizable2(void)
     ret = GetOpenFileNameA(&ofn);
     ok( ret == TRUE, "File Dialog should have been sizable\n");
     ret = CommDlgExtendedError();
-    ok(!ret, "CommDlgExtendedError returned %#x\n", ret);
+    ok(!ret, "CommDlgExtendedError returned %#lx\n", ret);
     ofn.Flags = OFN_EXPLORER | OFN_ENABLETEMPLATE;
     ret = GetOpenFileNameA(&ofn);
     ok( !ret, "File Dialog should NOT have been sizable\n");
     ret = CommDlgExtendedError();
-    ok(!ret, "CommDlgExtendedError returned %#x\n", ret);
+    ok(!ret, "CommDlgExtendedError returned %#lx\n", ret);
     ofn.Flags = OFN_EXPLORER | OFN_ENABLETEMPLATEHANDLE;
     ofn.hInstance = LoadResource( GetModuleHandleA(NULL), FindResourceA( GetModuleHandleA(NULL), "template1", (LPSTR)RT_DIALOG));
     ofn.lpTemplateName = NULL;
     ret = GetOpenFileNameA(&ofn);
     ok( !ret, "File Dialog should NOT have been sizable\n");
     ret = CommDlgExtendedError();
-    ok(!ret, "CommDlgExtendedError returned %#x\n", ret);
+    ok(!ret, "CommDlgExtendedError returned %#lx\n", ret);
     ofn.Flags = OFN_EXPLORER | OFN_ENABLEHOOK;
     ret = GetOpenFileNameA(&ofn);
     ok( !ret, "File Dialog should NOT have been sizable\n");
     ret = CommDlgExtendedError();
-    ok(!ret, "CommDlgExtendedError returned %#x\n", ret);
+    ok(!ret, "CommDlgExtendedError returned %#lx\n", ret);
 }
 
 static void test_mru(void)
@@ -986,15 +986,15 @@ static void test_mru(void)
 
     SetLastError(0xdeadbeef);
     ret = CreateDirectoryA(test_dir_name, NULL);
-    ok(ret == TRUE, "CreateDirectoryA should have succeeded: %d\n", GetLastError());
+    ok(ret == TRUE, "CreateDirectoryA should have succeeded: %ld\n", GetLastError());
 
     /* "teach" comdlg32 about this directory */
     strcpy(filename_buf, test_full_path);
     SetLastError(0xdeadbeef);
     ret = GetOpenFileNameA(&ofn);
-    ok(ret, "GetOpenFileNameA should have succeeded: %d\n", GetLastError());
+    ok(ret, "GetOpenFileNameA should have succeeded: %ld\n", GetLastError());
     ret = CommDlgExtendedError();
-    ok(!ret, "CommDlgExtendedError returned %x\n", ret);
+    ok(!ret, "CommDlgExtendedError returned %lx\n", ret);
     ok(testcase.actclose, "Open File dialog should have closed.\n");
     ok(!strcmp(ofn.lpstrFile, test_full_path), "Expected to get %s, got %s\n", test_full_path, ofn.lpstrFile);
 
@@ -1003,16 +1003,16 @@ static void test_mru(void)
     strcpy(filename_buf, test_file_name);
     SetLastError(0xdeadbeef);
     ret = GetOpenFileNameA(&ofn);
-    ok(ret, "GetOpenFileNameA should have succeeded: %d\n", GetLastError());
+    ok(ret, "GetOpenFileNameA should have succeeded: %ld\n", GetLastError());
     ret = CommDlgExtendedError();
-    ok(!ret, "CommDlgExtendedError returned %x\n", ret);
+    ok(!ret, "CommDlgExtendedError returned %lx\n", ret);
     ok(testcase.actclose, "Open File dialog should have closed.\n");
     if(strcmp(ofn.lpstrFile, test_full_path) != 0)
         win_skip("Platform doesn't save MRU data\n");
 
     SetLastError(0xdeadbeef);
     ret = RemoveDirectoryA(test_dir_name);
-    ok(ret == TRUE, "RemoveDirectoryA should have succeeded: %d\n", GetLastError());
+    ok(ret == TRUE, "RemoveDirectoryA should have succeeded: %ld\n", GetLastError());
 }
 
 static UINT_PTR WINAPI test_extension_wndproc(HWND dlg, UINT msg, WPARAM wParam, LPARAM lParam)
@@ -1044,7 +1044,7 @@ static void test_extension_helper(OPENFILENAMEA* ofn, const char *filter,
     ok(boolret, "%s: expected TRUE\n", filter);
 
     ret = CommDlgExtendedError();
-    ok(!ret, "%s: CommDlgExtendedError returned %#x\n", filter, ret);
+    ok(!ret, "%s: CommDlgExtendedError returned %#lx\n", filter, ret);
 
     filename_ptr = ofn->lpstrFile + ofn->nFileOffset;
     ok(strcmp(filename_ptr, expected_filename) == 0,
@@ -1055,7 +1055,7 @@ static void test_extension(void)
 {
     OPENFILENAMEA ofn = { OPENFILENAME_SIZE_VERSION_400A };
     char filename[1024] = {0};
-    char curdir[MAX_PATH];
+    char dir[MAX_PATH];
     unsigned int i;
     BOOL boolret;
 
@@ -1074,14 +1074,14 @@ static void test_extension(void)
         NULL    /* is a test, not an endmark! */
     };
 
-    boolret = GetCurrentDirectoryA(sizeof(curdir), curdir);
-    ok(boolret, "Failed to get current dir err %d\n", GetLastError());
+    boolret = GetTempPathA(sizeof(dir), dir);
+    ok(boolret, "Failed to get current dir err %ld\n", GetLastError());
 
     ofn.hwndOwner = NULL;
     ofn.lpstrFile = filename;
     ofn.nMaxFile = MAX_PATH;
     ofn.Flags = OFN_EXPLORER | OFN_ENABLEHOOK;
-    ofn.lpstrInitialDir = curdir;
+    ofn.lpstrInitialDir = dir;
     ofn.lpfnHook = test_extension_wndproc;
     ofn.nFileExtension = 0;
 
@@ -1172,9 +1172,9 @@ static void test_null_filename(void)
     ofnA.lpstrFilter = "text\0*.txt\0All\0*\0\0";
     ofnA.lpstrDefExt = NULL;
     ret = GetOpenFileNameA(&ofnA);
-    todo_wine ok(ret, "GetOpenFileNameA returned %#x\n", ret);
+    todo_wine ok(ret, "GetOpenFileNameA returned %#lx\n", ret);
     ret = CommDlgExtendedError();
-    todo_wine ok(!ret, "CommDlgExtendedError returned %#x, should be 0\n", ret);
+    todo_wine ok(!ret, "CommDlgExtendedError returned %#lx, should be 0\n", ret);
 
     todo_wine ok(ofnA.nFileOffset != 0xdead, "ofnA.nFileOffset is 0xdead\n");
     todo_wine ok(ofnA.nFileExtension != 0xbeef, "ofnA.nFileExtension is 0xbeef\n");
@@ -1184,9 +1184,9 @@ static void test_null_filename(void)
     ofnA.nFileOffset = 0xdead;
     ofnA.nFileExtension = 0xbeef;
     ret = GetOpenFileNameA(&ofnA);
-    ok(ret, "GetOpenFileNameA returned %#x\n", ret);
+    ok(ret, "GetOpenFileNameA returned %#lx\n", ret);
     ret = CommDlgExtendedError();
-    ok(!ret, "CommDlgExtendedError returned %#x\n", ret);
+    ok(!ret, "CommDlgExtendedError returned %#lx\n", ret);
 
     ok(ofnA.nFileOffset != 0xdead, "ofnA.nFileOffset is 0xdead\n");
     ok(ofnA.nFileExtension == 0, "ofnA.nFileExtension is 0x%x, should be 0\n", ofnA.nFileExtension);
@@ -1203,9 +1203,9 @@ static void test_null_filename(void)
     ofnW.lpstrFilter = filterW;
     ofnW.lpstrDefExt = NULL;
     ret = GetOpenFileNameW(&ofnW);
-    todo_wine ok(ret, "GetOpenFileNameW returned %#x\n", ret);
+    todo_wine ok(ret, "GetOpenFileNameW returned %#lx\n", ret);
     ret = CommDlgExtendedError();
-    todo_wine ok(!ret, "CommDlgExtendedError returned %#x\n", ret);
+    todo_wine ok(!ret, "CommDlgExtendedError returned %#lx\n", ret);
 
     todo_wine ok(ofnW.nFileOffset != 0xdead, "ofnW.nFileOffset is 0xdead\n");
     todo_wine ok(ofnW.nFileExtension != 0xbeef, "ofnW.nFileExtension is 0xbeef\n");
@@ -1215,9 +1215,9 @@ static void test_null_filename(void)
     ofnW.nFileOffset = 0xdead;
     ofnW.nFileExtension = 0xbeef;
     ret = GetOpenFileNameW(&ofnW);
-    ok(ret, "GetOpenFileNameA returned %#x\n", ret);
+    ok(ret, "GetOpenFileNameA returned %#lx\n", ret);
     ret = CommDlgExtendedError();
-    ok(!ret, "CommDlgExtendedError returned %#x\n", ret);
+    ok(!ret, "CommDlgExtendedError returned %#lx\n", ret);
 
     ok(ofnW.nFileOffset != 0xdead, "ofnW.nFileOffset is 0xdead\n");
     ok(ofnW.nFileExtension == 0, "ofnW.nFileExtension is 0x%x, should be 0\n", ofnW.nFileExtension);
@@ -1248,7 +1248,7 @@ static void test_directory_filename(void)
     ofnA.lpstrFilter = "text\0*.txt\0All\0*\0\0";
     ofnA.lpstrDefExt = NULL;
     ret = GetOpenFileNameA(&ofnA);
-    todo_wine ok(!ret, "GetOpenFileNameA returned %#x\n", ret);
+    todo_wine ok(!ret, "GetOpenFileNameA returned %#lx\n", ret);
 
     /* unicode tests */
     ofnW.lStructSize = OPENFILENAME_SIZE_VERSION_400W;
@@ -1260,7 +1260,7 @@ static void test_directory_filename(void)
     ofnW.lpstrFilter = filterW;
     ofnW.lpstrDefExt = NULL;
     ret = GetOpenFileNameW(&ofnW);
-    todo_wine ok(!ret, "GetOpenFileNameW returned %#x\n", ret);
+    todo_wine ok(!ret, "GetOpenFileNameW returned %#lx\n", ret);
 }
 
 static UINT_PTR WINAPI test_ole_init_wndproc(HWND dlg, UINT msg, WPARAM wParam, LPARAM lParam)
@@ -1268,7 +1268,7 @@ static UINT_PTR WINAPI test_ole_init_wndproc(HWND dlg, UINT msg, WPARAM wParam, 
     HRESULT hr;
 
     hr = OleInitialize(NULL);
-    ok(hr == S_FALSE, "OleInitialize() returned %#x\n", hr);
+    ok(hr == S_FALSE, "OleInitialize() returned %#lx\n", hr);
     OleUninitialize();
 
     if (msg == WM_NOTIFY)
@@ -1295,7 +1295,7 @@ static LRESULT CALLBACK hook_proc(int code, WPARAM wp, LPARAM lp)
             hr = OleInitialize(NULL);
             ok((first_dlg ? hr == S_OK : hr == S_FALSE)
                     || broken(first_dlg && hr == S_FALSE),
-                    "OleInitialize() returned %#x (first dialog %#x)\n", hr, first_dlg);
+                    "OleInitialize() returned %#lx (first dialog %#x)\n", hr, first_dlg);
             OleUninitialize();
             first_dlg = FALSE;
         }
@@ -1324,7 +1324,7 @@ static void test_ole_initialization(void)
     ok(!ret, "GetOpenFileNameA returned %#x\n", ret);
 
     hr = OleInitialize(NULL);
-    ok(hr == S_OK, "OleInitialize() returned %#x\n", hr);
+    ok(hr == S_OK, "OleInitialize() returned %#lx\n", hr);
     OleUninitialize();
 
     UnhookWindowsHookEx(hook);

@@ -242,6 +242,8 @@ AppearancePageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
                         PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                         g->Scheme = g->SchemeAdv;
                         g->bSchemeChanged = TRUE;
+
+                        AppearancePage_UpdateThemePreview(hwndDlg, g);
                     }
                     break;
 

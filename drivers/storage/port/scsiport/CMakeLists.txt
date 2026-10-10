@@ -1,11 +1,8 @@
 
 spec2def(scsiport.sys scsiport.spec ADD_IMPORTLIB)
 
-include_directories(
-    ${REACTOS_SOURCE_DIR}/sdk/lib/drivers/sptilib)
-
 # Link GCC stack protector lib
-if (STACK_PROTECTOR)
+if(STACK_PROTECTOR)
     target_link_libraries(libscsiport INTERFACE gcc_ssp_scsiport)
 endif()
 
@@ -27,8 +24,8 @@ add_library(scsiport MODULE
     ${PCH_SKIP_SOURCE}
     scsiport.rc
     ${CMAKE_CURRENT_BINARY_DIR}/scsiport.def)
-
 add_pch(scsiport scsiport.h "${PCH_SKIP_SOURCE}")
+
 set_module_type(scsiport kernelmodedriver)
 target_link_libraries(scsiport sptilib ${PSEH_LIB})
 add_importlibs(scsiport ntoskrnl hal)

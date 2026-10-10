@@ -1,8 +1,8 @@
 /*
- * PROJECT:     ReactOS Kernel&Driver SDK
- * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
- * PURPOSE:     Hardware Resources Arbiter Library
- * COPYRIGHT:   Copyright 2020 Vadim Galyant <vgal@rambler.ru>
+ * PROJECT:     ReactOS Arbitration Library
+ * LICENSE:     MIT (https://spdx.org/licenses/MIT)
+ * PURPOSE:     Generic Arbiter Library
+ * COPYRIGHT:   Copyright 2026 Justin Miller <justin.miller@reactos.org>
  */
 
 /* INCLUDES *******************************************************************/
@@ -14,272 +14,59 @@
 #define NDEBUG
 #include <debug.h>
 
-/* GLOBALS ********************************************************************/
-
-/* DATA **********************************************************************/
-
-/* FUNCTIONS ******************************************************************/
-
-CODE_SEG("PAGE")
-NTSTATUS
-NTAPI
-ArbTestAllocation(
-    _In_ PARBITER_INSTANCE Arbiter,
-    _In_ PLIST_ENTRY ArbitrationList)
-{
-    PAGED_CODE();
-
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
-}
-
-CODE_SEG("PAGE")
-NTSTATUS
-NTAPI
-ArbRetestAllocation(
-    _In_ PARBITER_INSTANCE Arbiter,
-    _In_ PLIST_ENTRY ArbitrationList)
-{
-    PAGED_CODE();
-
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
-}
-
-CODE_SEG("PAGE")
-NTSTATUS
-NTAPI
-ArbCommitAllocation(
-    _In_ PARBITER_INSTANCE Arbiter)
-{
-    PAGED_CODE();
-
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
-}
-
-CODE_SEG("PAGE")
-NTSTATUS
-NTAPI
-ArbRollbackAllocation(
-    _In_ PARBITER_INSTANCE Arbiter)
-{
-    PAGED_CODE();
-
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
-}
-
-/* FIXME: the prototype is not correct yet. */
-CODE_SEG("PAGE")
-NTSTATUS
-NTAPI
-ArbAddReserved(
-    _In_ PARBITER_INSTANCE Arbiter)
-{
-    PAGED_CODE();
-
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
-}
-
-CODE_SEG("PAGE")
-NTSTATUS
-NTAPI
-ArbPreprocessEntry(
-    _In_ PARBITER_INSTANCE Arbiter,
-    _Inout_ PARBITER_ALLOCATION_STATE ArbState)
-{
-    PAGED_CODE();
-
-    return STATUS_SUCCESS;
-}
-
-CODE_SEG("PAGE")
-NTSTATUS
-NTAPI
-ArbAllocateEntry(
-    _In_ PARBITER_INSTANCE Arbiter,
-    _Inout_ PARBITER_ALLOCATION_STATE ArbState)
-{
-    PAGED_CODE();
-
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
-}
-
-CODE_SEG("PAGE")
-BOOLEAN
-NTAPI
-ArbGetNextAllocationRange(
-    _In_ PARBITER_INSTANCE Arbiter,
-    _Inout_ PARBITER_ALLOCATION_STATE ArbState)
-{
-    PAGED_CODE();
-
-    UNIMPLEMENTED;
-    return FALSE;
-}
-
-CODE_SEG("PAGE")
-BOOLEAN
-NTAPI
-ArbFindSuitableRange(
-    _In_ PARBITER_INSTANCE Arbiter,
-    _Inout_ PARBITER_ALLOCATION_STATE ArbState)
-{
-    PAGED_CODE();
-
-    UNIMPLEMENTED;
-    return FALSE;
-}
+#define ARBITER_SIG  'sbrA'
 
 CODE_SEG("PAGE")
 VOID
 NTAPI
-ArbAddAllocation(
-    _In_ PARBITER_INSTANCE Arbiter,
-    _Inout_ PARBITER_ALLOCATION_STATE ArbState)
-{
-    PAGED_CODE();
-
-    UNIMPLEMENTED;
-}
-
-CODE_SEG("PAGE")
-VOID
-NTAPI
-ArbBacktrackAllocation(
-    _In_ PARBITER_INSTANCE Arbiter,
-    _Inout_ PARBITER_ALLOCATION_STATE ArbState)
-{
-    PAGED_CODE();
-
-    UNIMPLEMENTED;
-}
-
-/* FIXME: the prototype is not correct yet. */
-CODE_SEG("PAGE")
-NTSTATUS
-NTAPI
-ArbOverrideConflict(
+ArbiterLibDeleteInstance(
     _In_ PARBITER_INSTANCE Arbiter)
 {
     PAGED_CODE();
 
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    if (Arbiter->PossibleAllocation)
+    {
+        RtlFreeRangeList(Arbiter->PossibleAllocation);
+        ExFreePoolWithTag(Arbiter->PossibleAllocation, TAG_ARBITER);
+        Arbiter->PossibleAllocation = NULL;
+    }
+
+    if (Arbiter->Allocation)
+    {
+        RtlFreeRangeList(Arbiter->Allocation);
+        ExFreePoolWithTag(Arbiter->Allocation, TAG_ARBITER);
+        Arbiter->Allocation = NULL;
+    }
+
+    if (Arbiter->AllocationStack)
+    {
+        ExFreePoolWithTag(Arbiter->AllocationStack, TAG_ARBITER);
+        Arbiter->AllocationStack = NULL;
+        Arbiter->AllocationStackMaxSize = 0;
+    }
+
+    ArbiterLibFreeOrderingList(&Arbiter->OrderingList);
+    ArbiterLibFreeOrderingList(&Arbiter->ReservedList);
+
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+    if (Arbiter->TransactionEvent)
+    {
+        ExFreePoolWithTag(Arbiter->TransactionEvent, TAG_ARBITER);
+        Arbiter->TransactionEvent = NULL;
+    }
+#endif
+
+    if (Arbiter->MutexEvent)
+    {
+        ExFreePoolWithTag(Arbiter->MutexEvent, TAG_ARBITER);
+        Arbiter->MutexEvent = NULL;
+    }
 }
 
 CODE_SEG("PAGE")
 NTSTATUS
 NTAPI
-ArbBootAllocation(
-    _In_ PARBITER_INSTANCE Arbiter,
-    _In_ PLIST_ENTRY ArbitrationList)
-{
-    PAGED_CODE();
-
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
-}
-
-/* FIXME: the prototype is not correct yet. */
-CODE_SEG("PAGE")
-NTSTATUS
-NTAPI
-ArbQueryConflict(
-    _In_ PARBITER_INSTANCE Arbiter)
-{
-    PAGED_CODE();
-
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
-}
-
-/* FIXME: the prototype is not correct yet. */
-CODE_SEG("PAGE")
-NTSTATUS
-NTAPI
-ArbStartArbiter(
-    _In_ PARBITER_INSTANCE Arbiter)
-{
-    PAGED_CODE();
-
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
-}
-
-CODE_SEG("PAGE")
-NTSTATUS
-NTAPI
-ArbAddOrdering(
-    _Out_ PARBITER_ORDERING_LIST OrderList,
-    _In_ UINT64 MinimumAddress,
-    _In_ UINT64 MaximumAddress)
-{
-    PAGED_CODE();
-
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
-}
-
-CODE_SEG("PAGE")
-NTSTATUS
-NTAPI
-ArbPruneOrdering(
-    _Out_ PARBITER_ORDERING_LIST OrderingList,
-    _In_ UINT64 MinimumAddress,
-    _In_ UINT64 MaximumAddress)
-{
-    PAGED_CODE();
-
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
-}
-
-CODE_SEG("PAGE")
-NTSTATUS
-NTAPI
-ArbInitializeOrderingList(
-    _Out_ PARBITER_ORDERING_LIST OrderList)
-{
-    PAGED_CODE();
-
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
-}
-
-CODE_SEG("PAGE")
-VOID
-NTAPI
-ArbFreeOrderingList(
-    _Out_ PARBITER_ORDERING_LIST OrderList)
-{
-    PAGED_CODE();
-
-    UNIMPLEMENTED;
-}
-
-CODE_SEG("PAGE")
-NTSTATUS
-NTAPI
-ArbBuildAssignmentOrdering(
-    _Inout_ PARBITER_INSTANCE ArbInstance,
-    _In_ PCWSTR OrderName,
-    _In_ PCWSTR ReservedOrderName,
-    _In_ PARB_TRANSLATE_ORDERING TranslateOrderingFunction)
-{
-    PAGED_CODE();
-
-    UNIMPLEMENTED;
-    return STATUS_SUCCESS;
-}
-
-CODE_SEG("PAGE")
-NTSTATUS
-NTAPI
-ArbInitializeArbiterInstance(
+ArbiterLibInitializeInstance(
     _Inout_ PARBITER_INSTANCE Arbiter,
     _In_ PDEVICE_OBJECT BusDeviceObject,
     _In_ CM_RESOURCE_TYPE ResourceType,
@@ -291,7 +78,7 @@ ArbInitializeArbiterInstance(
 
     PAGED_CODE();
 
-    DPRINT("ArbInitializeArbiterInstance: '%S'\n", ArbiterName);
+    DPRINT("ArbiterLibInitializeInstance: '%S'\n", ArbiterName);
 
     ASSERT(Arbiter->UnpackRequirement != NULL);
     ASSERT(Arbiter->PackResource != NULL);
@@ -301,106 +88,106 @@ ArbInitializeArbiterInstance(
     ASSERT(Arbiter->PossibleAllocation == NULL);
     ASSERT(Arbiter->AllocationStack == NULL);
 
-    Arbiter->Signature = ARBITER_SIGNATURE;
+    Arbiter->Signature = ARBITER_SIG;
     Arbiter->BusDeviceObject = BusDeviceObject;
-
-    Arbiter->MutexEvent = ExAllocatePoolWithTag(NonPagedPool, sizeof(KEVENT), TAG_ARBITER);
-    if (!Arbiter->MutexEvent)
-    {
-        DPRINT1("ArbInitializeArbiterInstance: STATUS_INSUFFICIENT_RESOURCES\n");
-        return STATUS_INSUFFICIENT_RESOURCES;
-    }
-
-    KeInitializeEvent(Arbiter->MutexEvent, SynchronizationEvent, TRUE);
-
-    Arbiter->AllocationStack = ExAllocatePoolWithTag(PagedPool, PAGE_SIZE, TAG_ARB_ALLOCATION);
-    if (!Arbiter->AllocationStack)
-    {
-        DPRINT1("ArbInitializeArbiterInstance: STATUS_INSUFFICIENT_RESOURCES\n");
-        ExFreePoolWithTag(Arbiter->MutexEvent, TAG_ARBITER);
-        return STATUS_INSUFFICIENT_RESOURCES;
-    }
-
-    Arbiter->AllocationStackMaxSize = PAGE_SIZE;
-
-    Arbiter->Allocation = ExAllocatePoolWithTag(PagedPool, sizeof(RTL_RANGE_LIST), TAG_ARB_RANGE);
-    if (!Arbiter->Allocation)
-    {
-        DPRINT1("ArbInitializeArbiterInstance: STATUS_INSUFFICIENT_RESOURCES\n");
-        ExFreePoolWithTag(Arbiter->AllocationStack, TAG_ARB_ALLOCATION);
-        ExFreePoolWithTag(Arbiter->MutexEvent, TAG_ARBITER);
-        return STATUS_INSUFFICIENT_RESOURCES;
-    }
-
-    Arbiter->PossibleAllocation = ExAllocatePoolWithTag(PagedPool, sizeof(RTL_RANGE_LIST), TAG_ARB_RANGE);
-    if (!Arbiter->PossibleAllocation)
-    {
-        DPRINT1("ArbInitializeArbiterInstance: STATUS_INSUFFICIENT_RESOURCES\n");
-        ExFreePoolWithTag(Arbiter->Allocation, TAG_ARB_RANGE);
-        ExFreePoolWithTag(Arbiter->AllocationStack, TAG_ARB_ALLOCATION);
-        ExFreePoolWithTag(Arbiter->MutexEvent, TAG_ARBITER);
-        return STATUS_INSUFFICIENT_RESOURCES;
-    }
-
-    RtlInitializeRangeList(Arbiter->Allocation);
-    RtlInitializeRangeList(Arbiter->PossibleAllocation);
-
     Arbiter->Name = ArbiterName;
     Arbiter->ResourceType = ResourceType;
     Arbiter->TransactionInProgress = FALSE;
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+    Arbiter->OrderingName = OrderName;
+#endif
+
+    /* The per-instance lock: a signaled synchronization event used as a mutex. */
+    Arbiter->MutexEvent = ExAllocatePoolWithTag(NonPagedPool, sizeof(KEVENT), TAG_ARBITER);
+    if (!Arbiter->MutexEvent)
+    {
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto Failure;
+    }
+    KeInitializeEvent(Arbiter->MutexEvent, SynchronizationEvent, TRUE);
+
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+    /* Vista+: a notification event exposing whether a Test is outstanding. */
+    Arbiter->TransactionEvent = ExAllocatePoolWithTag(NonPagedPool, sizeof(KEVENT), TAG_ARBITER);
+    if (!Arbiter->TransactionEvent)
+    {
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto Failure;
+    }
+    KeInitializeEvent(Arbiter->TransactionEvent, NotificationEvent, TRUE);
+#endif
+
+    Arbiter->AllocationStack = ExAllocatePoolWithTag(PagedPool, PAGE_SIZE, TAG_ARBITER);
+    if (!Arbiter->AllocationStack)
+    {
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto Failure;
+    }
+    Arbiter->AllocationStackMaxSize = PAGE_SIZE;
+    Arbiter->Allocation = ExAllocatePoolWithTag(PagedPool, sizeof(RTL_RANGE_LIST), TAG_ARBITER);
+    if (!Arbiter->Allocation)
+    {
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto Failure;
+    }
+    RtlInitializeRangeList(Arbiter->Allocation);
+
+    Arbiter->PossibleAllocation = ExAllocatePoolWithTag(PagedPool, sizeof(RTL_RANGE_LIST), TAG_ARBITER);
+    if (!Arbiter->PossibleAllocation)
+    {
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto Failure;
+    }
+    RtlInitializeRangeList(Arbiter->PossibleAllocation);
 
     if (!Arbiter->TestAllocation)
-        Arbiter->TestAllocation = ArbTestAllocation;
-
+        Arbiter->TestAllocation = ArbiterLibTestAllocation;
     if (!Arbiter->RetestAllocation)
-        Arbiter->RetestAllocation = ArbRetestAllocation;
-
+        Arbiter->RetestAllocation = ArbiterLibRetestAllocation;
     if (!Arbiter->CommitAllocation)
-        Arbiter->CommitAllocation = ArbCommitAllocation;
-
+        Arbiter->CommitAllocation = ArbiterLibCommitAllocation;
     if (!Arbiter->RollbackAllocation)
-        Arbiter->RollbackAllocation = ArbRollbackAllocation;
-
-    if (!Arbiter->AddReserved)
-        Arbiter->AddReserved = ArbAddReserved;
-
-    if (!Arbiter->PreprocessEntry)
-        Arbiter->PreprocessEntry = ArbPreprocessEntry;
-
-    if (!Arbiter->AllocateEntry)
-        Arbiter->AllocateEntry = ArbAllocateEntry;
-
-    if (!Arbiter->GetNextAllocationRange)
-        Arbiter->GetNextAllocationRange = ArbGetNextAllocationRange;
-
-    if (!Arbiter->FindSuitableRange)
-        Arbiter->FindSuitableRange = ArbFindSuitableRange;
-
-    if (!Arbiter->AddAllocation)
-        Arbiter->AddAllocation = ArbAddAllocation;
-
-    if (!Arbiter->BacktrackAllocation)
-        Arbiter->BacktrackAllocation = ArbBacktrackAllocation;
-
-    if (!Arbiter->OverrideConflict)
-        Arbiter->OverrideConflict = ArbOverrideConflict;
-
+        Arbiter->RollbackAllocation = ArbiterLibRollbackAllocation;
     if (!Arbiter->BootAllocation)
-        Arbiter->BootAllocation = ArbBootAllocation;
-
+        Arbiter->BootAllocation = ArbiterLibBootAllocation;
+    if (!Arbiter->AddReserved)
+        Arbiter->AddReserved = ArbiterLibAddReserved;
     if (!Arbiter->QueryConflict)
-        Arbiter->QueryConflict = ArbQueryConflict;
-
+        Arbiter->QueryConflict = ArbiterLibQueryConflict;
+    if (!Arbiter->QueryArbitrate)
+        Arbiter->QueryArbitrate = ArbiterLibQueryArbitrate;
     if (!Arbiter->StartArbiter)
-        Arbiter->StartArbiter = ArbStartArbiter;
+        Arbiter->StartArbiter = ArbiterLibStartArbiter;
+    if (!Arbiter->PreprocessEntry)
+        Arbiter->PreprocessEntry = ArbiterLibPreprocessEntry;
+    if (!Arbiter->AllocateEntry)
+        Arbiter->AllocateEntry = ArbiterLibAllocateEntry;
+    if (!Arbiter->GetNextAllocationRange)
+        Arbiter->GetNextAllocationRange = ArbiterLibGetNextAllocationRange;
+    if (!Arbiter->FindSuitableRange)
+        Arbiter->FindSuitableRange = ArbiterLibFindSuitableRange;
+    if (!Arbiter->AddAllocation)
+        Arbiter->AddAllocation = ArbiterLibAddAllocation;
+    if (!Arbiter->BacktrackAllocation)
+        Arbiter->BacktrackAllocation = ArbiterLibBacktrackAllocation;
+    if (!Arbiter->OverrideConflict)
+        Arbiter->OverrideConflict = ArbiterLibOverrideConflict;
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+    if (!Arbiter->InitializeRangeList)
+        Arbiter->InitializeRangeList = ArbiterLibInitializeRangeList;
+#endif
 
-    Status = ArbBuildAssignmentOrdering(Arbiter, OrderName, OrderName, TranslateOrderingFunction);
-    if (NT_SUCCESS(Status))
+    Status = ArbiterLibDefaultAssignmentOrdering(Arbiter, OrderName, OrderName, TranslateOrderingFunction);
+    if (!NT_SUCCESS(Status))
     {
-        return STATUS_SUCCESS;
+        DPRINT1("ArbiterLibInitializeInstance: ArbiterLibDefaultAssignmentOrdering failed, Status %X\n", Status);
+        goto Failure;
     }
 
-    DPRINT1("ArbInitializeArbiterInstance: Status %X\n", Status);
+    return STATUS_SUCCESS;
 
+Failure:
+    DPRINT1("ArbiterLibInitializeInstance: '%S' failed, Status %X\n", ArbiterName, Status);
+    ArbiterLibDeleteInstance(Arbiter);
     return Status;
 }

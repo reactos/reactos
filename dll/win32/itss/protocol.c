@@ -101,7 +101,7 @@ static ULONG WINAPI ITSProtocol_AddRef(IUnknown *iface)
 {
     ITSProtocol *This = impl_from_IUnknown(iface);
     LONG ref = InterlockedIncrement(&This->ref);
-    TRACE("(%p) ref=%d\n", This, ref);
+    TRACE("(%p) ref=%ld\n", This, ref);
     return ref;
 }
 
@@ -110,7 +110,7 @@ static ULONG WINAPI ITSProtocol_Release(IUnknown *iface)
     ITSProtocol *This = impl_from_IUnknown(iface);
     LONG ref = InterlockedDecrement(&This->ref);
 
-    TRACE("(%p) ref=%d\n", This, ref);
+    TRACE("(%p) ref=%ld\n", This, ref);
 
     if(!ref) {
         release_chm(This);
@@ -148,16 +148,16 @@ static ULONG WINAPI ITSInternetProtocol_Release(IInternetProtocol *iface)
 
 static LPCWSTR skip_schema(LPCWSTR url)
 {
-    static const WCHAR its_schema[] = {'i','t','s',':'};
-    static const WCHAR msits_schema[] = {'m','s','-','i','t','s',':'};
-    static const WCHAR mk_schema[] = {'m','k',':','@','M','S','I','T','S','t','o','r','e',':'};
+    static const WCHAR its_schema[] = L"its:";
+    static const WCHAR msits_schema[] = L"ms-its:";
+    static const WCHAR mk_schema[] = L"mk:@MSITStore:";
 
-    if(!_wcsnicmp(its_schema, url, ARRAY_SIZE(its_schema)))
-        return url + ARRAY_SIZE(its_schema);
-    if(!_wcsnicmp(msits_schema, url, ARRAY_SIZE(msits_schema)))
-        return url + ARRAY_SIZE(msits_schema);
-    if(!_wcsnicmp(mk_schema, url, ARRAY_SIZE(mk_schema)))
-        return url + ARRAY_SIZE(mk_schema);
+    if(!wcsnicmp(its_schema, url, ARRAY_SIZE(its_schema) - 1))
+        return url + ARRAY_SIZE(its_schema) - 1;
+    if(!wcsnicmp(msits_schema, url, ARRAY_SIZE(msits_schema) - 1))
+        return url + ARRAY_SIZE(msits_schema) - 1;
+    if(!wcsnicmp(mk_schema, url, ARRAY_SIZE(mk_schema) - 1))
+        return url + ARRAY_SIZE(mk_schema) - 1;
 
     return NULL;
 }
@@ -231,9 +231,7 @@ static HRESULT WINAPI ITSProtocol_Start(IInternetProtocol *iface, LPCWSTR szUrl,
     int res;
     HRESULT hres;
 
-    static const WCHAR separator[] = {':',':',0};
-
-    TRACE("(%p)->(%s %p %p %08x %lx)\n", This, debugstr_w(szUrl), pOIProtSink,
+    TRACE("(%p)->(%s %p %p %08lx %Ix)\n", This, debugstr_w(szUrl), pOIProtSink,
             pOIBindInfo, grfPI, dwReserved);
 
     ptr = skip_schema(szUrl);
@@ -244,7 +242,7 @@ static HRESULT WINAPI ITSProtocol_Start(IInternetProtocol *iface, LPCWSTR szUrl,
     bindinfo.cbSize = sizeof(BINDINFO);
     hres = IInternetBindInfo_GetBindInfo(pOIBindInfo, &bindf, &bindinfo);
     if(FAILED(hres)) {
-        WARN("GetBindInfo failed: %08x\n", hres);
+        WARN("GetBindInfo failed: %08lx\n", hres);
         return hres;
     }
 
@@ -255,12 +253,12 @@ static HRESULT WINAPI ITSProtocol_Start(IInternetProtocol *iface, LPCWSTR szUrl,
     memcpy(file_name, ptr, len*sizeof(WCHAR));
     hres = UrlUnescapeW(file_name, NULL, &len, URL_UNESCAPE_INPLACE);
     if(FAILED(hres)) {
-        WARN("UrlUnescape failed: %08x\n", hres);
+        WARN("UrlUnescape failed: %08lx\n", hres);
         HeapFree(GetProcessHeap(), 0, file_name);
         return hres;
     }
 
-    p = wcsstr(file_name, separator);
+    p = wcsstr(file_name, L"::");
     if(!p) {
         WARN("invalid url\n");
         HeapFree(GetProcessHeap(), 0, file_name);
@@ -324,7 +322,7 @@ static HRESULT WINAPI ITSProtocol_Start(IInternetProtocol *iface, LPCWSTR szUrl,
             BSCF_FIRSTDATANOTIFICATION|BSCF_DATAFULLYAVAILABLE,
             chm_object.length, chm_object.length);
     if(FAILED(hres)) {
-        WARN("ReportData failed: %08x\n", hres);
+        WARN("ReportData failed: %08lx\n", hres);
         release_chm(This);
         return report_result(pOIProtSink, hres);
     }
@@ -345,7 +343,7 @@ static HRESULT WINAPI ITSProtocol_Abort(IInternetProtocol *iface, HRESULT hrReas
         DWORD dwOptions)
 {
     ITSProtocol *This = impl_from_IInternetProtocol(iface);
-    FIXME("(%p)->(%08x %08x)\n", This, hrReason, dwOptions);
+    FIXME("(%p)->(%08lx %08lx)\n", This, hrReason, dwOptions);
     return E_NOTIMPL;
 }
 
@@ -353,7 +351,7 @@ static HRESULT WINAPI ITSProtocol_Terminate(IInternetProtocol *iface, DWORD dwOp
 {
     ITSProtocol *This = impl_from_IInternetProtocol(iface);
 
-    TRACE("(%p)->(%08x)\n", This, dwOptions);
+    TRACE("(%p)->(%08lx)\n", This, dwOptions);
 
     return S_OK;
 }
@@ -377,7 +375,7 @@ static HRESULT WINAPI ITSProtocol_Read(IInternetProtocol *iface, void *pv,
 {
     ITSProtocol *This = impl_from_IInternetProtocol(iface);
 
-    TRACE("(%p)->(%p %u %p)\n", This, pv, cb, pcbRead);
+    TRACE("(%p)->(%p %lu %p)\n", This, pv, cb, pcbRead);
 
     if(!This->chm_file)
         return INET_E_DATA_NOT_AVAILABLE;
@@ -392,7 +390,7 @@ static HRESULT WINAPI ITSProtocol_Seek(IInternetProtocol *iface, LARGE_INTEGER d
         DWORD dwOrigin, ULARGE_INTEGER *plibNewPosition)
 {
     ITSProtocol *This = impl_from_IInternetProtocol(iface);
-    FIXME("(%p)->(%d %d %p)\n", This, dlibMove.u.LowPart, dwOrigin, plibNewPosition);
+    FIXME("(%p)->(%ld %ld %p)\n", This, dlibMove.u.LowPart, dwOrigin, plibNewPosition);
     return E_NOTIMPL;
 }
 
@@ -400,7 +398,7 @@ static HRESULT WINAPI ITSProtocol_LockRequest(IInternetProtocol *iface, DWORD dw
 {
     ITSProtocol *This = impl_from_IInternetProtocol(iface);
 
-    TRACE("(%p)->(%08x)\n", This, dwOptions);
+    TRACE("(%p)->(%08lx)\n", This, dwOptions);
 
     return S_OK;
 }
@@ -455,7 +453,7 @@ static HRESULT WINAPI ITSProtocolInfo_ParseUrl(IInternetProtocolInfo *iface, LPC
 {
     ITSProtocol *This = impl_from_IInternetProtocolInfo(iface);
 
-    TRACE("(%p)->(%s %x %08x %p %d %p %d)\n", This, debugstr_w(pwzUrl), ParseAction,
+    TRACE("(%p)->(%s %x %08lx %p %ld %p %ld)\n", This, debugstr_w(pwzUrl), ParseAction,
           dwParseFlags, pwzResult, cchResult, pcchResult, dwReserved);
 
     switch(ParseAction) {
@@ -480,13 +478,11 @@ static HRESULT WINAPI ITSProtocolInfo_CombineUrl(IInternetProtocolInfo *iface,
     LPCWSTR base_end, ptr;
     DWORD rel_len;
 
-    static const WCHAR separator[] = {':',':',0};
-
-    TRACE("(%p)->(%s %s %08x %p %d %p %d)\n", This, debugstr_w(pwzBaseUrl),
+    TRACE("(%p)->(%s %s %08lx %p %ld %p %ld)\n", This, debugstr_w(pwzBaseUrl),
             debugstr_w(pwzRelativeUrl), dwCombineFlags, pwzResult, cchResult,
             pcchResult, dwReserved);
 
-    base_end = wcsstr(pwzBaseUrl, separator);
+    base_end = wcsstr(pwzBaseUrl, L"::");
     if(!base_end)
         return 0x80041001;
     base_end += 2;
@@ -524,7 +520,7 @@ static HRESULT WINAPI ITSProtocolInfo_CompareUrl(IInternetProtocolInfo *iface, L
         LPCWSTR pwzUrl2, DWORD dwCompareFlags)
 {
     ITSProtocol *This = impl_from_IInternetProtocolInfo(iface);
-    FIXME("%p)->(%s %s %08x)\n", This, debugstr_w(pwzUrl1), debugstr_w(pwzUrl2), dwCompareFlags);
+    FIXME("%p)->(%s %s %08lx)\n", This, debugstr_w(pwzUrl1), debugstr_w(pwzUrl2), dwCompareFlags);
     return E_NOTIMPL;
 }
 
@@ -533,7 +529,7 @@ static HRESULT WINAPI ITSProtocolInfo_QueryInfo(IInternetProtocolInfo *iface, LP
         DWORD dwReserved)
 {
     ITSProtocol *This = impl_from_IInternetProtocolInfo(iface);
-    FIXME("(%p)->(%s %08x %08x %p %d %p %d)\n", This, debugstr_w(pwzUrl), QueryOption,
+    FIXME("(%p)->(%s %08x %08lx %p %ld %p %ld)\n", This, debugstr_w(pwzUrl), QueryOption,
           dwQueryFlags, pBuffer, cbBuffer, pcbBuf, dwReserved);
     return E_NOTIMPL;
 }

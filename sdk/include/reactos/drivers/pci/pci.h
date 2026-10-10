@@ -9,6 +9,7 @@
 //
 // PCI Hack Flags
 //
+#define PCI_HACK_KEEP_DECODES_ON_STOP                       0x0000000000000002LL
 #define PCI_HACK_LOCK_RESOURCES                             0x0000000000000004LL
 #define PCI_HACK_NO_ENUM_AT_ALL                             0x0000000000000008LL
 #define PCI_HACK_ENUM_NO_RESOURCE                           0x0000000000000010LL
@@ -37,7 +38,7 @@
 #define PCI_HACK_PCI_HACK_SBR_ON_LINK_STATE_CHANGE          0x0000000008000000LL
 #define PCI_HACK_PCI_HACK_LINK_DISABLE_ON_SLOT_PWRDN        0x0000000010000000LL
 #define PCI_HACK_NO_PM_CAPS                                 0x0000000020000000LL
-#define PCI_HACK_DONT_DISABLE_DECODES                       0x0000000040000000LL
+#define PCI_HACK_NEVER_POWER_DOWN                           0x0000000040000000LL
 #define PCI_HACK_NO_SUBSYSTEM_AFTER_D3                      0x0000000080000000LL
 #define PCI_HACK_VIDEO_LEGACY_DECODE                        0x0000000100000000LL
 #define PCI_HACK_FAKE_CLASS_CODE                            0x0000000200000000LL
@@ -45,7 +46,7 @@
 #define PCI_HACK_DISABLE_IDE_NATIVE_MODE                    0x0000000800000000LL
 #define PCI_HACK_FAIL_QUERY_REMOVE                          0x0000001000000000LL
 #define PCI_HACK_CRITICAL_DEVICE                            0x0000002000000000LL
-#define PCI_HACK_UNUSED_4000000000                          0x0000004000000000LL
+#define PCI_HACK_NOT_CRITICAL_DEVICE                        0x0000004000000000LL
 #define PCI_HACK_BROKEN_SUBTRACTIVE_DECODE                  0x0000008000000000LL
 #define PCI_HACK_NO_REVISION_AFTER_D3                       0x0000010000000000LL
 #define PCI_HACK_ENABLE_MSI_MAPPING                         0x0000020000000000LL
@@ -65,7 +66,7 @@
 #define PCI_ENABLE_BRIDGE_VGA_16BIT                         0x0010
 
 //
-// PCI IRQ Routing Table in BIOS/Registry (Signature: PIR$)
+// PCI IRQ Routing Table in BIOS/Registry (Signature: $PIR)
 //
 #include <pshpack1.h>
 typedef struct _PIN_INFO
@@ -106,9 +107,23 @@ typedef struct _PCI_REGISTRY_INFO
 {
     UCHAR MajorRevision;
     UCHAR MinorRevision;
-    UCHAR NoBuses; // Number Of Buses
+    UCHAR NoBuses; // Number of buses. Note: Wraps when the highest bus number is 255
     UCHAR HardwareMechanism;
 } PCI_REGISTRY_INFO, *PPCI_REGISTRY_INFO;
+
+/**
+ * @brief
+ * Retrieves the corrected number of buses from the PCI_REGISTRY_INFO structure.
+ *
+ * PCI_REGISTRY_INFO::NoBuses is a UCHAR (0-255). Thus, this member would wrap
+ * to 0 for a system having exactly the maximum number of allowed PCI buses (256).
+ * In order to distinguish this case from the one where no PCI system (and no bus)
+ * is present, verify the Major/MinorRevision values. If they are initialized
+ * (and NoBuses == 0), this means that the system actually has 256 buses.
+ **/
+#define PCI_GET_NUM_OF_BUSES(PciRegInfo) \
+    ((USHORT)((PciRegInfo)->NoBuses ? (PciRegInfo)->NoBuses : \
+       ((PciRegInfo)->MajorRevision | (PciRegInfo)->MinorRevision) ? (PCI_MAX_BRIDGE_NUMBER + 1) : 0))
 
 //
 // PCI Card Descriptor in Registry

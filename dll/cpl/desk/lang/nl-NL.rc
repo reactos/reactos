@@ -114,7 +114,7 @@ BEGIN
     AUTOCHECKBOX "Randen van letter&s vloeiend op het scherm weergeven, en wel als volgt:", IDC_EFFAPPEARANCE_SMOOTHING, 10, 42, 267, 19
     COMBOBOX IDC_EFFAPPEARANCE_SMOOTHINGTYPE, 20, 62, 95, 19, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | WS_VSCROLL | WS_TABSTOP
-    AUTOCHECKBOX "&Grote pictogrammen gebruiken", IDC_EFFAPPEARANCE_LARGEICONS, 10, 80, 267, 19, WS_TABSTOP | WS_DISABLED
+    AUTOCHECKBOX "&Grote pictogrammen gebruiken", IDC_EFFAPPEARANCE_LARGEICONS, 10, 80, 267, 19, WS_TABSTOP
     AUTOCHECKBOX "Sch&aduw onder menu's weergeven", IDC_EFFAPPEARANCE_SETDROPSHADOW, 10, 95, 267, 19
     AUTOCHECKBOX "De in&houd van het venster tijdens het slepen weergeven", IDC_EFFAPPEARANCE_DRAGFULLWINDOWS, 10, 110, 267, 19
     AUTOCHECKBOX "Onderstreepte letters voor toetsenbordnavigatie &verbergen tot ALT wordt ingedrukt", IDC_EFFAPPEARANCE_KEYBOARDCUES, 10, 125, 267, 19//FIXME: text cutoff. I used "&Verberg onderstreepte letters voor navigatie totdat ALT wordt ingedrukt" for the backport

@@ -495,6 +495,8 @@
 @ stdcall RegDeleteKeyW(long wstr)
 @ stdcall -version=0x600+ RegDeleteTreeA(long str)
 @ stdcall -version=0x600+ RegDeleteTreeW(long wstr)
+@ stdcall -version=0x600+ RegDeleteKeyValueA(long wstr wstr)
+@ stdcall -version=0x600+ RegDeleteKeyValueW(long wstr wstr)
 @ stdcall RegDeleteValueA(long str)
 @ stdcall RegDeleteValueW(long wstr)
 @ stdcall RegDisablePredefinedCache()

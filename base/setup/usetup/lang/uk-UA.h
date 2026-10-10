@@ -1265,7 +1265,7 @@ static MUI_ENTRY ukUAFormatPartitionEntries[] =
     {
         0,
         0,
-        "ENTER = \217\340\256\244\256\242\246\250\342\250   F3 = \202\250\251\342\250",
+        "ENTER = \217\340\256\244\256\242\246\250\342\250   ESC = \221\252\240\341\343\242\240\342\250   F3 = \202\250\251\342\250",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
         TEXT_ID_STATIC
     },

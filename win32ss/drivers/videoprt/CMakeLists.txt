@@ -1,10 +1,10 @@
 
-include_directories(${REACTOS_SOURCE_DIR}/ntoskrnl/include)
 add_definitions(-D_VIDEOPORT_)
+
 spec2def(videoprt.sys videoprt.spec ADD_IMPORTLIB)
 
 # Link GCC stack protector lib
-if (STACK_PROTECTOR)
+if(STACK_PROTECTOR)
     target_link_libraries(libvideoprt INTERFACE gcc_ssp_videoprt)
 endif()
 
@@ -34,9 +34,9 @@ add_library(videoprt MODULE
     ${PCH_SKIP_SOURCE}
     videoprt.rc
     ${CMAKE_CURRENT_BINARY_DIR}/videoprt.def)
+add_pch(videoprt videoprt.h "${PCH_SKIP_SOURCE}")
 
 set_module_type(videoprt kernelmodedriver)
 target_link_libraries(videoprt ${PSEH_LIB})
 add_importlibs(videoprt ntoskrnl hal)
-add_pch(videoprt videoprt.h "${PCH_SKIP_SOURCE}")
 add_cd_file(TARGET videoprt DESTINATION reactos/system32/drivers FOR all)

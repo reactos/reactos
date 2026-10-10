@@ -63,7 +63,7 @@ static ULONG WINAPI ShellUIHelper2_AddRef(IShellUIHelper2 *iface)
     ShellUIHelper *This = impl_from_IShellUIHelper2(iface);
     LONG ref = InterlockedIncrement(&This->ref);
 
-    TRACE("(%p) ref=%d\n", This, ref);
+    TRACE("(%p) ref=%ld\n", This, ref);
 
     return ref;
 }
@@ -73,10 +73,10 @@ static ULONG WINAPI ShellUIHelper2_Release(IShellUIHelper2 *iface)
     ShellUIHelper *This = impl_from_IShellUIHelper2(iface);
     LONG ref = InterlockedDecrement(&This->ref);
 
-    TRACE("(%p) ref=%d\n", This, ref);
+    TRACE("(%p) ref=%ld\n", This, ref);
 
     if(!ref)
-        heap_free(This);
+        free(This);
 
     return ref;
 }
@@ -94,7 +94,7 @@ static HRESULT WINAPI ShellUIHelper2_GetTypeInfoCount(IShellUIHelper2 *iface, UI
 static HRESULT WINAPI ShellUIHelper2_GetTypeInfo(IShellUIHelper2 *iface, UINT iTInfo, LCID lcid, LPTYPEINFO *ppTInfo)
 {
     ShellUIHelper *This = impl_from_IShellUIHelper2(iface);
-    FIXME("(%p)->(%d %d %p)\n", This, iTInfo, lcid, ppTInfo);
+    FIXME("(%p)->(%d %ld %p)\n", This, iTInfo, lcid, ppTInfo);
     return E_NOTIMPL;
 }
 
@@ -104,7 +104,7 @@ static HRESULT WINAPI ShellUIHelper2_GetIDsOfNames(IShellUIHelper2 *iface, REFII
     ShellUIHelper *This = impl_from_IShellUIHelper2(iface);
     unsigned i;
 
-    FIXME("(%p)->(%s %p %d %d %p)\n", This, debugstr_guid(riid), rgszNames, cNames, lcid, rgDispId);
+    FIXME("(%p)->(%s %p %d %ld %p)\n", This, debugstr_guid(riid), rgszNames, cNames, lcid, rgDispId);
     for(i = 0; i < cNames; i++)
         FIXME("%s\n", debugstr_w(rgszNames[i]));
 
@@ -116,7 +116,7 @@ static HRESULT WINAPI ShellUIHelper2_Invoke(IShellUIHelper2 *iface, DISPID dispI
         EXCEPINFO *pExepInfo, UINT *puArgErr)
 {
     ShellUIHelper *This = impl_from_IShellUIHelper2(iface);
-    FIXME("(%p)->(%d %s %d %08x %p %p %p %p)\n", This, dispIdMember, debugstr_guid(riid),
+    FIXME("(%p)->(%ld %s %ld %08x %p %p %p %p)\n", This, dispIdMember, debugstr_guid(riid),
           lcid, wFlags, pDispParams, pVarResult, pExepInfo, puArgErr);
     return E_NOTIMPL;
 }
@@ -370,7 +370,7 @@ HRESULT create_shell_ui_helper(IShellUIHelper2 **_ret)
 {
     ShellUIHelper *ret;
 
-    ret = heap_alloc(sizeof(*ret));
+    ret = malloc(sizeof(*ret));
     if(!ret)
         return E_OUTOFMEMORY;
 

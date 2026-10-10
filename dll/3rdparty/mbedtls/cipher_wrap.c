@@ -173,6 +173,15 @@ static int aes_crypt_cfb128_wrap( void *ctx, mbedtls_operation_t operation,
     return mbedtls_aes_crypt_cfb128( (mbedtls_aes_context *) ctx, operation, length, iv_off, iv,
                              input, output );
 }
+#ifdef __REACTOS__
+static int aes_crypt_cfb8_wrap( void *ctx, mbedtls_operation_t operation,
+        size_t length, size_t *iv_off, unsigned char *iv,
+        const unsigned char *input, unsigned char *output )
+{
+    return mbedtls_aes_crypt_cfb8( (mbedtls_aes_context *) ctx, operation, length, iv,
+                             input, output );
+}
+#endif
 #endif /* MBEDTLS_CIPHER_MODE_CFB */
 
 #if defined(MBEDTLS_CIPHER_MODE_OFB)
@@ -278,6 +287,35 @@ static const mbedtls_cipher_base_t aes_info = {
     aes_ctx_free
 };
 
+#ifdef __REACTOS__
+static const mbedtls_cipher_base_t cfb8_aes_info = {
+    MBEDTLS_CIPHER_ID_AES,
+    aes_crypt_ecb_wrap,
+#if defined(MBEDTLS_CIPHER_MODE_CBC)
+    aes_crypt_cbc_wrap,
+#endif
+#if defined(MBEDTLS_CIPHER_MODE_CFB)
+    aes_crypt_cfb8_wrap,
+#endif
+#if defined(MBEDTLS_CIPHER_MODE_OFB)
+    aes_crypt_ofb_wrap,
+#endif
+#if defined(MBEDTLS_CIPHER_MODE_CTR)
+    aes_crypt_ctr_wrap,
+#endif
+#if defined(MBEDTLS_CIPHER_MODE_XTS)
+    NULL,
+#endif
+#if defined(MBEDTLS_CIPHER_MODE_STREAM)
+    NULL,
+#endif
+    aes_setkey_enc_wrap,
+    aes_setkey_dec_wrap,
+    aes_ctx_alloc,
+    aes_ctx_free
+};
+#endif
+
 static const mbedtls_cipher_info_t aes_128_ecb_info = {
     MBEDTLS_CIPHER_AES_128_ECB,
     MBEDTLS_MODE_ECB,
@@ -347,6 +385,41 @@ static const mbedtls_cipher_info_t aes_256_cbc_info = {
 #endif /* MBEDTLS_CIPHER_MODE_CBC */
 
 #if defined(MBEDTLS_CIPHER_MODE_CFB)
+#ifdef __REACTOS__
+static const mbedtls_cipher_info_t aes_128_cfb8_info = {
+    MBEDTLS_CIPHER_AES_128_CFB8,
+    MBEDTLS_MODE_CFB,
+    128,
+    "AES-128-CFB8",
+    16,
+    0,
+    16,
+    &cfb8_aes_info
+};
+
+static const mbedtls_cipher_info_t aes_192_cfb8_info = {
+    MBEDTLS_CIPHER_AES_192_CFB8,
+    MBEDTLS_MODE_CFB,
+    192,
+    "AES-192-CFB8",
+    16,
+    0,
+    16,
+    &cfb8_aes_info
+};
+
+static const mbedtls_cipher_info_t aes_256_cfb8_info = {
+    MBEDTLS_CIPHER_AES_256_CFB8,
+    MBEDTLS_MODE_CFB,
+    256,
+    "AES-256-CFB8",
+    16,
+    0,
+    16,
+    &cfb8_aes_info
+};
+#endif
+
 static const mbedtls_cipher_info_t aes_128_cfb128_info = {
     MBEDTLS_CIPHER_AES_128_CFB128,
     MBEDTLS_MODE_CFB,
@@ -2156,6 +2229,11 @@ const mbedtls_cipher_definition_t mbedtls_cipher_definitions[] =
     { MBEDTLS_CIPHER_AES_256_CBC,          &aes_256_cbc_info },
 #endif
 #if defined(MBEDTLS_CIPHER_MODE_CFB)
+#ifdef __REACTOS__
+    { MBEDTLS_CIPHER_AES_128_CFB8,         &aes_128_cfb8_info },
+    { MBEDTLS_CIPHER_AES_192_CFB8,         &aes_192_cfb8_info },
+    { MBEDTLS_CIPHER_AES_256_CFB8,         &aes_256_cfb8_info },
+#endif
     { MBEDTLS_CIPHER_AES_128_CFB128,       &aes_128_cfb128_info },
     { MBEDTLS_CIPHER_AES_192_CFB128,       &aes_192_cfb128_info },
     { MBEDTLS_CIPHER_AES_256_CFB128,       &aes_256_cfb128_info },

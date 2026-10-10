@@ -5,17 +5,27 @@
 #include <wine/config.h>
 
 #include <stdarg.h>
+#include <stdio.h>
 
 #define WIN32_NO_STATUS
 #define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
 
 #define COBJMACROS
 
 #include <windef.h>
 #include <winbase.h>
 #include <objbase.h>
+#include <winuser.h>
+#include <string.h>
+#include <initguid.h>
+#include <assert.h>
+#include <winsock2.h>
+#include <winhttp.h>
+#include <shlwapi.h>
+#include <xmllite.h>
+#include <ole2.h>
 #include <netfw.h>
+#include <natupnp.h>
 
 #include <wine/debug.h>
 

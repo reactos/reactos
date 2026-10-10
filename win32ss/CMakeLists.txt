@@ -23,15 +23,13 @@ add_subdirectory(win32u)
 spec2def(win32k.sys win32k.spec ADD_IMPORTLIB)
 
 # Link GCC stack protector lib
-if (STACK_PROTECTOR)
+if(STACK_PROTECTOR)
     target_link_libraries(libwin32k INTERFACE gcc_ssp_win32k)
 endif()
 
 include_directories(
-    .
     include
-    ${REACTOS_SOURCE_DIR}/ntoskrnl/include
-    ${REACTOS_SOURCE_DIR}/sdk/lib/3rdparty/freetype/include
+    ${REACTOS_SOURCE_DIR}/sdk/lib/3rdparty/freetype/include ## HACK for ntgdi/freetype.c and related
     ${REACTOS_SOURCE_DIR}/sdk/include/reactos/subsys
     ${REACTOS_SOURCE_DIR}/sdk/include/reactos/drivers)
 
@@ -129,8 +127,9 @@ list(APPEND SOURCE
     user/ntuser/guicheck.c
     user/ntuser/hook.c
     user/ntuser/hotkey.c
-    user/ntuser/input.c
     user/ntuser/ime.c
+    user/ntuser/input.c
+    user/ntuser/job.c
     user/ntuser/keyboard.c
     user/ntuser/kbdlayout.c
     user/ntuser/layered.c
@@ -147,6 +146,7 @@ list(APPEND SOURCE
     user/ntuser/painting.c
     user/ntuser/power.c
     user/ntuser/prop.c
+    user/ntuser/rawinput.c
     user/ntuser/scrollbar.c
     user/ntuser/scrollex.c
     user/ntuser/security.c
@@ -245,6 +245,7 @@ add_library(win32k MODULE
     ${win32k_asm}
     win32k.rc
     ${CMAKE_CURRENT_BINARY_DIR}/win32k.def)
+add_pch(win32k pch.h SOURCE)
 
 set_module_type(win32k kernelmodedriver)
 target_link_libraries(win32k ${PSEH_LIB} dxguid libcntpr)
@@ -254,7 +255,6 @@ if(USE_DIBLIB)
 endif()
 
 add_importlibs(win32k ntoskrnl hal ftfd)
-add_pch(win32k pch.h SOURCE)
 add_cd_file(TARGET win32k DESTINATION reactos/system32 FOR all)
 
 if(ARCH STREQUAL "amd64")

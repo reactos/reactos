@@ -1,7 +1,7 @@
 [Unattend]
 Signature = "$ReactOS$"
 
-; Set UnattendSetupEnabled to yes in order to boot the LiveImage immediately to desktop.
+; Set UnattendSetupEnabled to yes in order to immediately start the ReactOS installer.
 ; yes - unattend setup enabled
 ; no - unattend setup disabled
 UnattendSetupEnabled = no

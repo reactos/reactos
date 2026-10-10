@@ -29,9 +29,8 @@ PCONTEXT_ENTRY pCurrentContext = NULL;
 PCONTEXT_STACK_ENTRY pContextStackHead = NULL;
 PCONTEXT_STACK_ENTRY pContextStackTail = NULL;
 
-PWSTR pszMachine = NULL;
-
-static BOOL bOnline = TRUE; 
+PWSTR g_pszMachine = NULL;
+BOOL g_bOnline = TRUE; 
 
 /* FUNCTIONS ******************************************************************/
 
@@ -264,7 +263,7 @@ RemoveContextFromStack(
     {
         if (pStackEntry->pContext == pContextEntry)
         {
-            if (pStackEntry == pContextStackHead && pStackEntry == pContextStackHead)
+            if (pStackEntry == pContextStackHead && pStackEntry == pContextStackTail)
             {
                 pContextStackHead = NULL;
                 pContextStackTail = NULL;
@@ -581,7 +580,7 @@ ExitCommand(
     _In_ LPCVOID pvData,
     _Out_ BOOL *pbDone)
 {
-    if (bOnline == FALSE)
+    if (g_bOnline == FALSE)
         CommitContext(pRootContext, NETSH_FLUSH);
 
     *pbDone = TRUE;
@@ -617,7 +616,7 @@ OfflineCommand(
 {
     DPRINT("OfflineCommand()\n");
     CommitContext(pRootContext, NETSH_UNCOMMIT);
-    bOnline = FALSE;
+    g_bOnline = FALSE;
     return ERROR_SUCCESS;
 }
 
@@ -635,7 +634,7 @@ OnlineCommand(
 {
     DPRINT("OnlineCommand()\n");
     CommitContext(pRootContext, NETSH_COMMIT);
-    bOnline = TRUE;
+    g_bOnline = TRUE;
     return ERROR_SUCCESS;
 }
 
@@ -734,18 +733,18 @@ SetMachineCommand(
     if ((dwArgCount - dwCurrentIndex) > 1)
         return ERROR_SHOW_USAGE;
 
-    if (pszMachine != NULL)
+    if (g_pszMachine != NULL)
     {
-        HeapFree(GetProcessHeap(), 0, pszMachine);
-        pszMachine = NULL;
+        HeapFree(GetProcessHeap(), 0, g_pszMachine);
+        g_pszMachine = NULL;
     }
 
     if ((dwArgCount - dwCurrentIndex) == 1)
     {
-        pszMachine = HeapAlloc(GetProcessHeap(), 0, (sizeof(argv[dwCurrentIndex]) + 1) * sizeof(WCHAR));
-        if (pszMachine == NULL)
+        g_pszMachine = HeapAlloc(GetProcessHeap(), 0, (sizeof(argv[dwCurrentIndex]) + 1) * sizeof(WCHAR));
+        if (g_pszMachine == NULL)
             return ERROR_NOT_ENOUGH_MEMORY;
-        wcscpy(pszMachine, argv[dwCurrentIndex]);
+        wcscpy(g_pszMachine, argv[dwCurrentIndex]);
     }
 
     return dwError;
@@ -774,12 +773,12 @@ SetModeCommand(
     if (!_wcsicmp(argv[dwCurrentIndex], L"offline"))
     {
         CommitContext(pRootContext, NETSH_UNCOMMIT);
-        bOnline = FALSE;
+        g_bOnline = FALSE;
     }
     else if (!_wcsicmp(argv[dwCurrentIndex], L"online"))
     {
         CommitContext(pRootContext, NETSH_COMMIT);
-        bOnline = TRUE;
+        g_bOnline = TRUE;
     }
     else
     {
@@ -802,7 +801,7 @@ ShowModeCommand(
     _Out_ BOOL *pbDone)
 {
     DPRINT("ShowModeCommand()\n");
-    ConPuts(StdOut, bOnline ? L"online\n\n" : L"offline\n\n");
+    ConPuts(StdOut, g_bOnline ? L"online\n\n" : L"offline\n\n");
     return ERROR_SUCCESS;
 }
 
@@ -839,19 +838,19 @@ CreateRootContext(VOID)
     pGroup = AddCommandGroup(pRootContext, L"add", IDS_HLP_GROUP_ADD, 0, NULL);
     if (pGroup)
     {
-        AddGroupCommand(pGroup, L"helper", AddHelperCommand, IDS_HLP_ADD_HELPER, IDS_HLP_ADD_HELPER_EX, 0, NULL);
+        AddGroupCommand(pGroup, L"helper", AddHelperCommand, IDS_HLP_ADD_HELPER, IDS_HLP_ADD_HELPER_EX, CMD_FLAG_LOCAL, NULL);
     }
 
     pGroup = AddCommandGroup(pRootContext, L"delete", IDS_HLP_GROUP_DELETE, 0, NULL);
     if (pGroup)
     {
-        AddGroupCommand(pGroup, L"helper", DeleteHelperCommand, IDS_HLP_DEL_HELPER, IDS_HLP_DEL_HELPER_EX, 0, NULL);
+        AddGroupCommand(pGroup, L"helper", DeleteHelperCommand, IDS_HLP_DEL_HELPER, IDS_HLP_DEL_HELPER_EX, CMD_FLAG_LOCAL, NULL);
     }
 
     pGroup = AddCommandGroup(pRootContext, L"set", IDS_HLP_GROUP_SET, 0, NULL);
     if (pGroup)
     {
-        AddGroupCommand(pGroup, L"machine", SetMachineCommand, IDS_HLP_SET_MACHINE, IDS_HLP_SET_MACHINE_EX, 0, NULL);
+        AddGroupCommand(pGroup, L"machine", SetMachineCommand, IDS_HLP_SET_MACHINE, IDS_HLP_SET_MACHINE_EX, CMD_FLAG_ONLINE, NULL);
         AddGroupCommand(pGroup, L"mode",    SetModeCommand,    IDS_HLP_SET_MODE,    IDS_HLP_SET_MODE_EX, 0, NULL);
     }
 
@@ -921,7 +920,7 @@ RegisterContext(
     DWORD i, j;
     DWORD dwError = ERROR_SUCCESS;
 
-    DPRINT1("RegisterContext(%p)\n", pChildContext);
+    DPRINT("RegisterContext(%p)\n", pChildContext);
     if (pChildContext == NULL)
     {
         DPRINT1("Invalid child context!\n");
@@ -959,6 +958,7 @@ RegisterContext(
         pContext->pfnDumpFn = pChildContext->pfnDumpFn;
         pContext->pfnConnectFn = pChildContext->pfnConnectFn;
         pContext->pfnOsVersionCheck = pChildContext->pfnOsVersionCheck;
+        pContext->dwFlags = pChildContext->dwFlags;
         pContext->ulPriority = (pChildContext->dwFlags & CMD_FLAG_PRIORITY) ?
                                pChildContext->ulPriority : DEFAULT_CONTEXT_PRIORITY;
 
@@ -1003,8 +1003,8 @@ RegisterContext(
 
         if (pContext->pfnConnectFn)
         {
-            dwError = pContext->pfnConnectFn(pszMachine);
-            DPRINT("pfnConnectFn(%S) returned %lu\n", pszMachine, dwError);
+            dwError = pContext->pfnConnectFn(g_pszMachine);
+            DPRINT("pfnConnectFn(%S) returned %lu\n", g_pszMachine, dwError);
         }
     }
 

@@ -33,11 +33,6 @@
  */
 #define D3DERR_INVALIDCALL 0x8876086c
 
-static HRESULT (WINAPI *pD3DCreateBlob)(SIZE_T, ID3DBlob **);
-static HRESULT (WINAPI *pD3DGetBlobPart)(const void *, SIZE_T, D3D_BLOB_PART, UINT, ID3DBlob **);
-static HRESULT (WINAPI *pD3DReadFileToBlob)(const WCHAR *, ID3DBlob **);
-static HRESULT (WINAPI *pD3DStripShader)(const void *, SIZE_T, UINT, ID3DBlob **);
-
 #define MAKE_TAG(ch0, ch1, ch2, ch3) \
     ((DWORD)(ch0) | ((DWORD)(ch1) << 8) | \
     ((DWORD)(ch2) << 16) | ((DWORD)(ch3) << 24 ))
@@ -54,23 +49,24 @@ static HRESULT (WINAPI *pD3DStripShader)(const void *, SIZE_T, UINT, ID3DBlob **
 #define TAG_XNAP MAKE_TAG('X', 'N', 'A', 'P')
 #define TAG_XNAS MAKE_TAG('X', 'N', 'A', 'S')
 
+#if D3D_COMPILER_VERSION >= 43
 static void test_create_blob(void)
 {
     ID3D10Blob *blob;
     HRESULT hr;
     ULONG refcount;
 
-    hr = pD3DCreateBlob(1, NULL);
-    ok(hr == D3DERR_INVALIDCALL, "D3DCreateBlob failed with %x\n", hr);
+    hr = D3DCreateBlob(1, NULL);
+    ok(hr == D3DERR_INVALIDCALL, "Got unexpected hr %#lx.\n", hr);
 
-    hr = pD3DCreateBlob(0, NULL);
-    ok(hr == D3DERR_INVALIDCALL, "D3DCreateBlob failed with %x\n", hr);
+    hr = D3DCreateBlob(0, NULL);
+    ok(hr == D3DERR_INVALIDCALL, "Got unexpected hr %#lx.\n", hr);
 
-    hr = pD3DCreateBlob(0, &blob);
-    ok(hr == S_OK, "D3DCreateBlob failed with %x\n", hr);
+    hr = D3DCreateBlob(0, &blob);
+    ok(hr == S_OK, "Got unexpected hr %#lx.\n", hr);
 
     refcount = ID3D10Blob_Release(blob);
-    ok(!refcount, "ID3DBlob has %u references left\n", refcount);
+    ok(!refcount, "ID3DBlob has %lu references left.\n", refcount);
 }
 
 static const D3D_BLOB_PART parts[] =
@@ -119,290 +115,322 @@ static DWORD test_blob_part[] = {
 static void test_get_blob_part(void)
 {
     ID3DBlob *blob, *blob2;
-    HRESULT hr;
+    HRESULT hr, expected;
     ULONG refcount;
     DWORD *dword;
     SIZE_T size;
     UINT i;
 
-    hr = pD3DCreateBlob(1, &blob2);
-    ok(hr == S_OK, "D3DCreateBlob failed with %x\n", hr);
+#if D3D_COMPILER_VERSION >= 46
+    expected = D3DERR_INVALIDCALL;
+#else
+    expected = E_FAIL;
+#endif
+
+    hr = D3DCreateBlob(1, &blob2);
+    ok(hr == S_OK, "Got unexpected hr %#lx.\n", hr);
     blob = blob2;
 
     /* invalid cases */
-    hr = pD3DGetBlobPart(NULL, test_blob_part[6], D3D_BLOB_INPUT_SIGNATURE_BLOB, 0, &blob);
-    ok(hr == D3DERR_INVALIDCALL, "D3DGetBlobPart failed with %x\n", hr);
+    hr = D3DGetBlobPart(NULL, test_blob_part[6], D3D_BLOB_INPUT_SIGNATURE_BLOB, 0, &blob);
+    ok(hr == D3DERR_INVALIDCALL, "Got unexpected hr %#lx.\n", hr);
     ok(blob2 == blob, "D3DGetBlobPart failed got %p, expected %p\n", blob, blob2);
 
-    hr = pD3DGetBlobPart(NULL, 0, D3D_BLOB_INPUT_SIGNATURE_BLOB, 0, &blob);
-    ok(hr == D3DERR_INVALIDCALL, "D3DGetBlobPart failed with %x\n", hr);
+    hr = D3DGetBlobPart(NULL, 0, D3D_BLOB_INPUT_SIGNATURE_BLOB, 0, &blob);
+    ok(hr == D3DERR_INVALIDCALL, "Got unexpected hr %#lx.\n", hr);
     ok(blob2 == blob, "D3DGetBlobPart failed got %p, expected %p\n", blob, blob2);
 
-    hr = pD3DGetBlobPart(NULL, test_blob_part[6], D3D_BLOB_INPUT_SIGNATURE_BLOB, 0, NULL);
-    ok(hr == D3DERR_INVALIDCALL, "D3DGetBlobPart failed with %x\n", hr);
+    hr = D3DGetBlobPart(NULL, test_blob_part[6], D3D_BLOB_INPUT_SIGNATURE_BLOB, 0, NULL);
+    ok(hr == D3DERR_INVALIDCALL, "Got unexpected hr %#lx.\n", hr);
 
-    hr = pD3DGetBlobPart(NULL, 0, D3D_BLOB_INPUT_SIGNATURE_BLOB, 0, NULL);
-    ok(hr == D3DERR_INVALIDCALL, "D3DGetBlobPart failed with %x\n", hr);
+    hr = D3DGetBlobPart(NULL, 0, D3D_BLOB_INPUT_SIGNATURE_BLOB, 0, NULL);
+    ok(hr == D3DERR_INVALIDCALL, "Got unexpected hr %#lx.\n", hr);
 
-    hr = pD3DGetBlobPart(test_blob_part, 0, D3D_BLOB_INPUT_SIGNATURE_BLOB, 0, &blob);
-    ok(hr == D3DERR_INVALIDCALL, "D3DGetBlobPart failed with %x\n", hr);
+    hr = D3DGetBlobPart(test_blob_part, 0, D3D_BLOB_INPUT_SIGNATURE_BLOB, 0, &blob);
+    ok(hr == D3DERR_INVALIDCALL, "Got unexpected hr %#lx.\n", hr);
     ok(blob2 == blob, "D3DGetBlobPart failed got %p, expected %p\n", blob, blob2);
 
-    hr = pD3DGetBlobPart(test_blob_part, test_blob_part[6], D3D_BLOB_INPUT_SIGNATURE_BLOB, 0, NULL);
-    ok(hr == D3DERR_INVALIDCALL, "D3DGetBlobPart failed with %x\n", hr);
-
-    hr = pD3DGetBlobPart(test_blob_part, 0, D3D_BLOB_INPUT_SIGNATURE_BLOB, 0, NULL);
-    ok(hr == D3DERR_INVALIDCALL, "D3DGetBlobPart failed with %x\n", hr);
-
-    hr = pD3DGetBlobPart(test_blob_part, test_blob_part[6], D3D_BLOB_INPUT_SIGNATURE_BLOB, 1, &blob);
-    ok(hr == D3DERR_INVALIDCALL, "D3DGetBlobPart failed with %x\n", hr);
+    hr = D3DGetBlobPart(test_blob_part, 7 * sizeof(DWORD), D3D_BLOB_INPUT_SIGNATURE_BLOB, 0, &blob);
+    ok(hr == D3DERR_INVALIDCALL, "Got unexpected hr %#lx.\n", hr);
     ok(blob2 == blob, "D3DGetBlobPart failed got %p, expected %p\n", blob, blob2);
 
-    hr = pD3DGetBlobPart(test_blob_part, test_blob_part[6], 0xffffffff, 0, &blob);
-    ok(hr == D3DERR_INVALIDCALL, "D3DGetBlobPart failed with %x\n", hr);
+    hr = D3DGetBlobPart(test_blob_part, 8 * sizeof(DWORD), D3D_BLOB_INPUT_SIGNATURE_BLOB, 0, &blob);
+#if D3D_COMPILER_VERSION >= 46
+    todo_wine
+#endif
+    ok(hr == expected, "Got unexpected hr %#lx.\n", hr);
+    ok(blob2 == blob, "D3DGetBlobPart failed got %p, expected %p\n", blob, blob2);
+
+    hr = D3DGetBlobPart(test_blob_part, test_blob_part[6], D3D_BLOB_INPUT_SIGNATURE_BLOB, 0, NULL);
+    ok(hr == D3DERR_INVALIDCALL, "Got unexpected hr %#lx.\n", hr);
+
+    hr = D3DGetBlobPart(test_blob_part, 0, D3D_BLOB_INPUT_SIGNATURE_BLOB, 0, NULL);
+    ok(hr == D3DERR_INVALIDCALL, "Got unexpected hr %#lx.\n", hr);
+
+    hr = D3DGetBlobPart(test_blob_part, test_blob_part[6], D3D_BLOB_INPUT_SIGNATURE_BLOB, 1, &blob);
+    ok(hr == D3DERR_INVALIDCALL, "Got unexpected hr %#lx.\n", hr);
+    ok(blob2 == blob, "D3DGetBlobPart failed got %p, expected %p\n", blob, blob2);
+
+    hr = D3DGetBlobPart(test_blob_part, test_blob_part[6], 0xffffffff, 0, &blob);
+    ok(hr == D3DERR_INVALIDCALL, "Got unexpected hr %#lx.\n", hr);
     ok(blob2 == blob, "D3DGetBlobPart failed got %p, expected %p\n", blob, blob2);
 
     refcount = ID3D10Blob_Release(blob2);
-    ok(!refcount, "ID3DBlob has %u references left\n", refcount);
+    ok(!refcount, "ID3DBlob has %lu references left.\n", refcount);
 
     /* D3D_BLOB_INPUT_SIGNATURE_BLOB */
-    hr = pD3DGetBlobPart(test_blob_part, test_blob_part[6], D3D_BLOB_INPUT_SIGNATURE_BLOB, 0, &blob);
-    ok(hr == S_OK, "D3DGetBlobPart failed, got %x, expected %x\n", hr, S_OK);
+    hr = D3DGetBlobPart(test_blob_part, test_blob_part[6], D3D_BLOB_INPUT_SIGNATURE_BLOB, 0, &blob);
+    ok(hr == S_OK, "Got unexpected hr %#lx.\n", hr);
 
     size = ID3D10Blob_GetBufferSize(blob);
-    ok(size == 124, "GetBufferSize failed, got %lu, expected %u\n", size, 124);
+    ok(size == 124, "Got unexpected size %Iu.\n", size);
 
     dword = ((DWORD*)ID3D10Blob_GetBufferPointer(blob));
-    ok(TAG_DXBC == *dword, "DXBC got %#x, expected %#x.\n", *dword, TAG_DXBC);
-    ok(TAG_ISGN == *(dword+9), "ISGN got %#x, expected %#x.\n", *(dword+9), TAG_ISGN);
+    ok(TAG_DXBC == *dword, "DXBC got %#lx, expected %#lx.\n", *dword, TAG_DXBC);
+    ok(TAG_ISGN == *(dword + 9), "ISGN got %#lx, expected %#lx.\n", *(dword + 9), TAG_ISGN);
 
     for (i = 0; i < ARRAY_SIZE(parts); i++)
     {
-        hr = pD3DGetBlobPart(dword, size, parts[i], 0, &blob2);
+        hr = D3DGetBlobPart(dword, size, parts[i], 0, &blob2);
 
         if (parts[i] == D3D_BLOB_INPUT_SIGNATURE_BLOB)
         {
-            ok(hr == S_OK, "D3DGetBlobPart failed, got %x, expected %x\n", hr, S_OK);
+            ok(hr == S_OK, "Got unexpected hr %#lx.\n", hr);
 
             refcount = ID3D10Blob_Release(blob2);
-            ok(!refcount, "ID3DBlob has %u references left\n", refcount);
+            ok(!refcount, "ID3DBlob has %lu references left.\n", refcount);
         }
         else
         {
-            ok(hr == E_FAIL, "D3DGetBlobPart failed, got %x, expected %x\n", hr, E_FAIL);
+            ok(hr == E_FAIL, "Got unexpected hr %#lx.\n", hr);
         }
     }
 
     refcount = ID3D10Blob_Release(blob);
-    ok(!refcount, "ID3DBlob has %u references left\n", refcount);
+    ok(!refcount, "ID3DBlob has %lu references left.\n", refcount);
 
     /* D3D_BLOB_OUTPUT_SIGNATURE_BLOB */
-    hr = pD3DGetBlobPart(test_blob_part, test_blob_part[6], D3D_BLOB_OUTPUT_SIGNATURE_BLOB, 0, &blob);
-    ok(hr == S_OK, "D3DGetBlobPart failed, got %x, expected %x\n", hr, S_OK);
+    hr = D3DGetBlobPart(test_blob_part, test_blob_part[6], D3D_BLOB_OUTPUT_SIGNATURE_BLOB, 0, &blob);
+    ok(hr == S_OK, "Got unexpected hr %#lx.\n", hr);
 
     size = ID3D10Blob_GetBufferSize(blob);
-    ok(size == 88, "GetBufferSize failed, got %lu, expected %u\n", size, 88);
+    ok(size == 88, "Got unexpected size %Iu.\n", size);
 
     dword = ((DWORD*)ID3D10Blob_GetBufferPointer(blob));
-    ok(TAG_DXBC == *dword, "DXBC got %#x, expected %#x.\n", *dword, TAG_DXBC);
-    ok(TAG_OSGN == *(dword+9), "OSGN got %#x, expected %#x.\n", *(dword+9), TAG_OSGN);
+    ok(TAG_DXBC == *dword, "DXBC got %#lx, expected %#lx.\n", *dword, TAG_DXBC);
+    ok(TAG_OSGN == *(dword + 9), "OSGN got %#lx, expected %#lx.\n", *(dword + 9), TAG_OSGN);
 
     for (i = 0; i < ARRAY_SIZE(parts); i++)
     {
-        hr = pD3DGetBlobPart(dword, size, parts[i], 0, &blob2);
+        hr = D3DGetBlobPart(dword, size, parts[i], 0, &blob2);
 
         if (parts[i] == D3D_BLOB_OUTPUT_SIGNATURE_BLOB)
         {
-            ok(hr == S_OK, "D3DGetBlobPart failed, got %x, expected %x\n", hr, S_OK);
+            ok(hr == S_OK, "Got unexpected hr %#lx.\n", hr);
 
             refcount = ID3D10Blob_Release(blob2);
-            ok(!refcount, "ID3DBlob has %u references left\n", refcount);
+            ok(!refcount, "ID3DBlob has %lu references left.\n", refcount);
         }
         else
         {
-            ok(hr == E_FAIL, "D3DGetBlobPart failed, got %x, expected %x\n", hr, E_FAIL);
+            ok(hr == E_FAIL, "Got unexpected hr %#lx.\n", hr);
         }
     }
 
     refcount = ID3D10Blob_Release(blob);
-    ok(!refcount, "ID3DBlob has %u references left\n", refcount);
+    ok(!refcount, "ID3DBlob has %lu references left.\n", refcount);
 
     /* D3D_BLOB_INPUT_AND_OUTPUT_SIGNATURE_BLOB */
-    hr = pD3DGetBlobPart(test_blob_part, test_blob_part[6], D3D_BLOB_INPUT_AND_OUTPUT_SIGNATURE_BLOB, 0, &blob);
-    ok(hr == S_OK, "D3DGetBlobPart failed, got %x, expected %x\n", hr, S_OK);
+    hr = D3DGetBlobPart(test_blob_part, test_blob_part[6], D3D_BLOB_INPUT_AND_OUTPUT_SIGNATURE_BLOB, 0, &blob);
+    ok(hr == S_OK, "Got unexpected hr %#lx.\n", hr);
 
     size = ID3D10Blob_GetBufferSize(blob);
-    ok(size == 180, "GetBufferSize failed, got %lu, expected %u\n", size, 180);
+    ok(size == 180, "Got unexpected size %Iu.\n", size);
 
     dword = ((DWORD*)ID3D10Blob_GetBufferPointer(blob));
-    ok(TAG_DXBC == *dword, "DXBC got %#x, expected %#x.\n", *dword, TAG_DXBC);
-    ok(TAG_ISGN == *(dword+10), "ISGN got %#x, expected %#x.\n", *(dword+10), TAG_ISGN);
-    ok(TAG_OSGN == *(dword+32), "OSGN got %#x, expected %#x.\n", *(dword+32), TAG_OSGN);
+    ok(TAG_DXBC == *dword, "DXBC got %#lx, expected %#lx.\n", *dword, TAG_DXBC);
+    ok(TAG_ISGN == *(dword + 10), "ISGN got %#lx, expected %#lx.\n", *(dword + 10), TAG_ISGN);
+    ok(TAG_OSGN == *(dword + 32), "OSGN got %#lx, expected %#lx.\n", *(dword + 32), TAG_OSGN);
 
     for (i = 0; i < ARRAY_SIZE(parts); i++)
     {
-        hr = pD3DGetBlobPart(dword, size, parts[i], 0, &blob2);
+        hr = D3DGetBlobPart(dword, size, parts[i], 0, &blob2);
 
         if (parts[i] == D3D_BLOB_INPUT_AND_OUTPUT_SIGNATURE_BLOB
                 || parts[i] == D3D_BLOB_INPUT_SIGNATURE_BLOB
                 || parts[i] == D3D_BLOB_OUTPUT_SIGNATURE_BLOB)
         {
-            ok(hr == S_OK, "D3DGetBlobPart failed, got %x, expected %x\n", hr, S_OK);
+            ok(hr == S_OK, "Got unexpected hr %#lx.\n", hr);
 
             refcount = ID3D10Blob_Release(blob2);
-            ok(!refcount, "ID3DBlob has %u references left\n", refcount);
+            ok(!refcount, "ID3DBlob has %lu references left.\n", refcount);
         }
         else
         {
-            ok(hr == E_FAIL, "D3DGetBlobPart failed, got %x, expected %x\n", hr, E_FAIL);
+            ok(hr == E_FAIL, "Got unexpected hr %#lx.\n", hr);
         }
     }
 
     refcount = ID3D10Blob_Release(blob);
-    ok(!refcount, "ID3DBlob has %u references left\n", refcount);
+    ok(!refcount, "ID3DBlob has %lu references left.\n", refcount);
 
     /* D3D_BLOB_PATCH_CONSTANT_SIGNATURE_BLOB */
-    hr = pD3DGetBlobPart(test_blob_part, test_blob_part[6], D3D_BLOB_PATCH_CONSTANT_SIGNATURE_BLOB, 0, &blob);
-    ok(hr == E_FAIL, "D3DGetBlobPart failed, got %x, expected %x\n", hr, E_FAIL);
+    hr = D3DGetBlobPart(test_blob_part, test_blob_part[6], D3D_BLOB_PATCH_CONSTANT_SIGNATURE_BLOB, 0, &blob);
+    ok(hr == E_FAIL, "Got unexpected hr %#lx.\n", hr);
 
     /* D3D_BLOB_ALL_SIGNATURE_BLOB */
-    hr = pD3DGetBlobPart(test_blob_part, test_blob_part[6], D3D_BLOB_ALL_SIGNATURE_BLOB, 0, &blob);
-    ok(hr == E_FAIL, "D3DGetBlobPart failed, got %x, expected %x\n", hr, E_FAIL);
+    hr = D3DGetBlobPart(test_blob_part, test_blob_part[6], D3D_BLOB_ALL_SIGNATURE_BLOB, 0, &blob);
+    ok(hr == E_FAIL, "Got unexpected hr %#lx.\n", hr);
 
     /* D3D_BLOB_DEBUG_INFO */
-    hr = pD3DGetBlobPart(test_blob_part, test_blob_part[6], D3D_BLOB_DEBUG_INFO, 0, &blob);
-    ok(hr == E_FAIL, "D3DGetBlobPart failed, got %x, expected %x\n", hr, E_FAIL);
+    hr = D3DGetBlobPart(test_blob_part, test_blob_part[6], D3D_BLOB_DEBUG_INFO, 0, &blob);
+    ok(hr == E_FAIL, "Got unexpected hr %#lx.\n", hr);
 
     /* D3D_BLOB_LEGACY_SHADER */
-    hr = pD3DGetBlobPart(test_blob_part, test_blob_part[6], D3D_BLOB_LEGACY_SHADER, 0, &blob);
-    ok(hr == S_OK, "D3DGetBlobPart failed, got %x, expected %x\n", hr, S_OK);
+    hr = D3DGetBlobPart(test_blob_part, test_blob_part[6], D3D_BLOB_LEGACY_SHADER, 0, &blob);
+    ok(hr == S_OK, "Got unexpected hr %#lx.\n", hr);
 
     size = ID3D10Blob_GetBufferSize(blob);
-    ok(size == 92, "GetBufferSize failed, got %lu, expected %u\n", size, 92);
+    ok(size == 92, "Got unexpected size %Iu.\n", size);
 
     dword = ((DWORD*)ID3D10Blob_GetBufferPointer(blob));
-    ok(test_blob_part[0] != *dword, "DXBC failed got %#x.\n", *dword);
+    ok(test_blob_part[0] != *dword, "DXBC failed got %#lx.\n", *dword);
 
     for (i = 0; i < ARRAY_SIZE(parts); i++)
     {
         /* There isn't a full DXBC blob returned for D3D_BLOB_LEGACY_SHADER */
-        hr = pD3DGetBlobPart(dword, size, parts[i], 0, &blob2);
-        ok(hr == E_FAIL, "D3DGetBlobPart failed, got %x, expected %x\n", hr, E_FAIL);
+        hr = D3DGetBlobPart(dword, size, parts[i], 0, &blob2);
+#if D3D_COMPILER_VERSION >= 46
+        todo_wine
+#endif
+        ok(hr == expected, "Got unexpected hr %#lx, expected %#lx.\n", hr, expected);
     }
 
     refcount = ID3D10Blob_Release(blob);
-    ok(!refcount, "ID3DBlob has %u references left\n", refcount);
+    ok(!refcount, "ID3DBlob has %lu references left.\n", refcount);
 
     /* D3D_BLOB_XNA_PREPASS_SHADER */
-    hr = pD3DGetBlobPart(test_blob_part, test_blob_part[6], D3D_BLOB_XNA_PREPASS_SHADER, 0, &blob);
-    ok(hr == S_OK, "D3DGetBlobPart failed, got %x, expected %x\n", hr, S_OK);
+    hr = D3DGetBlobPart(test_blob_part, test_blob_part[6], D3D_BLOB_XNA_PREPASS_SHADER, 0, &blob);
+    ok(hr == S_OK, "Got unexpected hr %#lx.\n", hr);
 
     size = ID3D10Blob_GetBufferSize(blob);
-    ok(size == 68, "GetBufferSize failed, got %lu, expected %u\n", size, 68);
+    ok(size == 68, "Got unexpected size %Iu.\n", size);
 
     dword = ((DWORD*)ID3D10Blob_GetBufferPointer(blob));
-    ok(test_blob_part[0] != *dword, "DXBC failed got %#x.\n", *dword);
+    ok(test_blob_part[0] != *dword, "DXBC failed got %#lx.\n", *dword);
 
     for (i = 0; i < ARRAY_SIZE(parts); i++)
     {
         /* There isn't a full DXBC blob returned for D3D_BLOB_XNA_PREPASS_SHADER */
-        hr = pD3DGetBlobPart(dword, size, parts[i], 0, &blob2);
-        ok(hr == E_FAIL, "D3DGetBlobPart failed, got %x, expected %x\n", hr, E_FAIL);
+        hr = D3DGetBlobPart(dword, size, parts[i], 0, &blob2);
+#if D3D_COMPILER_VERSION >= 46
+        todo_wine
+#endif
+        ok(hr == expected, "Got unexpected hr %#lx, expected %#lx.\n", hr, expected);
     }
 
     refcount = ID3D10Blob_Release(blob);
-    ok(!refcount, "ID3DBlob has %u references left\n", refcount);
+    ok(!refcount, "ID3DBlob has %lu references left.\n", refcount);
 
     /* D3D_BLOB_XNA_SHADER */
-    hr = pD3DGetBlobPart(test_blob_part, test_blob_part[6], D3D_BLOB_XNA_SHADER, 0, &blob);
-    ok(hr == S_OK, "D3DGetBlobPart failed, got %x, expected %x\n", hr, S_OK);
+    hr = D3DGetBlobPart(test_blob_part, test_blob_part[6], D3D_BLOB_XNA_SHADER, 0, &blob);
+    ok(hr == S_OK, "Got unexpected hr %#lx.\n", hr);
 
     size = ID3D10Blob_GetBufferSize(blob);
-    ok(size == 68, "GetBufferSize failed, got %lu, expected %u\n", size, 68);
+    ok(size == 68, "Got unexpected size %Iu.\n", size);
 
     dword = ((DWORD*)ID3D10Blob_GetBufferPointer(blob));
-    ok(test_blob_part[0] != *dword, "DXBC failed got %#x.\n", *dword);
+    ok(test_blob_part[0] != *dword, "DXBC failed got %#lx.\n", *dword);
 
     for (i = 0; i < ARRAY_SIZE(parts); i++)
     {
         /* There isn't a full DXBC blob returned for D3D_BLOB_XNA_SHADER */
-        hr = pD3DGetBlobPart(dword, size, parts[i], 0, &blob2);
-        ok(hr == E_FAIL, "D3DGetBlobPart failed, got %x, expected %x\n", hr, E_FAIL);
+        hr = D3DGetBlobPart(dword, size, parts[i], 0, &blob2);
+#if D3D_COMPILER_VERSION >= 46
+        todo_wine
+#endif
+        ok(hr == expected, "Got unexpected hr %#lx, expected %#lx.\n", hr, expected);
     }
 
     refcount = ID3D10Blob_Release(blob);
-    ok(!refcount, "ID3DBlob has %u references left\n", refcount);
+    ok(!refcount, "ID3DBlob has %lu references left.\n", refcount);
 
     /* check corner cases for D3DStripShader */
-    hr = pD3DStripShader(test_blob_part, test_blob_part[6], 0xffffffff, &blob);
-    ok(hr == S_OK, "D3DStripShader failed, got %x, expected %x\n", hr, S_OK);
+    hr = D3DStripShader(test_blob_part, test_blob_part[6], 0xffffffff, &blob);
+    ok(hr == S_OK, "Got unexpected hr %#lx.\n", hr);
 
     refcount = ID3D10Blob_Release(blob);
-    ok(!refcount, "ID3DBlob has %u references left\n", refcount);
+    ok(!refcount, "ID3DBlob has %lu references left.\n", refcount);
 
-    hr = pD3DStripShader(test_blob_part, test_blob_part[6], 0, &blob);
-    ok(hr == S_OK, "D3DStripShader failed, got %x, expected %x\n", hr, S_OK);
+    hr = D3DStripShader(test_blob_part, test_blob_part[6], 0, &blob);
+    ok(hr == S_OK, "Got unexpected hr %#lx.\n", hr);
 
     refcount = ID3D10Blob_Release(blob);
-    ok(!refcount, "ID3DBlob has %u references left\n", refcount);
+    ok(!refcount, "ID3DBlob has %lu references left.\n", refcount);
 
-    hr = pD3DStripShader(NULL, test_blob_part[6], 0, &blob);
-    ok(hr == D3DERR_INVALIDCALL, "D3DStripShader failed, got %x, expected %x\n", hr, D3DERR_INVALIDCALL);
+    hr = D3DStripShader(NULL, test_blob_part[6], 0, &blob);
+    ok(hr == D3DERR_INVALIDCALL, "Got unexpected hr %#lx.\n", hr);
 
-    hr = pD3DStripShader(test_blob_part, 2, 0, &blob);
-    ok(hr == D3DERR_INVALIDCALL, "D3DStripShader failed, got %x, expected %x\n", hr, D3DERR_INVALIDCALL);
+    hr = D3DStripShader(test_blob_part, 7 * sizeof(DWORD), 0, &blob);
+    ok(hr == D3DERR_INVALIDCALL, "Got unexpected hr %#lx.\n", hr);
 
-    hr = pD3DStripShader(test_blob_part, test_blob_part[6], 0, NULL);
-    ok(hr == E_FAIL, "D3DStripShader failed, got %x, expected %x\n", hr, E_FAIL);
+    hr = D3DStripShader(test_blob_part, 8 * sizeof(DWORD), 0, &blob);
+#if D3D_COMPILER_VERSION >= 46
+    todo_wine
+#endif
+    ok(hr == expected, "Got unexpected hr %#lx.\n", hr);
 
-    hr = pD3DStripShader(NULL, test_blob_part[6], 0, NULL);
-    ok(hr == E_FAIL, "D3DStripShader failed, got %x, expected %x\n", hr, E_FAIL);
+    hr = D3DStripShader(test_blob_part, test_blob_part[6], 0, NULL);
+    ok(hr == E_FAIL, "Got unexpected hr %#lx.\n", hr);
 
-    hr = pD3DStripShader(test_blob_part, 0, 0, NULL);
-    ok(hr == E_FAIL, "D3DStripShader failed, got %x, expected %x\n", hr, E_FAIL);
+    hr = D3DStripShader(NULL, test_blob_part[6], 0, NULL);
+    ok(hr == E_FAIL, "Got unexpected hr %#lx.\n", hr);
+
+    hr = D3DStripShader(test_blob_part, 0, 0, NULL);
+    ok(hr == E_FAIL, "Got unexpected hr %#lx.\n", hr);
 
     /* D3DCOMPILER_STRIP_DEBUG_INFO */
-    hr = pD3DStripShader(test_blob_part, test_blob_part[6], D3DCOMPILER_STRIP_DEBUG_INFO, &blob);
-    ok(hr == S_OK, "D3DStripShader failed, got %x, expected %x\n", hr, S_OK);
+    hr = D3DStripShader(test_blob_part, test_blob_part[6], D3DCOMPILER_STRIP_DEBUG_INFO, &blob);
+    ok(hr == S_OK, "Got unexpected hr %#lx.\n", hr);
 
     size = ID3D10Blob_GetBufferSize(blob);
-    ok(size == 736, "GetBufferSize failed, got %lu, expected %u\n", size, 736);
+    ok(size == 736, "Got unexpected size %Iu.\n", size);
 
     dword = ((DWORD*)ID3D10Blob_GetBufferPointer(blob));
-    ok(TAG_DXBC == *dword, "DXBC got %#x, expected %#x.\n", *dword, TAG_DXBC);
-    ok(TAG_XNAS == *(dword+16), "XNAS got %#x, expected %#x.\n", *(dword+16), TAG_XNAS);
-    ok(TAG_XNAP == *(dword+35), "XNAP got %#x, expected %#x.\n", *(dword+35), TAG_XNAP);
-    ok(TAG_Aon9 == *(dword+54), "Aon9 got %#x, expected %#x.\n", *(dword+54), TAG_Aon9);
-    ok(TAG_SHDR == *(dword+79), "SHDR got %#x, expected %#x.\n", *(dword+79), TAG_SHDR);
-    ok(TAG_STAT == *(dword+96), "STAT got %#x, expected %#x.\n", *(dword+96), TAG_STAT);
-    ok(TAG_RDEF == *(dword+127), "RDEF got %#x, expected %#x.\n", *(dword+127), TAG_RDEF);
-    ok(TAG_ISGN == *(dword+149), "ISGN got %#x, expected %#x.\n", *(dword+149), TAG_ISGN);
-    ok(TAG_OSGN == *(dword+171), "OSGN got %#x, expected %#x.\n", *(dword+171), TAG_OSGN);
+    ok(TAG_DXBC == *dword, "DXBC got %#lx, expected %#lx.\n", *dword, TAG_DXBC);
+    ok(TAG_XNAS == *(dword + 16), "XNAS got %#lx, expected %#lx.\n", *(dword + 16), TAG_XNAS);
+    ok(TAG_XNAP == *(dword + 35), "XNAP got %#lx, expected %#lx.\n", *(dword + 35), TAG_XNAP);
+    ok(TAG_Aon9 == *(dword + 54), "Aon9 got %#lx, expected %#lx.\n", *(dword + 54), TAG_Aon9);
+    ok(TAG_SHDR == *(dword + 79), "SHDR got %#lx, expected %#lx.\n", *(dword + 79), TAG_SHDR);
+    ok(TAG_STAT == *(dword + 96), "STAT got %#lx, expected %#lx.\n", *(dword + 96), TAG_STAT);
+    ok(TAG_RDEF == *(dword + 127), "RDEF got %#lx, expected %#lx.\n", *(dword + 127), TAG_RDEF);
+    ok(TAG_ISGN == *(dword + 149), "ISGN got %#lx, expected %#lx.\n", *(dword + 149), TAG_ISGN);
+    ok(TAG_OSGN == *(dword + 171), "OSGN got %#lx, expected %#lx.\n", *(dword + 171), TAG_OSGN);
 
-    hr = pD3DGetBlobPart(dword, size, D3D_BLOB_DEBUG_INFO, 0, &blob2);
-    ok(hr == E_FAIL, "D3DGetBlobPart failed, got %x, expected %x\n", hr, E_FAIL);
+    hr = D3DGetBlobPart(dword, size, D3D_BLOB_DEBUG_INFO, 0, &blob2);
+    ok(hr == E_FAIL, "Got unexpected hr %#lx.\n", hr);
 
     refcount = ID3D10Blob_Release(blob);
-    ok(!refcount, "ID3DBlob has %u references left\n", refcount);
+    ok(!refcount, "ID3DBlob has %lu references left.\n", refcount);
 
     /* D3DCOMPILER_STRIP_REFLECTION_DATA */
-    hr = pD3DStripShader(test_blob_part, test_blob_part[6], D3DCOMPILER_STRIP_REFLECTION_DATA, &blob);
-    ok(hr == S_OK, "D3DStripShader failed, got %x, expected %x\n", hr, S_OK);
+    hr = D3DStripShader(test_blob_part, test_blob_part[6], D3DCOMPILER_STRIP_REFLECTION_DATA, &blob);
+    ok(hr == S_OK, "Got unexpected hr %#lx.\n", hr);
 
     size = ID3D10Blob_GetBufferSize(blob);
-    ok(size == 516, "GetBufferSize failed, got %lu, expected %u\n", size, 516);
+    ok(size == 516, "Got unexpected size %Iu.\n", size);
 
     dword = ((DWORD*)ID3D10Blob_GetBufferPointer(blob));
-    ok(TAG_DXBC == *dword, "DXBC got %#x, expected %#x.\n", *dword, TAG_DXBC);
-    ok(TAG_XNAS == *(dword+14), "XNAS got %#x, expected %#x.\n", *(dword+14), TAG_XNAS);
-    ok(TAG_XNAP == *(dword+33), "XNAP got %#x, expected %#x.\n", *(dword+33), TAG_XNAP);
-    ok(TAG_Aon9 == *(dword+52), "Aon9 got %#x, expected %#x.\n", *(dword+52), TAG_Aon9);
-    ok(TAG_SHDR == *(dword+77), "SHDR got %#x, expected %#x.\n", *(dword+77), TAG_SHDR);
-    ok(TAG_ISGN == *(dword+94), "ISGN got %#x, expected %#x.\n", *(dword+94), TAG_ISGN);
-    ok(TAG_OSGN == *(dword+116), "OSGN got %#x, expected %#x.\n", *(dword+116), TAG_OSGN);
+    ok(TAG_DXBC == *dword, "DXBC got %#lx, expected %#lx.\n", *dword, TAG_DXBC);
+    ok(TAG_XNAS == *(dword + 14), "XNAS got %#lx, expected %#lx.\n", *(dword + 14), TAG_XNAS);
+    ok(TAG_XNAP == *(dword + 33), "XNAP got %#lx, expected %#lx.\n", *(dword + 33), TAG_XNAP);
+    ok(TAG_Aon9 == *(dword + 52), "Aon9 got %#lx, expected %#lx.\n", *(dword + 52), TAG_Aon9);
+    ok(TAG_SHDR == *(dword + 77), "SHDR got %#lx, expected %#lx.\n", *(dword + 77), TAG_SHDR);
+    ok(TAG_ISGN == *(dword + 94), "ISGN got %#lx, expected %#lx.\n", *(dword + 94), TAG_ISGN);
+    ok(TAG_OSGN == *(dword + 116), "OSGN got %#lx, expected %#lx.\n", *(dword + 116), TAG_OSGN);
 
     refcount = ID3D10Blob_Release(blob);
-    ok(!refcount, "ID3DBlob has %u references left\n", refcount);
+    ok(!refcount, "ID3DBlob has %lu references left.\n", refcount);
 }
 
 /*
@@ -594,59 +622,65 @@ static DWORD test_blob_part2[] = {
 static void test_get_blob_part2(void)
 {
     ID3DBlob *blob, *blob2;
-    HRESULT hr;
+    HRESULT hr, expected;
     ULONG refcount;
     DWORD *dword;
     SIZE_T size;
     UINT i;
 
+#if D3D_COMPILER_VERSION >= 46
+    expected = D3DERR_INVALIDCALL;
+#else
+    expected = E_FAIL;
+#endif
+
     /* D3D_BLOB_PATCH_CONSTANT_SIGNATURE_BLOB */
-    hr = pD3DGetBlobPart(test_blob_part2, test_blob_part2[6], D3D_BLOB_PATCH_CONSTANT_SIGNATURE_BLOB, 0, &blob);
-    ok(hr == S_OK, "D3DGetBlobPart failed, got %x, expected %x\n", hr, S_OK);
+    hr = D3DGetBlobPart(test_blob_part2, test_blob_part2[6], D3D_BLOB_PATCH_CONSTANT_SIGNATURE_BLOB, 0, &blob);
+    ok(hr == S_OK, "Got unexpected hr %#lx.\n", hr);
 
     size = ID3D10Blob_GetBufferSize(blob);
-    ok(size == 232, "GetBufferSize failed, got %lu, expected %u\n", size, 232);
+    ok(size == 232, "Got unexpected size %Iu.\n", size);
 
     dword = ((DWORD*)ID3D10Blob_GetBufferPointer(blob));
-    ok(TAG_DXBC == *dword, "DXBC got %#x, expected %#x.\n", *dword, TAG_DXBC);
-    ok(TAG_PCSG == *(dword+9), "PCSG got %#x, expected %#x.\n", *(dword+9), TAG_PCSG);
+    ok(TAG_DXBC == *dword, "DXBC got %#lx, expected %#lx.\n", *dword, TAG_DXBC);
+    ok(TAG_PCSG == *(dword + 9), "PCSG got %#lx, expected %#lx.\n", *(dword + 9), TAG_PCSG);
 
     for (i = 0; i < ARRAY_SIZE(parts); i++)
     {
-        hr = pD3DGetBlobPart(dword, size, parts[i], 0, &blob2);
+        hr = D3DGetBlobPart(dword, size, parts[i], 0, &blob2);
 
         if (parts[i] == D3D_BLOB_PATCH_CONSTANT_SIGNATURE_BLOB)
         {
-            ok(hr == S_OK, "D3DGetBlobPart failed, got %x, expected %x\n", hr, S_OK);
+            ok(hr == S_OK, "Got unexpected hr %#lx.\n", hr);
 
             refcount = ID3D10Blob_Release(blob2);
-            ok(!refcount, "ID3DBlob has %u references left\n", refcount);
+            ok(!refcount, "ID3DBlob has %lu references left.\n", refcount);
         }
         else
         {
-            ok(hr == E_FAIL, "D3DGetBlobPart failed, got %x, expected %x\n", hr, E_FAIL);
+            ok(hr == E_FAIL, "Got unexpected hr %#lx.\n", hr);
         }
     }
 
     refcount = ID3D10Blob_Release(blob);
-    ok(!refcount, "ID3DBlob has %u references left\n", refcount);
+    ok(!refcount, "ID3DBlob has %lu references left.\n", refcount);
 
     /* D3D_BLOB_ALL_SIGNATURE_BLOB */
-    hr = pD3DGetBlobPart(test_blob_part2, test_blob_part2[6], D3D_BLOB_ALL_SIGNATURE_BLOB, 0, &blob);
-    ok(hr == S_OK, "D3DGetBlobPart failed, got %x, expected %x\n", hr, S_OK);
+    hr = D3DGetBlobPart(test_blob_part2, test_blob_part2[6], D3D_BLOB_ALL_SIGNATURE_BLOB, 0, &blob);
+    ok(hr == S_OK, "Got unexpected hr %#lx.\n", hr);
 
     size = ID3D10Blob_GetBufferSize(blob);
-    ok(size == 344, "GetBufferSize failed, got %lu, expected %u\n", size, 344);
+    ok(size == 344, "Got unexpected size %Iu.\n", size);
 
     dword = ((DWORD*)ID3D10Blob_GetBufferPointer(blob));
-    ok(TAG_DXBC == *dword, "DXBC got %#x, expected %#x.\n", *dword, TAG_DXBC);
-    ok(TAG_ISGN == *(dword+11), "ISGN got %#x, expected %#x.\n", *(dword+11), TAG_ISGN);
-    ok(TAG_OSGN == *(dword+24), "OSGN got %#x, expected %#x.\n", *(dword+24), TAG_OSGN);
-    ok(TAG_PCSG == *(dword+37), "PCSG got %#x, expected %#x.\n", *(dword+37), TAG_PCSG);
+    ok(TAG_DXBC == *dword, "DXBC got %#lx, expected %#lx.\n", *dword, TAG_DXBC);
+    ok(TAG_ISGN == *(dword + 11), "ISGN got %#lx, expected %#lx.\n", *(dword + 11), TAG_ISGN);
+    ok(TAG_OSGN == *(dword + 24), "OSGN got %#lx, expected %#lx.\n", *(dword + 24), TAG_OSGN);
+    ok(TAG_PCSG == *(dword + 37), "PCSG got %#lx, expected %#lx.\n", *(dword + 37), TAG_PCSG);
 
     for (i = 0; i < ARRAY_SIZE(parts); i++)
     {
-        hr = pD3DGetBlobPart(dword, size, parts[i], 0, &blob2);
+        hr = D3DGetBlobPart(dword, size, parts[i], 0, &blob2);
 
         if (parts[i] == D3D_BLOB_ALL_SIGNATURE_BLOB
                 || parts[i] == D3D_BLOB_PATCH_CONSTANT_SIGNATURE_BLOB
@@ -654,116 +688,97 @@ static void test_get_blob_part2(void)
                 || parts[i] == D3D_BLOB_INPUT_SIGNATURE_BLOB
                 || parts[i] == D3D_BLOB_OUTPUT_SIGNATURE_BLOB)
         {
-            ok(hr == S_OK, "D3DGetBlobPart failed, got %x, expected %x\n", hr, S_OK);
+            ok(hr == S_OK, "Got unexpected hr %#lx.\n", hr);
 
             refcount = ID3D10Blob_Release(blob2);
-            ok(!refcount, "ID3DBlob has %u references left\n", refcount);
+            ok(!refcount, "ID3DBlob has %lu references left.\n", refcount);
         }
         else
         {
-            ok(hr == E_FAIL, "D3DGetBlobPart failed, got %x, expected %x\n", hr, E_FAIL);
+            ok(hr == E_FAIL, "Got unexpected hr %#lx.\n", hr);
         }
     }
 
     refcount = ID3D10Blob_Release(blob);
-    ok(!refcount, "ID3DBlob has %u references left\n", refcount);
+    ok(!refcount, "ID3DBlob has %lu references left.\n", refcount);
 
     /* D3D_BLOB_DEBUG_INFO */
-    hr = pD3DGetBlobPart(test_blob_part2, test_blob_part2[6], D3D_BLOB_DEBUG_INFO, 0, &blob);
-    ok(hr == S_OK, "D3DGetBlobPart failed, got %x, expected %x\n", hr, S_OK);
+    hr = D3DGetBlobPart(test_blob_part2, test_blob_part2[6], D3D_BLOB_DEBUG_INFO, 0, &blob);
+    ok(hr == S_OK, "Got unexpected hr %#lx.\n", hr);
 
     size = ID3D10Blob_GetBufferSize(blob);
-    ok(size == 4055, "GetBufferSize failed, got %lu, expected %u\n", size, 4055);
+    ok(size == 4055, "Got unexpected size %Iu.\n", size);
 
     dword = ((DWORD*)ID3D10Blob_GetBufferPointer(blob));
-    ok(TAG_DXBC != *dword, "DXBC failed got %#x.\n", *dword);
+    ok(TAG_DXBC != *dword, "DXBC failed got %#lx.\n", *dword);
 
     for (i = 0; i < ARRAY_SIZE(parts); i++)
     {
         /* There isn't a full DXBC blob returned for D3D_BLOB_DEBUG_INFO */
-        hr = pD3DGetBlobPart(dword, size, parts[i], 0, &blob2);
-        ok(hr == E_FAIL, "D3DGetBlobPart failed, got %x, expected %x\n", hr, E_FAIL);
+        hr = D3DGetBlobPart(dword, size, parts[i], 0, &blob2);
+#if D3D_COMPILER_VERSION >= 46
+        todo_wine
+#endif
+        ok(hr == expected, "Got unexpected hr %#lx, expected %#lx.\n", hr, expected);
     }
 
     refcount = ID3D10Blob_Release(blob);
-    ok(!refcount, "ID3DBlob has %u references left\n", refcount);
+    ok(!refcount, "ID3DBlob has %lu references left.\n", refcount);
 
     /* D3D_BLOB_LEGACY_SHADER */
-    hr = pD3DGetBlobPart(test_blob_part2, test_blob_part2[6], D3D_BLOB_LEGACY_SHADER, 0, &blob);
-    ok(hr == E_FAIL, "D3DGetBlobPart failed, got %x, expected %x\n", hr, E_FAIL);
+    hr = D3DGetBlobPart(test_blob_part2, test_blob_part2[6], D3D_BLOB_LEGACY_SHADER, 0, &blob);
+    ok(hr == E_FAIL, "Got unexpected hr %#lx.\n", hr);
 
     /* D3D_BLOB_XNA_PREPASS_SHADER */
-    hr = pD3DGetBlobPart(test_blob_part2, test_blob_part2[6], D3D_BLOB_XNA_PREPASS_SHADER, 0, &blob);
-    ok(hr == E_FAIL, "D3DGetBlobPart failed, got %x, expected %x\n", hr, E_FAIL);
+    hr = D3DGetBlobPart(test_blob_part2, test_blob_part2[6], D3D_BLOB_XNA_PREPASS_SHADER, 0, &blob);
+    ok(hr == E_FAIL, "Got unexpected hr %#lx.\n", hr);
 
     /* D3D_BLOB_XNA_SHADER */
-    hr = pD3DGetBlobPart(test_blob_part2, test_blob_part2[6], D3D_BLOB_XNA_SHADER, 0, &blob);
-    ok(hr == E_FAIL, "D3DGetBlobPart failed, got %x, expected %x\n", hr, E_FAIL);
+    hr = D3DGetBlobPart(test_blob_part2, test_blob_part2[6], D3D_BLOB_XNA_SHADER, 0, &blob);
+    ok(hr == E_FAIL, "Got unexpected hr %#lx.\n", hr);
 
     /* D3DCOMPILER_STRIP_DEBUG_INFO */
-    hr = pD3DStripShader(test_blob_part2, test_blob_part2[6], D3DCOMPILER_STRIP_DEBUG_INFO, &blob);
-    ok(hr == S_OK, "D3DStripShader failed, got %x, expected %x\n", hr, S_OK);
+    hr = D3DStripShader(test_blob_part2, test_blob_part2[6], D3DCOMPILER_STRIP_DEBUG_INFO, &blob);
+    ok(hr == S_OK, "Got unexpected hr %#lx.\n", hr);
 
     size = ID3D10Blob_GetBufferSize(blob);
-    ok(size == 952, "GetBufferSize failed, got %lu, expected %u\n", size, 952);
+    ok(size == 952, "Got unexpected size %Iu.\n", size);
 
     dword = ((DWORD*)ID3D10Blob_GetBufferPointer(blob));
-    ok(TAG_DXBC == *dword, "DXBC got %#x, expected %#x.\n", *dword, TAG_DXBC);
-    ok(TAG_RDEF == *(dword+14), "RDEF got %#x, expected %#x.\n", *(dword+14), TAG_RDEF);
-    ok(TAG_ISGN == *(dword+44), "ISGN got %#x, expected %#x.\n", *(dword+44), TAG_ISGN);
-    ok(TAG_OSGN == *(dword+57), "OSGN got %#x, expected %#x.\n", *(dword+57), TAG_OSGN);
-    ok(TAG_PCSG == *(dword+70), "PCSG got %#x, expected %#x.\n", *(dword+70), TAG_PCSG);
-    ok(TAG_SHEX == *(dword+119), "SHEX got %#x, expected %#x.\n", *(dword+119), TAG_SHEX);
-    ok(TAG_STAT == *(dword+199), "STAT got %#x, expected %#x.\n", *(dword+199), TAG_STAT);
+    ok(TAG_DXBC == *dword, "DXBC got %#lx, expected %#lx.\n", *dword, TAG_DXBC);
+    ok(TAG_RDEF == *(dword + 14), "RDEF got %#lx, expected %#lx.\n", *(dword + 14), TAG_RDEF);
+    ok(TAG_ISGN == *(dword + 44), "ISGN got %#lx, expected %#lx.\n", *(dword + 44), TAG_ISGN);
+    ok(TAG_OSGN == *(dword + 57), "OSGN got %#lx, expected %#lx.\n", *(dword + 57), TAG_OSGN);
+    ok(TAG_PCSG == *(dword + 70), "PCSG got %#lx, expected %#lx.\n", *(dword + 70), TAG_PCSG);
+    ok(TAG_SHEX == *(dword + 119), "SHEX got %#lx, expected %#lx.\n", *(dword + 119), TAG_SHEX);
+    ok(TAG_STAT == *(dword + 199), "STAT got %#lx, expected %#lx.\n", *(dword + 199), TAG_STAT);
 
-    hr = pD3DGetBlobPart(dword, size, D3D_BLOB_DEBUG_INFO, 0, &blob2);
-    ok(hr == E_FAIL, "D3DGetBlobPart failed, got %x, expected %x\n", hr, E_FAIL);
+    hr = D3DGetBlobPart(dword, size, D3D_BLOB_DEBUG_INFO, 0, &blob2);
+    ok(hr == E_FAIL, "Got unexpected hr %#lx.\n", hr);
 
     refcount = ID3D10Blob_Release(blob);
-    ok(!refcount, "ID3DBlob has %u references left\n", refcount);
+    ok(!refcount, "ID3DBlob has %lu references left.\n", refcount);
 
     /* D3DCOMPILER_STRIP_REFLECTION_DATA */
-    hr = pD3DStripShader(test_blob_part2, test_blob_part2[6], D3DCOMPILER_STRIP_REFLECTION_DATA, &blob);
-    ok(hr == S_OK, "D3DStripShader failed, got %x, expected %x\n", hr, S_OK);
+    hr = D3DStripShader(test_blob_part2, test_blob_part2[6], D3DCOMPILER_STRIP_REFLECTION_DATA, &blob);
+    ok(hr == S_OK, "Got unexpected hr %#lx.\n", hr);
 
     size = ID3D10Blob_GetBufferSize(blob);
-    ok(size == 4735, "GetBufferSize failed, got %lu, expected %u\n", size, 4735);
+    ok(size == 4735, "Got unexpected size %Iu.\n", size);
 
     dword = ((DWORD*)ID3D10Blob_GetBufferPointer(blob));
-    ok(TAG_DXBC == *dword, "DXBC got %#x, expected %#x.\n", *dword, TAG_DXBC);
-    ok(TAG_ISGN == *(dword+13), "ISGN got %#x, expected %#x.\n", *(dword+13), TAG_ISGN);
-    ok(TAG_OSGN == *(dword+26), "OSGN got %#x, expected %#x.\n", *(dword+26), TAG_OSGN);
-    ok(TAG_PCSG == *(dword+39), "PCSG got %#x, expected %#x.\n", *(dword+39), TAG_PCSG);
-    ok(TAG_SHEX == *(dword+88), "SHEX got %#x, expected %#x.\n", *(dword+88), TAG_SHEX);
-    ok(TAG_SDBG == *(dword+168), "SDBG got %#x, expected %#x.\n", *(dword+168), TAG_SDBG);
+    ok(TAG_DXBC == *dword, "DXBC got %#lx, expected %#lx.\n", *dword, TAG_DXBC);
+    ok(TAG_ISGN == *(dword + 13), "ISGN got %#lx, expected %#lx.\n", *(dword + 13), TAG_ISGN);
+    ok(TAG_OSGN == *(dword + 26), "OSGN got %#lx, expected %#lx.\n", *(dword + 26), TAG_OSGN);
+    ok(TAG_PCSG == *(dword + 39), "PCSG got %#lx, expected %#lx.\n", *(dword + 39), TAG_PCSG);
+    ok(TAG_SHEX == *(dword + 88), "SHEX got %#lx, expected %#lx.\n", *(dword + 88), TAG_SHEX);
+    ok(TAG_SDBG == *(dword + 168), "SDBG got %#lx, expected %#lx.\n", *(dword + 168), TAG_SDBG);
 
     refcount = ID3D10Blob_Release(blob);
-    ok(!refcount, "ID3DBlob has %u references left\n", refcount);
+    ok(!refcount, "ID3DBlob has %lu references left.\n", refcount);
 }
 
-static BOOL load_d3dcompiler_43(void)
-{
-    HMODULE module;
-
-    if (!(module = LoadLibraryA("d3dcompiler_43.dll"))) return FALSE;
-
-    pD3DCreateBlob = (void*)GetProcAddress(module, "D3DCreateBlob");
-    pD3DGetBlobPart = (void*)GetProcAddress(module, "D3DGetBlobPart");
-    pD3DStripShader = (void*)GetProcAddress(module, "D3DStripShader");
-    return TRUE;
-}
-
-static BOOL load_d3dcompiler_47(void)
-{
-    HMODULE module;
-
-    if (!(module = LoadLibraryA("d3dcompiler_47.dll")))
-        return FALSE;
-
-    pD3DReadFileToBlob = (void *)GetProcAddress(module, "D3DReadFileToBlob");
-    return TRUE;
-}
-
+#if D3D_COMPILER_VERSION >= 46
 static BOOL create_file(WCHAR *filename, const DWORD *data, DWORD data_size)
 {
     static WCHAR temp_dir[MAX_PATH];
@@ -821,17 +836,17 @@ static void test_D3DReadFileToBlob(void)
     DWORD *data;
     HRESULT hr;
 
-    hr = pD3DReadFileToBlob(filename, NULL);
-    ok(hr == HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND), "Got unexpected hr %#x.\n", hr);
+    hr = D3DReadFileToBlob(filename, NULL);
+    ok(hr == HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND), "Got unexpected hr %#lx.\n", hr);
 
-    hr = pD3DReadFileToBlob(filename, &blob);
-    ok(hr == HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND), "Got unexpected hr %#x.\n", hr);
+    hr = D3DReadFileToBlob(filename, &blob);
+    ok(hr == HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND), "Got unexpected hr %#lx.\n", hr);
 
     if (0)
     {
         /* Crashes on Windows. */
         create_file(filename, test_cso_data, ARRAY_SIZE(test_cso_data));
-        pD3DReadFileToBlob(filename, NULL);
+        D3DReadFileToBlob(filename, NULL);
         DeleteFileW(filename);
     }
 
@@ -840,8 +855,8 @@ static void test_D3DReadFileToBlob(void)
         win_skip("File creation failed.\n");
         return;
     }
-    hr = pD3DReadFileToBlob(filename, &blob);
-    ok(hr == S_OK, "Got unexpected hr %#x.\n", hr);
+    hr = D3DReadFileToBlob(filename, &blob);
+    ok(hr == S_OK, "Got unexpected hr %#lx.\n", hr);
     data_size = ID3D10Blob_GetBufferSize(blob);
     ok(!data_size, "Got unexpected data size.\n");
     DeleteFileW(filename);
@@ -852,8 +867,8 @@ static void test_D3DReadFileToBlob(void)
         win_skip("File creation failed.\n");
         return;
     }
-    hr = pD3DReadFileToBlob(filename, &blob);
-    ok(hr == S_OK, "Got unexpected hr %#x.\n", hr);
+    hr = D3DReadFileToBlob(filename, &blob);
+    ok(hr == S_OK, "Got unexpected hr %#lx.\n", hr);
     data_size = ID3D10Blob_GetBufferSize(blob);
     ok(data_size == ARRAY_SIZE(test_cso_data), "Got unexpected data size.\n");
     data = ID3D10Blob_GetBufferPointer(blob);
@@ -862,25 +877,48 @@ static void test_D3DReadFileToBlob(void)
     ID3D10Blob_Release(blob);
 }
 
+static void test_D3DWriteBlobToFile(void)
+{
+    WCHAR temp_dir[MAX_PATH], filename[MAX_PATH];
+    ID3DBlob *blob;
+    HRESULT hr;
+
+    GetTempPathW(ARRAY_SIZE(temp_dir), temp_dir);
+    GetTempFileNameW(temp_dir, NULL, 0, filename);
+
+    hr = D3DCreateBlob(16, &blob);
+    ok(hr == S_OK, "Got unexpected hr %#lx.\n", hr);
+
+    hr = D3DWriteBlobToFile(blob, filename, FALSE);
+    ok(hr == HRESULT_FROM_WIN32(ERROR_FILE_EXISTS), "Got unexpected hr %#lx.\n", hr);
+
+    hr = D3DWriteBlobToFile(blob, filename, TRUE);
+    ok(hr == S_OK, "Got unexpected hr %#lx.\n", hr);
+
+    DeleteFileW(filename);
+
+    hr = D3DWriteBlobToFile(blob, filename, FALSE);
+    ok(hr == S_OK, "Got unexpected hr %#lx.\n", hr);
+
+    hr = D3DWriteBlobToFile(blob, filename, FALSE);
+    ok(hr == HRESULT_FROM_WIN32(ERROR_FILE_EXISTS), "Got unexpected hr %#lx.\n", hr);
+
+    DeleteFileW(filename);
+
+    ID3D10Blob_Release(blob);
+}
+#endif
+#endif
+
 START_TEST(blob)
 {
-    if (load_d3dcompiler_43())
-    {
-        test_create_blob();
-        test_get_blob_part();
-        test_get_blob_part2();
-    }
-    else
-    {
-        win_skip("Could not load d3dcompiler_43.dll\n");
-    }
-
-    if (load_d3dcompiler_47())
-    {
-        test_D3DReadFileToBlob();
-    }
-    else
-    {
-        win_skip("Could not load d3dcompiler_47.dll.\n");
-    }
+#if D3D_COMPILER_VERSION >= 43
+    test_create_blob();
+    test_get_blob_part();
+    test_get_blob_part2();
+#if D3D_COMPILER_VERSION >= 46
+    test_D3DReadFileToBlob();
+    test_D3DWriteBlobToFile();
+#endif
+#endif
 }

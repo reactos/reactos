@@ -29,7 +29,7 @@
 
 #include "wine/test.h"
 
-#define ok_ole_success(hr, func) ok(hr == S_OK, func " failed with error 0x%08x\n", hr)
+#define ok_ole_success(hr, func) ok(hr == S_OK, func " failed with error %#08lx\n", hr)
 
 static BOOL register_testentry(void)
 {
@@ -66,26 +66,10 @@ static void do_enum(void)
 	GUID wanted_guid;
 	ULONG fetched = -1;
 
-        static const WCHAR szCatID[] = {
-			'{',
-			'd','e','a','d','c','a','f','e',
-			'-','0','0','0','0','-','0','0','0','0',
-			'-','0','0','0','0',
-			'-','0','0','0','0','0','0','0','0','0','0','0','0',
-			'}',0};
-        static const WCHAR szGuid[] = {
-			'{',
-			'd','e','a','d','c','a','f','e','-',
-			'b','e','e','d','-',
-			'b','e','a','d','-',
-			'd','e','a','d','-',
-			'c','a','f','e','b','e','a','d','d','e','a','d',
-			'}',0};
-
 	IEnumCLSID *pIEnum =(IEnumCLSID*)0xdeadcafe;
 
-	CLSIDFromString(szCatID,the_cat);
-	CLSIDFromString(szGuid,&wanted_guid);
+	CLSIDFromString(L"{deadcafe-0000-0000-0000-000000000000}", the_cat);
+	CLSIDFromString(L"{deadcafe-beed-bead-dead-cafebeaddead}", &wanted_guid);
 
 	OleInitialize(NULL);
 
@@ -104,8 +88,8 @@ static void do_enum(void)
 	ok_ole_success(hr,"ICatInformation_EnumClassesOfCategories");
 
 	hr = IEnumGUID_Next(pIEnum,1,the_guid, &fetched);
-	ok (hr == S_FALSE,"Expected S_FALSE, got 0x%08x\n", hr);
-	ok (fetched == 0,"Fetched wrong number of guids %u\n",fetched);
+	ok (hr == S_FALSE,"Expected S_FALSE, got 0x%08lx\n", hr);
+	ok (fetched == 0,"Fetched wrong number of guids %lu\n",fetched);
 	IEnumGUID_Release(pIEnum);
 
 	if (register_testentry())
@@ -114,8 +98,8 @@ static void do_enum(void)
             ok_ole_success(hr,"ICatInformation_EnumClassesOfCategories");
 
             hr = IEnumGUID_Next(pIEnum,1,the_guid, &fetched);
-            ok (hr == S_OK,"Expected S_OK, got 0x%08x\n", hr);
-            ok (fetched == 1,"Fetched wrong number of guids %u\n",fetched);
+            ok (hr == S_OK,"Expected S_OK, got 0x%08lx\n", hr);
+            ok (fetched == 1,"Fetched wrong number of guids %lu\n",fetched);
             ok (IsEqualGUID(the_guid,&wanted_guid),"Guids do not match\n");
 
             IEnumGUID_Release(pIEnum);

@@ -26,7 +26,7 @@
 
 #include "windef.h"
 #include "winbase.h"
-#include "wine/winternl.h"
+#include "winternl.h"
 #include "winuser.h"
 #include "winnls.h"
 #include "htmlhelp.h"
@@ -40,7 +40,6 @@
 #endif
 
 #include "wine/itss.h"
-#include "wine/heap.h"
 #include "wine/list.h"
 
 #define WB_GOBACK     0
@@ -206,67 +205,47 @@ typedef struct {
     DWORD current_tab;
 } HHInfo;
 
-BOOL InitWebBrowser(HHInfo*,HWND) DECLSPEC_HIDDEN;
-void ReleaseWebBrowser(HHInfo*) DECLSPEC_HIDDEN;
-void ResizeWebBrowser(HHInfo*,DWORD,DWORD) DECLSPEC_HIDDEN;
-void DoPageAction(WebBrowserContainer*,DWORD) DECLSPEC_HIDDEN;
+BOOL InitWebBrowser(HHInfo*,HWND);
+void ReleaseWebBrowser(HHInfo*);
+void ResizeWebBrowser(HHInfo*,DWORD,DWORD);
+void DoPageAction(WebBrowserContainer*,DWORD);
 
-void InitContent(HHInfo*) DECLSPEC_HIDDEN;
-void ReleaseContent(HHInfo*) DECLSPEC_HIDDEN;
-void ActivateContentTopic(HWND,LPCWSTR,ContentItem *) DECLSPEC_HIDDEN;
+void InitContent(HHInfo*);
+void ReleaseContent(HHInfo*);
+void ActivateContentTopic(HWND,LPCWSTR,ContentItem *);
 
-void InitIndex(HHInfo*) DECLSPEC_HIDDEN;
-void ReleaseIndex(HHInfo*) DECLSPEC_HIDDEN;
+void InitIndex(HHInfo*);
+void ReleaseIndex(HHInfo*);
 
-CHMInfo *OpenCHM(LPCWSTR szFile) DECLSPEC_HIDDEN;
-BOOL LoadWinTypeFromCHM(HHInfo *info) DECLSPEC_HIDDEN;
-CHMInfo *CloseCHM(CHMInfo *pCHMInfo) DECLSPEC_HIDDEN;
-void SetChmPath(ChmPath*,LPCWSTR,LPCWSTR) DECLSPEC_HIDDEN;
-IStream *GetChmStream(CHMInfo*,LPCWSTR,ChmPath*) DECLSPEC_HIDDEN;
-LPWSTR FindContextAlias(CHMInfo*,DWORD) DECLSPEC_HIDDEN;
-WCHAR *GetDocumentTitle(CHMInfo*,LPCWSTR) DECLSPEC_HIDDEN;
+CHMInfo *OpenCHM(LPCWSTR szFile);
+BOOL LoadWinTypeFromCHM(HHInfo *info);
+CHMInfo *CloseCHM(CHMInfo *pCHMInfo);
+void SetChmPath(ChmPath*,LPCWSTR,LPCWSTR);
+IStream *GetChmStream(CHMInfo*,LPCWSTR,ChmPath*);
+LPWSTR FindContextAlias(CHMInfo*,DWORD);
+WCHAR *GetDocumentTitle(CHMInfo*,LPCWSTR);
 
-extern struct list window_list DECLSPEC_HIDDEN;
-HHInfo *CreateHelpViewer(HHInfo*,LPCWSTR,HWND) DECLSPEC_HIDDEN;
-void ReleaseHelpViewer(HHInfo*) DECLSPEC_HIDDEN;
+extern struct list window_list;
+HHInfo *CreateHelpViewer(HHInfo*,LPCWSTR,HWND);
+void ReleaseHelpViewer(HHInfo*);
 #ifdef __REACTOS__
-LPWSTR HH_LoadString(DWORD dwID) DECLSPEC_HIDDEN;
+LPWSTR HH_LoadString(DWORD dwID);
 #endif
-BOOL NavigateToUrl(HHInfo*,LPCWSTR) DECLSPEC_HIDDEN;
-BOOL NavigateToChm(HHInfo*,LPCWSTR,LPCWSTR) DECLSPEC_HIDDEN;
-void MergeChmProperties(HH_WINTYPEW*,HHInfo*,BOOL) DECLSPEC_HIDDEN;
-void UpdateHelpWindow(HHInfo *info) DECLSPEC_HIDDEN;
+BOOL NavigateToUrl(HHInfo*,LPCWSTR);
+BOOL NavigateToChm(HHInfo*,LPCWSTR,LPCWSTR);
+void MergeChmProperties(HH_WINTYPEW*,HHInfo*,BOOL);
+void UpdateHelpWindow(HHInfo *info);
 
-void InitSearch(HHInfo *info, const char *needle) DECLSPEC_HIDDEN;
-void ReleaseSearch(HHInfo *info) DECLSPEC_HIDDEN;
+void InitSearch(HHInfo *info, const char *needle);
+void ReleaseSearch(HHInfo *info);
 
-LPCWSTR skip_schema(LPCWSTR url) DECLSPEC_HIDDEN;
-void wintype_stringsA_free(struct wintype_stringsA *stringsA) DECLSPEC_HIDDEN;
-void wintype_stringsW_free(struct wintype_stringsW *stringsW) DECLSPEC_HIDDEN;
-WCHAR *decode_html(const char *html_fragment, int html_fragment_len, UINT code_page) DECLSPEC_HIDDEN;
-HHInfo *find_window(const WCHAR *window) DECLSPEC_HIDDEN;
+LPCWSTR skip_schema(LPCWSTR url);
+void wintype_stringsA_free(struct wintype_stringsA *stringsA);
+void wintype_stringsW_free(struct wintype_stringsW *stringsW);
+WCHAR *decode_html(const char *html_fragment, int html_fragment_len, UINT code_page);
+HHInfo *find_window(const WCHAR *window);
 
 /* memory allocation functions */
-
-static inline void * __WINE_ALLOC_SIZE(2) heap_realloc_zero(void *mem, size_t len)
-{
-    return HeapReAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, mem, len);
-}
-
-static inline LPWSTR strdupW(LPCWSTR str)
-{
-    LPWSTR ret;
-    int size;
-
-    if(!str)
-        return NULL;
-
-    size = (lstrlenW(str)+1)*sizeof(WCHAR);
-    ret = heap_alloc(size);
-    memcpy(ret, str, size);
-
-    return ret;
-}
 
 static inline LPWSTR strdupnAtoW(LPCSTR str, LONG lenA)
 {
@@ -284,7 +263,7 @@ static inline LPWSTR strdupnAtoW(LPCSTR str, LONG lenA)
     }
 
     len = MultiByteToWideChar(CP_ACP, 0, str, lenA, NULL, 0)+1; /* +1 for null pad */
-    ret = heap_alloc(len*sizeof(WCHAR));
+    ret = malloc(len * sizeof(WCHAR));
     MultiByteToWideChar(CP_ACP, 0, str, lenA, ret, len);
     ret[len-1] = 0;
 
@@ -305,13 +284,13 @@ static inline LPSTR strdupWtoA(LPCWSTR str)
         return NULL;
 
     len = WideCharToMultiByte(CP_ACP, 0, str, -1, NULL, 0, NULL, NULL);
-    ret = heap_alloc(len);
+    ret = malloc(len);
     WideCharToMultiByte(CP_ACP, 0, str, -1, ret, len, NULL, NULL);
     return ret;
 }
 
 
-extern HINSTANCE hhctrl_hinstance DECLSPEC_HIDDEN;
-extern BOOL hh_process DECLSPEC_HIDDEN;
+extern HINSTANCE hhctrl_hinstance;
+extern BOOL hh_process;
 
 #endif

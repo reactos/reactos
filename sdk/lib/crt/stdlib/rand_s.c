@@ -62,11 +62,8 @@ int CDECL rand_s(unsigned int *pval)
     return 0;
 }
 
-// Small hack: import stub to allow GCC's stdc++ to link
+// Small hack: import slot bound to the static definition, so the GCC and LLVM C++ runtimes can link
 #if defined(__GNUC__) && (DLL_EXPORT_VERSION < 0x600)
-#ifdef WIN64
-const void* __imp_rand_s = rand_s;
-#else
-const void* _imp_rand_s = rand_s;
-#endif
+#include <imp_alias.h>
+IMP_ALIAS_CDECL(rand_s);
 #endif

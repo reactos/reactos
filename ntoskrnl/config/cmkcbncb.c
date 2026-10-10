@@ -712,7 +712,7 @@ CmpCreateKeyControlBlock(IN PHHIVE Hive,
     Kcb = CmpAllocateKeyControlBlock();
     if (!Kcb) return NULL;
 
-    /* Initailize the key list */
+    /* Initialize the key list */
     InitializeKCBKeyBodyList(Kcb);
 
     /* Set it up */

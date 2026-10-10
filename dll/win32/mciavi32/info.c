@@ -39,9 +39,9 @@ static DWORD MCIAVI_ConvertFrameToTimeFormat(WINE_MCIAVI* wma, DWORD val, LPDWOR
 	ret = val;
 	break;
     default:
-	WARN("Bad time format %u!\n", wma->dwMciTimeFormat);
+	WARN("Bad time format %lu!\n", wma->dwMciTimeFormat);
     }
-    TRACE("val=%u=0x%08x [tf=%u] => ret=%u\n", val, val, wma->dwMciTimeFormat, ret);
+    TRACE("val=%lu=0x%08lx [tf=%lu] => ret=%lu\n", val, val, wma->dwMciTimeFormat, ret);
     *lpRet = 0;
     return ret;
 }
@@ -61,9 +61,9 @@ DWORD 	MCIAVI_ConvertTimeFormatToFrame(WINE_MCIAVI* wma, DWORD val)
 	ret = val;
 	break;
     default:
-	WARN("Bad time format %u!\n", wma->dwMciTimeFormat);
+	WARN("Bad time format %lu!\n", wma->dwMciTimeFormat);
     }
-    TRACE("val=%u=0x%08x [tf=%u] => ret=%u\n", val, val, wma->dwMciTimeFormat, ret);
+    TRACE("val=%lu=0x%08lx [tf=%lu] => ret=%lu\n", val, val, wma->dwMciTimeFormat, ret);
     return ret;
 }
 
@@ -75,7 +75,7 @@ DWORD	MCIAVI_mciGetDevCaps(UINT wDevID, DWORD dwFlags,  LPMCI_GETDEVCAPS_PARMS l
     WINE_MCIAVI*	wma = MCIAVI_mciGetOpenDev(wDevID);
     DWORD		ret = MCIERR_UNSUPPORTED_FUNCTION;
 
-    TRACE("(%04x, %08X, %p)\n", wDevID, dwFlags, lpParms);
+    TRACE("(%04x, %08lX, %p)\n", wDevID, dwFlags, lpParms);
 
     if (lpParms == NULL) 	return MCIERR_NULL_PARAMETER_BLOCK;
     if (wma == NULL)		return MCIERR_INVALID_DEVICE_ID;
@@ -173,7 +173,7 @@ DWORD	MCIAVI_mciGetDevCaps(UINT wDevID, DWORD dwFlags,  LPMCI_GETDEVCAPS_PARMS l
 	    break;
 	/* w2k does not know MAX_WINDOWS or MAX/MINIMUM_RATE */
 	default:
-            FIXME("Unknown capability (%08x) !\n", lpParms->dwItem);
+            FIXME("Unknown capability (%08lx) !\n", lpParms->dwItem);
             break;
 	}
     }
@@ -190,32 +190,29 @@ DWORD	MCIAVI_mciInfo(UINT wDevID, DWORD dwFlags, LPMCI_DGV_INFO_PARMSW lpParms)
     LPCWSTR		str = 0;
     WINE_MCIAVI*	wma = MCIAVI_mciGetOpenDev(wDevID);
     DWORD		ret = 0;
-    static const WCHAR wszAviPlayer[] = {'W','i','n','e','\'','s',' ','A','V','I',' ','p','l','a','y','e','r',0};
-    static const WCHAR wszVersion[] = {'1','.','1',0};
 
     if (lpParms == NULL || lpParms->lpstrReturn == NULL)
 	return MCIERR_NULL_PARAMETER_BLOCK;
     if (wma == NULL) return MCIERR_INVALID_DEVICE_ID;
     if (dwFlags & MCI_TEST)	return 0;
 
-    TRACE("buf=%p, len=%u\n", lpParms->lpstrReturn, lpParms->dwRetSize);
+    TRACE("buf=%p, len=%lu\n", lpParms->lpstrReturn, lpParms->dwRetSize);
 
     EnterCriticalSection(&wma->cs);
 
     if (dwFlags & MCI_INFO_PRODUCT)
-	str = wszAviPlayer;
+	str = L"Wine's AVI player";
     else if (dwFlags & MCI_INFO_VERSION)
-	str = wszVersion;
+	str = L"1.1";
     else if (dwFlags & MCI_INFO_FILE)
 	str = wma->lpFileName;
     else {
-	WARN("Don't know this info command (%u)\n", dwFlags);
+	WARN("Don't know this info command (%lu)\n", dwFlags);
 	ret = MCIERR_UNRECOGNIZED_COMMAND;
     }
     if (!ret) {
-	WCHAR zero = 0;
 	/* Only mciwave, mciseq and mcicda set dwRetSize (since NT). */
-	lstrcpynW(lpParms->lpstrReturn, str ? str : &zero, lpParms->dwRetSize);
+	lstrcpynW(lpParms->lpstrReturn, str ? str : L"", lpParms->dwRetSize);
     }
     LeaveCriticalSection(&wma->cs);
     return ret;
@@ -245,7 +242,7 @@ DWORD	MCIAVI_mciSet(UINT wDevID, DWORD dwFlags, LPMCI_DGV_SET_PARMS lpParms)
 	    wma->dwMciTimeFormat = MCI_FORMAT_FRAMES;
 	    break;
 	default:
-            WARN("Bad time format %u!\n", lpParms->dwTimeFormat);
+            WARN("Bad time format %lu!\n", lpParms->dwTimeFormat);
             LeaveCriticalSection(&wma->cs);
 	    return MCIERR_BAD_TIME_FORMAT;
 	}
@@ -287,7 +284,7 @@ DWORD	MCIAVI_mciSet(UINT wDevID, DWORD dwFlags, LPMCI_DGV_SET_PARMS lpParms)
 		break;
 	    default:
 		szAudio = " audio unknown";
-		WARN("Unknown audio channel %u\n", lpParms->dwAudio);
+		WARN("Unknown audio channel %lu\n", lpParms->dwAudio);
 		break;
 	    }
 	}
@@ -322,7 +319,7 @@ DWORD	MCIAVI_mciSet(UINT wDevID, DWORD dwFlags, LPMCI_DGV_SET_PARMS lpParms)
 		break;
 	    default:
 		szAudio = " audio unknown";
-		WARN("Unknown audio channel %u\n", lpParms->dwAudio);
+		WARN("Unknown audio channel %lu\n", lpParms->dwAudio);
 		break;
 	    }
 	}
@@ -345,12 +342,12 @@ DWORD	MCIAVI_mciSet(UINT wDevID, DWORD dwFlags, LPMCI_DGV_SET_PARMS lpParms)
 	case MCI_DGV_FF_MPEG: 	FIXME("Setting file format (%s) to 'MPEG'\n", str); 	break;
 	case MCI_DGV_FF_RDIB:	FIXME("Setting file format (%s) to 'RLE DIB'\n", str);	break;
 	case MCI_DGV_FF_RJPEG: 	FIXME("Setting file format (%s) to 'RJPEG'\n", str);	break;
-	default:		FIXME("Setting unknown file format (%s): %d\n", str, lpParms->dwFileFormat);
+	default:		FIXME("Setting unknown file format (%s): %ld\n", str, lpParms->dwFileFormat);
 	}
     }
 
     if (dwFlags & MCI_DGV_SET_SPEED) {
-	FIXME("Setting speed to %d\n", lpParms->dwSpeed);
+	FIXME("Setting speed to %ld\n", lpParms->dwSpeed);
     }
 
     LeaveCriticalSection(&wma->cs);
@@ -376,7 +373,7 @@ DWORD	MCIAVI_mciStatus(UINT wDevID, DWORD dwFlags, LPMCI_DGV_STATUS_PARMSW lpPar
 	switch (lpParms->dwItem) {
 	case MCI_STATUS_CURRENT_TRACK:
 	    lpParms->dwReturn = 1;
-	    TRACE("MCI_STATUS_CURRENT_TRACK => %lu\n", lpParms->dwReturn);
+	    TRACE("MCI_STATUS_CURRENT_TRACK => %Iu\n", lpParms->dwReturn);
 	    break;
 	case MCI_STATUS_LENGTH:
 	    if (!wma->hFile) {
@@ -386,7 +383,7 @@ DWORD	MCIAVI_mciStatus(UINT wDevID, DWORD dwFlags, LPMCI_DGV_STATUS_PARMSW lpPar
 	    }
 	    /* only one track in file is currently handled, so don't take care of MCI_TRACK flag */
 	    lpParms->dwReturn = MCIAVI_ConvertFrameToTimeFormat(wma, wma->mah.dwTotalFrames, &ret);
-	    TRACE("MCI_STATUS_LENGTH => %lu\n", lpParms->dwReturn);
+	    TRACE("MCI_STATUS_LENGTH => %Iu\n", lpParms->dwReturn);
 	    break;
 	case MCI_STATUS_MODE:
  	    lpParms->dwReturn = MAKEMCIRESOURCE(wma->dwStatus, wma->dwStatus);
@@ -400,7 +397,7 @@ DWORD	MCIAVI_mciStatus(UINT wDevID, DWORD dwFlags, LPMCI_DGV_STATUS_PARMSW lpPar
 	    break;
 	case MCI_STATUS_NUMBER_OF_TRACKS:
 	    lpParms->dwReturn = 1;
-	    TRACE("MCI_STATUS_NUMBER_OF_TRACKS => %lu\n", lpParms->dwReturn);
+	    TRACE("MCI_STATUS_NUMBER_OF_TRACKS => %Iu\n", lpParms->dwReturn);
 	    break;
 	case MCI_STATUS_POSITION:
 	    if (!wma->hFile) {
@@ -412,7 +409,7 @@ DWORD	MCIAVI_mciStatus(UINT wDevID, DWORD dwFlags, LPMCI_DGV_STATUS_PARMSW lpPar
 	    lpParms->dwReturn = MCIAVI_ConvertFrameToTimeFormat(wma,
 							     (dwFlags & MCI_STATUS_START) ? 0 : wma->dwCurrVideoFrame,
 							     &ret);
-	    TRACE("MCI_STATUS_POSITION %s => %lu\n",
+	    TRACE("MCI_STATUS_POSITION %s => %Iu\n",
 		  (dwFlags & MCI_STATUS_START) ? "start" : "current", lpParms->dwReturn);
 	    break;
 	case MCI_STATUS_READY:
@@ -461,11 +458,11 @@ DWORD	MCIAVI_mciStatus(UINT wDevID, DWORD dwFlags, LPMCI_DGV_STATUS_PARMSW lpPar
 #endif
 	case MCI_DGV_STATUS_BITSPERPEL:
 	    lpParms->dwReturn = wma->inbih->biBitCount;
-	    TRACE("MCI_DGV_STATUS_BITSPERPEL => %lu\n", lpParms->dwReturn);
+	    TRACE("MCI_DGV_STATUS_BITSPERPEL => %Iu\n", lpParms->dwReturn);
 	    break;
 	case MCI_DGV_STATUS_HPAL:
 	    lpParms->dwReturn = 0;
-	    TRACE("MCI_DGV_STATUS_HPAL => %lx\n", lpParms->dwReturn);
+	    TRACE("MCI_DGV_STATUS_HPAL => %Ix\n", lpParms->dwReturn);
 	    break;
 	case MCI_DGV_STATUS_HWND:
            lpParms->dwReturn = (DWORD_PTR)wma->hWndPaint;
@@ -491,12 +488,12 @@ DWORD	MCIAVI_mciStatus(UINT wDevID, DWORD dwFlags, LPMCI_DGV_STATUS_PARMSW lpPar
 	    break;
 	case MCI_DGV_STATUS_SPEED:
 	    lpParms->dwReturn = 1000;
-	    TRACE("MCI_DGV_STATUS_SPEED = %lu\n", lpParms->dwReturn);
+	    TRACE("MCI_DGV_STATUS_SPEED = %Iu\n", lpParms->dwReturn);
 	    break;
 	case MCI_DGV_STATUS_FRAME_RATE:
 	    /* FIXME: 1000 is a settable speed multiplier */
 	    lpParms->dwReturn = MulDiv(1000000,1000,wma->mah.dwMicroSecPerFrame);
-	    TRACE("MCI_DGV_STATUS_FRAME_RATE = %lu\n", lpParms->dwReturn);
+	    TRACE("MCI_DGV_STATUS_FRAME_RATE = %Iu\n", lpParms->dwReturn);
 	    break;
 	case MCI_DGV_STATUS_FORWARD:
 	    lpParms->dwReturn = MAKEMCIRESOURCE(TRUE, MCI_TRUE);
@@ -514,7 +511,7 @@ DWORD	MCIAVI_mciStatus(UINT wDevID, DWORD dwFlags, LPMCI_DGV_STATUS_PARMSW lpPar
 	    break;
 	case MCI_DGV_STATUS_AUDIO_STREAM:
 	   lpParms->dwReturn = wma->audio_stream_n;
-	   TRACE("MCI_DGV_STATUS_AUDIO_STREAM => %lu\n", lpParms->dwReturn);
+	   TRACE("MCI_DGV_STATUS_AUDIO_STREAM => %Iu\n", lpParms->dwReturn);
 	   break;
 #if 0
 	case MCI_DGV_STATUS_KEY_COLOR:
@@ -539,15 +536,15 @@ DWORD	MCIAVI_mciStatus(UINT wDevID, DWORD dwFlags, LPMCI_DGV_STATUS_PARMSW lpPar
 	case MCI_DGV_STATUS_VOLUME:
 #endif
 	default:
-            FIXME("Unknown command %08X !\n", lpParms->dwItem);
-            TRACE("(%04x, %08X, %p)\n", wDevID, dwFlags, lpParms);
+            FIXME("Unknown command %08lX !\n", lpParms->dwItem);
+            TRACE("(%04x, %08lX, %p)\n", wDevID, dwFlags, lpParms);
             LeaveCriticalSection(&wma->cs);
 	    return MCIERR_UNSUPPORTED_FUNCTION;
 	}
     }
 
     if (dwFlags & MCI_NOTIFY) {
-	TRACE("MCI_NOTIFY_SUCCESSFUL %08lX !\n", lpParms->dwCallback);
+	TRACE("MCI_NOTIFY_SUCCESSFUL %08IX !\n", lpParms->dwCallback);
 	mciDriverNotify(HWND_32(LOWORD(lpParms->dwCallback)),
                        wDevID, MCI_NOTIFY_SUCCESSFUL);
     }

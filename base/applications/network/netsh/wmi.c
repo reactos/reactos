@@ -24,12 +24,31 @@
 UINT  VersionInfoArchitecture;
 UINT  VersionInfoOsProductSuite;
 UINT  VersionInfoOsType;
-UINT  VersionInfoVersion;
+WCHAR VersionInfoVersion[MAX_PATH];
 WCHAR VersionInfoBuildNumber[MAX_PATH];
 WCHAR VersionInfoServicePackMajorVersion[MAX_PATH];
 WCHAR VersionInfoServicePackMinorVersion[MAX_PATH];
 
 /* FUNCTIONS ******************************************************************/
+
+BOOL
+CheckOsVersion(
+    _In_ PNS_OSVERSIONCHECK pfnOsVersionCheck)
+{
+    DPRINT("CheckOsVersion(%p)\n", pfnOsVersionCheck);
+
+    if (pfnOsVersionCheck == NULL)
+        return TRUE;
+
+    return pfnOsVersionCheck(VersionInfoOsType,
+                             VersionInfoOsProductSuite,
+                             VersionInfoVersion,
+                             VersionInfoBuildNumber,
+                             VersionInfoServicePackMajorVersion,
+                             VersionInfoServicePackMinorVersion,
+                             VersionInfoArchitecture,
+                             0);
+}
 
 static
 HRESULT
@@ -80,36 +99,36 @@ QueryOperatingSystemInfo(
 
     while (IWbemClassObject_Next(Object, 0, &Name, &Value, &Type, NULL) == S_OK)
     {
-        DPRINT1("Name: %S\n", Name);
+        DPRINT("Name: %S\n", Name);
         if (_wcsicmp(Name, L"BuildNumber") == 0)
         {
-            DPRINT1("BuildNumber %S\n", V_BSTR(&Value));
+            DPRINT("BuildNumber %S\n", V_BSTR(&Value));
             StringCbCopyW(VersionInfoBuildNumber, sizeof(VersionInfoBuildNumber), V_BSTR(&Value));
         }
         else if (_wcsicmp(Name, L"OSProductSuite") == 0)
         {
-            DPRINT1("OSProductSuite 0x%x\n", V_UINT(&Value));
+            DPRINT("OSProductSuite 0x%x\n", V_UINT(&Value));
             VersionInfoOsProductSuite = V_UINT(&Value);
         }
         else if (_wcsicmp(Name, L"OSType") == 0)
         {
-            DPRINT1("OSType %u\n", V_UINT(&Value));
+            DPRINT("OSType %u\n", V_UINT(&Value));
             VersionInfoOsType = V_UINT(&Value);
         }
         else if (_wcsicmp(Name, L"ServicePackMajorVersion") == 0)
         {
-            DPRINT1("ServicePackMajorVersion %S\n", V_BSTR(&Value));
-            StringCbCopyW(VersionInfoServicePackMajorVersion, sizeof(VersionInfoServicePackMajorVersion), V_BSTR(&Value));
+            DPRINT("ServicePackMajorVersion %hu\n", V_UINT(&Value));
+            _swprintf(VersionInfoServicePackMajorVersion, L"%hu", V_UINT(&Value));
         }
         else if (_wcsicmp(Name, L"ServicePackMinorVersion") == 0)
         {
-            DPRINT1("ServicePackMinorVersion %S\n", V_BSTR(&Value));
-            StringCbCopyW(VersionInfoServicePackMinorVersion, sizeof(VersionInfoServicePackMinorVersion), V_BSTR(&Value));
+            DPRINT("ServicePackMinorVersion %hu\n", V_UINT(&Value));
+            _swprintf(VersionInfoServicePackMinorVersion, L"%hu", V_UINT(&Value));
         }
         else if (_wcsicmp(Name, L"Version") == 0)
         {
-            DPRINT1("Version %S\n", V_BSTR(&Value));
-            VersionInfoVersion = V_UINT(&Value);
+            DPRINT("Version %S\n", V_BSTR(&Value));
+            StringCbCopyW(VersionInfoVersion, sizeof(VersionInfoVersion), V_BSTR(&Value));
         }
 
         SysFreeString(Name);
@@ -189,10 +208,11 @@ QueryProcessorInfo(
 
     while (IWbemClassObject_Next(Object, 0, &Name, &Value, &Type, NULL) == S_OK)
     {
-        DPRINT1("Name: %S\n", Name);
+        DPRINT("Name: %S\n", Name);
         if (_wcsicmp(Name, L"Architecture") == 0)
         {
-            DPRINT1("Architecture %u\n", V_UINT(&Value));
+            DPRINT("Architecture %u\n", V_UINT(&Value));
+            VersionInfoArchitecture = V_UINT(&Value);
         }
 
         SysFreeString(Name);
@@ -265,7 +285,8 @@ GetWmiVersionInfo(VOID)
     }
 
     hr = QueryOperatingSystemInfo(Services);
-    hr = QueryProcessorInfo(Services);
+    if (hr == S_OK)
+        hr = QueryProcessorInfo(Services);
 
 done:
     if (Path)

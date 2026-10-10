@@ -4,7 +4,6 @@ add_subdirectory(empty_dll)
 
 include_directories($<TARGET_FILE_DIR:load_notifications>)
 include_directories($<TARGET_FILE_DIR:empty_dll>)
-include_directories(${REACTOS_SOURCE_DIR}/ntoskrnl/include)
 spec2def(ntdll_apitest.exe ntdll_apitest.spec)
 
 list(APPEND SOURCE_CRT_TESTS
@@ -67,6 +66,7 @@ list(APPEND SOURCE
     NtLoadUnloadKey.c
     NtMapViewOfSection.c
     NtMutant.c
+    NtNotifyChangeMultipleKeys.c
     NtOpenKey.c
     NtOpenProcessToken.c
     NtOpenThreadToken.c
@@ -124,8 +124,11 @@ list(APPEND SOURCE
     RtlHandle.c
     RtlImageDirectoryEntryToData.c
     RtlImageRvaToVa.c
+    RtlInitializeContext.c
+    RtlIsNameInExpression.c
     RtlIsNameLegalDOS8Dot3.c
     RtlLocale.c
+    RtlMemIoResource.c
     RtlMemoryStream.c
     RtlMultipleAllocateHeap.c
     RtlNtPathNameToDosPathName.c
@@ -154,11 +157,13 @@ if(ARCH STREQUAL "i386")
     add_asm_files(ntdll_apitest_asm
         ../crt/i386/setjmp_helper.s
         i386/NtContinue.S
+        i386/NtCreateThread.S
     )
 elseif(ARCH STREQUAL "amd64")
     add_asm_files(ntdll_apitest_asm
         ../crt/amd64/setjmp_helper.s
         amd64/NtContinue.S
+        amd64/NtCreateThread.S
     )
 endif()
 
@@ -174,6 +179,16 @@ add_executable(ntdll_apitest
     ${PCH_SKIP_SOURCE}
     testdata.rc
     ${CMAKE_CURRENT_BINARY_DIR}/ntdll_apitest.def)
+add_pch(ntdll_apitest precomp.h "${PCH_SKIP_SOURCE}")
+
+target_include_directories(ntdll_apitest PRIVATE ${REACTOS_SOURCE_DIR}/ntoskrnl/include)
+
+if(NOT MSVC)
+    set_source_files_properties(
+        RtlGetFullPathName_UstrEx.c
+        RtlLocale.c
+        PROPERTIES COMPILE_OPTIONS "-Wno-format")
+endif()
 
 set_target_properties(ntdll_apitest
     PROPERTIES
@@ -183,15 +198,7 @@ set_target_properties(ntdll_apitest
 target_link_libraries(ntdll_apitest ntdll_crt_test_lib rtl_test_lib wine uuid ${PSEH_LIB})
 set_module_type(ntdll_apitest win32cui)
 add_importlibs(ntdll_apitest msvcrt advapi32 kernel32 ntdll)
-add_pch(ntdll_apitest precomp.h "${PCH_SKIP_SOURCE}")
 add_dependencies(ntdll_apitest load_notifications empty_dll)
-
-if(NOT MSVC)
-    set_source_files_properties(
-        RtlGetFullPathName_UstrEx.c
-        RtlLocale.c
-        PROPERTIES COMPILE_OPTIONS "-Wno-format")
-endif()
 
 add_rostests_file(TARGET ntdll_apitest)
 add_rostests_file(TARGET ntdll_apitest SUBDIR testdata)

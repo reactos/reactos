@@ -1280,7 +1280,7 @@ static MUI_ENTRY ruRUFormatPartitionEntries[] =
     {
         0,
         0,
-        "ENTER = \217\340\256\244\256\253\246\250\342\354   F3 = \202\353\345\256\244",
+        "ENTER = \217\340\256\244\256\253\246\250\342\354   ESC = \216\342\254\245\255\240   F3 = \202\353\345\256\244",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
         TEXT_ID_STATIC
     },

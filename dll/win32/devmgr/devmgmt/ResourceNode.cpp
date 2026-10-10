@@ -37,9 +37,12 @@ CResourceNode::CResourceNode(
 
     if (Descriptor->Type == CmResourceTypeInterrupt)
     {
+        /* Level overlaps the message count of a raw MSI descriptor, and
+           message interrupts are latched but belong to PCI devices */
         wsprintf(szDetail, L"(%s) 0x%08x (%d) %s",
-                 (Descriptor->Flags & CM_RESOURCE_INTERRUPT_LATCHED) ? L"ISA" : L"PCI",
-                 Descriptor->u.Interrupt.Level, Descriptor->u.Interrupt.Vector,
+                 ((Descriptor->Flags & (CM_RESOURCE_INTERRUPT_LATCHED | CM_RESOURCE_INTERRUPT_MESSAGE)) ==
+                  CM_RESOURCE_INTERRUPT_LATCHED) ? L"ISA" : L"PCI",
+                 Descriptor->u.Interrupt.Vector, Descriptor->u.Interrupt.Vector,
                  szDescription);
         StringCchCopyW(m_DisplayName, MAX_PATH, szDetail);
     }

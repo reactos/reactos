@@ -1,27 +1,17 @@
 /*
- * ReactOS Explorer
- *
- * Copyright 2006 - 2007 Thomas Weidenmueller <w3seek@reactos.org>
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ * PROJECT:     ReactOS Explorer
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     Task window implementation
+ * COPYRIGHT:   Copyright 2006-2007 Thomas Weidenmueller <w3seek@reactos.org>
+ *              Copyright 2026 Vitaly Orekhov <vkvo2000@vivaldi.net>
  */
 
 #include "precomp.h"
+#include "mediabtns.h"
 #include <commoncontrols.h>
 #include <regstr.h>
 #include <shlwapi_undoc.h>
+#include <psapi.h>
 
 /* Set DUMP_TASKS to 1 to enable a dump of the tasks and task groups every
    5 seconds */
@@ -110,6 +100,23 @@ SHELL_IsRudeWindow(_In_opt_ HMONITOR hMonitor, _In_ HWND hWnd, _In_ BOOL bDontCh
     ::UnionRect(&rcUnion, &rcWnd, &rcMonitor);
 
     return ::EqualRect(&rcUnion, &rcWnd) && (bDontCheckActive || SHELL_IsRudeWindowActive(hWnd));
+}
+
+static BOOL
+SHELL_GetImageFileNameByWindow(_In_ HWND hWnd, _Out_cap_(cchPath) LPWSTR pszPath, _In_ DWORD cchPath)
+{
+    DWORD dwProcessId;
+    HANDLE hProcess;
+    BOOL bSuccess;
+    if (GetWindowThreadProcessId(hWnd, &dwProcessId) == 0)
+        return FALSE;
+    // TODO: Switch to PROCESS_QUERY_LIMITED_INFORMATION once NT6 kernel32 support is implemented.
+    hProcess = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, dwProcessId);
+    if (hProcess == NULL)
+        return FALSE;
+    bSuccess = GetModuleFileNameExW(hProcess, NULL, pszPath, cchPath) != 0;
+    CloseHandle(hProcess);
+    return bSuccess;
 }
 
 ////////////////////////////////////////////////////////////////
@@ -387,6 +394,7 @@ class CTaskSwitchWnd :
     CComPtr<ITrayWindow> m_Tray;
 
     UINT m_ShellHookMsg;
+    UINT m_WinMMDevChgMsg;
 
     WORD m_TaskItemCount;
     WORD m_AllocatedTaskItems;
@@ -410,10 +418,12 @@ class CTaskSwitchWnd :
 
     UINT m_uHardErrorMsg;
     CHardErrorThread m_HardErrorThread;
+    CMultimediaBackend m_Mixer;
 
 public:
     CTaskSwitchWnd() :
         m_ShellHookMsg(NULL),
+        m_WinMMDevChgMsg(NULL),
         m_TaskItemCount(0),
         m_AllocatedTaskItems(0),
         m_TaskGroups(NULL),
@@ -1542,6 +1552,11 @@ public:
 #if DUMP_TASKS != 0
         SetTimer(hwnd, 1, 5000, NULL);
 #endif
+
+        /* WinMM is needed to change system volume via media buttons */
+        m_WinMMDevChgMsg = RegisterWindowMessageW(L"winmm_devicechange");
+        m_Mixer.Initialize();
+
         return TRUE;
     }
 
@@ -1610,12 +1625,12 @@ public:
             return TRUE;
         switch (uAppCmd)
         {
+            // TODO: When MMDevAPI arrives, try IMMDeviceEnumerator::GetDefaultAudioEndpoint first and then fall back to WinMM.
             case APPCOMMAND_VOLUME_MUTE:
+                return m_Mixer.Mute();
             case APPCOMMAND_VOLUME_DOWN:
             case APPCOMMAND_VOLUME_UP:
-                // TODO: Try IMMDeviceEnumerator::GetDefaultAudioEndpoint first and then fall back to mixer.
-                FIXME("Call the mixer API to change the global volume\n");
-                return TRUE;
+                return m_Mixer.AdjustVolume(uAppCmd, hProcessHeap);
             case APPCOMMAND_BROWSER_SEARCH:
                 return SHFindFiles(NULL, NULL);
         }
@@ -1704,6 +1719,13 @@ public:
         }
 
         return Ret;
+    }
+
+    LRESULT OnWinMMDeviceChange(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+    {
+        TRACE("Audio device was added or removed, invalidating mixer\n");
+        m_Mixer.Initialize();
+        return TRUE;
     }
 
     VOID HandleTaskItemClick(IN OUT PTASK_ITEM TaskItem)
@@ -2092,6 +2114,72 @@ public:
         return TRUE;
     }
 
+    LRESULT OnActivateTaskIndex(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+    {
+        DWORD dwAccelerators = HIWORD(wParam);
+        WCHAR szExecutablePath[MAX_PATH];
+
+        PTASK_ITEM pTaskItem = FindTaskItemByIndex(LOWORD(wParam));
+        if (pTaskItem && ::IsWindow(pTaskItem->hWnd))
+        {
+            // Win+Shift: New instance
+            if ((dwAccelerators & MOD_SHIFT) == MOD_SHIFT)
+            {
+                if (!SHELL_GetImageFileNameByWindow(pTaskItem->hWnd,
+                                                    szExecutablePath,
+                                                    _countof(szExecutablePath)))
+                {
+                    return FALSE;
+                }
+                // Win+Shift+Ctrl is used for creating a new instance of a task as Administrator
+                LPCWSTR szVerb = L"open";
+                if ((dwAccelerators & MOD_CONTROL) == MOD_CONTROL)
+                    szVerb = L"runas";
+                ShellExecuteW(NULL, szVerb, szExecutablePath, NULL, NULL, SW_SHOWNORMAL);
+                return TRUE;
+            }
+            // Win+Alt: Jump list
+            else if ((dwAccelerators & MOD_ALT) == MOD_ALT)
+            {
+                // TODO: Use JumpList once implemented
+
+                // Find TaskItem's position on the screen
+                RECT rcItem, rcToolbar;
+                m_TaskBar.GetItemRect(pTaskItem->Index, &rcItem);
+                m_TaskBar.GetWindowRect(&rcToolbar);
+                OffsetRect(&rcItem, rcToolbar.left, rcToolbar.top);
+
+                ::SendMessageCallbackW(pTaskItem->hWnd, WM_POPUPSYSTEMMENU, 0, MAKELPARAM(rcItem.left, rcItem.top),
+                               SendAsyncProc, (ULONG_PTR)pTaskItem);
+            }
+            // Win+Ctrl: Switch to last window of a task
+            else if ((dwAccelerators & MOD_CONTROL) == MOD_CONTROL)
+            {
+                // TODO: Implement once Superbar is implemented.
+                return FALSE;
+            }
+            // No modifier: just switch to the task
+            else
+            {
+                // TODO: This should launch a pinned task once Superbar is implemented
+
+                BOOL bIsMinimized = ::IsIconic(pTaskItem->hWnd);
+                BOOL bIsActive = (pTaskItem == m_ActiveTaskItem);
+
+                if (!bIsMinimized && bIsActive)
+                {
+                    if (!::IsHungAppWindow(pTaskItem->hWnd))
+                        ::ShowWindowAsync(pTaskItem->hWnd, SW_MINIMIZE);
+                }
+                else
+                {
+                    ::SwitchToThisWindow(pTaskItem->hWnd, TRUE);
+                }
+            }
+        }
+        return TRUE;
+    }
+
     LRESULT OnTaskbarSettingsChanged(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
         BOOL bSettingsChanged = FALSE;
@@ -2273,12 +2361,14 @@ public:
         MESSAGE_HANDLER(WM_COMMAND, OnCommand)
         MESSAGE_HANDLER(WM_NOTIFY, OnNotify)
         MESSAGE_HANDLER(TSWM_UPDATETASKBARPOS, OnUpdateTaskbarPos)
+        MESSAGE_HANDLER(TSWM_ACTIVATETASKINDEX, OnActivateTaskIndex)
         MESSAGE_HANDLER(TWM_SETTINGSCHANGED, OnTaskbarSettingsChanged)
         MESSAGE_HANDLER(WM_CONTEXTMENU, OnContextMenu)
         MESSAGE_HANDLER(WM_TIMER, OnTimer)
         MESSAGE_HANDLER(WM_SETFONT, OnSetFont)
         MESSAGE_HANDLER(WM_SETTINGCHANGE, OnSettingChanged)
         MESSAGE_HANDLER(m_ShellHookMsg, OnShellHook)
+        MESSAGE_HANDLER(m_WinMMDevChgMsg, OnWinMMDeviceChange)
         MESSAGE_HANDLER(WM_MOUSEACTIVATE, OnMouseActivate)
         MESSAGE_HANDLER(WM_KLUDGEMINRECT, OnKludgeItemRect)
         MESSAGE_HANDLER(WM_COPYDATA, OnCopyData)

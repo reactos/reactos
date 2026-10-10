@@ -13,9 +13,6 @@
 #define NDEBUG
 #include <debug.h>
 
-ULONG IopTraceLevel = 0;
-BOOLEAN PnpSystemInit = FALSE;
-
 VOID
 NTAPI
 IopTimerDispatch(
@@ -32,9 +29,18 @@ WmiInitialize(
 
 /* DATA ********************************************************************/
 
+ULONG IopTraceLevel = 0;
+BOOLEAN PnpSystemInit = FALSE;
+
 POBJECT_TYPE IoDeviceObjectType = NULL;
 POBJECT_TYPE IoFileObjectType = NULL;
 extern POBJECT_TYPE IoControllerObjectType;
+ULONG IopCaseInsensitive =
+#if (NTDDI_VERSION >= NTDDI_WIN7) || (DLL_EXPORT_VERSION >= _WIN32_WINNT_WIN7)
+    TRUE;
+#else
+    FALSE;
+#endif
 BOOLEAN IoCountOperations = TRUE;
 ULONG IoReadOperationCount = 0;
 LARGE_INTEGER IoReadTransferCount = {{0, 0}};

@@ -292,9 +292,9 @@ PADDRESS_FILE AddrSearchNext(
     else
         Current = NULL;
 
-    DereferenceObject(StartingAddrFile);
-
     TcpipReleaseSpinLock(&AddressFileListLock, OldIrql);
+
+    DereferenceObject(StartingAddrFile);
 
     return Current;
 }

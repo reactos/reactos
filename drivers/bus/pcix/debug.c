@@ -270,6 +270,7 @@ PciDebugCmResourceTypeToText(IN UCHAR Type)
         case CmResourceTypeConfigData: return "CmResourceTypeConfigData";
         case CmResourceTypeDevicePrivate: return "CmResourceTypeDevicePrivate";
         case CmResourceTypePcCardConfig: return "CmResourceTypePcCardConfig";
+        case CmResourceTypeMemoryLarge: return "CmResourceTypeMemoryLarge";
         default: return "*** INVALID RESOURCE TYPE ***";
     }
 }

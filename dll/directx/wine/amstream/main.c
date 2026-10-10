@@ -35,21 +35,7 @@
 
 #include "wine/debug.h"
 
-WINE_DEFAULT_DEBUG_CHANNEL(amstream);
-
-static HINSTANCE instance;
-
-/* For the moment, do nothing here. */
-BOOL WINAPI DllMain(HINSTANCE hInstDLL, DWORD fdwReason, LPVOID lpv)
-{
-    switch(fdwReason) {
-        case DLL_PROCESS_ATTACH:
-            instance = hInstDLL;
-            DisableThreadLibraryCalls(hInstDLL);
-	    break;
-    }
-    return TRUE;
-}
+WINE_DEFAULT_DEBUG_CHANNEL(quartz);
 
 /******************************************************************************
  * Multimedia Streams ClassFactory
@@ -73,10 +59,11 @@ struct object_creation_info
 
 static const struct object_creation_info object_creation[] =
 {
-    { &CLSID_AMMultiMediaStream, AM_create },
-    { &CLSID_AMDirectDrawStream, AM_create },
+    { &CLSID_AMMultiMediaStream, multimedia_stream_create },
+    { &CLSID_AMDirectDrawStream, ddraw_stream_create },
+    { &CLSID_AMAudioStream, audio_stream_create },
     { &CLSID_AMAudioData, AMAudioData_create },
-    { &CLSID_MediaStreamFilter, MediaStreamFilter_create }
+    { &CLSID_MediaStreamFilter, filter_create }
 };
 
 static HRESULT WINAPI AMCF_QueryInterface(IClassFactory *iface, REFIID riid, void **ppobj)
@@ -106,7 +93,7 @@ static ULONG WINAPI AMCF_Release(IClassFactory *iface)
     ULONG ref = InterlockedDecrement(&This->ref);
 
     if (ref == 0)
-	HeapFree(GetProcessHeap(), 0, This);
+        free(This);
 
     return ref;
 }
@@ -174,20 +161,20 @@ HRESULT WINAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID *ppv)
 	 && ! IsEqualGUID( &IID_IUnknown, riid) )
 	return E_NOINTERFACE;
 
-    for (i=0; i < sizeof(object_creation)/sizeof(object_creation[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(object_creation); i++)
     {
 	if (IsEqualGUID(object_creation[i].clsid, rclsid))
 	    break;
     }
 
-    if (i == sizeof(object_creation)/sizeof(object_creation[0]))
+    if (i == ARRAY_SIZE(object_creation))
     {
 	FIXME("%s: no class found.\n", debugstr_guid(rclsid));
 	return CLASS_E_CLASSNOTAVAILABLE;
     }
 
-    factory = HeapAlloc(GetProcessHeap(), 0, sizeof(*factory));
-    if (factory == NULL) return E_OUTOFMEMORY;
+    if (!(factory = calloc(1, sizeof(*factory))))
+        return E_OUTOFMEMORY;
 
     factory->IClassFactory_iface.lpVtbl = &DSCF_Vtbl;
     factory->ref = 1;
@@ -196,28 +183,4 @@ HRESULT WINAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID *ppv)
 
     *ppv = &factory->IClassFactory_iface;
     return S_OK;
-}
-
-/***********************************************************************
- *              DllCanUnloadNow (AMSTREAM.@)
- */
-HRESULT WINAPI DllCanUnloadNow(void)
-{
-    return S_FALSE;
-}
-
-/***********************************************************************
- *		DllRegisterServer (AMSTREAM.@)
- */
-HRESULT WINAPI DllRegisterServer(void)
-{
-    return __wine_register_resources( instance );
-}
-
-/***********************************************************************
- *		DllUnregisterServer (AMSTREAM.@)
- */
-HRESULT WINAPI DllUnregisterServer(void)
-{
-    return __wine_unregister_resources( instance );
 }

@@ -1259,7 +1259,7 @@ static MUI_ENTRY daDKFormatPartitionEntries[] =
     {
         0,
         0,
-        "ENTER = Forts\221t   F3 = Afslut",
+        "ENTER = Forts\221t   ESC = Annuller   F3 = Afslut",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
         TEXT_ID_STATIC
     },

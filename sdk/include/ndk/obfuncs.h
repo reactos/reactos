@@ -160,7 +160,7 @@ NTSTATUS
 NTAPI
 ObSetHandleAttributes(
     _In_ HANDLE Handle,
-    _In_ POBJECT_HANDLE_ATTRIBUTE_INFORMATION HandleFlags,
+    _In_ POBJECT_HANDLE_FLAG_INFORMATION HandleFlags,
     _In_ KPROCESSOR_MODE PreviousMode
 );
 
@@ -172,6 +172,15 @@ ObSetSecurityObjectByPointer(
     _In_ SECURITY_INFORMATION SecurityInformation,
     _In_ PSECURITY_DESCRIPTOR SecurityDescriptor
 );
+
+#if (NTDDI_VERSION >= NTDDI_WIN7) || defined(__REACTOS__)
+NTKERNELAPI
+POBJECT_TYPE
+FASTCALL
+ObGetObjectType(
+    _In_ PVOID Object
+);
+#endif
 
 #endif
 

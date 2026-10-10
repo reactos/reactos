@@ -33,6 +33,7 @@
 #define W32PF_MANUALGUICHECK         (0x02000000)
 #define W32PF_CREATEDWINORDC         (0x04000000)
 #define W32PF_APIHOOKLOADED          (0x08000000)
+#define W32PF_JOBRESTRICTED          (0x40000000)
 
 #define QSIDCOUNTS 7
 
@@ -151,6 +152,8 @@ typedef struct _THREADINFO
     // Hard list QS_MOUSE|QS_KEY only
     // Accounting of queue bit sets, the rest are flags. QS_TIMER QS_PAINT counts are handled in thread information.
     DWORD nCntsQBits[QSIDCOUNTS]; // QS_KEY QS_MOUSEMOVE QS_MOUSEBUTTON QS_POSTMESSAGE QS_SENDMESSAGE QS_HOTKEY
+
+    HRAWINPUT hPrevRawInput;
 
     LIST_ENTRY WindowListHead;
     LIST_ENTRY W32CallbackListHead;
@@ -273,7 +276,7 @@ typedef struct _PROCESSINFO
     struct _CURICON_OBJECT* pCursorCache;
     PVOID pClientBase;
     DWORD dwLpkEntryPoints;
-    PVOID pW32Job;
+    struct _JOBINFO *pW32Job;
     DWORD dwImeCompatFlags;
     LUID luidSession;
     USERSTARTUPINFO usi;

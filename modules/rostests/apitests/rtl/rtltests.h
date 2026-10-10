@@ -10,3 +10,7 @@
 #include <apitest.h>
 #include <ndk/ntndk.h>
 #include <strsafe.h>
+
+VOID
+NTAPI
+RtlpInitialize(VOID);

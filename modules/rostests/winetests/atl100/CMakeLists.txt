@@ -7,3 +7,4 @@ target_link_libraries(atl100_winetest uuid)
 set_module_type(atl100_winetest win32cui)
 add_importlibs(atl100_winetest atl100 oleaut32 ole32 advapi32 user32 msvcrt kernel32)
 add_rostests_file(TARGET atl100_winetest)
+set_wine_module(atl_winetest) # Required for atlbase.h

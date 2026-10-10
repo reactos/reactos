@@ -2301,6 +2301,27 @@ typedef struct _KSERVICE_TABLE_DESCRIPTOR
     PUCHAR Number;
 } KSERVICE_TABLE_DESCRIPTOR, *PKSERVICE_TABLE_DESCRIPTOR;
 
+//
+// Processor affinity (Extended Version)
+//
+#ifdef _M_IX86
+#define MAX_PROC_GROUPS 1
+#elif (NTDDI_VERSION < NTDDI_WIN8)
+#define MAX_PROC_GROUPS 4
+#else
+#define MAX_PROC_GROUPS 20
+#endif
+
+#if (NTDDI_VERSION >= NTDDI_WIN7) || defined(__REACTOS__)
+typedef struct _KAFFINITY_EX
+{
+    USHORT Count;
+    USHORT Size;
+    ULONG Reserved;
+    KAFFINITY Bitmap[MAX_PROC_GROUPS];
+} KAFFINITY_EX, *PKAFFINITY_EX;
+#endif
+
 #if (NTDDI_VERSION >= NTDDI_WIN8)
 //
 // Entropy Timing State

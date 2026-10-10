@@ -3,6 +3,7 @@
 #include <wine/test.h>
 
 extern void func_AddCommas(void);
+extern void func_AssocCreateElement(void);
 extern void func_Control_RunDLLW(void);
 extern void func_CFSFolder(void);
 extern void func_CheckEscapes(void);
@@ -21,11 +22,13 @@ extern void func_GUIDFromString(void);
 extern void func_ILCreateFromPath(void);
 extern void func_ILIsEqual(void);
 extern void func_Int64ToString(void);
+extern void func_IQueryAssociations(void);
 extern void func_IShellFolderViewCB(void);
 extern void func_LockServer(void);
 extern void func_menu(void);
 extern void func_OpenAs_RunDLL(void);
 extern void func_PathIsEqualOrSubFolder(void);
+extern void func_PathIsSlow(void);
 extern void func_PathIsTemporary(void);
 extern void func_PathMakeUniqueName(void);
 extern void func_PathProcessCommand(void);
@@ -65,6 +68,7 @@ extern void func_StrRStr(void);
 const struct test winetest_testlist[] =
 {
     { "AddCommas", func_AddCommas },
+    { "AssocCreateElement", func_AssocCreateElement },
     { "Control_RunDLLW", func_Control_RunDLLW },
     { "CFSFolder", func_CFSFolder },
     { "CheckEscapes", func_CheckEscapes },
@@ -83,11 +87,13 @@ const struct test winetest_testlist[] =
     { "ILCreateFromPath", func_ILCreateFromPath },
     { "ILIsEqual", func_ILIsEqual },
     { "Int64ToString", func_Int64ToString },
+    { "IQueryAssociations", func_IQueryAssociations },
     { "IShellFolderViewCB", func_IShellFolderViewCB },
     { "LockServer", func_LockServer },
     { "menu", func_menu },
     //{ "OpenAs_RunDLL", func_OpenAs_RunDLL }, // Test hangs on Win 2003
     { "PathIsEqualOrSubFolder", func_PathIsEqualOrSubFolder },
+    { "PathIsSlow", func_PathIsSlow },
     { "PathIsTemporary", func_PathIsTemporary },
     { "PathMakeUniqueName", func_PathMakeUniqueName },
     { "PathProcessCommand", func_PathProcessCommand },
@@ -105,7 +111,7 @@ const struct test winetest_testlist[] =
     { "She", func_She },
     //{ "ShellExec_RunDLL", func_ShellExec_RunDLL }, Broke on Windows
     //{ "ShellExecCmdLine", func_ShellExecCmdLine }, Broke on Windows
-    //{ "ShellExecuteEx", func_ShellExecuteEx }, Broke on Windows
+    { "ShellExecuteEx", func_ShellExecuteEx }, // Mostly broken on Windows, only simple tests enabled
     //{ "ShellExecuteW", func_ShellExecuteW }, Broke on Windows
     { "ShellFolder", func_ShellFolder },
     { "ShellHook", func_ShellHook },

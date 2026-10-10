@@ -33,15 +33,15 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(mapi);
 
-DECLSPEC_HIDDEN LONG MAPI_ObjectCount = 0;
-DECLSPEC_HIDDEN HINSTANCE hInstMAPI32;
+LONG MAPI_ObjectCount = 0;
+HINSTANCE hInstMAPI32;
 
 /***********************************************************************
  *              DllMain (MAPI32.init)
  */
 BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID fImpLoad)
 {
-    TRACE("(%p,%d,%p)\n", hinstDLL, fdwReason, fImpLoad);
+    TRACE("(%p,%ld,%p)\n", hinstDLL, fdwReason, fImpLoad);
 
     switch (fdwReason)
     {
@@ -52,7 +52,7 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID fImpLoad)
         break;
     case DLL_PROCESS_DETACH:
         if (fImpLoad) break;
-	TRACE("DLL_PROCESS_DETACH: %d objects remaining\n", MAPI_ObjectCount);
+	TRACE("DLL_PROCESS_DETACH: %ld objects remaining\n", MAPI_ObjectCount);
         unload_mapi_providers();
 	break;
     }
@@ -68,7 +68,7 @@ HRESULT WINAPI DllGetClassObject(REFCLSID rclsid, REFIID iid, LPVOID *ppv)
     {
         HRESULT ret = mapiFunctions.DllGetClassObject(rclsid, iid, ppv);
 
-        TRACE("ret: %x\n", ret);
+        TRACE("ret: %lx\n", ret);
         return ret;
     }
 
@@ -97,7 +97,7 @@ HRESULT WINAPI DllCanUnloadNow(void)
     if (mapiFunctions.DllCanUnloadNow)
     {
         ret = mapiFunctions.DllCanUnloadNow();
-        TRACE("(): provider returns %d\n", ret);
+        TRACE("(): provider returns %ld\n", ret);
     }
 
     return MAPI_ObjectCount == 0 ? ret : S_FALSE;
@@ -129,7 +129,7 @@ HRESULT WINAPI MAPIInitialize(LPVOID init)
 ULONG WINAPI MAPILogon(ULONG_PTR uiparam, LPSTR profile, LPSTR password,
     FLAGS flags, ULONG reserved, LPLHANDLE session)
 {
-    TRACE("(0x%08lx %s %p 0x%08x 0x%08x %p)\n", uiparam,
+    TRACE("(0x%08Ix %s %p 0x%08lx 0x%08lx %p)\n", uiparam,
           debugstr_a(profile), password, flags, reserved, session);
 
     if (mapiFunctions.MAPILogon)
@@ -149,7 +149,7 @@ ULONG WINAPI MAPILogon(ULONG_PTR uiparam, LPSTR profile, LPSTR password,
 ULONG WINAPI MAPILogoff(LHANDLE session, ULONG_PTR uiparam, FLAGS flags,
     ULONG reserved )
 {
-    TRACE("(0x%08lx 0x%08lx 0x%08x 0x%08x)\n", session,
+    TRACE("(0x%08Ix 0x%08Ix 0x%08lx 0x%08lx)\n", session,
           uiparam, flags, reserved);
 
     if (mapiFunctions.MAPILogoff)
@@ -167,7 +167,7 @@ ULONG WINAPI MAPILogoff(LHANDLE session, ULONG_PTR uiparam, FLAGS flags,
 HRESULT WINAPI MAPILogonEx(ULONG_PTR uiparam, LPWSTR profile,
     LPWSTR password, ULONG flags, LPMAPISESSION *session)
 {
-    TRACE("(0x%08lx %s %p 0x%08x %p)\n", uiparam,
+    TRACE("(0x%08Ix %s %p 0x%08lx %p)\n", uiparam,
           debugstr_w(profile), password, flags, session);
 
     if (mapiFunctions.MAPILogonEx)
@@ -206,7 +206,7 @@ HRESULT WINAPI MAPIAdminProfiles(ULONG ulFlags,  LPPROFADMIN *lppProfAdmin)
     if (mapiFunctions.MAPIAdminProfiles)
         return mapiFunctions.MAPIAdminProfiles(ulFlags, lppProfAdmin);
 
-    FIXME("(%u, %p): stub\n", ulFlags, lppProfAdmin);
+    FIXME("(%lu, %p): stub\n", ulFlags, lppProfAdmin);
     *lppProfAdmin = NULL;
     return E_FAIL;
 }

@@ -24,14 +24,15 @@
  */
 VOID
 NTAPI
-RtlInitializeContext(IN HANDLE ProcessHandle,
-                     OUT PCONTEXT ThreadContext,
-                     IN PVOID ThreadStartParam  OPTIONAL,
-                     IN PTHREAD_START_ROUTINE ThreadStartAddress,
-                     IN PINITIAL_TEB InitialTeb)
+RtlInitializeContext(
+    _In_ HANDLE ProcessHandle,
+    _Out_ PCONTEXT ThreadContext,
+    _In_opt_ PVOID ThreadStartParam,
+    _In_ PTHREAD_START_ROUTINE ThreadStartAddress,
+    _In_ PVOID StackBase)
 {
-    DPRINT("RtlInitializeContext: (hProcess: %p, ThreadContext: %p, Teb: %p\n",
-            ProcessHandle, ThreadContext, InitialTeb);
+    DPRINT("RtlInitializeContext: (hProcess: %p, ThreadContext: %p, StackBase: %p\n",
+            ProcessHandle, ThreadContext, StackBase);
 
     /*
      * Set the Initial Registers
@@ -58,7 +59,7 @@ RtlInitializeContext(IN HANDLE ProcessHandle,
 
     /* Settings passed */
     ThreadContext->Eip = (ULONG)ThreadStartAddress;
-    ThreadContext->Esp = (ULONG)InitialTeb;
+    ThreadContext->Esp = (ULONG)StackBase;
 
     /* Only the basic Context is initialized */
     ThreadContext->ContextFlags = CONTEXT_CONTROL |

@@ -1260,7 +1260,7 @@ static MUI_ENTRY etEEFormatPartitionEntries[] =
     {
         0,
         0,
-        "ENTER = J\204tka   F3 = V\204lju",
+        "ENTER = J\204tka   ESC = Katkesta   F3 = V\204lju",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
         TEXT_ID_STATIC
     },

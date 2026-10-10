@@ -51,6 +51,7 @@
 #define DXGKDDI_INTERFACE_VERSION_WDDM2_8    0xD001
 #define DXGKDDI_INTERFACE_VERSION_WDDM2_9    0xE003
 #define DXGKDDI_INTERFACE_VERSION_WDDM3_0    0xF003
+#define DXGKDDI_INTERFACE_VERSION_WDDM3_1    0x10002
 
 
 #define IS_OFFICIAL_DDI_INTERFACE_VERSION(version)                 \
@@ -72,7 +73,8 @@
              ((version) == DXGKDDI_INTERFACE_VERSION_WDDM2_7) ||   \
              ((version) == DXGKDDI_INTERFACE_VERSION_WDDM2_8) ||   \
              ((version) == DXGKDDI_INTERFACE_VERSION_WDDM2_9) ||   \
-             ((version) == DXGKDDI_INTERFACE_VERSION_WDDM3_0)      \
+             ((version) == DXGKDDI_INTERFACE_VERSION_WDDM3_0) ||   \
+             ((version) == DXGKDDI_INTERFACE_VERSION_WDDM3_1)      \
             )
 
 #if !defined(DXGKDDI_INTERFACE_VERSION)

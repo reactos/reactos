@@ -967,6 +967,11 @@ CDownloadManager::PerformDownloadAndInstall(const DownloadInfo &Info)
         {
             if (CopyFileW(LocalFilePath, Path, FALSE))
             {
+                // Remove the readonly flag in case we are copying from a read-only medium
+                DWORD attr = GetFileAttributesW(Path);
+                if (attr != INVALID_FILE_ATTRIBUTES && (attr & FILE_ATTRIBUTE_READONLY))
+                    SetFileAttributesW(Path, attr & ~FILE_ATTRIBUTE_READONLY);
+
                 goto run;
             }
             else

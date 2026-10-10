@@ -21,10 +21,6 @@
 #include "oleacc.h"
 #include "resource.h"
 
-1 TYPELIB "oleacc_classes.tlb"
-1 WINE_REGISTRY "oleacc_classes_r.rgs"
-2 WINE_REGISTRY "oleacc_classes_t.rgs"
-
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
 #define WINE_FILEDESCRIPTION_STR "Wine OLE Accessibility"

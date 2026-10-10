@@ -19,20 +19,32 @@ HANDLE BasepDefaultTimerQueue = NULL;
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
-/* FIXME - make this thread safe */
 BOOL
 WINAPI
 BasepCreateDefaultTimerQueue(VOID)
 {
     NTSTATUS Status;
+    HANDLE TimerQueue;
+
+    /* Already initialized */
+    if (BasepDefaultTimerQueue != NULL)
+        return TRUE;
 
     /* Create the timer queue */
-    Status = RtlCreateTimerQueue(&BasepDefaultTimerQueue);
+    Status = RtlCreateTimerQueue(&TimerQueue);
     if (!NT_SUCCESS(Status))
     {
         BaseSetLastNTError(Status);
         DPRINT1("Unable to create the default timer queue!\n");
         return FALSE;
+    }
+
+    /* Try to publish it. If another thread already did, throw ours away */
+    if (InterlockedCompareExchangePointer((PVOID *)&BasepDefaultTimerQueue,
+                                           TimerQueue,
+                                           NULL) != NULL)
+    {
+        RtlDeleteTimerQueueEx(TimerQueue, NULL);
     }
 
     return TRUE;

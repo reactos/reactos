@@ -157,14 +157,8 @@ typedef struct _COFF_SYMENT
 } COFF_SYMENT, *PCOFF_SYMENT;
 #pragma pack(pop)
 
-#ifdef TARGET_i386
-typedef ULONG TARGET_ULONG_PTR;
-#else
-typedef ULONGLONG TARGET_ULONG_PTR;
-#endif
-
 typedef struct _ROSSYM_ENTRY {
-  TARGET_ULONG_PTR Address;
+  ULONG Address; /* RVA */
   ULONG FunctionOffset;
   ULONG FileOffset;
   ULONG SourceLine;

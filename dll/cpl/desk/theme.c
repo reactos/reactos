@@ -361,6 +361,21 @@ ApplyScheme(IN COLOR_SCHEME *scheme, IN PTHEME_SELECTION pSelectedTheme)
         RegCloseKey(hKey);
     }
 
+    /* Save the icon size to registry */
+    Result = RegCreateKeyW(HKEY_CURRENT_USER, g_CPMetrics, &hKey);
+    if (Result == ERROR_SUCCESS)
+    {
+        wsprintf(clText, L"%d", scheme->iIconSize);
+
+        RegSetValueExW(hKey,
+                       L"Shell Icon Size",
+                       0,
+                       REG_SZ,
+                       (BYTE *)clText,
+                       (lstrlen(clText) + 1) * sizeof(WCHAR));
+        RegCloseKey(hKey);
+    }
+
     /* Apply non client metrics */
     SystemParametersInfoW(SPI_SETNONCLIENTMETRICS,
                           sizeof(NONCLIENTMETRICS),
@@ -398,9 +413,6 @@ ApplyScheme(IN COLOR_SCHEME *scheme, IN PTHEME_SELECTION pSelectedTheme)
      * Not everyone listens for this WM_SETTINGCHANGE, including the shell and most third party programs.
      */
     InvalidateRect(NULL, NULL, TRUE);
-
-    /* Use large icons */
-    //SYS_CONFIG(SPI_GETDRAGFULLWINDOWS,   (PVOID) g->SchemeAdv.Effects.bMenuFade);
 
     /* Show shadows under windows */
     SYS_CONFIG(SPI_SETDROPSHADOW,                0, IntToPtr(scheme->Effects.bDropShadow));

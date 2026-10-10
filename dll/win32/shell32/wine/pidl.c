@@ -1665,6 +1665,7 @@ HRESULT WINAPI SHGetNameFromIDList(PCIDLIST_ABSOLUTE pidl, SIGDN sigdnName, PWST
     return ret;
 }
 
+#ifndef __REACTOS__
 /*************************************************************************
  * SHGetItemFromDataObject          [SHELL32.@]
  */
@@ -1673,6 +1674,7 @@ HRESULT WINAPI SHGetItemFromDataObject(IDataObject *pdtobj, DATAOBJ_GET_ITEM_FLA
 {
     return E_NOTIMPL; // FIXME
 }
+#endif
 
 /*************************************************************************
  * SHGetIDListFromObject             [SHELL32.@]

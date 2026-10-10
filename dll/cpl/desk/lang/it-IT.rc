@@ -114,7 +114,7 @@ BEGIN
     AUTOCHECKBOX "U&sare il seguente metodo per arrotondare i bordi dei font per lo schermo:", IDC_EFFAPPEARANCE_SMOOTHING, 10, 42, 267, 19
     COMBOBOX IDC_EFFAPPEARANCE_SMOOTHINGTYPE, 20, 62, 95, 19, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | WS_VSCROLL | WS_TABSTOP
-    AUTOCHECKBOX "Usare le icone grandi", IDC_EFFAPPEARANCE_LARGEICONS, 10, 80, 267, 19, WS_TABSTOP | WS_DISABLED//FIXME: add accel. I used "Us&are le icone grandi" for the backport
+    AUTOCHECKBOX "Usare le icone grandi", IDC_EFFAPPEARANCE_LARGEICONS, 10, 80, 267, 19, WS_TABSTOP //FIXME: add accel. I used "Us&are le icone grandi" for the backport
     AUTOCHECKBOX "&Ombreggiatura sotto i menu", IDC_EFFAPPEARANCE_SETDROPSHADOW, 10, 95, 267, 19
     AUTOCHECKBOX "Mostrare il contenuto delle finestr mentre le si trascina", IDC_EFFAPPEARANCE_DRAGFULLWINDOWS, 10, 110, 267, 19//FIXME: add accel. I used "&Mostrare il contenuto delle finestr mentre le si trascina" for the backport
     AUTOCHECKBOX "&Nascondere la sottolineatura delle lettere di navigazione finche non è premuto il tasto Alt", IDC_EFFAPPEARANCE_KEYBOARDCUES, 10, 125, 267, 19//FIXME: text cutoff. I used "&Nascondi le lettere sottolineate finché non viene premuto il tasto Alt" for the backport

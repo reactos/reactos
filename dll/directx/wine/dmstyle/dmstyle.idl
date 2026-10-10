@@ -1,0 +1,93 @@
+/*
+ * COM Classes for dmstyle
+ *
+ * Copyright 2010 Alexandre Julliard
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+#pragma makedep register
+
+[
+    threading(both),
+    progid("Microsoft.DirectMusicSection.1"),
+    vi_progid("Microsoft.DirectMusicSection"),
+    uuid(3f037241-414e-11d1-a7ce-00a0c913f73c)
+]
+coclass DirectMusicSection { interface IDirectMusicSection; }
+
+[
+    threading(both),
+    progid("Microsoft.DirectMusicStyle.1"),
+    vi_progid("Microsoft.DirectMusicStyle"),
+    uuid(d2ac288a-b39b-11d1-8704-00600893b1bd)
+]
+coclass DirectMusicStyle { interface IDirectMusicStyle; }
+
+[
+    threading(both),
+    progid("Microsoft.DirectMusicChordTrack.1"),
+    vi_progid("Microsoft.DirectMusicChordTrack"),
+    uuid(d2ac288b-b39b-11d1-8704-00600893b1bd)
+]
+coclass DirectMusicChordTrack { interface IDirectMusicChordTrack; }
+
+[
+    threading(both),
+    progid("Microsoft.DirectMusicCommandTrack.1"),
+    vi_progid("Microsoft.DirectMusicCommandTrack"),
+    uuid(d2ac288c-b39b-11d1-8704-00600893b1bd)
+]
+coclass DirectMusicCommandTrack { interface IDirectMusicCommandTrack; }
+
+[
+    threading(both),
+    progid("Microsoft.DirectMusicStyleTrack.1"),
+    vi_progid("Microsoft.DirectMusicStyleTrack"),
+    uuid(d2ac288d-b39b-11d1-8704-00600893b1bd)
+]
+coclass DirectMusicStyleTrack { interface IDirectMusicStyleTrack; }
+
+[
+    threading(both),
+    progid("Microsoft.DirectMusicMotifTrack.1"),
+    vi_progid("Microsoft.DirectMusicMotifTrack"),
+    uuid(d2ac288e-b39b-11d1-8704-00600893b1bd)
+]
+coclass DirectMusicMotifTrack { interface IDirectMusicMotifTrack; }
+
+[
+    threading(both),
+    progid("Microsoft.DirectMusicAuditionTrack.1"),
+    vi_progid("Microsoft.DirectMusicAuditionTrack"),
+    uuid(d2ac2897-b39b-11d1-8704-00600893b1bd)
+]
+coclass DirectMusicAuditionTrack { interface IDirectMusicAuditionTrack; }
+
+[
+    threading(both),
+    progid("Microsoft.DirectMusicMuteTrack.1"),
+    vi_progid("Microsoft.DirectMusicMuteTrack"),
+    uuid(d2ac2898-b39b-11d1-8704-00600893b1bd)
+]
+coclass DirectMusicMuteTrack { interface IDirectMusicMuteTrack; }
+
+[
+    threading(both),
+    progid("Microsoft.DirectMusicMelodyFormulationTrack.1"),
+    vi_progid("Microsoft.DirectMusicMelodyFormulationTrack"),
+    uuid(b0684266-b57f-11d2-97f9-00c04fa36e58)
+]
+coclass DirectMusicMelodyFormulationTrack { interface IDirectMusicMelodyFormulationTrack; }

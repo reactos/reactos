@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS Kernel
  * LICENSE:     MIT (https://spdx.org/licenses/MIT)
  * PURPOSE:     PnP manager Root Bus Arbiter
- * COPYRIGHT:   Copyright 2025 Justin Miller <justin.miller@reactos.org>
+ * COPYRIGHT:   Copyright 2025-2026 Justin Miller <justin.miller@reactos.org>
  */
 
 /* INCLUDES *****************************************************************/
@@ -23,19 +23,17 @@ IopArbBusNumberUnpackRequirements(
     _In_ PIO_RESOURCE_DESCRIPTOR IoDescriptor,
     _Out_ PUINT64 OutMinimumAddress,
     _Out_ PUINT64 OutMaximumAddress,
-    _Out_ PUINT32 OutLength,
-    _Out_ PUINT32 OutAlignment)
+    _Out_ PUINT64 OutLength,
+    _Out_ PUINT64 OutAlignment)
 {
     PAGED_CODE();
-    DPRINT("IopArbBusNumberUnpackRequirements: IoDescriptor: %p, OutMinimumAddress: %p, OutMaximumAddress: %p, OutLength: %p, OutAlignment: %p\n",
-           IoDescriptor,
-           OutMinimumAddress,
-           OutMaximumAddress,
-           OutLength,
-           OutAlignment);
 
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    *OutMinimumAddress = IoDescriptor->u.BusNumber.MinBusNumber;
+    *OutMaximumAddress = IoDescriptor->u.BusNumber.MaxBusNumber;
+    *OutLength = IoDescriptor->u.BusNumber.Length;
+    *OutAlignment = 1;
+
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS
@@ -46,13 +44,14 @@ IopArbBusNumberPackResource(
     _Out_ PCM_PARTIAL_RESOURCE_DESCRIPTOR CmDescriptor)
 {
     PAGED_CODE();
-    DPRINT("IopArbBusNumberPackResource: IoDescriptor: %p, Start: %I64x, CmDescriptor: %p\n",
-           IoDescriptor,
-           Start,
-           CmDescriptor);
 
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    CmDescriptor->Type = CmResourceTypeBusNumber;
+    CmDescriptor->ShareDisposition = IoDescriptor->ShareDisposition;
+    CmDescriptor->Flags = IoDescriptor->Flags;
+    CmDescriptor->u.BusNumber.Start = (ULONG)Start;
+    CmDescriptor->u.BusNumber.Length = IoDescriptor->u.BusNumber.Length;
+
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS
@@ -60,16 +59,14 @@ NTAPI
 IopArbBusNumberUnpackResource(
     _In_ PCM_PARTIAL_RESOURCE_DESCRIPTOR CmDescriptor,
     _Out_ PUINT64 Start,
-    _Out_ PUINT32 OutLength)
+    _Out_ PUINT64 OutLength)
 {
     PAGED_CODE();
-    DPRINT("IopArbBusNumberUnpackResource: CmDescriptor: %p, Start: %p, OutLength: %p\n",
-           CmDescriptor,
-           Start,
-           OutLength);
 
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    *Start  = CmDescriptor->u.BusNumber.Start;
+    *OutLength = CmDescriptor->u.BusNumber.Length;
+
+    return STATUS_SUCCESS;
 }
 
 INT32
@@ -78,18 +75,21 @@ IopArbBusNumberScoreRequirement(
     _In_ PIO_RESOURCE_DESCRIPTOR IoDescriptor)
 {
     PAGED_CODE();
-    DPRINT("IopArbBusNumberScoreRequirement: IoDescriptor: %p\n",
-           IoDescriptor);
 
-    UNIMPLEMENTED;
-    return 0;
+    ASSERT(IoDescriptor->u.BusNumber.Length != 0);
+    if (IoDescriptor->u.BusNumber.Length == 0)
+        return -1;
+
+    return (IoDescriptor->u.BusNumber.MaxBusNumber - IoDescriptor->u.BusNumber.MinBusNumber)
+           / IoDescriptor->u.BusNumber.Length;
 }
 
 /**
  * @brief Initialize the RootBusArbiter
  *
- * Initializes rootbus arbiter against IopRootBusNumberArbiter for use in PCI
- * every "bus" gets to check against this.
+ * The root bus-number arbiter owns the flat 0..255 bus-number space and hands 
+ * each bridge a sub-range.
+ *
  * @return NTSTATUS
  * @retval STATUS_SUCCESS
  * @retval STATUS_UNSUCCESSFUL
@@ -108,7 +108,7 @@ IopArbBusNumberInitialize(VOID)
     IopRootBusNumberArbiter.UnpackResource = IopArbBusNumberUnpackResource;
     IopRootBusNumberArbiter.ScoreRequirement = IopArbBusNumberScoreRequirement;
 
-    Status = ArbInitializeArbiterInstance(&IopRootBusNumberArbiter,
+    Status = ArbiterLibInitializeInstance(&IopRootBusNumberArbiter,
                                           NULL,
                                           CmResourceTypeBusNumber,
                                           IopRootBusNumberArbiter.Name,
@@ -116,7 +116,7 @@ IopArbBusNumberInitialize(VOID)
                                           NULL);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("IopArbBusNumberInitialize: Failed with %X", Status);
+        DPRINT1("IopArbBusNumberInitialize: Failed with %X\n", Status);
     }
 
     return Status;

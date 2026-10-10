@@ -1266,7 +1266,7 @@ static MUI_ENTRY skSKFormatPartitionEntries[] =
     {
         0,
         0,
-        "ENTER = Pokra\237ova\234   F3 = Skon\237i\234",
+        "ENTER = Pokra\237ova\234   ESC = Zru\347i\234   F3 = Skon\237i\234",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
         TEXT_ID_STATIC
     },

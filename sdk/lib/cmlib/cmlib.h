@@ -156,8 +156,10 @@
     } SECURITY_DESCRIPTOR_RELATIVE, *PISECURITY_DESCRIPTOR_RELATIVE;
 
     #define CMLTRACE(x, ...)
+
     #undef PAGED_CODE
     #define PAGED_CODE()
+
     #define REGISTRY_ERROR                   ((ULONG)0x00000051L)
 
 #else
@@ -179,6 +181,11 @@
     #include <ntdef.h>
     #include <ntifs.h>
     #include <bugcodes.h>
+
+    #ifdef _BLDR_
+    #undef PAGED_CODE
+    #define PAGED_CODE()
+    #endif
 
     /* Prevent inclusion of Windows headers through <wine/unicode.h> */
     #define _WINDEF_
@@ -332,6 +339,9 @@ typedef struct _CMHIVE
     PFILE_OBJECT FileObject;
     UNICODE_STRING FileFullPath;
     UNICODE_STRING FileUserName;
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+    UNICODE_STRING HiveRootPath;
+#endif
     USHORT MappedViews;
     USHORT PinnedViews;
     ULONG UseCount;
@@ -356,6 +366,12 @@ typedef struct _CMHIVE
     ULONG FlushCount;
     BOOLEAN HiveIsLoading;
     PKTHREAD CreatorOwner;
+    //
+    // ReactOS-specific fields
+    //
+#if (NTDDI_VERSION < NTDDI_VISTA) && defined(__REACTOS__)
+    UNICODE_STRING HiveRootPath;
+#endif
 } CMHIVE, *PCMHIVE;
 
 typedef struct _HV_HIVE_CELL_PAIR

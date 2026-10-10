@@ -1,0 +1,42 @@
+HKCR
+{
+    NoRemove CLSID
+    {
+        ForceRemove {7A80E4A8-8005-11D2-BCF8-00C04F72C717} = s 'MMC Shell Extension'
+        {
+            InprocServer32 = s '%MODULE%' { val ThreadingModel = s 'Apartment' }
+        }
+    }
+
+    NoRemove mscfile
+    {
+        DefaultIcon =  s '%%1'
+        NoRemove shellex
+        {
+            IconHandler = s '{7A80E4A8-8005-11D2-BCF8-00C04F72C717}'
+        }
+    }
+}
+
+HKLM
+{
+    NoRemove SOFTWARE
+    {
+        NoRemove Microsoft
+        {
+            NoRemove Windows
+            {
+                NoRemove CurrentVersion
+                {
+                    NoRemove 'Shell Extensions'
+                    {
+                        NoRemove Approved
+                        {
+                            val {7A80E4A8-8005-11D2-BCF8-00C04F72C717} = s 'MMC Icon Handler'
+                        }
+                    }
+                }
+            }
+        }
+    } 
+}

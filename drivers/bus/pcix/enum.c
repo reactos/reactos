@@ -56,11 +56,12 @@ PciComputeNewCurrentSettings(IN PPCI_PDO_EXTENSION PdoExtension,
                              IN PCM_RESOURCE_LIST ResourceList)
 {
     PCM_PARTIAL_RESOURCE_DESCRIPTOR Partial, InterruptResource;
-    PCM_PARTIAL_RESOURCE_DESCRIPTOR BaseResource, CurrentDescriptor;
-    PCM_PARTIAL_RESOURCE_DESCRIPTOR PreviousDescriptor;
+    PCM_PARTIAL_RESOURCE_DESCRIPTOR CurrentDescriptor;
     CM_PARTIAL_RESOURCE_DESCRIPTOR ResourceArray[7];
+    ULONG BarIndex;
     PCM_FULL_RESOURCE_DESCRIPTOR FullList;
-    BOOLEAN DrainPartial, RangeChange;
+    BOOLEAN RangeChange;
+    ULONG DrainPartial;
     ULONG i, j;
     PPCI_FUNCTION_RESOURCES PciResources;
     PAGED_CODE();
@@ -72,6 +73,11 @@ PciComputeNewCurrentSettings(IN PPCI_PDO_EXTENSION PdoExtension,
     Partial = NULL;
     InterruptResource = NULL;
     RangeChange = FALSE;
+    BarIndex = 0;
+
+    /* The limits say which BARs this function implements, so the walk below
+     * can tell which BAR each assigned descriptor belongs to */
+    PciResources = PdoExtension->Resources;
 
     /* Check if there's not actually any resources */
     if (!(ResourceList) || !(ResourceList->Count))
@@ -91,8 +97,7 @@ PciComputeNewCurrentSettings(IN PPCI_PDO_EXTENSION PdoExtension,
     for (i = 0; i < ResourceList->Count; i++)
     {
         /* Initialize loop variables */
-        DrainPartial = FALSE;
-        BaseResource = NULL;
+        DrainPartial = 0;
 
         /* Loop the partial descriptors */
         Partial = FullList->PartialResourceList.PartialDescriptors;
@@ -101,8 +106,8 @@ PciComputeNewCurrentSettings(IN PPCI_PDO_EXTENSION PdoExtension,
             /* Check if we were supposed to drain a partial due to device data */
             if (DrainPartial)
             {
-                /* Draining complete, move on to the next descriptor then */
                 DrainPartial--;
+                Partial = CmiGetNextPartialDescriptor(Partial);
                 continue;
             }
 
@@ -112,6 +117,7 @@ PciComputeNewCurrentSettings(IN PPCI_PDO_EXTENSION PdoExtension,
                 /* Base BAR resources */
                 case CmResourceTypePort:
                 case CmResourceTypeMemory:
+                case CmResourceTypeMemoryLarge:
                 {
                     /*
                      * Skip legacy/shared resources (e.g., VGA ports 0x3B0-0x3DF, memory 0xA0000).
@@ -122,9 +128,22 @@ PciComputeNewCurrentSettings(IN PPCI_PDO_EXTENSION PdoExtension,
                         break;
                     }
 
-                    /* Set it as the base */
-                    ASSERT(BaseResource == NULL);
-                    BaseResource = Partial;
+                    /*
+                     * The assigned descriptors come back in the order the
+                     * requirements list asked for them, so walking the limits
+                     * in that same order says which BAR this one satisfies.
+                     */
+                    if (PciResources)
+                    {
+                        while ((BarIndex < RTL_NUMBER_OF(ResourceArray)) &&
+                               (PciResources->Limit[BarIndex].Type == CmResourceTypeNull))
+                        {
+                            BarIndex++;
+                        }
+
+                        if (BarIndex < RTL_NUMBER_OF(ResourceArray))
+                            ResourceArray[BarIndex++] = *Partial;
+                    }
                     break;
                 }
                 /* Interrupt resource */
@@ -167,10 +186,7 @@ PciComputeNewCurrentSettings(IN PPCI_PDO_EXTENSION PdoExtension,
 
                         /* A drain request */
                         case 3:
-                            /* Shouldn't be a base resource, this is a drain */
-                            ASSERT(BaseResource == NULL);
                             DrainPartial = Partial->u.DevicePrivate.Data[1];
-                            ASSERT(DrainPartial == TRUE);
                             break;
                     }
                     break;
@@ -181,34 +197,26 @@ PciComputeNewCurrentSettings(IN PPCI_PDO_EXTENSION PdoExtension,
         }
 
         /* We should be starting a new list now */
-        ASSERT(BaseResource == NULL);
         FullList = (PVOID)Partial;
     }
 
-    /* Check the current assigned PCI resources */
-    PciResources = PdoExtension->Resources;
+    /* A function with no discovered resources has nothing to update */
     if (!PciResources) return FALSE;
 
-    //if... // MISSING CODE
-    UNIMPLEMENTED;
-    DPRINT1("Missing sanity checking code!\n");
-
     /* Loop all the PCI function resources */
-    for (i = 0; i < 7; i++)
+    for (i = 0; i < RTL_NUMBER_OF(ResourceArray); i++)
     {
         /* Get the current function resource descriptor, and the new one */
         CurrentDescriptor = &PciResources->Current[i];
         Partial = &ResourceArray[i];
 
-        /* Previous is current during the first loop iteration */
-        PreviousDescriptor = &PciResources->Current[(i == 0) ? (0) : (i - 1)];
-
         /* Check if this new descriptor is different than the old one */
-        if (((Partial->Type != CurrentDescriptor->Type) ||
-             (Partial->Type != CmResourceTypeNull)) &&
-            ((Partial->u.Generic.Start.QuadPart !=
-              CurrentDescriptor->u.Generic.Start.QuadPart) ||
-             (Partial->u.Generic.Length != CurrentDescriptor->u.Generic.Length)))
+        if ((Partial->Type != CurrentDescriptor->Type) ||
+            ((Partial->Type != CmResourceTypeNull) &&
+             ((Partial->u.Generic.Start.QuadPart !=
+               CurrentDescriptor->u.Generic.Start.QuadPart) ||
+              (RtlCmDecodeMemIoResource(Partial, NULL) !=
+               RtlCmDecodeMemIoResource(CurrentDescriptor, NULL)))))
         {
             /* Record a change */
             RangeChange = TRUE;
@@ -232,9 +240,9 @@ PciComputeNewCurrentSettings(IN PPCI_PDO_EXTENSION PdoExtension,
 
             /* Update to new range */
             CurrentDescriptor->Type = Partial->Type;
-            PreviousDescriptor->u.Generic.Start = Partial->u.Generic.Start;
-            PreviousDescriptor->u.Generic.Length = Partial->u.Generic.Length;
-            CurrentDescriptor = PreviousDescriptor;
+            CurrentDescriptor->Flags = Partial->Flags;
+            CurrentDescriptor->u.Generic.Start = Partial->u.Generic.Start;
+            CurrentDescriptor->u.Generic.Length = Partial->u.Generic.Length;
         }
     }
 
@@ -259,6 +267,16 @@ PcipUpdateHardware(IN PVOID Context,
                               PCI_ENABLE_MEMORY_SPACE |
                               PCI_ENABLE_BUS_MASTER |
                               PCI_ENABLE_WRITE_AND_INVALIDATE);
+
+        /* A BAR size can only change with the decodes off, before the BAR gets its address */
+        if (PdoExtension->ResizableBarState.CapabilityPtr)
+        {
+            PciWriteDeviceConfig(PdoExtension,
+                                 &PciData->Command,
+                                 FIELD_OFFSET(PCI_COMMON_HEADER, Command),
+                                 sizeof(PciData->Command));
+            PciApplyResizableBarSizes(PdoExtension);
+        }
     }
 
     /* Update the device configuration */
@@ -290,7 +308,7 @@ PciUpdateHardware(IN PPCI_PDO_EXTENSION PdoExtension,
     }
     else
     {
-        /* Just to the update inline */
+        /* Just do the update inline */
         PcipUpdateHardware(PdoExtension, PciData);
     }
 }
@@ -396,8 +414,10 @@ PciQueryResources(IN PPCI_PDO_EXTENSION PdoExtension,
     {
         /* Check if the decode for this descriptor is actually turned on */
         Partial = &PciResources->Current[i];
-        if (((HaveMemSpace) && (Partial->Type == CmResourceTypeMemory)) ||
-            ((HaveIoSpace) && (Partial->Type == CmResourceTypePort)))
+        if ((HaveMemSpace &&
+             ((Partial->Type == CmResourceTypeMemory) ||
+              (Partial->Type == CmResourceTypeMemoryLarge))) ||
+            (HaveIoSpace && (Partial->Type == CmResourceTypePort)))
         {
             /* One more fully active descriptor */
             Count++;
@@ -448,8 +468,10 @@ PciQueryResources(IN PPCI_PDO_EXTENSION PdoExtension,
     {
         /* Check if the decode for this descriptor is actually turned on */
         Partial = &PciResources->Current[i];
-        if (((HaveMemSpace) && (Partial->Type == CmResourceTypeMemory)) ||
-            ((HaveIoSpace) && (Partial->Type == CmResourceTypePort)))
+        if ((HaveMemSpace &&
+             ((Partial->Type == CmResourceTypeMemory) ||
+              (Partial->Type == CmResourceTypeMemoryLarge))) ||
+            (HaveIoSpace && (Partial->Type == CmResourceTypePort)))
         {
             /* Copy the descriptor into the resource list */
             *Resource++ = *Partial;
@@ -562,10 +584,42 @@ PciBuildRequirementsList(IN PPCI_PDO_EXTENSION PdoExtension,
                          OUT PIO_RESOURCE_REQUIREMENTS_LIST* Buffer)
 {
     PIO_RESOURCE_REQUIREMENTS_LIST RequirementsList;
+    PIO_RESOURCE_DESCRIPTOR Descriptor, Limit;
+    PCI_CONFIGURATOR_CONTEXT Context;
+    ULONG Count, i, Resized;
+    BOOLEAN HaveInterrupt;
 
-    UNREFERENCED_PARAMETER(PdoExtension);
-    UNREFERENCED_PARAMETER(PciData);
+    PAGED_CODE();
 
+    /* Count the BAR limits that resource discovery found for this function */
+    Count = 0;
+    if (PdoExtension->Resources)
+    {
+        for (i = 0; i < (PCI_TYPE0_ADDRESSES + 1); i++)
+        {
+            if (PdoExtension->Resources->Limit[i].Type == CmResourceTypeNull)
+                continue;
+
+            /* A resizable BAR also asks for the larger sizes it can decode */
+            Count++;
+            Count += PciAddResizableBarRequirements(PdoExtension,
+                                                    i,
+                                                    &PdoExtension->Resources->Limit[i],
+                                                    NULL);
+        }
+    }
+
+    /* A device with an interrupt pin also needs a line routed to it */
+    HaveInterrupt = (PdoExtension->InterruptPin) &&
+                    !(PdoExtension->HackFlags & PCI_HACK_NO_ENUM_AT_ALL);
+    if (HaveInterrupt)
+        Count++;
+
+    /* And a bridge with legacy decodes enabled needs those ranges locked down */
+    Count += PdoExtension->AdditionalResourceCount;
+
+    /* Check if the function turned out to need nothing after all */
+    if (!Count)
     {
         /* There aren't, so use the zero descriptor */
         RequirementsList = PciZeroIoResourceRequirements;
@@ -579,11 +633,63 @@ PciBuildRequirementsList(IN PPCI_PDO_EXTENSION PdoExtension,
             if (!PciZeroIoResourceRequirements) return STATUS_INSUFFICIENT_RESOURCES;
         }
 
-        /* Return the zero requirements list to the caller */
         *Buffer = RequirementsList;
         DPRINT1("PCI - build resource reqs - early out, 0 resources\n");
         return STATUS_SUCCESS;
     }
+
+    RequirementsList = PciAllocateIoRequirementsList(Count,
+                                                     PdoExtension->ParentFdoExtension->BaseBus,
+                                                     PdoExtension->Slot.u.AsULONG);
+    if (!RequirementsList)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
+    Descriptor = RequirementsList->List[0].Descriptors;
+
+    /* Emit one descriptor per BAR that decoded something during discovery */
+    if (PdoExtension->Resources)
+    {
+        Limit = PdoExtension->Resources->Limit;
+        for (i = 0; i < (PCI_TYPE0_ADDRESSES + 1); i++)
+        {
+            /* Skip the BARs this function does not implement */
+            if (Limit[i].Type == CmResourceTypeNull)
+                continue;
+
+            /* The larger sizes of a resizable BAR come first, its default size is the fallback */
+            Resized = PciAddResizableBarRequirements(PdoExtension, i, &Limit[i], Descriptor);
+            Descriptor += Resized;
+
+            /* A BAR decodes for one function only, so it cannot be shared */
+            *Descriptor = Limit[i];
+            Descriptor->ShareDisposition = CmResourceShareDeviceExclusive;
+            if (Resized)
+                Descriptor->Option = IO_RESOURCE_ALTERNATIVE;
+            Descriptor++;
+        }
+    }
+
+    if (HaveInterrupt)
+    {
+        Descriptor->Type = CmResourceTypeInterrupt;
+        Descriptor->ShareDisposition = CmResourceShareShared;
+        Descriptor->Flags = CM_RESOURCE_INTERRUPT_LEVEL_SENSITIVE;
+        Descriptor->u.Interrupt.MinimumVector = 0;
+        Descriptor->u.Interrupt.MaximumVector = MAXULONG;
+        Descriptor++;
+    }
+
+    /* And finally any extra ranges this kind of function decodes on the side */
+    if (PdoExtension->AdditionalResourceCount)
+    {
+        RtlZeroMemory(&Context, sizeof(Context));
+        Context.PdoExtension = PdoExtension;
+        Context.Current = PciData;
+        PciConfigurators[PdoExtension->HeaderType].
+            GetAdditionalResourceDescriptors(&Context, PciData, Descriptor);
+    }
+
+    *Buffer = RequirementsList;
     return STATUS_SUCCESS;
 }
 
@@ -1289,6 +1395,12 @@ PciGetEnhancedCapabilities(IN PPCI_PDO_EXTENSION PdoExtension,
         }
     }
 
+    /* Now find out whether this is an Express function, and what kind */
+    PciGetExpressCapabilities(PdoExtension);
+
+    /* And whether any of its BARs can be resized */
+    PciGetResizableBarCapability(PdoExtension);
+
     /* At the very end of all this, does this device not have power management? */
     if (PdoExtension->HackFlags & PCI_HACK_NO_PM_CAPS)
     {
@@ -1415,7 +1527,7 @@ PcipGetFunctionLimits(IN PPCI_CONFIGURATOR_CONTEXT Context)
     }
     else
     {
-        /* Otherwise, it's safe to do this in-line at low IRQL */
+        /* Otherwise, it's safe to do this inline at low IRQL */
         PciWriteLimitsAndRestoreCurrent(PdoExtension, Context);
     }
 
@@ -1470,8 +1582,8 @@ PcipGetFunctionLimits(IN PPCI_CONFIGURATOR_CONTEXT Context)
         IoDescriptor--;
         if (IoDescriptor->Type != CmResourceTypeNull) break;
 
-        /* This is a null descriptor, is it the last one? */
-        if (IoDescriptor == &PdoExtension->Resources->Limit[PCI_TYPE0_ADDRESSES + 1])
+        /* This is a null descriptor, have all of them been scanned now? */
+        if (IoDescriptor == &PdoExtension->Resources->Limit[0])
         {
             /* This means the descriptor is NULL, which means discovery failed */
             DPRINT1("PCI Resources fail!\n");
@@ -1707,12 +1819,17 @@ PciScanBus(IN PPCI_FDO_EXTENSION DeviceExtension)
             /* Check if this device is considered critical by the OS */
             if (PciIsCriticalDeviceClass(PciData->BaseClass, PciData->SubClass))
             {
-                /* Check if normally the decodes would be disabled */
-                if (!(HackFlags & PCI_HACK_DONT_DISABLE_DECODES))
+                /* The hack database can take a device out of its critical class */
+                if (!(HackFlags & PCI_HACK_NOT_CRITICAL_DEVICE))
                 {
-                    /* Because this device is critical, don't disable them */
                     DPRINT1("Not allowing PM Because device is critical\n");
-                    HackFlags |= PCI_HACK_CRITICAL_DEVICE;
+
+                    /* Probe it with the system held, and keep it decoding while stopped */
+                    HackFlags |= PCI_HACK_CRITICAL_DEVICE | PCI_HACK_KEEP_DECODES_ON_STOP;
+
+                    /* Only the display can still be powered down */
+                    if (PciData->BaseClass != PCI_CLASS_DISPLAY_CTLR)
+                        HackFlags |= PCI_HACK_NEVER_POWER_DOWN;
                 }
             }
 
@@ -1720,11 +1837,11 @@ PciScanBus(IN PPCI_FDO_EXTENSION DeviceExtension)
             if ((PciData->BaseClass == PCI_CLASS_BRIDGE_DEV) &&
                 (PciData->SubClass == PCI_SUBCLASS_BR_PCI_TO_PCI) &&
                 (PciData->u.type1.BridgeControl & PCI_ENABLE_BRIDGE_VGA) &&
-               !(HackFlags & PCI_HACK_DONT_DISABLE_DECODES))
+               !(HackFlags & PCI_HACK_NOT_CRITICAL_DEVICE))
             {
-                /* Do not disable their decodes either */
+                /* They follow the adapter behind them, so they can still be powered down */
                 DPRINT1("Not allowing PM because device is VGA\n");
-                HackFlags |= PCI_HACK_CRITICAL_DEVICE;
+                HackFlags |= PCI_HACK_CRITICAL_DEVICE | PCI_HACK_KEEP_DECODES_ON_STOP;
             }
 
             /* Check if the device should be skipped for whatever reason */
@@ -2166,7 +2283,7 @@ PciSetResources(IN PPCI_PDO_EXTENSION PdoExtension,
                 IN BOOLEAN SomethingSomethingDarkSide)
 {
     PPCI_FDO_EXTENSION FdoExtension;
-    UCHAR NewCacheLineSize, NewLatencyTimer;
+    UCHAR NewCacheLineSize, NewLatencyTimer, CacheLineReadBack;
     PCI_COMMON_HEADER PciData;
     BOOLEAN Native;
     PPCI_CONFIGURATOR Configurator;
@@ -2207,8 +2324,40 @@ PciSetResources(IN PPCI_PDO_EXTENSION PdoExtension,
     if ((PdoExtension->NeedsHotPlugConfiguration) &&
         (FdoExtension->HotPlugParameters.Acquired))
     {
-        /* Don't have hotplug devices to test with yet, QEMU 0.14 should */
-        UNIMPLEMENTED_DBGBREAK();
+        /* The firmware never configured this device, so use what _HPP asks for */
+        PdoExtension->SavedLatencyTimer = FdoExtension->HotPlugParameters.LatencyTimer;
+        PdoExtension->SavedCacheLineSize = FdoExtension->HotPlugParameters.CacheLineSize;
+
+        PdoExtension->CommandEnables &= ~(PCI_ENABLE_PARITY | PCI_ENABLE_SERR);
+        if (FdoExtension->HotPlugParameters.EnablePERR)
+        {
+            PdoExtension->CommandEnables |= PCI_ENABLE_PARITY;
+        }
+
+        if (FdoExtension->HotPlugParameters.EnableSERR)
+        {
+            PdoExtension->CommandEnables |= PCI_ENABLE_SERR;
+        }
+
+        /* Only turn on memory write and invalidate if the device keeps the cache line size */
+        PciWriteDeviceConfig(PdoExtension,
+                             &PdoExtension->SavedCacheLineSize,
+                             FIELD_OFFSET(PCI_COMMON_HEADER, CacheLineSize),
+                             sizeof(PdoExtension->SavedCacheLineSize));
+        PciReadDeviceConfig(PdoExtension,
+                            &CacheLineReadBack,
+                            FIELD_OFFSET(PCI_COMMON_HEADER, CacheLineSize),
+                            sizeof(CacheLineReadBack));
+        if ((CacheLineReadBack != 0) &&
+            (CacheLineReadBack == PdoExtension->SavedCacheLineSize))
+        {
+            PdoExtension->CommandEnables |= PCI_ENABLE_WRITE_AND_INVALIDATE;
+        }
+        else
+        {
+            DPRINT1("PCI (pdox %p) cache line size %02x rejected, MWI stays off\n",
+                    PdoExtension, PdoExtension->SavedCacheLineSize);
+        }
     }
 
     /* Locate the correct resource configurator for this type of device */

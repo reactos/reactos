@@ -23,8 +23,6 @@
 #include <string.h>
 
 #define COBJMACROS
-#define NONAMELESSUNION
-
 #include "windef.h"
 #include "winbase.h"
 #include "wingdi.h"
@@ -102,7 +100,7 @@ unsigned char * WINAPI CLEANLOCALSTORAGE_UserMarshal(ULONG *pFlags, unsigned cha
         break;
 
     default:
-        ERR("Unknown type %x\n", pstg->flags);
+        ERR("Unknown type %lx\n", pstg->flags);
     }
 
     *(VOID**)pstg->pStorage = NULL;
@@ -135,11 +133,11 @@ typedef struct
 
 ULONG WINAPI BSTR_UserSize(ULONG *pFlags, ULONG Start, BSTR *pstr)
 {
-    TRACE("(%x,%d,%p) => %p\n", *pFlags, Start, pstr, *pstr);
+    TRACE("%#lx, %lu, %p => %p\n", *pFlags, Start, pstr, *pstr);
     if (*pstr) TRACE("string=%s\n", debugstr_w(*pstr));
     ALIGN_LENGTH(Start, 3);
     Start += sizeof(bstr_wire_t) + ((SysStringByteLen(*pstr) + 1) & ~1);
-    TRACE("returning %d\n", Start);
+    TRACE("returning %ld\n", Start);
     return Start;
 }
 
@@ -148,7 +146,7 @@ unsigned char * WINAPI BSTR_UserMarshal(ULONG *pFlags, unsigned char *Buffer, BS
     bstr_wire_t *header;
     DWORD len = SysStringByteLen(*pstr);
 
-    TRACE("(%x,%p,%p) => %p\n", *pFlags, Buffer, pstr, *pstr);
+    TRACE("%#lx, %p, %p => %p\n", *pFlags, Buffer, pstr, *pstr);
     if (*pstr) TRACE("string=%s\n", debugstr_w(*pstr));
 
     ALIGN_POINTER(Buffer, 3);
@@ -168,12 +166,12 @@ unsigned char * WINAPI BSTR_UserMarshal(ULONG *pFlags, unsigned char *Buffer, BS
 unsigned char * WINAPI BSTR_UserUnmarshal(ULONG *pFlags, unsigned char *Buffer, BSTR *pstr)
 {
     bstr_wire_t *header;
-    TRACE("(%x,%p,%p) => %p\n", *pFlags, Buffer, pstr, *pstr);
+    TRACE("%#lx, %p, %p => %p\n", *pFlags, Buffer, pstr, *pstr);
 
     ALIGN_POINTER(Buffer, 3);
     header = (bstr_wire_t*)Buffer;
     if(header->len != header->len2)
-        FIXME("len %08x != len2 %08x\n", header->len, header->len2);
+        FIXME("len %#lx != len2 %#lx\n", header->len, header->len2);
 
     if (header->byte_len == 0xffffffff)
     {
@@ -188,7 +186,7 @@ unsigned char * WINAPI BSTR_UserUnmarshal(ULONG *pFlags, unsigned char *Buffer, 
 
 void WINAPI BSTR_UserFree(ULONG *pFlags, BSTR *pstr)
 {
-    TRACE("(%x,%p) => %p\n", *pFlags, pstr, *pstr);
+    TRACE("%#lx, %p => %p\n", *pFlags, pstr, *pstr);
     SysFreeString(*pstr);
     *pstr = NULL;
 }
@@ -268,11 +266,7 @@ static unsigned int get_type_alignment(ULONG *pFlags, VARTYPE vt)
 }
 
 /* WdtpInterfacePointer_UserSize takes care of 2 additional DWORDs to store marshalling buffer size */
-#ifdef __REACTOS__
 static unsigned interface_user_size(ULONG *pFlags, ULONG Start, REFIID riid, IUnknown *punk)
-#else
-static unsigned interface_variant_size(ULONG *pFlags, REFIID riid, IUnknown *punk)
-#endif
 {
     ULONG size = 0;
 
@@ -286,12 +280,8 @@ static unsigned interface_variant_size(ULONG *pFlags, REFIID riid, IUnknown *pun
         }
     }
     size += sizeof(ULONG);
-    TRACE("wire-size extra of interface variant is %d\n", size);
-#ifdef __REACTOS__
+    TRACE("wire-size extra of interface variant is %ld.\n", size);
     return Start + size;
-#else
-    return size;
-#endif
 }
 
 static ULONG wire_extra_user_size(ULONG *pFlags, ULONG Start, VARIANT *pvar)
@@ -312,29 +302,13 @@ static ULONG wire_extra_user_size(ULONG *pFlags, ULONG Start, VARIANT *pvar)
   case VT_VARIANT | VT_BYREF:
     return VARIANT_UserSize(pFlags, Start, V_VARIANTREF(pvar));
   case VT_UNKNOWN:
-#ifdef __REACTOS__
     return interface_user_size(pFlags, Start, &IID_IUnknown, V_UNKNOWN(pvar));
-#else
-    return Start + interface_variant_size(pFlags, &IID_IUnknown, V_UNKNOWN(pvar));
-#endif
   case VT_UNKNOWN | VT_BYREF:
-#ifdef __REACTOS__
     return interface_user_size(pFlags, Start, &IID_IUnknown, *V_UNKNOWNREF(pvar));
-#else
-    return Start + interface_variant_size(pFlags, &IID_IUnknown, *V_UNKNOWNREF(pvar));
-#endif
   case VT_DISPATCH:
-#ifdef __REACTOS__
     return interface_user_size(pFlags, Start, &IID_IDispatch, (IUnknown*)V_DISPATCH(pvar));
-#else
-    return Start + interface_variant_size(pFlags, &IID_IDispatch, (IUnknown*)V_DISPATCH(pvar));
-#endif
   case VT_DISPATCH | VT_BYREF:
-#ifdef __REACTOS__
     return interface_user_size(pFlags, Start, &IID_IDispatch, (IUnknown*)*V_DISPATCHREF(pvar));
-#else
-    return Start + interface_variant_size(pFlags, &IID_IDispatch, (IUnknown*)*V_DISPATCHREF(pvar));
-#endif
   case VT_RECORD:
     FIXME("wire-size record\n");
     return Start;
@@ -348,14 +322,10 @@ static ULONG wire_extra_user_size(ULONG *pFlags, ULONG Start, VARIANT *pvar)
 }
 
 /* helper: called for VT_DISPATCH variants to marshal the IDispatch* into the buffer */
-#ifdef __REACTOS__
 static unsigned char* interface_user_marshal(ULONG *pFlags, unsigned char *Buffer,
-#else
-static unsigned char* interface_variant_marshal(ULONG *pFlags, unsigned char *Buffer,
-#endif
                                                 REFIID riid, IUnknown *punk)
 {
-  TRACE("pFlags=%d, Buffer=%p, pUnk=%p\n", *pFlags, Buffer, punk);
+  TRACE("%#lx, %p, %p.\n", *pFlags, Buffer, punk);
 
   /* first DWORD is used to store pointer itself, truncated on win64 */
   if(!punk)
@@ -373,16 +343,12 @@ static unsigned char* interface_variant_marshal(ULONG *pFlags, unsigned char *Bu
 }
 
 /* helper: called for VT_DISPATCH / VT_UNKNOWN variants to unmarshal the buffer */
-#ifdef __REACTOS__
 static unsigned char *interface_user_unmarshal(ULONG *pFlags, unsigned char *Buffer,
-#else
-static unsigned char *interface_variant_unmarshal(ULONG *pFlags, unsigned char *Buffer,
-#endif
                                                   REFIID riid, IUnknown **ppunk)
 {
   DWORD ptr;
   
-  TRACE("pFlags=%d, Buffer=%p, ppUnk=%p\n", *pFlags, Buffer, ppunk);
+  TRACE("%#lx, %p, %p.\n", *pFlags, Buffer, ppunk);
 
   /* skip pointer part itself */
   ptr = *(DWORD*)Buffer;
@@ -397,7 +363,7 @@ static unsigned char *interface_variant_unmarshal(ULONG *pFlags, unsigned char *
 ULONG WINAPI VARIANT_UserSize(ULONG *pFlags, ULONG Start, VARIANT *pvar)
 {
     int align;
-    TRACE("(%x,%d,%p)\n", *pFlags, Start, pvar);
+    TRACE("%#lx, %lu, %p.\n", *pFlags, Start, pvar);
     TRACE("vt=%04x\n", V_VT(pvar));
 
     ALIGN_LENGTH(Start, 7);
@@ -413,7 +379,7 @@ ULONG WINAPI VARIANT_UserSize(ULONG *pFlags, ULONG Start, VARIANT *pvar)
         Start += get_type_size(pFlags, V_VT(pvar));
     Start = wire_extra_user_size(pFlags, Start, pvar);
 
-    TRACE("returning %d\n", Start);
+    TRACE("returning %ld\n", Start);
     return Start;
 }
 
@@ -424,7 +390,7 @@ unsigned char * WINAPI VARIANT_UserMarshal(ULONG *pFlags, unsigned char *Buffer,
     int align;
     unsigned char *Pos;
 
-    TRACE("(%x,%p,%p)\n", *pFlags, Buffer, pvar);
+    TRACE("%#lx, %p, %p.\n", *pFlags, Buffer, pvar);
     TRACE("vt=%04x\n", V_VT(pvar));
 
     ALIGN_POINTER(Buffer, 7);
@@ -433,11 +399,17 @@ unsigned char * WINAPI VARIANT_UserMarshal(ULONG *pFlags, unsigned char *Buffer,
 
     header->clSize = 0; /* fixed up at the end */
     header->rpcReserved = 0;
-    header->vt = pvar->n1.n2.vt;
+    header->vt = V_VT(pvar);
+#ifdef __REACTOS__
     header->wReserved1 = pvar->n1.n2.wReserved1;
     header->wReserved2 = pvar->n1.n2.wReserved2;
     header->wReserved3 = pvar->n1.n2.wReserved3;
-    header->switch_is = pvar->n1.n2.vt;
+#else
+    header->wReserved1 = pvar->wReserved1;
+    header->wReserved2 = pvar->wReserved2;
+    header->wReserved3 = pvar->wReserved3;
+#endif
+    header->switch_is = V_VT(pvar);
     if(header->switch_is & VT_ARRAY)
         header->switch_is &= ~VT_TYPEMASK;
 
@@ -452,7 +424,7 @@ unsigned char * WINAPI VARIANT_UserMarshal(ULONG *pFlags, unsigned char *Buffer,
         Pos += 4;
         if((header->vt & VT_TYPEMASK) != VT_VARIANT)
         {
-            memcpy(Pos, pvar->n1.n2.n3.byref, type_size);
+            memcpy(Pos, V_BYREF(pvar), type_size);
             Pos += type_size;
         }
         else
@@ -466,7 +438,7 @@ unsigned char * WINAPI VARIANT_UserMarshal(ULONG *pFlags, unsigned char *Buffer,
         if((header->vt & VT_TYPEMASK) == VT_DECIMAL)
             memcpy(Pos, pvar, type_size);
         else
-            memcpy(Pos, &pvar->n1.n2.n3, type_size);
+            memcpy(Pos, &V_UI8(pvar), type_size);
         Pos += type_size;
     }
 
@@ -491,32 +463,16 @@ unsigned char * WINAPI VARIANT_UserMarshal(ULONG *pFlags, unsigned char *Buffer,
             Pos = VARIANT_UserMarshal(pFlags, Pos, V_VARIANTREF(pvar));
             break;
         case VT_UNKNOWN:
-#ifdef __REACTOS__
             Pos = interface_user_marshal(pFlags, Pos, &IID_IUnknown, V_UNKNOWN(pvar));
-#else
-            Pos = interface_variant_marshal(pFlags, Pos, &IID_IUnknown, V_UNKNOWN(pvar));
-#endif
             break;
         case VT_UNKNOWN | VT_BYREF:
-#ifdef __REACTOS__
             Pos = interface_user_marshal(pFlags, Pos, &IID_IUnknown, *V_UNKNOWNREF(pvar));
-#else
-            Pos = interface_variant_marshal(pFlags, Pos, &IID_IUnknown, *V_UNKNOWNREF(pvar));
-#endif
             break;
         case VT_DISPATCH:
-#ifdef __REACTOS__
             Pos = interface_user_marshal(pFlags, Pos, &IID_IDispatch, (IUnknown*)V_DISPATCH(pvar));
-#else
-            Pos = interface_variant_marshal(pFlags, Pos, &IID_IDispatch, (IUnknown*)V_DISPATCH(pvar));
-#endif
             break;
         case VT_DISPATCH | VT_BYREF:
-#ifdef __REACTOS__
             Pos = interface_user_marshal(pFlags, Pos, &IID_IDispatch, (IUnknown*)*V_DISPATCHREF(pvar));
-#else
-            Pos = interface_variant_marshal(pFlags, Pos, &IID_IDispatch, (IUnknown*)*V_DISPATCHREF(pvar));
-#endif
             break;
         case VT_RECORD:
             FIXME("handle BRECORD by val\n");
@@ -527,7 +483,7 @@ unsigned char * WINAPI VARIANT_UserMarshal(ULONG *pFlags, unsigned char *Buffer,
         }
     }
     header->clSize = ((Pos - Buffer) + 7) >> 3;
-    TRACE("marshalled size=%d\n", header->clSize);
+    TRACE("marshalled size %ld\n", header->clSize);
     return Pos;
 }
 
@@ -538,7 +494,7 @@ unsigned char * WINAPI VARIANT_UserUnmarshal(ULONG *pFlags, unsigned char *Buffe
     int align;
     unsigned char *Pos;
 
-    TRACE("(%x,%p,%p)\n", *pFlags, Buffer, pvar);
+    TRACE("%#lx, %p, %p.\n", *pFlags, Buffer, pvar);
 
     ALIGN_POINTER(Buffer, 7);
 
@@ -554,7 +510,10 @@ unsigned char * WINAPI VARIANT_UserUnmarshal(ULONG *pFlags, unsigned char *Buffe
         ULONG mem_size;
         Pos += 4;
 
-        switch (header->vt & ~VT_BYREF)
+        /* byref array needs to allocate a SAFEARRAY pointer */
+        if (header->vt & VT_ARRAY)
+            mem_size = sizeof(void *);
+        else switch (header->vt & ~VT_BYREF)
         {
         /* these types have a different memory size compared to wire size */
         case VT_UNKNOWN:
@@ -608,14 +567,20 @@ unsigned char * WINAPI VARIANT_UserUnmarshal(ULONG *pFlags, unsigned char *Buffe
         else if((header->vt & VT_TYPEMASK) == VT_DECIMAL)
             memcpy(pvar, Pos, type_size);
         else
-            memcpy(&pvar->n1.n2.n3, Pos, type_size);
+            memcpy(&V_UI8(pvar), Pos, type_size);
         Pos += type_size;
     }
 
-    pvar->n1.n2.vt = header->vt;
+    V_VT(pvar) = header->vt;
+#ifdef __REACTOS__
     pvar->n1.n2.wReserved1 = header->wReserved1;
     pvar->n1.n2.wReserved2 = header->wReserved2;
     pvar->n1.n2.wReserved3 = header->wReserved3;
+#else
+    pvar->wReserved1 = header->wReserved1;
+    pvar->wReserved2 = header->wReserved2;
+    pvar->wReserved3 = header->wReserved3;
+#endif
 
     if(header->vt & VT_ARRAY)
     {
@@ -638,32 +603,16 @@ unsigned char * WINAPI VARIANT_UserUnmarshal(ULONG *pFlags, unsigned char *Buffe
             Pos = VARIANT_UserUnmarshal(pFlags, Pos, V_VARIANTREF(pvar));
             break;
         case VT_UNKNOWN:
-#ifdef __REACTOS__
             Pos = interface_user_unmarshal(pFlags, Pos, &IID_IUnknown, &V_UNKNOWN(pvar));
-#else
-            Pos = interface_variant_unmarshal(pFlags, Pos, &IID_IUnknown, &V_UNKNOWN(pvar));
-#endif
             break;
         case VT_UNKNOWN | VT_BYREF:
-#ifdef __REACTOS__
             Pos = interface_user_unmarshal(pFlags, Pos, &IID_IUnknown, V_UNKNOWNREF(pvar));
-#else
-            Pos = interface_variant_unmarshal(pFlags, Pos, &IID_IUnknown, V_UNKNOWNREF(pvar));
-#endif
             break;
         case VT_DISPATCH:
-#ifdef __REACTOS__
             Pos = interface_user_unmarshal(pFlags, Pos, &IID_IDispatch, (IUnknown**)&V_DISPATCH(pvar));
-#else
-            Pos = interface_variant_unmarshal(pFlags, Pos, &IID_IDispatch, (IUnknown**)&V_DISPATCH(pvar));
-#endif
             break;
         case VT_DISPATCH | VT_BYREF:
-#ifdef __REACTOS__
             Pos = interface_user_unmarshal(pFlags, Pos, &IID_IDispatch, (IUnknown**)V_DISPATCHREF(pvar));
-#else
-            Pos = interface_variant_unmarshal(pFlags, Pos, &IID_IDispatch, (IUnknown**)V_DISPATCHREF(pvar));
-#endif
             break;
         case VT_RECORD:
             FIXME("handle BRECORD by val\n");
@@ -681,10 +630,10 @@ void WINAPI VARIANT_UserFree(ULONG *pFlags, VARIANT *pvar)
   VARTYPE vt = V_VT(pvar);
   PVOID ref = NULL;
 
-  TRACE("(%x,%p)\n", *pFlags, pvar);
+  TRACE("%#lx, %p.\n", *pFlags, pvar);
   TRACE("vt=%04x\n", V_VT(pvar));
 
-  if (vt & VT_BYREF) ref = pvar->n1.n2.n3.byref;
+  if (vt & VT_BYREF) ref = V_BYREF(pvar);
 
   VariantClear(pvar);
   if (!ref) return;
@@ -797,39 +746,24 @@ static inline SF_TYPE SAFEARRAY_GetUnionType(SAFEARRAY *psa)
 
 static DWORD elem_wire_size(LPSAFEARRAY lpsa, SF_TYPE sftype)
 {
-#ifdef __REACTOS__
     switch (sftype)
     {
     case SF_BSTR:
     case SF_HAVEIID:
     case SF_UNKNOWN:
     case SF_DISPATCH:
-#else
-    if (sftype == SF_BSTR)
-#endif
         return sizeof(DWORD);
-#ifdef __REACTOS__
 
     case SF_VARIANT:
-#else
-    else if (sftype == SF_VARIANT)
-#endif
         return sizeof(variant_wire_t) - sizeof(DWORD);
-#ifdef __REACTOS__
 
     default:
-#else
-    else
-#endif
         return lpsa->cbElements;
-#ifdef __REACTOS__
     }
-#endif
 }
 
 static DWORD elem_mem_size(wireSAFEARRAY wiresa, SF_TYPE sftype)
 {
-#ifdef __REACTOS__
     switch (sftype)
     {
     case SF_HAVEIID:
@@ -838,34 +772,21 @@ static DWORD elem_mem_size(wireSAFEARRAY wiresa, SF_TYPE sftype)
         return sizeof(void *);
 
     case SF_BSTR:
-#else
-    if (sftype == SF_BSTR)
-#endif
         return sizeof(BSTR);
-#ifdef __REACTOS__
 
     case SF_VARIANT:
-#else
-    else if (sftype == SF_VARIANT)
-#endif
         return sizeof(VARIANT);
-#ifdef __REACTOS__
 
     default:
-#else
-    else
-#endif
         return wiresa->cbElements;
-#ifdef __REACTOS__
     }
-#endif
 }
 
 ULONG WINAPI LPSAFEARRAY_UserSize(ULONG *pFlags, ULONG StartingSize, LPSAFEARRAY *ppsa)
 {
     ULONG size = StartingSize;
 
-    TRACE("("); dump_user_flags(pFlags); TRACE(", %d, %p\n", StartingSize, *ppsa);
+    TRACE("("); dump_user_flags(pFlags); TRACE(", %ld, %p\n", StartingSize, *ppsa);
 
     ALIGN_LENGTH(size, 3);
     size += sizeof(ULONG);
@@ -905,7 +826,6 @@ ULONG WINAPI LPSAFEARRAY_UserSize(ULONG *pFlags, ULONG StartingSize, LPSAFEARRAY
             case SF_DISPATCH:
             case SF_UNKNOWN:
             case SF_HAVEIID:
-#ifdef __REACTOS__
             {
                 IUnknown **lpUnk;
                 GUID guid;
@@ -920,13 +840,8 @@ ULONG WINAPI LPSAFEARRAY_UserSize(ULONG *pFlags, ULONG StartingSize, LPSAFEARRAY
                 for (lpUnk = psa->pvData; ulCellCount; ulCellCount--, lpUnk++)
                     size = interface_user_size(pFlags, size, &guid, *lpUnk);
 
-#else
-                FIXME("size interfaces\n");
-#endif
                 break;
-#ifdef __REACTOS__
             }
-#endif
             case SF_VARIANT:
             {
                 VARIANT* lpVariant;
@@ -1000,11 +915,7 @@ unsigned char * WINAPI LPSAFEARRAY_UserMarshal(ULONG *pFlags, unsigned char *Buf
         Buffer += sizeof(ULONG);
 
         hr = SafeArrayGetVartype(psa, &vt);
-#ifdef __REACTOS__
         if ((psa->fFeatures & FADF_HAVEIID) || FAILED(hr)) vt = 0;
-#else
-        if (FAILED(hr)) vt = 0;
-#endif
 
         *(ULONG *)Buffer = (USHORT)psa->cLocks | (vt << 16);
         Buffer += sizeof(ULONG);
@@ -1050,7 +961,6 @@ unsigned char * WINAPI LPSAFEARRAY_UserMarshal(ULONG *pFlags, unsigned char *Buf
                 case SF_DISPATCH:
                 case SF_UNKNOWN:
                 case SF_HAVEIID:
-#ifdef __REACTOS__
                 {
                     IUnknown **lpUnk;
                     const GUID *iid;
@@ -1065,13 +975,8 @@ unsigned char * WINAPI LPSAFEARRAY_UserMarshal(ULONG *pFlags, unsigned char *Buf
                     for (lpUnk = psa->pvData; ulCellCount; ulCellCount--, lpUnk++)
                             Buffer = interface_user_marshal(pFlags, Buffer, iid, *lpUnk);
 
-#else
-                    FIXME("marshal interfaces\n");
-#endif
                     break;
-#ifdef __REACTOS__
                 }
-#endif
                 case SF_VARIANT:
                 {
                     VARIANT* lpVariant;
@@ -1247,7 +1152,6 @@ unsigned char * WINAPI LPSAFEARRAY_UserUnmarshal(ULONG *pFlags, unsigned char *B
             case SF_DISPATCH:
             case SF_UNKNOWN:
             case SF_HAVEIID:
-#ifdef __REACTOS__
             {
                 IUnknown **lpUnk;
                 const GUID *iid;
@@ -1262,13 +1166,8 @@ unsigned char * WINAPI LPSAFEARRAY_UserUnmarshal(ULONG *pFlags, unsigned char *B
                 for (lpUnk = (*ppsa)->pvData; cell_count; cell_count--, lpUnk++)
                     Buffer = interface_user_unmarshal(pFlags, Buffer, iid, lpUnk);
 
-#else
-                FIXME("marshal interfaces\n");
-#endif
                 break;
-#ifdef __REACTOS__
             }
-#endif
             case SF_VARIANT:
             {
                 VARIANT* lpVariant;
@@ -1362,7 +1261,7 @@ HRESULT CALLBACK IDispatch_Invoke_Proxy(
   UINT uArgErr;
   EXCEPINFO ExcepInfo;
 
-  TRACE("(%p)->(%d,%s,%x,%x,%p,%p,%p,%p)\n", This,
+  TRACE("%p, %ld, %s, %#lx, %x, %p, %p, %p, %p.\n", This,
         dispIdMember, debugstr_guid(riid),
         lcid, wFlags, pDispParams, pVarResult,
         pExcepInfo, puArgErr);
@@ -1552,12 +1451,12 @@ static void free_embedded_arraydesc(ARRAYDESC *adesc)
     {
     case VT_PTR:
     case VT_SAFEARRAY:
-        free_embedded_typedesc(adesc->tdescElem.u.lptdesc);
-        CoTaskMemFree(adesc->tdescElem.u.lptdesc);
+        free_embedded_typedesc(adesc->tdescElem.lptdesc);
+        CoTaskMemFree(adesc->tdescElem.lptdesc);
         break;
     case VT_CARRAY:
-        free_embedded_arraydesc(adesc->tdescElem.u.lpadesc);
-        CoTaskMemFree(adesc->tdescElem.u.lpadesc);
+        free_embedded_arraydesc(adesc->tdescElem.lpadesc);
+        CoTaskMemFree(adesc->tdescElem.lpadesc);
         break;
     }
 }
@@ -1568,12 +1467,12 @@ static void free_embedded_typedesc(TYPEDESC *tdesc)
     {
     case VT_PTR:
     case VT_SAFEARRAY:
-        free_embedded_typedesc(tdesc->u.lptdesc);
-        CoTaskMemFree(tdesc->u.lptdesc);
+        free_embedded_typedesc(tdesc->lptdesc);
+        CoTaskMemFree(tdesc->lptdesc);
         break;
     case VT_CARRAY:
-        free_embedded_arraydesc(tdesc->u.lpadesc);
-        CoTaskMemFree(tdesc->u.lpadesc);
+        free_embedded_arraydesc(tdesc->lpadesc);
+        CoTaskMemFree(tdesc->lpadesc);
         break;
     }
 }
@@ -1581,8 +1480,8 @@ static void free_embedded_typedesc(TYPEDESC *tdesc)
 static void free_embedded_elemdesc(ELEMDESC *edesc)
 {
     free_embedded_typedesc(&edesc->tdesc);
-    if(edesc->u.paramdesc.wParamFlags & PARAMFLAG_FHASDEFAULT)
-        CoTaskMemFree(edesc->u.paramdesc.pparamdescex);
+    if(edesc->paramdesc.wParamFlags & PARAMFLAG_FHASDEFAULT)
+        CoTaskMemFree(edesc->paramdesc.pparamdescex);
 }
 
 /* ITypeComp */
@@ -1602,7 +1501,7 @@ HRESULT CALLBACK ITypeComp_Bind_Proxy(
     VARDESC *vardesc;
     HRESULT hr;
 
-    TRACE("(%p, %s, %#x, %#x, %p, %p, %p)\n", This, debugstr_w(name), lHashVal, flags, ti,
+    TRACE("%p, %s, %#lx, %#x, %p, %p, %p.\n", This, debugstr_w(name), lHashVal, flags, ti,
         desckind, bindptr);
 
     *desckind = DESCKIND_NONE;
@@ -1648,7 +1547,7 @@ HRESULT __RPC_STUB ITypeComp_Bind_Stub(
     BINDPTR bindptr;
     HRESULT hr;
 
-    TRACE("(%p, %s, %#x, %#x, %p, %p, %p, %p, %p, %p)\n", This, debugstr_w(name),
+    TRACE("%p, %s, %#lx, %#x, %p, %p, %p, %p, %p, %p.\n", This, debugstr_w(name),
         lHashVal, flags, ti, desckind, funcdesc, vardesc, typecomp, stg);
 
     memset(stg, 0, sizeof(*stg));
@@ -1700,7 +1599,7 @@ HRESULT CALLBACK ITypeComp_BindType_Proxy(
 {
     HRESULT hr;
 
-    TRACE("(%p, %s, %#x, %p, %p)\n", This, debugstr_w(name), lHashVal, ti, typecomp);
+    TRACE("%p, %s, %#lx, %p, %p.\n", This, debugstr_w(name), lHashVal, ti, typecomp);
 
     hr = ITypeComp_RemoteBindType_Proxy(This, name, lHashVal, ti);
     if (hr == S_OK)
@@ -1720,7 +1619,7 @@ HRESULT __RPC_STUB ITypeComp_BindType_Stub(
     ITypeComp *typecomp = NULL;
     HRESULT hr;
 
-    TRACE("(%p, %s, %#x, %p)\n", This, debugstr_w(name), lHashVal, ti);
+    TRACE("%p, %s, %#lx, %p.\n", This, debugstr_w(name), lHashVal, ti);
 
     hr = ITypeComp_BindType(This, name, lHashVal, ti, &typecomp);
 
@@ -1843,7 +1742,7 @@ HRESULT CALLBACK ITypeInfo_GetNames_Proxy(
     UINT cMaxNames,
     UINT* pcNames)
 {
-    TRACE("(%p, %08x, %p, %d, %p)\n", This, memid, rgBstrNames, cMaxNames, pcNames);
+    TRACE("%p, %#lx, %p, %d, %p.\n", This, memid, rgBstrNames, cMaxNames, pcNames);
 
     return ITypeInfo_RemoteGetNames_Proxy(This, memid, rgBstrNames, cMaxNames, pcNames);
 }
@@ -1855,7 +1754,7 @@ HRESULT __RPC_STUB ITypeInfo_GetNames_Stub(
     UINT cMaxNames,
     UINT* pcNames)
 {
-    TRACE("(%p, %08x, %p, %d, %p)\n", This, memid, rgBstrNames, cMaxNames, pcNames);
+    TRACE("%p, %#lx, %p, %d, %p.\n", This, memid, rgBstrNames, cMaxNames, pcNames);
 
     return ITypeInfo_GetNames(This, memid, rgBstrNames, cMaxNames, pcNames);
 }
@@ -1905,7 +1804,8 @@ HRESULT CALLBACK ITypeInfo_GetDocumentation_Proxy(ITypeInfo *This, MEMBERID memi
     DWORD dummy_help_context, flags = 0;
     BSTR dummy_name, dummy_doc_string, dummy_help_file;
     HRESULT hr;
-    TRACE("(%p, %08x, %p, %p, %p, %p)\n", This, memid, name, doc_string, help_context, help_file);
+
+    TRACE("%p, %#lx, %p, %p, %p, %p.\n", This, memid, name, doc_string, help_context, help_file);
 
     if(!name) name = &dummy_name;
     else flags = 1;
@@ -1930,7 +1830,7 @@ HRESULT __RPC_STUB ITypeInfo_GetDocumentation_Stub(ITypeInfo *This, MEMBERID mem
                                                    DWORD flags, BSTR *name, BSTR *doc_string,
                                                    DWORD *help_context, BSTR *help_file)
 {
-    TRACE("(%p, %08x, %08x, %p, %p, %p, %p)\n", This, memid, flags, name, doc_string, help_context, help_file);
+    TRACE("%p, %#lx, %#lx, %p, %p, %p, %p.\n", This, memid, flags, name, doc_string, help_context, help_file);
 
     *name = *doc_string = *help_file = NULL;
     *help_context = 0;
@@ -1951,7 +1851,8 @@ HRESULT CALLBACK ITypeInfo_GetDllEntry_Proxy(ITypeInfo *This, MEMBERID memid,
     BSTR dummy_dll_name, dummy_name;
     WORD dummy_ordinal;
     HRESULT hr;
-    TRACE("(%p, %08x, %x, %p, %p, %p)\n", This, memid, invkind, dll_name, name, ordinal);
+
+    TRACE("%p, %#lx, %#x, %p, %p, %p.\n", This, memid, invkind, dll_name, name, ordinal);
 
     if(!dll_name) dll_name = &dummy_dll_name;
     else flags = 1;
@@ -1974,7 +1875,7 @@ HRESULT __RPC_STUB ITypeInfo_GetDllEntry_Stub(ITypeInfo *This, MEMBERID memid,
                                               BSTR *dll_name, BSTR *name,
                                               WORD *ordinal)
 {
-    TRACE("(%p, %08x, %x, %p, %p, %p)\n", This, memid, invkind, dll_name, name, ordinal);
+    TRACE("%p, %#lx, %x, %p, %p, %p.\n", This, memid, invkind, dll_name, name, ordinal);
 
     *dll_name = *name = NULL;
     *ordinal = 0;
@@ -2108,7 +2009,7 @@ void CALLBACK ITypeInfo_ReleaseVarDesc_Proxy(
     CoTaskMemFree(pVarDesc->lpstrSchema);
 
     if(pVarDesc->varkind == VAR_CONST)
-        CoTaskMemFree(pVarDesc->u.lpvarValue);
+        CoTaskMemFree(pVarDesc->lpvarValue);
 
     free_embedded_elemdesc(&pVarDesc->elemdescVar);
     CoTaskMemFree(pVarDesc);
@@ -2131,7 +2032,8 @@ HRESULT CALLBACK ITypeInfo2_GetDocumentation2_Proxy(ITypeInfo2 *This, MEMBERID m
     DWORD dummy_help_context, flags = 0;
     BSTR dummy_help_string, dummy_help_dll;
     HRESULT hr;
-    TRACE("(%p, %08x, %08x, %p, %p, %p)\n", This, memid, lcid, help_string, help_context, help_dll);
+
+    TRACE("%p, %#lx, %#lx, %p, %p, %p.\n", This, memid, lcid, help_string, help_context, help_dll);
 
     if(!help_string) help_string = &dummy_help_string;
     else flags = 1;
@@ -2154,7 +2056,7 @@ HRESULT __RPC_STUB ITypeInfo2_GetDocumentation2_Stub(ITypeInfo2 *This, MEMBERID 
                                                      BSTR *help_string, DWORD *help_context,
                                                      BSTR *help_dll)
 {
-    TRACE("(%p, %08x, %08x, %08x, %p, %p, %p)\n", This, memid, lcid, flags, help_string, help_context, help_dll);
+    TRACE("%p, %#lx, %#lx, %#lx, %p, %p, %p.\n", This, memid, lcid, flags, help_string, help_context, help_dll);
 
     *help_string = *help_dll = NULL;
     *help_context = 0;
@@ -2253,7 +2155,7 @@ HRESULT __RPC_STUB ITypeLib_GetDocumentation_Stub(ITypeLib *This, INT index, DWO
                                                   BSTR *name, BSTR *doc_string,
                                                   DWORD *help_context, BSTR *help_file)
 {
-    TRACE("(%p, %d, %08x, %p, %p, %p, %p)\n", This, index, flags, name, doc_string, help_context, help_file);
+    TRACE("%p, %d, %#lx, %p, %p, %p, %p.\n", This, index, flags, name, doc_string, help_context, help_file);
 
     *name = *doc_string = *help_file = NULL;
     *help_context = 0;
@@ -2355,7 +2257,8 @@ HRESULT CALLBACK ITypeLib2_GetDocumentation2_Proxy(ITypeLib2 *This, INT index,
     DWORD dummy_help_context, flags = 0;
     BSTR dummy_help_string, dummy_help_dll;
     HRESULT hr;
-    TRACE("(%p, %d, %08x, %p, %p, %p)\n", This, index, lcid, help_string, help_context, help_dll);
+
+    TRACE("%p, %d, %#lx, %p, %p, %p.\n", This, index, lcid, help_string, help_context, help_dll);
 
     if(!help_string) help_string = &dummy_help_string;
     else flags = 1;
@@ -2377,7 +2280,7 @@ HRESULT __RPC_STUB ITypeLib2_GetDocumentation2_Stub(ITypeLib2 *This, INT index, 
                                                     DWORD flags, BSTR *help_string,
                                                     DWORD *help_context, BSTR *help_dll)
 {
-    TRACE("(%p, %d, %08x, %08x, %p, %p, %p)\n", This, index, lcid, flags, help_string, help_context, help_dll);
+    TRACE("%p, %d, %#lx, %#lx, %p, %p, %p.\n", This, index, lcid, flags, help_string, help_context, help_dll);
 
     *help_string = *help_dll = NULL;
     *help_context = 0;
@@ -2435,10 +2338,10 @@ HRESULT __RPC_STUB IPropertyBag_Read_Stub(
     DWORD varType,
     IUnknown *pUnkObj)
 {
-  static const WCHAR emptyWstr[] = {0};
   IDispatch *disp;
   HRESULT hr;
-  TRACE("(%p, %s, %p, %p, %x, %p)\n", This, debugstr_w(pszPropName), pVar,
+
+  TRACE("%p, %s, %p, %p, %lx, %p.\n", This, debugstr_w(pszPropName), pVar,
                                      pErrorLog, varType, pUnkObj);
 
   if(varType & (VT_BYREF | VT_ARRAY | VT_VECTOR))
@@ -2461,7 +2364,7 @@ HRESULT __RPC_STUB IPropertyBag_Read_Stub(
       V_UNKNOWN(pVar) = pUnkObj;
       break;
     case VT_BSTR:
-      V_BSTR(pVar) = SysAllocString(emptyWstr);
+      V_BSTR(pVar) = SysAllocString(L"");
       break;
     case VT_SAFEARRAY:
       FIXME("Safearray support not yet implemented.\n");
@@ -2517,7 +2420,7 @@ HRESULT CALLBACK IEnumConnections_Next_Proxy(
 {
     ULONG fetched;
 
-    TRACE("(%u, %p %p)\n", cConnections, rgcd, pcFetched);
+    TRACE("%lu, %p, %p.\n", cConnections, rgcd, pcFetched);
 
     if (!pcFetched)
         pcFetched = &fetched;
@@ -2533,7 +2436,7 @@ HRESULT __RPC_STUB IEnumConnections_Next_Stub(
 {
     HRESULT hr;
 
-    TRACE("(%u, %p, %p)\n", cConnections, rgcd, pcFetched);
+    TRACE("%lu, %p, %p.\n", cConnections, rgcd, pcFetched);
 
     *pcFetched = 0;
     hr = IEnumConnections_Next(This, cConnections, rgcd, pcFetched);
@@ -2551,7 +2454,7 @@ HRESULT CALLBACK IEnumConnectionPoints_Next_Proxy(
 {
     ULONG fetched;
 
-    TRACE("(%u, %p %p)\n", cConnections, ppCP, pcFetched);
+    TRACE("%lu, %p %p.\n", cConnections, ppCP, pcFetched);
 
     if (!pcFetched)
         pcFetched = &fetched;
@@ -2567,7 +2470,7 @@ HRESULT __RPC_STUB IEnumConnectionPoints_Next_Stub(
 {
     HRESULT hr;
 
-    TRACE("(%u, %p, %p)\n", cConnections, ppCP, pcFetched);
+    TRACE("%lu, %p, %p.\n", cConnections, ppCP, pcFetched);
 
     *pcFetched = 0;
     hr = IEnumConnectionPoints_Next(This, cConnections, ppCP, pcFetched);
@@ -2582,7 +2485,7 @@ HRESULT CALLBACK IPersistMemory_Load_Proxy(
     LPVOID pMem,
     ULONG cbSize)
 {
-    TRACE("(%p, %u)\n", pMem, cbSize);
+    TRACE("%p, %lu.\n", pMem, cbSize);
 
     if (!pMem)
         return E_POINTER;
@@ -2595,7 +2498,7 @@ HRESULT __RPC_STUB IPersistMemory_Load_Stub(
     BYTE *pMem,
     ULONG cbSize)
 {
-    TRACE("(%p, %u)\n", pMem, cbSize);
+    TRACE("%p, %lu.\n", pMem, cbSize);
     return IPersistMemory_Load(This, pMem, cbSize);
 }
 
@@ -2605,7 +2508,7 @@ HRESULT CALLBACK IPersistMemory_Save_Proxy(
     BOOL fClearDirty,
     ULONG cbSize)
 {
-    TRACE("(%p, %d, %u)\n", pMem, fClearDirty, cbSize);
+    TRACE("%p, %d, %lu.\n", pMem, fClearDirty, cbSize);
 
     if (!pMem)
         return E_POINTER;
@@ -2619,7 +2522,7 @@ HRESULT __RPC_STUB IPersistMemory_Save_Stub(
     BOOL fClearDirty,
     ULONG cbSize)
 {
-    TRACE("(%p, %d, %u)\n", pMem, fClearDirty, cbSize);
+    TRACE("%p, %d, %lu.\n", pMem, fClearDirty, cbSize);
     return IPersistMemory_Save(This, pMem, fClearDirty, cbSize);
 }
 
@@ -2627,7 +2530,7 @@ void CALLBACK IAdviseSinkEx_OnViewStatusChange_Proxy(
     IAdviseSinkEx* This,
     DWORD dwViewStatus)
 {
-    TRACE("(%p, 0x%08x)\n", This, dwViewStatus);
+    TRACE("%p, %#lx.\n", This, dwViewStatus);
     IAdviseSinkEx_RemoteOnViewStatusChange_Proxy(This, dwViewStatus);
 }
 
@@ -2635,7 +2538,7 @@ HRESULT __RPC_STUB IAdviseSinkEx_OnViewStatusChange_Stub(
     IAdviseSinkEx* This,
     DWORD dwViewStatus)
 {
-    TRACE("(%p, 0x%08x)\n", This, dwViewStatus);
+    TRACE("%p, %#lx.\n", This, dwViewStatus);
     IAdviseSinkEx_OnViewStatusChange(This, dwViewStatus);
     return S_OK;
 }
@@ -2648,7 +2551,7 @@ HRESULT CALLBACK IEnumOleUndoUnits_Next_Proxy(
 {
     ULONG fetched;
 
-    TRACE("(%u, %p %p)\n", cElt, rgElt, pcEltFetched);
+    TRACE("%lu, %p %p.\n", cElt, rgElt, pcEltFetched);
 
     if (!pcEltFetched)
         pcEltFetched = &fetched;
@@ -2664,7 +2567,7 @@ HRESULT __RPC_STUB IEnumOleUndoUnits_Next_Stub(
 {
     HRESULT hr;
 
-    TRACE("(%u, %p, %p)\n", cElt, rgElt, pcEltFetched);
+    TRACE("%lu, %p, %p.\n", cElt, rgElt, pcEltFetched);
 
     *pcEltFetched = 0;
     hr = IEnumOleUndoUnits_Next(This, cElt, rgElt, pcEltFetched);

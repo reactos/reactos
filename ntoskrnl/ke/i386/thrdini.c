@@ -329,6 +329,7 @@ KiSwapContextExit(IN PKTHREAD OldThread,
     PKIPCR Pcr = (PKIPCR)KeGetPcr();
     PKPROCESS OldProcess, NewProcess;
     PKTHREAD NewThread;
+    ULONG64 CurrentCycleTime, ElapsedCycles, NewCycleTime;
 
     /* We are on the new thread stack now */
     NewThread = Pcr->PrcbData.CurrentThread;
@@ -357,6 +358,14 @@ KiSwapContextExit(IN PKTHREAD OldThread,
         /* Switch address space and flush TLB */
         __writecr3(NewProcess->DirectoryTableBase[0]);
     }
+
+    /* Update the old thread's cycle time */
+    CurrentCycleTime = __rdtsc();
+    ElapsedCycles = CurrentCycleTime - Pcr->PrcbData.StartCycles;
+    NewCycleTime = ((PETHREAD)OldThread)->CycleTime + ElapsedCycles;
+    KiWriteThreadCycleTime(OldThread, NewCycleTime);
+    InterlockedAdd64((PLONG64)&((PEPROCESS)OldProcess)->CycleTime, ElapsedCycles);
+    Pcr->PrcbData.StartCycles = CurrentCycleTime;
 
     /* Clear GS */
     Ke386SetGs(0);
@@ -416,6 +425,10 @@ KiSwapContextEntry(IN PKSWITCHFRAME SwitchFrame,
     PKIPCR Pcr = (PKIPCR)KeGetPcr();
     PKTHREAD OldThread, NewThread;
     ULONG Cr0, NewCr0;
+#ifdef CONFIG_SMP
+    PKTHREAD NpxThread;
+    PFX_SAVE_AREA NpxSaveArea;
+#endif
 
     /* Save APC bypass disable */
     SwitchFrame->ApcBypassDisable = OldThreadAndApcFlag & 3;
@@ -443,8 +456,34 @@ KiSwapContextEntry(IN PKSWITCHFRAME SwitchFrame,
     /* ISRs can change FPU state, so disable interrupts while checking */
     _disable();
 
-    /* Get current and new CR0 and check if they've changed */
+    /* Get the current CR0 state */
     Cr0 = __readcr0();
+
+#ifdef CONFIG_SMP
+    /*
+     * The outgoing thread's NPX state lives in this processor's registers.
+     * Save it and drop local ownership so the thread can resume on any processor.
+     */
+    NpxThread = Pcr->PrcbData.NpxThread;
+    if (NpxThread)
+    {
+        ASSERT(NpxThread == OldThread);
+
+        if (NpxThread->NpxState == NPX_STATE_LOADED)
+        {
+            __writecr0(Cr0 & ~(CR0_MP | CR0_EM | CR0_TS));
+
+            NpxSaveArea = KiGetThreadNpxArea(NpxThread);
+            Ke386SaveFpuState(NpxSaveArea);
+            NpxSaveArea->NpxSavedCpu = 0;
+            NpxThread->NpxState = NPX_STATE_NOT_LOADED;
+        }
+
+        Pcr->PrcbData.NpxThread = NULL;
+    }
+#endif
+
+    /* Set the incoming thread's CR0 state */
     NewCr0 = NewThread->NpxState |
              (Cr0 & ~(CR0_MP | CR0_EM | CR0_TS)) |
              KiGetThreadNpxArea(NewThread)->Cr0NpxState;

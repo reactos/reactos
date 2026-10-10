@@ -11,9 +11,10 @@ if(CMAKE_CROSSCOMPILING)
         infrosput.c
         inflib.h)
 
-    add_library(inflib ${SOURCE})
+    add_library(inflib STATIC ${SOURCE})
     add_pch(inflib inflib.h SOURCE)
     add_dependencies(inflib psdk)
+    target_include_directories(inflib INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
 else()
     list(APPEND SOURCE
         infhostgen.c
@@ -22,7 +23,7 @@ else()
         infhostrtl.c)
 
     add_definitions(-D__NO_CTYPE_INLINES -DINFLIB_HOST -D_CRT_SECURE_NO_WARNINGS)
-    add_library(inflibhost ${SOURCE})
+    add_library(inflibhost STATIC ${SOURCE})
     target_include_directories(inflibhost INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
 
     if(NOT MSVC)

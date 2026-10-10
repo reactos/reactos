@@ -53,6 +53,38 @@ uacpi_status uacpi_write_field_unit(
     uacpi_data_view *wtr_response
 );
 
+#ifdef UACPI_NATIVE_MMIO
+#define uacpi_mmio_read8 uacpi_kernel_mmio_read8
+#define uacpi_mmio_read16 uacpi_kernel_mmio_read16
+#define uacpi_mmio_read32 uacpi_kernel_mmio_read32
+#define uacpi_mmio_read64 uacpi_kernel_mmio_read64
+
+#define uacpi_mmio_write8 uacpi_kernel_mmio_write8
+#define uacpi_mmio_write16 uacpi_kernel_mmio_write16
+#define uacpi_mmio_write32 uacpi_kernel_mmio_write32
+#define uacpi_mmio_write64 uacpi_kernel_mmio_write64
+#else
+uacpi_u8 uacpi_builtin_mmio_read8(void *ptr);
+uacpi_u16 uacpi_builtin_mmio_read16(void *ptr);
+uacpi_u32 uacpi_builtin_mmio_read32(void *ptr);
+uacpi_u64 uacpi_builtin_mmio_read64(void *ptr);
+
+void uacpi_builtin_mmio_write8(void *ptr, uacpi_u8 data);
+void uacpi_builtin_mmio_write16(void *ptr, uacpi_u16 data);
+void uacpi_builtin_mmio_write32(void *ptr, uacpi_u32 data);
+void uacpi_builtin_mmio_write64(void *ptr, uacpi_u64 data);
+
+#define uacpi_mmio_read8 uacpi_builtin_mmio_read8
+#define uacpi_mmio_read16 uacpi_builtin_mmio_read16
+#define uacpi_mmio_read32 uacpi_builtin_mmio_read32
+#define uacpi_mmio_read64 uacpi_builtin_mmio_read64
+
+#define uacpi_mmio_write8 uacpi_builtin_mmio_write8
+#define uacpi_mmio_write16 uacpi_builtin_mmio_write16
+#define uacpi_mmio_write32 uacpi_builtin_mmio_write32
+#define uacpi_mmio_write64 uacpi_builtin_mmio_write64
+#endif
+
 uacpi_status uacpi_system_memory_read(
     void *ptr, uacpi_size offset, uacpi_u8 width, uacpi_u64 *out
 );

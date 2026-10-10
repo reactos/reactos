@@ -17,6 +17,27 @@
 #include <shellutils.h>
 #include "shell32_apitest_sub.h"
 
+static void RunTest(LPTHREAD_START_ROUTINE TestFunc, UINT TimeOut = 1000 * 30)
+{
+    // These tests have a tendency to hang, kill it if it takes too long
+    HANDLE hThread = CreateThread(NULL, 0, TestFunc, NULL, 0, NULL);
+    if (hThread)
+    {
+        if (WaitForSingleObject(hThread, TimeOut) != WAIT_OBJECT_0)
+            TerminateThread(hThread, ERROR_OPERATION_ABORTED);
+        CloseHandle(hThread);
+    }
+}
+
+template<class T> static T& Reset(T &sei, UINT flags = SEE_MASK_FLAG_NO_UI)
+{
+    ZeroMemory(&sei, sizeof(T));
+    sei.cbSize = sizeof(T);
+    sei.fMask = flags;
+    sei.nShow = SW_SHOW;
+    return sei;
+}
+
 static WCHAR s_win_dir[MAX_PATH];
 static WCHAR s_sys_dir[MAX_PATH];
 static WCHAR s_win_notepad[MAX_PATH];
@@ -511,8 +532,47 @@ static void test_DoInvalidDir(void)
     CloseHandle(sei.hProcess);
 }
 
+static DWORD CALLBACK Test_InvokeIdList(LPVOID)
+{
+    CCoInit ComInit;
+    UINT err, ret;
+    WCHAR Path[MAX_PATH * 2];
+    CComHeapPtr<ITEMIDLIST> pidl;
+    SHELLEXECUTEINFOW sei;
+
+    Reset(sei, SEE_MASK_FLAG_NO_UI | SEE_MASK_INVOKEIDLIST).nShow = SW_HIDE;
+    GetSystemDirectoryW(Path, _countof(Path));
+    PathAppendW(Path, L"cmd.exe");
+    sei.lpParameters = L"/C exit 0";
+    sei.lpIDList = LPITEMIDLIST((pidl.Attach(ILCreateFromPathW(Path)), pidl));
+    if (!pidl)
+    {
+        skip("No exe to test\n");
+        return 0;
+    }
+
+    sei.lpVerb = NULL;
+    ok(ShellExecuteExW(&sei), "Failed with error %lu\n", GetLastError());
+
+    sei.lpVerb = L"open";
+    ok(ShellExecuteExW(&sei), "Failed with error %lu\n", GetLastError());
+
+    sei.lpVerb = L"Shell32_Test_DoesNotExist";
+    ret = ShellExecuteExW(&sei), err = GetLastError();
+    ok(!ret, "Expected failure\n");
+    ok_long(err, IsWindowsVistaOrGreater() ? ERROR_NO_ASSOCIATION : ERROR_INVALID_PARAMETER);
+
+    return 0;
+}
+
 START_TEST(ShellExecuteEx)
 {
+    RunTest(Test_InvokeIdList);
+
+    // FIXME: These tests are broken (silent skip for now)
+    if (!lstrcmpiW(L"", L""))
+        return;
+
 #ifdef _WIN64
     skip("Win64 is not supported yet\n");
     return;

@@ -2,7 +2,6 @@
 
 #include <uacpi/types.h>
 #include <uacpi/uacpi.h>
-#include <uacpi/acpi.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -28,7 +27,7 @@ uacpi_status uacpi_uninstall_fixed_event_handler(
     uacpi_fixed_event event
 ))
 
-/*
+/**
  * Enable/disable a fixed event. Note that the event is automatically enabled
  * upon installing a handler to it.
  */
@@ -91,7 +90,7 @@ const uacpi_char *uacpi_gpe_triggering_to_string(
     uacpi_gpe_triggering triggering
 );
 
-/*
+/**
  * Installs a handler to the provided GPE at 'idx' controlled by device
  * 'gpe_device'. The GPE is automatically disabled & cleared according to the
  * configured triggering upon invoking the handler. The event is optionally
@@ -105,7 +104,7 @@ uacpi_status uacpi_install_gpe_handler(
     uacpi_gpe_triggering triggering, uacpi_gpe_handler handler, uacpi_handle ctx
 ))
 
-/*
+/**
  * Installs a raw handler to the provided GPE at 'idx' controlled by device
  * 'gpe_device'. The handler is dispatched immediately after the event is
  * received, status & enable bits are untouched.
@@ -123,7 +122,7 @@ uacpi_status uacpi_uninstall_gpe_handler(
     uacpi_namespace_node *gpe_device, uacpi_u16 idx, uacpi_gpe_handler handler
 ))
 
-/*
+/**
  * Marks the GPE 'idx' managed by 'gpe_device' as wake-capable. 'wake_device' is
  * optional and configures the GPE to generate an implicit notification whenever
  * an event occurs.
@@ -136,7 +135,7 @@ uacpi_status uacpi_setup_gpe_for_wake(
     uacpi_namespace_node *wake_device
 ))
 
-/*
+/**
  * Mark a GPE managed by 'gpe_device' as enabled/disabled for wake. The GPE must
  * have previously been marked by calling uacpi_gpe_setup_for_wake. This
  * function only affects the GPE enable register state following the call to
@@ -153,7 +152,7 @@ uacpi_status uacpi_disable_gpe_for_wake(
     uacpi_namespace_node *gpe_device, uacpi_u16 idx
 ))
 
-/*
+/**
  * Finalize GPE initialization by enabling all GPEs not configured for wake and
  * having a matching AML handler detected.
  *
@@ -166,7 +165,7 @@ UACPI_ALWAYS_ERROR_FOR_REDUCED_HARDWARE(
     uacpi_status uacpi_finalize_gpe_initialization(void)
 )
 
-/*
+/**
  * Enable/disable a general purpose event managed by 'gpe_device'. Internally
  * this uses reference counting to make sure a GPE is not disabled until all
  * possible users of it do so. GPEs not marked for wake are enabled
@@ -184,7 +183,7 @@ uacpi_status uacpi_disable_gpe(
     uacpi_namespace_node *gpe_device, uacpi_u16 idx
 ))
 
-/*
+/**
  * Clear the status bit of the event 'idx' managed by 'gpe_device'.
  *
  * NOTE: 'gpe_device' may be null for GPEs managed by \_GPE
@@ -194,7 +193,7 @@ uacpi_status uacpi_clear_gpe(
     uacpi_namespace_node *gpe_device, uacpi_u16 idx
 ))
 
-/*
+/**
  * Suspend/resume a general purpose event managed by 'gpe_device'. This bypasses
  * the reference counting mechanism and unconditionally clears/sets the
  * corresponding bit in the enable registers. This is used for switching the GPE
@@ -211,7 +210,7 @@ uacpi_status uacpi_resume_gpe(
     uacpi_namespace_node *gpe_device, uacpi_u16 idx
 ))
 
-/*
+/**
  * Finish handling the GPE managed by 'gpe_device' at 'idx'. This clears the
  * status registers if it hasn't been cleared yet and re-enables the event if
  * it was enabled before.
@@ -223,7 +222,7 @@ uacpi_status uacpi_finish_handling_gpe(
     uacpi_namespace_node *gpe_device, uacpi_u16 idx
 ))
 
-/*
+/**
  * Hard mask/umask a general purpose event at 'idx' managed by 'gpe_device'.
  * This is used to permanently silence an event so that further calls to
  * enable/disable as well as suspend/resume get ignored. This might be necessary
@@ -241,14 +240,14 @@ uacpi_status uacpi_unmask_gpe(
     uacpi_namespace_node *gpe_device, uacpi_u16 idx
 ))
 
-/*
+/**
  * Disable all GPEs currently set up on the system.
  */
 UACPI_ALWAYS_ERROR_FOR_REDUCED_HARDWARE(
 uacpi_status uacpi_disable_all_gpes(void)
 )
 
-/*
+/**
  * Enable all GPEs not marked as wake. This is only needed after the system
  * wakes from a shallow sleep state and is called automatically by wake code.
  */
@@ -256,7 +255,7 @@ UACPI_ALWAYS_ERROR_FOR_REDUCED_HARDWARE(
 uacpi_status uacpi_enable_all_runtime_gpes(void)
 )
 
-/*
+/**
  * Enable all GPEs marked as wake. This is only needed before the system goes
  * to sleep is called automatically by sleep code.
  */
@@ -264,7 +263,7 @@ UACPI_ALWAYS_ERROR_FOR_REDUCED_HARDWARE(
 uacpi_status uacpi_enable_all_wake_gpes(void)
 )
 
-/*
+/**
  * Install/uninstall a new GPE block, usually defined by a device in the
  * namespace with a _HID of ACPI0006.
  */

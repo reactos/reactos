@@ -14,8 +14,8 @@
 @ stdcall CredUIStoreSSOCredA(str str str long)
 @ stdcall CredUIStoreSSOCredW(wstr wstr wstr long)
 @ stdcall CredUnPackAuthenticationBufferW(long ptr long ptr ptr ptr ptr ptr ptr)
-@ stub -private DllCanUnloadNow
+@ stdcall -private DllCanUnloadNow()
 @ stub -private DllGetClassObject
-@ stub -private DllRegisterServer
-@ stub -private DllUnregisterServer
+@ stdcall -private DllRegisterServer()
+@ stdcall -private DllUnregisterServer()
 @ stdcall SspiPromptForCredentialsW(wstr ptr long wstr ptr ptr ptr long)

@@ -1831,7 +1831,6 @@ static HRESULT ShellExecute_ContextMenuVerb(LPSHELLEXECUTEINFOW sei)
         return hr;
 
     CComHeapPtr<char> verb, parameters, dir;
-    __SHCloneStrWtoA(&verb, sei->lpVerb);
     __SHCloneStrWtoA(&parameters, sei->lpParameters);
     __SHCloneStrWtoA(&dir, sei->lpDirectory);
 
@@ -1841,6 +1840,7 @@ static HRESULT ShellExecute_ContextMenuVerb(LPSHELLEXECUTEINFOW sei)
     ici.nShow = sei->nShow;
     if (!fDefault)
     {
+        __SHCloneStrWtoA(&verb, sei->lpVerb);
         ici.lpVerb = verb;
         ici.lpVerbW = sei->lpVerb;
     }
@@ -2185,6 +2185,19 @@ static void do_error_dialog(UINT_PTR retval, HWND hwnd, PCWSTR filename)
     SetLastError(error_code); // Restore
 }
 
+static UINT_PTR ExecuteFailed(UINT_PTR retval, SHELLEXECUTEINFOW &sei, LPCWSTR lpFile, BOOL AllowOpenWith = TRUE)
+{
+    if (retval <= 32 && !(sei.fMask & SEE_MASK_FLAG_NO_UI))
+    {
+        if (retval == SE_ERR_NOASSOC && !(sei.fMask & SEE_MASK_CLASSALL) && AllowOpenWith)
+            retval = InvokeOpenWith(sei.hwnd, sei);
+        if (retval <= 32)
+            do_error_dialog(retval, sei.hwnd, lpFile);
+    }
+    sei.hInstApp = (HINSTANCE)UlongToHandle(retval > 32 ? 33 : retval);
+    return retval;
+}
+
 static WCHAR *expand_environment( const WCHAR *str )
 {
     CHeapPtr<WCHAR, CLocalAllocator> buf;
@@ -2351,8 +2364,7 @@ static BOOL SHELL_execute(LPSHELLEXECUTEINFOW sei, SHELL_ExecuteW32 execfunc)
     }
 
     /* process the IDList */
-    if (sei_tmp.fMask & SEE_MASK_IDLIST &&
-        (sei_tmp.fMask & SEE_MASK_INVOKEIDLIST) != SEE_MASK_INVOKEIDLIST)
+    if ((sei_tmp.fMask & SEE_MASK_INVOKEIDLIST) == SEE_MASK_IDLIST)
     {
         LPCITEMIDLIST pidl = (LPCITEMIDLIST)sei_tmp.lpIDList;
         hr = SHGetNameAndFlagsW(pidl, SHGDN_FORPARSING, wszApplicationName, dwApplicationNameLen, NULL);
@@ -2385,6 +2397,9 @@ static BOOL SHELL_execute(LPSHELLEXECUTEINFOW sei, SHELL_ExecuteW32 execfunc)
             sei->hInstApp = (HINSTANCE)42;
             return TRUE;
         }
+        UINT err = HRESULT_FACILITY(hr) == FACILITY_WIN32 ? HRESULT_CODE(hr) : GetLastError();
+        SetLastError(err ? err : ERROR_ACCESS_DENIED);
+        return ExecuteFailed(retval, *sei, NULL, FALSE) > 32;
     }
 
     if (ERROR_SUCCESS == ShellExecute_FromContextMenuHandlers(&sei_tmp))
@@ -2588,16 +2603,10 @@ static BOOL SHELL_execute(LPSHELLEXECUTEINFOW sei, SHELL_ExecuteW32 execfunc)
 
     TRACE("retval %lu\n", retval);
 
-    if (retval <= 32 && !(sei_tmp.fMask & SEE_MASK_FLAG_NO_UI))
-    {
-        if (retval == SE_ERR_NOASSOC && !(sei->fMask & SEE_MASK_CLASSALL))
-            retval = InvokeOpenWith(sei_tmp.hwnd, *sei);
-        if (retval <= 32)
-            do_error_dialog(retval, sei_tmp.hwnd, lpFile);
-    }
+    if (retval <= 32)
+        retval = ExecuteFailed(retval, *sei, lpFile);
 
     sei->hInstApp = (HINSTANCE)(retval > 32 ? 33 : retval);
-
     return retval > 32;
 }
 

@@ -323,6 +323,7 @@ CNetConnectionPropertyUi::LANPropertiesUIDlg(
                         RegCloseKey(hKey);
                     }
                 }
+                RefreshNetTaskbarNotificationIcon();
 
                 return PSNRET_NOERROR;
             }

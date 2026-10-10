@@ -109,24 +109,21 @@ LRESULT CPaletteWindow::OnPaint(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& b
     rc.top = Y_MARGIN + (CXY_BIGBOX * 5 / 8) - (CXY_SELECTEDBOX / 2);
     rc.right = rc.left + CXY_SELECTEDBOX;
     rc.bottom = rc.top + CXY_SELECTEDBOX;
-    HBRUSH hbrBg = paletteModel.CreateBgBrush();
-    drawColorBox(hMemDC, &rc, hbrBg, BDR_RAISEDINNER);
-    DeleteObject(hbrBg);
+    drawColorBox(hMemDC, &rc, toolsModel.GetBgBrush(), BDR_RAISEDINNER);
 
     /* Draw the black box (overlapping the white box), at 3/8 position */
     rc.left = X_MARGIN + (CXY_BIGBOX * 3 / 8) - (CXY_SELECTEDBOX / 2);
     rc.top = Y_MARGIN + (CXY_BIGBOX * 3 / 8) - (CXY_SELECTEDBOX / 2);
     rc.right = rc.left + CXY_SELECTEDBOX;
     rc.bottom = rc.top + CXY_SELECTEDBOX;
-    HBRUSH hbrFg = paletteModel.CreateFgBrush();
-    drawColorBox(hMemDC, &rc, hbrFg, BDR_RAISEDINNER);
-    DeleteObject(hbrFg);
+    drawColorBox(hMemDC, &rc, toolsModel.GetFgBrush(), BDR_RAISEDINNER);
 
     /* Draw the normal color boxes */
+    const PAL_TYPE palette = paletteModel.SelectedPalette();
     for (INT i = 0; i < COLOR_COUNT; i++)
     {
         getColorBoxRect(&rc, rcClient, i);
-        HBRUSH hbr = paletteModel.CreateColorBrush(paletteModel.GetColor(i));
+        HBRUSH hbr = toolsModel.CreateBrush(palette, paletteModel.GetColor(i));
         drawColorBox(hMemDC, &rc, hbr, BDR_SUNKENOUTER);
         DeleteObject(hbr);
     }

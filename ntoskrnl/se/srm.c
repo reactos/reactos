@@ -4,7 +4,7 @@
  * PURPOSE:     Security Reference Monitor Server
  * COPYRIGHT:   Copyright Timo Kreuzer <timo.kreuzer@reactos.org>
  *              Copyright Pierre Schweitzer <pierre@reactos.org>
- *              Copyright 2021 George Bișoc <george.bisoc@reactos.org>
+ *              Copyright 2021-2026 George Bișoc <george.bisoc@reactos.org>
  */
 
 /* INCLUDES *******************************************************************/
@@ -21,6 +21,12 @@ typedef struct _SEP_LOGON_SESSION_TERMINATED_NOTIFICATION
     struct _SEP_LOGON_SESSION_TERMINATED_NOTIFICATION *Next;
     PSE_LOGON_SESSION_TERMINATED_ROUTINE CallbackRoutine;
 } SEP_LOGON_SESSION_TERMINATED_NOTIFICATION, *PSEP_LOGON_SESSION_TERMINATED_NOTIFICATION;
+
+typedef struct _SEP_LOGON_SESSION_TERMINATED_NOTIFY_CONTEXT
+{
+    LUID LogonId;
+    WORK_QUEUE_ITEM NotifyWorkItem;
+} SEP_LOGON_SESSION_TERMINATED_NOTIFY_CONTEXT, *PSEP_LOGON_SESSION_TERMINATED_NOTIFY_CONTEXT;
 
 VOID
 NTAPI
@@ -60,10 +66,102 @@ ULONG SepAdtMaxListLength = 0x3000;
 UCHAR SeAuditingState[POLICY_AUDIT_EVENT_TYPE_COUNT];
 
 KGUARDED_MUTEX SepRmDbLock;
-PSEP_LOGON_SESSION_REFERENCES SepLogonSessions = NULL;
 PSEP_LOGON_SESSION_TERMINATED_NOTIFICATION SepLogonNotifications = NULL;
 
+/*
+ * The logon session database is a hash table comprised of 16 hash buckets.
+ * Each bucket is a single-list of SEP_LOGON_SESSION_REFERENCES structures,
+ * that is simply indexed by a session logon ID modulo the number of buckets.
+ *
+ * !logonsession command extension from WinDBG strictly expects nt!SepLogonSessions
+ * symbol to follow this mechanism.
+ */
+#define MAX_LOGON_SESSION_LISTS_IN_ARRAY      16
+static PSEP_LOGON_SESSION_REFERENCES _SepLogonSessions[MAX_LOGON_SESSION_LISTS_IN_ARRAY] = {NULL};
+PSEP_LOGON_SESSION_REFERENCES* const SepLogonSessions = _SepLogonSessions;
+
 /* PRIVATE FUNCTIONS **********************************************************/
+
+/**
+ * @brief
+ * Main SRM worker that deploys notification to every registered
+ * filesystem that is interested for logon session termination notify.
+ *
+ * @param[in] Parameter
+ * A pointer to the session notify dispatch buffer containing the logon
+ * session ID of interest, provided by the method who inquired us to
+ * notify every registered filesystem.
+ */
+_Function_class_(WORKER_THREAD_ROUTINE)
+static VOID
+NTAPI
+SepRmNotifyFsCallbacksWorker(
+    _In_ PVOID Parameter)
+{
+    PSEP_LOGON_SESSION_TERMINATED_NOTIFICATION Notification;
+    PSEP_LOGON_SESSION_TERMINATED_NOTIFY_CONTEXT SessionNotify = (PSEP_LOGON_SESSION_TERMINATED_NOTIFY_CONTEXT)Parameter;
+    PAGED_CODE();
+
+    KeAcquireGuardedMutex(&SepRmDbLock);
+
+    for (Notification = SepLogonNotifications;
+         Notification != NULL;
+         Notification = Notification->Next)
+    {
+        Notification->CallbackRoutine(&SessionNotify->LogonId);
+    }
+
+    KeReleaseGuardedMutex(&SepRmDbLock);
+    ExFreePoolWithTag(SessionNotify, TAG_LOGON_TERMINATED);
+}
+
+/**
+ * @brief
+ * Alerts every registered filesystem of an impeding logon termination
+ * that is about to occur soon.
+ *
+ * @param[in] Session
+ * A pointer to the logon session that is about to be terminated, of
+ * which the interested filesystems get acknowledged of this fact with
+ * a notification.
+ *
+ * @remarks
+ * Logon session termination can occur when a thread may die as the
+ * process gets cleaned up. So service this operation with a Executive
+ * worker thread.
+ */
+static
+VOID
+SepRmNotifyTerminatedLogonSession(
+    _In_ PSEP_LOGON_SESSION_REFERENCES Session)
+{
+    PSEP_LOGON_SESSION_TERMINATED_NOTIFY_CONTEXT SessionNotify;
+
+    /* No filesystem has taken interest for this logon session */
+    if (!(Session->Flags & SEP_LOGON_SESSION_TERMINATION_NOTIFY))
+    {
+        DPRINT("No filesystem cares to be notified for this [%08x-%08x] logon ID, bail out!\n",
+               Session->LogonId.HighPart, Session->LogonId.LowPart);
+        return;
+    }
+
+    SessionNotify = ExAllocatePoolZero(NonPagedPool,
+                                       sizeof(*SessionNotify),
+                                       TAG_LOGON_TERMINATED);
+    if (SessionNotify == NULL)
+    {
+        DPRINT1("Failed to allocate memory pool to hold the logon session termination notify work item!\n");
+        return;
+    }
+
+    /* Setup the worker thread and deploy it immediately as soon as possible */
+    ExInitializeWorkItem(&SessionNotify->NotifyWorkItem,
+                         SepRmNotifyFsCallbacksWorker,
+                         SessionNotify);
+
+    SessionNotify->LogonId = Session->LogonId;
+    ExQueueWorkItem(&SessionNotify->NotifyWorkItem, CriticalWorkQueue);
+}
 
 /**
  * @brief
@@ -377,7 +475,8 @@ SepRmInsertLogonSessionIntoToken(
     /* Acquire the database lock */
     KeAcquireGuardedMutex(&SepRmDbLock);
 
-    for (LogonSession = SepLogonSessions;
+    /* Retrieve the hash bucket and loop over it */
+    for (LogonSession = SepLogonSessions[Token->AuthenticationId.LowPart % MAX_LOGON_SESSION_LISTS_IN_ARRAY];
          LogonSession != NULL;
          LogonSession = LogonSession->Next)
     {
@@ -458,7 +557,8 @@ SepRmRemoveLogonSessionFromToken(
     /* Acquire the database lock */
     KeAcquireGuardedMutex(&SepRmDbLock);
 
-    for (LogonSession = SepLogonSessions;
+    /* Retrieve the hash bucket and loop over it */
+    for (LogonSession = SepLogonSessions[Token->AuthenticationId.LowPart % MAX_LOGON_SESSION_LISTS_IN_ARRAY];
          LogonSession != NULL;
          LogonSession = LogonSession->Next)
     {
@@ -512,7 +612,7 @@ NTSTATUS
 SepRmCreateLogonSession(
     _In_ PLUID LogonLuid)
 {
-    PSEP_LOGON_SESSION_REFERENCES CurrentSession, NewSession;
+    PSEP_LOGON_SESSION_REFERENCES *LogonSession, CurrentSession, NewSession;
     NTSTATUS Status;
     PAGED_CODE();
 
@@ -538,8 +638,15 @@ SepRmCreateLogonSession(
     /* Acquire the database lock */
     KeAcquireGuardedMutex(&SepRmDbLock);
 
+    /*
+     * Cache the previous session from the hash bucket, the newly created
+     * session will keep hold of the previous session and the hash bucket
+     * gets a new assigned session.
+     */
+    LogonSession = &SepLogonSessions[LogonLuid->LowPart % MAX_LOGON_SESSION_LISTS_IN_ARRAY];
+
     /* Loop all existing sessions */
-    for (CurrentSession = SepLogonSessions;
+    for (CurrentSession = *LogonSession;
          CurrentSession != NULL;
          CurrentSession = CurrentSession->Next)
     {
@@ -552,8 +659,8 @@ SepRmCreateLogonSession(
     }
 
     /* Insert the new session */
-    NewSession->Next = SepLogonSessions;
-    SepLogonSessions = NewSession;
+    NewSession->Next = *LogonSession;
+    *LogonSession = NewSession;
 
     Status = STATUS_SUCCESS;
 
@@ -590,7 +697,7 @@ NTSTATUS
 SepRmDeleteLogonSession(
     _In_ PLUID LogonLuid)
 {
-    PSEP_LOGON_SESSION_REFERENCES SessionToDelete;
+    PSEP_LOGON_SESSION_REFERENCES SessionToDelete, *LogonSession;
     NTSTATUS Status;
     PAGED_CODE();
 
@@ -600,8 +707,11 @@ SepRmDeleteLogonSession(
     /* Acquire the database lock */
     KeAcquireGuardedMutex(&SepRmDbLock);
 
+    /* Retrieve the hash bucket, the database will have this session pulled away down below */
+    LogonSession = &SepLogonSessions[LogonLuid->LowPart % MAX_LOGON_SESSION_LISTS_IN_ARRAY];
+
     /* Loop over the existing logon sessions */
-    for (SessionToDelete = SepLogonSessions;
+    for (SessionToDelete = *LogonSession;
          SessionToDelete != NULL;
          SessionToDelete = SessionToDelete->Next)
     {
@@ -667,6 +777,9 @@ SepRmDeleteLogonSession(
         ObfDereferenceDeviceMap(SessionToDelete->pDeviceMap);
     }
 
+    /* Unlink the session from the bucket list */
+    *LogonSession = SessionToDelete->Next;
+
     /* If we're here then we've deleted the logon session successfully */
     DPRINT("SepRmDeleteLogonSession(): Logon session deleted with success!\n");
     Status = STATUS_SUCCESS;
@@ -705,8 +818,8 @@ SepRmReferenceLogonSession(
     /* Acquire the database lock */
     KeAcquireGuardedMutex(&SepRmDbLock);
 
-    /* Loop all existing sessions */
-    for (CurrentSession = SepLogonSessions;
+    /* Retrieve the hash bucket and loop over it */
+    for (CurrentSession = SepLogonSessions[LogonLuid->LowPart % MAX_LOGON_SESSION_LISTS_IN_ARRAY];
          CurrentSession != NULL;
          CurrentSession = CurrentSession->Next)
     {
@@ -994,7 +1107,8 @@ AllocateLinksAgain:
  * De-references a logon session. If the session has a reference
  * count of 0 by the time the function has de-referenced the logon,
  * that means the session is no longer used and can be safely deleted
- * from the logon sessions database.
+ * from the logon sessions database. Whoever registered for logon termination
+ * notification (typically filesystems) gets alerted of this fact.
  *
  * @param[in] LogonLuid
  * A logon session ID to de-reference.
@@ -1018,8 +1132,8 @@ SepRmDereferenceLogonSession(
     /* Acquire the database lock */
     KeAcquireGuardedMutex(&SepRmDbLock);
 
-    /* Loop all existing sessions */
-    for (CurrentSession = SepLogonSessions;
+    /* Retrieve the hash bucket and walk over it */
+    for (CurrentSession = SepLogonSessions[LogonLuid->LowPart % MAX_LOGON_SESSION_LISTS_IN_ARRAY];
          CurrentSession != NULL;
          CurrentSession = CurrentSession->Next)
     {
@@ -1045,7 +1159,8 @@ SepRmDereferenceLogonSession(
                     ObfDereferenceDeviceMap(DeviceMap);
                 }
 
-                /* FIXME: Alert LSA and filesystems that a logon is about to be deleted */
+                /* Alert filesystems that a logon session is about to be deleted */
+                SepRmNotifyTerminatedLogonSession(CurrentSession);
             }
 
             return STATUS_SUCCESS;
@@ -1367,8 +1482,8 @@ SeGetLogonIdDeviceMap(
     /* Acquire the database lock */
     KeAcquireGuardedMutex(&SepRmDbLock);
 
-    /* Loop all existing sessions */
-    for (CurrentSession = SepLogonSessions;
+    /* Retrieve the hash bucket and loop over it */
+    for (CurrentSession = SepLogonSessions[LogonId->LowPart % MAX_LOGON_SESSION_LISTS_IN_ARRAY];
          CurrentSession != NULL;
          CurrentSession = CurrentSession->Next)
     {
@@ -1494,9 +1609,9 @@ SeGetLogonIdDeviceMap(
 
 /**
  * @brief
- * Marks a logon session for future termination, given its logon ID. This triggers
- * a callout (the registered callback) when the logon is no longer used by anyone,
- * that is, no token is still referencing the speciffied logon session.
+ * Marks a logon session for termination notification, given its logon ID. This triggers
+ * a callout (that is registered by a filesystem) when the logon is no longer used by
+ * anyone that is, no token is still referencing the speciffied logon session.
  *
  * @param[in] LogonId
  * The ID of the logon session.
@@ -1519,8 +1634,8 @@ SeMarkLogonSessionForTerminationNotification(
     /* Acquire the database lock */
     KeAcquireGuardedMutex(&SepRmDbLock);
 
-    /* Loop over the existing logon sessions */
-    for (SessionToMark = SepLogonSessions;
+    /* Retrieve the hash bucket and loop over it */
+    for (SessionToMark = SepLogonSessions[LogonId->LowPart % MAX_LOGON_SESSION_LISTS_IN_ARRAY];
          SessionToMark != NULL;
          SessionToMark = SessionToMark->Next)
     {
@@ -1543,9 +1658,10 @@ SeMarkLogonSessionForTerminationNotification(
         return STATUS_NOT_FOUND;
     }
 
-    /* Mark the logon session for termination */
+    /* Mark the logon session for termination notification */
     SessionToMark->Flags |= SEP_LOGON_SESSION_TERMINATION_NOTIFY;
-    DPRINT("SeMarkLogonSessionForTerminationNotification(): Logon session marked for termination with success!\n");
+    DPRINT("SeMarkLogonSessionForTerminationNotification(): Logon session [%08x-%08x] marked for termination notification with success!\n",
+           LogonId->HighPart, LogonId->LowPart);
 
     /* Release the database lock */
     KeReleaseGuardedMutex(&SepRmDbLock);
@@ -1555,7 +1671,9 @@ SeMarkLogonSessionForTerminationNotification(
 /**
  * @brief
  * Registers a callback that will be called once a logon session
- * terminates.
+ * terminates. This is typically registered by a filesystem, of
+ * which it receives a notification from the kernel once the
+ * logon session of interest is terminated through this callback.
  *
  * @param[in] CallbackRoutine
  * Callback routine address.

@@ -52,7 +52,13 @@ GetCharacterTimeout (LPTCH ch, DWORD dwMilliseconds)
         return GC_TIMEOUT;
 
     //otherwise get the event
-    ReadConsoleInput (hInput, &lpBuffer, 1, &dwRead);
+    lpBuffer.EventType = !KEY_EVENT;
+    if (!ReadConsoleInput (hInput, &lpBuffer, 1, &dwRead) && GetLastError () == ERROR_INVALID_HANDLE)
+    {
+        *ch = '\0';
+        if (ReadFile(hInput, ch, 1, &dwRead, NULL))
+            return GC_KEYREAD;
+    }
 
     //if the event is a key pressed
     if ((lpBuffer.EventType == KEY_EVENT) &&
@@ -103,12 +109,13 @@ CommandChoice (LPTSTR param)
 {
     LPTSTR lpOptions;
     TCHAR Options[6];
-    LPTSTR lpText    = NULL;
+    LPTSTR lpText   = NULL, lpTextParam = NULL;
+    UINT   iSkipTextIndex = 0, iTextIndex;
     BOOL   bNoPrompt = FALSE;
     BOOL   bCaseSensitive = FALSE;
     BOOL   bTimeout = FALSE;
     INT    nTimeout = 0;
-    TCHAR  cDefault = _T('\0');
+    TCHAR  cDefault = _T('\0'), cDefParam = _T('\0');
     INPUT_RECORD ir;
     LPTSTR p, np;
     LPTSTR *arg;
@@ -129,58 +136,70 @@ CommandChoice (LPTSTR param)
         return 0;
     }
 
-    /* retrieve text */
-    p = param;
-
-    while (TRUE)
-    {
-        if (*p == _T('\0'))
-            break;
-
-        if (*p != _T('/'))
-        {
-            lpText = p;
-                break;
-        }
-        np = _tcschr (p, _T(' '));
-        if (!np)
-            break;
-        p = np + 1;
-    }
-
     /* build parameter array */
     arg = split (param, &argc, FALSE, FALSE);
 
     /* evaluate arguments */
+    nErrorLevel = 255;
     if (argc > 0)
     {
         for (i = 0; i < argc; i++)
         {
-            if (_tcsnicmp (arg[i], _T("/c"), 2) == 0)
+            if (_tcsnicmp (arg[i], _T("/s"), 2) == 0) /* DOS */
+            {
+                bCaseSensitive = TRUE;
+            }
+            else if (_tcsnicmp (arg[i], _T("/cs"), 3) == 0) /* NT */
+            {
+                bCaseSensitive = TRUE;
+            }
+            else if (_tcsnicmp (arg[i], _T("/c"), 2) == 0) /* Note: This eats /CS so it must come after */
             {
                 if (arg[i][2] == _T(':'))
-                    lpOptions = &arg[i][3];
-                else
-                    lpOptions = &arg[i][2];
+                    lpOptions = &arg[i][3];                 /* "/c:XYZ" (DOS and NT) */
+                else if (arg[i][2])
+                    lpOptions = &arg[i][2];                 /* "/cXYZ" (DOS) */
+                else if (i + 1 < argc && *arg[i + 1] != _T('/'))
+                    lpOptions = arg[iSkipTextIndex = ++i];  /* "/c XYZ" (NT) */
 
-                if (_tcslen (lpOptions) == 0)
+                if (!*lpOptions)
                 {
+                invalid_choice_characters:
                     ConErrResPuts(STRING_CHOICE_ERROR);
-                    freep (arg);
-                    return 1;
+                    freep(arg);
+                    return nErrorLevel;
+                }
+            }
+            else if (_tcsnicmp (arg[i], _T("/m"), 2) == 0)  /* "/m msg" (NT) */
+            {
+                if (arg[i][2] == _T(':'))
+                    lpText = lpTextParam = &arg[i][3];
+                else if (i + 1 < argc && *arg[i + 1] != _T('/'))
+                    lpText = lpTextParam = arg[++i];
+                else
+                {
+                    ConErrResPrintf(STRING_CHOICE_ERROR_OPTION, arg[i]);
+                    freep(arg);
+                    return nErrorLevel;
                 }
             }
             else if (_tcsnicmp (arg[i], _T("/n"), 2) == 0)
             {
                 bNoPrompt = TRUE;
             }
-            else if (_tcsnicmp (arg[i], _T("/s"), 2) == 0)
+            else if (_tcsnicmp (arg[i], _T("/d"), 2) == 0)  /* "/d:X" and "/d X" (NT) */
             {
-                bCaseSensitive = TRUE;
+                if (arg[i][2] == _T(':'))
+                    cDefault = cDefParam = arg[i][3];
+                else if (i + 1 < argc)
+                    cDefault = cDefParam = arg[iSkipTextIndex = ++i][0];
+                else
+                    goto invalid_parameter_format;
             }
             else if (_tcsnicmp (arg[i], _T("/t"), 2) == 0)
             {
-                LPTSTR s;
+                LPTSTR s, end;
+                TCHAR cSaveDefault = cDefault;
 
                 if (arg[i][2] == _T(':'))
                 {
@@ -195,22 +214,74 @@ CommandChoice (LPTSTR param)
 
                 if (*s != _T(','))
                 {
+                    /* Just a number (NT syntax) */
+                    cDefault = cSaveDefault;
+                    if (arg[i][2] == _T(':'))
+                        s = &arg[i][3];
+                    else if (i + 1 < argc)
+                        s = arg[iSkipTextIndex = ++i];
+
+                    _tcstol(s, &end, 10);
+                    if (end > s && !*end)
+                        goto parse_timeout_seconds;
+
+                failed_parse_timeout:
                     ConErrResPuts(STRING_CHOICE_ERROR_TXT);
                     freep (arg);
-                    return 1;
+                    return nErrorLevel;
                 }
 
                 s++;
+            parse_timeout_seconds:
                 nTimeout = _ttoi(s);
                 bTimeout = TRUE;
             }
             else if (arg[i][0] == _T('/'))
             {
+            invalid_parameter_format:
                 ConErrResPrintf(STRING_CHOICE_ERROR_OPTION, arg[i]);
                 freep (arg);
-                return 1;
+                return nErrorLevel;
             }
         }
+    }
+
+    if (bTimeout)
+    {
+        if (!cDefault) /* NT /t syntax used without /d */
+            goto failed_parse_timeout;
+        if (nTimeout < 0 || (cDefParam && nTimeout > 9999)) /* DOS seems to be limited to 99, no ">" validation */
+            goto failed_parse_timeout;
+        if (IsKeyInString(lpOptions, cDefault, bCaseSensitive) < 0) /* The default must exist in the list of options */
+            goto failed_parse_timeout;
+
+        /* Duplicate choice characters are not allowed */
+        for (p = lpOptions; *p; ++p)
+        {
+            if (IsKeyInString(p + 1, *p, bCaseSensitive) >= 0)
+                goto invalid_choice_characters;
+        }
+    }
+
+    /* The choice characters are printed uppercase when case-insensitive */
+    if (!bCaseSensitive)
+        _wcsupr(lpOptions);
+
+    /* retrieve text */
+    for (p = param, iTextIndex = 0; !lpTextParam; ++iTextIndex)
+    {
+        if (*p == _T('\0'))
+            break;
+
+        if (*p != _T('/') && (!iSkipTextIndex || iTextIndex > iSkipTextIndex))
+        {
+            lpText = p;
+            break;
+        }
+        np = _tcschr (p, _T(' '));
+        if (!np)
+            break;
+        p = np + 1;
     }
 
     /* print text */
@@ -220,7 +291,8 @@ CommandChoice (LPTSTR param)
     /* print options */
     if (bNoPrompt == FALSE)
     {
-        ConOutPrintf (_T("[%c"), lpOptions[0]);
+        LPCTSTR prefix = lpText && lpText == lpTextParam ? _T(" ") : _T("");
+        ConOutPrintf (_T("%s[%c"), prefix, lpOptions[0]);
 
         for (i = 1; (unsigned)i < _tcslen (lpOptions); i++)
             ConOutPrintf (_T(",%c"), lpOptions[i]);
@@ -258,14 +330,18 @@ CommandChoice (LPTSTR param)
 
         freep (arg);
         TRACE ("ErrorLevel: %d\n", nErrorLevel);
-        return 0;
+        return nErrorLevel;
     }
 
     clk = GetTickCount ();
     amount = nTimeout*1000;
 
 loop:
-    GCret = GetCharacterTimeout (&Ch, amount - (GetTickCount () - clk));
+    nTimeout = amount - (GetTickCount () - clk);
+    if (nTimeout < 0)
+        GCret = GC_TIMEOUT;
+    else
+        GCret = GetCharacterTimeout (&Ch, nTimeout);
 
     switch (GCret)
     {
@@ -304,7 +380,7 @@ loop:
 
     TRACE ("ErrorLevel: %d\n", nErrorLevel);
 
-    return 0;
+    return nErrorLevel;
 }
 #endif /* INCLUDE_CMD_CHOICE */
 

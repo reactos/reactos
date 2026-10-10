@@ -122,7 +122,7 @@ coclass WAVFile { interface IAVIFile; }
     threading(both),
     uuid(0002000d-0000-0000-c000-000000000046)
 ]
-coclass PSFactoryBuffer { interface IFactoryBuffer; }
+coclass PSFactoryBuffer { interface IPSFactoryBuffer; }
 
 [
     helpstring("ACM Compressed Audio Stream"),

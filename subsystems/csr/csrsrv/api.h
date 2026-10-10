@@ -114,13 +114,15 @@ VOID
 NTAPI
 CsrRemoveProcess(IN PCSR_PROCESS CsrProcess);
 
-NTSTATUS
+ULONG
 NTAPI
-CsrApiRequestThread(IN PVOID Parameter);
+CsrApiRequestThread(
+    _In_ PVOID Parameter);
 
-VOID
+ULONG
 NTAPI
-CsrSbApiRequestThread(IN PVOID Parameter);
+CsrSbApiRequestThread(
+    _In_ PVOID Parameter);
 
 NTSTATUS
 NTAPI

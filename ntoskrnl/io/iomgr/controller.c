@@ -69,6 +69,9 @@ IoCreateController(IN ULONG Size)
                                NULL,
                                NULL);
 
+    /* Honor the internal I/O System case (in)sensitivity */
+    if (IopCaseInsensitive) ObjectAttributes.Attributes |= OBJ_CASE_INSENSITIVE;
+
     /* Create the Object */
     Status = ObCreateObject(KernelMode,
                             IoControllerObjectType,

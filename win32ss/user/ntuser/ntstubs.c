@@ -342,18 +342,6 @@ NtUserUpdateInstance(
    return 0;
 }
 
-BOOL
-APIENTRY
-NtUserUserHandleGrantAccess(
-   IN HANDLE hUserHandle,
-   IN HANDLE hJob,
-   IN BOOL bGrant)
-{
-   STUB
-
-   return 0;
-}
-
 DWORD
 APIENTRY
 NtUserWaitForMsgAndEvent(
@@ -386,65 +374,6 @@ NtUserYieldTask(VOID)
    STUB
 
    return 0;
-}
-
-DWORD
-APIENTRY
-NtUserGetRawInputBuffer(
-    PRAWINPUT pData,
-    PUINT pcbSize,
-    UINT cbSizeHeader)
-{
-    STUB;
-    return 0;
-}
-
-DWORD
-APIENTRY
-NtUserGetRawInputData(
-    HRAWINPUT hRawInput,
-    UINT uiCommand,
-    LPVOID pData,
-    PUINT pcbSize,
-    UINT cbSizeHeader)
-{
-    STUB;
-    return 0;
-}
-
-DWORD
-APIENTRY
-NtUserGetRawInputDeviceInfo(
-    HANDLE hDevice,
-    UINT uiCommand,
-    LPVOID pData,
-    PUINT pcbSize
-)
-{
-    STUB;
-    return 0;
-}
-
-DWORD
-APIENTRY
-NtUserGetRawInputDeviceList(
-    PRAWINPUTDEVICELIST pRawInputDeviceList,
-    PUINT puiNumDevices,
-    UINT cbSize)
-{
-    STUB;
-    return 0;
-}
-
-DWORD
-APIENTRY
-NtUserGetRegisteredRawInputDevices(
-    PRAWINPUTDEVICE pRawInputDevices,
-    PUINT puiNumDevices,
-    UINT cbSize)
-{
-    STUB;
-    return 0;
 }
 
 DWORD
@@ -630,17 +559,6 @@ APIENTRY
 NtUserRealWaitMessageEx(
     DWORD dwWakeMask,
     UINT uTimeout)
-{
-    STUB;
-    return 0;
-}
-
-BOOL
-APIENTRY
-NtUserRegisterRawInputDevices(
-    IN PCRAWINPUTDEVICE pRawInputDevices,
-    IN UINT uiNumDevices,
-    IN UINT cbSize)
 {
     STUB;
     return 0;

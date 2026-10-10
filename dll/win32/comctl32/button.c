@@ -331,6 +331,10 @@ BOOL BUTTON_PaintWithTheme(HTHEME theme, const BUTTON_INFO *infoPtr, HDC hParamD
     if (infoPtr->u.image != 0)
         return FALSE;
 
+    /* If the button isn't visible, don't paint it (themed or not) */
+    if (!IsWindowVisible(infoPtr->hwnd))
+        return TRUE; /* Pretend it has been drawn successfully */
+
     dwStyle = GetWindowLongW(infoPtr->hwnd, GWL_STYLE);
     type = get_button_type(dwStyle);
 

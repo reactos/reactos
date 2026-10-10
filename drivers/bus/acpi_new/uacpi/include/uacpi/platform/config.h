@@ -12,6 +12,19 @@
  * Context-related options
  * =======================
  */
+
+/*
+ * Optional string to prefix all uACPI log messages with.
+ */
+// #define UACPI_START_OF_LOG_MSG
+
+/*
+ * Optional string to suffix all uACPI log messages with.
+ */
+#ifndef UACPI_END_OF_LOG_MSG
+    #define UACPI_END_OF_LOG_MSG "\n"
+#endif
+
 #ifndef UACPI_DEFAULT_LOG_LEVEL
     #define UACPI_DEFAULT_LOG_LEVEL UACPI_LOG_INFO
 #endif
@@ -67,6 +80,14 @@ UACPI_BUILD_BUG_ON_WITH_MSG(
  */
 // #define UACPI_SIZED_FREES
 
+/*
+ * Makes uacpi_kernel_mmio_read{8,16,32,64} and
+ * uacpi_kernel_mmio_write{8,16,32,64} mandatory to implement by the host,
+ * uACPI will not provide a default implementation if this is enabled.
+ * By default, uACPI ships with simple builtin MMIO helpers that use volatile
+ * loads and stores.
+ */
+// #define UACPI_NATIVE_MMIO
 
 /*
  * Makes uacpi_kernel_alloc_zeroed mandatory to implement by the host, uACPI

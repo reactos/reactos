@@ -451,7 +451,9 @@ CsrSrvCreateSharedSection(IN PCHAR ParameterValue)
 
     /* Write the values to the PEB */
     Peb->ReadOnlySharedMemoryBase = CsrSrvSharedSectionBase;
+#if (NTDDI_VERSION < NTDDI_LONGHORN)
     Peb->ReadOnlySharedMemoryHeap = CsrSrvSharedSectionHeap;
+#endif
     Peb->ReadOnlyStaticServerData = CsrSrvSharedStaticServerData;
 
     /* Return */

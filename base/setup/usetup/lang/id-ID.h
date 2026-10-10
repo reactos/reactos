@@ -1257,7 +1257,7 @@ static MUI_ENTRY idIDFormatPartitionEntries[] =
     {
         0,
         0,
-        "ENTER = Lanjut   F3 = Keluar",
+        "ENTER = Lanjut   ESC = Batal   F3 = Keluar",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
         TEXT_ID_STATIC
     },

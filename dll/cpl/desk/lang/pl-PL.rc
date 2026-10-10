@@ -125,7 +125,7 @@ BEGIN
     AUTOCHECKBOX "Użyj n&astępującej metody wygładzania krawędzi czcionek ekranowych:", IDC_EFFAPPEARANCE_SMOOTHING, 10, 42, 267, 19
     COMBOBOX IDC_EFFAPPEARANCE_SMOOTHINGTYPE, 20, 62, 95, 19, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | WS_VSCROLL | WS_TABSTOP
-    AUTOCHECKBOX "Użyj &dużych ikon", IDC_EFFAPPEARANCE_LARGEICONS, 10, 80, 267, 19, WS_TABSTOP | WS_DISABLED
+    AUTOCHECKBOX "Użyj &dużych ikon", IDC_EFFAPPEARANCE_LARGEICONS, 10, 80, 267, 19, WS_TABSTOP
     AUTOCHECKBOX "&Pokaż cienie pod menu", IDC_EFFAPPEARANCE_SETDROPSHADOW, 10, 95, 267, 19
     AUTOCHECKBOX "Pokaż &zawartość okna podczas przeciągania", IDC_EFFAPPEARANCE_DRAGFULLWINDOWS, 10, 110, 267, 19
     AUTOCHECKBOX "Ukryj podkreślenie liter do nawigacji &klawiaturą, dopóki nie nacisnę klawisza Alt", IDC_EFFAPPEARANCE_KEYBOARDCUES, 10, 125, 267, 19

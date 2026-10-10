@@ -2,8 +2,7 @@
 include_directories(
     ${REACTOS_SOURCE_DIR}/sdk/include/wine
     ${REACTOS_SOURCE_DIR}/win32ss/include
-    ../include
-    .)
+    ../include)
 
 list(APPEND SOURCE
     emfdc.c
@@ -13,6 +12,6 @@ list(APPEND SOURCE
     metafile.c
     rosglue.c)
 
-add_library(winegdi ${SOURCE})
+add_library(winegdi STATIC ${SOURCE})
 target_link_libraries(winegdi PRIVATE pseh)
 add_dependencies(winegdi psdk)

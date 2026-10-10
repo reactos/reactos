@@ -308,6 +308,9 @@ static void Test_Overread(void)
         goto Exit;
     }
 
+    /* Allow some time for 'send' to process */
+    Sleep(100);
+
     flags = 0x55555555;
     bytesTransferred = 0x55555555;
     ret = WSAGetOverlappedResult(ClientSocket,

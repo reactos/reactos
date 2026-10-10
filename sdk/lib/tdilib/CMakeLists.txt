@@ -6,6 +6,7 @@ list(APPEND SOURCE
     handle.c
     precomp.h)
 
-add_library(tdilib ${SOURCE})
+add_library(tdilib STATIC ${SOURCE})
 add_pch(tdilib precomp.h SOURCE)
 add_dependencies(tdilib psdk)
+target_include_directories(tdilib INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})

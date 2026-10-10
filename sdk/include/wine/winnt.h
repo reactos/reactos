@@ -3,6 +3,13 @@
 
 #include <psdk/winnt.h>
 
+/* Wine's own <winnt.h> exposes ARRAY_SIZE to modules built with __WINESRC__ */
+#ifdef __WINESRC__
+# ifndef ARRAY_SIZE
+#  define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
+# endif
+#endif
+
 #define CONTEXT_i386 0x10000
 #define CONTEXT_i486 0x10000
 
@@ -161,6 +168,10 @@ typedef struct _XSTATE
 #ifdef __ROS_LONG64__
 #define ReadAcquire(x) ReadAcquire((volatile long*)(x))
 #define WriteRelease(x, y) WriteRelease((volatile long*)(x), (y))
+#undef BitScanForward
+#undef BitScanReverse
+#define BitScanForward(idx, mask) _BitScanForward((unsigned long *)(idx), (mask))
+#define BitScanReverse(idx, mask) _BitScanReverse((unsigned long *)(idx), (mask))
 #endif
 
 #ifndef __WINE_WINNT_EXCEPTION_REGISTRATION_RECORD

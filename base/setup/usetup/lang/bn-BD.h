@@ -1257,7 +1257,7 @@ static MUI_ENTRY bnBDFormatPartitionEntries[] =
     {
         0,
         0,
-        "ENTER = Continue   F3 = Quit",
+        "ENTER = Continue   ESC = Cancel   F3 = Quit",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
         TEXT_ID_STATIC
     },

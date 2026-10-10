@@ -56,7 +56,8 @@ if(ARCH STREQUAL "i386")
         arch/i386/hwdisk.c
         arch/i386/hwpci.c
         # arch/i386/i386bug.c
-        arch/i386/i386idt.c)
+        arch/i386/i386idt.c
+        arch/hwpci.c)
 
     if(SARCH STREQUAL "xbox")
         list(APPEND PCATLDR_ARC_SOURCE
@@ -137,7 +138,8 @@ elseif(ARCH STREQUAL "amd64")
         arch/i386/pc/pcmem.c
         arch/i386/pc/pcrtc.c
         arch/i386/pc/pcvesa.c
-        arch/i386/pc/pcvideo.c)
+        arch/i386/pc/pcvideo.c
+        arch/hwpci.c)
 
 elseif(ARCH STREQUAL "arm")
     list(APPEND PCATLDR_COMMON_ASM_SOURCE
@@ -172,8 +174,7 @@ endif()
 set(PCH_SOURCE
     ${PCATLDR_ARC_SOURCE}
     ${FREELDR_BOOTLIB_SOURCE}
-    ${PCATLDR_BOOTMGR_SOURCE}
-)
+    ${PCATLDR_BOOTMGR_SOURCE})
 
 add_pch(freeldr_common include/freeldr.h PCH_SOURCE)
 add_dependencies(freeldr_common bugcodes asm xdk)

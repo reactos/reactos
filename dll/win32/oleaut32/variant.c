@@ -30,9 +30,6 @@
 #include <stdarg.h>
 
 #define COBJMACROS
-#define NONAMELESSUNION
-#define NONAMELESSSTRUCT
-
 #include "windef.h"
 #include "winbase.h"
 #include "winerror.h"
@@ -42,14 +39,6 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(variant);
 
-static CRITICAL_SECTION cache_cs;
-static CRITICAL_SECTION_DEBUG critsect_debug =
-{
-    0, 0, &cache_cs,
-    { &critsect_debug.ProcessLocksList, &critsect_debug.ProcessLocksList },
-      0, 0, { (DWORD_PTR)(__FILE__ ": cache_cs") }
-};
-static CRITICAL_SECTION cache_cs = { &critsect_debug, -1, 0, 0, 0, 0 };
 
 /* Convert a variant from one type to another */
 static inline HRESULT VARIANT_Coerce(VARIANTARG* pd, LCID lcid, USHORT wFlags,
@@ -59,7 +48,7 @@ static inline HRESULT VARIANT_Coerce(VARIANTARG* pd, LCID lcid, USHORT wFlags,
   VARTYPE vtFrom =  V_TYPE(ps);
   DWORD dwFlags = 0;
 
-  TRACE("(%s,0x%08x,0x%04x,%s,%s)\n", debugstr_variant(pd), lcid, wFlags,
+  TRACE("%s, %#lx, 0x%04x, %s, %s.\n", debugstr_variant(pd), lcid, wFlags,
         debugstr_variant(ps), debugstr_vt(vt));
 
   if (vt == VT_BSTR || vtFrom == VT_BSTR)
@@ -436,13 +425,13 @@ static inline HRESULT VARIANT_Coerce(VARIANTARG* pd, LCID lcid, USHORT wFlags,
     {
     case VT_EMPTY:
     case VT_BOOL:
-       DEC_SIGNSCALE(&V_DECIMAL(pd)) = SIGNSCALE(DECIMAL_POS,0);
-       DEC_HI32(&V_DECIMAL(pd)) = 0;
-       DEC_MID32(&V_DECIMAL(pd)) = 0;
+       V_DECIMAL(pd).sign = DECIMAL_POS;
+       V_DECIMAL(pd).scale = 0;
+       V_DECIMAL(pd).Hi32 = 0;
         /* VarDecFromBool() coerces to -1/0, ChangeTypeEx() coerces to 1/0.
          * VT_NULL and VT_EMPTY always give a 0 value.
          */
-       DEC_LO32(&V_DECIMAL(pd)) = vtFrom == VT_BOOL && V_BOOL(ps) ? 1 : 0;
+       V_DECIMAL(pd).Lo64 = vtFrom == VT_BOOL && V_BOOL(ps) ? 1 : 0;
        return S_OK;
     case VT_I1:       return VarDecFromI1(V_I1(ps), &V_DECIMAL(pd));
     case VT_I2:       return VarDecFromI2(V_I2(ps), &V_DECIMAL(pd));
@@ -514,13 +503,13 @@ static inline HRESULT VARIANT_CoerceArray(VARIANTARG* pd, VARIANTARG* ps, VARTYP
 
 static HRESULT VARIANT_FetchDispatchValue(LPVARIANT pvDispatch, LPVARIANT pValue)
 {
+    DISPPARAMS params = { 0 };
     HRESULT hres;
-    static DISPPARAMS emptyParams = { NULL, NULL, 0, 0 };
 
     if ((V_VT(pvDispatch) & VT_TYPEMASK) == VT_DISPATCH) {
         if (NULL == V_DISPATCH(pvDispatch)) return DISP_E_TYPEMISMATCH;
         hres = IDispatch_Invoke(V_DISPATCH(pvDispatch), DISPID_VALUE, &IID_NULL,
-            LOCALE_USER_DEFAULT, DISPATCH_PROPERTYGET, &emptyParams, pValue,
+            LOCALE_USER_DEFAULT, DISPATCH_PROPERTYGET, &params, pValue,
             NULL, NULL);
     } else {
         hres = DISP_E_TYPEMISMATCH;
@@ -553,24 +542,13 @@ static inline HRESULT VARIANT_ValidateType(VARTYPE vt)
 /******************************************************************************
  *		VariantInit	[OLEAUT32.8]
  *
- * Initialise a variant.
- *
- * PARAMS
- *  pVarg [O] Variant to initialise
- *
- * RETURNS
- *  Nothing.
- *
- * NOTES
- *  This function simply sets the type of the variant to VT_EMPTY. It does not
- *  free any existing value, use VariantClear() for that.
+ * Since Windows 8.1 whole structure is initialized, before that only type field was reset to VT_EMPTY.
  */
 void WINAPI VariantInit(VARIANTARG* pVarg)
 {
-  TRACE("(%p)\n", pVarg);
+    TRACE("(%p)\n", pVarg);
 
-  /* Win8.1 zeroes whole struct. Previous implementations don't set any other fields. */
-  V_VT(pVarg) = VT_EMPTY;
+    memset(pVarg, 0, sizeof(*pVarg));
 }
 
 HRESULT VARIANT_ClearInd(VARIANTARG *pVarg)
@@ -607,11 +585,11 @@ HRESULT VARIANT_ClearInd(VARIANTARG *pVarg)
     case VT_RECORD:
     case VT_RECORD | VT_BYREF:
     {
-        struct __tagBRECORD* pBr = &V_UNION(pVarg,brecVal);
-        if (pBr->pRecInfo)
+        IRecordInfo *rec_info = V_RECORDINFO(pVarg);
+        if (rec_info)
         {
-            IRecordInfo_RecordClear(pBr->pRecInfo, pBr->pvRecord);
-            IRecordInfo_Release(pBr->pRecInfo);
+            IRecordInfo_RecordClear(rec_info, V_RECORD(pVarg));
+            IRecordInfo_Release(rec_info);
         }
         break;
     }
@@ -667,11 +645,11 @@ HRESULT WINAPI DECLSPEC_HOTPATCH VariantClear(VARIANTARG* pVarg)
       }
       else if (V_VT(pVarg) == VT_RECORD)
       {
-        struct __tagBRECORD* pBr = &V_UNION(pVarg,brecVal);
-        if (pBr->pRecInfo)
+        IRecordInfo *rec_info = V_RECORDINFO(pVarg);
+        if (rec_info)
         {
-          IRecordInfo_RecordClear(pBr->pRecInfo, pBr->pvRecord);
-          IRecordInfo_Release(pBr->pRecInfo);
+          IRecordInfo_RecordClear(rec_info, V_RECORD(pVarg));
+          IRecordInfo_Release(rec_info);
         }
       }
       else if (V_VT(pVarg) == VT_DISPATCH ||
@@ -689,32 +667,30 @@ HRESULT WINAPI DECLSPEC_HOTPATCH VariantClear(VARIANTARG* pVarg)
 /******************************************************************************
  * Copy an IRecordInfo object contained in a variant.
  */
-static HRESULT VARIANT_CopyIRecordInfo(VARIANT *dest, VARIANT *src)
+static HRESULT VARIANT_CopyIRecordInfo(VARIANT *dest, const VARIANT *src)
 {
-  struct __tagBRECORD *dest_rec = &V_UNION(dest, brecVal);
-  struct __tagBRECORD *src_rec = &V_UNION(src, brecVal);
+  IRecordInfo *src_info = V_RECORDINFO(src);
   HRESULT hr = S_OK;
   ULONG size;
 
-  if (!src_rec->pRecInfo)
+  if (!src_info)
   {
-    if (src_rec->pvRecord) return E_INVALIDARG;
+    if (V_RECORD(src)) return E_INVALIDARG;
     return S_OK;
   }
 
-  hr = IRecordInfo_GetSize(src_rec->pRecInfo, &size);
+  hr = IRecordInfo_GetSize(src_info, &size);
   if (FAILED(hr)) return hr;
 
-  /* This could look cleaner if only RecordCreate() was used, but native doesn't use it.
-     Memory should be allocated in a same way as RecordCreate() does, so RecordDestroy()
+  /* Windows does not use RecordCreate() here, memory should be allocated in compatible way so RecordDestroy()
      could free it later. */
-  dest_rec->pvRecord = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, size);
-  if (!dest_rec->pvRecord) return E_OUTOFMEMORY;
+  V_RECORD(dest) = CoTaskMemAlloc(size);
+  if (!V_RECORD(dest)) return E_OUTOFMEMORY;
+  if (size)
+      memset(V_RECORD(dest), 0, size);
 
-  dest_rec->pRecInfo = src_rec->pRecInfo;
-  IRecordInfo_AddRef(src_rec->pRecInfo);
-
-  return IRecordInfo_RecordCopy(src_rec->pRecInfo, src_rec->pvRecord, dest_rec->pvRecord);
+  IRecordInfo_AddRef(V_RECORDINFO(dest) = src_info);
+  return IRecordInfo_RecordCopy(src_info, V_RECORD(src), V_RECORD(dest));
 }
 
 /******************************************************************************
@@ -745,7 +721,7 @@ static HRESULT VARIANT_CopyIRecordInfo(VARIANT *dest, VARIANT *src)
  *    reference count increased using IUnknown_AddRef().
  *  - For all by-reference types, only the referencing pointer is copied.
  */
-HRESULT WINAPI VariantCopy(VARIANTARG* pvargDest, VARIANTARG* pvargSrc)
+HRESULT WINAPI VariantCopy(VARIANTARG* pvargDest, const VARIANTARG* pvargSrc)
 {
   HRESULT hres = S_OK;
 
@@ -844,9 +820,10 @@ static inline size_t VARIANT_DataSize(const VARIANT* pv)
  *    pvargDest is always cleared using VariantClear() before pvargSrc is copied
  *    to it. If clearing pvargDest fails, so does this function.
  */
-HRESULT WINAPI VariantCopyInd(VARIANT* pvargDest, VARIANTARG* pvargSrc)
+HRESULT WINAPI VariantCopyInd(VARIANT* pvargDest, const VARIANTARG* pvargSrc)
 {
-  VARIANTARG vTmp, *pSrc = pvargSrc;
+  const VARIANTARG *pSrc = pvargSrc;
+  VARIANTARG vTmp;
   VARTYPE vt;
   HRESULT hres = S_OK;
 
@@ -920,7 +897,7 @@ HRESULT WINAPI VariantCopyInd(VARIANT* pvargDest, VARIANTARG* pvargSrc)
   }
   else if (V_VT(pSrc) == (VT_DECIMAL|VT_BYREF))
   {
-    memcpy(&DEC_SCALE(&V_DECIMAL(pvargDest)), &DEC_SCALE(V_DECIMALREF(pSrc)),
+    memcpy(&V_DECIMAL(pvargDest).scale, &V_DECIMALREF(pSrc)->scale,
            sizeof(DECIMAL) - sizeof(USHORT));
   }
   else
@@ -934,9 +911,9 @@ HRESULT WINAPI VariantCopyInd(VARIANT* pvargDest, VARIANTARG* pvargSrc)
 VariantCopyInd_Return:
 
   if (pSrc != pvargSrc)
-    VariantClear(pSrc);
+    VariantClear(&vTmp);
 
-  TRACE("returning 0x%08x, %s\n", hres, debugstr_variant(pvargDest));
+  TRACE("returning %#lx, %s\n", hres, debugstr_variant(pvargDest));
   return hres;
 }
 
@@ -959,7 +936,7 @@ VariantCopyInd_Return:
  *  The LCID used for the conversion is LOCALE_USER_DEFAULT.
  *  See VariantChangeTypeEx.
  */
-HRESULT WINAPI DECLSPEC_HOTPATCH VariantChangeType(VARIANTARG* pvargDest, VARIANTARG* pvargSrc,
+HRESULT WINAPI DECLSPEC_HOTPATCH VariantChangeType(VARIANTARG* pvargDest, const VARIANTARG* pvargSrc,
                                                    USHORT wFlags, VARTYPE vt)
 {
   return VariantChangeTypeEx( pvargDest, pvargSrc, LOCALE_USER_DEFAULT, wFlags, vt );
@@ -985,12 +962,12 @@ HRESULT WINAPI DECLSPEC_HOTPATCH VariantChangeType(VARIANTARG* pvargDest, VARIAN
  *  pvargDest and pvargSrc can point to the same variant to perform an in-place
  *  conversion. If the conversion is successful, pvargSrc will be freed.
  */
-HRESULT WINAPI VariantChangeTypeEx(VARIANTARG* pvargDest, VARIANTARG* pvargSrc,
+HRESULT WINAPI VariantChangeTypeEx(VARIANTARG* pvargDest, const VARIANTARG* pvargSrc,
                                    LCID lcid, USHORT wFlags, VARTYPE vt)
 {
   HRESULT res = S_OK;
 
-  TRACE("(%s,%s,0x%08x,0x%04x,%s)\n", debugstr_variant(pvargDest),
+  TRACE("%s, %s, %#lx, 0x%04x, %s.\n", debugstr_variant(pvargDest),
         debugstr_variant(pvargSrc), lcid, wFlags, debugstr_vt(vt));
 
   if (vt == VT_CLSID)
@@ -1039,7 +1016,7 @@ HRESULT WINAPI VariantChangeTypeEx(VARIANTARG* pvargDest, VARIANTARG* pvargSrc,
     }
   }
 
-  TRACE("returning 0x%08x, %s\n", res, debugstr_variant(pvargDest));
+  TRACE("returning %#lx, %s\n", res, debugstr_variant(pvargDest));
   return res;
 }
 
@@ -1123,11 +1100,11 @@ static HRESULT VARIANT_RollUdate(UDATE *lpUd)
 
   if (iYear > 9999 || iYear < -9999)
     return E_INVALIDARG; /* Invalid value */
-  /* Year 0 to 29 are treated as 2000 + year */
-  if (iYear >= 0 && iYear < 30)
+  /* Years 0 to 49 are treated as 2000 + year, see also VARIANT_MakeDate() */
+  if (0 <= iYear && iYear <= 49)
     iYear += 2000;
-  /* Remaining years < 100 are treated as 1900 + year */
-  else if (iYear >= 30 && iYear < 100)
+  /* Remaining years 50 to 99 are treated as 1900 + year */
+  else if (50 <= iYear && iYear <= 99)
     iYear += 1900;
 
   iMinute += iSecond / 60;
@@ -1347,7 +1324,7 @@ HRESULT WINAPI VarDateFromUdateEx(UDATE *pUdateIn, LCID lcid, ULONG dwFlags, DAT
   UDATE ud;
   double dateVal = 0;
 
-  TRACE("(%p->%d/%d/%d %d:%d:%d:%d %d %d,0x%08x,0x%08x,%p)\n", pUdateIn,
+  TRACE("%p, %d/%d/%d, %d:%d:%d:%d, %#x, %d, %#lx, %#lx, %p.\n", pUdateIn,
         pUdateIn->st.wMonth, pUdateIn->st.wDay, pUdateIn->st.wYear,
         pUdateIn->st.wHour, pUdateIn->st.wMinute, pUdateIn->st.wSecond,
         pUdateIn->st.wMilliseconds, pUdateIn->st.wDayOfWeek,
@@ -1356,7 +1333,7 @@ HRESULT WINAPI VarDateFromUdateEx(UDATE *pUdateIn, LCID lcid, ULONG dwFlags, DAT
   if (lcid != MAKELCID(MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US), SORT_DEFAULT))
     FIXME("lcid possibly not handled, treating as en-us\n");
   if (dwFlags & ~(VAR_TIMEVALUEONLY|VAR_DATEVALUEONLY))
-    FIXME("unsupported flags: %x\n", dwFlags);
+    FIXME("unsupported flags: %lx\n", dwFlags);
 
   ud = *pUdateIn;
 
@@ -1434,7 +1411,7 @@ HRESULT WINAPI VarUdateFromDate(DATE dateIn, ULONG dwFlags, UDATE *lpUdate)
   double datePart, timePart;
   int julianDays;
 
-  TRACE("(%g,0x%08x,%p)\n", dateIn, dwFlags, lpUdate);
+  TRACE("%g, %#lx, %p.\n", dateIn, dwFlags, lpUdate);
 
   if (dateIn <= (DATE_MIN - 1.0) || dateIn >= (DATE_MAX + 1.0))
     return E_INVALIDARG;
@@ -1506,35 +1483,33 @@ HRESULT WINAPI VarUdateFromDate(DATE dateIn, ULONG dwFlags, UDATE *lpUdate)
   return S_OK;
 }
 
+/* The localised characters that make up a valid number */
+typedef struct tagVARIANT_NUMBER_CHARS
+{
+  WCHAR cNegativeSymbol;
+  WCHAR cPositiveSymbol;
+  WCHAR cDecimalPoint;
+  WCHAR cDigitSeparator;
+  DWORD sCurrencyLen;
+  WCHAR sCurrency[8];
+  WCHAR cCurrencyDecimalPoint;
+  WCHAR cCurrencyDigitSeparator;
+} VARIANT_NUMBER_CHARS;
+
 #define GET_NUMBER_TEXT(fld,name) \
   buff[0] = 0; \
-  if (!GetLocaleInfoW(lcid, lctype|fld, buff, 2)) \
+  if (!GetLocaleInfoW(lcid, lctype|fld, buff, ARRAY_SIZE(buff))) \
     WARN("buffer too small for " #fld "\n"); \
   else \
     if (buff[0]) lpChars->name = buff[0]; \
-  TRACE("lcid 0x%x, " #name "=%d '%c'\n", lcid, lpChars->name, lpChars->name)
+  TRACE("lcid 0x%lx, " #name "=%s\n", lcid, wine_dbgstr_wn(&lpChars->name, 1))
 
 /* Get the valid number characters for an lcid */
 static void VARIANT_GetLocalisedNumberChars(VARIANT_NUMBER_CHARS *lpChars, LCID lcid, DWORD dwFlags)
 {
-  static const VARIANT_NUMBER_CHARS defaultChars = { '-','+','.',',','$',0,'.',',' };
-  static VARIANT_NUMBER_CHARS lastChars;
-  static LCID lastLcid = -1;
-  static DWORD lastFlags = 0;
+  static const VARIANT_NUMBER_CHARS defaultChars = { '-','+','.',0,1,{'$',0},0,',' };
   LCTYPE lctype = dwFlags & LOCALE_NOUSEROVERRIDE;
   WCHAR buff[4];
-
-  /* To make caching thread-safe, a critical section is needed */
-  EnterCriticalSection(&cache_cs);
-
-  /* Asking for default locale entries is very expensive: It is a registry
-     server call. So cache one locally, as Microsoft does it too */
-  if(lcid == lastLcid && dwFlags == lastFlags)
-  {
-    memcpy(lpChars, &lastChars, sizeof(defaultChars));
-    LeaveCriticalSection(&cache_cs);
-    return;
-  }
 
   memcpy(lpChars, &defaultChars, sizeof(defaultChars));
   GET_NUMBER_TEXT(LOCALE_SNEGATIVESIGN, cNegativeSymbol);
@@ -1544,22 +1519,16 @@ static void VARIANT_GetLocalisedNumberChars(VARIANT_NUMBER_CHARS *lpChars, LCID 
   GET_NUMBER_TEXT(LOCALE_SMONDECIMALSEP, cCurrencyDecimalPoint);
   GET_NUMBER_TEXT(LOCALE_SMONTHOUSANDSEP, cCurrencyDigitSeparator);
 
-  /* Local currency symbols are often 2 characters */
-  lpChars->cCurrencyLocal2 = '\0';
-  switch(GetLocaleInfoW(lcid, lctype|LOCALE_SCURRENCY, buff, ARRAY_SIZE(buff)))
+  if (!GetLocaleInfoW(lcid, lctype|LOCALE_SCURRENCY, lpChars->sCurrency, ARRAY_SIZE(lpChars->sCurrency)))
   {
-    case 3: lpChars->cCurrencyLocal2 = buff[1]; /* Fall through */
-    case 2: lpChars->cCurrencyLocal  = buff[0];
-            break;
-    default: WARN("buffer too small for LOCALE_SCURRENCY\n");
+    if (GetLastError() == ERROR_INSUFFICIENT_BUFFER)
+      WARN("buffer too small for LOCALE_SCURRENCY\n");
+    *lpChars->sCurrency = 0;
   }
-  TRACE("lcid 0x%x, cCurrencyLocal =%d,%d '%c','%c'\n", lcid, lpChars->cCurrencyLocal,
-        lpChars->cCurrencyLocal2, lpChars->cCurrencyLocal, lpChars->cCurrencyLocal2);
-
-  memcpy(&lastChars, lpChars, sizeof(defaultChars));
-  lastLcid = lcid;
-  lastFlags = dwFlags;
-  LeaveCriticalSection(&cache_cs);
+  if (!*lpChars->sCurrency)
+    wcscpy(lpChars->sCurrency, L"$");
+  lpChars->sCurrencyLen = wcslen(lpChars->sCurrency);
+  TRACE("lcid %#lx, sCurrency %lu %s\n", lcid, lpChars->sCurrencyLen, wine_dbgstr_w(lpChars->sCurrency));
 }
 
 /* Number Parsing States */
@@ -1570,6 +1539,11 @@ static void VARIANT_GetLocalisedNumberChars(VARIANT_NUMBER_CHARS *lpChars, LCID 
 #define B_LEADING_ZERO        0x10
 #define B_PROCESSING_HEX      0x20
 #define B_PROCESSING_OCT      0x40
+
+static inline BOOL is_digit(WCHAR c)
+{
+    return '0' <= c && c <= '9';
+}
 
 /**********************************************************************
  *              VarParseNumFromStr [OLEAUT32.46]
@@ -1601,7 +1575,7 @@ static void VARIANT_GetLocalisedNumberChars(VARIANT_NUMBER_CHARS *lpChars, LCID 
  *  - I am unsure if this function should parse non-Arabic (e.g. Thai)
  *   numerals, so this has not been implemented.
  */
-HRESULT WINAPI VarParseNumFromStr(OLECHAR *lpszStr, LCID lcid, ULONG dwFlags,
+HRESULT WINAPI VarParseNumFromStr(const OLECHAR *lpszStr, LCID lcid, ULONG dwFlags,
                                   NUMPARSE *pNumprs, BYTE *rgbDig)
 {
   VARIANT_NUMBER_CHARS chars;
@@ -1609,8 +1583,9 @@ HRESULT WINAPI VarParseNumFromStr(OLECHAR *lpszStr, LCID lcid, ULONG dwFlags,
   DWORD dwState = B_EXPONENT_START|B_INEXACT_ZEROS;
   int iMaxDigits = ARRAY_SIZE(rgbTmp);
   int cchUsed = 0;
+  OLECHAR cDigitSeparator2;
 
-  TRACE("(%s,%d,0x%08x,%p,%p)\n", debugstr_w(lpszStr), lcid, dwFlags, pNumprs, rgbDig);
+  TRACE("%s, %#lx, %#lx, %p, %p.\n", debugstr_w(lpszStr), lcid, dwFlags, pNumprs, rgbDig);
 
   if (!pNumprs || !rgbDig)
     return E_INVALIDARG;
@@ -1628,11 +1603,42 @@ HRESULT WINAPI VarParseNumFromStr(OLECHAR *lpszStr, LCID lcid, ULONG dwFlags,
     return DISP_E_TYPEMISMATCH;
 
   VARIANT_GetLocalisedNumberChars(&chars, lcid, dwFlags);
+  if (chars.cDigitSeparator == chars.cDecimalPoint)
+    /* The decimal point completely masks the digit separator */
+    chars.cDigitSeparator = 0;
+  /* Setting the thousands separator to a non-breaking space implies regular
+   * spaces are allowed too. But the converse is not true.
+   */
+  cDigitSeparator2 = chars.cDigitSeparator == 0xa0 ? ' ' : 0;
 
   /* First consume all the leading symbols and space from the string */
   while (1)
   {
-    if (pNumprs->dwInFlags & NUMPRS_LEADING_WHITE && iswspace(*lpszStr))
+    if (pNumprs->dwInFlags & NUMPRS_DECIMAL &&
+        (*lpszStr == chars.cDecimalPoint ||
+         *lpszStr == chars.cCurrencyDecimalPoint))
+    {
+      pNumprs->dwOutFlags |= NUMPRS_DECIMAL;
+      if (*lpszStr == chars.cCurrencyDecimalPoint &&
+        chars.cDecimalPoint != chars.cCurrencyDecimalPoint)
+        pNumprs->dwOutFlags |= NUMPRS_CURRENCY;
+      cchUsed++;
+      lpszStr++;
+
+      /* If we have no digits so far, skip leading zeros */
+      if (!pNumprs->cDig)
+      {
+        while (*lpszStr == '0')
+        {
+          dwState |= B_LEADING_ZERO;
+          cchUsed++;
+          lpszStr++;
+          pNumprs->nPwr10--;
+        }
+      }
+      break;
+    }
+    else if (pNumprs->dwInFlags & NUMPRS_LEADING_WHITE && iswspace(*lpszStr))
     {
       pNumprs->dwOutFlags |= NUMPRS_LEADING_WHITE;
       do
@@ -1640,6 +1646,17 @@ HRESULT WINAPI VarParseNumFromStr(OLECHAR *lpszStr, LCID lcid, ULONG dwFlags,
         cchUsed++;
         lpszStr++;
       } while (iswspace(*lpszStr));
+    }
+    else if (pNumprs->dwInFlags & NUMPRS_THOUSANDS &&
+             ((chars.cDigitSeparator && *lpszStr == chars.cDigitSeparator) ||
+              (cDigitSeparator2 && *lpszStr == cDigitSeparator2)))
+    {
+      return DISP_E_TYPEMISMATCH; /* Not allowed before the first digit */
+    }
+    else if ((pNumprs->dwInFlags & (NUMPRS_THOUSANDS|NUMPRS_CURRENCY)) == (NUMPRS_THOUSANDS|NUMPRS_CURRENCY) &&
+             chars.cCurrencyDigitSeparator && *lpszStr == chars.cCurrencyDigitSeparator)
+    {
+      return DISP_E_TYPEMISMATCH; /* Not allowed before the first digit */
     }
     else if (pNumprs->dwInFlags & NUMPRS_LEADING_PLUS &&
              *lpszStr == chars.cPositiveSymbol &&
@@ -1659,15 +1676,11 @@ HRESULT WINAPI VarParseNumFromStr(OLECHAR *lpszStr, LCID lcid, ULONG dwFlags,
     }
     else if (pNumprs->dwInFlags & NUMPRS_CURRENCY &&
              !(pNumprs->dwOutFlags & NUMPRS_CURRENCY) &&
-             *lpszStr == chars.cCurrencyLocal &&
-             (!chars.cCurrencyLocal2 || lpszStr[1] == chars.cCurrencyLocal2))
+             wcsncmp(lpszStr, chars.sCurrency, chars.sCurrencyLen) == 0)
     {
       pNumprs->dwOutFlags |= NUMPRS_CURRENCY;
-      cchUsed++;
-      lpszStr++;
-      /* Only accept currency characters */
-      chars.cDecimalPoint = chars.cCurrencyDecimalPoint;
-      chars.cDigitSeparator = chars.cCurrencyDigitSeparator;
+      cchUsed += chars.sCurrencyLen;
+      lpszStr += chars.sCurrencyLen;
     }
     else if (pNumprs->dwInFlags & NUMPRS_PARENS && *lpszStr == '(' &&
              !(pNumprs->dwOutFlags & NUMPRS_PARENS))
@@ -1680,28 +1693,24 @@ HRESULT WINAPI VarParseNumFromStr(OLECHAR *lpszStr, LCID lcid, ULONG dwFlags,
       break;
   }
 
-  if (!(pNumprs->dwOutFlags & NUMPRS_CURRENCY))
+  if (!(pNumprs->dwOutFlags & (NUMPRS_CURRENCY|NUMPRS_DECIMAL)))
   {
-    /* Only accept non-currency characters */
-    chars.cCurrencyDecimalPoint = chars.cDecimalPoint;
-    chars.cCurrencyDigitSeparator = chars.cDigitSeparator;
-  }
-
-  if ((*lpszStr == '&' && (*(lpszStr+1) == 'H' || *(lpszStr+1) == 'h')) &&
-    pNumprs->dwInFlags & NUMPRS_HEX_OCT)
-  {
+    if ((*lpszStr == '&' && (*(lpszStr+1) == 'H' || *(lpszStr+1) == 'h')) &&
+        pNumprs->dwInFlags & NUMPRS_HEX_OCT)
+    {
       dwState |= B_PROCESSING_HEX;
       pNumprs->dwOutFlags |= NUMPRS_HEX_OCT;
       cchUsed=cchUsed+2;
       lpszStr=lpszStr+2;
-  }
-  else if ((*lpszStr == '&' && (*(lpszStr+1) == 'O' || *(lpszStr+1) == 'o')) &&
-    pNumprs->dwInFlags & NUMPRS_HEX_OCT)
-  {
+    }
+    else if ((*lpszStr == '&' && (*(lpszStr+1) == 'O' || *(lpszStr+1) == 'o')) &&
+             pNumprs->dwInFlags & NUMPRS_HEX_OCT)
+    {
       dwState |= B_PROCESSING_OCT;
       pNumprs->dwOutFlags |= NUMPRS_HEX_OCT;
       cchUsed=cchUsed+2;
       lpszStr=lpszStr+2;
+    }
   }
 
   /* Strip Leading zeros */
@@ -1714,14 +1723,14 @@ HRESULT WINAPI VarParseNumFromStr(OLECHAR *lpszStr, LCID lcid, ULONG dwFlags,
 
   while (*lpszStr)
   {
-    if (iswdigit(*lpszStr))
+    if (is_digit(*lpszStr))
     {
       if (dwState & B_PROCESSING_EXPONENT)
       {
         int exponentSize = 0;
         if (dwState & B_EXPONENT_START)
         {
-          if (!iswdigit(*lpszStr))
+          if (!is_digit(*lpszStr))
             break; /* No exponent digits - invalid */
           while (*lpszStr == '0')
           {
@@ -1731,7 +1740,7 @@ HRESULT WINAPI VarParseNumFromStr(OLECHAR *lpszStr, LCID lcid, ULONG dwFlags,
           }
         }
 
-        while (iswdigit(*lpszStr))
+        while (is_digit(*lpszStr))
         {
           exponentSize *= 10;
           exponentSize += *lpszStr - '0';
@@ -1775,16 +1784,30 @@ HRESULT WINAPI VarParseNumFromStr(OLECHAR *lpszStr, LCID lcid, ULONG dwFlags,
         cchUsed++;
       }
     }
-    else if (*lpszStr == chars.cDigitSeparator && pNumprs->dwInFlags & NUMPRS_THOUSANDS)
+    else if (pNumprs->dwInFlags & NUMPRS_THOUSANDS &&
+             !(pNumprs->dwOutFlags & NUMPRS_HEX_OCT) &&
+             ((chars.cDigitSeparator && *lpszStr == chars.cDigitSeparator) ||
+              (cDigitSeparator2 && *lpszStr == cDigitSeparator2)))
     {
       pNumprs->dwOutFlags |= NUMPRS_THOUSANDS;
       cchUsed++;
     }
-    else if (*lpszStr == chars.cDecimalPoint &&
-             pNumprs->dwInFlags & NUMPRS_DECIMAL &&
-             !(pNumprs->dwOutFlags & (NUMPRS_DECIMAL|NUMPRS_EXPONENT)))
+    else if ((pNumprs->dwInFlags & (NUMPRS_THOUSANDS|NUMPRS_CURRENCY)) == (NUMPRS_THOUSANDS|NUMPRS_CURRENCY) &&
+             !(pNumprs->dwOutFlags & NUMPRS_HEX_OCT) &&
+             chars.cCurrencyDigitSeparator && *lpszStr == chars.cCurrencyDigitSeparator)
+    {
+      pNumprs->dwOutFlags |= NUMPRS_THOUSANDS|NUMPRS_CURRENCY;
+      cchUsed++;
+    }
+    else if (pNumprs->dwInFlags & NUMPRS_DECIMAL &&
+             (*lpszStr == chars.cDecimalPoint ||
+              *lpszStr == chars.cCurrencyDecimalPoint) &&
+             !(pNumprs->dwOutFlags & (NUMPRS_HEX_OCT|NUMPRS_DECIMAL|NUMPRS_EXPONENT)))
     {
       pNumprs->dwOutFlags |= NUMPRS_DECIMAL;
+      if (*lpszStr == chars.cCurrencyDecimalPoint &&
+        chars.cDecimalPoint != chars.cCurrencyDecimalPoint)
+        pNumprs->dwOutFlags |= NUMPRS_CURRENCY;
       cchUsed++;
 
       /* If we have no digits so far, skip leading zeros */
@@ -1819,7 +1842,7 @@ HRESULT WINAPI VarParseNumFromStr(OLECHAR *lpszStr, LCID lcid, ULONG dwFlags,
     }
     else if ((*lpszStr == 'e' || *lpszStr == 'E') &&
              pNumprs->dwInFlags & NUMPRS_EXPONENT &&
-             !(pNumprs->dwOutFlags & NUMPRS_EXPONENT))
+             !(pNumprs->dwOutFlags & (NUMPRS_HEX_OCT|NUMPRS_CURRENCY|NUMPRS_EXPONENT)))
     {
       dwState |= B_PROCESSING_EXPONENT;
       pNumprs->dwOutFlags |= NUMPRS_EXPONENT;
@@ -1903,7 +1926,38 @@ HRESULT WINAPI VarParseNumFromStr(OLECHAR *lpszStr, LCID lcid, ULONG dwFlags,
   /* Consume any trailing symbols and space */
   while (1)
   {
-    if ((pNumprs->dwInFlags & NUMPRS_TRAILING_WHITE) && iswspace(*lpszStr))
+    if ((chars.cDigitSeparator && *lpszStr == chars.cDigitSeparator) ||
+        (cDigitSeparator2 && *lpszStr == cDigitSeparator2))
+    {
+      if (pNumprs->dwInFlags & NUMPRS_THOUSANDS &&
+          !(pNumprs->dwOutFlags & NUMPRS_HEX_OCT))
+      {
+        pNumprs->dwOutFlags |= NUMPRS_THOUSANDS;
+        cchUsed++;
+        lpszStr++;
+      }
+      else
+      {
+        /* Not allowed, even with NUMPRS_TRAILING_WHITE */
+        break;
+      }
+    }
+    else if (*lpszStr == chars.cCurrencyDigitSeparator)
+    {
+      if ((pNumprs->dwInFlags & (NUMPRS_THOUSANDS|NUMPRS_CURRENCY)) == (NUMPRS_THOUSANDS|NUMPRS_CURRENCY) &&
+          !(pNumprs->dwOutFlags & NUMPRS_HEX_OCT))
+      {
+        pNumprs->dwOutFlags |= NUMPRS_THOUSANDS|NUMPRS_CURRENCY;
+        cchUsed++;
+        lpszStr++;
+      }
+      else
+      {
+        /* Not allowed, even with NUMPRS_TRAILING_WHITE */
+        break;
+      }
+    }
+    else if ((pNumprs->dwInFlags & NUMPRS_TRAILING_WHITE) && iswspace(*lpszStr))
     {
       pNumprs->dwOutFlags |= NUMPRS_TRAILING_WHITE;
       do
@@ -1934,6 +1988,14 @@ HRESULT WINAPI VarParseNumFromStr(OLECHAR *lpszStr, LCID lcid, ULONG dwFlags,
       cchUsed++;
       lpszStr++;
       pNumprs->dwOutFlags |= NUMPRS_NEG;
+    }
+    else if (pNumprs->dwInFlags & NUMPRS_CURRENCY &&
+             !(pNumprs->dwOutFlags & NUMPRS_HEX_OCT) &&
+             wcsncmp(lpszStr, chars.sCurrency, chars.sCurrencyLen) == 0)
+    {
+      pNumprs->dwOutFlags |= NUMPRS_CURRENCY;
+      cchUsed += chars.sCurrencyLen;
+      lpszStr += chars.sCurrencyLen;
     }
     else
       break;
@@ -2016,7 +2078,7 @@ HRESULT WINAPI VarNumFromParseNum(NUMPARSE *pNumprs, BYTE *rgbDig,
 
   int wholeNumberDigits, fractionalDigits, divisor10 = 0, multiplier10 = 0;
 
-  TRACE("(%p,%p,0x%x,%p)\n", pNumprs, rgbDig, dwVtBits, pVarDst);
+  TRACE("%p, %p, %lx, %p.\n", pNumprs, rgbDig, dwVtBits, pVarDst);
 
   if (pNumprs->nBaseShift)
   {
@@ -2091,9 +2153,10 @@ HRESULT WINAPI VarNumFromParseNum(NUMPARSE *pNumprs, BYTE *rgbDig,
     else if ((dwVtBits & VTBIT_DECIMAL) == VTBIT_DECIMAL)
     {
       V_VT(pVarDst) = VT_DECIMAL;
-      DEC_SIGNSCALE(&V_DECIMAL(pVarDst)) = SIGNSCALE(DECIMAL_POS,0);
-      DEC_HI32(&V_DECIMAL(pVarDst)) = 0;
-      DEC_LO64(&V_DECIMAL(pVarDst)) = ul64;
+      V_DECIMAL(pVarDst).sign = DECIMAL_POS;
+      V_DECIMAL(pVarDst).scale = 0;
+      V_DECIMAL(pVarDst).Hi32 = 0;
+      V_DECIMAL(pVarDst).Lo64 = ul64;
       return S_OK;
     }
     else if (dwVtBits & VTBIT_R4 && ((ul64 <= I4_MAX)||(l64 >= I4_MIN)))
@@ -2115,7 +2178,7 @@ HRESULT WINAPI VarNumFromParseNum(NUMPARSE *pNumprs, BYTE *rgbDig,
       return S_OK;
     }
 
-    TRACE("Overflow: possible return types: 0x%x, value: %s\n", dwVtBits, wine_dbgstr_longlong(ul64));
+    TRACE("Overflow: possible return types: %#lx, value: %s\n", dwVtBits, wine_dbgstr_longlong(ul64));
     return DISP_E_OVERFLOW;
   }
 
@@ -2276,9 +2339,10 @@ HRESULT WINAPI VarNumFromParseNum(NUMPARSE *pNumprs, BYTE *rgbDig,
         {
           /* Decimal is only output choice left - fast path */
           V_VT(pVarDst) = VT_DECIMAL;
-          DEC_SIGNSCALE(&V_DECIMAL(pVarDst)) = SIGNSCALE(DECIMAL_NEG,0);
-          DEC_HI32(&V_DECIMAL(pVarDst)) = 0;
-          DEC_LO64(&V_DECIMAL(pVarDst)) = -ul64;
+          V_DECIMAL(pVarDst).sign = DECIMAL_NEG;
+          V_DECIMAL(pVarDst).scale = 0;
+          V_DECIMAL(pVarDst).Hi32 = 0;
+          V_DECIMAL(pVarDst).Lo64 = -ul64;
           return S_OK;
         }
       }
@@ -2338,9 +2402,10 @@ HRESULT WINAPI VarNumFromParseNum(NUMPARSE *pNumprs, BYTE *rgbDig,
       {
         /* Decimal is only output choice left - fast path */
         V_VT(pVarDst) = VT_DECIMAL;
-        DEC_SIGNSCALE(&V_DECIMAL(pVarDst)) = SIGNSCALE(DECIMAL_POS,0);
-        DEC_HI32(&V_DECIMAL(pVarDst)) = 0;
-        DEC_LO64(&V_DECIMAL(pVarDst)) = ul64;
+        V_DECIMAL(pVarDst).sign = DECIMAL_POS;
+        V_DECIMAL(pVarDst).scale = 0;
+        V_DECIMAL(pVarDst).Hi32 = 0;
+        V_DECIMAL(pVarDst).Lo64 = ul64;
         return S_OK;
       }
     }
@@ -2446,30 +2511,30 @@ HRESULT WINAPI VarNumFromParseNum(NUMPARSE *pNumprs, BYTE *rgbDig,
     DECIMAL* pDec = &V_DECIMAL(pVarDst);
 
     DECIMAL_SETZERO(*pDec);
-    DEC_LO32(pDec) = 0;
+    pDec->Lo32 = 0;
 
     if (pNumprs->dwOutFlags & NUMPRS_NEG)
-      DEC_SIGN(pDec) = DECIMAL_NEG;
+      pDec->sign = DECIMAL_NEG;
     else
-      DEC_SIGN(pDec) = DECIMAL_POS;
+      pDec->sign = DECIMAL_POS;
 
     /* Factor the significant digits */
     for (i = 0; i < pNumprs->cDig; i++)
     {
-      tmp = (ULONG64)DEC_LO32(pDec) * 10 + rgbDig[i];
+      tmp = (ULONG64)pDec->Lo32 * 10 + rgbDig[i];
       carry = (ULONG)(tmp >> 32);
-      DEC_LO32(pDec) = (ULONG)(tmp & UI4_MAX);
-      tmp = (ULONG64)DEC_MID32(pDec) * 10 + carry;
+      pDec->Lo32 = (ULONG)tmp;
+      tmp = (ULONG64)pDec->Mid32 * 10 + carry;
       carry = (ULONG)(tmp >> 32);
-      DEC_MID32(pDec) = (ULONG)(tmp & UI4_MAX);
-      tmp = (ULONG64)DEC_HI32(pDec) * 10 + carry;
-      DEC_HI32(pDec) = (ULONG)(tmp & UI4_MAX);
+      pDec->Mid32 = (ULONG)tmp;
+      tmp = (ULONG64)pDec->Hi32 * 10 + carry;
+      pDec->Hi32 = (ULONG)tmp;
 
-      if (tmp >> 32 & UI4_MAX)
+      if (tmp >> 32)
       {
 VarNumFromParseNum_DecOverflow:
         TRACE("Overflow\n");
-        DEC_LO32(pDec) = DEC_MID32(pDec) = DEC_HI32(pDec) = UI4_MAX;
+        pDec->Lo32 = pDec->Mid32 = pDec->Hi32 = UI4_MAX;
         return DISP_E_OVERFLOW;
       }
     }
@@ -2477,20 +2542,20 @@ VarNumFromParseNum_DecOverflow:
     /* Account for the scale of the number */
     while (multiplier10 > 0)
     {
-      tmp = (ULONG64)DEC_LO32(pDec) * 10;
+      tmp = (ULONG64)pDec->Lo32 * 10;
       carry = (ULONG)(tmp >> 32);
-      DEC_LO32(pDec) = (ULONG)(tmp & UI4_MAX);
-      tmp = (ULONG64)DEC_MID32(pDec) * 10 + carry;
+      pDec->Lo32 = (ULONG)tmp;
+      tmp = (ULONG64)pDec->Mid32 * 10 + carry;
       carry = (ULONG)(tmp >> 32);
-      DEC_MID32(pDec) = (ULONG)(tmp & UI4_MAX);
-      tmp = (ULONG64)DEC_HI32(pDec) * 10 + carry;
-      DEC_HI32(pDec) = (ULONG)(tmp & UI4_MAX);
+      pDec->Mid32 = (ULONG)tmp;
+      tmp = (ULONG64)pDec->Hi32 * 10 + carry;
+      pDec->Hi32 = (ULONG)tmp;
 
-      if (tmp >> 32 & UI4_MAX)
+      if (tmp >> 32)
         goto VarNumFromParseNum_DecOverflow;
       multiplier10--;
     }
-    DEC_SCALE(pDec) = divisor10;
+    pDec->scale = divisor10;
 
     V_VT(pVarDst) = VT_DECIMAL;
     return S_OK;
@@ -2716,7 +2781,7 @@ HRESULT WINAPI VarCmp(LPVARIANT left, LPVARIANT right, LCID lcid, DWORD flags)
     DWORD       xmask;
     HRESULT     rc;
 
-    TRACE("(%s,%s,0x%08x,0x%08x)\n", debugstr_variant(left), debugstr_variant(right), lcid, flags);
+    TRACE("%s, %s, %#lx, %#lx.\n", debugstr_variant(left), debugstr_variant(right), lcid, flags);
 
     lvt = V_VT(left) & VT_TYPEMASK;
     rvt = V_VT(right) & VT_TYPEMASK;
@@ -3009,8 +3074,7 @@ HRESULT WINAPI VarAnd(LPVARIANT left, LPVARIANT right, LPVARIANT result)
                     resvt = VT_NULL;
                 break;
             case VT_DECIMAL:
-                if (DEC_HI32(&V_DECIMAL(right)) ||
-                    DEC_LO64(&V_DECIMAL(right)))
+                if (V_DECIMAL(right).Hi32 || V_DECIMAL(right).Lo64)
                     resvt = VT_NULL;
                 break;
             case VT_BSTR:
@@ -3311,7 +3375,7 @@ end:
     VariantClear(&tv);
     VariantClear(&tempLeft);
     VariantClear(&tempRight);
-    TRACE("returning 0x%8x %s\n", hres, debugstr_variant(result));
+    TRACE("returning %#lx, %s\n", hres, debugstr_variant(result));
     return hres;
 }
 
@@ -3500,7 +3564,7 @@ end:
     VariantClear(&tv);
     VariantClear(&tempLeft);
     VariantClear(&tempRight);
-    TRACE("returning 0x%8x %s\n", hres, debugstr_variant(result));
+    TRACE("returning %#lx, %s\n", hres, debugstr_variant(result));
     return hres;
 }
 
@@ -3662,7 +3726,7 @@ end:
     VariantClear(&rv);
     VariantClear(&tempLeft);
     VariantClear(&tempRight);
-    TRACE("returning 0x%8x %s\n", hres, debugstr_variant(result));
+    TRACE("returning %#lx, %s\n", hres, debugstr_variant(result));
     return hres;
 }
 
@@ -3925,7 +3989,7 @@ end:
     VariantClear(&rv);
     VariantClear(&tempLeft);
     VariantClear(&tempRight);
-    TRACE("returning 0x%8x %s\n", hres, debugstr_variant(result));
+    TRACE("returning %#lx, %s\n", hres, debugstr_variant(result));
     return hres;
 }
 
@@ -4045,7 +4109,7 @@ HRESULT WINAPI VarOr(LPVARIANT pVarLeft, LPVARIANT pVarRight, LPVARIANT pVarOut)
             hRet = S_OK;
             goto VarOr_Exit;
         case VT_DECIMAL:
-            if (DEC_HI32(&V_DECIMAL(pVarLeft)) || DEC_LO64(&V_DECIMAL(pVarLeft)))
+            if (V_DECIMAL(pVarLeft).Hi32 || V_DECIMAL(pVarLeft).Lo64)
                 goto VarOr_AsEmpty;
             hRet = S_OK;
             goto VarOr_Exit;
@@ -4262,7 +4326,6 @@ VarOr_Exit:
  */
 HRESULT WINAPI VarAbs(LPVARIANT pVarIn, LPVARIANT pVarOut)
 {
-    VARIANT varIn;
     HRESULT hRet = S_OK;
     VARIANT temp;
 
@@ -4302,21 +4365,24 @@ HRESULT WINAPI VarAbs(LPVARIANT pVarIn, LPVARIANT pVarOut)
     case VT_INT:
     ABS_CASE(I4,I4_MIN);
     ABS_CASE(I8,I8_MIN);
-    ABS_CASE(R4,R4_MIN);
+    case VT_R4:
+        if (V_R4(pVarOut) < 0.0) V_R4(pVarOut) = -V_R4(pVarOut);
+        break;
     case VT_BSTR:
-        hRet = VarR8FromStr(V_BSTR(pVarIn), LOCALE_USER_DEFAULT, 0, &V_R8(&varIn));
+        hRet = VarR8FromStr(V_BSTR(pVarIn), LOCALE_USER_DEFAULT, 0, &V_R8(pVarOut));
         if (FAILED(hRet))
             break;
         V_VT(pVarOut) = VT_R8;
-        pVarIn = &varIn;
         /* Fall through ... */
     case VT_DATE:
-    ABS_CASE(R8,R8_MIN);
+    case VT_R8:
+        if (V_R8(pVarOut) < 0.0) V_R8(pVarOut) = -V_R8(pVarOut);
+        break;
     case VT_CY:
         hRet = VarCyAbs(V_CY(pVarIn), & V_CY(pVarOut));
         break;
     case VT_DECIMAL:
-        DEC_SIGN(&V_DECIMAL(pVarOut)) &= ~DECIMAL_NEG;
+        V_DECIMAL(pVarOut).sign &= ~DECIMAL_NEG;
         break;
     case VT_UI1:
     case VT_UI2:
@@ -4568,6 +4634,7 @@ HRESULT WINAPI VarXor(LPVARIANT pVarLeft, LPVARIANT pVarRight, LPVARIANT pVarOut
         return S_OK;
     }
 
+    V_VT(&varLeft) = V_VT(&varRight) = VT_EMPTY;
     VariantInit(&tempLeft);
     VariantInit(&tempRight);
 
@@ -4586,8 +4653,6 @@ HRESULT WINAPI VarXor(LPVARIANT pVarLeft, LPVARIANT pVarRight, LPVARIANT pVarOut
     }
 
     /* Copy our inputs so we don't disturb anything */
-    V_VT(&varLeft) = V_VT(&varRight) = VT_EMPTY;
-
     hRet = VariantCopy(&varLeft, pVarLeft);
     if (FAILED(hRet))
         goto VarXor_Exit;
@@ -5159,7 +5224,7 @@ VarRound_Exit:
       V_VT(pVarOut) = VT_EMPTY;
     VariantClear(&temp);
 
-    TRACE("returning 0x%08x %s\n", hRet, debugstr_variant(pVarOut));
+    TRACE("returning %#lx, %s\n", hRet, debugstr_variant(pVarOut));
     return hRet;
 }
 
@@ -5336,7 +5401,6 @@ end:
  */
 HRESULT WINAPI VarMod(LPVARIANT left, LPVARIANT right, LPVARIANT result)
 {
-    BOOL         lOk        = TRUE;
     HRESULT      rc         = E_FAIL;
     int          resT = 0;
     VARIANT      lv,rv;
@@ -5346,6 +5410,7 @@ HRESULT WINAPI VarMod(LPVARIANT left, LPVARIANT right, LPVARIANT result)
     VariantInit(&tempRight);
     VariantInit(&lv);
     VariantInit(&rv);
+    V_VT(result) = VT_EMPTY;
 
     TRACE("(%s,%s,%p)\n", debugstr_variant(left), debugstr_variant(right), result);
 
@@ -5364,7 +5429,6 @@ HRESULT WINAPI VarMod(LPVARIANT left, LPVARIANT right, LPVARIANT result)
     }
 
     /* check for invalid inputs */
-    lOk = TRUE;
     switch (V_VT(left) & VT_TYPEMASK) {
     case VT_BOOL :
     case VT_I1   :
@@ -5436,6 +5500,7 @@ HRESULT WINAPI VarMod(LPVARIANT left, LPVARIANT right, LPVARIANT result)
       if(V_VT(left) == VT_EMPTY)
       {
 	V_VT(result) = VT_I4;
+        V_I4(result) = 0;
         rc = S_OK;
         goto end;
       }
@@ -5466,15 +5531,10 @@ HRESULT WINAPI VarMod(LPVARIANT left, LPVARIANT right, LPVARIANT result)
       {
 	V_VT(result) = VT_EMPTY;
         rc = DISP_E_BADVARTYPE;
-      } else if((V_VT(left) == VT_NULL) || (V_VT(left) == VT_EMPTY) || (V_VT(left) == VT_ERROR) ||
-		lOk)
+      } else
       {
         V_VT(result) = VT_NULL;
         rc = S_OK;
-      } else
-      {
-	V_VT(result) = VT_NULL;
-        rc = DISP_E_BADVARTYPE;
       }
       goto end;
     case VT_VARIANT:
@@ -5486,7 +5546,7 @@ HRESULT WINAPI VarMod(LPVARIANT left, LPVARIANT right, LPVARIANT result)
       rc = DISP_E_TYPEMISMATCH;
       goto end;
     case VT_RECORD:
-      if((V_VT(left) == 15) || ((V_VT(left) >= 24) && (V_VT(left) <= 35)) || !lOk)
+      if((V_VT(left) == 15) || ((V_VT(left) >= 24) && (V_VT(left) <= 35)))
       {
 	V_VT(result) = VT_EMPTY;
         rc = DISP_E_BADVARTYPE;
@@ -5519,14 +5579,14 @@ HRESULT WINAPI VarMod(LPVARIANT left, LPVARIANT right, LPVARIANT result)
     rc = VariantChangeType(&lv, left, 0, VT_I8);
     if(FAILED(rc))
     {
-      FIXME("Could not convert left type %d to %d? rc == 0x%X\n", V_VT(left), VT_I8, rc);
+      FIXME("Could not convert left type %d to %d? rc == %#lx.\n", V_VT(left), VT_I8, rc);
       goto end;
     }
 
     rc = VariantChangeType(&rv, right, 0, VT_I8);
     if(FAILED(rc))
     {
-      FIXME("Could not convert right type %d to %d? rc == 0x%X\n", V_VT(right), VT_I8, rc);
+      FIXME("Could not convert right type %d to %d? rc == %#lx.\n", V_VT(right), VT_I8, rc);
       goto end;
     }
 
@@ -5803,7 +5863,7 @@ HRESULT WINAPI VarImp(LPVARIANT left, LPVARIANT right, LPVARIANT result)
         case VT_DATE: if (!V_DATE(right)) resvt = VT_NULL; break;
         case VT_CY:   if (!V_CY(right).int64) resvt = VT_NULL; break;
         case VT_DECIMAL:
-            if (!(DEC_HI32(&V_DECIMAL(right)) || DEC_LO64(&V_DECIMAL(right))))
+            if (!(V_DECIMAL(right).Hi32 || V_DECIMAL(right).Lo64))
                 resvt = VT_NULL;
             break;
         case VT_BSTR:
@@ -5853,7 +5913,7 @@ HRESULT WINAPI VarImp(LPVARIANT left, LPVARIANT right, LPVARIANT result)
         case VT_R8:     if (V_R8(left) == -1.0) resvt = VT_NULL; break;
         case VT_CY:     if (V_CY(left).int64 == -1) resvt = VT_NULL; break;
         case VT_DECIMAL:
-            if (DEC_HI32(&V_DECIMAL(left)) == 0xffffffff)
+            if (V_DECIMAL(left).Hi32 == 0xffffffff)
                 resvt = VT_NULL;
             break;
         case VT_BSTR:

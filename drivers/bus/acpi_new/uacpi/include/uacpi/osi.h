@@ -36,7 +36,7 @@ typedef enum uacpi_vendor_interface {
     UACPI_VENDOR_INTERFACE_WINDOWS_11_22H2,
 } uacpi_vendor_interface;
 
-/*
+/**
  * Returns the "latest" AML-queried _OSI vendor interface.
  *
  * E.g. for the following AML code:
@@ -56,7 +56,7 @@ typedef enum uacpi_interface_kind {
                                UACPI_INTERFACE_KIND_FEATURE,
 } uacpi_interface_kind;
 
-/*
+/**
  * Install or uninstall an interface.
  *
  * The interface kind is used for matching during interface enumeration in
@@ -77,7 +77,7 @@ typedef enum uacpi_host_interface {
     UACPI_HOST_INTERFACE_PROCESSOR_AGGREGATOR_DEVICE,
 } uacpi_host_interface;
 
-/*
+/**
  * Same as install/uninstall interface, but comes with an enum of known
  * interfaces defined by the ACPI specification. These are disabled by default
  * as they depend on the host kernel support.
@@ -88,7 +88,7 @@ uacpi_status uacpi_disable_host_interface(uacpi_host_interface);
 typedef uacpi_bool (*uacpi_interface_handler)
     (const uacpi_char *name, uacpi_bool supported);
 
-/*
+/**
  * Set a custom interface query (_OSI) handler.
  *
  * This callback will be invoked for each _OSI query with the value
@@ -104,7 +104,7 @@ typedef enum uacpi_interface_action {
     UACPI_INTERFACE_ACTION_ENABLE,
 } uacpi_interface_action;
 
-/*
+/**
  * Bulk interface configuration, used to disable or enable all interfaces that
  * match 'kind'.
  *

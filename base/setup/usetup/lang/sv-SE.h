@@ -1266,7 +1266,7 @@ static MUI_ENTRY svSEFormatPartitionEntries[] =
     {
         0,
         0,
-        "   ENTER = Forts\204tt   F3 = Avsluta",
+        "   ENTER = Forts\204tt   ESC = Avbryt   F3 = Avsluta",
         TEXT_TYPE_STATUS,
         TEXT_ID_STATIC
     },

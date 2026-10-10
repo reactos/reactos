@@ -44,6 +44,8 @@ HRESULT TrayWindowCtxMenuCreator(ITrayWindow * TrayWnd, IN HWND hWndOwner, ICont
 #define IDHK_DESKTOP 0x1fe
 #define IDHK_PAGER 0x1ff
 
+#define IDHK_ACTIVATE_TASK 0x209
+
 enum { NONE, TILED, CASCADED } g_Arrangement = NONE;
 
 struct WINDOWPOSBACKUPDATA
@@ -351,6 +353,8 @@ class CTrayWindow :
 
     HDPA m_ShellServices;
 
+    UINT m_WinMMDevChgMsg;
+
 public:
     CComPtr<ITrayBandSite> m_TrayBandSite;
 
@@ -385,6 +389,7 @@ public:
         m_RunFileDlgOwner(NULL),
         m_AutoHideState(NULL),
         m_ShellServices(NULL),
+        m_WinMMDevChgMsg(NULL),
         Flags(0)
     {
         ZeroMemory(&m_TrayRects, sizeof(m_TrayRects));
@@ -2434,6 +2439,61 @@ ChangePos:
             MAKELONG(IDHK_SYS_PROPERTIES, MAKEWORD(VK_PAUSE, MOD_WIN)),
             MAKELONG(IDHK_DESKTOP,        MAKEWORD('D', MOD_WIN)),
             MAKELONG(IDHK_PAGER,          MAKEWORD('B', MOD_WIN)),
+
+            MAKELONG(IDHK_ACTIVATE_TASK,  MAKEWORD('1', MOD_WIN)),
+            MAKELONG(IDHK_ACTIVATE_TASK,  MAKEWORD('2', MOD_WIN)),
+            MAKELONG(IDHK_ACTIVATE_TASK,  MAKEWORD('3', MOD_WIN)),
+            MAKELONG(IDHK_ACTIVATE_TASK,  MAKEWORD('4', MOD_WIN)),
+            MAKELONG(IDHK_ACTIVATE_TASK,  MAKEWORD('5', MOD_WIN)),
+            MAKELONG(IDHK_ACTIVATE_TASK,  MAKEWORD('6', MOD_WIN)),
+            MAKELONG(IDHK_ACTIVATE_TASK,  MAKEWORD('7', MOD_WIN)),
+            MAKELONG(IDHK_ACTIVATE_TASK,  MAKEWORD('8', MOD_WIN)),
+            MAKELONG(IDHK_ACTIVATE_TASK,  MAKEWORD('9', MOD_WIN)),
+            MAKELONG(IDHK_ACTIVATE_TASK,  MAKEWORD('0', MOD_WIN)),
+
+            MAKELONG(IDHK_ACTIVATE_TASK,  MAKEWORD('1', MOD_WIN | MOD_ALT)),
+            MAKELONG(IDHK_ACTIVATE_TASK,  MAKEWORD('2', MOD_WIN | MOD_ALT)),
+            MAKELONG(IDHK_ACTIVATE_TASK,  MAKEWORD('3', MOD_WIN | MOD_ALT)),
+            MAKELONG(IDHK_ACTIVATE_TASK,  MAKEWORD('4', MOD_WIN | MOD_ALT)),
+            MAKELONG(IDHK_ACTIVATE_TASK,  MAKEWORD('5', MOD_WIN | MOD_ALT)),
+            MAKELONG(IDHK_ACTIVATE_TASK,  MAKEWORD('6', MOD_WIN | MOD_ALT)),
+            MAKELONG(IDHK_ACTIVATE_TASK,  MAKEWORD('7', MOD_WIN | MOD_ALT)),
+            MAKELONG(IDHK_ACTIVATE_TASK,  MAKEWORD('8', MOD_WIN | MOD_ALT)),
+            MAKELONG(IDHK_ACTIVATE_TASK,  MAKEWORD('9', MOD_WIN | MOD_ALT)),
+            MAKELONG(IDHK_ACTIVATE_TASK,  MAKEWORD('0', MOD_WIN | MOD_ALT)),
+
+            MAKELONG(IDHK_ACTIVATE_TASK,  MAKEWORD('1', MOD_WIN | MOD_CONTROL)),
+            MAKELONG(IDHK_ACTIVATE_TASK,  MAKEWORD('2', MOD_WIN | MOD_CONTROL)),
+            MAKELONG(IDHK_ACTIVATE_TASK,  MAKEWORD('3', MOD_WIN | MOD_CONTROL)),
+            MAKELONG(IDHK_ACTIVATE_TASK,  MAKEWORD('4', MOD_WIN | MOD_CONTROL)),
+            MAKELONG(IDHK_ACTIVATE_TASK,  MAKEWORD('5', MOD_WIN | MOD_CONTROL)),
+            MAKELONG(IDHK_ACTIVATE_TASK,  MAKEWORD('6', MOD_WIN | MOD_CONTROL)),
+            MAKELONG(IDHK_ACTIVATE_TASK,  MAKEWORD('7', MOD_WIN | MOD_CONTROL)),
+            MAKELONG(IDHK_ACTIVATE_TASK,  MAKEWORD('8', MOD_WIN | MOD_CONTROL)),
+            MAKELONG(IDHK_ACTIVATE_TASK,  MAKEWORD('9', MOD_WIN | MOD_CONTROL)),
+            MAKELONG(IDHK_ACTIVATE_TASK,  MAKEWORD('0', MOD_WIN | MOD_CONTROL)),
+
+            MAKELONG(IDHK_ACTIVATE_TASK,  MAKEWORD('1', MOD_WIN | MOD_SHIFT)),
+            MAKELONG(IDHK_ACTIVATE_TASK,  MAKEWORD('2', MOD_WIN | MOD_SHIFT)),
+            MAKELONG(IDHK_ACTIVATE_TASK,  MAKEWORD('3', MOD_WIN | MOD_SHIFT)),
+            MAKELONG(IDHK_ACTIVATE_TASK,  MAKEWORD('4', MOD_WIN | MOD_SHIFT)),
+            MAKELONG(IDHK_ACTIVATE_TASK,  MAKEWORD('5', MOD_WIN | MOD_SHIFT)),
+            MAKELONG(IDHK_ACTIVATE_TASK,  MAKEWORD('6', MOD_WIN | MOD_SHIFT)),
+            MAKELONG(IDHK_ACTIVATE_TASK,  MAKEWORD('7', MOD_WIN | MOD_SHIFT)),
+            MAKELONG(IDHK_ACTIVATE_TASK,  MAKEWORD('8', MOD_WIN | MOD_SHIFT)),
+            MAKELONG(IDHK_ACTIVATE_TASK,  MAKEWORD('9', MOD_WIN | MOD_SHIFT)),
+            MAKELONG(IDHK_ACTIVATE_TASK,  MAKEWORD('0', MOD_WIN | MOD_SHIFT)),
+
+            MAKELONG(IDHK_ACTIVATE_TASK,  MAKEWORD('1', MOD_WIN | MOD_CONTROL | MOD_SHIFT)),
+            MAKELONG(IDHK_ACTIVATE_TASK,  MAKEWORD('2', MOD_WIN | MOD_CONTROL | MOD_SHIFT)),
+            MAKELONG(IDHK_ACTIVATE_TASK,  MAKEWORD('3', MOD_WIN | MOD_CONTROL | MOD_SHIFT)),
+            MAKELONG(IDHK_ACTIVATE_TASK,  MAKEWORD('4', MOD_WIN | MOD_CONTROL | MOD_SHIFT)),
+            MAKELONG(IDHK_ACTIVATE_TASK,  MAKEWORD('5', MOD_WIN | MOD_CONTROL | MOD_SHIFT)),
+            MAKELONG(IDHK_ACTIVATE_TASK,  MAKEWORD('6', MOD_WIN | MOD_CONTROL | MOD_SHIFT)),
+            MAKELONG(IDHK_ACTIVATE_TASK,  MAKEWORD('7', MOD_WIN | MOD_CONTROL | MOD_SHIFT)),
+            MAKELONG(IDHK_ACTIVATE_TASK,  MAKEWORD('8', MOD_WIN | MOD_CONTROL | MOD_SHIFT)),
+            MAKELONG(IDHK_ACTIVATE_TASK,  MAKEWORD('9', MOD_WIN | MOD_CONTROL | MOD_SHIFT)),
+            MAKELONG(IDHK_ACTIVATE_TASK,  MAKEWORD('0', MOD_WIN | MOD_CONTROL | MOD_SHIFT)),
         };
         if (!SHRestricted(REST_NOWINKEYS))
         {
@@ -2443,6 +2503,8 @@ ChangePos:
                 RegisterHotKey(m_hWnd, LOWORD(winkeys[i]), mod, key);
             }
         }
+
+        m_WinMMDevChgMsg = RegisterWindowMessageW(L"winmm_devicechange");
 
         return TRUE;
     }
@@ -3102,6 +3164,13 @@ HandleTrayContextMenu:
 
     LRESULT OnHotkey(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
+        if (wParam == IDHK_ACTIVATE_TASK)
+        {
+            // Map the ('1'-'9','0') hotkey to a zero-based task index
+            DWORD iTask = (HIWORD(lParam) - '0' + 9) % 10;
+            // Request the task switcher to perform the switch
+            ::SendMessageW(m_TaskSwitch, TSWM_ACTIVATETASKINDEX, MAKEWPARAM(iTask, LOWORD(lParam)), 0);
+        }
         return HandleHotKey(wParam);
     }
 
@@ -3465,6 +3534,7 @@ HandleTrayContextMenu:
         MESSAGE_HANDLER(WM_ACTIVATE, OnActivate)
         MESSAGE_HANDLER(WM_SETFOCUS, OnSetFocus)
         MESSAGE_HANDLER(WM_GETMINMAXINFO, OnGetMinMaxInfo)
+        MESSAGE_HANDLER(m_WinMMDevChgMsg, OnWinMMDeviceChange)
         MESSAGE_HANDLER(TWM_SETTINGSCHANGED, OnTaskbarSettingsChanged)
         MESSAGE_HANDLER(TWM_OPENSTARTMENU, OnOpenStartMenu)
         MESSAGE_HANDLER(TWM_DOEXITWINDOWS, OnDoExitWindows)
@@ -3474,6 +3544,13 @@ HandleTrayContextMenu:
     END_MSG_MAP()
 
     /*****************************************************************************/
+
+    LRESULT OnWinMMDeviceChange(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+    {
+        /* CTaskSwitchWnd does not receive this message directly */
+        ::SendMessageW(m_TaskSwitch, uMsg, wParam, lParam);
+        return TRUE;
+    }
 
     VOID TrayProcessMessages()
     {

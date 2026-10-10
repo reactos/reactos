@@ -1273,7 +1273,7 @@ static MUI_ENTRY bgBGFormatPartitionEntries[] =
     {
         0,
         0,
-        "   ENTER = \217\340\256\244\352\253\246\250   F3 = \210\247\345\256\244",
+        "   ENTER = \217\340\256\244\352\253\246\250   ESC = \216\342\252\240\247   F3 = \210\247\345\256\244",
         TEXT_TYPE_STATUS,
         TEXT_ID_STATIC
     },

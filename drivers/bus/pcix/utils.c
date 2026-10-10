@@ -248,9 +248,8 @@ PciGetRegistryValue(IN PWCHAR ValueName,
         Status = STATUS_INVALID_PARAMETER;
         if (PartialInfo->Type != Type) break;
 
-        /* Subtract the registry-specific header, to get the data size */
         ASSERT(NeededLength == ActualLength);
-        NeededLength -= sizeof(KEY_VALUE_PARTIAL_INFORMATION);
+        NeededLength = PartialInfo->DataLength;
 
         /* Allocate a buffer to hold the data and return it to the caller */
         Status = STATUS_INSUFFICIENT_RESOURCES;
@@ -958,7 +957,7 @@ PciCanDisableDecodes(IN PPCI_PDO_EXTENSION DeviceExtension,
                      IN BOOLEAN ForPowerDown)
 {
     UCHAR BaseClass, SubClass;
-    BOOLEAN IsVga;
+    BOOLEAN IsVga, KeepPower = FALSE;
 
     /* Is there a device extension or should the PCI header be used? */
     if (DeviceExtension)
@@ -973,6 +972,7 @@ PciCanDisableDecodes(IN PPCI_PDO_EXTENSION DeviceExtension,
         HackFlags = DeviceExtension->HackFlags;
         SubClass = DeviceExtension->SubClass;
         BaseClass = DeviceExtension->BaseClass;
+        KeepPower = DeviceExtension->DisablePowerDown;
     }
     else
     {
@@ -984,33 +984,34 @@ PciCanDisableDecodes(IN PPCI_PDO_EXTENSION DeviceExtension,
 
     /* Check for hack flags that prevent disabling the decodes */
     if (HackFlags & (PCI_HACK_PRESERVE_COMMAND |
-                     PCI_HACK_CB_SHARE_CMD_BITS |
-                     PCI_HACK_DONT_DISABLE_DECODES))
+                     PCI_HACK_NEVER_DISCONNECT |
+                     PCI_HACK_DONT_DISABLE |
+                     PCI_HACK_CB_SHARE_CMD_BITS))
     {
         /* Don't do it */
         return FALSE;
     }
 
-    /* Is this a VGA adapter? */
-    if ((BaseClass == PCI_CLASS_DISPLAY_CTLR) &&
-        (SubClass == PCI_SUBCLASS_VID_VGA_CTLR))
+    if (ForPowerDown)
     {
-        /* Never disable decodes if this is for power down */
+        /* IDE controllers, legacy bridges and flagged functions may stop but not power down */
+        if (KeepPower || (HackFlags & PCI_HACK_NEVER_POWER_DOWN))
+            return FALSE;
+    }
+    else if (HackFlags & PCI_HACK_KEEP_DECODES_ON_STOP)
+    {
+        /* Flagged functions may power down, but keep decoding while stopped or removed */
+        return FALSE;
+    }
+
+    /* VGA adapters keep decoding unless they are being powered down */
+    if (((BaseClass == PCI_CLASS_DISPLAY_CTLR) && (SubClass == PCI_SUBCLASS_VID_VGA_CTLR)) ||
+        ((BaseClass == PCI_CLASS_PRE_20) && (SubClass == PCI_SUBCLASS_PRE_20_VGA)))
+    {
         return ForPowerDown;
     }
 
-    /* Check for legacy devices */
-    if (BaseClass == PCI_CLASS_PRE_20)
-    {
-        /* Never disable video adapter cards if this is for power down */
-        if (SubClass == PCI_SUBCLASS_PRE_20_VGA) return ForPowerDown;
-    }
-    else if (BaseClass == PCI_CLASS_DISPLAY_CTLR)
-    {
-        /* Never disable VGA adapters if this is for power down */
-        if (SubClass == PCI_SUBCLASS_VID_VGA_CTLR) return ForPowerDown;
-    }
-    else if (BaseClass == PCI_CLASS_BRIDGE_DEV)
+    if (BaseClass == PCI_CLASS_BRIDGE_DEV)
     {
         /* Check for legacy bridges */
         if ((SubClass == PCI_SUBCLASS_BR_ISA) ||
@@ -1037,13 +1038,14 @@ PciCanDisableDecodes(IN PPCI_PDO_EXTENSION DeviceExtension,
                 IsVga = DeviceExtension->Dependent.type1.VgaBitSet;
             }
 
-            /* Never disable VGA adapters if this is for power down */
-            if (IsVga) return ForPowerDown;
+            /* A bridge forwarding VGA follows the same rule as the adapter behind it */
+            if (IsVga)
+                return ForPowerDown;
         }
     }
 
-    /* Finally, never disable decodes if there's no power management */
-    return !(HackFlags & PCI_HACK_NO_PM_CAPS);
+    /* Nothing else has to keep decoding */
+    return TRUE;
 }
 
 PCI_DEVICE_TYPES
@@ -1153,53 +1155,55 @@ PciIsSlotPresentInParentMethod(IN PPCI_PDO_EXTENSION PdoExtension,
     return FoundSlot;
 }
 
-ULONG
-NTAPI
-PciGetLengthFromBar(IN ULONG Bar)
-{
-    ULONG Length;
-
-    /* I/O addresses vs. memory addresses start differently due to alignment */
-    Length = 1 << ((Bar & PCI_ADDRESS_IO_SPACE) ? 2 : 4);
-
-    /* Keep going until a set bit */
-    while (!(Length & Bar) && (Length)) Length <<= 1;
-
-    /* Return the length (might be 0 on 64-bit because it's the low-word) */
-    if ((Bar & PCI_ADDRESS_MEMORY_TYPE_MASK) != PCI_TYPE_64BIT) ASSERT(Length);
-    return Length;
-}
-
+/**
+ * @brief
+ * Builds the requirement of a BAR from the value it reads back after all ones were written to it.
+ *
+ * @param[out] ResourceDescriptor
+ * Receives the requirement, or a null descriptor when the BAR is not implemented.
+ *
+ * @param[in] Bar
+ * The probed BAR.
+ *
+ * @param[in] NextBar
+ * The probed BAR after it, which holds the high half of a 64-bit BAR. 0 when there is none.
+ *
+ * @param[in] Rom
+ * TRUE when Bar is an expansion ROM BAR.
+ *
+ * @return
+ * TRUE when the BAR is 64-bit, so the BAR after it is not a BAR of its own.
+ */
 BOOLEAN
 NTAPI
-PciCreateIoDescriptorFromBarLimit(PIO_RESOURCE_DESCRIPTOR ResourceDescriptor,
-                                  IN PULONG BarArray,
-                                  IN BOOLEAN Rom)
+PciCreateIoDescriptorFromBarLimit(
+    _Out_ PIO_RESOURCE_DESCRIPTOR ResourceDescriptor,
+    _In_ ULONG Bar,
+    _In_ ULONG NextBar,
+    _In_ BOOLEAN Rom)
 {
-    ULONG CurrentBar, BarLength, BarMask;
+    ULONGLONG AddressBits, Length, Alignment;
+    ULONGLONG MinimumAddress, MaximumAddress;
+    UCHAR Type;
     BOOLEAN Is64BitBar = FALSE;
 
     /* Check if the BAR is nor I/O nor memory */
-    CurrentBar = BarArray[0];
-    if (!(CurrentBar & ~PCI_ADDRESS_IO_SPACE))
+    if (!(Bar & ~PCI_ADDRESS_IO_SPACE))
     {
         /* Fail this descriptor */
         ResourceDescriptor->Type = CmResourceTypeNull;
         return FALSE;
     }
 
-    /* Set default flag and clear high words */
+    /* Set default flag */
     ResourceDescriptor->Flags = 0;
-    ResourceDescriptor->u.Generic.MaximumAddress.HighPart = 0;
-    ResourceDescriptor->u.Generic.MinimumAddress.LowPart = 0;
-    ResourceDescriptor->u.Generic.MinimumAddress.HighPart = 0;
 
-    /* Check for ROM Address */
+    /* Check for ROM AddressBits */
     if (Rom)
     {
         /* Clean up the BAR to get just the address */
-        CurrentBar &= PCI_ADDRESS_ROM_ADDRESS_MASK;
-        if (!CurrentBar)
+        Bar &= PCI_ADDRESS_ROM_ADDRESS_MASK;
+        if (!Bar)
         {
             /* Invalid ar, fail this descriptor */
             ResourceDescriptor->Type = CmResourceTypeNull;
@@ -1210,53 +1214,68 @@ PciCreateIoDescriptorFromBarLimit(PIO_RESOURCE_DESCRIPTOR ResourceDescriptor,
         ResourceDescriptor->Flags = CM_RESOURCE_MEMORY_READ_ONLY;
     }
 
-    /* Compute the length, assume it's the alignment for now */
-    BarLength = PciGetLengthFromBar(CurrentBar);
-    ResourceDescriptor->u.Generic.Length = BarLength;
-    ResourceDescriptor->u.Generic.Alignment = BarLength;
-
     /* Check what kind of BAR this is */
-    if (CurrentBar & PCI_ADDRESS_IO_SPACE)
+    if (Bar & PCI_ADDRESS_IO_SPACE)
     {
-        /* Use correct mask to decode the address */
-        BarMask = PCI_ADDRESS_IO_ADDRESS_MASK;
-
         /* Set this as an I/O Port descriptor */
-        ResourceDescriptor->Type = CmResourceTypePort;
+        Type = CmResourceTypePort;
         ResourceDescriptor->Flags = CM_RESOURCE_PORT_IO;
+        AddressBits = Bar & PCI_ADDRESS_IO_ADDRESS_MASK;
     }
     else
     {
-        /* Use correct mask to decode the address */
-        BarMask = PCI_ADDRESS_MEMORY_ADDRESS_MASK;
-
         /* Set this as a memory descriptor */
-        ResourceDescriptor->Type = CmResourceTypeMemory;
+        Type = CmResourceTypeMemory;
+        AddressBits = Bar & PCI_ADDRESS_MEMORY_ADDRESS_MASK;
 
-        /* Check if it's 64-bit or 20-bit decode */
-        if ((CurrentBar & PCI_ADDRESS_MEMORY_TYPE_MASK) == PCI_TYPE_64BIT)
+        /* A 64-bit BAR takes the high half of its address from the next BAR */
+        if ((Bar & PCI_ADDRESS_MEMORY_TYPE_MASK) == PCI_TYPE_64BIT)
         {
-            /* The next BAR has the high word, read it */
-            ResourceDescriptor->u.Port.MaximumAddress.HighPart = BarArray[1];
+            AddressBits |= (ULONGLONG)NextBar << 32;
             Is64BitBar = TRUE;
-        }
-        else if ((CurrentBar & PCI_ADDRESS_MEMORY_TYPE_MASK) == PCI_TYPE_20BIT)
-        {
-            /* Use the correct mask to decode the address */
-            BarMask = ~0xFFF0000F;
         }
 
         /* Check if the BAR is listed as prefetchable memory */
-        if (CurrentBar & PCI_ADDRESS_MEMORY_PREFETCHABLE)
+        if (Bar & PCI_ADDRESS_MEMORY_PREFETCHABLE)
         {
             /* Mark the descriptor in the same way */
             ResourceDescriptor->Flags |= CM_RESOURCE_MEMORY_PREFETCHABLE;
         }
     }
 
-    /* Now write down the maximum address based on the base + length */
-    ResourceDescriptor->u.Port.MaximumAddress.QuadPart = (CurrentBar & BarMask) +
-                                                         BarLength - 1;
+    /* The probe leaves only the bits the BAR implements, so the lowest one is its length */
+    Length = AddressBits & (~AddressBits + 1);
+
+    /* A BAR that implements no address bits is not there */
+    if (!Length)
+    {
+        ResourceDescriptor->Type = CmResourceTypeNull;
+        return FALSE;
+    }
+
+    /* A legacy memory BAR can only be placed below 1MB */
+    if ((Type == CmResourceTypeMemory) &&
+        ((Bar & PCI_ADDRESS_MEMORY_TYPE_MASK) == PCI_TYPE_20BIT))
+    {
+        AddressBits &= 0xFFFFF;
+    }
+
+    /* A BAR aligns to its own length and decodes nothing above the bits it implements */
+    Alignment = Length;
+    MinimumAddress = 0;
+    MaximumAddress = AddressBits | (Length - 1);
+
+    /* A length of 4GB or more takes the large memory form */
+    if (!NT_SUCCESS(RtlIoEncodeMemIoResource(ResourceDescriptor,
+                                             Type,
+                                             Length,
+                                             Alignment,
+                                             MinimumAddress,
+                                             MaximumAddress)))
+    {
+        /* Fail this descriptor */
+        ResourceDescriptor->Type = CmResourceTypeNull;
+    }
 
     /* Return if this is a 64-bit BAR, so the loop code knows to skip the next one */
     return Is64BitBar;
@@ -1354,7 +1373,7 @@ PciDetermineSlotNumber(IN PPCI_PDO_EXTENSION PdoExtension,
     {
         /* Read every slot information entry */
         SlotInfo = &PciIrqRoutingTable->Slot[0];
-        DPRINT1("PIR$ %p is %lx bytes, slot 0 is at: %p\n",
+        DPRINT1("$PIR %p is %lx bytes, slot 0 is at: %p\n",
                 PciIrqRoutingTable, PciIrqRoutingTable->TableSize, SlotInfo);
         while (SlotInfo < (PSLOT_INFO)((ULONG_PTR)PciIrqRoutingTable +
                                        PciIrqRoutingTable->TableSize))

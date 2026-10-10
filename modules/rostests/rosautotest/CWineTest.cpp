@@ -46,9 +46,6 @@ CWineTest::~CWineTest()
 {
     if(m_hFind)
         FindClose(m_hFind);
-
-    if(m_ListBuffer)
-        delete m_ListBuffer;
 }
 
 /**
@@ -62,6 +59,10 @@ CWineTest::GetNextFile()
 {
     bool FoundFile = false;
     WIN32_FIND_DATAW fd;
+
+    /* Reset the test list */
+    m_ListBuffer = NULL;
+    m_ListString.clear();
 
     /* Did we already begin searching for files? */
     if (m_hFind)
@@ -90,18 +91,29 @@ CWineTest::GetNextFile()
     {
         /* Start searching for test files */
         wstring FindPath = m_TestPath;
+        wstring Module = Configuration.GetModule();
 
         /* Did the user specify a module? */
-        if(Configuration.GetModule().empty())
+        if(Module.empty())
         {
-            /* No module, so search for all files in that directory */
-            FindPath += L"*.exe";
+            /* No module, so search for all "*test.exe" files in that directory */
+            FindPath += L"*test.exe";
         }
         else
         {
-            /* Search for files with the pattern "modulename_*" */
-            FindPath += Configuration.GetModule();
-            FindPath += L"_*.exe";
+            /* Check for 'special' tests (e.g. "kmtest") or full test name ("ntdll_winetest") */
+            if (Module.substr(Module.length() - 4, 4) == L"test")
+            {
+                /* Search for files with the pattern "modulename.exe" */
+                FindPath += Configuration.GetModule();
+                FindPath += L".exe";
+            }
+            else
+            {
+                /* Search for files with the pattern "modulename_*test.exe" */
+                FindPath += Configuration.GetModule();
+                FindPath += L"_*test.exe";
+            }
         }
 
         /* Search for the first file and check whether we got one */
@@ -143,45 +155,46 @@ CWineTest::GetNextFile()
 DWORD
 CWineTest::DoListCommand()
 {
-    DWORD BytesAvailable;
-    DWORD Temp;
+    DWORD BytesRead;
     wstring CommandLine;
     CPipe Pipe;
+    CHAR TempBuffer[1024];
+    DWORD ret;
+
+    m_ListString.clear();
 
     /* Build the command line */
     CommandLine = m_TestPath;
     CommandLine += m_CurrentFile;
     CommandLine += L" --list";
 
-    {
-        /* Start the process for getting all available tests */
-        CPipedProcess Process(CommandLine, Pipe);
+    /* Start the process for getting all available tests */
+    CPipedProcess Process(CommandLine, Pipe);
 
-        /* Wait till this process ended */
-        if(WaitForSingleObject(Process.GetProcessHandle(), ListTimeout) == WAIT_FAILED)
-            TESTEXCEPTION("WaitForSingleObject failed for the test list\n");
+    for (;;)
+    {
+        /* Try to read from the pipe */
+        ret = Pipe.Read(TempBuffer, ARRAYSIZE(TempBuffer), &BytesRead, ListTimeout);
+
+        /* If the pipe is broken, the process terminated */
+        if (ret == ERROR_BROKEN_PIPE)
+            break;
+
+        /* Timeout, the process might not be responding */
+        if (ret == WAIT_TIMEOUT)
+            break;
+
+        if (ret != ERROR_SUCCESS)
+            TESTEXCEPTION("Unexpected error\n");
+
+        m_ListString.append(TempBuffer, BytesRead);
     }
 
-    /* Read the output data into a buffer */
-    if(!Pipe.Peek(NULL, 0, NULL, &BytesAvailable))
-        TESTEXCEPTION("CPipe::Peek failed for the test list\n");
+    if (WaitForSingleObject(Process.GetProcessHandle(), ListTimeout) != ERROR_SUCCESS)
+        TESTEXCEPTION("WaitForSingleObject failed for the test list\n");
 
-    /* Check if we got any */
-    if(!BytesAvailable)
-    {
-        stringstream ss;
-
-        ss << "The --list command did not return any data for " << UnicodeToAscii(m_CurrentFile) << endl;
-        TESTEXCEPTION(ss.str());
-    }
-
-    /* Read the data */
-    m_ListBuffer = new char[BytesAvailable];
-
-    if(Pipe.Read(m_ListBuffer, BytesAvailable, &Temp, INFINITE) != ERROR_SUCCESS)
-        TESTEXCEPTION("CPipe::Read failed\n");
-
-    return BytesAvailable;
+    m_ListBuffer = (PCHAR)m_ListString.c_str();
+    return (DWORD)m_ListString.size();
 }
 
 /**
@@ -202,6 +215,13 @@ CWineTest::GetNextTest()
         /* Perform the --list command */
         BufferSize = DoListCommand();
 
+        if ((BufferSize == 0) || (m_ListBuffer == NULL))
+        {
+            stringstream ss;
+            ss << "The --list command did not return any data for " << UnicodeToAscii(m_CurrentFile) << endl;
+            TESTEXCEPTION(ss.str());
+        }
+
         /* Move the pointer to the first test */
         pStart = strchr(m_ListBuffer, '\n');
         pStart += 5;
@@ -214,8 +234,8 @@ CWineTest::GetNextTest()
         m_CurrentFile.clear();
 
         /* Also free the memory for the list buffer */
-        delete[] m_ListBuffer;
         m_ListBuffer = NULL;
+        m_ListString.clear();
 
         return false;
     }
@@ -223,8 +243,12 @@ CWineTest::GetNextTest()
     /* Get start and end of this test name */
     pEnd = pStart;
 
-    while(*pEnd != '\r')
+    while (*pEnd != '\r')
+    {
+        if (*pEnd == '\0')
+            TESTEXCEPTION("Unexpected test list format\n");
         ++pEnd;
+    }
 
     /* Store the test name */
     m_CurrentTest = string(pStart, pEnd);
@@ -279,10 +303,10 @@ CWineTest::GetNextTestInfo()
 
                     if(UnderscorePosition == m_CurrentFile.npos)
                     {
-                        stringstream ss;
-
-                        ss << "Invalid test file name: " << UnicodeToAscii(m_CurrentFile) << endl;
-                        SSEXCEPTION;
+                        /* Use the entire name (without .exe extendion) */
+                        UnderscorePosition = m_CurrentFile.find_first_of('.');
+                        if(UnderscorePosition == m_CurrentFile.npos)
+                            UnderscorePosition = m_CurrentFile.length();
                     }
 
                     TestInfo->Module = UnicodeToAscii(m_CurrentFile.substr(0, UnderscorePosition));
@@ -303,7 +327,7 @@ CWineTest::GetNextTestInfo()
             StringOut(e.GetMessage());
             StringOut("\n");
             m_CurrentFile.clear();
-            delete[] m_ListBuffer;
+            m_ListString.clear();
         }
     }
 

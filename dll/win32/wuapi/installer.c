@@ -274,8 +274,9 @@ static HRESULT WINAPI update_installer_get_IsBusy(
     IUpdateInstaller *This,
     VARIANT_BOOL *retval )
 {
-    FIXME("\n");
-    return E_NOTIMPL;
+    FIXME("semi-stub, returning VARIANT_FALSE!\n");
+    *retval = VARIANT_FALSE;
+    return S_OK;
 }
 
 static HRESULT WINAPI update_installer_Uninstall(

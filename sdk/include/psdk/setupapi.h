@@ -1469,6 +1469,34 @@ SetupDiGetActualSectionToInstallExW(
   _Out_opt_ PWSTR *Extension,
   _Reserved_ PVOID Reserved);
 
+WINSETUPAPI
+BOOL
+WINAPI
+SetupDiGetActualModelsSectionA(
+    _In_ PINFCONTEXT Context,
+    _In_opt_ PSP_ALTPLATFORM_INFO AlternatePlatformInfo,
+    _Out_writes_opt_(InfSectionWithExtSize) PSTR InfSectionWithExt,
+    _In_ DWORD InfSectionWithExtSize,
+    _Out_opt_ PDWORD RequiredSize,
+    _Reserved_ PVOID Reserved);
+
+WINSETUPAPI
+BOOL
+WINAPI
+SetupDiGetActualModelsSectionW(
+    _In_ PINFCONTEXT Context,
+    _In_opt_ PSP_ALTPLATFORM_INFO AlternatePlatformInfo,
+    _Out_writes_opt_(InfSectionWithExtSize) PWSTR InfSectionWithExt,
+    _In_ DWORD InfSectionWithExtSize,
+    _Out_opt_ PDWORD RequiredSize,
+    _Reserved_ PVOID Reserved);
+
+#ifdef UNICODE
+#define SetupDiGetActualModelsSection SetupDiGetActualModelsSectionW
+#else
+#define SetupDiGetActualModelsSection SetupDiGetActualModelsSectionA
+#endif
+
 WINSETUPAPI BOOL WINAPI SetupDiGetClassBitmapIndex(_In_opt_ CONST GUID*, _Out_ PINT);
 
 WINSETUPAPI

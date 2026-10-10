@@ -608,12 +608,36 @@ HidClassPDO_PnP(
         }
         case IRP_MN_QUERY_INTERFACE:
         {
-            DPRINT1("[HIDCLASS] PDO IRP_MN_QUERY_INTERFACE not implemented\n");
-
             //
-            // do nothing
+            // return error default
             //
             Status = Irp->IoStatus.Status;
+
+            //
+            // check for known interfaces
+            //
+            if (IsEqualGUIDAligned(IoStack->Parameters.QueryInterface.InterfaceType,
+                                        &GUID_HID_INTERFACE_NOTIFY))
+            {
+                PHID_INTERFACE_NOTIFY_PNP HidInterfaceNotify = (PHID_INTERFACE_NOTIFY_PNP)IoStack->Parameters.QueryInterface.Interface;
+                if (IoStack->Parameters.QueryInterface.Size == sizeof(*HidInterfaceNotify) &&
+                    IoStack->Parameters.QueryInterface.Version == 1)
+                {
+                    DPRINT1("[HIDCLASS] PDO IRP_MN_QUERY_INTERFACE/GUID_HID_INTERFACE_NOTIFY not implemented\n");
+                    ASSERT(FALSE);
+                }
+            }
+            else if (IsEqualGUIDAligned(IoStack->Parameters.QueryInterface.InterfaceType,
+                                        &GUID_HID_INTERFACE_HIDPARSE))
+            {
+                PHID_INTERFACE_HIDPARSE HidInterfaceHidparse = (PHID_INTERFACE_HIDPARSE)IoStack->Parameters.QueryInterface.Interface;
+                if (IoStack->Parameters.QueryInterface.Size == sizeof(*HidInterfaceHidparse) &&
+                    IoStack->Parameters.QueryInterface.Version == 1)
+                {
+                    HidInterfaceHidparse->HidpGetCaps = HidP_GetCaps;
+                    Status = STATUS_SUCCESS;
+                }
+            }
             break;
         }
         case IRP_MN_QUERY_REMOVE_DEVICE:
@@ -741,7 +765,7 @@ HidClassPDO_CreatePDO(
         //
         PDODeviceExtension->Common.HidDeviceExtension.MiniDeviceExtension = FDODeviceExtension->Common.HidDeviceExtension.MiniDeviceExtension;
         PDODeviceExtension->Common.HidDeviceExtension.NextDeviceObject = FDODeviceExtension->Common.HidDeviceExtension.NextDeviceObject;
-        PDODeviceExtension->Common.HidDeviceExtension.PhysicalDeviceObject = FDODeviceExtension->Common.HidDeviceExtension.PhysicalDeviceObject;
+        PDODeviceExtension->Common.HidDeviceExtension.PhysicalDeviceObject = PDODeviceObject;
         PDODeviceExtension->Common.IsFDO = FALSE;
         PDODeviceExtension->FDODeviceExtension = FDODeviceExtension;
         PDODeviceExtension->FDODeviceObject = DeviceObject;

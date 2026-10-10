@@ -283,8 +283,6 @@ static HRESULT WINAPI ITS_IMonikerImpl_GetDisplayName(
     LPOLESTR* ppszDisplayName)
 {
     ITS_IMonikerImpl *This = impl_from_IMoniker(iface);
-    static const WCHAR szFormat[] = {
-        'm','s','-','i','t','s',':','%','s',':',':','%','s',0 };
     DWORD len;
     LPWSTR str;
 
@@ -292,7 +290,7 @@ static HRESULT WINAPI ITS_IMonikerImpl_GetDisplayName(
 
     len = lstrlenW( This->szFile ) + lstrlenW( This->szHtml );
     str = CoTaskMemAlloc( len*sizeof(WCHAR) );
-    swprintf( str, szFormat, This->szFile, This->szHtml );
+    swprintf( str, len, L"ms-its:%s::%s", This->szFile, This->szHtml );
 
     *ppszDisplayName = str;
     
@@ -431,8 +429,7 @@ static HRESULT WINAPI ITS_IParseDisplayNameImpl_ParseDisplayName(
     ULONG * pchEaten,
     IMoniker ** ppmkOut)
 {
-    static const WCHAR szPrefix[] = { 
-        '@','M','S','I','T','S','t','o','r','e',':',0 };
+    static const WCHAR szPrefix[] = L"@MSITStore:";
     const DWORD prefix_len = ARRAY_SIZE(szPrefix)-1;
     DWORD n;
 
@@ -441,7 +438,7 @@ static HRESULT WINAPI ITS_IParseDisplayNameImpl_ParseDisplayName(
     TRACE("%p %s %p %p\n", This,
           debugstr_w( pszDisplayName ), pchEaten, ppmkOut );
 
-    if( _wcsnicmp( pszDisplayName, szPrefix, prefix_len ) )
+    if( wcsnicmp( pszDisplayName, szPrefix, prefix_len ) )
         return MK_E_SYNTAX;
 
     /* search backwards for a double colon */

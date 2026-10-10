@@ -116,7 +116,7 @@ BEGIN
     AUTOCHECKBOX "Utili&ser la méthode suivante pour lisser les bords des polices d'écran :", IDC_EFFAPPEARANCE_SMOOTHING, 10, 42, 267, 19
     COMBOBOX IDC_EFFAPPEARANCE_SMOOTHINGTYPE, 20, 62, 95, 19, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | WS_VSCROLL | WS_TABSTOP
-    AUTOCHECKBOX "&Utiliser de grandes icônes", IDC_EFFAPPEARANCE_LARGEICONS, 10, 80, 267, 19, WS_TABSTOP | WS_DISABLED
+    AUTOCHECKBOX "&Utiliser de grandes icônes", IDC_EFFAPPEARANCE_LARGEICONS, 10, 80, 267, 19, WS_TABSTOP
     AUTOCHECKBOX "&Afficher une ombre sous les menus", IDC_EFFAPPEARANCE_SETDROPSHADOW, 10, 95, 267, 19
     AUTOCHECKBOX "A&fficher le contenu des fenêtres pendant leur déplacement", IDC_EFFAPPEARANCE_DRAGFULLWINDOWS, 10, 110, 267, 19
     AUTOCHECKBOX "Mas&quer les lettres soulignées de navigation au clavier jusqu'à l'appui sur la touche Alt", IDC_EFFAPPEARANCE_KEYBOARDCUES, 10, 125, 290, 19//FIXME: This is the too long string, and so I used the shortened "&Cacher les lettres soulignées jusqu'à ce que j'appuie sur la touche Alt" for the backport to allow keeping the dialogs en-US original size

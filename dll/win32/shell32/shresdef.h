@@ -27,8 +27,6 @@
 #define IDA_DESKBROWSER 3
 
 /* Bitmaps */
-#define IDB_REACTOS                 131
-#define IDB_LINEBAR                 138
 #define IDB_SHELL_IEXPLORE_LG       204
 #define IDB_SHELL_IEXPLORE_LG_HOT   205
 #define IDB_SHELL_IEXPLORE_SM       206
@@ -961,3 +959,5 @@
 #define IDR_RECYCLEBINCLEANER   162
 #define IDR_EXPLORER            163
 #define IDR_SYSTEMFILEASSOC     164
+#define IDR_SHELLLIBRARY        165
+#define IDR_USEREVENTTIMER      166

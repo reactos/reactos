@@ -1,10 +1,8 @@
 project(rapps)
 
 include_directories(
-    ${REACTOS_SOURCE_DIR}/sdk/lib/cryptlib
-    ${REACTOS_SOURCE_DIR}/sdk/include/reactos/libs/zlib
-    ${REACTOS_SOURCE_DIR}/sdk/lib/3rdparty/zlib/contrib)
-include_directories(include)
+    include
+    ${REACTOS_SOURCE_DIR}/sdk/lib/cryptlib)
 
 list(APPEND SOURCE
     appdb.cpp
@@ -38,7 +36,6 @@ list(APPEND SOURCE
     include/settings.h
     include/unattended.h
     include/winmain.h
-    ${ZLIB_SOURCE}
 )
 
 add_definitions(

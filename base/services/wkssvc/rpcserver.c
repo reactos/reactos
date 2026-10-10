@@ -1126,7 +1126,7 @@ NetrGetJoinInformation(
     wchar_t **NameBuffer,
     PNETSETUP_JOIN_STATUS BufferType)
 {
-    TRACE("NetrGetJoinInformation(%p %p %p)\n",
+    ERR("NetrGetJoinInformation(%p %p %p)\n",
           ServerName, NameBuffer, BufferType);
 
     if (NameBuffer == NULL)

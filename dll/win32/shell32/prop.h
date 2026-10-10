@@ -32,5 +32,15 @@ DEFINE_SHELL32PROPERTYKEY(PKEYSHELL32_Comments, PSGUID_SUMMARYINFORMATION, PIDSI
 const PROPERTYKEY*
 SHELL_GetPropertyKeyFromString(_In_ PCWSTR pszString, _Out_ PROPERTYKEY *pkey);
 
+static inline VARIANT*
+VariantDerefVariant(_In_ const VARIANT *pV)
+{
+    if (V_VT(pV) == (VT_BYREF | VT_VARIANT) && V_VARIANTREF(pV))
+        return V_VARIANTREF(pV);
+    return (VARIANT*)pV;
+}
+
 HRESULT
 VariantToIdlist(_In_ VARIANT *pV, _Out_ LPITEMIDLIST *ppidl);
+HRESULT
+VariantQueryInterface(_In_ VARIANT *pV, _In_ REFIID riid, _Out_ void **ppv);

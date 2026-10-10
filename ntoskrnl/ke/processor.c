@@ -47,7 +47,7 @@ KeQueryActiveProcessors(VOID)
  * Retrieves the number of the current processor.
  *
  * \param ProcessorNumber Pointer to a PROCESSOR_NUMBER structure that receives the processor number.
- * 
+ *
  * \return NTSTATUS The status of the operation.
  */
 NTSTATUS

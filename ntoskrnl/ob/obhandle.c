@@ -724,7 +724,7 @@ ObpCloseHandleTableEntry(IN PHANDLE_TABLE HandleTable,
             return STATUS_HANDLE_NOT_CLOSABLE;
         }
 
-        /* Success, validate callout retrn */
+        /* Success, validate callout return */
         ObpCalloutEnd(CalloutIrql, "NtClose", ObjectType, Body);
     }
 
@@ -826,6 +826,7 @@ ObpIncrementHandleCount(IN PVOID Object,
     KPROCESSOR_MODE ProbeMode;
     ULONG Total;
     POBJECT_HEADER_NAME_INFO NameInfo;
+    BOOLEAN ObjectLocked;
     PAGED_CODE();
 
     /* Get the object header and type */
@@ -853,10 +854,11 @@ ObpIncrementHandleCount(IN PVOID Object,
 
     /* Lock the object */
     ObpAcquireObjectLock(ObjectHeader);
+    ObjectLocked = TRUE;
 
     /* Charge quota and remove the creator info flag */
     Status = ObpChargeQuotaForObject(ObjectHeader, ObjectType, &NewObject);
-    if (!NT_SUCCESS(Status)) return Status;
+    if (!NT_SUCCESS(Status)) goto Quickie;
 
     /* Check if the open is exclusive */
     if (HandleAttributes & OBJ_EXCLUSIVE)
@@ -954,8 +956,17 @@ ObpIncrementHandleCount(IN PVOID Object,
         /* Check if the caller is trying to access system security */
         if (AccessState->RemainingDesiredAccess & ACCESS_SYSTEM_SECURITY)
         {
-            /* FIXME: TODO */
-            DPRINT1("ACCESS_SYSTEM_SECURITY not validated!\n");
+            /* Client must be warranted SeSecurityPrivilege to touch SACLs */
+            if (!SeSinglePrivilegeCheck(SeSecurityPrivilege, ProbeMode))
+            {
+                /* FIXME: Generate an audit alarm, security manager must be alerted */
+                Status = STATUS_PRIVILEGE_NOT_HELD;
+                goto Quickie;
+            }
+
+            /* Privilege held, grant it so the access state reflects reality */
+            AccessState->PreviouslyGrantedAccess |= ACCESS_SYSTEM_SECURITY;
+            AccessState->RemainingDesiredAccess &= ~ACCESS_SYSTEM_SECURITY;
         }
     }
 
@@ -988,6 +999,7 @@ ObpIncrementHandleCount(IN PVOID Object,
 
     /* Release the lock */
     ObpReleaseObjectLock(ObjectHeader);
+    ObjectLocked = FALSE;
 
     /* Check if we have an open procedure */
     Status = STATUS_SUCCESS;
@@ -995,13 +1007,12 @@ ObpIncrementHandleCount(IN PVOID Object,
     {
         /* Call it */
         ObpCalloutStart(&CalloutIrql);
+        ACCESS_MASK GrantedAccess = AccessState ? AccessState->PreviouslyGrantedAccess : 0;
         Status = ObjectType->TypeInfo.OpenProcedure(OpenReason,
+                                                    ProbeMode,
                                                     Process,
                                                     Object,
-                                                    AccessState ?
-                                                    AccessState->
-                                                    PreviouslyGrantedAccess :
-                                                    0,
+                                                    &GrantedAccess,
                                                     ProcessHandleCount);
         ObpCalloutEnd(CalloutIrql, "Open", ObjectType, Object);
 
@@ -1011,7 +1022,7 @@ ObpIncrementHandleCount(IN PVOID Object,
             /* FIXME: This should never happen for now */
             DPRINT1("Unhandled case\n");
             ASSERT(FALSE);
-            return Status;
+            goto Quickie;
         }
     }
 
@@ -1049,11 +1060,13 @@ ObpIncrementHandleCount(IN PVOID Object,
             OpenReason,
             ObjectHeader->HandleCount,
             ObjectHeader->PointerCount);
-    return Status;
 
 Quickie:
-    /* Release lock and return */
-    ObpReleaseObjectLock(ObjectHeader);
+    if (ObjectLocked)
+    {
+        ObpReleaseObjectLock(ObjectHeader);
+    }
+
     return Status;
 }
 
@@ -1102,6 +1115,7 @@ ObpIncrementUnnamedHandleCount(IN PVOID Object,
     POBJECT_HEADER_CREATOR_INFO CreatorInfo;
     KIRQL CalloutIrql;
     ULONG Total;
+    BOOLEAN ObjectLocked;
 
     /* Get the object header and type */
     ObjectHeader = OBJECT_TO_OBJECT_HEADER(Object);
@@ -1115,10 +1129,11 @@ ObpIncrementUnnamedHandleCount(IN PVOID Object,
 
     /* Lock the object */
     ObpAcquireObjectLock(ObjectHeader);
+    ObjectLocked = TRUE;
 
     /* Charge quota and remove the creator info flag */
     Status = ObpChargeQuotaForObject(ObjectHeader, ObjectType, &NewObject);
-    if (!NT_SUCCESS(Status)) return Status;
+    if (!NT_SUCCESS(Status)) goto Quickie;
 
     /* Check if the open is exclusive */
     if (HandleAttributes & OBJ_EXCLUSIVE)
@@ -1215,6 +1230,7 @@ ObpIncrementUnnamedHandleCount(IN PVOID Object,
 
     /* Release the lock */
     ObpReleaseObjectLock(ObjectHeader);
+    ObjectLocked = FALSE;
 
     /* Check if we have an open procedure */
     Status = STATUS_SUCCESS;
@@ -1223,9 +1239,10 @@ ObpIncrementUnnamedHandleCount(IN PVOID Object,
         /* Call it */
         ObpCalloutStart(&CalloutIrql);
         Status = ObjectType->TypeInfo.OpenProcedure(ObCreateHandle,
+                                                    AccessMode,
                                                     Process,
                                                     Object,
-                                                    *DesiredAccess,
+                                                    DesiredAccess,
                                                     ProcessHandleCount);
         ObpCalloutEnd(CalloutIrql, "Open", ObjectType, Object);
 
@@ -1235,7 +1252,7 @@ ObpIncrementUnnamedHandleCount(IN PVOID Object,
             /* FIXME: This should never happen for now */
             DPRINT1("Unhandled case\n");
             ASSERT(FALSE);
-            return Status;
+            goto Quickie;
         }
     }
 
@@ -1268,11 +1285,13 @@ ObpIncrementUnnamedHandleCount(IN PVOID Object,
             Object,
             ObjectHeader->HandleCount,
             ObjectHeader->PointerCount);
-    return Status;
 
 Quickie:
-    /* Release lock and return */
-    ObpReleaseObjectLock(ObjectHeader);
+    if (ObjectLocked)
+    {
+        ObpReleaseObjectLock(ObjectHeader);
+    }
+
     return Status;
 }
 
@@ -3295,9 +3314,8 @@ ObInsertObject(IN PVOID Object,
  * Handle whose attributes are to be modified.
  *
  * @param[in]   HandleFlags
- * Pointer to an @p OBJECT_HANDLE_ATTRIBUTE_INFORMATION structure
- * specifying the new values for the handle's inherit and
- * protect-from-close attributes.
+ * Pointer to an @p OBJECT_HANDLE_FLAG_INFORMATION structure specifying
+ * the new values for the handle's inherit and protect-from-close attributes.
  *
  * @param[in]   PreviousMode
  * Processor mode of the original caller. This is used to determine
@@ -3317,7 +3335,7 @@ NTSTATUS
 NTAPI
 ObSetHandleAttributes(
     _In_ HANDLE Handle,
-    _In_ POBJECT_HANDLE_ATTRIBUTE_INFORMATION HandleFlags,
+    _In_ POBJECT_HANDLE_FLAG_INFORMATION HandleFlags,
     _In_ KPROCESSOR_MODE PreviousMode)
 {
     OBP_SET_HANDLE_ATTRIBUTES_CONTEXT SetHandleAttributesContext;

@@ -560,7 +560,7 @@ struct FreeSelTool : SelectionBaseTool
         if (!selectionModel.m_bShow && m_bDrawing)
         {
             /* Draw the freehand selection inverted/xored */
-            Poly(hdc, s_pPoints, (INT)s_cPoints, 0, 0, 2, 0, FALSE, TRUE);
+            Poly(hdc, s_pPoints, (INT)s_cPoints, (COLORREF)0, (COLORREF)0, 2, 0, FALSE, TRUE);
         }
     }
 };
@@ -587,9 +587,9 @@ struct RubberTool : SmoothDrawTool
     void OnDraw(HDC hdc, BOOL bLeftButton, POINT pt0, POINT pt1) override
     {
         if (bLeftButton)
-            Erase(hdc, pt0.x, pt0.y, pt1.x, pt1.y, m_bg, toolsModel.GetRubberRadius());
+            Erase(hdc, pt0.x, pt0.y, pt1.x, pt1.y, toolsModel.GetBgBrush(), toolsModel.GetRubberRadius());
         else
-            Replace(hdc, pt0.x, pt0.y, pt1.x, pt1.y, m_fg, m_bg, toolsModel.GetRubberRadius());
+            Replace(hdc, pt0.x, pt0.y, pt1.x, pt1.y, m_fg, toolsModel.GetBgBrush(), toolsModel.GetRubberRadius());
     }
 
     void OnSpecialTweak(BOOL bMinus) override
@@ -604,7 +604,8 @@ struct FillTool : ToolBase
     void OnButtonDown(BOOL bLeftButton, LONG x, LONG y, BOOL bDoubleClick) override
     {
         imageModel.PushImageForUndo();
-        Fill(m_hdc, x, y, bLeftButton ? m_fg : m_bg);
+        HBRUSH hBrush = (bLeftButton ? toolsModel.GetFgBrush() : toolsModel.GetBgBrush());
+        Fill(m_hdc, x, y, hBrush);
     }
 };
 
@@ -709,8 +710,8 @@ struct PenTool : SmoothDrawTool
 {
     void OnDraw(HDC hdc, BOOL bLeftButton, POINT pt0, POINT pt1) override
     {
-        COLORREF rgb = bLeftButton ? m_fg : m_bg;
-        Line(hdc, pt0.x, pt0.y, pt1.x, pt1.y, rgb, toolsModel.GetPenWidth());
+        HBRUSH hBrush = (bLeftButton ? toolsModel.GetFgBrush() : toolsModel.GetBgBrush());
+        Line(hdc, pt0.x, pt0.y, pt1.x, pt1.y, hBrush, toolsModel.GetPenWidth());
     }
 
     void OnSpecialTweak(BOOL bMinus) override
@@ -724,8 +725,8 @@ struct BrushTool : SmoothDrawTool
 {
     void OnDraw(HDC hdc, BOOL bLeftButton, POINT pt0, POINT pt1) override
     {
-        COLORREF rgb = bLeftButton ? m_fg : m_bg;
-        Brush(hdc, pt0.x, pt0.y, pt1.x, pt1.y, rgb, toolsModel.GetBrushStyle(),
+        HBRUSH hBrush = (bLeftButton ? toolsModel.GetFgBrush() : toolsModel.GetBgBrush());
+        Brush(hdc, pt0.x, pt0.y, pt1.x, pt1.y, hBrush, toolsModel.GetBrushStyle(),
               toolsModel.GetBrushWidth());
     }
 
@@ -754,8 +755,8 @@ struct AirBrushTool : SmoothDrawTool
 
     void OnDraw(HDC hdc, BOOL bLeftButton, POINT pt0, POINT pt1) override
     {
-        COLORREF rgb = bLeftButton ? m_fg : m_bg;
-        Airbrush(hdc, pt1.x, pt1.y, rgb, toolsModel.GetAirBrushRadius());
+        HBRUSH hBrush = (bLeftButton ? toolsModel.GetFgBrush() : toolsModel.GetBgBrush());
+        Airbrush(hdc, pt1.x, pt1.y, hBrush, toolsModel.GetAirBrushRadius());
     }
 
     void OnSpecialTweak(BOOL bMinus) override
@@ -811,7 +812,7 @@ struct TextTool : ToolBase
 
         // Draw the text
         INT style = (toolsModel.IsBackgroundTransparent() ? 0 : 1);
-        Text(hdc, rc.left, rc.top, rc.right, rc.bottom, m_fg, m_bg, szText,
+        Text(hdc, rc.left, rc.top, rc.right, rc.bottom, toolsModel.GetFgBrush(), toolsModel.GetBgBrush(), szText,
              textEditWindow.GetFont(), style);
     }
 
@@ -902,8 +903,8 @@ struct LineTool : TwoPointDrawTool
             return;
         if (GetAsyncKeyState(VK_SHIFT) < 0)
             roundTo8Directions(g_ptStart.x, g_ptStart.y, g_ptEnd.x, g_ptEnd.y);
-        COLORREF rgb = m_bLeftButton ? m_fg : m_bg;
-        Line(hdc, g_ptStart.x, g_ptStart.y, g_ptEnd.x, g_ptEnd.y, rgb, toolsModel.GetLineWidth());
+        HBRUSH hBrush = (m_bLeftButton ? toolsModel.GetFgBrush() : toolsModel.GetBgBrush());
+        Line(hdc, g_ptStart.x, g_ptStart.y, g_ptEnd.x, g_ptEnd.y, hBrush, toolsModel.GetLineWidth());
     }
 };
 
@@ -914,18 +915,17 @@ struct BezierTool : ToolBase
 
     void OnDrawOverlayOnImage(HDC hdc)
     {
-        COLORREF rgb = (m_bLeftButton ? m_fg : m_bg);
+        HBRUSH hBrush = (m_bLeftButton ? toolsModel.GetFgBrush() : toolsModel.GetBgBrush());
         switch (s_cPoints)
         {
             case 2:
-                Line(hdc, s_pPoints[0].x, s_pPoints[0].y, s_pPoints[1].x, s_pPoints[1].y, rgb,
-                     toolsModel.GetLineWidth());
+                Line(hdc, s_pPoints[0].x, s_pPoints[0].y, s_pPoints[1].x, s_pPoints[1].y, hBrush, toolsModel.GetLineWidth());
                 break;
             case 3:
-                Bezier(hdc, s_pPoints[0], s_pPoints[2], s_pPoints[2], s_pPoints[1], rgb, toolsModel.GetLineWidth());
+                Bezier(hdc, s_pPoints[0], s_pPoints[2], s_pPoints[2], s_pPoints[1], hBrush, toolsModel.GetLineWidth());
                 break;
             case 4:
-                Bezier(hdc, s_pPoints[0], s_pPoints[2], s_pPoints[3], s_pPoints[1], rgb, toolsModel.GetLineWidth());
+                Bezier(hdc, s_pPoints[0], s_pPoints[2], s_pPoints[3], s_pPoints[1], hBrush, toolsModel.GetLineWidth());
                 break;
         }
     }
@@ -994,9 +994,9 @@ struct RectTool : TwoPointDrawTool
         if (GetAsyncKeyState(VK_SHIFT) < 0)
             regularize(g_ptStart.x, g_ptStart.y, g_ptEnd.x, g_ptEnd.y);
         if (m_bLeftButton)
-            Rect(hdc, g_ptStart.x, g_ptStart.y, g_ptEnd.x, g_ptEnd.y, m_fg, m_bg, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle());
+            Rect(hdc, g_ptStart.x, g_ptStart.y, g_ptEnd.x, g_ptEnd.y, toolsModel.GetFgBrush(), toolsModel.GetBgBrush(), toolsModel.GetLineWidth(), toolsModel.GetShapeStyle());
         else
-            Rect(hdc, g_ptStart.x, g_ptStart.y, g_ptEnd.x, g_ptEnd.y, m_bg, m_fg, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle());
+            Rect(hdc, g_ptStart.x, g_ptStart.y, g_ptEnd.x, g_ptEnd.y, toolsModel.GetBgBrush(), toolsModel.GetFgBrush(), toolsModel.GetLineWidth(), toolsModel.GetShapeStyle());
     }
 };
 
@@ -1012,9 +1012,9 @@ struct ShapeTool : ToolBase
             return;
 
         if (m_bLeftButton)
-            Poly(hdc, s_pPoints, (INT)s_cPoints, m_fg, m_bg, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle(), m_bClosed, FALSE);
+            Poly(hdc, s_pPoints, (INT)s_cPoints, toolsModel.GetFgBrush(), toolsModel.GetBgBrush(), toolsModel.GetLineWidth(), toolsModel.GetShapeStyle(), m_bClosed, FALSE);
         else
-            Poly(hdc, s_pPoints, (INT)s_cPoints, m_bg, m_fg, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle(), m_bClosed, FALSE);
+            Poly(hdc, s_pPoints, (INT)s_cPoints, toolsModel.GetBgBrush(), toolsModel.GetFgBrush(), toolsModel.GetLineWidth(), toolsModel.GetShapeStyle(), m_bClosed, FALSE);
     }
 
     void OnButtonDown(BOOL bLeftButton, LONG x, LONG y, BOOL bDoubleClick) override
@@ -1105,9 +1105,9 @@ struct EllipseTool : TwoPointDrawTool
         if (GetAsyncKeyState(VK_SHIFT) < 0)
             regularize(g_ptStart.x, g_ptStart.y, g_ptEnd.x, g_ptEnd.y);
         if (m_bLeftButton)
-            Ellp(hdc, g_ptStart.x, g_ptStart.y, g_ptEnd.x, g_ptEnd.y, m_fg, m_bg, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle());
+            Ellp(hdc, g_ptStart.x, g_ptStart.y, g_ptEnd.x, g_ptEnd.y, toolsModel.GetFgBrush(), toolsModel.GetBgBrush(), toolsModel.GetLineWidth(), toolsModel.GetShapeStyle());
         else
-            Ellp(hdc, g_ptStart.x, g_ptStart.y, g_ptEnd.x, g_ptEnd.y, m_bg, m_fg, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle());
+            Ellp(hdc, g_ptStart.x, g_ptStart.y, g_ptEnd.x, g_ptEnd.y, toolsModel.GetBgBrush(), toolsModel.GetFgBrush(), toolsModel.GetLineWidth(), toolsModel.GetShapeStyle());
     }
 };
 
@@ -1121,9 +1121,9 @@ struct RRectTool : TwoPointDrawTool
         if (GetAsyncKeyState(VK_SHIFT) < 0)
             regularize(g_ptStart.x, g_ptStart.y, g_ptEnd.x, g_ptEnd.y);
         if (m_bLeftButton)
-            RRect(hdc, g_ptStart.x, g_ptStart.y, g_ptEnd.x, g_ptEnd.y, m_fg, m_bg, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle());
+            RRect(hdc, g_ptStart.x, g_ptStart.y, g_ptEnd.x, g_ptEnd.y, toolsModel.GetFgBrush(), toolsModel.GetBgBrush(), toolsModel.GetLineWidth(), toolsModel.GetShapeStyle());
         else
-            RRect(hdc, g_ptStart.x, g_ptStart.y, g_ptEnd.x, g_ptEnd.y, m_bg, m_fg, toolsModel.GetLineWidth(), toolsModel.GetShapeStyle());
+            RRect(hdc, g_ptStart.x, g_ptStart.y, g_ptEnd.x, g_ptEnd.y, toolsModel.GetBgBrush(), toolsModel.GetFgBrush(), toolsModel.GetLineWidth(), toolsModel.GetShapeStyle());
     }
 };
 

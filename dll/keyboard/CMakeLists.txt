@@ -1,5 +1,8 @@
 
 list(APPEND _keyboard_layouts
+    kbd101
+    kbd101a
+    kbd106
     kbda1
     kbda2
     kbda3
@@ -53,6 +56,7 @@ list(APPEND _keyboard_layouts
     kbdlv
     kbdmac
     kbdne
+    kbdnec
     kbdno
     kbdpl
     kbdpl1
@@ -95,7 +99,6 @@ foreach(_keyboard_layout ${_keyboard_layouts})
         ${_keyboard_layout}/${_keyboard_layout}.rc
         ${CMAKE_CURRENT_BINARY_DIR}/${_keyboard_layout}.def)
 
-    target_include_directories(${_keyboard_layout} PRIVATE ${REACTOS_SOURCE_DIR}/ntoskrnl/include)
     set_entrypoint(${_keyboard_layout} 0)
     set_image_base(${_keyboard_layout} 0x5FFF0000)
     set_subsystem(${_keyboard_layout} native)

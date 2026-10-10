@@ -138,6 +138,7 @@
 #define TAG_SHIM                'MIHS'
 #define TAG_QUOTA_BLOCK         'bQsP'
 #define TAG_THREAD_NAME         'mNhT'
+#define TAG_PS_WOW64            'oWsP'
 
 /* Run-Time Library Tags */
 #define TAG_HDTB    'BTDH'
@@ -166,6 +167,7 @@
 #define TAG_SID_AND_ATTRIBUTES  'aSeS'
 #define TAG_SID_VALIDATE        'vSeS'
 #define TAG_DACL                'lcaD'
+#define TAG_LOGON_TERMINATED    'eToL'
 
 /* LPC Tags */
 #define TAG_LPC_MESSAGE         'McpL'

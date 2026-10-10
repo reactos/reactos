@@ -24,12 +24,28 @@
 #include "windef.h"
 #include "winbase.h"
 #include "wine/dplaysp.h"
+#include "wine/list.h"
 #include "lobbysp.h"
 #include "dplayx_queue.h"
 
 extern HRESULT DPL_EnumAddress( LPDPENUMADDRESSCALLBACK lpEnumAddressCallback,
                                 LPCVOID lpAddress, DWORD dwAddressSize,
-                                LPVOID lpContext ) DECLSPEC_HIDDEN;
+                                LPVOID lpContext );
+
+typedef struct
+{
+    struct list entry;
+
+    DWORD flags;
+    GUID spGuid;
+    void *address;
+    DWORD addressSize;
+    DPNAME name;
+    DPNAME nameA;
+    DWORD reserved1;
+    DWORD reserved2;
+    char *path;
+} DPCONNECTION;
 
 typedef struct tagEnumSessionAsyncCallbackData
 {
@@ -37,16 +53,18 @@ typedef struct tagEnumSessionAsyncCallbackData
   GUID         requestGuid;
   DWORD        dwEnumSessionFlags;
   DWORD        dwTimeout;
+  WCHAR       *password;
   HANDLE       hSuicideRequest;
 } EnumSessionAsyncCallbackData;
 
 typedef struct tagDP_MSG_REPLY_STRUCT
 {
   HANDLE hReceipt;
-  WORD   wExpectedReply;
+  WORD  *expectedReplies;
+  DWORD  expectedReplyCount;
   LPVOID lpReplyMsg;
   DWORD  dwMsgBodySize;
-  /* FIXME: Is the message header required as well? */
+  void  *replyMsgHeader;
 } DP_MSG_REPLY_STRUCT, *LPDP_MSG_REPLY_STRUCT;
 
 typedef struct tagDP_MSG_REPLY_STRUCT_LIST
@@ -60,7 +78,8 @@ struct PlayerData
   /* Individual player information */
   DPID dpid;
 
-  DPNAME name;
+  DPNAME *name;
+  DPNAME *nameA;
   HANDLE hEvent;
 
   ULONG  uRef;  /* What is the reference count on this data? */
@@ -103,7 +122,8 @@ struct GroupData
   DWORD dwFlags; /* Flags describing anything special about the group */
 
   DPID   dpid;
-  DPNAME name;
+  DPNAME *name;
+  DPNAME *nameA;
 
   /* View of local data */
   LPVOID lpLocalData;
@@ -112,6 +132,9 @@ struct GroupData
   /* View of remote data */
   LPVOID lpRemoteData;
   DWORD  dwRemoteDataSize;
+
+  /* SP data on a per player basis */
+  LPVOID lpSPPlayerData;
 };
 typedef struct GroupData  GroupData;
 typedef struct GroupData* lpGroupData;
@@ -124,10 +147,17 @@ struct GroupList
 };
 typedef struct GroupList* lpGroupList;
 
+typedef DWORD FN_COPY_MESSAGE( DPMSG_GENERIC *genericDst, DPMSG_GENERIC *genericSrc,
+                               DWORD genericSize, BOOL ansi );
+
 struct DPMSG
 {
   DPQ_ENTRY( DPMSG ) msgs;
+  DPID fromId;
+  DPID toId;
   DPMSG_GENERIC* msg;
+  FN_COPY_MESSAGE *copyMessage;
+  DWORD genericSize;
 };
 typedef struct DPMSG* LPDPMSG;
 
@@ -154,11 +184,12 @@ typedef struct tagDirectPlay2Data
 
   lpGroupData lpSysGroup; /* System group with _everything_ in it */
 
+  DPID systemPlayerId;
+
   LPDPSESSIONDESC2 lpSessionDesc;
 
   /* I/O Msg queues */
   DPQ_HEAD( DPMSG ) receiveMsgs; /* Msg receive queue */
-  DPQ_HEAD( DPMSG ) sendMsgs;    /* Msg send pending queue */
 
   /* Information about the service provider active on this connection */
   SPINITDATA spData;
@@ -189,26 +220,37 @@ typedef struct IDirectPlayImpl
   IDirectPlay3 IDirectPlay3_iface;
   IDirectPlay4A IDirectPlay4A_iface;
   IDirectPlay4  IDirectPlay4_iface;
-  LONG numIfaces; /* "in use interfaces" refcount */
-  LONG ref, ref2A, ref2, ref3A, ref3, ref4A, ref4;
+  LONG ref;
   CRITICAL_SECTION lock;
   DirectPlay2Data *dp2;
 } IDirectPlayImpl;
 
-HRESULT DP_HandleMessage( IDirectPlayImpl *This, const void *lpMessageBody,
-        DWORD  dwMessageBodySize, const void *lpMessageHeader, WORD wCommandId, WORD wVersion,
-        void **lplpReply, DWORD *lpdwMsgSize ) DECLSPEC_HIDDEN;
+HRESULT DP_HandleMessage( IDirectPlayImpl *This, void *messageBody,
+        DWORD  dwMessageBodySize, void *messageHeader, WORD wCommandId, WORD wVersion,
+        void **lplpReply, DWORD *lpdwMsgSize );
+DPSESSIONDESC2 *DP_DuplicateSessionDesc( const DPSESSIONDESC2 *src, BOOL dstAnsi, BOOL srcAnsi );
+HRESULT DP_HandleGameMessage( IDirectPlayImpl *This, void *messageBody, DWORD messageBodySize,
+                              DPID fromId, DPID toId );
+HRESULT DP_CreatePlayer( IDirectPlayImpl *This, void *msgHeader, DPID *lpid, DPNAME *lpName,
+                         void *data, DWORD dataSize, void *spData, DWORD spDataSize, DWORD dwFlags,
+                         HANDLE hEvent, struct PlayerData **playerData, BOOL bAnsi );
+HRESULT DP_CreateGroup( IDirectPlayImpl *This, void *msgHeader, const DPID *lpid,
+                        const DPNAME *lpName, void *data, DWORD dataSize, DWORD dwFlags,
+                        DPID idParent, BOOL bAnsi );
+HRESULT DP_AddPlayerToGroup( IDirectPlayImpl *This, DPID group, DPID player );
+
+void DP_FreeConnections(void);
 
 /* DP SP external interfaces into DirectPlay */
-extern HRESULT DP_GetSPPlayerData( IDirectPlayImpl *lpDP, DPID idPlayer, void **lplpData ) DECLSPEC_HIDDEN;
-extern HRESULT DP_SetSPPlayerData( IDirectPlayImpl *lpDP, DPID idPlayer, void *lpData ) DECLSPEC_HIDDEN;
+extern HRESULT DP_GetSPPlayerData( IDirectPlayImpl *lpDP, DPID idPlayer, void **lplpData );
+extern HRESULT DP_SetSPPlayerData( IDirectPlayImpl *lpDP, DPID idPlayer, void *lpData );
 
 /* DP external interfaces to call into DPSP interface */
-extern LPVOID DPSP_CreateSPPlayerData(void) DECLSPEC_HIDDEN;
+extern LPVOID DPSP_CreateSPPlayerData(void);
 
-extern HRESULT dplay_create( REFIID riid, void **ppv ) DECLSPEC_HIDDEN;
-extern HRESULT dplobby_create( REFIID riid, void **ppv ) DECLSPEC_HIDDEN;
-extern HRESULT dplaysp_create( REFIID riid, void **ppv, IDirectPlayImpl *dp ) DECLSPEC_HIDDEN;
-extern HRESULT dplobbysp_create( REFIID riid, void **ppv, IDirectPlayImpl *dp ) DECLSPEC_HIDDEN;
+extern HRESULT dplay_create( REFIID riid, void **ppv );
+extern HRESULT dplobby_create( REFIID riid, void **ppv );
+extern HRESULT dplaysp_create( REFIID riid, void **ppv, IDirectPlayImpl *dp );
+extern HRESULT dplobbysp_create( REFIID riid, void **ppv, IDirectPlayImpl *dp );
 
 #endif /* __WINE_DPLAY_GLOBAL_INCLUDED */

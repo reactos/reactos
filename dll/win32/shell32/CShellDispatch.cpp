@@ -82,7 +82,7 @@ HRESULT STDMETHODCALLTYPE CShellDispatch::NameSpace(VARIANT vDir, Folder **ppsdf
     if (!SUCCEEDED(hr))
         return S_FALSE;
 
-    return ShellObjectCreatorInit<CFolder>(static_cast<LPITEMIDLIST>(idlist), IID_PPV_ARG(Folder, ppsdf));
+    return CFolder::CreateInstance(idlist, this, IID_PPV_ARG(Folder, ppsdf));
 }
 
 static BOOL is_optional_argument(const VARIANT *arg)
@@ -110,7 +110,7 @@ HRESULT STDMETHODCALLTYPE CShellDispatch::BrowseForFolder(LONG Hwnd, BSTR Title,
     if (!selection)
         return S_FALSE;
 
-    return ShellObjectCreatorInit<CFolder>(static_cast<LPITEMIDLIST>(selection), IID_PPV_ARG(Folder, ppsdf));
+    return CFolder::CreateInstance(selection, this, IID_PPV_ARG(Folder, ppsdf));
 }
 
 HRESULT STDMETHODCALLTYPE CShellDispatch::Windows(IDispatch **ppid)
@@ -539,9 +539,6 @@ HRESULT STDMETHODCALLTYPE CShellDispatch::ExplorerPolicy(BSTR policy, VARIANT *v
     return E_NOTIMPL;
 }
 
-#ifndef SSF_SERVERADMINUI
-#define SSF_SERVERADMINUI 4
-#endif
 HRESULT STDMETHODCALLTYPE CShellDispatch::GetSetting(LONG setting, VARIANT_BOOL *result)
 {
     TRACE("(%p, %lu, %p)\n", this, setting, result);

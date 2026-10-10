@@ -9,7 +9,7 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
-HRESULT
+EXTERN_C HRESULT
 SHELL_GetShellExtensionRegCLSID(HKEY hKey, LPCWSTR KeyName, CLSID *pClsId)
 {
     // First try the key name
@@ -22,7 +22,7 @@ SHELL_GetShellExtensionRegCLSID(HKEY hKey, LPCWSTR KeyName, CLSID *pClsId)
     return !err ? SHCLSIDFromStringW(buf, pClsId) : HRESULT_FROM_WIN32(err);
 }
 
-static HRESULT
+EXTERN_C HRESULT
 SHELL_InitializeExtension(REFCLSID clsid, PCIDLIST_ABSOLUTE pidlFolder, IDataObject *pDO, HKEY hkeyProgID, REFIID riid, void **ppv)
 {
     *ppv = NULL;

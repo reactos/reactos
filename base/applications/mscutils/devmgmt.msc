@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+<MMC_ConsoleFile ConsoleVersion="2.0">
+  <VisualAttributes>
+    <Icon File="%windir%\system32\devmgmt.exe" />
+  </VisualAttributes>
+  <RosLaunch File="%windir%\system32\devmgmt.exe" />
+</MMC_ConsoleFile>

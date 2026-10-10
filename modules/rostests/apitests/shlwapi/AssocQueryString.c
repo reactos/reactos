@@ -36,6 +36,7 @@ static void TEST_End(void)
 
 static void TEST_AssocQueryStringA(void)
 {
+    /* Note: NT5 differs from NT6 because NT5 converts a NULL pszExtra to L"" */
     CHAR szPath[MAX_PATH], szAnswer[MAX_PATH];
     CHAR szDebug1[MAX_PATH], szDebug2[MAX_PATH];
     HRESULT hr;

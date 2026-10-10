@@ -148,7 +148,7 @@ CmpInitializeHive(
     Hive->FileHandles[HFILE_TYPE_EXTERNAL] = External;
     Hive->FileHandles[HFILE_TYPE_ALTERNATE] = Alternate;
 
-    /* Initailize the guarded mutex */
+    /* Initialize the guarded mutex */
     KeInitializeGuardedMutex(Hive->ViewLock);
     Hive->ViewLockOwner = NULL;
 
@@ -166,11 +166,12 @@ CmpInitializeHive(
     /* Clear file names */
     RtlInitEmptyUnicodeString(&Hive->FileUserName, NULL, 0);
     RtlInitEmptyUnicodeString(&Hive->FileFullPath, NULL, 0);
+    RtlInitEmptyUnicodeString(&Hive->HiveRootPath, NULL, 0);
 
     /* Initialize the view list */
     CmpInitHiveViewList(Hive);
 
-    /* Initailize the security cache */
+    /* Initialize the security cache */
     CmpInitSecurityCache(Hive);
 
     /* Setup flags */

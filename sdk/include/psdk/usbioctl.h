@@ -22,7 +22,7 @@
 
 #pragma once
 
-#include "usb100.h"
+#include "usb300.h"
 #include "usbiodef.h"
 
 #ifdef __cplusplus
@@ -666,6 +666,108 @@ typedef struct _USB_DEVICE_PERFORMANCE_INFO {
 #include <poppack.h>
 
 #endif /* USB_KERNEL_IOCTL */
+
+/* USB 3.0 additions to the user mode hub interface */
+
+#define IOCTL_USB_GET_PORT_STATUS \
+  CTL_CODE(FILE_DEVICE_USB, USB_GET_PORT_STATUS, METHOD_BUFFERED, FILE_ANY_ACCESS)
+
+#define IOCTL_USB_GET_HUB_INFORMATION_EX \
+  CTL_CODE(FILE_DEVICE_USB, USB_GET_HUB_INFORMATION_EX, METHOD_BUFFERED, FILE_ANY_ACCESS)
+
+#define IOCTL_USB_GET_PORT_CONNECTOR_PROPERTIES \
+  CTL_CODE(FILE_DEVICE_USB, USB_GET_PORT_CONNECTOR_PROPERTIES, METHOD_BUFFERED, FILE_ANY_ACCESS)
+
+#define IOCTL_USB_GET_NODE_CONNECTION_INFORMATION_EX_V2 \
+  CTL_CODE(FILE_DEVICE_USB, USB_GET_NODE_CONNECTION_INFORMATION_EX_V2, METHOD_BUFFERED, FILE_ANY_ACCESS)
+
+typedef enum _USB_HUB_TYPE {
+  UsbRootHub = 1,
+  Usb20Hub = 2,
+  Usb30Hub = 3
+} USB_HUB_TYPE;
+
+/* HubType selects which arm of the descriptor union is valid */
+typedef struct _USB_HUB_INFORMATION_EX {
+  USB_HUB_TYPE HubType;
+  USHORT HighestPortNumber;
+  union {
+    USB_HUB_DESCRIPTOR UsbHubDescriptor;
+    USB_30_HUB_DESCRIPTOR Usb30HubDescriptor;
+  } u;
+} USB_HUB_INFORMATION_EX, *PUSB_HUB_INFORMATION_EX;
+
+typedef union _USB_PORT_PROPERTIES {
+  ULONG ul;
+  __GNU_EXTENSION struct {
+    ULONG PortIsUserConnectable:1;
+    ULONG PortIsDebugCapable:1;
+    ULONG PortHasMultipleCompanions:1;
+    ULONG PortConnectorIsTypeC:1;
+    ULONG ReservedMBZ:28;
+  };
+} USB_PORT_PROPERTIES, *PUSB_PORT_PROPERTIES;
+
+/*
+ * A USB 3 port is two ports behind one connector, one on each of the 2.0 and
+ * 3.0 buses, so a caller walks the companions by index. ActualLength reports
+ * the size the hub wanted, which sizes the buffer for a second call.
+ */
+typedef struct _USB_PORT_CONNECTOR_PROPERTIES {
+  ULONG ConnectionIndex;
+  ULONG ActualLength;
+  USB_PORT_PROPERTIES UsbPortProperties;
+  USHORT CompanionIndex;
+  USHORT CompanionPortNumber;
+  WCHAR CompanionHubSymbolicLinkName[1];
+} USB_PORT_CONNECTOR_PROPERTIES, *PUSB_PORT_CONNECTOR_PROPERTIES;
+
+typedef union _USB_PROTOCOLS {
+  ULONG ul;
+  __GNU_EXTENSION struct {
+    ULONG Usb110:1;
+    ULONG Usb200:1;
+    ULONG Usb300:1;
+    ULONG ReservedMBZ:29;
+  };
+} USB_PROTOCOLS, *PUSB_PROTOCOLS;
+
+typedef union _USB_NODE_CONNECTION_INFORMATION_EX_V2_FLAGS {
+  ULONG ul;
+  __GNU_EXTENSION struct {
+    ULONG DeviceIsOperatingAtSuperSpeedOrHigher:1;
+    ULONG DeviceIsSuperSpeedCapableOrHigher:1;
+    ULONG DeviceIsOperatingAtSuperSpeedPlusOrHigher:1;
+    ULONG DeviceIsSuperSpeedPlusCapableOrHigher:1;
+    ULONG ReservedMBZ:28;
+  };
+} USB_NODE_CONNECTION_INFORMATION_EX_V2_FLAGS, *PUSB_NODE_CONNECTION_INFORMATION_EX_V2_FLAGS;
+
+/*
+ * SupportedUsbProtocols goes in naming the protocols the caller understands and
+ * comes back narrowed to the ones the port also supports, so an older caller is
+ * never told about a speed it cannot name.
+ */
+typedef struct _USB_NODE_CONNECTION_INFORMATION_EX_V2 {
+  ULONG ConnectionIndex;
+  ULONG Length;
+  USB_PROTOCOLS SupportedUsbProtocols;
+  USB_NODE_CONNECTION_INFORMATION_EX_V2_FLAGS Flags;
+} USB_NODE_CONNECTION_INFORMATION_EX_V2, *PUSB_NODE_CONNECTION_INFORMATION_EX_V2;
+
+/* Composite device and remote wake requests, carried on FILE_DEVICE_USBEX */
+
+#define IOCTL_INTERNAL_USB_REGISTER_COMPOSITE_DEVICE \
+  CTL_CODE(FILE_DEVICE_USBEX, USB_REGISTER_COMPOSITE_DEVICE, METHOD_NEITHER, FILE_ANY_ACCESS)
+
+#define IOCTL_INTERNAL_USB_UNREGISTER_COMPOSITE_DEVICE \
+  CTL_CODE(FILE_DEVICE_USBEX, USB_UNREGISTER_COMPOSITE_DEVICE, METHOD_NEITHER, FILE_ANY_ACCESS)
+
+#define IOCTL_INTERNAL_USB_REQUEST_REMOTE_WAKE_NOTIFICATION \
+  CTL_CODE(FILE_DEVICE_USBEX, USB_REQUEST_REMOTE_WAKE_NOTIFICATION, METHOD_NEITHER, FILE_ANY_ACCESS)
+
+#define IOCTL_INTERNAL_USB_FAIL_GET_STATUS_FROM_DEVICE \
+  CTL_CODE(FILE_DEVICE_USB, USB_FAIL_GET_STATUS, METHOD_NEITHER, FILE_ANY_ACCESS)
 
 #ifdef __cplusplus
 }

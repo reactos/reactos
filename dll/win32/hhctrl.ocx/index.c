@@ -54,7 +54,7 @@ static void fill_index_tree(HWND hwnd, IndexItem *item)
 static void item_realloc(IndexItem *item, int num_items)
 {
     item->nItems = num_items;
-    item->items = heap_realloc(item->items, sizeof(IndexSubItem)*item->nItems);
+    item->items = realloc(item->items, sizeof(IndexSubItem) * item->nItems);
     item->items[item->nItems-1].name = NULL;
     item->items[item->nItems-1].local = NULL;
     item->itemFlags = 0x00;
@@ -127,9 +127,9 @@ static IndexItem *parse_index_sitemap_object(HHInfo *info, stream_t *stream)
     strbuf_init(&node);
     strbuf_init(&node_name);
 
-    item = heap_alloc_zero(sizeof(IndexItem));
+    item = calloc(1, sizeof(IndexItem));
     item->nItems = 0;
-    item->items = heap_alloc_zero(0);
+    item->items = NULL;
     item->itemFlags = 0x11;
 
     while(next_node(stream, &node)) {
@@ -137,9 +137,9 @@ static IndexItem *parse_index_sitemap_object(HHInfo *info, stream_t *stream)
 
         TRACE("%s\n", node.buf);
 
-        if(!_strnicmp(node_name.buf, "param", -1)) {
+        if(!stricmp(node_name.buf, "param")) {
             parse_index_obj_node_param(item, node.buf, info->pCHMInfo->codePage);
-        }else if(!_strnicmp(node_name.buf, "/object", -1)) {
+        }else if(!stricmp(node_name.buf, "/object")) {
             break;
         }else {
             WARN("Unhandled tag! %s\n", node_name.buf);
@@ -173,7 +173,7 @@ static IndexItem *parse_li(HHInfo *info, stream_t *stream)
 
         TRACE("%s\n", node.buf);
 
-        if(!_strnicmp(node_name.buf, "object", -1)) {
+        if(!stricmp(node_name.buf, "object")) {
             const char *ptr;
             int len;
 
@@ -228,7 +228,7 @@ static void parse_hhindex(HHInfo *info, IStream *str, IndexItem *item)
 
         TRACE("%s\n", node.buf);
 
-        if(!_strnicmp(node_name.buf, "li", -1)) {
+        if(!stricmp(node_name.buf, "li")) {
             IndexItem *new_item;
 
             new_item = parse_li(info, &stream);
@@ -237,18 +237,18 @@ static void parse_hhindex(HHInfo *info, IStream *str, IndexItem *item)
 
                 item_realloc(item, num_items+1);
                 memcpy(&item->items[num_items], &new_item->items[0], sizeof(IndexSubItem));
-                heap_free(new_item->keyword);
-                heap_free(new_item->items);
-                heap_free(new_item);
+                free(new_item->keyword);
+                free(new_item->items);
+                free(new_item);
             } else if(new_item) {
                 item->next = new_item;
                 item->next->merge = item->merge;
                 item = item->next;
                 item->indentLevel = indent_level;
             }
-        }else if(!_strnicmp(node_name.buf, "ul", -1)) {
+        }else if(!stricmp(node_name.buf, "ul")) {
             indent_level++;
-        }else if(!_strnicmp(node_name.buf, "/ul", -1)) {
+        }else if(!stricmp(node_name.buf, "/ul")) {
             indent_level--;
         }else {
             WARN("Unhandled tag! %s\n", node_name.buf);
@@ -266,7 +266,7 @@ void InitIndex(HHInfo *info)
 {
     IStream *stream;
 
-    info->index = heap_alloc_zero(sizeof(IndexItem));
+    info->index = calloc(1, sizeof(IndexItem));
     info->index->nItems = 0;
     SetChmPath(&info->index->merge, info->pCHMInfo->szFile, info->WinType.pszIndex);
 
@@ -292,17 +292,17 @@ void ReleaseIndex(HHInfo *info)
 
     if(!item) return;
     /* Note: item->merge is identical for all items, only free once */
-    heap_free(item->merge.chm_file);
-    heap_free(item->merge.chm_index);
+    free(item->merge.chm_file);
+    free(item->merge.chm_index);
     while(item) {
         next = item->next;
 
-        heap_free(item->keyword);
+        free(item->keyword);
         for(i=0;i<item->nItems;i++) {
-            heap_free(item->items[i].name);
-            heap_free(item->items[i].local);
+            free(item->items[i].name);
+            free(item->items[i].local);
         }
-        heap_free(item->items);
+        free(item->items);
 
         item = next;
     }

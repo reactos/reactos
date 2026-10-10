@@ -22,8 +22,6 @@
 #include <stdarg.h>
 
 #define COBJMACROS
-#define NONAMELESSUNION
-
 #include "windef.h"
 #include "winbase.h"
 #include "wingdi.h"
@@ -93,7 +91,7 @@ static ULONG WINAPI PropertyPageSite_AddRef(IPropertyPageSite* iface)
     PropertyPageSite *this = impl_from_IPropertyPageSite(iface);
     LONG ref = InterlockedIncrement(&this->ref);
 
-    TRACE("(%p) ref=%d\n", this, ref);
+    TRACE("%p, refcount %ld.\n", iface, ref);
     return ref;
 }
 
@@ -102,7 +100,7 @@ static ULONG WINAPI PropertyPageSite_Release(IPropertyPageSite* iface)
     PropertyPageSite *this = impl_from_IPropertyPageSite(iface);
     LONG ref = InterlockedDecrement(&this->ref);
 
-    TRACE("(%p) ref=%d\n", this, ref);
+    TRACE("%p, refcount %ld.\n", iface, ref);
     if(!ref)
         HeapFree(GetProcessHeap(), 0, this);
     return ref;
@@ -111,7 +109,7 @@ static ULONG WINAPI PropertyPageSite_Release(IPropertyPageSite* iface)
 static HRESULT WINAPI PropertyPageSite_OnStatusChange(
         IPropertyPageSite *iface, DWORD dwFlags)
 {
-    TRACE("(%p, %x)\n", iface, dwFlags);
+    TRACE("%p, %lx.\n", iface, dwFlags);
     return S_OK;
 }
 
@@ -154,8 +152,6 @@ static IPropertyPageSiteVtbl PropertyPageSiteVtbl = {
  */
 HRESULT WINAPI OleCreatePropertyFrameIndirect(LPOCPFIPARAMS lpParams)
 {
-    static const WCHAR comctlW[] = { 'c','o','m','c','t','l','3','2','.','d','l','l',0 };
-
     PROPSHEETHEADERW property_sheet;
     PROPSHEETPAGEW property_sheet_page;
     struct {
@@ -180,7 +176,7 @@ HRESULT WINAPI OleCreatePropertyFrameIndirect(LPOCPFIPARAMS lpParams)
     if(!lpParams)
         return E_POINTER;
 
-    TRACE("(%d %p %d %d %s %d %p %d %p %d %d)\n", lpParams->cbStructSize,
+    TRACE("%ld, %p, %d, %d, %s, %ld, %p, %ld, %p, %ld, %ld.\n", lpParams->cbStructSize,
             lpParams->hWndOwner, lpParams->x, lpParams->y,
             debugstr_w(lpParams->lpszCaption), lpParams->cObjects,
             lpParams->lplpUnk, lpParams->cPages, lpParams->lpPages,
@@ -198,7 +194,7 @@ HRESULT WINAPI OleCreatePropertyFrameIndirect(LPOCPFIPARAMS lpParams)
         FIXME("dispidInitialProperty not yet implemented\n");
 
     hdc = GetDC(NULL);
-    hcomctl = LoadLibraryW(comctlW);
+    hcomctl = LoadLibraryW(L"comctl32.dll");
     if(hcomctl)
         property_sheet_dialog_find = FindResourceW(hcomctl,
                 MAKEINTRESOURCEW(1006 /*IDD_PROPSHEET*/), (LPWSTR)RT_DIALOG);
@@ -246,14 +242,14 @@ HRESULT WINAPI OleCreatePropertyFrameIndirect(LPOCPFIPARAMS lpParams)
         property_sheet.pszCaption = lpParams->lpszCaption;
     }
 
-    property_sheet.u3.phpage = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY,
+    property_sheet.phpage = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY,
             lpParams->cPages*sizeof(HPROPSHEETPAGE));
     property_page = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY,
             lpParams->cPages*sizeof(IPropertyPage*));
     dialogs = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY,
             lpParams->cPages*sizeof(*dialogs));
-    if(!property_sheet.u3.phpage || !property_page || !dialogs) {
-        HeapFree(GetProcessHeap(), 0, property_sheet.u3.phpage);
+    if(!property_sheet.phpage || !property_page || !dialogs) {
+        HeapFree(GetProcessHeap(), 0, property_sheet.phpage);
         HeapFree(GetProcessHeap(), 0, property_page);
         HeapFree(GetProcessHeap(), 0, dialogs);
         return E_OUTOFMEMORY;
@@ -288,7 +284,7 @@ HRESULT WINAPI OleCreatePropertyFrameIndirect(LPOCPFIPARAMS lpParams)
         res = IPropertyPage_SetObjects(property_page[i],
                 lpParams->cObjects, lpParams->lplpUnk);
         if(FAILED(res))
-            WARN("SetObjects() failed, hr %#x.\n", res);
+            WARN("SetObjects() failed, hr %#lx.\n", res);
 
         res = IPropertyPage_GetPageInfo(property_page[i], &page_info);
         if(FAILED(res))
@@ -297,11 +293,11 @@ HRESULT WINAPI OleCreatePropertyFrameIndirect(LPOCPFIPARAMS lpParams)
         dialogs[i].template.cx = MulDiv(page_info.size.cx, 4, font_width);
         dialogs[i].template.cy = MulDiv(page_info.size.cy, 8, font_height);
 
-        property_sheet_page.u.pResource = &dialogs[i].template;
+        property_sheet_page.pResource = &dialogs[i].template;
         property_sheet_page.lParam = (LPARAM)property_page[i];
         property_sheet_page.pszTitle = page_info.pszTitle;
 
-        property_sheet.u3.phpage[property_sheet.nPages++] =
+        property_sheet.phpage[property_sheet.nPages++] =
             CreatePropertySheetPageW(&property_sheet_page);
     }
 
@@ -314,7 +310,7 @@ HRESULT WINAPI OleCreatePropertyFrameIndirect(LPOCPFIPARAMS lpParams)
 
     HeapFree(GetProcessHeap(), 0, dialogs);
     HeapFree(GetProcessHeap(), 0, property_page);
-    HeapFree(GetProcessHeap(), 0, property_sheet.u3.phpage);
+    HeapFree(GetProcessHeap(), 0, property_sheet.phpage);
     return S_OK;
 }
 

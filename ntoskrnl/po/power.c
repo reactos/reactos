@@ -891,7 +891,7 @@ Exit:
     ZwClose(CompBattHandle);
     return Status;
 }
-    
+
 
 /*
  * @unimplemented

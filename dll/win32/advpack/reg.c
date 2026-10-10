@@ -31,23 +31,14 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(advpack);
 
-static const WCHAR REGINST[] = {'R','E','G','I','N','S','T',0};
-static const WCHAR Strings[] = {'S','t','r','i','n','g','s',0};
-static const WCHAR MOD_PATH[] = {'_','M','O','D','_','P','A','T','H',0};
-static const WCHAR SYS_MOD_PATH[] = {'_','S','Y','S','_','M','O','D','_','P','A','T','H',0};
-static const WCHAR SystemRoot[] = {'S','y','s','t','e','m','R','o','o','t',0};
-static const WCHAR escaped_SystemRoot[] = {'%','S','y','s','t','e','m','R','o','o','t','%',0};
-static const WCHAR quote[] = {'\"',0};
-
 static BOOL get_temp_ini_path(LPWSTR name)
 {
-    static const WCHAR prefix[] = {'a','v','p',0};
     WCHAR tmp_dir[MAX_PATH];
 
     if(!GetTempPathW(ARRAY_SIZE(tmp_dir), tmp_dir))
        return FALSE;
 
-    if(!GetTempFileNameW(tmp_dir, prefix, 0, name))
+    if (!GetTempFileNameW(tmp_dir, L"avp", 0, name))
         return FALSE;
     return TRUE;
 }
@@ -65,7 +56,7 @@ static BOOL create_tmp_ini_file(HMODULE hm, WCHAR *ini_file)
         goto error;
     }
 
-    if(!(hrsrc = FindResourceW(hm, REGINST, REGINST))) {
+    if (!(hrsrc = FindResourceW(hm, L"REGINST", L"REGINST"))) {
         ERR("Can't find REGINST resource\n");
         goto error;
     }
@@ -104,8 +95,8 @@ static void strentry_atow(const STRENTRYA *aentry, STRENTRYW *wentry)
     name_len = MultiByteToWideChar(CP_ACP, 0, aentry->pszName, -1, NULL, 0);
     val_len = MultiByteToWideChar(CP_ACP, 0, aentry->pszValue, -1, NULL, 0);
 
-    wentry->pszName = HeapAlloc(GetProcessHeap(), 0, name_len * sizeof(WCHAR));
-    wentry->pszValue = HeapAlloc(GetProcessHeap(), 0, val_len * sizeof(WCHAR));
+    wentry->pszName = malloc(name_len * sizeof(WCHAR));
+    wentry->pszValue = malloc(val_len * sizeof(WCHAR));
 
     MultiByteToWideChar(CP_ACP, 0, aentry->pszName, -1, wentry->pszName, name_len);
     MultiByteToWideChar(CP_ACP, 0, aentry->pszValue, -1, wentry->pszValue, val_len);
@@ -116,8 +107,8 @@ static STRTABLEW *strtable_atow(const STRTABLEA *atable)
     STRTABLEW *wtable;
     DWORD j;
 
-    wtable = HeapAlloc(GetProcessHeap(), 0, sizeof(STRTABLEW));
-    wtable->pse = HeapAlloc(GetProcessHeap(), 0, atable->cEntries * sizeof(STRENTRYW));
+    wtable = malloc(sizeof(STRTABLEW));
+    wtable->pse = malloc(atable->cEntries * sizeof(STRENTRYW));
     wtable->cEntries = atable->cEntries;
 
     for (j = 0; j < wtable->cEntries; j++)
@@ -132,12 +123,12 @@ static void free_strtable(STRTABLEW *wtable)
 
     for (j = 0; j < wtable->cEntries; j++)
     {
-        HeapFree(GetProcessHeap(), 0, wtable->pse[j].pszName);
-        HeapFree(GetProcessHeap(), 0, wtable->pse[j].pszValue);
+        free(wtable->pse[j].pszName);
+        free(wtable->pse[j].pszValue);
     }
 
-    HeapFree(GetProcessHeap(), 0, wtable->pse);
-    HeapFree(GetProcessHeap(), 0, wtable);
+    free(wtable->pse);
+    free(wtable);
 }
 
 /***********************************************************************
@@ -180,16 +171,16 @@ static HRESULT write_predefined_strings(HMODULE hm, LPCWSTR ini_path)
     if (!GetModuleFileNameW(hm, mod_path + 1, ARRAY_SIZE(mod_path) - 2))
         return E_FAIL;
 
-    lstrcatW(mod_path, quote);
-    WritePrivateProfileStringW(Strings, MOD_PATH, mod_path, ini_path);
+    lstrcatW(mod_path, L"\"");
+    WritePrivateProfileStringW(L"Strings", L"_MOD_PATH", mod_path, ini_path);
 
     *sys_root = '\0';
-    GetEnvironmentVariableW(SystemRoot, sys_root, ARRAY_SIZE(sys_root));
+    GetEnvironmentVariableW(L"SystemRoot", sys_root, ARRAY_SIZE(sys_root));
 
-    if(!_wcsnicmp(sys_root, mod_path + 1, lstrlenW(sys_root)))
+    if(!wcsnicmp(sys_root, mod_path + 1, lstrlenW(sys_root)))
     {
         *sys_mod_path = '\"';
-        lstrcpyW(sys_mod_path + 1, escaped_SystemRoot);
+        lstrcpyW(sys_mod_path + 1, L"%SystemRoot%");
         lstrcatW(sys_mod_path, mod_path + 1 + lstrlenW(sys_root));
     }
     else
@@ -198,7 +189,7 @@ static HRESULT write_predefined_strings(HMODULE hm, LPCWSTR ini_path)
         lstrcpyW(sys_mod_path, mod_path);
     }
 
-    WritePrivateProfileStringW(Strings, SYS_MOD_PATH, sys_mod_path, ini_path);
+    WritePrivateProfileStringW(L"Strings", L"_SYS_MOD_PATH", sys_mod_path, ini_path);
 
     return S_OK;
 }
@@ -242,9 +233,9 @@ HRESULT WINAPI RegInstallW(HMODULE hm, LPCWSTR pszSection, const STRTABLEW* pstT
     
             tmp_value[0] = '\"';
             lstrcpyW(tmp_value + 1, pstTable->pse[i].pszValue);
-            lstrcatW(tmp_value, quote);
-    
-            WritePrivateProfileStringW(Strings, pstTable->pse[i].pszName, tmp_value, tmp_ini_path);
+            lstrcatW(tmp_value, L"\"");
+
+            WritePrivateProfileStringW(L"Strings", pstTable->pse[i].pszName, tmp_value, tmp_ini_path);
         }
     }
 
@@ -323,7 +314,7 @@ HRESULT WINAPI RegSaveRestoreA(HWND hWnd, LPCSTR pszTitleString, HKEY hkBackupKe
     UNICODE_STRING title, root, subkey, value;
     HRESULT hr;
 
-    TRACE("(%p, %s, %p, %s, %s, %s, %d)\n", hWnd, debugstr_a(pszTitleString),
+    TRACE("(%p, %s, %p, %s, %s, %s, %ld)\n", hWnd, debugstr_a(pszTitleString),
           hkBackupKey, debugstr_a(pcszRootKey), debugstr_a(pcszSubKey),
           debugstr_a(pcszValueName), dwFlags);
 
@@ -368,7 +359,7 @@ HRESULT WINAPI RegSaveRestoreW(HWND hWnd, LPCWSTR pszTitleString, HKEY hkBackupK
                                LPCWSTR pcszRootKey, LPCWSTR pcszSubKey,
                                LPCWSTR pcszValueName, DWORD dwFlags)
 {
-    FIXME("(%p, %s, %p, %s, %s, %s, %d): stub\n", hWnd, debugstr_w(pszTitleString),
+    FIXME("(%p, %s, %p, %s, %s, %s, %ld): stub\n", hWnd, debugstr_w(pszTitleString),
           hkBackupKey, debugstr_w(pcszRootKey), debugstr_w(pcszSubKey),
           debugstr_w(pcszValueName), dwFlags);
 
@@ -387,7 +378,7 @@ HRESULT WINAPI RegSaveRestoreOnINFA(HWND hWnd, LPCSTR pszTitle, LPCSTR pszINF,
     UNICODE_STRING title, inf, section;
     HRESULT hr;
 
-    TRACE("(%p, %s, %s, %s, %p, %p, %d)\n", hWnd, debugstr_a(pszTitle),
+    TRACE("(%p, %s, %s, %s, %p, %p, %ld)\n", hWnd, debugstr_a(pszTitle),
           debugstr_a(pszINF), debugstr_a(pszSection),
           hHKLMBackKey, hHKCUBackKey, dwFlags);
 
@@ -430,7 +421,7 @@ HRESULT WINAPI RegSaveRestoreOnINFW(HWND hWnd, LPCWSTR pszTitle, LPCWSTR pszINF,
                                     LPCWSTR pszSection, HKEY hHKLMBackKey,
                                     HKEY hHKCUBackKey, DWORD dwFlags)
 {
-    FIXME("(%p, %s, %s, %s, %p, %p, %d): stub\n", hWnd, debugstr_w(pszTitle),
+    FIXME("(%p, %s, %s, %s, %p, %p, %ld): stub\n", hWnd, debugstr_w(pszTitle),
           debugstr_w(pszINF), debugstr_w(pszSection),
           hHKLMBackKey, hHKCUBackKey, dwFlags);
 

@@ -35,6 +35,13 @@ coclass MediaStreamFilter { interface IMediaStreamFilter; }
 coclass AMDirectDrawStream { interface IAMMultiMediaStream; }
 
 [
+    helpstring("AuStream Class"),
+    threading(both),
+    uuid(8496e040-af4c-11d0-8212-00c04fc32c45)
+]
+coclass AMAudioStream { interface IAMMediaStream; }
+
+[
     helpstring("MMStream Class"),
     threading(both),
     uuid(49c47ce5-9ba4-11d0-8212-00c04fc32c45)

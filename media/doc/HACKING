@@ -31,7 +31,7 @@ page called Coding Style: https://reactos.org/wiki/index.php/Coding_Style
 
 However, not all codebase complies with the rules outlined in that page, so
 if you need to hack some code which has not been yet formatted, it's wise
-to keep the kind of formatting it already has, to make it looking good until
+to keep the kind of formatting it already has, to make it look good until
 it receives a formatting patch.
 
 
@@ -55,7 +55,7 @@ Debugging kernel-mode code is tricky, these are some snippets
     gdb over a serial line. Bochs (a shareware CPU emulator) is also useful
     for debugging the kernel, I wrote some patches to allow capture of console
     output from within bochs to file and for debugging a kernel running
-    under bochs with gdb. Contact me (welch@cwcom.net) if you're are
+    under bochs with gdb. Contact me (welch@cwcom.net) if you are
     interested.
 
     If CPU reports an exception not handled by the kernel (any page fault
@@ -92,7 +92,7 @@ Debugging kernel-mode code is tricky, these are some snippets
 	           ....
 
     Again the numbers printed after 'Frames' are any addresses on the stack
-    that look like function addresss. Usually the kernel will also print a
+    that look like function addresses. Usually the kernel will also print a
     message describing the problem in more detail, the bug check code isn't
     very useful at the moment.
 
@@ -117,9 +117,9 @@ Debugging kernel-mode code is tricky, these are some snippets
     The NT4 ddk license agreement allows its usage for developing nt drivers
     only. Legally therefore it can not be used to develop ReactOS, neither the
     documentation or the sample code. I'm not a lawyer, but I doubt the
-    effiacy of 'shrinkwrap licenses' particularly on freely downloadable
-    software. The only precendent I know of, in a Scottish court, didn't
-    upload this type of license.
+    efficacy of 'shrinkwrap licenses' particularly on freely downloadable
+    software. The only precedent I know of, in a Scottish court, didn't
+    uphold this type of license.
 
     Also the 'fair use' section of copyright law allows the 'quoting' of small
     sections from copyrighted documents, e.g. Windows API or DDK documentation

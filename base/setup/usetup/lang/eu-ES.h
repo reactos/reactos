@@ -1258,7 +1258,7 @@ static MUI_ENTRY euESFormatPartitionEntries[] =
     {
         0,
         0,
-        "SARTU = Jarraitu   F3 = Irten",
+        "SARTU = Jarraitu   ESC = Utzi   F3 = Irten",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
         TEXT_ID_STATIC
     },

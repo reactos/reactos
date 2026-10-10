@@ -220,21 +220,6 @@ GetAccCursorInfo ( PCURSORINFO pci )
 /*
  * @unimplemented
  */
-UINT
-WINAPI
-GetRawInputDeviceInfoW(
-    HANDLE hDevice,
-    UINT uiCommand,
-    LPVOID pData,
-    PUINT pcbSize)
-{
-  UNIMPLEMENTED;
-  return 0;
-}
-
-/*
- * @unimplemented
- */
 LONG
 WINAPI
 CsrBroadcastSystemMessageExW(
@@ -250,18 +235,40 @@ CsrBroadcastSystemMessageExW(
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 UINT
 WINAPI
 GetRawInputDeviceInfoA(
-    HANDLE hDevice,
-    UINT uiCommand,
-    LPVOID pData,
-    PUINT pcbSize)
+    _In_opt_ HANDLE hDevice,
+    _In_ UINT uiCommand,
+    _Inout_opt_ LPVOID pData,
+    _Inout_ PUINT pcbSize)
 {
-  UNIMPLEMENTED;
-  return 0;
+    UINT Ret;
+    LPVOID pDataW = pData;
+    UINT cbSize = *pcbSize;
+
+    if (uiCommand == RIDI_DEVICENAME && pData)
+    {
+        pDataW = HeapAlloc(GetProcessHeap(), 0, cbSize * sizeof(WCHAR));
+        if (!pDataW)
+        {
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            return (UINT)-1;
+        }
+    }
+
+    Ret = NtUserGetRawInputDeviceInfo(hDevice, uiCommand, pDataW, &cbSize);
+    if (Ret >= 0 && uiCommand == RIDI_DEVICENAME && pDataW)
+    {
+        if (WideCharToMultiByte(CP_THREAD_ACP, 0, pDataW, cbSize, pData, *pcbSize, NULL, NULL) == 0)
+            Ret = (UINT)-1;
+    }
+    if (pData != pDataW)
+        HeapFree(GetProcessHeap(), 0, pDataW);
+    *pcbSize = cbSize;
+    return Ret;
 }
 
 /*
@@ -291,83 +298,31 @@ DefRawInputProc(
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 UINT
 WINAPI
 DECLSPEC_HOTPATCH
 GetRawInputBuffer(
-    PRAWINPUT pData,
-    PUINT pcbSize,
-    UINT cbSizeHeader)
+    _In_opt_ PRAWINPUT pData,
+    _Inout_ PUINT pcbSize,
+    _In_ UINT cbSizeHeader)
 {
-  UNIMPLEMENTED;
-  return 0;
-}
+    PCLIENTTHREADINFO pcti = GetWin32ClientInfo()->pClientThreadInfo;
 
-/*
- * @unimplemented
- */
-UINT
-WINAPI
-GetRawInputData(
-    HRAWINPUT hRawInput,
-    UINT uiCommand,
-    LPVOID pData,
-    PUINT pcbSize,
-    UINT cbSizeHeader)
-{
-  UNIMPLEMENTED;
-  return 0;
-}
+    if (!pcbSize || cbSizeHeader != sizeof(RAWINPUTHEADER))
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return (UINT)-1;
+    }
 
-/*
- * @unimplemented
- */
-UINT
-WINAPI
-GetRawInputDeviceList(
-    PRAWINPUTDEVICELIST pRawInputDeviceList,
-    PUINT puiNumDevices,
-    UINT cbSize)
-{
-    if(pRawInputDeviceList)
-        memset(pRawInputDeviceList, 0, sizeof *pRawInputDeviceList);
-    if(puiNumDevices)
-       *puiNumDevices = 0;
+    if (!pcti || !(pcti->fsWakeBits & QS_RAWINPUT))
+    {
+        *pcbSize = 0;
+        return 0;
+    }
 
-    UNIMPLEMENTED;
-    return 0;
-}
-
-/*
- * @unimplemented
- */
-UINT
-WINAPI
-DECLSPEC_HOTPATCH
-GetRegisteredRawInputDevices(
-    PRAWINPUTDEVICE pRawInputDevices,
-    PUINT puiNumDevices,
-    UINT cbSize)
-{
-  UNIMPLEMENTED;
-  return 0;
-}
-
-/*
- * @unimplemented
- */
-BOOL
-WINAPI
-DECLSPEC_HOTPATCH
-RegisterRawInputDevices(
-    PCRAWINPUTDEVICE pRawInputDevices,
-    UINT uiNumDevices,
-    UINT cbSize)
-{
-  UNIMPLEMENTED;
-  return FALSE;
+    return NtUserGetRawInputBuffer(pData, pcbSize, cbSizeHeader);
 }
 
 /*
@@ -427,15 +382,6 @@ VOID WINAPI InitializeLpkHooks(FARPROC *hookfuncs)
  * @unimplemented
  */
 WORD WINAPI InitializeWin32EntryTable(UCHAR* EntryTablePlus0x1000)
-{
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-/*
- * @unimplemented
- */
-BOOL WINAPI IsServerSideWindow(HWND wnd)
 {
   UNIMPLEMENTED;
   return FALSE;

@@ -8,8 +8,7 @@ list(APPEND SOURCE
 
 add_library(credui MODULE ${SOURCE} credui.rc)
 set_module_type(credui win32dll)
-target_compile_definitions(credui PRIVATE _CRT_NON_CONFORMING_SWPRINTFS)
-target_link_libraries(credui wine oldnames)
+target_link_libraries(credui wine wine_dll_register wine_dll_canunload oldnames)
 add_importlibs(credui advapi32 user32 comctl32 msvcrt kernel32 ntdll)
 add_cd_file(TARGET credui DESTINATION reactos/system32 FOR all)
 set_wine_module_FIXME(credui) # CORE-5743: No ARRAY_SIZE macro

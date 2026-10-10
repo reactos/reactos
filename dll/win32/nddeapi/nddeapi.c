@@ -38,7 +38,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(nddeapi);
 UINT WINAPI NDdeShareAddA(LPSTR lpszServer, UINT nLevel, PSECURITY_DESCRIPTOR pSD,
                           LPBYTE lpBuffer, DWORD cBufSize)
 {
-    TRACE("(%s, %u, %p, %p, %u)\n", debugstr_a(lpszServer), nLevel, pSD, lpBuffer, cBufSize);
+    TRACE("(%s, %u, %p, %p, %lu)\n", debugstr_a(lpszServer), nLevel, pSD, lpBuffer, cBufSize);
 
     return NDDE_NOT_IMPLEMENTED;
 }
@@ -61,7 +61,7 @@ UINT WINAPI NDdeShareDelA(LPSTR lpszServer, LPSTR lpszShareName, UINT wReserved)
 UINT WINAPI NDdeShareEnumA(LPSTR lpszServer, UINT nLevel, LPBYTE lpBuffer, DWORD cBufSize,
                            LPDWORD lpnEntriesRead, LPDWORD lpcbTotalAvailable)
 {
-    TRACE("(%s, %u, %p, %u, %p, %p)\n", debugstr_a(lpszServer), nLevel, lpBuffer, cBufSize,
+    TRACE("(%s, %u, %p, %lu, %p, %p)\n", debugstr_a(lpszServer), nLevel, lpBuffer, cBufSize,
                                         lpnEntriesRead, lpcbTotalAvailable);
 
     return NDDE_NOT_IMPLEMENTED;
@@ -74,7 +74,7 @@ UINT WINAPI NDdeShareEnumA(LPSTR lpszServer, UINT nLevel, LPBYTE lpBuffer, DWORD
 UINT WINAPI NDdeShareGetInfoA(LPSTR lpszServer, LPSTR lpszShareName, UINT nLevel, LPBYTE lpBuffer,
                               DWORD cBufSize, LPDWORD lpnTotalAvailable, LPWORD lpnItems)
 {
-    TRACE("(%s, %s, %u, %p, %u, %p, %p)\n", debugstr_a(lpszServer), debugstr_a(lpszShareName), nLevel,
+    TRACE("(%s, %s, %u, %p, %lu, %p, %p)\n", debugstr_a(lpszServer), debugstr_a(lpszShareName), nLevel,
                                             lpBuffer, cBufSize, lpnTotalAvailable, lpnItems);
 
     return NDDE_NOT_IMPLEMENTED;
@@ -87,7 +87,7 @@ UINT WINAPI NDdeShareGetInfoA(LPSTR lpszServer, LPSTR lpszShareName, UINT nLevel
 UINT WINAPI NDdeShareSetInfoA(LPSTR lpszServer, LPSTR lpszShareName, UINT nLevel, LPBYTE lpBuffer,
                               DWORD cBufSize, WORD sParmNum)
 {
-    TRACE("(%s, %s, %u, %p, %u, %u)\n", debugstr_a(lpszServer), debugstr_a(lpszShareName), nLevel,
+    TRACE("(%s, %s, %u, %p, %lu, %u)\n", debugstr_a(lpszServer), debugstr_a(lpszShareName), nLevel,
                                         lpBuffer, cBufSize, sParmNum);
 
     return NDDE_NOT_IMPLEMENTED;
@@ -99,7 +99,7 @@ UINT WINAPI NDdeShareSetInfoA(LPSTR lpszServer, LPSTR lpszShareName, UINT nLevel
  */
 UINT WINAPI NDdeGetErrorStringA(UINT uErrorCode, LPSTR lpszErrorString, DWORD cBufSize)
 {
-    TRACE("(%u, %p, %d)\n", uErrorCode, lpszErrorString, cBufSize);
+    TRACE("(%u, %p, %ld)\n", uErrorCode, lpszErrorString, cBufSize);
 
     return NDDE_NOT_IMPLEMENTED;
 }
@@ -133,7 +133,7 @@ BOOL WINAPI NDdeIsValidAppTopicListA(LPSTR targetTopic)
 UINT WINAPI NDdeGetShareSecurityA(LPSTR lpszServer, LPSTR lpszShareName, SECURITY_INFORMATION si,
                                   PSECURITY_DESCRIPTOR pSD, DWORD cbSD, LPDWORD lpcbsdRequired)
 {
-    TRACE("(%s, %s, %u, %p, %u, %p)\n", debugstr_a(lpszServer), debugstr_a(lpszShareName),
+    TRACE("(%s, %s, %lu, %p, %lu, %p)\n", debugstr_a(lpszServer), debugstr_a(lpszShareName),
                                         si, pSD, cbSD, lpcbsdRequired);
 
     return NDDE_NOT_IMPLEMENTED;
@@ -146,7 +146,7 @@ UINT WINAPI NDdeGetShareSecurityA(LPSTR lpszServer, LPSTR lpszShareName, SECURIT
 UINT WINAPI NDdeSetShareSecurityA(LPSTR lpszServer, LPSTR lpszShareName, SECURITY_INFORMATION si,
                                   PSECURITY_DESCRIPTOR pSD)
 {
-    TRACE("(%s, %s, %u, %p)\n", debugstr_a(lpszServer), debugstr_a(lpszShareName), si, pSD);
+    TRACE("(%s, %s, %lu, %p)\n", debugstr_a(lpszServer), debugstr_a(lpszShareName), si, pSD);
 
     return NDDE_NOT_IMPLEMENTED;
 }
@@ -170,7 +170,7 @@ UINT WINAPI NDdeGetTrustedShareA(LPSTR lpszServer, LPSTR lpszShareName, LPDWORD 
  */
 UINT WINAPI NDdeSetTrustedShareA(LPSTR lpszServer, LPSTR lpszShareName, DWORD dwTrustOptions)
 {
-    TRACE("(%s, %s, 0x%08x)\n", debugstr_a(lpszServer), debugstr_a(lpszShareName), dwTrustOptions);
+    TRACE("(%s, %s, 0x%08lx)\n", debugstr_a(lpszServer), debugstr_a(lpszShareName), dwTrustOptions);
 
     return NDDE_NOT_IMPLEMENTED;
 }
@@ -182,7 +182,7 @@ UINT WINAPI NDdeSetTrustedShareA(LPSTR lpszServer, LPSTR lpszShareName, DWORD dw
 UINT WINAPI NDdeTrustedShareEnumA(LPSTR lpszServer, UINT nLevel, LPBYTE lpBuffer, DWORD cBufSize,
                                   LPDWORD lpnEntriesRead, LPDWORD lpcbTotalAvailable)
 {
-    TRACE("(%s, %u, %p, %u, %p, %p)\n", debugstr_a(lpszServer), nLevel, lpBuffer, cBufSize,
+    TRACE("(%s, %u, %p, %lu, %p, %p)\n", debugstr_a(lpszServer), nLevel, lpBuffer, cBufSize,
                                         lpnEntriesRead, lpcbTotalAvailable);
 
     return NDDE_NOT_IMPLEMENTED;
@@ -195,7 +195,7 @@ UINT WINAPI NDdeTrustedShareEnumA(LPSTR lpszServer, UINT nLevel, LPBYTE lpBuffer
 UINT WINAPI NDdeShareAddW(LPWSTR lpszServer, UINT nLevel, PSECURITY_DESCRIPTOR pSD,
                           LPBYTE lpBuffer, DWORD cBufSize)
 {
-    TRACE("(%s, %u, %p, %p, %u)\n", debugstr_w(lpszServer), nLevel, pSD, lpBuffer, cBufSize);
+    TRACE("(%s, %u, %p, %p, %lu)\n", debugstr_w(lpszServer), nLevel, pSD, lpBuffer, cBufSize);
 
     return NDDE_NOT_IMPLEMENTED;
 }
@@ -218,7 +218,7 @@ UINT WINAPI NDdeShareDelW(LPWSTR lpszServer, LPWSTR lpszShareName, UINT wReserve
 UINT WINAPI NDdeShareEnumW(LPWSTR lpszServer, UINT nLevel, LPBYTE lpBuffer, DWORD cBufSize,
                            LPDWORD lpnEntriesRead, LPDWORD lpcbTotalAvailable)
 {
-    TRACE("(%s, %u, %p, %u, %p, %p)\n", debugstr_w(lpszServer), nLevel, lpBuffer, cBufSize,
+    TRACE("(%s, %u, %p, %lu, %p, %p)\n", debugstr_w(lpszServer), nLevel, lpBuffer, cBufSize,
                                         lpnEntriesRead, lpcbTotalAvailable);
 
     return NDDE_NOT_IMPLEMENTED;
@@ -231,7 +231,7 @@ UINT WINAPI NDdeShareEnumW(LPWSTR lpszServer, UINT nLevel, LPBYTE lpBuffer, DWOR
 UINT WINAPI NDdeShareGetInfoW(LPWSTR lpszServer, LPWSTR lpszShareName, UINT nLevel, LPBYTE lpBuffer,
                               DWORD cBufSize, LPDWORD lpnTotalAvailable, LPWORD lpnItems)
 {
-    TRACE("(%s, %s, %u, %p, %u, %p, %p)\n", debugstr_w(lpszServer), debugstr_w(lpszShareName), nLevel,
+    TRACE("(%s, %s, %u, %p, %lu, %p, %p)\n", debugstr_w(lpszServer), debugstr_w(lpszShareName), nLevel,
                                             lpBuffer, cBufSize, lpnTotalAvailable, lpnItems);
 
     return NDDE_NOT_IMPLEMENTED;
@@ -244,7 +244,7 @@ UINT WINAPI NDdeShareGetInfoW(LPWSTR lpszServer, LPWSTR lpszShareName, UINT nLev
 UINT WINAPI NDdeShareSetInfoW(LPWSTR lpszServer, LPWSTR lpszShareName, UINT nLevel, LPBYTE lpBuffer,
                               DWORD cBufSize, WORD sParmNum)
 {
-    TRACE("(%s, %s, %u, %p, %u, %u)\n", debugstr_w(lpszServer), debugstr_w(lpszShareName), nLevel,
+    TRACE("(%s, %s, %u, %p, %lu, %u)\n", debugstr_w(lpszServer), debugstr_w(lpszShareName), nLevel,
                                         lpBuffer, cBufSize, sParmNum);
 
     return NDDE_NOT_IMPLEMENTED;
@@ -256,7 +256,7 @@ UINT WINAPI NDdeShareSetInfoW(LPWSTR lpszServer, LPWSTR lpszShareName, UINT nLev
 */
 UINT WINAPI NDdeGetErrorStringW(UINT uErrorCode, LPWSTR lpszErrorString, DWORD cBufSize)
 {
-    FIXME("(%u, %p, %d): stub!\n", uErrorCode, lpszErrorString, cBufSize);
+    FIXME("(%u, %p, %ld): stub!\n", uErrorCode, lpszErrorString, cBufSize);
 
     return NDDE_NOT_IMPLEMENTED;
 }
@@ -290,7 +290,7 @@ BOOL WINAPI NDdeIsValidAppTopicListW(LPWSTR targetTopic)
 UINT WINAPI NDdeGetShareSecurityW(LPWSTR lpszServer, LPWSTR lpszShareName, SECURITY_INFORMATION si,
                                   PSECURITY_DESCRIPTOR pSD, DWORD cbSD, LPDWORD lpcbsdRequired)
 {
-    TRACE("(%s, %s, %u, %p, %u, %p)\n", debugstr_w(lpszServer), debugstr_w(lpszShareName),
+    TRACE("(%s, %s, %lu, %p, %lu, %p)\n", debugstr_w(lpszServer), debugstr_w(lpszShareName),
                                         si, pSD, cbSD, lpcbsdRequired);
 
     return NDDE_NOT_IMPLEMENTED;
@@ -303,7 +303,7 @@ UINT WINAPI NDdeGetShareSecurityW(LPWSTR lpszServer, LPWSTR lpszShareName, SECUR
 UINT WINAPI NDdeSetShareSecurityW(LPWSTR lpszServer, LPWSTR lpszShareName, SECURITY_INFORMATION si,
                                   PSECURITY_DESCRIPTOR pSD)
 {
-    TRACE("(%s, %s, %u, %p)\n", debugstr_w(lpszServer), debugstr_w(lpszShareName), si, pSD);
+    TRACE("(%s, %s, %lu, %p)\n", debugstr_w(lpszServer), debugstr_w(lpszShareName), si, pSD);
 
     return NDDE_NOT_IMPLEMENTED;
 }
@@ -327,7 +327,7 @@ UINT WINAPI NDdeGetTrustedShareW(LPWSTR lpszServer, LPWSTR lpszShareName, LPDWOR
  */
 UINT WINAPI NDdeSetTrustedShareW(LPWSTR lpszServer, LPWSTR lpszShareName, DWORD dwTrustOptions)
 {
-    TRACE("(%s, %s, 0x%08x)\n", debugstr_w(lpszServer), debugstr_w(lpszShareName), dwTrustOptions);
+    TRACE("(%s, %s, 0x%08lx)\n", debugstr_w(lpszServer), debugstr_w(lpszShareName), dwTrustOptions);
 
     return NDDE_NOT_IMPLEMENTED;
 }
@@ -339,7 +339,7 @@ UINT WINAPI NDdeSetTrustedShareW(LPWSTR lpszServer, LPWSTR lpszShareName, DWORD 
 UINT WINAPI NDdeTrustedShareEnumW(LPWSTR lpszServer, UINT nLevel, LPBYTE lpBuffer, DWORD cBufSize,
                                   LPDWORD lpnEntriesRead, LPDWORD lpcbTotalAvailable)
 {
-    TRACE("(%s, %u, %p, %u, %p, %p)\n", debugstr_w(lpszServer), nLevel, lpBuffer, cBufSize,
+    TRACE("(%s, %u, %p, %lu, %p, %p)\n", debugstr_w(lpszServer), nLevel, lpBuffer, cBufSize,
                                         lpnEntriesRead, lpcbTotalAvailable);
 
     return NDDE_NOT_IMPLEMENTED;

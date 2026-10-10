@@ -37,7 +37,6 @@
  *     o WM_CONTEXTMENU
  *   - Notifications:
  *     o PSN_GETOBJECT
- *     o PSN_QUERYINITIALFOCUS
  *     o PSN_TRANSLATEACCELERATOR
  *   - Styles:
  *     o PSH_RTLREADING
@@ -195,6 +194,30 @@ static WCHAR *heap_strdupAtoW(const char *str)
 }
 
 #define add_flag(a) if (dwFlags & a) {strcat(string, #a );strcat(string," ");}
+
+#ifdef __REACTOS__
+static void PROPSHEET_SetInitialFocus(HWND hwndDlg, int index, PropSheetInfo* psInfo)
+{
+    PSHNOTIFY psn;
+    HWND focusable_item = NULL;
+    HWND initial_focus = NULL;
+
+    focusable_item = GetNextDlgTabItem(psInfo->proppage[index].hwndPage, NULL, FALSE);
+    if (!focusable_item)
+        return;
+
+    psn.hdr.code = PSN_QUERYINITIALFOCUS;
+    psn.hdr.hwndFrom = hwndDlg;
+    psn.hdr.idFrom = 0;
+    psn.lParam = 0;
+    initial_focus = (HWND)SendMessageW(psInfo->proppage[index].hwndPage, WM_NOTIFY, 0, (LPARAM)&psn);
+    if (initial_focus)
+        SetFocus(initial_focus);
+    else if (focusable_item)
+        SetFocus(focusable_item);
+}
+#endif // __REACTOS__
+
 /******************************************************************************
  *            PROPSHEET_UnImplementedFlags
  *
@@ -1523,7 +1546,9 @@ static BOOL PROPSHEET_ShowPage(HWND hwndDlg, int index, PropSheetInfo * psInfo)
 {
   HWND hwndTabCtrl;
   HWND hwndLineHeader;
+#ifndef __REACTOS__
   HWND control;
+#endif
   LPCPROPSHEETPAGEW ppshpage;
 
   TRACE("active_page %d, index %d\n", psInfo->active_page, index);
@@ -1544,10 +1569,12 @@ static BOOL PROPSHEET_ShowPage(HWND hwndDlg, int index, PropSheetInfo * psInfo)
   {
      PROPSHEET_SetTitleW(hwndDlg, psInfo->ppshheader.dwFlags,
                          psInfo->proppage[index].pszText);
+#ifndef __REACTOS__
 
      control = GetNextDlgTabItem(psInfo->proppage[index].hwndPage, NULL, FALSE);
      if(control != NULL)
          SetFocus(control);
+#endif
   }
 
   if (psInfo->active_page != -1)
@@ -1562,6 +1589,10 @@ static BOOL PROPSHEET_ShowPage(HWND hwndDlg, int index, PropSheetInfo * psInfo)
 
   psInfo->active_page = index;
   psInfo->activeValid = TRUE;
+
+#ifdef __REACTOS__
+  PROPSHEET_SetInitialFocus(hwndDlg, index, psInfo);
+#endif
 
   if (psInfo->ppshheader.dwFlags & (PSH_WIZARD97_OLD | PSH_WIZARD97_NEW) )
   {
@@ -1761,6 +1792,9 @@ static BOOL PROPSHEET_Apply(HWND hwndDlg, LPARAM lParam)
      psn.lParam   = 0;
      hwndPage = psInfo->proppage[psInfo->active_page].hwndPage;
      SendMessageW(hwndPage, WM_NOTIFY, 0, (LPARAM) &psn);
+#ifdef __REACTOS__
+     PROPSHEET_SetInitialFocus(hwndPage, psInfo->active_page, psInfo);
+#endif
   }
 
   return TRUE;
@@ -3699,7 +3733,11 @@ PROPSHEET_DialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
       if (psInfo->ppshheader.dwFlags & INTRNL_ANY_WIZARD)
           return FALSE;
 
+#ifdef __REACTOS__
+      return FALSE;
+#else
       return TRUE;
+#endif
     }
 
     case WM_PRINTCLIENT:
@@ -3767,9 +3805,41 @@ PROPSHEET_DialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
          HWND hwndPage = psInfo->proppage[i].hwndPage;
          SendMessageW(hwndPage, uMsg, wParam, lParam);
       }
+      SendDlgItemMessageW(hwnd, IDC_TABCONTROL, uMsg, wParam, lParam);
       return FALSE;
     }
 #endif
+
+#ifdef __REACTOS__
+    case WM_ENABLE:
+    case WM_QUERYENDSESSION:
+    case WM_ENDSESSION:
+    case WM_DEVICECHANGE:
+    {
+        /* Send to the tab control, before forwarding it to the active page */
+        SendDlgItemMessageW(hwnd, IDC_TABCONTROL, uMsg, wParam, lParam);
+        __fallthrough;
+    }
+    case WM_ACTIVATE:
+    case WM_ACTIVATEAPP:
+    {
+        PropSheetInfo* psInfo = GetPropW(hwnd, PropSheetInfoStr);
+        if (!psInfo)
+            return FALSE;
+
+        /* Forward notification to active page */
+        if (psInfo->activeValid && psInfo->active_page != -1)
+        {
+            HWND hwndPage = psInfo->proppage[psInfo->active_page].hwndPage;
+            LRESULT msgResult = SendMessageW(hwndPage, uMsg, wParam, lParam);
+            /* The message is handled, set the dialog return value
+             * to whatever the page returned */
+            SetWindowLongPtrW(hwnd, DWLP_MSGRESULT, msgResult);
+            return TRUE;
+        }
+        return FALSE;
+    }
+#endif // __REACTOS__
 
     case PSM_GETCURRENTPAGEHWND:
     {

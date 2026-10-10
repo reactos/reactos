@@ -129,7 +129,7 @@ MouseOnDialogInit(
         return FALSE;
 
     /* Keep the pointer to the mouse info struct */
-    SetWindowLongPtr(hwndDlg, GWLP_USERDATA, (DWORD_PTR)pMouseInfo);
+    SetWindowLongPtr(hwndDlg, DWLP_USER, (DWORD_PTR)pMouseInfo);
 
     /* Add the sample rates */
     for (i = 0; i < ARRAYSIZE(MouseSampleRates); i++)
@@ -329,7 +329,7 @@ MouseOnApply(
     BOOL bFailed;
     INT nIndex;
 
-    pMouseInfo = (PMOUSE_INFO)GetWindowLongPtr(hwndDlg, GWLP_USERDATA);
+    pMouseInfo = (PMOUSE_INFO)GetWindowLongPtr(hwndDlg, DWLP_USER);
 
     /* Get the sample rate setting and store it if it was changed */
     nIndex = SendDlgItemMessageW(hwndDlg, IDC_PS2MOUSESAMPLERATE,

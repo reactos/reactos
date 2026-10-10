@@ -1,0 +1,116 @@
+/*
+ * PROJECT:     ReactOS Tests
+ * LICENSE:     LGPL-2.0-or-later (https://spdx.org/licenses/LGPL-2.0-or-later)
+ * PURPOSE:     Resources
+ * COPYRIGHT:   Copyright 2026 Hermès Bélusca-Maïto <hermes.belusca-maito@reactos.org>
+ */
+
+#include <winnt.rh>
+#include <winuser.rh>
+#include "resource.h"
+
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+
+#define REACTOS_STR_FILE_DESCRIPTION  "ReactOS Menu & Accelerators Test"
+#define REACTOS_STR_INTERNAL_NAME     "menuaccels"
+#define REACTOS_STR_ORIGINAL_FILENAME "menuaccels.exe"
+#include <reactos/version.rc>
+
+IDI_TESTAPP ICON "menuaccels.ico"
+
+IDC_TESTAPP MENU
+BEGIN
+    POPUP "Zero (&0)"
+    BEGIN
+        MENUITEM "<IDS_EDITSHOWHIDE>",  IDM_SHOWHIDEEDIT
+        MENUITEM "<IDS_ACCELXLAT>",     IDM_ACCELXLAT
+        MENUITEM "&Clear Log",          IDM_CLEARLOG
+        MENUITEM "&Quit",               IDM_EXIT
+    END
+    POPUP "One (&1)"
+    BEGIN
+        MENUITEM "Alpha",   ID_ONE_ALPHA
+    END
+    POPUP "Two (&2)"
+    BEGIN
+        MENUITEM "Bravo",   ID_TWO_BRAVO
+    END
+    POPUP "Three (&3)"
+    BEGIN
+        MENUITEM "Charlie", ID_THREE_CHARLIE
+    END
+    POPUP "Four (&4)"
+    BEGIN
+        MENUITEM "Delta",   ID_FOUR_DELTA
+    END
+    POPUP "Five (&5)"
+    BEGIN
+        MENUITEM "Echo",    ID_FIVE_ECHO
+    END
+    POPUP "Six (&6)"
+    BEGIN
+        MENUITEM "Foxtrot", ID_SIX_FOXTROT
+    END
+    POPUP "Seven (&7)"
+    BEGIN
+        MENUITEM "Golf",    ID_SEVEN_GOLF
+    END
+    POPUP "Eight (&8)"
+    BEGIN
+        MENUITEM "Hotel",   ID_EIGHT_HOTEL
+    END
+    POPUP "Nine (&9)"
+    BEGIN
+        MENUITEM "India",   ID_NINE_INDIA
+    END
+    POPUP "Ten (&A)"
+    BEGIN
+        MENUITEM "Juliet",  ID_TEN_JULIET
+    END
+    POPUP "Eleven (&B)"
+    BEGIN
+        MENUITEM "Kilo",    ID_ELEVEN_KILO
+    END
+    POPUP "Twelve (&C)"
+    BEGIN
+        MENUITEM "Lima",    ID_TWELVE_LIMA
+    END
+    POPUP "Thirteen (&D)"
+    BEGIN
+        MENUITEM "Mike",    ID_THIRTEEN_MIKE
+    END
+    POPUP "Fourteen (&E)"
+    BEGIN
+        MENUITEM "November",    ID_FOURTEEN_NOVEMBER
+    END
+    POPUP "Fifteen (&F)"
+    BEGIN
+        MENUITEM "Oscar",   ID_FIFTEEN_OSCAR
+    END
+    POPUP "Plus (&+)"
+    BEGIN
+        MENUITEM "Papa",    ID_PLUS_PAPA
+    END
+    POPUP "Dot (&.)"
+    BEGIN
+        MENUITEM "Quebec",  ID_DOT_QUEBEC
+    END
+END
+
+IDC_TESTAPP ACCELERATORS
+BEGIN
+    "1",        IDM_ONE,        ASCII,  ALT, NOINVERT
+    "2",        IDM_TWO,        VIRTKEY, ALT, NOINVERT
+    VK_NUMPAD3, IDM_THREE,      VIRTKEY, ALT, NOINVERT
+    "D",        IDM_THIRTEEN,   ASCII,  ALT, NOINVERT
+    "E",        IDM_FOURTEEN,   VIRTKEY, ALT, NOINVERT
+    "F",        IDM_FIFTEEN,    VIRTKEY, ALT, NOINVERT
+END
+
+STRINGTABLE
+BEGIN
+    IDS_EDITSHOW    "&Show Edit"
+    IDS_EDITHIDE    "&Hide Edit"
+    IDS_ACCELXLAT   "&Translate accelerators"
+    IDS_ACCELNOXLAT "&Don't translate accelerators"
+END

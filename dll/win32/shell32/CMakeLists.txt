@@ -46,6 +46,7 @@ list(APPEND SOURCE
     shell32.cpp
     utils.cpp
     CShellItem.cpp
+    CShellItemArray.cpp
     CShellLink.cpp
     CFolderOptions.cpp
     folders/CDesktopFolder.cpp
@@ -75,6 +76,8 @@ list(APPEND SOURCE
     CDefViewBckgrndMenu.cpp
     stubs.cpp
     systray.cpp
+    CUserEventTimer.cpp
+    CUserEventTimer.h
     CUserNotification.cpp
     CDefaultContextMenu.cpp
     COpenWithMenu.cpp
@@ -83,6 +86,8 @@ list(APPEND SOURCE
     CCopyMoveToMenu.cpp
     CCopyAsPathMenu.cpp
     CShellDispatch.cpp
+    CShellLibrary.cpp
+    CShellLibrary.h
     CFolder.cpp
     CFolderItems.cpp
     CFolderItemVerbs.cpp)

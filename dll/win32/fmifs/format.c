@@ -58,7 +58,7 @@ FormatEx(
 // TODO: Convert filesystem Format into ULIB format string.
 //
 
-    Provider = GetProvider(Format);
+    Provider = LoadProvider(Format);
     if (!Provider)
     {
         /* Unknown file system */
@@ -130,6 +130,9 @@ FormatEx(
     RtlFreeUnicodeString(&usDriveRoot);
 
 Quit:
+    if (Provider)
+        UnloadProvider(Provider);
+
     /* Report result */
     Callback(DONE, 0, &Success);
 }

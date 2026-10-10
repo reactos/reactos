@@ -1259,7 +1259,7 @@ static MUI_ENTRY deDEFormatPartitionEntries[] =
     {
         0,
         0,
-        "ENTER = Fortsetzen   F3 = Installation abbrechen",
+        "ENTER = Fortsetzen   ESC = Abbrechen   F3 = Installation abbrechen",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
         TEXT_ID_STATIC
     },

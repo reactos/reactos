@@ -30,23 +30,23 @@
 /* Compressed file names end with underscore. */
 static char filename [] = "testfile.xxx";
 static char filename_[] = "testfile.xx_";
-static WCHAR filenameW [] = {'t','e','s','t','f','i','l','e','.','x','x','x',0};
-static WCHAR filenameW_[] = {'t','e','s','t','f','i','l','e','.','x','x','_',0};
+static WCHAR filenameW [] = L"testfile.xxx";
+static WCHAR filenameW_[] = L"testfile.xx_";
 
 static char dotless [] = "dotless";
 static char dotless_[] = "dotless._";
-static WCHAR dotlessW [] = {'d','o','t','l','e','s','s', 0};
-static WCHAR dotlessW_[] = {'d','o','t','l','e','s','s','.','_', 0};
+static WCHAR dotlessW [] = L"dotless";
+static WCHAR dotlessW_[] = L"dotless._";
 
 static char extless [] = "extless.";
 static char extless_[] = "extless._";
-static WCHAR extlessW [] = {'e','x','t','l','e','s','s','.', 0};
-static WCHAR extlessW_[] = {'e','x','t','l','e','s','s','.','_', 0};
+static WCHAR extlessW [] = L"extless.";
+static WCHAR extlessW_[] = L"extless._";
 
 static char _terminated [] = "_terminated.xxxx_";
 static char _terminated_[] = "_terminated.xxxx_";
-static WCHAR _terminatedW [] = {'_','t','e','r','m','i','n','a','t','e','d','.','x','x','x','x','_', 0};
-static WCHAR _terminatedW_[] = {'_','t','e','r','m','i','n','a','t','e','d','.','x','x','x','x','_', 0};
+static WCHAR _terminatedW [] = L"_terminated.xxxx_";
+static WCHAR _terminatedW_[] = L"_terminated.xxxx_";
 
 static char filename2[] = "testfile.yyy";
 
@@ -74,7 +74,7 @@ static void full_file_path_name_in_a_CWD(const char *src, char *dst, BOOL expect
   char shortname[MAX_PATH];
 
   retval = GetCurrentDirectoryA(MAX_PATH, dst);
-  ok(retval > 0, "GetCurrentDirectoryA returned %d, GLE=%d\n",
+  ok(retval > 0, "GetCurrentDirectoryA returned %ld, GLE=%ld\n",
      retval, GetLastError());
   if(dst[retval-1] != '\\')
     /* Append backslash only when it's missing */
@@ -84,7 +84,7 @@ static void full_file_path_name_in_a_CWD(const char *src, char *dst, BOOL expect
   {
     memcpy(shortname, dst, MAX_PATH);
     retval = GetShortPathNameA(shortname, dst, MAX_PATH-1);
-    ok(retval > 0, "GetShortPathNameA returned %d for '%s', GLE=%d\n",
+    ok(retval > 0, "GetShortPathNameA returned %ld for '%s', GLE=%ld\n",
        retval, dst, GetLastError());
   }
 }
@@ -99,7 +99,7 @@ static void create_file(char *fname)
   ok(file >= 0, "LZOpenFileA failed to create '%s'\n", fname);
   LZClose(file);
   retval = GetFileAttributesA(fname);
-  ok(retval != INVALID_FILE_ATTRIBUTES, "GetFileAttributesA('%s'): error %d\n", ofs.szPathName, GetLastError());
+  ok(retval != INVALID_FILE_ATTRIBUTES, "GetFileAttributesA('%s'): error %ld\n", ofs.szPathName, GetLastError());
 }
 
 static void delete_file(char *fname)
@@ -228,7 +228,7 @@ static void test_LZOpenFileA_nonexisting_compressed(void)
   ok(file == LZERROR_BADINHANDLE, 
      "LZOpenFileA succeeded on nonexistent file\n");
   ok(GetLastError() == ERROR_FILE_NOT_FOUND,
-     "GetLastError() returns %d\n", GetLastError());
+     "GetLastError() returns %ld\n", GetLastError());
   ok(test.cBytes == 0xA5, 
      "LZOpenFileA set test.cBytes to %d\n", test.cBytes);
   ok(test.nErrCode == ERROR_FILE_NOT_FOUND, 
@@ -247,7 +247,7 @@ static void test_LZOpenFileA_nonexisting_compressed(void)
   ok(file == LZERROR_BADINHANDLE, 
      "LZOpenFileA succeeded on nonexistent file\n");
   ok(GetLastError() == ERROR_FILE_NOT_FOUND,
-     "GetLastError() returns %d\n", GetLastError());
+     "GetLastError() returns %ld\n", GetLastError());
   ok(test.cBytes == 0xA5, 
      "LZOpenFileA set test.cBytes to %d\n", test.cBytes);
   ok(test.nErrCode == ERROR_FILE_NOT_FOUND, 
@@ -266,7 +266,7 @@ static void test_LZOpenFileA_nonexisting_compressed(void)
   ok(file == LZERROR_BADINHANDLE, 
      "LZOpenFileA succeeded on nonexistent file\n");
   ok(GetLastError() == ERROR_FILE_NOT_FOUND,
-     "GetLastError() returns %d\n", GetLastError());
+     "GetLastError() returns %ld\n", GetLastError());
   ok(test.cBytes == 0xA5, 
      "LZOpenFileA set test.cBytes to %d\n", test.cBytes);
   ok(test.nErrCode == ERROR_FILE_NOT_FOUND, 
@@ -285,7 +285,7 @@ static void test_LZOpenFileA_nonexisting_compressed(void)
   ok(file == LZERROR_BADINHANDLE, 
      "LZOpenFileA succeeded on nonexistent file\n");
   ok(GetLastError() == ERROR_FILE_NOT_FOUND,
-     "GetLastError() returns %d\n", GetLastError());
+     "GetLastError() returns %ld\n", GetLastError());
   ok(test.cBytes == 0xA5, 
      "LZOpenFileA set test.cBytes to %d\n", test.cBytes);
   ok(test.nErrCode == ERROR_FILE_NOT_FOUND, 
@@ -310,7 +310,7 @@ static void test_LZOpenFileA(void)
   ok(file == LZERROR_BADINHANDLE, 
      "LZOpenFileA succeeded on nonexistent file\n");
   ok(GetLastError() == ERROR_FILE_NOT_FOUND, 
-     "GetLastError() returns %d\n", GetLastError());
+     "GetLastError() returns %ld\n", GetLastError());
   LZClose(file);
 
   memset(&test, 0xA5, sizeof(test));
@@ -329,7 +329,7 @@ static void test_LZOpenFileA(void)
   LZClose(file);
 
   retval = GetFileAttributesA(filename_);
-  ok(retval != INVALID_FILE_ATTRIBUTES, "GetFileAttributesA: error %d\n", 
+  ok(retval != INVALID_FILE_ATTRIBUTES, "GetFileAttributesA: error %ld\n",
      GetLastError());
 
   /* Check various opening options: */
@@ -424,7 +424,7 @@ static void test_LZRead(void)
   file = CreateFileA(filename_, GENERIC_WRITE, 0, NULL, CREATE_NEW, 0, 0);
   ok(file != INVALID_HANDLE_VALUE, "Could not create test file\n");
   retok = WriteFile(file, compressed_file, compressed_file_size, &ret, 0);
-  ok( retok, "WriteFile: error %d\n", GetLastError());
+  ok( retok, "WriteFile: error %ld\n", GetLastError());
   ok(ret == compressed_file_size, "Wrote wrong number of bytes with WriteFile?\n");
   CloseHandle(file);
 
@@ -447,7 +447,7 @@ static void test_LZRead(void)
   LZClose(cfile);
 
   ret = DeleteFileA(filename_);
-  ok(ret, "DeleteFileA: error %d\n", GetLastError());
+  ok(ret, "DeleteFileA: error %ld\n", GetLastError());
 }
 
 static void test_LZCopy(void)
@@ -461,9 +461,9 @@ static void test_LZCopy(void)
   /* Create the compressed file. */
   file = CreateFileA(filename_, GENERIC_WRITE, 0, NULL, CREATE_NEW, 0, 0);
   ok(file != INVALID_HANDLE_VALUE, 
-     "CreateFileA: error %d\n", GetLastError());
+     "CreateFileA: error %ld\n", GetLastError());
   retok = WriteFile(file, compressed_file, compressed_file_size, &ret, 0);
-  ok( retok, "WriteFile error %d\n", GetLastError());
+  ok( retok, "WriteFile error %ld\n", GetLastError());
   ok(ret == compressed_file_size, "Wrote wrong number of bytes\n");
   CloseHandle(file);
 
@@ -480,19 +480,19 @@ static void test_LZCopy(void)
 
   file = CreateFileA(filename2, GENERIC_READ, 0, NULL, OPEN_EXISTING, 0, 0);
   ok(file != INVALID_HANDLE_VALUE,
-     "CreateFileA: error %d\n", GetLastError());
+     "CreateFileA: error %ld\n", GetLastError());
 
   retok = ReadFile(file, buf, uncompressed_data_size*2, &ret, 0);
-  ok( retok && ret == uncompressed_data_size, "ReadFile: error %d\n", GetLastError());
+  ok( retok && ret == uncompressed_data_size, "ReadFile: error %ld\n", GetLastError());
   /* Compare what we read with what we think we should read. */
   ok(!memcmp(buf, uncompressed_data, uncompressed_data_size),
      "buffer contents mismatch\n");
   CloseHandle(file);
 
   ret = DeleteFileA(filename_);
-  ok(ret, "DeleteFileA: error %d\n", GetLastError());
+  ok(ret, "DeleteFileA: error %ld\n", GetLastError());
   ret = DeleteFileA(filename2);
-  ok(ret, "DeleteFileA: error %d\n", GetLastError());
+  ok(ret, "DeleteFileA: error %ld\n", GetLastError());
 }
 
 static void create_fileW(WCHAR *fnameW)
@@ -505,7 +505,7 @@ static void create_fileW(WCHAR *fnameW)
   ok(file >= 0, "LZOpenFileW failed on creation\n");
   LZClose(file);
   retval = GetFileAttributesW(fnameW);
-  ok(retval != INVALID_FILE_ATTRIBUTES, "GetFileAttributesW('%s'): error %d\n", ofs.szPathName, GetLastError());
+  ok(retval != INVALID_FILE_ATTRIBUTES, "GetFileAttributesW('%s'): error %ld\n", ofs.szPathName, GetLastError());
 }
 
 static void delete_fileW(WCHAR *fnameW)
@@ -628,7 +628,7 @@ static void test_LZOpenFileW_nonexisting_compressed(void)
   ok(file == LZERROR_BADINHANDLE, 
      "LZOpenFileW succeeded on nonexistent file\n");
   ok(GetLastError() == ERROR_FILE_NOT_FOUND,
-     "GetLastError() returns %d\n", GetLastError());
+     "GetLastError() returns %ld\n", GetLastError());
   ok(test.cBytes == 0xA5, 
      "LZOpenFileW set test.cBytes to %d\n", test.cBytes);
   ok(test.nErrCode == ERROR_FILE_NOT_FOUND, 
@@ -647,7 +647,7 @@ static void test_LZOpenFileW_nonexisting_compressed(void)
   ok(file == LZERROR_BADINHANDLE, 
      "LZOpenFileW succeeded on nonexistent file\n");
   ok(GetLastError() == ERROR_FILE_NOT_FOUND,
-     "GetLastError() returns %d\n", GetLastError());
+     "GetLastError() returns %ld\n", GetLastError());
   ok(test.cBytes == 0xA5, 
      "LZOpenFileW set test.cBytes to %d\n", test.cBytes);
   ok(test.nErrCode == ERROR_FILE_NOT_FOUND, 
@@ -666,7 +666,7 @@ static void test_LZOpenFileW_nonexisting_compressed(void)
   ok(file == LZERROR_BADINHANDLE, 
      "LZOpenFileW succeeded on nonexistent file\n");
   ok(GetLastError() == ERROR_FILE_NOT_FOUND,
-     "GetLastError() returns %d\n", GetLastError());
+     "GetLastError() returns %ld\n", GetLastError());
   ok(test.cBytes == 0xA5, 
      "LZOpenFileW set test.cBytes to %d\n", test.cBytes);
   ok(test.nErrCode == ERROR_FILE_NOT_FOUND, 
@@ -685,7 +685,7 @@ static void test_LZOpenFileW_nonexisting_compressed(void)
   ok(file == LZERROR_BADINHANDLE, 
      "LZOpenFileW succeeded on nonexistent file\n");
   ok(GetLastError() == ERROR_FILE_NOT_FOUND,
-     "GetLastError() returns %d\n", GetLastError());
+     "GetLastError() returns %ld\n", GetLastError());
   ok(test.cBytes == 0xA5, 
      "LZOpenFileW set test.cBytes to %d\n", test.cBytes);
   ok(test.nErrCode == ERROR_FILE_NOT_FOUND, 
@@ -700,7 +700,7 @@ static void test_LZOpenFileW(void)
   OFSTRUCT test;
   DWORD retval;
   INT file;
-  static WCHAR badfilenameW[] = {'b','a','d','f','i','l','e','n','a','m','e','.','x','t','n',0};
+  static WCHAR badfilenameW[] = L"badfilename.xtn";
   char expected[MAX_PATH];
 
   SetLastError(0xfaceabee);
@@ -712,7 +712,7 @@ static void test_LZOpenFileW(void)
     return;
   }
   ok(GetLastError() == ERROR_FILE_NOT_FOUND,
-     "GetLastError() returns %d\n", GetLastError());
+     "GetLastError() returns %ld\n", GetLastError());
   ok(file == LZERROR_BADINHANDLE, "LZOpenFileW succeeded on nonexistent file\n");
   LZClose(file);
 
@@ -732,7 +732,7 @@ static void test_LZOpenFileW(void)
   LZClose(file);
 
   retval = GetFileAttributesW(filenameW_);
-  ok(retval != INVALID_FILE_ATTRIBUTES, "GetFileAttributes: error %d\n", 
+  ok(retval != INVALID_FILE_ATTRIBUTES, "GetFileAttributes: error %ld\n",
     GetLastError());
 
   /* Check various opening options: */

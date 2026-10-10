@@ -177,6 +177,7 @@ typedef struct _AFD_FCB {
     PTDI_CONNECTION_INFORMATION AddressFrom, ConnectCallInfo, ConnectReturnInfo;
     AFD_TDI_OBJECT AddressFile, Connection;
     AFD_IN_FLIGHT_REQUEST ConnectIrp, ListenIrp, ReceiveIrp, SendIrp, DisconnectIrp;
+    PIRP AcceptIrp;
     AFD_DATA_WINDOW Send, Recv;
     KMUTEX Mutex;
     PKEVENT EventSelect;
@@ -216,7 +217,7 @@ AfdBindSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
 /* connect.c */
 
-NTSTATUS MakeSocketIntoConnection( PAFD_FCB FCB );
+NTSTATUS MakeSocketIntoConnection(PAFD_FCB FCB, BOOL Receive);
 NTSTATUS WarmSocketForConnection( PAFD_FCB FCB );
 NTSTATUS NTAPI
 AfdStreamSocketConnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
@@ -283,6 +284,9 @@ NTSTATUS AfdListenSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 NTSTATUS AfdAccept( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 		    PIO_STACK_LOCATION IrpSp );
 
+NTSTATUS AfdSuperAccept( PDEVICE_OBJECT DeviceObject, PIRP Irp,
+		    PIO_STACK_LOCATION IrpSp );
+
 /* lock.c */
 
 PAFD_WSABUF LockBuffers( PAFD_WSABUF Buf, UINT Count,
@@ -313,6 +317,8 @@ VOID RetryDisconnectCompletion(PAFD_FCB FCB);
 BOOLEAN CheckUnlockExtraBuffers(PAFD_FCB FCB, PIO_STACK_LOCATION IrpSp);
 
 /* read.c */
+
+IO_COMPLETION_ROUTINE AcceptExReceiveComplete;
 
 IO_COMPLETION_ROUTINE ReceiveComplete;
 

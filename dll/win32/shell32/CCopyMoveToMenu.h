@@ -46,6 +46,8 @@ public:
     // IObjectWithSite
     STDMETHODIMP SetSite(IUnknown *pUnkSite) override;
     STDMETHODIMP GetSite(REFIID riid, void **ppvSite) override;
+
+    static HRESULT DoCopyMoveToFolder(BOOL Copy, HWND hWnd, IUnknown *pSite, IShellFolder *pSF, UINT cidl, PCUITEMID_CHILD_ARRAY pidls);
 };
 
 class CCopyToMenu

@@ -29,6 +29,7 @@ list(APPEND SOURCE
     GetWindowPlacement.c
     GW_ENABLEDPOPUP.c
     InitializeLpkHooks.c
+    IsServerSideWindow.c
     KbdLayout.c
     keybd_event.c
     LoadImage.c
@@ -36,6 +37,7 @@ list(APPEND SOURCE
     LookupIconIdFromDirectoryEx.c
     MenuUI.c
     MessageStateAnalyzer.c
+    NcPaintRgn.c
     NextDlgItem.c
     PrivateExtractIcons.c
     RealGetWindowClass.c
@@ -61,6 +63,7 @@ list(APPEND SOURCE
     SystemParametersInfo.c
     TrackMouseEvent.c
     TrackPopupMenuEx.c
+    UserHandleGrantAccess.c
     VirtualKey.c
     WndProc.c
     wsprintf.c)

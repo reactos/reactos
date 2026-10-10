@@ -1,6 +1,4 @@
 
-include_directories(${REACTOS_SOURCE_DIR}/sdk/lib/udmihelp)
-
 add_executable(systeminfo systeminfo.c systeminfo.rc)
 set_module_type(systeminfo win32cui UNICODE)
 target_link_libraries(systeminfo conutils udmihelp)

@@ -17,11 +17,6 @@ endif()
 #spec2def(freeldr_pe.exe freeldr.spec)
 
 include_directories(BEFORE include)
-include_directories(
-    ${REACTOS_SOURCE_DIR}/ntoskrnl/include
-    ${REACTOS_SOURCE_DIR}/sdk/lib/cmlib
-    ${REACTOS_SOURCE_DIR}/sdk/include/reactos/libs
-    ${REACTOS_SOURCE_DIR}/sdk/include/reactos/elf)
 
 add_definitions(-D_NTHAL_ -D_BLDR_ -D_NTSYSTEM_)
 
@@ -83,8 +78,7 @@ elseif(ARCH STREQUAL "amd64")
         # arch/amd64/linux.S
 
     list(APPEND FREELDR_ARC_SOURCE
-        arch/i386/i386bug.c
-        arch/i386/ntoskrnl.c)
+        arch/i386/i386bug.c)
 
 elseif(ARCH STREQUAL "arm")
     #TBD

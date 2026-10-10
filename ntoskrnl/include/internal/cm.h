@@ -601,24 +601,15 @@ CmpCompareNewValueDataAgainstKCBCache(
 //
 // Hive List Routines
 //
-BOOLEAN
-NTAPI
-CmpGetHiveName(
-    IN  PCMHIVE Hive,
-    OUT PUNICODE_STRING HiveName
-);
-
 NTSTATUS
 NTAPI
 CmpAddToHiveFileList(
-    IN PCMHIVE Hive
-);
+    _Inout_ PCMHIVE Hive);
 
 VOID
 NTAPI
 CmpRemoveFromHiveFileList(
-    IN PCMHIVE Hive
-);
+    _Inout_ PCMHIVE Hive);
 
 //
 // Quota Routines
@@ -695,8 +686,8 @@ CmpCloseKeyObject(
     IN PEPROCESS Process OPTIONAL,
     IN PVOID Object,
     IN ACCESS_MASK GrantedAccess,
-    IN ULONG ProcessHandleCount,
-    IN ULONG SystemHandleCount
+    IN ULONG_PTR ProcessHandleCount,
+    IN ULONG_PTR SystemHandleCount
 );
 
 VOID
@@ -730,7 +721,8 @@ CmpSecurityMethod(
     IN OUT PULONG CapturedLength,
     IN OUT PSECURITY_DESCRIPTOR *ObjectSecurityDescriptor,
     IN POOL_TYPE PoolType,
-    IN PGENERIC_MAPPING GenericMapping
+    IN PGENERIC_MAPPING GenericMapping,
+    IN KPROCESSOR_MODE AccessMode
 );
 
 NTSTATUS
@@ -1069,7 +1061,7 @@ CmpGetNextName(
 );
 
 //
-// Command Routines (Flush, Open, Close, Init);
+// Command Routines (Flush, Open, Close, Init)
 //
 BOOLEAN
 NTAPI

@@ -10,8 +10,6 @@ add_custom_command(
     DEPENDS native-bin2c command)
 #####################################
 
-include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/libs/fast486)
-
 spec2def(ntvdm.exe ntvdm.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
@@ -72,13 +70,13 @@ add_executable(ntvdm
     ${SOURCE}
     ntvdm.rc
     ${CMAKE_CURRENT_BINARY_DIR}/ntvdm.def)
+add_pch(ntvdm ntvdm.h SOURCE)
 
 set_target_properties(ntvdm
     PROPERTIES
     ENABLE_EXPORTS TRUE
     DEFINE_SYMBOL "")
 
-add_pch(ntvdm ntvdm.h SOURCE)
 set_module_type(ntvdm win32cui UNICODE IMAGEBASE 0x0F000000)
 target_link_libraries(ntvdm fast486 ${PSEH_LIB})
 add_importlibs(ntvdm user32 gdi32 advapi32 comdlg32 msvcrt kernel32 ntdll)

@@ -1,8 +1,9 @@
 /*
- * FILE:        dll/acppage/acppage/lang/sk-SK.rc
- * PURPOSE:     Slovak Language File for acppage
- * TRANSLATOR:  Kario <kario@szm.sk>
- * DATE OF TR.: 30-09-2007
+ * PROJECT:     ReactOS Compatibility Layer Shell Extension
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Slovak resource file
+ * TRANSLATORS: Copyright 2007 Mário Kačmár <kario@szm.sk>
+ *              Copyright 2026 Václav Zouzalík (Venca24) <vaclav.zouzalik@seznam.cz>
  */
 
 LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
@@ -12,9 +13,9 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Kompatibilita"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT "Ak máte problémy so spustením tohto programu v systéme ReactOS, vyberte operačný systém, pod názvom ktorého sa systém ReactOS ohlási programu.\nPlease note that this is a work in progress.", IDC_EXPLANATION, 7, 7, 210, 31
+    LTEXT "Ak máte problémy so spustením tohto programu v systéme ReactOS, vyberte operačný systém, pod názvom ktorého sa systém ReactOS ohlási programu.\nMajte prosím na zreteli, že táto funkcia je stále vo vývoji.", IDC_EXPLANATION, 7, 7, 210, 31
     GROUPBOX "Kompatibilný režim", IDC_COMPATGROUP, 7, 41, 210, 49
-    CHECKBOX "Tento program spustiť v režime kompatibilnom so systémom:", IDC_CHKRUNCOMPATIBILITY, 18, 57, 188, 10, BS_AUTOCHECKBOX | WS_TABSTOP
+    CHECKBOX "Spustiť tento program v režime kompatibility pre:", IDC_CHKRUNCOMPATIBILITY, 18, 57, 188, 10, BS_AUTOCHECKBOX | WS_TABSTOP
     COMBOBOX IDC_COMPATIBILITYMODE, 18, 70, 188, 85, CBS_HASSTRINGS | CBS_DROPDOWNLIST | WS_TABSTOP | WS_DISABLED
     GROUPBOX "Nastavenia obrazovky", -1, 7, 99, 210, 61, BS_GROUPBOX
     CHECKBOX "Spustiť v režime 256 farieb", IDC_CHKRUNIN256COLORS, 18, 114, 188, 10, BS_AUTOCHECKBOX | WS_TABSTOP
@@ -37,13 +38,13 @@ BEGIN
     PUSHBUTTON      "<",IDC_REMOVE,144,60,18,14,WS_DISABLED
     PUSHBUTTON      "&OK",IDOK,174,114,60,14
     PUSHBUTTON      "&Zrušiť",IDCANCEL,240,114,60,14
-    LTEXT           "Available modes",-1,6,6,52,8
-    LTEXT           "Selected modes",-1,168,6,51,8
+    LTEXT           "Dostupné režimy",-1,6,6,53,8
+    LTEXT           "Vybrané režimy",-1,168,6,51,8
 END
 
 STRINGTABLE
 BEGIN
     IDS_COMPAT_TITLE "Kompatibilita"
-    IDS_FAILED_NETWORK "Compatibility modes cannot be set on this program because it is on a network drive."
-    IDS_FAILED_PROTECTED "Compatibility modes cannot be set on this program because it is a part of ReactOS."
+    IDS_FAILED_NETWORK "Režim kompatibility nie je možné pri tomto programe nastaviť, lebo program sa nachádza na sieťovom úložisku."
+    IDS_FAILED_PROTECTED "Režim kompatibility nie je možné pri tomto programe nastaviť, lebo program je súčasťou ReactOS."
 END

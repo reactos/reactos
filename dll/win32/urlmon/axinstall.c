@@ -30,12 +30,6 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(urlmon);
 
-static const WCHAR ctxW[] = {'c','t','x',0};
-static const WCHAR cab_extW[] = {'.','c','a','b',0};
-static const WCHAR infW[] = {'i','n','f',0};
-static const WCHAR dllW[] = {'d','l','l',0};
-static const WCHAR ocxW[] = {'o','c','x',0};
-
 enum install_type {
     INSTALL_UNKNOWN,
     INSTALL_DLL,
@@ -63,8 +57,8 @@ static void release_install_ctx(install_ctx_t *ctx)
         IUri_Release(ctx->uri);
     if(ctx->callback)
         IBindStatusCallback_Release(ctx->callback);
-    heap_free(ctx->install_file);
-    heap_free(ctx);
+    free(ctx->install_file);
+    free(ctx);
 }
 
 static inline BOOL file_exists(const WCHAR *file_name)
@@ -163,7 +157,19 @@ done:
     return res;
 }
 
+static inline char *strdupWtoA(const WCHAR *str)
+{
+    char *ret = NULL;
 
+    if(str) {
+        DWORD size = WideCharToMultiByte(CP_ACP, 0, str, -1, NULL, 0, NULL, NULL);
+        ret = malloc(size);
+        if(ret)
+            WideCharToMultiByte(CP_ACP, 0, str, -1, ret, size, NULL, NULL);
+    }
+
+    return ret;
+}
 
 HRESULT WINAPI Modified_ExtractFilesW(LPCWSTR CabName, LPCWSTR ExpandDir)
 {
@@ -173,13 +179,13 @@ HRESULT WINAPI Modified_ExtractFilesW(LPCWSTR CabName, LPCWSTR ExpandDir)
     TRACE("(%s, %s, %d)\n", debugstr_w(CabName), debugstr_w(ExpandDir));
 
     if(CabName) {
-        cab_name = heap_strdupWtoA(CabName);
+        cab_name = strdupWtoA(CabName);
         if(!cab_name)
             return E_OUTOFMEMORY;
     }
 
     if(ExpandDir) {
-        expand_dir = heap_strdupWtoA(ExpandDir);
+        expand_dir = strdupWtoA(ExpandDir);
         if(!expand_dir)
             hres = E_OUTOFMEMORY;
     }
@@ -189,13 +195,12 @@ HRESULT WINAPI Modified_ExtractFilesW(LPCWSTR CabName, LPCWSTR ExpandDir)
     if(SUCCEEDED(hres))
         hres = Modified_ExtractFilesA(cab_name, expand_dir);
 
-    heap_free(cab_name);
-    heap_free(expand_dir);
+    free(cab_name);
+    free(expand_dir);
     return hres;
 }
 
-#endif
-
+#endif /* __REACTOS__ */
 
 static HRESULT extract_cab_file(install_ctx_t *ctx)
 {
@@ -209,13 +214,13 @@ static HRESULT extract_cab_file(install_ctx_t *ctx)
     hres = ExtractFilesW(ctx->cache_file, ctx->tmp_dir, 0, NULL, NULL, 0);
 #endif
     if(FAILED(hres)) {
-        WARN("ExtractFilesW failed: %08x\n", hres);
+        WARN("ExtractFilesW failed: %08lx\n", hres);
         return hres;
     }
 
     path_len = lstrlenW(ctx->tmp_dir);
     file_len = lstrlenW(ctx->file_name);
-    ctx->install_file = heap_alloc((path_len+file_len+2)*sizeof(WCHAR));
+    ctx->install_file = malloc((path_len + file_len + 2) * sizeof(WCHAR));
     if(!ctx->install_file)
         return E_OUTOFMEMORY;
 
@@ -226,19 +231,19 @@ static HRESULT extract_cab_file(install_ctx_t *ctx)
     /* NOTE: Assume that file_name contains ".cab" extension */
     ptr = ctx->install_file+path_len+1+file_len-3;
 
-    memcpy(ptr, infW, sizeof(infW));
+    memcpy(ptr, L"inf", sizeof(L"inf"));
     if(file_exists(ctx->install_file)) {
         ctx->install_type = INSTALL_INF;
         return S_OK;
     }
 
-    memcpy(ptr, dllW, sizeof(dllW));
+    memcpy(ptr, L"dll", sizeof(L"dll"));
     if(file_exists(ctx->install_file)) {
         ctx->install_type = INSTALL_DLL;
         return S_OK;
     }
 
-    memcpy(ptr, ocxW, sizeof(ocxW));
+    memcpy(ptr, L"ocx", sizeof(L"ocx"));
     if(file_exists(ctx->install_file)) {
         ctx->install_type = INSTALL_DLL;
         return S_OK;
@@ -283,7 +288,7 @@ static void expand_command(install_ctx_t *ctx, const WCHAR *cmd, WCHAR *buf, siz
             memcpy(buf+len, prev_ptr, ptr-prev_ptr);
         len += ptr-prev_ptr;
 
-        if(!_wcsnicmp(ptr, expand_dirW, ARRAY_SIZE(expand_dirW))) {
+        if(!wcsnicmp(ptr, expand_dirW, ARRAY_SIZE(expand_dirW))) {
             len2 = lstrlenW(ctx->tmp_dir);
             if(buf)
                 memcpy(buf+len, ctx->tmp_dir, len2*sizeof(WCHAR));
@@ -312,30 +317,28 @@ static HRESULT process_hook_section(install_ctx_t *ctx, const WCHAR *sect_name)
     DWORD len;
     HRESULT hres;
 
-    static const WCHAR runW[] = {'r','u','n',0};
-
     len = GetPrivateProfileStringW(sect_name, NULL, NULL, buf, ARRAY_SIZE(buf), ctx->install_file);
     if(!len)
         return S_OK;
 
     for(key = buf; *key; key += lstrlenW(key)+1) {
-        if(!wcsicmp(key, runW)) {
+        if(!wcsicmp(key, L"run")) {
             WCHAR *cmd;
             size_t size;
 
-            len = GetPrivateProfileStringW(sect_name, runW, NULL, val, ARRAY_SIZE(val), ctx->install_file);
+            len = GetPrivateProfileStringW(sect_name, L"run", NULL, val, ARRAY_SIZE(val), ctx->install_file);
 
             TRACE("Run %s\n", debugstr_w(val));
 
             expand_command(ctx, val, NULL, &size);
 
-            cmd = heap_alloc(size*sizeof(WCHAR));
+            cmd = malloc(size * sizeof(WCHAR));
             if(!cmd)
-                heap_free(cmd);
+                return E_OUTOFMEMORY;
 
             expand_command(ctx, val, cmd, &size);
             hres = RunSetupCommandW(ctx->hwnd, cmd, NULL, ctx->tmp_dir, NULL, NULL, 0, NULL);
-            heap_free(cmd);
+            free(cmd);
             if(FAILED(hres))
                 return hres;
         }else {
@@ -355,17 +358,14 @@ static HRESULT install_inf_file(install_ctx_t *ctx)
     DWORD len;
     HRESULT hres;
 
-    static const WCHAR setup_hooksW[] = {'S','e','t','u','p',' ','H','o','o','k','s',0};
-    static const WCHAR add_codeW[] = {'A','d','d','.','C','o','d','e',0};
-
-    len = GetPrivateProfileStringW(setup_hooksW, NULL, NULL, buf, ARRAY_SIZE(buf), ctx->install_file);
+    len = GetPrivateProfileStringW(L"Setup Hooks", NULL, NULL, buf, ARRAY_SIZE(buf), ctx->install_file);
     if(len) {
         default_install = FALSE;
 
         for(key = buf; *key; key += lstrlenW(key)+1) {
             TRACE("[Setup Hooks] key: %s\n", debugstr_w(key));
 
-            len = GetPrivateProfileStringW(setup_hooksW, key, NULL, sect_name, ARRAY_SIZE(sect_name),
+            len = GetPrivateProfileStringW(L"Setup Hooks", key, NULL, sect_name, ARRAY_SIZE(sect_name),
                     ctx->install_file);
             if(!len) {
                 WARN("Could not get key value\n");
@@ -378,14 +378,14 @@ static HRESULT install_inf_file(install_ctx_t *ctx)
         }
     }
 
-    len = GetPrivateProfileStringW(add_codeW, NULL, NULL, buf, ARRAY_SIZE(buf), ctx->install_file);
+    len = GetPrivateProfileStringW(L"Add.Code", NULL, NULL, buf, ARRAY_SIZE(buf), ctx->install_file);
     if(len) {
         default_install = FALSE;
 
         for(key = buf; *key; key += lstrlenW(key)+1) {
             TRACE("[Add.Code] key: %s\n", debugstr_w(key));
 
-            len = GetPrivateProfileStringW(add_codeW, key, NULL, sect_name, ARRAY_SIZE(sect_name),
+            len = GetPrivateProfileStringW(L"Add.Code", key, NULL, sect_name, ARRAY_SIZE(sect_name),
                     ctx->install_file);
             if(!len) {
                 WARN("Could not get key value\n");
@@ -395,7 +395,7 @@ static HRESULT install_inf_file(install_ctx_t *ctx)
             hres = RunSetupCommandW(ctx->hwnd, ctx->install_file, sect_name,
                     ctx->tmp_dir, NULL, NULL, RSC_FLAG_INF, NULL);
             if(FAILED(hres)) {
-                WARN("RunSetupCommandW failed: %08x\n", hres);
+                WARN("RunSetupCommandW failed: %08lx\n", hres);
                 return hres;
             }
         }
@@ -404,7 +404,7 @@ static HRESULT install_inf_file(install_ctx_t *ctx)
     if(default_install) {
         hres = RunSetupCommandW(ctx->hwnd, ctx->install_file, NULL, ctx->tmp_dir, NULL, NULL, RSC_FLAG_INF, NULL);
         if(FAILED(hres)) {
-            WARN("RunSetupCommandW failed: %08x\n", hres);
+            WARN("RunSetupCommandW failed: %08lx\n", hres);
             return hres;
         }
     }
@@ -472,7 +472,7 @@ static void update_counter(install_ctx_t *ctx, HWND hwnd)
     }else {
         WCHAR buf[100];
         LoadStringW(urlmon_instance, IDS_AXINSTALL_INSTALLN, buf, ARRAY_SIZE(buf));
-        swprintf(text, buf, ctx->counter);
+        swprintf(text, ARRAY_SIZE(text), buf, ctx->counter);
     }
 
     SetDlgItemTextW(hwnd, ID_AXINSTALL_INSTALL_BTN, text);
@@ -483,7 +483,7 @@ static BOOL init_warning_dialog(HWND hwnd, install_ctx_t *ctx)
     BSTR display_uri;
     HRESULT hres;
 
-    if(!SetPropW(hwnd, ctxW, ctx))
+    if(!SetPropW(hwnd, L"ctx", ctx))
         return FALSE;
 
     hres = IUri_GetDisplayUri(ctx->uri, &display_uri);
@@ -513,7 +513,7 @@ static INT_PTR WINAPI warning_proc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lp
     case WM_COMMAND:
         switch(wparam) {
         case ID_AXINSTALL_INSTALL_BTN: {
-            install_ctx_t *ctx = GetPropW(hwnd, ctxW);
+            install_ctx_t *ctx = GetPropW(hwnd, L"ctx");
             if(ctx)
                 ctx->cancel = FALSE;
             EndDialog(hwnd, 0);
@@ -524,7 +524,7 @@ static INT_PTR WINAPI warning_proc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lp
             return FALSE;
         }
     case WM_TIMER:
-        update_counter(GetPropW(hwnd, ctxW), hwnd);
+        update_counter(GetPropW(hwnd, L"ctx"), hwnd);
         return TRUE;
     }
 
@@ -589,7 +589,7 @@ static HRESULT install_file(install_ctx_t *ctx, const WCHAR *cache_file)
         if(!ext)
             ext = ptr;
 
-        if(!wcsicmp(ext, cab_extW)) {
+        if(!wcsicmp(ext, L".cab")) {
             hres = install_cab_file(ctx);
         }else {
             FIXME("Unsupported extension %s\n", debugstr_w(ext));
@@ -606,7 +606,7 @@ static void failure_msgbox(install_ctx_t *ctx, HRESULT hres)
     WCHAR buf[1024], fmt[1024];
 
     LoadStringW(urlmon_instance, IDS_AXINSTALL_FAILURE, fmt, ARRAY_SIZE(fmt));
-    swprintf(buf, fmt, hres);
+    swprintf(buf, ARRAY_SIZE(buf), fmt, hres);
     MessageBoxW(ctx->hwnd, buf, NULL, MB_OK);
 }
 
@@ -614,7 +614,7 @@ static HRESULT distunit_on_stop(void *ctx, const WCHAR *cache_file, HRESULT hres
 {
     install_ctx_t *install_ctx = ctx;
 
-    TRACE("(%p %s %08x %s)\n", ctx, debugstr_w(cache_file), hresult, debugstr_w(error_str));
+    TRACE("(%p %s %08lx %s)\n", ctx, debugstr_w(cache_file), hresult, debugstr_w(error_str));
 
     if(hresult == S_OK) {
         hresult = install_file(install_ctx, cache_file);
@@ -639,19 +639,19 @@ HRESULT WINAPI AsyncInstallDistributionUnit(const WCHAR *szDistUnit, const WCHAR
     install_ctx_t *ctx;
     HRESULT hres;
 
-    TRACE("(%s %s %s %x %x %s %p %p %x)\n", debugstr_w(szDistUnit), debugstr_w(szTYPE), debugstr_w(szExt),
+    TRACE("(%s %s %s %lx %lx %s %p %p %lx)\n", debugstr_w(szDistUnit), debugstr_w(szTYPE), debugstr_w(szExt),
           dwFileVersionMS, dwFileVersionLS, debugstr_w(szURL), pbc, pvReserved, flags);
 
     if(szDistUnit || szTYPE || szExt)
         FIXME("Unsupported arguments\n");
 
-    ctx = heap_alloc_zero(sizeof(*ctx));
+    ctx = calloc(1, sizeof(*ctx));
     if(!ctx)
         return E_OUTOFMEMORY;
 
     hres = CreateUri(szURL, 0, 0, &ctx->uri);
     if(FAILED(hres)) {
-        heap_free(ctx);
+        free(ctx);
         return E_OUTOFMEMORY;
     }
 

@@ -78,3 +78,18 @@ VariantToIdlist(_In_ VARIANT *pV, _Out_ LPITEMIDLIST *ppidl)
     }
     return hr;
 }
+
+HRESULT
+VariantQueryInterface(_In_ VARIANT *pV, _In_ REFIID riid, _Out_ void **ppv)
+{
+    pV = VariantDerefVariant(pV);
+    switch (V_VT(pV))
+    {
+        case VT_DISPATCH | VT_BYREF:
+            return V_DISPATCHREF(pV) && *V_DISPATCHREF(pV) ? (*V_DISPATCHREF(pV))->QueryInterface(riid, ppv) : E_UNEXPECTED;
+        case VT_DISPATCH:
+        case VT_UNKNOWN:
+            return V_UNKNOWN(pV) ? V_UNKNOWN(pV)->QueryInterface(riid, ppv) : E_UNEXPECTED;
+    }
+    return E_FAIL;
+}

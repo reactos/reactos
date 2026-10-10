@@ -13,27 +13,27 @@
 BOOLEAN
 NTAPI
 VfatChkdsk(
-    IN PUNICODE_STRING DriveRoot,
-    IN PFMIFSCALLBACK Callback,
-    IN BOOLEAN FixErrors,
-    IN BOOLEAN Verbose,
-    IN BOOLEAN CheckOnlyIfDirty,
-    IN BOOLEAN ScanDrive,
-    IN PVOID pUnknown1,
-    IN PVOID pUnknown2,
-    IN PVOID pUnknown3,
-    IN PVOID pUnknown4,
-    IN PULONG ExitStatus);
+    _In_ PUNICODE_STRING DriveRoot,
+    _In_ PFMIFSCALLBACK Callback,
+    _In_ BOOLEAN FixErrors,
+    _In_ BOOLEAN Verbose,
+    _In_ BOOLEAN CheckOnlyIfDirty,
+    _In_ BOOLEAN ScanDrive,
+    _In_opt_ PVOID pUnknown1,
+    _In_opt_ PVOID pUnknown2,
+    _In_opt_ PVOID pUnknown3,
+    _In_opt_ PVOID pUnknown4,
+    _Out_ PULONG ExitStatus);
 
 BOOLEAN
 NTAPI
 VfatFormat(
-    IN PUNICODE_STRING DriveRoot,
-    IN PFMIFSCALLBACK Callback,
-    IN BOOLEAN QuickFormat,
-    IN BOOLEAN BackwardCompatible,
-    IN MEDIA_TYPE MediaType,
-    IN PUNICODE_STRING Label,
-    IN ULONG ClusterSize);
+    _In_ PUNICODE_STRING DriveRoot,
+    _In_ PFMIFSCALLBACK Callback,
+    _In_ BOOLEAN QuickFormat,
+    _In_ BOOLEAN BackwardCompatible,
+    _In_ MEDIA_TYPE MediaType,
+    _In_ PUNICODE_STRING Label,
+    _In_ ULONG ClusterSize);
 
 #endif /* __VFATLIB_H */

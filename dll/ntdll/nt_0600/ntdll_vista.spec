@@ -15,10 +15,14 @@
 @ stdcall RtlAcquireSRWLockExclusive(ptr)
 @ stdcall RtlReleaseSRWLockExclusive(ptr)
 @ stdcall RtlTryAcquireSRWLockExclusive(ptr)
+@ stdcall RtlWaitOnAddress(ptr ptr long ptr)
+@ stdcall RtlWakeAddressAll(ptr)
+@ stdcall RtlWakeAddressSingle(ptr)
 @ stdcall RtlRunOnceInitialize(ptr)
 @ stdcall RtlRunOnceBeginInitialize(ptr long ptr)
 @ stdcall RtlRunOnceComplete(ptr long ptr)
 @ stdcall RtlRunOnceExecuteOnce(ptr ptr ptr ptr)
+@ stdcall RtlWow64GetProcessMachines(ptr ptr ptr)
 
 @ stdcall RtlConnectToSm(ptr ptr long ptr) SmConnectToSm
 @ stdcall RtlSendMsgToSm(ptr ptr) SmSendMsgToSm
@@ -32,6 +36,8 @@
 
 @ stdcall RtlUnicodeToUTF8N(ptr long ptr wstr long)
 @ stdcall RtlUTF8ToUnicodeN(ptr long ptr str long)
+
+@ stdcall RtlIsNameInExpression(ptr ptr long ptr)
 
 @ stdcall TpAllocCleanupGroup(ptr)
 @ stdcall TpAllocIoCompletion(ptr ptr ptr ptr ptr)

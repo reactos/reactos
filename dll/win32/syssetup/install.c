@@ -4,6 +4,7 @@
  * PURPOSE:           System setup
  * FILE:              dll/win32/syssetup/install.c
  * PROGRAMER:         Eric Kohl
+ *                    Whindmar Saksit <whindsaks@proton.me>
  */
 
 /* INCLUDES *****************************************************************/
@@ -22,6 +23,7 @@
 #include <shobjidl.h>
 #include <rpcproxy.h>
 #include <ndk/cmfuncs.h>
+#include <reactos/rosbrand.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -764,7 +766,7 @@ StatusMessageWindowProc(
     PDLG_DATA pDlgData;
     UNREFERENCED_PARAMETER(wParam);
 
-    pDlgData = (PDLG_DATA)GetWindowLongPtrW(hwndDlg, GWLP_USERDATA);
+    pDlgData = (PDLG_DATA)GetWindowLongPtrW(hwndDlg, DWLP_USER);
 
     /* pDlgData is required for each case except WM_INITDIALOG */
     if (uMsg != WM_INITDIALOG && pDlgData == NULL) return FALSE;
@@ -773,33 +775,36 @@ StatusMessageWindowProc(
     {
         case WM_INITDIALOG:
         {
-            BITMAP bm;
             WCHAR szMsg[256];
 
             /* Allocate pDlgData */
             pDlgData = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*pDlgData));
             if (pDlgData)
             {
-                /* Set pDlgData to GWLP_USERDATA, so we can get it for new messages */
-                SetWindowLongPtrW(hwndDlg, GWLP_USERDATA, (LONG_PTR)pDlgData);
+                /* Set pDlgData to DWLP_USER, so we can get it for new messages */
+                SetWindowLongPtrW(hwndDlg, DWLP_USER, (LONG_PTR)pDlgData);
 
                 /* Load bitmaps */
-                pDlgData->hLogoBitmap = LoadImageW(hDllInstance,
-                                                    MAKEINTRESOURCEW(IDB_REACTOS), IMAGE_BITMAP,
-                                                    0, 0, LR_DEFAULTCOLOR);
-
-                pDlgData->hBarBitmap = LoadImageW(hDllInstance, MAKEINTRESOURCEW(IDB_LINE),
-                                                IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
-                GetObject(pDlgData->hBarBitmap, sizeof(bm), &bm);
-                pDlgData->BarWidth = bm.bmWidth;
-                pDlgData->BarHeight = bm.bmHeight;
+                HMODULE hBrand = LoadLibraryExW(L"rosbrand.dll", NULL, LOAD_LIBRARY_AS_DATAFILE);
+                if (hBrand)
+                {
+                    pDlgData->hLogoBitmap = LoadImageW(hBrand,
+                                                       MAKEINTRESOURCEW(IDB_BRAND_BANNER),
+                                                       IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
+                    pDlgData->hBarBitmap = LoadImageW(hBrand,
+                                                      MAKEINTRESOURCEW(IDB_BRAND_BANNERLINE),
+                                                      IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
+                }
 
                 if (pDlgData->hLogoBitmap && pDlgData->hBarBitmap)
                 {
+                    BITMAP bm;
+                    GetObject(pDlgData->hBarBitmap, sizeof(bm), &bm);
+                    pDlgData->BarWidth = bm.bmWidth;
+                    pDlgData->BarHeight = bm.bmHeight;
+
                     if (SetTimer(hwndDlg, IDT_BAR, 20, NULL) == 0)
-                    {
                         DPRINT1("SetTimer(IDT_BAR) failed: %lu\n", GetLastError());
-                    }
 
                     /* Get the animation bar control */
                     pDlgData->hWndBarCtrl = GetDlgItem(hwndDlg, IDC_BAR);
@@ -834,12 +839,7 @@ StatusMessageWindowProc(
         {
             LPDRAWITEMSTRUCT lpDis = (LPDRAWITEMSTRUCT)lParam;
 
-            if (lpDis->CtlID != IDC_BAR)
-            {
-                return FALSE;
-            }
-
-            if (pDlgData->hBarBitmap)
+            if ((lpDis->CtlID == IDC_BAR) && pDlgData->hBarBitmap)
             {
                 HDC hdcMem;
                 HGDIOBJ hOld;
@@ -855,6 +855,20 @@ StatusMessageWindowProc(
                 DeleteDC(hdcMem);
                 return TRUE;
             }
+
+            if ((lpDis->CtlID == IDC_ROSLOGO) && pDlgData->hLogoBitmap)
+            {
+                HDC hdcMem = CreateCompatibleDC(lpDis->hDC);
+                HGDIOBJ hOld = SelectObject(hdcMem, pDlgData->hLogoBitmap);
+                BITMAP bm;
+
+                GetObject(pDlgData->hLogoBitmap, sizeof(bm), &bm);
+                BitBlt(lpDis->hDC, 0, 0, bm.bmWidth, bm.bmHeight, hdcMem, 0, 0, SRCCOPY);
+                SelectObject(hdcMem, hOld);
+                DeleteDC(hdcMem);
+                return TRUE;
+            }
+
             return FALSE;
         }
 
@@ -985,6 +999,26 @@ cleanup:
     return bConsoleBoot;
 }
 
+static VOID
+ProcessDetachedProgram(
+    _In_ PCWSTR pszInf)
+{
+    WCHAR szInfApp[MAX_PATH], szInfArg[MAX_PATH * 3];
+    WCHAR szCmd[_countof(szInfApp) + _countof(szInfArg)];
+    UINT cch;
+
+    if (!GetPrivateProfileStringW(L"GuiUnattended", L"DetachedProgram", L"", szInfApp, _countof(szInfApp), pszInf) || !*szInfApp)
+        return;
+    cch = ExpandEnvironmentStrings(szInfApp, szCmd, _countof(szCmd) - 1);
+    if (GetPrivateProfileStringW(L"GuiUnattended", L"Arguments", L"", szInfArg, _countof(szInfArg), pszInf) && cch)
+    {
+        szCmd[cch - 1] = L' ';
+        szCmd[cch] = UNICODE_NULL;
+        ExpandEnvironmentStrings(szInfArg, szCmd + cch, _countof(szCmd) - cch);
+    }
+    RunCommandAndWait(szCmd);
+}
+
 extern VOID
 EnableVisualTheme(
     _In_opt_ HWND hwndParent,
@@ -1010,8 +1044,7 @@ PreprocessUnattend(
     {
         /* See also wizard.c!ProcessSetupInf()
          * Retrieve the path of the setup INF */
-        GetSystemDirectoryW(szPath, _countof(szPath));
-        wcscat(szPath, L"\\$winnt$.inf");
+        GetSetupInfPath(szPath, _countof(szPath));
     }
     else
     {
@@ -1038,12 +1071,16 @@ PreprocessUnattend(
 
     /* Enable the chosen theme, or use the classic theme */
     EnableVisualTheme(NULL, bDefaultThemesOff ? NULL : szValue);
+
+    if (IsInstall)
+        ProcessDetachedProgram(szPath);
 }
 
 static BOOL
 CommonInstall(VOID)
 {
     HANDLE hThread = NULL;
+    DWORD dwThreadId = 0;
     BOOL bResult = FALSE;
 
     hSysSetupInf = SetupOpenInfFileW(L"syssetup.inf",
@@ -1075,7 +1112,7 @@ CommonInstall(VOID)
                                ShowStatusMessageThread,
                                NULL,
                                0,
-                               NULL);
+                               &dwThreadId);
     }
 
     if (!EnableUserModePnpManager())
@@ -1100,7 +1137,7 @@ Exit:
 
     if (hThread != NULL)
     {
-        PostThreadMessage(GetThreadId(hThread), WM_QUIT, 0, 0);
+        PostThreadMessage(dwThreadId, WM_QUIT, 0, 0);
         WaitForSingleObject(hThread, INFINITE);
         CloseHandle(hThread);
     }
@@ -1177,11 +1214,15 @@ InstallLiveCD(VOID)
     return 0;
 
 error:
-    MessageBoxW(
-        NULL,
-        L"Failed to load LiveCD! You can shutdown your computer, or press ENTER to reboot.",
-        L"ReactOS LiveCD",
-        MB_OK);
+    MessageBoxW(NULL,
+                L"Failed to load LiveCD! You can shutdown your computer, or press ENTER to reboot.",
+                L"ReactOS LiveCD",
+                MB_OK);
+    // HACK: This shouldn't be done here, but by the caller of InstallWindowsNt()
+    /* Enable the shutdown privilege and reboot the machine */
+    if (!pSetupEnablePrivilege(SE_SHUTDOWN_NAME, TRUE))
+        DPRINT1("pSetupEnablePrivilege(SE_SHUTDOWN_NAME) failed (Error %lu)\n", GetLastError());
+    ExitWindowsEx(EWX_REBOOT, 0);
     return 0;
 }
 
@@ -1514,7 +1555,8 @@ SaveDefaultUserHive(VOID)
         return dwError;
     }
 
-    pSetupEnablePrivilege(L"SeBackupPrivilege", TRUE);
+    if (!pSetupEnablePrivilege(SE_BACKUP_NAME, TRUE))
+        DPRINT1("pSetupEnablePrivilege(SE_BACKUP_NAME) failed (Error %lu)\n", GetLastError());
 
     /* Save the Default hive */
     dwError = RegSaveKeyExW(hUserKey,
@@ -1552,7 +1594,7 @@ SaveDefaultUserHive(VOID)
         DPRINT1("RegSaveKeyExW() failed (Error %lu)\n", dwError);
     }
 
-    pSetupEnablePrivilege(L"SeBackupPrivilege", FALSE);
+    pSetupEnablePrivilege(SE_BACKUP_NAME, FALSE);
 
     RegCloseKey(hUserKey);
 
@@ -1564,12 +1606,9 @@ static
 DWORD
 InstallReactOS(VOID)
 {
-    WCHAR szBuffer[MAX_PATH];
-    HANDLE token;
-    TOKEN_PRIVILEGES privs;
-    HKEY hKey;
-    HANDLE hHotkeyThread;
     BOOL ret;
+    DWORD dwHotkeyThreadId = 0;
+    WCHAR szBuffer[MAX_PATH];
 
     InitializeSetupActionLog(FALSE);
     LogItem(NULL, L"Installing ReactOS");
@@ -1580,19 +1619,20 @@ InstallReactOS(VOID)
     if (!InitializeProgramFilesDir())
     {
         FatalError("InitializeProgramFilesDir() failed");
-        return 0;
+        goto Quit;
     }
 
     if (!InitializeProfiles())
     {
         FatalError("InitializeProfiles() failed");
-        return 0;
+        goto Quit;
     }
 
     InitializeDefaultUserLocale();
 
     if (GetWindowsDirectoryW(szBuffer, ARRAYSIZE(szBuffer)))
     {
+        HKEY hKey;
         if (RegOpenKeyExW(HKEY_LOCAL_MACHINE,
                           L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion",
                           0,
@@ -1624,20 +1664,21 @@ InstallReactOS(VOID)
     if (SaveDefaultUserHive() != ERROR_SUCCESS)
     {
         FatalError("SaveDefaultUserHive() failed");
-        return 0;
+        goto Quit;
     }
 
     if (!CopySystemProfile(0))
     {
         FatalError("CopySystemProfile() failed");
-        return 0;
+        goto Quit;
     }
 
-    hHotkeyThread = CreateThread(NULL, 0, HotkeyThread, NULL, 0, NULL);
+    /* Start the hotkey thread */
+    CloseHandle(CreateThread(NULL, 0, HotkeyThread, NULL, 0, &dwHotkeyThreadId));
 
     PreprocessUnattend(TRUE);
     if (!CommonInstall())
-        return 0;
+        goto Quit;
 
     /* Install the TCP/IP protocol driver */
     ret = InstallNetworkComponent(L"MS_TCPIP");
@@ -1660,11 +1701,9 @@ InstallReactOS(VOID)
     SetupCloseInfFile(hSysSetupInf);
     SetSetupType(0);
 
-    if (hHotkeyThread)
-    {
-        PostThreadMessage(GetThreadId(hHotkeyThread), WM_QUIT, 0, 0);
-        CloseHandle(hHotkeyThread);
-    }
+    /* Stop the hotkey thread */
+    if (dwHotkeyThreadId)
+        PostThreadMessage(dwHotkeyThreadId, WM_QUIT, 0, 0);
 
     LogItem(NULL, L"Installing ReactOS done");
     TerminateSetupActionLog();
@@ -1678,32 +1717,11 @@ InstallReactOS(VOID)
     if (AdminInfo.Password != NULL)
         RtlFreeHeap(RtlGetProcessHeap(), 0, AdminInfo.Password);
 
-    /* Get shutdown privilege */
-    if (!OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES, &token))
-    {
-        FatalError("OpenProcessToken() failed!");
-        return 0;
-    }
-    if (!LookupPrivilegeValue(NULL,
-                              SE_SHUTDOWN_NAME,
-                              &privs.Privileges[0].Luid))
-    {
-        FatalError("LookupPrivilegeValue() failed!");
-        return 0;
-    }
-    privs.PrivilegeCount = 1;
-    privs.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
-    if (AdjustTokenPrivileges(token,
-                              FALSE,
-                              &privs,
-                              0,
-                              (PTOKEN_PRIVILEGES)NULL,
-                              NULL) == 0)
-    {
-        FatalError("AdjustTokenPrivileges() failed!");
-        return 0;
-    }
-
+Quit:
+    // HACK: This shouldn't be done here, but by the caller of InstallWindowsNt()
+    /* Enable the shutdown privilege and reboot the machine */
+    if (!pSetupEnablePrivilege(SE_SHUTDOWN_NAME, TRUE))
+        DPRINT1("pSetupEnablePrivilege(SE_SHUTDOWN_NAME) failed (Error %lu)\n", GetLastError());
     ExitWindowsEx(EWX_REBOOT, 0);
     return 0;
 }

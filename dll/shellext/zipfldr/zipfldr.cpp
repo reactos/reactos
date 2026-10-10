@@ -39,9 +39,6 @@ END_OBJECT_MAP()
 CZipFldrModule gModule;
 
 
-#include "minizip/ioapi.h"
-#include "minizip/iowin32.h"
-
 zlib_filefunc64_def g_FFunc;
 
 static void init_zlib()

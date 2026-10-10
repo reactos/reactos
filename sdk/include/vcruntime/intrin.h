@@ -1007,9 +1007,43 @@ int _isunorderedf(float, float);
 
 #endif /* _M_ARM */
 
-#ifdef _M_ARM64
+#if defined(_M_ARM64)
+void __break(int);
+unsigned char _BitScanForward64(unsigned long * _Index, unsigned __int64 _Mask);
+unsigned char _BitScanReverse64(unsigned long * _Index, unsigned __int64 _Mask);
+unsigned int _CountLeadingZeros(unsigned long);
+unsigned int _CountLeadingZeros64(unsigned __int64);
+unsigned int _CountOneBits(unsigned long);
+unsigned int _CountOneBits64(unsigned __int64);
 unsigned __int64 __getReg(int);
-#endif
+__int64 _InterlockedAdd64(_Interlocked_operand_ __int64 volatile * _Addend, __int64 _Value);
+long _InterlockedAdd(_Interlocked_operand_ long volatile * _Addend, long _Value);
+__int64 _InterlockedAnd64(_Interlocked_operand_ __int64 volatile * _Value, __int64 _Mask);
+unsigned char _InterlockedCompareExchange128(_Interlocked_operand_ __int64 volatile * _Destination, __int64 _ExchangeHigh, __int64 _ExchangeLow, __int64 * _ComparandResult);
+__int64 _InterlockedDecrement64(_Interlocked_operand_ __int64 volatile * _Addend);
+__int64 _InterlockedExchange64(_Interlocked_operand_ __int64 volatile * _Target, __int64 _Value);
+__int64 _InterlockedExchangeAdd64(_Interlocked_operand_ __int64 volatile * _Addend, __int64 _Value);
+__int64 _InterlockedIncrement64(_Interlocked_operand_ __int64 volatile * _Addend);
+__int64 _InterlockedOr64(_Interlocked_operand_ __int64 volatile * _Value, __int64 _Mask);
+__int64 _InterlockedXor64(_Interlocked_operand_ __int64 volatile * _Value, __int64 _Mask);
+void __yield(void);
+__int64 __mulh(__int64, __int64);
+unsigned __int64 __umulh(unsigned __int64, unsigned __int64);
+unsigned char __readx18byte(unsigned long);
+unsigned long __readx18dword(unsigned long);
+unsigned __int64 __readx18qword(unsigned long);
+unsigned short __readx18word(unsigned long);
+void __writex18byte(unsigned long, unsigned char);
+void __writex18dword(unsigned long, unsigned long);
+void __writex18qword(unsigned long, unsigned __int64);
+void __writex18word(unsigned long, unsigned short);
+unsigned char _bittest64(__int64 const *, __int64);
+unsigned char _bittestandcomplement64(__int64 *, __int64);
+unsigned char _bittestandreset64(__int64 *, __int64);
+unsigned char _bittestandset64(__int64 *, __int64);
+unsigned char _interlockedbittestandreset64(__int64 volatile *, __int64);
+unsigned char _interlockedbittestandset64(__int64 volatile *, __int64);
+#endif /* _M_ARM64 */
 
 #if defined(_M_CEE_PURE)
 

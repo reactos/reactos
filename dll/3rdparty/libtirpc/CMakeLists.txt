@@ -1,10 +1,9 @@
-spec2def(libtirpc.dll libtirpc/libtirpc.spec ADD_IMPORTLIB)
 
 remove_definitions(-D_WIN32_WINNT=0x502)
 add_definitions(-D_WIN32_WINNT=0x600)
 add_definitions(-DUNICODE -D_WIN32 -DPORTMAP -D_CRT_NONSTDC_NO_DEPRECATE=1)
 
-include_directories(${REACTOS_SOURCE_DIR}/dll/3rdparty/libtirpc/tirpc)
+spec2def(libtirpc.dll libtirpc/libtirpc.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     src/asprintf.c
@@ -92,6 +91,8 @@ add_library(libtirpc MODULE
 #    libtirpc/libtirpc.rc
     libtirpc/libtirpc_ros.rc
     ${CMAKE_CURRENT_BINARY_DIR}/libtirpc.def)
+add_pch(libtirpc precomp.h SOURCE)
+target_include_directories(libtirpc PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/tirpc)
 
 if(MSVC)
     # Disable warning C4273: 'strtok_s': inconsistent dll linkage
@@ -109,5 +110,4 @@ set_module_type(libtirpc win32dll)
 target_link_libraries(libtirpc oldnames)
 add_importlibs(libtirpc user32 advapi32 kernel32_vista ws2_32 msvcrt kernel32 ntdll)
 add_delay_importlibs(libtirpc secur32)
-add_pch(libtirpc precomp.h SOURCE)
 add_cd_file(TARGET libtirpc DESTINATION reactos/system32 FOR all)

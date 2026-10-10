@@ -8,7 +8,7 @@ extern "C" {
 
 #ifndef UACPI_BAREBONES_MODE
 
-/*
+/**
  * Install a Notify() handler to a device node.
  * A handler installed to the root node will receive all notifications, even if
  * a device already has a dedicated Notify handler.

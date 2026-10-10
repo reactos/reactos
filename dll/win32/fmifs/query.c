@@ -4,7 +4,7 @@
  * FILE:            reactos/dll/win32/fmifs/query.c
  * PURPOSE:         Query volume information
  *
- * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.org)
+ * PROGRAMMERS:     HervÃ© Poussineau (hpoussin@reactos.org)
  */
 
 #include "precomp.h"
@@ -134,6 +134,10 @@ QueryDeviceInformation(
                         &Iosb,
                         FILE_SHARE_READ | FILE_SHARE_WRITE,
                         FILE_SYNCHRONOUS_IO_NONALERT);
+    if (DeviceName.Buffer != DiskDevice)
+    {
+        RtlFreeHeap(RtlGetProcessHeap(), 0, DeviceName.Buffer);
+    }
     if (!NT_SUCCESS(Status))
         return FALSE;
 

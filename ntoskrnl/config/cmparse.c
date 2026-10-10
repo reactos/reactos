@@ -667,8 +667,27 @@ CmpDoOpen(IN PHHIVE Hive,
             /* Is this symlink found? */
             if ((*CachedKcb)->ExtFlags & CM_KCB_SYM_LINK_FOUND)
             {
-                /* Get the real KCB, is this deleted? */
+                /* Get the real KCB */
                 Kcb = (*CachedKcb)->ValueCache.RealKcb;
+
+                /* Before we drop all locks, we need to reference the real KCB */
+                if (!CmpReferenceKeyControlBlock(Kcb))
+                {
+                    DPRINT("Failed to reference the real KCB, attempt a reparse\n");
+                    return STATUS_REPARSE;
+                }
+
+                /*
+                 * Lock the real KCB of the symlink exclusively, we don't want anybody
+                 * to mess it up.
+                 */
+                CmpUnLockKcbArray(KcbsLocked);
+                KcbsLocked[0] = 1;
+                KcbsLocked[1] = GET_HASH_INDEX(Kcb->ConvKey);
+                CmpAcquireKcbLockExclusiveByIndex(KcbsLocked[1]);
+                IsLockShared = FALSE;
+
+                /* Was the real KCB deleted? */
                 if (Kcb->Delete)
                 {
                     /*
@@ -679,22 +698,13 @@ CmpDoOpen(IN PHHIVE Hive,
                      */
                     DPRINT1("The real KCB is deleted, attempt a reparse\n");
                     CmpUnLockKcbArray(KcbsLocked);
+                    CmpDereferenceKeyControlBlock(Kcb);
                     CmpAcquireKcbLockExclusiveByIndex(GET_HASH_INDEX((*CachedKcb)->ConvKey));
                     CmpCleanUpKcbValueCache(*CachedKcb);
                     KcbsLocked[0] = 1;
                     KcbsLocked[1] = GET_HASH_INDEX((*CachedKcb)->ConvKey);
                     return STATUS_REPARSE;
                 }
-
-                /*
-                 * The symlink has been found. As in the similar case above,
-                 * the KCB of the symlink exclusively, we don't want anybody
-                 * to mess it up.
-                 */
-                CmpUnLockKcbArray(KcbsLocked);
-                CmpAcquireKcbLockExclusiveByIndex(GET_HASH_INDEX((*CachedKcb)->ConvKey));
-                KcbsLocked[0] = 1;
-                KcbsLocked[1] = GET_HASH_INDEX((*CachedKcb)->ConvKey);
             }
             else
             {
@@ -707,13 +717,13 @@ CmpDoOpen(IN PHHIVE Hive,
         {
             /* This is not a symlink, just give the cached KCB already */
             Kcb = *CachedKcb;
-        }
 
-        /* The caller wants to open a cached KCB */
-        if (!CmpReferenceKeyControlBlock(Kcb))
-        {
-            /* Return failure code */
-            return STATUS_INSUFFICIENT_RESOURCES;
+            /* The caller wants to open a cached KCB */
+            if (!CmpReferenceKeyControlBlock(Kcb))
+            {
+                /* Return failure code */
+                return STATUS_INSUFFICIENT_RESOURCES;
+            }
         }
     }
     else
@@ -1610,23 +1620,34 @@ CmpLookInCache(
     if (KeyFoundInCache)
     {
         /*
-         * Before we change the KCB we must dereference the prior
-         * KCB that we no longer need it.
+         * Reference the new KCB before dropping the locks.
          */
-        CmpDereferenceKeyControlBlock(*Kcb);
-        *Kcb = CurrentKcb;
-
-        /* Reference the new KCB now */
-        if (!CmpReferenceKeyControlBlock(*Kcb))
+        if (!CmpReferenceKeyControlBlock(CurrentKcb))
         {
             /* This key is opened too many times, bail out */
-            DPRINT1("Could not reference the KCB, too many references (KCB 0x%p)\n", Kcb);
+            DPRINT1("Could not reference the KCB, too many references (KCB 0x%p)\n", CurrentKcb);
+
+            /*
+             * Make sure to unlock the KCBs and release the KCB reference we took
+             * at the start of the function, so that the caller sees a clean state.
+             */
+            CmpUnLockKcbArray(LockedKcbs);
+            CmpDereferenceKeyControlBlock(*Kcb);
             return STATUS_UNSUCCESSFUL;
         }
+
+        /*
+         * Dereference the prior KCB that we no longer need
+         * and switch to the newly referenced one.
+         */
+        CmpUnLockKcbArray(LockedKcbs);
+        CmpDereferenceKeyControlBlock(*Kcb);
+        *Kcb = CurrentKcb;
 
         /* Update hive and cell data from current KCB */
         *Hive = CurrentKcb->KeyHive;
         *Cell = CurrentKcb->KeyCell;
+        return STATUS_SUCCESS;
     }
 
     /* Unlock the KCBs */

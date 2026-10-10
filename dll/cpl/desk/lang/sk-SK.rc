@@ -116,7 +116,7 @@ BEGIN
     AUTOCHECKBOX "Po&užívať nasledovnú metódu vyhladenia okrajov zobrazeného písma:", IDC_EFFAPPEARANCE_SMOOTHING, 10, 42, 267, 19
     COMBOBOX IDC_EFFAPPEARANCE_SMOOTHINGTYPE, 20, 62, 95, 19, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | WS_VSCROLL | WS_TABSTOP
-    AUTOCHECKBOX "Používať &veľké ikony", IDC_EFFAPPEARANCE_LARGEICONS, 10, 80, 267, 19, WS_TABSTOP | WS_DISABLED
+    AUTOCHECKBOX "Používať &veľké ikony", IDC_EFFAPPEARANCE_LARGEICONS, 10, 80, 267, 19, WS_TABSTOP
     AUTOCHECKBOX "&Zobrazovať tiene pod ponukami", IDC_EFFAPPEARANCE_SETDROPSHADOW, 10, 95, 267, 19
     AUTOCHECKBOX "Zobrazovať &obsah okna počas presúvania", IDC_EFFAPPEARANCE_DRAGFULLWINDOWS, 10, 110, 267, 19
     AUTOCHECKBOX "&Skrývať podčiarknuté písmená (klávesové skratky) až do stlačenia klávesu Alt", IDC_EFFAPPEARANCE_KEYBOARDCUES, 10, 125, 267, 19

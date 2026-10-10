@@ -57,16 +57,58 @@ PciReadWriteConfigSpace(IN PPCI_FDO_EXTENSION DeviceExtension,
     PBUS_HANDLER BusHandler;
     PPCIBUSDATA BusData;
     PciReadWriteConfig HalFunction;
+    ULONG LengthProcessed;
 
     /* Only the root FDO can access configuration space */
     ASSERT(PCI_IS_ROOT_FDO(DeviceExtension->BusRootFdoExtension));
 
-    /* Get the ACPI-compliant PCI interface */
+    /* The legacy mechanism cannot reach extended configuration space */
+    if (((Offset + Length) > PCI_LEGACY_CONFIG_LENGTH) &&
+        (PciEcamReadWriteConfig(DeviceExtension->BaseBus,
+                                Slot,
+                                Buffer,
+                                Offset,
+                                Length,
+                                Read)))
+    {
+        return;
+    }
+
+    /* Get the ACPI-compliant PCI interface from the root */
     PciInterface = DeviceExtension->BusRootFdoExtension->PciBusInterface;
     if (PciInterface)
     {
-        /* Currently this driver only supports the legacy HAL interface */
-        UNIMPLEMENTED_DBGBREAK();
+        /* Use the PCI interface to access configuration space */
+        if (Read)
+        {
+            LengthProcessed = PciInterface->ReadConfig(PciInterface->Context,
+                                                       DeviceExtension->BaseBus,
+                                                       Slot.u.AsULONG,
+                                                       Buffer,
+                                                       Offset,
+                                                       Length);
+        }
+        else
+        {
+            LengthProcessed = PciInterface->WriteConfig(PciInterface->Context,
+                                                        DeviceExtension->BaseBus,
+                                                        Slot.u.AsULONG,
+                                                        Buffer,
+                                                        Offset,
+                                                        Length);
+        }
+
+        /* Verify the operation succeeded */
+        if (LengthProcessed != Length)
+        {
+            DPRINT1("PCI: Config space %s failed - Bus %x, Slot %x, Offset %x, Expected %x bytes, got %x\n",
+                    Read ? "read" : "write",
+                    DeviceExtension->BaseBus,
+                    Slot.u.AsULONG,
+                    Offset,
+                    Length,
+                    LengthProcessed);
+        }
     }
     else
     {
@@ -223,8 +265,10 @@ NTSTATUS
 NTAPI
 PciGetConfigHandlers(IN PPCI_FDO_EXTENSION FdoExtension)
 {
+    PPCI_BUS_INTERFACE_STANDARD PciInterface;
     PBUS_HANDLER BusHandler;
     NTSTATUS Status;
+
     ASSERT(FdoExtension->BusHandler == NULL);
 
     /* Check if this is the FDO for the root bus */
@@ -242,6 +286,21 @@ PciGetConfigHandlers(IN PPCI_FDO_EXTENSION FdoExtension)
         {
             /* ACPI detected, PCI Bus Driver will reconfigure bus numbers*/
             PciAssignBusNumbers = TRUE;
+
+            /* The driver below owns _OSC and reports what the firmware granted */
+            PciInterface = FdoExtension->PciBusInterface;
+            if ((PciInterface->Size >= RTL_SIZEOF_THROUGH_FIELD(PCI_BUS_INTERFACE_STANDARD,
+                                                                RootBusCapability)) &&
+                PciInterface->RootBusCapability)
+            {
+                PciInterface->RootBusCapability(PciInterface->Context,
+                                                &FdoExtension->RootBusHardwareCapability);
+
+                DPRINT1("PCI - Root bus interface %d, _OSC support 0x%08lx, granted 0x%08lx\n",
+                        FdoExtension->RootBusHardwareCapability.SecondaryInterface,
+                        FdoExtension->RootBusHardwareCapability.OscFeatureSupport.u.AsULONG,
+                        FdoExtension->RootBusHardwareCapability.OscControlGranted.u.AsULONG);
+            }
         }
     }
     else

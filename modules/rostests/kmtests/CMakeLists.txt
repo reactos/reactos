@@ -63,6 +63,7 @@ list(APPEND KMTEST_DRV_SOURCE
     ntos_ex/ExHardError.c
     ntos_ex/ExInterlocked.c
     ntos_ex/ExPools.c
+    ntos_ex/ExPushLock.c
     ntos_ex/ExResource.c
     ntos_ex/ExSequencedList.c
     ntos_ex/ExSingleList.c
@@ -104,8 +105,8 @@ list(APPEND KMTEST_DRV_SOURCE
     ntos_ob/ObReference.c
     ntos_ob/ObSecurity.c
     ntos_ob/ObSymbolicLink.c
-    ntos_ob/ObType.c
-    ntos_ob/ObTypes.c
+    ntos_ob/ObType.cpp
+    ntos_ob/ObTypes.cpp
     ntos_ob/ObWait.c
     ntos_ps/PsNotify.c
     ntos_ps/PsQuota.c
@@ -189,7 +190,6 @@ target_link_libraries(kmtest ${PSEH_LIB})
 add_importlibs(kmtest fltlib advapi32 ws2_32 msvcrt kernel32 ntdll)
 target_compile_definitions(kmtest PRIVATE KMT_USER_MODE NTDDI_VERSION=NTDDI_WS03SP1)
 #add_pch(kmtest include/kmt_test.h)
-set_target_properties(kmtest PROPERTIES OUTPUT_NAME "kmtest_")
 add_rostests_file(TARGET kmtest)
 
 #

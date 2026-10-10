@@ -19,7 +19,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
 #include "d3d9_private.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(d3d9);
@@ -89,7 +88,7 @@ HRESULT vdecl_convert_fvf(
            has_psize + has_diffuse + has_specular + num_textures + 1;
 
     /* convert the declaration */
-    if (!(elements = heap_alloc(size * sizeof(*elements))))
+    if (!(elements = malloc(size * sizeof(*elements))))
         return D3DERR_OUTOFVIDEOMEMORY;
 
     elements[size-1] = end_element;
@@ -120,7 +119,7 @@ HRESULT vdecl_convert_fvf(
                 case 3: elements[idx].Type = D3DDECLTYPE_FLOAT3; break;
                 case 4: elements[idx].Type = D3DDECLTYPE_FLOAT4; break;
                 default:
-                    ERR("Unexpected amount of blend values: %u\n", num_blends);
+                    ERR("Unexpected amount of blend values: %lu\n", num_blends);
             }
         }
         elements[idx].Usage = D3DDECLUSAGE_BLENDWEIGHT;
@@ -221,14 +220,12 @@ static ULONG WINAPI d3d9_vertex_declaration_AddRef(IDirect3DVertexDeclaration9 *
     struct d3d9_vertex_declaration *declaration = impl_from_IDirect3DVertexDeclaration9(iface);
     ULONG refcount = InterlockedIncrement(&declaration->refcount);
 
-    TRACE("%p increasing refcount to %u.\n", iface, refcount);
+    TRACE("%p increasing refcount to %lu.\n", iface, refcount);
 
     if (refcount == 1)
     {
         IDirect3DDevice9Ex_AddRef(declaration->parent_device);
-        wined3d_mutex_lock();
         wined3d_vertex_declaration_incref(declaration->wined3d_declaration);
-        wined3d_mutex_unlock();
     }
 
     return refcount;
@@ -239,14 +236,12 @@ static ULONG WINAPI d3d9_vertex_declaration_Release(IDirect3DVertexDeclaration9 
     struct d3d9_vertex_declaration *declaration = impl_from_IDirect3DVertexDeclaration9(iface);
     ULONG refcount = InterlockedDecrement(&declaration->refcount);
 
-    TRACE("%p decreasing refcount to %u.\n", iface, refcount);
+    TRACE("%p decreasing refcount to %lu.\n", iface, refcount);
 
     if (!refcount)
     {
         IDirect3DDevice9Ex *parent_device = declaration->parent_device;
-        wined3d_mutex_lock();
         wined3d_vertex_declaration_decref(declaration->wined3d_declaration);
-        wined3d_mutex_unlock();
 
         /* Release the device last, as it may cause the device to be destroyed. */
         IDirect3DDevice9Ex_Release(parent_device);
@@ -310,8 +305,8 @@ struct d3d9_vertex_declaration *unsafe_impl_from_IDirect3DVertexDeclaration9(IDi
 static void STDMETHODCALLTYPE d3d9_vertexdeclaration_wined3d_object_destroyed(void *parent)
 {
     struct d3d9_vertex_declaration *declaration = parent;
-    heap_free(declaration->elements);
-    heap_free(declaration);
+    free(declaration->elements);
+    free(declaration);
 }
 
 static const struct wined3d_parent_ops d3d9_vertexdeclaration_wined3d_parent_ops =
@@ -320,13 +315,15 @@ static const struct wined3d_parent_ops d3d9_vertexdeclaration_wined3d_parent_ops
 };
 
 static HRESULT convert_to_wined3d_declaration(const D3DVERTEXELEMENT9 *d3d9_elements,
-        struct wined3d_vertex_element **wined3d_elements, UINT *element_count)
+        struct wined3d_vertex_element **wined3d_elements, UINT *element_count, DWORD *stream_map)
 {
     const D3DVERTEXELEMENT9* element;
     UINT count = 1;
     UINT i;
 
     TRACE("d3d9_elements %p, wined3d_elements %p, element_count %p\n", d3d9_elements, wined3d_elements, element_count);
+
+    *stream_map = 0;
 
     element = d3d9_elements;
     while (element++->Stream != 0xff && count++ < 128);
@@ -336,7 +333,7 @@ static HRESULT convert_to_wined3d_declaration(const D3DVERTEXELEMENT9 *d3d9_elem
     /* Skip the END element */
     --count;
 
-    if (!(*wined3d_elements = heap_alloc(count * sizeof(**wined3d_elements))))
+    if (!(*wined3d_elements = malloc(count * sizeof(**wined3d_elements))))
     {
         FIXME("Memory allocation failed\n");
         return D3DERR_OUTOFVIDEOMEMORY;
@@ -347,7 +344,7 @@ static HRESULT convert_to_wined3d_declaration(const D3DVERTEXELEMENT9 *d3d9_elem
         if (d3d9_elements[i].Type >= ARRAY_SIZE(d3d_dtype_lookup))
         {
             WARN("Invalid element type %#x.\n", d3d9_elements[i].Type);
-            heap_free(*wined3d_elements);
+            free(*wined3d_elements);
             return E_FAIL;
         }
         (*wined3d_elements)[i].format = d3d_dtype_lookup[d3d9_elements[i].Type].format;
@@ -359,6 +356,7 @@ static HRESULT convert_to_wined3d_declaration(const D3DVERTEXELEMENT9 *d3d9_elem
         (*wined3d_elements)[i].method = d3d9_elements[i].Method;
         (*wined3d_elements)[i].usage = d3d9_elements[i].Usage;
         (*wined3d_elements)[i].usage_idx = d3d9_elements[i].UsageIndex;
+        *stream_map |= 1u << d3d9_elements[i].Stream;
     }
 
     *element_count = count;
@@ -374,10 +372,11 @@ static HRESULT vertexdeclaration_init(struct d3d9_vertex_declaration *declaratio
     UINT element_count;
     HRESULT hr;
 
-    hr = convert_to_wined3d_declaration(elements, &wined3d_elements, &wined3d_element_count);
+    hr = convert_to_wined3d_declaration(elements, &wined3d_elements, &wined3d_element_count,
+            &declaration->stream_map);
     if (FAILED(hr))
     {
-        WARN("Failed to create wined3d vertex declaration elements, hr %#x.\n", hr);
+        WARN("Failed to create wined3d vertex declaration elements, hr %#lx.\n", hr);
         return hr;
     }
 
@@ -385,9 +384,9 @@ static HRESULT vertexdeclaration_init(struct d3d9_vertex_declaration *declaratio
     declaration->refcount = 1;
 
     element_count = wined3d_element_count + 1;
-    if (!(declaration->elements = heap_alloc(element_count * sizeof(*declaration->elements))))
+    if (!(declaration->elements = malloc(element_count * sizeof(*declaration->elements))))
     {
-        heap_free(wined3d_elements);
+        free(wined3d_elements);
         ERR("Failed to allocate vertex declaration elements memory.\n");
         return D3DERR_OUTOFVIDEOMEMORY;
     }
@@ -398,11 +397,13 @@ static HRESULT vertexdeclaration_init(struct d3d9_vertex_declaration *declaratio
     hr = wined3d_vertex_declaration_create(device->wined3d_device, wined3d_elements, wined3d_element_count,
             declaration, &d3d9_vertexdeclaration_wined3d_parent_ops, &declaration->wined3d_declaration);
     wined3d_mutex_unlock();
-    heap_free(wined3d_elements);
+    free(wined3d_elements);
     if (FAILED(hr))
     {
-        heap_free(declaration->elements);
-        WARN("Failed to create wined3d vertex declaration, hr %#x.\n", hr);
+        free(declaration->elements);
+        WARN("Failed to create wined3d vertex declaration, hr %#lx.\n", hr);
+        if (hr == E_INVALIDARG)
+            hr = E_FAIL;
         return hr;
     }
 
@@ -418,14 +419,14 @@ HRESULT d3d9_vertex_declaration_create(struct d3d9_device *device,
     struct d3d9_vertex_declaration *object;
     HRESULT hr;
 
-    if (!(object = heap_alloc_zero(sizeof(*object))))
+    if (!(object = calloc(1, sizeof(*object))))
         return E_OUTOFMEMORY;
 
     hr = vertexdeclaration_init(object, device, elements);
     if (FAILED(hr))
     {
-        WARN("Failed to initialize vertex declaration, hr %#x.\n", hr);
-        heap_free(object);
+        WARN("Failed to initialize vertex declaration, hr %#lx.\n", hr);
+        free(object);
         return hr;
     }
 

@@ -41,13 +41,7 @@ typedef HRESULT (WINAPI *DLLREGISTER) (void);
 #define PREFIX_LEN          5
 
 /* registry path of the Installed Components key for per-user stubs */
-static const WCHAR setup_key[] = {
-    'S','O','F','T','W','A','R','E','\\',
-    'M','i','c','r','o','s','o','f','t','\\',
-    'A','c','t','i','v','e',' ','S','e','t','u','p','\\',
-    'I','n','s','t','a','l','l','e','d',' ',
-    'C','o','m','p','o','n','e','n','t','s',0
-};
+static const WCHAR setup_key[] = L"SOFTWARE\\Microsoft\\Active Setup\\Installed Components";
 
 /* Strip single quotes from a token - note size includes NULL */
 static void strip_quotes(WCHAR *buffer, DWORD *size)
@@ -73,9 +67,6 @@ static void get_dest_dir(HINF hInf, PCWSTR pszSection, PWSTR pszBuffer, DWORD dw
     HKEY root, subkey = 0;
     DWORD size;
 
-    static const WCHAR hklm[] = {'H','K','L','M',0};
-    static const WCHAR hkcu[] = {'H','K','C','U',0};
-
     /* load the destination parameters */
     SetupFindFirstLineW(hInf, pszSection, NULL, &context);
     SetupGetStringFieldW(&context, 1, prefix, PREFIX_LEN + 2, &size);
@@ -85,9 +76,9 @@ static void get_dest_dir(HINF hInf, PCWSTR pszSection, PWSTR pszBuffer, DWORD dw
     SetupGetStringFieldW(&context, 3, value, MAX_PATH + 2, &size);
     strip_quotes(value, &size);
 
-    if (!lstrcmpW(prefix, hklm))
+    if (!lstrcmpW(prefix, L"HKLM"))
         root = HKEY_LOCAL_MACHINE;
-    else if (!lstrcmpW(prefix, hkcu))
+    else if (!lstrcmpW(prefix, L"HKCU"))
         root = HKEY_CURRENT_USER;
     else
         root = NULL;
@@ -115,13 +106,7 @@ void set_ldids(HINF hInf, LPCWSTR pszInstallSection, LPCWSTR pszWorkingDir)
     DWORD size;
     int ldid;
 
-    static const WCHAR source_dir[] = {'S','o','u','r','c','e','D','i','r',0};
-
-    static const WCHAR custDestW[] = {
-        'C','u','s','t','o','m','D','e','s','t','i','n','a','t','i','o','n',0
-    };
-
-    if (!SetupGetLineTextW(NULL, hInf, pszInstallSection, custDestW,
+    if (!SetupGetLineTextW(NULL, hInf, pszInstallSection, L"CustomDestination",
                            field, MAX_FIELD_LENGTH, &size))
         return;
 
@@ -142,7 +127,7 @@ void set_ldids(HINF hInf, LPCWSTR pszInstallSection, LPCWSTR pszWorkingDir)
         if (!(value = wcschr(line, '=')))
         {
             SetupGetStringFieldW(&context, 0, NULL, 0, &size);
-            key = HeapAlloc(GetProcessHeap(), 0, size * sizeof(WCHAR));
+            key = malloc(size * sizeof(WCHAR));
             key_copy = key;
             SetupGetStringFieldW(&context, 0, key, size, &size);
             value = line;
@@ -165,7 +150,7 @@ void set_ldids(HINF hInf, LPCWSTR pszInstallSection, LPCWSTR pszWorkingDir)
         }
 
         /* set dest to pszWorkingDir if key is SourceDir */
-        if (pszWorkingDir && !lstrcmpiW(value, source_dir))
+        if (pszWorkingDir && !lstrcmpiW(value, L"SourceDir"))
             lstrcpynW(dest, pszWorkingDir, MAX_PATH);
         else
             get_dest_dir(hInf, value, dest, MAX_PATH);
@@ -180,7 +165,7 @@ void set_ldids(HINF hInf, LPCWSTR pszInstallSection, LPCWSTR pszWorkingDir)
             ldid = wcstol(ptr, NULL, 10);
             SetupSetDirectoryIdW(hInf, ldid, dest);
         }
-        HeapFree(GetProcessHeap(), 0, key_copy);
+        free(key_copy);
     } while (SetupFindNextLine(&context, &context));
 }
 
@@ -228,7 +213,7 @@ BOOL WINAPI IsNTAdmin(DWORD reserved, LPDWORD pReserved)
     HANDLE hToken;
     PSID pSid;
 
-    TRACE("(%d, %p)\n", reserved, pReserved);
+    TRACE("(%ld, %p)\n", reserved, pReserved);
 
     if (!OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &hToken))
         return FALSE;
@@ -242,7 +227,7 @@ BOOL WINAPI IsNTAdmin(DWORD reserved, LPDWORD pReserved)
         }
     }
 
-    pTokenGroups = HeapAlloc(GetProcessHeap(), 0, dwSize);
+    pTokenGroups = malloc(dwSize);
     if (!pTokenGroups)
     {
         CloseHandle(hToken);
@@ -251,7 +236,7 @@ BOOL WINAPI IsNTAdmin(DWORD reserved, LPDWORD pReserved)
 
     if (!GetTokenInformation(hToken, TokenGroups, pTokenGroups, dwSize, &dwSize))
     {
-        HeapFree(GetProcessHeap(), 0, pTokenGroups);
+        free(pTokenGroups);
         CloseHandle(hToken);
         return FALSE;
     }
@@ -261,7 +246,7 @@ BOOL WINAPI IsNTAdmin(DWORD reserved, LPDWORD pReserved)
     if (!AllocateAndInitializeSid(&SidAuthority, 2, SECURITY_BUILTIN_DOMAIN_RID,
                                   DOMAIN_ALIAS_RID_ADMINS, 0, 0, 0, 0, 0, 0, &pSid))
     {
-        HeapFree(GetProcessHeap(), 0, pTokenGroups);
+        free(pTokenGroups);
         return FALSE;
     }
 
@@ -274,7 +259,7 @@ BOOL WINAPI IsNTAdmin(DWORD reserved, LPDWORD pReserved)
         }
     }
 
-    HeapFree(GetProcessHeap(), 0, pTokenGroups);
+    free(pTokenGroups);
     FreeSid(pSid);
 
     return bSidFound;
@@ -310,7 +295,7 @@ DWORD WINAPI NeedRebootInit(VOID)
  */
 BOOL WINAPI NeedReboot(DWORD dwRebootCheck)
 {
-    FIXME("(%d): stub\n", dwRebootCheck);
+    FIXME("(%ld): stub\n", dwRebootCheck);
     return FALSE;
 }
 
@@ -325,7 +310,7 @@ HRESULT WINAPI OpenINFEngineA(LPCSTR pszInfFilename, LPCSTR pszInstallSection,
     UNICODE_STRING filenameW, installW;
     HRESULT res;
 
-    TRACE("(%s, %s, %d, %p, %p)\n", debugstr_a(pszInfFilename),
+    TRACE("(%s, %s, %ld, %p, %p)\n", debugstr_a(pszInfFilename),
           debugstr_a(pszInstallSection), dwFlags, phInf, pvReserved);
 
     if (!pszInfFilename || !phInf)
@@ -363,7 +348,7 @@ HRESULT WINAPI OpenINFEngineA(LPCSTR pszInfFilename, LPCSTR pszInstallSection,
 HRESULT WINAPI OpenINFEngineW(LPCWSTR pszInfFilename, LPCWSTR pszInstallSection,
                               DWORD dwFlags, HINF *phInf, PVOID pvReserved)
 {
-    TRACE("(%s, %s, %d, %p, %p)\n", debugstr_w(pszInfFilename),
+    TRACE("(%s, %s, %ld, %p, %p)\n", debugstr_w(pszInfFilename),
           debugstr_w(pszInstallSection), dwFlags, phInf, pvReserved);
 
     if (!pszInfFilename || !phInf)
@@ -389,7 +374,7 @@ HRESULT WINAPI RebootCheckOnInstallA(HWND hWnd, LPCSTR pszINF,
     UNICODE_STRING infW, secW;
     HRESULT res;
 
-    TRACE("(%p, %s, %s, %d)\n", hWnd, debugstr_a(pszINF),
+    TRACE("(%p, %s, %s, %ld)\n", hWnd, debugstr_a(pszINF),
           debugstr_a(pszSec), dwReserved);
 
     if (!pszINF || !pszSec)
@@ -432,7 +417,7 @@ HRESULT WINAPI RebootCheckOnInstallA(HWND hWnd, LPCSTR pszINF,
 HRESULT WINAPI RebootCheckOnInstallW(HWND hWnd, LPCWSTR pszINF,
                                      LPCWSTR pszSec, DWORD dwReserved)
 {
-    FIXME("(%p, %s, %s, %d): stub\n", hWnd, debugstr_w(pszINF),
+    FIXME("(%p, %s, %s, %ld): stub\n", hWnd, debugstr_w(pszINF),
           debugstr_w(pszSec), dwReserved);
 
     return E_FAIL;
@@ -484,16 +469,13 @@ HRESULT WINAPI RegisterOCX(HWND hWnd, HINSTANCE hInst, LPCSTR cmdline, INT show)
     UNICODE_STRING cmdlineW;
     HRESULT hr = E_FAIL;
     HMODULE hm = NULL;
-    DWORD size;
 
     TRACE("(%s)\n", debugstr_a(cmdline));
 
     RtlCreateUnicodeStringFromAsciiz(&cmdlineW, cmdline);
 
-    size = (lstrlenW(cmdlineW.Buffer) + 1) * sizeof(WCHAR);
-    cmdline_copy = HeapAlloc(GetProcessHeap(), 0, size);
+    cmdline_copy = wcsdup(cmdlineW.Buffer);
     cmdline_ptr = cmdline_copy;
-    lstrcpyW(cmdline_copy, cmdlineW.Buffer);
 
     ocx_filename = get_parameter(&cmdline_ptr, ',', TRUE);
     if (!ocx_filename || !*ocx_filename)
@@ -510,7 +492,7 @@ HRESULT WINAPI RegisterOCX(HWND hWnd, HINSTANCE hInst, LPCSTR cmdline, INT show)
 
 done:
     FreeLibrary(hm);
-    HeapFree(GetProcessHeap(), 0, cmdline_copy);
+    free(cmdline_copy);
     RtlFreeUnicodeString(&cmdlineW);
 
     return hr;
@@ -559,12 +541,6 @@ HRESULT WINAPI SetPerUserSecValuesW(PERUSERSECTIONW* pPerUser)
 {
     HKEY setup, guid;
 
-    static const WCHAR stub_path[] = {'S','t','u','b','P','a','t','h',0};
-    static const WCHAR version[] = {'V','e','r','s','i','o','n',0};
-    static const WCHAR locale[] = {'L','o','c','a','l','e',0};
-    static const WCHAR compid[] = {'C','o','m','p','o','n','e','n','t','I','D',0};
-    static const WCHAR isinstalled[] = {'I','s','I','n','s','t','a','l','l','e','d',0};
-
     TRACE("(%p)\n", pPerUser);
 
     if (!pPerUser || !*pPerUser->szGUID)
@@ -585,25 +561,25 @@ HRESULT WINAPI SetPerUserSecValuesW(PERUSERSECTIONW* pPerUser)
 
     if (*pPerUser->szStub)
     {
-        RegSetValueExW(guid, stub_path, 0, REG_SZ, (LPBYTE)pPerUser->szStub,
+        RegSetValueExW(guid, L"StubPath", 0, REG_SZ, (BYTE *)pPerUser->szStub,
                        (lstrlenW(pPerUser->szStub) + 1) * sizeof(WCHAR));
     }
 
     if (*pPerUser->szVersion)
     {
-        RegSetValueExW(guid, version, 0, REG_SZ, (LPBYTE)pPerUser->szVersion,
+        RegSetValueExW(guid, L"Version", 0, REG_SZ, (BYTE *)pPerUser->szVersion,
                        (lstrlenW(pPerUser->szVersion) + 1) * sizeof(WCHAR));
     }
 
     if (*pPerUser->szLocale)
     {
-        RegSetValueExW(guid, locale, 0, REG_SZ, (LPBYTE)pPerUser->szLocale,
+        RegSetValueExW(guid, L"Locale", 0, REG_SZ, (BYTE *)pPerUser->szLocale,
                        (lstrlenW(pPerUser->szLocale) + 1) * sizeof(WCHAR));
     }
 
     if (*pPerUser->szCompID)
     {
-        RegSetValueExW(guid, compid, 0, REG_SZ, (LPBYTE)pPerUser->szCompID,
+        RegSetValueExW(guid, L"ComponentID", 0, REG_SZ, (BYTE *)pPerUser->szCompID,
                        (lstrlenW(pPerUser->szCompID) + 1) * sizeof(WCHAR));
     }
 
@@ -613,7 +589,7 @@ HRESULT WINAPI SetPerUserSecValuesW(PERUSERSECTIONW* pPerUser)
                        (lstrlenW(pPerUser->szDispName) + 1) * sizeof(WCHAR));
     }
 
-    RegSetValueExW(guid, isinstalled, 0, REG_DWORD,
+    RegSetValueExW(guid, L"IsInstalled", 0, REG_DWORD,
                    (LPBYTE)&pPerUser->dwIsInstalled, sizeof(DWORD));
 
     RegCloseKey(guid);
@@ -637,7 +613,7 @@ HRESULT WINAPI TranslateInfStringA(LPCSTR pszInfFilename, LPCSTR pszInstallSecti
     HRESULT res;
     DWORD len = 0;
 
-    TRACE("(%s, %s, %s, %s, %p, %d, %p, %p)\n",
+    TRACE("(%s, %s, %s, %s, %p, %ld, %p, %p)\n",
           debugstr_a(pszInfFilename), debugstr_a(pszInstallSection),
           debugstr_a(pszTranslateSection), debugstr_a(pszTranslateKey),
           pszBuffer, dwBufferSize,pdwRequiredSize, pvReserved);
@@ -657,7 +633,7 @@ HRESULT WINAPI TranslateInfStringA(LPCSTR pszInfFilename, LPCSTR pszInstallSecti
 
     if (res == S_OK)
     {
-        bufferW = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
+        bufferW = malloc(len * sizeof(WCHAR));
 
         res = TranslateInfStringW(filenameW.Buffer, installW.Buffer,
                                   translateW.Buffer, keyW.Buffer, bufferW,
@@ -675,8 +651,8 @@ HRESULT WINAPI TranslateInfStringA(LPCSTR pszInfFilename, LPCSTR pszInstallSecti
             else
                 res = E_NOT_SUFFICIENT_BUFFER;
         }
-        
-        HeapFree(GetProcessHeap(), 0, bufferW);
+
+        free(bufferW);
     }
 
     RtlFreeUnicodeString(&filenameW);
@@ -714,7 +690,7 @@ HRESULT WINAPI TranslateInfStringW(LPCWSTR pszInfFilename, LPCWSTR pszInstallSec
     HINF hInf;
     HRESULT hret = S_OK;
 
-    TRACE("(%s, %s, %s, %s, %p, %d, %p, %p)\n",
+    TRACE("(%s, %s, %s, %s, %p, %ld, %p, %p)\n",
           debugstr_w(pszInfFilename), debugstr_w(pszInstallSection),
           debugstr_w(pszTranslateSection), debugstr_w(pszTranslateKey),
           pszBuffer, dwBufferSize,pdwRequiredSize, pvReserved);
@@ -757,7 +733,7 @@ HRESULT WINAPI TranslateInfStringExA(HINF hInf, LPCSTR pszInfFilename,
     HRESULT res;
     DWORD len = 0;
 
-    TRACE("(%p, %s, %s, %s, %p, %d, %p, %p)\n", hInf, debugstr_a(pszInfFilename),
+    TRACE("(%p, %s, %s, %s, %p, %ld, %p, %p)\n", hInf, debugstr_a(pszInfFilename),
           debugstr_a(pszTranslateSection), debugstr_a(pszTranslateKey),
           pszBuffer, dwBufferSize, pdwRequiredSize, pvReserved);
 
@@ -774,7 +750,7 @@ HRESULT WINAPI TranslateInfStringExA(HINF hInf, LPCSTR pszInfFilename,
 
     if (res == S_OK)
     {
-        bufferW = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
+        bufferW = malloc(len * sizeof(WCHAR));
 
         res = TranslateInfStringExW(hInf, filenameW.Buffer, sectionW.Buffer,
                                 keyW.Buffer, bufferW, len, &len, NULL);
@@ -792,8 +768,8 @@ HRESULT WINAPI TranslateInfStringExA(HINF hInf, LPCSTR pszInfFilename,
             else
                 res = E_NOT_SUFFICIENT_BUFFER;
         }
-        
-        HeapFree(GetProcessHeap(), 0, bufferW);
+
+        free(bufferW);
     }
 
     RtlFreeUnicodeString(&filenameW);
@@ -837,7 +813,7 @@ HRESULT WINAPI TranslateInfStringExW(HINF hInf, LPCWSTR pszInfFilename,
                                      LPWSTR pszBuffer, DWORD dwBufferSize,
                                      PDWORD pdwRequiredSize, PVOID pvReserved)
 {
-    TRACE("(%p, %s, %s, %s, %p, %d, %p, %p)\n", hInf, debugstr_w(pszInfFilename),
+    TRACE("(%p, %s, %s, %s, %p, %ld, %p, %p)\n", hInf, debugstr_w(pszInfFilename),
           debugstr_w(pszTranslateSection), debugstr_w(pszTranslateKey),
           pszBuffer, dwBufferSize, pdwRequiredSize, pvReserved);
 
@@ -911,10 +887,6 @@ HRESULT WINAPI UserInstStubWrapperW(HWND hWnd, HINSTANCE hInstance,
     HRESULT hr = S_OK;
     BOOL res;
 
-    static const WCHAR real_stub_path[] = {
-        'R','e','a','l','S','t','u','b','P','a','t','h',0
-    };
-
     TRACE("(%p, %p, %s, %i)\n", hWnd, hInstance, debugstr_w(pszParms), nShow);
 
     if (!pszParms || !*pszParms)
@@ -931,7 +903,7 @@ HRESULT WINAPI UserInstStubWrapperW(HWND hWnd, HINSTANCE hInstance,
         return E_FAIL;
     }
 
-    res = RegQueryValueExW(guid, real_stub_path, NULL, NULL, (LPBYTE)stub, &size);
+    res = RegQueryValueExW(guid, L"RealStubPath", NULL, NULL, (BYTE *)stub, &size);
     if (res || !*stub)
         goto done;
 

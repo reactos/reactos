@@ -22,8 +22,7 @@ add_library(usp10 MODULE
     ${CMAKE_CURRENT_BINARY_DIR}/usp10.def)
 
 set_module_type(usp10 win32dll)
-target_compile_definitions(usp10 PRIVATE _CRT_NON_CONFORMING_SWPRINTFS)
-target_link_libraries(usp10 wine)
+target_link_libraries(usp10 wine oldnames)
 add_importlibs(usp10 advapi32 user32 gdi32 msvcrt kernel32 ntdll)
 add_pch(usp10 precomp.h SOURCE)
 add_cd_file(TARGET usp10 DESTINATION reactos/system32 FOR all)

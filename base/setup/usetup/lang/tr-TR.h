@@ -1248,7 +1248,7 @@ static MUI_ENTRY trTRFormatPartitionEntries[] =
     {
         0,
         0,
-        "ENTER = Devam Et   F3 = \200\215k",
+        "ENTER = Devam Et   ESC = \230ptal   F3 = \200\215k",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
         TEXT_ID_STATIC
     },

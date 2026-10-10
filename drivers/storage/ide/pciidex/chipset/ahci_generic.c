@@ -644,7 +644,7 @@ AhciGetControllerProperties(
     if (!Controller->IoBase)
         return STATUS_NO_MATCH; // Try IDE/RAID
 
-    Controller->Flags = CTRL_FLAG_IS_AHCI | CTRL_FLAG_SATA_HBA_ACPI;
+    Controller->Flags |= CTRL_FLAG_IS_AHCI | CTRL_FLAG_SATA_HBA_ACPI;
     Controller->Start = AtaAhciHbaStart;
     Controller->Stop = AtaAhciHbaStop;
     Controller->FreeResources = AtaAhciHbaFreeResouces;

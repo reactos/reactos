@@ -1,6 +1,8 @@
 
 #include "precomp.h"
 
+#include <ndk/umtypes.h>
+
 START_TEST(LookupIconIdFromDirectoryEx)
 {
     HRSRC hResource;
@@ -124,4 +126,12 @@ START_TEST(LookupIconIdFromDirectoryEx)
     ok(ChangeDisplaySettingsExW(NULL, &dm, NULL, 0, NULL) == DISP_CHANGE_SUCCESSFUL, "\n");
 
     FreeResource(hMem);
+
+    /* Test invalid directory */
+    StartSeh()
+        SetLastError(0xdeadbeef);
+        wResId = LookupIconIdFromDirectoryEx((PBYTE)(LONG_PTR)0xdeadbeef, TRUE, 0, 0, LR_DEFAULTSIZE);
+        ok_eq_int(wResId, 0);
+        ok_eq_ulong(GetLastError(), 0xdeadbeef);
+    EndSeh(STATUS_SUCCESS);
 }

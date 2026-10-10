@@ -1,7 +1,4 @@
 
-include_directories(
-    ${REACTOS_SOURCE_DIR}/sdk/lib/drivers/sptilib)
-
 list(APPEND SOURCE
     atapi.c
     atapi.h
@@ -23,14 +20,14 @@ list(APPEND SOURCE
     wmi.c)
 
 add_library(atapi MODULE ${SOURCE} atapi.rc)
+add_pch(atapi atapi.h SOURCE)
 
-if (STACK_PROTECTOR)
+if(STACK_PROTECTOR)
     target_sources(atapi PRIVATE $<TARGET_OBJECTS:gcc_ssp_nt>)
 endif()
 
 set_module_type(atapi kernelmodedriver)
 target_link_libraries(atapi memcmp sptilib ${PSEH_LIB})
-add_pch(atapi atapi.h SOURCE)
 add_importlibs(atapi ntoskrnl hal wmilib)
 add_cd_file(TARGET atapi DESTINATION reactos/system32/drivers NO_CAB FOR all)
 add_registry_inf(atapi_reg.inf)

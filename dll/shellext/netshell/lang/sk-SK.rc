@@ -23,7 +23,7 @@ END
 
 IDD_STATUS DIALOGEX 0, 0, 200, 180
 STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION | DS_MODALFRAME | WS_SYSMENU
-CAPTION "Všeobecné"
+CAPTION TRAYICONWINDOWCAPTION
 FONT 8, "MS Shell Dlg"
 BEGIN
 END
@@ -75,7 +75,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Po&drobnosti sieťového pripojenia:", -1, 10, 4, 170, 12
     CONTROL "", IDC_DETAILS, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 10, 15, 170, 130
-    PUSHBUTTON "&Zavrieť", IDC_CLOSE, 120, 155, 60, 14
+    DEFPUSHBUTTON "&Zavrieť", IDCANCEL, 120, 155, 60, 14
 END
 
 IDD_NETWORKINITPAGE DIALOGEX 0, 0, 317, 143
@@ -125,7 +125,7 @@ BEGIN
 (You can obtain this information from your network administrator.)", IDC_STATIC, 33, 2, 263, 50
     AUTORADIOBUTTON "No, this computer will be part of a workgroup instead.", IDC_SELECT_WORKGROUP, 33, 32, 253, 20, WS_TABSTOP | WS_GROUP
     AUTORADIOBUTTON "Yes, this computer will be part of a domain.", IDC_SELECT_DOMAIN, 33, 47, 253, 20, WS_TABSTOP
-    LTEXT "Workgroup or Domain Name:", IDC_STATIC, 33, 72, 126, 14
+    LTEXT "Workgroup or Domain Name:", IDC_STATIC, 33, 72, 126, 10
     EDITTEXT IDC_DOMAIN_NAME, 33, 82, 126, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL
     LTEXT "NOTE: If this computer isn't going to be part of a network, you don't have sufficient rights to join a domain, or you don't know what to enter, then just choose workgroup for now. These options can be changed at a later time.", IDC_STATIC, 33, 107, 263, 50
 END

@@ -13,7 +13,7 @@ add_library(oledlg MODULE
     ${CMAKE_CURRENT_BINARY_DIR}/oledlg.def)
 
 set_module_type(oledlg win32dll)
-target_link_libraries(oledlg wine)
+target_link_libraries(oledlg wine oldnames)
 add_importlibs(oledlg ole32 comdlg32 user32 advapi32 msvcrt kernel32 ntdll)
 add_pch(oledlg precomp.h SOURCE)
 add_cd_file(TARGET oledlg DESTINATION reactos/system32 FOR all)

@@ -11,6 +11,30 @@ ToolsModel toolsModel;
 
 /* FUNCTIONS ********************************************************/
 
+ToolsModel::VirtualBrush::~VirtualBrush()
+{
+    if (m_hBrush)
+        ::DeleteObject(m_hBrush);
+}
+
+HBRUSH ToolsModel::VirtualBrush::GetBrush(PAL_TYPE palette, COLORREF rgbColor)
+{
+    if (m_hBrush &&
+        m_palette == palette &&
+        m_rgbColor == rgbColor)
+    {
+        return m_hBrush;
+    }
+
+    if (m_hBrush)
+        ::DeleteObject(m_hBrush);
+
+    m_hBrush = ToolsModel::CreateBrush(palette, rgbColor);
+    m_palette = palette;
+    m_rgbColor = rgbColor;
+    return m_hBrush;
+}
+
 ToolsModel::ToolsModel()
 {
     m_lineWidth = m_penWidth = 1;
@@ -320,4 +344,22 @@ void ToolsModel::selectAll()
     OnButtonDown(TRUE, 0, 0, FALSE);
     OnMouseMove(TRUE, imageModel.GetWidth(), imageModel.GetHeight());
     OnButtonUp(TRUE, imageModel.GetWidth(), imageModel.GetHeight());
+}
+
+HBRUSH ToolsModel::CreateBrush(PAL_TYPE palette, COLORREF color)
+{
+    if (palette == PAL_MONOCHROME)
+        return CreateDitherBrush(color, RGB(0, 0, 0), RGB(255, 255, 255));
+    else
+        return ::CreateSolidBrush(color);
+}
+
+HBRUSH ToolsModel::GetFgBrush()
+{
+    return m_fgBrush.GetBrush(paletteModel.SelectedPalette(), paletteModel.GetFgColor());
+}
+
+HBRUSH ToolsModel::GetBgBrush()
+{
+    return m_bgBrush.GetBrush(paletteModel.SelectedPalette(), paletteModel.GetBgColor());
 }

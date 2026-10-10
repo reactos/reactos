@@ -25,8 +25,13 @@
 
 struct InternalIconData : NOTIFYICONDATA
 {
-    // Must keep a separate copy since the original is unioned with uTimeout.
-    UINT uVersionCopy;
+    void SaveVersion(UINT Version) // uVersion is unioned with uTimeout but cbSize is free so we store it there
+    {
+        cbSize = HIWORD(cbSize) | (HIWORD(Version) ? 0xffff : Version);
+    }
+    UINT GetVersion() const { return LOWORD(cbSize); }
+    BOOL IsRemoved() const { return HIWORD(cbSize); }
+    void MarkAsRemoved() { cbSize |= 0x80000000; }
 };
 
 struct IconWatcherData
@@ -121,7 +126,6 @@ private:
     CNotifyToolbar * m_toolbar;
 
     InternalIconData * m_current;
-    bool m_currentClosed;
 
     int m_timer;
 
@@ -157,6 +161,7 @@ public:
     virtual ~CNotifyToolbar();
 
     int GetVisibleButtonCount();
+    int GetFirstVisibleIndex();
     int FindItem(IN HWND hWnd, IN UINT uID, InternalIconData ** pdata);
     int FindExistingSharedIcon(HICON handle);
     BOOL AddButton(IN CONST NOTIFYICONDATA *iconData);
@@ -202,6 +207,9 @@ class CSysPagerWnd :
 public:
     CSysPagerWnd();
     virtual ~CSysPagerWnd();
+
+    HWND GetTrayNotifyWindow() const { return GetParent(); }
+    HWND GetTaskbarWindow() const { return ::GetParent(GetTrayNotifyWindow()); }
 
     LRESULT DrawBackground(HDC hdc);
     LRESULT OnEraseBackground(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
@@ -391,13 +399,10 @@ bool CIconWatcher::RemoveIconFromWatcher(_In_ CONST NOTIFYICONDATA *iconData)
 IconWatcherData* CIconWatcher::GetListEntry(_In_opt_ CONST NOTIFYICONDATA *iconData, _In_opt_ HANDLE hProcess, _In_ bool Remove)
 {
     IconWatcherData *Entry = NULL;
-    POSITION NextPosition = m_WatcherList.GetHeadPosition();
-    POSITION Position;
-    do
+    for (POSITION NextPosition = m_WatcherList.GetHeadPosition(); NextPosition;)
     {
-        Position = NextPosition;
-
-        Entry = m_WatcherList.GetNext(NextPosition);
+        POSITION Position = NextPosition;
+        Entry = m_WatcherList.GetNext(NextPosition); // Note: This will advance NextPosition
         if (Entry)
         {
             if ((iconData && ((Entry->IconData.hWnd == iconData->hWnd) && (Entry->IconData.uID == iconData->uID))) ||
@@ -405,14 +410,11 @@ IconWatcherData* CIconWatcher::GetListEntry(_In_opt_ CONST NOTIFYICONDATA *iconD
             {
                 if (Remove)
                     m_WatcherList.RemoveAt(Position);
-                break;
+                return Entry;
             }
         }
-        Entry = NULL;
-
-    } while (NextPosition != NULL);
-
-    return Entry;
+    }
+    return NULL;
 }
 
 UINT WINAPI CIconWatcher::WatcherThread(_In_opt_ LPVOID lpParam)
@@ -510,7 +512,6 @@ CBalloonQueue::CBalloonQueue() :
     m_tooltips(NULL),
     m_toolbar(NULL),
     m_current(NULL),
-    m_currentClosed(false),
     m_timer(-1)
 {
 }
@@ -538,14 +539,12 @@ bool CBalloonQueue::OnTimer(int timerId)
     ::KillTimer(m_hwndParent, m_timer);
     m_timer = -1;
 
-    if (m_current && !m_currentClosed)
+    if (m_current)
     {
         Close(m_current, NIN_BALLOONTIMEOUT);
     }
     else
     {
-        m_current = NULL;
-        m_currentClosed = false;
         if (!m_queue.IsEmpty())
         {
             Info info = m_queue.RemoveHead();
@@ -558,9 +557,7 @@ bool CBalloonQueue::OnTimer(int timerId)
 
 void CBalloonQueue::UpdateInfo(InternalIconData * notifyItem)
 {
-    size_t len = 0;
-    HRESULT hr = StringCchLength(notifyItem->szInfo, _countof(notifyItem->szInfo), &len);
-    if (SUCCEEDED(hr) && len > 0)
+    if (notifyItem->szInfo[0])
     {
         Info info(notifyItem);
 
@@ -584,13 +581,14 @@ void CBalloonQueue::RemoveInfo(InternalIconData * notifyItem)
 {
     Close(notifyItem, NIN_BALLOONHIDE);
 
-    POSITION position = m_queue.GetHeadPosition();
-    while(position != NULL)
+    for (POSITION next = m_queue.GetHeadPosition(); next;)
     {
-        Info& info = m_queue.GetNext(position);
+        POSITION current = next;
+        Info& info = m_queue.GetNext(next); // Note: This will advance the position
         if (info.pSource == notifyItem)
         {
-            m_queue.RemoveAt(position);
+            m_queue.RemoveAt(current);
+            break;
         }
     }
 }
@@ -628,9 +626,9 @@ void CBalloonQueue::Show(Info& info)
     m_current = info.pSource;
     RECT rc;
     m_toolbar->GetItemRect(IndexOf(m_current), &rc);
+    UINT halfsize = (rc.right - rc.left) / 2;
     m_toolbar->ClientToScreen(&rc);
-    const WORD x = (rc.left + rc.right) / 2;
-    const WORD y = (rc.top + rc.bottom) / 2;
+    WORD x = rc.left + halfsize, y = rc.top + halfsize;
 
     m_tooltips->SetTitle(info.szInfoTitle, info.uIcon);
     m_tooltips->TrackPosition(x, y);
@@ -651,12 +649,11 @@ void CBalloonQueue::Close(IN OUT InternalIconData * notifyItem, IN UINT uReason)
 {
     TRACE("HideBalloonTip called\n");
 
-    if (m_current == notifyItem && !m_currentClosed)
+    if (m_current == notifyItem)
     {
         m_toolbar->SendNotifyCallback(m_current, uReason);
 
-        // Prevent Re-entry
-        m_currentClosed = true;
+        m_current = NULL; // Prevent re-entry (TrackDeactivate will generate a TTN_POP)
         m_tooltips->TrackDeactivate();
         SetTimer(CooldownBetweenBalloons);
     }
@@ -680,6 +677,18 @@ CNotifyToolbar::~CNotifyToolbar()
 int CNotifyToolbar::GetVisibleButtonCount()
 {
     return m_VisibleButtonCount;
+}
+
+int CNotifyToolbar::GetFirstVisibleIndex()
+{
+    for (UINT i = 0;; ++i)
+    {
+        int state = SendMessage(TB_GETSTATE, i);
+        if (!(state & TBSTATE_HIDDEN))
+            return i;
+        if (state == -1)
+            return state;
+    }
 }
 
 int CNotifyToolbar::FindItem(IN HWND hWnd, IN UINT uID, InternalIconData ** pdata)
@@ -836,7 +845,7 @@ BOOL CNotifyToolbar::SwitchVersion(_In_ CONST NOTIFYICONDATA *iconData)
 
     // We can not store the version in the uVersion field, because it's union'd with uTimeout,
     // which we also need to keep track of.
-    notifyItem->uVersionCopy = iconData->uVersion;
+    notifyItem->SaveVersion(iconData->uVersion);
 
     return TRUE;
 }
@@ -857,7 +866,7 @@ BOOL CNotifyToolbar::UpdateButton(_In_ CONST NOTIFYICONDATA *iconData)
     if (index < 0)
     {
         WARN("Icon %d from hWnd %08x DOES NOT EXIST!\n", iconData->uID, iconData->hWnd);
-        return AddButton(iconData);
+        return FALSE;
     }
 
     TBBUTTON btn;
@@ -959,6 +968,10 @@ BOOL CNotifyToolbar::RemoveButton(_In_ CONST NOTIFYICONDATA *iconData)
 
         return FALSE;
     }
+    if (notifyItem->IsRemoved())
+        return FALSE; // Avoid recursion [CORE-20685]
+    else
+        notifyItem->MarkAsRemoved();
 
     if (!(notifyItem->dwState & NIS_HIDDEN))
     {
@@ -1063,7 +1076,7 @@ LRESULT CNotifyToolbar::OnCtxMenu(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL&
     if (!::IsWindow(notifyItem->hWnd))
         return 0;
 
-    if (notifyItem->uVersionCopy >= NOTIFYICON_VERSION)
+    if (notifyItem->GetVersion() >= NOTIFYICON_VERSION)
     {
         /* Transmit the WM_CONTEXTMENU message if the notification icon supports it */
         ::SendNotifyMessage(notifyItem->hWnd,
@@ -1390,7 +1403,15 @@ BOOL CSysPagerWnd::NotifyIcon(DWORD dwMessage, _In_ CONST NOTIFYICONDATA *iconDa
         break;
 
     case NIM_SETFOCUS:
-        Toolbar.SetFocus();
+        if (::SetForegroundWindow(GetTaskbarWindow()))
+        {
+            InternalIconData *pData;
+            int index = Toolbar.FindItem(iconData->hWnd, iconData->uID, &pData);
+            if (index < 0 || (pData->dwState & NIS_HIDDEN))
+                index = Toolbar.GetFirstVisibleIndex();
+            Toolbar.SetFocus();
+            Toolbar.SetHotItem(index);
+        }
         ret = TRUE;
         break;
 
@@ -1407,6 +1428,7 @@ BOOL CSysPagerWnd::NotifyIcon(DWORD dwMessage, _In_ CONST NOTIFYICONDATA *iconDa
     {
         /* Ask the parent to resize */
         NMHDR nmh = {GetParent(), 0, NTNWM_REALIGN};
+        // FIXME: This causes the desktop icons to flash (InvalidateRect?)
         GetParent().SendMessage(WM_NOTIFY, 0, (LPARAM) &nmh);
     }
 
@@ -1497,7 +1519,7 @@ LRESULT CSysPagerWnd::OnCommand(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& b
     // TODO: Improve keyboard handling by looking whether one presses
     // on ENTER, etc..., which roughly translates into "double-clicking".
 
-    if (notifyItem->uVersionCopy >= NOTIFYICON_VERSION)
+    if (notifyItem->GetVersion() >= NOTIFYICON_VERSION)
     {
         /* Use new-style notifications if the notification icon supports them */
         ::SendNotifyMessage(notifyItem->hWnd,

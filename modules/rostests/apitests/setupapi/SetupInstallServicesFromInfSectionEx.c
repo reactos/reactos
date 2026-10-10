@@ -1,7 +1,7 @@
 /*
  * SetupAPI device class-related functions tests
  *
- * Copyright 2015 Víctor Martínez (victor.martinez@reactos.org)
+ * Copyright 2015 VÃ­ctor MartÃ­nez (victor.martinez@reactos.org)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public Licence as

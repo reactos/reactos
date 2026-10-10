@@ -94,7 +94,11 @@ extern ULONG PcBiosMapCount;
 PFREELDR_MEMORY_DESCRIPTOR Pc98MemGetMemoryMap(ULONG *MemoryMapSize);
 
 /* hwpci.c */
-BOOLEAN PcFindPciBios(PPCI_REGISTRY_INFO BusData);
+BOOLEAN
+PcDetectPciBus(
+    _In_ PCONFIGURATION_COMPONENT_DATA SystemKey,
+    _Inout_ PULONG BusNumber,
+    _Out_ PPCI_REGISTRY_INFO BusData);
 
 /*
  * Disk Variables and Functions
