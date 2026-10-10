@@ -1812,7 +1812,7 @@ MiReloadBootLoadedDrivers(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
         /* Loop the PTEs */
         while (PointerPte < LastPte)
         {
-            ULONG len;
+            SIZE_T len;
             ASSERT(PointerPte->u.Hard.Valid == 1);
             Pfn1 = MiGetPfnEntry(PFN_FROM_PTE(PointerPte));
             len = wcslen(LdrEntry->BaseDllName.Buffer) * sizeof(WCHAR);
