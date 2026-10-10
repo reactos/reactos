@@ -247,7 +247,7 @@ KeBoostPriorityThread(IN PKTHREAD Thread,
                 }
 
                 /* Reset the quantum */
-                Thread->Quantum = Thread->QuantumReset;
+                KiThreadQuantum(Thread) = Thread->QuantumReset;
 
                 /* Set the new Priority */
                 KiSetPriorityThread(Thread, Priority);
@@ -500,9 +500,9 @@ KeStartThread(IN OUT PKTHREAD Thread)
     /* Setup static fields from parent */
     Thread->DisableBoost = Process->DisableBoost;
 #if defined(_M_IX86)
-    Thread->Iopl = Process->Iopl;
+    KiThreadIopl(Thread) = Process->Iopl;
 #endif
-    Thread->Quantum = Process->QuantumReset;
+    KiThreadQuantum(Thread) = Process->QuantumReset;
     Thread->QuantumReset = Process->QuantumReset;
     Thread->SystemAffinityActive = FALSE;
 
@@ -796,7 +796,7 @@ KeInitThread(IN OUT PKTHREAD Thread,
     KeInitializeSpinLock(&Thread->ThreadLock);
 
     /* Setup the Service Descriptor Table for Native Calls */
-    Thread->ServiceTable = KeServiceDescriptorTable;
+    KiThreadServiceTable(Thread) = KeServiceDescriptorTable;
 
     /* Setup APC Fields */
     InitializeListHead(&Thread->ApcState.ApcListHead[KernelMode]);
@@ -1256,7 +1256,7 @@ KeSetBasePriorityThread(IN PKTHREAD Thread,
     if (Priority != Thread->Priority)
     {
         /* Reset the quantum and do the actual priority modification */
-        Thread->Quantum = Thread->QuantumReset;
+        KiThreadQuantum(Thread) = Thread->QuantumReset;
         KiSetPriorityThread(Thread, Priority);
     }
 
@@ -1321,7 +1321,7 @@ KeSetPriorityThread(IN PKTHREAD Thread,
     if (Priority != Thread->Priority)
     {
         /* Reset the quantum */
-        Thread->Quantum = Thread->QuantumReset;
+        KiThreadQuantum(Thread) = Thread->QuantumReset;
 
         /* Check if priority is being set too low and normalize if so */
         if ((Thread->BasePriority != 0) && !(Priority)) Priority = 1;
@@ -1468,7 +1468,7 @@ KeQueryTotalCycleTimeThread(
 
         /* Get the thread's cycle time from the last preemption.
            We don't need synchronization here, since only the thread itself updates its cycle time. */
-        ThreadCycles = ((PETHREAD)Thread)->CycleTime;
+        ThreadCycles = KiReadThreadCycleTime(Thread);
 
         /* Enable interrupts */
         KeRestoreInterrupts(TRUE);

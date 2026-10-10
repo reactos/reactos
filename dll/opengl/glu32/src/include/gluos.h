@@ -41,7 +41,7 @@
 #define NOIME
 #define NOMINMAX
 
-#ifdef __MINGW64_VERSION_MAJOR
+#if defined(__MINGW64_VERSION_MAJOR) && !defined(__REACTOS__)
   #undef _WIN32_WINNT
 #endif
 

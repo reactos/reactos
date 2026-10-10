@@ -75,6 +75,7 @@ KiGetFeatureBits(VOID)
     PKPRCB Prcb = KeGetCurrentPrcb();
     ULONG Vendor;
     ULONG64 FeatureBits = 0;
+    UCHAR LogicalProcessors;
     CPUID_SIGNATURE_REGS signature;
     CPUID_VERSION_INFO_REGS VersionInfo;
     CPUID_EXTENDED_FUNCTION_REGS extendedFunction;
@@ -122,10 +123,9 @@ KiGetFeatureBits(VOID)
     /* Check if the CPU has hyper-threading */
     if (VersionInfo.Edx.Bits.HTT)
     {
-        /* Set the number of logical CPUs */
-        Prcb->LogicalProcessorsPerPhysicalProcessor =
-            VersionInfo.Ebx.Bits.MaximumAddressableIdsForLogicalProcessors;
-        if (Prcb->LogicalProcessorsPerPhysicalProcessor > 1)
+        /* Get the number of logical CPUs */
+        LogicalProcessors = VersionInfo.Ebx.Bits.MaximumAddressableIdsForLogicalProcessors;
+        if (LogicalProcessors > 1)
         {
             /* We're on dual-core */
             KiSMTProcessorsPresent = TRUE;
@@ -134,8 +134,11 @@ KiGetFeatureBits(VOID)
     else
     {
         /* We only have a single CPU */
-        Prcb->LogicalProcessorsPerPhysicalProcessor = 1;
+        LogicalProcessors = 1;
     }
+#if (NTDDI_VERSION < NTDDI_LONGHORN)
+    Prcb->LogicalProcessorsPerPhysicalProcessor = LogicalProcessors;
+#endif
 
     /* Check if CPUID_THERMAL_POWER_MANAGEMENT (0x06) is supported */
     if (signature.MaxLeaf >= CPUID_THERMAL_POWER_MANAGEMENT)

@@ -100,7 +100,7 @@ KiInitializeUserApc(IN PKEXCEPTION_FRAME ExceptionFrame,
         TrapFrame->EFlags = Ke386SanitizeFlags(Context.EFlags, UserMode);
 
         /* Check if thread has IOPL and force it enabled if so */
-        if (KeGetCurrentThread()->Iopl) TrapFrame->EFlags |= EFLAGS_IOPL;
+        if (KiThreadIopl(KeGetCurrentThread())) TrapFrame->EFlags |= EFLAGS_IOPL;
 
         /* Setup the stack */
         *(PULONG_PTR)(Stack + 0 * sizeof(ULONG_PTR)) = (ULONG_PTR)NormalRoutine;

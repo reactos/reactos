@@ -5,9 +5,6 @@
  * COPYRIGHT:   Copyright 2023-2024 Ratin Gao <ratin@knsoft.org>
  */
 
-/* We need NT6+ Ex definitions */
-#undef NTDDI_VERSION
-#define NTDDI_VERSION NTDDI_VISTA
 #include <ndk/exfuncs.h>
 
 #include "k32_vista.h"

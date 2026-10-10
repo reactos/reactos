@@ -6,7 +6,7 @@
  */
 
 #define _CRT_SECURE_NO_DEPRECATE
-#define _WIN32_WINNT 0x502
+#define _WIN32_WINNT 0x600
 #define WIN32_NO_STATUS
 
 /* PSDK Headers */

@@ -902,7 +902,7 @@ LpcpCopyRequestData(
         /* Copy data from the caller to the message sender */
         Status = MmCopyVirtualMemory(PsGetCurrentProcess(),
                                      Buffer,
-                                     ClientThread->ThreadsProcess,
+                                     PspGetThreadProcess(ClientThread),
                                      DataInfoBaseAddress,
                                      BufferLength,
                                      PreviousMode,
@@ -911,7 +911,7 @@ LpcpCopyRequestData(
     else
     {
         /* Copy data from the message sender to the caller */
-        Status = MmCopyVirtualMemory(ClientThread->ThreadsProcess,
+        Status = MmCopyVirtualMemory(PspGetThreadProcess(ClientThread),
                                      DataInfoBaseAddress,
                                      PsGetCurrentProcess(),
                                      Buffer,

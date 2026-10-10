@@ -1622,7 +1622,7 @@ typedef struct _KUSER_SHARED_DATA
     UCHAR Reserved8[14];                                    // 0x372
 #endif
 #endif // NTDDI_VERSION < NTDDI_WIN10
-#elif (NTDDI_VERSION >= NTDDI_VISTASP2)
+#elif (NTDDI_VERSION >= NTDDI_WIN7)
     ULONG DEPRECATED_Wow64SharedInformation[MAX_WOW64_SHARED_ENTRIES]; // 0x340
 #else
     ULONG Wow64SharedInformation[MAX_WOW64_SHARED_ENTRIES]; // 0x340

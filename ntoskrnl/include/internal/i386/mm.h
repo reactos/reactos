@@ -104,8 +104,10 @@
 #define MI_MAKE_OWNER_PAGE(x)      ((x)->u.Hard.Owner = 1)
 #if !defined(CONFIG_SMP)
 #define MI_MAKE_WRITE_PAGE(x)      ((x)->u.Hard.Write = 1)
+#define MI_MAKE_READ_ONLY_PAGE(x)  ((x)->u.Hard.Write = 0)
 #else
 #define MI_MAKE_WRITE_PAGE(x)      ((x)->u.Hard.Writable = 1)
+#define MI_MAKE_READ_ONLY_PAGE(x)  ((x)->u.Hard.Writable = 0)
 #endif
 
 
@@ -125,7 +127,7 @@
 #define MI_WRITE_VALID_PPE MI_WRITE_VALID_PTE
 
 /*  Translating virtual addresses to physical addresses
-        (See: "Intel® 64 and IA-32 Architectures Software Developer’s Manual
+        (See: "Intelï¿½ 64 and IA-32 Architectures Software Developerï¿½s Manual
               Volume 3A: System Programming Guide, Part 1, CHAPTER 4 PAGING")
     Page directory (PD) and Page table (PT) definitions
     Page directory entry (PDE) and Page table entry (PTE) definitions

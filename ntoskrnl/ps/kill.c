@@ -301,11 +301,11 @@ PspDeleteProcess(IN PVOID ObjectBody)
     }
 
     /* Check if we have an exception port */
-    if (Process->ExceptionPort)
+    if (PspGetProcessExceptionPort(Process))
     {
         /* Deference the Exception Port */
-        ObDereferenceObject(Process->ExceptionPort);
-        Process->ExceptionPort = NULL;
+        ObDereferenceObject(PspGetProcessExceptionPort(Process));
+        PspSetProcessExceptionPort(Process, NULL);
     }
 
     /* Check if we have a section object */
@@ -402,7 +402,7 @@ NTAPI
 PspDeleteThread(IN PVOID ObjectBody)
 {
     PETHREAD Thread = (PETHREAD)ObjectBody;
-    PEPROCESS Process = Thread->ThreadsProcess;
+    PEPROCESS Process = PspGetThreadProcess(Thread);
     PAGED_CODE();
     PSTRACE(PS_KILL_DEBUG, "ObjectBody: %p\n", ObjectBody);
     PSREFTRACE(Thread);
@@ -473,8 +473,10 @@ PspExitThread(IN NTSTATUS ExitStatus)
     PTEB Teb;
     PEPROCESS CurrentProcess;
     PETHREAD Thread, OtherThread, PreviousThread = NULL;
+#if (NTDDI_VERSION < NTDDI_LONGHORN)
     PVOID DeallocationStack;
     SIZE_T Dummy;
+#endif
     BOOLEAN Last = FALSE;
     PTERMINATION_PORT TerminationPort, NextPort;
     PLIST_ENTRY FirstEntry, CurrentEntry;
@@ -485,7 +487,7 @@ PspExitThread(IN NTSTATUS ExitStatus)
 
     /* Get the Current Thread and Process */
     Thread = PsGetCurrentThread();
-    CurrentProcess = Thread->ThreadsProcess;
+    CurrentProcess = PspGetThreadProcess(Thread);
     ASSERT((Thread) == PsGetCurrentThread());
 
     /* Can't terminate a thread if it attached another process */
@@ -707,8 +709,8 @@ PspExitThread(IN NTSTATUS ExitStatus)
         } while (TerminationPort);
     }
     else if (((ExitStatus == STATUS_THREAD_IS_TERMINATING) &&
-              (Thread->DeadThread)) ||
-             !(Thread->DeadThread))
+              PspIsThreadDead(Thread)) ||
+             !PspIsThreadDead(Thread))
     {
         /*
          * This case is special and deserves some extra comments. What
@@ -736,7 +738,7 @@ PspExitThread(IN NTSTATUS ExitStatus)
                                             sizeof(PORT_MESSAGE);
 
         /* Make sure the process has an exception port */
-        if (CurrentProcess->ExceptionPort)
+        if (PspGetProcessExceptionPort(CurrentProcess))
         {
             /* Save the Create Time */
             TerminationMsg.CreateTime = Thread->CreateTime;
@@ -745,7 +747,7 @@ PspExitThread(IN NTSTATUS ExitStatus)
             while (TRUE)
             {
                 /* Send the LPC Message */
-                Status = LpcRequestPort(CurrentProcess->ExceptionPort,
+                Status = LpcRequestPort(PspGetProcessExceptionPort(CurrentProcess),
                                         &TerminationMsg.h);
                 if ((Status == STATUS_NO_MEMORY) ||
                     (Status == STATUS_INSUFFICIENT_RESOURCES))
@@ -794,7 +796,7 @@ PspExitThread(IN NTSTATUS ExitStatus)
     if (Teb)
     {
         /* Check if the thread is still alive */
-        if (!Thread->DeadThread)
+        if (!PspIsThreadDead(Thread))
         {
 #if (NTDDI_VERSION < NTDDI_LONGHORN)
             /*
@@ -1026,7 +1028,7 @@ PspTerminateThreadByPointer(IN PETHREAD Thread,
         /* Break to debugger */
         PspCatchCriticalBreak("Terminating critical thread 0x%p (in %s)\n",
                               Thread,
-                              Thread->ThreadsProcess->ImageFileName);
+                              PspGetThreadProcess(Thread)->ImageFileName);
     }
 
     /* Check if we are already inside the thread */
@@ -1151,7 +1153,7 @@ PspExitProcess(IN BOOLEAN LastThread,
             /* Check if we are part of a job that has a completion port
                and do I/O completion if needed */
             if (Process->Job->CompletionPort &&
-                !FlagOn(Process->JobStatus, PSP_JOB_NOT_REALLY_ACTIVE))
+                !FlagOn(PspProcessJobStatus(Process), PSP_JOB_NOT_REALLY_ACTIVE))
             {
                 (VOID)PspSendJobMessageLocked(Process->Job,
                                               JOB_OBJECT_MSG_EXIT_PROCESS,

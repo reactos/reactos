@@ -359,7 +359,7 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
     PVOID ExceptionPortObject;
     PDEBUG_OBJECT DebugObject;
     PSECTION SectionObject;
-    NTSTATUS Status, AccessStatus;
+    NTSTATUS Status;
     ULONG_PTR DirectoryTableBase[2] = {0,0};
     KAFFINITY Affinity;
     HANDLE_TABLE_ENTRY CidEntry;
@@ -371,9 +371,12 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
     PACCESS_STATE AccessState = &LocalAccessState;
     AUX_ACCESS_DATA AuxData;
     UCHAR Quantum;
+#if (NTDDI_VERSION < NTDDI_LONGHORN)
+    NTSTATUS AccessStatus;
     BOOLEAN Result, SdAllocated;
     PSECURITY_DESCRIPTOR SecurityDescriptor;
     SECURITY_SUBJECT_CONTEXT SubjectContext;
+#endif
     BOOLEAN NeedsPeb = FALSE;
     INITIAL_PEB InitialPeb;
 
@@ -549,7 +552,7 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
         if (!NT_SUCCESS(Status)) goto CleanupWithRef;
 
         /* Save the exception port */
-        Process->ExceptionPort = ExceptionPortObject;
+        PspSetProcessExceptionPort(Process, ExceptionPortObject);
     }
 
     /* Save the pointer to the section object */
@@ -689,8 +692,8 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
 
 #if MI_TRACE_PFNS
     /* Copy the process name now that we have it */
-    memcpy(MiGetPfnEntry(Process->Pcb.DirectoryTableBase[0] >> PAGE_SHIFT)->ProcessName, Process->ImageFileName, 16);
-    if (Process->Pcb.DirectoryTableBase[1]) memcpy(MiGetPfnEntry(Process->Pcb.DirectoryTableBase[1] >> PAGE_SHIFT)->ProcessName, Process->ImageFileName, 16);
+    memcpy(MiGetPfnEntry(KiProcessDirectoryTableBase(&Process->Pcb) >> PAGE_SHIFT)->ProcessName, Process->ImageFileName, 16);
+    if (KiProcessHyperSpacePageTable(&Process->Pcb)) memcpy(MiGetPfnEntry(KiProcessHyperSpacePageTable(&Process->Pcb) >> PAGE_SHIFT)->ProcessName, Process->ImageFileName, 16);
     if (Process->WorkingSetPage) memcpy(MiGetPfnEntry(Process->WorkingSetPage)->ProcessName, Process->ImageFileName, 16);
 #endif
 
@@ -815,6 +818,7 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
                                             &Quantum);
     Process->Pcb.QuantumReset = Quantum;
 
+#if (NTDDI_VERSION < NTDDI_LONGHORN)
     /* Check if we have a parent other then the initial system process */
     Process->GrantedAccess = PROCESS_TERMINATE;
     if ((Parent) && (Parent != PsInitialSystemProcess))
@@ -873,6 +877,7 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
         /* Set full granted access */
         Process->GrantedAccess = PROCESS_ALL_ACCESS;
     }
+#endif
 
     /* Set the Creation Time */
     KeQuerySystemTime(&Process->CreateTime);
@@ -1020,7 +1025,7 @@ PsLookupProcessThreadByCid(IN PCLIENT_ID Cid,
                 if (Process)
                 {
                     /* Return it and reference it */
-                    *Process = FoundThread->ThreadsProcess;
+                    *Process = PspGetThreadProcess(FoundThread);
                     ObReferenceObject(*Process);
                 }
             }
@@ -1666,7 +1671,7 @@ PsQueryTotalCycleTimeProcess(
     CurrentCycleTime = KxQueryProcessorCycleTime();
 
     /* Get the process' cycle time */
-    TotalCycleTime = Process->CycleTime;
+    TotalCycleTime = KiQueryProcessCycleTime(&Process->Pcb);
 
     /* Check if this is the current process */
     if (Process == PsGetCurrentProcess())

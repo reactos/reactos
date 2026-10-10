@@ -36,6 +36,107 @@
     InterlockedAnd((PLONG)&Process->Flags, ~Flag)
 
 FORCEINLINE
+PEPROCESS
+PspGetThreadProcess(
+    _In_ PETHREAD Thread)
+{
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+    return CONTAINING_RECORD(Thread->Tcb.Process, EPROCESS, Pcb);
+#else
+    return Thread->ThreadsProcess;
+#endif
+}
+
+/* On Vista the low bits of the exception port hold its state */
+#define PSP_EXCEPTION_PORT_STATE_MASK 0x7
+
+FORCEINLINE
+PVOID
+PspGetProcessExceptionPort(
+    _In_ PEPROCESS Process)
+{
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+    return (PVOID)((ULONG_PTR)Process->ExceptionPortData & ~(ULONG_PTR)PSP_EXCEPTION_PORT_STATE_MASK);
+#else
+    return Process->ExceptionPort;
+#endif
+}
+
+FORCEINLINE
+VOID
+PspSetProcessExceptionPort(
+    _Inout_ PEPROCESS Process,
+    _In_opt_ PVOID Port)
+{
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+    Process->ExceptionPortData = Port;
+#else
+    Process->ExceptionPort = Port;
+#endif
+}
+
+FORCEINLINE
+PVOID volatile *
+PspGetProcessExceptionPortAddress(
+    _In_ PEPROCESS Process)
+{
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+    return &Process->ExceptionPortData;
+#else
+    return &Process->ExceptionPort;
+#endif
+}
+
+/* On Vista a thread that never got inserted is the dead one */
+FORCEINLINE
+BOOLEAN
+PspIsThreadDead(
+    _In_ PETHREAD Thread)
+{
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+    return !Thread->ThreadInserted;
+#else
+    return (BOOLEAN)Thread->DeadThread;
+#endif
+}
+
+FORCEINLINE
+BOOLEAN
+PspIsThreadCreated(
+    _In_ PETHREAD Thread)
+{
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+    return (BOOLEAN)Thread->ThreadInserted;
+#else
+    return (Thread->GrantedAccess != 0);
+#endif
+}
+
+FORCEINLINE
+VOID
+PspMarkThreadDead(
+    _Inout_ PETHREAD Thread)
+{
+#if (NTDDI_VERSION < NTDDI_LONGHORN)
+    PspSetCrossThreadFlag(Thread, CT_DEAD_THREAD_BIT);
+#else
+    ASSERT(!Thread->ThreadInserted);
+#endif
+}
+
+FORCEINLINE
+VOID
+PspMarkThreadInserted(
+    _Inout_ PETHREAD Thread)
+{
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+    PspSetCrossThreadFlag(Thread, CT_THREAD_INSERTED_BIT);
+#else
+    UNREFERENCED_PARAMETER(Thread);
+#endif
+}
+
+FORCEINLINE
 VOID
 PspRunCreateThreadNotifyRoutines(IN PETHREAD CurrentThread,
                                  IN BOOLEAN Create)

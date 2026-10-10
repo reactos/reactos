@@ -478,7 +478,7 @@ InitThreadCallback(PETHREAD Thread)
     PKL pDefKL;
     BOOLEAN bFirstThread;
 
-    Process = Thread->ThreadsProcess;
+    Process = PsGetThreadProcess(Thread);
 
     pTeb = NtCurrentTeb();
     ASSERT(pTeb);
@@ -753,7 +753,7 @@ ExitThreadCallback(PETHREAD Thread)
     PTHREADINFO ptiCurrent;
     PWINDOWLIST pwl, pwlNext;
 
-    Process = Thread->ThreadsProcess;
+    Process = PsGetThreadProcess(Thread);
 
     /* Get the Win32 Thread */
     ptiCurrent = PsGetThreadWin32Thread(Thread);

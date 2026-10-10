@@ -42,6 +42,8 @@ extern SIZE_T MmTotalCommittedPages;
 extern SIZE_T MmSharedCommit;
 extern SIZE_T MmDriverCommit;
 extern SIZE_T MmProcessCommit;
+extern ULONG MmBadPagesDetected;
+extern ULONG MmZeroedPageSingleBitErrorsDetected;
 extern SIZE_T MmPagedPoolCommit;
 extern SIZE_T MmPeakCommitment;
 extern SIZE_T MmtotalCommitLimitMaximum;
@@ -1690,6 +1692,40 @@ MmGrowKernelStack(
 );
 
 
+VOID
+NTAPI
+MiInitializeProcessAddressSpaceLock(
+    _Out_ PEPROCESS Process);
+
+VOID
+NTAPI
+MiLockProcessAddressSpace(
+    _Inout_ PEPROCESS Process);
+
+BOOLEAN
+NTAPI
+MiTryToLockProcessAddressSpace(
+    _Inout_ PEPROCESS Process);
+
+VOID
+NTAPI
+MiUnlockProcessAddressSpace(
+    _Inout_ PEPROCESS Process);
+
+FORCEINLINE
+BOOLEAN
+MiIsProcessAddressSpaceLockOwner(
+    _In_ PEPROCESS Process)
+{
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+    /* The push lock has no owner, the owning thread is flagged instead */
+    UNREFERENCED_PARAMETER(Process);
+    return (BOOLEAN)PsGetCurrentThread()->OwnsProcessAddressSpaceExclusive;
+#else
+    return (Process->AddressCreationLock.Owner == KeGetCurrentThread());
+#endif
+}
+
 FORCEINLINE
 VOID
 MmLockAddressSpace(PMMSUPPORT AddressSpace)
@@ -1700,14 +1736,14 @@ MmLockAddressSpace(PMMSUPPORT AddressSpace)
     ASSERT(!PsGetCurrentThread()->OwnsSystemWorkingSetShared);
     ASSERT(!PsGetCurrentThread()->OwnsSessionWorkingSetExclusive);
     ASSERT(!PsGetCurrentThread()->OwnsSessionWorkingSetShared);
-    KeAcquireGuardedMutex(&CONTAINING_RECORD(AddressSpace, EPROCESS, Vm)->AddressCreationLock);
+    MiLockProcessAddressSpace(CONTAINING_RECORD(AddressSpace, EPROCESS, Vm));
 }
 
 FORCEINLINE
 VOID
 MmUnlockAddressSpace(PMMSUPPORT AddressSpace)
 {
-    KeReleaseGuardedMutex(&CONTAINING_RECORD(AddressSpace, EPROCESS, Vm)->AddressCreationLock);
+    MiUnlockProcessAddressSpace(CONTAINING_RECORD(AddressSpace, EPROCESS, Vm));
 }
 
 FORCEINLINE

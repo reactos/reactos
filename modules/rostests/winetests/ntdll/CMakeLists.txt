@@ -2,7 +2,7 @@
 include_directories(BEFORE ${REACTOS_SOURCE_DIR}/sdk/include/wine)
 add_definitions(-D__WINESRC__ -DWINETEST_USE_DBGSTR_LONGLONG)
 
-remove_definitions(-D_WIN32_WINNT=0x502 -DWINVER=0x502)
+remove_definitions(-D_WIN32_WINNT=0x600 -DNTDDI_VERSION=0x06000200)
 add_definitions(-D_WIN32_WINNT=0x601)
 
 if(_WINKD_)

@@ -2163,9 +2163,9 @@ MsqIsHung(PTHREADINFO pti, DWORD TimeOut)
             "PsGetThreadFreezeCount(pti->pEThread) = %lu\n",
             pti, TimeOut,
             pti->pEThread,
-            pti->pEThread ? pti->pEThread->ThreadsProcess : NULL,
-            (pti->pEThread && pti->pEThread->ThreadsProcess)
-                ? pti->pEThread->ThreadsProcess->ImageFileName : "(None)",
+            pti->pEThread ? PsGetThreadProcess(pti->pEThread) : NULL,
+            (pti->pEThread && PsGetThreadProcess(pti->pEThread))
+                ? PsGetThreadProcess(pti->pEThread)->ImageFileName : "(None)",
             dwTimeStamp,
             pti->pcti->timeLastRead,
             pti->timeLast,

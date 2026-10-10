@@ -86,6 +86,36 @@ Author:
 //
 // KTHREAD Offsets
 //
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+#define KTHREAD_DEBUG_ACTIVE                    0x03
+#define KTHREAD_INITIAL_STACK                   0x28
+#define KTHREAD_STACK_LIMIT                     0x2C
+#define KTHREAD_TEB                             0x84
+#define KTHREAD_KERNEL_STACK                    0x30
+#define KTHREAD_ALERTED                         0x6E
+#define KTHREAD_APCSTATE_PROCESS                0x38 + 0x10
+#define KTHREAD_PENDING_USER_APC                0x38 + 0x16
+#define KTHREAD_PENDING_KERNEL_APC              0x38 + 0x15
+#define KTHREAD_CONTEXT_SWITCHES                0x58
+#define KTHREAD_STATE_                          0x5C
+#define KTHREAD_NPX_STATE                       0x5D
+#define KTHREAD_WAIT_IRQL                       0x5E
+#define KTHREAD_NEXT_PROCESSOR                  0x50
+#define KTHREAD_WAIT_REASON                     0x6C
+#define KTHREAD_PRIORITY                        0x4F
+#define KTHREAD_SWAP_BUSY                       0x6D
+#define KTHREAD_SERVICE_TABLE                   0x12C
+#define KTHREAD_PREVIOUS_MODE                   0xE7
+#define KTHREAD_COMBINED_APC_DISABLE            0x80
+#define KTHREAD_SPECIAL_APC_DISABLE             0x82
+#define KTHREAD_LARGE_STACK                     0x117
+#define KTHREAD_TRAP_FRAME                      0x120
+#define KTHREAD_CALLBACK_STACK                  0x128
+#define KTHREAD_APC_STATE_INDEX                 0x130
+#define KTHREAD_STACK_BASE                      0x174
+#define KTHREAD_KERNEL_TIME                     0x17C
+#define KTHREAD_USER_TIME                       0x1A8
+#else
 #define KTHREAD_DEBUG_ACTIVE                    0x03
 #define KTHREAD_INITIAL_STACK                   0x18
 #define KTHREAD_STACK_LIMIT                     0x1C
@@ -115,6 +145,7 @@ Author:
 #define KTHREAD_QUANTUM                         0x15D
 #define KTHREAD_KERNEL_TIME                     0x160
 #define KTHREAD_USER_TIME                       0x18C
+#endif
 
 //
 // KPROCESS Offsets
@@ -126,7 +157,11 @@ Author:
 #define KPROCESS_INT21_DESCRIPTOR1              0x2C
 #define KPROCESS_IOPM_OFFSET                    0x30
 #define KPROCESS_ACTIVE_PROCESSORS              0x34
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+#define EPROCESS_VDM_OBJECTS                    0x130
+#else
 #define EPROCESS_VDM_OBJECTS                    0x144
+#endif
 
 //
 // KTIMER_TABLE Offsets
@@ -147,8 +182,13 @@ Author:
 #define KPRCB_DR3                               0x304
 #define KPRCB_DR6                               0x308
 #define KPRCB_DR7                               0x30C
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+#define KPRCB_TIMER_HAND                        0x1A24
+#define KPRCB_TIMER_REQUEST                     0x1A28
+#else
 #define KPRCB_TIMER_HAND                        0x964
 #define KPRCB_TIMER_REQUEST                     0x968
+#endif
 
 //
 // KPCR Offsets
@@ -181,6 +221,33 @@ Author:
 #define KPCR_PROCESSOR_NUMBER                   0x130
 #define KPCR_PRCB_SET_MEMBER                    0x134
 #define KPCR_PRCB_CPU_TYPE                      0x138
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+#define KPCR_PRCB_PRCB_LOCK                     0x1B3C
+#define KPCR_NPX_THREAD                         0x6C0
+#define KPCR_DR6                                0x428
+#define KPCR_DR7                                0x42C
+#define KPCR_PRCB_INTERRUPT_COUNT               0x6C4
+#define KPCR_PRCB_KERNEL_TIME                   0x6C8
+#define KPCR_PRCB_USER_TIME                     0x6CC
+#define KPCR_PRCB_DPC_TIME                      0x6D0
+#define KPCR_PRCB_DPC_TIME_COUNT                0x6D4
+#define KPCR_PRCB_INTERRUPT_TIME                0x6D8
+#define KPCR_PRCB_ADJUST_DPC_THRESHOLD          0x6DC
+#define KPCR_PRCB_SKIP_TICK                     0x6E4
+#define KPCR_SYSTEM_CALLS                       0x7B0
+#define KPCR_PRCB_DPC_QUEUE_DEPTH               0x1B0C
+#define KPCR_PRCB_DPC_COUNT                     0x1B10
+#define KPCR_PRCB_DPC_STACK                     0x1B28
+#define KPCR_PRCB_MAXIMUM_DPC_QUEUE_DEPTH       0x1B2C
+#define KPCR_PRCB_DPC_REQUEST_RATE              0x1B30
+#define KPCR_PRCB_DPC_INTERRUPT_REQUESTED       0x1B38
+#define KPCR_PRCB_DPC_ROUTINE_ACTIVE            0x1B3A
+#define KPCR_PRCB_DPC_LAST_COUNT                0x1B40
+#define KPCR_PRCB_TIMER_REQUEST                 0x1B48
+#define KPCR_PRCB_QUANTUM_END                   0x1B61
+#define KPCR_PRCB_IDLE_SCHEDULE                 0x1B63
+#define KPCR_PRCB_DEFERRED_READY_LIST_HEAD      0x1BD4
+#else
 #define KPCR_PRCB_PRCB_LOCK                     0xA7C
 #define KPCR_NPX_THREAD                         0x640
 #define KPCR_DR6                                0x428
@@ -207,6 +274,7 @@ Author:
 #define KPCR_PRCB_IDLE_SCHEDULE                 0xAA3
 #define KPCR_PRCB_DEFERRED_READY_LIST_HEAD      0xC10
 #define KPCR_PRCB_POWER_STATE_IDLE_FUNCTION     0xEC0
+#endif
 
 //
 // KINTERRUPT Offsets

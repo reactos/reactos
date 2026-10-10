@@ -17,6 +17,7 @@
 /* This TU defines the kernel32 Win7 surface itself: make the headers declare it, non-dllimport */
 #define _KERNEL32_
 #undef _WIN32_WINNT
+#undef NTDDI_VERSION
 #define _WIN32_WINNT 0x0601
 
 /* Bind the Rtl references to the static rtl_vista implementation, not to ntdll(_vista).dll imports */

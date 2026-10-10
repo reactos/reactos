@@ -90,6 +90,58 @@ VOID
 (FASTCALL *PPROCESSOR_IDLE_FUNCTION)(
     struct _PROCESSOR_POWER_STATE *PState);
 
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+typedef struct _PROCESSOR_POWER_STATE
+{
+    struct _PPM_IDLE_STATES *IdleStates;
+    ULONGLONG LastTimeCheck;
+    ULONGLONG IdleTimeAccumulated;
+    union
+    {
+        struct
+        {
+            ULONGLONG IdleTransitionTime;
+        } Native;
+        struct
+        {
+            ULONGLONG LastIdleCheck;
+        } Hv;
+    };
+    struct _PPM_IDLE_ACCOUNTING *IdleAccounting;
+    struct _PPM_PERF_STATES *PerfStates;
+    ULONG LastKernelUserTime;
+    ULONG LastIdleThreadKTime;
+    ULONGLONG LastGlobalTimeHv;
+    ULONGLONG LastProcessorTimeHv;
+    UCHAR ThermalConstraint;
+    UCHAR LastBusyPercentage;
+    union
+    {
+        USHORT AsUSHORT;
+        struct
+        {
+            USHORT PStateDomain:1;
+            USHORT PStateDomainIdleAccounting:1;
+            USHORT Reserved:14;
+        };
+    } Flags;
+    KTIMER PerfTimer;
+    KDPC PerfDpc;
+    ULONG LastSysTime;
+    struct _KPRCB *PStateMaster;
+    KAFFINITY PStateSet;
+    ULONG CurrentPState;
+    ULONG DesiredPState;
+    volatile ULONG PStateIdleStartTime;
+    ULONG PStateIdleTime;
+    ULONG LastPStateIdleTime;
+    ULONG PStateStartTime;
+    ULONG DiaIndex;
+    ULONG Reserved0;
+    ULONG_PTR WmiDispatchPtr;
+    LONG WmiInterfaceEnabled;
+} PROCESSOR_POWER_STATE, *PPROCESSOR_POWER_STATE;
+#else
 typedef struct _PROCESSOR_POWER_STATE
 {
     PPROCESSOR_IDLE_FUNCTION IdleFunction;
@@ -137,6 +189,7 @@ typedef struct _PROCESSOR_POWER_STATE
     ULONG LastC3KernelUserTime;
     ULONG Spare1[1];
 } PROCESSOR_POWER_STATE, *PPROCESSOR_POWER_STATE;
+#endif
 
 //
 // Device Notification Structure

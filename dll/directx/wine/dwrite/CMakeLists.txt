@@ -1,6 +1,4 @@
 
-remove_definitions(-D_WIN32_WINNT=0x502)
-add_definitions(-D_WIN32_WINNT=0x600)
 include_directories(BEFORE ${REACTOS_SOURCE_DIR}/sdk/include/wine)
 
 spec2def(dwrite.dll dwrite.spec ADD_IMPORTLIB)
