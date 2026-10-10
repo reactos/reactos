@@ -19,27 +19,3 @@ BEGIN
     RTEXT "Time remaining:", IDC_TIMEOUTSTATIC, 172, 80, 54, 8
     LTEXT "", IDC_TIMEOUT, 230, 80, 12, 8
 END
-
-/* See also: dll/win32/shell32/lang */
-STRINGTABLE
-BEGIN
-    IDS_PROFILEPATH "%SystemDrive%\\Documente și preferințe"
-    IDS_APPDATA "Date de aplicație"
-    IDS_DESKTOP "Desktop"
-    IDS_FAVORITES "Favorite"
-    IDS_MYDOCUMENTS "Documentele mele"
-    IDS_NETHOOD "Rețele"
-    IDS_PRINTHOOD "Imprimante"
-    IDS_RECENT "Recente"
-    IDS_SENDTO "Trimitere"
-    IDS_TEMPLATES "Șabloane"
-    IDS_STARTMENU "Meniul Pornire"
-    IDS_PROGRAMS "Meniul Pornire\\Programe"
-    IDS_STARTUP "Meniul Pornire\\Programe\\Autolansate"
-    IDS_LOCALSETTINGS "Preferințe locale"
-    IDS_LOCALAPPDATA "Preferințe locale\\Date de aplicație"
-    IDS_TEMP "Preferințe locale\\Temp" /* See also TEMP_DIR in boot/bootdata/hivedef.inf */
-    IDS_CACHE "Preferințe locale\\Fișiere de Internet temporare"
-    IDS_HISTORY "Preferințe locale\\Istoric"
-    IDS_COOKIES "Cookie-uri"
-END

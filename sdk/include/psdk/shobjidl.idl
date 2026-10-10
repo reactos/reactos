@@ -4287,6 +4287,45 @@ interface IApplicationAssociationRegistration : IUnknown
 }
 
 [
+    object,
+    uuid(12337d35-94c6-48a0-bce7-6a9c69d4d600),
+    pointer_default(unique)
+]
+interface IApplicationDestinations : IUnknown
+{
+    HRESULT SetAppID(
+        [in] LPCWSTR pszAppID);
+
+    HRESULT RemoveDestination(
+        [in] IUnknown *punk);
+
+    HRESULT RemoveAllDestinations();
+}
+
+[
+    object,
+    uuid(3c594f9f-9f30-47a1-979a-c9e83d3d0a06),
+    pointer_default(unique)
+]
+interface IApplicationDocumentLists : IUnknown
+{
+    typedef [v1_enum] enum APPDOCLISTTYPE
+    {
+        ADLT_RECENT     = 0,
+        ADLT_FREQUENT   = 1,
+    } APPDOCLISTTYPE;
+
+    HRESULT SetAppID(
+        [in] LPCWSTR pszAppID);
+
+    HRESULT GetList(
+        [in] APPDOCLISTTYPE list_type,
+        [in] UINT item_count,
+        [in] REFIID riid,
+        [out, iid_is(riid)] void **ppv);
+}
+
+[
     uuid(6332debf-87b5-4670-90c0-5e57b408a49e),
     object,
     pointer_default(unique)

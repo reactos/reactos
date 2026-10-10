@@ -155,6 +155,7 @@ extern "C" {
 #define FOF_WANTNUKEWARNING        0x4000  /* during delete operation, warn if delete instead
                                               of recycling (even if FOF_NOCONFIRMATION) */
 #define FOF_NORECURSEREPARSE       0x8000  /* don't do recursion into reparse points */
+#define FOF_NO_UI                  (FOF_SILENT | FOF_NOCONFIRMATION | FOF_NOERRORUI | FOF_NOCONFIRMMKDIR)
 
 #define PO_DELETE 19
 #define PO_RENAME 20

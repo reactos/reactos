@@ -18,27 +18,3 @@ BEGIN
     RTEXT "Time remaining:", IDC_TIMEOUTSTATIC, 172, 80, 54, 8
     LTEXT "", IDC_TIMEOUT, 230, 80, 12, 8
 END
-
-/* See also: dll/win32/shell32/lang */
-STRINGTABLE
-BEGIN
-    IDS_PROFILEPATH "%SystemDrive%\\Documents and Settings"
-    IDS_APPDATA "Programaren datuak"
-    IDS_DESKTOP "Mahaigaina"
-    IDS_FAVORITES "Gogokoenak"
-    IDS_MYDOCUMENTS "Nire dokumentuak"
-    IDS_NETHOOD "Sarekoak"
-    IDS_PRINTHOOD "Inprimagailuak"
-    IDS_RECENT "Arestikoak"
-    IDS_SENDTO "Bidali hona"
-    IDS_TEMPLATES "Txantioiak"
-    IDS_STARTMENU "Hasi menua"
-    IDS_PROGRAMS "Hasi Menua\\Programak"
-    IDS_STARTUP "Hasi Menua\\Programak\\Hasi"
-    IDS_LOCALSETTINGS "Lokal konfigurazioa"
-    IDS_LOCALAPPDATA "Lokal konfigurazioa\\Programaren datuak"
-    IDS_TEMP "Lokal konfigurazioa\\Temp" /* See also TEMP_DIR in boot/bootdata/hivedef.inf */
-    IDS_CACHE "Lokal konfigurazioa\\Interneten Aldi Baterako Fitxategiak"
-    IDS_HISTORY "Lokal konfigurazioa\\Historia"
-    IDS_COOKIES "Cookiak"
-END

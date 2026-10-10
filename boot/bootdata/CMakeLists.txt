@@ -100,8 +100,8 @@ cmdenvvar(envvar_homepath   "HOMEPATH"   FALSE)
 ## NOTE: What would be nice is to create this list using /media/inf/shortcuts.inf
 ## and taking their default english translation!
 
-set(dir_allusers_desktop        "Profiles/All Users/Desktop")
-set(dir_startmenu_programs      "Profiles/All Users/Start Menu/Programs")
+set(dir_allusers_desktop        "Users/Public/Desktop")
+set(dir_startmenu_programs      "ProgramData/Microsoft/Windows/Start Menu/Programs")
 set(dir_startmenu_admintools    "${dir_startmenu_programs}/Administrative Tools")
 set(dir_startmenu_accessories   "${dir_startmenu_programs}/Accessories")
 set(dir_startmenu_games         "${dir_startmenu_programs}/Games")
@@ -109,7 +109,7 @@ set(dir_startmenu_accessibility "${dir_startmenu_accessories}/Accessibility")
 set(dir_startmenu_comms         "${dir_startmenu_accessories}/Communications")
 set(dir_startmenu_entertainment "${dir_startmenu_accessories}/Entertainment")
 set(dir_startmenu_systemtools   "${dir_startmenu_accessories}/System Tools")
-set(dir_quicklaunch             "Profiles/Default User/Application Data/Microsoft/Internet Explorer/Quick Launch")
+set(dir_quicklaunch             "Users/Default/AppData/Roaming/Microsoft/Internet Explorer/Quick Launch")
 
 cmdenvvar(envvar_systemdrive "SystemDrive" TRUE)
 cmdenvvar(envvar_archdir     "PROCESSOR_ARCHITECTURE:x86=I386" TRUE)
