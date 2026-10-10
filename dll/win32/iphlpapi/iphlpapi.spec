@@ -11,6 +11,7 @@
 @ stdcall AllocateAndGetUdpExTableFromStack(ptr long long long long)
 @ stdcall AllocateAndGetUdpTableFromStack(ptr long long long)
 @ stdcall CancelIPChangeNotify(ptr)
+@ stdcall -stub CancelMibChangeNotify2(ptr)
 @ stub CancelSecurityHealthChangeNotify
 @ stdcall -stub -version=0x600+ ConvertGuidToStringA(ptr ptr long)
 @ stdcall -stub -version=0x600+ ConvertGuidToStringW(ptr ptr long)
@@ -46,6 +47,7 @@
 @ stdcall GetBestInterfaceEx(ptr ptr)
 @ stub GetBestInterfaceFromStack
 @ stdcall GetBestRoute(long long long)
+@ stdcall -stub GetBestRoute2(ptr long ptr ptr long ptr ptr)
 @ stub GetBestRouteFromStack
 @ stdcall -stub -version=0x600+ GetCurrentThreadCompartmentId()
 @ stdcall GetExtendedTcpTable(ptr ptr long long long long)
@@ -139,6 +141,7 @@
 @ stdcall NhpAllocateAndGetInterfaceInfoFromStack(ptr ptr long ptr long)
 @ stub NhpGetInterfaceIndexFromStack
 @ stdcall NotifyAddrChange(ptr ptr)
+@ stdcall -stub NotifyIpInterfaceChange(long ptr ptr long ptr)
 @ stdcall NotifyRouteChange(ptr ptr)
 @ stub NotifyRouteChangeEx
 @ stub NotifySecurityHealthChange

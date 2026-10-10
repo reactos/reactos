@@ -209,6 +209,10 @@
 @ stdcall -version=0x502 EnableTrace(long long long ptr double) ntdll.EtwEnableTrace
 @ stdcall -version=0x600+ EnableTrace(long long long ptr double) EtwEnableTrace
 @ stdcall EncryptFileA(str)
+@ stdcall EventRegister(ptr ptr ptr ptr) ntdll.EtwEventRegister
+@ stdcall EventSetInformation(int64 long ptr long) ntdll.EtwEventSetInformation
+@ stdcall EventUnregister(int64) ntdll.EtwEventUnregister
+@ stdcall EventWriteTransfer(long ptr ptr ptr long long) ntdll.EtwEventWriteTransfer
 @ stdcall EncryptFileW(wstr)
 @ stub EncryptedFileKeyInfo
 @ stdcall EncryptionDisable(wstr long)
