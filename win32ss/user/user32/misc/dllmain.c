@@ -721,3 +721,15 @@ User32CallImmLoadLayoutFromKernel(PVOID Arguments, ULONG ArgumentLength)
     Result.ret = IMM_FN(ImmLoadLayout)(Common->hKL, &Result.iiex);
     return ZwCallbackReturn(&Result, sizeof(Result), STATUS_SUCCESS);
 }
+
+NTSTATUS WINAPI
+User32CallGetKeyboardMultiTableFromKernel(PVOID Arguments, ULONG ArgumentLength)
+{
+    PGETKEYBOARDMULTITABLE_CALLBACK_ARGUMENTS Common = Arguments;
+    GETKEYBOARDMULTITABLE_CALLBACK_OUTPUT Result;
+    RtlZeroMemory(&Result, sizeof(Result)); /* Don't leak the kernel stack */
+    Result.ret = User32GetKeyboardMultiTable(Common->hKL, Common->szLayoutFile,
+                                             &Result.KbdTableMulti,
+                                             Result.szRealName, _countof(Result.szRealName));
+    return ZwCallbackReturn(&Result, sizeof(Result), STATUS_SUCCESS);
+}

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <ndk/kbd.h>
+
 LRESULT APIENTRY
 co_IntCallWindowProc(WNDPROC Proc,
                   BOOLEAN IsAnsiProc,
@@ -86,3 +88,12 @@ APIENTRY
 co_ClientImmLoadLayout(
     _In_ HKL hKL,
     _Inout_ PIMEINFOEX pImeInfoEx);
+
+BOOL
+APIENTRY
+co_GetKeyboardMultiTable(
+    _In_ PCWSTR pszLayoutFile,
+    _In_ HKL hKL,
+    _Out_ PKBDTABLE_MULTI pKbdTableMulti,
+    _Out_writes_z_(cchRealDllName) PWSTR pszRealDllName,
+    _In_ SIZE_T cchRealDllName);

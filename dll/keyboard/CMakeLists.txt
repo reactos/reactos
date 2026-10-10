@@ -99,6 +99,12 @@ foreach(_keyboard_layout ${_keyboard_layouts})
         ${_keyboard_layout}/${_keyboard_layout}.rc
         ${CMAKE_CURRENT_BINARY_DIR}/${_keyboard_layout}.def)
 
+    if(_keyboard_layout STREQUAL "kbdjpn" OR _keyboard_layout STREQUAL "kbdkor")
+        # kbdjpn and kbdkor are special keyboard layouts
+        target_sources(${_keyboard_layout} PRIVATE jpnkor.c)
+        add_importlibs(${_keyboard_layout} ntdll)
+    endif()
+
     set_entrypoint(${_keyboard_layout} 0)
     set_image_base(${_keyboard_layout} 0x5FFF0000)
     set_subsystem(${_keyboard_layout} native)
@@ -109,6 +115,8 @@ foreach(_keyboard_layout ${_keyboard_layouts})
     else()
         # Use a custom linker script
         target_link_options(${_keyboard_layout} PRIVATE "-Wl,-T,${CMAKE_CURRENT_SOURCE_DIR}/kbdlayout.lds")
+        set_property(TARGET ${_keyboard_layout} APPEND PROPERTY
+                     LINK_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/kbdlayout.lds)
     endif()
 
     # dynamic analysis switches
@@ -123,3 +131,6 @@ foreach(_keyboard_layout ${_keyboard_layouts})
     add_dependencies(${_keyboard_layout} xdk)
     add_cd_file(TARGET ${_keyboard_layout} DESTINATION reactos/system32 FOR all)
 endforeach()
+
+target_compile_definitions(kbdjpn PRIVATE KBD_JAPANESE)
+target_compile_definitions(kbdkor PRIVATE KBD_KOREAN)

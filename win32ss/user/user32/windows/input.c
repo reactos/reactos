@@ -1121,4 +1121,80 @@ mouse_event(
     NtUserSendInput(1, &Input, sizeof(INPUT));
 }
 
-/* EOF */
+typedef struct tagCLIENTKEYBOARDTYPE
+{
+    ULONG Type;
+    ULONG SubType;
+    ULONG FunctionKey;
+} CLIENTKEYBOARDTYPE, *PCLIENTKEYBOARDTYPE;
+
+typedef BOOL (WINAPI *PFN_KbdLayerMultiDescriptor)(PKBDTABLE_MULTI);
+typedef BOOL (WINAPI *PFN_KbdLayerRealDllFile)(HKL, PWSTR, PCLIENTKEYBOARDTYPE, PVOID);
+typedef BOOL (WINAPI *PFN_KbdLayerRealDllFileNT4)(PWSTR);
+#define IFN_KbdLayerRealDllFileNT4  MAKEINTRESOURCEA(3)
+#define IFN_KbdLayerRealDllFile     MAKEINTRESOURCEA(5)
+#define IFN_KbdLayerMultiDescriptor MAKEINTRESOURCEA(6)
+
+BOOL APIENTRY
+User32GetKeyboardMultiTable(
+    _In_ HKL hKL,
+    _In_z_ PCWSTR pszLayoutFile,
+    _Out_ PKBDTABLE_MULTI pKbdTableMulti,
+    _Out_writes_z_(cchRealDllName) PWSTR pszRealDllName,
+    _In_ SIZE_T cchRealDllName)
+{
+    PFN_KbdLayerMultiDescriptor pfnMulti;
+    PFN_KbdLayerRealDllFile pfnReal;
+    PFN_KbdLayerRealDllFileNT4 pfnRealNT4;
+    WCHAR szSysDir[MAX_PATH], szPath[MAX_PATH];
+    HMODULE hModule;
+    UINT cch;
+    BOOL ret = FALSE;
+
+    if (pszRealDllName)
+        pszRealDllName[0] = UNICODE_NULL;
+
+    /* Build the full path */
+    cch = GetSystemDirectoryW(szSysDir, _countof(szSysDir));
+    if (!cch || cch >= _countof(szSysDir))
+        return FALSE;
+    if (FAILED(StringCchPrintfW(szPath, _countof(szPath), L"%s\\%s", szSysDir, pszLayoutFile)))
+        return FALSE;
+
+    hModule = LoadLibraryW(szPath);
+    if (!hModule)
+        return FALSE;
+
+    pfnMulti   = (PFN_KbdLayerMultiDescriptor)GetProcAddress(hModule, IFN_KbdLayerMultiDescriptor);
+    pfnReal    = (PFN_KbdLayerRealDllFile)GetProcAddress(hModule, IFN_KbdLayerRealDllFile);
+    pfnRealNT4 = (PFN_KbdLayerRealDllFileNT4)GetProcAddress(hModule, IFN_KbdLayerRealDllFileNT4);
+    TRACE("pfnMulti=%p pfnReal=%p pfnRealNT4=%p\n", pfnMulti, pfnReal, pfnRealNT4);
+
+    /* Obtain the multi-table and real DLL name */
+    if (pfnMulti)
+    {
+        _SEH2_TRY
+        {
+            if (pfnMulti(pKbdTableMulti) &&
+                pKbdTableMulti->nTables && pKbdTableMulti->nTables < KBDTABLE_MULTI_MAX &&
+                ((pfnReal && pfnReal(hKL, pszRealDllName, NULL, NULL)) ||
+                 (pfnRealNT4 && pfnRealNT4(pszRealDllName))))
+            {
+                pszRealDllName[cchRealDllName - 1] = UNICODE_NULL; /* Avoid buffer overrun */
+                ret = TRUE; /* Success */
+            }
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            ERR("Exception in User32GetKeyboardMultiTable!\n");
+        }
+        _SEH2_END;
+    }
+
+    FreeLibrary(hModule);
+
+    if (!ret)
+        pszRealDllName[0] = UNICODE_NULL;
+
+    return ret;
+}
