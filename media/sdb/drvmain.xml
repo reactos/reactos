@@ -1,0 +1,20 @@
+<SDB>
+    <DATABASE>
+        <NAME>ReactOS driver compatibility database</NAME>
+        <DATABASE_ID>{f9ab2228-3312-4a73-b6f9-936d70e112ef}</DATABASE_ID>
+
+        <!-- Shims implemented by the Kernel Shim Engine (ntoskrnl/kse) -->
+        <KSHIM NAME="DriverScope">
+            <MODULE>NT kernel component</MODULE>
+            <FIX_ID>{bc04ab45-ea7e-4a11-a7bb-977615f4caae}</FIX_ID>
+        </KSHIM>
+
+        <!--
+            Drivers are matched with KDRIVER entries, for example:
+
+        <KDRIVER NAME="example.sys" APP_NAME="Example driver" VENDOR="ACME">
+            <KSHIM_REF NAME="DriverScope" />
+        </KDRIVER>
+        -->
+    </DATABASE>
+</SDB>
