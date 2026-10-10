@@ -12,7 +12,7 @@ extern "C" {
 #endif
 
 #undef DPA_GetPtr
-LPVOID WINAPI DPA_GetPtr(HDPA, INT);
+LPVOID WINAPI DPA_GetPtr(HDPA, INT_PTR);
 
 #undef FlatSB_SetScrollProp
 BOOL  WINAPI FlatSB_SetScrollProp(HWND, UINT, INT, BOOL);
@@ -39,17 +39,6 @@ static const WCHAR DRAGLISTMSGSTRINGW[] = { 'c','o','m','m','c','t','r','l',
 #else
 #define SNDMSGA SendMessageA
 #define SNDMSGW SendMessageW
-#endif
-
-#define FLATSB_CLASSA         "flatsb_class32"
-#if defined(__GNUC__)
-# define FLATSB_CLASSW (const WCHAR []){ 'f','l','a','t','s','b','_', \
-  'c','l','a','s','s','3','2',0 }
-#elif defined(_MSC_VER)
-# define FLATSB_CLASSW        L"flatsb_class32"
-#else
-static const WCHAR FLATSB_CLASSW[] = { 'f','l','a','t','s','b','_',
-  'c','l','a','s','s','3','2',0 };
 #endif
 
 typedef TBSAVEPARAMSW *LPTBSAVEPARAMSW;
@@ -89,6 +78,16 @@ typedef struct
 
 #define TreeView_SetItemA(hwnd, pitem) \
  (BOOL)SNDMSGA((hwnd), TVM_SETITEMA, 0, (LPARAM)(const TVITEMA *)(pitem))
+
+
+#define ListView_GetItemTextA(hwndLV, i, _iSubItem, _pszText, _cchTextMax) \
+{ \
+    LVITEMA _LVi;\
+    _LVi.iSubItem = _iSubItem;\
+    _LVi.cchTextMax = _cchTextMax;\
+    _LVi.pszText = _pszText;\
+    SNDMSGA(hwndLV, LVM_GETITEMTEXTA, (WPARAM)(i), (LPARAM)&_LVi);\
+}
 
 #ifdef __cplusplus
 }
