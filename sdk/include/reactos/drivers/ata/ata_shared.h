@@ -349,6 +349,9 @@ typedef struct _ATA_DEVICE_REQUEST
 
 #define REQUEST_FLAG_DEVICE_EXCLUSIVE_ACCESS  0x01000000
 
+/** The request owns DataBuffer and will release it */
+#define REQUEST_FLAG_OWNS_DATA_BUFFER         0x02000000
+
 /** Polled command */
 #define REQUEST_FLAG_POLL                     0x80000000
 
