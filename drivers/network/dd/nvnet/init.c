@@ -92,7 +92,7 @@ NvNetReadConfiguration(
     Adapter->OptimizationMode = GenericUlong;
 
     QueryInteger(ConfigurationHandle,
-                 L"FlowControl",
+                 L"*FlowControl",
                  &GenericUlong,
                  NV_FLOW_CONTROL_AUTO,
                  NV_FLOW_CONTROL_DISABLE,
@@ -100,7 +100,7 @@ NvNetReadConfiguration(
     Adapter->FlowControlMode = GenericUlong;
 
     QueryInteger(ConfigurationHandle,
-                 L"SpeedDuplex",
+                 L"*SpeedDuplex",
                  &GenericUlong,
                  0,
                  0,
@@ -135,7 +135,7 @@ NvNetReadConfiguration(
         Adapter->Flags |= NV_SEND_CHECKSUM;
 
     QueryInteger(ConfigurationHandle,
-                 L"LargeSendOffload",
+                 L"*LsoV1IPv4",
                  &GenericUlong,
                  0,
                  0,
@@ -144,7 +144,7 @@ NvNetReadConfiguration(
         Adapter->Flags |= NV_SEND_LARGE_SEND;
 
     QueryInteger(ConfigurationHandle,
-                 L"JumboSize",
+                 L"*JumboPacket",
                  &GenericUlong,
                  NVNET_MAXIMUM_FRAME_SIZE,
                  NVNET_MAXIMUM_FRAME_SIZE,
@@ -152,22 +152,29 @@ NvNetReadConfiguration(
     Adapter->MaximumFrameSize = GenericUlong;
 
     QueryInteger(ConfigurationHandle,
-                 L"Priority",
+                 L"*PriorityVLANTag",
                  &GenericUlong,
+                 3,
                  0,
-                 0,
-                 1);
-    if (GenericUlong)
-        Adapter->Flags |= NV_PACKET_PRIORITY;
+                 3);
+    switch (GenericUlong)
+    {
+        case 0:
+            break;
+        case 1:
+            Adapter->Flags |= NV_PACKET_PRIORITY;
+            break;
+        case 2:
+            Adapter->Flags |= NV_VLAN_TAGGING;
+            break;
+        case 3:
+            Adapter->Flags |= NV_PACKET_PRIORITY | NV_VLAN_TAGGING;
+            break;
 
-    QueryInteger(ConfigurationHandle,
-                 L"VlanTag",
-                 &GenericUlong,
-                 0,
-                 0,
-                 1);
-    if (GenericUlong)
-        Adapter->Flags |= NV_VLAN_TAGGING;
+        default:
+            ASSERT(FALSE);
+            UNREACHABLE;
+    }
 
     QueryInteger(ConfigurationHandle,
                  L"VlanID",
