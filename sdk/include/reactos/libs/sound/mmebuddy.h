@@ -294,23 +294,14 @@ typedef struct _SOUND_DEVICE_INSTANCE
 
     /* DO NOT TOUCH THESE OUTSIDE OF THE SOUND THREAD */
 
-    union
-    {
-        PWAVEHDR HeadWaveHeader;
-    };
-
-    union
-    {
-        PWAVEHDR TailWaveHeader;
-    };
-
-    PWAVEHDR WaveLoopStart;
-    //PWAVEHDR CurrentWaveHeader;
+    PWAVEHDR WaveHeader;
     DWORD OutstandingBuffers;
     DWORD LoopsRemaining;
     DWORD FrameSize;
     DWORD BufferCount;
+    BOOL DoResampling;
     WAVEFORMATEX WaveFormatEx;
+    KSDATARANGE_AUDIO DataRange;
     HANDLE hNotifyEvent;
     HANDLE hStopEvent;
     HANDLE hResetEvent;
@@ -323,6 +314,8 @@ typedef struct _WAVEHDR_EXTENSION
 {
     DWORD BytesCommitted;
     DWORD BytesCompleted;
+    DWORD ResampledLength;
+    PVOID ResampledBuffer;
 } WAVEHDR_EXTENSION, *PWAVEHDR_EXTENSION;
 
 
@@ -615,8 +608,7 @@ EnqueueWaveHeader(
 
 VOID
 CompleteWaveHeader(
-    IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
-    IN  PWAVEHDR Header);
+    IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance);
 
 MMRESULT
 PrepareWaveHeader(
@@ -633,6 +625,19 @@ WriteWaveHeader(
     IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
     IN  PWAVEHDR Header);
 
+
+/* 
+    wave/resample.c
+*/
+
+MMRESULT
+MmeResampleStream(
+    _In_ PWAVEFORMATEX WaveFormatEx,
+    _In_ PKSDATARANGE_AUDIO DataRange,
+    _In_ DWORD InputLength,
+    _In_ PVOID InputBuffer,
+    _Out_ PDWORD OutputLength,
+    _Out_ PVOID* OutputBuffer);
 
 /*
     wave/streaming.c
