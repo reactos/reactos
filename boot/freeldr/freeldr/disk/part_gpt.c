@@ -47,7 +47,8 @@ DiskGetGptPartitionEntry(
     _In_ UCHAR DriveNumber,
     _In_ ULONG SectorSize, // BlockSize
     _In_ ULONG PartitionNumber,
-    _Out_ PPARTITION_INFORMATION PartitionEntry)
+    _Out_ PPARTITION_INFORMATION PartitionEntry,
+    _In_ BOOLEAN IgnoreUnusedFlag)
 {
     GPT_TABLE_HEADER GptHeader;
     GPT_PARTITION_ENTRY GptEntry;
@@ -82,10 +83,6 @@ DiskGetGptPartitionEntry(
     /* Extract partition entry */
     RtlCopyMemory(&GptEntry, (PUCHAR)DiskReadBuffer + EntryOffset, sizeof(GptEntry));
 
-    /* Check if partition is unused */
-    if (RtlEqualMemory(&GptEntry.PartitionTypeGuid, &UnusedGuid, sizeof(UnusedGuid)))
-        return FALSE;
-
     /* Calculate partition size in blocks */
     ULONGLONG PartitionSizeBlocks = GptEntry.EndingLba - GptEntry.StartingLba + 1;
 
@@ -94,10 +91,19 @@ DiskGetGptPartitionEntry(
     PartitionEntry->PartitionLength.QuadPart = (PartitionSizeBlocks * SectorSize);
     PartitionEntry->HiddenSectors = 0;
     PartitionEntry->PartitionNumber = PartitionNumber;
-    PartitionEntry->PartitionType = PARTITION_GPT; /* Mark as GPT partition */
+
+    if (RtlEqualMemory(&GptEntry.PartitionTypeGuid, &UnusedGuid, sizeof(UnusedGuid)))
+        PartitionEntry->PartitionType = PARTITION_ENTRY_UNUSED;
+    else
+        PartitionEntry->PartitionType = PARTITION_GPT; /* Mark as GPT partition */
+
     PartitionEntry->BootIndicator = RtlEqualMemory(&GptEntry.PartitionTypeGuid, &SystemGuid, sizeof(SystemGuid));
     PartitionEntry->RecognizedPartition = TRUE;
     PartitionEntry->RewritePartition = FALSE;
+
+    /* Check if partition is unused when the flag is not ignored */
+    if (!IgnoreUnusedFlag && PartitionEntry->PartitionType == PARTITION_ENTRY_UNUSED)
+        return FALSE;
 
     return TRUE;
 }
