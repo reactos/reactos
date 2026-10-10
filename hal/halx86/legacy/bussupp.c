@@ -440,7 +440,7 @@ HalpIsRecognizedCard(IN PPCI_REGISTRY_INFO_INTERNAL PciRegistryInfo,
         /* Check what kind of device this is */
         switch (PCI_CONFIGURATION_TYPE(PciData))
         {
-            /* CardBUS Bridge */
+            /* CardBus bridge */
             case PCI_CARDBUS_BRIDGE_TYPE:
 
                 /* This means the real device header is in the device-specific data */
@@ -468,7 +468,7 @@ HalpIsRecognizedCard(IN PPCI_REGISTRY_INFO_INTERNAL PciRegistryInfo,
                 /* You made it! */
                 return TRUE;
 
-            /* PCI Bridge -- don't bother */
+            /* PCI bridge -- don't bother */
             case PCI_BRIDGE_TYPE:
             default:
 
@@ -539,7 +539,7 @@ static BOOLEAN
 NTAPI
 HalpIsBridgeDevice(IN PPCI_COMMON_CONFIG PciData)
 {
-    /* Either this is a PCI-to-PCI Bridge, or a CardBUS Bridge */
+    /* Either this is a PCI-to-PCI bridge, or a CardBus bridge */
     return (((PCI_CONFIGURATION_TYPE(PciData) == PCI_BRIDGE_TYPE) &&
              (PciData->BaseClass == PCI_CLASS_BRIDGE_DEV) &&
              (PciData->SubClass == PCI_SUBCLASS_BR_PCI_TO_PCI)) ||
@@ -590,12 +590,12 @@ HalpGetPciBridgeConfig(
                 /* Skip if this is an invalid function */
                 if (PciData->VendorID == PCI_INVALID_VENDORID) continue;
 
-                /* Make sure that this is a PCI bridge or a cardbus bridge */
+                /* Make sure that this is a PCI bridge or a CardBus bridge */
                 if (!HalpIsBridgeDevice(PciData)) continue;
 
                 // FIXME TODO: Implement
                 if (!WarningsGiven[2]++)
-                    DPRINT1("UNIMPLEMENTED: Your machine has a PCI-to-PCI or CardBUS Bridge. PCI devices may fail!\n");
+                    DPRINT1("UNIMPLEMENTED: Your machine has a PCI-to-PCI or CardBus bridge. PCI devices may fail!\n");
                 continue;
             }
         }
@@ -626,7 +626,7 @@ HalpFixupPciSupportedRanges(
         {
             // FIXME TODO: Should merge addresses
             if (!WarningsGiven[0]++)
-                DPRINT1("UNIMPLEMENTED: Found parent bus (indicating PCI Bridge). PCI devices may fail!\n");
+                DPRINT1("UNIMPLEMENTED: Found parent bus (indicating PCI bridge). PCI devices may fail!\n");
 
             /* Check the next parent */
             ParentBus = ParentBus->ParentHandler;
@@ -651,7 +651,7 @@ HalpFixupPciSupportedRanges(
                 {
                     // FIXME TODO: Should trim addresses
                     if (!WarningsGiven[1]++)
-                        DPRINT1("UNIMPLEMENTED: Found parent PCI Bus (indicating PCI-to-PCI Bridge). PCI devices may fail!\n");
+                        DPRINT1("UNIMPLEMENTED: Found parent PCI bus (indicating PCI-to-PCI bridge). PCI devices may fail!\n");
                 }
 
                 /* Check the next parent */
@@ -1044,11 +1044,11 @@ HalpInitializePciBus(VOID)
                 /* Print out the entry */
                 HalpDebugPciDumpBus(BusHandler, PciSlot, i, j, k, PciData);
 
-                /* Check if this is a Cardbus bridge */
+                /* Check if this is a CardBus bridge */
                 if (PCI_CONFIGURATION_TYPE(PciData) == PCI_CARDBUS_BRIDGE_TYPE)
                 {
                     // FIXME TODO: Implement
-                    DbgPrint("\tDevice is a PCI Cardbus Bridge. It will not work!\n");
+                    DbgPrint("\tDevice is a PCI CardBus bridge. It will not work!\n");
                     continue;
                 }
 
@@ -1086,20 +1086,20 @@ HalpInitializePciBus(VOID)
                         continue;
                     }
 
-                    /* Check for broken 82378 PCI-to-ISA Bridge */
+                    /* Check for broken 82378 PCI-to-ISA bridge */
                     if ((PciData->DeviceID == 0x0484) &&
                         (PciData->RevisionID <= 3))
                     {
                         /* Skip */
-                        DbgPrint("\tDevice is a broken Intel 82378 PCI-to-ISA Bridge. It will not work!\n\n");
+                        DbgPrint("\tDevice is a broken Intel 82378 PCI-to-ISA bridge. It will not work!\n\n");
                         continue;
                     }
 
-                    /* Check for broken 82450 PCI Bridge */
+                    /* Check for broken 82450 PCI bridge */
                     if ((PciData->DeviceID == 0x84C4) &&
                         (PciData->RevisionID <= 4))
                     {
-                        DbgPrint("\tDevice is a Intel Orion 82450 PCI Bridge. It will not work!\n\n");
+                        DbgPrint("\tDevice is a Intel Orion 82450 PCI bridge. It will not work!\n\n");
                         continue;
                     }
                 }
