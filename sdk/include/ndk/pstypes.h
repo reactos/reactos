@@ -1296,24 +1296,73 @@ typedef struct _ETHREAD
     {
         struct
         {
-           ULONG Terminated:1;
+            ULONG Terminated:1;
 #if (NTDDI_VERSION >= NTDDI_LONGHORN)
-           ULONG ThreadInserted:1;
+            ULONG ThreadInserted:1;
 #else
-           ULONG DeadThread:1;
+            ULONG DeadThread:1;
 #endif
-           ULONG HideFromDebugger:1;
-           ULONG ActiveImpersonationInfo:1;
-           ULONG SystemThread:1;
-           ULONG HardErrorsAreDisabled:1;
-           ULONG BreakOnTermination:1;
-           ULONG SkipCreationMsg:1;
-           ULONG SkipTerminationMsg:1;
+            ULONG HideFromDebugger:1;
+            ULONG ActiveImpersonationInfo:1;
+#if (NTDDI_VERSION < NTDDI_WIN8) // NOTE: In Win8+, replaced by KTHREAD::SystemThread
+#if (NTDDI_VERSION >= NTDDI_WIN7SP1)
+            ULONG Reserved:1;
+#else
+            ULONG SystemThread:1;
+#endif
+#endif // (NTDDI_VERSION < NTDDI_WIN8)
+            ULONG HardErrorsAreDisabled:1;
+            ULONG BreakOnTermination:1;
+            ULONG SkipCreationMsg:1;
+            ULONG SkipTerminationMsg:1;
 #if (NTDDI_VERSION >= NTDDI_LONGHORN)
-           ULONG CreateMsgSent:1;
-           ULONG ThreadIoPriority:3;
-           ULONG ThreadPagePriority:3;
-           ULONG PendingRatecontrol:1;
+            ULONG CopyTokenOnOpen:1;
+            ULONG ThreadIoPriority:3;
+            ULONG ThreadPagePriority:3;
+            ULONG RundownFail:1;
+#endif
+#if (NTDDI_VERSION == NTDDI_WIN7)
+            ULONG NeedsWorkingSetAging:1;
+#elif (NTDDI_VERSION >= NTDDI_WIN8)
+            ULONG UmsForceQueueTermination:1;
+#endif
+#if (NTDDI_VERSION >= NTDDI_WIN10)
+            ULONG IndirectCpuSets:1;
+#endif
+#if (NTDDI_VERSION >= NTDDI_WIN10_RS1)
+            ULONG DisableDynamicCodeOptOut:1;
+            ULONG ExplicitCaseSensitivity:1;
+#elif defined(__REACTOS__) // Support per-thread case-sensitivity on pre-NT10-RS1 ReactOS
+            ULONG ExplicitCaseSensitivity:1;
+#endif
+#if (NTDDI_VERSION >= NTDDI_WIN10_RS2)
+            ULONG PicoNotifyExit:1;
+            ULONG DbgWerUserReportActive:1;
+#endif
+#if (NTDDI_VERSION >= NTDDI_WIN10_RS3)
+            ULONG ForcedSelfTrimActive:1;
+#endif
+#if (NTDDI_VERSION >= NTDDI_WIN10_RS4)
+            ULONG SamplingCoverage:1;
+#endif
+#if (NTDDI_VERSION >= NTDDI_WIN11_GE) // 24H2
+            ULONG ImpersonationSchedulingGroup:1;
+#endif
+
+#if (NTDDI_VERSION >= NTDDI_WIN11_GE) // 24H2
+            ULONG ReservedCrossThreadFlags:7;
+#elif (NTDDI_VERSION >= NTDDI_WIN10_RS4)
+            ULONG ReservedCrossThreadFlags:8;
+#elif (NTDDI_VERSION >= NTDDI_WIN10_RS3)
+            ULONG ReservedCrossThreadFlags:9;
+#elif (NTDDI_VERSION >= NTDDI_WIN10_RS2)
+            ULONG ReservedCrossThreadFlags:10;
+#elif (NTDDI_VERSION >= NTDDI_WIN10_RS1)
+            ULONG ReservedCrossThreadFlags:12;
+#elif (NTDDI_VERSION >= NTDDI_WIN10)
+            ULONG ReservedCrossThreadFlags:14;
+#elif (NTDDI_VERSION >= NTDDI_WIN8)
+            ULONG ReservedCrossThreadFlags:15;
 #endif
         };
         ULONG CrossThreadFlags;
@@ -1322,12 +1371,12 @@ typedef struct _ETHREAD
     {
         struct
         {
-           ULONG ActiveExWorker:1;
-           ULONG ExWorkerCanWaitUser:1;
-           ULONG MemoryMaker:1;
-           ULONG KeyedEventInUse:1;
+            ULONG ActiveExWorker:1;
+            ULONG ExWorkerCanWaitUser:1;
+            ULONG MemoryMaker:1;
+            ULONG KeyedEventInUse:1;
 #if (NTDDI_VERSION >= NTDDI_LONGHORN)
-           ULONG RateApcState:2;
+            ULONG RateApcState:2;
 #endif
         };
         ULONG SameThreadPassiveFlags;
@@ -1336,25 +1385,25 @@ typedef struct _ETHREAD
     {
         struct
         {
-           ULONG LpcReceivedMsgIdValid:1;
-           ULONG LpcExitThreadCalled:1;
+            ULONG LpcReceivedMsgIdValid:1;
+            ULONG LpcExitThreadCalled:1;
 #if (NTDDI_VERSION >= NTDDI_LONGHORN)
-           ULONG Spare:1;
+            ULONG Spare:1;
 #else
-           ULONG AddressSpaceOwner:1;
+            ULONG AddressSpaceOwner:1;
 #endif
-           ULONG OwnsProcessWorkingSetExclusive:1;
-           ULONG OwnsProcessWorkingSetShared:1;
-           ULONG OwnsSystemWorkingSetExclusive:1;
-           ULONG OwnsSystemWorkingSetShared:1;
-           ULONG OwnsSessionWorkingSetExclusive:1;
-           ULONG OwnsSessionWorkingSetShared:1;
+            ULONG OwnsProcessWorkingSetExclusive:1;
+            ULONG OwnsProcessWorkingSetShared:1;
+            ULONG OwnsSystemWorkingSetExclusive:1;
+            ULONG OwnsSystemWorkingSetShared:1;
+            ULONG OwnsSessionWorkingSetExclusive:1;
+            ULONG OwnsSessionWorkingSetShared:1;
 #if (NTDDI_VERSION >= NTDDI_LONGHORN)
-           ULONG SuppressSymbolLoad:1;
-           ULONG Spare1:3;
-           ULONG PriorityRegionActive:4;
+            ULONG SuppressSymbolLoad:1;
+            ULONG Spare1:3;
+            ULONG PriorityRegionActive:4;
 #else
-           ULONG ApcNeeded:1;
+            ULONG ApcNeeded:1;
 #endif
         };
         ULONG SameThreadApcFlags;
