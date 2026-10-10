@@ -343,6 +343,9 @@ HRESULT CDesktopFolder::_ParseDisplayNameByParent(
     }
     else if (PathIsUNCW(lpszDisplayName)) // "\\\\..."
     {
+        if (lpszDisplayName[2] == L'?' && (lpszDisplayName[3] == L'\\' || !lpszDisplayName[3]))
+            return E_INVALIDARG; // We don't support "\\?\..." paths
+
         bPath = TRUE;
         pidlParent.Attach(_ILCreateNetwork());
     }
@@ -892,26 +895,19 @@ HRESULT WINAPI CDesktopFolder::SetNameOf(
 
 HRESULT WINAPI CDesktopFolder::GetDefaultSearchGUID(GUID *pguid)
 {
-    FIXME ("(%p)\n", this);
     return E_NOTIMPL;
 }
 
 HRESULT WINAPI CDesktopFolder::EnumSearches(IEnumExtraSearch **ppenum)
 {
-    FIXME ("(%p)\n", this);
+    *ppenum = NULL;
     return E_NOTIMPL;
 }
 
 HRESULT WINAPI CDesktopFolder::GetDefaultColumn(DWORD dwRes, ULONG *pSort, ULONG *pDisplay)
 {
     TRACE ("(%p)\n", this);
-
-    if (pSort)
-        *pSort = 0;
-    if (pDisplay)
-        *pDisplay = 0;
-
-    return S_OK;
+    return E_NOTIMPL; // Not required when column 0 is our default.
 }
 
 HRESULT WINAPI CDesktopFolder::GetDefaultColumnState(UINT iColumn, SHCOLSTATEF *pcsFlags)
