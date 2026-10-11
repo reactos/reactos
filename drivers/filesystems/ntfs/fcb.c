@@ -204,8 +204,10 @@ NtfsReleaseFCB(PNTFS_VCB Vcb,
             return;
         }
 
+        /* A deleted FCB already left the table */
         KeAcquireSpinLock(&Vcb->FcbListLock, &oldIrql);
-        RemoveEntryList(&Fcb->FcbListEntry);
+        if (!(Fcb->Flags & FCB_DELETED))
+            RemoveEntryList(&Fcb->FcbListEntry);
         KeReleaseSpinLock(&Vcb->FcbListLock, oldIrql);
 
         NtfsDestroyFCB(Fcb);
@@ -246,11 +248,13 @@ NtfsRemoveFCBFromTable(
 
     KeAcquireSpinLock(&Vcb->FcbListLock, &OldIrql);
 
-    /* Leave the entry linked to itself, so the RemoveEntryList() in
-     * NtfsReleaseFCB() stays harmless */
-    RemoveEntryList(&Fcb->FcbListEntry);
-    InitializeListHead(&Fcb->FcbListEntry);
-    Fcb->Flags |= FCB_DELETED;
+    /* FCB_DELETED tells NtfsReleaseFCB() the entry is already unlinked */
+    if (!(Fcb->Flags & FCB_DELETED))
+    {
+        RemoveEntryList(&Fcb->FcbListEntry);
+        InitializeListHead(&Fcb->FcbListEntry);
+        Fcb->Flags |= FCB_DELETED;
+    }
 
     KeReleaseSpinLock(&Vcb->FcbListLock, OldIrql);
 }
