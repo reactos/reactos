@@ -174,6 +174,11 @@ typedef struct
     //
     PIO_WORKITEM CompletionWorkItem;
 
+    //
+    // link in the pending read list; the IRP itself belongs to the lower driver until it completes
+    //
+    LIST_ENTRY PendingLink;
+
 } HIDCLASS_IRP_CONTEXT, *PHIDCLASS_IRP_CONTEXT;
 
 /* fdo.c */

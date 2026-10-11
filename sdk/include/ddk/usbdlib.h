@@ -272,69 +272,106 @@ USBD_ValidateConfigurationDescriptor(
 _Must_inspect_result_
 _IRQL_requires_(PASSIVE_LEVEL)
 NTSTATUS
-USBD_QueryUsbCapability(
-    _In_ USBD_HANDLE USBDHandle,
-    _In_ const GUID* CapabilityType,
-    _In_ ULONG       OutputBufferLength,
-    _When_(OutputBufferLength == 0, _Pre_null_)
-    _When_(OutputBufferLength != 0 && ResultLength == NULL, _Out_writes_bytes_(OutputBufferLength))
-    _When_(OutputBufferLength != 0 && ResultLength != NULL, _Out_writes_bytes_to_opt_(OutputBufferLength, *ResultLength))
-        PUCHAR                        OutputBuffer,
-    _Out_opt_ 
-    _When_(ResultLength != NULL, _Deref_out_range_(<=,OutputBufferLength))
-        PULONG                        ResultLength
-);
+NTAPI
+USBD_CreateHandle(
+  _In_ PDEVICE_OBJECT DeviceObject,
+  _In_ PDEVICE_OBJECT TargetDeviceObject,
+  _In_ ULONG USBDClientContractVersion,
+  _In_ ULONG PoolTag,
+  _Out_ USBD_HANDLE *USBDHandle);
 
 _IRQL_requires_max_(DISPATCH_LEVEL)
 VOID
-USBD_AssignUrbToIoStackLocation(
-    _In_ USBD_HANDLE USBDHandle,
-    _In_ PIO_STACK_LOCATION IoStackLocation,
-    _In_ PURB Urb
-);
+NTAPI
+USBD_CloseHandle(
+  _In_ USBD_HANDLE USBDHandle);
 
 _Must_inspect_result_
 _IRQL_requires_(PASSIVE_LEVEL)
 NTSTATUS
-USBD_CreateHandle(
-    _In_      PDEVICE_OBJECT DeviceObject,
-    _In_      PDEVICE_OBJECT TargetDeviceObject,
-    _In_      ULONG          USBDClientContractVersion,
-    _In_      ULONG          PoolTag,
-    _Out_     USBD_HANDLE   *USBDHandle
-);
-
-VOID
-USBD_CloseHandle(
-    _In_ USBD_HANDLE USBDHandle
-);
+NTAPI
+USBD_QueryUsbCapability(
+  _In_ USBD_HANDLE USBDHandle,
+  _In_ const GUID *CapabilityType,
+  _In_ ULONG OutputBufferLength,
+  _When_(OutputBufferLength == 0, _Pre_null_)
+  _When_(OutputBufferLength != 0 && ResultLength == NULL, _Out_writes_bytes_(OutputBufferLength))
+  _When_(OutputBufferLength != 0 && ResultLength != NULL, _Out_writes_bytes_to_opt_(OutputBufferLength, *ResultLength))
+    PUCHAR OutputBuffer,
+  _Out_opt_
+  _When_(ResultLength != NULL, _Deref_out_range_(<=, OutputBufferLength))
+    PULONG ResultLength);
 
 _IRQL_requires_max_(DISPATCH_LEVEL)
 _Must_inspect_result_
 NTSTATUS
+NTAPI
 USBD_UrbAllocate(
-    _In_ USBD_HANDLE USBDHandle,
-    _Outptr_result_bytebuffer_(sizeof(URB)) PURB *Urb
-);
+  _In_ USBD_HANDLE USBDHandle,
+  _Outptr_result_bytebuffer_(sizeof(URB)) PURB *Urb);
 
 _IRQL_requires_max_(DISPATCH_LEVEL)
 _Must_inspect_result_
 NTSTATUS
+NTAPI
 USBD_IsochUrbAllocate(
-    _In_ USBD_HANDLE USBDHandle,
-    _In_ ULONG NumberOfIsochPacket,
-    _Outptr_result_bytebuffer_(sizeof(struct _URB_ISOCH_TRANSFER) 
-                               + (NumberOfIsochPackets * sizeof(USBD_ISO_PACKET_DESCRIPTOR))
-                               - sizeof(USBD_ISO_PACKET_DESCRIPTOR)) 
-    PURB *Urb
-);
+  _In_ USBD_HANDLE USBDHandle,
+  _In_ ULONG NumberOfIsochPackets,
+  _Outptr_result_bytebuffer_(sizeof(struct _URB_ISOCH_TRANSFER)
+                             + (NumberOfIsochPackets * sizeof(USBD_ISO_PACKET_DESCRIPTOR))
+                             - sizeof(USBD_ISO_PACKET_DESCRIPTOR))
+    PURB *Urb);
+
+_IRQL_requires_max_(DISPATCH_LEVEL)
+_Must_inspect_result_
+NTSTATUS
+NTAPI
+USBD_SelectConfigUrbAllocateAndBuild(
+  _In_ USBD_HANDLE USBDHandle,
+  _In_opt_ PUSB_CONFIGURATION_DESCRIPTOR ConfigurationDescriptor,
+  _Inout_ PUSBD_INTERFACE_LIST_ENTRY InterfaceList,
+  _Outptr_ PURB *Urb);
+
+_IRQL_requires_max_(DISPATCH_LEVEL)
+_Must_inspect_result_
+NTSTATUS
+NTAPI
+USBD_SelectInterfaceUrbAllocateAndBuild(
+  _In_ USBD_HANDLE USBDHandle,
+  _In_ USBD_CONFIGURATION_HANDLE ConfigurationHandle,
+  _Inout_ PUSBD_INTERFACE_LIST_ENTRY InterfaceListEntry,
+  _Outptr_ PURB *Urb);
 
 _IRQL_requires_max_(DISPATCH_LEVEL)
 VOID
+NTAPI
 USBD_UrbFree(
-    _In_ USBD_HANDLE USBDHandle,
-    _In_ PURB Urb
-);
+  _In_ USBD_HANDLE USBDHandle,
+  _In_ PURB Urb);
+
+_IRQL_requires_max_(DISPATCH_LEVEL)
+VOID
+NTAPI
+USBD_AssignUrbToIoStackLocation(
+  _In_ USBD_HANDLE USBDHandle,
+  _In_ PIO_STACK_LOCATION IoStackLocation,
+  _In_ PURB Urb);
+
+_IRQL_requires_max_(DISPATCH_LEVEL)
+BOOLEAN
+NTAPI
+USBD_IsInterfaceVersionSupported(
+  _In_ USBD_HANDLE USBDHandle,
+  _In_ ULONG USBDInterfaceVersion);
+
+_IRQL_requires_max_(DISPATCH_LEVEL)
+VOID
+NTAPI
+USBD_BuildRegisterCompositeDevice(
+  _In_ USBD_HANDLE USBDHandle,
+  _In_ COMPOSITE_DEVICE_CAPABILITIES CapabilityFlags,
+  _In_ ULONG FunctionCount,
+  _Out_ PREGISTER_COMPOSITE_DEVICE RegisterCompositeDevice);
 
 #endif
 
