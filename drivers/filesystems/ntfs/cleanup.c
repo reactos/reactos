@@ -91,6 +91,26 @@ NtfsCleanupFile(PDEVICE_EXTENSION DeviceExt,
             }
         }
 
+        /* Give back what writes reserved past the end of the file */
+        if (Fcb->OpenHandleCount == 0 &&
+            !DeletePending &&
+            !NtfsFCBIsDirectory(Fcb) &&
+            !(DeviceExt->Flags & VCB_VOLUME_DISMOUNTED) &&
+            Fcb->RFCB.AllocationSize.QuadPart > (LONGLONG)ROUND_UP(Fcb->RFCB.FileSize.QuadPart, DeviceExt->NtfsInfo.BytesPerCluster))
+        {
+            NTSTATUS Status;
+
+            Status = NtfsTrimAllocation(Fcb);
+            if (!NT_SUCCESS(Status))
+            {
+                DPRINT1("Couldn't trim the allocation of '%wS' (Status %lx)\n", Fcb->ObjectName, Status);
+            }
+            else
+            {
+                CcSetFileSizes(FileObject, (PCC_FILE_SIZES)&Fcb->RFCB.AllocationSize);
+            }
+        }
+
         CcUninitializeCacheMap(FileObject, &Fcb->RFCB.FileSize, NULL);
 
         /* Only once the cache map is gone. Freeing the record while a section still refers to
@@ -101,7 +121,30 @@ NtfsCleanupFile(PDEVICE_EXTENSION DeviceExt,
 
             MmFlushImageSection(&Fcb->SectionObjectPointers, MmFlushForDelete);
 
-            Status = NtfsDeleteFileRecord(DeviceExt, Fcb->MFTIndex, FALSE);
+            /* Something may have been created in the directory since the delete
+             * was requested; freeing it now would orphan that child */
+            Status = STATUS_SUCCESS;
+            if (NtfsFCBIsDirectory(Fcb))
+            {
+                BOOLEAN Empty;
+
+                KeEnterCriticalRegion();
+                ExAcquireResourceSharedLite(&DeviceExt->IndexResource, TRUE);
+                Status = NtfsIsDirectoryEmpty(DeviceExt, Fcb->MFTIndex, &Empty);
+                ExReleaseResourceLite(&DeviceExt->IndexResource);
+                KeLeaveCriticalRegion();
+
+                if (NT_SUCCESS(Status) && !Empty)
+                    Status = STATUS_DIRECTORY_NOT_EMPTY;
+            }
+
+            if (NT_SUCCESS(Status))
+                Status = NtfsDeleteFileRecord(DeviceExt, Fcb->MFTIndex, FALSE);
+
+            /* A cached FCB for a path that no longer exists would make it look present */
+            if (NT_SUCCESS(Status))
+                NtfsRemoveFCBFromTable(DeviceExt, Fcb);
+
             if (!NT_SUCCESS(Status))
             {
                 DPRINT1("ERROR: Failed to delete '%wS' (MFT record %I64u), Status %lx\n",
