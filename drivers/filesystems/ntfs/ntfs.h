@@ -584,6 +584,7 @@ typedef struct _NTFS_ATTR_CONTEXT
 #define FCB_IS_VOLUME_STREAM    0x0002
 #define FCB_IS_VOLUME           0x0004
 #define FCB_DELETE_PENDING      0x0008
+#define FCB_DELETED             0x0010
 #define MAX_PATH                260
 
 typedef struct _FCB
@@ -1075,6 +1076,11 @@ NtfsReleaseFCB(PNTFS_VCB Vcb,
 VOID
 NtfsAddFCBToTable(PNTFS_VCB Vcb,
                   PNTFS_FCB Fcb);
+
+VOID
+NtfsRemoveFCBFromTable(
+    _In_ PNTFS_VCB Vcb,
+    _In_ PNTFS_FCB Fcb);
 
 PNTFS_FCB
 NtfsGrabFCBFromTable(PNTFS_VCB Vcb,

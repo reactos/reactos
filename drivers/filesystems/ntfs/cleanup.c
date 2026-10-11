@@ -141,6 +141,10 @@ NtfsCleanupFile(PDEVICE_EXTENSION DeviceExt,
             if (NT_SUCCESS(Status))
                 Status = NtfsDeleteFileRecord(DeviceExt, Fcb->MFTIndex, FALSE);
 
+            /* A cached FCB for a path that no longer exists would make it look present */
+            if (NT_SUCCESS(Status))
+                NtfsRemoveFCBFromTable(DeviceExt, Fcb);
+
             if (!NT_SUCCESS(Status))
             {
                 DPRINT1("ERROR: Failed to delete '%wS' (MFT record %I64u), Status %lx\n",

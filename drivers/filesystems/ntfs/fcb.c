@@ -191,7 +191,7 @@ NtfsReleaseFCB(PNTFS_VCB Vcb,
 
     KeAcquireSpinLock(&Vcb->FcbListLock, &oldIrql);
     Fcb->RefCount--;
-    if (Fcb->RefCount <= 0 && !NtfsFCBIsDirectory(Fcb))
+    if (Fcb->RefCount <= 0 && (!NtfsFCBIsDirectory(Fcb) || (Fcb->Flags & FCB_DELETED)))
     {
         KeReleaseSpinLock(&Vcb->FcbListLock, oldIrql);
 
@@ -227,6 +227,32 @@ NtfsAddFCBToTable(PNTFS_VCB Vcb,
     Fcb->Vcb = Vcb;
     InsertTailList(&Vcb->FcbListHead, &Fcb->FcbListEntry);
     KeReleaseSpinLock(&Vcb->FcbListLock, oldIrql);
+}
+
+
+/**
+* @name NtfsRemoveFCBFromTable
+*
+* Takes the FCB of a deleted file or directory out of the table, so a later
+* open of the same path goes to the disk instead of finding it. The FCB lives
+* on until its last reference is released.
+*/
+VOID
+NtfsRemoveFCBFromTable(
+    _In_ PNTFS_VCB Vcb,
+    _In_ PNTFS_FCB Fcb)
+{
+    KIRQL OldIrql;
+
+    KeAcquireSpinLock(&Vcb->FcbListLock, &OldIrql);
+
+    /* Leave the entry linked to itself, so the RemoveEntryList() in
+     * NtfsReleaseFCB() stays harmless */
+    RemoveEntryList(&Fcb->FcbListEntry);
+    InitializeListHead(&Fcb->FcbListEntry);
+    Fcb->Flags |= FCB_DELETED;
+
+    KeReleaseSpinLock(&Vcb->FcbListLock, OldIrql);
 }
 
 
