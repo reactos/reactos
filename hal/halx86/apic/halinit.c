@@ -59,13 +59,18 @@ HalpInitPhase0(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
                                HalpClockInterrupt,
                                Latched);
 
-    /* Enable profile interrupt handler */
-    HalpEnableInterruptHandler(IDT_DEVICE,
-                               0,
-                               APIC_PROFILE_VECTOR,
-                               APIC_PROFILE_LEVEL,
-                               HalpProfileInterrupt,
-                               Latched);
+    /* Measure the profile timer against the calibrated TSC */
+    HalpInitializeProfileTimer();
+
+    /* The profile interrupt is the local APIC timer, not an I/O APIC input */
+    HalpRegisterVector(IDT_DEVICE | IDT_LATCHED,
+                       0,
+                       APIC_PROFILE_VECTOR,
+                       APIC_PROFILE_LEVEL);
+    KeRegisterInterruptHandler(APIC_PROFILE_VECTOR, HalpProfileInterrupt);
+
+    /* Profile list updates must mask the profile interrupt */
+    KeSetProfileIrql(APIC_PROFILE_LEVEL);
 }
 
 VOID

@@ -356,6 +356,10 @@ HalInitializeProfiling(VOID);
 
 VOID
 NTAPI
+HalpInitializeProfileTimer(VOID);
+
+VOID
+NTAPI
 HalpInitApicInfo(IN PLOADER_PARAMETER_BLOCK KeLoaderBlock);
 
 VOID __cdecl ApicSpuriousService(VOID);

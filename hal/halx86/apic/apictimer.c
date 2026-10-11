@@ -15,11 +15,14 @@
 
 extern LARGE_INTEGER HalpCpuClockFrequency;
 
-/* HAL profiling variables */
+/* HAL profiling variables, intervals in 100 ns units */
 BOOLEAN HalIsProfiling = FALSE;
-ULONGLONG HalCurProfileInterval = 10000000;
-ULONGLONG HalMinProfileInterval = 1000;
+ULONGLONG HalCurProfileInterval = 78125;
+ULONGLONG HalMinProfileInterval = 1221;
 ULONGLONG HalMaxProfileInterval = 10000000;
+
+/* Local APIC timer ticks per millisecond at divide-by-1, measured at boot */
+static ULONG HalpProfileTimerTicksPerMs = 10000;
 
 /* TIMER FUNCTIONS ************************************************************/
 
@@ -61,11 +64,106 @@ ApicInitializeTimer(ULONG Cpu)
 // KeSetTimeIncrement
 }
 
+static
+ULONG
+HalpProfileIntervalToCount(
+    _In_ ULONGLONG Interval)
+{
+    ULONGLONG Count;
+
+    Count = Interval * HalpProfileTimerTicksPerMs / 10000;
+    if (Count == 0)
+        return 1;
+    if (Count > MAXULONG)
+        return MAXULONG;
+    return (ULONG)Count;
+}
+
 VOID
 FASTCALL
 HalpProfileInterruptHandler(_In_ PKTRAP_FRAME TrapFrame)
 {
+#ifdef _M_IX86
+    KIRQL Irql;
+
+    /* Enter trap */
+    KiEnterInterruptTrap(TrapFrame);
+
+    /* Start the interrupt */
+    if (!HalBeginSystemInterrupt(APIC_PROFILE_LEVEL, APIC_PROFILE_VECTOR, &Irql))
+    {
+        /* Spurious, just end the interrupt */
+        KiEoiHelper(TrapFrame);
+    }
+
     KeProfileInterruptWithSource(TrapFrame, ProfileTime);
+
+    /* On x86 this exits the trap: the entry stub must never be returned to */
+    KiEndInterrupt(Irql, TrapFrame);
+#else
+    KeProfileInterruptWithSource(TrapFrame, ProfileTime);
+#endif
+}
+
+VOID
+NTAPI
+HalpInitializeProfileTimer(VOID)
+{
+    ULONG_PTR Flags;
+    ULONG64 T0, T1, T2, T3, Wait, Slack, TicksPerMs;
+    ULONG Remaining, Attempt;
+    LVT_REGISTER LvtEntry;
+
+    Flags = __readeflags();
+    _disable();
+
+    /* Count down in one-shot mode with the interrupt masked */
+    LvtEntry.Long = 0;
+    LvtEntry.TimerMode = 0;
+    LvtEntry.Vector = APIC_PROFILE_VECTOR;
+    LvtEntry.Mask = 1;
+    ApicWrite(APIC_TMRLVTR, LvtEntry.Long);
+    ApicWrite(APIC_TDCR, TIMER_DV_DivideBy1);
+
+    Wait = HalpCpuClockFrequency.QuadPart / 1000;
+    Slack = Wait / 64;
+    for (Attempt = 0; (Wait != 0) && (Attempt < 5); Attempt++)
+    {
+        /* TSC reads bracket both APIC accesses; a delay at either edge is retried */
+        T0 = __rdtsc();
+        ApicWrite(APIC_TICR, MAXULONG);
+        T1 = __rdtsc();
+        do
+        {
+            YieldProcessor();
+            T2 = __rdtsc();
+        } while ((T2 - T1) < Wait);
+        Remaining = ApicRead(APIC_TCCR);
+        T3 = __rdtsc();
+
+        if ((Remaining == 0) || ((T1 - T0) > Slack) || ((T3 - T2) > Slack))
+            continue;
+
+        TicksPerMs = (ULONG64)(MAXULONG - Remaining) * Wait / (((T2 + T3) / 2) - ((T0 + T1) / 2));
+        if ((TicksPerMs != 0) && (TicksPerMs <= MAXULONG))
+        {
+            HalpProfileTimerTicksPerMs = (ULONG)TicksPerMs;
+            break;
+        }
+    }
+
+    if ((Wait == 0) || (Attempt == 5))
+    {
+        DPRINT1("Profile timer not calibrated, assuming %lu ticks per ms\n",
+                HalpProfileTimerTicksPerMs);
+    }
+
+    /* Stop the timer and leave it masked and periodic */
+    ApicWrite(APIC_TICR, 0);
+    LvtEntry.TimerMode = 1;
+    ApicWrite(APIC_TMRLVTR, LvtEntry.Long);
+
+    __writeeflags(Flags);
 }
 
 
@@ -75,8 +173,8 @@ VOID
 NTAPI
 HalInitializeProfiling(VOID)
 {
-    KeGetPcr()->HalReserved[HAL_PROFILING_INTERVAL] = HalCurProfileInterval;
-    KeGetPcr()->HalReserved[HAL_PROFILING_MULTIPLIER] = 1; /* TODO: HACK */
+    /* All processors count at the rate measured on the boot processor */
+    ApicWrite(APIC_TDCR, TIMER_DV_DivideBy1);
 }
 
 VOID
@@ -91,15 +189,15 @@ HalStartProfileInterrupt(IN KPROFILE_SOURCE ProfileSource)
         /* OK, we are profiling now */
         HalIsProfiling = TRUE;
 
-        /* Set interrupt interval */
-        ApicWrite(APIC_TICR, KeGetPcr()->HalReserved[HAL_PROFILING_INTERVAL]);
-
-        /* Unmask it */
+        /* Periodic and unmasked first: a one-shot count could expire before the mode changes */
         LvtEntry.Long = 0;
         LvtEntry.TimerMode = 1;
         LvtEntry.Vector = APIC_PROFILE_VECTOR;
         LvtEntry.Mask = 0;
         ApicWrite(APIC_TMRLVTR, LvtEntry.Long);
+
+        /* Set interrupt interval, which starts the count */
+        ApicWrite(APIC_TICR, HalpProfileIntervalToCount(HalCurProfileInterval));
     }
 }
 
@@ -128,7 +226,6 @@ ULONG_PTR
 NTAPI
 HalSetProfileInterval(IN ULONG_PTR Interval)
 {
-    ULONGLONG TimerInterval;
     ULONGLONG FixedInterval;
 
     FixedInterval = (ULONGLONG)Interval;
@@ -146,14 +243,9 @@ HalSetProfileInterval(IN ULONG_PTR Interval)
     /* Remember interval */
     HalCurProfileInterval = FixedInterval;
 
-    /* Recalculate interval for APIC */
-    TimerInterval = FixedInterval * KeGetPcr()->HalReserved[HAL_PROFILING_MULTIPLIER] / HalMaxProfileInterval;
+    /* A profile timer running on this processor takes the new interval at once */
+    if (HalIsProfiling)
+        ApicWrite(APIC_TICR, HalpProfileIntervalToCount(FixedInterval));
 
-    /* Remember recalculated interval in PCR */
-    KeGetPcr()->HalReserved[HAL_PROFILING_INTERVAL] = (ULONG)TimerInterval;
-
-    /* And set it */
-    ApicWrite(APIC_TICR, (ULONG)TimerInterval);
-
-    return Interval;
+    return (ULONG_PTR)FixedInterval;
 }
