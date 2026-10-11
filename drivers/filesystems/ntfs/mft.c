@@ -1946,13 +1946,14 @@ NtfsUpdateDuplicatedInformation(PDEVICE_EXTENSION Vcb,
 *
 * (Most of this code was copied from NtfsFindMftRecord)
 */
+static
 NTSTATUS
-UpdateFileNameRecord(PDEVICE_EXTENSION Vcb,
-                     ULONGLONG ParentMFTIndex,
-                     PUNICODE_STRING FileName,
-                     BOOLEAN DirSearch,
-                     PNTFS_FILENAME_UPDATE Update,
-                     BOOLEAN CaseSensitive)
+UpdateFileNameRecordWorker(PDEVICE_EXTENSION Vcb,
+                           ULONGLONG ParentMFTIndex,
+                           PUNICODE_STRING FileName,
+                           BOOLEAN DirSearch,
+                           PNTFS_FILENAME_UPDATE Update,
+                           BOOLEAN CaseSensitive)
 {
     PFILE_RECORD_HEADER MftRecord;
     PNTFS_ATTR_CONTEXT IndexRootCtx;
@@ -2049,6 +2050,27 @@ UpdateFileNameRecord(PDEVICE_EXTENSION Vcb,
     ReleaseAttributeContext(IndexRootCtx);
     ExFreePoolWithTag(IndexRecord, TAG_NTFS);
     ExFreeToNPagedLookasideList(&Vcb->FileRecLookasideList, MftRecord);
+
+    return Status;
+}
+
+/* The worker rewrites the directory record from a copy it reads, so it
+ * must not overlap any other update of a directory index */
+NTSTATUS
+UpdateFileNameRecord(PDEVICE_EXTENSION Vcb,
+                     ULONGLONG ParentMFTIndex,
+                     PUNICODE_STRING FileName,
+                     BOOLEAN DirSearch,
+                     PNTFS_FILENAME_UPDATE Update,
+                     BOOLEAN CaseSensitive)
+{
+    NTSTATUS Status;
+
+    KeEnterCriticalRegion();
+    ExAcquireResourceExclusiveLite(&Vcb->IndexResource, TRUE);
+    Status = UpdateFileNameRecordWorker(Vcb, ParentMFTIndex, FileName, DirSearch, Update, CaseSensitive);
+    ExReleaseResourceLite(&Vcb->IndexResource);
+    KeLeaveCriticalRegion();
 
     return Status;
 }
@@ -2546,12 +2568,13 @@ GetMaxIndexRootSize(PDEVICE_EXTENSION DeviceExt,
 * file which contains one FILENAME_ATTRIBUTE for a long name and another for the 8.3 name, will
 * get both attributes added to its parent directory.
 */
+static
 NTSTATUS
-NtfsAddFilenameToDirectory(PDEVICE_EXTENSION DeviceExt,
-                           ULONGLONG DirectoryMftIndex,
-                           ULONGLONG FileReferenceNumber,
-                           PFILENAME_ATTRIBUTE FilenameAttribute,
-                           BOOLEAN CaseSensitive)
+AddFilenameToDirectoryWorker(PDEVICE_EXTENSION DeviceExt,
+                             ULONGLONG DirectoryMftIndex,
+                             ULONGLONG FileReferenceNumber,
+                             PFILENAME_ATTRIBUTE FilenameAttribute,
+                             BOOLEAN CaseSensitive)
 {
     NTSTATUS Status = STATUS_SUCCESS;
     PFILE_RECORD_HEADER ParentFileRecord;
@@ -2889,6 +2912,26 @@ NtfsAddFilenameToDirectory(PDEVICE_EXTENSION DeviceExt,
     return Status;
 }
 
+/* The worker rewrites the directory record from a copy it reads, so it
+ * must not overlap any other update of a directory index */
+NTSTATUS
+NtfsAddFilenameToDirectory(PDEVICE_EXTENSION DeviceExt,
+                           ULONGLONG DirectoryMftIndex,
+                           ULONGLONG FileReferenceNumber,
+                           PFILENAME_ATTRIBUTE FilenameAttribute,
+                           BOOLEAN CaseSensitive)
+{
+    NTSTATUS Status;
+
+    KeEnterCriticalRegion();
+    ExAcquireResourceExclusiveLite(&DeviceExt->IndexResource, TRUE);
+    Status = AddFilenameToDirectoryWorker(DeviceExt, DirectoryMftIndex, FileReferenceNumber, FilenameAttribute, CaseSensitive);
+    ExReleaseResourceLite(&DeviceExt->IndexResource);
+    KeLeaveCriticalRegion();
+
+    return Status;
+}
+
 /**
 * @name NtfsRemoveFilenameFromDirectory
 * @implemented
@@ -2917,11 +2960,12 @@ NtfsAddFilenameToDirectory(PDEVICE_EXTENSION DeviceExt,
 * The inverse of NtfsAddFilenameToDirectory(). One $FILE_NAME attribute is indexed per link, so
 * a file carrying both a long name and an 8.3 name needs one call for each.
 */
+static
 NTSTATUS
-NtfsRemoveFilenameFromDirectory(PDEVICE_EXTENSION DeviceExt,
-                                ULONGLONG DirectoryMftIndex,
-                                PFILENAME_ATTRIBUTE FilenameAttribute,
-                                BOOLEAN CaseSensitive)
+RemoveFilenameFromDirectoryWorker(PDEVICE_EXTENSION DeviceExt,
+                                  ULONGLONG DirectoryMftIndex,
+                                  PFILENAME_ATTRIBUTE FilenameAttribute,
+                                  BOOLEAN CaseSensitive)
 {
     NTSTATUS Status;
     PFILE_RECORD_HEADER ParentFileRecord;
@@ -3112,6 +3156,25 @@ NtfsRemoveFilenameFromDirectory(PDEVICE_EXTENSION DeviceExt,
     ReleaseAttributeContext(IndexRootContext);
     ExFreePoolWithTag(I30IndexRoot, TAG_NTFS);
     ExFreeToNPagedLookasideList(&DeviceExt->FileRecLookasideList, ParentFileRecord);
+
+    return Status;
+}
+
+/* The worker rewrites the directory record from a copy it reads, so it
+ * must not overlap any other update of a directory index */
+NTSTATUS
+NtfsRemoveFilenameFromDirectory(PDEVICE_EXTENSION DeviceExt,
+                                ULONGLONG DirectoryMftIndex,
+                                PFILENAME_ATTRIBUTE FilenameAttribute,
+                                BOOLEAN CaseSensitive)
+{
+    NTSTATUS Status;
+
+    KeEnterCriticalRegion();
+    ExAcquireResourceExclusiveLite(&DeviceExt->IndexResource, TRUE);
+    Status = RemoveFilenameFromDirectoryWorker(DeviceExt, DirectoryMftIndex, FilenameAttribute, CaseSensitive);
+    ExReleaseResourceLite(&DeviceExt->IndexResource);
+    KeLeaveCriticalRegion();
 
     return Status;
 }

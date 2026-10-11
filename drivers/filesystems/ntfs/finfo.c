@@ -993,8 +993,10 @@ NtfsSetInformation(PNTFS_IRP_CONTEXT IrpContext)
     SystemBuffer = Irp->AssociatedIrp.SystemBuffer;
     BufferLength = Stack->Parameters.QueryFile.Length;
 
-    if (!ExAcquireResourceSharedLite(&Fcb->MainResource,
-                                     BooleanFlagOn(IrpContext->Flags, IRPCONTEXT_CANWAIT)))
+    /* Every class below rewrites the file record from a copy it reads, so
+     * two of them at once on the same file would lose one update */
+    if (!ExAcquireResourceExclusiveLite(&Fcb->MainResource,
+                                        BooleanFlagOn(IrpContext->Flags, IRPCONTEXT_CANWAIT)))
     {
         return NtfsMarkIrpContextForQueue(IrpContext);
     }
@@ -1010,10 +1012,16 @@ NtfsSetInformation(PNTFS_IRP_CONTEXT IrpContext)
                 break;
             }
 
+            /* A directory's record carries its index, which a create in it
+             * could be changing; IndexResource keeps the two apart */
+            KeEnterCriticalRegion();
+            ExAcquireResourceExclusiveLite(&DeviceExt->IndexResource, TRUE);
             Status = NtfsSetBasicInformation(DeviceExt,
                                              Fcb,
                                              BooleanFlagOn(Stack->Flags, SL_CASE_SENSITIVE),
                                              (PFILE_BASIC_INFORMATION)SystemBuffer);
+            ExReleaseResourceLite(&DeviceExt->IndexResource);
+            KeLeaveCriticalRegion();
             break;
 
         /* TODO: Allocation size is not actually the same as file end for NTFS,

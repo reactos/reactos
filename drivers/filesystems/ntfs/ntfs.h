@@ -104,6 +104,10 @@ typedef struct
     ERESOURCE DirResource;
 //    ERESOURCE FatResource;
 
+    /* Serializes every read-modify-write of a directory's file record and
+     * index. Taken after any FCB resource, and before BitmapResource. */
+    ERESOURCE IndexResource;
+
     /* In-memory copy of $Bitmap, loaded at mount. BitmapResource guards
      * the copy and keeps it in step with the disk. */
     ERESOURCE BitmapResource;
