@@ -174,3 +174,7 @@ KseDbGetShimsForDriver(
 NTSTATUS
 NTAPI
 KseDriverScopeInitialize(VOID);
+
+NTSTATUS
+NTAPI
+KseIgnoreFreePoolTagInitialize(VOID);
