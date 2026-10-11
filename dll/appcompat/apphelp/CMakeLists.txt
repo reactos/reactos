@@ -40,3 +40,6 @@ set_module_type(apphelp win32dll UNICODE ENTRYPOINT DllMain 12)
 add_delay_importlibs(apphelp version)
 add_importlibs(apphelp kernel32 ntdll)
 add_cd_file(TARGET apphelp DESTINATION reactos/system32 FOR all)
+
+add_library(sdbread_km STATIC sdbread.c)
+add_dependencies(sdbread_km psdk)

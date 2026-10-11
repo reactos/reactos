@@ -77,7 +77,7 @@ KsepPoolAllocateNonPaged(IN SIZE_T NumberOfBytes)
     return NULL;
 }
 
-static PKSE_SHIM NTAPI
+PKSE_SHIM NTAPI
 KsepFindShim(
     IN PCUNICODE_STRING Name)
 {
@@ -101,17 +101,47 @@ KsepFindShim(
     return NULL;
 }
 
-static NTSTATUS NTAPI
+/* Add the named shim to the shims of a driver, unless it is already there */
+VOID NTAPI
+KsepAddShimByName(
+    IN PCUNICODE_STRING Name,
+    IN OUT PKSE_SHIM* Shims,
+    IN OUT PULONG NumberOfShims)
+{
+    PKSE_SHIM Shim;
+    ULONG n;
+
+    Shim = KsepFindShim(Name);
+    if (!Shim)
+    {
+        DPRINT1("KSE: Shim %wZ not found\n", Name);
+        return;
+    }
+
+    for (n = 0; n < *NumberOfShims; n++)
+    {
+        if (Shims[n] == Shim)
+            return;
+    }
+
+    if (*NumberOfShims >= KSE_MAX_SHIMS_PER_DRIVER)
+    {
+        DPRINT1("KSE: Too many shims, ignoring %wZ\n", Name);
+        return;
+    }
+
+    Shims[(*NumberOfShims)++] = Shim;
+}
+
+static VOID NTAPI
 KsepMultiSzToShims(
     IN PKEY_VALUE_FULL_INFORMATION KeyValueInformation,
-    OUT PKSE_SHIM* Shims,
-    OUT PULONG NumberOfShims)
+    IN OUT PKSE_SHIM* Shims,
+    IN OUT PULONG NumberOfShims)
 {
     PWCHAR Current, End;
     UNICODE_STRING ShimName;
     SIZE_T Length;
-
-    *NumberOfShims = 0;
 
     Current = (PWCHAR)((ULONG_PTR)KeyValueInformation + KeyValueInformation->DataOffset);
     End = (PWCHAR)((ULONG_PTR)Current + KeyValueInformation->DataLength);
@@ -124,31 +154,17 @@ KsepMultiSzToShims(
 
         ShimName.Buffer = Current;
         ShimName.Length = ShimName.MaximumLength = (USHORT)(Length * sizeof(WCHAR));
-
-        if (*NumberOfShims >= KSE_MAX_SHIMS_PER_DRIVER)
-        {
-            DPRINT1("KSE: Too many shims, ignoring %wZ\n", &ShimName);
-        }
-        else
-        {
-            Shims[*NumberOfShims] = KsepFindShim(&ShimName);
-            if (Shims[*NumberOfShims])
-                (*NumberOfShims)++;
-            else
-                DPRINT1("KSE: Shim %wZ not found\n", &ShimName);
-        }
+        KsepAddShimByName(&ShimName, Shims, NumberOfShims);
 
         Current += Length + 1;
     }
-
-    return *NumberOfShims ? STATUS_SUCCESS : STATUS_NOT_FOUND;
 }
 
 static NTSTATUS NTAPI
 KsepGetShimsFromRegistry(
     IN PLDR_DATA_TABLE_ENTRY LdrEntry,
-    OUT PKSE_SHIM* Shims,
-    OUT PULONG NumberOfShims)
+    IN OUT PKSE_SHIM* Shims,
+    IN OUT PULONG NumberOfShims)
 {
     static const UNICODE_STRING ValueName = RTL_CONSTANT_STRING(L"Shims");
     WCHAR KeyNameBuffer[256];
@@ -158,8 +174,6 @@ KsepGetShimsFromRegistry(
     ULONG KeyValueSize = 0x800;
     HANDLE KeyHandle;
     NTSTATUS Status;
-
-    *NumberOfShims = 0;
 
     RtlInitEmptyUnicodeString(&KeyName, KeyNameBuffer, sizeof(KeyNameBuffer));
     Status = RtlAppendUnicodeToString(&KeyName, L"\\Registry\\Machine\\System\\CurrentControlSet\\Control\\Compatibility\\Driver\\");
@@ -195,7 +209,7 @@ KsepGetShimsFromRegistry(
     if (NT_SUCCESS(Status))
     {
         if (KeyValueInformation->Type == REG_MULTI_SZ && KeyValueInformation->DataLength)
-            Status = KsepMultiSzToShims(KeyValueInformation, Shims, NumberOfShims);
+            KsepMultiSzToShims(KeyValueInformation, Shims, NumberOfShims);
         else
             Status = STATUS_OBJECT_TYPE_MISMATCH;
     }
@@ -210,8 +224,13 @@ KsepGetShimsForDriver(
     OUT PKSE_SHIM* Shims,
     OUT PULONG NumberOfShims)
 {
-    /* TODO: Also match against the driver database (drvmain.sdb) */
-    return KsepGetShimsFromRegistry(LdrEntry, Shims, NumberOfShims);
+    *NumberOfShims = 0;
+
+    /* Shims from the driver database (drvmain.sdb), and from the registry */
+    KseDbGetShimsForDriver(LdrEntry, Shims, NumberOfShims);
+    KsepGetShimsFromRegistry(LdrEntry, Shims, NumberOfShims);
+
+    return *NumberOfShims ? STATUS_SUCCESS : STATUS_NOT_FOUND;
 }
 
 
@@ -339,9 +358,15 @@ KseShimDriverIoCallbacks(
 }
 
 static NTSTATUS NTAPI
-KseShimDatabaseBootInitialize(VOID)
+KseShimDatabaseBootInitialize(
+    IN PLOADER_PARAMETER_EXTENSION LoaderExtension)
 {
-    UNIMPLEMENTED_ONCE;
+    NTSTATUS Status;
+
+    /* Without a usable database, shims can still be applied through the registry */
+    Status = KseDbInitialize(LoaderExtension->DrvDBImage, LoaderExtension->DrvDBSize);
+    if (!NT_SUCCESS(Status))
+        DPRINT1("KSE: Unable to load the driver database (0x%08lx)\n", Status);
 
     return STATUS_SUCCESS;
 }
@@ -403,7 +428,7 @@ KseInitialize(
         InitializeListHead(&KseEngine.ShimmedDriversListHead);
         KseEngine.KseCallbackRoutines.KseGetIoCallbacksRoutine = KseGetIoCallbacks;
         KseEngine.KseCallbackRoutines.KseSetCompletionHookRoutine = KseSetCompletionHook;
-        Status = KseShimDatabaseBootInitialize();
+        Status = KseShimDatabaseBootInitialize(LoaderExtension);
         if (NT_SUCCESS(Status))
         {
             Status = KsepMatchInitMachineInfo();
