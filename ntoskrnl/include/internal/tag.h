@@ -127,6 +127,7 @@
 
 /* Kernel Shim Engine Tags */
 #define TAG_KSE_CALLBACKS       'cESK'
+#define TAG_KSE_DATABASE        'dESK'
 #define TAG_KSE_PROVIDER        'pESK'
 #define TAG_KSE_REGISTRY        'rESK'
 
