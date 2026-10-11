@@ -1722,6 +1722,20 @@ PciArbiter_PreprocessEntry(
     _Inout_ PARBITER_ALLOCATION_STATE State
 );
 
+BOOLEAN
+NTAPI
+PciArbiter_FindSuitableRange(
+    _In_ PARBITER_INSTANCE Arbiter,
+    _Inout_ PARBITER_ALLOCATION_STATE State
+);
+
+BOOLEAN
+NTAPI
+PciArbiter_OverrideConflict(
+    _In_ PARBITER_INSTANCE Arbiter,
+    _Inout_ PARBITER_ALLOCATION_STATE State
+);
+
 NTSTATUS
 NTAPI
 pcicbintrf_Constructor(

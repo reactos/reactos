@@ -133,6 +133,8 @@ ario_Initializer(IN PVOID Instance)
     Arbiter->CommonInstance.UnpackResource = ario_UnpackResource;
     Arbiter->CommonInstance.ScoreRequirement = ario_ScoreRequirement;
     Arbiter->CommonInstance.PreprocessEntry = PciArbiter_PreprocessEntry;
+    Arbiter->CommonInstance.FindSuitableRange = PciArbiter_FindSuitableRange;
+    Arbiter->CommonInstance.OverrideConflict = PciArbiter_OverrideConflict;
 
     /* The rest of the engine, and the PCI assignment ordering, is generic */
     Status = ArbiterLibInitializeInstance(&Arbiter->CommonInstance,
@@ -320,6 +322,8 @@ armem_Initializer(IN PVOID Instance)
     Arbiter->CommonInstance.UnpackResource = armem_UnpackResource;
     Arbiter->CommonInstance.ScoreRequirement = armem_ScoreRequirement;
     Arbiter->CommonInstance.PreprocessEntry = PciArbiter_PreprocessEntry;
+    Arbiter->CommonInstance.FindSuitableRange = PciArbiter_FindSuitableRange;
+    Arbiter->CommonInstance.OverrideConflict = PciArbiter_OverrideConflict;
 
     /* The rest of the engine, and the PCI assignment ordering, is generic */
     Status = ArbiterLibInitializeInstance(&Arbiter->CommonInstance,

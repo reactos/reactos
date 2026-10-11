@@ -15,6 +15,9 @@
 
 /* GLOBALS ********************************************************************/
 
+/* Marks a range placed by a fixed alternative */
+#define PCI_RANGE_FIXED_PLACEMENT   0x04
+
 PCHAR PciArbiterNames[] =
 {
     "I/O Port",
@@ -73,6 +76,105 @@ PciArbiter_PreprocessEntry(
         State->RangeAvailableAttributes |= ARBITER_RANGE_PORT_ALIAS;
 
     return STATUS_SUCCESS;
+}
+
+/**
+ * @brief
+ * Searches for a placement, remembering on the range whether it came
+ * from a fixed alternative.
+ *
+ * @param[in] Arbiter
+ * The arbiter instance placing the entry.
+ *
+ * @param[in,out] State
+ * The allocation state of the entry.
+ *
+ * @return
+ * TRUE if a placement was found, FALSE otherwise.
+ */
+BOOLEAN
+NTAPI
+PciArbiter_FindSuitableRange(
+    _In_ PARBITER_INSTANCE Arbiter,
+    _Inout_ PARBITER_ALLOCATION_STATE State)
+{
+    PAGED_CODE();
+
+    State->RangeAttributes &= (UCHAR)~PCI_RANGE_FIXED_PLACEMENT;
+    if (State->CurrentAlternative &&
+        (State->CurrentAlternative->Flags & ARBITER_ALTERNATIVE_FLAG_FIXED))
+    {
+        State->RangeAttributes |= PCI_RANGE_FIXED_PLACEMENT;
+    }
+
+    return ArbiterLibFindSuitableRange(Arbiter, State);
+}
+
+/**
+ * @brief
+ * Lets a fixed requirement overlap ranges its own device was given by
+ * other fixed requirements.
+ *
+ * @param[in] Arbiter
+ * The arbiter instance placing the entry.
+ *
+ * @param[in,out] State
+ * The allocation state of the entry. On success Start and End receive
+ * the requested window.
+ *
+ * @return
+ * TRUE if every conflicting range is a fixed placement of the same
+ * device, FALSE otherwise.
+ *
+ * @remarks
+ * A resized BAR that landed on top of another BAR's firmware address is
+ * a movable placement, so the fixed BAR fails and the resized one has to
+ * back off to another alternative.
+ */
+BOOLEAN
+NTAPI
+PciArbiter_OverrideConflict(
+    _In_ PARBITER_INSTANCE Arbiter,
+    _Inout_ PARBITER_ALLOCATION_STATE State)
+{
+    RTL_RANGE_LIST_ITERATOR Iterator;
+    PRTL_RANGE Range;
+    BOOLEAN Overridden = FALSE;
+
+    PAGED_CODE();
+
+    if (!State->Entry ||
+        !State->CurrentAlternative ||
+        !(State->CurrentAlternative->Flags & ARBITER_ALTERNATIVE_FLAG_FIXED))
+    {
+        return FALSE;
+    }
+
+    if (!NT_SUCCESS(RtlGetFirstRange(Arbiter->PossibleAllocation, &Iterator, &Range)))
+        return FALSE;
+
+    while (Range)
+    {
+        if ((Range->Start <= State->CurrentMaximum) &&
+            (Range->End >= State->CurrentMinimum) &&
+            !(Range->Attributes & State->RangeAvailableAttributes))
+        {
+            if ((Range->Owner != State->Entry->PhysicalDeviceObject) ||
+                !(Range->Attributes & PCI_RANGE_FIXED_PLACEMENT))
+            {
+                return FALSE;
+            }
+
+            Overridden = TRUE;
+            State->Start = State->CurrentMinimum;
+            State->End = State->CurrentMaximum;
+        }
+
+        if (!NT_SUCCESS(RtlGetNextRange(&Iterator, &Range, TRUE)))
+            break;
+    }
+
+    return Overridden;
 }
 
 VOID
