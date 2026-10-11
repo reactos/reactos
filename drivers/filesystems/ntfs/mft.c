@@ -1129,6 +1129,7 @@ NtfsMapAttributeRuns(PDEVICE_EXTENSION Vcb,
         DPRINT1("Not enough memory!\n");
         return STATUS_INSUFFICIENT_RESOURCES;
     }
+    RtlZeroMemory(TempBuffer, Vcb->NtfsInfo.BytesPerFileRecord);
 
     ConvertLargeMCBToDataRuns(&Context->DataRunsMCB,
                               TempBuffer,
@@ -1187,6 +1188,10 @@ NtfsMapAttributeRuns(PDEVICE_EXTENSION Vcb,
     /* Did that consume the rest of this data run? */
     if (RunLength == DataRunLength * Vcb->NtfsInfo.BytesPerCluster - (Offset - CurrentOffset))
     {
+        /* Never decode past the terminator; the caller gets a short map */
+        if (*DataRun == 0)
+            goto Cleanup;
+
         CurrentOffset += DataRunLength * Vcb->NtfsInfo.BytesPerCluster;
         DataRun = DecodeRun(DataRun, &DataRunOffset, &DataRunLength);
         if (DataRunOffset != (LONGLONG)-1)
