@@ -50,8 +50,6 @@ NtfsHasFileSystem(PDEVICE_OBJECT DeviceToMount)
     PBOOT_SECTOR BootSector;
     NTSTATUS Status;
 
-    return STATUS_UNRECOGNIZED_VOLUME;
-
     DPRINT("NtfsHasFileSystem() called\n");
 
     Size = sizeof(DISK_GEOMETRY);
