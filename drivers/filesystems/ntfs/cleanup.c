@@ -91,6 +91,26 @@ NtfsCleanupFile(PDEVICE_EXTENSION DeviceExt,
             }
         }
 
+        /* Give back what writes reserved past the end of the file */
+        if (Fcb->OpenHandleCount == 0 &&
+            !DeletePending &&
+            !NtfsFCBIsDirectory(Fcb) &&
+            !(DeviceExt->Flags & VCB_VOLUME_DISMOUNTED) &&
+            Fcb->RFCB.AllocationSize.QuadPart > (LONGLONG)ROUND_UP(Fcb->RFCB.FileSize.QuadPart, DeviceExt->NtfsInfo.BytesPerCluster))
+        {
+            NTSTATUS Status;
+
+            Status = NtfsTrimAllocation(Fcb);
+            if (!NT_SUCCESS(Status))
+            {
+                DPRINT1("Couldn't trim the allocation of '%wS' (Status %lx)\n", Fcb->ObjectName, Status);
+            }
+            else
+            {
+                CcSetFileSizes(FileObject, (PCC_FILE_SIZES)&Fcb->RFCB.AllocationSize);
+            }
+        }
+
         CcUninitializeCacheMap(FileObject, &Fcb->RFCB.FileSize, NULL);
 
         /* Only once the cache map is gone. Freeing the record while a section still refers to

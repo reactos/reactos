@@ -33,6 +33,10 @@
 #define NDEBUG
 #include <debug.h>
 
+/* Bounds on how far a growing file is allocated past its end */
+#define NTFS_GROW_AHEAD_MIN (64 * 1024)
+#define NTFS_GROW_AHEAD_MAX (4 * 1024 * 1024)
+
 /* FUNCTIONS ****************************************************************/
 
 /**
@@ -556,6 +560,27 @@ NTSTATUS NtfsWriteFile(PDEVICE_EXTENSION DeviceExt,
             LARGE_INTEGER DataSize;
 
             DataSize.QuadPart = WriteOffset + Length;
+
+            /* Reserve room past the new end, so the appends that follow fit
+             * without touching the bitmap or the run list. Cleanup gives back
+             * what's left over. */
+            if (DataContext->pRecord->IsNonResident &&
+                (ULONGLONG)DataSize.QuadPart > DataContext->pRecord->NonResident.AllocatedSize)
+            {
+                ULONGLONG Ahead;
+
+                Ahead = min(max(DataSize.QuadPart / 4, NTFS_GROW_AHEAD_MIN), NTFS_GROW_AHEAD_MAX);
+                Status = NtfsExtendAllocation(DeviceExt,
+                                              DataContext,
+                                              AttributeOffset,
+                                              FileRecord,
+                                              ROUND_UP(DataSize.QuadPart + Ahead, DeviceExt->NtfsInfo.BytesPerCluster));
+                if (!NT_SUCCESS(Status))
+                {
+                    /* Not fatal; SetAttributeDataLength() still allocates what's needed */
+                    DPRINT("Couldn't reserve ahead of %wS (Status %lx)\n", Fcb->ObjectName, Status);
+                }
+            }
 
             // set the attribute data length
             Status = SetAttributeDataLength(FileObject, Fcb, DataContext, AttributeOffset, FileRecord, &DataSize);

@@ -254,6 +254,10 @@ typedef enum
 #define NTFS_FILE_TYPE_ENCRYPTED  0x4000
 #define NTFS_FILE_TYPE_DIRECTORY  0x10000000
 
+/* NTFS_ATTR_RECORD Flags */
+#define NTFS_ATTR_COMPRESSION_MASK 0x00FF
+#define NTFS_ATTR_SPARSE           0x8000
+
 /* Indexed Flag in Resident attributes - still somewhat speculative */
 #define RA_INDEXED    0x01
 
@@ -1245,6 +1249,18 @@ SetNonResidentAttributeDataLength(PDEVICE_EXTENSION Vcb,
                                   ULONG AttrOffset,
                                   PFILE_RECORD_HEADER FileRecord,
                                   PLARGE_INTEGER DataSize);
+
+NTSTATUS
+NtfsExtendAllocation(
+    _In_ PDEVICE_EXTENSION Vcb,
+    _In_ PNTFS_ATTR_CONTEXT AttrContext,
+    _In_ ULONG AttrOffset,
+    _In_ PFILE_RECORD_HEADER FileRecord,
+    _In_ ULONGLONG AllocationSize);
+
+NTSTATUS
+NtfsTrimAllocation(
+    _In_ PNTFS_FCB Fcb);
 
 NTSTATUS
 SetResidentAttributeDataLength(PDEVICE_EXTENSION Vcb,
