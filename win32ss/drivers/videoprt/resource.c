@@ -194,6 +194,23 @@ IntVideoPortFilterResourceRequirements(
     return STATUS_SUCCESS;
 }
 
+/**
+ * @brief
+ * Returns the device object that owns the adapter's legacy resource claims.
+ * A PnP adapter claims through its FDO, since legacy APIs reject the PDO.
+ **/
+static
+PDEVICE_OBJECT
+NTAPI
+IntVideoPortGetClaimDevice(
+    _In_ PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension)
+{
+    if (DeviceExtension->PhysicalDeviceObject)
+        return DeviceExtension->FunctionalDeviceObject;
+
+    return NULL;
+}
+
 VOID
 IntVideoPortReleaseResources(
     _In_ PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension)
@@ -208,7 +225,7 @@ IntVideoPortReleaseResources(
         Status = IoReportResourceForDetection(
                     DeviceExtension->DriverObject,
                     NULL, 0, /* Driver List */
-                    DeviceExtension->PhysicalDeviceObject,
+                    IntVideoPortGetClaimDevice(DeviceExtension),
                     (PCM_RESOURCE_LIST)EmptyResourceList,
                     sizeof(EmptyResourceList),
                     &ConflictDetected);
@@ -226,7 +243,7 @@ IntVideoPortReleaseResources(
                                        DeviceExtension->DriverObject,
                                        NULL,
                                        0,
-                                       DeviceExtension->PhysicalDeviceObject,
+                                       IntVideoPortGetClaimDevice(DeviceExtension),
                                        (PCM_RESOURCE_LIST)EmptyResourceList,
                                        sizeof(EmptyResourceList),
                                        FALSE,
@@ -728,7 +745,8 @@ VideoPortGetAccessRanges(
     DriverObject = DeviceExtension->DriverObject;
     DriverExtension = IoGetDriverObjectExtension(DriverObject, DriverObject);
 
-    if (NumRequestedResources == 0)
+    /* A PnP adapter only gets the resources the PnP manager assigned to it */
+    if (NumRequestedResources == 0 || DeviceExtension->PhysicalDeviceObject)
     {
         AllocatedResources = DeviceExtension->AllocatedResources;
         if (AllocatedResources == NULL &&
@@ -813,7 +831,7 @@ VideoPortGetAccessRanges(
             Status = HalAssignSlotResources(&DeviceExtension->RegistryPath,
                                             NULL,
                                             DeviceExtension->DriverObject,
-                                            DeviceExtension->DriverObject->DeviceObject,
+                                            DeviceExtension->FunctionalDeviceObject,
                                             DeviceExtension->AdapterInterfaceType,
                                             DeviceExtension->SystemIoBusNumber,
                                             PciSlotNumber.u.AsULONG,
@@ -866,9 +884,7 @@ VideoPortGetAccessRanges(
         Status = IoAssignResources(&DeviceExtension->RegistryPath,
                                    NULL,
                                    DeviceExtension->DriverObject,
-                                   DeviceExtension->PhysicalDeviceObject ?
-                                   DeviceExtension->PhysicalDeviceObject :
-                                   DeviceExtension->DriverObject->DeviceObject,
+                                   DeviceExtension->FunctionalDeviceObject,
                                    ResReqList,
                                    &AllocatedResources);
 
@@ -1131,7 +1147,7 @@ VideoPortVerifyAccessRanges(
         Status = IoReportResourceForDetection(
                     DeviceExtension->DriverObject,
                     NULL, 0, /* Driver List */
-                    DeviceExtension->PhysicalDeviceObject,
+                    IntVideoPortGetClaimDevice(DeviceExtension),
                     ResourceList, ResourceListSize,
                     &ConflictDetected);
 
@@ -1144,7 +1160,7 @@ VideoPortVerifyAccessRanges(
                                              DeviceExtension->DriverObject,
                                              NULL,
                                              0,
-                                             DeviceExtension->PhysicalDeviceObject,
+                                             IntVideoPortGetClaimDevice(DeviceExtension),
                                              ResourceList,
                                              ResourceListSize,
                                              FALSE,
@@ -1161,7 +1177,7 @@ VideoPortVerifyAccessRanges(
                                        DeviceExtension->DriverObject,
                                        NULL,
                                        0,
-                                       DeviceExtension->PhysicalDeviceObject,
+                                       IntVideoPortGetClaimDevice(DeviceExtension),
                                        ResourceList,
                                        ResourceListSize,
                                        FALSE,
