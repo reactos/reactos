@@ -2970,6 +2970,162 @@ GetInstallSourceWin32(
     return FALSE;
 }
 
+static BOOL
+IsDisplayServiceActive(
+    IN LPCWSTR pszServiceName)
+{
+    HKEY hKey;
+    WCHAR szPattern[MAX_PATH];
+    WCHAR szValueName[64];
+    WCHAR szData[MAX_PATH];
+    DWORD dwIndex, cchValueName, cbData, dwType;
+    BOOL bActive = FALSE;
+
+    if (RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                      L"HARDWARE\\DEVICEMAP\\VIDEO",
+                      0,
+                      KEY_QUERY_VALUE,
+                      &hKey) != ERROR_SUCCESS)
+    {
+        return FALSE;
+    }
+
+    /* The DEVICEMAP entries point to Services\<ServiceName>\DeviceX */
+    _snwprintf(szPattern, _countof(szPattern), L"\\SERVICES\\%s\\", pszServiceName);
+    szPattern[_countof(szPattern) - 1] = UNICODE_NULL;
+    _wcsupr(szPattern);
+
+    for (dwIndex = 0; !bActive; dwIndex++)
+    {
+        cchValueName = _countof(szValueName);
+        cbData = sizeof(szData) - sizeof(WCHAR);
+        if (RegEnumValueW(hKey, dwIndex, szValueName, &cchValueName,
+                          NULL, &dwType, (LPBYTE)szData, &cbData) == ERROR_NO_MORE_ITEMS)
+        {
+            break;
+        }
+
+        if (dwType != REG_SZ)
+            continue;
+
+        szData[cbData / sizeof(WCHAR)] = UNICODE_NULL;
+        _wcsupr(szData);
+        bActive = (wcsstr(szData, szPattern) != NULL);
+    }
+
+    RegCloseKey(hKey);
+    return bActive;
+}
+
+static VOID
+WriteDisplaySettingsToService(
+    IN LPCWSTR pszServiceName,
+    IN const DEVMODEW *pdm)
+{
+    HKEY hServicesKey, hServiceKey, hDeviceKey;
+    WCHAR szDeviceName[MAX_PATH];
+    DWORD dwIndex, cchDeviceName;
+
+    if (RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                      L"SYSTEM\\CurrentControlSet\\Services",
+                      0,
+                      KEY_ENUMERATE_SUB_KEYS,
+                      &hServicesKey) != ERROR_SUCCESS)
+    {
+        return;
+    }
+
+    if (RegOpenKeyExW(hServicesKey,
+                      pszServiceName,
+                      0,
+                      KEY_ENUMERATE_SUB_KEYS,
+                      &hServiceKey) != ERROR_SUCCESS)
+    {
+        RegCloseKey(hServicesKey);
+        return;
+    }
+    RegCloseKey(hServicesKey);
+
+    for (dwIndex = 0; ; dwIndex++)
+    {
+        cchDeviceName = _countof(szDeviceName);
+        if (RegEnumKeyExW(hServiceKey, dwIndex, szDeviceName, &cchDeviceName,
+                          NULL, NULL, NULL, NULL) != ERROR_SUCCESS)
+        {
+            break;
+        }
+
+        if (_wcsnicmp(szDeviceName, L"Device", 6) != 0)
+            continue;
+
+        if (RegOpenKeyExW(hServiceKey, szDeviceName, 0, KEY_SET_VALUE, &hDeviceKey) != ERROR_SUCCESS)
+            continue;
+
+        DPRINT1("Applying unattended display settings to %S\\%S\n", pszServiceName, szDeviceName);
+
+        if (pdm->dmFields & DM_BITSPERPEL)
+            RegSetValueExW(hDeviceKey, L"DefaultSettings.BitsPerPel", 0, REG_DWORD,
+                           (const BYTE*)&pdm->dmBitsPerPel, sizeof(DWORD));
+        if (pdm->dmFields & DM_PELSWIDTH)
+            RegSetValueExW(hDeviceKey, L"DefaultSettings.XResolution", 0, REG_DWORD,
+                           (const BYTE*)&pdm->dmPelsWidth, sizeof(DWORD));
+        if (pdm->dmFields & DM_PELSHEIGHT)
+            RegSetValueExW(hDeviceKey, L"DefaultSettings.YResolution", 0, REG_DWORD,
+                           (const BYTE*)&pdm->dmPelsHeight, sizeof(DWORD));
+        if (pdm->dmFields & DM_DISPLAYFREQUENCY)
+            RegSetValueExW(hDeviceKey, L"DefaultSettings.VRefresh", 0, REG_DWORD,
+                           (const BYTE*)&pdm->dmDisplayFrequency, sizeof(DWORD));
+
+        RegCloseKey(hDeviceKey);
+    }
+
+    RegCloseKey(hServiceKey);
+}
+
+/*
+ * Display drivers installed during the second stage (e.g. from modules/optional)
+ * only become active after a reboot, so ChangeDisplaySettings cannot reach them.
+ * Store the unattended settings in their registry keys, so they are used on the next boot.
+ */
+static VOID
+ApplyDisplaySettingsToInactiveAdapters(
+    IN const DEVMODEW *pdm)
+{
+    GUID ClassGuid;
+    DWORD dwGuids = 0, dwIndex;
+    HDEVINFO hDevInfo;
+    SP_DEVINFO_DATA DevInfoData;
+    WCHAR szServiceName[MAX_PATH];
+
+    if (!pdm->dmFields)
+        return;
+
+    if (!SetupDiClassGuidsFromNameW(L"Display", &ClassGuid, 1, &dwGuids) || dwGuids == 0)
+        return;
+
+    hDevInfo = SetupDiGetClassDevsW(&ClassGuid, NULL, NULL, DIGCF_PRESENT);
+    if (hDevInfo == INVALID_HANDLE_VALUE)
+        return;
+
+    DevInfoData.cbSize = sizeof(DevInfoData);
+    for (dwIndex = 0; SetupDiEnumDeviceInfo(hDevInfo, dwIndex, &DevInfoData); dwIndex++)
+    {
+        if (!SetupDiGetDeviceRegistryPropertyW(hDevInfo, &DevInfoData, SPDRP_SERVICE, NULL,
+                                               (PBYTE)szServiceName, sizeof(szServiceName), NULL))
+        {
+            continue;
+        }
+
+        /* The settings of an active adapter were already updated by ChangeDisplaySettings */
+        if (IsDisplayServiceActive(szServiceName))
+            continue;
+
+        WriteDisplaySettingsToService(szServiceName, pdm);
+    }
+
+    SetupDiDestroyDeviceInfoList(hDevInfo);
+}
+
 VOID
 ProcessUnattendSection(
     IN OUT PSETUPDATA pSetupData)
@@ -3093,7 +3249,9 @@ ProcessUnattendSection(
                             &InfContext))
     {
         DEVMODEW dm = { { 0 } };
+        DEVMODEW dmUnattend = { { 0 } };
         dm.dmSize = sizeof(dm);
+        dmUnattend.dmSize = sizeof(dmUnattend);
         if (EnumDisplaySettingsW(NULL, ENUM_CURRENT_SETTINGS, &dm))
         {
             do
@@ -3126,27 +3284,38 @@ ProcessUnattendSection(
 
                 if (!_wcsicmp(szName, L"BitsPerPel"))
                 {
-                    dm.dmFields |= DM_BITSPERPEL;
-                    dm.dmBitsPerPel = iValue;
+                    dmUnattend.dmFields |= DM_BITSPERPEL;
+                    dmUnattend.dmBitsPerPel = iValue;
                 }
                 else if (!_wcsicmp(szName, L"XResolution"))
                 {
-                    dm.dmFields |= DM_PELSWIDTH;
-                    dm.dmPelsWidth = iValue;
+                    dmUnattend.dmFields |= DM_PELSWIDTH;
+                    dmUnattend.dmPelsWidth = iValue;
                 }
                 else if (!_wcsicmp(szName, L"YResolution"))
                 {
-                    dm.dmFields |= DM_PELSHEIGHT;
-                    dm.dmPelsHeight = iValue;
+                    dmUnattend.dmFields |= DM_PELSHEIGHT;
+                    dmUnattend.dmPelsHeight = iValue;
                 }
                 else if (!_wcsicmp(szName, L"VRefresh"))
                 {
-                    dm.dmFields |= DM_DISPLAYFREQUENCY;
-                    dm.dmDisplayFrequency = iValue;
+                    dmUnattend.dmFields |= DM_DISPLAYFREQUENCY;
+                    dmUnattend.dmDisplayFrequency = iValue;
                 }
             } while (SetupFindNextLine(&InfContext, &InfContext));
 
+            dm.dmFields |= dmUnattend.dmFields;
+            if (dmUnattend.dmFields & DM_BITSPERPEL)
+                dm.dmBitsPerPel = dmUnattend.dmBitsPerPel;
+            if (dmUnattend.dmFields & DM_PELSWIDTH)
+                dm.dmPelsWidth = dmUnattend.dmPelsWidth;
+            if (dmUnattend.dmFields & DM_PELSHEIGHT)
+                dm.dmPelsHeight = dmUnattend.dmPelsHeight;
+            if (dmUnattend.dmFields & DM_DISPLAYFREQUENCY)
+                dm.dmDisplayFrequency = dmUnattend.dmDisplayFrequency;
+
             ChangeDisplaySettingsW(&dm, CDS_UPDATEREGISTRY);
+            ApplyDisplaySettingsToInactiveAdapters(&dmUnattend);
         }
     }
 
