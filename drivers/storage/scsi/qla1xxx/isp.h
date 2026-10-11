@@ -6,7 +6,7 @@
  */
 
 /*
- * Register definitions are derived from the Matthew Jacob's
+ * Hardware definitions are derived from the Matthew Jacob's
  * multiplatform driver for ISP chipsets.
  * Copyright (C) 2000-2007 by Matthew Jacob <mjacob@NetBSD.org>
  */

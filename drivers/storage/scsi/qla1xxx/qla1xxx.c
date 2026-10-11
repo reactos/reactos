@@ -195,7 +195,7 @@ IspPutDataSegment32(
     _In_ STOR_SCATTER_GATHER_ELEMENT* __restrict SgElement)
 {
     ASSERT(SgElement->Length != 0);
-    ASSERT(SgElement->PhysicalAddress.HighPart == 0);
+    ASSERT(SgElement->PhysicalAddress.HighPart == 0); /* 32-bit DMA */
 
     DataSegment->Address = htole32(SgElement->PhysicalAddress.LowPart);
     DataSegment->Length = htole32(SgElement->Length);
@@ -1031,6 +1031,7 @@ IspTranslateSrbToIocb(
             SegmentCount = Sgl->NumberOfElements;
 
             ASSERT((SegmentCount > 0) && (SegmentCount <= QL_SG_LIST_MAX_SEG_64));
+            __assume(SegmentCount > 0);
 
             if (SegmentCount > QL_IOCB_MAX_REQ_SEG_64)
             {
@@ -1058,6 +1059,7 @@ IspTranslateSrbToIocb(
             SegmentCount = Sgl->NumberOfElements;
 
             ASSERT((SegmentCount > 0) && (SegmentCount <= QL_SG_LIST_MAX_SEG_32));
+            __assume(SegmentCount > 0);
 
             if (SegmentCount > QL_IOCB_MAX_REQ_SEG_32)
             {
@@ -1693,9 +1695,9 @@ IspAllocateQueues(
         return FALSE;
 
     HwExt->RequestQueueBase = MemBlockVa;
-    HwExt->ResponseQueueBase = MemBlockVa + ISP_REQUEST_QUEUE_SIZE * QL_QENTRY_LEN;
-
     HwExt->RequestQueuePa = MemBlockPa;
+
+    HwExt->ResponseQueueBase = MemBlockVa + ISP_REQUEST_QUEUE_SIZE * QL_QENTRY_LEN;
     HwExt->ResponseQueuePa = MemBlockPa + ISP_REQUEST_QUEUE_SIZE * QL_QENTRY_LEN;
 
     return TRUE;
