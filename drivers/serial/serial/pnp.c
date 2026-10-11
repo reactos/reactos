@@ -394,8 +394,8 @@ SerialPnp(
 					TRACE_(SERIAL, "IRP_MJ_PNP / IRP_MN_QUERY_DEVICE_RELATIONS / BusRelations\n");
 
 					DeviceRelations = ExAllocatePoolWithTag(PagedPool,
-																									FIELD_OFFSET(DEVICE_RELATIONS, Objects),
-																									SERIAL_TAG);
+															FIELD_OFFSET(DEVICE_RELATIONS, Objects),
+															SERIAL_TAG);
 
 					if (!DeviceRelations)
 					{
@@ -415,8 +415,8 @@ SerialPnp(
 					TRACE_(SERIAL, "IRP_MJ_PNP / IRP_MN_QUERY_DEVICE_RELATIONS / RemovalRelations\n");
 
 					DeviceRelations = ExAllocatePoolWithTag(PagedPool,
-																									FIELD_OFFSET(DEVICE_RELATIONS, Objects),
-																									SERIAL_TAG);
+															FIELD_OFFSET(DEVICE_RELATIONS, Objects),
+															SERIAL_TAG);
 
 					if (!DeviceRelations)
 					{
