@@ -505,6 +505,9 @@ static const LOCALE_ENTRY RtlpLocaleTable[] =
 // This table will be sorted by LCID at runtime
 static USHORT RtlpLocaleIndexTable[_ARRAYSIZE(RtlpLocaleTable)];
 
+// From wine locale.c
+extern void locale_init(void);
+
 typedef struct _SORT_ENTRY
 {
     LCID Lcid;
@@ -562,46 +565,9 @@ RtlpInitializeLocaleTable(VOID)
 
     RtlFreeHeap(RtlGetProcessHeap(), 0, SortTable);
 
+    locale_init();
+
     return STATUS_SUCCESS;
-}
-
-_Must_inspect_result_
-static
-ULONG
-FindIndexByLcid(
-    _In_ LCID Lcid)
-{
-    USHORT TableIndex;
-    LONG Low = 0;
-    LONG High = ARRAYSIZE(RtlpLocaleTable) - 1;
-    LONG Middle;
-    LCID CurrentLcid;
-
-    while (Low <= High)
-    {
-        Middle = (Low + High) / 2;
-
-        /* Use the indirection table to get the real table entry */
-        TableIndex = RtlpLocaleIndexTable[Middle];
-        ASSERT(TableIndex < ARRAYSIZE(RtlpLocaleTable));
-
-        /* Compare the LCID (including the alternative name flag!) */
-        CurrentLcid = RtlpLocaleTable[TableIndex].Lcid;
-        if (CurrentLcid < Lcid)
-        {
-            Low = Middle + 1;
-        }
-        else if (CurrentLcid > Lcid)
-        {
-            High = Middle - 1;
-        }
-        else /* CurrentLcid == Lcid */
-        {
-            return RtlpLocaleIndexTable[Middle];
-        }
-    }
-
-    return MAXULONG;
 }
 
 #define LOWERCASE_CHAR(Char) \
@@ -686,34 +652,6 @@ FindIndexByLocaleName(
     return MAXULONG;
 }
 
-_Must_inspect_result_
-static
-BOOLEAN
-CopyAsciizToUnicodeString(
-    _Inout_ PUNICODE_STRING UnicodeString,
-    _In_ PCSTR AsciiString)
-{
-    SIZE_T AsciiLength = strlen(AsciiString);
-
-    /* Make sure we can copy the full string, including the terminating 0 */
-    if (UnicodeString->MaximumLength < (AsciiLength + 1) * sizeof(WCHAR))
-    {
-        return FALSE;
-    }
-
-    /* Copy the string manually */
-    for (SIZE_T i = 0; i < AsciiLength; i++)
-    {
-        UnicodeString->Buffer[i] = (WCHAR)AsciiString[i];
-    }
-
-    /* Add the terminating 0 and update the Length */
-    UnicodeString->Buffer[AsciiLength] = UNICODE_NULL;
-    UnicodeString->Length = (USHORT)(AsciiLength * sizeof(WCHAR));
-
-    return TRUE;
-}
-
 static
 BOOLEAN
 IsNeutralLocale(
@@ -728,82 +666,6 @@ IsNeutralLocale(
     }
 
     return FALSE;
-}
-
-NTSTATUS
-NTAPI
-RtlLcidToLocaleName(
-    _In_ LCID Lcid,
-    _Inout_ PUNICODE_STRING LocaleName,
-    _In_ ULONG Flags,
-    _In_ BOOLEAN AllocateDestinationString)
-{
-    ULONG LocaleIndex;
-
-    /* Check for invalid flags */
-    if (Flags & ~0x2)
-    {
-        DPRINT1("RtlLcidToLocaleName: Invalid flags: 0x%lx\n", Flags);
-        return STATUS_INVALID_PARAMETER_3;
-    }
-
-    /* Check if the LocaleName buffer is valid */
-    if ((LocaleName == NULL) || (LocaleName->Buffer == NULL))
-    {
-        DPRINT1("RtlLcidToLocaleName: Invalid buffer\n");
-        return STATUS_INVALID_PARAMETER_2;
-    }
-
-    /* Validate LCID */
-    if (Lcid & ~NLS_VALID_LOCALE_MASK)
-    {
-        DPRINT1("RtlLcidToLocaleName: Invalid LCID: 0x%lx\n", Lcid);
-        return STATUS_INVALID_PARAMETER_1;
-    }
-
-    /* Check if neutral locales were requested */
-    if ((Flags & RTL_LOCALE_ALLOW_NEUTRAL_NAMES) == 0)
-    {
-        /* Check if this is a neutral locale */
-        if (IsNeutralLocale(Lcid))
-        {
-            DPRINT("RtlLcidToLocaleName: Neutral LCID: 0x%lx\n", Lcid);
-            return STATUS_INVALID_PARAMETER_1;
-        }
-    }
-
-    /* Handle special LCIDs */
-    switch (Lcid)
-    {
-        case LOCALE_USER_DEFAULT:
-            Lcid = RtlpUserDefaultLcid;
-            break;
-
-        case LOCALE_SYSTEM_DEFAULT:
-        case LOCALE_CUSTOM_DEFAULT:
-            Lcid = RtlpSystemDefaultLcid;
-            break;
-
-        case LOCALE_CUSTOM_UI_DEFAULT:
-            return STATUS_UNSUCCESSFUL;
-    }
-
-    /* Try to find the locale by LCID */
-    LocaleIndex = FindIndexByLcid(Lcid);
-    if (LocaleIndex == MAXULONG)
-    {
-        DPRINT("RtlLcidToLocaleName: LCID 0x%lx not found\n", Lcid);
-        return STATUS_INVALID_PARAMETER_1;
-    }
-
-    /* Copy the locale name to the buffer */
-    if (!CopyAsciizToUnicodeString(LocaleName, RtlpLocaleTable[LocaleIndex].Locale))
-    {
-        DPRINT("RtlLcidToLocaleName: Buffer too small\n");
-        return STATUS_BUFFER_TOO_SMALL;
-    }
-
-    return STATUS_SUCCESS;
 }
 
 _Must_inspect_result_
@@ -866,23 +728,6 @@ RtlpLocaleNameToLcidInternal(
     return STATUS_SUCCESS;
 }
 
-
-NTSTATUS
-NTAPI
-RtlLocaleNameToLcid(
-    _In_ PCWSTR LocaleName,
-    _Out_ PLCID Lcid,
-    _In_ ULONG Flags)
-{
-    UNICODE_STRING LocaleNameString;
-
-    /* Convert the string to a UNICODE_STRING */
-    RtlInitUnicodeString(&LocaleNameString, LocaleName);
-
-    /* Forward to internal function */
-    return RtlpLocaleNameToLcidInternal(&LocaleNameString, Lcid, Flags);
-}
-
 _Success_(return != FALSE)
 BOOLEAN
 NTAPI
@@ -927,16 +772,6 @@ RtlCultureNameToLCID(
         return FALSE;
     }
 
-    return TRUE;
-}
-
-BOOLEAN
-NTAPI
-RtlIsValidLocaleName(
-    _In_ LPCWSTR LocaleName,
-    _In_ ULONG Flags)
-{
-    UNIMPLEMENTED;
     return TRUE;
 }
 
