@@ -147,6 +147,33 @@ NTAPI
 KseDriverLoadImage(
     _In_ PLDR_DATA_TABLE_ENTRY LdrEntry);
 
+PKSE_SHIM
+NTAPI
+KsepFindShim(
+    _In_ PCUNICODE_STRING Name);
+
+VOID
+NTAPI
+KsepAddShimByName(
+    _In_ PCUNICODE_STRING Name,
+    _Inout_ PKSE_SHIM* Shims,
+    _Inout_ PULONG NumberOfShims);
+
+/* Driver database (drvmain.sdb) */
+CODE_SEG("INIT")
+NTSTATUS
+NTAPI
+KseDbInitialize(
+    _In_ PVOID DatabaseImage,
+    _In_ ULONG DatabaseSize);
+
+VOID
+NTAPI
+KseDbGetShimsForDriver(
+    _In_ PLDR_DATA_TABLE_ENTRY LdrEntry,
+    _Inout_ PKSE_SHIM* Shims,
+    _Inout_ PULONG NumberOfShims);
+
 CODE_SEG("INIT")
 NTSTATUS
 NTAPI
