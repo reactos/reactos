@@ -9,9 +9,9 @@
 /* INCLUDES *******************************************************************/
 
 #include <ntoskrnl.h>
+#include "../../vf/vf.h"
 #define NDEBUG
 #include <debug.h>
-
 #define MODULE_INVOLVED_IN_ARM3
 #include <mm/ARM3/miarm.h>
 
@@ -1937,7 +1937,9 @@ ExAllocatePoolWithTag(IN POOL_TYPE PoolType,
         //
         if (ExpPoolFlags & POOL_FLAG_VERIFIER)
         {
-            DPRINT1("Driver Verifier is not yet supported\n");
+            PDRIVER_OBJECT Driver = VfGetDriverByAddress(_ReturnAddress());
+            if (Driver)
+                return VfAllocatePool(Driver, PoolType, NumberOfBytes, Tag);
         }
 
         //
@@ -2505,6 +2507,27 @@ ExFreePoolWithTag(IN PVOID P,
     PKPRCB Prcb = KeGetCurrentPrcb();
     PGENERAL_LOOKASIDE LookasideList;
     PEPROCESS Process;
+
+    //
+    // check if Driver Verifier is enabled and owns this allocation
+    //
+    if (ExpPoolFlags & POOL_FLAG_VERIFIER)
+    {
+        PDRIVER_OBJECT Driver = VfGetDriverByAddress(_ReturnAddress());
+        if (Driver)
+        {
+            POOL_TYPE FreePoolType;
+            if (PAGE_ALIGN(P) == P)
+                FreePoolType = MmDeterminePoolType(P);
+            else
+            {
+                PPOOL_HEADER Entry = (PPOOL_HEADER)P - 1;
+                FreePoolType = (Entry->PoolType - 1) & BASE_POOL_TYPE_MASK;
+            }
+            VfFreePool(Driver, P, TagToFree, FreePoolType);
+            return;
+        }
+    }
 
     //
     // Check if any of the debug flags are enabled
