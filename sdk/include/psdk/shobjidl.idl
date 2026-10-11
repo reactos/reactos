@@ -2930,6 +2930,8 @@ cpp_quote("#define SMINIT_HORIZONTAL            0x20000000")
 cpp_quote("")
 cpp_quote("#define ANCESTORDEFAULT              (UINT)-1")
 cpp_quote("")
+cpp_quote("#define SMSET_USEBKICONEXTRACTION    0x00000008") /* github.com/ryanm852/ExplorerEx/blob/14279afe7be00ba314485efef8fd3f71362a7a3f/src/Shell32StartMnu.cpp#L3084 */
+cpp_quote("#define SMSET_HASEXPANDABLEFOLDERS   0x00000010") /* Need to call SHIsExpandableFolder */
 cpp_quote("#define SMSET_TOP                    0x10000000")
 cpp_quote("#define SMSET_BOTTOM                 0x20000000")
 cpp_quote("#define SMSET_DONTOWN                0x00000001")

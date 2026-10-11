@@ -47,9 +47,11 @@ class CMenuCallback :
 {
 private:
     CComPtr<IShellMenu>             fFavoritesMenu;
+    IUnknown*                       pSite = NULL; // Note: Not ref-counted
 public:
     CMenuCallback();
     virtual ~CMenuCallback();
+    void SetSite(IUnknown *pNewSite) { pSite = pNewSite; }
 
     HRESULT STDMETHODCALLTYPE GetObject(LPSMDATA psmd, REFIID riid, void **ppvObject);
 public:
