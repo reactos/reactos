@@ -53,6 +53,12 @@ typedef struct
 	/* Performance page settings */
 	BOOL	CPUHistory_OneGraphPerCPU;
 	BOOL	ShowKernelTimes;
+
+	/* Networking page settings */
+	BOOL	NetShowBytesSent;
+	BOOL	NetShowBytesReceived;
+	BOOL	NetShowBytesTotal;
+	BOOL	NetShowScale;
 } TASKMANAGER_SETTINGS, *LPTASKMANAGER_SETTINGS;
 
 /* Global Variables: */
