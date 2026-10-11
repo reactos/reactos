@@ -708,6 +708,7 @@ ConvertDataRunsToLargeMCB(PUCHAR DataRun,
 
 NTSTATUS
 ConvertLargeMCBToDataRuns(PLARGE_MCB DataRunsMCB,
+                          ULONGLONG VcnCount,
                           PUCHAR RunBuffer,
                           ULONG MaxBufferSize,
                           PULONG UsedBufferSize);

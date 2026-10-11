@@ -762,7 +762,9 @@ NtfsExtendAllocation(
     PNTFS_ATTR_RECORD DestinationAttribute = (PNTFS_ATTR_RECORD)((ULONG_PTR)FileRecord + AttrOffset);
     ULONGLONG ExistingClusters = AttrContext->pRecord->NonResident.AllocatedSize / BytesPerCluster;
     ULONG ClustersNeeded;
-    LARGE_INTEGER LastClusterInDataRun;
+    ULONG DesiredCluster = 0;
+    LONGLONG LastVbn;
+    LONGLONG LastLbn;
     ULONG NextAssignedCluster;
     ULONG AssignedClusters;
 
@@ -774,35 +776,23 @@ NtfsExtendAllocation(
 
     ClustersNeeded = (ULONG)(AllocationSize / BytesPerCluster - ExistingClusters);
 
-    if (ExistingClusters == 0)
+    /* Ask for the clusters right after the last one the stream owns. The
+     * tail of a sparse stream is a hole, so look at the last mapping, not
+     * at HighestVCN. */
+    if (ExistingClusters != 0 &&
+        FsRtlLookupLastLargeMcbEntry(&AttrContext->DataRunsMCB, &LastVbn, &LastLbn) &&
+        LastLbn != -1)
     {
-        LastClusterInDataRun.QuadPart = 0;
-    }
-    else
-    {
-        if (!FsRtlLookupLargeMcbEntry(&AttrContext->DataRunsMCB,
-                                      (LONGLONG)AttrContext->pRecord->NonResident.HighestVCN,
-                                      (PLONGLONG)&LastClusterInDataRun.QuadPart,
-                                      NULL,
-                                      NULL,
-                                      NULL,
-                                      NULL))
-        {
-            DPRINT1("Error looking up final large MCB entry!\n");
-
-            // Most likely, HighestVCN went above the largest mapping
-            DPRINT1("Highest VCN of record: %I64u\n", AttrContext->pRecord->NonResident.HighestVCN);
-            return STATUS_INVALID_PARAMETER;
-        }
+        DesiredCluster = (ULONG)LastLbn + 1;
     }
 
-    DPRINT("LastClusterInDataRun: %I64u\n", LastClusterInDataRun.QuadPart);
+    DPRINT("DesiredCluster: %lu\n", DesiredCluster);
     DPRINT("Highest VCN of record: %I64u\n", AttrContext->pRecord->NonResident.HighestVCN);
 
     while (ClustersNeeded > 0)
     {
         Status = NtfsAllocateClusters(Vcb,
-                                      LastClusterInDataRun.LowPart + 1,
+                                      DesiredCluster,
                                       ClustersNeeded,
                                       &NextAssignedCluster,
                                       &AssignedClusters);
@@ -824,10 +814,9 @@ NtfsExtendAllocation(
         /* AddRun() places the next run after HighestVCN only once the
          * attribute owns clusters, so count these before looping */
         AttrContext->pRecord->NonResident.AllocatedSize += (ULONGLONG)AssignedClusters * BytesPerCluster;
-        AttrContext->pRecord->NonResident.HighestVCN = AttrContext->pRecord->NonResident.AllocatedSize / BytesPerCluster - 1;
 
         ClustersNeeded -= AssignedClusters;
-        LastClusterInDataRun.LowPart = NextAssignedCluster + AssignedClusters - 1;
+        DesiredCluster = NextAssignedCluster + AssignedClusters;
     }
 
     DestinationAttribute->NonResident.AllocatedSize = AttrContext->pRecord->NonResident.AllocatedSize;
@@ -894,7 +883,6 @@ NtfsTrimAllocation(
         {
             DestinationAttribute = (PNTFS_ATTR_RECORD)((ULONG_PTR)FileRecord + AttributeOffset);
             DestinationAttribute->NonResident.AllocatedSize = NeededSize;
-            DestinationAttribute->NonResident.HighestVCN = NeededSize / BytesPerCluster - 1;
 
             Status = UpdateFileRecord(Vcb, Fcb->MFTIndex, FileRecord);
             if (NT_SUCCESS(Status))
@@ -985,9 +973,8 @@ SetNonResidentAttributeDataLength(PDEVICE_EXTENSION Vcb,
     DestinationAttribute->NonResident.DataSize = DataSize->QuadPart;
     DestinationAttribute->NonResident.InitializedSize = DataSize->QuadPart;
 
-    // HighestVCN seems to be set incorrectly somewhere. Apply a hack-fix to reset it.
-    // HACKHACK FIXME: Fix for sparse files; this math won't work in that case.
-    AttrContext->pRecord->NonResident.HighestVCN = (AttrContext->pRecord->NonResident.AllocatedSize / Vcb->NtfsInfo.BytesPerCluster) - 1;
+    /* AddRun() and FreeClusters() keep HighestVCN on the last VCN the runs
+     * describe, holes included, so it's carried over rather than recomputed */
     DestinationAttribute->NonResident.HighestVCN = AttrContext->pRecord->NonResident.HighestVCN;
 
     DPRINT("Allocated Size: %I64u\n", DestinationAttribute->NonResident.AllocatedSize);
@@ -1274,6 +1261,7 @@ NtfsMapAttributeRuns(PDEVICE_EXTENSION Vcb,
     RtlZeroMemory(TempBuffer, Vcb->NtfsInfo.BytesPerFileRecord);
 
     ConvertLargeMCBToDataRuns(&Context->DataRunsMCB,
+                              Context->pRecord->NonResident.HighestVCN + 1,
                               TempBuffer,
                               Vcb->NtfsInfo.BytesPerFileRecord,
                               &UsedBufferSize);
