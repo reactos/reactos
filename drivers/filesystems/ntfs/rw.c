@@ -741,20 +741,12 @@ NtfsWrite(PNTFS_IRP_CONTEXT IrpContext)
         }
     }
 
+    /* A zero length write is a valid no-op */
     if (Length == 0)
     {
-        DPRINT1("Null write!\n");
-
+        // FIXME: Update last write time
         IrpContext->Irp->IoStatus.Information = 0;
-
-        // FIXME: Doesn't accurately detect when a user passes NULL to WriteFile() for the buffer
-        if (Irp->UserBuffer == NULL && Irp->MdlAddress == NULL)
-        {
-            // FIXME: Update last write time
-            return STATUS_SUCCESS;
-        }
-
-        return STATUS_INVALID_PARAMETER;
+        return STATUS_SUCCESS;
     }
 
     /* Is this an async request to a file? Serving a write means reading the
