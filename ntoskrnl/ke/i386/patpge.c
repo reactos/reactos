@@ -56,12 +56,38 @@ Ki386EnableGlobalPage(IN ULONG_PTR Context)
 }
 
 CODE_SEG("INIT")
+static ULONG_PTR
+NTAPI
+Ki386InitializePATTarget(IN ULONG_PTR Context)
+{
+    ULONGLONG Pat;
+
+    UNREFERENCED_PARAMETER(Context);
+
+    /*
+     * Keep PAT0 and PAT4 as WB and PAT2/PAT6 as UC-minus. Replace the
+     * reset WT entries at PAT1 and PAT5 with WC. This is the same layout
+     * used by the AMD64 kernel.
+     */
+    Pat = (PAT_WB << 0)  | (PAT_WC << 8) | (PAT_UCM << 16) | (PAT_UC << 24) |
+          (PAT_WB << 32) | (PAT_WC << 40) | (PAT_UCM << 48) | (PAT_UC << 56);
+
+    /* Invalidate cached translations and data before changing their types. */
+    KeFlushCurrentTb();
+    KeInvalidateAllCaches();
+    __writemsr(MSR_PAT, Pat);
+    KeFlushCurrentTb();
+
+    return 0;
+}
+
+CODE_SEG("INIT")
 VOID
 NTAPI
 KiInitializePAT(VOID)
 {
-    /* FIXME: Support this */
-    DPRINT("PAT support detected but not yet taken advantage of\n");
+    /* PAT values must be identical on every processor. */
+    KeIpiGenericCall(Ki386InitializePATTarget, 0);
 }
 
 CODE_SEG("INIT")
