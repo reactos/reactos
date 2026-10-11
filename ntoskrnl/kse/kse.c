@@ -533,6 +533,216 @@ KseUnregisterShim(
 }
 
 
+static BOOLEAN
+KsepIsImportFromModule(
+    _In_ PCSTR ImportName,
+    _In_ PCWSTR ModuleName)
+{
+    while (*ImportName && *ModuleName)
+    {
+        if (RtlUpcaseUnicodeChar((WCHAR)(UCHAR)*ImportName) != RtlUpcaseUnicodeChar(*ModuleName))
+            return FALSE;
+        ImportName++;
+        ModuleName++;
+    }
+    return (*ImportName == ANSI_NULL && *ModuleName == UNICODE_NULL);
+}
+
+static PLDR_DATA_TABLE_ENTRY
+KsepFindExportingModule(
+    _In_ PKSE_HOOK_COLLECTION HookCollection,
+    _Out_ PCWSTR* ModuleName)
+{
+    PLIST_ENTRY ListEntry;
+    PLDR_DATA_TABLE_ENTRY LdrEntry;
+    UNICODE_STRING ExportDriverName;
+
+    /* The kernel is always the first loaded module, the HAL the second one */
+    switch (HookCollection->Type)
+    {
+        case KseCollectionNtExport:
+            *ModuleName = L"ntoskrnl.exe";
+            ListEntry = PsLoadedModuleList.Flink;
+            return CONTAINING_RECORD(ListEntry, LDR_DATA_TABLE_ENTRY, InLoadOrderLinks);
+
+        case KseCollectionHalExport:
+            *ModuleName = L"hal.dll";
+            ListEntry = PsLoadedModuleList.Flink->Flink;
+            return CONTAINING_RECORD(ListEntry, LDR_DATA_TABLE_ENTRY, InLoadOrderLinks);
+
+        case KseCollectionDriverExport:
+            if (!HookCollection->ExportDriverName)
+                return NULL;
+
+            *ModuleName = HookCollection->ExportDriverName;
+            RtlInitUnicodeString(&ExportDriverName, HookCollection->ExportDriverName);
+            for (ListEntry = PsLoadedModuleList.Flink;
+                 ListEntry != &PsLoadedModuleList;
+                 ListEntry = ListEntry->Flink)
+            {
+                LdrEntry = CONTAINING_RECORD(ListEntry, LDR_DATA_TABLE_ENTRY, InLoadOrderLinks);
+                if (RtlEqualUnicodeString(&LdrEntry->BaseDllName, &ExportDriverName, TRUE))
+                    return LdrEntry;
+            }
+            return NULL;
+
+        default:
+            return NULL;
+    }
+}
+
+/* Write an import address table entry. The table can already be write-protected
+ * (for example for boot drivers), so write through a temporary mapping. */
+static NTSTATUS
+KsepWriteImportEntry(
+    _In_ PIMAGE_THUNK_DATA Thunk,
+    _In_ PVOID NewFunction)
+{
+    PMDL Mdl;
+    PIMAGE_THUNK_DATA MappedThunk;
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    Mdl = IoAllocateMdl(Thunk, sizeof(*Thunk), FALSE, FALSE, NULL);
+    if (!Mdl)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
+    _SEH2_TRY
+    {
+        MmProbeAndLockPages(Mdl, KernelMode, IoReadAccess);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = _SEH2_GetExceptionCode();
+    }
+    _SEH2_END;
+
+    if (!NT_SUCCESS(Status))
+    {
+        IoFreeMdl(Mdl);
+        return Status;
+    }
+
+    MappedThunk = MmMapLockedPagesSpecifyCache(Mdl, KernelMode, MmCached, NULL, FALSE, NormalPagePriority);
+    if (MappedThunk)
+    {
+        InterlockedExchangePointer((PVOID*)&MappedThunk->u1.Function, NewFunction);
+        MmUnmapLockedPages(MappedThunk, Mdl);
+    }
+    else
+    {
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    MmUnlockPages(Mdl);
+    IoFreeMdl(Mdl);
+    return Status;
+}
+
+static VOID
+KsepHookImports(
+    _In_ PLDR_DATA_TABLE_ENTRY LdrEntry,
+    _In_ PKSE_HOOK_COLLECTION HookCollection)
+{
+    PUCHAR DllBase = LdrEntry->DllBase;
+    PIMAGE_IMPORT_DESCRIPTOR ImportDescriptor;
+    PIMAGE_THUNK_DATA OriginalThunk, FirstThunk;
+    PIMAGE_IMPORT_BY_NAME ImportByName;
+    PLDR_DATA_TABLE_ENTRY ExportEntry;
+    PCWSTR ModuleName;
+    PKSE_HOOK Hook;
+    BOOLEAN Match;
+    ULONG Size;
+    NTSTATUS Status;
+
+    ExportEntry = KsepFindExportingModule(HookCollection, &ModuleName);
+    if (!ExportEntry)
+    {
+        DPRINT1("KSE: Exporting module for collection type %lu not found\n", HookCollection->Type);
+        return;
+    }
+
+    /* Resolve the original functions. They are the same for every shimmed driver. */
+    for (Hook = HookCollection->HookArray; Hook->Type != KseHookInvalid; Hook++)
+    {
+        if (Hook->Type != KseHookFunction || Hook->OriginalFunction)
+            continue;
+
+        Hook->OriginalFunction = RtlFindExportedRoutineByName(ExportEntry->DllBase, Hook->FunctionName);
+        if (!Hook->OriginalFunction)
+            DPRINT1("KSE: %s not exported by %S\n", Hook->FunctionName, ModuleName);
+    }
+
+    ImportDescriptor = RtlImageDirectoryEntryToData(DllBase, TRUE, IMAGE_DIRECTORY_ENTRY_IMPORT, &Size);
+    if (!ImportDescriptor)
+        return;
+
+    for (; ImportDescriptor->Name && ImportDescriptor->FirstThunk; ImportDescriptor++)
+    {
+        if (ImportDescriptor->Name >= LdrEntry->SizeOfImage ||
+            !KsepIsImportFromModule((PCSTR)(DllBase + ImportDescriptor->Name), ModuleName))
+        {
+            continue;
+        }
+
+        FirstThunk = (PIMAGE_THUNK_DATA)(DllBase + ImportDescriptor->FirstThunk);
+        OriginalThunk = ImportDescriptor->OriginalFirstThunk ?
+            (PIMAGE_THUNK_DATA)(DllBase + ImportDescriptor->OriginalFirstThunk) : NULL;
+
+        for (; FirstThunk->u1.Function; FirstThunk++, OriginalThunk = OriginalThunk ? OriginalThunk + 1 : NULL)
+        {
+            /* Without a name table, match on the address the import was bound to */
+            ImportByName = NULL;
+            if (OriginalThunk &&
+                !IMAGE_SNAP_BY_ORDINAL(OriginalThunk->u1.Ordinal) &&
+                OriginalThunk->u1.AddressOfData < LdrEntry->SizeOfImage)
+            {
+                ImportByName = (PIMAGE_IMPORT_BY_NAME)(DllBase + OriginalThunk->u1.AddressOfData);
+            }
+
+            for (Hook = HookCollection->HookArray; Hook->Type != KseHookInvalid; Hook++)
+            {
+                if (Hook->Type != KseHookFunction || !Hook->OriginalFunction)
+                    continue;
+
+                if (ImportByName)
+                    Match = !strcmp((PCSTR)ImportByName->Name, Hook->FunctionName);
+                else
+                    Match = (FirstThunk->u1.Function == (ULONG_PTR)Hook->OriginalFunction);
+
+                if (!Match)
+                    continue;
+
+                /* FIXME: When two shims hook the same function, the last one wins */
+                Status = KsepWriteImportEntry(FirstThunk, Hook->HookFunction);
+                if (NT_SUCCESS(Status))
+                    DPRINT1("KSE: Hooked %S!%s in %wZ\n", ModuleName, Hook->FunctionName, &LdrEntry->BaseDllName);
+                else
+                    DPRINT1("KSE: Unable to hook %S!%s in %wZ (0x%08lx)\n", ModuleName, Hook->FunctionName, &LdrEntry->BaseDllName, Status);
+                break;
+            }
+        }
+    }
+}
+
+static VOID
+KsepApplyShimToDriver(
+    _In_ PKSE_SHIM Shim,
+    _In_ PLDR_DATA_TABLE_ENTRY LdrEntry)
+{
+    PKSE_HOOK_COLLECTION HookCollection;
+
+    for (HookCollection = Shim->HookCollectionsArray;
+         HookCollection->Type != KseCollectionInvalid;
+         HookCollection++)
+    {
+        /* Callbacks are applied when the driver object is initialized */
+        if (HookCollection->Type == KseCollectionCallback)
+            continue;
+
+        KsepHookImports(LdrEntry, HookCollection);
+    }
+}
+
 NTSTATUS
 NTAPI
 KseDriverLoadImage(
@@ -557,8 +767,7 @@ KseDriverLoadImage(
         DPRINT1("KSE: Applying shim %S (0x%08lx) to %wZ\n",
                 Shims[n]->ShimName, Shims[n]->ShimGuid->Data1, &LdrEntry->BaseDllName);
 
-        /* FIXME: Patch the import table of the driver */
-        DPRINT1("KSE: Import table hooking is not implemented yet\n");
+        KsepApplyShimToDriver(Shims[n], LdrEntry);
 
         if (Shims[n]->ShimmedDriverTargetedNotification)
         {
