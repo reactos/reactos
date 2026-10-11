@@ -34,18 +34,32 @@ typedef union
     };
 } CPUID_VERSION_INFO_REGS;
 
-// CPUID_EXTENDED_FUNCTION (0x80000000)
+// CPUID_CACHE_INFO (2)
 typedef union
 {
     INT32 AsInt32[4];
     struct
     {
-        UINT32 MaxLeaf;
-        UINT32 ReservedEbx;
-        UINT32 ReservedEcx;
-        UINT32 ReservedEdx;
+        CPUID_CACHE_INFO_CACHE_TLB Eax;
+        CPUID_CACHE_INFO_CACHE_TLB Ebx;
+        CPUID_CACHE_INFO_CACHE_TLB Ecx;
+        CPUID_CACHE_INFO_CACHE_TLB Edx;
     };
-} CPUID_EXTENDED_FUNCTION_REGS;
+    CPUID_CACHE_INFO_CACHE_TLB Regs[4];
+} CPUID_CACHE_INFO_REGS;
+
+// CPUID_CACHE_PARAMS (4)
+typedef union
+{
+    INT32 AsInt32[4];
+    struct
+    {
+        CPUID_CACHE_PARAMS_EAX Eax;
+        CPUID_CACHE_PARAMS_EBX Ebx;
+        UINT32 NumberOfSets;
+        CPUID_CACHE_PARAMS_EDX Edx;
+    };
+} CPUID_CACHE_PARAMS_REGS;
 
 // CPUID_THERMAL_POWER_MANAGEMENT (6)
 typedef union
@@ -128,6 +142,19 @@ typedef union
     };
 } CPUID_EXTENDED_STATE_SIZE_OFFSET_REGS;
 
+// CPUID_EXTENDED_FUNCTION (0x80000000)
+typedef union
+{
+    INT32 AsInt32[4];
+    struct
+    {
+        UINT32 MaxLeaf;
+        UINT32 ReservedEbx;
+        UINT32 ReservedEcx;
+        UINT32 ReservedEdx;
+    };
+} CPUID_EXTENDED_FUNCTION_REGS;
+
 // CPUID_EXTENDED_CPU_SIG (0x80000001)
 typedef union
 {
@@ -148,6 +175,148 @@ typedef union
     } Amd;
 } CPUID_EXTENDED_CPU_SIG_REGS;
 
+
+// https://kib.kiev.ua/x86docs/AMD/AMD-CPUID-Spec/25481-r2.34.pdf#G3.2106230
+#define CPUID_L1_TLB_INFO 0x80000005
+
+// https://docs.amd.com/v/u/en-US/24594_3.38_APM_Vol3 (E.4.4 Function 8000_0005h—L1 Cache and TLB Information)
+typedef union
+{
+    struct
+    {
+        UINT32 L1ITlb2and4MSize : 8; ///< EAX[7..0] - ITLB number of entries for 2 MB and 4 MB pages
+        UINT32 L1ITlb2and4MAssoc : 8; ///< EAX[15..8] - ITLB associativity for 2 MB and 4 MB pages (0xFF = Fully associative)
+        UINT32 L1DTlb2and4MSize : 8; ///< EAX[23..16] - DTLB number of entries for 2 MB and 4 MB pages
+        UINT32 L1DTlb2and4MAssoc : 8; ///< EAX[31..24] - DTLB associativity for 2 MB and 4 MB pages (0xFF = Fully associative)
+    } Bits;
+    UINT32 Uint32;
+} CPUID_AMD_L1_TLB_INFO_EAX;
+
+typedef union
+{
+    struct
+    {
+        UINT32 L1ITlb4KSize : 8; ///< EBX[7..0] - ITLB number of entries for 4 KB pages
+        UINT32 L1ITlb4KAssoc : 8; ///< EBX[15..8] - ITLB associativity for 4 KB pages (0xFF = Fully associative)
+        UINT32 L1DTlb4KSize : 8; ///< EBX[23..16] - DTLB number of entries for 4 KB pages
+        UINT32 L1DTlb4KAssoc : 8; ///< EBX[31..24] - DTLB associativity for 4 KB pages (0xFF = Fully associative)
+    } Bits;
+    UINT32 Uint32;
+} CPUID_AMD_L1_TLB_INFO_EBX;
+
+typedef union
+{
+    struct
+    {
+        UINT32 L1DcLineSize : 8; ///< ECX[7..0] - L1 data cache line size in bytes
+        UINT32 L1DcLinesPerTag : 8; ///< ECX[15..8]- L1 data cache lines per tag
+        UINT32 L1DcAssoc : 8; ///< ECX[23..16] - L1 data cache associativity (0xFF = Fully associative)
+        UINT32 L1DcSize : 8; ///< ECX[31..24] - L1 data cache size in KB
+    } Bits;
+    UINT32 Uint32;
+} CPUID_AMD_L1_TLB_INFO_ECX;
+
+typedef union
+{
+    struct
+    {
+        UINT32 L1IcLineSize : 8; ///< EDX[7..0] - L1 instruction cache line size in bytes
+        UINT32 L1IcLinesPerTag : 8; ///< EDX[15..8] - L1 instruction cache lines per tag
+        UINT32 L1IcAssoc : 8; ///< EDX[23..16] - L1 instruction cache associativity (0xFF = Fully associative)
+        UINT32 L1IcSize : 8; ///< EDX[31..24] - L1 instruction cache size KB
+    } Bits;
+    UINT32 Uint32;
+} CPUID_AMD_L1_TLB_INFO_EDX;
+
+typedef union
+{
+    INT32 AsInt32[4];
+    struct
+    {
+        UINT32 ReservedEax;
+        UINT32 ReservedEbx;
+        UINT32 ReservedEcx;
+        UINT32 ReservedEdx;
+    } Intel;
+    struct
+    {
+        CPUID_AMD_L1_TLB_INFO_EAX Eax;
+        CPUID_AMD_L1_TLB_INFO_EBX Ebx;
+        CPUID_AMD_L1_TLB_INFO_ECX Ecx;
+        CPUID_AMD_L1_TLB_INFO_EDX Edx;
+    } Amd;
+    struct
+    {
+        // Same as AMD, but no TLB info in EAX
+        UINT32 Eax; // Reserved
+        CPUID_AMD_L1_TLB_INFO_EBX Ebx;
+        CPUID_AMD_L1_TLB_INFO_ECX Ecx;
+        CPUID_AMD_L1_TLB_INFO_EDX Edx;
+    } Via;
+} CPUID_L1_TLB_INFO_REGS;
+
+// CPUID_EXTENDED_CACHE_INFO (0x80000006)
+// https://docs.amd.com/v/u/en-US/24594_3.38_APM_Vol3 (E.4.5 Function 8000_0006h—L2 Cache and TLB and L3 Cache Information)
+typedef union
+{
+    struct
+    {
+        UINT32 L2ITlb2and4MSize : 12; ///< EAX[11..0] - ITLB number of entries for 2 MB and 4 MB pages
+        UINT32 L2ITlb2and4MAssoc : 4; ///< EAX[15..12] - ITLB associativity for 2 MB and 4 MB pages
+        UINT32 L2DTlb2and4MSize : 12; ///< EAX[27..16] - DTLB number of entries for 2 MB and 4 MB pages
+        UINT32 L2DTlb2and4MAssoc : 4; ///< EAX[31..28] - DTLB associativity for 2 MB and 4 MB pages
+    } Bits;
+    UINT32 Uint32;
+} CPUID_AMD_EXTENDED_CACHE_INFO_EAX;
+
+typedef union
+{
+    struct
+    {
+        UINT32 L2ITlb4KSize : 12; ///< EBX[11..0] - ITLB number of entries for 4 KB pages
+        UINT32 L2ITlb4KAssoc : 4; ///< EBX[15..12] - ITLB associativity for 4 KB pages
+        UINT32 L2DTlb4KSize : 12; ///< EBX[27..16] - DTLB number of entries for 4 KB pages
+        UINT32 L2DTlb4KAssoc : 4; ///< EBX[31..28] - DTLB associativity for 4 KB pages
+    } Bits;
+    UINT32 Uint32;
+} CPUID_AMD_EXTENDED_CACHE_INFO_EBX;
+
+typedef union
+{
+    struct
+    {
+        UINT32 L2LineSize : 8; ///< ECX[7..0] - L2 cache line size in bytes
+        UINT32 L2LinesPerTag : 4; ///< ECX[11..8] - L2 cache lines per tag
+        UINT32 L2Assoc : 4; ///< ECX[15..12] - L2 cache associativity
+        UINT32 L2Size : 16; ///< ECX[31..16] - L2 cache size in KB
+    } Bits;
+    UINT32 Uint32;
+} CPUID_AMD_EXTENDED_CACHE_INFO_ECX;
+
+typedef union
+{
+    struct
+    {
+        UINT32 L3LineSize : 8; ///< EDX[7..0] - L3 cache line size in bytes
+        UINT32 L3LinesPerTag : 4; ///< EDX[11..8] - L3 cache lines per tag
+        UINT32 L3Assoc : 4; ///< EDX[15..12] - L3 cache associativity
+        UINT32 Reserved : 2; ///< EDX[17..16] - Reserved
+        UINT32 L3Size : 14; ///< EDX[31..18] - L3 cache size in 512 KB
+    } Bits;
+    UINT32 Uint32;
+} CPUID_AMD_EXTENDED_CACHE_INFO_EDX;
+
+typedef union
+{
+    INT32 AsInt32[4];
+    struct
+    {
+        CPUID_AMD_EXTENDED_CACHE_INFO_EAX Eax;
+        CPUID_AMD_EXTENDED_CACHE_INFO_EBX Ebx;
+        CPUID_AMD_EXTENDED_CACHE_INFO_ECX Ecx;
+        CPUID_AMD_EXTENDED_CACHE_INFO_EDX Edx;
+    };
+} CPUID_AMD_EXTENDED_CACHE_INFO_REGS;
 
 // Additional AMD specific CPUID:
 // See
@@ -220,3 +389,5 @@ typedef union
         CPUID_AMD_SVM_FEATURES_EDX Edx;
     };
 } CPUID_AMD_SVM_FEATURES_REGS;
+
+#define CPUID_CACHE_PARAMS_AMD 0x8000001D
