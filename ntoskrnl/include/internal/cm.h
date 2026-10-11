@@ -335,6 +335,39 @@ typedef struct _CM_NOTIFY_BLOCK
 } CM_NOTIFY_BLOCK, *PCM_NOTIFY_BLOCK;
 
 //
+// Post Block
+//
+typedef struct _CMP_POST_BLOCK
+{
+    LIST_ENTRY NotifyList; /* Link to CM_NOTIFY_BLOCK->PostList */
+
+    BOOLEAN IsPrimary;
+    union
+    {
+        /* Fields used by the primary PostBlock to report changes to the notification session */
+        struct
+        {
+            PKEVENT Event;
+            PKAPC UserApc;
+            PWORK_QUEUE_ITEM WorkQueueItem;
+            WORK_QUEUE_TYPE WorkQueueType;
+
+            PCM_NOTIFY_BLOCK SecondaryBlock;
+
+            PKPROCESS OwnerProcess;
+            PIO_STATUS_BLOCK IoStatusBlock;
+        };
+
+        /* Fields used by the secondary PostBlock */
+        struct
+        {
+            PCM_NOTIFY_BLOCK PrimaryNotifyBlock;
+            struct _CMP_POST_BLOCK* PrimaryPostBlock;
+        };
+    };
+} CMP_POST_BLOCK, *PCMP_POST_BLOCK;
+
+//
 // Re-map Block
 //
 typedef struct _CM_CELL_REMAP_BLOCK
