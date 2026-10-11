@@ -104,6 +104,15 @@ typedef struct
     ERESOURCE DirResource;
 //    ERESOURCE FatResource;
 
+    /* In-memory copy of $Bitmap, loaded at mount. BitmapResource guards
+     * the copy and keeps it in step with the disk. */
+    ERESOURCE BitmapResource;
+    struct _NTFS_ATTR_CONTEXT* BitmapContext;
+    PULONG BitmapBuffer;
+    ULONG BitmapSize;
+    RTL_BITMAP ClusterBitmap;
+    ULONGLONG FreeClusterCount;
+
     KSPIN_LOCK FcbListLock;
     LIST_ENTRY FcbListHead;
 
@@ -1451,6 +1460,20 @@ NtfsAllocateClusters(PDEVICE_EXTENSION DeviceExt,
 
 ULONGLONG
 NtfsGetFreeClusters(PDEVICE_EXTENSION DeviceExt);
+
+NTSTATUS
+NtfsLoadVolumeBitmap(
+    _In_ PDEVICE_EXTENSION DeviceExt);
+
+VOID
+NtfsFreeVolumeBitmap(
+    _In_ PDEVICE_EXTENSION DeviceExt);
+
+NTSTATUS
+NtfsWriteVolumeBitmap(
+    _In_ PDEVICE_EXTENSION DeviceExt,
+    _In_ ULONG FirstCluster,
+    _In_ ULONG ClusterCount);
 
 NTSTATUS
 NtfsQueryVolumeInformation(PNTFS_IRP_CONTEXT IrpContext);

@@ -545,7 +545,12 @@ NtfsMountVolume(PDEVICE_OBJECT DeviceObject,
     }
     _SEH2_END;
 
+    Status = NtfsLoadVolumeBitmap(Vcb);
+    if (!NT_SUCCESS(Status))
+        goto ByeBye;
+
     ExInitializeResourceLite(&Vcb->DirResource);
+    ExInitializeResourceLite(&Vcb->BitmapResource);
 
     KeInitializeSpinLock(&Vcb->FcbListLock);
 
@@ -574,6 +579,9 @@ ByeBye:
 
         if (Ccb)
             ExFreePool(Ccb);
+
+        if (Vcb != NULL)
+            NtfsFreeVolumeBitmap(Vcb);
 
         if (Vcb != NULL && Vcb->UpCaseTable != NULL)
         {
@@ -748,8 +756,6 @@ GetVolumeBitmap(PDEVICE_EXTENSION DeviceExt,
     PIO_STACK_LOCATION Stack;
     PVOLUME_BITMAP_BUFFER BitmapBuffer;
     LONGLONG StartingLcn;
-    PFILE_RECORD_HEADER BitmapRecord;
-    PNTFS_ATTR_CONTEXT DataContext;
     ULONGLONG TotalClusters;
     ULONGLONG ToCopy;
     BOOLEAN Overflow = FALSE;
@@ -820,35 +826,17 @@ GetVolumeBitmap(PDEVICE_EXTENSION DeviceExt,
         ToCopy = Stack->Parameters.FileSystemControl.OutputBufferLength - FIELD_OFFSET(VOLUME_BITMAP_BUFFER, Buffer);
     }
 
-    BitmapRecord = ExAllocateFromNPagedLookasideList(&DeviceExt->FileRecLookasideList);
-    if (BitmapRecord == NULL)
-    {
-        return STATUS_INSUFFICIENT_RESOURCES;
-    }
-
-    Status = ReadFileRecord(DeviceExt, NTFS_FILE_BITMAP, BitmapRecord);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("Failed reading volume bitmap: %lx\n", Status);
-        ExFreeToNPagedLookasideList(&DeviceExt->FileRecLookasideList, BitmapRecord);
-        return Status;
-    }
-
-    Status = FindAttribute(DeviceExt, BitmapRecord, AttributeData, L"", 0, &DataContext, NULL);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("Failed find $DATA for bitmap: %lx\n", Status);
-        ExFreeToNPagedLookasideList(&DeviceExt->FileRecLookasideList, BitmapRecord);
-        return Status;
-    }
-
     BitmapBuffer->StartingLcn.QuadPart = StartingLcn;
     BitmapBuffer->BitmapSize.QuadPart = ToCopy * 8;
 
     Irp->IoStatus.Information = FIELD_OFFSET(VOLUME_BITMAP_BUFFER, Buffer);
+
+    KeEnterCriticalRegion();
+    ExAcquireResourceSharedLite(&DeviceExt->BitmapResource, TRUE);
     _SEH2_TRY
     {
-        Irp->IoStatus.Information += ReadAttribute(DeviceExt, DataContext, StartingLcn / 8, (PCHAR)BitmapBuffer->Buffer, ToCopy);
+        RtlCopyMemory(BitmapBuffer->Buffer, (PUCHAR)DeviceExt->BitmapBuffer + StartingLcn / 8, (SIZE_T)ToCopy);
+        Irp->IoStatus.Information += (ULONG_PTR)ToCopy;
         Status = (Overflow ? STATUS_BUFFER_OVERFLOW : STATUS_SUCCESS);
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
@@ -856,8 +844,8 @@ GetVolumeBitmap(PDEVICE_EXTENSION DeviceExt,
         Status = _SEH2_GetExceptionCode();
     }
     _SEH2_END;
-    ReleaseAttributeContext(DataContext);
-    ExFreeToNPagedLookasideList(&DeviceExt->FileRecLookasideList, BitmapRecord);
+    ExReleaseResourceLite(&DeviceExt->BitmapResource);
+    KeLeaveCriticalRegion();
 
     return Status;
 }
