@@ -320,6 +320,175 @@ NtfsOpenFile(PDEVICE_EXTENSION DeviceExt,
 }
 
 
+/**
+* @name NtfsGrantShareAccess
+*
+* Records a new open of Fcb against its share access, or fails it with a
+* sharing violation.
+*/
+static
+NTSTATUS
+NtfsGrantShareAccess(
+    _In_ PDEVICE_EXTENSION DeviceExt,
+    _In_ PNTFS_FCB Fcb,
+    _In_ PFILE_OBJECT FileObject,
+    _In_ PIO_STACK_LOCATION Stack)
+{
+    ACCESS_MASK DesiredAccess = 0;
+    ULONG ShareAccess = Stack->Parameters.Create.ShareAccess;
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    if (Stack->Parameters.Create.SecurityContext != NULL)
+        DesiredAccess = Stack->Parameters.Create.SecurityContext->DesiredAccess;
+
+    if (Fcb->OpenHandleCount > 0)
+    {
+        Status = IoCheckShareAccess(DesiredAccess,
+                                    ShareAccess,
+                                    FileObject,
+                                    &Fcb->ShareAccess,
+                                    TRUE);
+    }
+    else
+    {
+        IoSetShareAccess(DesiredAccess,
+                         ShareAccess,
+                         FileObject,
+                         &Fcb->ShareAccess);
+    }
+
+    if (NT_SUCCESS(Status))
+    {
+        Fcb->OpenHandleCount++;
+        DeviceExt->OpenHandleCount++;
+    }
+
+    return Status;
+}
+
+/**
+* @name NtfsOpenTargetDirectory
+*
+* Serves SL_OPEN_TARGET_DIRECTORY, the open the I/O manager does ahead of a
+* rename: opens the parent of the named file, reports whether the final
+* component exists, and leaves only that component in the file object's name,
+* where the rename reads it.
+*
+* @param DeviceExt
+* Volume being opened on.
+*
+* @param FileObject
+* File object of the create, naming the rename target.
+*
+* @param CaseSensitive
+* TRUE for POSIX semantics.
+*
+* @param Information
+* Receives FILE_EXISTS or FILE_DOES_NOT_EXIST for the final component.
+*
+* @return
+* STATUS_SUCCESS with the directory attached to FileObject, or an error.
+*/
+static
+NTSTATUS
+NtfsOpenTargetDirectory(
+    _In_ PDEVICE_EXTENSION DeviceExt,
+    _In_ PFILE_OBJECT FileObject,
+    _In_ BOOLEAN CaseSensitive,
+    _Out_ PULONG_PTR Information)
+{
+    WCHAR Path[MAX_PATH];
+    WCHAR FinalBuffer[MAX_PATH];
+    PWSTR AbsFileName = NULL;
+    PWSTR LastSeparator;
+    UNICODE_STRING FinalName;
+    ULONGLONG ExistingMft;
+    ULONG FirstEntry = 0;
+    PNTFS_FCB ParentFcb = NULL;
+    PNTFS_FCB Fcb;
+    SIZE_T Length;
+    NTSTATUS Status;
+
+    *Information = 0;
+
+    if (FileObject->FileName.Length == 0 || FileObject->FileName.Length >= sizeof(Path))
+        return STATUS_OBJECT_NAME_INVALID;
+
+    RtlCopyMemory(Path, FileObject->FileName.Buffer, FileObject->FileName.Length);
+    Path[FileObject->FileName.Length / sizeof(WCHAR)] = UNICODE_NULL;
+
+    if (FileObject->RelatedFileObject)
+    {
+        Status = NtfsMakeAbsoluteFilename(FileObject->RelatedFileObject, Path, &AbsFileName);
+        if (!NT_SUCCESS(Status))
+            return Status;
+
+        if (AbsFileName)
+        {
+            if (wcslen(AbsFileName) >= MAX_PATH)
+            {
+                ExFreePoolWithTag(AbsFileName, TAG_NTFS);
+                return STATUS_NAME_TOO_LONG;
+            }
+
+            wcscpy(Path, AbsFileName);
+            ExFreePoolWithTag(AbsFileName, TAG_NTFS);
+        }
+    }
+
+    /* A trailing separator names nothing */
+    Length = wcslen(Path);
+    while (Length > 1 && Path[Length - 1] == L'\\')
+        Path[--Length] = UNICODE_NULL;
+
+    LastSeparator = wcsrchr(Path, L'\\');
+    if (LastSeparator == NULL || LastSeparator[1] == UNICODE_NULL)
+        return STATUS_OBJECT_NAME_INVALID;
+
+    wcscpy(FinalBuffer, LastSeparator + 1);
+    RtlInitUnicodeString(&FinalName, FinalBuffer);
+
+    /* Cut the path down to the directory, keeping the root's separator */
+    if (LastSeparator == Path)
+        LastSeparator[1] = UNICODE_NULL;
+    else
+        *LastSeparator = UNICODE_NULL;
+
+    Fcb = NtfsGrabFCBFromTable(DeviceExt, Path);
+    if (Fcb == NULL)
+    {
+        Status = NtfsGetFCBForFile(DeviceExt, &ParentFcb, &Fcb, Path, CaseSensitive);
+        if (ParentFcb != NULL)
+            NtfsReleaseFCB(DeviceExt, ParentFcb);
+
+        if (!NT_SUCCESS(Status))
+            return (Status == STATUS_OBJECT_NAME_NOT_FOUND) ? STATUS_OBJECT_PATH_NOT_FOUND : Status;
+    }
+
+    if (!NtfsFCBIsDirectory(Fcb))
+    {
+        NtfsReleaseFCB(DeviceExt, Fcb);
+        return STATUS_OBJECT_PATH_NOT_FOUND;
+    }
+
+    Status = NtfsFindMftRecord(DeviceExt, Fcb->MFTIndex, &FinalName, &FirstEntry, FALSE, CaseSensitive, &ExistingMft);
+    *Information = NT_SUCCESS(Status) ? FILE_EXISTS : FILE_DOES_NOT_EXIST;
+
+    Status = NtfsAttachFCBToFileObject(DeviceExt, Fcb, FileObject);
+    if (!NT_SUCCESS(Status))
+    {
+        NtfsReleaseFCB(DeviceExt, Fcb);
+        return Status;
+    }
+
+    /* The final component is a suffix of the original name, so it fits */
+    RtlMoveMemory(FileObject->FileName.Buffer, FinalName.Buffer, FinalName.Length);
+    FileObject->FileName.Length = FinalName.Length;
+
+    return STATUS_SUCCESS;
+}
+
+
 /*
  * FUNCTION: Opens a file
  */
@@ -362,6 +531,32 @@ NtfsCreateFile(PDEVICE_OBJECT DeviceObject,
     }
 
     FileObject = Stack->FileObject;
+
+    /* The I/O manager opening a rename's destination directory */
+    if (Stack->Flags & SL_OPEN_TARGET_DIRECTORY)
+    {
+        ULONG_PTR Information;
+
+        if (RequestedOptions & FILE_OPEN_BY_FILE_ID)
+            return STATUS_INVALID_PARAMETER;
+
+        Status = NtfsOpenTargetDirectory(DeviceExt,
+                                         FileObject,
+                                         BooleanFlagOn(Stack->Flags, SL_CASE_SENSITIVE),
+                                         &Information);
+        if (!NT_SUCCESS(Status))
+            return Status;
+
+        Status = NtfsGrantShareAccess(DeviceExt, FileObject->FsContext, FileObject, Stack);
+        if (!NT_SUCCESS(Status))
+        {
+            NtfsCloseFile(DeviceExt, FileObject);
+            return Status;
+        }
+
+        Irp->IoStatus.Information = Information;
+        return STATUS_SUCCESS;
+    }
 
     if ((RequestedOptions & FILE_OPEN_BY_FILE_ID) == FILE_OPEN_BY_FILE_ID)
     {
@@ -605,28 +800,7 @@ NtfsCreateFile(PDEVICE_OBJECT DeviceObject,
 
     if (NT_SUCCESS(Status))
     {
-        ACCESS_MASK DesiredAccess = 0;
-        ULONG ShareAccess = Stack->Parameters.Create.ShareAccess;
-
-        if (Stack->Parameters.Create.SecurityContext != NULL)
-            DesiredAccess = Stack->Parameters.Create.SecurityContext->DesiredAccess;
-
-        if (Fcb->OpenHandleCount > 0)
-        {
-            Status = IoCheckShareAccess(DesiredAccess,
-                                        ShareAccess,
-                                        FileObject,
-                                        &Fcb->ShareAccess,
-                                        TRUE);
-        }
-        else
-        {
-            IoSetShareAccess(DesiredAccess,
-                             ShareAccess,
-                             FileObject,
-                             &Fcb->ShareAccess);
-        }
-
+        Status = NtfsGrantShareAccess(DeviceExt, Fcb, FileObject, Stack);
         if (!NT_SUCCESS(Status))
         {
             DPRINT("Sharing violation opening '%wZ'\n", &FileObject->FileName);
@@ -634,9 +808,6 @@ NtfsCreateFile(PDEVICE_OBJECT DeviceObject,
             Irp->IoStatus.Information = 0;
             return Status;
         }
-
-        Fcb->OpenHandleCount++;
-        DeviceExt->OpenHandleCount++;
     }
 
     /*

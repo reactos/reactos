@@ -33,68 +33,174 @@
 
 /* FUNCTIONS ****************************************************************/
 
-ULONGLONG
-NtfsGetFreeClusters(PDEVICE_EXTENSION DeviceExt)
+/**
+* @name NtfsLoadVolumeBitmap
+*
+* Reads $Bitmap into memory once at mount. Cluster allocation and freeing work
+* on this copy and write back only the sectors they change.
+*
+* @param DeviceExt
+* Volume being mounted. Its file record lookaside list and MFT context must be ready.
+*
+* @return
+* STATUS_SUCCESS, or an error if $Bitmap could not be found or read.
+*/
+NTSTATUS
+NtfsLoadVolumeBitmap(
+    _In_ PDEVICE_EXTENSION DeviceExt)
 {
-    NTSTATUS Status;
     PFILE_RECORD_HEADER BitmapRecord;
-    PNTFS_ATTR_CONTEXT DataContext;
-    ULONGLONG BitmapDataSize;
-    PCHAR BitmapData;
-    ULONGLONG FreeClusters = 0;
-    ULONG Read = 0;
-    RTL_BITMAP Bitmap;
-
-    DPRINT("NtfsGetFreeClusters(%p)\n", DeviceExt);
+    ULONGLONG BitmapSize;
+    ULONG BufferSize;
+    NTSTATUS Status;
 
     BitmapRecord = ExAllocateFromNPagedLookasideList(&DeviceExt->FileRecLookasideList);
     if (BitmapRecord == NULL)
-    {
-        return 0;
-    }
+        return STATUS_INSUFFICIENT_RESOURCES;
 
     Status = ReadFileRecord(DeviceExt, NTFS_FILE_BITMAP, BitmapRecord);
-    if (!NT_SUCCESS(Status))
+    if (NT_SUCCESS(Status))
     {
-        ExFreeToNPagedLookasideList(&DeviceExt->FileRecLookasideList, BitmapRecord);
-        return 0;
+        /* The context keeps its own copy of the attribute record */
+        Status = FindAttribute(DeviceExt, BitmapRecord, AttributeData, L"", 0, &DeviceExt->BitmapContext, NULL);
     }
 
-    Status = FindAttribute(DeviceExt, BitmapRecord, AttributeData, L"", 0, &DataContext, NULL);
-    if (!NT_SUCCESS(Status))
-    {
-        ExFreeToNPagedLookasideList(&DeviceExt->FileRecLookasideList, BitmapRecord);
-        return 0;
-    }
-
-    BitmapDataSize = AttributeDataLength(DataContext->pRecord);
-    ASSERT((BitmapDataSize * 8) >= DeviceExt->NtfsInfo.ClusterCount);
-    BitmapData = ExAllocatePoolWithTag(NonPagedPool, ROUND_UP(BitmapDataSize, DeviceExt->NtfsInfo.BytesPerSector), TAG_NTFS);
-    if (BitmapData == NULL)
-    {
-        ReleaseAttributeContext(DataContext);
-        ExFreeToNPagedLookasideList(&DeviceExt->FileRecLookasideList, BitmapRecord);
-        return 0;
-    }
-
-    /* FIXME: Totally underoptimized! */
-    for (; Read < BitmapDataSize; Read += DeviceExt->NtfsInfo.BytesPerSector)
-    {
-        ReadAttribute(DeviceExt, DataContext, Read, (PCHAR)((ULONG_PTR)BitmapData + Read), DeviceExt->NtfsInfo.BytesPerSector);
-    }
-    ReleaseAttributeContext(DataContext);
-
-    /* $Bitmap is rounded up to a cluster, so it normally covers a few clusters more than the
-     * volume has. The bitmap below is bounded by ClusterCount, so the surplus bits are ignored. */
-    DPRINT("Total clusters: %I64x\n", DeviceExt->NtfsInfo.ClusterCount);
-    DPRINT("Total clusters in bitmap: %I64x\n", BitmapDataSize * 8);
-    DPRINT("Diff in size: %I64d B\n", ((BitmapDataSize * 8) - DeviceExt->NtfsInfo.ClusterCount) * DeviceExt->NtfsInfo.SectorsPerCluster * DeviceExt->NtfsInfo.BytesPerSector);
-
-    RtlInitializeBitMap(&Bitmap, (PULONG)BitmapData, DeviceExt->NtfsInfo.ClusterCount);
-    FreeClusters = RtlNumberOfClearBits(&Bitmap);
-
-    ExFreePoolWithTag(BitmapData, TAG_NTFS);
     ExFreeToNPagedLookasideList(&DeviceExt->FileRecLookasideList, BitmapRecord);
+
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Unable to find $Bitmap (Status %lx)\n", Status);
+        DeviceExt->BitmapContext = NULL;
+        return Status;
+    }
+
+    BitmapSize = AttributeDataLength(DeviceExt->BitmapContext->pRecord);
+    if (BitmapSize > MAXULONG ||
+        BitmapSize * 8 < DeviceExt->NtfsInfo.ClusterCount ||
+        DeviceExt->NtfsInfo.ClusterCount > MAXULONG)
+    {
+        DPRINT1("$Bitmap size %I64u does not cover %I64u clusters\n",
+                BitmapSize, DeviceExt->NtfsInfo.ClusterCount);
+        Status = STATUS_FILE_CORRUPT_ERROR;
+        goto Fail;
+    }
+
+    /* Whole sectors, so write back never reads first */
+    BufferSize = ROUND_UP((ULONG)BitmapSize, DeviceExt->NtfsInfo.BytesPerSector);
+    DeviceExt->BitmapBuffer = ExAllocatePoolWithTag(PagedPool, BufferSize, TAG_NTFS);
+    if (DeviceExt->BitmapBuffer == NULL)
+    {
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto Fail;
+    }
+    RtlZeroMemory(DeviceExt->BitmapBuffer, BufferSize);
+
+    if (ReadAttribute(DeviceExt, DeviceExt->BitmapContext, 0, (PCHAR)DeviceExt->BitmapBuffer, (ULONG)BitmapSize) != (ULONG)BitmapSize)
+    {
+        DPRINT1("Unable to read $Bitmap\n");
+        Status = STATUS_UNSUCCESSFUL;
+        goto Fail;
+    }
+
+    DeviceExt->BitmapSize = (ULONG)BitmapSize;
+
+    /* $Bitmap is rounded up to a cluster and covers a few clusters more than
+     * the volume has. Bounding by ClusterCount ignores the surplus bits, but
+     * write back still preserves them on disk. */
+    RtlInitializeBitMap(&DeviceExt->ClusterBitmap, DeviceExt->BitmapBuffer, (ULONG)DeviceExt->NtfsInfo.ClusterCount);
+    DeviceExt->FreeClusterCount = RtlNumberOfClearBits(&DeviceExt->ClusterBitmap);
+
+    DPRINT("Volume bitmap loaded: %I64u of %I64u clusters free\n",
+           DeviceExt->FreeClusterCount, DeviceExt->NtfsInfo.ClusterCount);
+
+    return STATUS_SUCCESS;
+
+Fail:
+    NtfsFreeVolumeBitmap(DeviceExt);
+    return Status;
+}
+
+/**
+* @name NtfsFreeVolumeBitmap
+*
+* Releases what NtfsLoadVolumeBitmap() set up. Safe on a partly loaded volume.
+*
+* @param DeviceExt
+* Volume whose bitmap copy is released.
+*/
+VOID
+NtfsFreeVolumeBitmap(
+    _In_ PDEVICE_EXTENSION DeviceExt)
+{
+    if (DeviceExt->BitmapBuffer != NULL)
+    {
+        ExFreePoolWithTag(DeviceExt->BitmapBuffer, TAG_NTFS);
+        DeviceExt->BitmapBuffer = NULL;
+    }
+
+    if (DeviceExt->BitmapContext != NULL)
+    {
+        ReleaseAttributeContext(DeviceExt->BitmapContext);
+        DeviceExt->BitmapContext = NULL;
+    }
+}
+
+/**
+* @name NtfsWriteVolumeBitmap
+*
+* Writes the sectors of $Bitmap that hold the given clusters' bits.
+* The caller holds BitmapResource exclusively.
+*
+* @param DeviceExt
+* Volume whose bitmap changed.
+*
+* @param FirstCluster
+* First cluster whose bit changed.
+*
+* @param ClusterCount
+* Number of clusters, starting at FirstCluster, to cover. Can't be 0.
+*
+* @return
+* Status from WriteAttribute().
+*/
+NTSTATUS
+NtfsWriteVolumeBitmap(
+    _In_ PDEVICE_EXTENSION DeviceExt,
+    _In_ ULONG FirstCluster,
+    _In_ ULONG ClusterCount)
+{
+    ULONG SectorSize = DeviceExt->NtfsInfo.BytesPerSector;
+    ULONG Start;
+    ULONG End;
+    ULONG LengthWritten;
+
+    ASSERT(ClusterCount != 0);
+
+    Start = ROUND_DOWN(FirstCluster / 8, SectorSize);
+    End = ROUND_UP((FirstCluster + ClusterCount - 1) / 8 + 1, SectorSize);
+    End = min(End, ROUND_UP(DeviceExt->BitmapSize, SectorSize));
+
+    return WriteAttribute(DeviceExt,
+                          DeviceExt->BitmapContext,
+                          Start,
+                          (PUCHAR)DeviceExt->BitmapBuffer + Start,
+                          End - Start,
+                          &LengthWritten,
+                          NULL);
+}
+
+ULONGLONG
+NtfsGetFreeClusters(PDEVICE_EXTENSION DeviceExt)
+{
+    ULONGLONG FreeClusters;
+
+    DPRINT("NtfsGetFreeClusters(%p)\n", DeviceExt);
+
+    KeEnterCriticalRegion();
+    ExAcquireResourceSharedLite(&DeviceExt->BitmapResource, TRUE);
+    FreeClusters = DeviceExt->FreeClusterCount;
+    ExReleaseResourceLite(&DeviceExt->BitmapResource);
+    KeLeaveCriticalRegion();
 
     return FreeClusters;
 }
@@ -111,70 +217,31 @@ NtfsAllocateClusters(PDEVICE_EXTENSION DeviceExt,
                      PULONG AssignedClusters)
 {
     NTSTATUS Status;
-    PFILE_RECORD_HEADER BitmapRecord;
-    PNTFS_ATTR_CONTEXT DataContext;
-    ULONGLONG BitmapDataSize;
-    PUCHAR BitmapData;
-    ULONGLONG FreeClusters = 0;
-    RTL_BITMAP Bitmap;
+    PRTL_BITMAP Bitmap = &DeviceExt->ClusterBitmap;
     ULONG AssignedRun;
-    ULONG LengthWritten;
 
     DPRINT("NtfsAllocateClusters(%p, %lu, %lu, %p, %p)\n", DeviceExt, FirstDesiredCluster, DesiredClusters, FirstAssignedCluster, AssignedClusters);
 
-    BitmapRecord = ExAllocateFromNPagedLookasideList(&DeviceExt->FileRecLookasideList);
-    if (BitmapRecord == NULL)
+    *AssignedClusters = 0;
+
+    /* Files growing in parallel must not both claim the same free run */
+    KeEnterCriticalRegion();
+    ExAcquireResourceExclusiveLite(&DeviceExt->BitmapResource, TRUE);
+
+    if (DeviceExt->FreeClusterCount < DesiredClusters)
     {
-        return STATUS_INSUFFICIENT_RESOURCES;
+        Status = STATUS_DISK_FULL;
+        goto Quit;
     }
 
-    Status = ReadFileRecord(DeviceExt, NTFS_FILE_BITMAP, BitmapRecord);
-    if (!NT_SUCCESS(Status))
-    {
-        ExFreeToNPagedLookasideList(&DeviceExt->FileRecLookasideList, BitmapRecord);
-        return Status;
-    }
-
-    Status = FindAttribute(DeviceExt, BitmapRecord, AttributeData, L"", 0, &DataContext, NULL);
-    if (!NT_SUCCESS(Status))
-    {
-        ExFreeToNPagedLookasideList(&DeviceExt->FileRecLookasideList, BitmapRecord);
-        return Status;
-    }
-
-    BitmapDataSize = AttributeDataLength(DataContext->pRecord);
-    BitmapDataSize = min(BitmapDataSize, 0xffffffff);
-    ASSERT((BitmapDataSize * 8) >= DeviceExt->NtfsInfo.ClusterCount);
-    BitmapData = ExAllocatePoolWithTag(NonPagedPool, ROUND_UP(BitmapDataSize, DeviceExt->NtfsInfo.BytesPerSector), TAG_NTFS);
-    if (BitmapData == NULL)
-    {
-        ReleaseAttributeContext(DataContext);
-        ExFreeToNPagedLookasideList(&DeviceExt->FileRecLookasideList, BitmapRecord);
-        return  STATUS_INSUFFICIENT_RESOURCES;
-    }
-
-    DPRINT("Total clusters: %I64x\n", DeviceExt->NtfsInfo.ClusterCount);
-    DPRINT("Total clusters in bitmap: %I64x\n", BitmapDataSize * 8);
-    DPRINT("Diff in size: %I64d B\n", ((BitmapDataSize * 8) - DeviceExt->NtfsInfo.ClusterCount) * DeviceExt->NtfsInfo.SectorsPerCluster * DeviceExt->NtfsInfo.BytesPerSector);
-
-    ReadAttribute(DeviceExt, DataContext, 0, (PCHAR)BitmapData, (ULONG)BitmapDataSize);
-
-    RtlInitializeBitMap(&Bitmap, (PULONG)BitmapData, DeviceExt->NtfsInfo.ClusterCount);
-    FreeClusters = RtlNumberOfClearBits(&Bitmap);
-
-    if (FreeClusters < DesiredClusters)
-    {
-        ReleaseAttributeContext(DataContext);
-
-        ExFreePoolWithTag(BitmapData, TAG_NTFS);
-        ExFreeToNPagedLookasideList(&DeviceExt->FileRecLookasideList, BitmapRecord);
-        return STATUS_DISK_FULL;
-    }
+    /* The hint is just past the file's last cluster, which can be past the volume end */
+    if (FirstDesiredCluster >= Bitmap->SizeOfBitMap)
+        FirstDesiredCluster = 0;
 
     // TODO: Observe MFT reservation zone
 
     // Can we get one contiguous run?
-    AssignedRun = RtlFindClearBitsAndSet(&Bitmap, DesiredClusters, FirstDesiredCluster);
+    AssignedRun = RtlFindClearBitsAndSet(Bitmap, DesiredClusters, FirstDesiredCluster);
 
     if (AssignedRun != 0xFFFFFFFF)
     {
@@ -184,22 +251,40 @@ NtfsAllocateClusters(PDEVICE_EXTENSION DeviceExt,
     else
     {
         // we can't get one contiguous run
-        *AssignedClusters = RtlFindNextForwardRunClear(&Bitmap, FirstDesiredCluster, FirstAssignedCluster);
+        *AssignedClusters = RtlFindNextForwardRunClear(Bitmap, FirstDesiredCluster, FirstAssignedCluster);
 
         if (*AssignedClusters == 0)
         {
             // we couldn't find any runs starting at DesiredFirstCluster
-            *AssignedClusters = RtlFindLongestRunClear(&Bitmap, FirstAssignedCluster);
+            *AssignedClusters = RtlFindLongestRunClear(Bitmap, FirstAssignedCluster);
         }
 
+        if (*AssignedClusters == 0)
+        {
+            Status = STATUS_DISK_FULL;
+            goto Quit;
+        }
+
+        /* Hand out no more than was asked for, and mark it in use */
+        *AssignedClusters = min(*AssignedClusters, DesiredClusters);
+        RtlSetBits(Bitmap, *FirstAssignedCluster, *AssignedClusters);
     }
 
-    Status = WriteAttribute(DeviceExt, DataContext, 0, BitmapData, (ULONG)BitmapDataSize, &LengthWritten, BitmapRecord);
+    Status = NtfsWriteVolumeBitmap(DeviceExt, *FirstAssignedCluster, *AssignedClusters);
+    if (NT_SUCCESS(Status))
+    {
+        DeviceExt->FreeClusterCount -= *AssignedClusters;
+    }
+    else
+    {
+        /* Keep the copy in step with what the disk says */
+        RtlClearBits(Bitmap, *FirstAssignedCluster, *AssignedClusters);
+        *AssignedClusters = 0;
+    }
 
-    ReleaseAttributeContext(DataContext);
-
-    ExFreePoolWithTag(BitmapData, TAG_NTFS);
-    ExFreeToNPagedLookasideList(&DeviceExt->FileRecLookasideList, BitmapRecord);
+Quit:
+    ExReleaseResourceLite(&DeviceExt->BitmapResource);
+    KeLeaveCriticalRegion();
 
     return Status;
 }

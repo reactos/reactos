@@ -33,6 +33,10 @@
 #define NDEBUG
 #include <debug.h>
 
+/* Bounds on how far a growing file is allocated past its end */
+#define NTFS_GROW_AHEAD_MIN (64 * 1024)
+#define NTFS_GROW_AHEAD_MAX (4 * 1024 * 1024)
+
 /* FUNCTIONS ****************************************************************/
 
 /**
@@ -557,6 +561,27 @@ NTSTATUS NtfsWriteFile(PDEVICE_EXTENSION DeviceExt,
 
             DataSize.QuadPart = WriteOffset + Length;
 
+            /* Reserve room past the new end, so the appends that follow fit
+             * without touching the bitmap or the run list. Cleanup gives back
+             * what's left over. */
+            if (DataContext->pRecord->IsNonResident &&
+                (ULONGLONG)DataSize.QuadPart > DataContext->pRecord->NonResident.AllocatedSize)
+            {
+                ULONGLONG Ahead;
+
+                Ahead = min(max(DataSize.QuadPart / 4, NTFS_GROW_AHEAD_MIN), NTFS_GROW_AHEAD_MAX);
+                Status = NtfsExtendAllocation(DeviceExt,
+                                              DataContext,
+                                              AttributeOffset,
+                                              FileRecord,
+                                              ROUND_UP(DataSize.QuadPart + Ahead, DeviceExt->NtfsInfo.BytesPerCluster));
+                if (!NT_SUCCESS(Status))
+                {
+                    /* Not fatal; SetAttributeDataLength() still allocates what's needed */
+                    DPRINT("Couldn't reserve ahead of %wS (Status %lx)\n", Fcb->ObjectName, Status);
+                }
+            }
+
             // set the attribute data length
             Status = SetAttributeDataLength(FileObject, Fcb, DataContext, AttributeOffset, FileRecord, &DataSize);
             if (!NT_SUCCESS(Status))
@@ -741,20 +766,12 @@ NtfsWrite(PNTFS_IRP_CONTEXT IrpContext)
         }
     }
 
+    /* A zero length write is a valid no-op */
     if (Length == 0)
     {
-        DPRINT1("Null write!\n");
-
+        // FIXME: Update last write time
         IrpContext->Irp->IoStatus.Information = 0;
-
-        // FIXME: Doesn't accurately detect when a user passes NULL to WriteFile() for the buffer
-        if (Irp->UserBuffer == NULL && Irp->MdlAddress == NULL)
-        {
-            // FIXME: Update last write time
-            return STATUS_SUCCESS;
-        }
-
-        return STATUS_INVALID_PARAMETER;
+        return STATUS_SUCCESS;
     }
 
     /* Is this an async request to a file? Serving a write means reading the
@@ -850,6 +867,7 @@ NtfsWrite(PNTFS_IRP_CONTEXT IrpContext)
     else if (NtfsFCBIsDirectory(Fcb))
     {
         /* A directory has no data stream to write */
+        ExReleaseResourceLite(Resource);
         Irp->IoStatus.Information = 0;
         return STATUS_INVALID_DEVICE_REQUEST;
     }

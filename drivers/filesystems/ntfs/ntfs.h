@@ -104,6 +104,19 @@ typedef struct
     ERESOURCE DirResource;
 //    ERESOURCE FatResource;
 
+    /* Serializes every read-modify-write of a directory's file record and
+     * index. Taken after any FCB resource, and before BitmapResource. */
+    ERESOURCE IndexResource;
+
+    /* In-memory copy of $Bitmap, loaded at mount. BitmapResource guards
+     * the copy and keeps it in step with the disk. */
+    ERESOURCE BitmapResource;
+    struct _NTFS_ATTR_CONTEXT* BitmapContext;
+    PULONG BitmapBuffer;
+    ULONG BitmapSize;
+    RTL_BITMAP ClusterBitmap;
+    ULONGLONG FreeClusterCount;
+
     KSPIN_LOCK FcbListLock;
     LIST_ENTRY FcbListHead;
 
@@ -244,6 +257,10 @@ typedef enum
 #define NTFS_FILE_TYPE_OFFLINE    0x1000
 #define NTFS_FILE_TYPE_ENCRYPTED  0x4000
 #define NTFS_FILE_TYPE_DIRECTORY  0x10000000
+
+/* NTFS_ATTR_RECORD Flags */
+#define NTFS_ATTR_COMPRESSION_MASK 0x00FF
+#define NTFS_ATTR_SPARSE           0x8000
 
 /* Indexed Flag in Resident attributes - still somewhat speculative */
 #define RA_INDEXED    0x01
@@ -567,6 +584,7 @@ typedef struct _NTFS_ATTR_CONTEXT
 #define FCB_IS_VOLUME_STREAM    0x0002
 #define FCB_IS_VOLUME           0x0004
 #define FCB_DELETE_PENDING      0x0008
+#define FCB_DELETED             0x0010
 #define MAX_PATH                260
 
 typedef struct _FCB
@@ -695,6 +713,7 @@ ConvertDataRunsToLargeMCB(PUCHAR DataRun,
 
 NTSTATUS
 ConvertLargeMCBToDataRuns(PLARGE_MCB DataRunsMCB,
+                          ULONGLONG VcnCount,
                           PUCHAR RunBuffer,
                           ULONG MaxBufferSize,
                           PULONG UsedBufferSize);
@@ -1058,6 +1077,11 @@ VOID
 NtfsAddFCBToTable(PNTFS_VCB Vcb,
                   PNTFS_FCB Fcb);
 
+VOID
+NtfsRemoveFCBFromTable(
+    _In_ PNTFS_VCB Vcb,
+    _In_ PNTFS_FCB Fcb);
+
 PNTFS_FCB
 NtfsGrabFCBFromTable(PNTFS_VCB Vcb,
                      PCWSTR FileName);
@@ -1238,6 +1262,18 @@ SetNonResidentAttributeDataLength(PDEVICE_EXTENSION Vcb,
                                   PLARGE_INTEGER DataSize);
 
 NTSTATUS
+NtfsExtendAllocation(
+    _In_ PDEVICE_EXTENSION Vcb,
+    _In_ PNTFS_ATTR_CONTEXT AttrContext,
+    _In_ ULONG AttrOffset,
+    _In_ PFILE_RECORD_HEADER FileRecord,
+    _In_ ULONGLONG AllocationSize);
+
+NTSTATUS
+NtfsTrimAllocation(
+    _In_ PNTFS_FCB Fcb);
+
+NTSTATUS
 SetResidentAttributeDataLength(PDEVICE_EXTENSION Vcb,
                                PNTFS_ATTR_CONTEXT AttrContext,
                                ULONG AttrOffset,
@@ -1390,6 +1426,12 @@ NtfsFindFileAt(PDEVICE_EXTENSION Vcb,
                BOOLEAN CaseSensitive);
 
 NTSTATUS
+NtfsIsDirectoryEmpty(
+    _In_ PDEVICE_EXTENSION Vcb,
+    _In_ ULONGLONG MftIndex,
+    _Out_ PBOOLEAN Empty);
+
+NTSTATUS
 NtfsFindMftRecord(PDEVICE_EXTENSION Vcb,
                   ULONGLONG MFTIndex,
                   PUNICODE_STRING FileName,
@@ -1451,6 +1493,20 @@ NtfsAllocateClusters(PDEVICE_EXTENSION DeviceExt,
 
 ULONGLONG
 NtfsGetFreeClusters(PDEVICE_EXTENSION DeviceExt);
+
+NTSTATUS
+NtfsLoadVolumeBitmap(
+    _In_ PDEVICE_EXTENSION DeviceExt);
+
+VOID
+NtfsFreeVolumeBitmap(
+    _In_ PDEVICE_EXTENSION DeviceExt);
+
+NTSTATUS
+NtfsWriteVolumeBitmap(
+    _In_ PDEVICE_EXTENSION DeviceExt,
+    _In_ ULONG FirstCluster,
+    _In_ ULONG ClusterCount);
 
 NTSTATUS
 NtfsQueryVolumeInformation(PNTFS_IRP_CONTEXT IrpContext);
