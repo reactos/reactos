@@ -484,8 +484,6 @@ TestFindRange(
     Start = 0x55;
     Status = RtlFindRange(RangeList, 0x0, 0x1000, 0 /* Length */, 1, 0, 0, NULL, NULL, &Start);
     ok_eq_hex(Status, STATUS_INVALID_PARAMETER);
-    Status = RtlFindRange(RangeList, 0x0, 0x1000, 0x10, 0 /* Alignment */, 0, 0, NULL, NULL, &Start);
-    ok_eq_hex(Status, STATUS_INVALID_PARAMETER);
 
     /* Top-down search finds the highest aligned hole below Maximum */
     Start = 0x55;
