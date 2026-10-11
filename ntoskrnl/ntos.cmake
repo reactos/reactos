@@ -203,6 +203,7 @@ list(APPEND SOURCE
     ${REACTOS_SOURCE_DIR}/ntoskrnl/kse/kse.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/kse/ksedb.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/kse/driverscope.c
+    ${REACTOS_SOURCE_DIR}/ntoskrnl/kse/ignorepooltag.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/lpc/close.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/lpc/complete.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/lpc/connect.c
