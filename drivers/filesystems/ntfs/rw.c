@@ -842,6 +842,7 @@ NtfsWrite(PNTFS_IRP_CONTEXT IrpContext)
     else if (NtfsFCBIsDirectory(Fcb))
     {
         /* A directory has no data stream to write */
+        ExReleaseResourceLite(Resource);
         Irp->IoStatus.Information = 0;
         return STATUS_INVALID_DEVICE_REQUEST;
     }
