@@ -9,12 +9,15 @@
             <FIX_ID>{bc04ab45-ea7e-4a11-a7bb-977615f4caae}</FIX_ID>
         </KSHIM>
 
-        <!--
-            Drivers are matched with KDRIVER entries, for example:
+        <KSHIM NAME="IgnoreFreePoolTag">
+            <MODULE>NT kernel component</MODULE>
+            <FIX_ID>{8d0ed225-0892-4efc-9e72-508912427453}</FIX_ID>
+        </KSHIM>
 
-        <KDRIVER NAME="example.sys" APP_NAME="Example driver" VENDOR="ACME">
-            <KSHIM_REF NAME="DriverScope" />
+        <!-- Frees pool with the wrong tag (CORE-14623) -->
+        <KDRIVER NAME="vmx_svga.sys" APP_NAME="VMware SVGA 3D" VENDOR="VMware, Inc.">
+            <MATCHING_FILE NAME="*" LINK_DATE="0x546ab93b" />
+            <KSHIM_REF NAME="IgnoreFreePoolTag" />
         </KDRIVER>
-        -->
     </DATABASE>
 </SDB>

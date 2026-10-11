@@ -452,7 +452,7 @@ KseInitialize(
 
         /* Done initializing, so register the remainder of the shims */
         KseEngine.State = KSE_STATE_INITIALIZED;
-        Status = STATUS_SUCCESS;
+        Status = KseIgnoreFreePoolTagInitialize();
     }
 
     DPRINT1("KseInitialize(BootPhase %ld) => %08lx\n", BootPhase, Status);

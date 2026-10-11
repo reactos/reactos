@@ -178,3 +178,8 @@ CODE_SEG("INIT")
 NTSTATUS
 NTAPI
 KseDriverScopeInitialize(VOID);
+
+CODE_SEG("INIT")
+NTSTATUS
+NTAPI
+KseIgnoreFreePoolTagInitialize(VOID);
