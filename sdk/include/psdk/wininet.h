@@ -2600,6 +2600,9 @@ typedef struct
     DWORD dwScriptBufferSize;
 } AUTO_PROXY_SCRIPT_BUFFER, *LPAUTO_PROXY_SCRIPT_BUFFER;
 
+#define PROXY_AUTO_DETECT_TYPE_DHCP  1
+#define PROXY_AUTO_DETECT_TYPE_DNS_A 2
+
 BOOLAPI InternetInitializeAutoProxyDll(_In_ DWORD);
 
 BOOLAPI

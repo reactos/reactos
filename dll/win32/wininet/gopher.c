@@ -1,6 +1,7 @@
 #ifdef __REACTOS__
 #include "precomp.h"
-#else/*
+#else
+/*
  * WININET - Gopher implementation
  *
  * Copyright 2003 Kirill Smelkov
@@ -66,7 +67,7 @@ BOOL WINAPI GopherCreateLocatorA(
 
 /***********************************************************************
  *           GopherCreateLocatorW (WININET.@)
- *
+ * 
  * See GopherCreateLocatorA.
  */
 BOOL WINAPI GopherCreateLocatorW(
@@ -139,7 +140,7 @@ HINTERNET WINAPI GopherFindFirstFileW(
  *           GopherGetAttributeA (WININET.@)
  *
  * Retrieves the specific attribute information from the server.
- *
+ * 
  * RETURNS
  *  TRUE on success
  *  FALSE on failure

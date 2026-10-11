@@ -35,6 +35,3 @@
 
 #include "internet.h"
 #include "resource.h"
-
-/* msvcrt/ucrtbase incompatibilities */
-#define swprintf _snwprintf
