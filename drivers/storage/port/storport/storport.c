@@ -9,7 +9,6 @@
 
 #include "precomp.h"
 #include "inline.h"
-#include "intsafe.h"
 #include "wdm.h"
 
 #define NDEBUG
@@ -168,263 +167,6 @@ PortReleaseSpinLock(
 
 
 static
-VOID
-PortScheduleComingRequestsOnCompletion(
-    _In_ PPDO_DEVICE_EXTENSION PdoExtension,
-    _In_ PFDO_DEVICE_EXTENSION FdoExtension)
-{
-    PLIST_ENTRY Entry;
-    PQUEUED_REQUEST_REFERENCE RequestReference;
-
-    /* Sanity check again whether FDO has resource to handle the request */
-    NT_ASSERT(FdoExtension->FlowControl.OutstandingRequestCount <
-              FdoExtension->OutstandingRequestMax);
-
-    /* If FDO has waiting requests, issue one. */
-    if (!IsListEmpty(&FdoExtension->FlowControl.FdoBlockedRequestsListHead))
-    {
-        /* Sanity check */
-        NT_ASSERT(FdoExtension->FlowControl.OutstandingRequestCount <
-                  FdoExtension->OutstandingRequestMax);
-
-        /* Take it out of FDO list */
-        Entry = RemoveTailList(&FdoExtension->FlowControl.FdoBlockedRequestsListHead);
-        RequestReference = CONTAINING_RECORD(Entry, QUEUED_REQUEST_REFERENCE, FdoEntry);
-
-        /* Increment FDO request counter */
-        ++FdoExtension->FlowControl.OutstandingRequestCount;
-        NT_ASSERT(FdoExtension->FlowControl.OutstandingRequestCount <=
-                  FdoExtension->OutstandingRequestMax);
-
-        /* Call the start routine */
-        PortPdoIssueRequest(PdoExtension, RequestReference);
-
-        /* Our task is done */
-        return;
-    }
-
-    /* FDO's got no request, check the PDO of the just-finished request for awaiting requests */
-    if (!IsListEmpty(&PdoExtension->FlowControl.AwaitingRequestsListHead))
-    {
-        /* Sanity check */
-        NT_ASSERT(PdoExtension->FlowControl.OutstandingRequestCount <
-                  PdoExtension->OutstandingRequestMax);
-        
-        /* Take one request */
-        Entry = RemoveTailList(&PdoExtension->FlowControl.AwaitingRequestsListHead);
-        RequestReference = CONTAINING_RECORD(Entry, QUEUED_REQUEST_REFERENCE, PdoEntry);
-
-        /* This one goes to active list */
-        InsertHeadList(&PdoExtension->FlowControl.ActiveRequestsListHead, Entry);
-
-        /* Increment PDO request counter */
-        ++PdoExtension->FlowControl.OutstandingRequestCount;
-        NT_ASSERT(PdoExtension->FlowControl.OutstandingRequestCount <=
-                  PdoExtension->OutstandingRequestMax);
-
-        /* FIXME: should be false. Allocate resource if it is determined required */
-        if (RequestReference->Srb->SrbExtension == NULL)
-        {
-            __debugbreak();
-        }
-
-        /* Call the start routine */
-        PortPdoIssueRequest(PdoExtension, RequestReference);
-
-        /* Our task is done */
-        return;
-    }
-}
-
-
-static
-VOID
-PortCompleteRequest(
-    _In_ PQUEUED_REQUEST_REFERENCE RequestReference)
-{
-    PSCSI_REQUEST_BLOCK Srb;
-    PIRP Irp;
-    PFDO_DEVICE_EXTENSION FdoExtension;
-    PPDO_DEVICE_EXTENSION PdoExtension;
-    KLOCK_QUEUE_HANDLE LockHandle;
-    NTSTATUS IoStatus;
-    BOOLEAN FromReserve;
-
-    /* Take out our information */
-    Srb = RequestReference->Srb;
-    Irp = RequestReference->Irp;
-    PdoExtension = RequestReference->PdoExtension;
-    FdoExtension = PdoExtension->FdoExtension;
-
-    /* The reference is released further down, so remember this while it is still valid */
-    FromReserve = RequestReference->FromReserve;
-
-    /* FIXME: DELETE AFTER DEBUG */
-    // if (RequestReference->DumpSpecialRequest)
-    // {
-    //     StorpDumpRequestResponse(RequestReference);
-    // }
-
-    DPRINT("Completing request: (%d:%d:%d) ReqRef %p Srb %p Irp %p Tag %x\n",
-            Srb->PathId, Srb->TargetId, Srb->Lun, RequestReference, Srb, RequestReference->Irp, Srb->QueueTag);
-
-    /* Return SG list resources back to system */
-    if (RequestReference->ScatterGatherList)
-    {
-        FdoExtension->DmaAdapter->DmaOperations->
-            PutScatterGatherList(FdoExtension->DmaAdapter,
-                                 (PSCATTER_GATHER_LIST)RequestReference->ScatterGatherList,
-                                 RequestReference->WriteToDevice);
-        RequestReference->ScatterGatherList = NULL;
-
-        // /* Release pages we locked for DMA, if we actually have locked it */
-        // if (RequestReference->MappedSystemVa != NULL)
-        // {
-        //     MmUnmapLockedPages(RequestReference->MappedSystemVa, RequestReference->Irp->MdlAddress);
-        // }
-        /* Unlock the pages locked for DMA */
-        if (RequestReference->MappedSystemVa)
-        {
-            MmUnlockPages(RequestReference->Irp->MdlAddress);
-        }
-    }
-
-    /* Check if we need to interact with flow control. */
-    if (RequestReference->IsOutstanding)
-    {
-        /* Take the request out of FDO and PDO structures, and update flow control data */
-        KeAcquireInStackQueuedSpinLock(&FdoExtension->FlowControl.Lock, &LockHandle);
-        StorpCheckFlowControl(FdoExtension);
-
-        FdoExtension->FlowControl.OutstandingRequestCount--;
-        if (FdoExtension->FlowControl.RemainingBusyRequests)
-        {
-            --FdoExtension->FlowControl.RemainingBusyRequests;
-
-            /* Clear busy state as needed */
-            if (FdoExtension->FlowControl.OutstandingRequestCount == 0 ||
-                FdoExtension->FlowControl.RemainingBusyRequests == 0)
-            {
-                FdoExtension->FlowControl.IsBusy = FALSE;
-            }
-        }
-
-        RemoveEntryList(&RequestReference->PdoEntry);
-        --PdoExtension->FlowControl.OutstandingRequestCount;
-        if (PdoExtension->FlowControl.RemainingBusyRequests)
-        {
-            --PdoExtension->FlowControl.RemainingBusyRequests;
-
-            /* Clear busy state as needed */
-            if (PdoExtension->FlowControl.OutstandingRequestCount == 0 ||
-                PdoExtension->FlowControl.RemainingBusyRequests == 0)
-            {
-                PdoExtension->FlowControl.IsBusy = FALSE;
-            }
-        }
-
-        /* Decrement strong ordered request count if needed */
-        if (RequestReference->StrongOrdered)
-        {
-            --PdoExtension->FlowControl.StrongOrderedCount;
-        }
-
-        /* Free the private data structure. No one should use it anymore */
-        StorpSrbFreeRequestReference(Srb);
-        RequestReference = NULL;
-
-        /* Schedule next IO before we release flow control lock */
-        PortScheduleComingRequestsOnCompletion(PdoExtension, FdoExtension);
-
-        /* We're done, release flow control lock */
-        StorpCheckFlowControl(FdoExtension);
-        KeReleaseInStackQueuedSpinLock(&LockHandle);
-
-    }
-
-    /*
-     * Free SRB extension as this request will never go back to miniport again. Must free it before
-     * IoCompleteRequest because class driver's completion routine may issue another request. If we
-     * free it after IoCompleteRequest we may zero out the newly-issued SRB's extension, since one
-     * single SRB can be reused between requests, and the SRB issued in completion routine could be
-     * the same one we operating here.
-     */
-    if (Srb->SrbExtension)
-    {
-        /* The reserved one is handed back along with its packet, not freed */
-        if (!FromReserve)
-        {
-            ExFreePoolWithTag(Srb->SrbExtension, TAG_SRB_EXTENSION);
-        }
-        Srb->SrbExtension = NULL;
-    }
-
-    /*
-     * After done with internal accountings, we can finally complete this IO.
-     *
-     * We must not complete the IO before scheduling next IO, because at that point the flow control
-     * lock is still held, and class driver's completion routine may issue another request. This
-     * will cause a recursive lock acquisition in PDO SCSI handler and lead to bugcheck.
-     */
-    switch (Srb->SrbStatus) {
-        case SRB_STATUS_SUCCESS: IoStatus = STATUS_SUCCESS; break;
-        case SRB_STATUS_BUSY: IoStatus = STATUS_DEVICE_BUSY; break;
-        default: IoStatus = STATUS_UNSUCCESSFUL; // FIXME:
-    }
-    Irp->IoStatus.Status = IoStatus;
-    Irp->IoStatus.Information = Srb->DataTransferLength; /* FIXME: hopefully this is correct */
-
-    DPRINT("Calling IoCompleteRequest\n");
-    IoCompleteRequest(Irp, IO_DISK_INCREMENT);
-
-    /* We just gave memory back, so let one request that ran out of it through */
-    PortRetryStarvedRequest(FdoExtension);
-}
-
-
-static
-VOID
-NTAPI
-PortCompletionDpc(
-    _In_ PKDPC Dpc,
-    _In_ PVOID Context,
-    _In_ PVOID SystemArgument1,
-    _In_ PVOID SystemArgument2)
-{
-    PQUEUED_REQUEST_REFERENCE RequestReference;
-    PFDO_DEVICE_EXTENSION FdoExtension;
-    PSLIST_ENTRY Entry;
-    PSLIST_ENTRY Next;
-    ULONG Count = 0;
-
-    DPRINT("PortCompletionDpc(%p %p %p %p)\n", Dpc, Context, SystemArgument1, SystemArgument2);
-
-    /* Take context pointer as FDO extension */
-    FdoExtension = (PFDO_DEVICE_EXTENSION)Context;
-
-    /* Flush all entries in the list and complete all requests */
-    Entry = InterlockedFlushSList(&FdoExtension->CompletionList);
-    while (Entry)
-    {
-        /* Prepare Next pointer first (Completion routine will free the memory that contains it) */
-        Next = Entry->Next;
-
-        /* Get original request */
-        RequestReference = CONTAINING_RECORD(Entry, QUEUED_REQUEST_REFERENCE, CompletionEntry);
-
-        /* Call real completion routine */
-        PortCompleteRequest(RequestReference);
-
-        /* Move on to next one */
-        Entry = Next;
-        ++Count;
-    }
-
-    DPRINT("Completed %d requests\n", Count);
-}
-
-
-static
 NTSTATUS
 NTAPI
 PortAddDevice(
@@ -433,7 +175,7 @@ PortAddDevice(
 {
     PDRIVER_OBJECT_EXTENSION DriverObjectExtension;
     PFDO_DEVICE_EXTENSION DeviceExtension = NULL;
-    WCHAR NameBuffer[80];
+    WCHAR NameBuffer[sizeof("\\Device\\RaidPort4294967295")];
     UNICODE_STRING DeviceName;
     PDEVICE_OBJECT Fdo = NULL;
     NTSTATUS Status;
@@ -444,9 +186,11 @@ PortAddDevice(
     ASSERT(DriverObject);
     ASSERT(PhysicalDeviceObject);
 
-    _swprintf(NameBuffer,
-              L"\\Device\\RaidPort%lu",
-              PortNumber);
+    Status = RtlStringCbPrintfW(NameBuffer,
+                                sizeof(NameBuffer),
+                                L"\\Device\\RaidPort%lu",
+                                PortNumber);
+    ASSERT(NT_SUCCESS(Status));
     RtlInitUnicodeString(&DeviceName, NameBuffer);
     PortNumber++;
 
@@ -1064,7 +808,7 @@ StorPortExtendedFunction(
             PTIMER_ENTRY TimerEntry;
             ULONG IsTimerAlreadySet;
             LARGE_INTEGER TimerDueTime;
-            HRESULT MultiplyResult;
+            NTSTATUS MultiplyResult;
 
             /* FIXME: I actually don't know how to deal with tolerable delay */
             UNREFERENCED_PARAMETER(TolerableDelay);
@@ -1092,8 +836,8 @@ StorPortExtendedFunction(
 
             /* This API uses microseconds, KTIMER operate on 100 nanoseconds, multiply by 10
                to get the correct timer due time */
-            MultiplyResult = ULongLongMult(TimerValue, 10ull, (PULONGLONG)&TimerDueTime.QuadPart);
-            if (MultiplyResult != INTSAFE_SUCCESS) {
+            MultiplyResult = RtlULongLongMult(TimerValue, 10ull, (PULONGLONG)&TimerDueTime.QuadPart);
+            if (!NT_SUCCESS(MultiplyResult)) {
                 Status = STOR_STATUS_INVALID_PARAMETER;
                 break;
             }
@@ -1184,9 +928,6 @@ StorPortGetBusData(
             DeviceExtension, MiniportExtension);
 
     Interface = &MiniportExtension->Miniport->DeviceExtension->BusInterface;
-
-    if (BusDataType == 4)
-        BusDataType = 0;
 
     ReturnLength = Interface->GetBusData(Interface->Context,
                                          BusDataType,
@@ -1774,7 +1515,7 @@ StorPortNotification(
             PHW_TIMER TimerRoutine;
             ULONG TimerValue;
             LARGE_INTEGER TimerDueTime;
-            BOOLEAN MultiplyResult;
+            NTSTATUS MultiplyResult;
 
             TimerRoutine = (PHW_TIMER)va_arg(ap, PHW_TIMER);
             TimerValue = (ULONG)va_arg(ap, ULONG);
@@ -1783,8 +1524,8 @@ StorPortNotification(
             /* Set timer if timer value != 0. Logic is exactly same as StorPortRequestTimer */
             if (TimerValue != 0)
             {
-                MultiplyResult = ULongLongMult(TimerValue, 10ull, (PULONGLONG)&TimerDueTime.QuadPart);
-                if (MultiplyResult != INTSAFE_SUCCESS) {
+                MultiplyResult = RtlULongLongMult(TimerValue, 10ull, (PULONGLONG)&TimerDueTime.QuadPart);
+                if (!NT_SUCCESS(MultiplyResult)) {
                     break;
                 }
 

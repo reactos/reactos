@@ -252,8 +252,14 @@ MiniportInitialize(
     Miniport->InitData = InitData;
 
     /* Calculate the miniport device extension size */
-    Size = sizeof(MINIPORT_DEVICE_EXTENSION) +
-           Miniport->InitData->DeviceExtensionSize;
+    Status = RtlULongAdd(sizeof(*MiniportExtension),
+                         Miniport->InitData->DeviceExtensionSize,
+                         &Size);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Invalid miniport extension size %lx\n", Miniport->InitData->DeviceExtensionSize);
+        return Status;
+    }
 
     /* Allocate and initialize the miniport device extension */
     MiniportExtension = ExAllocatePoolWithTag(NonPagedPool,

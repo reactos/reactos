@@ -10,6 +10,8 @@
 
 #include <wdm.h>
 #include <ntddk.h>
+#include <ntintsafe.h>
+#include <ntstrsafe.h>
 #include <stdio.h>
 #include <memory.h>
 
@@ -425,9 +427,18 @@ PortFdoPnp(
     _In_ PDEVICE_OBJECT DeviceObject,
     _In_ PIRP Irp);
 
+
+/* ioctl.c */
+
 NTSTATUS
 NTAPI
 PortFdoDeviceControl(
+    _In_ PDEVICE_OBJECT DeviceObject,
+    _In_ PIRP Irp);
+
+NTSTATUS
+NTAPI
+PortPdoDeviceControl(
     _In_ PDEVICE_OBJECT DeviceObject,
     _In_ PIRP Irp);
 
@@ -537,10 +548,6 @@ GetGenericType(
 
 /* pdo.c */
 
-VOID
-StorpSrbFreeRequestReference(
-    _In_ PSCSI_REQUEST_BLOCK Srb);
-
 NTSTATUS
 PortCreatePdo(
     _In_ PFDO_DEVICE_EXTENSION FdoExtension,
@@ -552,6 +559,19 @@ PortCreatePdo(
 NTSTATUS
 PortDeletePdo(
     _In_ PPDO_DEVICE_EXTENSION PdoExtension);
+
+NTSTATUS
+NTAPI
+PortPdoPnp(
+    _In_ PDEVICE_OBJECT DeviceObject,
+    _In_ PIRP Irp);
+
+
+/* srb.c */
+
+VOID
+StorpSrbFreeRequestReference(
+    _In_ PSCSI_REQUEST_BLOCK Srb);
 
 NTSTATUS
 PortPdoIssueRequest(
@@ -578,17 +598,13 @@ PortPdoScsi(
     _In_ PDEVICE_OBJECT DeviceObject,
     _In_ PIRP Irp);
 
-NTSTATUS
+VOID
 NTAPI
-PortPdoPnp(
-    _In_ PDEVICE_OBJECT DeviceObject,
-    _In_ PIRP Irp);
-
-NTSTATUS
-NTAPI
-PortPdoDeviceControl(
-    _In_ PDEVICE_OBJECT DeviceObject,
-    _In_ PIRP Irp);
+PortCompletionDpc(
+    _In_ PKDPC Dpc,
+    _In_ PVOID Context,
+    _In_ PVOID SystemArgument1,
+    _In_ PVOID SystemArgument2);
 
 
 /* storport.c */
