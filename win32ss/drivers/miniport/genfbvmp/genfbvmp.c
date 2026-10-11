@@ -37,7 +37,7 @@
 #define DRIVER_LEGACY   1
 // Define if the driver must behave as a PnP driver.
 #define DRIVER_PNP      2
-#define DRIVER_MODE     DRIVER_PNP // (DRIVER_LEGACY | DRIVER_PNP)
+#define DRIVER_MODE     (DRIVER_LEGACY | DRIVER_PNP)
 
 /********************************** Globals ***********************************/
 
