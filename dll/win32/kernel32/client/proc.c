@@ -15,6 +15,8 @@
 #define NDEBUG
 #include <debug.h>
 
+#define THREAD_ALL_ACCESS_NT6 (STANDARD_RIGHTS_REQUIRED|SYNCHRONIZE|0xFFFF)
+
 /* GLOBALS *******************************************************************/
 
 UNICODE_STRING BaseUnicodeCommandLine;
@@ -4101,7 +4103,7 @@ StartScan:
 
     /* Create the Kernel Thread Object */
     Status = NtCreateThread(&ThreadHandle,
-                            THREAD_ALL_ACCESS,
+                            THREAD_ALL_ACCESS_NT6,
                             ObjectAttributes,
                             ProcessHandle,
                             &ClientId,
