@@ -295,12 +295,12 @@
     SVC_(QueryPortInformationProcess, 0)
     SVC_(GetCurrentProcessorNumber, 0)
     SVC_(WaitForMultipleObjects32, 5)
-    SVC_(InitializeNlsFiles, 4) // HACK: NT6 function, required by init_locale in sdk/lib/rtl/wine/locale.c
-    SVC_(GetNlsSectionPtr, 5) // HACK: NT6 function
 #endif // SYSFUNCS_NT6_ONLY
 
 #ifndef SYSFUNCS_NT5_ONLY
     SVC_(GetCurrentProcessorNumberEx, 1)
     SVC_(GetNextProcess, 5)
     SVC_(GetNextThread, 6)
+    SVC_(InitializeNlsFiles, 4)
+    SVC_(GetNlsSectionPtr, 5)
 #endif
