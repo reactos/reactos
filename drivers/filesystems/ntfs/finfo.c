@@ -938,21 +938,21 @@ NtfsSetDispositionInformation(PDEVICE_EXTENSION DeviceExt,
 
     if (NtfsFCBIsDirectory(Fcb))
     {
-        UNICODE_STRING Pattern = RTL_CONSTANT_STRING(L"*");
-        ULONGLONG EntryMftIndex;
-        ULONG FirstEntry = 0;
+        BOOLEAN Empty;
         NTSTATUS Status;
 
-        /* "." and ".." are synthesized during enumeration and are not in the index, so any
-         * entry found here is a real child */
-        Status = NtfsFindMftRecord(DeviceExt,
-                                   Fcb->MFTIndex,
-                                   &Pattern,
-                                   &FirstEntry,
-                                   FALSE,
-                                   CaseSensitive,
-                                   &EntryMftIndex);
-        if (NT_SUCCESS(Status))
+        /* A lookup treats an unreadable sub-node as a miss, which here would
+         * delete a directory that still has children. This check fails instead. */
+        KeEnterCriticalRegion();
+        ExAcquireResourceSharedLite(&DeviceExt->IndexResource, TRUE);
+        Status = NtfsIsDirectoryEmpty(DeviceExt, Fcb->MFTIndex, &Empty);
+        ExReleaseResourceLite(&DeviceExt->IndexResource);
+        KeLeaveCriticalRegion();
+
+        if (!NT_SUCCESS(Status))
+            return Status;
+
+        if (!Empty)
             return STATUS_DIRECTORY_NOT_EMPTY;
     }
 

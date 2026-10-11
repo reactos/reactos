@@ -121,7 +121,26 @@ NtfsCleanupFile(PDEVICE_EXTENSION DeviceExt,
 
             MmFlushImageSection(&Fcb->SectionObjectPointers, MmFlushForDelete);
 
-            Status = NtfsDeleteFileRecord(DeviceExt, Fcb->MFTIndex, FALSE);
+            /* Something may have been created in the directory since the delete
+             * was requested; freeing it now would orphan that child */
+            Status = STATUS_SUCCESS;
+            if (NtfsFCBIsDirectory(Fcb))
+            {
+                BOOLEAN Empty;
+
+                KeEnterCriticalRegion();
+                ExAcquireResourceSharedLite(&DeviceExt->IndexResource, TRUE);
+                Status = NtfsIsDirectoryEmpty(DeviceExt, Fcb->MFTIndex, &Empty);
+                ExReleaseResourceLite(&DeviceExt->IndexResource);
+                KeLeaveCriticalRegion();
+
+                if (NT_SUCCESS(Status) && !Empty)
+                    Status = STATUS_DIRECTORY_NOT_EMPTY;
+            }
+
+            if (NT_SUCCESS(Status))
+                Status = NtfsDeleteFileRecord(DeviceExt, Fcb->MFTIndex, FALSE);
+
             if (!NT_SUCCESS(Status))
             {
                 DPRINT1("ERROR: Failed to delete '%wS' (MFT record %I64u), Status %lx\n",

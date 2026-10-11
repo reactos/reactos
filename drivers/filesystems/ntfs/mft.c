@@ -3360,6 +3360,43 @@ NtfsDeleteFileRecord(PDEVICE_EXTENSION DeviceExt,
         return Status;
     }
 
+    // Remove every name this file has from its parent's index before anything is freed, so a
+    // failure leaves the file whole instead of an entry pointing at a released record. A file
+    // with both a long name and an 8.3 name is indexed twice, and both parents are named by
+    // the attributes themselves.
+    Attribute = (PNTFS_ATTR_RECORD)((ULONG_PTR)FileRecord + FileRecord->AttributeOffset);
+    AttributeOffset = FileRecord->AttributeOffset;
+
+    while (AttributeOffset < DeviceExt->NtfsInfo.BytesPerFileRecord &&
+           Attribute->Type != AttributeEnd)
+    {
+        if (Attribute->Type == AttributeFileName && !Attribute->IsNonResident)
+        {
+            PFILENAME_ATTRIBUTE FileName =
+                (PFILENAME_ATTRIBUTE)((ULONG_PTR)Attribute + Attribute->Resident.ValueOffset);
+
+            Status = NtfsRemoveFilenameFromDirectory(DeviceExt,
+                                                     FileName->DirectoryFileReferenceNumber & NTFS_MFT_MASK,
+                                                     FileName,
+                                                     CaseSensitive);
+            if (!NT_SUCCESS(Status))
+            {
+                DPRINT1("ERROR: Failed to remove '%.*S' from directory %I64u!\n",
+                        FileName->NameLength,
+                        FileName->Name,
+                        FileName->DirectoryFileReferenceNumber & NTFS_MFT_MASK);
+                ExFreeToNPagedLookasideList(&DeviceExt->FileRecLookasideList, FileRecord);
+                return Status;
+            }
+        }
+
+        if (Attribute->Length == 0)
+            break;
+
+        AttributeOffset += Attribute->Length;
+        Attribute = (PNTFS_ATTR_RECORD)((ULONG_PTR)FileRecord + AttributeOffset);
+    }
+
     // Release the clusters held by every non-resident attribute
     Attribute = (PNTFS_ATTR_RECORD)((ULONG_PTR)FileRecord + FileRecord->AttributeOffset);
     AttributeOffset = FileRecord->AttributeOffset;
@@ -3388,41 +3425,6 @@ NtfsDeleteFileRecord(PDEVICE_EXTENSION DeviceExt,
                 }
 
                 ReleaseAttributeContext(AttributeContext);
-            }
-        }
-
-        if (Attribute->Length == 0)
-            break;
-
-        AttributeOffset += Attribute->Length;
-        Attribute = (PNTFS_ATTR_RECORD)((ULONG_PTR)FileRecord + AttributeOffset);
-    }
-
-    // Remove every name this file has from its parent's index. A file with both a long name and
-    // an 8.3 name is indexed twice, and both parents are named by the attributes themselves.
-    Attribute = (PNTFS_ATTR_RECORD)((ULONG_PTR)FileRecord + FileRecord->AttributeOffset);
-    AttributeOffset = FileRecord->AttributeOffset;
-
-    while (AttributeOffset < DeviceExt->NtfsInfo.BytesPerFileRecord &&
-           Attribute->Type != AttributeEnd)
-    {
-        if (Attribute->Type == AttributeFileName && !Attribute->IsNonResident)
-        {
-            PFILENAME_ATTRIBUTE FileName =
-                (PFILENAME_ATTRIBUTE)((ULONG_PTR)Attribute + Attribute->Resident.ValueOffset);
-
-            Status = NtfsRemoveFilenameFromDirectory(DeviceExt,
-                                                     FileName->DirectoryFileReferenceNumber & NTFS_MFT_MASK,
-                                                     FileName,
-                                                     CaseSensitive);
-            if (!NT_SUCCESS(Status))
-            {
-                DPRINT1("ERROR: Failed to remove '%.*S' from directory %I64u!\n",
-                        FileName->NameLength,
-                        FileName->Name,
-                        FileName->DirectoryFileReferenceNumber & NTFS_MFT_MASK);
-                ExFreeToNPagedLookasideList(&DeviceExt->FileRecLookasideList, FileRecord);
-                return Status;
             }
         }
 
@@ -4271,6 +4273,225 @@ NtfsFindFileAt(PDEVICE_EXTENSION Vcb,
     *MFTIndex = CurrentMFTIndex;
 
     return STATUS_SUCCESS;
+}
+
+
+/* Deeper than any index this driver or Windows builds; past it the tree loops */
+#define NTFS_MAX_INDEX_DEPTH 32
+
+static
+NTSTATUS
+NtfsIndexEntriesAreEmpty(
+    _In_ PDEVICE_EXTENSION Vcb,
+    _In_ PNTFS_ATTR_CONTEXT IndexAllocationContext,
+    _In_ ULONG IndexBlockSize,
+    _In_ PINDEX_HEADER_ATTRIBUTE Header,
+    _In_ ULONG Depth,
+    _Out_ PBOOLEAN Empty);
+
+/**
+* @name NtfsIndexNodeIsEmpty
+*
+* Reads the index node at Vcn and reports whether its subtree holds any entry.
+*/
+static
+NTSTATUS
+NtfsIndexNodeIsEmpty(
+    _In_ PDEVICE_EXTENSION Vcb,
+    _In_ PNTFS_ATTR_CONTEXT IndexAllocationContext,
+    _In_ ULONG IndexBlockSize,
+    _In_ ULONGLONG Vcn,
+    _In_ ULONG Depth,
+    _Out_ PBOOLEAN Empty)
+{
+    PINDEX_BUFFER IndexBuffer;
+    ULONG BytesRead;
+    NTSTATUS Status;
+
+    if (IndexAllocationContext == NULL || Depth >= NTFS_MAX_INDEX_DEPTH)
+        return STATUS_FILE_CORRUPT_ERROR;
+
+    IndexBuffer = ExAllocatePoolWithTag(NonPagedPool, IndexBlockSize, TAG_NTFS);
+    if (IndexBuffer == NULL)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
+    BytesRead = ReadAttribute(Vcb,
+                              IndexAllocationContext,
+                              GetAllocationOffsetFromVCN(Vcb, IndexBlockSize, Vcn),
+                              (PCHAR)IndexBuffer,
+                              IndexBlockSize);
+    if (BytesRead != IndexBlockSize || IndexBuffer->Ntfs.Type != NRH_INDX_TYPE)
+    {
+        DPRINT1("Unable to read index node at VCN %I64u\n", Vcn);
+        ExFreePoolWithTag(IndexBuffer, TAG_NTFS);
+        return STATUS_FILE_CORRUPT_ERROR;
+    }
+
+    Status = FixupUpdateSequenceArray(Vcb, &((PFILE_RECORD_HEADER)IndexBuffer)->Ntfs);
+    if (NT_SUCCESS(Status) &&
+        FIELD_OFFSET(INDEX_BUFFER, Header) + IndexBuffer->Header.TotalSizeOfEntries > IndexBlockSize)
+    {
+        Status = STATUS_FILE_CORRUPT_ERROR;
+    }
+
+    if (NT_SUCCESS(Status))
+    {
+        Status = NtfsIndexEntriesAreEmpty(Vcb,
+                                          IndexAllocationContext,
+                                          IndexBlockSize,
+                                          &IndexBuffer->Header,
+                                          Depth + 1,
+                                          Empty);
+    }
+
+    ExFreePoolWithTag(IndexBuffer, TAG_NTFS);
+    return Status;
+}
+
+/**
+* @name NtfsIndexEntriesAreEmpty
+*
+* Checks the entries under Header. Entries are sorted with the terminator last,
+* so the first one decides: anything but the terminator is a child, and a
+* terminator that points down only leads to more entries to check.
+*/
+static
+NTSTATUS
+NtfsIndexEntriesAreEmpty(
+    _In_ PDEVICE_EXTENSION Vcb,
+    _In_ PNTFS_ATTR_CONTEXT IndexAllocationContext,
+    _In_ ULONG IndexBlockSize,
+    _In_ PINDEX_HEADER_ATTRIBUTE Header,
+    _In_ ULONG Depth,
+    _Out_ PBOOLEAN Empty)
+{
+    PINDEX_ENTRY_ATTRIBUTE IndexEntry;
+
+    if (Header->FirstEntryOffset + sizeof(*IndexEntry) > Header->TotalSizeOfEntries)
+        return STATUS_FILE_CORRUPT_ERROR;
+
+    IndexEntry = (PINDEX_ENTRY_ATTRIBUTE)((ULONG_PTR)Header + Header->FirstEntryOffset);
+
+    if (!(IndexEntry->Flags & NTFS_INDEX_ENTRY_END))
+    {
+        *Empty = FALSE;
+        return STATUS_SUCCESS;
+    }
+
+    if (IndexEntry->Flags & NTFS_INDEX_ENTRY_NODE)
+    {
+        return NtfsIndexNodeIsEmpty(Vcb,
+                                    IndexAllocationContext,
+                                    IndexBlockSize,
+                                    GetIndexEntryVCN(IndexEntry),
+                                    Depth,
+                                    Empty);
+    }
+
+    *Empty = TRUE;
+    return STATUS_SUCCESS;
+}
+
+/**
+* @name NtfsIsDirectoryEmpty
+* @implemented
+*
+* Decides whether a directory may be deleted. Unlike a name lookup, a sub-node
+* that can't be read is an error here rather than a miss, since it may hold children.
+*
+* @param Vcb
+* Volume holding the directory.
+*
+* @param MftIndex
+* MFT record of the directory.
+*
+* @param Empty
+* Receives TRUE if the index holds no entries.
+*
+* @return
+* STATUS_SUCCESS if Empty was set, or an error if the index couldn't be fully read.
+*/
+NTSTATUS
+NtfsIsDirectoryEmpty(
+    _In_ PDEVICE_EXTENSION Vcb,
+    _In_ ULONGLONG MftIndex,
+    _Out_ PBOOLEAN Empty)
+{
+    PFILE_RECORD_HEADER FileRecord;
+    PNTFS_ATTR_CONTEXT IndexRootContext = NULL;
+    PNTFS_ATTR_CONTEXT IndexAllocationContext = NULL;
+    PINDEX_ROOT_ATTRIBUTE IndexRoot = NULL;
+    ULONG IndexRootLength;
+    NTSTATUS Status;
+
+    *Empty = FALSE;
+
+    FileRecord = ExAllocateFromNPagedLookasideList(&Vcb->FileRecLookasideList);
+    if (FileRecord == NULL)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
+    Status = ReadFileRecord(Vcb, MftIndex, FileRecord);
+    if (!NT_SUCCESS(Status))
+        goto Quit;
+
+    Status = FindAttribute(Vcb, FileRecord, AttributeIndexRoot, L"$I30", 4, &IndexRootContext, NULL);
+    if (!NT_SUCCESS(Status))
+        goto Quit;
+
+    IndexRootLength = (ULONG)AttributeDataLength(IndexRootContext->pRecord);
+    if (IndexRootLength < sizeof(*IndexRoot))
+    {
+        Status = STATUS_FILE_CORRUPT_ERROR;
+        goto Quit;
+    }
+
+    IndexRoot = ExAllocatePoolWithTag(NonPagedPool, IndexRootLength, TAG_NTFS);
+    if (IndexRoot == NULL)
+    {
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto Quit;
+    }
+
+    if (ReadAttribute(Vcb, IndexRootContext, 0, (PCHAR)IndexRoot, IndexRootLength) != IndexRootLength)
+    {
+        Status = STATUS_FILE_CORRUPT_ERROR;
+        goto Quit;
+    }
+
+    if (FIELD_OFFSET(INDEX_ROOT_ATTRIBUTE, Header) + IndexRoot->Header.TotalSizeOfEntries > IndexRootLength)
+    {
+        Status = STATUS_FILE_CORRUPT_ERROR;
+        goto Quit;
+    }
+
+    /* Only a root that points down needs the allocation */
+    if (IndexRoot->Header.Flags & INDEX_ROOT_LARGE)
+    {
+        Status = FindAttribute(Vcb, FileRecord, AttributeIndexAllocation, L"$I30", 4, &IndexAllocationContext, NULL);
+        if (!NT_SUCCESS(Status))
+        {
+            Status = STATUS_FILE_CORRUPT_ERROR;
+            goto Quit;
+        }
+    }
+
+    Status = NtfsIndexEntriesAreEmpty(Vcb,
+                                      IndexAllocationContext,
+                                      IndexRoot->SizeOfEntry,
+                                      &IndexRoot->Header,
+                                      0,
+                                      Empty);
+
+Quit:
+    if (IndexRoot != NULL)
+        ExFreePoolWithTag(IndexRoot, TAG_NTFS);
+    if (IndexAllocationContext != NULL)
+        ReleaseAttributeContext(IndexAllocationContext);
+    if (IndexRootContext != NULL)
+        ReleaseAttributeContext(IndexRootContext);
+    ExFreeToNPagedLookasideList(&Vcb->FileRecLookasideList, FileRecord);
+
+    return Status;
 }
 
 /* EOF */

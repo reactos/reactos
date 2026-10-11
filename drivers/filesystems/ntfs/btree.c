@@ -1996,6 +1996,10 @@ RemoveKeyFromNode(PB_TREE_FILENAME_NODE Node,
 {
     NTSTATUS Status;
 
+    /* Either way this node's keys change. Only dirty nodes are written back,
+     * so without this a removal from a sub-node never reaches the disk. */
+    Node->DiskNeedsUpdating = TRUE;
+
     if (Key->LesserChild != NULL)
     {
         PB_TREE_FILENAME_NODE OwnerNode;

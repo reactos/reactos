@@ -1420,6 +1420,12 @@ NtfsFindFileAt(PDEVICE_EXTENSION Vcb,
                BOOLEAN CaseSensitive);
 
 NTSTATUS
+NtfsIsDirectoryEmpty(
+    _In_ PDEVICE_EXTENSION Vcb,
+    _In_ ULONGLONG MftIndex,
+    _Out_ PBOOLEAN Empty);
+
+NTSTATUS
 NtfsFindMftRecord(PDEVICE_EXTENSION Vcb,
                   ULONGLONG MFTIndex,
                   PUNICODE_STRING FileName,
