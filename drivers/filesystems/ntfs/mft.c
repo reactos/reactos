@@ -4367,10 +4367,14 @@ NtfsIndexEntriesAreEmpty(
 {
     PINDEX_ENTRY_ATTRIBUTE IndexEntry;
 
-    if (Header->FirstEntryOffset + sizeof(*IndexEntry) > Header->TotalSizeOfEntries)
+    /* A terminator has no key, so only the fixed header is guaranteed */
+    if (Header->FirstEntryOffset + FIELD_OFFSET(INDEX_ENTRY_ATTRIBUTE, FileName) > Header->TotalSizeOfEntries)
         return STATUS_FILE_CORRUPT_ERROR;
 
     IndexEntry = (PINDEX_ENTRY_ATTRIBUTE)((ULONG_PTR)Header + Header->FirstEntryOffset);
+
+    if (Header->FirstEntryOffset + IndexEntry->Length > Header->TotalSizeOfEntries)
+        return STATUS_FILE_CORRUPT_ERROR;
 
     if (!(IndexEntry->Flags & NTFS_INDEX_ENTRY_END))
     {
@@ -4380,6 +4384,10 @@ NtfsIndexEntriesAreEmpty(
 
     if (IndexEntry->Flags & NTFS_INDEX_ENTRY_NODE)
     {
+        /* The child's VCN sits in the last 8 bytes of the entry */
+        if (IndexEntry->Length < FIELD_OFFSET(INDEX_ENTRY_ATTRIBUTE, FileName) + sizeof(ULONGLONG))
+            return STATUS_FILE_CORRUPT_ERROR;
+
         return NtfsIndexNodeIsEmpty(Vcb,
                                     IndexAllocationContext,
                                     IndexBlockSize,
