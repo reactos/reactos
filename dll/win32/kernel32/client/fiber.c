@@ -314,10 +314,10 @@ DeleteFiber(_In_ LPVOID lpFiber)
     Fiber = (PFIBER)lpFiber;
 
 #if (NTDDI_VERSION < NTDDI_LONGHORN)
-    if ((!Teb->HasFiberData) &&
+    if ((Teb->HasFiberData) &&
         (Teb->NtTib.FiberData == Fiber))
 #else
-    if ((!Teb->DbgHasFiberData) &&
+    if ((Teb->DbgHasFiberData) &&
         (Teb->NtTib.FiberData == Fiber))
 #endif
     {
