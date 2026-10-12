@@ -1923,6 +1923,9 @@ typedef enum tagHANDEDNESS
 #define WM_USER 1024
 #define WM_APP 32768
 #define WM_GETTITLEBARINFOEX 0x033F
+#ifndef WM_DPICHANGED
+#define WM_DPICHANGED 0x02E0 /* wParam: MAKEWPARAM(new X DPI, new Y DPI); lParam: RECT* suggested window rect */
+#endif
 
 #if (_WIN32_WINNT >= 0x0400)
 #define WHEEL_DELTA 120

@@ -14,6 +14,12 @@ extern "C" {
 #define WC_SWITCH     (MAKEINTATOM(0x8003))
 #define WC_ICONTITLE  (MAKEINTATOM(0x8004))
 
+/* Undocumented SystemParametersInfo actions */
+#ifndef SPI_GETLOGICALDPIOVERRIDE
+#define SPI_GETLOGICALDPIOVERRIDE 0x009E /* ReactOS: pvParam = PUINT, receives the system DPI */
+#define SPI_SETLOGICALDPIOVERRIDE 0x009F /* ReactOS: uiParam = new system DPI (96..480), applied live */
+#endif
+
 /* Non SDK Styles */
 #define ES_COMBO 0x200 /* Parent is a combobox */
 #define WS_MAXIMIZED  WS_MAXIMIZE
