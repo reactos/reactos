@@ -32,7 +32,7 @@ BOOL OpenImageFileExecOptions(IN REGSAM SamDesired, IN OPTIONAL PCWSTR ImageName
     }
 
     Ret = RegCreateKeyExW(HandleKey, ImageName, 0, NULL, REG_OPTION_NON_VOLATILE, SamDesired, NULL, &HandleSubKey, NULL);
-    CloseHandle(HandleKey);
+    RegCloseKey(HandleKey);
 
     if (Ret != ERROR_SUCCESS)
     {
