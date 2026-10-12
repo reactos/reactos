@@ -2117,10 +2117,24 @@ START_TEST (notification)
     test_redirect( TRUE );
     winetest_pop_context();
     test_async();
+#ifdef __REACTOS__
+    if (is_reactos() && !winetest_interactive)
+    {
+        skip("Skipping websocket tests due to hang\n");
+    }
+    else
+    {
+        test_websocket( FALSE );
+        winetest_push_context( "secure" );
+        test_websocket( TRUE );
+        winetest_pop_context();
+    }
+#else
     test_websocket( FALSE );
     winetest_push_context( "secure" );
     test_websocket( TRUE );
     winetest_pop_context();
+#endif
     test_recursion();
 
     si.event = CreateEventW( NULL, 0, 0, NULL );
