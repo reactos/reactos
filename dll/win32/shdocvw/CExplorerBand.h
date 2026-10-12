@@ -9,6 +9,7 @@
 #pragma once
 
 #include "CNSCBand.h"
+#include <atlsimpcoll.h>
 
 class CExplorerBand
     : public CNSCBand
@@ -71,4 +72,13 @@ protected:
         _In_ BOOL bInsert,
         _In_ BOOL bSelect);
     static INT CALLBACK _CompareTreeItems(LPARAM p1, LPARAM p2, LPARAM p3); // Used by _SortItems
+    HTREEITEM _InsertRoot(_In_ LPITEMIDLIST pidl, _In_opt_ LPCWSTR pszLabel, _In_ BOOL bPinned);
+    LRESULT _OnTreeCustomDraw(_In_ LPNMTVCUSTOMDRAW pnmcd) override;
+    BOOL _CanExpand(_In_ HTREEITEM hItem) override { return !_IsPinned(hItem); }
+    BOOL _IsPinned(_In_ HTREEITEM hItem);
+
+    // Windows 11 navigation pane: pinned folders (flat, not expandable), a
+    // separator line, then the My Computer and My Network Places trees
+    CSimpleArray<HTREEITEM> m_PinnedItems;
+    HTREEITEM m_hLastPinned = NULL;
 };

@@ -190,6 +190,8 @@ protected:
     virtual BOOL _GetTitle(LPWSTR pszTitle, INT cchTitle) = 0;
     virtual BOOL _WantsRootItem() = 0;
     virtual void _SortItems(HTREEITEM hParent) = 0;
+    virtual LRESULT _OnTreeCustomDraw(_In_ LPNMTVCUSTOMDRAW pnmcd) { return CDRF_DODEFAULT; }
+    virtual BOOL _CanExpand(_In_ HTREEITEM hItem) { return TRUE; }
     void _RegisterChangeNotify();
     void _UnregisterChangeNotify();
     BOOL OnTreeItemExpanding(_In_ LPNMTREEVIEW pnmtv);

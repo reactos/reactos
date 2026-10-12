@@ -7,6 +7,7 @@
  */
 
 #include "objects.h"
+#include <strsafe.h>
 
 #include <wine/debug.h>
 WINE_DEFAULT_DEBUG_CHANNEL(shdocvw);
@@ -42,8 +43,9 @@ INT CExplorerBand::_GetRootCsidl()
 DWORD CExplorerBand::_GetTVStyle()
 {
     // Remove TVS_SINGLEEXPAND for now since it has strange behaviour
-    return WS_CHILD | WS_VISIBLE | WS_CLIPCHILDREN | WS_CLIPSIBLINGS | TVS_HASLINES |
-           TVS_HASBUTTONS | TVS_SHOWSELALWAYS | TVS_EDITLABELS /* | TVS_SINGLEEXPAND*/;
+    // Windows 11 look: no lines, whole-row selection, hover highlight
+    return WS_CHILD | WS_VISIBLE | WS_CLIPCHILDREN | WS_CLIPSIBLINGS | TVS_FULLROWSELECT | TVS_TRACKSELECT |
+           TVS_HASBUTTONS | TVS_LINESATROOT | TVS_SHOWSELALWAYS | TVS_EDITLABELS | TVS_NOHSCROLL /* | TVS_SINGLEEXPAND*/;
 }
 
 DWORD CExplorerBand::_GetTVExStyle()
@@ -110,14 +112,60 @@ HRESULT CExplorerBand::_CreateTreeView(HWND hwndParent)
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
-    // Insert the root node
-    m_hRoot = _InsertItem(NULL, m_pDesktop, m_pidlRoot, m_pidlRoot, FALSE);
-    if (!m_hRoot)
+    // Insert the top-level items, like the Windows 11 navigation pane: pinned
+    // folders (flat), a separator, then the My Computer and My Network Places trees.
+    // m_hRoot stays NULL: there is no single "Desktop" root any more.
+    static const struct { INT csidl; LPCWSTR pszLabel; } Pinned[] =
     {
-        ERR("Failed to create root item\n");
+        { CSIDL_PROFILE, NULL },                // the user's folder, under its own name
+        { CSIDL_DESKTOPDIRECTORY, L"Desktop" },
+        { CSIDL_PERSONAL, L"Documents" },
+        { -1 /* Downloads */, L"Downloads" },
+        { CSIDL_MYPICTURES, L"Pictures" },
+        { CSIDL_MYMUSIC, L"Music" },
+        { CSIDL_MYVIDEO, L"Videos" },
+    };
+    for (SIZE_T i = 0; i < _countof(Pinned); i++)
+    {
+        LPITEMIDLIST pidl = NULL;
+        if (Pinned[i].csidl >= 0)
+        {
+            SHGetSpecialFolderLocation(NULL, Pinned[i].csidl, &pidl);
+        }
+        else
+        {
+            WCHAR szPath[MAX_PATH];
+            if (SHGetSpecialFolderPathW(NULL, szPath, CSIDL_PROFILE, FALSE) &&
+                SUCCEEDED(StringCchCatW(szPath, _countof(szPath), L"\\Downloads")) &&
+                PathIsDirectoryW(szPath))
+            {
+                pidl = ILCreateFromPathW(szPath);
+            }
+        }
+        if (pidl)
+        {
+            HTREEITEM hItem = _InsertRoot(pidl, Pinned[i].pszLabel, TRUE);
+            if (hItem)
+                m_hLastPinned = hItem;
+        }
+    }
+
+    static const INT Trees[] = { CSIDL_DRIVES, CSIDL_NETWORK };
+    for (SIZE_T i = 0; i < _countof(Trees); i++)
+    {
+        LPITEMIDLIST pidl = NULL;
+        if (SUCCEEDED(SHGetSpecialFolderLocation(NULL, Trees[i], &pidl)))
+            _InsertRoot(pidl, NULL, FALSE);
+    }
+
+    if (!TreeView_GetRoot(m_hwndTreeView))
+    {
+        ERR("Failed to create root items\n");
         return E_FAIL;
     }
-    TreeView_Expand(m_hwndTreeView, m_hRoot, TVE_EXPAND);
+    HDC hdc = ::GetDC(m_hwndTreeView);
+    TreeView_SetItemHeight(m_hwndTreeView, MulDiv(26, GetDeviceCaps(hdc, LOGPIXELSY), 96));
+    ::ReleaseDC(m_hwndTreeView, hdc);
 
     // Navigate to current folder position
     _NavigateToCurrentFolder();
@@ -136,8 +184,68 @@ HRESULT CExplorerBand::_CreateTreeView(HWND hwndParent)
     return hr;
 }
 
+// Takes ownership of pidl
+HTREEITEM CExplorerBand::_InsertRoot(_In_ LPITEMIDLIST pidl, _In_opt_ LPCWSTR pszLabel, _In_ BOOL bPinned)
+{
+    HTREEITEM hItem = _InsertItem(NULL, pidl, ILFindLastID(pidl), FALSE);
+    ILFree(pidl);
+    if (!hItem)
+        return NULL;
+
+    // pinned folders are flat shortcuts; the trees always get an expand button
+    // (it disappears if there is nothing inside)
+    TVITEMW tvi = { TVIF_HANDLE | TVIF_CHILDREN, hItem };
+    tvi.cChildren = bPinned ? 0 : 1;
+    if (pszLabel)
+    {
+        tvi.mask |= TVIF_TEXT;
+        tvi.pszText = const_cast<LPWSTR>(pszLabel);
+    }
+    // navigating into a subfolder of a pinned folder selects it in the
+    // My Computer tree instead (see _NavigateToPIDL)
+    if (bPinned)
+        m_PinnedItems.Add(hItem);
+    TreeView_SetItem(m_hwndTreeView, &tvi);
+    return hItem;
+}
+
+// The separator line between the pinned folders and the trees
+LRESULT CExplorerBand::_OnTreeCustomDraw(_In_ LPNMTVCUSTOMDRAW pnmcd)
+{
+    switch (pnmcd->nmcd.dwDrawStage)
+    {
+        case CDDS_PREPAINT:
+            return CDRF_NOTIFYITEMDRAW;
+        case CDDS_ITEMPREPAINT:
+            return ((HTREEITEM)pnmcd->nmcd.dwItemSpec == m_hLastPinned) ? CDRF_NOTIFYPOSTPAINT : CDRF_DODEFAULT;
+        case CDDS_ITEMPOSTPAINT:
+        {
+            RECT rc = pnmcd->nmcd.rc;
+            rc.left += 8;
+            rc.right -= 8;
+            rc.top = rc.bottom - 1;
+            // 15% of the text color over the background: works for light and dark themes
+            COLORREF crBack = GetSysColor(COLOR_WINDOW), crText = GetSysColor(COLOR_WINDOWTEXT);
+            HBRUSH hbr = CreateSolidBrush(RGB((GetRValue(crBack) * 85 + GetRValue(crText) * 15) / 100,
+                                              (GetGValue(crBack) * 85 + GetGValue(crText) * 15) / 100,
+                                              (GetBValue(crBack) * 85 + GetBValue(crText) * 15) / 100));
+            FillRect(pnmcd->nmcd.hdc, &rc, hbr);
+            DeleteObject(hbr);
+            return CDRF_DODEFAULT;
+        }
+    }
+    return CDRF_DODEFAULT;
+}
+
+BOOL CExplorerBand::_IsPinned(_In_ HTREEITEM hItem)
+{
+    return m_PinnedItems.Find(hItem) >= 0;
+}
+
 void CExplorerBand::_DestroyTreeView()
 {
+    m_PinnedItems.RemoveAll();
+    m_hLastPinned = NULL;
     CComPtr<IWebBrowser2> browserService;
     HRESULT hr = IUnknown_QueryService(m_pSite, SID_SWebBrowserApp,
                                        IID_PPV_ARG(IWebBrowser2, &browserService));
@@ -231,7 +339,7 @@ CExplorerBand::_NavigateToPIDL(
 
     *phItem = NULL;
 
-    HTREEITEM hItem = TreeView_GetFirstVisible(m_hwndTreeView);
+    HTREEITEM hItem = TreeView_GetRoot(m_hwndTreeView);
     HTREEITEM hParent = NULL, tmp;
     while (TRUE)
     {
@@ -253,7 +361,7 @@ CExplorerBand::_NavigateToPIDL(
 
         // Check if we are a parent of the requested item
         TVITEMW tvItem;
-        LPITEMIDLIST relativeChild = ILFindChild(pItemData->absolutePidl, dest);
+        LPITEMIDLIST relativeChild = _IsPinned(hItem) ? NULL : ILFindChild(pItemData->absolutePidl, dest);
         if (relativeChild)
         {
             // Notify treeview we have children

@@ -487,7 +487,20 @@ void CNSCBand::_RefreshRecurse(_In_ HTREEITEM hTarget)
 void CNSCBand::_Refresh()
 {
     m_hwndTreeView.SendMessage(WM_SETREDRAW, FALSE, 0);
-    _RefreshRecurse(_WantsRootItem() ? m_hRoot : TVI_ROOT);
+    if (_WantsRootItem() && !m_hRoot)
+    {
+        // several top-level items (Explorer navigation pane): refresh each expanded tree
+        for (HTREEITEM hItem = TreeView_GetRoot(m_hwndTreeView); hItem;
+             hItem = TreeView_GetNextSibling(m_hwndTreeView, hItem))
+        {
+            if (TreeView_GetItemState(m_hwndTreeView, hItem, TVIS_EXPANDEDONCE) & TVIS_EXPANDEDONCE)
+                _RefreshRecurse(hItem);
+        }
+    }
+    else
+    {
+        _RefreshRecurse(_WantsRootItem() ? m_hRoot : TVI_ROOT);
+    }
     m_hwndTreeView.SendMessage(WM_SETREDRAW, TRUE, 0);
 }
 
@@ -777,6 +790,9 @@ BOOL CNSCBand::OnTreeItemExpanding(_In_ LPNMTREEVIEW pnmtv)
         }
     }
 
+    if (pnmtv->action == TVE_EXPAND && !_CanExpand(pnmtv->itemNew.hItem))
+        return TRUE; // Prevent expanding (e.g. pinned folders of the navigation pane)
+
     if (pnmtv->action == TVE_EXPAND)
     {
         // Grab our directory PIDL
@@ -1035,6 +1051,10 @@ LRESULT CNSCBand::OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
                 if (pnmhdr->code == NM_CLICK && HitTest.hItem != hCurrent)
                     return TRUE; // Prevents click processing
             }
+            break;
+        case NM_CUSTOMDRAW:
+            if (pnmhdr->hwndFrom == m_hwndTreeView)
+                return _OnTreeCustomDraw((LPNMTVCUSTOMDRAW)lParam);
             break;
         case TVN_BEGINDRAG:
         case TVN_BEGINRDRAG:
