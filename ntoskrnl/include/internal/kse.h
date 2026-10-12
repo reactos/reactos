@@ -178,3 +178,7 @@ KseDriverScopeInitialize(VOID);
 NTSTATUS
 NTAPI
 KseIgnoreFreePoolTagInitialize(VOID);
+
+NTSTATUS
+NTAPI
+KseVersionLieInitialize(VOID);
