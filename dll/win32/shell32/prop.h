@@ -40,7 +40,19 @@ VariantDerefVariant(_In_ const VARIANT *pV)
     return (VARIANT*)pV;
 }
 
+static inline BOOL
+VariantTimeToFileTime(_In_ const DOUBLE vtime, _Out_ FILETIME *pft)
+{
+    SYSTEMTIME st;
+    return VariantTimeToSystemTime(vtime, &st) && SystemTimeToFileTime(&st, pft);
+}
+
 HRESULT
 VariantToIdlist(_In_ VARIANT *pV, _Out_ LPITEMIDLIST *ppidl);
 HRESULT
 VariantQueryInterface(_In_ VARIANT *pV, _In_ REFIID riid, _Out_ void **ppv);
+
+HRESULT
+SHELL_VariantToPropVariant(_In_ const VARIANT *pVar, _Out_ PROPVARIANT *pPropVar);
+HRESULT
+SHELL_PropVariantChangeType(_Out_ PROPVARIANT *ppvDest, _In_ REFPROPVARIANT pvSrc, _In_ VARTYPE vt);
