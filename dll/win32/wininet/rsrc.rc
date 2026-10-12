@@ -30,6 +30,8 @@
 
 #include <reactos/manifest_dll.rc>
 
+#include <winineterror.rc>
+
 /*
  * Everything specific to any language goes
  * in one of the specific files.
