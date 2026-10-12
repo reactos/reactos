@@ -183,7 +183,7 @@ static VOID ModifyStatus(VOID)
             ShowStatus(GlobalFlags, Ignored);
         }
     }
-    CloseHandle(IFEOKey);
+    RegCloseKey(IFEOKey);
 }
 
 
@@ -200,7 +200,7 @@ static VOID DisplayStatus(VOID)
     GlobalFlags = ReadSZFlagsFromRegistry(IFEOKey, L"GlobalFlag");
     ShowStatus(GlobalFlags, 0);
 
-    CloseHandle(IFEOKey);
+    RegCloseKey(IFEOKey);
 }
 
 
