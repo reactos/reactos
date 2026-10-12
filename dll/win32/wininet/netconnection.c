@@ -267,7 +267,11 @@ static BOOL WINAPI winsock_startup(INIT_ONCE *once, void *param, void **context)
     WSADATA wsa_data;
     DWORD res;
 
+#ifdef __REACTOS__
+    res = WSAStartup(MAKEWORD(2,2), &wsa_data);
+#else
     res = WSAStartup(MAKEWORD(1,1), &wsa_data);
+#endif
     if(res == ERROR_SUCCESS)
         winsock_loaded = TRUE;
     else
