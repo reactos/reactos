@@ -53,6 +53,7 @@ BEGIN
             MENUITEM "", -1, MFT_SEPARATOR
         END
         MENUITEM "&Barre d'état", IDM_VIEW_STATUSBAR
+        MENUITEM "Pre&view pane", IDM_VIEW_PREVIEWPANE
         POPUP "&Volet d'exploration", IDM_VIEW_EXPLORERBAR
         BEGIN
             MENUITEM "&Rechercher\tCtrl+E", IDM_EXPLORERBAR_SEARCH
@@ -330,7 +331,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_STANDARD_TOOLBAR, "|Retour|Avancer|Dossier parent|Recherche|Dossiers|Déplacer vers|Copier dans|Supprimer|Annuler|Affichage|Stop|Rafraîchir|Accueil|Connecter|Déconnecter|Favoris|Historique|Plein écran|Propriétés|Couper|Copier|Coller|Options des dossiers||"
+    IDS_STANDARD_TOOLBAR, "|Retour|Avancer|Dossier parent|Recherche|Dossiers|Déplacer vers|Copier dans|Supprimer|Annuler|Affichage|Stop|Rafraîchir|Accueil|Connecter|Déconnecter|Favoris|Historique|Plein écran|Propriétés|Couper|Copier|Coller|Options des dossiers|Rename|Copy path||"
 END
 
 STRINGTABLE

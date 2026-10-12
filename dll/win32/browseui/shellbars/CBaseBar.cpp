@@ -165,7 +165,8 @@ CBaseBar::CBaseBar()
     fClientWindow = NULL;
     fVertical = true;
     fVisible = false;
-    fNeededSize = 200;
+    // Windows 11 navigation pane width (240px at 100%), scaled with the DPI
+    fNeededSize = MulDiv(240, GetSystemMetrics(SM_CXSMICON), 16); // small icons are 16px at 96 DPI
     fTracking = false;
 }
 

@@ -57,6 +57,7 @@ BEGIN
             MENUITEM "", -1, MFT_SEPARATOR
         END
         MENUITEM "状态栏(&B)", IDM_VIEW_STATUSBAR
+        MENUITEM "Pre&view pane", IDM_VIEW_PREVIEWPANE
         POPUP "浏览器栏(&E)", IDM_VIEW_EXPLORERBAR
         BEGIN
             MENUITEM "搜索(&S)\tCtrl+E", IDM_EXPLORERBAR_SEARCH
@@ -334,7 +335,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_STANDARD_TOOLBAR, "|返回|前进|向上|搜索|文件夹|移动到|复制到|删除|撤消|视图|停止|刷新|首页|映射磁盘|断开连接|收藏夹|历史|全屏幕|属性|剪切|复制|粘贴|文件夹选项||"
+    IDS_STANDARD_TOOLBAR, "|返回|前进|向上|搜索|文件夹|移动到|复制到|删除|撤消|视图|停止|刷新|首页|映射磁盘|断开连接|收藏夹|历史|全屏幕|属性|剪切|复制|粘贴|文件夹选项|Rename|Copy path||"
 END
 
 STRINGTABLE

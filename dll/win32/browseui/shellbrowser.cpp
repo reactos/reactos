@@ -185,6 +185,22 @@ static const TCHAR szCabinetWndClass[] = TEXT("CabinetWClass");
 //static const TCHAR szExploreWndClass[] = TEXT("ExploreWClass");
 
 class CDockManager;
+/* Per-user explorer options added by ReactOS (Windows 11 style UI) */
+static BOOL GetExplorerAdvancedFlag(LPCWSTR pszName, BOOL bDefault)
+{
+    DWORD dwValue = bDefault, cb = sizeof(dwValue);
+    SHGetValueW(HKEY_CURRENT_USER, L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced",
+                pszName, NULL, &dwValue, &cb);
+    return dwValue != 0;
+}
+
+static void SetExplorerAdvancedFlag(LPCWSTR pszName, BOOL bValue)
+{
+    DWORD dwValue = !!bValue;
+    SHSetValueW(HKEY_CURRENT_USER, L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced",
+                pszName, REG_DWORD, &dwValue, sizeof(dwValue));
+}
+
 class CShellBrowser;
 
 class CToolbarProxy :
@@ -301,6 +317,9 @@ private:
     CComPtr<IShellView>                     fCurrentShellView;          //
     LPITEMIDLIST                            fCurrentDirectoryPIDL;      //
     HWND                                    fStatusBar;
+    HWND                                    fPreviewPane;               // Windows 11 style preview pane (empty for now)
+    BOOL                                    fPreviewPaneVisible;
+    BOOL                                    fNavPaneInitialized;
     CToolbarProxy                           fToolbarProxy;
     barInfo                                 fClientBars[3];
     CComPtr<ITravelLog>                     fTravelLog;
@@ -645,6 +664,8 @@ public:
     LRESULT OnOrganizeFavorites(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled);
     LRESULT OnToggleFullscreen(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled);
     LRESULT OnToggleStatusBarVisible(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled);
+    LRESULT OnTogglePreviewPane(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled);
+    LRESULT OnCtlColorStatic(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnToggleToolbarLock(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled);
     LRESULT OnToggleToolbarBandVisible(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled);
     LRESULT OnToggleAddressBandVisible(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled);
@@ -699,6 +720,8 @@ public:
         COMMAND_ID_HANDLER(IDM_FAVORITES_ADDTOFAVORITES, OnAddToFavorites)
         COMMAND_ID_HANDLER(IDM_FAVORITES_ORGANIZEFAVORITES, OnOrganizeFavorites)
         COMMAND_ID_HANDLER(IDM_VIEW_STATUSBAR, OnToggleStatusBarVisible)
+        COMMAND_ID_HANDLER(IDM_VIEW_PREVIEWPANE, OnTogglePreviewPane)
+        MESSAGE_HANDLER(WM_CTLCOLORSTATIC, OnCtlColorStatic)
         COMMAND_ID_HANDLER(IDM_VIEW_REFRESH, OnRefresh)
         COMMAND_ID_HANDLER(FCIDM_BROWSER_TOGGLEFULLSCREEN, OnToggleFullscreen)
         COMMAND_ID_HANDLER(IDM_TOOLBARS_LOCKTOOLBARS, OnToggleToolbarLock)
@@ -757,6 +780,9 @@ CShellBrowser::CShellBrowser()
     fCurrentShellViewWindow = NULL;
     fCurrentDirectoryPIDL = NULL;
     fStatusBar = NULL;
+    fPreviewPane = NULL;
+    fPreviewPaneVisible = FALSE;
+    fNavPaneInitialized = FALSE;
     fCurrentMenuBar = NULL;
     fHistoryObject = NULL;
     fHistoryStream = NULL;
@@ -828,6 +854,14 @@ HRESULT CShellBrowser::Initialize()
     fStatusBar = ::CreateWindowExW(0, STATUSCLASSNAMEW, NULL, dwStatusStyle,
                                    0, 0, 500, 20, m_hWnd, (HMENU)IDC_STATUSBAR,
                                    _AtlBaseModule.GetModuleInstance(), 0);
+
+    // Preview pane on the right (hidden by default, View > Preview pane)
+    fPreviewPaneVisible = GetExplorerAdvancedFlag(L"ReactOSPreviewPane", FALSE);
+    fPreviewPane = ::CreateWindowExW(0, WC_STATICW, L"TODO: select a file to preview",
+                                     WS_CHILD | WS_CLIPSIBLINGS | SS_CENTER | SS_CENTERIMAGE | SS_NOPREFIX |
+                                     (fPreviewPaneVisible ? WS_VISIBLE : 0),
+                                     0, 0, 0, 0, m_hWnd, NULL, _AtlBaseModule.GetModuleInstance(), 0);
+    ::SendMessageW(fPreviewPane, WM_SETFONT, (WPARAM)::GetStockObject(DEFAULT_GUI_FONT), FALSE);
 
     ShowWindow(SW_SHOWNORMAL);
     UpdateWindow();
@@ -1624,6 +1658,18 @@ void CShellBrowser::RepositionBars()
         }
     }
 
+    if (fPreviewPane && fPreviewPaneVisible)
+    {
+        // a third of the width, at most 320px (at 96 DPI)
+        HDC hdc = ::GetDC(m_hWnd);
+        INT cxMax = MulDiv(320, GetDeviceCaps(hdc, LOGPIXELSX), 96);
+        ::ReleaseDC(m_hWnd, hdc);
+        INT cx = min(cxMax, (INT)(clientRect.right - clientRect.left) / 3);
+        ::SetWindowPos(fPreviewPane, NULL, clientRect.right - cx + 1, clientRect.top, cx - 1,
+                       clientRect.bottom - clientRect.top, SWP_NOOWNERZORDER | SWP_NOZORDER);
+        clientRect.right -= cx;
+    }
+
     if (!fCurrentShellViewWindow)
         return;
 
@@ -1863,6 +1909,7 @@ void CShellBrowser::UpdateViewMenu(HMENU theMenu)
         SetMenuItemInfo(theMenu, IDM_VIEW_TOOLBARS, FALSE, &menuItemInfo);
     }
     SHCheckMenuItem(theMenu, IDM_VIEW_STATUSBAR, m_settings.fStatusBarVisible ? TRUE : FALSE);
+    SHCheckMenuItem(theMenu, IDM_VIEW_PREVIEWPANE, fPreviewPaneVisible);
 
     // Check the menu items for Explorer bar
     BOOL bSearchBand = (IsEqualCLSID(CLSID_SH_SearchBand, fCurrentVertBar) ||
@@ -2161,6 +2208,9 @@ HRESULT STDMETHODCALLTYPE CShellBrowser::Exec(const GUID *pguidCmdGroup, DWORD n
                 else if (nCmdID == 0x1e) pclsid = &CLSID_SH_FavBand;
                 else pclsid = &CLSID_ExplorerBand;
 
+                if (nCmdID == SBCMDID_EXPLORERBARFOLDERS)
+                    SetExplorerAdvancedFlag(L"ReactOSNavPane", !IsEqualCLSID(*pclsid, fCurrentVertBar));
+
                 if (IsEqualCLSID(*pclsid, fCurrentVertBar))
                 {
                     IUnknown_ShowDW(fClientBars[BIVerticalBaseBar].clientBar.p, FALSE);
@@ -2383,7 +2433,12 @@ HRESULT STDMETHODCALLTYPE CShellBrowser::BrowseObject(LPCITEMIDLIST pidl, UINT w
 {
     wFlags = ApplyNewBrowserFlag(wFlags);
     // FIXME: Should not automatically show the Explorer band
-    if ((wFlags & SBSP_EXPLOREMODE) && !(wFlags & SBSP_NEWBROWSER))
+    // Windows 11 style: the navigation pane (folder tree) is shown in every new
+    // window, unless the user turned it off (remembered in ReactOSNavPane)
+    BOOL bShowNavPane = (wFlags & SBSP_EXPLOREMODE) ||
+                        (!fNavPaneInitialized && GetExplorerAdvancedFlag(L"ReactOSNavPane", TRUE));
+    fNavPaneInitialized = TRUE;
+    if (bShowNavPane && !(wFlags & SBSP_NEWBROWSER) && !IsEqualCLSID(fCurrentVertBar, CLSID_ExplorerBand))
         ShowBand(CLSID_ExplorerBand, true);
 
     CComHeapPtr<ITEMIDLIST> pidlResolved;
@@ -4056,6 +4111,28 @@ LRESULT CShellBrowser::OnToggleStatusBarVisible(WORD wNotifyCode, WORD wID, HWND
     m_settings.Save();
     SendMessageW(BWM_SETTINGCHANGE, 0, (LPARAM)&m_settings);
     return 0;
+}
+
+LRESULT CShellBrowser::OnTogglePreviewPane(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled)
+{
+    fPreviewPaneVisible = !fPreviewPaneVisible;
+    SetExplorerAdvancedFlag(L"ReactOSPreviewPane", fPreviewPaneVisible);
+    ::ShowWindow(fPreviewPane, fPreviewPaneVisible ? SW_SHOWNA : SW_HIDE);
+    RepositionBars();
+    return 0;
+}
+
+LRESULT CShellBrowser::OnCtlColorStatic(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
+{
+    if ((HWND)lParam != fPreviewPane)
+    {
+        bHandled = FALSE;
+        return 0;
+    }
+    // the preview pane looks like the file list: window background, grey hint text
+    ::SetBkColor((HDC)wParam, ::GetSysColor(COLOR_WINDOW));
+    ::SetTextColor((HDC)wParam, ::GetSysColor(COLOR_GRAYTEXT));
+    return (LRESULT)::GetSysColorBrush(COLOR_WINDOW);
 }
 
 LRESULT CShellBrowser::OnToggleToolbarLock(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled)

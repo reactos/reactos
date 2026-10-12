@@ -37,6 +37,7 @@ BEGIN
             MENUITEM "", -1, MFT_SEPARATOR
         END
         MENUITEM "שורת מצב", IDM_VIEW_STATUSBAR
+        MENUITEM "Pre&view pane", IDM_VIEW_PREVIEWPANE
         POPUP "&Explorer Bar", IDM_VIEW_EXPLORERBAR
         BEGIN
             MENUITEM "חפש\tCtrl+E", IDM_EXPLORERBAR_SEARCH
@@ -314,7 +315,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_STANDARD_TOOLBAR, "|אחורה|קדימה|למעלה|חפש|תיקיות|העבר לתיקיה|העתק לתיקיה|מחק|בטל|תצוגות|עצור|רענן|Home|Map Drive|Disconnect|מועדפים|היסטוריה|Full Screen|Properties|גזור|העתק|הדבק|אפשרויות תיקיה||"
+    IDS_STANDARD_TOOLBAR, "|אחורה|קדימה|למעלה|חפש|תיקיות|העבר לתיקיה|העתק לתיקיה|מחק|בטל|תצוגות|עצור|רענן|Home|Map Drive|Disconnect|מועדפים|היסטוריה|Full Screen|Properties|גזור|העתק|הדבק|אפשרויות תיקיה|Rename|Copy path||"
 END
 
 STRINGTABLE

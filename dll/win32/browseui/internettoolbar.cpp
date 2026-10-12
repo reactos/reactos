@@ -1174,7 +1174,9 @@ HRESULT STDMETHODCALLTYPE CInternetToolbar::InitNew()
     hResult = CAddressBand_CreateInstance(IID_PPV_ARG(IUnknown, &navigationBar));
     if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
-    AddDockItem(navigationBar, ITBBID_ADDRESSBAND, CDockSite::ITF_NEWBANDALWAYS | CDockSite::ITF_GRIPPERALWAYS);
+    // Windows 7/11 layout: the address bar sits on the same row as the
+    // back/forward/up buttons, without an "Address" label
+    AddDockItem(navigationBar, ITBBID_ADDRESSBAND, CDockSite::ITF_NOTITLE | CDockSite::ITF_GRIPPERALWAYS);
     fNavigationBar.Attach(navigationBar.Detach());
     hResult = IUnknown_GetWindow(fNavigationBar, &fNavigationWindow);
 
@@ -1669,6 +1671,73 @@ LRESULT CInternetToolbar::OnSearch(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOO
 LRESULT CInternetToolbar::OnFolders(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled)
 {
     IUnknown_Exec(fSite, CGID_Explorer, 0x23, 0, NULL, NULL);
+    return 1;
+}
+
+// "Copy path" (like Windows 11): the selected items' full paths, in quotes and one
+// per line, or the current folder's path when nothing is selected
+LRESULT CInternetToolbar::OnCopyPath(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled)
+{
+    CComPtr<IShellBrowser> pBrowser;
+    CComPtr<IShellView> pView;
+    if (FAILED(IUnknown_QueryService(fSite, SID_SShellBrowser, IID_PPV_ARG(IShellBrowser, &pBrowser))) ||
+        FAILED(pBrowser->QueryActiveShellView(&pView)))
+    {
+        return 1;
+    }
+
+    CStringW strText;
+    CComPtr<IDataObject> pDataObj;
+    if (SUCCEEDED(pView->GetItemObject(SVGIO_SELECTION, IID_PPV_ARG(IDataObject, &pDataObj))))
+    {
+        FORMATETC fmt = { CF_HDROP, NULL, DVASPECT_CONTENT, -1, TYMED_HGLOBAL };
+        STGMEDIUM medium;
+        if (SUCCEEDED(pDataObj->GetData(&fmt, &medium)))
+        {
+            HDROP hDrop = (HDROP)medium.hGlobal;
+            UINT cFiles = DragQueryFileW(hDrop, 0xFFFFFFFF, NULL, 0);
+            for (UINT i = 0; i < cFiles; i++)
+            {
+                WCHAR szPath[MAX_PATH];
+                if (!DragQueryFileW(hDrop, i, szPath, _countof(szPath)))
+                    continue;
+                if (!strText.IsEmpty())
+                    strText += L"\r\n";
+                strText += L"\"";
+                strText += szPath;
+                strText += L"\"";
+            }
+            ReleaseStgMedium(&medium);
+        }
+    }
+
+    if (strText.IsEmpty())
+    {
+        CComPtr<IFolderView> pFolderView;
+        CComPtr<IPersistFolder2> pFolder;
+        CComHeapPtr<ITEMIDLIST> pidl;
+        WCHAR szPath[MAX_PATH];
+        if (SUCCEEDED(pView->QueryInterface(IID_PPV_ARG(IFolderView, &pFolderView))) &&
+            SUCCEEDED(pFolderView->GetFolder(IID_PPV_ARG(IPersistFolder2, &pFolder))) &&
+            SUCCEEDED(pFolder->GetCurFolder(&pidl)) && SHGetPathFromIDListW(pidl, szPath))
+        {
+            strText.Format(L"\"%s\"", szPath);
+        }
+    }
+
+    if (strText.IsEmpty() || !::OpenClipboard(m_hWnd))
+        return 1;
+    ::EmptyClipboard();
+    SIZE_T cb = (strText.GetLength() + 1) * sizeof(WCHAR);
+    HGLOBAL hMem = GlobalAlloc(GMEM_MOVEABLE, cb);
+    if (hMem)
+    {
+        CopyMemory(GlobalLock(hMem), (LPCWSTR)strText, cb);
+        GlobalUnlock(hMem);
+        if (!::SetClipboardData(CF_UNICODETEXT, hMem))
+            GlobalFree(hMem);
+    }
+    ::CloseClipboard();
     return 1;
 }
 

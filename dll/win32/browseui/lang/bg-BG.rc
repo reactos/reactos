@@ -35,6 +35,7 @@ BEGIN
             MENUITEM "", -1, MFT_SEPARATOR
         END
         MENUITEM "Лента на &състоянието", IDM_VIEW_STATUSBAR
+        MENUITEM "Pre&view pane", IDM_VIEW_PREVIEWPANE
         POPUP "Лента на &изследователя", IDM_VIEW_EXPLORERBAR
         BEGIN
             MENUITEM "&Търсене\tCtrl+E", IDM_EXPLORERBAR_SEARCH
@@ -312,7 +313,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_STANDARD_TOOLBAR, "|Назад|Напред|Нагоре|Търси|Папки|Премести в|Копирай в|Изтрий|Отмени|Изгледи|Стоп|Обнови|Начало|Свързване на устройство|Разкачи|Избрани|История|Пълен екран|Свойства|Изрежи|Копирай|Постави|Настройки на папките||"
+    IDS_STANDARD_TOOLBAR, "|Назад|Напред|Нагоре|Търси|Папки|Премести в|Копирай в|Изтрий|Отмени|Изгледи|Стоп|Обнови|Начало|Свързване на устройство|Разкачи|Избрани|История|Пълен екран|Свойства|Изрежи|Копирай|Постави|Настройки на папките|Rename|Copy path||"
 END
 
 STRINGTABLE

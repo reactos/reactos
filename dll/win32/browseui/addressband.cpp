@@ -54,7 +54,7 @@ CAddressBand::~CAddressBand()
 
 BOOL CAddressBand::ShouldShowGoButton()
 {
-    return SHRegGetBoolUSValueW(L"Software\\Microsoft\\Internet Explorer\\Main", L"ShowGoButton", FALSE, TRUE);
+    return SHRegGetBoolUSValueW(L"Software\\Microsoft\\Internet Explorer\\Main", L"ShowGoButton", FALSE, FALSE); // hidden by default, like Windows 7+
 }
 
 BOOL CAddressBand::IsGoButtonVisible(IUnknown *pUnkBand)

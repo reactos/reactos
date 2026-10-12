@@ -23,6 +23,7 @@ Implements the toolbar band of a cabinet window
 */
 
 #include "precomp.h"
+#include <uxtheme.h>
 
 class CToolsBand :
     public CWindowImpl<CToolsBand, CWindow, CControlWinTraits>,
@@ -151,6 +152,8 @@ HRESULT STDMETHODCALLTYPE CToolsBand::GetBandInfo(DWORD dwBandID, DWORD dwViewMo
 static const int backImageIndex = 0;
 static const int forwardImageIndex = 1;
 static const int favoritesImageIndex = 2;
+static const int renameImageIndex = 3;      // ReactOS: was an unused bookmark picture
+static const int copyPathImageIndex = 4;    // ReactOS: was an unused bookmark picture
 // 3
 // 4
 static const int cutImageIndex = 5;
@@ -220,38 +223,44 @@ enum StandardToolbarButtons {
     BtnIdx_Copy,
     BtnIdx_Paste,
     BtnIdx_FolderOptions,
+    BtnIdx_Rename,
+    BtnIdx_CopyPath,
 };
 
-const int numShownButtons = 13;
-const int numHiddenButtons = 13;
+// Windows 11 command bar order: navigation, then clipboard and file commands,
+// then views and panes. The rest can be added with Customize.
+const int numShownButtons = 17;
+const int numHiddenButtons = 11;
 TBBUTTON tbButtonsAdd[numShownButtons + numHiddenButtons] =
 {
-    { backImageIndex, IDM_GOTO_BACK, TBSTATE_ENABLED, BTNS_DROPDOWN | BTNS_SHOWTEXT, { 0 }, 0, BtnIdx_Back },
+    { backImageIndex, IDM_GOTO_BACK, TBSTATE_ENABLED, BTNS_DROPDOWN, { 0 }, 0, BtnIdx_Back },
     { forwardImageIndex, IDM_GOTO_FORWARD, TBSTATE_ENABLED, BTNS_DROPDOWN, { 0 }, 0,          BtnIdx_Forward },
     { upImageIndex, IDM_GOTO_UPONELEVEL, TBSTATE_ENABLED, BTNS_BUTTON, { 0 }, 0,                 BtnIdx_Up },
     { 6, -1, TBSTATE_ENABLED, BTNS_SEP },
-    { searchImageIndex, gSearchCommandID, TBSTATE_ENABLED, BTNS_BUTTON | BTNS_SHOWTEXT, { 0 }, 0, BtnIdx_Search },
-    { foldersImageIndex, gFoldersCommandID, TBSTATE_ENABLED, BTNS_BUTTON | BTNS_SHOWTEXT, { 0 }, 0, BtnIdx_Folders },
-    { 6, -1, TBSTATE_ENABLED, BTNS_SEP },
-    { moveToImageIndex, gMoveToCommandID, TBSTATE_ENABLED, BTNS_BUTTON, { 0 }, 0, BtnIdx_MoveTo },
-    { copyToImageIndex, gCopyToCommandID, TBSTATE_ENABLED, BTNS_BUTTON, { 0 }, 0, BtnIdx_CopyTo },
+    { cutImageIndex, gCutCommandID, TBSTATE_ENABLED, BTNS_BUTTON, { 0 }, 0, BtnIdx_Cut },
+    { copyImageIndex, gCopyCommandID, TBSTATE_ENABLED, BTNS_BUTTON, { 0 }, 0, BtnIdx_Copy },
+    { pasteImageIndex, gPasteCommandID, TBSTATE_ENABLED, BTNS_BUTTON, { 0 }, 0, BtnIdx_Paste },
+    { renameImageIndex, gRenameCommandID, TBSTATE_ENABLED, BTNS_BUTTON, { 0 }, 0, BtnIdx_Rename },
+    { copyPathImageIndex, gCopyPathCommandID, TBSTATE_ENABLED, BTNS_BUTTON, { 0 }, 0, BtnIdx_CopyPath },
     { deleteImageIndex, gDeleteCommandID, TBSTATE_ENABLED, BTNS_BUTTON, { 0 }, 0, BtnIdx_Delete },
     { undoImageIndex, gUndoCommandID, TBSTATE_ENABLED, BTNS_BUTTON, { 0 }, 0, BtnIdx_Undo },
     { 6, -1, TBSTATE_ENABLED, BTNS_SEP },
     { viewsImageIndex, gViewsCommandID, TBSTATE_ENABLED, BTNS_WHOLEDROPDOWN, { 0 }, 0, BtnIdx_Views },
+    { 6, -1, TBSTATE_ENABLED, BTNS_SEP },
+    { foldersImageIndex, gFoldersCommandID, TBSTATE_ENABLED, BTNS_BUTTON, { 0 }, 0, BtnIdx_Folders },
+    { searchImageIndex, gSearchCommandID, TBSTATE_ENABLED, BTNS_BUTTON, { 0 }, 0, BtnIdx_Search },
+    { propertiesImageIndex, gPropertiesCommandID, TBSTATE_ENABLED, BTNS_BUTTON, { 0 }, 0, BtnIdx_Properties },
 
+    { moveToImageIndex, gMoveToCommandID, TBSTATE_ENABLED, BTNS_BUTTON, { 0 }, 0, BtnIdx_MoveTo },
+    { copyToImageIndex, gCopyToCommandID, TBSTATE_ENABLED, BTNS_BUTTON, { 0 }, 0, BtnIdx_CopyTo },
     { 0, gStopCommandID, TBSTATE_ENABLED, BTNS_BUTTON, { 0 }, 0, BtnIdx_Stop },
     { 0, IDM_VIEW_REFRESH, TBSTATE_ENABLED, BTNS_BUTTON, { 0 }, 0, BtnIdx_Refresh },
     { 0, gHomeCommandID, TBSTATE_ENABLED, BTNS_BUTTON, { 0 }, 0, BtnIdx_Home },
     { mapDriveImageIndex, IDM_TOOLS_MAPNETWORKDRIVE, TBSTATE_ENABLED, BTNS_BUTTON, { 0 }, 0, BtnIdx_MapDrive },
     { disconnectImageIndex, IDM_TOOLS_DISCONNECTNETWORKDRIVE, TBSTATE_ENABLED, BTNS_BUTTON, { 0 }, 0, BtnIdx_Disconnect },
-    { favoritesImageIndex, gFavoritesCommandID, TBSTATE_ENABLED, BTNS_BUTTON | BTNS_SHOWTEXT, { 0 }, 0, BtnIdx_Favorites },
+    { favoritesImageIndex, gFavoritesCommandID, TBSTATE_ENABLED, BTNS_BUTTON, { 0 }, 0, BtnIdx_Favorites },
     { 0, gHistoryCommandID, TBSTATE_ENABLED, BTNS_BUTTON, { 0 }, 0, BtnIdx_History },
     { 0, gFullScreenCommandID, TBSTATE_ENABLED, BTNS_BUTTON, { 0 }, 0, BtnIdx_FullScreen },
-    { propertiesImageIndex, gPropertiesCommandID, TBSTATE_ENABLED, BTNS_BUTTON, { 0 }, 0, BtnIdx_Properties },
-    { cutImageIndex, gCutCommandID, TBSTATE_ENABLED, BTNS_BUTTON, { 0 }, 0, BtnIdx_Cut },
-    { copyImageIndex, gCopyCommandID, TBSTATE_ENABLED, BTNS_BUTTON, { 0 }, 0, BtnIdx_Copy },
-    { pasteImageIndex, gPasteCommandID, TBSTATE_ENABLED, BTNS_BUTTON, { 0 }, 0, BtnIdx_Paste },
     { folderOptionsImageIndex, IDM_TOOLS_FOLDEROPTIONS, TBSTATE_ENABLED, BTNS_BUTTON, { 0 }, 0, BtnIdx_FolderOptions },
 };
 
@@ -289,12 +298,17 @@ HRESULT STDMETHODCALLTYPE CToolsBand::SetSite(IUnknown* pUnkSite){
     SendMessage(TB_SETMAXTEXTROWS, 1, 0);
     SendMessage(TB_SETEXTENDEDSTYLE, 0, TBSTYLE_EX_HIDECLIPPEDBUTTONS | TBSTYLE_EX_MIXEDBUTTONS | TBSTYLE_EX_DRAWDDARROWS);
 
+    // Dark visual style (e.g. Eleven "Dark"): light icons on the dark command bar
+    WCHAR szColor[64];
+    BOOL bDark = IsThemeActive() && SUCCEEDED(GetCurrentThemeName(NULL, 0, szColor, _countof(szColor), NULL, 0)) &&
+                 !_wcsicmp(szColor, L"Dark");
+
     m_himlNormal = ImageList_LoadImageW(_AtlBaseModule.GetResourceInstance(),
-                                        MAKEINTRESOURCEW(IDB_SHELL_EXPLORER_LG),
+                                        MAKEINTRESOURCEW(bDark ? IDB_SHELL_EXPLORER_LG_DARK : IDB_SHELL_EXPLORER_LG),
                                         0, 0, RGB(255, 0, 255), IMAGE_BITMAP, LR_DEFAULTSIZE | LR_CREATEDIBSECTION);
 
     m_himlHot = ImageList_LoadImageW(_AtlBaseModule.GetResourceInstance(),
-                                     MAKEINTRESOURCEW(IDB_SHELL_EXPLORER_LG_HOT),
+                                     MAKEINTRESOURCEW(bDark ? IDB_SHELL_EXPLORER_LG_DARK_HOT : IDB_SHELL_EXPLORER_LG_HOT),
                                      0, 0, RGB(255, 0, 255), IMAGE_BITMAP, LR_DEFAULTSIZE | LR_CREATEDIBSECTION);
 
     SendMessage(TB_SETIMAGELIST, 0, (LPARAM) m_himlNormal);

@@ -40,6 +40,8 @@ static const int gPropertiesCommandID = FCIDM_SHVIEW_PROPERTIES;
 static const int gCutCommandID = FCIDM_SHVIEW_CUT;
 static const int gCopyCommandID = FCIDM_SHVIEW_COPY;
 static const int gPasteCommandID = FCIDM_SHVIEW_INSERT;
+static const int gRenameCommandID = FCIDM_SHVIEW_RENAME;
+static const int gCopyPathCommandID = 1020;     // ReactOS: "Copy path" (Windows 11 command bar)
 
 class CMenuCallback :
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
@@ -201,6 +203,7 @@ public:
     LRESULT OnSearch(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled);
     LRESULT OnFolders(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled);
     LRESULT OnForwardToCommandTarget(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled);
+    LRESULT OnCopyPath(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled);
     LRESULT OnMenuDropDown(UINT idControl, NMHDR *pNMHDR, BOOL &bHandled);
     LRESULT OnQueryInsert(UINT idControl, NMHDR *pNMHDR, BOOL &bHandled);
     LRESULT OnQueryDelete(UINT idControl, NMHDR *pNMHDR, BOOL &bHandled);
@@ -223,6 +226,7 @@ public:
         COMMAND_ID_HANDLER(IDM_GOTO_UPONELEVEL, OnUpLevel)
         COMMAND_ID_HANDLER(gSearchCommandID, OnSearch)
         COMMAND_ID_HANDLER(gFoldersCommandID, OnFolders)
+        COMMAND_ID_HANDLER(gCopyPathCommandID, OnCopyPath)
         COMMAND_RANGE_HANDLER(0x7000, 0x7fff, OnForwardToCommandTarget)
         NOTIFY_HANDLER(0, TBN_DROPDOWN, OnMenuDropDown)
         NOTIFY_HANDLER(0, TBN_QUERYINSERT, OnQueryInsert)

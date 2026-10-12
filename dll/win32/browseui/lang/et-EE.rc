@@ -42,6 +42,7 @@ BEGIN
             MENUITEM "", -1, MFT_SEPARATOR
         END
         MENUITEM "Olekuriba", IDM_VIEW_STATUSBAR
+        MENUITEM "Pre&view pane", IDM_VIEW_PREVIEWPANE
         POPUP "&Exploreri riba", IDM_VIEW_EXPLORERBAR
         BEGIN
             MENUITEM "&Otsi\tCtrl+E", IDM_EXPLORERBAR_SEARCH
@@ -319,7 +320,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_STANDARD_TOOLBAR, "|Tagasi|Edasi|Üles|Otsing|Kaustad|Teiselda kausta|Kopeeri kausta|Kustuta|Võta tagasi|Vaated|Peatu|Värskenda|Kodu|Ühenda võrgudraiv|Ühenda lahti|Lemmikud|Ajalugu|Täisekraan|Atribuudid|Lõika|Kopeeri|Kleebi|Kaustasuvandid||"
+    IDS_STANDARD_TOOLBAR, "|Tagasi|Edasi|Üles|Otsing|Kaustad|Teiselda kausta|Kopeeri kausta|Kustuta|Võta tagasi|Vaated|Peatu|Värskenda|Kodu|Ühenda võrgudraiv|Ühenda lahti|Lemmikud|Ajalugu|Täisekraan|Atribuudid|Lõika|Kopeeri|Kleebi|Kaustasuvandid|Rename|Copy path||"
 END
 
 STRINGTABLE

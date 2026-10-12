@@ -35,6 +35,7 @@ BEGIN
             MENUITEM "", -1, MFT_SEPARATOR
         END
         MENUITEM "स्टेटस &बार", IDM_VIEW_STATUSBAR
+        MENUITEM "Pre&view pane", IDM_VIEW_PREVIEWPANE
         POPUP "&एक्सप्लोरर बार", IDM_VIEW_EXPLORERBAR
         BEGIN
             MENUITEM "&ढूंढे\tCtrl+E", IDM_EXPLORERBAR_SEARCH
@@ -312,7 +313,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_STANDARD_TOOLBAR, "|वापस|आगे|ऊपर|ढूंढे|फ़ोल्डरों|यहाँ ले जाएँ|को कॉपी|हटाएं|पूर्ववत|व्यू|रुकें|रिफ़ेश|होम|मैप ड्राइव|डिस्कनेक्ट|पसंदीदा|हिस्टरी|पूरा स्क्रीन|गुण|कट|कापी|पेस्ट|फ़ोल्डर विकल्प||"
+    IDS_STANDARD_TOOLBAR, "|वापस|आगे|ऊपर|ढूंढे|फ़ोल्डरों|यहाँ ले जाएँ|को कॉपी|हटाएं|पूर्ववत|व्यू|रुकें|रिफ़ेश|होम|मैप ड्राइव|डिस्कनेक्ट|पसंदीदा|हिस्टरी|पूरा स्क्रीन|गुण|कट|कापी|पेस्ट|फ़ोल्डर विकल्प|Rename|Copy path||"
 END
 
 STRINGTABLE

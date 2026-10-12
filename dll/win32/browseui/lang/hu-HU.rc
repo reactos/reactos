@@ -53,6 +53,7 @@ BEGIN
             MENUITEM "", -1, MFT_SEPARATOR
         END
         MENUITEM "Álla&potsor", IDM_VIEW_STATUSBAR
+        MENUITEM "Pre&view pane", IDM_VIEW_PREVIEWPANE
         POPUP "Bön&gészősáv", IDM_VIEW_EXPLORERBAR
         BEGIN
             MENUITEM "Ke&resés\tCtrl+E", IDM_EXPLORERBAR_SEARCH
@@ -330,7 +331,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_STANDARD_TOOLBAR, "|Vissza|Előre|Fel|Keresés|Mappák|Áthelyezés ide|Másolás ide|Törlés|Visszavonás|Nézetek|Leállítás|Frissítés|Kezdőlap|Hálózati csatlakozás|Hálózati leválasztás|Kedvencek|Előzmények|Teljes képernyő|Tulajdonságok|Kivágás|Másolás|Beillesztés|Mappabeállítások||"
+    IDS_STANDARD_TOOLBAR, "|Vissza|Előre|Fel|Keresés|Mappák|Áthelyezés ide|Másolás ide|Törlés|Visszavonás|Nézetek|Leállítás|Frissítés|Kezdőlap|Hálózati csatlakozás|Hálózati leválasztás|Kedvencek|Előzmények|Teljes képernyő|Tulajdonságok|Kivágás|Másolás|Beillesztés|Mappabeállítások|Rename|Copy path||"
 END
 
 STRINGTABLE

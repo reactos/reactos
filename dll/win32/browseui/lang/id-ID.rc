@@ -54,6 +54,7 @@ BEGIN
             MENUITEM "", -1, MFT_SEPARATOR
         END
         MENUITEM "Bilah &Status", IDM_VIEW_STATUSBAR
+        MENUITEM "Pre&view pane", IDM_VIEW_PREVIEWPANE
         POPUP "Bilah &Penjelajah", IDM_VIEW_EXPLORERBAR
         BEGIN
             MENUITEM "Pen&carian\tCtrl+E", IDM_EXPLORERBAR_SEARCH
@@ -331,7 +332,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_STANDARD_TOOLBAR, "|Kembali|Maju|Ke Atas|Pencarian|Folder|Pindahkan Ke|Salin Ke|Hapus|Urungkan|Tampilan|Berhenti|Segarkan|Rumah|Peta Drive|Putuskan|Favorit|Riwayat|Layar Penuh|Properti|Gunting|Salin|Tempel|Opsi Folder||"
+    IDS_STANDARD_TOOLBAR, "|Kembali|Maju|Ke Atas|Pencarian|Folder|Pindahkan Ke|Salin Ke|Hapus|Urungkan|Tampilan|Berhenti|Segarkan|Rumah|Peta Drive|Putuskan|Favorit|Riwayat|Layar Penuh|Properti|Gunting|Salin|Tempel|Opsi Folder|Rename|Copy path||"
 END
 
 STRINGTABLE

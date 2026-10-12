@@ -43,6 +43,7 @@ BEGIN
             MENUITEM "", -1, MFT_SEPARATOR
         END
         MENUITEM "Bară de st&are", IDM_VIEW_STATUSBAR
+        MENUITEM "Pre&view pane", IDM_VIEW_PREVIEWPANE
         POPUP "Bară de &explorare", IDM_VIEW_EXPLORERBAR
         BEGIN
             MENUITEM "&Căutare\tCtrl+E", IDM_EXPLORERBAR_SEARCH
@@ -320,7 +321,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_STANDARD_TOOLBAR, "|Înapoi|Înainte|Sus|Căutare|Foldere|Mutare în|Copiere în|Ștergere|Desfacere|Afișări|Oprire|Împrospătare|Acasă|Conectare unitate de stocare|Deconectare|Favorite|Istoric|Pe tot ecranul|Proprietăți|Decupare|Copiere|Lipire|Opțiuni de folder||"
+    IDS_STANDARD_TOOLBAR, "|Înapoi|Înainte|Sus|Căutare|Foldere|Mutare în|Copiere în|Ștergere|Desfacere|Afișări|Oprire|Împrospătare|Acasă|Conectare unitate de stocare|Deconectare|Favorite|Istoric|Pe tot ecranul|Proprietăți|Decupare|Copiere|Lipire|Opțiuni de folder|Rename|Copy path||"
 END
 
 STRINGTABLE

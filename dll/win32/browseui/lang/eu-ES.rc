@@ -42,6 +42,7 @@ BEGIN
             MENUITEM "", -1, MFT_SEPARATOR
         END
         MENUITEM "&Egoera-barra", IDM_VIEW_STATUSBAR
+        MENUITEM "Pre&view pane", IDM_VIEW_PREVIEWPANE
         POPUP "Ex&plorer-en barra", IDM_VIEW_EXPLORERBAR
         BEGIN
             MENUITEM "&Bilatu\tKtrl+E", IDM_EXPLORERBAR_SEARCH
@@ -319,7 +320,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_STANDARD_TOOLBAR, "|Atrás|Adelante|Subir|Búsqueda|Carpetas|Mover a|Copiar a|Borrar|Deshacer|Vistas|Detener|Recargar|Inicio|Montar disco|Desconectar|Favoritos|Historial|Pantalla completa|Propiedades|Cortar|Copiar|Pegar|Opciones de carpeta||"
+    IDS_STANDARD_TOOLBAR, "|Atrás|Adelante|Subir|Búsqueda|Carpetas|Mover a|Copiar a|Borrar|Deshacer|Vistas|Detener|Recargar|Inicio|Montar disco|Desconectar|Favoritos|Historial|Pantalla completa|Propiedades|Cortar|Copiar|Pegar|Opciones de carpeta|Rename|Copy path||"
 END
 
 STRINGTABLE

@@ -234,6 +234,9 @@ HRESULT CBaseBarSite::InsertBar(IUnknown *newBar)
     bandInfo.fMask = RBBIM_STYLE | RBBIM_CHILD | RBBIM_CHILDSIZE | RBBIM_IDEALSIZE | RBBIM_TEXT |
         RBBIM_LPARAM | RBBIM_ID;
     bandInfo.fStyle = RBBS_TOPALIGN | RBBS_VARIABLEHEIGHT | RBBS_NOGRIPPER;
+    // Windows 7/11: the folder tree (navigation pane) has no "Folders [x]" title bar
+    if (IsEqualCLSID(tmp, CLSID_ExplorerBand))
+        bandInfo.fStyle |= RBBS_HIDETITLE;
     bandInfo.lpText = deskBandInfo.wszTitle;
     hResult = oleWindow->GetWindow(&bandInfo.hwndChild);
     /* It seems Windows XP doesn't take account of band minsize */
@@ -700,6 +703,11 @@ LRESULT CBaseBarSite::OnCustomDraw(LPNMCUSTOMDRAW pnmcd)
         case CDDS_PREERASE:
             return CDRF_NOTIFYITEMDRAW;
         case CDDS_ITEMPREPAINT:
+            if (fVertical && fCurrentActiveBar && IsEqualCLSID(fCurrentActiveBar->fBarClass, CLSID_ExplorerBand))
+            {
+                ::ShowWindow(toolbarWnd, SW_HIDE);   // no close button either
+                return CDRF_SKIPDEFAULT;
+            }
             if (fVertical)
             {
                 REBARBANDINFO info;

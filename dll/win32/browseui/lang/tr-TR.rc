@@ -45,6 +45,7 @@ BEGIN
             MENUITEM "", -1, MFT_SEPARATOR
         END
         MENUITEM "&Durum Çubuğu", IDM_VIEW_STATUSBAR
+        MENUITEM "Pre&view pane", IDM_VIEW_PREVIEWPANE
         POPUP "&Gezinme Çubuğu", IDM_VIEW_EXPLORERBAR
         BEGIN
             MENUITEM "&Ara\tCtrl+E", IDM_EXPLORERBAR_SEARCH
@@ -322,7 +323,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_STANDARD_TOOLBAR, "|Geri|İleri|Yukarı|Ara|Dizinler|Taşı|Kopyala|Sil|Geri Al|Görünümler|Dur|Yenile|Giriş|Sürücü Oluştur|Bağlantıyı Kes|Yer İmleri|Geçmiş|Tam Ekran|Özellikler|Kes|Kopyala|Yapıştır|Dizin Seçenekleri||"
+    IDS_STANDARD_TOOLBAR, "|Geri|İleri|Yukarı|Ara|Dizinler|Taşı|Kopyala|Sil|Geri Al|Görünümler|Dur|Yenile|Giriş|Sürücü Oluştur|Bağlantıyı Kes|Yer İmleri|Geçmiş|Tam Ekran|Özellikler|Kes|Kopyala|Yapıştır|Dizin Seçenekleri|Rename|Copy path||"
 END
 
 STRINGTABLE

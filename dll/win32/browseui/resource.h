@@ -36,6 +36,7 @@
 #define IDM_TOOLBARS_TEXTLABELS          0xA207
 #define IDM_TOOLBARS_GOBUTTON            0xA20B
 #define IDM_VIEW_STATUSBAR               0xA202
+#define IDM_VIEW_PREVIEWPANE             0xA20E
 #define IDM_VIEW_EXPLORERBAR             0xA230
 #define IDM_EXPLORERBAR_SEARCH           0xA231
 #define IDM_EXPLORERBAR_FAVORITES        0xA232
@@ -152,6 +153,8 @@
 #define IDB_BANDBUTTONS 545
 #define IDB_SHELL_EXPLORER_LG       214
 #define IDB_SHELL_EXPLORER_LG_HOT   215
+#define IDB_SHELL_EXPLORER_LG_DARK      220    /* ReactOS: toolbar icons for dark themes */
+#define IDB_SHELL_EXPLORER_LG_DARK_HOT  221
 #define IDB_SHELL_EXPLORER_SM       216
 #define IDB_SHELL_EXPLORER_SM_HOT   217
 #define IDB_SHELL_GO                230
