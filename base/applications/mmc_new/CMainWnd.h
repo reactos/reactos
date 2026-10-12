@@ -55,6 +55,9 @@ public:
     CWindow m_MDIClient;
     CAtlString m_Filename;
 
+    /* Only used for loading msc files */
+    CSimpleMap<UINT, CSnapin*> *m_TempNodeMap;
+
 public:
 
     BEGIN_MSG_MAP(CMainWnd)
@@ -246,6 +249,7 @@ private:
     LRESULT SaveMscFile(const CAtlString &FileName);
     LRESULT LoadMscFile(const CAtlString &FileName);
     HRESULT ParseScopeTree(MscFile *mscFile, IXMLDOMElement *pRootElement);
+    HRESULT ParseViewsElement(MscFile *mscFile, IXMLDOMElement *pRootElement);
 
 public:
     CAtlString *GetConsoleTitle();
@@ -266,8 +270,8 @@ public:
 
     CSnapin *GetRootSnapin();
 
-    UINT RegisterView(CConsoleWnd *pView);
-    void UnregisterView(CConsoleWnd *pView);
+    VOID RegisterView(CConsoleWnd *pView);
+    VOID UnregisterView(CConsoleWnd *pView);
     UINT GetNextNodeId();
     VOID UpdateNextNodeId(UINT NodeId);
     DOCUMENT_MODE GetDocumentMode();

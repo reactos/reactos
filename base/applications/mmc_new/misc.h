@@ -16,3 +16,4 @@ LPWSTR ShowCmdToString(int nShowCmd);
 int ShowCmdFromString(LPWSTR pszString);
 LPWSTR DocumentModeToString(DOCUMENT_MODE DocumentMode);
 HRESULT StringToDocumentMode(LPWSTR pszDocumentMode, PDOCUMENT_MODE pDocumentMode);
+BOOL StringToBool(LPWSTR pszString);

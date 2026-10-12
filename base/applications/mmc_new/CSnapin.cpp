@@ -246,6 +246,9 @@ CSnapin::ParseSnapin(CMainWnd *pMainWnd, MscFile *mscFile, IXMLDOMElement *pSnap
         goto done;
     }
 
+    /* Add the Snap-in to the temporary node map */
+    pMainWnd->m_TempNodeMap->Add(uSnapinId, pSnapin);
+
     /* FIXME: Read the Bitmaps element */
     /* FIXME: Read the ComponentDatas element */
     /* FIXME: Read the Component element */

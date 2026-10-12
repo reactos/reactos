@@ -245,3 +245,14 @@ StringToDocumentMode(
     return hr;
 }
 
+BOOL
+StringToBool(
+    _In_ LPWSTR pszString)
+{
+    if (_wcsicmp(pszString, L"true") == 0)
+        return TRUE;
+    else if (_wcsicmp(pszString, L"false") == 0)
+        return FALSE;
+
+    return FALSE;
+}

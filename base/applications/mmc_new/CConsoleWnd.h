@@ -24,7 +24,6 @@ class CConsoleWnd :
     public IConsoleNameSpace2
 {
 private:
-    UINT m_ViewId;
     CMainWnd* m_MainWnd;
     CTreeView m_TreeView;
     CListView m_ListView;
@@ -50,6 +49,8 @@ private:
     CSnapin *m_ViewSelectedNode;
 
 public:
+    UINT m_ViewId;
+
     BEGIN_MSG_MAP(CConsoleWnd)
         MESSAGE_HANDLER(WM_CREATE, OnCreate)
         MESSAGE_HANDLER(WM_DESTROY, OnDestroy)
@@ -104,6 +105,8 @@ private:
     VOID UpdateLayout();
     VOID AddTreeViewItemRecursive(HTREEITEM hParentTreeItem, CSnapin *Node);
     VOID UpdateTreeView();
+    static HRESULT ParseViewAttributes(MscFile *mscFile, IXMLDOMElement *pViewElement, UINT *puViewID,
+                                       INT *piScopePanelWidth, INT *piActionsPanelWidth);
 
 public:
     CConsoleWnd(CMainWnd *MainWnd, CSnapin *RootNode, CSnapin *SelectedNode = NULL);
@@ -142,6 +145,7 @@ public:
     VOID SetListViewMode(LISTVIEW_MODE ListViewMode);
 
     VOID SaveView(MscFile *mscFile, IXMLDOMElement *pParentElement);
+    static HRESULT ParseView(CMainWnd *pMainWnd, MscFile *mscFile, IXMLDOMElement *pViewElement);
 
     // +IConsole
     STDMETHODIMP QueryInterface(REFIID riid, void **ppvObject);

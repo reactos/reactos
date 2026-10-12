@@ -32,6 +32,7 @@ CMainWnd::CMainWnd()
     , m_NextViewId(1)
     , m_RootNode(NULL)
     , m_NextNodeId(1)
+    , m_TempNodeMap(NULL)
 {
     m_FrameThunk.Init(XDefFrameProc, this);
     m_pfnSuperWindowProc = m_FrameThunk.GetWNDPROC();
@@ -247,9 +248,7 @@ CMainWnd::OnFileOpen(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
         if (ret == ERROR_SUCCESS)
         {
             AddToRecentFiles(m_Filename);
-
-            if (CreateView(m_RootNode))
-                m_ConsoleNumber++;
+            m_ConsoleNumber++;
         }
     }
 
@@ -363,9 +362,7 @@ CMainWnd::OnFileRecent(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
         if (ret == ERROR_SUCCESS)
         {
             AddToRecentFiles(FileEntry->FileName());
-
-            if (CreateView(m_RootNode))
-                m_ConsoleNumber++;
+            m_ConsoleNumber++;
         }
     }
 
@@ -670,19 +667,25 @@ CMainWnd::GetRootSnapin()
     return m_RootNode;
 }
 
-UINT
+VOID
 CMainWnd::RegisterView(CConsoleWnd *pView)
 {
     m_ViewList.AddTail(pView);
-    return m_NextViewId++;
+    if (pView->m_ViewId == 0)
+        pView->m_ViewId = m_NextViewId++;
+    else if (m_NextViewId <= pView->m_ViewId)
+        m_NextViewId = pView->m_ViewId + 1;
 }
 
-void
+VOID
 CMainWnd::UnregisterView(CConsoleWnd *pView)
 {
     POSITION pos = m_ViewList.Find(pView);
     if (pos)
+    {
         m_ViewList.RemoveAt(pos);
+        pView->m_ViewId = 0;
+    }
 }
 
 UINT
@@ -1069,6 +1072,8 @@ CMainWnd::LoadMscFile(const CAtlString &FileName)
     VARIANT ProgramMode;
     HRESULT hr = S_OK;
 
+    m_TempNodeMap = new CSimpleMap<UINT, CSnapin*>();
+
     VariantInit(&ProgramMode);
 
     m_DocumentMode = DocumentMode_Author;
@@ -1127,11 +1132,15 @@ CMainWnd::LoadMscFile(const CAtlString &FileName)
 
     /* FIXME Parse other frame settings */
 
+    /* Parse the ScopeTree element */
     hr = ParseScopeTree(mscFile, pRootElement);
     if (hr != S_OK)
         goto done;
 
-    /* Parse the Views Element and create the views */
+    /* Parse the Views element */
+    hr = ParseViewsElement(mscFile, pRootElement);
+    if (hr != S_OK)
+        goto done;
 
 done:
     VariantClear(&ProgramMode);
@@ -1141,6 +1150,9 @@ done:
 
     if (pRootElement)
         pRootElement->Release();
+
+    delete m_TempNodeMap;
+    m_TempNodeMap = NULL;
 
     delete mscFile;
 
@@ -1190,6 +1202,68 @@ done:
 
     if (pScopeTreeElement)
         pScopeTreeElement->Release();
+
+    return hr;
+}
+
+HRESULT
+CMainWnd::ParseViewsElement(MscFile *mscFile, IXMLDOMElement *pRootElement)
+{
+    IXMLDOMElement *pViewsElement = NULL;
+    IXMLDOMNodeList *pChildList = NULL;
+    IXMLDOMNode *nextItem;
+    DOMNodeType NodeType;
+    BSTR NodeName = NULL;
+    HRESULT hr = S_OK;
+
+    hr = mscFile->GetElement(pRootElement, (LPWSTR)L"Views", &pViewsElement);
+    if (hr != S_OK)
+        goto done;
+
+    hr = pViewsElement->get_childNodes(&pChildList);
+    if (FAILED(hr))
+        goto done;
+
+    for (;;)
+    {
+        hr = pChildList->nextNode(&nextItem);
+        if (hr == S_FALSE)
+        {
+            hr = S_OK;
+            break;
+        }
+
+        hr = nextItem->get_nodeType(&NodeType);
+        if (hr == S_OK)
+        {
+            if (NodeType == NODE_ELEMENT)
+            {
+                NodeName = NULL;
+                hr = nextItem->get_baseName(&NodeName);
+                if (hr == S_OK)
+                {
+                    if (_wcsicmp(NodeName, L"View") == 0)
+                    {
+                        CConsoleWnd::ParseView(this, mscFile, (IXMLDOMElement *)nextItem);
+                    }
+                    SysFreeString(NodeName);
+                    NodeName = NULL;
+                }
+            }
+        }
+
+        nextItem->Release();
+    }
+
+done:
+    if (pChildList)
+        pChildList->Release();
+
+    if (NodeName)
+        SysFreeString(NodeName);
+
+    if (pViewsElement)
+        pViewsElement->Release();
 
     return hr;
 }
