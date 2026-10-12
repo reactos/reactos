@@ -103,6 +103,9 @@ BochsInitializeSuitableModeInfo(
     {
         if (BochsAvailableResolutions[i].XResolution > DeviceExtension->MaxXResolution)
             continue;
+        /* The Bochs/QEMU adapter silently rounds other widths down, which skews the picture */
+        if (BochsAvailableResolutions[i].XResolution % 8)
+            continue;
         if (BochsAvailableResolutions[i].YResolution > DeviceExtension->MaxYResolution)
             continue;
         if (BochsAvailableResolutions[i].XResolution * BochsAvailableResolutions[i].YResolution * 4 > DeviceExtension->VramSize64K * 64 * 1024)

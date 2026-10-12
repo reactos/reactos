@@ -12,11 +12,11 @@ HKLM,"SYSTEM\CurrentControlSet\Services\bochsmp\Video","Service",0x00000000,"boc
 HKLM,"SYSTEM\CurrentControlSet\Services\bochsmp\Device0","Device Description",0x00000000,"Bochs Graphics Adapter"
 HKLM,"SYSTEM\CurrentControlSet\Services\bochsmp\Device0","InstalledDisplayDrivers",0x00010000,"framebuf"
 HKLM,"SYSTEM\CurrentControlSet\Services\bochsmp\Device0","VgaCompatible",0x00010001,0
-HKLM,"SYSTEM\CurrentControlSet\Services\bochsmp\Device0","DefaultSettings.XResolution",0x00010001,800
-HKLM,"SYSTEM\CurrentControlSet\Services\bochsmp\Device0","DefaultSettings.YResolution",0x00010001,600
+HKLM,"SYSTEM\CurrentControlSet\Services\bochsmp\Device0","DefaultSettings.XResolution",0x00010001,1368
+HKLM,"SYSTEM\CurrentControlSet\Services\bochsmp\Device0","DefaultSettings.YResolution",0x00010001,768
 
 HKLM,"SYSTEM\CurrentControlSet\Services\bochsmp\Device1","Device Description",0x00000000,"Bochs Graphics Adapter"
 HKLM,"SYSTEM\CurrentControlSet\Services\bochsmp\Device1","InstalledDisplayDrivers",0x00010000,"framebuf"
 HKLM,"SYSTEM\CurrentControlSet\Services\bochsmp\Device1","VgaCompatible",0x00010001,0
-HKLM,"SYSTEM\CurrentControlSet\Services\bochsmp\Device1","DefaultSettings.XResolution",0x00010001,800
-HKLM,"SYSTEM\CurrentControlSet\Services\bochsmp\Device1","DefaultSettings.YResolution",0x00010001,600
+HKLM,"SYSTEM\CurrentControlSet\Services\bochsmp\Device1","DefaultSettings.XResolution",0x00010001,1368
+HKLM,"SYSTEM\CurrentControlSet\Services\bochsmp\Device1","DefaultSettings.YResolution",0x00010001,768

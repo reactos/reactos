@@ -11,8 +11,8 @@ HKLM,"SYSTEM\CurrentControlSet\Services\vga\Video","Service",0x00000000,"vga"
 HKLM,"SYSTEM\CurrentControlSet\Services\vga\Device0","InstalledDisplayDrivers",0x00010000,"framebuf"
 HKLM,"SYSTEM\CurrentControlSet\Services\vga\Device0","DefaultSettings.VRefresh",0x00010001,1
 HKLM,"SYSTEM\CurrentControlSet\Services\vga\Device0","DefaultSettings.BitsPerPel",0x00010001,32
-HKLM,"SYSTEM\CurrentControlSet\Services\vga\Device0","DefaultSettings.XResolution",0x00010001,800
-HKLM,"SYSTEM\CurrentControlSet\Services\vga\Device0","DefaultSettings.YResolution",0x00010001,600
+HKLM,"SYSTEM\CurrentControlSet\Services\vga\Device0","DefaultSettings.XResolution",0x00010001,1366
+HKLM,"SYSTEM\CurrentControlSet\Services\vga\Device0","DefaultSettings.YResolution",0x00010001,768
 HKLM,"SYSTEM\CurrentControlSet\Services\vga\Device0","DefaultSettings.FixedOutput",0x00010001,0
 HKLM,"SYSTEM\CurrentControlSet\Services\vga\Device0","DefaultSettings.Flags",0x00010001,0
 HKLM,"SYSTEM\CurrentControlSet\Services\vga\Device0","DefaultSettings.Orientation",0x00010001,0
