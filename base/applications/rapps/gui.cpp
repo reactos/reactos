@@ -936,6 +936,7 @@ CMainWindow::HandleProtocolMessage(LPCWSTR Url)
     CStringW urlbuf(Url);
     Url = urlbuf.GetBuffer();
     UrlUnescapeInPlace(const_cast<LPWSTR>(Url), 0);
+    urlbuf.ReleaseBuffer();
 
     LPCWSTR p;
     if ((p = IsStrPrefixI(Url, L"view/")) != NULL && m_Db)
@@ -958,6 +959,10 @@ CMainWindow::HandleProtocolMessage(LPCWSTR Url)
     }
     if ((p = IsStrPrefixI(Url, L"category/")) != NULL)
     {
+        if (!_wcsicmp(L"Wallpapers", p))
+            p = L"Themes"; // We don't have a wallpaper category, they are currently in themes
+
+        C_ASSERT(CATSTRINGID_LAST - CATSTRINGID_FIRST == ENUM_LASTCATEGORY - ENUM_CAT_AUDIO);
         for (int i = CATSTRINGID_FIRST; i <= CATSTRINGID_LAST; ++i)
         {
             WCHAR buf[100];

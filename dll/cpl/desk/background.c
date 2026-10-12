@@ -1286,7 +1286,7 @@ BackgroundPageProc(HWND hwndDlg,
                     case NM_RETURN:
                     case NM_CLICK:
                         if (lpnm->idFrom == IDC_GETMOREWALLS)
-                            ShellExecuteW(hwndDlg, NULL, L"rapps://Search/Wallpaper", NULL, NULL, SW_SHOW);
+                            ShellExecuteW(hwndDlg, NULL, L"rapps://Category/Wallpapers", NULL, NULL, SW_SHOW);
                         break;
                 }
             }
