@@ -307,6 +307,10 @@ HRESULT STDMETHODCALLTYPE Power_Message(_In_ CSysTray * pSysTray, UINT uMsg, WPA
             switch (lParam)
             {
                 case WM_LBUTTONDOWN:
+                    /* Windows 11 style: the system icons and the clock form one button
+                     * that opens Quick Settings; a double click still opens the full tool */
+                    if (StObj_OpenQuickSettings())
+                        break;
                     SetTimer(pSysTray->GetHWnd(), POWER_TIMER_ID, GetDoubleClickTime(), NULL);
                     break;
 

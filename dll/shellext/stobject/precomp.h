@@ -94,4 +94,11 @@ extern HRESULT STDMETHODCALLTYPE MouseKeys_Message(_In_ CSysTray * pSysTray, UIN
 #define HOTPLUG_TIMER_ID 4
 #define HOTPLUG_DEVICE_TIMER_ID 5
 
+/* Ask the taskbar (explorer) to toggle its Quick Settings panel (TWM_QUICKSETTINGS) */
+static inline BOOL StObj_OpenQuickSettings(VOID)
+{
+    HWND hwndTray = FindWindowW(L"Shell_TrayWnd", NULL);
+    return hwndTray && PostMessageW(hwndTray, WM_USER + 401, 0, 0);
+}
+
 #endif /* _STOBJECT_PRECOMP_H_ */
