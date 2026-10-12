@@ -45,11 +45,6 @@ HRESULT SHELL32_AssocGetExtensionDescription(PCWSTR DotExt, PWSTR Buf, UINT cchB
 
 EXTERN_C HRESULT SHELL32_AssocGetFileDescription(PCWSTR Name, PWSTR Buf, UINT cchBuf);
 
-struct ClassesRegKey : CQueryAssociations::RegKeyRef
-{
-    HRESULT Initialize(ASSOCF fA, PCWSTR pszSource);
-};
-
 HRESULT OpenShellVerbKey(HKEY hClass, LPCWSTR pszVerb, HKEY *phKey);
 HRESULT OpenClassWithShellExecKey(ASSOCF fA, HKEY hClass, LPCWSTR pszVerb, HKEY *phKey);
 HRESULT GetClassKeyName(ASSOCF fA, PCWSTR pszSource, HKEY hSource, LPWSTR pszClass, UINT cchMax);
@@ -70,3 +65,42 @@ HRESULT GetKeyFromObjectWithQuerySource(T &Obj, HKEY *phKey)
         hr = pOWRKO->GetKey(phKey);
     return hr;
 }
+
+struct CRegKeyRef
+{
+    HKEY hKey = NULL, hKeyClose = NULL;
+
+    CRegKeyRef(HKEY hNewKey = NULL) : hKey(hNewKey), hKeyClose(hNewKey) {}
+
+    ~CRegKeyRef()
+    {
+        Close();
+    }
+
+    void Close()
+    {
+        if (hKeyClose)
+            RegCloseKey(hKeyClose);
+        hKeyClose = NULL;
+    }
+
+    void Attach(HKEY hNewKey)
+    {
+        Close();
+        hKey = hKeyClose = hNewKey;
+    }
+
+    HKEY Detach()
+    {
+        HKEY hRet = hKeyClose;
+        hKey = hKeyClose = NULL;
+        return hRet;
+    }
+
+    operator HKEY() { return hKey; }
+};
+
+struct ClassesRegKey : CRegKeyRef
+{
+    HRESULT Initialize(ASSOCF fA, PCWSTR pszSource);
+};

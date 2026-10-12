@@ -9,46 +9,13 @@
 
 #pragma once
 
+#include "CQueryAssocCommon.h"
+
 class CQueryAssociationsVista :
     public CComCoClass<CQueryAssociationsVista, &CLSID_QueryAssociations>,
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
     public IQueryAssociations
 {
-public:
-    struct RegKeyRef
-    {
-        HKEY hKey = NULL, hKeyClose = NULL;
-
-        RegKeyRef(HKEY hNewKey = NULL) : hKey(hNewKey), hKeyClose(hNewKey) {}
-
-        ~RegKeyRef()
-        {
-            Close();
-        }
-
-        void Close()
-        {
-            if (hKeyClose)
-                RegCloseKey(hKeyClose);
-            hKeyClose = NULL;
-        }
-
-        void Attach(HKEY hNewKey)
-        {
-            Close();
-            hKey = hKeyClose = hNewKey;
-        }
-
-        HKEY Detach()
-        {
-            HKEY hRet = hKeyClose;
-            hKey = hKeyClose = NULL;
-            return hRet;
-        }
-
-        operator HKEY() { return hKey; }
-    };
-
 private:
     HKEY hkeySource;
     HKEY hkeyProgID;
@@ -64,12 +31,12 @@ private:
     HKEY GetClassHandle() const { return hkeyProgID ? hkeyProgID : hkeySource; }
     CQueryAssociationsVista* TryBaseClass(ASSOCF flags);
 
-    HRESULT OpenShellVerbKey(ASSOCF flags, LPCWSTR pszVerb, LPCWSTR pszSubKey, RegKeyRef &KeyRef);
-    HRESULT OpenShellVerbKey(ASSOCF flags, LPCWSTR pszVerb, RegKeyRef &KeyRef)
+    HRESULT OpenShellVerbKey(ASSOCF flags, LPCWSTR pszVerb, LPCWSTR pszSubKey, CRegKeyRef &KeyRef);
+    HRESULT OpenShellVerbKey(ASSOCF flags, LPCWSTR pszVerb, CRegKeyRef &KeyRef)
     {
         return OpenShellVerbKey(flags, pszVerb, NULL, KeyRef);
     }
-    HRESULT OpenDdeKey(ASSOCF flags, LPCWSTR pszExtra, RegKeyRef &KeyRef)
+    HRESULT OpenDdeKey(ASSOCF flags, LPCWSTR pszExtra, CRegKeyRef &KeyRef)
     {
         return OpenShellVerbKey(flags, pszExtra, L"ddeexec", KeyRef);
     }

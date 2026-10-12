@@ -94,7 +94,7 @@ CQueryAssociationsVista* CQueryAssociationsVista::TryBaseClass(ASSOCF flags)
     return m_pBaseClass;
 }
 
-HRESULT CQueryAssociationsVista::OpenShellVerbKey(ASSOCF flags, LPCWSTR pszVerb, LPCWSTR pszSubKey, RegKeyRef &KeyRef)
+HRESULT CQueryAssociationsVista::OpenShellVerbKey(ASSOCF flags, LPCWSTR pszVerb, LPCWSTR pszSubKey, CRegKeyRef &KeyRef)
 {
     HKEY hClass = GetClassHandle();
     if (!hClass)
@@ -532,7 +532,7 @@ HRESULT STDMETHODCALLTYPE CQueryAssociationsVista::GetData(ASSOCF cfFlags, ASSOC
     enum { HANDLEDFLAGS = ASSOCF_IGNOREBASECLASS };
     HRESULT hr = HRESULT_FROM_WIN32(ERROR_NO_ASSOCIATION);
     HKEY hClass = GetClassHandle();
-    RegKeyRef rkr;
+    CRegKeyRef rkr;
 
     if (cfFlags & ~HANDLEDFLAGS)
         FIXME("Unsupported flags: %x\n", cfFlags & ~HANDLEDFLAGS);
