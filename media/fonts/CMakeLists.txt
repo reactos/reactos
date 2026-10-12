@@ -30,6 +30,11 @@ list(APPEND FONT_FILES
     palab.ttf
     palabi.ttf
     palai.ttf
+    selawk.ttf
+    selawkb.ttf
+    selawkl.ttf
+    selawksb.ttf
+    selawksl.ttf
     SourceSansPro-Regular.ttf
     SourceSansPro-Bold.ttf
     SourceSansPro-BoldIt.ttf
