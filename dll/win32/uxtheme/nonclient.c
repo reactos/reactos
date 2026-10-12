@@ -351,10 +351,42 @@ ThemeGetButtonState(DWORD htCurrect, DWORD htHot, DWORD htDown, BOOL Active)
     return (Active ? BUTTON_NORMAL : BUTTON_INACTIVE);
 }
 
+/* Repaint the caption background behind the caption buttons. The button images
+ * can be semi-transparent (hover shade), so drawing one again on top of itself
+ * would make it darker at every mouse move. */
+static void
+ThemeEraseCaptionButtons(PDRAW_CONTEXT pcontext)
+{
+    RECT rcCaption;
+    INT iPart, iState, i;
+    PWND_DATA pwndData = ThemeGetWndData(pcontext->hWnd);
+    if (!pwndData)
+        return;
+
+    if (pcontext->wi.dwStyle & WS_MINIMIZE)
+        iPart = WP_MINCAPTION;
+    else if (pcontext->wi.dwExStyle & WS_EX_TOOLWINDOW)
+        iPart = WP_SMALLCAPTION;
+    else if (pcontext->wi.dwStyle & WS_MAXIMIZE)
+        iPart = WP_MAXCAPTION;
+    else
+        iPart = WP_CAPTION;
+    iState = pcontext->Active ? FS_ACTIVE : FS_INACTIVE;
+
+    SetRect(&rcCaption, 0, 0, pcontext->wi.rcWindow.right - pcontext->wi.rcWindow.left, pcontext->CaptionHeight);
+    for (i = CLOSEBUTTON; i <= HELPBUTTON; i++)
+    {
+        if (!IsRectEmpty(&pwndData->rcCaptionButtons[i]))
+            DrawThemeBackground(pcontext->theme, pcontext->hDC, iPart, iState, &rcCaption, &pwndData->rcCaptionButtons[i]);
+    }
+}
+
 /* Used only from mouse event handlers */
 static void
 ThemeDrawCaptionButtons(PDRAW_CONTEXT pcontext, DWORD htHot, DWORD htDown)
 {
+    ThemeEraseCaptionButtons(pcontext);
+
     /* Draw the buttons */
     ThemeDrawCaptionButton(pcontext, NULL, CLOSEBUTTON,
                            ThemeGetButtonState(HTCLOSE, htHot, htDown, pcontext->Active));

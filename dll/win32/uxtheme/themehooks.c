@@ -166,6 +166,34 @@ static BOOL CALLBACK ThemeCleanupWndContext(HWND hWnd, LPARAM msg)
     return TRUE;
 }
 
+/*
+ * Themes can give windows shaped (e.g. rounded) bottom corners: when the bottom
+ * frame image has transparent pixels, its shape becomes the window's bottom
+ * edge. The image then also draws the outline along that shape.
+ */
+static HRGN GetBottomFrameRegion(HTHEME hTheme, int iCaptionPart, int cxWindow, int cyWindow, int cyBorder)
+{
+    RECT rc;
+    HRGN hrgn = NULL;
+
+    if (iCaptionPart != WP_CAPTION || cyBorder <= 0)
+        return NULL;
+
+    SetRect(&rc, 0, 0, cxWindow, cyBorder);
+    if (FAILED(GetThemeBackgroundRegion(hTheme, 0, WP_FRAMEBOTTOM, FS_ACTIVE, &rc, &hrgn)) || !hrgn)
+        return NULL;
+
+    /* Fully opaque: square corners, nothing to do */
+    if (PtInRegion(hrgn, 0, cyBorder - 1) && PtInRegion(hrgn, cxWindow - 1, cyBorder - 1))
+    {
+        DeleteObject(hrgn);
+        return NULL;
+    }
+
+    OffsetRgn(hrgn, 0, cyWindow - cyBorder);
+    return hrgn;
+}
+
 void SetThemeRegion(HWND hWnd)
 {
     HTHEME hTheme;
@@ -206,6 +234,18 @@ void SetThemeRegion(HWND hWnd)
     rcWindow.bottom -= rcWindow.top;
     rcWindow.top = CaptionHeight;
     rcWindow.left = 0;
+
+    if (rcWindow.bottom > CaptionHeight + (int)wi.cyWindowBorders)
+    {
+        HRGN hrgnBottom = GetBottomFrameRegion(hTheme, iPart, rcWindow.right, rcWindow.bottom, wi.cyWindowBorders);
+        if (hrgnBottom)
+        {
+            CombineRgn(hrgn, hrgn, hrgnBottom, RGN_OR);
+            DeleteObject(hrgnBottom);
+            rcWindow.bottom -= wi.cyWindowBorders;
+        }
+    }
+
     hrgn1 = CreateRectRgnIndirect(&rcWindow);
 
     CombineRgn(hrgn, hrgn, hrgn1, RGN_OR );
@@ -332,7 +372,15 @@ ThemePreWindowProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam, ULONG_PTR 
             PWND_DATA pwndData = ThemeGetWndData(hWnd);
 
             if (GetAncestor(hWnd, GA_PARENT) == GetDesktopWindow())
+            {
                 UXTHEME_LoadTheme(TRUE);
+
+                /* The frame may have been sized with the previous style's metrics
+                 * (e.g. Classic's 18px title bar when going back to Eleven's 30px):
+                 * recompute it with the current ones */
+                SetWindowPos(hWnd, NULL, 0, 0, 0, 0,
+                             SWP_FRAMECHANGED | SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);
+            }
 
             if (pwndData == NULL)
                 return 0;
@@ -407,8 +455,22 @@ HRESULT GetDiaogTextureBrush(HTHEME theme, HWND hwnd, HDC hdc, HBRUSH* result, B
     if (pwndData == NULL)
         return E_FAIL;
 
+    /* Made with a previous theme (e.g. a tab page of a dialog that stayed open
+     * while switching Light -> Dark; such child windows get no WM_THEMECHANGED) */
+    if (pwndData->hTabBackgroundBrush != NULL && pwndData->TabBackgroundGeneration != g_ThemeGeneration)
+    {
+        DeleteObject(pwndData->hTabBackgroundBrush);
+        pwndData->hTabBackgroundBrush = NULL;
+        if (pwndData->hTabBackgroundBmp != NULL)
+        {
+            DeleteObject(pwndData->hTabBackgroundBmp);
+            pwndData->hTabBackgroundBmp = NULL;
+        }
+    }
+
     if (pwndData->hTabBackgroundBrush == NULL)
     {
+        pwndData->TabBackgroundGeneration = g_ThemeGeneration;
         HBITMAP hbmp;
         RECT dummy, bmpRect;
         BOOL hasImageAlpha;
@@ -500,11 +562,27 @@ ThemeDlgPostWindowProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam, ULONG_
                 break;
 
             hTheme = GetWindowTheme(hWnd);
+            {
+                /* A handle opened under a previous theme (dialog kept open while
+                 * switching Light <-> Dark) still gives the old images: reopen */
+                PWND_DATA pDlgData = ThemeGetWndData(hWnd);
+                if (pDlgData && pDlgData->DialogThemeGeneration != g_ThemeGeneration)
+                {
+                    pDlgData->DialogThemeGeneration = g_ThemeGeneration;
+                    hTheme = NULL;
+                }
+            }
             if (!hTheme)
                 hTheme = OpenThemeData(hWnd, L"TAB");
 
             if (!hTheme)
                 break;
+
+            /* If the dialog procedure did not handle the message, our brush makes
+             * DefDlgProc skip DefWindowProc, which is what sets the text color:
+             * set it here, or labels stay black on a dark tab page */
+            if (!*phbrush)
+                SetTextColor(hdc, GetSysColor(COLOR_WINDOWTEXT));
 
             GetDiaogTextureBrush(hTheme, hwndTarget, hdc, phbrush, Msg != WM_CTLCOLORDLG);
 

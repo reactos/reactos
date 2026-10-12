@@ -172,6 +172,8 @@ enum SCROLL_HITTEST
 };
 
 /* The window context stores data for the window needed through the life of the window */
+extern LONG g_ThemeGeneration;
+
 typedef struct _WND_DATA
 {
     HTHEME hthemeWindow;
@@ -185,6 +187,8 @@ typedef struct _WND_DATA
     BOOL DirtyThemeRegion;
     HBRUSH hTabBackgroundBrush;
     HBITMAP hTabBackgroundBmp;
+    LONG TabBackgroundGeneration;   /* g_ThemeGeneration the brush was made with */
+    LONG DialogThemeGeneration;     /* ... and the dialog's "TAB" theme handle */
 
     BOOL SCROLL_trackVertical;
     enum SCROLL_HITTEST SCROLL_trackHitTest;

@@ -131,8 +131,13 @@ static DWORD query_reg_path (HKEY hKey, LPCWSTR lpszValue,
   return dwRet;
 }
 
+/* Incremented whenever the active theme (style, color scheme or size) changes:
+ * lets per-window caches made from the old theme notice they are stale */
+LONG g_ThemeGeneration = 0;
+
 static HRESULT UXTHEME_SetActiveTheme(PTHEME_FILE tf)
 {
+    InterlockedIncrement(&g_ThemeGeneration);
     if(g_ActiveThemeFile)
         MSSTYLES_CloseThemeFile(g_ActiveThemeFile);
     g_ActiveThemeFile = tf;
