@@ -1373,10 +1373,25 @@ static void test_open_device_interface_key(void)
     device.cbSize = sizeof(device);
     ret = SetupDiCreateDeviceInfoA(set, "ROOT\\LEGACY_BOGUS\\0000", &guid, NULL, NULL, 0, &device);
     ok(ret, "Failed to create device, error %#lx.\n", GetLastError());
+#ifdef __REACTOS__
+    if (!ret)
+    {
+        SetupDiDestroyDeviceInfoList(set);
+        return;
+    }
+#endif
 
     iface.cbSize = sizeof(iface);
     ret = SetupDiCreateDeviceInterfaceA(set, &device, &guid, NULL, 0, &iface);
     ok(ret, "Failed to create interface, error %#lx.\n", GetLastError());
+#ifdef __REACTOS__
+    if (!ret)
+    {
+        SetupDiRemoveDevice(set, &device);
+        SetupDiDestroyDeviceInfoList(set);
+        return;
+    }
+#endif
 
     /* Test open before creation */
     key = SetupDiOpenDeviceInterfaceRegKey(set, &iface, 0, KEY_ALL_ACCESS);
