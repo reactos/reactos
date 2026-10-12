@@ -90,6 +90,8 @@ We are always looking for developers! Check [how to contribute](CONTRIBUTING.md)
 
 __Legal notice__: If you have seen proprietary Microsoft Windows source code (including but not limited to the leaked Windows NT 3.5, NT 4, 2000 source code and the Windows Research Kernel), your contribution won't be accepted because of potential copyright violation.
 
+__AI tools__: Write PR descriptions and commit messages yourself, and label any other AI-generated text. See [details](CONTRIBUTING.md#ai-generated-communication).
+
 Try out cloud-based ReactOS development using Gitpod and Docker:
 
 [![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/reactos/reactos)
