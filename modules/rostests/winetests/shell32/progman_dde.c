@@ -401,6 +401,10 @@ static void test_request_groups(DWORD instance, HCONV hconv)
 
     list = dde_request(instance, hconv, "Groups");
     ok(list != NULL, "request failed: %u\n", DdeGetLastError(instance));
+#ifdef __REACTOS__
+    if (!list)
+        return;
+#endif
     strcpy(programs, ProgramsDir);
     strcat(programs, "/*");
     hfind = FindFirstFileA(programs, &finddata);
