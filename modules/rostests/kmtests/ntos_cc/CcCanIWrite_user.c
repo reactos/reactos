@@ -7,7 +7,10 @@
 
 #include <kmt_test.h>
 
-START_TEST(CcCanIWrite)
+static
+VOID
+WriteTestFile(
+    _In_ PUNICODE_STRING FileName)
 {
     HANDLE Handle;
     NTSTATUS Status;
@@ -15,15 +18,8 @@ START_TEST(CcCanIWrite)
     IO_STATUS_BLOCK IoStatusBlock;
     OBJECT_ATTRIBUTES ObjectAttributes;
     CHAR Buffer = 0;
-    UNICODE_STRING TestFile = RTL_CONSTANT_STRING(L"\\Device\\Kmtest-CcCanIWrite\\TestFile");
-    DWORD Error;
 
-    Error = KmtLoadAndOpenDriver(L"CcCanIWrite", FALSE);
-    ok_eq_int(Error, ERROR_SUCCESS);
-    if (Error)
-        return;
-
-    InitializeObjectAttributes(&ObjectAttributes, &TestFile, OBJ_CASE_INSENSITIVE, NULL, NULL);
+    InitializeObjectAttributes(&ObjectAttributes, FileName, OBJ_CASE_INSENSITIVE, NULL, NULL);
     Status = NtOpenFile(&Handle, FILE_ALL_ACCESS, &ObjectAttributes, &IoStatusBlock, 0, FILE_NON_DIRECTORY_FILE | FILE_SYNCHRONOUS_IO_NONALERT);
     ok_eq_hex(Status, STATUS_SUCCESS);
 
@@ -35,6 +31,21 @@ START_TEST(CcCanIWrite)
 
         NtClose(Handle);
     }
+}
+
+START_TEST(CcCanIWrite)
+{
+    UNICODE_STRING TestFile = RTL_CONSTANT_STRING(L"\\Device\\Kmtest-CcCanIWrite\\TestFile");
+    UNICODE_STRING StressFile = RTL_CONSTANT_STRING(L"\\Device\\Kmtest-CcCanIWrite\\StressFile");
+    DWORD Error;
+
+    Error = KmtLoadAndOpenDriver(L"CcCanIWrite", FALSE);
+    ok_eq_int(Error, ERROR_SUCCESS);
+    if (Error)
+        return;
+
+    WriteTestFile(&TestFile);
+    WriteTestFile(&StressFile);
 
     KmtCloseDriver();
     KmtUnloadDriver();
