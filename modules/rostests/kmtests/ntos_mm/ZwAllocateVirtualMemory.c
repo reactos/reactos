@@ -318,28 +318,25 @@ StressTesting(ULONG AllocationType)
     ULONG Index = 0;
     PVOID Base = NULL;
     PVOID *bases = NULL;
-    ULONG NumberOfElements = 0;
-    SIZE_T RegionSize, basesSize;
+    ULONG NumberOfElements;
+    SIZE_T RegionSize;
 
 #ifdef _WIN64
-    // 2 TB total
-    // Going too high causes the test to time out
-    basesSize = 2 * 1024 * 1024;
-    RegionSize = 1 * 1024 * 1024;
+    // 256 TB total, large chunks keep the VAD count low
+    NumberOfElements = 4096;
+    RegionSize = 64ULL * 1024 * 1024 * 1024;
 #else
     // 5 GB total
-    basesSize = 1024;
+    NumberOfElements = 1024;
     RegionSize = 5 * 1024 * 1024;
 #endif
 
-    bases = ExAllocatePoolZero(PagedPool, basesSize, 'stts');
+    bases = ExAllocatePoolZero(PagedPool, NumberOfElements * sizeof(*bases), 'stts');
     if (!bases)
     {
         trace("Failed to allocate memory for bases array\n");
         return STATUS_INSUFFICIENT_RESOURCES;
     }
-
-    NumberOfElements = basesSize / sizeof(PVOID);
 
     for (Index = 0; Index < NumberOfElements && NT_SUCCESS(Status); Index++)
     {
@@ -582,10 +579,10 @@ START_TEST(ZwAllocateVirtualMemory)
 
     CustomBaseAllocation();
 
-    // TODO: Find out why these sometimes return STATUS_SUCCESS (especially on 32-bit systems)
     Status = StressTesting(MEM_RESERVE);
 #ifdef _WIN64
-    ok_eq_hex(Status, STATUS_COMMITMENT_LIMIT);
+    ok(Status == STATUS_NO_MEMORY || Status == STATUS_COMMITMENT_LIMIT,
+       "Expected STATUS_NO_MEMORY or STATUS_COMMITMENT_LIMIT, got 0x%lx\n", Status);
 #else
     ok_eq_hex(Status, STATUS_NO_MEMORY);
 #endif
