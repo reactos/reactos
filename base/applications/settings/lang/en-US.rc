@@ -1,0 +1,10 @@
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+
+STRINGTABLE
+BEGIN
+    IDS_APPTITLE        "Settings"
+    IDS_SEARCH_CUE      "Find a setting"
+    IDS_RESULTS_FOR     "Search results for “%s”"
+    IDS_NO_RESULTS      "No results for “%s”"
+    IDS_NO_RESULTS_HINT "Try other words, like “wallpaper”, “mouse” or “uninstall”."
+END
