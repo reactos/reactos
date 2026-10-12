@@ -2715,19 +2715,24 @@ IntGetFontRenderMode(LOGFONTW *logfont)
     switch (logfont->lfQuality)
     {
     case ANTIALIASED_QUALITY:
-        break;
+        return FT_RENDER_MODE_NORMAL;
     case NONANTIALIASED_QUALITY:
         return FT_RENDER_MODE_MONO;
     case DRAFT_QUALITY:
         return FT_RENDER_MODE_LIGHT;
     case CLEARTYPE_QUALITY:
-        if (!gspv.bFontSmoothing)
-            break;
-        if (!gspv.uiFontSmoothingType)
-            break;
+    case CLEARTYPE_NATURAL_QUALITY:
+        /* Explicitly requested: ClearType even if the system uses grayscale */
         return FT_RENDER_MODE_LCD;
+    default:
+        /* DEFAULT_QUALITY / PROOF_QUALITY follow the system setting, like on
+         * Windows: ClearType when "smooth edges of screen fonts" is set to
+         * ClearType, grayscale otherwise (ReactOS never falls back to jagged
+         * monochrome text here, as it never did). */
+        if (gspv.bFontSmoothing && gspv.uiFontSmoothingType == FE_FONTSMOOTHINGCLEARTYPE)
+            return FT_RENDER_MODE_LCD;
+        return FT_RENDER_MODE_NORMAL;
     }
-    return FT_RENDER_MODE_NORMAL;
 }
 
 NTSTATUS FASTCALL
@@ -3862,8 +3867,15 @@ IntGetBitmapGlyphWithCache(
         return NULL;
     }
 
-    FT_Bitmap_Done(GlyphSlot->library, &BitmapGlyph->bitmap);
-    BitmapGlyph->bitmap = AlignedBitmap;
+    {
+        /* The conversion keeps LCD rows as one byte per subpixel (3 per pixel) but
+         * labels them gray: put the real mode back so ExtTextOut can blend per channel */
+        unsigned char PixelMode = BitmapGlyph->bitmap.pixel_mode;
+        FT_Bitmap_Done(GlyphSlot->library, &BitmapGlyph->bitmap);
+        BitmapGlyph->bitmap = AlignedBitmap;
+        if (PixelMode == FT_PIXEL_MODE_LCD)
+            BitmapGlyph->bitmap.pixel_mode = FT_PIXEL_MODE_LCD;
+    }
 
     NewEntry->BitmapGlyph = BitmapGlyph;
     NewEntry->dwHash = Cache->dwHash;
@@ -6702,7 +6714,7 @@ IntExtTextOutW(
     PMATRIX pmxWorldToDevice;
     FT_Vector delta, vecAscent64, vecDescent64, vec;
     LOGFONTW *plf;
-    BOOL use_kerning, bResult, DoBreak;
+    BOOL use_kerning, bResult, DoBreak, bLcdGlyph;
     FONT_CACHE_ENTRY Cache;
     FT_Matrix mat;
     BOOL bNoTransform;
@@ -6971,7 +6983,9 @@ IntExtTextOutW(
         DPRINT("X64, Y64: %I64d, %I64d\n", X64, Y64);
         DPRINT("Advance: %d, %d\n", realglyph->root.advance.x, realglyph->root.advance.y);
 
-        glyphSize.cx = realglyph->bitmap.width;
+        /* ClearType glyphs have 3 bytes (R, G, B coverage) per pixel */
+        bLcdGlyph = (realglyph->bitmap.pixel_mode == FT_PIXEL_MODE_LCD);
+        glyphSize.cx = bLcdGlyph ? realglyph->bitmap.width / 3 : realglyph->bitmap.width;
         glyphSize.cy = realglyph->bitmap.rows;
 
         /* Do chars > space & not DEL & not nbsp have a glyphSize.cx of zero? */
@@ -6994,7 +7008,7 @@ IntExtTextOutW(
             realglyph->left = 0;
         }
 
-        MaskRect.right = realglyph->bitmap.width;
+        MaskRect.right = bLcdGlyph ? realglyph->bitmap.width / 3 : realglyph->bitmap.width;
         MaskRect.bottom = realglyph->bitmap.rows;
 
         DestRect.left   = ((X64 + 32) >> 6) + realglyph->left;
@@ -7011,7 +7025,7 @@ IntExtTextOutW(
              * limit the work of the transbitblt.
              */
             hbmGlyph = EngCreateBitmap(glyphSize, realglyph->bitmap.pitch,
-                                       BMF_8BPP, BMF_TOPDOWN,
+                                       bLcdGlyph ? BMF_24BPP : BMF_8BPP, BMF_TOPDOWN,
                                        realglyph->bitmap.buffer);
             if (!hbmGlyph)
             {

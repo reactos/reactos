@@ -817,6 +817,76 @@ IntEngBitBlt(
 
 /**** REACTOS FONT RENDERING CODE *********************************************/
 
+/*
+ * ClearType: the mask has 3 bytes per pixel, the coverage of the red, green and
+ * blue subpixels (left to right on an RGB panel). Each color channel of the
+ * text is blended with the background using its own coverage.
+ */
+static BOOLEAN
+AlphaBltMaskLcd(SURFOBJ* psoDest,
+                SURFOBJ* psoMask,
+                XLATEOBJ* pxloRGB2Dest,
+                XLATEOBJ* pxloBrush,
+                RECTL* prclDest,
+                POINTL* pptlMask,
+                BRUSHOBJ* pbo)
+{
+    LONG i, j, dx, dy;
+    int r, g, b;
+    ULONG Background, BrushColor, NewColor;
+    BYTE *tMask, *lMask;
+    BOOL bBGR = (gspv.uiFontSmoothingOrientation == FE_FONTSMOOTHINGORIENTATIONBGR);
+    /* Palette or monochrome screens cannot show subpixel colors: use the average */
+    BOOL bGray = (BitsPerFormat(psoDest->iBitmapFormat) <= 8);
+
+    dx = prclDest->right  - prclDest->left;
+    dy = prclDest->bottom - prclDest->top;
+
+    BrushColor = XLATEOBJ_iXlate(pxloBrush, pbo ? pbo->iSolidColor : 0);
+    r = (int)GetRValue(BrushColor);
+    g = (int)GetGValue(BrushColor);
+    b = (int)GetBValue(BrushColor);
+
+    tMask = (PBYTE)psoMask->pvScan0 + (pptlMask->y * psoMask->lDelta) + pptlMask->x * 3;
+    for (j = 0; j < dy; j++)
+    {
+        lMask = tMask;
+        for (i = 0; i < dx; i++, lMask += 3)
+        {
+            int ar = lMask[0], ag = lMask[1], ab = lMask[2];
+
+            if (bBGR)
+            {
+                ar = lMask[2];
+                ab = lMask[0];
+            }
+            if (bGray)
+                ar = ag = ab = (ar + ag + ab) / 3;
+
+            if ((ar | ag | ab) == 0)
+                continue;
+
+            if ((ar & ag & ab) == 0xff)
+            {
+                DibFunctionsForBitmapFormat[psoDest->iBitmapFormat].DIB_PutPixel(
+                    psoDest, prclDest->left + i, prclDest->top + j, pbo ? pbo->iSolidColor : 0);
+                continue;
+            }
+
+            Background = DIB_GetSource(psoDest, prclDest->left + i, prclDest->top + j, pxloBrush);
+            NewColor =
+                RGB((ar * (r - GetRValue(Background)) + 127) / 255 + GetRValue(Background),
+                    (ag * (g - GetGValue(Background)) + 127) / 255 + GetGValue(Background),
+                    (ab * (b - GetBValue(Background)) + 127) / 255 + GetBValue(Background));
+
+            DibFunctionsForBitmapFormat[psoDest->iBitmapFormat].DIB_PutPixel(
+                psoDest, prclDest->left + i, prclDest->top + j, XLATEOBJ_iXlate(pxloRGB2Dest, NewColor));
+        }
+        tMask += psoMask->lDelta;
+    }
+    return TRUE;
+}
+
 /* renders the alpha mask bitmap */
 static BOOLEAN APIENTRY
 AlphaBltMask(SURFOBJ* psoDest,
@@ -837,6 +907,9 @@ AlphaBltMask(SURFOBJ* psoDest,
 
     ASSERT(psoSource == NULL);
     ASSERT(pptlSource == NULL);
+
+    if (psoMask && psoMask->iBitmapFormat == BMF_24BPP)
+        return AlphaBltMaskLcd(psoDest, psoMask, pxloRGB2Dest, pxloBrush, prclDest, pptlMask, pbo);
 
     dx = prclDest->right  - prclDest->left;
     dy = prclDest->bottom - prclDest->top;
@@ -1007,7 +1080,7 @@ EngMaskBitBlt(SURFOBJ *psoDest,
     switch (clippingType)
     {
         case DC_TRIVIAL:
-            if (psoMask->iBitmapFormat == BMF_8BPP)
+            if (psoMask->iBitmapFormat == BMF_8BPP || psoMask->iBitmapFormat == BMF_24BPP)
                 Ret = AlphaBltMask(psoOutput, NULL , psoInput, DestColorTranslation, SourceColorTranslation,
                                    &OutputRect, NULL, &InputPoint, pbo, &AdjustedBrushOrigin);
             else
@@ -1025,7 +1098,7 @@ EngMaskBitBlt(SURFOBJ *psoDest,
             {
                 Pt.x = InputPoint.x + CombinedRect.left - OutputRect.left;
                 Pt.y = InputPoint.y + CombinedRect.top - OutputRect.top;
-                if (psoMask->iBitmapFormat == BMF_8BPP)
+                if (psoMask->iBitmapFormat == BMF_8BPP || psoMask->iBitmapFormat == BMF_24BPP)
                 {
                     Ret = AlphaBltMask(psoOutput, NULL, psoInput, DestColorTranslation, SourceColorTranslation,
                                        &CombinedRect, NULL, &Pt, pbo, &AdjustedBrushOrigin);
@@ -1069,7 +1142,7 @@ EngMaskBitBlt(SURFOBJ *psoDest,
                     {
                         Pt.x = InputPoint.x + CombinedRect.left - OutputRect.left;
                         Pt.y = InputPoint.y + CombinedRect.top - OutputRect.top;
-                        if (psoMask->iBitmapFormat == BMF_8BPP)
+                        if (psoMask->iBitmapFormat == BMF_8BPP || psoMask->iBitmapFormat == BMF_24BPP)
                         {
                             Ret = AlphaBltMask(psoOutput, NULL, psoInput,
                                                DestColorTranslation,
@@ -1137,7 +1210,7 @@ IntEngMaskBlt(
                             ROP4_MASKPAINT);
     }
 
-    ASSERT(psoMask->iBitmapFormat == BMF_8BPP);
+    ASSERT(psoMask->iBitmapFormat == BMF_8BPP || psoMask->iBitmapFormat == BMF_24BPP); /* gray / ClearType */
 
     if (pptlMask)
     {
