@@ -9,6 +9,7 @@
 
 #include "precomp.h"
 #include <commctrl.h>
+#include <comctl32_undoc.h>
 #include <shlwapi_undoc.h>
 #include "evalcmd/elements.h"
 #include <evalcmd.h>
@@ -16,8 +17,6 @@
 #include "CQueryAssociations.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
-
-INT WINAPI DSA_DeleteItem (HDSA hdsa, INT nIndex); // FIXME: Move or delete
 
 // ---------------------------------------------------------------------------
 // External tables / create helpers (from evalcmd/elements)

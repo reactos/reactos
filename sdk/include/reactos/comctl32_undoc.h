@@ -148,6 +148,8 @@ BOOL WINAPI ImageList_SetFlags(HIMAGELIST himl, DWORD flags);
 
 #endif /* NOIMAGEAPIS */
 
+INT WINAPI DSA_DeleteItem(HDSA hdsa, INT nIndex);
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif /* defined(__cplusplus) */
