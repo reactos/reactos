@@ -69,6 +69,9 @@ NTSTATUS
 static PSET_INTERFACE_PROPERTY_ROUTINE pIoSetDeviceInterfacePropertyData;
 static PGET_INTERFACE_PROPERTY_ROUTINE pIoGetDeviceInterfacePropertyData;
 
+/* NT 6.0 and 6.1 keep a raw registry store with no type checks or builtin keys */
+static BOOLEAN LegacyStore;
+
 static
 NTSTATUS
 SetProperty(
@@ -161,8 +164,16 @@ ExpectNoProperty(
 
     Status = GetProperty(Target, Key, Lcid, sizeof(Buffer), Buffer, &Required, &Type);
     ok_eq_hex(Status, STATUS_OBJECT_NAME_NOT_FOUND);
-    ok_eq_ulong(Required, 0UL);
-    ok_eq_hex(Type, DEVPROP_TYPE_EMPTY);
+    if (LegacyStore)
+    {
+        ok_eq_ulong(Required, 0x55555555UL);
+        ok_eq_hex(Type, 0x55555555UL);
+    }
+    else
+    {
+        ok_eq_ulong(Required, 0UL);
+        ok_eq_hex(Type, DEVPROP_TYPE_EMPTY);
+    }
 }
 
 static
@@ -221,6 +232,13 @@ Test_StoreRoundTrip(
 
     Status = SetProperty(Target, &TestKeyString, LOCALE_NEUTRAL, DEVPROP_TYPE_EMPTY, 0, &Number);
     ok_eq_hex(Status, STATUS_SUCCESS);
+    if (LegacyStore)
+    {
+        /* Only a NULL buffer deletes, the empty type gets stored as is */
+        ExpectProperty(Target, &TestKeyString, LOCALE_NEUTRAL, DEVPROP_TYPE_EMPTY, NULL, 0);
+        Status = SetProperty(Target, &TestKeyString, LOCALE_NEUTRAL, DEVPROP_TYPE_EMPTY, 0, NULL);
+        ok_eq_hex(Status, STATUS_SUCCESS);
+    }
     ExpectNoProperty(Target, &TestKeyString, LOCALE_NEUTRAL);
 
     Status = SetProperty(Target, &TestKeyList, LOCALE_NEUTRAL, DEVPROP_TYPE_EMPTY, 0, NULL);
@@ -236,6 +254,58 @@ Test_StoreRoundTrip(
 
 static
 VOID
+Test_LegacyLocales(
+    _In_ PPROPERTY_TARGET Target)
+{
+    static const WCHAR English[] = L"Hello";
+    static const WCHAR German[] = L"Hallo";
+    static const WCHAR Neutral[] = L"Neutral";
+    static const WCHAR Indirect[] = L"@machine.inf,%DeviceDesc%;Device";
+    NTSTATUS Status;
+
+    trace("Legacy locales on %s\n", Target->Description);
+
+    Status = SetProperty(Target, &TestKeyLocalized, LCID_EN_US, DEVPROP_TYPE_STRING, sizeof(English), (PVOID)English);
+    ok_eq_hex(Status, STATUS_SUCCESS);
+    ExpectProperty(Target, &TestKeyLocalized, LCID_EN_US, DEVPROP_TYPE_STRING, (PVOID)English, sizeof(English));
+    ExpectNoProperty(Target, &TestKeyLocalized, LOCALE_NEUTRAL);
+    ExpectNoProperty(Target, &TestKeyLocalized, LCID_DE_DE);
+
+    Status = SetProperty(Target, &TestKeyLocalized, LCID_DE_DE, DEVPROP_TYPE_STRING, sizeof(German), (PVOID)German);
+    ok_eq_hex(Status, STATUS_SUCCESS);
+    ExpectProperty(Target, &TestKeyLocalized, LCID_EN_US, DEVPROP_TYPE_STRING, (PVOID)English, sizeof(English));
+    ExpectProperty(Target, &TestKeyLocalized, LCID_DE_DE, DEVPROP_TYPE_STRING, (PVOID)German, sizeof(German));
+
+    /* A neutral write replaces every localized value and lookups fall back to it */
+    Status = SetProperty(Target, &TestKeyLocalized, LOCALE_NEUTRAL, DEVPROP_TYPE_STRING, sizeof(Neutral), (PVOID)Neutral);
+    ok_eq_hex(Status, STATUS_SUCCESS);
+    ExpectProperty(Target, &TestKeyLocalized, LCID_EN_US, DEVPROP_TYPE_STRING, (PVOID)Neutral, sizeof(Neutral));
+    ExpectProperty(Target, &TestKeyLocalized, LCID_DE_DE, DEVPROP_TYPE_STRING, (PVOID)Neutral, sizeof(Neutral));
+    ExpectProperty(Target, &TestKeyLocalized, LOCALE_NEUTRAL, DEVPROP_TYPE_STRING, (PVOID)Neutral, sizeof(Neutral));
+
+    Status = SetProperty(Target, &TestKeyLocalized, LCID_EN_US, DEVPROP_TYPE_EMPTY, 0, NULL);
+    ok_eq_hex(Status, STATUS_OBJECT_NAME_NOT_FOUND);
+
+    Status = SetProperty(Target, &TestKeyLocalized, LCID_EN_US, DEVPROP_TYPE_STRING_INDIRECT, sizeof(Indirect), (PVOID)Indirect);
+    ok_eq_hex(Status, STATUS_SUCCESS);
+    ExpectProperty(Target, &TestKeyLocalized, LCID_EN_US, DEVPROP_TYPE_STRING_INDIRECT, (PVOID)Indirect, sizeof(Indirect));
+    ExpectProperty(Target, &TestKeyLocalized, LCID_DE_DE, DEVPROP_TYPE_STRING, (PVOID)Neutral, sizeof(Neutral));
+
+    Status = SetProperty(Target, &TestKeyLocalized, LCID_EN_US, DEVPROP_TYPE_EMPTY, 0, NULL);
+    ok_eq_hex(Status, STATUS_SUCCESS);
+    ExpectProperty(Target, &TestKeyLocalized, LCID_EN_US, DEVPROP_TYPE_STRING, (PVOID)Neutral, sizeof(Neutral));
+
+    Status = SetProperty(Target, &TestKeyLocalized, LCID_EN_US, DEVPROP_TYPE_STRING, sizeof(English), (PVOID)English);
+    ok_eq_hex(Status, STATUS_SUCCESS);
+    Status = SetProperty(Target, &TestKeyLocalized, LOCALE_NEUTRAL, DEVPROP_TYPE_EMPTY, 0, NULL);
+    ok_eq_hex(Status, STATUS_SUCCESS);
+    ExpectNoProperty(Target, &TestKeyLocalized, LCID_EN_US);
+    ExpectNoProperty(Target, &TestKeyLocalized, LCID_DE_DE);
+    ExpectNoProperty(Target, &TestKeyLocalized, LOCALE_NEUTRAL);
+}
+
+static
+VOID
 Test_Locales(
     _In_ PPROPERTY_TARGET Target)
 {
@@ -244,6 +314,12 @@ Test_Locales(
     static const WCHAR Neutral[] = L"Neutral";
     static const WCHAR Indirect[] = L"@machine.inf,%DeviceDesc%;Device";
     NTSTATUS Status;
+
+    if (LegacyStore)
+    {
+        Test_LegacyLocales(Target);
+        return;
+    }
 
     trace("Locales on %s\n", Target->Description);
 
@@ -304,7 +380,7 @@ Test_Validation(
     LARGE_INTEGER NegativeTime = { .QuadPart = -1 };
     ULONG Number = 5;
     ULONG Index = 0, i;
-    NTSTATUS Status;
+    NTSTATUS Expected, Status;
 
     trace("Validation on %s\n", Target->Description);
 
@@ -334,12 +410,15 @@ Test_Validation(
 
     for (i = 0; i < Index; i++)
     {
-        Status = SetProperty(Target, &TestKeyInvalid, LOCALE_NEUTRAL, Cases[i].Type, Cases[i].Size, Cases[i].Data);
-        ok(Status == Cases[i].Expected,
-           "%s case %lu (type 0x%lx, size %lu): got 0x%08lx, expected 0x%08lx\n",
-           Target->Description, i, Cases[i].Type, Cases[i].Size, Status, Cases[i].Expected);
+        /* The legacy store takes any type and size as is */
+        Expected = LegacyStore ? STATUS_SUCCESS : Cases[i].Expected;
 
-        if (NT_SUCCESS(Cases[i].Expected))
+        Status = SetProperty(Target, &TestKeyInvalid, LOCALE_NEUTRAL, Cases[i].Type, Cases[i].Size, Cases[i].Data);
+        ok(Status == Expected,
+           "%s case %lu (type 0x%lx, size %lu): got 0x%08lx, expected 0x%08lx\n",
+           Target->Description, i, Cases[i].Type, Cases[i].Size, Status, Expected);
+
+        if (NT_SUCCESS(Expected))
             ExpectProperty(Target, &TestKeyInvalid, LOCALE_NEUTRAL, Cases[i].Type, Cases[i].Data, Cases[i].Size);
         else
             ExpectNoProperty(Target, &TestKeyInvalid, LOCALE_NEUTRAL);
@@ -698,6 +777,8 @@ START_TEST(IoDeviceProperty)
     PDEVICE_OBJECT Pdo;
     BOOLEAN HaveInterfaceRoutines;
 
+    LegacyStore = !is_reactos() && (GetNTVersion() < _WIN32_WINNT_WIN8);
+
     pIoSetDeviceInterfacePropertyData = KmtGetSystemRoutineAddress(L"IoSetDeviceInterfacePropertyData");
     pIoGetDeviceInterfacePropertyData = KmtGetSystemRoutineAddress(L"IoGetDeviceInterfacePropertyData");
     HaveInterfaceRoutines = (pIoSetDeviceInterfacePropertyData && pIoGetDeviceInterfacePropertyData);
@@ -719,8 +800,11 @@ START_TEST(IoDeviceProperty)
     Test_StoreRoundTrip(&DeviceTarget);
     Test_Locales(&DeviceTarget);
     Test_Validation(&DeviceTarget);
-    Test_DeviceBuiltins(&DeviceTarget);
-    Test_RootDevice(Pdo);
+    if (!skip(!LegacyStore, "No builtin or protected properties before NT 6.2\n"))
+    {
+        Test_DeviceBuiltins(&DeviceTarget);
+        Test_RootDevice(Pdo);
+    }
 
     if (!skip(HaveInterfaceRoutines, "Device interface property routines unavailable\n"))
     {
