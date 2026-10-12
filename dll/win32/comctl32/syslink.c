@@ -1708,8 +1708,15 @@ static LRESULT WINAPI SysLinkWindowProc(HWND hwnd, UINT message,
         infoPtr->HasFocus = FALSE;
         infoPtr->MouseDownID = -1;
         infoPtr->TextColor = comctl32_color.clrWindowText;
+#ifdef __REACTOS__
+        /* Like Windows: links use the hot-tracking (link) color, not the selection
+         * color, which may be a light tint that is unreadable on a light dialog */
+        infoPtr->LinkColor = GetSysColor(COLOR_HOTLIGHT);
+        infoPtr->VisitedColor = GetSysColor(COLOR_HOTLIGHT);
+#else
         infoPtr->LinkColor = comctl32_color.clrHighlight;
         infoPtr->VisitedColor = comctl32_color.clrHighlight;
+#endif
         infoPtr->BreakChar = ' ';
         infoPtr->IgnoreReturn = infoPtr->Style & LWS_IGNORERETURN;
         TRACE("SysLink Ctrl creation, hwnd=%p\n", hwnd);
