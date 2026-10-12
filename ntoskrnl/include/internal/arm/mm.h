@@ -89,6 +89,7 @@
 #define MI_IS_PAGE_DIRTY(x)        TRUE
 #define MI_MAKE_OWNER_PAGE(x)      ((x)->u.Hard.Owner = 1)
 #define MI_MAKE_WRITE_PAGE(x)      ((x)->u.Hard.ReadOnly = 0)
+#define MI_MAKE_READ_ONLY_PAGE(x)  ((x)->u.Hard.ReadOnly = 1)
 
 /* Macros to identify the page fault reason from the error code */
 #define MI_IS_NOT_PRESENT_FAULT(FaultCode) TRUE

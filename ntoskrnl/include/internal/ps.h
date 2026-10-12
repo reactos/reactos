@@ -111,6 +111,13 @@
 #define PSP_JOB_NOT_REALLY_ACTIVE   0x00000001
 #define PSP_JOB_ACCOUNTING_FOLDED   0x00000002
 
+/* Vista keeps these in the low bits of Flags2 */
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+#define PspProcessJobStatus(Process) ((Process)->Flags2)
+#else
+#define PspProcessJobStatus(Process) ((Process)->JobStatus)
+#endif
+
 //
 // Job Flags
 //

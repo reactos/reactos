@@ -549,7 +549,7 @@ EditCustomBootReactOS(
         return;
 
     /* Add the BootType */
-    if (!IniAddSettingValueToSection(SectionId, "BootType", IsSetup ? "ReactOSSetup" : "Windows2003"))
+    if (!IniAddSettingValueToSection(SectionId, "BootType", IsSetup ? "ReactOSSetup" : "WindowsVista"))
         return;
 
     /* Construct the ReactOS ARC system path */

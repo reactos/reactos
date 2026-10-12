@@ -16,7 +16,11 @@
 KAFFINITY KeActiveProcessors = 0;
 
 /* Number of processors */
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+volatile CCHAR KeNumberProcessors = 0;
+#else
 CCHAR KeNumberProcessors = 0;
+#endif
 
 #ifdef CONFIG_SMP
 

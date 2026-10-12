@@ -703,6 +703,11 @@ KDDEBUGGER_DATA64 KdDebuggerDataBlock =
     PtrToUL64(IopTriageDumpDataBlocks),
 
 #if (NTDDI_VERSION >= NTDDI_LONGHORN)
+    0,
+    PtrToUL64(&MmBadPagesDetected),
+    PtrToUL64(&MmZeroedPageSingleBitErrorsDetected),
+#endif
+#if (NTDDI_VERSION >= NTDDI_WIN7)
 #error KdDebuggerDataBlock requires other fields for this NT version!
 #endif
 };

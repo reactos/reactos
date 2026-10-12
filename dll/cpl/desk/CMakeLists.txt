@@ -20,8 +20,7 @@ list(APPEND SOURCE
     monslctl.c
     general.c
     draw.c
-    theme.c
-    muireg.c)
+    theme.c)
 
 list(APPEND PCH_SKIP_SOURCE
     guid.c)

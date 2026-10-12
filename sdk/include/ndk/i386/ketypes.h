@@ -548,7 +548,11 @@ typedef struct _KPRCB
     struct _KTHREAD *NextThread;
     struct _KTHREAD *IdleThread;
     UCHAR Number;
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+    UCHAR NestingLevel;
+#else
     UCHAR Reserved;
+#endif
     USHORT BuildType;
     KAFFINITY SetMember;
     UCHAR CpuType;
@@ -557,19 +561,35 @@ typedef struct _KPRCB
     KPROCESSOR_STATE ProcessorState;
     ULONG KernelReserved[16];
     ULONG HalReserved[16];
-#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+#if (NTDDI_VERSION >= NTDDI_VISTASP1)
+    ULONG CFlushSize;
+    UCHAR CoresPerPhysicalProcessor;
+    UCHAR LogicalProcessorsPerCore;
+    UCHAR PrcbPad0[2];
+    ULONG MHz;
+    UCHAR PrcbPad00[80];
+#elif (NTDDI_VERSION >= NTDDI_LONGHORN)
     ULONG CFlushSize;
     UCHAR PrcbPad0[88];
 #else
     UCHAR PrcbPad0[92];
 #endif
+#if (NTDDI_VERSION >= NTDDI_VISTASP1)
+    /* Sized for 32 timer table locks, only LockQueueMaximumLock entries are used */
+    KSPIN_LOCK_QUEUE LockQueue[LockQueueTimerTableLock + 32];
+#else
     KSPIN_LOCK_QUEUE LockQueue[LockQueueMaximumLock];
+#endif
     struct _KTHREAD *NpxThread;
     ULONG InterruptCount;
     ULONG KernelTime;
     ULONG UserTime;
     ULONG DpcTime;
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+    ULONG DpcTimeCount;
+#else
     ULONG DebugDpcTime;
+#endif
     ULONG InterruptTime;
     ULONG AdjustDpcThreshold;
     ULONG PageColor;
@@ -605,10 +625,12 @@ typedef struct _KPRCB
     ULONG CcCopyReadNoWait;
     ULONG CcCopyReadWait;
     ULONG CcCopyReadNoWaitMiss;
-#if (NTDDI_VERSION < NTDDI_LONGHORN)
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+    volatile LONG MmSpinLockOrdering;
+#else
     ULONG KeAlignmentFixupCount;
-#endif
     ULONG SpareCounter0;
+#endif
 #if (NTDDI_VERSION < NTDDI_LONGHORN)
     ULONG KeDcacheFlushCount;
     ULONG KeExceptionDispatchCount;
@@ -659,8 +681,13 @@ typedef struct _KPRCB
     ULONG SpareCounter1[8];
 #endif
     PP_LOOKASIDE_LIST PPLookasideList[16];
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+    GENERAL_LOOKASIDE_POOL PPNPagedLookasideList[NUMBER_POOL_LOOKASIDE_LISTS];
+    GENERAL_LOOKASIDE_POOL PPPagedLookasideList[NUMBER_POOL_LOOKASIDE_LISTS];
+#else
     PP_LOOKASIDE_LIST PPNPagedLookasideList[NUMBER_POOL_LOOKASIDE_LISTS];
     PP_LOOKASIDE_LIST PPPagedLookasideList[NUMBER_POOL_LOOKASIDE_LISTS];
+#endif
     volatile ULONG PacketBarrier;
     volatile ULONG ReverseStall;
     PVOID IpiFrame;
@@ -709,14 +736,17 @@ typedef struct _KPRCB
     UCHAR ClockPollCycle;
     UCHAR PrcbPad6[2];
     LONG DpcWatchdogPeriod;
-    LONG DpcWatchDogCount;
+    LONG DpcWatchdogCount;
     LONG ThreadWatchdogPeriod;
-    LONG ThreadWatchDogCount;
+    LONG ThreadWatchdogCount;
     ULONG PrcbPad70[2];
 #else
     ULONG PrcbPad7[8];
 #endif
     LIST_ENTRY WaitListHead;
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+    ULONG WaitLock;
+#endif
     ULONG ReadySummary;
     ULONG QueueIndex;
 #if (NTDDI_VERSION >= NTDDI_LONGHORN)
@@ -756,28 +786,48 @@ typedef struct _KPRCB
 #endif
     CHAR VendorString[13];
     UCHAR InitialApicId;
+#if (NTDDI_VERSION >= NTDDI_VISTASP1)
+    UCHAR LogicalProcessorsPerPhysicalProcessor;
+    UCHAR PrcbPad10[5];
+#else
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+    UCHAR CoresPerPhysicalProcessor;
+#endif
     UCHAR LogicalProcessorsPerPhysicalProcessor;
     ULONG MHz;
+#endif
     ULONG FeatureBits;
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+    ULONG PrcbPad11;
+#endif
     LARGE_INTEGER UpdateSignature;
     volatile LARGE_INTEGER IsrTime;
     LARGE_INTEGER SpareField1;
     FX_SAVE_AREA NpxSaveArea;
     PROCESSOR_POWER_STATE PowerState;
 #if (NTDDI_VERSION >= NTDDI_LONGHORN)
-    KDPC DpcWatchdogDoc;
+    KDPC DpcWatchdogDpc;
     KTIMER DpcWatchdogTimer;
     PVOID WheaInfo;
     PVOID EtwSupport;
     SLIST_HEADER InterruptObjectPool;
-    LARGE_INTEGER HyperCallPagePhysical;
-    LARGE_INTEGER HyperCallPageVirtual;
+#if (NTDDI_VERSION >= NTDDI_VISTASP1)
+    SLIST_HEADER HypercallPageList;
+    PVOID HypercallPageVirtual;
+    PVOID VirtualApicAssist;
+    PULONG64 StatisticsPage;
+#else
+    LARGE_INTEGER HypercallPagePhysical;
+    PVOID HypercallPageVirtual;
+#endif
     PVOID RateControl;
     CACHE_DESCRIPTOR Cache[5];
     ULONG CacheCount;
     ULONG CacheProcessorMask[5];
+#if (NTDDI_VERSION < NTDDI_VISTASP1)
     UCHAR LogicalProcessorsPerCore;
     UCHAR PrcbPad8[3];
+#endif
     ULONG PackageProcessorSet;
     ULONG CoreProcessorSet;
 #endif
@@ -785,6 +835,11 @@ typedef struct _KPRCB
 #if (NTDDI_VERSION < NTDDI_LONGHORN)
     ULONGLONG StartCycles;
     ULONGLONG CycleTime;
+#else
+    PPROCESSOR_IDLE_FUNCTION IdleFunction;
+    ULONG Idle0KernelTimeLimit;
+    UCHAR CurrentThrottle;
+    UCHAR CurrentThrottleIndex;
 #endif
 #if  (NTDDI_VERSION < NTDDI_WIN10)
     // On Win 10+ the FeatureBits field is extended to 64 bits

@@ -96,7 +96,7 @@ KsecGetKeyData (
         ProcessData.Process = CurrentProcess;
         ProcessData.ProcessId = CurrentProcess->UniqueProcessId;
         ProcessData.CreateTime = PsGetProcessCreateTimeQuadPart(CurrentProcess);
-        ProcessData.DirectoryTableBase = CurrentProcess->Pcb.DirectoryTableBase[0];
+        ProcessData.DirectoryTableBase = CurrentProcess->Pcb.DirectoryTableBase;
         MD5Update(&Md5Contexts[0], (PVOID)&ProcessData, sizeof(ProcessData));
         MD5Update(&Md5Contexts[1], (PVOID)&ProcessData, sizeof(ProcessData));
     }

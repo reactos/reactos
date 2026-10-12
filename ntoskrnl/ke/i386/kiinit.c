@@ -555,8 +555,10 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
     InitThread->WaitIrql = DISPATCH_LEVEL;
     InitProcess->ActiveProcessors |= 1 << Number;
 
+#if (NTDDI_VERSION < NTDDI_LONGHORN)
     /* HACK for MmUpdatePageDir */
     ((PETHREAD)InitThread)->ThreadsProcess = (PEPROCESS)InitProcess;
+#endif
 
     /* Set basic CPU Features that user mode can read */
     SharedUserData->ProcessorFeatures[PF_FLOATING_POINT_PRECISION_ERRATA] = FALSE;

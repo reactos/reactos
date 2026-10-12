@@ -48,7 +48,7 @@ KiSwapProcess(IN PKPROCESS NewProcess,
     }
 
     /* Update CR3 */
-    __writecr3(NewProcess->DirectoryTableBase[0]);
+    __writecr3(KiProcessDirectoryTableBase(NewProcess));
 
     /* Clear GS */
     Ke386SetGs(0);

@@ -522,7 +522,7 @@ static NTSTATUS query_dir_item(fcb* fcb, ccb* ccb, void* buf, LONG* len, PIRP Ir
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wswitch"
 #endif
-#if (NTDDI_VERSION >= NTDDI_VISTA)
+#if (NTDDI_VERSION >= NTDDI_VISTA) && !defined(__REACTOS__)
         case FileIdExtdDirectoryInformation:
         {
             FILE_ID_EXTD_DIR_INFORMATION* fiedi = buf;

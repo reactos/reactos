@@ -161,10 +161,10 @@ ExpRaiseHardError(IN NTSTATUS ErrorStatus,
         (ErrorStatus & HARDERROR_OVERRIDE_ERRORMODE))
     {
         /* Check if we have an exception port */
-        if (Process->ExceptionPort)
+        if (PspGetProcessExceptionPort(Process))
         {
             /* Use the port */
-            PortHandle = Process->ExceptionPort;
+            PortHandle = PspGetProcessExceptionPort(Process);
         }
         else
         {

@@ -168,6 +168,52 @@ extern VOID __cdecl KiInterruptTemplate(VOID);
 /* One of the Reserved Wait Blocks, this one is for the Thread's Timer */
 #define TIMER_WAIT_BLOCK 0x3L
 
+/* Tick based quantum and IOPL live in the ReactOS part of ETHREAD on Vista */
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+#define KiThreadQuantum(Thread) (((PETHREAD)(Thread))->Quantum)
+#define KiThreadIopl(Thread) (((PETHREAD)(Thread))->Iopl)
+#else
+#define KiThreadQuantum(Thread) ((Thread)->Quantum)
+#define KiThreadIopl(Thread) ((Thread)->Iopl)
+#endif
+
+/* Vista keeps a single directory table base, ReactOS keeps its hyperspace page table in EPROCESS */
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+#define KiProcessDirectoryTableBase(Process) ((Process)->DirectoryTableBase)
+#define KiProcessHyperSpacePageTable(Process) (CONTAINING_RECORD((Process), EPROCESS, Pcb)->HyperSpacePageTable)
+#else
+#define KiProcessDirectoryTableBase(Process) ((Process)->DirectoryTableBase[0])
+#define KiProcessHyperSpacePageTable(Process) ((Process)->DirectoryTableBase[1])
+#endif
+
+/* KTHREAD only gained StateSaveArea in Win8, Vista keeps it in the ReactOS part of ETHREAD */
+#if defined(_M_AMD64) && (NTDDI_VERSION >= NTDDI_LONGHORN) && (NTDDI_VERSION < NTDDI_WIN8)
+#define KiThreadStateSaveArea(Thread) (((PETHREAD)(Thread))->StateSaveArea)
+#else
+#define KiThreadStateSaveArea(Thread) ((Thread)->StateSaveArea)
+#endif
+
+/* The 64 bit KTHREAD has no service table on Vista, ReactOS keeps it in ETHREAD */
+#if defined(_WIN64) && (NTDDI_VERSION >= NTDDI_LONGHORN)
+#define KiThreadServiceTable(Thread) (((PETHREAD)(Thread))->ServiceTable)
+#else
+#define KiThreadServiceTable(Thread) ((Thread)->ServiceTable)
+#endif
+
+/* The ReactOS idle function lives in the ReactOS part of the PRCB on Vista */
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+#define KiPrcbIdleFunction(Prcb) ((Prcb)->IdleFunction)
+#else
+#define KiPrcbIdleFunction(Prcb) ((Prcb)->PowerState.IdleFunction)
+#endif
+
+/* The DPC watchdog tick count was renamed in Vista */
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+#define KiPrcbDpcTimeCount(Prcb) ((Prcb)->DpcTimeCount)
+#else
+#define KiPrcbDpcTimeCount(Prcb) ((Prcb)->DebugDpcTime)
+#endif
+
 /* INTERNAL KERNEL FUNCTIONS ************************************************/
 
 /* Finds a new thread to run */

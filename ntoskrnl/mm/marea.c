@@ -265,7 +265,7 @@ MmFreeMemoryArea(
     PVOID EndAddress;
 
     /* Make sure we own the address space lock! */
-    ASSERT(CONTAINING_RECORD(AddressSpace, EPROCESS, Vm)->AddressCreationLock.Owner == KeGetCurrentThread());
+    ASSERT(MiIsProcessAddressSpaceLockOwner(CONTAINING_RECORD(AddressSpace, EPROCESS, Vm)));
 
     /* Check magic */
     ASSERT(MemoryArea->Magic == 'erAM');
@@ -502,7 +502,7 @@ MiRosCleanupMemoryArea(
        Make sure things are as expected... */
     ASSERT(Process == PsGetCurrentProcess());
     ASSERT(Process->VmDeleted == TRUE);
-    ASSERT(((PsGetCurrentThread()->ThreadsProcess == Process) &&
+    ASSERT(((PspGetThreadProcess(PsGetCurrentThread()) == Process) &&
             (Process->ActiveThreads == 1)) ||
            (Process->ActiveThreads == 0));
 

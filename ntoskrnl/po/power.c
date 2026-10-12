@@ -511,10 +511,17 @@ PoInitializePrcb(IN PKPRCB Prcb)
 {
     /* Initialize the Power State */
     RtlZeroMemory(&Prcb->PowerState, sizeof(Prcb->PowerState));
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+    Prcb->Idle0KernelTimeLimit = 0xFFFFFFFF;
+    Prcb->CurrentThrottle = 100;
+    Prcb->CurrentThrottleIndex = 0;
+    Prcb->IdleFunction = PopIdle0;
+#else
     Prcb->PowerState.Idle0KernelTimeLimit = 0xFFFFFFFF;
     Prcb->PowerState.CurrentThrottle = 100;
     Prcb->PowerState.CurrentThrottleIndex = 0;
     Prcb->PowerState.IdleFunction = PopIdle0;
+#endif
 
     /* Initialize the Perf DPC and Timer */
     KeInitializeDpc(&Prcb->PowerState.PerfDpc, PopPerfIdleDpc, Prcb);

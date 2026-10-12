@@ -38,6 +38,10 @@ ULONG MmSystemPageColor;
 ULONG MmTransitionSharedPages;
 ULONG MmTotalPagesForPagingFile;
 
+/* Reported to the debugger, ReactOS does not detect bad pages yet */
+ULONG MmBadPagesDetected;
+ULONG MmZeroedPageSingleBitErrorsDetected;
+
 MMPFNLIST MmZeroedPageListHead = {0, ZeroedPageList, LIST_HEAD, LIST_HEAD};
 MMPFNLIST MmFreePageListHead = {0, FreePageList, LIST_HEAD, LIST_HEAD};
 MMPFNLIST MmStandbyPageListHead = {0, StandbyPageList, LIST_HEAD, LIST_HEAD};

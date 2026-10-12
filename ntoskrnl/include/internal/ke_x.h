@@ -1717,20 +1717,30 @@ ULONG64
 KiReadThreadCycleTime(
     _In_ PKTHREAD Thread)
 {
-    /* Hack until we switched to NTDDI_VISTA, where CycleTime is in KTHREAD */
-    PETHREAD EThread = (PETHREAD)Thread;
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+    volatile ULONG64 *CycleTime = &Thread->CycleTime;
+#ifndef _WIN64
+    volatile ULONG *CycleTimeHigh = &Thread->HighCycleTime;
+#endif
+#else
+    /* Before Vista the cycle time lives in the ReactOS part of ETHREAD */
+    volatile ULONG64 *CycleTime = &((PETHREAD)Thread)->CycleTime;
+#ifndef _WIN64
+    volatile ULONG *CycleTimeHigh = &((PETHREAD)Thread)->CycleTimeHigh;
+#endif
+#endif
 
 #ifdef _WIN64
-    return EThread->CycleTime;
+    return *CycleTime;
 #else
     /* Read in a loop until we get a match */
     ULARGE_INTEGER CycleTimeAsULI;
     for (;;)
     {
-        volatile ULARGE_INTEGER* CycleTimePtr = (volatile ULARGE_INTEGER*)&EThread->CycleTime;
+        volatile ULARGE_INTEGER* CycleTimePtr = (volatile ULARGE_INTEGER*)CycleTime;
         CycleTimeAsULI.HighPart = CycleTimePtr->HighPart;
         CycleTimeAsULI.LowPart = CycleTimePtr->LowPart;
-        if (CycleTimeAsULI.HighPart == EThread->CycleTimeHigh)
+        if (CycleTimeAsULI.HighPart == *CycleTimeHigh)
             break;
         YieldProcessor();
     }
@@ -1745,19 +1755,54 @@ KiWriteThreadCycleTime(
     _Inout_ PKTHREAD Thread,
     _In_ ULONG64 NewCycleTime)
 {
-    /* Hack until we switched to NTDDI_VISTA, where CycleTime is in KTHREAD */
-    PETHREAD EThread = (PETHREAD)Thread;
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+    volatile ULONG64 *CycleTime = &Thread->CycleTime;
+#ifndef _WIN64
+    volatile ULONG *CycleTimeHigh = &Thread->HighCycleTime;
+#endif
+#else
+    /* Before Vista the cycle time lives in the ReactOS part of ETHREAD */
+    volatile ULONG64 *CycleTime = &((PETHREAD)Thread)->CycleTime;
+#ifndef _WIN64
+    volatile ULONG *CycleTimeHigh = &((PETHREAD)Thread)->CycleTimeHigh;
+#endif
+#endif
 
 #ifdef _WIN64
-    EThread->CycleTime = NewCycleTime;
+    *CycleTime = NewCycleTime;
 #else
     /* On 32 bit systems we need to use the same trick as for writing a KSYSTEM_TIME */
     ULARGE_INTEGER NewCycleTimeAsULI;
     NewCycleTimeAsULI.QuadPart = NewCycleTime;
-    volatile ULARGE_INTEGER* CycleTimePtr = (volatile ULARGE_INTEGER*)&EThread->CycleTime;
-    EThread->CycleTimeHigh = NewCycleTimeAsULI.HighPart;
+    volatile ULARGE_INTEGER* CycleTimePtr = (volatile ULARGE_INTEGER*)CycleTime;
+    *CycleTimeHigh = NewCycleTimeAsULI.HighPart;
     CycleTimePtr->LowPart = NewCycleTimeAsULI.LowPart;
     CycleTimePtr->HighPart = NewCycleTimeAsULI.HighPart;
+#endif
+}
+
+FORCEINLINE
+ULONG64
+KiQueryProcessCycleTime(
+    _In_ PKPROCESS Process)
+{
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+    return Process->CycleTime;
+#else
+    return ((PEPROCESS)Process)->CycleTime;
+#endif
+}
+
+FORCEINLINE
+VOID
+KiAddProcessCycleTime(
+    _Inout_ PKPROCESS Process,
+    _In_ ULONG64 ElapsedCycles)
+{
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+    InterlockedAdd64((PLONG64)&Process->CycleTime, ElapsedCycles);
+#else
+    InterlockedAdd64((PLONG64)&((PEPROCESS)Process)->CycleTime, ElapsedCycles);
 #endif
 }
 

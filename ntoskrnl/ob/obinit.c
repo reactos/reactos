@@ -249,9 +249,11 @@ ObInitSystem(VOID)
     /* Initialize the Dos Device Map mutex */
     KeInitializeGuardedMutex(&ObpDeviceMapLock);
 
+#if (NTDDI_VERSION < NTDDI_LONGHORN)
     /* Setup default access for the system process */
     PsGetCurrentProcess()->GrantedAccess = PROCESS_ALL_ACCESS;
     PsGetCurrentThread()->GrantedAccess = THREAD_ALL_ACCESS;
+#endif
 
     /* Setup the Object Reaper */
     ExInitializeWorkItem(&ObpReaperWorkItem, ObpReapObject, NULL);

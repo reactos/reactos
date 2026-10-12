@@ -26,20 +26,18 @@ GENERAL_LOOKASIDE ExpSmallPagedPoolLookasideLists[NUMBER_POOL_LOOKASIDE_LISTS];
 /* PRIVATE FUNCTIONS *********************************************************/
 
 CODE_SEG("INIT")
+static
 VOID
-NTAPI
-ExInitializeSystemLookasideList(IN PGENERAL_LOOKASIDE List,
-                                IN POOL_TYPE Type,
-                                IN ULONG Size,
-                                IN ULONG Tag,
-                                IN USHORT MaximumDepth,
-                                IN PLIST_ENTRY ListHead)
+ExpInitializeLookasideFields(
+    _Out_ PGENERAL_LOOKASIDE List,
+    _In_ POOL_TYPE Type,
+    _In_ ULONG Size,
+    _In_ ULONG Tag,
+    _In_ USHORT MaximumDepth)
 {
-    /* Initialize the list */
     List->Tag = Tag;
     List->Type = Type;
     List->Size = Size;
-    InsertHeadList(ListHead, &List->ListEntry);
     List->MaximumDepth = MaximumDepth;
     List->Depth = 2;
     List->Allocate = ExAllocatePoolWithTag;
@@ -56,10 +54,40 @@ ExInitializeSystemLookasideList(IN PGENERAL_LOOKASIDE List,
 CODE_SEG("INIT")
 VOID
 NTAPI
+ExInitializeSystemLookasideList(IN PGENERAL_LOOKASIDE List,
+                                IN POOL_TYPE Type,
+                                IN ULONG Size,
+                                IN ULONG Tag,
+                                IN USHORT MaximumDepth,
+                                IN PLIST_ENTRY ListHead)
+{
+    /* Initialize the list */
+    ExpInitializeLookasideFields(List, Type, Size, Tag, MaximumDepth);
+    InsertHeadList(ListHead, &List->ListEntry);
+}
+
+CODE_SEG("INIT")
+VOID
+NTAPI
 ExInitPoolLookasidePointers(VOID)
 {
     ULONG i;
     PKPRCB Prcb = KeGetCurrentPrcb();
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+    PGENERAL_LOOKASIDE List;
+
+    /* The per processor lists are embedded in the PRCB and are not linked to the system lists */
+    for (i = 0; i < NUMBER_POOL_LOOKASIDE_LISTS; i++)
+    {
+        List = (PGENERAL_LOOKASIDE)&Prcb->PPNPagedLookasideList[i];
+        ExpInitializeLookasideFields(List, NonPagedPool, (i + 1) * 8, 'looP', 256);
+        InitializeListHead(&List->ListEntry);
+
+        List = (PGENERAL_LOOKASIDE)&Prcb->PPPagedLookasideList[i];
+        ExpInitializeLookasideFields(List, PagedPool, (i + 1) * 8, 'looP', 256);
+        InitializeListHead(&List->ListEntry);
+    }
+#else
     PGENERAL_LOOKASIDE Entry;
 
     /* Loop for all pool lists */
@@ -81,6 +109,7 @@ ExInitPoolLookasidePointers(VOID)
         Prcb->PPPagedLookasideList[i].P = Entry;
         Prcb->PPPagedLookasideList[i].L = Entry;
     }
+#endif
 }
 
 CODE_SEG("INIT")

@@ -343,12 +343,12 @@ VideoPortWriteRegisterBufferUlong(
     WRITE_REGISTER_BUFFER_ULONG(Register, Buffer, Count);
 }
 
+#endif /* _M_AMD64 */
+
 VOID
 NTAPI
 VideoPortQuerySystemTime(
-    OUT PLARGE_INTEGER CurrentTime)
+    _Out_ PLARGE_INTEGER CurrentTime)
 {
     KeQuerySystemTime(CurrentTime);
 }
-
-#endif /* _M_AMD64 */

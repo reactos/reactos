@@ -102,7 +102,10 @@
 #define MI_PAGE_WRITE_THROUGH(x)   ((x)->u.Hard.WriteThrough = 1)
 #define MI_PAGE_WRITE_COMBINED(x)  ((x)->u.Hard.WriteThrough = 0)
 #define MI_IS_PAGE_LARGE(x)        ((x)->u.Hard.LargePage == 1)
-#if !defined(CONFIG_SMP)
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+/* Vista names the hardware write bit Dirty1 and keeps Write as the software bit */
+#define MI_IS_PAGE_WRITEABLE(x)    ((x)->u.Hard.Dirty1 == 1)
+#elif !defined(CONFIG_SMP)
 #define MI_IS_PAGE_WRITEABLE(x)    ((x)->u.Hard.Write == 1)
 #else
 #define MI_IS_PAGE_WRITEABLE(x)    ((x)->u.Hard.Writable == 1)
@@ -111,10 +114,15 @@
 #define MI_IS_PAGE_EXECUTABLE(x)   ((x)->u.Hard.NoExecute == 0)
 #define MI_IS_PAGE_DIRTY(x)        ((x)->u.Hard.Dirty == 1)
 #define MI_MAKE_OWNER_PAGE(x)      ((x)->u.Hard.Owner = 1)
-#if !defined(CONFIG_SMP)
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+#define MI_MAKE_WRITE_PAGE(x)      ((x)->u.Hard.Dirty1 = 1)
+#define MI_MAKE_READ_ONLY_PAGE(x)  ((x)->u.Hard.Dirty1 = 0)
+#elif !defined(CONFIG_SMP)
 #define MI_MAKE_WRITE_PAGE(x)      ((x)->u.Hard.Write = 1)
+#define MI_MAKE_READ_ONLY_PAGE(x)  ((x)->u.Hard.Write = 0)
 #else
 #define MI_MAKE_WRITE_PAGE(x)      ((x)->u.Hard.Writable = 1)
+#define MI_MAKE_READ_ONLY_PAGE(x)  ((x)->u.Hard.Writable = 0)
 #endif
 
 /* Macros to identify the page fault reason from the error code */

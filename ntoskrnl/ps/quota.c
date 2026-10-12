@@ -22,6 +22,9 @@ static KSPIN_LOCK PspQuotaLock;
                            QUOTA_LIMITS_HARDWS_MAX_ENABLE | \
                            QUOTA_LIMITS_HARDWS_MAX_DISABLE)
 
+/* Vista only tracks the pool types per process, the quota block has more */
+#define PSP_PROCESS_QUOTA_TYPES (RTL_FIELD_SIZE(EPROCESS, QuotaUsage) / sizeof(SIZE_T))
+
 /* PRIVATE FUNCTIONS *******************************************************/
 
 /**
@@ -203,7 +206,7 @@ PspChargeProcessQuotaSpecifiedPool(
     SIZE_T UpdatedLimit;
 
     /* Sanity checks */
-    ASSERT(QuotaType < PsQuotaTypes);
+    ASSERT(QuotaType < PSP_PROCESS_QUOTA_TYPES);
     ASSERT((SSIZE_T)Amount >= 0);
 
     /* Guard ourselves in a spin lock */
@@ -353,7 +356,7 @@ PspReturnProcessQuotaSpecifiedPool(
     SIZE_T AmountToReturn = 0;
 
     /* Sanity checks */
-    ASSERT(QuotaType < PsQuotaTypes);
+    ASSERT(QuotaType < PSP_PROCESS_QUOTA_TYPES);
     ASSERT((SSIZE_T)Amount >= 0);
 
     /* Guard ourselves in a spin lock */
@@ -563,7 +566,7 @@ PspDereferenceQuotaBlock(
     /* Iterate over the process quota types if we have a process */
     if (Process)
     {
-        for (PsQuotaTypeIndex = PsNonPagedPool; PsQuotaTypeIndex < PsQuotaTypes; PsQuotaTypeIndex++)
+        for (PsQuotaTypeIndex = PsNonPagedPool; PsQuotaTypeIndex < PSP_PROCESS_QUOTA_TYPES; PsQuotaTypeIndex++)
         {
             /*
              * We need to make sure that the quota usage

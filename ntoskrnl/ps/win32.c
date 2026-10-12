@@ -51,7 +51,7 @@ PsConvertToGuiThread(VOID)
     if (!PspW32ProcessCallout) return STATUS_ACCESS_DENIED;
 
     /* Make sure it's not already win32 */
-    if (Thread->Tcb.ServiceTable != KeServiceDescriptorTable)
+    if (KiThreadServiceTable(&Thread->Tcb) != KeServiceDescriptorTable)
     {
         /* We're already a win32 thread */
         return STATUS_ALREADY_WIN32;
@@ -88,7 +88,7 @@ PsConvertToGuiThread(VOID)
     if (!NT_SUCCESS(Status)) return Status;
 
     /* Set the new service table */
-    Thread->Tcb.ServiceTable = KeServiceDescriptorTableShadow;
+    KiThreadServiceTable(&Thread->Tcb) = KeServiceDescriptorTableShadow;
     ASSERT(Thread->Tcb.Win32Thread == 0);
 
     /* Tell Win32k about our thread */
@@ -96,7 +96,7 @@ PsConvertToGuiThread(VOID)
     if (!NT_SUCCESS(Status))
     {
         /* Revert our table */
-        Thread->Tcb.ServiceTable = KeServiceDescriptorTable;
+        KiThreadServiceTable(&Thread->Tcb) = KeServiceDescriptorTable;
     }
 
     /* Return status */

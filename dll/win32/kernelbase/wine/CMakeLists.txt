@@ -1,3 +1,4 @@
+remove_definitions(-D_WIN32_WINNT=0x600 -DNTDDI_VERSION=0x06000200 -DWINVER=0x600)
 add_definitions(-D_WIN32_WINNT=0xA01 -DWINVER=0xA01)
 
 add_definitions(

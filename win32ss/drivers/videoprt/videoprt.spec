@@ -69,8 +69,7 @@
 @ stdcall VideoPortPutDmaAdapter(ptr ptr)
 @ stdcall VideoPortQueryPerformanceCounter(ptr ptr)
 @ stdcall VideoPortQueryServices(ptr long ptr)
-@ stdcall -arch=i386,arm VideoPortQuerySystemTime(ptr) NTOSKRNL.KeQuerySystemTime
-@ stdcall -arch=x86_64 VideoPortQuerySystemTime(ptr)
+@ stdcall VideoPortQuerySystemTime(ptr)
 @ stdcall VideoPortQueueDpc(ptr ptr ptr)
 @ stdcall -arch=i386,arm VideoPortReadPortBufferUchar(ptr ptr long) HAL.READ_PORT_BUFFER_UCHAR
 @ stdcall -arch=x86_64 VideoPortReadPortBufferUchar(ptr ptr long)

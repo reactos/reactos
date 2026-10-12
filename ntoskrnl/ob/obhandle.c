@@ -108,7 +108,11 @@ ObpReferenceProcessObjectByHandle(IN HANDLE Handle,
         {
             /* Return handle info */
             HandleInformation->HandleAttributes = 0;
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+            HandleInformation->GrantedAccess = PROCESS_ALL_ACCESS;
+#else
             HandleInformation->GrantedAccess = Process->GrantedAccess;
+#endif
 
             /* No audit mask */
             *AuditMask = 0;
@@ -128,7 +132,11 @@ ObpReferenceProcessObjectByHandle(IN HANDLE Handle,
         {
             /* Return handle information */
             HandleInformation->HandleAttributes = 0;
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+            HandleInformation->GrantedAccess = THREAD_ALL_ACCESS;
+#else
             HandleInformation->GrantedAccess = Thread->GrantedAccess;
+#endif
 
             /* Reference ourselves */
             ObjectHeader = OBJECT_TO_OBJECT_HEADER(Thread);

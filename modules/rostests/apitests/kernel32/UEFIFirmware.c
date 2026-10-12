@@ -21,6 +21,7 @@
 #define EFI_DUMMY_NAMESPACE_GUID_STRING "{00000000-0000-0000-0000-000000000000}"
 #define EFI_DUMMY_VARIABLE_NAME ""
 
+#if (NTDDI_VERSION < NTDDI_LONGHORN)
 typedef enum _FIRMWARE_TYPE
 {
     FirmwareTypeUnknown,
@@ -28,6 +29,7 @@ typedef enum _FIRMWARE_TYPE
     FirmwareTypeUefi,
     FirmwareTypeMax
 } FIRMWARE_TYPE, *PFIRMWARE_TYPE;
+#endif
 
 typedef
 _Success_(return)

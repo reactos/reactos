@@ -1,6 +1,4 @@
 
-remove_definitions(-D_WIN32_WINNT=0x502)
-add_definitions(-D_WIN32_WINNT=0x600)
 add_definitions(-DUNICODE -D_WIN32 -DPORTMAP -D_CRT_NONSTDC_NO_DEPRECATE=1)
 
 spec2def(libtirpc.dll libtirpc/libtirpc.spec ADD_IMPORTLIB)

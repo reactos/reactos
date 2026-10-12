@@ -7,6 +7,10 @@ list(APPEND SOURCE
 include_directories(
     ${REACTOS_SOURCE_DIR}/dll/np/nfs)
 
+# Uses the WS03 RDBSS interface from rdbsslib and rxce
+remove_definitions(-D_WIN32_WINNT=0x600 -DNTDDI_VERSION=0x06000200)
+add_definitions(-D_WIN32_WINNT=0x502 -DNTDDI_VERSION=0x05020400)
+
 add_definitions(-DRDBSS_TRACKER)
 
 add_library(nfs41_driver MODULE ${SOURCE} nfs.rc)

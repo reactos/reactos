@@ -319,6 +319,43 @@ VOID
 NTAPI
 ExInitPoolLookasidePointers(VOID);
 
+extern GENERAL_LOOKASIDE ExpSmallNPagedPoolLookasideLists[NUMBER_POOL_LOOKASIDE_LISTS];
+extern GENERAL_LOOKASIDE ExpSmallPagedPoolLookasideLists[NUMBER_POOL_LOOKASIDE_LISTS];
+
+/* On Vista the per processor pool lookaside lists live in the PRCB */
+FORCEINLINE
+PGENERAL_LOOKASIDE
+ExpGetProcessorPoolLookaside(
+    _In_ PKPRCB Prcb,
+    _In_ POOL_TYPE PoolType,
+    _In_ ULONG Index)
+{
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+    return (PoolType == PagedPool) ? (PGENERAL_LOOKASIDE)&Prcb->PPPagedLookasideList[Index] :
+                                     (PGENERAL_LOOKASIDE)&Prcb->PPNPagedLookasideList[Index];
+#else
+    return (PoolType == PagedPool) ? Prcb->PPPagedLookasideList[Index].P :
+                                     Prcb->PPNPagedLookasideList[Index].P;
+#endif
+}
+
+FORCEINLINE
+PGENERAL_LOOKASIDE
+ExpGetSystemPoolLookaside(
+    _In_ PKPRCB Prcb,
+    _In_ POOL_TYPE PoolType,
+    _In_ ULONG Index)
+{
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+    UNREFERENCED_PARAMETER(Prcb);
+    return (PoolType == PagedPool) ? &ExpSmallPagedPoolLookasideLists[Index] :
+                                     &ExpSmallNPagedPoolLookasideLists[Index];
+#else
+    return (PoolType == PagedPool) ? Prcb->PPPagedLookasideList[Index].L :
+                                     Prcb->PPNPagedLookasideList[Index].L;
+#endif
+}
+
 /* Callback Functions ********************************************************/
 
 VOID

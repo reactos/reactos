@@ -1,4 +1,8 @@
 
+# Keep the WaveRT miniport disabled until it is ported to the shared miniport classes
+remove_definitions(-D_WIN32_WINNT=0x600 -DNTDDI_VERSION=0x06000200)
+add_definitions(-D_WIN32_WINNT=0x502 -DNTDDI_VERSION=0x05020400)
+
 list(APPEND SOURCE
     adapter.cpp
     common.cpp

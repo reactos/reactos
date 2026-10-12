@@ -41,7 +41,11 @@ MiCheckForUserStackOverflow(IN PVOID Address,
     NTSTATUS Status;
 
     /* Do we own the address space lock? */
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+    if (CurrentThread->OwnsProcessAddressSpaceExclusive)
+#else
     if (CurrentThread->AddressSpaceOwner == 1)
+#endif
     {
         /* This isn't valid */
         DPRINT1("Process owns address space lock\n");
@@ -105,7 +109,7 @@ MiCheckForUserStackOverflow(IN PVOID Address,
 
 #if defined(_WIN64) && defined(BUILD_WOW64_ENABLED)
             /* Update WOW64 32-bit TEB stack limit */
-            if (CurrentThread->ThreadsProcess->Wow64Process != NULL)
+            if (PspGetThreadProcess(CurrentThread)->Wow64Process != NULL)
             {
                 PS_GET_TEB32_FROM_TEB(Teb)->NtTib.StackLimit = PtrToUlong(Teb->NtTib.StackLimit);
             }
@@ -127,7 +131,7 @@ MiCheckForUserStackOverflow(IN PVOID Address,
 
 #if defined(_WIN64) && defined(BUILD_WOW64_ENABLED)
     /* Update WOW64 32-bit TEB stack limit */
-    if (CurrentThread->ThreadsProcess->Wow64Process != NULL)
+    if (PspGetThreadProcess(CurrentThread)->Wow64Process != NULL)
     {
         PS_GET_TEB32_FROM_TEB(Teb)->NtTib.StackLimit = PtrToUlong(Teb->NtTib.StackLimit);
     }
@@ -2328,7 +2332,7 @@ UserFault:
                 /* And make a new shiny one with our page */
                 MiInitializePfn(PageFrameIndex, PointerPte, TRUE);
                 TempPte.u.Hard.PageFrameNumber = PageFrameIndex;
-                TempPte.u.Hard.Write = 1;
+                MI_MAKE_WRITE_PAGE(&TempPte);
                 TempPte.u.Hard.CopyOnWrite = 0;
 
                 MI_WRITE_VALID_PTE(PointerPte, TempPte);
@@ -2451,7 +2455,9 @@ UserFault:
 
             /* Not supported */
             ASSERT(ProtoPte == NULL);
+#if (NTDDI_VERSION < NTDDI_LONGHORN)
             ASSERT(CurrentThread->ApcNeeded == 0);
+#endif
 
             /* Drop the working set lock */
             MiUnlockProcessWorkingSet(CurrentProcess, CurrentThread);
@@ -2621,7 +2627,9 @@ UserFault:
         if (Status != STATUS_SUCCESS)
         {
             /* Not supported */
+#if (NTDDI_VERSION < NTDDI_LONGHORN)
             ASSERT(CurrentThread->ApcNeeded == 0);
+#endif
 
             /* Drop the working set lock */
             MiUnlockProcessWorkingSet(CurrentProcess, CurrentThread);

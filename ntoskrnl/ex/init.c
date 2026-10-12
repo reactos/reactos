@@ -778,13 +778,13 @@ ExpIsLoaderValid(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     if (Extension->Size < LOADER_PARAMETER_EXTENSION_MIN_SIZE) return FALSE;
 
     /* Don't validate upper versions */
-    if (Extension->MajorVersion > VER_PRODUCTMAJORVERSION) return TRUE;
+    if (Extension->MajorVersion > 5) return TRUE;
 
     /* Fail if this is NT 4 */
-    if (Extension->MajorVersion < VER_PRODUCTMAJORVERSION) return FALSE;
+    if (Extension->MajorVersion < 5) return FALSE;
 
     /* Fail if this is XP */
-    if (Extension->MinorVersion < VER_PRODUCTMINORVERSION) return FALSE;
+    if (Extension->MinorVersion < 2) return FALSE;
 
     /* This is 2003 or newer, approve it */
     return TRUE;

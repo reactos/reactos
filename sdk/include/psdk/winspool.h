@@ -1444,7 +1444,6 @@ WINBOOL WINAPI EnumPrintersW(DWORD Flags,LPWSTR Name,DWORD Level,LPBYTE pPrinter
 #if (_WIN32_WINNT >= 0x0600)
 #define AddPrinterConnection2 __MINGW_NAME_AW(AddPrinterConnection2)
 #define DeletePrinterDriverPackage __MINGW_NAME_AW(DeletePrinterDriverPackage)
-#define DocumentEvent __MINGW_NAME_AW(DocumentEvent)
 
 #define PRINTER_CONNECTION_MISMATCH 0x00000020
 #define PRINTER_CONNECTION_NO_UI    0x00000040
@@ -1493,25 +1492,16 @@ HRESULT WINAPI DeletePrinterDriverPackageW(
   LPCWSTR pszEnvironment
 );
 
-HRESULT DocumentEventA(
-  HANDLE hPrinter,
-  HDC hdc,
-  INT iEsc,
-  ULONG cbIn,
-  PVOID pvIn,
-  ULONG cbOut,
-  PVOID pvOut
-);
-
-HRESULT DocumentEventW(
-  HANDLE hPrinter,
-  HDC hdc,
-  INT iEsc,
-  ULONG cbIn,
-  PVOID pvIn,
-  ULONG cbOut,
-  PVOID pvOut
-);
+INT
+WINAPI
+DocumentEvent(
+  _In_ HANDLE hPrinter,
+  _In_ HDC hdc,
+  _In_ INT iEsc,
+  _In_ ULONG cbIn,
+  _In_reads_bytes_opt_(cbIn) PVOID pvIn,
+  _In_ ULONG cbOut,
+  _Out_writes_bytes_opt_(cbOut) PVOID pvOut);
 
 typedef struct _PRINTPROCESSOR_CAPS_2 {
   DWORD dwLevel;
@@ -1556,7 +1546,6 @@ __MINGW_TYPEDEF_AW(PCORE_PRINTER_DRIVER)
 #define GetCorePrinterDrivers __MINGW_NAME_AW(GetCorePrinterDrivers)
 #define GetPrinterDriver2 __MINGW_NAME_AW(GetPrinterDriver2)
 #define GetPrinterDriverPackagePath __MINGW_NAME_AW(GetPrinterDriverPackagePath)
-#define GetSpoolFileHandle __MINGW_NAME_AW(GetSpoolFileHandle)
 
 HRESULT WINAPI GetCorePrinterDriversA(
   LPCSTR pszServer,
@@ -1615,13 +1604,10 @@ HRESULT WINAPI GetPrinterDriverPackagePathW(
   LPDWORD pcchRequiredSize
 );
 
-HANDLE WINAPI GetSpoolFileHandleA(
-  HANDLE hPrinter
-);
-
-HANDLE WINAPI GetSpoolFileHandleW(
-  HANDLE hPrinter
-);
+HANDLE
+WINAPI
+GetSpoolFileHandle(
+  _In_ HANDLE hPrinter);
 
 HANDLE WINAPI CommitSpoolData(
   HANDLE hPrinter,

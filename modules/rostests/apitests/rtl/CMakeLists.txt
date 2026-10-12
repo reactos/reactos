@@ -51,7 +51,7 @@ target_compile_definitions(rtl_unittest PRIVATE _RTL_TEST _NTSYSTEM_ TEST_STATIC
 target_link_libraries(rtl_unittest rtl_test_lib rtl rtl_um rtl_vista wine uuid ${PSEH_LIB})
 set_module_type(rtl_unittest win32cui)
 add_importlibs(rtl_unittest msvcrt advapi32 kernel32 ntdll)
-target_compile_definitions(rtl_unittest PRIVATE KMT_USER_MODE NTDDI_VERSION=NTDDI_WS03SP1)
+target_compile_definitions(rtl_unittest PRIVATE KMT_USER_MODE)
 
 add_rostests_file(TARGET rtl_unittest)
 

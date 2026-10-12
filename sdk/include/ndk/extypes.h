@@ -793,7 +793,11 @@ typedef struct _HANDLE_TABLE
 #endif
     PEPROCESS QuotaProcess;
     PVOID UniqueProcessId;
-#if (NTDDI_VERSION >= NTDDI_WINXP)
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+    EX_PUSH_LOCK HandleLock;
+    LIST_ENTRY HandleTableList;
+    EX_PUSH_LOCK HandleContentionEvent;
+#elif (NTDDI_VERSION >= NTDDI_WINXP)
     EX_PUSH_LOCK HandleTableLock[4];
     LIST_ENTRY HandleTableList;
     EX_PUSH_LOCK HandleContentionEvent;
@@ -814,6 +818,11 @@ typedef struct _HANDLE_TABLE
     PHANDLE_TABLE_ENTRY LastFreeHandleEntry;
     LONG HandleCount;
     ULONG NextHandleNeedingPool;
+#ifdef __REACTOS__
+    /* ReactOS still uses the 2003 lock striping and deferred free list */
+    EX_PUSH_LOCK HandleTableLock[4];
+    ULONG LastFree;
+#endif
 #else
     ULONG FirstFree;
     ULONG LastFree;

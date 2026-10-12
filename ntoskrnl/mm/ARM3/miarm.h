@@ -234,7 +234,11 @@ extern const ULONG MmProtectToValue[32];
 //
 #define MI_GET_PAGE_COLOR(x)                ((x) & MmSecondaryColorMask)
 #define MI_GET_NEXT_COLOR()                 (MI_GET_PAGE_COLOR(++MmSystemPageColor))
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+#define MI_GET_NEXT_PROCESS_COLOR(x)        (MI_GET_PAGE_COLOR(++(x)->Vm.NextPageColor))
+#else
 #define MI_GET_NEXT_PROCESS_COLOR(x)        (MI_GET_PAGE_COLOR(++(x)->NextPageColor))
+#endif
 
 //
 // Prototype PTEs that don't yet have a pagefile association

@@ -15,8 +15,10 @@
     s.Buffer[sizeof(c) / sizeof(WCHAR) - 1] = 0; \
     s.Length = sizeof(c) - sizeof(UNICODE_NULL)
 
+#if (NTDDI_VERSION < NTDDI_VISTA)
 NTSTATUS NTAPI FsRtlRemoveDotsFromPath(PWSTR OriginalString,
                                        USHORT PathLength, USHORT *NewLength);
+#endif
 
 static
 NTSTATUS

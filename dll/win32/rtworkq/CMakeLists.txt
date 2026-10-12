@@ -1,5 +1,5 @@
 
-remove_definitions(-D_WIN32_WINNT=0x502)
+remove_definitions(-D_WIN32_WINNT=0x600 -DNTDDI_VERSION=0x06000200)
 add_definitions(-D_WIN32_WINNT=0x603)
 spec2def(rtworkq.dll rtworkq.spec ADD_IMPORTLIB)
 

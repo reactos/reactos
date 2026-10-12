@@ -565,7 +565,7 @@ KeContextToTrapFrame(IN PCONTEXT Context,
     }
 
     /* Check if thread has IOPL and force it enabled if so */
-    if (KeGetCurrentThread()->Iopl) TrapFrame->EFlags |= EFLAGS_IOPL;
+    if (KiThreadIopl(KeGetCurrentThread())) TrapFrame->EFlags |= EFLAGS_IOPL;
 
     /* Restore IRQL */
     if (OldIrql < APC_LEVEL) KeLowerIrql(OldIrql);

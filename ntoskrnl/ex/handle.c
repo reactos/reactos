@@ -302,7 +302,7 @@ ExpFreeHandleTableEntry(IN PHANDLE_TABLE HandleTable,
 
         /* Select which entry to use */
         Free = (HandleTable->HandleTableLock[LockIndex].Locked) ?
-                &HandleTable->FirstFree : &HandleTable->LastFree;
+                &HandleTable->FirstFreeHandle : &HandleTable->LastFree;
     }
     else
     {
@@ -402,7 +402,7 @@ ExpAllocateHandleTable(IN PEPROCESS Process OPTIONAL,
         /* Terminate the last entry */
         HandleEntry->Value = 0;
         HandleEntry->NextFreeTableEntry = 0;
-        HandleTable->FirstFree = INDEX_TO_HANDLE_VALUE(1);
+        HandleTable->FirstFreeHandle = INDEX_TO_HANDLE_VALUE(1);
     }
 
     /* Set the next handle needing pool after our allocated page from above */
@@ -628,11 +628,11 @@ ExpAllocateHandleTableEntrySlow(IN PHANDLE_TABLE HandleTable,
         for (;;)
         {
             /* Setup the first free index */
-            FirstFree = HandleTable->FirstFree;
+            FirstFree = HandleTable->FirstFreeHandle;
             Low[LOW_LEVEL_ENTRIES - 1].NextFreeTableEntry = FirstFree;
 
             /* Change the index */
-            NewFree = InterlockedCompareExchange((PLONG) &HandleTable->FirstFree,
+            NewFree = InterlockedCompareExchange((PLONG) &HandleTable->FirstFreeHandle,
                                                  Index,
                                                  FirstFree);
             if (NewFree == FirstFree) break;
@@ -666,7 +666,7 @@ ExpMoveFreeHandles(IN PHANDLE_TABLE HandleTable)
     if (!HandleTable->StrictFIFO)
     {
         /* Update the first free index */
-        if (!InterlockedCompareExchange((PLONG) &HandleTable->FirstFree, LastFree, 0))
+        if (!InterlockedCompareExchange((PLONG) &HandleTable->FirstFreeHandle, LastFree, 0))
         {
             /* We're done, exit */
             return LastFree;
@@ -693,7 +693,7 @@ ExpAllocateHandleTableEntry(IN PHANDLE_TABLE HandleTable,
     for (;;)
     {
         /* Get the current link */
-        OldValue = HandleTable->FirstFree;
+        OldValue = HandleTable->FirstFreeHandle;
         while (!OldValue)
         {
             /* No free entries remain, lock the handle table */
@@ -701,7 +701,7 @@ ExpAllocateHandleTableEntry(IN PHANDLE_TABLE HandleTable,
             ExAcquirePushLockExclusive(&HandleTable->HandleTableLock[0]);
 
             /* Check the value again */
-            OldValue = HandleTable->FirstFree;
+            OldValue = HandleTable->FirstFreeHandle;
             if (OldValue)
             {
                 /* Another thread has already created a new level, bail out */
@@ -726,7 +726,7 @@ ExpAllocateHandleTableEntry(IN PHANDLE_TABLE HandleTable,
             /* Unlock the table and get the value now */
             ExReleasePushLockExclusive(&HandleTable->HandleTableLock[0]);
             KeLeaveCriticalRegion();
-            OldValue = HandleTable->FirstFree;
+            OldValue = HandleTable->FirstFreeHandle;
 
             /* Check if allocation failed */
             if (!Result)
@@ -754,7 +754,7 @@ ExpAllocateHandleTableEntry(IN PHANDLE_TABLE HandleTable,
         ExAcquirePushLockShared(&HandleTable->HandleTableLock[i]);
 
         /* Check if the value changed after acquiring the lock */
-        if (OldValue != *(volatile ULONG*)&HandleTable->FirstFree)
+        if (OldValue != *(volatile ULONG*)&HandleTable->FirstFreeHandle)
         {
             /* It did, so try again */
             ExReleasePushLockShared(&HandleTable->HandleTableLock[i]);
@@ -764,7 +764,7 @@ ExpAllocateHandleTableEntry(IN PHANDLE_TABLE HandleTable,
 
         /* Now get the next value and do the compare */
         NewValue = *(volatile ULONG*)&Entry->NextFreeTableEntry;
-        NewValue1 = InterlockedCompareExchange((PLONG) &HandleTable->FirstFree,
+        NewValue1 = InterlockedCompareExchange((PLONG) &HandleTable->FirstFreeHandle,
                                                NewValue,
                                                OldValue);
 
@@ -1100,7 +1100,7 @@ ExDupHandleTable(IN PEPROCESS Process,
     /* Setup the initial handle table data */
     NewTable->HandleCount = 0;
     NewTable->ExtraInfoPages = 0;
-    NewTable->FirstFree = 0;
+    NewTable->FirstFreeHandle = 0;
 
     /* Setup the first handle value  */
     Handle.Value = INDEX_TO_HANDLE_VALUE(1);
@@ -1160,8 +1160,8 @@ ExDupHandleTable(IN PEPROCESS Process,
             {
                 /* Free this entry */
                 NewEntry->Object = NULL;
-                NewEntry->NextFreeTableEntry = NewTable->FirstFree;
-                NewTable->FirstFree = (ULONG)Handle.Value;
+                NewEntry->NextFreeTableEntry = NewTable->FirstFreeHandle;
+                NewTable->FirstFreeHandle = (ULONG)Handle.Value;
             }
 
             /* Increase the handle value and move to the next entry */

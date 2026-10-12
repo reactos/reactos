@@ -590,7 +590,7 @@ ExpBoostOwnerThread(IN PKTHREAD Thread,
             OwnerThread->PriorityDecrement += 14 - OwnerThread->Priority;
 
             /* Update quantum */
-            OwnerThread->Quantum = OwnerThread->QuantumReset;
+            KiThreadQuantum(OwnerThread) = OwnerThread->QuantumReset;
 
             /* Update the kernel state */
             KiSetPriorityThread(OwnerThread, 14);

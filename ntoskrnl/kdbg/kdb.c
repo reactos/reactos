@@ -1045,7 +1045,7 @@ KdbpAttachToThread(
         KdbpPrint("Invalid thread id: 0x%08x\n", (ULONG_PTR)ThreadId);
         return FALSE;
     }
-    Process = Thread->ThreadsProcess;
+    Process = PspGetThreadProcess(Thread);
 
     if (KeIsExecutingDpc() && Process != KdbCurrentProcess)
     {

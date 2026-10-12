@@ -17,6 +17,10 @@
 PERESOURCE FsRtlPagingIoResources;
 ULONG FsRtlPagingIoResourceSelector;
 CODE_SEG("INIT") NTSTATUS NTAPI FsRtlInitializeWorkerThread(VOID);
+
+/* Set once smss reports that autochk and the other startup applications are done */
+static BOOLEAN FsRtlpStartupApplicationsDone;
+static WORK_QUEUE_ITEM FsRtlpSafeVolumesWorkItem;
 extern KSEMAPHORE FsRtlpUncSemaphore;
 
 static const UCHAR LegalAnsiCharacterArray[] =
@@ -155,6 +159,60 @@ const UCHAR * const FsRtlLegalAnsiCharacterArray = LegalAnsiCharacterArray;
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
+static
+VOID
+NTAPI
+FsRtlpWaitForSafeVolumes(
+    _In_ PVOID Context)
+{
+    PKEVENT SafeVolumesEvent = Context;
+
+    KeWaitForSingleObject(SafeVolumesEvent, Executive, KernelMode, FALSE, NULL);
+    FsRtlpStartupApplicationsDone = TRUE;
+    ObDereferenceObject(SafeVolumesEvent);
+}
+
+CODE_SEG("INIT")
+static
+NTSTATUS
+FsRtlpInitializeSafeVolumesEvent(VOID)
+{
+    UNICODE_STRING EventName = RTL_CONSTANT_STRING(L"\\Device\\VolumesSafeForWriteAccess");
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    HANDLE EventHandle;
+    PKEVENT SafeVolumesEvent;
+    NTSTATUS Status;
+
+    /* smss signals this event once volumes are safe for write access */
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &EventName,
+                               OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE | OBJ_PERMANENT,
+                               NULL,
+                               NULL);
+    Status = ZwCreateEvent(&EventHandle,
+                           EVENT_ALL_ACCESS,
+                           &ObjectAttributes,
+                           NotificationEvent,
+                           FALSE);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    Status = ObReferenceObjectByHandle(EventHandle,
+                                       SYNCHRONIZE,
+                                       ExEventObjectType,
+                                       KernelMode,
+                                       (PVOID*)&SafeVolumesEvent,
+                                       NULL);
+    ZwClose(EventHandle);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    /* Wait for it off a worker thread so boot is not held up */
+    ExInitializeWorkItem(&FsRtlpSafeVolumesWorkItem, FsRtlpWaitForSafeVolumes, SafeVolumesEvent);
+    ExQueueWorkItem(&FsRtlpSafeVolumesWorkItem, DelayedWorkQueue);
+    return STATUS_SUCCESS;
+}
+
 CODE_SEG("INIT")
 BOOLEAN
 NTAPI
@@ -187,10 +245,23 @@ FsRtlInitSystem(VOID)
         ExInitializeResource(&FsRtlPagingIoResources[i]);
     }
 
+    if (!NT_SUCCESS(FsRtlpInitializeSafeVolumesEvent()))
+        return FALSE;
+
     return NT_SUCCESS(FsRtlInitializeWorkerThread());
 }
 
 /* PUBLIC FUNCTIONS **********************************************************/
+
+/*
+ * @implemented
+ */
+BOOLEAN
+NTAPI
+FsRtlAreVolumeStartupApplicationsComplete(VOID)
+{
+    return FsRtlpStartupApplicationsDone;
+}
 
 /*++
  * @name FsRtlAllocateResource

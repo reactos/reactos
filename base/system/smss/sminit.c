@@ -2560,7 +2560,7 @@ SmpInit(IN PUNICODE_STRING InitialCommand,
     RtlInitUnicodeString(&EventName, L"\\Device\\VolumesSafeForWriteAccess");
     InitializeObjectAttributes(&ObjectAttributes,
                                &EventName,
-                               OBJ_PERMANENT,
+                               OBJ_PERMANENT | OBJ_OPENIF,
                                NULL,
                                NULL);
     Status2 = NtCreateEvent(&EventHandle,

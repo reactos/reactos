@@ -161,7 +161,7 @@ NTAPI
 IoThreadToProcess(IN PETHREAD Thread)
 {
     /* Return the thread's process */
-    return Thread->ThreadsProcess;
+    return PspGetThreadProcess(Thread);
 }
 
 /*

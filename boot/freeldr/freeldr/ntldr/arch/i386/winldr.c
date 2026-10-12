@@ -100,6 +100,9 @@ PUCHAR KernelPageTablesBuffer;
 ULONG PhysicalPageTables;
 ULONG KernelPageTables;
 
+/* The Vista PCR no longer fits in one page */
+#define PCR_PAGE_COUNT (ROUND_TO_PAGES(sizeof(KIPCR)) / MM_PAGE_SIZE)
+
 ULONG PcrBasePage;
 ULONG TssBasePage;
 PVOID GdtIdt;
@@ -319,19 +322,24 @@ static
 BOOLEAN
 WinLdrMapSpecialPages(void)
 {
+    ULONG i;
+
     TRACE("HalPageTable: 0x%X\n", HalPageTable);
 
     /*
      * The Page Tables have been setup, make special handling
      * for the boot processor PCR and KI_USER_SHARED_DATA.
      */
-    HalPageTable[(KI_USER_SHARED_DATA - 0xFFC00000) >> MM_PAGE_SHIFT].PageFrameNumber = PcrBasePage+1;
+    HalPageTable[(KI_USER_SHARED_DATA - 0xFFC00000) >> MM_PAGE_SHIFT].PageFrameNumber = PcrBasePage + PCR_PAGE_COUNT;
     HalPageTable[(KI_USER_SHARED_DATA - 0xFFC00000) >> MM_PAGE_SHIFT].Valid = 1;
     HalPageTable[(KI_USER_SHARED_DATA - 0xFFC00000) >> MM_PAGE_SHIFT].Write = 1;
 
-    HalPageTable[(KIP0PCRADDRESS - 0xFFC00000) >> MM_PAGE_SHIFT].PageFrameNumber = PcrBasePage;
-    HalPageTable[(KIP0PCRADDRESS - 0xFFC00000) >> MM_PAGE_SHIFT].Valid = 1;
-    HalPageTable[(KIP0PCRADDRESS - 0xFFC00000) >> MM_PAGE_SHIFT].Write = 1;
+    for (i = 0; i < PCR_PAGE_COUNT; i++)
+    {
+        HalPageTable[((KIP0PCRADDRESS - 0xFFC00000) >> MM_PAGE_SHIFT) + i].PageFrameNumber = PcrBasePage + i;
+        HalPageTable[((KIP0PCRADDRESS - 0xFFC00000) >> MM_PAGE_SHIFT) + i].Valid = 1;
+        HalPageTable[((KIP0PCRADDRESS - 0xFFC00000) >> MM_PAGE_SHIFT) + i].Write = 1;
+    }
 
     /* Map APIC */
     WinLdrpMapApic();
@@ -379,8 +387,8 @@ void WinLdrSetupMachineDependent(PLOADER_PARAMETER_BLOCK LoaderBlock)
     LoaderBlock->u.I386.CommonDataArea = NULL; // Force No ABIOS support
     LoaderBlock->u.I386.MachineType = MACHINE_TYPE_ISA;
 
-    /* Allocate 2 pages for PCR: one for the boot processor PCR and one for KI_USER_SHARED_DATA */
-    Pcr = (ULONG_PTR)MmAllocateMemoryWithType(2 * MM_PAGE_SIZE, LoaderStartupPcrPage);
+    /* Allocate the boot processor PCR pages followed by one page for KI_USER_SHARED_DATA */
+    Pcr = (ULONG_PTR)MmAllocateMemoryWithType((PCR_PAGE_COUNT + 1) * MM_PAGE_SIZE, LoaderStartupPcrPage);
     PcrBasePage = Pcr >> MM_PAGE_SHIFT;
     if (Pcr == 0)
     {
@@ -468,7 +476,7 @@ WinLdrSetProcessorContext(
     __writecr0(__readcr0() | CR0_PG);
 
     /* The Kernel expects the boot processor PCR to be zero-filled on startup */
-    RtlZeroMemory((PVOID)Pcr, MM_PAGE_SIZE);
+    RtlZeroMemory((PVOID)Pcr, PCR_PAGE_COUNT * MM_PAGE_SIZE);
 
     /* Get old values of GDT and IDT */
     Ke386GetGlobalDescriptorTable(&GdtDesc);
