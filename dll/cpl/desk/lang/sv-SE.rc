@@ -219,7 +219,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_STANDARDEFFECT "Standard"
-    IDS_CLEARTYPEEFFECT "FreeType Antialiased"
+    IDS_CLEARTYPEEFFECT "ClearType"
 END
 
 STRINGTABLE
@@ -301,4 +301,9 @@ BEGIN
     IDS_APPLY_FAILED "Failed to apply new settings..."
     IDS_APPLY_NEEDS_RESTART "You need to restart your computer to apply changes."
     IDS_TIMEOUTTEXT "Revert to previous settings in %d seconds."
+END
+
+STRINGTABLE
+BEGIN
+    IDS_BING_WALLPAPER "Bing – picture of the day"
 END

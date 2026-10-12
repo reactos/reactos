@@ -302,3 +302,8 @@ BEGIN
     IDS_APPLY_NEEDS_RESTART "A változtatások életbe lépéséhez újra kell indítania a számítógépet."
     IDS_TIMEOUTTEXT "Visszalépés az előző beállításokra %d másodperc múlva."
 END
+
+STRINGTABLE
+BEGIN
+    IDS_BING_WALLPAPER "Bing – picture of the day"
+END

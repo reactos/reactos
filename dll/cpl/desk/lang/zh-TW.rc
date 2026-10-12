@@ -309,3 +309,8 @@ BEGIN
     IDS_APPLY_NEEDS_RESTART "需要重新啟動電腦使變更生效。"
     IDS_TIMEOUTTEXT "在 %d 秒後還原至原來的設定。"
 END
+
+STRINGTABLE
+BEGIN
+    IDS_BING_WALLPAPER "Bing – picture of the day"
+END

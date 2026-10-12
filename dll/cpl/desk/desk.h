@@ -206,4 +206,10 @@ RegLoadMUIStringW(IN HKEY hKey,
                   IN DWORD Flags,
                   IN LPCWSTR pszDirectory  OPTIONAL);
 
+/* bing.c */
+BOOL Bing_GetCachePath(LPWSTR pszPath, DWORD cchPath);
+BOOL Bing_Download(VOID);
+BOOL Bing_IsEnabled(VOID);
+VOID Bing_SetEnabled(BOOL bEnable);
+
 #endif /* _DESK_H */

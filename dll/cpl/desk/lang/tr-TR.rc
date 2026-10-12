@@ -310,3 +310,8 @@ BEGIN
     IDS_APPLY_NEEDS_RESTART "Değişiklikleri uygulamak için bilgisayarınızı yeniden başlatmanız gerekir."
     IDS_TIMEOUTTEXT "%d saniyede önceki ayarlara geri dönülecek."
 END
+
+STRINGTABLE
+BEGIN
+    IDS_BING_WALLPAPER "Bing – picture of the day"
+END

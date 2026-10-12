@@ -41,6 +41,7 @@ typedef enum
 typedef struct
 {
     BOOL bWallpaper; /* Is this background a wallpaper */
+    BOOL bBing;      /* "Bing - picture of the day" (see bing.c) */
 
     TCHAR szFilename[MAX_PATH];
     TCHAR szDisplayName[256];
@@ -347,6 +348,36 @@ AddListViewItems(HWND hwndDlg, PBACKGROUND_DATA pData)
                           LVIS_SELECTED,
                           LVIS_SELECTED);
 
+    pData->listViewItemCount++;
+
+    /* "Bing - picture of the day": downloaded when selected, refreshed at each logon */
+    backgroundItem = &pData->backgroundItems[pData->listViewItemCount];
+    backgroundItem->bWallpaper = TRUE;
+    backgroundItem->bBing = TRUE;
+    Bing_GetCachePath(backgroundItem->szFilename, _countof(backgroundItem->szFilename));
+    LoadString(hApplet, IDS_BING_WALLPAPER, backgroundItem->szDisplayName,
+               _countof(backgroundItem->szDisplayName));
+    ZeroMemory(&listItem, sizeof(LV_ITEM));
+    listItem.mask       = LVIF_TEXT | LVIF_PARAM | LVIF_STATE | LVIF_IMAGE;
+    listItem.pszText    = backgroundItem->szDisplayName;
+    listItem.iImage     = -1;
+    {
+        HICON hBingIcon = NULL;
+        ExtractIconExW(L"shell32.dll", 13, NULL, &hBingIcon, 1);   /* globe */
+        if (hBingIcon)
+        {
+            listItem.iImage = ImageList_AddIcon(himl, hBingIcon);
+            DestroyIcon(hBingIcon);
+        }
+    }
+    listItem.iItem      = pData->listViewItemCount;
+    listItem.lParam     = pData->listViewItemCount;
+    (void)ListView_InsertItem(hwndBackgroundList, &listItem);
+    if (Bing_IsEnabled())
+    {
+        ListView_SetItemState(hwndBackgroundList, pData->listViewItemCount, LVIS_SELECTED, LVIS_SELECTED);
+        pData->backgroundSelection = pData->listViewItemCount;
+    }
     pData->listViewItemCount++;
 
     /* Add current wallpaper if any */
@@ -756,6 +787,14 @@ ListViewItemChanged(HWND hwndDlg, PBACKGROUND_DATA pData, int itemIndex)
     {
         DibFreeImage(pData->pWallpaperBitmap);
         pData->pWallpaperBitmap = NULL;
+    }
+
+    /* Bing: get today's picture the first time it is selected (for the preview) */
+    if (backgroundItem->bBing && GetFileAttributes(backgroundItem->szFilename) == INVALID_FILE_ATTRIBUTES)
+    {
+        HCURSOR hOldCursor = SetCursor(LoadCursor(NULL, IDC_WAIT));
+        Bing_Download();
+        SetCursor(hOldCursor);
     }
 
     if (backgroundItem->bWallpaper != FALSE)
@@ -1256,7 +1295,10 @@ BackgroundPageProc(HWND hwndDlg,
                 {
                     case PSN_APPLY:
                         if (pData->bWallpaperChanged)
+                        {
+                            Bing_SetEnabled(pData->backgroundItems[pData->backgroundSelection].bBing);
                             SetWallpaper(pData);
+                        }
                         if (pData->bClrBackgroundChanged)
                             SetDesktopBackColor(hwndDlg, pData);
                         if (pData->desktopData.bSettingsChanged)

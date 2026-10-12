@@ -440,10 +440,37 @@ ShowResolutionPreview(IN LPDRAWITEMSTRUCT draw, IN PSETTINGS_DATA pData)
     hDC = CreateCompatibleDC(draw->hDC);
     hOldObj = SelectObject(hDC, g_GlobalData.hMonitorBitmap);
 
-    /* FIXME: Draw resolution preview bitmap inside monitor. */
+    /* The desktop as it is now: the wallpaper (cached), or the desktop color */
     hBrush = CreateSolidBrush(g_GlobalData.desktop_color);
     FillRect(hDC, &rcItem, hBrush);
     DeleteObject(hBrush);
+    {
+        static WCHAR s_szCached[MAX_PATH] = L"";
+        static HBITMAP s_hbmWallpaper = NULL;
+        WCHAR szWallpaper[MAX_PATH] = L"";
+
+        SystemParametersInfoW(SPI_GETDESKWALLPAPER, _countof(szWallpaper), szWallpaper, 0);
+        if (wcscmp(szWallpaper, s_szCached) != 0)
+        {
+            if (s_hbmWallpaper)
+                DeleteObject(s_hbmWallpaper);
+            s_hbmWallpaper = szWallpaper[0] ?
+                (HBITMAP)LoadImageW(NULL, szWallpaper, IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE | LR_CREATEDIBSECTION) : NULL;
+            StringCchCopyW(s_szCached, _countof(s_szCached), szWallpaper);
+        }
+        if (s_hbmWallpaper)
+        {
+            BITMAP bm;
+            HDC hdcWall = CreateCompatibleDC(hDC);
+            HGDIOBJ hOldWall = SelectObject(hdcWall, s_hbmWallpaper);
+            GetObjectW(s_hbmWallpaper, sizeof(bm), &bm);
+            SetStretchBltMode(hDC, HALFTONE);
+            StretchBlt(hDC, rcItem.left, rcItem.top, rcItem.right - rcItem.left, rcItem.bottom - rcItem.top,
+                       hdcWall, 0, 0, bm.bmWidth, bm.bmHeight, SRCCOPY);
+            SelectObject(hdcWall, hOldWall);
+            DeleteDC(hdcWall);
+        }
+    }
 
     GdiTransparentBlt(draw->hDC,
                       draw->rcItem.left, draw->rcItem.top,

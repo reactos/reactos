@@ -310,3 +310,8 @@ BEGIN
     IDS_APPLY_NEEDS_RESTART "需要重新启动以生效。"
     IDS_TIMEOUTTEXT "%d 秒之内复原"
 END
+
+STRINGTABLE
+BEGIN
+    IDS_BING_WALLPAPER "Bing – picture of the day"
+END

@@ -6,6 +6,7 @@
  */
 
 #include "desk.h"
+#include <undocuser.h>
 
 static VOID
 InitFontSizeList(HWND hWnd)
@@ -54,13 +55,12 @@ InitFontSizeList(HWND hWnd)
                     if (i != CB_ERR)
                         SendMessage(hFontSize, CB_SETITEMDATA, (WPARAM)i, (LPARAM)ci);
 
-                    if ((int)dwValue == ci)
+                    /* Select the current DPI (the first entry if it is not in the list) */
+                    if ((int)dwValue == ci || SendMessage(hFontSize, CB_GETCURSEL, 0, 0) == CB_ERR)
                     {
                         SendMessage(hFontSize, CB_SETCURSEL, (WPARAM)i, 0);
                         SetWindowText(GetDlgItem(hWnd, IDC_FONTSIZE_CUSTOM), Desc);
                     }
-                    else
-                        SendMessage(hFontSize, CB_SETCURSEL, 0, 0);
                 }
 
                 if (!SetupFindNextLine(&Context, &Context))
@@ -148,6 +148,23 @@ AdvGeneralPageProc(HWND hwndDlg,
                 case IDC_ASKME_RB:
                     PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                 break;
+            }
+            break;
+
+        case WM_NOTIFY:
+            if (((LPNMHDR)lParam)->code == (UINT)PSN_APPLY)
+            {
+                /* Apply the scale (DPI) right away; it is also saved for the next start */
+                HWND hFontSize = GetDlgItem(hwndDlg, IDC_FONTSIZE_COMBO);
+                INT iSel = (INT)SendMessage(hFontSize, CB_GETCURSEL, 0, 0);
+                if (iSel != CB_ERR)
+                {
+                    UINT uDpi = (UINT)SendMessage(hFontSize, CB_GETITEMDATA, iSel, 0);
+                    SystemParametersInfoW(SPI_SETLOGICALDPIOVERRIDE, uDpi, NULL,
+                                          SPIF_UPDATEINIFILE | SPIF_SENDCHANGE);
+                }
+                SetWindowLongPtr(hwndDlg, DWLP_MSGRESULT, PSNRET_NOERROR);
+                Ret = TRUE;
             }
             break;
     }

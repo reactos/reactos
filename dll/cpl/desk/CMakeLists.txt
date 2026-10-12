@@ -6,6 +6,7 @@ list(APPEND SOURCE
     advmon.c
     appearance.c
     background.c
+    bing.c
     classinst.c
     desk.c
     desktop.c
@@ -37,6 +38,7 @@ add_library(desk MODULE
 
 set_module_type(desk cpl UNICODE)
 target_link_libraries(desk uuid)
+add_delay_importlibs(desk wininet)
 add_importlibs(desk user32 advapi32 gdi32 comctl32 comdlg32 ole32 setupapi shell32 shlwapi uxtheme gdiplus msvcrt kernel32 ntdll)
 add_pch(desk desk.h "${PCH_SKIP_SOURCE}")
 add_cd_file(TARGET desk DESTINATION reactos/system32 FOR all)

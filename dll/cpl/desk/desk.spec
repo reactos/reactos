@@ -5,3 +5,4 @@
 @ stdcall InstallScreenSaverA(ptr ptr str long)
 @ stdcall InstallScreenSaverW(ptr ptr wstr long)
 @ stdcall MonitorClassInstaller(long ptr ptr)
+@ stdcall UpdateBingWallpaper(ptr ptr str long)
