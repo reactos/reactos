@@ -12,6 +12,7 @@
 #include <regstr.h>
 #include <shlwapi_undoc.h>
 #include <psapi.h>
+#include <winver.h>
 
 /* Set DUMP_TASKS to 1 to enable a dump of the tasks and task groups every
    5 seconds */
@@ -174,6 +175,7 @@ typedef struct _TASK_ITEM
     PTASK_GROUP Group;
     INT Index;
     INT IconIndex;
+    INT PinIndex;   /* >= 0: shown by that pinned app's button instead of its own */
 
     union
     {
@@ -286,6 +288,78 @@ public:
         }
     }
 };
+
+/*
+ * Pinned apps (Windows 7/11 style): pinned programs keep a button at the start of
+ * the taskbar. While one runs, its windows are represented by that button (running
+ * pill, active tile, click to switch) instead of getting buttons of their own.
+ * Stored as program paths in HKCU\...\Explorer\Taskband\ReactOSPinnedApps.
+ */
+#define MAX_PINS        32
+#define PIN_CMD_BASE    0x4000
+#define PIN_REG_KEY     L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Taskband"
+#define PIN_REG_VALUE   L"ReactOSPinnedApps"
+#define PIN_DEFAULTS    L"%SystemRoot%\\explorer.exe\0%SystemRoot%\\system32\\settings.exe\0"
+
+typedef struct _PINNED_APP
+{
+    WCHAR szPath[MAX_PATH];
+    WCHAR szName[128];
+    INT IconIndex;
+} PINNED_APP;
+
+/* Full path of the program that owns a window */
+static BOOL GetWindowExePath(HWND hWnd, LPWSTR pszPath, DWORD cchPath)
+{
+    DWORD dwPid = 0;
+    HANDLE hProcess;
+    BOOL bOk = FALSE;
+
+    GetWindowThreadProcessId(hWnd, &dwPid);
+    hProcess = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, dwPid);
+    if (hProcess)
+    {
+        bOk = GetModuleFileNameExW(hProcess, NULL, pszPath, cchPath) > 0;
+        CloseHandle(hProcess);
+    }
+    return bOk;
+}
+
+/* "Notepad" from the program's version info, or its file name */
+static VOID GetAppDisplayName(LPCWSTR pszPath, LPWSTR pszName, DWORD cchName)
+{
+    DWORD dwHandle, cbInfo = GetFileVersionInfoSizeW(pszPath, &dwHandle);
+    PCWSTR pszFile;
+
+    if (cbInfo)
+    {
+        PVOID pInfo = HeapAlloc(GetProcessHeap(), 0, cbInfo);
+        if (pInfo && GetFileVersionInfoW(pszPath, 0, cbInfo, pInfo))
+        {
+            WORD *pLang;
+            UINT cb;
+            if (VerQueryValueW(pInfo, L"\\VarFileInfo\\Translation", (PVOID *)&pLang, &cb) && cb >= 4)
+            {
+                WCHAR szSub[64];
+                PWSTR pszDesc;
+                StringCchPrintfW(szSub, _countof(szSub), L"\\StringFileInfo\\%04x%04x\\FileDescription",
+                                 pLang[0], pLang[1]);
+                if (VerQueryValueW(pInfo, szSub, (PVOID *)&pszDesc, &cb) && cb > 1 && *pszDesc)
+                {
+                    StringCchCopyW(pszName, cchName, pszDesc);
+                    HeapFree(GetProcessHeap(), 0, pInfo);
+                    return;
+                }
+            }
+        }
+        if (pInfo)
+            HeapFree(GetProcessHeap(), 0, pInfo);
+    }
+
+    pszFile = PathFindFileNameW(pszPath);
+    StringCchCopyW(pszName, cchName, pszFile);
+    PathRemoveExtensionW(pszName);
+}
 
 class CTaskToolbar :
     public CWindowImplBaseT< CToolbar<TASK_ITEM>, CControlWinTraits >
@@ -415,6 +489,13 @@ class CTaskSwitchWnd :
     INT m_nRudeAppValidationCounter;
 
     SIZE m_ButtonSize;
+    INT m_cyLastButton = 0;
+
+    /* Pinned apps */
+    CTaskToolbar m_PinBar;
+    HIMAGELIST m_PinImageList = NULL;
+    PINNED_APP m_Pins[MAX_PINS];
+    INT m_PinCount = 0;
 
     UINT m_uHardErrorMsg;
     CHardErrorThread m_HardErrorThread;
@@ -591,7 +672,7 @@ public:
 #define GET_ICON(type) \
     SendMessageTimeout(hwnd, WM_GETICON, (type), 0, SMTO_NOTIMEOUTIFNOTHUNG, 100, (PDWORD_PTR)&hIcon)
 
-        LRESULT bAlive = GET_ICON(g_TaskbarSettings.bSmallIcons ? ICON_SMALL2 : ICON_BIG);
+        LRESULT bAlive = GET_ICON(UseSmallIcons() ? ICON_SMALL2 : ICON_BIG);
         if (hIcon)
             return hIcon;
 
@@ -604,18 +685,18 @@ public:
 
         if (bAlive)
         {
-            GET_ICON(g_TaskbarSettings.bSmallIcons ? ICON_BIG : ICON_SMALL2);
+            GET_ICON(UseSmallIcons() ? ICON_BIG : ICON_SMALL2);
             if (hIcon)
                 return hIcon;
         }
 #undef GET_ICON
 
         /* If we failed, retrieve icon from the window class */
-        hIcon = (HICON)GetClassLongPtr(hwnd, g_TaskbarSettings.bSmallIcons ? GCLP_HICONSM : GCLP_HICON);
+        hIcon = (HICON)GetClassLongPtr(hwnd, UseSmallIcons() ? GCLP_HICONSM : GCLP_HICON);
         if (hIcon)
             return hIcon;
 
-        return (HICON)GetClassLongPtr(hwnd, g_TaskbarSettings.bSmallIcons ? GCLP_HICON : GCLP_HICONSM);
+        return (HICON)GetClassLongPtr(hwnd, UseSmallIcons() ? GCLP_HICON : GCLP_HICONSM);
     }
 
     INT UpdateTaskItemButton(IN PTASK_ITEM TaskItem)
@@ -623,6 +704,12 @@ public:
         TBBUTTONINFO tbbi = { 0 };
         HICON icon;
         WCHAR windowText[255];
+
+        if (TaskItem->Index < 0 && TaskItem->PinIndex >= 0)
+        {
+            m_PinBar.InvalidateRect(NULL, TRUE);
+            return -1;
+        }
 
         ASSERT(TaskItem->Index >= 0);
 
@@ -781,6 +868,13 @@ public:
         INT iIndex;
         HICON icon;
 
+        if (TaskItem->PinIndex >= 0)
+        {
+            /* Represented by its pinned app button */
+            m_PinBar.InvalidateRect(NULL, TRUE);
+            return -1;
+        }
+
         if (TaskItem->Index >= 0)
         {
             return UpdateTaskItemButton(TaskItem);
@@ -800,7 +894,7 @@ public:
 
         tbBtn.iBitmap = TaskItem->IconIndex;
         tbBtn.fsState = TBSTATE_ENABLED | TBSTATE_ELLIPSES;
-        tbBtn.fsStyle = BTNS_CHECK | BTNS_NOPREFIX | BTNS_SHOWTEXT;
+        tbBtn.fsStyle = BTNS_CHECK | BTNS_NOPREFIX | (IsIconOnly() ? 0 : BTNS_SHOWTEXT);
         tbBtn.dwData = TaskItem->Index;
 
         if (GetWndTextFromTaskItem(TaskItem, windowText, _countof(windowText)) > 0)
@@ -1100,6 +1194,10 @@ public:
 
         /* Free the task item */
         FreeTaskItem(TaskItem);
+
+        /* A pinned app may have lost its last window */
+        if (m_PinBar.m_hWnd)
+            m_PinBar.InvalidateRect(NULL, TRUE);
     }
 
     VOID CheckActivateTaskItem(IN OUT PTASK_ITEM TaskItem)
@@ -1149,6 +1247,10 @@ public:
         }
 
         m_ActiveTaskItem = TaskItem;
+
+        /* The active window may belong to a pinned app */
+        if (m_PinBar.m_hWnd)
+            m_PinBar.InvalidateRect(NULL, TRUE);
 
         if (TaskItem != NULL && TaskItem->Index >= 0)
         {
@@ -1210,6 +1312,7 @@ public:
                 ZeroMemory(TaskItem, sizeof(*TaskItem));
                 TaskItem->hWnd = hWnd;
                 TaskItem->Index = -1;
+                TaskItem->PinIndex = GetPinIndexForWindow(hWnd);
                 TaskItem->Group = AddToTaskGroup(hWnd);
 
                 if (!m_IsDestroying)
@@ -1348,6 +1451,487 @@ public:
         return FALSE;
     }
 
+    /* Windows 11 style: icon-only buttons (title shown as tooltip) on a horizontal
+     * taskbar. The alignment setting (left/center) only moves them, like on Windows 11. */
+    BOOL IsIconOnly()
+    {
+        return m_Tray->IsHorizontal();
+    }
+
+    /* The toolbar recomputes its button height as icon height + vertical padding,
+     * overriding TB_SETBUTTONSIZE: set the padding so that this gives S too */
+    VOID SetIconOnlyButtonSize(CTaskToolbar &Toolbar, INT S)
+    {
+        INT cyIcon = GetTaskIconSize().cy;
+        /* (TB_SETPADDING would clamp the padding to SM_CYEDGE; TB_SETMETRICS doesn't) */
+        TBMETRICS tbm = { sizeof(tbm), TBMF_PAD };
+        tbm.cxPad = max(0, S - cyIcon);
+        tbm.cyPad = max(0, S - cyIcon);
+        Toolbar.SendMessageW(TB_SETMETRICS, 0, (LPARAM)&tbm);
+        Toolbar.SendMessageW(TB_SETBUTTONSIZE, 0, MAKELONG(S, S));
+    }
+
+    /* Size of a task button image: the same as the Start button's */
+    INT GetButtonImageSize()
+    {
+        if (g_StartImageSize.cy > 0)
+            return g_StartImageSize.cy;
+        HDC hdc = GetDC();
+        INT cy = MulDiv(48, GetDeviceCaps(hdc, LOGPIXELSY), 96);
+        ReleaseDC(hdc);
+        return cy;
+    }
+
+    /*
+     * Windows 11 style taskbar button: the theme tile drawn at exactly the Start
+     * button's size, centered on the taskbar's vertical center (like the Start
+     * button), the icon centered on it, and the pill under the icon:
+     * PillWidth 0 = not running, small = running, wide = active window.
+     */
+    VOID DrawTaskTile(HWND hwndToolbar, HDC hdc, const RECT *prc, UINT uItemState, BOOL bActive,
+                      INT PillWidth, HIMAGELIST himl, INT IconIndex)
+    {
+        HTHEME hTheme = GetWindowTheme(hwndToolbar);
+        INT S = GetButtonImageSize(), cxIcon = GetTaskIconSize().cx, iState;
+        RECT rcTray, rcImage;
+        POINT ptCenter;
+        HWND hwndTray = GetAncestor(m_hWnd, GA_ROOT);
+
+        /* Vertical center of the taskbar, in toolbar coordinates */
+        ::GetClientRect(hwndTray, &rcTray);
+        ptCenter.x = 0;
+        ptCenter.y = rcTray.bottom / 2;
+        ::MapWindowPoints(hwndTray, hwndToolbar, &ptCenter, 1);
+
+        rcImage.left = (prc->left + prc->right - S) / 2;
+        rcImage.top = ptCenter.y - S / 2;
+        rcImage.right = rcImage.left + S;
+        rcImage.bottom = rcImage.top + S;
+
+        if (uItemState & CDIS_MARKED)
+        {
+            /* Flashing: the theme's flash tile */
+            DrawThemeBackground(m_Theme, hdc, TDP_FLASHBUTTON, 0, &rcImage, NULL);
+        }
+        else if (hTheme)
+        {
+            if (bActive)
+                iState = (uItemState & CDIS_HOT) ? TS_HOTCHECKED : TS_CHECKED;
+            else if (uItemState & CDIS_SELECTED)
+                iState = TS_PRESSED;
+            else if (uItemState & CDIS_HOT)
+                iState = TS_HOT;
+            else
+                iState = TS_NORMAL;
+            DrawThemeBackground(hTheme, hdc, TP_BUTTON, iState, &rcImage, NULL);
+        }
+
+        /* Icon centered on the tile, a little above the pill */
+        if (IconIndex >= 0)
+        {
+            ImageList_Draw(himl, IconIndex, hdc,
+                           rcImage.left + (S - cxIcon) / 2,
+                           rcImage.top + (S - cxIcon) / 2 - S / 24,
+                           ILD_TRANSPARENT);
+        }
+
+        /* The pill: gray when running, accent colored and wider when active */
+        if (PillWidth > 0)
+        {
+            INT cy = max(3, S / 16), inset = S / 12;
+            RECT rcPill;
+            HBRUSH hbr = CreateSolidBrush(GetSysColor(bActive ? COLOR_HOTLIGHT : COLOR_GRAYTEXT));
+            HGDIOBJ hOldBrush = SelectObject(hdc, hbr), hOldPen = SelectObject(hdc, GetStockObject(NULL_PEN));
+            rcPill.left = rcImage.left + (S - PillWidth) / 2;
+            rcPill.right = rcPill.left + PillWidth;
+            rcPill.bottom = rcImage.bottom - inset - 1;
+            rcPill.top = rcPill.bottom - cy;
+            RoundRect(hdc, rcPill.left, rcPill.top, rcPill.right + 1, rcPill.bottom + 1, cy, cy);
+            SelectObject(hdc, hOldBrush);
+            SelectObject(hdc, hOldPen);
+            DeleteObject(hbr);
+        }
+    }
+
+    INT PillWidthFor(BOOL bRunning, BOOL bActive)
+    {
+        INT S = GetButtonImageSize();
+        return !bRunning ? 0 : bActive ? S / 3 : S / 8;
+    }
+
+    /* Returns FALSE to let the toolbar draw (classic look, groups) */
+    BOOL DrawIconOnlyButton(IN OUT NMTBCUSTOMDRAW *nmtbcd, PTASK_ITEM TaskItem)
+    {
+        BOOL bActive = (nmtbcd->nmcd.uItemState & CDIS_CHECKED) != 0;
+
+        if (!IsIconOnly() || !GetWindowTheme(m_TaskBar.m_hWnd) || !TaskItem)
+            return FALSE;
+
+        DrawTaskTile(m_TaskBar.m_hWnd, nmtbcd->nmcd.hdc, &nmtbcd->nmcd.rc, nmtbcd->nmcd.uItemState,
+                     bActive, PillWidthFor(TRUE, bActive), m_ImageList, TaskItem->IconIndex);
+        return TRUE;
+    }
+
+    /* ---- Pinned apps ------------------------------------------------------ */
+
+    INT FindPin(LPCWSTR pszPath)
+    {
+        for (INT i = 0; i < m_PinCount; i++)
+        {
+            if (!_wcsicmp(m_Pins[i].szPath, pszPath))
+                return i;
+        }
+        return -1;
+    }
+
+    INT GetPinIndexForWindow(HWND hWnd)
+    {
+        WCHAR szPath[MAX_PATH];
+        if (!m_PinCount || !IsIconOnly() || !GetWindowExePath(hWnd, szPath, _countof(szPath)))
+            return -1;
+        return FindPin(szPath);
+    }
+
+    INT PinBarWidth()
+    {
+        return (m_PinCount && IsIconOnly()) ? m_PinCount * GetButtonImageSize() : 0;
+    }
+
+    BOOL AddPinEntry(LPCWSTR pszPath)
+    {
+        if (m_PinCount >= MAX_PINS || FindPin(pszPath) >= 0 || GetFileAttributesW(pszPath) == INVALID_FILE_ATTRIBUTES)
+            return FALSE;
+        PINNED_APP *Pin = &m_Pins[m_PinCount++];
+        StringCchCopyW(Pin->szPath, _countof(Pin->szPath), pszPath);
+        GetAppDisplayName(pszPath, Pin->szName, _countof(Pin->szName));
+        Pin->IconIndex = -1;
+        return TRUE;
+    }
+
+    VOID LoadPins()
+    {
+        WCHAR szList[MAX_PINS * MAX_PATH];
+        DWORD cbList = sizeof(szList) - 2 * sizeof(WCHAR), dwType = 0;
+
+        ZeroMemory(szList, sizeof(szList));
+        if (SHGetValueW(HKEY_CURRENT_USER, PIN_REG_KEY, PIN_REG_VALUE, &dwType, szList, &cbList) != ERROR_SUCCESS ||
+            dwType != REG_MULTI_SZ)
+        {
+            /* Default pins: File Explorer and Settings */
+            CopyMemory(szList, PIN_DEFAULTS, sizeof(PIN_DEFAULTS));
+        }
+
+        m_PinCount = 0;
+        for (PCWSTR psz = szList; *psz; psz += wcslen(psz) + 1)
+        {
+            WCHAR szPath[MAX_PATH];
+            if (ExpandEnvironmentStringsW(psz, szPath, _countof(szPath)))
+                AddPinEntry(szPath);
+        }
+    }
+
+    VOID SavePins()
+    {
+        WCHAR szList[MAX_PINS * MAX_PATH];
+        PWSTR psz = szList;
+
+        for (INT i = 0; i < m_PinCount; i++)
+        {
+            StringCchCopyW(psz, _countof(szList) - (psz - szList) - 1, m_Pins[i].szPath);
+            psz += wcslen(psz) + 1;
+        }
+        *psz++ = UNICODE_NULL;
+        SHSetValueW(HKEY_CURRENT_USER, PIN_REG_KEY, PIN_REG_VALUE, REG_MULTI_SZ,
+                    szList, (DWORD)((psz - szList) * sizeof(WCHAR)));
+    }
+
+    VOID LayoutBars()
+    {
+        RECT rc;
+        INT cxPins = PinBarWidth();
+
+        if (!m_TaskBar.m_hWnd || !GetClientRect(&rc))
+            return;
+        if (m_PinBar.m_hWnd)
+        {
+            m_PinBar.SetWindowPos(NULL, 0, 0, cxPins, rc.bottom,
+                                  SWP_NOZORDER | SWP_NOACTIVATE | (cxPins ? SWP_SHOWWINDOW : SWP_HIDEWINDOW));
+        }
+        m_TaskBar.SetWindowPos(NULL, cxPins, 0, rc.right - cxPins, rc.bottom, SWP_NOZORDER | SWP_NOACTIVATE);
+    }
+
+    /* (Re)create the pinned buttons: after loading, pin/unpin, icon size changes */
+    VOID RebuildPinBar()
+    {
+        if (!m_PinBar.m_hWnd)
+            return;
+
+        SIZE IconSize = GetTaskIconSize();
+        m_PinBar.BeginUpdate();
+        while (m_PinBar.GetButtonCount() > 0)
+            m_PinBar.DeleteButton(0);
+        ImageList_SetIconSize(m_PinImageList, IconSize.cx, IconSize.cy);   /* also empties it */
+        m_PinBar.SetImageList(m_PinImageList);
+        SetIconOnlyButtonSize(m_PinBar, GetButtonImageSize());
+
+        for (INT i = 0; i < m_PinCount; i++)
+        {
+            HICON hIcon = NULL;
+            TBBUTTON tbBtn = { 0 };
+
+            PrivateExtractIconsW(m_Pins[i].szPath, 0, IconSize.cx, IconSize.cy, &hIcon, NULL, 1, 0);
+            m_Pins[i].IconIndex = hIcon ? ImageList_ReplaceIcon(m_PinImageList, -1, hIcon) : -1;
+            if (hIcon)
+                DestroyIcon(hIcon);
+
+            tbBtn.iBitmap = m_Pins[i].IconIndex;
+            tbBtn.idCommand = PIN_CMD_BASE + i;
+            tbBtn.fsState = TBSTATE_ENABLED;
+            tbBtn.fsStyle = BTNS_BUTTON | BTNS_NOPREFIX;    /* no BTNS_SHOWTEXT: name = tooltip */
+            tbBtn.dwData = i;
+            tbBtn.iString = (INT_PTR)m_Pins[i].szName;
+            m_PinBar.InsertButton(i, &tbBtn);
+        }
+        m_PinBar.EndUpdate();
+        LayoutBars();
+    }
+
+    /* Recompute which pin represents each window (after pins changed) */
+    VOID RematchPins()
+    {
+        for (INT i = 0; i < m_TaskItemCount; i++)
+        {
+            PTASK_ITEM TaskItem = &m_TaskItems[i];
+            INT PinIndex = GetPinIndexForWindow(TaskItem->hWnd);
+            if (PinIndex == TaskItem->PinIndex)
+                continue;
+
+            TaskItem->PinIndex = PinIndex;
+            if (PinIndex >= 0)
+                DeleteTaskItemButton(TaskItem);     /* now shown by the pin */
+            else
+                AddTaskItemButton(TaskItem);        /* gets its own button again */
+        }
+        UpdateButtonsSize(FALSE);
+    }
+
+    VOID PinApp(LPCWSTR pszPath)
+    {
+        if (!AddPinEntry(pszPath))
+            return;
+        SavePins();
+        RebuildPinBar();
+        RematchPins();
+    }
+
+    VOID UnpinApp(INT PinIndex)
+    {
+        if (PinIndex < 0 || PinIndex >= m_PinCount)
+            return;
+        MoveMemory(&m_Pins[PinIndex], &m_Pins[PinIndex + 1], (m_PinCount - PinIndex - 1) * sizeof(PINNED_APP));
+        m_PinCount--;
+        SavePins();
+        /* Pin indexes changed: windows will be matched again */
+        for (INT i = 0; i < m_TaskItemCount; i++)
+        {
+            if (m_TaskItems[i].PinIndex == PinIndex)
+                m_TaskItems[i].PinIndex = -2;   /* force a re-match */
+            else if (m_TaskItems[i].PinIndex > PinIndex)
+                m_TaskItems[i].PinIndex--;
+        }
+        RebuildPinBar();
+        RematchPins();
+    }
+
+    /* Windows of a pinned app, in taskbar order; returns how many */
+    INT GetPinWindows(INT PinIndex, PTASK_ITEM *pFirst, PTASK_ITEM *pNextAfterActive)
+    {
+        INT Count = 0;
+        BOOL bAfterActive = FALSE;
+        *pFirst = *pNextAfterActive = NULL;
+        for (INT i = 0; i < m_TaskItemCount; i++)
+        {
+            PTASK_ITEM TaskItem = &m_TaskItems[i];
+            if (TaskItem->PinIndex != PinIndex)
+                continue;
+            Count++;
+            if (!*pFirst)
+                *pFirst = TaskItem;
+            if (bAfterActive && !*pNextAfterActive)
+                *pNextAfterActive = TaskItem;
+            if (TaskItem == m_ActiveTaskItem)
+                bAfterActive = TRUE;
+        }
+        return Count;
+    }
+
+    VOID HandlePinClick(INT PinIndex)
+    {
+        PTASK_ITEM First, Next, Target;
+        INT Count;
+
+        if (PinIndex < 0 || PinIndex >= m_PinCount)
+            return;
+
+        Count = GetPinWindows(PinIndex, &First, &Next);
+        if (!Count)
+        {
+            /* Not running: start it */
+            ShellExecuteW(NULL, NULL, m_Pins[PinIndex].szPath, NULL, NULL, SW_SHOWNORMAL);
+            return;
+        }
+
+        /* Running: switch to it, cycle through its windows, or minimize the only one */
+        if (m_ActiveTaskItem && m_ActiveTaskItem->PinIndex == PinIndex)
+            Target = Next ? Next : (Count > 1 ? First : m_ActiveTaskItem);
+        else
+            Target = First;
+        HandleTaskItemClick(Target);
+    }
+
+    LRESULT HandlePinNotification(IN const NMHDR *nmh)
+    {
+        if (nmh->code != NM_CUSTOMDRAW)
+            return 0;
+
+        LPNMTBCUSTOMDRAW nmtbcd = (LPNMTBCUSTOMDRAW)nmh;
+        if (nmtbcd->nmcd.dwDrawStage == CDDS_PREPAINT)
+            return CDRF_NOTIFYITEMDRAW;
+        if (nmtbcd->nmcd.dwDrawStage != CDDS_ITEMPREPAINT)
+            return CDRF_DODEFAULT;
+
+        INT PinIndex = (INT)nmtbcd->nmcd.lItemlParam;
+        PTASK_ITEM First, Next;
+        BOOL bRunning = (PinIndex >= 0 && PinIndex < m_PinCount) && GetPinWindows(PinIndex, &First, &Next) > 0;
+        BOOL bActive = bRunning && m_ActiveTaskItem && m_ActiveTaskItem->PinIndex == PinIndex;
+
+        DrawTaskTile(m_PinBar.m_hWnd, nmtbcd->nmcd.hdc, &nmtbcd->nmcd.rc, nmtbcd->nmcd.uItemState & ~CDIS_CHECKED,
+                     bActive, PillWidthFor(bRunning, bActive), m_PinImageList,
+                     (PinIndex >= 0 && PinIndex < m_PinCount) ? m_Pins[PinIndex].IconIndex : -1);
+        return CDRF_SKIPDEFAULT;
+    }
+
+    /*
+     * Windows 11 style menu for a taskbar button: the app (starts a new one),
+     * pin/unpin, and close. pTaskItem: a window without a pin; PinIndex: a pin.
+     */
+    VOID ShowAppMenu(PTASK_ITEM pTaskItem, INT PinIndex)
+    {
+        enum { CMD_LAUNCH = 1, CMD_PIN, CMD_UNPIN, CMD_CLOSE };
+        WCHAR szPath[MAX_PATH], szName[128], szText[128];
+        PTASK_ITEM First = NULL, Next = NULL;
+        INT Count = 0, Cmd;
+        POINT pt;
+        HMENU hMenu;
+
+        if (PinIndex >= 0)
+        {
+            StringCchCopyW(szPath, _countof(szPath), m_Pins[PinIndex].szPath);
+            StringCchCopyW(szName, _countof(szName), m_Pins[PinIndex].szName);
+            Count = GetPinWindows(PinIndex, &First, &Next);
+        }
+        else
+        {
+            if (!GetWindowExePath(pTaskItem->hWnd, szPath, _countof(szPath)))
+                return;
+            GetAppDisplayName(szPath, szName, _countof(szName));
+            First = pTaskItem;
+            Count = 1;
+        }
+
+        hMenu = CreatePopupMenu();
+        AppendMenuW(hMenu, MF_STRING, CMD_LAUNCH, szName);
+        SetMenuDefaultItem(hMenu, CMD_LAUNCH, FALSE);
+        AppendMenuW(hMenu, MF_SEPARATOR, 0, NULL);
+        LoadStringW(hExplorerInstance, PinIndex >= 0 ? IDS_UNPIN_FROM_TASKBAR : IDS_PIN_TO_TASKBAR, szText, _countof(szText));
+        AppendMenuW(hMenu, MF_STRING, PinIndex >= 0 ? CMD_UNPIN : CMD_PIN, szText);
+        if (Count)
+        {
+            LoadStringW(hExplorerInstance, Count > 1 ? IDS_CLOSE_ALL_WINDOWS : IDS_CLOSE_WINDOW, szText, _countof(szText));
+            AppendMenuW(hMenu, MF_SEPARATOR, 0, NULL);
+            AppendMenuW(hMenu, MF_STRING, CMD_CLOSE, szText);
+        }
+
+        /* No tooltips while the menu is open: they would cover it (the mouse is
+         * still over the button, so hiding one just makes it come back) */
+        HWND hwndTips[2] = { (HWND)m_TaskBar.SendMessageW(TB_GETTOOLTIPS, 0, 0),
+                             (HWND)m_PinBar.SendMessageW(TB_GETTOOLTIPS, 0, 0) };
+        for (INT i = 0; i < 2; i++)
+        {
+            if (hwndTips[i])
+            {
+                ::SendMessageW(hwndTips[i], TTM_ACTIVATE, FALSE, 0);
+                ::SendMessageW(hwndTips[i], TTM_POP, 0, 0);
+            }
+        }
+
+        GetCursorPos(&pt);
+        ::SetForegroundWindow(GetAncestor(m_hWnd, GA_ROOT));
+        Cmd = TrackPopupMenu(hMenu, TPM_RETURNCMD | TPM_RIGHTBUTTON | TPM_BOTTOMALIGN, pt.x, pt.y, 0, m_hWnd, NULL);
+        DestroyMenu(hMenu);
+
+        for (INT i = 0; i < 2; i++)
+        {
+            if (hwndTips[i])
+                ::SendMessageW(hwndTips[i], TTM_ACTIVATE, TRUE, 0);
+        }
+
+        switch (Cmd)
+        {
+            case CMD_LAUNCH:
+                ShellExecuteW(NULL, NULL, szPath, NULL, NULL, SW_SHOWNORMAL);
+                break;
+            case CMD_PIN:
+                PinApp(szPath);
+                break;
+            case CMD_UNPIN:
+                UnpinApp(PinIndex);
+                break;
+            case CMD_CLOSE:
+                for (INT i = m_TaskItemCount - 1; i >= 0; i--)
+                {
+                    PTASK_ITEM TaskItem = &m_TaskItems[i];
+                    if (TaskItem == pTaskItem || (PinIndex >= 0 && TaskItem->PinIndex == PinIndex))
+                        ::PostMessageW(TaskItem->hWnd, WM_SYSCOMMAND, SC_CLOSE, 0);
+                }
+                break;
+        }
+    }
+
+    LRESULT OnGetContentWidth(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+    {
+        /* Width of the pinned buttons and the task buttons (for the centered layout) */
+        INT cx = PinBarWidth(), n = m_TaskBar.GetButtonCount();
+        RECT rcItem;
+        if (n > 0 && m_TaskBar.GetItemRect(n - 1, &rcItem))
+            cx += rcItem.right;
+        return cx;
+    }
+
+    BOOL UseSmallIcons()
+    {
+        return g_TaskbarSettings.bSmallIcons && !IsIconOnly();
+    }
+
+    /* Icon-only buttons use 32px icons at 100% (96 DPI): the programs' native large
+     * icons, the same size as the Start logo */
+    SIZE GetTaskIconSize()
+    {
+        SIZE Size;
+        if (IsIconOnly())
+        {
+            HDC hdc = GetDC();
+            Size.cx = Size.cy = MulDiv(32, GetDeviceCaps(hdc, LOGPIXELSY), 96);
+            ReleaseDC(hdc);
+        }
+        else
+        {
+            Size.cx = GetSystemMetrics(g_TaskbarSettings.bSmallIcons ? SM_CXSMICON : SM_CXICON);
+            Size.cy = GetSystemMetrics(g_TaskbarSettings.bSmallIcons ? SM_CYSMICON : SM_CYICON);
+        }
+        return Size;
+    }
+
     VOID UpdateButtonsSize(IN BOOL bRedrawDisabled)
     {
         RECT rcClient;
@@ -1357,13 +1941,11 @@ public:
 
         /* Update the size of the image list if needed */
         int cx, cy;
+        SIZE IconSize = GetTaskIconSize();
         ImageList_GetIconSize(m_ImageList, &cx, &cy);
-        if (cx != GetSystemMetrics(g_TaskbarSettings.bSmallIcons ? SM_CXSMICON : SM_CXICON) ||
-            cy != GetSystemMetrics(g_TaskbarSettings.bSmallIcons ? SM_CYSMICON : SM_CYICON))
+        if (cx != IconSize.cx || cy != IconSize.cy)
         {
-            ImageList_SetIconSize(m_ImageList,
-                                  GetSystemMetrics(g_TaskbarSettings.bSmallIcons ? SM_CXSMICON : SM_CXICON),
-                                  GetSystemMetrics(g_TaskbarSettings.bSmallIcons ? SM_CYSMICON : SM_CYICON));
+            ImageList_SetIconSize(m_ImageList, IconSize.cx, IconSize.cy);
 
             /* SetIconSize removes all icons so we have to reinsert them */
             PTASK_ITEM TaskItem = m_TaskItems;
@@ -1376,10 +1958,14 @@ public:
                 TaskItem++;
             }
             m_TaskBar.SetImageList(m_ImageList);
+
+            /* The pinned buttons too */
+            RebuildPinBar();
         }
 
         if (GetClientRect(&rcClient) && !IsRectEmpty(&rcClient))
         {
+            rcClient.right -= PinBarWidth();
             if (m_ButtonCount > 0)
             {
                 Horizontal = m_Tray->IsHorizontal();
@@ -1428,6 +2014,22 @@ public:
                         NewBtnSize = uiMin;
                     if (NewBtnSize >(LONG)uiMax)
                         NewBtnSize = uiMax;
+
+                    if (IsIconOnly())
+                    {
+                        /* Square buttons exactly the size of the Start button image; they are
+                         * custom drawn (HandleItemPaint) at the same place as the Start button */
+                        NewBtnSize = GetButtonImageSize();
+                        SetIconOnlyButtonSize(m_TaskBar, NewBtnSize);
+
+                        /* The band must be as tall as the buttons, or their tiles get cut off:
+                         * have the taskbar re-read the band size when it changes */
+                        if (NewBtnSize != m_cyLastButton)
+                        {
+                            m_cyLastButton = NewBtnSize;
+                            ::PostMessageW(GetAncestor(m_hWnd, GA_ROOT), TWM_REALIGNCONTROLS, 1, 0);
+                        }
+                    }
 
                     /* Recalculate how many buttons actually fit into one line */
                     uiBtnsPerLine = rcClient.right / (NewBtnSize + cxButtonSpacing);
@@ -1481,6 +2083,10 @@ public:
 
         // FIXME: This seems to be enabling redraws prematurely, but moving it to its right place doesn't work!
         m_TaskBar.EndUpdate();
+
+        /* The centered taskbar layout depends on the number of buttons */
+        if (IsIconOnly() && g_TaskbarSettings.bCenterTaskbar)
+            ::PostMessageW(GetAncestor(m_hWnd, GA_ROOT), TWM_REALIGNCONTROLS, 0, 0);
     }
 
     BOOL CALLBACK EnumWindowsProc(IN HWND hWnd)
@@ -1524,14 +2130,34 @@ public:
 
     LRESULT OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
+        /* Pinned apps toolbar. Created first: other code finds the task toolbar as
+         * this window's first child (the most recently created one) */
+        if (m_PinBar.Initialize(m_hWnd))
+        {
+            SIZE PinIconSize = GetTaskIconSize();
+            SetWindowTheme(m_PinBar.m_hWnd, L"TaskBand", NULL);
+            m_PinBar.SendMessageW(TB_SETEXTENDEDSTYLE, 0,
+                                  m_PinBar.SendMessageW(TB_GETEXTENDEDSTYLE, 0, 0) | TBSTYLE_EX_MIXEDBUTTONS);
+            m_PinImageList = ImageList_Create(PinIconSize.cx, PinIconSize.cy, ILC_COLOR32 | ILC_MASK, 0, MAX_PINS);
+            LoadPins();
+        }
+
         if (!m_TaskBar.Initialize(m_hWnd))
             return FALSE;
 
         SetWindowTheme(m_TaskBar.m_hWnd, L"TaskBand", NULL);
 
-        m_ImageList = ImageList_Create(GetSystemMetrics(g_TaskbarSettings.bSmallIcons ? SM_CXSMICON : SM_CXICON),
-                                       GetSystemMetrics(g_TaskbarSettings.bSmallIcons ? SM_CYSMICON : SM_CYICON),
-                                       ILC_COLOR32 | ILC_MASK, 0, 1000);
+        /* Icon-only buttons are as large as the Start button from the start, so the
+         * band is tall enough even before the first window appears */
+        if (IsIconOnly())
+            SetIconOnlyButtonSize(m_TaskBar, GetButtonImageSize());
+
+        /* Buttons without BTNS_SHOWTEXT (icon-only mode) use their text as tooltip */
+        m_TaskBar.SendMessageW(TB_SETEXTENDEDSTYLE, 0,
+                               m_TaskBar.SendMessageW(TB_GETEXTENDEDSTYLE, 0, 0) | TBSTYLE_EX_MIXEDBUTTONS);
+
+        SIZE IconSize = GetTaskIconSize();
+        m_ImageList = ImageList_Create(IconSize.cx, IconSize.cy, ILC_COLOR32 | ILC_MASK, 0, 1000);
         m_TaskBar.SetImageList(m_ImageList);
 
         /* Set proper spacing between buttons */
@@ -1544,6 +2170,7 @@ public:
 
         RegisterShellHook(m_hWnd, 3); /* 1 if no NT! We're targeting NT so we don't care! */
 
+        RebuildPinBar();
         RefreshWindowList();
 
         /* Recalculate the button size */
@@ -1571,6 +2198,12 @@ public:
 
         CloseThemeData(m_Theme);
         DeleteAllTasks();
+
+        if (m_PinImageList)
+        {
+            ImageList_Destroy(m_PinImageList);
+            m_PinImageList = NULL;
+        }
 
         if (m_ImageList)
         {
@@ -1801,6 +2434,13 @@ public:
         POINT pt;
         GetCursorPos(&pt);
 
+        /* Windows 11 style menu (pin, close); Shift+right-click gives the window menu */
+        if (IsIconOnly() && !(GetKeyState(VK_SHIFT) & 0x8000))
+        {
+            ShowAppMenu(TaskItem, -1);
+            return;
+        }
+
         SetForegroundWindow(TaskItem->hWnd);
 
         ActivateTask(TaskItem->hWnd);
@@ -1857,6 +2497,9 @@ public:
 
             if (TaskItem != NULL && ::IsWindow(TaskItem->hWnd))
             {
+                if (DrawIconOnlyButton(nmtbcd, TaskItem))
+                    return CDRF_SKIPDEFAULT;
+
                 /* Make the entire button flashing if necessary */
                 if (nmtbcd->nmcd.uItemState & CDIS_MARKED)
                 {
@@ -2061,13 +2704,9 @@ public:
 
     LRESULT OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
-        SIZE szClient;
-
-        szClient.cx = LOWORD(lParam);
-        szClient.cy = HIWORD(lParam);
         if (m_TaskBar.m_hWnd != NULL)
         {
-            m_TaskBar.SetWindowPos(NULL, 0, 0, szClient.cx, szClient.cy, SWP_NOZORDER);
+            LayoutBars();
 
             UpdateButtonsSize(FALSE);
         }
@@ -2092,6 +2731,10 @@ public:
         {
             HandleButtonClick(LOWORD(wParam));
         }
+        else if (lParam != 0 && (HWND) lParam == m_PinBar.m_hWnd)
+        {
+            HandlePinClick(LOWORD(wParam) - PIN_CMD_BASE);
+        }
         return Ret;
     }
 
@@ -2103,6 +2746,10 @@ public:
         if (nmh->hwndFrom == m_TaskBar.m_hWnd)
         {
             Ret = HandleToolbarNotification(nmh);
+        }
+        else if (nmh->hwndFrom == m_PinBar.m_hWnd)
+        {
+            Ret = HandlePinNotification(nmh);
         }
         return Ret;
     }
@@ -2198,6 +2845,12 @@ public:
             g_TaskbarSettings.bSmallIcons = newSettings->bSmallIcons;
         }
 
+        if (newSettings->bCenterTaskbar != g_TaskbarSettings.bCenterTaskbar)
+        {
+            bSettingsChanged = TRUE;
+            g_TaskbarSettings.bCenterTaskbar = newSettings->bCenterTaskbar;
+        }
+
         if (bSettingsChanged)
         {
             /* Refresh each task item view */
@@ -2212,6 +2865,18 @@ public:
     {
         LRESULT Ret = 0;
         INT_PTR iBtn = -1;
+
+        if (m_PinBar.m_hWnd != NULL && m_PinBar.IsWindowVisible())
+        {
+            POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
+            ::ScreenToClient(m_PinBar.m_hWnd, &pt);
+            INT_PTR iPin = m_PinBar.HitTest(&pt);
+            if (iPin >= 0 && iPin < m_PinCount)
+            {
+                ShowAppMenu(NULL, (INT)iPin);
+                return 0;
+            }
+        }
 
         if (m_TaskBar.m_hWnd != NULL)
         {
@@ -2362,6 +3027,7 @@ public:
         MESSAGE_HANDLER(WM_NOTIFY, OnNotify)
         MESSAGE_HANDLER(TSWM_UPDATETASKBARPOS, OnUpdateTaskbarPos)
         MESSAGE_HANDLER(TSWM_ACTIVATETASKINDEX, OnActivateTaskIndex)
+        MESSAGE_HANDLER(TSWM_GETCONTENTWIDTH, OnGetContentWidth)
         MESSAGE_HANDLER(TWM_SETTINGSCHANGED, OnTaskbarSettingsChanged)
         MESSAGE_HANDLER(WM_CONTEXTMENU, OnContextMenu)
         MESSAGE_HANDLER(WM_TIMER, OnTimer)

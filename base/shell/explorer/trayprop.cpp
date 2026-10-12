@@ -88,6 +88,7 @@ public:
     BEGIN_MSG_MAP(CTaskBarSettingsPage)
         MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)
         COMMAND_RANGE_HANDLER(IDC_TASKBARPROP_FIRST_CMD, IDC_TASKBARPROP_LAST_CMD, OnCtrlCommand)
+        COMMAND_ID_HANDLER(IDC_TASKBARPROP_CENTER, OnCtrlCommand)
         CHAIN_MSG_MAP(CPropertyPageImpl<CTaskBarSettingsPage>)
     END_MSG_MAP()
 
@@ -111,6 +112,7 @@ public:
         CheckDlgButton(IDC_TASKBARPROP_GROUP, g_TaskbarSettings.bGroupButtons ? BST_CHECKED : BST_UNCHECKED);
         //CheckDlgButton(IDC_TASKBARPROP_SHOWQL, g_TaskbarSettings.bShowQuickLaunch ? BST_CHECKED : BST_UNCHECKED);
         CheckDlgButton(IDC_TASKBARPROP_SMALLICONS, g_TaskbarSettings.bSmallIcons ? BST_CHECKED : BST_UNCHECKED);
+        CheckDlgButton(IDC_TASKBARPROP_CENTER, g_TaskbarSettings.bCenterTaskbar ? BST_CHECKED : BST_UNCHECKED);
 
         _UpdateDialog();
         return TRUE;
@@ -133,6 +135,7 @@ public:
         newSettings.bGroupButtons = IsDlgButtonChecked(IDC_TASKBARPROP_GROUP);
         //newSettings.bShowQuickLaunch = IsDlgButtonChecked(IDC_TASKBARPROP_SHOWQL);
         newSettings.bSmallIcons = IsDlgButtonChecked(IDC_TASKBARPROP_SMALLICONS);
+        newSettings.bCenterTaskbar = IsDlgButtonChecked(IDC_TASKBARPROP_CENTER);
 
         SendMessage(m_hwndTaskbar, TWM_SETTINGSCHANGED, 0, (LPARAM)&newSettings);
 

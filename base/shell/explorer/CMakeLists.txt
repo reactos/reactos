@@ -10,10 +10,12 @@ list(APPEND SOURCE
     explorer.cpp
     mediabtns.cpp
     notifyiconscust.cpp
+    quicksettings.cpp
     rshell.cpp
     settings.cpp
     shellservice.cpp
     startctxmnu.cpp
+    startmenu7.cpp
     startmnu.cpp
     startmnucust.cpp
     startmnusite.cpp
@@ -36,6 +38,6 @@ add_executable(explorer ${SOURCE} explorer.rc)
 target_link_libraries(explorer uuid wine cpprt atl_classes)
 set_module_type(explorer win32gui UNICODE)
 add_importlibs(explorer setupapi advapi32 gdi32 user32 comctl32 ole32 oleaut32 shell32 browseui shlwapi shdocvw version uxtheme msvcrt kernel32 ntdll)
-add_delay_importlibs(explorer psapi)
+add_delay_importlibs(explorer psapi iphlpapi)
 add_pch(explorer precomp.h SOURCE)
 add_cd_file(TARGET explorer DESTINATION reactos FOR all)

@@ -237,3 +237,32 @@ GetVersionInfoString(IN LPCWSTR szFileName,
 
     return bRet;
 }
+
+/* Windows 11 light/dark mode for explorer's own drawn UI (Start menu, Quick Settings...):
+ * dark when the visual style's color scheme is "Dark" (e.g. Eleven Dark) */
+BOOL IsDarkTheme()
+{
+    WCHAR szColor[64];
+    if (!IsThemeActive() || FAILED(GetCurrentThemeName(NULL, 0, szColor, _countof(szColor), NULL, 0)))
+        return FALSE;
+    return !_wcsicmp(szColor, L"Dark");
+}
+
+/* A color designed for the light UI, or its dark mode counterpart: grays are
+ * inverted (light surfaces become near-black, dark text becomes light), pale
+ * blue tints become dark blue tints, strong colors (accent, red) stay. */
+COLORREF UIC(COLORREF cr)
+{
+    if (!IsDarkTheme())
+        return cr;
+    INT r = GetRValue(cr), g = GetGValue(cr), b = GetBValue(cr);
+    INT mx = max(r, max(g, b)), mn = min(r, min(g, b));
+    if (mx - mn < 16)
+    {
+        INT v = max(0, min(255, 288 - (r + g + b) / 3));
+        return RGB(v, v, v);
+    }
+    if ((r * 3 + g * 6 + b) / 10 > 170)
+        return RGB(r / 5, g / 4, b * 3 / 10);
+    return cr;
+}

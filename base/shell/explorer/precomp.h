@@ -133,6 +133,9 @@ HRESULT WINAPI _CBandSite_CreateInstance(LPUNKNOWN pUnkOuter, REFIID riid, void 
 #define TWM_OPENSTARTMENU (WM_USER + 260)
 #define TWM_SETTINGSCHANGED (WM_USER + 300)
 #define TWM_SETZORDER (WM_USER + 338)
+#define TWM_REALIGNCONTROLS (WM_USER + 400)
+#define TWM_QUICKSETTINGS (WM_USER + 401) /* posted by stobject: toggle Quick Settings */
+#define TWM_TRAYCOMMAND (WM_USER + 402)   /* wParam: TRAYCMD_*, posted by the Start menu */
 
 extern const GUID IID_IShellDesktopTray;
 
@@ -225,6 +228,7 @@ struct TaskbarSettings
     BOOL bSmallIcons;
     TrayIconsMode eCompactTrayIcons;
     BOOL bShowDesktopButton;
+    BOOL bCenterTaskbar;
     TW_STRUCKRECTS2 sr;
 
     BOOL Load();
@@ -244,6 +248,22 @@ struct TaskbarSettings
 };
 
 extern TaskbarSettings g_TaskbarSettings;
+
+/* Size of the themed Start button image (0 if none). Task buttons use the same
+ * size and vertical position, so every taskbar button lines up exactly. */
+extern SIZE g_StartImageSize;
+
+/* quicksettings.cpp: the Windows 11 style Quick Settings panel */
+VOID QuickSettings_Toggle(HWND hwndOwner);
+
+/* util.cpp: light/dark mode of explorer's own drawn UI */
+BOOL IsDarkTheme();
+COLORREF UIC(COLORREF cr);
+
+/* startmenu7.cpp */
+BOOL StartMenu7_IsEnabled();
+VOID StartMenu7_Toggle(HWND hwndTray, HWND hwndStartButton);
+VOID StartMenu7_Hide();
 
 /*
  * shellservice.cpp
@@ -396,6 +416,7 @@ HRESULT CSysPagerWnd_CreateInstance(HWND hwndParent, REFIID riid, void **ppv);
 
 #define TSWM_UPDATETASKBARPOS   (WM_USER + 2)
 #define TSWM_ACTIVATETASKINDEX  (WM_USER + 88)
+#define TSWM_GETCONTENTWIDTH    (WM_USER + 89) /* pinned + task buttons width, for centering */
 
 HRESULT CTaskSwitchWnd_CreateInstance(IN HWND hWndParent, IN OUT ITrayWindow *Tray, REFIID riid, void **ppv);
 

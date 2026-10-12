@@ -21,6 +21,7 @@
 #include "precomp.h"
 
 TaskbarSettings g_TaskbarSettings;
+SIZE g_StartImageSize = { 0, 0 };
 
 BOOL TaskbarSettings::Save()
 {
@@ -33,6 +34,7 @@ BOOL TaskbarSettings::Save()
     sr.cbSize = sizeof(sr);
     SHSetValueW(hkExplorer, L"Advanced", L"TaskbarSmallIcons", REG_DWORD, &bSmallIcons, sizeof(bSmallIcons));
     SHSetValueW(hkExplorer, L"Advanced", L"TaskbarSd", REG_DWORD, &bShowDesktopButton, sizeof(bShowDesktopButton));
+    SHSetValueW(hkExplorer, L"Advanced", L"TaskbarAl", REG_DWORD, &bCenterTaskbar, sizeof(bCenterTaskbar));
     SHSetValueW(hkExplorer, L"StuckRects2", L"Settings", REG_BINARY, &sr, sizeof(sr));
 
     /* TODO: AutoHide writes something to HKEY_CURRENT_USER\Software\Microsoft\Internet Explorer\Desktop\Components\0 figure out what and why */
@@ -70,6 +72,10 @@ BOOL TaskbarSettings::Load()
 
     dwRet = SHGetValueW(hkExplorer, L"Advanced", L"TaskbarSd", NULL, &dwValue, &cbSize);
     bShowDesktopButton = (dwRet == ERROR_SUCCESS) ? (dwValue != 0) : TRUE;
+
+    /* Taskbar alignment: 0 = left (default), 1 = center (same value name as Windows 11) */
+    dwRet = SHGetValueW(hkExplorer, L"Advanced", L"TaskbarAl", NULL, &dwValue, &cbSize);
+    bCenterTaskbar = (dwRet == ERROR_SUCCESS) ? (dwValue != 0) : FALSE;
 
     cbSize = sizeof(sr);
     dwRet = SHGetValueW(hkExplorer, L"StuckRects2", L"Settings", NULL, &sr, &cbSize);

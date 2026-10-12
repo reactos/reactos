@@ -45,6 +45,9 @@ HRESULT TrayWindowCtxMenuCreator(ITrayWindow * TrayWnd, IN HWND hWndOwner, ICont
 #define IDHK_PAGER 0x1ff
 
 #define IDHK_ACTIVATE_TASK 0x209
+#define IDHK_SETTINGS 0x20a
+#define IDHK_DISPLAY 0x20b
+#define IDHK_TERMINAL 0x20c
 
 enum { NONE, TILED, CASCADED } g_Arrangement = NONE;
 
@@ -209,9 +212,48 @@ public:
         return m_Size;
     }
 
+    /* Themes may draw the whole Start button as one image ("Start::Button",
+     * SizingType TrueSize). Then the button is exactly that image and we paint
+     * it ourselves, without the classic logo and "Start" text on top. */
+    BOOL GetThemeImageSize(SIZE *pSize)
+    {
+        HTHEME hTheme = GetWindowTheme(m_hWnd);
+        int iSizingType = ST_STRETCH;
+
+        if (!hTheme ||
+            FAILED(GetThemeEnumValue(hTheme, BP_PUSHBUTTON, PBS_NORMAL, TMT_SIZINGTYPE, &iSizingType)) ||
+            iSizingType != ST_TRUESIZE)
+        {
+            return FALSE;
+        }
+        /* A screen DC lets the theme pick the image made for the current DPI */
+        HDC hdc = ::GetDC(NULL);
+        HRESULT hr = GetThemePartSize(hTheme, hdc, BP_PUSHBUTTON, PBS_NORMAL, NULL, TS_TRUE, pSize);
+        ::ReleaseDC(NULL, hdc);
+        return SUCCEEDED(hr);
+    }
+
     VOID UpdateSize()
     {
         SIZE Size = { 0, 0 };
+
+        if (!GetThemeImageSize(&Size))
+            Size.cx = Size.cy = 0;
+
+        /* The task band reports its height from this size: when it changes (theme
+         * applied after startup, new DPI...), have the taskbar re-read the band sizes */
+        if (Size.cy != g_StartImageSize.cy)
+        {
+            g_StartImageSize = Size;
+            if (IsWindow())
+                GetParent().PostMessage(TWM_REALIGNCONTROLS, 1, 0);
+        }
+
+        if (Size.cy)
+        {
+            m_Size = Size;
+            return;
+        }
 
         if (m_ImageList == NULL ||
             !SendMessageW(BCM_GETIDEALSIZE, 0, (LPARAM) &Size))
@@ -301,8 +343,53 @@ public:
         return 0;
     }
 
+    LRESULT OnPaint(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+    {
+        SIZE Size;
+        if (!GetThemeImageSize(&Size))
+        {
+            bHandled = FALSE;
+            return 0;
+        }
+
+        PAINTSTRUCT ps;
+        HDC hdc = BeginPaint(&ps);
+        RECT rc;
+        GetClientRect(&rc);
+
+        LRESULT State = SendMessageW(BM_GETSTATE, 0, 0);
+        int iState = (State & BST_PUSHED) ? PBS_PRESSED : (State & BST_HOT) ? PBS_HOT : PBS_NORMAL;
+
+        /* Center the image in the button */
+        RECT rcImage;
+        rcImage.left = rc.left + (rc.right - rc.left - Size.cx) / 2;
+        rcImage.top = rc.top + (rc.bottom - rc.top - Size.cy) / 2;
+        rcImage.right = rcImage.left + Size.cx;
+        rcImage.bottom = rcImage.top + Size.cy;
+
+        DrawThemeParentBackground(m_hWnd, hdc, &rc);
+        DrawThemeBackground(GetWindowTheme(m_hWnd), hdc, BP_PUSHBUTTON, iState, &rcImage, &rc);
+        EndPaint(&ps);
+        return 0;
+    }
+
+    LRESULT OnEraseBkgnd(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+    {
+        /* The theme image (with transparent rounded corners) is painted over the
+         * taskbar background in OnPaint; a default erase would add a square tile. */
+        SIZE Size;
+        if (!GetThemeImageSize(&Size))
+        {
+            bHandled = FALSE;
+            return 0;
+        }
+        return TRUE;
+    }
+
     BEGIN_MSG_MAP(CStartButton)
         MESSAGE_HANDLER(WM_LBUTTONDOWN, OnLButtonDown)
+        MESSAGE_HANDLER(WM_PAINT, OnPaint)
+        MESSAGE_HANDLER(WM_ERASEBKGND, OnEraseBkgnd)
     END_MSG_MAP()
 };
 
@@ -331,6 +418,7 @@ class CTrayWindow :
     HWND m_DesktopWnd;
     HWND m_Rebar;
     HWND m_TaskSwitch;
+    INT m_cxCenteredTasks;
     HWND m_TrayNotify;
 
     CComPtr<IUnknown> m_TrayNotifyInstance;
@@ -379,6 +467,7 @@ public:
         m_DesktopWnd(NULL),
         m_Rebar(NULL),
         m_TaskSwitch(NULL),
+        m_cxCenteredTasks(-1),
         m_TrayNotify(NULL),
         m_Position(0),
         m_Monitor(NULL),
@@ -682,6 +771,18 @@ public:
             OpenTaskManager(m_hWnd);
             break;
 
+        case ID_SHELL_CMD_DEVICE_MANAGER:
+            ShellExecuteW(m_hWnd, NULL, L"devmgmt.exe", NULL, NULL, SW_SHOWNORMAL);
+            break;
+
+        case ID_SHELL_CMD_DISPLAY_SETTINGS:
+            ShellExecuteW(m_hWnd, NULL, L"rundll32.exe", L"shell32.dll,Control_RunDLL desk.cpl,,3", NULL, SW_SHOWNORMAL);
+            break;
+
+        case ID_SHELL_CMD_SETTINGS:
+            ShellExecuteW(m_hWnd, NULL, L"settings.exe", NULL, NULL, SW_SHOWNORMAL);
+            break;
+
         case ID_SHELL_CMD_UNDO_ACTION:
             RestoreWindowPos();
             break;
@@ -745,6 +846,7 @@ public:
 
     VOID HideStartMenu()
     {
+        StartMenu7_Hide();
         m_StartMenuPopup->OnSelect(MPOS_CANCELLEVEL);
     }
 
@@ -785,6 +887,22 @@ public:
         case IDHK_SYS_PROPERTIES:
             ShellExecuteW(m_hWnd, NULL, L"sysdm.cpl", NULL, NULL, SW_NORMAL);
             break;
+        case IDHK_SETTINGS:
+            ShellExecuteW(m_hWnd, NULL, L"settings.exe", NULL, NULL, SW_NORMAL);
+            break;
+        case IDHK_DISPLAY:
+            /* Screen settings: resolution, monitors (Display properties, Settings tab) */
+            ShellExecuteW(m_hWnd, NULL, L"rundll32.exe", L"shell32.dll,Control_RunDLL desk.cpl,,3", NULL, SW_NORMAL);
+            break;
+        case IDHK_TERMINAL:
+        {
+            /* Open a shell in the user's profile folder */
+            WCHAR szProfile[MAX_PATH];
+            if (!GetEnvironmentVariableW(L"USERPROFILE", szProfile, _countof(szProfile)))
+                szProfile[0] = UNICODE_NULL;
+            ShellExecuteW(m_hWnd, NULL, L"cmd.exe", NULL, szProfile[0] ? szProfile : NULL, SW_NORMAL);
+            break;
+        }
         case IDHK_NEXT_TASK:
             break;
         case IDHK_PREV_TASK:
@@ -1684,8 +1802,9 @@ ChangePos:
             }
             else
             {
+                /* Themed: the taskbar is as tall as the Start button (image) */
                 g_TaskbarSettings.sr.Size.cx = StartBtnSize.cx - EdgeSize.cx;
-                g_TaskbarSettings.sr.Size.cy = StartBtnSize.cy - EdgeSize.cy;
+                g_TaskbarSettings.sr.Size.cy = StartBtnSize.cy;
                 if(!g_TaskbarSettings.bLock)
                     g_TaskbarSettings.sr.Size.cy += GetSystemMetrics(SM_CYSIZEFRAME);
             }
@@ -1704,7 +1823,7 @@ ChangePos:
         else
         {
             WndSize.cx = StartBtnSize.cx;
-            WndSize.cy = StartBtnSize.cy - EdgeSize.cy;
+            WndSize.cy = StartBtnSize.cy;
         }
 
         if (WndSize.cx < g_TaskbarSettings.sr.Size.cx)
@@ -1730,6 +1849,19 @@ ChangePos:
         /* Determine which monitor we are on. It shouldn't matter which docked
            position rectangle we use */
         m_Monitor = GetMonitorFromRect(&m_TrayRects[ABE_LEFT]);
+    }
+
+    /* Width taken by the pinned and task buttons, measured from the left edge of the rebar */
+    INT GetTaskButtonsWidth()
+    {
+        if (!m_TaskSwitch || !m_Rebar)
+            return 0;
+
+        POINT pt = { (LONG)::SendMessageW(m_TaskSwitch, TSWM_GETCONTENTWIDTH, 0, 0), 0 };
+        if (pt.x <= 0)
+            return 0;
+        ::MapWindowPoints(m_TaskSwitch, m_Rebar, &pt, 1);
+        return pt.x;
     }
 
     VOID AlignControls(IN PRECT prcClient OPTIONAL)
@@ -1776,25 +1908,19 @@ ChangePos:
             DWORD size = SendMessageW(hwndTaskToolbar, TB_GETBUTTONSIZE, 0, 0);
 
             /* Themed button covers Edge area as well */
-            StartSize.cy = HIWORD(size) + (m_Theme ? GetSystemMetrics(SM_CYEDGE) : 0);
+            INT cyButtons = HIWORD(size) + (m_Theme ? GetSystemMetrics(SM_CYEDGE) : 0);
+
+            /* A horizontal (Windows 11 style) taskbar keeps the full height of the Start image,
+             * whether it is left aligned or centered */
+            if (IsPosHorizontal())
+                StartSize.cy = max(StartSize.cy, cyButtons);
+            else
+                StartSize.cy = cyButtons;
         }
 
-        if (m_StartButton.m_hWnd != NULL)
-        {
-            /* Resize and reposition the button */
-            dwp = m_StartButton.DeferWindowPos(dwp,
-                                               NULL,
-                                               0,
-                                               0,
-                                               StartSize.cx,
-                                               StartSize.cy,
-                                               SWP_NOZORDER | SWP_NOACTIVATE);
-            if (dwp == NULL)
-            {
-                ERR("DeferWindowPos for start button failed. lastErr=%d\n", GetLastError());
-                return;
-            }
-        }
+        /* Never taller than the taskbar, so nothing gets cut off */
+        if (Horizontal && StartSize.cy > rcClient.bottom)
+            StartSize.cy = rcClient.bottom;
 
         /* Determine the size that the tray notification window needs */
         if (Horizontal)
@@ -1835,6 +1961,38 @@ ChangePos:
             }
         }
 
+        /* Windows 11 style: center the Start button and the task buttons as one group */
+        INT xGroup = 0;
+        if (Horizontal && g_TaskbarSettings.bCenterTaskbar)
+        {
+            INT xLimit = (m_TrayNotify != NULL) ? ptTrayNotify.x : rcClient.right;
+            m_cxCenteredTasks = GetTaskButtonsWidth();
+            INT cxGroup = StartSize.cx + GetSystemMetrics(SM_CXSIZEFRAME) + m_cxCenteredTasks;
+
+            xGroup = (rcClient.right - cxGroup) / 2;
+            if (xGroup + cxGroup > xLimit)
+                xGroup = xLimit - cxGroup;
+            if (xGroup < 0)
+                xGroup = 0;
+        }
+
+        if (m_StartButton.m_hWnd != NULL)
+        {
+            /* Resize and reposition the button */
+            dwp = m_StartButton.DeferWindowPos(dwp,
+                                               NULL,
+                                               xGroup,
+                                               Horizontal ? (rcClient.bottom - StartSize.cy) / 2 : 0,
+                                               StartSize.cx,
+                                               StartSize.cy,
+                                               SWP_NOZORDER | SWP_NOACTIVATE);
+            if (dwp == NULL)
+            {
+                ERR("DeferWindowPos for start button failed. lastErr=%d\n", GetLastError());
+                return;
+            }
+        }
+
         /* Resize/Move the rebar control */
         if (m_Rebar != NULL)
         {
@@ -1845,7 +2003,7 @@ ChangePos:
 
             if (Horizontal)
             {
-                ptRebar.x = StartSize.cx + GetSystemMetrics(SM_CXSIZEFRAME);
+                ptRebar.x = xGroup + StartSize.cx + GetSystemMetrics(SM_CXSIZEFRAME);
                 szRebar.cx = ptTrayNotify.x - ptRebar.x;
                 szRebar.cy = rcClient.bottom;
             }
@@ -1915,11 +2073,32 @@ ChangePos:
             break;
         }
 
+        /* Windows 11 style: a themed horizontal taskbar is exactly as tall as the Start
+         * image, the same height RegLoadSettings uses at startup. The rebar's own
+         * height (buttons + band padding) is a bit taller and made the bar grow after
+         * every settings change. */
+        if (m_Theme && (m_Position == ABE_TOP || m_Position == ABE_BOTTOM))
+        {
+            INT cy = m_StartButton.GetSize().cy;
+            if (!g_TaskbarSettings.bLock)
+                cy += GetSystemMetrics(SM_CYSIZEFRAME);
+            if (m_Position == ABE_TOP)
+                pRect->bottom = pRect->top + cy;
+            else
+                pRect->top = pRect->bottom - cy;
+        }
+
         CalculateValidSize(m_Position, pRect);
     }
 
     void PopupStartMenu()
     {
+        if (StartMenu7_IsEnabled())
+        {
+            StartMenu7_Toggle(m_hWnd, m_StartButton.m_hWnd);
+            return;
+        }
+
         if (m_StartMenuPopup != NULL)
         {
             POINTL pt;
@@ -2439,6 +2618,9 @@ ChangePos:
             MAKELONG(IDHK_SYS_PROPERTIES, MAKEWORD(VK_PAUSE, MOD_WIN)),
             MAKELONG(IDHK_DESKTOP,        MAKEWORD('D', MOD_WIN)),
             MAKELONG(IDHK_PAGER,          MAKEWORD('B', MOD_WIN)),
+            MAKELONG(IDHK_SETTINGS,       MAKEWORD('I', MOD_WIN)),
+            MAKELONG(IDHK_DISPLAY,        MAKEWORD('P', MOD_WIN)),
+            MAKELONG(IDHK_TERMINAL,       MAKEWORD('T', MOD_WIN)),
 
             MAKELONG(IDHK_ACTIVATE_TASK,  MAKEWORD('1', MOD_WIN)),
             MAKELONG(IDHK_ACTIVATE_TASK,  MAKEWORD('2', MOD_WIN)),
@@ -2994,9 +3176,9 @@ ChangePos:
             menu is currently being shown */
             if (!(m_StartButton.SendMessage(BM_GETSTATE, 0, 0) & BST_PUSHED))
             {
-                CComPtr<IContextMenu> ctxMenu;
-                CStartMenuBtnCtxMenu_CreateInstance(this, m_hWnd, &ctxMenu);
-                TrackCtxMenu(ctxMenu, ppt, hWndExclude, m_Position == ABE_BOTTOM, this);
+                /* Like Windows 11: right-clicking Start gives the system tools menu
+                 * (Task Manager, Device Manager, Settings...) */
+                TrackCtxMenu(this, ppt, hWndExclude, m_Position == ABE_BOTTOM, this);
             }
         }
         else
@@ -3107,8 +3289,19 @@ HandleTrayContextMenu:
         return TRUE;
     }
 
+    LRESULT OnTrayCommand(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+    {
+        return HandleCommand((UINT)wParam);
+    }
+
     LRESULT OnOpenStartMenu(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
+        if (StartMenu7_IsEnabled())
+        {
+            PopupStartMenu();
+            return TRUE;
+        }
+
         HWND hwndStartMenu;
         HRESULT hr = IUnknown_GetWindow(m_StartMenuPopup, &hwndStartMenu);
         if (FAILED_UNEXPECTEDLY(hr))
@@ -3448,6 +3641,29 @@ HandleTrayContextMenu:
         return 0;
     }
 
+    LRESULT OnQuickSettings(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+    {
+        QuickSettings_Toggle(m_hWnd);
+        return 0;
+    }
+
+    LRESULT OnRealignControls(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+    {
+        /* wParam = 1: the task buttons changed size, the band height must follow */
+        if (wParam)
+        {
+            CheckTrayWndPosition();
+            AlignControls(NULL);
+            return 0;
+        }
+
+        /* Sent by the task switch window when its buttons changed. Only re-center
+         * if their width actually changed, to avoid layout ping-pong. */
+        if (g_TaskbarSettings.bCenterTaskbar && GetTaskButtonsWidth() != m_cxCenteredTasks)
+            AlignControls(NULL);
+        return 0;
+    }
+
     LRESULT OnTaskbarSettingsChanged(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
         TaskbarSettings* newSettings = (TaskbarSettings*)lParam;
@@ -3467,6 +3683,9 @@ HandleTrayContextMenu:
 
         /* Adjust taskbar size */
         CheckTrayWndPosition();
+
+        /* Left or centered alignment may have changed */
+        AlignControls(NULL);
 
         g_TaskbarSettings.Save();
         return 0;
@@ -3536,6 +3755,9 @@ HandleTrayContextMenu:
         MESSAGE_HANDLER(WM_GETMINMAXINFO, OnGetMinMaxInfo)
         MESSAGE_HANDLER(m_WinMMDevChgMsg, OnWinMMDeviceChange)
         MESSAGE_HANDLER(TWM_SETTINGSCHANGED, OnTaskbarSettingsChanged)
+        MESSAGE_HANDLER(TWM_REALIGNCONTROLS, OnRealignControls)
+        MESSAGE_HANDLER(TWM_QUICKSETTINGS, OnQuickSettings)
+        MESSAGE_HANDLER(TWM_TRAYCOMMAND, OnTrayCommand)
         MESSAGE_HANDLER(TWM_OPENSTARTMENU, OnOpenStartMenu)
         MESSAGE_HANDLER(TWM_DOEXITWINDOWS, OnDoExitWindows)
         MESSAGE_HANDLER(TWM_GETTASKSWITCH, OnGetTaskSwitch)

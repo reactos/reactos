@@ -102,6 +102,10 @@
 \*******************************************************************************/
 
 #define IDS_STARTUP_ERROR                  105
+#define IDS_PIN_TO_TASKBAR     830
+#define IDS_UNPIN_FROM_TASKBAR 831
+#define IDS_CLOSE_WINDOW       832
+#define IDS_CLOSE_ALL_WINDOWS  833
 #define IDS_START                          595
 #define IDS_OPEN_ALL_USERS                 718
 #define IDS_EXPLORE_ALL_USERS              719
@@ -139,6 +143,7 @@
 #define IDC_TASKBARPROP_SMALLICONS           1119
 #define IDC_TASKBARPROP_LAST_CMD             1119
 #define IDC_TASKBARPROP_TASKBARBITMAP        1120
+#define IDC_TASKBARPROP_CENTER               1121
 
 /* Startmenu Page */
 #define IDC_TASKBARPROP_STARTMENUCLASSICCUST 1130
@@ -221,5 +226,8 @@
 #define ID_SHELL_CMD_CUST_NOTIF         (411)
 #define ID_SHELL_CMD_ADJUST_DAT         (412)
 #define ID_SHELL_CMD_RESTORE_ALL        (413)
+#define ID_SHELL_CMD_DEVICE_MANAGER     (414)
+#define ID_SHELL_CMD_DISPLAY_SETTINGS   (415)
+#define ID_SHELL_CMD_SETTINGS           (416)
 #define ID_SHELL_CMD_FIRST              ID_SHELL_CMD_PROPERTIES
-#define ID_SHELL_CMD_LAST               ID_SHELL_CMD_RESTORE_ALL
+#define ID_SHELL_CMD_LAST               ID_SHELL_CMD_SETTINGS

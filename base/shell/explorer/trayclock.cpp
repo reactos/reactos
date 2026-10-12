@@ -101,6 +101,9 @@ private:
     LRESULT OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnTaskbarSettingsChanged(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnLButtonDblClick(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+    LRESULT OnMouseMove(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+    LRESULT OnMouseLeave(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+    BOOL m_bHover = FALSE;
     VOID PaintLine(IN HDC hDC, IN OUT RECT *rcClient, IN UINT LineNumber, IN UINT szLinesIndex);
 
 public:
@@ -144,6 +147,9 @@ public:
         MESSAGE_HANDLER(TNWM_GETMINIMUMSIZE, OnGetMinimumSize)
         MESSAGE_HANDLER(TWM_SETTINGSCHANGED, OnTaskbarSettingsChanged)
         MESSAGE_HANDLER(WM_LBUTTONDBLCLK, OnLButtonDblClick)
+        MESSAGE_HANDLER(WM_LBUTTONDOWN, OnLButtonDblClick)
+        MESSAGE_HANDLER(WM_MOUSEMOVE, OnMouseMove)
+        MESSAGE_HANDLER(WM_MOUSELEAVE, OnMouseLeave)
     END_MSG_MAP()
 
     HRESULT Initialize(IN HWND hWndParent);
@@ -530,6 +536,23 @@ LRESULT CTrayClockWnd::OnPaint(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
     {
         iPrevBkMode = SetBkMode(hDC, TRANSPARENT);
 
+        /* Windows 11 style: on hover, the same rounded tile as the taskbar buttons
+         * (the clock opens Quick Settings) */
+        if (m_bHover && IsAppThemed())
+        {
+            INT k = GetDeviceCaps(hDC, LOGPIXELSY);
+            INT inset = max(1, (rcClient.bottom - MulDiv(40, k, 96)) / 2);
+            HBRUSH hbr = CreateSolidBrush(UIC(RGB(250, 250, 250)));
+            HPEN hpen = CreatePen(PS_SOLID, 1, UIC(RGB(226, 226, 226)));
+            HGDIOBJ ob = SelectObject(hDC, hbr), op = SelectObject(hDC, hpen);
+            RoundRect(hDC, rcClient.left + 1, rcClient.top + inset, rcClient.right - 1, rcClient.bottom - inset,
+                      MulDiv(10, k, 96), MulDiv(10, k, 96));
+            SelectObject(hDC, ob);
+            SelectObject(hDC, op);
+            DeleteObject(hbr);
+            DeleteObject(hpen);
+        }
+
         if (!IsAppThemed())
             textColor = ::GetSysColor(COLOR_BTNTEXT);
 
@@ -750,13 +773,32 @@ LRESULT CTrayClockWnd::OnTaskbarSettingsChanged(UINT uMsg, WPARAM wParam, LPARAM
     return 0;
 }
 
+/* Like Windows 11: each press on the clock opens (or closes) Quick Settings; the
+ * date/time settings are one click away in it. A double click is two presses. */
 LRESULT CTrayClockWnd::OnLButtonDblClick(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     if (IsWindowVisible())
-    {
-        ShellExecuteW(m_hWnd, NULL, L"timedate.cpl", NULL, NULL, SW_NORMAL);
-    }
+        QuickSettings_Toggle(GetAncestor(m_hWnd, GA_ROOT));
     return TRUE;
+}
+
+LRESULT CTrayClockWnd::OnMouseMove(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    if (!m_bHover)
+    {
+        TRACKMOUSEEVENT tme = { sizeof(tme), TME_LEAVE, m_hWnd, 0 };
+        m_bHover = TRUE;
+        TrackMouseEvent(&tme);
+        InvalidateRect(NULL, TRUE);
+    }
+    return 0;
+}
+
+LRESULT CTrayClockWnd::OnMouseLeave(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    m_bHover = FALSE;
+    InvalidateRect(NULL, TRUE);
+    return 0;
 }
 
 HRESULT CTrayClockWnd::Initialize(IN HWND hWndParent)

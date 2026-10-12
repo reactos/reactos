@@ -1462,11 +1462,10 @@ void CSysPagerWnd::GetSize(IN BOOL IsHorizontal, IN PSIZE size)
 
     if (IsHorizontal)
     {
-        if (!g_TaskbarSettings.UseCompactTrayIcons())
-            rows = max(size->cy / MulDiv(cyButton, 3, 2), 1);
-        else
-            rows = max(size->cy / cyButton, 1);
-        columns = (VisibleButtonCount + rows - 1) / rows;
+        /* Windows 11 style: one row of notification icons, centered vertically
+         * (the taskbar is tall enough for two rows of small icons) */
+        rows = 1;
+        columns = VisibleButtonCount;
     }
     else
     {

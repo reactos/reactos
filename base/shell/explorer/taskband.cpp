@@ -119,6 +119,12 @@ public:
 
             /* Obtain the button size, to be used as the minimum size */
             DWORD size = SendMessageW(hwndToolbar, TB_GETBUTTONSIZE, 0, 0);
+
+            /* Windows 11 style horizontal taskbar: the buttons are exactly the size of
+             * the Start button image (the toolbar may still report an older height) */
+            if (!(dwViewMode & DBIF_VIEWMODE_VERTICAL) && g_StartImageSize.cy > 0)
+                size = MAKELONG(LOWORD(size), g_StartImageSize.cy);
+
             pdbi->ptMinSize.x = 0;
             pdbi->ptMinSize.y = GET_Y_LPARAM(size);
 
@@ -141,6 +147,11 @@ public:
             /* FIXME: We should query the height from the task bar object!!! */
             pdbi->ptActual.x = rcToolbar.right - rcToolbar.left;
             pdbi->ptActual.y = rcToolbar.bottom - rcToolbar.top;
+
+            /* Same as ptMinSize above: never report the toolbar's old, smaller height,
+             * or the band stays too short and cuts the bottom of the buttons */
+            if (!(dwViewMode & DBIF_VIEWMODE_VERTICAL) && pdbi->ptActual.y < pdbi->ptMinSize.y)
+                pdbi->ptActual.y = pdbi->ptMinSize.y;
 
             TRACE("H: %d, Min: %d,%d, Integral.y: %d Actual: %d,%d\n", (dwViewMode & DBIF_VIEWMODE_VERTICAL) == 0,
                 pdbi->ptMinSize.x, pdbi->ptMinSize.y, pdbi->ptIntegral.y,

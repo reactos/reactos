@@ -42,7 +42,13 @@ INT CTrayShowDesktopButton::WidthOrHeight() const
                 return 24;
             }
             else
-                return 15;
+            {
+                /* Slim strip, like Windows 11 (12px at 100%) */
+                HDC hdc = ::GetDC(NULL);
+                INT cx = MulDiv(12, GetDeviceCaps(hdc, LOGPIXELSX), 96);
+                ::ReleaseDC(NULL, hdc);
+                return cx;
+            }
         }
         else
         {

@@ -24,6 +24,9 @@ BEGIN
         MENUITEM "&Geri Al", ID_SHELL_CMD_UNDO_ACTION
         MENUITEM SEPARATOR
         MENUITEM "&Görev Yöneticisi", ID_SHELL_CMD_OPEN_TASKMGR
+        MENUITEM "&Device Manager", ID_SHELL_CMD_DEVICE_MANAGER
+        MENUITEM "Displa&y settings", ID_SHELL_CMD_DISPLAY_SETTINGS
+        MENUITEM "Se&ttings", ID_SHELL_CMD_SETTINGS
         MENUITEM SEPARATOR
         MENUITEM "G&örev çubuğunu kilitle", ID_LOCKTASKBAR
         MENUITEM "&Özellikler", ID_SHELL_CMD_PROPERTIES
@@ -73,7 +76,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Görev Çubuğu"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
-    GROUPBOX "Görev çubuğu görünümü", IDC_STATIC, 6, 6, 240, 120
+    GROUPBOX "Görev çubuğu görünümü", IDC_STATIC, 6, 6, 240, 133
     CONTROL "", IDC_TASKBARPROP_TASKBARBITMAP, "Static", SS_BITMAP | SS_SUNKEN | SS_CENTERIMAGE, 12, 18, 229, 24
     AUTOCHECKBOX "&Görev çubuğunu kilitle", IDC_TASKBARPROP_LOCK, 13, 45, 200, 10
     AUTOCHECKBOX "G&örev çubuğunu otomatik olarak gizle", IDC_TASKBARPROP_HIDE, 13, 58, 200, 10
@@ -81,6 +84,7 @@ BEGIN
     AUTOCHECKBOX "&Benzer görev çubuğu düğmelerini gruplandır", IDC_TASKBARPROP_GROUP, 13, 84, 200, 10
     AUTOCHECKBOX "&Hızlı Başlat'ı göster", IDC_TASKBARPROP_SHOWQL, 13, 97, 200, 10
     AUTOCHECKBOX "K&üçük simgeler kullan", IDC_TASKBARPROP_SMALLICONS, 13, 110, 200, 10
+    AUTOCHECKBOX "&Center taskbar items", IDC_TASKBARPROP_CENTER, 13, 123, 200, 10
 END
 
 IDD_TASKBARPROP_STARTMENU DIALOGEX 0, 0, 252, 218
@@ -218,4 +222,12 @@ BEGIN
     IDS_TRAYWND_UNDO_CASCADE "&Kademeyi Geri Al"
     IDS_TRAYWND_UNDO_TILE "&Döşemeyi Geri Al"
     IDS_TRAYDESKBTN_TOOLTIP "Masaüstünü/Pencereleri Göster"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_PIN_TO_TASKBAR "Pin to taskbar"
+    IDS_UNPIN_FROM_TASKBAR "Unpin from taskbar"
+    IDS_CLOSE_WINDOW "Close window"
+    IDS_CLOSE_ALL_WINDOWS "Close all windows"
 END
