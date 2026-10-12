@@ -52,6 +52,8 @@ HKR, , Icon,           0, "-27"
 
 %SWENUM.DeviceDesc%   = SWENUM_Inst, ROOT\SWENUM
 %ACPI\FixedButton.DeviceDesc% = NO_DRV,ACPI\FixedButton
+%ACPI\QEMU0002.DeviceDesc% = NO_DRV,ACPI\QEMU0002
+%ACPI\ACPI0010.DeviceDesc% = NO_DRV,ACPI\ACPI0010
 %ISAPNP\ReadDataPort.DeviceDesc% = NO_DRV,ISAPNP\ReadDataPort
 %PCI\CC_0500.DeviceDesc% = NO_DRV,PCI\CC_0500
 %PCI\CC_0600.DeviceDesc% = NO_DRV,PCI\CC_0600
@@ -198,6 +200,8 @@ GenericMfg = "(Generic system devices)"
 
 SWENUM.DeviceDesc  = "Plug & Play Software Bus Enumerator"
 ACPI\FixedButton.DeviceDesc = "ACPI fixed feature button"
+ACPI\QEMU0002.DeviceDesc = "QEMU firmware configuration"
+ACPI\ACPI0010.DeviceDesc = "Processor container"
 ISAPNP\ReadDataPort.DeviceDesc = "ISAPNP read data port"
 PCI\CC_0500.DeviceDesc = "Standard PCI RAM controller"
 PCI\CC_0600.DeviceDesc = "Standard CPU to PCI bridge"

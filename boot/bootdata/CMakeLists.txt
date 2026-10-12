@@ -128,6 +128,9 @@ add_livecd_shortcut("ReactOS Explorer"
     "shell:windows\\explorer.exe" ICON_INDEX 1
     WORKDIR "${envvar_homedrive}${envvar_homepath}"
     DESTINATION "${dir_startmenu_programs}" "${dir_quicklaunch}")
+add_livecd_shortcut("Settings"
+    "shell:system\\settings.exe" ICON_INDEX 0
+    DESTINATION "${dir_startmenu_programs}")
 add_livecd_shortcut("Command Prompt"
     "shell:system\\cmd.exe" ICON_INDEX 0
     WORKDIR "${envvar_homedrive}${envvar_homepath}"

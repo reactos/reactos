@@ -37,7 +37,7 @@ HKCR,"CLSID\%CLSID_InternetExplorerManager%\LocalServer32",,,"""%16422%\Internet
 
 
 [Settings.Reg]
-HKCU,"Software\Microsoft\Internet Explorer\Main","ShowGoButton",2,"yes"
+HKCU,"Software\Microsoft\Internet Explorer\Main","ShowGoButton",2,"no"
 #HKCU,"Software\Microsoft\Internet Explorer\Main","Start Page",2,"https://www.winehq.org"
 HKCU,"Software\Microsoft\Internet Explorer\Main","Start Page",2,"https://reactos.org/"
 HKCU,"Software\Microsoft\Internet Explorer\Main","Search Page",2,"https://duckduckgo.com/"

@@ -21,6 +21,7 @@ QuickLaunchShortcuts=26, Microsoft\Internet Explorer\Quick Launch
 
 [ProgramShortcuts]
 %SystemRoot%\explorer.exe, %EXPLORER_TITLE%, %EXPLORER_DESC%, 1, %HOMEDRIVE%%HOMEPATH%
+%SystemRoot%\system32\settings.exe, %SETTINGS_TITLE%, %SETTINGS_DESC%, 0
 %SystemRoot%\system32\rapps.exe, %RAPPS_TITLE%, %RAPPS_DESC%, 0
 %16422%\Internet Explorer\iexplore.exe, %IEXPLORE_TITLE%, %IEXPLORE_DESC%, 0
 
@@ -84,6 +85,8 @@ README_DESC=ReactOS Read-Me file
 CMD_TITLE=Command Prompt
 CMD_DESC=Open command prompt
 EXPLORER_TITLE=ReactOS Explorer
+SETTINGS_TITLE=Settings
+SETTINGS_DESC=Find and change system settings
 EXPLORER_DESC=Launch Explorer
 RAPPS_TITLE=ReactOS Applications Manager
 RAPPS_TITLE_SHORT=Applications Manager
