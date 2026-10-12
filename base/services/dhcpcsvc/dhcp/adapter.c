@@ -263,7 +263,7 @@ BOOL PrepareAdapterForService( PDHCP_ADAPTER Adapter ) {
 
         LoadAlternateConfiguration(Adapter, AdapterKey);
 
-        CloseHandle(AdapterKey);
+        RegCloseKey(AdapterKey);
     }
     else
     {
