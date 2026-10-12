@@ -931,6 +931,57 @@ BOOL CDefView::CreateList()
     return TRUE;
 }
 
+/*
+ * Is the desktop behind the icon labels light? Samples the left quarter of the
+ * wallpaper (where the icons are). The wallpaper in use is always a BMP: the
+ * Display applet converts other formats before applying them.
+ */
+static BOOL IsDesktopBackgroundLight()
+{
+    WCHAR szWallpaper[MAX_PATH] = L"";
+    COLORREF crDesktop = GetSysColor(COLOR_DESKTOP);
+    UINT Sum = GetRValue(crDesktop) * 30 + GetGValue(crDesktop) * 59 + GetBValue(crDesktop) * 11;
+
+    if (SystemParametersInfoW(SPI_GETDESKWALLPAPER, _countof(szWallpaper), szWallpaper, 0) && szWallpaper[0])
+    {
+        HBITMAP hbm = (HBITMAP)LoadImageW(NULL, szWallpaper, IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE | LR_CREATEDIBSECTION);
+        if (hbm)
+        {
+            BITMAP bm;
+            GetObjectW(hbm, sizeof(bm), &bm);
+
+            /* Shrink the left quarter to 8x8 pixels and average them */
+            BITMAPINFO bmi = { { sizeof(BITMAPINFOHEADER), 8, -8, 1, 32, BI_RGB } };
+            DWORD *pBits = NULL;
+            HDC hdcScreen = GetDC(NULL);
+            HDC hdcSrc = CreateCompatibleDC(hdcScreen), hdcDst = CreateCompatibleDC(hdcScreen);
+            HBITMAP hbmSmall = CreateDIBSection(hdcScreen, &bmi, DIB_RGB_COLORS, (void **)&pBits, NULL, 0);
+            if (hdcSrc && hdcDst && hbmSmall)
+            {
+                HGDIOBJ hOldSrc = SelectObject(hdcSrc, hbm), hOldDst = SelectObject(hdcDst, hbmSmall);
+                SetStretchBltMode(hdcDst, HALFTONE);
+                StretchBlt(hdcDst, 0, 0, 8, 8, hdcSrc, 0, 0, max(1, bm.bmWidth / 4), bm.bmHeight, SRCCOPY);
+                GdiFlush();
+                Sum = 0;
+                for (int i = 0; i < 64; i++)
+                    Sum += ((pBits[i] >> 16) & 0xFF) * 30 + ((pBits[i] >> 8) & 0xFF) * 59 + (pBits[i] & 0xFF) * 11;
+                Sum /= 64;
+                SelectObject(hdcSrc, hOldSrc);
+                SelectObject(hdcDst, hOldDst);
+            }
+            if (hbmSmall)
+                DeleteObject(hbmSmall);
+            if (hdcSrc)
+                DeleteDC(hdcSrc);
+            if (hdcDst)
+                DeleteDC(hdcDst);
+            ReleaseDC(NULL, hdcScreen);
+            DeleteObject(hbm);
+        }
+    }
+    return Sum > 150 * 100;
+}
+
 void CDefView::UpdateListColors()
 {
     if (m_FolderSettings.fFlags & FWF_DESKTOP)
@@ -948,7 +999,14 @@ void CDefView::UpdateListColors()
 
         SHGetValueW(HKEY_CURRENT_USER, L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced",
                      L"ListviewShadow", NULL, &bDropShadow, &cbDropShadow);
-        if (bDropShadow)
+        if (bDropShadow && IsDesktopBackgroundLight())
+        {
+            /* Light wallpaper: white text would be unreadable, use dark text without shadow */
+            m_ListView.SetTextBkColor(CLR_NONE);
+            m_ListView.SetTextColor(RGB(26, 26, 26));
+            m_ListView.SetExtendedListViewStyle(0, LVS_EX_TRANSPARENTSHADOWTEXT);
+        }
+        else if (bDropShadow)
         {
             /* Set the icon background transparent */
             m_ListView.SetTextBkColor(CLR_NONE);
@@ -3036,6 +3094,28 @@ LRESULT CDefView::OnSettingChange(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL 
     }
     m_ListView.SetExtendedListViewStyle(ListExBits, ListExMask);
     m_ListView.SendMessage(uMsg, wParam, lParam);
+
+    /* Icon metrics changed (e.g. the display scale): desktop labels take the new
+     * icon title font and spacing, and the icons are laid out again */
+    if (wParam == SPI_SETICONMETRICS && (m_FolderSettings.fFlags & FWF_DESKTOP))
+    {
+        static HFONT s_hDesktopFont = NULL;
+        LOGFONTW lf;
+        if (SystemParametersInfoW(SPI_GETICONTITLELOGFONT, sizeof(lf), &lf, 0))
+        {
+            HFONT hFont = CreateFontIndirectW(&lf);
+            if (hFont)
+            {
+                m_ListView.SetFont(hFont);
+                if (s_hDesktopFont)
+                    DeleteObject(s_hDesktopFont);
+                s_hDesktopFont = hFont;
+            }
+        }
+        m_ListView.SendMessage(LVM_SETICONSPACING, 0,
+                               MAKELPARAM(GetSystemMetrics(SM_CXICONSPACING), GetSystemMetrics(SM_CYICONSPACING)));
+        m_ListView.Arrange(LVA_DEFAULT);
+    }
     return S_OK;
 }
 
@@ -3579,7 +3659,9 @@ HRESULT WINAPI CDefView::GetItemObject(UINT uItem, REFIID riid, LPVOID *ppvOut)
 
 FOLDERVIEWMODE CDefView::GetDefaultViewMode()
 {
-    FOLDERVIEWMODE mode = ((m_FolderSettings.fFlags & FWF_DESKTOP) || !IsOS(OS_SERVERADMINUI)) ? FVM_ICON : FVM_DETAILS;
+    // Windows 11 style: folders open in Details view (the desktop keeps its icons;
+    // special folders like This PC or the Control Panel still choose their own)
+    FOLDERVIEWMODE mode = (m_FolderSettings.fFlags & FWF_DESKTOP) ? FVM_ICON : FVM_DETAILS;
     FOLDERVIEWMODE temp = mode;
     if (SUCCEEDED(_DoFolderViewCB(SFVM_DEFVIEWMODE, 0, (LPARAM)&temp)) && IsSupportedFolderViewMode(temp))
         mode = temp;

@@ -2991,6 +2991,13 @@ HRESULT WINAPI ShellExecCmdLine(
         {
             StringCchCopyW(szFile, _countof(szFile), szFile2);
         }
+        else if (!wcschr(szFile, L'\\') && SHELL_TryAppPathW(szFile, szFile2, NULL))
+        {
+            /* Like Windows: programs registered under "App Paths" (e.g. iexplore)
+             * also work with arguments, e.g. "iexplore http://example.com" */
+            StringCchCopyW(szFile, _countof(szFile), szFile2);
+            PathUnquoteSpacesW(szFile);
+        }
 
         apPathList[0] = pwszStartDir;
         apPathList[1] = NULL;
