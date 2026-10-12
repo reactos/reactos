@@ -42,6 +42,7 @@ PRIORITIES = (
     'kernel32_vista.dll',
     'kernelbase_ros.dll',
     'msvcrt.dll',
+    'ucrtbase.dll',
     'advapi32.dll',
     'advapi32_vista.dll',
     'gdi32.dll',
