@@ -144,11 +144,43 @@ VOID WaitCursor(BOOL bBegin)
 }
 
 
+/* Width needed to show the longest of these strings in the status bar's font */
+static int StatusBarTextWidth(const UINT *pIds, UINT cIds)
+{
+    HDC hdc = GetDC(Globals.hStatusBar);
+    HFONT hFont = (HFONT)SendMessageW(Globals.hStatusBar, WM_GETFONT, 0, 0);
+    HGDIOBJ hOldFont = SelectObject(hdc, hFont ? hFont : GetStockObject(DEFAULT_GUI_FONT));
+    WCHAR szText[128];
+    SIZE size;
+    int cxMax = 0;
+    UINT i;
+
+    for (i = 0; i < cIds; i++)
+    {
+        if (LoadStringW(Globals.hInstance, pIds[i], szText, _countof(szText)) &&
+            GetTextExtentPoint32W(hdc, szText, lstrlenW(szText), &size))
+        {
+            cxMax = max(cxMax, size.cx);
+        }
+    }
+    /* Room for the part borders and some padding (scaled with the font) */
+    cxMax += GetDeviceCaps(hdc, LOGPIXELSX) * 24 / 96;
+
+    SelectObject(hdc, hOldFont);
+    ReleaseDC(Globals.hStatusBar, hdc);
+    return cxMax;
+}
+
 VOID DIALOG_StatusBarAlignParts(VOID)
 {
-    static const int defaultWidths[] = {120, 120, 120};
+    /* Sized from the text they must show, so they fit at any scale (DPI), font or language */
+    int defaultWidths[3];
     RECT rcStatusBar;
     int parts[3];
+
+    defaultWidths[1] = StatusBarTextWidth(EolnToStrId, _countof(EolnToStrId));
+    defaultWidths[2] = StatusBarTextWidth(EncToStrId, _countof(EncToStrId));
+    defaultWidths[0] = max(defaultWidths[1], defaultWidths[2]);
 
     GetClientRect(Globals.hStatusBar, &rcStatusBar);
 

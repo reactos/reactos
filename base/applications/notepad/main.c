@@ -322,6 +322,8 @@ LRESULT CALLBACK EDIT_WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
     return CallWindowProc( Globals.EditProc, hWnd, msg, wParam, lParam);
 }
 
+static UINT s_uFontDpi = 96;
+
 /***********************************************************************
  *           NOTEPAD_WndProc
  */
@@ -333,6 +335,12 @@ NOTEPAD_WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
     {
 
     case WM_CREATE:
+    {
+        /* DPI the editor font was sized for (see WM_SETTINGCHANGE) */
+        HDC hdc = GetDC(NULL);
+        s_uFontDpi = GetDeviceCaps(hdc, LOGPIXELSY);
+        ReleaseDC(NULL, hdc);
+    }
         Globals.hMainWnd = hWnd;
         Globals.hMenu = GetMenu(hWnd);
 
@@ -410,6 +418,38 @@ NOTEPAD_WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
     case WM_SETFOCUS:
         SetFocus(Globals.hEdit);
+        break;
+
+    case WM_DPICHANGED:
+        /* The display scale changed (sent by the system): keep the text the same size
+         * in points, refresh the status bar and take the suggested window size */
+        {
+            const RECT *prc = (const RECT *)lParam;
+            UINT uDpi = LOWORD(wParam);
+
+            if (uDpi != s_uFontDpi)
+            {
+                HFONT hFont;
+                Globals.lfFont.lfHeight = MulDiv(Globals.lfFont.lfHeight, uDpi, s_uFontDpi);
+                s_uFontDpi = uDpi;
+                hFont = CreateFontIndirect(&Globals.lfFont);
+                if (hFont)
+                {
+                    SendMessage(Globals.hEdit, WM_SETFONT, (WPARAM)hFont, TRUE);
+                    if (Globals.hFont)
+                        DeleteObject(Globals.hFont);
+                    Globals.hFont = hFont;
+                }
+            }
+            if (Globals.hStatusBar)
+            {
+                SendMessageW(Globals.hStatusBar, WM_SETFONT, (WPARAM)GetStockObject(DEFAULT_GUI_FONT), FALSE);
+                SendMessageW(Globals.hStatusBar, WM_SIZE, 0, 0);
+            }
+            SetWindowPos(hWnd, NULL, prc->left, prc->top, prc->right - prc->left, prc->bottom - prc->top,
+                         SWP_NOZORDER | SWP_NOACTIVATE);
+            PostMessageW(hWnd, WM_SIZE, 0, 0);
+        }
         break;
 
     case WM_DROPFILES:
