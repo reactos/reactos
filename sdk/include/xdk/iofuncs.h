@@ -2617,10 +2617,10 @@ IoGetDevicePropertyData(
   _Out_ PDEVPROPTYPE Type);
 #endif /* (NTDDI_VERSION >= NTDDI_VISTA) || defined(__REACTOS__) */
 
-#if (NTDDI_VERSION >= NTDDI_WIN8) || defined(__REACTOS__)
+#if (NTDDI_VERSION >= NTDDI_WIN8)
 _IRQL_requires_max_(PASSIVE_LEVEL)
 _Must_inspect_result_
-NTKERNELAPI
+NTKRNLVISTAAPI
 NTSTATUS
 NTAPI
 IoSetDeviceInterfacePropertyData(
@@ -2634,7 +2634,7 @@ IoSetDeviceInterfacePropertyData(
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
 _Must_inspect_result_
-NTKERNELAPI
+NTKRNLVISTAAPI
 NTSTATUS
 NTAPI
 IoGetDeviceInterfacePropertyData(
@@ -2646,7 +2646,7 @@ IoGetDeviceInterfacePropertyData(
   _Out_writes_bytes_to_opt_(Size, *RequiredSize) PVOID Data,
   _Out_ PULONG RequiredSize,
   _Out_ PDEVPROPTYPE Type);
-#endif /* (NTDDI_VERSION >= NTDDI_WIN8) || defined(__REACTOS__) */
+#endif /* (NTDDI_VERSION >= NTDDI_WIN8) */
 $endif (_WDMDDK_)
 
 $if (_WDMDDK_)

@@ -42,6 +42,33 @@ typedef struct _PROPERTY_TARGET
     PUNICODE_STRING SymbolicLinkName;
 } PROPERTY_TARGET, *PPROPERTY_TARGET;
 
+typedef
+NTSTATUS
+(NTAPI *PSET_INTERFACE_PROPERTY_ROUTINE)(
+    _In_ PUNICODE_STRING SymbolicLinkName,
+    _In_ CONST DEVPROPKEY *PropertyKey,
+    _In_ LCID Lcid,
+    _In_ ULONG Flags,
+    _In_ DEVPROPTYPE Type,
+    _In_ ULONG Size,
+    _In_reads_bytes_opt_(Size) PVOID Data);
+
+typedef
+NTSTATUS
+(NTAPI *PGET_INTERFACE_PROPERTY_ROUTINE)(
+    _In_ PUNICODE_STRING SymbolicLinkName,
+    _In_ CONST DEVPROPKEY *PropertyKey,
+    _In_ LCID Lcid,
+    _Reserved_ ULONG Flags,
+    _In_ ULONG Size,
+    _Out_writes_bytes_to_opt_(Size, *RequiredSize) PVOID Data,
+    _Out_ PULONG RequiredSize,
+    _Out_ PDEVPROPTYPE Type);
+
+/* Only exported on NT 6.2+ */
+static PSET_INTERFACE_PROPERTY_ROUTINE pIoSetDeviceInterfacePropertyData;
+static PGET_INTERFACE_PROPERTY_ROUTINE pIoGetDeviceInterfacePropertyData;
+
 static
 NTSTATUS
 SetProperty(
@@ -55,7 +82,7 @@ SetProperty(
     if (Target->Pdo)
         return IoSetDevicePropertyData(Target->Pdo, Key, Lcid, 0, Type, Size, Data);
 
-    return IoSetDeviceInterfacePropertyData(Target->SymbolicLinkName, Key, Lcid, 0, Type, Size, Data);
+    return pIoSetDeviceInterfacePropertyData(Target->SymbolicLinkName, Key, Lcid, 0, Type, Size, Data);
 }
 
 static
@@ -72,7 +99,7 @@ GetProperty(
     if (Target->Pdo)
         return IoGetDevicePropertyData(Target->Pdo, Key, Lcid, 0, Size, Data, RequiredSize, Type);
 
-    return IoGetDeviceInterfacePropertyData(Target->SymbolicLinkName, Key, Lcid, 0, Size, Data, RequiredSize, Type);
+    return pIoGetDeviceInterfacePropertyData(Target->SymbolicLinkName, Key, Lcid, 0, Size, Data, RequiredSize, Type);
 }
 
 static
@@ -501,25 +528,25 @@ Test_InterfaceParameters(VOID)
 
     trace("Interface parameter checks\n");
 
-    Status = IoSetDeviceInterfacePropertyData(NULL, &TestKeyNumber, LOCALE_NEUTRAL, 0,
-                                              DEVPROP_TYPE_UINT32, sizeof(Number), &Number);
+    Status = pIoSetDeviceInterfacePropertyData(NULL, &TestKeyNumber, LOCALE_NEUTRAL, 0,
+                                               DEVPROP_TYPE_UINT32, sizeof(Number), &Number);
     ok_eq_hex(Status, STATUS_INVALID_PARAMETER);
-    Status = IoGetDeviceInterfacePropertyData(NULL, &TestKeyNumber, LOCALE_NEUTRAL, 0,
-                                              sizeof(Number), &Number, &Required, &Type);
-    ok_eq_hex(Status, STATUS_INVALID_PARAMETER);
-
-    Status = IoSetDeviceInterfacePropertyData(&EmptyName, &TestKeyNumber, LOCALE_NEUTRAL, 0,
-                                              DEVPROP_TYPE_UINT32, sizeof(Number), &Number);
-    ok_eq_hex(Status, STATUS_INVALID_PARAMETER);
-    Status = IoGetDeviceInterfacePropertyData(&EmptyName, &TestKeyNumber, LOCALE_NEUTRAL, 0,
-                                              sizeof(Number), &Number, &Required, &Type);
+    Status = pIoGetDeviceInterfacePropertyData(NULL, &TestKeyNumber, LOCALE_NEUTRAL, 0,
+                                               sizeof(Number), &Number, &Required, &Type);
     ok_eq_hex(Status, STATUS_INVALID_PARAMETER);
 
-    Status = IoSetDeviceInterfacePropertyData(&MissingName, &TestKeyNumber, LOCALE_NEUTRAL, 0,
-                                              DEVPROP_TYPE_UINT32, sizeof(Number), &Number);
+    Status = pIoSetDeviceInterfacePropertyData(&EmptyName, &TestKeyNumber, LOCALE_NEUTRAL, 0,
+                                               DEVPROP_TYPE_UINT32, sizeof(Number), &Number);
+    ok_eq_hex(Status, STATUS_INVALID_PARAMETER);
+    Status = pIoGetDeviceInterfacePropertyData(&EmptyName, &TestKeyNumber, LOCALE_NEUTRAL, 0,
+                                               sizeof(Number), &Number, &Required, &Type);
+    ok_eq_hex(Status, STATUS_INVALID_PARAMETER);
+
+    Status = pIoSetDeviceInterfacePropertyData(&MissingName, &TestKeyNumber, LOCALE_NEUTRAL, 0,
+                                               DEVPROP_TYPE_UINT32, sizeof(Number), &Number);
     ok(!NT_SUCCESS(Status), "Setting a property of a missing interface returned 0x%08lx\n", Status);
-    Status = IoGetDeviceInterfacePropertyData(&MissingName, &TestKeyNumber, LOCALE_NEUTRAL, 0,
-                                              sizeof(Number), &Number, &Required, &Type);
+    Status = pIoGetDeviceInterfacePropertyData(&MissingName, &TestKeyNumber, LOCALE_NEUTRAL, 0,
+                                               sizeof(Number), &Number, &Required, &Type);
     ok(!NT_SUCCESS(Status), "Getting a property of a missing interface returned 0x%08lx\n", Status);
 }
 
@@ -669,8 +696,14 @@ START_TEST(IoDeviceProperty)
     UNICODE_STRING SymbolicLinkName;
     const GUID *InterfaceClass;
     PDEVICE_OBJECT Pdo;
+    BOOLEAN HaveInterfaceRoutines;
 
-    Test_InterfaceParameters();
+    pIoSetDeviceInterfacePropertyData = KmtGetSystemRoutineAddress(L"IoSetDeviceInterfacePropertyData");
+    pIoGetDeviceInterfacePropertyData = KmtGetSystemRoutineAddress(L"IoGetDeviceInterfacePropertyData");
+    HaveInterfaceRoutines = (pIoSetDeviceInterfacePropertyData && pIoGetDeviceInterfacePropertyData);
+
+    if (!skip(HaveInterfaceRoutines, "Device interface property routines unavailable\n"))
+        Test_InterfaceParameters();
 
     if (skip(FindTestInterface(&SymbolicLinkName, &Pdo, &InterfaceClass),
              "No device interface with a PnP PDO found\n"))
@@ -689,10 +722,13 @@ START_TEST(IoDeviceProperty)
     Test_DeviceBuiltins(&DeviceTarget);
     Test_RootDevice(Pdo);
 
-    Test_StoreRoundTrip(&InterfaceTarget);
-    Test_Locales(&InterfaceTarget);
-    Test_Validation(&InterfaceTarget);
-    Test_InterfaceBuiltins(&InterfaceTarget, InterfaceClass);
+    if (!skip(HaveInterfaceRoutines, "Device interface property routines unavailable\n"))
+    {
+        Test_StoreRoundTrip(&InterfaceTarget);
+        Test_Locales(&InterfaceTarget);
+        Test_Validation(&InterfaceTarget);
+        Test_InterfaceBuiltins(&InterfaceTarget, InterfaceClass);
+    }
 
     RtlFreeUnicodeString(&SymbolicLinkName);
     ObDereferenceObject(Pdo);
