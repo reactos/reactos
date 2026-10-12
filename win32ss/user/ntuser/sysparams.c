@@ -19,11 +19,37 @@ BOOL gbSpiInitialized = FALSE;
 BOOL g_PaintDesktopVersion = FALSE;
 BOOL g_bWindowSnapEnabled = TRUE;
 
-// HACK! We initialize SPI before we have a proper surface to get this from.
-#define dpi 96
-//(pPrimarySurface->GDIInfo.ulLogPixelsY)
-#define REG2METRIC(reg) (reg > 0 ? reg : ((-(reg) * dpi + 720) / 1440))
+/*
+ * System DPI ("LogPixels", 96 = 100%). Window metrics are stored in the
+ * registry as negative twips (1/1440 inch), which are DPI independent; positive
+ * values are pixels at 96 DPI. Fonts are stored in pixels at "AppliedDPI".
+ */
+static UINT gusSystemDpi = 0;
+#define dpi UserGetSystemDpi()
+#define KEY_DPI L"\\Registry\\Machine\\System\\CurrentControlSet\\Hardware Profiles\\Current\\Software\\Fonts"
+#define REG2METRIC(reg) (reg > 0 ? EngMulDiv(reg, dpi, 96) : ((-(reg) * dpi + 720) / 1440))
 #define METRIC2REG(met) (-((((met) * 1440)- 0) / dpi))
+
+UINT
+FASTCALL
+UserGetSystemDpi(VOID)
+{
+    if (!gusSystemDpi)
+    {
+        HKEY hkey;
+        DWORD dwDpi = 96;
+
+        if (NT_SUCCESS(RegOpenKey(KEY_DPI, &hkey)))
+        {
+            RegReadDWORD(hkey, L"LogPixels", &dwDpi);
+            ZwClose(hkey);
+        }
+        if (dwDpi < 96 || dwDpi > 480)
+            dwDpi = 96;
+        gusSystemDpi = dwDpi;
+    }
+    return gusSystemDpi;
+}
 
 #define REQ_INTERACTIVE_WINSTA(err) \
 do { \
@@ -191,13 +217,27 @@ SpiLoadFont(PLOGFONTW plfOut, LPWSTR pwszValueName, PLOGFONTW plfDefault)
 {
     BOOL bResult;
 
+    UINT uFontDpi;
+
     bResult = RegReadUserSetting(KEY_METRIC,
                                  pwszValueName,
                                  REG_BINARY,
                                  plfOut,
                                  sizeof(LOGFONTW));
     if (!bResult)
+    {
         *plfOut = *plfDefault;
+        uFontDpi = 96;
+    }
+    else
+    {
+        uFontDpi = SpiLoadDWord(KEY_METRIC, L"AppliedDPI", 96);
+        if (uFontDpi < 96 || uFontDpi > 480)
+            uFontDpi = 96;
+    }
+
+    /* Font sizes are in pixels: scale them to the current DPI */
+    plfOut->lfHeight = EngMulDiv(plfOut->lfHeight, dpi, uFontDpi);
 }
 
 static
@@ -450,11 +490,16 @@ static
 VOID
 SpiStoreFont(PCWSTR pwszValue, LOGFONTW* plogfont)
 {
+    DWORD dwDpi = dpi;
+
     RegWriteUserSetting(KEY_METRIC,
                         pwszValue,
                         REG_BINARY,
                         plogfont,
                         sizeof(LOGFONTW));
+
+    /* Remember at which DPI the font sizes were stored */
+    RegWriteUserSetting(KEY_METRIC, L"AppliedDPI", REG_DWORD, &dwDpi, sizeof(dwDpi));
 }
 
 
@@ -797,6 +842,25 @@ SpiSetWallpaper(PVOID pvParam, FLONG fl)
     return (UINT_PTR)KEY_DESKTOP;
 }
 
+/*
+ * The wallpaper is stretched to the screen size once, when it is set. After a
+ * display mode change it must be loaded and stretched again for the new size.
+ */
+VOID
+UserRefreshWallpaper(VOID)
+{
+    UNICODE_STRING ustr;
+    WCHAR awcPath[MAX_PATH + 1];
+
+    if (!gspv.awcWallpaper[0])
+        return;
+
+    RtlCopyMemory(awcPath, gspv.awcWallpaper, sizeof(awcPath));
+    awcPath[MAX_PATH] = UNICODE_NULL;
+    RtlInitUnicodeString(&ustr, awcPath);
+    SpiSetWallpaper(&ustr, 0);
+}
+
 static BOOL
 SpiNotifyNCMetricsChanged(VOID)
 {
@@ -830,6 +894,163 @@ SpiNotifyNCMetricsChanged(VOID)
     ExFreePoolWithTag(ahwnd, USERTAG_WINDOWLIST);
 
     return TRUE;
+}
+
+/*
+ * Tell every top-level window that the scale changed, like Windows does with
+ * WM_DPICHANGED: wParam = new DPI (X and Y), lParam = suggested window rect,
+ * which keeps the top-left corner and scales the size. Apps that handle it
+ * rebuild their fonts/layout and move to that rect.
+ */
+static VOID
+SpiSendDpiChanged(UINT uOldDpi, UINT uNewDpi)
+{
+    PWND pwndDesktop = UserGetDesktopWindow(), pwnd;
+    HWND *ahwnd;
+    USER_REFERENCE_ENTRY Ref;
+    ULONG_PTR ulResult;
+    RECT rc;
+    int i;
+
+    if (!pwndDesktop || !(ahwnd = IntWinListChildren(pwndDesktop)))
+        return;
+
+    for (i = 0; ahwnd[i]; i++)
+    {
+        pwnd = UserGetWindowObject(ahwnd[i]);
+        if (!pwnd || !(pwnd->style & WS_VISIBLE))
+            continue;
+
+        rc = pwnd->rcWindow;
+        if (!(pwnd->style & (WS_MAXIMIZE | WS_MINIMIZE)))
+        {
+            PMONITOR pMonitor = UserMonitorFromRect((PRECTL)&pwnd->rcWindow, MONITOR_DEFAULTTONEAREST);
+            LONG cx = EngMulDiv(rc.right - rc.left, uNewDpi, uOldDpi);
+            LONG cy = EngMulDiv(rc.bottom - rc.top, uNewDpi, uOldDpi);
+
+            /* Keep the scaled window on its monitor's work area */
+            if (pMonitor)
+            {
+                const RECT *prcWork = &pMonitor->rcWork;
+                cx = min(cx, prcWork->right - prcWork->left);
+                cy = min(cy, prcWork->bottom - prcWork->top);
+                if (rc.left + cx > prcWork->right)
+                    rc.left = prcWork->right - cx;
+                if (rc.top + cy > prcWork->bottom)
+                    rc.top = prcWork->bottom - cy;
+                rc.left = max(rc.left, prcWork->left);
+                rc.top = max(rc.top, prcWork->top);
+            }
+            rc.right = rc.left + cx;
+            rc.bottom = rc.top + cy;
+        }
+
+        UserRefObjectCo(pwnd, &Ref);
+        co_IntSendMessageTimeout(ahwnd[i], WM_DPICHANGED, MAKEWPARAM(uNewDpi, uNewDpi), (LPARAM)&rc,
+                                 SMTO_NORMAL, 200, &ulResult);
+        UserDerefObjectCo(pwnd);
+    }
+    ExFreePoolWithTag(ahwnd, USERTAG_WINDOWLIST);
+}
+
+/*
+ * Change the system DPI ("scale") live: rescale every metric and font kept in
+ * pixels, update what GetDeviceCaps(LOGPIXELSX/Y) returns, refresh window
+ * frames and tell applications. Windows created afterwards get the new size.
+ */
+static
+UINT_PTR
+SpiSetDpi(UINT uiNewDpi, FLONG fl)
+{
+    UINT uiOldDpi = dpi;
+    PPDEVOBJ ppdev;
+    ULONG i;
+    ULONG_PTR ulResult;
+
+    if (uiNewDpi < 96 || uiNewDpi > 480)
+    {
+        EngSetLastError(ERROR_INVALID_PARAMETER);
+        return 0;
+    }
+    if (uiNewDpi == uiOldDpi)
+        return (UINT_PTR)KEY_METRIC;
+
+#define SCALE(x) (x) = EngMulDiv((x), uiNewDpi, uiOldDpi)
+    SCALE(gspv.ncm.iScrollWidth);
+    SCALE(gspv.ncm.iScrollHeight);
+    SCALE(gspv.ncm.iCaptionWidth);
+    SCALE(gspv.ncm.iCaptionHeight);
+    SCALE(gspv.ncm.iSmCaptionWidth);
+    SCALE(gspv.ncm.iSmCaptionHeight);
+    SCALE(gspv.ncm.iMenuWidth);
+    SCALE(gspv.ncm.iMenuHeight);
+#if (WINVER >= 0x0600)
+    SCALE(gspv.ncm.iPaddedBorderWidth);
+#endif
+    SCALE(gspv.ncm.lfCaptionFont.lfHeight);
+    SCALE(gspv.ncm.lfSmCaptionFont.lfHeight);
+    SCALE(gspv.ncm.lfMenuFont.lfHeight);
+    SCALE(gspv.ncm.lfStatusFont.lfHeight);
+    SCALE(gspv.ncm.lfMessageFont.lfHeight);
+    SCALE(gspv.im.lfFont.lfHeight);
+    SCALE(gspv.im.iHorzSpacing);
+    SCALE(gspv.im.iVertSpacing);
+#undef SCALE
+
+    gusSystemDpi = uiNewDpi;
+    IntScaleStockFonts(uiOldDpi, uiNewDpi);
+
+    /* What GetDeviceCaps returns, for every display */
+    if (gpmdev)
+    {
+        for (i = 0; i < gpmdev->cDev; i++)
+        {
+            ppdev = gpmdev->dev[i].ppdev;
+            ppdev->gdiinfo.ulLogPixelsX = ppdev->gdiinfo.ulLogPixelsY = uiNewDpi;
+        }
+        ppdev = gpmdev->ppdevGlobal;
+        ppdev->gdiinfo.ulLogPixelsX = ppdev->gdiinfo.ulLogPixelsY = uiNewDpi;
+        PDEVOBJ_vGetDeviceCaps(ppdev, &GdiHandleTable->DevCaps);
+    }
+    gpsi->dmLogPixels = uiNewDpi;
+
+    if (fl & SPIF_UPDATEINIFILE)
+    {
+        HKEY hkey;
+        if (NT_SUCCESS(RegOpenKey(KEY_DPI, &hkey)))
+        {
+            RegWriteDWORD(hkey, L"LogPixels", uiNewDpi);
+            ZwClose(hkey);
+        }
+        SpiStoreFont(L"CaptionFont", &gspv.ncm.lfCaptionFont);
+        SpiStoreFont(L"SmCaptionFont", &gspv.ncm.lfSmCaptionFont);
+        SpiStoreFont(L"MenuFont", &gspv.ncm.lfMenuFont);
+        SpiStoreFont(L"StatusFont", &gspv.ncm.lfStatusFont);
+        SpiStoreFont(L"MessageFont", &gspv.ncm.lfMessageFont);
+        SpiStoreFont(L"IconFont", &gspv.im.lfFont);
+    }
+
+    SpiFixupValues();
+    InitMetrics();
+    MenuRefreshFonts();
+    SpiNotifyNCMetricsChanged();
+
+    /* SpiNotifyNCMetricsChanged doesn't redraw: repaint every window and its frame
+     * (inactive windows would otherwise keep a blank title bar) */
+    co_UserRedrawWindow(UserGetDesktopWindow(), NULL, NULL,
+                        RDW_INVALIDATE | RDW_ERASE | RDW_FRAME | RDW_ALLCHILDREN);
+
+    /* Apps refresh their fonts and layout on these */
+    if (fl & SPIF_SENDCHANGE)
+    {
+        co_IntSendMessageTimeout(HWND_BROADCAST, WM_SETTINGCHANGE, SPI_SETNONCLIENTMETRICS,
+                                 (LPARAM)L"WindowMetrics", SMTO_NORMAL, 100, &ulResult);
+        co_IntSendMessageTimeout(HWND_BROADCAST, WM_SETTINGCHANGE, SPI_SETICONMETRICS,
+                                 (LPARAM)L"WindowMetrics", SMTO_NORMAL, 100, &ulResult);
+        SpiSendDpiChanged(uiOldDpi, uiNewDpi);
+    }
+
+    return (UINT_PTR)KEY_METRIC;
 }
 
 static
@@ -975,6 +1196,15 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
         case SPI_SETDRAGFULLWINDOWS:
             return SpiSetInt(&gspv.bDragFullWindows, uiParam, KEY_DESKTOP, VAL_DRAG, fl);
 
+        case SPI_GETLOGICALDPIOVERRIDE:
+        {
+            UINT uiDpi = dpi;
+            return SpiGet(pvParam, &uiDpi, sizeof(UINT), fl);
+        }
+
+        case SPI_SETLOGICALDPIOVERRIDE:
+            return SpiSetDpi(uiParam, fl);
+
         case SPI_GETNONCLIENTMETRICS:
         {
             return SpiGet(pvParam, &gspv.ncm, sizeof(NONCLIENTMETRICSW), fl);
@@ -1010,6 +1240,15 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
                 SpiStoreFont(L"StatusFont", &gspv.ncm.lfStatusFont);
                 SpiStoreFont(L"MessageFont", &gspv.ncm.lfMessageFont);
             }
+
+            /* The menu font may have changed */
+            MenuRefreshFonts();
+
+            /* Recompute SM_CYCAPTION etc. *before* resizing the windows' frames:
+             * otherwise every open window keeps the previous title bar height
+             * (e.g. Classic's 18px after switching back to a 30px visual style) */
+            SpiFixupValues();
+            InitMetrics();
 
             if(!SpiNotifyNCMetricsChanged())
                 return 0;
@@ -1901,6 +2140,7 @@ SpiGetSetProbeBuffer(UINT uiAction, UINT uiParam, PVOID pvParam)
 #endif
         case SPI_GETSHOWIMEUI:
         case SPI_GETMOUSESPEED:
+        case SPI_GETLOGICALDPIOVERRIDE:
         case SPI_GETSCREENSAVERRUNNING:
 #if(WINVER >= 0x0600)
         case SPI_GETSCREENSAVESECURE:

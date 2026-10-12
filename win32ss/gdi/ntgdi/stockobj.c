@@ -225,6 +225,18 @@ CreateStockFonts(void)
         DefaultGuiFont.lfHeight = -11;
     }
 
+    /* The heights above are pixels at 96 DPI: scale them to the system DPI */
+    {
+        UINT uDpi = UserGetSystemDpi();
+        OEMFixedFont.lfHeight = EngMulDiv(OEMFixedFont.lfHeight, uDpi, 96);
+        AnsiFixedFont.lfHeight = EngMulDiv(AnsiFixedFont.lfHeight, uDpi, 96);
+        AnsiVarFont.lfHeight = EngMulDiv(AnsiVarFont.lfHeight, uDpi, 96);
+        SystemFont.lfHeight = EngMulDiv(SystemFont.lfHeight, uDpi, 96);
+        DeviceDefaultFont.lfHeight = EngMulDiv(DeviceDefaultFont.lfHeight, uDpi, 96);
+        SystemFixedFont.lfHeight = EngMulDiv(SystemFixedFont.lfHeight, uDpi, 96);
+        DefaultGuiFont.lfHeight = EngMulDiv(DefaultGuiFont.lfHeight, uDpi, 96);
+    }
+
     OEMFixedFont.lfCharSet = bOemCharSet;
     SystemFont.lfCharSet = bActiveCharSet;
     DeviceDefaultFont.lfCharSet = bActiveCharSet;
@@ -238,6 +250,26 @@ CreateStockFonts(void)
     TextIntCreateFontIndirect(&DeviceDefaultFont, (HFONT*)&StockObjects[DEVICE_DEFAULT_FONT]);
     TextIntCreateFontIndirect(&SystemFixedFont, (HFONT*)&StockObjects[SYSTEM_FIXED_FONT]);
     TextIntCreateFontIndirect(&DefaultGuiFont, (HFONT*)&StockObjects[DEFAULT_GUI_FONT]);
+}
+
+/* Live DPI change: resize the stock fonts (their size is read at draw time) */
+VOID FASTCALL
+IntScaleStockFonts(UINT uOldDpi, UINT uNewDpi)
+{
+    static const INT Fonts[] = { OEM_FIXED_FONT, ANSI_FIXED_FONT, ANSI_VAR_FONT, SYSTEM_FONT,
+                                 DEVICE_DEFAULT_FONT, SYSTEM_FIXED_FONT, DEFAULT_GUI_FONT };
+    ULONG i;
+
+    for (i = 0; i < _countof(Fonts); i++)
+    {
+        PTEXTOBJ TextObj = TEXTOBJ_LockText((HFONT)StockObjects[Fonts[i]]);
+        if (TextObj)
+        {
+            LOGFONTW *plf = &TextObj->logfont.elfEnumLogfontEx.elfLogFont;
+            plf->lfHeight = EngMulDiv(plf->lfHeight, uNewDpi, uOldDpi);
+            TEXTOBJ_UnlockText(TextObj);
+        }
+    }
 }
 
 /*!

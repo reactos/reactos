@@ -898,8 +898,17 @@ UserChangeDisplaySettings(
         /* Remove all cursor clipping */
         UserClipCursor(NULL);
 
-        //pdesk = IntGetActiveDesktop();
-        //IntHideDesktop(pdesk);
+        /* Resize the desktop window to the new screen size. Without this, the
+         * area outside the old size belongs to no window and is never painted
+         * (black areas, leftovers of closed windows, trails when dragging). */
+        {
+            PDESKTOP pdeskActive = IntGetActiveDesktop();
+            if (pdeskActive)
+                co_IntShowDesktop(pdeskActive, gpsi->aiSysMet[SM_CXSCREEN], gpsi->aiSysMet[SM_CYSCREEN], FALSE);
+        }
+
+        /* The cached wallpaper was stretched for the old screen size */
+        UserRefreshWallpaper();
 
         /* Send WM_DISPLAYCHANGE to all toplevel windows */
         co_IntSendMessageTimeout( HWND_BROADCAST,

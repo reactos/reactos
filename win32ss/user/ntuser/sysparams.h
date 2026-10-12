@@ -198,4 +198,7 @@ extern SPIVALUES gspv;
 extern BOOL g_PaintDesktopVersion;
 
 BOOL InitSysParams();
+VOID UserRefreshWallpaper(VOID);
+UINT FASTCALL UserGetSystemDpi(VOID);
+VOID FASTCALL IntScaleStockFonts(UINT uOldDpi, UINT uNewDpi);
 #define SPITESTPREF(x) (gspv.dwUserPrefMask & x ? 1 : 0)

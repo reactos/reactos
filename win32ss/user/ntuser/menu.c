@@ -355,6 +355,25 @@ IntDestroyMenuObject(PMENU Menu, BOOL bRecurse)
    return FALSE;
 }
 
+/* The menu font changed (new metrics or display scale): recreate the cached fonts */
+VOID
+MenuRefreshFonts(VOID)
+{
+    if (ghMenuFont)
+    {
+        GreSetObjectOwner(ghMenuFont, GDI_OBJ_HMGR_POWNED);
+        GreDeleteObject(ghMenuFont);
+        ghMenuFont = NULL;
+    }
+    if (ghMenuFontBold)
+    {
+        GreSetObjectOwner(ghMenuFontBold, GDI_OBJ_HMGR_POWNED);
+        GreDeleteObject(ghMenuFontBold);
+        ghMenuFontBold = NULL;
+    }
+    MenuInit();
+}
+
 BOOL
 MenuInit(VOID)
 {

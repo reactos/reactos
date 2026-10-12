@@ -161,6 +161,7 @@ BOOL FASTCALL IntMenuItemInfo(PMENU Menu, UINT Item, BOOL ByPosition, PROSMENUIT
 BOOL FASTCALL IntSetMenu(PWND Wnd,HMENU Menu,BOOL *Changed);
 UINT MENU_DrawMenuBar( HDC hDC, LPRECT lprect, PWND pWnd, BOOL suppress_draw );
 BOOL MenuInit(VOID);
+VOID MenuRefreshFonts(VOID);
 VOID MENU_TrackKbdMenuBar(PWND pwnd, UINT wParam, WCHAR wChar);
 VOID MENU_TrackMouseMenuBar( PWND pWnd, ULONG ht, POINT pt);
 BOOL WINAPI PopupMenuWndProc(PWND Wnd,UINT Message,WPARAM wParam,LPARAM lParam,LRESULT *lResult);

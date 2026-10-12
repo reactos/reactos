@@ -209,12 +209,9 @@ PDEVOBJ_bEnablePDEV(
         return FALSE;
     }
 
-    /* Fix up some values */
-    if (ppdev->gdiinfo.ulLogPixelsX == 0)
-        ppdev->gdiinfo.ulLogPixelsX = 96;
-
-    if (ppdev->gdiinfo.ulLogPixelsY == 0)
-        ppdev->gdiinfo.ulLogPixelsY = 96;
+    /* The DPI is a system setting ("scale"), not a property of the display driver */
+    ppdev->gdiinfo.ulLogPixelsX = UserGetSystemDpi();
+    ppdev->gdiinfo.ulLogPixelsY = UserGetSystemDpi();
 
     /* Set raster caps */
     ppdev->gdiinfo.flRaster = RC_OP_DX_OUTPUT | RC_GDI20_OUTPUT | RC_BIGFONT;
