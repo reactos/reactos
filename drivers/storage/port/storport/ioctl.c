@@ -41,7 +41,6 @@ GetFieldLength(
 
 static
 NTSTATUS
-NTAPI
 FdoDeviceControlQueryProperty(
     _In_ PFDO_DEVICE_EXTENSION FdoExtension,
     _In_ PIRP Irp)
@@ -157,7 +156,7 @@ PortFdoDeviceControl(
     {
         case IOCTL_STORAGE_QUERY_PROPERTY:
             return FdoDeviceControlQueryProperty(DeviceObject->DeviceExtension, Irp);
-        
+
         default:
             // __debugbreak();
             Status = Irp->IoStatus.Status;
@@ -174,7 +173,6 @@ PortFdoDeviceControl(
 
 static
 NTSTATUS
-NTAPI
 PdoDeviceControlQueryProperty(
     _In_ PPDO_DEVICE_EXTENSION PdoExtension,
     _In_ PIRP Irp)
@@ -267,7 +265,7 @@ PdoDeviceControlQueryProperty(
                     .DeviceTypeModifier = InquiryData->DeviceTypeModifier,
                     .RemovableMedia = InquiryData->RemovableMedia,
                     .CommandQueueing = InquiryData->CommandQueue,
-                    .BusType = BusTypeSata, /* FIXME: ＵＳＥ　ＦＤＯ　ＢＵＳ　ＴＹＰＥ　ＦＲＯＭ　ＲＥＧＩＳＴＲＹ */
+                    .BusType = BusTypeSata, /* FIXME: USE FDO BUS TYPE FROM REGISTRY */
                 };
 
                 /* Arbitrary data offsets, set them cascading */
@@ -279,7 +277,7 @@ PdoDeviceControlQueryProperty(
                                                           ProductIdLength + 1;
                 DeviceDescriptor->SerialNumberOffset = DeviceDescriptor->ProductRevisionOffset +
                                                        RevisionLength + 1;
-                
+
                 /* Fill the arbitrary data */
                 Dest = DeviceDescriptor->RawDeviceProperties;
 
@@ -327,7 +325,6 @@ PdoDeviceControlQueryProperty(
 
 static
 NTSTATUS
-NTAPI
 PdoDeviceControlScsiGetAddress(
     _In_ PPDO_DEVICE_EXTENSION DeviceExtension,
     _In_ PIRP Irp)
@@ -343,7 +340,7 @@ PdoDeviceControlScsiGetAddress(
 
     NT_ASSERT(DeviceExtension->ExtensionType == PdoExtension);
     FdoDeviceExtension = DeviceExtension->FdoExtension;
-    
+
     do
     {
         /* Check buffer length */
@@ -391,7 +388,7 @@ PortPdoDeviceControl(
     {
         case IOCTL_STORAGE_QUERY_PROPERTY:
             return PdoDeviceControlQueryProperty(DeviceObject->DeviceExtension, Irp);
-        
+
         case IOCTL_SCSI_GET_ADDRESS:
             return PdoDeviceControlScsiGetAddress(DeviceObject->DeviceExtension, Irp);
 

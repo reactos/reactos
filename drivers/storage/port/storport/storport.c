@@ -638,11 +638,10 @@ StorPortDeviceBusy(
     PFDO_DEVICE_EXTENSION FdoExtension;
     PPDO_DEVICE_EXTENSION PdoExtension;
     KLOCK_QUEUE_HANDLE LockHandle;
-    
+
     DPRINT1("StorPortDeviceBusy(%p %d %d %d %d)\n",
             HwDeviceExtension, PathId, TargetId, Lun, RequestsToComplete);
-    __debugbreak();
-    
+
     FdoExtension = StorpGetMiniportFdo(HwDeviceExtension);
     PdoExtension = FdoFindLun(FdoExtension, PathId, TargetId, Lun);
 
@@ -672,11 +671,10 @@ StorPortDeviceReady(
     PFDO_DEVICE_EXTENSION FdoExtension;
     PPDO_DEVICE_EXTENSION PdoExtension;
     KLOCK_QUEUE_HANDLE LockHandle;
-    
+
     DPRINT1("StorPortDeviceReady(%p %d %d %d %d)\n",
             HwDeviceExtension, PathId, TargetId, Lun);
-    __debugbreak();
-    
+
     FdoExtension = StorpGetMiniportFdo(HwDeviceExtension);
     PdoExtension = FdoFindLun(FdoExtension, PathId, TargetId, Lun);
 
@@ -765,7 +763,7 @@ StorPortExtendedFunction(
                 break;
             }
 
-            TimerEntry = (PTIMER_ENTRY)ExAllocatePoolWithTag(NonPagedPool, 
+            TimerEntry = (PTIMER_ENTRY)ExAllocatePoolWithTag(NonPagedPool,
                                                              sizeof(TIMER_ENTRY),
                                                              TAG_MINIPORT_DATA);
             RtlZeroMemory(TimerEntry, sizeof(TIMER_ENTRY));
@@ -789,7 +787,7 @@ StorPortExtendedFunction(
                                                   &DeviceExtension->TimerListHead,
                                                   &TimerEntry->ListEntry,
                                                   &DeviceExtension->TimerCount);
-            
+
             /* Return list entry of the timer as its handle */
             *TimerHandle = (PVOID)&TimerEntry->ListEntry;
             Status = STOR_STATUS_SUCCESS;
@@ -864,7 +862,7 @@ StorPortExtendedFunction(
     }
 
     va_end(va);
-    
+
     return Status;
 }
 
@@ -1435,7 +1433,7 @@ StorPortNotification(
 
             /* Insert DPC for delayed completion */
             KeInsertQueueDpc(&FdoExtension->Device->Dpc, NULL, NULL);
-            
+
             break;
 
         case GetExtendedFunctionTable:
@@ -1476,7 +1474,7 @@ StorPortNotification(
                             (PVOID)(FdoExtension->Miniport.MiniportExtension->HwDeviceExtension));
             KeInitializeSpinLock(&Dpc->Lock);
             break;
-        
+
         case IssueDpc:
             DPRINT("IssueDpc\n");
             Dpc = (PSTOR_DPC)va_arg(ap, PSTOR_DPC);
@@ -1484,7 +1482,7 @@ StorPortNotification(
             DpcArgument2 = (PVOID)va_arg(ap, PVOID);
             DPRINT("Dpc %p Arg1 %p Arg2 %p\n", Dpc, DpcArgument1, DpcArgument2);
             Result = (PBOOLEAN)va_arg(ap, PBOOLEAN);
-            
+
             *Result = KeInsertQueueDpc((PKDPC)Dpc, DpcArgument1, DpcArgument2);
             break;
 

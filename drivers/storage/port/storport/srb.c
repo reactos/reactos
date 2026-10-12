@@ -126,7 +126,7 @@ StorpSrbFreeRequestReference(
 
 /**
  * @brief Assigns a queue tag to a request if it stated it supports one.
- * 
+ *
  * @param PdoExtension PDO Device extension
  * @param Srb SRB that represents this request
  * @return BOOLEAN Whether the request was assigned a tag at last.
@@ -139,7 +139,7 @@ StorpAssignTagToSrb(
 )
 {
     ULONG NewTag;
-    
+
     /* Bail out if the request is untagged */
     if (!TEST_FLAG(Srb->SrbFlags, SRB_FLAGS_QUEUE_ACTION_ENABLE))
     {
@@ -211,10 +211,6 @@ PortPdoAfterBuildingScatterGatherList(
 }
 
 
-/**
- * @brief Allocates SRB extension, Request reference. If it fails, the IO will be failed and return.
- * 
- */
 /**
  * @brief Parks a request that is out of memory, or fails it if there is no reserve to wait for.
  * Either way the IRP is no longer ours, hence STATUS_PENDING.
@@ -341,7 +337,7 @@ PortPdoIssueRequest(
 
         /* Following call requires DISPATCH_LEVEL. */
         OldIrql = KfRaiseIrql(DISPATCH_LEVEL);
-        
+
         /* Make up the scatter gather list */
         /* FIXME: I don't know if we actually hit it */
         NT_ASSERT((RequestReference->Srb->SrbFlags & SRB_FLAGS_UNSPECIFIED_DIRECTION) !=
@@ -358,7 +354,7 @@ PortPdoIssueRequest(
                                  PortPdoAfterBuildingScatterGatherList,
                                  (PVOID)RequestReference,
                                  RequestReference->WriteToDevice);
-        
+
         /* Restore IRQL */
         KeLowerIrql(OldIrql);
     } else {
@@ -389,7 +385,7 @@ PortPdoScheduleRequestNoFlowControl(
 /**
  * @brief Schedules an outstanding request and return a boolean value to indicate if the request can
  * be immediately issued.
- * 
+ *
  * @param PdoExtension PDO device extension.
  * @param FdoExtension FDO device extension.
  * @param RequestReference RequestReference must be allocated beforehand.
@@ -448,7 +444,7 @@ PortPdoScheduleRequestFlowControlled(
         }
 
         /*
-        * If this request is strong ordered and the LUN's active/approved list is not 
+        * If this request is strong ordered and the LUN's active/approved list is not
         * drained, the request must wait.
         */
         if (StrongOrderedRequest && !IsListEmpty(&FlowControl->ActiveRequestsListHead))
@@ -474,7 +470,7 @@ PortPdoScheduleRequestFlowControlled(
 
         /* A new outstanding request is added to this LUN */
         ++FlowControl->OutstandingRequestCount;
-    
+
         /* Check FDO flow control status. */
 
         /* If the FDO can't handle more requests, then the request should be queued. */
@@ -485,16 +481,16 @@ PortPdoScheduleRequestFlowControlled(
             InsertHeadList(&FdoExtension->FlowControl.FdoBlockedRequestsListHead,
                            &RequestReference->FdoEntry);
 
-            /* 
+            /*
             * Now the request is in PDO active list, in FDO awaiting queue, not issued.
             * Let it wait until another completion event schedules it.
             */
             break;
         }
-        
+
         /* Seems good, increment FDO request count */
         ++FdoExtension->FlowControl.OutstandingRequestCount;
-        
+
         /*
         * Now the request is counted in FDO & PDO, and is put into PDO active list,
         * next step we're going to issue it.
@@ -512,59 +508,6 @@ PortPdoScheduleRequestFlowControlled(
     KeReleaseInStackQueuedSpinLock(&LockHandle);
 
     return IssueRequest;
-}
-
-
-/**
- * @brief Allocate Request Reference, SRB extension, etc for a new request.
- * An SRB must have been called with this before issuing a request with PortPdoIssueRequest.
- * Because SRB is allocated here, one can determine if this call is needed by checking whether
- * SRB extension is NULL.
- * 
- * @param Srb SRB pointer.
- */
-NTSTATUS
-NTAPI
-PortAllocateResourceForNewRequest(
-    _In_ PPDO_DEVICE_EXTENSION PdoExtension,
-    _In_ PIRP Irp,
-    _In_ PSCSI_REQUEST_BLOCK Srb,
-    _In_ ULONG SrbExtensionSize)
-{
-    NTSTATUS Status;
-
-    /* Mark IRP as pending */
-    IoMarkIrpPending(Irp);
-
-    /* Allocate our private data area */
-    if (StorpSrbAllocateRequestReference(Srb, Irp, PdoExtension) == NULL)
-    {
-        Status = STATUS_INSUFFICIENT_RESOURCES;
-        return Status;
-    }
-
-    /* Allocate SRB extension */
-    if (SrbExtensionSize != 0)
-    {
-        Srb->SrbExtension = ExAllocatePoolWithTag(NonPagedPool,
-                                                  SrbExtensionSize,
-                                                  TAG_SRB_EXTENSION);
-
-        if (Srb->SrbExtension == NULL)
-        {
-            Status = STATUS_INSUFFICIENT_RESOURCES;
-            StorpSrbFreeRequestReference(Srb);
-            return Status;
-        }
-    } else {
-        Srb->SrbExtension = NULL;
-    }
-
-    /* Assign a tag to the SRB if it supports tagging */
-    StorpAssignTagToSrb(PdoExtension, Srb);
-
-    Status = STATUS_SUCCESS;
-    return Status;
 }
 
 
@@ -627,7 +570,7 @@ PortPdoScsi(
 
             /* Assign a tag to the SRB if it supports tagging */
             StorpAssignTagToSrb(PdoExtension, Srb);
-            
+
             DPRINT("New request (%d:%d:%d) ReqRef %p Srb %p Irp %p Tag %x SrbExt %p(%d)\n",
                     Srb->PathId, Srb->TargetId, Srb->Lun,
                     RequestReference, Srb, Irp, Srb->QueueTag,
@@ -649,7 +592,7 @@ PortPdoScsi(
             } else {
                 Status = STATUS_PENDING;
             }
-            
+
             break;
         }
 
@@ -764,7 +707,7 @@ PortScheduleComingRequestsOnCompletion(
         /* Sanity check */
         NT_ASSERT(PdoExtension->FlowControl.OutstandingRequestCount <
                   PdoExtension->OutstandingRequestMax);
-        
+
         /* Take one request */
         Entry = RemoveTailList(&PdoExtension->FlowControl.AwaitingRequestsListHead);
         RequestReference = CONTAINING_RECORD(Entry, QUEUED_REQUEST_REFERENCE, PdoEntry);
@@ -921,19 +864,28 @@ PortCompleteRequest(
      * lock is still held, and class driver's completion routine may issue another request. This
      * will cause a recursive lock acquisition in PDO SCSI handler and lead to bugcheck.
      */
-    switch (Srb->SrbStatus) {
-        case SRB_STATUS_SUCCESS: IoStatus = STATUS_SUCCESS; break;
-        case SRB_STATUS_BUSY: IoStatus = STATUS_DEVICE_BUSY; break;
-        default: IoStatus = STATUS_UNSUCCESSFUL; // FIXME:
+    switch (SRB_STATUS(Srb->SrbStatus))
+    {
+        case SRB_STATUS_SUCCESS:
+            IoStatus = STATUS_SUCCESS;
+            break;
+
+        case SRB_STATUS_BUSY:
+            IoStatus = STATUS_DEVICE_BUSY;
+            break;
+
+        default:
+            IoStatus = STATUS_UNSUCCESSFUL; // FIXME:
+            break;
     }
     Irp->IoStatus.Status = IoStatus;
     Irp->IoStatus.Information = Srb->DataTransferLength; /* FIXME: hopefully this is correct */
 
-    DPRINT("Calling IoCompleteRequest\n");
-    IoCompleteRequest(Irp, IO_DISK_INCREMENT);
-
     /* We just gave memory back, so let one request that ran out of it through */
     PortRetryStarvedRequest(FdoExtension);
+
+    DPRINT("Calling IoCompleteRequest\n");
+    IoCompleteRequest(Irp, IO_DISK_INCREMENT);
 }
 
 

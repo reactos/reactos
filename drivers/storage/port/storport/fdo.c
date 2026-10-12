@@ -378,7 +378,6 @@ PortFdoStartMiniport(
 
 static
 NTSTATUS
-NTAPI
 PortFdoStartDevice(
     _In_ PFDO_DEVICE_EXTENSION DeviceExtension,
     _In_ PIRP Irp)
@@ -490,7 +489,7 @@ PortSendReportLuns(
     ULONG RetryCount = 0;
 
     DPRINT("PortSendReportLuns(%p)\n", PdoExtension);
-    
+
     /* Allocate sense buffer */
     /* TODO: Reuse sense buffers */
     /* FIXME: Do we need sense buffer here? Can I pass a NULL? */
@@ -502,7 +501,7 @@ PortSendReportLuns(
 
     /* Allocate REPORT LUNS return buffer. Use buffer size for the case of a single LUN */
     BufferSize = sizeof(REPORT_LUNS_DATA);
-    ReportLunsData = 
+    ReportLunsData =
         (PREPORT_LUNS_DATA)ExAllocatePoolWithTag(NonPagedPool, BufferSize, TAG_REPORT_LUN_DATA);
     if (ReportLunsData == NULL)
     {
@@ -593,7 +592,7 @@ PortSendReportLuns(
             DataSize |= (((ULONG)ReportLunsData->LunListLength[1]) << (8*1));
             DataSize |= (((ULONG)ReportLunsData->LunListLength[2]) << (8*2));
             DataSize |= (((ULONG)ReportLunsData->LunListLength[3]) << (8*3));
-            *LunCount = ((DataSize - FIELD_OFFSET(REPORT_LUNS_DATA, LunDescriptor)) / 
+            *LunCount = ((DataSize - FIELD_OFFSET(REPORT_LUNS_DATA, LunDescriptor)) /
                          sizeof(LUN_DESCRIPTOR));
 
             /* Quit the loop */
@@ -658,7 +657,7 @@ PortSendReportLuns(
             DPRINT1("Data overrun at TargetId %d, %d bytes needed\n",
                    PdoExtension->Target,
                    BufferSize);
-            
+
             /* Allocate a larger buffer */
             ExFreePoolWithTag(ReportLunsData, TAG_REPORT_LUN_DATA);
             ReportLunsData = ExAllocatePoolWithTag(NonPagedPool, BufferSize, TAG_REPORT_LUN_DATA);
@@ -949,7 +948,7 @@ PortFdoScanBus(
             {
                 /* Send Report LUNs first */
                 PortSendReportLuns(PdoExtension, &LunCount);
-            
+
                 /* Scan LUN 0 */
                 Status = PortSendInquiry(PdoExtension);
                 DPRINT("PortSendInquiry returned 0x%08lx\n", Status);

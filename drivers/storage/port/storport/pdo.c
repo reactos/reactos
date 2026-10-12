@@ -61,7 +61,7 @@ PortCreatePdo(
 
     /* Add the PDO to the PDO list*/
     StorpInterlockedInsertHeadListCounted(&FdoDeviceExtension->PdoListLock,
-                                          &FdoDeviceExtension->PdoListHead, 
+                                          &FdoDeviceExtension->PdoListHead,
                                           &DeviceExtension->PdoListEntry,
                                           &FdoDeviceExtension->PdoCount);
 

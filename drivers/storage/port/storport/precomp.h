@@ -586,14 +586,6 @@ PortPdoScheduleRequestFlowControlled(
 
 NTSTATUS
 NTAPI
-PortAllocateResourceForNewRequest(
-    _In_ PPDO_DEVICE_EXTENSION PdoExtension,
-    _In_ PIRP Irp,
-    _In_ PSCSI_REQUEST_BLOCK Srb,
-    _In_ ULONG SrbExtensionSize);
-
-NTSTATUS
-NTAPI
 PortPdoScsi(
     _In_ PDEVICE_OBJECT DeviceObject,
     _In_ PIRP Irp);
