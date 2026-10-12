@@ -149,7 +149,12 @@ WDFEXPORT(WdfRegistryOpenKey)(
         else {
             DoTraceLevelMessage(
                 pFxDriverGlobals, TRACE_LEVEL_ERROR, TRACINGERROR,
+#ifdef __REACTOS__
+                "new WDFKEY object open of %wZ failed, %!STATUS!",
+                KeyName, status);
+#else
                 "new WDFKEY object open failed, %!STATUS!", status);
+#endif
         }
     }
 
