@@ -35,6 +35,7 @@
 #define TAG_RESOURCE_LIST   'LRtS'
 #define TAG_ADDRESS_MAPPING 'MAtS'
 #define TAG_INQUIRY_DATA    'QItS'
+#define TAG_LUN_EXTENSION   'ELtS'
 #define TAG_REPORT_LUN_DATA 'LRtS'
 #define TAG_SENSE_DATA      'NStS'
 #define TAG_QUEUED_REQUEST  'RQtS'
@@ -331,6 +332,9 @@ typedef struct _PDO_DEVICE_EXTENSION
     LONG TagCounter;
 
     LONG SpecialRequestCounter; /* FIXME: DELETE AFTER DEBUG */
+
+    /* What the miniport keeps about this one unit, if it asked for any */
+    PVOID LunExtension;
 
 } PDO_DEVICE_EXTENSION, *PPDO_DEVICE_EXTENSION;
 
