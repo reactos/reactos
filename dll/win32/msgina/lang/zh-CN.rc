@@ -3,7 +3,7 @@
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Chinese (Simplified) resource file
  * TRANSLATORS: Copyright 2015 Henry Tang Ih <henrytang2@hotmail.com>
- *              Copyright 2018 Luke Luo <njlyf2011@hotmail.com>
+ *              Copyright 2018-2026 Luke Luo <njlyf2011@hotmail.com>
  *              Copyright 2021 Wu Haotian <rigoligo03@gmail.com>
  */
 
@@ -236,17 +236,17 @@ BEGIN
     IDS_LOGONTITLE "登录消息"
     IDS_LOGONWRONGUSERORPWD "系统不能让您登录。请确认您的用户名和域是否正确，然后再次输入密码。密码是区分大小写的，必须输入正确。"
     IDS_LOGONUSERDISABLED "您的帐户已被禁用。请咨询您的系统管理员。"
-    IDS_PASSWORDMUSTCHANGE "您需要更改您在首次登录时使用的密码。"
+    IDS_PASSWORDMUSTCHANGE "首次登录时必须更改密码。"
     IDS_PASSWORDEXPIRED "您的密码已过期，必须更改。"
     IDS_ACCOUNTEXPIRED "您的帐户已过期。请咨询您的系统管理员。"
     IDS_ACCOUNTLOCKED "您的账户已被锁定，无法登录。请咨询您的系统管理员。"
     IDS_INVALIDLOGONHOURS "您的账户具有的时间限制阻止您现在登录。请稍后再试。"
     IDS_INVALIDWORKSTATION "您的账户设置阻止了您在这台计算机登录。请在另一台计算机尝试登录。"
     IDS_ACCOUNTRESTRICTION "您的账户由于账户限制而不能登录。"
-    IDS_EMERGENCYLOGOFFTITLE "Log Off ReactOS"
-    IDS_EMERGENCYLOGOFF "Click OK to immediately log off. Any unsaved data will be lost. Use this only as a last resort."
-    IDS_EMERGENCYRESTARTTITLE "Emergency restart"
-    IDS_EMERGENCYRESTART "Click OK to immediately restart. Any unsaved data will be lost. Use this only as a last resort."
+    IDS_EMERGENCYLOGOFFTITLE "注销 ReactOS 会话"
+    IDS_EMERGENCYLOGOFF "按“确定”将立即结束当前会话，尚未保存的内容会丢失。请仅在别无办法时使用此操作。"
+    IDS_EMERGENCYRESTARTTITLE "紧急重新启动"
+    IDS_EMERGENCYRESTART "按“确定”将立即重新启动计算机，尚未保存的内容会丢失。请仅在别无办法时使用此操作。"
 END
 
 /* Shutdown Dialog Strings */
