@@ -21,6 +21,7 @@ typedef struct _SYS_BUTTON_CONTEXT
     KEVENT Event;
     IO_STATUS_BLOCK IoStatusBlock;
     ULONG SysButton;
+    ULONG ReportedButton;
 } SYS_BUTTON_CONTEXT, *PSYS_BUTTON_CONTEXT;
 
 static VOID
@@ -28,6 +29,12 @@ NTAPI
 PopGetSysButton(
     IN PDEVICE_OBJECT DeviceObject,
     IN PVOID Context);
+
+static VOID
+NTAPI
+PopHandleSysButton(
+    _In_ PDEVICE_OBJECT DeviceObject,
+    _In_ PVOID Context);
 
 PKWIN32_POWEREVENT_CALLOUT PopEventCallout;
 extern PCALLBACK_OBJECT SetSystemTimeCallback;
@@ -62,29 +69,12 @@ PopGetSysButtonCompletion(
     IN PVOID Context)
 {
     PSYS_BUTTON_CONTEXT SysButtonContext = Context;
-    ULONG SysButton;
 
     /* The DeviceObject can be NULL, so use the one we stored */
     DeviceObject = SysButtonContext->DeviceObject;
 
-    /* FIXME: What do do with the sys button event? */
-    SysButton = *(PULONG)Irp->AssociatedIrp.SystemBuffer;
-    {
-        DPRINT1("A device reported the event 0x%x (", SysButton);
-        if (SysButton & SYS_BUTTON_POWER) DbgPrint(" POWER");
-        if (SysButton & SYS_BUTTON_SLEEP) DbgPrint(" SLEEP");
-        if (SysButton & SYS_BUTTON_LID) DbgPrint(" LID");
-        if (SysButton == 0) DbgPrint(" WAKE");
-        DbgPrint(" )\n");
-
-        if (SysButton & SYS_BUTTON_POWER)
-        {
-            /* FIXME: Read registry for the action we should perform here */
-            DPRINT1("Initiating shutdown after power button event\n");
-
-            ZwShutdownSystem(ShutdownNoReboot);
-        }
-    }
+    /* Completion can run at DISPATCH_LEVEL, so handle the event in the work item */
+    SysButtonContext->ReportedButton = *(PULONG)Irp->AssociatedIrp.SystemBuffer;
 
     /* Allocate a new workitem to send the next IOCTL_GET_SYS_BUTTON_EVENT */
     SysButtonContext->WorkItem = IoAllocateWorkItem(DeviceObject);
@@ -95,7 +85,7 @@ PopGetSysButtonCompletion(
         return STATUS_SUCCESS;
     }
     IoQueueWorkItem(SysButtonContext->WorkItem,
-                    PopGetSysButton,
+                    PopHandleSysButton,
                     DelayedWorkQueue,
                     SysButtonContext);
 
@@ -140,6 +130,34 @@ PopGetSysButton(
     }
 
     IoFreeWorkItem(CurrentWorkItem);
+}
+
+static VOID
+NTAPI
+PopHandleSysButton(
+    _In_ PDEVICE_OBJECT DeviceObject,
+    _In_ PVOID Context)
+{
+    PSYS_BUTTON_CONTEXT SysButtonContext = Context;
+    ULONG SysButton = SysButtonContext->ReportedButton;
+
+    DPRINT1("A device reported the event 0x%x (", SysButton);
+    if (SysButton & SYS_BUTTON_POWER) DbgPrint(" POWER");
+    if (SysButton & SYS_BUTTON_SLEEP) DbgPrint(" SLEEP");
+    if (SysButton & SYS_BUTTON_LID) DbgPrint(" LID");
+    if (SysButton == 0) DbgPrint(" WAKE");
+    DbgPrint(" )\n");
+
+    if (SysButton & SYS_BUTTON_POWER)
+    {
+        /* FIXME: Read registry for the action we should perform here */
+        DPRINT1("Initiating shutdown after power button event\n");
+
+        ZwShutdownSystem(ShutdownNoReboot);
+    }
+
+    /* Send the next IOCTL_GET_SYS_BUTTON_EVENT, this frees the work item */
+    PopGetSysButton(DeviceObject, Context);
 }
 
 NTSTATUS
