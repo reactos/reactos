@@ -58,7 +58,7 @@ START_TEST(ProcThreadAttribute)
 
     if (!pInitialize || !pUpdate || !pDelete)
     {
-        skip("ProcThreadAttribute functions not exported (pre-Vista / 0x502 builds)\n");
+        skip("ProcThreadAttribute functions not exported (require Vista+)\n");
         return;
     }
 
