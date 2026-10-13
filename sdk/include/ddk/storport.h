@@ -439,6 +439,21 @@ extern "C" {
 #define STOR_MAP_ALL_BUFFERS                (1)
 #define STOR_MAP_NON_READ_WRITE_BUFFERS     (2)
 
+/* Status codes returned by the StorPortXxx routines */
+#define STOR_STATUS_SUCCESS                 (0x00000000L)
+#define STOR_STATUS_UNSUCCESSFUL            (0xC1000001L)
+#define STOR_STATUS_NOT_IMPLEMENTED         (0xC1000002L)
+#define STOR_STATUS_INSUFFICIENT_RESOURCES  (0xC1000003L)
+#define STOR_STATUS_BUFFER_TOO_SMALL        (0xC1000004L)
+#define STOR_STATUS_ACCESS_DENIED           (0xC1000005L)
+#define STOR_STATUS_INVALID_PARAMETER       (0xC1000006L)
+#define STOR_STATUS_INVALID_DEVICE_REQUEST  (0xC1000007L)
+#define STOR_STATUS_INVALID_IRQL            (0xC1000008L)
+#define STOR_STATUS_INVALID_DEVICE_STATE    (0xC1000009L)
+#define STOR_STATUS_INVALID_BUFFER_SIZE     (0xC100000AL)
+#define STOR_STATUS_UNSUPPORTED_VERSION     (0xC100000BL)
+#define STOR_STATUS_BUSY                    (0xC100000CL)
+
 #define VPD_SUPPORTED_PAGES                 0x00
 #define VPD_SERIAL_NUMBER                   0x80
 #define VPD_DEVICE_IDENTIFIERS              0x83
@@ -471,6 +486,13 @@ typedef enum _STOR_SYNCHRONIZATION_MODEL
     StorSynchronizeHalfDuplex,
     StorSynchronizeFullDuplex
 } STOR_SYNCHRONIZATION_MODEL;
+
+typedef enum _INTERRUPT_SYNCHRONIZATION_MODE
+{
+    InterruptSupportNone,
+    InterruptSynchronizeAll,
+    InterruptSynchronizePerMessage
+} INTERRUPT_SYNCHRONIZATION_MODE;
 
 typedef enum _STOR_DMA_WIDTH
 {
@@ -620,8 +642,18 @@ typedef enum _STORPORT_FUNCTION_CODE
     ExtFunctionGetHighestNodeNumber,
     ExtFunctionGetLogicalProcessorRelationship,
     ExtFunctionAllocateContiguousMemorySpecifyCacheNode,
-    ExtFunctionFreeContiguousMemorySpecifyCache
+    ExtFunctionFreeContiguousMemorySpecifyCache,
 #endif
+    /* Pinned value, as the codes above are only declared on newer targets */
+    ExtFunctionSetPowerSettingNotificationGuids = 0x1A,
+    ExtFunctionInvokeAcpiMethod,
+    ExtFunctionGetRequestInfo,
+    ExtFunctionInitializeWorker,
+    ExtFunctionQueueWorkItem,
+    ExtFunctionFreeWorker,
+    ExtFunctionInitializeTimer,
+    ExtFunctionRequestTimer,
+    ExtFunctionFreeTimer
 } STORPORT_FUNCTION_CODE, *PSTORPORT_FUNCTION_CODE;
 
 typedef enum _STOR_EVENT_ASSOCIATION_ENUM
@@ -2031,6 +2063,12 @@ typedef struct _MEMORY_REGION
     ULONG Length;
 } MEMORY_REGION, *PMEMORY_REGION;
 
+typedef
+BOOLEAN
+(NTAPI *PHW_MESSAGE_SIGNALED_INTERRUPT_ROUTINE)(
+    _In_ PVOID DeviceExtension,
+    _In_ ULONG MessageId);
+
 typedef struct _PORT_CONFIGURATION_INFORMATION
 {
     ULONG Length;
@@ -2085,6 +2123,18 @@ typedef struct _PORT_CONFIGURATION_INFORMATION
     UCHAR MaximumNumberOfLogicalUnits;
     BOOLEAN WmiDataProvider;
     STOR_SYNCHRONIZATION_MODEL SynchronizationModel;
+    PHW_MESSAGE_SIGNALED_INTERRUPT_ROUTINE HwMSInterruptRoutine;
+    INTERRUPT_SYNCHRONIZATION_MODE InterruptSynchronizationMode;
+    MEMORY_REGION DumpRegion;
+    ULONG RequestedDumpBufferSize;
+    BOOLEAN VirtualDevice;
+    UCHAR DumpMode;
+    ULONG ExtendedFlags1;
+    ULONG MaxNumberOfIO;
+    ULONG MaxIOsPerLun;
+    ULONG InitialLunQueueDepth;
+    ULONG BusResetHoldTime;
+    ULONG FeatureSupport;
 } PORT_CONFIGURATION_INFORMATION, *PPORT_CONFIGURATION_INFORMATION;
 
 typedef struct _STOR_SCATTER_GATHER_ELEMENT
@@ -2213,6 +2263,12 @@ typedef
 VOID
 (NTAPI *PHW_TIMER)(
     _In_ PVOID DeviceExtension);
+
+typedef
+VOID
+(NTAPI *PHW_TIMER_EX)(
+    _In_ PVOID DeviceExtension,
+    _In_opt_ PVOID Context);
 
 typedef
 VOID

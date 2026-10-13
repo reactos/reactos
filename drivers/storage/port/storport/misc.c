@@ -7,6 +7,7 @@
 
 /* INCLUDES *******************************************************************/
 
+#include "ntdef.h"
 #include "precomp.h"
 
 #define NDEBUG
@@ -318,6 +319,134 @@ AllocateAddressMapping(
     Mapping->BusNumber = BusNumber;
 
     return STATUS_SUCCESS;
+}
+
+
+VOID
+NTAPI
+SimpleTimerCallbackDpcRoutine(
+    PKDPC Dpc,
+    PVOID DeferredContext,
+    PVOID SystemArgument1,
+    PVOID SystemArgument2)
+{
+    UNREFERENCED_PARAMETER(Dpc);
+    UNREFERENCED_PARAMETER(SystemArgument1);
+    UNREFERENCED_PARAMETER(SystemArgument2);
+
+    PFDO_DEVICE_EXTENSION FdoExtension = (PFDO_DEVICE_EXTENSION)DeferredContext;
+
+    NT_ASSERT(FdoExtension);
+    NT_ASSERT(FdoExtension->Miniport.MiniportExtension);
+
+    FdoExtension->TimerCallback(&FdoExtension->Miniport.MiniportExtension->HwDeviceExtension);
+}
+
+
+VOID
+NTAPI
+TimerCallbackDpcRoutine(
+    PKDPC Dpc,
+    PVOID DeferredContext,
+    PVOID SystemArgument1,
+    PVOID SystemArgument2)
+{
+    UNREFERENCED_PARAMETER(Dpc);
+    UNREFERENCED_PARAMETER(SystemArgument1);
+    UNREFERENCED_PARAMETER(SystemArgument2);
+
+    PTIMER_ENTRY TimerEntry = (PTIMER_ENTRY)DeferredContext;
+
+    /*
+     * Miniport can schedule a new timer event inside of callback, we should clear timer activated
+     * status here to ensure timer can be correctly scheduled
+     */
+    TimerEntry->TimerAlreadySet = 0;
+
+    TimerEntry->TimerCallback(TimerEntry->HwDeviceExtension,
+                              TimerEntry->Context);
+}
+
+// see https://docs.microsoft.com/en-us/windows-hardware/drivers/install/identifiers-for-scsi-devices
+// and https://docs.microsoft.com/en-us/windows-hardware/drivers/install/identifiers-for-ide-devices
+
+PCSTR
+GetDeviceType(
+    _In_ PINQUIRYDATA InquiryData)
+{
+    switch (InquiryData->DeviceType)
+    {
+        case DIRECT_ACCESS_DEVICE:
+            return "Disk";
+        case SEQUENTIAL_ACCESS_DEVICE:
+            return "Sequential";
+        case PRINTER_DEVICE:
+            return "Printer";
+        case PROCESSOR_DEVICE:
+            return "Processor";
+        case WRITE_ONCE_READ_MULTIPLE_DEVICE:
+            return "Worm";
+        case READ_ONLY_DIRECT_ACCESS_DEVICE:
+            return "CdRom";
+        case SCANNER_DEVICE:
+            return "Scanner";
+        case OPTICAL_DEVICE:
+            return "Optical";
+        case MEDIUM_CHANGER:
+            return "Changer";
+        case COMMUNICATION_DEVICE:
+            return "Net";
+        case ARRAY_CONTROLLER_DEVICE:
+            return "Array";
+        case SCSI_ENCLOSURE_DEVICE:
+            return "Enclosure";
+        case REDUCED_BLOCK_DEVICE:
+            return "RBC";
+        case OPTICAL_CARD_READER_WRITER_DEVICE:
+            return "CardReader";
+        case BRIDGE_CONTROLLER_DEVICE:
+            return "Bridge";
+        default:
+            return "Other";
+    }
+}
+
+
+PCSTR
+GetGenericType(
+    _In_ PINQUIRYDATA InquiryData)
+{
+    switch (InquiryData->DeviceType)
+    {
+        case DIRECT_ACCESS_DEVICE:
+            return "GenDisk";
+        case PRINTER_DEVICE:
+            return "GenPrinter";
+        case WRITE_ONCE_READ_MULTIPLE_DEVICE:
+            return "GenWorm";
+        case READ_ONLY_DIRECT_ACCESS_DEVICE:
+            return "GenCdRom";
+        case SCANNER_DEVICE:
+            return "GenScanner";
+        case OPTICAL_DEVICE:
+            return "GenOptical";
+        case MEDIUM_CHANGER:
+            return "ScsiChanger";
+        case COMMUNICATION_DEVICE:
+            return "ScsiNet";
+        case ARRAY_CONTROLLER_DEVICE:
+            return "ScsiArray";
+        case SCSI_ENCLOSURE_DEVICE:
+            return "ScsiEnclosure";
+        case REDUCED_BLOCK_DEVICE:
+            return "ScsiRBC";
+        case OPTICAL_CARD_READER_WRITER_DEVICE:
+            return "ScsiCardReader";
+        case BRIDGE_CONTROLLER_DEVICE:
+            return "ScsiBridge";
+        default:
+            return "ScsiOther";
+    }
 }
 
 /* EOF */
