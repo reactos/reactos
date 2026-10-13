@@ -270,7 +270,7 @@ PortAddDevice(
                                     NULL,
                                     NULL,
                                     0,
-                                    sizeof(QUEUED_REQUEST_REFERENCE),
+                                    REQUEST_REFERENCE_ALLOCATION_SIZE,
                                     TAG_QUEUED_REQUEST,
                                     0);
 
@@ -1471,18 +1471,26 @@ StorPortNotification(
         case RequestComplete:
             DPRINT("RequestComplete\n");
             Srb = (PSCSI_REQUEST_BLOCK)va_arg(ap, PSCSI_REQUEST_BLOCK);
-            DPRINT("Complete Notify - (%d:%d:%d) ReqRef %p Srb %p Irp %p Tag %x\n",
-                    Srb->PathId, Srb->TargetId, Srb->Lun,
-                    Srb->OriginalRequest, Srb,
-                    ((PQUEUED_REQUEST_REFERENCE)Srb->OriginalRequest)->Irp,
-                    Srb->QueueTag);
-            // if (Srb->OriginalRequest != NULL)
-            // {
-            //     // DPRINT1("Need to complete the IRP!\n");
-            //     PortCompleteRequest(HwDeviceExtension, Srb);
-            // }
-            NT_ASSERT(Srb->OriginalRequest);
-            RequestReference = (PQUEUED_REQUEST_REFERENCE)Srb->OriginalRequest;
+
+            /* An extended SRB keeps the back reference in a different place */
+            if (StorpIsExtendedSrb(Srb))
+            {
+                PSTORAGE_REQUEST_BLOCK Extended = (PSTORAGE_REQUEST_BLOCK)Srb;
+
+                NT_ASSERT(Extended->OriginalRequest);
+                RequestReference = (PQUEUED_REQUEST_REFERENCE)Extended->OriginalRequest;
+
+                StorpCompleteExtendedSrb(RequestReference->Srb,
+                                         RequestReference->ExtendedRequest);
+            }
+            else
+            {
+                NT_ASSERT(Srb->OriginalRequest);
+                RequestReference = (PQUEUED_REQUEST_REFERENCE)Srb->OriginalRequest;
+            }
+
+            DPRINT("Complete Notify - ReqRef %p Srb %p Irp %p\n",
+                    RequestReference, Srb, RequestReference->Irp);
             // if (RequestReference->SpecialRequestId) {
             //     /* FIXME: DELETE AFTER DEBUG */
             //     DPRINT1("STORPORT SPECIAL REQUEST %d Queuing for completion\n", RequestReference->SpecialRequestId);
