@@ -1164,7 +1164,7 @@ StorPortGetScatterGatherList(
     PQUEUED_REQUEST_REFERENCE RequestReference;
 
     DPRINT("StorPortGetScatterGatherList(%p %p)\n", HwDeviceExtension, Srb);
-    RequestReference = (PQUEUED_REQUEST_REFERENCE)Srb->OriginalRequest;
+    RequestReference = StorpRequestReference(Srb);
 
     return RequestReference->ScatterGatherList;
 }
@@ -1478,21 +1478,14 @@ StorPortNotification(
             DPRINT("RequestComplete\n");
             Srb = (PSCSI_REQUEST_BLOCK)va_arg(ap, PSCSI_REQUEST_BLOCK);
 
-            /* An extended SRB keeps the back reference in a different place */
+            RequestReference = StorpRequestReference(Srb);
+            NT_ASSERT(RequestReference);
+
+            /* Carry the miniport's answer back to the original request */
             if (StorpIsExtendedSrb(Srb))
             {
-                PSTORAGE_REQUEST_BLOCK Extended = (PSTORAGE_REQUEST_BLOCK)Srb;
-
-                NT_ASSERT(Extended->OriginalRequest);
-                RequestReference = (PQUEUED_REQUEST_REFERENCE)Extended->OriginalRequest;
-
                 StorpCompleteExtendedSrb(RequestReference->Srb,
                                          RequestReference->ExtendedRequest);
-            }
-            else
-            {
-                NT_ASSERT(Srb->OriginalRequest);
-                RequestReference = (PQUEUED_REQUEST_REFERENCE)Srb->OriginalRequest;
             }
 
             DPRINT("Complete Notify - ReqRef %p Srb %p Irp %p\n",
