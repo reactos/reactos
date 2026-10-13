@@ -165,43 +165,50 @@ AssignResourcesToConfiguration(
                     break;
 
                 case CmResourceTypeInterrupt:
-                    DPRINT1("Interrupt: Level %lu  Vector %lu\n",
-                            PartialDescriptor->u.Interrupt.Level,
-                            PartialDescriptor->u.Interrupt.Vector);
+                {
+                    KINTERRUPT_MODE Mode;
+                    ULONG Level;
+                    ULONG Vector;
+
+                    /* A message interrupt is always edge triggered and has no line */
+                    if (TEST_FLAG(PartialDescriptor->Flags, CM_RESOURCE_INTERRUPT_MESSAGE))
+                    {
+                        Mode = Latched;
+                        Level = 0;
+                        Vector = PartialDescriptor->u.MessageInterrupt.Raw.Vector;
+
+                        DPRINT1("Message interrupt: %u messages  Vector %lu\n",
+                                PartialDescriptor->u.MessageInterrupt.Raw.MessageCount,
+                                Vector);
+                    }
+                    else
+                    {
+                        if (TEST_FLAG(PartialDescriptor->Flags, CM_RESOURCE_INTERRUPT_LATCHED))
+                            Mode = Latched;
+                        else
+                            Mode = LevelSensitive;
+
+                        Level = PartialDescriptor->u.Interrupt.Level;
+                        Vector = PartialDescriptor->u.Interrupt.Vector;
+
+                        DPRINT1("Interrupt: Level %lu  Vector %lu\n", Level, Vector);
+                    }
+
                     if (Interrupt == 0)
                     {
-                        /* Copy interrupt data */
-                        PortConfiguration->BusInterruptLevel = PartialDescriptor->u.Interrupt.Level;
-                        PortConfiguration->BusInterruptVector = PartialDescriptor->u.Interrupt.Vector;
-
-                        /* Set interrupt mode accordingly to the resource */
-                        if (PartialDescriptor->Flags == CM_RESOURCE_INTERRUPT_LATCHED)
-                        {
-                            PortConfiguration->InterruptMode = Latched;
-                        }
-                        else if (PartialDescriptor->Flags == CM_RESOURCE_INTERRUPT_LEVEL_SENSITIVE)
-                        {
-                            PortConfiguration->InterruptMode = LevelSensitive;
-                        }
+                        PortConfiguration->BusInterruptLevel = Level;
+                        PortConfiguration->BusInterruptVector = Vector;
+                        PortConfiguration->InterruptMode = Mode;
                     }
                     else if (Interrupt == 1)
                     {
-                        /* Copy interrupt data */
-                        PortConfiguration->BusInterruptLevel2 = PartialDescriptor->u.Interrupt.Level;
-                        PortConfiguration->BusInterruptVector2 = PartialDescriptor->u.Interrupt.Vector;
-
-                        /* Set interrupt mode accordingly to the resource */
-                        if (PartialDescriptor->Flags == CM_RESOURCE_INTERRUPT_LATCHED)
-                        {
-                            PortConfiguration->InterruptMode2 = Latched;
-                        }
-                        else if (PartialDescriptor->Flags == CM_RESOURCE_INTERRUPT_LEVEL_SENSITIVE)
-                        {
-                            PortConfiguration->InterruptMode2 = LevelSensitive;
-                        }
+                        PortConfiguration->BusInterruptLevel2 = Level;
+                        PortConfiguration->BusInterruptVector2 = Vector;
+                        PortConfiguration->InterruptMode2 = Mode;
                     }
                     Interrupt++;
                     break;
+                }
 
                 case CmResourceTypeDma:
                     DPRINT1("Dma: Channel: %lu  Port: %lu\n",
