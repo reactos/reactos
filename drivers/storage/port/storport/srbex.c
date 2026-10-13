@@ -57,6 +57,25 @@ StorpIsExtendedSrb(
 
 
 /**
+ * @brief Finds the request reference behind an SRB in either format.
+ */
+PQUEUED_REQUEST_REFERENCE
+NTAPI
+StorpRequestReference(
+    _In_ PSCSI_REQUEST_BLOCK Srb)
+{
+    if (StorpIsExtendedSrb(Srb))
+    {
+        PSTORAGE_REQUEST_BLOCK Extended = (PSTORAGE_REQUEST_BLOCK)Srb;
+
+        return (PQUEUED_REQUEST_REFERENCE)Extended->OriginalRequest;
+    }
+
+    return (PQUEUED_REQUEST_REFERENCE)Srb->OriginalRequest;
+}
+
+
+/**
  * @brief Fills in the extended request a miniport will be given.
  *
  * @param Srb The request as the class layer built it.
