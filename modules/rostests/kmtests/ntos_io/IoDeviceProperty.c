@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS kernel mode tests
  * LICENSE:     MIT (https://spdx.org/licenses/MIT)
  * PURPOSE:     Test for the DEVPROPKEY device and device interface property functions
- * COPYRIGHT:   Copyright 2026 Justin Miller <justinmiller100@gmail.com>
+ * COPYRIGHT:   Copyright 2026 Justin Miller <justin.miller@reactos.org>
  */
 
 #include <kmt_test.h>

@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS Kernel
  * LICENSE:     MIT (https://spdx.org/licenses/MIT)
  * PURPOSE:     DEVPROPKEY property store for devices and device interfaces
- * COPYRIGHT:   Copyright 2026 Justin Miller <justinmiller100@gmail.com>
+ * COPYRIGHT:   Copyright 2026 Justin Miller <justin.miller@reactos.org>
  */
 
 /* INCLUDES ******************************************************************/
