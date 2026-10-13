@@ -391,6 +391,80 @@ MiniportHwInterrupt(
 }
 
 
+/**
+ * @brief Asks the miniport which adapter control requests it handles.
+ */
+VOID
+NTAPI
+MiniportQueryAdapterControl(
+    _In_ PMINIPORT Miniport)
+{
+    PSCSI_SUPPORTED_CONTROL_TYPE_LIST List;
+    SCSI_ADAPTER_CONTROL_STATUS Result;
+    ULONG Length;
+    ULONG Type;
+
+    RtlZeroMemory(Miniport->AdapterControlSupported,
+                  sizeof(Miniport->AdapterControlSupported));
+
+    if (Miniport->InitData->HwAdapterControl == NULL)
+        return;
+
+    Length = sizeof(*List) +
+             (ScsiAdapterControlMax * sizeof(List->SupportedTypeList[0]));
+
+    List = ExAllocatePoolWithTag(NonPagedPool, Length, TAG_MINIPORT_DATA);
+    if (List == NULL)
+        return;
+
+    RtlZeroMemory(List, Length);
+    List->MaxControlType = ScsiAdapterControlMax;
+
+    Result = Miniport->InitData->HwAdapterControl(&Miniport->MiniportExtension->HwDeviceExtension,
+                                                  ScsiQuerySupportedControlTypes,
+                                                  List);
+    if (Result == ScsiAdapterControlSuccess)
+    {
+        RtlCopyMemory(Miniport->AdapterControlSupported,
+                      List->SupportedTypeList,
+                      sizeof(Miniport->AdapterControlSupported));
+
+        for (Type = 0; Type < ScsiAdapterControlMax; Type++)
+        {
+            if (Miniport->AdapterControlSupported[Type])
+                DPRINT1("Adapter control %lu supported\n", Type);
+        }
+    }
+
+    ExFreePoolWithTag(List, TAG_MINIPORT_DATA);
+}
+
+
+/**
+ * @brief Sends one adapter control request, if the miniport claimed it.
+ */
+SCSI_ADAPTER_CONTROL_STATUS
+NTAPI
+MiniportAdapterControl(
+    _In_ PMINIPORT Miniport,
+    _In_ SCSI_ADAPTER_CONTROL_TYPE ControlType,
+    _In_opt_ PVOID Parameters)
+{
+    DPRINT("MiniportAdapterControl(%p %u %p)\n",
+            Miniport, ControlType, Parameters);
+
+    if (ControlType >= ScsiAdapterControlMax ||
+        !Miniport->AdapterControlSupported[ControlType])
+    {
+        return ScsiAdapterControlUnsuccessful;
+    }
+
+    return Miniport->InitData->HwAdapterControl(&Miniport->MiniportExtension->HwDeviceExtension,
+                                                ControlType,
+                                                Parameters);
+}
+
+
 BOOLEAN
 NTAPI
 MiniportHwMSInterrupt(
