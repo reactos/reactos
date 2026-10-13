@@ -542,6 +542,80 @@ typedef enum _INTERRUPT_SYNCHRONIZATION_MODE
     InterruptSynchronizePerMessage
 } INTERRUPT_SYNCHRONIZATION_MODE;
 
+#if (NTDDI_VERSION >= NTDDI_WIN11_GE)
+
+/*
+ * An NVMe miniport gets these instead of the SCSI adapter and unit control
+ * codes. The adapter list deliberately mirrors SCSI_ADAPTER_CONTROL_TYPE.
+ */
+typedef enum _NVME_ADAPTER_CONTROL_TYPE
+{
+    NvmeQuerySupportedControlTypes = 0,
+    NvmeStopAdapter,
+    NvmeRestartAdapter,
+    NvmeSetBootConfig,
+    NvmeSetRunningConfig,
+    NvmePowerSettingNotification,
+    NvmeAdapterPower,
+    NvmeAdapterPoFxPowerRequired,
+    NvmeAdapterPoFxPowerActive,
+    NvmeAdapterPoFxPowerSetFState,
+    NvmeAdapterPoFxPowerControl,
+    NvmeAdapterPrepareForBusReScan,
+    NvmeAdapterSystemPowerHints,
+    NvmeAdapterFilterResourceRequirements,
+    NvmeAdapterPoFxMaxOperationalPower,
+    NvmeAdapterPoFxSetPerfState,
+    NvmeAdapterSurpriseRemoval,
+    NvmeAdapterSerialNumber,
+    NvmeAdapterCryptoOperation,
+    NvmeAdapterQueryFruId,
+    NvmeAdapterSetEventLogging,
+    NvmeAdapterReportInternalData,
+    NvmeAdapterResetBusSynchronous,
+    NvmeAdapterPostHwInitialize,
+    NvmeAdapterPrepareEarlyDumpData,
+    NvmeAdapterRestoreEarlyDumpData,
+    NvmeAdapterKsrPowerDown,
+    NvmeAdapterPreparePLDR,
+    NvmeNvmeofAdapterOperation,
+    NvmeAdapterControlMax,
+    MakeNvmeAdapterControlTypeSizeOfUlong = 0xffffffff
+} NVME_ADAPTER_CONTROL_TYPE, *PNVME_ADAPTER_CONTROL_TYPE;
+
+typedef enum _NVME_ADAPTER_CONTROL_STATUS
+{
+    NvmeAdapterControlSuccess = 0,
+    NvmeAdapterControlUnsuccessful,
+    NvmeAdapterControlRetryNeeded,
+    NvmeAdapterControlBufferTooSmall
+} NVME_ADAPTER_CONTROL_STATUS, *PNVME_ADAPTER_CONTROL_STATUS;
+
+typedef enum _NVME_NAMESPACE_CONTROL_TYPE
+{
+    NvmeQuerySupportedNamespaceControlTypes = 0,
+    NvmeNamespaceStart,
+    NvmeNamespacePower,
+    NvmeNamespacePoFxPowerInfo,
+    NvmeNamespacePoFxPowerRequired,
+    NvmeNamespacePoFxPowerActive,
+    NvmeNamespacePoFxPowerSetFState,
+    NvmeNamespacePoFxPowerControl,
+    NvmeNamespaceRemove,
+    NvmeNamespaceSurpriseRemoval,
+    NvmeNamespaceControlMax,
+    MakeNamespaceControlTypeSizeOfUlong = 0xffffffff
+} NVME_NAMESPACE_CONTROL_TYPE, *PNVME_NAMESPACE_CONTROL_TYPE;
+
+typedef enum _NVME_NAMESPACE_CONTROL_STATUS
+{
+    NvmeNamespaceControlSuccess = 0,
+    NvmeNamespaceControlUnsuccessful,
+    NvmeNamespaceControlNotSupported
+} NVME_NAMESPACE_CONTROL_STATUS, *PNVME_NAMESPACE_CONTROL_STATUS;
+
+#endif /* (NTDDI_VERSION >= NTDDI_WIN11_GE) */
+
 typedef enum _SCSI_ADAPTER_CONTROL_TYPE
 {
     ScsiQuerySupportedControlTypes = 0,
@@ -571,6 +645,9 @@ typedef enum _SCSI_ADAPTER_CONTROL_TYPE
     ScsiAdapterPrepareEarlyDumpData,
     ScsiAdapterRestoreEarlyDumpData,
     ScsiAdapterKsrPowerDown,
+    ScsiAdapterPreparePLDR,
+    ScsiAdapterReserved0,
+    ScsiAdapterReserved1,
     ScsiAdapterControlMax,
     MakeAdapterControlTypeSizeOfUlong = 0xffffffff
 } SCSI_ADAPTER_CONTROL_TYPE, *PSCSI_ADAPTER_CONTROL_TYPE;
@@ -578,7 +655,9 @@ typedef enum _SCSI_ADAPTER_CONTROL_TYPE
 typedef enum _SCSI_ADAPTER_CONTROL_STATUS
 {
     ScsiAdapterControlSuccess = 0,
-    ScsiAdapterControlUnsuccessful
+    ScsiAdapterControlUnsuccessful,
+    ScsiAdapterControlRetryNeeded,
+    ScsiAdapterControlBufferTooSmall
 } SCSI_ADAPTER_CONTROL_STATUS, *PSCSI_ADAPTER_CONTROL_STATUS;
 
 #if (NTDDI_VERSION >= NTDDI_WIN8)
@@ -601,6 +680,7 @@ typedef enum _SCSI_UNIT_CONTROL_TYPE
     ScsiUnitQueryFruId,
     ScsiUnitReportInternalData,
     ScsiUnitKsrPowerDown,
+    ScsiUnitNvmeIceInformation,
     ScsiUnitControlMax,
     MakeUnitControlTypeSizeOfUlong = 0xffffffff
 } SCSI_UNIT_CONTROL_TYPE, *PSCSI_UNIT_CONTROL_TYPE;
@@ -3092,6 +3172,243 @@ typedef struct _STOR_POFX_POWER_CONTROL
     PSIZE_T BytesReturned;
 } STOR_POFX_POWER_CONTROL, *PSTOR_POFX_POWER_CONTROL;
 
+/* ScsiQuerySupportedControlTypes and ScsiQuerySupportedUnitControlTypes */
+typedef struct _SCSI_SUPPORTED_CONTROL_TYPE_LIST
+{
+    ULONG MaxControlType;
+    /*
+     * One entry per control type, sized by ScsiAdapterControlMax or
+     * ScsiUnitControlMax. The miniport must not write past MaxControlType.
+     */
+    BOOLEAN SupportedTypeList[0];
+} SCSI_SUPPORTED_CONTROL_TYPE_LIST, *PSCSI_SUPPORTED_CONTROL_TYPE_LIST;
+
+/* ScsiPowerSettingNotification */
+typedef struct _STOR_POWER_SETTING_INFO
+{
+    GUID PowerSettingGuid;
+    _Field_size_bytes_(ValueLength) PVOID Value;
+    ULONG ValueLength;
+} STOR_POWER_SETTING_INFO, *PSTOR_POWER_SETTING_INFO;
+
+typedef enum _RAID_SYSTEM_POWER
+{
+    RaidSystemPowerUnknown = 0,
+    RaidSystemPowerLowest,
+    RaidSystemPowerLow,
+    RaidSystemPowerMedium,
+    RaidSystemPowerHigh
+} RAID_SYSTEM_POWER, *PRAID_SYSTEM_POWER;
+
+#define STOR_SYSTEM_POWER_HINTS_V1          0x1
+
+/* ScsiAdapterSystemPowerHints, only sent on always-on always-connected systems */
+typedef struct _STOR_SYSTEM_POWER_HINTS
+{
+    ULONG Version;
+    ULONG Size;
+    RAID_SYSTEM_POWER SystemPower;
+    /* Milliseconds of resume latency this hint tolerates */
+    ULONG ResumeLatencyMSec;
+} STOR_SYSTEM_POWER_HINTS, *PSTOR_SYSTEM_POWER_HINTS;
+
+#define STOR_FILTER_RESOURCE_REQUIREMENTS_V1 0x1
+
+/*
+ * ScsiAdapterFilterResourceRequirements. A miniport may drop or narrow a
+ * requirement but never add one; to drop one it moves the rest of the buffer
+ * up and lowers the descriptor count.
+ */
+typedef struct _STOR_FILTER_RESOURCE_REQUIREMENTS
+{
+    ULONG Version;
+    ULONG Size;
+    PIO_RESOURCE_REQUIREMENTS_LIST IoResourceRequirementsList;
+} STOR_FILTER_RESOURCE_REQUIREMENTS, *PSTOR_FILTER_RESOURCE_REQUIREMENTS;
+
+/* ScsiAdapterPoFxMaxOperationalPower */
+typedef struct _STOR_MAX_OPERATIONAL_POWER
+{
+    ULONG Version;
+    ULONG Size;
+    ULONGLONG Value;
+} STOR_MAX_OPERATIONAL_POWER, *PSTOR_MAX_OPERATIONAL_POWER;
+
+/*
+ * ScsiAdapterPoFxSetPerfState reports the outcome of a transition the miniport
+ * asked for with StorPortPoFxSetPerfState. Context is whatever it passed there.
+ */
+typedef struct _STOR_POFX_PERF_STATE_CONTEXT
+{
+    ULONG Version;
+    ULONG Size;
+    ULONG ComponentIndex;
+    BOOLEAN Succeeded;
+    PVOID Context;
+} STOR_POFX_PERF_STATE_CONTEXT, *PSTOR_POFX_PERF_STATE_CONTEXT;
+
+#define STOR_SERIAL_NUMBER_MAX_SIZE         (128 * sizeof(WCHAR))
+
+/* ScsiAdapterSerialNumber. At most 128 characters including the terminator. */
+typedef struct _STOR_SERIAL_NUMBER
+{
+    ULONG Version;
+    ULONG Size;
+    BOOLEAN Unicode;
+    UCHAR SerialNumber[STOR_SERIAL_NUMBER_MAX_SIZE];
+} STOR_SERIAL_NUMBER, *PSTOR_SERIAL_NUMBER;
+
+/* Matches DEVICE_USAGE_NOTIFICATION_TYPE */
+typedef enum _SCSI_UC_DEVICE_USAGE_TYPE
+{
+    ScsiDeviceUsageTypeUndefined,
+    ScsiDeviceUsageTypePaging,
+    ScsiDeviceUsageTypeHibernation,
+    ScsiDeviceUsageTypeDumpFile,
+    ScsiDeviceUsageTypeBoot,
+    ScsiDeviceUsageTypeInlineCryptoEngine = 7
+} SCSI_UC_DEVICE_USAGE_TYPE;
+
+/* ScsiUnitUsage */
+typedef struct _STOR_UC_DEVICE_USAGE
+{
+    PSTOR_ADDRESS Address;
+    SCSI_UC_DEVICE_USAGE_TYPE UsageType;
+    BOOLEAN InUse;
+} STOR_UC_DEVICE_USAGE, *PSTOR_UC_DEVICE_USAGE;
+
+#define STOR_VENDOR_ID_LENGTH               16
+#define STOR_MODEL_NUMBER_LENGTH            64
+#define STOR_FIRMWARE_REVISION_LENGTH       16
+
+#define STOR_RICH_DEVICE_DESCRIPTION_STRUCTURE_VERSION 0x1
+
+/* ScsiUnitRichDescription, for devices whose strings outgrow the SCSI fields */
+typedef struct _STOR_RICH_DEVICE_DESCRIPTION
+{
+    ULONG Version;
+    ULONG Size;
+    CHAR VendorId[STOR_VENDOR_ID_LENGTH + 1];
+    CHAR ModelNumber[STOR_MODEL_NUMBER_LENGTH + 1];
+    CHAR FirmwareRevision[STOR_FIRMWARE_REVISION_LENGTH + 1];
+} STOR_RICH_DEVICE_DESCRIPTION, *PSTOR_RICH_DEVICE_DESCRIPTION;
+
+#define STOR_RICH_DEVICE_DESCRIPTION_STRUCTURE_VERSION_V2 0x2
+
+typedef struct _STOR_RICH_DEVICE_DESCRIPTION_V2
+{
+    ULONG Version;
+    ULONG Size;
+    CHAR VendorId[STOR_VENDOR_ID_LENGTH + 1];
+    CHAR ModelNumber[STOR_MODEL_NUMBER_LENGTH + 1];
+    CHAR FirmwareRevision[STOR_FIRMWARE_REVISION_LENGTH + 1];
+    PSTOR_ADDRESS Address;
+} STOR_RICH_DEVICE_DESCRIPTION_V2, *PSTOR_RICH_DEVICE_DESCRIPTION_V2;
+
+/* ScsiUnitQueryBusType */
+typedef struct _STOR_UNIT_CONTROL_QUERY_BUS_TYPE
+{
+    PSTOR_ADDRESS Address;
+    ULONG BusType;
+} STOR_UNIT_CONTROL_QUERY_BUS_TYPE, *PSTOR_UNIT_CONTROL_QUERY_BUS_TYPE;
+
+#define STOR_FRU_ID_MAX_LENGTH              128
+#define STOR_FRU_ID_DESCRIPTION_STRUCTURE_VERSION_1 0x1
+
+/* Scsi(Adapter|Unit)QueryFruId */
+typedef struct _STOR_FRU_ID_DESCRIPTION
+{
+    ULONG Version;
+    ULONG Size;
+    PSTOR_ADDRESS Address;
+    UCHAR FruId[STOR_FRU_ID_MAX_LENGTH + 1];
+} STOR_FRU_ID_DESCRIPTION, *PSTOR_FRU_ID_DESCRIPTION;
+
+typedef enum _INTERNAL_DATA_SCOPE
+{
+    InternalDataScopeUndefined = 0,
+    InternalDataScopeInMemoryState,
+    InternalDataScopeMax
+} INTERNAL_DATA_SCOPE, *PINTERNAL_DATA_SCOPE;
+
+/*
+ * Scsi(Adapter|Unit)ReportInternalData. CallbackContext is passed straight
+ * back to StorPortMiniportReportInternalData.
+ */
+typedef struct _STOR_REPORT_INTERNAL_DATA
+{
+    ULONG Version;
+    ULONG Size;
+    PSTOR_ADDRESS Address;
+    INTERNAL_DATA_SCOPE Scope;
+    PVOID CallbackContext;
+} STOR_REPORT_INTERNAL_DATA, *PSTOR_REPORT_INTERNAL_DATA;
+
+/*
+ * ScsiAdapterResetBusSynchronous. Delivered at PASSIVE_LEVEL so the miniport
+ * can reset the bus and wait for it.
+ */
+typedef struct _STOR_RESET_BUS_SYNCHRONOUS_PARAMETER
+{
+    ULONG Version;
+    ULONG Size;
+    ULONG PathId;
+    ULONG Reserved;
+} STOR_RESET_BUS_SYNCHRONOUS_PARAMETER, *PSTOR_RESET_BUS_SYNCHRONOUS_PARAMETER;
+
+typedef enum _STOR_CRYPTO_OPERATION_TYPE
+{
+    StorCryptoOperationInsertKey = 1,
+    StorCryptoOperationMax
+} STOR_CRYPTO_OPERATION_TYPE, *PSTOR_CRYPTO_OPERATION_TYPE;
+
+/* Scsi(Adapter|Unit)CryptoOperation */
+typedef struct _STOR_CRYPTO_OPERATION
+{
+    STOR_CRYPTO_OPERATION_TYPE OperationType;
+    ULONG OperationBufferLength;
+    PVOID OperationBuffer;
+} STOR_CRYPTO_OPERATION, *PSTOR_CRYPTO_OPERATION;
+
+#define STOR_CRYPTO_OPERATION_INSERT_KEY_VERSION_1 1
+
+typedef struct _STOR_CRYPTO_OPERATION_INSERT_KEY
+{
+    USHORT Version;
+    USHORT Size;
+    ULONG KeyIndex;
+    ULONG CryptoCapabilityIndex;
+    ULONG DataUnitSizeBitmask;
+    ULONG KeySize;
+    ULONG Reserved;
+    PVOID KeyVirtualAddress;
+    PHYSICAL_ADDRESS KeyPhysicalAddress;
+} STOR_CRYPTO_OPERATION_INSERT_KEY, *PSTOR_CRYPTO_OPERATION_INSERT_KEY;
+
+#if (NTDDI_VERSION >= NTDDI_WIN11_GE)
+
+/* NvmeQuerySupportedControlTypes and NvmeQuerySupportedNamespaceControlTypes */
+typedef struct _NVME_SUPPORTED_CONTROL_TYPE_LIST
+{
+    ULONG MaxControlType;
+    BOOLEAN SupportedTypeList[0];
+} NVME_SUPPORTED_CONTROL_TYPE_LIST, *PNVME_SUPPORTED_CONTROL_TYPE_LIST;
+
+typedef struct _NVME_ICE_ENTRY *PNVME_ICE_ENTRY;
+
+/*
+ * ScsiUnitNvmeIceInformation, asked during enumeration to find out whether a
+ * unit can take part in NVMe inline crypto.
+ */
+typedef struct _STOR_UNIT_NVME_ICE_INFORMATION
+{
+    ULONG Version;
+    PSTOR_ADDRESS Address;
+    PNVME_ICE_ENTRY NvmeIceEntry;
+} STOR_UNIT_NVME_ICE_INFORMATION, *PSTOR_UNIT_NVME_ICE_INFORMATION;
+
+#endif /* (NTDDI_VERSION >= NTDDI_WIN11_GE) */
+
 #define STOR_POFX_UNKNOWN_POWER             0xFFFFFFFF
 #define STOR_POFX_UNKNOWN_TIME              0xFFFFFFFFFFFFFFFF
 
@@ -3329,6 +3646,24 @@ SCSI_UNIT_CONTROL_STATUS
     _In_ SCSI_UNIT_CONTROL_TYPE ControlType,
     _In_ PVOID Parameters);
 
+#if (NTDDI_VERSION >= NTDDI_WIN11_GE)
+
+typedef
+NVME_ADAPTER_CONTROL_STATUS
+(NTAPI *PHW_NVME_ADAPTER_CONTROL)(
+    _In_ PVOID DeviceExtension,
+    _In_ NVME_ADAPTER_CONTROL_TYPE ControlType,
+    _In_ PVOID Parameters);
+
+typedef
+NVME_NAMESPACE_CONTROL_STATUS
+(NTAPI *PHW_NAMESPACE_CONTROL)(
+    _In_ PVOID DeviceExtension,
+    _In_ NVME_NAMESPACE_CONTROL_TYPE ControlType,
+    _In_ PVOID Parameters);
+
+#endif /* (NTDDI_VERSION >= NTDDI_WIN11_GE) */
+
 typedef
 VOID
 (NTAPI *PHW_WORKITEM)(
@@ -3506,7 +3841,15 @@ typedef struct _HW_INITIALIZATION_DATA
     };
     USHORT DeviceIdLength;
     PVOID DeviceId;
+#if (NTDDI_VERSION >= NTDDI_WIN11_GE)
+    union
+    {
+        PHW_ADAPTER_CONTROL HwAdapterControl;
+        PHW_NVME_ADAPTER_CONTROL HwNvmeAdapterControl;
+    };
+#else
     PHW_ADAPTER_CONTROL HwAdapterControl;
+#endif
     PHW_BUILDIO HwBuildIo;
 #if (NTDDI_VERSION >= NTDDI_WIN8)
     PHW_FREE_ADAPTER_RESOURCES HwFreeAdapterResources;
@@ -3519,7 +3862,15 @@ typedef struct _HW_INITIALIZATION_DATA
     ULONG SrbTypeFlags;
     ULONG AddressTypeFlags;
     ULONG Reserved1;
+#if (NTDDI_VERSION >= NTDDI_WIN11_GE)
+    union
+    {
+        PHW_UNIT_CONTROL HwUnitControl;
+        PHW_NAMESPACE_CONTROL HwNamespaceControl;
+    };
+#else
     PHW_UNIT_CONTROL HwUnitControl;
+#endif
 #endif
 } HW_INITIALIZATION_DATA, *PHW_INITIALIZATION_DATA;
 
