@@ -324,6 +324,14 @@ typedef struct _PDO_DEVICE_EXTENSION
 
 } PDO_DEVICE_EXTENSION, *PPDO_DEVICE_EXTENSION;
 
+/* The miniport reaches the address and CDB by offset, so they must follow the SRB */
+typedef struct _EXTENDED_REQUEST
+{
+    STORAGE_REQUEST_BLOCK Srb;
+    STOR_ADDR_BTL8 Address;
+    SRBEX_DATA_SCSI_CDB16 Cdb;
+} EXTENDED_REQUEST, *PEXTENDED_REQUEST;
+
 /* 
  * Storport sends SRBs to HBA, and needs to notify IRPs about IO status.
  * Conventionally SRB has an OriginalRequest field to point to IRP, and IRP tail overlay
@@ -345,6 +353,8 @@ typedef struct _QUEUED_REQUEST_REFERENCE
     LIST_ENTRY PdoEntry;
     PPDO_DEVICE_EXTENSION PdoExtension;
     PSCSI_REQUEST_BLOCK Srb;
+    /* Trails this packet, set only when the miniport takes extended SRBs */
+    PEXTENDED_REQUEST ExtendedRequest;
     PIRP Irp;
     PSTOR_SCATTER_GATHER_LIST ScatterGatherList;
     PVOID MappedSystemVa;
@@ -366,6 +376,10 @@ typedef struct _QUEUED_REQUEST_REFERENCE
     BOOLEAN DumpSpecialRequest;
     LONG SpecialRequestId;
 } QUEUED_REQUEST_REFERENCE, *PQUEUED_REQUEST_REFERENCE;
+
+/* The SRB format is only known after HwFindAdapter, so every packet has room for both */
+#define REQUEST_REFERENCE_ALLOCATION_SIZE \
+    (sizeof(QUEUED_REQUEST_REFERENCE) + sizeof(EXTENDED_REQUEST))
 
 /* This and next one are for REPORT_LUNS command return structure, seems to be found nowhere else */
 typedef struct _LUN_DESCRIPTOR
@@ -607,6 +621,26 @@ PortCompletionDpc(
     _In_ PVOID Context,
     _In_ PVOID SystemArgument1,
     _In_ PVOID SystemArgument2);
+
+
+/* srbex.c */
+
+BOOLEAN
+NTAPI
+StorpIsExtendedSrb(
+    _In_ PVOID Srb);
+
+VOID
+NTAPI
+StorpBuildExtendedSrb(
+    _In_ PSCSI_REQUEST_BLOCK Srb,
+    _Out_ PEXTENDED_REQUEST Request);
+
+VOID
+NTAPI
+StorpCompleteExtendedSrb(
+    _In_ PSCSI_REQUEST_BLOCK Srb,
+    _In_ PEXTENDED_REQUEST Request);
 
 
 /* storport.c */
