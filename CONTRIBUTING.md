@@ -83,7 +83,7 @@ Reviewer time is limited, and we want to hear from you, not from a tool.
 
 - *Write PR descriptions and commit messages yourself.* Do not generate or rewrite them with AI tools (ChatGPT, Copilot, Claude, etc.). AI drafts edited by a human still count.
 - *Clearly label any other AI-generated text* (issues, review comments, JIRA, forum, chat) and put it in a quote block or `<details>` section. Your message must make sense without it.
-- Translating your own text or fixing spelling and grammar is fine.
+- Translating your own text or fixing spelling and grammar using an AI tool is fine.
 
 Contributions that ignore this may be closed without review.
 
