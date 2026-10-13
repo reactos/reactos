@@ -479,6 +479,10 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
         KeFeatureBits |= KF_NX_DISABLED;
     }
 
+    /* The startup code of an AP only enabled paging, the boot CPU does this later */
+    if (Number != 0)
+        KiSetCR0Bits();
+
     /* Save CPU state */
     KiSaveProcessorControlState(&Prcb->ProcessorState);
 
