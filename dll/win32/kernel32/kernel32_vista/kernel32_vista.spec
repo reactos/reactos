@@ -4,6 +4,10 @@
 @ stdcall InitOnceExecuteOnce(ptr ptr ptr ptr)
 @ stdcall InitOnceInitialize(ptr) NTDLL.RtlRunOnceInitialize
 
+@ stdcall InitializeProcThreadAttributeList(ptr long long ptr)
+@ stdcall UpdateProcThreadAttribute(ptr long ptr ptr ptr ptr ptr)
+@ stdcall DeleteProcThreadAttributeList(ptr)
+
 @ stdcall GetFileInformationByHandleEx(long long ptr long)
 @ stdcall -ret64 GetTickCount64()
 

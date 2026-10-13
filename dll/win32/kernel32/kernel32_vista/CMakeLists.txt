@@ -20,6 +20,7 @@ list(APPEND SOURCE
     IsValidLocaleName.c
     LCIDToLocaleName.c
     LocaleNameToLCID.c
+    procattr.c
     sync.c
     ThreadDescription.c
     threadpool.c
