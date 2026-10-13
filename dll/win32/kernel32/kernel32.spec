@@ -1309,4 +1309,3 @@
 ;@ stdcall -arch=x86_64 uaw_wcsicmp(wstr wstr)
 ;@ stdcall -arch=x86_64 uaw_wcslen(wstr)
 ;@ stdcall -arch=x86_64 uaw_wcsrchr(wstr long)
-
