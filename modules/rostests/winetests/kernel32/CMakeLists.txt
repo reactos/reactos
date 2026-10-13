@@ -11,7 +11,7 @@ endif()
 spec2def(dummy.dll dummy.spec)
 add_library(kernel32_winetest_dummy MODULE dummy.c ${CMAKE_CURRENT_BINARY_DIR}/dummy.def)
 set_target_properties(kernel32_winetest_dummy PROPERTIES OUTPUT_NAME "dummy")
-set_module_type(kernel32_winetest_dummy win32dll)
+set_module_type(kernel32_winetest_dummy win32dll IMAGEBASE default)
 add_importlibs(kernel32_winetest_dummy msvcrt kernel32)
 add_rostests_file(TARGET kernel32_winetest_dummy)
 
