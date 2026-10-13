@@ -667,6 +667,11 @@ NTAPI
 StorpIsExtendedSrb(
     _In_ PVOID Srb);
 
+PQUEUED_REQUEST_REFERENCE
+NTAPI
+StorpRequestReference(
+    _In_ PSCSI_REQUEST_BLOCK Srb);
+
 VOID
 NTAPI
 StorpBuildExtendedSrb(
