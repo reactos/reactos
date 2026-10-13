@@ -124,6 +124,7 @@ pci.sys      = 1,,,,,,x,4,,,,1,4
 scsiport.sys = 1,,,,,,,4,,,,1,4
 storport.sys = 1,,,,,,,4,,,,1,4
 ucx01000.sys = 1,,,,,,x,4,,,,1,4
+stornvme.sys = 1,,,,,,x,4,,,,1,4
 fastfat.sys  = 1,,,,,,x,4,,,,1,4
 btrfs.sys    = 1,,,,,,x,4,,,,1,4
 ntfs.sys     = 1,,,,,,x,4,,,,1,4
@@ -170,6 +171,7 @@ PCI\CC_0104 = pciide
 PCI\CC_0105 = pciide
 PCI\CC_0106 = pciide
 ;PCI\CC_0106 = storahci
+PCI\CC_010802 = stornvme
 ;*PNP0600 = uniata
 *PNP0600 = atapi
 USB\CLASS_09 = usbhub
@@ -217,6 +219,7 @@ atapi = atapi.sys
 atapi = atapi.sys
 buslogic = buslogic.sys
 storahci = storahci.sys
+stornvme = stornvme.sys
 disk = disk.sys
 
 [MouseDrivers.Load]
