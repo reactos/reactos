@@ -112,8 +112,6 @@ FdoDeviceControlQueryProperty(
 
         /* Return AdapterDescriptor */
         AdapterDescriptor = Irp->AssociatedIrp.SystemBuffer;
-
-        /* Classpnp is built for NTDDI_WIN8 and reads SrbType and AddressType past our tail */
         RtlZeroMemory(AdapterDescriptor, sizeof(*AdapterDescriptor));
 
         AdapterDescriptor->Version = sizeof(*AdapterDescriptor);
@@ -128,6 +126,8 @@ FdoDeviceControlQueryProperty(
         AdapterDescriptor->BusType = BusTypeSata; /* FIXME: ＲＥＡＤ　ＦＲＯＭ　ＲＥＧＩＳＴＲＹ */
         AdapterDescriptor->BusMajorVersion = 2;
         AdapterDescriptor->BusMinorVersion = 0;
+        AdapterDescriptor->SrbType = SRB_TYPE_SCSI_REQUEST_BLOCK;
+        AdapterDescriptor->AddressType = STORAGE_ADDRESS_TYPE_BTL8;
 
         Irp->IoStatus.Information = sizeof(*AdapterDescriptor);
         Status = STATUS_SUCCESS;
