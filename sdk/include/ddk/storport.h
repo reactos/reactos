@@ -372,6 +372,12 @@ extern "C" {
 #define SRB_FUNCTION_FREE_DUMP_INFO         0x2B
 #endif
 
+#if (NTDDI_VERSION >= NTDDI_WIN11_GE)
+#define SRB_FUNCTION_EXECUTE_NVME           0x0A
+#define SRB_FUNCTION_NVMEOF_OPERATION       0x2C
+#define SRB_FUNCTION_MINIPORT_PASSTHROUGH_REQUEST 0x2D
+#endif
+
 /* SCSI_REQUEST_BLOCK.SrbStatus constants */
 #define SRB_STATUS_PENDING                  0x00
 #define SRB_STATUS_SUCCESS                  0x01
@@ -450,6 +456,8 @@ extern "C" {
 #define SRB_WMI_FLAGS_ADAPTER_REQUEST       0x01
 #define SRB_POWER_FLAGS_ADAPTER_REQUEST     0x01
 #define SRB_PNP_FLAGS_ADAPTER_REQUEST       0x01
+#define SRB_IOCTL_FLAGS_ADAPTER_REQUEST     0x01
+#define SRB_PROTOCOL_FLAGS_ADAPTER_REQUEST  0x01
 
 #define STOR_MAP_NO_BUFFERS                 (0)
 #define STOR_MAP_ALL_BUFFERS                (1)
@@ -1039,10 +1047,14 @@ typedef enum _SRBEXDATATYPE
     SrbExDataTypeScsiCdb16 = 0x40,
     SrbExDataTypeScsiCdb32,
     SrbExDataTypeScsiCdbVar,
+    SrbExDataTypeNvmeCommand,
+    SrbExDataTypeNvmeofOperation,
+    SrbExDataTypeMiniportPassthrough,
     SrbExDataTypeWmi = 0x60,
     SrbExDataTypePower,
     SrbExDataTypePnP,
     SrbExDataTypeIoInfo = 0x80,
+    SrbExDataTypePassthroughDirect = 0xa0,
     SrbExDataTypeMSReservedStart = 0xf0000000,
     SrbExDataTypeReserved = 0xffffffff
 } SRBEXDATATYPE, *PSRBEXDATATYPE;
@@ -1181,6 +1193,7 @@ typedef struct SRB_ALIGN _SRBEX_DATA_PNP
 #define REQUEST_INFO_NO_FILE_OBJECT_FLAG    0x00000040
 #define REQUEST_INFO_VOLSNAP_IO_FLAG        0x00000080
 #define REQUEST_INFO_STREAM_FLAG            0x00000100
+#define REQUEST_INFO_CRYPTO_FLAG            0x00000200
 #define REQUEST_INFO_VALID_CACHEPRIORITY_FLAG 0x80000000
 
 typedef struct SRB_ALIGN _SRBEX_DATA_IO_INFO
@@ -1194,7 +1207,12 @@ typedef struct SRB_ALIGN _SRBEX_DATA_IO_INFO
     ULONG RWLength;
     BOOLEAN IsWriteRequest;
     UCHAR CachePriority;
+#if (NTDDI_VERSION >= NTDDI_WIN11_GE)
+    UCHAR IoPriorityLevel;
+    UCHAR Reserved;
+#else
     UCHAR Reserved[2];
+#endif
     ULONG Reserved1[2];
 } SRBEX_DATA_IO_INFO, *PSRBEX_DATA_IO_INFO;
 
@@ -1233,7 +1251,15 @@ typedef _Struct_size_bytes_(SrbLength) struct SRB_ALIGN _STORAGE_REQUEST_BLOCK
     USHORT RequestPriority;
     USHORT RequestAttribute;
     ULONG TimeOutValue;
+#if (NTDDI_VERSION >= NTDDI_WIN10_CU)
+    union
+    {
+        ULONG SystemStatus;
+        ULONG RequestTagHigh4Bytes;
+    } DUMMYUNIONNAME;
+#else
     ULONG SystemStatus;
+#endif
     ULONG ZeroGuard1;
     _Field_range_(sizeof(STORAGE_REQUEST_BLOCK), SrbLength - sizeof(STOR_ADDRESS))
     ULONG AddressOffset;
@@ -1255,6 +1281,7 @@ typedef _Struct_size_bytes_(SrbLength) struct SRB_ALIGN _STORAGE_REQUEST_BLOCK
 /* PORT_CONFIGURATION_INFORMATION.SrbType */
 #define SRB_TYPE_SCSI_REQUEST_BLOCK         0
 #define SRB_TYPE_STORAGE_REQUEST_BLOCK      1
+#define SRB_TYPE_NVME_REQUEST_BLOCK         2
 
 /* PORT_CONFIGURATION_INFORMATION.AddressType */
 #define STORAGE_ADDRESS_TYPE_BTL8           0
@@ -1285,6 +1312,180 @@ typedef _Struct_size_bytes_(SrbLength) struct SRB_ALIGN _STORAGE_REQUEST_BLOCK
 #define STOR_FEATURE_EARLY_DUMP                          0x00010000
 
 #endif /* (NTDDI_VERSION >= NTDDI_WIN8) */
+
+#if (NTDDI_VERSION >= NTDDI_WIN11_GE)
+
+/*
+ * StorMQ addresses a controller directly rather than by bus, target and LUN.
+ * Controller is the controller extension the miniport already knows.
+ */
+#define STOR_ADDRESS_TYPE_NVME              0x2
+#define STOR_ADDR_NVME_ADDRESS_LENGTH       16
+
+typedef struct STOR_ADDRESS_ALIGN _STOR_ADDR_NVME
+{
+    _Field_range_(STOR_ADDRESS_TYPE_NVME, STOR_ADDRESS_TYPE_NVME)
+    USHORT Type;
+    USHORT Port;
+    _Field_range_(STOR_ADDR_NVME_ADDRESS_LENGTH, STOR_ADDR_NVME_ADDRESS_LENGTH)
+    ULONG AddressLength;
+    PVOID Controller;
+    ULONG NamespaceId;
+    ULONG Reserved;
+} STOR_ADDR_NVME, *PSTOR_ADDR_NVME;
+
+#define SRBEX_DATA_MINIPORT_PASSTHROUGH_LENGTH (4 * sizeof(ULONG))
+
+/* SRB_FUNCTION_MINIPORT_PASSTHROUGH_REQUEST */
+typedef struct SRB_ALIGN _SRBEX_DATA_MINIPORT_PASSTHROUGH
+{
+    _Field_range_(SrbExDataTypeMiniportPassthrough, SrbExDataTypeMiniportPassthrough)
+    SRBEXDATATYPE Type;
+    _Field_range_(SRBEX_DATA_MINIPORT_PASSTHROUGH_LENGTH, SRBEX_DATA_MINIPORT_PASSTHROUGH_LENGTH)
+    ULONG Length;
+    ULONG InputBufferLength;
+    ULONG OutputBufferLength;
+    ULONG OutputBufferWritten;
+    ULONG Reserved;
+} SRBEX_DATA_MINIPORT_PASSTHROUGH, *PSRBEX_DATA_MINIPORT_PASSTHROUGH;
+
+#define SRBEX_DATA_NVME_COMMAND_LENGTH \
+    ((4 * sizeof(ULONGLONG)) + (14 * sizeof(ULONG)) + (5 * sizeof(USHORT)) + (2 * sizeof(UCHAR)))
+
+/* SRBEX_DATA_NVME_COMMAND.CommandType */
+typedef enum
+{
+    SRBEX_DATA_NVME_COMMAND_TYPE_NVM = 0,
+    SRBEX_DATA_NVME_COMMAND_TYPE_ADMIN,
+    SRBEX_DATA_NVME_COMMAND_TYPE_FABRICS
+} SRBEX_DATA_NVME_COMMAND_TYPE, *PSRBEX_DATA_NVME_COMMAND_TYPE;
+
+/* SRBEX_DATA_NVME_COMMAND.CommandFlags */
+typedef enum
+{
+    SRBEX_DATA_NVME_COMMAND_FLAG_REQUIRE_DATA_TRANSFER_IN = 0x1,
+    SRBEX_DATA_NVME_COMMAND_FLAG_REQUIRE_DATA_TRANSFER_OUT = 0x2,
+    SRBEX_DATA_NVME_COMMAND_FLAG_PRP_SET_ALREADY = 0x4,
+    SRBEX_DATA_NVME_COMMAND_FLAG_SIGNATURE_ENABLED = 0x8,
+    SRBEX_DATA_NVME_COMMAND_FLAG_NO_POLLING = 0x10
+} SRBEX_DATA_NVME_COMMAND_FLAG, *PSRBEX_DATA_NVME_COMMAND_FLAG;
+
+/* SRBEX_DATA_NVME_COMMAND.ResponseFlags */
+typedef enum
+{
+    SRBEX_DATA_NVME_RESPONSE_FLAG_SQHD_VALID = 0x1
+} SRBEX_DATA_NVME_RESPONSE_FLAG, *PSRBEX_DATA_NVME_RESPONSE_FLAG;
+
+/*
+ * SRB_FUNCTION_EXECUTE_NVME. The command members mirror the NVMe common
+ * command format, so the three views of the same 64 bytes let a caller fill
+ * in an NVM, admin or fabrics command without reshaping the block.
+ */
+typedef struct SRB_ALIGN _SRBEX_DATA_NVME_COMMAND
+{
+    _Field_range_(SrbExDataTypeNvmeCommand, SrbExDataTypeNvmeCommand)
+    SRBEXDATATYPE Type;
+    _Field_range_(SRBEX_DATA_NVME_COMMAND_LENGTH, SRBEX_DATA_NVME_COMMAND_LENGTH)
+    ULONG Length;
+    union
+    {
+        PVOID ControllerHandle;
+        ULONGLONG Reserved0;
+    };
+    union
+    {
+        struct
+        {
+            ULONG CommandDWORD0;
+            ULONG CommandNSID;
+            ULONG Reserved1[2];
+            ULONGLONG CommandMPTR;
+            union
+            {
+                struct
+                {
+                    ULONGLONG CommandPRP1;
+                    ULONGLONG CommandPRP2;
+                };
+                ULONGLONG CommandSGL1[2];
+            };
+            ULONG CommandCDW10;
+            ULONG CommandCDW11;
+            ULONG CommandCDW12;
+            ULONG CommandCDW13;
+            ULONG CommandCDW14;
+            ULONG CommandCDW15;
+        };
+        struct
+        {
+            UCHAR OPC;
+            UCHAR PSDT;
+            USHORT CID;
+            UCHAR FCTYPE;
+            UCHAR Reserved[35];
+            UCHAR Specific[24];
+        } FabricsCommand;
+        struct
+        {
+            ULONG OPC:8;
+            ULONG FUSE:2;
+            ULONG Reserved:4;
+            ULONG PSDT:2;
+            ULONG CID:16;
+            UCHAR TypeSpecific[60];
+        } Command;
+    };
+    UCHAR CommandType;
+    UCHAR Reserved2;
+    USHORT CommandFlags;
+    USHORT ResponseFlags;
+    union
+    {
+        struct
+        {
+            USHORT P:1;
+            USHORT SC:8;
+            USHORT SCT:3;
+            USHORT CRD:2;
+            USHORT M:1;
+            USHORT DNR:1;
+        } DUMMYSTRUCTNAME;
+        USHORT AsUshort;
+    } CommandStatus;
+    /* 0xFFFFFFFF leaves the queue choice to the miniport */
+    ULONG QID;
+    ULONG CommandTag;
+    union
+    {
+        struct
+        {
+            ULONG CQEntryDW0;
+            ULONG CQEntryDW1;
+        };
+        UCHAR Specific[8];
+    };
+    USHORT SQHD;
+    USHORT SQID;
+} SRBEX_DATA_NVME_COMMAND, *PSRBEX_DATA_NVME_COMMAND;
+
+#define STOR_NVMEOF_OPERATION_V1            0x0001
+#define SRBEX_DATA_NVMEOF_OPERATION_LENGTH  ((2 * sizeof(USHORT)) + (2 * sizeof(ULONG)))
+
+/* SRB_FUNCTION_NVMEOF_OPERATION. Any payload travels in the data buffer. */
+typedef struct SRB_ALIGN _SRBEX_DATA_NVMEOF_OPERATION
+{
+    _Field_range_(SrbExDataTypeNvmeofOperation, SrbExDataTypeNvmeofOperation)
+    SRBEXDATATYPE Type;
+    _Field_range_(SRBEX_DATA_NVMEOF_OPERATION_LENGTH, SRBEX_DATA_NVMEOF_OPERATION_LENGTH)
+    ULONG Length;
+    _Field_range_(STOR_NVMEOF_OPERATION_V1, STOR_NVMEOF_OPERATION_V1)
+    USHORT Version;
+    USHORT Reserved1;
+    ULONG Flags;
+    ULONG FunctionType;
+} SRBEX_DATA_NVMEOF_OPERATION, *PSRBEX_DATA_NVMEOF_OPERATION;
+
+#endif /* (NTDDI_VERSION >= NTDDI_WIN11_GE) */
 
 #include <pshpack1.h>
 typedef union _CDB
