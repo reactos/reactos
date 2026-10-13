@@ -1126,7 +1126,7 @@ StorPortGetPhysicalAddress(
 
     /* Inside of the uncached extension? */
     if (((ULONG_PTR)VirtualAddress >= (ULONG_PTR)DeviceExtension->UncachedExtensionVirtualBase) &&
-        ((ULONG_PTR)VirtualAddress <= (ULONG_PTR)DeviceExtension->UncachedExtensionVirtualBase + DeviceExtension->UncachedExtensionSize))
+        ((ULONG_PTR)VirtualAddress < (ULONG_PTR)DeviceExtension->UncachedExtensionVirtualBase + DeviceExtension->UncachedExtensionSize))
     {
         Offset = (ULONG_PTR)VirtualAddress - (ULONG_PTR)DeviceExtension->UncachedExtensionVirtualBase;
 
@@ -1136,15 +1136,15 @@ StorPortGetPhysicalAddress(
         return PhysicalAddress;
     }
 
-    // FIXME
-
-
     PhysicalAddress = MmGetPhysicalAddress(VirtualAddress);
-    *Length = 1;
-//    UNIMPLEMENTED;
+    if (PhysicalAddress.QuadPart == 0)
+    {
+        *Length = 0;
+        return PhysicalAddress;
+    }
 
-//    *Length = 0;
-//    PhysicalAddress.QuadPart = (LONGLONG)0;
+    /* Outside the uncached extension only the rest of this page is known contiguous */
+    *Length = PAGE_SIZE - BYTE_OFFSET(VirtualAddress);
 
     return PhysicalAddress;
 }
