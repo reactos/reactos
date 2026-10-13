@@ -1864,6 +1864,8 @@ typedef struct _SCSI_REQUEST_BLOCK
     UCHAR Cdb[16];
 } SCSI_REQUEST_BLOCK, *PSCSI_REQUEST_BLOCK;
 
+#define SCSI_REQUEST_BLOCK_SIZE             sizeof(SCSI_REQUEST_BLOCK)
+
 typedef struct _SCSI_WMI_REQUEST_BLOCK
 {
     USHORT Length;
