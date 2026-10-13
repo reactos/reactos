@@ -90,6 +90,20 @@ InitializeConfiguration(
     /* Default per-adapter outstanding IO limit, as per storport documentation. */
     PortConfig->MaxNumberOfIO = 1000;
 
+    /* Only a Win8 or later init data block carries the request format flags */
+    PortConfig->SrbType = SRB_TYPE_SCSI_REQUEST_BLOCK;
+    if (InitData->HwInitializationDataSize >=
+        RTL_SIZEOF_THROUGH_FIELD(HW_INITIALIZATION_DATA, SrbTypeFlags) &&
+        TEST_FLAG(InitData->SrbTypeFlags, SRB_TYPE_FLAG_STORAGE_REQUEST_BLOCK))
+    {
+        PortConfig->SrbType = SRB_TYPE_STORAGE_REQUEST_BLOCK;
+    }
+
+    /* Bus, target and LUN is the only addressing we hand out */
+    PortConfig->AddressType = STORAGE_ADDRESS_TYPE_BTL8;
+
+    DPRINT1("SrbType: %u\n", PortConfig->SrbType);
+
     return STATUS_SUCCESS;
 }
 
