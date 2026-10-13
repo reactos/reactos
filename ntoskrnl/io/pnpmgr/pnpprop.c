@@ -375,7 +375,7 @@ PiPropInitName(
 
     Status = RtlStringCchPrintfW(Name->FmtidBuffer,
                                  RTL_NUMBER_OF(Name->FmtidBuffer),
-                                 L"{%08lX-%04X-%04X-%02X%02X-%02X%02X%02X%02X%02X%02X}",
+                                 L"{%08lx-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x}",
                                  Fmtid->Data1, Fmtid->Data2, Fmtid->Data3,
                                  Fmtid->Data4[0], Fmtid->Data4[1],
                                  Fmtid->Data4[2], Fmtid->Data4[3],
@@ -436,7 +436,8 @@ PiPropCopyOut(
     *Type = SourceType;
     *RequiredSize = SourceSize;
 
-    if (Size < SourceSize)
+    /* An empty buffer only satisfies DEVPROP_TYPE_NULL */
+    if ((Size < SourceSize) || (!Size && (SourceType != DEVPROP_TYPE_NULL)))
         return STATUS_BUFFER_TOO_SMALL;
 
     if (SourceSize)
@@ -1669,7 +1670,7 @@ PiPropSet(
     ExReleaseResourceLite(&PpRegistryDeviceResource);
     KeLeaveCriticalRegion();
 
-    if (NT_SUCCESS(Status) && Object->DeviceNode && PiPropShouldAnnounce(Object->DeviceNode))
+    if (Object->DeviceNode && PiPropShouldAnnounce(Object->DeviceNode))
         IopQueueDevicePropertyChangeEvent(&Object->DeviceNode->InstancePath);
 
     return PiPropNormalizeStatus(Status);
