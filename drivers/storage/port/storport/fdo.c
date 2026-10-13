@@ -1250,18 +1250,20 @@ PortFdoFilterRequirements(
 }
 
 
+/**
+ * @brief Walks the PDO list for a unit, the caller keeps the list from changing.
+ */
+static
 PPDO_DEVICE_EXTENSION
-FdoFindLun(
+NTAPI
+FdoScanPdoList(
     _In_ PFDO_DEVICE_EXTENSION FdoExtension,
     _In_ ULONG Bus,
     _In_ ULONG Target,
     _In_ ULONG Lun)
 {
     PPDO_DEVICE_EXTENSION PdoExtension;
-    KLOCK_QUEUE_HANDLE LockHandle;
     PLIST_ENTRY PdoEntry;
-
-    KeAcquireInStackQueuedSpinLock(&FdoExtension->PdoListLock, &LockHandle);
 
     for (PdoEntry = FdoExtension->PdoListHead.Flink;
          PdoEntry != &FdoExtension->PdoListHead;
@@ -1272,13 +1274,181 @@ FdoFindLun(
         if (PdoExtension->Bus == Bus && PdoExtension->Target == Target &&
             PdoExtension->Lun == Lun)
         {
-            KeReleaseInStackQueuedSpinLock(&LockHandle);
             return PdoExtension;
         }
     }
 
-    KeReleaseInStackQueuedSpinLock(&LockHandle);
     return NULL;
+}
+
+
+PPDO_DEVICE_EXTENSION
+FdoFindLun(
+    _In_ PFDO_DEVICE_EXTENSION FdoExtension,
+    _In_ ULONG Bus,
+    _In_ ULONG Target,
+    _In_ ULONG Lun)
+{
+    PPDO_DEVICE_EXTENSION PdoExtension;
+    KLOCK_QUEUE_HANDLE LockHandle;
+
+    KeAcquireInStackQueuedSpinLock(&FdoExtension->PdoListLock, &LockHandle);
+    PdoExtension = FdoScanPdoList(FdoExtension, Bus, Target, Lun);
+    KeReleaseInStackQueuedSpinLock(&LockHandle);
+
+    return PdoExtension;
+}
+
+
+/**
+ * @brief Keeps every interrupt service routine of the adapter from running.
+ *
+ * @return The IRQL to hand back to PortFdoReleaseInterruptLocks.
+ */
+static
+KIRQL
+NTAPI
+PortFdoAcquireInterruptLocks(
+    _In_ PFDO_DEVICE_EXTENSION FdoExtension)
+{
+    KIRQL OldIrql;
+    ULONG Index;
+
+    OldIrql = KeGetCurrentIrql();
+
+    if (!FdoExtension->MessageInterrupts)
+    {
+        if (FdoExtension->Interrupt != NULL)
+            OldIrql = KeAcquireInterruptSpinLock(FdoExtension->Interrupt);
+
+        return OldIrql;
+    }
+
+    /* Each message has its own lock, a routine on any of them may be reading the list */
+    for (Index = 0; Index < FdoExtension->MessageInfo->MessageCount; Index++)
+    {
+        KIRQL Irql = KeAcquireInterruptSpinLock(FdoExtension->MessageInfo->MessageInfo[Index].InterruptObject);
+
+        if (Index == 0)
+            OldIrql = Irql;
+    }
+
+    return OldIrql;
+}
+
+
+static
+VOID
+NTAPI
+PortFdoReleaseInterruptLocks(
+    _In_ PFDO_DEVICE_EXTENSION FdoExtension,
+    _In_ KIRQL OldIrql)
+{
+    ULONG Index;
+
+    if (!FdoExtension->MessageInterrupts)
+    {
+        if (FdoExtension->Interrupt != NULL)
+            KeReleaseInterruptSpinLock(FdoExtension->Interrupt, OldIrql);
+
+        return;
+    }
+
+    /* Only the first lock taken drops back to the caller's IRQL */
+    for (Index = FdoExtension->MessageInfo->MessageCount; Index > 0; Index--)
+    {
+        KeReleaseInterruptSpinLock(FdoExtension->MessageInfo->MessageInfo[Index - 1].InterruptObject,
+                                   (Index == 1) ? OldIrql : KeGetCurrentIrql());
+    }
+}
+
+
+/**
+ * @brief Finds a unit from an interrupt service routine or any other caller above DISPATCH_LEVEL.
+ */
+PPDO_DEVICE_EXTENSION
+NTAPI
+FdoFindLunAboveDispatch(
+    _In_ PFDO_DEVICE_EXTENSION FdoExtension,
+    _In_ ULONG Bus,
+    _In_ ULONG Target,
+    _In_ ULONG Lun)
+{
+    PPDO_DEVICE_EXTENSION PdoExtension;
+    KIRQL OldIrql;
+
+    /* At device IRQL the caller is an ISR or synchronized routine and already holds a lock */
+    if (KeGetCurrentIrql() >= FdoExtension->InterruptIrql)
+        return FdoScanPdoList(FdoExtension, Bus, Target, Lun);
+
+    OldIrql = PortFdoAcquireInterruptLocks(FdoExtension);
+    PdoExtension = FdoScanPdoList(FdoExtension, Bus, Target, Lun);
+    PortFdoReleaseInterruptLocks(FdoExtension, OldIrql);
+
+    return PdoExtension;
+}
+
+
+/**
+ * @brief Adds a PDO where both the list lock and the interrupt service routines respect it.
+ */
+VOID
+NTAPI
+PortFdoLinkPdo(
+    _Inout_ PFDO_DEVICE_EXTENSION FdoExtension,
+    _Inout_ PPDO_DEVICE_EXTENSION PdoExtension)
+{
+    KLOCK_QUEUE_HANDLE LockHandle;
+    KIRQL OldIrql;
+
+    KeAcquireInStackQueuedSpinLock(&FdoExtension->PdoListLock, &LockHandle);
+    OldIrql = PortFdoAcquireInterruptLocks(FdoExtension);
+
+    InsertHeadList(&FdoExtension->PdoListHead, &PdoExtension->PdoListEntry);
+    FdoExtension->PdoCount++;
+
+    PortFdoReleaseInterruptLocks(FdoExtension, OldIrql);
+    KeReleaseInStackQueuedSpinLock(&LockHandle);
+}
+
+
+VOID
+NTAPI
+PortFdoUnlinkPdo(
+    _Inout_ PFDO_DEVICE_EXTENSION FdoExtension,
+    _Inout_ PPDO_DEVICE_EXTENSION PdoExtension)
+{
+    KLOCK_QUEUE_HANDLE LockHandle;
+    KIRQL OldIrql;
+
+    KeAcquireInStackQueuedSpinLock(&FdoExtension->PdoListLock, &LockHandle);
+    OldIrql = PortFdoAcquireInterruptLocks(FdoExtension);
+
+    RemoveEntryList(&PdoExtension->PdoListEntry);
+    FdoExtension->PdoCount--;
+
+    PortFdoReleaseInterruptLocks(FdoExtension, OldIrql);
+    KeReleaseInStackQueuedSpinLock(&LockHandle);
+}
+
+
+VOID
+NTAPI
+PortFdoBusChangeDpc(
+    _In_ PKDPC Dpc,
+    _In_opt_ PVOID DeferredContext,
+    _In_opt_ PVOID SystemArgument1,
+    _In_opt_ PVOID SystemArgument2)
+{
+    PFDO_DEVICE_EXTENSION FdoExtension = (PFDO_DEVICE_EXTENSION)DeferredContext;
+
+    UNREFERENCED_PARAMETER(Dpc);
+    UNREFERENCED_PARAMETER(SystemArgument1);
+    UNREFERENCED_PARAMETER(SystemArgument2);
+
+    DPRINT1("Bus change, invalidating bus relations\n");
+
+    IoInvalidateDeviceRelations(FdoExtension->PhysicalDevice, BusRelations);
 }
 
 
@@ -1345,6 +1515,10 @@ PortFdoPnp(
             DPRINT1("IRP_MJ_PNP / IRP_MN_REMOVE_DEVICE\n");
             MiniportAdapterControl(&DeviceExtension->Miniport, ScsiStopAdapter, NULL);
             PortFdoDisconnectInterrupt(DeviceExtension);
+
+            /* Nothing may tell PnP about this adapter once it is gone */
+            KeRemoveQueueDpc(&DeviceExtension->BusChangeDpc);
+            KeFlushQueuedDpcs();
             MiniportFreeAdapterResources(&DeviceExtension->Miniport);
             PortFlushStarvedRequests(DeviceExtension);
             PortFreeRequestReserve(DeviceExtension);
