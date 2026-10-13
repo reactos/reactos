@@ -1,13 +1,23 @@
 /*
- * PROJECT:     ReactOS system libraries
- * FILE:        dll/win32/kernel32/kernel32_vista/SetFileInformationByHandle.c
- * PURPOSE:     Win32 wrapper around NtSetInformationFile
- * PROGRAMMERS: Mohammed Al-Houmi <mhmdlylyalhwmy461@gmail.com>
+ * SetFileInformationByHandle
  *
- * NOTE:        kernel32 exports this API for Windows Vista and up. The
- *              translation below is the one from Wine's kernelbase/file.c.
- *              FILE_RENAME_INFO and the NT FILE_RENAME_INFORMATION have the
- *              same layout, so the caller's buffer is passed through as is.
+ * Copyright 1993 John Burton
+ * Copyright 1996, 2004 Alexandre Julliard
+ * Copyright 2008 Jeff Zaroyko
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #include "k32_vista.h"
@@ -24,23 +34,25 @@
 
 /* Taken from Wine kernelbase/file.c */
 
-/***********************************************************************
- *	SetFileInformationByHandle   (kernel32_vista.@)
+/*
+ * @implemented
  */
-BOOL WINAPI DECLSPEC_HOTPATCH SetFileInformationByHandle(HANDLE file,
-                                                         FILE_INFO_BY_HANDLE_CLASS class,
-                                                         LPVOID info,
-                                                         DWORD size)
+BOOL
+WINAPI
+DECLSPEC_HOTPATCH
+SetFileInformationByHandle(_In_ HANDLE hFile,
+                           _In_ FILE_INFO_BY_HANDLE_CLASS FileInformationClass,
+                           _In_reads_bytes_(dwBufferSize) LPVOID lpFileInformation,
+                           _In_ DWORD dwBufferSize)
 {
     NTSTATUS status;
     IO_STATUS_BLOCK io;
 
-    switch (class)
+    switch (FileInformationClass)
     {
-    /* These have no matching set operation in the kernel, or are only ever
-     * used to query information, so there is nothing to pass along. */
+    /* These are query-only classes, the kernel has no matching set operation
+     * to forward them to. */
     case FileNameInfo:
-    case FileAllocationInfo:
     case FileStreamInfo:
     case FileIdBothDirectoryInfo:
     case FileIdBothDirectoryRestartInfo:
@@ -51,59 +63,94 @@ BOOL WINAPI DECLSPEC_HOTPATCH SetFileInformationByHandle(HANDLE file,
     case FileIdInfo:
     case FileIdExtdDirectoryInfo:
     case FileIdExtdDirectoryRestartInfo:
+    /* These map to set classes that NtSetInformationFile does not implement on
+     * ReactOS yet: FileDispositionInformationEx and FileIoPriorityHintInformation
+     * both have no entry in IopSetOperationLength[], so there is nothing to
+     * forward them to for the moment. */
     case FileDispositionInfoEx:
     case FileIoPriorityHintInfo:
-        FIXME("(%p, %u, %p, %lu)\n", file, class, info, size);
+        FIXME("(%p, %u, %p, %lu)\n", hFile, FileInformationClass, lpFileInformation, dwBufferSize);
         SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
         return FALSE;
 
     case FileBasicInfo:
-        status = NtSetInformationFile(file, &io, info, size, FileBasicInformation);
+        status = NtSetInformationFile(hFile, &io, lpFileInformation, dwBufferSize, FileBasicInformation);
+        break;
+
+    case FileAllocationInfo:
+        status = NtSetInformationFile(hFile, &io, lpFileInformation, dwBufferSize, FileAllocationInformation);
         break;
 
     case FileEndOfFileInfo:
-        status = NtSetInformationFile(file, &io, info, size, FileEndOfFileInformation);
+        status = NtSetInformationFile(hFile, &io, lpFileInformation, dwBufferSize, FileEndOfFileInformation);
         break;
 
     case FileDispositionInfo:
-        status = NtSetInformationFile(file, &io, info, size, FileDispositionInformation);
+        status = NtSetInformationFile(hFile, &io, lpFileInformation, dwBufferSize, FileDispositionInformation);
         break;
 
     case FileRenameInfo:
         {
-            FILE_RENAME_INFO *source = info;
-            FILE_RENAME_INFO *rename_info;
-            UNICODE_STRING nt_name;
+            FILE_RENAME_INFO *source = lpFileInformation;
+            FILE_RENAME_INFO *renameInfo;
+            UNICODE_STRING ntName;
             ULONG length;
 
-            status = RtlDosPathNameToNtPathName_U(source->FileName, &nt_name, NULL, NULL) ?
-                     STATUS_SUCCESS : STATUS_OBJECT_PATH_NOT_FOUND;
-            if (!NT_SUCCESS(status))
-                break;
-
-            /* The NT path is longer than the Win32 one the caller provided,
-             * so it needs a buffer of its own. */
-            length = FIELD_OFFSET(FILE_RENAME_INFO, FileName) +
-                     nt_name.Length + sizeof(WCHAR);
-            rename_info = HeapAlloc(GetProcessHeap(), 0, length);
-            if (rename_info)
+            /* The fixed part of the structure has to fit in the caller's
+             * buffer before FileName can be read from it. */
+            if (dwBufferSize < sizeof(FILE_RENAME_INFO))
             {
-                rename_info->ReplaceIfExists = source->ReplaceIfExists;
-                rename_info->RootDirectory = source->RootDirectory;
-                rename_info->FileNameLength = nt_name.Length;
-                memcpy(rename_info->FileName, nt_name.Buffer,
-                       nt_name.Length + sizeof(WCHAR));
+                SetLastError(ERROR_BAD_LENGTH);
+                return FALSE;
+            }
 
-                status = NtSetInformationFile(file, &io, rename_info, length,
+            /* A Win32 caller has no directory handle to pass in, Windows
+             * rejects a non-NULL RootDirectory instead of interpreting it. */
+            if (source->RootDirectory != NULL)
+            {
+                SetLastError(ERROR_INVALID_PARAMETER);
+                return FALSE;
+            }
+
+            /* A name that already is an NT path has to be forwarded as is:
+             * RtlDosPathNameToNtPathName_U would take the leading backslash
+             * for a rooted DOS path and prepend the current drive to it. */
+            if ((dwBufferSize >= FIELD_OFFSET(FILE_RENAME_INFO, FileName) + 4 * sizeof(WCHAR)) &&
+                source->FileName[0] == L'\\' && source->FileName[1] == L'?' &&
+                source->FileName[2] == L'?' && source->FileName[3] == L'\\')
+            {
+                status = NtSetInformationFile(hFile, &io, lpFileInformation, dwBufferSize,
                                               FileRenameInformation);
-                HeapFree(GetProcessHeap(), 0, rename_info);
+                break;
+            }
+
+            if (!RtlDosPathNameToNtPathName_U(source->FileName, &ntName, NULL, NULL))
+            {
+                SetLastError(ERROR_PATH_NOT_FOUND);
+                return FALSE;
+            }
+
+            /* The NT name is longer than the Win32 one the caller supplied,
+             * so it needs a buffer of its own. */
+            length = FIELD_OFFSET(FILE_RENAME_INFO, FileName) + ntName.Length + sizeof(WCHAR);
+            renameInfo = HeapAlloc(GetProcessHeap(), 0, length);
+            if (renameInfo != NULL)
+            {
+                renameInfo->ReplaceIfExists = source->ReplaceIfExists;
+                renameInfo->RootDirectory = NULL;
+                renameInfo->FileNameLength = ntName.Length;
+                memcpy(renameInfo->FileName, ntName.Buffer, ntName.Length + sizeof(WCHAR));
+
+                status = NtSetInformationFile(hFile, &io, renameInfo, length,
+                                              FileRenameInformation);
+                HeapFree(GetProcessHeap(), 0, renameInfo);
             }
             else
             {
                 status = STATUS_NO_MEMORY;
             }
 
-            RtlFreeUnicodeString(&nt_name);
+            RtlFreeUnicodeString(&ntName);
             break;
         }
 
