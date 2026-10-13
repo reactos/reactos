@@ -1151,30 +1151,23 @@ cleanup:
  * NtUserLoadKeyboardLayoutEx
  *
  * Loads keyboard layout with given locale id
- *
- * NOTE: We adopt a different design from Microsoft's one due to security reason.
- *       We don't use the 3rd parameter of NtUserLoadKeyboardLayoutEx.
- *       See https://seclists.org/fulldisclosure/2012/Jul/137
  */
 HKL
 NTAPI
 NtUserLoadKeyboardLayoutEx(
-    IN HANDLE hFile,
-    IN DWORD offTable,
-    IN PVOID pTables,
-    IN HKL hOldKL,
-    IN PUNICODE_STRING puszKLID,
-    IN DWORD dwNewKL,
-    IN UINT Flags)
+    _In_ HANDLE hFile,
+    _In_ DWORD offTable,
+    _In_opt_ PKBDTABLE_MULTI_EX pTables,
+    _In_opt_ HKL hOldKL,
+    _In_ PUNICODE_STRING puszKLID,
+    _In_ DWORD dwNewKL,
+    _In_ UINT Flags)
 {
     HKL hRetKL;
     WCHAR Buffer[KL_NAMELENGTH];
     UNICODE_STRING uszSafeKLID;
     PWINSTATION_OBJECT pWinSta;
     HANDLE hSafeFile;
-
-    UNREFERENCED_PARAMETER(offTable);
-    UNREFERENCED_PARAMETER(pTables);
 
     if (Flags & ~(KLF_ACTIVATE|KLF_NOTELLSHELL|KLF_REORDER|KLF_REPLACELANG|
                   KLF_SUBSTITUTE_OK|KLF_SETFORPROCESS|KLF_UNLOADPREVIOUS|

@@ -26,10 +26,36 @@
  */
 
 #include <user32.h>
-
+#include <cjkcode.h>
 #include <strsafe.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(user32);
+
+#define KLF_INITTIME 0x80000000
+#define KLF_FORCE 0x200
+
+#define KBDLAYOUTS_KEY L"System\\CurrentControlSet\\Control\\Keyboard Layouts"
+#define KBDLAYOUT_KEY  L"System\\CurrentControlSet\\Control\\Keyboard Layout"
+#define ATTR_MASK      0x00FF0000
+
+#define LANGID_ENGLISH_US MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US)
+
+/* procedure ordinals of keyboard layout file */
+#define IFN_KbdLayerDescriptor      MAKEINTRESOURCEA(1)
+#define IFN_KbdNlsLayerDescriptor   MAKEINTRESOURCEA(2)
+#define IFN_KbdLayerRealDllFileNT4  MAKEINTRESOURCEA(3)
+#define IFN_KbdLayerRealDllFile     MAKEINTRESOURCEA(5)
+#define IFN_KbdLayerMultiDescriptor MAKEINTRESOURCEA(6)
+
+typedef PVOID (WINAPI *PFN_KbdLayerDescriptor)(void);
+typedef PVOID (WINAPI *PFN_KbdNlsLayerDescriptor)(PKBDTABLE_MULTI_EX);
+typedef BOOL (WINAPI *PFN_KbdLayerRealDllFileNT4)(PWSTR);
+typedef BOOL (WINAPI *PFN_KbdLayerRealDllFile)(ULONG, PWSTR, PCLIENTKEYBOARDTYPE, DWORD);
+
+static BOOL IsConsoleSession(void)
+{
+    return FALSE; /* FIXME */
+}
 
 typedef struct tagIMEHOTKEYENTRY
 {
@@ -697,13 +723,290 @@ VOID GetSystemLibraryPath(LPWSTR pszPath, INT cchPath, LPCWSTR pszFileName)
     StringCchPrintfW(pszPath, cchPath, L"%s\\%s", szSysDir, pszFileName);
 }
 
-#define ENGLISH_US MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US)
+HANDLE WINAPI
+IntLoadKeyboardLayoutTables(
+    _In_z_ PCWSTR pszLayoutFile,
+    _In_z_ PCWSTR pszKLID,
+    _Inout_ PUINT puFlags,
+    _Out_ PULONG poffTable,
+    _Out_opt_ PKBDTABLE_MULTI_EX pMulti)
+{
+    HMODULE hModule;
+    PCWSTR pszCurrentFile;
+    PFN_KbdLayerDescriptor pfnKbdLayer;
+    PFN_KbdLayerDescriptor pfnKbdNlsLayer;
+    PFN_KbdLayerRealDllFile pfnReal;
+    PFN_KbdLayerRealDllFileNT4 pfnRealNT4;
+    PFN_KbdNlsLayerDescriptor pfnMulti;
+    WCHAR szRealFile[MAX_PATH], szFileName[MAX_PATH];
+    UINT iTable;
+
+    for (;;)
+    {
+        pszCurrentFile = pszLayoutFile;
+
+        hModule = LoadLibraryW(pszLayoutFile);
+        if (!hModule)
+        {
+            ERR("LoadLibraryW failed\n");
+            return NULL;
+        }
+
+        if (_wcsicmp(pszLayoutFile, L"kbdus.dll") != 0)
+        {
+            pfnReal    = (PFN_KbdLayerRealDllFile)GetProcAddress(hModule, IFN_KbdLayerRealDllFile);
+            pfnRealNT4 = (PFN_KbdLayerRealDllFileNT4)GetProcAddress(hModule,
+                                                                    IFN_KbdLayerRealDllFileNT4);
+            pfnMulti = NULL;
+            if (pMulti && IsConsoleSession())
+            {
+                pfnMulti = (PFN_KbdNlsLayerDescriptor)GetProcAddress(hModule,
+                                                                     IFN_KbdLayerMultiDescriptor);
+            }
+
+            /* Multi-table */
+            if (pfnMulti && pfnMulti(pMulti))
+            {
+                if (pMulti->MultiTable.nTables >= KBDTABLE_MULTI_MAX)
+                {
+                    pMulti->MultiTable.nTables = 0;
+                }
+                else
+                {
+                    for (iTable = 0; iTable < pMulti->MultiTable.nTables; iTable++)
+                    {
+                        DWORD offTable;
+                        HANDLE hFile = IntLoadKeyboardLayoutTables(
+                            pMulti->MultiTable.aKbdTables[iTable].wszDllName,
+                            NULL, puFlags, &offTable, NULL);
+
+                        pMulti->AuxEntries[iTable].hFile = hFile;
+                        if (hFile)
+                        {
+                            pMulti->AuxEntries[iTable].wMainOffset = LOWORD(offTable);
+                            pMulti->AuxEntries[iTable].wNlsOffset  = HIWORD(offTable);
+                        }
+                    }
+                }
+            }
+
+            if (pfnReal || pfnRealNT4)
+            {
+                ULONG ulKLID = pszKLID ? wcstoul(pszKLID, NULL, 16) : 0;
+                /* FIXME: Specify CLIENTKEYBOARDTYPE for KbdLayerRealDllFile */
+
+                if ((pfnReal    && pfnReal(ulKLID, szRealFile, NULL, 0)) ||
+                    (pfnRealNT4 && pfnRealNT4(szRealFile)))
+                {
+                    HMODULE hRealModule = LoadLibraryW(szRealFile);
+                    if (hRealModule)
+                    {
+                        pszCurrentFile = szRealFile;
+                        FreeLibrary(hModule);
+                        hModule = hRealModule;
+                    }
+                }
+            }
+        }
+
+        pfnKbdLayer = (PFN_KbdLayerDescriptor)GetProcAddress(hModule, IFN_KbdLayerDescriptor);
+        if (pfnKbdLayer)
+            break; /* Success */
+
+        if (pMulti)
+        {
+            for (iTable = 0; iTable < pMulti->MultiTable.nTables && iTable < KBDTABLE_MULTI_MAX;
+                 ++iTable)
+            {
+                if (pMulti->AuxEntries[iTable].hFile)
+                {
+                    CloseHandle(pMulti->AuxEntries[iTable].hFile);
+                    pMulti->AuxEntries[iTable].hFile = NULL;
+                }
+            }
+            pMulti->MultiTable.nTables = 0;
+        }
+
+        if (*puFlags & KLF_INITTIME)
+        {
+            pszLayoutFile = L"kbdus.dll";
+            if (_wcsicmp(pszCurrentFile, L"kbdus.dll") != 0)
+                continue; /* Retry with new name */
+        }
+
+        return NULL; /* Failure */
+    }
+
+    {
+        INT_PTR MainOffset = (PBYTE)pfnKbdLayer() - (PBYTE)hModule;
+        *poffTable = LOWORD(MainOffset);
+    }
+
+    pfnKbdNlsLayer = (PFN_KbdLayerDescriptor)GetProcAddress(hModule, IFN_KbdNlsLayerDescriptor);
+    if (pfnKbdNlsLayer)
+    {
+        INT_PTR NlsOffset = (PBYTE)pfnKbdNlsLayer() - (PBYTE)hModule;
+        *poffTable |= LOWORD(NlsOffset) << 16;
+    }
+
+    if (pMulti)
+    {
+        lstrcpynW(pMulti->szRealDllName, pszCurrentFile, _countof(pMulti->szRealDllName));
+        pMulti->szRealDllName[_countof(pMulti->szRealDllName) - 1] = UNICODE_NULL;
+    }
+
+    GetModuleFileNameW(hModule, szFileName, _countof(szFileName));
+    FreeLibrary(hModule);
+
+    return CreateFileW(szFileName, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
+}
+
+BOOL WINAPI
+IntGetKeyboardDllName(
+    _Out_writes_(cchDllName) PWSTR pszDllName,
+    _In_ SIZE_T cchDllName,
+    _Inout_z_ PWSTR pszKLID,
+    _In_ SIZE_T cchKLID,
+    _In_ LANGID wLangID,
+    _Inout_ PUINT puFlags,
+    _Out_ PULONG pdwKL)
+{
+    HKEY hKey;
+    DWORD error, cbData, dwAttributes, dwKL;
+    PCWSTR pszSource = NULL;
+    WCHAR szKeyPath[MAX_PATH], szSubstitute[10], szLayoutFile[MAX_PATH], szLayoutId[16];
+    HRESULT hr;
+
+    if (!pszKLID)
+        return FALSE;
+
+    if (!wLangID)
+        wLangID = (WORD)wcstoul(pszKLID, NULL, 16);
+
+    if (*puFlags & KLF_SUBSTITUTE_OK)
+    {
+        GetPrivateProfileStringW(L"Substitutes", pszKLID, pszKLID,
+                                 szSubstitute, _countof(szSubstitute), L"keyboardlayout.ini");
+        WritePrivateProfileStringW(NULL, NULL, NULL, NULL); /* Flush! */
+
+        szSubstitute[8] = UNICODE_NULL;
+        StringCchCopyW(pszKLID, cchKLID, szSubstitute);
+    }
+
+    dwKL = wcstoul(pszKLID, NULL, 16);
+    hr = StringCbPrintfW(szKeyPath, sizeof(szKeyPath), KBDLAYOUTS_KEY L"\\%s", pszKLID);
+    if (FAILED(hr))
+        return FALSE;
+
+    error = RegOpenKeyExW(HKEY_LOCAL_MACHINE, szKeyPath, 0, KEY_READ, &hKey);
+    if (error == ERROR_SUCCESS)
+    {
+        /* "Layout File" */
+        cbData = sizeof(szLayoutFile);
+        error = RegQueryValueExW(hKey, L"Layout File", NULL, NULL, (PBYTE)szLayoutFile, &cbData);
+        if (error == ERROR_SUCCESS)
+        {
+            szLayoutFile[_countof(szLayoutFile) - 1] = UNICODE_NULL;
+            pszSource = szLayoutFile;
+        }
+
+        /* "Attributes" */
+        cbData = sizeof(dwAttributes);
+        error = RegQueryValueExW(hKey, L"Attributes", NULL, NULL, (PBYTE)&dwAttributes, &cbData);
+        if (error == ERROR_SUCCESS)
+            *puFlags |= (dwAttributes & ATTR_MASK);
+
+        if (IS_IME_HKL(UlongToHandle(dwKL)))
+        {
+            dwKL = HIWORD(dwKL);
+        }
+        else if (HIWORD(dwKL))
+        {
+            /* "Layout ID" */
+            cbData = sizeof(szLayoutId);
+            error = RegQueryValueExW(hKey, L"Layout ID", NULL, NULL, (PBYTE)szLayoutId, &cbData);
+            if (error == ERROR_SUCCESS)
+            {
+                szLayoutId[_countof(szLayoutId) - 1] = UNICODE_NULL;
+                dwKL = (wcstol(szLayoutId, NULL, 16) & 0xFFF) | 0xF000;
+            }
+            else
+            {
+                dwKL = 0xFFFE;
+            }
+        }
+
+        RegCloseKey(hKey);
+    }
+    else
+    {
+        /* Fallback */
+        error = RegOpenKeyExW(HKEY_LOCAL_MACHINE, KBDLAYOUT_KEY, 0, KEY_READ, &hKey);
+        if (error == ERROR_SUCCESS)
+        {
+            cbData = sizeof(szLayoutFile);
+            error = RegQueryValueExW(hKey, pszKLID, NULL, NULL, (PBYTE)szLayoutFile, &cbData);
+            if (error == ERROR_SUCCESS)
+            {
+                szLayoutFile[_countof(szLayoutFile) - 1] = UNICODE_NULL;
+                pszSource = szLayoutFile;
+            }
+            RegCloseKey(hKey);
+        }
+    }
+
+    *pdwKL = MAKELONG(wLangID, (WORD)dwKL);
+
+    if (!pszSource) /* Layout DLL not found? */
+    {
+        if (IsConsoleSession() || IS_IME_HKL(UlongToHandle(dwKL)))
+        {
+            *pdwKL = MAKELONG(LANGID_ENGLISH_US, LANGID_ENGLISH_US);
+        }
+        else if (PRIMARYLANGID(wLangID) == LANG_JAPANESE)
+        {
+            pszSource = L"kbdjpn.dll";
+            *pdwKL = MAKELONG(LANGID_JAPANESE, LANGID_JAPANESE);
+        }
+        else if (PRIMARYLANGID(wLangID) == LANG_KOREAN)
+        {
+            pszSource = L"kbdkor.dll";
+            *pdwKL = MAKELONG(LANGID_KOREAN, LANGID_KOREAN);
+        }
+        else
+        {
+            *pdwKL = MAKELONG(wLangID, wLangID);
+        }
+
+        if (!pszSource)
+            pszSource = L"kbdus.dll";
+    }
+
+    StringCchCopyW(pszDllName, cchDllName, pszSource);
+    return TRUE;
+}
+
+/* Open and load keyboard layout file(s). */
+static HANDLE
+IntLoadKeyboardLayoutFile(
+    _Inout_z_ PWSTR pszKLID,
+    _In_ SIZE_T cchKLID,
+    _In_ DWORD wLangID,
+    _Inout_ PUINT pFlags,
+    _Out_ PULONG pOffTable,
+    _Out_ PULONG pdwNewKL,
+    _Out_opt_ PKBDTABLE_MULTI_EX pMulti)
+{
+    WCHAR szDllName[MAX_PATH];
+    if (pMulti)
+        ZeroMemory(pMulti, sizeof(*pMulti));
+    if (!IntGetKeyboardDllName(szDllName, _countof(szDllName), pszKLID, cchKLID, wLangID, pFlags, pdwNewKL))
+        return NULL;
+    return IntLoadKeyboardLayoutTables(szDllName, pszKLID, pFlags, pOffTable, pMulti);
+}
 
 /*
- * @unimplemented
- *
- * NOTE: We adopt a different design from Microsoft's one due to security reason.
- *       See NtUserLoadKeyboardLayoutEx.
+ * @implemented
  */
 HKL APIENTRY
 IntLoadKeyboardLayout(
@@ -713,109 +1016,53 @@ IntLoadKeyboardLayout(
     _In_    UINT    Flags,
     _In_    BOOL    unknown5)
 {
-    DWORD dwKLID, dwHKL, dwType, dwSize;
-    UNICODE_STRING ustrKLID;
-    WCHAR wszRegKey[256] = L"SYSTEM\\CurrentControlSet\\Control\\Keyboard Layouts\\";
-    WCHAR wszLayoutId[10], wszNewKLID[KL_NAMELENGTH], szImeFileName[80];
+    HANDLE hFile;
+    WCHAR szKLID[KL_NAMELENGTH];
+    KBDTABLE_MULTI_EX multi;
+    DWORD offTable, dwNewKL, iTable;
     HKL hNewKL;
-    HKEY hKey;
-    BOOL bIsIME;
-    WORD wLow, wHigh;
+    UNICODE_STRING ustrKLID;
 
-    if (!IsValidKLID(pwszKLID))
+    StringCbCopyW(szKLID, sizeof(szKLID), pwszKLID);
+    szKLID[8] = UNICODE_NULL;
+
+    /* Open keyboard layout files */
+    hFile = IntLoadKeyboardLayoutFile(szKLID, _countof(szKLID), wLangID, &Flags, &offTable,
+                                      &dwNewKL, &multi);
+    if (!hFile)
     {
-        ERR("pwszKLID: %s\n", debugstr_w(pwszKLID));
-        return UlongToHandle(MAKELONG(ENGLISH_US, ENGLISH_US));
-    }
-
-    dwKLID = wcstoul(pwszKLID, NULL, 16);
-    bIsIME = IS_IME_HKL(UlongToHandle(dwKLID));
-
-    wLow = LOWORD(dwKLID);
-    wHigh = HIWORD(dwKLID);
-
-    if (Flags & KLF_SUBSTITUTE_OK)
-    {
-        /* Check substitutes key */
-        if (RegOpenKeyExW(HKEY_CURRENT_USER, L"Keyboard Layout\\Substitutes", 0,
-                          KEY_READ, &hKey) == ERROR_SUCCESS)
+        if (!unknown5 && !(Flags & KLF_FORCE))
         {
-            dwSize = sizeof(wszNewKLID);
-            if (RegQueryValueExW(hKey, pwszKLID, NULL, &dwType, (LPBYTE)wszNewKLID,
-                                 &dwSize) == ERROR_SUCCESS &&
-                dwType == REG_SZ)
-            {
-                /* Use new KLID value */
-                pwszKLID = wszNewKLID;
-                dwKLID = wcstoul(pwszKLID, NULL, 16);
-                wHigh = LOWORD(dwKLID);
-            }
+            ERR("Failed to IntLoadKeyboardLayoutFile\n");
+            return NULL; /* Failure */
+        }
 
-            /* Close the key now */
-            RegCloseKey(hKey);
+        /* Fallback to English */
+        Flags &= ~KLF_SUBSTITUTE_OK;
+        multi.MultiTable.nTables = 0;
+        if (wcscmp(szKLID, L"00000409") != 0) /* Not English? Then retry with English */
+        {
+            StringCbCopyW(szKLID, sizeof(szKLID), L"00000409");
+            hFile = IntLoadKeyboardLayoutFile(szKLID, _countof(szKLID), wLangID, &Flags,
+                                              &offTable, &dwNewKL, 0);
         }
     }
 
-    /* Append KLID at the end of registry key */
-    StringCbCatW(wszRegKey, sizeof(wszRegKey), pwszKLID);
+    /* Main dish */
+    RtlInitUnicodeString(&ustrKLID, szKLID);
+    hNewKL = NtUserLoadKeyboardLayoutEx(hFile, offTable, &multi, hklUnload, &ustrKLID, dwNewKL,
+                                        Flags);
 
-    /* Open layout registry key for read */
-    if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, wszRegKey, 0, KEY_READ, &hKey) == ERROR_SUCCESS)
+    /* Cleanup file handles */
+    NtClose(hFile);
+    for (iTable = 0; iTable < multi.MultiTable.nTables && iTable < KBDTABLE_MULTI_MAX; ++iTable)
     {
-        dwSize = sizeof(wszLayoutId);
-        if (RegQueryValueExW(hKey, L"Layout Id", NULL, &dwType, (LPBYTE)wszLayoutId,
-                             &dwSize) == ERROR_SUCCESS && dwType == REG_SZ)
-        {
-            /* If Layout Id is specified, use this value | f000 as HIWORD */
-            wHigh = (0xF000 | wcstoul(wszLayoutId, NULL, 16));
-        }
-
-        if (bIsIME)
-        {
-            /* Check "IME File" value */
-            dwSize = sizeof(szImeFileName);
-            if (RegQueryValueExW(hKey, L"IME File", NULL, &dwType, (LPBYTE)szImeFileName,
-                                 &dwSize) != ERROR_SUCCESS)
-            {
-                bIsIME = FALSE;
-                wHigh = 0;
-                ERR("0x%X\n", dwKLID);
-            }
-            else
-            {
-                WCHAR szPath[MAX_PATH];
-                szImeFileName[_countof(szImeFileName) - 1] = UNICODE_NULL;
-                GetSystemLibraryPath(szPath, _countof(szPath), szImeFileName);
-
-                /* We don't allow the invalid "IME File" values due to security reason */
-                if (dwType != REG_SZ || szImeFileName[0] == 0 ||
-                    wcscspn(szImeFileName, L":\\/") != wcslen(szImeFileName) ||
-                    GetFileAttributesW(szPath) == INVALID_FILE_ATTRIBUTES) /* Does not exist? */
-                {
-                    bIsIME = FALSE;
-                    wHigh = 0;
-                    ERR("'%s'\n", debugstr_w(szPath));
-                }
-            }
-        }
-
-        /* Close the key now */
-        RegCloseKey(hKey);
-    }
-    else
-    {
-        ERR("Could not find keyboard layout %S.\n", pwszKLID);
-        return NULL;
+        if (multi.AuxEntries[iTable].hFile)
+            NtClose(multi.AuxEntries[iTable].hFile);
     }
 
-    if (wHigh == 0)
-        wHigh = wLow;
-
-    dwHKL = MAKELONG(wLow, wHigh);
-
-    RtlInitUnicodeString(&ustrKLID, pwszKLID);
-    hNewKL = NtUserLoadKeyboardLayoutEx(NULL, 0, NULL, hklUnload, &ustrKLID, dwHKL, Flags);
-    CliImmInitializeHotKeys(SETIMEHOTKEY_ADD, hNewKL);
+    /* Initialize the IME hot keys */
+    CliImmInitializeHotKeys(SETIMEHOTKEY_ADD, UlongToHandle(dwNewKL));
     return hNewKL;
 }
 
@@ -831,16 +1078,22 @@ LoadKeyboardLayoutW(LPCWSTR pwszKLID,
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 HKL WINAPI
-LoadKeyboardLayoutEx(HKL hklUnload,
-                     LPCWSTR pwszKLID,
-                     UINT Flags)
+LoadKeyboardLayoutEx(
+    _In_ HKL hklUnload,
+    _In_z_ LPCWSTR pwszKLID,
+    _In_ UINT Flags)
 {
-    FIXME("(%p, %s, 0x%X)", hklUnload, debugstr_w(pwszKLID), Flags);
+    TRACE("(%p, %s, 0x%X)", hklUnload, debugstr_w(pwszKLID), Flags);
+
     if (!hklUnload)
+    {
+        ERR("hklUnload was NULL\n");
         return NULL;
+    }
+
     return IntLoadKeyboardLayout(hklUnload, pwszKLID, 0, Flags, FALSE);
 }
 

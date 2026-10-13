@@ -1,6 +1,8 @@
 #ifndef __WIN32K_NTUSER_H
 #define __WIN32K_NTUSER_H
 
+#include <ndk/kbd.h>
+
 struct _PROCESSINFO;
 struct _THREADINFO;
 struct _DESKTOP;
@@ -106,6 +108,25 @@ typedef struct _LARGE_ANSI_STRING
     ULONG bAnsi:1;
     PCHAR Buffer;
 } LARGE_ANSI_STRING, *PLARGE_ANSI_STRING;
+
+typedef struct tagKBDTABLE_MULTI_AUX_ENTRY {
+    HANDLE hFile;
+    WORD wMainOffset;
+    WORD wNlsOffset;
+} KBDTABLE_MULTI_AUX_ENTRY, *PKBDTABLE_MULTI_AUX_ENTRY;
+
+typedef struct tagKBDTABLE_MULTI_EX {
+    KBDTABLE_MULTI MultiTable;
+    WCHAR szRealDllName[32];
+    KBDTABLE_MULTI_AUX_ENTRY AuxEntries[KBDTABLE_MULTI_MAX];
+} KBDTABLE_MULTI_EX, *PKBDTABLE_MULTI_EX;
+
+typedef struct tagCLIENTKEYBOARDTYPE
+{
+    ULONG Type;
+    ULONG SubType;
+    ULONG FunctionKey;
+} CLIENTKEYBOARDTYPE, *PCLIENTKEYBOARDTYPE;
 
 VOID
 NTAPI
@@ -2634,13 +2655,13 @@ NtUserKillTimer(
 HKL
 NTAPI
 NtUserLoadKeyboardLayoutEx(
-    IN HANDLE hFile,
-    IN DWORD offTable,
-    IN PVOID pTables,
-    IN HKL hOldKL,
-    IN PUNICODE_STRING puszKLID,
-    IN DWORD dwNewKL,
-    IN UINT Flags);
+    _In_ HANDLE hFile,
+    _In_ DWORD offTable,
+    _In_opt_ PKBDTABLE_MULTI_EX pTables,
+    _In_opt_ HKL hOldKL,
+    _In_ PUNICODE_STRING puszKLID,
+    _In_ DWORD dwNewKL,
+    _In_ UINT Flags);
 
 BOOL
 NTAPI
