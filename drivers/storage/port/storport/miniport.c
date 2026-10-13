@@ -378,6 +378,25 @@ MiniportHwInterrupt(
 
 
 BOOLEAN
+NTAPI
+MiniportHwMSInterrupt(
+    _In_ PMINIPORT Miniport,
+    _In_ ULONG MessageId)
+{
+    BOOLEAN Result;
+
+    DPRINT("MiniportHwMSInterrupt(%p %lu)\n",
+            Miniport, MessageId);
+
+    Result = Miniport->PortConfig.HwMSInterruptRoutine(&Miniport->MiniportExtension->HwDeviceExtension,
+                                                       MessageId);
+    DPRINT("HwMSInterruptRoutine() returned %u\n", Result);
+
+    return Result;
+}
+
+
+BOOLEAN
 MiniportStartIo(
     _In_ PMINIPORT Miniport,
     _In_ PSCSI_REQUEST_BLOCK Srb)
