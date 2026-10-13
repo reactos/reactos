@@ -3011,6 +3011,27 @@ typedef struct _STOR_LOG_EVENT_DETAILS
     PWSTR *StringList;
 } STOR_LOG_EVENT_DETAILS, *PSTOR_LOG_EVENT_DETAILS;
 
+/* PERF_CONFIGURATION_DATA.Flags */
+#define STOR_PERF_DPC_REDIRECTION           0x00000001
+#define STOR_PERF_CONCURRENT_CHANNELS       0x00000002
+#define STOR_PERF_INTERRUPT_MESSAGE_RANGES  0x00000004
+#define STOR_PERF_ADV_CONFIG_LOCALITY       0x00000008
+#define STOR_PERF_OPTIMIZE_FOR_COMPLETION_DURING_STARTIO 0x00000010
+#define STOR_PERF_DPC_REDIRECTION_CURRENT_CPU 0x00000020
+#define STOR_PERF_NO_SGL                    0x00000040
+#define STOR_PERF_SOFT_NUMA                 0x00000080
+#define STOR_PERF_HETEROGENEOUS_CPU         0x00000100
+
+#define STOR_PERF_VERSION_2                 0x00000002
+#define STOR_PERF_VERSION_3                 0x00000003
+#define STOR_PERF_VERSION_4                 0x00000004
+#define STOR_PERF_VERSION_5                 0x00000005
+#define STOR_PERF_VERSION_6                 0x00000006
+#define STOR_PERF_VERSION_7                 0x00000007
+#define STOR_PERF_VERSION_8                 0x00000008
+
+#define STOR_PERF_VERSION                   STOR_PERF_VERSION_8
+
 typedef struct _PERF_CONFIGURATION_DATA
 {
     ULONG Version;
@@ -3107,6 +3128,48 @@ typedef struct _STOR_UNIT_ATTRIBUTES
     ULONG BypassIoSupported:1;
     ULONG Reserved:28;
 } STOR_UNIT_ATTRIBUTES, *PSTOR_UNIT_ATTRIBUTES;
+
+typedef enum _STORPORT_ETW_LEVEL
+{
+    StorportEtwLevelLogAlways = 0,
+    StorportEtwLevelCritical = 1,
+    StorportEtwLevelError = 2,
+    StorportEtwLevelWarning = 3,
+    StorportEtwLevelInformational = 4,
+    StorportEtwLevelVerbose = 5,
+    StorportEtwLevelMax = StorportEtwLevelVerbose
+} STORPORT_ETW_LEVEL, *PSTORPORT_ETW_LEVEL;
+
+#define STORPORT_ETW_EVENT_KEYWORD_IO                   0x0000000000000001
+#define STORPORT_ETW_EVENT_KEYWORD_PERFORMANCE          0x0000000000000002
+#define STORPORT_ETW_EVENT_KEYWORD_POWER                0x0000000000000004
+#define STORPORT_ETW_EVENT_KEYWORD_ENUMERATION          0x0000000000000008
+
+typedef enum _STORPORT_ETW_EVENT_OPCODE
+{
+    StorportEtwEventOpcodeInfo = 0,
+    StorportEtwEventOpcodeStart = 1,
+    StorportEtwEventOpcodeStop = 2,
+    StorportEtwEventOpcodeDC_Start = 3,
+    StorportEtwEventOpcodeDC_Stop = 4,
+    StorportEtwEventOpcodeExtension = 5,
+    StorportEtwEventOpcodeReply = 6,
+    StorportEtwEventOpcodeResume = 7,
+    StorportEtwEventOpcodeSuspend = 8,
+    StorportEtwEventOpcodeSend = 9,
+    StorportEtwEventOpcodeReceive = 240
+} STORPORT_ETW_EVENT_OPCODE, *PSTORPORT_ETW_EVENT_OPCODE;
+
+typedef enum _STORPORT_ETW_EVENT_CHANNEL
+{
+    StorportEtwEventDiagnostic = 0,
+    StorportEtwEventOperational = 1,
+    StorportEtwEventHealth = 2,
+    StorportEtwEventIoPerformance = 3
+} STORPORT_ETW_EVENT_CHANNEL, *PSTORPORT_ETW_EVENT_CHANNEL;
+
+#define STORPORT_ETW_MAX_DESCRIPTION_LENGTH 32
+#define STORPORT_ETW_MAX_PARAM_NAME_LENGTH  16
 
 /* Prefix shared by every adapter and unit control power parameter block */
 typedef struct _STOR_POWER_CONTROL_HEADER
@@ -3409,6 +3472,422 @@ typedef struct _STOR_UNIT_NVME_ICE_INFORMATION
 
 #endif /* (NTDDI_VERSION >= NTDDI_WIN11_GE) */
 
+#if (NTDDI_VERSION >= NTDDI_WIN8)
+
+typedef enum _STOR_IMPORTANCE
+{
+    StorLowImportance,
+    StorMediumImportance,
+    StorHighImportance,
+    StorMediumHighImportance
+} STOR_IMPORTANCE;
+
+/* StorPortSetExtendedDpcParameters */
+typedef struct _STOR_EXT_SET_PARAMETERS
+{
+    ULONG Version;
+    ULONG Reserved;
+    LONGLONG NoWakeTolerance;
+} STOR_EXT_SET_PARAMETERS, *PSTOR_EXT_SET_PARAMETERS;
+
+typedef
+VOID
+(NTAPI *PSTOR_EXT_DELETE_CALLBACK)(
+    _In_opt_ PVOID Context);
+
+typedef struct _STOR_EXT_DELETE_PARAMETERS
+{
+    ULONG Version;
+    ULONG Reserved;
+    PSTOR_EXT_DELETE_CALLBACK DeleteCallback;
+    PVOID DeleteContext;
+} STOR_EXT_DELETE_PARAMETERS, *PSTOR_EXT_DELETE_PARAMETERS;
+
+typedef struct _STARTIO_PERFORMANCE_PARAMETERS_V2
+{
+    ULONG Version;
+    ULONG Size;
+    ULONG MessageNumber;
+    ULONG ChannelNumber;
+    PROCESSOR_NUMBER InitiatingProcessor;
+} STARTIO_PERFORMANCE_PARAMETERS_V2, *PSTARTIO_PERFORMANCE_PARAMETERS_V2;
+
+/*
+ * Storport owns these list primitives because a miniport in dump mode cannot
+ * call the kernel ones. The layout follows SLIST_ENTRY and SLIST_HEADER.
+ */
+#if defined(_WIN64)
+
+typedef struct DECLSPEC_ALIGN(16) _STOR_SLIST_ENTRY *PSTOR_SLIST_ENTRY;
+
+typedef struct DECLSPEC_ALIGN(16) _STOR_SLIST_ENTRY
+{
+    PSTOR_SLIST_ENTRY Next;
+} STOR_SLIST_ENTRY;
+
+typedef union DECLSPEC_ALIGN(16) _STOR_SLIST_HEADER
+{
+    struct
+    {
+        ULONGLONG Alignment;
+        ULONGLONG Region;
+    } DUMMYSTRUCTNAME;
+    struct
+    {
+        ULONGLONG Depth:16;
+        ULONGLONG Sequence:9;
+        ULONGLONG NextEntry:39;
+        /* 0 for the 8 byte header, 1 for the 16 byte one */
+        ULONGLONG HeaderType:1;
+        ULONGLONG Init:1;
+        ULONGLONG Reserved:59;
+        ULONGLONG Region:3;
+    } Header8;
+    struct
+    {
+        ULONGLONG Depth:16;
+        ULONGLONG Sequence:48;
+        ULONGLONG HeaderType:1;
+        ULONGLONG Init:1;
+        ULONGLONG Reserved:2;
+        /* The low four bits are always clear */
+        ULONGLONG NextEntry:60;
+    } Header16;
+    struct
+    {
+        ULONGLONG Depth:16;
+        ULONGLONG Sequence:48;
+        ULONGLONG HeaderType:1;
+        ULONGLONG Reserved:3;
+        ULONGLONG NextEntry:60;
+    } HeaderX64;
+} STOR_SLIST_HEADER, *PSTOR_SLIST_HEADER;
+
+#else
+
+typedef struct _STOR_SLIST_ENTRY
+{
+    struct _STOR_SLIST_ENTRY *Next;
+} STOR_SLIST_ENTRY, *PSTOR_SLIST_ENTRY;
+
+typedef union _STOR_SLIST_HEADER
+{
+    ULONGLONG Alignment;
+    struct
+    {
+        STOR_SLIST_ENTRY Next;
+        USHORT Depth;
+        USHORT Sequence;
+    } DUMMYSTRUCTNAME;
+} STOR_SLIST_HEADER, *PSTOR_SLIST_HEADER;
+
+#endif /* defined(_WIN64) */
+
+typedef struct _STOR_LIST_ENTRY
+{
+    struct _STOR_LIST_ENTRY *Flink;
+    struct _STOR_LIST_ENTRY *Blink;
+} STOR_LIST_ENTRY, *PSTOR_LIST_ENTRY;
+
+typedef ULONG_PTR STOR_KSPIN_LOCK, *PSTOR_KSPIN_LOCK;
+
+typedef ULONG_PTR STOR_AFFINITY;
+
+typedef struct _STOR_GROUP_AFFINITY
+{
+    STOR_AFFINITY Mask;
+    USHORT Group;
+    USHORT Reserved[3];
+} STOR_GROUP_AFFINITY, *PSTOR_GROUP_AFFINITY;
+
+/* StorPortMarkDumpMemory */
+#define MARK_DUMP_MEMORY_FLAG_PHYSICAL_ADDRESS 0x1
+
+typedef struct _STOR_DISPATCHER_HEADER
+{
+    union
+    {
+        struct
+        {
+            UCHAR Type;
+            UCHAR Flags;
+            UCHAR Size;
+            union
+            {
+                UCHAR Inserted;
+                BOOLEAN DebugActive;
+            };
+        } Data;
+        volatile LONG Lock;
+    };
+    LONG SignalState;
+    STOR_LIST_ENTRY WaitListHead;
+} STOR_DISPATCHER_HEADER, *PSTOR_DISPATCHER_HEADER;
+
+typedef struct _STOR_EVENT
+{
+    STOR_DISPATCHER_HEADER Header;
+} STOR_EVENT, *PSTOR_EVENT, *PRSTOR_EVENT;
+
+typedef enum _STOR_EVENT_TYPE
+{
+    StorNotificationEvent = 0,
+    StorSynchronizationEvent = 1
+} STOR_EVENT_TYPE, *PSTOR_EVENT_TYPE;
+
+typedef enum _STOR_THREAD_PRIORITY
+{
+    StorThreadPriorityBackground = 7,
+    StorThreadPriorityNormal = 8,
+    StorThreadPriorityDelayed = 12,
+    StorThreadPriorityCritical = 13,
+    StorThreadPrioritySuperCritical = 14,
+    StorThreadPriorityHyperCritical = 15,
+    StorThreadPriorityRealTime = 18
+} STOR_THREAD_PRIORITY, *PSTOR_THREAD_PRIORITY;
+
+typedef enum _STOR_DEVICE_RESET_TYPE
+{
+    StorFunctionLevelReset,
+    StorPlatformLevelReset,
+    StorBusSpecificReset
+} STOR_DEVICE_RESET_TYPE;
+
+/* All times are in timer ticks */
+typedef struct _STOR_DPC_WATCHDOG_INFORMATION
+{
+    ULONG DpcTimeLimit;
+    ULONG DpcTimeCount;
+    ULONG DpcWatchdogLimit;
+    ULONG DpcWatchdogCount;
+    ULONG Reserved;
+} STOR_DPC_WATCHDOG_INFORMATION, *PSTOR_DPC_WATCHDOG_INFORMATION;
+
+typedef enum _STORPORT_QUERY_CONFIGURATION_TYPE
+{
+    StorportQueryConfigurationD3 = 0,
+    StorportQueryConfigurationNvmeIce,
+    StorportQueryConfigurationMax
+} STORPORT_QUERY_CONFIGURATION_TYPE, *PSTORPORT_QUERY_CONFIGURATION_TYPE;
+
+/*
+ * StorPortSetFeatureList. A miniport has to claim every adapter and unit
+ * control code added after Windows 8 before Storport will send it.
+ */
+typedef enum _STORPORT_FEATURE_TYPE
+{
+    StorportFeatureBusTypeUnitControl = 0,
+    StorportFeatureFruIdUnitControl,
+    StorportFeatureFruIdAdapterControl,
+    StorportFeatureSetEventLoggingAdapterControl,
+    StorportFeatureReportInternalDataUnitControl,
+    StorportFeatureReportInternalDataAdapterControl,
+    StorportFeatureResetBusSynchronous,
+    StorportFeaturePostHwInitialize,
+    StorportFeaturePrepareEarlyDumpData,
+    StorportFeatureRestoreEarlyDumpData,
+    StorportFeatureKsrAdapterPowerDownOptimization,
+    StorportFeatureKsrUnitPowerDownOptimization,
+    StorportFeaturePreparePLDR,
+    StorportFeatureNvmeofAdapterOperation,
+    StorportFeatureReserved1,
+    StorportFeatureQueryStorMQInterface,
+    StorportFeatureMax
+} STORPORT_FEATURE_TYPE;
+
+/* ScsiAdapterSetEventLogging */
+typedef struct _STOR_SET_EVENT_LOGGING
+{
+    STORPORT_ETW_EVENT_CHANNEL Channel;
+    BOOLEAN Enabled;
+} STOR_SET_EVENT_LOGGING, *PSTOR_SET_EVENT_LOGGING;
+
+typedef enum _STOR_TELEMETRY_CATEGORY
+{
+    StorTelemetryCategory,
+    StorMeasuresCategory
+} STOR_TELEMETRY_CATEGORY, *PSTOR_TELEMETRY_CATEGORY;
+
+#define EVENT_BUFFER_MAX_LENGTH             4096
+#define EVENT_NAME_MAX_LENGTH               32
+#define EVENT_MAX_PARAM_NAME_LEN            32
+
+typedef struct _STORPORT_TELEMETRY_EVENT
+{
+    ULONG DriverVersion;
+    ULONG EventId;
+    UCHAR EventName[EVENT_NAME_MAX_LENGTH];
+    ULONG EventVersion;
+    ULONG Flags;
+    _Field_range_(0, EVENT_BUFFER_MAX_LENGTH)
+    ULONG EventBufferLength;
+    _Field_size_bytes_(EventBufferLength)
+    PUCHAR EventBuffer;
+    UCHAR ParameterName0[EVENT_MAX_PARAM_NAME_LEN];
+    ULONGLONG ParameterValue0;
+    UCHAR ParameterName1[EVENT_MAX_PARAM_NAME_LEN];
+    ULONGLONG ParameterValue1;
+    UCHAR ParameterName2[EVENT_MAX_PARAM_NAME_LEN];
+    ULONGLONG ParameterValue2;
+    UCHAR ParameterName3[EVENT_MAX_PARAM_NAME_LEN];
+    ULONGLONG ParameterValue3;
+    UCHAR ParameterName4[EVENT_MAX_PARAM_NAME_LEN];
+    ULONGLONG ParameterValue4;
+    UCHAR ParameterName5[EVENT_MAX_PARAM_NAME_LEN];
+    ULONGLONG ParameterValue5;
+    UCHAR ParameterName6[EVENT_MAX_PARAM_NAME_LEN];
+    ULONGLONG ParameterValue6;
+    UCHAR ParameterName7[EVENT_MAX_PARAM_NAME_LEN];
+    ULONGLONG ParameterValue7;
+} STORPORT_TELEMETRY_EVENT, *PSTORPORT_TELEMETRY_EVENT;
+
+/* StorPortMiniportReportInternalData payload description */
+typedef enum _DATA_TYPE
+{
+    DataTypeGuid,
+    DataTypeBoolean,
+    DataTypeUnicodeString,
+    DataTypeAnsiString,
+    DataTypeInt8,
+    DataTypeInt16,
+    DataTypeInt32,
+    DataTypeInt64,
+    DataTypeUInt8,
+    DataTypeUInt16,
+    DataTypeUInt32,
+    DataTypeUInt64,
+    DataTypeHex8,
+    DataTypeHex16,
+    DataTypeHex32,
+    DataTypeHex64,
+    DataTypeByteArray
+} DATA_TYPE;
+
+typedef struct _MINIPORT_DATA
+{
+    PSTR Name;
+    DATA_TYPE Type;
+    /* Only meaningful for DataTypeByteArray */
+    USHORT ArrayLength;
+    PVOID Data;
+} MINIPORT_DATA, *PMINIPORT_DATA;
+
+typedef enum _STORPORT_LIVEDUMP_ISSUE_TYPE
+{
+    StorportLivedumpIssueTypeUndefined = 0,
+    StorportLivedumpIssueTypeDevicePanic
+} STORPORT_LIVEDUMP_ISSUE_TYPE, *PSTORPORT_LIVEDUMP_ISSUE_TYPE;
+
+#define STORPORT_LIVEDUMP_BUCKET_ID_LENGTH  128
+
+typedef enum _STORPORT_CAPTURE_LIVEDUMP_TYPE
+{
+    StorportCaptureLiveDumpTypeUndefined = 0,
+    StorportCaptureLiveDumpTypeMini,
+    StorportCaptureLiveDumpTypeFull
+} STORPORT_CAPTURE_LIVEDUMP_TYPE, *PSTORPORT_CAPTURE_LIVEDUMP_TYPE;
+
+typedef enum _STORPORT_LIVEDUMP_DATA_TYPE
+{
+    StorportLivedumpDataTypeUndefined = 0,
+    StorportLivedumpDataTypeDeviceTelemetryLog
+} STORPORT_LIVEDUMP_DATA_TYPE, *PSTORPORT_LIVEDUMP_DATA_TYPE;
+
+typedef struct _STORPORT_LIVEDUMP_DEVICE_TELEMETRY_LOG
+{
+    ULONG Version;
+    ULONG Size;
+    /* Identifies the device state at the time of the issue */
+    UCHAR BucketId[STORPORT_LIVEDUMP_BUCKET_ID_LENGTH];
+    UCHAR OrganizationID[3];
+    UCHAR Reserved;
+    ULONG TelemetryLength;
+    PVOID DeviceTelemetry;
+} STORPORT_LIVEDUMP_DEVICE_TELEMETRY_LOG, *PSTORPORT_LIVEDUMP_DEVICE_TELEMETRY_LOG;
+
+typedef struct _STORPORT_CAPTURE_LIVEDUMP
+{
+    ULONG Version;
+    ULONG Size;
+    STORPORT_CAPTURE_LIVEDUMP_TYPE LiveDumpType;
+    STORPORT_LIVEDUMP_ISSUE_TYPE IssueType;
+    PWSTR ComponentName;
+    STORPORT_LIVEDUMP_DATA_TYPE DataType;
+    PVOID Data;
+} STORPORT_CAPTURE_LIVEDUMP, *PSTORPORT_CAPTURE_LIVEDUMP;
+
+#define STOR_RPMB_VERSION_1                 0x00000001
+
+typedef enum _STOR_RPMB_FRAME_TYPE
+{
+    StorRpmbFrameTypeUnknown = 0,
+    StorRpmbFrameTypeStandard,
+    StorRpmbFrameTypeMax
+} STOR_RPMB_FRAME_TYPE, *PSTOR_RPMB_FRAME_TYPE;
+
+typedef struct _STOR_RPMB_CAPABILITIES_DATA
+{
+    ULONG Version;
+    ULONG Size;
+    ULONG RpmbSize;
+    ULONG MaxReliableRpmbWriteSize;
+    UCHAR SecurityProtocol;
+    USHORT SecurityProtocolSpecifier;
+    STOR_ADDRESS RpmbTarget;
+    STOR_RPMB_FRAME_TYPE FrameFormat;
+} STOR_RPMB_CAPABILITIES_DATA, *PSTOR_RPMB_CAPABILITIES_DATA;
+
+/* ASCII "MPDI" */
+#define MINIPORT_DUMP_INFO_SIGNATURE        0x4D504449
+
+/* Returned by SRB_FUNCTION_GET_DUMP_INFO */
+typedef struct _MINIPORT_DUMP_INFO
+{
+    ULONG Version;
+    ULONG Size;
+    _Field_range_(MINIPORT_DUMP_INFO_SIGNATURE, MINIPORT_DUMP_INFO_SIGNATURE)
+    ULONG Signature;
+    UCHAR Reserved0[4];
+    PVOID Context;
+} MINIPORT_DUMP_INFO, *PMINIPORT_DUMP_INFO;
+
+/* ASCII "GMDE" */
+#define GET_DUMP_INFO_SIGNATURE_EXT         0x474D4445
+#define GET_DUMP_INFO_VERSION_1             sizeof(GET_MINIPORT_DUMP_INFO_V1)
+
+/* Input buffer of SRB_FUNCTION_GET_DUMP_INFO */
+typedef struct _GET_MINIPORT_DUMP_INFO_V1
+{
+    _Field_range_(GET_DUMP_INFO_VERSION_1, GET_DUMP_INFO_VERSION_1)
+    ULONG Version;
+    ULONG Size;
+    _Field_range_(GET_DUMP_INFO_SIGNATURE_EXT, GET_DUMP_INFO_SIGNATURE_EXT)
+    ULONG Signature;
+    USHORT DiskCount;
+    /* A STOR_ADDRESS_TYPE_* value, never STOR_ADDRESS_TYPE_UNKNOWN */
+    USHORT AddressType;
+    ULONG AddressSize;
+    UCHAR Reserved0[4];
+    _Field_size_bytes_(DiskCount * AddressSize)
+    UCHAR Addresses[ANYSIZE_ARRAY];
+} GET_MINIPORT_DUMP_INFO_V1, *PGET_MINIPORT_DUMP_INFO_V1;
+
+/* ASCII "FMDI" */
+#define FREE_DUMP_INFO_SIGNATURE            0x464D4449
+
+/* Input buffer of SRB_FUNCTION_FREE_DUMP_INFO */
+typedef struct _FREE_MINIPORT_DUMP_INFO
+{
+    ULONG Version;
+    ULONG Size;
+    _Field_range_(FREE_DUMP_INFO_SIGNATURE, FREE_DUMP_INFO_SIGNATURE)
+    ULONG Signature;
+    UCHAR Reserved0[4];
+    PVOID Context;
+} FREE_MINIPORT_DUMP_INFO, *PFREE_MINIPORT_DUMP_INFO;
+
+#endif /* (NTDDI_VERSION >= NTDDI_WIN8) */
+
 #define STOR_POFX_UNKNOWN_POWER             0xFFFFFFFF
 #define STOR_POFX_UNKNOWN_TIME              0xFFFFFFFFFFFFFFFF
 
@@ -3512,48 +3991,6 @@ static const GUID STORPORT_POFX_ADAPTER_GUID =
     {0xdcaf9c10, 0x895f, 0x481f, {0xa4, 0x92, 0xd4, 0xce, 0xd2, 0xf5, 0x56, 0x33}};
 static const GUID STORPORT_POFX_LUN_GUID =
     {0x585d326b, 0x0b3a, 0x4088, {0x89, 0x39, 0x88, 0xb0, 0x0f, 0x69, 0x58, 0xbe}};
-
-typedef enum _STORPORT_ETW_LEVEL
-{
-    StorportEtwLevelLogAlways = 0,
-    StorportEtwLevelCritical = 1,
-    StorportEtwLevelError = 2,
-    StorportEtwLevelWarning = 3,
-    StorportEtwLevelInformational = 4,
-    StorportEtwLevelVerbose = 5,
-    StorportEtwLevelMax = StorportEtwLevelVerbose
-} STORPORT_ETW_LEVEL, *PSTORPORT_ETW_LEVEL;
-
-#define STORPORT_ETW_EVENT_KEYWORD_IO                   0x0000000000000001
-#define STORPORT_ETW_EVENT_KEYWORD_PERFORMANCE          0x0000000000000002
-#define STORPORT_ETW_EVENT_KEYWORD_POWER                0x0000000000000004
-#define STORPORT_ETW_EVENT_KEYWORD_ENUMERATION          0x0000000000000008
-
-typedef enum _STORPORT_ETW_EVENT_OPCODE
-{
-    StorportEtwEventOpcodeInfo = 0,
-    StorportEtwEventOpcodeStart = 1,
-    StorportEtwEventOpcodeStop = 2,
-    StorportEtwEventOpcodeDC_Start = 3,
-    StorportEtwEventOpcodeDC_Stop = 4,
-    StorportEtwEventOpcodeExtension = 5,
-    StorportEtwEventOpcodeReply = 6,
-    StorportEtwEventOpcodeResume = 7,
-    StorportEtwEventOpcodeSuspend = 8,
-    StorportEtwEventOpcodeSend = 9,
-    StorportEtwEventOpcodeReceive = 240
-} STORPORT_ETW_EVENT_OPCODE, *PSTORPORT_ETW_EVENT_OPCODE;
-
-typedef enum _STORPORT_ETW_EVENT_CHANNEL
-{
-    StorportEtwEventDiagnostic = 0,
-    StorportEtwEventOperational = 1,
-    StorportEtwEventHealth = 2,
-    StorportEtwEventIoPerformance = 3
-} STORPORT_ETW_EVENT_CHANNEL, *PSTORPORT_ETW_EVENT_CHANNEL;
-
-#define STORPORT_ETW_MAX_DESCRIPTION_LENGTH 32
-#define STORPORT_ETW_MAX_PARAM_NAME_LENGTH  16
 
 #endif /* (NTDDI_VERSION >= NTDDI_WIN8) */
 typedef
@@ -5536,6 +5973,464 @@ StorPortEtwEvent4(
                                     Parameter3Value,
                                     Parameter4Name,
                                     Parameter4Value);
+}
+
+#endif /* (NTDDI_VERSION >= NTDDI_WIN8) */
+
+#if (NTDDI_VERSION >= NTDDI_WIN8)
+
+FORCEINLINE
+ULONG
+StorPortInitializeSpinLock(
+    _In_ PVOID HwDeviceExtension,
+    _In_ PSTOR_KSPIN_LOCK SpinLock)
+{
+    return StorPortExtendedFunction(ExtFunctionInitializeSpinlock,
+                                    HwDeviceExtension,
+                                    SpinLock);
+}
+
+FORCEINLINE
+ULONG
+StorPortInterlockedInsertHeadList(
+    _In_ PVOID HwDeviceExtension,
+    _In_ PSTOR_LIST_ENTRY ListHead,
+    _In_ PSTOR_LIST_ENTRY ListEntry,
+    _In_ PSTOR_KSPIN_LOCK Lock)
+{
+    return StorPortExtendedFunction(ExtFunctionInterlockedInsertHeadList,
+                                    HwDeviceExtension,
+                                    ListHead,
+                                    ListEntry,
+                                    Lock);
+}
+
+FORCEINLINE
+ULONG
+StorPortInterlockedInsertTailList(
+    _In_ PVOID HwDeviceExtension,
+    _In_ PSTOR_LIST_ENTRY ListHead,
+    _In_ PSTOR_LIST_ENTRY ListEntry,
+    _In_ PSTOR_KSPIN_LOCK Lock)
+{
+    return StorPortExtendedFunction(ExtFunctionInterlockedInsertTailList,
+                                    HwDeviceExtension,
+                                    ListHead,
+                                    ListEntry,
+                                    Lock);
+}
+
+FORCEINLINE
+ULONG
+StorPortInterlockedRemoveHeadList(
+    _In_ PVOID HwDeviceExtension,
+    _In_ PSTOR_LIST_ENTRY ListHead,
+    _In_ PSTOR_KSPIN_LOCK Lock,
+    _Out_ PSTOR_LIST_ENTRY *Result)
+{
+    return StorPortExtendedFunction(ExtFunctionInterlockedRemoveHeadList,
+                                    HwDeviceExtension,
+                                    ListHead,
+                                    Lock,
+                                    Result);
+}
+
+FORCEINLINE
+ULONG
+StorPortGetPfns(
+    _In_ PVOID HwDeviceExtension,
+    _In_ PVOID Mdl,
+    _Out_ PVOID Pfns,
+    _Inout_ PULONG PfnCount)
+{
+    return StorPortExtendedFunction(ExtFunctionGetPfns,
+                                    HwDeviceExtension,
+                                    Mdl,
+                                    Pfns,
+                                    PfnCount);
+}
+
+FORCEINLINE
+ULONG
+StorPortSetFeatureList(
+    _In_ PVOID HwDeviceExtension,
+    _In_range_(1, StorportFeatureMax) ULONG FeatureCount,
+    _In_reads_(FeatureCount) PBOOLEAN FeatureList)
+{
+    return StorPortExtendedFunction(ExtFunctionSetFeatureList,
+                                    HwDeviceExtension,
+                                    FeatureCount,
+                                    FeatureList);
+}
+
+FORCEINLINE
+ULONG
+StorPortQueryConfiguration(
+    _In_ PVOID HwDeviceExtension,
+    _In_ STORPORT_QUERY_CONFIGURATION_TYPE Type,
+    _Out_ PVOID Buffer,
+    _In_ ULONG BufferLength)
+{
+    return StorPortExtendedFunction(ExtFunctionQueryConfiguration,
+                                    HwDeviceExtension,
+                                    Type,
+                                    Buffer,
+                                    BufferLength);
+}
+
+FORCEINLINE
+ULONG
+StorPortInitializeEvent(
+    _In_ PVOID HwDeviceExtension,
+    _In_ PSTOR_EVENT Event,
+    _In_ STOR_EVENT_TYPE Type,
+    _In_ BOOLEAN State)
+{
+    return StorPortExtendedFunction(ExtFunctionInitializeEvent,
+                                    HwDeviceExtension,
+                                    Event,
+                                    Type,
+                                    State);
+}
+
+/* Timeout is in microseconds; a negative value means wait forever */
+FORCEINLINE
+ULONG
+StorPortWaitForEvent(
+    _In_ PVOID HwDeviceExtension,
+    _In_ PSTOR_EVENT Event,
+    _In_ LONGLONG Timeout)
+{
+    return StorPortExtendedFunction(ExtFunctionWaitForEvent,
+                                    HwDeviceExtension,
+                                    Event,
+                                    Timeout);
+}
+
+FORCEINLINE
+ULONG
+StorPortSetEvent(
+    _In_ PVOID HwDeviceExtension,
+    _In_ PSTOR_EVENT Event,
+    _Out_opt_ PLONG PreviousState)
+{
+    return StorPortExtendedFunction(ExtFunctionSetEvent,
+                                    HwDeviceExtension,
+                                    Event,
+                                    PreviousState);
+}
+
+FORCEINLINE
+ULONG
+StorPortHardwareReset(
+    _In_ PVOID HwDeviceExtension,
+    _In_ STOR_DEVICE_RESET_TYPE Type)
+{
+    return StorPortExtendedFunction(ExtFunctionDeviceReset,
+                                    HwDeviceExtension,
+                                    Type);
+}
+
+FORCEINLINE
+ULONG
+StorPortQueryDpcWatchdogInformation(
+    _In_ PVOID HwDeviceExtension,
+    _Out_ PSTOR_DPC_WATCHDOG_INFORMATION WatchdogInformation)
+{
+    return StorPortExtendedFunction(ExtFunctionQueryDpcWatchdogInformation,
+                                    HwDeviceExtension,
+                                    WatchdogInformation);
+}
+
+FORCEINLINE
+ULONG
+StorPortQueryTimerMinInterval(
+    _In_ PVOID HwDeviceExtension,
+    _Out_ PULONG MinInterval)
+{
+    return StorPortExtendedFunction(ExtFunctionQueryTimerMinInterval,
+                                    HwDeviceExtension,
+                                    MinInterval);
+}
+
+FORCEINLINE
+ULONG
+StorPortGetCurrentIrql(
+    _In_ PVOID HwDeviceExtension,
+    _Out_ PKIRQL Irql)
+{
+    return StorPortExtendedFunction(ExtFunctionGetCurrentIrql,
+                                    HwDeviceExtension,
+                                    Irql);
+}
+
+FORCEINLINE
+ULONG
+StorPortGetProcessorCount(
+    _In_ PVOID HwDeviceExtension,
+    _Out_ PULONG ProcessorCount)
+{
+    return StorPortExtendedFunction(ExtFunctionGetProcessorCount,
+                                    HwDeviceExtension,
+                                    ProcessorCount);
+}
+
+FORCEINLINE
+ULONG
+StorPortGetCurrentProcessorIndex(
+    _In_ PVOID HwDeviceExtension,
+    _Out_ PULONG ProcessorIndex)
+{
+    return StorPortExtendedFunction(ExtFunctionGetCurrentProcessorIndex,
+                                    HwDeviceExtension,
+                                    ProcessorIndex);
+}
+
+FORCEINLINE
+ULONG
+StorPortCreateSystemThread(
+    _In_ PVOID HwDeviceExtension,
+    _In_ PVOID ThreadStartRoutine,
+    _In_opt_ PVOID StartContext,
+    _Out_ PVOID *ThreadHandle)
+{
+    return StorPortExtendedFunction(ExtFunctionCreateSystemThread,
+                                    HwDeviceExtension,
+                                    ThreadStartRoutine,
+                                    StartContext,
+                                    ThreadHandle);
+}
+
+FORCEINLINE
+ULONG
+StorPortSetPriorityThread(
+    _In_ PVOID HwDeviceExtension,
+    _In_ PVOID ThreadHandle,
+    _In_ STOR_THREAD_PRIORITY Priority,
+    _Out_opt_ PSTOR_THREAD_PRIORITY OldPriority)
+{
+    return StorPortExtendedFunction(ExtFunctionSetPriorityThread,
+                                    HwDeviceExtension,
+                                    ThreadHandle,
+                                    Priority,
+                                    OldPriority);
+}
+
+FORCEINLINE
+ULONG
+StorPortSetSystemGroupAffinityThread(
+    _In_ PVOID HwDeviceExtension,
+    _In_ PSTOR_GROUP_AFFINITY Affinity,
+    _Out_opt_ PSTOR_GROUP_AFFINITY PreviousAffinity)
+{
+    return StorPortExtendedFunction(ExtFunctionSetSystemGroupAffinityThread,
+                                    HwDeviceExtension,
+                                    Affinity,
+                                    PreviousAffinity);
+}
+
+FORCEINLINE
+ULONG
+StorPortRevertToUserGroupAffinityThread(
+    _In_ PVOID HwDeviceExtension,
+    _In_opt_ PSTOR_GROUP_AFFINITY PreviousAffinity)
+{
+    return StorPortExtendedFunction(ExtFunctionRevertToUserGroupAffinityThread,
+                                    HwDeviceExtension,
+                                    PreviousAffinity);
+}
+
+FORCEINLINE
+ULONG
+StorPortTerminateSystemThread(
+    _In_ PVOID HwDeviceExtension,
+    _In_ ULONG ExitStatus)
+{
+    StorPortNotification(TerminateSystemThread, HwDeviceExtension, ExitStatus);
+    return STOR_STATUS_SUCCESS;
+}
+
+FORCEINLINE
+ULONG
+StorPortLogTelemetry(
+    _In_ PVOID HwDeviceExtension,
+    _In_opt_ PSTOR_ADDRESS Address,
+    _In_ PSTORPORT_TELEMETRY_EVENT Event)
+{
+    return StorPortExtendedFunction(ExtFunctionMiniportTelemetry,
+                                    HwDeviceExtension,
+                                    Address,
+                                    Event);
+}
+
+FORCEINLINE
+ULONG
+StorPortLogTelemetryEx(
+    _In_ PVOID HwDeviceExtension,
+    _In_opt_ PSTOR_ADDRESS Address,
+    _In_ PSTORPORT_TELEMETRY_EVENT Event,
+    _In_ STOR_TELEMETRY_CATEGORY Category)
+{
+    return StorPortExtendedFunction(ExtFunctionMiniportTelemetryEx,
+                                    HwDeviceExtension,
+                                    Address,
+                                    Event,
+                                    Category);
+}
+
+FORCEINLINE
+ULONG
+StorPortMiniportReportInternalData(
+    _In_ PVOID HwDeviceExtension,
+    _In_ PVOID CallbackContext,
+    _In_ ULONG DataCount,
+    _In_reads_(DataCount) PMINIPORT_DATA Data)
+{
+    return StorPortExtendedFunction(ExtFunctionMiniportReportInternalData,
+                                    HwDeviceExtension,
+                                    CallbackContext,
+                                    DataCount,
+                                    Data);
+}
+
+FORCEINLINE
+ULONG
+StorPortCaptureLiveDump(
+    _In_ PVOID HwDeviceExtension,
+    _In_opt_ PSTOR_ADDRESS Address,
+    _In_ PSTORPORT_CAPTURE_LIVEDUMP CaptureLivedump)
+{
+    return StorPortExtendedFunction(ExtFunctionCaptureLiveDump,
+                                    HwDeviceExtension,
+                                    Address,
+                                    CaptureLivedump);
+}
+
+FORCEINLINE
+ULONG
+StorPortInitializeHighResolutionTimer(
+    _In_ PVOID HwDeviceExtension,
+    _In_ PHW_TIMER_EX Callback,
+    _In_opt_ PVOID Context,
+    _Out_ PVOID *TimerHandle)
+{
+    return StorPortExtendedFunction(ExtFunctionInitializeHighResolutionTimer,
+                                    HwDeviceExtension,
+                                    Callback,
+                                    Context,
+                                    TimerHandle);
+}
+
+/* TimerValue is in microseconds */
+FORCEINLINE
+ULONG
+StorPortRequestHighResolutionTimer(
+    _In_ PVOID HwDeviceExtension,
+    _In_ PVOID TimerHandle,
+    _In_ ULONGLONG TimerValue)
+{
+    return StorPortExtendedFunction(ExtFunctionRequestHighResolutionTimer,
+                                    HwDeviceExtension,
+                                    TimerHandle,
+                                    TimerValue);
+}
+
+FORCEINLINE
+ULONG
+StorPortCancelHighResolutionTimer(
+    _In_ PVOID HwDeviceExtension,
+    _In_ PVOID TimerHandle,
+    _In_ BOOLEAN Wait)
+{
+    return StorPortExtendedFunction(ExtFunctionCancelHighResolutionTimer,
+                                    HwDeviceExtension,
+                                    TimerHandle,
+                                    Wait);
+}
+
+FORCEINLINE
+ULONG
+StorPortFreeHighResolutionTimer(
+    _In_ PVOID HwDeviceExtension,
+    _In_ PVOID TimerHandle)
+{
+    return StorPortExtendedFunction(ExtFunctionFreeHighResolutionTimer,
+                                    HwDeviceExtension,
+                                    TimerHandle);
+}
+
+FORCEINLINE
+ULONG
+StorPortCancelDpc(
+    _In_ PVOID HwDeviceExtension,
+    _In_ PSTOR_DPC Dpc,
+    _Out_ PBOOLEAN Cancelled)
+{
+    return StorPortExtendedFunction(ExtFunctionCancelDpc,
+                                    HwDeviceExtension,
+                                    Dpc,
+                                    Cancelled);
+}
+
+FORCEINLINE
+ULONG
+StorPortMaskPciMsixEntry(
+    _In_ PVOID HwDeviceExtension,
+    _In_ ULONG MessageId,
+    _In_ BOOLEAN Mask)
+{
+    return StorPortExtendedFunction(ExtFunctionMaskPciMsixEntry,
+                                    HwDeviceExtension,
+                                    MessageId,
+                                    Mask);
+}
+
+FORCEINLINE
+ULONG
+StorPortCurrentOsInstallationUpgrade(
+    _In_ PVOID HwDeviceExtension,
+    _Out_ PBOOLEAN OsInstallationUpgrade)
+{
+    return StorPortExtendedFunction(ExtFunctionCurrentOsInstallationUpgrade,
+                                    HwDeviceExtension,
+                                    OsInstallationUpgrade);
+}
+
+FORCEINLINE
+ULONG
+StorPortGetD3ColdSupport(
+    _In_ PVOID HwDeviceExtension,
+    _In_opt_ PSTOR_ADDRESS Address,
+    _Out_ PBOOLEAN D3ColdSupported)
+{
+    return StorPortExtendedFunction(ExtFunctionGetD3ColdSupport,
+                                    HwDeviceExtension,
+                                    Address,
+                                    D3ColdSupported);
+}
+
+FORCEINLINE
+ULONG
+StorPortSetAdapterBusType(
+    _In_ PVOID HwDeviceExtension,
+    _In_ ULONG BusType)
+{
+    return StorPortExtendedFunction(ExtFunctionSetAdapterBusType,
+                                    HwDeviceExtension,
+                                    BusType);
+}
+
+FORCEINLINE
+ULONG
+StorPortPropagateIrpExtension(
+    _In_ PVOID HwDeviceExtension,
+    _In_ PVOID SourceSrb,
+    _Inout_ PVOID DestinationSrb)
+{
+    return StorPortExtendedFunction(ExtFunctionPropagateIrpExtension,
+                                    HwDeviceExtension,
+                                    SourceSrb,
+                                    DestinationSrb);
 }
 
 #endif /* (NTDDI_VERSION >= NTDDI_WIN8) */
