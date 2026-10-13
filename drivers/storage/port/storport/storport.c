@@ -718,7 +718,7 @@ StorPortExtendedFunction(
     ...)
 {
     va_list va;
-    ULONG Status = STATUS_NOT_IMPLEMENTED;
+    ULONG Status = STOR_STATUS_NOT_IMPLEMENTED;
     PMINIPORT_DEVICE_EXTENSION MiniportExtension = NULL;
     PFDO_DEVICE_EXTENSION DeviceExtension = NULL;
     ULONG AllocatePoolSize;
