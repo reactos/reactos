@@ -364,6 +364,11 @@ public: // Button list management methods
         return SendMessageW(TB_CHECKBUTTON, cmdId, MAKELPARAM(bCheck, 0));
     }
 
+    DWORD HideButton(int cmdId, BOOL bHide)
+    {
+        return SendMessageW(TB_HIDEBUTTON, cmdId, MAKELPARAM(bHide, 0));
+    }
+
 public: // Layout management methods
     DWORD GetButtonSize()
     {
