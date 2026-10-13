@@ -921,6 +921,100 @@ StorPortExtendedFunction(
             break;
         }
 
+        case ExtFunctionGetSystemAddress:
+        {
+            /* Hand back a kernel address the miniport can touch the buffer through */
+            PSCSI_REQUEST_BLOCK Srb = va_arg(va, PSCSI_REQUEST_BLOCK);
+            PVOID *SystemAddress = va_arg(va, PVOID *);
+            PQUEUED_REQUEST_REFERENCE RequestReference;
+            PVOID Address;
+
+            if (Srb == NULL || SystemAddress == NULL)
+            {
+                Status = STOR_STATUS_INVALID_PARAMETER;
+                break;
+            }
+
+            *SystemAddress = NULL;
+
+            RequestReference = StorpRequestReference(Srb);
+            if (RequestReference->Irp == NULL || RequestReference->Irp->MdlAddress == NULL)
+            {
+                /* No buffer was described, so whatever the request carries is it */
+                *SystemAddress = StorpSrbDataBuffer(Srb);
+                Status = (*SystemAddress != NULL) ? STOR_STATUS_SUCCESS : STOR_STATUS_INVALID_PARAMETER;
+                break;
+            }
+
+            Address = MmGetSystemAddressForMdlSafe(RequestReference->Irp->MdlAddress,
+                                                   NormalPagePriority);
+            if (Address == NULL)
+            {
+                Status = STOR_STATUS_INSUFFICIENT_RESOURCES;
+                break;
+            }
+
+            *SystemAddress = Address;
+            Status = STOR_STATUS_SUCCESS;
+            break;
+        }
+
+        case ExtFunctionGetOriginalMdl:
+        {
+            /* The MDL the IO manager built for the request, if there is one */
+            PSCSI_REQUEST_BLOCK Srb = va_arg(va, PSCSI_REQUEST_BLOCK);
+            PMDL *Mdl = va_arg(va, PMDL *);
+            PQUEUED_REQUEST_REFERENCE RequestReference;
+
+            if (Srb == NULL || Mdl == NULL)
+            {
+                Status = STOR_STATUS_INVALID_PARAMETER;
+                break;
+            }
+
+            *Mdl = NULL;
+
+            RequestReference = StorpRequestReference(Srb);
+            if (RequestReference->Irp == NULL || RequestReference->Irp->MdlAddress == NULL)
+            {
+                Status = STOR_STATUS_INVALID_PARAMETER;
+                break;
+            }
+
+            *Mdl = RequestReference->Irp->MdlAddress;
+            Status = STOR_STATUS_SUCCESS;
+            break;
+        }
+
+        case ExtFunctionGetDeviceObjects:
+        {
+            /* Where the miniport sits in the device stack */
+            PDEVICE_OBJECT *AdapterDeviceObject = va_arg(va, PDEVICE_OBJECT *);
+            PDEVICE_OBJECT *PhysicalDeviceObject = va_arg(va, PDEVICE_OBJECT *);
+            PDEVICE_OBJECT *LowerDeviceObject = va_arg(va, PDEVICE_OBJECT *);
+
+            DeviceExtension = StorpGetMiniportFdo(HwDeviceExtension);
+
+            if (AdapterDeviceObject != NULL)
+                *AdapterDeviceObject = DeviceExtension->Device;
+
+            if (PhysicalDeviceObject != NULL)
+                *PhysicalDeviceObject = DeviceExtension->PhysicalDevice;
+
+            if (LowerDeviceObject != NULL)
+                *LowerDeviceObject = DeviceExtension->LowerDevice;
+
+            Status = STOR_STATUS_SUCCESS;
+            break;
+        }
+
+        case ExtFunctionInitializePerformanceOptimizations:
+        {
+            /* Completions are not spread over processors yet, accept and ignore */
+            Status = STOR_STATUS_SUCCESS;
+            break;
+        }
+
         default:
         {
             UNIMPLEMENTED;
