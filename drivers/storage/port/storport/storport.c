@@ -1476,6 +1476,29 @@ StorPortInitialize(
     /* Add the initialzation data to the driver extension */
     Status = PortAddDriverInitData(DriverObjectExtension,
                                    HwInitializationData);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("PortAddDriverInitData() failed (Status 0x%08lx)\n", Status);
+        return Status;
+    }
+
+    /* No bus reports a device for a virtual miniport, so it reports one itself */
+    if ((HwInitializationData->HwInitializationDataSize == sizeof(*HwInitializationData)) &&
+        (HwInitializationData->FeatureSupport & STOR_FEATURE_VIRTUAL_MINIPORT))
+    {
+        PDEVICE_OBJECT PhysicalDeviceObject = NULL;
+
+        Status = IoReportDetectedDevice(DriverObject,
+                                        HwInitializationData->AdapterInterfaceType,
+                                        -1,
+                                        -1,
+                                        NULL,
+                                        NULL,
+                                        FALSE,
+                                        &PhysicalDeviceObject);
+        if (!NT_SUCCESS(Status))
+            DPRINT1("IoReportDetectedDevice() failed (Status 0x%08lx)\n", Status);
+    }
 
     DPRINT1("StorPortInitialize() done (Status 0x%08lx)\n", Status);
 
