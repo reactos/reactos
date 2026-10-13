@@ -365,7 +365,8 @@ typedef struct _QUEUED_REQUEST_REFERENCE
     PIRP Irp;
     PSTOR_SCATTER_GATHER_LIST ScatterGatherList;
     PVOID MappedSystemVa;
-    ULONG TimeoutCounter; // FIXME: Implement timeout with a heap
+    /* TODO: Nothing counts this down yet, a timer should call HwResetBus when it expires */
+    ULONG TimeoutCounter;
     /*
      * Indicates if the current request is outstanding. Some requests are for HBA, and shouldn't be
      * affected by outstanding requests flow controlling.
