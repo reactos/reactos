@@ -14,6 +14,7 @@
 
 #define NDEBUG
 #include <debug.h>
+DEBUG_CHANNEL(kernel32file);
 
 typedef struct _K32_PROC_THREAD_ATTRIBUTE
 {
