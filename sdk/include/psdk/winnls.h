@@ -24,7 +24,7 @@ extern "C" {
 #define LOCALE_RETURN_GENITIVE_NAMES  0x10000000
 #define LOCALE_ALLOW_NEUTRAL_NAMES    0x08000000
 #define LOCALE_SLOCALIZEDDISPLAYNAME  0x00000002
-#if (WINVER >= _WIN32_WINNT_VISTA)
+#if (WINVER >= _WIN32_WINNT_VISTA) || defined(__REACTOS__)
 #define LOCALE_SLOCALIZEDLANGUAGENAME 0x0000006f
 #endif
 #define LOCALE_ILANGUAGE	1
@@ -159,6 +159,7 @@ extern "C" {
 #define LOCALE_SSCRIPTS             108
 #define LOCALE_SPARENT              109
 #define LOCALE_SCONSOLEFALLBACKNAME 110
+#define LOCALE_SLANGDISPLAYNAME     111
 #endif /* (WINVER >= 0x0600) */
 
 //#if (WINVER >= _WIN32_WINNT_WIN7)
@@ -180,7 +181,7 @@ extern "C" {
 #define LOCALE_SSHORTESTPM          0x007F
 
 
-#if (WINVER >= 0x0600)
+#if (WINVER >= 0x0600) || defined(__REACTOS__)
 #define LOCALE_NAME_USER_DEFAULT    NULL
 #define LOCALE_NAME_INVARIANT      L""
 #define LOCALE_NAME_SYSTEM_DEFAULT      L"!sys-default-locale"
@@ -472,7 +473,7 @@ extern "C" {
 #define CAL_SYEARMONTH 47
 #define CAL_ITWODIGITYEARMAX 48
 #endif //(WINVER >= _WIN32_WINNT_WIN2K)
-#if (WINVER >= _WIN32_WINNT_VISTA)
+#if (WINVER >= _WIN32_WINNT_VISTA) || defined(__REACTOS__)
 #define CAL_SSHORTESTDAYNAME1 49
 #define CAL_SSHORTESTDAYNAME2 50
 #define CAL_SSHORTESTDAYNAME3 51
@@ -481,11 +482,11 @@ extern "C" {
 #define CAL_SSHORTESTDAYNAME6 54
 #define CAL_SSHORTESTDAYNAME7 55
 #endif //(WINVER >= _WIN32_WINNT_VISTA)
-#if (WINVER >= _WIN32_WINNT_WIN7)
+#if (WINVER >= _WIN32_WINNT_WIN7) || defined(__REACTOS__)
 #define CAL_SMONTHDAY 56
 #define CAL_SABBREVERASTRING 57
 #endif //(WINVER >= _WIN32_WINNT_WIN7)
-#if (WINVER >= _WIN32_WINNT_WIN8) || defined(_KERNELBASE_)
+#if (WINVER >= _WIN32_WINNT_WIN8) || defined(__REACTOS__)
 #define CAL_SRELATIVELONGDATE 58
 #define CAL_SENGLISHERANAME 59
 #define CAL_SENGLISHABBREVERANAME 60
@@ -556,7 +557,7 @@ extern "C" {
 typedef long LONG_PTR;
 #endif
 
-#if (WINVER >= 0x0600)
+#if (WINVER >= 0x0600) || defined(__REACTOS__)
 #define MUI_FULL_LANGUAGE                   0x0001
 #define MUI_LANGUAGE_ID                     0x0004
 #define MUI_LANGUAGE_NAME                   0x0008
@@ -651,7 +652,7 @@ enum SYSGEOTYPE
     GEO_DIALINGCODE,
     GEO_CURRENCYCODE,
     GEO_CURRENCYSYMBOL,
-#if (NTDDI_VERSION >= NTDDI_WIN10_RS3) || defined(_KERNELBASE_)
+#if (NTDDI_VERSION >= NTDDI_WIN10_RS3) || defined(__REACTOS__)
     GEO_NAME,
     GEO_ID
 #endif
@@ -702,7 +703,7 @@ typedef struct _nlsversioninfo {
 	DWORD dwNLSVersionInfoSize;
 	DWORD dwNLSVersion;
 	DWORD dwDefinedVersion;
-#if (WINVER >= _WIN32_WINNT_WIN8) || defined(_KERNELBASE_)
+#if (WINVER >= _WIN32_WINNT_WIN8) || defined(_KERNELBASE_) || defined(__REACTOS__)
   DWORD dwEffectiveId;
   GUID  guidCustomVersion;
 #endif

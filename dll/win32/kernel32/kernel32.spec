@@ -234,6 +234,7 @@
 @ stdcall -version=0x600+ EnumDateFormatsExEx(ptr wstr long long)
 @ stdcall EnumDateFormatsExW(ptr long long)
 @ stdcall EnumDateFormatsW(ptr long long)
+@ stdcall -version=0x602+ EnumDynamicTimeZoneInformation(long ptr)
 @ stdcall EnumLanguageGroupLocalesA(ptr long long ptr)
 @ stdcall EnumLanguageGroupLocalesW(ptr long long ptr)
 @ stdcall EnumResourceLanguagesA(long str str ptr long)
@@ -305,8 +306,8 @@
 @ stdcall FindFirstVolumeMountPointA(str ptr long)
 @ stdcall FindFirstVolumeMountPointW(wstr ptr long)
 @ stdcall FindFirstVolumeW(ptr long)
-@ stub -version=0x600+ FindNLSString
-@ stub -version=0x600+ FindNLSStringEx
+@ stdcall FindNLSString(long long wstr long wstr long ptr)
+@ stdcall FindNLSStringEx(wstr long wstr long wstr long ptr ptr ptr long)
 @ stdcall FindNextChangeNotification(long)
 @ stdcall FindNextFileA(long ptr)
 @ stub -version=0x600+ FindNextFileNameW
@@ -320,6 +321,7 @@
 @ stdcall FindResourceExA(long str str long)
 @ stdcall FindResourceExW(long wstr wstr long)
 @ stdcall FindResourceW(long wstr wstr)
+@ stdcall -version=0x601+ FindStringOrdinal(long wstr long wstr long long)
 @ stdcall FindVolumeClose(ptr)
 @ stdcall FindVolumeMountPointClose(ptr)
 @ stdcall FlsAlloc(ptr)
@@ -457,7 +459,8 @@
 @ stdcall GetDriveTypeW(wstr)
 @ stub -version=0x600+ GetDurationFormat
 @ stub -version=0x600+ GetDurationFormatEx
-@ stub -version=0x600+ GetDynamicTimeZoneInformation
+@ stdcall -version=0x600+ GetDynamicTimeZoneInformation(ptr)
+@ stdcall -version=0x600+ GetDynamicTimeZoneInformationEffectiveYears(ptr ptr ptr)
 @ stdcall GetEnvironmentStrings()
 @ stdcall GetEnvironmentStringsA() GetEnvironmentStrings
 @ stdcall GetEnvironmentStringsW()
@@ -496,6 +499,7 @@
 @ stdcall GetFullPathNameW(wstr long ptr ptr)
 @ stdcall GetGeoInfoA(long long ptr long long)
 @ stdcall GetGeoInfoW(long long ptr long long)
+@ stdcall -version=0xA00+ GetGeoInfoEx(ptr long ptr long)
 @ stdcall -i386 GetHandleContext(long) ; missing on x64
 @ stdcall GetHandleInformation(long ptr)
 @ stdcall GetLargePageMinimum()
@@ -507,6 +511,7 @@
 @ stdcall -version=0x600+ GetLocaleInfoEx(wstr long ptr long)
 @ stdcall GetLocaleInfoW(long long ptr long)
 @ stdcall -version=0x600+ IsValidLocaleName(wstr)
+@ stdcall -version=0x602+ IsValidNLSVersion(long wstr ptr)
 @ stdcall GetLogicalDriveStringsA(long ptr)
 @ stdcall GetLogicalDriveStringsW(long ptr)
 @ stdcall GetLogicalDrives()
@@ -575,6 +580,7 @@
 @ stdcall GetProcessId(long)
 @ stdcall GetProcessIdOfThread(ptr)
 @ stdcall GetProcessIoCounters(long ptr)
+@ stdcall -version=0x601+ GetProcessPreferredUILanguages(long ptr ptr ptr)
 @ stdcall GetProcessPriorityBoost(long ptr)
 @ stdcall GetProcessShutdownParameters(ptr ptr)
 @ stdcall GetProcessTimes(long ptr ptr ptr ptr)
@@ -589,7 +595,7 @@
 @ stdcall GetProfileStringA(str str str ptr long)
 @ stdcall GetProfileStringW(wstr wstr wstr ptr long)
 @ stdcall GetQueuedCompletionStatus(long ptr ptr ptr long)
-@ stub -version=0x600+ GetQueuedCompletionStatusEx
+@ stdcall -stub -version=0x600+ GetQueuedCompletionStatusEx(ptr ptr long ptr long long)
 @ stdcall GetShortPathNameA(str ptr long)
 @ stdcall GetShortPathNameW(wstr ptr long)
 @ stdcall GetStartupInfoA(ptr)
@@ -647,8 +653,9 @@
 @ stdcall -version=0x600+ GetTimeFormatEx(wstr long ptr wstr wstr long)
 @ stdcall GetTimeFormatW(long long ptr wstr ptr long)
 @ stdcall GetTimeZoneInformation(ptr)
-@ stdcall -stub -version=0x600+ GetTimeZoneInformationForYear(long ptr ptr)
+@ stdcall -version=0x600+ GetTimeZoneInformationForYear(long ptr ptr)
 @ stdcall -version=0x600+ GetUILanguageInfo(long wstr wstr ptr ptr)
+@ stdcall -version=0xA00+ GetUserDefaultGeoName(ptr long)
 @ stdcall GetUserDefaultLCID()
 @ stdcall GetUserDefaultLangID()
 @ stdcall -version=0x600+ GetUserDefaultLocaleName(wstr long)
@@ -715,9 +722,9 @@
 @ stdcall -version=0x351-0x502 HeapUsage(long long long long ptr)
 @ stdcall HeapValidate(long long ptr)
 @ stdcall HeapWalk(long ptr)
-@ stdcall -stub -version=0x600+ IdnToAscii(long wstr long ptr long)
-@ stdcall -stub -version=0x600+ IdnToNameprepUnicode(long wstr long ptr long)
-@ stdcall -stub -version=0x600+ IdnToUnicode(long wstr long ptr long)
+@ stdcall -version=0x600+ IdnToAscii(long wstr long ptr long)
+@ stdcall -version=0x600+ IdnToNameprepUnicode(long wstr long ptr long)
+@ stdcall -version=0x600+ IdnToUnicode(long wstr long ptr long)
 @ stdcall InitAtomTable(long)
 @ stdcall -version=0x600+ InitOnceBeginInitialize(ptr long ptr ptr)
 @ stdcall -version=0x600+ InitOnceComplete(ptr long ptr)
@@ -740,6 +747,15 @@
 @ stdcall InterlockedPopEntrySList(ptr) ntdll.RtlInterlockedPopEntrySList
 @ stdcall InterlockedPushEntrySList(ptr ptr) ntdll.RtlInterlockedPushEntrySList
 @ fastcall -version=0x600+ InterlockedPushListSList(ptr ptr ptr long) ntdll.RtlInterlockedPushListSList
+@ stub InternalLcidToName
+@ stdcall Internal_EnumCalendarInfo(ptr long long long long long long long)
+@ stdcall Internal_EnumDateFormats(ptr long long long long long long)
+@ stdcall Internal_EnumLanguageGroupLocales(ptr long long ptr long)
+@ stdcall Internal_EnumSystemCodePages(ptr long long)
+@ stdcall Internal_EnumSystemLanguageGroups(ptr long ptr long)
+@ stub Internal_EnumSystemLocales
+@ stdcall Internal_EnumTimeFormats(ptr long long long long long)
+@ stdcall Internal_EnumUILanguages(ptr long long long)
 @ stdcall InvalidateConsoleDIBits(long long)
 @ stdcall IsBadCodePtr(ptr)
 @ stdcall IsBadHugeReadPtr(ptr long)
@@ -751,11 +767,26 @@
 @ stub -version=0x600+ IsCalendarLeapDay
 @ stub -version=0x600+ IsCalendarLeapMonth
 @ stub -version=0x600+ IsCalendarLeapYear
+@ stdcall IsCharAlphaA(long)
+@ stdcall IsCharAlphaNumericA(long)
+@ stdcall IsCharAlphaNumericW(long)
+@ stdcall IsCharAlphaW(long)
+@ stdcall IsCharBlankW(long)
+@ stdcall IsCharCntrlW(long)
+@ stdcall IsCharDigitW(long)
+@ stdcall IsCharLowerA(long)
+@ stdcall IsCharLowerW(long)
+@ stdcall IsCharPunctW(long)
+@ stdcall IsCharSpaceA(long)
+@ stdcall IsCharSpaceW(long)
+@ stdcall IsCharUpperA(long)
+@ stdcall IsCharUpperW(long)
+@ stdcall IsCharXDigitW(long)
 @ stdcall IsDBCSLeadByte(long)
 @ stdcall IsDBCSLeadByteEx(long long)
 @ stdcall IsDebuggerPresent()
 @ stdcall IsNLSDefinedString(long long ptr long long)
-@ stdcall -stub -version=0x600+ IsNormalizedString(long wstr long)
+@ stdcall -version=0x600+ IsNormalizedString(long wstr long)
 @ stdcall IsProcessInJob(long long ptr)
 @ stdcall IsProcessorFeaturePresent(long)
 @ stdcall IsSystemResumeAutomatic()
@@ -864,7 +895,8 @@
 @ stub -version=0x600+ NlsUpdateLocale
 @ stub -version=0x600+ NlsUpdateSystemLocale
 @ stub -version=0x600+ NlsWriteEtwEvent
-@ stdcall -stub -version=0x600+ NormalizeString(long wstr long ptr long)
+@ stdcall -version=0x601+ NlsValidateLocale(ptr long)
+@ stdcall -version=0x600+ NormalizeString(long wstr long ptr long)
 @ stdcall -stub -version=0x600+ NotifyUILanguageChange(long wstr wstr long ptr)
 @ stdcall OpenConsoleW(wstr long long long)
 @ stdcall -version=0x500-0x502 OpenDataFile(long long)
@@ -973,6 +1005,7 @@
 @ stdcall RequestWakeupLatency(long)
 @ stdcall ResetEvent(long)
 @ stdcall ResetWriteWatch(ptr long)
+@ stdcall -version=0x601+ ResolveLocaleName(wstr ptr long)
 @ stdcall RestoreLastError(long) ntdll.RtlRestoreLastWin32Error
 @ stdcall ResumeThread(long)
 @ stdcall -arch=x86_64 RtlAddFunctionTable(ptr long long) ntdll.RtlAddFunctionTable
@@ -1095,6 +1128,7 @@
 @ stub -version=0x600+ SetNamedPipeAttribute
 @ stdcall SetNamedPipeHandleState(long ptr ptr ptr)
 @ stdcall SetPriorityClass(long long)
+@ stdcall -version=0x601+ SetProcessPreferredUILanguages(long ptr ptr)
 @ stdcall SetProcessAffinityMask(long long)
 @ stub -version=0x600+ SetProcessAffinityUpdateMode
 @ stdcall SetProcessDEPPolicy(long)
@@ -1133,6 +1167,7 @@
 @ stdcall SetTimerQueueTimer(long ptr ptr long long long)
 @ stdcall SetUnhandledExceptionFilter(ptr)
 @ stdcall SetUserGeoID(long)
+@ stdcall -version=0xA00+ SetUserGeoName(wstr)
 @ stdcall SetVDMCurrentDirectories(long long)
 @ stdcall SetVolumeLabelA(str str)
 @ stdcall SetVolumeLabelW(wstr wstr)

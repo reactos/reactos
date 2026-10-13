@@ -139,19 +139,18 @@ list(TRANSFORM GEN_NLS APPEND ".nls")
 list(TRANSFORM GEN_NLS PREPEND "${CMAKE_CURRENT_BINARY_DIR}/")
 add_custom_target(gen_nls DEPENDS ${GEN_NLS})
 
-# those ones were manually generated
-add_cd_file(FILE ${CMAKE_CURRENT_SOURCE_DIR}/l_intl.nls DESTINATION reactos/system32 NO_CAB FOR all)
+# Imported from Wine-11.15
 list(APPEND NLS_FILES
-    c_856.nls
-    c_878.nls
-    ctype.nls
-    geo.nls
-    l_except.nls
+    l_intl.nls
     locale.nls
-    sortkey.nls
-    sorttbls.nls
-    unicode.nls)
+    normidna.nls
+    normnfc.nls
+    normnfd.nls
+    normnfkc.nls
+    normnfkd.nls)
 
 foreach(item ${NLS_FILES})
     add_cd_file(FILE "${CMAKE_CURRENT_SOURCE_DIR}/${item}" DESTINATION reactos/system32 FOR all)
 endforeach(item)
+
+add_cd_file(FILE "${CMAKE_CURRENT_SOURCE_DIR}/sortdefault.nls" DESTINATION reactos/Globalization/Sorting FOR all)

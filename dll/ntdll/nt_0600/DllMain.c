@@ -29,3 +29,52 @@ DllMain(HANDLE hDll,
     }
     return TRUE;
 }
+
+/* Required for locale.c */
+extern NTSYSAPI NTSTATUS WINAPI RtlQueryActivationContextApplicationSettings(DWORD,HANDLE,const WCHAR*,const WCHAR*,WCHAR*,SIZE_T,SIZE_T*);
+NTSTATUS
+NTAPI
+RtlQueryActivationContextApplicationSettingsLibSupp(
+    DWORD flags,
+    HANDLE handle,
+    const WCHAR *ns,
+    const WCHAR *settings,
+    WCHAR *buffer,
+    SIZE_T size,
+    SIZE_T *written
+)
+{
+#if DLL_EXPORT_VERSION <= 0x502
+    /* Rtl vista does not include actctx.c as it brings in many other dependencies */
+    return STATUS_NOT_IMPLEMENTED;
+#else
+    return RtlQueryActivationContextApplicationSettings(flags, handle, ns, settings, buffer, size, written);
+#endif
+}
+
+/* Used by sdk/lib/rtl/wine/locale.c */
+
+PVOID
+NTAPI
+RtlpAllocateMemory(UINT Bytes,
+                   ULONG Tag)
+{
+    UNREFERENCED_PARAMETER(Tag);
+
+    return RtlAllocateHeap(RtlGetProcessHeap(),
+                           0,
+                           Bytes);
+}
+
+
+VOID
+NTAPI
+RtlpFreeMemory(PVOID Mem,
+               ULONG Tag)
+{
+    UNREFERENCED_PARAMETER(Tag);
+
+    RtlFreeHeap(RtlGetProcessHeap(),
+                0,
+                Mem);
+}

@@ -425,7 +425,7 @@ typedef struct STRUCT(_TEB)
     PTR(PVOID) FlsData;
 #endif
 
-#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+#if (NTDDI_VERSION >= NTDDI_LONGHORN) || defined(__REACTOS__)
     PTR(PVOID) PreferredLanguages;
     PTR(PVOID) UserPrefLanguages;
     PTR(PVOID) MergedPrefLanguages;

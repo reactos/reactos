@@ -2657,7 +2657,7 @@ $endif (_WDMDDK_)
 
 #endif /* (NTDDI_VERSION >= NTDDI_VISTA) || defined(__REACTOS__) */
 
-#if (NTDDI_VERSION >= NTDDI_WIN7)
+#if (NTDDI_VERSION >= NTDDI_WIN7) || defined(__REACTOS__)
 
 $if (_WDMDDK_)
 _IRQL_requires_max_(PASSIVE_LEVEL)
