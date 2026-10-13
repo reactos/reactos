@@ -94,6 +94,9 @@ typedef struct _MINIPORT
     PHW_INITIALIZATION_DATA InitData;
     PORT_CONFIGURATION_INFORMATION PortConfig;
     PMINIPORT_DEVICE_EXTENSION MiniportExtension;
+
+    /* Answer to ScsiQuerySupportedControlTypes, unclaimed types are never sent */
+    BOOLEAN AdapterControlSupported[ScsiAdapterControlMax];
 } MINIPORT, *PMINIPORT;
 
 typedef struct _UNIT_DATA
@@ -489,6 +492,18 @@ NTAPI
 MiniportHwMSInterrupt(
     _In_ PMINIPORT Miniport,
     _In_ ULONG MessageId);
+
+VOID
+NTAPI
+MiniportQueryAdapterControl(
+    _In_ PMINIPORT Miniport);
+
+SCSI_ADAPTER_CONTROL_STATUS
+NTAPI
+MiniportAdapterControl(
+    _In_ PMINIPORT Miniport,
+    _In_ SCSI_ADAPTER_CONTROL_TYPE ControlType,
+    _In_opt_ PVOID Parameters);
 
 BOOLEAN
 MiniportStartIo(
