@@ -14,7 +14,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  *
  * TRANSLATORS: Copyright 2008 Hongbo Ni <hongbo@njstar.com>
- *              Copyright 2018-2019 Luke Luo <njlyf2011@hotmail.com>
+ *              Copyright 2018-2026 Luke Luo <njlyf2011@hotmail.com>
  *              Copyright 2021 Chan Chilung <eason066@gmail.com>
  */
 
@@ -27,7 +27,7 @@ STRINGTABLE
 
 STRINGTABLE
 {
-    IDS_PRINT_HEADER_TEMPLATE "&w&bPage &p" /* FIXME: should be "&w&bPage &p of &P" */
+    IDS_PRINT_HEADER_TEMPLATE "&w&b第 &p 页" /* FIXME: should be "&w&bPage &p of &P" */
     IDS_PRINT_FOOTER_TEMPLATE "&u&b&d"
 }
 
@@ -90,7 +90,7 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM "剪切(&T)", IDM_CUT
         MENUITEM "复制(&C)", IDM_COPY
         MENUITEM "粘贴(&P)", IDM_PASTE
-        MENUITEM "删除(&D", IDM_DELETE
+        MENUITEM "删除(&D)", IDM_DELETE
         MENUITEM SEPARATOR
         MENUITEM "全选(&A)", IDM_SELECTALL
     }
@@ -216,7 +216,7 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM "滚动这里", IDM_SCROLL_HERE
         MENUITEM SEPARATOR
         MENUITEM "顶", IDM_SCROLL_TOP
-        MENUITEM "低", IDM_SCROLL_BOTTOM
+        MENUITEM "底部", IDM_SCROLL_BOTTOM
         MENUITEM SEPARATOR
         MENUITEM "向上翻页", IDM_SCROLL_PAGEUP
         MENUITEM "向下翻页", IDM_SCROLL_PAGEDOWN
@@ -257,8 +257,8 @@ IDR_BROWSE_CONTEXT_MENU MENU
 {
     POPUP "" /* Default */
     {
-        MENUITEM "下一頁(&B)", IDM_GOBACKWARD
-        MENUITEM "上一頁(&O)", IDM_GOFORWARD
+        MENUITEM "返回(&B)", IDM_GOBACKWARD
+        MENUITEM "前進(&O)", IDM_GOFORWARD
         MENUITEM SEPARATOR
         MENUITEM "另存背景為(&S)...", IDM_SAVEBACKGROUND
         MENUITEM "設為背景(&G)", IDM_SETWALLPAPER
@@ -312,7 +312,7 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM "剪下(&T)", IDM_CUT
         MENUITEM "複製(&C)", IDM_COPY
         MENUITEM "貼上(&P)", IDM_PASTE
-        MENUITEM "刪除(&D", IDM_DELETE
+        MENUITEM "刪除(&D)", IDM_DELETE
         MENUITEM SEPARATOR
         MENUITEM "全選(&A)", IDM_SELECTALL
     }
