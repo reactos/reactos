@@ -114,6 +114,23 @@ NTAPI
 MiFillSystemPageDirectory(IN PVOID Base,
                           IN SIZE_T NumberOfBytes);
 
+/* Other processors may cache the translation too */
+static
+VOID
+MiInvalidateTranslation(
+    _In_ PVOID Address)
+{
+#ifdef CONFIG_SMP
+    if (KeNumberProcessors > 1)
+    {
+        KeFlushEntireTb(TRUE, TRUE);
+        return;
+    }
+#endif
+
+    KeInvalidateTlbEntry(Address);
+}
+
 static
 BOOLEAN
 MiIsPageTablePresent(PVOID Address)
@@ -293,7 +310,7 @@ MmDeleteVirtualMappingEx(
         PointerPte = MiAddressToPte(Address);
         OldPte.u.Long = InterlockedExchangePte(PointerPte, 0);
 
-        KeInvalidateTlbEntry(Address);
+        MiInvalidateTranslation(Address);
 
         if (OldPte.u.Long != 0)
         {
@@ -880,7 +897,7 @@ MmSetPageProtect(PEPROCESS Process, PVOID Address, ULONG flProtect)
     }
 
     if (OldPte.u.Long != TempPte.u.Long)
-        KeInvalidateTlbEntry(Address);
+        MiInvalidateTranslation(Address);
 
     MiUnlockProcessWorkingSetUnsafe(Process, PsGetCurrentThread());
 }
@@ -914,7 +931,7 @@ MmSetDirtyBit(PEPROCESS Process, PVOID Address, BOOLEAN Bit)
     PointerPte->u.Hard.Dirty = !!Bit;
 
     if (!Bit)
-        KeInvalidateTlbEntry(Address);
+        MiInvalidateTranslation(Address);
 
     MiUnlockProcessWorkingSetUnsafe(Process, PsGetCurrentThread());
 }
