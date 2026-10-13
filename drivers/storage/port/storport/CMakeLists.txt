@@ -13,6 +13,7 @@ list(APPEND SOURCE
     misc.c
     pdo.c
     srb.c
+    srbex.c
     storport.c
     stubs.c)
 
