@@ -6,7 +6,7 @@ add_library(wlntfytests MODULE
     wlntfytests.rc
     ${CMAKE_CURRENT_BINARY_DIR}/wlntfytests.def)
 
-set_module_type(wlntfytests win32dll UNICODE ENTRYPOINT DllMain 12)
+set_module_type(wlntfytests win32dll UNICODE ENTRYPOINT DllMain 12 IMAGEBASE default)
 target_link_libraries(wlntfytests wine)
 add_importlibs(wlntfytests advapi32 user32 kernel32 ntdll)
 add_rostests_file(TARGET wlntfytests SUBDIR suppl)
