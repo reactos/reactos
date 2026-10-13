@@ -252,6 +252,10 @@ typedef struct _FDO_DEVICE_EXTENSION
     PKINTERRUPT Interrupt;
     ULONG InterruptIrql;
 
+    /* Message signaled interrupts, Interrupt then holds the first message's object */
+    BOOLEAN MessageInterrupts;
+    PIO_INTERRUPT_MESSAGE_INFO MessageInfo;
+
     KSPIN_LOCK PdoListLock;
     LIST_ENTRY PdoListHead;
     ULONG PdoCount;
@@ -462,6 +466,12 @@ MiniportHwInitialize(
 BOOLEAN
 MiniportHwInterrupt(
     _In_ PMINIPORT Miniport);
+
+BOOLEAN
+NTAPI
+MiniportHwMSInterrupt(
+    _In_ PMINIPORT Miniport,
+    _In_ ULONG MessageId);
 
 BOOLEAN
 MiniportStartIo(

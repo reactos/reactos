@@ -874,6 +874,47 @@ StorPortExtendedFunction(
             break;
         }
 
+        case ExtFunctionGetMessageInterruptInformation:
+        {
+            /* Describe one of the message interrupts connected for the adapter */
+            ULONG MessageId = va_arg(va, ULONG);
+            PMESSAGE_INTERRUPT_INFORMATION InterruptInfo;
+            PIO_INTERRUPT_MESSAGE_INFO_ENTRY Entry;
+            PFDO_DEVICE_EXTENSION FdoExtension;
+
+            InterruptInfo = va_arg(va, PMESSAGE_INTERRUPT_INFORMATION);
+            if (InterruptInfo == NULL)
+            {
+                Status = STOR_STATUS_INVALID_PARAMETER;
+                break;
+            }
+
+            FdoExtension = StorpGetMiniportFdo(HwDeviceExtension);
+            if (!FdoExtension->MessageInterrupts)
+            {
+                Status = STOR_STATUS_UNSUCCESSFUL;
+                break;
+            }
+
+            if (MessageId >= FdoExtension->MessageInfo->MessageCount)
+            {
+                Status = STOR_STATUS_INVALID_PARAMETER;
+                break;
+            }
+
+            Entry = &FdoExtension->MessageInfo->MessageInfo[MessageId];
+
+            InterruptInfo->MessageId = MessageId;
+            InterruptInfo->MessageData = Entry->MessageData;
+            InterruptInfo->MessageAddress = Entry->MessageAddress;
+            InterruptInfo->InterruptVector = Entry->Vector;
+            InterruptInfo->InterruptLevel = FdoExtension->MessageInfo->UnifiedIrql;
+            InterruptInfo->InterruptMode = Entry->Mode;
+
+            Status = STOR_STATUS_SUCCESS;
+            break;
+        }
+
         default:
         {
             UNIMPLEMENTED;
