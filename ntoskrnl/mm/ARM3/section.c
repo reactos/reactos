@@ -1898,7 +1898,11 @@ MiFlushTbAndCapture(IN PMMVAD FoundVad,
     // Flush the TLB
     //
     ASSERT(PreviousPte.u.Hard.Valid == 1);
+#ifdef CONFIG_SMP
+    KeFlushEntireTb(TRUE, TRUE);
+#else
     KeFlushCurrentTb();
+#endif
     ASSERT(PreviousPte.u.Hard.Valid == 1);
 
     //
