@@ -330,6 +330,18 @@ extern "C" {
 #define SETBITON                            1
 #define SETBITOFF                           0
 
+#define SP_BUS_PARITY_ERROR                 0x0001
+#define SP_UNEXPECTED_DISCONNECT            0x0002
+#define SP_INVALID_RESELECTION              0x0003
+#define SP_BUS_TIME_OUT                     0x0004
+#define SP_PROTOCOL_ERROR                   0x0005
+#define SP_INTERNAL_ADAPTER_ERROR           0x0006
+#define SP_REQUEST_TIMEOUT                  0x0007
+#define SP_IRQ_NOT_RESPONDING               0x0008
+#define SP_BAD_FW_WARNING                   0x0009
+#define SP_BAD_FW_ERROR                     0x000a
+#define SP_LOST_WMI_MINIPORT_REQUEST        0x000b
+
 #define SP_RETURN_NOT_FOUND                 0
 #define SP_RETURN_FOUND                     1
 #define SP_RETURN_ERROR                     2
@@ -2101,6 +2113,12 @@ typedef struct _STOR_SCATTER_GATHER_LIST
     STOR_SCATTER_GATHER_ELEMENT List[];
 } STOR_SCATTER_GATHER_LIST, *PSTOR_SCATTER_GATHER_LIST;
 
+typedef struct _SCSI_SUPPORTED_CONTROL_TYPE_LIST
+{
+    ULONG MaxControlType;
+    BOOLEAN SupportedTypeList[0];
+} SCSI_SUPPORTED_CONTROL_TYPE_LIST, *PSCSI_SUPPORTED_CONTROL_TYPE_LIST;
+
 typedef struct _DPC_BUFFER
 {
     CSHORT Type;
@@ -2189,85 +2207,96 @@ typedef struct _MESSAGE_INTERRUPT_INFORMATION
 
 typedef
 BOOLEAN
-(NTAPI *PHW_INITIALIZE)(
+(NTAPI HW_INITIALIZE)(
     _In_ PVOID DeviceExtension);
+typedef HW_INITIALIZE *PHW_INITIALIZE;
 
 typedef
 BOOLEAN
-(NTAPI *PHW_BUILDIO)(
+(NTAPI HW_BUILDIO)(
     _In_ PVOID DeviceExtension,
     _In_ PSCSI_REQUEST_BLOCK Srb);
+typedef HW_BUILDIO *PHW_BUILDIO;
 
 typedef
 BOOLEAN
-(NTAPI *PHW_STARTIO)(
+(NTAPI HW_STARTIO)(
     _In_ PVOID DeviceExtension,
     _In_ PSCSI_REQUEST_BLOCK Srb);
+typedef HW_STARTIO *PHW_STARTIO;
 
 typedef
 BOOLEAN
-(NTAPI *PHW_INTERRUPT)(
+(NTAPI HW_INTERRUPT)(
     _In_ PVOID DeviceExtension);
+typedef HW_INTERRUPT *PHW_INTERRUPT;
 
 typedef
 VOID
-(NTAPI *PHW_TIMER)(
+(NTAPI HW_TIMER)(
     _In_ PVOID DeviceExtension);
+typedef HW_TIMER *PHW_TIMER;
 
 typedef
 VOID
-(NTAPI *PHW_DMA_STARTED)(
+(NTAPI HW_DMA_STARTED)(
     _In_ PVOID DeviceExtension);
+typedef HW_DMA_STARTED *PHW_DMA_STARTED;
 
 typedef
 ULONG
-(NTAPI *PHW_FIND_ADAPTER)(
+(NTAPI HW_FIND_ADAPTER)(
     IN PVOID DeviceExtension,
     IN PVOID HwContext,
     IN PVOID BusInformation,
     IN PCHAR ArgumentString,
     IN OUT PPORT_CONFIGURATION_INFORMATION ConfigInfo,
     OUT PBOOLEAN Again);
+typedef HW_FIND_ADAPTER *PHW_FIND_ADAPTER;
 
 typedef
 BOOLEAN
-(NTAPI *PHW_RESET_BUS)(
+(NTAPI HW_RESET_BUS)(
     IN PVOID DeviceExtension,
     IN ULONG PathId);
+typedef HW_RESET_BUS *PHW_RESET_BUS;
 
 typedef
 BOOLEAN
-(NTAPI *PHW_ADAPTER_STATE)(
+(NTAPI HW_ADAPTER_STATE)(
     IN PVOID DeviceExtension,
     IN PVOID Context,
     IN BOOLEAN SaveState);
+typedef HW_ADAPTER_STATE *PHW_ADAPTER_STATE;
 
 typedef
 SCSI_ADAPTER_CONTROL_STATUS
-(NTAPI *PHW_ADAPTER_CONTROL)(
+(NTAPI HW_ADAPTER_CONTROL)(
     IN PVOID DeviceExtension,
     IN SCSI_ADAPTER_CONTROL_TYPE ControlType,
     IN PVOID Parameters);
+typedef HW_ADAPTER_CONTROL *PHW_ADAPTER_CONTROL;
 
 typedef
 BOOLEAN
-(*PHW_PASSIVE_INITIALIZE_ROUTINE)(
+(NTAPI HW_PASSIVE_INITIALIZE_ROUTINE)(
     _In_ PVOID DeviceExtension);
+typedef HW_PASSIVE_INITIALIZE_ROUTINE *PHW_PASSIVE_INITIALIZE_ROUTINE;
 
 typedef
 VOID
-(*PHW_DPC_ROUTINE)(
+(NTAPI HW_DPC_ROUTINE)(
     _In_ PSTOR_DPC Dpc,
     _In_ PVOID HwDeviceExtension,
-    _In_ PVOID SystemArgument1,
-    _In_ PVOID SystemArgument2);
+    _In_opt_ PVOID SystemArgument1,
+    _In_opt_ PVOID SystemArgument2);
+typedef HW_DPC_ROUTINE *PHW_DPC_ROUTINE;
 
 typedef
 BOOLEAN
 (NTAPI STOR_SYNCHRONIZED_ACCESS)(
     _In_ PVOID HwDeviceExtension,
     _In_ PVOID Context);
-
 typedef STOR_SYNCHRONIZED_ACCESS *PSTOR_SYNCHRONIZED_ACCESS;
 
 typedef
