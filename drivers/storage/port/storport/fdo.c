@@ -589,7 +589,9 @@ static
 NTSTATUS
 PortSendReportLuns(
     _In_ PPDO_DEVICE_EXTENSION PdoExtension,
-    _Out_ PULONG LunCount)
+    _Out_ PULONG LunCount,
+    _Out_writes_(LunListSize) PUCHAR LunList,
+    _In_ ULONG LunListSize)
 {
     NTSTATUS Status;
     SCSI_REQUEST_BLOCK Srb;
@@ -678,10 +680,10 @@ PortSendReportLuns(
         /* Fill in CDB */
         Cdb = (PCDB)Srb.Cdb;
         Cdb->REPORT_LUNS.OperationCode = SCSIOP_REPORT_LUNS;
-        Cdb->REPORT_LUNS.AllocationLength[0] = (BufferSize >> (0*8)) & 0xFF;
-        Cdb->REPORT_LUNS.AllocationLength[1] = (BufferSize >> (1*8)) & 0xFF;
-        Cdb->REPORT_LUNS.AllocationLength[2] = (BufferSize >> (2*8)) & 0xFF;
-        Cdb->REPORT_LUNS.AllocationLength[3] = (BufferSize >> (3*8)) & 0xFF;
+        Cdb->REPORT_LUNS.AllocationLength[0] = (BufferSize >> (3*8)) & 0xFF;
+        Cdb->REPORT_LUNS.AllocationLength[1] = (BufferSize >> (2*8)) & 0xFF;
+        Cdb->REPORT_LUNS.AllocationLength[2] = (BufferSize >> (1*8)) & 0xFF;
+        Cdb->REPORT_LUNS.AllocationLength[3] = (BufferSize >> (0*8)) & 0xFF;
 
         /* Call the driver */
         Status = IoCallDriver(PdoExtension->Device, Irp);
@@ -703,14 +705,54 @@ PortSendReportLuns(
         if (SRB_STATUS(Srb.SrbStatus) == SRB_STATUS_SUCCESS)
         {
             ULONG DataSize = 0;
+            ULONG Reported;
+            ULONG Index;
 
-            /* Extract LUN count from the return data. This is the sole purpose of this function */
-            DataSize |= (((ULONG)ReportLunsData->LunListLength[0]) << (8*0));
-            DataSize |= (((ULONG)ReportLunsData->LunListLength[1]) << (8*1));
-            DataSize |= (((ULONG)ReportLunsData->LunListLength[2]) << (8*2));
-            DataSize |= (((ULONG)ReportLunsData->LunListLength[3]) << (8*3));
-            *LunCount = ((DataSize - FIELD_OFFSET(REPORT_LUNS_DATA, LunDescriptor)) /
-                         sizeof(LUN_DESCRIPTOR));
+            /* The reported length covers the descriptors alone */
+            DataSize |= (((ULONG)ReportLunsData->LunListLength[0]) << (8*3));
+            DataSize |= (((ULONG)ReportLunsData->LunListLength[1]) << (8*2));
+            DataSize |= (((ULONG)ReportLunsData->LunListLength[2]) << (8*1));
+            DataSize |= (((ULONG)ReportLunsData->LunListLength[3]) << (8*0));
+            Reported = DataSize / sizeof(*ReportLunsData->LunDescriptor);
+
+            /* A device with more units than the first guess held is asked again */
+            if ((DataSize > BufferSize - FIELD_OFFSET(REPORT_LUNS_DATA, LunDescriptor)) &&
+                !BufferReallocated)
+            {
+                ExFreePoolWithTag(ReportLunsData, TAG_REPORT_LUN_DATA);
+
+                BufferSize = FIELD_OFFSET(REPORT_LUNS_DATA, LunDescriptor) + DataSize;
+                ReportLunsData = ExAllocatePoolWithTag(NonPagedPool, BufferSize, TAG_REPORT_LUN_DATA);
+                if (ReportLunsData == NULL)
+                {
+                    DPRINT1("Cannot reallocate REPORT_LUNS buffer\n");
+                    ExFreePoolWithTag(SenseBuffer, TAG_SENSE_DATA);
+                    return STATUS_INSUFFICIENT_RESOURCES;
+                }
+
+                BufferReallocated = TRUE;
+                continue;
+            }
+
+            /* Only what actually arrived can be read back out */
+            Reported = min(Reported,
+                           (BufferSize - FIELD_OFFSET(REPORT_LUNS_DATA, LunDescriptor)) /
+                               sizeof(*ReportLunsData->LunDescriptor));
+
+            *LunCount = 0;
+            for (Index = 0; Index < Reported; Index++)
+            {
+                PLUN_DESCRIPTOR Descriptor = &ReportLunsData->LunDescriptor[Index];
+
+                /* Only units named the flat way fit in a single byte */
+                if (Descriptor->AddressMethod != 0)
+                    continue;
+
+                if (*LunCount >= LunListSize)
+                    break;
+
+                LunList[(*LunCount)++] = Descriptor->Level1Address;
+            }
 
             /* Quit the loop */
             Status = STATUS_SUCCESS;
@@ -766,10 +808,11 @@ PortSendReportLuns(
 
             /* Miniport will return how many bytes should we actually allocate */
             BufferSize = 0;
-            BufferSize |= (((ULONG)ReportLunsData->LunListLength[0]) << (8*0));
-            BufferSize |= (((ULONG)ReportLunsData->LunListLength[1]) << (8*1));
-            BufferSize |= (((ULONG)ReportLunsData->LunListLength[2]) << (8*2));
-            BufferSize |= (((ULONG)ReportLunsData->LunListLength[3]) << (8*3));
+            BufferSize |= (((ULONG)ReportLunsData->LunListLength[0]) << (8*3));
+            BufferSize |= (((ULONG)ReportLunsData->LunListLength[1]) << (8*2));
+            BufferSize |= (((ULONG)ReportLunsData->LunListLength[2]) << (8*1));
+            BufferSize |= (((ULONG)ReportLunsData->LunListLength[3]) << (8*0));
+            BufferSize += FIELD_OFFSET(REPORT_LUNS_DATA, LunDescriptor);
 
             DPRINT1("Data overrun at TargetId %d, %d bytes needed\n",
                    PdoExtension->Target,
@@ -1039,9 +1082,12 @@ PortFdoScanBus(
     _In_ PFDO_DEVICE_EXTENSION DeviceExtension)
 {
     PPDO_DEVICE_EXTENSION PdoExtension;
-    ULONG Bus, Target; //, Lun;
+    ULONG Bus, Target, Index;
     NTSTATUS Status;
     ULONG LunCount = 0;
+
+    /* A unit named by one byte is all the flat addressing method carries */
+    UCHAR LunList[256];
 
     DPRINT("PortFdoScanBus(%p)\n", DeviceExtension);
 
@@ -1061,38 +1107,47 @@ PortFdoScanBus(
 
             DPRINT("    Scanning logical unit %ld:%ld:%ld\n", Bus, Target, 0);
             Status = PortCreatePdo(DeviceExtension, Bus, Target, 0, &PdoExtension);
-            if (NT_SUCCESS(Status))
-            {
-                /* Send Report LUNs first */
-                PortSendReportLuns(PdoExtension, &LunCount);
+            if (!NT_SUCCESS(Status))
+                continue;
 
-                /* Scan LUN 0 */
+            /* Ask the target which units it has before probing any of them */
+            LunCount = 0;
+            PortSendReportLuns(PdoExtension, &LunCount, LunList, RTL_NUMBER_OF(LunList));
+
+            /* Scan LUN 0 */
+            Status = PortSendInquiry(PdoExtension);
+            DPRINT("PortSendInquiry returned 0x%08lx\n", Status);
+            if (!NT_SUCCESS(Status))
+            {
+                PortDeletePdo(PdoExtension);
+            }
+            else
+            {
+                DPRINT("VendorId: %.8s\n", PdoExtension->InquiryBuffer->VendorId);
+                DPRINT("ProductId: %.16s\n", PdoExtension->InquiryBuffer->ProductId);
+                DPRINT("ProductRevisionLevel: %.4s\n", PdoExtension->InquiryBuffer->ProductRevisionLevel);
+                DPRINT("VendorSpecific: %.20s\n", PdoExtension->InquiryBuffer->VendorSpecific);
+            }
+
+            /* Scan the rest of the units the target reported */
+            for (Index = 0; Index < LunCount; Index++)
+            {
+                ULONG Lun = LunList[Index];
+
+                /* Unit zero was done above, and the report may not name it */
+                if (Lun == 0)
+                    continue;
+
+                DPRINT("    Scanning logical unit %ld:%ld:%ld\n", Bus, Target, Lun);
+                Status = PortCreatePdo(DeviceExtension, Bus, Target, Lun, &PdoExtension);
+                if (!NT_SUCCESS(Status))
+                    continue;
+
                 Status = PortSendInquiry(PdoExtension);
                 DPRINT("PortSendInquiry returned 0x%08lx\n", Status);
                 if (!NT_SUCCESS(Status))
-                {
                     PortDeletePdo(PdoExtension);
-                }
-                else
-                {
-                    DPRINT("VendorId: %.8s\n", PdoExtension->InquiryBuffer->VendorId);
-                    DPRINT("ProductId: %.16s\n", PdoExtension->InquiryBuffer->ProductId);
-                    DPRINT("ProductRevisionLevel: %.4s\n", PdoExtension->InquiryBuffer->ProductRevisionLevel);
-                    DPRINT("VendorSpecific: %.20s\n", PdoExtension->InquiryBuffer->VendorSpecific);
-                }
             }
-
-#if 0
-            /* Scan all logical units */
-            for (Lun = 1; Lun < DeviceExtension->Miniport.PortConfig.MaximumNumberOfLogicalUnits; Lun++)
-            {
-                DPRINT("    Scanning logical unit %ld:%ld:%ld\n", Bus, Target, Lun);
-                Status = PortSendInquiry(DeviceExtension->Device, Bus, Target, Lun);
-                DPRINT("PortSendInquiry returned 0x%08lx\n", Status);
-                if (!NT_SUCCESS(Status))
-                    break;
-            }
-#endif
         }
     }
 
