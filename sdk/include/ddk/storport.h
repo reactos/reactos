@@ -3972,6 +3972,268 @@ typedef struct _STOR_POFX_DEVICE_V2
 
 #define STOR_POFX_DEVICE_VERSION_V2         2
 
+typedef enum _STOR_POFX_PERF_STATE_UNIT
+{
+    StorPoFxPerfStateUnitOther,
+    StorPoFxPerfStateUnitFrequency,
+    StorPoFxPerfStateUnitBandwidth,
+    StorPoFxPerfStateUnitMilliwatts,
+    StorPoFxPerfStateUnitMaximum
+} STOR_POFX_PERF_STATE_UNIT, *PSTOR_POFX_PERF_STATE_UNIT;
+
+typedef enum _STOR_POFX_PERF_STATE_TYPE
+{
+    StorPoFxPerfStateTypeDiscrete,
+    StorPoFxPerfStateTypeRange,
+    StorPoFxPerfStateTypeMaximum
+} STOR_POFX_PERF_STATE_TYPE, *PSTOR_POFX_PERF_STATE_TYPE;
+
+/* One discrete P-state. Context carries whatever Value cannot express. */
+typedef struct _STOR_POFX_PERF_STATE
+{
+    ULONG Version;
+    ULONG Size;
+    ULONGLONG Value;
+    PVOID Context;
+} STOR_POFX_PERF_STATE, *PSTOR_POFX_PERF_STATE;
+
+#define STOR_POFX_PERF_STATE_SIZE           (sizeof(STOR_POFX_PERF_STATE))
+#define STOR_POFX_PERF_STATE_VERSION_V1     1
+
+typedef struct _STOR_POFX_COMPONENT_PERF_SET
+{
+    ULONG Version;
+    ULONG Size;
+    ULONGLONG Flags;
+    STOR_POFX_PERF_STATE_UNIT PStateUnit;
+    STOR_POFX_PERF_STATE_TYPE PStateType;
+    union
+    {
+        struct
+        {
+            ULONG Count;
+            /* Byte offset from this structure to the STOR_POFX_PERF_STATE array */
+            ULONG Offset;
+        } Discrete;
+        struct
+        {
+            ULONGLONG Minimum;
+            ULONGLONG Maximum;
+        } Range;
+    } PStates;
+} STOR_POFX_COMPONENT_PERF_SET, *PSTOR_POFX_COMPONENT_PERF_SET;
+
+#define STOR_POFX_COMPONENT_PERF_SET_SIZE   (sizeof(STOR_POFX_COMPONENT_PERF_SET))
+#define STOR_POFX_COMPONENT_PERF_SET_VERSION_V1 1
+
+/* At most one perf set per non-other unit type */
+#define STOR_POFX_COMPONENT_MIN_PERF_SETS   0
+#define STOR_POFX_COMPONENT_MAX_PERF_SETS   3
+#define STOR_POFX_MIN_DISCRETE_PERF_STATES  1
+#define STOR_POFX_MAX_DISCRETE_PERF_STATES  8
+
+/*
+ * MinimumPowerCyclePeriodInMS is only read for units and only when
+ * STOR_POFX_DEVICE_FLAG_ADAPTIVE_D3_IDLE_TIMEOUT is set.
+ */
+typedef struct _STOR_POFX_DEVICE_V3
+{
+    ULONG Version;
+    ULONG Size;
+    ULONG ComponentCount;
+    ULONG Flags;
+    union
+    {
+        ULONG UnitMinIdleTimeoutInMS;
+        ULONG AdapterIdleTimeoutInMS;
+    };
+    ULONG MinimumPowerCyclePeriodInMS;
+    _Field_size_full_(ComponentCount) STOR_POFX_COMPONENT Components[ANYSIZE_ARRAY];
+} STOR_POFX_DEVICE_V3, *PSTOR_POFX_DEVICE_V3;
+
+#define STOR_POFX_DEVICE_V3_SIZE            ((ULONG)FIELD_OFFSET(STOR_POFX_DEVICE_V3, Components))
+#define STOR_POFX_DEVICE_VERSION_V3         3
+
+/* A unit and an adapter each register exactly one component */
+#define STOR_POFX_UNIT_MIN_COMPONENTS       1
+#define STOR_POFX_UNIT_MAX_COMPONENTS       1
+#define STOR_POFX_ADAPTER_MIN_COMPONENTS    1
+#define STOR_POFX_ADAPTER_MAX_COMPONENTS    1
+
+#define STOR_POFX_DEVICE_FLAG_GET_PERF_STATE_FROM_PEP 0x1000
+
+#ifndef STORAGE_CRYPTO_ALGORITHMS_DEFINED
+#define STORAGE_CRYPTO_ALGORITHMS_DEFINED
+
+typedef enum _STORAGE_CRYPTO_ALGORITHM_ID
+{
+    StorageCryptoAlgorithmUnknown = 0,
+    StorageCryptoAlgorithmXTSAES = 1,
+    StorageCryptoAlgorithmBitlockerAESCBC,
+    StorageCryptoAlgorithmAESECB,
+    StorageCryptoAlgorithmESSIVAESCBC,
+    StorageCryptoAlgorithmMax,
+    /* Kept for drivers written against the original names */
+    StorCryptoAlgorithmUnknown = StorageCryptoAlgorithmUnknown,
+    StorCryptoAlgorithmXTSAES = StorageCryptoAlgorithmXTSAES,
+    StorCryptoAlgorithmBitlockerAESCBC = StorageCryptoAlgorithmBitlockerAESCBC,
+    StorCryptoAlgorithmAESECB = StorageCryptoAlgorithmAESECB,
+    StorCryptoAlgorithmESSIVAESCBC = StorageCryptoAlgorithmESSIVAESCBC
+} STORAGE_CRYPTO_ALGORITHM_ID, *PSTORAGE_CRYPTO_ALGORITHM_ID;
+
+typedef enum _STORAGE_CRYPTO_KEY_SIZE
+{
+    StorageCryptoKeySizeUnknown = 0,
+    StorageCryptoKeySize128Bits = 1,
+    StorageCryptoKeySize192Bits,
+    StorageCryptoKeySize256Bits,
+    StorageCryptoKeySize512Bits,
+    StorageCryptoKeySizeMax,
+    StorCryptoKeySizeUnknown = StorageCryptoKeySizeUnknown,
+    StorCryptoKeySize128Bits = StorageCryptoKeySize128Bits,
+    StorCryptoKeySize192Bits = StorageCryptoKeySize192Bits,
+    StorCryptoKeySize256Bits = StorageCryptoKeySize256Bits,
+    StorCryptoKeySize512Bits = StorageCryptoKeySize512Bits
+} STORAGE_CRYPTO_KEY_SIZE, *PSTORAGE_CRYPTO_KEY_SIZE;
+
+#endif /* STORAGE_CRYPTO_ALGORITHMS_DEFINED */
+
+#ifndef STORAGE_SECURITY_COMPLIANCE_BITMASK_DEFINED
+#define STORAGE_SECURITY_COMPLIANCE_BITMASK_DEFINED
+
+typedef union _STORAGE_SECURITY_COMPLIANCE_BITMASK
+{
+    struct
+    {
+        UCHAR FIPS:1;
+        UCHAR Reserved:7;
+    };
+    UCHAR AsUchar;
+} STORAGE_SECURITY_COMPLIANCE_BITMASK;
+
+#endif /* STORAGE_SECURITY_COMPLIANCE_BITMASK_DEFINED */
+
+#ifndef STORAGE_CRYPTO_KEY_TYPE_DEFINED
+#define STORAGE_CRYPTO_KEY_TYPE_DEFINED
+
+typedef union _STORAGE_CRYPTO_KEY_TYPE
+{
+    struct
+    {
+        UCHAR DirectKey:1;
+        UCHAR PlatformWrappedKey:1;
+        UCHAR PlutonWrappedKey:1;
+        UCHAR Reserved:5;
+    };
+    UCHAR AsUchar;
+} STORAGE_CRYPTO_KEY_TYPE;
+
+#endif /* STORAGE_CRYPTO_KEY_TYPE_DEFINED */
+
+typedef STORAGE_CRYPTO_ALGORITHM_ID STOR_CRYPTO_ALGORITHM_ID, *PSTOR_CRYPTO_ALGORITHM_ID;
+typedef STORAGE_CRYPTO_KEY_SIZE STOR_CRYPTO_KEY_SIZE, *PSTOR_CRYPTO_KEY_SIZE;
+
+#define STOR_CRYPTO_ALGORITHM_ID_OFFSET     StorCryptoAlgorithmXTSAES
+
+#define STOR_CRYPTO_CAPABILITY_VERSION_1    1
+#define STOR_CRYPTO_CAPABILITY_VERSION_2    2
+
+typedef struct _STOR_CRYPTO_CAPABILITY
+{
+    ULONG Version;
+    ULONG Size;
+    USHORT CryptoCapabilityIndex;
+    USHORT DataUnitSizeBitmask;
+    STORAGE_CRYPTO_ALGORITHM_ID AlgorithmId;
+    STORAGE_CRYPTO_KEY_SIZE KeySize;
+#if (NTDDI_VERSION >= NTDDI_WIN11_GA)
+    /* Zero where the algorithm has no initialization vector */
+    USHORT MaxIVBitSize;
+    USHORT Reserved;
+    STORAGE_SECURITY_COMPLIANCE_BITMASK SecurityComplianceBitmask;
+#endif
+} STOR_CRYPTO_CAPABILITY, *PSTOR_CRYPTO_CAPABILITY;
+
+#define STOR_CRYPTO_CAPABILITIES_DATA_VERSION_1 1
+
+typedef struct _STOR_CRYPTO_CAPABILITIES_DATA
+{
+    ULONG Version;
+    ULONG Size;
+    USHORT NumKeysSupported;
+    USHORT NumCryptoCapabilities;
+    _Field_size_(NumCryptoCapabilities) STOR_CRYPTO_CAPABILITY CryptoCapabilities[ANYSIZE_ARRAY];
+} STOR_CRYPTO_CAPABILITIES_DATA, *PSTOR_CRYPTO_CAPABILITIES_DATA;
+
+#define STOR_CRYPTO_KEY_INFO_VERSION_1      1
+
+typedef struct _STOR_CRYPTO_KEY_INFO
+{
+    ULONG Version;
+    ULONG Size;
+    ULONG KeyIndex;
+    ULONGLONG Tweak;
+} STOR_CRYPTO_KEY_INFO, *PSTOR_CRYPTO_KEY_INFO;
+
+/* Smallest tolerable delay the timer calls accept */
+#define RAID_MIN_TIMER_DELAY_IN_MSEC        32
+
+/* StorPortStateChangeDetected ChangedEntity. The highest bit set wins. */
+#define STATE_CHANGE_LUN                    0x1
+#define STATE_CHANGE_TARGET                 0x2
+#define STATE_CHANGE_BUS                    0x4
+
+/* StorPortStateChangeDetected Attributes, applied to newly found entities */
+#define ATTRIBUTE_VM_PASSTHROUGH_LUN        0x1
+
+/* StorPortAsyncNotificationDetected Flags */
+#define RAID_ASYNC_NOTIFY_FLAG_MEDIA_STATUS     0x1
+#define RAID_ASYNC_NOTIFY_FLAG_DEVICE_STATUS    0x2
+#define RAID_ASYNC_NOTIFY_FLAG_DEVICE_OPERATION 0x4
+
+#define RAID_ASYNC_NOTIFY_SUPPORTED_FLAGS   (RAID_ASYNC_NOTIFY_FLAG_MEDIA_STATUS | \
+                                             RAID_ASYNC_NOTIFY_FLAG_DEVICE_STATUS | \
+                                             RAID_ASYNC_NOTIFY_FLAG_DEVICE_OPERATION)
+
+#define DUMP_MINIPORT_VERSION_1             0x0100
+#define DUMP_MINIPORT_VERSION               0x0200
+#define DUMP_MINIPORT_NAME_LENGTH           15
+
+typedef struct _MINIPORT_MAPPINGS
+{
+    USHORT Version;
+    PVOID IBFTable;
+    PVOID Nic0Map;
+    PVOID Nic1Map;
+    ULONG NumberOfAdditionalNic;
+    PVOID NicMap[];
+} MINIPORT_MAPPINGS, *PMINIPORT_MAPPINGS;
+
+/* Returned by SRB_FUNCTION_DUMP_POINTERS */
+typedef struct _MINIPORT_DUMP_POINTERS
+{
+    USHORT Version;
+    USHORT Size;
+    WCHAR DriverName[DUMP_MINIPORT_NAME_LENGTH];
+    struct _ADAPTER_OBJECT *AdapterObject;
+    PVOID MappedRegisterBase;
+    /* Must not exceed 64KB */
+    ULONG CommonBufferSize;
+    PVOID MiniportPrivateDumpData;
+    /* The rest mirrors PORT_CONFIGURATION_INFORMATION */
+    ULONG SystemIoBusNumber;
+    INTERFACE_TYPE AdapterInterfaceType;
+    ULONG MaximumTransferLength;
+    ULONG NumberOfPhysicalBreaks;
+    ULONG AlignmentMask;
+    ULONG NumberOfAccessRanges;
+    ACCESS_RANGE (*AccessRanges)[];
+    UCHAR NumberOfBuses;
+    BOOLEAN Master;
+    BOOLEAN MapBuffers;
+    UCHAR MaximumNumberOfTargets;
+} MINIPORT_DUMP_POINTERS, *PMINIPORT_DUMP_POINTERS;
+
 /* STOR_POFX_DEVICE.Flags */
 #define STOR_POFX_DEVICE_FLAG_NO_D0                     0x01
 #define STOR_POFX_DEVICE_FLAG_NO_D3                     0x02
@@ -6431,6 +6693,81 @@ StorPortPropagateIrpExtension(
                                     HwDeviceExtension,
                                     SourceSrb,
                                     DestinationSrb);
+}
+
+#endif /* (NTDDI_VERSION >= NTDDI_WIN8) */
+
+#if (NTDDI_VERSION >= NTDDI_WIN8)
+
+FORCEINLINE
+ULONG
+StorPortPoFxRegisterPerfStates(
+    _In_ PVOID HwDeviceExtension,
+    _In_opt_ PSTOR_ADDRESS Address,
+    _In_ ULONG ComponentIndex,
+    _In_ ULONG PerfSetCount,
+    _In_reads_(PerfSetCount) PSTOR_POFX_COMPONENT_PERF_SET *PerfSets)
+{
+    return StorPortExtendedFunction(ExtFunctionPoFxRegisterPerfStates,
+                                    HwDeviceExtension,
+                                    Address,
+                                    ComponentIndex,
+                                    PerfSetCount,
+                                    PerfSets);
+}
+
+FORCEINLINE
+ULONG
+StorPortPoFxSetPerfState(
+    _In_ PVOID HwDeviceExtension,
+    _In_opt_ PSTOR_ADDRESS Address,
+    _In_ ULONG ComponentIndex,
+    _In_ ULONG PerfSetIndex,
+    _In_ ULONGLONG Value,
+    _In_opt_ PVOID Context)
+{
+    return StorPortExtendedFunction(ExtFunctionPoFxSetPerfState,
+                                    HwDeviceExtension,
+                                    Address,
+                                    ComponentIndex,
+                                    PerfSetIndex,
+                                    Value,
+                                    Context);
+}
+
+FORCEINLINE
+ULONG
+StorPortInitializeCryptoEngine(
+    _In_ PVOID HwDeviceExtension,
+    _In_ PSTOR_CRYPTO_CAPABILITIES_DATA CryptoCapabilities)
+{
+    return StorPortExtendedFunction(ExtFunctionInitializeCryptoEngine,
+                                    HwDeviceExtension,
+                                    CryptoCapabilities);
+}
+
+FORCEINLINE
+ULONG
+StorPortGetRequestCryptoInfo(
+    _In_ PVOID HwDeviceExtension,
+    _In_ PSCSI_REQUEST_BLOCK Srb,
+    _Out_ PSTOR_CRYPTO_KEY_INFO KeyInfo)
+{
+    return StorPortExtendedFunction(ExtFunctionGetRequestCryptoInfo,
+                                    HwDeviceExtension,
+                                    Srb,
+                                    KeyInfo);
+}
+
+FORCEINLINE
+ULONG
+StorPortInitializeRpmb(
+    _In_ PVOID HwDeviceExtension,
+    _In_ PSTOR_RPMB_CAPABILITIES_DATA RpmbCapabilities)
+{
+    return StorPortExtendedFunction(ExtFunctionInitializeRpmb,
+                                    HwDeviceExtension,
+                                    RpmbCapabilities);
 }
 
 #endif /* (NTDDI_VERSION >= NTDDI_WIN8) */
