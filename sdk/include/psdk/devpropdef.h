@@ -96,13 +96,8 @@ typedef struct _DEVPROPKEY {
         const DEVPROPKEY DECLSPEC_SELECTANY name = { { l, w1, w2, { b1, b2,  b3,  b4,  b5,  b6,  b7,  b8 } }, pid }
 #endif
 #else
-#ifdef __GNUC__
 #define DEFINE_DEVPROPKEY(name, l, w1, w2, b1, b2, b3, b4, b5, b6, b7, b8, pid) \
     EXTERN_C const DEVPROPKEY name
-#else
-#define DEFINE_DEVPROPKEY(name, l, w1, w2, b1, b2, b3, b4, b5, b6, b7, b8, pid) \
-    EXTERN_C const DEVPROPKEY DECLSPEC_SELECTANY name
-#endif
 #endif /* INITGUID */
 
 #ifndef IsEqualDevPropKey

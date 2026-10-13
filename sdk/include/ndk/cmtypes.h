@@ -273,9 +273,20 @@ typedef enum _PLUGPLAY_EVENT_CATEGORY
     CustomDeviceEvent,
     DeviceInstallEvent,
     DeviceArrivalEvent,
+#if (NTDDI_VERSION < NTDDI_WIN7) && !defined(__REACTOS__)
     PowerEvent,
+#endif
     VetoEvent,
     BlockedDriverEvent,
+#if (NTDDI_VERSION >= NTDDI_VISTA) || defined(__REACTOS__)
+    InvalidIDEvent,
+#endif
+#if (NTDDI_VERSION >= NTDDI_WIN7) || defined(__REACTOS__)
+    DevicePropertyChangeEvent,
+    DeviceInstanceRemovalEvent,
+#elif (NTDDI_VERSION >= NTDDI_VISTA)
+    PowerSettingChange,
+#endif
     MaxPlugEventCategory
 } PLUGPLAY_EVENT_CATEGORY;
 
