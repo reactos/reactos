@@ -881,15 +881,15 @@ EeStartAdapter(
 {
     PAGED_CODE();
 
-    Adapter->AdapterActive = TRUE;
-    _ReadWriteBarrier();
-
     /* Clear the events caused by adapter initialization */
     CSR_WRITE_8(Adapter,
                 FXP_CSR_SCB_STATACK,
                 0xFF & ~(FXP_SCB_STATACK_FR | FXP_SCB_STATACK_RNR | FXP_SCB_STATACK_ER));
 
-    /* Enable interrupts */
+    Adapter->AdapterActive = TRUE;
+    _ReadWriteBarrier();
+
+    /* Enable interrupts (clear the FXP_SCB_INTR_DISABLE bit) */
     CSR_WRITE_8(Adapter, FXP_CSR_SCB_INTRCNTL, 0);
 }
 

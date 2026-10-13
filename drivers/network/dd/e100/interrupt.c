@@ -214,7 +214,7 @@ EeHandleRxChecksum82559(
         if (PayloadSize < (IpHeaderLength + sizeof(*UdpHeader)))
             goto Exit;
 
-        /* See "B.4 RCV Checksum Processing" from the OpenSDM */
+        /* See "B.4 RCV Checksum Processing" from manual */
         if (UdpHeader->Checksum == 0)
         {
             CsInfo.Receive.NdisPacketUdpChecksumSucceeded = 1;

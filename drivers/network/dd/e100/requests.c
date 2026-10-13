@@ -429,7 +429,7 @@ MiniportQueryInformation(
 
         case OID_GEN_VENDOR_DESCRIPTION:
         {
-            static const CHAR VendorDesc[] = "Intel 8255x compatible Ethernet Controller";
+            static const CHAR VendorDesc[] = "Intel PRO/100 Ethernet Adapter";
             InfoPtr = VendorDesc;
             InfoLength = sizeof(VendorDesc);
             break;
