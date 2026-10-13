@@ -125,6 +125,10 @@ AssignResourcesToConfiguration(
     DPRINT1("AssignResourceToConfiguration(%p %p %lu)\n",
             PortConfiguration, ResourceList, NumberOfAccessRanges);
 
+    /* A virtual miniport sits on a bus that hands out no resources at all */
+    if (ResourceList == NULL)
+        return;
+
     FullDescriptor = &ResourceList->List[0];
     for (i = 0; i < ResourceList->Count; i++)
     {
@@ -272,6 +276,11 @@ MiniportInitialize(
     Miniport->DeviceExtension = DeviceExtension;
     Miniport->InitData = InitData;
 
+    /* Only the Win8 init data carries the feature flags, older miniports are physical */
+    Miniport->IsVirtual = (InitData->HwInitializationDataSize == sizeof(*InitData)) &&
+                          (InitData->FeatureSupport & STOR_FEATURE_VIRTUAL_MINIPORT);
+    DPRINT1("Miniport is %s\n", Miniport->IsVirtual ? "virtual" : "physical");
+
     /* Calculate the miniport device extension size */
     Status = RtlULongAdd(sizeof(*MiniportExtension),
                          Miniport->InitData->DeviceExtensionSize,
@@ -315,22 +324,41 @@ NTSTATUS
 MiniportFindAdapter(
     _In_ PMINIPORT Miniport)
 {
+    PFDO_DEVICE_EXTENSION DeviceExtension = Miniport->DeviceExtension;
     BOOLEAN Reserved = FALSE;
-    PHW_FIND_ADAPTER FindAdapter;
     ULONG Result;
     NTSTATUS Status;
 
     DPRINT1("MiniportFindAdapter(%p)\n", Miniport);
 
-    /* HwFindAdapter is typeless since Win8, we only drive physical miniports */
-    FindAdapter = (PHW_FIND_ADAPTER)Miniport->InitData->HwFindAdapter;
+    /* HwFindAdapter is typeless since Win8, a virtual miniport puts a PVIRTUAL_HW_FIND_ADAPTER there */
+    if (Miniport->IsVirtual)
+    {
+        PVIRTUAL_HW_FIND_ADAPTER FindAdapter;
 
-    Result = FindAdapter(&Miniport->MiniportExtension->HwDeviceExtension,
-                         NULL,
-                         NULL,
-                         NULL,
-                         &Miniport->PortConfig,
-                         &Reserved);
+        FindAdapter = (PVIRTUAL_HW_FIND_ADAPTER)Miniport->InitData->HwFindAdapter;
+
+        Result = FindAdapter(&Miniport->MiniportExtension->HwDeviceExtension,
+                             DeviceExtension->PhysicalDevice,
+                             DeviceExtension->Device,
+                             DeviceExtension->LowerDevice,
+                             NULL,
+                             &Miniport->PortConfig,
+                             &Reserved);
+    }
+    else
+    {
+        PHW_FIND_ADAPTER FindAdapter;
+
+        FindAdapter = (PHW_FIND_ADAPTER)Miniport->InitData->HwFindAdapter;
+
+        Result = FindAdapter(&Miniport->MiniportExtension->HwDeviceExtension,
+                             NULL,
+                             NULL,
+                             NULL,
+                             &Miniport->PortConfig,
+                             &Reserved);
+    }
     DPRINT1("HwFindAdapter() returned %lu\n", Result);
 
     /* Convert the result to a status code */
@@ -379,6 +407,27 @@ MiniportHwInitialize(
     DPRINT("HwInitialize() returned %u\n", Result);
 
     return Result ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL;
+}
+
+
+/**
+ * @brief Tells the miniport the adapter is going away.
+ */
+VOID
+NTAPI
+MiniportFreeAdapterResources(
+    _In_ PMINIPORT Miniport)
+{
+    if (Miniport->MiniportExtension == NULL ||
+        Miniport->InitData->HwInitializationDataSize != sizeof(*Miniport->InitData) ||
+        Miniport->InitData->HwFreeAdapterResources == NULL)
+    {
+        return;
+    }
+
+    DPRINT1("MiniportFreeAdapterResources(%p)\n", Miniport);
+
+    Miniport->InitData->HwFreeAdapterResources(&Miniport->MiniportExtension->HwDeviceExtension);
 }
 
 
