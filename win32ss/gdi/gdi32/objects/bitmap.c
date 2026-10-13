@@ -1054,7 +1054,7 @@ SetDIBitsToDevice(
 
     if (pConvertedInfo->bmiHeader.biHeight < 0 && YDest >= 0)
     {
-        if (Height * ScanLinesOrig > ImageSizeOrig && ImageSizeOrig != 0)
+        if (Width * ScanLinesOrig > ImageSizeOrig && ImageSizeOrig != 0)
         {
             LinesCopied = 0;
         }
