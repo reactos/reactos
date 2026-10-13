@@ -28,6 +28,7 @@ DefaultDestDir = 12
 [GenericMfg]
 %GEN_SCSIADAPTER.DeviceDesc% = NO_DRV,,GEN_SCSIADAPTER
 %PCI\VEN_104B&CC_0100.DeviceDesc% = BusLogic_Inst,PCI\VEN_104B&CC_0100
+%PCI\CC_010802.DeviceDesc% = StorNvme_Inst,PCI\CC_010802
 
 ;--------------------------- SCSIPORT DRIVER ----------------------------
 
@@ -47,6 +48,45 @@ LoadOrderGroup = SCSI Port
 
 [NO_DRV.Services]
 AddService = , 0x00000002
+
+;--------------------------- STORPORT DRIVER ----------------------------
+
+[Storport_CopyFiles.NT]
+storport.sys
+
+[Storport_Service_Inst]
+ServiceType    = 1
+StartType      = 0
+ErrorControl   = 1
+ServiceBinary  = %12%\storport.sys
+LoadOrderGroup = SCSI Port
+
+;---------------------------- STORNVME DRIVER ---------------------------
+
+[StorNvme_Inst.NT]
+CopyFiles = StorNvme_CopyFiles.NT, Storport_CopyFiles.NT
+
+[StorNvme_CopyFiles.NT]
+stornvme.sys
+
+[StorNvme_Inst.NT.HW]
+AddReg = StorNvme_AddReg.HW
+
+[StorNvme_AddReg.HW]
+HKR, Interrupt Management,, 0x00000010
+HKR, Interrupt Management\MessageSignaledInterruptProperties,, 0x00000010
+HKR, Interrupt Management\MessageSignaledInterruptProperties, MSISupported, 0x00010001, 1
+
+[StorNvme_Inst.NT.Services]
+AddService = stornvme, 0x00000002, StorNvme_Service_Inst
+AddService = storport, , Storport_Service_Inst
+
+[StorNvme_Service_Inst]
+ServiceType    = 1
+StartType      = 0
+ErrorControl   = 1
+ServiceBinary  = %12%\stornvme.sys
+LoadOrderGroup = SCSI Miniport
 
 ;--------------------------- BUSLOGIC DRIVER ----------------------------
 
@@ -80,6 +120,7 @@ GenericMfg = "(Standard SCSI and RAID controllers)"
 GEN_SCSIADAPTER.DeviceDesc = "SCSI/RAID Host Controller"
 
 PCI\VEN_104B&CC_0100.DeviceDesc = "BusLogic SCSI Controller"
+PCI\CC_010802.DeviceDesc = "Standard NVM Express Controller"
 
 [Strings.0404]
 SCSIClassName = "SCSI / RAID 控制器"

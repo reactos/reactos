@@ -1,0 +1,8 @@
+; NVM Express miniport driver
+[AddReg]
+HKLM,"SYSTEM\CurrentControlSet\Services\stornvme","ErrorControl",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\stornvme","Group",0x00000000,"SCSI Miniport"
+HKLM,"SYSTEM\CurrentControlSet\Services\stornvme","ImagePath",0x00020000,"system32\drivers\stornvme.sys"
+HKLM,"SYSTEM\CurrentControlSet\Services\stornvme","Start",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\stornvme","Type",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\stornvme","Tag",0x00010001,0x00000022
