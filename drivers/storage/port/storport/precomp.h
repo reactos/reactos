@@ -95,8 +95,9 @@ typedef struct _MINIPORT
     PORT_CONFIGURATION_INFORMATION PortConfig;
     PMINIPORT_DEVICE_EXTENSION MiniportExtension;
 
-    /* Answer to ScsiQuerySupportedControlTypes, unclaimed types are never sent */
+    /* Answers to the supported control type queries, unclaimed types are never sent */
     BOOLEAN AdapterControlSupported[ScsiAdapterControlMax];
+    BOOLEAN UnitControlSupported[ScsiUnitControlMax];
 } MINIPORT, *PMINIPORT;
 
 typedef struct _UNIT_DATA
@@ -505,6 +506,18 @@ MiniportAdapterControl(
     _In_ SCSI_ADAPTER_CONTROL_TYPE ControlType,
     _In_opt_ PVOID Parameters);
 
+VOID
+NTAPI
+MiniportQueryUnitControl(
+    _In_ PMINIPORT Miniport);
+
+SCSI_UNIT_CONTROL_STATUS
+NTAPI
+MiniportUnitControl(
+    _In_ PMINIPORT Miniport,
+    _In_ SCSI_UNIT_CONTROL_TYPE ControlType,
+    _In_opt_ PVOID Parameters);
+
 BOOLEAN
 MiniportStartIo(
     _In_ PMINIPORT Miniport,
@@ -642,6 +655,12 @@ PortCompletionDpc(
 
 
 /* srbex.c */
+
+VOID
+NTAPI
+StorpBuildUnitAddress(
+    _In_ PPDO_DEVICE_EXTENSION PdoExtension,
+    _Out_ PSTOR_ADDR_BTL8 Address);
 
 BOOLEAN
 NTAPI

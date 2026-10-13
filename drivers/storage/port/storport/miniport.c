@@ -465,6 +465,77 @@ MiniportAdapterControl(
 }
 
 
+/**
+ * @brief Asks the miniport which unit control requests it handles.
+ */
+VOID
+NTAPI
+MiniportQueryUnitControl(
+    _In_ PMINIPORT Miniport)
+{
+    PSCSI_SUPPORTED_CONTROL_TYPE_LIST List;
+    SCSI_UNIT_CONTROL_STATUS Result;
+    ULONG Length;
+
+    RtlZeroMemory(Miniport->UnitControlSupported,
+                  sizeof(Miniport->UnitControlSupported));
+
+    if (Miniport->InitData->HwInitializationDataSize <
+        RTL_SIZEOF_THROUGH_FIELD(HW_INITIALIZATION_DATA, HwUnitControl) ||
+        Miniport->InitData->HwUnitControl == NULL)
+    {
+        return;
+    }
+
+    Length = sizeof(*List) +
+             (ScsiUnitControlMax * sizeof(List->SupportedTypeList[0]));
+
+    List = ExAllocatePoolWithTag(NonPagedPool, Length, TAG_MINIPORT_DATA);
+    if (List == NULL)
+        return;
+
+    RtlZeroMemory(List, Length);
+    List->MaxControlType = ScsiUnitControlMax;
+
+    Result = Miniport->InitData->HwUnitControl(&Miniport->MiniportExtension->HwDeviceExtension,
+                                               ScsiQuerySupportedUnitControlTypes,
+                                               List);
+    if (Result == ScsiUnitControlSuccess)
+    {
+        RtlCopyMemory(Miniport->UnitControlSupported,
+                      List->SupportedTypeList,
+                      sizeof(Miniport->UnitControlSupported));
+    }
+
+    ExFreePoolWithTag(List, TAG_MINIPORT_DATA);
+}
+
+
+/**
+ * @brief Sends one unit control request, if the miniport claimed it.
+ */
+SCSI_UNIT_CONTROL_STATUS
+NTAPI
+MiniportUnitControl(
+    _In_ PMINIPORT Miniport,
+    _In_ SCSI_UNIT_CONTROL_TYPE ControlType,
+    _In_opt_ PVOID Parameters)
+{
+    DPRINT("MiniportUnitControl(%p %u %p)\n",
+            Miniport, ControlType, Parameters);
+
+    if (ControlType >= ScsiUnitControlMax ||
+        !Miniport->UnitControlSupported[ControlType])
+    {
+        return ScsiUnitControlNotSupported;
+    }
+
+    return Miniport->InitData->HwUnitControl(&Miniport->MiniportExtension->HwDeviceExtension,
+                                             ControlType,
+                                             Parameters);
+}
+
+
 BOOLEAN
 NTAPI
 MiniportHwMSInterrupt(
