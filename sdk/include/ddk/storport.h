@@ -4702,6 +4702,192 @@ typedef struct _TAPE_POSITION_DATA
     UCHAR NumberOfBytes[4];
 } TAPE_POSITION_DATA, *PTAPE_POSITION_DATA;
 
+
+/* ZONE_DESCRIPTIOR.ZoneType */
+#define ZONE_TYPE_CONVENTIONAL              0x1
+#define ZONE_TYPE_SEQUENTIAL_WRITE_REQUIRED 0x2
+#define ZONE_TYPE_SEQUENTIAL_WRITE_PREFERRED 0x3
+
+/* ZONE_DESCRIPTIOR.ZoneCondition */
+#define ZONE_CONDITION_NOT_WRITE_POINTER    0x0
+#define ZONE_CONDITION_EMPTY                0x1
+#define ZONE_CONDITION_IMPLICITLY_OPENED    0x2
+#define ZONE_CONDITION_EXPLICITLY_OPENED    0x3
+#define ZONE_CONDITION_CLOSED               0x4
+#define ZONE_CONDITION_READ_ONLY            0xD
+#define ZONE_CONDITION_FULL                 0xE
+#define ZONE_CONDITION_OFFLINE              0xF
+
+/* PHYSICAL_ELEMENT_STATUS_DATA_DESCRIPTOR.PhysicalElementType */
+#define PHYSICAL_ELEMENT_TYPE_STORAGE_ELEMENT 0x01
+
+/* PHYSICAL_ELEMENT_STATUS_DATA_DESCRIPTOR.PhysicalElementHealth */
+#define PHYSICAL_ELEMENT_HEALTH_NOT_REPORTED 0x00
+#define PHYSICAL_ELEMENT_HEALTH_MANUFACTURER_SPECIFICATION_LIMIT 0x64
+#define PHYSICAL_ELEMENT_HEALTH_RESERVED_LOWER_BOUNDARY 0xD0
+#define PHYSICAL_ELEMENT_HEALTH_RESERVED_UPPER_BOUNDARY 0xFC
+#define PHYSICAL_ELEMENT_HEALTH_DEPOPULATION_COMPLETED_WITH_ERROR 0xFD
+#define PHYSICAL_ELEMENT_HEALTH_DEPOPULATION_IN_PROGRESS 0xFE
+#define PHYSICAL_ELEMENT_HEALTH_DEPOPULATION_COMPLETED_SUCCESS 0xFF
+
+/* READ BUFFER buffer ids that address the error history */
+#define BUFFER_ID_RETURN_ERROR_HISTORY_DIRECTORY 0x0
+#define BUFFER_ID_RETURN_ERROR_HISTORY_DIRECTORY_CREATE_NEW_ERROR_HISTORY_SNAPSHOT 0x1
+#define BUFFER_ID_RETURN_ERROR_HISTORY_DIRECTORY_ESTABLISH_NEW_NEXUS 0x2
+#define BUFFER_ID_RETURN_ERROR_HISTORY_DIRECTORY_ESTABLISH_NEW_NEXUS_AND_SNAPSHOT 0x3
+#define BUFFER_ID_RETURN_ERROR_HISTORY_MINIMUM_THRESHOLD 0x10
+#define BUFFER_ID_RETURN_ERROR_HISTORY_MAXIMUM_THRESHOLD 0xEF
+#define BUFFER_ID_CLEAR_ERROR_HISTORY_NEXUS 0xFE
+#define BUFFER_ID_CLEAR_ERROR_HISTORY_AND_RELEASE_ANY_SNAPSHOT 0xFF
+
+/* ERROR_HISTORY_DIRECTORY.ErrorHistorySource */
+#define ERROR_HISTORY_SOURCE_CREATED_BY_DEVICE_SERVER 0x0
+#define ERROR_HISTORY_SOURCE_CREATED_DUE_TO_CURRENT_READ_BUFFER_COMMAND 0x1
+#define ERROR_HISTORY_SOURCE_CREATED_DUE_TO_PREVIOUS_READ_BUFFER_COMMAND 0x2
+#define ERROR_HISTORY_SOURCE_INDICATED_IN_BUFFER_SOURCE_FIELD 0x3
+
+/* ERROR_HISTORY_DIRECTORY.ErrorHistoryRetrieved */
+#define ERROR_HISTORY_RETRIEVED_NO_INFORMATION 0x0
+#define ERROR_HISTORY_RETRIEVED_BUFFER_ID_FE_OR_FF 0x1
+#define ERROR_HISTORY_RETRIEVED_NOT_BUFFER_ID_FE_OR_FF 0x2
+#define ERROR_HISTORY_RETRIEVED_RESERVED    0x3
+typedef struct _ZONE_DESCRIPTIOR
+{
+    UCHAR ZoneType:4;
+    UCHAR Reserved1:4;
+    UCHAR Reset:1;
+    UCHAR Non_Seq:1;
+    UCHAR Reserved2:2;
+    UCHAR ZoneCondition:4;
+    UCHAR Reserved3[6];
+    UCHAR ZoneLength[8];
+    UCHAR ZoneStartLBA[8];
+    UCHAR WritePointerLBA[8];
+    UCHAR Reserved4[32];
+} ZONE_DESCRIPTIOR, *PZONE_DESCRIPTIOR;
+
+typedef struct _REPORT_ZONES_DATA
+{
+    UCHAR ZoneListLength[4];
+    UCHAR Same:4;
+    UCHAR Reserved1:4;
+    UCHAR Reserved2[3];
+    UCHAR MaxLBA[8];
+    UCHAR Reserved3[48];
+#if !defined(__midl)
+    ZONE_DESCRIPTIOR ZoneDescriptors[ANYSIZE_ARRAY];
+#endif
+} REPORT_ZONES_DATA, *PREPORT_ZONES_DATA;
+
+typedef struct _PHYSICAL_ELEMENT_STATUS_DATA_DESCRIPTOR
+{
+    UCHAR Reserved1[4];
+    UCHAR ElementIdentifier[4];
+    UCHAR Reserved2[6];
+    UCHAR PhysicalElementType;
+    UCHAR PhysicalElementHealth;
+    UCHAR AssociatedCapacity[8];
+    UCHAR Reserved3[8];
+} PHYSICAL_ELEMENT_STATUS_DATA_DESCRIPTOR, *PPHYSICAL_ELEMENT_STATUS_DATA_DESCRIPTOR;
+
+typedef struct _PHYSICAL_ELEMENT_STATUS_PARAMETER_DATA
+{
+    UCHAR DescriptorCount[4];
+    UCHAR ReturnedDescriptorCount[4];
+    UCHAR ElementIdentifierBeingDepoped[4];
+    UCHAR Reserved[20];
+    PHYSICAL_ELEMENT_STATUS_DATA_DESCRIPTOR Descriptors[ANYSIZE_ARRAY];
+} PHYSICAL_ELEMENT_STATUS_PARAMETER_DATA, *PPHYSICAL_ELEMENT_STATUS_PARAMETER_DATA;
+
+typedef struct _ERROR_HISTORY_DIRECTORY_ENTRY
+{
+    UCHAR SupportedBufferId;
+    UCHAR BufferFormat;
+    UCHAR BufferSource:4;
+    UCHAR Reserved0:4;
+    UCHAR Reserved1;
+    UCHAR MaxAvailableLength[4];
+} ERROR_HISTORY_DIRECTORY_ENTRY, *PERROR_HISTORY_DIRECTORY_ENTRY;
+
+typedef struct _ERROR_HISTORY_DIRECTORY
+{
+    UCHAR T10VendorId[8];
+    UCHAR ErrorHistoryVersion;
+    UCHAR ClearSupport:1;
+    UCHAR ErrorHistorySource:2;
+    UCHAR ErrorHistoryRetrieved:2;
+    UCHAR Reserved0:3;
+    UCHAR Reserved1[20];
+    UCHAR DirectoryLength[2];
+    ERROR_HISTORY_DIRECTORY_ENTRY ErrorHistoryDirectoryList[ANYSIZE_ARRAY];
+} ERROR_HISTORY_DIRECTORY, *PERROR_HISTORY_DIRECTORY;
+
+typedef struct _CURRENT_INTERNAL_STATUS_PARAMETER_DATA
+{
+    UCHAR Reserved0[4];
+    UCHAR IEEECompanyId[4];
+    UCHAR CurrentInternalStatusDataSetOneLength[2];
+    UCHAR CurrentInternalStatusDataSetTwoLength[2];
+    UCHAR CurrentInternalStatusDataSetThreeLength[2];
+    UCHAR CurrentInternalStatusDataSetFourLength[4];
+    UCHAR Reserved1[364];
+    UCHAR NewSavedDataAvailable;
+    UCHAR SavedDataGenerationNumber;
+    UCHAR CurrentReasonIdentifier[128];
+    UCHAR CurrentInternalStatusData[ANYSIZE_ARRAY];
+} CURRENT_INTERNAL_STATUS_PARAMETER_DATA, *PCURRENT_INTERNAL_STATUS_PARAMETER_DATA;
+
+typedef struct _SAVED_INTERNAL_STATUS_PARAMETER_DATA
+{
+    UCHAR Reserved0[4];
+    UCHAR IEEECompanyId[4];
+    UCHAR SavedInternalStatusDataSetOneLength[2];
+    UCHAR SavedInternalStatusDataSetTwoLength[2];
+    UCHAR SavedInternalStatusDataSetThreeLength[2];
+    UCHAR SavedInternalStatusDataSetFourLength[4];
+    UCHAR Reserved1[364];
+    UCHAR NewSavedDataAvailable;
+    UCHAR SavedDataGenerationNumber;
+    UCHAR SavedReasonIdentifier[128];
+    UCHAR SavedInternalStatusData[ANYSIZE_ARRAY];
+} SAVED_INTERNAL_STATUS_PARAMETER_DATA, *PSAVED_INTERNAL_STATUS_PARAMETER_DATA;
+
+typedef struct _SUPPORTED_SECURITY_PROTOCOLS_PARAMETER_DATA
+{
+    UCHAR Reserved1[6];
+    UCHAR SupportedSecurityListLength[2];
+    UCHAR SupportedSecurityProtocol[0];
+} SUPPORTED_SECURITY_PROTOCOLS_PARAMETER_DATA, *PSUPPORTED_SECURITY_PROTOCOLS_PARAMETER_DATA;
+
+typedef struct _OVERWRITE_PARAMETER_LIST
+{
+    UCHAR OverWriteCount:5;
+    UCHAR Test:2;
+    UCHAR Invert:1;
+    UCHAR Reserved1;
+    UCHAR InitializationPatternLength[2];
+#if !defined(__midl)
+    UCHAR InitializationPattern[ANYSIZE_ARRAY];
+#endif
+} OVERWRITE_PARAMETER_LIST, *POVERWRITE_PARAMETER_LIST;
+
+typedef struct
+{
+    UCHAR ParameterDataLength[2];
+    UCHAR Origin:3;
+    UCHAR Reserved1:5;
+    UCHAR Reserved2;
+    UCHAR Timestamp[6];
+    UCHAR Reserved3[2];
+} RT_PARAMETER_DATA, *PRT_PARAMETER_DATA;
+
+typedef struct
+{
+    UCHAR Reserved1[4];
+    UCHAR Timestamp[6];
+    UCHAR Reserved2[2];
+} ST_PARAMETER_DATA, *PST_PARAMETER_DATA;
+
 #include <pshpack1.h>
 
 typedef struct _UNMAP_BLOCK_DESCRIPTOR
