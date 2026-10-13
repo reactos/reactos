@@ -295,18 +295,21 @@ MiniportFindAdapter(
     _In_ PMINIPORT Miniport)
 {
     BOOLEAN Reserved = FALSE;
+    PHW_FIND_ADAPTER FindAdapter;
     ULONG Result;
     NTSTATUS Status;
 
     DPRINT1("MiniportFindAdapter(%p)\n", Miniport);
 
-    /* Call the miniport HwFindAdapter routine */
-    Result = Miniport->InitData->HwFindAdapter(&Miniport->MiniportExtension->HwDeviceExtension,
-                                               NULL,
-                                               NULL,
-                                               NULL,
-                                               &Miniport->PortConfig,
-                                               &Reserved);
+    /* HwFindAdapter is typeless since Win8, we only drive physical miniports */
+    FindAdapter = (PHW_FIND_ADAPTER)Miniport->InitData->HwFindAdapter;
+
+    Result = FindAdapter(&Miniport->MiniportExtension->HwDeviceExtension,
+                         NULL,
+                         NULL,
+                         NULL,
+                         &Miniport->PortConfig,
+                         &Reserved);
     DPRINT1("HwFindAdapter() returned %lu\n", Result);
 
     /* Convert the result to a status code */

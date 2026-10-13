@@ -133,6 +133,16 @@ PortAcquireSpinLock(
             else
                 LockHandle->Context.OldIrql = KeAcquireInterruptSpinLock(DeviceExtension->Interrupt);
             break;
+
+        /* FIXME: The Win8 lock types are not implemented yet */
+        case ThreadedDpcLock: /* 4 */
+        case DpcLevelLock: /* 5 */
+            DPRINT1("Unimplemented lock type %lu\n", SpinLock);
+            break;
+
+        case InvalidLock:
+            NT_ASSERT(FALSE);
+            break;
     }
 }
 
@@ -161,6 +171,16 @@ PortReleaseSpinLock(
             if (DeviceExtension->Interrupt != NULL)
                 KeReleaseInterruptSpinLock(DeviceExtension->Interrupt,
                                            LockHandle->Context.OldIrql);
+            break;
+
+        /* FIXME: The Win8 lock types are not implemented yet */
+        case ThreadedDpcLock: /* 4 */
+        case DpcLevelLock: /* 5 */
+            DPRINT1("Unimplemented lock type %lu\n", LockHandle->Lock);
+            break;
+
+        case InvalidLock:
+            NT_ASSERT(FALSE);
             break;
     }
 }
