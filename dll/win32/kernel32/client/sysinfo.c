@@ -257,6 +257,141 @@ GetLogicalProcessorInformation(OUT PSYSTEM_LOGICAL_PROCESSOR_INFORMATION Buffer,
     return TRUE;
 }
 
+/* Size of the SYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX record that the given
+ * relationship needs, or 0 when the classic information cannot describe it. */
+static ULONG
+GetExRecordSize(IN LOGICAL_PROCESSOR_RELATIONSHIP Relationship)
+{
+    switch (Relationship)
+    {
+        case RelationProcessorCore:
+            return FIELD_OFFSET(SYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX, Processor) +
+                   FIELD_OFFSET(PROCESSOR_RELATIONSHIP, GroupMask[1]);
+
+        case RelationNumaNode:
+            return FIELD_OFFSET(SYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX, NumaNode) +
+                   sizeof(NUMA_NODE_RELATIONSHIP);
+
+        default:
+            return 0;
+    }
+}
+
+/*
+ * @implemented
+ */
+BOOL
+WINAPI
+GetLogicalProcessorInformationEx(IN LOGICAL_PROCESSOR_RELATIONSHIP Relationship,
+                                 OUT PSYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX Buffer,
+                                 IN OUT PDWORD ReturnLength)
+{
+    PSYSTEM_LOGICAL_PROCESSOR_INFORMATION Info, Entry, InfoEnd;
+    PSYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX ExEntry;
+    ULONG InfoLength, RequiredLength, EntrySize;
+    NTSTATUS Status;
+
+    if (!ReturnLength)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    /* The kernel only hands out the classic core and NUMA node records, so
+     * nothing else can be described and the request is rejected. */
+    if (Relationship != RelationProcessorCore &&
+        Relationship != RelationNumaNode &&
+        Relationship != RelationAll)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    /* Find out how large the classic array is */
+    InfoLength = 0;
+    Status = NtQuerySystemInformation(SystemLogicalProcessorInformation,
+                                      NULL,
+                                      0,
+                                      &InfoLength);
+    if (Status != STATUS_INFO_LENGTH_MISMATCH || InfoLength == 0)
+    {
+        BaseSetLastNTError(Status);
+        return FALSE;
+    }
+
+    Info = RtlAllocateHeap(RtlGetProcessHeap(), 0, InfoLength);
+    if (!Info)
+    {
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        return FALSE;
+    }
+
+    Status = NtQuerySystemInformation(SystemLogicalProcessorInformation,
+                                      Info,
+                                      InfoLength,
+                                      &InfoLength);
+    if (!NT_SUCCESS(Status))
+    {
+        RtlFreeHeap(RtlGetProcessHeap(), 0, Info);
+        BaseSetLastNTError(Status);
+        return FALSE;
+    }
+
+    /* First pass: work out how many bytes the Ex representation needs */
+    RequiredLength = 0;
+    InfoEnd = (PSYSTEM_LOGICAL_PROCESSOR_INFORMATION)((PBYTE)Info + InfoLength);
+    for (Entry = Info; Entry < InfoEnd; ++Entry)
+    {
+        if (Relationship != RelationAll && Entry->Relationship != Relationship)
+            continue;
+
+        RequiredLength += GetExRecordSize(Entry->Relationship);
+    }
+
+    if (!Buffer || *ReturnLength < RequiredLength)
+    {
+        *ReturnLength = RequiredLength;
+        SetLastError(ERROR_INSUFFICIENT_BUFFER);
+        RtlFreeHeap(RtlGetProcessHeap(), 0, Info);
+        return FALSE;
+    }
+
+    /* Second pass: translate the classic records into Ex records */
+    ExEntry = Buffer;
+    for (Entry = Info; Entry < InfoEnd; ++Entry)
+    {
+        if (Relationship != RelationAll && Entry->Relationship != Relationship)
+            continue;
+
+        EntrySize = GetExRecordSize(Entry->Relationship);
+        if (EntrySize == 0)
+            continue;
+
+        RtlZeroMemory(ExEntry, EntrySize);
+        ExEntry->Relationship = Entry->Relationship;
+        ExEntry->Size = EntrySize;
+
+        if (Entry->Relationship == RelationProcessorCore)
+        {
+            ExEntry->Processor.Flags = Entry->ProcessorCore.Flags;
+            ExEntry->Processor.GroupCount = 1;
+            ExEntry->Processor.GroupMask[0].Mask = Entry->ProcessorMask;
+        }
+        else
+        {
+            ExEntry->NumaNode.NodeNumber = Entry->NumaNode.NodeNumber;
+            ExEntry->NumaNode.GroupMask.Mask = Entry->ProcessorMask;
+        }
+
+        ExEntry = (PSYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX)((PBYTE)ExEntry + EntrySize);
+    }
+
+    RtlFreeHeap(RtlGetProcessHeap(), 0, Info);
+
+    *ReturnLength = RequiredLength;
+    return TRUE;
+}
+
 /*
  * @implemented
  */
