@@ -67,6 +67,9 @@ typedef struct _DRIVER_INIT_DATA
     HW_INITIALIZATION_DATA HwInitData;
 } DRIVER_INIT_DATA, *PDRIVER_INIT_DATA;
 
+/* Size of HW_INITIALIZATION_DATA before the virtual miniport members were added */
+#define HW_INIT_DATA_SIZE_PHYSICAL  FIELD_OFFSET(HW_INITIALIZATION_DATA, HwFreeAdapterResources)
+
 typedef struct _DRIVER_OBJECT_EXTENSION
 {
     EXTENSION_TYPE ExtensionType;
