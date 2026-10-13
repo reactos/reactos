@@ -271,6 +271,9 @@ typedef struct _FDO_DEVICE_EXTENSION
     LIST_ENTRY PdoListHead;
     ULONG PdoCount;
 
+    /* BusChangeDetected can arrive at device IRQL, PnP is told from here instead */
+    KDPC BusChangeDpc;
+
     /*
      * HBA timers. The first timer, DPC & callback are for StorPortNotification's RequestTimerCall,
      * and the timer list is for StorPortInitializeTimer (implemented in ExtendedFunction), list
@@ -447,6 +450,34 @@ FdoFindLun(
     _In_ ULONG Bus,
     _In_ ULONG Target,
     _In_ ULONG Lun);
+
+PPDO_DEVICE_EXTENSION
+NTAPI
+FdoFindLunAboveDispatch(
+    _In_ PFDO_DEVICE_EXTENSION FdoExtension,
+    _In_ ULONG Bus,
+    _In_ ULONG Target,
+    _In_ ULONG Lun);
+
+VOID
+NTAPI
+PortFdoLinkPdo(
+    _Inout_ PFDO_DEVICE_EXTENSION FdoExtension,
+    _Inout_ PPDO_DEVICE_EXTENSION PdoExtension);
+
+VOID
+NTAPI
+PortFdoUnlinkPdo(
+    _Inout_ PFDO_DEVICE_EXTENSION FdoExtension,
+    _Inout_ PPDO_DEVICE_EXTENSION PdoExtension);
+
+VOID
+NTAPI
+PortFdoBusChangeDpc(
+    _In_ PKDPC Dpc,
+    _In_opt_ PVOID DeferredContext,
+    _In_opt_ PVOID SystemArgument1,
+    _In_opt_ PVOID SystemArgument2);
 
 NTSTATUS
 NTAPI

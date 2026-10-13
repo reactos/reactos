@@ -76,12 +76,6 @@ PortCreatePdo(
         }
     }
 
-    /* Add the PDO to the PDO list*/
-    StorpInterlockedInsertHeadListCounted(&FdoDeviceExtension->PdoListLock,
-                                          &FdoDeviceExtension->PdoListHead,
-                                          &DeviceExtension->PdoListEntry,
-                                          &FdoDeviceExtension->PdoCount);
-
     DeviceExtension->Bus = Bus;
     DeviceExtension->Target = Target;
     DeviceExtension->Lun = Lun;
@@ -112,6 +106,9 @@ PortCreatePdo(
 
     DeviceExtension->SpecialRequestCounter = 0; /* FIXME: DELETE AFTER DEBUG */
 
+    /* Add the PDO to the PDO list only once a lookup can match its address */
+    PortFdoLinkPdo(FdoDeviceExtension, DeviceExtension);
+
     /* Let the miniport know the unit is coming up */
     StorpBuildUnitAddress(DeviceExtension, &Address);
     MiniportUnitControl(&FdoDeviceExtension->Miniport, ScsiUnitStart, &Address);
@@ -138,9 +135,7 @@ PortDeletePdo(
     MiniportUnitControl(&PdoExtension->FdoExtension->Miniport, ScsiUnitRemove, &Address);
 
     /* Remove the PDO from the PDO list*/
-    StorpInterlockedRemoveEntryListCounted(&PdoExtension->FdoExtension->PdoListLock,
-                                           &PdoExtension->PdoListEntry,
-                                           &PdoExtension->FdoExtension->PdoCount);
+    PortFdoUnlinkPdo(PdoExtension->FdoExtension, PdoExtension);
 
     if (PdoExtension->InquiryBuffer)
     {

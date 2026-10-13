@@ -258,6 +258,8 @@ PortAddDevice(
     KeInitializeSpinLock(&DeviceExtension->PdoListLock);
     InitializeListHead(&DeviceExtension->PdoListHead);
 
+    KeInitializeDpc(&DeviceExtension->BusChangeDpc, PortFdoBusChangeDpc, DeviceExtension);
+
     KeInitializeSpinLock(&DeviceExtension->TimerListLock);
     InitializeListHead(&DeviceExtension->TimerListHead);
 
@@ -1184,6 +1186,7 @@ StorPortGetLogicalUnit(
     _In_ UCHAR Lun)
 {
     PMINIPORT_DEVICE_EXTENSION MiniportExtension;
+    PFDO_DEVICE_EXTENSION FdoExtension;
     PPDO_DEVICE_EXTENSION PdoExtension;
 
     DPRINT("StorPortGetLogicalUnit(%p %u %u %u)\n",
@@ -1195,12 +1198,15 @@ StorPortGetLogicalUnit(
     MiniportExtension = CONTAINING_RECORD(HwDeviceExtension,
                                           MINIPORT_DEVICE_EXTENSION,
                                           HwDeviceExtension);
+    FdoExtension = MiniportExtension->Miniport->DeviceExtension;
+
+    /* Miniports call this from HwInterrupt too, where the list lock cannot be taken */
+    if (KeGetCurrentIrql() > DISPATCH_LEVEL)
+        PdoExtension = FdoFindLunAboveDispatch(FdoExtension, PathId, TargetId, Lun);
+    else
+        PdoExtension = FdoFindLun(FdoExtension, PathId, TargetId, Lun);
 
     /* A unit nothing ever found has nothing kept about it */
-    PdoExtension = FdoFindLun(MiniportExtension->Miniport->DeviceExtension,
-                              PathId,
-                              TargetId,
-                              Lun);
     if (PdoExtension == NULL)
         return NULL;
 
@@ -1625,12 +1631,9 @@ StorPortNotification(
         case BusChangeDetected:
             DPRINT1("BusChangeDetected\n");
 
-            /* Have PnP query bus relations again so the scan runs */
+            /* Have PnP query bus relations again so the scan runs, once below device IRQL */
             if (FdoExtension != NULL && FdoExtension->PhysicalDevice != NULL)
-            {
-                IoInvalidateDeviceRelations(FdoExtension->PhysicalDevice,
-                                            BusRelations);
-            }
+                KeInsertQueueDpc(&FdoExtension->BusChangeDpc, NULL, NULL);
             break;
 
         case GetExtendedFunctionTable:
