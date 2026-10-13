@@ -641,7 +641,7 @@ PortPdoScsi(
             PortPdoScheduleRequestNoFlowControl(FdoExtension, RequestReference);
 
             /* Fire up the request immediately */
-            PortPdoIssueRequest(PdoExtension, RequestReference);
+            Status = PortPdoIssueRequest(PdoExtension, RequestReference);
 
             break;
         }
