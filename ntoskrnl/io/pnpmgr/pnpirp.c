@@ -67,6 +67,20 @@ IopSynchronousCall(
     Status = IoCallDriver(TopDeviceObject, Irp);
     /* Otherwise we may get stuck here or have IoStatusBlock not populated */
     ASSERT(!KeAreAllApcsDisabled());
+#if DBG
+    /* A request completed in this thread has run its completion APC by now */
+    if (Status != STATUS_PENDING &&
+        !IsListEmpty(&KeGetCurrentThread()->ApcState.ApcListHead[KernelMode]))
+    {
+        DPRINT1("Completion APC of IRP %p still queued: Irql %u Pending %u SpecialApcDisable %d Flags 0x%Ix\n",
+                Irp,
+                KeGetCurrentIrql(),
+                KeGetCurrentThread()->ApcState.KernelApcPending,
+                KeGetCurrentThread()->SpecialApcDisable,
+                __readeflags());
+        DbgBreakPoint();
+    }
+#endif
     if (Status == STATUS_PENDING)
     {
         /* Wait for it */
