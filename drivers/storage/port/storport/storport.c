@@ -1515,8 +1515,15 @@ StorPortInitialize(
                                         NULL,
                                         FALSE,
                                         &PhysicalDeviceObject);
-        if (!NT_SUCCESS(Status))
-            DPRINT1("IoReportDetectedDevice() failed (Status 0x%08lx)\n", Status);
+
+        DPRINT1("Virtual miniport reported itself: Status 0x%08lx Pdo %p\n",
+                Status, PhysicalDeviceObject);
+    }
+    else
+    {
+        DPRINT1("Not a virtual miniport: size %lu features 0x%08lx\n",
+                HwInitializationData->HwInitializationDataSize,
+                HwInitializationData->FeatureSupport);
     }
 
     DPRINT1("StorPortInitialize() done (Status 0x%08lx)\n", Status);
