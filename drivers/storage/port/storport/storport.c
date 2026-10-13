@@ -1501,39 +1501,6 @@ StorPortInitialize(
         return Status;
     }
 
-    /* No bus reports a device for a virtual miniport, so it reports one itself */
-    if ((HwInitializationData->HwInitializationDataSize == sizeof(*HwInitializationData)) &&
-        (HwInitializationData->FeatureSupport & STOR_FEATURE_VIRTUAL_MINIPORT))
-    {
-        PDEVICE_OBJECT PhysicalDeviceObject = NULL;
-
-        Status = IoReportDetectedDevice(DriverObject,
-                                        HwInitializationData->AdapterInterfaceType,
-                                        -1,
-                                        -1,
-                                        NULL,
-                                        NULL,
-                                        FALSE,
-                                        &PhysicalDeviceObject);
-
-        DPRINT1("Virtual miniport reported itself: Status 0x%08lx Pdo %p\n",
-                Status, PhysicalDeviceObject);
-    }
-    else
-    {
-        /* Only the full init data has a feature word */
-        if (HwInitializationData->HwInitializationDataSize == sizeof(*HwInitializationData))
-        {
-            DPRINT1("Not a virtual miniport: features 0x%08lx\n",
-                    HwInitializationData->FeatureSupport);
-        }
-        else
-        {
-            DPRINT1("Not a virtual miniport: size %lu is short of the feature word\n",
-                    HwInitializationData->HwInitializationDataSize);
-        }
-    }
-
     DPRINT1("StorPortInitialize() done (Status 0x%08lx)\n", Status);
 
     return Status;
