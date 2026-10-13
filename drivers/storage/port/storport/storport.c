@@ -1172,7 +1172,7 @@ StorPortGetDeviceBase(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 STORPORT_API
 PVOID
@@ -1183,9 +1183,28 @@ StorPortGetLogicalUnit(
     _In_ UCHAR TargetId,
     _In_ UCHAR Lun)
 {
-    DPRINT1("StorPortGetLogicalUnit()\n");
-    UNIMPLEMENTED;
-    return NULL;
+    PMINIPORT_DEVICE_EXTENSION MiniportExtension;
+    PPDO_DEVICE_EXTENSION PdoExtension;
+
+    DPRINT("StorPortGetLogicalUnit(%p %u %u %u)\n",
+           HwDeviceExtension, PathId, TargetId, Lun);
+
+    if (HwDeviceExtension == NULL)
+        return NULL;
+
+    MiniportExtension = CONTAINING_RECORD(HwDeviceExtension,
+                                          MINIPORT_DEVICE_EXTENSION,
+                                          HwDeviceExtension);
+
+    /* A unit nothing ever found has nothing kept about it */
+    PdoExtension = FdoFindLun(MiniportExtension->Miniport->DeviceExtension,
+                              PathId,
+                              TargetId,
+                              Lun);
+    if (PdoExtension == NULL)
+        return NULL;
+
+    return PdoExtension->LunExtension;
 }
 
 
@@ -1619,6 +1638,17 @@ StorPortNotification(
             /* Insert DPC for delayed completion */
             KeInsertQueueDpc(&FdoExtension->Device->Dpc, NULL, NULL);
 
+            break;
+
+        case BusChangeDetected:
+            DPRINT1("BusChangeDetected\n");
+
+            /* Have PnP query bus relations again so the scan runs */
+            if (FdoExtension != NULL && FdoExtension->PhysicalDevice != NULL)
+            {
+                IoInvalidateDeviceRelations(FdoExtension->PhysicalDevice,
+                                            BusRelations);
+            }
             break;
 
         case GetExtendedFunctionTable:
