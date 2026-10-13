@@ -1,0 +1,11 @@
+/*
+ * PROJECT:     ReactOS NVM Express Miniport Driver
+ * LICENSE:     MIT (https://spdx.org/licenses/MIT)
+ * COPYRIGHT:   Copyright 2026 Justin Miller <justin.miller@reactos.org>
+ */
+
+#define REACTOS_VERSION_DLL
+#define REACTOS_STR_FILE_DESCRIPTION  "NVM Express Storport Miniport Driver"
+#define REACTOS_STR_INTERNAL_NAME     "stornvme"
+#define REACTOS_STR_ORIGINAL_FILENAME "stornvme.sys"
+#include <reactos/version.rc>
