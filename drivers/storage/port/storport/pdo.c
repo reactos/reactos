@@ -27,6 +27,7 @@ PortCreatePdo(
 {
     PPDO_DEVICE_EXTENSION DeviceExtension = NULL;
     PDEVICE_OBJECT Pdo = NULL;
+    STOR_ADDR_BTL8 Address;
     NTSTATUS Status;
 
     DPRINT("PortCreatePdo(%p %p)\n",
@@ -95,6 +96,10 @@ PortCreatePdo(
 
     DeviceExtension->SpecialRequestCounter = 0; /* FIXME: DELETE AFTER DEBUG */
 
+    /* Let the miniport know the unit is coming up */
+    StorpBuildUnitAddress(DeviceExtension, &Address);
+    MiniportUnitControl(&FdoDeviceExtension->Miniport, ScsiUnitStart, &Address);
+
     /* The device has been initialized */
     Pdo->Flags &= ~DO_DEVICE_INITIALIZING;
 
@@ -108,7 +113,13 @@ NTSTATUS
 PortDeletePdo(
     _In_ PPDO_DEVICE_EXTENSION PdoExtension)
 {
+    STOR_ADDR_BTL8 Address;
+
     DPRINT("PortDeletePdo(%p)\n", PdoExtension);
+
+    /* Tell the miniport before the unit goes away under it */
+    StorpBuildUnitAddress(PdoExtension, &Address);
+    MiniportUnitControl(&PdoExtension->FdoExtension->Miniport, ScsiUnitRemove, &Address);
 
     /* Remove the PDO from the PDO list*/
     StorpInterlockedRemoveEntryListCounted(&PdoExtension->FdoExtension->PdoListLock,
