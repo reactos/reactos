@@ -6,7 +6,7 @@
  * COPYRIGHT:       Copyright 2007 Saveliy Tretiakov
  *                  Copyright 2008 Colin Finck
  *                  Copyright 2011 Rafal Harabien
- *                  Copyright 2022 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
+ *                  Copyright 2022-2026 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
 #include <win32k.h>
@@ -24,8 +24,6 @@ PKBDFILE gpkfList = NULL;
 DWORD gSystemFS = 0;
 UINT gSystemCPCharSet = 0;
 HKL ghKLSentToShell = NULL;
-
-typedef PVOID (*PFN_KBDLAYERDESCRIPTOR)(VOID);
 
 /* PRIVATE FUNCTIONS ******************************************************/
 
@@ -238,6 +236,201 @@ DumpKbdLayout(
 
 #endif // DBG
 
+#define KBDIMG_TAG 'ibKU'
+#define KBDIMG_MAXSIZE (16 * 1024 * 1024)
+
+#ifndef IMAGE_REL_BASED_ABSOLUTE
+    #define IMAGE_REL_BASED_ABSOLUTE 0
+    #define IMAGE_REL_BASED_HIGHLOW  3
+    #define IMAGE_REL_BASED_DIR64    10
+#endif
+
+/* We have to build the image of the keyboard layout file without executing the file,
+   due to security reason */
+static PVOID
+KbdBuildImage(
+    _In_ PVOID pvRaw,
+    _In_ SIZE_T cbRaw)
+{
+    PIMAGE_DOS_HEADER pDos = pvRaw;
+    PIMAGE_NT_HEADERS pNt;
+    PIMAGE_SECTION_HEADER pSec;
+    PBYTE pbRaw = pvRaw, pbImage;
+    ULONG cbImage, i;
+    ULONG_PTR delta;
+
+    _SEH2_TRY
+    {
+        if (cbRaw < sizeof(IMAGE_DOS_HEADER) || pDos->e_magic != IMAGE_DOS_SIGNATURE ||
+            pDos->e_lfanew <= 0 || cbRaw < sizeof(IMAGE_NT_HEADERS) ||
+            (SIZE_T)pDos->e_lfanew > cbRaw - sizeof(IMAGE_NT_HEADERS))
+        {
+            _SEH2_YIELD(return NULL);
+        }
+
+        pNt = (PIMAGE_NT_HEADERS)(pbRaw + pDos->e_lfanew);
+        if (pNt->Signature != IMAGE_NT_SIGNATURE ||
+            pNt->OptionalHeader.Magic != IMAGE_NT_OPTIONAL_HDR_MAGIC)
+        {
+            _SEH2_YIELD(return NULL);
+        }
+
+        cbImage = pNt->OptionalHeader.SizeOfImage;
+        if (!cbImage || cbImage > KBDIMG_MAXSIZE ||
+            pNt->OptionalHeader.SizeOfHeaders > cbImage ||
+            pNt->OptionalHeader.SizeOfHeaders > cbRaw)
+        {
+            _SEH2_YIELD(return NULL);
+        }
+
+        pbImage = ExAllocatePoolWithTag(PagedPool, cbImage, KBDIMG_TAG);
+        if (!pbImage)
+            _SEH2_YIELD(return NULL);
+
+        RtlZeroMemory(pbImage, cbImage);
+        RtlCopyMemory(pbImage, pbRaw, pNt->OptionalHeader.SizeOfHeaders);
+
+        pSec = IMAGE_FIRST_SECTION(pNt);
+        if ((PBYTE)(pSec + pNt->FileHeader.NumberOfSections) > pbRaw + cbRaw)
+            _SEH2_YIELD(goto Failure);
+
+        for (i = 0; i < pNt->FileHeader.NumberOfSections; ++i)
+        {
+            ULONG cb = pSec[i].SizeOfRawData;
+            if (pSec[i].Misc.VirtualSize && pSec[i].Misc.VirtualSize < cb)
+                cb = pSec[i].Misc.VirtualSize;
+            if (!cb)
+                continue;
+            if (pSec[i].VirtualAddress > cbImage || cb > cbImage - pSec[i].VirtualAddress ||
+                pSec[i].PointerToRawData > cbRaw || cb > cbRaw - pSec[i].PointerToRawData)
+            {
+                _SEH2_YIELD(goto Failure);
+            }
+            RtlCopyMemory(pbImage + pSec[i].VirtualAddress, pbRaw + pSec[i].PointerToRawData, cb);
+        }
+
+        delta = (ULONG_PTR)pbImage - (ULONG_PTR)pNt->OptionalHeader.ImageBase;
+        if (delta)
+        {
+            PIMAGE_DATA_DIRECTORY pDir =
+                &pNt->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_BASERELOC];
+            ULONG off = pDir->VirtualAddress, end = off + pDir->Size;
+
+            if (!pDir->Size || end < off || end > cbImage)
+                _SEH2_YIELD(goto Failure);
+
+            while (off + sizeof(IMAGE_BASE_RELOCATION) <= end)
+            {
+                PIMAGE_BASE_RELOCATION pBlk = (PIMAGE_BASE_RELOCATION)(pbImage + off);
+                PUSHORT pEnt = (PUSHORT)(pBlk + 1);
+                ULONG n;
+
+                if (pBlk->SizeOfBlock < sizeof(*pBlk) || pBlk->SizeOfBlock > end - off)
+                    _SEH2_YIELD(goto Failure);
+                n = (pBlk->SizeOfBlock - sizeof(*pBlk)) / sizeof(USHORT);
+
+                while (n--)
+                {
+                    USHORT e = *pEnt++;
+                    ULONG rva = pBlk->VirtualAddress + (e & 0xFFF);
+                    switch (e >> 12)
+                    {
+                        case IMAGE_REL_BASED_ABSOLUTE:
+                            break;
+                        case IMAGE_REL_BASED_HIGHLOW:
+                            if (rva > cbImage - sizeof(ULONG))
+                                _SEH2_YIELD(goto Failure);
+                            *(PULONG)(pbImage + rva) += (ULONG)delta;
+                            break;
+#ifdef _WIN64
+                        case IMAGE_REL_BASED_DIR64:
+                            if (rva > cbImage - sizeof(ULONGLONG))
+                                _SEH2_YIELD(goto Failure);
+                            *(PULONGLONG)(pbImage + rva) += (ULONGLONG)delta;
+                            break;
+#endif
+                        default:
+                            _SEH2_YIELD(goto Failure);
+                    }
+                }
+                off += pBlk->SizeOfBlock;
+            }
+        }
+        _SEH2_YIELD(return pbImage);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        ERR("Exception in KbdBuildImage!\n");
+    }
+    _SEH2_END;
+
+Failure:
+    ExFreePoolWithTag(pbImage, KBDIMG_TAG);
+    return NULL;
+}
+
+/* Loads the image of keyboard layout file. See also KbdUnloadImage below. */
+static PVOID
+KbdLoadImage(
+    _In_ HANDLE hSafeFile)
+{
+    NTSTATUS Status;
+    IO_STATUS_BLOCK IoStatusBlock;
+    FILE_STANDARD_INFORMATION FileInfo;
+    LARGE_INTEGER Offset;
+    PVOID pvRaw, pvImage;
+    ULONG cbRaw;
+
+    if (!hSafeFile)
+        return NULL;
+
+    /* Get the file size */
+    Status = ZwQueryInformationFile(hSafeFile, &IoStatusBlock, &FileInfo,
+                                    sizeof(FileInfo), FileStandardInformation);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("ZwQueryInformationFile failed: 0x%08X\n", Status);
+        return NULL;
+    }
+    if (FileInfo.EndOfFile.QuadPart <= 0 || FileInfo.EndOfFile.QuadPart > KBDIMG_MAXSIZE)
+    {
+        ERR("Invalid file size\n");
+        return NULL;
+    }
+    cbRaw = FileInfo.EndOfFile.LowPart;
+
+    /* Allocate raw image buffer */
+    pvRaw = ExAllocatePoolWithTag(PagedPool, cbRaw, KBDIMG_TAG);
+    if (!pvRaw)
+        return NULL;
+
+    /* Load the file content */
+    Offset.QuadPart = 0;
+    Status = ZwReadFile(hSafeFile, NULL, NULL, NULL, &IoStatusBlock, pvRaw, cbRaw, &Offset, NULL);
+    if (!NT_SUCCESS(Status) || IoStatusBlock.Information != cbRaw)
+    {
+        ERR("ZwReadFile failed: 0x%08X (read %Iu of %lu)\n", Status, IoStatusBlock.Information,
+            cbRaw);
+        ExFreePoolWithTag(pvRaw, KBDIMG_TAG);
+        return NULL;
+    }
+
+    /* RVA mapping + relocation */
+    pvImage = KbdBuildImage(pvRaw, cbRaw);
+    if (!pvImage)
+        ERR("KbdBuildImage failed\n");
+
+    ExFreePoolWithTag(pvRaw, KBDIMG_TAG);
+    return pvImage;
+}
+
+static VOID
+KbdUnloadImage(
+    _In_opt_ PVOID pvImageBase)
+{
+    if (pvImageBase)
+        ExFreePoolWithTag(pvImageBase, KBDIMG_TAG);
+}
 
 /*
  * UserLoadKbdDll
@@ -245,43 +438,31 @@ DumpKbdLayout(
  * Loads keyboard layout DLL and gets address to KbdTables
  */
 static BOOL
-UserLoadKbdDll(WCHAR *pwszLayoutPath,
-               HANDLE *phModule,
-               PKBDTABLES *pKbdTables)
+UserLoadKbdDll(
+    _In_ HANDLE hSafeFile,
+    _In_ ULONG offTable,
+    _Out_ HANDLE *phModule,
+    _Out_ PKBDTABLES *ppKbdTables,
+    _Out_ PKBDNLSTABLES *ppKbdNlsTables)
 {
-    PFN_KBDLAYERDESCRIPTOR pfnKbdLayerDescriptor;
+    PBYTE pbImage;
+    ULONG wMainOffset = LOWORD(offTable), wNlsOffset = HIWORD(offTable);
+
+    if (!wMainOffset)
+        return FALSE;
 
     /* Load keyboard layout DLL */
-    TRACE("Loading Keyboard DLL %ws\n", pwszLayoutPath);
-    *phModule = EngLoadImage(pwszLayoutPath);
+    *phModule = KbdLoadImage(hSafeFile);
     if (!(*phModule))
-    {
-        ERR("Failed to load dll %ws\n", pwszLayoutPath);
         return FALSE;
-    }
 
-    /* Find KbdLayerDescriptor function and get layout tables */
-    TRACE("Loaded %ws\n", pwszLayoutPath);
-    pfnKbdLayerDescriptor = EngFindImageProcAddress(*phModule, "KbdLayerDescriptor");
-
-    /* FIXME: Windows reads file instead of executing!
-              It's not safe to kbdlayout DLL in kernel mode! */
-
-    if (pfnKbdLayerDescriptor)
-        *pKbdTables = pfnKbdLayerDescriptor();
-    else
-        ERR("Error: %ws has no KbdLayerDescriptor()\n", pwszLayoutPath);
-
-    if (!pfnKbdLayerDescriptor || !*pKbdTables)
-    {
-        ERR("Failed to load the keyboard layout.\n");
-        EngUnloadImage(*phModule);
-        return FALSE;
-    }
+    pbImage = (PBYTE)*phModule;
+    *ppKbdTables = (PKBDTABLES)(pbImage + wMainOffset);
+    *ppKbdNlsTables = wNlsOffset ? (PKBDNLSTABLES)(pbImage + wNlsOffset) : NULL;
 
 #if 0 && DBG
     /* Dump keyboard layout */
-    DumpKbdLayout(*pKbdTables);
+    DumpKbdLayout(*ppKbdTables);
 #endif
 
     return TRUE;
@@ -293,15 +474,12 @@ UserLoadKbdDll(WCHAR *pwszLayoutPath,
  * Loads keyboard layout DLL and creates KBDFILE object
  */
 static PKBDFILE
-UserLoadKbdFile(PUNICODE_STRING pwszKLID)
+UserLoadKbdFile(
+    _In_ HANDLE hSafeFile,
+    _In_ ULONG offTable,
+    _In_ const UNICODE_STRING* pwszKLID)
 {
     PKBDFILE pkf, pRet = NULL;
-    NTSTATUS Status;
-    ULONG cbSize;
-    HKEY hKey = NULL;
-    WCHAR wszLayoutPath[MAX_PATH] = L"\\SystemRoot\\System32\\";
-    WCHAR wszLayoutRegKey[256] = L"\\REGISTRY\\Machine\\SYSTEM\\CurrentControlSet\\"
-                                 L"Control\\Keyboard Layouts\\";
 
     /* Create keyboard layout file object */
     pkf = UserCreateObject(gHandleTable, NULL, NULL, NULL, TYPE_KBDFILE, sizeof(KBDFILE));
@@ -314,33 +492,10 @@ UserLoadKbdFile(PUNICODE_STRING pwszKLID)
     /* Set keyboard layout name */
     _swprintf(pkf->awchKF, L"%wZ", pwszKLID);
 
-    /* Open layout registry key */
-    RtlStringCbCatW(wszLayoutRegKey, sizeof(wszLayoutRegKey), pkf->awchKF);
-    Status = RegOpenKey(wszLayoutRegKey, &hKey);
-    if (!NT_SUCCESS(Status))
-    {
-        ERR("Failed to open keyboard layouts registry key %ws (%lx)\n", wszLayoutRegKey, Status);
-        goto cleanup;
-    }
-
-    /* Read filename of layout DLL */
-    cbSize = (ULONG)(sizeof(wszLayoutPath) - wcslen(wszLayoutPath)*sizeof(WCHAR));
-    Status = RegQueryValue(hKey,
-                           L"Layout File",
-                           REG_SZ,
-                           wszLayoutPath + wcslen(wszLayoutPath),
-                           &cbSize);
-
-    if (!NT_SUCCESS(Status))
-    {
-        ERR("Can't get layout filename for %wZ (%lx)\n", pwszKLID, Status);
-        goto cleanup;
-    }
-
     /* Load keyboard file now */
-    if (!UserLoadKbdDll(wszLayoutPath, &pkf->hBase, &pkf->pKbdTbl))
+    if (!UserLoadKbdDll(hSafeFile, offTable, &pkf->hBase, &pkf->pKbdTbl, &pkf->pKbdNlsTbl))
     {
-        ERR("Failed to load %ws dll!\n", wszLayoutPath);
+        ERR("Failed to load layout file!\n");
         goto cleanup;
     }
 
@@ -352,8 +507,6 @@ UserLoadKbdFile(PUNICODE_STRING pwszKLID)
     pRet = pkf;
 
 cleanup:
-    if (hKey)
-        ZwClose(hKey);
     if (pkf)
         UserDereferenceObject(pkf); // we dont need ptr anymore
     if (!pRet)
@@ -372,11 +525,21 @@ cleanup:
  * Loads keyboard layout and creates KL object
  */
 static PKL
-co_UserLoadKbdLayout(PUNICODE_STRING pustrKLID, HKL hKL)
+co_UserLoadKbdLayout(
+    _In_ HANDLE hSafeFile,
+    _In_ ULONG offTable,
+    _In_ const UNICODE_STRING* pustrKLID,
+    _In_ HKL hKL)
 {
     LCID lCid;
     CHARSETINFO cs;
     PKL pKl;
+
+    if (!offTable)
+    {
+        ERR("offTable was zero\n");
+        return NULL;
+    }
 
     /* Create keyboard layout object */
     pKl = UserCreateObject(gHandleTable, NULL, NULL, NULL, TYPE_KBDLAYOUT, sizeof(KL));
@@ -387,7 +550,7 @@ co_UserLoadKbdLayout(PUNICODE_STRING pustrKLID, HKL hKL)
     }
 
     pKl->hkl = hKL;
-    pKl->spkf = UserLoadKbdFile(pustrKLID);
+    pKl->spkf = UserLoadKbdFile(hSafeFile, offTable, pustrKLID);
 
     /* Dereference keyboard layout */
     UserDereferenceObject(pKl);
@@ -458,7 +621,7 @@ UnloadKbdFile(_In_ PKBDFILE pkf)
     if (*ppkfLink == pkf)
         *ppkfLink = pkf->pkfNext;
 
-    EngUnloadImage(pkf->hBase);
+    KbdUnloadImage(pkf->hBase);
     UserDeleteObject(UserHMGetHandle(pkf), TYPE_KBDFILE);
 }
 
@@ -883,16 +1046,16 @@ PIMEINFOEX FASTCALL co_UserImmLoadLayout(_In_ HKL hKL)
 
 HKL APIENTRY
 co_IntLoadKeyboardLayoutEx(
-    IN OUT PWINSTATION_OBJECT pWinSta,
-    IN HANDLE hSafeFile,
-    IN HKL hOldKL,
-    IN PUNICODE_STRING puszSafeKLID,
-    IN HKL hNewKL,
-    IN UINT Flags)
+    _Inout_ PWINSTATION_OBJECT pWinSta,
+    _In_ HANDLE hSafeFile,
+    _In_opt_ HKL hOldKL,
+    _In_ ULONG offTable,
+    _In_opt_ PKBDTABLE_MULTI_EX pMulti,
+    _In_ PUNICODE_STRING puszSafeKLID,
+    _In_ HKL hNewKL,
+    _In_ UINT Flags)
 {
     PKL pOldKL, pNewKL;
-
-    UNREFERENCED_PARAMETER(hSafeFile);
 
     if (hNewKL == NULL || (pWinSta->Flags & WSS_NOIO))
         return NULL;
@@ -907,12 +1070,29 @@ co_IntLoadKeyboardLayoutEx(
 
     /* FIXME: It seems KLF_RESET is only supported for WINLOGON */
 
+    /* Update offTable by using pMulti (if any) */
+    if (pMulti && pMulti->szRealDllName[0])
+    {
+        ULONG iTable;
+        PKBDTABLE_DESC pKbdTables = pMulti->Multi.aKbdTables;
+        for (iTable = 0; iTable < pMulti->Multi.nTables; ++iTable)
+        {
+            PCWSTR pszDllName = pKbdTables[iTable].wszDllName;
+            if (_wcsicmp(pMulti->szRealDllName, pszDllName) == 0)
+            {
+                PKBDTABLE_MULTI_AUX_ENTRY pAuxEntry = &pMulti->AuxEntries[iTable];
+                offTable = pAuxEntry->offTable;
+                break;
+            }
+        }
+    }
+
     /* Let's see if layout was already loaded. */
     pNewKL = UserHklToKbl(hNewKL);
     if (!pNewKL)
     {
         /* It wasn't, so load it. */
-        pNewKL = co_UserLoadKbdLayout(puszSafeKLID, hNewKL);
+        pNewKL = co_UserLoadKbdLayout(hSafeFile, offTable, puszSafeKLID, hNewKL);
         if (!pNewKL)
             return NULL;
 
@@ -960,28 +1140,80 @@ co_IntLoadKeyboardLayoutEx(
     return hNewKL;
 }
 
-HANDLE FASTCALL IntVerifyKeyboardFileHandle(HANDLE hFile)
+typedef struct KBDFILE_NAME
 {
-    PFILE_OBJECT FileObject;
+    OBJECT_NAME_INFORMATION Info;
+    WCHAR Buffer[MAX_PATH];
+} KBDFILE_NAME;
+
+/* Gets the full NT path of a file or directory handle. */
+static __inline NTSTATUS
+IntQueryHandleName(HANDLE hObject, KBDFILE_NAME *pName)
+{
+    ULONG cbReturned;
+    return ZwQueryObject(hObject, ObjectNameInformation, pName, sizeof(*pName), &cbReturned);
+}
+
+/* hFile is a handle from CreateFile. Accept it only if the file is in system32. */
+static HANDLE FASTCALL
+IntVerifyKeyboardFileHandle(HANDLE hFile)
+{
+    static const UNICODE_STRING ustrDir = RTL_CONSTANT_STRING(L"\\SystemRoot\\system32");
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    IO_STATUS_BLOCK IoStatusBlock;
+    KBDFILE_NAME Names[2]; /* [0]: system32 directory, [1]: the file */
+    UNICODE_STRING ustrParent;
+    HANDLE hDir, hResult = NULL;
     NTSTATUS Status;
 
-    if (hFile == INVALID_HANDLE_VALUE)
+    if (hFile == NULL || hFile == INVALID_HANDLE_VALUE)
         return NULL;
 
-    Status = ObReferenceObjectByHandle(hFile, FILE_READ_DATA, NULL, UserMode,
-                                       (PVOID*)&FileObject, NULL);
+    /* Get the canonical name of the file */
+    Status = IntQueryHandleName(hFile, &Names[1]);
     if (!NT_SUCCESS(Status))
     {
         ERR("0x%08X\n", Status);
-        return NULL;
+        goto Quit;
     }
 
-    /* FIXME: Is the file in the system directory? */
+    /* Get the canonical name of the system32 directory */
+    InitializeObjectAttributes(&ObjectAttributes, (PUNICODE_STRING)&ustrDir,
+                               OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE, NULL, NULL);
+    Status = ZwCreateFile(&hDir, FILE_LIST_DIRECTORY | SYNCHRONIZE, &ObjectAttributes,
+                          &IoStatusBlock, NULL, FILE_ATTRIBUTE_DIRECTORY,
+                          FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+                          FILE_OPEN, FILE_DIRECTORY_FILE | FILE_SYNCHRONOUS_IO_NONALERT, NULL, 0);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("0x%08X\n", Status);
+        goto Quit;
+    }
 
-    if (FileObject)
-        ObDereferenceObject(FileObject);
+    Status = IntQueryHandleName(hDir, &Names[0]);
+    ZwClose(hDir);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("0x%08X\n", Status);
+        goto Quit;
+    }
 
-    return hFile;
+    /* Strip the filename */
+    ustrParent = Names[1].Info.Name;
+    while (ustrParent.Length > 0)
+    {
+        ustrParent.Length -= sizeof(WCHAR);
+        if (ustrParent.Buffer[ustrParent.Length / sizeof(WCHAR)] == L'\\')
+            break;
+    }
+
+    if (RtlEqualUnicodeString(&ustrParent, &Names[0].Info.Name, TRUE))
+        hResult = hFile;
+    else
+        ERR("Not in system32: %wZ\n", &Names[1].Info.Name);
+
+Quit:
+    return hResult;
 }
 
 /* EXPORTS *******************************************************************/
@@ -1157,7 +1389,7 @@ NTAPI
 NtUserLoadKeyboardLayoutEx(
     _In_ HANDLE hFile,
     _In_ DWORD offTable,
-    _In_opt_ PKBDTABLE_MULTI_EX pTables,
+    _In_opt_ PKBDTABLE_MULTI_EX pMulti,
     _In_opt_ HKL hOldKL,
     _In_ PUNICODE_STRING puszKLID,
     _In_ DWORD dwNewKL,
@@ -1167,7 +1399,9 @@ NtUserLoadKeyboardLayoutEx(
     WCHAR Buffer[KL_NAMELENGTH];
     UNICODE_STRING uszSafeKLID;
     PWINSTATION_OBJECT pWinSta;
-    HANDLE hSafeFile;
+    HANDLE hSafeFile = NULL;
+    KBDTABLE_MULTI_EX multi;
+    UINT iTable;
 
     if (Flags & ~(KLF_ACTIVATE|KLF_NOTELLSHELL|KLF_REORDER|KLF_REPLACELANG|
                   KLF_SUBSTITUTE_OK|KLF_SETFORPROCESS|KLF_UNLOADPREVIOUS|
@@ -1179,11 +1413,18 @@ NtUserLoadKeyboardLayoutEx(
     }
 
     RtlInitEmptyUnicodeString(&uszSafeKLID, Buffer, sizeof(Buffer));
+    RtlZeroMemory(&multi, sizeof(multi));
+
     _SEH2_TRY
     {
         ProbeForRead(puszKLID, sizeof(*puszKLID), 1);
-        ProbeForRead(puszKLID->Buffer, sizeof(puszKLID->Length), 1);
+        ProbeForRead(puszKLID->Buffer, puszKLID->Length, 1);
         RtlCopyUnicodeString(&uszSafeKLID, puszKLID);
+        if (pMulti)
+        {
+            ProbeForRead(pMulti, sizeof(*pMulti), 1);
+            multi = *pMulti;
+        }
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
@@ -1194,16 +1435,44 @@ NtUserLoadKeyboardLayoutEx(
 
     UserEnterExclusive();
 
-    hSafeFile = (hFile ? IntVerifyKeyboardFileHandle(hFile) : NULL);
+    if (!hFile || multi.Multi.nTables > KBDTABLE_MULTI_MAX || !offTable)
+    {
+        ERR("hFile: %p, nTables: %u, offTable: 0x%08X\n", hFile, multi.Multi.nTables, offTable);
+        EngSetLastError(ERROR_INVALID_PARAMETER);
+        hRetKL = NULL;
+        goto Quit;
+    }
+
+    /* Verify file handles */
+    hSafeFile = IntVerifyKeyboardFileHandle(hFile);
+    if (pMulti)
+    {
+        for (iTable = 0; iTable < multi.Multi.nTables; ++iTable)
+        {
+            HANDLE hAuxFile = multi.AuxEntries[iTable].hFile;
+            hAuxFile = IntVerifyKeyboardFileHandle(hAuxFile);
+            multi.AuxEntries[iTable].hFile = hAuxFile;
+        }
+    }
+
     pWinSta = IntGetProcessWindowStation(NULL);
     hRetKL = co_IntLoadKeyboardLayoutEx(pWinSta,
                                         hSafeFile,
                                         hOldKL,
+                                        offTable,
+                                        (multi.Multi.nTables ? &multi : NULL),
                                         &uszSafeKLID,
                                         UlongToHandle(dwNewKL),
                                         Flags);
+Quit:
+    /* Close file handles */
     if (hSafeFile)
         ZwClose(hSafeFile);
+    for (iTable = 0; iTable < multi.Multi.nTables; ++iTable)
+    {
+        if (multi.AuxEntries[iTable].hFile)
+            ZwClose(multi.AuxEntries[iTable].hFile);
+    }
 
     UserLeave();
     return hRetKL;

@@ -111,12 +111,11 @@ typedef struct _LARGE_ANSI_STRING
 
 typedef struct tagKBDTABLE_MULTI_AUX_ENTRY {
     HANDLE hFile;
-    WORD wMainOffset;
-    WORD wNlsOffset;
+    ULONG offTable;
 } KBDTABLE_MULTI_AUX_ENTRY, *PKBDTABLE_MULTI_AUX_ENTRY;
 
 typedef struct tagKBDTABLE_MULTI_EX {
-    KBDTABLE_MULTI MultiTable;
+    KBDTABLE_MULTI Multi;
     WCHAR szRealDllName[32];
     KBDTABLE_MULTI_AUX_ENTRY AuxEntries[KBDTABLE_MULTI_MAX];
 } KBDTABLE_MULTI_EX, *PKBDTABLE_MULTI_EX;
@@ -2657,7 +2656,7 @@ NTAPI
 NtUserLoadKeyboardLayoutEx(
     _In_ HANDLE hFile,
     _In_ DWORD offTable,
-    _In_opt_ PKBDTABLE_MULTI_EX pTables,
+    _In_opt_ PKBDTABLE_MULTI_EX pMulti,
     _In_opt_ HKL hOldKL,
     _In_ PUNICODE_STRING puszKLID,
     _In_ DWORD dwNewKL,
