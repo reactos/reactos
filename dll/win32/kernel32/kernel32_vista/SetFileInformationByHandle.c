@@ -34,7 +34,27 @@
 
 /* Taken from Wine kernelbase/file.c */
 
-/*
+/**
+ * @brief
+ * Sets information for the file or device that a handle refers to. The Win32
+ * class is translated to the matching NT set operation and the caller's
+ * buffer is handed to NtSetInformationFile.
+ *
+ * @param[in]   hFile
+ * Handle to the file or device to set information on.
+ *
+ * @param[in]   FileInformationClass
+ * The class of information to set.
+ *
+ * @param[in]   lpFileInformation
+ * Buffer holding the information to set. Its layout depends on the class.
+ *
+ * @param[in]   dwBufferSize
+ * Size of the buffer, in bytes.
+ *
+ * @return
+ * TRUE on success, FALSE on failure. Call GetLastError for the error code.
+ *
  * @implemented
  */
 BOOL
