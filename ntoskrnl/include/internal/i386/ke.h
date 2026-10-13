@@ -392,8 +392,13 @@ FORCEINLINE
 VOID
 KeFlushProcessTb(VOID)
 {
+#ifdef CONFIG_SMP
+    /* Other processors may still cache the reused hyperspace and system PTEs */
+    KeFlushEntireTb(TRUE, TRUE);
+#else
     /* Flush the TLB by resetting CR3 */
     __writecr3(__readcr3());
+#endif
 }
 
 FORCEINLINE
