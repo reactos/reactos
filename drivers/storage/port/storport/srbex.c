@@ -76,6 +76,25 @@ StorpRequestReference(
 
 
 /**
+ * @brief Finds the data buffer of a request in either format.
+ */
+PVOID
+NTAPI
+StorpSrbDataBuffer(
+    _In_ PSCSI_REQUEST_BLOCK Srb)
+{
+    if (StorpIsExtendedSrb(Srb))
+    {
+        PSTORAGE_REQUEST_BLOCK Extended = (PSTORAGE_REQUEST_BLOCK)Srb;
+
+        return Extended->DataBuffer;
+    }
+
+    return Srb->DataBuffer;
+}
+
+
+/**
  * @brief Fills in the extended request a miniport will be given.
  *
  * @param Srb The request as the class layer built it.

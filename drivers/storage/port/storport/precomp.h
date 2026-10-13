@@ -98,6 +98,9 @@ typedef struct _MINIPORT
     /* Answers to the supported control type queries, unclaimed types are never sent */
     BOOLEAN AdapterControlSupported[ScsiAdapterControlMax];
     BOOLEAN UnitControlSupported[ScsiUnitControlMax];
+
+    /* No resources, interrupt or DMA adapter, it gets its own stack's device objects instead */
+    BOOLEAN IsVirtual;
 } MINIPORT, *PMINIPORT;
 
 typedef struct _UNIT_DATA
@@ -489,6 +492,11 @@ BOOLEAN
 MiniportHwInterrupt(
     _In_ PMINIPORT Miniport);
 
+VOID
+NTAPI
+MiniportFreeAdapterResources(
+    _In_ PMINIPORT Miniport);
+
 BOOLEAN
 NTAPI
 MiniportHwMSInterrupt(
@@ -671,6 +679,11 @@ StorpIsExtendedSrb(
 PQUEUED_REQUEST_REFERENCE
 NTAPI
 StorpRequestReference(
+    _In_ PSCSI_REQUEST_BLOCK Srb);
+
+PVOID
+NTAPI
+StorpSrbDataBuffer(
     _In_ PSCSI_REQUEST_BLOCK Srb);
 
 VOID
