@@ -3652,7 +3652,6 @@ typedef struct _VPD_SUPPORTED_PAGES_PAGE
     UCHAR SupportedPageList[0];
 } VPD_SUPPORTED_PAGES_PAGE, *PVPD_SUPPORTED_PAGES_PAGE;
 
-#include <pshpack1.h>
 typedef struct _READ_CAPACITY_DATA
 {
     ULONG LogicalBlockAddress;
@@ -5541,8 +5540,6 @@ typedef enum _TRANSFER_COUNT_UNITS
     TRANSFER_COUNT_UNITS_EXBIBYTES = 6,
     TRANSFER_COUNT_UNITS_NUMBER_BLOCKS = 0xF1
 } TRANSFER_COUNT_UNITS, *PTRANSFER_COUNT_UNITS;
-
-#include <poppack.h>
 
 #include <poppack.h>
 
