@@ -30,6 +30,7 @@ PortAddDriverInitData(
     PHW_INITIALIZATION_DATA HwInitializationData)
 {
     PDRIVER_INIT_DATA InitData;
+    ULONG Length;
 
     DPRINT1("PortAddDriverInitData()\n");
 
@@ -39,9 +40,14 @@ PortAddDriverInitData(
     if (InitData == NULL)
         return STATUS_NO_MEMORY;
 
+    /* Copy only what both interface revisions share, absent members stay zero */
+    Length = min(HwInitializationData->HwInitializationDataSize,
+                 sizeof(InitData->HwInitData));
+
+    RtlZeroMemory(&InitData->HwInitData, sizeof(InitData->HwInitData));
     RtlCopyMemory(&InitData->HwInitData,
                   HwInitializationData,
-                  sizeof(HW_INITIALIZATION_DATA));
+                  Length);
 
     InsertHeadList(&DriverExtension->InitDataListHead,
                    &InitData->Entry);
@@ -1319,8 +1325,8 @@ StorPortInitialize(
         return STATUS_INVALID_PARAMETER;
     }
 
-    /* Check initialization data */
-    if ((HwInitializationData->HwInitializationDataSize < sizeof(HW_INITIALIZATION_DATA)) ||
+    /* Check initialization data, any interface revision from the original onwards is fine */
+    if ((HwInitializationData->HwInitializationDataSize < HW_INIT_DATA_SIZE_PHYSICAL) ||
         (HwInitializationData->HwInitialize == NULL) ||
         (HwInitializationData->HwStartIo == NULL) ||
         (HwInitializationData->HwFindAdapter == NULL) ||
