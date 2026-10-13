@@ -87,6 +87,8 @@ CConsoleWnd::OnCreate(UINT nMessage, WPARAM wParam, LPARAM lParam, BOOL& bHandle
     if (mdicreate->lParam)
         PostMessage(WM_SYSCOMMAND, SC_MAXIMIZE, 0);
 
+    m_MainWnd->UpdateViewMenu(m_ListViewMode);
+
     return 0;
 }
 
@@ -328,7 +330,7 @@ CConsoleWnd::OnNotify(UINT nMessage, WPARAM wParam, LPARAM lParam, BOOL& bHandle
 LRESULT
 CConsoleWnd::OnActivate(UINT nMessage, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-//    m_MainWnd->UpdateToolbuttons(m_bTreeViewVisible, m_bActionsPaneVisible);
+    m_MainWnd->UpdateToolbuttons(m_bTreeViewVisible, m_bActionsPaneVisible);
     m_MainWnd->UpdateViewMenu(m_ListViewMode);
     return 0;
 }
@@ -346,7 +348,6 @@ CConsoleWnd::OnActionNewWindow(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& b
 
     MDICREATESTRUCT mcs;
     HWND hChild;
-    CAtlString title;
 
     mcs.szTitle = Snapin->DisplayName();
     mcs.szClass = CConsoleWnd::GetWndClassName();
@@ -363,7 +364,13 @@ CConsoleWnd::OnActionNewWindow(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& b
     if (!hChild)
     {
         delete child;
+		return 0;
     }
+
+    m_MainWnd->UpdateLayout();
+    m_MainWnd->UpdateTitle();
+    m_MainWnd->UpdateMenu();
+    m_MainWnd->UpdateViewMenu(child->GetListViewMode());
 
     return 0;
 }
@@ -686,7 +693,6 @@ CConsoleWnd::ParseView(
 
     MDICREATESTRUCT mcs;
     HWND hChild;
-    CAtlString title;
     HWND hWndOld;
     BOOL bMaximized;
     CConsoleWnd *pConsoleWnd = NULL;
@@ -791,7 +797,7 @@ CConsoleWnd::ParseView(
                         hr = mscFile->GetAttribute((IXMLDOMElement *)nextItem, (LPWSTR)L"DescriptionBarVisible", &DescriptionBar);
                         if (hr == S_OK)
                         {
-                            bDescriptionBarVisible = StringToBool(V_BSTR(&ActionsPane));
+                            bDescriptionBarVisible = StringToBool(V_BSTR(&DescriptionBar));
                         }
 
                         /* FIXME: Attribut DefaultColumn0Width="200" */
@@ -811,6 +817,9 @@ CConsoleWnd::ParseView(
 
         nextItem->Release();
     }
+
+    if (FAILED(hr))
+        goto done;
 
     /* Create the view */
 
@@ -834,12 +843,19 @@ CConsoleWnd::ParseView(
     if (!hChild)
     {
         delete pConsoleWnd;
+        hr = E_FAIL;
+        goto done;
     }
 
     pConsoleWnd->SetListViewMode(ListViewMode);
     pConsoleWnd->SetTreeViewVisible(bScopePaneVisible);
     pConsoleWnd->SetActionsPaneVisible(bActionsPaneVisible);
     pConsoleWnd->SetDescriptionBarVisible(bDescriptionBarVisible);
+
+    pMainWnd->UpdateLayout();
+    pMainWnd->UpdateTitle();
+    pMainWnd->UpdateMenu();
+    pMainWnd->UpdateViewMenu(ListViewMode);
 
 done:
     if (pChildList)

@@ -122,6 +122,7 @@ CMainWnd::OnSize(UINT nMessage, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 LRESULT
 CMainWnd::OnCloseChild(UINT nMessage, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
+    UpdateLayout();
     UpdateTitle();
     UpdateMenu();
     return 0;
@@ -563,8 +564,10 @@ CMainWnd::CreateView(CSnapin *RootNode, CSnapin *SelectedNode)
         return FALSE;
     }
 
+    UpdateLayout();
     UpdateTitle();
     UpdateMenu();
+    UpdateViewMenu(child->GetListViewMode());
 
     return TRUE;
 }
@@ -701,7 +704,7 @@ CMainWnd::UpdateNextNodeId(UINT NodeId)
         m_NextNodeId = NodeId + 1;
 }
 
-void
+VOID
 CMainWnd::UpdateViews()
 {
     CConsoleWnd *console;
@@ -713,18 +716,17 @@ CMainWnd::UpdateViews()
         console = (CConsoleWnd*)m_ViewList.GetNext(pos);
         if (console)
             console->UpdateView();
-
     }
 }
 
-void
+VOID
 CMainWnd::UpdateLayout()
 {
     RECT rcClient, rcToolBar = {0, 0, 0, 0};
     GetClientRect(&rcClient);
 
     int nToolBarFlags = SWP_NOZORDER;
-    if (m_bToolBarVisible)
+    if (m_bToolBarVisible && !m_ViewList.IsEmpty())
     {
         rcClient.top += m_iToolBarHeight;
         rcClient.bottom -= m_iToolBarHeight;
@@ -741,6 +743,30 @@ CMainWnd::UpdateLayout()
     m_ToolBar.SetWindowPos(NULL, rcToolBar.left, rcToolBar.top, rcToolBar.right, rcToolBar.bottom, nToolBarFlags);
 
     m_MDIClient.SetWindowPos(NULL, rcClient.left, rcClient.top, rcClient.right, rcClient.bottom, SWP_NOZORDER);
+}
+
+VOID
+CMainWnd::UpdateMenu()
+{
+    if (m_ViewList.IsEmpty())
+    {
+        SetMenu(m_hMenuConsoleSmall);
+    }
+    else
+    {
+        SetMenu(m_hMenuConsoleLarge);
+        UpdateRecentFilesMenu();
+    }
+}
+
+VOID
+CMainWnd::UpdateTitle()
+{
+    if (m_ViewList.IsEmpty())
+        m_ConsoleTitle.LoadString(IDS_APPTITLE);
+    else
+        CreateNewConsoleTitle(m_ConsoleTitle);
+    SetWindowTextW(m_ConsoleTitle.GetString());
 }
 
 DOCUMENT_MODE
@@ -820,15 +846,14 @@ CMainWnd::UpdateViewMenu(LISTVIEW_MODE ListViewMode)
 VOID
 CMainWnd::UpdateUpToolButton(BOOL bShow)
 {
-    if (bShow)
-        m_ToolBar.InsertButton(3, &TbButtons[3]);
-    else
-    {
-        TBBUTTON ToolButton;
-        m_ToolBar.GetButton(3, &ToolButton);
-        if (ToolButton.idCommand == IDM_TB_UP)
-            m_ToolBar.DeleteButton(3);
-    }
+    m_ToolBar.HideButton(IDM_TB_UP, !bShow);
+}
+
+VOID
+CMainWnd::UpdateToolbuttons(BOOL bTreeViewVisible, BOOL bActionsPaneVisible)
+{
+    m_ToolBar.CheckButton(IDM_TB_SCOPE_PANE, bTreeViewVisible);
+    m_ToolBar.CheckButton(IDM_TB_ACTIONS_PANE, bActionsPaneVisible);
 }
 
 VOID

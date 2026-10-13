@@ -67,6 +67,7 @@ public:
         {
             case IDC_CUSTOMIZE_SCOPEPANE:
                 m_Console->SetTreeViewVisible((IsDlgButtonChecked(IDC_CUSTOMIZE_SCOPEPANE) == BST_CHECKED) ? TRUE : FALSE);
+                m_MainWnd->UpdateToolbuttons(m_Console->IsTreeViewVisible(), m_Console->IsActionsPaneVisible());
                 return 0;
 
             case IDC_CUSTOMIZE_MENUS:
@@ -87,6 +88,7 @@ public:
 
             case IDC_CUSTOMIZE_ACTIONSPANE:
                 m_Console->SetActionsPaneVisible((IsDlgButtonChecked(IDC_CUSTOMIZE_ACTIONSPANE) == BST_CHECKED) ? TRUE : FALSE);
+                m_MainWnd->UpdateToolbuttons(m_Console->IsTreeViewVisible(), m_Console->IsActionsPaneVisible());
                 return 0;
 
             case IDOK:

@@ -154,24 +154,6 @@ private:
         m_NextNodeId = 1;
     }
 
-    void UpdateMenu()
-    {
-        if (m_ViewList.IsEmpty())
-            SetMenu(m_hMenuConsoleSmall);
-        else
-            SetMenu(m_hMenuConsoleLarge);
-        UpdateRecentFilesMenu();
-    }
-
-    void UpdateTitle()
-    {
-        if (m_ViewList.IsEmpty())
-            m_ConsoleTitle.LoadString(IDS_APPTITLE);
-        else
-            CreateNewConsoleTitle(m_ConsoleTitle);
-        SetWindowTextW(m_ConsoleTitle.GetString());
-    }
-
     CConsoleWnd* GetActiveChildInfo()
     {
         HWND hWndMDIChild;
@@ -239,8 +221,6 @@ public:
 private:
     BOOL CreateView(CSnapin *RootNode, CSnapin *SelectedNode = NULL);
     LRESULT LoadSnapinCache();
-    void UpdateLayout();
-    void UpdateViews();
 
     VOID UpdateRecentFilesMenu();
     VOID LoadRecentFiles();
@@ -262,6 +242,11 @@ public:
     VOID UpdateAboutSnapinMenu(CSnapin *Snapin);
     VOID UpdateViewMenu(LISTVIEW_MODE ListViewMode);
     VOID UpdateUpToolButton(BOOL bShow);
+    VOID UpdateToolbuttons(BOOL bTreeViewVisible, BOOL bActionsPaneVisible);
+    VOID UpdateLayout();
+    VOID UpdateViews();
+    VOID UpdateMenu();
+    VOID UpdateTitle();
 
     int GetSnapinCacheCount();
     CSnapinCacheEntry *GetSnapinCacheEntry(int nIndex);
