@@ -172,7 +172,7 @@ PortAllocateRequestReserve(
 
     FdoExtension->ReservedRequestReference =
         ExAllocatePoolWithTag(NonPagedPool,
-                              sizeof(*FdoExtension->ReservedRequestReference),
+                              REQUEST_REFERENCE_ALLOCATION_SIZE,
                               TAG_QUEUED_REQUEST);
     if (FdoExtension->ReservedRequestReference == NULL)
     {
