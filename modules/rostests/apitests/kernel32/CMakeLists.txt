@@ -80,4 +80,3 @@ list(APPEND MANIFEST_FILES
 foreach(item ${MANIFEST_FILES})
     add_rostests_file(FILE "${CMAKE_CURRENT_SOURCE_DIR}/${item}")
 endforeach(item)
-
