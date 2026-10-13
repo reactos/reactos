@@ -60,6 +60,22 @@ PortCreatePdo(
     DeviceExtension->FdoExtension = FdoDeviceExtension;
     DeviceExtension->PnpState = dsStopped;
 
+    /* Allocate the miniport's per unit extension before the unit is reachable */
+    if (FdoDeviceExtension->HwInitData != NULL &&
+        FdoDeviceExtension->HwInitData->SpecificLuExtensionSize != 0)
+    {
+        DeviceExtension->LunExtension =
+            ExAllocatePoolZero(NonPagedPool,
+                               FdoDeviceExtension->HwInitData->SpecificLuExtensionSize,
+                               TAG_LUN_EXTENSION);
+        if (DeviceExtension->LunExtension == NULL)
+        {
+            DPRINT1("No pool for the unit extension\n");
+            IoDeleteDevice(Pdo);
+            return STATUS_INSUFFICIENT_RESOURCES;
+        }
+    }
+
     /* Add the PDO to the PDO list*/
     StorpInterlockedInsertHeadListCounted(&FdoDeviceExtension->PdoListLock,
                                           &FdoDeviceExtension->PdoListHead,
@@ -130,6 +146,13 @@ PortDeletePdo(
     {
         ExFreePoolWithTag(PdoExtension->InquiryBuffer, TAG_INQUIRY_DATA);
         PdoExtension->InquiryBuffer = NULL;
+    }
+
+    /* The miniport was just told the unit is going, so what it kept goes too */
+    if (PdoExtension->LunExtension)
+    {
+        ExFreePoolWithTag(PdoExtension->LunExtension, TAG_LUN_EXTENSION);
+        PdoExtension->LunExtension = NULL;
     }
 
 
