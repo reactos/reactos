@@ -449,6 +449,9 @@ PortFdoStartMiniport(
         return Status;
     }
 
+    /* Find out which adapter control requests the miniport takes */
+    MiniportQueryAdapterControl(&DeviceExtension->Miniport);
+
     /* Connect the configured interrupt */
     Status = PortFdoConnectInterrupt(DeviceExtension);
     if (!NT_SUCCESS(Status))
@@ -1274,10 +1277,12 @@ PortFdoPnp(
 
         case IRP_MN_REMOVE_DEVICE: /* 0x02 */
             DPRINT1("IRP_MJ_PNP / IRP_MN_REMOVE_DEVICE\n");
+            MiniportAdapterControl(&DeviceExtension->Miniport, ScsiStopAdapter, NULL);
             PortFdoDisconnectInterrupt(DeviceExtension);
             PortFlushStarvedRequests(DeviceExtension);
             PortFreeRequestReserve(DeviceExtension);
             ExDeleteNPagedLookasideList(&DeviceExtension->RequestReferenceLookaside);
+            DeviceExtension->PnpState = dsRemoved;
             break;
 
         case IRP_MN_CANCEL_REMOVE_DEVICE: /* 0x03 */
@@ -1286,6 +1291,7 @@ PortFdoPnp(
 
         case IRP_MN_STOP_DEVICE: /* 0x04 */
             DPRINT1("IRP_MJ_PNP / IRP_MN_STOP_DEVICE\n");
+            MiniportAdapterControl(&DeviceExtension->Miniport, ScsiStopAdapter, NULL);
             PortFdoDisconnectInterrupt(DeviceExtension);
             DeviceExtension->PnpState = dsStopped;
             break;
