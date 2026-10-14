@@ -444,7 +444,7 @@ NtfsRead(PNTFS_IRP_CONTEXT IrpContext)
         Irp->IoStatus.Information = 0;
         return STATUS_INVALID_DEVICE_REQUEST;
     }
-    else if (!(Irp->Flags & (IRP_PAGING_IO | IRP_NOCACHE)))
+    else if (!(Irp->Flags & (IRP_PAGING_IO | IRP_NOCACHE)) && NtfsIsRegularFileObject(FileObject))
     {
         Status = NtfsCachedRead(IrpContext,
                                 (PNTFS_FCB)FileObject->FsContext,
@@ -460,7 +460,8 @@ NtfsRead(PNTFS_IRP_CONTEXT IrpContext)
         PNTFS_FCB Fcb = (PNTFS_FCB)FileObject->FsContext;
 
         /* A non cached read must not miss what is still dirty in the cache */
-        if (!(Irp->Flags & IRP_PAGING_IO) && Fcb->SectionObjectPointers.DataSectionObject != NULL)
+        if (!(Irp->Flags & IRP_PAGING_IO) && NtfsIsRegularFileObject(FileObject) &&
+            Fcb->SectionObjectPointers.DataSectionObject != NULL)
         {
             IO_STATUS_BLOCK IoStatus;
 
@@ -1056,9 +1057,8 @@ NtfsWrite(PNTFS_IRP_CONTEXT IrpContext)
 
     /* Regular writes go through the cache, the lazy writer brings them to disk */
     if (!(Irp->Flags & (IRP_PAGING_IO | IRP_NOCACHE)) &&
-        !(Fcb->Flags & FCB_IS_VOLUME) &&
         !(FileObject->Flags & FO_NO_INTERMEDIATE_BUFFERING) &&
-        !NtfsFCBIsDirectory(Fcb))
+        NtfsIsRegularFileObject(FileObject))
     {
         if (DeviceExt->Flags & VCB_VOLUME_DISMOUNTED)
         {
@@ -1174,7 +1174,8 @@ NtfsWrite(PNTFS_IRP_CONTEXT IrpContext)
     else
     {
         /* What goes straight to disk must not be overwritten by stale cached data later */
-        if (!(Irp->Flags & IRP_PAGING_IO) && Fcb->SectionObjectPointers.DataSectionObject != NULL)
+        if (!(Irp->Flags & IRP_PAGING_IO) && NtfsIsRegularFileObject(FileObject) &&
+            Fcb->SectionObjectPointers.DataSectionObject != NULL)
         {
             IO_STATUS_BLOCK IoStatus;
 

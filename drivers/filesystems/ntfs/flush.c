@@ -128,10 +128,12 @@ NtfsFlushBuffers(PNTFS_IRP_CONTEXT IrpContext)
 
     /* Cached writes only reach the disk once the cache lets them go */
     Fcb = (PNTFS_FCB)IrpContext->FileObject->FsContext;
-    if (Fcb == NULL || (Fcb->Flags & FCB_IS_VOLUME))
+    if (NtfsIsRegularFileObject(IrpContext->FileObject))
+        Status = NtfsFlushFileCache(Fcb);
+    else if (Fcb != NULL && Fcb->Identifier.Type == NTFS_TYPE_FCB && (Fcb->Flags & FCB_IS_VOLUME))
         Status = NtfsFlushVolumeFiles(DeviceExt);
     else
-        Status = NtfsFlushFileCache(Fcb);
+        Status = STATUS_SUCCESS;
 
     DeviceStatus = NtfsFlushDevice(DeviceExt->StorageDevice);
 

@@ -1054,6 +1054,11 @@ BOOLEAN
 NtfsFCBIsDirectory(PNTFS_FCB Fcb);
 
 BOOLEAN
+NTAPI
+NtfsIsRegularFileObject(
+    _In_ PFILE_OBJECT FileObject);
+
+BOOLEAN
 NtfsFCBIsReparsePoint(PNTFS_FCB Fcb);
 
 BOOLEAN

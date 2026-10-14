@@ -141,6 +141,21 @@ NtfsFCBIsDirectory(PNTFS_FCB Fcb)
 }
 
 
+/* The I/O manager may route file objects we never opened to us, so check what FsContext holds */
+BOOLEAN
+NTAPI
+NtfsIsRegularFileObject(
+    _In_ PFILE_OBJECT FileObject)
+{
+    PNTFS_FCB Fcb = (PNTFS_FCB)FileObject->FsContext;
+
+    if (Fcb == NULL || Fcb->Identifier.Type != NTFS_TYPE_FCB)
+        return FALSE;
+
+    return !(Fcb->Flags & FCB_IS_VOLUME) && !NtfsFCBIsDirectory(Fcb);
+}
+
+
 BOOLEAN
 NtfsFCBIsReparsePoint(PNTFS_FCB Fcb)
 {

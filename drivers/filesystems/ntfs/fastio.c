@@ -127,11 +127,10 @@ NtfsFastIoCheckIfPossible(
     UNREFERENCED_PARAMETER(IoStatus);
     UNREFERENCED_PARAMETER(DeviceObject);
 
-    if (Fcb == NULL || Fcb->Identifier.Type != NTFS_TYPE_FCB)
+    if (!NtfsIsRegularFileObject(FileObject))
         return FALSE;
 
-    if ((Fcb->Flags & FCB_IS_VOLUME) || NtfsFCBIsDirectory(Fcb) ||
-        NtfsFCBIsCompressed(Fcb) || NtfsFCBIsEncrypted(Fcb) ||
+    if (NtfsFCBIsCompressed(Fcb) || NtfsFCBIsEncrypted(Fcb) ||
         (Fcb->Vcb->Flags & VCB_VOLUME_DISMOUNTED))
     {
         return FALSE;
@@ -159,8 +158,7 @@ NtfsFastIoRead(
     _Out_ PIO_STATUS_BLOCK IoStatus,
     _In_ PDEVICE_OBJECT DeviceObject)
 {
-    /* Opens of the file system device have no FCB */
-    if (FileObject->FsContext == NULL)
+    if (!NtfsIsRegularFileObject(FileObject))
         return FALSE;
 
     return FsRtlCopyRead(FileObject, FileOffset, Length, Wait, LockKey, Buffer, IoStatus, DeviceObject);
@@ -178,7 +176,7 @@ NtfsFastIoWrite(
     _Out_ PIO_STATUS_BLOCK IoStatus,
     _In_ PDEVICE_OBJECT DeviceObject)
 {
-    if (FileObject->FsContext == NULL || !NtfsGlobalData->EnableWriteSupport)
+    if (!NtfsIsRegularFileObject(FileObject) || !NtfsGlobalData->EnableWriteSupport)
         return FALSE;
 
     return FsRtlCopyWrite(FileObject, FileOffset, Length, Wait, LockKey, Buffer, IoStatus, DeviceObject);
