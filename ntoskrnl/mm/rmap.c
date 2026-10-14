@@ -303,11 +303,16 @@ WriteSegment:
     Segment = MmGetSectionAssociation(Page, &SegmentOffset);
     if (Segment)
     {
-        BOOLEAN Released;
+        BOOLEAN Released = FALSE;
+        ULONG_PTR Entry;
 
         MmLockSectionSegment(Segment);
 
-        Released = MmCheckDirtySegment(Segment, &SegmentOffset, FALSE, TRUE);
+        /* A file page still mapped by a view can't be released anyway. Leave it to the
+         * lazy writer, which won't write it while the file system has it pinned. */
+        Entry = MmGetPageEntrySectionSegment(Segment, &SegmentOffset);
+        if (!FlagOn(*Segment->Flags, MM_DATAFILE_SEGMENT) || SHARE_COUNT_FROM_SSE(Entry) == 0)
+            Released = MmCheckDirtySegment(Segment, &SegmentOffset, FALSE, TRUE);
 
         MmUnlockSectionSegment(Segment);
         MmDereferenceSegment(Segment);

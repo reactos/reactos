@@ -67,6 +67,31 @@ CcpFindBcb(
     return (Found ? Bcb : NULL);
 }
 
+/* Pins keep the lazy writer off their view, see CcRosFlushDirtyPages */
+static
+VOID
+NTAPI
+CcpPinVacb(
+    _In_ PROS_VACB Vacb)
+{
+    static LARGE_INTEGER FlushWait = RTL_CONSTANT_LARGE_INTEGER(-10000LL);
+
+    InterlockedIncrement(&Vacb->PinnedCount);
+
+    /* A flush that started before us has to finish before the data can change */
+    while (InterlockedCompareExchange(&Vacb->Flushing, 0, 0) != 0)
+        KeDelayExecutionThread(KernelMode, FALSE, &FlushWait);
+}
+
+static
+VOID
+NTAPI
+CcpUnpinVacb(
+    _In_ PROS_VACB Vacb)
+{
+    InterlockedDecrement(&Vacb->PinnedCount);
+}
+
 static
 VOID
 NTAPI
@@ -193,6 +218,7 @@ CcpGetAppropriateBcb(
             if (Result)
             {
                 DupBcb->PinCount++;
+                CcpPinVacb(DupBcb->Vacb);
             }
             else
             {
@@ -235,6 +261,9 @@ CcpGetAppropriateBcb(
 
         InsertTailList(&SharedCacheMap->BcbList, &iBcb->BcbEntry);
         KeReleaseSpinLock(&SharedCacheMap->BcbSpinLock, OldIrql);
+
+        if (ToPin)
+            CcpPinVacb(iBcb->Vacb);
     }
 
     return iBcb;
@@ -287,6 +316,7 @@ CcpPinData(
         }
 
         NewBcb->PinCount++;
+        CcpPinVacb(NewBcb->Vacb);
     }
     else
     {
@@ -629,6 +659,7 @@ CcUnpinDataForThread (
     {
         ExReleaseResourceForThreadLite(&iBcb->Lock, ResourceThreadId);
         iBcb->PinCount--;
+        CcpUnpinVacb(iBcb->Vacb);
     }
 
     CcpDereferenceBcb(iBcb->Vacb->SharedCacheMap, iBcb);
@@ -695,6 +726,7 @@ CcUnpinRepinnedBcb (
         {
             ExReleaseResourceLite(&iBcb->Lock);
             iBcb->PinCount--;
+            CcpUnpinVacb(iBcb->Vacb);
             ASSERT(iBcb->PinCount == 0);
         }
 

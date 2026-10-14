@@ -436,8 +436,28 @@ CcRosFlushDirtyPages (
             continue;
         }
 
+        /* Like Windows, don't write what the file system still has pinned: it may be
+         * halfway through changing it, and FastFat forgets its dirty FAT sectors once
+         * written. New pins wait for us once Flushing is set. */
+        InterlockedExchange(&current->Flushing, 1);
+        if (!Wait && InterlockedCompareExchange(&current->PinnedCount, 0, 0) != 0)
+        {
+            InterlockedExchange(&current->Flushing, 0);
+            SharedCacheMap->Callbacks->ReleaseFromLazyWrite(SharedCacheMap->LazyWriteContext);
+            CcRosVacbDecRefCount(current);
+            OldIrql = KeAcquireQueuedSpinLock(LockQueueMasterLock);
+            SharedCacheMap->Flags &= ~SHARED_CACHE_MAP_IN_LAZYWRITE;
+
+            if (--SharedCacheMap->OpenCount == 0)
+                CcRosDeleteFileCache(SharedCacheMap->FileObject, SharedCacheMap, &OldIrql);
+
+            continue;
+        }
+
         IO_STATUS_BLOCK Iosb;
         Status = CcRosFlushVacb(current, &Iosb);
+
+        InterlockedExchange(&current->Flushing, 0);
 
         SharedCacheMap->Callbacks->ReleaseFromLazyWrite(SharedCacheMap->LazyWriteContext);
 
@@ -914,6 +934,8 @@ CcRosCreateVacb (
     current->SharedCacheMap = SharedCacheMap;
     current->MappedCount = 0;
     current->ReferenceCount = 0;
+    current->PinnedCount = 0;
+    current->Flushing = 0;
     InitializeListHead(&current->CacheMapVacbListEntry);
     InitializeListHead(&current->DirtyVacbListEntry);
     InitializeListHead(&current->VacbLruListEntry);

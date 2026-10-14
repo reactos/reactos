@@ -225,6 +225,10 @@ typedef struct _ROS_VACB
     volatile ULONG ReferenceCount;
     /* Pointer to the shared cache map for the file which this view maps data for. */
     PROS_SHARED_CACHE_MAP SharedCacheMap;
+    /* Pins on this view, the lazy writer leaves it alone while there are any. */
+    volatile LONG PinnedCount;
+    /* Set while the lazy writer flushes this view, new pins wait for it. */
+    volatile LONG Flushing;
     /* Pointer to the next VACB in a chain. */
 } ROS_VACB, *PROS_VACB;
 
