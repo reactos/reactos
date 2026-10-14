@@ -1493,7 +1493,8 @@ NTAPI
 MmMakeSegmentDirty(
     _In_ PSECTION_OBJECT_POINTERS SectionObjectPointer,
     _In_ LONGLONG Offset,
-    _In_ ULONG Length);
+    _In_ ULONG Length,
+    _Out_opt_ PBOOLEAN WasClean);
 
 NTSTATUS
 NTAPI

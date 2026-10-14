@@ -71,14 +71,28 @@ static
 VOID
 NTAPI
 CcpMarkBcbDataDirty(
-    _In_ PINTERNAL_BCB Bcb)
+    _In_ PINTERNAL_BCB Bcb,
+    _In_ BOOLEAN Unpinning)
 {
     PROS_VACB Vacb = Bcb->Vacb;
+    PFILE_OBJECT FileObject = Vacb->SharedCacheMap->FileObject;
+    BOOLEAN WasClean;
 
     /* Tell Mm */
-    MmMakeSegmentDirty(Vacb->SharedCacheMap->FileObject->SectionObjectPointer,
+    MmMakeSegmentDirty(FileObject->SectionObjectPointer,
                        Bcb->PFCB.MappedFileOffset.QuadPart,
-                       Bcb->PFCB.MappedLength);
+                       Bcb->PFCB.MappedLength,
+                       &WasClean);
+
+    /* CORE-19200: a flush cleaned these pages while they were pinned dirty */
+    if (Unpinning && WasClean)
+    {
+        DPRINT1("Pinned data cleaned before unpin: %wZ offset 0x%I64x length 0x%lx, VACB dirty %u\n",
+                &FileObject->FileName,
+                Bcb->PFCB.MappedFileOffset.QuadPart,
+                Bcb->PFCB.MappedLength,
+                Vacb->Dirty);
+    }
 
     if (!Vacb->Dirty)
     {
@@ -575,7 +589,7 @@ CcSetDirtyPinnedData (
 
     /* Callers may keep writing to the buffer after this, see CcUnpinDataForThread */
     iBcb->Dirty = TRUE;
-    CcpMarkBcbDataDirty(iBcb);
+    CcpMarkBcbDataDirty(iBcb, FALSE);
 }
 
 
@@ -609,7 +623,7 @@ CcUnpinDataForThread (
      * caller's writes to the buffer. Dirty them again so those writes are not lost.
      */
     if (iBcb->Dirty)
-        CcpMarkBcbDataDirty(iBcb);
+        CcpMarkBcbDataDirty(iBcb, TRUE);
 
     if (iBcb->PinCount != 0)
     {
@@ -656,7 +670,7 @@ CcUnpinRepinnedBcb (
 
     /* Same as in CcUnpinDataForThread, and it must happen before the write through */
     if (iBcb->Dirty)
-        CcpMarkBcbDataDirty(iBcb);
+        CcpMarkBcbDataDirty(iBcb, TRUE);
 
     if (WriteThrough)
     {

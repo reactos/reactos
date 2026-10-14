@@ -5071,11 +5071,15 @@ NTAPI
 MmMakeSegmentDirty(
     _In_ PSECTION_OBJECT_POINTERS SectionObjectPointer,
     _In_ LONGLONG Offset,
-    _In_ ULONG Length)
+    _In_ ULONG Length,
+    _Out_opt_ PBOOLEAN WasClean)
 {
     PMM_SECTION_SEGMENT Segment;
     LARGE_INTEGER RangeStart, RangeEnd;
     NTSTATUS Status;
+
+    if (WasClean)
+        *WasClean = FALSE;
 
     RangeStart.QuadPart = Offset;
     Status = RtlLongLongAdd(RangeStart.QuadPart, Length, &RangeEnd.QuadPart);
@@ -5110,6 +5114,9 @@ MmMakeSegmentDirty(
         /* If there is no page there, there is nothing to make dirty */
         if (Entry != 0)
         {
+            if (WasClean && !IS_DIRTY_SSE(Entry))
+                *WasClean = TRUE;
+
             /* Dirtify the entry */
             MmSetPageEntrySectionSegment(Segment, &RangeStart, DIRTY_SSE(Entry));
         }
