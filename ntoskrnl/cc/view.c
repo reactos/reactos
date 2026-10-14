@@ -513,12 +513,11 @@ CcRosTrimCache(
     KIRQL oldIrql;
     LIST_ENTRY FreeList;
     BOOLEAN FlushedPages = FALSE;
+    PFN_COUNT AvailableBefore = MmAvailablePages;
 
     DPRINT("CcRosTrimCache(Target %lu)\n", Target);
 
     InitializeListHead(&FreeList);
-
-    *NrFreed = 0;
 
 retry:
     oldIrql = KeAcquireQueuedSpinLock(LockQueueMasterLock);
@@ -584,10 +583,9 @@ retry:
             InitializeListHead(&current->VacbLruListEntry);
             InsertHeadList(&FreeList, &current->CacheMapVacbListEntry);
 
-            /* Calculate how many pages we freed for Mm */
+            /* The pages stay in the segment, this only lets Mm release them later */
             PagesFreed = min(VACB_MAPPING_GRANULARITY / PAGE_SIZE, Target);
             Target -= PagesFreed;
-            (*NrFreed) += PagesFreed;
         }
 
         KeReleaseSpinLockFromDpcLevel(&current->SharedCacheMap->CacheMapLock);
@@ -626,6 +624,9 @@ retry:
         Refs = CcRosVacbDecRefCount(current);
         ASSERT(Refs == 0);
     }
+
+    /* Only report what really went back to Mm, so the balancer keeps trimming user pages */
+    *NrFreed = (MmAvailablePages > AvailableBefore) ? (MmAvailablePages - AvailableBefore) : 0;
 
     DPRINT("Evicted %lu cache pages\n", (*NrFreed));
 }
