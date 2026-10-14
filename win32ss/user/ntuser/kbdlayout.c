@@ -255,7 +255,8 @@ KbdBuildImage(
     PIMAGE_DOS_HEADER pDos = pvRaw;
     PIMAGE_NT_HEADERS pNt;
     PIMAGE_SECTION_HEADER pSec;
-    PBYTE pbRaw = pvRaw, pbImage;
+    PBYTE pbRaw = pvRaw;
+    PBYTE volatile pbImage = NULL; /* Read in the SEH handler and at Failure */
     ULONG cbImage, i;
     ULONG_PTR delta;
 
@@ -365,7 +366,8 @@ KbdBuildImage(
     _SEH2_END;
 
 Failure:
-    ExFreePoolWithTag(pbImage, KBDIMG_TAG);
+    if (pbImage)
+        ExFreePoolWithTag(pbImage, KBDIMG_TAG);
     return NULL;
 }
 
@@ -523,6 +525,14 @@ co_UserLoadKbdLayout(
         return NULL;
     }
 
+    // Up to Language Identifiers..
+    // NOTE: Do this before creating any object, so that a failure here leaks nothing.
+    if (!NT_SUCCESS(RtlUnicodeStringToInteger(pustrKLID, 16, (PULONG)&lCid)))
+    {
+        ERR("RtlUnicodeStringToInteger failed for '%wZ'\n", pustrKLID);
+        return NULL;
+    }
+
     /* Create keyboard layout object */
     pKl = UserCreateObject(gHandleTable, NULL, NULL, NULL, TYPE_KBDLAYOUT, sizeof(KL));
     if (!pKl)
@@ -541,14 +551,6 @@ co_UserLoadKbdLayout(
     if (!pKl->spkf)
     {
         ERR("UserLoadKbdFile(%wZ) failed!\n", pustrKLID);
-        UserDeleteObject(UserHMGetHandle(pKl), TYPE_KBDLAYOUT);
-        return NULL;
-    }
-
-    // Up to Language Identifiers..
-    if (!NT_SUCCESS(RtlUnicodeStringToInteger(pustrKLID, 16, (PULONG)&lCid)))
-    {
-        ERR("RtlUnicodeStringToInteger failed for '%wZ'\n", pustrKLID);
         UserDeleteObject(UserHMGetHandle(pKl), TYPE_KBDLAYOUT);
         return NULL;
     }
@@ -619,7 +621,7 @@ UserUnloadKbl(PKL pKl)
        if the keyboard layout identifier was preloaded. */
     if (pKl == gspklBaseLayout)
     {
-        if (pKl->pklNext == pKl->pklPrev)
+        if (pKl->pklNext == pKl)
         {
             /* There is only one layout */
             return FALSE;
@@ -760,7 +762,8 @@ IntImmActivateLayout(
     else
     {
         /* Remember old keyboard layout to switch back for Chinese IMEs */
-        pti->hklPrev = pti->KeyboardLayout->hkl;
+        if (pti->KeyboardLayout)
+            pti->hklPrev = pti->KeyboardLayout->hkl;
 
         if (pti->spDefaultImc)
         {
@@ -1117,7 +1120,17 @@ static NTSTATUS IntQueryHandleName(HANDLE hObject, PKBDFILE_NAME pName)
     return ZwQueryObject(hObject, ObjectNameInformation, pName, sizeof(*pName), &cbReturned);
 }
 
-/* hFile is a handle from CreateFile. Accept it only if the file is in system32. */
+/*
+ * hFile is a handle from CreateFile. Accept it only if the file is in system32.
+ *
+ * On success this returns a NEW kernel handle (OBJ_KERNEL_HANDLE) to the same file object.
+ * The caller must release it with ZwClose and must use it, not hFile, for all further I/O:
+ * the user-mode handle value can be closed and reused by another thread right after the
+ * check. The caller's own handle is never closed here (user32 owns and closes it).
+ *
+ * Only synchronous file objects are accepted, because KbdLoadImage calls ZwReadFile without
+ * an event and relies on the read being complete when it returns.
+ */
 HANDLE FASTCALL IntVerifyKeyboardFileHandle(HANDLE hFile)
 {
     static const UNICODE_STRING ustrDir = RTL_CONSTANT_STRING(L"\\SystemRoot\\system32");
@@ -1125,18 +1138,46 @@ HANDLE FASTCALL IntVerifyKeyboardFileHandle(HANDLE hFile)
     IO_STATUS_BLOCK IoStatusBlock;
     KBDFILE_NAME Names[2]; /* [0]: system32 directory, [1]: the file */
     UNICODE_STRING ustrParent;
-    HANDLE hDir;
+    PFILE_OBJECT pFileObject = NULL;
+    HANDLE hDir, hKernelFile = NULL;
     NTSTATUS Status;
 
     if (!hFile || hFile == INVALID_HANDLE_VALUE)
         return NULL;
 
-    /* Get the canonical name of the file */
-    Status = IntQueryHandleName(hFile, &Names[1]);
+    /* Resolve the user handle exactly once and pin the file object */
+    Status = ObReferenceObjectByHandle(hFile, FILE_READ_DATA, *IoFileObjectType, UserMode,
+                                       (PVOID*)&pFileObject, NULL);
     if (!NT_SUCCESS(Status))
     {
         ERR("0x%08X for %p\n", Status, hFile);
         return NULL;
+    }
+
+    if (!(pFileObject->Flags & FO_SYNCHRONOUS_IO))
+    {
+        ERR("Not a synchronous file: %p\n", hFile);
+        ObDereferenceObject(pFileObject);
+        return NULL;
+    }
+
+    /* Make our own kernel handle, which user mode cannot close or swap */
+    Status = ObOpenObjectByPointer(pFileObject, OBJ_KERNEL_HANDLE, NULL,
+                                   FILE_READ_DATA | FILE_READ_ATTRIBUTES | SYNCHRONIZE,
+                                   *IoFileObjectType, KernelMode, &hKernelFile);
+    ObDereferenceObject(pFileObject);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("0x%08X for %p\n", Status, hFile);
+        return NULL;
+    }
+
+    /* Get the canonical name of the file */
+    Status = IntQueryHandleName(hKernelFile, &Names[1]);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("0x%08X for %p\n", Status, hFile);
+        goto Failure;
     }
 
     /* Get the canonical name of the system32 directory */
@@ -1149,7 +1190,7 @@ HANDLE FASTCALL IntVerifyKeyboardFileHandle(HANDLE hFile)
     if (!NT_SUCCESS(Status))
     {
         ERR("0x%08X for %p\n", Status, hFile);
-        return NULL;
+        goto Failure;
     }
 
     Status = IntQueryHandleName(hDir, &Names[0]);
@@ -1157,7 +1198,7 @@ HANDLE FASTCALL IntVerifyKeyboardFileHandle(HANDLE hFile)
     if (!NT_SUCCESS(Status))
     {
         ERR("0x%08X for %p\n", Status, hFile);
-        return NULL;
+        goto Failure;
     }
 
     /* Strip the filename of the file */
@@ -1172,10 +1213,14 @@ HANDLE FASTCALL IntVerifyKeyboardFileHandle(HANDLE hFile)
     if (!RtlEqualUnicodeString(&ustrParent, &Names[0].Info.Name, TRUE))
     {
         ERR("Not in system32: %wZ\n", &Names[1].Info.Name);
-        return NULL;
+        goto Failure;
     }
 
-    return hFile;
+    return hKernelFile; /* Success */
+
+Failure:
+    ZwClose(hKernelFile);
+    return NULL;
 }
 
 /* EXPORTS *******************************************************************/
@@ -1361,8 +1406,10 @@ NtUserLoadKeyboardLayoutEx(
     WCHAR Buffer[KL_NAMELENGTH];
     UNICODE_STRING uszSafeKLID;
     PWINSTATION_OBJECT pWinSta;
-    HANDLE hSafeFile;
+    HANDLE hSafeFile = NULL; /* Kernel handle made from hFile. Closed here. */
+    HANDLE ahSafeAuxFile[KBDTABLE_MULTI_MAX] = { NULL }; /* Ditto, for the aux files */
     KBDTABLE_MULTI_EX multi;
+    ULONG iTable;
 
     if (Flags & ~(KLF_ACTIVATE|KLF_NOTELLSHELL|KLF_REORDER|KLF_REPLACELANG|
                   KLF_SUBSTITUTE_OK|KLF_SETFORPROCESS|KLF_UNLOADPREVIOUS|
@@ -1406,13 +1453,20 @@ NtUserLoadKeyboardLayoutEx(
         goto Quit;
     }
 
-    /* Verify file handles */
+    /* Verify file handles. The handles passed in belong to user32, which closes them itself.
+       We only work with (and close) our own kernel handles made by the verification. */
     hSafeFile = IntVerifyKeyboardFileHandle(hFile);
     if (!hSafeFile)
         goto Quit;
-    for (ULONG iTable = 0; iTable < multi.Multi.nTables; ++iTable)
+    for (iTable = 0; iTable < multi.Multi.nTables; ++iTable) /* nTables < MAX is checked above */
     {
-        if (!IntVerifyKeyboardFileHandle(multi.AuxEntries[iTable].hFile))
+        HANDLE hAuxFile = multi.AuxEntries[iTable].hFile;
+        /* user32 tolerates a failed aux file by storing NULL or INVALID_HANDLE_VALUE */
+        if (!hAuxFile || hAuxFile == INVALID_HANDLE_VALUE)
+            continue;
+
+        ahSafeAuxFile[iTable] = IntVerifyKeyboardFileHandle(hAuxFile);
+        if (!ahSafeAuxFile[iTable])
             goto Quit;
     }
 
@@ -1421,13 +1475,13 @@ NtUserLoadKeyboardLayoutEx(
     hRetKL = co_IntLoadKeyboardLayoutEx(pWinSta, hSafeFile, hOldKL, offTable, &uszSafeKLID,
                                         UlongToHandle(dwNewKL), Flags);
 Quit:
-    /* Close file handles */
-    if (hFile)
-        ZwClose(hFile);
-    for (ULONG iTable = 0; iTable < multi.Multi.nTables; ++iTable)
+    /* Close our kernel handles. Never use the (unvalidated) user-supplied nTables here. */
+    if (hSafeFile)
+        ZwClose(hSafeFile);
+    for (iTable = 0; iTable < RTL_NUMBER_OF(ahSafeAuxFile); ++iTable)
     {
-        if (multi.AuxEntries[iTable].hFile)
-            ZwClose(multi.AuxEntries[iTable].hFile);
+        if (ahSafeAuxFile[iTable])
+            ZwClose(ahSafeAuxFile[iTable]);
     }
 
     UserLeave();

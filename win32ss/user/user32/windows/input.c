@@ -843,7 +843,8 @@ IntLoadKeyboardLayoutTablesAndFile(
             for (iTable = 0; iTable < pMulti->Multi.nTables && iTable < KBDTABLE_MULTI_MAX;
                  ++iTable)
             {
-                if (pMulti->AuxEntries[iTable].hFile)
+                if (pMulti->AuxEntries[iTable].hFile &&
+                    pMulti->AuxEntries[iTable].hFile != INVALID_HANDLE_VALUE)
                 {
                     CloseHandle(pMulti->AuxEntries[iTable].hFile);
                     pMulti->AuxEntries[iTable].hFile = NULL;
@@ -1116,12 +1117,14 @@ IntLoadKeyboardLayout(
     hNewKL = NtUserLoadKeyboardLayoutEx(hFile, offTable, &multi, hklUnload, &ustrKLID, dwNewKL,
                                         Flags);
 
-    /* Close file handles */
-    NtClose(hFile);
+    /* Close file handles. We own them: win32k only uses its own duplicates. */
+    if (hFile && hFile != INVALID_HANDLE_VALUE)
+        NtClose(hFile);
     for (iTable = 0; iTable < multi.Multi.nTables && iTable < KBDTABLE_MULTI_MAX; ++iTable)
     {
-        if (multi.AuxEntries[iTable].hFile)
-            NtClose(multi.AuxEntries[iTable].hFile);
+        HANDLE hAuxFile = multi.AuxEntries[iTable].hFile;
+        if (hAuxFile && hAuxFile != INVALID_HANDLE_VALUE)
+            NtClose(hAuxFile);
     }
 
     /* Initialize the IME hot keys */
