@@ -1364,6 +1364,23 @@ PortFdoReleaseInterruptLocks(
 
 
 /**
+ * @brief Tells the miniport to stop the adapter with its interrupt service routines held off.
+ */
+static
+VOID
+NTAPI
+PortFdoStopAdapter(
+    _In_ PFDO_DEVICE_EXTENSION FdoExtension)
+{
+    KIRQL OldIrql;
+
+    OldIrql = PortFdoAcquireInterruptLocks(FdoExtension);
+    MiniportAdapterControl(&FdoExtension->Miniport, ScsiStopAdapter, NULL);
+    PortFdoReleaseInterruptLocks(FdoExtension, OldIrql);
+}
+
+
+/**
  * @brief Finds a unit from an interrupt service routine or any other caller above DISPATCH_LEVEL.
  */
 PPDO_DEVICE_EXTENSION
@@ -1513,7 +1530,7 @@ PortFdoPnp(
 
         case IRP_MN_REMOVE_DEVICE: /* 0x02 */
             DPRINT1("IRP_MJ_PNP / IRP_MN_REMOVE_DEVICE\n");
-            MiniportAdapterControl(&DeviceExtension->Miniport, ScsiStopAdapter, NULL);
+            PortFdoStopAdapter(DeviceExtension);
             PortFdoDisconnectInterrupt(DeviceExtension);
 
             /* Nothing may tell PnP about this adapter once it is gone */
@@ -1532,7 +1549,7 @@ PortFdoPnp(
 
         case IRP_MN_STOP_DEVICE: /* 0x04 */
             DPRINT1("IRP_MJ_PNP / IRP_MN_STOP_DEVICE\n");
-            MiniportAdapterControl(&DeviceExtension->Miniport, ScsiStopAdapter, NULL);
+            PortFdoStopAdapter(DeviceExtension);
             PortFdoDisconnectInterrupt(DeviceExtension);
             MiniportFreeAdapterResources(&DeviceExtension->Miniport);
             DeviceExtension->PnpState = dsStopped;
