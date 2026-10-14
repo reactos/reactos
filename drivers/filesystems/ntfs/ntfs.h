@@ -589,9 +589,11 @@ typedef struct _NTFS_ATTR_CONTEXT
 
 typedef struct _FCB
 {
+    /* Must come first: FsRtl, Cc and Mm read FsContext as this header */
+    FSRTL_COMMON_FCB_HEADER RFCB;
+
     NTFSIDENTIFIER Identifier;
 
-    FSRTL_COMMON_FCB_HEADER RFCB;
     SECTION_OBJECT_POINTERS SectionObjectPointers;
 
     PFILE_OBJECT FileObject;

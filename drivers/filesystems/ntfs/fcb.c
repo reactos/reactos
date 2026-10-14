@@ -141,7 +141,7 @@ NtfsFCBIsDirectory(PNTFS_FCB Fcb)
 }
 
 
-/* The I/O manager may route file objects we never opened to us, so check what FsContext holds */
+/* Fast I/O and the cache are only for the data of regular files */
 BOOLEAN
 NTAPI
 NtfsIsRegularFileObject(
