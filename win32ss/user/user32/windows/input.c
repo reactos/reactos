@@ -771,7 +771,8 @@ IntLoadKeyboardLayoutTablesAndFile(
             return NULL;
         }
 
-        if (_wcsicmp(pszLayoutFile, L"kbdus.dll") != 0) /* Non English US? */
+        if ((PVOID)pszLayoutFile != (PVOID)L"kbdus.dll" &&
+            _wcsicmp(pszLayoutFile, L"kbdus.dll") != 0) /* Non English US? */
         {
             /* Get the procedures of layout file */
             pfnReal    = (PFN_KbdLayerRealDllFile)GetProcAddress(hModule, IFN_KbdLayerRealDllFile);
@@ -856,8 +857,11 @@ IntLoadKeyboardLayoutTablesAndFile(
         if (*puFlags & KLF_INITTIME)
         {
             pszLayoutFile = L"kbdus.dll";
-            if (_wcsicmp(pszCurrentFile, L"kbdus.dll") != 0)
+            if ((PVOID)pszCurrentFile != (PVOID)L"kbdus.dll" &&
+                _wcsicmp(pszCurrentFile, L"kbdus.dll") != 0)
+            {
                 continue; /* Retry with "kbdus.dll" */
+            }
         }
 
         ERR("Invalid layout file: %s\n", debugstr_w(pszLayoutFile));
