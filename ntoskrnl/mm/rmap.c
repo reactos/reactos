@@ -307,7 +307,7 @@ WriteSegment:
 
         MmLockSectionSegment(Segment);
 
-        Released = MmCheckDirtySegment(Segment, &SegmentOffset, FALSE, TRUE, NULL);
+        Released = MmCheckDirtySegment(Segment, &SegmentOffset, FALSE, TRUE);
 
         MmUnlockSectionSegment(Segment);
         MmDereferenceSegment(Segment);

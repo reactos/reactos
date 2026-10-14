@@ -235,32 +235,33 @@ static GENERIC_MAPPING MmpSectionMapping =
 
 
 
+/* Largest run of contiguous dirty pages written with a single paging I/O */
+#define MI_MAX_WRITE_RUN_PAGES ((4 * _64K) / PAGE_SIZE)
+
+static
 NTSTATUS
 NTAPI
-MiWritePage(PMM_SECTION_SEGMENT Segment,
-            LONGLONG SegOffset,
-            PFN_NUMBER Page)
-/*
- * FUNCTION: write a page for a section backed memory area.
- * PARAMETERS:
- *       MemoryArea - Memory area to write the page for.
- *       Offset - Offset of the page to write.
- *       Page - Page which contains the data to write.
- */
+MiWritePages(
+    _In_ PMM_SECTION_SEGMENT Segment,
+    _In_ LONGLONG SegOffset,
+    _In_reads_(PageCount) PPFN_NUMBER Pages,
+    _In_ ULONG PageCount)
 {
     NTSTATUS Status;
     IO_STATUS_BLOCK IoStatus;
     KEVENT Event;
-    UCHAR MdlBase[sizeof(MDL) + sizeof(PFN_NUMBER)];
+    UCHAR MdlBase[sizeof(MDL) + MI_MAX_WRITE_RUN_PAGES * sizeof(PFN_NUMBER)];
     PMDL Mdl = (PMDL)MdlBase;
     PFILE_OBJECT FileObject = Segment->FileObject;
     LARGE_INTEGER FileOffset;
 
+    ASSERT((PageCount != 0) && (PageCount <= MI_MAX_WRITE_RUN_PAGES));
+
     FileOffset.QuadPart = Segment->Image.FileOffset + SegOffset;
 
     RtlZeroMemory(MdlBase, sizeof(MdlBase));
-    MmInitializeMdl(Mdl, NULL, PAGE_SIZE);
-    MmBuildMdlFromPages(Mdl, &Page);
+    MmInitializeMdl(Mdl, NULL, PageCount * PAGE_SIZE);
+    MmBuildMdlFromPages(Mdl, Pages);
     Mdl->MdlFlags |= MDL_PAGES_LOCKED;
 
     KeInitializeEvent(&Event, NotificationEvent, FALSE);
@@ -276,6 +277,22 @@ MiWritePage(PMM_SECTION_SEGMENT Segment,
     }
 
     return Status;
+}
+
+NTSTATUS
+NTAPI
+MiWritePage(PMM_SECTION_SEGMENT Segment,
+            LONGLONG SegOffset,
+            PFN_NUMBER Page)
+/*
+ * FUNCTION: write a page for a section backed memory area.
+ * PARAMETERS:
+ *       MemoryArea - Memory area to write the page for.
+ *       Offset - Offset of the page to write.
+ *       Page - Page which contains the data to write.
+ */
+{
+    return MiWritePages(Segment, SegOffset, &Page, 1);
 }
 
 
@@ -5188,27 +5205,67 @@ MmFlushSegment(
 
     while (FlushStart.QuadPart < FlushEnd.QuadPart)
     {
-        ULONG_PTR Entry = MmGetPageEntrySectionSegment(Segment, &FlushStart);
+        PFN_NUMBER Pages[MI_MAX_WRITE_RUN_PAGES];
+        LARGE_INTEGER RunStart = FlushStart;
+        ULONG PageCount = 0;
+        NTSTATUS WriteStatus;
+        ULONG i;
 
-        if (IS_DIRTY_SSE(Entry))
+        /* Gather contiguous dirty pages, marking them as being written like MmCheckDirtySegment does */
+        while ((PageCount < MI_MAX_WRITE_RUN_PAGES) && (FlushStart.QuadPart < FlushEnd.QuadPart))
         {
-            NTSTATUS WriteStatus;
+            ULONG_PTR Entry = MmGetPageEntrySectionSegment(Segment, &FlushStart);
 
-            MmCheckDirtySegment(Segment, &FlushStart, FALSE, FALSE, &WriteStatus);
+            if (!IS_DIRTY_SSE(Entry))
+                break;
 
-            /* Keep going so the other pages get written, but report the first failure */
-            if (!NT_SUCCESS(WriteStatus))
-            {
-                if (NT_SUCCESS(Status))
-                    Status = WriteStatus;
-            }
-            else if (Iosb)
-            {
-                Iosb->Information += PAGE_SIZE;
-            }
+            Pages[PageCount++] = PFN_FROM_SSE(Entry);
+
+            Entry = MAKE_SSE(PAGE_FROM_SSE(Entry), SHARE_COUNT_FROM_SSE(Entry) + 1);
+            MmSetPageEntrySectionSegment(Segment, &FlushStart, WRITE_SSE(Entry));
+
+            FlushStart.QuadPart += PAGE_SIZE;
         }
 
-        FlushStart.QuadPart += PAGE_SIZE;
+        if (PageCount == 0)
+        {
+            FlushStart.QuadPart += PAGE_SIZE;
+            continue;
+        }
+
+        MmUnlockSectionSegment(Segment);
+        WriteStatus = MiWritePages(Segment, RunStart.QuadPart, Pages, PageCount);
+        MmLockSectionSegment(Segment);
+
+        if (!NT_SUCCESS(WriteStatus))
+        {
+            DPRINT1("MiWritePages FAILED: Status 0x%08lx!\n", WriteStatus);
+
+            /* Keep going so the other pages get written, but report the first failure */
+            if (NT_SUCCESS(Status))
+                Status = WriteStatus;
+        }
+        else if (Iosb)
+        {
+            Iosb->Information += PageCount * PAGE_SIZE;
+        }
+
+        /* Drop our references. Keep the pages dirty if the write failed or someone wrote to them meanwhile */
+        for (i = 0; i < PageCount; i++)
+        {
+            LARGE_INTEGER PageOffset;
+            ULONG_PTR Entry, NewEntry;
+
+            PageOffset.QuadPart = RunStart.QuadPart + (i * PAGE_SIZE);
+            Entry = MmGetPageEntrySectionSegment(Segment, &PageOffset);
+            ASSERT(PFN_FROM_SSE(Entry) == Pages[i]);
+
+            NewEntry = MAKE_SSE(Pages[i] << PAGE_SHIFT, SHARE_COUNT_FROM_SSE(Entry) - 1);
+            if (!NT_SUCCESS(WriteStatus) || IS_DIRTY_SSE(Entry))
+                NewEntry = DIRTY_SSE(NewEntry);
+
+            MmSetPageEntrySectionSegment(Segment, &PageOffset, NewEntry);
+        }
     }
 
     MmUnlockSectionSegment(Segment);
@@ -5233,15 +5290,11 @@ MmCheckDirtySegment(
     PMM_SECTION_SEGMENT Segment,
     PLARGE_INTEGER Offset,
     BOOLEAN ForceDirty,
-    BOOLEAN PageOut,
-    _Out_opt_ PNTSTATUS WriteStatus)
+    BOOLEAN PageOut)
 {
     ULONG_PTR Entry;
     NTSTATUS Status;
     PFN_NUMBER Page;
-
-    if (WriteStatus)
-        *WriteStatus = STATUS_SUCCESS;
 
     ASSERT(Segment->Locked);
 
@@ -5369,9 +5422,6 @@ MmCheckDirtySegment(
             /* Damn, this failed. Consider this page as still dirty */
             DPRINT1("MiWritePage FAILED: Status 0x%08x!\n", Status);
             DirtyAgain = TRUE;
-
-            if (WriteStatus)
-                *WriteStatus = Status;
         }
         else
         {
