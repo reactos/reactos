@@ -401,6 +401,14 @@ MiBalancerThread(PVOID Unused)
             }
             while (InitialTarget != 0);
 
+            /* Writes may have been deferred for lack of memory, let Cc retry them now */
+            if (!IsListEmpty(&CcDeferredWrites))
+            {
+                KIRQL OldIrql = KeAcquireQueuedSpinLock(LockQueueMasterLock);
+                CcScheduleLazyWriteScan(TRUE);
+                KeReleaseQueuedSpinLock(LockQueueMasterLock, OldIrql);
+            }
+
             if (Status == STATUS_WAIT_0)
             {
                 LONG Active = InterlockedExchange(&PageOutThreadActive, 0);
