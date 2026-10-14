@@ -89,6 +89,12 @@ typedef struct _DOT11_BSSID_LIST {
 #endif
 } DOT11_BSSID_LIST, *PDOT11_BSSID_LIST;
 
+#define DOT11_RATE_SET_MAX_LENGTH 126
+
+typedef struct _WLAN_RATE_SET {
+    ULONG uRateSetLength;
+    USHORT usRateSet[DOT11_RATE_SET_MAX_LENGTH];
+} WLAN_RATE_SET, *PWLAN_RATE_SET;
 
 #endif
 
