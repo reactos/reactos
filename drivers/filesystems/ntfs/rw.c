@@ -805,8 +805,14 @@ NtfsWrite(PNTFS_IRP_CONTEXT IrpContext)
         Resource = &Fcb->MainResource;
     }
 
-    // acquire exclusive access to the Resource
-    if (!ExAcquireResourceExclusiveLite(Resource, BooleanFlagOn(IrpContext->Flags, IRPCONTEXT_CANWAIT)))
+    /* Paging writes never change the sizes, and Cc or Mm may already hold the
+     * paging resource shared for us. Size changes take it exclusive. */
+    if (Resource == &Fcb->PagingIoResource)
+    {
+        if (!ExAcquireResourceSharedLite(Resource, BooleanFlagOn(IrpContext->Flags, IRPCONTEXT_CANWAIT)))
+            return STATUS_CANT_WAIT;
+    }
+    else if (!ExAcquireResourceExclusiveLite(Resource, BooleanFlagOn(IrpContext->Flags, IRPCONTEXT_CANWAIT)))
     {
         return STATUS_CANT_WAIT;
     }

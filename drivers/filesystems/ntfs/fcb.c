@@ -109,8 +109,10 @@ NtfsCreateFCB(PCWSTR FileName,
     }
 
     ExInitializeResourceLite(&Fcb->MainResource);
+    ExInitializeResourceLite(&Fcb->PagingIoResource);
 
     Fcb->RFCB.Resource = &(Fcb->MainResource);
+    Fcb->RFCB.PagingIoResource = &(Fcb->PagingIoResource);
 
     return Fcb;
 }
@@ -122,6 +124,7 @@ NtfsDestroyFCB(PNTFS_FCB Fcb)
     ASSERT(Fcb);
     ASSERT(Fcb->Identifier.Type == NTFS_TYPE_FCB);
 
+    ExDeleteResourceLite(&Fcb->PagingIoResource);
     ExDeleteResourceLite(&Fcb->MainResource);
 
     ExFreeToNPagedLookasideList(&NtfsGlobalData->FcbLookasideList, Fcb);
