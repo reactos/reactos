@@ -15,6 +15,22 @@ This is a desktop-shell and rendering project, not only a wallpaper/color change
 
 These are the primary integration points. A new `.theme` configuration by itself will not provide real Aero Glass while the compositor and non-client rendering path do not support it.
 
+## Aero-oriented test hardware profile (provisional)
+
+Use the following as a **development target**, not a validated hardware minimum:
+
+- **CPU:** 2 virtual CPU cores recommended.
+- **RAM:** 2 GB minimum target; 4 GB recommended for desktop, shell, and compositor development.
+- **Storage:** 20 GB minimum target; 32 GB recommended for an installed test VM and snapshots.
+- **Display:** VGA-compatible virtual adapter for baseline testing; 1024 × 768 minimum test resolution, with 1280 × 720 as an additional layout test.
+- **Graphics capability:** a driver that works with the selected build. Hardware acceleration and a composition-capable driver path are not currently guaranteed; do not treat a modern GPU or extra VRAM as a substitute for the missing DWM compositor.
+- **Boot:** use a Legacy BIOS VM as the conservative baseline until the target build's UEFI path has been validated.
+- **Input/accessibility:** keyboard and mouse, including keyboard-only navigation and high-contrast/opaque fallback checks.
+
+Recommended VM profile: 2 vCPUs, 4 GB RAM, 32 GB disposable virtual disk, VGA-compatible display, and a snapshot before each installation or compositor test. Start at 1024 × 768, then test 1280 × 720. Never use a disk containing important data for alpha testing.
+
+The existing implementation still lacks the real compositor, redirected-window surfaces, and glass-frame rendering. These higher resource targets are intended to give future Aero work more headroom; **they do not mean Aero currently works**, and they must be revised after repeatable boot, install, desktop, memory-use, and composition tests across several VM configurations.
+
 ## Visual acceptance target
 
 ### 1. Window frames and composition
