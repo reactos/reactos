@@ -66,7 +66,19 @@ HRESULT WINAPI DwmIsCompositionEnabled(BOOL *enabled)
  */
 HRESULT WINAPI DwmEnableComposition(UINT uCompositionAction)
 {
-    FIXME("(%d) stub\n", uCompositionAction);
+    TRACE("(%u)\n", uCompositionAction);
+
+    /*
+     * This build does not contain a window compositor. Do not report
+     * success for an operation that cannot be performed; callers can
+     * then retain the classic, non-composited window-frame path.
+     */
+    if (uCompositionAction != DWM_EC_DISABLECOMPOSITION &&
+        uCompositionAction != DWM_EC_ENABLECOMPOSITION)
+        return E_INVALIDARG;
+
+    if (uCompositionAction == DWM_EC_ENABLECOMPOSITION)
+        return DWM_E_COMPOSITIONDISABLED;
 
     return S_OK;
 }
@@ -76,9 +88,17 @@ HRESULT WINAPI DwmEnableComposition(UINT uCompositionAction)
  */
 HRESULT WINAPI DwmExtendFrameIntoClientArea(HWND hwnd, const MARGINS* margins)
 {
-    FIXME("(%p, %p) stub\n", hwnd, margins);
+    TRACE("(%p, %p)\n", hwnd, margins);
 
-    return S_OK;
+    if (!IsWindow(hwnd) || !margins)
+        return E_INVALIDARG;
+
+    /*
+     * Glass-frame extension requires a compositor-backed surface. Until
+     * that renderer exists, fail explicitly instead of claiming that the
+     * client-area frame was extended when nothing was drawn.
+     */
+    return DWM_E_COMPOSITIONDISABLED;
 }
 
 /**********************************************************************
