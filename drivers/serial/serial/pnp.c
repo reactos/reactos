@@ -486,7 +486,7 @@ SerialPnp(
 			}
 
 			break;
-    }
+        }
 		case IRP_MN_SURPRISE_REMOVAL: /* 0x17 */
 		{
 			WCHAR LinkNameBuffer[32];
