@@ -387,8 +387,11 @@ MiBalancerThread(PVOID Unused)
                     InitialTarget = MiTrimMemoryConsumer(i, InitialTarget);
                 }
 
-                /* Trim cache */
-                Target = max(InitialTarget, abs(MiMinimumAvailablePages - MmAvailablePages));
+                /* Trim cache, but only when we are below the minimum */
+                Target = InitialTarget;
+                if (MmAvailablePages < MiMinimumAvailablePages)
+                    Target = max(Target, MiMinimumAvailablePages - MmAvailablePages);
+
                 if (Target)
                 {
                     CcRosTrimCache(Target, &NrFreedPages);
