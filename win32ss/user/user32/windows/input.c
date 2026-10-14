@@ -726,7 +726,7 @@ static inline BOOL IntIsValidLayoutFileName(PCWSTR pszFileName)
     return (cch < MAX_VALID_LAYOUT_FILENAME && !pszFileName[cch]);
 }
 
-BOOL GetSystemLibraryPath(PWSTR pszPath, INT cchPath, LPCWSTR pszFileName)
+BOOL GetSystemLibraryPath(PWSTR pszPath, SIZE_T cchPath, PCWSTR pszFileName)
 {
     WCHAR szSysDir[MAX_PATH];
     UINT cch = GetSystemDirectoryW(szSysDir, _countof(szSysDir));
