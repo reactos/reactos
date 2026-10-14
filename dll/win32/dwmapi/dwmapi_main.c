@@ -44,12 +44,6 @@ WINE_DEFAULT_DEBUG_CHANNEL(dwmapi);
 HRESULT WINAPI DwmIsCompositionEnabled(BOOL *enabled)
 {
 
-#ifdef __REACTOS__
-    RTL_OSVERSIONINFOW version;
-#else
-    RTL_OSVERSIONINFOEXW version;
-#endif
-
     TRACE("%p\n", enabled);
 
     if (!enabled)
