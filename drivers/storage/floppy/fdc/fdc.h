@@ -46,8 +46,7 @@ typedef struct _CONTROLLER_INFO
 //    ULONG            Vector;
 //    ULONG            MappedVector;
 //    KINTERRUPT_MODE  InterruptMode;
-    BOOLEAN          PortAddressValid;
-    PHYSICAL_ADDRESS PortAddress;
+    PUCHAR           BaseAddress;
 //    ULONG            Dma;
 //    ULONG            MapRegisters;
 //    PVOID            MapRegisterBase;
@@ -92,8 +91,6 @@ typedef struct _PDO_DEVICE_EXTENSION
 
     PDEVICE_OBJECT Fdo;
     PDRIVE_INFO DriveInfo;
-    BOOLEAN ReportedPresent;
-    BOOLEAN DeletePending;
 
     UNICODE_STRING DeviceDescription; // REG_SZ
     UNICODE_STRING DeviceId;          // REG_SZ
@@ -121,10 +118,6 @@ DuplicateUnicodeString(
     OUT PUNICODE_STRING DestinationString);
 
 /* pdo.c */
-
-VOID
-FdcPdoDeleteDevice(
-    IN PDEVICE_OBJECT DeviceObject);
 
 NTSTATUS
 NTAPI

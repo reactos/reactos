@@ -93,78 +93,19 @@ FdcPdoQueryId(
 }
 
 
-static
-NTSTATUS
-FdcPdoQueryTargetDeviceRelation(
-    IN PDEVICE_OBJECT DeviceObject,
-    OUT ULONG_PTR *Information)
-{
-    PDEVICE_RELATIONS Relations;
-
-    Relations = ExAllocatePoolWithTag(PagedPool,
-                                      sizeof(DEVICE_RELATIONS),
-                                      FDC_TAG);
-    if (Relations == NULL)
-        return STATUS_INSUFFICIENT_RESOURCES;
-
-    Relations->Count = 1;
-    Relations->Objects[0] = DeviceObject;
-    ObReferenceObject(DeviceObject);
-
-    *Information = (ULONG_PTR)Relations;
-    return STATUS_SUCCESS;
-}
-
-
-VOID
-FdcPdoDeleteDevice(
-    IN PDEVICE_OBJECT DeviceObject)
-{
-    PPDO_DEVICE_EXTENSION DeviceExtension;
-
-    DeviceExtension = (PPDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
-    if (DeviceExtension->DeletePending)
-        return;
-
-    DeviceExtension->DeletePending = TRUE;
-    DeviceExtension->ReportedPresent = FALSE;
-
-    if (DeviceExtension->DriveInfo != NULL &&
-        DeviceExtension->DriveInfo->DeviceObject == DeviceObject)
-    {
-        DeviceExtension->DriveInfo->DeviceObject = NULL;
-    }
-
-    DeviceExtension->DriveInfo = NULL;
-    DeviceExtension->Fdo = NULL;
-
-    RtlFreeUnicodeString(&DeviceExtension->DeviceDescription);
-    RtlFreeUnicodeString(&DeviceExtension->DeviceId);
-    RtlFreeUnicodeString(&DeviceExtension->InstanceId);
-    RtlFreeUnicodeString(&DeviceExtension->HardwareIds);
-    RtlFreeUnicodeString(&DeviceExtension->CompatibleIds);
-
-    IoDeleteDevice(DeviceObject);
-}
-
-
 NTSTATUS
 NTAPI
 FdcPdoPnp(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp)
 {
-    PPDO_DEVICE_EXTENSION DeviceExtension;
     PIO_STACK_LOCATION IrpSp;
-    ULONG_PTR Information;
+    ULONG_PTR Information = 0;
     NTSTATUS Status;
-    BOOLEAN DeleteDevice = FALSE;
 
     DPRINT("FdcPdoPnp()\n");
 
     Status = Irp->IoStatus.Status;
-    Information = Irp->IoStatus.Information;
-    DeviceExtension = (PPDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 
     IrpSp = IoGetCurrentIrpStackLocation(Irp);
 
@@ -189,8 +130,6 @@ FdcPdoPnp(
 
         case IRP_MN_QUERY_DEVICE_RELATIONS:
             DPRINT("IRP_MN_QUERY_DEVICE_RELATIONS received\n");
-            if (IrpSp->Parameters.QueryDeviceRelations.Type == TargetDeviceRelation)
-                Status = FdcPdoQueryTargetDeviceRelation(DeviceObject, &Information);
             break;
 
         case IRP_MN_QUERY_DEVICE_TEXT:
@@ -220,7 +159,6 @@ FdcPdoPnp(
 
         case IRP_MN_START_DEVICE:
             DPRINT("IRP_MN_START_DEVICE received\n");
-            Status = STATUS_SUCCESS;
             break;
 
         case IRP_MN_QUERY_STOP_DEVICE:
@@ -228,19 +166,12 @@ FdcPdoPnp(
         case IRP_MN_STOP_DEVICE:
         case IRP_MN_QUERY_REMOVE_DEVICE:
         case IRP_MN_CANCEL_REMOVE_DEVICE:
-            Status = STATUS_SUCCESS;
-            break;
-
         case IRP_MN_SURPRISE_REMOVAL:
-            DeviceExtension->ReportedPresent = FALSE;
             Status = STATUS_SUCCESS;
             break;
 
         case IRP_MN_REMOVE_DEVICE:
             DPRINT("IRP_MN_REMOVE_DEVICE received\n");
-            Status = STATUS_SUCCESS;
-            DeleteDevice = !DeviceExtension->ReportedPresent &&
-                           !DeviceExtension->DeletePending;
             break;
 
         case IRP_MN_FILTER_RESOURCE_REQUIREMENTS:
@@ -259,9 +190,6 @@ FdcPdoPnp(
     IoCompleteRequest(Irp, IO_NO_INCREMENT);
 
     DPRINT("Leaving. Status 0x%X\n", Status);
-
-    if (DeleteDevice)
-        FdcPdoDeleteDevice(DeviceObject);
 
     return Status;
 }
