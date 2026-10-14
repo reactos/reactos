@@ -121,10 +121,12 @@ NtfsFastIoCheckIfPossible(
     _In_ PDEVICE_OBJECT DeviceObject)
 {
     PNTFS_FCB Fcb = (PNTFS_FCB)FileObject->FsContext;
+    LARGE_INTEGER LargeLength;
 
     UNREFERENCED_PARAMETER(Wait);
-    UNREFERENCED_PARAMETER(LockKey);
     UNREFERENCED_PARAMETER(IoStatus);
+
+    LargeLength.QuadPart = Length;
     UNREFERENCED_PARAMETER(DeviceObject);
 
     if (!NtfsIsRegularFileObject(FileObject))
@@ -137,10 +139,17 @@ NtfsFastIoCheckIfPossible(
     }
 
     if (CheckForReadOperation)
-        return TRUE;
+    {
+        return FsRtlFastCheckLockForRead(&Fcb->FileLock, FileOffset, &LargeLength, LockKey,
+                                         FileObject, PsGetCurrentProcess());
+    }
 
-    if (!NtfsGlobalData->EnableWriteSupport)
+    if (!NtfsGlobalData->EnableWriteSupport ||
+        !FsRtlFastCheckLockForWrite(&Fcb->FileLock, FileOffset, &LargeLength, LockKey,
+                                    FileObject, PsGetCurrentProcess()))
+    {
         return FALSE;
+    }
 
     /* Growing the file updates its record, leave that to the IRP path */
     return (FileOffset->QuadPart + Length <= Fcb->RFCB.FileSize.QuadPart);

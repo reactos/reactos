@@ -137,6 +137,10 @@ NtfsDispatch(PNTFS_IRP_CONTEXT IrpContext)
         case IRP_MJ_FLUSH_BUFFERS:
             Status = NtfsFlushBuffers(IrpContext);
             break;
+
+        case IRP_MJ_LOCK_CONTROL:
+            Status = NtfsLockControl(IrpContext);
+            break;
     }
 
     ASSERT((!(IrpContext->Flags & IRPCONTEXT_COMPLETE) && !(IrpContext->Flags & IRPCONTEXT_QUEUE)) ||

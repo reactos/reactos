@@ -444,6 +444,12 @@ NtfsRead(PNTFS_IRP_CONTEXT IrpContext)
         Irp->IoStatus.Information = 0;
         return STATUS_INVALID_DEVICE_REQUEST;
     }
+    else if (!(Irp->Flags & IRP_PAGING_IO) && NtfsIsRegularFileObject(FileObject) &&
+             !FsRtlCheckLockForReadAccess(&((PNTFS_FCB)FileObject->FsContext)->FileLock, Irp))
+    {
+        Irp->IoStatus.Information = 0;
+        return STATUS_FILE_LOCK_CONFLICT;
+    }
     else if (!(Irp->Flags & (IRP_PAGING_IO | IRP_NOCACHE)) && NtfsIsRegularFileObject(FileObject))
     {
         Status = NtfsCachedRead(IrpContext,
@@ -1055,6 +1061,14 @@ NtfsWrite(PNTFS_IRP_CONTEXT IrpContext)
         return NtfsMarkIrpContextForQueue(IrpContext);
     }
 
+    /* Byte range locks only stop other handles, never Mm or Cc */
+    if (!(Irp->Flags & IRP_PAGING_IO) && NtfsIsRegularFileObject(FileObject) &&
+        !FsRtlCheckLockForWriteAccess(&Fcb->FileLock, Irp))
+    {
+        Irp->IoStatus.Information = 0;
+        return STATUS_FILE_LOCK_CONFLICT;
+    }
+
     /* Regular writes go through the cache, the lazy writer brings them to disk */
     if (!(Irp->Flags & (IRP_PAGING_IO | IRP_NOCACHE)) &&
         !(FileObject->Flags & FO_NO_INTERMEDIATE_BUFFERING) &&
@@ -1110,17 +1124,6 @@ NtfsWrite(PNTFS_IRP_CONTEXT IrpContext)
     {
         return STATUS_CANT_WAIT;
     }
-
-    /* From VfatWrite(). Todo: Handle file locks
-    if (!(IrpContext->Irp->Flags & IRP_PAGING_IO) &&
-    FsRtlAreThereCurrentFileLocks(&Fcb->FileLock))
-    {
-    if (!FsRtlCheckLockForWriteAccess(&Fcb->FileLock, IrpContext->Irp))
-    {
-    Status = STATUS_FILE_LOCK_CONFLICT;
-    goto ByeBye;
-    }
-    }*/
 
     // get the buffer of data the user is trying to write
     Buffer = NtfsGetUserBuffer(Irp, BooleanFlagOn(Irp->Flags, IRP_PAGING_IO));

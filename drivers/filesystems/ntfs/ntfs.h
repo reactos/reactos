@@ -606,6 +606,9 @@ typedef struct _FCB
     ERESOURCE PagingIoResource;
     ERESOURCE MainResource;
 
+    /* Byte range locks taken through LockFileEx() */
+    FILE_LOCK FileLock;
+
     LIST_ENTRY FcbListEntry;
     struct _FCB* ParentFcb;
 
@@ -1158,6 +1161,13 @@ NtfsFileSystemControl(PNTFS_IRP_CONTEXT IrpContext);
 
 NTSTATUS
 NtfsFlushBuffers(PNTFS_IRP_CONTEXT IrpContext);
+
+/* lockctrl.c */
+
+NTSTATUS
+NTAPI
+NtfsLockControl(
+    _In_ PNTFS_IRP_CONTEXT IrpContext);
 
 
 /* mft.c */
