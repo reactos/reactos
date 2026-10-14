@@ -250,7 +250,8 @@ DumpKbdLayout(
 static PVOID
 KbdBuildImage(
     _In_ PVOID pvRaw,
-    _In_ SIZE_T cbRaw)
+    _In_ SIZE_T cbRaw,
+    _Out_ PULONG pcbImage)
 {
     PIMAGE_DOS_HEADER pDos = pvRaw;
     PIMAGE_NT_HEADERS pNt;
@@ -259,6 +260,8 @@ KbdBuildImage(
     PBYTE volatile pbImage = NULL; /* Read in the SEH handler and at Failure */
     ULONG cbImage, i;
     ULONG_PTR delta;
+
+    *pcbImage = 0;
 
     _SEH2_TRY
     {
@@ -357,6 +360,7 @@ KbdBuildImage(
                 off += pBlk->SizeOfBlock;
             }
         }
+        *pcbImage = cbImage;
         _SEH2_YIELD(return pbImage);
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
@@ -374,7 +378,8 @@ Failure:
 /* Loads the image of keyboard layout file. See also KbdUnloadImage below. */
 static PVOID
 KbdLoadImage(
-    _In_ HANDLE hSafeFile)
+    _In_ HANDLE hSafeFile,
+    _Out_ PULONG pcbImage)
 {
     NTSTATUS Status;
     IO_STATUS_BLOCK IoStatusBlock;
@@ -382,6 +387,8 @@ KbdLoadImage(
     LARGE_INTEGER Offset;
     PVOID pvRaw, pvImage;
     ULONG cbRaw;
+
+    *pcbImage = 0;
 
     if (!hSafeFile)
         return NULL;
@@ -418,7 +425,7 @@ KbdLoadImage(
     }
 
     /* RVA mapping + relocation */
-    pvImage = KbdBuildImage(pvRaw, cbRaw);
+    pvImage = KbdBuildImage(pvRaw, cbRaw, pcbImage);
     if (!pvImage)
         ERR("KbdBuildImage failed\n");
 
@@ -434,26 +441,46 @@ KbdUnloadImage(
         ExFreePoolWithTag(pvImageBase, KBDIMG_TAG);
 }
 
+/* Tells whether [off, off + cb) lies within an image of cbImage bytes (without overflowing) */
+static __inline BOOL
+KbdIsRangeInImage(_In_ ULONG off, _In_ SIZE_T cb, _In_ ULONG cbImage)
+{
+    return (cb <= cbImage) && (off <= cbImage - cb);
+}
+
 /* Loads keyboard layout DLL and gets address to KbdTables */
 static BOOL
 UserLoadKbdDll(
     _In_ HANDLE hSafeFile,
     _In_ ULONG offTable,
     _Out_ HANDLE *phModule,
+    _Out_ PULONG pcbImage,
     _Out_ PKBDTABLES *ppKbdTables,
     _Out_ PKBDNLSTABLES *ppKbdNlsTables)
 {
     PBYTE pbImage;
-    ULONG wMainOffset = LOWORD(offTable), wNlsOffset = HIWORD(offTable);
+    ULONG cbImage, wMainOffset = LOWORD(offTable), wNlsOffset = HIWORD(offTable);
 
     if (!wMainOffset)
         return FALSE;
 
     /* Load keyboard layout DLL */
-    *phModule = KbdLoadImage(hSafeFile);
+    *phModule = KbdLoadImage(hSafeFile, &cbImage);
     if (!(*phModule))
         return FALSE;
 
+    /* offTable comes from user mode: the tables must lie entirely within the image.
+       NOTE: Pointers inside the tables are not validated here. */
+    if (!KbdIsRangeInImage(wMainOffset, sizeof(**ppKbdTables), cbImage) ||
+        (wNlsOffset && !KbdIsRangeInImage(wNlsOffset, sizeof(**ppKbdNlsTables), cbImage)))
+    {
+        ERR("Table offset out of range: offTable 0x%08X, image size %lu\n", offTable, cbImage);
+        KbdUnloadImage(*phModule);
+        *phModule = NULL;
+        return FALSE;
+    }
+
+    *pcbImage = cbImage;
     pbImage = (PBYTE)*phModule;
     *ppKbdTables = (PKBDTABLES)(pbImage + wMainOffset);
     *ppKbdNlsTables = wNlsOffset ? (PKBDNLSTABLES)(pbImage + wNlsOffset) : NULL;
@@ -486,7 +513,8 @@ UserLoadKbdFile(
     _swprintf(pkf->awchKF, L"%wZ", pwszKLID); /* Set keyboard layout name */
 
     /* Load keyboard file now */
-    if (!UserLoadKbdDll(hSafeFile, offTable, &pkf->hBase, &pkf->pKbdTbl, &pkf->pKbdNlsTbl))
+    if (!UserLoadKbdDll(hSafeFile, offTable, &pkf->hBase, &pkf->Size,
+                        &pkf->pKbdTbl, &pkf->pKbdNlsTbl))
     {
         ERR("Failed to load layout file!\n");
         goto cleanup;
@@ -1288,7 +1316,7 @@ NtUserGetKeyboardLayoutList(
 
     if (nBuff > MAXULONG / sizeof(HKL))
     {
-        SetLastNtError(ERROR_INVALID_PARAMETER);
+        EngSetLastError(ERROR_INVALID_PARAMETER);
         goto Quit;
     }
 
@@ -1299,7 +1327,7 @@ NtUserGetKeyboardLayoutList(
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         SetLastNtError(_SEH2_GetExceptionCode());
-        goto Quit;
+        _SEH2_YIELD(goto Quit);
     }
     _SEH2_END;
 
@@ -1312,7 +1340,7 @@ NtUserGetKeyboardLayoutList(
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         SetLastNtError(_SEH2_GetExceptionCode());
-        goto Quit;
+        _SEH2_YIELD(goto Quit);
     }
     _SEH2_END;
 
@@ -1361,7 +1389,7 @@ NtUserGetKeyboardLayoutName(
             if (ustrNameSafe.MaximumLength < KL_NAMELENGTH * sizeof(WCHAR))
             {
                 EngSetLastError(ERROR_INVALID_PARAMETER);
-                goto cleanup;
+                _SEH2_YIELD(goto cleanup);
             }
 
             /* FIXME: Do not use awchKF */

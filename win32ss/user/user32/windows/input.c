@@ -770,18 +770,184 @@ IntLoadKeyboardLayoutTablesAndFile(
     _In_opt_z_ PCWSTR pszKLID,
     _Inout_ PUINT puFlags,
     _Out_ PULONG poffTable,
+    _Out_opt_ PKBDTABLE_MULTI_EX pMulti);
+
+/* Loads the multi-table (if any). Each aux table file is loaded by a recursive call, and its
+   file handle and offset are stored in pMulti. The caller owns the handles: see IntCloseAuxFiles. */
+static VOID
+IntLoadMultiTables(
+    _In_ HMODULE hModule,
+    _Inout_ PUINT puFlags,
+    _Inout_ PKBDTABLE_MULTI_EX pMulti)
+{
+    PFN_KbdLayerMultiDescriptor pfnMulti;
+    UINT iTable;
+
+    pfnMulti = (PFN_KbdLayerMultiDescriptor)GetProcAddress(hModule, IFN_KbdLayerMultiDescriptor);
+    if (!pfnMulti || !pfnMulti(&pMulti->Multi))
+        return;
+
+    if (pMulti->Multi.nTables >= KBDTABLE_MULTI_MAX)
+        pMulti->Multi.nTables = 0;
+
+    for (iTable = 0; iTable < pMulti->Multi.nTables; iTable++)
+    {
+        PKBDTABLE_DESC pDesc = &pMulti->Multi.aKbdTables[iTable];
+        ULONG offTable = 0;
+        HANDLE hAuxFile;
+
+        /* Avoid buffer overrun */
+        pDesc->wszDllName[_countof(pDesc->wszDllName) - 1] = UNICODE_NULL;
+
+        hAuxFile = IntLoadKeyboardLayoutTablesAndFile(pDesc->wszDllName, NULL,
+                                                      puFlags, &offTable, NULL);
+        pMulti->AuxEntries[iTable].hFile = hAuxFile; /* NULL if failed */
+        if (hAuxFile)
+            pMulti->AuxEntries[iTable].offTable = offTable;
+    }
+}
+
+/* If the layout DLL redirects to a "real" DLL, loads that one instead and releases the original.
+   On return, *phModule and *ppszFile name the DLL that is actually used. */
+static VOID
+IntFollowRealDll(
+    _Inout_ HMODULE *phModule,
+    _Inout_ PCWSTR *ppszFile,
+    _Out_writes_(MAX_PATH) PWSTR pszRealFile,
+    _In_opt_z_ PCWSTR pszKLID)
+{
+    PFN_KbdLayerRealDllFile pfnReal;
+    PFN_KbdLayerRealDllFileNT4 pfnRealNT4;
+    HMODULE hRealModule;
+    ULONG ulKLID;
+
+    pfnReal    = (PFN_KbdLayerRealDllFile)GetProcAddress(*phModule, IFN_KbdLayerRealDllFile);
+    pfnRealNT4 = (PFN_KbdLayerRealDllFileNT4)GetProcAddress(*phModule, IFN_KbdLayerRealDllFileNT4);
+    if (!pfnReal && !pfnRealNT4)
+        return;
+
+    ulKLID = pszKLID ? wcstoul(pszKLID, NULL, 16) : 0;
+    pszRealFile[0] = UNICODE_NULL;
+
+    /* FIXME: Specify PCLIENTKEYBOARDTYPE parameter for pfnReal */
+    if (!((pfnReal    && pfnReal(ulKLID, pszRealFile, NULL, 0)) ||
+          (pfnRealNT4 && pfnRealNT4(pszRealFile))))
+    {
+        return;
+    }
+
+    pszRealFile[MAX_PATH - 1] = UNICODE_NULL;
+    if (!IntIsValidLayoutFileName(pszRealFile))
+        return;
+
+    hRealModule = LoadSysLibraryW(pszRealFile);
+    if (!hRealModule)
+    {
+        WARN("Getting real failed\n");
+        return;
+    }
+
+    FreeLibrary(*phModule);
+    *phModule = hRealModule;
+    *ppszFile = pszRealFile;
+}
+
+/* Prepares a freshly loaded layout DLL: loads the multi-table, follows the "real" DLL, and gets
+   KbdLayerDescriptor. Returns NULL on failure. The caller owns *phModule either way (it can be
+   replaced by the real DLL). The layout DLL code can crash, so everything is under SEH. */
+static PFN_KbdLayerDescriptor
+IntPrepareLayoutModule(
+    _Inout_ HMODULE *phModule,
+    _Inout_ PCWSTR *ppszFile,
+    _Out_writes_(MAX_PATH) PWSTR pszRealFile,
+    _In_opt_z_ PCWSTR pszKLID,
+    _Inout_ PUINT puFlags,
+    _Inout_opt_ PKBDTABLE_MULTI_EX pMulti)
+{
+    _SEH2_TRY
+    {
+        if (!WCSIEQL(*ppszFile, L"kbdus.dll")) /* Not English US? */
+        {
+            if (pMulti && IntIsConsoleSession())
+                IntLoadMultiTables(*phModule, puFlags, pMulti);
+
+            IntFollowRealDll(phModule, ppszFile, pszRealFile, pszKLID);
+        }
+
+        /* Get KbdLayerDescriptor procedure */
+        _SEH2_YIELD(return (PFN_KbdLayerDescriptor)GetProcAddress(*phModule,
+                                                                  IFN_KbdLayerDescriptor));
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        ERR("Exception!\n");
+    }
+    _SEH2_END;
+
+    return NULL;
+}
+
+/* Gets the 16-bit offsets of the tables, as NtUserLoadKeyboardLayoutEx expects them:
+   LOWORD is the main table and HIWORD is the NLS table (0 if none). */
+static BOOL
+IntGetTableOffsets(
+    _In_ HMODULE hModule,
+    _In_ PFN_KbdLayerDescriptor pfnMain,
+    _Out_ PULONG poffTable)
+{
+    PFN_KbdNlsLayerDescriptor pfnNls;
+    INT_PTR MainOffset, NlsOffset = 0;
+
+    _SEH2_TRY
+    {
+        /* Get the main table offset */
+        MainOffset = (PBYTE)pfnMain() - (PBYTE)hModule;
+        if (MainOffset <= 0 || MainOffset > MAXWORD)
+        {
+            ERR("MainOffset: %p\n", (PVOID)MainOffset);
+            _SEH2_YIELD(return FALSE);
+        }
+
+        /* Get the NLS table offset */
+        pfnNls = (PFN_KbdNlsLayerDescriptor)GetProcAddress(hModule, IFN_KbdNlsLayerDescriptor);
+        if (pfnNls)
+        {
+            NlsOffset = (PBYTE)pfnNls() - (PBYTE)hModule;
+            if (NlsOffset <= 0 || NlsOffset > MAXWORD)
+            {
+                ERR("NlsOffset: %p\n", (PVOID)NlsOffset);
+                _SEH2_YIELD(return FALSE);
+            }
+        }
+
+        *poffTable = MAKELONG(MainOffset, NlsOffset);
+        _SEH2_YIELD(return TRUE);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        ERR("Exception!\n");
+    }
+    _SEH2_END;
+
+    return FALSE;
+}
+
+/* Returns a handle to the layout file, or NULL on failure. On success, the handles in pMulti
+   (if any) stay open for the caller; on failure, this function has closed them. */
+static HANDLE
+IntLoadKeyboardLayoutTablesAndFile(
+    _In_z_ PCWSTR pszLayoutFile,
+    _In_opt_z_ PCWSTR pszKLID,
+    _Inout_ PUINT puFlags,
+    _Out_ PULONG poffTable,
     _Out_opt_ PKBDTABLE_MULTI_EX pMulti)
 {
     HMODULE hModule;
     PCWSTR pszCurrentFile;
-    PFN_KbdLayerDescriptor pfnMain = NULL;
-    PFN_KbdNlsLayerDescriptor pfnNls = NULL;
-    PFN_KbdLayerRealDllFile pfnReal = NULL;
-    PFN_KbdLayerRealDllFileNT4 pfnRealNT4 = NULL;
-    PFN_KbdLayerMultiDescriptor pfnMulti = NULL;
+    PFN_KbdLayerDescriptor pfnMain;
     WCHAR szRealFile[MAX_PATH], szFull[MAX_PATH];
-    DWORD iTable, cchFull;
-    WORD wLow = 0, wHigh = 0;
+    DWORD cchFull;
+    HANDLE hFile;
 
     TRACE("Loading layout file %s\n", debugstr_w(pszLayoutFile));
     if (!IntIsValidLayoutFileName(pszLayoutFile))
@@ -798,162 +964,61 @@ IntLoadKeyboardLayoutTablesAndFile(
         hModule = LoadSysLibraryW(pszLayoutFile);
         if (!hModule)
         {
-            ERR("LoadSysLibraryW failed\n");
+            ERR("LoadSysLibraryW(%s) failed\n", debugstr_w(pszLayoutFile));
             return NULL;
         }
 
-        _SEH2_TRY
-        {
-            if (!WCSIEQL(pszLayoutFile, L"kbdus.dll")) /* Not English US? */
-            {
-                /* Get the procedures of layout file */
-                pfnReal    = (PFN_KbdLayerRealDllFile)GetProcAddress(hModule, IFN_KbdLayerRealDllFile);
-                pfnRealNT4 = (PFN_KbdLayerRealDllFileNT4)GetProcAddress(hModule,
-                                                                        IFN_KbdLayerRealDllFileNT4);
-                pfnMulti = NULL;
-                if (pMulti && IntIsConsoleSession())
-                {
-                    pfnMulti = (PFN_KbdLayerMultiDescriptor)
-                        GetProcAddress(hModule, IFN_KbdLayerMultiDescriptor);
-                }
-
-                /* Load the multi-table (if any) */
-                if (pMulti && pfnMulti && pfnMulti(&pMulti->Multi))
-                {
-                    if (pMulti->Multi.nTables >= KBDTABLE_MULTI_MAX)
-                        pMulti->Multi.nTables = 0;
-
-                    for (iTable = 0; iTable < pMulti->Multi.nTables; iTable++)
-                    {
-                        DWORD offTable;
-                        HANDLE hAuxFile;
-                        PKBDTABLE_DESC pDesc = &pMulti->Multi.aKbdTables[iTable];
-
-                        /* Avoid buffer overrun */
-                        pDesc->wszDllName[_countof(pDesc->wszDllName) - 1] = UNICODE_NULL;
-
-                        hAuxFile = IntLoadKeyboardLayoutTablesAndFile(pDesc->wszDllName, NULL,
-                                                                      puFlags, &offTable, NULL);
-                        pMulti->AuxEntries[iTable].hFile = hAuxFile;
-                        if (hAuxFile && hAuxFile != INVALID_HANDLE_VALUE)
-                            pMulti->AuxEntries[iTable].offTable = offTable;
-                    }
-                }
-
-                /* Load the real DLL name (if any) */
-                if (pfnReal || pfnRealNT4)
-                {
-                    ULONG ulKLID = pszKLID ? wcstoul(pszKLID, NULL, 16) : 0;
-                    /* FIXME: Specify PCLIENTKEYBOARDTYPE parameter for pfnReal */
-                    if ((pfnReal    && pfnReal(ulKLID, szRealFile, NULL, 0)) ||
-                        (pfnRealNT4 && pfnRealNT4(szRealFile)))
-                    {
-                        szRealFile[_countof(szRealFile) - 1] = UNICODE_NULL;
-                        if (IntIsValidLayoutFileName(szRealFile))
-                        {
-                            HMODULE hRealModule = LoadSysLibraryW(szRealFile);
-                            if (hRealModule)
-                            {
-                                pszCurrentFile = szRealFile;
-                                FreeLibrary(hModule);
-                                hModule = hRealModule;
-                            }
-                            else
-                            {
-                                WARN("Getting real failed\n");
-                            }
-                        }
-                    }
-                }
-            }
-
-            /* Get KbdLayerDescriptor procedure */
-            pfnMain = (PFN_KbdLayerDescriptor)GetProcAddress(hModule, IFN_KbdLayerDescriptor);
-            if (pfnMain)
-                _SEH2_YIELD(break); /* Success */
-        }
-        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-        {
-            ERR("Exception!\n");
-        }
-        _SEH2_END;
+        pfnMain = IntPrepareLayoutModule(&hModule, &pszCurrentFile, szRealFile, pszKLID,
+                                         puFlags, pMulti);
+        if (pfnMain)
+            break; /* Success */
 
         /* Otherwise, it's a failure. We leave this module either way (pszCurrentFile does not
            point into it), so release it here; a retry loads a fresh one. */
         FreeLibrary(hModule);
-        hModule = NULL;
         IntCloseAuxFiles(pMulti);
 
-        if (*puFlags & KLF_INITTIME)
+        if ((*puFlags & KLF_INITTIME) && !WCSIEQL(pszCurrentFile, L"kbdus.dll"))
         {
             pszLayoutFile = L"kbdus.dll";
-            if (!WCSIEQL(pszCurrentFile, L"kbdus.dll")) /* Not English US? */
-                continue; /* Retry with "kbdus.dll" */
+            continue; /* Retry with "kbdus.dll" */
         }
 
         ERR("Invalid layout file: %s\n", debugstr_w(pszLayoutFile));
         return NULL; /* Failure */
     }
 
-    _SEH2_TRY
-    {
-        /* Get the main table offset */
-        {
-            INT_PTR MainOffset = (PBYTE)pfnMain() - (PBYTE)hModule;
-            if (MainOffset <= 0 || MainOffset > MAXWORD)
-            {
-                ERR("MainOffset: %p\n", MainOffset);
-                FreeLibrary(hModule);
-                IntCloseAuxFiles(pMulti);
-                _SEH2_YIELD(return NULL);
-            }
-            wLow = LOWORD(MainOffset);
-        }
-
-        /* Get the NLS table offset */
-        pfnNls = (PFN_KbdNlsLayerDescriptor)GetProcAddress(hModule, IFN_KbdNlsLayerDescriptor);
-        if (pfnNls)
-        {
-            INT_PTR NlsOffset = (PBYTE)pfnNls() - (PBYTE)hModule;
-            if (NlsOffset <= 0 || NlsOffset > MAXWORD)
-            {
-                ERR("NlsOffset: %p\n", NlsOffset);
-                FreeLibrary(hModule);
-                IntCloseAuxFiles(pMulti);
-                _SEH2_YIELD(return NULL);
-            }
-            wHigh = LOWORD(NlsOffset);
-        }
-    }
-    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-    {
-        ERR("Exception!\n");
-        FreeLibrary(hModule);
-        IntCloseAuxFiles(pMulti);
-        _SEH2_YIELD(return NULL);
-    }
-    _SEH2_END;
-
-    *poffTable = MAKELONG(wLow, wHigh);
+    /* From here on, every failure goes to Cleanup */
+    if (!IntGetTableOffsets(hModule, pfnMain, poffTable))
+        goto Cleanup;
 
     if (pMulti)
         StringCbCopyW(pMulti->szRealDllName, sizeof(pMulti->szRealDllName), pszCurrentFile);
 
-    TRACE("FileName:%s\n", debugstr_w(pszCurrentFile));
-    TRACE("pfnMain:%p, pfnNls:%p, pfnReal:%p, pfnRealNT4:%p, pfnMulti:%p, *poffTable:0x%08X\n",
-          pfnMain, pfnNls, pfnReal, pfnRealNT4, pfnMulti, *poffTable);
+    TRACE("FileName:%s, *poffTable:0x%08X\n", debugstr_w(pszCurrentFile), *poffTable);
 
     /* Get the full pathname of hModule */
     cchFull = GetModuleFileNameW(hModule, szFull, _countof(szFull));
-    FreeLibrary(hModule);
     if (!cchFull || cchFull >= _countof(szFull))
     {
         ERR("GetModuleFileNameW failed\n");
-        IntCloseAuxFiles(pMulti);
-        return NULL;
+        goto Cleanup;
     }
 
-    return CreateFileW(szFull, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
+    FreeLibrary(hModule);
+    hModule = NULL;
+
+    hFile = CreateFileW(szFull, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
+    if (hFile != INVALID_HANDLE_VALUE)
+        return hFile; /* Success */
+
+    ERR("CreateFileW failed: %s\n", debugstr_w(szFull));
+
+Cleanup:
+    if (hModule)
+        FreeLibrary(hModule);
+    IntCloseAuxFiles(pMulti);
+    return NULL;
 }
 
 static BOOL
@@ -1125,11 +1190,11 @@ IntLoadKeyboardLayoutFile(
  */
 HKL APIENTRY
 IntLoadKeyboardLayout(
-    _In_opt_ HKL     hklUnload,
-    _In_z_   LPCWSTR pwszKLID,
-    _In_     LANGID  wLangID,
-    _In_     UINT    Flags,
-    _In_     BOOL    unknown5)
+    _In_opt_ HKL    hklUnload,
+    _In_z_   PCWSTR pwszKLID,
+    _In_     LANGID wLangID,
+    _In_     UINT   Flags,
+    _In_     BOOL   bForce)
 {
     HANDLE hFile;
     WCHAR szKLID[KL_NAMELENGTH];
@@ -1147,7 +1212,7 @@ IntLoadKeyboardLayout(
                                       &dwNewKL, &multi);
     if (!hFile || hFile == INVALID_HANDLE_VALUE)
     {
-        if (!unknown5 && !(Flags & KLF_FORCE))
+        if (!bForce && !(Flags & KLF_FORCE))
         {
             ERR("Failed to IntLoadKeyboardLayoutFile\n");
             return NULL; /* Failure */
