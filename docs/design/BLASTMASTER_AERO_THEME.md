@@ -23,7 +23,19 @@ These are the primary integration points. A new `.theme` configuration by itself
 - Correct hit-testing and accessibility for caption buttons, resizing borders, and system menus.
 - Opaque fallback when composition is disabled or unsupported; no invisible controls or unreadable captions.
 
-### Caption-button visual specification (Windows 7 Aero with Basic geometry)
+### DWM integration boundary and default fallback
+
+The current `dwmapi` module is an API shim, not a compositor. It has no composition service, redirected-window surfaces, or frame-composition loop to integrate with yet. Until those pieces exist:
+
+- `DwmIsCompositionEnabled` must report `FALSE`.
+- `DwmExtendFrameIntoClientArea` must validate its arguments and return `DWM_E_COMPOSITIONDISABLED` rather than claiming a glass frame was drawn.
+- `DwmEnableComposition` must reject unknown actions and must not report that enabling composition succeeded.
+- A request to disable composition remains a successful no-op, since composition is already unavailable.
+- New user profiles start with `ThemeActive=0`, selecting the built-in Classic/non-themed rendering path. This is the safe default while Aero is unfinished; it does not prevent users from enabling a supported visual theme later.
+
+These are truthful compatibility/fallback behaviors, not the completed Aero renderer. The next DWM milestone must implement the compositor itself and connect redirected surfaces, frame margins, colorization, invalidation/flush, and composition state to it. Only after that path is working should DWM report composition as enabled.
+
+## Caption-button visual specification (Windows 7 Aero with Basic geometry)
 
 The Minimize, Maximize/Restore, and Close buttons should use the compact, square-edged Windows 7 Basic-style layout and glyph proportions, while retaining the Windows 7 Aero palette and state treatment. Do not use Vista's oversized, pill-shaped caption controls.
 
