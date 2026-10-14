@@ -52,6 +52,14 @@ The Minimize, Maximize/Restore, and Close buttons should use the compact, square
 
 The existing `dll/win32/uxtheme/nonclient.c` already calculates caption-button hit rectangles and delegates visuals to `DrawThemeBackground`. The preferred implementation is to supply and validate matching theme resources/state artwork through the existing theme pipeline first. Only add custom non-client drawing if the theme format cannot express the required state; avoid globally overriding caption buttons for every installed theme.
 
+### Caption layout hardening completed
+
+The non-client layout path now initializes theme button dimensions before querying the theme and falls back to system-sized geometry if a theme returns an error or invalid dimensions. Button height and width are constrained to sensible positive bounds, preventing malformed/incomplete theme resources from producing arbitrary caption-button rectangles. This is a robustness fix, not the Aero artwork itself.
+
+### Remaining visual blocker
+
+The current `Lautus` and `Modern` theme targets compile `.msstyles` resources from INI files, resource scripts, and image assets. There is not yet a dedicated Blastmaster Aero `.msstyles` resource set, and the DWM compositor remains unavailable. Do not enable a nonexistent Aero theme or paint fake glass into ordinary themed windows. The next visual milestone is to create original, licensed caption/frame assets and a dedicated theme resource set, then test it through the existing `DrawThemeBackground` path. Actual translucency, rounded composited corners, and shadows still require the compositor milestone.
+
 ## 2. Shell
 - Vista-style taskbar proportions and glass treatment, Start orb, notification area, clock, and task buttons.
 - Vista-style two-column Start menu with program list, common locations, search entry point where supported, and shutdown/lock actions that map to existing shell functionality.
