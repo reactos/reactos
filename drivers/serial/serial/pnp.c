@@ -352,10 +352,6 @@ SerialPnp(
 			break;
 		}
 		IRP_MN_CANCEL_REMOVE_DEVICE 0x3
-		IRP_MN_QUERY_DEVICE_RELATIONS / BusRelations (optional) 0x7
-		IRP_MN_QUERY_DEVICE_RELATIONS / RemovalRelations (optional) 0x7
-		IRP_MN_QUERY_INTERFACE (optional) 0x8
-		IRP_MN_QUERY_CAPABILITIES (optional) 0x9
 		IRP_MN_FILTER_RESOURCE_REQUIREMENTS (optional) 0xd
 		IRP_MN_QUERY_PNP_DEVICE_STATE (optional) 0x14
 		IRP_MN_DEVICE_USAGE_NOTIFICATION (required or optional) 0x16
