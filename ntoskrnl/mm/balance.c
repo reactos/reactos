@@ -315,16 +315,9 @@ MmRequestPageMemoryConsumer(ULONG Consumer, BOOLEAN CanWait,
 {
     PFN_NUMBER Page;
 
-    /* Delay some requests for the Memory Manager to recover pages (CORE-17624).
-     * FIXME: This is suboptimal.
-     */
-    static INT i = 0;
-    static LARGE_INTEGER TinyTime = {{-1L, -1L}};
-    if (i++ >= 100)
-    {
-        KeDelayExecutionThread(KernelMode, FALSE, &TinyTime);
-        i = 0;
-    }
+    /* Let the balancer recover pages before we run out of them (CORE-17624) */
+    if ((MmAvailablePages < MiMinimumAvailablePages) && (MiBalancerThreadHandle != NULL))
+        MmRebalanceMemoryConsumers();
 
     /*
      * Actually allocate the page.
