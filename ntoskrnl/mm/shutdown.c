@@ -59,7 +59,7 @@ MiShutdownSystem(VOID)
                     if (!IS_SWAP_FROM_SSE(Entry) && IS_DIRTY_SSE(Entry))
                     {
                         Dirty = TRUE;
-                        MmCheckDirtySegment(Segment, &SegmentOffset, FALSE, TRUE);
+                        MmCheckDirtySegment(Segment, &SegmentOffset, FALSE, TRUE, NULL);
                     }
 
                     MmUnlockSectionSegment(Segment);

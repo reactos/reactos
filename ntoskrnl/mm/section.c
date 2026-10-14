@@ -982,7 +982,16 @@ FreeSegmentPage(PMM_SECTION_SEGMENT Segment, PLARGE_INTEGER Offset)
 
     /* Write the page */
     if (IS_DIRTY_SSE(Entry))
-        MiWritePage(Segment, Offset->QuadPart, Page);
+    {
+        NTSTATUS Status = MiWritePage(Segment, Offset->QuadPart, Page);
+
+        /* The segment is going away, so this data is lost. Say so like Windows does */
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("Lost dirty page at offset 0x%I64x, Status 0x%08lx\n", Offset->QuadPart, Status);
+            IoRaiseInformationalHardError(STATUS_LOST_WRITEBEHIND_DATA, &Segment->FileObject->FileName, NULL);
+        }
+    }
 
     MmReleasePageMemoryConsumer(MC_USER, Page);
 }
@@ -5168,16 +5177,28 @@ MmFlushSegment(
     /* Find byte offset of the page to start */
     FlushStart.QuadPart = PAGE_ROUND_DOWN_64(FlushStart.QuadPart);
 
+    Status = STATUS_SUCCESS;
+
     while (FlushStart.QuadPart < FlushEnd.QuadPart)
     {
         ULONG_PTR Entry = MmGetPageEntrySectionSegment(Segment, &FlushStart);
 
         if (IS_DIRTY_SSE(Entry))
         {
-            MmCheckDirtySegment(Segment, &FlushStart, FALSE, FALSE);
+            NTSTATUS WriteStatus;
 
-            if (Iosb)
+            MmCheckDirtySegment(Segment, &FlushStart, FALSE, FALSE, &WriteStatus);
+
+            /* Keep going so the other pages get written, but report the first failure */
+            if (!NT_SUCCESS(WriteStatus))
+            {
+                if (NT_SUCCESS(Status))
+                    Status = WriteStatus;
+            }
+            else if (Iosb)
+            {
                 Iosb->Information += PAGE_SIZE;
+            }
         }
 
         FlushStart.QuadPart += PAGE_SIZE;
@@ -5186,8 +5207,12 @@ MmFlushSegment(
     MmUnlockSectionSegment(Segment);
     MmDereferenceSegment(Segment);
 
+    if (Iosb)
+        Iosb->Status = Status;
+
+    return Status;
+
 Quit:
-    /* FIXME: Handle failures */
     if (Iosb)
         Iosb->Status = STATUS_SUCCESS;
 
@@ -5201,11 +5226,15 @@ MmCheckDirtySegment(
     PMM_SECTION_SEGMENT Segment,
     PLARGE_INTEGER Offset,
     BOOLEAN ForceDirty,
-    BOOLEAN PageOut)
+    BOOLEAN PageOut,
+    _Out_opt_ PNTSTATUS WriteStatus)
 {
     ULONG_PTR Entry;
     NTSTATUS Status;
     PFN_NUMBER Page;
+
+    if (WriteStatus)
+        *WriteStatus = STATUS_SUCCESS;
 
     ASSERT(Segment->Locked);
 
@@ -5333,6 +5362,9 @@ MmCheckDirtySegment(
             /* Damn, this failed. Consider this page as still dirty */
             DPRINT1("MiWritePage FAILED: Status 0x%08x!\n", Status);
             DirtyAgain = TRUE;
+
+            if (WriteStatus)
+                *WriteStatus = Status;
         }
         else
         {

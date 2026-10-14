@@ -481,6 +481,10 @@ CcRosFlushDirtyPages (
             }
         }
 
+        /* A failed VACB is dirty again and would be picked right back up. Retry it on the next pass */
+        if (!NT_SUCCESS(Status))
+            break;
+
         current_entry = DirtyVacbListHead.Flink;
     }
 
