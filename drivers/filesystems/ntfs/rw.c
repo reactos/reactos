@@ -303,6 +303,94 @@ NtfsReadFile(PDEVICE_EXTENSION DeviceExt,
     return STATUS_SUCCESS;
 }
 
+/* Sets up the cache map of a handle on its first cached I/O */
+static
+VOID
+NTAPI
+NtfsEnsureCacheMap(
+    _In_ PFILE_OBJECT FileObject,
+    _In_ PNTFS_FCB Fcb)
+{
+    if (FileObject->PrivateCacheMap == NULL)
+    {
+        CcInitializeCacheMap(FileObject,
+                             (PCC_FILE_SIZES)&Fcb->RFCB.AllocationSize,
+                             FALSE,
+                             &NtfsGlobalData->CacheMgrCallbacks,
+                             Fcb);
+    }
+}
+
+static
+NTSTATUS
+NTAPI
+NtfsCachedRead(
+    _In_ PNTFS_IRP_CONTEXT IrpContext,
+    _In_ PNTFS_FCB Fcb,
+    _Out_writes_bytes_(Length) PVOID Buffer,
+    _In_ ULONG Length,
+    _In_ PLARGE_INTEGER ReadOffset,
+    _Out_ PULONG LengthRead)
+{
+    PFILE_OBJECT FileObject = IrpContext->FileObject;
+    BOOLEAN CanWait = BooleanFlagOn(IrpContext->Flags, IRPCONTEXT_CANWAIT);
+    IO_STATUS_BLOCK IoStatus;
+    NTSTATUS Status;
+    BOOLEAN Done = FALSE;
+
+    *LengthRead = 0;
+
+    if (NtfsFCBIsCompressed(Fcb) || NtfsFCBIsEncrypted(Fcb))
+    {
+        UNIMPLEMENTED;
+        return STATUS_NOT_IMPLEMENTED;
+    }
+
+    if (!ExAcquireResourceSharedLite(&Fcb->MainResource, CanWait))
+        goto Post;
+
+    if (ReadOffset->QuadPart >= Fcb->RFCB.FileSize.QuadPart)
+    {
+        ExReleaseResourceLite(&Fcb->MainResource);
+        return STATUS_END_OF_FILE;
+    }
+
+    if (Length > Fcb->RFCB.FileSize.QuadPart - ReadOffset->QuadPart)
+        Length = (ULONG)(Fcb->RFCB.FileSize.QuadPart - ReadOffset->QuadPart);
+
+    _SEH2_TRY
+    {
+        NtfsEnsureCacheMap(FileObject, Fcb);
+
+        Done = CcCopyRead(FileObject, ReadOffset, Length, CanWait, Buffer, &IoStatus);
+        Status = Done ? IoStatus.Status : STATUS_PENDING;
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Done = TRUE;
+        Status = _SEH2_GetExceptionCode();
+    }
+    _SEH2_END;
+
+    ExReleaseResourceLite(&Fcb->MainResource);
+
+    if (Done)
+    {
+        if (NT_SUCCESS(Status))
+            *LengthRead = (ULONG)IoStatus.Information;
+
+        return Status;
+    }
+
+Post:
+    /* The data isn't in yet, read it from a worker that can wait */
+    Status = NtfsLockUserBuffer(IrpContext->Irp, Length, IoWriteAccess);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    return NtfsMarkIrpContextForQueue(IrpContext);
+}
+
 
 NTSTATUS
 NtfsRead(PNTFS_IRP_CONTEXT IrpContext)
@@ -356,8 +444,29 @@ NtfsRead(PNTFS_IRP_CONTEXT IrpContext)
         Irp->IoStatus.Information = 0;
         return STATUS_INVALID_DEVICE_REQUEST;
     }
+    else if (!(Irp->Flags & (IRP_PAGING_IO | IRP_NOCACHE)))
+    {
+        Status = NtfsCachedRead(IrpContext,
+                                (PNTFS_FCB)FileObject->FsContext,
+                                Buffer,
+                                ReadLength,
+                                &ReadOffset,
+                                &ReturnedReadLength);
+        if (Status == STATUS_PENDING)
+            return Status;
+    }
     else
     {
+        PNTFS_FCB Fcb = (PNTFS_FCB)FileObject->FsContext;
+
+        /* A non cached read must not miss what is still dirty in the cache */
+        if (!(Irp->Flags & IRP_PAGING_IO) && Fcb->SectionObjectPointers.DataSectionObject != NULL)
+        {
+            IO_STATUS_BLOCK IoStatus;
+
+            CcFlushCache(&Fcb->SectionObjectPointers, &ReadOffset, ReadLength, &IoStatus);
+        }
+
         Status = NtfsReadFile(DeviceExt,
                               FileObject,
                               Buffer,
