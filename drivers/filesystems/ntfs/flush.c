@@ -56,15 +56,21 @@ NtfsFlushVolumeFiles(
     if (Fcbs == NULL)
         return STATUS_INSUFFICIENT_RESOURCES;
 
-    /* Take references, a delete may take an FCB off the list while we flush */
+    /* Take references, a delete may take an FCB off the list while we flush.
+     * Unreferenced FCBs only linger for their section and have nothing cached
+     * to write; releasing one again would tear it down twice. */
     KeAcquireSpinLock(&DeviceExt->FcbListLock, &OldIrql);
     for (Entry = DeviceExt->FcbListHead.Flink;
          Entry != &DeviceExt->FcbListHead && Taken < Count;
          Entry = Entry->Flink)
     {
-        Fcbs[Taken] = CONTAINING_RECORD(Entry, NTFS_FCB, FcbListEntry);
-        Fcbs[Taken]->RefCount++;
-        Taken++;
+        PNTFS_FCB Fcb = CONTAINING_RECORD(Entry, NTFS_FCB, FcbListEntry);
+
+        if (Fcb->RefCount <= 0)
+            continue;
+
+        Fcb->RefCount++;
+        Fcbs[Taken++] = Fcb;
     }
     KeReleaseSpinLock(&DeviceExt->FcbListLock, OldIrql);
 
