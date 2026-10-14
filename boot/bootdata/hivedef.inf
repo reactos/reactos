@@ -7,8 +7,8 @@ HKCU,"Control Panel",,0x00000012
 
 ; Start with the built-in Classic (non-themed) desktop. Aero is opt-in
 ; until a real DWM compositor and its frame-rendering path are available.
-HKCU,"Software\\Microsoft\\Windows\\CurrentVersion\\ThemeManager",,0x00000012
-HKCU,"Software\\Microsoft\\Windows\\CurrentVersion\\ThemeManager","ThemeActive",2,"0"
+HKCU,"Software\Microsoft\Windows\CurrentVersion\ThemeManager",,0x00000012
+HKCU,"Software\Microsoft\Windows\CurrentVersion\ThemeManager","ThemeActive",2,"0"
 
 ; Accessibility
 HKCU,"Control Panel\Accessibility",,0x00000012
