@@ -46,6 +46,10 @@ KiFreezeWaitForThaw(
 }
 #endif /* CONFIG_SMP */
 
+/**
+ * @brief
+ * Handles an IPI freeze request. Returns TRUE if this processor was frozen.
+ **/
 BOOLEAN
 KiProcessorFreezeHandler(
     _In_ PKTRAP_FRAME TrapFrame,

@@ -219,12 +219,12 @@ typedef enum
 // Freeze states, as held in KPRCB::IpiFrozen. Only the processor that is
 // currently active in the debugger may change another processor's state.
 //
-#define IPI_FROZEN_STATE_RUNNING 0
-#define IPI_FROZEN_STATE_FROZEN 2
-#define IPI_FROZEN_STATE_THAW 3
-#define IPI_FROZEN_STATE_OWNER 4
-#define IPI_FROZEN_STATE_TARGET_FREEZE 5
-#define IPI_FROZEN_FLAG_ACTIVE 0x20
+#define IPI_FROZEN_STATE_RUNNING        0
+#define IPI_FROZEN_STATE_FROZEN         2
+#define IPI_FROZEN_STATE_THAW           3
+#define IPI_FROZEN_STATE_OWNER          4
+#define IPI_FROZEN_STATE_TARGET_FREEZE  5
+#define IPI_FROZEN_FLAG_ACTIVE          0x20
 
 //
 // PRCB Flags
