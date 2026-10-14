@@ -1038,12 +1038,12 @@ SetResidentAttributeDataLength(PDEVICE_EXTENSION Vcb,
     {
         // There's usually padding at the end of a record. Do we need to extend past it?
         ULONG MaxValueLength = AttrContext->pRecord->Length - AttrContext->pRecord->Resident.ValueOffset;
-        if (MaxValueLength < DataSize->LowPart)
+        if (MaxValueLength < (ULONGLONG)DataSize->QuadPart)
         {
             // If this is the last attribute, we could move the end marker to the very end of the file record
             MaxValueLength += Vcb->NtfsInfo.BytesPerFileRecord - NextAttributeOffset - (sizeof(ULONG) * 2);
 
-            if (MaxValueLength < DataSize->LowPart || NextAttribute->Type != AttributeEnd)
+            if (MaxValueLength < (ULONGLONG)DataSize->QuadPart || NextAttribute->Type != AttributeEnd)
             {
                 // convert attribute to non-resident
                 PNTFS_ATTR_RECORD Destination = (PNTFS_ATTR_RECORD)((ULONG_PTR)FileRecord + AttrOffset);

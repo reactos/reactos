@@ -139,7 +139,7 @@ NtfsFastIoCheckIfPossible(
     if (CheckForReadOperation)
         return TRUE;
 
-    if (!NtfsGlobalData->EnableWriteSupport || FileOffset->HighPart != 0)
+    if (!NtfsGlobalData->EnableWriteSupport)
         return FALSE;
 
     /* Growing the file updates its record, leave that to the IRP path */

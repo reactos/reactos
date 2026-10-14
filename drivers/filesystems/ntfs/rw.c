@@ -125,7 +125,7 @@ NtfsReadFile(PDEVICE_EXTENSION DeviceExt,
              PFILE_OBJECT FileObject,
              PUCHAR Buffer,
              ULONG Length,
-             ULONG ReadOffset,
+             ULONGLONG ReadOffset,
              ULONG IrpFlags,
              PIRP Irp,
              PULONG LengthRead)
@@ -135,14 +135,14 @@ NtfsReadFile(PDEVICE_EXTENSION DeviceExt,
     PFILE_RECORD_HEADER FileRecord;
     PNTFS_ATTR_CONTEXT DataContext = NULL;
     ULONG RealLength;
-    ULONG RealReadOffset;
+    ULONGLONG RealReadOffset;
     ULONG RealLengthRead;
     ULONG ToRead;
     BOOLEAN AllocatedBuffer = FALSE;
     PCHAR ReadBuffer = (PCHAR)Buffer;
     ULONGLONG StreamSize;
 
-    DPRINT("NtfsReadFile(%p, %p, %p, %lu, %lu, %lx, %p)\n", DeviceExt, FileObject, Buffer, Length, ReadOffset, IrpFlags, LengthRead);
+    DPRINT("NtfsReadFile(%p, %p, %p, %lu, %I64u, %lx, %p)\n", DeviceExt, FileObject, Buffer, Length, ReadOffset, IrpFlags, LengthRead);
 
     *LengthRead = 0;
 
@@ -228,7 +228,7 @@ NtfsReadFile(PDEVICE_EXTENSION DeviceExt,
 
     ToRead = Length;
     if (ReadOffset + Length > StreamSize)
-        ToRead = StreamSize - ReadOffset;
+        ToRead = (ULONG)(StreamSize - ReadOffset);
 
     RealReadOffset = ReadOffset;
     RealLength = ToRead;
@@ -256,7 +256,7 @@ NtfsReadFile(PDEVICE_EXTENSION DeviceExt,
         AllocatedBuffer = TRUE;
     }
 
-    DPRINT("Effective read: %lu at %lu for stream '%S'\n", RealLength, RealReadOffset, Fcb->Stream);
+    DPRINT("Effective read: %lu at %I64u for stream '%S'\n", RealLength, RealReadOffset, Fcb->Stream);
     /* Only hand the IRP down when reading straight into its buffer: a
      * forwarded transfer lands at the start of the IRP's MDL, so a bounced
      * read would end up in the wrong place */
@@ -287,7 +287,7 @@ NtfsReadFile(PDEVICE_EXTENSION DeviceExt,
 
     if (AllocatedBuffer)
     {
-        RtlCopyMemory(Buffer, ReadBuffer + (ReadOffset - RealReadOffset), ToRead);
+        RtlCopyMemory(Buffer, ReadBuffer + (ULONG)(ReadOffset - RealReadOffset), ToRead);
     }
 
     if (ToRead != Length)
@@ -472,7 +472,7 @@ NtfsRead(PNTFS_IRP_CONTEXT IrpContext)
                               FileObject,
                               Buffer,
                               ReadLength,
-                              ReadOffset.u.LowPart,
+                              ReadOffset.QuadPart,
                               Irp->Flags,
                               Irp,
                               &ReturnedReadLength);
@@ -606,7 +606,7 @@ NTSTATUS NtfsWriteFile(PDEVICE_EXTENSION DeviceExt,
                        PFILE_OBJECT FileObject,
                        const PUCHAR Buffer,
                        ULONG Length,
-                       ULONG WriteOffset,
+                       ULONGLONG WriteOffset,
                        ULONG IrpFlags,
                        BOOLEAN CaseSensitive,
                        PIRP Irp,
@@ -620,7 +620,7 @@ NTSTATUS NtfsWriteFile(PDEVICE_EXTENSION DeviceExt,
     ULONGLONG StreamSize;
     ULONG RequestedLength = 0;
 
-    DPRINT("NtfsWriteFile(%p, %p, %p, %lu, %lu, %x, %s, %p)\n",
+    DPRINT("NtfsWriteFile(%p, %p, %p, %lu, %I64u, %x, %s, %p)\n",
            DeviceExt,
            FileObject,
            Buffer,
@@ -720,7 +720,7 @@ NTSTATUS NtfsWriteFile(PDEVICE_EXTENSION DeviceExt,
     // Get the size of the stream on disk
     StreamSize = AttributeDataLength(DataContext->pRecord);
 
-    DPRINT("WriteOffset: %lu\tStreamSize: %I64u\n", WriteOffset, StreamSize);
+    DPRINT("WriteOffset: %I64u\tStreamSize: %I64u\n", WriteOffset, StreamSize);
 
     // Are we trying to write beyond the end of the stream?
     if (WriteOffset + Length > StreamSize)
@@ -761,7 +761,7 @@ NTSTATUS NtfsWriteFile(PDEVICE_EXTENSION DeviceExt,
                 return STATUS_SUCCESS;
             }
 
-            DPRINT("Clamping paging write of %lu bytes at %lu to stream size %I64u\n",
+            DPRINT("Clamping paging write of %lu bytes at %I64u to stream size %I64u\n",
                    Length, WriteOffset, StreamSize);
 
             RequestedLength = Length;
@@ -777,7 +777,7 @@ NTSTATUS NtfsWriteFile(PDEVICE_EXTENSION DeviceExt,
         }
     }
 
-    DPRINT("Length: %lu\tWriteOffset: %lu\tStreamSize: %I64u\n", Length, WriteOffset, StreamSize);
+    DPRINT("Length: %lu\tWriteOffset: %I64u\tStreamSize: %I64u\n", Length, WriteOffset, StreamSize);
 
     // Write the data to the attribute
     /* Buffer is the system mapping of this IRP's MDL, so hand the IRP down too
@@ -952,7 +952,7 @@ NtfsCachedWrite(
 * STATUS_PARTIAL_COPY, STATUS_UNSUCCESSFUL, or STATUS_OBJECT_NAME_NOT_FOUND if NtfsWriteFile() fails.
 *
 * @remarks Called by NtfsDispatch() in response to an IRP_MJ_WRITE request. Page files are not implemented.
-* Support for large files (>4gb) is not implemented. Cached writes, file locks, transactions, etc - not implemented.
+* File locks, transactions, etc - not implemented.
 *
 */
 NTSTATUS
@@ -1011,10 +1011,10 @@ NtfsWrite(PNTFS_IRP_CONTEXT IrpContext)
     DPRINT("ByteOffset: %I64u\tLength: %lu\tBytes per sector: %lu\n", ByteOffset.QuadPart,
         Length, BytesPerSector);
 
-    if (ByteOffset.u.HighPart && !(Fcb->Flags & FCB_IS_VOLUME))
+    /* Offsets are 64 bits all the way down, only reject what can't be a file position */
+    if (ByteOffset.QuadPart < 0 || ByteOffset.QuadPart + Length < ByteOffset.QuadPart)
     {
-        // TODO: Support large files
-        DPRINT1("FIXME: Writing to large files is not yet supported at this time.\n");
+        DPRINT1("Invalid write offset %I64d, length %lu\n", ByteOffset.QuadPart, Length);
         return STATUS_INVALID_PARAMETER;
     }
 
@@ -1141,7 +1141,6 @@ NtfsWrite(PNTFS_IRP_CONTEXT IrpContext)
     DPRINT("Existing File Size(Fcb->RFCB.FileSize.QuadPart): %I64u\n", Fcb->RFCB.FileSize.QuadPart);
     DPRINT("About to write the data. Length: %lu\n", Length);
 
-    // TODO: handle HighPart of ByteOffset (large files)
 
     /* See NtfsRead() */
     if ((DeviceExt->Flags & VCB_VOLUME_DISMOUNTED) &&
@@ -1187,7 +1186,7 @@ NtfsWrite(PNTFS_IRP_CONTEXT IrpContext)
                                FileObject,
                                Buffer,
                                Length,
-                               ByteOffset.LowPart,
+                               ByteOffset.QuadPart,
                                Irp->Flags,
                                BooleanFlagOn(IrpContext->Stack->Flags, SL_CASE_SENSITIVE),
                                Irp,
