@@ -23,7 +23,24 @@ These are the primary integration points. A new `.theme` configuration by itself
 - Correct hit-testing and accessibility for caption buttons, resizing borders, and system menus.
 - Opaque fallback when composition is disabled or unsupported; no invisible controls or unreadable captions.
 
-### 2. Shell
+### Caption-button visual specification (Windows 7 Aero with Basic geometry)
+
+The Minimize, Maximize/Restore, and Close buttons should use the compact, square-edged Windows 7 Basic-style layout and glyph proportions, while retaining the Windows 7 Aero palette and state treatment. Do not use Vista's oversized, pill-shaped caption controls.
+
+- **Minimize:** a crisp horizontal glyph centered in a compact rectangular button.
+- **Maximize:** a thin, square outline; **Restore:** two overlapping square outlines, with consistent stroke weight and centering.
+- **Close:** a clearly legible X glyph inside the wider close-button hit target.
+- **Normal:** subtle blue glass gradient/highlight with a restrained border; buttons should visually blend into the Aero frame.
+- **Hover:** brighter cyan/blue glass highlight with a clear outline.
+- **Pressed:** darker blue inset treatment that visibly reads as pressed.
+- **Inactive window:** muted, lower-contrast frame and button colors while retaining readable glyphs.
+- **Close hover/pressed:** use the distinct amber-to-red Windows 7 Aero close-button treatment; preserve a high-contrast X.
+- Preserve native caption hit-testing and system-command behavior. The visual implementation must not replace the existing `HTMINBUTTON`, `HTMAXBUTTON`, and `HTCLOSE` interactions.
+- Support maximized windows, disabled caption buttons, small tool windows, high contrast, and composition-off fallback without clipping or changing button hit boxes.
+
+The existing `dll/win32/uxtheme/nonclient.c` already calculates caption-button hit rectangles and delegates visuals to `DrawThemeBackground`. The preferred implementation is to supply and validate matching theme resources/state artwork through the existing theme pipeline first. Only add custom non-client drawing if the theme format cannot express the required state; avoid globally overriding caption buttons for every installed theme.
+
+## 2. Shell
 - Vista-style taskbar proportions and glass treatment, Start orb, notification area, clock, and task buttons.
 - Vista-style two-column Start menu with program list, common locations, search entry point where supported, and shutdown/lock actions that map to existing shell functionality.
 - Window grouping and previews only where the shell APIs can support them reliably; do not fake working previews with static images.
