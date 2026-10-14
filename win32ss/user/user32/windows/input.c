@@ -38,7 +38,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(user32);
 #define KBDLAYOUT_KEY  L"System\\CurrentControlSet\\Control\\Keyboard Layout"
 #define ATTR_MASK      0x00FF0000
 #define LANGID_ENGLISH_US MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US)
-#define WCSEQL(s1, s2) ((LPCVOID)(s1) == (LPCVOID)(s2) || !_wcsicmp((s1), (s2)))
+#define WCSIEQL(s1, s2) ((LPCVOID)(s1) == (LPCVOID)(s2) || !_wcsicmp((s1), (s2)))
 
 /* procedure ordinals of keyboard layout file */
 #define IFN_KbdLayerDescriptor      MAKEINTRESOURCEA(1)
@@ -771,7 +771,7 @@ IntLoadKeyboardLayoutTablesAndFile(
             return NULL;
         }
 
-        if (!WCSEQL(pszLayoutFile, L"kbdus.dll")) /* Not English US? */
+        if (!WCSIEQL(pszLayoutFile, L"kbdus.dll")) /* Not English US? */
         {
             /* Get the procedures of layout file */
             pfnReal    = (PFN_KbdLayerRealDllFile)GetProcAddress(hModule, IFN_KbdLayerRealDllFile);
@@ -856,7 +856,7 @@ IntLoadKeyboardLayoutTablesAndFile(
         if (*puFlags & KLF_INITTIME)
         {
             pszLayoutFile = L"kbdus.dll";
-            if (!WCSEQL(pszCurrentFile, L"kbdus.dll")) /* Not English US? */
+            if (!WCSIEQL(pszCurrentFile, L"kbdus.dll")) /* Not English US? */
                 continue; /* Retry with "kbdus.dll" */
         }
 
