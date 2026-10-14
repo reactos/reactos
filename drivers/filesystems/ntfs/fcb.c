@@ -114,6 +114,9 @@ NtfsCreateFCB(PCWSTR FileName,
     Fcb->RFCB.Resource = &(Fcb->MainResource);
     Fcb->RFCB.PagingIoResource = &(Fcb->PagingIoResource);
 
+    /* NtfsFastIoCheckIfPossible decides per request */
+    Fcb->RFCB.IsFastIoPossible = FastIoIsQuestionable;
+
     return Fcb;
 }
 

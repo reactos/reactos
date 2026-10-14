@@ -120,16 +120,31 @@ NtfsFastIoCheckIfPossible(
     _Out_ PIO_STATUS_BLOCK IoStatus,
     _In_ PDEVICE_OBJECT DeviceObject)
 {
-    /* Deny FastIo */
-    UNREFERENCED_PARAMETER(FileObject);
-    UNREFERENCED_PARAMETER(FileOffset);
-    UNREFERENCED_PARAMETER(Length);
+    PNTFS_FCB Fcb = (PNTFS_FCB)FileObject->FsContext;
+
     UNREFERENCED_PARAMETER(Wait);
     UNREFERENCED_PARAMETER(LockKey);
-    UNREFERENCED_PARAMETER(CheckForReadOperation);
     UNREFERENCED_PARAMETER(IoStatus);
     UNREFERENCED_PARAMETER(DeviceObject);
-    return FALSE;
+
+    if (Fcb == NULL || Fcb->Identifier.Type != NTFS_TYPE_FCB)
+        return FALSE;
+
+    if ((Fcb->Flags & FCB_IS_VOLUME) || NtfsFCBIsDirectory(Fcb) ||
+        NtfsFCBIsCompressed(Fcb) || NtfsFCBIsEncrypted(Fcb) ||
+        (Fcb->Vcb->Flags & VCB_VOLUME_DISMOUNTED))
+    {
+        return FALSE;
+    }
+
+    if (CheckForReadOperation)
+        return TRUE;
+
+    if (!NtfsGlobalData->EnableWriteSupport || FileOffset->HighPart != 0)
+        return FALSE;
+
+    /* Growing the file updates its record, leave that to the IRP path */
+    return (FileOffset->QuadPart + Length <= Fcb->RFCB.FileSize.QuadPart);
 }
 
 BOOLEAN
@@ -144,15 +159,11 @@ NtfsFastIoRead(
     _Out_ PIO_STATUS_BLOCK IoStatus,
     _In_ PDEVICE_OBJECT DeviceObject)
 {
-    DBG_UNREFERENCED_PARAMETER(FileObject);
-    DBG_UNREFERENCED_PARAMETER(FileOffset);
-    DBG_UNREFERENCED_PARAMETER(Length);
-    DBG_UNREFERENCED_PARAMETER(Wait);
-    DBG_UNREFERENCED_PARAMETER(LockKey);
-    DBG_UNREFERENCED_PARAMETER(Buffer);
-    DBG_UNREFERENCED_PARAMETER(IoStatus);
-    DBG_UNREFERENCED_PARAMETER(DeviceObject);
-    return FALSE;
+    /* Opens of the file system device have no FCB */
+    if (FileObject->FsContext == NULL)
+        return FALSE;
+
+    return FsRtlCopyRead(FileObject, FileOffset, Length, Wait, LockKey, Buffer, IoStatus, DeviceObject);
 }
 
 BOOLEAN
@@ -167,15 +178,10 @@ NtfsFastIoWrite(
     _Out_ PIO_STATUS_BLOCK IoStatus,
     _In_ PDEVICE_OBJECT DeviceObject)
 {
-    DBG_UNREFERENCED_PARAMETER(FileObject);
-    DBG_UNREFERENCED_PARAMETER(FileOffset);
-    DBG_UNREFERENCED_PARAMETER(Length);
-    DBG_UNREFERENCED_PARAMETER(Wait);
-    DBG_UNREFERENCED_PARAMETER(LockKey);
-    DBG_UNREFERENCED_PARAMETER(Buffer);
-    DBG_UNREFERENCED_PARAMETER(IoStatus);
-    DBG_UNREFERENCED_PARAMETER(DeviceObject);
-    return FALSE;
+    if (FileObject->FsContext == NULL || !NtfsGlobalData->EnableWriteSupport)
+        return FALSE;
+
+    return FsRtlCopyWrite(FileObject, FileOffset, Length, Wait, LockKey, Buffer, IoStatus, DeviceObject);
 }
 
 /* EOF */
