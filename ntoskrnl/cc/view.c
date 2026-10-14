@@ -498,11 +498,13 @@ CcRosFlushDirtyPages (
 VOID
 CcRosTrimCache(
     _In_ ULONG Target,
+    _In_ BOOLEAN FlushDirty,
     _Out_ PULONG NrFreed)
 /*
  * FUNCTION: Try to free some memory from the file cache.
  * ARGUMENTS:
  *       Target - The number of pages to be freed.
+ *       FlushDirty - Whether dirty pages may be flushed to meet the target.
  *       NrFreed - Points to a variable where the number of pages
  *                 actually freed is returned.
  */
@@ -594,7 +596,7 @@ retry:
     KeReleaseQueuedSpinLock(LockQueueMasterLock, oldIrql);
 
     /* Try flushing pages if we haven't met our target */
-    if ((Target > 0) && !FlushedPages)
+    if (FlushDirty && (Target > 0) && !FlushedPages)
     {
         /* Flush dirty pages to disk */
         CcRosFlushDirtyPages(Target, &PagesFreed, FALSE, FALSE);
