@@ -412,7 +412,7 @@ KiIpiSendRequest(
 #else
     UNREFERENCED_PARAMETER(TargetSet);
     WorkerRoutine(NULL, Parameter1, Parameter2, Parameter3);
-#endif
+#endif // CONFIG_SMP
 }
 
 #endif // !_M_AMD64

@@ -873,15 +873,18 @@ VOID
 NTAPI
 KiRestoreProcessorState(
     _Out_ PKTRAP_FRAME TrapFrame,
-    _Out_opt_ PKEXCEPTION_FRAME ExceptionFrame)
+    _Out_ PKEXCEPTION_FRAME ExceptionFrame)
 {
     PKPRCB Prcb = KeGetCurrentPrcb();
+
+    /* x86 has no exception frame, everything lives in the trap frame */
+    UNREFERENCED_PARAMETER(ExceptionFrame);
 
     //
     // Restore full context, flags must match KiSaveProcessorState
     //
     KeContextToTrapFrame(&Prcb->ProcessorState.ContextFrame,
-                         ExceptionFrame,
+                         NULL,
                          TrapFrame,
                          CONTEXT_FULL | CONTEXT_DEBUG_REGISTERS,
                          KernelMode);
@@ -1313,7 +1316,6 @@ KeFlushEntireTb(IN BOOLEAN Invalid,
 #ifdef CONFIG_SMP
     KAFFINITY TargetAffinity;
     PKPRCB Prcb = KeGetCurrentPrcb();
-    LONG Stamp;
 #endif
 
     /* Raise the IRQL for the TB Flush */
@@ -1323,7 +1325,7 @@ KeFlushEntireTb(IN BOOLEAN Invalid,
     /* An odd flush stamp means a flush is in progress, claim it by making it odd */
     for (;;)
     {
-        Stamp = KiTbFlushTimeStamp;
+        LONG Stamp = KiTbFlushTimeStamp;
         if (!(Stamp & 1) &&
             InterlockedCompareExchange(&KiTbFlushTimeStamp, Stamp | 1, Stamp) == Stamp)
             break;
