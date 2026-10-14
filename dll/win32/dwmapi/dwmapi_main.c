@@ -55,10 +55,14 @@ HRESULT WINAPI DwmIsCompositionEnabled(BOOL *enabled)
     if (!enabled)
         return E_INVALIDARG;
 
+    /*
+     * Do not infer composition support from the reported OS version.
+     * This implementation does not provide a DWM compositor yet, so
+     * advertising composition here would cause callers to assume that
+     * glass frames and other composition effects are actually available.
+     * Keep the capability disabled until the compositor is implemented.
+     */
     *enabled = FALSE;
-    version.dwOSVersionInfoSize = sizeof(version);
-    if (!RtlGetVersion(&version))
-        *enabled = (version.dwMajorVersion > 6 || (version.dwMajorVersion == 6 && version.dwMinorVersion >= 3));
 
     return S_OK;
 }
