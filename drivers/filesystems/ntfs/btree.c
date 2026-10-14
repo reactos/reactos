@@ -1494,8 +1494,10 @@ CreateBTreeKeyFromFilename(ULONGLONG FileReference, PFILENAME_ATTRIBUTE FileName
         ExFreePoolWithTag(NewEntry, TAG_NTFS);
         return NULL;
     }
+
+    /* DestroyBTreeKey() follows LesserChild, it can't be left to pool garbage */
+    RtlZeroMemory(NewKey, sizeof(*NewKey));
     NewKey->IndexEntry = NewEntry;
-    NewKey->NextKey = NULL;
 
     return NewKey;
 }
