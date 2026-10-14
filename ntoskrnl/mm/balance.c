@@ -432,6 +432,10 @@ MiInitBalancerThread(VOID)
     NTSTATUS Status;
     LARGE_INTEGER Timeout;
 
+    /* Cc throttles writes below MmThrottleTop, keep enough pages available above it */
+    if (MiMinimumAvailablePages <= MmThrottleTop)
+        MiMinimumAvailablePages = MmThrottleTop + MiMinimumPagesPerRun;
+
     KeInitializeEvent(&MiBalancerEvent, SynchronizationEvent, FALSE);
     KeInitializeEvent(&MiBalancerDoneEvent, SynchronizationEvent, FALSE);
     KeInitializeTimerEx(&MiBalancerTimer, SynchronizationTimer);
