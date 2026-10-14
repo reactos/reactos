@@ -176,7 +176,7 @@ class CAvailableApplicationInfo : public CAppInfo
 
     CConfigParser *
     GetConfigParser() const { return m_Parser; }
-    const CStringW
+    const CStringW&
     GetPackageName() const { return szIdentifier; }
 
     bool
