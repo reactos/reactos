@@ -236,6 +236,7 @@ typedef struct _INTERNAL_BCB
     PROS_VACB Vacb;
     ULONG PinCount;
     CSHORT RefCount; /* (At offset 0x34 on WinNT4) */
+    BOOLEAN Dirty;
     LIST_ENTRY BcbEntry;
 } INTERNAL_BCB, *PINTERNAL_BCB;
 

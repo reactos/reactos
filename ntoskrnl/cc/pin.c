@@ -69,6 +69,25 @@ CcpFindBcb(
 
 static
 VOID
+NTAPI
+CcpMarkBcbDataDirty(
+    _In_ PINTERNAL_BCB Bcb)
+{
+    PROS_VACB Vacb = Bcb->Vacb;
+
+    /* Tell Mm */
+    MmMakeSegmentDirty(Vacb->SharedCacheMap->FileObject->SectionObjectPointer,
+                       Bcb->PFCB.MappedFileOffset.QuadPart,
+                       Bcb->PFCB.MappedLength);
+
+    if (!Vacb->Dirty)
+    {
+        CcRosMarkDirtyVacb(Vacb);
+    }
+}
+
+static
+VOID
 CcpDereferenceBcb(
     IN PROS_SHARED_CACHE_MAP SharedCacheMap,
     IN PINTERNAL_BCB Bcb)
@@ -551,19 +570,12 @@ CcSetDirtyPinnedData (
     IN PLARGE_INTEGER Lsn)
 {
     PINTERNAL_BCB iBcb = CONTAINING_RECORD(Bcb, INTERNAL_BCB, PFCB);
-    PROS_VACB Vacb = iBcb->Vacb;
 
     CCTRACE(CC_API_DEBUG, "Bcb=%p Lsn=%p\n", Bcb, Lsn);
 
-    /* Tell Mm */
-    MmMakeSegmentDirty(Vacb->SharedCacheMap->FileObject->SectionObjectPointer,
-                       iBcb->PFCB.MappedFileOffset.QuadPart,
-                       iBcb->PFCB.MappedLength);
-
-    if (!Vacb->Dirty)
-    {
-        CcRosMarkDirtyVacb(Vacb);
-    }
+    /* Callers may keep writing to the buffer after this, see CcUnpinDataForThread */
+    iBcb->Dirty = TRUE;
+    CcpMarkBcbDataDirty(iBcb);
 }
 
 
@@ -591,6 +603,13 @@ CcUnpinDataForThread (
     PINTERNAL_BCB iBcb = CONTAINING_RECORD(Bcb, INTERNAL_BCB, PFCB);
 
     CCTRACE(CC_API_DEBUG, "Bcb=%p ResourceThreadId=%lu\n", Bcb, ResourceThreadId);
+
+    /*
+     * A flush may have cleaned the pages between CcSetDirtyPinnedData and the
+     * caller's writes to the buffer. Dirty them again so those writes are not lost.
+     */
+    if (iBcb->Dirty)
+        CcpMarkBcbDataDirty(iBcb);
 
     if (iBcb->PinCount != 0)
     {
@@ -634,6 +653,10 @@ CcUnpinRepinnedBcb (
 
     SharedCacheMap = iBcb->Vacb->SharedCacheMap;
     IoStatus->Status = STATUS_SUCCESS;
+
+    /* Same as in CcUnpinDataForThread, and it must happen before the write through */
+    if (iBcb->Dirty)
+        CcpMarkBcbDataDirty(iBcb);
 
     if (WriteThrough)
     {
