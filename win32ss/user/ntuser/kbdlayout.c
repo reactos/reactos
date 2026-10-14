@@ -1418,7 +1418,7 @@ NtUserLoadKeyboardLayoutEx(
     _SEH2_TRY
     {
         ProbeForRead(puszKLID, sizeof(*puszKLID), 1);
-        ProbeForRead(puszKLID->Buffer, puszKLID->Length, 1);
+        ProbeForRead(puszKLID->Buffer, sizeof(puszKLID->Length), 1);
         RtlCopyUnicodeString(&uszSafeKLID, puszKLID);
         if (pMulti)
         {
