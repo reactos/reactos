@@ -135,6 +135,19 @@ KbdLayerRealDllFileForWBT(
 }
 
 /* ------------------------------------------------------------------------
+ * KbdLayerRealDllFileNT4 @3
+ * ------------------------------------------------------------------------ */
+BOOL WINAPI
+KbdLayerRealDllFileNT4(
+    _Out_writes_z_(MAX_PATH) PWSTR pRealDllName)
+{
+    if (!pRealDllName)
+        return FALSE;
+    *pRealDllName = UNICODE_NULL;
+    return QueryRealDllName(I8042PRT_PARAMS, L"LayerDriver", pRealDllName, MAX_PATH);
+}
+
+/* ------------------------------------------------------------------------
  * KbdLayerRealDllFile @5
  * ------------------------------------------------------------------------ */
 BOOL WINAPI
@@ -171,19 +184,6 @@ KbdLayerRealDllFile(
         return FALSE;
 
     return QueryRealDllName(I8042PRT_PARAMS, szValue, pRealDllName, MAX_PATH);
-}
-
-/* ------------------------------------------------------------------------
- * KbdLayerRealDllFileNT4 @3
- * ------------------------------------------------------------------------ */
-BOOL WINAPI
-KbdLayerRealDllFileNT4(
-    _Out_writes_z_(MAX_PATH) PWSTR pRealDllName)
-{
-    if (!pRealDllName)
-        return FALSE;
-    *pRealDllName = UNICODE_NULL;
-    return QueryRealDllName(I8042PRT_PARAMS, L"LayerDriver", pRealDllName, MAX_PATH);
 }
 
 static BOOL
