@@ -311,11 +311,11 @@ KiIdleLoop(VOID)
             Prcb->NextThread = NULL;
             Prcb->CurrentThread = NewThread;
 
-            /* Release the PRCB lock */
-            KiReleasePrcbLock(Prcb);
-
             /* The thread is now running */
             NewThread->State = Running;
+
+            /* Release the PRCB lock */
+            KiReleasePrcbLock(Prcb);
 
             /* Nothing to do if the idle thread was selected */
             if (NewThread != OldThread)
@@ -595,7 +595,7 @@ KiDispatchInterrupt(VOID)
         NewThread->State = Running;
         OldThread->WaitReason = WrDispatchInt;
 
-        /* Make the old thread ready */
+        /* Make the old thread ready, this also releases the PRCB lock */
         KxQueueReadyThread(OldThread, Prcb);
 
         /* Swap to the new thread */
