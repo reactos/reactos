@@ -1281,6 +1281,13 @@ NtfsTrimAllocation(
     _In_ PNTFS_FCB Fcb);
 
 NTSTATUS
+NtfsResizeAllocation(
+    _In_ PNTFS_FCB Fcb,
+    _In_ PFILE_OBJECT FileObject,
+    _In_ BOOLEAN CaseSensitive,
+    _In_ ULONGLONG AllocationSize);
+
+NTSTATUS
 SetResidentAttributeDataLength(PDEVICE_EXTENSION Vcb,
                                PNTFS_ATTR_CONTEXT AttrContext,
                                ULONG AttrOffset,
