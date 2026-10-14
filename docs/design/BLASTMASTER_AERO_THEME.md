@@ -137,3 +137,7 @@ The current `Lautus` and `Modern` theme targets compile `.msstyles` resources fr
 ## Scope note
 
 “1:1” is the visual target, not a claim that unsupported Windows Vista internals already exist in ReactOS. Exact behavior such as live thumbnails, advanced window animations, and full DWM composition must be implemented and verified individually; otherwise it must be marked as a known limitation.
+
+## DWM compositor implementation plan
+
+The compositor work is tracked separately in [DWM Compositor Architecture](DWM_COMPOSITOR_ARCHITECTURE.md). That document defines the session process, window-redirection contract, software-renderer milestones, API behavior, fallback, and validation gates. This theme document remains a visual specification; it does not imply that composition is implemented.
