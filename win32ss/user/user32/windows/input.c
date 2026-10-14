@@ -723,7 +723,7 @@ static inline BOOL IntIsValidLayoutFileName(PCWSTR pszFileName)
     if (!*pszFileName)
         return FALSE;
     SIZE_T cch = wcscspn(pszFileName, L"\\/:");
-    return (cch < MAX_VALID_LAYOUT_FILENAME && !pszFileName[cch]);
+    return (cch < MAX_LAYOUT_FILENAME && !pszFileName[cch]);
 }
 
 BOOL GetSystemLibraryPath(PWSTR pszPath, SIZE_T cchPath, PCWSTR pszFileName)
@@ -813,7 +813,7 @@ static VOID
 IntFollowRealDll(
     _Inout_ HMODULE *phModule,
     _Inout_ PCWSTR *ppszFile,
-    _Out_writes_(MAX_PATH) PWSTR pszRealFile,
+    _Out_writes_(MAX_LAYOUT_FILENAME) PWSTR pszRealFile,
     _In_opt_z_ PCWSTR pszKLID)
 {
     PFN_KbdLayerRealDllFile pfnReal;
@@ -836,14 +836,14 @@ IntFollowRealDll(
         return;
     }
 
-    pszRealFile[MAX_PATH - 1] = UNICODE_NULL;
+    pszRealFile[MAX_LAYOUT_FILENAME - 1] = UNICODE_NULL;
     if (!IntIsValidLayoutFileName(pszRealFile))
         return;
 
     hRealModule = LoadSysLibraryW(pszRealFile);
     if (!hRealModule)
     {
-        WARN("Getting real failed\n");
+        WARN("LoadSysLibraryW(%s) failed\n", debugstr_w(pszRealFile));
         return;
     }
 
@@ -859,7 +859,7 @@ static PFN_KbdLayerDescriptor
 IntPrepareLayoutModule(
     _Inout_ HMODULE *phModule,
     _Inout_ PCWSTR *ppszFile,
-    _Out_writes_(MAX_PATH) PWSTR pszRealFile,
+    _Out_writes_(MAX_LAYOUT_FILENAME) PWSTR pszRealFile,
     _In_opt_z_ PCWSTR pszKLID,
     _Inout_ PUINT puFlags,
     _Inout_opt_ PKBDTABLE_MULTI_EX pMulti)
@@ -945,7 +945,7 @@ IntLoadKeyboardLayoutTablesAndFile(
     HMODULE hModule;
     PCWSTR pszCurrentFile;
     PFN_KbdLayerDescriptor pfnMain;
-    WCHAR szRealFile[MAX_PATH], szFull[MAX_PATH];
+    WCHAR szRealFile[MAX_LAYOUT_FILENAME], szFull[MAX_PATH];
     DWORD cchFull;
     HANDLE hFile;
 
@@ -1098,7 +1098,7 @@ IntGetKeyboardDllName(
             }
             else
             {
-                dwKL = 0xFFFE;
+                dwKL = 0xFFFE; /* Invalid value */
             }
         }
 
@@ -1131,6 +1131,7 @@ IntGetKeyboardDllName(
 
         if (IntIsConsoleSession() || IS_IME_HKL(UlongToHandle(dwKL)))
         {
+            pszSource = L"kbdus.dll";
             *pdwKL = MAKELONG(LANGID_ENGLISH_US, LANGID_ENGLISH_US);
         }
         else if (PRIMARYLANGID(wLangID) == LANG_JAPANESE)
@@ -1145,18 +1146,13 @@ IntGetKeyboardDllName(
         }
         else
         {
+            pszSource = L"kbdus.dll";
             *pdwKL = MAKELONG(wLangID, wLangID);
         }
-
-        if (!pszSource)
-            pszSource = L"kbdus.dll";
     }
 
-    if (!IntIsValidLayoutFileName(pszSource))
-        return FALSE;
-
-    StringCchCopyW(pszDllName, cchDllName, pszSource);
-    return TRUE;
+    return IntIsValidLayoutFileName(pszSource) &&
+           SUCCEEDED(StringCchCopyW(pszDllName, cchDllName, pszSource));
 }
 
 /* Open and load keyboard layout file(s). */
