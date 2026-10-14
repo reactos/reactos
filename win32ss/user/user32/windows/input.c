@@ -718,12 +718,11 @@ static inline BOOL IsValidKLID(_In_ LPCWSTR pwszKLID)
     return pwszKLID && (wcsspn(pwszKLID, L"0123456789ABCDEFabcdef") == (KL_NAMELENGTH - 1));
 }
 
-static __inline BOOL IntIsValidLayoutFileName(PCWSTR pszFileName)
+static inline BOOL IntIsValidLayoutFileName(PCWSTR pszFileName)
 {
     if (!*pszFileName)
         return FALSE;
     SIZE_T cch = wcscspn(pszFileName, L"\\/:");
-#define MAX_VALID_LAYOUT_FILENAME 32
     return (cch < MAX_VALID_LAYOUT_FILENAME && !pszFileName[cch]);
 }
 
@@ -734,8 +733,8 @@ VOID GetSystemLibraryPath(LPWSTR pszPath, INT cchPath, LPCWSTR pszFileName)
     StringCchPrintfW(pszPath, cchPath, L"%s\\%s", szSysDir, pszFileName);
 }
 
-HANDLE WINAPI
-IntLoadKeyboardLayoutTables(
+static HANDLE
+IntLoadKeyboardLayoutTablesAndFile(
     _In_z_ PCWSTR pszLayoutFile,
     _In_opt_z_ PCWSTR pszKLID,
     _Inout_ PUINT puFlags,
@@ -744,22 +743,27 @@ IntLoadKeyboardLayoutTables(
 {
     HMODULE hModule;
     PCWSTR pszCurrentFile;
-    PFN_KbdLayerDescriptor pfnMain;
-    PFN_KbdNlsLayerDescriptor pfnNls;
-    PFN_KbdLayerRealDllFile pfnReal;
-    PFN_KbdLayerRealDllFileNT4 pfnRealNT4;
-    PFN_KbdLayerMultiDescriptor pfnMulti;
-    WCHAR szRealFile[MAX_PATH], szFileName[MAX_PATH];
+    PFN_KbdLayerDescriptor pfnMain = NULL;
+    PFN_KbdNlsLayerDescriptor pfnNls = NULL;
+    PFN_KbdLayerRealDllFile pfnReal = NULL;
+    PFN_KbdLayerRealDllFileNT4 pfnRealNT4 = NULL;
+    PFN_KbdLayerMultiDescriptor pfnMulti = NULL;
+    WCHAR szRealFile[MAX_PATH], szFullName[MAX_PATH];
     UINT iTable;
-    WORD wLow = 0, wHigh = 0;
+    WORD wLow, wHigh = 0;
 
+    TRACE("Loading layout file %s\n", debugstr_w(pszLayoutFile));
     if (!IntIsValidLayoutFileName(pszLayoutFile))
+    {
+        ERR("Invalid layout filename: %s\n", debugstr_w(pszLayoutFile));
         return NULL;
+    }
 
     for (;;)
     {
         pszCurrentFile = pszLayoutFile;
 
+        /* Load the layout file */
         hModule = LoadLibraryW(pszLayoutFile);
         if (!hModule)
         {
@@ -767,20 +771,21 @@ IntLoadKeyboardLayoutTables(
             return NULL;
         }
 
-        if (_wcsicmp(pszLayoutFile, L"kbdus.dll") != 0) /* Not English US? */
+        if (_wcsicmp(pszLayoutFile, L"kbdus.dll") != 0) /* Non English US? */
         {
+            /* Get the procedures of layout file */
             pfnReal    = (PFN_KbdLayerRealDllFile)GetProcAddress(hModule, IFN_KbdLayerRealDllFile);
             pfnRealNT4 = (PFN_KbdLayerRealDllFileNT4)GetProcAddress(hModule,
                                                                     IFN_KbdLayerRealDllFileNT4);
             pfnMulti = NULL;
             if (pMulti && IntIsConsoleSession())
             {
-                pfnMulti = (PFN_KbdLayerMultiDescriptor)GetProcAddress(hModule,
-                                                                       IFN_KbdLayerMultiDescriptor);
+                pfnMulti = (PFN_KbdLayerMultiDescriptor)
+                    GetProcAddress(hModule, IFN_KbdLayerMultiDescriptor);
             }
 
             /* Load the multi-table (if any) */
-            if (pfnMulti && pfnMulti(&pMulti->Multi))
+            if (pMulti && pfnMulti && pfnMulti(&pMulti->Multi))
             {
                 if (pMulti->Multi.nTables >= KBDTABLE_MULTI_MAX)
                     pMulti->Multi.nTables = 0;
@@ -794,10 +799,10 @@ IntLoadKeyboardLayoutTables(
                     /* Avoid buffer overrun */
                     pDesc->wszDllName[_countof(pDesc->wszDllName) - 1] = UNICODE_NULL;
 
-                    hAuxFile = IntLoadKeyboardLayoutTables(pDesc->wszDllName, NULL, puFlags,
-                                                           &offTable, NULL);
+                    hAuxFile = IntLoadKeyboardLayoutTablesAndFile(pDesc->wszDllName, NULL,
+                                                                  puFlags, &offTable, NULL);
                     pMulti->AuxEntries[iTable].hFile = hAuxFile;
-                    if (hAuxFile)
+                    if (hAuxFile && hAuxFile != INVALID_HANDLE_VALUE)
                         pMulti->AuxEntries[iTable].offTable = offTable;
                 }
             }
@@ -821,7 +826,7 @@ IntLoadKeyboardLayoutTables(
                     }
                     else
                     {
-                        WARN("Getting real module failed\n");
+                        WARN("Getting real failed\n");
                     }
                 }
             }
@@ -854,29 +859,30 @@ IntLoadKeyboardLayoutTables(
                 continue; /* Retry with "kbdus.dll" */
         }
 
+        ERR("Invalid layout file: %s\n", debugstr_w(pszLayoutFile));
         return NULL; /* Failure */
     }
 
-    /* Get the main table */
+    /* Get the main table offset */
     {
         INT_PTR MainOffset = (PBYTE)pfnMain() - (PBYTE)hModule;
-        if (MainOffset > MAXWORD)
+        if (MainOffset <= 0 || MainOffset > MAXWORD)
         {
-            ERR("MainOffset: 0x%08X\n", MainOffset);
+            ERR("MainOffset: %p\n", MainOffset);
             FreeLibrary(hModule);
             return NULL;
         }
         wLow = LOWORD(MainOffset);
     }
 
-    /* Get the NLS table */
+    /* Get the NLS table offset */
     pfnNls = (PFN_KbdNlsLayerDescriptor)GetProcAddress(hModule, IFN_KbdNlsLayerDescriptor);
     if (pfnNls)
     {
         INT_PTR NlsOffset = (PBYTE)pfnNls() - (PBYTE)hModule;
-        if (NlsOffset > MAXWORD)
+        if (NlsOffset <= 0 || NlsOffset > MAXWORD)
         {
-            ERR("NlsOffset: 0x%08X\n", NlsOffset);
+            ERR("NlsOffset: %p\n", NlsOffset);
             FreeLibrary(hModule);
             return NULL;
         }
@@ -886,15 +892,19 @@ IntLoadKeyboardLayoutTables(
     *poffTable = MAKELONG(wLow, wHigh);
 
     if (pMulti)
-        StringCchCopyW(pMulti->szRealDllName, _countof(pMulti->szRealDllName), pszCurrentFile);
+        StringCbCopyW(pMulti->szRealDllName, sizeof(pMulti->szRealDllName), pszCurrentFile);
 
-    GetModuleFileNameW(hModule, szFileName, _countof(szFileName));
+    TRACE("FileName:%s\n", debugstr_w(pszCurrentFile));
+    TRACE("pfnMain:%p, pfnNls:%p, pfnReal:%p, pfnRealNT4:%p, pfnMulti:%p, *poffTable:0x%08X\n",
+          pfnMain, pfnNls, pfnReal, pfnRealNT4, pfnMulti, *poffTable);
+
+    GetModuleFileNameW(hModule, szFullName, _countof(szFullName));
     FreeLibrary(hModule);
 
-    return CreateFileW(szFileName, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
+    return CreateFileW(szFullName, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
 }
 
-BOOL WINAPI
+static BOOL
 IntGetKeyboardDllName(
     _Out_writes_(cchDllName) PWSTR pszDllName,
     _In_ SIZE_T cchDllName,
@@ -1055,7 +1065,7 @@ IntLoadKeyboardLayoutFile(
         return NULL;
     }
 
-    return IntLoadKeyboardLayoutTables(szDllName, pszKLID, pFlags, pOffTable, pMulti);
+    return IntLoadKeyboardLayoutTablesAndFile(szDllName, pszKLID, pFlags, pOffTable, pMulti);
 }
 
 /*
@@ -1082,7 +1092,7 @@ IntLoadKeyboardLayout(
     /* Load keyboard layout file(s) */
     hFile = IntLoadKeyboardLayoutFile(szKLID, _countof(szKLID), wLangID, &Flags, &offTable,
                                       &dwNewKL, &multi);
-    if (!hFile)
+    if (!hFile || hFile == INVALID_HANDLE_VALUE)
     {
         if (!unknown5 && !(Flags & KLF_FORCE))
         {

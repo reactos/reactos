@@ -424,7 +424,7 @@ KbdLoadImage(
     return pvImage;
 }
 
-static VOID
+static __inline VOID
 KbdUnloadImage(
     _In_opt_ PVOID pvImageBase)
 {
@@ -432,11 +432,7 @@ KbdUnloadImage(
         ExFreePoolWithTag(pvImageBase, KBDIMG_TAG);
 }
 
-/*
- * UserLoadKbdDll
- *
- * Loads keyboard layout DLL and gets address to KbdTables
- */
+/* Loads keyboard layout DLL and gets address to KbdTables */
 static BOOL
 UserLoadKbdDll(
     _In_ HANDLE hSafeFile,
@@ -468,11 +464,7 @@ UserLoadKbdDll(
     return TRUE;
 }
 
-/*
- * UserLoadKbdFile
- *
- * Loads keyboard layout DLL and creates KBDFILE object
- */
+/* Loads keyboard layout DLL and creates KBDFILE object */
 static PKBDFILE
 UserLoadKbdFile(
     _In_ HANDLE hSafeFile,
@@ -489,8 +481,7 @@ UserLoadKbdFile(
         return NULL;
     }
 
-    /* Set keyboard layout name */
-    _swprintf(pkf->awchKF, L"%wZ", pwszKLID);
+    _swprintf(pkf->awchKF, L"%wZ", pwszKLID); /* Set keyboard layout name */
 
     /* Load keyboard file now */
     if (!UserLoadKbdDll(hSafeFile, offTable, &pkf->hBase, &pkf->pKbdTbl, &pkf->pKbdNlsTbl))
@@ -509,21 +500,12 @@ UserLoadKbdFile(
 cleanup:
     if (pkf)
         UserDereferenceObject(pkf); // we dont need ptr anymore
-    if (!pRet)
-    {
-        /* We have failed - destroy created object */
-        if (pkf)
-            UserDeleteObject(UserHMGetHandle(pkf), TYPE_KBDFILE);
-    }
-
+    if (!pRet && pkf) /* We have failed? - then destroy created object */
+        UserDeleteObject(UserHMGetHandle(pkf), TYPE_KBDFILE);
     return pRet;
 }
 
-/*
- * co_UserLoadKbdLayout
- *
- * Loads keyboard layout and creates KL object
- */
+/* Loads keyboard layout and creates KL object */
 static PKL
 co_UserLoadKbdLayout(
     _In_ HANDLE hSafeFile,
@@ -535,9 +517,9 @@ co_UserLoadKbdLayout(
     CHARSETINFO cs;
     PKL pKl;
 
-    if (!offTable)
+    if (!hSafeFile || !offTable)
     {
-        ERR("offTable was zero\n");
+        ERR("hSafeFile %p, offTable 0x%08X\n", hSafeFile, offTable);
         return NULL;
     }
 
@@ -1050,7 +1032,6 @@ co_IntLoadKeyboardLayoutEx(
     _In_ HANDLE hSafeFile,
     _In_opt_ HKL hOldKL,
     _In_ ULONG offTable,
-    _In_opt_ PKBDTABLE_MULTI_EX pMulti,
     _In_ PUNICODE_STRING puszSafeKLID,
     _In_ HKL hNewKL,
     _In_ UINT Flags)
@@ -1069,23 +1050,6 @@ co_IntLoadKeyboardLayoutEx(
     }
 
     /* FIXME: It seems KLF_RESET is only supported for WINLOGON */
-
-    /* Update offTable by using pMulti (if any) */
-    if (pMulti && pMulti->szRealDllName[0])
-    {
-        ULONG iTable;
-        PKBDTABLE_DESC pKbdTables = pMulti->Multi.aKbdTables;
-        for (iTable = 0; iTable < pMulti->Multi.nTables; ++iTable)
-        {
-            PCWSTR pszDllName = pKbdTables[iTable].wszDllName;
-            if (_wcsicmp(pMulti->szRealDllName, pszDllName) == 0)
-            {
-                PKBDTABLE_MULTI_AUX_ENTRY pAuxEntry = &pMulti->AuxEntries[iTable];
-                offTable = pAuxEntry->offTable;
-                break;
-            }
-        }
-    }
 
     /* Let's see if layout was already loaded. */
     pNewKL = UserHklToKbl(hNewKL);
@@ -1140,41 +1104,39 @@ co_IntLoadKeyboardLayoutEx(
     return hNewKL;
 }
 
-typedef struct KBDFILE_NAME
+typedef struct tagKBDFILE_NAME
 {
     OBJECT_NAME_INFORMATION Info;
     WCHAR Buffer[MAX_PATH];
-} KBDFILE_NAME;
+} KBDFILE_NAME, *PKBDFILE_NAME;
 
 /* Gets the full NT path of a file or directory handle. */
-static __inline NTSTATUS
-IntQueryHandleName(HANDLE hObject, KBDFILE_NAME *pName)
+static NTSTATUS IntQueryHandleName(HANDLE hObject, PKBDFILE_NAME pName)
 {
     ULONG cbReturned;
     return ZwQueryObject(hObject, ObjectNameInformation, pName, sizeof(*pName), &cbReturned);
 }
 
 /* hFile is a handle from CreateFile. Accept it only if the file is in system32. */
-static HANDLE FASTCALL
-IntVerifyKeyboardFileHandle(HANDLE hFile)
+HANDLE FASTCALL IntVerifyKeyboardFileHandle(HANDLE hFile)
 {
     static const UNICODE_STRING ustrDir = RTL_CONSTANT_STRING(L"\\SystemRoot\\system32");
     OBJECT_ATTRIBUTES ObjectAttributes;
     IO_STATUS_BLOCK IoStatusBlock;
     KBDFILE_NAME Names[2]; /* [0]: system32 directory, [1]: the file */
     UNICODE_STRING ustrParent;
-    HANDLE hDir, hResult = NULL;
+    HANDLE hDir;
     NTSTATUS Status;
 
-    if (hFile == NULL || hFile == INVALID_HANDLE_VALUE)
+    if (!hFile || hFile == INVALID_HANDLE_VALUE)
         return NULL;
 
     /* Get the canonical name of the file */
     Status = IntQueryHandleName(hFile, &Names[1]);
     if (!NT_SUCCESS(Status))
     {
-        ERR("0x%08X\n", Status);
-        goto Quit;
+        ERR("0x%08X for %p\n", Status, hFile);
+        return NULL;
     }
 
     /* Get the canonical name of the system32 directory */
@@ -1186,19 +1148,19 @@ IntVerifyKeyboardFileHandle(HANDLE hFile)
                           FILE_OPEN, FILE_DIRECTORY_FILE | FILE_SYNCHRONOUS_IO_NONALERT, NULL, 0);
     if (!NT_SUCCESS(Status))
     {
-        ERR("0x%08X\n", Status);
-        goto Quit;
+        ERR("0x%08X for %p\n", Status, hFile);
+        return NULL;
     }
 
     Status = IntQueryHandleName(hDir, &Names[0]);
     ZwClose(hDir);
     if (!NT_SUCCESS(Status))
     {
-        ERR("0x%08X\n", Status);
-        goto Quit;
+        ERR("0x%08X for %p\n", Status, hFile);
+        return NULL;
     }
 
-    /* Strip the filename */
+    /* Strip the filename of the file */
     ustrParent = Names[1].Info.Name;
     while (ustrParent.Length > 0)
     {
@@ -1207,13 +1169,13 @@ IntVerifyKeyboardFileHandle(HANDLE hFile)
             break;
     }
 
-    if (RtlEqualUnicodeString(&ustrParent, &Names[0].Info.Name, TRUE))
-        hResult = hFile;
-    else
+    if (!RtlEqualUnicodeString(&ustrParent, &Names[0].Info.Name, TRUE))
+    {
         ERR("Not in system32: %wZ\n", &Names[1].Info.Name);
+        return NULL;
+    }
 
-Quit:
-    return hResult;
+    return hFile;
 }
 
 /* EXPORTS *******************************************************************/
@@ -1388,20 +1350,19 @@ HKL
 NTAPI
 NtUserLoadKeyboardLayoutEx(
     _In_ HANDLE hFile,
-    _In_ DWORD offTable,
+    _In_ ULONG offTable,
     _In_opt_ PKBDTABLE_MULTI_EX pMulti,
     _In_opt_ HKL hOldKL,
     _In_ PUNICODE_STRING puszKLID,
-    _In_ DWORD dwNewKL,
+    _In_ ULONG dwNewKL,
     _In_ UINT Flags)
 {
-    HKL hRetKL;
+    HKL hRetKL = NULL;
     WCHAR Buffer[KL_NAMELENGTH];
     UNICODE_STRING uszSafeKLID;
     PWINSTATION_OBJECT pWinSta;
-    HANDLE hSafeFile = NULL;
+    HANDLE hSafeFile;
     KBDTABLE_MULTI_EX multi;
-    UINT iTable;
 
     if (Flags & ~(KLF_ACTIVATE|KLF_NOTELLSHELL|KLF_REORDER|KLF_REPLACELANG|
                   KLF_SUBSTITUTE_OK|KLF_SETFORPROCESS|KLF_UNLOADPREVIOUS|
@@ -1415,10 +1376,11 @@ NtUserLoadKeyboardLayoutEx(
     RtlInitEmptyUnicodeString(&uszSafeKLID, Buffer, sizeof(Buffer));
     RtlZeroMemory(&multi, sizeof(multi));
 
+    /* Read from paramters */
     _SEH2_TRY
     {
         ProbeForRead(puszKLID, sizeof(*puszKLID), 1);
-        ProbeForRead(puszKLID->Buffer, sizeof(puszKLID->Length), 1);
+        ProbeForRead(puszKLID->Buffer, sizeof(puszKLID->Length), 1); /* FIXME */
         RtlCopyUnicodeString(&uszSafeKLID, puszKLID);
         if (pMulti)
         {
@@ -1435,40 +1397,34 @@ NtUserLoadKeyboardLayoutEx(
 
     UserEnterExclusive();
 
-    if (!hFile || multi.Multi.nTables > KBDTABLE_MULTI_MAX || !offTable)
+    /* Validate data */
+    if (!hFile || hFile == INVALID_HANDLE_VALUE || !offTable ||
+        multi.Multi.nTables >= KBDTABLE_MULTI_MAX)
     {
-        ERR("hFile: %p, nTables: %u, offTable: 0x%08X\n", hFile, multi.Multi.nTables, offTable);
+        ERR("hFile:%p, nTables:%u, offTable:0x%08X\n", hFile, multi.Multi.nTables, offTable);
         EngSetLastError(ERROR_INVALID_PARAMETER);
-        hRetKL = NULL;
         goto Quit;
     }
 
     /* Verify file handles */
     hSafeFile = IntVerifyKeyboardFileHandle(hFile);
-    if (pMulti)
+    if (!hSafeFile)
+        goto Quit;
+    for (ULONG iTable = 0; iTable < multi.Multi.nTables; ++iTable)
     {
-        for (iTable = 0; iTable < multi.Multi.nTables; ++iTable)
-        {
-            HANDLE hAuxFile = multi.AuxEntries[iTable].hFile;
-            hAuxFile = IntVerifyKeyboardFileHandle(hAuxFile);
-            multi.AuxEntries[iTable].hFile = hAuxFile;
-        }
+        if (!IntVerifyKeyboardFileHandle(multi.AuxEntries[iTable].hFile))
+            goto Quit;
     }
 
+    /* Load it now */
     pWinSta = IntGetProcessWindowStation(NULL);
-    hRetKL = co_IntLoadKeyboardLayoutEx(pWinSta,
-                                        hSafeFile,
-                                        hOldKL,
-                                        offTable,
-                                        (multi.Multi.nTables ? &multi : NULL),
-                                        &uszSafeKLID,
-                                        UlongToHandle(dwNewKL),
-                                        Flags);
+    hRetKL = co_IntLoadKeyboardLayoutEx(pWinSta, hSafeFile, hOldKL, offTable, &uszSafeKLID,
+                                        UlongToHandle(dwNewKL), Flags);
 Quit:
     /* Close file handles */
-    if (hSafeFile)
-        ZwClose(hSafeFile);
-    for (iTable = 0; iTable < multi.Multi.nTables; ++iTable)
+    if (hFile)
+        ZwClose(hFile);
+    for (ULONG iTable = 0; iTable < multi.Multi.nTables; ++iTable)
     {
         if (multi.AuxEntries[iTable].hFile)
             ZwClose(multi.AuxEntries[iTable].hFile);

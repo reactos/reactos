@@ -114,9 +114,11 @@ typedef struct tagKBDTABLE_MULTI_AUX_ENTRY {
     ULONG offTable;
 } KBDTABLE_MULTI_AUX_ENTRY, *PKBDTABLE_MULTI_AUX_ENTRY;
 
+#define MAX_VALID_LAYOUT_FILENAME 32
+
 typedef struct tagKBDTABLE_MULTI_EX {
     KBDTABLE_MULTI Multi;
-    WCHAR szRealDllName[32];
+    WCHAR szRealDllName[MAX_VALID_LAYOUT_FILENAME];
     KBDTABLE_MULTI_AUX_ENTRY AuxEntries[KBDTABLE_MULTI_MAX];
 } KBDTABLE_MULTI_EX, *PKBDTABLE_MULTI_EX;
 
@@ -2655,11 +2657,11 @@ HKL
 NTAPI
 NtUserLoadKeyboardLayoutEx(
     _In_ HANDLE hFile,
-    _In_ DWORD offTable,
+    _In_ ULONG offTable,
     _In_opt_ PKBDTABLE_MULTI_EX pMulti,
     _In_opt_ HKL hOldKL,
     _In_ PUNICODE_STRING puszKLID,
-    _In_ DWORD dwNewKL,
+    _In_ ULONG dwNewKL,
     _In_ UINT Flags);
 
 BOOL
