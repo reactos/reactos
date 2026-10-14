@@ -248,12 +248,37 @@ static void ThemeCalculateCaptionButtonsPosEx(WINDOWINFO* wi, HWND hWnd, HTHEME 
 
     iPartId = wi->dwExStyle & WS_EX_TOOLWINDOW ? WP_SMALLCLOSEBUTTON : WP_CLOSEBUTTON;
 
-    GetThemePartSize(htheme, NULL, iPartId, 0, NULL, TS_MIN, &ButtonSize);
+    /*
+     * A malformed or incomplete theme must not leave caption-button geometry
+     * dependent on uninitialized SIZE data. Use system metrics as a safe
+     * fallback, then constrain the dimensions to the available caption band.
+     */
+    if (buttonHeight < 1)
+        buttonHeight = GetSystemMetrics(SM_CYSIZE);
+    if (buttonHeight < 1)
+        buttonHeight = 18;
 
-    captionBtnWidth = MulDiv(ButtonSize.cx, buttonHeight, ButtonSize.cy);
+    ButtonSize.cx = buttonHeight;
+    ButtonSize.cy = buttonHeight;
+    if (FAILED(GetThemePartSize(htheme, NULL, iPartId, 0, NULL, TS_MIN, &ButtonSize)) ||
+        ButtonSize.cx < 1 || ButtonSize.cy < 1)
+    {
+        ButtonSize.cx = buttonHeight;
+        ButtonSize.cy = buttonHeight;
+    }
 
     captionBtnHeight = buttonHeight - 4;
-    captionBtnWidth -= 4;
+    if (captionBtnHeight < 1)
+        captionBtnHeight = buttonHeight;
+
+    captionBtnWidth = MulDiv(ButtonSize.cx, captionBtnHeight, ButtonSize.cy);
+    if (captionBtnWidth < captionBtnHeight - 2)
+        captionBtnWidth = captionBtnHeight - 2;
+    if (captionBtnWidth > buttonHeight * 2)
+        captionBtnWidth = buttonHeight * 2;
+
+    if (captionBtnWidth < 1)
+        captionBtnWidth = 1;
 
     for (i = CLOSEBUTTON; i <= HELPBUTTON; i++)
     {
