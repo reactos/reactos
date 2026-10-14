@@ -627,7 +627,7 @@ KdSendPacket(
              * which, in turn, informs KD that the exception cannot be handled.
              */
             KD_DEBUGGER_NOT_PRESENT = FALSE;
-            SharedUserData->KdDebuggerEnabled |= 0x00000002;
+           // SharedUserData->KdDebuggerEnabled |= 0x00000002;
 
             KdIoPrintf("%s: Got exception 0x%08lx @ 0x%p, Flags 0x%08x, %s - Info[0]: 0x%p\n",
                        __FUNCTION__,

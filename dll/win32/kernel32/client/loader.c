@@ -162,9 +162,14 @@ LoadLibraryExA(LPCSTR lpLibFileName,
 {
     PUNICODE_STRING FileNameW;
 
+    DPRINT1("LoadLibraryExA %s\n", lpLibFileName);
+
     /* Convert file name to unicode */
     if (!(FileNameW = Basep8BitStringToStaticUnicodeString(lpLibFileName)))
-        return NULL;
+    {
+         DPRINT1("LoadLibraryExA %s FAIL\n", lpLibFileName);
+            return NULL;
+    }
 
     /* And call W version of the API */
     return LoadLibraryExW(FileNameW->Buffer, hFile, dwFlags);

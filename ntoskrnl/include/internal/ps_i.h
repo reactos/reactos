@@ -504,7 +504,7 @@ static const INFORMATION_CLASS_INFO PsThreadInfoClass[] =
 
     /* ThreadHideFromDebugger */
     {
-#if (NTDDI_VERSION >= NTDDI_VISTA)
+#if (NTDDI_VERSION >= NTDDI_VISTA) || defined(__REACTOS__)
         sizeof(BOOLEAN), /* Query support only on Vista and above */
 #else
         0,
@@ -512,7 +512,7 @@ static const INFORMATION_CLASS_INFO PsThreadInfoClass[] =
         sizeof(ULONG), // UCHAR
         0, /* No size for Set */
         sizeof(ULONG),
-#if (NTDDI_VERSION >= NTDDI_VISTA)
+#if (NTDDI_VERSION >= NTDDI_VISTA) || defined(__REACTOS__)
         ICIF_QUERY |
 #endif
         ICIF_SET

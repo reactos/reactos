@@ -401,7 +401,7 @@ KdInitSystem(
         KdDebuggerEnabled = TRUE;
 
         /* Let user-mode know that it's enabled as well */
-        SharedUserData->KdDebuggerEnabled = TRUE;
+       // SharedUserData->KdDebuggerEnabled = TRUE;
 
         /* Display separator + ReactOS version at the start of the debug log */
         KdpPrintBanner();
