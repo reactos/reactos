@@ -1,8 +1,0 @@
-LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
-
-STRINGTABLE
-BEGIN
-    IDS_USAGE "\nPrint the current host's name.\n\nhostname\n"
-    IDS_NOSET "sethostname: Open the ""Computer Name"" tab in the ""System"" Control Panel applet\nto change the host name.\nhostname -s is not supported.\n"
-    IDS_ERROR "Error: "
-END

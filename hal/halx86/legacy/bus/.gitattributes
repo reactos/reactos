@@ -1,3 +1,0 @@
-# The HAL expects these files to be in LF.
-pci_classes.ids text eol=lf
-pci_vendors.ids text eol=lf

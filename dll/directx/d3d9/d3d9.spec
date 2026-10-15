@@ -1,6 +1,0 @@
-@ stdcall Direct3DShaderValidatorCreate9()
-@ stdcall PSGPError()
-@ stdcall PSGPSampleTexture()
-@ stdcall DebugSetLevel()
-@ stdcall DebugSetMute(long)
-@ stdcall Direct3DCreate9(long)

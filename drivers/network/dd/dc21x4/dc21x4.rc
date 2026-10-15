@@ -1,5 +1,0 @@
-#define REACTOS_VERSION_DLL
-#define REACTOS_STR_FILE_DESCRIPTION  "DC21x4 Ethernet Adapter Driver"
-#define REACTOS_STR_INTERNAL_NAME     "dc21x4"
-#define REACTOS_STR_ORIGINAL_FILENAME "dc21x4.sys"
-#include <reactos/version.rc>

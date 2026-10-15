@@ -1,7 +1,0 @@
-LANGUAGE LANG_HEBREW, SUBLANG_DEFAULT
-
-STRINGTABLE
-BEGIN
-    IDS_DESCRIPTION "שומר מסך של התחברות"
-    IDS_TEXT "אין אפשרויות כדי להגדיר"
-END

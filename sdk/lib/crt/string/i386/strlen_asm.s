@@ -1,4 +1,0 @@
-
-#include "tcslen.inc"
-
-/* EOF */

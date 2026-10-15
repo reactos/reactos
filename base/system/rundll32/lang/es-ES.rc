@@ -1,7 +1,0 @@
-LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
-
-STRINGTABLE
-BEGIN
-    IDS_DllNotLoaded "El cargador de Librerias falló al cargar '%s'"
-    IDS_MissingEntry "Punto de entrada perdido:%s\nIn %s"
-END

@@ -1,8 +1,0 @@
-LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
-
-STRINGTABLE
-BEGIN
-    IDS_DESCRIPTION "スターフィールド スクリーンセーバー"
-    IDS_TITLE       "バージョン情報"
-    IDS_TEXT        "設定できるオプションはありません。"
-END

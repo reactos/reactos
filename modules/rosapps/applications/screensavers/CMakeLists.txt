@@ -1,8 +1,0 @@
-add_subdirectory(blankscr)
-add_subdirectory(butterflies)
-add_subdirectory(circles)
-add_subdirectory(cylfrac)
-add_subdirectory(matrix)
-add_subdirectory(mazescr)
-add_subdirectory(ssstars)
-add_subdirectory(starfield)

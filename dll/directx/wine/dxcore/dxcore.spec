@@ -1,1 +1,0 @@
-@ stdcall DXCoreCreateAdapterFactory(ptr ptr)

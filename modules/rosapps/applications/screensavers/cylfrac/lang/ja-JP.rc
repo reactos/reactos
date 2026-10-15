@@ -1,8 +1,0 @@
-LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
-
-STRINGTABLE
-BEGIN
-    IDS_DESCRIPTION "シリンダー フラクタル"
-    IDS_TITLE       "バージョン情報"
-    IDS_TEXT        "シリンダー フラクタル by unC0Rr\nReactOS 特別版"
-END

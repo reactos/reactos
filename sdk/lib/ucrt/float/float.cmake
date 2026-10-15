@@ -1,4 +1,0 @@
-
-list(APPEND UCRT_FLOAT_SOURCES
-    # TBD
-)

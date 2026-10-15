@@ -1,2 +1,0 @@
-
-#include <psdk/winsplp.h>

@@ -1,5 +1,0 @@
-// C++ forwarding C assert header.
-
-#pragma once
-
-#include <assert.h>

@@ -1,1 +1,0 @@
-dbg2 is a tool that splits the console output of gdb and the debugged program. it runs gdb into new console and redirects its output to the original, so the debugged program outputs to the second console.

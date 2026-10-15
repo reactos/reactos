@@ -1,4 +1,0 @@
-
-#include "tcsncat.inc"
-
-/* EOF */

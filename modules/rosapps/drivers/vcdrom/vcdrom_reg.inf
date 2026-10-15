@@ -1,8 +1,0 @@
-; Vcdrom class driver
-[AddReg]
-HKLM,"SYSTEM\CurrentControlSet\Services\Vcdrom","ErrorControl",0x00010001,0x00000000
-HKLM,"SYSTEM\CurrentControlSet\Services\Vcdrom","Group",0x00000000,"SCSI Class"
-HKLM,"SYSTEM\CurrentControlSet\Services\Vcdrom","ImagePath",0x00020000,"system32\drivers\vcdrom.sys"
-HKLM,"SYSTEM\CurrentControlSet\Services\Vcdrom","Start",0x00010001,0x00000003
-HKLM,"SYSTEM\CurrentControlSet\Services\Vcdrom","Type",0x00010001,0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Services\Vcdrom","DisplayName",0x00000000,"Virtual CD-ROM Device Driver"

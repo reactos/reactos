@@ -1,1 +1,0 @@
-@ stdcall InitHelperDll(long ptr)

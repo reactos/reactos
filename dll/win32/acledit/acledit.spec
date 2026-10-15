@@ -1,8 +1,0 @@
-1 stdcall EditAuditInfo(long)
-2 stdcall EditOwnerInfo(long)
-3 stdcall EditPermissionInfo(long)
-4 stdcall DllMain(ptr long ptr)
-5 stdcall FMExtensionProcW(ptr long long)
-6 stdcall SedDiscretionaryAclEditor(ptr ptr wstr ptr ptr wstr ptr ptr ptr long long ptr long)
-7 stdcall SedSystemAclEditor(ptr ptr wstr ptr ptr wstr ptr ptr ptr long ptr long)
-8 stdcall SedTakeOwnership(ptr ptr wstr wstr wstr long ptr ptr ptr long long ptr ptr long)

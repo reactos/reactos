@@ -1,6 +1,0 @@
-[
-    implicit_handle(handle_t netdfs_hBinding)
-]
-interface netdfs
-{
-}

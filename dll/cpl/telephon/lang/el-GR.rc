@@ -1,7 +1,0 @@
-LANGUAGE LANG_GREEK, SUBLANG_DEFAULT
-
-STRINGTABLE
-BEGIN
-    IDS_CPLSYSTEMNAME "Επιλογές Τηλεφώνου και Μόντεμ"
-    IDS_CPLSYSTEMDESCRIPTION "Ρυθμίζει τις παραμέτρους των κανόνων κλήσεις του τηλεφώνου σας και των ιδιοτήτων του μόντεμ."
-END

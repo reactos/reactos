@@ -1,4 +1,0 @@
-
-#include "tcschr.inc"
-
-/* EOF */

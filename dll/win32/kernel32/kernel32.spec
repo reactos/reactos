@@ -541,7 +541,7 @@
 @ stdcall -version=0x500-0x502 GetNlsSectionName(long long long str str long)
 @ stdcall GetNumaAvailableMemoryNode(long ptr)
 @ stdcall GetNumaHighestNodeNumber(ptr)
-@ stdcall -stub -version=0x601+ GetNumaNodeProcessorMaskEx(long ptr)
+@ stdcall -version=0x601+ GetNumaNodeProcessorMaskEx(long ptr)
 @ stdcall GetNumaNodeProcessorMask(long ptr)
 @ stdcall GetNumaProcessorNode(long ptr)
 @ stub -version=0x600+ GetNumaProximityNode

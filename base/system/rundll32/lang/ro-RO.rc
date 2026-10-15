@@ -1,9 +1,0 @@
-/* Romanian translation by Petru Dimitriu & Fulea Ștefan */
-
-LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
-
-STRINGTABLE
-BEGIN
-    IDS_DllNotLoaded "LoadLibrary nu a putut încărca „%s”"
-    IDS_MissingEntry "Lipsă punct de intrare: %s\nîn %s"
-END

@@ -330,6 +330,42 @@ GetNumaNodeProcessorMask(IN UCHAR Node,
  */
 BOOL
 WINAPI
+GetNumaNodeProcessorMaskEx(IN USHORT Node,
+                           OUT PGROUP_AFFINITY ProcessorMask)
+{
+    NTSTATUS Status;
+    SYSTEM_NUMA_INFORMATION NumaInformation;
+    ULONG Length;
+
+    /* Query NUMA information */
+    Status = NtQuerySystemInformation(SystemNumaProcessorMap,
+                                      &NumaInformation,
+                                      sizeof(NumaInformation),
+                                      &Length);
+    if (!NT_SUCCESS(Status))
+    {
+        BaseSetLastNTError(Status);
+        return FALSE;
+    }
+
+    /* Validate input node number */
+    if (Node > NumaInformation.HighestNodeNumber)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    /* ReactOS only has one processor group, so this is always group 0 */
+    RtlZeroMemory(ProcessorMask, sizeof(*ProcessorMask));
+    ProcessorMask->Mask = NumaInformation.ActiveProcessorsAffinityMask[Node];
+    return TRUE;
+}
+
+/*
+ * @implemented
+ */
+BOOL
+WINAPI
 GetNumaProcessorNode(IN UCHAR Processor,
                      OUT PUCHAR NodeNumber)
 {

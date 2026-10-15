@@ -1,2 +1,0 @@
-!include vc-common.mak
-

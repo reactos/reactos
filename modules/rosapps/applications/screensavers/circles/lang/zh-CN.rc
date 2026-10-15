@@ -1,9 +1,0 @@
-/* Simplified Chinese translation by Henry Tang Ih 2015 (henrytang2@hotmail.com) */
-
-LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
-
-STRINGTABLE
-BEGIN
-    IDS_DESCRIPTION "圆圈"
-    IDS_TEXT        "没有需要设置的选项。"
-END

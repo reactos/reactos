@@ -1,9 +1,0 @@
-LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
-
-STRINGTABLE
-BEGIN
-    IDS_NTOBJFLD_NAME "Espace de noms des objets NT"
-    IDS_REGISTRY_NAME "Registre système"
-    IDS_NTOBJFLD_COMMENT "Permet de naviguer dans l'espace des objets NT"
-    IDS_REGISTRY_COMMENT "Permet de naviguer dans le registre système"
-END

@@ -1,6 +1,0 @@
-13 stdcall doWinMain(long ptr)
-14 stdcall HtmlHelpA(ptr str long long)
-15 stdcall HtmlHelpW(ptr wstr long long)
-@ stdcall -private DllGetClassObject(ptr ptr ptr)
-@ stdcall -private DllRegisterServer()
-@ stdcall -private DllUnregisterServer()

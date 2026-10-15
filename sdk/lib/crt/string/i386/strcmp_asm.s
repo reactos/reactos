@@ -1,4 +1,0 @@
-
-#include "tcscmp.inc"
-
-/* EOF */

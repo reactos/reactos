@@ -1,8 +1,0 @@
-LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
-
-STRINGTABLE
-BEGIN
-    IDS_DESCRIPTION "Salvaschermo Campo stellare"
-    IDS_TITLE       "Informazioni"
-    IDS_TEXT        "Non ci sono opzioni da impostare."
-END

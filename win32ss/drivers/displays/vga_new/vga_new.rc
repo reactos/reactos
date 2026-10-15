@@ -1,5 +1,0 @@
-#define REACTOS_VERSION_DLL
-#define REACTOS_STR_FILE_DESCRIPTION  "VGA Display Driver"
-#define REACTOS_STR_INTERNAL_NAME     "vga"
-#define REACTOS_STR_ORIGINAL_FILENAME "vga.dll"
-#include <reactos/version.rc>

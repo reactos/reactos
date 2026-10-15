@@ -1,7 +1,0 @@
-LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
-
-STRINGTABLE
-BEGIN
-    IDS_CPLSYSTEMNAME "Nastavení telefonu a modemu"
-    IDS_CPLSYSTEMDESCRIPTION "Zde lze konfigurovat pravidla pro vytáčení telefonních čísel a nastavení modemu."
-END

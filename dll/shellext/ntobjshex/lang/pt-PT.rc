@@ -1,9 +1,0 @@
-LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
-
-STRINGTABLE
-BEGIN
-    IDS_NTOBJFLD_NAME "Espaço de nomes NT"
-    IDS_REGISTRY_NAME "Registo do sistema"
-    IDS_NTOBJFLD_COMMENT "Permite navegar no espaço de nomes NT"
-    IDS_REGISTRY_COMMENT "Permite navegar no Registo do sistema"
-END

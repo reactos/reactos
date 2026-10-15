@@ -1,7 +1,0 @@
-#include <windef.h>
-
-#define REACTOS_VERSION_DLL
-#define REACTOS_STR_FILE_DESCRIPTION  "LAN Manager"
-#define REACTOS_STR_INTERNAL_NAME     "ntlanman"
-#define REACTOS_STR_ORIGINAL_FILENAME "ntlanman.dll"
-#include <reactos/version.rc>

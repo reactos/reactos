@@ -1,7 +1,0 @@
-LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
-
-STRINGTABLE
-BEGIN
-    IDS_APP_TITLE "ReactOS クラッシュレポーター"
-    IDS_USER_ALERT_MESSAGE "アプリケーション %ls がクラッシュしました。このクラッシュに関する情報は次の場所に保存されました:\n\n%ls"
-END

@@ -1,9 +1,0 @@
-/* Swedish translation by Jaix Bly */
-
-LANGUAGE LANG_SWEDISH, SUBLANG_NEUTRAL
-
-STRINGTABLE
-BEGIN
-    IDS_DESCRIPTION "Inloggingsskärmsläckare"
-    IDS_TEXT "Inga inställningar behövs."
-END

@@ -1,9 +1,0 @@
-/* Hungarian translation by Peter Nagy <nagylakas@gmail.com> */
-
-LANGUAGE LANG_HUNGARIAN, SUBLANG_DEFAULT
-
-STRINGTABLE
-BEGIN
-    IDS_DllNotLoaded "A LoadLibrary nem tudta betölteni a következőt: '%s'"
-    IDS_MissingEntry "Hiányzó belépési pont: %s\nItt: %s"
-END
