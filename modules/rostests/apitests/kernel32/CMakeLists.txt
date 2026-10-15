@@ -7,6 +7,7 @@ list(APPEND SOURCE
     ConsoleCP.c
     CreateProcess.c
     DefaultActCtx.c
+    DeleteFile.c
     DeviceIoControl.c
     dosdev.c
     EnumSystemCodePages.c

@@ -203,6 +203,8 @@ typedef struct _MM_SECTION_SEGMENT
     LARGE_INTEGER Length;			/* absolute length of the segment */
     PLONG64 ReferenceCount;
 	ULONG SectionCount;
+    ULONG UserSectionCount;   /* Data sections not owned by Cc */
+    LONG UserMapCount;        /* Views of data sections not owned by Cc */
     ULONG Protection;
     PULONG Flags;
     BOOLEAN WriteCopy;
@@ -259,6 +261,7 @@ typedef struct _MEMORY_AREA
     {
         LONGLONG ViewOffset;
         PMM_SECTION_SEGMENT Segment;
+        BOOLEAN UserReference; /* Counted in Segment->UserMapCount */
         LIST_ENTRY RegionListHead;
     } SectionData;
 } MEMORY_AREA, *PMEMORY_AREA;
