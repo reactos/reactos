@@ -1,14 +1,15 @@
 
 list(APPEND SOURCE
+     debug.h
      isp.h
      eeprom.c
      qla1xxx.c
      qla1xxx.h)
 
 add_library(qla1xxx MODULE ${SOURCE} qla1xxx.rc)
-target_link_libraries(qla1xxx libcntpr)
-set_module_type(qla1xxx kernelmodedriver)
 add_pch(qla1xxx qla1xxx.h SOURCE)
+set_module_type(qla1xxx kernelmodedriver)
+target_link_libraries(qla1xxx libcntpr)
 if(DBG)
     # Required for ASSERT()
     add_importlibs(qla1xxx storport ntoskrnl)

@@ -39,28 +39,28 @@ static const USHORT IspMailboxTestPattern[QL_MAX_MAILBOX - 1] =
 
 static const UCHAR IspCompletionStatusToSrbStatus[] =
 {
-    SRB_STATUS_SUCCESS,                 // RQCS_COMPLETE
-    SRB_STATUS_SELECTION_TIMEOUT,       // RQCS_INCOMPLETE
-    SRB_STATUS_ERROR,                   // RQCS_DMA_ERROR
-    SRB_STATUS_ERROR,                   // RQCS_TRANSPORT_ERROR
-    SRB_STATUS_BUS_RESET,               // RQCS_RESET_OCCURRED
-    SRB_STATUS_ABORTED,                 // RQCS_ABORTED
-    SRB_STATUS_TIMEOUT,                 // RQCS_TIMEOUT
-    SRB_STATUS_DATA_OVERRUN,            // RQCS_DATA_OVERRUN
-    SRB_STATUS_PHASE_SEQUENCE_FAILURE,  // RQCS_COMMAND_OVERRUN
-    SRB_STATUS_PHASE_SEQUENCE_FAILURE,  // RQCS_STATUS_OVERRUN
-    SRB_STATUS_PHASE_SEQUENCE_FAILURE,  // RQCS_BAD_MESSAGE
-    SRB_STATUS_PHASE_SEQUENCE_FAILURE,  // RQCS_NO_MESSAGE_OUT
-    SRB_STATUS_MESSAGE_REJECTED,        // RQCS_EXT_ID_FAILED
-    SRB_STATUS_MESSAGE_REJECTED,        // RQCS_IDE_MSG_FAILED
-    SRB_STATUS_MESSAGE_REJECTED,        // RQCS_ABORT_MSG_FAILED
-    SRB_STATUS_MESSAGE_REJECTED,        // RQCS_REJECT_MSG_FAILED
-    SRB_STATUS_MESSAGE_REJECTED,        // RQCS_NOP_MSG_FAILED
-    SRB_STATUS_MESSAGE_REJECTED,        // RQCS_PARITY_ERROR_MSG_FAILED
-    SRB_STATUS_MESSAGE_REJECTED,        // RQCS_DEVICE_RESET_MSG_FAILED
-    SRB_STATUS_MESSAGE_REJECTED,        // RQCS_ID_MSG_FAILED
-    SRB_STATUS_UNEXPECTED_BUS_FREE,     // RQCS_UNEXP_BUS_FREE
-    SRB_STATUS_DATA_OVERRUN             // RQCS_DATA_UNDERRUN
+    SRB_STATUS_SUCCESS,                // RQCS_COMPLETE
+    SRB_STATUS_SELECTION_TIMEOUT,      // RQCS_INCOMPLETE
+    SRB_STATUS_ERROR,                  // RQCS_DMA_ERROR
+    SRB_STATUS_ERROR,                  // RQCS_TRANSPORT_ERROR
+    SRB_STATUS_BUS_RESET,              // RQCS_RESET_OCCURRED
+    SRB_STATUS_ABORTED,                // RQCS_ABORTED
+    SRB_STATUS_TIMEOUT,                // RQCS_TIMEOUT
+    SRB_STATUS_DATA_OVERRUN,           // RQCS_DATA_OVERRUN
+    SRB_STATUS_PHASE_SEQUENCE_FAILURE, // RQCS_COMMAND_OVERRUN
+    SRB_STATUS_PHASE_SEQUENCE_FAILURE, // RQCS_STATUS_OVERRUN
+    SRB_STATUS_PHASE_SEQUENCE_FAILURE, // RQCS_BAD_MESSAGE
+    SRB_STATUS_PHASE_SEQUENCE_FAILURE, // RQCS_NO_MESSAGE_OUT
+    SRB_STATUS_MESSAGE_REJECTED,       // RQCS_EXT_ID_FAILED
+    SRB_STATUS_MESSAGE_REJECTED,       // RQCS_IDE_MSG_FAILED
+    SRB_STATUS_MESSAGE_REJECTED,       // RQCS_ABORT_MSG_FAILED
+    SRB_STATUS_MESSAGE_REJECTED,       // RQCS_REJECT_MSG_FAILED
+    SRB_STATUS_MESSAGE_REJECTED,       // RQCS_NOP_MSG_FAILED
+    SRB_STATUS_MESSAGE_REJECTED,       // RQCS_PARITY_ERROR_MSG_FAILED
+    SRB_STATUS_MESSAGE_REJECTED,       // RQCS_DEVICE_RESET_MSG_FAILED
+    SRB_STATUS_MESSAGE_REJECTED,       // RQCS_ID_MSG_FAILED
+    SRB_STATUS_UNEXPECTED_BUS_FREE,    // RQCS_UNEXP_BUS_FREE
+    SRB_STATUS_DATA_OVERRUN            // RQCS_DATA_UNDERRUN
 };
 
 /* FUNCTIONS ******************************************************************/
@@ -742,9 +742,7 @@ IspBuildContinuationPackets64(
         MaxSegments = min(SegmentCount, QL_IOCB_MAX_CONT_SEG_64);
         for (i = 0; i < MaxSegments; ++i)
         {
-            IspPutDataSegment64(&Continuation->DataSegment[i], SgElement);
-
-            SgElement++;
+            IspPutDataSegment64(&Continuation->DataSegment[i], SgElement++);
         }
 
         SegmentCount -= MaxSegments;
@@ -775,9 +773,7 @@ IspBuildContinuationPackets32(
         MaxSegments = min(SegmentCount, QL_IOCB_MAX_CONT_SEG_32);
         for (i = 0; i < MaxSegments; ++i)
         {
-            IspPutDataSegment32(&Continuation->DataSegment[i], SgElement);
-
-            SgElement++;
+            IspPutDataSegment32(&Continuation->DataSegment[i], SgElement++);
         }
 
         SegmentCount -= MaxSegments;
@@ -1844,6 +1840,7 @@ IspHwFindAdapter(
 
     UNREFERENCED_PARAMETER(HwContext);
     UNREFERENCED_PARAMETER(BusInformation);
+    UNREFERENCED_PARAMETER(ArgumentString);
     UNREFERENCED_PARAMETER(Reserved3);
 
     /* Retrieve the MMIO BAR */
