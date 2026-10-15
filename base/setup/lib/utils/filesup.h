@@ -129,4 +129,9 @@ GetNtDevicePathOfDriveNumber(
     _In_ USHORT DriveNumber,
     _Out_ PUNICODE_STRING DevicePath);
 
+NTSTATUS
+SetupSetFileAttributes(
+    _In_z_ PCWSTR Path,
+    _In_ ULONG FileAttributes);
+
 /* EOF */
