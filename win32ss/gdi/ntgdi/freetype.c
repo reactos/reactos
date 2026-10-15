@@ -1989,6 +1989,8 @@ IntGdiLoadFontByIndexFromMemory(PGDI_LOAD_FONT pLoadFont, FT_Long FontIndex)
     }
 
     FaceCount += IntGdiLoadFontsFromMemory(pLoadFont, SharedFace, FontIndex, -1);
+    /* Each loaded font entry owns its reference; drop the creator's reference. */
+    SharedFace_Release(SharedFace, TRUE);
     return FaceCount;
 }
 
