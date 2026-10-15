@@ -903,6 +903,10 @@ InstallBootloaderFiles(
         return Status;
     }
 
+    /* Mark freeldr.sys as SYSTEM and HIDDEN
+     * (This is really optional, so any potential errors are ignored.) */
+    SetupSetFileAttributes(DstPath, FILE_ATTRIBUTE_HIDDEN | FILE_ATTRIBUTE_SYSTEM);
+
     /* Copy rosload to the system partition, always overwriting the older version */
     CombinePaths(SrcPath, ARRAYSIZE(SrcPath), 2, SourceRootPath->Buffer, L"\\loader\\rosload.exe");
     CombinePaths(DstPath, ARRAYSIZE(DstPath), 2, SystemRootPath->Buffer, L"rosload.exe");
@@ -914,6 +918,9 @@ InstallBootloaderFiles(
         DPRINT1("SetupCopyFile() failed (Status 0x%08lx)\n", Status);
         return Status;
     }
+
+    /* Mark rosload.exe as SYSTEM and HIDDEN */
+    SetupSetFileAttributes(DstPath, FILE_ATTRIBUTE_HIDDEN | FILE_ATTRIBUTE_SYSTEM);
 
     return STATUS_SUCCESS;
 }
