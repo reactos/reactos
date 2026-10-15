@@ -1092,7 +1092,7 @@ GreGetDIBitsInternal(
         if (biSizeImageOrig == 0 && ScanLines == 0)
         {
             BITMAP bm;
-            HBITMAP hBmpComp = IntCreateCompatibleBitmap(pDC, 1, 1, 0, 0);
+            HBITMAP hBmpComp = NtGdiGetStockObject(DEFAULT_BITMAP);
             GreGetObject(hBmpComp, sizeof(BITMAP), &bm);
             if (bpp != bm.bmBitsPixel && bpp != 1)
             goto done;

@@ -751,6 +751,7 @@ SetDIBitsToDevice(
     INT src_y = 0;
     ULONG iFormat, cBitsPixel, cjBits, cjWidth;
 
+    // HACK: Temporay hack for Half-Life
     #define MaxScanLines 6000
     #define MaxHeight 2000
     #define MaxSourceHeight 2000
