@@ -1969,15 +1969,16 @@ IntGdiLoadFontByIndexFromMemory(PGDI_LOAD_FONT pLoadFont, FT_Long FontIndex)
     pLoadFont->IsTrueType = FT_IS_SFNT(Face);
     num_faces = Face->num_faces;
     SharedFace = SharedFace_Create(Face, pLoadFont->Memory);
-
-    IntUnLockFreeType();
-
     if (!SharedFace)
     {
+        FT_Done_Face(Face);
+        IntUnLockFreeType();
         DPRINT1("SharedFace_Create failed\n");
         EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
         return 0; /* Failure */
     }
+
+    IntUnLockFreeType();
 
     if (FontIndex == -1)
     {
