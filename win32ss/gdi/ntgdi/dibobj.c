@@ -720,7 +720,7 @@ GreGetDIBitsInternal(
     PDC pDC;
     LONG width, height;
     WORD planes, bpp;
-    DWORD compr, size, biSizeImageOrig;
+    DWORD compr, size;
     USHORT i;
     int bitmap_type;
     RGBQUAD* rgbQuads;
@@ -730,8 +730,6 @@ GreGetDIBitsInternal(
 
     if ((Usage && Usage != DIB_PAL_COLORS) || !Info || !hBitmap)
         return 0;
-
-    biSizeImageOrig = Info->bmiHeader.biSizeImage;
 
     pDC = DC_LockDc(hDC);
     if (pDC == NULL || pDC->dctype == DCTYPE_INFO)
@@ -1087,17 +1085,6 @@ GreGetDIBitsInternal(
         else
             /* Signals success and not the actual number of scan lines*/
             ScanLines = 1;
-
-        /* Check if both bitmaps have the same bpp (are compatible) */
-        if (biSizeImageOrig == 0 && ScanLines == 0)
-        {
-            BITMAP bm;
-            HBITMAP hBmpComp = NtGdiGetStockObject(DEFAULT_BITMAP);
-            GreGetObject(hBmpComp, sizeof(BITMAP), &bm);
-            if (bpp != bm.bmBitsPixel && bpp != 1)
-            goto done;
-        }
-
     }
 
 done:
