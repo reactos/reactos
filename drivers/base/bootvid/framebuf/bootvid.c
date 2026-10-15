@@ -123,8 +123,10 @@ ApplyPalette(VOID)
 
 BOOLEAN
 NTAPI
-VidInitialize(
-    _In_ BOOLEAN SetMode)
+VidInitializeEx(
+    _In_ INT Phase,
+    _In_ BOOLEAN SetMode,
+    _In_opt_ PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
     PHYSICAL_ADDRESS FrameBuffer;
     PHYSICAL_ADDRESS VramAddress;
@@ -133,6 +135,14 @@ VidInitialize(
     INTERFACE_TYPE Interface;
     ULONG BusNumber;
     NTSTATUS Status;
+
+    // FIXME: Support Phase != 0 and LoaderBlock parameter.
+    if (Phase != 0)
+    {
+        UNIMPLEMENTED;
+        return FALSE;
+    }
+    DBG_UNREFERENCED_PARAMETER(LoaderBlock);
 
     /* Find boot-time framebuffer display information from the LoaderBlock */
     Status = FindBootDisplay(&VramAddress,

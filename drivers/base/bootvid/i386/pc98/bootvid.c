@@ -353,23 +353,45 @@ DoScroll(
 
 BOOLEAN
 NTAPI
-VidInitialize(
-    _In_ BOOLEAN SetMode)
+VidInitializeEx(
+    _In_ INT Phase,
+    _In_ BOOLEAN SetMode,
+    _In_opt_ PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
     PHYSICAL_ADDRESS BaseAddress;
 
+    UNREFERENCED_PARAMETER(LoaderBlock);
+
     BaseAddress.QuadPart = VRAM_NORMAL_PLANE_I;
-    PegcControl = (ULONG_PTR)MmMapIoSpace(BaseAddress, PEGC_CONTROL_SIZE, MmNonCached);
-    if (!PegcControl)
-        goto Failure;
+    if (Phase < 0)
+    {
+        PegcControl = (ULONG_PTR)BaseAddress.QuadPart;
+    }
+    else
+    {
+        if (PegcControl /*&& PegcControl != (ULONG_PTR)BaseAddress.QuadPart*/)
+            MmUnmapIoSpace((PVOID)PegcControl, PEGC_CONTROL_SIZE);
+        PegcControl = (ULONG_PTR)MmMapIoSpace(BaseAddress, PEGC_CONTROL_SIZE, MmNonCached);
+        if (!PegcControl)
+            goto Failure;
+    }
 
     if (!HasPegcController())
         goto Failure;
 
     BaseAddress.QuadPart = PEGC_FRAMEBUFFER_PACKED;
-    FrameBuffer = (ULONG_PTR)MmMapIoSpace(BaseAddress, PEGC_FRAMEBUFFER_SIZE, MmNonCached);
-    if (!FrameBuffer)
-        goto Failure;
+    if (Phase < 0)
+    {
+        FrameBuffer = (ULONG_PTR)BaseAddress.QuadPart;
+    }
+    else
+    {
+        if (FrameBuffer /*&& FrameBuffer != (ULONG_PTR)BaseAddress.QuadPart*/)
+            MmUnmapIoSpace((PVOID)FrameBuffer, PEGC_FRAMEBUFFER_SIZE);
+        FrameBuffer = (ULONG_PTR)MmMapIoSpace(BaseAddress, PEGC_FRAMEBUFFER_SIZE, MmNonCached);
+        if (!FrameBuffer)
+            goto Failure;
+    }
 
     if (SetMode)
         VidResetDisplay(TRUE);

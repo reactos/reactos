@@ -14,8 +14,19 @@
 
 BOOLEAN
 NTAPI
+#if (NTDDI_VERSION >= NTDDI_WIN7)
+VidInitialize(
+    _In_ INT Phase,
+    _In_ BOOLEAN SetMode,
+    _In_opt_ PLOADER_PARAMETER_BLOCK LoaderBlock);
+#elif (NTDDI_VERSION == NTDDI_VISTA)
+VidInitialize(
+    _In_ INT Phase,
+    _In_ BOOLEAN SetMode);
+#else // #if (NTDDI_VERSION < NTDDI_VISTA)
 VidInitialize(
     _In_ BOOLEAN SetMode);
+#endif
 
 VOID
 NTAPI

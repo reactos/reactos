@@ -197,7 +197,13 @@ InbvDriverInitialize(
     }
 
     /* Initialize the video */
+#if (NTDDI_VERSION >= NTDDI_WIN7)
+    InbvBootDriverInstalled = VidInitialize(0, ResetMode, LoaderBlock);
+#elif (NTDDI_VERSION == NTDDI_VISTA)
+    InbvBootDriverInstalled = VidInitialize(0, ResetMode);
+#else // #if (NTDDI_VERSION < NTDDI_VISTA)
     InbvBootDriverInstalled = VidInitialize(ResetMode);
+#endif
     if (InbvBootDriverInstalled)
     {
         /* Find bitmap resources in the kernel */
