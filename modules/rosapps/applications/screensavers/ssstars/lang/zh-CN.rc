@@ -29,7 +29,7 @@ BEGIN
     GROUPBOX        "高级",IDC_STATIC,16,180,260,72
     CONTROL         "启用背景混合",IDC_CHECK_DOBLENDING,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,24,196,160,10
-    CONTROL         "启用准确的角度校正",
+    CONTROL         "启用精确透视校正",
                     IDC_CHECK_PERSPECTIVE,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,24,208,160,10
     CONTROL         "启用纹理过滤",IDC_CHECK_FILTERING,

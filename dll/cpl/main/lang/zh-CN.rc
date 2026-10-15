@@ -158,7 +158,7 @@ BEGIN
     IDS_CROSSHAIR "精确定位"
     IDS_IBEAM "选定文本"
     IDS_NWPEN "手写"
-    IDS_NO "（无）"
+    IDS_NO "不可用"
     IDS_SIZENS "垂直调整"
     IDS_SIZEWE "水平调整"
     IDS_SIZENWSE "沿对角线调整 1"

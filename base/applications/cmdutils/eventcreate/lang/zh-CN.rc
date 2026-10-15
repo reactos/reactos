@@ -51,7 +51,7 @@ EVENTCREATE [/S computer [/U [domain\\]user [/P password]]] /ID EventID\n\
     IDS_BADSYNTAX_3 "错误的命令行语法。值“%s”不被选项“%s”所接受。\n"
     IDS_BADSYNTAX_4 "错误的命令行语法。值不能被选项“%s”所指定。\n"
     IDS_BADSYNTAX_5 "错误的命令行语法。选项“%s”不能使用超过 %lu 次。\n"
-    IDS_BADSYNTAX_6 "错误的命令行语法。托管选项“%s”暂不可用。\n"
+    IDS_BADSYNTAX_6 "命令行语法错误。缺少必需的选项“%s”。\n"
     // IDS_BADSYNTAX_7 "错误的命令行语法。选项“%s”的值超过可允许的范围。\n"
     IDS_BADSYNTAX_7 "错误的命令行语法。选项“%s”的值必须介于 %d - %d 以内。\n"
 

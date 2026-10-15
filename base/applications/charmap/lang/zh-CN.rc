@@ -60,5 +60,5 @@ BEGIN
     IDS_ABOUT "关于(&A)..."
     IDS_TITLE "字符映射表"
     IDS_UNICODE "Unicode"
-    IDS_ALL "All"
+    IDS_ALL "全部"
 END

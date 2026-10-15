@@ -20,10 +20,10 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_IME_ON "Input System (IME) - ON"
-    IDS_IME_OFF "Input System (IME) - OFF"
-    IDS_SOFTKBD_ON "Soft Keyboard - ON"
-    IDS_SOFTKBD_OFF "Soft Keyboard - OFF"
-    IDS_SHOWTOOLBAR "Show Toolbar"
-    IDS_INPUTSYSTEM "Input System (IME) configuration..."
+    IDS_IME_ON "输入法 - 已开启"
+    IDS_IME_OFF "输入法 - 已关闭"
+    IDS_SOFTKBD_ON "软键盘 - 已开启"
+    IDS_SOFTKBD_OFF "软键盘 - 已关闭"
+    IDS_SHOWTOOLBAR "显示工具栏"
+    IDS_INPUTSYSTEM "输入法（IME）设置..."
 END

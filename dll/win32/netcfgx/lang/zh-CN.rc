@@ -88,7 +88,7 @@ BEGIN
     PUSHBUTTON "添加(&A)...", IDC_DNSADDRADD, 15, 53, 50, 14
     PUSHBUTTON "编辑(&E)...", IDC_DNSADDRMOD, 75, 53, 50, 14
     PUSHBUTTON "删除(&V)", IDC_DNSADDRDEL, 135, 53, 50, 14
-    LTEXT "以下三种设置被应用到所有连接启用 TCP/IP。解析不合格的名称：", -1, 5, 70, 220, 24
+    LTEXT "以下三项设置适用于所有启用 TCP/IP 的连接。解析未限定的名称时：", -1, 5, 70, 220, 24
     CONTROL "附加主要的和连接特定的 DNS 后缀(&P)", IDC_PRIMSUFFIX, "BUTTON", BS_AUTORADIOBUTTON, 5, 90, 220, 12
     CHECKBOX "附加主 DNS 后缀的父后缀(&X)", IDC_TOPPRIMSUFFIX, 15, 102, 220, 12, BS_AUTOCHECKBOX | WS_TABSTOP
     CONTROL "附加这些 DNS 后缀 (按顺序)(&H)：", IDC_SELSUFFIX, "BUTTON", BS_AUTORADIOBUTTON, 5, 115, 220, 12
@@ -240,7 +240,7 @@ BEGIN
     IDS_TCP_PORTS "TCP 端口"
     IDS_UDP_PORTS "UDP 端口"
     IDS_IP_PROTO "IP 协议"
-    IDS_PORT_RANGE "端口数目必须大于 0 且小于 65536。请输入此范围内的数字。"
+    IDS_PORT_RANGE "端口号必须大于 0 且小于 65536。请输入此范围内的数字。"
     IDS_PROT_RANGE "协议编号必须大于 0 且小于 256。请输入此范围内的数字。"
     IDS_DUP_NUMBER "您试图添加的编号已在列表中。请输入一个不同的数字。"
     IDS_DISABLE_FILTER "禁用此全局 TCP/IP 设置将影响所有适配器。"
@@ -250,5 +250,5 @@ BEGIN
     IDS_DUP_SUFFIX "此 DNS 后缀已经位于列表中。"
     IDS_DUP_IPADDR "此 IP 地址已在列表中。"
     IDS_DUP_GW "此默认网关已在列表中。"
-    IDS_METRIC_RANGE "Please enter a metric value between 1 and 9999."
+    IDS_METRIC_RANGE "请输入 1 至 9999 之间的权值。"
 END

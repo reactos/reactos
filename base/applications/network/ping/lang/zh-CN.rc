@@ -53,7 +53,7 @@ BEGIN
     IDS_REPLY_STATUS "回显已返回 %lu。\n"
     IDS_DEST_HOST_UNREACHABLE "目标主机不可达。\n"
     IDS_DEST_NET_UNREACHABLE "目标网络不可达。\n"
-    IDS_REQUEST_TIMED_OUT "请求已过期。\n"
+    IDS_REQUEST_TIMED_OUT "请求超时。\n"
     IDS_TTL_EXPIRED "TTL 在传输途中过期。\n"
     IDS_TRANSMIT_FAILED "PING：传输失败。（错误码 %u）\n"
 

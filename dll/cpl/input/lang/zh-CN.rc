@@ -112,7 +112,7 @@ BEGIN
     IDS_CTRL_SHIFT "Ctrl+Shift"
     IDS_LEFT_ALT_SHIFT "左 Alt+Shift"
     IDS_SWITCH_BET_INLANG "在输入语言间切换"
-    IDS_REBOOT_NOW "You have to restart the system for the settings to take effect. Reboot now?"
+    IDS_REBOOT_NOW "这些设置将在系统重启后生效。现在重启吗？"
 END
 
 STRINGTABLE
@@ -181,8 +181,8 @@ BEGIN
     IDS_GERMAN_IBM_LAYOUT "德文（IBM）"
     IDS_GERMAN_NEO_11_LAYOUT "德文（NEO-1.1）"
     IDS_GERMAN_RISTOME_LAYOUT "德文（RISTOME）"
-    IDS_GERMAN_EXTENDED1_LAYOUT "German Extended (E1)"
-    IDS_GERMAN_EXTENDED2_LAYOUT "German Extended (E2)"
+    IDS_GERMAN_EXTENDED1_LAYOUT "德语扩展 (E1)"
+    IDS_GERMAN_EXTENDED2_LAYOUT "德语扩展 (E2)"
     IDS_GREEK_LAYOUT "希腊文"
     IDS_GREEK_220_LAYOUT "希腊文（220）"
     IDS_GREEK_220_LATIN_LAYOUT "希腊语（220）拉丁文"
