@@ -8,6 +8,9 @@
 
 #include "precomp.h"
 
+#define NDEBUG
+#include <debug.h> // For UNIMPLEMENTED
+
 /* PRIVATE FUNCTIONS *********************************************************/
 
 static BOOLEAN
@@ -373,8 +376,10 @@ VgaIsPresent(VOID)
 
 BOOLEAN
 NTAPI
-VidInitialize(
-    _In_ BOOLEAN SetMode)
+VidInitializeEx(
+    _In_ INT Phase,
+    _In_ BOOLEAN SetMode,
+    _In_opt_ PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
     ULONG_PTR Context = 0;
     PHYSICAL_ADDRESS TranslatedAddress;
@@ -382,6 +387,14 @@ VidInitialize(
     ULONG AddressSpace;
     BOOLEAN Result;
     ULONG_PTR Base;
+
+    // FIXME: Support Phase != 0
+    if (Phase != 0)
+    {
+        UNIMPLEMENTED;
+        return FALSE;
+    }
+    UNREFERENCED_PARAMETER(LoaderBlock);
 
     /* Make sure that we have a bus translation function */
     if (!HalFindBusAddressTranslation) return FALSE;
