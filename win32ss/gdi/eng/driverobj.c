@@ -96,6 +96,15 @@ EngDeleteDriverObj(
         }
     }
 
+    /* Fail if the lock count does not match bLocked, like Windows does.
+     * The VMware display driver relies on this: it passes bLocked = TRUE
+     * without having locked the object. */
+    if (pedo->baseobj.cExclusiveLock != (bLocked ? 2 : 1))
+    {
+        DRIVEROBJ_UnlockObject(pedo);
+        return FALSE;
+    }
+
     /* Prevent cleanup callback from being called again */
     pedo->drvobj.pFreeProc = NULL;
 

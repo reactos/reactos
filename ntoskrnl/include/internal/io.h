@@ -674,6 +674,14 @@ IopQueueDeviceInstallEvent(
     _In_ PUNICODE_STRING DeviceId);
 
 NTSTATUS
+IopQueueDevicePropertyChangeEvent(
+    _In_ PCUNICODE_STRING DeviceId);
+
+ULONG
+IopGetDeviceNodeStatus(
+    _In_ PDEVICE_NODE DeviceNode);
+
+NTSTATUS
 NTAPI
 IopOpenRegistryKeyEx(
     PHANDLE KeyHandle,
@@ -1383,6 +1391,26 @@ PiNotifyTargetDeviceChange(
     _In_ LPCGUID Event,
     _In_ PDEVICE_OBJECT DeviceObject,
     _In_opt_ PTARGET_DEVICE_CUSTOM_NOTIFICATION CustomNotification);
+
+//
+// Device interface registry
+//
+NTSTATUS
+IopOpenDeviceInterfaceKeys(
+    _In_ PCUNICODE_STRING SymbolicLinkName,
+    _In_ ACCESS_MASK DesiredAccess,
+    _Out_opt_ PHANDLE DeviceKey,
+    _Out_opt_ PHANDLE InstanceKey);
+
+//
+// PnP property store
+//
+extern ERESOURCE PpRegistryDeviceResource;
+
+CODE_SEG("PAGE")
+VOID
+PiPropReleaseDevice(
+    _In_ PDEVICE_OBJECT DeviceObject);
 
 //
 // PnP IRPs

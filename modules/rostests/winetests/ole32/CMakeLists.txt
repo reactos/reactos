@@ -5,7 +5,7 @@ include_directories(BEFORE ${REACTOS_SOURCE_DIR}/sdk/include/wine)
 spec2def(ole32_testlib.dll testlib.spec)
 
 add_library(ole32_testlib MODULE testlib.c ${CMAKE_CURRENT_BINARY_DIR}/ole32_testlib.def)
-set_module_type(ole32_testlib win32dll)
+set_module_type(ole32_testlib win32dll IMAGEBASE default)
 add_importlibs(ole32_testlib msvcrt kernel32)
 
 list(APPEND SOURCE

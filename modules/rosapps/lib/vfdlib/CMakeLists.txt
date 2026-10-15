@@ -29,7 +29,7 @@ add_library(vfd MODULE
     vfdlib.rc
     ${CMAKE_CURRENT_BINARY_DIR}/vfd.def)
 
-set_module_type(vfd win32dll ENTRYPOINT DllMain 12)
+set_module_type(vfd win32dll ENTRYPOINT DllMain 12 IMAGEBASE default)
 target_link_libraries(vfd zlib_solo uuid cppstl)
 set_target_cpp_properties(vfd WITH_EXCEPTIONS)
 

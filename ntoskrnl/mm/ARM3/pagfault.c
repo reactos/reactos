@@ -1331,7 +1331,7 @@ MiResolveProtoPteFault(IN BOOLEAN StoreInstruction,
 #if MI_TRACE_PFNS
         /* Update debug info */
         if (TrapInformation)
-            MiGetPfnEntry(PointerProtoPte->u.Hard.PageFrameNumber)->CallSite = (PVOID)((PKTRAP_FRAME)TrapInformation)->Eip;
+            MiGetPfnEntry(PointerProtoPte->u.Hard.PageFrameNumber)->CallSite = (PVOID)KeGetTrapFramePc(TrapInformation);
         else
             MiGetPfnEntry(PointerProtoPte->u.Hard.PageFrameNumber)->CallSite = _ReturnAddress();
 #endif
@@ -1690,7 +1690,7 @@ MiDispatchFault(IN ULONG FaultCode,
 #if MI_TRACE_PFNS
         /* Update debug info */
         if (TrapInformation)
-            MiGetPfnEntry(PointerPte->u.Hard.PageFrameNumber)->CallSite = (PVOID)((PKTRAP_FRAME)TrapInformation)->Eip;
+            MiGetPfnEntry(PointerPte->u.Hard.PageFrameNumber)->CallSite = (PVOID)KeGetTrapFramePc(TrapInformation);
         else
             MiGetPfnEntry(PointerPte->u.Hard.PageFrameNumber)->CallSite = _ReturnAddress();
 #endif
@@ -2270,7 +2270,7 @@ UserFault:
         UserPdeFault = FALSE;
         /* Update debug info */
         if (TrapInformation)
-            MiGetPfnEntry(PointerPde->u.Hard.PageFrameNumber)->CallSite = (PVOID)((PKTRAP_FRAME)TrapInformation)->Eip;
+            MiGetPfnEntry(PointerPde->u.Hard.PageFrameNumber)->CallSite = (PVOID)KeGetTrapFramePc(TrapInformation);
         else
             MiGetPfnEntry(PointerPde->u.Hard.PageFrameNumber)->CallSite = _ReturnAddress();
 #endif
@@ -2393,7 +2393,7 @@ UserFault:
 #if MI_TRACE_PFNS
         /* Update debug info */
         if (TrapInformation)
-            MiGetPfnEntry(PointerPte->u.Hard.PageFrameNumber)->CallSite = (PVOID)((PKTRAP_FRAME)TrapInformation)->Eip;
+            MiGetPfnEntry(PointerPte->u.Hard.PageFrameNumber)->CallSite = (PVOID)KeGetTrapFramePc(TrapInformation);
         else
             MiGetPfnEntry(PointerPte->u.Hard.PageFrameNumber)->CallSite = _ReturnAddress();
 #endif
@@ -2657,7 +2657,18 @@ ExitUser:
 
     if (Status == STATUS_NO_MEMORY)
     {
-        MmRebalanceMemoryConsumersAndWait();
+        /* Don't wait on the balancer while holding AddressCreationLock (CORE-20761) */
+        if (CurrentProcess->AddressCreationLock.Owner == KeGetCurrentThread())
+        {
+            static LARGE_INTEGER TinyTime = {{-1L, -1L}};
+            MmRebalanceMemoryConsumers();
+            KeDelayExecutionThread(KernelMode, FALSE, &TinyTime);
+        }
+        else
+        {
+            MmRebalanceMemoryConsumersAndWait();
+        }
+
         goto UserFault;
     }
 

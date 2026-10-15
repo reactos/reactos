@@ -67,6 +67,7 @@ C_ASSERT(sizeof(MASTER_BOOT_RECORD) == 512);
 #define VALID_NTFT                      0xC0      // NTFT uses high order bits
 #define PARTITION_NTFT                  0x80      // NTFT partition
 #define PARTITION_GPT                   0xEE      // GPT protective partition
+#define PARTITION_SYSTEM                0xEF      // EFI System partition
 #ifdef __REACTOS__
 #define PARTITION_OLD_LINUX             0x43
 #define PARTITION_LINUX                 0x83

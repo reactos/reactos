@@ -299,4 +299,6 @@
 
 #ifndef SYSFUNCS_NT5_ONLY
     SVC_(GetCurrentProcessorNumberEx, 1)
+    SVC_(GetNextProcess, 5)
+    SVC_(GetNextThread, 6)
 #endif

@@ -9,7 +9,7 @@ list(APPEND SOURCE
 
 add_library(rshell MODULE ${SOURCE})
 
-set_module_type(rshell win32dll UNICODE)
+set_module_type(rshell win32dll UNICODE IMAGEBASE default)
 
 target_link_libraries(rshell
     shellbars

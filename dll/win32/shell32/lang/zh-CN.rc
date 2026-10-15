@@ -102,7 +102,7 @@ IDM_DVSELECT MENU
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "Se&lect", 0
+        MENUITEM "选择(&S)", 0
     END
 END
 
@@ -381,7 +381,7 @@ BEGIN
     ICON IDI_SHELL_SECURITY, -1, 7, 7, 21, 20
     LTEXT "您想使用哪个用户帐户运行这个程序？", -1, 32, 12, 200, 16
     AUTORADIOBUTTON "当前用户 %s", IDC_RUNAS_CURRENT, 7, 35, 226, 10, WS_GROUP
-    AUTOCHECKBOX "&Protect my computer and data from unauthorized program activity\n\nThis option can prevent computer viruses from harming your computer or personal data, but selecting it might cause the program to function improperly.", IDC_RUNAS_SAFER, 18, 50, 210, 62, WS_DISABLED | WS_TABSTOP | BS_MULTILINE | BS_TOP
+    AUTOCHECKBOX "保护计算机和数据免受未经授权的程序活动影响(&P)\n\n启用此选项有助于防范病毒对计算机或个人数据的损害，但也可能影响程序的正常运行。", IDC_RUNAS_SAFER, 18, 50, 210, 62, WS_DISABLED | WS_TABSTOP | BS_MULTILINE | BS_TOP
     AUTORADIOBUTTON "下列用户:", IDC_RUNAS_OTHER, 7, 110, 226, 10
     LTEXT "用户名:", -1, 18, 124, 54, 10
     COMBOBOX IDC_RUNAS_NAME, 75, 122, 134, 40, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
@@ -434,7 +434,7 @@ BEGIN
     GROUPBOX "浏览文件夹", -1, 7, 60, 249, 40, WS_TABSTOP
     CONTROL "", IDC_FOLDER_OPTIONS_FOLDERICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 70, 21, 20
     AUTORADIOBUTTON "在相同窗口中打开每一个文件夹(&M)", IDC_FOLDER_OPTIONS_SAMEWINDOW, 40, 70, 210, 10, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "在相同窗口中打开自己的文件夹(&W)", IDC_FOLDER_OPTIONS_OWNWINDOW, 40, 82, 210, 10
+    AUTORADIOBUTTON "为每个文件夹打开独立窗口(&W)", IDC_FOLDER_OPTIONS_OWNWINDOW, 40, 82, 210, 10
     GROUPBOX "点击项目的方式", -1, 7, 110, 249, 64
     CONTROL "", IDC_FOLDER_OPTIONS_CLICKICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 120, 21, 20
     AUTORADIOBUTTON "通过单击来打开项目（指向时选择）(&S)", IDC_FOLDER_OPTIONS_SINGLECLICK, 40, 120, 210, 10, WS_TABSTOP | WS_GROUP
@@ -696,7 +696,7 @@ BEGIN
     PUSHBUTTON "移除(&R)", IDC_EDITTYPE_REMOVE, 150, 80, 70, 14
     PUSHBUTTON "设为默认(&S)", IDC_EDITTYPE_SET_DEFAULT, 150, 95, 70, 14
     AUTOCHECKBOX "下载后确认打开(&O)", IDC_EDITTYPE_CONFIRM_OPEN, 5, 115, 150, 14
-    AUTOCHECKBOX "总之显示扩展名(&W)", IDC_EDITTYPE_SHOW_EXT, 5, 130, 150, 14
+    AUTOCHECKBOX "始终显示扩展名(&W)", IDC_EDITTYPE_SHOW_EXT, 5, 130, 150, 14
     AUTOCHECKBOX "在相同窗口中打开(&B)", IDC_EDITTYPE_SAME_WINDOW, 5, 145, 150, 14
     DEFPUSHBUTTON "确定", IDOK, 95, 170, 60, 14
     PUSHBUTTON "取消", IDCANCEL, 160, 170, 60, 14
@@ -760,7 +760,7 @@ BEGIN
     IDS_SHV_COLUMN_TYPE "类型"
     IDS_SHV_COLUMN_MODIFIED "修改"
     IDS_SHV_COLUMN_ATTRIBUTES "属性"
-    IDS_SHV_COLUMN_DISK_CAPACITY "使用空间"
+    IDS_SHV_COLUMN_DISK_CAPACITY "总容量"
     IDS_SHV_COLUMN_DISK_AVAILABLE "剩余空间"
     IDS_SHV_COLUMN_OWNER "所有者"
     IDS_SHV_COLUMN_GROUP "小组"
@@ -775,7 +775,7 @@ BEGIN
     IDS_SHV_COLUMN_STATUS "状态"
     IDS_SHV_COLUMN_COMMENTS "备注"
     IDS_SHV_COLUMN_LOCATION "位置"
-    IDS_SHV_COLUMN_MODEL "模型"
+    IDS_SHV_COLUMN_MODEL "型号"
 
     /* special folders */
     IDS_DESKTOP "桌面"
@@ -786,7 +786,7 @@ BEGIN
 
     /* special folders descriptions */
     IDS_ADMINISTRATIVETOOLS_DESCRIPTION "配置您计算机的管理设置。"
-    IDS_FOLDER_OPTIONS_DESCRIPTION "自定义文件和文件夹的显示。"
+    IDS_FOLDER_OPTIONS_DESCRIPTION "设置文件和文件夹的显示方式，并更改文件关联。"
     IDS_FONTS_DESCRIPTION "添加、更改和管理您计算机上的字体"
     IDS_PRINTERS_DESCRIPTION "显示安装的打印机和传真打印机，并帮助您添加新的。"
 
@@ -857,7 +857,7 @@ BEGIN
 
     /* Format Dialog Strings */
     IDS_FORMAT_TITLE "格式化本地磁盘"
-    IDS_FORMAT_WARNING "警告：格式化将会擦除磁盘上的所有数据。\n想要格式化这个磁盘，请点击确定。若想退出，请点击返回。"
+    IDS_FORMAT_WARNING "警告：格式化将会擦除磁盘上的所有数据。\n想要格式化这个磁盘，请点击确定。若要退出，请点击“取消”。"
     IDS_FORMAT_COMPLETE "格式化完成"
 
     /* Warning format system drive dialog strings */
@@ -929,8 +929,8 @@ BEGIN
     FCIDM_SHVIEW_NEWFOLDER "文件夹(&F)"
     FCIDM_SHVIEW_NEWLINK "快捷方式(&L)"
     IDS_FOLDER_OPTIONS "文件夹选项"
-    IDS_TASKBAR_OPTIONS "Taskbar and Start Menu"
-    IDS_TASKBAR_OPTIONS_INFOTIP "Customize the Start Menu and the taskbar, such as the types of items to be displayed and how they should appear."
+    IDS_TASKBAR_OPTIONS "任务栏与开始菜单设置"
+    IDS_TASKBAR_OPTIONS_INFOTIP "设置开始菜单与任务栏中显示哪些项目，以及这些项目的呈现方式。"
     IDS_RECYCLEBIN_LOCATION "回收站位置"
     IDS_RECYCLEBIN_DISKSPACE "可用空间"
     IDS_EMPTY_BITBUCKET "清空回收站"
@@ -943,10 +943,10 @@ BEGIN
     IDS_CANTEJECTMEDIA "无法弹出媒体（错误代码：%lu）。"
     IDS_CANTSHOWPROPERTIES "无法显示属性（错误代码：%lu）。"
     IDS_CANTDISCONNECT "无法断开连接（错误代码：%lu）。"
-    IDS_NONE "(None)"
+    IDS_NONE "(无)"
 
-    IDS_EXPAND "Exp&and"
-    IDS_COLLAPSE "Coll&apse"
+    IDS_EXPAND "展开(&A)"
+    IDS_COLLAPSE "折叠(&A)"
 
     /* Friendly File Type Names */
     IDS_DIRECTORY "文件夹"
@@ -985,8 +985,8 @@ BEGIN
     IDS_PRINT_VERB "打印"
     IDS_CMD_VERB "在此打开命令提示符"
 
-    IDS_MULTIPLETYPES   "Multiple Types"
-    IDS_VARIOUSFOLDERS  "Various Folders"
+    IDS_MULTIPLETYPES   "包含多种文件类型"
+    IDS_VARIOUSFOLDERS  "分布于不同文件夹"
     IDS_FILE_FOLDER "%u 个文件，%u 个文件夹"
 
     IDS_PRINTERS "打印机"
@@ -1013,9 +1013,9 @@ BEGIN
 
     IDS_SEARCH_BROWSEITEM "浏览..."
 
-    IDS_RECYCLE_CLEANER_DISPLAYNAME "Recycle Bin"
-    IDS_RECYCLE_CLEANER_DESCRIPTION "The Recycle Bin contains files you have deleted from your computer. These files are not permanently removed until you empty the Recycle Bin."
-    IDS_RECYCLE_CLEANER_BUTTON_TEXT "&View Files"
+    IDS_RECYCLE_CLEANER_DISPLAYNAME "回收站"
+    IDS_RECYCLE_CLEANER_DESCRIPTION "已删除的文件暂存于回收站中。清空回收站会将这些文件彻底移除。"
+    IDS_RECYCLE_CLEANER_BUTTON_TEXT "浏览文件(&V)"
 
     IDS_TITLE_MYCOMP "我的电脑"
     IDS_TITLE_MYNET "网上邻居"
@@ -1036,7 +1036,7 @@ BEGIN
     IDS_ADVANCED_HIDE_FILE_EXT "隐藏已知文件类型的扩展名"
     IDS_ADVANCED_SUPER_HIDDEN "隐藏已被保护的操作系统文件（推荐）"
     IDS_ADVANCED_DESKTOP_PROCESS "在单独的进程中启动文件夹窗口"
-    IDS_ADVANCED_CLASSIC_VIEW_STATE "记住每一个文件夹的试图设置"
+    IDS_ADVANCED_CLASSIC_VIEW_STATE "记住每一个文件夹的视图设置"
     IDS_ADVANCED_PERSIST_BROWSERS "在登录时还原上一个文件夹窗口"
     IDS_ADVANCED_CONTROL_PANEL_IN_MY_COMPUTER "在我的电脑中显示控制面板"
     IDS_ADVANCED_SHOW_COMP_COLOR "以彩色显示已被加密或压缩的 NTFS 文件"
@@ -1046,15 +1046,15 @@ BEGIN
     IDS_ADVANCED_EXPAND_CONTROL_PANEL "扩展控制面板"
     IDS_ADVANCED_EXPAND_MY_DOCUMENTS "扩展我的文档"
     IDS_ADVANCED_EXPAND_PRINTERS "扩展打印机"
-    IDS_ADVANCED_EXPAND_MY_PICTURES "扩展“图片收藏”"
+    IDS_ADVANCED_EXPAND_MY_PICTURES "展开我的图片"
     IDS_ADVANCED_EXPAND_NET_CONNECTIONS "扩展网络连接"
     IDS_ADVANCED_DISPLAY_RUN "显示运行"
     IDS_ADVANCED_DISPLAY_ADMINTOOLS "显示管理工具"
     IDS_ADVANCED_SMALL_START_MENU "在“开始”菜单中显示小图标"
 
-    IDS_VISEFFECT_DRAGFULL "Show window contents while dragging"
-    IDS_VISEFFECT_FONTSMOOTHING "Smooth edges of screen fonts"
-    IDS_VISEFFECT_LISTVIEWSHADOW "Use drop shadows for icon labels on the desktop"
+    IDS_VISEFFECT_DRAGFULL "拖动窗口时显示其内容"
+    IDS_VISEFFECT_FONTSMOOTHING "让屏幕文字边缘更平滑"
+    IDS_VISEFFECT_LISTVIEWSHADOW "在桌面图标名称下显示阴影"
 
     IDS_NEWEXT_ADVANCED_LEFT "<< 高级(&V)"
     IDS_NEWEXT_ADVANCED_RIGHT "高级(&V) >>"
