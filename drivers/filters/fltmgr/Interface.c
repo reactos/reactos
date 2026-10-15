@@ -1925,3 +1925,84 @@ Cleanup:
 
     return Status;
 }
+
+NTSTATUS NTAPI
+FltWriteFile(  _In_ PFLT_INSTANCE InitiatingInstance,
+    _In_ PFILE_OBJECT FileObject,
+    _In_opt_ PLARGE_INTEGER ByteOffset,
+    _In_ ULONG Length,
+    _In_reads_bytes_(Length) PVOID Buffer,
+    _In_ FLT_IO_OPERATION_FLAGS Flags,
+    _Out_opt_ PULONG BytesWritten,
+    _In_opt_ PFLT_COMPLETED_ASYNC_IO_CALLBACK CallbackRoutine,
+    _In_opt_ PVOID CallbackContext)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+PVOID NTAPI
+FltAllocatePoolAlignedWithTag(    _In_ PFLT_INSTANCE Instance,
+    _In_ POOL_TYPE PoolType,
+    _In_ SIZE_T NumberOfBytes,
+    _In_ ULONG Tag)
+{
+    UNIMPLEMENTED;
+    return NULL;
+}
+
+VOID NTAPI
+FltFreePoolAlignedWithTag( _In_ PFLT_INSTANCE Instance,
+    _In_ PVOID Buffer,
+    _In_ ULONG Tag)
+{
+    UNIMPLEMENTED;
+}
+
+ULONG NTAPI
+FltGetRequestorProcessId(_In_ PFLT_CALLBACK_DATA CallbackData)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS NTAPI
+FltGetVolumeFromInstance( _In_ PFLT_INSTANCE Instance,
+    _Outptr_ PFLT_VOLUME *RetVolume)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS NTAPI
+FltParseFileNameInformation(_Inout_ PFLT_FILE_NAME_INFORMATION FileNameInformation)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS NTAPI
+FltReadFile( _In_ PFLT_INSTANCE InitiatingInstance,
+    _In_ PFILE_OBJECT FileObject,
+    _In_opt_ PLARGE_INTEGER ByteOffset,
+    _In_ ULONG Length,
+    _Out_writes_bytes_to_(Length,*BytesRead) PVOID Buffer,
+    _In_ FLT_IO_OPERATION_FLAGS Flags,
+    _Out_opt_ PULONG BytesRead,
+    _In_opt_ PFLT_COMPLETED_ASYNC_IO_CALLBACK CallbackRoutine,
+    _In_opt_ PVOID CallbackContext)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS NTAPI
+FltSetInformationFile(  _In_ PFLT_INSTANCE Instance,
+    _In_ PFILE_OBJECT FileObject,
+    _In_reads_bytes_(Length) PVOID FileInformation,
+    _In_ ULONG Length,
+    _In_ FILE_INFORMATION_CLASS FileInformationClass)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}

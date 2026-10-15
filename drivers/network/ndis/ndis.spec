@@ -292,3 +292,4 @@
  @ stdcall TrFilterDprIndicateReceive(ptr ptr ptr long ptr long long)
  @ stdcall TrFilterDprIndicateReceiveComplete(ptr)
  @ stdcall NdisScheduleWorkItem(ptr)
+ @ stdcall NdisOpenConfigurationEx(ptr ptr)

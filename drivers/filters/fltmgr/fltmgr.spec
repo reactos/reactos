@@ -23,3 +23,11 @@
  @ stdcall FltGetDestinationFileNameInformation(ptr ptr ptr ptr long long ptr)
  @ stdcall FltReleaseFileNameInformation(ptr)
 
+@ stdcall FltAllocatePoolAlignedWithTag()
+@ stdcall FltFreePoolAlignedWithTag()
+@ stdcall FltGetRequestorProcessId()
+@ stdcall FltGetVolumeFromInstance(ptr ptr)
+@ stdcall FltParseFileNameInformation(ptr)
+@ stdcall FltReadFile(ptr ptr ptr long ptr long ptr ptr ptr)
+@ stdcall FltSetInformationFile(ptr ptr ptr long long)
+@ stdcall FltWriteFile(ptr ptr ptr long ptr long ptr ptr ptr)

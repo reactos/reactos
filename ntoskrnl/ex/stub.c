@@ -183,4 +183,70 @@ NtWorkerFactoryWorkerReady(IN ULONG TheUnknown)
     __debugbreak();
     return STATUS_NOT_IMPLEMENTED;
 }
+
+
+NTSTATUS NTAPI IoUnregisterPlugPlayNotificationEx() { UNIMPLEMENTED; return STATUS_NOT_IMPLEMENTED; }
+NTSTATUS NTAPI KeQueryPrcbAddress() { UNIMPLEMENTED; return STATUS_NOT_IMPLEMENTED; }
+NTSTATUS NTAPI ObGetFilterVersion() { UNIMPLEMENTED; return STATUS_NOT_IMPLEMENTED; }
+NTSTATUS NTAPI ObRegisterCallbacks() { UNIMPLEMENTED; return STATUS_NOT_IMPLEMENTED; }
+NTSTATUS NTAPI ObUnRegisterCallbacks() { UNIMPLEMENTED; return STATUS_NOT_IMPLEMENTED; }
+NTSTATUS NTAPI PsAcquireProcessExitSynchronization() { UNIMPLEMENTED; return STATUS_NOT_IMPLEMENTED; }
+NTSTATUS NTAPI PsGetProcessWow64Process() { UNIMPLEMENTED; return STATUS_NOT_IMPLEMENTED; }
+NTSTATUS NTAPI PsReleaseProcessExitSynchronization() { UNIMPLEMENTED; return STATUS_NOT_IMPLEMENTED; }
+NTSTATUS NTAPI PsSetCreateProcessNotifyRoutineEx() { UNIMPLEMENTED; return STATUS_NOT_IMPLEMENTED; }
+
+NTSTATUS NTAPI KeGetCurrentProcessorNumberEx(PPROCESSOR_NUMBER ProcNumber)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS NTAPI KeGetProcessorNumberFromIndex(ULONG ProcIndex, PPROCESSOR_NUMBER Number)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+ULONG NTAPI KeQueryActiveProcessorCountEx(USHORT GroupNumber)
+{    UNIMPLEMENTED;
+    return 1;
+}
+
+ULONG NTAPI KeQueryMaximumProcessorCount()
+{    UNIMPLEMENTED;
+    return 1;
+}
+
+ULONG NTAPI KeQueryMaximumProcessorCountEx(USHORT GroupNumber)
+{    UNIMPLEMENTED;
+    return 1;
+}
+
+VOID NTAPI KeRevertToUserGroupAffinityThread(PGROUP_AFFINITY PreviousAffinity)
+{
+    UNIMPLEMENTED;
+}
+
+VOID NTAPI KeSetSystemGroupAffinityThread(PGROUP_AFFINITY Affinity, PGROUP_AFFINITY PreviousAffinity)
+{
+    UNIMPLEMENTED;
+}
+
+int NTAPI strcpy_s( _Out_writes_z_(_Size) char *_Dst,
+    _In_ size_t _Size,
+    _In_z_ const char *_Src)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+int NTAPI strncpy_s(    _Out_writes_z_(_DstSizeInChars) char *_Dst,
+    _In_ size_t _DstSizeInChars,
+    _In_z_ const char *_Src,
+    _In_ size_t _MaxCount)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
 #pragma warning( pop )

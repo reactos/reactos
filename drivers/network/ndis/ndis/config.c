@@ -188,6 +188,15 @@ NdisCloseConfiguration(
     ZwClose(ConfigurationContext->Handle);
 }
 
+NDIS_STATUS 
+EXPORT
+NdisOpenConfigurationEx(
+    void* A, PNDIS_HANDLE               ConfigurationHandle
+)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
 
 /*
  * @implemented
