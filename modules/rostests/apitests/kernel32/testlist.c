@@ -6,6 +6,7 @@ extern void func_ActCtxWithXmlNamespaces(void);
 extern void func_ConsoleCP(void);
 extern void func_CreateProcess(void);
 extern void func_DefaultActCtx(void);
+extern void func_DeleteFile(void);
 extern void func_DeviceIoControl(void);
 extern void func_dosdev(void);
 extern void func_EnumSystemCodePages(void);
@@ -53,6 +54,7 @@ const struct test winetest_testlist[] =
     { "ConsoleCP",                   func_ConsoleCP },
     { "CreateProcess",               func_CreateProcess },
     { "DefaultActCtx",               func_DefaultActCtx },
+    { "DeleteFile",                  func_DeleteFile },
     { "DeviceIoControl",             func_DeviceIoControl },
     { "dosdev",                      func_dosdev },
     { "EnumSystemCodePages",         func_EnumSystemCodePages },
