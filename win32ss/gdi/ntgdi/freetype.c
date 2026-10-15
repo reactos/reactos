@@ -1989,6 +1989,9 @@ IntGdiLoadFontByIndexFromMemory(PGDI_LOAD_FONT pLoadFont, FT_Long FontIndex)
     }
 
     FaceCount += IntGdiLoadFontsFromMemory(pLoadFont, SharedFace, FontIndex, -1);
+
+    /* Every font entry holds its own reference */
+    SharedFace_Release(SharedFace, TRUE);
     return FaceCount;
 }
 
@@ -2276,6 +2279,9 @@ IntGdiRemoveFontResourceSingle(
     BOOL ret = FALSE;
     UNICODE_STRING PathName;
     PLIST_ENTRY CurrentEntry, NextEntry;
+    LIST_ENTRY RemovedList;
+    PLIST_ENTRY FontListHead = &g_FontListHead;
+    PPROCESSINFO Win32Process = NULL;
     PFONT_ENTRY FontEntry;
     PFONTGDI FontGDI;
     PWSTR pszBuffer, pszFileTitle;
@@ -2311,10 +2317,20 @@ IntGdiRemoveFontResourceSingle(
         return FALSE; /* Failure */
     }
 
-    /* Delete font entries that matches PathName */
+    /* Private fonts live in the process list */
+    if (dwFlags & FR_PRIVATE)
+    {
+        Win32Process = PsGetCurrentProcessWin32Process();
+        FontListHead = &Win32Process->PrivateFontListHead;
+    }
+
+    /* Unlink font entries that match PathName */
+    InitializeListHead(&RemovedList);
     IntLockFreeType();
-    for (CurrentEntry = g_FontListHead.Flink;
-         CurrentEntry != &g_FontListHead;
+    if (Win32Process)
+        IntLockProcessPrivateFonts(Win32Process);
+    for (CurrentEntry = FontListHead->Flink;
+         CurrentEntry != FontListHead;
          CurrentEntry = NextEntry)
     {
         FontEntry = CONTAINING_RECORD(CurrentEntry, FONT_ENTRY, ListEntry);
@@ -2322,16 +2338,27 @@ IntGdiRemoveFontResourceSingle(
 
         FontGDI = FontEntry->Font;
         ASSERT(FontGDI);
-        if (FontGDI->Filename && _wcsicmp(FontGDI->Filename, pszFileTitle) == 0)
+        /* Filename holds the full path, the title is only used for the registry */
+        if (FontGDI->Filename && _wcsicmp(FontGDI->Filename, PathName.Buffer) == 0)
         {
             RemoveEntryList(&FontEntry->ListEntry);
-            CleanupFontEntry(FontEntry);
-            if (dwFlags & AFRX_WRITE_REGISTRY)
-                IntDeleteRegFontEntries(pszFileTitle, dwFlags);
-            ret = TRUE;
+            InsertTailList(&RemovedList, &FontEntry->ListEntry);
         }
     }
+    if (Win32Process)
+        IntUnLockProcessPrivateFonts(Win32Process);
     IntUnLockFreeType();
+
+    /* CleanupFontEntry takes the FreeType lock itself */
+    while (!IsListEmpty(&RemovedList))
+    {
+        CurrentEntry = RemoveHeadList(&RemovedList);
+        CleanupFontEntry(CONTAINING_RECORD(CurrentEntry, FONT_ENTRY, ListEntry));
+        ret = TRUE;
+    }
+
+    if (ret && (dwFlags & AFRX_WRITE_REGISTRY))
+        IntDeleteRegFontEntries(pszFileTitle, dwFlags);
 
     RtlFreeUnicodeString(&PathName);
     return ret;
