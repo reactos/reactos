@@ -399,7 +399,7 @@ WlanGetNetworkBssList(
     if ((pReserved != NULL) || (pInterfaceGuid == NULL) || (hClientHandle == NULL) || (ppWlanBssList == NULL))
         return ERROR_INVALID_PARAMETER;
 
-    (*ppWlanBssList) = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(**ppWlanBssList));
+    *ppWlanBssList = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(**ppWlanBssList));
     (*ppWlanBssList)->dwTotalSize = sizeof(**ppWlanBssList);
 
     UNIMPLEMENTED;
