@@ -369,14 +369,54 @@ VgaIsPresent(VOID)
 
 BOOLEAN
 NTAPI
-VidInitialize(
-    _In_ BOOLEAN SetMode)
+VidInitializeEx(
+    _In_ INT Phase,
+    _In_ BOOLEAN SetMode,
+    _In_opt_ PVOID LoaderBlock)
 {
     ULONG_PTR Context = 0;
     PHYSICAL_ADDRESS TranslatedAddress;
     PHYSICAL_ADDRESS NullAddress = {{0, 0}}, VgaAddress;
     ULONG AddressSpace;
     BOOLEAN Result;
+
+    UNREFERENCED_PARAMETER(LoaderBlock);
+
+    if (Phase <= 0) // (Phase == -1 || Phase == 0)
+    {
+        /* Always use direct address without mapping the VGA register address */
+        VgaRegisterBase = 0;
+
+        /* Verify whether this is VGA space */
+        if (!VgaIsPresent())
+            return FALSE;
+
+        if (Phase == -1)
+        {
+            /* Always use direct address without mapping */
+            VgaBase = (ULONG_PTR)MEM_VGA;
+        }
+        else // (Phase == 0)
+        {
+            VgaAddress.LowPart = MEM_VGA;
+            VgaAddress.HighPart = 0;
+
+            /* Try to map the VGA memory base; if it fails, fall back to direct */
+            VgaBase = (ULONG_PTR)MmMapIoSpace(VgaAddress,
+                                              MEM_VGA_SIZE,
+                                              MmNonCached);
+            if (!VgaBase)
+                VgaBase = (ULONG_PTR)MEM_VGA; //return FALSE;
+        }
+
+        /* Don't perform further initialization for now */
+        return TRUE;
+    }
+
+    /* In phase >= 1, if the VGA memory base was previously mapped from
+     * phase 0, unmap it so as to search the accurate VGA space mapping. */
+    if (VgaBase && VgaBase != (ULONG_PTR)MEM_VGA)
+        MmUnmapIoSpace((PVOID)VgaBase, MEM_VGA_SIZE);
 
     /* Make sure a bus translation function is available */
     if (!HalFindBusAddressTranslation)

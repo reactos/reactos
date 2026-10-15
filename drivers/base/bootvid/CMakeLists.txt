@@ -1,9 +1,14 @@
 
+## Temp HACK: Must match VER_PRODUCT(MAJOR|MINOR)VERSION used by ntoskrnl,
+## until they match consistently with NTDDI_VERSION and DLL_EXPORT_VERSION.
+set(BOOTVID_EXPORTS_VERSION 0x502)
+add_definitions(-DBOOTVID_EXPORTS_VERSION=${BOOTVID_EXPORTS_VERSION})
+
 function(add_bootvid _target _configfile)
     cmake_parse_arguments(_bviddata "" "NAME_ON_CD" "SOURCES" ${ARGN})
 
     # Handle the spec file for the dll name
-    spec2def(${_target}.dll bootvid.spec ADD_IMPORTLIB)
+    spec2def(${_target}.dll bootvid.spec VERSION ${BOOTVID_EXPORTS_VERSION} ADD_IMPORTLIB)
 
     # Set default values for the version resource file
     set(REACTOS_STR_INTERNAL_NAME "$<TARGET_NAME:${_target}>")
@@ -24,7 +29,8 @@ function(add_bootvid _target _configfile)
     endif()
 
     # Add the common sources, with or without graphics support
-    list(APPEND SOURCE console.c precomp.h)
+    add_asm_files(SOURCE vidinit.S)
+    list(APPEND SOURCE vidinit.c console.c precomp.h)
     if(NO_VIDEO_GRAPHICS)
         list(APPEND COMPILE_DEFINITIONS NO_VIDEO_GRAPHICS)
     else()
@@ -43,12 +49,34 @@ function(add_bootvid _target _configfile)
         ${SOURCE}
         ${CMAKE_CURRENT_BINARY_DIR}/${_target}.rc
         ${CMAKE_CURRENT_BINARY_DIR}/${_target}.def)
-    add_pch(${_target} precomp.h "")
+    add_pch(${_target} precomp.h "vidinit.c")
     target_compile_definitions(${_target} PRIVATE ${COMPILE_DEFINITIONS})
 
     set_module_type(${_target} kerneldll ENTRYPOINT 0)
     add_importlibs(${_target} ntoskrnl hal)
     add_dependencies(${_target} psdk)
+
+    # Reduce the required subsystem to Windows 2000 (NT 5) for i386 builds only.
+    if(ARCH STREQUAL "i386")
+        if(MSVC)
+            # NOTE: We cannot use the following command:
+            #   target_link_options(${_target} PRIVATE "/SUBSYSTEM:NATIVE,5.00")
+            # because it would act at the level of the LINK.EXE linker flags,
+            # which only accepts a subsystem version >= 5.10 (Windows XP+) on
+            # latest MSVC versions.
+            # So to work around this problem, we use a post-build command by
+            # employing EDITBIN.EXE that does not check the subsystem version.
+            #
+            add_custom_command(
+                TARGET ${_target} POST_BUILD
+                COMMAND editbin.exe /NOLOGO /SUBSYSTEM:NATIVE,5.00 $<TARGET_FILE:${_target}> > NUL
+                VERBATIM)
+        else()
+            # The binutils linker does not set a lower limit on the subsystem.
+            # Otherwise we would use: objcopy --subsystem native:5.00 $<TARGET_FILE:${_target}>
+            target_link_options(${_target} PRIVATE "-Wl,--subsystem,native:5.00")
+        endif()
+    endif()
 
     if(NOT _bviddata_NAME_ON_CD)
         set(_bviddata_NAME_ON_CD "$<TARGET_FILE_NAME:${_target}>")

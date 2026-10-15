@@ -9,6 +9,14 @@
 #pragma once
 
 /* Native definitions from BOOTVID (Boot Video Driver) */
+/*
+ * Redefine BOOTVID_EXPORTS_VERSION (the BOOTVID exports version expected
+ * by the kernel) using VER_PRODUCT*VERSION. ReactOS' BOOTVID relies on
+ * which version the kernel reports via PsGetVersion(), that is based on the
+ * VER_PRODUCT*VERSION defines, for determining the VidInitialize() behaviour.
+ * See also bootvid/CMakeLists.txt
+ */
+#define BOOTVID_EXPORTS_VERSION ((VER_PRODUCTMAJORVERSION << 8) | VER_PRODUCTMINORVERSION)
 #include "bootvid/bootvid.h"
 
 //
