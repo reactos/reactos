@@ -228,10 +228,21 @@ InitPaletteWithTable(
 
 BOOLEAN
 NTAPI
-VidInitialize(
-    _In_ BOOLEAN SetMode)
+VidInitializeEx(
+    _In_ INT Phase,
+    _In_ BOOLEAN SetMode,
+    _In_opt_ PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
     DPRINT1("bv-arm v0.1\n");
+
+    // FIXME: Support Phase != 0 and LoaderBlock parameter.
+    if (Phase != 0)
+    {
+        UNIMPLEMENTED;
+        return FALSE;
+    }
+    UNREFERENCED_PARAMETER(SetMode);
+    UNREFERENCED_PARAMETER(LoaderBlock);
 
     //
     // Allocate framebuffer

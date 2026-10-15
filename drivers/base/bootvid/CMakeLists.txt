@@ -24,7 +24,7 @@ function(add_bootvid _target _configfile)
     endif()
 
     # Add the common sources, with or without graphics support
-    list(APPEND SOURCE console.c precomp.h)
+    list(APPEND SOURCE console.c vidinit.c precomp.h)
     if(NO_VIDEO_GRAPHICS)
         list(APPEND COMPILE_DEFINITIONS NO_VIDEO_GRAPHICS)
     else()
