@@ -101,7 +101,7 @@ PciReadWriteConfigSpace(IN PPCI_FDO_EXTENSION DeviceExtension,
         /* Verify the operation succeeded */
         if (LengthProcessed != Length)
         {
-            DPRINT1("PCI: Config space %s failed - Bus %x, Slot %x, Offset %x, Expected %x bytes, got %x\n",
+            DPRINT1("PCIX - Config space %s failed - Bus %x, Slot %x, Offset %x, Expected %x bytes, got %x\n",
                     Read ? "read" : "write",
                     DeviceExtension->BaseBus,
                     Slot.u.AsULONG,
@@ -296,7 +296,7 @@ PciGetConfigHandlers(IN PPCI_FDO_EXTENSION FdoExtension)
                 PciInterface->RootBusCapability(PciInterface->Context,
                                                 &FdoExtension->RootBusHardwareCapability);
 
-                DPRINT1("PCI - Root bus interface %d, _OSC support 0x%08lx, granted 0x%08lx\n",
+                DPRINT1("PCIX - Root bus interface %d, _OSC support 0x%08lx, granted 0x%08lx\n",
                         FdoExtension->RootBusHardwareCapability.SecondaryInterface,
                         FdoExtension->RootBusHardwareCapability.OscFeatureSupport.u.AsULONG,
                         FdoExtension->RootBusHardwareCapability.OscControlGranted.u.AsULONG);

@@ -84,6 +84,9 @@ typedef struct _SLOT_INFO
     UCHAR Reserved;
 } SLOT_INFO, *PSLOT_INFO;
 
+#define PCI_IRQ_ROUTING_TABLE_SIGNATURE 'RIP$'
+#define PCI_IRQ_ROUTING_TABLE_VERSION   0x0100
+
 typedef struct _PCI_IRQ_ROUTING_TABLE
 {
     ULONG Signature;

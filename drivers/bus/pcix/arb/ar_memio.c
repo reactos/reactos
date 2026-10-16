@@ -132,6 +132,9 @@ ario_Initializer(IN PVOID Instance)
     Arbiter->CommonInstance.PackResource = ario_PackResource;
     Arbiter->CommonInstance.UnpackResource = ario_UnpackResource;
     Arbiter->CommonInstance.ScoreRequirement = ario_ScoreRequirement;
+    Arbiter->CommonInstance.PreprocessEntry = PciArbiter_PreprocessEntry;
+    Arbiter->CommonInstance.FindSuitableRange = PciArbiter_FindSuitableRange;
+    Arbiter->CommonInstance.OverrideConflict = PciArbiter_OverrideConflict;
 
     /* The rest of the engine, and the PCI assignment ordering, is generic */
     Status = ArbiterLibInitializeInstance(&Arbiter->CommonInstance,
@@ -142,7 +145,7 @@ ario_Initializer(IN PVOID Instance)
                                           NULL);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("ario_Initializer: init arbiter returned %X\n", Status);
+        DPRINT1("PCIX - ario_Initializer: init arbiter returned %X\n", Status);
     }
 
     return Status;
@@ -210,7 +213,7 @@ ario_ApplyBrokenVideoHack(IN PPCI_FDO_EXTENSION FdoExtension)
     ASSERT(NT_SUCCESS(Status));
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("ario_ApplyBrokenVideoHack: ordering failed %X\n", Status);
+        DPRINT1("PCIX - ario_ApplyBrokenVideoHack: ordering failed %X\n", Status);
     }
 
     /* Now the hack has been applied */
@@ -318,6 +321,9 @@ armem_Initializer(IN PVOID Instance)
     Arbiter->CommonInstance.PackResource = armem_PackResource;
     Arbiter->CommonInstance.UnpackResource = armem_UnpackResource;
     Arbiter->CommonInstance.ScoreRequirement = armem_ScoreRequirement;
+    Arbiter->CommonInstance.PreprocessEntry = PciArbiter_PreprocessEntry;
+    Arbiter->CommonInstance.FindSuitableRange = PciArbiter_FindSuitableRange;
+    Arbiter->CommonInstance.OverrideConflict = PciArbiter_OverrideConflict;
 
     /* The rest of the engine, and the PCI assignment ordering, is generic */
     Status = ArbiterLibInitializeInstance(&Arbiter->CommonInstance,
@@ -328,7 +334,7 @@ armem_Initializer(IN PVOID Instance)
                                           NULL);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("armem_Initializer: init arbiter returned %X\n", Status);
+        DPRINT1("PCIX - armem_Initializer: init arbiter returned %X\n", Status);
     }
 
     return Status;

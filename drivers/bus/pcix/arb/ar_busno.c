@@ -123,6 +123,7 @@ arbusno_Initializer(IN PVOID Instance)
     Arbiter->CommonInstance.PackResource = arbusno_PackResource;
     Arbiter->CommonInstance.UnpackResource = arbusno_UnpackResource;
     Arbiter->CommonInstance.ScoreRequirement = arbusno_ScoreRequirement;
+    Arbiter->CommonInstance.PreprocessEntry = PciArbiter_PreprocessEntry;
 
     Status = ArbiterLibInitializeInstance(&Arbiter->CommonInstance,
                                           FdoExtension->FunctionalDeviceObject,
@@ -132,7 +133,7 @@ arbusno_Initializer(IN PVOID Instance)
                                           NULL);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("arbusno_Initializer: init arbiter return %X\n", Status);
+        DPRINT1("PCIX - arbusno_Initializer: init arbiter return %X\n", Status);
     }
 
     return Status;
