@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS SuperSpeed USB Hub Driver
  * LICENSE:     MIT (https://spdx.org/licenses/MIT)
  * PURPOSE:     Driver wide state, global policy and boot device support
- * COPYRIGHT:   Copyright 2026 Justin Miller <justinmiller100@gmail.com>
+ * COPYRIGHT:   Copyright 2026 Justin Miller <justin.miller@reactos.org>
  */
 
 #pragma once
@@ -21,11 +21,11 @@ enum class HubGlobal : ULONG
     UxdDeleteOnDisconnect              = 0x00000400,
     UxdEnable                          = 0x00000800,
     EtwEnabled                         = 0x00001000,
-    CheckReservedFields           = 0x00002000,
-    StrictDescriptorChecks          = 0x00004000,
+    CheckReservedFields                = 0x00002000,
+    StrictDescriptorChecks             = 0x00004000,
     EnableUsb20HardwareLpm             = 0x00008000,
     PreventSuperSpeedDebounce          = 0x00010000,
-    AlwaysSecondReset             = 0x00020000,
+    AlwaysSecondReset                  = 0x00020000,
     EnableUsbLtm                       = 0x00040000
 };
 

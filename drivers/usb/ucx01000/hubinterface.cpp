@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS USB Host Controller Extension
  * LICENSE:     MIT (https://spdx.org/licenses/MIT)
  * PURPOSE:     Query interfaces the root hub PDO answers
- * COPYRIGHT:   Copyright 2026 Justin Miller <justinmiller100@gmail.com>
+ * COPYRIGHT:   Copyright 2026 Justin Miller <justin.miller@reactos.org>
  */
 
 #include "ucx01000.h"

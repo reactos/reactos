@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS xHCI Host Controller Driver
  * LICENSE:     MIT (https://spdx.org/licenses/MIT)
  * PURPOSE:     Endpoint object, its state machine owner and the UCX endpoint callbacks
- * COPYRIGHT:   Copyright 2026 Justin Miller <justinmiller100@gmail.com>
+ * COPYRIGHT:   Copyright 2026 Justin Miller <justin.miller@reactos.org>
  */
 
 #pragma once
