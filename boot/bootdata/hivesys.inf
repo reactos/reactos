@@ -1576,7 +1576,7 @@ HKLM,"SYSTEM\CurrentControlSet\Control\ProductOptions","ProductSuite",0x00010002
 HKLM,"SYSTEM\CurrentControlSet\Control\ReactOS\Settings\Version","ReportAsWorkstation",0x00010001,0x00000000
 ; Some installers check for SP2
 HKLM,"SYSTEM\CurrentControlSet\Control\Windows","CSDReleaseType",0x00010001,0x00000000
-HKLM,"SYSTEM\CurrentControlSet\Control\Windows","CSDVersion",0x00010001,0x00000200
+HKLM,"SYSTEM\CurrentControlSet\Control\Windows","CSDVersion",0x00010001,0x00000100
 
 HKLM,"SYSTEM\CurrentControlSet\Control\Windows","Directory",0x00020002,"%SystemRoot%"
 HKLM,"SYSTEM\CurrentControlSet\Control\Windows","ErrorMode",0x00010003,0x00000000

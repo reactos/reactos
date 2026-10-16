@@ -584,7 +584,7 @@ PsGetVersion(OUT PULONG MajorVersion OPTIONAL,
     }
 
     /* Return TRUE if this is a Checked Build */
-    return (NtBuildNumber >> 28) == 0xC;
+    return FALSE;//(NtBuildNumber >> 28) == 0xC;
 }
 
 /* EOF */

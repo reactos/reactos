@@ -1232,7 +1232,7 @@ static const DWORD table_c0000202[396] =
    ERROR_ACCESS_DISABLED_BY_POLICY,        /* c0000362 (STATUS_ACCESS_DISABLED_BY_POLICY_PATH) */
    ERROR_ACCESS_DISABLED_BY_POLICY,        /* c0000363 (STATUS_ACCESS_DISABLED_BY_POLICY_PUBLISHER) */
    ERROR_ACCESS_DISABLED_BY_POLICY,        /* c0000364 (STATUS_ACCESS_DISABLED_BY_POLICY_OTHER) */
-   0,                                      /* c0000365 (STATUS_FAILED_DRIVER_ENTRY) */
+   ERROR_FAILED_DRIVER_ENTRY,              /* c0000365 (STATUS_FAILED_DRIVER_ENTRY) */
    0,                                      /* c0000366 (STATUS_DEVICE_ENUMERATION_ERROR) */
    0,                                      /* c0000367 */
    0,                                      /* c0000368 (STATUS_MOUNT_POINT_NOT_RESOLVED) */

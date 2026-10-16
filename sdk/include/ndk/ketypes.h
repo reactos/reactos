@@ -615,7 +615,7 @@ typedef struct _KUSER_SHARED_DATA
     ULONG NumberOfPhysicalPages;                            // 0x2e8
     BOOLEAN SafeBootMode;                                   // 0x2ec
 
-#if (NTDDI_VERSION == NTDDI_WIN7)
+#if (NTDDI_VERSION == NTDDI_WIN7) || defined(__REACTOS__)
     union
     {
         UCHAR TscQpcData;                                   // 0x2ed
@@ -645,7 +645,7 @@ typedef struct _KUSER_SHARED_DATA
     UCHAR Reserved12[3];                                    // 0x2ed
 #endif // NTDDI_VERSION == NTDDI_WIN7
 
-#if (NTDDI_VERSION >= NTDDI_VISTA)
+#if (NTDDI_VERSION >= NTDDI_VISTA) || defined(__REACTOS__)
     union
     {
         ULONG SharedDataFlags;                              // 0x2f0
@@ -744,13 +744,14 @@ typedef struct _KUSER_SHARED_DATA
     UCHAR Reserved8[14];                                    // 0x372
 #endif
 #endif // NTDDI_VERSION < NTDDI_WIN10
-#elif (NTDDI_VERSION >= NTDDI_VISTASP2)
-    ULONG DEPRECATED_Wow64SharedInformation[MAX_WOW64_SHARED_ENTRIES]; // 0x340
+#elif (NTDDI_VERSION >= NTDDI_VISTASP2) || defined(__REACTOS__)
+    //ULONG DEPRECATED_Wow64SharedInformation[MAX_WOW64_SHARED_ENTRIES]; // 0x340
+      ULONG Wow64SharedInformation[MAX_WOW64_SHARED_ENTRIES]; // 0x340
 #else
     ULONG Wow64SharedInformation[MAX_WOW64_SHARED_ENTRIES]; // 0x340
 #endif // NTDDI_VERSION >= NTDDI_VISTA
 
-#if (NTDDI_VERSION >= NTDDI_WIN7)
+#if (NTDDI_VERSION >= NTDDI_WIN7) || defined(__REACTOS__)
     USHORT UserModeGlobalLogger[16];                        // 0x380
 #else
     USHORT UserModeGlobalLogger[8];                         // 0x380
@@ -779,7 +780,7 @@ typedef struct _KUSER_SHARED_DATA
 //
 // Windows 7 and later
 //
-#if (NTDDI_VERSION >= NTDDI_WIN7)
+#if (NTDDI_VERSION >= NTDDI_WIN7) || defined(__REACTOS__)
     volatile ULONGLONG QpcBias;                            // 0x3b8 // Win7: TscQpcBias
     /* volatile */ ULONG ActiveProcessorCount;             // 0x3c0 // not volatile since Win 8.1 Update 1
 
@@ -824,10 +825,6 @@ typedef struct _KUSER_SHARED_DATA
 #if (NTDDI_VERSION >= NTDDI_WIN11_NI)
     ULONG64 UserPointerAuthMask;                            // 0x730
 #endif // NTDDI_VERSION >= NTDDI_WIN11_NI
-
-#if (NTDDI_VERSION < NTDDI_WIN7) && defined(__REACTOS__)
-    XSTATE_CONFIGURATION XState;
-#endif
 } KUSER_SHARED_DATA, *PKUSER_SHARED_DATA;
 
 //

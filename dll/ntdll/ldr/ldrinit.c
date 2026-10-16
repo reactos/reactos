@@ -991,7 +991,7 @@ LdrShutdownProcess(VOID)
     /* Enter the Loader Lock */
     RtlEnterCriticalSection(&LdrpLoaderLock);
 
-#if (NTDDI_VERSION < NTDDI_VISTA)
+#if 0//(NTDDI_VERSION < NTDDI_VISTA)
     /* Cleanup trace logging data (Etw) */
     if (SharedUserData->TraceLogging)
     {
@@ -1113,7 +1113,7 @@ LdrShutdownThread(VOID)
     DPRINT("LdrShutdownThread() called for %wZ\n",
             &LdrpImageEntry->BaseDllName);
 
-#if (NTDDI_VERSION < NTDDI_VISTA)
+#if 0 //(NTDDI_VERSION < NTDDI_VISTA)
     /* Cleanup trace logging data (Etw) */
     if (SharedUserData->TraceLogging)
     {
