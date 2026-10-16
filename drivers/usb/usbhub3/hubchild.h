@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS SuperSpeed USB Hub Driver
  * LICENSE:     MIT (https://spdx.org/licenses/MIT)
  * PURPOSE:     The device attached to a hub port
- * COPYRIGHT:   Copyright 2026 Justin Miller <justinmiller100@gmail.com>
+ * COPYRIGHT:   Copyright 2026 Justin Miller <justin.miller@reactos.org>
  */
 
 #pragma once
@@ -22,28 +22,28 @@ enum class ChildMuxFlag : ULONG
 enum class ChildHack : ULONG
 {
     DisableSerialNumber              = 0x00000001,
-    AlwaysQueryMsOs           = 0x00000002,
-    ResetAfterSystemResume                  = 0x00000004,
+    AlwaysQueryMsOs                  = 0x00000002,
+    ResetAfterSystemResume           = 0x00000004,
     DisableOnSoftRemove              = 0x00000008,
     RequestConfigDescOnReset         = 0x00000010,
     SkipContainerIdQuery             = 0x00000020,
     IgnoreBosValidationFailure       = 0x00000040,
     DisableLpm                       = 0x00000080,
-    NoExitLatencyRequest                       = 0x00000100,
-    ResetAfterSuperSpeedResume        = 0x00000200,
-    TolerateStalePipes          = 0x00000400,
+    NoExitLatencyRequest             = 0x00000100,
+    ResetAfterSuperSpeedResume       = 0x00000200,
+    TolerateStalePipes               = 0x00000400,
     DisableUasp                      = 0x00000800,
-    NoIsochDelayRequest                = 0x00001000,
-    ResetAfterIdleResume                  = 0x00002000,
+    NoIsochDelayRequest              = 0x00001000,
+    ResetAfterIdleResume             = 0x00002000,
     DisableHotReset                  = 0x00004000,
     SkipBosQuery                     = 0x00008000,
     NonFunctional                    = 0x00010000,
     DisableUsb20Lpm                  = 0x00020000,
     DisableRemoteWakeForUsb20Lpm     = 0x00040000,
     DisableSuperSpeed                = 0x00080000,
-    BlockedDevice          = 0x00100000,
+    BlockedDevice                    = 0x00100000,
     UseWin8DescriptorValidation      = 0x00200000,
-    AlwaysSecondReset           = 0x00400000
+    AlwaysSecondReset                = 0x00400000
 };
 
 /* USB4 tunnel state of a device; 1 means the port has no USB4 host and the controller was not asked */
@@ -63,7 +63,7 @@ enum class ChildProperty : ULONG
     LtmCapable                       = 0x00000100,
     DualRole                         = 0x00000200,
     ChargingPolicySupported          = 0x00000400,
-    AcpiAllowsD3Cold            = 0x00000800,
+    AcpiAllowsD3Cold                 = 0x00000800,
     ExtPropertiesInstalled           = 0x00001000,
     IsComposite                      = 0x00002000,
     HasBillboard                     = 0x00004000,
@@ -75,7 +75,7 @@ enum class ChildProperty : ULONG
 
     /* identity */
     ContainerIdKnown                 = 0x10000000,  /**< From MS OS, or generated from the serial number */
-    ContainerIdFromBos              = 0x20000000,
+    ContainerIdFromBos               = 0x20000000,
 
     /* registry */
     UxdReserved                      = 0x01000000,  /**< A UXD settings record redirects the device to a VM */
@@ -92,9 +92,9 @@ enum class ChildState : ULONG
     AttachSucceeded                  = 0x00000008,
     WarmResetOnEnumeration           = 0x00000010,
     LastSetAddressFailed             = 0x00000020,
-    AltSettingFiltered             = 0x00000040,
+    AltSettingFiltered               = 0x00000040,
     ConfigurationValid               = 0x00000080,
-    WasResetAtResume                = 0x00000100,
+    WasResetAtResume                 = 0x00000100,
     D3ColdEnabledByDriver            = 0x00000200,
     FailedAnEnumeration              = 0x00000400,
     U1EnabledUpstream                = 0x00000800,
@@ -108,7 +108,7 @@ enum class ChildState : ULONG
 
     /* identity */
     WorkingDevice                    = 0x10000000,  /**< The PDO describes a working device, not a placeholder */
-    PrefixedSerial             = 0x20000000,
+    PrefixedSerial                   = 0x20000000,
 
     /* devxfer */
     DualRoleCommandSent              = 0x00800000

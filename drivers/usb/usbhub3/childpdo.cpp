@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS SuperSpeed USB Hub Driver
  * LICENSE:     MIT (https://spdx.org/licenses/MIT)
  * PURPOSE:     Child PDO: creation, PnP and power, query interfaces and the client IOCTL front end
- * COPYRIGHT:   Copyright 2026 Justin Miller <justinmiller100@gmail.com>
+ * COPYRIGHT:   Copyright 2026 Justin Miller <justin.miller@reactos.org>
  */
 
 #include "usbhub3.h"

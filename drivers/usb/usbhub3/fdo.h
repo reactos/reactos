@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS SuperSpeed USB Hub Driver
  * LICENSE:     MIT (https://spdx.org/licenses/MIT)
  * PURPOSE:     Hub FDO, its state and the event mux to ports and devices
- * COPYRIGHT:   Copyright 2026 Justin Miller <justinmiller100@gmail.com>
+ * COPYRIGHT:   Copyright 2026 Justin Miller <justin.miller@reactos.org>
  */
 
 #pragma once
@@ -27,14 +27,14 @@ enum class HubFlag : ULONG
     PowerReferencePending          = 0x00004000,
     DisableLpm                     = 0x00008000,
     DisableUsb20Lpm                = 0x00010000,
-    PowerReferenceAllowed       = 0x00020000,
+    PowerReferenceAllowed          = 0x00020000,
     InAcpiNamespace                = 0x00040000,
     DelayAfterResetComplete        = 0x00080000,
-    ToleratesU0WhileDetached         = 0x00100000,
+    ToleratesU0WhileDetached       = 0x00100000,
     IgnoreEnabledInSsInactive      = 0x00200000,
     InBootOrPagingPath             = 0x00400000,
     DisableSuperSpeed              = 0x00800000,
-    DiscardEnableDuringReset           = 0x01000000,
+    DiscardEnableDuringReset       = 0x01000000,
     NoSelectiveSuspendIntegrated   = 0x02000000,
     S0IdleConfigured               = 0x04000000,
     GlobalPowerReference           = 0x08000000,

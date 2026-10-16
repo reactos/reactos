@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS USB Host Controller Extension
  * LICENSE:     MIT (https://spdx.org/licenses/MIT)
  * PURPOSE:     UCXUSBDEVICE creation, deletion, the device tree and per device services
- * COPYRIGHT:   Copyright 2026 Justin Miller <justinmiller100@gmail.com>
+ * COPYRIGHT:   Copyright 2026 Justin Miller <justin.miller@reactos.org>
  */
 
 #include "ucx01000.h"

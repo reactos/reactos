@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS xHCI Host Controller Driver
  * LICENSE:     MIT (https://spdx.org/licenses/MIT)
  * PURPOSE:     Endpoint state machine
- * COPYRIGHT:   Copyright 2026 Justin Miller <justinmiller100@gmail.com>
+ * COPYRIGHT:   Copyright 2026 Justin Miller <justin.miller@reactos.org>
  */
 
 /* INCLUDES *******************************************************************/
@@ -24,7 +24,7 @@ const SM_EVENT_INFO XhciEndpointMachine::EventInfo[] =
 {
     { "CommandSucceeded",        SmEventCritical,   FALSE, FALSE },
     { "CommandFailed",           SmEventCritical,   FALSE, FALSE },
-    { "StreamMapStopped",          SmEventCritical,   FALSE, FALSE },
+    { "StreamMapStopped",        SmEventCritical,   FALSE, FALSE },
     { "CancelAllowed",           SmEventCritical,   FALSE, FALSE },
     { "StopFailedHalted",        SmEventCritical,   FALSE, FALSE },
     { "StopFailedRunning",       SmEventCritical,   FALSE, FALSE },
@@ -33,10 +33,10 @@ const SM_EVENT_INFO XhciEndpointMachine::EventInfo[] =
     { "ExpectedEventsDone",      SmEventCompletion, FALSE, FALSE },
     { "StoppedEventSeen",        SmEventCompletion, FALSE, FALSE },
     { "HaltReported",            SmEventCompletion, FALSE, FALSE },
-    { "StreamsOff",         SmEventCompletion, FALSE, FALSE },
-    { "StreamsOn",          SmEventCompletion, FALSE, FALSE },
+    { "StreamsOff",              SmEventCompletion, FALSE, FALSE },
+    { "StreamsOn",               SmEventCompletion, FALSE, FALSE },
     { "TimerFired",              SmEventCompletion, FALSE, FALSE },
-    { "TransferAborted",        SmEventCompletion, FALSE, FALSE },
+    { "TransferAborted",         SmEventCompletion, FALSE, FALSE },
     { "TransfersRecovered",      SmEventCompletion, FALSE, FALSE },
     { "ControllerResetStarting", SmEventRequest,    FALSE, FALSE },
     { "ControllerResetDone",     SmEventRequest,    FALSE, FALSE },
