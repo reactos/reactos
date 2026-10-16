@@ -84,7 +84,7 @@ locintrf_GetLocationString(
     if (!IsDevice && !PCI_IS_ROOT_FDO(FdoExtension))
         return STATUS_INVALID_PARAMETER;
 
-    /* Room for the longer form plus the empty string that ends the list */
+    /* Room for the longer form plus the empty character that ends the list */
     Size = sizeof(L"PCIROOT(FF)") + sizeof(UNICODE_NULL);
     Buffer = ExAllocatePoolWithTag(PagedPool, Size, PCI_POOL_TAG);
     if (!Buffer)
