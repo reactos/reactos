@@ -151,7 +151,7 @@ END
 /* Detail header titles */
 STRINGTABLE
 BEGIN
-    IDS_LIST_DISK_HEAD "  磁盘 ###   状态      大小     可用    活动 Gpt\n"
+    IDS_LIST_DISK_HEAD "  磁盘 ###   状态      大小     可用    动态 Gpt\n"
     IDS_LIST_DISK_LINE "  --------  ----------  -------  -------  ---  ---\n"
     IDS_LIST_DISK_FORMAT "%c 磁盘 %-3lu   %-10s  %-7s  %-7s   %1s    %1s\n"
     IDS_LIST_PARTITION_HEAD "  分区 ###          类型          大小     偏移量\n"
@@ -183,16 +183,16 @@ END
 /* Select command strings */
 STRINGTABLE
 BEGIN
-    IDS_SELECT_NO_DISK "\n没有当前选择的磁盘。\nP请选择一个磁盘，再试一次。\n\n"
+    IDS_SELECT_NO_DISK "\n没有当前选择的磁盘。\n请选择一个磁盘，再试一次。\n\n"
     IDS_SELECT_DISK "\n磁盘 %lu 现在是所选的磁盘。\n\n"
     IDS_SELECT_DISK_INVALID "\n无效的磁盘。\n\n"
     IDS_SELECT_DISK_ENUM_NO_START "\nNo disk enumeration started yet.\n\nNo disk is currently selected.\n\n"
     IDS_SELECT_DISK_ENUM_FINISHED "\nThe last disk has been enumerated.\n\nNo disk is currently selected.\n\n"
-    IDS_SELECT_NO_PARTITION "\n有是没有当前选定的分区。\n请选择一个磁盘，再试一次。\n\n"
+    IDS_SELECT_NO_PARTITION "\n没有当前选定的分区。\n请选择一个分区，再试一次。\n\n"
     IDS_SELECT_PARTITION "\n分区 %lu 现在是所选的分区。\n\n"
     IDS_SELECT_PARTITION_NO_DISK "\n没有一个选择是有分区的磁盘。\n请选择一个磁盘，再试一次。\n\n"
     IDS_SELECT_PARTITION_INVALID "\n无效的分区。\n\n"
-    IDS_SELECT_NO_VOLUME "\n没有当前所选的卷。\n请选择一个磁盘，再试一次。\n\n"
+    IDS_SELECT_NO_VOLUME "\n没有当前所选的卷。\n请选择一个卷，再试一次。\n\n"
     IDS_SELECT_VOLUME "\n卷 %lu 现在是所选的卷。\n\n"
     IDS_SELECT_VOLUME_INVALID "\nInvalid volume.\n\n"
 END
@@ -241,7 +241,7 @@ BEGIN
     IDS_HELP_ATTRIBUTES                "操纵卷或磁盘的属性。\n"
     IDS_HELP_AUTOMOUNT                 "启用和禁用基本卷的自动挂载。\n"
     IDS_HELP_BREAK                     "中断镜像集。\n"
-    IDS_HELP_CLEAN                     "清除配置信息或所有信息，关闭\n              磁盘。\n"
+    IDS_HELP_CLEAN                     "清除磁盘上的配置信息或全部信息。\n"
     IDS_HELP_COMPACT                   "尝试减少文件的物理大小。\n"
 
     IDS_HELP_CONVERT                   "在不同的磁盘格式之间进行转换。\n"
@@ -287,8 +287,8 @@ BEGIN
     IDS_HELP_LIST_VDISK                "List virtual disk files.\n"
 
     IDS_HELP_MERGE                     "将子磁盘与父磁盘合并。\n"
-    IDS_HELP_OFFLINE                   "将当前标记为脱机的磁盘设置为联机。\n"
-    IDS_HELP_ONLINE                    "将当前标记为联机的磁盘设置为脱机。\n"
+    IDS_HELP_OFFLINE                   "将当前联机的对象设为脱机。\n"
+    IDS_HELP_ONLINE                    "将当前脱机的对象设为联机。\n"
     IDS_HELP_RECOVER                   "刷新无效包中的所有磁盘的状态，\n              并重新同步具有过期块或奇偶校\n              验数据的镜像卷和 RAID5 卷。\n"
     IDS_HELP_REM                       "无作用。这用来注释脚本。\n"
     IDS_HELP_REMOVE                    "删除驱动器号或指派的装载点。\n"

@@ -2,6 +2,7 @@
  * Chinese (Simplified) resources for shlwapi
  *
  * Copyright 2008 Hongbo Ni <hongbo.at.njstar.com>
+ * Copyright 2026 Luo Yufan <njlyf2011@hotmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -33,11 +34,11 @@ STRINGTABLE
     IDS_TB_FORMAT "%s TB"
     IDS_PB_FORMAT "%s PB"
     IDS_EB_FORMAT "%s EB"
-    IDS_RESTRICTED "This operation has been cancelled due to restrictions on this computer. Please contact your system administrator."
-    IDS_RESTRICTIONS "Restrictions"
-    IDS_ANY_FILE "%s File"
-    IDS_FILE "File"
-    IDS_FOLDER "Folder"
+    IDS_RESTRICTED "此计算机的限制设置阻止了这项操作。请向系统管理员联系。"
+    IDS_RESTRICTIONS "操作受限"
+    IDS_ANY_FILE "%s 文件"
+    IDS_FILE "文件"
+    IDS_FOLDER "文件夹"
 #endif
 }
 

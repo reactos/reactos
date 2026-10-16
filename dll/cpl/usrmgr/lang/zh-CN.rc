@@ -3,7 +3,7 @@
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Chinese (Simplified) resource file
  * TRANSLATORS: Copyright 2015 Henry Tang Ih <henrytang2@hotmail.com>
- *              Copyright 2018 Luo Yufan <njlyf2011@hotmail.com>
+ *              Copyright 2018-2026 Luo Yufan <njlyf2011@hotmail.com>
  *              Copyright 2021 Wu Haotian <rigoligo03@gmail.com>
  */
 
@@ -71,7 +71,7 @@ BEGIN
     CONTROL "", IDC_USER_MEMBERSHIP_LIST, "SysListView32", LVS_REPORT | LVS_NOCOLUMNHEADER |
             LVS_SORTASCENDING | WS_BORDER | WS_TABSTOP, 7, 18, 238, 173, WS_EX_CLIENTEDGE
     PUSHBUTTON "添加...", IDC_USER_MEMBERSHIP_ADD, 7, 197, 50, 14
-    PUSHBUTTON "取除", IDC_USER_MEMBERSHIP_REMOVE, 61, 197, 50, 14, WS_DISABLED
+    PUSHBUTTON "移除", IDC_USER_MEMBERSHIP_REMOVE, 61, 197, 50, 14, WS_DISABLED
 END
 
 IDD_USER_PROFILE DIALOGEX 0, 0, 252, 223
@@ -84,7 +84,7 @@ BEGIN
     EDITTEXT IDC_USER_PROFILE_PATH, 78, 19, 160, 13, ES_AUTOHSCROLL
     LTEXT "登录脚本：", -1, 16, 40, 55, 8
     EDITTEXT IDC_USER_PROFILE_SCRIPT, 78, 37, 160, 13, ES_AUTOHSCROLL
-    GROUPBOX "主址录", -1, 7, 68, 238, 54
+    GROUPBOX "主目录", -1, 7, 68, 238, 54
     AUTORADIOBUTTON "本地路径：", IDC_USER_PROFILE_LOCAL, 16, 83, 60, 10
     AUTORADIOBUTTON "连接：", IDC_USER_PROFILE_REMOTE, 16, 100, 60, 10
     EDITTEXT IDC_USER_PROFILE_LOCAL_PATH, 78, 81, 160, 13, ES_AUTOHSCROLL
@@ -199,7 +199,7 @@ BEGIN
     BEGIN
         MENUITEM "更改密码", IDM_USER_CHANGE_PASSWORD
         MENUITEM SEPARATOR
-        MENUITEM "取除", IDM_USER_DELETE
+        MENUITEM "删除", IDM_USER_DELETE
         MENUITEM "重命名", IDM_USER_RENAME
         MENUITEM SEPARATOR
         MENUITEM "属性", IDM_USER_PROPERTIES

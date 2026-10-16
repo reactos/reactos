@@ -231,7 +231,7 @@ CAPTION "筛选键高级设置"
 FONT 9, "宋体"
 BEGIN
     GROUPBOX "蹦跳键", -1, 6, 11, 234, 47
-    LTEXT "忽略重复的击键比快：(&I)", -1, 12, 21, 222, 20
+    LTEXT "忽略间隔短于以下时间的重复按键：(&I)", -1, 12, 21, 222, 20
     COMBOBOX IDC_BOUNCE_TIME_COMBO, 12, 34, 222, 56,
              CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
     LTEXT "试验区：(&T)", -1, 6, 68, 48, 11

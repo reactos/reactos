@@ -178,9 +178,9 @@ BEGIN
     IDS_WELCOME_TEXT "从左栏选择一个类别，然后选择要安装或卸载的程序。\nReactOS 网站："
     IDS_WELCOME_URL "https://reactos.org"
 
-    IDS_APPWIZ_TITLE "Add/Remove Programs"
-    IDS_APPWIZ_TEXT1 "Choose ""Applications"" or ""Updates"" to view the list of applications or updates installed on your system."
-    IDS_APPWIZ_TEXT2 "To remove a program or to modify its installed components, select it from the list and click on ""Uninstall"" or ""Modify""."
+    IDS_APPWIZ_TITLE "添加/删除程序"
+    IDS_APPWIZ_TEXT1 "选择“应用程序”或“更新”，查看系统中已安装的程序或更新。"
+    IDS_APPWIZ_TEXT2 "在列表中选中程序，再单击“卸载”以移除程序，或单击“修改”以更改已安装的组件。"
 END
 
 STRINGTABLE
@@ -270,6 +270,6 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_INSTGEN_CONFIRMUNINST "Are you sure you want to uninstall %s?"
-    IDS_INSTGEN_CONFIRMINSTRUNAPP "Installation complete, run %s now?"
+    IDS_INSTGEN_CONFIRMUNINST "确定要卸载 %s 吗？"
+    IDS_INSTGEN_CONFIRMINSTRUNAPP "安装完成。是否立即运行 %s？"
 END

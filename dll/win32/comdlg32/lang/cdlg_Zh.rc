@@ -135,7 +135,7 @@ STRINGTABLE /* Color names */
 
 STRINGTABLE
 {
-    IDS_FONT_SIZE   "选择 %d 到 %d 之间的字号。"
+    IDS_FONT_SIZE   "请选择 %1!d! 至 %2!d! 磅之间的字号。"
     IDS_SAVE_BUTTON "保存(&S)"
     IDS_SAVE_IN     "保存在(&I)："
     IDS_SAVE        "保存"

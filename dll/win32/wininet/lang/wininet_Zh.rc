@@ -18,6 +18,7 @@
  * TRANSLATORS: Copyright 2008 Hongbo Ni <hongbo@njstar.com>
  *              Copyright 2010 Rex Tsai <chihchun@kalug.linux.org.tw>
  *              Copyright 2021 Chan Chilung <eason066@gmail.com>
+ *              Copyright 2026 Luo Yufan <njlyf2011@hotmail.com>
  */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
@@ -29,17 +30,17 @@ STRINGTABLE
   IDS_CERT_DATE_INVALID "证书上的日期是无效的。"
   IDS_CERT_CN_INVALID   "证书上的名称与该站点不匹配。"
   IDS_CERT_ERRORS       "还有与此证书的至少一个未指定的安全问题。"
-  IDS_CERT_SUBJECT      "Subject"
-  IDS_CERT_ISSUER       "Issuer"
-  IDS_CERT_EFFECTIVE    "Effective Date"
-  IDS_CERT_EXPIRATION   "Expiration Date"
-  IDS_CERT_PROTOCOL     "Security Protocol"
-  IDS_CERT_SIGNATURE    "Signature Type"
-  IDS_CERT_ENCRYPTION   "Encryption Type"
-  IDS_CERT_PRIVACY      "Privacy Strength"
-  IDS_CERT_HIGH         "High"
-  IDS_CERT_LOW          "Low"
-  IDS_CERT_BITS         "bits"
+  IDS_CERT_SUBJECT      "主体"
+  IDS_CERT_ISSUER       "颁发者"
+  IDS_CERT_EFFECTIVE    "生效日期"
+  IDS_CERT_EXPIRATION   "到期日期"
+  IDS_CERT_PROTOCOL     "安全协议"
+  IDS_CERT_SIGNATURE    "签名类型"
+  IDS_CERT_ENCRYPTION   "加密类型"
+  IDS_CERT_PRIVACY      "加密强度"
+  IDS_CERT_HIGH         "高"
+  IDS_CERT_LOW          "低"
+  IDS_CERT_BITS         "位"
 }
 
 IDD_PROXYDLG DIALOGEX 36, 24, 220, 146

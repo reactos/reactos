@@ -24,7 +24,7 @@ BEGIN
 
        you can test your translation of these attributes by using 'whoami /groups' */
 
-    IDS_ATTR_GROUP_MANDATORY "委托组, "
+    IDS_ATTR_GROUP_MANDATORY "必需组, "
     IDS_ATTR_GROUP_ENABLED_BY_DEFAULT "默认启用, "
     IDS_ATTR_GROUP_ENABLED "已启用的组, "
     IDS_ATTR_GROUP_OWNER "组的所有者, "
@@ -33,7 +33,7 @@ BEGIN
     IDS_STATE_DISABLED "已禁用"
     IDS_ERROR_UPN "错误：无法获取用户主体名称（UPN） 因为当前登录的用户\n不是域用户。\n"
     IDS_ERROR_FQDN "错误：无法获取完全限定名（FQDN），因为\n当前登录的用户不是域用户。\n"
-    IDS_ERROR_VALUEXPECTED "错误：无效语法。值的预期“/fo”。\n输入“WHOAMI /?”以了解用法。\n"
+    IDS_ERROR_VALUEXPECTED "错误：语法无效。“/fo”选项后缺少值。\n输入“WHOAMI /?”以了解用法。\n"
     IDS_ERROR_VALUENOTALLOWED "错误：无效语法。“/fo”选项不允许带值“%s”。\n输入“WHOAMI /?”以了解用法。\n"
     IDS_ERROR_1TIMES "错误：无效语法。“%s”选项不允许出现超过“1”次。\n输入“WHOAMI /?”以了解用法。\n"
     IDS_ERROR_INVALIDSYNTAX "错误：无效语法。\n输入“WHOAMI /?”以了解用法。\n"

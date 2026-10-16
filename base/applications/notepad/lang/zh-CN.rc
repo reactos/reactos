@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS Notepad
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     Chinese (Simplified) resource file
- * TRANSLATORS: Copyright 2018, 2022 Luo Yufan <njlyf2011@hotmail.com>
+ * TRANSLATORS: Copyright 2018-2026 Luo Yufan <njlyf2011@hotmail.com>
  *              Copyright 2021-2022 Wu Haotian <rigoligo03@gmail.com>
  */
 
@@ -139,11 +139,11 @@ BEGIN
 END
 
 DIALOG_PRINTING DIALOG 0, 0, 160, 100
-CAPTION "Now printing"
+CAPTION "正在打印"
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 FONT 9, "宋体"
 BEGIN
-    CTEXT "Print job is starting...", IDC_PRINTING_STATUS, 5, 10, 150, 15
+    CTEXT "正在启动打印任务...", IDC_PRINTING_STATUS, 5, 10, 150, 15
     CTEXT "(Filename)", IDC_PRINTING_FILENAME, 5, 35, 150, 15
     CTEXT "页面 %u", IDC_PRINTING_PAGE, 5, 55, 150, 15
     PUSHBUTTON "取消", IDCANCEL, 50, 75, 60, 20
@@ -183,12 +183,12 @@ BEGIN
     STRING_LINE_COLUMN "行 %d，列 %d"
     STRING_PRINTERROR "无法打印文件“%s”。\n\n请确保打印机已打开，并且已正确配置。"
     STRING_DEFAULTFONT "宋体" /* SimSun */
-    STRING_LINE_NUMBER_OUT_OF_RANGE "The specified line number is out of range."
-    STRING_NOWPRINTING "Now printing page..."
-    STRING_PRINTCANCELING "The print job is being canceled..."
-    STRING_PRINTCOMPLETE "Printing is successfully done."
-    STRING_PRINTCANCELED "Printing has been canceled."
-    STRING_PRINTFAILED "Printing failed."
+    STRING_LINE_NUMBER_OUT_OF_RANGE "指定的行号超出文档范围。"
+    STRING_NOWPRINTING "正在打印页面..."
+    STRING_PRINTCANCELING "正在取消打印任务..."
+    STRING_PRINTCOMPLETE "打印完成。"
+    STRING_PRINTCANCELED "打印已取消。"
+    STRING_PRINTFAILED "打印失败。"
 
     STRING_TEXT_DOCUMENT "文本文档"
     STRING_NOTEPAD_AUTHORS "版权所有 1997,98 Marcel Baur, 2000 Mike McCormack, 2002 Sylvain Petreolle, 2002 Andriy Palamarchuk\r\n"

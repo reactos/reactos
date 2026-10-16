@@ -168,9 +168,9 @@ BEGIN
     IDS_SAVE_FILTER "事件日志 (*.evt)\0*.evt\0"
     IDS_CLEAREVENTS_MSG "你想要在清除之前保存此事件日志吗？"
     IDS_RESTOREDEFAULTS "你想要将这个日志的所有设置恢复为默认值吗？"
-    IDS_EVENTSTRINGIDNOTFOUND "无法找到来源（%s）中的事件 ID（%lu）的描述。本地计算机可能没有显示来自远程计算机的消息所必需的注册表信息或消息 DLL 文件。\n\n下面的信息是事件的一部分：\n\n"
-    IDS_CONTFROMBEGINNING "You have reached the end of the event log. Do you want to continue from the beginning?"
-    IDS_CONTFROMEND "You have reached the beginning of the event log. Do you want to continue from the end?"
+    IDS_EVENTSTRINGIDNOTFOUND "无法找到事件 ID (%lu) 在来源 (%s) 中的描述。本机可能缺少用于显示远程计算机消息的注册表信息或消息 DLL 文件。\n\n下面的信息是事件的一部分：\n\n"
+    IDS_CONTFROMBEGINNING "已到达事件日志末尾。是否从开头继续查看？"
+    IDS_CONTFROMEND "已到达事件日志开头。是否从末尾继续查看？"
 END
 
 STRINGTABLE
@@ -188,7 +188,7 @@ EventVwr [计算机名] [/L:<事件日志文件>] [/?]\n\
 \n\
 /? ：显示这条帮助。\n\
 "
-    IDS_EVENTLOGFILE "Event Log File"
+    IDS_EVENTLOGFILE "事件日志文件"
 END
 
 STRINGTABLE

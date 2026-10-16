@@ -67,7 +67,7 @@ BEGIN
     IDS_ERROR_SET_PARALLEL_STATE "错误：SetParallelState(%d) - DefineDosDevice(%s)（0x%lx）\n"
     IDS_ERROR_INVALID_PARAMETER "无效参数 - %s\n"
     IDS_ERROR_ILLEGAL_DEVICE_NAME "非法设备名 - %s（0x%lx）\n"
-    IDS_ERROR_DEVICE_NOT_AVAILABLE "此设备当前不可用。\n"
+    IDS_ERROR_DEVICE_NOT_AVAILABLE "设备 %s 当前不可用。\n"
     IDS_ERROR_STATUS_GET_DEVICE "无法获得设备 %s 的状态：\n"
     IDS_ERROR_STATUS_SET_DEVICE "无法设置设备 %s 的状态：\n"
     IDS_ERROR_TIMEOUT_GET_DEVICE "无法获取设备 %s 的超时时间：\n"

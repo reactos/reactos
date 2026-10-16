@@ -57,7 +57,7 @@ BEGIN
     STRING_CF_DIBV5 "DIB 位图（第 5 版）"
     STRING_CF_SYLK "符号链接格式"
     STRING_CF_DIF "数据交换格式"
-    STRING_CF_HDROP "删除数据"
+    STRING_CF_HDROP "文件拖放数据"
 END
 
 STRINGTABLE

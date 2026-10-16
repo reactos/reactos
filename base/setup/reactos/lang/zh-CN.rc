@@ -7,16 +7,11 @@ STYLE DS_SHELLFONT | WS_CHILD
 FONT 9, "宋体"
 BEGIN
     LTEXT "欢迎使用 ReactOS 安装程序", IDC_STARTTITLE, 115, 8, 195, 24
-    LTEXT "This wizard will install or upgrade ReactOS on your computer, \
-and prepare the second part of the setup.", IDC_STATIC, 115, 40, 195, 27
+    LTEXT "此向导将在计算机上安装或升级 ReactOS，并为第二阶段安装做好准备。", IDC_STATIC, 115, 40, 195, 27
 ////
-    GROUPBOX " IMPORTANT INFORMATION ", IDC_WARNTEXT1, 115, 70, 200, 90, BS_CENTER
-    LTEXT "ReactOS is in Alpha stage: it is not feature- complete and is \
-under heavy development. It is recommended to use it only for \
-evaluation and testing and not as your daily-usage OS.\n\
-It may corrupt your data or damage your hardware.", IDC_WARNTEXT2, 120, 80, 190, 50, SS_CENTER
-    LTEXT "Backup your data or test on a secondary computer \
-if you attempt to run ReactOS on real hardware.", IDC_WARNTEXT3, 120, 130, 190, 27, SS_CENTER
+    GROUPBOX " 重要信息 ", IDC_WARNTEXT1, 115, 70, 200, 90, BS_CENTER
+    LTEXT "ReactOS 仍处于 Alpha 阶段，功能尚不完整，正在积极开发中。建议仅用于评估和测试，不宜作为日常使用的操作系统。\n使用时可能会造成数据或硬件的损坏。", IDC_WARNTEXT2, 120, 80, 190, 50, SS_CENTER
+    LTEXT "如需在真实硬件上运行 ReactOS，请先备份数据，或使用备用计算机进行测试。", IDC_WARNTEXT3, 120, 130, 190, 27, SS_CENTER
 ////
     LTEXT "若要继续，请单击“下一步”。", IDC_STATIC, 115, 169, 195, 17
 END
@@ -38,7 +33,7 @@ BEGIN
     LTEXT       "安装程序可以升级下面列出的一个可用的 ReactOS 安装，如果 ReactOS 安装损坏，安装程序可以尝试修复它。", IDC_STATIC, 6, 6, 303, 18
     CONTROL     "", IDC_NTOSLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP, 6, 30, 303, 90
     PUSHBUTTON  "不执行升级(&D)", IDC_SKIPUPGRADE, 230, 128, 80, 14
-    LTEXT       "Click Next to upgrade the selected OS installation, or on 'Do not upgrade' to perform a new installation.", IDC_STATIC, 7, 124, 222, 16
+    LTEXT       "单击“下一步”升级所选系统，或单击“不执行升级”进行全新安装。", IDC_STATIC, 7, 124, 222, 16
 END
 
 IDD_DEVICEPAGE DIALOGEX 0, 0, 317, 143
@@ -59,9 +54,9 @@ STYLE DS_SHELLFONT | WS_CHILD
 FONT 9, "宋体"
 BEGIN
     CONTROL "", IDC_PARTITION, "SysTreeList32", WS_BORDER | WS_VISIBLE | WS_TABSTOP | LVS_REPORT | LVS_SINGLESEL, 7, 7, 303, 112
-    PUSHBUTTON "Initialize(&I)", IDC_INITDISK, 7, 122, 50, 14, WS_GROUP // NOTE: At same position as IDC_PARTCREATE
+    PUSHBUTTON "初始化(&I)", IDC_INITDISK, 7, 122, 50, 14, WS_GROUP // NOTE: At same position as IDC_PARTCREATE
     PUSHBUTTON "新建(&C)", IDC_PARTCREATE, 7, 122, 50, 14
-    PUSHBUTTON "Format(&F)", IDC_PARTFORMAT, 7, 122, 50, 14 // NOTE: At same position as IDC_PARTCREATE
+    PUSHBUTTON "格式化(&F)", IDC_PARTFORMAT, 7, 122, 50, 14 // NOTE: At same position as IDC_PARTCREATE
     PUSHBUTTON "删除(&D)", IDC_PARTDELETE, 63, 122, 50, 14
     PUSHBUTTON "驱动器(&R)", IDC_DEVICEDRIVER, 174, 122, 50, 14, WS_DISABLED
     PUSHBUTTON "高级选项(&A)...", IDC_PARTMOREOPTS, 230, 122, 80, 14
@@ -78,35 +73,35 @@ BEGIN
     CONTROL "", IDC_UPDOWN_PARTSIZE, UPDOWN_CLASS, UDS_SETBUDDYINT | UDS_ALIGNRIGHT |
             UDS_AUTOBUDDY | UDS_ARROWKEYS | WS_GROUP, 120, 22, 9, 13
     LTEXT "MB", IDC_UNIT, 134, 9, 14, 9
-    AUTOCHECKBOX "&Extended partition", IDC_CHECK_MBREXTPART, 7, 22, 180, 14
+    AUTOCHECKBOX "扩展分区(&E)", IDC_CHECK_MBREXTPART, 7, 22, 180, 14
     LTEXT "文件系统(&F)：", IDC_FS_STATIC, 7, 46, 70, 9
     COMBOBOX IDC_FSTYPE, 82, 44, 100, 50, CBS_DROPDOWNLIST | WS_TABSTOP
-    AUTOCHECKBOX "&Quick format", IDC_CHECK_QUICKFMT, 7, 59, 180, 14
+    AUTOCHECKBOX "快速格式化(&Q)", IDC_CHECK_QUICKFMT, 7, 59, 180, 14
     PUSHBUTTON "确定", IDOK, 88, 98, 50, 14
     PUSHBUTTON "取消", IDCANCEL, 143, 98, 50, 14
 END
 
 IDD_FORMAT DIALOGEX 0, 0, 200, 83
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Format Partition"
-FONT 8, "MS Shell Dlg"
+CAPTION "格式化分区"
+FONT 9, "宋体"
 BEGIN
     LTEXT "文件系统(&F)：", IDC_FS_STATIC, 7, 9, 70, 9
     COMBOBOX IDC_FSTYPE, 82, 7, 100, 50, CBS_DROPDOWNLIST | WS_TABSTOP
-    AUTOCHECKBOX "&Quick format", IDC_CHECK_QUICKFMT, 7, 22, 180, 14
+    AUTOCHECKBOX "快速格式化(&Q)", IDC_CHECK_QUICKFMT, 7, 22, 180, 14
     PUSHBUTTON "确定", IDOK, 88, 61, 50, 14
     PUSHBUTTON "取消", IDCANCEL, 143, 61, 50, 14
 END
 
 IDD_ADVINSTOPTS DIALOGEX 0, 0, 305, 135
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Advanced Installation Options"
+CAPTION "高级安装选项"
 FONT 9, "宋体"
 BEGIN
-    LTEXT "Choose the &directory where you want to install ReactOS:", IDC_STATIC, 7, 9, 291, 10
+    LTEXT "选择 ReactOS 的安装目录(&D)：", IDC_STATIC, 7, 9, 291, 10
     EDITTEXT IDC_PATH, 7, 23, 291, 13
-    GROUPBOX "Bootloader", IDC_STATIC, 7, 45, 291, 60
-    LTEXT "Select the location where the FreeLoader\nbootloader should be installed.\n\nBy default, it is installed on the system partition of the boot disk (and either in the Master or the Volume Boot Record for BIOS-based computers).", IDC_STATIC, 13, 57, 279, 44
+    GROUPBOX "引导程序", IDC_STATIC, 7, 45, 291, 60
+    LTEXT "选择 FreeLoader 引导程序\n的安装位置。\n\n默认安装在启动磁盘的系统分区上；对于使用 BIOS 的计算机，还会写入主引导记录或卷引导记录。", IDC_STATIC, 13, 57, 279, 44
     COMBOBOX IDC_INSTFREELDR, 150, 58, 142, 45, WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST
     DEFPUSHBUTTON "确定", IDOK, 193, 113, 50, 14
     PUSHBUTTON "取消", IDCANCEL, 248, 113, 50, 14
@@ -150,23 +145,23 @@ IDD_FINISHPAGE DIALOGEX 0, 0, 317, 193
 STYLE DS_SHELLFONT | WS_CHILD
 FONT 9, "宋体"
 BEGIN
-    LTEXT "Restarting your Computer", IDC_FINISHTITLE, 115, 8, 195, 24
-    LTEXT "The first ReactOS installation step has completed successfully.", IDC_STATIC, 115, 40, 195, 24
+    LTEXT "正在重新启动计算机", IDC_FINISHTITLE, 115, 8, 195, 24
+    LTEXT "ReactOS 的第一阶段安装已完成。", IDC_STATIC, 115, 40, 195, 24
     // The following text can be replaced by IDS_FINISH_NO_REBOOT at runtime;
     // please ensure it can hold in the text control!
-    LTEXT "Setup will now restart your computer to continue with the second installation step.\n\nYour computer will automatically restart in 15 seconds or when you click on Restart.", IDC_FINISHTEXT, 115, 78, 195, 56
+    LTEXT "安装程序将重新启动计算机，继续第二阶段安装。\n\n计算机将在 15 秒后自动重新启动。您也可以单击“重新启动”立即重启。", IDC_FINISHTEXT, 115, 78, 195, 56
     CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 135, 188, 12
 END
 
 IDD_ABORTPAGE DIALOGEX 0, 0, 317, 193
 STYLE DS_SHELLFONT | WS_CHILD
-FONT 8, "MS Shell Dlg"
+FONT 9, "宋体"
 BEGIN
-    LTEXT "The ReactOS Setup Wizard ended prematurely", IDC_FINISHTITLE, 115, 8, 195, 24
-    LTEXT "The first ReactOS installation step prematurely ended because of an error or because you have canceled it.\n\nYou will be able to run the Setup Wizard at a later time to install or upgrade ReactOS.", IDC_STATIC, 115, 40, 195, 48
+    LTEXT "ReactOS 安装向导提前结束", IDC_FINISHTITLE, 115, 8, 195, 24
+    LTEXT "由于发生错误或您取消了操作，第一阶段安装提前结束。\n\n您可以稍后重新运行安装向导，安装或升级 ReactOS。", IDC_STATIC, 115, 40, 195, 48
     // The following text can be replaced by IDS_ABORT_NO_REBOOT at runtime;
     // please ensure it can hold in the text control!
-    LTEXT "Your computer will automatically restart in 15 seconds or when you click on Restart.", IDC_FINISHTEXT, 115, 110, 195, 24
+    LTEXT "计算机将在 15 秒后自动重新启动。您也可以单击“重新启动”立即重启。", IDC_FINISHTEXT, 115, 110, 195, 24
     CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 135, 188, 12
 END
 
@@ -175,10 +170,10 @@ END
 STRINGTABLE
 BEGIN
     IDS_CAPTION "ReactOS 安装程序"
-    IDS_TYPETITLE "Installation Type"
-    IDS_TYPESUBTITLE "You can setup a new ReactOS installation, or update/repair an existing installation."
-    IDS_UPDATETITLE "Update or Repair ReactOS"
-    IDS_UPDATESUBTITLE "Choose which existing ReactOS installation you want to update or repair."
+    IDS_TYPETITLE "安装类型"
+    IDS_TYPESUBTITLE "您可以全新安装 ReactOS，也可以更新或修复已安装的系统。"
+    IDS_UPDATETITLE "更新或修复 ReactOS"
+    IDS_UPDATESUBTITLE "选择要更新或修复的 ReactOS 系统。"
     IDS_DEVICETITLE "设置基本设备"
     IDS_DEVICESUBTITLE "指定显示和键盘设置。"
     IDS_DRIVETITLE "设置安装分区和系统文件夹"
@@ -190,19 +185,19 @@ BEGIN
     IDS_ABORTSETUP "ReactOS 未在您的电脑上安装完成。如果您现在退出安装程序，您需要再次运行安装程序来安装 ReactOS。 确定退出？"
     IDS_ABORTSETUP2 "终止安装？"
     IDS_NO_TXTSETUP_SIF "无法找到 'txtsetup.sif'。\n安装程序无法继续。"
-    IDS_FINISH_NO_REBOOT "Setup needs to restart your computer to continue with the second installation step.\n\nClick on Restart to immediately restart your computer.\nClick on Postpone to quit the installer and restart your computer at a later time."
-    IDS_ABORT_NO_REBOOT "Click on Restart to immediately restart your computer.\nClick on Close to quit the installer."
-    IDS_INSTALLBTN "&Install"
-    IDS_RESTARTBTN "&Restart"
-    IDS_POSTPONEBTN "&Postpone"
-    IDS_VOLUME_NOFORMAT "Not formatted"
+    IDS_FINISH_NO_REBOOT "需要重新启动计算机，才能继续第二阶段安装。\n\n单击“重新启动”立即重启。\n单击“稍后重启”退出安装程序，并在稍后自行重启。"
+    IDS_ABORT_NO_REBOOT "单击“重新启动”立即重启计算机。\n单击“关闭”退出安装程序。"
+    IDS_INSTALLBTN "安装(&I)"
+    IDS_RESTARTBTN "重新启动(&R)"
+    IDS_POSTPONEBTN "稍后重启(&P)"
+    IDS_VOLUME_NOFORMAT "未格式化"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_INSTALLATION_NAME "Name"
+    IDS_INSTALLATION_NAME "名称"
     IDS_INSTALLATION_PATH "安装目录"
-    IDS_INSTALLATION_VENDOR "Vendor Name"
+    IDS_INSTALLATION_VENDOR "供应商名称"
 END
 
 STRINGTABLE
@@ -215,10 +210,10 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_BOOTLOADER_NOINST "No installation"
-    IDS_BOOTLOADER_REMOVABLE "Removable media"
-    IDS_BOOTLOADER_SYSTEM "System partition (Default)"
-    IDS_BOOTLOADER_MBRVBR "MBR 和 VBR (Default)"
+    IDS_BOOTLOADER_NOINST "不安装"
+    IDS_BOOTLOADER_REMOVABLE "可移动介质"
+    IDS_BOOTLOADER_SYSTEM "系统分区 (默认)"
+    IDS_BOOTLOADER_MBRVBR "MBR 和 VBR (默认)"
     IDS_BOOTLOADER_VBRONLY "仅 VBR"
 END
 
@@ -226,88 +221,77 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_FORMATTING_PROGRESS1 "Formatting volume %c: (%s) in %s..."
-    IDS_FORMATTING_PROGRESS2 "Formatting volume %s in %s..."
+    IDS_FORMATTING_PROGRESS1 "正在格式化卷 %c: (%s)，文件系统为 %s..."
+    IDS_FORMATTING_PROGRESS2 "正在格式化卷 %s，文件系统为 %s..."
 
-    IDS_CHECKING_PROGRESS1 "Checking volume %c: (%s)..."
-    IDS_CHECKING_PROGRESS2 "Checking volume %s..."
+    IDS_CHECKING_PROGRESS1 "正在检查卷 %c: (%s)..."
+    IDS_CHECKING_PROGRESS2 "正在检查卷 %s..."
 
-    IDS_COPYING  "Copying %s"
-    IDS_MOVING   "Moving %s to %s"
-    IDS_RENAMING "Renaming %s to %s"
-    IDS_DELETING "Deleting %s"
+    IDS_COPYING  "正在复制 %s"
+    IDS_MOVING   "正在将 %s 移动到 %s"
+    IDS_RENAMING "正在将 %s 重命名为 %s"
+    IDS_DELETING "正在删除 %s"
 
-    IDS_CONFIG_SYSTEM_PARTITION "Configuring the system partition..."
-    IDS_PREPARE_PARTITIONS "Preparing partitions..."
-    IDS_PREPARE_FILES "Preparing the list of files to be copied, please wait..."
-    IDS_COPYING_FILES "Copying files..."
+    IDS_CONFIG_SYSTEM_PARTITION "正在配置系统分区..."
+    IDS_PREPARE_PARTITIONS "正在准备分区..."
+    IDS_PREPARE_FILES "正在准备要复制的文件列表，请稍候..."
+    IDS_COPYING_FILES "正在复制文件..."
 
-    IDS_CREATE_REGISTRY "Creating the registry..."
-    IDS_UPDATE_REGISTRY "Updating the registry..."
+    IDS_CREATE_REGISTRY "正在创建注册表..."
+    IDS_UPDATE_REGISTRY "正在更新注册表..."
 
     // IDS_INSTALL_FINALIZE "Finalizing the installation..."
-    IDS_INSTALL_BOOTLOADER "Installing the bootloader..."
+    IDS_INSTALL_BOOTLOADER "正在安装引导程序..."
 END
 
 // Note to translators: please refer to the corresponding usetup/lang/*.h translations.
 STRINGTABLE
 BEGIN
-    IDS_REG_DONE "Done"
-    IDS_REG_REGHIVEUPDATE "Updating registry hives"
-    IDS_REG_IMPORTFILE "Importing %s"
-    IDS_REG_DISPLAYSETTINGSUPDATE "Updating display registry settings"
-    IDS_REG_LOCALESETTINGSUPDATE "Updating locale settings"
-    IDS_REG_ADDKBLAYOUTS "Adding keyboard layouts"
-    IDS_REG_KEYBOARDSETTINGSUPDATE "Updating keyboard layout settings"
-    IDS_REG_CODEPAGEINFOUPDATE "Adding codepage information"
-    IDS_REG_UNKNOWN "Unknown status %d"
+    IDS_REG_DONE "完成"
+    IDS_REG_REGHIVEUPDATE "正在更新注册表配置单元"
+    IDS_REG_IMPORTFILE "正在导入 %s"
+    IDS_REG_DISPLAYSETTINGSUPDATE "正在更新注册表中的显示设置"
+    IDS_REG_LOCALESETTINGSUPDATE "正在更新区域设置"
+    IDS_REG_ADDKBLAYOUTS "正在添加键盘布局"
+    IDS_REG_KEYBOARDSETTINGSUPDATE "正在更新键盘布局设置"
+    IDS_REG_CODEPAGEINFOUPDATE "正在添加代码页信息"
+    IDS_REG_UNKNOWN "未知状态 %d"
 END
 
 /* Error Strings */
 
 STRINGTABLE
 BEGIN
-    IDS_ERROR_INVALID_INSTALLDIR_CHAR_TITLE "Invalid character"
-    IDS_ERROR_INVALID_INSTALLDIR_CHAR "The only valid characters are:\n\
-alphanumericals (a-z, A-Z, 0-9), and\n . \\ - _\n\
-Spaces are not allowed."
+    IDS_ERROR_INVALID_INSTALLDIR_CHAR_TITLE "无效字符"
+    IDS_ERROR_INVALID_INSTALLDIR_CHAR "只能使用以下字符：\n字母和数字 (a-z、A-Z、0-9)，以及\n . \\ - _\n不能包含空格。"
 
-    IDS_ERROR_DIRECTORY_NAME_TITLE "Invalid installation path"
-    IDS_ERROR_DIRECTORY_NAME "The ReactOS installation path must follow the DOS 8.3 naming scheme, \
-and only contain letters, digits, dashes and periods. Spaces are not allowed."
+    IDS_ERROR_DIRECTORY_NAME_TITLE "无效的安装路径"
+    IDS_ERROR_DIRECTORY_NAME "ReactOS 安装路径必须符合 DOS 8.3 命名规则，只能包含字母、数字、连字符和句点，不能包含空格。"
 
-    IDS_ERROR_CREATE_PARTITION_TITLE "Create partition"
-    IDS_ERROR_CREATE_PARTITION "Failed to create a new partition."
+    IDS_ERROR_CREATE_PARTITION_TITLE "创建分区"
+    IDS_ERROR_CREATE_PARTITION "无法创建新分区。"
 
-    IDS_WARN_DELETE_PARTITION_TITLE "Delete partition?"
-    IDS_WARN_DELETE_PARTITION "Are you sure you want to delete the selected partition?"
-    IDS_WARN_DELETE_MBR_EXTENDED_PARTITION "Are you sure you want to delete the selected extended partition and ALL the logical partitions it contains?"
+    IDS_WARN_DELETE_PARTITION_TITLE "删除分区？"
+    IDS_WARN_DELETE_PARTITION "确定要删除所选分区吗？"
+    IDS_WARN_DELETE_MBR_EXTENDED_PARTITION "确定要删除所选扩展分区及其包含的所有逻辑分区吗？"
 
-    IDS_ERROR_WRITE_PTABLE "Setup failed to write partition tables."
+    IDS_ERROR_WRITE_PTABLE "安装程序无法写入分区表。"
 
-    IDS_ERROR_SYSTEM_PARTITION "The ReactOS Setup could not find a supported system partition\n\
-on your system or could not create a new one. Without such a partition\n\
-the Setup program cannot install ReactOS.\
-\nClick on OK to return to the partition selection list."
+    IDS_ERROR_SYSTEM_PARTITION "安装程序找不到受支持的系统分区，或无法创建新的系统分区。\n没有可用的系统分区，就无法安装 ReactOS。\n单击“确定”返回分区选择列表。"
 
-    IDS_ERROR_FORMAT_UNRECOGNIZED_VOLUME "Unrecognized volume while attempting to format the partition."
+    IDS_ERROR_FORMAT_UNRECOGNIZED_VOLUME "格式化分区时无法识别该卷。"
 
-    IDS_ERROR_COULD_NOT_FORMAT "Setup is currently unable to format a partition in %s.\n\
-\nClick on OK to continue Setup.\
-\nClick on CANCEL to quit Setup."
+    IDS_ERROR_COULD_NOT_FORMAT "安装程序目前无法将分区格式化为 %s。\n\n单击“确定”继续安装。\n单击“取消”退出安装程序。"
 
-    IDS_ERROR_FORMATTING_PARTITION "Setup is unable to format the partition:\n %s\n"
+    IDS_ERROR_FORMATTING_PARTITION "安装程序无法格式化分区：\n %s\n"
 
-    IDS_ERROR_COULD_NOT_CHECK "Setup is currently unable to check a partition formatted in %s.\n\
-\nClick on OK to continue Setup.\
-\nClick on CANCEL to quit Setup."
+    IDS_ERROR_COULD_NOT_CHECK "安装程序目前无法检查使用 %s 文件系统的分区。\n\n单击“确定”继续安装。\n单击“取消”退出安装程序。"
 
-    IDS_ERROR_CHECKING_PARTITION "ChkDsk detected some disk errors.\n(Status 0x%08lx)."
+    IDS_ERROR_CHECKING_PARTITION "ChkDsk 检测到磁盘错误。\n(状态码 0x%08lx)"
 
-    IDS_ERROR_WRITE_BOOT "Setup failed to install the %s bootcode on the system partition."
-    IDS_ERROR_INSTALL_BOOTCODE "Setup failed to install the %s bootcode on the boot disk."
-    IDS_ERROR_INSTALL_BOOTCODE_REMOVABLE "Setup failed to install the bootcode on the removable media."
-    IDS_ERROR_BOOTLDR_ARCH_UNSUPPORTED "Setup does not currently support installing the bootloader on the computer you are using.\
-\nClick on OK to continue anyway."
-    IDS_ERROR_BOOTLDR_FAILED "Setup could not install the bootloader (Status 0x%08lx)."
+    IDS_ERROR_WRITE_BOOT "安装程序无法在系统分区上安装 %s 引导代码。"
+    IDS_ERROR_INSTALL_BOOTCODE "安装程序无法在启动磁盘上安装 %s 引导代码。"
+    IDS_ERROR_INSTALL_BOOTCODE_REMOVABLE "安装程序无法在可移动介质上安装引导代码。"
+    IDS_ERROR_BOOTLDR_ARCH_UNSUPPORTED "安装程序目前不支持在此计算机上安装引导程序。\n单击“确定”仍然继续安装。"
+    IDS_ERROR_BOOTLDR_FAILED "安装程序无法安装引导程序 (状态码 0x%08lx)。"
 END

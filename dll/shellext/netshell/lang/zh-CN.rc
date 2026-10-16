@@ -1,9 +1,9 @@
 /*
- * PROJECT:    ReactOS Netshell
- * LICENSE:    GPL - See COPYING in the top level directory
- * PURPOSE:    Chinese (Simplified) Language File
- * TRANSLATOR: 2011 Elton Chung aka MfldElton <elton328@gmail.com>
- *             2018 Luo Yufan <njlyf2011@hotmail.com>
+ * PROJECT:     ReactOS Network Shell
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     Chinese (Simplified) resource file
+ * TRANSLATORS: Copyright 2011 Elton Chung aka MfldElton <elton328@gmail.com>
+ *              Copyright 2018-2026 Luo Yufan <njlyf2011@hotmail.com>
  */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
@@ -41,7 +41,7 @@ FONT 9, "宋体"
 BEGIN
     GROUPBOX "连接", -1, 9, 8, 190, 58, BS_GROUPBOX
     LTEXT "状态：", -1, 22, 20, 65, 8
-    LTEXT "持久：", -1, 22, 34, 65, 8
+    LTEXT "连接时长：", -1, 22, 34, 65, 8
     LTEXT "速度：", -1, 22, 48, 65, 8
     GROUPBOX "活动", -1, 9, 74, 190, 70, BS_GROUPBOX
     LTEXT "发送", -1, 60, 90, 60, 8
@@ -86,11 +86,11 @@ END
 
 IDD_NETWORKINITPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS Setup"
+CAPTION "ReactOS 安装程序"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_NET_SETUP, IDC_STATIC, 21, 10, 20, 20
-    LTEXT "Please wait while ReactOS installs networking components.", IDC_STATIC, 53, 7, 240, 20
+    LTEXT "正在安装 ReactOS 网络组件，请稍候。", IDC_STATIC, 53, 7, 240, 20
     CONTROL "", IDC_INSTALL_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 21, 58, 275, 11
 END
 
@@ -171,7 +171,7 @@ BEGIN
     IDS_NET_DELETE "删除"
     IDS_NET_RENAME "重命名"
     IDS_NET_PROPERTIES "属性"
-    IDS_NET_OPEN_CONNECTIONS "Open Network Connections"
+    IDS_NET_OPEN_CONNECTIONS "打开网络连接"
     IDS_FORMAT_BIT "%u Bit/秒"
     IDS_FORMAT_KBIT "%u KBit/秒"
     IDS_FORMAT_MBIT "%u MBit/秒"
@@ -184,8 +184,8 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_NETWORKINITTITLE "Network Install"
-    IDS_NETWORKINITSUBTITLE "Installs required networking components."
+    IDS_NETWORKINITTITLE "网络组件安装"
+    IDS_NETWORKINITSUBTITLE "安装所需的网络组件。"
     IDS_NETWORKSETTINGSTITLE "网络设置"
     IDS_NETWORKSETTINGSSUBTITLE "安装用于连接其他网络、计算机和 Internet 的网络软件。"
     IDS_NETWORKCOMPONENTTITLE "网络组件"

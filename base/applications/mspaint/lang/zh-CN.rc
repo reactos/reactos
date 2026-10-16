@@ -95,8 +95,8 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "现代调色板", IDM_COLORSMODERNPALETTE
         MENUITEM "传统调色板", IDM_COLORSOLDPALETTE
-        MENUITEM "Grayscale palette", IDM_COLORSGRAYSCALE
-        MENUITEM "Monochrome palette", IDM_COLORSMONOCHROME
+        MENUITEM "灰度调色板", IDM_COLORSGRAYSCALE
+        MENUITEM "单色调色板", IDM_COLORSMONOCHROME
     END
     POPUP "帮助(&H)"
     BEGIN
@@ -114,7 +114,7 @@ BEGIN
         MENUITEM "复制(&C)\tCtrl+C", IDM_EDITCOPY
         MENUITEM "粘贴(&P)\tCtrl+V", IDM_EDITPASTE
         MENUITEM SEPARATOR
-        MENUITEM "Crop &selection", IDM_CROPSELECTION
+        MENUITEM "裁剪到选区(&S)", IDM_CROPSELECTION
         MENUITEM "删除选中区域(&L)\tDel", IDM_EDITDELETESELECTION
         MENUITEM "全部选择(&A)\tCtrl+A", IDM_EDITSELECTALL
         MENUITEM SEPARATOR
@@ -273,8 +273,8 @@ BEGIN
     IDS_UNDERLINE "下划线"
     IDS_VERTICAL "垂直"
     IDS_PRINTRES "%d x %d pixel/cm"
-    IDS_CANTPASTE "Failed to paste from the clipboard. The data format is either incorrect or not supported."
-    IDS_SAVEERROR "Failed to save the bitmap to file:\n\n%s"
-    IDS_CANTSENDMAIL "Failed to send a mail."
-    IDS_LOSECOLOR "The color information will be lost in this operation. Are you sure to proceed?"
+    IDS_CANTPASTE "无法粘贴剪贴板中的内容。数据格式有误或不受支持。"
+    IDS_SAVEERROR "无法将位图保存到以下文件：\n\n%s"
+    IDS_CANTSENDMAIL "邮件发送失败。"
+    IDS_LOSECOLOR "此操作会丢失颜色信息。是否继续？"
 END
