@@ -4793,7 +4793,7 @@ MmCreateSection (OUT PVOID  * Section,
         {
             /* Reference the file handle to get the object */
             Status = ObReferenceObjectByHandle(FileHandle,
-                                               MmMakeFileAccess[Protection],
+                                               MmMakeFileAccess[Protection & MM_PROTECT_ACCESS],
                                                IoFileObjectType,
                                                ExGetPreviousMode(),
                                                (PVOID*)&FileObject,

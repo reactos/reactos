@@ -2165,7 +2165,7 @@ MmCreateArm3Section(OUT PVOID *SectionObject,
 
         /* Reference the file handle to get the object */
         Status = ObReferenceObjectByHandle(FileHandle,
-                                           MmMakeFileAccess[ProtectionMask],
+                                           MmMakeFileAccess[ProtectionMask & MM_PROTECT_ACCESS],
                                            IoFileObjectType,
                                            PreviousMode,
                                            (PVOID*)&File,
