@@ -278,6 +278,15 @@ typedef struct _PCI_FUNCTION_RESOURCES
     CM_PARTIAL_RESOURCE_DESCRIPTOR Current[7];
 } PCI_FUNCTION_RESOURCES, *PPCI_FUNCTION_RESOURCES;
 
+//
+// Location of a device the kernel debugger talks through
+//
+typedef struct _PCI_DEBUGGING_DEVICE
+{
+    ULONG Bus;
+    PCI_SLOT_NUMBER Slot;
+} PCI_DEBUGGING_DEVICE, *PPCI_DEBUGGING_DEVICE;
+
 typedef union _PCI_HEADER_TYPE_DEPENDENT
 {
     struct
@@ -2106,6 +2115,8 @@ extern BOOLEAN PciRunningDatacenter;
 extern PIO_RESOURCE_REQUIREMENTS_LIST PciZeroIoResourceRequirements;
 extern RTL_RANGE_LIST PciIsaBitExclusionList;
 extern RTL_RANGE_LIST PciVgaAndIsaBitExclusionList;
+extern PCI_DEBUGGING_DEVICE PciDebuggingDevices[MAX_DEBUGGING_DEVICES_SUPPORTED];
+extern ULONG PciDebugPortsCount;
 
 /* Exported by NTOS, should this go in the NDK? */
 extern NTSYSAPI BOOLEAN InitSafeBootMode;

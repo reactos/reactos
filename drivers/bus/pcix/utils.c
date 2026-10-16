@@ -15,6 +15,7 @@
 
 /* GLOBALS ********************************************************************/
 
+PCI_DEBUGGING_DEVICE PciDebuggingDevices[MAX_DEBUGGING_DEVICES_SUPPORTED];
 ULONG PciDebugPortsCount;
 
 RTL_RANGE_LIST PciIsaBitExclusionList;
@@ -743,19 +744,94 @@ PciFindPdoByFunction(IN PPCI_FDO_EXTENSION DeviceExtension,
     return PdoExtension;
 }
 
+/**
+ * @brief Reads the bus range the firmware gave a bridge.
+ *
+ * @return FALSE if the firmware left the bridge unconfigured.
+ */
+static
+BOOLEAN
+PciGetBiosBusRange(
+    _In_ PPCI_PDO_EXTENSION BridgeExtension,
+    _Out_ PUCHAR SecondaryBus,
+    _Out_ PUCHAR SubordinateBus)
+{
+    PCI_COMMON_HEADER BiosData;
+
+    if (!NT_SUCCESS(PciGetBiosConfig(BridgeExtension, &BiosData)))
+        return FALSE;
+
+    if (BridgeExtension->HeaderType == PCI_CARDBUS_BRIDGE_TYPE)
+    {
+        *SecondaryBus = BiosData.u.type2.SecondaryBus;
+        *SubordinateBus = BiosData.u.type2.SubordinateBus;
+    }
+    else
+    {
+        *SecondaryBus = BiosData.u.type1.SecondaryBus;
+        *SubordinateBus = BiosData.u.type1.SubordinateBus;
+    }
+
+    return ((*SecondaryBus != 0) && (*SubordinateBus != 0));
+}
+
 BOOLEAN
 NTAPI
-PciIsDeviceOnDebugPath(IN PPCI_PDO_EXTENSION DeviceExtension)
+PciIsDeviceOnDebugPath(
+    _In_ PPCI_PDO_EXTENSION DeviceExtension)
 {
+    PPCI_FDO_EXTENSION ParentFdo;
+    UCHAR LowBus, HighBus;
+    BOOLEAN IsBridge;
+    ULONG i;
     PAGED_CODE();
-
-    UNREFERENCED_PARAMETER(DeviceExtension);
 
     /* Check for too many, or no, debug ports */
     ASSERT(PciDebugPortsCount <= MAX_DEBUGGING_DEVICES_SUPPORTED);
     if (!PciDebugPortsCount) return FALSE;
 
-    /* No debugging device locations are recorded, so there is nothing to match */
+    IsBridge = ((DeviceExtension->HeaderType == PCI_BRIDGE_TYPE) ||
+                (DeviceExtension->HeaderType == PCI_CARDBUS_BRIDGE_TYPE));
+    ParentFdo = DeviceExtension->ParentFdoExtension;
+
+    /* Work out which firmware bus numbers a debugging device has to be on */
+    if (IsBridge)
+    {
+        if (!PciGetBiosBusRange(DeviceExtension, &LowBus, &HighBus))
+            return FALSE;
+    }
+    else if (PCI_IS_ROOT_FDO(ParentFdo))
+    {
+        LowBus = HighBus = ParentFdo->BaseBus;
+    }
+    else
+    {
+        if (!PciGetBiosBusRange(ParentFdo->PhysicalDeviceObject->DeviceExtension,
+                                &LowBus,
+                                &HighBus))
+        {
+            return FALSE;
+        }
+
+        HighBus = LowBus;
+    }
+
+    for (i = 0; i < PciDebugPortsCount; i++)
+    {
+        if ((PciDebuggingDevices[i].Bus < LowBus) ||
+            (PciDebuggingDevices[i].Bus > HighBus))
+        {
+            continue;
+        }
+
+        /* A bridge covers its whole range, anything else must be the device itself */
+        if (IsBridge ||
+            (PciDebuggingDevices[i].Slot.u.AsULONG == DeviceExtension->Slot.u.AsULONG))
+        {
+            return TRUE;
+        }
+    }
+
     return FALSE;
 }
 

@@ -728,14 +728,62 @@ PciBuildHackTable(IN HANDLE KeyHandle)
     return Status;
 }
 
+/**
+ * @brief Records the bus and slot of each debugging device listed under the Debug key.
+ *
+ * Each device has a numbered subkey holding "Bus" and "Slot" REG_DWORD values.
+ * Incomplete entries are skipped.
+ */
 NTSTATUS
 NTAPI
-PciGetDebugPorts(IN HANDLE DebugKey)
+PciGetDebugPorts(
+    _In_ HANDLE DebugKey)
 {
-    UNREFERENCED_PARAMETER(DebugKey);
+    WCHAR SubKeyName[2];
+    PULONG Bus, Slot;
+    ULONG Index, BusLength, SlotLength;
+    PAGED_CODE();
 
-    /* Only called when the Debug key exists, so this prints once per boot */
-    DPRINT1("PCI: Debugging devices are not tracked yet and will not be protected\n");
+    C_ASSERT(MAX_DEBUGGING_DEVICES_SUPPORTED <= 10);
+
+    PciDebugPortsCount = 0;
+    SubKeyName[1] = UNICODE_NULL;
+    for (Index = 0; Index < MAX_DEBUGGING_DEVICES_SUPPORTED; Index++)
+    {
+        SubKeyName[0] = (WCHAR)(L'0' + Index);
+
+        if (!NT_SUCCESS(PciGetRegistryValue(L"Bus",
+                                            SubKeyName,
+                                            DebugKey,
+                                            REG_DWORD,
+                                            (PVOID*)&Bus,
+                                            &BusLength)))
+        {
+            continue;
+        }
+
+        if (!NT_SUCCESS(PciGetRegistryValue(L"Slot",
+                                            SubKeyName,
+                                            DebugKey,
+                                            REG_DWORD,
+                                            (PVOID*)&Slot,
+                                            &SlotLength)))
+        {
+            ExFreePoolWithTag(Bus, 0);
+            continue;
+        }
+
+        if ((BusLength == sizeof(*Bus)) && (SlotLength == sizeof(*Slot)))
+        {
+            PciDebuggingDevices[PciDebugPortsCount].Bus = *Bus;
+            PciDebuggingDevices[PciDebugPortsCount].Slot.u.AsULONG = *Slot;
+            PciDebugPortsCount++;
+        }
+
+        ExFreePoolWithTag(Slot, 0);
+        ExFreePoolWithTag(Bus, 0);
+    }
+
     return STATUS_SUCCESS;
 }
 
