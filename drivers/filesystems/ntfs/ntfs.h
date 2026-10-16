@@ -589,9 +589,11 @@ typedef struct _NTFS_ATTR_CONTEXT
 
 typedef struct _FCB
 {
+    /* Must come first: FsRtl, Cc and Mm read FsContext as this header */
+    FSRTL_COMMON_FCB_HEADER RFCB;
+
     NTFSIDENTIFIER Identifier;
 
-    FSRTL_COMMON_FCB_HEADER RFCB;
     SECTION_OBJECT_POINTERS SectionObjectPointers;
 
     PFILE_OBJECT FileObject;
@@ -603,6 +605,9 @@ typedef struct _FCB
 
     ERESOURCE PagingIoResource;
     ERESOURCE MainResource;
+
+    /* Byte range locks taken through LockFileEx() */
+    FILE_LOCK FileLock;
 
     LIST_ENTRY FcbListEntry;
     struct _FCB* ParentFcb;
@@ -1054,6 +1059,11 @@ BOOLEAN
 NtfsFCBIsDirectory(PNTFS_FCB Fcb);
 
 BOOLEAN
+NTAPI
+NtfsIsRegularFileObject(
+    _In_ PFILE_OBJECT FileObject);
+
+BOOLEAN
 NtfsFCBIsReparsePoint(PNTFS_FCB Fcb);
 
 BOOLEAN
@@ -1151,6 +1161,13 @@ NtfsFileSystemControl(PNTFS_IRP_CONTEXT IrpContext);
 
 NTSTATUS
 NtfsFlushBuffers(PNTFS_IRP_CONTEXT IrpContext);
+
+/* lockctrl.c */
+
+NTSTATUS
+NTAPI
+NtfsLockControl(
+    _In_ PNTFS_IRP_CONTEXT IrpContext);
 
 
 /* mft.c */
@@ -1272,6 +1289,13 @@ NtfsExtendAllocation(
 NTSTATUS
 NtfsTrimAllocation(
     _In_ PNTFS_FCB Fcb);
+
+NTSTATUS
+NtfsResizeAllocation(
+    _In_ PNTFS_FCB Fcb,
+    _In_ PFILE_OBJECT FileObject,
+    _In_ BOOLEAN CaseSensitive,
+    _In_ ULONGLONG AllocationSize);
 
 NTSTATUS
 SetResidentAttributeDataLength(PDEVICE_EXTENSION Vcb,

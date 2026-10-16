@@ -194,6 +194,15 @@ NtfsCleanup(PNTFS_IRP_CONTEXT IrpContext)
         return NtfsMarkIrpContextForQueue(IrpContext);
     }
 
+    /* The handle is going away, and so are the locks it took */
+    if (NtfsIsRegularFileObject(FileObject))
+    {
+        FsRtlFastUnlockAll(&((PNTFS_FCB)FileObject->FsContext)->FileLock,
+                           FileObject,
+                           IoGetRequestorProcess(IrpContext->Irp),
+                           NULL);
+    }
+
     Status = NtfsCleanupFile(DeviceExtension, FileObject, BooleanFlagOn(IrpContext->Flags, IRPCONTEXT_CANWAIT));
 
     ExReleaseResourceLite(&DeviceExtension->DirResource);

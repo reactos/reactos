@@ -36,43 +36,76 @@
 
 BOOLEAN
 NTAPI
-NtfsAcqLazyWrite(PVOID Context,
-                 BOOLEAN Wait)
+NtfsAcqLazyWrite(
+    _In_ PVOID Context,
+    _In_ BOOLEAN Wait)
 {
-    UNREFERENCED_PARAMETER(Context);
-    UNREFERENCED_PARAMETER(Wait);
-    UNIMPLEMENTED;
-    return FALSE;
+    PNTFS_FCB Fcb = (PNTFS_FCB)Context;
+
+    ASSERT(Fcb->Identifier.Type == NTFS_TYPE_FCB);
+
+    /* The paging writes below take it shared as well, size changes exclude us */
+    if (!ExAcquireResourceSharedLite(&Fcb->PagingIoResource, Wait))
+        return FALSE;
+
+    /* Let Cc know it doesn't have to acquire the file again for the flush */
+    if (IoGetTopLevelIrp() == NULL)
+        IoSetTopLevelIrp((PIRP)FSRTL_CACHE_TOP_LEVEL_IRP);
+
+    return TRUE;
 }
 
 
 VOID
 NTAPI
-NtfsRelLazyWrite(PVOID Context)
+NtfsRelLazyWrite(
+    _In_ PVOID Context)
 {
-    UNREFERENCED_PARAMETER(Context);
-    UNIMPLEMENTED;
+    PNTFS_FCB Fcb = (PNTFS_FCB)Context;
+
+    ASSERT(Fcb->Identifier.Type == NTFS_TYPE_FCB);
+
+    if (IoGetTopLevelIrp() == (PIRP)FSRTL_CACHE_TOP_LEVEL_IRP)
+        IoSetTopLevelIrp(NULL);
+
+    ExReleaseResourceLite(&Fcb->PagingIoResource);
 }
 
 
 BOOLEAN
 NTAPI
-NtfsAcqReadAhead(PVOID Context,
-                 BOOLEAN Wait)
+NtfsAcqReadAhead(
+    _In_ PVOID Context,
+    _In_ BOOLEAN Wait)
 {
-    UNREFERENCED_PARAMETER(Context);
-    UNREFERENCED_PARAMETER(Wait);
-    UNIMPLEMENTED;
-    return FALSE;
+    PNTFS_FCB Fcb = (PNTFS_FCB)Context;
+
+    ASSERT(Fcb->Identifier.Type == NTFS_TYPE_FCB);
+
+    /* Keep size changes out while we read ahead */
+    if (!ExAcquireResourceSharedLite(&Fcb->MainResource, Wait))
+        return FALSE;
+
+    if (IoGetTopLevelIrp() == NULL)
+        IoSetTopLevelIrp((PIRP)FSRTL_CACHE_TOP_LEVEL_IRP);
+
+    return TRUE;
 }
 
 
 VOID
 NTAPI
-NtfsRelReadAhead(PVOID Context)
+NtfsRelReadAhead(
+    _In_ PVOID Context)
 {
-    UNREFERENCED_PARAMETER(Context);
-    UNIMPLEMENTED;
+    PNTFS_FCB Fcb = (PNTFS_FCB)Context;
+
+    ASSERT(Fcb->Identifier.Type == NTFS_TYPE_FCB);
+
+    if (IoGetTopLevelIrp() == (PIRP)FSRTL_CACHE_TOP_LEVEL_IRP)
+        IoSetTopLevelIrp(NULL);
+
+    ExReleaseResourceLite(&Fcb->MainResource);
 }
 
 BOOLEAN
@@ -87,16 +120,39 @@ NtfsFastIoCheckIfPossible(
     _Out_ PIO_STATUS_BLOCK IoStatus,
     _In_ PDEVICE_OBJECT DeviceObject)
 {
-    /* Deny FastIo */
-    UNREFERENCED_PARAMETER(FileObject);
-    UNREFERENCED_PARAMETER(FileOffset);
-    UNREFERENCED_PARAMETER(Length);
+    PNTFS_FCB Fcb = (PNTFS_FCB)FileObject->FsContext;
+    LARGE_INTEGER LargeLength;
+
     UNREFERENCED_PARAMETER(Wait);
-    UNREFERENCED_PARAMETER(LockKey);
-    UNREFERENCED_PARAMETER(CheckForReadOperation);
     UNREFERENCED_PARAMETER(IoStatus);
+
+    LargeLength.QuadPart = Length;
     UNREFERENCED_PARAMETER(DeviceObject);
-    return FALSE;
+
+    if (!NtfsIsRegularFileObject(FileObject))
+        return FALSE;
+
+    if (NtfsFCBIsCompressed(Fcb) || NtfsFCBIsEncrypted(Fcb) ||
+        (Fcb->Vcb->Flags & VCB_VOLUME_DISMOUNTED))
+    {
+        return FALSE;
+    }
+
+    if (CheckForReadOperation)
+    {
+        return FsRtlFastCheckLockForRead(&Fcb->FileLock, FileOffset, &LargeLength, LockKey,
+                                         FileObject, PsGetCurrentProcess());
+    }
+
+    if (!NtfsGlobalData->EnableWriteSupport ||
+        !FsRtlFastCheckLockForWrite(&Fcb->FileLock, FileOffset, &LargeLength, LockKey,
+                                    FileObject, PsGetCurrentProcess()))
+    {
+        return FALSE;
+    }
+
+    /* Growing the file updates its record, leave that to the IRP path */
+    return (FileOffset->QuadPart + Length <= Fcb->RFCB.FileSize.QuadPart);
 }
 
 BOOLEAN
@@ -111,15 +167,10 @@ NtfsFastIoRead(
     _Out_ PIO_STATUS_BLOCK IoStatus,
     _In_ PDEVICE_OBJECT DeviceObject)
 {
-    DBG_UNREFERENCED_PARAMETER(FileObject);
-    DBG_UNREFERENCED_PARAMETER(FileOffset);
-    DBG_UNREFERENCED_PARAMETER(Length);
-    DBG_UNREFERENCED_PARAMETER(Wait);
-    DBG_UNREFERENCED_PARAMETER(LockKey);
-    DBG_UNREFERENCED_PARAMETER(Buffer);
-    DBG_UNREFERENCED_PARAMETER(IoStatus);
-    DBG_UNREFERENCED_PARAMETER(DeviceObject);
-    return FALSE;
+    if (!NtfsIsRegularFileObject(FileObject))
+        return FALSE;
+
+    return FsRtlCopyRead(FileObject, FileOffset, Length, Wait, LockKey, Buffer, IoStatus, DeviceObject);
 }
 
 BOOLEAN
@@ -134,15 +185,10 @@ NtfsFastIoWrite(
     _Out_ PIO_STATUS_BLOCK IoStatus,
     _In_ PDEVICE_OBJECT DeviceObject)
 {
-    DBG_UNREFERENCED_PARAMETER(FileObject);
-    DBG_UNREFERENCED_PARAMETER(FileOffset);
-    DBG_UNREFERENCED_PARAMETER(Length);
-    DBG_UNREFERENCED_PARAMETER(Wait);
-    DBG_UNREFERENCED_PARAMETER(LockKey);
-    DBG_UNREFERENCED_PARAMETER(Buffer);
-    DBG_UNREFERENCED_PARAMETER(IoStatus);
-    DBG_UNREFERENCED_PARAMETER(DeviceObject);
-    return FALSE;
+    if (!NtfsIsRegularFileObject(FileObject) || !NtfsGlobalData->EnableWriteSupport)
+        return FALSE;
+
+    return FsRtlCopyWrite(FileObject, FileOffset, Length, Wait, LockKey, Buffer, IoStatus, DeviceObject);
 }
 
 /* EOF */

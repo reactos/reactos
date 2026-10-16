@@ -60,12 +60,13 @@ NtfsDispatch(PNTFS_IRP_CONTEXT IrpContext)
 {
     PIRP Irp = IrpContext->Irp;
     NTSTATUS Status = STATUS_UNSUCCESSFUL;
+    BOOLEAN TopLevel;
 
     TRACE_(NTFS, "NtfsDispatch()\n");
 
     FsRtlEnterFileSystem();
 
-    NtfsIsIrpTopLevel(Irp);
+    TopLevel = NtfsIsIrpTopLevel(Irp);
 
     switch (IrpContext->MajorFunction)
     {
@@ -136,6 +137,10 @@ NtfsDispatch(PNTFS_IRP_CONTEXT IrpContext)
         case IRP_MJ_FLUSH_BUFFERS:
             Status = NtfsFlushBuffers(IrpContext);
             break;
+
+        case IRP_MJ_LOCK_CONTROL:
+            Status = NtfsLockControl(IrpContext);
+            break;
     }
 
     ASSERT((!(IrpContext->Flags & IRPCONTEXT_COMPLETE) && !(IrpContext->Flags & IRPCONTEXT_QUEUE)) ||
@@ -160,7 +165,10 @@ NtfsDispatch(PNTFS_IRP_CONTEXT IrpContext)
         ExFreeToNPagedLookasideList(&NtfsGlobalData->IrpContextLookasideList, IrpContext);
     }
 
-    IoSetTopLevelIrp(NULL);
+    /* Cc and Mm set their own top level IRP around paging I/O, leave theirs alone */
+    if (TopLevel)
+        IoSetTopLevelIrp(NULL);
+
     FsRtlExitFileSystem();
 
     return Status;

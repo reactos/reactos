@@ -900,6 +900,134 @@ Quit:
 }
 
 /**
+* @name NtfsResizeAllocation
+* @implemented
+*
+* Sets how many clusters the data stream owns, leaving its size alone.
+*
+* @param Fcb
+* FCB of the file. The caller holds its MainResource exclusively.
+*
+* @param FileObject
+* File object the request came through
+*
+* @param CaseSensitive
+* Whether the directory entries are looked up case sensitively
+*
+* @param AllocationSize
+* New allocation in bytes, a multiple of the cluster size. It never goes below the data.
+*
+* @return
+* STATUS_SUCCESS on success, including when there's nothing to change.
+*/
+NTSTATUS
+NtfsResizeAllocation(
+    _In_ PNTFS_FCB Fcb,
+    _In_ PFILE_OBJECT FileObject,
+    _In_ BOOLEAN CaseSensitive,
+    _In_ ULONGLONG AllocationSize)
+{
+    PDEVICE_EXTENSION Vcb = Fcb->Vcb;
+    ULONG BytesPerCluster = Vcb->NtfsInfo.BytesPerCluster;
+    PFILE_RECORD_HEADER FileRecord;
+    PNTFS_ATTR_CONTEXT DataContext;
+    PNTFS_ATTR_RECORD DestinationAttribute;
+    ULONG AttributeOffset;
+    ULONGLONG CurrentSize;
+    BOOLEAN Changed = FALSE;
+    NTSTATUS Status;
+
+    ASSERT(AllocationSize % BytesPerCluster == 0);
+
+    FileRecord = ExAllocateFromNPagedLookasideList(&Vcb->FileRecLookasideList);
+    if (FileRecord == NULL)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
+    Status = ReadFileRecord(Vcb, Fcb->MFTIndex, FileRecord);
+    if (!NT_SUCCESS(Status))
+        goto Quit;
+
+    Status = FindAttribute(Vcb, FileRecord, AttributeData, Fcb->Stream, wcslen(Fcb->Stream), &DataContext, &AttributeOffset);
+    if (!NT_SUCCESS(Status))
+        goto Quit;
+
+    /* Resident data lives in the record, and compressed or sparse streams
+     * round their allocation differently; there is nothing to do for those */
+    if (!DataContext->pRecord->IsNonResident ||
+        (DataContext->pRecord->Flags & (NTFS_ATTR_COMPRESSION_MASK | NTFS_ATTR_SPARSE)))
+    {
+        ReleaseAttributeContext(DataContext);
+        goto Quit;
+    }
+
+    AllocationSize = max(AllocationSize, ROUND_UP(DataContext->pRecord->NonResident.DataSize, BytesPerCluster));
+    CurrentSize = DataContext->pRecord->NonResident.AllocatedSize;
+
+    if (AllocationSize < CurrentSize)
+    {
+        LARGE_INTEGER NewSize;
+
+        NewSize.QuadPart = AllocationSize;
+        if (!MmCanFileBeTruncated(FileObject->SectionObjectPointer, &NewSize))
+        {
+            ReleaseAttributeContext(DataContext);
+            Status = STATUS_USER_MAPPED_FILE;
+            goto Quit;
+        }
+    }
+
+    /* Paging writes look the runs up again, keep them out while those change */
+    ExAcquireResourceExclusiveLite(&Fcb->PagingIoResource, TRUE);
+
+    if (AllocationSize > CurrentSize)
+    {
+        Status = NtfsExtendAllocation(Vcb, DataContext, AttributeOffset, FileRecord, AllocationSize);
+        Changed = NT_SUCCESS(Status);
+    }
+    else if (AllocationSize < CurrentSize)
+    {
+        Status = FreeClusters(Vcb,
+                              DataContext,
+                              AttributeOffset,
+                              FileRecord,
+                              (ULONG)((CurrentSize - AllocationSize) / BytesPerCluster));
+        if (NT_SUCCESS(Status))
+        {
+            DestinationAttribute = (PNTFS_ATTR_RECORD)((ULONG_PTR)FileRecord + AttributeOffset);
+            DestinationAttribute->NonResident.AllocatedSize = AllocationSize;
+            Changed = TRUE;
+        }
+    }
+
+    if (Changed)
+    {
+        Status = UpdateFileRecord(Vcb, Fcb->MFTIndex, FileRecord);
+        if (NT_SUCCESS(Status))
+            Fcb->RFCB.AllocationSize.QuadPart = AllocationSize;
+    }
+
+    ExReleaseResourceLite(&Fcb->PagingIoResource);
+    ReleaseAttributeContext(DataContext);
+
+    if (Changed && NT_SUCCESS(Status))
+    {
+        CcSetFileSizes(FileObject, (PCC_FILE_SIZES)&Fcb->RFCB.AllocationSize);
+
+        /* The directory entries carry the allocation too */
+        NtfsUpdateDuplicatedInformation(Vcb,
+                                        FileRecord,
+                                        Fcb->MFTIndex,
+                                        NTFS_FILENAME_UPDATE_SIZES,
+                                        CaseSensitive);
+    }
+
+Quit:
+    ExFreeToNPagedLookasideList(&Vcb->FileRecLookasideList, FileRecord);
+
+    return Status;
+}
+
+/**
 * @name SetNonResidentAttributeDataLength
 * @implemented
 *
@@ -1038,12 +1166,12 @@ SetResidentAttributeDataLength(PDEVICE_EXTENSION Vcb,
     {
         // There's usually padding at the end of a record. Do we need to extend past it?
         ULONG MaxValueLength = AttrContext->pRecord->Length - AttrContext->pRecord->Resident.ValueOffset;
-        if (MaxValueLength < DataSize->LowPart)
+        if (MaxValueLength < (ULONGLONG)DataSize->QuadPart)
         {
             // If this is the last attribute, we could move the end marker to the very end of the file record
             MaxValueLength += Vcb->NtfsInfo.BytesPerFileRecord - NextAttributeOffset - (sizeof(ULONG) * 2);
 
-            if (MaxValueLength < DataSize->LowPart || NextAttribute->Type != AttributeEnd)
+            if (MaxValueLength < (ULONGLONG)DataSize->QuadPart || NextAttribute->Type != AttributeEnd)
             {
                 // convert attribute to non-resident
                 PNTFS_ATTR_RECORD Destination = (PNTFS_ATTR_RECORD)((ULONG_PTR)FileRecord + AttrOffset);

@@ -125,7 +125,7 @@ NtfsReadFile(PDEVICE_EXTENSION DeviceExt,
              PFILE_OBJECT FileObject,
              PUCHAR Buffer,
              ULONG Length,
-             ULONG ReadOffset,
+             ULONGLONG ReadOffset,
              ULONG IrpFlags,
              PIRP Irp,
              PULONG LengthRead)
@@ -135,14 +135,14 @@ NtfsReadFile(PDEVICE_EXTENSION DeviceExt,
     PFILE_RECORD_HEADER FileRecord;
     PNTFS_ATTR_CONTEXT DataContext = NULL;
     ULONG RealLength;
-    ULONG RealReadOffset;
+    ULONGLONG RealReadOffset;
     ULONG RealLengthRead;
     ULONG ToRead;
     BOOLEAN AllocatedBuffer = FALSE;
     PCHAR ReadBuffer = (PCHAR)Buffer;
     ULONGLONG StreamSize;
 
-    DPRINT("NtfsReadFile(%p, %p, %p, %lu, %lu, %lx, %p)\n", DeviceExt, FileObject, Buffer, Length, ReadOffset, IrpFlags, LengthRead);
+    DPRINT("NtfsReadFile(%p, %p, %p, %lu, %I64u, %lx, %p)\n", DeviceExt, FileObject, Buffer, Length, ReadOffset, IrpFlags, LengthRead);
 
     *LengthRead = 0;
 
@@ -228,7 +228,7 @@ NtfsReadFile(PDEVICE_EXTENSION DeviceExt,
 
     ToRead = Length;
     if (ReadOffset + Length > StreamSize)
-        ToRead = StreamSize - ReadOffset;
+        ToRead = (ULONG)(StreamSize - ReadOffset);
 
     RealReadOffset = ReadOffset;
     RealLength = ToRead;
@@ -256,7 +256,7 @@ NtfsReadFile(PDEVICE_EXTENSION DeviceExt,
         AllocatedBuffer = TRUE;
     }
 
-    DPRINT("Effective read: %lu at %lu for stream '%S'\n", RealLength, RealReadOffset, Fcb->Stream);
+    DPRINT("Effective read: %lu at %I64u for stream '%S'\n", RealLength, RealReadOffset, Fcb->Stream);
     /* Only hand the IRP down when reading straight into its buffer: a
      * forwarded transfer lands at the start of the IRP's MDL, so a bounced
      * read would end up in the wrong place */
@@ -287,7 +287,7 @@ NtfsReadFile(PDEVICE_EXTENSION DeviceExt,
 
     if (AllocatedBuffer)
     {
-        RtlCopyMemory(Buffer, ReadBuffer + (ReadOffset - RealReadOffset), ToRead);
+        RtlCopyMemory(Buffer, ReadBuffer + (ULONG)(ReadOffset - RealReadOffset), ToRead);
     }
 
     if (ToRead != Length)
@@ -301,6 +301,94 @@ NtfsReadFile(PDEVICE_EXTENSION DeviceExt,
     }
 
     return STATUS_SUCCESS;
+}
+
+/* Sets up the cache map of a handle on its first cached I/O */
+static
+VOID
+NTAPI
+NtfsEnsureCacheMap(
+    _In_ PFILE_OBJECT FileObject,
+    _In_ PNTFS_FCB Fcb)
+{
+    if (FileObject->PrivateCacheMap == NULL)
+    {
+        CcInitializeCacheMap(FileObject,
+                             (PCC_FILE_SIZES)&Fcb->RFCB.AllocationSize,
+                             FALSE,
+                             &NtfsGlobalData->CacheMgrCallbacks,
+                             Fcb);
+    }
+}
+
+static
+NTSTATUS
+NTAPI
+NtfsCachedRead(
+    _In_ PNTFS_IRP_CONTEXT IrpContext,
+    _In_ PNTFS_FCB Fcb,
+    _Out_writes_bytes_(Length) PVOID Buffer,
+    _In_ ULONG Length,
+    _In_ PLARGE_INTEGER ReadOffset,
+    _Out_ PULONG LengthRead)
+{
+    PFILE_OBJECT FileObject = IrpContext->FileObject;
+    BOOLEAN CanWait = BooleanFlagOn(IrpContext->Flags, IRPCONTEXT_CANWAIT);
+    IO_STATUS_BLOCK IoStatus;
+    NTSTATUS Status;
+    BOOLEAN Done = FALSE;
+
+    *LengthRead = 0;
+
+    if (NtfsFCBIsCompressed(Fcb) || NtfsFCBIsEncrypted(Fcb))
+    {
+        UNIMPLEMENTED;
+        return STATUS_NOT_IMPLEMENTED;
+    }
+
+    if (!ExAcquireResourceSharedLite(&Fcb->MainResource, CanWait))
+        goto Post;
+
+    if (ReadOffset->QuadPart >= Fcb->RFCB.FileSize.QuadPart)
+    {
+        ExReleaseResourceLite(&Fcb->MainResource);
+        return STATUS_END_OF_FILE;
+    }
+
+    if (Length > Fcb->RFCB.FileSize.QuadPart - ReadOffset->QuadPart)
+        Length = (ULONG)(Fcb->RFCB.FileSize.QuadPart - ReadOffset->QuadPart);
+
+    _SEH2_TRY
+    {
+        NtfsEnsureCacheMap(FileObject, Fcb);
+
+        Done = CcCopyRead(FileObject, ReadOffset, Length, CanWait, Buffer, &IoStatus);
+        Status = Done ? IoStatus.Status : STATUS_PENDING;
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Done = TRUE;
+        Status = _SEH2_GetExceptionCode();
+    }
+    _SEH2_END;
+
+    ExReleaseResourceLite(&Fcb->MainResource);
+
+    if (Done)
+    {
+        if (NT_SUCCESS(Status))
+            *LengthRead = (ULONG)IoStatus.Information;
+
+        return Status;
+    }
+
+Post:
+    /* The data isn't in yet, read it from a worker that can wait */
+    Status = NtfsLockUserBuffer(IrpContext->Irp, Length, IoWriteAccess);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    return NtfsMarkIrpContextForQueue(IrpContext);
 }
 
 
@@ -356,13 +444,41 @@ NtfsRead(PNTFS_IRP_CONTEXT IrpContext)
         Irp->IoStatus.Information = 0;
         return STATUS_INVALID_DEVICE_REQUEST;
     }
+    else if (!(Irp->Flags & IRP_PAGING_IO) && NtfsIsRegularFileObject(FileObject) &&
+             !FsRtlCheckLockForReadAccess(&((PNTFS_FCB)FileObject->FsContext)->FileLock, Irp))
+    {
+        Irp->IoStatus.Information = 0;
+        return STATUS_FILE_LOCK_CONFLICT;
+    }
+    else if (!(Irp->Flags & (IRP_PAGING_IO | IRP_NOCACHE)) && NtfsIsRegularFileObject(FileObject))
+    {
+        Status = NtfsCachedRead(IrpContext,
+                                (PNTFS_FCB)FileObject->FsContext,
+                                Buffer,
+                                ReadLength,
+                                &ReadOffset,
+                                &ReturnedReadLength);
+        if (Status == STATUS_PENDING)
+            return Status;
+    }
     else
     {
+        PNTFS_FCB Fcb = (PNTFS_FCB)FileObject->FsContext;
+
+        /* A non cached read must not miss what is still dirty in the cache */
+        if (!(Irp->Flags & IRP_PAGING_IO) && NtfsIsRegularFileObject(FileObject) &&
+            Fcb->SectionObjectPointers.DataSectionObject != NULL)
+        {
+            IO_STATUS_BLOCK IoStatus;
+
+            CcFlushCache(&Fcb->SectionObjectPointers, &ReadOffset, ReadLength, &IoStatus);
+        }
+
         Status = NtfsReadFile(DeviceExt,
                               FileObject,
                               Buffer,
                               ReadLength,
-                              ReadOffset.u.LowPart,
+                              ReadOffset.QuadPart,
                               Irp->Flags,
                               Irp,
                               &ReturnedReadLength);
@@ -383,6 +499,68 @@ NtfsRead(PNTFS_IRP_CONTEXT IrpContext)
     }
 
     return Status;
+}
+
+/* Grows the stream to NewEnd. The caller holds the main resource exclusive. */
+static
+NTSTATUS
+NTAPI
+NtfsGrowStream(
+    _In_ PDEVICE_EXTENSION DeviceExt,
+    _In_ PFILE_OBJECT FileObject,
+    _In_ PNTFS_FCB Fcb,
+    _In_ PNTFS_ATTR_CONTEXT DataContext,
+    _In_ ULONG AttributeOffset,
+    _Inout_ PFILE_RECORD_HEADER FileRecord,
+    _In_ ULONGLONG NewEnd,
+    _In_ BOOLEAN CaseSensitive)
+{
+    LARGE_INTEGER DataSize;
+    NTSTATUS Status;
+
+    DataSize.QuadPart = NewEnd;
+
+    /* Paging writes look the runs up again, keep them out while those change */
+    ExAcquireResourceExclusiveLite(&Fcb->PagingIoResource, TRUE);
+
+    /* Reserve room past the new end, so the appends that follow fit
+     * without touching the bitmap or the run list. Cleanup gives back
+     * what's left over. */
+    if (DataContext->pRecord->IsNonResident &&
+        (ULONGLONG)DataSize.QuadPart > DataContext->pRecord->NonResident.AllocatedSize)
+    {
+        ULONGLONG Ahead;
+
+        Ahead = min(max(DataSize.QuadPart / 4, NTFS_GROW_AHEAD_MIN), NTFS_GROW_AHEAD_MAX);
+        Status = NtfsExtendAllocation(DeviceExt,
+                                      DataContext,
+                                      AttributeOffset,
+                                      FileRecord,
+                                      ROUND_UP(DataSize.QuadPart + Ahead, DeviceExt->NtfsInfo.BytesPerCluster));
+        if (!NT_SUCCESS(Status))
+        {
+            /* Not fatal; SetAttributeDataLength() still allocates what's needed */
+            DPRINT("Couldn't reserve ahead of %wS (Status %lx)\n", Fcb->ObjectName, Status);
+        }
+    }
+
+    // set the attribute data length
+    Status = SetAttributeDataLength(FileObject, Fcb, DataContext, AttributeOffset, FileRecord, &DataSize);
+
+    ExReleaseResourceLite(&Fcb->PagingIoResource);
+
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    // The file grew, so every copy of its size has to follow.
+    // TODO: adapt this to every filename / hardlink in the record.
+    NtfsUpdateDuplicatedInformation(Fcb->Vcb,
+                                    FileRecord,
+                                    Fcb->MFTIndex,
+                                    NTFS_FILENAME_UPDATE_SIZES,
+                                    CaseSensitive);
+
+    return STATUS_SUCCESS;
 }
 
 /**
@@ -434,7 +612,7 @@ NTSTATUS NtfsWriteFile(PDEVICE_EXTENSION DeviceExt,
                        PFILE_OBJECT FileObject,
                        const PUCHAR Buffer,
                        ULONG Length,
-                       ULONG WriteOffset,
+                       ULONGLONG WriteOffset,
                        ULONG IrpFlags,
                        BOOLEAN CaseSensitive,
                        PIRP Irp,
@@ -448,7 +626,7 @@ NTSTATUS NtfsWriteFile(PDEVICE_EXTENSION DeviceExt,
     ULONGLONG StreamSize;
     ULONG RequestedLength = 0;
 
-    DPRINT("NtfsWriteFile(%p, %p, %p, %lu, %lu, %x, %s, %p)\n",
+    DPRINT("NtfsWriteFile(%p, %p, %p, %lu, %I64u, %x, %s, %p)\n",
            DeviceExt,
            FileObject,
            Buffer,
@@ -548,7 +726,7 @@ NTSTATUS NtfsWriteFile(PDEVICE_EXTENSION DeviceExt,
     // Get the size of the stream on disk
     StreamSize = AttributeDataLength(DataContext->pRecord);
 
-    DPRINT("WriteOffset: %lu\tStreamSize: %I64u\n", WriteOffset, StreamSize);
+    DPRINT("WriteOffset: %I64u\tStreamSize: %I64u\n", WriteOffset, StreamSize);
 
     // Are we trying to write beyond the end of the stream?
     if (WriteOffset + Length > StreamSize)
@@ -557,33 +735,14 @@ NTSTATUS NtfsWriteFile(PDEVICE_EXTENSION DeviceExt,
         if (!(Fcb->Flags & FCB_IS_VOLUME) &&
             !(IrpFlags & IRP_PAGING_IO))
         {
-            LARGE_INTEGER DataSize;
-
-            DataSize.QuadPart = WriteOffset + Length;
-
-            /* Reserve room past the new end, so the appends that follow fit
-             * without touching the bitmap or the run list. Cleanup gives back
-             * what's left over. */
-            if (DataContext->pRecord->IsNonResident &&
-                (ULONGLONG)DataSize.QuadPart > DataContext->pRecord->NonResident.AllocatedSize)
-            {
-                ULONGLONG Ahead;
-
-                Ahead = min(max(DataSize.QuadPart / 4, NTFS_GROW_AHEAD_MIN), NTFS_GROW_AHEAD_MAX);
-                Status = NtfsExtendAllocation(DeviceExt,
-                                              DataContext,
-                                              AttributeOffset,
-                                              FileRecord,
-                                              ROUND_UP(DataSize.QuadPart + Ahead, DeviceExt->NtfsInfo.BytesPerCluster));
-                if (!NT_SUCCESS(Status))
-                {
-                    /* Not fatal; SetAttributeDataLength() still allocates what's needed */
-                    DPRINT("Couldn't reserve ahead of %wS (Status %lx)\n", Fcb->ObjectName, Status);
-                }
-            }
-
-            // set the attribute data length
-            Status = SetAttributeDataLength(FileObject, Fcb, DataContext, AttributeOffset, FileRecord, &DataSize);
+            Status = NtfsGrowStream(DeviceExt,
+                                    FileObject,
+                                    Fcb,
+                                    DataContext,
+                                    AttributeOffset,
+                                    FileRecord,
+                                    WriteOffset + Length,
+                                    CaseSensitive);
             if (!NT_SUCCESS(Status))
             {
                 ReleaseAttributeContext(DataContext);
@@ -591,14 +750,6 @@ NTSTATUS NtfsWriteFile(PDEVICE_EXTENSION DeviceExt,
                 *LengthWritten = 0;
                 return Status;
             }
-
-            // The file grew, so every copy of its size has to follow.
-            // TODO: adapt this to every filename / hardlink in the record.
-            Status = NtfsUpdateDuplicatedInformation(Fcb->Vcb,
-                                                     FileRecord,
-                                                     Fcb->MFTIndex,
-                                                     NTFS_FILENAME_UPDATE_SIZES,
-                                                     CaseSensitive);
         }
         else if (IrpFlags & IRP_PAGING_IO)
         {
@@ -616,7 +767,7 @@ NTSTATUS NtfsWriteFile(PDEVICE_EXTENSION DeviceExt,
                 return STATUS_SUCCESS;
             }
 
-            DPRINT("Clamping paging write of %lu bytes at %lu to stream size %I64u\n",
+            DPRINT("Clamping paging write of %lu bytes at %I64u to stream size %I64u\n",
                    Length, WriteOffset, StreamSize);
 
             RequestedLength = Length;
@@ -632,7 +783,7 @@ NTSTATUS NtfsWriteFile(PDEVICE_EXTENSION DeviceExt,
         }
     }
 
-    DPRINT("Length: %lu\tWriteOffset: %lu\tStreamSize: %I64u\n", Length, WriteOffset, StreamSize);
+    DPRINT("Length: %lu\tWriteOffset: %I64u\tStreamSize: %I64u\n", Length, WriteOffset, StreamSize);
 
     // Write the data to the attribute
     /* Buffer is the system mapping of this IRP's MDL, so hand the IRP down too
@@ -669,6 +820,125 @@ NTSTATUS NtfsWriteFile(PDEVICE_EXTENSION DeviceExt,
     return Status;
 }
 
+/* Grows the file for a cached write ending at NewEnd */
+static
+NTSTATUS
+NTAPI
+NtfsGrowFileForWrite(
+    _In_ PFILE_OBJECT FileObject,
+    _In_ PNTFS_FCB Fcb,
+    _In_ ULONGLONG NewEnd,
+    _In_ BOOLEAN CaseSensitive)
+{
+    PDEVICE_EXTENSION DeviceExt = Fcb->Vcb;
+    PFILE_RECORD_HEADER FileRecord;
+    PNTFS_ATTR_CONTEXT DataContext;
+    ULONG AttributeOffset;
+    NTSTATUS Status;
+
+    FileRecord = ExAllocateFromNPagedLookasideList(&DeviceExt->FileRecLookasideList);
+    if (FileRecord == NULL)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
+    Status = ReadFileRecord(DeviceExt, Fcb->MFTIndex, FileRecord);
+    if (NT_SUCCESS(Status))
+    {
+        Status = FindAttribute(DeviceExt, FileRecord, AttributeData, Fcb->Stream, wcslen(Fcb->Stream), &DataContext, &AttributeOffset);
+        if (NT_SUCCESS(Status))
+        {
+            Status = NtfsGrowStream(DeviceExt, FileObject, Fcb, DataContext, AttributeOffset, FileRecord, NewEnd, CaseSensitive);
+            ReleaseAttributeContext(DataContext);
+        }
+    }
+
+    ExFreeToNPagedLookasideList(&DeviceExt->FileRecLookasideList, FileRecord);
+
+    return Status;
+}
+
+static
+NTSTATUS
+NTAPI
+NtfsCachedWrite(
+    _In_ PNTFS_IRP_CONTEXT IrpContext,
+    _In_ PNTFS_FCB Fcb,
+    _In_reads_bytes_(Length) PVOID Buffer,
+    _In_ ULONG Length,
+    _In_ PLARGE_INTEGER WriteOffset,
+    _In_ BOOLEAN CaseSensitive,
+    _Out_ PULONG LengthWritten)
+{
+    PFILE_OBJECT FileObject = IrpContext->FileObject;
+    LONGLONG WriteEnd = WriteOffset->QuadPart + Length;
+    LARGE_INTEGER OldValidData;
+    BOOLEAN HideNewData = FALSE;
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    *LengthWritten = 0;
+
+    if (NtfsFCBIsCompressed(Fcb))
+    {
+        UNIMPLEMENTED;
+        return STATUS_NOT_IMPLEMENTED;
+    }
+
+    /* Let Cc throttle us before we hold anything */
+    CcCanIWrite(FileObject, Length, TRUE, FALSE);
+
+    ExAcquireResourceExclusiveLite(&Fcb->MainResource, TRUE);
+
+    _SEH2_TRY
+    {
+        NtfsEnsureCacheMap(FileObject, Fcb);
+
+        OldValidData = Fcb->RFCB.ValidDataLength;
+
+        if (WriteEnd > Fcb->RFCB.FileSize.QuadPart)
+        {
+            Status = NtfsGrowFileForWrite(FileObject, Fcb, WriteEnd, CaseSensitive);
+            if (!NT_SUCCESS(Status))
+                _SEH2_LEAVE;
+        }
+
+        /* Don't let Cc read from disk what we are about to overwrite, and
+         * make whatever lies before the write read as zeroes */
+        if (WriteEnd > OldValidData.QuadPart)
+        {
+            CC_FILE_SIZES Sizes;
+
+            Sizes.AllocationSize = Fcb->RFCB.AllocationSize;
+            Sizes.FileSize = Fcb->RFCB.FileSize;
+            Sizes.ValidDataLength = OldValidData;
+            CcSetFileSizes(FileObject, &Sizes);
+            HideNewData = TRUE;
+
+            if (WriteOffset->QuadPart > OldValidData.QuadPart)
+                CcZeroData(FileObject, &OldValidData, WriteOffset, TRUE);
+        }
+
+        if (!CcCopyWrite(FileObject, WriteOffset, Length, TRUE, Buffer))
+        {
+            Status = STATUS_UNSUCCESSFUL;
+            _SEH2_LEAVE;
+        }
+
+        *LengthWritten = Length;
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = _SEH2_GetExceptionCode();
+    }
+    _SEH2_END;
+
+    /* Back to the real valid data length, or a page Mm drops would read back as zeroes */
+    if (HideNewData)
+        CcSetFileSizes(FileObject, (PCC_FILE_SIZES)&Fcb->RFCB.AllocationSize);
+
+    ExReleaseResourceLite(&Fcb->MainResource);
+
+    return Status;
+}
+
 /**
 * @name NtfsWrite
 * @implemented
@@ -688,7 +958,7 @@ NTSTATUS NtfsWriteFile(PDEVICE_EXTENSION DeviceExt,
 * STATUS_PARTIAL_COPY, STATUS_UNSUCCESSFUL, or STATUS_OBJECT_NAME_NOT_FOUND if NtfsWriteFile() fails.
 *
 * @remarks Called by NtfsDispatch() in response to an IRP_MJ_WRITE request. Page files are not implemented.
-* Support for large files (>4gb) is not implemented. Cached writes, file locks, transactions, etc - not implemented.
+* File locks, transactions, etc - not implemented.
 *
 */
 NTSTATUS
@@ -747,10 +1017,10 @@ NtfsWrite(PNTFS_IRP_CONTEXT IrpContext)
     DPRINT("ByteOffset: %I64u\tLength: %lu\tBytes per sector: %lu\n", ByteOffset.QuadPart,
         Length, BytesPerSector);
 
-    if (ByteOffset.u.HighPart && !(Fcb->Flags & FCB_IS_VOLUME))
+    /* Offsets are 64 bits all the way down, only reject what can't be a file position */
+    if (ByteOffset.QuadPart < 0 || ByteOffset.QuadPart + Length < ByteOffset.QuadPart)
     {
-        // TODO: Support large files
-        DPRINT1("FIXME: Writing to large files is not yet supported at this time.\n");
+        DPRINT1("Invalid write offset %I64d, length %lu\n", ByteOffset.QuadPart, Length);
         return STATUS_INVALID_PARAMETER;
     }
 
@@ -791,6 +1061,44 @@ NtfsWrite(PNTFS_IRP_CONTEXT IrpContext)
         return NtfsMarkIrpContextForQueue(IrpContext);
     }
 
+    /* Byte range locks only stop other handles, never Mm or Cc */
+    if (!(Irp->Flags & IRP_PAGING_IO) && NtfsIsRegularFileObject(FileObject) &&
+        !FsRtlCheckLockForWriteAccess(&Fcb->FileLock, Irp))
+    {
+        Irp->IoStatus.Information = 0;
+        return STATUS_FILE_LOCK_CONFLICT;
+    }
+
+    /* Regular writes go through the cache, the lazy writer brings them to disk */
+    if (!(Irp->Flags & (IRP_PAGING_IO | IRP_NOCACHE)) &&
+        !(FileObject->Flags & FO_NO_INTERMEDIATE_BUFFERING) &&
+        NtfsIsRegularFileObject(FileObject))
+    {
+        if (DeviceExt->Flags & VCB_VOLUME_DISMOUNTED)
+        {
+            Irp->IoStatus.Information = 0;
+            return STATUS_VOLUME_DISMOUNTED;
+        }
+
+        Status = NtfsCachedWrite(IrpContext,
+                                 Fcb,
+                                 NtfsGetUserBuffer(Irp, FALSE),
+                                 Length,
+                                 &ByteOffset,
+                                 BooleanFlagOn(IrpContext->Stack->Flags, SL_CASE_SENSITIVE),
+                                 &ReturnedWriteLength);
+        if (NT_SUCCESS(Status))
+        {
+            if (FileObject->Flags & FO_SYNCHRONOUS_IO)
+                FileObject->CurrentByteOffset.QuadPart = ByteOffset.QuadPart + ReturnedWriteLength;
+
+            IrpContext->PriorityBoost = IO_DISK_INCREMENT;
+        }
+
+        Irp->IoStatus.Information = NT_SUCCESS(Status) ? ReturnedWriteLength : 0;
+        return Status;
+    }
+
     // get the Resource
     if (Fcb->Flags & FCB_IS_VOLUME)
     {
@@ -805,22 +1113,17 @@ NtfsWrite(PNTFS_IRP_CONTEXT IrpContext)
         Resource = &Fcb->MainResource;
     }
 
-    // acquire exclusive access to the Resource
-    if (!ExAcquireResourceExclusiveLite(Resource, BooleanFlagOn(IrpContext->Flags, IRPCONTEXT_CANWAIT)))
+    /* Paging writes never change the sizes, and Cc or Mm may already hold the
+     * paging resource shared for us. Size changes take it exclusive. */
+    if (Resource == &Fcb->PagingIoResource)
+    {
+        if (!ExAcquireResourceSharedLite(Resource, BooleanFlagOn(IrpContext->Flags, IRPCONTEXT_CANWAIT)))
+            return STATUS_CANT_WAIT;
+    }
+    else if (!ExAcquireResourceExclusiveLite(Resource, BooleanFlagOn(IrpContext->Flags, IRPCONTEXT_CANWAIT)))
     {
         return STATUS_CANT_WAIT;
     }
-
-    /* From VfatWrite(). Todo: Handle file locks
-    if (!(IrpContext->Irp->Flags & IRP_PAGING_IO) &&
-    FsRtlAreThereCurrentFileLocks(&Fcb->FileLock))
-    {
-    if (!FsRtlCheckLockForWriteAccess(&Fcb->FileLock, IrpContext->Irp))
-    {
-    Status = STATUS_FILE_LOCK_CONFLICT;
-    goto ByeBye;
-    }
-    }*/
 
     // get the buffer of data the user is trying to write
     Buffer = NtfsGetUserBuffer(Irp, BooleanFlagOn(Irp->Flags, IRP_PAGING_IO));
@@ -841,7 +1144,6 @@ NtfsWrite(PNTFS_IRP_CONTEXT IrpContext)
     DPRINT("Existing File Size(Fcb->RFCB.FileSize.QuadPart): %I64u\n", Fcb->RFCB.FileSize.QuadPart);
     DPRINT("About to write the data. Length: %lu\n", Length);
 
-    // TODO: handle HighPart of ByteOffset (large files)
 
     /* See NtfsRead() */
     if ((DeviceExt->Flags & VCB_VOLUME_DISMOUNTED) &&
@@ -873,11 +1175,21 @@ NtfsWrite(PNTFS_IRP_CONTEXT IrpContext)
     }
     else
     {
+        /* What goes straight to disk must not be overwritten by stale cached data later */
+        if (!(Irp->Flags & IRP_PAGING_IO) && NtfsIsRegularFileObject(FileObject) &&
+            Fcb->SectionObjectPointers.DataSectionObject != NULL)
+        {
+            IO_STATUS_BLOCK IoStatus;
+
+            CcFlushCache(&Fcb->SectionObjectPointers, &ByteOffset, Length, &IoStatus);
+            CcPurgeCacheSection(&Fcb->SectionObjectPointers, &ByteOffset, Length, FALSE);
+        }
+
         Status = NtfsWriteFile(DeviceExt,
                                FileObject,
                                Buffer,
                                Length,
-                               ByteOffset.LowPart,
+                               ByteOffset.QuadPart,
                                Irp->Flags,
                                BooleanFlagOn(IrpContext->Stack->Flags, SL_CASE_SENSITIVE),
                                Irp,
