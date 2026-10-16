@@ -355,7 +355,6 @@ RtlAnsiCharToUnicodeChar(
     ULONG Size;
     NTSTATUS Status;
     WCHAR UnicodeChar = L' ';
-    PAGED_CODE_RTL();
 
     if (NlsLeadByteInfo)
     {
