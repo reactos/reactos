@@ -490,7 +490,7 @@ PciGetDeviceProperty(IN PDEVICE_OBJECT DeviceObject,
         if (Status != STATUS_BUFFER_TOO_SMALL)
         {
             /* Call should've failed with buffer too small! */
-            DPRINT1("PCI - Unexpected status from GetDeviceProperty, saw %08X, expected %08X.\n",
+            DPRINT1("PCIX - Unexpected status from GetDeviceProperty, saw %08X, expected %08X.\n",
                     Status,
                     STATUS_BUFFER_TOO_SMALL);
             *OutputBuffer = NULL;
@@ -503,7 +503,7 @@ PciGetDeviceProperty(IN PDEVICE_OBJECT DeviceObject,
         if (!Buffer)
         {
             /* No memory, fail the request */
-            DPRINT1("PCI - Failed to allocate DeviceProperty buffer (%u bytes).\n", BufferLength);
+            DPRINT1("PCIX - Failed to allocate DeviceProperty buffer (%u bytes).\n", BufferLength);
             Status = STATUS_INSUFFICIENT_RESOURCES;
             break;
         }
@@ -1013,7 +1013,7 @@ PciReadDeviceCapability(IN PPCI_PDO_EXTENSION DeviceExtension,
         if (CapabilityCount > 48)
         {
             /* Fail, since this is basically a broken PCI device */
-            DPRINT1("PCI device %p capabilities list is broken.\n", DeviceExtension);
+            DPRINT1("PCIX - Device %p capabilities list is broken.\n", DeviceExtension);
             return 0;
         }
     }
@@ -1438,7 +1438,7 @@ PciDetermineSlotNumber(IN PPCI_PDO_EXTENSION PdoExtension,
 
     /* Check if a $PIR from the BIOS is used (legacy IRQ routing) */
     ParentExtension = PdoExtension->ParentFdoExtension;
-    DPRINT("Slot lookup for %d.%u.%u\n",
+    DPRINT("PCIX - Slot lookup for %d.%u.%u\n",
            ParentExtension ? ParentExtension->BaseBus : -1,
            PdoExtension->Slot.u.bits.DeviceNumber,
            PdoExtension->Slot.u.bits.FunctionNumber);
@@ -1446,12 +1446,12 @@ PciDetermineSlotNumber(IN PPCI_PDO_EXTENSION PdoExtension,
     {
         /* Read every slot information entry */
         SlotInfo = &PciIrqRoutingTable->Slot[0];
-        DPRINT("$PIR %p is %u bytes, slot 0 is at: %p\n",
+        DPRINT("PCIX - $PIR %p is %u bytes, slot 0 is at: %p\n",
                PciIrqRoutingTable, PciIrqRoutingTable->TableSize, SlotInfo);
         while (SlotInfo < (PSLOT_INFO)((ULONG_PTR)PciIrqRoutingTable +
                                        PciIrqRoutingTable->TableSize))
         {
-            DPRINT("Slot Info: %u.%u->#%u\n",
+            DPRINT("PCIX - Slot Info: %u.%u->#%u\n",
                    SlotInfo->BusNumber,
                    SlotInfo->DeviceNumber,
                    SlotInfo->SlotNumber);

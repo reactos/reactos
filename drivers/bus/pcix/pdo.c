@@ -205,7 +205,7 @@ PciPdoIrpStartDevice(IN PIRP Irp,
     else
     {
         /* All good */
-        DPRINT1("PCI - START not changing resource settings.\n");
+        DPRINT1("PCIX - START not changing resource settings.\n");
     }
 
     /* Check if the device was sleeping */
@@ -328,7 +328,7 @@ PciPdoIsPresent(
     PciReadDeviceConfig(DeviceExtension, &PciData, 0, PCI_COMMON_HDR_LENGTH);
     if (!PcipIsSameDevice(DeviceExtension, &PciData))
     {
-        DPRINT1("PCI (pdox %p) no longer answers in its slot\n", DeviceExtension);
+        DPRINT1("PCIX - pdox %p no longer answers in its slot\n", DeviceExtension);
         DeviceExtension->NotPresent = TRUE;
         return FALSE;
     }
@@ -368,9 +368,9 @@ PciPdoTurnOff(
     Command |= PCI_DISABLE_LEVEL_INTERRUPT;
     PciDecodeEnable(DeviceExtension, FALSE, &Command);
 
-    if ((!PowerDown) ||
+    if (!PowerDown ||
         (DeviceExtension->PowerState.CurrentDeviceState == PowerDeviceD3) ||
-        !(PciCanDisableDecodes(DeviceExtension, NULL, 0, TRUE)))
+        !PciCanDisableDecodes(DeviceExtension, NULL, 0, TRUE))
     {
         return;
     }
@@ -415,7 +415,7 @@ PciPdoCanPowerDown(
 
     /* The hibernation file and crash dump are written through this function */
     if ((SystemState == PowerSystemHibernate) &&
-        ((DeviceExtension->PowerState.Hibernate) || (DeviceExtension->PowerState.CrashDump)))
+        (DeviceExtension->PowerState.Hibernate || DeviceExtension->PowerState.CrashDump))
     {
         return FALSE;
     }
@@ -467,7 +467,7 @@ PciPdoEnterDevicePowerState(
         Status = PciSetPowerManagedDevicePowerState(DeviceExtension, PowerDeviceD0, TRUE);
         if (!NT_SUCCESS(Status))
         {
-            DPRINT1("PCI (pdox %p) failed to return to D0 (0x%08lx)\n", DeviceExtension, Status);
+            DPRINT1("PCIX - pdox %p failed to return to D0 (0x%08lx)\n", DeviceExtension, Status);
             return Status;
         }
 
@@ -486,7 +486,7 @@ PciPdoEnterDevicePowerState(
         Status = PciSetPowerManagedDevicePowerState(DeviceExtension, DeviceState, FALSE);
         if (!NT_SUCCESS(Status))
         {
-            DPRINT1("PCI (pdox %p) did not settle in device state %lu (0x%08lx)\n",
+            DPRINT1("PCIX - pdox %p did not settle in device state %lu (0x%08lx)\n",
                     DeviceExtension,
                     DeviceState,
                     Status);
@@ -1050,7 +1050,7 @@ PciPdoCreate(IN PPCI_FDO_EXTENSION DeviceExtension,
 
     /* Get the extension for it */
     PdoExtension = (PPCI_PDO_EXTENSION)DeviceObject->DeviceExtension;
-    DPRINT1("PCI: New PDO (b=0x%x, d=0x%x, f=0x%x) @ %p, ext @ %p\n",
+    DPRINT1("PCIX - New PDO (b=0x%x, d=0x%x, f=0x%x) @ %p, ext @ %p\n",
             DeviceExtension->BaseBus,
             Slot.u.bits.DeviceNumber,
             Slot.u.bits.FunctionNumber,

@@ -62,7 +62,7 @@ tranirq_Constructor(IN PVOID DeviceExtension,
     if ((ULONG_PTR)InterfaceData != CmResourceTypeInterrupt)
     {
         /* Fail this invalid request */
-        DPRINT1("PCI - IRQ trans constructor doesn't like %p in InterfaceSpecificData\n",
+        DPRINT1("PCIX - IRQ trans constructor doesn't like %p in InterfaceSpecificData\n",
                 InterfaceData);
         return STATUS_INVALID_PARAMETER_3;
     }

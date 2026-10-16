@@ -52,8 +52,8 @@ PciGetDescriptionMessage(IN ULONG Identifier,
         }
 
         /* Drop the trailing line break, where there is one */
-        while ((Count) && ((Description[Count - 1] == L'\n') ||
-                           (Description[Count - 1] == L'\r')))
+        while (Count && ((Description[Count - 1] == L'\n') ||
+                         (Description[Count - 1] == L'\r')))
         {
             Count--;
         }
@@ -78,7 +78,7 @@ PciGetDescriptionMessage(IN ULONG Identifier,
         RtlInitAnsiString(&MessageString, (PCHAR)Entry->Text);
 
         /* Drop the trailing line break, where there is one */
-        while ((MessageString.Length) &&
+        while (MessageString.Length &&
                ((MessageString.Buffer[MessageString.Length - 1] == '\n') ||
                 (MessageString.Buffer[MessageString.Length - 1] == '\r')))
         {
@@ -360,7 +360,7 @@ PciQueryId(IN PPCI_PDO_EXTENSION DeviceExtension,
                 if ((IdBuffer.CharBuffer + 2) >
                     (IdBuffer.BufferData + sizeof(IdBuffer.BufferData)))
                 {
-                    DPRINT1("Bridge chain too deep for an instance ID\n");
+                    DPRINT1("PCIX - Bridge chain too deep for an instance ID\n");
                     return STATUS_BUFFER_OVERFLOW;
                 }
 
@@ -379,7 +379,7 @@ PciQueryId(IN PPCI_PDO_EXTENSION DeviceExtension,
         default:
 
             /* Unknown query type */
-            DPRINT1("PciQueryId expected ID type = %d\n", QueryType);
+            DPRINT1("PCIX - PciQueryId expected ID type = %d\n", QueryType);
             return STATUS_NOT_SUPPORTED;
     }
 
@@ -391,7 +391,7 @@ PciQueryId(IN PPCI_PDO_EXTENSION DeviceExtension,
     if (!StringBuffer) return STATUS_INSUFFICIENT_RESOURCES;
 
     /* Build the UNICODE_STRING structure for it */
-    DPRINT("PciQueryId(%d)\n", QueryType);
+    DPRINT("PCIX - PciQueryId(%d)\n", QueryType);
     DestinationString.Buffer = StringBuffer;
     DestinationString.MaximumLength = IdBuffer.TotalLength;
 

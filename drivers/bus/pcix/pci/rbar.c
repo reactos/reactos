@@ -86,7 +86,7 @@ PciGetResizableBarCapability(
         State->SizeMask[BarIndex] = SizeMask;
         State->EntryIndex[BarIndex] = (UCHAR)Entry;
 
-        DPRINT1("PCI: BAR %lu of %p is resizable, sizes 0x%08lx\n",
+        DPRINT1("PCIX - BAR %lu of %p is resizable, sizes 0x%08lx\n",
                 BarIndex, PdoExtension, SizeMask);
     }
 }
@@ -212,7 +212,7 @@ PciSelectResizableBarSize(
     Control |= SizeBit << PCI_RBAR_CONTROL_SIZE_SHIFT;
     PciWriteDeviceConfig(PdoExtension, &Control, Offset, sizeof(Control));
 
-    DPRINT("PCI: BAR %lu of %p resized to %I64u MB\n", BarIndex, PdoExtension, Megabytes);
+    DPRINT("PCIX - BAR %lu of %p resized to %I64u MB\n", BarIndex, PdoExtension, Megabytes);
 }
 
 /**
@@ -243,7 +243,7 @@ PciApplyResizableBarSizes(
                         sizeof(Command));
     if (Command & PCI_ENABLE_MEMORY_SPACE)
     {
-        DPRINT("PCI: Memory decode of %p is still on, not resizing BARs\n", PdoExtension);
+        DPRINT("PCIX - Memory decode of %p is still on, not resizing BARs\n", PdoExtension);
         return;
     }
 

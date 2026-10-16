@@ -243,9 +243,9 @@ PciFdoIrpQueryRemoveDevice(IN PIRP Irp,
     UNREFERENCED_PARAMETER(IoStackLocation);
 
     /* Paging, hibernation and dump files behind this bus cannot lose their path */
-    if ((DeviceExtension->PowerState.Paging) ||
-        (DeviceExtension->PowerState.Hibernate) ||
-        (DeviceExtension->PowerState.CrashDump))
+    if (DeviceExtension->PowerState.Paging ||
+        DeviceExtension->PowerState.Hibernate ||
+        DeviceExtension->PowerState.CrashDump)
     {
         return STATUS_DEVICE_BUSY;
     }
@@ -303,7 +303,7 @@ PciFdoIrpRemoveDevice(IN PIRP Irp,
     PciFreeBusSecondaryExtensions(DeviceExtension);
 
     if (DeviceExtension->PreservedConfig)
-        ExFreePoolWithTag(DeviceExtension->PreservedConfig, 'PciP');
+        ExFreePoolWithTag(DeviceExtension->PreservedConfig, TAG_PCI_PRESERVED);
 
     /* The lower drivers see the remove before this device leaves the stack */
     DeviceObject = DeviceExtension->FunctionalDeviceObject;
@@ -363,15 +363,15 @@ PciFdoIrpQueryStopDevice(IN PIRP Irp,
     UNREFERENCED_PARAMETER(IoStackLocation);
 
     /* Paging, hibernation and dump files behind this bus cannot lose their path */
-    if ((DeviceExtension->PowerState.Paging) ||
-        (DeviceExtension->PowerState.Hibernate) ||
-        (DeviceExtension->PowerState.CrashDump))
+    if (DeviceExtension->PowerState.Paging ||
+        DeviceExtension->PowerState.Hibernate ||
+        DeviceExtension->PowerState.CrashDump)
     {
         return STATUS_DEVICE_BUSY;
     }
 
     /* Root bus ranges are fixed, and children would sit outside new bridge windows */
-    if ((PCI_IS_ROOT_FDO(DeviceExtension)) || (DeviceExtension->ChildPdoList))
+    if (PCI_IS_ROOT_FDO(DeviceExtension) || DeviceExtension->ChildPdoList)
         return STATUS_UNSUCCESSFUL;
 
     return PciBeginStateTransition(DeviceExtension, PciStopped);
@@ -531,7 +531,7 @@ PciFdoIrpDeviceUsageNotification(IN PIRP Irp,
     PAGED_CODE();
 
     /* A failure from below stands, but a lower driver that ignored it does not count */
-    if ((!NT_SUCCESS(Irp->IoStatus.Status)) &&
+    if (!NT_SUCCESS(Irp->IoStatus.Status) &&
         (Irp->IoStatus.Status != STATUS_NOT_SUPPORTED))
     {
         return Irp->IoStatus.Status;
@@ -644,7 +644,7 @@ PciGetHotPlugParameters(IN PPCI_FDO_EXTENSION FdoExtension)
         }
         if (i != 4)
         {
-            DPRINT1("PCI - _HPP returned something other than four integers\n");
+            DPRINT1("PCIX - _HPP returned something other than four integers\n");
             break;
         }
 
@@ -654,7 +654,7 @@ PciGetHotPlugParameters(IN PPCI_FDO_EXTENSION FdoExtension)
             (Argument[2].Argument > 1) ||
             (Argument[3].Argument > 1))
         {
-            DPRINT1("PCI - _HPP returned values out of range, ignoring them\n");
+            DPRINT1("PCIX - _HPP returned values out of range, ignoring them\n");
             break;
         }
 
@@ -665,7 +665,7 @@ PciGetHotPlugParameters(IN PPCI_FDO_EXTENSION FdoExtension)
         FdoExtension->HotPlugParameters.EnablePERR = (BOOLEAN)Argument[3].Argument;
         FdoExtension->HotPlugParameters.Acquired = TRUE;
 
-        DPRINT1("PCI - _HPP for FDO ext 0x%p: cache line %u, latency %u, SERR %u, PERR %u\n",
+        DPRINT1("PCIX - _HPP for FDO ext 0x%p: cache line %u, latency %u, SERR %u, PERR %u\n",
                 FdoExtension,
                 FdoExtension->HotPlugParameters.CacheLineSize,
                 FdoExtension->HotPlugParameters.LatencyTimer,
@@ -720,7 +720,7 @@ PciAddDevice(IN PDRIVER_OBJECT DriverObject,
     UNICODE_STRING ValueName;
     ULONG ResultLength;
     PAGED_CODE();
-    DPRINT1("PCI - AddDevice (a new bus). PDO: %p (Driver: %wZ)\n",
+    DPRINT1("PCIX - AddDevice (a new bus). PDO: %p (Driver: %wZ)\n",
             PhysicalDeviceObject, &PhysicalDeviceObject->DriverObject->DriverName);
 
     /* Zero out variables so failure path knows what to do */
@@ -745,7 +745,7 @@ PciAddDevice(IN PDRIVER_OBJECT DriverObject,
                 (PdoExtension->SubClass != PCI_SUBCLASS_BR_PCI_TO_PCI))
             {
                 /* This should never happen */
-                DPRINT1("PCI - PciAddDevice for Non-Root/Non-PCI-PCI bridge,\n"
+                DPRINT1("PCIX - PciAddDevice for Non-Root/Non-PCI-PCI bridge,\n"
                         "      Class %02x, SubClass %02x, will not add.\n",
                         PdoExtension->BaseClass,
                         PdoExtension->SubClass);
@@ -758,14 +758,14 @@ PciAddDevice(IN PDRIVER_OBJECT DriverObject,
             }
 
             /* Subordinate bus on the bridge */
-            DPRINT1("PCI - AddDevice (new bus is child of bus 0x%x).\n",
+            DPRINT1("PCIX - AddDevice (new bus is child of bus 0x%x).\n",
                     ParentExtension->BaseBus);
 
             /* Make sure PCI bus numbers are configured */
             if (!PciAreBusNumbersConfigured(PdoExtension))
             {
                 /* This is a critical failure */
-                DPRINT1("PCI - Bus numbers not configured for bridge (0x%x.0x%x.0x%x)\n",
+                DPRINT1("PCIX - Bus numbers not configured for bridge (0x%x.0x%x.0x%x)\n",
                         ParentExtension->BaseBus,
                         PdoExtension->Slot.u.bits.DeviceNumber,
                         PdoExtension->Slot.u.bits.FunctionNumber);
@@ -822,12 +822,12 @@ PciAddDevice(IN PDRIVER_OBJECT DriverObject,
             }
 
             /* The firmware reports the bus numbers this root decodes in its boot config */
-            if ((Descriptor) &&
-                (PciGetRootBusRange(Descriptor,
-                                    &FdoExtension->BaseBus,
-                                    &FdoExtension->MaxSubordinateBus)))
+            if (Descriptor &&
+                PciGetRootBusRange(Descriptor,
+                                   &FdoExtension->BaseBus,
+                                   &FdoExtension->MaxSubordinateBus))
             {
-                DPRINT1("PCI   Root bus range 0x%x to 0x%x.\n",
+                DPRINT1("PCIX - Root bus range 0x%x to 0x%x.\n",
                         FdoExtension->BaseBus,
                         FdoExtension->MaxSubordinateBus);
             }
@@ -845,7 +845,7 @@ PciAddDevice(IN PDRIVER_OBJECT DriverObject,
                 }
 
                 /* Warn that a default configuration will be used, and set bus 0 */
-                DPRINT1("PCI   Will use default configuration.\n");
+                DPRINT1("PCIX - Will use default configuration.\n");
                 PciBreakOnDefault = TRUE;
                 FdoExtension->BaseBus = 0;
                 FdoExtension->MaxSubordinateBus = 0xFF;
@@ -913,7 +913,7 @@ PciAddDevice(IN PDRIVER_OBJECT DriverObject,
     ASSERT(!NT_SUCCESS(Status));
 
     /* Check if the FDO extension exists */
-    if (FdoExtension) DPRINT1("Should destroy secondaries\n");
+    if (FdoExtension) DPRINT1("PCIX - Should destroy secondaries\n");
 
     /* Delete device objects */
     if (AttachedTo) IoDetachDevice(AttachedTo);

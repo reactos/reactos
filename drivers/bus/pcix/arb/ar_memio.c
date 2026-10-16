@@ -145,7 +145,7 @@ ario_Initializer(IN PVOID Instance)
                                           NULL);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("ario_Initializer: init arbiter returned %X\n", Status);
+        DPRINT1("PCIX - ario_Initializer: init arbiter returned %X\n", Status);
     }
 
     return Status;
@@ -213,7 +213,7 @@ ario_ApplyBrokenVideoHack(IN PPCI_FDO_EXTENSION FdoExtension)
     ASSERT(NT_SUCCESS(Status));
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("ario_ApplyBrokenVideoHack: ordering failed %X\n", Status);
+        DPRINT1("PCIX - ario_ApplyBrokenVideoHack: ordering failed %X\n", Status);
     }
 
     /* Now the hack has been applied */
@@ -334,7 +334,7 @@ armem_Initializer(IN PVOID Instance)
                                           NULL);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("armem_Initializer: init arbiter returned %X\n", Status);
+        DPRINT1("PCIX - armem_Initializer: init arbiter returned %X\n", Status);
     }
 
     return Status;

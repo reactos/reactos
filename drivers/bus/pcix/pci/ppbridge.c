@@ -192,7 +192,7 @@ PciBridgeIsSubtractiveDecode(IN PPCI_CONFIGURATOR_CONTEXT Context)
          ((PciData->u.type1.IOLimit & 0xF0) == 0xF0))
     {
         /* A subtractive decode bridge would have a ProgIf 1, and no I/O limit */
-        DPRINT("Subtractive decode does not seem to be enabled\n");
+        DPRINT("PCIX - Subtractive decode does not seem to be enabled\n");
         return FALSE;
     }
 
@@ -211,13 +211,13 @@ PciBridgeIsSubtractiveDecode(IN PPCI_CONFIGURATOR_CONTEXT Context)
         if (PciBridgeIsPositiveDecode(PdoExtension))
         {
             /* Obey ACPI */
-            DPRINT1("Putting bridge in positive decode because of PDEC\n");
+            DPRINT1("PCIX - Putting bridge in positive decode because of PDEC\n");
             return FALSE;
         }
     }
 
     /* If we found subtractive decode, we'll need a resource update later */
-    DPRINT1("PCI : Subtractive decode on 0x%x\n", Current->u.type1.SecondaryBus);
+    DPRINT1("PCIX - Subtractive decode on 0x%x\n", Current->u.type1.SecondaryBus);
     PdoExtension->UpdateHardware = TRUE;
     return TRUE;
 }
@@ -281,7 +281,7 @@ PPBridge_SaveCurrentSettings(IN PPCI_CONFIGURATOR_CONTEXT Context)
 
                 /* Decode the base address, and write down the length */
                 Base.LowPart = Bar & BarMask;
-                DPRINT1("ROM BAR Base: %lx\n", Base.LowPart);
+                DPRINT1("PCIX - ROM BAR Base: %lx\n", Base.LowPart);
                 CmDescriptor->u.Memory.Length = IoDescriptor->u.Memory.Length;
             }
             else
@@ -313,7 +313,7 @@ PPBridge_SaveCurrentSettings(IN PPCI_CONFIGURATOR_CONTEXT Context)
 
                 /* Decode the base address, and write down the length */
                 Base.LowPart = Bar & BarMask;
-                DPRINT1("BAR Base: %lx\n", Base.LowPart);
+                DPRINT1("PCIX - BAR Base: %lx\n", Base.LowPart);
                 CmDescriptor->u.Generic.Length = IoDescriptor->u.Generic.Length;
             }
         }
@@ -329,7 +329,7 @@ PPBridge_SaveCurrentSettings(IN PPCI_CONFIGURATOR_CONTEXT Context)
                 /* I/O Port Requirements */
                 Base.LowPart = PciBridgeIoBase(Current);
                 Limit.LowPart = PciBridgeIoLimit(Current);
-                DPRINT1("Bridge I/O Base and Limit: %lx %lx\n",
+                DPRINT1("PCIX - Bridge I/O Base and Limit: %lx %lx\n",
                          Base.LowPart, Limit.LowPart);
 
                 /* Do we have any I/O Port data? */
@@ -346,7 +346,7 @@ PPBridge_SaveCurrentSettings(IN PPCI_CONFIGURATOR_CONTEXT Context)
                 Limit.LowPart = PciBridgeMemoryLimit(Current);
 
                 /* These should always be there, so check their alignment */
-                DPRINT1("Bridge MEM Base and Limit: %lx %lx\n",
+                DPRINT1("PCIX - Bridge MEM Base and Limit: %lx %lx\n",
                          Base.LowPart, Limit.LowPart);
                 CheckAlignment = TRUE;
             }
@@ -358,7 +358,7 @@ PPBridge_SaveCurrentSettings(IN PPCI_CONFIGURATOR_CONTEXT Context)
                 Limit = PciBridgePrefetchMemoryLimit(Current);
 
                 /* If it's there, check the alignment */
-                DPRINT1("Bridge Prefetch MEM Base and Limit: %I64x %I64x\n", Base, Limit);
+                DPRINT1("PCIX - Bridge Prefetch MEM Base and Limit: %I64x %I64x\n", Base, Limit);
                 CheckAlignment = TRUE;
             }
 
@@ -387,7 +387,7 @@ PPBridge_SaveCurrentSettings(IN PPCI_CONFIGURATOR_CONTEXT Context)
                 (Limit.HighPart > Base.HighPart) &&
                 (Limit.LowPart > Base.LowPart))
             {
-                DPRINT1("Bridge prefetch limit %I64x has junk in its upper half\n",
+                DPRINT1("PCIX - Bridge prefetch limit %I64x has junk in its upper half\n",
                         Limit.QuadPart);
                 Limit.HighPart = Base.HighPart;
                 Length.QuadPart = Limit.QuadPart - Base.QuadPart + 1;
@@ -433,11 +433,11 @@ PPBridge_SaveCurrentSettings(IN PPCI_CONFIGURATOR_CONTEXT Context)
     if (PdoExtension->Dependent.type1.SubtractiveDecode)
     {
         /* Check if legacy VGA decodes are enabled */
-        DPRINT1("Subtractive decode bridge\n");
+        DPRINT1("PCIX - Subtractive decode bridge\n");
         if (Current->u.type1.BridgeControl & PCI_ENABLE_BRIDGE_VGA)
         {
             /* Save this setting for later */
-            DPRINT1("VGA Bridge\n");
+            DPRINT1("PCIX - VGA Bridge\n");
             PdoExtension->Dependent.type1.VgaBitSet = TRUE;
         }
 
@@ -450,7 +450,7 @@ PPBridge_SaveCurrentSettings(IN PPCI_CONFIGURATOR_CONTEXT Context)
         if (Current->u.type1.BridgeControl & PCI_ENABLE_BRIDGE_VGA)
         {
             /* Save this setting for later */
-            DPRINT1("VGA Bridge\n");
+            DPRINT1("PCIX - VGA Bridge\n");
             PdoExtension->Dependent.type1.VgaBitSet = TRUE;
 
             /* And on positive decode, we'll also need extra resources locked */
@@ -461,7 +461,7 @@ PPBridge_SaveCurrentSettings(IN PPCI_CONFIGURATOR_CONTEXT Context)
         if (Current->u.type1.BridgeControl & PCI_ENABLE_BRIDGE_ISA)
         {
             /* Save this setting for later */
-            DPRINT1("ISA Bridge\n");
+            DPRINT1("PCIX - ISA Bridge\n");
             PdoExtension->Dependent.type1.IsaBitSet = TRUE;
         }
     }
@@ -481,8 +481,8 @@ PPBridge_SaveCurrentSettings(IN PPCI_CONFIGURATOR_CONTEXT Context)
         if (PdoExtension->Dependent.type1.SubtractiveDecode)
         {
             /* We're going to need a copy of the configuration for later use */
-            DPRINT1("apply config save hack to ICH subtractive decode\n");
-            SavedConfig = ExAllocatePoolWithTag(0, PCI_COMMON_HDR_LENGTH, 'PciP');
+            DPRINT1("PCIX - apply config save hack to ICH subtractive decode\n");
+            SavedConfig = ExAllocatePoolWithTag(0, PCI_COMMON_HDR_LENGTH, TAG_PCI_PRESERVED);
             PdoExtension->ParentFdoExtension->PreservedConfig = SavedConfig;
             if (SavedConfig) RtlCopyMemory(SavedConfig, Current, PCI_COMMON_HDR_LENGTH);
         }

@@ -106,7 +106,7 @@ Device_SaveCurrentSettings(IN PPCI_CONFIGURATOR_CONTEXT Context)
         {
             /* Skip these descriptors */
             CmDescriptor->Type = CmResourceTypeNull;
-            DPRINT1("Invalid BAR\n");
+            DPRINT1("PCIX - Invalid BAR\n");
         }
     }
 
@@ -162,7 +162,7 @@ Device_SaveLimits(IN PPCI_CONFIGURATOR_CONTEXT Context)
             {
                 /* Increase it to 64MB to make sure nobody touches the buffer */
                 BarArray[i] = 0xFC000000;
-                DPRINT1("PCI - Adjusted broken S3 requirement from 32MB to 64MB\n");
+                DPRINT1("PCIX - Adjusted broken S3 requirement from 32MB to 64MB\n");
             }
         }
     }
@@ -178,19 +178,19 @@ Device_SaveLimits(IN PPCI_CONFIGURATOR_CONTEXT Context)
             {
                 /* Ignore it */
                 BarArray[1] = 0;
-                DPRINT1("PCI - Ignored Cirrus GD54xx broken IO requirement (400 ports)\n");
+                DPRINT1("PCIX - Ignored Cirrus GD54xx broken IO requirement (400 ports)\n");
             }
             else
             {
                 /* Otherwise, this BAR seems okay */
-                DPRINT1("PCI - Cirrus GD54xx 400 port IO requirement has a valid setting (%08x)\n",
+                DPRINT1("PCIX - Cirrus GD54xx 400 port IO requirement has a valid setting (%08x)\n",
                         Current->u.type0.BaseAddresses[1]);
             }
         }
         else if (BarArray[1])
         {
             /* Strange, the I/O BAR was not found as expected (or at all) */
-            DPRINT1("PCI - Warning Cirrus Adapter 101300a0 has unexpected resource requirement (%08x)\n",
+            DPRINT1("PCIX - Warning Cirrus Adapter 101300a0 has unexpected resource requirement (%08x)\n",
                     BarArray[1]);
         }
     }
@@ -208,7 +208,7 @@ Device_SaveLimits(IN PPCI_CONFIGURATOR_CONTEXT Context)
         /* A 64-bit BAR in the last slot has nowhere to put its high half, so it stays below 4GB */
         if ((i + 1) == PCI_TYPE0_ADDRESSES)
         {
-            DPRINT1("PCI - 64-bit BAR %lu has no upper register, decoding it as 32-bit\n", i);
+            DPRINT1("PCIX - 64-bit BAR %lu has no upper register, decoding it as 32-bit\n", i);
             continue;
         }
 
@@ -342,7 +342,7 @@ Device_ChangeResourceSettings(
                 (PdoExtension->CommandEnables & Decode) &&
                 !IsVga)
             {
-                DPRINT1("PCI (pdox %p) BAR %lu has no range but its decode stays on\n",
+                DPRINT1("PCIX - pdox %p BAR %lu has no range but its decode stays on\n",
                         PdoExtension,
                         i);
                 return STATUS_INVALID_PARAMETER;
@@ -372,7 +372,7 @@ Device_ChangeResourceSettings(
 
         if (!HasUpperHalf && CmDescriptor->u.Generic.Start.HighPart)
         {
-            DPRINT1("PCI (pdox %p) BAR %lu cannot hold address %I64x\n",
+            DPRINT1("PCIX - pdox %p BAR %lu cannot hold address %I64x\n",
                     PdoExtension,
                     i,
                     CmDescriptor->u.Generic.Start.QuadPart);

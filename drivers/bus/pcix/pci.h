@@ -27,6 +27,16 @@
 #define PCI_POOL_TAG    'BicP'
 
 //
+// Tag used for the legacy device routing cache
+//
+#define TAG_PCI_ROUTING 'RicP'
+
+//
+// Tag used for a bridge's preserved configuration
+//
+#define TAG_PCI_PRESERVED 'PicP'
+
+//
 // Checks if the specified FDO is the FDO for the Root PCI Bus
 //
 #define PCI_IS_ROOT_FDO(x)                  ((x)->BusRootFdoExtension == x)

@@ -211,7 +211,7 @@ PciGetAcpiTable(IN ULONG TableCode)
     if (!NT_SUCCESS(Status))
     {
         /* No ACPI on the machine */
-        DPRINT1("AcpiFindRsdt() Failed!\n");
+        DPRINT1("PCIX - AcpiFindRsdt() Failed!\n");
         return NULL;
     }
 
@@ -493,7 +493,6 @@ PciGetIrqRoutingTableFromRegistry(OUT PPCI_IRQ_ROUTING_TABLE *PciRoutingTable)
         {
             Checksum += ((PUCHAR)Table)[i];
         }
-
         if (Checksum != 0)
             break;
 
@@ -629,7 +628,7 @@ PciBuildHackTable(IN HANDLE KeyHandle)
                 (NameLength != PCI_HACK_ENTRY_FULL_SIZE))
             {
                 /* It's an invalid entry, skip it */
-                DPRINT1("Skipping hack entry with invalid length name\n");
+                DPRINT1("PCIX - Skipping hack entry with invalid length name\n");
                 continue;
             }
 
@@ -666,7 +665,7 @@ PciBuildHackTable(IN HANDLE KeyHandle)
              if ((NameLength == PCI_HACK_ENTRY_REV_SIZE) ||
                  (NameLength == PCI_HACK_ENTRY_FULL_SIZE))
              {
-                 /* RR ends the name, so parse the last four digits and keep the low byte */
+                 /* The revision ends the name, so parse the last four digits and keep the low byte */
                  if (!PciStringToUSHORT(&ValueInfo->Name[(NameLength / sizeof(WCHAR)) - 4],
                                         &Entry->RevisionID))
                  {
@@ -687,7 +686,7 @@ PciBuildHackTable(IN HANDLE KeyHandle)
 
             /* Print out for the debugger's sake */
 #ifdef HACK_DEBUG
-            DPRINT1("Adding Hack entry for Vendor:0x%04x Device:0x%04x ",
+            DPRINT1("PCIX - Adding Hack entry for Vendor:0x%04x Device:0x%04x ",
                     Entry->VendorID, Entry->DeviceID);
             if (Entry->Flags & PCI_HACK_HAS_SUBSYSTEM_INFO)
                 DbgPrint("SybSys:0x%04x SubVendor:0x%04x ",
@@ -851,7 +850,7 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
     PWCHAR StartOptions;
     UNICODE_STRING OptionString, PciLockString;
     NTSTATUS Status;
-    DPRINT1("PCI: DriverEntry!\n");
+    DPRINT1("PCIX - DriverEntry!\n");
 
     /* Setup initial loop variables */
     KeyHandle = NULL;
@@ -1002,7 +1001,7 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
 
         /* Check if this is a Datacenter SKU, which impacts IRQ alignment */
         PciRunningDatacenter = PciIsDatacenter();
-        if (PciRunningDatacenter) DPRINT1("PCI running on datacenter build\n");
+        if (PciRunningDatacenter) DPRINT1("PCIX - Running on datacenter build\n");
 
         /* Check if the system has an ACPI Hardware Watchdog Timer */
         //WdTable = PciGetAcpiTable(WDRT_SIGNATURE);

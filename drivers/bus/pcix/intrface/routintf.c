@@ -314,7 +314,7 @@ PciCacheLegacyDeviceRouting(IN PDEVICE_OBJECT DeviceObject,
         /* Allocate a new cache structure */
         LegacyDevice = ExAllocatePoolWithTag(PagedPool,
                                              sizeof(PCI_LEGACY_DEVICE),
-                                             'PciR');
+                                             TAG_PCI_ROUTING);
         if (!LegacyDevice) return STATUS_INSUFFICIENT_RESOURCES;
 
         /* Save all the data in it */
@@ -363,7 +363,7 @@ PciFreeLegacyDeviceCache(VOID)
     {
         LegacyDevice = PciLegacyDeviceHead;
         PciLegacyDeviceHead = LegacyDevice->Next;
-        ExFreePoolWithTag(LegacyDevice, 'PciR');
+        ExFreePoolWithTag(LegacyDevice, TAG_PCI_ROUTING);
     }
 }
 

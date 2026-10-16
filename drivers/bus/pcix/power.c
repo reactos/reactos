@@ -136,7 +136,7 @@ PciSetPowerManagedDevicePowerState(IN PPCI_PDO_EXTENSION DeviceExtension,
          (DeviceState != PowerDeviceD0))
     {
         /* Simply return success, ignoring this request */
-        DPRINT1("Cannot disable decodes on this device, ignoring PM request...\n");
+        DPRINT1("PCIX - Cannot disable decodes on this device, ignoring PM request...\n");
         return Status;
     }
 
@@ -184,7 +184,7 @@ PciSetPowerManagedDevicePowerState(IN PPCI_PDO_EXTENSION DeviceExtension,
     else
     {
         /* Nothing to do! */
-        DPRINT1("No PM on this device, ignoring request\n");
+        DPRINT1("PCIX - No PM on this device, ignoring request\n");
     }
 
     /* Check if new resources have to be assigned */
@@ -231,7 +231,7 @@ PciFdoDevicePowerCompletion(
     /* The system transition goes ahead even if the bus could not follow it */
     if (!NT_SUCCESS(IoStatus->Status))
     {
-        DPRINT1("PCI: Bus failed to enter device state %lu (0x%08lx)\n",
+        DPRINT1("PCIX - Bus failed to enter device state %lu (0x%08lx)\n",
                 PowerState.DeviceState,
                 IoStatus->Status);
     }
@@ -291,7 +291,7 @@ PciFdoSystemPowerCompletion(
         if (NT_SUCCESS(Status))
             return STATUS_MORE_PROCESSING_REQUIRED;
 
-        DPRINT1("PCI: Could not request device state %lu (0x%08lx)\n",
+        DPRINT1("PCIX - Could not request device state %lu (0x%08lx)\n",
                 Target.DeviceState,
                 Status);
     }
@@ -308,7 +308,8 @@ PciFdoWaitWake(IN PIRP Irp,
 {
     UNREFERENCED_PARAMETER(IoStackLocation);
 
-    /* The bus never arms itself, so whatever lies below answers this */
+    /* Arming the bus for its children's wake requests is not implemented yet */
+    DPRINT1("PCIX - Bus wake arming is not implemented, passing wait-wake down\n");
     return PciPassIrpFromFdoToPdo(DeviceExtension, Irp);
 }
 
@@ -355,7 +356,8 @@ PciFdoIrpQueryPower(IN PIRP Irp,
     UNREFERENCED_PARAMETER(IoStackLocation);
     UNREFERENCED_PARAMETER(DeviceExtension);
 
-    /* The bus is never armed for wake, so no state is refused */
+    /* Refusing states that would break an armed wake is not implemented yet */
+    DPRINT1("PCIX - Wake-aware power queries are not implemented, accepting the state\n");
     return STATUS_SUCCESS;
 }
 

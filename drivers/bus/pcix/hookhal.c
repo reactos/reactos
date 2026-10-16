@@ -47,8 +47,9 @@ PciTranslateBusAddress(IN INTERFACE_TYPE InterfaceType,
 }
 
 /**
- * @brief Finds the PDO of the function in a slot. The caller holds PciGlobalLock.
+ * @brief Finds the PDO of the function in a slot.
  */
+_Requires_lock_held_(PciGlobalLock)
 static
 PPCI_PDO_EXTENSION
 NTAPI
@@ -76,7 +77,7 @@ PciFindPdoByLocation(
     if (!DeviceExtension)
     {
         /* It wasn't, bail out */
-        DPRINT1("Pci: Could not find PCI bus FDO. Bus Number = 0x%x\n", BusNumber);
+        DPRINT1("PCIX - Could not find PCI bus FDO. Bus Number = 0x%x\n", BusNumber);
         return NULL;
     }
 
@@ -94,7 +95,7 @@ PciFindPdoByLocation(
          PdoExtension = PdoExtension->Next)
     {
         /* A function that left the slot keeps its PDO until PnP removes it */
-        if ((PdoExtension->NotPresent) || (PdoExtension->ReportedMissing))
+        if (PdoExtension->NotPresent || PdoExtension->ReportedMissing)
             continue;
 
         /* Check if the function number and header data matches */
@@ -115,7 +116,7 @@ PciFindPdoByLocation(
     if (!PdoExtension)
     {
         /* Let the debugger know */
-        DPRINT1("Pci: Could not find PDO for device @ %x.%x.%x\n",
+        DPRINT1("PCIX - Could not find PDO for device @ %x.%x.%x\n",
                 BusNumber,
                 PciSlot.u.bits.DeviceNumber,
                 PciSlot.u.bits.FunctionNumber);

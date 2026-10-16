@@ -181,10 +181,10 @@ PciComputeNewCurrentSettings(IN PPCI_PDO_EXTENSION PdoExtension,
                     /* Check what kind of data this was */
                     switch (Partial->u.DevicePrivate.Data[0])
                     {
-                        /* Not produced by this driver, so not consumed here */
+                        /* Not used in the driver yet */
                         case 1:
                         case 2:
-                            DPRINT1("PCI - ignoring device-private data type %u\n",
+                            DPRINT1("PCIX - ignoring device-private data type %u\n",
                                     Partial->u.DevicePrivate.Data[0]);
                             break;
 
@@ -577,8 +577,8 @@ PciQueryTargetDeviceRelations(IN PPCI_PDO_EXTENSION PdoExtension,
 /**
  * @brief Finds the other present functions in the same slot as PdoExtension.
  * When Objects is not NULL, each PDO found is referenced and stored there.
- * The caller holds the child list lock.
  */
+_Requires_lock_held_(PdoExtension->ParentFdoExtension->ChildListLock)
 static
 ULONG
 NTAPI
@@ -811,7 +811,7 @@ PciBuildRequirementsList(IN PPCI_PDO_EXTENSION PdoExtension,
         }
 
         *Buffer = RequirementsList;
-        DPRINT1("PCI - build resource reqs - early out, 0 resources\n");
+        DPRINT1("PCIX - build resource reqs - early out, 0 resources\n");
         return STATUS_SUCCESS;
     }
 
@@ -899,7 +899,7 @@ PciQueryRequirements(IN PPCI_PDO_EXTENSION PdoExtension,
         (ExIsProcessorFeaturePresent(PF_PAE_ENABLED)))
     {
         /* No fixup is applied for this controller under PAE */
-        DPRINT1("PCI - Compaq hotplug controller PDO ext 0x%p has an unhandled PAE quirk\n",
+        DPRINT1("PCIX - Compaq hotplug controller PDO ext 0x%p has an unhandled PAE quirk\n",
                 PdoExtension);
     }
 
@@ -907,7 +907,7 @@ PciQueryRequirements(IN PPCI_PDO_EXTENSION PdoExtension,
     if (*RequirementsList == PciZeroIoResourceRequirements)
     {
         *RequirementsList = NULL;
-        DPRINT("Returning NULL requirements list\n");
+        DPRINT("PCIX - Returning NULL requirements list\n");
     }
     else
     {
@@ -969,7 +969,7 @@ PciConfigureIdeController(IN PPCI_PDO_EXTENSION PdoExtension,
     if ((MasterMode != SlaveMode) || (MasterFixed != SlaveFixed))
     {
         /* Windows does not support this configuration, fail */
-        DPRINT1("PCI: Warning unsupported IDE controller configuration for VEN_%04x&DEV_%04x!",
+        DPRINT1("PCIX - Warning unsupported IDE controller configuration for VEN_%04x&DEV_%04x!",
                 PdoExtension->VendorId,
                 PdoExtension->DeviceId);
         return Switched;
@@ -1066,7 +1066,7 @@ PciConfigureIdeController(IN PPCI_PDO_EXTENSION PdoExtension,
         else
         {
             /* Settings did not work, fail */
-            DPRINT1("PCI: Warning failed switch to native mode for IDE controller VEN_%04x&DEV_%04x!",
+            DPRINT1("PCIX - Warning failed switch to native mode for IDE controller VEN_%04x&DEV_%04x!",
                     PciData->VendorID,
                     PciData->DeviceID);
         }
@@ -1482,7 +1482,7 @@ PciGetEnhancedCapabilities(IN PPCI_PDO_EXTENSION PdoExtension,
         }
         else
         {
-            DPRINT1("Device has capabilities at: %lx\n", CapPtr);
+            DPRINT1("PCIX - Device has capabilities at: %lx\n", CapPtr);
             PdoExtension->CapabilitiesPtr = CapPtr;
 
             /* Check for PCI-to-PCI Bridges and AGP bridges */
@@ -1502,7 +1502,7 @@ PciGetEnhancedCapabilities(IN PPCI_PDO_EXTENSION PdoExtension,
                                             sizeof(PCI_CAPABILITIES_HEADER)))
                 {
                     /* AGP target ID was found, store it */
-                    DPRINT1("AGP ID: %lx\n", TargetAgpCapabilityId);
+                    DPRINT1("PCIX - AGP ID: %lx\n", TargetAgpCapabilityId);
                     PdoExtension->TargetAgpCapabilityId = TargetAgpCapabilityId;
                 }
             }
@@ -1518,7 +1518,7 @@ PciGetEnhancedCapabilities(IN PPCI_PDO_EXTENSION PdoExtension,
                                              sizeof(PCI_PM_CAPABILITY)))
                 {
                     /* No power management, so act as if it had the hackflag set */
-                    DPRINT1("No PM caps, disabling PM\n");
+                    DPRINT1("PCIX - No PM caps, disabling PM\n");
                     PdoExtension->HackFlags |= PCI_HACK_NO_PM_CAPS;
                 }
                 else
@@ -1543,7 +1543,7 @@ PciGetEnhancedCapabilities(IN PPCI_PDO_EXTENSION PdoExtension,
 
                     /* Save all the power capabilities */
                     PdoExtension->PowerCapabilities = PowerCapabilities.PMC.Capabilities;
-                    DPRINT1("PM Caps Found! Wake Level: %d Power State: %d\n",
+                    DPRINT1("PCIX - PM Caps Found! Wake Level: %d Power State: %d\n",
                             WakeLevel, PdoExtension->PowerState.CurrentDeviceState);
                 }
             }
@@ -1565,7 +1565,7 @@ PciGetEnhancedCapabilities(IN PPCI_PDO_EXTENSION PdoExtension,
                                 PCI_ENABLE_MEMORY_SPACE |
                                 PCI_ENABLE_BUS_MASTER) ?
             PowerDeviceD0: PowerDeviceD3;
-        DPRINT1("PM is off, so assumed device is: %d based on enables\n",
+        DPRINT1("PCIX - PM is off, so assumed device is: %d based on enables\n",
                 PdoExtension->PowerState.CurrentDeviceState);
     }
 }
@@ -1704,7 +1704,7 @@ PcipGetFunctionLimits(IN PPCI_CONFIGURATOR_CONTEXT Context)
         if (Offset != PCI_COMMON_HDR_LENGTH)
         {
             /* It's not, which means configuration somehow changed, dump this */
-            DPRINT1("PCI - CFG space write verify failed at offset 0x%x\n", Offset);
+            DPRINT1("PCIX - CFG space write verify failed at offset 0x%x\n", Offset);
             PciDebugDumpCommonConfig(PciData + 1);
             DPRINT1("----------\n");
             PciDebugDumpCommonConfig(Current);
@@ -1741,7 +1741,7 @@ PcipGetFunctionLimits(IN PPCI_CONFIGURATOR_CONTEXT Context)
         if (IoDescriptor == &PdoExtension->Resources->Limit[0])
         {
             /* Every limit is null, so the function decodes no BAR, which is not an error */
-            DPRINT("PCI function %p decodes no BAR\n", PdoExtension);
+            DPRINT("PCIX - Function %p decodes no BAR\n", PdoExtension);
 
             /* No resources will be assigned for the device */
             ExFreePoolWithTag(PdoExtension->Resources, 0);
@@ -1810,7 +1810,7 @@ PciProcessBus(IN PPCI_FDO_EXTENSION DeviceExtension)
     }
 
     /* Check if the bridge above this bus has the ISA bit set, or required */
-    ParentDecodesIsa = ((PdoExtension) &&
+    ParentDecodesIsa = (PdoExtension &&
                         (PciClassifyDeviceType(PdoExtension) == PciTypePciBridge) &&
                         ((PdoExtension->Dependent.type1.IsaBitRequired) ||
                          (PdoExtension->Dependent.type1.IsaBitSet)));
@@ -1839,7 +1839,7 @@ PciProcessBus(IN PPCI_FDO_EXTENSION DeviceExtension)
     }
 
     /* The I/O arbiter does not avoid the ISA aliases yet, so only report these bridges */
-    if ((ParentDecodesIsa) || (VgaDecoder))
+    if (ParentDecodesIsa || VgaDecoder)
     {
         for (PdoExtension = DeviceExtension->ChildBridgePdoList;
              PdoExtension;
@@ -1848,7 +1848,7 @@ PciProcessBus(IN PPCI_FDO_EXTENSION DeviceExtension)
             if ((PdoExtension != VgaDecoder) &&
                 !(PdoExtension->Dependent.type1.IsaBitSet))
             {
-                DPRINT1("PCI - bridge PDO ext 0x%p needs the ISA bit, which is not applied\n",
+                DPRINT1("PCIX - bridge PDO ext 0x%p needs the ISA bit, which is not applied\n",
                         PdoExtension);
             }
         }
@@ -1864,7 +1864,7 @@ PciProcessBus(IN PPCI_FDO_EXTENSION DeviceExtension)
             if ((PciClassifyDeviceType(PdoExtension) == PciTypePciBridge) &&
                 !(PciAreBusNumbersConfigured(PdoExtension)))
             {
-                DPRINT1("PCI - bridge PDO ext 0x%p has no bus numbers assigned\n",
+                DPRINT1("PCIX - bridge PDO ext 0x%p has no bus numbers assigned\n",
                         PdoExtension);
             }
         }
@@ -1901,7 +1901,7 @@ PciScanBus(IN PPCI_FDO_EXTENSION DeviceExtension)
     PPCI_CAPABILITIES_HEADER CapHeader = (PVOID)CapBuffer;
     UCHAR SecondaryBus;
     UCHAR BusNumbers[3];
-    DPRINT1("PCI Scan Bus: FDO Extension @ 0x%p, Base Bus = 0x%x\n",
+    DPRINT1("PCIX - Scan Bus: FDO Extension @ 0x%p, Base Bus = 0x%x\n",
             DeviceExtension, DeviceExtension->BaseBus);
 
     /* Is this the root FDO? */
@@ -1921,7 +1921,7 @@ PciScanBus(IN PPCI_FDO_EXTENSION DeviceExtension)
                             sizeof(UCHAR));
         if (SecondaryBus != DeviceExtension->BaseBus)
         {
-            DPRINT1("PCI: Bus numbers have been changed!  Restoring originals.\n");
+            DPRINT1("PCIX - Bus numbers have been changed!  Restoring originals.\n");
 
             /* The children were found under these numbers, so the bridge must decode them again */
             BusNumbers[0] = PdoExtension->ParentFdoExtension->BaseBus;
@@ -1971,7 +1971,7 @@ PciScanBus(IN PPCI_FDO_EXTENSION DeviceExtension)
                           NULL);
 
             /* Dump device that was found */
-            DPRINT("Scan Found Device 0x%x (b=0x%x, d=0x%x, f=0x%x)\n",
+            DPRINT("PCIX - Scan Found Device 0x%x (b=0x%x, d=0x%x, f=0x%x)\n",
                    PciSlot.u.AsULONG,
                    i,
                    j,
@@ -1983,7 +1983,7 @@ PciScanBus(IN PPCI_FDO_EXTENSION DeviceExtension)
             /* Find description for this device for the debugger's sake */
             DescriptionText = PciGetDeviceDescriptionMessage(PciData->BaseClass,
                                                              PciData->SubClass);
-            DPRINT("Device Description \"%S\".\n",
+            DPRINT("PCIX - Device Description \"%S\".\n",
                    DescriptionText ? DescriptionText : L"(NULL)");
             if (DescriptionText) ExFreePoolWithTag(DescriptionText, 0);
 
@@ -1997,7 +1997,7 @@ PciScanBus(IN PPCI_FDO_EXTENSION DeviceExtension)
                 (WdTable->PciVendorId == PciData->VendorID) &&
                 (WdTable->PciDeviceId == PciData->DeviceID))
             {
-                DPRINT1("PCI - not enumerating the ACPI watchdog device\n");
+                DPRINT1("PCIX - not enumerating the ACPI watchdog device\n");
                 continue;
             }
 
@@ -2029,7 +2029,7 @@ PciScanBus(IN PPCI_FDO_EXTENSION DeviceExtension)
                 /* The hack database can take a device out of its critical class */
                 if (!(HackFlags & PCI_HACK_NOT_CRITICAL_DEVICE))
                 {
-                    DPRINT1("Not allowing PM Because device is critical\n");
+                    DPRINT1("PCIX - Not allowing PM Because device is critical\n");
 
                     /* Probe it with the system held, and keep it decoding while stopped */
                     HackFlags |= PCI_HACK_CRITICAL_DEVICE | PCI_HACK_KEEP_DECODES_ON_STOP;
@@ -2047,7 +2047,7 @@ PciScanBus(IN PPCI_FDO_EXTENSION DeviceExtension)
                !(HackFlags & PCI_HACK_NOT_CRITICAL_DEVICE))
             {
                 /* They follow the adapter behind them, so they can still be powered down */
-                DPRINT1("Not allowing PM because device is VGA\n");
+                DPRINT1("PCIX - Not allowing PM because device is VGA\n");
                 HackFlags |= PCI_HACK_CRITICAL_DEVICE | PCI_HACK_KEEP_DECODES_ON_STOP;
             }
 
@@ -2133,7 +2133,7 @@ PciScanBus(IN PPCI_FDO_EXTENSION DeviceExtension)
             Status = PciGetBiosConfig(NewExtension, BiosData);
             if (NT_SUCCESS(Status))
             {
-                DPRINT1("Have BIOS configuration!\n");
+                DPRINT1("PCIX - Have BIOS configuration!\n");
 
                 /* Check if the PCI BIOS configuration has changed */
                 if (!PcipIsSameDevice(NewExtension, BiosData))
@@ -2228,7 +2228,7 @@ PciScanBus(IN PPCI_FDO_EXTENSION DeviceExtension)
                 if (TempOffset != CapOffset)
                 {
                     /* This is a strange issue that shouldn't happen normally */
-                    DPRINT1("PCI - Failed to read PCI capability at offset 0x%02x\n",
+                    DPRINT1("PCIX - Failed to read PCI capability at offset 0x%02x\n",
                             CapOffset);
                     ASSERT(TempOffset == CapOffset);
                 }
@@ -2280,7 +2280,7 @@ PciScanBus(IN PPCI_FDO_EXTENSION DeviceExtension)
                 }
 
                 /* Dump this capability */
-                DPRINT("CAP @%02x ID %02x (%s)\n",
+                DPRINT("PCIX - CAP @%02x ID %02x (%s)\n",
                        CapOffset, CapHeader->CapabilityID, Name);
                 for (i = 0; i < Size; i += 2)
                     DPRINT("  %04x\n", *(PUSHORT)((ULONG_PTR)CapBuffer + i));
@@ -2340,7 +2340,7 @@ PciScanBus(IN PPCI_FDO_EXTENSION DeviceExtension)
                         ((TempOffset) && (PciData->LatencyTimer == 64)))
                     {
                         /* Keep track of the fact that it needs configuration */
-                        DPRINT1("PCI - ScanBus, PDOx %p found unconfigured\n",
+                        DPRINT1("PCIX - ScanBus, PDOx %p found unconfigured\n",
                                 NewExtension);
                         NewExtension->NeedsHotPlugConfiguration = TRUE;
                     }
@@ -2404,7 +2404,7 @@ PciQueryDeviceRelations(IN PPCI_FDO_EXTENSION DeviceExtension,
         {
             /* This means this PDO existed before, but not anymore */
             PdoExtension->ReportedMissing = TRUE;
-            DPRINT1("PCI - Old device (pdox) %p not found on rescan.\n",
+            DPRINT1("PCIX - Old device (pdox) %p not found on rescan.\n",
                     PdoExtension);
         }
         else
@@ -2442,7 +2442,7 @@ PciQueryDeviceRelations(IN PPCI_FDO_EXTENSION DeviceExtension,
     }
 
     /* Print out that we're ready to dump relations */
-    DPRINT("PCI QueryDeviceRelations/BusRelations FDOx %p (bus 0x%02x)\n",
+    DPRINT("PCIX - QueryDeviceRelations/BusRelations FDOx %p (bus 0x%02x)\n",
            DeviceExtension,
            DeviceExtension->BaseBus);
 
@@ -2565,7 +2565,7 @@ PciSetResources(IN PPCI_PDO_EXTENSION PdoExtension,
         }
         else
         {
-            DPRINT1("PCI (pdox %p) cache line size %02x rejected, MWI stays off\n",
+            DPRINT1("PCIX - pdox %p cache line size %02x rejected, MWI stays off\n",
                     PdoExtension, PdoExtension->SavedCacheLineSize);
         }
     }
@@ -2594,7 +2594,7 @@ PciSetResources(IN PPCI_PDO_EXTENSION PdoExtension,
     if (PciData.LatencyTimer != NewLatencyTimer)
     {
         /* Debug notification */
-        DPRINT1("PCI (pdox %p) changing latency from %02x to %02x.\n",
+        DPRINT1("PCIX - pdox %p changing latency from %02x to %02x.\n",
                 PdoExtension,
                 PciData.LatencyTimer,
                 NewLatencyTimer);
@@ -2605,7 +2605,7 @@ PciSetResources(IN PPCI_PDO_EXTENSION PdoExtension,
     if (PciData.CacheLineSize != NewCacheLineSize)
     {
         /* Debug notification */
-        DPRINT1("PCI (pdox %p) changing cache line size from %02x to %02x.\n",
+        DPRINT1("PCIX - pdox %p changing cache line size from %02x to %02x.\n",
                 PdoExtension,
                 PciData.CacheLineSize,
                 NewCacheLineSize);

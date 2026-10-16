@@ -66,7 +66,7 @@ PciPmeInterface_UpdateEnable(IN PDEVICE_OBJECT DeviceObject,
     UNREFERENCED_PARAMETER(DeviceObject);
     UNREFERENCED_PARAMETER(Enable);
 
-    DPRINT1("PciPmeInterface_UpdateEnable is not yet implemented\n");
+    DPRINT1("PCIX - PciPmeInterface_UpdateEnable is not yet implemented\n");
 }
 
 NTSTATUS

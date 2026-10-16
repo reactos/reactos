@@ -133,7 +133,7 @@ arbusno_Initializer(IN PVOID Instance)
                                           NULL);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("arbusno_Initializer: init arbiter return %X\n", Status);
+        DPRINT1("PCIX - arbusno_Initializer: init arbiter return %X\n", Status);
     }
 
     return Status;
