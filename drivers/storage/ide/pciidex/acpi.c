@@ -35,7 +35,10 @@ AtaAcpiEvaluateObject(
     TopDeviceObject = IoGetAttachedDeviceReference(DeviceObject);
 
     /* METHOD_BUFFERED returns the result in place, so the buffer must fit both directions */
-    SystemBufferLength = max(InputBufferLength, OutputBufferLength);
+    SystemBufferLength = InputBufferLength;
+    if (OutputBuffer != NULL)
+        SystemBufferLength = max(SystemBufferLength, OutputBufferLength);
+
     SystemBuffer = ExAllocatePoolZero(NonPagedPool, SystemBufferLength, TAG_PCIIDEX);
     if (!SystemBuffer)
     {
@@ -51,7 +54,6 @@ AtaAcpiEvaluateObject(
     Irp = IoAllocateIrp(TopDeviceObject->StackSize, 0);
     if (!Irp)
     {
-        ExFreePoolWithTag(SystemBuffer, TAG_PCIIDEX);
         Status = STATUS_INSUFFICIENT_RESOURCES;
         goto Exit;
     }
@@ -91,7 +93,6 @@ AtaAcpiEvaluateObject(
         RtlCopyMemory(OutputBuffer, SystemBuffer, min(Irp->IoStatus.Information, OutputBufferLength));
 
     IoFreeIrp(Irp);
-    ExFreePoolWithTag(SystemBuffer, TAG_PCIIDEX);
 
     if (OutputBuffer && NT_SUCCESS(Status))
     {
@@ -107,6 +108,9 @@ AtaAcpiEvaluateObject(
     }
 
 Exit:
+    if (SystemBuffer)
+        ExFreePoolWithTag(SystemBuffer, TAG_PCIIDEX);
+
     ObDereferenceObject(TopDeviceObject);
     return Status;
 }
