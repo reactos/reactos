@@ -1753,11 +1753,11 @@ Phase1InitializationDiscard(IN PVOID Context)
     /* Initialize the File System Runtime Library */
     if (!FsRtlInitSystem()) KeBugCheck(FILE_INITIALIZATION_FAILED);
 
-    /* Initialize range lists */
-    RtlInitializeRangeListPackage();
-
     /* Initialize the Rtl locale table */
     RtlpInitializeLocaleTable();
+
+    /* Initialize range lists */
+    RtlInitializeRangeListPackage();
 
     /* Report all resources used by HAL */
     HalReportResourceUsage();
