@@ -78,3 +78,10 @@ RtlpFreeMemory(PVOID Mem,
                 0,
                 Mem);
 }
+
+KPROCESSOR_MODE
+NTAPI
+RtlpGetMode(VOID)
+{
+   return UserMode;
+}

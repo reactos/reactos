@@ -1716,9 +1716,6 @@ Phase1InitializationDiscard(IN PVOID Context)
     /* Create NLS section */
     ExpInitNls(LoaderBlock);
 
-    /* Initialize the Rtl locale table */
-    RtlpInitializeLocaleTable();
-
     /* Initialize Cache Views */
     if (!CcInitializeCacheManager()) KeBugCheck(CACHE_INITIALIZATION_FAILED);
 
@@ -1758,6 +1755,9 @@ Phase1InitializationDiscard(IN PVOID Context)
 
     /* Initialize range lists */
     RtlInitializeRangeListPackage();
+
+    /* Initialize the Rtl locale table */
+    RtlpInitializeLocaleTable();
 
     /* Report all resources used by HAL */
     HalReportResourceUsage();

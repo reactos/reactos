@@ -954,18 +954,39 @@ NtInitializeNlsFiles(
         return Status;
     }
 
-    Status = ZwMapViewOfSection(
-        SectionHandle,
-        ZwCurrentProcess(),
-        &SectionBaseAddress,
-        0,
-        0,
-        NULL,
-        &ViewSize,
-        ViewUnmap,
-        0,
-        PAGE_READONLY
-    );
+    if (KeGetPreviousMode() != KernelMode)
+    {
+        Status = ZwMapViewOfSection(
+            SectionHandle,
+            ZwCurrentProcess(),
+            &SectionBaseAddress,
+            0,
+            0,
+            NULL,
+            &ViewSize,
+            ViewUnmap,
+            0,
+            PAGE_READONLY
+        );
+    }
+    else
+    {
+        PVOID SectionObject = NULL;
+
+        Status = ObReferenceObjectByHandle(
+            SectionHandle,
+            SECTION_MAP_READ,
+            NULL,
+            KernelMode,
+            &SectionObject,
+            NULL);
+
+        if (NT_SUCCESS(Status))
+        {
+            Status = MmMapViewInSystemSpace(SectionObject, &SectionBaseAddress, &ViewSize);
+            ObDereferenceObject(SectionObject);
+        }
+    }
 
     ZwClose(SectionHandle);
     if (!NT_SUCCESS(Status))
