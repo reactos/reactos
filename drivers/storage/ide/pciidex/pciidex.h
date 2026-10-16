@@ -638,6 +638,7 @@ KSERVICE_ROUTINE AtaAhciHbaIsr;
 /* pata_generic.c *************************************************************/
 
 CHANNEL_SET_MODE_EX SataSetTransferMode;
+CHANNEL_SET_MODE_EX PciIdeGenericSetTransferMode;
 
 CODE_SEG("PAGE")
 CONTROLLER_ATTACH_CHANNEL_EX PciIdeAttachChannel;
