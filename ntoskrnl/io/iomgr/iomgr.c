@@ -496,7 +496,12 @@ IopMarkBootPartition(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     LONG Timeout;
 
     /* Build the ARC device name */
-    sprintf(Buffer, "\\ArcName\\%s", LoaderBlock->ArcBootDeviceName);
+    Status = RtlStringCbPrintfA(Buffer,
+                                sizeof(Buffer),
+                                "\\ArcName\\%s",
+                                LoaderBlock->ArcBootDeviceName);
+    if (!NT_SUCCESS(Status)) return FALSE;
+
     RtlInitAnsiString(&DeviceString, Buffer);
     Status = RtlAnsiStringToUnicodeString(&DeviceName, &DeviceString, TRUE);
     if (!NT_SUCCESS(Status)) return FALSE;
