@@ -73,6 +73,10 @@ FASTCALL DIB_BitmapInfoSize(
     {
         const BITMAPCOREHEADER *core = (const BITMAPCOREHEADER *) info;
         size = sizeof(BITMAPCOREHEADER);
+        if (core->bcBitCount == 0)
+        {
+            return size;
+        }
         if (core->bcBitCount <= 8)
         {
             colors = 1 << core->bcBitCount;
@@ -85,6 +89,10 @@ FASTCALL DIB_BitmapInfoSize(
     }
     else /* assume BITMAPINFOHEADER */
     {
+        if (info->bmiHeader.biBitCount == 0)
+        {
+            return info->bmiHeader.biSize;
+        }
         colors = max ? (1 << info->bmiHeader.biBitCount) : info->bmiHeader.biClrUsed;
         if (colors > 256)
             colors = 256;
@@ -410,7 +418,7 @@ GetDIBits(
     LPBITMAPINFO lpbmi,
     UINT uUsage)
 {
-    UINT cjBmpScanSize;
+    UINT cjMaxBits;
     UINT cjInfoSize;
 
     if (!hDC || !GdiValidateHandle((HGDIOBJ) hDC) || !lpbmi)
@@ -419,7 +427,6 @@ GetDIBits(
         return 0;
     }
 
-    cjBmpScanSize = DIB_BitmapMaxBitsSize(lpbmi, cScanLines);
     /* Caller must provide maximum size possible */
     cjInfoSize = DIB_BitmapInfoSize(lpbmi, uUsage, TRUE);
 
@@ -434,10 +441,22 @@ GetDIBits(
                 return 0;
             }
         }
+        cjMaxBits = DIB_BitmapMaxBitsSize(lpbmi, cScanLines);
+    }
+    else
+    {
+        cjMaxBits = 0;
     }
 
-    return NtGdiGetDIBitsInternal(hDC, hbmp, uStartScan, cScanLines, lpvBits, lpbmi, uUsage,
-        cjBmpScanSize, cjInfoSize);
+    return NtGdiGetDIBitsInternal(hDC,
+                                  hbmp,
+                                  uStartScan,
+                                  cScanLines,
+                                  lpvBits,
+                                  lpbmi,
+                                  uUsage,
+                                  cjMaxBits,
+                                  cjInfoSize);
 }
 
 /*
@@ -727,12 +746,13 @@ SetDIBitsToDevice(
     UINT cjBmpScanSize = 0;
     BOOL Hit = FALSE;
     PVOID pvSafeBits = (PVOID) Bits;
-    UINT bmiHeight;
+    UINT bmiHeight, ScanLinesOrig = ScanLines, ImageSizeOrig;
     BOOL top_down;
     INT src_y = 0;
     ULONG iFormat, cBitsPixel, cjBits, cjWidth;
 
-    #define MaxScanLines 1000
+    // HACK: Temporay hack for Half-Life
+    #define MaxScanLines 6000
     #define MaxHeight 2000
     #define MaxSourceHeight 2000
     #define IS_ALIGNED(Pointer, Alignment) \
@@ -741,13 +761,16 @@ SetDIBitsToDevice(
     if (!ScanLines || !lpbmi || !Bits)
         return 0;
 
-    DPRINT("ScanLines %d Height %d Width %d biHeight %d biWidth %d\n"
-           "    lpbmi '%p' ColorUse '%d' SizeImage '%d' StartScan %d\n"
-           "    biCompression '%d' biBitCount '%d'\n",
-           ScanLines, Height, Width, lpbmi->bmiHeader.biHeight,
-           lpbmi->bmiHeader.biWidth, lpbmi, ColorUse,
-           lpbmi->bmiHeader.biSizeImage, StartScan,
-           lpbmi->bmiHeader.biCompression, lpbmi->bmiHeader.biBitCount);
+    DPRINT("hdc %p, XDest %d, YDest, %d, Width %d, Height %d\n"
+          "    XSrc %d, YSrc %d, StartScan %d, ScanLines %d, ColorUse %d\n"
+          "    biHeight %d, biWidth %d\n"
+          "    lpbmi %p, SizeImage %d\n"
+          "    biCompression %d, biBitCount %d\n",
+          hdc, XDest, YDest, Width, Height,
+          XSrc, YSrc, StartScan, ScanLines, ColorUse,
+          lpbmi->bmiHeader.biHeight, lpbmi->bmiHeader.biWidth,
+          lpbmi, lpbmi->bmiHeader.biSizeImage,
+          lpbmi->bmiHeader.biCompression, lpbmi->bmiHeader.biBitCount);
 
     if (lpbmi->bmiHeader.biWidth < 0)
         return 0;
@@ -764,6 +787,8 @@ SetDIBitsToDevice(
         LinesCopied = 0;
         goto Exit;
     }
+
+    ImageSizeOrig = pConvertedInfo->bmiHeader.biSizeImage;
 
     bmiHeight = abs(pConvertedInfo->bmiHeader.biHeight);
     top_down = (pConvertedInfo->bmiHeader.biHeight < 0);
@@ -1028,15 +1053,15 @@ SetDIBitsToDevice(
         LinesCopied = bmiHeight;
     }
 
-    if (pConvertedInfo->bmiHeader.biHeight < 0)
+    if (pConvertedInfo->bmiHeader.biHeight < 0 && YDest >= 0)
     {
-        if (pConvertedInfo->bmiHeader.biHeight < -MaxSourceHeight || YDest >= 0)
+        if (Width * ScanLinesOrig > ImageSizeOrig && ImageSizeOrig != 0)
         {
-            LinesCopied = ScanLines + src_y;
+            LinesCopied = 0;
         }
         else
         {
-            LinesCopied = ScanLines;
+            LinesCopied = ScanLinesOrig;
         }
     }
 
