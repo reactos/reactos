@@ -887,6 +887,10 @@ InstallBootloaderFiles(
     _In_ PCUNICODE_STRING SystemRootPath,
     _In_ PCUNICODE_STRING SourceRootPath)
 {
+    /* Set the SYSTEM, HIDDEN and READONLY attributes to the FreeLoader files */
+    static const ULONG ProtectAttribs =
+        (FILE_ATTRIBUTE_SYSTEM | FILE_ATTRIBUTE_HIDDEN | FILE_ATTRIBUTE_READONLY);
+
     NTSTATUS Status;
     WCHAR SrcPath[MAX_PATH];
     WCHAR DstPath[MAX_PATH];
@@ -903,9 +907,8 @@ InstallBootloaderFiles(
         return Status;
     }
 
-    /* Mark freeldr.sys as SYSTEM and HIDDEN
-     * (This is really optional, so any potential errors are ignored.) */
-    SetupSetFileAttributes(DstPath, FILE_ATTRIBUTE_HIDDEN | FILE_ATTRIBUTE_SYSTEM);
+    /* Protect freeldr.sys (this is optional, so any potential errors are ignored) */
+    SetupSetFileAttributes(DstPath, ProtectAttribs);
 
     /* Copy rosload to the system partition, always overwriting the older version */
     CombinePaths(SrcPath, ARRAYSIZE(SrcPath), 2, SourceRootPath->Buffer, L"\\loader\\rosload.exe");
@@ -919,8 +922,8 @@ InstallBootloaderFiles(
         return Status;
     }
 
-    /* Mark rosload.exe as SYSTEM and HIDDEN */
-    SetupSetFileAttributes(DstPath, FILE_ATTRIBUTE_HIDDEN | FILE_ATTRIBUTE_SYSTEM);
+    /* Protect rosload.exe (this is optional, so any potential errors are ignored) */
+    SetupSetFileAttributes(DstPath, ProtectAttribs);
 
     return STATUS_SUCCESS;
 }
