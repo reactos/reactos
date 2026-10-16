@@ -13,6 +13,7 @@ enum ViewType
     ResourcesByConnection
 };
 
+#define WM_REFRESH_COMPLETE (WM_APP + 1)
 
 class CDeviceView
 {
@@ -29,6 +30,9 @@ class CDeviceView
     CAtlList<CClassNode *> m_ClassNodeList;
     CAtlList<CDeviceNode *> m_DeviceNodeList;
     SP_CLASSIMAGELIST_DATA m_ImageListData;
+    HANDLE m_hRefreshThread;
+    bool m_RefreshDirty;
+    bool m_DirtyScanForChanges;
 
 public:
     CDeviceView(
@@ -69,6 +73,8 @@ public:
         _In_ bool UpdateView
         );
 
+    VOID OnRefreshComplete();
+
     VOID DisplayPropertySheet();
     VOID SetFocus();
 
@@ -78,6 +84,8 @@ public:
     }
 
     ViewType GetCurrentView() { return m_ViewType; }
+
+    bool IsRefreshing() { return m_hRefreshThread != NULL; }
 
     bool CreateActionMenu(
         _In_ HMENU OwnerMenu,

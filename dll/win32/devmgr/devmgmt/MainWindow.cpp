@@ -82,7 +82,8 @@ CDeviceManager::CDeviceManager(void) :
     m_hStatusBar(NULL),
     m_hToolBar(NULL),
     m_CmdShow(0),
-    m_RefreshPending(false)
+    m_RefreshPending(false),
+    m_ClosePending(false)
 {
     m_szMainWndClass = L"DevMgmtWndClass";
 }
@@ -835,6 +836,15 @@ CDeviceManager::MainWndProc(_In_ HWND hwnd,
             break;
         }
 
+        case WM_REFRESH_COMPLETE:
+        {
+            This->m_DeviceView->OnRefreshComplete();
+
+            if (This->m_ClosePending && !This->m_DeviceView->IsRefreshing())
+                DestroyWindow(hwnd);
+            break;
+        }
+
         case WM_ENTERMENULOOP:
         {
             This->UpdateStatusBar(true);
@@ -849,6 +859,13 @@ CDeviceManager::MainWndProc(_In_ HWND hwnd,
 
         case WM_CLOSE:
         {
+            // The refresh thread still uses the device view, so close once it posts back
+            if (This->m_DeviceView->IsRefreshing())
+            {
+                This->m_ClosePending = true;
+                break;
+            }
+
             // Destroy the main window
             DestroyWindow(hwnd);
             break;

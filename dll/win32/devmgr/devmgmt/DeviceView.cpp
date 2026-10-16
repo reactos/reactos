@@ -41,7 +41,10 @@ CDeviceView::CDeviceView(
     m_hMenu(NULL),
     m_ViewType(DevicesByType),
     m_ShowHidden(false),
-    m_RootNode(NULL)
+    m_RootNode(NULL),
+    m_hRefreshThread(NULL),
+    m_RefreshDirty(false),
+    m_DirtyScanForChanges(false)
 {
     ZeroMemory(&m_ImageListData, sizeof(SP_CLASSIMAGELIST_DATA));
 }
@@ -223,20 +226,28 @@ CDeviceView::Refresh(
 
     m_ViewType = Type;
 
+    // Overlapping refreshes free each other's nodes, so let the running one pick this up when it completes
+    if (m_hRefreshThread)
+    {
+        m_RefreshDirty = true;
+        m_DirtyScanForChanges |= ScanForChanges;
+        return;
+    }
+
     RefreshThreadData *ThreadData;
     ThreadData = new RefreshThreadData;
     ThreadData->This = this;
     ThreadData->ScanForChanges = ScanForChanges;
     ThreadData->UpdateView = UpdateView;
 
-    HANDLE hThread;
-    hThread = (HANDLE)_beginthreadex(NULL,
-                                     0,
-                                     RefreshThread,
-                                     ThreadData,
-                                     0,
-                                     NULL);
-    if (hThread) CloseHandle(hThread);
+    m_hRefreshThread = (HANDLE)_beginthreadex(NULL,
+                                              0,
+                                              RefreshThread,
+                                              ThreadData,
+                                              0,
+                                              NULL);
+    if (m_hRefreshThread == NULL)
+        delete ThreadData;
 }
 
 LRESULT
@@ -412,7 +423,11 @@ unsigned int __stdcall CDeviceView::RefreshThread(void *Param)
 
     // Re-add the root node to the tree
     if (This->AddRootDevice() == false)
+    {
+        PostMessageW(This->m_hMainWnd, WM_REFRESH_COMPLETE, 0, 0);
+        delete ThreadData;
         return 0;
+    }
 
     // display the type of view the user wants
     switch (This->m_ViewType)
@@ -435,11 +450,32 @@ unsigned int __stdcall CDeviceView::RefreshThread(void *Param)
 
     This->SelectNode(LastSelectedNode);
 
+    PostMessageW(This->m_hMainWnd, WM_REFRESH_COMPLETE, 0, 0);
     delete ThreadData;
 
     return 0;
 }
 
+VOID
+CDeviceView::OnRefreshComplete()
+{
+    bool ScanForChanges;
+
+    if (m_hRefreshThread == NULL)
+        return;
+
+    CloseHandle(m_hRefreshThread);
+    m_hRefreshThread = NULL;
+
+    // Pick up any changes that came in while the last refresh was running
+    if (m_RefreshDirty)
+    {
+        ScanForChanges = m_DirtyScanForChanges;
+        m_RefreshDirty = false;
+        m_DirtyScanForChanges = false;
+        Refresh(m_ViewType, ScanForChanges, true);
+    }
+}
 
 bool
 CDeviceView::ListDevicesByType()
