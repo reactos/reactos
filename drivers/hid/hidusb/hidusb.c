@@ -453,7 +453,9 @@ HidUsb_ReadReportCompletion(
         //
         // FIXME handle error
         //
-        ASSERT(Urb->UrbHeader.Status == USBD_STATUS_SUCCESS || Urb->UrbHeader.Status == USBD_STATUS_DEVICE_GONE);
+        ASSERT(Urb->UrbHeader.Status == USBD_STATUS_SUCCESS ||
+               Urb->UrbHeader.Status == USBD_STATUS_CANCELED ||
+               Urb->UrbHeader.Status == USBD_STATUS_DEVICE_GONE);
 
         //
         // free the urb
