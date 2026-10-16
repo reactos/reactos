@@ -1149,4 +1149,40 @@ GetNtDevicePathOfDriveNumber(
     return (NT_SUCCESS(Status) ? Type : DRIVE_UNKNOWN);
 }
 
+NTSTATUS
+SetupSetFileAttributes(
+    _In_ PCWSTR Path,
+    _In_ ULONG FileAttributes)
+{
+    UNICODE_STRING FileName;
+    FILE_BASIC_INFORMATION FileBasicInfo;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    IO_STATUS_BLOCK IoStatusBlock;
+    HANDLE FileHandle;
+    NTSTATUS Status;
+
+    RtlInitUnicodeString(&FileName, Path);
+    InitializeObjectAttributes(&ObjectAttributes, &FileName,
+                               OBJ_CASE_INSENSITIVE, NULL, NULL);
+
+    Status = NtOpenFile(&FileHandle,
+                        FILE_WRITE_ATTRIBUTES | SYNCHRONIZE,
+                        &ObjectAttributes,
+                        &IoStatusBlock,
+                        FILE_SHARE_READ,
+                        FILE_NO_INTERMEDIATE_BUFFERING | FILE_SEQUENTIAL_ONLY |
+                            FILE_SYNCHRONOUS_IO_NONALERT | FILE_NON_DIRECTORY_FILE);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    RtlZeroMemory(&FileBasicInfo, sizeof(FileBasicInfo));
+    FileBasicInfo.FileAttributes = FileAttributes;
+
+    Status = NtSetInformationFile(FileHandle, &IoStatusBlock, &FileBasicInfo,
+                                  sizeof(FileBasicInfo), FileBasicInformation);
+
+    NtClose(FileHandle);
+    return Status;
+}
+
 /* EOF */
