@@ -2159,6 +2159,7 @@ SHInvokePrinterCommandW(
     LPCWSTR pszSwitch;
     HRESULT hr;
 
+    // TODO: lpBuf2 is used by PRINTACTION_PROPERTIES and PRINTACTION_NETINSTALLLINK
     UNREFERENCED_PARAMETER(lpBuf2);
 
     TRACE("SHInvokePrinterCommandW(%p, %u, %s, %s, %d)\n",

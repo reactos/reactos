@@ -7,7 +7,6 @@
 
 #include "shelltest.h"
 #include <shellapi.h>
-#include <undocshell.h>
 
 START_TEST(SHInvokePrinterCommand)
 {
