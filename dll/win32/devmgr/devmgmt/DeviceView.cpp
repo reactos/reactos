@@ -477,7 +477,6 @@ CDeviceView::OnRefreshComplete()
     }
 }
 
-
 bool
 CDeviceView::ListDevicesByType()
 {
