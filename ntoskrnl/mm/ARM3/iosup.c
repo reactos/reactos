@@ -130,24 +130,23 @@ MmMapIoSpace(IN PHYSICAL_ADDRESS PhysicalAddress,
             //
             // Disable the cache
             //
-            MI_PAGE_DISABLE_CACHE(&TempPte);
-            MI_PAGE_WRITE_THROUGH(&TempPte);
+            MI_MAKE_PTE_NON_CACHED(&TempPte);
             break;
 
         case MiCached:
 
             //
-            // Leave defaults
+            // Enable caching
             //
+            MI_MAKE_PTE_CACHED(&TempPte);
             break;
 
         case MiWriteCombined:
 
             //
-            // Disable the cache and allow combined writing
+            // Enable write combining
             //
-            MI_PAGE_DISABLE_CACHE(&TempPte);
-            MI_PAGE_WRITE_COMBINED(&TempPte);
+            MI_MAKE_PTE_WRITE_COMBINE(&TempPte);
             break;
 
         default:
