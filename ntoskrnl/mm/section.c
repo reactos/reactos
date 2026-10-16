@@ -2444,6 +2444,13 @@ MmCreateDataFileSection(PSECTION *SectionObject,
 
         if (MaximumSize.QuadPart > FileSize.QuadPart)
         {
+            /* Only writable sections are allowed to extend the file */
+            if (!(SectionPageProtection & (PAGE_READWRITE | PAGE_EXECUTE_READWRITE)))
+            {
+                ObDereferenceObject(Section);
+                return STATUS_SECTION_TOO_BIG;
+            }
+
             Status = IoSetInformation(FileObject,
                                       FileEndOfFileInformation,
                                       sizeof(LARGE_INTEGER),
