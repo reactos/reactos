@@ -395,38 +395,28 @@ NTAPI
 KiGetCacheInformation(VOID)
 {
     PKIPCR Pcr = (PKIPCR)KeGetPcr();
-    ULONG CacheCount;
 
     /* Set default L2 size */
     Pcr->SecondLevelCacheSize = 0;
 
-#if (NTDDI_VERSION >= NTDDI_VISTA)
     /* Retrieve the cache descriptors */
     PKPRCB Prcb = KeGetCurrentPrcb();
-    CacheCount = KiGetCpuCacheDescriptors(Prcb->Cache,
-                                          ARRAYSIZE(Prcb->Cache),
-                                          KiGetCpuVendor());
-    Prcb->CacheCount = CacheCount;
-#else
-    /* Retrieve the cache descriptors */
-    CACHE_DESCRIPTOR CacheDescriptors[5];
-    CacheCount = KiGetCpuCacheDescriptors(CacheDescriptors,
-                                          ARRAYSIZE(CacheDescriptors),
-                                          KiGetCpuVendor());
-#endif
+    Prcb->CacheCount = KiGetCpuCacheDescriptors(Prcb->Cache,
+                                                ARRAYSIZE(Prcb->Cache),
+                                                KiGetCpuVendor());
 
     /* Loop the descriptors to find the L2 cache size */
-    for (ULONG i = 0; i < CacheCount; i++)
+    for (ULONG i = 0; i < Prcb->CacheCount; i++)
     {
-        KeLargestCacheLine = max(KeLargestCacheLine, CacheDescriptors[i].LineSize);
-        if ((CacheDescriptors[i].Level == 1) && (CacheDescriptors[i].Type != CacheInstruction))
+        KeLargestCacheLine = max(KeLargestCacheLine, Prcb->Cache[i].LineSize);
+        if ((Prcb->Cache[i].Level == 1) && (Prcb->Cache[i].Type != CacheInstruction))
         {
-            KePrefetchNTAGranularity = CacheDescriptors[i].LineSize;
+            KePrefetchNTAGranularity = Prcb->Cache[i].LineSize;
         }
-        else if (CacheDescriptors[i].Level == 2)
+        else if (Prcb->Cache[i].Level == 2)
         {
-            Pcr->SecondLevelCacheSize = CacheDescriptors[i].Size;
-            Pcr->SecondLevelCacheAssociativity = CacheDescriptors[i].Associativity;
+            Pcr->SecondLevelCacheSize = Prcb->Cache[i].Size;
+            Pcr->SecondLevelCacheAssociativity = Prcb->Cache[i].Associativity;
         }
     }
 
