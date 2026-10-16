@@ -920,7 +920,8 @@ NtInitializeNlsFiles(
 {
     NTSTATUS Status;
     UNICODE_STRING FileName;
-    OBJECT_ATTRIBUTES Attributes;
+    OBJECT_ATTRIBUTES FileAttributes;
+    OBJECT_ATTRIBUTES SectionAttributes;
     IO_STATUS_BLOCK Iosb;
     HANDLE FileHandle = NULL;
     HANDLE SectionHandle = NULL;
@@ -928,12 +929,12 @@ NtInitializeNlsFiles(
     PVOID SectionBaseAddress = NULL;
 
     RtlInitUnicodeString(&FileName, L"\\SystemRoot\\System32\\locale.nls");
-    InitializeObjectAttributes(&Attributes, &FileName, OBJ_KERNEL_HANDLE, NULL, NULL);
+    InitializeObjectAttributes(&FileAttributes, &FileName, OBJ_KERNEL_HANDLE, NULL, NULL);
 
     Status = ZwOpenFile(
         &FileHandle,
         GENERIC_READ,
-        &Attributes,
+        &FileAttributes,
         &Iosb,
         FILE_SHARE_READ,
         FILE_NON_DIRECTORY_FILE
@@ -945,7 +946,8 @@ NtInitializeNlsFiles(
         return Status;
     }
 
-    Status = ZwCreateSection(&SectionHandle, SECTION_MAP_READ, NULL, NULL, PAGE_READONLY, SEC_COMMIT, FileHandle);
+    InitializeObjectAttributes(&SectionAttributes, NULL, OBJ_KERNEL_HANDLE, NULL, NULL);
+    Status = ZwCreateSection(&SectionHandle, SECTION_MAP_READ, &SectionAttributes, NULL, PAGE_READONLY, SEC_COMMIT, FileHandle);
     ZwClose(FileHandle);
 
     if (!NT_SUCCESS(Status))
@@ -973,13 +975,12 @@ NtInitializeNlsFiles(
     {
         PVOID SectionObject = NULL;
 
-        Status = ObReferenceObjectByHandle(
-            SectionHandle,
-            SECTION_MAP_READ,
-            NULL,
-            KernelMode,
-            &SectionObject,
-            NULL);
+        Status = ObReferenceObjectByHandle(SectionHandle,
+                                        SECTION_MAP_READ,
+                                        MmSectionObjectType,
+                                        KernelMode,
+                                        &SectionObject,
+                                        NULL);
 
         if (NT_SUCCESS(Status))
         {
