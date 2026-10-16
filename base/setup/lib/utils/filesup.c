@@ -1151,8 +1151,8 @@ GetNtDevicePathOfDriveNumber(
 
 NTSTATUS
 SetupSetFileAttributes(
-    _In_z_ LPCWSTR Path,
-    _In_ DWORD FileAttributes)
+    _In_ PCWSTR Path,
+    _In_ ULONG FileAttributes)
 {
     UNICODE_STRING FileName;
     FILE_BASIC_INFORMATION FileBasicInfo;
@@ -1162,22 +1162,16 @@ SetupSetFileAttributes(
     NTSTATUS Status;
 
     RtlInitUnicodeString(&FileName, Path);
-    InitializeObjectAttributes(&ObjectAttributes, &FileName, OBJ_CASE_INSENSITIVE, NULL, NULL);
+    InitializeObjectAttributes(&ObjectAttributes, &FileName,
+                               OBJ_CASE_INSENSITIVE, NULL, NULL);
 
-    Status = NtCreateFile(&FileHandle,
-                          FILE_WRITE_ATTRIBUTES | SYNCHRONIZE,
-                          &ObjectAttributes,
-                          &IoStatusBlock,
-                          NULL,
-                          FILE_ATTRIBUTE_NORMAL,
-                          0,
-                          FILE_OPEN,
-                          FILE_NO_INTERMEDIATE_BUFFERING |
-                              FILE_SEQUENTIAL_ONLY |
-                              FILE_SYNCHRONOUS_IO_NONALERT,
-                          NULL,
-                          0);
-
+    Status = NtOpenFile(&FileHandle,
+                        FILE_WRITE_ATTRIBUTES | SYNCHRONIZE,
+                        &ObjectAttributes,
+                        &IoStatusBlock,
+                        FILE_SHARE_READ,
+                        FILE_NO_INTERMEDIATE_BUFFERING | FILE_SEQUENTIAL_ONLY |
+                            FILE_SYNCHRONOUS_IO_NONALERT | FILE_NON_DIRECTORY_FILE);
     if (!NT_SUCCESS(Status))
         return Status;
 

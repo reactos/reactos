@@ -131,7 +131,7 @@ GetNtDevicePathOfDriveNumber(
 
 NTSTATUS
 SetupSetFileAttributes(
-    _In_z_ PCWSTR Path,
+    _In_ PCWSTR Path,
     _In_ ULONG FileAttributes);
 
 /* EOF */
