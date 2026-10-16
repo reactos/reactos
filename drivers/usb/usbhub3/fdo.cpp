@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS SuperSpeed USB Hub Driver
  * LICENSE:     MIT (https://spdx.org/licenses/MIT)
  * PURPOSE:     Hub FDO creation, PnP and power callbacks, hub machine glue
- * COPYRIGHT:   Copyright 2026 Justin Miller <justinmiller100@gmail.com>
+ * COPYRIGHT:   Copyright 2026 Justin Miller <justin.miller@reactos.org>
  */
 
 #include "usbhub3.h"

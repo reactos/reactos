@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS USB 3 stack
  * LICENSE:     MIT (https://spdx.org/licenses/MIT)
  * PURPOSE:     Hierarchical state machine engine shared by the USB 3 drivers
- * COPYRIGHT:   Copyright 2026 Justin Miller <justinmiller100@gmail.com>
+ * COPYRIGHT:   Copyright 2026 Justin Miller <justin.miller@reactos.org>
  */
 
 #pragma once

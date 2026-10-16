@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS USB 3 stack
  * LICENSE:     MIT (https://spdx.org/licenses/MIT)
  * PURPOSE:     Client handle interface between usbd and the USB controller extension
- * COPYRIGHT:   Copyright 2026 Justin Miller <justinmiller100@gmail.com>
+ * COPYRIGHT:   Copyright 2026 Justin Miller <justin.miller@reactos.org>
  */
 
 #pragma once

@@ -3,7 +3,7 @@
  * LICENSE:     MIT (https://spdx.org/licenses/MIT)
  * PURPOSE:     Port state machine: event table, engine hooks, shared steps
  *              and the states used while the hub is not running
- * COPYRIGHT:   Copyright 2026 Justin Miller <justinmiller100@gmail.com>
+ * COPYRIGHT:   Copyright 2026 Justin Miller <justin.miller@reactos.org>
  */
 
 /* INCLUDES *******************************************************************/

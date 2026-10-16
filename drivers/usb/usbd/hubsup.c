@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS USB Driver Library
  * LICENSE:     MIT (https://spdx.org/licenses/MIT)
  * PURPOSE:     Hub number allocator and serial number device list for usbhub3
- * COPYRIGHT:   Copyright 2026 Justin Miller <justinmiller100@gmail.com>
+ * COPYRIGHT:   Copyright 2026 Justin Miller <justin.miller@reactos.org>
  */
 
 #define _USBD_

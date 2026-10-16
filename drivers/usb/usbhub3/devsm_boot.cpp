@@ -4,7 +4,7 @@
  * PURPOSE:     Device state machine, device that holds the boot, paging or
  *              hibernation file. Its PDO never goes away; the machine waits
  *              for it to come back instead.
- * COPYRIGHT:   Copyright 2026 Justin Miller <justinmiller100@gmail.com>
+ * COPYRIGHT:   Copyright 2026 Justin Miller <justin.miller@reactos.org>
  */
 
 /* INCLUDES *******************************************************************/

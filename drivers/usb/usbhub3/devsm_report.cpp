@@ -3,7 +3,7 @@
  * LICENSE:     MIT (https://spdx.org/licenses/MIT)
  * PURPOSE:     Device state machine, reporting the device to PnP and the
  *              device that failed enumeration
- * COPYRIGHT:   Copyright 2026 Justin Miller <justinmiller100@gmail.com>
+ * COPYRIGHT:   Copyright 2026 Justin Miller <justin.miller@reactos.org>
  */
 
 /* INCLUDES *******************************************************************/

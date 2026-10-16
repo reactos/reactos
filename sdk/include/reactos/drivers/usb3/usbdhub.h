@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS USB Driver Library
  * LICENSE:     MIT (https://spdx.org/licenses/MIT)
  * PURPOSE:     usbd.sys exports used by the SuperSpeed hub driver
- * COPYRIGHT:   Copyright 2026 Justin Miller <justinmiller100@gmail.com>
+ * COPYRIGHT:   Copyright 2026 Justin Miller <justin.miller@reactos.org>
  */
 
 #pragma once

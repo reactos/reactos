@@ -3,7 +3,7 @@
  * LICENSE:     MIT (https://spdx.org/licenses/MIT)
  * PURPOSE:     Device state machine, enumerating a known device again after a
  *              reset, resume or restart
- * COPYRIGHT:   Copyright 2026 Justin Miller <justinmiller100@gmail.com>
+ * COPYRIGHT:   Copyright 2026 Justin Miller <justin.miller@reactos.org>
  */
 
 /* INCLUDES *******************************************************************/
