@@ -14,7 +14,7 @@
 
 /* GLOBALS *******************************************************************/
 
-BOOLEAN NlsMbCodePageTag = FALSE;
+BYTE NlsMbCodePageTag = 0;
 
 BOOLEAN NlsMbOemCodePageTag = FALSE;
 PUSHORT NlsOemToUnicodeTable = NULL;
