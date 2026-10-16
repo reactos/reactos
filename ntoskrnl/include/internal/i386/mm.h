@@ -3,6 +3,8 @@
  */
 #pragma once
 
+#include <internal/x86x64/mm.h>
+
 #ifdef _X86PAE_
 #define _MI_PAGING_LEVELS 3
 #define _MI_HAS_NO_EXECUTE 1
@@ -85,24 +87,6 @@
 #define MI_MAKE_DIRTY_PAGE(x)      ((x)->u.Hard.Dirty = 1)
 #define MI_MAKE_CLEAN_PAGE(x)      ((x)->u.Hard.Dirty = 0)
 #define MI_MAKE_ACCESSED_PAGE(x)   ((x)->u.Hard.Accessed = 1)
-#define MI_PAGE_DISABLE_CACHE(x)   ((x)->u.Hard.CacheDisable = 1)
-#define MI_PAGE_WRITE_THROUGH(x)   ((x)->u.Hard.WriteThrough = 1)
-#define MI_PAGE_WRITE_COMBINED(x)                                      \
-    do                                                                 \
-    {                                                                  \
-        if (KeFeatureBits & KF_PAT)                                    \
-        {                                                              \
-            /* Select PAT1, which the kernel programs as WC. */        \
-            (x)->u.Hard.CacheDisable = 0;                              \
-            (x)->u.Hard.WriteThrough = 1;                              \
-        }                                                              \
-        else                                                           \
-        {                                                              \
-            /* PAT is unavailable, so fall back to UC. */              \
-            (x)->u.Hard.CacheDisable = 1;                              \
-            (x)->u.Hard.WriteThrough = 1;                              \
-        }                                                              \
-    } while (0)
 #define MI_IS_PAGE_LARGE(x)        ((x)->u.Hard.LargePage == 1)
 #if !defined(CONFIG_SMP)
 #define MI_IS_PAGE_WRITEABLE(x)    ((x)->u.Hard.Write == 1)
