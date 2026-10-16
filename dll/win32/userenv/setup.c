@@ -60,13 +60,16 @@ UserShellFolders[] =
 static FOLDERDATA
 CommonShellFolders[] =
 {
+    {L"{3D644C9B-1FB8-4f30-9B45-F670235F79C0}", L"Downloads", FALSE, TRUE, TRUE, FALSE},
     {L"Common Desktop", L"Desktop", FALSE, TRUE, TRUE, FALSE},
-    {L"Common Favorites", L"Favorites", FALSE, TRUE, TRUE, FALSE},
     {L"Common Documents", L"Documents", FALSE, TRUE, TRUE, FALSE},
     {L"Common Templates", L"Microsoft\\Windows\\Templates", TRUE, TRUE, TRUE, TRUE},
     {L"Common Start Menu", L"Microsoft\\Windows\\Start Menu", FALSE, TRUE, TRUE, TRUE},
     {L"Common Programs", L"Microsoft\\Windows\\Start Menu\\Programs", FALSE, TRUE, TRUE, TRUE},
     {L"Common Startup", L"Microsoft\\Windows\\Start Menu\\Programs\\Startup", FALSE, TRUE, TRUE, TRUE},
+    {L"CommonMusic", L"Music", FALSE, TRUE, TRUE, FALSE},
+    {L"CommonPictures", L"Pictures", FALSE, TRUE, TRUE, FALSE},
+    {L"CommonVideo", L"Videos", FALSE, TRUE, TRUE, FALSE},
     {NULL, NULL, FALSE, FALSE, FALSE, FALSE}
 };
 
@@ -319,7 +322,10 @@ CreateStandardProfile(
     {
         if (lpFolderData->bUserShellFolder)
         {
-            StringCbCopyW(szBuffer, sizeof(szBuffer), pProfileParams->pszEnvVarProfilePath);
+            if (lpFolderData->bProgramData)
+                StringCbCopyW(szBuffer, sizeof(szBuffer), L"%ProgramData%");
+            else
+                StringCbCopyW(szBuffer, sizeof(szBuffer), pProfileParams->pszEnvVarProfilePath);
             StringCbCatW(szBuffer, sizeof(szBuffer), L"\\");
             StringCbCatW(szBuffer, sizeof(szBuffer), lpFolderData->lpPath);
 
