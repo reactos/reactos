@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS USB Host Controller Extension
  * LICENSE:     MIT (https://spdx.org/licenses/MIT)
  * PURPOSE:     Class functions exported to UCX clients
- * COPYRIGHT:   Copyright 2026 Justin Miller <justinmiller100@gmail.com>
+ * COPYRIGHT:   Copyright 2026 Justin Miller <justin.miller@reactos.org>
  */
 
 /*

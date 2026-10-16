@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS xHCI Host Controller Driver
  * LICENSE:     MIT (https://spdx.org/licenses/MIT)
  * PURPOSE:     Isochronous transfer rings: frame scheduling, staging, TD writing, events and reclaim
- * COPYRIGHT:   Copyright 2026 Justin Miller <justinmiller100@gmail.com>
+ * COPYRIGHT:   Copyright 2026 Justin Miller <justin.miller@reactos.org>
  */
 
 #include "xhcidrv.h"

@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS USB Host Controller Extension
  * LICENSE:     MIT (https://spdx.org/licenses/MIT)
  * PURPOSE:     XRB submission, the fast transfer path and URB completion helpers
- * COPYRIGHT:   Copyright 2026 Justin Miller <justinmiller100@gmail.com>
+ * COPYRIGHT:   Copyright 2026 Justin Miller <justin.miller@reactos.org>
  */
 
 #include "ucx01000.h"

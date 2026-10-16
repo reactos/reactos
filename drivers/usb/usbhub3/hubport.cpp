@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS SuperSpeed USB Hub Driver
  * LICENSE:     MIT (https://spdx.org/licenses/MIT)
  * PURPOSE:     Port object lifetime, its timers and work item
- * COPYRIGHT:   Copyright 2026 Justin Miller <justinmiller100@gmail.com>
+ * COPYRIGHT:   Copyright 2026 Justin Miller <justin.miller@reactos.org>
  */
 
 #include "usbhub3.h"
@@ -17,7 +17,7 @@ static const char HubTagPort[] = "hub port";
 #define PORT_DEBOUNCE_TIME              100
 #define PORT_OVERCURRENT_TIME           500
 #define PORT_RESET_TIME                 3000
-#define HUB_PORT_RESUME_WAIT_MS                500
+#define HUB_PORT_RESUME_WAIT_MS         500
 #define PORT_RESUME_RECOVERY_TIME       10
 #define PORT_POWER_ON_TIME_ROOT         100
 #define PORT_POWER_ON_TIME              300
@@ -255,7 +255,7 @@ PortMachine::StartTimer(
         /* The device may ask for longer in its MS OS 2.0 descriptor set */
         case PsmTimerResumeRecovery:
             Time = (Child != NULL && Child->m_HasResumeRecoveryTime) ? Child->m_ResumeRecoveryTime
-                                                                       : PORT_RESUME_RECOVERY_TIME;
+                                                                     : PORT_RESUME_RECOVERY_TIME;
             break;
 
         /* Longer on external hubs */

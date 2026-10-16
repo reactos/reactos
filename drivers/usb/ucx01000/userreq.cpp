@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS USB Host Controller Extension
  * LICENSE:     MIT (https://spdx.org/licenses/MIT)
  * PURPOSE:     User mode and legacy host controller IOCTLs, and the WMI node info
- * COPYRIGHT:   Copyright 2026 Justin Miller <justinmiller100@gmail.com>
+ * COPYRIGHT:   Copyright 2026 Justin Miller <justin.miller@reactos.org>
  */
 
 #include "ucx01000.h"
@@ -559,8 +559,6 @@ UcxRunUserRequest(
     _In_ WDFDEVICE Fdo,
     _In_ UcxController* Controller)
 {
-    ULONG ParameterLength;
-
     switch (User.Header()->UsbUserRequest)
     {
         case USBUSER_GET_CONTROLLER_INFO_0:
@@ -614,10 +612,16 @@ UcxRunUserRequest(
             break;
 
         default:
+        {
+            /* Only consumed by the assert, so it is unused in free builds */
+            ULONG ParameterLength;
+
             DPRINT1("Unknown USBUSER request 0x%lx\n", User.Header()->UsbUserRequest);
             NT_ASSERT(!UcxLookupUserRequestSize(User.Header()->UsbUserRequest, &ParameterLength));
+            UNREFERENCED_PARAMETER(ParameterLength);
             User.SetStatus(UsbUserInvalidRequestCode);
             break;
+        }
     }
 }
 
