@@ -61,7 +61,7 @@ PciReadDeviceExtendedCapability(
 
         if (EntriesLeft == 0)
         {
-            DPRINT1("PCI device %p extended capabilities list is broken\n",
+            DPRINT1("PCIX - Device %p extended capabilities list is broken\n",
                     DeviceExtension);
             return 0;
         }
@@ -141,7 +141,7 @@ PciGetExpressCapabilities(
         PdoExtension->IsExtendedConfigReachable = ParentBridge->IsExtendedConfigReachable;
     }
 
-    DPRINT1("PCI - Express capability at 0x%x, port type %u, version %u\n",
+    DPRINT1("PCIX - Express capability at 0x%x, port type %u, version %u\n",
             PdoExtension->ExpressCapabilityPtr,
             PdoExtension->ExpressDeviceType,
             Express.ExpressCapabilities.CapabilityVersion);

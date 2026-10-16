@@ -172,7 +172,7 @@ PciEcamMapBus(
     PciEcamBusView[Bus] = MmMapIoSpace(Address, PCI_ECAM_BUS_SIZE, MmNonCached);
     if (!PciEcamBusView[Bus])
     {
-        DPRINT1("PCI: Unable to map ECAM for bus 0x%lx\n", Bus);
+        DPRINT1("PCIX - Unable to map ECAM for bus 0x%lx\n", Bus);
     }
 
     return PciEcamBusView[Bus];
@@ -309,7 +309,7 @@ PciEcamVerifyBus(
         EcamIds = READ_REGISTER_ULONG((PULONG)Function);
         if (EcamIds != LegacyIds)
         {
-            DPRINT1("PCI: ECAM mismatch at %02lx:%02lx.0, read %08lx expected %08lx\n",
+            DPRINT1("PCIX - ECAM mismatch at %02lx:%02lx.0, read %08lx expected %08lx\n",
                     FdoExtension->BaseBus,
                     Device,
                     EcamIds,
@@ -346,14 +346,14 @@ PciInitializeEcam(
         Status = PciEcamQueryWindow();
         if (!NT_SUCCESS(Status))
         {
-            DPRINT1("PCI: No ECAM window available (0x%lx)\n", Status);
+            DPRINT1("PCIX - No ECAM window available (0x%lx)\n", Status);
             return;
         }
 
 #if defined(_M_IX86) || defined(_M_AMD64)
         PciEcamSkipK8Northbridge = PciEcamIsAmdK8();
 #endif
-        DPRINT1("PCI: ECAM window at 0x%I64x for 0x%lx buses\n",
+        DPRINT1("PCIX - ECAM window at 0x%I64x for 0x%lx buses\n",
                 PciEcamWindowStart,
                 PciEcamWindowBuses);
     }
@@ -369,8 +369,23 @@ PciInitializeEcam(
     else if (NT_SUCCESS(Status))
     {
         PciEcamVerified = TRUE;
-        DPRINT1("PCI: ECAM verified on bus 0x%lx\n", FdoExtension->BaseBus);
+        DPRINT1("PCIX - ECAM verified on bus 0x%lx\n", FdoExtension->BaseBus);
     }
+}
+
+/**
+ * @brief Unmaps every bus mapped through the ECAM window.
+ */
+VOID
+NTAPI
+PciReleaseEcam(VOID)
+{
+    PAGED_CODE();
+
+    /* Config access falls back to the legacy mechanism before the mappings go away */
+    PciEcamVerified = FALSE;
+    PciEcamDiscardWindow();
+    PciEcamWindowQueried = FALSE;
 }
 
 /**

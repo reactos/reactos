@@ -206,7 +206,7 @@ BEGIN
     IDS_UNABLE_TO_WRITE "Nie można zapisać na dysku. Dysk może być pełny."
     IDS_INSTALL_SELECTED "Instaluj Zaznaczone"
     IDS_SELECTEDFORINST "Wybrane do instalacji"
-    IDS_MISMATCH_CERT_INFO "Użyty certyfikat jest nieznany:\nSubject: %s\nIssuer: %s\nCzy chcesz mimo to kontynuować?"
+    IDS_MISMATCH_CERT_INFO "Użyty certyfikat jest nieznany:\nSubject: %s\nIssuer root: %s\nCzy chcesz mimo to kontynuować?"
     IDS_UNABLE_PATH "Niepoprawny format ścieżki."
     IDS_APP_DISPLAY_DETAILS "Szczegóły"
     IDS_APP_DISPLAY_LIST "Lista"

@@ -206,7 +206,7 @@ BEGIN
     IDS_UNABLE_TO_WRITE "ディスクへの書き込みができません。容量を確認して下さい。"
     IDS_INSTALL_SELECTED "選択をインストール"
     IDS_SELECTEDFORINST "インストールを選択済み"
-    IDS_MISMATCH_CERT_INFO "証明書は未知のものです:\n件名: %s\n発行者: %s\nそれでも続けますか？"
+    IDS_MISMATCH_CERT_INFO "証明書は未知のものです:\n件名: %s\n発行者 root: %s\nそれでも続けますか？"
     IDS_UNABLE_PATH "パス形式が正しくありません"
     IDS_APP_DISPLAY_DETAILS "詳細"
     IDS_APP_DISPLAY_LIST "リスト"

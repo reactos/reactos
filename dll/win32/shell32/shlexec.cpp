@@ -1098,6 +1098,12 @@ static UINT SHELL_FindExecutable(LPCWSTR lpPath, LPCWSTR lpFile, LPCWSTR lpVerb,
         lstrcpyW(lpResult, xlpFile);
         /* The file was found in lpPath or one of the directories in the system-wide search path */
     }
+    /* Handle cases like CORE-20508 */
+    else if (SearchPathW(lpPath, lpFile, NULL, ARRAY_SIZE(xlpFile), xlpFile, NULL))
+    {
+        TRACE("SearchPathW returned non-zero\n");
+        lpFile = xlpFile;
+    }
     else
     {
         xlpFile[0] = '\0';

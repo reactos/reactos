@@ -172,7 +172,7 @@ PciDebugIrpDispatchDisplay(IN PIO_STACK_LOCATION IoStackLocation,
 
         /* For a PDO, print out the bus, device, and function number */
         PdoDeviceExtension = (PVOID)DeviceExtension;
-        DPRINT1("PDO(b=0x%x, d=0x%x, f=0x%x)<-%s\n",
+        DPRINT1("PCIX - PDO(b=0x%x, d=0x%x, f=0x%x)<-%s\n",
                 PdoDeviceExtension->ParentFdoExtension->BaseBus,
                 PdoDeviceExtension->Slot.u.bits.DeviceNumber,
                 PdoDeviceExtension->Slot.u.bits.FunctionNumber,
@@ -191,12 +191,12 @@ PciDebugIrpDispatchDisplay(IN PIO_STACK_LOCATION IoStackLocation,
         }
 
         /* For an FDO, just dump the extension pointer and IRP string */
-        DPRINT1("FDO(%p)<-%s\n", DeviceExtension, IrpString);
+        DPRINT1("PCIX - FDO(%p)<-%s\n", DeviceExtension, IrpString);
     }
 
     /* If the function is illegal for this extension, complain */
     if (IoStackLocation->MinorFunction > MaxMinor)
-        DPRINT1("Unknown IRP, minor = 0x%x\n", IoStackLocation->MinorFunction);
+        DPRINT1("PCIX - Unknown IRP, minor = 0x%x\n", IoStackLocation->MinorFunction);
 
     /* Return whether or not the debugger should be broken into for this IRP */
     return ((1 << IoStackLocation->MinorFunction) & BreakMask);
@@ -223,7 +223,7 @@ PciDebugDumpQueryCapabilities(IN PDEVICE_CAPABILITIES DeviceCaps)
     ULONG i;
 
     /* Dump the capabilities */
-    DPRINT1("Capabilities\n  Lock:%u, Eject:%u, Remove:%u, Dock:%u, UniqueId:%u\n",
+    DPRINT1("PCIX - Capabilities\n  Lock:%u, Eject:%u, Remove:%u, Dock:%u, UniqueId:%u\n",
             DeviceCaps->LockSupported,
             DeviceCaps->EjectSupported,
             DeviceCaps->Removable,

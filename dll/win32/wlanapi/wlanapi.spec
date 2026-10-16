@@ -9,7 +9,7 @@
 @ stdcall WlanGetAvailableNetworkList (ptr ptr long ptr ptr)
 @ stub WlanGetFilterList
 @ stdcall WlanGetInterfaceCapability (ptr ptr ptr ptr)
-@ stub WlanGetNetworkBssList
+@ stdcall WlanGetNetworkBssList(ptr ptr ptr long long ptr ptr)
 @ stdcall WlanGetProfile (ptr ptr ptr ptr ptr long ptr)
 @ stdcall WlanGetProfileCustomUserData (ptr ptr ptr ptr ptr ptr)
 @ stdcall WlanGetProfileList (ptr ptr ptr ptr)

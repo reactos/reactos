@@ -99,7 +99,7 @@ PciBeginStateTransition(IN PPCI_FDO_EXTENSION DeviceExtension,
 {
     PCI_STATE CurrentState;
     NTSTATUS Status;
-    DPRINT1("PCI Request to begin transition of Extension %p to %s ->",
+    DPRINT1("PCIX - Request to begin transition of Extension %p to %s ->",
             DeviceExtension,
             PciTransitionText[NewState]);
 
@@ -116,7 +116,7 @@ PciBeginStateTransition(IN PPCI_FDO_EXTENSION DeviceExtension,
     if (Status == STATUS_FAIL_CHECK)
     {
         /* Invalid transition (logical fault) */
-        DPRINT1("ERROR\nPCI: Error trying to enter state \"%s\" "
+        DPRINT1("ERROR\nPCIX - Error trying to enter state \"%s\" "
                 "from state \"%s\"\n",
                 PciTransitionText[NewState],
                 PciTransitionText[CurrentState]);
@@ -125,7 +125,7 @@ PciBeginStateTransition(IN PPCI_FDO_EXTENSION DeviceExtension,
     else if (Status == STATUS_INVALID_DEVICE_REQUEST)
     {
         /* Invalid transition (illegal request) */
-        DPRINT1("ERROR\nPCI: Illegal request to try to enter state \"%s\" "
+        DPRINT1("ERROR\nPCIX - Illegal request to try to enter state \"%s\" "
                 "from state \"%s\", rejecting",
                 PciTransitionText[NewState],
                 PciTransitionText[CurrentState]);
@@ -146,7 +146,7 @@ PciCancelStateTransition(IN PPCI_FDO_EXTENSION DeviceExtension,
                          IN PCI_STATE StateNotEntered)
 {
     NTSTATUS Status;
-    DPRINT1("PCI Request to cancel transition of Extension %p to %s ->",
+    DPRINT1("PCIX - Request to cancel transition of Extension %p to %s ->",
             DeviceExtension,
             PciTransitionText[StateNotEntered]);
 
@@ -181,7 +181,7 @@ NTAPI
 PciCommitStateTransition(IN PPCI_FDO_EXTENSION DeviceExtension,
                          IN PCI_STATE NewState)
 {
-    DPRINT1("PCI Commit transition of Extension %p to %s\n",
+    DPRINT1("PCIX - Commit transition of Extension %p to %s\n",
             DeviceExtension, PciTransitionText[NewState]);
 
     /* Make sure this is a valid commit */

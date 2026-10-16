@@ -204,7 +204,7 @@ BEGIN
     IDS_UNABLE_TO_WRITE "Nem lehet írni a lemezre. Lehet hogy megtelt."
     IDS_INSTALL_SELECTED "Kijelöltek telepítése"
     IDS_SELECTEDFORINST "Telepítésre kijelölve"
-    IDS_MISMATCH_CERT_INFO "A használt tanúsítvány ismeretlen:\nTárgy: %s\nKibocsátó: %s\nBiztosan folytatja?"
+    IDS_MISMATCH_CERT_INFO "A használt tanúsítvány ismeretlen:\nTárgy: %s\nKibocsátó root: %s\nBiztosan folytatja?"
     IDS_UNABLE_PATH "Az elérési út formátuma érvénytelen."
     IDS_APP_DISPLAY_DETAILS "Részletek"
     IDS_APP_DISPLAY_LIST "Lista"

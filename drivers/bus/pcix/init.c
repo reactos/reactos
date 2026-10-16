@@ -211,7 +211,7 @@ PciGetAcpiTable(IN ULONG TableCode)
     if (!NT_SUCCESS(Status))
     {
         /* No ACPI on the machine */
-        DPRINT1("AcpiFindRsdt() Failed!\n");
+        DPRINT1("PCIX - AcpiFindRsdt() Failed!\n");
         return NULL;
     }
 
@@ -321,11 +321,11 @@ PciGetIrqRoutingTableFromRegistry(OUT PPCI_IRQ_ROUTING_TABLE *PciRoutingTable)
     PKEY_BASIC_INFORMATION KeyInfo;
     PKEY_VALUE_PARTIAL_INFORMATION ValueInfo;
     UNICODE_STRING ValueName;
-    struct
-    {
-        CM_FULL_RESOURCE_DESCRIPTOR Descriptor;
-        PCI_IRQ_ROUTING_TABLE Table;
-    } *Package;
+    PCM_FULL_RESOURCE_DESCRIPTOR Package;
+    PCM_PARTIAL_RESOURCE_DESCRIPTOR Partial;
+    PPCI_IRQ_ROUTING_TABLE Table;
+    ULONG Offset, DataLength, HeaderLength;
+    UCHAR Checksum;
 
     /* So we know what to free at the end of the body */
     Package = NULL;
@@ -442,27 +442,69 @@ PciGetIrqRoutingTableFromRegistry(OUT PPCI_IRQ_ROUTING_TABLE *PciRoutingTable)
         /* Check if a descriptor was found */
         if (!Package) break;
 
-        /* Make sure the buffer is large enough to hold the table */
-        if ((NumberOfBytes < sizeof(*Package)) ||
-            (Package->Table.TableSize >
-             (NumberOfBytes - sizeof(CM_FULL_RESOURCE_DESCRIPTOR))))
+        /* The loader lists the bus ahead of the table, so find the data descriptor */
+        Status = STATUS_UNSUCCESSFUL;
+        Table = NULL;
+        DataLength = 0;
+        Offset = FIELD_OFFSET(CM_FULL_RESOURCE_DESCRIPTOR,
+                              PartialResourceList.PartialDescriptors);
+        if (NumberOfBytes < Offset)
+            break;
+
+        Partial = Package->PartialResourceList.PartialDescriptors;
+        for (i = 0; i < Package->PartialResourceList.Count; i++)
         {
-            /* Invalid package size */
-            Status = STATUS_UNSUCCESSFUL;
+            Offset += sizeof(*Partial);
+            if (Offset > NumberOfBytes)
+                break;
+
+            if (Partial->Type == CmResourceTypeDeviceSpecific)
+            {
+                DataLength = Partial->u.DeviceSpecificData.DataSize;
+                Table = (PPCI_IRQ_ROUTING_TABLE)(Partial + 1);
+                break;
+            }
+
+            Partial++;
+        }
+
+        /* The data must hold at least a $PIR header */
+        HeaderLength = FIELD_OFFSET(PCI_IRQ_ROUTING_TABLE, Slot);
+        if (!Table ||
+            (DataLength > NumberOfBytes - Offset) ||
+            (DataLength < HeaderLength))
+        {
             break;
         }
+
+        /* Accept only a version 1.0 table that fits in the data and ends on a slot entry */
+        if ((Table->Signature != PCI_IRQ_ROUTING_TABLE_SIGNATURE) ||
+            (Table->Version != PCI_IRQ_ROUTING_TABLE_VERSION) ||
+            (Table->TableSize < HeaderLength) ||
+            (Table->TableSize > DataLength) ||
+            (((Table->TableSize - HeaderLength) % sizeof(Table->Slot[0])) != 0))
+        {
+            break;
+        }
+
+        /* All bytes of the table must add up to zero */
+        Checksum = 0;
+        for (i = 0; i < Table->TableSize; i++)
+        {
+            Checksum += ((PUCHAR)Table)[i];
+        }
+        if (Checksum != 0)
+            break;
 
         /* Allocate space for the table */
         Status = STATUS_INSUFFICIENT_RESOURCES;
         *PciRoutingTable = ExAllocatePoolWithTag(PagedPool,
-                                                 NumberOfBytes,
+                                                 Table->TableSize,
                                                  PCI_POOL_TAG);
         if (!*PciRoutingTable) break;
 
-        /* Copy the registry data */
-        RtlCopyMemory(*PciRoutingTable,
-                      &Package->Table,
-                      NumberOfBytes - sizeof(CM_FULL_RESOURCE_DESCRIPTOR));
+        /* Copy the table out of the registry data */
+        RtlCopyMemory(*PciRoutingTable, Table, Table->TableSize);
         Status = STATUS_SUCCESS;
     } while (FALSE);
 
@@ -530,27 +572,27 @@ PciBuildHackTable(IN HANDLE KeyHandle)
                                              PCI_POOL_TAG);
         if (!PciHackTable) break;
 
-        /* Allocate the space needed to hold the full value information */
+        /* Allocate room for the longest valid name plus the 8 bytes of flags */
         ValueInfo = ExAllocatePoolWithTag(NonPagedPool,
-                                          sizeof(KEY_VALUE_FULL_INFORMATION) +
-                                          PCI_HACK_ENTRY_FULL_SIZE,
+                                          sizeof(*ValueInfo) +
+                                          PCI_HACK_ENTRY_FULL_SIZE +
+                                          sizeof(Entry->HackFlags),
                                           PCI_POOL_TAG);
-        if (!PciHackTable) break;
+        if (!ValueInfo)
+            break;
 
-        /* Loop each value in the registry */
+        /* Entry only advances once filled */
         Entry = &PciHackTable[0];
         for (i = 0; i < HackCount; i++)
         {
-            /* Get the entry for this value */
-            Entry = &PciHackTable[i];
-
             /* Query the value in the key */
             Status = ZwEnumerateValueKey(KeyHandle,
                                          i,
                                          KeyValueFullInformation,
                                          ValueInfo,
-                                         sizeof(KEY_VALUE_FULL_INFORMATION) +
-                                         PCI_HACK_ENTRY_FULL_SIZE,
+                                         sizeof(*ValueInfo) +
+                                         PCI_HACK_ENTRY_FULL_SIZE +
+                                         sizeof(Entry->HackFlags),
                                          &ResultLength);
             if (!NT_SUCCESS(Status))
             {
@@ -586,7 +628,7 @@ PciBuildHackTable(IN HANDLE KeyHandle)
                 (NameLength != PCI_HACK_ENTRY_FULL_SIZE))
             {
                 /* It's an invalid entry, skip it */
-                DPRINT1("Skipping hack entry with invalid length name\n");
+                DPRINT1("PCIX - Skipping hack entry with invalid length name\n");
                 continue;
             }
 
@@ -623,13 +665,14 @@ PciBuildHackTable(IN HANDLE KeyHandle)
              if ((NameLength == PCI_HACK_ENTRY_REV_SIZE) ||
                  (NameLength == PCI_HACK_ENTRY_FULL_SIZE))
              {
-                 /* Get the data */
-                 if (!PciStringToUSHORT(&ValueInfo->Name[16],
+                 /* The revision ends the name, so parse the last four digits and keep the low byte */
+                 if (!PciStringToUSHORT(&ValueInfo->Name[(NameLength / sizeof(WCHAR)) - 4],
                                         &Entry->RevisionID))
                  {
                      /* This failed, try the next entry */
                      continue;
                  }
+                 Entry->RevisionID &= 0xFF;
 
                  /* Save the fact this entry has finer controls */
                  Entry->Flags |= PCI_HACK_HAS_REVISION_INFO;
@@ -643,7 +686,7 @@ PciBuildHackTable(IN HANDLE KeyHandle)
 
             /* Print out for the debugger's sake */
 #ifdef HACK_DEBUG
-            DPRINT1("Adding Hack entry for Vendor:0x%04x Device:0x%04x ",
+            DPRINT1("PCIX - Adding Hack entry for Vendor:0x%04x Device:0x%04x ",
                     Entry->VendorID, Entry->DeviceID);
             if (Entry->Flags & PCI_HACK_HAS_SUBSYSTEM_INFO)
                 DbgPrint("SybSys:0x%04x SubVendor:0x%04x ",
@@ -652,10 +695,13 @@ PciBuildHackTable(IN HANDLE KeyHandle)
                 DbgPrint("Revision:0x%02x", Entry->RevisionID);
             DbgPrint(" = 0x%I64x\n", Entry->HackFlags);
 #endif
+
+            /* This one is filled in, so the next value gets the next entry */
+            Entry++;
         }
 
-        /* Bail out in case of failure */
-        if (!NT_SUCCESS(Status)) break;
+        /* Leaving the loop early means enumeration hit a real error */
+        if (i < HackCount) break;
 
         /* Terminate the table with an invalid entry */
         ASSERT(Entry < (PciHackTable + HackCount + 1));
@@ -670,29 +716,125 @@ PciBuildHackTable(IN HANDLE KeyHandle)
     ASSERT(!NT_SUCCESS(Status));
     if (FullInfo) ExFreePool(FullInfo);
     if (ValueInfo) ExFreePool(ValueInfo);
-    if (PciHackTable) ExFreePool(PciHackTable);
+
+    /* DriverEntry continues without a table, and PciGetHackFlags checks for NULL */
+    if (PciHackTable)
+    {
+        ExFreePool(PciHackTable);
+        PciHackTable = NULL;
+    }
+
     return Status;
 }
 
+/**
+ * @brief Records the bus and slot of each debugging device listed under the Debug key.
+ *
+ * Each device has a numbered subkey holding "Bus" and "Slot" REG_DWORD values.
+ * Incomplete entries are skipped.
+ */
 NTSTATUS
 NTAPI
-PciGetDebugPorts(IN HANDLE DebugKey)
+PciGetDebugPorts(
+    _In_ HANDLE DebugKey)
 {
-    UNREFERENCED_PARAMETER(DebugKey);
-    /* This function is not yet implemented */
-    UNIMPLEMENTED_DBGBREAK();
+    WCHAR SubKeyName[2];
+    PULONG Bus, Slot;
+    ULONG Index, BusLength, SlotLength;
+    PAGED_CODE();
+
+    C_ASSERT(MAX_DEBUGGING_DEVICES_SUPPORTED <= 10);
+
+    PciDebugPortsCount = 0;
+    SubKeyName[1] = UNICODE_NULL;
+    for (Index = 0; Index < MAX_DEBUGGING_DEVICES_SUPPORTED; Index++)
+    {
+        SubKeyName[0] = (WCHAR)(L'0' + Index);
+
+        if (!NT_SUCCESS(PciGetRegistryValue(L"Bus",
+                                            SubKeyName,
+                                            DebugKey,
+                                            REG_DWORD,
+                                            (PVOID*)&Bus,
+                                            &BusLength)))
+        {
+            continue;
+        }
+
+        if (!NT_SUCCESS(PciGetRegistryValue(L"Slot",
+                                            SubKeyName,
+                                            DebugKey,
+                                            REG_DWORD,
+                                            (PVOID*)&Slot,
+                                            &SlotLength)))
+        {
+            ExFreePoolWithTag(Bus, 0);
+            continue;
+        }
+
+        if ((BusLength == sizeof(*Bus)) && (SlotLength == sizeof(*Slot)))
+        {
+            PciDebuggingDevices[PciDebugPortsCount].Bus = *Bus;
+            PciDebuggingDevices[PciDebugPortsCount].Slot.u.AsULONG = *Slot;
+            PciDebugPortsCount++;
+        }
+
+        ExFreePoolWithTag(Slot, 0);
+        ExFreePoolWithTag(Bus, 0);
+    }
+
     return STATUS_SUCCESS;
 }
 
 DRIVER_UNLOAD PciDriverUnload;
 
+/**
+ * @brief Releases what DriverEntry and the buses left behind, then unhooks the HAL.
+ */
 VOID
 NTAPI
-PciDriverUnload(IN PDRIVER_OBJECT DriverObject)
+PciDriverUnload(
+    _In_ PDRIVER_OBJECT DriverObject)
 {
+    PAGED_CODE();
     UNREFERENCED_PARAMETER(DriverObject);
-    /* This function is not yet implemented */
-    UNIMPLEMENTED_DBGBREAK("PCI: Unload\n");
+
+    /* PnP only unloads the driver once every bus FDO has been removed */
+    ASSERT(PciFdoExtensionListHead.Next == NULL);
+
+    PciVerifierRelease();
+    PciReleaseEcam();
+
+    RtlFreeRangeList(&PciIsaBitExclusionList);
+    RtlFreeRangeList(&PciVgaAndIsaBitExclusionList);
+
+    if (PciIrqRoutingTable)
+    {
+        ExFreePoolWithTag(PciIrqRoutingTable, PCI_POOL_TAG);
+        PciIrqRoutingTable = NULL;
+    }
+
+    if (WdTable)
+    {
+        ExFreePoolWithTag(WdTable, PCI_POOL_TAG);
+        WdTable = NULL;
+    }
+
+    if (PciHackTable)
+    {
+        ExFreePoolWithTag(PciHackTable, PCI_POOL_TAG);
+        PciHackTable = NULL;
+    }
+
+    PciFreeLegacyDeviceCache();
+
+    if (PciZeroIoResourceRequirements)
+    {
+        ExFreePoolWithTag(PciZeroIoResourceRequirements, PCI_POOL_TAG);
+        PciZeroIoResourceRequirements = NULL;
+    }
+
+    PciRestoreHalHooks();
 }
 
 NTSTATUS
@@ -708,7 +850,7 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
     PWCHAR StartOptions;
     UNICODE_STRING OptionString, PciLockString;
     NTSTATUS Status;
-    DPRINT1("PCI: DriverEntry!\n");
+    DPRINT1("PCIX - DriverEntry!\n");
 
     /* Setup initial loop variables */
     KeyHandle = NULL;
@@ -859,7 +1001,7 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
 
         /* Check if this is a Datacenter SKU, which impacts IRQ alignment */
         PciRunningDatacenter = PciIsDatacenter();
-        if (PciRunningDatacenter) DPRINT1("PCI running on datacenter build\n");
+        if (PciRunningDatacenter) DPRINT1("PCIX - Running on datacenter build\n");
 
         /* Check if the system has an ACPI Hardware Watchdog Timer */
         //WdTable = PciGetAcpiTable(WDRT_SIGNATURE);

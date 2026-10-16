@@ -205,7 +205,7 @@ BEGIN
     IDS_UNABLE_TO_WRITE "Ukladanie na disk sa nepodarilo. Disk môže byť plný."
     IDS_INSTALL_SELECTED "Nainštalovať vybrané"
     IDS_SELECTEDFORINST "Vybrané pre inštaláciu"
-    IDS_MISMATCH_CERT_INFO "Neznámy certifikát:\nSubjekt: %s\nVydávateľ: %s\nChcete napriek tomu pokračovať?"
+    IDS_MISMATCH_CERT_INFO "Neznámy certifikát:\nSubjekt: %s\nVydávateľ root: %s\nChcete napriek tomu pokračovať?"
     IDS_UNABLE_PATH "Incorrect path format."
     IDS_APP_DISPLAY_DETAILS "Podrobnosti"
     IDS_APP_DISPLAY_LIST "Zoznam"

@@ -1,9 +1,9 @@
 /*
- * PROJECT:    ReactOS Netshell
- * LICENSE:    GPL - See COPYING in the top level directory
- * PURPOSE:    Chinese (Simplified) Language File
- * TRANSLATOR: 2011 Elton Chung aka MfldElton <elton328@gmail.com>
- *             2018-2026 Luo Yufan <njlyf2011@hotmail.com>
+ * PROJECT:     ReactOS Network Shell
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     Chinese (Simplified) resource file
+ * TRANSLATORS: Copyright 2011 Elton Chung aka MfldElton <elton328@gmail.com>
+ *              Copyright 2018-2026 Luo Yufan <njlyf2011@hotmail.com>
  */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED

@@ -15,6 +15,7 @@
 
 /* GLOBALS ********************************************************************/
 
+PCI_DEBUGGING_DEVICE PciDebuggingDevices[MAX_DEBUGGING_DEVICES_SUPPORTED];
 ULONG PciDebugPortsCount;
 
 RTL_RANGE_LIST PciIsaBitExclusionList;
@@ -489,7 +490,7 @@ PciGetDeviceProperty(IN PDEVICE_OBJECT DeviceObject,
         if (Status != STATUS_BUFFER_TOO_SMALL)
         {
             /* Call should've failed with buffer too small! */
-            DPRINT1("PCI - Unexpected status from GetDeviceProperty, saw %08X, expected %08X.\n",
+            DPRINT1("PCIX - Unexpected status from GetDeviceProperty, saw %08X, expected %08X.\n",
                     Status,
                     STATUS_BUFFER_TOO_SMALL);
             *OutputBuffer = NULL;
@@ -502,7 +503,7 @@ PciGetDeviceProperty(IN PDEVICE_OBJECT DeviceObject,
         if (!Buffer)
         {
             /* No memory, fail the request */
-            DPRINT1("PCI - Failed to allocate DeviceProperty buffer (%u bytes).\n", BufferLength);
+            DPRINT1("PCIX - Failed to allocate DeviceProperty buffer (%u bytes).\n", BufferLength);
             Status = STATUS_INSUFFICIENT_RESOURCES;
             break;
         }
@@ -721,11 +722,9 @@ PciFindPdoByFunction(IN PPCI_FDO_EXTENSION DeviceExtension,
         /* Find only enumerated PDOs */
         if (!PdoExtension->ReportedMissing)
         {
-            /* Check if the function number and header data matches */
+            /* Same slot, and the IDs match as the device's hack flags allow */
             if ((FunctionNumber == PdoExtension->Slot.u.AsULONG) &&
-                (PdoExtension->VendorId == PciData->VendorID) &&
-                (PdoExtension->DeviceId == PciData->DeviceID) &&
-                (PdoExtension->RevisionId == PciData->RevisionID))
+                (PcipIsSameDevice(PdoExtension, PciData)))
             {
                 /* This is considered to be the same PDO */
                 break;
@@ -745,20 +744,94 @@ PciFindPdoByFunction(IN PPCI_FDO_EXTENSION DeviceExtension,
     return PdoExtension;
 }
 
+/**
+ * @brief Reads the bus range the firmware gave a bridge.
+ *
+ * @return FALSE if the firmware left the bridge unconfigured.
+ */
+static
+BOOLEAN
+PciGetBiosBusRange(
+    _In_ PPCI_PDO_EXTENSION BridgeExtension,
+    _Out_ PUCHAR SecondaryBus,
+    _Out_ PUCHAR SubordinateBus)
+{
+    PCI_COMMON_HEADER BiosData;
+
+    if (!NT_SUCCESS(PciGetBiosConfig(BridgeExtension, &BiosData)))
+        return FALSE;
+
+    if (BridgeExtension->HeaderType == PCI_CARDBUS_BRIDGE_TYPE)
+    {
+        *SecondaryBus = BiosData.u.type2.SecondaryBus;
+        *SubordinateBus = BiosData.u.type2.SubordinateBus;
+    }
+    else
+    {
+        *SecondaryBus = BiosData.u.type1.SecondaryBus;
+        *SubordinateBus = BiosData.u.type1.SubordinateBus;
+    }
+
+    return ((*SecondaryBus != 0) && (*SubordinateBus != 0));
+}
+
 BOOLEAN
 NTAPI
-PciIsDeviceOnDebugPath(IN PPCI_PDO_EXTENSION DeviceExtension)
+PciIsDeviceOnDebugPath(
+    _In_ PPCI_PDO_EXTENSION DeviceExtension)
 {
+    PPCI_FDO_EXTENSION ParentFdo;
+    UCHAR LowBus, HighBus;
+    BOOLEAN IsBridge;
+    ULONG i;
     PAGED_CODE();
-
-    UNREFERENCED_PARAMETER(DeviceExtension);
 
     /* Check for too many, or no, debug ports */
     ASSERT(PciDebugPortsCount <= MAX_DEBUGGING_DEVICES_SUPPORTED);
     if (!PciDebugPortsCount) return FALSE;
 
-    /* eVb has not been able to test such devices yet */
-    UNIMPLEMENTED_DBGBREAK();
+    IsBridge = ((DeviceExtension->HeaderType == PCI_BRIDGE_TYPE) ||
+                (DeviceExtension->HeaderType == PCI_CARDBUS_BRIDGE_TYPE));
+    ParentFdo = DeviceExtension->ParentFdoExtension;
+
+    /* Work out which firmware bus numbers a debugging device has to be on */
+    if (IsBridge)
+    {
+        if (!PciGetBiosBusRange(DeviceExtension, &LowBus, &HighBus))
+            return FALSE;
+    }
+    else if (PCI_IS_ROOT_FDO(ParentFdo))
+    {
+        LowBus = HighBus = ParentFdo->BaseBus;
+    }
+    else
+    {
+        if (!PciGetBiosBusRange(ParentFdo->PhysicalDeviceObject->DeviceExtension,
+                                &LowBus,
+                                &HighBus))
+        {
+            return FALSE;
+        }
+
+        HighBus = LowBus;
+    }
+
+    for (i = 0; i < PciDebugPortsCount; i++)
+    {
+        if ((PciDebuggingDevices[i].Bus < LowBus) ||
+            (PciDebuggingDevices[i].Bus > HighBus))
+        {
+            continue;
+        }
+
+        /* A bridge covers its whole range, anything else must be the device itself */
+        if (IsBridge ||
+            (PciDebuggingDevices[i].Slot.u.AsULONG == DeviceExtension->Slot.u.AsULONG))
+        {
+            return TRUE;
+        }
+    }
+
     return FALSE;
 }
 
@@ -940,7 +1013,7 @@ PciReadDeviceCapability(IN PPCI_PDO_EXTENSION DeviceExtension,
         if (CapabilityCount > 48)
         {
             /* Fail, since this is basically a broken PCI device */
-            DPRINT1("PCI device %p capabilities list is broken.\n", DeviceExtension);
+            DPRINT1("PCIX - Device %p capabilities list is broken.\n", DeviceExtension);
             return 0;
         }
     }
@@ -1306,7 +1379,7 @@ PciDecodeEnable(IN PPCI_PDO_EXTENSION PdoExtension,
         {
             /* Otherwise, read the current command */
             PciReadDeviceConfig(PdoExtension,
-                                &Command,
+                                &CommandValue,
                                 FIELD_OFFSET(PCI_COMMON_HEADER, Command),
                                 sizeof(USHORT));
         }
@@ -1365,23 +1438,23 @@ PciDetermineSlotNumber(IN PPCI_PDO_EXTENSION PdoExtension,
 
     /* Check if a $PIR from the BIOS is used (legacy IRQ routing) */
     ParentExtension = PdoExtension->ParentFdoExtension;
-    DPRINT1("Slot lookup for %d.%u.%u\n",
-            ParentExtension ? ParentExtension->BaseBus : -1,
-            PdoExtension->Slot.u.bits.DeviceNumber,
-            PdoExtension->Slot.u.bits.FunctionNumber);
+    DPRINT("PCIX - Slot lookup for %d.%u.%u\n",
+           ParentExtension ? ParentExtension->BaseBus : -1,
+           PdoExtension->Slot.u.bits.DeviceNumber,
+           PdoExtension->Slot.u.bits.FunctionNumber);
     if ((PciIrqRoutingTable) && (ParentExtension))
     {
         /* Read every slot information entry */
         SlotInfo = &PciIrqRoutingTable->Slot[0];
-        DPRINT1("$PIR %p is %lx bytes, slot 0 is at: %p\n",
-                PciIrqRoutingTable, PciIrqRoutingTable->TableSize, SlotInfo);
+        DPRINT("PCIX - $PIR %p is %u bytes, slot 0 is at: %p\n",
+               PciIrqRoutingTable, PciIrqRoutingTable->TableSize, SlotInfo);
         while (SlotInfo < (PSLOT_INFO)((ULONG_PTR)PciIrqRoutingTable +
                                        PciIrqRoutingTable->TableSize))
         {
-            DPRINT1("Slot Info: %u.%u->#%u\n",
-                    SlotInfo->BusNumber,
-                    SlotInfo->DeviceNumber,
-                    SlotInfo->SlotNumber);
+            DPRINT("PCIX - Slot Info: %u.%u->#%u\n",
+                   SlotInfo->BusNumber,
+                   SlotInfo->DeviceNumber,
+                   SlotInfo->SlotNumber);
 
             /* Check if this slot information matches the PDO being queried */
             if ((ParentExtension->BaseBus == SlotInfo->BusNumber) &&
@@ -1574,8 +1647,8 @@ PciQueryPowerCapabilities(IN PPCI_PDO_EXTENSION PdoExtension,
         }
         else
         {
-            /* Take the minimums? -- need to check with briang at work */
-            UNIMPLEMENTED;
+            /* The bridge above may be in D3 too, which leaves this device in D3cold */
+            DeviceCapability->WakeFromD3 = PdoExtension->PowerCapabilities.Support.PMED3Cold;
         }
     }
 
