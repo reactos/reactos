@@ -136,7 +136,7 @@ PciSetPowerManagedDevicePowerState(IN PPCI_PDO_EXTENSION DeviceExtension,
          (DeviceState != PowerDeviceD0))
     {
         /* Simply return success, ignoring this request */
-        DPRINT1("PCIX - Cannot disable decodes on this device, ignoring PM request...\n");
+        DPRINT("PCIX - Cannot disable decodes on this device, ignoring PM request...\n");
         return Status;
     }
 
@@ -184,7 +184,7 @@ PciSetPowerManagedDevicePowerState(IN PPCI_PDO_EXTENSION DeviceExtension,
     else
     {
         /* Nothing to do! */
-        DPRINT1("PCIX - No PM on this device, ignoring request\n");
+        DPRINT("PCIX - No PM on this device, ignoring request\n");
     }
 
     /* Check if new resources have to be assigned */

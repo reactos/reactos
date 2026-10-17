@@ -205,7 +205,7 @@ PciPdoIrpStartDevice(IN PIRP Irp,
     else
     {
         /* All good */
-        DPRINT1("PCIX - START not changing resource settings.\n");
+        DPRINT("PCIX - START not changing resource settings.\n");
     }
 
     /* Check if the device was sleeping */
@@ -1059,12 +1059,12 @@ PciPdoCreate(IN PPCI_FDO_EXTENSION DeviceExtension,
 
     /* Get the extension for it */
     PdoExtension = (PPCI_PDO_EXTENSION)DeviceObject->DeviceExtension;
-    DPRINT1("PCIX - New PDO (b=0x%x, d=0x%x, f=0x%x) @ %p, ext @ %p\n",
-            DeviceExtension->BaseBus,
-            Slot.u.bits.DeviceNumber,
-            Slot.u.bits.FunctionNumber,
-            DeviceObject,
-            DeviceObject->DeviceExtension);
+    DPRINT("PCIX - New PDO (b=0x%x, d=0x%x, f=0x%x) @ %p, ext @ %p\n",
+           DeviceExtension->BaseBus,
+           Slot.u.bits.DeviceNumber,
+           Slot.u.bits.FunctionNumber,
+           DeviceObject,
+           DeviceObject->DeviceExtension);
 
     /* Configure the extension */
     PdoExtension->ExtensionType = PciPdoExtensionType;

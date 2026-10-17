@@ -162,7 +162,7 @@ Device_SaveLimits(IN PPCI_CONFIGURATOR_CONTEXT Context)
             {
                 /* Increase it to 64MB to make sure nobody touches the buffer */
                 BarArray[i] = 0xFC000000;
-                DPRINT1("PCIX - Adjusted broken S3 requirement from 32MB to 64MB\n");
+                DPRINT("PCIX - Adjusted broken S3 requirement from 32MB to 64MB\n");
             }
         }
     }
@@ -178,13 +178,13 @@ Device_SaveLimits(IN PPCI_CONFIGURATOR_CONTEXT Context)
             {
                 /* Ignore it */
                 BarArray[1] = 0;
-                DPRINT1("PCIX - Ignored Cirrus GD54xx broken IO requirement (400 ports)\n");
+                DPRINT("PCIX - Ignored Cirrus GD54xx broken IO requirement (400 ports)\n");
             }
             else
             {
                 /* Otherwise, this BAR seems okay */
-                DPRINT1("PCIX - Cirrus GD54xx 400 port IO requirement has a valid setting (%08x)\n",
-                        Current->u.type0.BaseAddresses[1]);
+                DPRINT("PCIX - Cirrus GD54xx 400 port IO requirement has a valid setting (%08x)\n",
+                       Current->u.type0.BaseAddresses[1]);
             }
         }
         else if (BarArray[1])
