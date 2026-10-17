@@ -4296,7 +4296,7 @@ USBH_CheckDeviceLanguage(IN PDEVICE_OBJECT DeviceObject,
 
     pSymbol = Descriptor->bString;
 
-    for (ix = 1; ix < NumSymbols; ix++)
+    for (ix = 0; ix < NumSymbols; ix++)
     {
         if (*pSymbol == (WCHAR)LanguageId)
         {
