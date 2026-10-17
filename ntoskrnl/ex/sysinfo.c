@@ -1160,9 +1160,56 @@ QSI_DEF(SystemProcessInformation)
 /* Class 6 - Call Count Information */
 QSI_DEF(SystemCallCountInformation)
 {
-    /* FIXME */
-    DPRINT1("NtQuerySystemInformation - SystemCallCountInformation not implemented\n");
-    return STATUS_NOT_IMPLEMENTED;
+    PSYSTEM_CALL_COUNT_INFORMATION CallCountInfo;
+    PKSERVICE_TABLE_DESCRIPTOR DescriptorTable;
+    ULONG NumberOfTables = 0;
+    ULONG TotalCounts = 0;
+    ULONG RequiredSize;
+    ULONG i;
+    PULONG TableSizes;
+    PULONG Counts;
+
+    /* Count how many tables are present and total entries */
+    DescriptorTable = KeServiceDescriptorTable;
+    for (i = 0; i < SSDT_MAX_ENTRIES; i++)
+    {
+        if (DescriptorTable[i].Limit != 0)
+        {
+            NumberOfTables++;
+            TotalCounts += DescriptorTable[i].Limit;
+        }
+    }
+
+    RequiredSize = sizeof(SYSTEM_CALL_COUNT_INFORMATION) +
+                   (NumberOfTables * sizeof(ULONG)) +
+                   (TotalCounts * sizeof(ULONG));
+
+    *ReqSize = RequiredSize;
+
+    if (Size < RequiredSize)
+    {
+        return STATUS_INFO_LENGTH_MISMATCH;
+    }
+
+    CallCountInfo = (PSYSTEM_CALL_COUNT_INFORMATION)Buffer;
+    CallCountInfo->Length = RequiredSize;
+    CallCountInfo->NumberOfTables = NumberOfTables;
+
+    /* Table size array */
+    TableSizes = (PULONG)(CallCountInfo + 1);
+    for (i = 0; i < SSDT_MAX_ENTRIES; i++)
+    {
+        if (DescriptorTable[i].Limit != 0)
+        {
+            *TableSizes++ = DescriptorTable[i].Limit;
+        }
+    }
+
+    /* Call counts don't get tracked in free builds */
+    Counts = TableSizes;
+    RtlZeroMemory(Counts, TotalCounts * sizeof(ULONG));
+
+    return STATUS_SUCCESS;
 }
 
 /* Class 7 - Device Information */
