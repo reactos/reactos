@@ -2,11 +2,22 @@
 remove_definitions(-D_WIN32_WINNT=0x502)
 
 list(APPEND SOURCE
-    controller.cpp
-    driver.cpp
-    roothub.cpp
-    usbdevice.cpp
-    usbxhci.h)
+    bulkio.cpp
+    cmdring.cpp
+    dmapool.cpp
+    ctrlxfer.cpp
+    hc.cpp
+    slots.cpp
+    xhcientry.cpp
+    epctx.cpp
+    epstate.cpp
+    intr.cpp
+    isoxfer.cpp
+    mmio.cpp
+    rootports.cpp
+    xferring.cpp
+    slotdev.cpp
+    xhcidrv.h)
 
 add_library(usbxhci MODULE ${SOURCE} usbxhci.rc)
 set_module_type(usbxhci kmdfdriver)
