@@ -30,6 +30,25 @@
 
 #define ARRAY_SIZE(A) (sizeof(A)/sizeof(*A))
 
+/* From rtl/locale.c */
+typedef struct _LOCALE_ENTRY
+{
+    const CHAR Locale[16];
+    LCID Lcid : 24;
+    ULONG Flags : 8;
+} LOCALE_ENTRY;
+
+_Must_inspect_result_
+BOOLEAN
+CopyAsciizToUnicodeString(
+    _Inout_ PUNICODE_STRING UnicodeString,
+    _In_ PCSTR AsciiString);
+
+_Must_inspect_result_
+ULONG
+FindIndexByLcid(
+    _In_ LCID Lcid);
+
 typedef struct
 {
     UINT   sname;                  /* 000 LOCALE_SNAME */

@@ -47,6 +47,18 @@ NTSYSAPI NTSTATUS  WINAPI RtlGetLocaleFileMappingAddress(void**,LCID*,LARGE_INTE
 /* Avoid linking to actctx.c to prevent linker errors */
 #define RtlQueryActivationContextApplicationSettings RtlQueryActivationContextApplicationSettingsLibSupp
 
+PUSHORT NlsLeadByteInfo = NULL;
+USHORT NlsOemDefaultChar = '\0';
+USHORT NlsUnicodeDefaultChar = 0;
+PUSHORT NlsOemLeadByteInfo = NULL;
+PUSHORT NlsOemToUnicodeTable = NULL;
+PCHAR NlsUnicodeToOemTable = NULL;
+PUSHORT NlsUnicodeToMbOemTable = NULL;
+PUSHORT NlsAnsiToUnicodeTable = NULL;
+PCHAR NlsUnicodeToAnsiTable = NULL;
+USHORT NlsOemCodePage = 0;
+extern const LOCALE_ENTRY RtlpLocaleTable[];
+
 #undef TRACE
 #undef FIXME
 #undef ERR
@@ -202,7 +214,7 @@ void locale_init(void)
         NtGetNlsSectionPtr( 11, ansi_cp, NULL, &ansi_ptr, &size );
         NtCurrentPeb()->AnsiCodePageData = ansi_ptr;
     }
-     if (oem_cp != CP_UTF8)
+    if (oem_cp != CP_UTF8)
     {
         NtGetNlsSectionPtr( 11, oem_cp, NULL, &oem_ptr, &size );
         NtCurrentPeb()->OemCodePageData = oem_ptr;
@@ -401,6 +413,23 @@ void WINAPI RtlResetRtlTranslations( NLSTABLEINFO *info )
     NlsMbCodePageTag    = info->AnsiTableInfo.DBCSCodePage;
     NlsMbOemCodePageTag = info->OemTableInfo.DBCSCodePage;
     nls_info = *info;
+#ifdef __REACTOS__
+    /* Set ANSI data */
+    NlsAnsiToUnicodeTable = (PUSHORT)info->AnsiTableInfo.MultiByteTable;
+    NlsUnicodeToAnsiTable = info->AnsiTableInfo.WideCharTable;
+    NlsLeadByteInfo = info->AnsiTableInfo.DBCSOffsets;
+
+    /* Set OEM data */
+    NlsOemToUnicodeTable = (PUSHORT)info->OemTableInfo.MultiByteTable;
+    NlsUnicodeToOemTable = info->OemTableInfo.WideCharTable;
+    NlsUnicodeToMbOemTable = (PUSHORT)info->OemTableInfo.WideCharTable;
+    NlsOemLeadByteInfo = info->OemTableInfo.DBCSOffsets;
+    NlsOemCodePage = info->OemTableInfo.CodePage;
+
+    /* set the default characters for RtlpDidUnicodeToOemWork */
+    NlsOemDefaultChar = info->OemTableInfo.DefaultChar;
+    NlsUnicodeDefaultChar = info->OemTableInfo.TransDefaultChar;
+#endif
 }
 
 
@@ -422,8 +451,20 @@ NTSTATUS WINAPI RtlGetLocaleFileMappingAddress( void **ptr, LCID *lcid, LARGE_IN
 #endif
 
         if (status) return status;
+#ifdef __REACTOS__
+        if (RtlpGetMode() == UserMode)
+        {
+            if (InterlockedCompareExchangePointer( &cached_ptr, addr, NULL ))
+                NtUnmapViewOfSection( GetCurrentProcess(), addr );
+        }
+        else
+        {
+            InterlockedCompareExchangePointer(&cached_ptr, addr, NULL);
+        }
+#else
         if (InterlockedCompareExchangePointer( &cached_ptr, addr, NULL ))
             NtUnmapViewOfSection( GetCurrentProcess(), addr );
+#endif
     }
     *ptr = cached_ptr;
     *lcid = cached_lcid;
@@ -975,6 +1016,28 @@ NTSTATUS WINAPI RtlLcidToLocaleName( LCID lcid, UNICODE_STRING *str, ULONG flags
         return STATUS_INVALID_PARAMETER_1;
     }
 
+#ifdef __REACTOS__
+    /* Fall back to the hardcoded table if running in kernel mode */
+    /* Calling locale_init in ntoskrnl would not work as the disk is not yet mounted and drivers would attempt to use the locale code */
+    if (!locale_table)
+    {
+        ULONG LocaleIndex = FindIndexByLcid(lcid);
+        if (LocaleIndex == MAXULONG)
+        {
+            return STATUS_INVALID_PARAMETER_1;
+        }
+
+        if (!CopyAsciizToUnicodeString(str, RtlpLocaleTable[LocaleIndex].Locale))
+        {
+            return STATUS_BUFFER_TOO_SMALL;
+        }
+
+        return STATUS_SUCCESS;
+    }
+    else
+    {
+#endif
+
     if (!(entry = find_lcid_entry( locale_table, lcid ))) return STATUS_INVALID_PARAMETER_1;
     /* reject neutral locale unless flag 2 is set */
     if (!(flags & 2) && !get_locale_data( locale_table, entry->idx )->inotneutral)
@@ -999,6 +1062,9 @@ NTSTATUS WINAPI RtlLcidToLocaleName( LCID lcid, UNICODE_STRING *str, ULONG flags
     str->Length = len * sizeof(WCHAR);
 #ifndef __REACTOS__
     TRACE( "%04lx -> %s\n", lcid, debugstr_us(str) );
+#endif
+#ifdef __REACTOS__
+    }
 #endif
     return STATUS_SUCCESS;
 }

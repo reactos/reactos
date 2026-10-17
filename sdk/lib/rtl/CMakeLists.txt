@@ -23,7 +23,7 @@ list(APPEND RTL_WINE_SOURCE
     timerqueue.c
 )
 list(APPEND RTL_WINE_SOURCE_VISTA
-    wine/product.c
+    product.c
     wine/threadpool.c
     wine/locale.c
 )

@@ -31,7 +31,7 @@ typedef struct _LOCALE_ENTRY
 } LOCALE_ENTRY;
 
 // This table is sorted alphabetically to allow binary search
-static const LOCALE_ENTRY RtlpLocaleTable[] =
+const LOCALE_ENTRY RtlpLocaleTable[] =
 {
     { "",               0x0007F }, // LOCALE_INVARIANT
     { "af",             0x00036 },
@@ -534,9 +534,50 @@ RtlpInitializeLocaleTable(VOID)
         RtlpLocaleIndexTable[j] = i;
     }
 
-    locale_init();
+    if (RtlpGetMode() == UserMode)
+    {
+        locale_init();
+    }
 
     return STATUS_SUCCESS;
+}
+
+_Must_inspect_result_
+ULONG
+FindIndexByLcid(
+    _In_ LCID Lcid)
+{
+    USHORT TableIndex;
+    LONG Low = 0;
+    LONG High = ARRAYSIZE(RtlpLocaleTable) - 1;
+    LONG Middle;
+    LCID CurrentLcid;
+
+    while (Low <= High)
+    {
+        Middle = (Low + High) / 2;
+
+        /* Use the indirection table to get the real table entry */
+        TableIndex = RtlpLocaleIndexTable[Middle];
+        ASSERT(TableIndex < ARRAYSIZE(RtlpLocaleTable));
+
+        /* Compare the LCID (including the alternative name flag!) */
+        CurrentLcid = RtlpLocaleTable[TableIndex].Lcid;
+        if (CurrentLcid < Lcid)
+        {
+            Low = Middle + 1;
+        }
+        else if (CurrentLcid > Lcid)
+        {
+            High = Middle - 1;
+        }
+        else /* CurrentLcid == Lcid */
+        {
+            return RtlpLocaleIndexTable[Middle];
+        }
+    }
+
+    return MAXULONG;
 }
 
 #define LOWERCASE_CHAR(Char) \
@@ -619,6 +660,33 @@ FindIndexByLocaleName(
     }
 
     return MAXULONG;
+}
+
+_Must_inspect_result_
+BOOLEAN
+CopyAsciizToUnicodeString(
+    _Inout_ PUNICODE_STRING UnicodeString,
+    _In_ PCSTR AsciiString)
+{
+    SIZE_T AsciiLength = strlen(AsciiString);
+
+    /* Make sure we can copy the full string, including the terminating 0 */
+    if (UnicodeString->MaximumLength < (AsciiLength + 1) * sizeof(WCHAR))
+    {
+        return FALSE;
+    }
+
+    /* Copy the string manually */
+    for (SIZE_T i = 0; i < AsciiLength; i++)
+    {
+        UnicodeString->Buffer[i] = (WCHAR)AsciiString[i];
+    }
+
+    /* Add the terminating 0 and update the Length */
+    UnicodeString->Buffer[AsciiLength] = UNICODE_NULL;
+    UnicodeString->Length = (USHORT)(AsciiLength * sizeof(WCHAR));
+
+    return TRUE;
 }
 
 static
