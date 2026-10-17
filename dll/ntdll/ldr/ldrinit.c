@@ -1795,6 +1795,8 @@ LdrpInitializeProcess(IN PCONTEXT Context,
     HANDLE SymLinkHandle;
     //ULONG DebugHeapOnly;
     UNICODE_STRING CommandLine, NtSystemRoot, ImagePathName, FullPath, ImageFileName, KnownDllString;
+    UNICODE_STRING MscoreeName;
+    PVOID MscoreeBase;
     PPEB Peb = NtCurrentPeb();
     BOOLEAN IsDotNetImage = FALSE;
     BOOLEAN FreeCurDir = FALSE;
@@ -2336,12 +2338,6 @@ LdrpInitializeProcess(IN PCONTEXT Context,
 
     }
 
-    if (IsDotNetImage)
-    {
-        /* FIXME */
-        DPRINT1("We don't support .NET applications yet\n");
-    }
-
     if (NtHeader->OptionalHeader.Subsystem == IMAGE_SUBSYSTEM_WINDOWS_GUI ||
         NtHeader->OptionalHeader.Subsystem == IMAGE_SUBSYSTEM_WINDOWS_CUI)
     {
@@ -2386,6 +2382,23 @@ LdrpInitializeProcess(IN PCONTEXT Context,
 
     /* Walk the IAT and load all the DLLs */
     ImportStatus = LdrpWalkImportDescriptor(LdrpDefaultPath.Buffer, LdrpImageEntry);
+
+    /*
+     * The .NET executables ReactOS can start today are x86 IL-only images, as the C# compilers
+     * emit them. They import mscoree!_CorExeMain and their entry point is a stub jumping through
+     * that import, so the walk above has loaded mscoree, and _CorExeMain hosts the runtime.
+     * IsDotNetImage only marks the image's loader entry. Nothing hosts the CLR for a .NET image
+     * that does not import mscoree, so say so.
+     */
+    if (IsDotNetImage && NT_SUCCESS(ImportStatus))
+    {
+        RtlInitUnicodeString(&MscoreeName, L"mscoree.dll");
+        if (!NT_SUCCESS(LdrGetDllHandle(NULL, NULL, &MscoreeName, &MscoreeBase)))
+        {
+            DPRINT1("LDR: .NET image %wZ does not import mscoree.dll, so nothing hosts the CLR\n",
+                    &ImagePathName);
+        }
+    }
 
     /* Check if relocation is needed */
     if (Peb->ImageBaseAddress != (PVOID)NtHeader->OptionalHeader.ImageBase)
