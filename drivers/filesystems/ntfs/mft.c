@@ -1220,6 +1220,9 @@ SetResidentAttributeDataLength(PDEVICE_EXTENSION Vcb,
                 // Copy the data that's common to both non-resident and resident attributes
                 RtlCopyMemory(NewRecord, AttrContext->pRecord, FIELD_OFFSET(NTFS_ATTR_RECORD, Resident.ValueLength));
 
+                // The name follows the non-resident header, not the resident one
+                NewRecord->NameOffset = FIELD_OFFSET(NTFS_ATTR_RECORD, NonResident.CompressedSize);
+
                 // if there's a name
                 if (AttrContext->pRecord->NameLength != 0)
                 {
