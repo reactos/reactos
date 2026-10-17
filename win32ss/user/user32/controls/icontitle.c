@@ -30,8 +30,8 @@ const struct builtin_class_descr ICONTITLE_builtin_class =
 {
     WC_ICONTITLE,     /* name */
     0,                /* style */
-    NULL,             /* procA (winproc is Unicode only) */
-    IconTitleWndProc, /* procW */
+    &pfnClientA.pfnTitleWndProc, /* procA (winproc is Unicode only) */
+    &pfnClientW.pfnTitleWndProc, /* procW */
     0,                /* extra */
     IDC_ARROW,        /* cursor */
     0                 /* brush */

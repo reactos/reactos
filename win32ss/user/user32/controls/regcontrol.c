@@ -12,9 +12,9 @@
 
 DWORD RegisterDefaultClasses = FALSE;
 
-static PFNCLIENT pfnClientA;
-static PFNCLIENT pfnClientW;
-static PFNCLIENTWORKER pfnClientWorker;
+PFNCLIENT pfnClientA;
+PFNCLIENT pfnClientW;
+PFNCLIENTWORKER pfnClientWorker;
 
 
 /***********************************************************************
@@ -92,7 +92,7 @@ BOOL WINAPI RegisterSystemControls(VOID)
 
         // Set Global bit!
         WndClass.style = g_SysClasses[i].desc->style|CS_GLOBALCLASS;
-        WndClass.lpfnWndProc = g_SysClasses[i].desc->procW;
+        WndClass.lpfnWndProc = *g_SysClasses[i].desc->procW;
         WndClass.cbWndExtra = g_SysClasses[i].desc->extra;
         WndClass.hCursor = LoadCursorW(NULL, g_SysClasses[i].desc->cursor);
         WndClass.hbrBackground= g_SysClasses[i].desc->brush;
@@ -203,6 +203,37 @@ BOOL WINAPI RegisterClientPFN(VOID)
   pfnClientWorker.pfnImeWndProc       = ImeWndProc_common;
   pfnClientWorker.pfnGhostWndProc     = GhostWndProc_common;
   pfnClientWorker.pfnCtfHookProc      = User32DefWindowProc;
+
+#if (DLL_EXPORT_VERSION >= _WIN32_WINNT_VISTA)
+    /* Register the PFNs with ntdll */
+    Status = RtlInitializeNtUserPfn(&pfnClientA,
+                                    sizeof(pfnClientA),
+                                    &pfnClientW,
+                                    sizeof(pfnClientW),
+                                    &pfnClientWorker,
+                                    sizeof(pfnClientWorker));
+    if (!NT_SUCCESS(Status))
+    {
+        return FALSE;
+    }
+
+    /* Query the PFN thunks from ntdll */
+    PFNCLIENT* pfnNtdllClientA;
+    PFNCLIENT* pfnNtdllClientW;
+    PFNCLIENTWORKER* pfnNtdllClientWorker;
+    Status = RtlRetrieveNtUserPfn((LPCVOID*)&pfnNtdllClientA,
+                                  (LPCVOID*)&pfnNtdllClientW,
+                                  (LPCVOID*)&pfnNtdllClientWorker);
+    if (!NT_SUCCESS(Status))
+    {
+        return FALSE;
+    }
+
+    /* Now update the global PFNs */
+    pfnClientA = *pfnNtdllClientA;
+    pfnClientW = *pfnNtdllClientW;
+    pfnClientWorker = *pfnNtdllClientWorker;
+#endif
 
   Status = NtUserInitializeClientPfnArrays( &pfnClientA,
                                             &pfnClientW,
