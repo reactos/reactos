@@ -29,6 +29,21 @@ extern "C" {
 #define WLAN_AVAILABLE_NETWORK_HOTSPOT2_ROAMING                   0x00000080
 #define WLAN_AVAILABLE_NETWORK_AUTO_CONNECT_FAILED                0x00000100
 
+#define WLAN_NOTIFICATION_SOURCE_NONE                             0
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+#define WLAN_NOTIFICATION_SOURCE_ONEX                             0x00000004
+#endif
+#define WLAN_NOTIFICATION_SOURCE_ACM                              0x00000008
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+#define WLAN_NOTIFICATION_SOURCE_MSM                              0x00000010
+#define WLAN_NOTIFICATION_SOURCE_SECURITY                         0x00000020
+#define WLAN_NOTIFICATION_SOURCE_IHV                              0x00000040
+#endif
+#if (NTDDI_VERSION >= NTDDI_WIN7)
+#define WLAN_NOTIFICATION_SOURCE_HNWK                             0x00000080
+#endif
+#define WLAN_NOTIFICATION_SOURCE_ALL                              0x0000FFFF
+
 #define WLAN_READ_ACCESS    (STANDARD_RIGHTS_READ | FILE_READ_DATA)
 #define WLAN_EXECUTE_ACCESS (STANDARD_RIGHTS_EXECUTE | FILE_EXECUTE | WLAN_READ_ACCESS)
 #define WLAN_WRITE_ACCESS   (STANDARD_RIGHTS_WRITE | FILE_WRITE_DATA | DELETE | WRITE_DAC | WLAN_READ_ACCESS | WLAN_EXECUTE_ACCESS)
@@ -144,6 +159,81 @@ typedef enum _WLAN_INTERFACE_TYPE {
     wlan_interface_type_native_802_11,
     wlan_interface_type_invalid
 } WLAN_INTERFACE_TYPE, *PWLAN_INTERFACE_TYPE;
+
+#if defined(__midl) || defined(__WIDL__)
+typedef [v1_enum] enum _WLAN_NOTIFICATION_ACM {
+#else
+typedef enum _WLAN_NOTIFICATION_ACM {
+#endif
+    wlan_notification_acm_start,
+    wlan_notification_acm_autoconf_enabled,
+    wlan_notification_acm_autoconf_disabled,
+    wlan_notification_acm_background_scan_enabled,
+    wlan_notification_acm_background_scan_disabled,
+    wlan_notification_acm_bss_type_change,
+    wlan_notification_acm_power_setting_change,
+    wlan_notification_acm_scan_complete,
+    wlan_notification_acm_scan_fail,
+    wlan_notification_acm_connection_start,
+    wlan_notification_acm_connection_complete,
+    wlan_notification_acm_connection_attempt_fail,
+    wlan_notification_acm_filter_list_change,
+    wlan_notification_acm_interface_arrival,
+    wlan_notification_acm_interface_removal,
+    wlan_notification_acm_profile_change,
+    wlan_notification_acm_profile_name_change,
+    wlan_notification_acm_profiles_exhausted,
+    wlan_notification_acm_network_not_available,
+    wlan_notification_acm_network_available,
+    wlan_notification_acm_disconnecting,
+    wlan_notification_acm_disconnected,
+    wlan_notification_acm_adhoc_network_state_change,
+    wlan_notification_acm_profile_unblocked,
+    wlan_notification_acm_screen_power_change,
+    wlan_notification_acm_profile_blocked,
+    wlan_notification_acm_scan_list_refresh,
+    wlan_notification_acm_operational_state_change,
+    wlan_notification_acm_end
+} WLAN_NOTIFICATION_ACM /* HACK: WIDL is broken, *PWLAN_NOTIFICATION_ACM */;
+
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+#if defined(__midl) || defined(__WIDL__)
+typedef [v1_enum] enum _WLAN_NOTIFICATION_MSM {
+#else
+typedef enum _WLAN_NOTIFICATION_MSM {
+#endif
+    wlan_notification_msm_start,
+    wlan_notification_msm_associating,
+    wlan_notification_msm_associated,
+    wlan_notification_msm_authenticating,
+    wlan_notification_msm_connected,
+    wlan_notification_msm_roaming_start,
+    wlan_notification_msm_roaming_end,
+    wlan_notification_msm_radio_state_change,
+    wlan_notification_msm_signal_quality_change,
+    wlan_notification_msm_disassociating,
+    wlan_notification_msm_disconnected,
+    wlan_notification_msm_peer_join,
+    wlan_notification_msm_peer_leave,
+    wlan_notification_msm_adapter_removal,
+    wlan_notification_msm_adapter_operation_mode_change,
+    wlan_notification_msm_link_degraded,
+    wlan_notification_msm_link_improved,
+    wlan_notification_msm_end
+} WLAN_NOTIFICATION_MSM /* HACK: WIDL is broken, *PWLAN_NOTIFICATION_MSM */;
+#endif
+
+#if (NTDDI_VERSION >= NTDDI_WIN7)
+#if defined(__midl) || defined(__WIDL__)
+typedef [v1_enum] enum _WLAN_HOSTED_NETWORK_NOTIFICATION_CODE {
+#else
+typedef enum _WLAN_HOSTED_NETWORK_NOTIFICATION_CODE {
+#endif
+    wlan_hosted_network_state_change = 0x1000,
+    wlan_hosted_network_peer_state_change,
+    wlan_hosted_network_radio_state_change
+} WLAN_HOSTED_NETWORK_NOTIFICATION_CODE /* HACK: WIDL is broken, *PWLAN_HOSTED_NETWORK_NOTIFICATION_CODE */;
+#endif
 
 /* Types */
 typedef DWORD WLAN_REASON_CODE, *PWLAN_REASON_CODE;
