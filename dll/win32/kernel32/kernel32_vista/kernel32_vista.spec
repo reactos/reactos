@@ -53,7 +53,6 @@
 @ stdcall RegisterApplicationRecoveryCallback(ptr ptr long long)
 @ stdcall RegisterApplicationRestart(wstr long)
 @ stdcall SetFileBandwidthReservation(ptr long long long ptr ptr)
-@ stdcall SetThreadPreferredUILanguages(long wstr ptr)
 @ stdcall CompareStringOrdinal(ptr long ptr long long)
 
 @ stdcall CloseThreadpool(ptr) ntdll_vista.TpReleasePool
