@@ -23,7 +23,9 @@ list(APPEND SOURCE
     CActiveDesktop.cpp
     CActiveDesktop.h
     CIDLDataObj.cpp
+    CQueryAssocCommon.cpp
     CQueryAssociations.cpp
+    CQueryAssociationsVista.cpp
     changenotify.cpp
     debughlp.cpp
     dialogs/dialogs.cpp

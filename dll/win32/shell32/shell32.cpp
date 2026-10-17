@@ -20,7 +20,6 @@
  */
 
 #include "precomp.h"
-
 #include "shell32_version.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
@@ -168,6 +167,12 @@ RegenerateUserEnvironment(LPVOID *lpEnvironment, BOOL bUpdateSelf)
 
     CloseHandle(hUserToken);
     return bResult;
+}
+
+ULONG GetProcessOsVersion(void)
+{
+    PPEB Peb = NtCurrentTeb()->ProcessEnvironmentBlock;
+    return (Peb->OSMajorVersion << 8) | Peb->OSMinorVersion;
 }
 
 /**************************************************************************
@@ -360,47 +365,53 @@ public:
     }
 };
 
+#define MAIN_OBJECT_ENTRIES \
+    OBJECT_ENTRY(CLSID_ActiveDesktop, CActiveDesktop) \
+    OBJECT_ENTRY(CLSID_AdminFolderShortcut, CAdminToolsFolder) \
+    OBJECT_ENTRY(CLSID_ControlPanel, CControlPanelFolder) \
+    OBJECT_ENTRY(CLSID_CopyAsPathMenu, CCopyAsPathMenu) \
+    OBJECT_ENTRY(CLSID_CopyToMenu, CCopyToMenu) \
+    OBJECT_ENTRY(CLSID_DragDropHelper, CDropTargetHelper) \
+    OBJECT_ENTRY(CLSID_ExeDropHandler, CExeDropHandler) \
+    OBJECT_ENTRY(CLSID_FontsFolderShortcut, CFontsFolder) \
+    OBJECT_ENTRY(CLSID_MenuBand, CMenuBand) \
+    OBJECT_ENTRY(CLSID_MenuBandSite, CMenuSite) \
+    OBJECT_ENTRY(CLSID_MenuDeskBar, CMenuDeskBar) \
+    OBJECT_ENTRY(CLSID_MergedFolder, CMergedFolder) \
+    OBJECT_ENTRY(CLSID_MoveToMenu, CMoveToMenu) \
+    OBJECT_ENTRY(CLSID_MyComputer, CDrivesFolder) \
+    OBJECT_ENTRY(CLSID_MyDocuments, CMyDocsFolder) \
+    OBJECT_ENTRY(CLSID_NetworkPlaces, CNetFolder) \
+    OBJECT_ENTRY(CLSID_NewMenu, CNewMenu) \
+    OBJECT_ENTRY(CLSID_OpenControlPanel, COpenControlPanel) \
+    OBJECT_ENTRY(CLSID_OpenWithMenu, COpenWithMenu) \
+    OBJECT_ENTRY(CLSID_Printers, CPrinterFolder) \
+    OBJECT_ENTRY(CLSID_RecycleBin, CRecycleBin) \
+    OBJECT_ENTRY(CLSID_SendToMenu, CSendToMenu) \
+    OBJECT_ENTRY(CLSID_Shell, CShellDispatch) \
+    OBJECT_ENTRY(CLSID_ShellDesktop, CDesktopFolder) \
+    OBJECT_ENTRY(CLSID_ShellDrvDefExt, CDrvDefExt) \
+    OBJECT_ENTRY(CLSID_ShellFSFolder, CFSFolder) \
+    OBJECT_ENTRY(CLSID_ShellFileDefExt, CFileDefExt) \
+    OBJECT_ENTRY(CLSID_ShellFldSetExt, CFolderOptions) \
+    OBJECT_ENTRY(CLSID_ShellItem, CShellItem) \
+    OBJECT_ENTRY(CLSID_ShellLibrary, CShellLibrary) \
+    OBJECT_ENTRY(CLSID_ShellLink, CShellLink) \
+    OBJECT_ENTRY(CLSID_StartMenu, CStartMenuDummy) \
+    OBJECT_ENTRY(CLSID_UserEventTimer, CUserEventTimer) \
+    OBJECT_ENTRY(CLSID_UserNotification, CUserNotification)
 
 BEGIN_OBJECT_MAP(ObjectMap)
-    OBJECT_ENTRY(CLSID_ActiveDesktop, CActiveDesktop)
-    OBJECT_ENTRY(CLSID_ShellFSFolder, CFSFolder)
-    OBJECT_ENTRY(CLSID_MyComputer, CDrivesFolder)
-    OBJECT_ENTRY(CLSID_ShellDesktop, CDesktopFolder)
-    OBJECT_ENTRY(CLSID_ShellFileDefExt, CFileDefExt)
-    OBJECT_ENTRY(CLSID_ShellDrvDefExt, CDrvDefExt)
-    OBJECT_ENTRY(CLSID_ShellItem, CShellItem)
-    OBJECT_ENTRY(CLSID_ShellLink, CShellLink)
-    OBJECT_ENTRY(CLSID_Shell, CShellDispatch)
-    OBJECT_ENTRY(CLSID_ShellLibrary, CShellLibrary)
-    OBJECT_ENTRY(CLSID_DragDropHelper, CDropTargetHelper)
-    OBJECT_ENTRY(CLSID_ControlPanel, CControlPanelFolder)
-    OBJECT_ENTRY(CLSID_OpenControlPanel, COpenControlPanel)
-    OBJECT_ENTRY(CLSID_MyDocuments, CMyDocsFolder)
-    OBJECT_ENTRY(CLSID_NetworkPlaces, CNetFolder)
-    OBJECT_ENTRY(CLSID_FontsFolderShortcut, CFontsFolder)
-    OBJECT_ENTRY(CLSID_Printers, CPrinterFolder)
-    OBJECT_ENTRY(CLSID_AdminFolderShortcut, CAdminToolsFolder)
-    OBJECT_ENTRY(CLSID_ShellFldSetExt, CFolderOptions)
-    OBJECT_ENTRY(CLSID_RecycleBin, CRecycleBin)
-    OBJECT_ENTRY(CLSID_OpenWithMenu, COpenWithMenu)
-    OBJECT_ENTRY(CLSID_NewMenu, CNewMenu)
-    OBJECT_ENTRY(CLSID_SendToMenu, CSendToMenu)
-    OBJECT_ENTRY(CLSID_CopyAsPathMenu, CCopyAsPathMenu)
-    OBJECT_ENTRY(CLSID_CopyToMenu, CCopyToMenu)
-    OBJECT_ENTRY(CLSID_MoveToMenu, CMoveToMenu)
-    OBJECT_ENTRY(CLSID_StartMenu, CStartMenuDummy)
-    OBJECT_ENTRY(CLSID_MenuBandSite, CMenuSite)
-    OBJECT_ENTRY(CLSID_MenuBand, CMenuBand)
-    OBJECT_ENTRY(CLSID_MenuDeskBar, CMenuDeskBar)
-    OBJECT_ENTRY(CLSID_MergedFolder, CMergedFolder)
-    OBJECT_ENTRY(CLSID_ExeDropHandler, CExeDropHandler)
+    MAIN_OBJECT_ENTRIES
     OBJECT_ENTRY(CLSID_QueryAssociations, CQueryAssociations)
-    OBJECT_ENTRY(CLSID_UserNotification, CUserNotification)
-    OBJECT_ENTRY(CLSID_UserEventTimer, CUserEventTimer)
+END_OBJECT_MAP()
+
+BEGIN_OBJECT_MAP(ObjectMapVista)
+    MAIN_OBJECT_ENTRIES
+    OBJECT_ENTRY(CLSID_QueryAssociations, CQueryAssociationsVista)
 END_OBJECT_MAP()
 
 CShell32Module  gModule;
-
 
 /***********************************************************************
  * DllGetVersion [SHELL32.@]
@@ -469,7 +480,10 @@ STDAPI_(BOOL) DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID fImpLoad)
     if (dwReason == DLL_PROCESS_ATTACH)
     {
         shell32_hInstance = hInstance;
-        gModule.Init(ObjectMap, hInstance, &LIBID_Shell32);
+        if (GetProcessOsVersion() >= _WIN32_WINNT_VISTA)
+            gModule.Init(ObjectMapVista, hInstance, &LIBID_Shell32);
+        else
+            gModule.Init(ObjectMap, hInstance, &LIBID_Shell32);
 
         DisableThreadLibraryCalls (hInstance);
 
