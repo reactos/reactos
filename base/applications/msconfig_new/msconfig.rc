@@ -84,6 +84,9 @@ END
     #include "lang/it-IT.rc"
     APP_TOOLS   HTML    "lang/mscfgtl/it-IT.xml"
 #endif
+#ifdef LANGUAGE_JA_JP
+    #include "lang/ja-JP.rc"
+#endif
 #ifdef LANGUAGE_KO_KR
     #include "lang/ko-KR.rc"
     APP_TOOLS   HTML    "lang/mscfgtl/ko-KR.xml"
