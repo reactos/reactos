@@ -276,9 +276,10 @@ MiniportInitialize(
     Miniport->DeviceExtension = DeviceExtension;
     Miniport->InitData = InitData;
 
-    /* Only the Win8 init data carries the feature flags, older miniports are physical */
-    Miniport->IsVirtual = (InitData->HwInitializationDataSize == sizeof(*InitData)) &&
-                          (InitData->FeatureSupport & STOR_FEATURE_VIRTUAL_MINIPORT);
+    /* Win7 virtual miniports used a shorter structure, Win8 ones set a feature flag */
+    Miniport->IsVirtual = (InitData->HwInitializationDataSize == HW_INIT_DATA_SIZE_VIRTUAL_LEGACY) ||
+                          ((InitData->HwInitializationDataSize == sizeof(*InitData)) &&
+                           (InitData->FeatureSupport & STOR_FEATURE_VIRTUAL_MINIPORT));
     DPRINT1("Miniport is %s\n", Miniport->IsVirtual ? "virtual" : "physical");
 
     /* Calculate the miniport device extension size */

@@ -71,6 +71,9 @@ typedef struct _DRIVER_INIT_DATA
 /* Size of HW_INITIALIZATION_DATA before the virtual miniport members were added */
 #define HW_INIT_DATA_SIZE_PHYSICAL  FIELD_OFFSET(HW_INITIALIZATION_DATA, HwFreeAdapterResources)
 
+/* Size of the Win7 virtual miniport initialization data */
+#define HW_INIT_DATA_SIZE_VIRTUAL_LEGACY  FIELD_OFFSET(HW_INITIALIZATION_DATA, HwTracingEnabled)
+
 typedef struct _DRIVER_OBJECT_EXTENSION
 {
     EXTENSION_TYPE ExtensionType;
