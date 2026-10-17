@@ -25,10 +25,10 @@ IDI_CLEANMGR ICON "resources/cleanmgr.ico"
     #include "lang/en-US.rc"
 #endif
 #ifdef LANGUAGE_JA_JP
-#include "lang/ja-JP.rc"
+    #include "lang/ja-JP.rc"
 #endif
 #ifdef LANGUAGE_ZH_CN
-#include "lang/zh-CN.rc"
+    #include "lang/zh-CN.rc"
 #endif
 #ifdef LANGUAGE_ZH_TW
     #include "lang/zh-TW.rc"
