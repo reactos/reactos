@@ -476,8 +476,25 @@ NdisReadConfiguration(
     }
     else if (RtlEqualUnicodeString(Keyword, &ProcessorTypeKey, TRUE))
     {
-        // FIXME: Not portable
+#if defined(_M_IX86)
         LocalUlong = NdisProcessorX86;
+#elif defined(_M_AMD64)
+        LocalUlong = NdisProcessorAmd64;
+#elif defined(_M_ARM)
+        LocalUlong = NdisProcessorArm;
+#elif defined(_M_ARM64)
+        LocalUlong = NdisProcessorArm64;
+#elif defined(_M_MPPC)
+        LocalUlong = NdisProcessorPpc;
+#elif defined(_M_MIPS)
+        LocalUlong = NdisProcessorMips;
+#elif defined(_M_ALPHA)
+        LocalUlong = NdisProcessorAlpha;
+#elif defined(_M_IA64)
+        LocalUlong = NdisProcessorIA64;
+#else
+#error Unknown architecture
+#endif
 
         RegType = REG_DWORD;
         RegData = &LocalUlong;
