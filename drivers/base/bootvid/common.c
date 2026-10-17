@@ -38,7 +38,8 @@ const RGBQUAD VidpDefaultPalette[BV_MAX_COLORS] =
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
-static VOID
+static
+VOID
 BitBlt(
     _In_ ULONG Left,
     _In_ ULONG Top,
@@ -48,16 +49,20 @@ BitBlt(
     _In_ ULONG BitsPerPixel,
     _In_ ULONG Stride)
 {
-    ULONG X, Y, Pixel;
-    UCHAR Colors;
+    ULONG X, Y;
     PUCHAR InputBuffer;
     const ULONG Bottom = Top + Height;
     const ULONG Right = Left + Width;
 
-    /* Check if the buffer isn't 4bpp */
+    if ((Width == 0) || (Height == 0))
+        return;
+
+    PrepareForSetPixel();
+
     if (BitsPerPixel != 4)
     {
         /* FIXME: TODO */
+#if DBG
         DbgPrint("Unhandled BitBlt\n"
                  "%lux%lu @ (%lu|%lu)\n"
                  "Bits Per Pixel %lu\n"
@@ -69,14 +74,16 @@ BitBlt(
                  BitsPerPixel,
                  Buffer,
                  Stride);
+#endif
         return;
     }
-
-    PrepareForSetPixel();
 
     /* 4bpp blitting */
     for (Y = Top; Y < Bottom; ++Y)
     {
+        UCHAR Colors, Color;
+        ULONG Pixel;
+
         InputBuffer = Buffer;
 
         for (X = Left, Pixel = 0;
@@ -88,19 +95,21 @@ BitBlt(
                 /* Extract colors at every two pixels */
                 Colors = *InputBuffer++;
 
-                SetPixel(X, Y, Colors >> 4);
+                Color = Colors >> 4;
             }
             else
             {
-                SetPixel(X, Y, Colors & 0x0F);
+                Color = Colors & 0x0F;
             }
+            SetPixel(X, Y, Color);
         }
 
         Buffer += Stride;
     }
 }
 
-static VOID
+static
+VOID
 RleBitBlt(
     _In_ ULONG Left,
     _In_ ULONG Top,
@@ -305,11 +314,6 @@ VidBufferToScreenBlt(
     _In_ ULONG Height,
     _In_ ULONG Stride)
 {
-    /* Make sure we have a width and height */
-    if (!Width || !Height)
-        return;
-
-    /* Call the helper function */
     BitBlt(Left, Top, Width, Height, Buffer, 4, Stride);
 }
 
@@ -362,30 +366,24 @@ VidBitBlt(
     }
     else
     {
-        /* Check if the height is negative */
         if (BitmapInfoHeader->biHeight < 0)
         {
-            /* Make it positive in the header */
+            /* Top-down DIB */
             BitmapInfoHeader->biHeight *= -1;
         }
         else
         {
-            /* Update buffer offset */
+            /* Bottom-up DIB */
             BitmapOffset += ((BitmapInfoHeader->biHeight - 1) * Stride);
             Stride *= -1;
         }
 
-        /* Make sure we have a width and a height */
-        if ((BitmapInfoHeader->biWidth) && (BitmapInfoHeader->biHeight))
-        {
-            /* Do the BitBlt */
-            BitBlt(Left,
-                   Top,
-                   BitmapInfoHeader->biWidth,
-                   BitmapInfoHeader->biHeight,
-                   BitmapOffset,
-                   BitmapInfoHeader->biBitCount,
-                   Stride);
-        }
+        BitBlt(Left,
+               Top,
+               BitmapInfoHeader->biWidth,
+               BitmapInfoHeader->biHeight,
+               BitmapOffset,
+               BitmapInfoHeader->biBitCount,
+               Stride);
     }
 }
