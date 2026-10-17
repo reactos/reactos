@@ -2,6 +2,21 @@
 include_directories(../include)
 
 #
+# CcCanIWrite
+#
+list(APPEND CCCANIWRITE_DRV_SOURCE
+    ../kmtest_drv/kmtest_standalone.c
+    CcCanIWrite_drv.c)
+
+add_library(cccaniwrite_drv MODULE ${CCCANIWRITE_DRV_SOURCE})
+set_module_type(cccaniwrite_drv kernelmodedriver)
+target_link_libraries(cccaniwrite_drv kmtest_printf ${PSEH_LIB})
+add_importlibs(cccaniwrite_drv ntoskrnl hal)
+target_compile_definitions(cccaniwrite_drv PRIVATE KMT_STANDALONE_DRIVER)
+#add_pch(cccaniwrite_drv ../include/kmt_test.h)
+add_rostests_file(TARGET cccaniwrite_drv)
+
+#
 # CcCopyRead
 #
 list(APPEND CCCOPYREAD_DRV_SOURCE
