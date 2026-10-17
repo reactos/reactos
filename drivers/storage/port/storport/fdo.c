@@ -168,7 +168,7 @@ VOID
 PortAllocateRequestReserve(
     _In_ PFDO_DEVICE_EXTENSION FdoExtension)
 {
-    ULONG SrbExtensionSize = FdoExtension->HwInitData->SrbExtensionSize;
+    ULONG SrbExtensionSize = FdoExtension->Miniport.PortConfig.SrbExtensionSize;
 
     FdoExtension->ReservedRequestReference =
         ExAllocatePoolWithTag(NonPagedPool,

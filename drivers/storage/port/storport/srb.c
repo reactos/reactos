@@ -261,7 +261,7 @@ PortPdoSrbAllocatePrivateContexts(
     _In_ PFDO_DEVICE_EXTENSION FdoExtension)
 {
     PQUEUED_REQUEST_REFERENCE RequestReference;
-    ULONG SrbExtensionSize = FdoExtension->HwInitData->SrbExtensionSize;
+    ULONG SrbExtensionSize = FdoExtension->Miniport.PortConfig.SrbExtensionSize;
     PIRP Irp;
 
     Irp = (PIRP)Srb->OriginalRequest;
@@ -286,6 +286,7 @@ PortPdoSrbAllocatePrivateContexts(
 
     if (RequestReference->FromReserve)
     {
+        NT_ASSERT(FdoExtension->ReservedSrbExtension != NULL);
         Srb->SrbExtension = FdoExtension->ReservedSrbExtension;
         RtlZeroMemory(Srb->SrbExtension, SrbExtensionSize);
         return STATUS_SUCCESS;
@@ -299,6 +300,8 @@ PortPdoSrbAllocatePrivateContexts(
         StorpSrbFreeRequestReference(Srb);
         return PortPdoStarveRequest(FdoExtension, Srb, Irp);
     }
+
+    RtlZeroMemory(Srb->SrbExtension, SrbExtensionSize);
 
     return STATUS_SUCCESS;
 }
@@ -552,7 +555,6 @@ PortPdoScsi(
     PPDO_DEVICE_EXTENSION PdoExtension;
     PFDO_DEVICE_EXTENSION FdoExtension;
     PMINIPORT Miniport;
-    PHW_INITIALIZATION_DATA HwInitData;
 
     DPRINT("PortPdoScsi(%p %p)\n", DeviceObject, Irp);
 
@@ -576,7 +578,6 @@ PortPdoScsi(
     FdoExtension = PdoExtension->FdoExtension;
     NT_ASSERT(FdoExtension);
     Miniport = &FdoExtension->Miniport;
-    HwInitData = Miniport->InitData;
 
     switch (Srb->Function) {
         /* Both of these should be sent to device and let themselves process this */
@@ -603,7 +604,7 @@ PortPdoScsi(
             DPRINT("New request (%d:%d:%d) ReqRef %p Srb %p Irp %p Tag %x SrbExt %p(%d)\n",
                     Srb->PathId, Srb->TargetId, Srb->Lun,
                     RequestReference, Srb, Irp, Srb->QueueTag,
-                    Srb->SrbExtension, HwInitData->SrbExtensionSize);
+                    Srb->SrbExtension, Miniport->PortConfig.SrbExtensionSize);
 
             /*
              * Do the scheduling. If returns TRUE, we should issue this request to the hardware.
