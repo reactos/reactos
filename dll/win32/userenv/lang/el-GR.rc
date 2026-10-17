@@ -17,9 +17,9 @@ STRINGTABLE
 BEGIN
     IDS_PROFILEPATH "%SystemDrive%\\Documents and Settings"
     IDS_APPDATA "Application Data"
-    IDS_DESKTOP "Desktop"
+    IDS_DESKTOP "Desktop" // FIXME "Επιφάνεια εργασίας" ?
     IDS_FAVORITES "Favorites"
-    IDS_MYDOCUMENTS "My Documents"
+    IDS_MYDOCUMENTS "Τα έγγραφά μου"
     IDS_NETHOOD "NetHood"
     IDS_PRINTHOOD "PrintHood"
     IDS_RECENT "Recent"

@@ -881,7 +881,7 @@ BEGIN
     IDS_PERSONAL "Мои документы"
     IDS_FAVORITES "Избранное"
     IDS_STARTUP "Главное меню\\Программы\\Автозагрузка"
-    IDS_RECENT "Недавние документы"
+    IDS_RECENT "Недавнее" // FIXME: or: "Недавние документы"? see also userenv.
     IDS_SENDTO "Отправить"
     IDS_STARTMENU "Главное меню"
     IDS_MYMUSIC "Моя музыка"

@@ -780,7 +780,7 @@ BEGIN
     IDS_SHV_COLUMN_MODEL "Modelo"
 
     /* special folders */
-    IDS_DESKTOP "Ambiente de trabalho"
+    IDS_DESKTOP "Ambiente de Trabalho"
     IDS_MYCOMPUTER "O Meu Computador"
     IDS_RECYCLEBIN_FOLDER_NAME "Reciclagem"
     IDS_CONTROLPANEL "Painel de Controle"
@@ -881,16 +881,16 @@ BEGIN
     IDS_PERSONAL "Os Meus Documentos"
     IDS_FAVORITES "Favoritos"
     IDS_STARTUP "Menu Iniciar\\Programas\\Iniciar"
-    IDS_RECENT "Recentes"
+    IDS_RECENT "Recentes" // FIXME: or "Documentos recentes"?
     IDS_SENDTO "Enviar Para"
     IDS_STARTMENU "Menu Iniciar"
     IDS_MYMUSIC "As Minhas Músicas"
     IDS_MYVIDEO "Os Meus Vídeos"
     IDS_DESKTOPDIRECTORY "Ambiente de Trabalho"
-    IDS_NETHOOD "Vizinhança na rede"
+    IDS_NETHOOD "Vizinhança na rede" // FIXME: or "Ambiente de rede"?
     IDS_TEMPLATES "Modelos"
     IDS_APPDATA "Dados de Programas"
-    IDS_PRINTHOOD "Impressoras"
+    IDS_PRINTHOOD "Impressoras" // FIXME: or "Ambiente de impressão"?
     IDS_LOCAL_APPDATA "Definições locais\\Dados de Programas"
     IDS_INTERNET_CACHE "Definições locais\\Ficheiros Temporários da Internet"
     IDS_COOKIES "Cookies"

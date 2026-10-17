@@ -16,15 +16,15 @@ END
 STRINGTABLE
 BEGIN
     IDS_PROFILEPATH "%SystemDrive%\\Documents and Settings"
-    IDS_APPDATA "Application Data"
+    IDS_APPDATA "Ohjelmien Tiedot"
     IDS_DESKTOP "Työpöytä"
     IDS_FAVORITES "Suosikit"
     IDS_MYDOCUMENTS "Omat Tiedostot"
-    IDS_NETHOOD "Lähiverkko"
-    IDS_PRINTHOOD "Tulostimet"
-    IDS_RECENT "Viimeisin"
+    IDS_NETHOOD "Lähiverkko" // FIXME: or "Verkkoympäristö" ?
+    IDS_PRINTHOOD "Tulostimet" // FIXME: or "Tulostinympäristö" ?
+    IDS_RECENT "Viimeisin" // FIXME: or "Äskettäin käytetyt" ?
     IDS_SENDTO "Lähetä"
-    IDS_TEMPLATES "Pohjat"
+    IDS_TEMPLATES "Pohjat" // FIXME: or "Mallit" ?
     IDS_STARTMENU "Käynnistä Valikko"
     IDS_PROGRAMS "Käynnistä Valikko\\Kaikki Ohjelmat"
     IDS_STARTUP "Käynnistä Valikko\\Kaikki Ohjelmat\\Käynnistys"

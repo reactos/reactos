@@ -869,19 +869,19 @@ BEGIN
 
     /* Shell folder path default values. See also: dll/win32/userenv/lang */
     IDS_PROGRAMS "Käynnistä\\Ohjelmat"
-    IDS_PERSONAL "Omat tiedostot"
+    IDS_PERSONAL "Omat Tiedostot"
     IDS_FAVORITES "Suosikit"
     IDS_STARTUP "Käynnistä\\Ohjelmat\\Käynnistys"
-    IDS_RECENT "Äskettäin käytetyt"
+    IDS_RECENT "Äskettäin käytetyt" // FIXME: or "Viimeisin" ?
     IDS_SENDTO "Lähetä"
     IDS_STARTMENU "Käynnistä"
     IDS_MYMUSIC "Omat musiikkitiedostot"
     IDS_MYVIDEO "Omat videotiedostot"
     IDS_DESKTOPDIRECTORY "Työpöytä"
-    IDS_NETHOOD "Verkkoympäristö"
-    IDS_TEMPLATES "Mallit"
+    IDS_NETHOOD "Verkkoympäristö" // FIXME: or "Lähiverkko" ?
+    IDS_TEMPLATES "Mallit" // FIXME: or "Pohjat" ?
     IDS_APPDATA "Ohjelmien Tiedot"
-    IDS_PRINTHOOD "Tulostinympäristö"
+    IDS_PRINTHOOD "Tulostinympäristö" // FIXME: or "Tulostimet"?
     IDS_LOCAL_APPDATA "Paikalliset Asetukset\\Ohjelmien Tiedot"
     IDS_INTERNET_CACHE "Paikalliset Asetukset\\Väliaikaiset Internet-tiedostot"
     IDS_COOKIES "Evästeet"
