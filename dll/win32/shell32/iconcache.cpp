@@ -1016,7 +1016,7 @@ HRESULT WINAPI SHDefExtractIconW(LPCWSTR pszIconFile, int iIndex, UINT uFlags,
                                  HICON* phiconLarge, HICON* phiconSmall, UINT nIconSize)
 {
     UINT ret;
-    HICON hIcons[2];
+    HICON hIcons[2] = { NULL, NULL };
     WARN("%s %d 0x%08x %p %p %d, semi-stub\n", debugstr_w(pszIconFile), iIndex, uFlags, phiconLarge, phiconSmall, nIconSize);
 
     if (!nIconSize)
