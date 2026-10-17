@@ -351,7 +351,7 @@ typedef enum _SYSTEM_INFORMATION_CLASS
     SystemQueryPerformanceCounterInformation              = 124, // 0x7C
 #endif // (NTDDI_VERSION >= NTDDI_WIN7)
 
-#if (NTDDI_VERSION >= NTDDI_WIN8)
+#if (NTDDI_VERSION >= NTDDI_WIN8) || defined(__REACTOS__)
     SystemSessionBigPoolInformation                       = 125, // 0x7D
     SystemBootGraphicsInformation                         = 126, // 0x7E
     SystemScrubPhysicalMemoryInformation                  = 127, // 0x7F
@@ -380,7 +380,7 @@ typedef enum _SYSTEM_INFORMATION_CLASS
     SystemFullProcessInformation                          = 148, // 0x94
 #endif // (NTDDI_VERSION >= NTDDI_WIN8)
 
-#if (NTDDI_VERSION >= NTDDI_WINBLUE)
+#if (NTDDI_VERSION >= NTDDI_WINBLUE) || defined(__REACTOS__)
     SystemKernelDebuggerInformationEx                     = 149, // 0x95
     SystemBootMetadataInformation                         = 150, // 0x96
     SystemSoftRebootInformation                           = 151, // 0x97
@@ -391,7 +391,7 @@ typedef enum _SYSTEM_INFORMATION_CLASS
     SystemEdidInformation                                 = 156, // 0x9C
 #endif // (NTDDI_VERSION >= NTDDI_WINBLUE)
 
-#if (NTDDI_VERSION >= NTDDI_WIN10)
+#if (NTDDI_VERSION >= NTDDI_WIN10) || defined(__REACTOS__)
     SystemManufacturingInformation                        = 157, // 0x9D
     SystemEnergyEstimationConfigInformation               = 158, // 0x9E
     SystemHypervisorDetailInformation                     = 159, // 0x9F
@@ -465,7 +465,7 @@ typedef enum _SYSTEM_INFORMATION_CLASS
     SystemPoolZeroingInformation                          = 227, // 0xE3
 #endif // (NTDDI_VERSION >= NTDDI_WIN10)
 
-#if (NTDDI_VERSION >= NTDDI_WIN11)
+#if (NTDDI_VERSION >= NTDDI_WIN11) || defined(__REACTOS__)
     SystemDpcWatchdogInformation                          = 228, // 0xE4
     SystemDpcWatchdogInformation2                         = 229, // 0xE5
     SystemSupportedProcessorArchitectures2                = 230, // 0xE6
@@ -1517,6 +1517,19 @@ typedef struct _SYSTEM_POWER_INFORMATION_NATIVE
     LARGE_INTEGER SpindownDrives;
 } SYSTEM_POWER_INFORMATION_NATIVE, *PSYSTEM_POWER_INFORMATION_NATIVE;
 
+// Class 42 - SystemProcessorIdleInformation
+typedef struct _SYSTEM_PROCESSOR_IDLE_INFORMATION
+{
+    ULONG64 IdleTime;
+    ULONG64 C1Time;
+    ULONG64 C2Time;
+    ULONG64 C3Time;
+    ULONG C1Transitions;
+    ULONG C2Transitions;
+    ULONG C3Transitions;
+    ULONG Padding;
+} SYSTEM_PROCESSOR_IDLE_INFORMATION, *PSYSTEM_PROCESSOR_IDLE_INFORMATION;
+
 // Class 43
 typedef struct _SYSTEM_LEGACY_DRIVER_INFORMATION
 {
@@ -1612,6 +1625,31 @@ typedef struct _SYSTEM_NUMA_INFORMATION
 
 // FIXME: Class 56-63
 
+// Class 61 SystemProcessorPowerInformation
+typedef struct _SYSTEM_PROCESSOR_POWER_INFORMATION
+{
+    UCHAR CurrentFrequency;
+    UCHAR ThermalLimitFrequency;
+    UCHAR ConstantThrottleFrequency;
+    UCHAR DegradedThrottleFrequency;
+    UCHAR LastBusyFrequency;
+    UCHAR LastC3Frequency;
+    UCHAR LastAdjustedBusyFrequency;
+    UCHAR ProcessorMinThrottle;
+    UCHAR ProcessorMaxThrottle;
+    ULONG NumberOfFrequencies;
+    ULONG PromotionCount;
+    ULONG DemotionCount;
+    ULONG ErrorCount;
+    ULONG RetryCount;
+    ULONGLONG CurrentFrequencyTime;
+    ULONGLONG CurrentProcessorTime;
+    ULONGLONG CurrentProcessorIdleTime;
+    ULONGLONG LastProcessorTime;
+    ULONGLONG LastProcessorIdleTime;
+    ULONGLONG Energy;
+} SYSTEM_PROCESSOR_POWER_INFORMATION, *PSYSTEM_PROCESSOR_POWER_INFORMATION;
+
 // Class 64
 typedef struct _SYSTEM_HANDLE_TABLE_ENTRY_INFO_EX
 {
@@ -1633,6 +1671,29 @@ typedef struct _SYSTEM_HANDLE_INFORMATION_EX
 } SYSTEM_HANDLE_INFORMATION_EX, *PSYSTEM_HANDLE_INFORMATION_EX;
 
 // FIXME: Class 65-89
+
+// Class 72 - SystemWatchdogTimerInformation
+// https://ntdoc.m417z.com/watchdog_information_class
+typedef enum _WATCHDOG_INFORMATION_CLASS
+{
+    WdInfoTimeoutValue = 0,
+    WdInfoResetTimer = 1,
+    WdInfoStopTimer = 2,
+    WdInfoStartTimer = 3,
+    WdInfoTriggerAction = 4,
+    WdInfoState = 5,
+    WdInfoTriggerReset = 6,
+    WdInfoNop = 7,
+    WdInfoGeneratedLastReset = 8,
+    WdInfoInvalid = 9,
+} WATCHDOG_INFORMATION_CLASS;
+
+// https://ntdoc.m417z.com/system_watchdog_timer_information
+typedef struct _SYSTEM_WATCHDOG_TIMER_INFORMATION
+{
+    WATCHDOG_INFORMATION_CLASS WdInfoClass;
+    ULONG DataValue;
+} SYSTEM_WATCHDOG_TIMER_INFORMATION, *PSYSTEM_WATCHDOG_TIMER_INFORMATION;
 
 // Class 83 - SystemProcessorIdleCycleTimeInformation
 typedef struct _SYSTEM_PROCESSOR_IDLE_CYCLE_TIME_INFORMATION
@@ -1674,6 +1735,176 @@ typedef struct _SYSTEM_SYSTEM_DISK_INFORMATION
 {
     UNICODE_STRING SystemDisk;
 } SYSTEM_SYSTEM_DISK_INFORMATION, *PSYSTEM_SYSTEM_DISK_INFORMATION;
+#endif
+
+// Class 100 - SystemProcessorPerformanceDistribution
+typedef struct _SYSTEM_PROCESSOR_PERFORMANCE_HITCOUNT
+{
+    ULONGLONG Hits; // Windows 8: ULONG
+    UCHAR PercentFrequency;
+} SYSTEM_PROCESSOR_PERFORMANCE_HITCOUNT, *PSYSTEM_PROCESSOR_PERFORMANCE_HITCOUNT;
+
+typedef struct _SYSTEM_PROCESSOR_PERFORMANCE_STATE_DISTRIBUTION
+{
+    ULONG ProcessorNumber;
+    ULONG StateCount;
+    _Field_size_(StateCount) SYSTEM_PROCESSOR_PERFORMANCE_HITCOUNT States[1];
+} SYSTEM_PROCESSOR_PERFORMANCE_STATE_DISTRIBUTION, *PSYSTEM_PROCESSOR_PERFORMANCE_STATE_DISTRIBUTION;
+
+typedef struct _SYSTEM_PROCESSOR_PERFORMANCE_DISTRIBUTION
+{
+    ULONG ProcessorCount;
+    _Field_size_(ProcessorCount) ULONG Offsets[1];
+    // Followed by SYSTEM_PROCESSOR_PERFORMANCE_STATE_DISTRIBUTION[ProcessorCount]
+} SYSTEM_PROCESSOR_PERFORMANCE_DISTRIBUTION, *PSYSTEM_PROCESSOR_PERFORMANCE_DISTRIBUTION;
+
+// Class 108 - SystemProcessorCycleTimeInformation
+// https://www.geoffchappell.com/studies/windows/km/ntoskrnl/api/ex/sysinfo/processor_idle_cycle_time.htm
+// https://microsoft.github.io/windows-docs-rs/doc/windows/Win32/System/SystemInformation/struct.SYSTEM_PROCESSOR_CYCLE_TIME_INFORMATION.html
+typedef struct _SYSTEM_PROCESSOR_CYCLE_TIME_INFORMATION
+{
+    ULONG64 CycleTime;
+} SYSTEM_PROCESSOR_CYCLE_TIME_INFORMATION, * PSYSTEM_PROCESSOR_CYCLE_TIME_INFORMATION;
+
+// Class 141 - SystemProcessorPerformanceInformationEx
+typedef struct _SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION_EX
+{
+    LARGE_INTEGER IdleTime;
+    LARGE_INTEGER KernelTime;
+    LARGE_INTEGER UserTime;
+    LARGE_INTEGER DpcTime;
+    LARGE_INTEGER InterruptTime;
+    ULONG InterruptCount;
+    ULONG Spare0;
+    LARGE_INTEGER AvailableTime;
+    LARGE_INTEGER Spare1;
+    LARGE_INTEGER Spare2;
+} SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION_EX, *PSYSTEM_PROCESSOR_PERFORMANCE_INFORMATION_EX;
+
+// Class 160 - SystemProcessorCycleStatsInformation
+// https://ntdoc.m417z.com/system_processor_cycle_stats_bucket_index
+typedef enum _SYSTEM_PROCESSOR_CYCLE_STATS_BUCKET_INDEX
+{
+    // Lowest frequency bucket — processor running at or below the first frequency threshold.
+    SystemProcessorCycleStatsBucketLowestFrequency = 0,
+    // Low frequency bucket — processor running between the first and second frequency thresholds.
+    SystemProcessorCycleStatsBucketLowFrequency = 1,
+    // High frequency bucket — processor running between the second and third frequency thresholds.
+    SystemProcessorCycleStatsBucketHighFrequency = 2,
+    // Highest frequency bucket — processor running above the third frequency threshold.
+    SystemProcessorCycleStatsBucketHighestFrequency = 3,
+    // The maximum number of frequency buckets.
+    SystemProcessorCycleStatsBucketMax = 4
+} SYSTEM_PROCESSOR_CYCLE_STATS_BUCKET_INDEX, *PSYSTEM_PROCESSOR_CYCLE_STATS_BUCKET_INDEX;
+
+// https://ntdoc.m417z.com/system_processor_cycle_stats_efficiency_class_index
+typedef enum _SYSTEM_PROCESSOR_CYCLE_STATS_EFFICIENCY_CLASS_INDEX
+{
+    // Represents the baseline architectural-efficiency group (the group with the minimum class value in current kernel logic)
+    // Baseline efficiency-class group (minimum architectural efficiency class).
+    SystemProcessorCycleStatsEfficiencyClassPrimary = 0,
+    // Represents processors not in that baseline group (all non-min class values are folded into this second bucket)
+    // Non-baseline efficiency-class group (all other architectural efficiency classes).
+    SystemProcessorCycleStatsEfficiencyClassSecondary = 1,
+    // The current maximum number of architectural-efficiency classes (subject to change).
+    SystemProcessorCycleStatsEfficiencyClassMax = 2
+} SYSTEM_PROCESSOR_CYCLE_STATS_EFFICIENCY_CLASS_INDEX, *PSYSTEM_PROCESSOR_CYCLE_STATS_EFFICIENCY_CLASS_INDEX;
+
+// Class 160 - SystemProcessorCycleStatsInformation
+// https://ntdoc.m417z.com/system_processor_cycle_stats_information
+typedef struct _SYSTEM_PROCESSOR_CYCLE_STATS_INFORMATION
+{
+    //
+    // First index is bucket (see: PoGetFrequencyBucket) selected based on latest frequency percent
+    // using _KPRCB.PowerState.FrequencyBucketThresholds.
+    //
+    // Second index is _KPRCB.PowerState.ArchitecturalEfficiencyClass, accounting for architecture
+    // dependent KeHeteroSystem and using _KPRCB.PowerState.EarlyBootArchitecturalEfficiencyClass
+    // instead, when appropriate.
+    //
+    ULONGLONG Cycles[SystemProcessorCycleStatsBucketMax][SystemProcessorCycleStatsEfficiencyClassMax];
+} SYSTEM_PROCESSOR_CYCLE_STATS_INFORMATION, *PSYSTEM_PROCESSOR_CYCLE_STATS_INFORMATION;
+
+// Class 165 - SystemIsolatedUserModeInformation
+typedef struct _SYSTEM_ISOLATED_USER_MODE_INFORMATION
+{
+    ///< \brief Virtualization-based Security core status (byte 0):
+    BOOLEAN SecureKernelRunning : 1;                   ///< Secure Kernel (hypervisor-based isolation) is active
+    BOOLEAN HvciEnabled : 1;                           ///< Hypervisor-enforced Code Integrity enabled
+    BOOLEAN HvciStrictMode : 1;                        ///< HVCI in strict enforcement mode
+    BOOLEAN DebugEnabled : 1;                          ///< Kernel debugger enabled (may weaken security)
+    BOOLEAN FirmwarePageProtection : 1;                ///< UEFI Secure Boot firmware page protection active
+    BOOLEAN EncryptionKeyAvailable : 1;                ///< Isolation-backed encryption key available from Secure Kernel
+    BOOLEAN SpareFlags : 2;                            ///< Reserved for future VBS flags (bits 6-7)
+
+    ///< \brief Isolated execution and security features (byte 1):
+    BOOLEAN TrustletRunning : 1;                       ///< Trustlet (isolated edge function) is running
+    BOOLEAN HvciDisableAllowed : 1;                    ///< HVCI can be disabled without reboot (policy-driven)
+    BOOLEAN HardwareEnforcedVbs : 1;                   ///< VBS enforced by processor/platform (e.g., AMD SME, Intel TXT)
+    BOOLEAN NoSecrets : 1;                             ///< No cryptographic secrets loaded in isolated user mode
+    BOOLEAN EncryptionKeyPersistent : 1;               ///< Encryption key persists across reboots
+    BOOLEAN HardwareEnforcedHvpt : 1;                  ///< Hardware enforces Hypervisor Page Table (HVPT) isolation
+    BOOLEAN HardwareHvptAvailable : 1;                 ///< CPU supports hardware-enforced HVPT (architectural feature)
+    BOOLEAN SpareFlags2 : 1;                           ///< Reserved for future feature flag (bit 15)
+    BOOLEAN EncryptionKeyTpmBound : 1;                 ///< Encryption key bound to TPM (Trusted Platform Module)
+
+    ///< \brief Reserved for future expansion (binary compatibility):
+    BOOLEAN Spare0[5];                                 ///< Reserved bytes for future isolated user mode flags
+    ULONGLONG Spare1;                                  ///< Reserved 8 bytes for future isolated user mode expansion
+} SYSTEM_ISOLATED_USER_MODE_INFORMATION, *PSYSTEM_ISOLATED_USER_MODE_INFORMATION;
+
+// Class 178 - SystemSecureKernelProfileInformation
+typedef struct _SYSTEM_SECURE_KERNEL_HYPERGUARD_PROFILE_INFORMATION
+{
+    ULONG ExtentCount;
+    ULONG ValidStructureSize;
+    ULONG NextExtentIndex;
+    ULONG ExtentRestart;
+    ULONG CycleCount;
+    ULONG TimeoutCount;
+    ULONGLONG CycleTime;
+    ULONGLONG CycleTimeMax;
+    ULONGLONG ExtentTime;
+    ULONG ExtentTimeIndex;
+    ULONG ExtentTimeMaxIndex;
+    ULONGLONG ExtentTimeMax;
+    ULONGLONG HyperFlushTimeMax;
+    ULONGLONG TranslateVaTimeMax;
+    ULONGLONG DebugExemptionCount;
+    ULONGLONG TbHitCount;
+    ULONGLONG TbMissCount;
+    ULONGLONG VinaPendingYield;
+    ULONGLONG HashCycles;
+    ULONG HistogramOffset;
+    ULONG HistogramBuckets;
+    ULONG HistogramShift;
+    ULONG Reserved1;
+    ULONGLONG PageNotPresentCount;
+} SYSTEM_SECURE_KERNEL_HYPERGUARD_PROFILE_INFORMATION, *PSYSTEM_SECURE_KERNEL_HYPERGUARD_PROFILE_INFORMATION;
+
+// Class 180 - SystemInterruptSteeringInformation
+// https://ntdoc.m417z.com/system_interrupt_steering_information_input
+typedef struct _SYSTEM_INTERRUPT_STEERING_INFORMATION_INPUT
+{
+    ULONG Gsiv;
+    UCHAR ControllerInterrupt;
+    UCHAR EdgeInterrupt;
+    UCHAR IsPrimaryInterrupt;
+    GROUP_AFFINITY TargetAffinity;
+} SYSTEM_INTERRUPT_STEERING_INFORMATION_INPUT, *PSYSTEM_INTERRUPT_STEERING_INFORMATION_INPUT;
+
+#ifndef NTOS_MODE_USER
+// Class 181 - SystemSupportedProcessorArchitecturesInformation
+typedef struct _SYSTEM_SUPPORTED_PROCESSOR_ARCHITECTURES_INFORMATION
+{
+    ULONG Machine : 16;
+    ULONG KernelMode : 1;
+    ULONG UserMode : 1;
+    ULONG Native : 1;
+    ULONG Process : 1;
+    ULONG WoW64Container : 1;
+    ULONG ReservedZero0 : 11;
+} SYSTEM_SUPPORTED_PROCESSOR_ARCHITECTURES_INFORMATION;
 #endif
 
 //
