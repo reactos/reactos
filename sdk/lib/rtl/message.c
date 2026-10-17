@@ -123,30 +123,254 @@ RtlFindMessage(
     return STATUS_SUCCESS;
 }
 
+/* RtlFormatMessageEx is synced to Wine-11.0 */
+#define ARRAY_SIZE ARRAYSIZE
+
+/***********************************************************************
+ * Message formatting
+ ***********************************************************************/
+
+struct format_message_args
+{
+    int           last;         /* last used arg */
+    ULONG_PTR    *array;        /* args array */
+    va_list      *list;         /* args va_list */
+    UINT64        arglist[102]; /* arguments fetched from va_list */
+};
+
+static NTSTATUS add_chars( WCHAR **buffer, WCHAR *end, const WCHAR *str, ULONG len )
+{
+    if (len > end - *buffer) return STATUS_BUFFER_OVERFLOW;
+    memcpy( *buffer, str, len * sizeof(WCHAR) );
+    *buffer += len;
+    return STATUS_SUCCESS;
+}
+
+static UINT64 get_arg( int nr, struct format_message_args *args_data, BOOL is64 )
+{
+    if (nr == -1) nr = args_data->last + 1;
+    while (nr > args_data->last)
+        args_data->arglist[args_data->last++] = is64 ? va_arg( *args_data->list, UINT64 )
+                                                     : va_arg( *args_data->list, ULONG_PTR );
+    return args_data->arglist[nr - 1];
+}
+
+static NTSTATUS add_format( WCHAR **buffer, WCHAR *end, const WCHAR **src, int insert, BOOLEAN ansi,
+                            struct format_message_args *args_data )
+{
+    const WCHAR *format = *src;
+    WCHAR *p, fmt[32];
+    ULONG_PTR args[5] = { 0 };
+    BOOL is_64 = FALSE;
+    UINT64 val;
+    int len, stars = 0, nb_args = 0;
+
+    p = fmt;
+    *p++ = '%';
+
+    if (*format++ == '!')
+    {
+        const WCHAR *end = wcschr( format, '!' );
+
+        if (!end || end - format > ARRAY_SIZE(fmt) - 2) return STATUS_INVALID_PARAMETER;
+        *src = end + 1;
+
+        while (wcschr( L"0123456789 +-*#.", *format ))
+        {
+            if (*format == '*') stars++;
+            *p++ = *format++;
+        }
+        if (stars > 2) return STATUS_INVALID_PARAMETER;
+
+        switch (*format)
+        {
+        case 'c': case 'C':
+        case 's': case 'S':
+            if (ansi) *p++ = *format++ ^ ('s' - 'S');
+            break;
+        case 'I':
+            if (sizeof(void *) == sizeof(int) && format[1] == '6' && format[2] == '4') is_64 = TRUE;
+            break;
+        }
+        while (format != end) *p++ = *format++;
+    }
+    else *p++ = ansi ? 'S' : 's'; /* simple string */
+
+    *p = 0;
+    if (args_data->list)
+    {
+        get_arg( insert - 1, args_data, is_64 );  /* make sure previous args have been fetched */
+        while (stars--)
+        {
+            args[nb_args++] = get_arg( insert, args_data, FALSE );
+            insert = -1;
+        }
+        /* replicate MS bug: drop an argument when using va_list with width/precision */
+        if (insert == -1) args_data->last--;
+        val = get_arg( insert, args_data, is_64 );
+        args[nb_args++] = val;
+        args[nb_args] = val >> 32;
+    }
+    else if (args_data->array)
+    {
+        args[nb_args++] = args_data->array[insert - 1];
+        if (args_data->last < insert) args_data->last = insert;
+        /* replicate MS bug: first arg is considered 64-bit, even if it's actually width or precision */
+        if (is_64) nb_args++;
+        while (stars--) args[nb_args++] = args_data->array[args_data->last++];
+    }
+    else return STATUS_INVALID_PARAMETER;
+
+#ifdef __REACTOS__
+    len = _snwprintf( *buffer, end - *buffer, fmt,
+                        args[0], args[1], args[2], args[3], args[4] );
+#else
+    len = _snwprintf_s( *buffer, end - *buffer, end - *buffer - 1, fmt,
+                        args[0], args[1], args[2], args[3], args[4] );
+#endif
+    if (len == -1) return STATUS_BUFFER_OVERFLOW;
+    *buffer += len;
+    return STATUS_SUCCESS;
+}
+
 /*
  * @unimplemented
  */
 NTSTATUS
 NTAPI
 RtlFormatMessageEx(
-    IN PWSTR Message,
-    IN ULONG MaxWidth OPTIONAL,
-    IN BOOLEAN IgnoreInserts,
-    IN BOOLEAN ArgumentsAreAnsi,
-    IN BOOLEAN ArgumentsAreAnArray,
-    IN va_list* Arguments,
-    OUT PWSTR Buffer,
-    IN ULONG BufferSize,
-    OUT PULONG ReturnLength OPTIONAL,
-    IN ULONG Flags)
+    IN PWSTR src,
+    IN ULONG width OPTIONAL,
+    IN BOOLEAN ignore_inserts,
+    IN BOOLEAN ansi,
+    IN BOOLEAN is_array,
+    IN va_list* args,
+    OUT PWSTR buffer,
+    IN ULONG size,
+    OUT PULONG retsize OPTIONAL,
+    IN ULONG flags)
 {
-    DPRINT1("RtlFormatMessage(%S, %lu, %s, %s, %s, %p, %p, %lu, %p, %lx)\n",
-            Message, MaxWidth, IgnoreInserts ? "TRUE" : "FALSE", ArgumentsAreAnsi ? "TRUE" : "FALSE",
-            ArgumentsAreAnArray ? "TRUE" : "FALSE", Arguments, Buffer, BufferSize,
-            ReturnLength, Flags);
+    static const WCHAR spaceW = ' ';
+    static const WCHAR crW    = '\r';
+    static const WCHAR tabW   = '\t';
+    static const WCHAR crlfW[] = {'\r','\n'};
 
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    struct format_message_args args_data;
+    NTSTATUS status = STATUS_SUCCESS;
+
+    WCHAR *start = buffer;                         /* start of buffer */
+    WCHAR *end   = buffer + size / sizeof(WCHAR);  /* end of buffer */
+    WCHAR *line  = buffer;                         /* start of last line */
+    WCHAR *space = NULL;                           /* last space */
+
+#ifndef __REACTOS__
+    if (flags) FIXME( "%s unknown flags %lx\n", debugstr_w(src), flags );
+#endif
+
+    args_data.last  = 0;
+    args_data.array = is_array ? (ULONG_PTR *)args : NULL;
+    args_data.list  = is_array ? NULL : args;
+
+    for ( ; *src; src++)
+    {
+        switch (*src)
+        {
+        case '\r':
+            if (src[1] == '\n') src++;
+            /* fall through */
+        case '\n':
+            if (!width)
+            {
+                status = add_chars( &buffer, end, crlfW, 2 );
+                line = buffer;
+                space = NULL;
+                break;
+            }
+            /* fall through */
+        case ' ':
+            space = buffer;
+            status = add_chars( &buffer, end, &spaceW, 1 );
+            break;
+        case '\t':
+            if (space == buffer - 1) space = buffer;
+            status = add_chars( &buffer, end, &tabW, 1 );
+            break;
+        case '%':
+            src++;
+            switch (*src)
+            {
+            case 0:
+                return STATUS_INVALID_PARAMETER;
+            case 't':
+                if (!width)
+                {
+                    status = add_chars( &buffer, end, &tabW, 1 );
+                    break;
+                }
+                /* fall through */
+            case 'n':
+                status = add_chars( &buffer, end, crlfW, 2 );
+                line = buffer;
+                space = NULL;
+                break;
+            case 'r':
+                status = add_chars( &buffer, end, &crW, 1 );
+                line = buffer;
+                space = NULL;
+                break;
+            case '0':
+                while (src[1]) src++;
+                break;
+            case '1': case '2': case '3': case '4': case '5': case '6': case '7': case '8': case '9':
+                if (!ignore_inserts)
+                {
+                    int nr = *src++ - '0';
+
+                    if (*src >= '0' && *src <= '9') nr = nr * 10 + *src++ - '0';
+                    status = add_format( &buffer, end, &src, nr, ansi, &args_data );
+                    src--;
+                    break;
+                }
+                /* fall through */
+            default:
+                if (ignore_inserts) status = add_chars( &buffer, end, src - 1, 2 );
+                else status = add_chars( &buffer, end, src, 1 );
+                break;
+            }
+            break;
+        default:
+            status = add_chars( &buffer, end, src, 1 );
+            break;
+        }
+
+        if (status) return status;
+
+        if (width && buffer - line >= width)
+        {
+            LONG_PTR diff = 2;
+            WCHAR *next;
+
+            if (space)  /* split line at the last space */
+            {
+                next = space + 1;
+                while (space > line && (space[-1] == ' ' || space[-1] == '\t')) space--;
+                diff -= next - space;
+            }
+            else space = next = buffer;  /* split at the end of the buffer */
+
+            if (diff > 0 && end - buffer < diff) return STATUS_BUFFER_OVERFLOW;
+            memmove( space + 2, next, (buffer - next) * sizeof(WCHAR) );
+            buffer += diff;
+            memcpy( space, crlfW, sizeof(crlfW) );
+            line = space + 2;
+            space = NULL;
+        }
+    }
+
+    if ((status = add_chars( &buffer, end, L"", 1 ))) return status;
+
+    *retsize = (buffer - start) * sizeof(WCHAR);
+    return STATUS_SUCCESS;
 }
 
 /**********************************************************************
