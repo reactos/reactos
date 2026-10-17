@@ -27,18 +27,18 @@ DoWaveStreaming(
     PWAVEHDR_EXTENSION HeaderExtension;
 
     Result = GetSoundDeviceFromInstance(SoundDeviceInstance, &SoundDevice);
-    SND_ASSERT( MMSUCCESS(Result) );
+    SND_ASSERT(MMSUCCESS(Result));
 
     Result = GetSoundDeviceType(SoundDevice, &DeviceType);
-    SND_ASSERT( MMSUCCESS(Result) );
+    SND_ASSERT(MMSUCCESS(Result));
 
     Result = GetSoundDeviceFunctionTable(SoundDevice, &FunctionTable);
-    SND_ASSERT( MMSUCCESS(Result) );
-    SND_ASSERT( FunctionTable );
-    SND_ASSERT( FunctionTable->CommitWaveBuffer );
+    SND_ASSERT(MMSUCCESS(Result));
+    SND_ASSERT(FunctionTable);
+    SND_ASSERT(FunctionTable->CommitWaveBuffer);
 
     /* No point in doing anything if no resources available to use */
-    if ( SoundDeviceInstance->OutstandingBuffers >= SoundDeviceInstance->BufferCount )
+    if (SoundDeviceInstance->OutstandingBuffers >= SoundDeviceInstance->BufferCount)
     {
         SND_TRACE(L"DoWaveStreaming: No available buffers to stream with - doing nothing\n");
         return;
@@ -47,10 +47,21 @@ DoWaveStreaming(
     /* Is there any work to do? */
     Header = SoundDeviceInstance->HeadWaveHeader;
 
-    if ( ! Header )
+    if (!Header)
     {
         SND_TRACE(L"DoWaveStreaming: No work to do - doing nothing\n");
         return;
+    }
+
+    if (SoundDeviceInstance->RTStreamingEnabled && !SoundDeviceInstance->bStarted)
+    {
+        /* Do a kickstart for an audio device, in case it isn't started yet */
+        Result = FunctionTable->SetState(SoundDeviceInstance, TRUE);
+        if (!MMSUCCESS(Result))
+        {
+            SND_ERR(L"DoWaveStreaming: Failed to kickstart audio device for streaming\n");
+            return;
+        }
     }
 
     /* Do we need to loop a header? */
@@ -69,27 +80,37 @@ DoWaveStreaming(
         }
     }
 
-    while ( ( SoundDeviceInstance->OutstandingBuffers < SoundDeviceInstance->BufferCount ) &&
-            ( Header ) && SoundDeviceInstance->ResetInProgress == FALSE)
+    while ((SoundDeviceInstance->OutstandingBuffers < SoundDeviceInstance->BufferCount) &&
+           (Header) && SoundDeviceInstance->ResetInProgress == FALSE)
     {
-        HeaderExtension = (PWAVEHDR_EXTENSION) Header->reserved;
-        SND_ASSERT( HeaderExtension );
+        if (SoundDeviceInstance->RTStreamingEnabled)
+        {
+            /* Is there any work to do? */
+            Header = SoundDeviceInstance->HeadWaveHeader;
+
+            if (!Header)
+            {
+                SND_TRACE(L"DoWaveStreaming: No work to do - doing nothing\n");
+                return;
+            }
+        }
+
+        HeaderExtension = (PWAVEHDR_EXTENSION)Header->reserved;
+        SND_ASSERT(HeaderExtension);
 
         /* Saniy checks */
         SND_ASSERT(Header->dwFlags & WHDR_PREPARED);
         SND_ASSERT(Header->dwFlags & WHDR_INQUEUE);
 
         /* Can never be *above* the length */
-        SND_ASSERT( HeaderExtension->BytesCommitted <= Header->dwBufferLength );
+        SND_ASSERT(HeaderExtension->BytesCommitted <= Header->dwBufferLength);
 
         /* Is this header entirely committed? */
-        if ( HeaderExtension->BytesCommitted == Header->dwBufferLength )
+        if (HeaderExtension->BytesCommitted == Header->dwBufferLength)
         {
-            {
-                /* Move on to the next header */
-                SND_ASSERT(Header != Header->lpNext);
-                Header = Header->lpNext;
-            }
+            /* Move on to the next header */
+            SND_ASSERT(Header != Header->lpNext);
+            Header = Header->lpNext;
         }
         else
         {
@@ -105,17 +126,26 @@ DoWaveStreaming(
             BytesRemaining = Header->dwBufferLength - HeaderExtension->BytesCommitted;
 
             /* We can commit anything up to the buffer size limit */
-            BytesToCommit = BytesRemaining > SoundDeviceInstance->FrameSize ?
-                            SoundDeviceInstance->FrameSize :
-                            BytesRemaining;
+            if (SoundDeviceInstance->RTStreamingEnabled)
+            {
+                /* No limit for RT streaming */
+                BytesToCommit = BytesRemaining;
+            }
+            else
+            {
+                /* We can commit anything up to the buffer size limit */
+                BytesToCommit = BytesRemaining > SoundDeviceInstance->FrameSize ?
+                                SoundDeviceInstance->FrameSize :
+                                BytesRemaining;
+            }
 
             /* Should always have something to commit by this point */
-            SND_ASSERT( BytesToCommit > 0 );
+            SND_ASSERT(BytesToCommit > 0);
 
             /* We need a new overlapped info structure for each buffer */
             Overlap = AllocateStruct(SOUND_OVERLAPPED);
 
-            if ( Overlap )
+            if (Overlap)
             {
                 ZeroMemory(Overlap, sizeof(SOUND_OVERLAPPED));
                 Overlap->SoundDeviceInstance = SoundDeviceInstance;
@@ -131,7 +161,7 @@ DoWaveStreaming(
                                                                Overlap,
                                                                CompleteIO));
 
-                if ( ! OK )
+                if (!OK)
                 {
                     /* Clean-up and try again on the next iteration (is this OK?) */
                     SND_WARN(L"FAILED\n");
@@ -164,11 +194,11 @@ DoWaveStreaming(
         Commit buffers using the WriteFileEx API.
 */
 
-VOID CALLBACK
+VOID WINAPI
 CompleteIO(
     IN  DWORD dwErrorCode,
     IN  DWORD dwNumberOfBytesTransferred,
-    IN  LPOVERLAPPED lpOverlapped)
+    IN  PSOUND_OVERLAPPED lpOverlapped)
 {
     MMDEVICE_TYPE DeviceType;
     PSOUND_DEVICE SoundDevice;
@@ -179,23 +209,22 @@ CompleteIO(
     MMRESULT Result;
     DWORD Bytes;
 
-    WaveHdr = (PWAVEHDR) SoundOverlapped->Header;
-    SND_ASSERT( WaveHdr );
+    WaveHdr = (PWAVEHDR)SoundOverlapped->Header;
+    SND_ASSERT(WaveHdr);
 
-    HdrExtension = (PWAVEHDR_EXTENSION) WaveHdr->reserved;
-    SND_ASSERT( HdrExtension );
+    HdrExtension = (PWAVEHDR_EXTENSION)WaveHdr->reserved;
+    SND_ASSERT(HdrExtension);
 
     SoundDeviceInstance = SoundOverlapped->SoundDeviceInstance;
 
     Result = GetSoundDeviceFromInstance(SoundDeviceInstance, &SoundDevice);
-    SND_ASSERT( MMSUCCESS(Result) );
+    SND_ASSERT(MMSUCCESS(Result));
 
     Result = GetSoundDeviceType(SoundDevice, &DeviceType);
-    SND_ASSERT( MMSUCCESS(Result) );
+    SND_ASSERT(MMSUCCESS(Result));
 
     do
 	{
-
         /* We have an available buffer now */
         -- SoundDeviceInstance->OutstandingBuffers;
 
@@ -205,10 +234,8 @@ CompleteIO(
         {
             /* Wave buffer fully completed */
             Bytes = WaveHdr->dwBufferLength - HdrExtension->BytesCompleted;
-
             HdrExtension->BytesCompleted += Bytes;
             dwNumberOfBytesTransferred -= Bytes;
-
             CompleteWaveHeader(SoundDeviceInstance, WaveHdr);
             SND_TRACE(L"%d/%d bytes of wavehdr completed\n", HdrExtension->BytesCompleted, WaveHdr->dwBufferLength);
         }
@@ -245,16 +272,20 @@ CompleteIO(
             break;
 		}
 
-        HdrExtension = (PWAVEHDR_EXTENSION) WaveHdr->reserved;
-        SND_ASSERT( HdrExtension );
+        HdrExtension = (PWAVEHDR_EXTENSION)WaveHdr->reserved;
+        SND_ASSERT(HdrExtension);
 
 
 	}while(dwNumberOfBytesTransferred);
 
     // AUDIO-BRANCH DIFF
     // completion callback is performed in a thread
-    DoWaveStreaming(SoundDeviceInstance);
-
+    if (SoundDeviceInstance->LegacyStreaming &&
+        SoundDeviceInstance->bPaused == FALSE &&
+        SoundDeviceInstance->bClosed == FALSE)
+    {
+        DoWaveStreaming(SoundDeviceInstance);
+    }
     //CompleteWavePortion(SoundDeviceInstance, dwNumberOfBytesTransferred);
 
     FreeMemory(lpOverlapped);
@@ -270,14 +301,14 @@ WriteFileEx_Committer(
 {
     HANDLE Handle;
 
-    VALIDATE_MMSYS_PARAMETER( SoundDeviceInstance );
-    VALIDATE_MMSYS_PARAMETER( OffsetPtr );
-    VALIDATE_MMSYS_PARAMETER( Overlap );
-    VALIDATE_MMSYS_PARAMETER( CompletionRoutine );
+    VALIDATE_MMSYS_PARAMETER(SoundDeviceInstance);
+    VALIDATE_MMSYS_PARAMETER(OffsetPtr);
+    VALIDATE_MMSYS_PARAMETER(Overlap);
+    VALIDATE_MMSYS_PARAMETER(CompletionRoutine);
 
     GetSoundDeviceInstanceHandle(SoundDeviceInstance, &Handle);
 
-    if ( ! WriteFileEx(Handle, OffsetPtr, Length, (LPOVERLAPPED)Overlap, CompletionRoutine) )
+    if (!WriteFileEx(Handle, OffsetPtr, Length, (LPOVERLAPPED)Overlap, CompletionRoutine))
     {
         // TODO
     }
@@ -308,15 +339,15 @@ StopStreamingInSoundThread(
 
     /* Get sound device */
     Result = GetSoundDeviceFromInstance(SoundDeviceInstance, &SoundDevice);
-    SND_ASSERT( Result == MMSYSERR_NOERROR );
+    SND_ASSERT(Result == MMSYSERR_NOERROR);
 
     /* Obtain the function table */
     Result = GetSoundDeviceFunctionTable(SoundDevice, &FunctionTable);
-    SND_ASSERT( Result == MMSYSERR_NOERROR );
+    SND_ASSERT(Result == MMSYSERR_NOERROR);
 
     /* Obtain device instance type */
     Result = GetSoundDeviceType(SoundDevice, &DeviceType);
-    SND_ASSERT( Result == MMSYSERR_NOERROR );
+    SND_ASSERT(Result == MMSYSERR_NOERROR);
 
     /* Check if reset function is supported */
     if (FunctionTable->ResetStream)
@@ -332,7 +363,7 @@ StopStreamingInSoundThread(
     }
 
     /* complete all current headers */
-    while( SoundDeviceInstance->HeadWaveHeader )
+    while(SoundDeviceInstance->HeadWaveHeader)
     {
         SND_TRACE(L"StopStreamingInSoundThread: Completing Header %p\n", SoundDeviceInstance->HeadWaveHeader);
         CompleteWaveHeader( SoundDeviceInstance, SoundDeviceInstance->HeadWaveHeader );
@@ -364,18 +395,18 @@ StopStreaming(
     PSOUND_DEVICE SoundDevice;
     MMDEVICE_TYPE DeviceType;
 
-    if ( ! IsValidSoundDeviceInstance(SoundDeviceInstance) )
+    if (!IsValidSoundDeviceInstance(SoundDeviceInstance))
         return MMSYSERR_INVALHANDLE;
 
     Result = GetSoundDeviceFromInstance(SoundDeviceInstance, &SoundDevice);
-    if ( ! MMSUCCESS(Result) )
+    if (!MMSUCCESS(Result))
         return TranslateInternalMmResult(Result);
 
     Result = GetSoundDeviceType(SoundDevice, &DeviceType);
-    if ( ! MMSUCCESS(Result) )
+    if (!MMSUCCESS(Result))
         return TranslateInternalMmResult(Result);
 
-    if ( DeviceType != WAVE_OUT_DEVICE_TYPE && DeviceType != WAVE_IN_DEVICE_TYPE )
+    if (DeviceType != WAVE_OUT_DEVICE_TYPE && DeviceType != WAVE_IN_DEVICE_TYPE)
         return MMSYSERR_NOTSUPPORTED;
 
     return CallSoundThread(SoundDeviceInstance,
@@ -398,10 +429,14 @@ WINAPI
 WaveActivateSoundStreaming(
     IN PVOID lpParameter)
 {
-    CallSoundThread((PSOUND_DEVICE_INSTANCE)lpParameter,
-                    PerformWaveStreaming,
-                    NULL);
+    PSOUND_DEVICE_INSTANCE SoundDeviceInstance = (PSOUND_DEVICE_INSTANCE)lpParameter;
 
+    PerformWaveStreaming(SoundDeviceInstance, NULL);
+    if (SoundDeviceInstance->hSoundThread != NULL)
+    {
+        CloseHandle(SoundDeviceInstance->hSoundThread);
+        SoundDeviceInstance->hSoundThread = NULL;
+    }
     ExitThread(0);
 }
 
@@ -409,10 +444,6 @@ VOID
 InitiateSoundStreaming(
     IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance)
 {
-    HANDLE hThread;
-
-    hThread = CreateThread(NULL, 0, WaveActivateSoundStreaming, (PVOID)SoundDeviceInstance, 0, NULL);
-
-    if (hThread != NULL)
-        CloseHandle(hThread);
+    if (SoundDeviceInstance->hSoundThread == NULL)
+        SoundDeviceInstance->hSoundThread = CreateThread(NULL, 0, WaveActivateSoundStreaming, (PVOID)SoundDeviceInstance, 0, NULL);
 }
