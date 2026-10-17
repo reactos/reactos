@@ -1,5 +1,6 @@
 /*
  * PURPOSE:     Japanese Language resource file
+ * COPYRIGHT:   Copyright 2026 Qian Wang <liamwang012@outlook.com>
  */
 
 LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
