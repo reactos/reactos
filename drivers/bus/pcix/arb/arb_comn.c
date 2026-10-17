@@ -260,8 +260,8 @@ PciInitializeArbiters(IN PPCI_FDO_EXTENSION FdoExtension)
 
         if (PdoExtension->Dependent.type1.SubtractiveDecode)
         {
-            DPRINT1("PCIX - Not creating arbiters for subtractive bus 0x%x\n",
-                    FdoExtension->BaseBus);
+            DPRINT("PCIX - Not creating arbiters for subtractive bus 0x%x\n",
+                   FdoExtension->BaseBus);
             return STATUS_SUCCESS;
         }
     }
@@ -283,9 +283,9 @@ PciInitializeArbiters(IN PPCI_FDO_EXTENSION FdoExtension)
         if (!*Interfaces)
         {
             /* Skip this arbiter and try the next one */
-            DPRINT1("PCIX - FDO ext 0x%p no %s arbiter.\n",
-                    FdoExtension,
-                    PciArbiterNames[ArbiterType - PciArb_Io]);
+            DPRINT("PCIX - FDO ext 0x%p no %s arbiter.\n",
+                   FdoExtension,
+                   PciArbiterNames[ArbiterType - PciArb_Io]);
             continue;
         }
 
@@ -316,10 +316,10 @@ PciInitializeArbiters(IN PPCI_FDO_EXTENSION FdoExtension)
                                    PciArbiterDestructor);
 
         /* This arbiter is now initialized, move to the next one */
-        DPRINT1("PCIX - FDO ext 0x%p %S arbiter initialized (context 0x%p).\n",
-                FdoExtension,
-                L"ARBITER HEADER MISSING", //ArbiterInterface->CommonInstance.Name,
-                ArbiterInterface);
+        DPRINT("PCIX - FDO ext 0x%p %S arbiter initialized (context 0x%p).\n",
+               FdoExtension,
+               L"ARBITER HEADER MISSING", //ArbiterInterface->CommonInstance.Name,
+               ArbiterInterface);
         Status = STATUS_SUCCESS;
     }
 
@@ -475,7 +475,7 @@ PciInitializeArbiterRanges(IN PPCI_FDO_EXTENSION DeviceExtension,
         if (PdoExtension->Dependent.type1.SubtractiveDecode)
         {
             /* There is nothing to do regarding arbitration of resources */
-            DPRINT1("PCIX - Skipping arbiter initialization for subtractive bridge FDOX %p\n", DeviceExtension);
+            DPRINT("PCIX - Skipping arbiter initialization for subtractive bridge FDOX %p\n", DeviceExtension);
             return STATUS_SUCCESS;
         }
 

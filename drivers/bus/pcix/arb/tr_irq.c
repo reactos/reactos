@@ -77,7 +77,7 @@ tranirq_Constructor(IN PVOID DeviceExtension,
         /* It is, so there is no parent, and it's connected on the system bus */
         ParentBus = 0;
         ParentInterface = Internal;
-        DPRINT1("      Is root FDO\n");
+        DPRINT("      Is root FDO\n");
     }
     else
     {
@@ -86,8 +86,8 @@ tranirq_Constructor(IN PVOID DeviceExtension,
         ASSERT_PDO(PdoExtension);
         ParentBus = PdoExtension->ParentFdoExtension->BaseBus;
         ParentInterface = PCIBus;
-        DPRINT1("      Is bridge FDO, parent bus %x, secondary bus %x\n",
-                ParentBus, BaseBus);
+        DPRINT("      Is bridge FDO, parent bus %x, secondary bus %x\n",
+               ParentBus, BaseBus);
     }
 
     /* Now call the legacy HAL interface to get the correct translator */
