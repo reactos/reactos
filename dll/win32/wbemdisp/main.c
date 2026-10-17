@@ -28,255 +28,10 @@
 #include "rpcproxy.h"
 
 #include "wine/debug.h"
-#include "wine/heap.h"
 #include "wbemdisp_private.h"
 #include "wbemdisp_classes.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(wbemdisp);
-
-static HINSTANCE instance;
-
-struct moniker
-{
-    IMoniker IMoniker_iface;
-    LONG refs;
-    IUnknown *obj;
-};
-
-static inline struct moniker *impl_from_IMoniker(
-    IMoniker *iface )
-{
-    return CONTAINING_RECORD( iface, struct moniker, IMoniker_iface );
-}
-
-static ULONG WINAPI moniker_AddRef(
-    IMoniker *iface )
-{
-    struct moniker *moniker = impl_from_IMoniker( iface );
-    return InterlockedIncrement( &moniker->refs );
-}
-
-static ULONG WINAPI moniker_Release(
-    IMoniker *iface )
-{
-    struct moniker *moniker = impl_from_IMoniker( iface );
-    LONG refs = InterlockedDecrement( &moniker->refs );
-    if (!refs)
-    {
-        TRACE( "destroying %p\n", moniker );
-        IUnknown_Release( moniker->obj );
-        heap_free( moniker );
-    }
-    return refs;
-}
-
-static HRESULT WINAPI moniker_QueryInterface(
-    IMoniker *iface, REFIID riid, void **ppvObject )
-{
-    struct moniker *moniker = impl_from_IMoniker( iface );
-
-    TRACE( "%p, %s, %p\n", moniker, debugstr_guid( riid ), ppvObject );
-
-    if (IsEqualGUID( riid, &IID_IMoniker ) ||
-        IsEqualGUID( riid, &IID_IUnknown ))
-    {
-        *ppvObject = iface;
-    }
-    else
-    {
-        FIXME( "interface %s not implemented\n", debugstr_guid(riid) );
-        return E_NOINTERFACE;
-    }
-    IMoniker_AddRef( iface );
-    return S_OK;
-}
-
-static HRESULT WINAPI moniker_GetClassID(
-    IMoniker *iface, CLSID *pClassID )
-{
-    FIXME( "\n" );
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI moniker_IsDirty(
-    IMoniker *iface )
-{
-    FIXME( "\n" );
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI moniker_Load(
-    IMoniker *iface, IStream *pStm )
-{
-    FIXME( "\n" );
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI moniker_Save(
-    IMoniker *iface, IStream *pStm, BOOL fClearDirty )
-{
-    FIXME( "\n" );
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI moniker_GetSizeMax(
-    IMoniker *iface, ULARGE_INTEGER *pcbSize )
-{
-    FIXME( "\n" );
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI moniker_BindToObject(
-    IMoniker *iface, IBindCtx *pbc, IMoniker *pmkToLeft, REFIID riidResult, void **ppvResult )
-{
-    struct moniker *moniker = impl_from_IMoniker( iface );
-
-    TRACE( "%p, %p, %p, %s, %p\n", iface, pbc, pmkToLeft, debugstr_guid(riidResult), ppvResult );
-    return IUnknown_QueryInterface( moniker->obj, riidResult, ppvResult );
-}
-
-static HRESULT WINAPI moniker_BindToStorage(
-    IMoniker *iface, IBindCtx *pbc, IMoniker *pmkToLeft, REFIID riid, void **ppvObj )
-{
-    FIXME( "\n" );
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI moniker_Reduce(
-    IMoniker *iface, IBindCtx *pbc, DWORD dwReduceHowFar, IMoniker **ppmkToLeft, IMoniker **ppmkReduced )
-{
-    FIXME( "\n" );
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI moniker_ComposeWith(
-    IMoniker *iface, IMoniker *pmkRight, BOOL fOnlyIfNotGeneric, IMoniker **ppmkComposite )
-{
-    FIXME( "\n" );
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI moniker_Enum(
-    IMoniker *iface, BOOL fForward, IEnumMoniker **ppenumMoniker )
-{
-    FIXME( "\n" );
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI moniker_IsEqual(
-    IMoniker *iface, IMoniker *pmkOtherMoniker )
-{
-    FIXME( "\n" );
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI moniker_Hash(
-    IMoniker *iface, DWORD *pdwHash )
-{
-    FIXME( "\n" );
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI moniker_IsRunning(
-    IMoniker *iface, IBindCtx *pbc, IMoniker *pmkToLeft, IMoniker *pmkNewlyRunning )
-{
-    FIXME( "\n" );
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI moniker_GetTimeOfLastChange(
-    IMoniker *iface, IBindCtx *pbc, IMoniker *pmkToLeft, FILETIME *pFileTime )
-{
-    FIXME( "\n" );
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI moniker_Inverse(
-    IMoniker *iface, IMoniker **ppmk )
-{
-    FIXME( "\n" );
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI moniker_CommonPrefixWith(
-    IMoniker *iface, IMoniker *pmkOther, IMoniker **ppmkPrefix )
-{
-    FIXME( "\n" );
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI moniker_RelativePathTo(
-    IMoniker *iface, IMoniker *pmkOther, IMoniker **ppmkRelPath )
-{
-    FIXME( "\n" );
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI moniker_GetDisplayName(
-    IMoniker *iface, IBindCtx *pbc, IMoniker *pmkToLeft, LPOLESTR *ppszDisplayName )
-{
-    FIXME( "\n" );
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI moniker_ParseDisplayName(
-    IMoniker *iface, IBindCtx *pbc, IMoniker *pmkToLeft, LPOLESTR pszDisplayName, ULONG *pchEaten,
-    IMoniker **ppmkOut )
-{
-    FIXME( "\n" );
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI moniker_IsSystemMoniker(
-    IMoniker *iface, DWORD *pdwMksys )
-{
-    FIXME( "\n" );
-    return E_NOTIMPL;
-}
-
-static const IMonikerVtbl moniker_vtbl =
-{
-    moniker_QueryInterface,
-    moniker_AddRef,
-    moniker_Release,
-    moniker_GetClassID,
-    moniker_IsDirty,
-    moniker_Load,
-    moniker_Save,
-    moniker_GetSizeMax,
-    moniker_BindToObject,
-    moniker_BindToStorage,
-    moniker_Reduce,
-    moniker_ComposeWith,
-    moniker_Enum,
-    moniker_IsEqual,
-    moniker_Hash,
-    moniker_IsRunning,
-    moniker_GetTimeOfLastChange,
-    moniker_Inverse,
-    moniker_CommonPrefixWith,
-    moniker_RelativePathTo,
-    moniker_GetDisplayName,
-    moniker_ParseDisplayName,
-    moniker_IsSystemMoniker
-};
-
-static HRESULT Moniker_create( IUnknown *unk, IMoniker **obj )
-{
-    struct moniker *moniker;
-
-    TRACE( "%p, %p\n", unk, obj );
-
-    if (!(moniker = heap_alloc( sizeof(*moniker) ))) return E_OUTOFMEMORY;
-    moniker->IMoniker_iface.lpVtbl = &moniker_vtbl;
-    moniker->refs = 1;
-    moniker->obj = unk;
-    IUnknown_AddRef( moniker->obj );
-
-    *obj = &moniker->IMoniker_iface;
-    TRACE( "returning iface %p\n", *obj );
-    return S_OK;
-}
 
 static HRESULT WINAPI WinMGMTS_QueryInterface(IParseDisplayName *iface, REFIID riid, void **ppv)
 {
@@ -371,8 +126,7 @@ done:
 static HRESULT WINAPI WinMGMTS_ParseDisplayName(IParseDisplayName *iface, IBindCtx *pbc, LPOLESTR pszDisplayName,
         ULONG *pchEaten, IMoniker **ppmkOut)
 {
-    static const WCHAR prefixW[] = {'w','i','n','m','g','m','t','s',':',0};
-    const DWORD prefix_len = ARRAY_SIZE(prefixW) - 1;
+    const DWORD prefix_len = ARRAY_SIZE(L"winmgmts:") - 1;
     ISWbemLocator *locator = NULL;
     ISWbemServices *services = NULL;
     ISWbemObject *obj = NULL;
@@ -382,7 +136,7 @@ static HRESULT WINAPI WinMGMTS_ParseDisplayName(IParseDisplayName *iface, IBindC
 
     TRACE( "%p, %p, %s, %p, %p\n", iface, pbc, debugstr_w(pszDisplayName), pchEaten, ppmkOut );
 
-    if (_wcsnicmp( pszDisplayName, prefixW, prefix_len )) return MK_E_SYNTAX;
+    if (wcsnicmp( pszDisplayName, L"winmgmts:", prefix_len )) return MK_E_SYNTAX;
 
     p = pszDisplayName + prefix_len;
     if (*p == '{')
@@ -401,12 +155,12 @@ static HRESULT WINAPI WinMGMTS_ParseDisplayName(IParseDisplayName *iface, IBindC
     hr = ISWbemLocator_ConnectServer( locator, server, namespace, NULL, NULL, NULL, NULL, 0, NULL, &services );
     if (hr != S_OK) goto done;
 
-    if (!relative || !*relative) Moniker_create( (IUnknown *)services, ppmkOut );
+    if (!relative || !*relative) CreatePointerMoniker( (IUnknown *)services, ppmkOut );
     else
     {
         hr = ISWbemServices_Get( services, relative, 0, NULL, &obj );
         if (hr != S_OK) goto done;
-        hr = Moniker_create( (IUnknown *)obj, ppmkOut );
+        hr = CreatePointerMoniker( (IUnknown *)obj, ppmkOut );
     }
 
 done:
@@ -454,7 +208,7 @@ static HRESULT WINAPI factory_QueryInterface( IClassFactory *iface, REFIID riid,
         *obj = iface;
         return S_OK;
     }
-    FIXME( "interface %s not implemented\n", debugstr_guid(riid) );
+    WARN( "interface %s not implemented\n", debugstr_guid(riid) );
     return E_NOINTERFACE;
 }
 
@@ -505,24 +259,8 @@ static const struct IClassFactoryVtbl factory_vtbl =
 };
 
 static struct factory swbem_locator_cf = { { &factory_vtbl }, SWbemLocator_create };
+static struct factory swbem_namedvalueset_cf = { { &factory_vtbl }, SWbemNamedValueSet_create };
 static struct factory winmgmts_cf = { { &factory_vtbl }, WinMGMTS_create };
-
-BOOL WINAPI DllMain( HINSTANCE hinst, DWORD reason, LPVOID reserved )
-{
-
-    switch (reason)
-    {
-#ifndef __REACTOS__
-        case DLL_WINE_PREATTACH:
-            return FALSE;    /* prefer native version */
-#endif
-        case DLL_PROCESS_ATTACH:
-            instance = hinst;
-            DisableThreadLibraryCalls( hinst );
-            break;
-    }
-    return TRUE;
-}
 
 HRESULT WINAPI DllGetClassObject( REFCLSID rclsid, REFIID iid, LPVOID *obj )
 {
@@ -534,32 +272,10 @@ HRESULT WINAPI DllGetClassObject( REFCLSID rclsid, REFIID iid, LPVOID *obj )
         cf = &swbem_locator_cf.IClassFactory_iface;
     else if (IsEqualGUID( rclsid, &CLSID_WinMGMTS ))
         cf = &winmgmts_cf.IClassFactory_iface;
+    else if (IsEqualGUID( rclsid, &CLSID_SWbemNamedValueSet ))
+        cf = &swbem_namedvalueset_cf.IClassFactory_iface;
     else
         return CLASS_E_CLASSNOTAVAILABLE;
 
     return IClassFactory_QueryInterface( cf, iid, obj );
-}
-
-/***********************************************************************
- *      DllCanUnloadNow (WBEMDISP.@)
- */
-HRESULT WINAPI DllCanUnloadNow(void)
-{
-    return S_FALSE;
-}
-
-/***********************************************************************
- *      DllRegisterServer (WBEMDISP.@)
- */
-HRESULT WINAPI DllRegisterServer(void)
-{
-    return __wine_register_resources( instance );
-}
-
-/***********************************************************************
- *      DllUnregisterServer (WBEMDISP.@)
- */
-HRESULT WINAPI DllUnregisterServer(void)
-{
-    return __wine_unregister_resources( instance );
 }
