@@ -19,6 +19,7 @@ CreateNTPServerList(HWND hwnd)
     HWND hList;
     WCHAR szValName[MAX_VALUE_NAME];
     WCHAR szData[256];
+    WCHAR szCustomValue[256] = { 0 };
     DWORD dwIndex = 0;
     DWORD dwValSize;
     DWORD dwNameSize;
@@ -55,16 +56,17 @@ CreateNTPServerList(HWND hwnd)
             if (wcscmp(szValName, L"") == 0) // if (Index == 0)
             {
                 dwDefault = _wtoi(szData);
-                dwIndex++;
+            }
+            else if (wcscmp(szValName, L"0") == 0)
+            {
+                /* Special treatment for custom value */
+                StringCchCopyW(szCustomValue, _countof(szCustomValue), szData);
             }
             else
             {
-                SendMessageW(hList,
-                             CB_ADDSTRING,
-                             0,
-                             (LPARAM)szData);
-                dwIndex++;
+                SendMessageW(hList, CB_ADDSTRING, 0, (LPARAM)szData);
             }
+            dwIndex++;
         }
         else if (lRet != ERROR_MORE_DATA)
         {
@@ -72,17 +74,23 @@ CreateNTPServerList(HWND hwnd)
         }
     }
 
-    if (dwDefault < 1 || dwDefault > dwIndex)
-        dwDefault = 1;
+    if (dwDefault == 0 && szCustomValue[0] != L'\0')
+    {
+        /* Set the custom server in the combobox */
+        SendMessageW(hList, CB_SETCURSEL, -1, 0);
+        SetWindowTextW(hList, szCustomValue);
+    }
+    else
+    {
+        if (dwDefault < 1 || dwDefault > dwIndex)
+            dwDefault = 1;
 
-    /* Server reg entries count from 1,
-     * Combo boxes count from 0 */
-    dwDefault--;
+        /* Server reg entries count from 1,
+         * Combo boxes count from 0 */
+        dwDefault--;
 
-    SendMessageW(hList,
-                 CB_SETCURSEL,
-                 dwDefault,
-                 0);
+        SendMessageW(hList, CB_SETCURSEL, dwDefault, 0);
+    }
 
     RegCloseKey(hKey);
 }
