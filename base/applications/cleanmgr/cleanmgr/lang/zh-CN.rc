@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS Disk Cleanup
  * LICENSE:     MIT (https://spdx.org/licenses/MIT)
  * PURPOSE:     Chinese (Simplified) resource file
- * COPYRIGHT:   Copyright 2026 Qian Wang <liamwang012@outlook.com>
+ * TRANSLATOR:  Copyright 2026 Qian Wang <liamwang012@outlook.com>
  */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED

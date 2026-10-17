@@ -1,8 +1,8 @@
 /*
- * PROJECT:     ReactOS Character Map
- * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
- * PURPOSE:     Japanese Translation for ReactOS Character Map
- * COPYRIGHT:   Copyright 2026 Qian Wang <liamwang012@outlook.com>
+ * PROJECT:      ReactOS Character Map
+ * LICENSE:      GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:      Japanese resource file
+ * TRANSLATOR:   Copyright 2026 Qian Wang <liamwang012@outlook.com>
  */
 
 LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT

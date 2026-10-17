@@ -1,6 +1,8 @@
 /*
- * PURPOSE:     Japanese Language resource file
- * COPYRIGHT:   Copyright 2026 Qian Wang <liamwang012@outlook.com>
+ * PROJECT:     ReactOS MSConfig
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     Japanese resource file
+ * TRANSLATOR:  Copyright 2026 Qian Wang <liamwang012@outlook.com>
  */
 
 LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT

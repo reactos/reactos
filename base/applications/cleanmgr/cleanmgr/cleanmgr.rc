@@ -33,4 +33,3 @@ IDI_CLEANMGR ICON "resources/cleanmgr.ico"
 #ifdef LANGUAGE_ZH_TW
     #include "lang/zh-TW.rc"
 #endif
-
