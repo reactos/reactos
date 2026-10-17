@@ -107,7 +107,7 @@ list(APPEND WINE_SOURCE
     wine/shlmenu.c
     wine/shpolicy.c)
 
-set_source_files_properties(${WINE_SOURCE} PROPERTIES COMPILE_DEFINITIONS _CRT_NON_CONFORMING_SWPRINTFS)
+set_source_files_properties(${WINE_SOURCE} PROPERTIES COMPILE_DEFINITIONS CONST_VTABLE)
 
 list(APPEND PCH_SKIP_SOURCE
     ${WINE_SOURCE}

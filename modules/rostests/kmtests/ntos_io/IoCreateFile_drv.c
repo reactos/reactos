@@ -104,10 +104,10 @@ TestIrpHandler(
             }
 
             Reparse->ReparseTag = IO_REPARSE_TAG_MOUNT_POINT;
-            Reparse->ReparseDataLength = 12 + sizeof(L"\\??\\C:\\Documents and Settings");
-            Reparse->MountPointReparseBuffer.SubstituteNameLength = sizeof(L"\\??\\C:\\Documents and Settings") - sizeof(UNICODE_NULL);
-            Reparse->MountPointReparseBuffer.PrintNameOffset = sizeof(L"\\??\\C:\\Documents and Settings");
-            RtlCopyMemory(Reparse->MountPointReparseBuffer.PathBuffer, L"\\??\\C:\\Documents and Settings", sizeof(L"\\??\\C:\\Documents and Settings"));
+            Reparse->ReparseDataLength = 12 + sizeof(L"\\??\\C:\\Users");
+            Reparse->MountPointReparseBuffer.SubstituteNameLength = sizeof(L"\\??\\C:\\Users") - sizeof(UNICODE_NULL);
+            Reparse->MountPointReparseBuffer.PrintNameOffset = sizeof(L"\\??\\C:\\Users");
+            RtlCopyMemory(Reparse->MountPointReparseBuffer.PathBuffer, L"\\??\\C:\\Users", sizeof(L"\\??\\C:\\Users"));
             Irp->IoStatus.Information = IO_REPARSE_TAG_MOUNT_POINT;
             Status = STATUS_REPARSE;
         }
@@ -132,10 +132,10 @@ TestIrpHandler(
             }
 
             Reparse->ReparseTag = IO_REPARSE_TAG_SYMLINK;
-            Reparse->ReparseDataLength = 12 + sizeof(L"\\??\\C:\\Documents and Settings");
-            Reparse->SymbolicLinkReparseBuffer.SubstituteNameLength = sizeof(L"\\??\\C:\\Documents and Settings") - sizeof(UNICODE_NULL);
-            Reparse->SymbolicLinkReparseBuffer.PrintNameOffset = sizeof(L"\\??\\C:\\Documents and Settings");
-            RtlCopyMemory(Reparse->SymbolicLinkReparseBuffer.PathBuffer, L"\\??\\C:\\Documents and Settings", sizeof(L"\\??\\C:\\Documents and Settings"));
+            Reparse->ReparseDataLength = 12 + sizeof(L"\\??\\C:\\Users");
+            Reparse->SymbolicLinkReparseBuffer.SubstituteNameLength = sizeof(L"\\??\\C:\\Users") - sizeof(UNICODE_NULL);
+            Reparse->SymbolicLinkReparseBuffer.PrintNameOffset = sizeof(L"\\??\\C:\\Users");
+            RtlCopyMemory(Reparse->SymbolicLinkReparseBuffer.PathBuffer, L"\\??\\C:\\Users", sizeof(L"\\??\\C:\\Users"));
             Irp->IoStatus.Information = IO_REPARSE_TAG_SYMLINK;
             Status = STATUS_REPARSE;
         }
@@ -180,7 +180,7 @@ Finish:
 }
 
 static UNICODE_STRING FileObjectFileName = RTL_CONSTANT_STRING(L"\\NonSymlinked");
-static UNICODE_STRING DocumentsAndSettings = RTL_CONSTANT_STRING(L"\\Documents and Settings");
+static UNICODE_STRING DocumentsAndSettings = RTL_CONSTANT_STRING(L"\\Users");
 
 static
 NTSTATUS

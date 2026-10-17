@@ -23,7 +23,8 @@ add_library(userenv MODULE
     ${CMAKE_CURRENT_BINARY_DIR}/userenv.def)
 
 set_module_type(userenv win32dll)
-target_link_libraries(userenv uuid)
+target_link_libraries(userenv uuid pathcch_static)
+target_compile_definitions(userenv PRIVATE STATIC_PATHCCH)
 add_importlibs(userenv advapi32 advapi32_vista user32 msvcrt kernel32 ntdll)
 add_pch(userenv precomp.h "${PCH_SKIP_SOURCE}")
 add_cd_file(TARGET userenv DESTINATION reactos/system32 FOR all)

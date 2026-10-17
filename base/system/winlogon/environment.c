@@ -12,6 +12,19 @@
 
 #include "winlogon.h"
 
+/* GLOBALS ******************************************************************/
+
+static const struct
+{
+    PCWSTR pszVariable;
+    PCWSTR pszShellFolder;
+} AppDataVariables[] =
+{
+    {L"APPDATA",      L"AppData"},
+    {L"LOCALAPPDATA", L"Local AppData"},
+};
+
+
 /* FUNCTIONS ****************************************************************/
 
 static
@@ -91,7 +104,7 @@ BuildVolatileEnvironment(
         }
     }
 
-    /* Set the 'APPDATA' environment variable */
+    /* Set the 'APPDATA' and 'LOCALAPPDATA' environment variables */
     lError = RegOpenKeyExW(hKeyCurrentUser,
                            L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders",
                            0,
@@ -99,18 +112,27 @@ BuildVolatileEnvironment(
                            &hKeyShellFolders);
     if (lError == ERROR_SUCCESS)
     {
-        dwSize = (MAX_PATH + 1) * sizeof(WCHAR);
-        lError = RegQueryValueExW(hKeyShellFolders,
-                                  L"AppData",
-                                  NULL,
-                                  &dwType,
-                                  (LPBYTE)szPath,
-                                  &dwSize);
-        if (lError == ERROR_SUCCESS)
+        ULONG i;
+
+        for (i = 0; i < ARRAYSIZE(AppDataVariables); i++)
         {
-            TRACE("APPDATA path: %S\n", szPath);
+            dwSize = (MAX_PATH + 1) * sizeof(WCHAR);
+            lError = RegQueryValueExW(hKeyShellFolders,
+                                      AppDataVariables[i].pszShellFolder,
+                                      NULL,
+                                      &dwType,
+                                      (LPBYTE)szPath,
+                                      &dwSize);
+            if (lError != ERROR_SUCCESS)
+            {
+                WARN("WL: No '%S' shell folder (Error: %ld)\n",
+                     AppDataVariables[i].pszShellFolder, lError);
+                continue;
+            }
+
+            TRACE("%S path: %S\n", AppDataVariables[i].pszVariable, szPath);
             RegSetValueExW(hKeyVolatileEnv,
-                           L"APPDATA",
+                           AppDataVariables[i].pszVariable,
                            0,
                            REG_SZ,
                            (LPBYTE)szPath,
