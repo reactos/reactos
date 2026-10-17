@@ -128,6 +128,10 @@ NtfsDestroyFCB(PNTFS_FCB Fcb)
     ASSERT(Fcb);
     ASSERT(Fcb->Identifier.Type == NTFS_TYPE_FCB);
 
+    /* The volume stream belongs to the VCB */
+    if (Fcb->FileObject && !(Fcb->Flags & FCB_IS_VOLUME_STREAM))
+        ObDereferenceObject(Fcb->FileObject);
+
     FsRtlUninitializeFileLock(&Fcb->FileLock);
     ExDeleteResourceLite(&Fcb->PagingIoResource);
     ExDeleteResourceLite(&Fcb->MainResource);
@@ -373,7 +377,7 @@ NtfsFCBInitializeCache(PNTFS_VCB Vcb,
     }
     _SEH2_END;
 
-    ObDereferenceObject(FileObject);
+    /* The FCB keeps its reference, tearing down the cache map would otherwise free the stream */
     Fcb->Flags |= FCB_CACHE_INITIALIZED;
 
     return Status;
