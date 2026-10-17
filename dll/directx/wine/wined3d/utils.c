@@ -2454,6 +2454,33 @@ static void draw_test_quad(struct wined3d_caps_gl_ctx *ctx, const struct wined3d
 
         ctx->test_program_id = GL_EXTCALL(glCreateProgram());
 
+#ifdef __REACTOS__
+        vs_id = GL_EXTCALL(glCreateShader(GL_VERTEX_SHADER));
+        source[0] = use_glsl_150 ? vs_core_header : vs_legacy_header;
+        source[1] = vs_body;
+        GL_EXTCALL(glShaderSource(vs_id, 2, source, NULL));
+        GL_EXTCALL(glCompileShader(vs_id));
+        print_glsl_info_log(gl_info, vs_id, FALSE);
+        GL_EXTCALL(glAttachShader(ctx->test_program_id, vs_id));
+        GL_EXTCALL(glDeleteShader(vs_id));
+
+        fs_id = GL_EXTCALL(glCreateShader(GL_FRAGMENT_SHADER));
+        source[0] = use_glsl_150 ? fs_core : fs_legacy;
+        GL_EXTCALL(glShaderSource(fs_id, 1, source, NULL));
+        GL_EXTCALL(glCompileShader(fs_id));
+        print_glsl_info_log(gl_info, fs_id, FALSE);
+        GL_EXTCALL(glAttachShader(ctx->test_program_id, fs_id));
+        GL_EXTCALL(glDeleteShader(fs_id));
+
+        GL_EXTCALL(glBindAttribLocation(ctx->test_program_id, 0, "pos"));
+        GL_EXTCALL(glBindAttribLocation(ctx->test_program_id, 1, "color"));
+
+        if (use_glsl_150)
+            GL_EXTCALL(glBindFragDataLocation(ctx->test_program_id, 0, "fragment_color"));
+
+        GL_EXTCALL(glLinkProgram(ctx->test_program_id));
+        shader_glsl_validate_link(gl_info, ctx->test_program_id);
+#else
         vs_id = GL_EXTCALL(glCreateShader(GL_VERTEX_SHADER));
         source[0] = use_glsl_150 ? vs_core_header : vs_legacy_header;
         source[1] = vs_body;
@@ -2479,6 +2506,7 @@ static void draw_test_quad(struct wined3d_caps_gl_ctx *ctx, const struct wined3d
         print_glsl_info_log(gl_info, fs_id, FALSE);
         GL_EXTCALL(glLinkProgram(ctx->test_program_id));
         shader_glsl_validate_link(gl_info, ctx->test_program_id);
+#endif
     }
     GL_EXTCALL(glUseProgram(ctx->test_program_id));
 
