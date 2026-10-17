@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS Boot Video Driver for NEC PC-98 series
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Main file
- * COPYRIGHT:   Copyright 2020 Dmitry Borisov <di.sean@protonmail.com>
+ * COPYRIGHT:   Copyright 2020-2026 Dmitry Borisov <di.sean@protonmail.com>
  */
 
 /* INCLUDES *******************************************************************/
@@ -19,9 +19,10 @@
 static ULONG_PTR PegcControl = 0;
 ULONG_PTR FrameBuffer = 0;
 
-/* PRIVATE FUNCTIONS **********************************************************/
+/* FUNCTIONS ******************************************************************/
 
-static BOOLEAN
+static
+BOOLEAN
 GraphGetStatus(
     _In_ UCHAR Status)
 {
@@ -33,7 +34,8 @@ GraphGetStatus(
     return (Result & GRAPH_STATUS_SET) && (Result != 0xFF);
 }
 
-static BOOLEAN
+static
+BOOLEAN
 TestMmio(VOID)
 {
     USHORT OldValue, NewValue;
@@ -49,7 +51,8 @@ TestMmio(VOID)
     return !(NewValue & 0x80);
 }
 
-static BOOLEAN
+static
+BOOLEAN
 HasPegcController(VOID)
 {
     BOOLEAN Success;
@@ -66,7 +69,8 @@ HasPegcController(VOID)
     return Success;
 }
 
-static VOID
+static
+VOID
 TextSync(VOID)
 {
     while (READ_PORT_UCHAR((PUCHAR)GDC1_IO_i_STATUS) & GDC_STATUS_VSYNC)
@@ -76,7 +80,8 @@ TextSync(VOID)
         NOTHING;
 }
 
-static VOID
+static
+VOID
 InitializeDisplay(VOID)
 {
     SYNCPARAM SyncParameters;
@@ -242,7 +247,8 @@ InitializeDisplay(VOID)
     WRITE_PORT_UCHAR((PUCHAR)GRAPH_IO_o_RELAY, RelayState);
 }
 
-static VOID
+static
+VOID
 SetPaletteEntryRGB(
     _In_ ULONG Id,
     _In_ RGBQUAD Rgb)
@@ -263,93 +269,41 @@ InitPaletteWithTable(
 
     for (i = 0; i < Count; i++)
         SetPaletteEntryRGB(i, *Entry++);
+}
 
-    for (i = Count; i < PEGC_MAX_COLORS; i++)
+static
+VOID
+InitializePalette(VOID)
+{
+    ULONG i;
+
+    InitPaletteWithTable(VidpDefaultPalette, BV_MAX_COLORS);
+
+    for (i = BV_MAX_COLORS; i < PEGC_MAX_COLORS; i++)
         SetPaletteEntryRGB(i, VidpDefaultPalette[BV_COLOR_BLACK]);
 }
 
 VOID
-DisplayCharacter(
-    _In_ CHAR Character,
-    _In_ ULONG Left,
-    _In_ ULONG Top,
-    _In_ ULONG TextColor,
-    _In_ ULONG BackColor)
+ResetDisplay(
+    _In_ BOOLEAN SetMode)
 {
-    const UCHAR* FontChar = GetFontPtr(Character);
-    ULONG X, Y, PixelMask;
+    /* Reset the video mode with HAL if requested */
+    if (SetMode)
+        HalResetDisplay();
 
-    for (Y = Top;
-         Y < Top + BOOTCHAR_HEIGHT;
-         ++Y, FontChar += FONT_PTR_DELTA)
-    {
-        for (X = Left, PixelMask = 1 << (BOOTCHAR_WIDTH - 1);
-             X < Left + BOOTCHAR_WIDTH;
-             ++X, PixelMask >>= 1)
-        {
-            if (*FontChar & PixelMask)
-                SetPixel(X, Y, (UCHAR)TextColor);
-            else if (BackColor < BV_COLOR_NONE)
-                SetPixel(X, Y, (UCHAR)BackColor);
-        }
-    }
+    WRITE_PORT_UCHAR((PUCHAR)GDC1_IO_o_MODE_FLIPFLOP1, GRAPH_MODE_DISPLAY_DISABLE);
+
+    /* 640x480 256-color 31 kHz mode */
+    InitializeDisplay();
+
+    /* Re-initialize the palette and fill the screen black */
+    InitializePalette();
+    __stosd((PULONG)(FrameBuffer + FB_OFFSET(0, 0)),
+            0,
+            (SCREEN_WIDTH * SCREEN_HEIGHT) / sizeof(ULONG));
+
+    WRITE_PORT_UCHAR((PUCHAR)GDC1_IO_o_MODE_FLIPFLOP1, GRAPH_MODE_DISPLAY_ENABLE);
 }
-
-VOID
-PreserveRow(
-    _In_ ULONG CurrentTop,
-    _In_ ULONG Height,
-    _In_ BOOLEAN Restore)
-{
-    PULONG OldPosition, NewPosition;
-    ULONG PixelCount = Height * (SCREEN_WIDTH / sizeof(ULONG));
-
-    if (Restore)
-    {
-        /* Restore the row by copying back the contents saved off-screen */
-        OldPosition = (PULONG)(FrameBuffer + FB_OFFSET(0, SCREEN_HEIGHT));
-        NewPosition = (PULONG)(FrameBuffer + FB_OFFSET(0, CurrentTop));
-    }
-    else
-    {
-        /* Preserve the row by saving its contents off-screen */
-        OldPosition = (PULONG)(FrameBuffer + FB_OFFSET(0, CurrentTop));
-        NewPosition = (PULONG)(FrameBuffer + FB_OFFSET(0, SCREEN_HEIGHT));
-    }
-
-    while (PixelCount--)
-        WRITE_REGISTER_ULONG(NewPosition++, READ_REGISTER_ULONG(OldPosition++));
-}
-
-VOID
-DoScroll(
-    _In_ ULONG Scroll)
-{
-    USHORT i, Line;
-    PUCHAR Src, Dst;
-    PULONG SrcWide, DstWide;
-    USHORT PixelCount = (VidpScrollRegion.Right - VidpScrollRegion.Left) + 1;
-    ULONG_PTR SourceOffset = FrameBuffer + FB_OFFSET(VidpScrollRegion.Left, VidpScrollRegion.Top + Scroll);
-    ULONG_PTR DestinationOffset = FrameBuffer + FB_OFFSET(VidpScrollRegion.Left, VidpScrollRegion.Top);
-
-    for (Line = VidpScrollRegion.Top; Line <= VidpScrollRegion.Bottom; Line++)
-    {
-        SrcWide = (PULONG)SourceOffset;
-        DstWide = (PULONG)DestinationOffset;
-        for (i = 0; i < PixelCount / sizeof(ULONG); i++)
-            WRITE_REGISTER_ULONG(DstWide++, READ_REGISTER_ULONG(SrcWide++));
-
-        Src = (PUCHAR)SrcWide;
-        Dst = (PUCHAR)DstWide;
-        for (i = 0; i < PixelCount % sizeof(ULONG); i++)
-            WRITE_REGISTER_UCHAR(Dst++, READ_REGISTER_UCHAR(Src++));
-
-        SourceOffset += SCREEN_WIDTH;
-        DestinationOffset += SCREEN_WIDTH;
-    }
-}
-
-/* PUBLIC FUNCTIONS ***********************************************************/
 
 BOOLEAN
 NTAPI
@@ -391,27 +345,158 @@ VidCleanUp(VOID)
 }
 
 VOID
-ResetDisplay(
-    _In_ BOOLEAN SetMode)
+DisplayCharacter(
+    _In_ CHAR Character,
+    _In_ ULONG Left,
+    _In_ ULONG Top,
+    _In_ ULONG TextColor,
+    _In_ ULONG BackColor)
 {
-    PULONG PixelsPosition = (PULONG)(FrameBuffer + FB_OFFSET(0, 0));
-    ULONG PixelCount = ((SCREEN_WIDTH * SCREEN_HEIGHT) / sizeof(ULONG)) + 1;
+    const UCHAR* FontChar = GetFontPtr(Character);
+    ULONG_PTR StartOffset = FrameBuffer + FB_OFFSET(Left, Top);
+    ULONG X, Y;
 
-    /* Reset the video mode with HAL if requested */
-    if (SetMode)
-        HalResetDisplay();
+    for (Y = 0; Y < BOOTCHAR_HEIGHT; ++Y)
+    {
+        UCHAR PixelMask = 1 << (BOOTCHAR_WIDTH - 1);
+        PUCHAR Pixel = (PUCHAR)StartOffset;
 
-    WRITE_PORT_UCHAR((PUCHAR)GDC1_IO_o_MODE_FLIPFLOP1, GRAPH_MODE_DISPLAY_DISABLE);
+        for (X = 0; X < BOOTCHAR_WIDTH; ++X)
+        {
+            if (*FontChar & PixelMask)
+                *Pixel = (UCHAR)TextColor;
+            else if (BackColor < BV_COLOR_NONE)
+                *Pixel = (UCHAR)BackColor;
 
-    /* 640x480 256-color 31 kHz mode */
-    InitializeDisplay();
+            Pixel++;
+            PixelMask >>= 1;
+        }
 
-    /* Re-initialize the palette and fill the screen black */
-    InitializePalette();
-    while (PixelCount--)
-        WRITE_REGISTER_ULONG(PixelsPosition++, 0);
+        FontChar += FONT_PTR_DELTA;
+        StartOffset += SCREEN_WIDTH;
+    }
+}
 
-    WRITE_PORT_UCHAR((PUCHAR)GDC1_IO_o_MODE_FLIPFLOP1, GRAPH_MODE_DISPLAY_ENABLE);
+VOID
+PreserveRow(
+    _In_ ULONG CurrentTop,
+    _In_ ULONG Height,
+    _In_ BOOLEAN Restore)
+{
+    PULONG OldPosition, NewPosition;
+    ULONG PixelCount;
+
+    if (Restore)
+    {
+        /* Restore the row by copying back the contents saved off-screen */
+        OldPosition = (PULONG)(FrameBuffer + FB_OFFSET(0, SCREEN_HEIGHT));
+        NewPosition = (PULONG)(FrameBuffer + FB_OFFSET(0, CurrentTop));
+    }
+    else
+    {
+        /* Preserve the row by saving its contents off-screen */
+        OldPosition = (PULONG)(FrameBuffer + FB_OFFSET(0, CurrentTop));
+        NewPosition = (PULONG)(FrameBuffer + FB_OFFSET(0, SCREEN_HEIGHT));
+    }
+
+    PixelCount = Height * (SCREEN_WIDTH / sizeof(ULONG));
+    __movsd(NewPosition, OldPosition, PixelCount);
+}
+
+VOID
+DoScroll(
+    _In_ ULONG Scroll)
+{
+    const ULONG PixelCount = (VidpScrollRegion.Right - VidpScrollRegion.Left) + 1;
+    ULONG Line;
+    ULONG_PTR SourceOffset = FrameBuffer + FB_OFFSET(VidpScrollRegion.Left, VidpScrollRegion.Top + Scroll);
+    ULONG_PTR DestinationOffset = FrameBuffer + FB_OFFSET(VidpScrollRegion.Left, VidpScrollRegion.Top);
+
+    if (PixelCount == 0)
+        return;
+
+    for (Line = VidpScrollRegion.Top; Line <= VidpScrollRegion.Bottom; Line++)
+    {
+        ULONG_PTR Src = SourceOffset;
+        ULONG_PTR Dst = DestinationOffset;
+        ULONG Width = PixelCount;
+
+        while (Width > 0)
+        {
+            /* Note that Src and Dst have the same alignment */
+            if (((Src & 3) == 0) && (Width >= sizeof(ULONG)))
+            {
+                /* Copy 4 pixels at once */
+                while (Width >= sizeof(ULONG))
+                {
+                    /* Volatile to prevent the optimizer from replacing the loop by memcpy */
+                    *(volatile ULONG*)Dst = *(volatile ULONG*)Src;
+
+                    Dst += sizeof(ULONG);
+                    Src += sizeof(ULONG);
+                    Width -= sizeof(ULONG);
+                }
+            }
+            else
+            {
+                *(UCHAR*)Dst = *(UCHAR*)Src;
+
+                Dst++;
+                Src++;
+                Width--;
+            }
+        }
+
+        SourceOffset += SCREEN_WIDTH;
+        DestinationOffset += SCREEN_WIDTH;
+    }
+}
+
+static
+VOID
+SaveRowToBuffer(
+    _Out_ UCHAR* __restrict Buffer,
+    _In_ const ULONG* __restrict Pixels,
+    _In_ ULONG Width,
+    _In_ ULONG Shift)
+{
+    ULONG Px, Value = 0;
+
+    if (Shift != 0)
+    {
+        Px = *Pixels++;
+        Value = Px;
+    }
+
+    /* Read 4 pixels at once */
+    while (Width >= sizeof(USHORT))
+    {
+        Value >>= Shift;
+
+        if (Shift == 0 || Shift == 24)
+        {
+            Px = *Pixels++;
+
+            if (Shift == 24)
+                Value |= Px << 8;
+            else
+                Value = Px;
+        }
+        *Buffer++ = ((Value & 0x000F) << 4) | ((Value & 0x0F00) >> 8);
+        Value = Px;
+
+        Shift = (Shift + 16) & (32 - 1);
+
+        Width -= sizeof(USHORT);
+    }
+
+    if (Width != 0)
+    {
+        if (Shift == 0)
+            Value = *Pixels;
+        Value >>= Shift;
+        *Buffer = Value << 4;
+    }
 }
 
 VOID
@@ -424,24 +509,26 @@ VidScreenToBufferBlt(
     _In_ ULONG Height,
     _In_ ULONG Stride)
 {
-    ULONG X, Y;
-    PUCHAR OutputBuffer;
-    USHORT Px;
-    PUSHORT PixelsPosition;
+    ULONG_PTR StartOffset;
+    ULONG Offset, StartShift;
+    ULONG Y;
 
     /* Clear the destination buffer */
     RtlZeroMemory(Buffer, Height * Stride);
 
+    if ((Width == 0) || (Height == 0))
+        return;
+
+    Offset = FB_OFFSET(Left, Top);
+    StartOffset = FrameBuffer + (Offset & ~3);
+    StartShift = (Offset & 3) * 8;
+
     for (Y = 0; Y < Height; Y++)
     {
-        OutputBuffer = Buffer + Y * Stride;
-        PixelsPosition = (PUSHORT)(FrameBuffer + FB_OFFSET(Left, Top + Y));
+        SaveRowToBuffer(Buffer, (PULONG)StartOffset, Width, StartShift);
 
-        for (X = 0; X < Width; X += sizeof(USHORT))
-        {
-            Px = READ_REGISTER_USHORT(PixelsPosition++);
-            *OutputBuffer++ = (FIRSTBYTE(Px) << 4) | (SECONDBYTE(Px) & 0x0F);
-        }
+        Buffer += Stride;
+        StartOffset += SCREEN_WIDTH;
     }
 }
 
@@ -454,22 +541,41 @@ VidSolidColorFill(
     _In_ ULONG Bottom,
     _In_ UCHAR Color)
 {
-    USHORT i, Line;
-    PUCHAR PixelPtr;
-    PULONG PixelsPtr;
-    ULONG WideColor = (Color << 24) | (Color << 16) | (Color << 8) | Color;
-    USHORT PixelCount = (Right - Left) + 1;
+    const ULONG WideColor = Color * 0x01010101ul;
+    const ULONG PixelCount = (Right - Left) + 1;
+    ULONG Line;
     ULONG_PTR StartOffset = FrameBuffer + FB_OFFSET(Left, Top);
+
+    if ((Left > Right) || (PixelCount == 0))
+        return;
 
     for (Line = Top; Line <= Bottom; Line++)
     {
-        PixelsPtr = (PULONG)StartOffset;
-        for (i = 0; i < PixelCount / sizeof(ULONG); i++)
-            WRITE_REGISTER_ULONG(PixelsPtr++, WideColor);
+        ULONG_PTR Px = StartOffset;
+        ULONG Width = PixelCount;
 
-        PixelPtr = (PUCHAR)PixelsPtr;
-        for (i = 0; i < PixelCount % sizeof(ULONG); i++)
-            WRITE_REGISTER_UCHAR(PixelPtr++, Color);
+        while (Width > 0)
+        {
+            if (((Px & 3) == 0) && (Width >= sizeof(ULONG)))
+            {
+                /* Modify 4 pixels at once */
+                while (Width >= sizeof(ULONG))
+                {
+                    /* Volatile to prevent the optimizer from replacing the loop by memset */
+                    *(volatile ULONG*)Px = WideColor;
+
+                    Px += sizeof(ULONG);
+                    Width -= sizeof(ULONG);
+                }
+            }
+            else
+            {
+                *(PUCHAR)Px = (UCHAR)WideColor;
+
+                Px++;
+                Width--;
+            }
+        }
 
         StartOffset += SCREEN_WIDTH;
     }
