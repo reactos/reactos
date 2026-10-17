@@ -147,7 +147,7 @@ HWND* WIN_ListChildren (HWND hWndparent)
 
   Status = NtUserBuildHwndList(NULL, hWndparent, FALSE, 0, dwCount, NULL, &dwCount);
 
-  if ( !NT_SUCCESS( Status ) )
+  if ( !NT_SUCCESS( Status ) && Status != STATUS_BUFFER_TOO_SMALL)
     return 0;
 
   /* allocate buffer to receive HWND handles */
