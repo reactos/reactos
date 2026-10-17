@@ -32,9 +32,18 @@
 #include <windows.h>
 #include "msg.h"
 
-#define expect(expected, got) ok(expected == got, "Expected %d, got %d\n", expected, got);
-#define expect_hex(expected, got) ok(expected == got, "Expected %x, got %x\n", expected, got);
-#define expect_d(expected, got) ok(abs((expected) - (got)) <= 2, "Expected %d, got %d\n", expected, got);
+#define expect(expected,got) expect_(__LINE__, expected, got)
+static inline void expect_(unsigned line, DWORD expected, DWORD got)
+{
+    ok_(__FILE__, line)(expected == got, "Expected %ld, got %ld\n", expected, got);
+}
+
+#define expect_hex(expected,got) expect_hex_(__LINE__, expected, got)
+static inline void expect_hex_(unsigned line, DWORD expected, DWORD got)
+{
+    ok_(__FILE__, line)(expected == got, "Expected %lx, got %lx\n", expected, got);
+}
+#define expect_d(expected, got) ok(abs((expected) - (got)) <= 2, "Expected %ld, got %ld\n", expected, got);
 
 #define NUM_MSG_SEQUENCES   2
 #define PARENT_SEQ_INDEX    0
@@ -47,6 +56,7 @@ static BOOL (WINAPI *pInitCommonControlsEx)(const INITCOMMONCONTROLSEX*);
 static struct msg_sequence *sequences[NUM_MSG_SEQUENCES];
 
 static HWND parent_wnd;
+static BOOL got_MCN_SELECT, got_MCN_SELCHANGE;
 
 static const struct message create_parent_window_seq[] = {
     { WM_GETMINMAXINFO, sent },
@@ -61,8 +71,6 @@ static const struct message create_parent_window_seq[] = {
     { WM_ACTIVATEAPP, sent|wparam, 1 },
     { WM_NCACTIVATE, sent },
     { WM_ACTIVATE, sent|wparam, 1 },
-    { WM_IME_SETCONTEXT, sent|wparam|defwinproc|optional, 1 },
-    { WM_IME_NOTIFY, sent|defwinproc|optional },
     { WM_SETFOCUS, sent|wparam|defwinproc, 0 },
     /* Win9x adds SWP_NOZORDER below */
     { WM_WINDOWPOSCHANGED, sent, /*|wparam, SWP_SHOWWINDOW|SWP_NOSIZE|SWP_NOMOVE|SWP_NOCLIENTSIZE|SWP_NOCLIENTMOVE*/ },
@@ -275,7 +283,7 @@ static void test_monthcal(void)
     limits = SendMessageA(hwnd, MCM_GETRANGE, 0, (LPARAM)st);
     ok(limits == 0 ||
        broken(limits == GDTR_MIN), /* comctl32 <= 4.70 */
-       "No limits should be set (%d)\n", limits);
+       "No limits should be set (%ld)\n", limits);
     if (limits == GDTR_MIN)
     {
         win_skip("comctl32 <= 4.70 is broken\n");
@@ -308,7 +316,7 @@ static void test_monthcal(void)
     expect(0, st[1].wMilliseconds);
 
     limits = SendMessageA(hwnd, MCM_GETRANGE, 0, 0);
-    ok(limits == 0, "got %u\n", limits);
+    ok(limits == 0, "got %lu\n", limits);
 
     GetSystemTime(&st[0]);
     st[1] = st[0];
@@ -458,20 +466,22 @@ static void test_monthcal(void)
 
     /* 0 limit flags */
     limits = SendMessageA(hwnd, MCM_GETRANGE, 0, (LPARAM)st1);
-    ok(limits == GDTR_MIN, "got 0x%08x\n", limits);
+    ok(limits == GDTR_MIN, "got 0x%08lx\n", limits);
 
     GetSystemTime(st);
+    st[0].wDay = 25;
     st[1] = st[0];
     st[1].wYear++;
     r = SendMessageA(hwnd, MCM_SETRANGE, 0, (LPARAM)st);
     ok(r, "got %d\n", r);
 
     limits = SendMessageA(hwnd, MCM_GETRANGE, 0, (LPARAM)st);
-    ok(limits == 0, "got 0x%08x\n", limits);
+    ok(limits == 0, "got 0x%08lx\n", limits);
     ok(st[0].wYear == 0 && st[1].wYear == 0, "got %u, %u\n", st[0].wYear, st[1].wYear);
 
     /* flags are 0, set min limit */
     GetSystemTime(st);
+    st[0].wDay = 25;
     st[1] = st[0];
     st[1].wYear++;
 
@@ -479,7 +489,7 @@ static void test_monthcal(void)
     ok(r, "got %d\n", r);
 
     limits = SendMessageA(hwnd, MCM_GETRANGE, 0, (LPARAM)st1);
-    ok(limits == GDTR_MIN, "got 0x%08x\n", limits);
+    ok(limits == GDTR_MIN, "got 0x%08lx\n", limits);
     ok(st1[1].wYear == 0, "got %u\n", st1[1].wYear);
 
     /* now set max limit, check flags */
@@ -487,7 +497,7 @@ static void test_monthcal(void)
     ok(r, "got %d\n", r);
 
     limits = SendMessageA(hwnd, MCM_GETRANGE, 0, (LPARAM)st1);
-    ok(limits == GDTR_MAX, "got 0x%08x\n", limits);
+    ok(limits == GDTR_MAX, "got 0x%08lx\n", limits);
     ok(st1[0].wYear == 0, "got %u\n", st1[0].wYear);
 
     DestroyWindow(hwnd);
@@ -507,7 +517,9 @@ static LRESULT WINAPI parent_wnd_proc(HWND hwnd, UINT message, WPARAM wParam, LP
         message != WM_NCHITTEST &&
         message != WM_GETTEXT &&
         message != WM_GETICON &&
-        message != WM_DEVICECHANGE)
+        message != WM_DEVICECHANGE &&
+        message != WM_IME_SETCONTEXT &&
+        message != WM_IME_NOTIFY)
     {
         msg.message = message;
         msg.flags = sent|wparam|lparam;
@@ -544,6 +556,12 @@ static LRESULT WINAPI parent_wnd_proc(HWND hwnd, UINT message, WPARAM wParam, LP
 
             if(GetWindowLongPtrA(nmchg->nmhdr.hwndFrom, GWLP_ID) != SEL_NOTIFY_TEST_ID)
               break;
+
+            if (hdr->code == MCN_SELECT)
+                got_MCN_SELECT = TRUE;
+            else
+                got_MCN_SELCHANGE = TRUE;
+
             SendMessageA(nmchg->nmhdr.hwndFrom, is_multisel ? MCM_GETSELRANGE : MCM_GETCURSEL,
                     0, (LPARAM)st);
 
@@ -636,7 +654,7 @@ static LRESULT WINAPI monthcal_subclass_proc(HWND hwnd, UINT message, WPARAM wPa
          message == WM_STYLECHANGED) && lParam)
     {
         STYLESTRUCT *style = (STYLESTRUCT*)lParam;
-        trace("\told style: 0x%08x, new style: 0x%08x\n", style->styleOld, style->styleNew);
+        trace("\told style: 0x%08lx, new style: 0x%08lx\n", style->styleOld, style->styleNew);
     }
 
     defwndproc_counter++;
@@ -911,7 +929,7 @@ static void test_firstDay(void)
     SetLastError(0xdeadbeef);
     ret = GetLocaleInfoA(lcid, LOCALE_ICALENDARTYPE, caltype, 3);
     if (ret == 0) {
-        skip("Must know local calendar type (%x)\n", GetLastError());
+        skip("Must know local calendar type (%lx)\n", GetLastError());
         return;
     } else if (atoi(caltype) != CAL_GREGORIAN) {
         skip("MonthCalendar Control only supports Gregorian calendar (type: %s)\n", caltype);
@@ -1220,7 +1238,7 @@ if (0)
                     break;
 
                 todo_wine_if(title_hits[title_index].todo)
-                    ok(title_hits[title_index].ht == res, "Expected %x, got %x, pos %d\n",
+                    ok(title_hits[title_index].ht == res, "Expected %x, got %x, pos %ld\n",
                                                           title_hits[title_index].ht, res, x);
             }
             old_res = res;
@@ -1825,7 +1843,7 @@ static void test_hittest_v6(void)
     expect(0, mchit.rc.left);
     expect(0, mchit.rc.top);
     expect_d(r.right, mchit.rc.right);
-    ok(mchit.rc.bottom > 0, "got %d\n", mchit.rc.bottom);
+    ok(mchit.rc.bottom > 0, "got %ld\n", mchit.rc.bottom);
 
     /* between two calendars */
     MoveWindow(hwnd, 0, 0, r.right * 5/2, r.bottom, FALSE);
@@ -1891,7 +1909,7 @@ static void test_MCM_SIZERECTTOMIN(void)
     }
 
     ret = SendMessageA(hwnd, MCM_SIZERECTTOMIN, 0, 0);
-    ok(ret == 0, "got %d\n", ret);
+    ok(ret == 0, "got %ld\n", ret);
 
     SetRectEmpty(&r);
     ret = SendMessageA(hwnd, MCM_SIZERECTTOMIN, 0, (LPARAM)&r);
@@ -1901,18 +1919,18 @@ static void test_MCM_SIZERECTTOMIN(void)
         DestroyWindow(hwnd);
         return;
     }
-    ok(ret == 1, "got %d\n", ret);
-    ok(r.left == 0 && r.right > 0, "got %d, %d\n", r.left, r.right);
+    ok(ret == 1, "got %ld\n", ret);
+    ok(r.left == 0 && r.right > 0, "got %ld, %ld\n", r.left, r.right);
 
     r = r2;
     ret = SendMessageA(hwnd, MCM_SIZERECTTOMIN, 0, (LPARAM)&r);
-    ok(ret == 1, "got %d\n", ret);
+    ok(ret == 1, "got %ld\n", ret);
 
     r2.right = (r2.right - r2.left) * 3;
     r2.bottom = (r2.bottom - r2.top) * 3;
     r2.left = r2.top = 0;
     ret = SendMessageA(hwnd, MCM_SIZERECTTOMIN, 0, (LPARAM)&r2);
-    ok(ret == 1, "got %d\n", ret);
+    ok(ret == 1, "got %ld\n", ret);
 
     DestroyWindow(hwnd);
 }
@@ -1968,7 +1986,7 @@ static void test_daystate(void)
     /* try to switch on */
     SetWindowLongA(hwnd, GWL_STYLE, GetWindowLongA(hwnd, GWL_STYLE) | MCS_DAYSTATE);
     style = GetWindowLongA(hwnd, GWL_STYLE);
-    ok((style & MCS_DAYSTATE) == 0, "got 0x%08x\n", style);
+    ok((style & MCS_DAYSTATE) == 0, "got 0x%08lx\n", style);
 
     DestroyWindow(hwnd);
 
@@ -1990,7 +2008,7 @@ static void test_daystate(void)
     /* try to switch off */
     SetWindowLongA(hwnd, GWL_STYLE, GetWindowLongA(hwnd, GWL_STYLE) & ~MCS_DAYSTATE);
     style = GetWindowLongA(hwnd, GWL_STYLE);
-    ok((style & MCS_DAYSTATE) == MCS_DAYSTATE, "got 0x%08x\n", style);
+    ok((style & MCS_DAYSTATE) == MCS_DAYSTATE, "got 0x%08lx\n", style);
 
     DestroyWindow(hwnd);
 }
@@ -2005,7 +2023,7 @@ static void test_sel_notify(void)
 
     HWND hwnd;
     RECT rc;
-    MCHITTESTINFO mchit = {sizeof(MCHITTESTINFO)};
+    MCHITTESTINFO mchit = {MCHITTESTINFO_V1_SIZE};
     SYSTEMTIME st;
     Monthcal_style styles[] = {
         {MCS_NOTODAY,                    "MCS_NOTODAY"},
@@ -2023,17 +2041,33 @@ static void test_sel_notify(void)
         MoveWindow(hwnd, 0, 0, rc.right, rc.bottom, FALSE);
         /* Simulate mouse click on some unselected day to generate
             MCN_SELECT and MCN_SELCHANGE notifications */
-        mchit.pt.x = rc.right / 2;
-        mchit.pt.y = rc.bottom / 2;
-        SendMessageA(hwnd, MCM_HITTEST, 0, (LPARAM)&mchit);
+        mchit.pt.x = mchit.pt.y = 0;
         SendMessageA(hwnd, MCM_GETCURSEL, 0, (LPARAM)&st);
-        while(st.wDay == mchit.st.wDay) /* Ensure that mchit.pt points to unselected day */
+
+        do
         {
-            mchit.pt.y++;
+            /* we assume box for day is larger than 3x3 */
+            if ((mchit.pt.y += 3) >= rc.bottom)
+            {
+                mchit.pt.y = 0;
+                if ((mchit.pt.x += 3) >= rc.right) break;
+            }
             SendMessageA(hwnd, MCM_HITTEST, 0, (LPARAM)&mchit);
-        }
+        } while (mchit.uHit != MCHT_CALENDARDATE || st.wDay == mchit.st.wDay); /* Ensure that mchit.pt points to unselected day */
+        got_MCN_SELECT = got_MCN_SELCHANGE = FALSE;
         SendMessageA(hwnd, WM_LBUTTONDOWN, 0, MAKELPARAM(mchit.pt.x, mchit.pt.y));
+        if (styles[i].val & MCS_MULTISELECT)
+            ok(got_MCN_SELCHANGE, "%d: MCN_SELCHANGE should be sent\n", i);
+        else
+            ok(!got_MCN_SELCHANGE, "%d: MCN_SELCHANGE should not be sent\n", i);
+        ok(!got_MCN_SELECT, "%d: MCN_SELECT should not be sent\n", i);
+        got_MCN_SELECT = got_MCN_SELCHANGE = FALSE;
         SendMessageA(hwnd, WM_LBUTTONUP, 0, MAKELPARAM(mchit.pt.x, mchit.pt.y));
+        if (styles[i].val & MCS_MULTISELECT)
+            ok(!got_MCN_SELCHANGE, "%d: MCN_SELCHANGE should not be sent\n", i);
+        else
+            ok(got_MCN_SELCHANGE, "%d: MCN_SELCHANGE should be sent\n", i);
+        ok(got_MCN_SELECT, "%d: MCN_SELECT should be sent\n", i);
         DestroyWindow(hwnd);
     }
 }
