@@ -172,7 +172,7 @@ PortAllocateRequestReserve(
 
     FdoExtension->ReservedRequestReference =
         ExAllocatePoolWithTag(NonPagedPool,
-                              sizeof(*FdoExtension->ReservedRequestReference),
+                              REQUEST_REFERENCE_ALLOCATION_SIZE,
                               TAG_QUEUED_REQUEST);
     if (FdoExtension->ReservedRequestReference == NULL)
     {
@@ -237,6 +237,80 @@ PortFdoInterruptRoutine(
 
 
 static
+BOOLEAN
+NTAPI
+PortFdoMessageInterruptRoutine(
+    _In_ PKINTERRUPT Interrupt,
+    _In_ PVOID ServiceContext,
+    _In_ ULONG MessageId)
+{
+    PFDO_DEVICE_EXTENSION DeviceExtension;
+
+    UNREFERENCED_PARAMETER(Interrupt);
+
+    DeviceExtension = (PFDO_DEVICE_EXTENSION)ServiceContext;
+
+    return MiniportHwMSInterrupt(&DeviceExtension->Miniport, MessageId);
+}
+
+
+/**
+ * @brief Connects the adapter on message signaled interrupts, falling back to a line interrupt.
+ */
+static
+NTSTATUS
+NTAPI
+PortFdoConnectMessageInterrupt(
+    _In_ PFDO_DEVICE_EXTENSION DeviceExtension)
+{
+    IO_CONNECT_INTERRUPT_PARAMETERS Parameters;
+    NTSTATUS Status;
+
+    RtlZeroMemory(&Parameters, sizeof(Parameters));
+
+    Parameters.Version = CONNECT_MESSAGE_BASED;
+    Parameters.MessageBased.PhysicalDeviceObject = DeviceExtension->PhysicalDevice;
+    Parameters.MessageBased.ConnectionContext.InterruptMessageTable = &DeviceExtension->MessageInfo;
+    Parameters.MessageBased.MessageServiceRoutine = PortFdoMessageInterruptRoutine;
+    Parameters.MessageBased.ServiceContext = DeviceExtension;
+    Parameters.MessageBased.SpinLock = NULL;
+    Parameters.MessageBased.SynchronizeIrql = 0;
+    Parameters.MessageBased.FloatingSave = FALSE;
+    Parameters.MessageBased.FallBackServiceRoutine = PortFdoInterruptRoutine;
+
+    Status = IoConnectInterruptEx(&Parameters);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("IoConnectInterruptEx() failed (Status 0x%08lx)\n", Status);
+        return Status;
+    }
+
+    if (Parameters.Version == CONNECT_LINE_BASED)
+    {
+        /* No MSI, the line interrupt object came back in the same union */
+        DeviceExtension->Interrupt = (PKINTERRUPT)DeviceExtension->MessageInfo;
+        DeviceExtension->MessageInfo = NULL;
+
+        DPRINT1("Adapter fell back to a line interrupt\n");
+        return STATUS_SUCCESS;
+    }
+
+    DeviceExtension->MessageInterrupts = TRUE;
+    DeviceExtension->InterruptIrql = DeviceExtension->MessageInfo->UnifiedIrql;
+
+    /* The synchronization helpers work on a single interrupt object */
+    if (DeviceExtension->MessageInfo->MessageCount > 0)
+        DeviceExtension->Interrupt = DeviceExtension->MessageInfo->MessageInfo[0].InterruptObject;
+
+    DPRINT1("Connected %lu message interrupts at IRQL %lu\n",
+            DeviceExtension->MessageInfo->MessageCount,
+            DeviceExtension->InterruptIrql);
+
+    return STATUS_SUCCESS;
+}
+
+
+static
 NTSTATUS
 PortFdoConnectInterrupt(
     _In_ PFDO_DEVICE_EXTENSION DeviceExtension)
@@ -258,6 +332,10 @@ PortFdoConnectInterrupt(
         DPRINT("Checkpoint\n");
         return STATUS_SUCCESS;
     }
+
+    /* A miniport that can take messages gets them in preference to a line */
+    if (DeviceExtension->Miniport.PortConfig.HwMSInterruptRoutine != NULL)
+        return PortFdoConnectMessageInterrupt(DeviceExtension);
 
     /* Get the interrupt data from the resource list */
     Status = GetResourceListInterrupt(DeviceExtension,
@@ -303,6 +381,35 @@ PortFdoConnectInterrupt(
 
 
 static
+VOID
+NTAPI
+PortFdoDisconnectInterrupt(
+    _In_ PFDO_DEVICE_EXTENSION DeviceExtension)
+{
+    IO_DISCONNECT_INTERRUPT_PARAMETERS Parameters;
+
+    DPRINT("PortFdoDisconnectInterrupt(%p)\n", DeviceExtension);
+
+    if (DeviceExtension->MessageInterrupts)
+    {
+        Parameters.Version = CONNECT_MESSAGE_BASED;
+        Parameters.ConnectionContext.InterruptMessageTable = DeviceExtension->MessageInfo;
+        IoDisconnectInterruptEx(&Parameters);
+
+        DeviceExtension->MessageInterrupts = FALSE;
+        DeviceExtension->MessageInfo = NULL;
+    }
+    else if (DeviceExtension->Interrupt != NULL)
+    {
+        IoDisconnectInterrupt(DeviceExtension->Interrupt);
+    }
+
+    DeviceExtension->Interrupt = NULL;
+    DeviceExtension->InterruptIrql = 0;
+}
+
+
+static
 NTSTATUS
 PortFdoStartMiniport(
     _In_ PFDO_DEVICE_EXTENSION DeviceExtension)
@@ -313,16 +420,26 @@ PortFdoStartMiniport(
 
     DPRINT1("PortFdoStartMiniport(%p)\n", DeviceExtension);
 
-    /* Get the interface type of the lower device */
-    InterfaceType = GetBusInterface(DeviceExtension->LowerDevice);
+    /* Query the physical device, a filter may sit between us and it */
+    InterfaceType = GetBusInterface(DeviceExtension->PhysicalDevice);
     if (InterfaceType == InterfaceTypeUndefined)
-        return STATUS_NO_SUCH_DEVICE;
+    {
+        /* Only a virtual miniport, registered under Internal, can drive such a device */
+        DPRINT1("The bus this adapter sits on is unknown, trying Internal\n");
+        InterfaceType = Internal;
+    }
 
     /* Get the driver init data for the given interface type */
     InitData = PortGetDriverInitData(DeviceExtension->DriverExtension,
                                      InterfaceType);
     if (InitData == NULL)
+    {
+        DPRINT1("No init data registered for bus type %lu\n", InterfaceType);
         return STATUS_NO_SUCH_DEVICE;
+    }
+
+    /* The request path needs this even if no uncached extension is ever asked for */
+    DeviceExtension->HwInitData = InitData;
 
     /* Initialize the miniport */
     Status = MiniportInitialize(&DeviceExtension->Miniport,
@@ -341,6 +458,10 @@ PortFdoStartMiniport(
         DPRINT1("MiniportFindAdapter() failed (Status 0x%08lx)\n", Status);
         return Status;
     }
+
+    /* Find out which adapter control requests the miniport takes */
+    MiniportQueryAdapterControl(&DeviceExtension->Miniport);
+    MiniportQueryUnitControl(&DeviceExtension->Miniport);
 
     /* Connect the configured interrupt */
     Status = PortFdoConnectInterrupt(DeviceExtension);
@@ -472,7 +593,9 @@ static
 NTSTATUS
 PortSendReportLuns(
     _In_ PPDO_DEVICE_EXTENSION PdoExtension,
-    _Out_ PULONG LunCount)
+    _Out_ PULONG LunCount,
+    _Out_writes_(LunListSize) PUCHAR LunList,
+    _In_ ULONG LunListSize)
 {
     NTSTATUS Status;
     SCSI_REQUEST_BLOCK Srb;
@@ -561,10 +684,10 @@ PortSendReportLuns(
         /* Fill in CDB */
         Cdb = (PCDB)Srb.Cdb;
         Cdb->REPORT_LUNS.OperationCode = SCSIOP_REPORT_LUNS;
-        Cdb->REPORT_LUNS.AllocationLength[0] = (BufferSize >> (0*8)) & 0xFF;
-        Cdb->REPORT_LUNS.AllocationLength[1] = (BufferSize >> (1*8)) & 0xFF;
-        Cdb->REPORT_LUNS.AllocationLength[2] = (BufferSize >> (2*8)) & 0xFF;
-        Cdb->REPORT_LUNS.AllocationLength[3] = (BufferSize >> (3*8)) & 0xFF;
+        Cdb->REPORT_LUNS.AllocationLength[0] = (BufferSize >> (3*8)) & 0xFF;
+        Cdb->REPORT_LUNS.AllocationLength[1] = (BufferSize >> (2*8)) & 0xFF;
+        Cdb->REPORT_LUNS.AllocationLength[2] = (BufferSize >> (1*8)) & 0xFF;
+        Cdb->REPORT_LUNS.AllocationLength[3] = (BufferSize >> (0*8)) & 0xFF;
 
         /* Call the driver */
         Status = IoCallDriver(PdoExtension->Device, Irp);
@@ -586,14 +709,54 @@ PortSendReportLuns(
         if (SRB_STATUS(Srb.SrbStatus) == SRB_STATUS_SUCCESS)
         {
             ULONG DataSize = 0;
+            ULONG Reported;
+            ULONG Index;
 
-            /* Extract LUN count from the return data. This is the sole purpose of this function */
-            DataSize |= (((ULONG)ReportLunsData->LunListLength[0]) << (8*0));
-            DataSize |= (((ULONG)ReportLunsData->LunListLength[1]) << (8*1));
-            DataSize |= (((ULONG)ReportLunsData->LunListLength[2]) << (8*2));
-            DataSize |= (((ULONG)ReportLunsData->LunListLength[3]) << (8*3));
-            *LunCount = ((DataSize - FIELD_OFFSET(REPORT_LUNS_DATA, LunDescriptor)) /
-                         sizeof(LUN_DESCRIPTOR));
+            /* The reported length covers the descriptors alone */
+            DataSize |= (((ULONG)ReportLunsData->LunListLength[0]) << (8*3));
+            DataSize |= (((ULONG)ReportLunsData->LunListLength[1]) << (8*2));
+            DataSize |= (((ULONG)ReportLunsData->LunListLength[2]) << (8*1));
+            DataSize |= (((ULONG)ReportLunsData->LunListLength[3]) << (8*0));
+            Reported = DataSize / sizeof(*ReportLunsData->LunDescriptor);
+
+            /* A device with more units than the first guess held is asked again */
+            if ((DataSize > BufferSize - FIELD_OFFSET(REPORT_LUNS_DATA, LunDescriptor)) &&
+                !BufferReallocated)
+            {
+                ExFreePoolWithTag(ReportLunsData, TAG_REPORT_LUN_DATA);
+
+                BufferSize = FIELD_OFFSET(REPORT_LUNS_DATA, LunDescriptor) + DataSize;
+                ReportLunsData = ExAllocatePoolWithTag(NonPagedPool, BufferSize, TAG_REPORT_LUN_DATA);
+                if (ReportLunsData == NULL)
+                {
+                    DPRINT1("Cannot reallocate REPORT_LUNS buffer\n");
+                    ExFreePoolWithTag(SenseBuffer, TAG_SENSE_DATA);
+                    return STATUS_INSUFFICIENT_RESOURCES;
+                }
+
+                BufferReallocated = TRUE;
+                continue;
+            }
+
+            /* Only what actually arrived can be read back out */
+            Reported = min(Reported,
+                           (BufferSize - FIELD_OFFSET(REPORT_LUNS_DATA, LunDescriptor)) /
+                               sizeof(*ReportLunsData->LunDescriptor));
+
+            *LunCount = 0;
+            for (Index = 0; Index < Reported; Index++)
+            {
+                PLUN_DESCRIPTOR Descriptor = &ReportLunsData->LunDescriptor[Index];
+
+                /* Only units named the flat way fit in a single byte */
+                if (Descriptor->AddressMethod != 0)
+                    continue;
+
+                if (*LunCount >= LunListSize)
+                    break;
+
+                LunList[(*LunCount)++] = Descriptor->Level1Address;
+            }
 
             /* Quit the loop */
             Status = STATUS_SUCCESS;
@@ -649,10 +812,11 @@ PortSendReportLuns(
 
             /* Miniport will return how many bytes should we actually allocate */
             BufferSize = 0;
-            BufferSize |= (((ULONG)ReportLunsData->LunListLength[0]) << (8*0));
-            BufferSize |= (((ULONG)ReportLunsData->LunListLength[1]) << (8*1));
-            BufferSize |= (((ULONG)ReportLunsData->LunListLength[2]) << (8*2));
-            BufferSize |= (((ULONG)ReportLunsData->LunListLength[3]) << (8*3));
+            BufferSize |= (((ULONG)ReportLunsData->LunListLength[0]) << (8*3));
+            BufferSize |= (((ULONG)ReportLunsData->LunListLength[1]) << (8*2));
+            BufferSize |= (((ULONG)ReportLunsData->LunListLength[2]) << (8*1));
+            BufferSize |= (((ULONG)ReportLunsData->LunListLength[3]) << (8*0));
+            BufferSize += FIELD_OFFSET(REPORT_LUNS_DATA, LunDescriptor);
 
             DPRINT1("Data overrun at TargetId %d, %d bytes needed\n",
                    PdoExtension->Target,
@@ -922,9 +1086,12 @@ PortFdoScanBus(
     _In_ PFDO_DEVICE_EXTENSION DeviceExtension)
 {
     PPDO_DEVICE_EXTENSION PdoExtension;
-    ULONG Bus, Target; //, Lun;
+    ULONG Bus, Target, Index;
     NTSTATUS Status;
     ULONG LunCount = 0;
+
+    /* A unit named by one byte is all the flat addressing method carries */
+    UCHAR LunList[256];
 
     DPRINT("PortFdoScanBus(%p)\n", DeviceExtension);
 
@@ -944,38 +1111,47 @@ PortFdoScanBus(
 
             DPRINT("    Scanning logical unit %ld:%ld:%ld\n", Bus, Target, 0);
             Status = PortCreatePdo(DeviceExtension, Bus, Target, 0, &PdoExtension);
-            if (NT_SUCCESS(Status))
-            {
-                /* Send Report LUNs first */
-                PortSendReportLuns(PdoExtension, &LunCount);
+            if (!NT_SUCCESS(Status))
+                continue;
 
-                /* Scan LUN 0 */
+            /* Ask the target which units it has before probing any of them */
+            LunCount = 0;
+            PortSendReportLuns(PdoExtension, &LunCount, LunList, RTL_NUMBER_OF(LunList));
+
+            /* Scan LUN 0 */
+            Status = PortSendInquiry(PdoExtension);
+            DPRINT("PortSendInquiry returned 0x%08lx\n", Status);
+            if (!NT_SUCCESS(Status))
+            {
+                PortDeletePdo(PdoExtension);
+            }
+            else
+            {
+                DPRINT("VendorId: %.8s\n", PdoExtension->InquiryBuffer->VendorId);
+                DPRINT("ProductId: %.16s\n", PdoExtension->InquiryBuffer->ProductId);
+                DPRINT("ProductRevisionLevel: %.4s\n", PdoExtension->InquiryBuffer->ProductRevisionLevel);
+                DPRINT("VendorSpecific: %.20s\n", PdoExtension->InquiryBuffer->VendorSpecific);
+            }
+
+            /* Scan the rest of the units the target reported */
+            for (Index = 0; Index < LunCount; Index++)
+            {
+                ULONG Lun = LunList[Index];
+
+                /* Unit zero was done above, and the report may not name it */
+                if (Lun == 0)
+                    continue;
+
+                DPRINT("    Scanning logical unit %ld:%ld:%ld\n", Bus, Target, Lun);
+                Status = PortCreatePdo(DeviceExtension, Bus, Target, Lun, &PdoExtension);
+                if (!NT_SUCCESS(Status))
+                    continue;
+
                 Status = PortSendInquiry(PdoExtension);
                 DPRINT("PortSendInquiry returned 0x%08lx\n", Status);
                 if (!NT_SUCCESS(Status))
-                {
                     PortDeletePdo(PdoExtension);
-                }
-                else
-                {
-                    DPRINT("VendorId: %.8s\n", PdoExtension->InquiryBuffer->VendorId);
-                    DPRINT("ProductId: %.16s\n", PdoExtension->InquiryBuffer->ProductId);
-                    DPRINT("ProductRevisionLevel: %.4s\n", PdoExtension->InquiryBuffer->ProductRevisionLevel);
-                    DPRINT("VendorSpecific: %.20s\n", PdoExtension->InquiryBuffer->VendorSpecific);
-                }
             }
-
-#if 0
-            /* Scan all logical units */
-            for (Lun = 1; Lun < DeviceExtension->Miniport.PortConfig.MaximumNumberOfLogicalUnits; Lun++)
-            {
-                DPRINT("    Scanning logical unit %ld:%ld:%ld\n", Bus, Target, Lun);
-                Status = PortSendInquiry(DeviceExtension->Device, Bus, Target, Lun);
-                DPRINT("PortSendInquiry returned 0x%08lx\n", Status);
-                if (!NT_SUCCESS(Status))
-                    break;
-            }
-#endif
         }
     }
 
@@ -1074,18 +1250,20 @@ PortFdoFilterRequirements(
 }
 
 
+/**
+ * @brief Walks the PDO list for a unit, the caller keeps the list from changing.
+ */
+static
 PPDO_DEVICE_EXTENSION
-FdoFindLun(
+NTAPI
+FdoScanPdoList(
     _In_ PFDO_DEVICE_EXTENSION FdoExtension,
     _In_ ULONG Bus,
     _In_ ULONG Target,
     _In_ ULONG Lun)
 {
     PPDO_DEVICE_EXTENSION PdoExtension;
-    KLOCK_QUEUE_HANDLE LockHandle;
     PLIST_ENTRY PdoEntry;
-
-    KeAcquireInStackQueuedSpinLock(&FdoExtension->PdoListLock, &LockHandle);
 
     for (PdoEntry = FdoExtension->PdoListHead.Flink;
          PdoEntry != &FdoExtension->PdoListHead;
@@ -1096,13 +1274,198 @@ FdoFindLun(
         if (PdoExtension->Bus == Bus && PdoExtension->Target == Target &&
             PdoExtension->Lun == Lun)
         {
-            KeReleaseInStackQueuedSpinLock(&LockHandle);
             return PdoExtension;
         }
     }
 
-    KeReleaseInStackQueuedSpinLock(&LockHandle);
     return NULL;
+}
+
+
+PPDO_DEVICE_EXTENSION
+FdoFindLun(
+    _In_ PFDO_DEVICE_EXTENSION FdoExtension,
+    _In_ ULONG Bus,
+    _In_ ULONG Target,
+    _In_ ULONG Lun)
+{
+    PPDO_DEVICE_EXTENSION PdoExtension;
+    KLOCK_QUEUE_HANDLE LockHandle;
+
+    KeAcquireInStackQueuedSpinLock(&FdoExtension->PdoListLock, &LockHandle);
+    PdoExtension = FdoScanPdoList(FdoExtension, Bus, Target, Lun);
+    KeReleaseInStackQueuedSpinLock(&LockHandle);
+
+    return PdoExtension;
+}
+
+
+/**
+ * @brief Keeps every interrupt service routine of the adapter from running.
+ *
+ * @return The IRQL to hand back to PortFdoReleaseInterruptLocks.
+ */
+static
+KIRQL
+NTAPI
+PortFdoAcquireInterruptLocks(
+    _In_ PFDO_DEVICE_EXTENSION FdoExtension)
+{
+    KIRQL OldIrql;
+    ULONG Index;
+
+    OldIrql = KeGetCurrentIrql();
+
+    if (!FdoExtension->MessageInterrupts)
+    {
+        if (FdoExtension->Interrupt != NULL)
+            OldIrql = KeAcquireInterruptSpinLock(FdoExtension->Interrupt);
+
+        return OldIrql;
+    }
+
+    /* Each message has its own lock, a routine on any of them may be reading the list */
+    for (Index = 0; Index < FdoExtension->MessageInfo->MessageCount; Index++)
+    {
+        KIRQL Irql = KeAcquireInterruptSpinLock(FdoExtension->MessageInfo->MessageInfo[Index].InterruptObject);
+
+        if (Index == 0)
+            OldIrql = Irql;
+    }
+
+    return OldIrql;
+}
+
+
+static
+VOID
+NTAPI
+PortFdoReleaseInterruptLocks(
+    _In_ PFDO_DEVICE_EXTENSION FdoExtension,
+    _In_ KIRQL OldIrql)
+{
+    ULONG Index;
+
+    if (!FdoExtension->MessageInterrupts)
+    {
+        if (FdoExtension->Interrupt != NULL)
+            KeReleaseInterruptSpinLock(FdoExtension->Interrupt, OldIrql);
+
+        return;
+    }
+
+    /* Only the first lock taken drops back to the caller's IRQL */
+    for (Index = FdoExtension->MessageInfo->MessageCount; Index > 0; Index--)
+    {
+        KeReleaseInterruptSpinLock(FdoExtension->MessageInfo->MessageInfo[Index - 1].InterruptObject,
+                                   (Index == 1) ? OldIrql : KeGetCurrentIrql());
+    }
+}
+
+
+/**
+ * @brief Tells the miniport to stop the adapter with its interrupt service routines held off.
+ */
+static
+VOID
+NTAPI
+PortFdoStopAdapter(
+    _In_ PFDO_DEVICE_EXTENSION FdoExtension)
+{
+    KIRQL OldIrql;
+
+    OldIrql = PortFdoAcquireInterruptLocks(FdoExtension);
+    MiniportAdapterControl(&FdoExtension->Miniport, ScsiStopAdapter, NULL);
+    PortFdoReleaseInterruptLocks(FdoExtension, OldIrql);
+}
+
+
+/**
+ * @brief Finds a unit from an interrupt service routine or any other caller above DISPATCH_LEVEL.
+ */
+PPDO_DEVICE_EXTENSION
+NTAPI
+FdoFindLunAboveDispatch(
+    _In_ PFDO_DEVICE_EXTENSION FdoExtension,
+    _In_ ULONG Bus,
+    _In_ ULONG Target,
+    _In_ ULONG Lun)
+{
+    PPDO_DEVICE_EXTENSION PdoExtension;
+    KIRQL OldIrql;
+
+    /* At device IRQL the caller is an ISR or synchronized routine and already holds a lock */
+    if (KeGetCurrentIrql() >= FdoExtension->InterruptIrql)
+        return FdoScanPdoList(FdoExtension, Bus, Target, Lun);
+
+    OldIrql = PortFdoAcquireInterruptLocks(FdoExtension);
+    PdoExtension = FdoScanPdoList(FdoExtension, Bus, Target, Lun);
+    PortFdoReleaseInterruptLocks(FdoExtension, OldIrql);
+
+    return PdoExtension;
+}
+
+
+/**
+ * @brief Adds a PDO where both the list lock and the interrupt service routines respect it.
+ */
+VOID
+NTAPI
+PortFdoLinkPdo(
+    _Inout_ PFDO_DEVICE_EXTENSION FdoExtension,
+    _Inout_ PPDO_DEVICE_EXTENSION PdoExtension)
+{
+    KLOCK_QUEUE_HANDLE LockHandle;
+    KIRQL OldIrql;
+
+    KeAcquireInStackQueuedSpinLock(&FdoExtension->PdoListLock, &LockHandle);
+    OldIrql = PortFdoAcquireInterruptLocks(FdoExtension);
+
+    InsertHeadList(&FdoExtension->PdoListHead, &PdoExtension->PdoListEntry);
+    FdoExtension->PdoCount++;
+
+    PortFdoReleaseInterruptLocks(FdoExtension, OldIrql);
+    KeReleaseInStackQueuedSpinLock(&LockHandle);
+}
+
+
+VOID
+NTAPI
+PortFdoUnlinkPdo(
+    _Inout_ PFDO_DEVICE_EXTENSION FdoExtension,
+    _Inout_ PPDO_DEVICE_EXTENSION PdoExtension)
+{
+    KLOCK_QUEUE_HANDLE LockHandle;
+    KIRQL OldIrql;
+
+    KeAcquireInStackQueuedSpinLock(&FdoExtension->PdoListLock, &LockHandle);
+    OldIrql = PortFdoAcquireInterruptLocks(FdoExtension);
+
+    RemoveEntryList(&PdoExtension->PdoListEntry);
+    FdoExtension->PdoCount--;
+
+    PortFdoReleaseInterruptLocks(FdoExtension, OldIrql);
+    KeReleaseInStackQueuedSpinLock(&LockHandle);
+}
+
+
+VOID
+NTAPI
+PortFdoBusChangeDpc(
+    _In_ PKDPC Dpc,
+    _In_opt_ PVOID DeferredContext,
+    _In_opt_ PVOID SystemArgument1,
+    _In_opt_ PVOID SystemArgument2)
+{
+    PFDO_DEVICE_EXTENSION FdoExtension = (PFDO_DEVICE_EXTENSION)DeferredContext;
+
+    UNREFERENCED_PARAMETER(Dpc);
+    UNREFERENCED_PARAMETER(SystemArgument1);
+    UNREFERENCED_PARAMETER(SystemArgument2);
+
+    DPRINT1("Bus change, invalidating bus relations\n");
+
+    IoInvalidateDeviceRelations(FdoExtension->PhysicalDevice, BusRelations);
 }
 
 
@@ -1167,9 +1530,17 @@ PortFdoPnp(
 
         case IRP_MN_REMOVE_DEVICE: /* 0x02 */
             DPRINT1("IRP_MJ_PNP / IRP_MN_REMOVE_DEVICE\n");
+            PortFdoStopAdapter(DeviceExtension);
+            PortFdoDisconnectInterrupt(DeviceExtension);
+
+            /* Nothing may tell PnP about this adapter once it is gone */
+            KeRemoveQueueDpc(&DeviceExtension->BusChangeDpc);
+            KeFlushQueuedDpcs();
+            MiniportFreeAdapterResources(&DeviceExtension->Miniport);
             PortFlushStarvedRequests(DeviceExtension);
             PortFreeRequestReserve(DeviceExtension);
             ExDeleteNPagedLookasideList(&DeviceExtension->RequestReferenceLookaside);
+            DeviceExtension->PnpState = dsRemoved;
             break;
 
         case IRP_MN_CANCEL_REMOVE_DEVICE: /* 0x03 */
@@ -1178,6 +1549,10 @@ PortFdoPnp(
 
         case IRP_MN_STOP_DEVICE: /* 0x04 */
             DPRINT1("IRP_MJ_PNP / IRP_MN_STOP_DEVICE\n");
+            PortFdoStopAdapter(DeviceExtension);
+            PortFdoDisconnectInterrupt(DeviceExtension);
+            MiniportFreeAdapterResources(&DeviceExtension->Miniport);
+            DeviceExtension->PnpState = dsStopped;
             break;
 
         case IRP_MN_QUERY_STOP_DEVICE: /* 0x05 */

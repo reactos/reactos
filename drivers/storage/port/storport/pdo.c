@@ -27,6 +27,7 @@ PortCreatePdo(
 {
     PPDO_DEVICE_EXTENSION DeviceExtension = NULL;
     PDEVICE_OBJECT Pdo = NULL;
+    STOR_ADDR_BTL8 Address;
     NTSTATUS Status;
 
     DPRINT("PortCreatePdo(%p %p)\n",
@@ -59,11 +60,21 @@ PortCreatePdo(
     DeviceExtension->FdoExtension = FdoDeviceExtension;
     DeviceExtension->PnpState = dsStopped;
 
-    /* Add the PDO to the PDO list*/
-    StorpInterlockedInsertHeadListCounted(&FdoDeviceExtension->PdoListLock,
-                                          &FdoDeviceExtension->PdoListHead,
-                                          &DeviceExtension->PdoListEntry,
-                                          &FdoDeviceExtension->PdoCount);
+    /* Allocate the miniport's per unit extension before the unit is reachable */
+    if (FdoDeviceExtension->HwInitData != NULL &&
+        FdoDeviceExtension->HwInitData->SpecificLuExtensionSize != 0)
+    {
+        DeviceExtension->LunExtension =
+            ExAllocatePoolZero(NonPagedPool,
+                               FdoDeviceExtension->HwInitData->SpecificLuExtensionSize,
+                               TAG_LUN_EXTENSION);
+        if (DeviceExtension->LunExtension == NULL)
+        {
+            DPRINT1("No pool for the unit extension\n");
+            IoDeleteDevice(Pdo);
+            return STATUS_INSUFFICIENT_RESOURCES;
+        }
+    }
 
     DeviceExtension->Bus = Bus;
     DeviceExtension->Target = Target;
@@ -95,6 +106,13 @@ PortCreatePdo(
 
     DeviceExtension->SpecialRequestCounter = 0; /* FIXME: DELETE AFTER DEBUG */
 
+    /* Add the PDO to the PDO list only once a lookup can match its address */
+    PortFdoLinkPdo(FdoDeviceExtension, DeviceExtension);
+
+    /* Let the miniport know the unit is coming up */
+    StorpBuildUnitAddress(DeviceExtension, &Address);
+    MiniportUnitControl(&FdoDeviceExtension->Miniport, ScsiUnitStart, &Address);
+
     /* The device has been initialized */
     Pdo->Flags &= ~DO_DEVICE_INITIALIZING;
 
@@ -108,17 +126,28 @@ NTSTATUS
 PortDeletePdo(
     _In_ PPDO_DEVICE_EXTENSION PdoExtension)
 {
+    STOR_ADDR_BTL8 Address;
+
     DPRINT("PortDeletePdo(%p)\n", PdoExtension);
 
+    /* Tell the miniport before the unit goes away under it */
+    StorpBuildUnitAddress(PdoExtension, &Address);
+    MiniportUnitControl(&PdoExtension->FdoExtension->Miniport, ScsiUnitRemove, &Address);
+
     /* Remove the PDO from the PDO list*/
-    StorpInterlockedRemoveEntryListCounted(&PdoExtension->FdoExtension->PdoListLock,
-                                           &PdoExtension->PdoListEntry,
-                                           &PdoExtension->FdoExtension->PdoCount);
+    PortFdoUnlinkPdo(PdoExtension->FdoExtension, PdoExtension);
 
     if (PdoExtension->InquiryBuffer)
     {
         ExFreePoolWithTag(PdoExtension->InquiryBuffer, TAG_INQUIRY_DATA);
         PdoExtension->InquiryBuffer = NULL;
+    }
+
+    /* The miniport was just told the unit is going, so what it kept goes too */
+    if (PdoExtension->LunExtension)
+    {
+        ExFreePoolWithTag(PdoExtension->LunExtension, TAG_LUN_EXTENSION);
+        PdoExtension->LunExtension = NULL;
     }
 
 

@@ -37,6 +37,12 @@ StorpSrbInitRequestReference(
     RequestReference->TimeoutCounter = Srb->TimeOutValue;
 
     RequestReference->PdoExtension = PdoExtension;
+
+    if (PdoExtension->FdoExtension->Miniport.PortConfig.SrbType == SRB_TYPE_STORAGE_REQUEST_BLOCK)
+    {
+        RequestReference->ExtendedRequest = (PEXTENDED_REQUEST)(RequestReference + 1);
+        RtlZeroMemory(RequestReference->ExtendedRequest, sizeof(*RequestReference->ExtendedRequest));
+    }
 }
 
 /**
@@ -175,6 +181,7 @@ PortPdoAfterBuildingScatterGatherList(
     PVOID MiniportExtension;
     PHW_INITIALIZATION_DATA HwInitData;
     PQUEUED_REQUEST_REFERENCE RequestReference;
+    PSCSI_REQUEST_BLOCK MiniportSrb;
     BOOLEAN CanStartIo = TRUE;
     KIRQL OldIrql;
 
@@ -186,6 +193,17 @@ PortPdoAfterBuildingScatterGatherList(
     /* Save our SG List */
     RequestReference->ScatterGatherList = (PSTOR_SCATTER_GATHER_LIST)ScatterGatherList;
 
+    /* Translate last, once the tag and SRB extension are final */
+    if (RequestReference->ExtendedRequest != NULL)
+    {
+        StorpBuildExtendedSrb(RequestReference->Srb, RequestReference->ExtendedRequest);
+        MiniportSrb = (PSCSI_REQUEST_BLOCK)RequestReference->ExtendedRequest;
+    }
+    else
+    {
+        MiniportSrb = RequestReference->Srb;
+    }
+
     /* BuildIo and StartIo are called on DISPATCH_LEVEL */
     OldIrql = KfRaiseIrql(DISPATCH_LEVEL);
 
@@ -193,7 +211,7 @@ PortPdoAfterBuildingScatterGatherList(
         /* Call BuildIo, if one is provided */
         if (HwInitData->HwBuildIo)
         {
-            CanStartIo = HwInitData->HwBuildIo(MiniportExtension, RequestReference->Srb);
+            CanStartIo = HwInitData->HwBuildIo(MiniportExtension, MiniportSrb);
         }
 
         /* If BuildIo says the request processing shall stop here, no more processing is needed */
@@ -202,7 +220,7 @@ PortPdoAfterBuildingScatterGatherList(
             break;
         }
 
-        HwInitData->HwStartIo(MiniportExtension, RequestReference->Srb);
+        HwInitData->HwStartIo(MiniportExtension, MiniportSrb);
     }
     while (0);
 
@@ -335,6 +353,19 @@ PortPdoIssueRequest(
             MmProbeAndLockPages(Irp->MdlAddress, KernelMode, IoModifyAccess);
         }
 
+        RequestReference->WriteToDevice =
+            TEST_FLAG(RequestReference->Srb->SrbFlags, SRB_FLAGS_DATA_OUT);
+
+        /* A virtual miniport has no DMA adapter and moves the buffer itself through the MDL */
+        if (FdoExtension->Miniport.IsVirtual)
+        {
+            PortPdoAfterBuildingScatterGatherList(FdoExtension->Device,
+                                                  RequestReference->Irp,
+                                                  NULL,
+                                                  RequestReference);
+            return STATUS_PENDING;
+        }
+
         /* Following call requires DISPATCH_LEVEL. */
         OldIrql = KfRaiseIrql(DISPATCH_LEVEL);
 
@@ -342,8 +373,6 @@ PortPdoIssueRequest(
         /* FIXME: I don't know if we actually hit it */
         NT_ASSERT((RequestReference->Srb->SrbFlags & SRB_FLAGS_UNSPECIFIED_DIRECTION) !=
                   SRB_FLAGS_UNSPECIFIED_DIRECTION);
-        RequestReference->WriteToDevice =
-            TEST_FLAG(RequestReference->Srb->SrbFlags, SRB_FLAGS_DATA_OUT);
 
         FdoExtension->DmaAdapter->DmaOperations->
             GetScatterGatherList(FdoExtension->DmaAdapter,
@@ -623,7 +652,7 @@ PortPdoScsi(
             PortPdoScheduleRequestNoFlowControl(FdoExtension, RequestReference);
 
             /* Fire up the request immediately */
-            PortPdoIssueRequest(PdoExtension, RequestReference);
+            Status = PortPdoIssueRequest(PdoExtension, RequestReference);
 
             break;
         }
@@ -774,17 +803,13 @@ PortCompleteRequest(
                                  (PSCATTER_GATHER_LIST)RequestReference->ScatterGatherList,
                                  RequestReference->WriteToDevice);
         RequestReference->ScatterGatherList = NULL;
+    }
 
-        // /* Release pages we locked for DMA, if we actually have locked it */
-        // if (RequestReference->MappedSystemVa != NULL)
-        // {
-        //     MmUnmapLockedPages(RequestReference->MappedSystemVa, RequestReference->Irp->MdlAddress);
-        // }
-        /* Unlock the pages locked for DMA */
-        if (RequestReference->MappedSystemVa)
-        {
-            MmUnlockPages(RequestReference->Irp->MdlAddress);
-        }
+    /* A virtual miniport never built a list, so this cannot hang off one */
+    if (RequestReference->MappedSystemVa)
+    {
+        MmUnlockPages(RequestReference->Irp->MdlAddress);
+        RequestReference->MappedSystemVa = NULL;
     }
 
     /* Check if we need to interact with flow control. */
