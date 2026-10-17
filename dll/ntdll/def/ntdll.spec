@@ -344,7 +344,7 @@
 @ stdcall -stub -version=0x600+ NtGetMUIRegistryInfo(long ptr ptr)
 @ stdcall -version=0x600+ NtGetNextProcess(ptr long long long ptr)
 @ stdcall -version=0x600+ NtGetNextThread(ptr ptr long long long ptr)
-@ stdcall -version=0x600+ NtGetNlsSectionPtr(long long ptr ptr ptr)
+@ stdcall NtGetNlsSectionPtr(long long ptr ptr ptr)
 @ stdcall -stub -version=0x600+ NtGetNotificationResourceManager(ptr ptr long ptr ptr long long)
 @ stdcall NtGetPlugPlayEvent(long long ptr long)
 @ stdcall NtGetTickCount() RtlGetTickCount
