@@ -106,11 +106,23 @@ PerformRedirection(REDIRECTION *RedirList)
         }
         else
         {
+            DWORD dwDesiredAccess = RedirParams[Redir->Mode].dwDesiredAccess;
+            DWORD dwShareMode = RedirParams[Redir->Mode].dwShareMode;
+            DWORD dwCreationDisposition = RedirParams[Redir->Mode].dwCreationDisposition;
+
+            /* Communications ports (COM1..COM9, \\.\COMx) require exclusive access and OPEN_EXISTING */
+            if ((_tcsnicmp(Filename, _T("COM"), 3) == 0 && Filename[3] >= 0x31 && Filename[3] <= 0x39) ||
+                (_tcsnicmp(Filename, _T("\\\\.\\COM"), 7) == 0))
+            {
+                dwShareMode = 0;
+                dwCreationDisposition = OPEN_EXISTING;
+            }
+
             hNew = CreateFile(Filename,
-                              RedirParams[Redir->Mode].dwDesiredAccess,
-                              RedirParams[Redir->Mode].dwShareMode,
+                              dwDesiredAccess,
+                              dwShareMode,
                               &SecAttr,
-                              RedirParams[Redir->Mode].dwCreationDisposition,
+                              dwCreationDisposition,
                               0,
                               NULL);
         }

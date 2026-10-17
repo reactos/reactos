@@ -3341,7 +3341,7 @@ TREEVIEW_SendExpanded(const TREEVIEW_INFO *infoPtr, TREEVIEW_ITEM *item,
  * bRemoveChildren corresponds to TVE_COLLAPSERESET. */
 static BOOL
 TREEVIEW_Collapse(TREEVIEW_INFO *infoPtr, TREEVIEW_ITEM *item,
-		  BOOL bRemoveChildren, BOOL bUser)
+             BOOL bRemoveChildren, BOOL bUser)
 {
     UINT action = TVE_COLLAPSE | (bRemoveChildren ? TVE_COLLAPSERESET : 0);
     BOOL bSetSelection, bSetFirstVisible;
@@ -3349,6 +3349,10 @@ TREEVIEW_Collapse(TREEVIEW_INFO *infoPtr, TREEVIEW_ITEM *item,
     LONG scrollDist = 0;
     TREEVIEW_ITEM *nextItem = NULL, *tmpItem;
     BOOL wasExpanded;
+
+if (!item || !TREEVIEW_ValidItem(infoPtr, item))
+        return FALSE;
+
 
     TRACE("TVE_COLLAPSE %p %s\n", item, TREEVIEW_ItemName(item));
 
@@ -3602,6 +3606,9 @@ static BOOL
 TREEVIEW_Toggle(TREEVIEW_INFO *infoPtr, TREEVIEW_ITEM *item, BOOL user)
 {
     TRACE("item=%p, user=%d\n", item, user);
+
+    if (!item || !TREEVIEW_ValidItem(infoPtr, item))
+        return FALSE;
 
     if (item->state & TVIS_EXPANDED)
 	return TREEVIEW_Collapse(infoPtr, item, FALSE, user);

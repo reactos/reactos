@@ -305,8 +305,11 @@ UhciQueryEndpointRequirements(IN PVOID uhciExtension,
 
         case USBPORT_TRANSFER_TYPE_CONTROL:
             DPRINT("UhciQueryEndpointRequirements: ControlTransfer\n");
-            TdCount = EndpointProperties->MaxTransferSize /
-                      EndpointProperties->TotalMaxPacketSize;
+
+            {
+                ULONG MaxPacket = EndpointProperties->TotalMaxPacketSize ? EndpointProperties->TotalMaxPacketSize : 8;
+                TdCount = EndpointProperties->MaxTransferSize / MaxPacket;
+            }
 
             TdCount += 2; // First + Last TDs
 
@@ -318,8 +321,11 @@ UhciQueryEndpointRequirements(IN PVOID uhciExtension,
 
         case USBPORT_TRANSFER_TYPE_BULK:
             DPRINT("UhciQueryEndpointRequirements: BulkTransfer\n");
-            TdCount = 2 * UHCI_MAX_BULK_TRANSFER_SIZE /
-                      EndpointProperties->TotalMaxPacketSize;
+
+            {
+                ULONG MaxPacket = EndpointProperties->TotalMaxPacketSize ? EndpointProperties->TotalMaxPacketSize : 64;
+                TdCount = 2 * UHCI_MAX_BULK_TRANSFER_SIZE / MaxPacket;
+            }
 
             EndpointRequirements->HeaderBufferSize = sizeof(UHCI_HCD_QH) +
                                                      TdCount * sizeof(UHCI_HCD_TD);
@@ -1191,7 +1197,7 @@ UhciMapAsyncTransferToTDs(IN PUHCI_EXTENSION UhciExtension,
             TD->HwTD.ControlStatus.Status = UHCI_TD_STS_ACTIVE;
             TD->HwTD.ControlStatus.ErrorCounter = 3;
             TD->HwTD.ControlStatus.ActualLength = UHCI_TD_LENGTH_NULL;
-            TD->HwTD.ControlStatus.ShortPacketDetect = 1;
+            TD->HwTD.ControlStatus.ShortPacketDetect = (PIDCode == UHCI_TD_PID_IN);
 
             TD->HwTD.Token.AsULONG = 0;
             TD->HwTD.Token.Endpoint = EndpointAddress;
@@ -1208,8 +1214,7 @@ UhciMapAsyncTransferToTDs(IN PUHCI_EXTENSION UhciExtension,
             TD->NextHcdTD = 0;
             TD->UhciTransfer = UhciTransfer;
 
-            if (!IsLastTd)
-                ASSERT(FALSE);
+
 
             PhysicalAddress += LengthThisTD;
             LengthMapped += LengthThisTD;
@@ -2618,7 +2623,11 @@ UhciSetEndpointDataToggle(IN PVOID uhciExtension,
                           IN PVOID uhciEndpoint,
                           IN ULONG DataToggle)
 {
-    DPRINT_IMPL("UhciSetEndpointDataToggle: UNIMPLEMENTED. FIXME\n");
+    PUHCI_ENDPOINT UhciEndpoint = uhciEndpoint;
+
+    DPRINT("UhciSetEndpointDataToggle: DataToggle - %x\n", DataToggle);
+
+    UhciEndpoint->DataToggle = (BOOL)DataToggle;
 }
 
 VOID

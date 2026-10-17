@@ -22,8 +22,8 @@ extern USBPORT_REGISTRATION_PACKET RegPacket;
 #define UHCI_MAX_HC_SCHEDULE_ERRORS        16
 
 #define UHCI_MAX_ISO_TRANSFER_SIZE         0x10000
-#define UHCI_MAX_BULK_TRANSFER_SIZE        0x1000
-//#define UHCI_MAX_BULK_TRANSFER_SIZE        0x10000 // Hack for testing w/o Split Transfers
+//#define UHCI_MAX_BULK_TRANSFER_SIZE        0x1000
+#define UHCI_MAX_BULK_TRANSFER_SIZE        0x10000 // Hack for testing w/o Split Transfers
 #define UHCI_MAX_ISO_TD_COUNT              256
 #define UHCI_MAX_INTERRUPT_TD_COUNT        8
 
