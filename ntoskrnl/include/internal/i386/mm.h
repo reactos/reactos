@@ -198,7 +198,7 @@ C_ASSERT(PD_COUNT == 1);
 
 /* Check P*E boundaries */
 #define MiIsPteOnPdeBoundary(PointerPte) \
-    ((((ULONG_PTR)PointerPte) & (PAGE_SIZE - 1)) == 0)
+    ((((ULONG_PTR)(PointerPte)) & (PAGE_SIZE - 1)) == 0)
 
 //
 // Decodes a Prototype PTE into the underlying PTE
