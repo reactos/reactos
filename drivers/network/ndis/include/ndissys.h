@@ -28,6 +28,8 @@
 
 #define NDIS_TAG 'SIDN' // "NDIS"
 
+#define TAG_CONFIG 'FCDN'
+
 #define MIN(value1, value2) \
     ((value1 < value2)? value1 : value2)
 
