@@ -7800,7 +7800,6 @@ BOOL WINAPI DECLSPEC_HOTPATCH SetProcessPreferredUILanguages( DWORD flags, PCZZW
 {
     return set_ntstatus( RtlSetProcessPreferredUILanguages( flags, buffer, count ));
 }
-#endif
 
 
 /***********************************************************************
@@ -7810,6 +7809,7 @@ BOOL WINAPI DECLSPEC_HOTPATCH SetThreadPreferredUILanguages( DWORD flags, PCZZWS
 {
     return set_ntstatus( RtlSetThreadPreferredUILanguages( flags, buffer, count ));
 }
+#endif
 
 
 /***********************************************************************
