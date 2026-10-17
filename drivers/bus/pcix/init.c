@@ -850,7 +850,7 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
     PWCHAR StartOptions;
     UNICODE_STRING OptionString, PciLockString;
     NTSTATUS Status;
-    DPRINT1("PCIX - DriverEntry!\n");
+    DPRINT("PCIX - DriverEntry!\n");
 
     /* Setup initial loop variables */
     KeyHandle = NULL;
@@ -1001,7 +1001,7 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
 
         /* Check if this is a Datacenter SKU, which impacts IRQ alignment */
         PciRunningDatacenter = PciIsDatacenter();
-        if (PciRunningDatacenter) DPRINT1("PCIX - Running on datacenter build\n");
+        if (PciRunningDatacenter) DPRINT("PCIX - Running on datacenter build\n");
 
         /* Check if the system has an ACPI Hardware Watchdog Timer */
         //WdTable = PciGetAcpiTable(WDRT_SIGNATURE);
