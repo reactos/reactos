@@ -208,14 +208,17 @@ STRINGTABLE
 BEGIN
     IDS_STATUS_YES "Да"
     IDS_STATUS_NO "Нет"
-    IDS_STATUS_DISK_HEALTHY "Исправен"
-    IDS_STATUS_DISK_SICK "Не исправен"
-    IDS_STATUS_UNAVAILABLE "НЕДОСТУПЕН"
     IDS_STATUS_ONLINE "В сети"
     IDS_STATUS_OFFLINE "Вне сети"
-    IDS_STATUS_NO_MEDIA "Нет носителя"
-    IDS_INFO_BOOT "Boot"
-    IDS_INFO_SYSTEM "System"
+    IDS_STATUS_VOLUME_HEALTHY "Исправен"
+    IDS_STATUS_VOLUME_FAILED "Не исправен"
+    IDS_STATUS_VOLUME_NO_MEDIA "Нет носителя"
+    IDS_STATUS_VOLUME_REBUILD "Rebuild"
+    IDS_STATUS_VOLUME_UNUSABLE "НЕДОСТУПЕН"
+    IDS_INFO_VOLUME_BOOT "Boot"
+    IDS_INFO_VOLUME_SYSTEM "System"
+    IDS_INFO_VOLUME_HIDDEN "Hidden"
+    IDS_INFO_VOLUME_OFFLINE "Offline"
 END
 
 /* CMD Messages for commands */

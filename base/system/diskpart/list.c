@@ -366,9 +366,15 @@ PrintVolume(
     _In_ PVOLENTRY VolumeEntry)
 {
     WCHAR szVolumeTypeBuffer[30];
+    WCHAR szStatusBuffer[16];
     WCHAR szInfoBuffer[16];
     WCHAR szSizeBuffer[8];
-    INT nVolumeType;
+    INT nVolumeType, nVolumeStatus;
+
+    if (VolumeEntry->VolumeType != VOLUME_TYPE_PARTITION)
+    {
+        UpdateVolumeInfo(VolumeEntry);
+    }
 
     switch (VolumeEntry->VolumeType)
     {
@@ -390,15 +396,40 @@ PrintVolume(
             break;
     }
 
+    switch (VolumeEntry->VolumeStatus)
+    {
+        case VOLUME_STATUS_HEALTHY:
+            nVolumeStatus = IDS_STATUS_VOLUME_HEALTHY;
+            break;
+
+        case VOLUME_STATUS_FAILED:
+            nVolumeStatus = IDS_STATUS_VOLUME_FAILED;
+            break;
+
+        case VOLUME_STATUS_NO_MEDIA:
+            nVolumeStatus = IDS_STATUS_VOLUME_NO_MEDIA;
+            break;
+
+        case VOLUME_STATUS_REBUILD:
+            nVolumeStatus = IDS_STATUS_VOLUME_REBUILD;
+            break;
+
+        case VOLUME_STATUS_UNUSABLE:
+        default:
+            nVolumeType = IDS_STATUS_VOLUME_UNUSABLE;
+            break;
+    }
+
     LoadStringW(GetModuleHandle(NULL), nVolumeType, szVolumeTypeBuffer, ARRAYSIZE(szVolumeTypeBuffer));
+    LoadStringW(GetModuleHandle(NULL), nVolumeStatus, szStatusBuffer, ARRAYSIZE(szStatusBuffer));
 
     PrintSize(VolumeEntry->Size.QuadPart, szSizeBuffer, ARRAYSIZE(szSizeBuffer));
 
     szInfoBuffer[0] = UNICODE_NULL;
     if (VolumeEntry->IsSystem)
-        LoadStringW(GetModuleHandle(NULL), IDS_INFO_SYSTEM, szInfoBuffer, ARRAYSIZE(szInfoBuffer));
+        LoadStringW(GetModuleHandle(NULL), IDS_INFO_VOLUME_SYSTEM, szInfoBuffer, ARRAYSIZE(szInfoBuffer));
     else if (VolumeEntry->IsBoot)
-        LoadStringW(GetModuleHandle(NULL), IDS_INFO_BOOT, szInfoBuffer, ARRAYSIZE(szInfoBuffer));
+        LoadStringW(GetModuleHandle(NULL), IDS_INFO_VOLUME_BOOT, szInfoBuffer, ARRAYSIZE(szInfoBuffer));
 
     ConResPrintf(StdOut, IDS_LIST_VOLUME_FORMAT,
                  (CurrentVolume == VolumeEntry) ? L'*' : L' ',
@@ -408,7 +439,7 @@ PrintVolume(
                  (VolumeEntry->pszFilesystem) ? VolumeEntry->pszFilesystem : L"",
                  szVolumeTypeBuffer,
                  szSizeBuffer,
-                 L"",
+                 szStatusBuffer,
                  szInfoBuffer);
 }
 

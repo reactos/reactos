@@ -140,18 +140,24 @@
 
 #define IDS_UNIQUID_DISK_INVALID_STYLE 4500
 
-#define IDS_STATUS_YES          31
-#define IDS_STATUS_NO           32
-#define IDS_STATUS_DISK_HEALTHY 33
-#define IDS_STATUS_DISK_SICK    34
-#define IDS_STATUS_UNAVAILABLE  35
-#define IDS_STATUS_ONLINE       36
-#define IDS_STATUS_OFFLINE      37
-#define IDS_STATUS_NO_MEDIA     38
-#define IDS_INFO_BOOT           39
-#define IDS_INFO_SYSTEM         40
+#define IDS_STATUS_YES                      31
+#define IDS_STATUS_NO                       32
+#define IDS_STATUS_ONLINE                   33
+#define IDS_STATUS_OFFLINE                  34
 
-#define IDS_MSG_ARG_SYNTAX_ERROR   41
+#define IDS_STATUS_VOLUME_HEALTHY           35
+#define IDS_STATUS_VOLUME_FAILED            36
+#define IDS_STATUS_VOLUME_NO_MEDIA          37
+#define IDS_STATUS_VOLUME_REBUILD           38
+#define IDS_STATUS_VOLUME_UNUSABLE          39
+
+#define IDS_INFO_VOLUME_BOOT                40
+#define IDS_INFO_VOLUME_SYSTEM              41
+#define IDS_INFO_VOLUME_HIDDEN              42
+#define IDS_INFO_VOLUME_OFFLINE             43
+
+
+#define IDS_MSG_ARG_SYNTAX_ERROR            55
 
 #define IDS_HELP_ACTIVE                     58
 #define IDS_HELP_ADD                        59

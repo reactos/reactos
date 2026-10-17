@@ -214,14 +214,17 @@ STRINGTABLE
 BEGIN
     IDS_STATUS_YES "Sim"
     IDS_STATUS_NO "Não"
-    IDS_STATUS_DISK_HEALTHY "Saudável"
-    IDS_STATUS_DISK_SICK "Ruim"
-    IDS_STATUS_UNAVAILABLE "Indisponivél"
     IDS_STATUS_ONLINE "Activo"
     IDS_STATUS_OFFLINE "Inactivo"
-    IDS_STATUS_NO_MEDIA "sem disco"
-    IDS_INFO_BOOT "Partida"
-    IDS_INFO_SYSTEM "Sistema"
+    IDS_STATUS_VOLUME_HEALTHY "Saudável"
+    IDS_STATUS_VOLUME_FAILED "Ruim"
+    IDS_STATUS_VOLUME_NO_MEDIA "sem disco"
+    IDS_STATUS_VOLUME_REBUILD "Rebuild"
+    IDS_STATUS_VOLUME_UNUSABLE "Indisponivél"
+    IDS_INFO_VOLUME_BOOT "Partida"
+    IDS_INFO_VOLUME_SYSTEM "Sistema"
+    IDS_INFO_VOLUME_HIDDEN "Hidden"
+    IDS_INFO_VOLUME_OFFLINE "Offline"
 END
 
 /* CMD Messages for commands */
