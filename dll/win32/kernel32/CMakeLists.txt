@@ -135,7 +135,7 @@ set_subsystem(kernel32 console)
 ################# END  HACK #################
 
 target_link_libraries(kernel32 psapi_static win32_registry kernel32_vista_static kernel32_shared wine chkstk ${PSEH_LIB})
-if(DLL_EXPORT_VERSION LESS 0x600)
+if(DLL_EXPORT_VERSION LESS 0x601)
 add_importlibs(kernel32 ntdll_vista)
 endif()
 add_importlibs(kernel32 ntdll)
