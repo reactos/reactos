@@ -214,6 +214,33 @@ typedef struct _SHCREATEPROCESSINFOW
 typedef WORD FILEOP_FLAGS;
 typedef WORD PRINTEROP_FLAGS;
 
+#define PRINTACTION_OPEN             0
+#define PRINTACTION_PROPERTIES       1
+#define PRINTACTION_NETINSTALL       2
+#define PRINTACTION_NETINSTALLLINK   3
+#define PRINTACTION_TESTPAGE         4
+#define PRINTACTION_OPENNETPRN       5
+#define PRINTACTION_DOCUMENTDEFAULTS 6
+#define PRINTACTION_SERVERPROPERTIES 7
+
+BOOL
+WINAPI
+SHInvokePrinterCommandA(
+    _In_opt_ HWND hwnd,
+    _In_ UINT uAction,
+    _In_ LPCSTR lpBuf1,
+    _In_opt_ LPCSTR lpBuf2,
+    _In_ BOOL fModal);
+
+BOOL
+WINAPI
+SHInvokePrinterCommandW(
+    _In_opt_ HWND hwnd,
+    _In_ UINT uAction,
+    _In_ LPCWSTR lpBuf1,
+    _In_opt_ LPCWSTR lpBuf2,
+    _In_ BOOL fModal);
+
 typedef struct _AppBarData {
 	DWORD	cbSize;
 	HWND	hWnd;
@@ -726,6 +753,7 @@ typedef LPSHNAMEMAPPINGW LPSHNAMEMAPPING;
 #define SHQueryRecycleBin SHQueryRecycleBinW
 #define SHEmptyRecycleBin SHEmptyRecycleBinW
 #define SHGetNewLinkInfo SHGetNewLinkInfoW
+#define SHInvokePrinterCommand SHInvokePrinterCommandW
 #define DoEnvironmentSubst DoEnvironmentSubstW
 
 #else
@@ -754,6 +782,7 @@ typedef LPSHNAMEMAPPINGA LPSHNAMEMAPPING;
 #define SHQueryRecycleBin SHQueryRecycleBinA
 #define SHEmptyRecycleBin SHEmptyRecycleBinA
 #define SHGetNewLinkInfo SHGetNewLinkInfoA
+#define SHInvokePrinterCommand SHInvokePrinterCommandA
 #define DoEnvironmentSubst DoEnvironmentSubstA
 #endif
 
