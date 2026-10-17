@@ -437,7 +437,7 @@ RtlpDidUnicodeToOemWork(IN PCUNICODE_STRING UnicodeString,
 {
     ULONG i = 0;
 
-    if (NlsMbOemCodePageTag == FALSE)
+    if (!NlsMbOemCodePageTag)
     {
         /* single-byte code page */
         /* Go through all characters of a string */

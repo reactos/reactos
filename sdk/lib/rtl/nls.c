@@ -15,23 +15,19 @@
 
 /* GLOBALS *******************************************************************/
 
-PUSHORT NlsUnicodeUpcaseTable = NULL;
-PUSHORT NlsUnicodeLowercaseTable = NULL;
+extern UINT NlsAnsiCodePage;
+extern PUSHORT NlsAnsiToUnicodeTable;
+extern PCHAR NlsUnicodeToAnsiTable;
+extern PUSHORT NlsLeadByteInfo;
 
-extern UINT NlsAnsiCodePage; /* exported */  
-PUSHORT NlsAnsiToUnicodeTable = NULL;
-PCHAR NlsUnicodeToAnsiTable = NULL;
-PUSHORT NlsUnicodeToMbAnsiTable = NULL;
-PUSHORT NlsLeadByteInfo = NULL; /* exported */
+extern USHORT NlsOemCodePage;
+extern PUSHORT NlsOemToUnicodeTable;
+extern PCHAR NlsUnicodeToOemTable;
+extern PUSHORT NlsUnicodeToMbOemTable;
+extern PUSHORT NlsOemLeadByteInfo;
 
-USHORT NlsOemCodePage = 0;
-PUSHORT NlsOemToUnicodeTable = NULL;
-PCHAR NlsUnicodeToOemTable = NULL;
-PUSHORT NlsUnicodeToMbOemTable = NULL;
-PUSHORT NlsOemLeadByteInfo = NULL; /* exported */
-
-USHORT NlsOemDefaultChar = '\0';
-USHORT NlsUnicodeDefaultChar = 0;
+extern USHORT NlsOemDefaultChar;
+extern USHORT NlsUnicodeDefaultChar;
 
 
 /* FUNCTIONS *****************************************************************/
