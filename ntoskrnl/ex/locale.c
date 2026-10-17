@@ -851,7 +851,7 @@ NtGetNlsSectionPtr(
 
         if (!NT_SUCCESS(Status))
         {
-            DPRINT1("ERROR: Failed to load NLS File: %ws\n", FileName.Buffer);
+            DPRINT1("ERROR: Failed to load NLS File: %ws (Status 0x%08lx)\n", FileName.Buffer, Status);
             return Status;
         }
 
@@ -860,7 +860,7 @@ NtGetNlsSectionPtr(
 
         if (!NT_SUCCESS(Status))
         {
-            DPRINT1("ERROR: Failed to create section %ws\n", Name.Buffer);
+            DPRINT1("ERROR: Failed to create section %ws (Status 0x%08lx)\n", Name.Buffer, Status);
             return Status;
         }
     }
@@ -942,7 +942,7 @@ NtInitializeNlsFiles(
 
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("ERROR: Failed to load NLS File: %ws\n", FileName.Buffer);
+        DPRINT1("ERROR: Failed to load NLS File: %ws (Status 0x%08lx)\n", FileName.Buffer, Status);
         return Status;
     }
 
@@ -952,7 +952,7 @@ NtInitializeNlsFiles(
 
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("ERROR: Failed to create section for NLS file %ws\n", FileName.Buffer);
+        DPRINT1("ERROR: Failed to create section for NLS file %ws (Status 0x%08lx)\n", FileName.Buffer, Status);
         return Status;
     }
 
@@ -992,7 +992,7 @@ NtInitializeNlsFiles(
     ZwClose(SectionHandle);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("ERROR: Failed to map NLS file %ws\n", FileName.Buffer);
+        DPRINT1("ERROR: Failed to map NLS file %ws (Status 0x%08lx)\n", FileName.Buffer, Status);
         return Status;
     }
 
