@@ -80,35 +80,20 @@ AllocConsole(VOID)
     IO_STATUS_BLOCK IoStatusBlock;
     ULONG Enable;
 
-    ULONG Retries;
-    LARGE_INTEGER Delay;
-    Delay.QuadPart = -1000000LL; /* 100 ms */
-
-    /* Open the screen (with retry for asynchronous driver initialization) */
+    /* Open the screen */
     InitializeObjectAttributes(&ObjectAttributes,
                                &ScreenName,
                                0,
                                NULL,
                                NULL);
-    Retries = 30;
-    while (TRUE)
-    {
-        Status = NtOpenFile(&StdOutput,
-                            FILE_ALL_ACCESS,
-                            &ObjectAttributes,
-                            &IoStatusBlock,
-                            FILE_OPEN,
-                            FILE_SYNCHRONOUS_IO_ALERT);
-        if (NT_SUCCESS(Status))
-            break;
-
-        if (--Retries == 0)
-        {
-            DPRINT1("Failed to open \\??\\BlueScreen (Status %lx)\n", Status);
-            return FALSE;
-        }
-        NtDelayExecution(FALSE, &Delay);
-    }
+    Status = NtOpenFile(&StdOutput,
+                        FILE_ALL_ACCESS,
+                        &ObjectAttributes,
+                        &IoStatusBlock,
+                        FILE_OPEN,
+                        FILE_SYNCHRONOUS_IO_ALERT);
+    if (!NT_SUCCESS(Status))
+        return FALSE;
 
     /* Enable it */
     Enable = TRUE;
@@ -124,7 +109,6 @@ AllocConsole(VOID)
                                    0);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("IOCTL_CONSOLE_RESET_SCREEN failed (Status %lx)\n", Status);
         NtClose(StdOutput);
         return FALSE;
     }
@@ -132,31 +116,22 @@ AllocConsole(VOID)
     /* Default to en-US output codepage */
     SetConsoleOutputCP(437);
 
-    /* Open the keyboard (with retry for asynchronous driver initialization) */
+    /* Open the keyboard */
     InitializeObjectAttributes(&ObjectAttributes,
                                &KeyboardName,
                                0,
                                NULL,
                                NULL);
-    Retries = 30;
-    while (TRUE)
+    Status = NtOpenFile(&StdInput,
+                        FILE_ALL_ACCESS,
+                        &ObjectAttributes,
+                        &IoStatusBlock,
+                        FILE_OPEN,
+                        0);
+    if (!NT_SUCCESS(Status))
     {
-        Status = NtOpenFile(&StdInput,
-                            FILE_ALL_ACCESS,
-                            &ObjectAttributes,
-                            &IoStatusBlock,
-                            FILE_OPEN,
-                            0);
-        if (NT_SUCCESS(Status))
-            break;
-
-        if (--Retries == 0)
-        {
-            DPRINT1("Failed to open \\Device\\KeyboardClass0 (Status %lx)\n", Status);
-            NtClose(StdOutput);
-            return FALSE;
-        }
-        NtDelayExecution(FALSE, &Delay);
+        NtClose(StdOutput);
+        return FALSE;
     }
 
     /* Reset the queue state */

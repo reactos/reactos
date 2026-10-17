@@ -320,13 +320,18 @@ IopCreateDeviceInstancePath(
                                   ParentIdPrefix.Length +
                                   (UseDefault ? DefaultInstanceId.Length : InstanceId.Length) +
                                   sizeof(UNICODE_NULL);
+    if (ParentIdPrefix.Length && InstanceId.Length)
+    {
+        InstancePath->MaximumLength += sizeof(WCHAR);
+    }
 
     InstancePath->Buffer = ExAllocatePoolWithTag(PagedPool,
                                                  InstancePath->MaximumLength,
                                                  TAG_IO);
     if (!InstancePath->Buffer)
     {
-        RtlFreeUnicodeString(&InstanceId);
+        if (!UseDefault)
+            RtlFreeUnicodeString(&InstanceId);
         RtlFreeUnicodeString(&ParentIdPrefix);
         RtlFreeUnicodeString(&DeviceId);
         return STATUS_INSUFFICIENT_RESOURCES;
@@ -338,6 +343,10 @@ IopCreateDeviceInstancePath(
 
     /* Add information from parent bus device to InstancePath */
     RtlAppendUnicodeStringToString(InstancePath, &ParentIdPrefix);
+    if (ParentIdPrefix.Length && InstanceId.Length)
+    {
+        RtlAppendUnicodeToString(InstancePath, L"&");
+    }
 
     /* Finally, add the id returned by the driver stack or the fallback */
     if (UseDefault)

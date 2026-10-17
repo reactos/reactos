@@ -398,7 +398,7 @@ struct module
     unsigned                    sorttab_size;
     struct symt_ht**            addr_sorttab;
     struct hash_table           ht_symbols;
-#if defined(__x86_64__) || defined(__aarch64__)
+#ifdef __x86_64__
     struct hash_table           ht_symaddr;
 #endif
 

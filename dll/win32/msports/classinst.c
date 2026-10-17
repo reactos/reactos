@@ -700,7 +700,7 @@ GetPortType(IN HDEVINFO DeviceInfoSet,
         else
             PortType = SerialPort;
     }
-if (PortType == UnknownPort)
+    if (PortType == UnknownPort)
     {
         HKEY hDevKey;
 
