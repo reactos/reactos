@@ -230,6 +230,16 @@ BEGIN
     PUSHBUTTON "Хронологія використання пам'яті", IDC_MEM_USAGE_HISTORY_GRAPH, 81, 75, 153, 37, NOT WS_TABSTOP, WS_EX_CLIENTEDGE
 END
 
+IDD_NETWORK_PAGE DIALOGEX 0, 0, 247, 210
+STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX "Мережева активність", IDC_NETWORK_HISTORY_FRAME, 5, 5, 237, 118, 0, WS_EX_TRANSPARENT
+    CONTROL "", IDC_NETWORK_GRAPH, "Static", SS_OWNERDRAW, 12, 17, 223, 99, WS_EX_CLIENTEDGE
+    CONTROL "", IDC_NETWORK_ADAPTERS, "SysListView32", LVS_REPORT | LVS_SINGLESEL |
+            LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 5, 128, 237, 77
+END
+
 IDD_AFFINITY_DIALOG DIALOGEX 0, 0, 231, 154
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Відповідність процесорів"
@@ -433,4 +443,33 @@ BEGIN
     IDS_STATUS_PROCESSES "Процесів: %d"
     IDS_NOT_RESPONDING "Не відповідає"
     IDS_RUNNING "Виконується"
+END
+
+STRINGTABLE
+BEGIN
+    ID_VIEW_NETHISTORY_SENT "Показує обсяг даних, надісланих через вибраний адаптер"
+    ID_VIEW_NETHISTORY_RECEIVED "Показує обсяг даних, отриманих через вибраний адаптер"
+    ID_VIEW_NETHISTORY_TOTAL "Показує загальний обсяг даних, переданих через вибраний адаптер"
+    ID_VIEW_NET_SHOWSCALE "Показує шкалу на графіку мережевої активності"
+    IDS_TAB_NETWORKING "Мережа"
+    IDS_NET_HISTORY "Мережева активність"
+    IDS_NET_NOADAPTERS "Активні мережеві адаптери не знайдено"
+    IDS_NET_COL_ADAPTER "Адаптер"
+    IDS_NET_COL_USAGE "Використання мережі"
+    IDS_NET_COL_LINKSPEED "Швидкість лінії"
+    IDS_NET_COL_STATE "Стан"
+    IDS_NET_COL_SENDRATE "Швидкість надсилання"
+    IDS_NET_COL_RECVRATE "Швидкість отримання"
+    IDS_NET_COL_BYTESSENT "Надіслано"
+    IDS_NET_COL_BYTESRECV "Отримано"
+    IDS_NET_STATE_CONNECTED "Підключено"
+    IDS_NET_STATE_DISCONNECTED "Відключено"
+    IDS_NET_STATE_CONNECTING "Підключення"
+    IDS_NET_STATE_DISABLED "Вимкнено"
+    IDS_NET_RATE_FORMAT "%s/с"
+    IDS_MENU_NETHISTORY "&Історія мережевого адаптера"
+    IDS_MENU_BYTESSENT "Байтів &надіслано"
+    IDS_MENU_BYTESRECEIVED "Байтів &отримано"
+    IDS_MENU_BYTESTOTAL "&Усього байтів"
+    IDS_MENU_SHOWSCALE "Показувати &шкалу"
 END
