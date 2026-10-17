@@ -37,6 +37,42 @@
 
 #define PARAMETERS_KEY L"Parameters"     /* The parameters subkey under the device-specific key */
 
+static
+PMINIPORT_CONFIGURATION_CONTEXT
+AllocateConfigurationContext(
+    _In_ POBJECT_ATTRIBUTES ObjectAttributes)
+{
+    PMINIPORT_CONFIGURATION_CONTEXT ConfigurationContext;
+    HANDLE KeyHandle;
+    NTSTATUS Status;
+
+    Status = ZwOpenKey(&KeyHandle, KEY_ALL_ACCESS, ObjectAttributes);
+    if (!NT_SUCCESS(Status))
+    {
+        NDIS_DbgPrint(MIN_TRACE, ("Failed to open registry configuration for this miniport "
+                                  "'%wZ', status 0x%lx\n",
+                                  ObjectAttributes->ObjectName, Status));
+        return NULL;
+    }
+
+    ConfigurationContext = ExAllocatePoolUninitialized(NonPagedPool,
+                                                       sizeof(*ConfigurationContext),
+                                                       TAG_CONFIG);
+    if (!ConfigurationContext)
+    {
+        NDIS_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
+        ZwClose(KeyHandle);
+        return NULL;
+    }
+
+    ConfigurationContext->Handle = KeyHandle;
+
+    KeInitializeSpinLock(&ConfigurationContext->ResourceLock);
+    InitializeListHead(&ConfigurationContext->ResourceListHead);
+
+    return ConfigurationContext;
+}
+
 /*
  * @implemented
  */
@@ -211,7 +247,6 @@ NdisOpenConfiguration(
  *     I think this is the parameters key; please verify.
  */
 {
-    HANDLE KeyHandle;
     PMINIPORT_CONFIGURATION_CONTEXT ConfigurationContext;
     PNDIS_WRAPPER_CONTEXT WrapperContext = (PNDIS_WRAPPER_CONTEXT)WrapperConfigurationContext;
     HANDLE RootKeyHandle = WrapperContext->RegistryHandle;
@@ -227,29 +262,14 @@ NdisOpenConfiguration(
                                OBJ_KERNEL_HANDLE,
                                RootKeyHandle,
                                NULL);
-    *Status = ZwOpenKey(&KeyHandle, KEY_ALL_ACCESS, &ObjectAttributes);
-    if(!NT_SUCCESS(*Status))
-    {
-        NDIS_DbgPrint(MIN_TRACE, ("Failed to open registry configuration for this miniport\n"));
-        *Status = NDIS_STATUS_FAILURE;
-        return;
-    }
 
-    ConfigurationContext = ExAllocatePoolUninitialized(NonPagedPool,
-                                                       sizeof(*ConfigurationContext),
-                                                       TAG_CONFIG);
+    ConfigurationContext = AllocateConfigurationContext(&ObjectAttributes);
     if(!ConfigurationContext)
     {
         NDIS_DbgPrint(MIN_TRACE,("Insufficient resources.\n"));
-        ZwClose(KeyHandle);
         *Status = NDIS_STATUS_RESOURCES;
         return;
     }
-
-    KeInitializeSpinLock(&ConfigurationContext->ResourceLock);
-    InitializeListHead(&ConfigurationContext->ResourceListHead);
-
-    ConfigurationContext->Handle = KeyHandle;
 
     *ConfigurationHandle = (NDIS_HANDLE)ConfigurationContext;
     *Status = NDIS_STATUS_SUCCESS;
@@ -282,7 +302,6 @@ NdisOpenProtocolConfiguration(
 {
     OBJECT_ATTRIBUTES KeyAttributes;
     UNICODE_STRING KeyNameU;
-    HANDLE KeyHandle;
     PMINIPORT_CONFIGURATION_CONTEXT ConfigurationContext;
 
     KeyNameU.Length = 0;
@@ -300,34 +319,15 @@ NdisOpenProtocolConfiguration(
     RtlAppendUnicodeToString(&KeyNameU, PARAMETERS_KEY);
     InitializeObjectAttributes(&KeyAttributes, &KeyNameU, OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE, NULL, NULL);
 
-    *Status = ZwOpenKey(&KeyHandle, KEY_ALL_ACCESS, &KeyAttributes);
-
+    ConfigurationContext = AllocateConfigurationContext(&KeyAttributes);
     ExFreePoolWithTag(KeyNameU.Buffer, TAG_CONFIG);
-
-    if(*Status != NDIS_STATUS_SUCCESS)
-    {
-        NDIS_DbgPrint(MIN_TRACE, ("ZwOpenKey failed (%x)\n", *Status));
-        *ConfigurationHandle = NULL;
-        *Status = NDIS_STATUS_FAILURE;
-        return;
-    }
-
-    ConfigurationContext = ExAllocatePoolUninitialized(NonPagedPool,
-                                                       sizeof(*ConfigurationContext),
-                                                       TAG_CONFIG);
     if(!ConfigurationContext)
     {
         NDIS_DbgPrint(MIN_TRACE,("Insufficient resources.\n"));
-        ZwClose(KeyHandle);
         *ConfigurationHandle = NULL;
         *Status = NDIS_STATUS_FAILURE;
         return;
     }
-
-    KeInitializeSpinLock(&ConfigurationContext->ResourceLock);
-    InitializeListHead(&ConfigurationContext->ResourceListHead);
-
-    ConfigurationContext->Handle = KeyHandle;
 
     *ConfigurationHandle = (NDIS_HANDLE)ConfigurationContext;
     *Status = NDIS_STATUS_SUCCESS;
@@ -894,7 +894,6 @@ NdisOpenConfigurationKeyByIndex(
     KEY_BASIC_INFORMATION *KeyInformation;
     ULONG KeyInformationLength;
     OBJECT_ATTRIBUTES KeyAttributes;
-    NDIS_HANDLE RegKeyHandle;
     PMINIPORT_CONFIGURATION_CONTEXT ConfigurationContext;
 
     *KeyHandle = NULL;
@@ -934,35 +933,16 @@ NdisOpenConfigurationKeyByIndex(
 
     InitializeObjectAttributes(&KeyAttributes, KeyName, OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE, ConfigurationHandle, NULL);
 
-    *Status = ZwOpenKey(&RegKeyHandle, KEY_ALL_ACCESS, &KeyAttributes);
-
+    ConfigurationContext = AllocateConfigurationContext(&KeyAttributes);
     ExFreePoolWithTag(KeyInformation, TAG_CONFIG);
-
-    if(*Status != STATUS_SUCCESS)
-    {
-        NDIS_DbgPrint(MIN_TRACE, ("ZwOpenKey failed (%x)\n", *Status));
-        *Status = NDIS_STATUS_FAILURE;
-        return;
-    }
-
-    ConfigurationContext = ExAllocatePoolUninitialized(NonPagedPool,
-                                                       sizeof(*ConfigurationContext),
-                                                       TAG_CONFIG);
     if(!ConfigurationContext)
     {
         NDIS_DbgPrint(MIN_TRACE,("Insufficient resources.\n"));
-        ZwClose(RegKeyHandle);
         *Status = NDIS_STATUS_FAILURE;
         return;
     }
 
-    KeInitializeSpinLock(&ConfigurationContext->ResourceLock);
-    InitializeListHead(&ConfigurationContext->ResourceListHead);
-
-    ConfigurationContext->Handle = RegKeyHandle;
-
     *KeyHandle = (NDIS_HANDLE)ConfigurationContext;
-
     *Status = NDIS_STATUS_SUCCESS;
 }
 
@@ -993,37 +973,19 @@ NdisOpenConfigurationKeyByName(
 {
     PMINIPORT_CONFIGURATION_CONTEXT ConfigurationContext;
     OBJECT_ATTRIBUTES KeyAttributes;
-    NDIS_HANDLE RegKeyHandle;
 
     *KeyHandle = NULL;
 
     InitializeObjectAttributes(&KeyAttributes, KeyName, OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE, ConfigurationHandle, 0);
-    *Status = ZwOpenKey(&RegKeyHandle, KEY_ALL_ACCESS, &KeyAttributes);
 
-    if(*Status != STATUS_SUCCESS)
-    {
-        NDIS_DbgPrint(MIN_TRACE, ("ZwOpenKey failed (%x)\n", *Status));
-        *Status = NDIS_STATUS_FAILURE;
-        return;
-    }
-
-    ConfigurationContext = ExAllocatePoolUninitialized(NonPagedPool,
-                                                       sizeof(*ConfigurationContext),
-                                                       TAG_CONFIG);
+    ConfigurationContext = AllocateConfigurationContext(&KeyAttributes);
     if(!ConfigurationContext)
     {
         NDIS_DbgPrint(MIN_TRACE,("Insufficient resources.\n"));
-        ZwClose(RegKeyHandle);
         *Status = NDIS_STATUS_FAILURE;
         return;
     }
 
-    KeInitializeSpinLock(&ConfigurationContext->ResourceLock);
-    InitializeListHead(&ConfigurationContext->ResourceListHead);
-
-    ConfigurationContext->Handle = RegKeyHandle;
-
     *KeyHandle = (NDIS_HANDLE)ConfigurationContext;
-
     *Status = NDIS_STATUS_SUCCESS;
 }
