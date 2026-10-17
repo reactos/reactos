@@ -105,7 +105,7 @@ HRESULT WINAPI CNetworkConnections::CompareIDs(
 {
     const UINT colcount = NETCONNECTSHELLVIEWCOLUMNS;
 
-    if (ILGetNext(pidl1) || ILGetNext(pidl2))
+    if (!ILIsSingle(pidl1) || !ILIsSingle(pidl2))
         return E_NOTIMPL; // FIXME: Can the connection folder have subfolders?
 
     if (lParam & SHCIDS_CANONICALONLY)
