@@ -353,9 +353,9 @@ PciInitializeEcam(
 #if defined(_M_IX86) || defined(_M_AMD64)
         PciEcamSkipK8Northbridge = PciEcamIsAmdK8();
 #endif
-        DPRINT1("PCIX - ECAM window at 0x%I64x for 0x%lx buses\n",
-                PciEcamWindowStart,
-                PciEcamWindowBuses);
+        DPRINT("PCIX - ECAM window at 0x%I64x for 0x%lx buses\n",
+               PciEcamWindowStart,
+               PciEcamWindowBuses);
     }
 
     if (!PciEcamMapBus(FdoExtension->BaseBus) || PciEcamVerified) return;
@@ -369,7 +369,7 @@ PciInitializeEcam(
     else if (NT_SUCCESS(Status))
     {
         PciEcamVerified = TRUE;
-        DPRINT1("PCIX - ECAM verified on bus 0x%lx\n", FdoExtension->BaseBus);
+        DPRINT("PCIX - ECAM verified on bus 0x%lx\n", FdoExtension->BaseBus);
     }
 }
 
