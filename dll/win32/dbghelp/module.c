@@ -485,7 +485,7 @@ static BOOL image_check_debug_link(const WCHAR* file, struct image_file_map* fma
 #ifndef DBGHELP_STATIC_LIB
     WCHAR *path;
 #endif
-    WORD magic;
+    WORD magic = 0;
     BOOL ret;
 
 #ifndef DBGHELP_STATIC_LIB

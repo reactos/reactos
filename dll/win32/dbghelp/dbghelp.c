@@ -875,7 +875,7 @@ DWORD calc_crc32(HANDLE handle)
 {
     BYTE buffer[8192];
     DWORD crc = 0;
-    DWORD len;
+    DWORD len = 0;
 
     SetFilePointer(handle, 0, 0, FILE_BEGIN);
     while (ReadFile(handle, buffer, sizeof(buffer), &len, NULL) && len)

@@ -260,8 +260,8 @@ static void UpdateNumberIntl(void)
         StringCbCopy(calc.sThousand, sizeof(calc.sThousand), _T(","));
 
     /* get the string lengths */
-    calc.sDecimal_len = _tcslen(calc.sDecimal);
-    calc.sThousand_len = _tcslen(calc.sThousand);
+    calc.sDecimal_len = (unsigned int)_tcslen(calc.sDecimal);
+    calc.sThousand_len = (unsigned int)_tcslen(calc.sThousand);
 }
 
 static int LoadRegInt(LPCTSTR lpszApp, LPCTSTR lpszKey, int iDefault)
