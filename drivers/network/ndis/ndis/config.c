@@ -418,11 +418,11 @@ IsValidNumericString(PNDIS_STRING String, ULONG Base)
 VOID
 EXPORT
 NdisReadConfiguration(
-    OUT PNDIS_STATUS                    Status,
-    OUT PNDIS_CONFIGURATION_PARAMETER   * ParameterValue,
-    IN  NDIS_HANDLE                     ConfigurationHandle,
-    IN  PNDIS_STRING                    Keyword,
-    IN  NDIS_PARAMETER_TYPE             ParameterType)
+    _At_(*Status, _Must_inspect_result_) _Out_ PNDIS_STATUS Status,
+    _Out_ PNDIS_CONFIGURATION_PARAMETER* ParameterValue,
+    _In_ NDIS_HANDLE ConfigurationHandle,
+    _In_ PNDIS_STRING Keyword,
+    _In_ NDIS_PARAMETER_TYPE ParameterType)
 /*
  * FUNCTION: Read a configuration value from the registry, tracking its resources
  * ARGUMENTS:
@@ -439,311 +439,272 @@ NdisReadConfiguration(
  *     - A parameter value in ParameterValue
  */
 {
-    KEY_VALUE_PARTIAL_INFORMATION *KeyInformation;
-    ULONG KeyDataLength;
-    PMINIPORT_RESOURCE MiniportResource;
-    PMINIPORT_CONFIGURATION_CONTEXT ConfigurationContext = (PMINIPORT_CONFIGURATION_CONTEXT)ConfigurationHandle;
-    PVOID Buffer;
+    PMINIPORT_CONFIGURATION_CONTEXT ConfigurationContext = ConfigurationHandle;
+    PKEY_VALUE_PARTIAL_INFORMATION KeyInformation = NULL;
+    PNDIS_CONFIGURATION_PARAMETER ConfigParameter = NULL;
+    PMINIPORT_RESOURCE MiniportResource = NULL;
+    NDIS_STATUS NdisStatus = NDIS_STATUS_SUCCESS;
+    NTSTATUS NtStatus;
+    ULONG LocalUlong;
+    PVOID RegData;
+    ULONG RegType;
+    ULONG RegDataLength;
+    static const UNICODE_STRING NdisVersionKey = RTL_CONSTANT_STRING(L"NdisVersion");
+    static const UNICODE_STRING EnvironmentKey = RTL_CONSTANT_STRING(L"Environment");
+    static const UNICODE_STRING ProcessorTypeKey = RTL_CONSTANT_STRING(L"ProcessorType");
 
-    //*ParameterValue = NULL;
-    *Status = NDIS_STATUS_FAILURE;
+    NDIS_DbgPrint(MAX_TRACE, ("requested read type %d of '%wZ'\n", ParameterType, Keyword));
 
-    NDIS_DbgPrint(MAX_TRACE,("requested read of %wZ\n", Keyword));
-    NDIS_DbgPrint(MID_TRACE,("requested parameter type: %d\n", ParameterType));
+    ASSERT(ConfigurationContext);
 
-    if (ConfigurationContext == NULL)
+    /* Check for predefined entry names */
+    if (RtlEqualUnicodeString(Keyword, &NdisVersionKey, TRUE))
     {
-       NDIS_DbgPrint(MIN_TRACE,("invalid parameter ConfigurationContext (0x%x)\n",ConfigurationContext));
-       return;
+        LocalUlong = NDIS_VERSION;
+
+        RegType = REG_DWORD;
+        RegData = &LocalUlong;
+        RegDataLength = sizeof(LocalUlong);
     }
-
-    if(!wcsncmp(Keyword->Buffer, L"Environment", Keyword->Length/sizeof(WCHAR)) &&
-        wcslen(L"Environment") == Keyword->Length/sizeof(WCHAR))
+    else if (RtlEqualUnicodeString(Keyword, &EnvironmentKey, TRUE))
     {
-        *ParameterValue = ExAllocatePoolZero(PagedPool, sizeof(**ParameterValue), TAG_CONFIG);
-        if(!*ParameterValue)
-        {
-            NDIS_DbgPrint(MIN_TRACE,("Insufficient resources.\n"));
-            *Status = NDIS_STATUS_RESOURCES;
-            return;
-        }
+        LocalUlong = NdisEnvironmentWindowsNt;
 
-        MiniportResource = ExAllocatePoolUninitialized(PagedPool,
-                                                       sizeof(*MiniportResource),
-                                                       TAG_CONFIG);
-        if(!MiniportResource)
-        {
-            NDIS_DbgPrint(MIN_TRACE,("Insufficient resources.\n"));
-            ExFreePoolWithTag(*ParameterValue, TAG_CONFIG);
-            *ParameterValue = NULL;
-            *Status = NDIS_STATUS_RESOURCES;
-            return;
-        }
-
-        MiniportResource->ResourceType = MINIPORT_RESOURCE_TYPE_REGISTRY_DATA;
-        MiniportResource->Resource = *ParameterValue;
-
-        NDIS_DbgPrint(MID_TRACE,("inserting 0x%x into the resource list\n",
-            MiniportResource->Resource));
-
-        ExInterlockedInsertTailList(&ConfigurationContext->ResourceListHead,
-            &MiniportResource->ListEntry, &ConfigurationContext->ResourceLock);
-
-        (*ParameterValue)->ParameterType = NdisParameterInteger;
-        (*ParameterValue)->ParameterData.IntegerData = NdisEnvironmentWindowsNt;
-        *Status = NDIS_STATUS_SUCCESS;
-
-        return;
+        RegType = REG_DWORD;
+        RegData = &LocalUlong;
+        RegDataLength = sizeof(LocalUlong);
     }
-
-    if(!wcsncmp(Keyword->Buffer, L"ProcessorType", Keyword->Length/sizeof(WCHAR)) &&
-        wcslen(L"ProcessorType") == Keyword->Length/sizeof(WCHAR))
+    else if (RtlEqualUnicodeString(Keyword, &ProcessorTypeKey, TRUE))
     {
-        *ParameterValue = ExAllocatePoolZero(PagedPool, sizeof(**ParameterValue), TAG_CONFIG);
-        if(!*ParameterValue)
-        {
-            NDIS_DbgPrint(MIN_TRACE,("Insufficient resources.\n"));
-            *Status = NDIS_STATUS_RESOURCES;
-            return;
-        }
+        // FIXME: Not portable
+        LocalUlong = NdisProcessorX86;
 
-        MiniportResource = ExAllocatePoolUninitialized(PagedPool,
-                                                       sizeof(*MiniportResource),
-                                                       TAG_CONFIG);
-        if(!MiniportResource)
-        {
-            NDIS_DbgPrint(MIN_TRACE,("Insufficient resources.\n"));
-            ExFreePoolWithTag(*ParameterValue, TAG_CONFIG);
-            *ParameterValue = NULL;
-            *Status = NDIS_STATUS_RESOURCES;
-            return;
-        }
-
-        MiniportResource->ResourceType = MINIPORT_RESOURCE_TYPE_REGISTRY_DATA;
-        MiniportResource->Resource = *ParameterValue;
-        NDIS_DbgPrint(MID_TRACE,("inserting 0x%x into the resource list\n", MiniportResource->Resource));
-        ExInterlockedInsertTailList(&ConfigurationContext->ResourceListHead,
-            &MiniportResource->ListEntry, &ConfigurationContext->ResourceLock);
-
-        (*ParameterValue)->ParameterType = NdisParameterInteger;
-        (*ParameterValue)->ParameterData.IntegerData = NdisProcessorX86;    /* XXX non-portable */
-        *Status = NDIS_STATUS_SUCCESS;
-
-        return;
-    }
-
-    if(!wcsncmp(Keyword->Buffer, L"NdisVersion", Keyword->Length/sizeof(WCHAR)) &&
-        wcslen(L"NdisVersion") == Keyword->Length/sizeof(WCHAR))
-    {
-        *ParameterValue = ExAllocatePoolZero(PagedPool, sizeof(**ParameterValue), TAG_CONFIG);
-        if(!*ParameterValue)
-        {
-            NDIS_DbgPrint(MIN_TRACE,("Insufficient resources.\n"));
-            *Status = NDIS_STATUS_RESOURCES;
-            return;
-        }
-
-        MiniportResource = ExAllocatePoolUninitialized(PagedPool,
-                                                       sizeof(*MiniportResource),
-                                                       TAG_CONFIG);
-        if(!MiniportResource)
-        {
-            NDIS_DbgPrint(MIN_TRACE,("Insufficient resources.\n"));
-            ExFreePoolWithTag(*ParameterValue, TAG_CONFIG);
-            *ParameterValue = NULL;
-            *Status = NDIS_STATUS_RESOURCES;
-            return;
-        }
-
-        MiniportResource->ResourceType = MINIPORT_RESOURCE_TYPE_REGISTRY_DATA;
-        MiniportResource->Resource = *ParameterValue;
-        NDIS_DbgPrint(MID_TRACE,("inserting 0x%x into the resource list\n", MiniportResource->Resource));
-        ExInterlockedInsertTailList(&ConfigurationContext->ResourceListHead,
-            &MiniportResource->ListEntry, &ConfigurationContext->ResourceLock);
-
-        (*ParameterValue)->ParameterType = NdisParameterInteger;
-        (*ParameterValue)->ParameterData.IntegerData = NDIS_VERSION;
-        *Status = NDIS_STATUS_SUCCESS;
-
-        NDIS_DbgPrint(MAX_TRACE,("ParameterType = 0x%x, ParameterValue = 0x%x\n",
-            (*ParameterValue)->ParameterType, (*ParameterValue)->ParameterData.IntegerData));
-        return;
-    }
-
-    /* figure out how much buffer i should allocate */
-    *Status = ZwQueryValueKey(ConfigurationContext->Handle, Keyword, KeyValuePartialInformation, NULL, 0, &KeyDataLength);
-    if(*Status != STATUS_BUFFER_OVERFLOW && *Status != STATUS_BUFFER_TOO_SMALL && *Status != STATUS_SUCCESS)
-    {
-        NDIS_DbgPrint(MID_TRACE,("ZwQueryValueKey #1 failed for %wZ, status 0x%x\n", Keyword, *Status));
-        *Status = NDIS_STATUS_FAILURE;
-        return;
-    }
-
-    /* allocate it */
-    KeyInformation = ExAllocatePoolUninitialized(PagedPool,
-                                                 KeyDataLength + sizeof(KEY_VALUE_PARTIAL_INFORMATION),
-                                                 TAG_CONFIG);
-    if(!KeyInformation)
-    {
-        NDIS_DbgPrint(MIN_TRACE,("Insufficient resources.\n"));
-        *Status = NDIS_STATUS_RESOURCES;
-        return;
-    }
-
-    /* grab the value */
-    *Status = ZwQueryValueKey(ConfigurationContext->Handle, Keyword, KeyValuePartialInformation,
-        KeyInformation, KeyDataLength + sizeof(KEY_VALUE_PARTIAL_INFORMATION), &KeyDataLength);
-    if(*Status != STATUS_SUCCESS)
-    {
-        ExFreePoolWithTag(KeyInformation, TAG_CONFIG);
-        NDIS_DbgPrint(MIN_TRACE,("ZwQueryValueKey #2 failed for %wZ, status 0x%x\n", Keyword, *Status));
-        *Status = NDIS_STATUS_FAILURE;
-        return;
-    }
-
-    MiniportResource = ExAllocatePool(PagedPool, sizeof(MINIPORT_RESOURCE));
-    if(!MiniportResource)
-    {
-       NDIS_DbgPrint(MIN_TRACE,("Insufficient resources.\n"));
-       ExFreePoolWithTag(KeyInformation, TAG_CONFIG);
-       *Status = NDIS_STATUS_RESOURCES;
-       return;
-    }
-
-    *ParameterValue = ExAllocatePoolZero(PagedPool, sizeof(**ParameterValue), TAG_CONFIG);
-    if (!*ParameterValue)
-    {
-        NDIS_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
-        ExFreePoolWithTag(MiniportResource, TAG_CONFIG);
-        ExFreePoolWithTag(KeyInformation, TAG_CONFIG);
-        *Status = NDIS_STATUS_RESOURCES;
-        return;
-    }
-
-    if (KeyInformation->Type == REG_BINARY)
-    {
-        NDIS_DbgPrint(MAX_TRACE, ("NdisParameterBinary\n"));
-
-        (*ParameterValue)->ParameterType = NdisParameterBinary;
-
-        Buffer = ExAllocatePoolUninitialized(PagedPool, KeyInformation->DataLength, TAG_CONFIG);
-        if (!Buffer)
-        {
-            NDIS_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
-            ExFreePoolWithTag(MiniportResource, TAG_CONFIG);
-            ExFreePoolWithTag(KeyInformation, TAG_CONFIG);
-            *Status = NDIS_STATUS_RESOURCES;
-            return;
-        }
-
-        RtlCopyMemory(Buffer, KeyInformation->Data, KeyInformation->DataLength);
-
-        (*ParameterValue)->ParameterData.BinaryData.Buffer = Buffer;
-        (*ParameterValue)->ParameterData.BinaryData.Length = KeyInformation->DataLength;
-    }
-    else if (KeyInformation->Type == REG_MULTI_SZ)
-    {
-        NDIS_DbgPrint(MAX_TRACE, ("NdisParameterMultiString\n"));
-
-        (*ParameterValue)->ParameterType = NdisParameterMultiString;
-
-        Buffer = ExAllocatePoolUninitialized(PagedPool, KeyInformation->DataLength, TAG_CONFIG);
-        if (!Buffer)
-        {
-            NDIS_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
-            ExFreePoolWithTag(MiniportResource, TAG_CONFIG);
-            ExFreePoolWithTag(KeyInformation, TAG_CONFIG);
-            *Status = NDIS_STATUS_RESOURCES;
-            return;
-        }
-
-        RtlCopyMemory(Buffer, KeyInformation->Data, KeyInformation->DataLength);
-
-        (*ParameterValue)->ParameterData.StringData.Buffer = Buffer;
-        (*ParameterValue)->ParameterData.StringData.Length = KeyInformation->DataLength;
-    }
-    else if (KeyInformation->Type == REG_DWORD)
-    {
-        ASSERT(KeyInformation->DataLength == sizeof(ULONG));
-        NDIS_DbgPrint(MAX_TRACE, ("NdisParameterInteger\n"));
-        (*ParameterValue)->ParameterType = NdisParameterInteger;
-        (*ParameterValue)->ParameterData.IntegerData = * (ULONG *) &KeyInformation->Data[0];
-    }
-    else if (KeyInformation->Type == REG_SZ)
-    {
-         UNICODE_STRING str;
-         ULONG Base;
-
-         if (ParameterType == NdisParameterInteger)
-             Base = 10;
-         else if (ParameterType == NdisParameterHexInteger)
-             Base = 16;
-         else
-             Base = 0;
-
-         str.Length = str.MaximumLength = (USHORT)KeyInformation->DataLength;
-         str.Buffer = (PWCHAR)KeyInformation->Data;
-
-         if (Base != 0 && IsValidNumericString(&str, Base))
-         {
-             *Status = RtlUnicodeStringToInteger(&str, Base, &(*ParameterValue)->ParameterData.IntegerData);
-              ASSERT(*Status == STATUS_SUCCESS);
-
-             NDIS_DbgPrint(MAX_TRACE, ("NdisParameter(Hex)Integer\n"));
-
-             /* MSDN documents that this is returned for all integers, regardless of the ParameterType passed in */
-             (*ParameterValue)->ParameterType = NdisParameterInteger;
-         }
-         else
-         {
-             NDIS_DbgPrint(MAX_TRACE, ("NdisParameterString\n"));
-
-             (*ParameterValue)->ParameterType = NdisParameterString;
-
-             Buffer = ExAllocatePoolUninitialized(PagedPool,
-                                                  KeyInformation->DataLength,
-                                                  TAG_CONFIG);
-             if (!Buffer)
-             {
-                 NDIS_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
-                 ExFreePoolWithTag(MiniportResource, TAG_CONFIG);
-                 ExFreePoolWithTag(KeyInformation, TAG_CONFIG);
-                 *Status = NDIS_STATUS_RESOURCES;
-                 return;
-             }
-
-             RtlCopyMemory(Buffer, KeyInformation->Data, KeyInformation->DataLength);
-
-             (*ParameterValue)->ParameterData.StringData.Buffer = Buffer;
-             (*ParameterValue)->ParameterData.StringData.Length = KeyInformation->DataLength;
-         }
+        RegType = REG_DWORD;
+        RegData = &LocalUlong;
+        RegDataLength = sizeof(LocalUlong);
     }
     else
     {
-        NDIS_DbgPrint(MIN_TRACE, ("Invalid type for NdisReadConfiguration (%d)\n", KeyInformation->Type));
-        NDIS_DbgPrint(MIN_TRACE, ("Requested type: %d\n", ParameterType));
-        NDIS_DbgPrint(MIN_TRACE, ("Registry entry: %wZ\n", Keyword));
-        *Status = NDIS_STATUS_FAILURE;
-        ExFreePoolWithTag(KeyInformation, TAG_CONFIG);
-        return;
+        ULONG KeyDataLength, RetryCount;
+
+        /* The most common case is NdisParameterInteger (REG_DWORD) */
+        KeyDataLength = FIELD_OFFSET(KEY_VALUE_PARTIAL_INFORMATION, Data) + sizeof(ULONG);
+
+        for (RetryCount = 0; RetryCount < 2; ++RetryCount)
+        {
+            KeyInformation = ExAllocatePoolUninitialized(PagedPool, KeyDataLength, TAG_CONFIG);
+            if (!KeyInformation)
+            {
+                NDIS_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
+                *Status = NDIS_STATUS_RESOURCES;
+                return;
+            }
+
+            /* Query the value */
+            NtStatus = ZwQueryValueKey(ConfigurationContext->Handle,
+                                       Keyword,
+                                       KeyValuePartialInformation,
+                                       KeyInformation,
+                                       KeyDataLength,
+                                       &KeyDataLength);
+
+            /* Increase the allocation size if it's too small */
+            if (NtStatus == STATUS_BUFFER_OVERFLOW || NtStatus == STATUS_BUFFER_TOO_SMALL)
+            {
+                ExFreePoolWithTag(KeyInformation, TAG_CONFIG);
+                KeyInformation = NULL;
+                continue;
+            }
+
+            break;
+        }
+
+        if (!NT_SUCCESS(NtStatus))
+        {
+            NDIS_DbgPrint(MIN_TRACE, ("ZwQueryValueKey failed for '%wZ', status 0x%lx\n",
+                                      Keyword, NtStatus));
+            NdisStatus = NDIS_STATUS_FAILURE;
+            goto Exit;
+        }
+
+        RegType = KeyInformation->Type;
+        RegData = &KeyInformation->Data[0];
+        RegDataLength = KeyInformation->DataLength;
     }
 
-    if (((*ParameterValue)->ParameterType != ParameterType) &&
-        !((ParameterType == NdisParameterHexInteger) && ((*ParameterValue)->ParameterType == NdisParameterInteger)))
+    MiniportResource = ExAllocatePoolUninitialized(PagedPool,
+                                                   sizeof(*MiniportResource),
+                                                   TAG_CONFIG);
+    if (!MiniportResource)
+    {
+       NDIS_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
+       NdisStatus = NDIS_STATUS_RESOURCES;
+       goto Exit;
+    }
+
+    ConfigParameter = ExAllocatePoolZero(PagedPool, sizeof(*ConfigParameter), TAG_CONFIG);
+    if (!ConfigParameter)
+    {
+        NDIS_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
+        NdisStatus = NDIS_STATUS_RESOURCES;
+        goto Exit;
+    }
+
+    switch (RegType)
+    {
+        case REG_DWORD:
+        {
+            ASSERT(RegDataLength == sizeof(ULONG));
+
+            ConfigParameter->ParameterType = NdisParameterInteger;
+            ConfigParameter->ParameterData.IntegerData = *(PULONG)RegData;
+
+            NDIS_DbgPrint(MAX_TRACE, ("NdisParameterInteger 0x%lX (%lu)\n",
+                                      ConfigParameter->ParameterData.IntegerData,
+                                      ConfigParameter->ParameterData.IntegerData));
+            break;
+        }
+        case REG_BINARY:
+        {
+            PVOID Buffer;
+
+            NDIS_DbgPrint(MAX_TRACE, ("NdisParameterBinary\n"));
+
+            Buffer = ExAllocatePoolUninitialized(PagedPool, RegDataLength, TAG_CONFIG);
+            if (!Buffer)
+            {
+                NDIS_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
+                NdisStatus = NDIS_STATUS_RESOURCES;
+                goto Exit;
+            }
+            RtlCopyMemory(Buffer, RegData, RegDataLength);
+
+            ConfigParameter->ParameterData.BinaryData.Buffer = Buffer;
+            ConfigParameter->ParameterData.BinaryData.Length = RegDataLength;
+            break;
+        }
+        case REG_MULTI_SZ:
+        {
+            PVOID Buffer;
+
+            NDIS_DbgPrint(MAX_TRACE, ("NdisParameterMultiString\n"));
+
+            Buffer = ExAllocatePoolUninitialized(PagedPool, RegDataLength, TAG_CONFIG);
+            if (!Buffer)
+            {
+                NDIS_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
+                NdisStatus = NDIS_STATUS_RESOURCES;
+                goto Exit;
+            }
+            RtlCopyMemory(Buffer, RegData, RegDataLength);
+
+            ConfigParameter->ParameterType = NdisParameterMultiString;
+            ConfigParameter->ParameterData.StringData.Buffer = Buffer;
+            ConfigParameter->ParameterData.StringData.Length = RegDataLength;
+            break;
+        }
+        case REG_SZ:
+        {
+            UNICODE_STRING String;
+            ULONG Base;
+            PVOID Buffer;
+
+            if (ParameterType == NdisParameterInteger)
+                Base = 10;
+            else if (ParameterType == NdisParameterHexInteger)
+                Base = 16;
+            else
+                Base = 0;
+
+            String.Length = String.MaximumLength = (USHORT)RegDataLength;
+            String.Buffer = RegData;
+
+            if (Base != 0 && IsValidNumericString(&String, Base))
+            {
+                NtStatus = RtlUnicodeStringToInteger(&String,
+                                                     Base,
+                                                     &ConfigParameter->ParameterData.IntegerData);
+                ASSERT(NT_SUCCESS(NtStatus));
+
+                NDIS_DbgPrint(MAX_TRACE, ("NdisParameter(Hex)Integer 0x%lX (%lu)\n",
+                                          ConfigParameter->ParameterData.IntegerData,
+                                          ConfigParameter->ParameterData.IntegerData));
+
+                /*
+                 * MSDN documents that this is returned for all integers,
+                 * regardless of the ParameterType passed in.
+                 */
+                ConfigParameter->ParameterType = NdisParameterInteger;
+            }
+            else
+            {
+                NDIS_DbgPrint(MAX_TRACE, ("NdisParameterString\n"));
+
+                ConfigParameter->ParameterType = NdisParameterString;
+
+                Buffer = ExAllocatePoolUninitialized(PagedPool,
+                                                     RegDataLength,
+                                                     TAG_CONFIG);
+                if (!Buffer)
+                {
+                    NDIS_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
+                    NdisStatus = NDIS_STATUS_RESOURCES;
+                    goto Exit;
+                }
+                RtlCopyMemory(Buffer, RegData, RegDataLength);
+
+                ConfigParameter->ParameterData.StringData.Buffer = Buffer;
+                ConfigParameter->ParameterData.StringData.Length = RegDataLength;
+            }
+            break;
+        }
+        default:
+        {
+            NDIS_DbgPrint(MIN_TRACE, ("Invalid type for NdisReadConfiguration (%d)\n", RegType));
+            NDIS_DbgPrint(MIN_TRACE, ("Requested type: %lu\n", ParameterType));
+            NDIS_DbgPrint(MIN_TRACE, ("Registry entry: '%wZ'\n", Keyword));
+
+            NdisStatus = NDIS_STATUS_FAILURE;
+            goto Exit;
+        }
+    }
+
+    if ((ConfigParameter->ParameterType != ParameterType) &&
+        !((ParameterType == NdisParameterHexInteger) &&
+          (ConfigParameter->ParameterType == NdisParameterInteger)))
     {
         NDIS_DbgPrint(MIN_TRACE, ("Parameter type mismatch! (Requested: %d | Received: %d)\n",
-                                  ParameterType, (*ParameterValue)->ParameterType));
-        NDIS_DbgPrint(MIN_TRACE, ("Registry entry: %wZ\n", Keyword));
+                                  ParameterType, ConfigParameter->ParameterType));
+        NDIS_DbgPrint(MIN_TRACE, ("Registry entry: '%wZ'\n", Keyword));
     }
 
+    ASSERT(NdisStatus == NDIS_STATUS_SUCCESS);
+
+    *ParameterValue = ConfigParameter;
+
     MiniportResource->ResourceType = MINIPORT_RESOURCE_TYPE_REGISTRY_DATA;
-    MiniportResource->Resource = *ParameterValue;
+    MiniportResource->Resource = ConfigParameter;
 
-    ExInterlockedInsertTailList(&ConfigurationContext->ResourceListHead, &MiniportResource->ListEntry, &ConfigurationContext->ResourceLock);
+    NDIS_DbgPrint(MID_TRACE, ("inserting %p into the resource list\n",
+                              MiniportResource->Resource));
 
-    ExFreePoolWithTag(KeyInformation, TAG_CONFIG);
+    ExInterlockedInsertTailList(&ConfigurationContext->ResourceListHead,
+                                &MiniportResource->ListEntry,
+                                &ConfigurationContext->ResourceLock);
 
-    *Status = NDIS_STATUS_SUCCESS;
+Exit:
+    *Status = NdisStatus;
+
+    if (NdisStatus != NDIS_STATUS_SUCCESS)
+    {
+        if (ConfigParameter)
+            ExFreePoolWithTag(ConfigParameter, TAG_CONFIG);
+        if (MiniportResource)
+            ExFreePoolWithTag(MiniportResource, TAG_CONFIG);
+    }
+
+    if (KeyInformation)
+        ExFreePoolWithTag(KeyInformation, TAG_CONFIG);
 }
 
 /*
