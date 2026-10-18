@@ -11,6 +11,7 @@ list(APPEND SOURCE
     CommandLineToArgvW.cpp
     CShellDesktop.cpp
     CShellDispatch.cpp
+    CShellItem.cpp
     CShellLink.cpp
     #CUserNotification.cpp # Test is broken on Win 2003
     Control_RunDLLW.cpp

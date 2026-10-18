@@ -21,6 +21,7 @@
  */
 
 #include "precomp.h"
+#include "prop.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
@@ -93,6 +94,16 @@ HRESULT CShellItem::get_shellfolder(IBindCtx *pbc, REFIID riid, void **ppvOut)
     }
 
     return psf->QueryInterface(riid, ppvOut);
+}
+
+HRESULT CShellItem::get_property_from_folder(REFPROPERTYKEY key, VARIANT *pvar)
+{
+    CComPtr<IShellFolder2> psf;
+    PCUITEMID_CHILD pidl;
+    HRESULT hr = SHBindToParent(m_pidl, IID_PPV_ARG(IShellFolder2, &psf), &pidl);
+    if (SUCCEEDED(hr))
+        return psf->GetDetailsEx(pidl, (const SHCOLUMNID*)&key, pvar);
+    return hr;
 }
 
 HRESULT WINAPI CShellItem::BindToHandler(IBindCtx *pbc, REFGUID rbhid, REFIID riid, void **ppvOut)
@@ -220,6 +231,167 @@ HRESULT WINAPI CShellItem::Compare(IShellItem *oth, SICHINTF hint, int *piOrder)
         return S_FALSE;
     else
         return S_OK;
+}
+
+HRESULT WINAPI CShellItem::GetPropertyStore(_In_ GETPROPERTYSTOREFLAGS flags,
+                                            _In_ REFIID riid, _Out_ void **ppv)
+{
+    if (!ppv)
+        return E_POINTER;
+    UNIMPLEMENTED;
+    *ppv = NULL;
+    return E_NOTIMPL;
+}
+
+HRESULT WINAPI CShellItem::GetPropertyStoreWithCreateObject(_In_ GETPROPERTYSTOREFLAGS flags,
+                                                            _In_ IUnknown *punkCreateObject,
+                                                            _In_ REFIID riid, _Out_ void **ppv)
+{
+    if (!ppv)
+        return E_POINTER;
+    if (!punkCreateObject)
+        return E_INVALIDARG;
+    UNIMPLEMENTED;
+    *ppv = NULL;
+    return E_NOTIMPL;
+}
+
+HRESULT WINAPI CShellItem::GetPropertyStoreForKeys(const PROPERTYKEY *rgKeys, _In_ UINT cKeys,
+                                                   _In_ GETPROPERTYSTOREFLAGS flags,
+                                                   _In_ REFIID riid, _Out_ void **ppv)
+{
+    if (!ppv)
+        return E_POINTER;
+    UNIMPLEMENTED;
+    *ppv = NULL;
+    return E_NOTIMPL;
+}
+
+HRESULT WINAPI CShellItem::GetPropertyDescriptionList(_In_ REFPROPERTYKEY keyType, _In_ REFIID riid,
+                                                      _Out_ void **ppv)
+{
+    if (!ppv)
+        return E_POINTER;
+    UNIMPLEMENTED; // TODO: propsys::PSCreatePropertyDescriptionList? IShellItemArray::GetPropertyDescriptionList?
+    *ppv = NULL;
+    return E_NOTIMPL;
+}
+
+HRESULT WINAPI CShellItem::Update(_In_ IBindCtx *pbc)
+{
+    UNIMPLEMENTED;
+    return E_NOTIMPL;
+}
+
+HRESULT WINAPI CShellItem::GetProperty(_In_ REFPROPERTYKEY key, _Out_ PROPVARIANT *ppropvar)
+{
+    VARIANT v;
+    HRESULT hr = get_property_from_folder(key, &v); // TODO: BHID_PropertyStore?
+    if (FAILED(hr))
+    {
+        if (HRESULT_FACILITY(hr) == FACILITY_WIN32 && hr != E_INVALIDARG)
+            return hr;
+        return HResultFromWin32(ERROR_NOT_FOUND);
+    }
+    return SHELL_VariantToPropVariant(&v, ppropvar);
+}
+
+HRESULT CShellItem::get_converted_property(REFPROPERTYKEY key, PROPVARIANT *ppropvar, VARTYPE vt)
+{
+    PROPVARIANT pv;
+    pv.vt = VT_EMPTY;
+    HRESULT hr = GetProperty(key, &pv);
+    if (FAILED(hr))
+        return hr;
+    hr = SHELL_PropVariantChangeType(ppropvar, pv, vt);
+    PropVariantClear(&pv);
+    return hr;
+}
+
+HRESULT WINAPI CShellItem::GetCLSID(_In_ REFPROPERTYKEY key, _Out_ CLSID *pclsid)
+{
+    if (!pclsid)
+        return E_INVALIDARG;
+
+    PROPVARIANT pv;
+    pv.vt = VT_EMPTY;
+    HRESULT hr = get_converted_property(key, &pv, VT_CLSID);
+    *pclsid = SUCCEEDED(hr) ? *pv.puuid : GUID_NULL;
+    PropVariantClear(&pv);
+    return hr;
+}
+
+HRESULT WINAPI CShellItem::GetFileTime(_In_ REFPROPERTYKEY key, _Out_ FILETIME *pft)
+{
+    if (!pft)
+        return E_INVALIDARG;
+
+    const FILETIME failval = {};
+    PROPVARIANT pv;
+    pv.vt = VT_EMPTY;
+    HRESULT hr = get_converted_property(key, &pv, VT_FILETIME);
+    *pft = SUCCEEDED(hr) ? pv.filetime : failval;
+    return hr;
+}
+
+HRESULT WINAPI CShellItem::GetString(_In_ REFPROPERTYKEY key, _Out_ LPWSTR *ppsz)
+{
+    if (!ppsz)
+        return E_INVALIDARG;
+
+    PROPVARIANT pv;
+    pv.vt = VT_EMPTY;
+    HRESULT hr = get_converted_property(key, &pv, VT_LPWSTR);
+    *ppsz = SUCCEEDED(hr) ? pv.pwszVal : NULL; // Transferring ownership, don't call PropVariantClear
+    return hr;
+}
+
+HRESULT WINAPI CShellItem::GetInt32(_In_ REFPROPERTYKEY key, _Out_ int *pi)
+{
+    if (!pi)
+        return E_INVALIDARG;
+
+    PROPVARIANT pv;
+    pv.vt = VT_EMPTY;
+    HRESULT hr = get_converted_property(key, &pv, VT_I4);
+    *pi = SUCCEEDED(hr) ? pv.lVal : 0;
+    return hr;
+}
+
+HRESULT WINAPI CShellItem::GetUInt32(_In_ REFPROPERTYKEY key, _Out_ ULONG *pui)
+{
+    if (!pui)
+        return E_INVALIDARG;
+
+    PROPVARIANT pv;
+    pv.vt = VT_EMPTY;
+    HRESULT hr = get_converted_property(key, &pv, VT_UI4);
+    *pui = SUCCEEDED(hr) ? pv.ulVal : 0;
+    return hr;
+}
+
+HRESULT WINAPI CShellItem::GetUInt64(_In_ REFPROPERTYKEY key, _Out_ ULONGLONG *pull)
+{
+    if (!pull)
+        return E_INVALIDARG;
+
+    PROPVARIANT pv;
+    pv.vt = VT_EMPTY;
+    HRESULT hr = get_converted_property(key, &pv, VT_UI8);
+    *pull = SUCCEEDED(hr) ? pv.uhVal.QuadPart : 0;
+    return hr;
+}
+
+HRESULT WINAPI CShellItem::GetBool(_In_ REFPROPERTYKEY key, _Out_ BOOL *pf)
+{
+    if (!pf)
+        return E_INVALIDARG;
+
+    PROPVARIANT pv;
+    pv.vt = VT_EMPTY;
+    HRESULT hr = get_converted_property(key, &pv, VT_BOOL);
+    *pf = SUCCEEDED(hr) && V_BOOL((VARIANT*)&pv) != VARIANT_FALSE;
+    return hr;
 }
 
 HRESULT WINAPI CShellItem::GetClassID(CLSID *pClassID)
