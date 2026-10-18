@@ -238,6 +238,7 @@ SelectVolume(
     PLIST_ENTRY Entry;
     PVOLENTRY VolumeEntry;
     ULONG ulValue;
+    WCHAR DriveLetter;
 
     DPRINT("SelectVolume()\n");
 
@@ -256,36 +257,60 @@ SelectVolume(
         return EXIT_SUCCESS;
     }
 
-    if (!IsDecString(argv[2]))
+    DriveLetter = IsDriveLetter(argv[2]);
+    if (DriveLetter != UNICODE_NULL)
     {
-        ConResPuts(StdErr, IDS_ERROR_INVALID_ARGS);
-        return EXIT_SUCCESS;
-    }
+        CurrentVolume = NULL;
 
-    ulValue = wcstoul(argv[2], NULL, 10);
-    if ((ulValue == 0) && (errno == ERANGE))
-    {
-        ConResPuts(StdErr, IDS_ERROR_INVALID_ARGS);
-        return EXIT_SUCCESS;
-    }
-
-    CurrentVolume = NULL;
-
-    Entry = VolumeListHead.Flink;
-    while (Entry != &VolumeListHead)
-    {
-        VolumeEntry = CONTAINING_RECORD(Entry, VOLENTRY, ListEntry);
-
-        if (VolumeEntry->VolumeNumber == ulValue)
+        Entry = VolumeListHead.Flink;
+        while (Entry != &VolumeListHead)
         {
-            CurrentVolume = VolumeEntry;
-            ConResPrintf(StdOut, IDS_SELECT_VOLUME, CurrentVolume->VolumeNumber);
-            return TRUE;
+            VolumeEntry = CONTAINING_RECORD(Entry, VOLENTRY, ListEntry);
+
+            if (towupper(VolumeEntry->DriveLetter) == towupper(DriveLetter))
+            {
+                CurrentVolume = VolumeEntry;
+                ConResPrintf(StdOut, IDS_SELECT_VOLUME, CurrentVolume->VolumeNumber);
+                return EXIT_SUCCESS;
+            }
+
+            Entry = Entry->Flink;
         }
 
-        Entry = Entry->Flink;
+        ConResPuts(StdErr, IDS_SELECT_VOLUME_INVALID);
+        return EXIT_SUCCESS;
     }
 
-    ConResPuts(StdErr, IDS_SELECT_VOLUME_INVALID);
+    if (IsDecString(argv[2]))
+    {
+        ulValue = wcstoul(argv[2], NULL, 10);
+        if ((ulValue == 0) && (errno == ERANGE))
+        {
+            ConResPuts(StdErr, IDS_ERROR_INVALID_ARGS);
+            return EXIT_SUCCESS;
+        }
+
+        CurrentVolume = NULL;
+
+        Entry = VolumeListHead.Flink;
+        while (Entry != &VolumeListHead)
+        {
+            VolumeEntry = CONTAINING_RECORD(Entry, VOLENTRY, ListEntry);
+
+            if (VolumeEntry->VolumeNumber == ulValue)
+            {
+                CurrentVolume = VolumeEntry;
+                ConResPrintf(StdOut, IDS_SELECT_VOLUME, CurrentVolume->VolumeNumber);
+                return EXIT_SUCCESS;
+            }
+
+            Entry = Entry->Flink;
+        }
+
+        ConResPuts(StdErr, IDS_SELECT_VOLUME_INVALID);
+        return EXIT_SUCCESS;
+    }
+
+    ConResPuts(StdErr, IDS_ERROR_INVALID_ARGS);
     return EXIT_SUCCESS;
 }

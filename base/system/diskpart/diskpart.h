@@ -556,6 +556,10 @@ BOOL
 IsHexString(
     _In_ PWSTR pszHexString);
 
+WCHAR
+IsDriveLetter(
+    _In_ PWSTR pszString);
+
 BOOL
 HasPrefix(
     _In_ PWSTR pszString,

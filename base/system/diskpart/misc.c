@@ -53,6 +53,24 @@ IsHexString(
     return TRUE;
 }
 
+WCHAR
+IsDriveLetter(
+    _In_ PWSTR pszString)
+{
+    INT nLength;
+
+    nLength = wcslen(pszString);
+    if ((nLength == 0) || (nLength > 2))
+        return UNICODE_NULL;
+
+    if (!iswalpha(pszString[0]))
+        return UNICODE_NULL;
+
+    if ((nLength > 1) && (pszString[1] != L':'))
+        return UNICODE_NULL;
+
+    return pszString[0];
+}
 
 BOOL
 HasPrefix(
