@@ -673,6 +673,12 @@ SetupDiGetClassInstallParamsW(
         return FALSE;
     }
 
+    if (DeviceInfoData && !DeviceInfoData->Reserved)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
     InstallParams.cbSize = sizeof(SP_DEVINSTALL_PARAMS_W);
     if (!SetupDiGetDeviceInstallParamsW(DeviceInfoSet, DeviceInfoData, &InstallParams))
         return FALSE;
@@ -1227,7 +1233,8 @@ SETUP_GetValueString(
     return ERROR_SUCCESS;
 }
 
-static BOOL
+static
+BOOL
 SETUP_CallInstaller(
     IN DI_FUNCTION InstallFunction,
     IN HDEVINFO DeviceInfoSet,
