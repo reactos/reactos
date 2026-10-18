@@ -7,6 +7,7 @@
  */
 
 #include "precomp.h"
+#include <strsafe.h>
 
 
 typedef struct _PORT_DATA
@@ -140,8 +141,11 @@ ReadPortSettings(
 
     if (lError != ERROR_SUCCESS || dwType != REG_SZ || dwSize > sizeof(szPortData))
     {
-        wcscpy(szPortData, L"9600,n,8,1");
+        TRACE("Using default port settings (error %lu, type %lu, size %lu)\n",
+              lError, dwType, dwSize);
+        StringCchCopyW(szPortData, ARRAYSIZE(szPortData), L"9600,n,8,1");
     }
+
     TRACE("szPortData: '%S'\n", szPortData);
 
     /* Replace commas by spaces */
@@ -354,7 +358,7 @@ OnInitDialog(
     HWND hwndControl;
 
     TRACE("OnInitDialog()\n");
-    
+
     EnableWindow(hwnd, TRUE);
 
     pPortData = (PPORT_DATA)((LPPROPSHEETPAGEW)lParam)->lParam;
