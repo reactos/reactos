@@ -2084,15 +2084,26 @@ static BOOL InstallOneService(
         NULL,
         NULL,
         NULL);
-        /* Create standard Parameters key for driver services */
+
+    /* Create standard Parameters key for driver services */
     if (ServiceType & (SERVICE_KERNEL_DRIVER | SERVICE_FILE_SYSTEM_DRIVER))
     {
         HKEY hParametersKey;
-        if (RegCreateKeyExW(hServiceKey, L"Parameters", 0, NULL, 0, KEY_READ | KEY_WRITE, NULL, &hParametersKey, NULL) == ERROR_SUCCESS)
+
+        if (RegCreateKeyExW(hServiceKey,
+                            L"Parameters",
+                            0,
+                            NULL,
+                            0,
+                            KEY_READ | KEY_WRITE,
+                            NULL,
+                            &hParametersKey,
+                            NULL) == ERROR_SUCCESS)
         {
             RegCloseKey(hParametersKey);
         }
     }
+
     RegCloseKey(hServiceKey);
 
 cleanup:
