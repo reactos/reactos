@@ -1716,6 +1716,9 @@ Phase1InitializationDiscard(IN PVOID Context)
     /* Create NLS section */
     ExpInitNls(LoaderBlock);
 
+    /* Initialize the Rtl locale table */
+    RtlpInitializeLocaleTable();
+
     /* Initialize Cache Views */
     if (!CcInitializeCacheManager()) KeBugCheck(CACHE_INITIALIZATION_FAILED);
 
@@ -1752,9 +1755,6 @@ Phase1InitializationDiscard(IN PVOID Context)
 
     /* Initialize the File System Runtime Library */
     if (!FsRtlInitSystem()) KeBugCheck(FILE_INITIALIZATION_FAILED);
-
-    /* Initialize the Rtl locale table */
-    RtlpInitializeLocaleTable();
 
     /* Initialize range lists */
     RtlInitializeRangeListPackage();
