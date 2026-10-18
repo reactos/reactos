@@ -302,7 +302,8 @@ UacpiNtArgumentsToObjects(
 
     for (i = 0; i < Count; i++)
     {
-        Status = UacpiNtArgumentToObject(Argument, BytesAvailable, Depth, &Array->objects[i], &Consumed);
+        Status = UacpiNtArgumentToObject(Argument, BytesAvailable, Depth, &Array->objects[i],
+                                         &Consumed);
         if (!NT_SUCCESS(Status))
         {
             UacpiNtFreeObjectArray(Array);
@@ -537,13 +538,15 @@ UacpiNtDecodeEvalInput(
                 return STATUS_INVALID_PARAMETER;
             RtlCopyMemory(Path, Integer->MethodName, sizeof(Integer->MethodName));
             Path[sizeof(Integer->MethodName)] = ANSI_NULL;
-            return UacpiNtSingleArgument(uacpi_object_create_integer(Integer->IntegerArgument), Args);
+            return UacpiNtSingleArgument(uacpi_object_create_integer(Integer->IntegerArgument),
+                                         Args);
 
         case ACPI_EVAL_INPUT_BUFFER_SIMPLE_STRING_SIGNATURE:
             String = Input;
             Offset = FIELD_OFFSET(ACPI_EVAL_INPUT_BUFFER_SIMPLE_STRING, String);
             if (InputLength < Offset ||
-                !UacpiNtStringArgumentValid(InputLength - Offset, String->StringLength, String->String))
+                !UacpiNtStringArgumentValid(InputLength - Offset, String->StringLength,
+                                            String->String))
             {
                 return STATUS_INVALID_PARAMETER;
             }
@@ -568,25 +571,30 @@ UacpiNtDecodeEvalInput(
             PlainEx = Input;
             if (InputLength < sizeof(*PlainEx))
                 return STATUS_INVALID_PARAMETER;
-            RtlStringCbCopyNA(Path, UACPINT_EVAL_PATH_LENGTH, PlainEx->MethodName, sizeof(PlainEx->MethodName));
+            RtlStringCbCopyNA(Path, UACPINT_EVAL_PATH_LENGTH, PlainEx->MethodName,
+                              sizeof(PlainEx->MethodName));
             return STATUS_SUCCESS;
 
         case ACPI_EVAL_INPUT_BUFFER_SIMPLE_INTEGER_SIGNATURE_EX:
             IntegerEx = Input;
             if (InputLength < sizeof(*IntegerEx))
                 return STATUS_INVALID_PARAMETER;
-            RtlStringCbCopyNA(Path, UACPINT_EVAL_PATH_LENGTH, IntegerEx->MethodName, sizeof(IntegerEx->MethodName));
-            return UacpiNtSingleArgument(uacpi_object_create_integer(IntegerEx->IntegerArgument), Args);
+            RtlStringCbCopyNA(Path, UACPINT_EVAL_PATH_LENGTH, IntegerEx->MethodName,
+                              sizeof(IntegerEx->MethodName));
+            return UacpiNtSingleArgument(uacpi_object_create_integer(IntegerEx->IntegerArgument),
+                                         Args);
 
         case ACPI_EVAL_INPUT_BUFFER_SIMPLE_STRING_SIGNATURE_EX:
             StringEx = Input;
             Offset = FIELD_OFFSET(ACPI_EVAL_INPUT_BUFFER_SIMPLE_STRING_EX, String);
             if (InputLength < Offset ||
-                !UacpiNtStringArgumentValid(InputLength - Offset, StringEx->StringLength, StringEx->String))
+                !UacpiNtStringArgumentValid(InputLength - Offset, StringEx->StringLength,
+                                            StringEx->String))
             {
                 return STATUS_INVALID_PARAMETER;
             }
-            RtlStringCbCopyNA(Path, UACPINT_EVAL_PATH_LENGTH, StringEx->MethodName, sizeof(StringEx->MethodName));
+            RtlStringCbCopyNA(Path, UACPINT_EVAL_PATH_LENGTH, StringEx->MethodName,
+                              sizeof(StringEx->MethodName));
             return UacpiNtSingleArgument(uacpi_object_create_cstring((const uacpi_char *)StringEx->String), Args);
 
         case ACPI_EVAL_INPUT_BUFFER_COMPLEX_SIGNATURE_EX:
@@ -594,7 +602,8 @@ UacpiNtDecodeEvalInput(
             Offset = FIELD_OFFSET(ACPI_EVAL_INPUT_BUFFER_COMPLEX_EX, Argument);
             if (InputLength < Offset || InputLength < ComplexEx->Size)
                 return STATUS_INVALID_PARAMETER;
-            RtlStringCbCopyNA(Path, UACPINT_EVAL_PATH_LENGTH, ComplexEx->MethodName, sizeof(ComplexEx->MethodName));
+            RtlStringCbCopyNA(Path, UACPINT_EVAL_PATH_LENGTH, ComplexEx->MethodName,
+                              sizeof(ComplexEx->MethodName));
             return UacpiNtArgumentsToObjects((PACPI_METHOD_ARGUMENT)ComplexEx->Argument,
                                              ComplexEx->ArgumentCount,
                                              InputLength - Offset,
@@ -729,7 +738,8 @@ UacpiNtEvaluate(
             }
             else
             {
-                DPRINT1("EVAL %s on %s failed: %s\n", Path, TraceName, uacpi_status_to_string(UacpiStatus));
+                DPRINT1("EVAL %s on %s failed: %s\n", Path, TraceName,
+                        uacpi_status_to_string(UacpiStatus));
                 Status = STATUS_UNSUCCESSFUL;
             }
         }
@@ -834,7 +844,8 @@ UacpiNtGetDeviceInformation(
             *Information = RTL_SIZEOF_THROUGH_FIELD(ACPI_DEVICE_INFORMATION_OUTPUT_BUFFER, Size);
         }
 
-        DPRINT("%s: device information needs %lu bytes, got %lu\n", TraceName, Needed, OutputLength);
+        DPRINT("%s: device information needs %lu bytes, got %lu\n", TraceName, Needed,
+               OutputLength);
         return STATUS_BUFFER_OVERFLOW;
     }
 
@@ -994,7 +1005,8 @@ UacpiNtEnumChildren(
         Output->NumberOfChildren = Needed;
         *Information = sizeof(*Output);
 
-        DPRINT("%s: %lu children need %lu bytes, got %lu\n", TraceName, Count, Needed, OutputLength);
+        DPRINT("%s: %lu children need %lu bytes, got %lu\n", TraceName, Count, Needed,
+               OutputLength);
         return STATUS_BUFFER_OVERFLOW;
     }
 
@@ -1044,7 +1056,8 @@ UacpiNtManipulateGlobalLock(
     else
         UacpiStatus = uacpi_release_global_lock(Sequence);
 
-    DPRINT("%s: global lock %s returned %d\n", TraceName, Acquire ? "acquire" : "release", (int)UacpiStatus);
+    DPRINT("%s: global lock %s returned %d\n", TraceName, Acquire ? "acquire" : "release",
+           (int)UacpiStatus);
     return uacpi_unlikely_error(UacpiStatus) ? STATUS_UNSUCCESSFUL : STATUS_SUCCESS;
 }
 
@@ -1172,7 +1185,8 @@ UacpiNtFindInitialApicId(
                 Found = TRUE;
             }
         }
-        else if (Header->type == ACPI_MADT_ENTRY_TYPE_LOCAL_X2APIC && Header->length >= sizeof(*X2Apic))
+        else if (Header->type == ACPI_MADT_ENTRY_TYPE_LOCAL_X2APIC &&
+                 Header->length >= sizeof(*X2Apic))
         {
             X2Apic = (struct acpi_madt_x2apic *)Entry;
             if (X2Apic->uid == ProcessorId)

@@ -24,12 +24,19 @@ typedef enum _ACPI_NT_INTERRUPT_MODEL {
 
 typedef
 VOID
-(NTAPI *PACPI_HAL_MACHINE_STATE_INIT)(PVOID StateData, PULONG OutInterruptModel);
+(NTAPI *PACPI_HAL_INIT_SLEEP_STATES)(
+    _In_ PVOID StateData,
+    _Out_ PULONG OutInterruptModel);
 
 typedef
 ULONG
-(NTAPI *PACPI_HAL_PCI_CONFIG)(PVOID Context, ULONG Bus, ULONG Slot,
-                              PVOID Buffer, ULONG Offset, ULONG Length);
+(NTAPI *PACPI_HAL_PCI_CONFIG)(
+    _In_opt_ PVOID Context,
+    _In_ ULONG Bus,
+    _In_ ULONG Slot,
+    _Inout_updates_bytes_(Length) PVOID Buffer,
+    _In_ ULONG Offset,
+    _In_ ULONG Length);
 
 typedef struct _ACPI_DRIVER_HAL_DISPATCH
 {
@@ -58,18 +65,18 @@ typedef struct _ACPI_HAL_PM_DISPATCH
 #if (NTDDI_VERSION >= NTDDI_WIN8)
     PVOID Reserved0;
 #else
-    PVOID TimerInit;
-    PVOID TimerCarry;
+    PVOID PmTimerInitialize;
+    PVOID PmTimerOverflow;
 #endif
-    PACPI_HAL_MACHINE_STATE_INIT MachineStateInit;
-    PVOID QueryFlags;
-    PVOID PicStateIntact;
+    PACPI_HAL_INIT_SLEEP_STATES InitializeSleepStates;
+    PVOID QueryAcpiFlags;
+    PVOID PicStateValid;
     PVOID RestorePicState;
     PACPI_HAL_PCI_CONFIG PciReadConfig;
     PACPI_HAL_PCI_CONFIG PciWriteConfig;
-    PVOID GetApicVersion;
+    PVOID QueryApicVersion;
     PVOID SetMaxLegacyPciBus;
-    PVOID IsVectorValid;
+    PVOID ValidateVector;
     PVOID GetTable;
     PVOID GetRsdp;
     PVOID GetFacsMapping;
@@ -81,7 +88,7 @@ typedef struct _ACPI_HAL_PM_DISPATCH
 #endif
 } ACPI_HAL_PM_DISPATCH, *PACPI_HAL_PM_DISPATCH;
 
-/* Handed to MachineStateInit, one entry per S1 to S5 */
+/* Handed to InitializeSleepStates, one entry per S1 to S5 */
 typedef struct _ACPI_HAL_STATE_DATA
 {
     UCHAR Supported;

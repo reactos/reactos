@@ -80,8 +80,8 @@ typedef struct _UACPINT_MSI_RECORD
 typedef struct _UACPINT_IRQ_LINK
 {
     uacpi_namespace_node *Node;
-    ULONG                 CurrentGsiv;   ///< line in the hardware, NONE when unprogrammed
-    ULONG                 PossibleGsiv;  ///< line this transaction picked
+    ULONG                 HardwareGsiv;  ///< line in the hardware, NONE when unprogrammed
+    ULONG                 PickedGsiv;    ///< line this transaction picked
     BOOLEAN               Dumped;        ///< its _PRS choices were traced once
 } UACPINT_IRQ_LINK, *PUACPINT_IRQ_LINK;
 
@@ -664,11 +664,11 @@ UacpiNtLinkSlot(
         if (!UacpiNtIrqLinks[Index].Node)
         {
             UacpiNtIrqLinks[Index].Node = Node;
-            UacpiNtIrqLinks[Index].PossibleGsiv = UACPINT_IRQ_LINK_NONE;
+            UacpiNtIrqLinks[Index].PickedGsiv = UACPINT_IRQ_LINK_NONE;
 
             /* The firmware left the link on a line already, _CRS tells which */
-            if (!UacpiNtLinkCurrentGsiv(Node, 0, &UacpiNtIrqLinks[Index].CurrentGsiv))
-                UacpiNtIrqLinks[Index].CurrentGsiv = UACPINT_IRQ_LINK_NONE;
+            if (!UacpiNtLinkCurrentGsiv(Node, 0, &UacpiNtIrqLinks[Index].HardwareGsiv))
+                UacpiNtIrqLinks[Index].HardwareGsiv = UACPINT_IRQ_LINK_NONE;
 
             return &UacpiNtIrqLinks[Index];
         }
@@ -776,8 +776,8 @@ UacpiNtGsivHeldByLink(
         if (!Slot->Node || Slot->Node == Except)
             continue;
 
-        Held = (Slot->PossibleGsiv != UACPINT_IRQ_LINK_NONE) ? Slot->PossibleGsiv
-                                                             : Slot->CurrentGsiv;
+        Held = (Slot->PickedGsiv != UACPINT_IRQ_LINK_NONE) ? Slot->PickedGsiv
+                                                           : Slot->HardwareGsiv;
         if (Held == Gsiv)
             return TRUE;
     }
@@ -979,24 +979,22 @@ UacpiNtIrqLinkDecide(
 
     UacpiNtLinkDumpCandidates(Slot);
 
-    if (Slot->PossibleGsiv != UACPINT_IRQ_LINK_NONE)
+    if (Slot->PickedGsiv != UACPINT_IRQ_LINK_NONE)
     {
-        *Gsiv = Slot->PossibleGsiv;
+        *Gsiv = Slot->PickedGsiv;
         return TRUE;
     }
 
-    Current = Slot->CurrentGsiv;
+    Current = Slot->HardwareGsiv;
 
     /*
-     * The firmware routed the links before we booted and wrote the result into
-     * every interrupt line register behind them, so the line a link is already
-     * on is the one to keep. Two links sharing a line is how firmware leaves
-     * them, so the other links are not avoided here. Moving one is for a line
-     * that cannot carry the link at all.
+     * Firmware routed the links before boot and wrote the result into the
+     * interrupt line registers, so keep the current line. Links sharing it are
+     * fine, a link only moves when its line cannot carry it.
      */
     if (Current != UACPINT_IRQ_LINK_NONE && UacpiNtLinkLineUsable(Current, FALSE, Node))
     {
-        Slot->PossibleGsiv = Current;
+        Slot->PickedGsiv = Current;
         *Gsiv = Current;
         return TRUE;
     }
@@ -1018,7 +1016,7 @@ UacpiNtIrqLinkDecide(
                UacpiNtIrqLinkRotation);
     }
 
-    Slot->PossibleGsiv = Chosen;
+    Slot->PickedGsiv = Chosen;
     *Gsiv = Chosen;
     return TRUE;
 }
@@ -1032,7 +1030,7 @@ UacpiNtIrqLinksRestart(VOID)
     ULONG Index;
 
     for (Index = 0; Index < UACPINT_IRQ_LINK_MAX; Index++)
-        UacpiNtIrqLinks[Index].PossibleGsiv = UACPINT_IRQ_LINK_NONE;
+        UacpiNtIrqLinks[Index].PickedGsiv = UACPINT_IRQ_LINK_NONE;
 }
 
 /* _SRS every link whose pick differs from the line it is on, then keep the pick */
@@ -1048,21 +1046,21 @@ UacpiNtIrqLinksWriteState(VOID)
     {
         Slot = &UacpiNtIrqLinks[Index];
         if (!Slot->Node ||
-            Slot->PossibleGsiv == UACPINT_IRQ_LINK_NONE ||
-            Slot->PossibleGsiv == Slot->CurrentGsiv)
+            Slot->PickedGsiv == UACPINT_IRQ_LINK_NONE ||
+            Slot->PickedGsiv == Slot->HardwareGsiv)
         {
             continue;
         }
 
-        if (NT_SUCCESS(UacpiNtLinkProgram(Slot->Node, Slot->PossibleGsiv)))
+        if (NT_SUCCESS(UacpiNtLinkProgram(Slot->Node, Slot->PickedGsiv)))
         {
-            DPRINT("uACPI-NT: link %p programmed to GSIV %u\n", Slot->Node, Slot->PossibleGsiv);
-            Slot->CurrentGsiv = Slot->PossibleGsiv;
+            DPRINT("uACPI-NT: link %p programmed to GSIV %u\n", Slot->Node, Slot->PickedGsiv);
+            Slot->HardwareGsiv = Slot->PickedGsiv;
         }
         else
         {
-            DPRINT1("uACPI-NT: link %p _SRS to GSIV %u failed\n", Slot->Node, Slot->PossibleGsiv);
-            Slot->PossibleGsiv = Slot->CurrentGsiv;
+            DPRINT1("uACPI-NT: link %p _SRS to GSIV %u failed\n", Slot->Node, Slot->PickedGsiv);
+            Slot->PickedGsiv = Slot->HardwareGsiv;
         }
     }
 }
@@ -1085,13 +1083,14 @@ UacpiNtIrqLinksResume(VOID)
     for (Index = 0; Index < UACPINT_IRQ_LINK_MAX; Index++)
     {
         Slot = &UacpiNtIrqLinks[Index];
-        if (!Slot->Node || Slot->CurrentGsiv == UACPINT_IRQ_LINK_NONE)
+        if (!Slot->Node || Slot->HardwareGsiv == UACPINT_IRQ_LINK_NONE)
             continue;
 
-        if (NT_SUCCESS(UacpiNtLinkProgram(Slot->Node, Slot->CurrentGsiv)))
-            DPRINT("uACPI-NT: link %p restored to GSIV %u\n", Slot->Node, Slot->CurrentGsiv);
+        if (NT_SUCCESS(UacpiNtLinkProgram(Slot->Node, Slot->HardwareGsiv)))
+            DPRINT("uACPI-NT: link %p restored to GSIV %u\n", Slot->Node, Slot->HardwareGsiv);
         else
-            DPRINT1("uACPI-NT: link %p restore to GSIV %u failed\n", Slot->Node, Slot->CurrentGsiv);
+            DPRINT1("uACPI-NT: link %p restore to GSIV %u failed\n", Slot->Node,
+                    Slot->HardwareGsiv);
     }
 }
 
@@ -1270,7 +1269,8 @@ UacpiNtPrtClimbBridge(
 
         default:
             if (UacpiNtIrqArbVerbose)
-                DPRINT("uACPI-NT: bridge on bus %u subclass 0x%02X does not route\n", *Bus, SubClass);
+                DPRINT("uACPI-NT: bridge on bus %u subclass 0x%02X does not route\n", *Bus,
+                       SubClass);
             return STATUS_NOT_FOUND;
     }
 
@@ -1314,7 +1314,8 @@ UacpiNtPrtResolveGsiv(
     if (!NT_SUCCESS(Status))
         return Status;
 
-    Status = IoGetDeviceProperty(DevicePdo, DevicePropertyAddress, sizeof(Address), &Address, &Length);
+    Status = IoGetDeviceProperty(DevicePdo, DevicePropertyAddress, sizeof(Address), &Address,
+                                 &Length);
     if (!NT_SUCCESS(Status))
         return Status;
 
@@ -1404,18 +1405,16 @@ UacpiNtPrtResolveGsiv(
     }
 
     /*
-     * The line is not noted as level triggered here. Resolving it is only a
-     * proposal, and a line a device merely considered must keep the triggering
-     * its real owner asked for. UacpiNtNotePlacedTriggering does it on placement.
+     * The triggering is not noted here since resolving is only a proposal.
+     * UacpiNtNotePlacedTriggering notes it on placement.
      */
     return Status;
 }
 
 /*
- * A GSIV already placed as a shared level triggered line may be joined whatever
- * the new requirement's disposition says, because every device on the line sees
- * the same assertion. An edge triggered one may not: the second device would
- * lose its edges.
+ * A shared level triggered GSIV may be joined whatever the new disposition says,
+ * every device on it sees the same assertion. A second device on an edge
+ * triggered one would lose its edges.
  */
 static
 BOOLEAN
@@ -1573,11 +1572,9 @@ UacpiNtIrqGetNextAllocationRange(
                 break;
 
             /*
-             * An unrouted device skips to its boot line. The firmware wired it
-             * to a line and wrote that line into its interrupt line register,
-             * and the ordering list the library walks knows nothing about which
-             * one: its first interrupt window is GSIV 9, so a device that falls
-             * through to it lands on a line nothing drives.
+             * An unrouted device skips to the boot line firmware wrote into its
+             * interrupt line register. The library ordering starts at GSIV 9,
+             * which would land it on a line nothing drives.
              */
             case UACPINT_NEXT_LINK_PREF:
                 UACPINT_WS_SET_CURSOR(WorkSpace, UACPINT_NEXT_BOOT_CONFIG);
@@ -1649,10 +1646,8 @@ UacpiNtIrqFindSuitableRange(
         return TRUE;
 
     /*
-     * A routed device only fits on its routed line, so the library's pick is
-     * replaced by it. The line has to be free or already carrying nothing but
-     * shared level triggered interrupts: a line an edge triggered or exclusive
-     * device drives is a miss, not somewhere to stack a second owner.
+     * A routed device only fits on its routed line, which replaces the library
+     * pick. That line must be free or carry only shared level triggered users.
      */
     if (UACPINT_WS_PRT(State->WorkSpace) >= UACPINT_WS_PRT_BIAS)
     {
@@ -2185,7 +2180,8 @@ UacpiNtDumpMsiState(
     if ((USHORT)Ids == PCI_INVALID_VENDORID)
         return;
 
-    UacpiNtReadPciConfig(Pdo, FIELD_OFFSET(PCI_COMMON_CONFIG, Command), &CommandStatus, sizeof(CommandStatus));
+    UacpiNtReadPciConfig(Pdo, FIELD_OFFSET(PCI_COMMON_CONFIG, Command), &CommandStatus,
+                         sizeof(CommandStatus));
     UacpiNtReadPciConfig(Pdo, UACPINT_PCI_CLASS_DWORD, &ClassDword, sizeof(ClassDword));
     StatusBits = (USHORT)(CommandStatus >> 16);
 
@@ -2217,7 +2213,8 @@ UacpiNtDumpMsiState(
     Capability = (UCHAR)(PointerDword & 0xFC);
     for (Guard = 0; Capability >= sizeof(PCI_COMMON_HEADER) && Guard < 48; Guard++)
     {
-        if (!NT_SUCCESS(UacpiNtReadPciConfig(Pdo, Capability, &CapabilityDword, sizeof(CapabilityDword))))
+        if (!NT_SUCCESS(UacpiNtReadPciConfig(Pdo, Capability, &CapabilityDword,
+                                             sizeof(CapabilityDword))))
             break;
 
         switch (CapabilityDword & 0xFF)
@@ -2361,7 +2358,8 @@ UacpiNtDumpLineState(VOID)
         else
             Masked = (BOOLEAN)((SlaveMask >> (Gsiv - 8)) & 1);
 
-        if (!NT_SUCCESS(UacpiNtIrqLibResolveVector(Gsiv, &Vector, &Irql, &Affinity, &Polarity, &Mode)))
+        if (!NT_SUCCESS(UacpiNtIrqLibResolveVector(Gsiv, &Vector, &Irql, &Affinity, &Polarity,
+                                                   &Mode)))
             Vector = 0;
 
         DPRINT("uACPI-NT: GSIV %2u vector 0x%02X owner %p %s\n",

@@ -192,7 +192,8 @@ UacpiNtResScoreRequirement(
     ULONGLONG Length = 0;
     ULONGLONG Alignment = 0;
 
-    if (!NT_SUCCESS(UacpiNtResUnpackRequirement(Descriptor, &Minimum, &Maximum, &Length, &Alignment)) ||
+    if (!NT_SUCCESS(UacpiNtResUnpackRequirement(Descriptor, &Minimum, &Maximum, &Length,
+                                                &Alignment)) ||
         Maximum < Minimum)
     {
         return -1;
@@ -584,9 +585,11 @@ UacpiNtDumpFailure(
                  Index++)
             {
                 Descriptor = &Entry->Alternatives[Index];
-                if (!NT_SUCCESS(UacpiNtResUnpackRequirement(Descriptor, &Minimum, &Maximum, &Length, &Alignment)))
+                if (!NT_SUCCESS(UacpiNtResUnpackRequirement(Descriptor, &Minimum, &Maximum, &Length,
+                                                            &Alignment)))
                 {
-                    DPRINT1("uACPI-NT:     [%u] type %u cannot be unpacked\n", Index, Descriptor->Type);
+                    DPRINT1("uACPI-NT:     [%u] type %u cannot be unpacked\n", Index,
+                            Descriptor->Type);
                     continue;
                 }
 
@@ -908,7 +911,8 @@ UacpiNtResPortBacktrackAllocation(
              UacpiNtNextPortAlias(Alternative->Descriptor->Flags, Last, &Alias);
              Last = Alias)
         {
-            RtlDeleteRange(Arbiter->PossibleAllocation, Alias, Alias + Alternative->Length - 1, Owner);
+            RtlDeleteRange(Arbiter->PossibleAllocation, Alias, Alias + Alternative->Length - 1,
+                           Owner);
         }
     }
 
@@ -951,7 +955,8 @@ UacpiNtInitRootArbiter(
         Arbiter->BacktrackAllocation = UacpiNtResPortBacktrackAllocation;
     }
 
-    Status = ArbiterLibInitializeInstance(Arbiter, Pdo->Shared.Self, ResourceType, Name, L"Root", NULL);
+    Status = ArbiterLibInitializeInstance(Arbiter, Pdo->Shared.Self, ResourceType, Name, L"Root",
+                                          NULL);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("uACPI-NT: %s arbiter initialization failed 0x%lx\n", Label, Status);

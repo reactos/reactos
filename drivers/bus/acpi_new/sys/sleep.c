@@ -56,7 +56,8 @@ UacpiNtResumeFromSleep(VOID)
     /* This also runs \_SI._SST(1) */
     UacpiStatus = uacpi_wake_from_sleep_state(WokeFrom);
     if (uacpi_unlikely_error(UacpiStatus))
-        DPRINT1("uACPI-NT: \\_WAK for S%d failed: %s\n", WokeFrom, uacpi_status_to_string(UacpiStatus));
+        DPRINT1("uACPI-NT: \\_WAK for S%d failed: %s\n", WokeFrom,
+                uacpi_status_to_string(UacpiStatus));
     else
         DPRINT("uACPI-NT: \\_WAK for S%d done\n", WokeFrom);
 
@@ -87,7 +88,8 @@ UacpiNtPrepareForSleep(
     /* Runs \_PTS and \_SI._SST for the target state */
     UacpiStatus = uacpi_prepare_for_sleep_state(Target);
     if (uacpi_unlikely_error(UacpiStatus))
-        DPRINT1("uACPI-NT: \\_PTS for S%d failed: %s\n", Target, uacpi_status_to_string(UacpiStatus));
+        DPRINT1("uACPI-NT: \\_PTS for S%d failed: %s\n", Target,
+                uacpi_status_to_string(UacpiStatus));
     else
         DPRINT("uACPI-NT: \\_PTS for S%d done\n", Target);
 
@@ -102,9 +104,8 @@ UacpiNtPrepareForSleep(
     else
     {
         /*
-         * uacpi_enter_sleep_state is never called since the HAL owns the
-         * sleep write, so do its housekeeping here. A stale WAK_STS or GPE
-         * status would wake the machine right back up.
+         * The HAL owns the sleep write, so do the uacpi_enter_sleep_state
+         * housekeeping here. Stale WAK_STS or GPE status would wake right up.
          */
         uacpi_write_register_field(UACPI_REGISTER_FIELD_WAK_STS, ACPI_PM1_STS_CLEAR);
         uacpi_disable_all_gpes();

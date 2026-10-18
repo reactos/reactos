@@ -221,7 +221,7 @@ UacpiNtEcFetchQuery(
     uacpi_u32 Sequence;
     UCHAR QueryCode = 0;
 
-    /* Queries are our own transaction, nobody above holds _GLK */
+    /* A query is a standalone transaction, nobody above holds _GLK */
     if (!UacpiNtEcLockGlobal(Ec, &Sequence))
         return 0;
 
@@ -352,6 +352,7 @@ UacpiNtEcGpeHandler(
 /* The EC is byte addressed, wider fields are assembled little endian */
 static
 uacpi_status
+NTAPI
 UacpiNtEcRegionRead(
     _Inout_ uacpi_region_rw_data *Data)
 {
@@ -377,6 +378,7 @@ UacpiNtEcRegionRead(
 
 static
 uacpi_status
+NTAPI
 UacpiNtEcRegionWrite(
     _In_ uacpi_region_rw_data *Data)
 {

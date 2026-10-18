@@ -295,7 +295,8 @@ UacpiNtPowerBuildStateMap(
     /* _S1D to _S4D, moved deeper onto a state the device has */
     for (SystemState = PowerSystemSleeping1; SystemState <= PowerSystemHibernate; SystemState++)
     {
-        if (!UacpiNtQuerySleepDeviceState(Pdo->Node, SystemState - PowerSystemWorking, &DeviceState))
+        if (!UacpiNtQuerySleepDeviceState(Pdo->Node, SystemState - PowerSystemWorking,
+                                          &DeviceState))
             continue;
 
         if (DeviceState == PowerDeviceD1 && !HasD1)
@@ -933,15 +934,17 @@ UacpiNtPdoSetPower(
         case IRP_MN_SET_POWER:
             if (IoStack->Parameters.Power.Type == DevicePowerState)
             {
-                Status = UacpiNtPowerSetDeviceState(Pdo, IoStack->Parameters.Power.State.DeviceState);
-                PoSetPowerState(Pdo->Shared.Self, DevicePowerState, IoStack->Parameters.Power.State);
+                Status = UacpiNtPowerSetDeviceState(Pdo,
+                                                    IoStack->Parameters.Power.State.DeviceState);
+                PoSetPowerState(Pdo->Shared.Self, DevicePowerState,
+                                IoStack->Parameters.Power.State);
             }
             break;
 
         case IRP_MN_QUERY_POWER:
             break;
 
-        /* Leave minors we do not handle, such as POWER_SEQUENCE, as they came */
+        /* Unhandled minors such as POWER_SEQUENCE are left as they came */
         default:
             Status = Irp->IoStatus.Status;
             break;

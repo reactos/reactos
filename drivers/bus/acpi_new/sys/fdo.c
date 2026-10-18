@@ -44,7 +44,8 @@ UacpiNtLogStartInterrupts(
     }
 
     if (Count)
-        DPRINT("uACPI-NT: HAL interrupt band has %lu vector(s), 0x%lX to 0x%lX\n", Count, FirstVector, LastVector);
+        DPRINT("uACPI-NT: HAL interrupt band has %lu vector(s), 0x%lX to 0x%lX\n", Count,
+               FirstVector, LastVector);
     else
         DPRINT("uACPI-NT: HAL reported no interrupt vectors\n");
 }
@@ -103,7 +104,8 @@ UacpiNtFdoQueryInterface(
     }
     else if (IsEqualGUID(IoStack->Parameters.QueryInterface.InterfaceType,
                          &GUID_TRANSLATOR_INTERFACE_STANDARD) &&
-             (ULONG_PTR)IoStack->Parameters.QueryInterface.InterfaceSpecificData == CmResourceTypeInterrupt)
+             (ULONG_PTR)IoStack->Parameters.QueryInterface.InterfaceSpecificData ==
+                 CmResourceTypeInterrupt)
     {
         Irp->IoStatus.Status = UacpiNtBuildIrqTranslator("ACPI root", IoStack);
     }

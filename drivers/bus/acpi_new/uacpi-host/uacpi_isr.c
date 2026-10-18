@@ -215,7 +215,7 @@ UacpiNtHostDeferInitialize(VOID)
 }
 
 uacpi_handle
-uacpi_kernel_create_work_item(void)
+uacpi_kernel_create_work_item(VOID)
 {
     PUACPINT_HOST_WORK_ITEM WorkItem;
 
@@ -282,7 +282,7 @@ uacpi_kernel_signal_semaphore(
 }
 
 uacpi_status
-uacpi_kernel_wait_for_work_completion(void)
+uacpi_kernel_wait_for_work_completion(VOID)
 {
     LARGE_INTEGER Interval;
     ULONG Waited = 0;

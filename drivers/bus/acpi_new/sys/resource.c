@@ -719,7 +719,8 @@ UacpiNtWalkCrsConnections(
     SIZE_T Offset;
     ULONG Count = 0;
 
-    if (uacpi_unlikely_error(uacpi_eval_typed(Node, "_CRS", NULL, UACPI_OBJECT_BUFFER_BIT, &Object)) ||
+    if (uacpi_unlikely_error(uacpi_eval_typed(Node, "_CRS", NULL, UACPI_OBJECT_BUFFER_BIT,
+                                              &Object)) ||
         !Object)
     {
         return 0;
