@@ -2159,6 +2159,70 @@ AddVolumeToList(
                    &VolumeEntry->ListEntry);
 }
 
+
+static
+VOID
+InsertListAfter(
+    _In_ PLIST_ENTRY ListEntry,
+    _In_ PLIST_ENTRY EntryToInsert)
+{
+    EntryToInsert->Blink = ListEntry;
+    EntryToInsert->Flink = ListEntry->Flink;
+    ListEntry->Flink->Blink = EntryToInsert;
+    ListEntry->Flink = EntryToInsert;
+}
+
+
+static
+VOID
+SortVolumeList(VOID)
+{
+    PLIST_ENTRY Entry, TempEntry, LastInsertEntry;
+    PVOLENTRY VolumeEntry;
+    ULONG VolumeNumber;
+
+    /* Desired sort order: CDROM volumes, Partition volumes */
+
+    if (IsListEmpty(&VolumeListHead))
+        return;
+
+    /* Move CDROM volumes to the head of the list */
+    LastInsertEntry = NULL;
+    Entry = VolumeListHead.Flink;
+    while (Entry != &VolumeListHead)
+    {
+        VolumeEntry = CONTAINING_RECORD(Entry, VOLENTRY, ListEntry);
+
+        if (VolumeEntry->VolumeType == VOLUME_TYPE_CDROM)
+        {
+            TempEntry = Entry;
+            Entry = Entry->Blink;
+
+            RemoveEntryList(TempEntry);
+            if (LastInsertEntry == NULL)
+                InsertHeadList(&VolumeListHead, TempEntry);
+            else
+                InsertListAfter(LastInsertEntry, TempEntry);
+            LastInsertEntry = TempEntry;
+        }
+
+        Entry = Entry->Flink;
+    }
+
+    /* Update the VolumeNumber */
+    VolumeNumber = 0;
+    Entry = VolumeListHead.Flink;
+    while (Entry != &VolumeListHead)
+    {
+        VolumeEntry = CONTAINING_RECORD(Entry, VOLENTRY, ListEntry);
+        VolumeEntry->VolumeNumber = VolumeNumber;
+ 
+        VolumeNumber++;
+        Entry = Entry->Flink;
+    }
+}
+
+
 NTSTATUS
 CreateVolumeList(VOID)
 {
@@ -2193,6 +2257,8 @@ CreateVolumeList(VOID)
 
     FindVolumeClose(hVolume);
 
+    SortVolumeList();
+
     return STATUS_SUCCESS;
 }
 
@@ -2224,6 +2290,7 @@ DestroyVolumeList(VOID)
         RtlFreeHeap(RtlGetProcessHeap(), 0, VolumeEntry);
     }
 }
+
 
 VOID
 UpdateVolumeInfo(
