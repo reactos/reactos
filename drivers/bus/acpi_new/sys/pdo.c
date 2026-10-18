@@ -133,7 +133,7 @@ UacpiNtPdoBusRelations(
     return Status;
 }
 
-/* A device with no _CRS simply needs no resources */
+/* A device with no _CRS needs no resources */
 static
 NTSTATUS
 NTAPI

@@ -307,7 +307,7 @@ UacpiNtButtonDeliverEvent(
         Entry = Pdo->ButtonIrpQueue.Flink;
         Head = CONTAINING_RECORD(Entry, IRP, Tail.Overlay.ListEntry);
 
-        /* Losing the race to the cancel routine means we latch instead */
+        /* The cancel routine won the race, latch the event instead */
         if (IoSetCancelRoutine(Head, NULL))
         {
             RemoveEntryList(Entry);
@@ -411,8 +411,8 @@ UacpiNtFixedButtonDpc(
         return;
 
     /*
-     * A press inside the resume window is what woke us. Reporting it as POWER
-     * would let the policy put the machine straight back to sleep.
+     * A press inside the resume window is what woke the system. Reporting it as
+     * POWER would let the policy put the machine straight back to sleep.
      */
     if (InterlockedCompareExchange(&UacpiNtSystemResuming, 0, 0))
     {

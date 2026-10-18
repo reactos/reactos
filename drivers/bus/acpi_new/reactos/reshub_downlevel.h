@@ -7,7 +7,7 @@
 #ifndef _UACPI_NT_RESHUB_DOWNLEVEL_H
 #define _UACPI_NT_RESHUB_DOWNLEVEL_H
 
-/* Opening the hub by this name simply fails when no hub is present. */
+/* Opening the hub by this name fails when no hub is present */
 #ifndef RESOURCE_HUB_DEVICE_NAME
 #define RESOURCE_HUB_DEVICE_NAME    L"\\Device\\RESOURCE_HUB"
 #endif

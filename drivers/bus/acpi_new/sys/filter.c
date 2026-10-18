@@ -154,7 +154,8 @@ UacpiNtFilterAttach(
     }
 
     /* Take over the I/O model, power flags and alignment of the stack */
-    DeviceObject->Flags |= Filter->LowerDevice->Flags & (DO_POWER_PAGABLE | DO_DIRECT_IO | DO_BUFFERED_IO);
+    DeviceObject->Flags |= Filter->LowerDevice->Flags &
+                           (DO_POWER_PAGABLE | DO_DIRECT_IO | DO_BUFFERED_IO);
     DeviceObject->AlignmentRequirement = Filter->LowerDevice->AlignmentRequirement;
     DeviceObject->Flags &= ~DO_DEVICE_INITIALIZING;
 
@@ -191,7 +192,8 @@ UacpiNtDetectFilterDevices(
 
     RtlZeroMemory(Probes, Relations->Count * sizeof(*Probes));
 
-    while (uacpi_likely_success(uacpi_namespace_node_next_typed(Parent, &Child, UACPI_OBJECT_DEVICE_BIT)) &&
+    while (uacpi_likely_success(uacpi_namespace_node_next_typed(Parent, &Child,
+                                                                UACPI_OBJECT_DEVICE_BIT)) &&
            Child)
     {
         if (!UacpiNtNodeIsPresent(Child))
@@ -232,7 +234,7 @@ UacpiNtDetectFilterDevices(
     return STATUS_SUCCESS;
 }
 
-/* Our PDOs go in before the IRP goes down, filters for the next level after */
+/* ACPI PDOs go in before the IRP goes down, filters for the next level after */
 static
 NTSTATUS
 NTAPI
@@ -315,7 +317,7 @@ UacpiNtFilterQueryCapabilities(
     return UacpiNtCompleteIrp(Irp, Status, Irp->IoStatus.Information);
 }
 
-/* Answers what we serve and always sends the IRP down */
+/* Answers the interfaces served here and always sends the IRP down */
 static
 NTSTATUS
 NTAPI
@@ -330,7 +332,8 @@ UacpiNtFilterQueryInterface(
     CHAR Name[8] = "FILT";
     NTSTATUS Status;
 
-    Interrupt = (ULONG_PTR)IoStack->Parameters.QueryInterface.InterfaceSpecificData == CmResourceTypeInterrupt;
+    Interrupt = (ULONG_PTR)IoStack->Parameters.QueryInterface.InterfaceSpecificData ==
+                CmResourceTypeInterrupt;
 
     if (Filter->Node)
     {
