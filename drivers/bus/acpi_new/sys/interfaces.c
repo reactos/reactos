@@ -186,7 +186,7 @@ UacpiNtRouteNotify(
     Pdo = UacpiNtFindPdoByNode(GlobalAcpiFdo, Node);
     if (!Pdo)
     {
-        /* Not one of ours, it may be a foreign PDO we filter */
+        /* Not an ACPI PDO, it may be a filtered foreign PDO */
         Filter = UacpiNtFindFilterByNode(GlobalAcpiFdo, Node);
         if (!Filter)
             return;
@@ -1080,7 +1080,8 @@ UacpiNtPciRootBusCapability(
     HardwareCapability->OscControlRequest.u.AsULONG = UACPINT_PCI_OSC_CONTROL;
     HardwareCapability->OscControlGranted.u.AsULONG = Pdo->HostBridge.OscControlGranted;
 
-    HardwareCapability->SecondaryInterface = Pdo->HostBridge.IsExpress ? PciExpress : PciConventional;
+    HardwareCapability->SecondaryInterface = Pdo->HostBridge.IsExpress ? PciExpress
+                                                                       : PciConventional;
     if (HardwareCapability->SecondaryInterface == PciExpress || !Pdo->HostBridge.BusCapsFound)
         return;
 
@@ -1171,7 +1172,8 @@ UacpiNtBuildPciBusInterface(
     if (_stricmp(Pdo->Hid, "PNP0A08") == 0)
         Pdo->HostBridge.IsExpress = TRUE;
     else
-        Pdo->HostBridge.IsExpress = (uacpi_device_matches_pnp_id(Pdo->Node, ExpressIds) == UACPI_TRUE);
+        Pdo->HostBridge.IsExpress =
+            (uacpi_device_matches_pnp_id(Pdo->Node, ExpressIds) == UACPI_TRUE);
 
     UacpiNtPciRootOscNegotiate(Pdo);
 

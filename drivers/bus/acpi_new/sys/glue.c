@@ -40,7 +40,8 @@ UacpiNtInstallEventHandlers(
     /* A handler on the root sees notifies for every node */
     UacpiStatus = uacpi_install_notify_handler(uacpi_namespace_root(), UacpiNtGlobalNotify, NULL);
     if (uacpi_unlikely_error(UacpiStatus))
-        DPRINT1("uACPI-NT: global Notify handler failed: %s\n", uacpi_status_to_string(UacpiStatus));
+        DPRINT1("uACPI-NT: global Notify handler failed: %s\n",
+                uacpi_status_to_string(UacpiStatus));
     else
         DPRINT("uACPI-NT: global Notify handler installed\n");
 
@@ -51,7 +52,14 @@ UacpiNtInstallEventHandlers(
 }
 
 /* Status bits of the fixed events, written back to clear them */
-#define UACPINT_PM1_STATUS_BITS (ACPI_PM1_STS_TMR_STS_MASK |                                         ACPI_PM1_STS_BM_STS_MASK |                                          ACPI_PM1_STS_GBL_STS_MASK |                                         ACPI_PM1_STS_PWRBTN_STS_MASK |                                      ACPI_PM1_STS_SLPBTN_STS_MASK |                                      ACPI_PM1_STS_RTC_STS_MASK |                                         ACPI_PM1_STS_PCIEXP_WAKE_STS_MASK |                                  ACPI_PM1_STS_WAKE_STS_MASK)
+#define UACPINT_PM1_STATUS_BITS (ACPI_PM1_STS_TMR_STS_MASK | \
+                                 ACPI_PM1_STS_BM_STS_MASK | \
+                                 ACPI_PM1_STS_GBL_STS_MASK | \
+                                 ACPI_PM1_STS_PWRBTN_STS_MASK | \
+                                 ACPI_PM1_STS_SLPBTN_STS_MASK | \
+                                 ACPI_PM1_STS_RTC_STS_MASK | \
+                                 ACPI_PM1_STS_PCIEXP_WAKE_STS_MASK | \
+                                 ACPI_PM1_STS_WAKE_STS_MASK)
 
 /* Clears one FADT GPE block, half of the block is status and each byte covers 8 GPEs */
 static
@@ -93,7 +101,8 @@ UacpiNtClearAllEvents(VOID)
         return UacpiStatus;
 
     UacpiNtClearGpeBlock(Fadt->x_gpe0_blk.address || Fadt->gpe0_blk, Fadt->gpe0_blk_len, 0);
-    UacpiNtClearGpeBlock(Fadt->x_gpe1_blk.address || Fadt->gpe1_blk, Fadt->gpe1_blk_len, Fadt->gpe1_base);
+    UacpiNtClearGpeBlock(Fadt->x_gpe1_blk.address || Fadt->gpe1_blk, Fadt->gpe1_blk_len,
+                         Fadt->gpe1_base);
     return UACPI_STATUS_OK;
 }
 
@@ -161,7 +170,8 @@ UacpiNtBringUpInterpreter(
     UacpiStatus = uacpi_namespace_initialize();
     if (uacpi_unlikely_error(UacpiStatus))
     {
-        DPRINT1("uACPI-NT: uacpi_namespace_initialize failed: %s\n", uacpi_status_to_string(UacpiStatus));
+        DPRINT1("uACPI-NT: uacpi_namespace_initialize failed: %s\n",
+                uacpi_status_to_string(UacpiStatus));
         return STATUS_UNSUCCESSFUL;
     }
 
