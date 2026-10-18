@@ -45,7 +45,8 @@ UacpiNtPowerResCollect(
     UNREFERENCED_PARAMETER(Depth);
 
     /* Evaluating the node hands back a copy of the PowerResource object */
-    if (uacpi_unlikely_error(uacpi_eval_simple_typed(Node, NULL, UACPI_OBJECT_POWER_RESOURCE_BIT, &Object)) ||
+    if (uacpi_unlikely_error(uacpi_eval_simple_typed(Node, NULL, UACPI_OBJECT_POWER_RESOURCE_BIT,
+                                                     &Object)) ||
         !Object)
     {
         return UACPI_ITERATION_DECISION_CONTINUE;

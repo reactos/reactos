@@ -18,7 +18,7 @@
 #define ACPI_BIOS_ERROR 0x000000A5
 #endif
 
-/* Widest GPE enable or status half we snapshot */
+/* Widest GPE enable or status half kept in the snapshot */
 #define UACPINT_PM_REG_MAX_BYTES 32
 
 typedef struct _UACPINT_PM_REG
@@ -439,7 +439,7 @@ UacpiNtHalGpeEnableWakeEvents(VOID)
 }
 
 #if (NTDDI_VERSION >= NTDDI_WIN8)
-/* Our globals are already part of the hibernate image */
+/* The driver globals are already part of the hibernate image */
 static
 NTSTATUS
 NTAPI
@@ -449,7 +449,7 @@ UacpiNtHalMarkHiberPhase(VOID)
 }
 #endif
 
-/* Collect the \_S1 to \_S5 SLP_TYP values for MachineStateInit */
+/* Collect the \_S1 to \_S5 SLP_TYP values for InitializeSleepStates */
 static
 VOID
 NTAPI
@@ -516,7 +516,8 @@ UacpiNtHalPmHandshake(VOID)
     RtlZeroMemory(&UacpiNtDriverHalTable, sizeof(UacpiNtDriverHalTable));
     UacpiNtDriverHalTable.Signature = ACPI_DRV_HAL_DISP_SIG;
     UacpiNtDriverHalTable.Version = ACPI_DRIVER_HAL_VERSION;
-    UacpiNtDriverHalTable.EnableDisableGpeEvents = (PVOID)(ULONG_PTR)UacpiNtHalEnableDisableGpeEvents;
+    UacpiNtDriverHalTable.EnableDisableGpeEvents =
+        (PVOID)(ULONG_PTR)UacpiNtHalEnableDisableGpeEvents;
     UacpiNtDriverHalTable.InitEnableAcpi = (PVOID)(ULONG_PTR)UacpiNtHalInitEnableAcpi;
     UacpiNtDriverHalTable.GpeEnableWakeEvents = (PVOID)(ULONG_PTR)UacpiNtHalGpeEnableWakeEvents;
 #if (NTDDI_VERSION >= NTDDI_WIN8)
@@ -541,7 +542,7 @@ UacpiNtHalPmHandshake(VOID)
     /* A version mismatch means this build targets a different HAL */
     if (HalTable->Signature != ACPI_DRV_HAL_PM_SIG ||
         HalTable->Version != ACPI_HAL_PM_VERSION ||
-        !HalTable->MachineStateInit ||
+        !HalTable->InitializeSleepStates ||
         !HalTable->PciReadConfig ||
         !HalTable->PciWriteConfig)
     {
@@ -560,7 +561,7 @@ UacpiNtHalPmHandshake(VOID)
     UacpiNtHalPciWrite = HalTable->PciWriteConfig;
 
     /* The HAL reports the interrupt model and takes over the sleep path */
-    HalTable->MachineStateInit(StateData, &Model);
+    HalTable->InitializeSleepStates(StateData, &Model);
 
     DPRINT("uACPI-NT: HAL PM table version %lu, model %lu, S1-S5 {%u,%u,%u,%u,%u}\n",
            HalTable->Version,
@@ -574,10 +575,10 @@ UacpiNtHalPmHandshake(VOID)
     /* An untouched sentinel means the slot or its arity is wrong */
     if (Model == MAXULONG)
     {
-        DPRINT1("uACPI-NT: MachineStateInit did not report an interrupt model\n");
+        DPRINT1("uACPI-NT: InitializeSleepStates did not report an interrupt model\n");
         KeBugCheckEx(ACPI_DRIVER_INTERNAL,
                      0x12,
-                     (ULONG_PTR)HalTable->MachineStateInit,
+                     (ULONG_PTR)HalTable->InitializeSleepStates,
                      HalTable->Version,
                      0);
     }

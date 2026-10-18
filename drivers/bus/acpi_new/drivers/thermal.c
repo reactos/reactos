@@ -530,7 +530,8 @@ UacpiNtThermalRunActive(
         Method[3] = (CHAR)('0' + Index);
 
         Package = NULL;
-        if (uacpi_unlikely_error(uacpi_eval_simple_package(Pdo->Node, Method, &Package)) || !Package)
+        if (uacpi_unlikely_error(uacpi_eval_simple_package(Pdo->Node, Method, &Package)) ||
+            !Package)
             break;
 
         UacpiNtThermalApplyActiveList(Pdo,
@@ -571,7 +572,8 @@ UacpiNtThermalCrossedTrip(
         if (!Trip)
             continue;
 
-        if ((NotifiedTemperature < Trip && Trip <= Current) || (Current <= Trip && Trip < NotifiedTemperature))
+        if ((NotifiedTemperature < Trip && Trip <= Current) ||
+            (Current <= Trip && Trip < NotifiedTemperature))
             return TRUE;
     }
 
@@ -788,7 +790,8 @@ UacpiNtThermalWorker(
 
 #if (NTDDI_VERSION >= NTDDI_WIN8)
         /* Any step other than the reading itself is followed by a fresh reading */
-        if (Work & (UACPINT_THERMAL_WORK_INIT | UACPINT_THERMAL_WORK_TRIPS | UACPINT_THERMAL_WORK_ACTIVE))
+        if (Work & (UACPINT_THERMAL_WORK_INIT | UACPINT_THERMAL_WORK_TRIPS |
+                    UACPINT_THERMAL_WORK_ACTIVE))
             Work |= UACPINT_THERMAL_WORK_TEMPERATURE;
 #endif
 
@@ -972,7 +975,8 @@ UacpiNtThermalDeviceControl(
                OutputSize);
     }
 
-    if ((!Buffer && (InputSize || OutputSize)) || InputLength < InputSize || OutputLength < OutputSize)
+    if ((!Buffer && (InputSize || OutputSize)) || InputLength < InputSize ||
+        OutputLength < OutputSize)
         return UacpiNtCompleteIrp(Irp, STATUS_BUFFER_TOO_SMALL, 0);
 
     KeAcquireSpinLock(&Zone->Lock, &OldIrql);
@@ -1002,7 +1006,8 @@ UacpiNtThermalDeviceControl(
 
         case IOCTL_THERMAL_SET_COOLING_POLICY:
             Zone->CoolingPolicy = *(PUCHAR)Buffer;
-            Work = UACPINT_THERMAL_WORK_POLICY | UACPINT_THERMAL_WORK_TRIPS | UACPINT_THERMAL_WORK_COMPLETE;
+            Work = UACPINT_THERMAL_WORK_POLICY | UACPINT_THERMAL_WORK_TRIPS |
+                   UACPINT_THERMAL_WORK_COMPLETE;
             DPRINT("uACPI-NT: %s cooling policy %u\n", Pdo->Name, Zone->CoolingPolicy);
             break;
 
@@ -1047,7 +1052,8 @@ UacpiNtThermalNotify(
     switch (NotifyValue)
     {
         case UACPINT_NOTIFY_TEMPERATURE:
-            UacpiNtThermalKick(Pdo, UACPINT_THERMAL_WORK_TEMPERATURE | UACPINT_THERMAL_WORK_COMPLETE);
+            UacpiNtThermalKick(Pdo,
+                               UACPINT_THERMAL_WORK_TEMPERATURE | UACPINT_THERMAL_WORK_COMPLETE);
             break;
 
         case UACPINT_NOTIFY_TRIP_POINTS:
@@ -1161,7 +1167,8 @@ UacpiNtThermalQueryWmiDataBlock(
     Data->ThermalConstant1 = UacpiNtThermalEvalDefault(Node, "_TC1", 0);
     Data->ThermalConstant2 = UacpiNtThermalEvalDefault(Node, "_TC2", 0);
     Data->SamplingPeriod = UacpiNtThermalEvalDefault(Node, "_TSP", 0);
-    Data->CurrentTemperature = UacpiNtThermalEvalDefault(Node, "_TMP", UACPINT_THERMAL_WMI_DEFAULT_TEMP);
+    Data->CurrentTemperature = UacpiNtThermalEvalDefault(Node, "_TMP",
+                                                         UACPINT_THERMAL_WMI_DEFAULT_TEMP);
     Data->PassiveTripPoint = UacpiNtThermalEvalDefault(Node, "_PSV", 0);
     Data->CriticalTripPoint = UacpiNtThermalEvalDefault(Node, "_CRT", 0);
     Data->ActiveTripPointCount = UacpiNtThermalReadActiveTrips(Node, Data->ActiveTripPoint);

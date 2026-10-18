@@ -263,10 +263,12 @@ UacpiNtResolveKernelRoutines(VOID)
         return;
 
     RtlInitUnicodeString(&RoutineName, L"IoSetDevicePropertyData");
-    UacpiNtIoSetDevicePropertyData = (PUACPINT_IO_SET_DEVICE_PROPERTY_DATA)MmGetSystemRoutineAddress(&RoutineName);
+    UacpiNtIoSetDevicePropertyData =
+        (PUACPINT_IO_SET_DEVICE_PROPERTY_DATA)MmGetSystemRoutineAddress(&RoutineName);
 
     RtlInitUnicodeString(&RoutineName, L"IoGetDevicePropertyData");
-    UacpiNtIoGetDevicePropertyData = (PUACPINT_IO_GET_DEVICE_PROPERTY_DATA)MmGetSystemRoutineAddress(&RoutineName);
+    UacpiNtIoGetDevicePropertyData =
+        (PUACPINT_IO_GET_DEVICE_PROPERTY_DATA)MmGetSystemRoutineAddress(&RoutineName);
 
     RtlInitUnicodeString(&RoutineName, L"KeRegisterProcessorChangeCallback");
     UacpiNtKeRegisterProcessorChangeCallback =
@@ -457,7 +459,8 @@ UacpiNtSeedIdtState(
     if (!UacpiNtHalGrantedCount)
     {
         RtlAddRange(UsedEntries, 0, UACPINT_DEVICE_VECTOR_FIRST - 1, 0, 0, NULL, NULL);
-        RtlAddRange(UsedEntries, UACPINT_DEVICE_VECTOR_LAST + 1, UACPINT_MAX_IDT_VECTOR, 0, 0, NULL, NULL);
+        RtlAddRange(UsedEntries, UACPINT_DEVICE_VECTOR_LAST + 1, UACPINT_MAX_IDT_VECTOR, 0, 0, NULL,
+                    NULL);
         return;
     }
 
@@ -581,7 +584,8 @@ UacpiNtClaimVectors(
     for (Processor = 0; Processor < UacpiNtProcessorIdtCount; Processor++)
     {
         if (UacpiNtProcessorIdt[Processor].Valid)
-            RtlAddRange(&UacpiNtProcessorIdt[Processor].UsedEntries, First, Last, 0, 0, NULL, Owner);
+            RtlAddRange(&UacpiNtProcessorIdt[Processor].UsedEntries, First, Last, 0, 0, NULL,
+                        Owner);
     }
 }
 
@@ -607,7 +611,9 @@ UacpiNtApicAllocateVector(
         return STATUS_UNSUCCESSFUL;
 
     /* Device vectors come from the band the HAL granted, the HAL hands out none of them */
-    for (Candidate = UACPINT_DEVICE_VECTOR_FIRST; Candidate <= UACPINT_DEVICE_VECTOR_LAST; Candidate++)
+    for (Candidate = UACPINT_DEVICE_VECTOR_FIRST;
+         Candidate <= UACPINT_DEVICE_VECTOR_LAST;
+         Candidate++)
     {
         if (!UacpiNtVectorFreeEverywhere(Candidate))
             continue;
@@ -932,7 +938,8 @@ UacpiNtIrqLibResolveVector(
         *Polarity = UacpiNtGsivPolarity(Gsiv);
         *Mode = UacpiNtGsivMode(Gsiv);
 
-        DPRINT("uACPI-NT: secondary GSIV %lu uses vector 0x%lx IRQL %u\n", Gsiv, Assigned, VectorIrql);
+        DPRINT("uACPI-NT: secondary GSIV %lu uses vector 0x%lx IRQL %u\n", Gsiv, Assigned,
+               VectorIrql);
         return STATUS_SUCCESS;
     }
 
@@ -1071,7 +1078,8 @@ UacpiNtWriteMessageConnectionData(
     if (!Count)
         Count = 1;
 
-    Status = UacpiNtIrqLibResolveMessageVector(Pdo, MessageGsiv, Count, &Base, &BaseIrql, &Processors);
+    Status = UacpiNtIrqLibResolveMessageVector(Pdo, MessageGsiv, Count, &Base, &BaseIrql,
+                                               &Processors);
     if (!NT_SUCCESS(Status))
         return Status;
 
@@ -1153,7 +1161,8 @@ UacpiNtWriteMessageConnectionData(
     if (Readback)
     {
         RtlZeroMemory(Readback, Size);
-        ReadbackStatus = UacpiNtGetConnectionData(Pdo, Readback, Size, &ReadbackSize, &ReadbackType);
+        ReadbackStatus = UacpiNtGetConnectionData(Pdo, Readback, Size, &ReadbackSize,
+                                                  &ReadbackType);
         DPRINT("uACPI-NT: message readback 0x%lx type 0x%lx size %lu of %lu, count %lu vectors 0x%lx-0x%lx\n",
                ReadbackStatus,
                ReadbackType,
@@ -1199,7 +1208,8 @@ UacpiNtIrqLibWriteConnectionData(
 
     if (HasMessages)
     {
-        DPRINT("uACPI-NT: PDO %p holds message vectors, GSIV %lu line data not written\n", Pdo, Gsiv);
+        DPRINT("uACPI-NT: PDO %p holds message vectors, GSIV %lu line data not written\n", Pdo,
+               Gsiv);
         return STATUS_SUCCESS;
     }
 
@@ -1228,7 +1238,8 @@ UacpiNtIrqLibWriteConnectionData(
     if (NT_SUCCESS(Status))
     {
         RtlZeroMemory(&Readback, sizeof(Readback));
-        ReadbackStatus = UacpiNtGetConnectionData(Pdo, &Readback, sizeof(Readback), &ReadbackSize, &ReadbackType);
+        ReadbackStatus = UacpiNtGetConnectionData(Pdo, &Readback, sizeof(Readback), &ReadbackSize,
+                                                  &ReadbackType);
         DPRINT("uACPI-NT: GSIV %lu readback 0x%lx type 0x%lx size %lu of %lu, vector 0x%lx IRQL %u target %p GSIV %lu\n",
                Gsiv,
                ReadbackStatus,
@@ -1258,7 +1269,8 @@ UacpiNtParseMadt(VOID)
     ULONG Trigger;
     ULONG Polarity;
 
-    if (uacpi_unlikely_error(uacpi_table_find_by_signature(ACPI_MADT_SIGNATURE, &Table)) || !Table.ptr)
+    if (uacpi_unlikely_error(uacpi_table_find_by_signature(ACPI_MADT_SIGNATURE, &Table)) ||
+        !Table.ptr)
         return;
 
     Madt = Table.ptr;
@@ -1625,12 +1637,14 @@ UacpiNtInstallHalOverrides(VOID)
 
     /*
      * The HalGetInterruptVector export calls through this slot, so keep the
-     * HAL's own routine or our lookups would land in the override.
+     * HAL's own routine or the lookups here would land in the override.
      */
     if (Table[UACPINT_HAL_SLOT_GET_INTERRUPT_VECTOR] &&
-        Table[UACPINT_HAL_SLOT_GET_INTERRUPT_VECTOR] != (ULONG_PTR)UacpiNtHalGetInterruptVectorOverride)
+        Table[UACPINT_HAL_SLOT_GET_INTERRUPT_VECTOR] !=
+            (ULONG_PTR)UacpiNtHalGetInterruptVectorOverride)
     {
-        UacpiNtHalGetInterruptVector = (pHalGetInterruptVector)Table[UACPINT_HAL_SLOT_GET_INTERRUPT_VECTOR];
+        UacpiNtHalGetInterruptVector =
+            (pHalGetInterruptVector)Table[UACPINT_HAL_SLOT_GET_INTERRUPT_VECTOR];
     }
 
     Table[UACPINT_HAL_SLOT_GET_INTERRUPT_VECTOR] = (ULONG_PTR)UacpiNtHalGetInterruptVectorOverride;
@@ -1638,7 +1652,8 @@ UacpiNtInstallHalOverrides(VOID)
 
     if (Version >= UACPINT_HAL_PRIVATE_MSG_VERSION)
     {
-        Table[UACPINT_HAL_SLOT_ALLOCATE_MSG_TARGET] = (ULONG_PTR)UacpiNtHalAllocateMessageTargetOverride;
+        Table[UACPINT_HAL_SLOT_ALLOCATE_MSG_TARGET] =
+            (ULONG_PTR)UacpiNtHalAllocateMessageTargetOverride;
         Table[UACPINT_HAL_SLOT_FREE_MSG_TARGET] = (ULONG_PTR)UacpiNtHalFreeMessageTargetOverride;
     }
 
@@ -1738,7 +1753,8 @@ UacpiNtIrqLibInitialize(VOID)
     UacpiNtHalGetInterruptVector = (pHalGetInterruptVector)MmGetSystemRoutineAddress(&RoutineName);
 
     RtlInitUnicodeString(&RoutineName, L"HalConvertDeviceIdtToIrql");
-    UacpiNtHalConvertDeviceIdtToIrql = (PUACPINT_HAL_CONVERT_IDT_TO_IRQL)MmGetSystemRoutineAddress(&RoutineName);
+    UacpiNtHalConvertDeviceIdtToIrql =
+        (PUACPINT_HAL_CONVERT_IDT_TO_IRQL)MmGetSystemRoutineAddress(&RoutineName);
 
     if (GlobalAcpiInterruptModel == ACPI_NT_APIC)
         UacpiNtInitializeApic();

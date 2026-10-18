@@ -66,7 +66,7 @@ UacpiNtNodeFromDeviceObject(
 {
     PUACPINT_SHARED Shared = DeviceObject->DeviceExtension;
 
-    /* Only our own device objects point back at themselves */
+    /* Only this driver's device objects point back at themselves */
     if (!Shared || Shared->Self != DeviceObject)
         return NULL;
 
@@ -133,7 +133,8 @@ UacpiNtRhQualifyBiosName(
     if (!Scope)
         Scope = uacpi_namespace_root();
 
-    if (uacpi_unlikely_error(uacpi_namespace_node_find(Scope, ReferenceName->Buffer, &Target)) || !Target)
+    if (uacpi_unlikely_error(uacpi_namespace_node_find(Scope, ReferenceName->Buffer, &Target)) ||
+        !Target)
     {
         DPRINT1("uACPI-NT: cannot resolve ResourceSource %s\n", ReferenceName->Buffer);
         return STATUS_OBJECT_NAME_NOT_FOUND;
@@ -216,7 +217,7 @@ UacpiNtOpenResourceHub(
                       FILE_NON_DIRECTORY_FILE);
 }
 
-/* Hand our half of the interface to the hub and take its half back */
+/* Hand the driver half of the interface to the hub and take its half back */
 static
 NTSTATUS
 NTAPI

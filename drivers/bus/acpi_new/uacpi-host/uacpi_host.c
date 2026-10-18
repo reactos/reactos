@@ -680,7 +680,7 @@ uacpi_kernel_pci_write32(
     return UacpiNtHostPciWrite(Device, Offset, &Value, sizeof(Value));
 }
 
-/* The I/O handle is simply the port base */
+/* The I/O handle is the port base */
 uacpi_status
 uacpi_kernel_io_map(
     _In_ uacpi_io_addr Base,
@@ -761,7 +761,7 @@ uacpi_kernel_io_write32(
 }
 
 uacpi_u64
-uacpi_kernel_get_nanoseconds_since_boot(void)
+uacpi_kernel_get_nanoseconds_since_boot(VOID)
 {
     LARGE_INTEGER Frequency;
     ULONGLONG Counter;
@@ -877,12 +877,14 @@ uacpi_kernel_wait_for_semaphore(
     {
         /* Poll first, then wait in slices so a stuck wait gets reported */
         Interval.QuadPart = 0;
-        Status = KeWaitForSingleObject(&Semaphore->Semaphore, Executive, KernelMode, FALSE, &Interval);
+        Status = KeWaitForSingleObject(&Semaphore->Semaphore, Executive, KernelMode, FALSE,
+                                       &Interval);
 
         while (Status == STATUS_TIMEOUT)
         {
             Interval.QuadPart = -((LONGLONG)UACPINT_HOST_WAIT_REPORT_SECONDS * 10 * 1000 * 1000);
-            Status = KeWaitForSingleObject(&Semaphore->Semaphore, Executive, KernelMode, FALSE, &Interval);
+            Status = KeWaitForSingleObject(&Semaphore->Semaphore, Executive, KernelMode, FALSE,
+                                           &Interval);
             if (Status != STATUS_TIMEOUT)
                 break;
 
@@ -918,14 +920,14 @@ uacpi_kernel_wait_for_semaphore(
 }
 
 uacpi_thread_id
-uacpi_kernel_get_thread_id(void)
+uacpi_kernel_get_thread_id(VOID)
 {
     /* Unique per thread and never UACPI_THREAD_ID_NONE */
     return (uacpi_thread_id)KeGetCurrentThread();
 }
 
 uacpi_interrupt_state
-uacpi_kernel_disable_interrupts(void)
+uacpi_kernel_disable_interrupts(VOID)
 {
     KIRQL OldIrql;
 
@@ -941,7 +943,7 @@ uacpi_kernel_restore_interrupts(
 }
 
 uacpi_handle
-uacpi_kernel_create_spinlock(void)
+uacpi_kernel_create_spinlock(VOID)
 {
     PKSPIN_LOCK SpinLock;
 

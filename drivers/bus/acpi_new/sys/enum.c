@@ -41,7 +41,7 @@ UacpiNtAsciiToWide(
     PWSTR Wide;
     SIZE_T Index;
 
-    Wide = ExAllocatePoolWithTag(PagedPool, (Length + 1) * sizeof(WCHAR), UACPINT_POOL_TAG);
+    Wide = ExAllocatePoolWithTag(PagedPool, (Length + 1) * sizeof(*Wide), UACPINT_POOL_TAG);
     if (!Wide)
         return NULL;
 
@@ -67,7 +67,7 @@ UacpiNtAsciiToMultiSz(
     for (Index = 0; Index < Count; Index++)
         Chars += strlen(Strings[Index]) + 1;
 
-    MultiSz = ExAllocatePoolWithTag(PagedPool, Chars * sizeof(WCHAR), UACPINT_POOL_TAG);
+    MultiSz = ExAllocatePoolWithTag(PagedPool, Chars * sizeof(*MultiSz), UACPINT_POOL_TAG);
     if (!MultiSz)
         return NULL;
 
@@ -454,7 +454,8 @@ UacpiNtMergeChildRelations(
     }
 
     if (ExistingCount)
-        RtlCopyMemory(Relations->Objects, Existing->Objects, ExistingCount * sizeof(PDEVICE_OBJECT));
+        RtlCopyMemory(Relations->Objects, Existing->Objects,
+                      ExistingCount * sizeof(*Existing->Objects));
     Relations->Count = ExistingCount;
 
     for (Entry = Fdo->ChildList.Flink; Entry != &Fdo->ChildList; Entry = Entry->Flink)
@@ -507,7 +508,8 @@ UacpiNtEnumDiagVerdict(
         return "skipped, _STA reports not present";
 
     if (!HasHid)
-        return HasAdr ? "skipped, no _HID, addressed by its parent bus" : "skipped, no _HID and no _ADR";
+        return HasAdr ? "skipped, no _HID, addressed by its parent bus"
+                      : "skipped, no _HID and no _ADR";
 
     if (UacpiNtHidIsExcluded(Hid))
         return "skipped, _HID excluded from enumeration";
@@ -768,7 +770,8 @@ UacpiNtProcessorQueryId(
                 break;
             }
 #endif
-            RtlStringCbPrintfA(HardwareIds[0], sizeof(HardwareIds[0]), "ACPI\\%s", UacpiNtProcessorString);
+            RtlStringCbPrintfA(HardwareIds[0], sizeof(HardwareIds[0]), "ACPI\\%s",
+                               UacpiNtProcessorString);
             Result = UacpiNtAsciiToWide(HardwareIds[0]);
             break;
 
@@ -787,8 +790,10 @@ UacpiNtProcessorQueryId(
                 else if (Index == 4)
                     Family[-1] = ANSI_NULL;
 
-                RtlStringCbPrintfA(HardwareIds[Index], sizeof(HardwareIds[Index]), "ACPI\\%s", Trimmed);
-                RtlStringCbPrintfA(HardwareIds[Index + 1], sizeof(HardwareIds[Index + 1]), "*%s", Trimmed);
+                RtlStringCbPrintfA(HardwareIds[Index], sizeof(HardwareIds[Index]), "ACPI\\%s",
+                                   Trimmed);
+                RtlStringCbPrintfA(HardwareIds[Index + 1], sizeof(HardwareIds[Index + 1]), "*%s",
+                                   Trimmed);
                 IdList[Index] = HardwareIds[Index];
                 IdList[Index + 1] = HardwareIds[Index + 1];
             }
