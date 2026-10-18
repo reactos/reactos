@@ -2165,7 +2165,7 @@ SHInvokePrinterCommandW(
     TRACE("SHInvokePrinterCommandW(%p, %u, %s, %s, %d)\n",
           hwnd, uAction, debugstr_w(lpBuf1), debugstr_w(lpBuf2), fModal);
 
-    // Windows doesn't set an error here
+    // Windows sets ERROR_SUCCESS here
     if (!lpBuf1)
     {
         SetLastError(ERROR_SUCCESS);
