@@ -222,6 +222,8 @@ IopCreateDeviceInstancePath(
     UNICODE_STRING ParentIdPrefix = { 0, 0, NULL };
     DEVICE_CAPABILITIES DeviceCapabilities;
     BOOLEAN IsValidID;
+    UNICODE_STRING DefaultInstanceId = RTL_CONSTANT_STRING(L"0000");
+    PUNICODE_STRING TargetId;
 
     DPRINT("Sending IRP_MN_QUERY_ID.BusQueryDeviceID to device stack\n");
 
@@ -303,22 +305,17 @@ IopCreateDeviceInstancePath(
         }
     }
 
-    UNICODE_STRING DefaultInstanceId = RTL_CONSTANT_STRING(L"0000");
-    BOOLEAN UseDefault = FALSE;
-
     RtlInitUnicodeString(&InstanceId,
                          (PWSTR)IoStatusBlock.Information);
 
     /* Only fallback to 0000 if both ParentIdPrefix and InstanceId are empty */
-    if (ParentIdPrefix.Length == 0 && InstanceId.Length == 0)
-    {
-        UseDefault = TRUE;
-    }
+    TargetId = (ParentIdPrefix.Length == 0 && InstanceId.Length == 0) ?
+               &DefaultInstanceId : &InstanceId;
 
     InstancePath->Length = 0;
     InstancePath->MaximumLength = DeviceId.Length + sizeof(WCHAR) +
                                   ParentIdPrefix.Length +
-                                  (UseDefault ? DefaultInstanceId.Length : InstanceId.Length) +
+                                  TargetId->Length +
                                   sizeof(UNICODE_NULL);
     if (ParentIdPrefix.Length && InstanceId.Length)
     {
@@ -330,7 +327,7 @@ IopCreateDeviceInstancePath(
                                                  TAG_IO);
     if (!InstancePath->Buffer)
     {
-        if (!UseDefault)
+        if (TargetId != &DefaultInstanceId)
             RtlFreeUnicodeString(&InstanceId);
         RtlFreeUnicodeString(&ParentIdPrefix);
         RtlFreeUnicodeString(&DeviceId);
@@ -349,14 +346,7 @@ IopCreateDeviceInstancePath(
     }
 
     /* Finally, add the id returned by the driver stack or the fallback */
-    if (UseDefault)
-    {
-        RtlAppendUnicodeStringToString(InstancePath, &DefaultInstanceId);
-    }
-    else
-    {
-        RtlAppendUnicodeStringToString(InstancePath, &InstanceId);
-    }
+    RtlAppendUnicodeStringToString(InstancePath, TargetId);
 
     /*
      * FIXME: Check for valid characters, if there is invalid characters
