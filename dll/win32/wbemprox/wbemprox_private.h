@@ -19,14 +19,22 @@
 #pragma once
 
 #include "wine/debug.h"
-#include "wine/heap.h"
 #include "wine/list.h"
 #ifdef __REACTOS__
 #include <winnls.h>
 #endif
 
-extern IClientSecurity client_security DECLSPEC_HIDDEN;
-extern struct list *table_list DECLSPEC_HIDDEN;
+enum wbm_namespace
+{
+    WBEMPROX_NAMESPACE_CIMV2,
+    WBEMPROX_NAMESPACE_MS_WINDOWS_STORAGE,
+    WBEMPROX_NAMESPACE_STANDARDCIMV2,
+    WBEMPROX_NAMESPACE_WMI,
+    WBEMPROX_NAMESPACE_LAST,
+};
+
+extern IClientSecurity client_security;
+extern struct list *table_list[WBEMPROX_NAMESPACE_LAST];
 
 enum param_direction
 {
@@ -42,7 +50,8 @@ enum param_direction
 #define COL_FLAG_KEY     0x00020000
 #define COL_FLAG_METHOD  0x00040000
 
-typedef HRESULT (class_method)(IWbemClassObject *, IWbemClassObject *, IWbemClassObject **);
+typedef HRESULT (class_method)(IWbemClassObject *object, IWbemContext *context, IWbemClassObject *in_params,
+        IWbemClassObject **out_params);
 
 enum operator
 {
@@ -117,6 +126,8 @@ struct table
     UINT flags;
     struct list entry;
     LONG refs;
+    CRITICAL_SECTION cs;
+    BOOL removed;
 };
 
 struct property
@@ -166,6 +177,7 @@ enum view_type
 
 struct view
 {
+    enum wbm_namespace ns;
     enum view_type type;
     const WCHAR *path;                      /* ASSOCIATORS OF query */
     const struct keyword *keywordlist;
@@ -180,6 +192,7 @@ struct view
 struct query
 {
     LONG refs;
+    enum wbm_namespace ns;
     struct view *view;
     struct list mem;
 };
@@ -192,80 +205,85 @@ struct path
     UINT   filter_len;
 };
 
-HRESULT parse_path( const WCHAR *, struct path ** ) DECLSPEC_HIDDEN;
-void free_path( struct path * ) DECLSPEC_HIDDEN;
-WCHAR *query_from_path( const struct path * ) DECLSPEC_HIDDEN;
+HRESULT parse_path( const WCHAR *, struct path ** );
+void free_path( struct path * );
+WCHAR *query_from_path( const struct path * );
 
-struct query *create_query(void) DECLSPEC_HIDDEN;
-void free_query( struct query * ) DECLSPEC_HIDDEN;
-struct query *addref_query( struct query * ) DECLSPEC_HIDDEN;
-void release_query( struct query *query ) DECLSPEC_HIDDEN;
-HRESULT exec_query( const WCHAR *, IEnumWbemClassObject ** ) DECLSPEC_HIDDEN;
-HRESULT parse_query( const WCHAR *, struct view **, struct list * ) DECLSPEC_HIDDEN;
-HRESULT create_view( enum view_type, const WCHAR *, const struct keyword *, const WCHAR *, const struct property *,
-                     const struct expr *, struct view ** ) DECLSPEC_HIDDEN;
-void destroy_view( struct view * ) DECLSPEC_HIDDEN;
-HRESULT execute_view( struct view * ) DECLSPEC_HIDDEN;
-struct table *get_view_table( const struct view *, UINT ) DECLSPEC_HIDDEN;
-void init_table_list( void ) DECLSPEC_HIDDEN;
-struct table *grab_table( const WCHAR * ) DECLSPEC_HIDDEN;
-struct table *addref_table( struct table * ) DECLSPEC_HIDDEN;
-void release_table( struct table * ) DECLSPEC_HIDDEN;
+struct query *create_query( enum wbm_namespace );
+void free_query( struct query * );
+struct query *addref_query( struct query * );
+void release_query( struct query *query );
+HRESULT exec_query( enum wbm_namespace, const WCHAR *, IEnumWbemClassObject ** );
+HRESULT parse_query( enum wbm_namespace, const WCHAR *, struct view **, struct list * );
+HRESULT create_view( enum view_type, enum wbm_namespace, const WCHAR *, const struct keyword *, const WCHAR *,
+                     const struct property *, const struct expr *, struct view ** );
+void destroy_view( struct view * );
+HRESULT execute_view( struct view * );
+struct table *get_view_table( const struct view *, UINT );
+void init_table_list( void );
+enum wbm_namespace get_namespace_from_string( const WCHAR *namespace );
+struct table *find_table( enum wbm_namespace, const WCHAR * );
+struct table *grab_table( struct table * );
+void release_table( struct table * );
 struct table *create_table( const WCHAR *, UINT, const struct column *, UINT, UINT, BYTE *,
-                            enum fill_status (*)(struct table *, const struct expr *) ) DECLSPEC_HIDDEN;
-BOOL add_table( struct table * ) DECLSPEC_HIDDEN;
-void free_columns( struct column *, UINT ) DECLSPEC_HIDDEN;
-void free_row_values( const struct table *, UINT ) DECLSPEC_HIDDEN;
-void clear_table( struct table * ) DECLSPEC_HIDDEN;
-void free_table( struct table * ) DECLSPEC_HIDDEN;
-UINT get_type_size( CIMTYPE ) DECLSPEC_HIDDEN;
-HRESULT eval_cond( const struct table *, UINT, const struct expr *, LONGLONG *, UINT * ) DECLSPEC_HIDDEN;
-HRESULT get_column_index( const struct table *, const WCHAR *, UINT * ) DECLSPEC_HIDDEN;
-HRESULT get_value( const struct table *, UINT, UINT, LONGLONG * ) DECLSPEC_HIDDEN;
-BSTR get_value_bstr( const struct table *, UINT, UINT ) DECLSPEC_HIDDEN;
-HRESULT set_value( const struct table *, UINT, UINT, LONGLONG, CIMTYPE ) DECLSPEC_HIDDEN;
-BOOL is_method( const struct table *, UINT ) DECLSPEC_HIDDEN;
-HRESULT get_method( const struct table *, const WCHAR *, class_method ** ) DECLSPEC_HIDDEN;
-HRESULT get_propval( const struct view *, UINT, const WCHAR *, VARIANT *, CIMTYPE *, LONG * ) DECLSPEC_HIDDEN;
-HRESULT put_propval( const struct view *, UINT, const WCHAR *, VARIANT *, CIMTYPE ) DECLSPEC_HIDDEN;
-HRESULT to_longlong( VARIANT *, LONGLONG *, CIMTYPE * ) DECLSPEC_HIDDEN;
-SAFEARRAY *to_safearray( const struct array *, CIMTYPE ) DECLSPEC_HIDDEN;
-VARTYPE to_vartype( CIMTYPE ) DECLSPEC_HIDDEN;
-void destroy_array( struct array *, CIMTYPE ) DECLSPEC_HIDDEN;
-BOOL is_result_prop( const struct view *, const WCHAR * ) DECLSPEC_HIDDEN;
-HRESULT get_properties( const struct view *, UINT, LONG, SAFEARRAY ** ) DECLSPEC_HIDDEN;
-HRESULT get_object( const WCHAR *, IWbemClassObject ** ) DECLSPEC_HIDDEN;
-BSTR get_method_name( const WCHAR *, UINT ) DECLSPEC_HIDDEN;
-void set_variant( VARTYPE, LONGLONG, void *, VARIANT * ) DECLSPEC_HIDDEN;
-HRESULT create_signature( const WCHAR *, const WCHAR *, enum param_direction,
-                          IWbemClassObject ** ) DECLSPEC_HIDDEN;
+                            enum fill_status (*)(struct table *, const struct expr *) );
+BOOL add_table( enum wbm_namespace, struct table * );
+void free_columns( struct column *, UINT );
+void free_row_values( const struct table *, UINT );
+void clear_table( struct table * );
+void free_table( struct table * );
+UINT get_type_size( CIMTYPE );
+HRESULT eval_cond( const struct table *, UINT, const struct expr *, LONGLONG *, UINT * );
+HRESULT get_column_index( const struct table *, const WCHAR *, UINT * );
+HRESULT get_value( const struct table *, UINT, UINT, LONGLONG * );
+BSTR get_value_bstr( const struct table *, UINT, UINT );
+HRESULT set_value( const struct table *, UINT, UINT, LONGLONG, CIMTYPE );
+BOOL is_method( const struct table *, UINT );
+HRESULT get_method( const struct table *, const WCHAR *, class_method ** );
+HRESULT get_propval( const struct view *, UINT, const WCHAR *, VARIANT *, CIMTYPE *, LONG * );
+HRESULT put_propval( const struct view *, UINT, const WCHAR *, VARIANT *, CIMTYPE );
+HRESULT to_longlong( VARIANT *, LONGLONG *, CIMTYPE * );
+SAFEARRAY *to_safearray( const struct array *, CIMTYPE );
+VARTYPE to_vartype( CIMTYPE );
+void destroy_array( struct array *, CIMTYPE );
+BOOL is_result_prop( const struct view *, const WCHAR * );
+HRESULT get_properties( const struct view *, UINT, LONG, SAFEARRAY ** );
+HRESULT get_object( enum wbm_namespace, const WCHAR *, IWbemClassObject ** );
+BSTR get_method_name( enum wbm_namespace, const WCHAR *, UINT );
+WCHAR *get_first_key_property( enum wbm_namespace, const WCHAR * );
+void set_variant( VARTYPE, LONGLONG, void *, VARIANT * );
+HRESULT create_signature( enum wbm_namespace ns, const WCHAR *, const WCHAR *, enum param_direction,
+                          IWbemClassObject ** );
 
-HRESULT WbemLocator_create(LPVOID *) DECLSPEC_HIDDEN;
-HRESULT WbemServices_create(const WCHAR *, LPVOID *) DECLSPEC_HIDDEN;
-HRESULT create_class_object(const WCHAR *, IEnumWbemClassObject *, UINT,
-                            struct record *, IWbemClassObject **) DECLSPEC_HIDDEN;
-HRESULT EnumWbemClassObject_create(struct query *, LPVOID *) DECLSPEC_HIDDEN;
-HRESULT WbemQualifierSet_create(const WCHAR *, const WCHAR *, LPVOID *) DECLSPEC_HIDDEN;
+HRESULT WbemLocator_create(LPVOID *, REFIID);
+HRESULT WbemServices_create(const WCHAR *, IWbemContext *, LPVOID *);
+HRESULT WbemContext_create(void **, REFIID);
+HRESULT create_class_object(enum wbm_namespace ns, const WCHAR *, IEnumWbemClassObject *, UINT,
+                            struct record *, IWbemClassObject **);
+HRESULT EnumWbemClassObject_create(struct query *, LPVOID *);
+HRESULT WbemQualifierSet_create(enum wbm_namespace, const WCHAR *, const WCHAR *, LPVOID *);
 
-HRESULT process_get_owner(IWbemClassObject *, IWbemClassObject *, IWbemClassObject **) DECLSPEC_HIDDEN;
-HRESULT reg_create_key(IWbemClassObject *, IWbemClassObject *, IWbemClassObject **) DECLSPEC_HIDDEN;
-HRESULT reg_enum_key(IWbemClassObject *, IWbemClassObject *, IWbemClassObject **) DECLSPEC_HIDDEN;
-HRESULT reg_enum_values(IWbemClassObject *, IWbemClassObject *, IWbemClassObject **) DECLSPEC_HIDDEN;
-HRESULT reg_get_stringvalue(IWbemClassObject *, IWbemClassObject *, IWbemClassObject **) DECLSPEC_HIDDEN;
-HRESULT service_pause_service(IWbemClassObject *, IWbemClassObject *, IWbemClassObject **) DECLSPEC_HIDDEN;
-HRESULT service_resume_service(IWbemClassObject *, IWbemClassObject *, IWbemClassObject **) DECLSPEC_HIDDEN;
-HRESULT service_start_service(IWbemClassObject *, IWbemClassObject *, IWbemClassObject **) DECLSPEC_HIDDEN;
-HRESULT service_stop_service(IWbemClassObject *, IWbemClassObject *, IWbemClassObject **) DECLSPEC_HIDDEN;
-HRESULT security_get_sd(IWbemClassObject *, IWbemClassObject *, IWbemClassObject **) DECLSPEC_HIDDEN;
-HRESULT security_set_sd(IWbemClassObject *, IWbemClassObject *, IWbemClassObject **) DECLSPEC_HIDDEN;
-
-static inline WCHAR *heap_strdupW( const WCHAR *src )
-{
-    WCHAR *dst;
-    if (!src) return NULL;
-    if ((dst = heap_alloc( (lstrlenW( src ) + 1) * sizeof(WCHAR) ))) lstrcpyW( dst, src );
-    return dst;
-}
+HRESULT process_get_owner(IWbemClassObject *obj, IWbemContext *context, IWbemClassObject *in, IWbemClassObject **out);
+HRESULT process_create(IWbemClassObject *obj, IWbemContext *context, IWbemClassObject *in, IWbemClassObject **out);
+HRESULT reg_create_key(IWbemClassObject *obj, IWbemContext *context, IWbemClassObject *in, IWbemClassObject **out);
+HRESULT reg_enum_key(IWbemClassObject *obj, IWbemContext *context, IWbemClassObject *in, IWbemClassObject **out);
+HRESULT reg_enum_values(IWbemClassObject *obj, IWbemContext *context, IWbemClassObject *in, IWbemClassObject **out);
+HRESULT reg_get_binaryvalue(IWbemClassObject *obj, IWbemContext *context, IWbemClassObject *in, IWbemClassObject **out);
+HRESULT reg_get_stringvalue(IWbemClassObject *obj, IWbemContext *context, IWbemClassObject *in, IWbemClassObject **out);
+HRESULT reg_set_stringvalue(IWbemClassObject *obj, IWbemContext *context, IWbemClassObject *in, IWbemClassObject **out);
+HRESULT reg_set_dwordvalue(IWbemClassObject *obj, IWbemContext *context, IWbemClassObject *in, IWbemClassObject **out);
+HRESULT reg_delete_key(IWbemClassObject *obj, IWbemContext *context, IWbemClassObject *in, IWbemClassObject **out);
+HRESULT service_pause_service(IWbemClassObject *obj, IWbemContext *context, IWbemClassObject *in, IWbemClassObject **out);
+HRESULT service_resume_service(IWbemClassObject *obj, IWbemContext *context, IWbemClassObject *in, IWbemClassObject **out);
+HRESULT service_start_service(IWbemClassObject *obj, IWbemContext *context, IWbemClassObject *in, IWbemClassObject **out);
+HRESULT service_stop_service(IWbemClassObject *obj, IWbemContext *context, IWbemClassObject *in, IWbemClassObject **out);
+HRESULT security_get_sd(IWbemClassObject *obj, IWbemContext *context, IWbemClassObject *in, IWbemClassObject **out);
+HRESULT security_set_sd(IWbemClassObject *obj, IWbemContext *context, IWbemClassObject *in, IWbemClassObject **out);
+HRESULT sysrestore_create(IWbemClassObject *obj, IWbemContext *context, IWbemClassObject *in, IWbemClassObject **out);
+HRESULT sysrestore_disable(IWbemClassObject *obj, IWbemContext *context, IWbemClassObject *in, IWbemClassObject **out);
+HRESULT sysrestore_enable(IWbemClassObject *obj, IWbemContext *context, IWbemClassObject *in, IWbemClassObject **out);
+HRESULT sysrestore_get_last_status(IWbemClassObject *obj, IWbemContext *context, IWbemClassObject *in, IWbemClassObject **out);
+HRESULT sysrestore_restore(IWbemClassObject *obj, IWbemContext *context, IWbemClassObject *in, IWbemClassObject **out);
 
 static inline WCHAR *heap_strdupAW( const char *src )
 {
@@ -273,36 +291,11 @@ static inline WCHAR *heap_strdupAW( const char *src )
     WCHAR *dst;
     if (!src) return NULL;
     len = MultiByteToWideChar( CP_ACP, 0, src, -1, NULL, 0 );
-    if ((dst = heap_alloc( len * sizeof(*dst) ))) MultiByteToWideChar( CP_ACP, 0, src, -1, dst, len );
+    if ((dst = malloc( len * sizeof(*dst) ))) MultiByteToWideChar( CP_ACP, 0, src, -1, dst, len );
     return dst;
 }
 
-static const WCHAR class_processW[] = {'W','i','n','3','2','_','P','r','o','c','e','s','s',0};
-static const WCHAR class_serviceW[] = {'W','i','n','3','2','_','S','e','r','v','i','c','e',0};
-static const WCHAR class_stdregprovW[] = {'S','t','d','R','e','g','P','r','o','v',0};
-static const WCHAR class_systemsecurityW[] = {'_','_','S','y','s','t','e','m','S','e','c','u','r','i','t','y',0};
-
-static const WCHAR prop_nameW[] = {'N','a','m','e',0};
-
-static const WCHAR method_createkeyW[] = {'C','r','e','a','t','e','K','e','y',0};
-static const WCHAR method_enumkeyW[] = {'E','n','u','m','K','e','y',0};
-static const WCHAR method_enumvaluesW[] = {'E','n','u','m','V','a','l','u','e','s',0};
-static const WCHAR method_getownerW[] = {'G','e','t','O','w','n','e','r',0};
-static const WCHAR method_getsdW[] = {'G','e','t','S','D',0};
-static const WCHAR method_getstringvalueW[] = {'G','e','t','S','t','r','i','n','g','V','a','l','u','e',0};
-static const WCHAR method_pauseserviceW[] = {'P','a','u','s','e','S','e','r','v','i','c','e',0};
-static const WCHAR method_resumeserviceW[] = {'R','e','s','u','m','e','S','e','r','v','i','c','e',0};
-static const WCHAR method_setsdW[] = {'S','e','t','S','D',0};
-static const WCHAR method_startserviceW[] = {'S','t','a','r','t','S','e','r','v','i','c','e',0};
-static const WCHAR method_stopserviceW[] = {'S','t','o','p','S','e','r','v','i','c','e',0};
-
-static const WCHAR param_defkeyW[] = {'h','D','e','f','K','e','y',0};
-static const WCHAR param_domainW[] = {'D','o','m','a','i','n',0};
-static const WCHAR param_namesW[] = {'s','N','a','m','e','s',0};
-static const WCHAR param_returnvalueW[] = {'R','e','t','u','r','n','V','a','l','u','e',0};
-static const WCHAR param_sdW[] = {'S','D',0};
-static const WCHAR param_subkeynameW[] = {'s','S','u','b','K','e','y','N','a','m','e',0};
-static const WCHAR param_typesW[] = {'T','y','p','e','s',0};
-static const WCHAR param_userW[] = {'U','s','e','r',0};
-static const WCHAR param_valueW[] = {'s','V','a','l','u','e',0};
-static const WCHAR param_valuenameW[] = {'s','V','a','l','u','e','N','a','m','e',0};
+static inline BOOL is_digit(WCHAR c)
+{
+    return '0' <= c && c <= '9';
+}

@@ -19,9 +19,6 @@
 #define COBJMACROS
 
 #include <stdarg.h>
-#ifdef __REACTOS__
-#include <wchar.h>
-#endif
 
 #include "windef.h"
 #include "winbase.h"
@@ -35,16 +32,16 @@ WINE_DEFAULT_DEBUG_CHANNEL(wbemprox);
 static HRESULT append_table( struct view *view, struct table *table )
 {
     struct table **tmp;
-    if (!(tmp = heap_realloc( view->table, (view->table_count + 1) * sizeof(*tmp) ))) return E_OUTOFMEMORY;
+    if (!(tmp = realloc( view->table, (view->table_count + 1) * sizeof(*tmp) ))) return E_OUTOFMEMORY;
     view->table = tmp;
     view->table[view->table_count++] = table;
     return S_OK;
 }
 
-HRESULT create_view( enum view_type type, const WCHAR *path, const struct keyword *keywordlist, const WCHAR *class,
-                     const struct property *proplist, const struct expr *cond, struct view **ret )
+HRESULT create_view( enum view_type type, enum wbm_namespace ns, const WCHAR *path, const struct keyword *keywordlist,
+                     const WCHAR *class, const struct property *proplist, const struct expr *cond, struct view **ret )
 {
-    struct view *view = heap_alloc_zero( sizeof(*view) );
+    struct view *view = calloc( 1, sizeof(*view) );
 
     if (!view) return E_OUTOFMEMORY;
 
@@ -57,13 +54,19 @@ HRESULT create_view( enum view_type type, const WCHAR *path, const struct keywor
 
     case VIEW_TYPE_SELECT:
     {
-        struct table *table = grab_table( class );
+        struct table *table = find_table( ns, class );
         HRESULT hr;
 
         if (table && (hr = append_table( view, table )) != S_OK)
         {
-            heap_free( view );
+            release_table( table );
+            free( view );
             return hr;
+        }
+        else if (!table && ns == WBEMPROX_NAMESPACE_LAST)
+        {
+            free( view );
+            return WBEM_E_INVALID_CLASS;
         }
         view->proplist = proplist;
         view->cond     = cond;
@@ -71,11 +74,12 @@ HRESULT create_view( enum view_type type, const WCHAR *path, const struct keywor
     }
     default:
         ERR( "unhandled type %u\n", type );
-        heap_free( view );
+        free( view );
         return E_INVALIDARG;
     }
 
     view->type = type;
+    view->ns = ns;
     *ret = view;
     return S_OK;
 }
@@ -85,27 +89,35 @@ void destroy_view( struct view *view )
     ULONG i;
     if (!view) return;
     for (i = 0; i < view->table_count; i++) release_table( view->table[i] );
-    heap_free( view->table );
-    heap_free( view->result );
-    heap_free( view );
+    free( view->table );
+    free( view->result );
+    free( view );
 }
 
-static BOOL eval_like( const WCHAR *lstr, const WCHAR *rstr )
+static BOOL eval_like( const WCHAR *text, const WCHAR *pattern )
 {
-    const WCHAR *p = lstr, *q = rstr;
+    if (wcsstr( pattern, L"[" )) FIXME( "character ranges (i.e. [abc], [^a-z]) are not supported\n" );
 
-    while (*p && *q)
+    while (*text)
     {
-        if (*q == '%')
+        if (pattern[0] == '\\' && pattern[1] == '\\') pattern++;
+
+        if (*pattern == '%')
         {
-            while (*q == '%') q++;
-            if (!*q) return TRUE;
-            while (*p && *q && towupper( *p ) == towupper( *q )) { p++; q++; };
-            if (!*p && !*q) return TRUE;
+            while (*pattern == '%') pattern++;
+            if (!*pattern) return TRUE;
+            while (!eval_like( text, pattern ) && *text) text++;
+
+            return !!*text;
         }
-        if (*q != '%' && towupper( *p++ ) != towupper( *q++ )) return FALSE;
+
+        if (*pattern != '_' && towupper( *text ) != towupper( *pattern )) return FALSE;
+        text++; pattern++;
     }
-    return TRUE;
+
+    while (*pattern == '%') pattern++;
+
+    return *pattern == '\0';
 }
 
 static HRESULT eval_strcmp( UINT op, const WCHAR *lstr, const WCHAR *rstr, LONGLONG *val )
@@ -118,22 +130,22 @@ static HRESULT eval_strcmp( UINT op, const WCHAR *lstr, const WCHAR *rstr, LONGL
     switch (op)
     {
     case OP_EQ:
-        *val = !wcscmp( lstr, rstr );
+        *val = !wcsicmp( lstr, rstr );
         break;
     case OP_GT:
-        *val = wcscmp( lstr, rstr ) > 0;
+        *val = wcsicmp( lstr, rstr ) > 0;
         break;
     case OP_LT:
-        *val = wcscmp( lstr, rstr ) < 0;
+        *val = wcsicmp( lstr, rstr ) < 0;
         break;
     case OP_LE:
-        *val = wcscmp( lstr, rstr ) <= 0;
+        *val = wcsicmp( lstr, rstr ) <= 0;
         break;
     case OP_GE:
-        *val = wcscmp( lstr, rstr ) >= 0;
+        *val = wcsicmp( lstr, rstr ) >= 0;
         break;
     case OP_NE:
-        *val = wcscmp( lstr, rstr );
+        *val = wcsicmp( lstr, rstr );
         break;
     case OP_LIKE:
         *val = eval_like( lstr, rstr );
@@ -183,10 +195,8 @@ static inline BOOL is_boolcmp( const struct complex_expr *expr, UINT ltype, UINT
 
 static HRESULT eval_boolcmp( UINT op, LONGLONG lval, LONGLONG rval, UINT ltype, UINT rtype, LONGLONG *val )
 {
-    static const WCHAR trueW[] = {'T','r','u','e',0};
-
-    if (ltype == CIM_STRING) lval = !wcsicmp( (const WCHAR *)(INT_PTR)lval, trueW ) ? -1 : 0;
-    else if (rtype == CIM_STRING) rval = !wcsicmp( (const WCHAR *)(INT_PTR)rval, trueW ) ? -1 : 0;
+    if (ltype == CIM_STRING) lval = !wcsicmp( (const WCHAR *)(INT_PTR)lval, L"True" ) ? -1 : 0;
+    else if (rtype == CIM_STRING) rval = !wcsicmp( (const WCHAR *)(INT_PTR)rval, L"True" ) ? -1 : 0;
 
     switch (op)
     {
@@ -279,35 +289,38 @@ static UINT resolve_type( UINT left, UINT right )
 
 static const WCHAR *format_int( WCHAR *buf, UINT len, CIMTYPE type, LONGLONG val )
 {
-    static const WCHAR fmt_signedW[] = {'%','d',0};
-    static const WCHAR fmt_unsignedW[] = {'%','u',0};
-    static const WCHAR fmt_signed64W[] = {'%','I','6','4','d',0};
-    static const WCHAR fmt_unsigned64W[] = {'%','I','6','4','u',0};
-
     switch (type)
     {
     case CIM_SINT8:
     case CIM_SINT16:
     case CIM_SINT32:
-        swprintf( buf, fmt_signedW, val );
+#ifdef __REACTOS__
+        swprintf( buf, len, L"%lld", val );
+#else
+        swprintf( buf, len, L"%d", val );
+#endif
         return buf;
 
     case CIM_UINT8:
     case CIM_UINT16:
     case CIM_UINT32:
-        swprintf( buf, fmt_unsignedW, val );
+#ifdef __REACTOS__
+        swprintf( buf, len, L"%llu", val );
+#else
+        swprintf( buf, len, L"%u", val );
+#endif
         return buf;
 
     case CIM_SINT64:
-        wsprintfW( buf, fmt_signed64W, val );
+        wsprintfW( buf, L"%I64d", val );
         return buf;
 
     case CIM_UINT64:
-        wsprintfW( buf, fmt_unsigned64W, val );
+        wsprintfW( buf, L"%I64u", val );
         return buf;
 
     default:
-        ERR( "unhandled type %u\n", type );
+        ERR( "unhandled type %lu\n", type );
         return NULL;
     }
 }
@@ -480,38 +493,35 @@ HRESULT eval_cond( const struct table *table, UINT row, const struct expr *cond,
 
 static WCHAR *build_assoc_query( const WCHAR *class, UINT class_len )
 {
-    static const WCHAR fmtW[] =
-        {'S','E','L','E','C','T',' ','*',' ','F','R','O','M',' ','_','_','A','S','S','O','C','I','A','T','O','R','S',
-         ' ','W','H','E','R','E',' ','C','l','a','s','s','=','\'','%','s','\'',0};
+    static const WCHAR fmtW[] = L"SELECT * FROM __ASSOCIATORS WHERE Class='%s'";
     UINT len = class_len + ARRAY_SIZE(fmtW);
     WCHAR *ret;
 
-    if (!(ret = heap_alloc( len * sizeof(WCHAR) ))) return NULL;
-    swprintf( ret, fmtW, class );
+    if (!(ret = malloc( len * sizeof(WCHAR) ))) return NULL;
+    swprintf( ret, len, fmtW, class );
     return ret;
 }
 
-static HRESULT create_assoc_enum( const WCHAR *class, UINT class_len, IEnumWbemClassObject **iter )
+static HRESULT create_assoc_enum( enum wbm_namespace ns, const WCHAR *class, UINT class_len,
+                                  IEnumWbemClassObject **iter )
 {
     WCHAR *query;
     HRESULT hr;
 
     if (!(query = build_assoc_query( class, class_len ))) return E_OUTOFMEMORY;
-    hr = exec_query( query, iter );
-    heap_free( query );
+    hr = exec_query( ns, query, iter );
+    free( query );
     return hr;
 }
 
 static WCHAR *build_antecedent_query( const WCHAR *assocclass, const WCHAR *dependent )
 {
-    static const WCHAR fmtW[] =
-        {'S','E','L','E','C','T',' ','A','n','t','e','c','e','d','e','n','t',' ','F','R','O','M',' ','%','s',' ',
-         'W','H','E','R','E',' ','D','e','p','e','n','d','e','n','t','=','\'','%','s','\'',0};
+    static const WCHAR fmtW[] = L"SELECT Antecedent FROM %s WHERE Dependent='%s'";
     UINT len = lstrlenW(assocclass) + lstrlenW(dependent) + ARRAY_SIZE(fmtW);
     WCHAR *ret;
 
-    if (!(ret = heap_alloc( len * sizeof(WCHAR) ))) return NULL;
-    swprintf( ret, fmtW, assocclass, dependent );
+    if (!(ret = malloc( len * sizeof(WCHAR) ))) return NULL;
+    swprintf( ret, len, fmtW, assocclass, dependent );
     return ret;
 }
 
@@ -527,13 +537,11 @@ static BSTR build_servername(void)
 
 static BSTR build_namespace(void)
 {
-    static const WCHAR cimv2W[] = {'R','O','O','T','\\','C','I','M','V','2',0};
-    return SysAllocString( cimv2W );
+    return SysAllocString( L"ROOT\\CIMV2" );
 }
 
 static WCHAR *build_canonical_path( const WCHAR *relpath )
 {
-    static const WCHAR fmtW[] = {'\\','\\','%','s','\\','%','s',':',0};
     BSTR server, namespace;
     WCHAR *ret;
     UINT len, i;
@@ -545,10 +553,10 @@ static WCHAR *build_canonical_path( const WCHAR *relpath )
         return NULL;
     }
 
-    len = ARRAY_SIZE( fmtW ) + SysStringLen( server ) + SysStringLen( namespace ) + lstrlenW( relpath );
-    if ((ret = heap_alloc( len * sizeof(WCHAR ) )))
+    len = ARRAY_SIZE( L"\\\\%s\\%s:" ) + SysStringLen( server ) + SysStringLen( namespace ) + lstrlenW( relpath );
+    if ((ret = malloc( len * sizeof(WCHAR ) )))
     {
-        len = swprintf( ret, fmtW, server, namespace );
+        len = swprintf( ret, len, L"\\\\%s\\%s:", server, namespace );
         for (i = 0; i < lstrlenW( relpath ); i ++)
         {
             if (relpath[i] == '\'') ret[len++] = '"';
@@ -562,9 +570,8 @@ static WCHAR *build_canonical_path( const WCHAR *relpath )
     return ret;
 }
 
-static HRESULT get_antecedent( const WCHAR *assocclass, const WCHAR *dependent, BSTR *ret )
+static HRESULT get_antecedent( enum wbm_namespace ns, const WCHAR *assocclass, const WCHAR *dependent, BSTR *ret )
 {
-    static const WCHAR antecedentW[] = {'A','n','t','e','c','e','d','e','n','t',0};
     WCHAR *fullpath, *str;
     IEnumWbemClassObject *iter = NULL;
     IWbemClassObject *obj;
@@ -574,7 +581,7 @@ static HRESULT get_antecedent( const WCHAR *assocclass, const WCHAR *dependent, 
 
     if (!(fullpath = build_canonical_path( dependent ))) return E_OUTOFMEMORY;
     if (!(str = build_antecedent_query( assocclass, fullpath ))) goto done;
-    if ((hr = exec_query( str, &iter )) != S_OK) goto done;
+    if ((hr = exec_query( ns, str, &iter )) != S_OK) goto done;
 
     IEnumWbemClassObject_Next( iter, WBEM_INFINITE, 1, &obj, &count );
     if (!count)
@@ -583,25 +590,25 @@ static HRESULT get_antecedent( const WCHAR *assocclass, const WCHAR *dependent, 
         goto done;
     }
 
-    hr = IWbemClassObject_Get( obj, antecedentW, 0, &var, NULL, NULL );
+    hr = IWbemClassObject_Get( obj, L"Antecedent", 0, &var, NULL, NULL );
     IWbemClassObject_Release( obj );
     if (hr != S_OK) goto done;
     *ret = V_BSTR( &var );
 
 done:
     if (iter) IEnumWbemClassObject_Release( iter );
-    heap_free( str );
-    heap_free( fullpath );
+    free( str );
+    free( fullpath );
     return hr;
 }
 
-static HRESULT do_query( const WCHAR *str, struct query **ret_query )
+static HRESULT do_query( enum wbm_namespace ns, const WCHAR *str, struct query **ret_query )
 {
     struct query *query;
     HRESULT hr;
 
-    if (!(query = create_query())) return E_OUTOFMEMORY;
-    if ((hr = parse_query( str, &query->view, &query->mem )) != S_OK || (hr = execute_view( query->view )) != S_OK)
+    if (!(query = create_query( ns ))) return E_OUTOFMEMORY;
+    if ((hr = parse_query( ns, str, &query->view, &query->mem )) != S_OK || (hr = execute_view( query->view )) != S_OK)
     {
         release_query( query );
         return hr;
@@ -610,7 +617,8 @@ static HRESULT do_query( const WCHAR *str, struct query **ret_query )
     return S_OK;
 }
 
-static HRESULT get_antecedent_table( const WCHAR *assocclass, const WCHAR *dependent, struct table **table )
+static HRESULT get_antecedent_table( enum wbm_namespace ns, const WCHAR *assocclass, const WCHAR *dependent,
+                                     struct table **table )
 {
     BSTR antecedent = NULL;
     struct path *path = NULL;
@@ -618,7 +626,7 @@ static HRESULT get_antecedent_table( const WCHAR *assocclass, const WCHAR *depen
     struct query *query = NULL;
     HRESULT hr;
 
-    if ((hr = get_antecedent( assocclass, dependent, &antecedent )) != S_OK) return hr;
+    if ((hr = get_antecedent( ns, assocclass, dependent, &antecedent )) != S_OK) return hr;
     if (!antecedent)
     {
         *table = NULL;
@@ -631,21 +639,20 @@ static HRESULT get_antecedent_table( const WCHAR *assocclass, const WCHAR *depen
         goto done;
     }
 
-    if ((hr = do_query( str, &query )) != S_OK) goto done;
-    if (query->view->table_count) *table = addref_table( query->view->table[0] );
+    if ((hr = do_query( ns, str, &query )) != S_OK) goto done;
+    if (query->view->table_count) *table = grab_table( query->view->table[0] );
     else *table = NULL;
 
 done:
     if (query) release_query( query );
     free_path( path );
     SysFreeString( antecedent );
-    heap_free( str );
+    free( str );
     return hr;
 }
 
 static HRESULT exec_assoc_view( struct view *view )
 {
-    static const WCHAR assocclassW[] = {'A','s','s','o','c','C','l','a','s','s',0};
     IEnumWbemClassObject *iter = NULL;
     struct path *path;
     HRESULT hr;
@@ -653,7 +660,7 @@ static HRESULT exec_assoc_view( struct view *view )
     if (view->keywordlist) FIXME( "ignoring keywords\n" );
     if ((hr = parse_path( view->path, &path )) != S_OK) return hr;
 
-    if ((hr = create_assoc_enum( path->class, path->class_len, &iter )) != S_OK) goto done;
+    if ((hr = create_assoc_enum( view->ns, path->class, path->class_len, &iter )) != S_OK) goto done;
     for (;;)
     {
         ULONG count;
@@ -664,14 +671,14 @@ static HRESULT exec_assoc_view( struct view *view )
         IEnumWbemClassObject_Next( iter, WBEM_INFINITE, 1, &obj, &count );
         if (!count) break;
 
-        if ((hr = IWbemClassObject_Get( obj, assocclassW, 0, &var, NULL, NULL )) != S_OK)
+        if ((hr = IWbemClassObject_Get( obj, L"AssocClass", 0, &var, NULL, NULL )) != S_OK)
         {
             IWbemClassObject_Release( obj );
             goto done;
         }
         IWbemClassObject_Release( obj );
 
-        hr = get_antecedent_table( V_BSTR(&var), view->path, &table );
+        hr = get_antecedent_table( view->ns, V_BSTR(&var), view->path, &table );
         VariantClear( &var );
         if (hr != S_OK) goto done;
 
@@ -684,7 +691,7 @@ static HRESULT exec_assoc_view( struct view *view )
 
     if (view->table_count)
     {
-        if (!(view->result = heap_alloc_zero( view->table_count * sizeof(UINT) ))) hr = E_OUTOFMEMORY;
+        if (!(view->result = calloc( view->table_count, sizeof(UINT) ))) hr = E_OUTOFMEMORY;
         else view->result_count = view->table_count;
     }
 
@@ -712,7 +719,7 @@ static HRESULT exec_select_view( struct view *view )
     if (!table->num_rows) return S_OK;
 
     len = min( table->num_rows, 16 );
-    if (!(view->result = heap_alloc( len * sizeof(UINT) ))) return E_OUTOFMEMORY;
+    if (!(view->result = malloc( len * sizeof(UINT) ))) return E_OUTOFMEMORY;
 
     for (i = 0; i < table->num_rows; i++)
     {
@@ -724,7 +731,7 @@ static HRESULT exec_select_view( struct view *view )
         {
             UINT *tmp;
             len *= 2;
-            if (!(tmp = heap_realloc( view->result, len * sizeof(UINT) ))) return E_OUTOFMEMORY;
+            if (!(tmp = realloc( view->result, len * sizeof(UINT) ))) return E_OUTOFMEMORY;
             view->result = tmp;
         }
         if (status == FILL_STATUS_FILTERED) val = 1;
@@ -752,12 +759,13 @@ HRESULT execute_view( struct view *view )
     }
 }
 
-struct query *create_query(void)
+struct query *create_query( enum wbm_namespace ns )
 {
     struct query *query;
 
-    if (!(query = heap_alloc( sizeof(*query) ))) return NULL;
+    if (!(query = malloc( sizeof(*query) ))) return NULL;
     list_init( &query->mem );
+    query->ns = ns;
     query->refs = 1;
     return query;
 }
@@ -768,8 +776,8 @@ void free_query( struct query *query )
 
     if (!query) return;
     destroy_view( query->view );
-    LIST_FOR_EACH_SAFE( mem, next, &query->mem ) { heap_free( mem ); }
-    heap_free( query );
+    LIST_FOR_EACH_SAFE( mem, next, &query->mem ) { free( mem ); }
+    free( query );
 }
 
 struct query *addref_query( struct query *query )
@@ -783,14 +791,14 @@ void release_query( struct query *query )
     if (!InterlockedDecrement( &query->refs )) free_query( query );
 }
 
-HRESULT exec_query( const WCHAR *str, IEnumWbemClassObject **result )
+HRESULT exec_query( enum wbm_namespace ns, const WCHAR *str, IEnumWbemClassObject **result )
 {
     HRESULT hr;
     struct query *query;
 
     *result = NULL;
-    if (!(query = create_query())) return E_OUTOFMEMORY;
-    hr = parse_query( str, &query->view, &query->mem );
+    if (!(query = create_query( ns ))) return E_OUTOFMEMORY;
+    hr = parse_query( ns, str, &query->view, &query->mem );
     if (hr != S_OK) goto done;
     hr = execute_view( query->view );
     if (hr != S_OK) goto done;
@@ -820,11 +828,10 @@ static BOOL is_system_prop( const WCHAR *name )
 
 static BSTR build_proplist( const struct table *table, UINT row, UINT count, UINT *len )
 {
-    static const WCHAR fmtW[] = {'%','s','=','%','s',0};
     UINT i, j, offset;
     BSTR *values, ret = NULL;
 
-    if (!(values = heap_alloc( count * sizeof(BSTR) ))) return NULL;
+    if (!(values = malloc( count * sizeof(BSTR) ))) return NULL;
 
     *len = j = 0;
     for (i = 0; i < table->num_cols; i++)
@@ -833,7 +840,7 @@ static BSTR build_proplist( const struct table *table, UINT row, UINT count, UIN
         {
             const WCHAR *name = table->columns[i].name;
             values[j] = get_value_bstr( table, row, i );
-            *len += lstrlenW( fmtW ) + lstrlenW( name ) + lstrlenW( values[j] );
+            *len += lstrlenW( L"%s=%s" ) + lstrlenW( name ) + lstrlenW( values[j] );
             j++;
         }
     }
@@ -845,14 +852,14 @@ static BSTR build_proplist( const struct table *table, UINT row, UINT count, UIN
             if (table->columns[i].type & COL_FLAG_KEY)
             {
                 const WCHAR *name = table->columns[i].name;
-                offset += swprintf( ret + offset, fmtW, name, values[j] );
+                offset += swprintf( ret + offset, *len - offset, L"%s=%s", name, values[j] );
                 if (j < count - 1) ret[offset++] = ',';
                 j++;
             }
         }
     }
     for (i = 0; i < count; i++) SysFreeString( values[i] );
-    heap_free( values );
+    free( values );
     return ret;
 }
 
@@ -869,7 +876,6 @@ static UINT count_key_columns( const struct table *table )
 
 static BSTR build_relpath( const struct view *view, UINT table_index, UINT result_index, const WCHAR *name )
 {
-    static const WCHAR fmtW[] = {'%','s','.','%','s',0};
     BSTR class, proplist, ret = NULL;
     struct table *table = view->table[table_index];
     UINT row = view->result[result_index];
@@ -881,9 +887,9 @@ static BSTR build_relpath( const struct view *view, UINT table_index, UINT resul
     if (!(num_keys = count_key_columns( table ))) return class;
     if (!(proplist = build_proplist( table, row, num_keys, &len ))) goto done;
 
-    len += lstrlenW( fmtW ) + SysStringLen( class );
+    len += lstrlenW( L"%s.%s" ) + SysStringLen( class );
     if (!(ret = SysAllocStringLen( NULL, len ))) goto done;
-    swprintf( ret, fmtW, class, proplist );
+    swprintf( ret, len, L"%s.%s", class, proplist );
 
 done:
     SysFreeString( class );
@@ -893,7 +899,6 @@ done:
 
 static BSTR build_path( const struct view *view, UINT table_index, UINT result_index, const WCHAR *name )
 {
-    static const WCHAR fmtW[] = {'\\','\\','%','s','\\','%','s',':','%','s',0};
     BSTR server, namespace = NULL, relpath = NULL, ret = NULL;
     UINT len;
 
@@ -903,9 +908,9 @@ static BSTR build_path( const struct view *view, UINT table_index, UINT result_i
     if (!(namespace = build_namespace())) goto done;
     if (!(relpath = build_relpath( view, table_index, result_index, name ))) goto done;
 
-    len = lstrlenW( fmtW ) + SysStringLen( server ) + SysStringLen( namespace ) + SysStringLen( relpath );
+    len = lstrlenW( L"\\\\%s\\%s:%s" ) + SysStringLen( server ) + SysStringLen( namespace ) + SysStringLen( relpath );
     if (!(ret = SysAllocStringLen( NULL, len ))) goto done;
-    swprintf( ret, fmtW, server, namespace, relpath );
+    swprintf( ret, len, L"\\\\%s\\%s:%s", server, namespace, relpath );
 
 done:
     SysFreeString( server );
@@ -945,17 +950,9 @@ static UINT count_result_properties( const struct view *view, UINT table_index )
 static HRESULT get_system_propval( const struct view *view, UINT table_index, UINT result_index, const WCHAR *name,
                                    VARIANT *ret, CIMTYPE *type, LONG *flavor )
 {
-    static const WCHAR classW[] = {'_','_','C','L','A','S','S',0};
-    static const WCHAR genusW[] = {'_','_','G','E','N','U','S',0};
-    static const WCHAR pathW[] = {'_','_','P','A','T','H',0};
-    static const WCHAR namespaceW[] = {'_','_','N','A','M','E','S','P','A','C','E',0};
-    static const WCHAR propcountW[] = {'_','_','P','R','O','P','E','R','T','Y','_','C','O','U','N','T',0};
-    static const WCHAR relpathW[] = {'_','_','R','E','L','P','A','T','H',0};
-    static const WCHAR serverW[] = {'_','_','S','E','R','V','E','R',0};
-
     if (flavor) *flavor = WBEM_FLAVOR_ORIGIN_SYSTEM;
 
-    if (!wcsicmp( name, classW ))
+    if (!wcsicmp( name, L"__CLASS" ))
     {
         if (ret)
         {
@@ -965,7 +962,7 @@ static HRESULT get_system_propval( const struct view *view, UINT table_index, UI
         if (type) *type = CIM_STRING;
         return S_OK;
     }
-    if (!wcsicmp( name, genusW ))
+    if (!wcsicmp( name, L"__GENUS" ))
     {
         if (ret)
         {
@@ -975,27 +972,29 @@ static HRESULT get_system_propval( const struct view *view, UINT table_index, UI
         if (type) *type = CIM_SINT32;
         return S_OK;
     }
-    else if (!wcsicmp( name, namespaceW ))
+    if (!wcsicmp( name, L"__NAMESPACE" ))
     {
         if (ret)
         {
             V_VT( ret ) = VT_BSTR;
             V_BSTR( ret ) = view->proplist ? NULL : build_namespace();
+            if (!V_BSTR( ret )) V_VT( ret ) = VT_NULL;
         }
         if (type) *type = CIM_STRING;
         return S_OK;
     }
-    else if (!wcsicmp( name, pathW ))
+    if (!wcsicmp( name, L"__PATH" ))
     {
         if (ret)
         {
             V_VT( ret ) = VT_BSTR;
             V_BSTR( ret ) = build_path( view, table_index, result_index, name );
+            if (!V_BSTR( ret )) V_VT( ret ) = VT_NULL;
         }
         if (type) *type = CIM_STRING;
         return S_OK;
     }
-    if (!wcsicmp( name, propcountW ))
+    if (!wcsicmp( name, L"__PROPERTY_COUNT" ))
     {
         if (ret)
         {
@@ -1005,24 +1004,39 @@ static HRESULT get_system_propval( const struct view *view, UINT table_index, UI
         if (type) *type = CIM_SINT32;
         return S_OK;
     }
-    else if (!wcsicmp( name, relpathW ))
+    if (!wcsicmp( name, L"__RELPATH" ))
     {
         if (ret)
         {
             V_VT( ret ) = VT_BSTR;
             V_BSTR( ret ) = build_relpath( view, table_index, result_index, name );
+            if (!V_BSTR( ret )) V_VT( ret ) = VT_NULL;
         }
         if (type) *type = CIM_STRING;
         return S_OK;
     }
-    else if (!wcsicmp( name, serverW ))
+    if (!wcsicmp( name, L"__SERVER" ))
     {
         if (ret)
         {
             V_VT( ret ) = VT_BSTR;
             V_BSTR( ret ) = view->proplist ? NULL : build_servername();
+            if (!V_BSTR( ret )) V_VT( ret ) = VT_NULL;
         }
         if (type) *type = CIM_STRING;
+        return S_OK;
+    }
+    if (!wcsicmp( name, L"__DERIVATION" ))
+    {
+        if (ret)
+        {
+            SAFEARRAY *sa;
+            FIXME( "returning empty array for __DERIVATION\n" );
+            if (!(sa = SafeArrayCreateVector( VT_BSTR, 0, 0 ))) return E_OUTOFMEMORY;
+            V_VT( ret ) = VT_BSTR | VT_ARRAY;
+            V_ARRAY( ret ) = sa;
+        }
+        if (type) *type = CIM_STRING | CIM_FLAG_ARRAY;
         return S_OK;
     }
     FIXME("system property %s not implemented\n", debugstr_w(name));
@@ -1053,7 +1067,7 @@ VARTYPE to_vartype( CIMTYPE type )
     case CIM_REAL32:    return VT_R4;
 
     default:
-        ERR("unhandled type %u\n", type);
+        ERR( "unhandled type %lu\n", type );
         break;
     }
     return 0;
@@ -1284,13 +1298,13 @@ static struct array *to_array( VARIANT *var, CIMTYPE *type )
     if (SafeArrayGetVartype( V_ARRAY( var ), &vartype ) != S_OK) return NULL;
     if (!(basetype = to_cimtype( vartype ))) return NULL;
     if (SafeArrayGetUBound( V_ARRAY( var ), 1, &bound ) != S_OK) return NULL;
-    if (!(ret = heap_alloc( sizeof(struct array) ))) return NULL;
+    if (!(ret = malloc( sizeof(struct array) ))) return NULL;
 
     ret->count     = bound + 1;
     ret->elem_size = get_type_size( basetype );
-    if (!(ret->ptr = heap_alloc_zero( ret->count * ret->elem_size )))
+    if (!(ret->ptr = calloc( ret->count, ret->elem_size )))
     {
-        heap_free( ret );
+        free( ret );
         return NULL;
     }
     for (i = 0; i < ret->count; i++)
@@ -1304,7 +1318,7 @@ static struct array *to_array( VARIANT *var, CIMTYPE *type )
                 destroy_array( ret, basetype );
                 return NULL;
             }
-            *(WCHAR **)ptr = heap_strdupW( str );
+            *(WCHAR **)ptr = wcsdup( str );
             SysFreeString( str );
             if (!*(WCHAR **)ptr)
             {
@@ -1342,7 +1356,7 @@ HRESULT to_longlong( VARIANT *var, LONGLONG *val, CIMTYPE *type )
         *type = CIM_BOOLEAN;
         break;
     case VT_BSTR:
-        *val = (INT_PTR)heap_strdupW( V_BSTR( var ) );
+        *val = (INT_PTR)wcsdup( V_BSTR( var ) );
         if (!*val) return E_OUTOFMEMORY;
         *type = CIM_STRING;
         break;
@@ -1400,40 +1414,62 @@ HRESULT put_propval( const struct view *view, UINT index, const WCHAR *name, VAR
 
 HRESULT get_properties( const struct view *view, UINT index, LONG flags, SAFEARRAY **props )
 {
+    static const WCHAR * const system_props[] =
+        { L"__GENUS", L"__CLASS", L"__RELPATH", L"__PROPERTY_COUNT", L"__DERIVATION", L"__SERVER", L"__NAMESPACE",
+          L"__PATH" };
     SAFEARRAY *sa;
     BSTR str;
-    UINT i, table_index, result_index, num_props;
+    UINT i, table_index, result_index, count = 0;
     struct table *table;
     HRESULT hr;
-    LONG j;
+    LONG j = 0;
 
     if ((hr = map_view_index( view, index, &table_index, &result_index )) != S_OK) return hr;
-
-    num_props = count_result_properties( view, table_index );
-    if (!(sa = SafeArrayCreateVector( VT_BSTR, 0, num_props ))) return E_OUTOFMEMORY;
-
     table = view->table[table_index];
-    for (i = 0, j = 0; i < table->num_cols; i++)
+
+    if (!(flags & WBEM_FLAG_NONSYSTEM_ONLY)) count += ARRAY_SIZE(system_props);
+    if (!(flags & WBEM_FLAG_SYSTEM_ONLY))
     {
-        BOOL is_system;
-
-        if (is_method( table, i )) continue;
-        if (!is_result_prop( view, table->columns[i].name )) continue;
-
-        is_system = is_system_prop( table->columns[i].name );
-        if ((flags & WBEM_FLAG_NONSYSTEM_ONLY) && is_system) continue;
-        else if ((flags & WBEM_FLAG_SYSTEM_ONLY) && !is_system) continue;
-
-        str = SysAllocString( table->columns[i].name );
-        if (!str || SafeArrayPutElement( sa, &j, str ) != S_OK)
+        for (i = 0; i < table->num_cols; i++)
         {
-            SysFreeString( str );
-            SafeArrayDestroy( sa );
-            return E_OUTOFMEMORY;
+            if (!is_method( table, i ) && is_result_prop( view, table->columns[i].name )) count++;
         }
-        SysFreeString( str );
-        j++;
     }
+
+    if (!(sa = SafeArrayCreateVector( VT_BSTR, 0, count ))) return E_OUTOFMEMORY;
+
+    if (!(flags & WBEM_FLAG_NONSYSTEM_ONLY))
+    {
+        for (j = 0; j < ARRAY_SIZE(system_props); j++)
+        {
+            str = SysAllocString( system_props[j] );
+            if (!str || SafeArrayPutElement( sa, &j, str ) != S_OK)
+            {
+                SysFreeString( str );
+                SafeArrayDestroy( sa );
+                return E_OUTOFMEMORY;
+            }
+            SysFreeString( str );
+        }
+    }
+    if (!(flags & WBEM_FLAG_SYSTEM_ONLY))
+    {
+        for (i = 0; i < table->num_cols; i++)
+        {
+            if (is_method( table, i ) || !is_result_prop( view, table->columns[i].name )) continue;
+
+            str = SysAllocString( table->columns[i].name );
+            if (!str || SafeArrayPutElement( sa, &j, str ) != S_OK)
+            {
+                SysFreeString( str );
+                SafeArrayDestroy( sa );
+                return E_OUTOFMEMORY;
+            }
+            SysFreeString( str );
+            j++;
+        }
+    }
+
     *props = sa;
     return S_OK;
 }
