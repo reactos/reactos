@@ -54,6 +54,7 @@ list(APPEND SOURCE
     ShellFolder.cpp
     ShellHook.cpp
     ShellInfo.cpp
+    ShellItemArray.cpp
     ShellState.cpp
     SHGetAttributesFromDataObject.cpp
     SHGetUserDisplayName.cpp
