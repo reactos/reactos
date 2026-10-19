@@ -73,6 +73,25 @@ AllocateConfigurationContext(
     return ConfigurationContext;
 }
 
+static
+VOID
+AddConfigurationParameter(
+    _In_ PMINIPORT_CONFIGURATION_CONTEXT ConfigurationContext,
+    _Out_ PMINIPORT_RESOURCE MiniportResource,
+    _In_ ULONG Type,
+    _In_ PVOID ConfigParameter)
+{
+    MiniportResource->ResourceType = Type;
+    MiniportResource->Resource = ConfigParameter;
+
+    NDIS_DbgPrint(MID_TRACE, ("inserting %p into the resource list\n",
+                              MiniportResource->Resource));
+
+    ExInterlockedInsertTailList(&ConfigurationContext->ResourceListHead,
+                                &MiniportResource->ListEntry,
+                                &ConfigurationContext->ResourceLock);
+}
+
 /*
  * @implemented
  */
@@ -699,16 +718,10 @@ NdisReadConfiguration(
 
     *ParameterValue = ConfigParameter;
 
-    MiniportResource->ResourceType = MINIPORT_RESOURCE_TYPE_REGISTRY_DATA;
-    MiniportResource->Resource = ConfigParameter;
-
-    NDIS_DbgPrint(MID_TRACE, ("inserting %p into the resource list\n",
-                              MiniportResource->Resource));
-
-    ExInterlockedInsertTailList(&ConfigurationContext->ResourceListHead,
-                                &MiniportResource->ListEntry,
-                                &ConfigurationContext->ResourceLock);
-
+    AddConfigurationParameter(ConfigurationContext,
+                              MiniportResource,
+                              MINIPORT_RESOURCE_TYPE_REGISTRY_DATA,
+                              ConfigParameter);
 Exit:
     *Status = NdisStatus;
 
@@ -825,10 +838,10 @@ NdisReadNetworkAddress(
         return;
     }
 
-    MiniportResource->ResourceType = MINIPORT_RESOURCE_TYPE_MEMORY;
-    MiniportResource->Resource = IntArray;
-    NDIS_DbgPrint(MID_TRACE,("inserting 0x%x into the resource list\n", MiniportResource->Resource));
-    ExInterlockedInsertTailList(&ConfigurationContext->ResourceListHead, &MiniportResource->ListEntry, &ConfigurationContext->ResourceLock);
+    AddConfigurationParameter(ConfigurationContext,
+                              MiniportResource,
+                              MINIPORT_RESOURCE_TYPE_MEMORY,
+                              IntArray);
 
     /* convert from string to bytes */
     for(i=0; i<(*NetworkAddressLength); i++)
