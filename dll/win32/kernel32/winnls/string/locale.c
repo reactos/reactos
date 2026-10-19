@@ -6535,7 +6535,6 @@ LANGID WINAPI DECLSPEC_HOTPATCH GetSystemDefaultUILanguage(void)
 }
 
 
-#if (__REACTOS__ && DLL_EXPORT_VERSION >= 0x600)
 /***********************************************************************
  *      GetSystemPreferredUILanguages   (kernelbase.@)
  */
@@ -6576,13 +6575,11 @@ LANGID WINAPI DECLSPEC_HOTPATCH GetThreadUILanguage(void)
 }
 
 
-#endif
 /**********************************************************************
  *	SetThreadUILanguage   (kernelbase.@)
  */
 LANGID WINAPI DECLSPEC_HOTPATCH SetThreadUILanguage( LANGID langid )
 {
-#if (__REACTOS__ && DLL_EXPORT_VERSION >= 0x600)
     LCID lcid = langid;
     WCHAR buffer[LOCALE_NAME_MAX_LENGTH + 1];
     const NLS_LOCALE_DATA *locale;
@@ -6598,21 +6595,6 @@ LANGID WINAPI DECLSPEC_HOTPATCH SetThreadUILanguage( LANGID langid )
     buffer[wcslen(buffer) + 1] = 0;
     if (!SetThreadPreferredUILanguages( MUI_LANGUAGE_NAME, buffer, NULL )) return 0;
     return LANGIDFROMLCID( lcid );
-#else
-#if (NTDDI_VERSION < NTDDI_LONGHORN)
-    /* We only support LangId == 0, for selecting a language
-     * identifier that best supports the NT Console. */
-    if (langid != 0)
-    {
-        BaseSetLastNTError(STATUS_NOT_SUPPORTED);
-        return 0;
-    }
-#endif
-
-    UNIMPLEMENTED;
-
-    return LANGIDFROMLCID(NtCurrentTeb()->CurrentLocale);
-#endif
 }
 
 
@@ -7792,7 +7774,6 @@ INT WINAPI /* DECLSPEC_HOTPATCH */ SetCalendarInfoW( LCID lcid, CALID calendar, 
 }
 
 
-#if (__REACTOS__ && DLL_EXPORT_VERSION >= 0x600)
 /***********************************************************************
  *      SetProcessPreferredUILanguages   (kernelbase.@)
  */
@@ -7809,7 +7790,6 @@ BOOL WINAPI DECLSPEC_HOTPATCH SetThreadPreferredUILanguages( DWORD flags, PCZZWS
 {
     return set_ntstatus( RtlSetThreadPreferredUILanguages( flags, buffer, count ));
 }
-#endif
 
 
 /***********************************************************************
