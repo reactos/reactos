@@ -259,6 +259,11 @@ SerenumDetectPnpDevice(
 	SERIAL_TIMEOUTS Timeouts;
 	SERIALPERF_STATS PerfStats;
 	NTSTATUS Status;
+	SERIAL_BAUD_RATE OrigBaudRate;
+	SERIAL_LINE_CONTROL OrigLCR;
+	SERIAL_TIMEOUTS OrigTimeouts;
+	ULONG_PTR OutSize;
+	BOOLEAN HaveOrigSettings = FALSE;
 
 	/* Open port */
 	Status = ObOpenObjectByPointer(
@@ -270,6 +275,22 @@ SerenumDetectPnpDevice(
 		KernelMode,
 		&Handle);
 	if (!NT_SUCCESS(Status)) goto ByeBye;
+
+	/* Save original settings before probing */
+	OutSize = sizeof(OrigBaudRate);
+	if (NT_SUCCESS(DeviceIoControl(LowerDevice, IOCTL_SERIAL_GET_BAUD_RATE,
+		NULL, 0, &OrigBaudRate, &OutSize)))
+	{
+		OutSize = sizeof(OrigLCR);
+		if (NT_SUCCESS(DeviceIoControl(LowerDevice, IOCTL_SERIAL_GET_LINE_CONTROL,
+			NULL, 0, &OrigLCR, &OutSize)))
+		{
+			OutSize = sizeof(OrigTimeouts);
+			DeviceIoControl(LowerDevice, IOCTL_SERIAL_GET_TIMEOUTS,
+				NULL, 0, &OrigTimeouts, &OutSize);
+			HaveOrigSettings = TRUE;
+		}
+	}
 
 	/* 1. COM port initialization, check for device enumerate */
 	TRACE_(SERENUM, "COM port initialization, check for device enumerate\n");
@@ -456,6 +477,21 @@ DisconnectIdle:
 	Status = STATUS_DEVICE_NOT_CONNECTED;
 
 ByeBye:
+	/* Restore original settings if nothing claimed the port */
+	if (HaveOrigSettings && Status == STATUS_DEVICE_NOT_CONNECTED)
+	{
+		DeviceIoControl(LowerDevice, IOCTL_SERIAL_SET_BAUD_RATE,
+			&OrigBaudRate.BaudRate, sizeof(OrigBaudRate.BaudRate), NULL, NULL);
+		DeviceIoControl(LowerDevice, IOCTL_SERIAL_SET_LINE_CONTROL,
+			&OrigLCR, sizeof(OrigLCR), NULL, NULL);
+		DeviceIoControl(LowerDevice, IOCTL_SERIAL_SET_TIMEOUTS,
+			&OrigTimeouts, sizeof(OrigTimeouts), NULL, NULL);
+	}
+
+	/* Assert DTR and RTS */
+	DeviceIoControl(LowerDevice, IOCTL_SERIAL_SET_DTR, NULL, 0, NULL, NULL);
+	DeviceIoControl(LowerDevice, IOCTL_SERIAL_SET_RTS, NULL, 0, NULL, NULL);
+
 	/* Close port */
 	if (Handle)
 		ZwClose(Handle);
@@ -481,6 +517,11 @@ SerenumDetectLegacyDevice(
 	UNICODE_STRING HardwareIds;
 	UNICODE_STRING CompatibleIds;
 	NTSTATUS Status;
+	SERIAL_BAUD_RATE OrigBaudRate;
+	SERIAL_LINE_CONTROL OrigLCR;
+	SERIAL_TIMEOUTS OrigTimeouts;
+	ULONG_PTR OutSize;
+	BOOLEAN HaveOrigSettings = FALSE;
 
 	TRACE_(SERENUM, "SerenumDetectLegacyDevice(DeviceObject %p, LowerDevice %p)\n",
 		DeviceObject,
@@ -498,6 +539,22 @@ SerenumDetectLegacyDevice(
 		KernelMode,
 		&Handle);
 	if (!NT_SUCCESS(Status)) return Status;
+
+	/* Save original settings before probing */
+	OutSize = sizeof(OrigBaudRate);
+	if (NT_SUCCESS(DeviceIoControl(LowerDevice, IOCTL_SERIAL_GET_BAUD_RATE,
+		NULL, 0, &OrigBaudRate, &OutSize)))
+	{
+		OutSize = sizeof(OrigLCR);
+		if (NT_SUCCESS(DeviceIoControl(LowerDevice, IOCTL_SERIAL_GET_LINE_CONTROL,
+			NULL, 0, &OrigLCR, &OutSize)))
+		{
+			OutSize = sizeof(OrigTimeouts);
+			DeviceIoControl(LowerDevice, IOCTL_SERIAL_GET_TIMEOUTS,
+				NULL, 0, &OrigTimeouts, &OutSize);
+			HaveOrigSettings = TRUE;
+		}
+	}
 
 	/* Reset UART */
 	TRACE_(SERENUM, "Reset UART\n");
@@ -617,6 +674,21 @@ SerenumDetectLegacyDevice(
 	Status = STATUS_DEVICE_NOT_CONNECTED;
 
 ByeBye:
+	/* Restore original settings if nothing claimed the port */
+	if (HaveOrigSettings && Status == STATUS_DEVICE_NOT_CONNECTED)
+	{
+		DeviceIoControl(LowerDevice, IOCTL_SERIAL_SET_BAUD_RATE,
+			&OrigBaudRate.BaudRate, sizeof(OrigBaudRate.BaudRate), NULL, NULL);
+		DeviceIoControl(LowerDevice, IOCTL_SERIAL_SET_LINE_CONTROL,
+			&OrigLCR, sizeof(OrigLCR), NULL, NULL);
+		DeviceIoControl(LowerDevice, IOCTL_SERIAL_SET_TIMEOUTS,
+			&OrigTimeouts, sizeof(OrigTimeouts), NULL, NULL);
+	}
+
+	/* Assert DTR and RTS */
+	DeviceIoControl(LowerDevice, IOCTL_SERIAL_SET_DTR, NULL, 0, NULL, NULL);
+	DeviceIoControl(LowerDevice, IOCTL_SERIAL_SET_RTS, NULL, 0, NULL, NULL);
+
 	/* Re-enable FIFO */
 	Fcr = SERIAL_IOC_FCR_FIFO_ENABLE;
 	DeviceIoControl(LowerDevice, IOCTL_SERIAL_SET_FIFO_CONTROL,
