@@ -108,7 +108,7 @@ BOOL WINAPI SetLocaleInfoA(LCID lcid, LCTYPE lctype, LPCSTR data)
     return ret;
 }
 
-#ifndef __REACTOS__
+
 /******************************************************************************
  *              SetCPGlobal   (KERNEL32.@)
  *
@@ -153,7 +153,6 @@ BOOL WINAPI GetCPInfoExA( UINT codepage, DWORD dwFlags, LPCPINFOEXA cpinfo )
     WideCharToMultiByte(CP_ACP, 0, cpinfoW.CodePageName, -1, cpinfo->CodePageName, sizeof(cpinfo->CodePageName), NULL, NULL);
     return TRUE;
 }
-#endif
 
 
 /*********************************************************************
