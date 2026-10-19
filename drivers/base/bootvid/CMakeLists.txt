@@ -1,9 +1,14 @@
 
+## Temp HACK: Must match VER_PRODUCT(MAJOR|MINOR)VERSION used by ntoskrnl,
+## until they match consistently with NTDDI_VERSION and DLL_EXPORT_VERSION.
+set(BOOTVID_EXPORTS_VERSION 0x502)
+add_definitions(-DBOOTVID_EXPORTS_VERSION=${BOOTVID_EXPORTS_VERSION})
+
 function(add_bootvid _target _configfile)
     cmake_parse_arguments(_bviddata "" "NAME_ON_CD" "SOURCES" ${ARGN})
 
     # Handle the spec file for the dll name
-    spec2def(${_target}.dll bootvid.spec ADD_IMPORTLIB)
+    spec2def(${_target}.dll bootvid.spec VERSION ${BOOTVID_EXPORTS_VERSION} ADD_IMPORTLIB)
 
     # Set default values for the version resource file
     set(REACTOS_STR_INTERNAL_NAME "$<TARGET_NAME:${_target}>")
