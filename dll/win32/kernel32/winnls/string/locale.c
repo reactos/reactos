@@ -437,10 +437,8 @@ static const NLS_LOCALE_DATA *system_locale;
 static const NLS_LOCALE_DATA *user_locale;
 static const NLS_LOCALE_DATA *user_ui_locale;
 
-#ifndef __REACTOS__
 static CPTABLEINFO codepages[128];
 static unsigned int nb_codepages;
-#endif
 
 static struct norm_table *norm_info;
 
@@ -2421,7 +2419,6 @@ static const WCHAR *get_decomposition( WCHAR ch, unsigned int *ret_len )
 }
 
 
-#ifndef __REACTOS__
 static WCHAR compose_chars( WCHAR ch1, WCHAR ch2 )
 {
     const USHORT *table = (const USHORT *)norm_info + norm_info->comp_hash;
@@ -2443,7 +2440,6 @@ static WCHAR compose_chars( WCHAR ch1, WCHAR ch2 )
     }
     return 0;
 }
-#endif
 
 
 static UINT get_locale_codepage( const NLS_LOCALE_DATA *locale, ULONG flags )
@@ -2467,7 +2463,6 @@ static UINT get_lcid_codepage( LCID lcid, ULONG flags )
 }
 
 
-#ifndef __REACTOS__
 static const CPTABLEINFO *get_codepage_table( UINT codepage )
 {
     static const CPTABLEINFO utf7_cpinfo = { CP_UTF7, 5, '?', 0xfffd, '?', '?' };
@@ -2516,7 +2511,6 @@ done:
     RtlLeaveCriticalSection( &locale_section );
     return &codepages[i];
 }
-#endif
 
 
 static const WCHAR *get_ligature( WCHAR wc )
@@ -2632,7 +2626,6 @@ static NTSTATUS fold_string( DWORD flags, const WCHAR *src, int srclen, WCHAR *d
 }
 
 
-#ifndef __REACTOS__
 static int mbstowcs_cpsymbol( DWORD flags, const char *src, int srclen, WCHAR *dst, int dstlen )
 {
     int len, i;
@@ -2779,7 +2772,6 @@ static int mbstowcs_utf8( DWORD flags, const char *src, int srclen, WCHAR *dst, 
 
     return reslen / sizeof(WCHAR);
 }
-#endif
 
 
 static inline int is_private_use_area_char( WCHAR code )
@@ -2788,7 +2780,6 @@ static inline int is_private_use_area_char( WCHAR code )
 }
 
 
-#ifndef __REACTOS__
 static int check_invalid_chars( const CPTABLEINFO *info, const unsigned char *src, int srclen )
 {
     if (info->DBCSOffsets)
@@ -3545,7 +3536,6 @@ static int wcstombs_codepage( const CPTABLEINFO *info, DWORD flags, const WCHAR 
     else
         return wcstombs_sbcs( info, src, srclen, dst, dstlen );
 }
-#endif
 
 
 struct sortkey
@@ -5797,7 +5787,6 @@ DWORD WINAPI DECLSPEC_HOTPATCH FormatMessageW( DWORD flags, const void *source, 
 }
 
 
-#ifndef __REACTOS__
 /******************************************************************************
  *	GetACP   (kernelbase.@)
  */
@@ -5861,7 +5850,6 @@ BOOL WINAPI GetCPInfoExW( UINT codepage, DWORD flags, CPINFOEXW *cpinfo )
     }
     return TRUE;
 }
-#endif
 
 
 /***********************************************************************
@@ -6409,7 +6397,6 @@ BOOL WINAPI DECLSPEC_HOTPATCH GetNLSVersionEx( NLS_FUNCTION func, const WCHAR *l
 }
 
 
-#ifndef __REACTOS__
 /******************************************************************************
  *	GetOEMCP   (kernelbase.@)
  */
@@ -6417,7 +6404,6 @@ UINT WINAPI GetOEMCP(void)
 {
     return oem_cpinfo.CodePage;
 }
-#endif
 
 
 #if (__REACTOS__ && DLL_EXPORT_VERSION >= 0x600)
@@ -7211,7 +7197,6 @@ BOOL WINAPI DECLSPEC_HOTPATCH IsCharXDigitW( WCHAR wc )
 }
 
 
-#ifndef __REACTOS__
 /******************************************************************************
  *	IsDBCSLeadByte   (kernelbase.@)
  */
@@ -7229,7 +7214,6 @@ BOOL WINAPI DECLSPEC_HOTPATCH IsDBCSLeadByteEx( UINT codepage, BYTE testchar )
     const CPTABLEINFO *table = get_codepage_table( codepage );
     return table && table->DBCSCodePage && table->DBCSOffsets[testchar];
 }
-#endif
 
 
 #if (__REACTOS__ && DLL_EXPORT_VERSION >= 0x600)
@@ -7245,7 +7229,6 @@ BOOL WINAPI DECLSPEC_HOTPATCH IsNormalizedString( NORM_FORM form, const WCHAR *s
 #endif
 
 
-#ifndef __REACTOS__
 /******************************************************************************
  *	IsValidCodePage   (kernelbase.@)
  */
@@ -7262,7 +7245,6 @@ BOOL WINAPI DECLSPEC_HOTPATCH IsValidCodePage( UINT codepage )
         return get_codepage_table( codepage ) != NULL;
     }
 }
-#endif
 
 
 /******************************************************************************
@@ -7559,7 +7541,6 @@ LCID WINAPI DECLSPEC_HOTPATCH LocaleNameToLCID( const WCHAR *name, DWORD flags )
 }
 
 
-#ifndef __REACTOS__
 /******************************************************************************
  *	MultiByteToWideChar   (kernelbase.@)
  */
@@ -7605,10 +7586,11 @@ INT WINAPI DECLSPEC_HOTPATCH MultiByteToWideChar( UINT codepage, DWORD flags, co
         break;
     }
 
+#ifndef __REACTOS__
     TRACE( "cp %d %s -> %s, ret = %d\n", codepage, debugstr_an(src, srclen), debugstr_wn(dst, ret), ret );
+#endif
     return ret;
 }
-#endif
 
 
 /******************************************************************************
@@ -7973,7 +7955,6 @@ DWORD WINAPI DECLSPEC_HOTPATCH VerLanguageNameW( DWORD lang, LPWSTR buffer, DWOR
 }
 
 
-#ifndef __REACTOS__
 /***********************************************************************
  *	WideCharToMultiByte   (kernelbase.@)
  */
@@ -8021,10 +8002,11 @@ INT WINAPI DECLSPEC_HOTPATCH WideCharToMultiByte( UINT codepage, DWORD flags, LP
         break;
     }
 
+#ifndef __REACTOS__
     TRACE( "cp %d %s -> %s, ret = %d\n", codepage, debugstr_wn(src, srclen), debugstr_an(dst, ret), ret );
+#endif
     return ret;
 }
-#endif
 
 
 /***********************************************************************
