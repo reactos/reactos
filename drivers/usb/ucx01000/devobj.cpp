@@ -399,6 +399,7 @@ UcxUsbDevice::WalkSubtree(
     _In_ BOOLEAN IncludeDisconnected)
 {
     PLIST_ENTRY Entry;
+    UcxUsbDevice* Child;
 
     if (!IncludeDisconnected && m_Disconnected)
         return;
@@ -407,9 +408,8 @@ UcxUsbDevice::WalkSubtree(
 
     for (Entry = m_ChildList.Flink; Entry != &m_ChildList; Entry = Entry->Flink)
     {
-        CONTAINING_RECORD(Entry, UcxUsbDevice, m_ChildLink)->WalkSubtree(Visitor,
-                                                                        Context,
-                                                                        IncludeDisconnected);
+        Child = CONTAINING_RECORD(Entry, UcxUsbDevice, m_ChildLink);
+        Child->WalkSubtree(Visitor, Context, IncludeDisconnected);
     }
 }
 

@@ -1,7 +1,7 @@
 ; Installation file for USBHUB3
 
 [Version]
-signature="$Windows NT$"
+Signature="$Windows NT$"
 Class=USB
 ClassGUID={36FC9E60-C465-11CF-8056-444553540000}
 Provider=%ReactOS%

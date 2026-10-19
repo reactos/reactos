@@ -681,7 +681,7 @@ UcxPrepareTransfer(
     _In_ PURB Urb,
     _In_ UcxUsbDevice* Device,
     _In_ const UcxUrbFunction* Function,
-    _Out_ UcxPipe** TargetPipe)
+    _Outptr_ UcxPipe** TargetPipe)
 {
     struct _URB_CONTROL_TRANSFER* Transfer = &Urb->UrbControlTransfer;
     USHORT Code = Urb->UrbHeader.Function;

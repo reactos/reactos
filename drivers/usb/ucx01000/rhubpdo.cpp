@@ -11,8 +11,8 @@
 #include <debug.h>
 
 /* SDDL_DEVOBJ_SYS_ALL_ADM_RWX_WORLD_RW_RES_R */
-static const UNICODE_STRING UcxRootHubPdoSddl =
-    RTL_CONSTANT_STRING(L"D:P(A;;GA;;;SY)(A;;GRGWGX;;;BA)(A;;GRGW;;;WD)(A;;GR;;;RC)");
+DECLARE_GLOBAL_CONST_UNICODE_STRING(UcxRootHubPdoSddl,
+    L"D:P(A;;GA;;;SY)(A;;GRGWGX;;;BA)(A;;GRGW;;;WD)(A;;GR;;;RC)");
 
 static IO_COMPLETION_ROUTINE UcxDeviceMgmtCompletion;
 static IO_COMPLETION_ROUTINE UcxRootHubGetInfoCompletion;
@@ -128,18 +128,8 @@ UcxRootHub::BuildPowerCapabilities()
 NTSTATUS
 UcxRootHub::CreatePdo()
 {
-    static const UNICODE_STRING InstanceId =
-    {
-        sizeof(UcxRootHubInstanceIdText) - sizeof(WCHAR),
-        sizeof(UcxRootHubInstanceIdText),
-        (PWCH)UcxRootHubInstanceIdText
-    };
-    static const UNICODE_STRING DeviceId =
-    {
-        sizeof(UcxRootHubDeviceIdText) - sizeof(WCHAR),
-        sizeof(UcxRootHubDeviceIdText),
-        (PWCH)UcxRootHubDeviceIdText
-    };
+    static const UNICODE_STRING InstanceId = RTL_CONSTANT_STRING(UcxRootHubInstanceIdText);
+    static const UNICODE_STRING DeviceId = RTL_CONSTANT_STRING(UcxRootHubDeviceIdText);
     static UCHAR PnpMinor = IRP_MN_QUERY_INTERFACE;
     static UCHAR PowerMinor = IRP_MN_SET_POWER;
     WDF_PNPPOWER_EVENT_CALLBACKS PnpPower;

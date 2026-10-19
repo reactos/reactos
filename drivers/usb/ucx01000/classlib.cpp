@@ -66,7 +66,7 @@ NTSTATUS
 NTAPI
 UcxOnClientBind(
     _In_ PWDF_CLASS_BIND_INFO ClassBindInfo,
-    _Out_ PWDF_COMPONENT_GLOBALS *ComponentGlobals)
+    _Outptr_ PWDF_COMPONENT_GLOBALS *ComponentGlobals)
 {
     PUCX_DRIVER_GLOBALS *ClientGlobals;
     PUCX_DRIVER_GLOBALS Globals;

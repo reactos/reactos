@@ -36,7 +36,7 @@ static POOL_TYPE UsbdNonPagedPoolType = NonPagedPool;
 static PRTL_BITMAP UsbdHubNumbers;
 static KEVENT UsbdHubNumberLock;
 
-static LIST_ENTRY UsbdSerialList = { &UsbdSerialList, &UsbdSerialList };
+static RTL_STATIC_LIST_HEAD(UsbdSerialList);
 static KSPIN_LOCK UsbdSerialListLock;
 
 NTSTATUS
