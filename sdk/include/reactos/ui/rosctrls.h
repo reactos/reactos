@@ -88,6 +88,11 @@ public:
         return (int)SendMessage(LVM_GETCOLUMNWIDTH, iCol);
     }
 
+    BOOL SetColumnWidth(int iCol, int width)
+    {
+        return (BOOL)SendMessage(LVM_SETCOLUMNWIDTH, iCol, width);
+    }
+
     HIMAGELIST SetImageList(HIMAGELIST himl, int iImageList)
     {
         return (HIMAGELIST)SendMessage(LVM_SETIMAGELIST, iImageList, reinterpret_cast<LPARAM>(himl));
