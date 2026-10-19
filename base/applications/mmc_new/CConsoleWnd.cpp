@@ -9,6 +9,8 @@
 
 #include "precomp.h"
 
+#define DEFAULT_COLUMN0_WIDTH 200
+
 CConsoleWnd::CConsoleWnd(CMainWnd *MainWnd, CSnapin *RootNode, CSnapin *SelectedNode)
 {
     m_MainWnd = MainWnd;
@@ -72,6 +74,9 @@ CConsoleWnd::OnCreate(UINT nMessage, WPARAM wParam, LPARAM lParam, BOOL& bHandle
     m_TreeView.SetImageList(m_MainWnd->SnapinImageList(), TVSIL_NORMAL);
 
     m_ListView.Create(this->m_hWnd, &Rect, NULL, WS_CHILD | WS_VISIBLE | ViewModeToStyle(m_ListViewMode), WS_EX_CLIENTEDGE);
+
+    CAtlString Column0Name(MAKEINTRESOURCE(IDS_COLUMN0)); /* FIXME */
+    m_ListView.InsertColumn(0, Column0Name.GetString(), LVCFMT_LEFT, DEFAULT_COLUMN0_WIDTH);
 
     Rect.right = 0;
     Rect.left = 0;
@@ -627,7 +632,8 @@ CConsoleWnd::SaveView(MscFile *mscFile, IXMLDOMElement *pParentElement)
         CHK_HR(mscFile->CreateAndAddAttributeNode(L"NoStatusBar", L"true", pViewOptionsElement));
     CHK_HR(mscFile->CreateAndAddAttributeNode(L"ActionsPaneVisible", IsActionsPaneVisible() ? L"true" : L"false", pViewOptionsElement));
     CHK_HR(mscFile->CreateAndAddAttributeNode(L"DescriptionBarVisible", IsDescriptionBarVisible() ? L"true" : L"false", pViewOptionsElement));
-    CHK_HR(mscFile->CreateAndAddAttributeNode(L"DefaultColumn0Width", L"200", pViewOptionsElement)); /* FIXME */
+    _swprintf(szBuffer, L"%d", m_ListView.GetColumnWidth(0));
+    CHK_HR(mscFile->CreateAndAddAttributeNode(L"DefaultColumn0Width", szBuffer, pViewOptionsElement));
     CHK_HR(mscFile->CreateAndAddAttributeNode(L"DefaultColumn1Width", L"0", pViewOptionsElement)); /* FIXME */
     SAFE_RELEASE(pViewOptionsElement); /* </ViewOptions> */
 
@@ -704,6 +710,7 @@ CConsoleWnd::ParseView(
     BOOL bScopePaneVisible = FALSE;
     BOOL bActionsPaneVisible = FALSE;
     BOOL bDescriptionBarVisible = FALSE;
+    INT iColumn0Width = DEFAULT_COLUMN0_WIDTH;
     HRESULT hr = S_OK;
 
     ParseViewAttributes(mscFile, pViewElement, &uViewId, &iScopePanelWidth, &iActionsPanelWidth);
@@ -764,13 +771,14 @@ CConsoleWnd::ParseView(
                     }
                     else if (_wcsicmp(NodeName, L"ViewOptions") == 0)
                     {
-                        VARIANT ViewMode, ScopePane;
-                        VARIANT ActionsPane, DescriptionBar;
+                        VARIANT ViewMode, ScopePane, ActionsPane;
+                        VARIANT DescriptionBar, Column0Width;
 
                         VariantInit(&ViewMode);
                         VariantInit(&ScopePane);
                         VariantInit(&ActionsPane);
                         VariantInit(&DescriptionBar);
+                        VariantInit(&Column0Width);
 
                         /* Attribut ViewMode="Report" */
                         hr = mscFile->GetAttribute((IXMLDOMElement *)nextItem, (LPWSTR)L"ViewMode", &ViewMode);
@@ -800,13 +808,20 @@ CConsoleWnd::ParseView(
                             bDescriptionBarVisible = StringToBool(V_BSTR(&DescriptionBar));
                         }
 
-                        /* FIXME: Attribut DefaultColumn0Width="200" */
+                        /* Attribut DefaultColumn0Width="200" */
+                        hr = mscFile->GetAttribute((IXMLDOMElement *)nextItem, (LPWSTR)L"DefaultColumn0Width", &Column0Width);
+                        if (hr == S_OK)
+                        {
+                            iColumn0Width = _wtoi(V_BSTR(&Column0Width));
+                        }
+
                         /* FIXME: Attribut DefaultColumn1Width="0" */
 
                         VariantClear(&ViewMode);
                         VariantClear(&ScopePane);
                         VariantClear(&ActionsPane);
                         VariantClear(&DescriptionBar);
+                        VariantClear(&Column0Width);
                     }
                 }
 
@@ -851,6 +866,8 @@ CConsoleWnd::ParseView(
     pConsoleWnd->SetTreeViewVisible(bScopePaneVisible);
     pConsoleWnd->SetActionsPaneVisible(bActionsPaneVisible);
     pConsoleWnd->SetDescriptionBarVisible(bDescriptionBarVisible);
+
+    pConsoleWnd->m_ListView.SetColumnWidth(0, iColumn0Width);
 
     pMainWnd->UpdateLayout();
     pMainWnd->UpdateTitle();

@@ -125,6 +125,7 @@
 #define IDS_ABOUT_VERSION             5501
 #define IDS_ABOUT_SNAPIN              5502
 
+#define IDS_COLUMN0                   5505
 
 #ifndef IDC_STATIC
 #define IDC_STATIC  -1

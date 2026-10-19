@@ -257,3 +257,8 @@ BEGIN
     IDM_HELP_ABOUT_MMC     "Display program information, version number, and copyright."
     IDM_HELP_ABOUT_SNAPIN  "Display snap-in information, version number, and copyright."
 END
+
+STRINGTABLE
+BEGIN
+    IDS_COLUMN0 "Name"
+END
