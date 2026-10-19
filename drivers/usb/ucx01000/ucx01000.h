@@ -61,7 +61,7 @@ NTSTATUS
 NTAPI
 UcxOnClientBind(
     _In_ PWDF_CLASS_BIND_INFO ClassBindInfo,
-    _Out_ PWDF_COMPONENT_GLOBALS* ComponentGlobals);
+    _Outptr_ PWDF_COMPONENT_GLOBALS* ComponentGlobals);
 
 _IRQL_requires_(PASSIVE_LEVEL)
 VOID

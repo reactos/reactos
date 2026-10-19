@@ -29,7 +29,7 @@ _Must_inspect_result_
 NTSTATUS
 (NTAPI *PFN_USBD_CLIENT_XRB_ALLOCATE)(
     _In_ USBD_CLIENT_HANDLE Handle,
-    _Out_ PURB* Urb);
+    _Outptr_ PURB* Urb);
 
 typedef
 _Must_inspect_result_
@@ -37,7 +37,7 @@ NTSTATUS
 (NTAPI *PFN_USBD_CLIENT_ISOCH_XRB_ALLOCATE)(
     _In_ USBD_CLIENT_HANDLE Handle,
     _In_ ULONG NumberOfIsochPackets,
-    _Out_ PURB* Urb);
+    _Outptr_ PURB* Urb);
 
 typedef
 _Must_inspect_result_
@@ -46,7 +46,7 @@ NTSTATUS
     _In_ USBD_CLIENT_HANDLE Handle,
     _In_ PUSB_CONFIGURATION_DESCRIPTOR ConfigurationDescriptor,
     _In_ PUSBD_INTERFACE_LIST_ENTRY InterfaceList,
-    _Out_ PURB* Urb);
+    _Outptr_ PURB* Urb);
 
 typedef
 _Must_inspect_result_
@@ -55,7 +55,7 @@ NTSTATUS
     _In_ USBD_CLIENT_HANDLE Handle,
     _In_ USBD_CONFIGURATION_HANDLE ConfigurationHandle,
     _In_ PUSBD_INTERFACE_LIST_ENTRY InterfaceListEntry,
-    _Out_ PURB* Urb);
+    _Outptr_ PURB* Urb);
 
 typedef
 VOID
@@ -107,7 +107,7 @@ NTSTATUS
     _In_ USBD_CONFIGURATION_HANDLE ConfigurationHandle,
     _Inout_ PUSBD_INTERFACE_LIST_ENTRY InterfaceListEntry,
     _In_ ULONG OffloadedEndpoints,
-    _Out_ PURB* Urb);
+    _Outptr_ PURB* Urb);
 
 typedef
 _Must_inspect_result_
@@ -116,7 +116,7 @@ NTSTATUS
     _In_ USBD_CLIENT_HANDLE Handle,
     _In_ USBD_PIPE_HANDLE PipeHandle,
     _In_ ULONG Flags,
-    _Out_ PURB* Urb);
+    _Outptr_ PURB* Urb);
 
 typedef struct _USBD_CLIENT_INTERFACE_603
 {

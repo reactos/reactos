@@ -20,13 +20,11 @@
 
 #define UCX_PASS_THRU_MAX_LENGTH   0x10000
 #define UCX_LEGACY_NAME_ATTEMPTS   5
-#define UCX_SYNTHETIC_FRAME_MASK        0x7FF
+#define UCX_SYNTHETIC_FRAME_MASK   0x7FF
 
 /* Header, then the name length; what a name request needs before any text */
 #define UCX_USER_HEADER_SIZE       sizeof(USBUSER_REQUEST_HEADER)
 #define UCX_USER_NAME_MIN          sizeof(USB_UNICODE_NAME)
-
-#define UCX_NODE_INFO_SIGNATURE    'USBN'
 
 C_ASSERT(UCX_USER_HEADER_SIZE == 16);
 C_ASSERT(UCX_USER_NAME_MIN == 6);
@@ -853,7 +851,7 @@ UcxEvtWmiNodeInfoQueryInstance(
 
     RtlZeroMemory(OutBuffer, OutBufferSize);
 
-    Node->Sig = UCX_NODE_INFO_SIGNATURE;
+    Node->Sig = USB_NODE_INFO_SIG;
     Node->LengthInBytes = sizeof(*Node);
     RtlStringCbCopyA((PSTR)Node->DeviceDescription,
                      sizeof(Node->DeviceDescription),

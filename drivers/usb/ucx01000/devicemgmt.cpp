@@ -564,7 +564,9 @@ UcxUsbDevice::HandleHubEndpointsConfigure(
             WdfRequestComplete(Request, STATUS_NO_SUCH_DEVICE);
         }
         else
+        {
             m_Callbacks.Public.EvtUsbDeviceEndpointsConfigure(m_Controller->m_Handle, Request);
+        }
         return;
     }
 

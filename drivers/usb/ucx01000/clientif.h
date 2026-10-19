@@ -39,7 +39,7 @@ public:
     AllocateXrb(
         _In_ ULONG Size,
         _In_ ULONG Type,
-        _Out_ UcxXrbPreamble** Xrb);
+        _Outptr_ UcxXrbPreamble** Xrb);
 
     VOID
     TrackXrb(

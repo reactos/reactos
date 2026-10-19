@@ -3,27 +3,27 @@ remove_definitions(-D_WIN32_WINNT=0x502)
 
 list(APPEND SOURCE
     classlib.cpp
-    hostctl.cpp
-    hostqueues.cpp
-    hostreset.cpp
+    clientif.cpp
+    clientxrb.cpp
     crsm.cpp
     devicemgmt.cpp
+    devobj.cpp
     driver.cpp
-    pipe.cpp
-    pipeio.cpp
     epsm.cpp
     exports.cpp
     guid.cpp
+    hostctl.cpp
+    hostqueues.cpp
+    hostreset.cpp
     hubinterface.cpp
+    pipe.cpp
+    pipeio.cpp
     rhub.cpp
     rhubpdo.cpp
     ucxutil.cpp
     urbroute.cpp
-    devobj.cpp
-    clientif.cpp
     userreq.cpp
     workitem.cpp
-    clientxrb.cpp
     ucx01000.h)
 
 add_library(ucx01000 MODULE ${SOURCE} ucx01000.rc)

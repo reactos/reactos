@@ -344,7 +344,7 @@ NTSTATUS
 NTAPI
 UcxClientAllocUrb(
     _In_ USBD_CLIENT_HANDLE ClientHandle,
-    _Out_ PURB* Urb);
+    _Outptr_ PURB* Urb);
 
 static
 NTSTATUS
@@ -352,7 +352,7 @@ NTAPI
 UcxClientAllocIsochUrb(
     _In_ USBD_CLIENT_HANDLE ClientHandle,
     _In_ ULONG NumberOfIsochPackets,
-    _Out_ PURB* Urb);
+    _Outptr_ PURB* Urb);
 
 static
 NTSTATUS
@@ -361,7 +361,7 @@ UcxClientSelectConfigXrbBuild(
     _In_ USBD_CLIENT_HANDLE ClientHandle,
     _In_ PUSB_CONFIGURATION_DESCRIPTOR ConfigurationDescriptor,
     _In_ PUSBD_INTERFACE_LIST_ENTRY InterfaceList,
-    _Out_ PURB* UrbOut);
+    _Outptr_ PURB* UrbOut);
 
 static
 NTSTATUS
@@ -370,7 +370,7 @@ UcxClientSelectInterfaceXrbBuild(
     _In_ USBD_CLIENT_HANDLE ClientHandle,
     _In_ USBD_CONFIGURATION_HANDLE ConfigurationHandle,
     _In_ PUSBD_INTERFACE_LIST_ENTRY InterfaceEntry,
-    _Out_ PURB* UrbOut);
+    _Outptr_ PURB* UrbOut);
 
 static
 VOID
@@ -386,7 +386,7 @@ UcxClientOffloadSelectXrbAllocate(
     _In_ USBD_CONFIGURATION_HANDLE ConfigurationHandle,
     _Inout_ PUSBD_INTERFACE_LIST_ENTRY InterfaceEntry,
     _In_ ULONG OffloadedEndpoints,
-    _Out_ PURB* Urb)
+    _Outptr_ PURB* Urb)
 {
     UNREFERENCED_PARAMETER(ClientHandle);
     UNREFERENCED_PARAMETER(ConfigurationHandle);
@@ -405,7 +405,7 @@ UcxClientOffloadNotifyXrbAllocate(
     _In_ USBD_CLIENT_HANDLE ClientHandle,
     _In_ USBD_PIPE_HANDLE PipeHandle,
     _In_ ULONG Flags,
-    _Out_ PURB* Urb)
+    _Outptr_ PURB* Urb)
 {
     UNREFERENCED_PARAMETER(ClientHandle);
     UNREFERENCED_PARAMETER(PipeHandle);
@@ -663,7 +663,7 @@ NTSTATUS
 UcxUsbdHandle::AllocateXrb(
     _In_ ULONG Size,
     _In_ ULONG Type,
-    _Out_ UcxXrbPreamble** XrbOut)
+    _Outptr_ UcxXrbPreamble** XrbOut)
 {
     WDF_OBJECT_ATTRIBUTES Attributes;
     UcxXrbPreamble* Xrb;
@@ -736,7 +736,7 @@ NTSTATUS
 NTAPI
 UcxClientAllocUrb(
     _In_ USBD_CLIENT_HANDLE ClientHandle,
-    _Out_ PURB* Urb)
+    _Outptr_ PURB* Urb)
 {
     UcxUsbdHandle* Handle = UcxUsbdHandle::FromClientHandle(ClientHandle);
     WDF_OBJECT_ATTRIBUTES RequestAttributes;
@@ -773,7 +773,7 @@ NTAPI
 UcxClientAllocIsochUrb(
     _In_ USBD_CLIENT_HANDLE ClientHandle,
     _In_ ULONG NumberOfIsochPackets,
-    _Out_ PURB* Urb)
+    _Outptr_ PURB* Urb)
 {
     UcxUsbdHandle* Handle = UcxUsbdHandle::FromClientHandle(ClientHandle);
     UcxXrbPreamble* Xrb;
@@ -822,7 +822,7 @@ UcxClientSelectConfigXrbBuild(
     _In_ USBD_CLIENT_HANDLE ClientHandle,
     _In_ PUSB_CONFIGURATION_DESCRIPTOR ConfigurationDescriptor,
     _In_ PUSBD_INTERFACE_LIST_ENTRY InterfaceList,
-    _Out_ PURB* UrbOut)
+    _Outptr_ PURB* UrbOut)
 {
     UcxUsbdHandle* Handle = UcxUsbdHandle::FromClientHandle(ClientHandle);
     BOOLEAN Strict = Handle->m_ContractVersion >= USBD_CLIENT_CONTRACT_VERSION_602;
@@ -913,7 +913,7 @@ UcxClientSelectInterfaceXrbBuild(
     _In_ USBD_CLIENT_HANDLE ClientHandle,
     _In_ USBD_CONFIGURATION_HANDLE ConfigurationHandle,
     _In_ PUSBD_INTERFACE_LIST_ENTRY InterfaceEntry,
-    _Out_ PURB* UrbOut)
+    _Outptr_ PURB* UrbOut)
 {
     UcxUsbdHandle* Handle = UcxUsbdHandle::FromClientHandle(ClientHandle);
     PUSBD_INTERFACE_INFORMATION Info;

@@ -14,13 +14,13 @@
 const SM_EVENT_INFO ControllerResetMachine::EventInfo[] =
 {
     { "ControllerLost",       SmEventRequest,    FALSE },
-    { "HubRequestsReset",       SmEventRequest,    FALSE },
-    { "RootHubPoweredUp",       SmEventRequest,    FALSE },
-    { "RootHubPoweringDown",    SmEventRequest,    FALSE },
-    { "ControllerNeedsReset",   SmEventCompletion, TRUE },
-    { "ControllerResetDone",    SmEventCompletion, TRUE },
-    { "ResetBlocksCleared", SmEventCompletion, FALSE },
-    { "DevicesReady",           SmEventCompletion, FALSE },
+    { "HubRequestsReset",     SmEventRequest,    FALSE },
+    { "RootHubPoweredUp",     SmEventRequest,    FALSE },
+    { "RootHubPoweringDown",  SmEventRequest,    FALSE },
+    { "ControllerNeedsReset", SmEventCompletion, TRUE },
+    { "ControllerResetDone",  SmEventCompletion, TRUE },
+    { "ResetBlocksCleared",   SmEventCompletion, FALSE },
+    { "DevicesReady",         SmEventCompletion, FALSE },
 };
 
 static_assert(RTL_NUMBER_OF(ControllerResetMachine::EventInfo) == static_cast<ULONG>(CrEvent::Count),

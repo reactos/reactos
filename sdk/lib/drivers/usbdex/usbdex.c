@@ -239,11 +239,10 @@ UsbdexBuildParametersPath(
     ServiceBytes = DriverName->Length - PrefixBytes;
     PathBytes = ServiceBytes + sizeof(ParametersSuffix);
 
-    Path = ExAllocatePoolWithTag(UsbdexPoolType, PathBytes, PoolTag);
+    Path = ExAllocatePoolZero(UsbdexPoolType, PathBytes, PoolTag);
     if (!Path)
         return NULL;
 
-    RtlZeroMemory(Path, PathBytes);
     RtlCopyMemory(Path, (PUCHAR)DriverName->Buffer + PrefixBytes, ServiceBytes);
     RtlCopyMemory((PUCHAR)Path + ServiceBytes, ParametersSuffix, sizeof(ParametersSuffix));
     return Path;
@@ -288,11 +287,10 @@ UsbdexReadVerifierSettings(
 
     /* One extra zeroed entry terminates the table */
     TableBytes = (RTL_NUMBER_OF(ValueNames) + 1) * sizeof(*Table);
-    Table = ExAllocatePoolWithTag(UsbdexPoolType, TableBytes, PoolTag);
+    Table = ExAllocatePoolZero(UsbdexPoolType, TableBytes, PoolTag);
     if (!Table)
         return;
 
-    RtlZeroMemory(Table, TableBytes);
     for (Index = 0; Index < RTL_NUMBER_OF(ValueNames); Index++)
     {
         Table[Index].QueryRoutine = UsbdexVerifierValueCallback;
@@ -423,13 +421,7 @@ UsbdexAllocatePoolUrb(
     _In_ PUSBDEX_HANDLE_OBJECT Handle,
     _In_ SIZE_T Size)
 {
-    PURB Urb;
-
-    Urb = ExAllocatePoolWithTag(UsbdexPoolType, Size, Handle->Client.PoolTag);
-    if (Urb)
-        RtlZeroMemory(Urb, Size);
-
-    return Urb;
+    return ExAllocatePoolZero(UsbdexPoolType, Size, Handle->Client.PoolTag);
 }
 
 /* Fills one interface block the way the bus driver expects to receive it */
@@ -561,9 +553,7 @@ UsbdexLegacyCapability(
     _In_ const GUID *CapabilityType,
     _In_opt_ PUCHAR OutputBuffer)
 {
-    if (RtlCompareMemory(CapabilityType,
-                         &GUID_USB_CAPABILITY_DEVICE_CONNECTION_HIGH_SPEED_COMPATIBLE,
-                         sizeof(GUID)) == sizeof(GUID))
+    if (IsEqualGUID(CapabilityType, &GUID_USB_CAPABILITY_DEVICE_CONNECTION_HIGH_SPEED_COMPATIBLE))
     {
         if (OutputBuffer)
             return STATUS_INVALID_PARAMETER;
@@ -571,9 +561,7 @@ UsbdexLegacyCapability(
         return Handle->HighSpeed ? STATUS_SUCCESS : STATUS_NOT_SUPPORTED;
     }
 
-    if (RtlCompareMemory(CapabilityType,
-                         &GUID_USB_CAPABILITY_SELECTIVE_SUSPEND,
-                         sizeof(GUID)) == sizeof(GUID))
+    if (IsEqualGUID(CapabilityType, &GUID_USB_CAPABILITY_SELECTIVE_SUSPEND))
     {
         return OutputBuffer ? STATUS_INVALID_PARAMETER : STATUS_SUCCESS;
     }
@@ -620,7 +608,7 @@ USBD_CreateHandle(
 
     ParametersPath = UsbdexBuildParametersPath(DeviceObject->DriverObject, PoolTag);
 
-    Handle = ExAllocatePoolWithTag(UsbdexPoolType, sizeof(*Handle), PoolTag);
+    Handle = ExAllocatePoolZero(UsbdexPoolType, sizeof(*Handle), PoolTag);
     if (!Handle)
     {
         if (ParametersPath)
@@ -629,7 +617,6 @@ USBD_CreateHandle(
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-    RtlZeroMemory(Handle, sizeof(*Handle));
     if (ParametersPath)
         UsbdexReadVerifierSettings(DeviceObject->DriverObject, ParametersPath, PoolTag, &Handle->Client);
 
@@ -830,9 +817,9 @@ USBD_SelectConfigUrbAllocateAndBuild(
     if (Handle->Client.AllocSelectConfigUrb)
     {
         Status = Handle->Client.AllocSelectConfigUrb(Handle->Client.Handle,
-                                                                ConfigurationDescriptor,
-                                                                InterfaceList,
-                                                                Urb);
+                                                     ConfigurationDescriptor,
+                                                     InterfaceList,
+                                                     Urb);
     }
     else
     {
@@ -864,9 +851,9 @@ USBD_SelectInterfaceUrbAllocateAndBuild(
     if (Handle->Client.AllocSelectInterfaceUrb)
     {
         Status = Handle->Client.AllocSelectInterfaceUrb(Handle->Client.Handle,
-                                                                   ConfigurationHandle,
-                                                                   InterfaceListEntry,
-                                                                   Urb);
+                                                        ConfigurationHandle,
+                                                        InterfaceListEntry,
+                                                        Urb);
     }
     else
     {

@@ -112,7 +112,7 @@ NTAPI
 UcxCreateStaticStreams(
     _In_ UcxEndpoint* Endpoint,
     _In_ ULONG Count,
-    _Out_ UcxStaticStreams** StreamsOut)
+    _Outptr_ UcxStaticStreams** StreamsOut)
 {
     BOOLEAN Verifying = Endpoint->m_Controller->m_DriverVerifierEnabled;
     UcxStaticStreamsInit Init;
