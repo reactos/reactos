@@ -327,8 +327,7 @@ IopCreateDeviceInstancePath(
                                                  TAG_IO);
     if (!InstancePath->Buffer)
     {
-        if (TargetId != &DefaultInstanceId)
-            RtlFreeUnicodeString(&InstanceId);
+        RtlFreeUnicodeString(&InstanceId);
         RtlFreeUnicodeString(&ParentIdPrefix);
         RtlFreeUnicodeString(&DeviceId);
         return STATUS_INSUFFICIENT_RESOURCES;
