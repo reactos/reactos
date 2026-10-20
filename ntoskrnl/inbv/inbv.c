@@ -197,11 +197,11 @@ InbvDriverInitialize(
     }
 
     /* Initialize the video */
-#if (NTDDI_VERSION >= NTDDI_WIN7)
+#if (BOOTVID_EXPORTS_VERSION >= _WIN32_WINNT_WIN7)
     InbvBootDriverInstalled = VidInitialize(0, ResetMode, LoaderBlock);
-#elif (NTDDI_VERSION == NTDDI_VISTA)
+#elif (BOOTVID_EXPORTS_VERSION == _WIN32_WINNT_WIN6)
     InbvBootDriverInstalled = VidInitialize(0, ResetMode);
-#else // #if (NTDDI_VERSION < NTDDI_VISTA)
+#else // if (BOOTVID_EXPORTS_VERSION < _WIN32_WINNT_WIN6)
     InbvBootDriverInstalled = VidInitialize(ResetMode);
 #endif
     if (InbvBootDriverInstalled)

@@ -55,22 +55,19 @@ typedef VID_INITIALIZE_NT5 *PVID_INITIALIZE_NT5;
 /**
  * @brief   Version-specific PVID_INITIALIZE function typedef.
  **/
-#if (NTDDI_VERSION >= NTDDI_WIN7)
+#if (BOOTVID_EXPORTS_VERSION >= _WIN32_WINNT_WIN7)
 //typedef PVID_INITIALIZE_NT61 PVID_INITIALIZE;
-#define  VID_INITIALIZE  VID_INITIALIZE_NT61
 #define PVID_INITIALIZE PVID_INITIALIZE_NT61
-#elif (NTDDI_VERSION == NTDDI_VISTA)
+#elif (BOOTVID_EXPORTS_VERSION == _WIN32_WINNT_WIN6)
 //typedef PVID_INITIALIZE_NT60 PVID_INITIALIZE;
-#define  VID_INITIALIZE  VID_INITIALIZE_NT60
 #define PVID_INITIALIZE PVID_INITIALIZE_NT60
-#else // #if (NTDDI_VERSION < NTDDI_VISTA)
+#else // if (BOOTVID_EXPORTS_VERSION < _WIN32_WINNT_WIN6)
 //typedef PVID_INITIALIZE_NT5  PVID_INITIALIZE;
-#define  VID_INITIALIZE  VID_INITIALIZE_NT5
 #define PVID_INITIALIZE PVID_INITIALIZE_NT5
 #endif
 
 
-//#if (NTDDI_VERSION >= NTDDI_WIN7)
+//#if (BOOTVID_EXPORTS_VERSION >= _WIN32_WINNT_WIN7)
 BOOLEAN
 NTAPI
 VidInitialize_NT61(
@@ -82,7 +79,7 @@ VidInitialize_NT61(
      * given phase and loader parameter block */
     return VidInitializeEx(Phase, SetMode, LoaderBlock);
 }
-//#elif (NTDDI_VERSION == NTDDI_VISTA)
+//#elif (BOOTVID_EXPORTS_VERSION == _WIN32_WINNT_WIN6)
 BOOLEAN
 NTAPI
 VidInitialize_NT60(
@@ -95,7 +92,7 @@ VidInitialize_NT60(
      * *MAY NOT* be initialized in Vista+ !! */
     return VidInitializeEx(Phase, SetMode, KeLoaderBlock);
 }
-//#else // #if (NTDDI_VERSION < NTDDI_VISTA)
+//#else // if (BOOTVID_EXPORTS_VERSION < _WIN32_WINNT_WIN6)
 BOOLEAN
 NTAPI
 VidInitialize_NT5(
@@ -114,7 +111,7 @@ typedef BOOLEAN (__cdecl *PVID_INITIALIZE_STUB)(PVOID p1, PVOID p2, PVOID p3);
 BOOLEAN __cdecl VidInitialize_Trampoline(PVOID p1, PVOID p2, PVOID p3);
 
 /* Initially points to the trampoline, then to VidInitialize_NT*() */
-/*extern*/ PVID_INITIALIZE_STUB VidInitialize_Stub = VidInitialize_Trampoline;
+static PVID_INITIALIZE_STUB VidInitialize_Stub = VidInitialize_Trampoline;
 
 /**
  * @brief
@@ -143,8 +140,8 @@ __init_VidInitialize(VOID)
 
 /*
  * Per-function code generation control. These functions must not get
- * stack-checking / runtime-check instrumentation, and must not have a
- * frame that we don't know about when we jump out of them.
+ * stack-checking / runtime-check instrumentation, and must not have
+ * a frame that we don't know about when we jump out of them.
  */
 #ifdef _MSC_VER
 
@@ -153,17 +150,9 @@ __init_VidInitialize(VOID)
 #pragma check_stack(off)
 #pragma strict_gs_check(push, off)
 
-/*
- * Enable the optimizations required for tail-calls on x64 (and a predictable
- * code on x86), for the functions below only, even when compiling with /Od.
- * On x86 keep the ebp frame (no /Oy), as the inline asm relies on it.
- */
+/* Enable the optimizations required for tail-calls on x64 (and a predictable
+ * code on x86), for the functions below only, even when compiling with /Od. */
 #pragma optimize("gt", on)
-#ifdef _M_IX86
-#pragma optimize("y", off)
-#endif
-#pragma warning(push)
-#pragma warning(disable:4731) // "frame pointer register 'ebp' modified by inline assembly code"
 
 #endif // _MSC_VER
 
@@ -175,19 +164,25 @@ __init_VidInitialize(VOID)
  */
 #ifdef _MSC_VER
 
-#define TAIL_JUMP_TO_MEM_FRAME(fn) \
-    __asm { __asm leave /*mov esp,ebp; pop ebp*/ __asm jmp dword ptr [fn] }
+/* Keep the ebp frame (no /Oy), as the inline asm relies on it */
+#pragma optimize("y", off)
+
+#define TAIL_FRAME_LEAVE(...) \
+    /* NOTE: The explicit 'pop ebp' emits
+     * warning C4731: "frame pointer register 'ebp' modified by inline assembly code"
+     * Using 'leave' avoids all of this. */ \
+    __asm leave /*mov esp,ebp; pop ebp*/ __VA_ARGS__
 #define TAIL_JUMP_TO_MEM(fn) \
-    __asm { jmp dword ptr [fn] }
+    __asm jmp dword ptr [fn]
 
 #define TRAMP_ATTR  __declspec(safebuffers)
 
 #else // def __GNUC__
 
-#define TAIL_JUMP_TO_MEM_FRAME(fn) \
-    __asm__ __volatile__("leave\n\tjmp *%0" : : "m"(fn)); return 0
+#define TAIL_FRAME_LEAVE(...) \
+    __asm__ __volatile__("leave"); __VA_ARGS__ ; return 0
 #define TAIL_JUMP_TO_MEM(fn) \
-    __asm__ __volatile__("jmp *%0" : : "m"(fn)); return 0
+    __asm__ __volatile__("jmp *%0" : : "m"(fn))
 
 #if (__GNUC__ >= 11)
 #define NO_CHECKS   __attribute__((no_stack_protector))
@@ -239,7 +234,7 @@ VidInitialize_Trampoline(PVOID p1, PVOID p2, PVOID p3) /* Needs to protect at mo
 {
     __init_VidInitialize();
 #ifdef _M_IX86
-    TAIL_JUMP_TO_MEM_FRAME(VidInitialize_Stub);
+    TAIL_FRAME_LEAVE(TAIL_JUMP_TO_MEM(VidInitialize_Stub));
 #else
     return ((PVID_INITIALIZE_STUB)VidInitialize_Stub)(p1, p2, p3);
 #endif
@@ -255,24 +250,30 @@ VidInitialize_Trampoline(PVOID p1, PVOID p2, PVOID p3) /* Needs to protect at mo
  * in the exports, depending on the exports version.
  **/
 
-#if (NTDDI_VERSION >= NTDDI_WIN7)
+#if (BOOTVID_EXPORTS_VERSION >= _WIN32_WINNT_WIN7)
     #define VIDINIT_PARAMS      _In_ INT Phase, _In_ BOOLEAN SetMode, _In_opt_ PLOADER_PARAMETER_BLOCK LoaderBlock
     #define VIDINIT_PARAMS_CALL          Phase,              SetMode,                                  LoaderBlock
-#elif (NTDDI_VERSION == NTDDI_VISTA)
+#elif (BOOTVID_EXPORTS_VERSION == _WIN32_WINNT_WIN6)
     #define VIDINIT_PARAMS      _In_ INT Phase, _In_ BOOLEAN SetMode
     #define VIDINIT_PARAMS_CALL          Phase,              SetMode
-#else // #if (NTDDI_VERSION < NTDDI_VISTA)
+#else // if (BOOTVID_EXPORTS_VERSION < _WIN32_WINNT_WIN6)
     #define VIDINIT_PARAMS      _In_ BOOLEAN SetMode
     #define VIDINIT_PARAMS_CALL              SetMode
 #endif
 
-#ifdef _M_IX86
+
 /* Frameless, so that the jump leaves the caller's stack untouched */
 #ifdef _MSC_VER
 #pragma optimize("gy", on)
+#else // def __GNUC__
+#pragma GCC push_options
+#pragma GCC optimize("O","-fomit-frame-pointer","-foptimize-sibling-calls")
+#endif
+
+#ifdef _M_IX86
+#ifdef _MSC_VER
 __declspec(naked)
 #else // def __GNUC__
-__attribute__((optimize("O","-fomit-frame-pointer","-foptimize-sibling-calls","-ftree-tail-merge")))
 __attribute__((naked))
 #endif
 #endif // _M_IX86
@@ -286,15 +287,16 @@ VidInitialize(VIDINIT_PARAMS)
     return ((PVID_INITIALIZE)VidInitialize_Stub)(VIDINIT_PARAMS_CALL);
 #endif
 }
-#if defined(_MSC_VER) && defined(_M_IX86)
+
+#ifdef _MSC_VER
 #pragma optimize("gy", off)
+#else
+#pragma GCC pop_options
 #endif
 
 
 #ifdef _MSC_VER
-#pragma warning(pop)
 #pragma optimize("", on)
-
 #pragma strict_gs_check(pop)
 #pragma check_stack() // Restore defaults
 #pragma runtime_checks("s", restore)
