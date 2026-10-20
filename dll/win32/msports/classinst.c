@@ -7,6 +7,7 @@
  */
 
 #include "precomp.h"
+#include <strsafe.h>
 
 #include <wchar.h>
 
@@ -863,9 +864,9 @@ ApplySerialPortSettings(IN HDEVINFO DeviceInfoSet,
 
     /* Read the saved settings string, for example "9600,n,8,1".
        First the same way the Port Settings page wrote it. */
-    _swprintf(szKeyName, L"%s:", szPortName);
+    StringCchPrintfW(szKeyName, ARRAYSIZE(szKeyName), L"%s:", szPortName);
     if (GetProfileStringW(L"ports", szKeyName, L"", szSettings,
-                          (sizeof(szSettings) / sizeof(WCHAR)) - 1) == 0)
+                          ARRAYSIZE(szSettings) - 1) == 0)
     {
         /* Fall back to reading the registry key directly */
         lError = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
@@ -888,7 +889,7 @@ ApplySerialPortSettings(IN HDEVINFO DeviceInfoSet,
         return;
 
     /* Apply it to the live port */
-    _swprintf(szDevice, L"\\\\.\\%s", szPortName);
+    StringCchPrintfW(szDevice, ARRAYSIZE(szDevice), L"\\\\.\\%s", szPortName);
     hPort = CreateFileW(szDevice,
                         GENERIC_READ | GENERIC_WRITE,
                         0,
