@@ -13,8 +13,15 @@ static const PROPERTYKEY PKEY_DoesNotExist = { { 0x071ED77F,0x6DEE,0x4800,0x94,0
 static const PROPERTYKEY PKEY_Size = { PSGUID_STORAGE, PID_STG_SIZE };
 static const PROPERTYKEY PKEY_DateModified = { PSGUID_STORAGE, PID_STG_WRITETIME };
 
-static IShellItem* CreateItem(PCWSTR pszPath)
+static IShellItem* CreateItem(PCWSTR pszPath = NULL)
 {
+    WCHAR szPath[MAX_PATH];
+    if (!pszPath)
+    {
+        pszPath = szPath;
+        GetModuleFileName(NULL, szPath, _countof(szPath));
+    }
+
     PIDLIST_ABSOLUTE pidl;
     HRESULT hr = SHParseDisplayName(pszPath, NULL, &pidl, 0, NULL);
     if (FAILED(hr))
@@ -25,12 +32,87 @@ static IShellItem* CreateItem(PCWSTR pszPath)
     return SUCCEEDED(hr) ? pSI : NULL;
 }
 
-static IShellItem2* CreateItem2(PCWSTR pszPath)
+static IShellItem2* CreateItem2(PCWSTR pszPath = NULL)
 {
     IShellItem2 *pSI2;
     CComPtr<IShellItem> pSI(CreateItem(pszPath));
     HRESULT hr = pSI ? pSI->QueryInterface(IID_IShellItem2, (void**)&pSI2) : E_FAIL;
     return SUCCEEDED(hr) ? pSI2 : NULL;
+}
+
+static void TestInterfaces()
+{
+    HRESULT hr;
+    CComPtr<IShellItem> pItem(CreateItem());
+    if (!pItem)
+    {
+        skip("Unable to create IShellItem\n");
+        return;
+    }
+
+#if 0 // Not sure when this exact change happened, don't test until it can be nailed down
+    CComPtr<IPersist> pPersist;
+    hr = pItem->QueryInterface(IID_PPV_ARG(IPersist, &pPersist));
+    if (LOBYTE(GetVersion()) >= 6 && !IsReactOS())
+        ok_hr(hr, S_OK);
+    else
+        ok_hr(hr, E_NOINTERFACE); // Windows incorrectly forgets to support QI for IPersist
+#endif
+
+    CComPtr<IPersistIDList> pPIL;
+    hr = pItem->QueryInterface(IID_PPV_ARG(IPersistIDList, &pPIL));
+    ok_hr(hr, S_OK);
+    if (SUCCEEDED(hr) && pPIL)
+    {
+        CLSID clsid = PKEY_DoesNotExist.fmtid;
+        hr = pPIL->GetClassID(&clsid);
+        ok(hr == S_OK && clsid == CLSID_ShellItem, "ClassID\n");
+
+        hr = pPIL->SetIDList(NULL);
+        ok(FAILED(hr), "Can't set a NULL item\n");
+    }
+
+    CComPtr<IParentAndItem> pPAI;
+    hr = pItem->QueryInterface(IID_PPV_ARG(IParentAndItem, &pPAI));
+    ok_hr(hr, S_OK);
+    if (SUCCEEDED(hr) && pPAI)
+    {
+        hr = pPAI->GetParentAndItem(NULL, NULL, NULL);
+        ok(SUCCEEDED(hr), "Asking for nothing is allowed\n");
+
+        hr = pPAI->SetParentAndItem(NULL, NULL, NULL);
+        ok_hr(hr, E_INVALIDARG);
+    }
+
+    // Windows does not check these pointers
+    // ok(FAILED(hr = pItem->GetDisplayName(SIGDN_FILESYSPATH, NULL)), "NULL output\n");
+    // ok(FAILED(hr = pItem->GetParent(NULL)), "NULL output\n");
+    // ok(FAILED(hr = pItem->GetAttributes(0, NULL)), "NULL output\n");
+    // ok(FAILED(hr = pItem->Compare(NULL, 0, NULL)), "NULL output\n");
+}
+
+static void TestGetAttributes()
+{
+    SFGAOF query, result;
+    HRESULT hr;
+    CComPtr<IShellItem> pItem(CreateItem());
+    if (!pItem)
+    {
+        skip("Unable to create IShellItem\n");
+        return;
+    }
+
+    query = SFGAO_FILESYSTEM;
+    hr = pItem->GetAttributes(query, (result = ~query, &result));
+    ok(hr == S_OK && query == result, "All matching is S_OK\n");
+
+    query = SFGAO_FILESYSTEM | SFGAO_COMPRESSED | SFGAO_ENCRYPTED | SFGAO_GHOSTED;
+    hr = pItem->GetAttributes(query, (result = ~query, &result));
+    ok(hr == S_FALSE && (query & result) != 0 && query > result, "Some matching is S_FALSE\n");
+
+    query = SFGAO_FOLDER | SFGAO_STREAM;
+    hr = pItem->GetAttributes(query, (result = ~query, &result));
+    ok(!(result & SFGAO_FILESYSTEM), "Filter away flags not in query\n");
 }
 
 static void TestShellItemPropSys()
@@ -45,7 +127,10 @@ static void TestShellItemPropSys()
     CComPtr<IShellItem2> pItem(CreateItem2(szPath));
     if (!pItem)
     {
-        skip("Unable to create IShellItem2 from %ls\n", szPath);
+        if (LOBYTE(GetVersion()) >= 6)
+            skip("Unable to create IShellItem2 from %ls\n", szPath);
+        else
+            skip("IShellItem2 not supported\n");
         return;
     }
 
@@ -85,5 +170,7 @@ START_TEST(CShellItem)
 {
     CCoInit ComInit;
 
+    TestInterfaces();
+    TestGetAttributes();
     TestShellItemPropSys();
 }
