@@ -307,7 +307,8 @@ UhciQueryEndpointRequirements(IN PVOID uhciExtension,
             DPRINT("UhciQueryEndpointRequirements: ControlTransfer\n");
 
             {
-                ULONG MaxPacket = EndpointProperties->TotalMaxPacketSize ? EndpointProperties->TotalMaxPacketSize : 8;
+                ULONG MaxPacket = EndpointProperties->TotalMaxPacketSize ?
+                                  EndpointProperties->TotalMaxPacketSize : 8;
                 TdCount = EndpointProperties->MaxTransferSize / MaxPacket;
             }
 
@@ -323,7 +324,8 @@ UhciQueryEndpointRequirements(IN PVOID uhciExtension,
             DPRINT("UhciQueryEndpointRequirements: BulkTransfer\n");
 
             {
-                ULONG MaxPacket = EndpointProperties->TotalMaxPacketSize ? EndpointProperties->TotalMaxPacketSize : 64;
+                ULONG MaxPacket = EndpointProperties->TotalMaxPacketSize ?
+                                  EndpointProperties->TotalMaxPacketSize : 64;
                 TdCount = 2 * UHCI_MAX_BULK_TRANSFER_SIZE / MaxPacket;
             }
 
