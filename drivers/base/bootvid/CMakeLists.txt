@@ -4,13 +4,11 @@
 remove_definitions(-DDLL_EXPORT_VERSION=${DLL_EXPORT_VERSION})
 add_definitions(-DDLL_EXPORT_VERSION=0x502)
 
-spec2def(bootvid.dll bootvid.spec ADD_IMPORTLIB)
-
 function(add_bootvid _target _configfile)
     cmake_parse_arguments(_bviddata "" "NAME_ON_CD" "SOURCES" ${ARGN})
 
     # Handle the spec file for the dll name
-    #spec2def(${_target}.dll bootvid.spec)
+    spec2def(${_target}.dll bootvid.spec ADD_IMPORTLIB)
 
     # Set default values for the version resource file
     set(REACTOS_STR_INTERNAL_NAME "$<TARGET_NAME:${_target}>")
@@ -49,7 +47,7 @@ function(add_bootvid _target _configfile)
     add_library(${_target} MODULE
         ${SOURCE}
         ${CMAKE_CURRENT_BINARY_DIR}/${_target}.rc
-        ${CMAKE_CURRENT_BINARY_DIR}/bootvid.def) # ${_target}.def
+        ${CMAKE_CURRENT_BINARY_DIR}/${_target}.def)
     add_pch(${_target} precomp.h "")
     target_compile_definitions(${_target} PRIVATE ${COMPILE_DEFINITIONS})
 
