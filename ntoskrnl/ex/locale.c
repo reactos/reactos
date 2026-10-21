@@ -827,6 +827,8 @@ NtGetNlsSectionPtr(
     DECLARE_UNICODE_STRING_SIZE(Name, 256);
     DECLARE_UNICODE_STRING_SIZE(FileName, 256);
 
+    if (KeGetPreviousMode() == KernelMode) return STATUS_INVALID_PARAMETER;
+
     Status = ExpGetNlsSectionName(SectionType, SectionId, &Name);
     if (!NT_SUCCESS(Status)) return Status;
 
@@ -851,7 +853,6 @@ NtGetNlsSectionPtr(
 
         if (!NT_SUCCESS(Status))
         {
-            DPRINT1("ERROR: Failed to load NLS File: %ws (Status 0x%08lx)\n", FileName.Buffer, Status);
             return Status;
         }
 
@@ -860,7 +861,6 @@ NtGetNlsSectionPtr(
 
         if (!NT_SUCCESS(Status))
         {
-            DPRINT1("ERROR: Failed to create section %ws (Status 0x%08lx)\n", Name.Buffer, Status);
             return Status;
         }
     }
@@ -882,7 +882,6 @@ NtGetNlsSectionPtr(
     ZwClose(SectionHandle);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("ERROR: Failed to map NLS file %ws\n", FileName.Buffer);
         return Status;
     }
 
@@ -901,7 +900,7 @@ NtGetNlsSectionPtr(
     _SEH2_EXCEPT(ExSystemExceptionFilter())
     {
         /* Return exception code */
-        DPRINT1("ERROR: Failed to map NLS file %ws due to exception\n", FileName.Buffer);
+        ZwUnmapViewOfSection(ZwCurrentProcess(), BaseAddress);
         _SEH2_YIELD(return _SEH2_GetExceptionCode());
     }
     _SEH2_END;
@@ -928,6 +927,8 @@ NtInitializeNlsFiles(
     SIZE_T ViewSize = 0;
     PVOID SectionBaseAddress = NULL;
 
+    if (KeGetPreviousMode() == KernelMode) return STATUS_INVALID_PARAMETER;
+
     RtlInitUnicodeString(&FileName, L"\\SystemRoot\\System32\\locale.nls");
     InitializeObjectAttributes(&FileAttributes, &FileName, OBJ_KERNEL_HANDLE, NULL, NULL);
 
@@ -942,7 +943,6 @@ NtInitializeNlsFiles(
 
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("ERROR: Failed to load NLS File: %ws (Status 0x%08lx)\n", FileName.Buffer, Status);
         return Status;
     }
 
@@ -952,47 +952,25 @@ NtInitializeNlsFiles(
 
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("ERROR: Failed to create section for NLS file %ws (Status 0x%08lx)\n", FileName.Buffer, Status);
         return Status;
     }
 
-    if (KeGetPreviousMode() != KernelMode)
-    {
-        Status = ZwMapViewOfSection(
-            SectionHandle,
-            ZwCurrentProcess(),
-            &SectionBaseAddress,
-            0,
-            0,
-            NULL,
-            &ViewSize,
-            ViewUnmap,
-            0,
-            PAGE_READONLY
-        );
-    }
-    else
-    {
-        PVOID SectionObject = NULL;
-
-        Status = ObReferenceObjectByHandle(SectionHandle,
-                                        SECTION_MAP_READ,
-                                        MmSectionObjectType,
-                                        KernelMode,
-                                        &SectionObject,
-                                        NULL);
-
-        if (NT_SUCCESS(Status))
-        {
-            Status = MmMapViewInSystemSpace(SectionObject, &SectionBaseAddress, &ViewSize);
-            ObDereferenceObject(SectionObject);
-        }
-    }
+    Status = ZwMapViewOfSection(
+        SectionHandle,
+        ZwCurrentProcess(),
+        &SectionBaseAddress,
+        0,
+        0,
+        NULL,
+        &ViewSize,
+        ViewUnmap,
+        0,
+        PAGE_READONLY
+    );
 
     ZwClose(SectionHandle);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("ERROR: Failed to map NLS file %ws (Status 0x%08lx)\n", FileName.Buffer, Status);
         return Status;
     }
 
@@ -1013,7 +991,7 @@ NtInitializeNlsFiles(
     _SEH2_EXCEPT(ExSystemExceptionFilter())
     {
         /* Return exception code */
-        DPRINT1("ERROR: Failed to map NLS file %ws due to exception\n", FileName.Buffer);
+        ZwUnmapViewOfSection(ZwCurrentProcess(), SectionBaseAddress);
         _SEH2_YIELD(return _SEH2_GetExceptionCode());
     }
     _SEH2_END;
