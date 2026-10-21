@@ -9,8 +9,42 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
+/**
+ @brief
+ * Small helper function for checking if pasting to some folder is possible.
+ **/
+BOOL
+ShellCanPaste(IShellFolder *pSF)
+{
+    HRESULT hr;
+    BOOL bRet = FALSE;
+    CComPtr<IDataObject> pDataObj;
+
+    if (pSF)
+    {
+        // If the folder doesn't have a drop target we can't paste
+        CComPtr<IDropTarget> pdt;
+        hr = pSF->CreateViewObject(NULL, IID_PPV_ARG(IDropTarget, &pdt));
+        if (FAILED(hr))
+            return FALSE;
+    }
+
+    hr = OleGetClipboard(&pDataObj);
+    if (FAILED(hr))
+        return FALSE;
+    
+
+    // Set the FORMATETC structure
+    FORMATETC formatetc;
+
+    InitFormatEtc(formatetc, RegisterClipboardFormatW(CFSTR_SHELLIDLIST), TYMED_HGLOBAL);
+    bRet = SUCCEEDED(pDataObj->QueryGetData(&formatetc));
+
+    return bRet;
+}
+
 HRESULT
-ShellViewIdToFolderViewMode(const SHELLVIEWID *pVid)
+ShellViewIdToFolderViewMode(const SHELLVIEWID *pVid) 
 {
     if (IsEqualIID(*pVid, VID_LargeIcons))
         return FVM_ICON;
