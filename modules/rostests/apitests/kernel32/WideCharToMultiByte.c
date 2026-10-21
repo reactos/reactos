@@ -7,7 +7,7 @@
 
 #include "precomp.h"
 
-#define ntv6(x) (LOBYTE(LOWORD(GetVersion())) >= 6 ? (x) : 0)
+#define ntv6(x) (is_reactos() || LOBYTE(LOWORD(GetVersion())) >= 6 ? (x) : 0)
 
 static
 VOID
