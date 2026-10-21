@@ -121,4 +121,57 @@ RtlUpperChar(IN CHAR Source)
     return Destination;
 }
 
+/*
+ * @implemented
+ */
+NTSTATUS
+NTAPI
+RtlUnicodeToOemN(OUT PCHAR OemString,
+                 IN ULONG OemSize,
+                 OUT PULONG ResultSize OPTIONAL,
+                 IN PCWCH UnicodeString,
+                 IN ULONG UnicodeSize)
+{
+    ULONG Size = 0;
+
+    PAGED_CODE_RTL();
+
+    /* Bytes -> chars */
+    UnicodeSize /= sizeof(WCHAR);
+
+    if (!NlsMbOemCodePageTag)
+    {
+        while (OemSize && UnicodeSize)
+        {
+            OemString[Size] = NlsUnicodeToOemTable[*UnicodeString++];
+            Size++;
+            OemSize--;
+            UnicodeSize--;
+        }
+    }
+    else
+    {
+        while (OemSize && UnicodeSize)
+        {
+            USHORT OemChar = NlsUnicodeToMbOemTable[*UnicodeString++];
+
+            if (HIBYTE(OemChar))
+            {
+                if (OemSize < 2)
+                    break;
+                OemString[Size++] = HIBYTE(OemChar);
+                OemSize--;
+            }
+            OemString[Size++] = LOBYTE(OemChar);
+            OemSize--;
+            UnicodeSize--;
+        }
+    }
+
+    if (ResultSize)
+        *ResultSize = Size;
+
+    return UnicodeSize ? STATUS_BUFFER_OVERFLOW : STATUS_SUCCESS;
+}
+
 /* EOF */
