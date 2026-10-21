@@ -12,7 +12,9 @@
 
 #include "display.h"
 
+#ifndef BOOTVID_EXPORTS_VERSION
 #define BOOTVID_EXPORTS_VERSION DLL_EXPORT_VERSION // (NTDDI_VERSION >> 16)
+#endif
 
 BOOLEAN
 NTAPI

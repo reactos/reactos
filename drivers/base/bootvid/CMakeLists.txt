@@ -1,4 +1,9 @@
 
+## Temp HACK: Must match VER_PRODUCT(MAJOR|MINOR)VERSION used by ntoskrnl, until
+## NTDDI_VERSION, DLL_EXPORT_VERSION, and our DLL_EXPORT_VERSION match consistenly.
+remove_definitions(-DDLL_EXPORT_VERSION=${DLL_EXPORT_VERSION})
+add_definitions(-DDLL_EXPORT_VERSION=0x502)
+
 spec2def(bootvid.dll bootvid.spec ADD_IMPORTLIB)
 
 function(add_bootvid _target _configfile)

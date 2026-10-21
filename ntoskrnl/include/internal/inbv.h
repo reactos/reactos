@@ -9,6 +9,8 @@
 #pragma once
 
 /* Native definitions from BOOTVID (Boot Video Driver) */
+// HACK: BOOTVID_EXPORTS_VERSION redefinition; see also bootvid CMakeLists.txt
+#define BOOTVID_EXPORTS_VERSION ((VER_PRODUCTMAJORVERSION << 8) | VER_PRODUCTMINORVERSION)
 #include "bootvid/bootvid.h"
 
 //
