@@ -20,7 +20,7 @@
  */
 
 /* Simplified Chinese translation by Henry Tang Ih 2015 (henrytang2@hotmail.com) */
-/* Translation has been updated by Luo Yufan 2018-2022 (njlyf2011@hotmail.com) */
+/* Translation has been updated by Luo Yufan 2018-2026 (njlyf2011@hotmail.com) */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
@@ -72,9 +72,9 @@ BEGIN
                     IDC_DELETE_COOKIES, 10, 48, 230, 40, BS_TOP | BS_MULTILINE
     AUTOCHECKBOX   "历史记录\n您进入的网站的列表。",
                     IDC_DELETE_HISTORY, 10, 88, 230, 40, BS_TOP | BS_MULTILINE
-    AUTOCHECKBOX   "表单数据\n您已进入形式的用户名和其他信息。",
+    AUTOCHECKBOX   "表单数据\n您在表单中输入的用户名和其他信息。",
                     IDC_DELETE_FORM_DATA, 10, 128, 230, 40, BS_TOP | BS_MULTILINE
-    AUTOCHECKBOX   "密码\n保存在窗口中输入的密码。",
+    AUTOCHECKBOX   "密码\n已保存的、您在表单中输入的密码。",
                     IDC_DELETE_PASSWORDS, 10, 168, 230, 40, BS_TOP | BS_MULTILINE
     DEFPUSHBUTTON  "取消", IDCANCEL, 185, 230, 60, 15, WS_GROUP
     PUSHBUTTON     "删除", IDOK, 120, 230, 60, 15
