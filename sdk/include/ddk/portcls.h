@@ -1943,6 +1943,28 @@ DECLARE_INTERFACE_(IMiniportWaveRTStreamNotification, IMiniportWaveRTStream)
     )   PURE;
 };
 
+#define IMP_IMiniportWaveRTStreamNotification\
+    IMP_IMiniportWaveRTStream;\
+    STDMETHODIMP_(NTSTATUS) AllocateBufferWithNotification\
+     (\
+               IN ULONG NotificationCount,\
+               IN ULONG RequestedSize,\
+               OUT PMDL *AudioBufferMdl,\
+               OUT ULONG *ActualSize,\
+               OUT ULONG *OffsetFromFirstPage,\
+               OUT MEMORY_CACHING_TYPE *CacheType\
+         );\
+    STDMETHODIMP_(VOID) FreeBufferWithNotification(\
+        IN PMDL AudioBufferMdl,\
+        IN ULONG BufferSize\
+        );\
+    STDMETHODIMP_(NTSTATUS) RegisterNotificationEvent(\
+                IN PKEVENT NotificationEvent\
+        );\
+    STDMETHODIMP_(NTSTATUS) UnregisterNotificationEvent(\
+                IN PKEVENT NotificationEvent\
+    )
+
 /* ===============================================================
     IMiniportWaveRT Interface
 */
