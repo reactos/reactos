@@ -7,6 +7,7 @@ extern void func_ConsoleCP(void);
 extern void func_CreateProcess(void);
 extern void func_DefaultActCtx(void);
 extern void func_DeviceIoControl(void);
+extern void func_DnsHostnameToComputerName(void);
 extern void func_dosdev(void);
 extern void func_EnumSystemCodePages(void);
 extern void func_FindActCtxSectionStringW(void);
@@ -54,6 +55,7 @@ const struct test winetest_testlist[] =
     { "CreateProcess",               func_CreateProcess },
     { "DefaultActCtx",               func_DefaultActCtx },
     { "DeviceIoControl",             func_DeviceIoControl },
+    { "DnsHostnameToComputerName",   func_DnsHostnameToComputerName },
     { "dosdev",                      func_dosdev },
     { "EnumSystemCodePages",         func_EnumSystemCodePages },
     { "FindActCtxSectionStringW",    func_FindActCtxSectionStringW },
