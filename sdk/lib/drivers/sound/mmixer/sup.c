@@ -767,6 +767,7 @@ MMixerCreateMixerData(
     MixerData->hDevice = hDevice;
     MixerData->hDeviceInterfaceKey = hKey;
     MixerData->Topology = NULL;
+    MixerData->MixerInfo = NULL;
 
     InsertTailList(&MixerList->MixerData, &MixerData->Entry);
     MixerList->MixerDataCount++;
@@ -848,6 +849,7 @@ MMixerGetDeviceName(
         /* done */
         return Status;
     }
+    DeviceName[0] = L'\0';
 
     Status = MixerContext->OpenKey(hKey, L"Device Parameters", KEY_READ, &hTemp);
     if (Status != MM_STATUS_SUCCESS)
