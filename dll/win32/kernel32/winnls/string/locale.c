@@ -4802,6 +4802,20 @@ BOOL WINAPI DECLSPEC_HOTPATCH Internal_EnumSystemCodePages( CODEPAGE_ENUMPROCW p
     DWORD name_len, type, index = 0;
     HKEY key;
 
+#ifdef __REACTOS__
+    /* Needed for kernel32:EnumSystemCodePages api test */
+    if (!proc)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+    if (flags != CP_INSTALLED && flags != CP_SUPPORTED)
+    {
+        SetLastError(ERROR_INVALID_FLAGS);
+        return FALSE;
+    }
+#endif
+
     if (RegOpenKeyExW( nls_key, L"Codepage", 0, KEY_READ, &key )) return FALSE;
 
     for (;;)
@@ -7555,6 +7569,14 @@ INT WINAPI DECLSPEC_HOTPATCH MultiByteToWideChar( UINT codepage, DWORD flags, co
         SetLastError( ERROR_INVALID_PARAMETER );
         return 0;
     }
+#ifdef __REACTOS__
+    /* Needed for kernel32:MultiByteToWideChar test */
+    if ((PVOID)src == (PVOID)dst)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return 0;
+    }
+#endif
     if (srclen < 0) srclen = strlen(src) + 1;
 
     switch (codepage)
@@ -8970,6 +8992,7 @@ int WINAPI GetTimeFormatEx( const WCHAR *name, DWORD flags, const SYSTEMTIME *sy
 }
 
 #ifdef __REACTOS__
+/* Copied from Wine 10 kernelbase/thread.c */
 /**********************************************************************
  *           SetThreadLocale    (KERNEL32.@)
  *

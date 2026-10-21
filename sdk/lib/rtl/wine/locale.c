@@ -437,7 +437,8 @@ void locale_init(void)
         NtCurrentPeb()->OemCodePageData = oem_ptr;
     }
     RtlInitNlsTables( ansi_ptr, oem_ptr, case_ptr, &nls_info );
-    /* TODO: Is any Wow64 handling needed? */
+    RtlResetRtlTranslations(&nls_info);
+    /* TODO: wow64 handling */
 #else
     NtCurrentTeb()->Peb->UnicodeCaseTableData = case_ptr;
     if (peb64) peb64->UnicodeCaseTableData = PtrToUlong( case_ptr );
@@ -454,10 +455,10 @@ void locale_init(void)
         if (peb64) peb64->OemCodePageData = PtrToUlong( oem_ptr );
     }
     RtlInitNlsTables( ansi_ptr, oem_ptr, case_ptr, &nls_info );
-#endif
     NlsAnsiCodePage     = nls_info.AnsiTableInfo.CodePage;
     NlsMbCodePageTag    = nls_info.AnsiTableInfo.DBCSCodePage;
     NlsMbOemCodePageTag = nls_info.OemTableInfo.DBCSCodePage;
+#endif
 }
 
 
