@@ -1019,6 +1019,7 @@ NTSTATUS WINAPI RtlUnicodeToMultiByteSize( DWORD *size, const WCHAR *str, DWORD 
 }
 
 
+#ifndef __REACTOS__
 /**************************************************************************
  *	RtlUnicodeToOemN   (NTDLL.@)
  */
@@ -1035,6 +1036,7 @@ NTSTATUS WINAPI RtlUnicodeToOemN( char *dst, DWORD dstlen, DWORD *reslen,
     if (reslen) *reslen = ret;
     return STATUS_SUCCESS;
 }
+#endif
 
 
 /**************************************************************************
