@@ -13,7 +13,7 @@ DBG_DEFAULT_CHANNEL(UserKbd);
 BYTE gafAsyncKeyState[256 * 2 / 8]; // 2 bits per key
 static BYTE gafAsyncKeyStateRecentDown[256 / 8]; // 1 bit per key
 static PKEYBOARD_INDICATOR_TRANSLATION gpKeyboardIndicatorTrans = NULL;
-static KEYBOARD_INDICATOR_PARAMETERS gIndicators = {0, 0};
+KEYBOARD_INDICATOR_PARAMETERS gIndicators = {0, 0};
 KEYBOARD_ATTRIBUTES gKeyboardInfo;
 static INT gLanguageToggleKeyState = 0;
 DWORD gdwLanguageToggleKey = 1;

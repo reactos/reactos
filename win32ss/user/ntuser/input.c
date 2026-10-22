@@ -31,6 +31,8 @@ PKTIMER MasterTimer = NULL;
 PATTACHINFO gpai = NULL;
 INT paiCount = 0;
 HANDLE ghKeyboardDevice = NULL;
+LONG gKeyboardFlags;
+PKEVENT gKeyboardUpdatesEvent;
 PINPUT_DEVICE_INFO gpInputDeviceInfo = NULL;
 PERESOURCE gpDeviceInfoListMutex = NULL;
 
@@ -188,6 +190,8 @@ OpenInputDevice(
             ERR("ZwDeviceIoControlFile('%wZ', IOCTL_KEYBOARD_QUERY_ATTRIBUTES) failed with status 0x%08x\n", &DeviceInfo->DeviceName, Status);
         }
         UserInitKeyboard(DeviceInfo->Handle);
+        InterlockedOr(&gKeyboardFlags, KBD_UPDATE_LEDS);
+        KeSetEvent(gKeyboardUpdatesEvent, IO_NO_INCREMENT, FALSE);
     }
     else if (DeviceInfo->DeviceType == RIM_TYPEMOUSE)
     {
@@ -420,6 +424,41 @@ ProcessDeviceChanges(
           gKeyboardInfo.NumberOfFunctionKeys);
 }
 
+static
+VOID
+ProcessKeyboardUpdates(
+    VOID)
+{
+    PINPUT_DEVICE_INFO DeviceInfo;
+    IO_STATUS_BLOCK Iosb;
+    DWORD Updates;
+
+    Updates = InterlockedExchange(&gKeyboardFlags, 0);
+    if (!Updates)
+        return;
+
+    AcquireDeviceInfoListMutex();
+    for (DeviceInfo = gpInputDeviceInfo; DeviceInfo; DeviceInfo = DeviceInfo->pNextDeviceInfo)
+    {
+        if (!DeviceInfo->Handle || DeviceInfo->DeviceType != RIM_TYPEKEYBOARD)
+            continue;
+
+        if (Updates & KBD_UPDATE_LEDS)
+        {
+            /* Update the lights on the hardware */
+            ZwDeviceIoControlFile(DeviceInfo->Handle,
+                                  NULL,
+                                  NULL,
+                                  NULL,
+                                  &Iosb,
+                                  IOCTL_KEYBOARD_SET_INDICATORS,
+                                  &gIndicators, sizeof(gIndicators),
+                                  NULL, 0);
+        }
+    }
+    ReleaseDeviceInfoListMutex();
+}
+
 /*
  * RawInputThreadMain
  *
@@ -431,7 +470,7 @@ RawInputThreadMain(VOID)
     PINPUT_DEVICE_INFO DeviceInfo;
     NTSTATUS Status;
     //LARGE_INTEGER WaitTimeout;
-    PVOID WaitObjects[3], pSignaledObject = NULL;
+    PVOID WaitObjects[4], pSignaledObject = NULL;
     KWAIT_BLOCK WaitBlockArray[RTL_NUMBER_OF(WaitObjects)];
     PVOID ShutdownEvent;
     HWINSTA hWinSta;
@@ -443,6 +482,10 @@ RawInputThreadMain(VOID)
     gDeviceListChangedEvent = ExAllocatePoolWithTag(NonPagedPool, sizeof(*gDeviceListChangedEvent), USERTAG_PNP);
     ASSERT(gDeviceListChangedEvent);
     KeInitializeEvent(gDeviceListChangedEvent, SynchronizationEvent, FALSE);
+
+    gKeyboardUpdatesEvent = ExAllocatePoolWithTag(NonPagedPool, sizeof(*gKeyboardUpdatesEvent), USERTAG_PNP);
+    ASSERT(gKeyboardUpdatesEvent);
+    KeInitializeEvent(gKeyboardUpdatesEvent, SynchronizationEvent, FALSE);
 
     //WaitTimeout.QuadPart = (LONGLONG)(-10000000);
 
@@ -496,6 +539,7 @@ RawInputThreadMain(VOID)
         WaitObjects[0] = ShutdownEvent;
         WaitObjects[1] = MasterTimer;
         WaitObjects[2] = gDeviceListChangedEvent;
+        WaitObjects[3] = gKeyboardUpdatesEvent;
 
         Status = KeWaitForMultipleObjects(RTL_NUMBER_OF(WaitObjects),
                                           WaitObjects,
@@ -515,6 +559,10 @@ RawInputThreadMain(VOID)
             if (pSignaledObject == gDeviceListChangedEvent)
             {
                 ProcessDeviceChanges();
+            }
+            else if (pSignaledObject == gKeyboardUpdatesEvent)
+            {
+                ProcessKeyboardUpdates();
             }
             else if (pSignaledObject == MasterTimer)
             {
@@ -542,6 +590,7 @@ RawInputThreadMain(VOID)
     ExDeleteResourceLite(gpDeviceInfoListMutex);
     ExFreePoolWithTag(gpDeviceInfoListMutex, USERTAG_SYSTEM);
     ExFreePoolWithTag(gDeviceListChangedEvent, USERTAG_PNP);
+    ExFreePoolWithTag(gKeyboardUpdatesEvent, USERTAG_PNP);
 
     ERR("Raw Input Thread Exit!\n");
 }
