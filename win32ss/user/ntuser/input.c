@@ -30,7 +30,6 @@ PTHREADINFO ptiRawInput;
 PKTIMER MasterTimer = NULL;
 PATTACHINFO gpai = NULL;
 INT paiCount = 0;
-HANDLE ghKeyboardDevice = NULL;
 LONG gKeyboardFlags;
 PKEVENT gKeyboardUpdatesEvent;
 PINPUT_DEVICE_INFO gpInputDeviceInfo = NULL;
@@ -221,9 +220,6 @@ CloseInputDevice(
     ASSERT(DeviceInfo->Handle);
     (void)ZwCancelIoFile(DeviceInfo->Handle, &DeviceInfo->Iosb);
     ObCloseHandle(DeviceInfo->Handle, KernelMode);
-
-    if (DeviceInfo->Handle == ghKeyboardDevice)
-        ghKeyboardDevice = NULL;
 }
 
 static
@@ -528,9 +524,6 @@ RawInputThreadMain(VOID)
     UserEnterExclusive();
     StartTheTimers();
     UserLeave();
-
-    NT_ASSERT(ghKeyboardDevice == NULL);
-    ghKeyboardDevice = Keyboard->Handle;
 
     PoRequestShutdownEvent(&ShutdownEvent);
     for (;;)
