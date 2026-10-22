@@ -189,7 +189,7 @@ OpenInputDevice(
             ERR("ZwDeviceIoControlFile('%wZ', IOCTL_KEYBOARD_QUERY_ATTRIBUTES) failed with status 0x%08x\n", &DeviceInfo->DeviceName, Status);
         }
         UserInitKeyboard(DeviceInfo->Handle);
-        InterlockedOr(&gKeyboardFlags, KBD_UPDATE_LEDS);
+        InterlockedOr(&gKeyboardFlags, KBD_UPDATE_LEDS | KBD_UPDATE_TYPEMATIC);
         KeSetEvent(gKeyboardUpdatesEvent, IO_NO_INCREMENT, FALSE);
     }
     else if (DeviceInfo->DeviceType == RIM_TYPEMOUSE)
@@ -426,12 +426,18 @@ ProcessKeyboardUpdates(
     VOID)
 {
     PINPUT_DEVICE_INFO DeviceInfo;
+    KEYBOARD_TYPEMATIC_PARAMETERS GlobalTypematic, LocalTypematic;
     IO_STATUS_BLOCK Iosb;
     DWORD Updates;
 
     Updates = InterlockedExchange(&gKeyboardFlags, 0);
     if (!Updates)
         return;
+
+    RtlZeroMemory(&LocalTypematic, sizeof(LocalTypematic));
+    RtlZeroMemory(&GlobalTypematic, sizeof(GlobalTypematic));
+    GlobalTypematic.Rate = gspv.dwKbdSpeed;
+    GlobalTypematic.Delay = gspv.iKbdDelay;
 
     AcquireDeviceInfoListMutex();
     for (DeviceInfo = gpInputDeviceInfo; DeviceInfo; DeviceInfo = DeviceInfo->pNextDeviceInfo)
@@ -449,6 +455,26 @@ ProcessKeyboardUpdates(
                                   &Iosb,
                                   IOCTL_KEYBOARD_SET_INDICATORS,
                                   &gIndicators, sizeof(gIndicators),
+                                  NULL, 0);
+        }
+
+        if (Updates & KBD_UPDATE_TYPEMATIC)
+        {
+            /* Update typematic */
+#define CLAMP(v, lo, hi) ((v) < (lo) ? (lo) : (v) > (hi) ? (hi) : (v))
+            LocalTypematic.Rate = CLAMP(GlobalTypematic.Rate,
+                                        DeviceInfo->Keyboard.Attributes.KeyRepeatMinimum.Rate,
+                                        DeviceInfo->Keyboard.Attributes.KeyRepeatMaximum.Rate);
+            LocalTypematic.Delay = CLAMP(GlobalTypematic.Delay,
+                                         DeviceInfo->Keyboard.Attributes.KeyRepeatMinimum.Delay,
+                                         DeviceInfo->Keyboard.Attributes.KeyRepeatMaximum.Delay);
+            ZwDeviceIoControlFile(DeviceInfo->Handle,
+                                  NULL,
+                                  NULL,
+                                  NULL,
+                                  &Iosb,
+                                  IOCTL_KEYBOARD_SET_TYPEMATIC,
+                                  &LocalTypematic, sizeof(LocalTypematic),
                                   NULL, 0);
         }
     }
