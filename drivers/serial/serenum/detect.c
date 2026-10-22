@@ -274,7 +274,7 @@ SerenumDetectPnpDevice(
 		NULL,
 		KernelMode,
 		&Handle);
-	if (!NT_SUCCESS(Status)) goto ByeBye;
+	if (!NT_SUCCESS(Status)) return Status;
 
 	/* Save original settings before probing */
 	OutSize = sizeof(OrigBaudRate);
@@ -286,9 +286,9 @@ SerenumDetectPnpDevice(
 			NULL, 0, &OrigLCR, &OutSize)))
 		{
 			OutSize = sizeof(OrigTimeouts);
-			DeviceIoControl(LowerDevice, IOCTL_SERIAL_GET_TIMEOUTS,
-				NULL, 0, &OrigTimeouts, &OutSize);
-			HaveOrigSettings = TRUE;
+			if (NT_SUCCESS(DeviceIoControl(LowerDevice, IOCTL_SERIAL_GET_TIMEOUTS,
+				NULL, 0, &OrigTimeouts, &OutSize)))
+				HaveOrigSettings = TRUE;
 		}
 	}
 
@@ -550,9 +550,9 @@ SerenumDetectLegacyDevice(
 			NULL, 0, &OrigLCR, &OutSize)))
 		{
 			OutSize = sizeof(OrigTimeouts);
-			DeviceIoControl(LowerDevice, IOCTL_SERIAL_GET_TIMEOUTS,
-				NULL, 0, &OrigTimeouts, &OutSize);
-			HaveOrigSettings = TRUE;
+			if (NT_SUCCESS(DeviceIoControl(LowerDevice, IOCTL_SERIAL_GET_TIMEOUTS,
+				NULL, 0, &OrigTimeouts, &OutSize)))
+				HaveOrigSettings = TRUE;
 		}
 	}
 
