@@ -194,18 +194,16 @@ IntKeyboardGetIndicatorTrans(HANDLE hKeyboardDevice,
 /*
  * IntKeyboardUpdateLeds
  *
- * Sends the keyboard commands to turn on/off the lights
+ * Update lights internal state, and request update
  */
 static
 NTSTATUS APIENTRY
-IntKeyboardUpdateLeds(HANDLE hKeyboardDevice,
-                      WORD wVk,
-                      WORD wScanCode)
+IntKeyboardUpdateLeds(
+    _In_ WORD wVk,
+    _In_ WORD wScanCode)
 {
-    NTSTATUS Status;
     UINT i;
     USHORT LedFlag = 0;
-    IO_STATUS_BLOCK Block;
 
     if (!gpKeyboardIndicatorTrans)
         return STATUS_NOT_SUPPORTED;
@@ -229,18 +227,8 @@ IntKeyboardUpdateLeds(HANDLE hKeyboardDevice,
     if (LedFlag)
     {
         gIndicators.LedFlags ^= LedFlag;
-
-        /* Update the lights on the hardware */
-        Status = ZwDeviceIoControlFile(hKeyboardDevice,
-                                       NULL,
-                                       NULL,
-                                       NULL,
-                                       &Block,
-                                       IOCTL_KEYBOARD_SET_INDICATORS,
-                                       &gIndicators, sizeof(gIndicators),
-                                       NULL, 0);
-
-        return Status;
+        InterlockedOr(&gKeyboardFlags, KBD_UPDATE_LEDS);
+        KeSetEvent(gKeyboardUpdatesEvent, IO_NO_INCREMENT, FALSE);
     }
 
     return STATUS_SUCCESS;
@@ -1184,8 +1172,7 @@ ProcessKeyEvent(WORD wVk, WORD wScanCode, DWORD dwFlags, BOOL bInjected, DWORD d
     if (bIsDown)
     {
         /* Update keyboard LEDs */
-        IntKeyboardUpdateLeds(ghKeyboardDevice,
-                              wSimpleVk,
+        IntKeyboardUpdateLeds(wSimpleVk,
                               wScanCode);
     }
 
