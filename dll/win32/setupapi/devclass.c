@@ -673,10 +673,22 @@ SetupDiGetClassInstallParamsW(
         return FALSE;
     }
 
-    if (DeviceInfoData && !DeviceInfoData->Reserved)
+    if (DeviceInfoData)
     {
-        SetLastError(ERROR_INVALID_PARAMETER);
-        return FALSE;
+        struct DeviceInfo *deviceInfo;
+
+        if (!DeviceInfoData->Reserved)
+        {
+            SetLastError(ERROR_INVALID_PARAMETER);
+            return FALSE;
+        }
+
+        deviceInfo = (struct DeviceInfo *)DeviceInfoData->Reserved;
+        if (deviceInfo->set != list)
+        {
+            SetLastError(ERROR_INVALID_PARAMETER);
+            return FALSE;
+        }
     }
 
     InstallParams.cbSize = sizeof(SP_DEVINSTALL_PARAMS_W);
