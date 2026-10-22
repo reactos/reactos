@@ -869,7 +869,11 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
             return SpiGetInt(pvParam, &gspv.dwKbdSpeed, fl);
 
         case SPI_SETKEYBOARDSPEED:
-            return SpiSetInt(&gspv.dwKbdSpeed, uiParam, KEY_KBD, VAL_KBDSPD, fl);
+            if (!SpiSetInt(&gspv.dwKbdSpeed, uiParam, KEY_KBD, VAL_KBDSPD, fl))
+                return 0;
+            InterlockedOr(&gKeyboardFlags, KBD_UPDATE_TYPEMATIC);
+            KeSetEvent(gKeyboardUpdatesEvent, IO_NO_INCREMENT, FALSE);
+            return (UINT_PTR)KEY_KBD;
 
         case SPI_LANGDRIVER:
             ERR("SPI_LANGDRIVER is unimplemented\n");
@@ -908,7 +912,11 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
             return SpiGetInt(pvParam, &gspv.iKbdDelay, fl);
 
         case SPI_SETKEYBOARDDELAY:
-            return SpiSetInt(&gspv.iKbdDelay, uiParam, KEY_KBD, VAL_KBDDELAY, fl);
+            if (!SpiSetInt(&gspv.iKbdDelay, uiParam, KEY_KBD, VAL_KBDDELAY, fl))
+                return 0;
+            InterlockedOr(&gKeyboardFlags, KBD_UPDATE_TYPEMATIC);
+            KeSetEvent(gKeyboardUpdatesEvent, IO_NO_INCREMENT, FALSE);
+            return (UINT_PTR)KEY_KBD;
 
         case SPI_ICONHORIZONTALSPACING:
             if (pvParam)
