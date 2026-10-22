@@ -186,6 +186,7 @@ OpenInputDevice(
         {
             ERR("ZwDeviceIoControlFile('%wZ', IOCTL_KEYBOARD_QUERY_ATTRIBUTES) failed with status 0x%08x\n", &DeviceInfo->DeviceName, Status);
         }
+        UserInitKeyboard(DeviceInfo->Handle);
     }
     else if (DeviceInfo->DeviceType == RIM_TYPEMOUSE)
     {
@@ -327,7 +328,6 @@ ProcessDeviceChanges(
                     if (!ghKeyboardDevice)
                     {
                         // Get and load keyboard attributes.
-                        UserInitKeyboard(DeviceInfo->Handle);
                         UserEnterExclusive();
                         // Register the Window hotkey.
                         UserRegisterHotKey(PWND_BOTTOM, IDHK_WINKEY, MOD_WIN, 0);
