@@ -147,6 +147,7 @@ VOID FASTCALL IntFreeImeHotKeys(VOID);
 extern DWORD gSystemFS;
 extern UINT gSystemCPCharSet; 
 #define KBD_UPDATE_LEDS      0x1
+#define KBD_UPDATE_TYPEMATIC 0x2
 extern LONG gKeyboardFlags;
 extern PKEVENT gKeyboardUpdatesEvent;
 extern PTHREADINFO ptiRawInput;
