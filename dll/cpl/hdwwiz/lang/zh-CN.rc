@@ -112,7 +112,7 @@ CAPTION "添加硬件向导"
 FONT 9, "宋体"
 BEGIN
     LTEXT "正在完成添加硬件向导", IDC_FINISHTITLE, 114, 8, 203, 24
-    LTEXT "向导发现以下连接到计算机的硬件：", -1, 114, 32, 193, 19
+    LTEXT "向导已完成安装以下连接到计算机的硬件：", -1, 114, 32, 193, 19
     LTEXT "想要关闭这个向导，请单击“完成”。", -1, 114, 166, 132, 8
     CONTROL "", IDC_FOUNDHARDWARELIST, "SysListView32", WS_BORDER | WS_GROUP | WS_TABSTOP | LVS_REPORT | LVS_NOSORTHEADER | LVS_SINGLESEL | LVS_SHAREIMAGELISTS, 114, 56, 193, 78
 END
