@@ -147,6 +147,9 @@ VOID FASTCALL IntFreeImeHotKeys(VOID);
 extern DWORD gSystemFS;
 extern UINT gSystemCPCharSet; 
 extern HANDLE ghKeyboardDevice;
+#define KBD_UPDATE_LEDS      0x1
+extern LONG gKeyboardFlags;
+extern PKEVENT gKeyboardUpdatesEvent;
 extern PTHREADINFO ptiRawInput;
 extern BYTE gafAsyncKeyState[256 * 2 / 8]; // 2 bits per key
 extern PINPUT_DEVICE_INFO gpInputDeviceInfo;
@@ -181,4 +184,5 @@ ReleaseDeviceInfoListMutex(VOID)
                                                               ((ks)[GET_KS_BYTE(vk)] & ~GET_KS_LOCK_BIT(vk)))
 
 extern PKL gspklBaseLayout;
+extern KEYBOARD_INDICATOR_PARAMETERS gIndicators;
 extern KEYBOARD_ATTRIBUTES gKeyboardInfo;
