@@ -34,6 +34,7 @@ HANDLE ghKeyboardDevice = NULL;
 PINPUT_DEVICE_INFO gpInputDeviceInfo = NULL;
 PERESOURCE gpDeviceInfoListMutex = NULL;
 
+static DWORD gNumberOfKeyboards = 0;
 static DWORD LastInputTick = 0;
 static PKEVENT gDeviceListChangedEvent;
 
@@ -306,6 +307,8 @@ ProcessDeviceChanges(
 {
     PINPUT_DEVICE_INFO DeviceInfo;
     NTSTATUS Status;
+    DWORD PreviousNumberOfKeyboards = gNumberOfKeyboards;
+    DWORD NumberOfKeyboards = 0;
     DWORD NumberOfMice = 0;
     DWORD MaxNumberOfButtons = 0;
     BOOL HasMouseWheel = FALSE;
@@ -325,21 +328,6 @@ ProcessDeviceChanges(
                 if (DeviceInfo->DeviceType == RIM_TYPEKEYBOARD)
                 {
                     TRACE("Keyboard connected!\n");
-                    if (!ghKeyboardDevice)
-                    {
-                        // Get and load keyboard attributes.
-                        UserEnterExclusive();
-                        // Register the Window hotkey.
-                        UserRegisterHotKey(PWND_BOTTOM, IDHK_WINKEY, MOD_WIN, 0);
-                        // Register the Window Snap hotkey.
-                        UserRegisterHotKey(PWND_BOTTOM, IDHK_SNAP_LEFT, MOD_WIN, VK_LEFT);
-                        UserRegisterHotKey(PWND_BOTTOM, IDHK_SNAP_RIGHT, MOD_WIN, VK_RIGHT);
-                        UserRegisterHotKey(PWND_BOTTOM, IDHK_SNAP_UP, MOD_WIN, VK_UP);
-                        UserRegisterHotKey(PWND_BOTTOM, IDHK_SNAP_DOWN, MOD_WIN, VK_DOWN);
-                        // Register the debug hotkeys.
-                        SetDebugHotKeys();
-                        UserLeave();
-                    }
                 }
                 else if (DeviceInfo->DeviceType == RIM_TYPEMOUSE)
                 {
@@ -351,6 +339,8 @@ ProcessDeviceChanges(
 
         if (DeviceInfo->DeviceType == RIM_TYPEKEYBOARD)
         {
+            NumberOfKeyboards++;
+
             if (DeviceInfo->Keyboard.Attributes.KeyboardIdentifier.Type == 4 /* Enhanced 101- or 102-key keyboard */ ||
                 DeviceInfo->Keyboard.Attributes.KeyboardIdentifier.Type == 7 /* Japanese keyboard */ ||
                 DeviceInfo->Keyboard.Attributes.KeyboardIdentifier.Type == 8 /* Korean keyboard */)
@@ -393,6 +383,36 @@ ProcessDeviceChanges(
           gpsi->aiSysMet[SM_CMOUSEBUTTONS],
           gpsi->aiSysMet[SM_MOUSEWHEELPRESENT]);
 
+    if (PreviousNumberOfKeyboards == 0 && NumberOfKeyboards > 0)
+    {
+        UserEnterExclusive();
+        // Register the Window hotkey.
+        UserRegisterHotKey(PWND_BOTTOM, IDHK_WINKEY, MOD_WIN, 0);
+        // Register the Window Snap hotkey.
+        UserRegisterHotKey(PWND_BOTTOM, IDHK_SNAP_LEFT, MOD_WIN, VK_LEFT);
+        UserRegisterHotKey(PWND_BOTTOM, IDHK_SNAP_RIGHT, MOD_WIN, VK_RIGHT);
+        UserRegisterHotKey(PWND_BOTTOM, IDHK_SNAP_UP, MOD_WIN, VK_UP);
+        UserRegisterHotKey(PWND_BOTTOM, IDHK_SNAP_DOWN, MOD_WIN, VK_DOWN);
+        // Register the debug hotkeys.
+        SetDebugHotKeys();
+        UserLeave();
+    }
+    else if (PreviousNumberOfKeyboards > 0 && NumberOfKeyboards == 0)
+    {
+        UserEnterExclusive();
+        // Unregister the Window hotkey.
+        UserUnregisterHotKey(PWND_BOTTOM, IDHK_WINKEY);
+        // Unregister the Window Snap hotkey.
+        UserUnregisterHotKey(PWND_BOTTOM, IDHK_SNAP_LEFT);
+        UserUnregisterHotKey(PWND_BOTTOM, IDHK_SNAP_RIGHT);
+        UserUnregisterHotKey(PWND_BOTTOM, IDHK_SNAP_UP);
+        UserUnregisterHotKey(PWND_BOTTOM, IDHK_SNAP_DOWN);
+        // Unregister the debug hotkeys.
+        UserUnregisterHotKey(PWND_BOTTOM, IDHK_F12);
+        UserUnregisterHotKey(PWND_BOTTOM, IDHK_SHIFTF12);
+        UserLeave();
+    }
+    gNumberOfKeyboards = NumberOfKeyboards;
     gKeyboardInfo.NumberOfFunctionKeys = MaxFunctionKeys;
     TRACE("Keyboard type %u, subtype %u and number of func keys %u\n",
           gKeyboardInfo.KeyboardIdentifier.Type,
