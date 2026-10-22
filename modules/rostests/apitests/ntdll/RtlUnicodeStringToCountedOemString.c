@@ -22,12 +22,14 @@ static const struct
         STATUS_BUFFER_OVERFLOW,
         RTL_CONSTANT_STRING("\x83\x66\x83\x58\x83\x4e")
     },
+#if 0 /* Fails on Windows 10 */
     {
         932, 1252, /* Modified SJIS - Western SBCS */
         RTL_CONSTANT_STRING(L"\u30c7\u30b9\u30af\u30c8\u30c3\u30d7"),
         STATUS_UNMAPPABLE_CHARACTER,
         RTL_CONSTANT_STRING("??????")
     },
+#endif
     {
         932, 932, /* Modified SJIS - Modified SJIS */
         RTL_CONSTANT_STRING(L"\u30c7\u30b9\u30af\u30c8\u30c3\u30d7"),
