@@ -1216,8 +1216,6 @@ UhciMapAsyncTransferToTDs(IN PUHCI_EXTENSION UhciExtension,
             TD->NextHcdTD = 0;
             TD->UhciTransfer = UhciTransfer;
 
-
-
             PhysicalAddress += LengthThisTD;
             LengthMapped += LengthThisTD;
 
