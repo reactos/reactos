@@ -21,9 +21,31 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#ifdef __REACTOS__
 #include <k32.h>
 #include <debug.h>
 #include "nls.h"
+#else
+#include <assert.h>
+#include <locale.h>
+#include <string.h>
+#include <stdarg.h>
+#include <stdio.h>
+#include <ctype.h>
+#include <stdlib.h>
+
+#include "ntstatus.h"
+#include "windef.h"
+#include "winbase.h"
+#include "winternl.h"
+#include "winnls.h"
+#include "winerror.h"
+#include "winver.h"
+#include "kernel_private.h"
+#include "wine/debug.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(nls);
+#endif
 
 extern const NLS_LOCALE_DATA * WINAPI NlsValidateLocale( LCID *lcid, ULONG flags );
 
@@ -354,13 +376,8 @@ BOOL WINAPI EnumTimeFormatsA( TIMEFMT_ENUMPROCA proc, LCID lcid, DWORD flags )
  */
 BOOL WINAPI InvalidateNLSCache(void)
 {
-#ifdef __REACTOS__
-    //JapaneseEra_ClearCache();
-    return TRUE;
-#else
   FIXME("() stub\n");
   return FALSE;
-#endif
 }
 
 /******************************************************************************
