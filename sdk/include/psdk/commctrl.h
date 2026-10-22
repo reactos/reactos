@@ -4741,8 +4741,12 @@ typedef struct {
 
 #define WC_LINK L"SysLink"
 
-#define LWS_TRANSPARENT 0x1
-#define LWS_IGNORERETURN 0x2
+#define LWS_TRANSPARENT     0x0001 // XP+
+#define LWS_IGNORERETURN    0x0002 // XP+
+#define LWS_NOPREFIX        0x0004 // Vista+
+#define LWS_USEVISUALSTYLE  0x0008 // Vista+
+#define LWS_USECUSTOMTEXT   0x0010 // Vista+
+#define LWS_RIGHT           0x0020 // Vista+
 
 #define LIF_ITEMINDEX 0x1
 #define LIF_STATE 0x2
