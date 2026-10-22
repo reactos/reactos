@@ -1872,7 +1872,7 @@ EHCI_LinkTransferToQueue(IN PEHCI_EXTENSION EhciExtension,
         QH->sqh.HwQH.AlternateNextTD = NextTD->HwTD.AlternateNextTD;
 
         QH->sqh.HwQH.Token.Status &= (UCHAR)~(EHCI_TOKEN_STATUS_ACTIVE |
-                                             EHCI_TOKEN_STATUS_HALTED);
+                                              EHCI_TOKEN_STATUS_HALTED);
 
         QH->sqh.HwQH.Token.TransferBytes = 0;
 
@@ -2514,7 +2514,7 @@ EHCI_AbortAsyncTransfer(IN PEHCI_EXTENSION EhciExtension,
 
         QH->sqh.HwQH.Token.TransferBytes = 0;
         QH->sqh.HwQH.Token.Status &= (UCHAR)~(EHCI_TOKEN_STATUS_ACTIVE |
-                                             EHCI_TOKEN_STATUS_HALTED);
+                                              EHCI_TOKEN_STATUS_HALTED);
 
         EhciEndpoint->HcdHeadP = TD;
     }
