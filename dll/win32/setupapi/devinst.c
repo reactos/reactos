@@ -5902,7 +5902,9 @@ SetupDiInstallDevice(
         RebootRequired = TRUE;
 
     /* Open device registry key */
-    hKey = SETUPDI_OpenDevKey(((struct DeviceInfoSet *)DeviceInfoSet)->HKLM, (struct DeviceInfo *)DeviceInfoData->Reserved, KEY_SET_VALUE);
+    hKey = SETUPDI_OpenDevKey(((struct DeviceInfoSet *)DeviceInfoSet)->HKLM,
+                              (struct DeviceInfo *)DeviceInfoData->Reserved,
+                              KEY_SET_VALUE | KEY_CREATE_SUB_KEY);
     if (hKey == INVALID_HANDLE_VALUE)
         goto cleanup;
 
@@ -5932,11 +5934,16 @@ SetupDiInstallDevice(
                             &hDevParamKey,
                             NULL) == ERROR_SUCCESS)
         {
-            SetupInstallFromInfSectionW(InstallParams.hwndParent,
+            Result = SetupInstallFromInfSectionW(InstallParams.hwndParent,
                 SelectedDriver->InfFileDetails->hInf, SectionName,
                 DoAction, hDevParamKey, NULL, 0,
                 NULL, NULL,
                 DeviceInfoSet, DeviceInfoData);
+            if (!Result)
+            {
+                WARN("Failed to install .HW section into Device Parameters (Error %lu)\n",
+                     GetLastError());
+            }
             RegCloseKey(hDevParamKey);
         }
     }
