@@ -41,10 +41,10 @@ BEGIN
     ICON IDI_DEVMGR, IDC_STATIC, 12, 18, 23, 21, SS_ICON
     LTEXT "设备管理器列出了计算机上安装的所有硬件设备。使用“设备管理器”可以更改任何设备的属性。", IDC_STATIC, 42, 18, 204, 24
     PUSHBUTTON "设备管理器(&D)...", IDC_HARDWARE_DEVICE_MANAGER, 154, 48, 90, 15
-    GROUPBOX "添加硬件向导", IDC_STATIC, 6, 79, 244, 61
+    GROUPBOX "硬件向导", IDC_STATIC, 6, 79, 244, 61
     ICON IDI_ADDHW, IDC_STATIC, 12, 90, 23, 21, SS_ICON
     LTEXT "“硬件向导”帮助您安装、卸载、修复、拔出、弹出和配置硬件。", IDC_STATIC, 42, 90, 204, 24
-    PUSHBUTTON "添加硬件向导(&H)", IDC_HARDWARE_WIZARD, 154, 120, 90, 15
+    PUSHBUTTON "硬件向导(&H)", IDC_HARDWARE_WIZARD, 154, 120, 90, 15
     GROUPBOX "硬件配置文件", IDC_STATIC, 6, 149, 244, 61
     ICON IDI_HARDPROF, IDC_STATIC, 12, 160, 23, 21, SS_ICON
     LTEXT "硬件配置文件为您提供了一种设置和存储不同硬件配置的方法。", IDC_STATIC, 42, 160, 204, 24
