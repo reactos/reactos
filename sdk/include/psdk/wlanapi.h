@@ -59,14 +59,14 @@ typedef V1_ENUM enum _DOT11_RADIO_STATE {
     dot11_radio_state_unknown = 0,
     dot11_radio_state_on,
     dot11_radio_state_off
-} DOT11_RADIO_STATE; /* HACK: WIDL is broken, *PDOT11_RADIO_STATE; */
+} DOT11_RADIO_STATE /* HACK: WIDL is broken, *PDOT11_RADIO_STATE */;
 
 typedef V1_ENUM enum _WLAN_OPCODE_VALUE_TYPE {
     wlan_opcode_value_type_query_only = 0,
     wlan_opcode_value_type_set_by_group_policy,
     wlan_opcode_value_type_set_by_user,
     wlan_opcode_value_type_invalid
-} WLAN_OPCODE_VALUE_TYPE; /* HACK: WIDL is broken    , *PWLAN_OPCODE_VALUE_TYPE; */
+} WLAN_OPCODE_VALUE_TYPE /* HACK: WIDL is broken, *PWLAN_OPCODE_VALUE_TYPE */;
 
 typedef enum _WLAN_SECURABLE_OBJECT {
     wlan_secure_permit_list = 0,
@@ -97,7 +97,7 @@ typedef enum _WLAN_CONNECTION_MODE {
 typedef V1_ENUM enum _WLAN_IHV_CONTROL_TYPE {
     wlan_ihv_control_type_service,
     wlan_ihv_control_type_driver
-} WLAN_IHV_CONTROL_TYPE;  /* HACK , *PWLAN_IHV_CONTROL_TYPE; */
+} WLAN_IHV_CONTROL_TYPE /* HACK: WIDL is broken, *PWLAN_IHV_CONTROL_TYPE */;
 
 typedef V1_ENUM enum _WLAN_INTF_OPCODE {
     wlan_intf_opcode_autoconf_start                              = 0x000000000,
@@ -126,7 +126,7 @@ typedef V1_ENUM enum _WLAN_INTF_OPCODE {
     wlan_intf_opcode_security_end                                = 0x2fffffff,
     wlan_intf_opcode_ihv_start                                   = 0x30000000,
     wlan_intf_opcode_ihv_end                                     = 0x3fffffff
-} WLAN_INTF_OPCODE; /* HACK: WIDL is broken    , *PWLAN_INTF_OPCODE; */
+} WLAN_INTF_OPCODE /* HACK: WIDL is broken, *PWLAN_INTF_OPCODE */;
 
 typedef V1_ENUM enum _WLAN_INTERFACE_STATE {
     wlan_interface_state_not_ready = 0,
