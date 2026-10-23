@@ -146,12 +146,6 @@ KeSetAffinityThread(
     _In_ KAFFINITY Affinity
 );
 
-PKPROCESS
-NTAPI
-KeGetCurrentProcess(
-    VOID
-);
-
 BOOLEAN
 NTAPI
 KeAddSystemServiceTable(

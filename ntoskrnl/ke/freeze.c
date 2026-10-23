@@ -73,7 +73,7 @@ KeThawExecution(IN BOOLEAN Enable)
     KiFreezeFlag = 0;
 
     /* Cleanup CPU caches */
-    KeFlushCurrentTb();
+    KxFlushEntireCurrentTb();
 
     /* Restore the old IRQL */
 #ifndef CONFIG_SMP
