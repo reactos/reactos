@@ -25,6 +25,7 @@
 #include <k32.h>
 #include <debug.h>
 #include "nls.h"
+#include "japanese.h"
 #else
 #include <assert.h>
 #include <locale.h>
@@ -376,8 +377,13 @@ BOOL WINAPI EnumTimeFormatsA( TIMEFMT_ENUMPROCA proc, LCID lcid, DWORD flags )
  */
 BOOL WINAPI InvalidateNLSCache(void)
 {
+#ifdef __REACTOS__
+    JapaneseEra_ClearCache();
+    return TRUE;
+#else
   FIXME("() stub\n");
   return FALSE;
+#endif
 }
 
 /******************************************************************************
@@ -395,6 +401,15 @@ BOOL WINAPI EnumUILanguagesA( UILANGUAGE_ENUMPROCA proc, DWORD flags, LONG_PTR p
 int WINAPI GetCalendarInfoA( LCID lcid, CALID id, CALTYPE type, LPSTR data, int data_len, DWORD *val )
 {
     WCHAR buffer[256];
+
+#ifdef __REACTOS__
+    if ((type & 0xFFFF) == CAL_SABBREVERASTRING)
+    {
+        /* NOTE: CAL_SABBREVERASTRING is not supported in GetCalendarInfoA */
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return 0;
+    }
+#endif
 
     if (type & CAL_RETURN_NUMBER)
         return GetCalendarInfoW( lcid, id, type, (WCHAR *)data, data_len, val ) * sizeof(WCHAR);
