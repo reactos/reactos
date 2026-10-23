@@ -28,6 +28,7 @@
 
 #define NDEBUG
 #include <debug.h>
+#include "japanese.h"
 DEBUG_CHANNEL(nls);
 
 #define strcasecmp _stricmp
@@ -1886,6 +1887,22 @@ static int get_calendar_info( const NLS_LOCALE_DATA *locale, CALID id, CALTYPE t
         return cal_return_number( val, type, buffer, len, value );
 
     case CAL_SERASTRING:
+#ifdef __REACTOS__
+        if (id == CAL_JAPAN)
+        {
+            PCJAPANESE_ERA pEra = JapaneseEra_Find(NULL);
+            if (pEra)
+            {
+                RtlStringCchCopyW(buffer, len, pEra->szEraName);
+                return strlenW(buffer) + 1;
+            }
+            else
+            {
+                SetLastError(ERROR_INVALID_PARAMETER);
+                return 0;
+            }
+        }
+#endif
         if (id == CAL_GREGORIAN) return locale_return_string( locale->serastring, type, buffer, len );
         if (cal->iyearoffsetrange)
         {
@@ -1981,6 +1998,17 @@ static int get_calendar_info( const NLS_LOCALE_DATA *locale, CALID id, CALTYPE t
 
     case CAL_SABBREVERASTRING:
         if (id == CAL_GREGORIAN) return locale_return_string( locale->sabbreverastring, type, buffer, len );
+#ifdef __REACTOS__
+        if (id == CAL_JAPAN)
+        {
+            PCJAPANESE_ERA pEra = JapaneseEra_Find(NULL);
+            if (pEra)
+            {
+                RtlStringCchCopyW(buffer, len, pEra->szEraAbbrev);
+                return strlenW(buffer) + 1;
+            }
+        }
+#endif
         if (cal->iyearoffsetrange)
         {
             const DWORD *array = (const DWORD *)(locale_strings + cal->iyearoffsetrange + 1);
@@ -4807,13 +4835,13 @@ BOOL WINAPI DECLSPEC_HOTPATCH Internal_EnumSystemCodePages( CODEPAGE_ENUMPROCW p
     HKEY key;
 
 #ifdef __REACTOS__
-    /* Needed for kernel32:EnumSystemCodePages api test */
+    /* Needed to pass kernel32:EnumSystemCodePages apitest */
     if (!proc)
     {
         SetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
     }
-    if (flags != CP_INSTALLED && flags != CP_SUPPORTED)
+    if ((flags & ~(CP_INSTALLED | CP_SUPPORTED)) != 0 || flags == (CP_INSTALLED | CP_SUPPORTED))
     {
         SetLastError(ERROR_INVALID_FLAGS);
         return FALSE;
@@ -7546,6 +7574,13 @@ INT WINAPI DECLSPEC_HOTPATCH LCMapStringW( LCID lcid, DWORD flags, const WCHAR *
 LCID WINAPI DECLSPEC_HOTPATCH LocaleNameToLCID( const WCHAR *name, DWORD flags )
 {
     LCID lcid;
+#ifdef __REACTOS__
+    if (flags & ~LOCALE_ALLOW_NEUTRAL_NAMES)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return 0;
+    }
+#endif
     const NLS_LOCALE_DATA *locale = get_locale_by_name( name, &lcid );
 
     if (!locale)
@@ -8543,8 +8578,13 @@ static int get_pattern_len( const WCHAR *pattern, const WCHAR *accept )
 }
 
 
+#ifdef __REACTOS__
+static int get_date_format( const NLS_LOCALE_DATA *locale, DWORD flags, const SYSTEMTIME *systime,
+                            const WCHAR *format, WCHAR *buffer, int len, LCID lcid )
+#else
 static int get_date_format( const NLS_LOCALE_DATA *locale, DWORD flags, const SYSTEMTIME *systime,
                             const WCHAR *format, WCHAR *buffer, int len )
+#endif
 {
     DWORD override = flags & LOCALE_NOUSEROVERRIDE;
     DWORD genitive = 0;
@@ -8594,7 +8634,11 @@ static int get_date_format( const NLS_LOCALE_DATA *locale, DWORD flags, const SY
 
     for (p = output; *format; format += count)
     {
+#ifdef __REACTOS__
+        count = get_pattern_len( format, L"yMdg" );
+#else
         count = get_pattern_len( format, L"yMd" );
+#endif
 
         switch (*format)
         {
@@ -8607,6 +8651,29 @@ static int get_date_format( const NLS_LOCALE_DATA *locale, DWORD flags, const SY
             break;
 
         case 'y':
+#ifdef __REACTOS__
+            if (IS_LCID_JAPANESE(lcid) && (flags & DATE_USE_ALT_CALENDAR))
+            {
+                PCJAPANESE_ERA pEra = JapaneseEra_Find(&time);
+                if (pEra)
+                {
+                    int year_count = (count >= 2) ? 2 : count;
+                    DWORD dwVal = time.wYear - pEra->wYear + 1;
+
+                    if (dwVal == 1 && JapaneseEra_IsFirstYearGannen())
+                    {
+                        p += swprintf(p, output + ARRAY_SIZE(output) - p, L"\u5143");
+                        break;
+                    }
+
+                    p += swprintf(p, output + ARRAY_SIZE(output) - p, L"%.*d", year_count, dwVal);
+                    break;
+                }
+
+                SetLastError(ERROR_INVALID_PARAMETER);
+                return 0;
+            }
+#endif
             p += swprintf( p, output + ARRAY_SIZE(output) - p, L"%02u",
                            (count <= 2) ? time.wYear % 100 : time.wYear );
             break;
@@ -8645,6 +8712,30 @@ static int get_date_format( const NLS_LOCALE_DATA *locale, DWORD flags, const SY
             break;
 
         case 'g':
+#ifdef __REACTOS__
+            if (IS_LCID_JAPANESE(lcid))
+            {
+                if (flags & DATE_USE_ALT_CALENDAR)
+                {
+                    PCJAPANESE_ERA pEra = JapaneseEra_Find(&time);
+                    if (pEra)
+                    {
+                        p += swprintf(p, output + ARRAY_SIZE(output) - p, L"%ls", pEra->szEraName);
+                        break;
+                    }
+
+                    SetLastError(ERROR_INVALID_PARAMETER);
+                    return 0;
+                }
+                else
+                {
+                    /* NOTE: Windows ignores count here */
+                    *p++ = 0x897F; /* 西 */
+                    *p++ = 0x66A6; /* 暦 */
+                    break;
+                }
+            }
+#endif
             p += locale_return_string( count >= 2 ? locale->serastring : locale->sabbreverastring,
                                        override, p, output + ARRAY_SIZE(output) - p ) - 1;
             break;
@@ -8904,7 +8995,11 @@ int WINAPI GetDateFormatW( LCID lcid, DWORD flags, const SYSTEMTIME *systime,
     }
 
     TRACE( "(%04lx,%lx,%p,%s,%p,%d)\n", lcid, flags, systime, debugstr_w(format), buffer, len );
+#ifdef __REACTOS__
+    return get_date_format( locale, flags, systime, format, buffer, len, lcid );
+#else
     return get_date_format( locale, flags, systime, format, buffer, len );
+#endif
 }
 
 
@@ -8924,7 +9019,11 @@ int WINAPI GetDateFormatEx( const WCHAR *name, DWORD flags, const SYSTEMTIME *sy
     }
 
     TRACE( "(%s,%lx,%p,%s,%p,%d)\n", debugstr_w(name), flags, systime, debugstr_w(format), buffer, len );
+#ifdef __REACTOS__
+    return get_date_format( locale, flags, systime, format, buffer, len, lcid );
+#else
     return get_date_format( locale, flags, systime, format, buffer, len );
+#endif
 }
 
 

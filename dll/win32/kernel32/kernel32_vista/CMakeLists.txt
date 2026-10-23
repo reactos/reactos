@@ -17,7 +17,8 @@ list(APPEND SOURCE
     ThreadDescription.c
     threadpool.c
     vista.c
-    ../winnls/string/locale.c)
+    ../winnls/string/locale.c
+    ../winnls/string/japanese.c)
 
 # These functions are not exported from kernel32_vista (yet).
 # They are only used when NT6 exports in kernel32 are enabled.
