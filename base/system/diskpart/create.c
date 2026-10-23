@@ -62,7 +62,7 @@ InsertGptPartition(
             else if (ullSectorSize < PartEntry->SectorCount.QuadPart)
             {
                 DPRINT("Claim part of unused space\n");
-                NewPartEntry = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(PPARTENTRY));
+                NewPartEntry = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(PARTENTRY));
                 if (NewPartEntry == NULL)
                 {
                     ConPuts(StdOut, L"Memory allocation failed!\n");
@@ -397,7 +397,7 @@ CreateExtendedPartition(
         }
         else if (PartEntry->SectorCount.QuadPart > ullSectorCount)
         {
-            NewPartEntry = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(PPARTENTRY));
+            NewPartEntry = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(PARTENTRY));
             if (NewPartEntry == NULL)
             {
                 ConPuts(StdOut, L"Memory allocation failed!\n");
@@ -603,7 +603,7 @@ CreateLogicalPartition(
             }
             else if (PartEntry->SectorCount.QuadPart > ullSectorCount)
             {
-                NewPartEntry = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(PPARTENTRY));
+                NewPartEntry = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(PARTENTRY));
                 if (NewPartEntry == NULL)
                 {
                     ConPuts(StdOut, L"Memory allocation failed!\n");
@@ -862,7 +862,7 @@ CreatePrimaryMbrPartition(
             }
             else if (PartEntry->SectorCount.QuadPart > ullSectorCount)
             {
-                NewPartEntry = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(PPARTENTRY));
+                NewPartEntry = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(PARTENTRY));
                 if (NewPartEntry == NULL)
                 {
                     ConPuts(StdOut, L"Memory allocation failed!\n");
