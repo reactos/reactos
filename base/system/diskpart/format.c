@@ -131,8 +131,6 @@ format_main(
 
     for (i = 1; i < argc; i++)
     {
-        ConPrintf(StdOut, L"%s\n", argv[i]);
-
         if (HasPrefix(argv[i], L"fs=", &pszSuffix))
         {
             /* fs=<fs> */
