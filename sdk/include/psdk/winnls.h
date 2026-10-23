@@ -184,7 +184,7 @@ extern "C" {
 #if (WINVER >= 0x0600) || defined(__REACTOS__)
 #define LOCALE_NAME_USER_DEFAULT    NULL
 #define LOCALE_NAME_INVARIANT      L""
-#define LOCALE_NAME_SYSTEM_DEFAULT      L"!sys-default-locale"
+#define LOCALE_NAME_SYSTEM_DEFAULT      L"!x-sys-default-locale"
 #endif
 
 #define LOCALE_IDEFAULTUNIXCODEPAGE   0x1030 /* Wine extension */
