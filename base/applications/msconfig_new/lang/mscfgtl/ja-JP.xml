@@ -1,0 +1,27 @@
+<MSCONFIGTOOLFILE>
+
+<_locDefinition>
+  <_locDefault _loc="locNone"/>
+  <_locTag _locAttrData="NAME,HELP">TOOL</_locTag>
+</_locDefinition>
+
+<MSCONFIGTOOLS>
+  <TOOL _locID="About ReactOS" NAME="ReactOS について" PATH="%windir%\system32\winver.exe" DEFAULT_OPT="" ADV_OPT="" HELP="ReactOS のバージョン情報を表示します。"/>
+  <TOOL _locID="Action Center" NAME="アクション センター" PATH="%windir%\System32\wscui.cpl" DEFAULT_OPT="" ADV_OPT="" HELP="アクション センターを開きます。"/>
+  <TOOL _locID="Computer Management" NAME="コンピューターの管理" PATH="%windir%\System32\compmgmt.msc" DEFAULT_OPT="" ADV_OPT="" HELP="システムの設定とコンポーネントを表示および構成します。"/>
+  <TOOL _locID="System Information" NAME="システム情報" PATH="%windir%\System32\msinfo32.exe" DEFAULT_OPT="" ADV_OPT="" HELP="ハードウェアとソフトウェアの設定に関する詳細情報を表示します。"/>
+  <TOOL _locID="Event Viewer" NAME="イベント ビューアー" PATH="%windir%\System32\eventvwr.exe" DEFAULT_OPT="" ADV_OPT="" HELP="監視およびトラブルシューティングに関するメッセージを表示します。"/>
+  <TOOL _locID="Programs" NAME="プログラム" PATH="%windir%\System32\appwiz.cpl" DEFAULT_OPT="" ADV_OPT="" HELP="プログラムや ReactOS コンポーネントの起動、追加、削除を行います。"/>
+  <TOOL _locID="System Properties" NAME="システムのプロパティ" PATH="%windir%\System32\control.exe" DEFAULT_OPT="system" ADV_OPT="" HELP="コンピューターのシステム設定に関する基本情報を表示します。"/>
+  <TOOL _locID="Internet Options" NAME="インターネット オプション" PATH="%windir%\System32\inetcpl.cpl" DEFAULT_OPT="" ADV_OPT="" HELP="インターネットのプロパティを表示します。"/>
+  <TOOL _locID="Internet Protocol Configuration" NAME="インターネット プロトコルの構成" PATH="%windir%\System32\cmd.exe" DEFAULT_OPT="/k %windir%\system32\ipconfig.exe" ADV_OPT="/k %windir%\system32\ipconfig.exe /all" HELP="ネットワーク アドレスの設定を表示および構成します。"/>
+  <TOOL _locID="Performance Monitor" NAME="パフォーマンス モニター" PATH="%windir%\System32\perfmon.exe" DEFAULT_OPT="" ADV_OPT="/sys" HELP="ローカルまたはリモート コンピューターのパフォーマンスを監視します。"/>
+  <TOOL _locID="Resource Monitor" NAME="リソース モニター" PATH="%windir%\System32\resmon.exe" DEFAULT_OPT="" ADV_OPT="" HELP="ローカル コンピューターのパフォーマンスとリソース使用状況を監視します。"/>
+  <TOOL _locID="Task Manager" NAME="タスク マネージャー" PATH="%windir%\System32\taskmgr.exe" DEFAULT_OPT="" ADV_OPT="" HELP="実行中のプログラムとプロセスの詳細を表示します。"/>
+  <TOOL _locID="Command Prompt" NAME="コマンド プロンプト" PATH="%windir%\System32\cmd.exe" DEFAULT_OPT="" ADV_OPT="" HELP="コマンド プロンプト ウィンドウを開きます。"/>
+  <TOOL _locID="Registry Editor" NAME="レジストリ エディター" PATH="%windir%\System32\regedt32.exe" DEFAULT_OPT="" ADV_OPT="" HELP="ReactOS のレジストリを変更します。"/>
+  <TOOL _locID="Remote Assistance" NAME="リモート アシスタンス" PATH="%windir%\System32\msra.exe" DEFAULT_OPT="" ADV_OPT="" HELP="インターネット経由で他のユーザーから支援を受けたり、他のユーザーを支援したりします。"/>
+  <TOOL _locID="System Restore" NAME="システムの復元" PATH="%windir%\System32\rstrui.exe" DEFAULT_OPT="" ADV_OPT="" HELP="コンピューターのシステムを以前の状態に復元します。"/>
+</MSCONFIGTOOLS>
+
+</MSCONFIGTOOLFILE>
