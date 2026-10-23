@@ -32,7 +32,6 @@
 #include "winioctl.h"
 #ifdef __REACTOS__
 /* Wine's headers aren't compatible */
-#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) >= 0)
 #define CTL_CODE( DeviceType, Function, Method, Access ) (                 \
     (DWORD)((DeviceType) << 16) | ((Access) << 14) | ((Function) << 2) | (Method) \
 )

@@ -39,7 +39,9 @@
 #include <sys/mman.h>
 #endif
 #include <errno.h>
+#ifndef __REACTOS__
 #include <sys/time.h>
+#endif
 #ifdef HAVE_ASM_TYPES_H
 #include <asm/types.h>
 #endif
