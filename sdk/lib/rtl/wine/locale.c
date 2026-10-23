@@ -974,8 +974,14 @@ DWORD WINAPI RtlUnicodeStringToOemSize( const UNICODE_STRING *str )
 {
     unsigned int ret;
 
+#ifdef __REACTOS__
+    /* Needed for ntdll_apitest:RtlxUnicodeStringToOemSize to pass */
+    if (nls_info.AnsiTableInfo.CodePage != CP_UTF8)
+        ret = cp_wcstombs_size( &nls_info.AnsiTableInfo, str->Buffer, str->Length / sizeof(WCHAR) );
+#else
     if (nls_info.OemTableInfo.CodePage != CP_UTF8)
         ret = cp_wcstombs_size( &nls_info.OemTableInfo, str->Buffer, str->Length / sizeof(WCHAR) );
+#endif
     else
         utf8_wcstombs_size( str->Buffer, str->Length / sizeof(WCHAR), &ret );
 
