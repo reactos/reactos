@@ -107,8 +107,50 @@ void Test_AddFontResourceA()
     ok(GetLastError() == ERROR_FILE_NOT_FOUND, "GetLastError()=%ld\n", GetLastError());
 }
 
+static void Test_DeleteLoadedFont(void)
+{
+    CHAR szSource[MAX_PATH], szTempPath[MAX_PATH], szFont[MAX_PATH];
+    BOOL bResult;
+    int result;
+
+    GetWindowsDirectoryA(szSource, MAX_PATH);
+    strcat(szSource, "\\Fonts\\tahoma.ttf");
+    GetTempPathA(MAX_PATH, szTempPath);
+    GetTempFileNameA(szTempPath, "fnt", 0, szFont);
+
+    if (!CopyFileA(szSource, szFont, FALSE))
+    {
+        skip("Unable to copy '%s' (%lu)\n", szSource, GetLastError());
+        DeleteFileA(szFont);
+        return;
+    }
+
+    result = AddFontResourceA(szFont);
+    ok(result == 1, "AddFontResourceA(\"%s\") failed, result=%d\n", szFont, result);
+
+    /* The loaded font keeps the file mapped */
+    SetLastError(0xdeadbeef);
+    bResult = DeleteFileA(szFont);
+    ok(bResult == FALSE, "DeleteFileA succeeded\n");
+    ok(GetLastError() == ERROR_ACCESS_DENIED, "GetLastError()=%ld\n", GetLastError());
+
+    /* Nor can it be overwritten (CORE-19789) */
+    SetLastError(0xdeadbeef);
+    bResult = CopyFileA(szSource, szFont, FALSE);
+    ok(bResult == FALSE, "CopyFileA succeeded\n");
+    ok(GetLastError() == ERROR_USER_MAPPED_FILE, "GetLastError()=%ld\n", GetLastError());
+
+    bResult = RemoveFontResourceA(szFont);
+    ok(bResult == TRUE, "RemoveFontResourceA failed\n");
+
+    SetLastError(0xdeadbeef);
+    bResult = DeleteFileA(szFont);
+    ok(bResult == TRUE, "DeleteFileA failed with %lu\n", GetLastError());
+}
+
 START_TEST(AddFontResource)
 {
     Test_AddFontResourceA();
+    Test_DeleteLoadedFont();
 }
 
