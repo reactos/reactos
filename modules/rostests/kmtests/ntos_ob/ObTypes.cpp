@@ -7,41 +7,53 @@
 
 #include <kmt_test.h>
 #include "ObTypes.hpp"
+#include <ndk/obfuncs.h>
 
 #define NDEBUG
 #include <debug.h>
 
-const UCHAR TypeIndex_Type[] = { 1, 1 };
-const UCHAR TypeIndex_Directory[] = { 2, 2 };
-const UCHAR TypeIndex_SymbolicLink[] = { 3, 3 };
-const UCHAR TypeIndex_Token[] = { 4, 4 };
-const UCHAR TypeIndex_Process[] = { 5, 6 };
-const UCHAR TypeIndex_Thread[] = { 6, 7 };
-const UCHAR TypeIndex_Job[] = { 7, 5 };
-const UCHAR TypeIndex_DebugObject[] = { 8, 8 };
-const UCHAR TypeIndex_Event[] = { 9, 9 };
-const UCHAR TypeIndex_EventPair[] = { 10, 10 };
-const UCHAR TypeIndex_Mutant[] = { 11, 11 };
-const UCHAR TypeIndex_Callback[] = { 12, 12 };
-const UCHAR TypeIndex_Semaphore[] = { 13, 13 };
-const UCHAR TypeIndex_Timer[] = { 14, 14 };
-const UCHAR TypeIndex_Profile[] = { 15, 15 };
-const UCHAR TypeIndex_KeyedEvent[] = { 16, 16 };
-const UCHAR TypeIndex_WindowStation[] = { 17, 17 };
-const UCHAR TypeIndex_Desktop[] = { 18, 18 };
-const UCHAR TypeIndex_Section[] = { 19, 30 };
-const UCHAR TypeIndex_Key[] = { 20, 32 };
-const UCHAR TypeIndex_Port[] = { 21, 21 };
-const UCHAR TypeIndex_WaitablePort[] = { 22, 22 };
-const UCHAR TypeIndex_Adapter[] = { 23, 20 };
-const UCHAR TypeIndex_Controller[] = { 24, 21 };
-const UCHAR TypeIndex_Device[] = { 25, 22 };
-const UCHAR TypeIndex_Driver[] = { 26, 23 };
-const UCHAR TypeIndex_IoCompletion[] = { 27, 24 };
-const UCHAR TypeIndex_File[] = { 28, 25 };
-const UCHAR TypeIndex_WmiGuid[] = { 29, 34 };
-const UCHAR TypeIndex_FilterConnectionPort[] = { 30, 36 };
-const UCHAR TypeIndex_FilterCommunicationPort[] = { 31, 37 };
+static OBJECT_TYPE* ObpTypeObjectType;
+
+/*
+ * Object types that don't exist in a certain version of Windows
+ * are marked with this bit. It has no practical purposes other than
+ * being here for clarity purposes so that people understand which types
+ * exist and which do not.
+ */
+#define TYPE_NO_EXIST 0xFF
+
+const UCHAR TypeIndex_Type[] = { 1, 1, 2 };
+const UCHAR TypeIndex_Directory[] = { 2, 2, 3 };
+const UCHAR TypeIndex_SymbolicLink[] = { 3, 3, 4 };
+const UCHAR TypeIndex_Token[] = { 4, 4, 5 };
+const UCHAR TypeIndex_Process[] = { 5, 6, 7 };
+const UCHAR TypeIndex_Thread[] = { 6, 7, 8 };
+const UCHAR TypeIndex_Job[] = { 7, 5, 6 };
+const UCHAR TypeIndex_DebugObject[] = { 8, 8, 11 };
+const UCHAR TypeIndex_Event[] = { 9, 9, 12 };
+const UCHAR TypeIndex_EventPair[] = { 10, 10, 13 };
+const UCHAR TypeIndex_Mutant[] = { 11, 11, 14 };
+const UCHAR TypeIndex_Callback[] = { 12, 12, 15 };
+const UCHAR TypeIndex_Semaphore[] = { 13, 13, 16 };
+const UCHAR TypeIndex_Timer[] = { 14, 14, 17 };
+const UCHAR TypeIndex_Profile[] = { 15, 15, 18 };
+const UCHAR TypeIndex_KeyedEvent[] = { 16, 16, 19 };
+const UCHAR TypeIndex_WindowStation[] = { 17, 17, 20 };
+const UCHAR TypeIndex_Desktop[] = { 18, 18, 21 };
+const UCHAR TypeIndex_Section[] = { 19, 30, 33 };
+const UCHAR TypeIndex_Key[] = { 20, 32, 35 };
+const UCHAR TypeIndex_Port[] = { 21, 21, TYPE_NO_EXIST };
+const UCHAR TypeIndex_WaitablePort[] = { 22, 22, TYPE_NO_EXIST };
+const UCHAR TypeIndex_Adapter[] = { 23, 20, 23 };
+const UCHAR TypeIndex_Controller[] = { 24, 21, 24 };
+const UCHAR TypeIndex_Device[] = { 25, 22, 25 };
+const UCHAR TypeIndex_Driver[] = { 26, 23, 26 };
+const UCHAR TypeIndex_IoCompletion[] = { 27, 24, 27 };
+const UCHAR TypeIndex_File[] = { 28, 25, 28 };
+const UCHAR TypeIndex_WmiGuid[] = { 29, 34, 38 };
+const UCHAR TypeIndex_FilterConnectionPort[] = { 30, 36, 41 };
+const UCHAR TypeIndex_FilterCommunicationPort[] = { 31, 37, 42 };
+const UCHAR TypeIndex_PowerRequest[] = { TYPE_NO_EXIST, TYPE_NO_EXIST, 37 };
 
 static
 ULONG
@@ -54,6 +66,8 @@ GetNtDdiIndex(ULONG NtDdiVersion)
         case NTDDI_VISTASP1: return 1;
         case NTDDI_VISTASP2: return 1;
         case NTDDI_VISTASP3: return 1;
+        case NTDDI_WIN7: return 2;
+        case NTDDI_WIN7SP1: return 2;
         default:
             trace("Unsupported NTDDI version 0x%lx\n", NtDdiVersion);
             return 0;
@@ -76,7 +90,7 @@ GetObjectType(
 
     RtlInitUnicodeString(&Name, TypeName);
     InitializeObjectAttributes(&ObjectAttributes, &Name, OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE, NULL, NULL);
-    Status = ObOpenObjectByName(&ObjectAttributes, NULL, KernelMode, NULL, 0, NULL, &Handle);
+    Status = ObOpenObjectByName(&ObjectAttributes, ObpTypeObjectType, KernelMode, NULL, 0, NULL, &Handle);
     ok(Status == STATUS_SUCCESS, "ObOpenObjectByName failed for '%wZ': %08x\n", &Name, Status);
     ok(Handle != NULL, "ObjectTypeHandle = NULL\n");
     if (!skip(Status == STATUS_SUCCESS && Handle, "No handle\n"))
@@ -204,18 +218,25 @@ VOID
 TestObjectTypes(VOID)
 {
     using OBJECT_TYPE = TOBJECT_TYPE<NtDdiVersion>;
-    static OBJECT_TYPE* ObpTypeObjectType;
     static OBJECT_TYPE* ObpDefaultObject;
-    using OB_SECURITY_METHOD = decltype(ObpTypeObjectType->TypeInfo.SecurityProcedure);
+    using OB_SECURITY_METHOD = decltype(ObpDefaultObject->TypeInfo.SecurityProcedure);
     static OB_SECURITY_METHOD SeDefaultObjectMethod;
 
-    ObpTypeObjectType = (OBJECT_TYPE*)GetObjectType(L"\\ObjectTypes\\Type");
+    if (NtDdiVersion >= NTDDI_WIN7)
+    {
+        ObpTypeObjectType = ObGetObjectType(*PsProcessType);
+    }
+    else
+    {
+        ObpTypeObjectType = GetObjectType(L"\\ObjectTypes\\Type");
+    }
+
     if (skip(ObpTypeObjectType != NULL, "No Type object type\n"))
         return;
 
     ObpDefaultObject = (OBJECT_TYPE*)ObpTypeObjectType->DefaultObject;
     ok(ObpDefaultObject != NULL, "No ObpDefaultObject\n");
-    SeDefaultObjectMethod = ObpTypeObjectType->TypeInfo.SecurityProcedure;
+    SeDefaultObjectMethod = ObpDefaultObject->TypeInfo.SecurityProcedure;
     ok(SeDefaultObjectMethod != NULL, "No SeDefaultObjectMethod\n");
 
 #ifdef _PROPER_NT_NDK_EXPORTS
@@ -305,13 +326,19 @@ TestObjectTypes(VOID)
     // exported but not created
     ok_eq_pointer(IoDeviceHandlerObjectType, NULL);
 
+    /* Test all of the object introduced in Windows 7 and above */
+    /* TODO: Write tests for other objects as well (see the comment below) */
+    if (NtDdiVersion >= NTDDI_WIN7)
+    {
+        CheckObjectType(PowerRequest, NULL,                     OBT_SECURITY_REQUIRED | OBT_PAGED_POOL,     0x100, 0x020000, 0x020000, 0x020000, 0x1f0000, 0x1f0000);
+    }
+
     // my Win7/x64 additionally has:
     // ALPC Port
     // EtwConsumer
     // EtwRegistration
     // IoCompletionReserve
     // PcwObject
-    // PowerRequest
     // Session
     // TmEn
     // TmRm
@@ -344,6 +371,7 @@ START_TEST(ObTypes)
             TestObjectTypes<NTDDI_VISTASP1>();
             return;
         case NTDDI_WIN7:
+        case NTDDI_WIN7SP1:
             TestObjectTypes<NTDDI_WIN7>();
             return;
         default:
