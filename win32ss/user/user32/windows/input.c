@@ -915,7 +915,7 @@ IntGetTableOffsets(
             NlsOffset = (PBYTE)pfnNls() - (PBYTE)hModule;
             if (NlsOffset <= 0 || NlsOffset > MAXWORD)
             {
-                ERR("NlsOffset: %p\n", (PVOID)NlsOffset);
+                ERR("Invalid NlsOffset: %p\n", (PVOID)NlsOffset);
                 _SEH2_YIELD(return FALSE);
             }
         }
