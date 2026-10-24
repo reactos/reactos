@@ -35,8 +35,8 @@ extern "C" {
 
 #define MOUNTMGR_DEVICE_NAME        L"\\Device\\MountPointManager"
 #define MOUNTMGR_DOS_DEVICE_NAME    L"\\\\.\\MountPointManager"
-#define MOUNTMGRCONTROLTYPE     ((ULONG)'m')
-#define MOUNTDEVCONTROLTYPE     ((ULONG)'M')
+#define MOUNTMGRCONTROLTYPE         ((ULONG)'m') /* Mount Manager */
+#define MOUNTDEVCONTROLTYPE         ((ULONG)'M') /* Mount Device */
 
 #ifdef DEFINE_GUID
 DEFINE_GUID(MOUNTDEV_MOUNTED_DEVICE_GUID, 0x53F5630D, 0xB6BF, 0x11D0, 0x94, 0xF2, 0x00, 0xA0, 0xC9, 0x1E, 0xFB, 0x8B);
@@ -97,21 +97,24 @@ typedef struct _MOUNTMGR_CREATE_POINT_INPUT {
 typedef struct _MOUNTMGR_MOUNT_POINT {
   ULONG SymbolicLinkNameOffset;
   USHORT SymbolicLinkNameLength;
+  USHORT Reserved1;
   ULONG UniqueIdOffset;
   USHORT UniqueIdLength;
+  USHORT Reserved2;
   ULONG DeviceNameOffset;
   USHORT DeviceNameLength;
+  USHORT Reserved3;
 } MOUNTMGR_MOUNT_POINT, *PMOUNTMGR_MOUNT_POINT;
 
 typedef struct _MOUNTMGR_MOUNT_POINTS {
   ULONG Size;
   ULONG NumberOfMountPoints;
-  MOUNTMGR_MOUNT_POINT MountPoints[1];
+  _Field_size_(NumberOfMountPoints) MOUNTMGR_MOUNT_POINT MountPoints[ANYSIZE_ARRAY];
 } MOUNTMGR_MOUNT_POINTS, *PMOUNTMGR_MOUNT_POINTS;
 
 typedef struct _MOUNTMGR_DRIVE_LETTER_TARGET {
   USHORT DeviceNameLength;
-  WCHAR DeviceName[1];
+  _Field_size_bytes_(DeviceNameLength) WCHAR DeviceName[ANYSIZE_ARRAY];
 } MOUNTMGR_DRIVE_LETTER_TARGET, *PMOUNTMGR_DRIVE_LETTER_TARGET;
 
 typedef struct _MOUNTMGR_DRIVE_LETTER_INFORMATION {
@@ -132,12 +135,12 @@ typedef struct _MOUNTMGR_CHANGE_NOTIFY_INFO {
 
 typedef struct _MOUNTMGR_TARGET_NAME {
   USHORT DeviceNameLength;
-  WCHAR DeviceName[1];
+  _Field_size_bytes_(DeviceNameLength) WCHAR DeviceName[ANYSIZE_ARRAY];
 } MOUNTMGR_TARGET_NAME, *PMOUNTMGR_TARGET_NAME;
 
 typedef struct _MOUNTDEV_NAME {
   USHORT NameLength;
-  WCHAR Name[1];
+  _Field_size_bytes_(NameLength) WCHAR Name[ANYSIZE_ARRAY];
 } MOUNTDEV_NAME, *PMOUNTDEV_NAME;
 
 #endif /* (NTDDI_VERSION >= NTDDI_WIN2K) */
@@ -154,13 +157,13 @@ typedef struct _MOUNTDEV_NAME {
 #define MOUNTMGR_IS_DOS_VOLUME_NAME_WB(s) \
   (MOUNTMGR_IS_VOLUME_NAME(s) && (s)->Length == 98 && (s)->Buffer[1] == '\\')
 #define MOUNTMGR_IS_NT_VOLUME_NAME(s) \
-  ( MOUNTMGR_IS_VOLUME_NAME(s) && (s)->Length == 96 && (s)->Buffer[1] == '?')
+  (MOUNTMGR_IS_VOLUME_NAME(s) && (s)->Length == 96 && (s)->Buffer[1] == '?')
 #define MOUNTMGR_IS_NT_VOLUME_NAME_WB(s) \
   (MOUNTMGR_IS_VOLUME_NAME(s) && (s)->Length == 98 && (s)->Buffer[1] == '?')
 
 typedef struct _MOUNTMGR_VOLUME_PATHS {
   ULONG MultiSzLength;
-  WCHAR MultiSz[1];
+  _Field_size_bytes_(MultiSzLength) WCHAR MultiSz[ANYSIZE_ARRAY];
 } MOUNTMGR_VOLUME_PATHS, *PMOUNTMGR_VOLUME_PATHS;
 
 #endif /* (NTDDI_VERSION >= NTDDI_WINXP) */
