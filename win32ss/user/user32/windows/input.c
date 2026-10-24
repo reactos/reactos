@@ -1173,7 +1173,9 @@ IntGetKeyboardDllName(
            SUCCEEDED(StringCchCopyW(pszDllName, cchDllName, pszSource));
 }
 
-/* Open and load keyboard layout file(s). */
+/**
+ * @brief   Opens and loads keyboard layout file(s).
+ **/
 static HANDLE
 IntLoadKeyboardLayoutFile(
     _Inout_z_ PWSTR pszKLID,
