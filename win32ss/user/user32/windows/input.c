@@ -861,9 +861,12 @@ IntFollowRealDll(
     *ppszFile = pszRealFile;
 }
 
-/* Prepares a freshly loaded layout DLL: loads the multi-table, follows the "real" DLL, and gets
-   KbdLayerDescriptor. Returns NULL on failure. The caller owns *phModule either way (it can be
-   replaced by the real DLL). The layout DLL code can crash, so everything is under SEH. */
+/**
+ * @brief
+ * Prepares a freshly loaded layout DLL: loads the multi-table, follows the "real" DLL, and gets
+ * KbdLayerDescriptor. Returns NULL on failure. The caller owns *phModule either way (it can be
+ * replaced by the real DLL). The layout DLL code can crash, so everything is under SEH.
+ **/
 static PFN_KbdLayerDescriptor
 IntPrepareLayoutModule(
     _Inout_ HMODULE *phModule,
