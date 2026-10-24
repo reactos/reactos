@@ -694,20 +694,268 @@ BOOL WINAPI SetupQueryInfOriginalFileInformationW(
     return TRUE;
 }
 
-BOOL WINAPI SetupQueryInfVersionInformationA(SP_INF_INFORMATION *info, UINT index, const char *key, char *buff,
-    DWORD size, DWORD *req_size)
+/**
+ * @brief
+ * Returns version information from an SP_INF_INFORMATION struct.
+ *
+ * @param[in] InfInformation
+ * Pointer to an SP_INF_INFORMATION struct returned by SetupGetInfInformation.
+ *
+ * @param[in] InfIndex
+ * Index of the constituent INF file. Must be in the range [0, InfInformation->InfCount).
+ *
+ * @param[in] Key
+ * Optional null-terminated key name. If NULL, all Version section keys and values
+ * are returned as a multi-sz string.
+ *
+ * @param[out] ReturnBuffer
+ * Optional buffer that receives the requested string data.
+ *
+ * @param[in] ReturnBufferSize
+ * Size of ReturnBuffer in bytes, including the null terminator.
+ *
+ * @param[out] RequiredSize
+ * Optional pointer that receives the required buffer size in bytes.
+ *
+ * @return
+ * TRUE on success, FALSE on failure.
+ */
+BOOL WINAPI SetupQueryInfVersionInformationW(
+    _In_ PSP_INF_INFORMATION InfInformation,
+    _In_ UINT InfIndex,
+    _In_opt_ PCWSTR Key,
+    _Out_writes_opt_(ReturnBufferSize) PWSTR ReturnBuffer,
+    _In_ DWORD ReturnBufferSize,
+    _Out_opt_ PDWORD RequiredSize)
 {
-    FIXME("info %p, index %d, key %s, buff %p, size %ld, req_size %p stub!\n", info, index, debugstr_a(key), buff,
-        size, req_size);
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
+    HINF hInf;
+    INFCONTEXT ctx;
+    DWORD needed = 0;
+    BOOL ok = TRUE;
+    PWSTR dest = ReturnBuffer;
+    DWORD remaining = ReturnBufferSize;
+    BOOL any = FALSE;
+
+    TRACE("(%p, %u, %s, %p, %lu, %p)\n",
+          InfInformation, InfIndex, debugstr_w(Key),
+          ReturnBuffer, ReturnBufferSize, RequiredSize);
+
+    if (!InfInformation)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    if (InfIndex >= InfInformation->InfCount)
+    {
+        SetLastError(ERROR_NO_MORE_ITEMS);
+        return FALSE;
+    }
+
+    /* We currently only store the filename in VersionData */
+    hInf = SetupOpenInfFileW((LPCWSTR)InfInformation->VersionData,
+                             NULL, INF_STYLE_WIN4, NULL);
+    if (hInf == INVALID_HANDLE_VALUE)
+        return FALSE;
+
+    if (SetupFindFirstLineW(hInf, L"Version", Key, &ctx))
+    {
+        do
+        {
+            WCHAR name[MAX_PATH];
+            WCHAR value[MAX_PATH];
+            DWORD namelen, valuelen;
+
+            if (!SetupGetStringFieldW(&ctx, 0, name, ARRAYSIZE(name), &namelen))
+                continue;
+            if (!SetupGetStringFieldW(&ctx, 1, value, ARRAYSIZE(value), &valuelen))
+                continue;
+
+            /* NameLen / ValueLen already include the terminating null */
+
+            if (!Key)
+            {
+                /* Multi-sz needs key + value */
+                needed += namelen + valuelen;
+
+                if (ReturnBuffer)
+                {
+                    if (namelen > remaining)
+                    {
+                        ok = FALSE;
+                        remaining = 0;
+                    }
+                    else
+                    {
+                        memcpy(dest, name, namelen * sizeof(WCHAR));
+                        dest += namelen;
+                        remaining -= namelen;
+                    }
+
+                    if (valuelen > remaining)
+                    {
+                        ok = FALSE;
+                        remaining = 0;
+                    }
+                    else
+                    {
+                        memcpy(dest, value, valuelen * sizeof(WCHAR));
+                        dest += valuelen;
+                        remaining -= valuelen;
+                    }
+                }
+            }
+            else
+            {
+                /* Single value only */
+                needed = valuelen;
+                any = TRUE;
+
+                if (ReturnBuffer)
+                {
+                    if (valuelen > remaining)
+                    {
+                        ok = FALSE;
+                    }
+                    else
+                    {
+                        memcpy(dest, value, valuelen * sizeof(WCHAR));
+                    }
+                }
+                break; /* First match is enough */
+            }
+        } while (SetupFindNextMatchLineW(&ctx, Key, &ctx));
+    }
+
+    if (!Key)
+        needed++; /* Final extra null of the multi-sz */
+
+    if (RequiredSize)
+        *RequiredSize = needed;
+
+    if (ReturnBuffer)
+    {
+        if (!ok)
+        {
+            SetLastError(ERROR_INSUFFICIENT_BUFFER);
+        }
+        else if (!Key)
+        {
+            if (remaining)
+                *dest = 0;
+            else
+            {
+                SetLastError(ERROR_INSUFFICIENT_BUFFER);
+                ok = FALSE;
+            }
+        }
+        else if (!any)
+        {
+            /* Key not found */
+            SetLastError(ERROR_INVALID_DATA);
+            ok = FALSE;
+        }
+    }
+    else
+    {
+        /* Pure size query always succeeds when the INF opened */
+        ok = TRUE;
+    }
+
+    SetupCloseInfFile(hInf);
+    return ok;
 }
 
-BOOL WINAPI SetupQueryInfVersionInformationW(SP_INF_INFORMATION *info, UINT index, const WCHAR *key, WCHAR *buff,
-    DWORD size, DWORD *req_size)
+/**
+ * @brief
+ * Returns version information from an SP_INF_INFORMATION struct.
+ *
+ * @param[in] InfInformation
+ * Pointer to an SP_INF_INFORMATION struct returned by SetupGetInfInformation.
+ *
+ * @param[in] InfIndex
+ * Index of the constituent INF file. Must be in the range [0, InfInformation->InfCount).
+ *
+ * @param[in] Key
+ * Optional null-terminated key name. If NULL, all Version section keys and values
+ * are returned as a multi-sz string.
+ *
+ * @param[out] ReturnBuffer
+ * Optional buffer that receives the requested string data.
+ *
+ * @param[in] ReturnBufferSize
+ * Size of ReturnBuffer in characters, including the null terminator.
+ *
+ * @param[out] RequiredSize
+ * Optional pointer that receives the required buffer size in characters.
+ *
+ * @return
+ * TRUE on success, FALSE on failure.
+ */
+BOOL WINAPI SetupQueryInfVersionInformationA(
+    _In_ PSP_INF_INFORMATION InfInformation,
+    _In_ UINT InfIndex,
+    _In_opt_ PCSTR Key,
+    _Out_writes_opt_(ReturnBufferSize) PSTR ReturnBuffer,
+    _In_ DWORD ReturnBufferSize,
+    _Out_opt_ PDWORD RequiredSize)
 {
-    FIXME("info %p, index %d, key %s, buff %p, size %ld, req_size %p stub!\n", info, index, debugstr_w(key), buff,
-        size, req_size);
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
+    WCHAR *keyW = NULL;
+    WCHAR *bufW = NULL;
+    DWORD sizeW = 0;
+    BOOL ret;
+
+    TRACE("(%p, %u, %s, %p, %lu, %p)\n",
+          InfInformation, InfIndex, debugstr_a(Key),
+          ReturnBuffer, ReturnBufferSize, RequiredSize);
+
+    if (Key)
+    {
+        keyW = strdupAtoW(Key);
+        if (!keyW)
+            return FALSE;
+    }
+
+    ret = SetupQueryInfVersionInformationW(InfInformation, InfIndex, keyW,
+                                           NULL, 0, &sizeW);
+    if (!ret)
+    {
+        HeapFree(GetProcessHeap(), 0, keyW);
+        return FALSE;
+    }
+
+    bufW = HeapAlloc(GetProcessHeap(), 0, sizeW * sizeof(WCHAR));
+    if (!bufW)
+    {
+        HeapFree(GetProcessHeap(), 0, keyW);
+        return FALSE;
+    }
+
+    ret = SetupQueryInfVersionInformationW(InfInformation, InfIndex, keyW,
+                                           bufW, sizeW, NULL);
+    if (ret)
+    {
+        INT bytes = WideCharToMultiByte(CP_ACP, 0, bufW, sizeW,
+                                        NULL, 0, NULL, NULL);
+        if (RequiredSize)
+            *RequiredSize = bytes;
+
+        if (ReturnBuffer)
+        {
+            if ((DWORD)bytes > ReturnBufferSize)
+            {
+                SetLastError(ERROR_INSUFFICIENT_BUFFER);
+                ret = FALSE;
+            }
+            else
+            {
+                WideCharToMultiByte(CP_ACP, 0, bufW, sizeW,
+                                    ReturnBuffer, ReturnBufferSize, NULL, NULL);
+            }
+        }
+    }
+
+    HeapFree(GetProcessHeap(), 0, bufW);
+    HeapFree(GetProcessHeap(), 0, keyW);
+    return ret;
 }
