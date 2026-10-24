@@ -1201,7 +1201,6 @@ IntLoadKeyboardLayout(
 
     if (FAILED(StringCbCopyW(szKLID, sizeof(szKLID), pwszKLID)))
         return NULL;
-    szKLID[KL_NAMELENGTH - 1] = UNICODE_NULL;
 
     /* Load keyboard layout file(s) */
     hFile = IntLoadKeyboardLayoutFile(szKLID, _countof(szKLID), wLangID, &Flags, &offTable,
