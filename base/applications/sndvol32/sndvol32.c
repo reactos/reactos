@@ -1067,45 +1067,6 @@ MainWindowProc(HWND hwnd,
         }
 
         case WM_HSCROLL:
-        case WM_VSCROLL:
-            TargetSlider = uMsg == WM_HSCROLL ? IDC_LINE_SLIDER_HORZ : IDC_LINE_SLIDER_VERT;
-
-            switch (LOWORD(wParam))
-            {
-                case TB_LINEUP:
-                case TB_LINEDOWN:
-                case TB_PAGEUP:
-                case TB_PAGEDOWN:
-                case TB_TOP:
-                case TB_BOTTOM:
-                case TB_THUMBTRACK:
-                    /* get dialog item ctrl */
-                    CtrlID = GetDlgCtrlID((HWND)lParam);
-
-                    /* get line index */
-                    LineOffset = CtrlID / TargetSlider;
-
-                    /* compute window id of line name static control */
-                    CtrlID = LineOffset * IDC_LINE_NAME;
-
-                    /* get line name */
-                    if (GetDlgItemTextW(hwnd, CtrlID, Context.LineName, MIXER_LONG_NAME_CHARS) != 0)
-                    {
-                        /* setup context */
-                        Context.SliderPos = LineOffset;
-                        Context.bVertical = TRUE;
-                        Context.bSwitch = FALSE;
-
-                        /* set volume */
-                        SndMixerEnumConnections(Preferences.MixerWindow->Mixer, Preferences.SelectedLine, SetVolumeCallback, (LPVOID)&Context);
-                    }
-                    break;
-
-                default:
-                    break;
-            }
-
-        case WM_HSCROLL:
             if (lParam == 0)
             {
                 /* Horizontal window scrollbar */
@@ -1185,6 +1146,44 @@ MainWindowProc(HWND hwnd,
                 }
                 break;
             }
+        case WM_VSCROLL:
+            TargetSlider = uMsg == WM_HSCROLL ? IDC_LINE_SLIDER_HORZ : IDC_LINE_SLIDER_VERT;
+
+            switch (LOWORD(wParam))
+            {
+                case TB_LINEUP:
+                case TB_LINEDOWN:
+                case TB_PAGEUP:
+                case TB_PAGEDOWN:
+                case TB_TOP:
+                case TB_BOTTOM:
+                case TB_THUMBTRACK:
+                    /* get dialog item ctrl */
+                    CtrlID = GetDlgCtrlID((HWND)lParam);
+
+                    /* get line index */
+                    LineOffset = CtrlID / TargetSlider;
+
+                    /* compute window id of line name static control */
+                    CtrlID = LineOffset * IDC_LINE_NAME;
+
+                    /* get line name */
+                    if (GetDlgItemTextW(hwnd, CtrlID, Context.LineName, MIXER_LONG_NAME_CHARS) != 0)
+                    {
+                        /* setup context */
+                        Context.SliderPos = LineOffset;
+                        Context.bVertical = TRUE;
+                        Context.bSwitch = FALSE;
+
+                        /* set volume */
+                        SndMixerEnumConnections(Preferences.MixerWindow->Mixer, Preferences.SelectedLine, SetVolumeCallback, (LPVOID)&Context);
+                    }
+                    break;
+
+                default:
+                    break;
+            }
+
             /* One more time to test if we released the slider or was there any other affection */
             switch (LOWORD(wParam))
             {
