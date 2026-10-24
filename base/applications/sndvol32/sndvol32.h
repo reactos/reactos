@@ -59,6 +59,10 @@ typedef struct _MIXER_WINDOW
     SIZE baseUnit;
     INT WndPosX;
     INT WndPosY;
+    /* Horizontal scrolling support attempt 1. */
+    INT ScrollPos;
+    INT ContentWidth;
+    INT ClientWidth;
 } MIXER_WINDOW, *PMIXER_WINDOW;
 
 extern HINSTANCE hAppInstance;
