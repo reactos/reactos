@@ -743,8 +743,11 @@ static HMODULE LoadSysLibraryW(PCWSTR pszFileName)
     return LoadLibraryW(szPath);
 }
 
-/* Closes the aux file handles that IntLoadKeyboardLayoutTablesAndFile stored in pMulti.
-   Skips NULL and INVALID_HANDLE_VALUE (a failed aux file), and resets the table count. */
+/**
+ * @brief
+ * Closes the aux file handles that IntLoadKeyboardLayoutTablesAndFile stored in pMulti.
+ * Skips NULL and INVALID_HANDLE_VALUE (a failed aux file), and resets the table count.
+ **/
 static VOID
 IntCloseAuxFiles(_Inout_opt_ PKBDTABLE_MULTI_EX pMulti)
 {
