@@ -813,8 +813,11 @@ IntLoadMultiTables(
     }
 }
 
-/* If the layout DLL redirects to a "real" DLL, loads that one instead and releases the original.
-   On return, *phModule and *ppszFile name the DLL that is actually used. */
+/**
+ * @brief
+ * If the layout DLL redirects to a "real" DLL, loads that one instead and releases the original.
+ * On return, *phModule and *ppszFile name the DLL that is actually used.
+ **/
 static VOID
 IntFollowRealDll(
     _Inout_ HMODULE *phModule,
