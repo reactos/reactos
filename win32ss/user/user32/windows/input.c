@@ -1230,7 +1230,7 @@ IntLoadKeyboardLayout(
     hNewKL = NtUserLoadKeyboardLayoutEx(hFile, offTable, &multi, hklUnload, &ustrKLID, dwNewKL,
                                         Flags);
 
-    /* Close file handles. We own them: win32k only uses its own duplicates. */
+    /* Close file handles, we own them: win32k duplicated them for its own purposes */
     if (hFile && hFile != INVALID_HANDLE_VALUE)
         NtClose(hFile);
     for (iTable = 0; iTable < multi.Multi.nTables && iTable < KBDTABLE_MULTI_MAX; ++iTable)
