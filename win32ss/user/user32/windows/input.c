@@ -1266,7 +1266,7 @@ LoadKeyboardLayoutW(LPCWSTR pwszKLID,
 HKL WINAPI
 LoadKeyboardLayoutEx(
     _In_ HKL hklUnload,
-    _In_z_ LPCWSTR pwszKLID,
+    _In_ PCWSTR pwszKLID,
     _In_ UINT Flags)
 {
     TRACE("(%p, %s, 0x%X)", hklUnload, debugstr_w(pwszKLID), Flags);
