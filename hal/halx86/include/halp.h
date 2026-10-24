@@ -544,6 +544,19 @@ HaliInitPnpDriver(
     VOID
 );
 
+/* acpi/irqtrans.c, legacy/irqtrans.c */
+NTSTATUS
+NTAPI
+HalpGetInterruptTranslator(
+    _In_ INTERFACE_TYPE ParentInterfaceType,
+    _In_ ULONG ParentBusNumber,
+    _In_ INTERFACE_TYPE BridgeInterfaceType,
+    _In_ USHORT Size,
+    _In_ USHORT Version,
+    _Out_ PTRANSLATOR_INTERFACE Translator,
+    _Out_ PULONG BridgeBusNumber
+);
+
 CODE_SEG("INIT")
 VOID
 NTAPI
@@ -635,3 +648,8 @@ extern IDTUsageFlags HalpIDTUsageFlags[MAXIMUM_IDTVECTOR+1];
 
 extern BOOLEAN HalBootViaEfi;
 extern const USHORT HalpBuildType;
+
+/* Interrupt controller this HAL drives, the PIC one being the default */
+#define HALP_INTERRUPT_CONTROLLER_PIC   0
+#define HALP_INTERRUPT_CONTROLLER_APIC  1
+extern ULONG HalpInterruptControllerType;
