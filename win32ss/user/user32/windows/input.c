@@ -775,8 +775,11 @@ IntLoadKeyboardLayoutTablesAndFile(
     _Out_ PULONG poffTable,
     _Out_opt_ PKBDTABLE_MULTI_EX pMulti);
 
-/* Loads the multi-table (if any). Each aux table file is loaded by a recursive call, and its
-   file handle and offset are stored in pMulti. The caller owns the handles: see IntCloseAuxFiles. */
+/**
+ * @brief
+ * Loads the multi-table (if any). Each aux table file is loaded by a recursive call, and its
+ * file handle and offset are stored in pMulti. The caller owns the handles: see IntCloseAuxFiles.
+ **/
 static VOID
 IntLoadMultiTables(
     _In_ HMODULE hModule,
