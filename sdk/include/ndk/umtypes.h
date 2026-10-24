@@ -190,6 +190,36 @@ typedef struct _OBJECT_ATTRIBUTES
     PVOID SecurityQualityOfService;
 } OBJECT_ATTRIBUTES, *POBJECT_ATTRIBUTES;
 
+#if (NTDDI_VERSION >= NTDDI_WIN7) || defined(__REACTOS__)
+typedef enum _REQUESTER_TYPE
+{
+    KernelRequester,
+    UserProcessRequester,
+    UserSharedServiceRequester
+} REQUESTER_TYPE;
+
+typedef struct _DIAGNOSTIC_BUFFER
+{
+    ULONG Size;
+    REQUESTER_TYPE CallerType;
+    union
+    {
+        struct
+        {
+            ULONG ProcessImageNameOffset;
+            ULONG ProcessId;
+            ULONG ServiceTag;
+        };
+        struct
+        {
+            ULONG DeviceDescriptionOffset;
+            ULONG DevicePathOffset;
+        };
+    } DUMMYUNIONNAME;
+    ULONG ReasonOffset;
+} DIAGNOSTIC_BUFFER, *PDIAGNOSTIC_BUFFER;
+#endif
+
 //
 // ClientID Structure
 //
