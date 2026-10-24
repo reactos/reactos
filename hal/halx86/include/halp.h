@@ -246,6 +246,7 @@ extern BOOLEAN HalpProfilingStopped;
 CODE_SEG("INIT") VOID NTAPI HalpInitializeClock(VOID);
 VOID __cdecl HalpClockInterrupt(VOID);
 VOID __cdecl HalpClockIpi(VOID);
+VOID __cdecl HalpIpiInterrupt(VOID);
 VOID __cdecl HalpProfileInterrupt(VOID);
 
 typedef struct _HALP_ROLLOVER
