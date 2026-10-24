@@ -42,12 +42,8 @@
 @ stdcall GetFinalPathNameByHandleW(ptr wstr long long)
 @ stdcall GetLocaleInfoEx(wstr long ptr long)
 @ stdcall GetSystemDefaultLocaleName(ptr long)
-@ stdcall GetSystemPreferredUILanguages(long ptr wstr ptr)
-@ stdcall GetThreadPreferredUILanguages(long ptr wstr ptr)
-@ stdcall GetThreadUILanguage()
 @ stdcall GetUILanguageInfo(long wstr wstr ptr ptr)
 @ stdcall GetUserDefaultLocaleName(wstr long)
-@ stdcall GetUserPreferredUILanguages(long ptr wstr ptr)
 @ stdcall IsValidLocaleName(wstr)
 @ stdcall LCIDToLocaleName(long wstr long long)
 @ stdcall LocaleNameToLCID(wstr long)
@@ -57,7 +53,6 @@
 @ stdcall RegisterApplicationRecoveryCallback(ptr ptr long long)
 @ stdcall RegisterApplicationRestart(wstr long)
 @ stdcall SetFileBandwidthReservation(ptr long long long ptr ptr)
-@ stdcall SetThreadPreferredUILanguages(long wstr ptr)
 @ stdcall CompareStringOrdinal(ptr long ptr long long)
 
 @ stdcall CloseThreadpool(ptr) ntdll_vista.TpReleasePool

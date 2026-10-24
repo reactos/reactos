@@ -2,6 +2,8 @@
 @ stdcall LdrUnregisterDllNotification(ptr)
 
 @ stdcall NtGetCurrentProcessorNumberEx(ptr)
+@ stdcall NtGetNlsSectionPtr(long long ptr ptr ptr)
+@ stdcall NtInitializeNlsFiles(ptr ptr ptr ptr)
 
 @ stdcall RtlGetProductInfo(long long long long ptr)
 @ stdcall RtlInitializeConditionVariable(ptr)
@@ -31,6 +33,12 @@
 @ stdcall RtlLcidToLocaleName(long ptr long long)
 @ stdcall RtlLocaleNameToLcid(wstr ptr long)
 @ stdcall RtlCompareUnicodeStrings(wstr long wstr long long)
+@ stdcall RtlGetLocaleFileMappingAddress(ptr ptr ptr)
+@ stdcall RtlNormalizeString(long long long long ptr)
+@ stdcall RtlGetSystemPreferredUILanguages(long ptr ptr ptr ptr)
+@ stdcall RtlGetThreadPreferredUILanguages(long long ptr ptr)
+@ stdcall RtlSetProcessPreferredUILanguages(long ptr ptr)
+@ stdcall RtlSetThreadPreferredUILanguages(long ptr ptr)
 @ stdcall RtlGetCurrentProcessorNumberEx(ptr)
 @ stdcall -arch=i386 RtlInterlockedPushListSListEx(ptr ptr ptr long)
 @ stdcall -arch=!i386 RtlInterlockedPushListSListEx(ptr ptr ptr long) ntdll.RtlInterlockedPushListSList
