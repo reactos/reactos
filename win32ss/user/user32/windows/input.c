@@ -991,8 +991,8 @@ IntLoadKeyboardLayoutTablesAndFile(
         if (pfnMain)
             break; /* Success */
 
-        /* Otherwise, it's a failure. We leave this module either way (pszCurrentFile does not
-           point into it), so release it here; a retry loads a fresh one. */
+        /* Otherwise, it's a failure. We leave this module either way (pszCurrentFile
+         * does not point into it), so release it here; a retry loads a fresh one. */
         FreeLibrary(hModule);
         IntCloseAuxFiles(pMulti);
 
