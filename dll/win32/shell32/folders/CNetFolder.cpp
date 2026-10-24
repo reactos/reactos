@@ -352,8 +352,7 @@ HRESULT WINAPI CNetFolder::CreateViewObject(HWND hwndOwner, REFIID riid, LPVOID 
 
     if (IsEqualIID(riid, IID_IDropTarget))
     {
-        WARN("IDropTarget not implemented\n");
-        hr = E_NOTIMPL;
+        return QueryInterface(riid, ppvOut);
     }
     else if (IsEqualIID(riid, IID_IContextMenu))
     {
@@ -603,5 +602,33 @@ HRESULT WINAPI CNetFolder::GetCurFolder(PIDLIST_ABSOLUTE *pidl)
 
     *pidl = ILClone(pidlRoot);
 
+    return S_OK;
+}
+
+HRESULT WINAPI CNetFolder::DragEnter(IDataObject *, DWORD, POINTL, DWORD *pdwEffect)
+{
+    if (pdwEffect == NULL)
+        return E_POINTER;
+
+    *pdwEffect = DROPEFFECT_NONE;
+    return S_OK;
+}
+
+HRESULT WINAPI CNetFolder::DragOver(DWORD, POINTL, DWORD *pdwEffect)
+{
+    if (pdwEffect == NULL)
+        return E_POINTER;
+
+    *pdwEffect = DROPEFFECT_NONE;
+    return S_OK;
+}
+
+HRESULT WINAPI CNetFolder::DragLeave()
+{
+    return S_OK;
+}
+
+HRESULT WINAPI CNetFolder::Drop(IDataObject *, DWORD, POINTL, DWORD *)
+{
     return S_OK;
 }
