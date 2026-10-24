@@ -941,7 +941,6 @@ ScrollMixerWindowHorizontally(
 {
     RECT ClientRect;
     INT MaxPos, NewPos, Delta;
-    UINT i;
 
     if (MixerWindow->ContentWidth <= MixerWindow->ClientWidth)
     {
@@ -995,23 +994,7 @@ ScrollMixerWindowHorizontally(
     SetScrollPos(MixerWindow->hWnd, SB_HORZ, NewPos, TRUE);
 
     /* Move the mixer controls */
-    for (i = 0; i < MixerWindow->WindowCount; i++)
-    {
-        HWND hCtrl = MixerWindow->Window[i];
-        RECT rc;
-
-        if (!GetWindowRect(hCtrl, &rc))
-            continue;
-
-        MapWindowPoints(NULL, MixerWindow->hWnd, (LPPOINT)&rc, 2);
-        SetWindowPos(hCtrl,
-                     NULL,
-                     rc.left - Delta,
-                     rc.top,
-                     0,
-                     0,
-                     SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);
-    }
+    MoveMixerControls(MixerWindow, -Delta);
 
     /*
      * The mixer controls have been moved, so they have to be repainted.
@@ -1322,12 +1305,13 @@ MainWindowProc(HWND hwnd,
             if (wParam != SIZE_MINIMIZED)
             {
                 MixerWindow = GetWindowData(hwnd, MIXER_WINDOW);
-                if (MixerWindow != NULL)
+                if (MixerWindow != NULL && !MixerWindow->bUpdatingLayout)
                 {
                     /*
-                     * Check if the horizontal scroll bar is still needed and
-                     * update its range. If the scroll bar has been enabled or
-                     * disabled, the window has to be resized.
+                     * The size of the client area has changed. Check if the
+                     * horizontal scroll bar is still needed and update its
+                     * range. If the scroll bar has been enabled or disabled,
+                     * the window has to be resized.
                      */
                     if (UpdateMixerWindowScrollBar(MixerWindow))
                     {

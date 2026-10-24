@@ -73,6 +73,7 @@ typedef struct _MIXER_WINDOW
     INT ScrollPos;     /* Current horizontal scroll position */
     INT ContentWidth;  /* Total width of the mixer controls */
     INT ClientWidth;   /* Width of the visible mixer controls */
+    BOOL bUpdatingLayout; /* TRUE while the layout of the window is updated */
 } MIXER_WINDOW, *PMIXER_WINDOW;
 
 extern HINSTANCE hAppInstance;
@@ -198,6 +199,7 @@ AdvancedDlgProc(
 VOID LoadDialogCtrls(PPREFERENCES_CONTEXT PrefContext);
 VOID UpdateMixerWindowLayout(PPREFERENCES_CONTEXT PrefContext);
 BOOL UpdateMixerWindowScrollBar(PMIXER_WINDOW MixerWindow);
+VOID MoveMixerControls(PMIXER_WINDOW MixerWindow, INT Delta);
 VOID UpdateDialogLineSliderControl(PPREFERENCES_CONTEXT PrefContext, LPMIXERLINE Line, DWORD DialogID, DWORD Position);
 VOID UpdateDialogLineSwitchControl(PPREFERENCES_CONTEXT PrefContext, LPMIXERLINE Line, LONG fValue);
 

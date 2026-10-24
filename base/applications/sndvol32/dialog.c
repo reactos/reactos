@@ -727,6 +727,42 @@ GetAvailableClientWidth(
 }
 
 /*
+ * Returns the size of the window frame, that is the space that is used by the
+ * borders, the caption and the menu bar of the window.
+ *
+ * The size of the menu bar is not known in advance, so it is measured.
+ * The height of the horizontal scroll bar is not part of the frame, because it
+ * is not part of the client rectangle either.
+ */
+static VOID
+GetWindowFrameSize(
+    IN HWND hWnd,
+    OUT INT *FrameWidth,
+    OUT INT *FrameHeight)
+{
+    RECT WindowRect, ClientRect;
+    POINT Origin;
+    INT BorderWidth;
+
+    GetWindowRect(hWnd, &WindowRect);
+    GetClientRect(hWnd, &ClientRect);
+    Origin.x = 0;
+    Origin.y = 0;
+    ClientToScreen(hWnd, &Origin);
+
+    /* The space used by the left and the right border */
+    *FrameWidth = (WindowRect.right - WindowRect.left) -
+                  (ClientRect.right - ClientRect.left);
+    BorderWidth = *FrameWidth / 2;
+
+    /*
+     * The space used by the top border, the caption and the menu bar, plus
+     * the space used by the bottom border.
+     */
+    *FrameHeight = (Origin.y - WindowRect.top) + BorderWidth;
+}
+
+/*
  * Enables or disables the horizontal scrollbar of the mixer window.
  * Returns TRUE if the state of the scrollbar has been changed.
  */
@@ -782,6 +818,41 @@ UpdateHorizontalScrollBar(
 }
 
 /*
+ * Moves the mixer controls by the given number of pixels.
+ */
+VOID
+MoveMixerControls(
+    IN PMIXER_WINDOW MixerWindow,
+    IN INT Delta)
+{
+    UINT i;
+
+    if (Delta == 0)
+    {
+        /* Nothing to do */
+        return;
+    }
+
+    for (i = 0; i < MixerWindow->WindowCount; i++)
+    {
+        HWND hCtrl = MixerWindow->Window[i];
+        RECT rc;
+
+        if (!GetWindowRect(hCtrl, &rc))
+            continue;
+
+        MapWindowPoints(NULL, MixerWindow->hWnd, (LPPOINT)&rc, 2);
+        SetWindowPos(hCtrl,
+                     NULL,
+                     rc.left + Delta,
+                     rc.top,
+                     0,
+                     0,
+                     SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);
+    }
+}
+
+/*
  * Checks if the horizontal scrollbar is still needed and updates its range.
  * The scrollbar is only shown if the mixer controls do not fit into the
  * client area of the window.
@@ -818,9 +889,12 @@ UpdateMixerWindowLayout(
     IN PPREFERENCES_CONTEXT PrefContext)
 {
     PMIXER_WINDOW MixerWindow = PrefContext->MixerWindow;
-    RECT WindowRect, StatusRect, ClientRect;
+    RECT StatusRect, ClientRect, ContentRect;
     INT ContentWidth, ContentHeight, ClientWidth, StatusHeight, ScrollHeight;
+    INT FrameWidth, FrameHeight, NewPos;
     BOOL bHasScrollBar;
+
+    MixerWindow->bUpdatingLayout = TRUE;
 
     /* Get the size of the mixer controls */
     ContentWidth = MixerWindow->rect.right - MixerWindow->rect.left;
@@ -841,32 +915,56 @@ UpdateMixerWindowLayout(
     MixerWindow->ContentWidth = ContentWidth;
     MixerWindow->ClientWidth = ClientWidth;
 
-    /* The horizontal scrollbar is only needed if the mixer controls do not fit */
+    /*
+     * The horizontal scrollbar is only needed if the mixer controls do not
+     * fit into the client area. It has to be switched on or off before the
+     * size of the window is calculated, because it uses space of the client
+     * area.
+     */
     bHasScrollBar = (ContentWidth > ClientWidth);
     SetHorizontalScrollBarEnabled(MixerWindow, bHasScrollBar);
 
-    /* Reserve room for the horizontal scrollbar */
+    /* The horizontal scrollbar uses space below the client area */
     ScrollHeight = bHasScrollBar ? GetSystemMetrics(SM_CYHSCROLL) : 0;
 
-    /* Calculate the size of the client area */
-    WindowRect.left = 0;
-    WindowRect.top = 0;
-    WindowRect.right = ClientWidth;
-    WindowRect.bottom = ContentHeight + StatusHeight + ScrollHeight;
-
-    /* Convert the client area into a window area */
-    AdjustWindowRect(&WindowRect,
-                     WS_DLGFRAME | WS_CAPTION | WS_MINIMIZEBOX | WS_SYSMENU | WS_CLIPCHILDREN | WS_CLIPSIBLINGS | WS_VISIBLE,
-                     TRUE);
+    /*
+     * Get the size of the window frame. It is measured instead of being
+     * calculated, because the space used by the menu bar is not known in
+     * advance.
+     */
+    GetWindowFrameSize(MixerWindow->hWnd, &FrameWidth, &FrameHeight);
 
     /* Resize the window */
     SetWindowPos(MixerWindow->hWnd,
                  HWND_TOP,
                  0,
                  0,
-                 WindowRect.right - WindowRect.left,
-                 WindowRect.bottom - WindowRect.top,
+                 ClientWidth + FrameWidth,
+                 ContentHeight + StatusHeight + ScrollHeight + FrameHeight,
                  SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE);
+
+    /* Update the range of the horizontal scrollbar */
+    UpdateHorizontalScrollBar(MixerWindow, ClientWidth);
+
+    /*
+     * The scroll position might have been changed by SetScrollInfo(), e.g.
+     * because the mixer controls fit into the client area now. The mixer
+     * controls have to be moved accordingly.
+     */
+    if (bHasScrollBar)
+    {
+        NewPos = GetScrollPos(MixerWindow->hWnd, SB_HORZ);
+    }
+    else
+    {
+        NewPos = 0;
+    }
+
+    if (NewPos != MixerWindow->ScrollPos)
+    {
+        MoveMixerControls(MixerWindow, MixerWindow->ScrollPos - NewPos);
+        MixerWindow->ScrollPos = NewPos;
+    }
 
     /*
      * Move the status bar below the mixer controls. It has to stay above the
@@ -885,8 +983,21 @@ UpdateMixerWindowLayout(
                      SWP_NOZORDER | SWP_NOACTIVATE);
     }
 
-    /* Update the horizontal scrollbar */
-    UpdateHorizontalScrollBar(MixerWindow, ClientWidth);
+    /*
+     * Repaint the mixer controls. The controls that have been clipped
+     * before, because they did not fit into the client area, have to be
+     * painted now.
+     */
+    ContentRect.left = 0;
+    ContentRect.top = 0;
+    ContentRect.right = ClientWidth;
+    ContentRect.bottom = ContentHeight;
+    RedrawWindow(MixerWindow->hWnd,
+                 &ContentRect,
+                 NULL,
+                 RDW_INVALIDATE | RDW_ERASE | RDW_UPDATENOW | RDW_ALLCHILDREN);
+
+    MixerWindow->bUpdatingLayout = FALSE;
 }
 
 VOID
