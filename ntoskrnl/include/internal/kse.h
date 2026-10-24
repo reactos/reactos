@@ -183,3 +183,8 @@ CODE_SEG("INIT")
 NTSTATUS
 NTAPI
 KseIgnoreFreePoolTagInitialize(VOID);
+
+CODE_SEG("INIT")
+NTSTATUS
+NTAPI
+KseVersionLieInitialize(VOID);
