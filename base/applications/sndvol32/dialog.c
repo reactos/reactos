@@ -674,6 +674,221 @@ done:
     return TRUE;
 }
 
+/*
+ * Returns the width that is available for the mixer window on the monitor
+ * the window is currently placed on. The work area of the monitor is used,
+ * so that the window is not larger than the usable screen area and the
+ * horizontal scrollbar is only shown when it is really needed.
+ */
+static INT
+GetAvailableClientWidth(
+    IN HWND hWnd)
+{
+    HMONITOR hMonitor;
+    MONITORINFO MonitorInfo;
+    RECT WorkArea, FrameRect;
+    INT Width;
+
+    /* Fall back to the work area of the primary monitor */
+    WorkArea.right = GetSystemMetrics(SM_CXSCREEN);
+
+    hMonitor = MonitorFromWindow(hWnd, MONITOR_DEFAULTTONEAREST);
+    if (hMonitor != NULL)
+    {
+        MonitorInfo.cbSize = sizeof(MonitorInfo);
+        if (GetMonitorInfoW(hMonitor, &MonitorInfo))
+        {
+            WorkArea = MonitorInfo.rcWork;
+        }
+        else
+        {
+            SystemParametersInfoW(SPI_GETWORKAREA, 0, &WorkArea, 0);
+        }
+    }
+    else
+    {
+        SystemParametersInfoW(SPI_GETWORKAREA, 0, &WorkArea, 0);
+    }
+
+    /* Get the size of the window frame */
+    FrameRect.left = 0;
+    FrameRect.top = 0;
+    FrameRect.right = 0;
+    FrameRect.bottom = 0;
+    AdjustWindowRect(&FrameRect,
+                     WS_DLGFRAME | WS_CAPTION | WS_MINIMIZEBOX | WS_SYSMENU,
+                     FALSE);
+
+    /* Leave some space so that the window frame does not touch the screen edges */
+    Width = (WorkArea.right - WorkArea.left) -
+            (FrameRect.right - FrameRect.left) - 4;
+
+    return max(Width, MIXER_WINDOW_MIN_WIDTH);
+}
+
+/*
+ * Enables or disables the horizontal scrollbar of the mixer window.
+ * Returns TRUE if the state of the scrollbar has been changed.
+ */
+static BOOL
+SetHorizontalScrollBarEnabled(
+    IN PMIXER_WINDOW MixerWindow,
+    IN BOOL bEnabled)
+{
+    LONG_PTR Style;
+
+    Style = GetWindowLongPtr(MixerWindow->hWnd, GWL_STYLE);
+    if (bEnabled == ((Style & WS_HSCROLL) != 0))
+    {
+        /* Nothing to do */
+        return FALSE;
+    }
+
+    if (bEnabled)
+        Style |= WS_HSCROLL;
+    else
+        Style &= ~WS_HSCROLL;
+
+    SetWindowLongPtr(MixerWindow->hWnd, GWL_STYLE, Style);
+    SetWindowPos(MixerWindow->hWnd,
+                 NULL,
+                 0,
+                 0,
+                 0,
+                 0,
+                 SWP_FRAMECHANGED | SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);
+
+    return TRUE;
+}
+
+/*
+ * Updates the range and the position of the horizontal scrollbar.
+ */
+static VOID
+UpdateHorizontalScrollBar(
+    IN PMIXER_WINDOW MixerWindow,
+    IN INT ClientWidth)
+{
+    SCROLLINFO ScrollInfo;
+
+    ScrollInfo.cbSize = sizeof(ScrollInfo);
+    ScrollInfo.fMask = SIF_RANGE | SIF_POS | SIF_PAGE;
+    ScrollInfo.nMin = 0;
+    ScrollInfo.nMax = max(0, MixerWindow->ContentWidth - 1);
+    ScrollInfo.nPage = ClientWidth;
+    ScrollInfo.nPos = MixerWindow->ScrollPos;
+
+    SetScrollInfo(MixerWindow->hWnd, SB_HORZ, &ScrollInfo, TRUE);
+}
+
+/*
+ * Checks if the horizontal scrollbar is still needed and updates its range.
+ * The scrollbar is only shown if the mixer controls do not fit into the
+ * client area of the window.
+ *
+ * Returns TRUE if the scrollbar has been enabled or disabled.
+ */
+BOOL
+UpdateMixerWindowScrollBar(
+    IN PMIXER_WINDOW MixerWindow)
+{
+    RECT ClientRect;
+    INT ClientWidth;
+    BOOL bChanged;
+
+    GetClientRect(MixerWindow->hWnd, &ClientRect);
+    ClientWidth = ClientRect.right - ClientRect.left;
+
+    /* The scrollbar is only needed if the mixer controls do not fit */
+    bChanged = SetHorizontalScrollBarEnabled(MixerWindow,
+                                             MixerWindow->ContentWidth > ClientWidth);
+
+    /* Update the range of the scrollbar */
+    UpdateHorizontalScrollBar(MixerWindow, ClientWidth);
+
+    return bChanged;
+}
+
+/*
+ * Adjusts the size of the mixer window to the size of the mixer controls,
+ * moves the status bar and updates the horizontal scrollbar.
+ */
+VOID
+UpdateMixerWindowLayout(
+    IN PPREFERENCES_CONTEXT PrefContext)
+{
+    PMIXER_WINDOW MixerWindow = PrefContext->MixerWindow;
+    RECT WindowRect, StatusRect, ClientRect;
+    INT ContentWidth, ContentHeight, ClientWidth, StatusHeight, ScrollHeight;
+    BOOL bHasScrollBar;
+
+    /* Get the size of the mixer controls */
+    ContentWidth = MixerWindow->rect.right - MixerWindow->rect.left;
+    ContentHeight = MixerWindow->rect.bottom - MixerWindow->rect.top;
+
+    /* Get the height of the status bar */
+    StatusHeight = 0;
+    if (MixerWindow->hStatusBar)
+    {
+        GetWindowRect(MixerWindow->hStatusBar, &StatusRect);
+        StatusHeight = StatusRect.bottom - StatusRect.top;
+    }
+
+    /* The window is limited to the width of the work area of the monitor */
+    ClientWidth = min(ContentWidth, GetAvailableClientWidth(MixerWindow->hWnd));
+
+    /* Store the sizes of the mixer controls */
+    MixerWindow->ContentWidth = ContentWidth;
+    MixerWindow->ClientWidth = ClientWidth;
+
+    /* The horizontal scrollbar is only needed if the mixer controls do not fit */
+    bHasScrollBar = (ContentWidth > ClientWidth);
+    SetHorizontalScrollBarEnabled(MixerWindow, bHasScrollBar);
+
+    /* Reserve room for the horizontal scrollbar */
+    ScrollHeight = bHasScrollBar ? GetSystemMetrics(SM_CYHSCROLL) : 0;
+
+    /* Calculate the size of the client area */
+    WindowRect.left = 0;
+    WindowRect.top = 0;
+    WindowRect.right = ClientWidth;
+    WindowRect.bottom = ContentHeight + StatusHeight + ScrollHeight;
+
+    /* Convert the client area into a window area */
+    AdjustWindowRect(&WindowRect,
+                     WS_DLGFRAME | WS_CAPTION | WS_MINIMIZEBOX | WS_SYSMENU | WS_CLIPCHILDREN | WS_CLIPSIBLINGS | WS_VISIBLE,
+                     TRUE);
+
+    /* Resize the window */
+    SetWindowPos(MixerWindow->hWnd,
+                 HWND_TOP,
+                 0,
+                 0,
+                 WindowRect.right - WindowRect.left,
+                 WindowRect.bottom - WindowRect.top,
+                 SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE);
+
+    /*
+     * Move the status bar below the mixer controls. It has to stay above the
+     * horizontal scrollbar, otherwise the scrollbar would be hidden by the
+     * status bar.
+     */
+    if (MixerWindow->hStatusBar)
+    {
+        GetClientRect(MixerWindow->hWnd, &ClientRect);
+        SetWindowPos(MixerWindow->hStatusBar,
+                     HWND_TOP,
+                     0,
+                     ContentHeight,
+                     ClientRect.right - ClientRect.left,
+                     StatusHeight,
+                     SWP_NOZORDER | SWP_NOACTIVATE);
+    }
+
+    /* Update the horizontal scrollbar */
+    UpdateHorizontalScrollBar(MixerWindow, ClientWidth);
+}
+
 VOID
 LoadDialogCtrls(
     PPREFERENCES_CONTEXT PrefContext)
@@ -681,12 +896,8 @@ LoadDialogCtrls(
     WCHAR szBuffer[64];
     HWND hDlgCtrl;
     RECT statusRect;
-    RECT workArea;
     UINT i;
     LONG dy;
-    INT ContentWidth, MaxClientWidth;
-    LONG_PTR WindowStyle;
-    SCROLLINFO ScrollInfo;
 
     /* set dialog count to zero */
     PrefContext->MixerWindow->DialogCount = 0;
@@ -697,98 +908,18 @@ LoadDialogCtrls(
     /* enumerate controls */
     SndMixerEnumConnections(PrefContext->MixerWindow->Mixer, PrefContext->SelectedLine, EnumConnectionsCallback, (PVOID)PrefContext);
 
-    /* Calculate total content width */
-    ContentWidth = PrefContext->MixerWindow->rect.right - PrefContext->MixerWindow->rect.left;
-
-    /* Determine whether a horizontal scrollbar is needed */
-    if (SystemParametersInfo(SPI_GETWORKAREA, 0, &workArea, 0))
-        MaxClientWidth = (workArea.right - workArea.left) - 40;
-    else
-        MaxClientWidth = ContentWidth;
-
-    if (MaxClientWidth < 200)
-        MaxClientWidth = 200;
-
-    /* Update window style */
-    WindowStyle = GetWindowLongPtr(PrefContext->MixerWindow->hWnd, GWL_STYLE);
-
-    if (ContentWidth > MaxClientWidth)
-    {
-        /* Need horizontal scrollbar */
-        WindowStyle |= WS_HSCROLL;
-
-        PrefContext->MixerWindow->ContentWidth = ContentWidth;
-        PrefContext->MixerWindow->ClientWidth  = MaxClientWidth;
-
-        /* Limit the visible client width */
-        PrefContext->MixerWindow->rect.right = PrefContext->MixerWindow->rect.left + MaxClientWidth;
-		
-        /* Reserve room for the horizontal scrollbar */
-        PrefContext->MixerWindow->rect.bottom += GetSystemMetrics(SM_CYHSCROLL);
-    }
-    else
-    {
-        /* No horizontal scrollbar needed */
-        WindowStyle &= ~WS_HSCROLL;
-
-        PrefContext->MixerWindow->ContentWidth = ContentWidth;
-        PrefContext->MixerWindow->ClientWidth  = ContentWidth;
-    }
-    PrefContext->MixerWindow->ScrollPos = 0;
-
-    SetWindowLongPtr(PrefContext->MixerWindow->hWnd, GWL_STYLE, WindowStyle);
-    SetWindowPos(PrefContext->MixerWindow->hWnd, NULL, 0, 0, 0, 0,
-                 SWP_FRAMECHANGED | SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);
-
-    /* Configure or disable the horizontal scrollbar */
-    ScrollInfo.cbSize = sizeof(ScrollInfo);
-    ScrollInfo.fMask  = SIF_RANGE | SIF_POS | SIF_PAGE;
-    ScrollInfo.nMin   = 0;
-    ScrollInfo.nPos   = 0;
-
-    if (ContentWidth > MaxClientWidth)
-    {
-        ScrollInfo.nMax  = ContentWidth;
-        ScrollInfo.nPage = PrefContext->MixerWindow->ClientWidth;
-    }
-    else
-    {
-        ScrollInfo.nMax  = 0;
-        ScrollInfo.nPage = 0;
-    }
-    SetScrollInfo(PrefContext->MixerWindow->hWnd, SB_HORZ, &ScrollInfo, TRUE);
     /* Update the 'Advanced Controls' menu item */
     EnableMenuItem(GetMenu(PrefContext->MixerWindow->hWnd),
                    IDM_ADVANCED_CONTROLS,
                    MF_BYCOMMAND | (PrefContext->MixerWindow->bHasExtendedControls ? MF_ENABLED : MF_GRAYED));
-
-    /* Add some height for the status bar */
-    if (PrefContext->MixerWindow->hStatusBar)
-    {
-        GetWindowRect(PrefContext->MixerWindow->hStatusBar, &statusRect);
-        PrefContext->MixerWindow->rect.bottom += (statusRect.bottom - statusRect.top);
-    }
 
     /* Add height of the 'Advanced' button */
     dy = MulDiv(ADVANCED_BUTTON_HEIGHT, PrefContext->MixerWindow->baseUnit.cy, 8);
     if (PrefContext->MixerWindow->bShowExtendedControls && PrefContext->MixerWindow->bHasExtendedControls)
         PrefContext->MixerWindow->rect.bottom += dy;
 
-    /* now move the window */
-    AdjustWindowRect(&PrefContext->MixerWindow->rect, WS_DLGFRAME | WS_CAPTION | WS_MINIMIZEBOX | WS_SYSMENU | WS_CLIPCHILDREN | WS_CLIPSIBLINGS | WS_VISIBLE, TRUE);
-    SetWindowPos(PrefContext->MixerWindow->hWnd, HWND_TOP, PrefContext->MixerWindow->rect.left, PrefContext->MixerWindow->rect.top, PrefContext->MixerWindow->rect.right - PrefContext->MixerWindow->rect.left, PrefContext->MixerWindow->rect.bottom - PrefContext->MixerWindow->rect.top, SWP_NOMOVE | SWP_NOZORDER);
-
-    /* Move the status bar */
-    if (PrefContext->MixerWindow->hStatusBar)
-    {
-        SetWindowPos(PrefContext->MixerWindow->hStatusBar,
-                     HWND_TOP,
-                     statusRect.left,
-                     PrefContext->MixerWindow->rect.bottom - (statusRect.bottom - statusRect.top),
-                     PrefContext->MixerWindow->rect.right - PrefContext->MixerWindow->rect.left,
-                     statusRect.bottom - statusRect.top,
-                     SWP_NOZORDER);
-    }
+    /* Resize the window and update the horizontal scrollbar */
+    UpdateMixerWindowLayout(PrefContext);
 
     if (PrefContext->MixerWindow->MixerId == RECORD_MIXER)
         LoadStringW(hAppInstance, IDS_SELECT, szBuffer, ARRAYSIZE(szBuffer));

@@ -33,6 +33,16 @@
 
 #define HOTKEY_CTRL_S 1
 
+/*
+ * Minimum width of the mixer window. If the mixer controls are wider than
+ * the work area of the monitor, a horizontal scrollbar is shown and the
+ * window is limited to this width.
+ */
+#define MIXER_WINDOW_MIN_WIDTH 200
+
+/* Number of pixels the mixer controls are scrolled by the scrollbar arrows */
+#define MIXER_HSCROLL_LINE_SIZE 10
+
 typedef enum _WINDOW_MODE
 {
     NORMAL_MODE,
@@ -59,10 +69,10 @@ typedef struct _MIXER_WINDOW
     SIZE baseUnit;
     INT WndPosX;
     INT WndPosY;
-    /* Horizontal scrolling support attempt 1. */
-    INT ScrollPos;
-    INT ContentWidth;
-    INT ClientWidth;
+    /* Horizontal scrolling support */
+    INT ScrollPos;     /* Current horizontal scroll position */
+    INT ContentWidth;  /* Total width of the mixer controls */
+    INT ClientWidth;   /* Width of the visible mixer controls */
 } MIXER_WINDOW, *PMIXER_WINDOW;
 
 extern HINSTANCE hAppInstance;
@@ -186,6 +196,8 @@ AdvancedDlgProc(
  * dialog.c
  */
 VOID LoadDialogCtrls(PPREFERENCES_CONTEXT PrefContext);
+VOID UpdateMixerWindowLayout(PPREFERENCES_CONTEXT PrefContext);
+BOOL UpdateMixerWindowScrollBar(PMIXER_WINDOW MixerWindow);
 VOID UpdateDialogLineSliderControl(PPREFERENCES_CONTEXT PrefContext, LPMIXERLINE Line, DWORD DialogID, DWORD Position);
 VOID UpdateDialogLineSwitchControl(PPREFERENCES_CONTEXT PrefContext, LPMIXERLINE Line, LONG fValue);
 
