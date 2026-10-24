@@ -802,6 +802,13 @@ typedef struct _KPRCB
     ULONG FeatureBitsHigh;
 #endif
 #endif
+
+#if defined(__REACTOS__) && (NTDDI_VERSION < NTDDI_LONGHORN)
+    // The following fields are only present on Vista and later
+    CACHE_DESCRIPTOR Cache[5];
+    ULONG CacheCount;
+#endif
+
 } KPRCB, *PKPRCB;
 
 //
