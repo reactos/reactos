@@ -591,11 +591,11 @@ CcCopyRead (
 BOOLEAN
 NTAPI
 CcCopyWrite (
-    IN PFILE_OBJECT FileObject,
-    IN PLARGE_INTEGER FileOffset,
-    IN ULONG Length,
-    IN BOOLEAN Wait,
-    IN PVOID Buffer)
+    _In_ PFILE_OBJECT FileObject,
+    _In_ PLARGE_INTEGER FileOffset,
+    _In_ ULONG Length,
+    _In_ BOOLEAN Wait,
+    _In_reads_bytes_(Length) PVOID Buffer)
 {
     PROS_VACB Vacb;
     PROS_SHARED_CACHE_MAP SharedCacheMap = FileObject->SectionObjectPointer->SharedCacheMap;
@@ -658,11 +658,13 @@ CcCopyWrite (
                                         VacbLength);
             if (!NT_SUCCESS(Status))
                 ExRaiseStatus(Status);
+
+            /* Tell Cc */
+            CcRosMarkDirtyVacb(Vacb, VacbOffset, VacbLength);
         }
         _SEH2_FINALLY
         {
-            /* Do not mark the VACB as dirty if an exception was raised */
-            CcRosReleaseVacb(SharedCacheMap, Vacb, !_SEH2_AbnormalTermination(), FALSE);
+            CcRosReleaseVacb(SharedCacheMap, Vacb, FALSE, FALSE);
         }
         _SEH2_END;
     }
@@ -807,10 +809,10 @@ CcFastCopyWrite (
 BOOLEAN
 NTAPI
 CcZeroData (
-    IN PFILE_OBJECT FileObject,
-    IN PLARGE_INTEGER StartOffset,
-    IN PLARGE_INTEGER EndOffset,
-    IN BOOLEAN Wait)
+    _In_ PFILE_OBJECT FileObject,
+    _In_ PLARGE_INTEGER StartOffset,
+    _In_ PLARGE_INTEGER EndOffset,
+    _In_ BOOLEAN Wait)
 {
     NTSTATUS Status;
     LARGE_INTEGER WriteOffset;
@@ -920,11 +922,13 @@ CcZeroData (
                                         VacbLength);
             if (!NT_SUCCESS(Status))
                 ExRaiseStatus(Status);
+
+            /* Tell Cc */
+            CcRosMarkDirtyVacb(Vacb, VacbOffset, VacbLength);
         }
         _SEH2_FINALLY
         {
-            /* Do not mark the VACB as dirty if an exception was raised */
-            CcRosReleaseVacb(SharedCacheMap, Vacb, !_SEH2_AbnormalTermination(), FALSE);
+            CcRosReleaseVacb(SharedCacheMap, Vacb, FALSE, FALSE);
         }
         _SEH2_END;
     }
