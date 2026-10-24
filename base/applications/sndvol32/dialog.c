@@ -681,7 +681,7 @@ LoadDialogCtrls(
     WCHAR szBuffer[64];
     HWND hDlgCtrl;
     RECT statusRect;
-	RECT workArea;
+    RECT workArea;
     UINT i;
     LONG dy;
     INT ContentWidth, MaxClientWidth;
@@ -691,7 +691,7 @@ LoadDialogCtrls(
     /* set dialog count to zero */
     PrefContext->MixerWindow->DialogCount = 0;
     PrefContext->MixerWindow->bHasExtendedControls = FALSE;
-	PrefContext->MixerWindow->ScrollPos = 0;
+    PrefContext->MixerWindow->ScrollPos = 0;
     SetRectEmpty(&PrefContext->MixerWindow->rect);
 
     /* enumerate controls */

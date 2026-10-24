@@ -63,7 +63,6 @@ typedef struct _MIXER_WINDOW
     INT ScrollPos;
     INT ContentWidth;
     INT ClientWidth;
-	
 } MIXER_WINDOW, *PMIXER_WINDOW;
 
 extern HINSTANCE hAppInstance;
