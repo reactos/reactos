@@ -1025,7 +1025,7 @@ static BOOL
 IntGetKeyboardDllName(
     _Out_writes_(cchDllName) PWSTR pszDllName,
     _In_ SIZE_T cchDllName,
-    _Inout_z_ PWSTR pszKLID,
+    _Inout_updates_z_(cchKLID) PWSTR pszKLID,
     _In_ SIZE_T cchKLID,
     _In_ LANGID wLangID,
     _Inout_ PUINT puFlags,
