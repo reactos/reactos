@@ -899,8 +899,11 @@ IntPrepareLayoutModule(
     return NULL;
 }
 
-/* Gets the 16-bit offsets of the tables, as NtUserLoadKeyboardLayoutEx expects them:
-   LOWORD is the main table and HIWORD is the NLS table (0 if none). */
+/**
+ * @brief
+ * Gets the 16-bit offsets of the tables, as NtUserLoadKeyboardLayoutEx expects them:
+ * LOWORD is the main table and HIWORD is the NLS table (0 if none).
+ **/
 static BOOL
 IntGetTableOffsets(
     _In_ HMODULE hModule,
