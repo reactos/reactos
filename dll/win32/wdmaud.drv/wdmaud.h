@@ -13,9 +13,9 @@
 
 #include <winuser.h>
 #include <mmddk.h>
-#include <mmebuddy.h>
 #include <ks.h>
 #include <ksmedia.h>
+#include <mmebuddy.h>
 #include <interface.h>
 #include <devioctl.h>
 #include <setupapi.h>

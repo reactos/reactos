@@ -857,7 +857,7 @@ WdmAudControlOpenWave(
     Context.DeviceExtension = (PWDMAUD_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
     Context.DeviceType = DeviceInfo->DeviceType;
 
-    Status = MMixerOpenWave(&MixerContext, DeviceInfo->DeviceIndex, DeviceInfo->DeviceType == WAVE_IN_DEVICE_TYPE, &DeviceInfo->u.WaveFormatEx, CreatePinCallback, &Context, &DeviceInfo->hDevice);
+    Status = MMixerOpenWave(&MixerContext, DeviceInfo->DeviceIndex, DeviceInfo->DeviceType == WAVE_IN_DEVICE_TYPE, &DeviceInfo->u.WaveFormatEx, CreatePinCallback, &Context, &DeviceInfo->hDevice, &DeviceInfo->u.DataRange);
 
     if (Status == MM_STATUS_SUCCESS)
         return SetIrpIoStatus(Irp, STATUS_SUCCESS, sizeof(WDMAUD_DEVICE_INFO));
