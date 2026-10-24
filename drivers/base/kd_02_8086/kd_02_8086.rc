@@ -1,0 +1,5 @@
+#define REACTOS_VERSION_DLL
+#define REACTOS_STR_FILE_DESCRIPTION  "Intel Network Kernel Debug Extensibility Module"
+#define REACTOS_STR_INTERNAL_NAME     "kd_02_8086"
+#define REACTOS_STR_ORIGINAL_FILENAME "kd_02_8086.dll"
+#include <reactos/version.rc>
