@@ -109,7 +109,7 @@ DetailDisk(
     ConResPrintf(StdOut, IDS_DETAIL_INFO_LUN_ID, CurrentDisk->Lun);
 
     LoadStringW(GetModuleHandle(NULL),
-                CurrentDisk->IsBoot ? IDS_STATUS_YES : IDS_STATUS_YES,
+                CurrentDisk->IsBoot ? IDS_STATUS_YES : IDS_STATUS_NO,
                 szBuffer, ARRAYSIZE(szBuffer));
     ConResPrintf(StdOut, IDS_DETAIL_INFO_BOOT_DSK, szBuffer);
 
