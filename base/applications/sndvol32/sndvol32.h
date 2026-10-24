@@ -246,6 +246,10 @@ WriteLineConfig(IN LPTSTR szDeviceName,
 DWORD
 GetStyleValue(VOID);
 
+VOID
+RepaintChildControls(
+    IN HWND hWnd);
+
 /* tray.c */
 
 INT_PTR

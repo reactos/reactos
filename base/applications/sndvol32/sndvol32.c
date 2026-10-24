@@ -554,6 +554,17 @@ DlgPreferencesProc(HWND hwndDlg,
             return TRUE;
         }
 
+        case WM_PAINT:
+        {
+            /*
+             * The dialog paints its background over the child controls, so
+             * they have to be repainted afterwards.
+             */
+            LRESULT lResult = DefWindowProc(hwndDlg, uMsg, wParam, lParam);
+            RepaintChildControls(hwndDlg);
+            return lResult;
+        }
+
         case WM_CLOSE:
         {
             EndDialog(hwndDlg,
