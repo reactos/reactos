@@ -40,7 +40,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(user32);
 #define LANGID_ENGLISH_US MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US)
 #define WCSIEQL(s1, s2) ((LPCVOID)(s1) == (LPCVOID)(s2) || !_wcsicmp((s1), (s2)))
 
-/* procedure ordinals of keyboard layout file */
+/* Procedure ordinals of keyboard layout file */
 #define IFN_KbdLayerDescriptor      MAKEINTRESOURCEA(1)
 #define IFN_KbdNlsLayerDescriptor   MAKEINTRESOURCEA(2)
 #define IFN_KbdLayerRealDllFileNT4  MAKEINTRESOURCEA(3)
