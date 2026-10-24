@@ -904,7 +904,7 @@ IntGetTableOffsets(
         MainOffset = (PBYTE)pfnMain() - (PBYTE)hModule;
         if (MainOffset <= 0 || MainOffset > MAXWORD)
         {
-            ERR("MainOffset: %p\n", (PVOID)MainOffset);
+            ERR("Invalid MainOffset: %p\n", (PVOID)MainOffset);
             _SEH2_YIELD(return FALSE);
         }
 
