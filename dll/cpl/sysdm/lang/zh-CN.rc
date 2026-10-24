@@ -3,7 +3,7 @@
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Chinese (Simplified) resource file
  * TRANSLATORS: Copyright 2009 Jingjing Fu <jingjingf@188.com>
- *              Copyright 2018 Luo Yufan <njlyf2011@hotmail.com>
+ *              Copyright 2018-2026 Luo Yufan <njlyf2011@hotmail.com>
  *              Copyright 2021 Wu Haotian <rigoligo03@gmail.com>
  */
 
@@ -19,7 +19,7 @@ BEGIN
     LTEXT REACTOS_STR_PRODUCT_NAME, IDC_STATIC, 10, 128, 116, 9
     LTEXT "版本", IDC_ROSVERSION, 10, 137, 116, 9
     LTEXT KERNEL_VERSION_REVISION_RC, IDC_STATIC, 10, 146, 110, 9
-    LTEXT "开机时间：", IDC_STATIC, 4, 161, 100, 9
+    LTEXT "系统运行时间：", IDC_STATIC, 4, 161, 100, 9
     LTEXT "", IDC_UPTIME, 10, 173, 116, 9
     LTEXT "计算机：", IDC_STATIC, 124, 116, 100, 9
     LTEXT "", IDC_MACHINELINE1, 130, 128, 118, 9
@@ -41,10 +41,10 @@ BEGIN
     ICON IDI_DEVMGR, IDC_STATIC, 12, 18, 23, 21, SS_ICON
     LTEXT "设备管理器列出了计算机上安装的所有硬件设备。使用“设备管理器”可以更改任何设备的属性。", IDC_STATIC, 42, 18, 204, 24
     PUSHBUTTON "设备管理器(&D)...", IDC_HARDWARE_DEVICE_MANAGER, 154, 48, 90, 15
-    GROUPBOX "添加硬件向导", IDC_STATIC, 6, 79, 244, 61
+    GROUPBOX "硬件向导", IDC_STATIC, 6, 79, 244, 61
     ICON IDI_ADDHW, IDC_STATIC, 12, 90, 23, 21, SS_ICON
-    LTEXT "“添加硬件向导”帮助您安装新的硬件。", IDC_STATIC, 42, 90, 204, 24
-    PUSHBUTTON "添加硬件向导(&H)", IDC_HARDWARE_WIZARD, 154, 120, 90, 15
+    LTEXT "“硬件向导”帮助您安装、卸载、修复、拔出、弹出和配置硬件。", IDC_STATIC, 42, 90, 204, 24
+    PUSHBUTTON "硬件向导(&H)", IDC_HARDWARE_WIZARD, 154, 120, 90, 15
     GROUPBOX "硬件配置文件", IDC_STATIC, 6, 149, 244, 61
     ICON IDI_HARDPROF, IDC_STATIC, 12, 160, 23, 21, SS_ICON
     LTEXT "硬件配置文件为您提供了一种设置和存储不同硬件配置的方法。", IDC_STATIC, 42, 160, 204, 24
@@ -397,7 +397,7 @@ BEGIN
     IDS_INFOREBOOT "您必须重新启动计算机，才能应用更改。"
     IDS_HWPROFILE_CONFIRM_DELETE_TITLE "确认配置文件删除"
     IDS_HWPROFILE_CONFIRM_DELETE "你确定你想要删除的硬件配置文件？“%s”？"
-    IDS_HWPROFILE_ALREADY_IN_USE "配置式名称已在使用。"
+    IDS_HWPROFILE_ALREADY_IN_USE "配置文件名称已在使用。"
     IDS_HWPROFILE_PROFILE "配置文件"
     IDS_HWPROFILE_WARNING "警告"
     IDS_ENVIRONMENT_WARNING "所作的更改将全部丢失，接下来将以文本方式编辑此变量的值。"
