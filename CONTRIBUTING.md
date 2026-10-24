@@ -77,6 +77,16 @@ Our commit style is defined in a __[commit template]__. Use it as a reference or
 - *Respect our __[Coding Style]__ and __[Programming Guidelines]__.*
 - *Do not be afraid to ask questions.* Ask our developers in the [chat].
 
+### AI-generated communication
+
+Reviewer time is limited, and we want to hear from you, not from a tool.
+
+- *Write PR descriptions and commit messages yourself.* Do not generate or rewrite them with AI tools (ChatGPT, Copilot, Claude, etc.). AI drafts edited by a human are not considered to be written by yourself.
+- *Clearly label any other AI-generated text* (issues, review comments, JIRA, forum, chat) and put it in a quote block or `<details>` section. Your message must make sense without it.
+- Translating your own text or fixing spelling and grammar using an AI tool is fine.
+
+Contributions that ignore this may be closed without review.
+
 To amend your commit with your name and e-mail (in any case you've forgot to set your name/e-mail) please take a look at this [guide](https://reactos.org/wiki/ReactOS_Git_For_Dummies#Amending_your_commit_with_name.2FE-mail). To set your name/e-mail globally for future commits that you push, [read this](https://reactos.org/wiki/ReactOS_Git_For_Dummies#Assign_commits_with_your_name_.26_E-mail_automatically).
 
 ## Where To Start?
