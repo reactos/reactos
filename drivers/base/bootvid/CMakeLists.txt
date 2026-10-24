@@ -1,4 +1,9 @@
 
+## Temp HACK: Must match VER_PRODUCT(MAJOR|MINOR)VERSION used by ntoskrnl, until
+## NTDDI_VERSION, DLL_EXPORT_VERSION, and our DLL_EXPORT_VERSION match consistenly.
+remove_definitions(-DDLL_EXPORT_VERSION=${DLL_EXPORT_VERSION})
+add_definitions(-DDLL_EXPORT_VERSION=0x502)
+
 function(add_bootvid _target _configfile)
     cmake_parse_arguments(_bviddata "" "NAME_ON_CD" "SOURCES" ${ARGN})
 
@@ -24,7 +29,7 @@ function(add_bootvid _target _configfile)
     endif()
 
     # Add the common sources, with or without graphics support
-    list(APPEND SOURCE console.c precomp.h)
+    list(APPEND SOURCE console.c vidinit.c precomp.h)
     if(NO_VIDEO_GRAPHICS)
         list(APPEND COMPILE_DEFINITIONS NO_VIDEO_GRAPHICS)
     else()
