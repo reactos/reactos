@@ -35,6 +35,7 @@
 #define TAG_RESOURCE_LIST   'LRtS'
 #define TAG_ADDRESS_MAPPING 'MAtS'
 #define TAG_INQUIRY_DATA    'QItS'
+#define TAG_LUN_EXTENSION   'ELtS'
 #define TAG_REPORT_LUN_DATA 'LRtS'
 #define TAG_SENSE_DATA      'NStS'
 #define TAG_QUEUED_REQUEST  'RQtS'
@@ -67,6 +68,9 @@ typedef struct _DRIVER_INIT_DATA
     HW_INITIALIZATION_DATA HwInitData;
 } DRIVER_INIT_DATA, *PDRIVER_INIT_DATA;
 
+/* Size of HW_INITIALIZATION_DATA before the virtual miniport members were added */
+#define HW_INIT_DATA_SIZE_PHYSICAL  FIELD_OFFSET(HW_INITIALIZATION_DATA, HwFreeAdapterResources)
+
 typedef struct _DRIVER_OBJECT_EXTENSION
 {
     EXTENSION_TYPE ExtensionType;
@@ -91,6 +95,13 @@ typedef struct _MINIPORT
     PHW_INITIALIZATION_DATA InitData;
     PORT_CONFIGURATION_INFORMATION PortConfig;
     PMINIPORT_DEVICE_EXTENSION MiniportExtension;
+
+    /* Answers to the supported control type queries, unclaimed types are never sent */
+    BOOLEAN AdapterControlSupported[ScsiAdapterControlMax];
+    BOOLEAN UnitControlSupported[ScsiUnitControlMax];
+
+    /* No resources, interrupt or DMA adapter, it gets its own stack's device objects instead */
+    BOOLEAN IsVirtual;
 } MINIPORT, *PMINIPORT;
 
 typedef struct _UNIT_DATA
@@ -252,9 +263,16 @@ typedef struct _FDO_DEVICE_EXTENSION
     PKINTERRUPT Interrupt;
     ULONG InterruptIrql;
 
+    /* Message signaled interrupts, Interrupt then holds the first message's object */
+    BOOLEAN MessageInterrupts;
+    PIO_INTERRUPT_MESSAGE_INFO MessageInfo;
+
     KSPIN_LOCK PdoListLock;
     LIST_ENTRY PdoListHead;
     ULONG PdoCount;
+
+    /* BusChangeDetected can arrive at device IRQL, PnP is told from here instead */
+    KDPC BusChangeDpc;
 
     /*
      * HBA timers. The first timer, DPC & callback are for StorPortNotification's RequestTimerCall,
@@ -318,7 +336,18 @@ typedef struct _PDO_DEVICE_EXTENSION
 
     LONG SpecialRequestCounter; /* FIXME: DELETE AFTER DEBUG */
 
+    /* What the miniport keeps about this one unit, if it asked for any */
+    PVOID LunExtension;
+
 } PDO_DEVICE_EXTENSION, *PPDO_DEVICE_EXTENSION;
+
+/* The miniport reaches the address and CDB by offset, so they must follow the SRB */
+typedef struct _EXTENDED_REQUEST
+{
+    STORAGE_REQUEST_BLOCK Srb;
+    STOR_ADDR_BTL8 Address;
+    SRBEX_DATA_SCSI_CDB16 Cdb;
+} EXTENDED_REQUEST, *PEXTENDED_REQUEST;
 
 /* 
  * Storport sends SRBs to HBA, and needs to notify IRPs about IO status.
@@ -341,10 +370,13 @@ typedef struct _QUEUED_REQUEST_REFERENCE
     LIST_ENTRY PdoEntry;
     PPDO_DEVICE_EXTENSION PdoExtension;
     PSCSI_REQUEST_BLOCK Srb;
+    /* Trails this packet, set only when the miniport takes extended SRBs */
+    PEXTENDED_REQUEST ExtendedRequest;
     PIRP Irp;
     PSTOR_SCATTER_GATHER_LIST ScatterGatherList;
     PVOID MappedSystemVa;
-    ULONG TimeoutCounter; // FIXME: Implement timeout with a heap
+    /* TODO: Nothing counts this down yet, a timer should call HwResetBus when it expires */
+    ULONG TimeoutCounter;
     /*
      * Indicates if the current request is outstanding. Some requests are for HBA, and shouldn't be
      * affected by outstanding requests flow controlling.
@@ -362,6 +394,10 @@ typedef struct _QUEUED_REQUEST_REFERENCE
     BOOLEAN DumpSpecialRequest;
     LONG SpecialRequestId;
 } QUEUED_REQUEST_REFERENCE, *PQUEUED_REQUEST_REFERENCE;
+
+/* The SRB format is only known after HwFindAdapter, so every packet has room for both */
+#define REQUEST_REFERENCE_ALLOCATION_SIZE \
+    (sizeof(QUEUED_REQUEST_REFERENCE) + sizeof(EXTENDED_REQUEST))
 
 /* This and next one are for REPORT_LUNS command return structure, seems to be found nowhere else */
 typedef struct _LUN_DESCRIPTOR
@@ -415,6 +451,34 @@ FdoFindLun(
     _In_ ULONG Target,
     _In_ ULONG Lun);
 
+PPDO_DEVICE_EXTENSION
+NTAPI
+FdoFindLunAboveDispatch(
+    _In_ PFDO_DEVICE_EXTENSION FdoExtension,
+    _In_ ULONG Bus,
+    _In_ ULONG Target,
+    _In_ ULONG Lun);
+
+VOID
+NTAPI
+PortFdoLinkPdo(
+    _Inout_ PFDO_DEVICE_EXTENSION FdoExtension,
+    _Inout_ PPDO_DEVICE_EXTENSION PdoExtension);
+
+VOID
+NTAPI
+PortFdoUnlinkPdo(
+    _Inout_ PFDO_DEVICE_EXTENSION FdoExtension,
+    _Inout_ PPDO_DEVICE_EXTENSION PdoExtension);
+
+VOID
+NTAPI
+PortFdoBusChangeDpc(
+    _In_ PKDPC Dpc,
+    _In_opt_ PVOID DeferredContext,
+    _In_opt_ PVOID SystemArgument1,
+    _In_opt_ PVOID SystemArgument2);
+
 NTSTATUS
 NTAPI
 PortFdoScsi(
@@ -462,6 +526,41 @@ MiniportHwInitialize(
 BOOLEAN
 MiniportHwInterrupt(
     _In_ PMINIPORT Miniport);
+
+VOID
+NTAPI
+MiniportFreeAdapterResources(
+    _In_ PMINIPORT Miniport);
+
+BOOLEAN
+NTAPI
+MiniportHwMSInterrupt(
+    _In_ PMINIPORT Miniport,
+    _In_ ULONG MessageId);
+
+VOID
+NTAPI
+MiniportQueryAdapterControl(
+    _In_ PMINIPORT Miniport);
+
+SCSI_ADAPTER_CONTROL_STATUS
+NTAPI
+MiniportAdapterControl(
+    _In_ PMINIPORT Miniport,
+    _In_ SCSI_ADAPTER_CONTROL_TYPE ControlType,
+    _In_opt_ PVOID Parameters);
+
+VOID
+NTAPI
+MiniportQueryUnitControl(
+    _In_ PMINIPORT Miniport);
+
+SCSI_UNIT_CONTROL_STATUS
+NTAPI
+MiniportUnitControl(
+    _In_ PMINIPORT Miniport,
+    _In_ SCSI_UNIT_CONTROL_TYPE ControlType,
+    _In_opt_ PVOID Parameters);
 
 BOOLEAN
 MiniportStartIo(
@@ -597,6 +696,42 @@ PortCompletionDpc(
     _In_ PVOID Context,
     _In_ PVOID SystemArgument1,
     _In_ PVOID SystemArgument2);
+
+
+/* srbex.c */
+
+VOID
+NTAPI
+StorpBuildUnitAddress(
+    _In_ PPDO_DEVICE_EXTENSION PdoExtension,
+    _Out_ PSTOR_ADDR_BTL8 Address);
+
+BOOLEAN
+NTAPI
+StorpIsExtendedSrb(
+    _In_ PVOID Srb);
+
+PQUEUED_REQUEST_REFERENCE
+NTAPI
+StorpRequestReference(
+    _In_ PSCSI_REQUEST_BLOCK Srb);
+
+PVOID
+NTAPI
+StorpSrbDataBuffer(
+    _In_ PSCSI_REQUEST_BLOCK Srb);
+
+VOID
+NTAPI
+StorpBuildExtendedSrb(
+    _In_ PSCSI_REQUEST_BLOCK Srb,
+    _Out_ PEXTENDED_REQUEST Request);
+
+VOID
+NTAPI
+StorpCompleteExtendedSrb(
+    _In_ PSCSI_REQUEST_BLOCK Srb,
+    _In_ PEXTENDED_REQUEST Request);
 
 
 /* storport.c */
