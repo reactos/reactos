@@ -31,3 +31,8 @@ add_library(wine_dll_canunload dll_canunload.c ${SOURCE})
 add_dependencies(wine_dll_canunload psdk)
 target_compile_definitions(wine_dll_canunload PRIVATE __WINESRC__ _WINE)
 target_include_directories(wine_dll_canunload BEFORE PRIVATE ${REACTOS_SOURCE_DIR}/sdk/include/wine)
+
+add_library(wine_dll_version dll_version.c ${SOURCE})
+add_dependencies(wine_dll_version psdk)
+target_compile_definitions(wine_dll_version PRIVATE __WINESRC__ _WINE)
+target_include_directories(wine_dll_version BEFORE PRIVATE ${REACTOS_SOURCE_DIR}/sdk/include/wine)
