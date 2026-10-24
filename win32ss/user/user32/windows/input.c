@@ -947,8 +947,11 @@ IntGetTableOffsets(
     return FALSE;
 }
 
-/* Returns a handle to the layout file, or NULL on failure. On success, the handles in pMulti
-   (if any) stay open for the caller; on failure, this function has closed them. */
+/**
+ * @brief
+ * Returns a handle to the layout file, or NULL on failure. On success, the handles in
+ * pMulti (if any) stay open for the caller; on failure, this function has closed them.
+ **/
 static HANDLE
 IntLoadKeyboardLayoutTablesAndFile(
     _In_z_ PCWSTR pszLayoutFile,
