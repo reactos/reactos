@@ -117,7 +117,8 @@ typedef struct tagKBDTABLE_MULTI_AUX_ENTRY
 
 #define MAX_LAYOUT_FILENAME 32
 
-typedef struct tagKBDTABLE_MULTI_EX {
+typedef struct tagKBDTABLE_MULTI_EX
+{
     KBDTABLE_MULTI Multi;
     WCHAR szRealDllName[MAX_LAYOUT_FILENAME];
     KBDTABLE_MULTI_AUX_ENTRY AuxEntries[KBDTABLE_MULTI_MAX];
