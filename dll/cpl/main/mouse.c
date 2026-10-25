@@ -770,7 +770,7 @@ SaveCursorScheme(HWND hwndDlg)
     {
         if (i > 0)
             nLength++;
-        nLength += _tcslen(g_CursorData[i].szCursorPath);
+        nLength += (INT)_tcslen(g_CursorData[i].szCursorPath);
     }
     nLength++;
 
@@ -802,7 +802,7 @@ SaveCursorScheme(HWND hwndDlg)
 
     lError = RegSetValueEx(hCuCursorKey, szNewSchemeName, 0,
                            REG_EXPAND_SZ, (LPBYTE)lpSchemeData,
-                           (_tcslen(lpSchemeData) + 1) * sizeof(TCHAR));
+                           (DWORD)((_tcslen(lpSchemeData) + 1) * sizeof(TCHAR)));
 
     RegCloseKey(hCuCursorKey);
     RegCloseKey(hCuKey);
@@ -886,18 +886,21 @@ LoadCursorScheme(LPTSTR lpName, BOOL bSystem)
         INT nLength;
 
         i = 0;
-        while (pEnd)
+        while (pEnd && i < _countof(g_CursorData))
         {
             pEnd = _tcschr(pStart, _T(','));
             if (pEnd)
-                nLength = ((INT_PTR)pEnd - (INT_PTR)pStart) / sizeof(TCHAR);
+                nLength = (INT)(((INT_PTR)pEnd - (INT_PTR)pStart) / sizeof(TCHAR));
             else
-                nLength = _tcslen(pStart);
+                nLength = (INT)_tcslen(pStart);
+
+            if (nLength >= MAX_PATH)
+                nLength = MAX_PATH - 1;
 
             _tcsncpy(g_CursorData[i].szCursorPath, pStart, nLength);
             g_CursorData[i].szCursorPath[nLength] = 0;
 
-            pStart = pStart + (nLength + 1);
+            pStart = pEnd ? (pEnd + 1) : (pStart + nLength);
             i++;
         }
 
@@ -1165,7 +1168,7 @@ ApplyCursorScheme(HWND hwndDlg)
             dwSchemeSource = 1;
         }
 
-        dwNameLength = (_tcslen(szSchemeName) + 1) * sizeof(TCHAR);
+        dwNameLength = (DWORD)((_tcslen(szSchemeName) + 1) * sizeof(TCHAR));
     }
 
     if (RegOpenKeyEx(HKEY_CURRENT_USER, _T("Control Panel\\Cursors"), 0,
@@ -1183,7 +1186,7 @@ ApplyCursorScheme(HWND hwndDlg)
         CompressPath(szTempPath, g_CursorData[i].szCursorPath);
         RegSetValueEx(hCursorKey, g_CursorData[i].lpValueName, 0,
                       REG_EXPAND_SZ, (LPBYTE)szTempPath,
-                      (_tcslen(szTempPath) + 1) * sizeof(TCHAR));
+                      (DWORD)((_tcslen(szTempPath) + 1) * sizeof(TCHAR)));
     }
 
     RegCloseKey(hCursorKey);
