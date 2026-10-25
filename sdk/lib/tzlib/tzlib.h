@@ -23,6 +23,7 @@ typedef struct _REG_TZI_FORMAT
 typedef LONG
 (*PENUM_TIMEZONE_CALLBACK)(
     IN HKEY hZoneKey,
+    IN LPCWSTR TimeZoneKeyName,
     IN PVOID Context OPTIONAL);
 
 BOOL

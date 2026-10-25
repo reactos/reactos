@@ -44,6 +44,7 @@ typedef struct _TIMEZONE_ENTRY
     WCHAR Description[128]; /* 'Display' */
     WCHAR StandardName[32]; /* 'Std' */
     WCHAR DaylightName[32]; /* 'Dlt' */
+    WCHAR TimeZoneKeyName[128];
     REG_TZI_FORMAT TimezoneInfo; /* 'TZI' */
     ULONG Index;
 } TIMEZONE_ENTRY, *PTIMEZONE_ENTRY;
@@ -1679,6 +1680,7 @@ GetLargerTimeZoneEntry(PSETUPDATA SetupData, DWORD Index)
 static LONG
 RetrieveTimeZone(
     IN HKEY hZoneKey,
+    IN LPCWSTR TimeZoneKeyName,
     IN PVOID Context)
 {
     LONG lError;
@@ -1699,6 +1701,7 @@ RetrieveTimeZone(
     StandardNameSize = sizeof(Entry->StandardName);
     DaylightNameSize = sizeof(Entry->DaylightName);
 
+    StringCchCopyW(Entry->TimeZoneKeyName, ARRAYSIZE(Entry->TimeZoneKeyName), TimeZoneKeyName);
     lError = QueryTimeZoneData(hZoneKey,
                                &Entry->Index,
                                &Entry->TimezoneInfo,
@@ -1863,9 +1866,9 @@ ShowTimeZoneList(HWND hwnd, PSETUPDATA SetupData, DWORD dwEntryIndex)
 
 
 static VOID
-SetLocalTimeZone(HWND hwnd, PSETUPDATA SetupData)
+SetLocalTimeZone(HWND hwnd, PSETUPDATA SetupData, BOOL AutoDaylight)
 {
-    TIME_ZONE_INFORMATION TimeZoneInformation;
+    DYNAMIC_TIME_ZONE_INFORMATION TimeZoneInformation;
     PTIMEZONE_ENTRY Entry;
     DWORD dwIndex;
     DWORD i;
@@ -1890,10 +1893,13 @@ SetLocalTimeZone(HWND hwnd, PSETUPDATA SetupData)
            Entry->StandardName);
     wcscpy(TimeZoneInformation.DaylightName,
            Entry->DaylightName);
+    wcscpy(TimeZoneInformation.TimeZoneKeyName,
+           Entry->TimeZoneKeyName);
 
     TimeZoneInformation.Bias = Entry->TimezoneInfo.Bias;
     TimeZoneInformation.StandardBias = Entry->TimezoneInfo.StandardBias;
     TimeZoneInformation.DaylightBias = Entry->TimezoneInfo.DaylightBias;
+    TimeZoneInformation.DynamicDaylightTimeDisabled = !AutoDaylight;
 
     memcpy(&TimeZoneInformation.StandardDate,
            &Entry->TimezoneInfo.StandardDate,
@@ -1903,7 +1909,7 @@ SetLocalTimeZone(HWND hwnd, PSETUPDATA SetupData)
            sizeof(SYSTEMTIME));
 
     /* Set time zone information */
-    SetTimeZoneInformation(&TimeZoneInformation);
+    SetDynamicTimeZoneInformation(&TimeZoneInformation);
 }
 
 
@@ -1967,9 +1973,8 @@ WriteDateTimeSettings(HWND hwndDlg, PSETUPDATA SetupData)
 
     GetLocalSystemTime(hwndDlg, SetupData);
     SetLocalTimeZone(GetDlgItem(hwndDlg, IDC_TIMEZONELIST),
-                     SetupData);
-
-    SetAutoDaylight(SendDlgItemMessage(hwndDlg, IDC_AUTODAYLIGHT,
+                    SetupData,
+                    SendDlgItemMessage(hwndDlg, IDC_AUTODAYLIGHT,
                                        BM_GETCHECK, 0, 0) != BST_UNCHECKED);
     if (!SetSystemLocalTime(hwndDlg, SetupData))
     {

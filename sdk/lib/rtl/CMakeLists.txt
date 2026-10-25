@@ -155,6 +155,7 @@ list(APPEND SOURCE_VISTA
     runonce.c
     slist.c
     srw.c
+    timezone.c
     waitaddress.c
     wow64.c)
 
