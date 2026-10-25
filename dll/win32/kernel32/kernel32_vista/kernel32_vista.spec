@@ -72,6 +72,7 @@
 @ stdcall GetProductInfo(long long long long ptr) ntdll_vista.RtlGetProductInfo
 @ stdcall GetSystemTimePreciseAsFileTime(ptr) kernel32.GetSystemTimeAsFileTime
 @ stdcall GetThreadDescription(ptr ptr) # Win 10
+@ stdcall SetDynamicTimeZoneInformation(ptr)
 @ stdcall SetThreadDescription(ptr wstr) # Win 10
 @ stdcall SetThreadpoolThreadMaximum(ptr long) ntdll_vista.TpSetPoolMaxThreads
 @ stdcall SetThreadpoolThreadMinimum(ptr long) ntdll_vista.TpSetPoolMinThreads

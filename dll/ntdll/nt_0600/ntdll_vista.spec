@@ -49,6 +49,9 @@
 
 @ stdcall RtlIsNameInExpression(ptr ptr long ptr)
 
+@ stdcall RtlQueryDynamicTimeZoneInformation(ptr)
+@ stdcall RtlSetDynamicTimeZoneInformation(long)
+
 @ stdcall TpAllocCleanupGroup(ptr)
 @ stdcall TpAllocIoCompletion(ptr ptr ptr ptr ptr)
 @ stdcall TpAllocPool(ptr ptr)

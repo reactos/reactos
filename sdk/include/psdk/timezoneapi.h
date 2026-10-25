@@ -119,7 +119,7 @@ LocalSystemTimeToLocalFileTime(
     _Out_ FILETIME* localFileTime);
 #endif /* NTDDI_VERSION >= NTDDI_WIN10_RS5 */
 
-#if (_WIN32_WINNT >= _WIN32_WINNT_VISTA)
+#if (_WIN32_WINNT >= _WIN32_WINNT_VISTA) || defined(__REACTOS__)
 WINBASEAPI
 BOOL
 WINAPI
