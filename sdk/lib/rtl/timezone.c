@@ -241,6 +241,28 @@ RtlSetTimeZoneInformation(PRTL_TIME_ZONE_INFORMATION TimeZoneInformation)
                                    &TimeZoneInformation->DaylightDate,
                                    sizeof(SYSTEMTIME));
 
+    /* SetTimeZoneInformation does not support dynamic daylight time */
+    WCHAR EmptyString[] = L"";
+    Status = RtlWriteRegistryValue(RTL_REGISTRY_CONTROL,
+                                L"TimeZoneInformation",
+                                L"TimeZoneKeyName",
+                                REG_SZ,
+                                &EmptyString,
+                                sizeof(EmptyString));
+
+    if (!NT_SUCCESS(Status))
+    {
+        return Status;
+    }
+
+    LONG Value = 1;
+    Status = RtlWriteRegistryValue(RTL_REGISTRY_CONTROL,
+                                   L"TimeZoneInformation",
+                                   L"DynamicDaylightTimeDisabled",
+                                   REG_DWORD,
+                                   &Value,
+                                   sizeof(Value));
+
     return Status;
 }
 

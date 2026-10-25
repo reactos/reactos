@@ -6633,8 +6633,13 @@ LANGID WINAPI DECLSPEC_HOTPATCH SetThreadUILanguage( LANGID langid )
  */
 DWORD WINAPI DECLSPEC_HOTPATCH GetTimeZoneInformation( TIME_ZONE_INFORMATION *info )
 {
+#ifdef __REACTOS__
+    RTL_TIME_ZONE_INFORMATION tzinfo;
+    DWORD ret = RtlQueryTimeZoneInformation( &tzinfo );
+#else
     DYNAMIC_TIME_ZONE_INFORMATION tzinfo;
     DWORD ret = GetDynamicTimeZoneInformation( &tzinfo );
+#endif
 
     memcpy( info, &tzinfo, sizeof(*info) );
     return ret;
