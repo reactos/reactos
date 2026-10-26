@@ -213,6 +213,8 @@ typedef struct _ROS_VACB
     /* Page out in progress */
     BOOLEAN PageOut;
     ULONG MappedCount;
+    /* One bit per dirty page of the view, protected by CacheMapLock. */
+    ULONG64 DirtyPageMap;
     /* Entry in the list of VACBs for this shared cache map. */
     LIST_ENTRY CacheMapVacbListEntry;
     /* Entry in the list of VACBs which are dirty. */
@@ -227,6 +229,8 @@ typedef struct _ROS_VACB
     PROS_SHARED_CACHE_MAP SharedCacheMap;
     /* Pointer to the next VACB in a chain. */
 } ROS_VACB, *PROS_VACB;
+
+C_ASSERT((VACB_MAPPING_GRANULARITY / PAGE_SIZE) <= 64);
 
 typedef struct _INTERNAL_BCB
 {
@@ -357,12 +361,14 @@ CcInitCacheZeroPage(VOID);
 
 VOID
 CcRosMarkDirtyVacb(
-    PROS_VACB Vacb);
+    _In_ PROS_VACB Vacb,
+    _In_ ULONG VacbOffset,
+    _In_ ULONG Length);
 
 BOOLEAN
 CcRosUnmarkDirtyVacb(
-    PROS_VACB Vacb,
-    BOOLEAN LockViews);
+    _In_ PROS_VACB Vacb,
+    _In_ BOOLEAN LockViews);
 
 NTSTATUS
 CcRosFlushDirtyPages(
@@ -380,11 +386,10 @@ CcRosReferenceCache(PFILE_OBJECT FileObject);
 
 NTSTATUS
 CcRosReleaseVacb(
-    PROS_SHARED_CACHE_MAP SharedCacheMap,
-    PROS_VACB Vacb,
-    BOOLEAN Dirty,
-    BOOLEAN Mapped
-);
+    _In_ PROS_SHARED_CACHE_MAP SharedCacheMap,
+    _In_ PROS_VACB Vacb,
+    _In_ BOOLEAN Dirty,
+    _In_ BOOLEAN Mapped);
 
 NTSTATUS
 CcRosRequestVacb(
