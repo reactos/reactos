@@ -494,10 +494,16 @@ WdmAudSetWaveDeviceFormatByMMixer(
     Result = GetSoundDeviceType(SoundDevice, &DeviceType);
     SND_ASSERT( Result == MMSYSERR_NOERROR );
 
+    Instance->WaveFormatEx = *WaveFormat;
     bWaveIn = (DeviceType == WAVE_IN_DEVICE_TYPE ? TRUE : FALSE);
 
-    if (MMixerOpenWave(&MixerContext, DeviceId, bWaveIn, WaveFormat, NULL, NULL, &Instance->Handle) == MM_STATUS_SUCCESS)
+    if (MMixerOpenWave(&MixerContext, DeviceId, bWaveIn, WaveFormat, NULL, NULL, &Instance->Handle, &Instance->DataRange) == MM_STATUS_SUCCESS)
     {
+        /* Check whether we need to perform formats conversion */
+        Instance->DoResampling = (Instance->WaveFormatEx.nChannels != Instance->DataRange.MaximumChannels) ||
+                                 (Instance->WaveFormatEx.nSamplesPerSec > Instance->DataRange.MaximumSampleFrequency) ||
+                                 (Instance->WaveFormatEx.wBitsPerSample != Instance->DataRange.MaximumBitsPerSample);
+
         if (DeviceType == WAVE_OUT_DEVICE_TYPE)
         {
             MMixerSetWaveStatus(&MixerContext, Instance->Handle, KSSTATE_ACQUIRE);
