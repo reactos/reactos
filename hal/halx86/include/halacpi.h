@@ -24,6 +24,27 @@ HalpAcpiGetTable(
     IN ULONG Signature
 );
 
+/* The Fixed ACPI Description Table, parsed at phase 0 */
+extern FADT HalpFixedAcpiDescTable;
+
+/* acpi/irqtrans.c */
+CODE_SEG("PAGE")
+NTSTATUS
+NTAPI
+HalpQueryPicLineTranslator(
+    _Out_writes_bytes_(Size) PVOID Interface,
+    _In_ ULONG Size,
+    _Out_ PULONG Length
+);
+
+/* acpi/mmconfig.c */
+CODE_SEG("INIT")
+NTSTATUS
+NTAPI
+HalpPublishMmConfigRanges(
+    VOID
+);
+
 CODE_SEG("INIT")
 NTSTATUS
 NTAPI
