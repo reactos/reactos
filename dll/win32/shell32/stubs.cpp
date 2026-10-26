@@ -317,36 +317,6 @@ SheChangeDirExA(LPSTR lpDir)
  */
 EXTERN_C BOOL
 WINAPI
-SHInvokePrinterCommandW(HWND hwnd,
-                        UINT uAction,
-                        LPCWSTR lpBuf1,
-                        LPCWSTR lpBuf2,
-                        BOOL fModal)
-{
-    FIXME("SHInvokePrinterCommandW() stub\n");
-    return FALSE;
-}
-
-/*
- * Unimplemented
- */
-EXTERN_C BOOL
-WINAPI
-SHInvokePrinterCommandA(HWND hwnd,
-                        UINT uAction,
-                        LPCSTR lpBuf1,
-                        LPCSTR lpBuf2,
-                        BOOL fModal)
-{
-    FIXME("SHInvokePrinterCommandA() stub\n");
-    return FALSE;
-}
-
-/*
- * Unimplemented
- */
-EXTERN_C BOOL
-WINAPI
 SHCreateProcessAsUserW(PSHCREATEPROCESSINFOW pscpi)
 {
     FIXME("SHCreateProcessAsUserW() stub\n");
