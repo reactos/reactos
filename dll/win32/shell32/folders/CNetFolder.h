@@ -28,7 +28,8 @@ class CNetFolder :
     public CComCoClass<CNetFolder, &CLSID_NetworkPlaces>,
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
     public IShellFolder2,
-    public IPersistFolder2
+    public IPersistFolder2,
+    public IDropTarget
 {
     private:
         /* both paths are parsible from the desktop */
@@ -67,6 +68,12 @@ class CNetFolder :
         // IPersistFolder2
         STDMETHOD(GetCurFolder)(PIDLIST_ABSOLUTE * pidl) override;
 
+        // IDropTarget
+        STDMETHOD(DragEnter)(IDataObject * dataObj, DWORD grfKeyState, POINTL pt, DWORD * pdwEffect) override;
+        STDMETHOD(DragOver)(DWORD grfKeyState, POINTL point, DWORD * pdwEffect) override;
+        STDMETHOD(DragLeave)() override;
+        STDMETHOD(Drop)(IDataObject * dataObj, DWORD grfKeyState, POINTL pt, DWORD * pdwEffect) override;
+
         DECLARE_REGISTRY_RESOURCEID(IDR_NETWORKPLACES)
         DECLARE_NOT_AGGREGATABLE(CNetFolder)
 
@@ -78,6 +85,7 @@ class CNetFolder :
         COM_INTERFACE_ENTRY_IID(IID_IPersistFolder, IPersistFolder)
         COM_INTERFACE_ENTRY_IID(IID_IPersistFolder2, IPersistFolder2)
         COM_INTERFACE_ENTRY_IID(IID_IPersist, IPersist)
+        COM_INTERFACE_ENTRY_IID(IID_IDropTarget, IDropTarget)
         END_COM_MAP()
 };
 
