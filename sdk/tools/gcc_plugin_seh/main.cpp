@@ -10,6 +10,8 @@
 #include <plugin-version.h>
 #include <function.h>
 #include <tree.h>
+#include <stringpool.h>
+#include <attribs.h>
 #include <c-family/c-pragma.h>
 #include <c-family/c-common.h>
 
@@ -51,6 +53,7 @@ struct seh_function
 {
     bool unwind;
     bool except;
+    bool no_reorder;
     tree asm_header_text;
     tree asm_header;
     size_t count;
@@ -59,6 +62,7 @@ struct seh_function
     seh_function(struct function* fun)
         : unwind(false)
         , except(false)
+        , no_reorder(false)
         , count(0)
     {
         /* Reserve space for our header statement */
@@ -108,6 +112,35 @@ mark_seh_function_noinline(void)
 
     DECL_UNINLINABLE(fndecl) = 1;
     DECL_DECLARED_INLINE_P(fndecl) = 0;
+}
+
+/*
+ * The scope table records reference the local labels __seh2$$begin_try__
+ * and __seh2$$end_try__ by their final addresses. Optimizations that move
+ * code across those labels can emit the end label before the begin label,
+ * which inverts the [BeginAddress, EndAddress) interval that
+ * __C_specific_handler matches exception scopes against:
+ *  - basic block reordering (-freorder-blocks)
+ *  - induction variable optimizations (-fivopts), which can rotate loops
+ *    containing a try block
+ * Keep functions with SEH out of those.
+ */
+static
+void
+mark_seh_function_no_reorder(void)
+{
+    tree fndecl = current_function_decl;
+
+    if (fndecl == NULL_TREE)
+        return;
+
+    tree opts = NULL_TREE;
+    for (const char* flag : { "-fno-reorder-blocks", "-fno-ivopts" })
+        opts = chainon(opts, build_tree_list(NULL_TREE,
+                   build_string(strlen(flag), flag)));
+    tree attr = build_tree_list(get_identifier("optimize"), opts);
+
+    decl_attributes(&fndecl, attr, 0);
 }
 
 static
@@ -165,6 +198,13 @@ handle_seh_pragma(cpp_reader* UNUSED parser)
 
     /* Keep handlerdata generation canonical: one SEH block per function. */
     mark_seh_function_noinline();
+
+    /* Keep scope table intervals ordered (once per function is enough). */
+    if (!seh_fun->no_reorder)
+    {
+        mark_seh_function_no_reorder();
+        seh_fun->no_reorder = true;
+    }
 }
 
 static
