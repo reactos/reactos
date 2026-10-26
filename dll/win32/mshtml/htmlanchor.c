@@ -18,13 +18,21 @@
 
 #include "mshtml_private.h"
 
+#ifdef __REACTOS__
+struct HTMLAnchorElement {
+#else
 typedef struct {
+#endif
     HTMLElement element;
 
     IHTMLAnchorElement IHTMLAnchorElement_iface;
 
     nsIDOMHTMLAnchorElement *nsanchor;
+#ifdef __REACTOS__
+};
+#else
 } HTMLAnchorElement;
+#endif
 
 static HRESULT navigate_href_new_window(HTMLElement *element, nsAString *href_str, const WCHAR *target)
 {
