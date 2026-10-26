@@ -15,8 +15,8 @@
 
 typedef struct _APINFO
 {
-    DECLSPEC_ALIGN(PAGE_SIZE) KIDTENTRY Idt[256];
     DECLSPEC_ALIGN(PAGE_SIZE) KGDTENTRY Gdt[128];
+    DECLSPEC_ALIGN(PAGE_SIZE) KIDTENTRY Idt[256];
     DECLSPEC_ALIGN(16) UINT8 NMIStackData[DOUBLE_FAULT_STACK_SIZE];
     KIPCR Pcr;
     ETHREAD Thread;
@@ -39,6 +39,7 @@ NTAPI
 KeStartAllProcessors(VOID)
 {
     PVOID KernelStack, DPCStack;
+    ULONG_PTR StackTop;
     PAPINFO APInfo;
     ULONG ProcessorCount;
     ULONG MaximumProcessors;
@@ -92,6 +93,8 @@ KeStartAllProcessors(VOID)
         __sgdt(&bspGdt.Limit);
         __sidt(&bspIdt.Limit);
         RtlCopyMemory(&APInfo->Gdt, (PVOID)bspGdt.Base, bspGdt.Limit + 1);
+
+        // Each processor gets its own IDT, seeded with the boot processor's
         RtlCopyMemory(&APInfo->Idt, (PVOID)bspIdt.Base, bspIdt.Limit + 1);
 
         KiSetGdtDescriptorBase(KiGetGdtEntry(&APInfo->Gdt, KGDT_R0_PCR), (ULONG_PTR)&APInfo->Pcr);
@@ -102,11 +105,34 @@ KeStartAllProcessors(VOID)
         // Clear TSS Busy flag (aka set the type to "TSS (Available)")
         KiGetGdtEntry(&APInfo->Gdt, KGDT_TSS)->HighWord.Bits.Type = I386_TSS;
 
-        APInfo->TssDoubleFault.Esp0 = (ULONG_PTR)&APInfo->NMIStackData;
-        APInfo->TssDoubleFault.Esp = (ULONG_PTR)&APInfo->NMIStackData;
+        // Initialize the TSS itself, not just its GDT entry
+        KiInitializeTSS2(&APInfo->Tss, KiGetGdtEntry(&APInfo->Gdt, KGDT_TSS));
+        KiInitializeTSS(&APInfo->Tss);
 
-        APInfo->TssNMI.Esp0 = (ULONG_PTR)&APInfo->NMIStackData;
-        APInfo->TssNMI.Esp = (ULONG_PTR)&APInfo->NMIStackData;
+        // Double fault and NMI task gates load everything from these TSSs
+        StackTop = (ULONG_PTR)&APInfo->NMIStackData[sizeof(APInfo->NMIStackData)];
+
+        KiInitializeTSS(&APInfo->TssDoubleFault);
+        APInfo->TssDoubleFault.CR3 = __readcr3();
+        APInfo->TssDoubleFault.Esp0 = StackTop;
+        APInfo->TssDoubleFault.Esp = StackTop;
+        APInfo->TssDoubleFault.Eip = PtrToUlong(KiTrap08);
+        APInfo->TssDoubleFault.Cs = KGDT_R0_CODE;
+        APInfo->TssDoubleFault.Fs = KGDT_R0_PCR;
+        APInfo->TssDoubleFault.Ss = Ke386GetSs();
+        APInfo->TssDoubleFault.Es = KGDT_R3_DATA | RPL_MASK;
+        APInfo->TssDoubleFault.Ds = KGDT_R3_DATA | RPL_MASK;
+
+        KiInitializeTSS(&APInfo->TssNMI);
+        APInfo->TssNMI.CR3 = __readcr3();
+        APInfo->TssNMI.Esp0 = StackTop;
+        APInfo->TssNMI.Esp = StackTop;
+        APInfo->TssNMI.Eip = PtrToUlong(KiTrap02);
+        APInfo->TssNMI.Cs = KGDT_R0_CODE;
+        APInfo->TssNMI.Fs = KGDT_R0_PCR;
+        APInfo->TssNMI.Ss = Ke386GetSs();
+        APInfo->TssNMI.Es = KGDT_R3_DATA | RPL_MASK;
+        APInfo->TssNMI.Ds = KGDT_R3_DATA | RPL_MASK;
 
         // Fill the processor state
         PKPROCESSOR_STATE ProcessorState = &APInfo->Pcr.Prcb->ProcessorState;
@@ -140,8 +166,8 @@ KeStartAllProcessors(VOID)
 
         // Update the LOADER_PARAMETER_BLOCK structure for the new processor
         KeLoaderBlock->KernelStack = (ULONG_PTR)KernelStack;
-        KeLoaderBlock->Prcb = (ULONG_PTR)&APInfo->Pcr.Prcb;
-        KeLoaderBlock->Thread = (ULONG_PTR)&APInfo->Pcr.Prcb->IdleThread;
+        KeLoaderBlock->Prcb = (ULONG_PTR)&APInfo->Pcr.PrcbData;
+        KeLoaderBlock->Thread = (ULONG_PTR)&APInfo->Thread;
 
         // Start the CPU
         DPRINT("Attempting to Start a CPU with number: %lu\n", ProcessorCount);

@@ -392,8 +392,13 @@ FORCEINLINE
 VOID
 KeFlushProcessTb(VOID)
 {
+#ifdef CONFIG_SMP
+    /* Other processors may still cache the reused hyperspace and system PTEs */
+    KeFlushEntireTb(TRUE, TRUE);
+#else
     /* Flush the TLB by resetting CR3 */
     __writecr3(__readcr3());
+#endif
 }
 
 FORCEINLINE
@@ -457,6 +462,18 @@ KiSetTebBase(PKPCR Pcr, PNT_TIB TebAddress)
     Pcr->NtTib.Self = TebAddress;
     Ke386SetGdtEntryBase(&Pcr->GDT[KGDT_R3_TEB / sizeof(KGDTENTRY)], TebAddress);
 }
+
+VOID
+NTAPI
+KiInitializeTSS(
+    _Inout_ PKTSS Tss);
+
+CODE_SEG("INIT")
+VOID
+NTAPI
+KiInitializeTSS2(
+    _Inout_ PKTSS Tss,
+    _Inout_opt_ PKGDTENTRY TssEntry);
 
 CODE_SEG("INIT")
 VOID
@@ -1019,6 +1036,11 @@ KiGetUserModeStackAddress(void)
 {
     return &(KeGetCurrentThread()->TrapFrame->HardwareEsp);
 }
+
+BOOLEAN
+KiProcessorFreezeHandler(
+    _In_ PKTRAP_FRAME TrapFrame,
+    _In_opt_ PKEXCEPTION_FRAME ExceptionFrame);
 
 #ifdef __cplusplus
 } // extern "C"
