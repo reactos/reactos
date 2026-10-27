@@ -553,7 +553,7 @@ co_UserLoadKbdLayout(
         return NULL;
     }
 
-    // Up to Language Identifiers..
+    // Retrieve the language identifier.
     // NOTE: Do this before creating any object, so that a failure here leaks nothing.
     if (!NT_SUCCESS(RtlUnicodeStringToInteger(pustrKLID, 16, (PULONG)&lCid)))
     {
