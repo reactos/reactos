@@ -1185,7 +1185,7 @@ HANDLE FASTCALL IntVerifyKeyboardFileHandle(HANDLE hFile)
                                        (PVOID*)&pFileObject, NULL);
     if (!NT_SUCCESS(Status))
     {
-        ERR("0x%08X for %p\n", Status, hFile);
+        ERR("ObReferenceObjectByHandle(%p) failed, Status 0x%08lx\n", hFile, Status);
         return NULL;
     }
 
