@@ -1218,10 +1218,9 @@ HANDLE FASTCALL IntVerifyKeyboardFileHandle(HANDLE hFile)
     /* Get the canonical name of the system32 directory */
     InitializeObjectAttributes(&ObjectAttributes, (PUNICODE_STRING)&ustrDir,
                                OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE, NULL, NULL);
-    Status = ZwCreateFile(&hDir, FILE_LIST_DIRECTORY | SYNCHRONIZE, &ObjectAttributes,
-                          &IoStatusBlock, NULL, FILE_ATTRIBUTE_DIRECTORY,
-                          FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
-                          FILE_OPEN, FILE_DIRECTORY_FILE | FILE_SYNCHRONOUS_IO_NONALERT, NULL, 0);
+    Status = ZwOpenFile(&hDir, FILE_LIST_DIRECTORY | SYNCHRONIZE, &ObjectAttributes,
+                        &IoStatusBlock, FILE_SHARE_READ | FILE_SHARE_WRITE,
+                        FILE_DIRECTORY_FILE | FILE_SYNCHRONOUS_IO_NONALERT);
     if (!NT_SUCCESS(Status))
     {
         ERR("ZwOpenFile(%wZ) failed, Status 0x%08lx\n", &ustrDir, Status);
