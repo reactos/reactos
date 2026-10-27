@@ -891,7 +891,7 @@ IntPrepareLayoutModule(
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        ERR("Exception caught! Status: 0x%x\n", _SEH2_GetExceptionCode());
+        ERR("Exception caught! Status: 0x%lx\n", _SEH2_GetExceptionCode());
     }
     _SEH2_END;
 
