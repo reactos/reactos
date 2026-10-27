@@ -1440,7 +1440,7 @@ NtUserLoadKeyboardLayoutEx(
     WCHAR Buffer[KL_NAMELENGTH];
     UNICODE_STRING uszSafeKLID;
     PWINSTATION_OBJECT pWinSta;
-    HANDLE hSafeFile = NULL; /* Kernel handle made from hFile. Closed here. */
+    HANDLE hSafeFile = NULL; /* Local kernel handle duplicated from hFile */
     HANDLE ahSafeAuxFile[KBDTABLE_MULTI_MAX] = { NULL }; /* Ditto, for the aux files */
     KBDTABLE_MULTI_EX multi;
     ULONG iTable;
