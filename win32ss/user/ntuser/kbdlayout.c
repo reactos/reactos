@@ -1211,7 +1211,7 @@ HANDLE FASTCALL IntVerifyKeyboardFileHandle(HANDLE hFile)
     Status = IntQueryHandleName(hKernelFile, &Names[1]);
     if (!NT_SUCCESS(Status))
     {
-        ERR("0x%08X for %p\n", Status, hFile);
+        ERR("IntQueryHandleName(%p) failed, Status 0x%08lx\n", hFile, Status);
         goto Failure;
     }
 
