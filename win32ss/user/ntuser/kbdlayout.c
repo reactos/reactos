@@ -1203,7 +1203,7 @@ HANDLE FASTCALL IntVerifyKeyboardFileHandle(HANDLE hFile)
     ObDereferenceObject(pFileObject);
     if (!NT_SUCCESS(Status))
     {
-        ERR("0x%08X for %p\n", Status, hFile);
+        ERR("ObOpenObjectByPointer(%p) failed, Status 0x%08lx\n", hFile, Status);
         return NULL;
     }
 
