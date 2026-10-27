@@ -1441,7 +1441,7 @@ NtUserLoadKeyboardLayoutEx(
     UNICODE_STRING uszSafeKLID;
     PWINSTATION_OBJECT pWinSta;
     HANDLE hKernelFile = NULL; /* Local kernel handle duplicated from hFile */
-    HANDLE ahSafeAuxFile[KBDTABLE_MULTI_MAX] = { NULL }; /* Ditto, for the aux files */
+    HANDLE ahKernelAuxFile[KBDTABLE_MULTI_MAX] = { NULL }; /* Ditto, for the aux files */
     KBDTABLE_MULTI_EX multi;
     ULONG iTable;
 
@@ -1499,8 +1499,8 @@ NtUserLoadKeyboardLayoutEx(
         if (!hAuxFile || hAuxFile == INVALID_HANDLE_VALUE)
             continue;
 
-        ahSafeAuxFile[iTable] = IntVerifyKeyboardFileHandle(hAuxFile);
-        if (!ahSafeAuxFile[iTable])
+        ahKernelAuxFile[iTable] = IntVerifyKeyboardFileHandle(hAuxFile);
+        if (!ahKernelAuxFile[iTable])
             goto Quit;
     }
 
@@ -1512,10 +1512,10 @@ Quit:
     /* Close our kernel handles. Never use the (unvalidated) user-supplied nTables here. */
     if (hKernelFile)
         ZwClose(hKernelFile);
-    for (iTable = 0; iTable < RTL_NUMBER_OF(ahSafeAuxFile); ++iTable)
+    for (iTable = 0; iTable < RTL_NUMBER_OF(ahKernelAuxFile); ++iTable)
     {
-        if (ahSafeAuxFile[iTable])
-            ZwClose(ahSafeAuxFile[iTable]);
+        if (ahKernelAuxFile[iTable])
+            ZwClose(ahKernelAuxFile[iTable]);
     }
 
     UserLeave();
