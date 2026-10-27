@@ -378,7 +378,7 @@ Failure:
 /* Loads the image of keyboard layout file. See also KbdUnloadImage below. */
 static PVOID
 KbdLoadImage(
-    _In_ HANDLE hSafeFile,
+    _In_ HANDLE hKernelFile,
     _Out_ PULONG pcbImage)
 {
     NTSTATUS Status;
@@ -390,11 +390,11 @@ KbdLoadImage(
 
     *pcbImage = 0;
 
-    if (!hSafeFile)
+    if (!hKernelFile)
         return NULL;
 
     /* Get the file size */
-    Status = ZwQueryInformationFile(hSafeFile, &IoStatusBlock, &FileInfo,
+    Status = ZwQueryInformationFile(hKernelFile, &IoStatusBlock, &FileInfo,
                                     sizeof(FileInfo), FileStandardInformation);
     if (!NT_SUCCESS(Status))
     {
@@ -415,7 +415,7 @@ KbdLoadImage(
 
     /* Load the file content */
     Offset.QuadPart = 0;
-    Status = ZwReadFile(hSafeFile, NULL, NULL, NULL, &IoStatusBlock, pvRaw, cbRaw, &Offset, NULL);
+    Status = ZwReadFile(hKernelFile, NULL, NULL, NULL, &IoStatusBlock, pvRaw, cbRaw, &Offset, NULL);
     if (!NT_SUCCESS(Status) || IoStatusBlock.Information != cbRaw)
     {
         ERR("ZwReadFile failed: 0x%08X (read %Iu of %lu)\n", Status, IoStatusBlock.Information,
@@ -451,7 +451,7 @@ KbdIsRangeInImage(_In_ ULONG off, _In_ SIZE_T cb, _In_ ULONG cbImage)
 /* Loads keyboard layout DLL and gets address to KbdTables */
 static BOOL
 UserLoadKbdDll(
-    _In_ HANDLE hSafeFile,
+    _In_ HANDLE hKernelFile,
     _In_ ULONG offTable,
     _Out_ HANDLE *phModule,
     _Out_ PULONG pcbImage,
@@ -465,7 +465,7 @@ UserLoadKbdDll(
         return FALSE;
 
     /* Load keyboard layout DLL */
-    *phModule = KbdLoadImage(hSafeFile, &cbImage);
+    *phModule = KbdLoadImage(hKernelFile, &cbImage);
     if (!(*phModule))
         return FALSE;
 
@@ -496,7 +496,7 @@ UserLoadKbdDll(
 /* Loads keyboard layout DLL and creates KBDFILE object */
 static PKBDFILE
 UserLoadKbdFile(
-    _In_ HANDLE hSafeFile,
+    _In_ HANDLE hKernelFile,
     _In_ ULONG offTable,
     _In_ const UNICODE_STRING* pwszKLID)
 {
@@ -513,7 +513,7 @@ UserLoadKbdFile(
     _swprintf(pkf->awchKF, L"%wZ", pwszKLID); /* Set keyboard layout name */
 
     /* Load keyboard file now */
-    if (!UserLoadKbdDll(hSafeFile, offTable, &pkf->hBase, &pkf->Size,
+    if (!UserLoadKbdDll(hKernelFile, offTable, &pkf->hBase, &pkf->Size,
                         &pkf->pKbdTbl, &pkf->pKbdNlsTbl))
     {
         ERR("Failed to load layout file!\n");
@@ -538,7 +538,7 @@ cleanup:
 /* Loads keyboard layout and creates KL object */
 static PKL
 co_UserLoadKbdLayout(
-    _In_ HANDLE hSafeFile,
+    _In_ HANDLE hKernelFile,
     _In_ ULONG offTable,
     _In_ const UNICODE_STRING* pustrKLID,
     _In_ HKL hKL)
@@ -547,9 +547,9 @@ co_UserLoadKbdLayout(
     CHARSETINFO cs;
     PKL pKl;
 
-    if (!hSafeFile || !offTable)
+    if (!hKernelFile || !offTable)
     {
-        ERR("hSafeFile %p, offTable 0x%08X\n", hSafeFile, offTable);
+        ERR("hKernelFile %p, offTable 0x%08X\n", hKernelFile, offTable);
         return NULL;
     }
 
@@ -570,7 +570,7 @@ co_UserLoadKbdLayout(
     }
 
     pKl->hkl = hKL;
-    pKl->spkf = UserLoadKbdFile(hSafeFile, offTable, pustrKLID);
+    pKl->spkf = UserLoadKbdFile(hKernelFile, offTable, pustrKLID);
 
     /* Dereference keyboard layout */
     UserDereferenceObject(pKl);
@@ -1060,7 +1060,7 @@ PIMEINFOEX FASTCALL co_UserImmLoadLayout(_In_ HKL hKL)
 HKL APIENTRY
 co_IntLoadKeyboardLayoutEx(
     _Inout_ PWINSTATION_OBJECT pWinSta,
-    _In_ HANDLE hSafeFile,
+    _In_ HANDLE hKernelFile,
     _In_opt_ HKL hOldKL,
     _In_ ULONG offTable,
     _In_ PUNICODE_STRING puszSafeKLID,
@@ -1087,7 +1087,7 @@ co_IntLoadKeyboardLayoutEx(
     if (!pNewKL)
     {
         /* It wasn't, so load it. */
-        pNewKL = co_UserLoadKbdLayout(hSafeFile, offTable, puszSafeKLID, hNewKL);
+        pNewKL = co_UserLoadKbdLayout(hKernelFile, offTable, puszSafeKLID, hNewKL);
         if (!pNewKL)
             return NULL;
 
@@ -1440,7 +1440,7 @@ NtUserLoadKeyboardLayoutEx(
     WCHAR Buffer[KL_NAMELENGTH];
     UNICODE_STRING uszSafeKLID;
     PWINSTATION_OBJECT pWinSta;
-    HANDLE hSafeFile = NULL; /* Local kernel handle duplicated from hFile */
+    HANDLE hKernelFile = NULL; /* Local kernel handle duplicated from hFile */
     HANDLE ahSafeAuxFile[KBDTABLE_MULTI_MAX] = { NULL }; /* Ditto, for the aux files */
     KBDTABLE_MULTI_EX multi;
     ULONG iTable;
@@ -1489,8 +1489,8 @@ NtUserLoadKeyboardLayoutEx(
 
     /* Verify file handles. The handles passed in belong to user32, which closes them itself.
        We only work with (and close) our own kernel handles made by the verification. */
-    hSafeFile = IntVerifyKeyboardFileHandle(hFile);
-    if (!hSafeFile)
+    hKernelFile = IntVerifyKeyboardFileHandle(hFile);
+    if (!hKernelFile)
         goto Quit;
     for (iTable = 0; iTable < multi.Multi.nTables; ++iTable) /* nTables < MAX is checked above */
     {
@@ -1506,12 +1506,12 @@ NtUserLoadKeyboardLayoutEx(
 
     /* Load it now */
     pWinSta = IntGetProcessWindowStation(NULL);
-    hRetKL = co_IntLoadKeyboardLayoutEx(pWinSta, hSafeFile, hOldKL, offTable, &uszSafeKLID,
+    hRetKL = co_IntLoadKeyboardLayoutEx(pWinSta, hKernelFile, hOldKL, offTable, &uszSafeKLID,
                                         UlongToHandle(dwNewKL), Flags);
 Quit:
     /* Close our kernel handles. Never use the (unvalidated) user-supplied nTables here. */
-    if (hSafeFile)
-        ZwClose(hSafeFile);
+    if (hKernelFile)
+        ZwClose(hKernelFile);
     for (iTable = 0; iTable < RTL_NUMBER_OF(ahSafeAuxFile); ++iTable)
     {
         if (ahSafeAuxFile[iTable])
