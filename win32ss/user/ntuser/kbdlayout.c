@@ -1196,7 +1196,7 @@ HANDLE FASTCALL IntVerifyKeyboardFileHandle(HANDLE hFile)
         return NULL;
     }
 
-    /* Make our own kernel handle, which user mode cannot close or swap */
+    /* Duplicate the handle for kernel-mode, which user mode cannot close or swap */
     Status = ObOpenObjectByPointer(pFileObject, OBJ_KERNEL_HANDLE, NULL,
                                    FILE_READ_DATA | FILE_READ_ATTRIBUTES | SYNCHRONIZE,
                                    *IoFileObjectType, KernelMode, &hKernelFile);
