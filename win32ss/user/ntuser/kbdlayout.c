@@ -1224,7 +1224,7 @@ HANDLE FASTCALL IntVerifyKeyboardFileHandle(HANDLE hFile)
                           FILE_OPEN, FILE_DIRECTORY_FILE | FILE_SYNCHRONOUS_IO_NONALERT, NULL, 0);
     if (!NT_SUCCESS(Status))
     {
-        ERR("0x%08X for %p\n", Status, hFile);
+        ERR("ZwOpenFile(%wZ) failed, Status 0x%08lx\n", &ustrDir, Status);
         goto Failure;
     }
 
