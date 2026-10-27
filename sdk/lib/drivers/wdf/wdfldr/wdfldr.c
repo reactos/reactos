@@ -816,6 +816,17 @@ WdfVersionBindClass(
         return status;
     }
 
+    /* VetTV: ReferenceClassVersion maps a failed ZwLoadDriver (e.g. class
+     * extension file not reachable yet during boot-driver init) to success,
+     * leaving ClassLibraryInfo NULL. Fail the bind instead of faulting. */
+    if (pClassModule->ClassLibraryInfo == NULL)
+    {
+        DPRINT_ERROR(("Class %S library not loaded, failing bind\n", ClassBindInfo->ClassName));
+        DereferenceClassVersion(ClassBindInfo, BindInfo, *ClientGlobals);
+        ExFreePoolWithTag(pClassClientModule, WDFLDR_TAG);
+        return STATUS_DLL_NOT_FOUND;
+    }
+
     status = ClassLinkInClient(pClassModule, ClassBindInfo, BindInfo, pClassClientModule);
     if (!NT_SUCCESS(status))
     {
