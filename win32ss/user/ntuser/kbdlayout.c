@@ -1148,17 +1148,24 @@ static NTSTATUS IntQueryHandleName(HANDLE hObject, PKBDFILE_NAME pName)
     return ZwQueryObject(hObject, ObjectNameInformation, pName, sizeof(*pName), &cbReturned);
 }
 
-/*
- * hFile is a handle from CreateFile. Accept it only if the file is in system32.
+/**
+ * @brief
+ * Validates that the given user-mode handle corresponds to an opened file in SystemRoot\system32.
+ * If so, duplicates it into a kernel-mode handle.
  *
- * On success this returns a NEW kernel handle (OBJ_KERNEL_HANDLE) to the same file object.
+ * @param[in]   hFile
+ * User-mode handle to a file. Accept it only if the file is in system32.
+ *
+ * @return
+ * On success, returns a NEW kernel handle (OBJ_KERNEL_HANDLE) to the same file object.
  * The caller must release it with ZwClose and must use it, not hFile, for all further I/O:
  * the user-mode handle value can be closed and reused by another thread right after the
  * check. The caller's own handle is never closed here (user32 owns and closes it).
  *
+ * @note
  * Only synchronous file objects are accepted, because KbdLoadImage calls ZwReadFile without
  * an event and relies on the read being complete when it returns.
- */
+ **/
 HANDLE FASTCALL IntVerifyKeyboardFileHandle(HANDLE hFile)
 {
     static const UNICODE_STRING ustrDir = RTL_CONSTANT_STRING(L"\\SystemRoot\\system32");
