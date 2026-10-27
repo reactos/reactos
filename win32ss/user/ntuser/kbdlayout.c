@@ -365,7 +365,7 @@ KbdBuildImage(
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        ERR("Exception in KbdBuildImage!\n");
+        ERR("Exception in KbdBuildImage! Status: 0x%lx\n", _SEH2_GetExceptionCode());
     }
     _SEH2_END;
 
