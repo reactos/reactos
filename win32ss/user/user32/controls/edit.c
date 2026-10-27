@@ -1725,6 +1725,7 @@ static void EDIT_UpdateScrollInfo(EDITSTATE *es)
 	TRACE("SB_VERT, nMin=%d, nMax=%d, nPage=%d, nPos=%d\n",
 		si.nMin, si.nMax, si.nPage, si.nPos);
 #ifdef __REACTOS__
+	/* Unlike WINE, SetScrollInfo is more than just a NtUserSetScrollInfo wrapper on ReactOS. */
 	SetScrollInfo(es->hwndSelf, SB_VERT, &si, TRUE);
 #else
 	NtUserSetScrollInfo(es->hwndSelf, SB_VERT, &si, TRUE);

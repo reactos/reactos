@@ -376,6 +376,7 @@ static void LISTBOX_UpdateScroll( LB_DESCR *descr )
             info.fMask |= SIF_DISABLENOSCROLL;
         if (descr->style & WS_HSCROLL)
 #ifdef __REACTOS__
+            /* Unlike WINE, SetScrollInfo is more than just a NtUserSetScrollInfo wrapper on ReactOS. */
             SetScrollInfo( descr->self, SB_HORZ, &info, TRUE );
 #else
             NtUserSetScrollInfo( descr->self, SB_HORZ, &info, TRUE );
