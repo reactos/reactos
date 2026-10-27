@@ -561,6 +561,8 @@ co_UserLoadKbdLayout(
         return NULL;
     }
 
+    TRACE("Language Identifiers %wZ LCID 0x%x\n", pustrKLID, lCid);
+
     /* Create keyboard layout object */
     pKl = UserCreateObject(gHandleTable, NULL, NULL, NULL, TYPE_KBDLAYOUT, sizeof(KL));
     if (!pKl)
@@ -583,7 +585,6 @@ co_UserLoadKbdLayout(
         return NULL;
     }
 
-    TRACE("Language Identifiers %wZ LCID 0x%x\n", pustrKLID, lCid);
     if (co_IntGetCharsetInfo(lCid, &cs))
     {
        pKl->iBaseCharset = cs.ciCharset;
