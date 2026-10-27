@@ -877,8 +877,8 @@ done:
  */
 static INT
 GetHorizontalScrollDirection(
-    IN PMIXER_WINDOW MixerWindow,
-    IN BOOL bTrackClick)
+    _In_ PMIXER_WINDOW MixerWindow,
+    _In_ BOOL bTrackClick)
 {
     RECT ClientRect;
     POINT Point;
@@ -935,9 +935,9 @@ GetHorizontalScrollDirection(
  */
 static VOID
 ScrollMixerWindowHorizontally(
-    IN PMIXER_WINDOW MixerWindow,
-    IN UINT ScrollCode,
-    IN INT TrackPos)
+    _In_ PMIXER_WINDOW MixerWindow,
+    _In_ UINT ScrollCode,
+    _In_ INT TrackPos)
 {
     RECT ClientRect;
     INT MaxPos, NewPos, Delta;

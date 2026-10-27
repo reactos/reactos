@@ -412,8 +412,8 @@ GetStyleValue(VOID)
 
 static BOOL CALLBACK
 RepaintChildControlProc(
-    IN HWND hwndChild,
-    IN LPARAM lParam)
+    _In_ HWND hwndChild,
+    _In_ LPARAM lParam)
 {
     if (IsWindowVisible(hwndChild))
     {
@@ -429,7 +429,7 @@ RepaintChildControlProc(
 
 VOID
 RepaintChildControls(
-    IN HWND hWnd)
+    _In_ HWND hWnd)
 {
     /*
      * A window paints its background over the area occupied by its child

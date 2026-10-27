@@ -250,7 +250,7 @@ GetStyleValue(VOID);
 
 VOID
 RepaintChildControls(
-    IN HWND hWnd);
+    _In_ HWND hWnd);
 
 /* tray.c */
 

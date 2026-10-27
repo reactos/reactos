@@ -682,7 +682,7 @@ done:
  */
 static INT
 GetAvailableClientWidth(
-    IN HWND hWnd)
+    _In_ HWND hWnd)
 {
     HMONITOR hMonitor;
     MONITORINFO MonitorInfo;
@@ -736,9 +736,9 @@ GetAvailableClientWidth(
  */
 static VOID
 GetWindowFrameSize(
-    IN HWND hWnd,
-    OUT INT *FrameWidth,
-    OUT INT *FrameHeight)
+    _In_ HWND hWnd,
+    _Out_ INT *FrameWidth,
+    _Out_ INT *FrameHeight)
 {
     RECT WindowRect, ClientRect;
     POINT Origin;
@@ -768,8 +768,8 @@ GetWindowFrameSize(
  */
 static BOOL
 SetHorizontalScrollBarEnabled(
-    IN PMIXER_WINDOW MixerWindow,
-    IN BOOL bEnabled)
+    _In_ PMIXER_WINDOW MixerWindow,
+    _In_ BOOL bEnabled)
 {
     LONG_PTR Style;
 
@@ -802,8 +802,8 @@ SetHorizontalScrollBarEnabled(
  */
 static VOID
 UpdateHorizontalScrollBar(
-    IN PMIXER_WINDOW MixerWindow,
-    IN INT ClientWidth)
+    _In_ PMIXER_WINDOW MixerWindow,
+    _In_ INT ClientWidth)
 {
     SCROLLINFO ScrollInfo;
 
@@ -822,16 +822,14 @@ UpdateHorizontalScrollBar(
  */
 VOID
 MoveMixerControls(
-    IN PMIXER_WINDOW MixerWindow,
-    IN INT Delta)
+    _In_ PMIXER_WINDOW MixerWindow,
+    _In_ INT Delta)
 {
     UINT i;
 
+    /* Nothing to do */
     if (Delta == 0)
-    {
-        /* Nothing to do */
         return;
-    }
 
     for (i = 0; i < MixerWindow->WindowCount; i++)
     {
@@ -861,7 +859,7 @@ MoveMixerControls(
  */
 BOOL
 UpdateMixerWindowScrollBar(
-    IN PMIXER_WINDOW MixerWindow)
+    _In_ PMIXER_WINDOW MixerWindow)
 {
     RECT ClientRect;
     INT ClientWidth;
@@ -886,7 +884,7 @@ UpdateMixerWindowScrollBar(
  */
 VOID
 UpdateMixerWindowLayout(
-    IN PPREFERENCES_CONTEXT PrefContext)
+    _In_ PPREFERENCES_CONTEXT PrefContext)
 {
     PMIXER_WINDOW MixerWindow = PrefContext->MixerWindow;
     RECT StatusRect, ClientRect, ContentRect;
