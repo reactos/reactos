@@ -1297,16 +1297,16 @@ MainWindowProc(HWND hwnd,
 
         case WM_SIZE:
         {
-            if (wParam != SIZE_MINIMIZED)
+            if (wParam == SIZE_MINIMIZED)
+                break;
+                
+            MixerWindow = GetWindowData(hwnd, MIXER_WINDOW);
+            if (MixerWindow != NULL && !MixerWindow->bUpdatingLayout)
             {
-                MixerWindow = GetWindowData(hwnd, MIXER_WINDOW);
-                if (MixerWindow != NULL && !MixerWindow->bUpdatingLayout)
-                {
-                    if (UpdateMixerWindowScrollBar(MixerWindow))
-                    {
-                        UpdateMixerWindowLayout(&Preferences);
-                    }
-                }
+                 if (UpdateMixerWindowScrollBar(MixerWindow))
+                 {
+                     UpdateMixerWindowLayout(&Preferences);
+                 }
             }
             break;
         }
