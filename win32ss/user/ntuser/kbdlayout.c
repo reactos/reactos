@@ -239,29 +239,42 @@ DumpKbdLayout(
 #define KBDIMG_TAG 'ibKU'
 #define KBDIMG_MAXSIZE (16 * 1024 * 1024)
 
-#ifndef IMAGE_REL_BASED_ABSOLUTE
-    #define IMAGE_REL_BASED_ABSOLUTE 0
-    #define IMAGE_REL_BASED_HIGHLOW  3
-    #define IMAGE_REL_BASED_DIR64    10
+#ifndef RVA
+    #define RVA(m, b) ((PVOID)((ULONG_PTR)(b) + (ULONG_PTR)(m)))
 #endif
 
+/* Describes the .data section inside the image built by KbdBuildImage */
+typedef struct _KBDIMAGE_INFO
+{
+    ULONG_PTR ImageBase;    /* The base address the pointers in the layout tables are based on */
+    ULONG offData;          /* RVA of the .data section in the image */
+    ULONG cbData;           /* Size of the .data section in the image */
+} KBDIMAGE_INFO, *PKBDIMAGE_INFO;
+
 /* We have to build the image of the keyboard layout file without executing the file,
-   due to security reason */
+   due to security reason.
+
+   For a valid keyboard layout file, the tables (and any data they point to) are all stored in
+   the .data section, so that is the only section we take. The headers and any other sections
+   are not considered, and neither is the base-relocation data: the pointers inside the tables
+   are adjusted later by KbdRebaseTables, using the RVA macro. */
 static PVOID
 KbdBuildImage(
     _In_ PVOID pvRaw,
     _In_ SIZE_T cbRaw,
-    _Out_ PULONG pcbImage)
+    _Out_ PULONG pcbImage,
+    _Out_ PKBDIMAGE_INFO pInfo)
 {
+    static const UCHAR s_DataName[IMAGE_SIZEOF_SHORT_NAME] = ".data";
     PIMAGE_DOS_HEADER pDos = pvRaw;
     PIMAGE_NT_HEADERS pNt;
-    PIMAGE_SECTION_HEADER pSec;
+    PIMAGE_SECTION_HEADER pSec, pData = NULL;
     PBYTE pbRaw = pvRaw;
     PBYTE volatile pbImage = NULL; /* Read in the SEH handler and at Failure */
-    ULONG cbImage, i;
-    ULONG_PTR delta;
+    ULONG cbImage, cbVirt, cbCopy, cbAlloc, i;
 
     *pcbImage = 0;
+    RtlZeroMemory(pInfo, sizeof(*pInfo));
 
     _SEH2_TRY
     {
@@ -280,87 +293,51 @@ KbdBuildImage(
         }
 
         cbImage = pNt->OptionalHeader.SizeOfImage;
-        if (!cbImage || cbImage > KBDIMG_MAXSIZE ||
-            pNt->OptionalHeader.SizeOfHeaders > cbImage ||
-            pNt->OptionalHeader.SizeOfHeaders > cbRaw)
-        {
+        if (!cbImage || cbImage > KBDIMG_MAXSIZE)
             _SEH2_YIELD(return NULL);
-        }
-
-        pbImage = ExAllocatePoolWithTag(PagedPool, cbImage, KBDIMG_TAG);
-        if (!pbImage)
-            _SEH2_YIELD(return NULL);
-
-        RtlZeroMemory(pbImage, cbImage);
-        RtlCopyMemory(pbImage, pbRaw, pNt->OptionalHeader.SizeOfHeaders);
 
         pSec = IMAGE_FIRST_SECTION(pNt);
         if ((PBYTE)(pSec + pNt->FileHeader.NumberOfSections) > pbRaw + cbRaw)
-            _SEH2_YIELD(goto Failure);
+            _SEH2_YIELD(return NULL);
 
+        /* Find the .data section. Any other section is ignored. */
         for (i = 0; i < pNt->FileHeader.NumberOfSections; ++i)
         {
-            ULONG cb = pSec[i].SizeOfRawData;
-            if (pSec[i].Misc.VirtualSize && pSec[i].Misc.VirtualSize < cb)
-                cb = pSec[i].Misc.VirtualSize;
-            if (!cb)
-                continue;
-            if (pSec[i].VirtualAddress > cbImage || cb > cbImage - pSec[i].VirtualAddress ||
-                pSec[i].PointerToRawData > cbRaw || cb > cbRaw - pSec[i].PointerToRawData)
+            if (RtlEqualMemory(pSec[i].Name, s_DataName, IMAGE_SIZEOF_SHORT_NAME))
             {
-                _SEH2_YIELD(goto Failure);
+                pData = &pSec[i];
+                break;
             }
-            RtlCopyMemory(pbImage + pSec[i].VirtualAddress, pbRaw + pSec[i].PointerToRawData, cb);
         }
-
-        delta = (ULONG_PTR)pbImage - (ULONG_PTR)pNt->OptionalHeader.ImageBase;
-        if (delta)
+        if (!pData)
         {
-            PIMAGE_DATA_DIRECTORY pDir =
-                &pNt->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_BASERELOC];
-            ULONG off = pDir->VirtualAddress, end = off + pDir->Size;
-
-            if (!pDir->Size || end < off || end > cbImage)
-                _SEH2_YIELD(goto Failure);
-
-            while (off + sizeof(IMAGE_BASE_RELOCATION) <= end)
-            {
-                PIMAGE_BASE_RELOCATION pBlk = (PIMAGE_BASE_RELOCATION)(pbImage + off);
-                PUSHORT pEnt = (PUSHORT)(pBlk + 1);
-                ULONG n;
-
-                if (pBlk->SizeOfBlock < sizeof(*pBlk) || pBlk->SizeOfBlock > end - off)
-                    _SEH2_YIELD(goto Failure);
-                n = (pBlk->SizeOfBlock - sizeof(*pBlk)) / sizeof(USHORT);
-
-                while (n--)
-                {
-                    USHORT e = *pEnt++;
-                    ULONG rva = pBlk->VirtualAddress + (e & 0xFFF);
-                    switch (e >> 12)
-                    {
-                        case IMAGE_REL_BASED_ABSOLUTE:
-                            break;
-                        case IMAGE_REL_BASED_HIGHLOW:
-                            if (rva > cbImage - sizeof(ULONG))
-                                _SEH2_YIELD(goto Failure);
-                            *(PULONG)(pbImage + rva) += (ULONG)delta;
-                            break;
-#ifdef _WIN64
-                        case IMAGE_REL_BASED_DIR64:
-                            if (rva > cbImage - sizeof(ULONGLONG))
-                                _SEH2_YIELD(goto Failure);
-                            *(PULONGLONG)(pbImage + rva) += (ULONGLONG)delta;
-                            break;
-#endif
-                        default:
-                            _SEH2_YIELD(goto Failure);
-                    }
-                }
-                off += pBlk->SizeOfBlock;
-            }
+            ERR("No .data section\n");
+            _SEH2_YIELD(return NULL);
         }
-        *pcbImage = cbImage;
+
+        /* The part beyond SizeOfRawData (if any) is zero-filled, as the loader does */
+        cbVirt = pData->Misc.VirtualSize ? pData->Misc.VirtualSize : pData->SizeOfRawData;
+        cbCopy = (pData->SizeOfRawData < cbVirt) ? pData->SizeOfRawData : cbVirt;
+        if (!cbVirt || pData->VirtualAddress > cbImage || cbVirt > cbImage - pData->VirtualAddress ||
+            pData->PointerToRawData > cbRaw || cbCopy > cbRaw - pData->PointerToRawData)
+        {
+            ERR("Invalid .data section\n");
+            _SEH2_YIELD(return NULL);
+        }
+
+        /* The buffer ends where .data ends (so that RVAs stay valid as offsets) */
+        cbAlloc = pData->VirtualAddress + cbVirt; /* No overflow: checked above */
+        pbImage = ExAllocatePoolWithTag(PagedPool, cbAlloc, KBDIMG_TAG);
+        if (!pbImage)
+            _SEH2_YIELD(return NULL);
+
+        RtlZeroMemory(pbImage, cbAlloc);
+        RtlCopyMemory(pbImage + pData->VirtualAddress, pbRaw + pData->PointerToRawData, cbCopy);
+
+        pInfo->ImageBase = (ULONG_PTR)pNt->OptionalHeader.ImageBase;
+        pInfo->offData = pData->VirtualAddress;
+        pInfo->cbData = cbVirt;
+        *pcbImage = cbAlloc;
         _SEH2_YIELD(return pbImage);
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
@@ -369,7 +346,6 @@ KbdBuildImage(
     }
     _SEH2_END;
 
-Failure:
     if (pbImage)
         ExFreePoolWithTag(pbImage, KBDIMG_TAG);
     return NULL;
@@ -379,7 +355,8 @@ Failure:
 static PVOID
 KbdLoadImage(
     _In_ HANDLE hKernelFile,
-    _Out_ PULONG pcbImage)
+    _Out_ PULONG pcbImage,
+    _Out_ PKBDIMAGE_INFO pInfo)
 {
     NTSTATUS Status;
     IO_STATUS_BLOCK IoStatusBlock;
@@ -389,6 +366,7 @@ KbdLoadImage(
     ULONG cbRaw;
 
     *pcbImage = 0;
+    RtlZeroMemory(pInfo, sizeof(*pInfo));
 
     if (!hKernelFile)
         return NULL;
@@ -424,8 +402,8 @@ KbdLoadImage(
         return NULL;
     }
 
-    /* RVA mapping + relocation */
-    pvImage = KbdBuildImage(pvRaw, cbRaw, pcbImage);
+    /* Take the .data section only (no relocation; see KbdRebaseTables) */
+    pvImage = KbdBuildImage(pvRaw, cbRaw, pcbImage, pInfo);
     if (!pvImage)
         ERR("KbdBuildImage failed\n");
 
@@ -441,11 +419,79 @@ KbdUnloadImage(
         ExFreePoolWithTag(pvImageBase, KBDIMG_TAG);
 }
 
-/* Tells whether [off, off + cb) lies within an image of cbImage bytes (without overflowing) */
+/* Tells whether [off, off + cb) lies within the .data section (without overflowing) */
 static __inline BOOL
-KbdIsRangeInImage(_In_ ULONG off, _In_ SIZE_T cb, _In_ ULONG cbImage)
+KbdIsRangeInData(_In_ const KBDIMAGE_INFO *pInfo, _In_ ULONG off, _In_ SIZE_T cb)
 {
-    return (cb <= cbImage) && (off <= cbImage - cb);
+    return (off >= pInfo->offData) && (cb <= pInfo->cbData) &&
+           ((off - pInfo->offData) <= (pInfo->cbData - cb));
+}
+
+/*
+ * Adjusts the pointers inside the layout tables. In the file, they are virtual addresses based
+ * on ImageBase, so the RVA of the target is (VA - ImageBase), and the adjusted pointer is the
+ * RVA applied to our image buffer. The tables are modified in place (in our own copy).
+ * Each target must lie in the .data section, where it has room for at least one element.
+ * Returns FALSE if any of the targets is not valid.
+ * NOTE: Walking up to the terminator of a table is not validated.
+ */
+static BOOL
+KbdRebaseTables(
+    _In_ PBYTE pbImage,
+    _In_ const KBDIMAGE_INFO *pInfo,
+    _Inout_ PKBDTABLES pTbl,
+    _Inout_opt_ PKBDNLSTABLES pNls)
+{
+#define REBASE(p) do { \
+    if (p) { \
+        ULONG_PTR va_ = (ULONG_PTR)(p), rva_ = va_ - pInfo->ImageBase; \
+        if (va_ < pInfo->ImageBase || !KbdIsRangeInData(pInfo, rva_, sizeof(*(p)))) \
+            return FALSE; \
+        (p) = RVA(rva_, pbImage); \
+    } \
+} while (0)
+    VSC_LPWSTR **appNames[2] = { &pTbl->pKeyNames, &pTbl->pKeyNamesExt };
+    PVK_TO_WCHAR_TABLE pWchTbl;
+    VSC_LPWSTR *pName;
+    PWSTR *ppwsz;
+    ULONG i;
+
+    REBASE(pTbl->pCharModifiers);
+    if (pTbl->pCharModifiers)
+        REBASE(pTbl->pCharModifiers->pVkToBit);
+
+    /* VK -> WCHARs tables. This table ends with an entry that has NULL pVkToWchars. */
+    REBASE(pTbl->pVkToWcharTable);
+    for (pWchTbl = pTbl->pVkToWcharTable; pWchTbl && pWchTbl->pVkToWchars; ++pWchTbl)
+        REBASE(pWchTbl->pVkToWchars);
+
+    /* Key names. This table ends with an entry that has vsc == 0. */
+    for (i = 0; i < RTL_NUMBER_OF(appNames); ++i)
+    {
+        REBASE(*appNames[i]);
+        for (pName = *appNames[i]; pName && pName->vsc; ++pName)
+            REBASE(pName->pwsz);
+    }
+
+    /* Dead key names. This array of strings ends with NULL. */
+    REBASE(pTbl->pKeyNamesDead);
+    for (ppwsz = pTbl->pKeyNamesDead; ppwsz && *ppwsz; ++ppwsz)
+        REBASE(*ppwsz);
+
+    /* The tables that have no pointers inside */
+    REBASE(pTbl->pDeadKey);
+    REBASE(pTbl->pusVSCtoVK);
+    REBASE(pTbl->pVSCtoVK_E0);
+    REBASE(pTbl->pVSCtoVK_E1);
+    REBASE(pTbl->pLigature);
+
+    if (pNls)
+    {
+        REBASE(pNls->pVkToF);
+        REBASE(pNls->pusMouseVKey);
+    }
+#undef REBASE
+    return TRUE;
 }
 
 /* Loads keyboard layout DLL and gets address to KbdTables */
@@ -460,30 +506,44 @@ UserLoadKbdDll(
 {
     PBYTE pbImage;
     ULONG cbImage, wMainOffset = LOWORD(offTable), wNlsOffset = HIWORD(offTable);
+    KBDIMAGE_INFO info;
 
     if (!wMainOffset)
         return FALSE;
 
     /* Load keyboard layout DLL */
-    *phModule = KbdLoadImage(hKernelFile, &cbImage);
+    *phModule = KbdLoadImage(hKernelFile, &cbImage, &info);
     if (!(*phModule))
         return FALSE;
 
-    /* offTable comes from user mode: the tables must lie entirely within the image.
-       NOTE: Pointers inside the tables are not validated here. */
-    if (!KbdIsRangeInImage(wMainOffset, sizeof(**ppKbdTables), cbImage) ||
-        (wNlsOffset && !KbdIsRangeInImage(wNlsOffset, sizeof(**ppKbdNlsTables), cbImage)))
+    /* offTable comes from user mode: the tables must lie entirely within the .data section */
+    if (!KbdIsRangeInData(&info, wMainOffset, sizeof(**ppKbdTables)) ||
+        (wNlsOffset && !KbdIsRangeInData(&info, wNlsOffset, sizeof(**ppKbdNlsTables))))
     {
-        ERR("Table offset out of range: offTable 0x%08X, image size %lu\n", offTable, cbImage);
+        ERR("Table offset out of range: offTable 0x%08X, .data 0x%08lX+0x%08lX\n",
+            offTable, info.offData, info.cbData);
         KbdUnloadImage(*phModule);
         *phModule = NULL;
         return FALSE;
     }
 
-    *pcbImage = cbImage;
     pbImage = (PBYTE)*phModule;
     *ppKbdTables = (PKBDTABLES)(pbImage + wMainOffset);
     *ppKbdNlsTables = wNlsOffset ? (PKBDNLSTABLES)(pbImage + wNlsOffset) : NULL;
+
+    /* Adjust the pointers inside the tables using RVA (instead of the base relocations),
+       and validate their targets */
+    if (!KbdRebaseTables(pbImage, &info, *ppKbdTables, *ppKbdNlsTables))
+    {
+        ERR("Invalid pointer in the layout tables\n");
+        KbdUnloadImage(*phModule);
+        *phModule = NULL;
+        *ppKbdTables = NULL;
+        *ppKbdNlsTables = NULL;
+        return FALSE;
+    }
+
+    *pcbImage = cbImage;
 
 #if 0 && DBG
     /* Dump keyboard layout */
