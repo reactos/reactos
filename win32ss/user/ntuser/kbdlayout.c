@@ -318,8 +318,9 @@ KbdBuildImage(
         /* The part beyond SizeOfRawData (if any) is zero-filled, as the loader does */
         cbVirt = pData->Misc.VirtualSize ? pData->Misc.VirtualSize : pData->SizeOfRawData;
         cbCopy = (pData->SizeOfRawData < cbVirt) ? pData->SizeOfRawData : cbVirt;
-        if (!cbVirt || pData->VirtualAddress > cbImage || cbVirt > cbImage - pData->VirtualAddress ||
-            pData->PointerToRawData > cbRaw || cbCopy > cbRaw - pData->PointerToRawData)
+        if (!cbVirt || pData->VirtualAddress > cbImage ||
+            cbVirt > cbImage - pData->VirtualAddress || pData->PointerToRawData > cbRaw ||
+            cbCopy > cbRaw - pData->PointerToRawData)
         {
             ERR("Invalid .data section\n");
             _SEH2_YIELD(return NULL);
@@ -393,7 +394,8 @@ KbdLoadImage(
 
     /* Load the file content */
     Offset.QuadPart = 0;
-    Status = ZwReadFile(hKernelFile, NULL, NULL, NULL, &IoStatusBlock, pvRaw, cbRaw, &Offset, NULL);
+    Status = ZwReadFile(hKernelFile, NULL, NULL, NULL, &IoStatusBlock, pvRaw, cbRaw, &Offset,
+                        NULL);
     if (!NT_SUCCESS(Status) || IoStatusBlock.Information != cbRaw)
     {
         ERR("ZwReadFile failed: 0x%08X (read %Iu of %lu)\n", Status, IoStatusBlock.Information,
