@@ -955,26 +955,22 @@ ScrollMixerWindowHorizontally(
     {
         case SB_LINELEFT:
         case SB_LINERIGHT:
-            /* One of the arrow buttons has been clicked */
             NewPos = MixerWindow->ScrollPos +
                      GetHorizontalScrollDirection(MixerWindow, FALSE) * MIXER_HSCROLL_LINE_SIZE;
             break;
 
         case SB_PAGELEFT:
         case SB_PAGERIGHT:
-            /* The track of the scroll bar has been clicked */
             NewPos = MixerWindow->ScrollPos +
                      GetHorizontalScrollDirection(MixerWindow, TRUE) * MixerWindow->ClientWidth;
             break;
 
         case SB_THUMBPOSITION:
         case SB_THUMBTRACK:
-            /* The thumb has been moved */
             NewPos = TrackPos;
             break;
 
         default:
-            /* Ignore all other notifications */
             return;
     }
 
@@ -1223,7 +1219,6 @@ MainWindowProc(HWND hwnd,
         case WM_HSCROLL:
             if (lParam == 0)
             {
-                /* The message was sent by the horizontal scroll bar of the window */
                 MixerWindow = GetWindowData(hwnd, MIXER_WINDOW);
                 if (MixerWindow != NULL)
                 {
@@ -1307,12 +1302,6 @@ MainWindowProc(HWND hwnd,
                 MixerWindow = GetWindowData(hwnd, MIXER_WINDOW);
                 if (MixerWindow != NULL && !MixerWindow->bUpdatingLayout)
                 {
-                    /*
-                     * The size of the client area has changed. Check if the
-                     * horizontal scroll bar is still needed and update its
-                     * range. If the scroll bar has been enabled or disabled,
-                     * the window has to be resized.
-                     */
                     if (UpdateMixerWindowScrollBar(MixerWindow))
                     {
                         UpdateMixerWindowLayout(&Preferences);
