@@ -346,6 +346,9 @@ VidScreenToBufferBlt(
         return;
     LineWidth = (LineEnd - LineStart) + 1;
 
+    // if (LineWidth * 4 > Stride) return; // FIX #1 for "not-ideal case"
+    LineWidth = min(LineWidth, Stride / 4); // FIX #2 for "not-ideal case", see https://github.com/reactos/reactos/pull/8968#discussion_r4417396304
+
     /* This check helps the compiler to compile the inner loop as a do-while loop */
     if (LineWidth == 0)
         return;
