@@ -329,11 +329,14 @@ VidScreenToBufferBlt(
     PUCHAR PixelPtr;
     ULONG Plane, X, Y;
 
-    if (Height == 0)
+    if ((Height == 0) || (Stride == 0))
         return;
 
     /* Clear the destination buffer */
     RtlZeroMemory(Buffer, Height * Stride);
+
+    if (Width == 0)
+        return;
 
     /* Calculate the start/final and number of horizontal 8-pixel blocks to copy.
      * The VGA bootvid only copies whole 8-pixel blocks by design. */
