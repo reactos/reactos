@@ -501,6 +501,160 @@ IsXmasTime(VOID)
 
 #endif // REACTOS_FANCY_BOOT
 
+#if 0 //////////////
+VOID
+DumpBuffer(
+    _In_ PUCHAR Buffer,
+    _In_ SIZE_T Size)
+{
+    for (; Size > 0; --Size, ++Buffer)
+        DbgPrint(" 0x%02x,", *Buffer);
+    DbgPrint("\n");
+}
+VOID
+RunTest(
+    _In_ ULONG TestToScreenWidth,
+    _In_ ULONG TestFromScreenWidth)
+{
+    static UCHAR LocalBuffer[256];
+
+    //DbgPrint("Test -- %lu %lu\n", TestToScreenWidth, TestFromScreenWidth);
+
+    ULONG Left = 90;
+    ULONG Top = SCREEN_HEIGHT-6;
+    ULONG Width = TestToScreenWidth;
+    ULONG Height = 1;
+    ULONG Stride = Width;
+
+    memset(LocalBuffer, 0xCC, sizeof(LocalBuffer));
+    LocalBuffer[0]  = 0x12;
+    LocalBuffer[1]  = 0x34;
+    LocalBuffer[2]  = 0x56;
+    LocalBuffer[3]  = 0x78;
+    LocalBuffer[4]  = 0x9A;
+    LocalBuffer[5]  = 0xB7;
+    LocalBuffer[6]  = 0xDE;
+    LocalBuffer[7]  = 0xF5;
+    LocalBuffer[8]  = 0xA1;
+    LocalBuffer[9]  = 0xB2;
+    LocalBuffer[10] = 0xC3;
+    LocalBuffer[11] = 0xD4;
+    LocalBuffer[12] = 0xE5;
+    LocalBuffer[13] = 0xF6;
+    LocalBuffer[14] = 0x87;
+    LocalBuffer[15] = 0x28;
+    VidBufferToScreenBlt(LocalBuffer, Left, Top, Width, Height, Stride);
+
+    memset(LocalBuffer, 0xCC, sizeof(LocalBuffer));
+
+    Width = TestFromScreenWidth;
+    Stride = Width;
+    VidScreenToBufferBlt(LocalBuffer, Left, Top, Width, Height, Stride);
+
+    DbgPrint("%lu %lu\t-", TestToScreenWidth, TestFromScreenWidth);
+    DumpBuffer(LocalBuffer, 16);
+}
+
+CODE_SEG("INIT")
+VOID
+NTAPI
+DisplayBootBitmap(
+    _In_ BOOLEAN TextMode)
+{
+    PVOID Header = NULL, Footer = NULL;
+
+    ShowProgressBar = FALSE;
+
+    /* Check if this is text mode */
+    if (TextMode)
+    {
+        /*
+         * Make the kernel resource section temporarily writable,
+         * as we are going to change the bitmaps' palette in place.
+         */
+        MmChangeKernelResourceSectionProtection(MM_READWRITE);
+
+        /* Server; set colors */
+        InbvSetTextColor(BV_COLOR_LIGHT_CYAN);
+        InbvSolidColorFill(0, 0, SCREEN_WIDTH-1, SCREEN_HEIGHT-1, BV_COLOR_CYAN);
+        InbvSolidColorFill(0, VID_FOOTER_BG_TOP, SCREEN_WIDTH-1, SCREEN_HEIGHT-1, BV_COLOR_RED);
+
+        /* Get resources */
+        Header = InbvGetResourceAddress(IDB_SERVER_HEADER);
+        Footer = InbvGetResourceAddress(IDB_SERVER_FOOTER);
+
+        /* Set the scrolling region */
+        InbvSetScrollRegion(VID_SCROLL_AREA_LEFT, VID_SCROLL_AREA_TOP,
+                            VID_SCROLL_AREA_RIGHT, VID_SCROLL_AREA_BOTTOM);
+
+        /* Make sure we have resources */
+        if (Header && Footer)
+        {
+            /* BitBlt them on the screen */
+            BitBltAligned(Footer,
+                          TRUE,
+                          AL_HORIZONTAL_CENTER,
+                          AL_VERTICAL_BOTTOM,
+                          0, 0, 0, 59);
+            BitBltAligned(Header,
+                          FALSE,
+                          AL_HORIZONTAL_CENTER,
+                          AL_VERTICAL_TOP,
+                          0, 0, 0, 0);
+        }
+
+        /* Restore the kernel resource section protection to be read-only */
+        MmChangeKernelResourceSectionProtection(MM_READONLY);
+        return;
+    }
+
+    InbvSetScrollRegion(0, 0, SCREEN_WIDTH - 1, SCREEN_HEIGHT - 1);
+
+__debugbreak();
+    InbvSolidColorFill(0, 0, SCREEN_WIDTH - 1, SCREEN_HEIGHT - 1, BV_COLOR_BLACK);
+
+    RunTest(8 , 0 );
+    RunTest(8 , 1 );
+    RunTest(8 , 2 );
+    RunTest(8 , 3 );
+    RunTest(8 , 4 );
+    RunTest(8 , 5 );
+    RunTest(8 , 6 );
+    RunTest(8 , 7 );
+    RunTest(8 , 8 );
+    RunTest(23, 0 );
+    RunTest(23, 1 );
+    RunTest(23, 2 );
+    RunTest(23, 3 );
+    RunTest(23, 4 );
+    RunTest(23, 5 );
+    RunTest(23, 6 );
+    RunTest(23, 7 );
+    RunTest(23, 8 );
+    RunTest(23, 9 );
+    RunTest(23, 10);
+    RunTest(23, 11);
+    RunTest(23, 12);
+    RunTest(23, 13);
+    RunTest(23, 14);
+    RunTest(23, 15);
+    RunTest(23, 16);
+    RunTest(23, 17);
+    RunTest(23, 18);
+    RunTest(23, 19);
+    RunTest(23, 20);
+    RunTest(23, 21);
+    RunTest(23, 22);
+    RunTest(23, 23);
+}
+CODE_SEG("INIT")
+VOID
+NTAPI
+FinalizeBootLogo(VOID)
+{
+}
+#endif /////////
+#if 1 ////////
 CODE_SEG("INIT")
 VOID
 NTAPI
@@ -813,6 +967,7 @@ FinalizeBootLogo(VOID)
 #endif
     InbvReleaseLock();
 }
+#endif //////////
 
 #ifdef REACTOS_FANCY_BOOT
 static PCH
