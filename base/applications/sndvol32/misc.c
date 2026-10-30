@@ -409,3 +409,35 @@ GetStyleValue(VOID)
 
     return dwStyle;
 }
+
+static BOOL CALLBACK
+RepaintChildControlProc(
+    _In_ HWND hwndChild,
+    _In_ LPARAM lParam)
+{
+    if (IsWindowVisible(hwndChild))
+    {
+        /*
+         * Repaint the control without erasing its background first. The
+         * background of the control is painted by the control itself.
+         */
+        InvalidateRect(hwndChild, NULL, FALSE);
+    }
+
+    return TRUE;
+}
+
+VOID
+RepaintChildControls(
+    _In_ HWND hWnd)
+{
+    /*
+     * A window paints its background over the area occupied by its child
+     * controls. The child controls are not repainted automatically, so their
+     * content would be lost. Repaint them, so that e.g. the text of a combo
+     * box stays readable.
+     */
+    EnumChildWindows(hWnd,
+                     RepaintChildControlProc,
+                     0);
+}
