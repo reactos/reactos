@@ -154,7 +154,32 @@ static UINT64 get_arg( int nr, struct format_message_args *args_data, BOOL is64 
                                                      : va_arg( *args_data->list, ULONG_PTR );
     return args_data->arglist[nr - 1];
 }
+#ifdef __REACTOS__
+static int __cdecl _snwprintf_s(
+    WCHAR *buffer, size_t size, size_t count,
+    const WCHAR *format, ...)
+{
+    va_list args;
+    int len;
 
+    if (!buffer || !size || !format)
+        return -1;
+
+    if (count >= size)
+        count = size - 1;
+
+    va_start(args, format);
+    len = _vsnwprintf(buffer, count, format, args);
+    va_end(args);
+
+    buffer[count] = L'\0';
+
+    if (len < 0 || (size_t)len > count)
+        return -1;
+
+    return len;
+}
+#endif
 static NTSTATUS add_format( WCHAR **buffer, WCHAR *end, const WCHAR **src, int insert, BOOLEAN ansi,
                             struct format_message_args *args_data )
 {
@@ -221,13 +246,8 @@ static NTSTATUS add_format( WCHAR **buffer, WCHAR *end, const WCHAR **src, int i
     }
     else return STATUS_INVALID_PARAMETER;
 
-#ifdef __REACTOS__
-    len = _snwprintf( *buffer, end - *buffer, fmt,
-                        args[0], args[1], args[2], args[3], args[4] );
-#else
     len = _snwprintf_s( *buffer, end - *buffer, end - *buffer - 1, fmt,
                         args[0], args[1], args[2], args[3], args[4] );
-#endif
     if (len == -1) return STATUS_BUFFER_OVERFLOW;
     *buffer += len;
     return STATUS_SUCCESS;

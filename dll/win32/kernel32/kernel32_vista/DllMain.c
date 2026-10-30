@@ -5,7 +5,7 @@
 UNICODE_STRING BaseWindowsSystemDirectory;
 
 /* From wine locale.c */
-extern void init_locale(void);
+extern void init_locale(HMODULE module);
 
 BOOL
 WINAPI
@@ -17,7 +17,7 @@ DllMain(HANDLE hDll,
     if (dwReason == DLL_PROCESS_ATTACH)
     {
         DisableThreadLibraryCalls(hDll);
-        init_locale();
+        init_locale(hDll);
     }
     return TRUE;
 }

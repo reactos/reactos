@@ -141,7 +141,7 @@ Quit:
 }
 
 
-extern void init_locale(void);
+extern void init_locale(HMODULE module);
 
 /**
  * @name NlsInit
@@ -211,7 +211,7 @@ NlsInit(VOID)
                          &OemCodePage.CodePageTable);
     OemCodePage.CodePage = OemCodePage.CodePageTable.CodePage;
     InsertTailList(&CodePageListHead, &OemCodePage.Entry);
-    init_locale();
+    init_locale(hCurrentModule);
 
     return TRUE;
 }
