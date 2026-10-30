@@ -8,6 +8,7 @@ list(APPEND SOURCE
     CreateProcess.c
     DefaultActCtx.c
     DeviceIoControl.c
+    DnsHostnameToComputerName.c
     dosdev.c
     EnumSystemCodePages.c
     FindActCtxSectionStringW.c
