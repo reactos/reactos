@@ -139,11 +139,26 @@ static BOOLEAN
 UdfParseAds(UDF_VOLUME* Volume, UDF_FILE* File, const UCHAR* Buffer,
             ULONG Start, ULONG Length, ULONG Mode, USHORT ParentRef, ULONG Depth)
 {
-    ULONG Offset, Step = (Mode == 0) ? 8 : 16;
+    ULONG Offset, Step = (Mode == 0) ? 8 : 16, Tail;
+    BOOLEAN Continued = FALSE;
 
-    if (Depth >= 32 || (Length % Step) != 0 ||
-        Start > UDF_BLOCK_SIZE || Length > UDF_BLOCK_SIZE - Start)
+    if (Depth >= 32 || Start > UDF_BLOCK_SIZE || Length > UDF_BLOCK_SIZE - Start)
         return FALSE;
+
+    /* Earlier UDFS builds counted the zero padding in front of a
+     * continuation descriptor in L_AD (for example 296 bytes after an
+     * Extended File Entry). Accept only a zero tail shorter than one
+     * descriptor, and only when the block continues elsewhere. */
+    Tail = Length % Step;
+    if (Tail)
+    {
+        for (Offset = Start + Length - Tail; Offset < Start + Length; ++Offset)
+        {
+            if (Buffer[Offset])
+                return FALSE;
+        }
+        Length -= Tail;
+    }
 
     for (Offset = Start; Offset < Start + Length; Offset += Step)
     {
@@ -174,6 +189,7 @@ UdfParseAds(UDF_VOLUME* Volume, UDF_FILE* File, const UCHAR* Buffer,
             if (!UdfParseAds(Volume, File, Continuation, 24, NextLength,
                              Mode, ParentRef, Depth + 1))
                 return FALSE;
+            Continued = TRUE;
         }
         else
         {
@@ -181,7 +197,7 @@ UdfParseAds(UDF_VOLUME* Volume, UDF_FILE* File, const UCHAR* Buffer,
             return FALSE;
         }
     }
-    return TRUE;
+    return (Tail == 0 || Continued);
 }
 
 static BOOLEAN
