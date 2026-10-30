@@ -641,6 +641,8 @@ struct VCB {
     // a resource to protect the fields contained within the VCB
     ERESOURCE                           VcbResource;
     ERESOURCE                           BitMapResource1;
+    // serializes growth of the UDF 2.50 metadata file
+    ERESOURCE                           MetadataGrowResource;
 
     ERESOURCE                           DlocResource;
     ERESOURCE                           DlocResource2;

@@ -1116,6 +1116,7 @@ UDFInitializeVCB(
 
         ExInitializeResourceLite(&Vcb->VcbResource);
         ExInitializeResourceLite(&Vcb->BitMapResource1);
+        ExInitializeResourceLite(&Vcb->MetadataGrowResource);
 
         ExInitializeResourceLite(&Vcb->DlocResource);
         ExInitializeResourceLite(&Vcb->DlocResource2);

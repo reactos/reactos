@@ -1323,6 +1323,7 @@ UDFDeleteVCB(
         UDFPrint(("UDF: Delete resources\n"));
         UDFDeleteResource(&(Vcb->VcbResource));
         UDFDeleteResource(&(Vcb->BitMapResource1));
+        UDFDeleteResource(&(Vcb->MetadataGrowResource));
 
         UDFDeleteResource(&(Vcb->DlocResource));
         UDFDeleteResource(&(Vcb->DlocResource2));

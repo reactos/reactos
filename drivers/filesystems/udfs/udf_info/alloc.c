@@ -845,7 +845,7 @@ UDFAllocMetadataExtent(
     OUT PEXTENT_INFO ExtInfo
     )
 {
-    uint32 blocks, bit, i, phys, pass, first;
+    uint32 blocks, bit, i, phys, pass, first, seenBlocks;
     BOOLEAN growthAttempted = FALSE;
     EXTENT_AD extent;
 
@@ -905,9 +905,24 @@ retry_after_growth:
       }
     }
 
+    seenBlocks = Vcb->MetadataBitCount;
     UDFReleaseResource(&(Vcb->BitMapResource1));
     if (!growthAttempted) {
-        NTSTATUS status = UDFGrowMetadataFile(IrpContext, Vcb, blocks);
+        NTSTATUS status;
+        /* Two creates can run out of metadata space at once. Growth swaps
+         * and frees the metadata file's extent maps, so only one thread may
+         * grow; a thread that waited retries with what the other added.
+         * A caller already owning the bitmap lock must not wait here, as
+         * the growing thread needs that lock to finish. */
+        if (!UDFAcquireResourceExclusive(&(Vcb->MetadataGrowResource),
+                !ExIsResourceAcquiredExclusiveLite(&(Vcb->BitMapResource1))))
+            return STATUS_DISK_FULL;
+        if (Vcb->MetadataBitCount != seenBlocks) {
+            UDFReleaseResource(&(Vcb->MetadataGrowResource));
+            goto retry_after_growth;
+        }
+        status = UDFGrowMetadataFile(IrpContext, Vcb, blocks);
+        UDFReleaseResource(&(Vcb->MetadataGrowResource));
         if (NT_SUCCESS(status)) {
             growthAttempted = TRUE;
             goto retry_after_growth;
