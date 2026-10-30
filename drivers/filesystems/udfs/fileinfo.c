@@ -791,7 +791,7 @@ UDFGetAltNameInformation(
     ShortName.MaximumLength = 13 * sizeof(WCHAR);
     ShortName.Buffer = (PWCHAR)&ShortNameBuffer;
 
-    UDFDOSName__(Fcb->Vcb, &ShortName, &(DirNdx->FName), Fcb->FileInfo);
+    UDFGetDirNdxShortName(Fcb->Vcb, DirNdx, Fcb->FileInfo->Index < 2, &ShortName);
 
     if (*PtrReturnedLength < ShortName.Length) {
         return(STATUS_BUFFER_OVERFLOW);

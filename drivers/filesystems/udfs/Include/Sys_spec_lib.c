@@ -443,8 +443,8 @@ get_name_only:
     RtlCopyMemory((PCHAR)&(NTFileInfo->FileName), (PCHAR)(UdfName.Buffer), UdfName.MaximumLength);
     if (!(FileDirNdx->FI_Flags & UDF_FI_FLAG_DOS)) {
         UDFPrint(("  !UDF_FI_FLAG_DOS"));
-        UDFDOSName(Vcb, &DosName, &UdfName,
-            (FileDirNdx->FI_Flags & UDF_FI_FLAG_KEEP_NAME) ? TRUE : FALSE);
+        UDFGetDirNdxShortName(Vcb, FileDirNdx,
+            (FileDirNdx->FI_Flags & UDF_FI_FLAG_KEEP_NAME) ? TRUE : FALSE, &DosName);
         NTFileInfo->ShortNameLength = (UCHAR)DosName.Length;
     }
     // report zero EOF & AllocSize for Dirs

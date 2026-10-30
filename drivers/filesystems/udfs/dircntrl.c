@@ -753,7 +753,7 @@ UDFFindNextMatch(
                                   BooleanFlagOn(CcbFlags, CCB_FLAG_IGNORE_CASE),
                                   BooleanFlagOn(CcbFlags, UDF_CCB_WILDCARD_PRESENT),
                                   BooleanFlagOn(CcbFlags, UDF_CCB_CAN_BE_8_DOT_3) && !(DirNdx->FI_Flags & UDF_FI_FLAG_DOS),
-                                  EntryNumber < 2) && !(DirNdx->FI_Flags & UDF_FI_FLAG_FI_INTERNAL)) {
+                                  EntryNumber < 2, DirNdx) && !(DirNdx->FI_Flags & UDF_FI_FLAG_FI_INTERNAL)) {
 
             break;
         }

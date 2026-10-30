@@ -202,6 +202,10 @@ typedef struct _DIR_INDEX_ITEM {
     int64 ChangeTime;
     int64 FileSize;
     int64 AllocationSize;
+    // Windows-style 8.3 alias, valid with UDF_FI_FLAG_SHORT_NAME.
+    // A zero length means the long name is already a legal 8.3 name.
+    uint8 ShortNameLength;             // in bytes
+    WCHAR ShortName[12];
 } DIR_INDEX_ITEM, *PDIR_INDEX_ITEM;
 /// FileIdent was  modified & should be flushed.
 #define UDF_FI_FLAG_FI_MODIFIED  (0x01)
@@ -214,6 +218,8 @@ typedef struct _DIR_INDEX_ITEM {
 
 #define UDF_FI_FLAG_DOS          (0x10)// Lfn-style name is equal to DOS-style (case insensetive)
 #define UDF_FI_FLAG_KEEP_NAME    (0x20)
+/// ShortName/ShortNameLength hold the entry's stored 8.3 alias.
+#define UDF_FI_FLAG_SHORT_NAME   (0x40)
 
 #define UDF_DATALOC_INFO_MT PagedPool
 
@@ -436,10 +442,6 @@ typedef struct _FE_LIST_ENTRY {
     ULONG EntryRefCount;
 } FE_LIST_ENTRY, *PFE_LIST_ENTRY;
 
-#define DOS_NAME_LEN 8
-#define DOS_EXT_LEN 3
-#define ILLEGAL_CHAR_MARK 0x005F
-#define UNICODE_CRC_MARK  0x0023
 #define UNICODE_PERIOD    0x002E
 #define UNICODE_SPACE     0x0020
 

@@ -18,13 +18,6 @@
 
 #define         UDF_BUG_CHECK_ID                UDF_FILE_UDF_INFO
 
-#define DOS_CRC_MODULUS 41
-#define hexChar crcChar
-static const char crcChar[] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ#_~-@";
-
-/* Used to convert hex digits to ASCII for readability. */
-//static const char hexChar[] = "0123456789ABCDEF";
-
 static const uint16 CrcTable[256] = {
     0x0000U, 0x1021U, 0x2042U, 0x3063U, 0x4084U, 0x50a5U, 0x60c6U, 0x70e7U,
     0x8108U, 0x9129U, 0xa14aU, 0xb16bU, 0xc18cU, 0xd1adU, 0xe1ceU, 0xf1efU,
@@ -276,543 +269,6 @@ UDFReadFileEntry(
     }
     return STATUS_SUCCESS;
 } // UDFReadFileEntry()
-
-/*
-    Decides whether character passed is an illegal character for a
-    DOS file name.
-*/
-BOOLEAN
-UDFIsIllegalChar(
-    IN WCHAR Char,
-    IN BOOLEAN IsStream
-    )
-{
-    if (Char < 0xFF &&
-        !FsRtlIsAnsiCharacterLegal((UCHAR)Char,
-                                   IsStream ? FSRTL_NTFS_STREAM_LEGAL : FSRTL_HPFS_LEGAL)) {
-
-        return FALSE;
-    }
-
-    return TRUE;
-} // end UDFIsIllegalChar()
-
-/*
-    Translate udfName to dosName using OSTA compliant.
-    dosName must be a unicode string with min length of 12.
- */
-
-/*void UDFDOSName__(
-    IN PVCB Vcb,
-    IN OUT PUNICODE_STRING DosName,
-    IN PUNICODE_STRING UdfName,
-    IN PUDF_FILE_INFO FileInfo
-    )
-{
-    BOOLEAN         KeepIntact;
-
-    KeepIntact = (FileInfo && (FileInfo->Index < 2));
-    UDFDOSName(Vcb, DosName, UdfName, KeepIntact);
-}*/
-
-void
-__fastcall
-UDFDOSName(
-    IN PVCB Vcb,
-    IN OUT PUNICODE_STRING DosName,
-    IN PUNICODE_STRING UdfName,
-    IN BOOLEAN KeepIntact
-    )
-{
-    switch(Vcb->UdfRevision) {
-    case 0x0100:
-    case 0x0101:
-    case 0x0102:
-        UDFDOSName100(DosName, UdfName, KeepIntact);
-        break;
-
-    case 0x0150:
-        // in general, we need bytes-from-media to
-        // create valid UDF 1.50 name.
-        // Curently it is impossible, thus,  we'll use
-        // UDF 2.00 translation algorithm
-    case 0x0200:
-        UDFDOSName200(DosName, UdfName, KeepIntact, Vcb->UdfRevision == 0x0150);
-        break;
-
-    case 0x0201:
-    default:
-        UDFDOSName201(DosName, UdfName, KeepIntact);
-    }
-}
-
-void
-__fastcall
-UDFDOSName100(
-    IN OUT PUNICODE_STRING DosName,
-    IN PUNICODE_STRING UdfName,
-    IN BOOLEAN KeepIntact
-    )
-{
-    PWCHAR dosName = DosName->Buffer;
-    PWCHAR udfName = UdfName->Buffer;
-    uint32 udfLen = UdfName->Length / sizeof(WCHAR);
-
-    uint32 index, dosIndex = 0, extIndex = 0, lastPeriodIndex;
-    BOOLEAN needsCRC = FALSE, hasExt = FALSE, writingExt = FALSE, isParent = FALSE;
-    uint32 valueCRC;
-    WCHAR ext[DOS_EXT_LEN], current;
-
-    if (KeepIntact &&
-       (udfLen <= 2) && (udfName[0] == UNICODE_PERIOD)) {
-        isParent = TRUE;
-        if ((udfLen == 2) && (udfName[1] != UNICODE_PERIOD))
-            isParent = FALSE;
-    }
-
-    for (index = 0 ; index < udfLen ; index++) {
-        current = udfName[index];
-        if (current == UNICODE_PERIOD && !isParent) {
-            if (dosIndex==0 || hasExt) {
-                // Ignore leading periods or any other than used for extension.
-                needsCRC = TRUE;
-            } else {
-                // First, find last character which is NOT a period or space.
-                lastPeriodIndex = udfLen - 1;
-                while(lastPeriodIndex >=0 &&
-                     (udfName[lastPeriodIndex] == UNICODE_PERIOD ||
-                      udfName[lastPeriodIndex] == UNICODE_SPACE))
-                    lastPeriodIndex--;
-                // Now search for last remaining period.
-                while(lastPeriodIndex >= 0 &&
-                      udfName[lastPeriodIndex] != UNICODE_PERIOD)
-                    lastPeriodIndex--;
-                // See if the period we found was the last or not.
-                if (lastPeriodIndex != index)
-                    needsCRC = TRUE; // If not, name needs translation.
-                // As long as the period was not trailing,
-                // the file name has an extension.
-                if (lastPeriodIndex >= 0) hasExt = TRUE;
-            }
-        } else {
-            if ((!hasExt && dosIndex == DOS_NAME_LEN) ||
-                 extIndex == DOS_EXT_LEN) {
-                // File name or extension is too long for DOS.
-                needsCRC = TRUE;
-            } else {
-                if (current == UNICODE_SPACE) { // Ignore spaces.
-                    needsCRC = TRUE;
-                } else {
-                    // Look for illegal or unprintable characters.
-                    if (UDFIsIllegalChar(current, FALSE) /*|| !UnicodeIsPrint(current)*/) {
-                        needsCRC = TRUE;
-                        current = ILLEGAL_CHAR_MARK;
-                        /* Skip Illegal characters(even spaces),
-                        * but not periods.
-                        */
-                        while(index+1 < udfLen &&
-                              (UDFIsIllegalChar(udfName[index+1], FALSE) /*||
-                              !UnicodeIsPrint(udfName[index+1])*/) &&
-                              udfName[index+1] != UNICODE_PERIOD)
-                            index++;
-                    }
-                    // Add current char to either file name or ext.
-                    if (writingExt) {
-                        ext[extIndex] = current;
-                        extIndex++;
-                    } else {
-                        dosName[dosIndex] = current;
-                        dosIndex++;
-                    }
-                }
-            }
-        }
-        // See if we are done with file name, either because we reached
-        // the end of the file name length, or the final period.
-        if (!writingExt && hasExt && (dosIndex == DOS_NAME_LEN ||
-            index == lastPeriodIndex)) {
-            // If so, and the name has an extension, start reading it.
-            writingExt = TRUE;
-            // Extension starts after last period.
-            index = lastPeriodIndex;
-        }
-    }
-    //
-    if (needsCRC) {
-        // Add CRC to end of file name or at position 4.
-        if (dosIndex >4) dosIndex = 4;
-        valueCRC = UDFUnicodeCksum(udfName, udfLen);
-        // set CRC prefix
-        dosName[dosIndex] = UNICODE_CRC_MARK;
-        // Convert 12-bit CRC to hex characters.
-        dosName[dosIndex+1] = hexChar[(valueCRC & 0x0f00) >> 8];
-        dosName[dosIndex+2] = hexChar[(valueCRC & 0x00f0) >> 4];
-        dosName[dosIndex+3] = hexChar[(valueCRC & 0x000f)];
-        dosIndex+=4;
-    }
-    // Add extension, if any.
-    if (extIndex != 0) {
-        dosName[dosIndex] = UNICODE_PERIOD;
-        dosIndex++;
-        for (index = 0; index < extIndex; index++) {
-            dosName[dosIndex] = ext[index];
-            dosIndex++;
-        }
-    }
-    DosName->Length = (uint16)dosIndex*sizeof(WCHAR);
-    RtlUpcaseUnicodeString(DosName, DosName, FALSE);
-} // end UDFDOSName100()
-
-void
-__fastcall
-UDFDOSName200(
-    IN OUT PUNICODE_STRING DosName,
-    IN PUNICODE_STRING UdfName,
-    IN BOOLEAN KeepIntact,
-    IN BOOLEAN Mode150
-    )
-{
-    PWCHAR dosName = DosName->Buffer;
-    PWCHAR udfName = UdfName->Buffer;
-    uint32 udfLen = UdfName->Length / sizeof(WCHAR);
-
-    uint32 index, dosIndex = 0, extIndex = 0, lastPeriodIndex;
-    BOOLEAN needsCRC = FALSE, hasExt = FALSE, writingExt = FALSE, isParent = FALSE;
-    uint32 valueCRC;
-    WCHAR ext[DOS_EXT_LEN], current;
-
-    if (KeepIntact &&
-       (udfLen <= 2) && (udfName[0] == UNICODE_PERIOD)) {
-        isParent = TRUE;
-        if ((udfLen == 2) && (udfName[1] != UNICODE_PERIOD))
-            isParent = FALSE;
-    }
-
-    for (index = 0 ; index < udfLen ; index++) {
-        current = udfName[index];
-        if (current == UNICODE_PERIOD && !isParent) {
-            if (dosIndex==0 || hasExt) {
-                // Ignore leading periods or any other than used for extension.
-                needsCRC = TRUE;
-            } else {
-                // First, find last character which is NOT a period or space.
-                lastPeriodIndex = udfLen - 1;
-                while(lastPeriodIndex >=0 &&
-                     (udfName[lastPeriodIndex] == UNICODE_PERIOD ||
-                      udfName[lastPeriodIndex] == UNICODE_SPACE))
-                    lastPeriodIndex--;
-                // Now search for last remaining period.
-                while(lastPeriodIndex >= 0 &&
-                      udfName[lastPeriodIndex] != UNICODE_PERIOD)
-                    lastPeriodIndex--;
-                // See if the period we found was the last or not.
-                if (lastPeriodIndex != index)
-                    needsCRC = TRUE; // If not, name needs translation.
-                // As long as the period was not trailing,
-                // the file name has an extension.
-                if (lastPeriodIndex >= 0) hasExt = TRUE;
-            }
-        } else {
-            if ((!hasExt && dosIndex == DOS_NAME_LEN) ||
-                 extIndex == DOS_EXT_LEN) {
-                // File name or extension is too long for DOS.
-                needsCRC = TRUE;
-            } else {
-                if (current == UNICODE_SPACE) { // Ignore spaces.
-                    needsCRC = TRUE;
-                } else {
-                    // Look for illegal or unprintable characters.
-                    if (UDFIsIllegalChar(current, FALSE) /*|| !UnicodeIsPrint(current)*/) {
-                        needsCRC = TRUE;
-                        current = ILLEGAL_CHAR_MARK;
-                        /* Skip Illegal characters(even spaces),
-                        * but not periods.
-                        */
-                        while(index+1 < udfLen &&
-                              (UDFIsIllegalChar(udfName[index+1], FALSE) /*||
-                              !UnicodeIsPrint(udfName[index+1])*/) &&
-                              udfName[index+1] != UNICODE_PERIOD)
-                            index++;
-                    }
-                    // Add current char to either file name or ext.
-                    if (writingExt) {
-                        ext[extIndex] = current;
-                        extIndex++;
-                    } else {
-                        dosName[dosIndex] = current;
-                        dosIndex++;
-                    }
-                }
-            }
-        }
-        // See if we are done with file name, either because we reached
-        // the end of the file name length, or the final period.
-        if (!writingExt && hasExt && (dosIndex == DOS_NAME_LEN ||
-            index == lastPeriodIndex)) {
-            // If so, and the name has an extension, start reading it.
-            writingExt = TRUE;
-            // Extension starts after last period.
-            index = lastPeriodIndex;
-        }
-    }
-    // Now handle CRC if needed.
-    if (needsCRC) {
-        // Add CRC to end of file name or at position 4.
-        if (dosIndex >4) dosIndex = 4;
-        valueCRC = Mode150 ? UDFUnicodeCksum150(udfName, udfLen) : UDFUnicodeCksum(udfName, udfLen);
-        // Convert 16-bit CRC to hex characters.
-        dosName[dosIndex] = hexChar[(valueCRC & 0xf000) >> 12];
-        dosName[dosIndex+1] = hexChar[(valueCRC & 0x0f00) >> 8];
-        dosName[dosIndex+2] = hexChar[(valueCRC & 0x00f0) >> 4];
-        dosName[dosIndex+3] = hexChar[(valueCRC & 0x000f)];
-        dosIndex+=4;
-    }
-    // Add extension, if any.
-    if (extIndex != 0) {
-        dosName[dosIndex] = UNICODE_PERIOD;
-        dosIndex++;
-        for (index = 0; index < extIndex; index++) {
-            dosName[dosIndex] = ext[index];
-            dosIndex++;
-        }
-    }
-    DosName->Length = (uint16)dosIndex*sizeof(WCHAR);
-    RtlUpcaseUnicodeString(DosName, DosName, FALSE);
-} // end UDFDOSName200()
-
-
-void
-__fastcall
-UDFDOSName201(
-    IN OUT PUNICODE_STRING DosName,
-    IN PUNICODE_STRING UdfName,
-    IN BOOLEAN KeepIntact
-    )
-{
-    PWCHAR dosName = DosName->Buffer;
-    PWCHAR udfName = UdfName->Buffer;
-    uint16 udfLen = UdfName->Length / sizeof(WCHAR);
-
-    int32 index;
-    uint16 dosIndex = 0;
-    //uint16 extIndex = 0;
-    BOOLEAN needsCRC = FALSE, isParent = FALSE;
-    //BOOLEAN hasExt = FALSE, writingExt = FALSE;
-    uint16 valueCRC;
-    WCHAR ext[DOS_EXT_LEN];
-    WCHAR current;
-
-    if (KeepIntact &&
-       (udfLen <= 2) && (udfName[0] == UNICODE_PERIOD)) {
-        isParent = TRUE;
-        if ((udfLen == 2) && (udfName[1] != UNICODE_PERIOD))
-            isParent = FALSE;
-    }
-
-    #define DOS_CRC_LEN 4
-    #define DOS_CRC_MODULUS 41
-
-    int16 crcIndex;
-    uint16 extLen;
-    uint16 nameLen;
-    uint16 charLen;
-    int16 overlayBytes;
-    int16 bytesLeft;
-
-    /* Start at the end of the UDF file name and scan for a period */
-    /* ('.'). This will be where the DOS extension starts (if */
-    /* any). */
-    index = udfLen;
-    while (index-- > 0) {
-        if (udfName[index] == '.')
-            break;
-    }
-    if ((index < 0) || isParent) {
-        /* There name was scanned to the beginning of the buffer */
-        /* and no extension was found. */
-        extLen = 0;
-        nameLen = udfLen;
-    } else {
-        /* A DOS extension was found, process it first. */
-        extLen = udfLen - index - 1;
-        nameLen = index;
-        dosIndex = 0;
-        bytesLeft = DOS_EXT_LEN;
-        while (++index < udfLen && bytesLeft > 0) {
-            /* Get the current character and convert it to upper */
-            /* case. */
-            current = udfName[index];
-            if (current == ' ') {
-                /* If a space is found, a CRC must be appended to */
-                /* the mangled file name. */
-                needsCRC = TRUE;
-            } else {
-                /* Determine if this is a valid file name char and */
-                /* calculate its corresponding BCS character byte */
-                /* length (zero if the char is not legal or */
-                /* undisplayable on this system). */
-
-                charLen = (UDFIsIllegalChar(current, FALSE)
-                           /*|| !UnicodeIsPrint(current)*/) ? 0 : 1;
-
-                /* If the char is larger than the available space */
-                /* in the buffer, pretend it is undisplayable. */
-                if (charLen > bytesLeft)
-                    charLen = 0;
-                if (charLen == 0) {
-                /* Undisplayable or illegal characters are */
-                /* substituted with an underscore ("_"), and */
-                /* required a CRC code appended to the mangled */
-                /* file name. */
-                needsCRC = TRUE;
-                charLen = 1;
-                current = '_';
-                /* Skip over any following undiplayable or */
-                /* illegal chars. */
-                while (index +1 <udfLen &&
-                        (UDFIsIllegalChar(udfName[index+1], FALSE)
-                       /*|| !UnicodeIsPrint(udfName[index+1])*/))
-                    index++;
-                }
-                /* Assign the resulting char to the next index in */
-                /* the extension buffer and determine how many BCS */
-                /* bytes are left. */
-                ext[dosIndex++] = current;
-                bytesLeft -= charLen;
-            }
-        }
-        /* Save the number of Unicode characters in the extension */
-        extLen = dosIndex;
-        /* If the extension was too large, or it was zero length */
-        /* (i.e. the name ended in a period), a CRC code must be */
-        /* appended to the mangled name. */
-        if (index < udfLen || extLen == 0)
-            needsCRC = TRUE;
-    }
-    /* Now process the actual file name. */
-    index = 0;
-    dosIndex = 0;
-    crcIndex = 0;
-    overlayBytes = -1;
-    bytesLeft = DOS_NAME_LEN;
-    while (index < nameLen && bytesLeft > 0) {
-        /* Get the current character and convert it to upper case. */
-        current = udfName[index];
-        if (current ==' ' || (current == '.' && !isParent) ) {
-            /* Spaces and periods are just skipped, a CRC code */
-            /* must be added to the mangled file name. */
-            needsCRC = TRUE;
-        } else {
-            /* Determine if this is a valid file name char and */
-            /* calculate its corresponding BCS character byte */
-            /* length (zero if the char is not legal or */
-            /* undisplayable on this system). */
-
-            charLen = (UDFIsIllegalChar(current, FALSE)
-                       /*|| !UnicodeIsPrint(current)*/) ? 0 : 1;
-
-            /* If the char is larger than the available space in */
-            /* the buffer, pretend it is undisplayable. */
-            if (charLen > bytesLeft)
-                charLen = 0;
-
-            if (charLen == 0) {
-                /* Undisplayable or illegal characters are */
-                /* substituted with an underscore ("_"), and */
-                /* required a CRC code appended to the mangled */
-                /* file name. */
-                needsCRC = TRUE;
-                charLen = 1;
-                current = '_';
-                /* Skip over any following undisplayable or illegal */
-                /* chars. */
-                while (index +1 <nameLen &&
-                       (UDFIsIllegalChar(udfName[index+1], FALSE)
-                        /*|| !UnicodeIsPrint(udfName[index+1])*/))
-                    index++;
-                /* Terminate loop if at the end of the file name. */
-                if (index >= nameLen)
-                    break;
-            }
-            /* Assign the resulting char to the next index in the */
-            /* file name buffer and determine how many BCS bytes */
-            /* are left. */
-            dosName[dosIndex++] = current;
-            bytesLeft -= charLen;
-            /* This figures out where the CRC code needs to start */
-            /* in the file name buffer. */
-            if (bytesLeft >= DOS_CRC_LEN) {
-                /* If there is enough space left, just tack it */
-                /* onto the end. */
-                crcIndex = dosIndex;
-            } else {
-                /* If there is not enough space left, the CRC */
-                /* must overlay a character already in the file */
-                /* name buffer. Once this condition has been */
-                /* met, the value will not change. */
-                if (overlayBytes < 0) {
-                    /* Determine the index and save the length of */
-                    /* the BCS character that is overlayed. It */
-                    /* is possible that the CRC might overlay */
-                    /* half of a two-byte BCS character depending */
-                    /* upon how the character boundaries line up. */
-                    overlayBytes = (bytesLeft + charLen > DOS_CRC_LEN)?1 :0;
-                    crcIndex = dosIndex - 1;
-                }
-            }
-        }
-        /* Advance to the next character. */
-        index++;
-    }
-    /* If the scan did not reach the end of the file name, or the */
-    /* length of the file name is zero, a CRC code is needed. */
-    if (index < nameLen || index == 0)
-        needsCRC = TRUE;
-
-    /* If the name has illegal characters or and extension, it */
-    /* is not a DOS device name. */
-
-/*    if (needsCRC == FALSE && extLen == 0) { */
-        /* If this is the name of a DOS device, a CRC code should */
-        /* be appended to the file name.
-        if (IsDeviceName(udfName, udfLen))
-            needsCRC = TRUE;
-    }*/
-
-    /* Append the CRC code to the file name, if needed. */
-    if (needsCRC) {
-        /* Get the CRC value for the original Unicode string */
-        valueCRC = UDFUnicodeCksum(udfName, udfLen);
-
-        /* begin. */
-        dosIndex = crcIndex;
-        /* If the character being overlayed is a two-byte BCS */
-        /* character, replace the first byte with an underscore. */
-        if (overlayBytes > 0)
-            dosName[dosIndex++] = '_';
-        /* Append the encoded CRC value with delimiter. */
-        dosName[dosIndex++] = '#';
-        dosName[dosIndex++] =
-            crcChar[valueCRC / (DOS_CRC_MODULUS * DOS_CRC_MODULUS)];
-        valueCRC %= DOS_CRC_MODULUS * DOS_CRC_MODULUS;
-            dosName[dosIndex++] =
-        crcChar[valueCRC / DOS_CRC_MODULUS];
-            valueCRC %= DOS_CRC_MODULUS;
-        dosName[dosIndex++] = crcChar[valueCRC];
-    }
-    /* Append the extension, if any. */
-    if (extLen > 0) {
-        /* Tack on a period and each successive byte in the */
-        /* extension buffer. */
-        dosName[dosIndex++] = '.';
-        for (index = 0; index < extLen; index++)
-            dosName[dosIndex++] = ext[index];
-    }
-    /* Return the length of the resulting Unicode string. */
-    DosName->Length = (uint16)dosIndex*sizeof(WCHAR);
-    RtlUpcaseUnicodeString(DosName, DosName, FALSE);
-
-} // end UDFDOSName201()
 
 /*
     This routine initializes Tag structure. It must be called after all
@@ -4007,6 +3463,13 @@ UDFCreateFile__(
     BOOLEAN NewNameAppend = FALSE;
     BOOLEAN InitialFEDeferred = FALSE;
     ULONGLONG NewUniqueId = 0;
+    WCHAR AliasBuffer[12];
+    UNICODE_STRING Alias;
+    BOOLEAN AliasStored = FALSE;
+
+    Alias.Buffer = AliasBuffer;
+    Alias.Length = 0;
+    Alias.MaximumLength = sizeof(AliasBuffer);
 
     ValidateFileInfo(DirInfo);
     *_FileInfo = NULL;
@@ -4108,6 +3571,13 @@ CreateUndel:
         *_FileInfo = FileInfo;
         if (!FileInfo)
             try_return (status = STATUS_INSUFFICIENT_RESOURCES);
+        /* Windows-style 8.3 alias, unique in this directory and stored in
+         * the FID so it never changes. A failure only leaves the name
+         * without a stored alias; it does not fail the create. */
+        if (!UDFIsAStreamDir(DirInfo) &&
+            NT_SUCCESS(UDFGenerateUniqueShortName(Vcb, DirInfo, _fn, &Alias)) &&
+            Alias.Length && ImpUseLen < UDF_SHORT_NAME_IMPUSE_LEN)
+            ImpUseLen = UDF_SHORT_NAME_IMPUSE_LEN;
         ImpUseLen = (ImpUseLen + 3) & ~((uint16)3);
 
         RtlZeroMemory(FileInfo, sizeof(UDF_FILE_INFO));
@@ -4146,6 +3616,8 @@ CreateUndel:
             ImpUseLen = FileInfo->FileIdent->lengthOfImpUse;
             DirNdx->FileCharacteristics = 0;
         }
+        if (Alias.Length)
+            AliasStored = UDFWriteShortNameImpUse(FileInfo->FileIdent, &Alias);
 
         // try to find suitable unused FileIdent in DirIndex
         l = FileInfo->FileIdentLen;
@@ -4234,6 +3706,10 @@ CrF__2:
         // hide the new file from enumeration.
         DirNdx->FI_Flags = UDFBuildHashEntry(Vcb, &(DirNdx->FName), &(DirNdx->hashes), HASH_ALL)
                          | UDF_FI_FLAG_FI_MODIFIED;
+        if (AliasStored)
+            UDFSetDirNdxShortName(DirNdx, &Alias);
+        else if (!UDFNeedsShortName(&DirNdx->FName))
+            UDFSetDirNdxShortName(DirNdx, NULL);
         // we get here immediately when 'undel' occured
         FileInfo->Index = i;
         ASSERT(!DirNdx->FileInfo);
@@ -4735,6 +4211,15 @@ UDFRenameMoveFile__(
 
             DirNdx2->FI_Flags |= UDF_FI_FLAG_FI_MODIFIED;
             UDFBuildHashEntry(Vcb, &(DirNdx2->FName), &(DirNdx2->hashes), HASH_ALL);
+            /* A case change keeps the 8.3 alias; restore its hash. */
+            if ((DirNdx2->FI_Flags & UDF_FI_FLAG_SHORT_NAME) && DirNdx2->ShortNameLength) {
+                WCHAR Kept[12];
+                UNICODE_STRING KeptAlias;
+                RtlCopyMemory(Kept, DirNdx2->ShortName, DirNdx2->ShortNameLength);
+                KeptAlias.Buffer = Kept;
+                KeptAlias.Length = KeptAlias.MaximumLength = DirNdx2->ShortNameLength;
+                UDFSetDirNdxShortName(DirNdx2, &KeptAlias);
+            }
             return STATUS_SUCCESS;
 /*        } else
         if (!NT_SUCCESS(status) && (fn->Length == UDFDirIndex(DirInfo2->Dloc->DirIndex, j=FileInfo->Index)->FName.Length)) {
@@ -6872,52 +6357,6 @@ crc32(
     }
     return crc32val;
 } // end crc32()
-
-/*
-    Calculate a 16-bit CRC checksum for unicode strings
-    using ITU-T V.41 polynomial.
-
-    The OSTA-UDF(tm) 1.50 standard states that using CRCs is mandatory.
-    The polynomial used is: x^16 + x^12 + x^15 + 1
-*/
-uint16
-__fastcall
-UDFUnicodeCksum(
-    PWCHAR s,
-    uint32 n
-    )
-{
-    uint16 Crc = 0;
-    while (n--) {
-        Crc = CrcTable[(Crc >> 8 ^ (*s >> 8)) & 0xff] ^ (Crc << 8);
-        Crc = CrcTable[(Crc >> 8 ^ (*s++ & 0xff)) & 0xff] ^ (Crc << 8);
-    }
-    return Crc;
-} // end UDFUnicodeCksum()
-
-uint16
-__fastcall
-UDFUnicodeCksum150(
-    PWCHAR s, // ECX
-    uint32 n  // EDX
-    )
-{
-    uint16 Crc = 0;
-    uint16 Crc2 = 0;
-    BOOLEAN Use16 = FALSE;
-    while (n--) {
-        if (!Use16) {
-            if ((*s) & 0xff00) {
-                Use16 = TRUE;
-            } else {
-                Crc2 = CrcTable[(Crc2 >> 8 ^ (*s >> 8)) & 0xff] ^ (Crc2 << 8);
-            }
-        }
-        Crc = CrcTable[(Crc >> 8 ^ (*s >> 8)) & 0xff] ^ (Crc << 8);
-        Crc = CrcTable[(Crc >> 8 ^ (*s++ & 0xff)) & 0xff] ^ (Crc << 8);
-    }
-    return Use16 ? Crc : Crc2;
-} // end UDFUnicodeCksum150()
 
 /*
     Calculate a 16-bit CRC checksum using ITU-T V.41 polynomial.

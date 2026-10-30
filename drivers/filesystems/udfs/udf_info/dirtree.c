@@ -391,13 +391,19 @@ UDFBuildHashEntry(
     }
 
     if (Mask & HASH_DOS) {
-        UName.Buffer = (PWCHAR)(&ShortNameBuffer);
-        UName.MaximumLength = 13*sizeof(WCHAR);
-        UDFDOSName(Vcb, &UName, Name, (Mask & HASH_KEEP_NAME) ? TRUE : FALSE);
-        if (!RtlCompareUnicodeString(Name, &UName, TRUE)) {
+        /* A valid 8.3 name is its own short name. Any other name gets the
+         * hash of its Windows-style alias when the alias is assigned. */
+        hashes->hDos = 0;
+        if ((Mask & HASH_KEEP_NAME) || !UDFNeedsShortName(Name)) {
+            UName.Buffer = (PWCHAR)(&ShortNameBuffer);
+            UName.Length = 0;
+            UName.MaximumLength = sizeof(ShortNameBuffer);
+            if (Name->Length <= UName.MaximumLength) {
+                RtlUpcaseUnicodeString(&UName, Name, FALSE);
+                hashes->hDos = crc32((uint8*)(UName.Buffer), UName.Length);
+            }
             RetFlags |= UDF_FI_FLAG_DOS;
         }
-        hashes->hDos = crc32((uint8*)(UName.Buffer), UName.Length);
     }
     return RetFlags;
 } // UDFBuildHashEntry()
@@ -663,6 +669,7 @@ UDFIndexDirectory(
             UDFNormalizeFileName(&(DirNdx->FName), valueCRC);
 
             DirNdx->FI_Flags |= UDFBuildHashEntry(Vcb, &(DirNdx->FName), &(DirNdx->hashes), HASH_ALL);
+            UDFLoadDirNdxShortName(DirNdx, FileId);
         }
         if ((FileId->fileCharacteristics & FILE_METADATA)
                        ||
@@ -719,6 +726,7 @@ UDFIndexDirectory(
     }
     // store index
     FileInfo->Dloc->DirIndex = hDirNdx;
+    UDFAssignMissingShortNames(Vcb, FileInfo);
     return status;
 } // end UDFIndexDirectory()
 
@@ -1098,7 +1106,7 @@ UDFFindFile(
                 !(DirNdx->FI_Flags & UDF_FI_FLAG_DOS) &&
                 (DirNdx->hashes.hDos == hashes.hLfn) &&
                 (k == (uint_di)(-1))) {
-                UDFDOSName(Vcb, &ShortName, &(DirNdx->FName), ScanContext.i < 2) ;
+                UDFGetDirNdxShortName(Vcb, DirNdx, ScanContext.i < 2, &ShortName);
                 if (!RtlCompareUnicodeString(&ShortName, Name, IgnoreCase))
                     k = ScanContext.i;
             }
@@ -1125,7 +1133,7 @@ UDFFindFile(
                 !(DirNdx->FI_Flags & UDF_FI_FLAG_DOS) &&
                 (DirNdx->hashes.hDos == hashes.hLfn) &&
                 (k == (uint_di)(-1))) {
-                UDFDOSName(Vcb, &ShortName, &(DirNdx->FName), ScanContext.i < 2 );
+                UDFGetDirNdxShortName(Vcb, DirNdx, ScanContext.i < 2, &ShortName);
                 if (!RtlCompareUnicodeString(&ShortName, Name, IgnoreCase)) {
                     k = ScanContext.i;
                 }

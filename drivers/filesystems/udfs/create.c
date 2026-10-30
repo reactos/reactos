@@ -3083,9 +3083,14 @@ UDFCompleteFcbOpen(
                     // Create uppercase version for case-insensitive comparisons
                     UDFUpcaseString(&CaseFileName, &FileName);
 
-                    // Generate 8.3 short name for DOS compatibility
-                    if (!UDFCanNameBeA8dot3(&FileName)) {
-                        UDFGenerateShortName(Fcb->Vcb, &FileName, &ShortName);
+                    // 8.3 alias for DOS-style lookups through the prefix cache
+                    PDIR_INDEX_ITEM NameNdx = NULL;
+                    if (Fcb->FileInfo->ParentFile)
+                        NameNdx = UDFDirIndex(UDFGetDirIndexByFileInfo(Fcb->FileInfo),
+                                              Fcb->FileInfo->Index);
+                    if (NameNdx ? !(NameNdx->FI_Flags & UDF_FI_FLAG_DOS)
+                                : !UDFCanNameBeA8dot3(&FileName)) {
+                        UDFGenerateShortName(Fcb->Vcb, &FileName, NameNdx, &ShortName);
                     }
 
                     Ccb->Lcb = UDFAcquirePrefix(IrpContext,

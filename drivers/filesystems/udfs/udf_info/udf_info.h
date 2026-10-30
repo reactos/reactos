@@ -270,39 +270,6 @@ __fastcall UDFRelocateSectors(IN PVCB Vcb,
                                IN uint32 Lba,
                                IN uint32 BlockCount);
 
-// validate char
-BOOLEAN
-UDFIsIllegalChar(
-    IN WCHAR Char,
-    IN BOOLEAN IsStream
-    );
-
-// translate udfName to dosName using OSTA compliant.
-#define  UDFDOSName__(Vcb, DosName, UdfName, FileInfo) \
-    UDFDOSName(Vcb, DosName, UdfName, (FileInfo) && ((FileInfo)->Index < 2));
-
-void
-__fastcall UDFDOSName(IN PVCB Vcb,
-                    IN OUT PUNICODE_STRING DosName,
-                    IN PUNICODE_STRING UdfName,
-                    IN BOOLEAN KeepIntact);
-
-void
-__fastcall UDFDOSName201(IN OUT PUNICODE_STRING DosName,
-                       IN PUNICODE_STRING UdfName,
-                       IN BOOLEAN KeepIntact);
-
-void
-__fastcall UDFDOSName200(IN OUT PUNICODE_STRING DosName,
-                       IN PUNICODE_STRING UdfName,
-                       IN BOOLEAN KeepIntact,
-                       IN BOOLEAN Mode150);
-
-void
-__fastcall UDFDOSName100(IN OUT PUNICODE_STRING DosName,
-                       IN PUNICODE_STRING UdfName,
-                       IN BOOLEAN KeepIntact);
-
 // return length of bit-chain starting from Offs bit
 SIZE_T    UDFGetBitmapLen(
                          uint32* Bitmap,
@@ -1141,17 +1108,6 @@ UDFUpdateVolIdent(
     IN UDF_VDS_RECORD Lba,
     IN PUNICODE_STRING VolIdent
     );
-
-// calculate checksum for unicode string (for DOS-names)
-uint16
-__fastcall UDFUnicodeCksum(PWCHAR s,
-                         uint32 n);
-//#define UDFUnicodeCksum(s,n)  UDFCrc((uint8*)(s), (n)*sizeof(WCHAR))
-//
-uint16
-__fastcall
-UDFUnicodeCksum150(PWCHAR s,
-                uint32 n);
 
 uint32
 __fastcall crc32(IN uint8* s,
