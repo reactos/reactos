@@ -2134,7 +2134,6 @@ static void update_registry_value( UINT type, const WCHAR *subkey, const WCHAR *
 }
 
 
-#ifndef __REACTOS__
 /* update all registry values upon user locale change */
 static void update_locale_registry(void)
 {
@@ -2189,7 +2188,6 @@ static void update_locale_registry(void)
     update_registry_value( LOCALE_NOUSEROVERRIDE | LOCALE_SNAME, NULL, L"LocaleName" );
     SetUserGeoID( user_locale->igeoid );
 }
-#endif
 
 
 /***********************************************************************
@@ -2201,15 +2199,11 @@ void init_locale( HMODULE module )
     USHORT *ansi_ptr, *oem_ptr;
     WCHAR bufferW[LOCALE_NAME_MAX_LENGTH];
     UNICODE_STRING strW;
-#ifndef __REACTOS__
     DYNAMIC_TIME_ZONE_INFORMATION timezone;
     const WCHAR *user_locale_name;
     DWORD count;
-#endif
     SIZE_T size;
-#ifndef __REACTOS__
     HKEY hkey;
-#endif
 
     kernelbase_handle = module;
     load_locale_nls();
@@ -2255,7 +2249,6 @@ void init_locale( HMODULE module )
 
     current_locale_sort = get_language_sort( LOCALE_NAME_USER_DEFAULT );
 
-#ifndef __REACTOS__
     if (GetDynamicTimeZoneInformation( &timezone ) != TIME_ZONE_ID_INVALID &&
         !RegCreateKeyExW( HKEY_LOCAL_MACHINE, L"System\\CurrentControlSet\\Control\\TimeZoneInformation",
                           0, NULL, REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS, NULL, &hkey, NULL ))
@@ -2293,7 +2286,6 @@ void init_locale( HMODULE module )
         RegSetValueExW( hkey, L"MACCP", 0, REG_SZ, (BYTE *)bufferW, (count + 1) * sizeof(WCHAR) );
         RegCloseKey( hkey );
     }
-#endif
 }
 
 

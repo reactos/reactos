@@ -222,8 +222,9 @@ static NTSTATUS add_format( WCHAR **buffer, WCHAR *end, const WCHAR **src, int i
     else return STATUS_INVALID_PARAMETER;
 
 #ifdef __REACTOS__
-    len = _snwprintf( *buffer, end - *buffer, fmt,
+    len = _snwprintf( *buffer, end - *buffer - 1, fmt,
                         args[0], args[1], args[2], args[3], args[4] );
+    (*buffer)[end - *buffer - 1] = L'\0';
 #else
     len = _snwprintf_s( *buffer, end - *buffer, end - *buffer - 1, fmt,
                         args[0], args[1], args[2], args[3], args[4] );
