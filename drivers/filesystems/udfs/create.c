@@ -278,7 +278,8 @@ UDFOpenExistingFcb(
 
                 Status = DeleteOnClose ? STATUS_CANNOT_DELETE :
                                               STATUS_SHARING_VIOLATION;
-                AdPrint(("    File is mapped or deletion in progress\n"));
+                UDFPrint(("UDFS share: %wZ is mapped as an image, status %lx\n",
+                          &IrpSp->FileObject->FileName, Status));
                 return Status;
             }
         }
@@ -452,6 +453,21 @@ UDFOpenExistingFcb(
 * Return Value: STATUS_SUCCESS/Error
 *
 *************************************************************************/
+/* UDFOpenFileInfoFromDirContext gives back a FileInfo with only its FID
+ * read when the entry was being loaded by another thread; it has no Dloc
+ * and is not linked anywhere yet. */
+static VOID
+UDFFreePausedFileInfo(
+    IN PUDF_FILE_INFO FileInfo
+    )
+{
+    if (!FileInfo || FileInfo->Dloc)
+        return;
+    if (FileInfo->FileIdent)
+        MyFreePool__(FileInfo->FileIdent);
+    MyFreePool__(FileInfo);
+}
+
 NTSTATUS
 UDFOpenObjectFromDirContext(
     IN PIRP_CONTEXT IrpContext,
@@ -490,14 +506,31 @@ UDFOpenObjectFromDirContext(
         // Step 1: Open FileInfo from directory context (read from disk or find cached)
         ASSERT(DirContext);
         Status = UDFOpenFileInfoFromDirContext(IrpContext, Vcb, DirContext, TRUE, &NewFileInfo);
+        /* Another thread is still loading this file's entry. Wait for it
+         * as other file systems do, rather than failing the open with a
+         * sharing violation the caller cannot explain. Bounded, because
+         * the parent is held here. */
+        if (Status == STATUS_SHARING_PAUSED) {
+            ULONG Retry;
+            LARGE_INTEGER Delay;
+            Delay.QuadPart = -10 * 1000 * 5;    // 5 ms
+            for (Retry = 0; Retry < 200 && Status == STATUS_SHARING_PAUSED; ++Retry) {
+                UDFFreePausedFileInfo(NewFileInfo);
+                KeDelayExecutionThread(KernelMode, FALSE, &Delay);
+                NewFileInfo = NULL;
+                Status = UDFOpenFileInfoFromDirContext(IrpContext, Vcb, DirContext,
+                                                       TRUE, &NewFileInfo);
+            }
+        }
         if (Status == STATUS_FILE_DELETED) {
             NewFileInfo = NULL;
             AdPrint(("    File deleted\n"));
             return STATUS_ACCESS_DENIED;
         }
         if (Status == STATUS_SHARING_PAUSED) {
-            AdPrint(("    Dloc is being initialized\n"));
-            BrutePoint();
+            UDFPrint(("UDFS share: %wZ entry still loading by another thread\n",
+                      &IrpSp->FileObject->FileName));
+            UDFFreePausedFileInfo(NewFileInfo);
             return STATUS_SHARING_VIOLATION;
         }
         if (!NT_SUCCESS(Status)) {
@@ -3006,6 +3039,8 @@ UDFCompleteFcbOpen(
             if (!MmFlushImageSection(&Fcb->FcbNonpaged->SegmentObject, MmFlushForWrite)) {
 
                 Status = DeleteOnClose ? STATUS_CANNOT_DELETE : STATUS_SHARING_VIOLATION;
+                UDFPrint(("UDFS share: %wZ is mapped as an image, status %lx\n",
+                          &IrpSp->FileObject->FileName, Status));
                 try_return(Status);
             }
         }
@@ -3020,6 +3055,15 @@ UDFCompleteFcbOpen(
                                         &Fcb->ShareAccess,
                                         FALSE);
             if (!NT_SUCCESS(Status)) {
+                UDFPrint(("UDFS share: %wZ refused at open, access %lx share %lx, "
+                          "open %lu readers %lu writers %lu deleters %lu "
+                          "shared r/w/d %lu/%lu/%lu\n",
+                          &IrpSp->FileObject->FileName, DesiredAccess,
+                          (ULONG)IrpSp->Parameters.Create.ShareAccess,
+                          Fcb->ShareAccess.OpenCount, Fcb->ShareAccess.Readers,
+                          Fcb->ShareAccess.Writers, Fcb->ShareAccess.Deleters,
+                          Fcb->ShareAccess.SharedRead, Fcb->ShareAccess.SharedWrite,
+                          Fcb->ShareAccess.SharedDelete));
                 try_return(Status);
             }
         }

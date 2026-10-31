@@ -85,6 +85,15 @@ UDFCheckAccessRights(
             // handles the actual update AFTER all checks pass.
             RC = IoCheckShareAccess(DesiredAccess, ShareAccess, FileObject,
                                             &Fcb->ShareAccess, FALSE);
+            if (!NT_SUCCESS(RC))
+                UDFPrint(("UDFS share: %wZ refused, access %lx share %lx, "
+                          "open %lu readers %lu writers %lu deleters %lu "
+                          "shared r/w/d %lu/%lu/%lu\n",
+                          &FileObject->FileName, DesiredAccess, (ULONG)ShareAccess,
+                          Fcb->ShareAccess.OpenCount, Fcb->ShareAccess.Readers,
+                          Fcb->ShareAccess.Writers, Fcb->ShareAccess.Deleters,
+                          Fcb->ShareAccess.SharedRead, Fcb->ShareAccess.SharedWrite,
+                          Fcb->ShareAccess.SharedDelete));
         } else {
 
             RC = STATUS_SUCCESS;
