@@ -197,7 +197,13 @@ InbvDriverInitialize(
     }
 
     /* Initialize the video */
+#if (BOOTVID_EXPORTS_VERSION >= _WIN32_WINNT_WIN7)
+    InbvBootDriverInstalled = VidInitialize(0, ResetMode, LoaderBlock);
+#elif (BOOTVID_EXPORTS_VERSION == _WIN32_WINNT_WIN6)
+    InbvBootDriverInstalled = VidInitialize(0, ResetMode);
+#else // if (BOOTVID_EXPORTS_VERSION < _WIN32_WINNT_WIN6)
     InbvBootDriverInstalled = VidInitialize(ResetMode);
+#endif
     if (InbvBootDriverInstalled)
     {
         /* Find bitmap resources in the kernel */

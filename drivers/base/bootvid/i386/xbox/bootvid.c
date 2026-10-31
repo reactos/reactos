@@ -113,10 +113,14 @@ ApplyPalette(VOID)
 
 BOOLEAN
 NTAPI
-VidInitialize(
-    _In_ BOOLEAN SetMode)
+VidInitializeEx(
+    _In_ INT Phase,
+    _In_ BOOLEAN SetMode,
+    _In_opt_ PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
     BOOLEAN Result = FALSE;
+
+    UNREFERENCED_PARAMETER(LoaderBlock);
 
     /* FIXME: Add platform check */
     /* 1. Access PCI device 1:0:0 */
@@ -126,12 +130,20 @@ VidInitialize(
     PHYSICAL_ADDRESS PhysControlStart = {.QuadPart = 0xFD000000};
     PHYSICAL_ADDRESS PhysFrameBufferStart = {.QuadPart = 0xF0000000};
     ULONG ControlLength = 16 * 1024 * 1024;
+    ULONG_PTR ControlStart;
 
-    ULONG_PTR ControlStart = (ULONG_PTR)MmMapIoSpace(PhysControlStart, ControlLength, MmNonCached);
-    if (!ControlStart)
+    if (Phase < 0)
     {
-        DPRINT1("Out of memory!\n");
-        return FALSE;
+        ControlStart = (ULONG_PTR)PhysControlStart.QuadPart;
+    }
+    else
+    {
+        ControlStart = (ULONG_PTR)MmMapIoSpace(PhysControlStart, ControlLength, MmNonCached);
+        if (!ControlStart)
+        {
+            DPRINT1("Out of memory!\n");
+            return FALSE;
+        }
     }
 
     ULONG_PTR FrameBuffer = READ_REGISTER_ULONG((PULONG)(ControlStart + NV2A_CRTC_FRAMEBUFFER_START));
@@ -191,11 +203,20 @@ VidInitialize(
 
     /* Return the address back to GPU memory mapped I/O */
     PhysFrameBufferStart.QuadPart += FrameBuffer;
-    FrameBufferStart = (ULONG_PTR)MmMapIoSpace(PhysFrameBufferStart, NV2A_VIDEO_MEMORY_SIZE, MmNonCached);
-    if (!FrameBufferStart)
+    if (Phase < 0)
     {
-        DPRINT1("Out of memory!\n");
-        goto cleanup;
+        FrameBufferStart = (ULONG_PTR)PhysFrameBufferStart.QuadPart;
+    }
+    else
+    {
+        if (FrameBufferStart /*&& FrameBufferStart != (ULONG_PTR)PhysFrameBufferStart.QuadPart*/)
+            MmUnmapIoSpace((PVOID)FrameBufferStart, NV2A_VIDEO_MEMORY_SIZE);
+        FrameBufferStart = (ULONG_PTR)MmMapIoSpace(PhysFrameBufferStart, NV2A_VIDEO_MEMORY_SIZE, MmNonCached);
+        if (!FrameBufferStart)
+        {
+            DPRINT1("Out of memory!\n");
+            goto cleanup;
+        }
     }
 
     Result = TRUE;
@@ -208,7 +229,7 @@ VidInitialize(
         VidResetDisplay(TRUE);
 
 cleanup:
-    if (ControlStart)
+    if ((Phase >= 0) && ControlStart)
         MmUnmapIoSpace((PVOID)ControlStart, ControlLength);
 
     /* Video is ready */
