@@ -24,6 +24,22 @@ LANGID PsInstallUILanguageId = LANGIDFROMLCID(0x00000409);
 LCID PsDefaultThreadLocaleId = 0x00000409;
 LANGID PsDefaultUILanguageId = LANGIDFROMLCID(0x00000409);
 
+typedef enum _NLS_SELECTION_TYPE
+{
+    NLS_SECTION_SORTKEYS = 9,
+    NLS_SECTION_CASEMAP = 10,
+    NLS_SECTION_CODEPAGE = 11,
+    NLS_SECTION_NORMALIZE = 12
+} NLS_SELECTION_TYPE;
+
+typedef enum _NORM_FORM {
+    NormalizationOther  = 0,
+    NormalizationC      = 0x1,
+    NormalizationD      = 0x2,
+    NormalizationKC     = 0x5,
+    NormalizationKD     = 0x6
+} NORM_FORM;
+
 /* DEFINES *******************************************************************/
 
 #define BOGUS_LOCALE_ID 0xFFFF0000
@@ -709,6 +725,277 @@ NtSetDefaultUILanguage(IN LANGID LanguageId)
         Status = ExpSetCurrentUserUILanguage(L"MultiUILanguageId", LanguageId);
     }
 
+    return Status;
+}
+
+static
+NTSTATUS
+ExpGetNlsSectionName(
+    _In_ NLS_SELECTION_TYPE Type,
+    _In_ UINT Id,
+    _Out_ PUNICODE_STRING SectionName)
+{
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    switch (Type)
+    {
+    case NLS_SECTION_SORTKEYS:
+        if (Id) return STATUS_INVALID_PARAMETER_1;
+        RtlInitUnicodeString(SectionName, L"\\NLS\\NlsSectionSORTDEFAULT");
+        break;
+    case NLS_SECTION_CASEMAP:
+        if (Id) return STATUS_UNSUCCESSFUL;
+        RtlInitUnicodeString(SectionName, L"\\NLS\\NlsSectionLANG_INTL");
+        break;
+    case NLS_SECTION_CODEPAGE:
+        Status = RtlUnicodeStringPrintf(SectionName, L"\\NLS\\NlsSectionCP%03u", Id);
+        break;
+    case NLS_SECTION_NORMALIZE:
+        Status = RtlUnicodeStringPrintf(SectionName, L"\\NLS\\NlsSectionNORM%08x", Id);
+        break;
+    default:
+        return STATUS_INVALID_PARAMETER_1;
+    }
+    return Status;
+}
+
+static
+NTSTATUS
+ExpGetNlsFilePath(
+    _In_ UINT Type,
+    _In_ UINT Id,
+    _Out_ PUNICODE_STRING FileName)
+{
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    switch (Type)
+    {
+    case NLS_SECTION_SORTKEYS:
+        RtlInitUnicodeString(FileName, L"\\SystemRoot\\Globalization\\Sorting\\sortdefault.nls");
+        break;
+    case NLS_SECTION_CASEMAP:
+        RtlInitUnicodeString(FileName, L"\\SystemRoot\\System32\\l_intl.nls");
+        break;
+    case NLS_SECTION_CODEPAGE:
+        Status = RtlUnicodeStringPrintf(FileName, L"\\SystemRoot\\System32\\c_%03u.nls", Id);
+        break;
+    case NLS_SECTION_NORMALIZE:
+        switch (Id)
+        {
+        case NormalizationC:
+            RtlInitUnicodeString(FileName, L"\\SystemRoot\\System32\\normnfc.nls");
+            break;
+        case NormalizationD:
+            RtlInitUnicodeString(FileName, L"\\SystemRoot\\System32\\normnfd.nls");
+            break;
+        case NormalizationKC:
+            RtlInitUnicodeString(FileName, L"\\SystemRoot\\System32\\normnfkc.nls");
+            break;
+        case NormalizationKD:
+            RtlInitUnicodeString(FileName, L"\\SystemRoot\\System32\\normnfkd.nls");
+            break;
+        case 13:
+            RtlInitUnicodeString(FileName, L"\\SystemRoot\\System32\\normidna.nls");
+            break;
+        default:
+            return STATUS_INVALID_PARAMETER_1;
+        }
+        break;
+    default:
+        return STATUS_INVALID_PARAMETER_1;
+    }
+    return Status;
+}
+
+NTSTATUS
+NTAPI
+NtGetNlsSectionPtr(
+    _In_ ULONG SectionType,
+    _In_ ULONG SectionId,
+    _In_ PVOID ContextData,
+    _Out_ PVOID* SectionPointer,
+    _Out_ SIZE_T* SectionSize)
+{
+    NTSTATUS Status;
+    OBJECT_ATTRIBUTES SectionAttributes;
+    OBJECT_ATTRIBUTES FileAttributes;
+    IO_STATUS_BLOCK Iosb;
+    HANDLE FileHandle = NULL;
+    HANDLE SectionHandle = NULL;
+    PVOID BaseAddress = NULL;
+    SIZE_T ViewSize = 0;
+    DECLARE_UNICODE_STRING_SIZE(Name, 256);
+    DECLARE_UNICODE_STRING_SIZE(FileName, 256);
+
+    if (KeGetPreviousMode() == KernelMode) return STATUS_INVALID_PARAMETER;
+
+    Status = ExpGetNlsSectionName(SectionType, SectionId, &Name);
+    if (!NT_SUCCESS(Status)) return Status;
+
+    Status = ExpGetNlsFilePath(SectionType, SectionId, &FileName);
+    if (!NT_SUCCESS(Status)) return Status;
+
+    InitializeObjectAttributes(&SectionAttributes, &Name, OBJ_OPENIF | OBJ_KERNEL_HANDLE | OBJ_PERMANENT, NULL, NULL);
+
+    /* Try to open the NLS section first, if that fails open the NLS file and create the section */
+    if (!NT_SUCCESS(ZwOpenSection(&SectionHandle, SECTION_MAP_READ, &SectionAttributes)))
+    {
+        InitializeObjectAttributes(&FileAttributes, &FileName, OBJ_KERNEL_HANDLE, NULL, NULL);
+
+        Status = ZwOpenFile(
+            &FileHandle,
+            GENERIC_READ,
+            &FileAttributes,
+            &Iosb,
+            FILE_SHARE_READ,
+            FILE_NON_DIRECTORY_FILE
+        );
+
+        if (!NT_SUCCESS(Status))
+        {
+            return Status;
+        }
+
+        Status = ZwCreateSection(&SectionHandle, SECTION_MAP_READ, &SectionAttributes, NULL, PAGE_READONLY, SEC_COMMIT, FileHandle);
+        ZwClose(FileHandle);
+
+        if (!NT_SUCCESS(Status))
+        {
+            return Status;
+        }
+    }
+
+    /* Map the NLS file */
+    Status = ZwMapViewOfSection(
+        SectionHandle,
+        ZwCurrentProcess(),
+        &BaseAddress,
+        0,
+        0,
+        NULL,
+        &ViewSize,
+        ViewUnmap,
+        0,
+        PAGE_READONLY
+    );
+
+    ZwClose(SectionHandle);
+    if (!NT_SUCCESS(Status))
+    {
+        return Status;
+    }
+
+    _SEH2_TRY
+    {
+        /* Check if we came from user mode */
+        if (KeGetPreviousMode() != KernelMode)
+        {
+            ProbeForRead(SectionPointer, sizeof(*SectionPointer), sizeof(UCHAR));
+            ProbeForRead(SectionSize, sizeof(*SectionSize), sizeof(UCHAR));
+        }
+
+        *SectionPointer = BaseAddress;
+        *SectionSize = ViewSize;
+    }
+    _SEH2_EXCEPT(ExSystemExceptionFilter())
+    {
+        /* Return exception code */
+        ZwUnmapViewOfSection(ZwCurrentProcess(), BaseAddress);
+        _SEH2_YIELD(return _SEH2_GetExceptionCode());
+    }
+    _SEH2_END;
+
+    
+    return Status;
+}
+
+NTSTATUS
+NTAPI
+NtInitializeNlsFiles(
+    _Out_ PVOID* BaseAddress,
+    _Out_ PLCID DefaultLocaleId,
+    _Out_ PLARGE_INTEGER DefaultCasingTableSize,
+    _Out_opt_ PULONG CurrentNLSVersion)
+{
+    NTSTATUS Status;
+    UNICODE_STRING FileName;
+    OBJECT_ATTRIBUTES FileAttributes;
+    OBJECT_ATTRIBUTES SectionAttributes;
+    IO_STATUS_BLOCK Iosb;
+    HANDLE FileHandle = NULL;
+    HANDLE SectionHandle = NULL;
+    SIZE_T ViewSize = 0;
+    PVOID SectionBaseAddress = NULL;
+
+    if (KeGetPreviousMode() == KernelMode) return STATUS_INVALID_PARAMETER;
+
+    RtlInitUnicodeString(&FileName, L"\\SystemRoot\\System32\\locale.nls");
+    InitializeObjectAttributes(&FileAttributes, &FileName, OBJ_KERNEL_HANDLE, NULL, NULL);
+
+    Status = ZwOpenFile(
+        &FileHandle,
+        GENERIC_READ,
+        &FileAttributes,
+        &Iosb,
+        FILE_SHARE_READ,
+        FILE_NON_DIRECTORY_FILE
+    );
+
+    if (!NT_SUCCESS(Status))
+    {
+        return Status;
+    }
+
+    InitializeObjectAttributes(&SectionAttributes, NULL, OBJ_KERNEL_HANDLE, NULL, NULL);
+    Status = ZwCreateSection(&SectionHandle, SECTION_MAP_READ, &SectionAttributes, NULL, PAGE_READONLY, SEC_COMMIT, FileHandle);
+    ZwClose(FileHandle);
+
+    if (!NT_SUCCESS(Status))
+    {
+        return Status;
+    }
+
+    Status = ZwMapViewOfSection(
+        SectionHandle,
+        ZwCurrentProcess(),
+        &SectionBaseAddress,
+        0,
+        0,
+        NULL,
+        &ViewSize,
+        ViewUnmap,
+        0,
+        PAGE_READONLY
+    );
+
+    ZwClose(SectionHandle);
+    if (!NT_SUCCESS(Status))
+    {
+        return Status;
+    }
+
+     _SEH2_TRY
+    {
+        /* Check if we came from user mode */
+        if (KeGetPreviousMode() != KernelMode)
+        {
+            ProbeForRead(DefaultLocaleId, sizeof(*DefaultLocaleId), sizeof(UCHAR));
+            ProbeForRead(BaseAddress, sizeof(*BaseAddress), sizeof(UCHAR));
+            ProbeForRead(DefaultCasingTableSize, sizeof(*DefaultCasingTableSize), sizeof(UCHAR));
+        }
+
+        *DefaultLocaleId = PsDefaultSystemLocaleId;
+        *BaseAddress = SectionBaseAddress;
+        DefaultCasingTableSize->QuadPart = (LONGLONG)ViewSize;
+    }
+    _SEH2_EXCEPT(ExSystemExceptionFilter())
+    {
+        /* Return exception code */
+        ZwUnmapViewOfSection(ZwCurrentProcess(), SectionBaseAddress);
+        _SEH2_YIELD(return _SEH2_GetExceptionCode());
+    }
+    _SEH2_END;
+    
     return Status;
 }
 

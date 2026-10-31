@@ -4636,6 +4636,14 @@ NTAPI
 RtlQueryTimeZoneInformation(
     _Out_ PRTL_TIME_ZONE_INFORMATION TimeZoneInformation);
 
+#if (_WIN32_WINNT >= _WIN32_WINNT_VISTA) || defined(__REACTOS__)
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlQueryDynamicTimeZoneInformation(
+    _Out_ PRTL_DYNAMIC_TIME_ZONE_INFORMATION TimeZoneInformation);
+#endif /* _WIN32_WINNT >= _WIN32_WINNT_VISTA */
+
 NTSYSAPI
 VOID
 NTAPI
@@ -4649,6 +4657,12 @@ NTSTATUS
 NTAPI
 RtlSetTimeZoneInformation(
     _In_ PRTL_TIME_ZONE_INFORMATION TimeZoneInformation);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlSetDynamicTimeZoneInformation(
+    _In_ PRTL_DYNAMIC_TIME_ZONE_INFORMATION TimeZoneInformation);
 
 _Success_(return != FALSE)
 NTSYSAPI
@@ -5165,6 +5179,8 @@ RtlReleaseSRWLockShared(IN OUT PRTL_SRWLOCK SRWLock);
 VOID
 NTAPI
 RtlReleaseSRWLockExclusive(IN OUT PRTL_SRWLOCK SRWLock);
+#endif
+#if (_WIN32_WINNT >= _WIN32_WINNT_VISTA) || defined(__REACTOS__)
 
 NTSYSAPI
 NTSTATUS
