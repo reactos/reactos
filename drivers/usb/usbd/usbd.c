@@ -52,24 +52,6 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
 /*
  * @implemented
  */
-ULONG NTAPI
-DllInitialize(ULONG Unknown)
-{
-    return 0;
-}
-
-/*
- * @implemented
- */
-ULONG NTAPI
-DllUnload(VOID)
-{
-    return 0;
-}
-
-/*
- * @implemented
- */
 PVOID NTAPI
 USBD_Debug_GetHeap(ULONG Unknown1, POOL_TYPE PoolType, ULONG NumberOfBytes,
                    ULONG Tag)
