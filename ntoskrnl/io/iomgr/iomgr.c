@@ -12,6 +12,7 @@
 #include <ntoskrnl.h>
 #define NDEBUG
 #include <debug.h>
+#include "../vf/vf.h"
 
 VOID
 NTAPI
@@ -724,6 +725,7 @@ IoInitSystem(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     }
 
     /* Return success */
+    VfInitialize();
     return TRUE;
 }
 
