@@ -39,7 +39,7 @@
 #include <debug.h>
 
 /* List of supported OIDs */
-static ULONG MiniportOIDList[] =
+static const NDIS_OID MiniportOIDList[] =
 {
   OID_GEN_SUPPORTED_LIST,
   OID_GEN_HARDWARE_STATUS,
@@ -110,7 +110,7 @@ MiniportQueryInformation(
  */
 {
   NDIS_STATUS Status;
-  PVOID CopyFrom;
+  const VOID* CopyFrom;
   UINT CopySize;
   ULONG GenericULONG;
   PADAPTER Adapter = (PADAPTER)MiniportAdapterContext;
@@ -129,7 +129,7 @@ MiniportQueryInformation(
     {
     case OID_GEN_SUPPORTED_LIST:
         {
-          CopyFrom = (PVOID)&MiniportOIDList;
+          CopyFrom = MiniportOIDList;
           CopySize = sizeof(MiniportOIDList);
           break;
         }
@@ -212,7 +212,7 @@ MiniportQueryInformation(
 
     case OID_GEN_VENDOR_DESCRIPTION:
         {
-          static UCHAR VendorDesc[] = "ReactOS Team";
+          static const CHAR VendorDesc[] = "AMD PCNet Ethernet Adapter";
           CopyFrom = VendorDesc;
           CopySize = sizeof(VendorDesc);
           break;

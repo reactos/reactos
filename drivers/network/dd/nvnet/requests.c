@@ -982,7 +982,7 @@ MiniportQueryInformation(
     PNVNET_ADAPTER Adapter = (PNVNET_ADAPTER)MiniportAdapterContext;
     NDIS_STATUS Status = NDIS_STATUS_SUCCESS;
     ULONG InfoLength;
-    PVOID InfoPtr;
+    const VOID* InfoPtr;
     union _GENERIC_INFORMATION
     {
         USHORT Ushort;
@@ -999,7 +999,7 @@ MiniportQueryInformation(
     switch (Oid)
     {
         case OID_GEN_SUPPORTED_LIST:
-            InfoPtr = (PVOID)&NvpSupportedOidList;
+            InfoPtr = NvpSupportedOidList;
             InfoLength = sizeof(NvpSupportedOidList);
             break;
 
@@ -1074,7 +1074,7 @@ MiniportQueryInformation(
         case OID_GEN_VENDOR_DESCRIPTION:
         {
             static const CHAR VendorDesc[] = "nVidia nForce Ethernet Controller";
-            InfoPtr = (PVOID)&VendorDesc;
+            InfoPtr = VendorDesc;
             InfoLength = sizeof(VendorDesc);
             break;
         }

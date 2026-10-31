@@ -217,7 +217,7 @@ DcQueryInformation(
     PDC21X4_ADAPTER Adapter = (PDC21X4_ADAPTER)MiniportAdapterContext;
     NDIS_STATUS Status = NDIS_STATUS_SUCCESS;
     ULONG InfoLength;
-    PVOID InfoPtr;
+    const VOID* InfoPtr;
     union _GENERIC_INFORMATION
     {
         USHORT Ushort;
@@ -234,7 +234,7 @@ DcQueryInformation(
     switch (Oid)
     {
         case OID_GEN_SUPPORTED_LIST:
-            InfoPtr = (PVOID)&DcpSupportedOidList;
+            InfoPtr = DcpSupportedOidList;
             InfoLength = sizeof(DcpSupportedOidList);
             break;
 
@@ -316,7 +316,7 @@ DcQueryInformation(
         case OID_GEN_VENDOR_DESCRIPTION:
         {
             static const CHAR VendorDesc[] = "DC21x4 compatible Ethernet Adapter";
-            InfoPtr = (PVOID)&VendorDesc;
+            InfoPtr = VendorDesc;
             InfoLength = sizeof(VendorDesc);
             break;
         }

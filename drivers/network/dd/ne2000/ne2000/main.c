@@ -26,7 +26,8 @@ ULONG DebugTraceLevel = 0;
 
 
 /* List of supported OIDs */
-static ULONG MiniportOIDList[] = {
+static const NDIS_OID MiniportOIDList[] =
+{
     OID_GEN_SUPPORTED_LIST,
     OID_GEN_HARDWARE_STATUS,
     OID_GEN_MEDIA_SUPPORTED,
@@ -495,7 +496,7 @@ static NDIS_STATUS NTAPI MiniportQueryInformation(
  */
 {
     NDIS_STATUS Status;
-    PVOID CopyFrom;
+    const VOID* CopyFrom;
     UINT CopySize;
     ULONG GenericULONG;
     USHORT GenericUSHORT;
@@ -510,7 +511,7 @@ static NDIS_STATUS NTAPI MiniportQueryInformation(
 
     switch (Oid) {
     case OID_GEN_SUPPORTED_LIST:
-        CopyFrom = (PVOID)&MiniportOIDList;
+        CopyFrom = MiniportOIDList;
         CopySize = sizeof(MiniportOIDList);
         break;
     case OID_GEN_HARDWARE_STATUS:
