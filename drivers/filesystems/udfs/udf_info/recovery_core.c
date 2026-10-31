@@ -9,8 +9,15 @@ typedef struct _RECOVERY_EXTENT {
     uint16_t Ref;
 } RECOVERY_EXTENT;
 
+/* Directory data is read through its extent list. Directories that grew
+ * in many small steps can have far more extents than the metadata files,
+ * so the scratch list holds as many as a 16 MB directory can use. */
+#define UDFS_RECOVERY_MAX_DIR_EXTENTS \
+    ((16U * 1024 * 1024) / UDFS_RECOVERY_SECTOR_SIZE)
+
 typedef struct _RECOVERY_EXTENT_LIST {
-    RECOVERY_EXTENT Items[UDFS_RECOVERY_MAX_EXTENTS];
+    RECOVERY_EXTENT *Items;
+    uint32_t Capacity;
     uint32_t Count;
     uint32_t TotalBlocks;
     uint64_t FileBytes;
@@ -18,6 +25,17 @@ typedef struct _RECOVERY_EXTENT_LIST {
     uint32_t InlineOffset;
     uint8_t Inline;
 } RECOVERY_EXTENT_LIST;
+
+/* Empty the list but keep its storage. */
+static void
+ResetExtents(RECOVERY_EXTENT_LIST *extents)
+{
+    RECOVERY_EXTENT *items = extents->Items;
+    uint32_t capacity = extents->Capacity;
+    memset(extents, 0, sizeof(*extents));
+    extents->Items = items;
+    extents->Capacity = capacity;
+}
 
 typedef struct _RECOVERY_SECTOR_CACHE {
     uint32_t Lba;
@@ -536,7 +554,7 @@ ReadFileExtents(const UDFS_RECOVERY_READER *reader,
         (mode != 0 && !(expectedType == 252 && mode == 3)))
         return UdfsRecoveryProbeUnsupported;
 
-    memset(extents, 0, sizeof(*extents));
+    ResetExtents(extents);
     extents->FileBytes = Read64(sector + 56);
     attrLength = Read32(sector + 208);
     adLength = Read32(sector + 212);
@@ -578,7 +596,7 @@ ReadFileExtents(const UDFS_RECOVERY_READER *reader,
                  UDFS_RECOVERY_SECTOR_SIZE;
         if (!blocks || blockLbn >= result->PartitionBlocks ||
             blocks > result->PartitionBlocks - blockLbn ||
-            extents->Count == UDFS_RECOVERY_MAX_EXTENTS ||
+            extents->Count == extents->Capacity ||
             blocks > UINT32_MAX - extents->TotalBlocks)
             return UdfsRecoveryProbeCorrupt;
         extents->Items[extents->Count].Lbn = blockLbn;
@@ -1169,7 +1187,7 @@ GraphParseFileAds(RECOVERY_GRAPH *graph, const RECOVERY_GRAPH_ENTRY *file,
     *modeOut = mode;
     *inlineStart = start;
     *inlineLength = length;
-    memset(dataExtents, 0, sizeof(*dataExtents));
+    ResetExtents(dataExtents);
     dataExtents->FileBytes = Read64(fe + 56);
     if (mode == 3)
         return dataExtents->FileBytes <= length ?
@@ -1218,7 +1236,7 @@ GraphParseFileAds(RECOVERY_GRAPH *graph, const RECOVERY_GRAPH_ENTRY *file,
             } else if (kind == 0 || kind == 1) {
                 if (haveNext ||
                     (keepExtents &&
-                     dataExtents->Count == UDFS_RECOVERY_MAX_EXTENTS))
+                     dataExtents->Count == dataExtents->Capacity))
                     return GRAPH_FAIL(UdfsRecoveryProbeUnsupported);
                 /* An allocated but unrecorded AD owns its blocks.  It is
                  * valid in an ordinary file, but cannot supply FID bytes. */
@@ -1228,7 +1246,7 @@ GraphParseFileAds(RECOVERY_GRAPH *graph, const RECOVERY_GRAPH_ENTRY *file,
                     return GRAPH_FAIL(UdfsRecoveryProbeUnsupported);
                 status = GraphOwn(graph, ref, lbn, bytes);
                 if (status != UdfsRecoveryProbeValidLayout) return GRAPH_FAIL(status);
-                if (dataExtents->Count < UDFS_RECOVERY_MAX_EXTENTS) {
+                if (dataExtents->Count < dataExtents->Capacity) {
                     RECOVERY_EXTENT *extent =
                         &dataExtents->Items[dataExtents->Count++];
                     extent->Ref = ref;
@@ -1952,7 +1970,14 @@ GraphRun(const UDFS_RECOVERY_READER *reader, UDFS_RECOVERY_PROBE *result,
     graph->Metadata = mainFile;
     graph->BitmapFile = bitmapFile;
     graph->ScratchExtents = (RECOVERY_EXTENT_LIST *)reader->Allocate(
-        reader->Context, sizeof(*graph->ScratchExtents));
+        reader->Context, sizeof(*graph->ScratchExtents) +
+        (size_t)UDFS_RECOVERY_MAX_DIR_EXTENTS * sizeof(RECOVERY_EXTENT));
+    if (graph->ScratchExtents) {
+        memset(graph->ScratchExtents, 0, sizeof(*graph->ScratchExtents));
+        graph->ScratchExtents->Items =
+            (RECOVERY_EXTENT *)(graph->ScratchExtents + 1);
+        graph->ScratchExtents->Capacity = UDFS_RECOVERY_MAX_DIR_EXTENTS;
+    }
     metadataBytes = (uint32_t)(((uint64_t)result->MetadataBlocks + 7) / 8);
     status = BitmapInitialize(reader, &graph->PhysicalOwned,
                                result->PartitionBlocks);
@@ -2232,6 +2257,7 @@ typedef struct _RECOVERY_LAYOUT_WORK {
     RECOVERY_SECTOR_CACHE PhysicalCache;
     RECOVERY_SECTOR_CACHE MetadataCache;
     RECOVERY_EXTENT_LIST Lists[3];
+    RECOVERY_EXTENT ListItems[3][UDFS_RECOVERY_MAX_EXTENTS];
 } RECOVERY_LAYOUT_WORK;
 
 static void
@@ -2858,6 +2884,10 @@ ProbeLayout(const UDFS_RECOVERY_READER *reader,
     prevailingLvid = work->PrevailingLvid;
     physicalCache = &work->PhysicalCache;
     metadataCache = &work->MetadataCache;
+    for (i = 0; i < 3; ++i) {
+        work->Lists[i].Items = work->ListItems[i];
+        work->Lists[i].Capacity = UDFS_RECOVERY_MAX_EXTENTS;
+    }
     mainFile = &work->Lists[0];
     mirrorFile = &work->Lists[1];
     bitmapFile = &work->Lists[2];
