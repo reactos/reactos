@@ -344,7 +344,7 @@ SamChangePasswordUser(IN SAM_HANDLE UserHandle,
     if (!NT_SUCCESS(Status))
     {
         TRACE("SystemFunction007 failed (Status 0x%08lx)\n", Status);
-        return Status;
+        goto done;
     }
 
     /* Calculate the NT hash for the new password */
@@ -353,7 +353,7 @@ SamChangePasswordUser(IN SAM_HANDLE UserHandle,
     if (!NT_SUCCESS(Status))
     {
         TRACE("SystemFunction007 failed (Status 0x%08lx)\n", Status);
-        return Status;
+        goto done;
     }
 
     /* Calculate the LM password and hash for the old password */
@@ -405,7 +405,7 @@ SamChangePasswordUser(IN SAM_HANDLE UserHandle,
         if (!NT_SUCCESS(Status))
         {
             TRACE("SystemFunction012 failed (Status 0x%08lx)\n", Status);
-            return Status;
+            goto done;
         }
 
         /* Encrypt the new LM hash with the old LM hash */
@@ -415,7 +415,7 @@ SamChangePasswordUser(IN SAM_HANDLE UserHandle,
         if (!NT_SUCCESS(Status))
         {
             TRACE("SystemFunction012 failed (Status 0x%08lx)\n", Status);
-            return Status;
+            goto done;
         }
 
         pOldLmEncryptedWithNewLm = &OldLmEncryptedWithNewLm;
@@ -429,7 +429,7 @@ SamChangePasswordUser(IN SAM_HANDLE UserHandle,
     if (!NT_SUCCESS(Status))
     {
         TRACE("SystemFunction012 failed (Status 0x%08lx)\n", Status);
-        return Status;
+        goto done;
     }
 
     /* Encrypt the new NT hash with the old NT hash */
@@ -439,7 +439,7 @@ SamChangePasswordUser(IN SAM_HANDLE UserHandle,
     if (!NT_SUCCESS(Status))
     {
         TRACE("SystemFunction012 failed (Status 0x%08lx)\n", Status);
-        return Status;
+        goto done;
     }
 
     RpcTryExcept
@@ -461,6 +461,12 @@ SamChangePasswordUser(IN SAM_HANDLE UserHandle,
         Status = I_RpcMapWin32Status(RpcExceptionCode());
     }
     RpcEndExcept;
+
+done:
+    SecureZeroMemory(&OldLmPassword, sizeof(OldLmPassword));
+    SecureZeroMemory(&NewLmPassword, sizeof(NewLmPassword));
+    SecureZeroMemory(&OldNtPassword, sizeof(OldNtPassword));
+    SecureZeroMemory(&NewNtPassword, sizeof(NewNtPassword));
 
     return Status;
 }
