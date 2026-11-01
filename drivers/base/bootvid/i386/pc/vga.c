@@ -65,6 +65,7 @@ static const ULONG ReverseAndUnpackMonochromePixels[16] =
     0x1111,
 };
 
+VGA_GRAPHICS_CONTROLLER_STATE VgaGCState = VGA_GC_STATE_UNINITIALIZED;
 ULONG_PTR VgaRegisterBase = 0;
 ULONG_PTR VgaBase = 0;
 
@@ -86,6 +87,10 @@ ReadWriteMode(
 static VOID
 PrepareForCopyArea(VOID)
 {
+    if (VgaGCState == VGA_GC_STATE_COPY_PIXELS)
+        return;
+    VgaGCState = VGA_GC_STATE_COPY_PIXELS;
+
     /* Enable all memory planes */
     __outpw(VGA_BASE_IO_PORT + SEQ_ADDRESS_PORT, (0x0F << 8) | IND_MAP_MASK);
 
@@ -96,9 +101,24 @@ PrepareForCopyArea(VOID)
     ReadWriteMode(1);
 }
 
+static VOID
+PrepareForReadPixels(VOID)
+{
+    if (VgaGCState == VGA_GC_STATE_READ_PIXELS)
+        return;
+    VgaGCState = VGA_GC_STATE_READ_PIXELS;
+
+    /* Select read mode 0 */
+    ReadWriteMode(0);
+}
+
 VOID
 PrepareForSetPixel(VOID)
 {
+    if (VgaGCState == VGA_GC_STATE_WRITE_PIXELS)
+        return;
+    VgaGCState = VGA_GC_STATE_WRITE_PIXELS;
+
     /* Select read mode 1 and write mode 2 */
     ReadWriteMode(0xA);
 
@@ -310,6 +330,8 @@ VOID
 NTAPI
 VidCleanUp(VOID)
 {
+    VgaGCState = VGA_GC_STATE_UNINITIALIZED;
+
     /* Restore the bit mask to its original state */
     __outpb(VGA_BASE_IO_PORT + GRAPH_ADDRESS_PORT, IND_BIT_MASK);
     __outpb(VGA_BASE_IO_PORT + GRAPH_DATA_PORT, BIT_MASK_DEFAULT);
@@ -355,8 +377,7 @@ VidScreenToBufferBlt(
     /* Calculate the starting pixel block pointer */
     PixelPtr = (PUCHAR)(VgaBase + Top * (SCREEN_WIDTH / 8) + (Left / 8));
 
-    /* Select read mode 0 */
-    ReadWriteMode(0);
+    PrepareForReadPixels();
 
     /* Loop through the pixels for each plane */
     for (Plane = 0; Plane < 4; ++Plane)
