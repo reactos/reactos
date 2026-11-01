@@ -350,8 +350,27 @@ InbvDisplayString(
         InbvAcquireLock();
 
         /* Make sure we're installed and display the string */
+#if 0 /////
         if (InbvBootDriverInstalled)
             VidDisplayString(String);
+#else
+        if (InbvBootDriverInstalled)
+        {
+            static ULONG Left = 50;
+            static ULONG Top = 20;
+            static ULONG Cnt = 0;
+
+            VidDisplayStringXY(String, Left, Top, FALSE);
+
+            Left++;
+            Top += 15;
+
+            if (Cnt++ > 26)
+            {
+                while (1) {};
+            }
+        }
+#endif /////
 
         /* Print the string on the EMS port */
         HeadlessDispatch(HeadlessCmdPutString,

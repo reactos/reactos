@@ -89,7 +89,11 @@ VidDisplayStringXY(
     for (; *String; ++String, Left += BOOTCHAR_WIDTH)
     {
         /* Display a character */
+#if 0 //////
         DisplayCharacter(*String, Left, Top, BV_COLOR_LIGHT_BLUE, BackColor);
+#else
+        DisplayCharacter(*String, Left, Top, 15, 8);
+#endif /////
     }
 }
 
