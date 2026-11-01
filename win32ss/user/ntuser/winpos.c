@@ -1942,6 +1942,13 @@ co_WinPosSetWindowPos(
       IntLinkHwnd(Window, WinPos.hwndInsertAfter);
    }
 
+   /* Start updating layered window position */
+   if (IntIsLayeredWindow(Window) &&
+       (WinPos.flags & SWP_HIDEWINDOW || !(WinPos.flags & SWP_NOSIZE) || !(WinPos.flags & SWP_NOMOVE)))
+   {
+      IntLayeredPreUpdate(Window);
+   }
+
    OldWindowRect = Window->rcWindow;
    OldClientRect = Window->rcClient;
 
@@ -1957,6 +1964,13 @@ co_WinPosSetWindowPos(
 
    Window->rcWindow = NewWindowRect;
    Window->rcClient = NewClientRect;
+
+   /* Finish updating layered window position */
+   if (IntIsLayeredWindow(Window) &&
+       (WinPos.flags & SWP_HIDEWINDOW || !(WinPos.flags & SWP_NOSIZE) || !(WinPos.flags & SWP_NOMOVE)))
+   {
+      IntLayeredPostUpdate(Window);
+   }
 
    /* erase parent when hiding or resizing child */
    if (WinPos.flags & SWP_HIDEWINDOW)
@@ -2075,7 +2089,7 @@ co_WinPosSetWindowPos(
           VisAfter != NULL &&
           !(WvrFlags & WVR_REDRAW) &&
           !(WinPos.flags & SWP_NOCOPYBITS) &&
-          !(Window->ExStyle & WS_EX_TRANSPARENT))
+          !(Window->ExStyle & (WS_EX_TRANSPARENT | WS_EX_LAYERED)))
       {
 
          /*
@@ -2187,7 +2201,6 @@ co_WinPosSetWindowPos(
              }
              GreDeleteObject(DirtyRgn);
              */
-
                 PWND Parent = Window->spwndParent;
 
                 REGION_bOffsetRgn( DirtyRgn, Window->rcWindow.left, Window->rcWindow.top);
@@ -2338,15 +2351,24 @@ co_WinPosSetWindowPos(
           (WinPos.flags & SWP_AGG_STATUSFLAGS) != SWP_AGG_NOGEOMETRYCHANGE))
        {
            PWND Parent = Window->spwndParent;
-           if (!Parent || UserIsDesktopWindow(Parent)) Parent = Window;
-           UserSyncAndPaintWindows( Parent, RDW_ERASENOW);
+           if ((!Parent || UserIsDesktopWindow(Parent)) &&
+               !(Window->ExStyle & WS_EX_LAYERED)) Parent = Window;
+           UserSyncAndPaintWindows( Parent, RDW_ERASENOW );
        }
 
        /* Give newly shown windows a chance to redraw */
        if(((WinPos.flags & SWP_AGG_STATUSFLAGS) != SWP_AGG_NOPOSCHANGE)
                 && !(flags & SWP_AGG_NOCLIENTCHANGE) && (flags & SWP_SHOWWINDOW))
        {
-           UserSyncAndPaintWindows( Window, RDW_ERASENOW);
+           UserSyncAndPaintWindows( Window, RDW_ERASENOW );
+       }
+
+       /* Redraw layered windows */
+       if (IntIsLayeredWindow(Window) &&
+           !(WinPos.flags & SWP_NOREDRAW) &&
+           (WinPos.flags & SWP_AGG_STATUSFLAGS) != SWP_AGG_NOPOSCHANGE)
+       {
+           IntLayeredRefresh(Window, NULL);
        }
    }
 
@@ -3112,7 +3134,9 @@ IntChildWindowFromPointEx(PWND Parent, LONG x, LONG y, UINT uiFlags)
 
             if (uiFlags & CWP_SKIPTRANSPARENT)
             {
-               if (Child->ExStyle & WS_EX_TRANSPARENT) continue;
+               if (Child->ExStyle & WS_EX_TRANSPARENT ||
+                   Child->ExStyle & WS_EX_LAYERED)
+                   continue;
             }
 
             if (IntPtInWindow(Child, Pt.x, Pt.y))
