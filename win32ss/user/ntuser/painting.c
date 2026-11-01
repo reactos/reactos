@@ -136,6 +136,13 @@ IntSendSyncPaint(PWND Wnd, ULONG Flags)
    PLIST_ENTRY Entry;
    BOOL bSend = TRUE;
 
+   /* Never give the layered window itself WM_PAINT/WM_ERASEBKGND/WM_NCPAINT/WM_SYNCPAINT */
+   if (Wnd->ExStyle & WS_EX_LAYERED)
+   {
+      ASSERT(!(Wnd->state & WNDS_PAINTNOTPROCESSED));
+      return;
+   }
+
    ptiWnd = Wnd->head.pti;
    ptiCur = PsGetCurrentThreadWin32Thread();
    /*
@@ -349,6 +356,13 @@ IntGetNCUpdateRgn(PWND Window, BOOL Validate)
 VOID FASTCALL
 IntSendNCPaint(PWND pWnd, HRGN hRgn)
 {
+   /* Never give the layered window itself WM_PAINT/WM_ERASEBKGND/WM_NCPAINT/WM_SYNCPAINT */
+   if (pWnd->ExStyle & WS_EX_LAYERED)
+   {
+      ASSERT(!(pWnd->state & WNDS_PAINTNOTPROCESSED));
+      return;
+   }
+
    pWnd->state &= ~WNDS_SENDNCPAINT;
 
    if ( pWnd == GetW32ThreadInfo()->MessageQueue->spwndActive &&
@@ -407,6 +421,13 @@ co_IntPaintWindows(PWND Wnd, ULONG Flags, BOOL Recurse)
    HDC hDC;
    HWND hWnd = UserHMGetHandle(Wnd);
    HRGN TempRegion = NULL;
+
+   /* Never give the layered window itself WM_PAINT/WM_ERASEBKGND/WM_NCPAINT/WM_SYNCPAINT */
+   if (Wnd->ExStyle & WS_EX_LAYERED)
+   {
+      ASSERT(!(Wnd->state & WNDS_PAINTNOTPROCESSED));
+      return;
+   }
 
    Wnd->state &= ~WNDS_PAINTNOTPROCESSED;
 

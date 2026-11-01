@@ -58,9 +58,7 @@ EngAlphaBlend(
     InputRect = *SourceRect;
     RECTL_vMakeWellOrdered(&InputRect);
     if ( (InputRect.top < 0) || (InputRect.bottom < 0) ||
-         (InputRect.left < 0) || (InputRect.right < 0) ||
-         InputRect.right > psoSource->sizlBitmap.cx ||
-         InputRect.bottom > psoSource->sizlBitmap.cy )
+         (InputRect.left < 0) || (InputRect.right < 0))
     {
         EngSetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;

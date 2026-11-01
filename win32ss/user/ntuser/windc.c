@@ -72,6 +72,11 @@ PREGION FASTCALL
 DceGetVisRgn(PWND Window, ULONG Flags, HWND hWndChild, ULONG CFlags)
 {
     PREGION Rgn;
+
+    /* A composited layered window is drawn only from its surface */
+    if (Window && !(Flags & DCX_LAYEREDWIN) && IntIsLayeredWindow(Window))
+        return IntSysCreateRectpRgn(0, 0, 0, 0);
+
     Rgn = VIS_ComputeVisibleRegion( Window,
                                     0 == (Flags & DCX_WINDOW),
                                     0 != (Flags & DCX_CLIPCHILDREN),
