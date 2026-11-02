@@ -12,7 +12,11 @@
 /* First missing LBAs retained for diagnostics, not a repair limit. */
 #define UDFS_RECOVERY_MAX_REPAIR_BLOCKS 4U
 /* Bound nonpaged plan memory by bitmap sectors, not file count. */
-#define UDFS_RECOVERY_MAX_BITMAP_EDITS 128U
+/* Distinct bitmap sectors one repair may rewrite. A large install cut off
+ * by power loss can leave over a gigabyte referenced but free, hundreds of
+ * sectors even when contiguous. 4096 sectors cover 16M blocks; the plan
+ * stays near 4 MB. */
+#define UDFS_RECOVERY_MAX_BITMAP_EDITS 4096U
 
 typedef int (*UdfsRecoveryReadSector)(void *context, uint32_t lba,
                                       uint8_t sector[UDFS_RECOVERY_SECTOR_SIZE]);
@@ -143,6 +147,7 @@ typedef struct _UDFS_RECOVERY_SECTOR_EDIT {
  * caller establishes exclusive access, durable ordering and retry semantics. */
 typedef struct _UDFS_RECOVERY_REPAIR_PLAN {
     uint32_t BitmapEditCount;
+    uint32_t LastBitmapEdit;    /* lookup hint: blocks arrive in order */
     UDFS_RECOVERY_SECTOR_EDIT BitmapEdits[UDFS_RECOVERY_MAX_BITMAP_EDITS];
     uint32_t FeEditCount;
     UDFS_RECOVERY_SECTOR_EDIT FeEdits[2];

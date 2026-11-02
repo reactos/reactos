@@ -1644,8 +1644,11 @@ PlanOwnedMetadataBlock(const UDFS_RECOVERY_READER *reader,
     status = MapExtentByte(result, bitmapFile, 24ULL + (lbn >> 3),
                             &lba, &offset);
     if (status != UdfsRecoveryProbeValidLayout) return status;
-    for (i = 0; i < plan->BitmapEditCount; ++i)
-        if (plan->BitmapEdits[i].Lba == lba) break;
+    i = plan->LastBitmapEdit;
+    if (i >= plan->BitmapEditCount || plan->BitmapEdits[i].Lba != lba)
+        for (i = 0; i < plan->BitmapEditCount; ++i)
+            if (plan->BitmapEdits[i].Lba == lba) break;
+    plan->LastBitmapEdit = i;
     if (i == plan->BitmapEditCount) {
         if (i == UDFS_RECOVERY_MAX_BITMAP_EDITS)
             return UdfsRecoveryProbeUnsupported;
@@ -1729,8 +1732,11 @@ PlanPhysicalBitmapBlock(const UDFS_RECOVERY_READER *reader,
     if (address >= reader->SectorCount) return UdfsRecoveryProbeCorrupt;
     lba = (uint32_t)address;
     offset = (uint32_t)(byteOffset % UDFS_RECOVERY_SECTOR_SIZE);
-    for (i = 0; i < plan->BitmapEditCount; ++i)
-        if (plan->BitmapEdits[i].Lba == lba) break;
+    i = plan->LastBitmapEdit;
+    if (i >= plan->BitmapEditCount || plan->BitmapEdits[i].Lba != lba)
+        for (i = 0; i < plan->BitmapEditCount; ++i)
+            if (plan->BitmapEdits[i].Lba == lba) break;
+    plan->LastBitmapEdit = i;
     if (i == plan->BitmapEditCount) {
         if (i == UDFS_RECOVERY_MAX_BITMAP_EDITS)
             return UdfsRecoveryProbeUnsupported;
