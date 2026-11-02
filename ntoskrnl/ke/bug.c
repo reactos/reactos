@@ -1080,12 +1080,31 @@ KeBugCheckWithTf(IN ULONG BugCheckCode,
         }
     }
 
+// !! TEST !! NEED TO DO THAT *BEFORE* DISABLING INTERRUPTS AND RAISING IRQL !!
+    /* Avoid recursion */
+    LONG TempCount = InterlockedDecrement((PLONG)&KeBugCheckCount);
+    if ((BugCheckCode == MANUALLY_INITIATED_CRASH) && !TempCount)
+    {
+        /* Display the BSOD */
+TEST_BEGIN("KiDisplayBlueScreen", 100)
+        KiDisplayBlueScreen(MessageId,
+                            IsHardError,
+                            HardErrCaption,
+                            HardErrMessage,
+                            AnsiName);
+TEST_TIMING_EXCLUDE_BEGIN()
+        VidDisplayString(" ");
+TEST_TIMING_EXCLUDE_END()
+TEST_END()
+    }
+// !! END TEST !!
+
     /* Raise IRQL to HIGH_LEVEL */
     _disable();
     KeRaiseIrql(HIGH_LEVEL, &OldIrql);
 
     /* Avoid recursion */
-    if (!InterlockedDecrement((PLONG)&KeBugCheckCount))
+    if (!TempCount /*InterlockedDecrement((PLONG)&KeBugCheckCount)*/)
     {
 #ifdef CONFIG_SMP
         /* Set CPU that is bug checking now */
@@ -1096,6 +1115,7 @@ KeBugCheckWithTf(IN ULONG BugCheckCode,
 #endif
 
         /* Display the BSOD */
+        /**/if (BugCheckCode != MANUALLY_INITIATED_CRASH)/**/
         KiDisplayBlueScreen(MessageId,
                             IsHardError,
                             HardErrCaption,

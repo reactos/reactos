@@ -697,6 +697,8 @@ DisplayBootBitmap(
          */
         MmChangeKernelResourceSectionProtection(MM_READWRITE);
 
+TEST_BEGIN(__FUNCTION__ "(SOS)", 100)
+
         /* Check the type of the OS: workstation or server */
         if (SharedUserData->NtProductType == NtProductWinNt)
         {
@@ -705,9 +707,11 @@ DisplayBootBitmap(
             InbvSolidColorFill(0, 0, SCREEN_WIDTH-1, SCREEN_HEIGHT-1, BV_COLOR_DARK_GRAY);
             InbvSolidColorFill(0, VID_FOOTER_BG_TOP, SCREEN_WIDTH-1, SCREEN_HEIGHT-1, BV_COLOR_RED);
 
+TEST_TIMING_EXCLUDE_BEGIN()
             /* Get resources */
             Header = InbvGetResourceAddress(IDB_WKSTA_HEADER);
             Footer = InbvGetResourceAddress(IDB_WKSTA_FOOTER);
+TEST_TIMING_EXCLUDE_END()
         }
         else
         {
@@ -716,9 +720,11 @@ DisplayBootBitmap(
             InbvSolidColorFill(0, 0, SCREEN_WIDTH-1, SCREEN_HEIGHT-1, BV_COLOR_CYAN);
             InbvSolidColorFill(0, VID_FOOTER_BG_TOP, SCREEN_WIDTH-1, SCREEN_HEIGHT-1, BV_COLOR_RED);
 
+TEST_TIMING_EXCLUDE_BEGIN()
             /* Get resources */
             Header = InbvGetResourceAddress(IDB_SERVER_HEADER);
             Footer = InbvGetResourceAddress(IDB_SERVER_FOOTER);
+TEST_TIMING_EXCLUDE_END()
         }
 
         /* Set the scrolling region */
@@ -740,6 +746,11 @@ DisplayBootBitmap(
                           AL_VERTICAL_TOP,
                           0, 0, 0, 0);
         }
+
+TEST_TIMING_EXCLUDE_BEGIN()
+        VidDisplayString(" ");
+TEST_TIMING_EXCLUDE_END()
+TEST_END()
 
         /* Restore the kernel resource section protection to be read-only */
         MmChangeKernelResourceSectionProtection(MM_READONLY);
@@ -805,6 +816,8 @@ DisplayBootBitmap(
 #endif
 #endif // REACTOS_SKUS
 
+TEST_BEGIN(__FUNCTION__ "(Gfx)", 100)
+
         /* Make sure we have a logo */
         if (BootLogo)
         {
@@ -848,7 +861,9 @@ DisplayBootBitmap(
         }
 
         /* Load and draw progress bar bitmap */
+TEST_TIMING_EXCLUDE_BEGIN()
         BootProgress = InbvGetResourceAddress(IDB_PROGRESS_BAR);
+TEST_TIMING_EXCLUDE_END()
         BitBltAligned(BootProgress,
                       TRUE,
                       AL_HORIZONTAL_CENTER,
@@ -856,7 +871,9 @@ DisplayBootBitmap(
                       0, 118, 0, 0);
 
         /* Load and draw copyright text bitmap */
+TEST_TIMING_EXCLUDE_BEGIN()
         BootCopy = InbvGetResourceAddress(IDB_COPYRIGHT);
+TEST_TIMING_EXCLUDE_END()
         BitBltAligned(BootCopy,
                       TRUE,
                       AL_HORIZONTAL_LEFT,
@@ -889,7 +906,9 @@ DisplayBootBitmap(
          */
         if (TempRotBarSelection == RB_PROGRESS_BAR)
         {
+TEST_TIMING_EXCLUDE_BEGIN()
             LineBmp = InbvGetResourceAddress(IDB_ROTATING_LINE);
+TEST_TIMING_EXCLUDE_END()
             if (LineBmp)
             {
                 /* Draw the line and store it in global buffer */
@@ -903,6 +922,11 @@ DisplayBootBitmap(
             ShowProgressBar = FALSE;
         }
 #endif // INBV_ROTBAR_IMPLEMENTED
+
+TEST_TIMING_EXCLUDE_BEGIN()
+        VidDisplayString(" ");
+TEST_TIMING_EXCLUDE_END()
+TEST_END()
 
         /* Restore the kernel resource section protection to be read-only */
         MmChangeKernelResourceSectionProtection(MM_READONLY);

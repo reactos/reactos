@@ -142,3 +142,51 @@ VOID
 NTAPI
 InbvPortTerminate(
     _In_ ULONG PortId);
+
+
+//// TESTING
+
+#define TEST_BEGIN(name, count) \
+{\
+    PCSTR __name = (name); \
+    ULONG __count = (count); \
+    ULONG __i; \
+    LARGE_INTEGER __StartTime, __EndTime, __TotalTime/*, __ExcludeTime*/; \
+\
+    DbgPrint("Test %s, count %lu", __name, __count); \
+    __TotalTime.QuadPart = /*__ExcludeTime.QuadPart =*/ 0; \
+    for (__i = 0; __i < __count; ++__i) \
+    { \
+        DbgPrint("\n    Run %lu ...", (__i + 1)); \
+        KeQuerySystemTime(&__StartTime); \
+        __EndTime.QuadPart = __StartTime.QuadPart; \
+        {
+
+#define TEST_TIMING_EXCLUDE_BEGIN() \
+    { \
+        KeQuerySystemTime(&__EndTime); \
+        __TotalTime.QuadPart += __EndTime.QuadPart - __StartTime.QuadPart; \
+        __StartTime.QuadPart = __EndTime.QuadPart; \
+        /*LARGE_INTEGER __BeginExcludeTime, __EndExcludeTime;*/ \
+        /*KeQuerySystemTime(&__BeginExcludeTime);*/ \
+        {
+
+#define TEST_TIMING_EXCLUDE_END() \
+        } \
+        KeQuerySystemTime(&__StartTime); \
+        __EndTime.QuadPart = __StartTime.QuadPart; \
+        /*KeQuerySystemTime(&__EndExcludeTime);*/ \
+        /*__ExcludeTime.QuadPart += __EndExcludeTime.QuadPart - __BeginExcludeTime.QuadPart;*/ \
+    }
+
+#define TEST_END() \
+        } \
+        KeQuerySystemTime(&__EndTime); \
+        __TotalTime.QuadPart += __EndTime.QuadPart - __StartTime.QuadPart; \
+    } \
+    /*__TotalTime.QuadPart -= __ExcludeTime.QuadPart;*/ \
+    if (__i > 0) \
+        __TotalTime.QuadPart /= __i; \
+    DbgPrint("\n--> Actual count %lu, Average time: %I64u (100ns)\n", __i, __TotalTime.QuadPart); \
+    DbgBreakPoint(); \
+}
