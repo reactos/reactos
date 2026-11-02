@@ -1,9 +1,10 @@
 /*
- * (Simplified Chinese resources)
- * (简体中文资源)
- * by zhangbing 2008 <e_zb@21cn.com, ezb@mail.gywb.cn>
- * Updated: 2009-04-26 Jingjing Fu <Jingjingf AT 188.com>
- *          2026-10-21 Luo Yufan <njlyf2011@hotmail.com>
+ * PROJECT:     ReactOS Add hardware control panel
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     Chinese (Simplified) resource file
+ * TRANSLATORS: Copyright 2008 Zhang Bing <e_zb@21cn.com> <ezb@mail.gywb.cn>
+ *              Copyright 2009 Jingjing Fu <jingjingf@188.com>
+ *              Copyright 2018-2026 Luo Yufan <njlyf2011@hotmail.com>
  */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
