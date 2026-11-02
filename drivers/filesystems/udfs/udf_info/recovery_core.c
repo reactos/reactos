@@ -3220,9 +3220,14 @@ GraphCanRecover(const UDFS_RECOVERY_PROBE *probe)
             probe->ReferencedFreeMetadataBlocks == 1 &&
             probe->FirstReferencedFreeMetadataLbn ==
                 probe->DirectoryLinkFixChildLbn)))) &&
-        (!probe->UnownedPhysicalBlocks ||
-         GraphCanRollbackPhysicalOrphans(probe)) &&
-        !probe->UnownedMetadataBlocks && !probe->OverlapBlocks &&
+        /* Allocated blocks that nothing refers to are left by creates and
+         * extends cut off by power loss. Outside the rollback case they stay
+         * allocated: a space leak, not a conflict with any file. */
+        ((!probe->UnownedPhysicalBlocks && !probe->UnownedMetadataBlocks) ||
+         GraphCanRollbackPhysicalOrphans(probe) ||
+         (!probe->FidSplitCount && !probe->MirrorDirectorySplitCount &&
+          !probe->DirectoryLinkFixCount)) &&
+        !probe->OverlapBlocks &&
         probe->ReferencedFreeMirrorBlocksCompared ==
             probe->ReferencedFreeMetadataBlocks &&
         probe->LvidPhysicalFreeBlocks <= probe->PartitionBlocks &&

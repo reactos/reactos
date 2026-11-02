@@ -234,6 +234,15 @@ UDFRecoverDirtyVolumeBeforeLoad(PIRP_CONTEXT IrpContext, PVCB Vcb)
               (ULONG)before.FilesVisited, (ULONG)before.DirectoriesVisited,
               (ULONG)before.PartitionBlocks, (ULONG)before.FailureObjectRef,
               (ULONG)before.FailureObjectLbn, (ULONG)before.FailureLine));
+    if (status == UdfsRecoveryProbeGraphMismatch)
+        UDFPrint(("UDFS recovery: in use but unreferenced %lu/%lu, referenced but free %lu/%lu, "
+                  "shared %lu, dir fixes %lu/%lu/%lu (physical/metadata)\n",
+                  (ULONG)before.UnownedPhysicalBlocks, (ULONG)before.UnownedMetadataBlocks,
+                  (ULONG)before.ReferencedFreePhysicalBlocks,
+                  (ULONG)before.ReferencedFreeMetadataBlocks,
+                  (ULONG)before.OverlapBlocks, (ULONG)before.FidSplitCount,
+                  (ULONG)before.MirrorDirectorySplitCount,
+                  (ULONG)before.DirectoryLinkFixCount));
     /* The probe has not written anything yet. Incomplete validation keeps
      * the pre-existing dirty/read-only mount policy. */
     if (status == UdfsRecoveryProbeNoMemory ||
