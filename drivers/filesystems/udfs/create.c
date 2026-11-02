@@ -147,6 +147,45 @@ try_exit: NOTHING;
 } // end UDFSupersedeOrOverwriteFile()
 
 
+/* Reverse UDFCompleteFcbOpen for an open that fails afterwards. */
+static VOID
+UDFUndoFcbOpen(
+    IN PIRP_CONTEXT IrpContext,
+    IN PVCB Vcb,
+    IN PFCB Fcb,
+    IN PFILE_OBJECT FileObject
+    )
+{
+    PFCB OpenFcb;
+    PCCB Ccb;
+
+    if (UDFDecodeFileObject(FileObject, &OpenFcb, &Ccb) == UnopenedFileObject ||
+        OpenFcb != Fcb)
+        return;
+
+    IoRemoveShareAccess(FileObject, &Fcb->ShareAccess);
+    if (FlagOn(FileObject->Flags, FO_CACHE_SUPPORTED)) {
+        InterlockedDecrement((PLONG)&Fcb->CachedOpenHandleCount);
+        ClearFlag(FileObject->Flags, FO_CACHE_SUPPORTED);
+    }
+
+    UDFLockVcb(IrpContext, Vcb);
+    UDFDecrementCleanupCounts(IrpContext, Fcb);
+    UDFDecrementReferenceCounts(IrpContext, Fcb, 1, 1);
+    if (Ccb && Ccb->Lcb) {
+        ASSERT(Ccb->Lcb->Reference > 0);
+        Ccb->Lcb->Reference--;
+    }
+    UDFUnlockVcb(IrpContext, Vcb);
+
+    UDFSetFileObject(FileObject, UnopenedFileObject, NULL, NULL);
+    FileObject->SectionObjectPointer = NULL;
+    if (Ccb) {
+        Ccb->Lcb = NULL;
+        UDFDeleteCcb(Ccb);
+    }
+}
+
 /*************************************************************************
 *
 * Function: UDFOpenExistingFcb()
@@ -278,9 +317,9 @@ UDFOpenExistingFcb(
 
                 Status = DeleteOnClose ? STATUS_CANNOT_DELETE :
                                               STATUS_SHARING_VIOLATION;
-                UDFPrint(("UDFS share: %wZ is mapped as an image, status %lx\n",
+                UDFPrint(("UDF share: %wZ is mapped as an image, status %lx\n",
                           &IrpSp->FileObject->FileName, Status));
-                return Status;
+                goto UndoOpen;
             }
         }
 
@@ -300,7 +339,8 @@ UDFOpenExistingFcb(
 
     if (DeleteOnClose && UDFIsADirectory(NewFileInfo) && !UDFIsDirEmpty__(NewFileInfo)) {
         AdPrint(("    Directory in not empry\n"));
-        return STATUS_DIRECTORY_NOT_EMPTY;
+        Status = STATUS_DIRECTORY_NOT_EMPTY;
+        goto UndoOpen;
     }
 
     // Get attributes from FCB cache.
@@ -310,7 +350,8 @@ UDFOpenExistingFcb(
     if (DeleteOnClose &&
        (TmpFileAttributes & FILE_ATTRIBUTE_READONLY)) {
         AdPrint(("    Read-only file with DeleteOnClose not allowed\n"));
-        return STATUS_CANNOT_DELETE;
+        Status = STATUS_CANNOT_DELETE;
+        goto UndoOpen;
     }
 
     // If a supersede or overwrite was requested, do so now ...
@@ -334,21 +375,22 @@ UDFOpenExistingFcb(
             }
             if (!NT_SUCCESS(Status)) {
                 AdPrint(("    Can't supersede. DELETE permission required\n"));
-                return Status;
+                goto UndoOpen;
             }
         } else {
             Status = UDFCheckAccessRights(NULL, NULL, *PtrNewFcb, NULL,
                         FILE_WRITE_DATA | FILE_WRITE_EA | FILE_WRITE_ATTRIBUTES, 0);
             if (!NT_SUCCESS(Status)) {
                 AdPrint(("    Can't overwrite. Permission denied\n"));
-                return Status;
+                goto UndoOpen;
             }
         }
         // Existing & requested System and Hidden bits must match
         if ( (TmpFileAttributes & (FILE_ATTRIBUTE_HIDDEN | FILE_ATTRIBUTE_SYSTEM)) &
             (FileAttributes ^ (FILE_ATTRIBUTE_HIDDEN | FILE_ATTRIBUTE_SYSTEM)) ) {
             AdPrint(("    The Hidden and/or System bits do not match\n"));
-            return STATUS_ACCESS_DENIED;
+            Status = STATUS_ACCESS_DENIED;
+            goto UndoOpen;
         }
 
         // Truncate file and set attributes
@@ -363,7 +405,7 @@ UDFOpenExistingFcb(
             (BOOLEAN)(CreateDisposition == FILE_SUPERSEDE)
         );
         if (!NT_SUCCESS(Status)) {
-            return Status;
+            goto UndoOpen;
         }
 
         // notify changes
@@ -429,6 +471,14 @@ UDFOpenExistingFcb(
     }
 
     return STATUS_SUCCESS;
+
+UndoOpen:
+    /* The open was already completed above. A failed create gets no
+     * cleanup or close, so take it back here; otherwise the share access
+     * and the handle count stay behind and every later open of the file
+     * fails with a sharing violation. */
+    UDFUndoFcbOpen(IrpContext, Vcb, *PtrNewFcb, FileObject);
+    return Status;
 
 } // end UDFOpenExistingFcb()
 
@@ -528,7 +578,7 @@ UDFOpenObjectFromDirContext(
             return STATUS_ACCESS_DENIED;
         }
         if (Status == STATUS_SHARING_PAUSED) {
-            UDFPrint(("UDFS share: %wZ entry still loading by another thread\n",
+            UDFPrint(("UDF share: %wZ entry still loading by another thread\n",
                       &IrpSp->FileObject->FileName));
             UDFFreePausedFileInfo(NewFileInfo);
             return STATUS_SHARING_VIOLATION;
@@ -3039,7 +3089,7 @@ UDFCompleteFcbOpen(
             if (!MmFlushImageSection(&Fcb->FcbNonpaged->SegmentObject, MmFlushForWrite)) {
 
                 Status = DeleteOnClose ? STATUS_CANNOT_DELETE : STATUS_SHARING_VIOLATION;
-                UDFPrint(("UDFS share: %wZ is mapped as an image, status %lx\n",
+                UDFPrint(("UDF share: %wZ is mapped as an image, status %lx\n",
                           &IrpSp->FileObject->FileName, Status));
                 try_return(Status);
             }
@@ -3055,7 +3105,7 @@ UDFCompleteFcbOpen(
                                         &Fcb->ShareAccess,
                                         FALSE);
             if (!NT_SUCCESS(Status)) {
-                UDFPrint(("UDFS share: %wZ refused at open, access %lx share %lx, "
+                UDFPrint(("UDF share: %wZ refused at open, access %lx share %lx, "
                           "open %lu readers %lu writers %lu deleters %lu "
                           "shared r/w/d %lu/%lu/%lu\n",
                           &IrpSp->FileObject->FileName, DesiredAccess,

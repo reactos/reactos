@@ -86,7 +86,7 @@ UDFCheckAccessRights(
             RC = IoCheckShareAccess(DesiredAccess, ShareAccess, FileObject,
                                             &Fcb->ShareAccess, FALSE);
             if (!NT_SUCCESS(RC))
-                UDFPrint(("UDFS share: %wZ refused, access %lx share %lx, "
+                UDFPrint(("UDF share: %wZ refused, access %lx share %lx, "
                           "open %lu readers %lu writers %lu deleters %lu "
                           "shared r/w/d %lu/%lu/%lu\n",
                           &FileObject->FileName, DesiredAccess, (ULONG)ShareAccess,
