@@ -1,9 +1,9 @@
 /*
- * PROJECT:     ReactOS Device Manager Applet
- * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        dll/win32/devmgr/lang/uk-UA.rc
- * PURPOSE:     Ukraianian Language File for devmgr
- * TRANSLATORS: Artem Reznikov, Igor Paliychuk
+ * PROJECT:     ReactOS Device Manager
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Ukrainian resource file
+ * TRANSLATORS: Copyright 2006-2008 Artem Reznikov <temarez@yandex.ru>
+ *              Copyright 2010-2011 Igor Paliychuk <igor-hkr@mail.ru>
  */
 
 LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
@@ -266,7 +266,7 @@ END
  This code relates to the device manager GUI
  */
 
-IDR_MAINMENU MENU
+IDM_MAINMENU MENU
 BEGIN
     POPUP "&File"
     BEGIN

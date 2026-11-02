@@ -267,7 +267,7 @@ END
  This code relates to the device manager GUI
  */
 
-IDR_MAINMENU MENU
+IDM_MAINMENU MENU
 BEGIN
     POPUP "文件(&F)"
     BEGIN
