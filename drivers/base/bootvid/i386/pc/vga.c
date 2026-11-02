@@ -189,12 +189,9 @@ DisplayCharacter(
         }
     }
 
-    /* Check if the background color is transparent */
+    /* If the background color is transparent, we are done */
     if (BackColor >= BV_COLOR_NONE)
-    {
-        /* We are done */
         return;
-    }
 
     /* Calculate shift */
     Shift = Left & 7;
