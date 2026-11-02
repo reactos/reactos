@@ -7325,6 +7325,11 @@ UDFConvertFEToExtended(
             FileInfo->Dloc->DataLoc.Modified = TRUE;
             MyFreePool__(FileInfo->Dloc->FileEntry);
             FileInfo->Dloc->FileEntry = (tag*)ExFileEntry;
+            /* The data goes back after the longer Extended FE header. Resize
+             * decides whether it still fits in the ICB, and places it, from
+             * FileEntryLen, so that must already be the new length; data
+             * that no longer fits then moves to an extent. */
+            FileInfo->Dloc->FileEntryLen = NewLength;
             if (!NT_SUCCESS(status = UDFResizeFile__(IrpContext, Vcb, FileInfo, l)) ||
                !NT_SUCCESS(status = UDFWriteFile__(IrpContext, Vcb, FileInfo, 0, l, FALSE, tmp_buff, &WrittenBytes)) ) {
                 MyFreePool__(ExFileEntry);
