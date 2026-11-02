@@ -605,6 +605,10 @@ UDFMountVolume(
 
         Vcb->VcbCondition = VcbMounted;
 
+        // Metadata copy-on-write checkpoints (cow.c), writable volumes only.
+        if (!(Vcb->VcbState & VCB_STATE_VOLUME_READ_ONLY))
+            (VOID)UDFCowStart(IrpContext, Vcb);
+
         Vcb->TotalAllocUnits = UDFGetTotalSpace(Vcb);
         Vcb->FreeAllocUnits = UDFGetFreeSpace(Vcb);
 

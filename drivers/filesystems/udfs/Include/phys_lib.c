@@ -373,6 +373,22 @@ try_exit: NOTHING;
     return RC;
 } // end UDFReadWriteSectorsRaw()
 
+/* Sector I/O at the given physical address, with no metadata mirror or
+ * copy-on-write handling. For cow.c, which manages both itself. */
+NTSTATUS
+UDFReadWriteSectorsDirect(
+    IN PIRP_CONTEXT IrpContext,
+    IN PVCB Vcb,
+    IN LONGLONG StartingOffset,
+    IN ULONG ByteCount,
+    IN PVOID Buffer,
+    IN BOOLEAN IsWrite
+    )
+{
+    return UDFReadWriteSectorsRaw(IrpContext, Vcb, StartingOffset, ByteCount,
+                                  TRUE, Buffer, IsWrite);
+}
+
 NTSTATUS
 UDFReadWriteSectors(
     IN PIRP_CONTEXT IrpContext,
@@ -387,6 +403,15 @@ UDFReadWriteSectors(
     NTSTATUS status;
     uint32 firstLba, count, i, metadataLbn, mirrorLba, mirrorFlags;
     PEXTENT_MAP mirrorMap;
+
+    /* With copy-on-write, metadata sectors are buffered and redirected to
+     * the committed region; cow.c also writes the mirror copies. */
+    if (Vcb->Cow && UDFCowIo(IrpContext, Vcb, StartingOffset, ByteCount,
+                             Buffer, IsWrite, &status)) {
+        if (!NT_SUCCESS(status) && !ReturnError)
+            ExRaiseStatus(status);
+        return status;
+    }
 
     // Write the primary copy before its mirror, including sector updates
     // made by the file-entry and directory paths.  The mirror has its own

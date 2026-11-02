@@ -1328,7 +1328,7 @@ UDFBuildDeletePrefree(PVCB Vcb, PUDF_FILE_INFO FileInfo,
     BOOLEAN embedded;
 
     *Prepared = NULL;
-    if (Vcb->CDR_Mode || Vcb->BitmapFcb || Vcb->SectorSize != 512 ||
+    if (Vcb->Cow || Vcb->CDR_Mode || Vcb->BitmapFcb || Vcb->SectorSize != 512 ||
         !Vcb->FSBM_Bitmap || !Vcb->FSBM_OldBitmap ||
         !Vcb->MetadataBitmap || !Vcb->MetadataFileInfo ||
         !Vcb->MetadataBitmapFileInfo ||
@@ -4846,6 +4846,7 @@ UDFResizeFile__(PIRP_CONTEXT IrpContext, PVCB Vcb,
     if (!FileInfo || !FileInfo->Dloc || !FileInfo->Dloc->DataLoc.Mapping ||
         NewLength < 0 ||
         NewLength >= FileInfo->Dloc->DataLoc.Length ||
+        Vcb->Cow ||         // frees already wait for a committed checkpoint
         UDFIsADirectory(FileInfo) ||
         (FileInfo->Dloc->FE_Flags & UDF_FE_FLAG_NEW_UNPUBLISHED))
         return UDFResizeFileUnordered__(IrpContext, Vcb, FileInfo, NewLength);

@@ -270,6 +270,15 @@ __fastcall UDFRelocateSectors(IN PVCB Vcb,
                                IN uint32 Lba,
                                IN uint32 BlockCount);
 
+NTSTATUS
+UDFAllocAlignedRun(
+    IN PIRP_CONTEXT IrpContext,
+    IN PVCB Vcb,
+    IN uint32 Blocks,
+    IN uint32 Align,
+    OUT uint32* Lba,
+    OUT PEXTENT_MAP* Map);
+
 // return length of bit-chain starting from Offs bit
 SIZE_T    UDFGetBitmapLen(
                          uint32* Bitmap,

@@ -643,6 +643,9 @@ struct VCB {
     ERESOURCE                           BitMapResource1;
     // serializes growth of the UDF 2.50 metadata file
     ERESOURCE                           MetadataGrowResource;
+    // copy-on-write of the metadata partition (cow.c)
+    ERESOURCE                           CowResource;
+    struct _UDF_COW*                    Cow;
 
     ERESOURCE                           DlocResource;
     ERESOURCE                           DlocResource2;

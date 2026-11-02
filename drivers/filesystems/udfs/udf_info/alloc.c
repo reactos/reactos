@@ -521,6 +521,35 @@ UDFAllocAlignedMetadataRun(
     return status;
 }
 
+/* One aligned run of Blocks in the metadata's physical partition, for the
+ * second copy-on-write region. Map receives the allocation to free later. */
+NTSTATUS
+UDFAllocAlignedRun(
+    IN PIRP_CONTEXT IrpContext,
+    IN PVCB Vcb,
+    IN uint32 Blocks,
+    IN uint32 Align,
+    OUT uint32* Lba,
+    OUT PEXTENT_MAP* Map
+    )
+{
+    UDF_METADATA_GROWTH_PROFILE profile;
+    EXTENT_INFO run;
+    NTSTATUS status;
+
+    RtlZeroMemory(&profile, sizeof(profile));
+    *Map = NULL;
+    status = UDFAllocAlignedMetadataRun(IrpContext, Vcb, Blocks,
+                 UDFPartStart(Vcb, Vcb->MetadataPhysRef),
+                 UDFPartEnd(Vcb, Vcb->MetadataPhysRef),
+                 Align, &run, Lba, &profile);
+    if (NT_SUCCESS(status) && !run.Mapping)
+        status = STATUS_DISK_FULL;
+    if (NT_SUCCESS(status))
+        *Map = run.Mapping;
+    return status;
+}
+
 static NTSTATUS
 UDFGrowMetadataFile(
     IN PIRP_CONTEXT IrpContext,
@@ -921,7 +950,18 @@ retry_after_growth:
             UDFReleaseResource(&(Vcb->MetadataGrowResource));
             goto retry_after_growth;
         }
-        status = UDFGrowMetadataFile(IrpContext, Vcb, blocks);
+        /* Growth rewrites the Metadata File entries from the home layout,
+         * so copy-on-write steps aside and starts again afterwards. */
+        {
+            BOOLEAN cowWasOn = Vcb->Cow != NULL;
+            if (cowWasOn && !NT_SUCCESS(UDFCowStop(IrpContext, Vcb))) {
+                UDFReleaseResource(&(Vcb->MetadataGrowResource));
+                return STATUS_DISK_FULL;
+            }
+            status = UDFGrowMetadataFile(IrpContext, Vcb, blocks);
+            if (cowWasOn)
+                (VOID)UDFCowStart(IrpContext, Vcb);
+        }
         UDFReleaseResource(&(Vcb->MetadataGrowResource));
         if (NT_SUCCESS(status)) {
             growthAttempted = TRUE;
@@ -1506,6 +1546,10 @@ UDFMarkSpaceAsXXXNoProtect_(
     UDF_CHECK_BITMAP_RESOURCE(Vcb);
 
     if (!Map) return;
+    /* With copy-on-write the last checkpoint may still refer to these
+     * blocks; they are freed once a later checkpoint is committed. */
+    if (asXXX == AS_DISCARDED && Vcb->Cow && UDFCowDeferFree(Vcb, Map))
+        return;
 
     BS = Vcb->SectorSize;
     BSh = Vcb->SectorShift;

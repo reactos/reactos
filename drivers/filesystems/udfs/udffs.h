@@ -123,6 +123,7 @@ extern UDFData              UdfData;
 #include "udf_info/udf_info.h"
 
 #include "protos.h"
+#include "cow.h"
 
 #include "Include/phys_lib.h"
 #include "mem.h"

@@ -257,6 +257,14 @@ UDFCommonFlush(
 
 try_exit:   NOTHING;
 
+        /* With copy-on-write, a flush is only durable once the buffered
+         * metadata is committed. */
+        if (NT_SUCCESS(Status) && Vcb && Vcb->Cow) {
+            NTSTATUS cowStatus = UDFCowCheckpoint(IrpContext, Vcb, FALSE);
+            if (!NT_SUCCESS(cowStatus))
+                Status = cowStatus;
+        }
+
     } _SEH2_FINALLY {
 
         // Release in reverse order of acquisition (parent first, then child)
@@ -609,7 +617,18 @@ UDFFlushVolume(
         // flush internal cache
         if (FlushFlags & UDF_FLUSH_FLAGS_LITE) {
             UDFPrint(("  Lite flush, keep Modified=%d.\n", Vcb->Modified));
+            if (Vcb->Cow) {
+                Status = UDFCowCheckpoint(IrpContext, Vcb, FALSE);
+                if (!NT_SUCCESS(Status))
+                    return Status;
+            }
         } else {
+            /* Commit buffered metadata and return the disk to its home
+             * layout before the volume is closed. */
+            Status = UDFCowStop(IrpContext, Vcb);
+            if (!NT_SUCCESS(Status))
+                return Status;
+
             // umount (this is internal operation, NT will "dismount" volume later)
             Status = UDFUmount__(IrpContext, Vcb, &CloseDeferred);
             if (!NT_SUCCESS(Status))
@@ -627,6 +646,11 @@ UDFFlushVolume(
                 UDFPreClrModified(Vcb);
                 UDFClrModified(Vcb);
             }
+
+            /* A user flush keeps the volume in use: start again. Shutdown,
+             * lock and dismount leave it off. */
+            if (IrpContext->MajorFunction == IRP_MJ_FLUSH_BUFFERS)
+                (VOID)UDFCowStart(IrpContext, Vcb);
         }
 
     } _SEH2_FINALLY {

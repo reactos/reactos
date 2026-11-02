@@ -11,6 +11,7 @@ list(APPEND SOURCE
     udf_info/remap.c
     udf_info/udf_info.c
     cleanup.c
+    cow.c
     close.c
     create.c
     devcntrl.c

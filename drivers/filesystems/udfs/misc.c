@@ -1324,6 +1324,8 @@ UDFDeleteVCB(
         UDFDeleteResource(&(Vcb->VcbResource));
         UDFDeleteResource(&(Vcb->BitMapResource1));
         UDFDeleteResource(&(Vcb->MetadataGrowResource));
+        UDFCowTeardown(Vcb);
+        UDFDeleteResource(&(Vcb->CowResource));
 
         UDFDeleteResource(&(Vcb->DlocResource));
         UDFDeleteResource(&(Vcb->DlocResource2));

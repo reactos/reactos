@@ -8,6 +8,16 @@
 #define __UDF_PHYS_LIB__H__
 
 NTSTATUS
+UDFReadWriteSectorsDirect(
+    IN PIRP_CONTEXT IrpContext,
+    IN PVCB Vcb,
+    IN LONGLONG StartingOffset,
+    IN ULONG ByteCount,
+    IN PVOID Buffer,
+    IN BOOLEAN IsWrite
+    );
+
+NTSTATUS
 UDFReadWriteSectors(
     IN PIRP_CONTEXT IrpContext,
     IN PVCB Vcb,
