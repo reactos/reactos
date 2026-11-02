@@ -3226,9 +3226,9 @@ GraphCanRecover(const UDFS_RECOVERY_PROBE *probe)
             probe->ReferencedFreeMetadataBlocks == 1 &&
             probe->FirstReferencedFreeMetadataLbn ==
                 probe->DirectoryLinkFixChildLbn)))) &&
-        /* Allocated blocks that nothing refers to are left by creates and
-         * extends cut off by power loss. Outside the rollback case they stay
-         * allocated: a space leak, not a conflict with any file. */
+        /* Allocated blocks that nothing refers to are left by creates,
+         * extends and copy-on-write checkpoints cut off by power loss. The
+         * repair frees physical ones; metadata ones stay allocated. */
         ((!probe->UnownedPhysicalBlocks && !probe->UnownedMetadataBlocks) ||
          GraphCanRollbackPhysicalOrphans(probe) ||
          (!probe->FidSplitCount && !probe->MirrorDirectorySplitCount &&
@@ -3594,10 +3594,11 @@ UdfsRecoveryPrepareRepair(const UDFS_RECOVERY_READER *reader,
         goto done;
     }
 
+    /* The plan frees every physical block nothing refers to (for example
+     * the copy-on-write region a power loss left unreferenced). */
     newPhysicalFree = probe->PhysicalFreeBlocks -
                       probe->ReferencedFreePhysicalBlocks +
-                      (GraphCanRollbackPhysicalOrphans(probe) ?
-                       probe->UnownedPhysicalBlocks : 0);
+                      probe->UnownedPhysicalBlocks;
     newMetadataFree = probe->MetadataFreeBlocks -
                       probe->ReferencedFreeMetadataBlocks;
     nextUniqueId = probe->MaxUniqueId + 1;
