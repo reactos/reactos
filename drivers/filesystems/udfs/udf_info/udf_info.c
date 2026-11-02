@@ -4861,7 +4861,7 @@ UDFResizeFile__(PIRP_CONTEXT IrpContext, PVCB Vcb,
               UDFGetMappingLength(FileInfo->Dloc->AllocLoc.Mapping) /
               sizeof(EXTENT_MAP) + 4;
     if (entries > 65536 || entries > ((SIZE_T)-1) / sizeof(EXTENT_MAP))
-        return STATUS_NOT_SUPPORTED;
+        return UDFResizeFileUnordered__(IrpContext, Vcb, FileInfo, NewLength);
     released = (PEXTENT_MAP)MyAllocatePoolTag__(NonPagedPool,
                     entries * sizeof(EXTENT_MAP), MEM_EXTMAP_TAG);
     if (!released) return STATUS_INSUFFICIENT_RESOURCES;
@@ -4878,14 +4878,25 @@ UDFResizeFile__(PIRP_CONTEXT IrpContext, PVCB Vcb,
             txnInitialized = TRUE;
             status = UDFTruncatePrefree(IrpContext, Vcb, FileInfo, NewLength,
                                         &possiblyModified);
-            if (NT_SUCCESS(status)) {
-                possiblyModified = TRUE;
-                status = UDFBarrierFlushDevice(Vcb->TargetDeviceObject);
-            }
-            if (NT_SUCCESS(status)) {
-                Vcb->TruncateTxnOwner = PsGetCurrentThread();
+            if (status == STATUS_NOT_SUPPORTED && !possiblyModified) {
+                /* The ordered free only covers some layouts (no metadata
+                 * partition, ADs in the FE block, ...). For the others,
+                 * shrink the way every other release frees space instead of
+                 * failing the truncate: an overwrite-open of such a file
+                 * returned STATUS_NOT_SUPPORTED to the caller. */
                 status = UDFResizeFileUnordered__(IrpContext, Vcb,
                                                   FileInfo, NewLength);
+                possiblyModified = TRUE;
+            } else {
+                if (NT_SUCCESS(status)) {
+                    possiblyModified = TRUE;
+                    status = UDFBarrierFlushDevice(Vcb->TargetDeviceObject);
+                }
+                if (NT_SUCCESS(status)) {
+                    Vcb->TruncateTxnOwner = PsGetCurrentThread();
+                    status = UDFResizeFileUnordered__(IrpContext, Vcb,
+                                                      FileInfo, NewLength);
+                }
             }
         }
         if (NT_SUCCESS(status) && !NT_SUCCESS(Vcb->TruncateTxnError))
