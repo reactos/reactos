@@ -152,8 +152,6 @@ DisplayCharacter(
     ULONG Height;
     ULONG Shift;
 
-    PrepareForSetPixel();
-
     /* Calculate shift */
     Shift = Left & 7;
 
@@ -161,6 +159,8 @@ DisplayCharacter(
     FontChar = GetFontPtr(Character);
     PixelPosition = (PUCHAR)(VgaBase + (Left / 8) + (Top * (SCREEN_WIDTH / 8)));
     PixelPtr = PixelPosition;
+
+    PrepareForSetPixel();
 
     /* Loop all pixel rows */
     for (Height = BOOTCHAR_HEIGHT; Height > 0; --Height)
@@ -266,12 +266,12 @@ DoScroll(
     ULONG Top, RowSize;
     PUCHAR OldPosition, NewPosition;
 
-    PrepareForCopyArea();
-
     RowSize = (VidpScrollRegion.Right - VidpScrollRegion.Left + 1) / 8;
 
     OldPosition = (PUCHAR)(VgaBase + (VidpScrollRegion.Top + Scroll) * (SCREEN_WIDTH / 8) + VidpScrollRegion.Left / 8);
     NewPosition = (PUCHAR)(VgaBase + VidpScrollRegion.Top * (SCREEN_WIDTH / 8) + VidpScrollRegion.Left / 8);
+
+    PrepareForCopyArea();
 
     for (Top = VidpScrollRegion.Top; Top <= VidpScrollRegion.Bottom; ++Top)
     {
@@ -298,8 +298,6 @@ PreserveRow(
     PUCHAR OldPosition, NewPosition;
     ULONG Count;
 
-    PrepareForCopyArea();
-
     if (Restore)
     {
         /* Restore the row by copying back the contents saved off-screen */
@@ -312,6 +310,8 @@ PreserveRow(
         OldPosition = (PUCHAR)(VgaBase + CurrentTop * (SCREEN_WIDTH / 8));
         NewPosition = (PUCHAR)(VgaBase + SCREEN_HEIGHT * (SCREEN_WIDTH / 8));
     }
+
+    PrepareForCopyArea();
 
     Count = Height * (SCREEN_WIDTH / 8);
 #if defined(_M_IX86) || defined(_M_AMD64)
@@ -450,11 +450,11 @@ VidSolidColorFill(
 
     PrepareForSetPixel();
 
-    /* Calculate pixel position for the read */
-    Offset = (PUCHAR)(VgaBase + (Top * (SCREEN_WIDTH / 8)) + LeftOffset);
-
     /* Select the bitmask register and write the mask */
     __outpw(VGA_BASE_IO_PORT + GRAPH_ADDRESS_PORT, (USHORT)lMask);
+
+    /* Calculate pixel position for the read */
+    Offset = (PUCHAR)(VgaBase + (Top * (SCREEN_WIDTH / 8)) + LeftOffset);
 
     /* Check if the top coord is below the bottom one */
     if (Top <= Bottom)
