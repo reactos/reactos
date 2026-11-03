@@ -38,6 +38,10 @@ NTAPI
 NmiDbgCallback(IN PVOID Context,
                IN BOOLEAN Handled)
 {
+#if !defined(_M_IX86) && !defined(_M_AMD64)
+    /* The status port only exists on PC hardware */
+    return FALSE;
+#else
     /* Clear the NMI flag */
     NmiClearFlag();
 
@@ -50,6 +54,7 @@ NmiDbgCallback(IN PVOID Context,
     KiEnableTimerWatchdog = (RtlCompareMemory(NmiBegin, NmiBegin + 4, 4) != 4);
 #endif
     return TRUE;
+#endif
 }
 
 NTSTATUS
