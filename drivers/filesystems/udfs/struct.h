@@ -424,6 +424,8 @@ typedef struct FCB* PFCB;
 // Requires exclusive lock for writes since data shares sector with metadata
 #define     UDF_FCB_EMBEDDED_DATA                       (0x00000001)
 #define     UDF_FCB_VALID                               (0x00000002)
+// Paging file: paging I/O goes straight to its recorded blocks, no locks
+#define     UDF_FCB_PAGING_FILE                         (0x00000004)
 #define     UDF_FCB_DIRECTORY                           (0x00000008)
 #define     UDF_FCB_ROOT_DIRECTORY                      (0x00000010)
 #define     UDF_FCB_DELETE_ON_CLOSE                     (0x00000200)

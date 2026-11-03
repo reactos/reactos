@@ -180,6 +180,16 @@ UDFCommonWrite(
         return Status;
     }
 
+    // Paging file writes go straight to its recorded blocks, with no locks.
+    if (PagingIo && TypeOfOpen == UserFileOpen && FlagOn(Fcb->FcbState, UDF_FCB_PAGING_FILE)) {
+
+        Status = UDFPagingFileIo(IrpContext, Fcb,
+                                 IrpSp->Parameters.Write.ByteOffset.QuadPart,
+                                 IrpSp->Parameters.Write.Length);
+        UDFCompleteRequest(IrpContext, Irp, Status);
+        return Status;
+    }
+
     // If this is async paging io then check if we are being called by the mapped page writer.
     // Convert it back to synchronous if not.
 

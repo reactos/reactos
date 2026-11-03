@@ -1557,4 +1557,18 @@ UDFPerformDevIoCtrl(
     IN BOOLEAN OverrideVerify,
     OUT PIO_STATUS_BLOCK Iosb OPTIONAL);
 
+NTSTATUS
+UDFPreparePagingFile(
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PFCB Fcb
+    );
+
+NTSTATUS
+UDFPagingFileIo(
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PFCB Fcb,
+    _In_ LONGLONG StartingOffset,
+    _In_ ULONG ByteCount
+    );
+
 #endif  // _UDF_PROTOS_H_

@@ -1440,3 +1440,65 @@ UDFPerformDevIoCtrl(
 
     return Status;
 } // end UDFPerformDevIoCtrl()
+
+/*************************************************************************
+*
+* Paging file support. Its blocks are recorded once, when its size is set,
+* so that paging writes never change metadata; its paging I/O then goes
+* straight to those blocks without taking any file system lock, as the
+* memory manager may page while other threads hold them.
+*
+*************************************************************************/
+
+NTSTATUS
+UDFPreparePagingFile(
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PFCB Fcb
+    )
+{
+    LONGLONG offset = 0, size = Fcb->Header.FileSize.QuadPart;
+    NTSTATUS status = STATUS_SUCCESS;
+    ULONG chunk;
+
+    size = UdfSectorAlign(Fcb->Vcb, size);
+    UDFAcquirePagingIoExclusive(IrpContext, Fcb);
+    while (offset < size && NT_SUCCESS(status)) {
+        chunk = (ULONG)min(size - offset, (LONGLONG)(64 * 1024 * 1024));
+        status = UDFConvertToRecorded(IrpContext, Fcb, offset, chunk);
+        offset += chunk;
+    }
+    UDFReleasePagingIo(IrpContext, Fcb);
+    if (NT_SUCCESS(status))
+        status = UDFFlushFile__(IrpContext, Fcb->Vcb, Fcb->FileInfo, 0);
+    return status;
+}
+
+NTSTATUS
+UDFPagingFileIo(
+    _In_ PIRP_CONTEXT IrpContext,
+    _In_ PFCB Fcb,
+    _In_ LONGLONG StartingOffset,
+    _In_ ULONG ByteCount
+    )
+{
+    struct UDF_IO_CONTEXT ioContext;
+    LONGLONG size = Fcb->Header.FileSize.QuadPart;
+    NTSTATUS status;
+
+    IrpContext->Irp->IoStatus.Information = 0;
+    if (StartingOffset < 0 || StartingOffset >= size || !ByteCount)
+        return StartingOffset < 0 ? STATUS_INVALID_PARAMETER : STATUS_SUCCESS;
+    if (StartingOffset + ByteCount > size)
+        ByteCount = (ULONG)UdfSectorAlign(Fcb->Vcb, size - StartingOffset);
+    if (UdfSectorOffset(Fcb->Vcb, StartingOffset) || UdfSectorOffset(Fcb->Vcb, ByteCount))
+        return STATUS_INVALID_PARAMETER;
+
+    RtlZeroMemory(&ioContext, sizeof(ioContext));
+    KeInitializeEvent(&ioContext.SyncEvent, NotificationEvent, FALSE);
+    IrpContext->IoContext = &ioContext;
+    ClearFlag(IrpContext->Flags, IRP_CONTEXT_FLAG_ALLOC_IO);
+    SetFlag(IrpContext->Flags, IRP_CONTEXT_FLAG_WAIT);
+    status = UDFNonCachedIo(IrpContext, Fcb, StartingOffset, ByteCount);
+    IrpContext->IoContext = NULL;
+    return status;
+}

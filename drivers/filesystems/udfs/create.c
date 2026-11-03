@@ -1339,9 +1339,12 @@ UDFCommonCreate(
         return STATUS_EAS_NOT_SUPPORTED;
     }
 
-    //  UDFS does not support paging files
+    //  A paging file must be a plain file on a writable disk volume.
 
-    if (FlagOn(IrpSp->Flags, SL_OPEN_PAGING_FILE)) {
+    if (FlagOn(IrpSp->Flags, SL_OPEN_PAGING_FILE) &&
+        (FlagOn(IrpSp->Parameters.Create.Options, FILE_DIRECTORY_FILE) ||
+         Vcb->CDR_Mode ||
+         FlagOn(Vcb->VcbState, VCB_STATE_VOLUME_READ_ONLY | VCB_STATE_MEDIA_WRITE_PROTECT))) {
 
         UDFCompleteRequest(IrpContext, Irp, STATUS_NOT_SUPPORTED);
         return STATUS_NOT_SUPPORTED;
@@ -3222,6 +3225,9 @@ UDFCompleteFcbOpen(
 
         // Set the file object type.
         UDFSetFileObject(IrpSp->FileObject, TypeOfOpen, Fcb, Ccb);
+
+        if (TypeOfOpen == UserFileOpen && FlagOn(IrpSp->Flags, SL_OPEN_PAGING_FILE))
+            Fcb->FcbState |= UDF_FCB_PAGING_FILE;
 
         UDFLockFcb(IrpContext, Fcb);
 

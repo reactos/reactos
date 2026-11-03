@@ -393,6 +393,10 @@ UDFCommonSetInfo(
             break;
         case FileEndOfFileInformation:
             Status = UDFSetEndOfFileInfo(IrpContext, IrpSp, Fcb, Ccb, Vcb, FileObject, Irp, (PFILE_END_OF_FILE_INFORMATION)Buffer);
+            // A paging file gets its blocks recorded now, never during paging.
+            if (NT_SUCCESS(Status) && Status != STATUS_PENDING &&
+                FlagOn(Fcb->FcbState, UDF_FCB_PAGING_FILE))
+                Status = UDFPreparePagingFile(IrpContext, Fcb);
             break;
         default:
             Status = STATUS_INVALID_PARAMETER;
