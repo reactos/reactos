@@ -832,8 +832,9 @@ MI_MAKE_HARDWARE_PTE_KERNEL(IN PMMPTE NewPte,
     NewPte->u.Long |= MmProtectToPteMask[ProtectionMask];
 
 #ifdef _M_ARM64
-    /* Kernel stacks are written by the trap entry itself, a clean one would fault forever */
+    /* Kernel stacks are written by the trap entry itself, a clean or unaccessed one would fault forever */
     MI_MAKE_DIRTY_PAGE(NewPte);
+    MI_MAKE_ACCESSED_PAGE(NewPte);
 #endif
 
     /* Make this valid & global */
