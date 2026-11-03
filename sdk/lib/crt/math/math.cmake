@@ -169,6 +169,10 @@ elseif(ARCH STREQUAL "amd64")
     )
 elseif(ARCH STREQUAL "arm")
     list(APPEND LIBCNTPR_MATH_SOURCE
+        math/__cos.c
+        math/__rem_pio2.c
+        math/__rem_pio2_large.c
+        math/__sin.c
         math/cos.c
         math/ceilf.c
         math/fabs.c

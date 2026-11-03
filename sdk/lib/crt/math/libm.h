@@ -203,6 +203,8 @@ double scalbn(double, int);
 
 hidden int    __rem_pio2_large(double*,double*,int,int,int);
 hidden int    __rem_pio2(double,double*);
+hidden double __sin(double,double,int);
+hidden double __cos(double,double);
 hidden double __tan(double,double,int);
 
 /* error handling functions */
