@@ -496,8 +496,8 @@ PspInheritQuota(
         QuotaBlock = &PspDefaultQuotaBlock;
     }
 
-    InterlockedIncrementSizeT(&QuotaBlock->ProcessCount);
-    InterlockedIncrementSizeT(&QuotaBlock->ReferenceCount);
+    InterlockedIncrementUL(&QuotaBlock->ProcessCount);
+    InterlockedIncrementUL(&QuotaBlock->ReferenceCount);
 
     Process->QuotaBlock = QuotaBlock;
 }
@@ -708,7 +708,7 @@ PsChargeSharedPoolQuota(
     }
 
     /* We have charged the quotas of an object, increment the reference */
-    InterlockedIncrementSizeT(&Process->QuotaBlock->ReferenceCount);
+    InterlockedIncrementUL(&Process->QuotaBlock->ReferenceCount);
 
     DPRINT("PsChargeSharedPoolQuota(): Amount charged (paged %lu --  non paged %lu)\n", AmountToChargePaged, AmountToChargeNonPaged);
     return Process->QuotaBlock;
