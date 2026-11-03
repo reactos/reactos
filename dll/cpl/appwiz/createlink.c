@@ -549,7 +549,7 @@ ShowCreateShortcutWizard(HWND hwndCPl, LPCWSTR szPath)
         return FALSE;
     }
 
-    nLength = wcslen(szPath);
+    nLength = (UINT)wcslen(szPath);
     if (!nLength)
     {
         HeapFree(GetProcessHeap(), 0, pContext);

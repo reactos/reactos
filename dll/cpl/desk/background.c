@@ -1141,7 +1141,7 @@ SetDesktopBackColor(HWND hwndDlg, PBACKGROUND_DATA pData)
     /* Format string to be set to registry */
     StringCbPrintf(clText, sizeof(clText), TEXT("%d %d %d"), red, green, blue);
     RegSetValueEx(hKey, TEXT("Background"), 0, REG_SZ, (LPBYTE)clText,
-                  (wcslen(clText) + 1) * sizeof(TCHAR));
+                  (DWORD)((wcslen(clText) + 1) * sizeof(TCHAR)));
 
     RegCloseKey(hKey);
 }
