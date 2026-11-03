@@ -722,7 +722,44 @@ MiIsMemoryTypeInvisible(TYPE_OF_MEMORY MemoryType)
             (MemoryType == LoaderBBTMemory));
 }
 
-#if defined(_M_AMD64) || defined(_M_ARM64)
+#if defined(_M_ARM64)
+/* The user entries of each level run from its table base to the entry of the highest user address */
+FORCEINLINE
+BOOLEAN
+MiIsUserPxe(
+    _In_ PVOID Address)
+{
+    return ((ULONG_PTR)Address >= PXE_BASE) &&
+           (Address <= (PVOID)MiAddressToPxe(MI_HIGHEST_USER_ADDRESS));
+}
+
+FORCEINLINE
+BOOLEAN
+MiIsUserPpe(
+    _In_ PVOID Address)
+{
+    return ((ULONG_PTR)Address >= PPE_BASE) &&
+           (Address <= (PVOID)MiAddressToPpe(MI_HIGHEST_USER_ADDRESS));
+}
+
+FORCEINLINE
+BOOLEAN
+MiIsUserPde(
+    _In_ PVOID Address)
+{
+    return ((ULONG_PTR)Address >= PDE_BASE) &&
+           (Address <= (PVOID)MiAddressToPde(MI_HIGHEST_USER_ADDRESS));
+}
+
+FORCEINLINE
+BOOLEAN
+MiIsUserPte(
+    _In_ PVOID Address)
+{
+    return ((ULONG_PTR)Address >= PTE_BASE) &&
+           (Address <= (PVOID)MiAddressToPte(MI_HIGHEST_USER_ADDRESS));
+}
+#elif defined(_M_AMD64)
 FORCEINLINE
 BOOLEAN
 MiIsUserPxe(PVOID Address)
