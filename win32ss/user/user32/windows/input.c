@@ -1256,7 +1256,7 @@ IntLoadKeyboardLayout(
     {
         HANDLE hAuxFile = multi.AuxEntries[iTable].hFile;
         if (hAuxFile && hAuxFile != INVALID_HANDLE_VALUE)
-            NtClose(hAuxFile);
+            CloseHandle(hAuxFile);
     }
 
     if (hNewKL)
