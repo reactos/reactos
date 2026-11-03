@@ -17,6 +17,7 @@ list(APPEND SOURCE
     generic/irql.c
     generic/memory.c
     generic/misc.c
+    generic/pci.c
     generic/timer.c
     ${REACTOS_SOURCE_DIR}/hal/halx86/generic/dma.c)
 
