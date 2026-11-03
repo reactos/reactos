@@ -950,7 +950,7 @@ MiSessionCommitPageTables(IN PVOID StartVa,
     Index = ((ULONG_PTR)StartVa - (ULONG_PTR)MmSessionBase) >> 22;
     while (StartPde <= EndPde)
     {
-#ifndef _M_AMD64
+#ifndef _WIN64
         /* If we don't already have a page table for it, increment count */
         if (MmSessionSpace->PageTables[Index].u.Long == 0) PageCount++;
 #endif
@@ -969,8 +969,8 @@ MiSessionCommitPageTables(IN PVOID StartVa,
     /* Loop each PDE while holding the working set lock */
 //  MiLockWorkingSet(PsGetCurrentThread(),
 //                   &MmSessionSpace->GlobalVirtualAddress->Vm);
-#ifdef _M_AMD64
-_WARN("MiSessionCommitPageTables halfplemented for amd64")
+#ifdef _WIN64
+_WARN("MiSessionCommitPageTables halfplemented for 64-bit")
     DBG_UNREFERENCED_LOCAL_VARIABLE(OldIrql);
     DBG_UNREFERENCED_LOCAL_VARIABLE(Color);
     DBG_UNREFERENCED_LOCAL_VARIABLE(TempPde);
@@ -1911,7 +1911,7 @@ MiFlushTbAndCapture(IN PMMVAD FoundVad,
     //
     // Windows updates the relevant PFN1 information, we currently don't.
     //
-    if (UpdateDirty && PreviousPte.u.Hard.Dirty)
+    if (UpdateDirty && MI_IS_PAGE_DIRTY(&PreviousPte))
     {
         if (!Pfn1->u3.e1.Modified)
         {

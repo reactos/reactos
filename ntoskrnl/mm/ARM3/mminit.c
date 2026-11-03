@@ -598,7 +598,7 @@ MiInitializeColorTables(VOID)
     }
 }
 
-#ifndef _M_AMD64
+#ifndef _WIN64
 CODE_SEG("INIT")
 BOOLEAN
 NTAPI
@@ -1077,7 +1077,7 @@ MiInitializePfnDatabase(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     /* Finally add the pages for the PFN database itself */
     MiBuildPfnDatabaseSelf();
 }
-#endif /* !_M_AMD64 */
+#endif /* !_WIN64 */
 
 CODE_SEG("INIT")
 VOID
@@ -2530,13 +2530,13 @@ MmArmInitSystem(IN ULONG Phase,
         }
 
         /* Define limits for system cache */
-#ifdef _M_AMD64
+#ifdef _WIN64
         MmSizeOfSystemCacheInPages = ((MI_SYSTEM_CACHE_END + 1) - MI_SYSTEM_CACHE_START) / PAGE_SIZE;
 #else
         MmSizeOfSystemCacheInPages = ((ULONG_PTR)MI_PAGED_POOL_START - (ULONG_PTR)MI_SYSTEM_CACHE_START) / PAGE_SIZE;
 #endif
         MmSystemCacheEnd = (PVOID)((ULONG_PTR)MmSystemCacheStart + (MmSizeOfSystemCacheInPages * PAGE_SIZE) - 1);
-#ifdef _M_AMD64
+#ifdef _WIN64
         ASSERT(MmSystemCacheEnd == (PVOID)MI_SYSTEM_CACHE_END);
 #else
         ASSERT(MmSystemCacheEnd == (PVOID)((ULONG_PTR)MI_PAGED_POOL_START - 1));
