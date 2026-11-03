@@ -39,6 +39,23 @@ void __cdecl __prefetch2(const void *_Address, unsigned char _PrfOp);
 #pragma intrinsic(__prefetch)
 #pragma intrinsic(__prefetch2)
 
+#if defined(_MSC_VER)
+
+/* System register number as encoded in mrs and msr, op0 is always 2 or 3 */
+#define ARM64_SYSREG(op0, op1, crn, crm, op2) \
+    ((((op0) & 1) << 14) | (((op1) & 7) << 11) | (((crn) & 15) << 7) | (((crm) & 15) << 3) | ((op2) & 7))
+
+#define ARM64_FPCR ARM64_SYSREG(3, 3, 4, 4, 0)
+#define ARM64_FPSR ARM64_SYSREG(3, 3, 4, 4, 1)
+
+__int64 _ReadStatusReg(int _Register);
+void _WriteStatusReg(int _Register, __int64 _Value);
+
+#pragma intrinsic(_ReadStatusReg)
+#pragma intrinsic(_WriteStatusReg)
+
+#endif /* _MSC_VER */
+
 #if defined(__cplusplus)
 } // extern "C"
 #endif
