@@ -2395,7 +2395,7 @@ MmChangeKernelResourceSectionProtection(IN ULONG_PTR ProtectionMask)
     }
 
     /* Only flush the current processor's TLB */
-    KeFlushCurrentTb();
+    KxFlushEntireCurrentTb();
     return TRUE;
 }
 
