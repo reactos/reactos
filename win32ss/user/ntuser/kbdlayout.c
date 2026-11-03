@@ -459,7 +459,10 @@ KbdRebaseTables(
     if (p) { \
         ULONG_PTR va_ = (ULONG_PTR)(p), rva_ = va_ - pInfo->ImageBase; \
         if (va_ < pInfo->ImageBase || !KbdIsRangeInData(pInfo, rva_, sizeof(*(p)))) \
+        { \
+            ERR("Invalid %s: 0x%p\n", #p, va_);
             return FALSE; \
+        } \
         (p) = RVA(rva_, pbImage); \
     } \
 } while (0)
