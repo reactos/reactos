@@ -844,7 +844,7 @@ MmCreateTeb(IN PEPROCESS Process,
         //
         // Set TIB Data
         //
-#ifdef _M_AMD64
+#ifdef _WIN64
         Teb->NtTib.ExceptionList = NULL;
 #else
         Teb->NtTib.ExceptionList = EXCEPTION_CHAIN_END;
@@ -909,7 +909,7 @@ MmCreateTeb(IN PEPROCESS Process,
     return Status;
 }
 
-#ifdef _M_AMD64
+#ifdef _WIN64
 static
 NTSTATUS
 MiInsertSharedUserPageVad(
@@ -1098,8 +1098,8 @@ MmInitializeProcessAddressSpace(IN PEPROCESS Process,
     /* Release the process working set */
     MiUnlockProcessWorkingSet(Process, PsGetCurrentThread());
 
-#ifdef _M_AMD64
-    /* On x64 we need a VAD for the shared user page */
+#ifdef _WIN64
+    /* On 64-bit we need a VAD for the shared user page */
     Status = MiInsertSharedUserPageVad(Process);
     if (!NT_SUCCESS(Status))
     {
@@ -1416,7 +1416,7 @@ MmDeleteProcessAddressSpace(IN PEPROCESS Process)
     KIRQL OldIrql;
     PFN_NUMBER PageFrameIndex;
 
-#ifndef _M_AMD64
+#ifndef _WIN64
     OldIrql = MiAcquireExpansionLock();
     RemoveEntryList(&Process->MmProcessLinks);
     MiReleaseExpansionLock(OldIrql);

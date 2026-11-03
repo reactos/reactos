@@ -69,7 +69,7 @@ MmMapIoSpace(IN PHYSICAL_ADDRESS PhysicalAddress,
     // FIXME: This doesn't respect PAE, but we currently don't
     // define a PAE build flag since there is no such build.
     //
-#if !defined(_M_AMD64)
+#ifndef _WIN64
     ASSERT(PhysicalAddress.HighPart == 0);
 #endif
 
