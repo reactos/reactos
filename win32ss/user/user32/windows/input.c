@@ -1007,9 +1007,9 @@ IntLoadKeyboardLayoutTablesAndFile(
         return NULL; /* Failure */
     }
 
-    /* From here on, every failure goes to Cleanup */
+    /* From here on, every failure goes to Failure */
     if (!IntGetTableOffsets(hModule, pfnMain, poffTable))
-        goto Cleanup;
+        goto Failure;
 
     if (pMulti)
         StringCbCopyW(pMulti->szRealDllName, sizeof(pMulti->szRealDllName), pszCurrentFile);
@@ -1021,7 +1021,7 @@ IntLoadKeyboardLayoutTablesAndFile(
     if (!cchFull || cchFull >= _countof(szFull))
     {
         ERR("GetModuleFileNameW failed\n");
-        goto Cleanup;
+        goto Failure;
     }
 
     FreeLibrary(hModule);
@@ -1033,7 +1033,7 @@ IntLoadKeyboardLayoutTablesAndFile(
 
     ERR("CreateFileW failed: %s\n", debugstr_w(szFull));
 
-Cleanup:
+Failure:
     if (hModule)
         FreeLibrary(hModule);
     IntCloseAuxFiles(pMulti);
