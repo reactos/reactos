@@ -46,6 +46,13 @@ extern "C" {
 #define PRCB_BUILD_UNIPROCESSOR 2
 
 //
+// Machine Types
+//
+#define MACHINE_TYPE_ISA        0x0000
+#define MACHINE_TYPE_EISA       0x0001
+#define MACHINE_TYPE_MCA        0x0002
+
+//
 // No LDTs on ARM64
 //
 #define LDT_ENTRY              ULONG
