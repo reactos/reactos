@@ -472,7 +472,8 @@ FORCEINLINE struct _TEB * NtCurrentTeb(VOID)
     // return (struct _TEB *)KeGetPcr()->Used_Self;
     return (struct _TEB *)(ULONG_PTR)_MoveFromCoprocessor(CP15_TPIDRURW);
 #elif defined (_M_ARM64)
-    return (struct _TEB *)__getReg(18);
+    /* x18 is the PCR here, the context switch keeps its NtTib.Self on the TEB */
+    return (struct _TEB *)__readx18qword(FIELD_OFFSET(NT_TIB, Self));
 // #elif defined(_M_PPC)
 //     return (struct _TEB *)_read_teb_dword(0x18);
 #else
