@@ -45,6 +45,7 @@
     LEAF_END _setjmpex
 
     IMPORT __intrinsic_setjmpex, WEAK _setjmpex
+    IMPORT __intrinsic_setjmp, WEAK _setjmpex
     IMPORT _setjmp, WEAK _setjmpex
     IMPORT setjmp, WEAK _setjmpex
 
