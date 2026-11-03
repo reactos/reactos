@@ -254,8 +254,8 @@ char _RTL_CONSTANT_STRING_type_check(const void *s);
   const UNICODE_STRING _var = { sizeof(_string) - sizeof(WCHAR), sizeof(_string), (PWCH)_var##_buffer }
 #endif
 
-#ifdef __GNUC__
-/* GCC rejects an initializer on an extern declaration, selectany alone is enough */
+#if defined(__GNUC__) && !defined(__cplusplus)
+/* GCC C rejects an initializer on an extern declaration, selectany alone is enough */
 #define DECLARE_GLOBAL_CONST_UNICODE_STRING(_var, _str) \
   const __declspec(selectany) UNICODE_STRING _var = RTL_CONSTANT_STRING(_str)
 #else
