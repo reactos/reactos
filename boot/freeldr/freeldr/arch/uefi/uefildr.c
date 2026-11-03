@@ -32,6 +32,9 @@ EfiEntry(
     GlobalImageHandle = ImageHandle;
     GlobalSystemTable = SystemTable;
 
+    /* The firmware resets the machine after 5 minutes unless the loader turns its watchdog off */
+    SystemTable->BootServices->SetWatchdogTimer(0, 0, 0, NULL);
+
     /* Load the default settings from the command-line */
     LoadSettings(CmdLine);
 
