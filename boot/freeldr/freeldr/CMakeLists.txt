@@ -97,8 +97,11 @@ if(ARCH STREQUAL "i386" OR ARCH STREQUAL "amd64")
         ${CMAKE_CURRENT_BINARY_DIR}/freeldr.def)
 endif()
 
-include(pcat.cmake)
-include(rosload.cmake)
+# ARM64 only boots through UEFI
+if(NOT ARCH STREQUAL "arm64")
+    include(pcat.cmake)
+    include(rosload.cmake)
+endif()
 if(NOT ARCH STREQUAL "i386" OR NOT (SARCH STREQUAL "pc98" OR SARCH STREQUAL "xbox"))
     include(uefi.cmake)
 endif()
