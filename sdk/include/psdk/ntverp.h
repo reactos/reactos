@@ -13,6 +13,11 @@
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  */
 
+// FIXME: *** Remove once things are OK ***
+#ifndef NTDDI_VERSION
+#error NTDDI_VERSION not defined
+#endif
+
 //
 // Windows NT Build 3790.3959
 //
@@ -20,12 +25,19 @@
 #define VER_PRODUCTBUILD_QFE                3959
 
 //
-// Windows NT Version 5.2
+// Example for Windows NT Version 5.2:
 //
-#define VER_PRODUCTMAJORVERSION             5
-#define VER_PRODUCTMINORVERSION             2
-#define VER_PRODUCTVERSION_W                (0x0502)
-#define VER_PRODUCTVERSION_DW               (0x05020000 | VER_PRODUCTBUILD)
+// VER_PRODUCTMAJORVERSION == 5
+// VER_PRODUCTMINORVERSION == 2
+// VER_PRODUCTVERSION_W    == (0x0502)
+// VER_PRODUCTVERSION_DW   == (0x05020000 | VER_PRODUCTBUILD)
+//
+#define VER_PRODUCTMAJORVERSION__           (NTDDI_VERSION >> 24) // (_WIN32_WINNT >> 8)
+#define VER_PRODUCTMINORVERSION__           ((NTDDI_VERSION & 0x00FF0000) >> 16) // (_WIN32_WINNT & 0xFF)
+#define VER_PRODUCTMAJORVERSION             VER_PRODUCTMAJORVERSION__
+#define VER_PRODUCTMINORVERSION             VER_PRODUCTMINORVERSION__
+#define VER_PRODUCTVERSION_W                ((NTDDI_VERSION & OSVERSION_MASK) >> 16) // _WIN32_WINNT
+#define VER_PRODUCTVERSION_DW               ((NTDDI_VERSION & OSVERSION_MASK) | VER_PRODUCTBUILD)
 
 //
 // Not a beta
