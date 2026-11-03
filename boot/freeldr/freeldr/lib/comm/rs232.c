@@ -55,6 +55,10 @@ Rs232PortInitialize(
 
     if (!PortAddress)
     {
+#ifdef _M_ARM64
+        /* The only known address is the QEMU PL011, which is not a 16550, so a UART needs its address */
+        return FALSE;
+#else
         /*
          * Enumerate COM ports from the last to the first one, and stop
          * when we find a valid port. If we reach the first list element
@@ -69,6 +73,7 @@ Rs232PortInitialize(
         }
         if (ComPort == 0 || PortAddress == NULL)
             return FALSE;
+#endif
     }
     else
     {
