@@ -74,7 +74,9 @@ KiInitializePcr(
     Pcr->MajorVersion = PCR_MAJOR_VERSION;
     Pcr->MinorVersion = PCR_MINOR_VERSION;
     Pcr->StallScaleFactor = INITIAL_STALL_COUNT;
-    Pcr->CurrentIrql = HIGH_LEVEL;
+
+    /* Interrupts stay masked until the idle loop, the IRQL goes up after KD is ready */
+    Pcr->CurrentIrql = PASSIVE_LEVEL;
 
     Pcr->Prcb.MajorVersion = PRCB_MAJOR_VERSION;
     Pcr->Prcb.MinorVersion = PRCB_MINOR_VERSION;
@@ -340,5 +342,6 @@ KiSystemStartup(
             DbgBreakPointWithStatus(DBG_STATUS_CONTROL_C);
     }
 
+    KfRaiseIrql(HIGH_LEVEL);
     KiSwitchToBootStack(LoaderBlock->KernelStack);
 }
