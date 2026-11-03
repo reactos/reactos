@@ -2272,7 +2272,7 @@ typedef union NEON128 {
 #define ARM64_MAX_BREAKPOINTS 8
 #define ARM64_MAX_WATCHPOINTS 2
 
-typedef struct _CONTEXT {
+typedef struct DECLSPEC_ALIGN(16) _CONTEXT {
 
     //
     // Control flags.
