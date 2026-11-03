@@ -40,6 +40,7 @@ PciIdeXPdoGetDmaAdapter(
     DeviceDescription.Master = TRUE;
     DeviceDescription.ScatterGather = TRUE;
     DeviceDescription.Dma32BitAddresses = !(ChanData->ChanInfo & CHANNEL_FLAG_64_BIT_DMA);
+    DeviceDescription.Dma64BitAddresses = !!(ChanData->ChanInfo & CHANNEL_FLAG_64_BIT_DMA);
     DeviceDescription.InterfaceType = PCIBus;
     DeviceDescription.MaximumLength = ChanData->MaximumTransferLength;
 
