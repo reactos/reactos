@@ -468,6 +468,9 @@ HidClassPDO_PnP(
             IoStack->Parameters.DeviceCapabilities.Capabilities->SilentInstall = TRUE;
             IoStack->Parameters.DeviceCapabilities.Capabilities->SurpriseRemovalOK = TRUE;
 
+            /* The collection number only tells collections of one device apart */
+            IoStack->Parameters.DeviceCapabilities.Capabilities->UniqueID = FALSE;
+
             Status = STATUS_SUCCESS;
             break;
         }
