@@ -18,11 +18,17 @@ endif()
 
 ## efisys.bin
 if(DEFINED EFI_PLATFORM_ID)
+    # The FAT boot sector is only built for x86/x64
+    if(ARCH STREQUAL "i386" OR ARCH STREQUAL "amd64")
+        set(EFISYS_BOOT_SECTOR -boot ${CMAKE_CURRENT_BINARY_DIR}/freeldr/bootsect/fat.bin)
+        set(EFISYS_BOOT_SECTOR_DEPENDS fat)
+    endif()
+
     add_custom_target(efisys
         COMMAND native-fatten ${CMAKE_CURRENT_BINARY_DIR}/efisys.bin -format 2880 EFIBOOT
-            -boot ${CMAKE_CURRENT_BINARY_DIR}/freeldr/bootsect/fat.bin
+            ${EFISYS_BOOT_SECTOR}
             -mkdir EFI -mkdir EFI/BOOT -add $<TARGET_FILE:uefildr> EFI/BOOT/boot${EFI_PLATFORM_ID}.efi
-        DEPENDS native-fatten fat uefildr
+        DEPENDS native-fatten ${EFISYS_BOOT_SECTOR_DEPENDS} uefildr
         VERBATIM)
 endif()
 
