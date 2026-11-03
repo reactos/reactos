@@ -64,6 +64,11 @@ PDESCRIPTION_HEADER
 UefiFindAcpiTable(
     _In_ ULONG Signature);
 
+BOOLEAN
+UefiGetDebugSerialPort(
+    _Out_ PUSHORT Subtype,
+    _Out_ PULONG64 Address);
+
 VOID
 UefiVideoSync(VOID);
 
