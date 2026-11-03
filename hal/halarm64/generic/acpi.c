@@ -138,6 +138,61 @@ HalpParseMadt(
     }
 }
 
+/* The loader hands over the XSDT when there is one, the RSDT otherwise */
+static
+ULONG
+HalpRootTableEntrySize(
+    _In_ PDESCRIPTION_HEADER Root)
+{
+    return (Root->Signature == XSDT_SIGNATURE) ? sizeof(ULONG64) : sizeof(ULONG);
+}
+
+static
+ULONG
+HalpRootTableCount(
+    _In_ PDESCRIPTION_HEADER Root)
+{
+    return (Root->Length - sizeof(*Root)) / HalpRootTableEntrySize(Root);
+}
+
+static
+PHYSICAL_ADDRESS
+HalpRootTableEntry(
+    _In_ PDESCRIPTION_HEADER Root,
+    _In_ ULONG Index)
+{
+    PUCHAR Entry = (PUCHAR)(Root + 1) + Index * HalpRootTableEntrySize(Root);
+    PHYSICAL_ADDRESS Address;
+
+    if (HalpRootTableEntrySize(Root) == sizeof(ULONG64))
+        Address.QuadPart = *(ULONG64 UNALIGNED *)Entry;
+    else
+        Address.QuadPart = *(ULONG UNALIGNED *)Entry;
+
+    return Address;
+}
+
+/* Only segment 0 is supported, the PCI driver sees a single root */
+static
+VOID
+HalpParseMcfg(
+    _In_ PMCFG_TABLE Mcfg)
+{
+    PMCFG_ALLOCATION Entry, End;
+
+    End = (PMCFG_ALLOCATION)((PUCHAR)Mcfg + Mcfg->Header.Length);
+    for (Entry = Mcfg->Allocation; Entry + 1 <= End; Entry++)
+    {
+        if ((Entry->PciSegmentGroup != 0) || (Entry->EndBusNumber < Entry->StartBusNumber))
+            continue;
+
+        HalpPlatform.EcamBase.QuadPart = Entry->BaseAddress;
+        HalpPlatform.EcamStartBus = Entry->StartBusNumber;
+        HalpPlatform.EcamEndBus = Entry->EndBusNumber;
+        break;
+    }
+}
+
 static
 VOID
 HalpParseTable(
@@ -148,6 +203,10 @@ HalpParseTable(
 
     switch (Header->Signature)
     {
+        case MCFG_SIGNATURE:
+            HalpParseMcfg((PMCFG_TABLE)Header);
+            break;
+
         case MADT_SIGNATURE:
             HalpParseMadt((PHALP_MADT)Header);
             break;
@@ -175,9 +234,8 @@ HalpAcpiInitialize(
     _In_ PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
     PDESCRIPTION_HEADER Root, Header;
-    PHYSICAL_ADDRESS RootAddress, TableAddress;
-    ULONG Count, EntrySize, i;
-    PUCHAR Entries;
+    PHYSICAL_ADDRESS RootAddress;
+    ULONG Count, i;
 
     HalpPlatform.TimerIntId = HALP_VIRTUAL_TIMER_INTID;
 
@@ -188,23 +246,15 @@ HalpAcpiInitialize(
         return;
     }
 
+    HalpPlatform.RootTable = RootAddress;
     Root = HalpMapTable(RootAddress);
     if (!Root)
         return;
 
-    /* The loader hands over the XSDT when there is one, the RSDT otherwise */
-    EntrySize = (Root->Signature == XSDT_SIGNATURE) ? sizeof(ULONG64) : sizeof(ULONG);
-    Count = (Root->Length - sizeof(*Root)) / EntrySize;
-    Entries = (PUCHAR)(Root + 1);
-
+    Count = HalpRootTableCount(Root);
     for (i = 0; i < Count; i++)
     {
-        if (EntrySize == sizeof(ULONG64))
-            TableAddress.QuadPart = *(ULONG64 UNALIGNED *)(Entries + i * EntrySize);
-        else
-            TableAddress.QuadPart = *(ULONG UNALIGNED *)(Entries + i * EntrySize);
-
-        Header = HalpMapTable(TableAddress);
+        Header = HalpMapTable(HalpRootTableEntry(Root, i));
         if (!Header)
             continue;
 
@@ -213,4 +263,47 @@ HalpAcpiInitialize(
     }
 
     HalpUnmapTable(Root);
+}
+
+/**
+ * @brief Finds a firmware table by its signature.
+ *
+ * The table stays mapped, callers keep it for the life of the system.
+ */
+PVOID
+NTAPI
+HalAcpiGetTable(
+    _In_opt_ PLOADER_PARAMETER_BLOCK LoaderBlock,
+    _In_ ULONG Signature)
+{
+    PDESCRIPTION_HEADER Root, Header;
+    ULONG Count, i;
+
+    UNREFERENCED_PARAMETER(LoaderBlock);
+
+    if (!HalpPlatform.RootTable.QuadPart)
+        return NULL;
+
+    Root = HalpMapTable(HalpPlatform.RootTable);
+    if (!Root)
+        return NULL;
+
+    Count = HalpRootTableCount(Root);
+    for (i = 0; i < Count; i++)
+    {
+        Header = HalpMapTable(HalpRootTableEntry(Root, i));
+        if (!Header)
+            continue;
+
+        if (Header->Signature == Signature)
+        {
+            HalpUnmapTable(Root);
+            return Header;
+        }
+
+        HalpUnmapTable(Header);
+    }
+
+    HalpUnmapTable(Root);
+    return NULL;
 }
