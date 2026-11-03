@@ -406,6 +406,10 @@ SrbGetScsiData(
               SRBHELPER_ASSERT(FALSE);
             }
             break;
+
+          default:
+            /* Nothing else carries a command */
+            break;
       }
 
       if (FoundEntry)
@@ -567,6 +571,10 @@ SrbSetScsiData(
             {
               SRBHELPER_ASSERT(FALSE);
             }
+            break;
+
+          default:
+            /* Nothing else carries a command */
             break;
       }
 
