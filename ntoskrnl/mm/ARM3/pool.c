@@ -1335,7 +1335,7 @@ MiInitializeSessionPool(VOID)
     /* Initialize the first page table */
     Index = (ULONG_PTR)MmSessionSpace->PagedPoolStart - (ULONG_PTR)MmSessionBase;
     Index >>= 22;
-#ifndef _M_AMD64 // FIXME
+#ifndef _WIN64 // FIXME
     ASSERT(MmSessionSpace->PageTables[Index].u.Long == 0);
     MmSessionSpace->PageTables[Index] = *PointerPde;
 #endif

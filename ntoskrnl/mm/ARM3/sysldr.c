@@ -2506,9 +2506,21 @@ MiSetSystemCodeProtection(
         }
 
         /* Update the protection */
+#ifdef _M_ARM64
+        if (BooleanFlagOn(Protection, IMAGE_SCN_MEM_WRITE))
+            MI_MAKE_WRITE_PAGE(&TempPte);
+        else
+            MI_MAKE_READ_ONLY_PAGE(&TempPte);
+
+        if (BooleanFlagOn(Protection, IMAGE_SCN_MEM_EXECUTE))
+            MI_MAKE_EXECUTABLE_PAGE(&TempPte);
+        else
+            MI_MAKE_NO_EXECUTE_PAGE(&TempPte);
+#else
         TempPte.u.Hard.Write = BooleanFlagOn(Protection, IMAGE_SCN_MEM_WRITE);
 #if _MI_HAS_NO_EXECUTE
         TempPte.u.Hard.NoExecute = !BooleanFlagOn(Protection, IMAGE_SCN_MEM_EXECUTE);
+#endif
 #endif
 
         MI_UPDATE_VALID_PTE(PointerPte, TempPte);

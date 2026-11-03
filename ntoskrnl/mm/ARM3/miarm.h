@@ -133,6 +133,40 @@ C_ASSERT(SYSTEM_PD_SIZE == PAGE_SIZE);
 #define PTE_DISABLE_CACHE       0x0000000000000018ULL
 #define PTE_WRITECOMBINED_CACHE 0x0000000000000008ULL
 #define PTE_PROTECT_MASK        0x800000000000061AULL
+#elif defined(_M_ARM64)
+//
+// Access Flags
+// Writable and CopyOnWrite are software bits, the hardware only allows the
+// write once AP[2] (PTE_NOT_DIRTY) is cleared by the first write fault.
+//
+#define PTE_NOT_DIRTY           0x0000000000000080ULL
+#define PTE_NO_EXECUTE          0x0060000000000000ULL
+#define PTE_WRITABLE            0x0080000000000000ULL
+#define PTE_COPY_ON_WRITE       0x0100000000000000ULL
+#define PTE_READONLY            (PTE_NO_EXECUTE | PTE_NOT_DIRTY)
+#define PTE_EXECUTE             PTE_NOT_DIRTY
+#define PTE_EXECUTE_READ        PTE_EXECUTE
+#define PTE_READWRITE           (PTE_NO_EXECUTE | PTE_WRITABLE | PTE_NOT_DIRTY)
+#define PTE_WRITECOPY           (PTE_NO_EXECUTE | PTE_COPY_ON_WRITE | PTE_NOT_DIRTY)
+#define PTE_EXECUTE_READWRITE   (PTE_WRITABLE | PTE_NOT_DIRTY)
+#define PTE_EXECUTE_WRITECOPY   (PTE_COPY_ON_WRITE | PTE_NOT_DIRTY)
+#define PTE_PROTOTYPE           0x0000000000000400ULL
+
+//
+// State Flags
+// Valid entries are page or table descriptors and inner shareable
+//
+#define PTE_VALID               0x0000000000000303ULL
+#define PTE_ACCESSED            0x0000000000000400ULL
+#define PTE_DIRTY               0x0000000000000000ULL
+
+//
+// Cache flags, the MAIR_EL1 index also carries the descriptor bits
+//
+#define PTE_ENABLE_CACHE        0x0000000000000302ULL
+#define PTE_DISABLE_CACHE       0x000000000000030EULL
+#define PTE_WRITECOMBINED_CACHE 0x0000000000000306ULL
+#define PTE_PROTECT_MASK        0x01E000000000008CULL
 #elif defined(_M_ARM)
 #define PTE_READONLY            0x200
 #define PTE_EXECUTE             0 // Not worrying about NX yet
@@ -505,12 +539,12 @@ typedef struct _MM_SESSION_SPACE
     PMMWSLE Wsle;
     PDRIVER_UNLOAD Win32KDriverUnload;
     POOL_DESCRIPTOR PagedPool;
-#if defined (_M_AMD64)
+#if defined(_M_AMD64) || defined(_M_ARM64)
     MMPDE PageDirectory;
 #else
     PMMPDE PageTables;
 #endif
-#if defined (_M_AMD64)
+#if defined(_M_AMD64) || defined(_M_ARM64)
     PMMPTE SpecialPoolFirstPte;
     PMMPTE SpecialPoolLastPte;
     PMMPTE NextPdeForSpecialPoolExpansion;
@@ -688,7 +722,7 @@ MiIsMemoryTypeInvisible(TYPE_OF_MEMORY MemoryType)
             (MemoryType == LoaderBBTMemory));
 }
 
-#ifdef _M_AMD64
+#if defined(_M_AMD64) || defined(_M_ARM64)
 FORCEINLINE
 BOOLEAN
 MiIsUserPxe(PVOID Address)
@@ -853,7 +887,7 @@ MI_MAKE_HARDWARE_PTE_USER(IN PMMPTE NewPte,
     NewPte->u.Long |= MmProtectToPteMask[ProtectionMask];
 }
 
-#ifndef _M_AMD64
+#if !defined(_M_AMD64) && !defined(_M_ARM64)
 //
 // Builds a Prototype PTE for the address of the PTE
 //
@@ -956,7 +990,7 @@ MI_IS_PHYSICAL_ADDRESS(IN PVOID Address)
 
     /* Large pages are never paged out, always physically resident */
     PointerPde = MiAddressToPde(Address);
-    return ((PointerPde->u.Hard.LargePage) && (PointerPde->u.Hard.Valid));
+    return (MI_IS_PAGE_LARGE(PointerPde) && (PointerPde->u.Hard.Valid));
 }
 
 //
