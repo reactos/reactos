@@ -145,10 +145,12 @@ KeUpdateRunTime(IN PKTRAP_FRAME TrapFrame,
     Prcb->InterruptCount++;
 
     /* Check if we came from user mode */
-#ifndef _M_ARM
-    if (KiUserTrap(TrapFrame) || (TrapFrame->EFlags & EFLAGS_V86_MASK))
-#else
+#if defined(_M_ARM)
     if (TrapFrame->PreviousMode == UserMode)
+#elif defined(_M_ARM64)
+    if (KiUserTrap(TrapFrame))
+#else
+    if (KiUserTrap(TrapFrame) || (TrapFrame->EFlags & EFLAGS_V86_MASK))
 #endif
     {
         /* Increase thread user time */
