@@ -83,6 +83,9 @@ elseif(ARCH STREQUAL "amd64")
 elseif(ARCH STREQUAL "arm")
     #TBD
 elseif(ARCH STREQUAL "arm64")
+    list(APPEND FREELDR_COMMON_ASM_SOURCE
+        arch/arm64/misc.s)
+
     list(APPEND FREELDR_ARC_SOURCE
         arch/arm64/arm64bug.c)
 else()
