@@ -36,6 +36,16 @@
 static PUCHAR Rs232ComPort = NULL;
 static CPPORT Rs232ComPortInfo;
 
+#ifdef _M_ARM64
+/* PL011 data and flag registers */
+#define PL011_DR        0x00
+#define PL011_FR        0x18
+#define PL011_FR_RXFE   0x10
+#define PL011_FR_TXFF   0x20
+
+static BOOLEAN Rs232IsPl011 = FALSE;
+#endif
+
 /* FUNCTIONS ******************************************************************/
 
 BOOLEAN
@@ -56,8 +66,34 @@ Rs232PortInitialize(
     if (!PortAddress)
     {
 #ifdef _M_ARM64
-        /* The only known address is the QEMU PL011, which is not a 16550, so a UART needs its address */
-        return FALSE;
+        USHORT Subtype;
+        ULONG64 Address;
+
+        /* The base table only has the QEMU PL011, the firmware names its debug port in DBG2 */
+        if (!UefiGetDebugSerialPort(&Subtype, &Address))
+            return FALSE;
+
+        PortAddress = (PUCHAR)(ULONG_PTR)Address;
+        switch (Subtype)
+        {
+            case DBG2_SERIAL_PL011:
+            case DBG2_SERIAL_SBSA_32BIT:
+            case DBG2_SERIAL_SBSA:
+                /* The firmware set the UART up, only its data path is used */
+                Rs232IsPl011 = TRUE;
+                Rs232ComPortInfo.Address = PortAddress;
+                Rs232ComPort = PortAddress;
+                return TRUE;
+
+            case DBG2_SERIAL_16550:
+            case DBG2_SERIAL_16550_SUBSET:
+                if (!CpDoesPortExist(PortAddress))
+                    return FALSE;
+                break;
+
+            default:
+                return FALSE;
+        }
 #else
         /*
          * Enumerate COM ports from the last to the first one, and stop
@@ -92,6 +128,15 @@ Rs232PortInitialize(
 BOOLEAN Rs232PortGetByte(PUCHAR ByteReceived)
 {
     if (!Rs232ComPort) return FALSE;
+#ifdef _M_ARM64
+    if (Rs232IsPl011)
+    {
+        while (READ_REGISTER_ULONG((PULONG)(Rs232ComPort + PL011_FR)) & PL011_FR_RXFE)
+            NOTHING;
+        *ByteReceived = (UCHAR)READ_REGISTER_ULONG((PULONG)(Rs232ComPort + PL011_DR));
+        return TRUE;
+    }
+#endif
     return (CpGetByte(&Rs232ComPortInfo, ByteReceived, TRUE, FALSE) == CP_GET_SUCCESS);
 }
 
@@ -106,6 +151,15 @@ BOOLEAN Rs232PortPollByte(PUCHAR ByteReceived)
 VOID Rs232PortPutByte(UCHAR ByteToSend)
 {
     if (!Rs232ComPort) return;
+#ifdef _M_ARM64
+    if (Rs232IsPl011)
+    {
+        while (READ_REGISTER_ULONG((PULONG)(Rs232ComPort + PL011_FR)) & PL011_FR_TXFF)
+            NOTHING;
+        WRITE_REGISTER_ULONG((PULONG)(Rs232ComPort + PL011_DR), ByteToSend);
+        return;
+    }
+#endif
     CpPutByte(&Rs232ComPortInfo, ByteToSend);
 }
 
