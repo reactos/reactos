@@ -3,6 +3,7 @@
 #define _ADVPACK_PRECOMP_H
 
 #include <stdarg.h>
+#include <stdlib.h>
 
 #define WIN32_NO_STATUS
 #define _INC_WINDOWS
