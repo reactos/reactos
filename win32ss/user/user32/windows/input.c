@@ -955,8 +955,8 @@ IntGetTableOffsets(
  **/
 static HANDLE
 IntLoadKeyboardLayoutTablesAndFile(
-    _In_z_ PCWSTR pszLayoutFile,
-    _In_opt_z_ PCWSTR pszKLID,
+    _In_ PCWSTR pszLayoutFile,
+    _In_opt_ PCWSTR pszKLID,
     _Inout_ PUINT puFlags,
     _Out_ PULONG poffTable,
     _Out_opt_ PKBDTABLE_MULTI_EX pMulti)
