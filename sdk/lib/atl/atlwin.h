@@ -225,6 +225,32 @@ struct thunkCode
 };
 #pragma pack(pop)
 
+#elif defined(_M_ARM64)
+
+#pragma pack(push,8)
+struct thunkCode
+{
+    DWORD   m_ldr_x0;  /* ldr x0, m_this */
+    DWORD   m_ldr_x16; /* ldr x16, m_proc */
+    DWORD   m_br_x16;  /* br x16 */
+    DWORD   m_pad;     /* nop, keeps the literals 8 byte aligned */
+    ULONG64 m_this;
+    ULONG64 m_proc;
+
+    void
+    Init(WNDPROC proc, void *pThis)
+    {
+        m_ldr_x0 = 0x58000080;
+        m_ldr_x16 = 0x580000B0;
+        m_br_x16 = 0xD61F0200;
+        m_pad = 0xD503201F;
+        m_this = (ULONG64)pThis;
+        m_proc = (ULONG64)proc;
+        FlushInstructionCache(GetCurrentProcess(), this, sizeof(thunkCode));
+    }
+};
+#pragma pack(pop)
+
 #else
 #error ARCH not supported
 #endif
