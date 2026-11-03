@@ -24,6 +24,10 @@ elseif(ARCH STREQUAL "arm")
         except/arm/_local_unwind2.s
         except/arm/chkstk_asm.s
     )
+elseif(ARCH STREQUAL "arm64")
+    list(APPEND LIBCNTPR_EXCEPT_ASM_SOURCE
+        except/arm64/chkstk_asm.s
+    )
 endif()
 
 if(ARCH STREQUAL "i386")
