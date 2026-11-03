@@ -778,15 +778,36 @@ HalpAdjustPCIResourceList(IN PBUS_HANDLER BusHandler,
         UNIMPLEMENTED_DBGBREAK("/PCILOCK boot switch is not yet supported.");
     }
 #endif
-    /* Now create the correct resource list based on the supported bus ranges */
-#if 0
-    Status = HaliAdjustResourceListRange(BusHandler->BusAddresses,
-                                         Interrupt,
-                                         pResourceList);
-#else
-    DPRINT1("HAL: No PCI Resource Adjustment done! Hardware may malfunction\n");
+    /* Without IRQ routing the pin stays on its line, so no other line can be offered */
+    if (Interrupt->Base <= Interrupt->Limit)
+    {
+        PIO_RESOURCE_LIST List = (*pResourceList)->List;
+        PIO_RESOURCE_DESCRIPTOR Descriptor;
+        ULONG Alternative, Index;
+
+        for (Alternative = 0; Alternative < (*pResourceList)->AlternativeLists; Alternative++)
+        {
+            for (Index = 0; Index < List->Count; Index++)
+            {
+                Descriptor = &List->Descriptors[Index];
+                if ((Descriptor->Type != CmResourceTypeInterrupt) ||
+                    (Descriptor->Flags & CM_RESOURCE_INTERRUPT_MESSAGE))
+                {
+                    continue;
+                }
+
+                Descriptor->u.Interrupt.MinimumVector = max(Descriptor->u.Interrupt.MinimumVector,
+                                                            (ULONG)Interrupt->Base);
+                Descriptor->u.Interrupt.MaximumVector = min(Descriptor->u.Interrupt.MaximumVector,
+                                                            (ULONG)Interrupt->Limit);
+            }
+
+            List = (PIO_RESOURCE_LIST)&List->Descriptors[List->Count];
+        }
+    }
+
+    /* TODO: Ports and memory are not checked against the bus ranges yet */
     Status = STATUS_SUCCESS;
-#endif
 
     /* Return to caller */
     ExFreePool(Interrupt);
