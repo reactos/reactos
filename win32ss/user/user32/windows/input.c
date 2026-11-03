@@ -759,7 +759,7 @@ IntCloseAuxFiles(
     for (iTable = 0; iTable < pMulti->Multi.nTables && iTable < KBDTABLE_MULTI_MAX; ++iTable)
     {
         HANDLE hAuxFile = pMulti->AuxEntries[iTable].hFile;
-        if (hAuxFile && hAuxFile != INVALID_HANDLE_VALUE)
+        if (hAuxFile)
             CloseHandle(hAuxFile);
         pMulti->AuxEntries[iTable].hFile = NULL;
     }
