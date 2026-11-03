@@ -1558,8 +1558,8 @@ NtUserLoadKeyboardLayoutEx(
     for (iTable = 0; iTable < multi.Multi.nTables; ++iTable) /* nTables < MAX is checked above */
     {
         HANDLE hAuxFile = multi.AuxEntries[iTable].hFile;
-        /* user32 tolerates a failed aux file by storing NULL or INVALID_HANDLE_VALUE */
-        if (!hAuxFile || hAuxFile == INVALID_HANDLE_VALUE)
+        /* user32 tolerates a failed aux file by storing NULL */
+        if (!hAuxFile)
             continue;
 
         ahKernelAuxFile[iTable] = IntVerifyKeyboardFileHandle(hAuxFile);
