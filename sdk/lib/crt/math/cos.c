@@ -1,94 +1,91 @@
 /*
- * COPYRIGHT:        See COPYING in the top level directory
- * PROJECT:          ReactOS CRT
- * FILE:             lib/sdk/crt/math/cos.c
- * PURPOSE:          Generic C Implementation of cos
- * PROGRAMMER:       Timo Kreuzer (timo.kreuzer@reactos.org)
+ * PROJECT:     ReactOS CRT
+ * LICENSE:     MIT (https://spdx.org/licenses/MIT)
+ * PURPOSE:     Implementation of cos.
+ * COPYRIGHT:   Imported from musl libc
+ *              https://git.musl-libc.org/cgit/musl/tree/src/math/cos.c
+ *              blob: ee97f68bbb7be73e473e9324484bed533fcb39bb
+ *              See https://git.musl-libc.org/cgit/musl/tree/COPYRIGHT
  */
 
+/* origin: FreeBSD /usr/src/lib/msun/src/s_cos.c */
+/*
+ * ====================================================
+ * Copyright (C) 1993 by Sun Microsystems, Inc. All rights reserved.
+ *
+ * Developed at SunPro, a Sun Microsystems, Inc. business.
+ * Permission to use, copy, modify, and distribute this
+ * software is freely granted, provided that this notice
+ * is preserved.
+ * ====================================================
+ */
+/* cos(x)
+ * Return cosine function of x.
+ *
+ * kernel function:
+ *      __sin           ... sine function on [-pi/4,pi/4]
+ *      __cos           ... cosine function on [-pi/4,pi/4]
+ *      __rem_pio2      ... argument reduction routine
+ *
+ * Method.
+ *      Let S,C and T denote the sin, cos and tan respectively on
+ *      [-PI/4, +PI/4]. Reduce the argument x to y1+y2 = x-k*pi/2
+ *      in [-pi/4 , +pi/4], and let n = k mod 4.
+ *      We have
+ *
+ *          n        sin(x)      cos(x)        tan(x)
+ *     ----------------------------------------------------------
+ *          0          S           C             T
+ *          1          C          -S            -1/T
+ *          2         -S          -C             T
+ *          3         -C           S            -1/T
+ *     ----------------------------------------------------------
+ *
+ * Special cases:
+ *      Let trig be any of sin, cos, or tan.
+ *      trig(+-INF)  is NaN, with signals;
+ *      trig(NaN)    is that NaN;
+ *
+ * Accuracy:
+ *      TRIG(x) returns trig(x) nearly rounded
+ */
+
+#include "libm.h"
+
 #ifdef _MSC_VER
-#pragma warning(suppress:4164) /* intrinsic not declared */
 #pragma function(cos)
-#endif /* _MSC_VER */
+#endif
 
-#define PRECISION 9
-#define M_PI 3.141592653589793238462643
-
-static double cos_off_tbl[] = {0.0, -M_PI/2., 0, -M_PI/2.};
-static double cos_sign_tbl[] = {1,-1,-1,1};
-
-double
-cos(double x)
+double cos(double x)
 {
-    int quadrant;
-    double x2, result;
+	double y[2];
+	uint32_t ix;
+	unsigned n;
 
-    /* Calculate the quadrant */
-    quadrant = (int)(x * (2./M_PI));
+	GET_HIGH_WORD(ix, x);
+	ix &= 0x7fffffff;
 
-    /* Get offset inside quadrant */
-    x = x - quadrant * (M_PI/2.);
+	/* |x| ~< pi/4 */
+	if (ix <= 0x3fe921fb) {
+		if (ix < 0x3e46a09e) {  /* |x| < 2**-27 * sqrt(2) */
+			/* raise inexact if x!=0 */
+			FORCE_EVAL(x + 0x1p120f);
+			return 1.0;
+		}
+		return __cos(x, 0);
+	}
 
-    /* Normalize quadrant to [0..3] */
-    quadrant = quadrant & 0x3;
+	/* cos(Inf or NaN) is NaN */
+	if (ix >= 0x7ff00000)
+		return x-x;
 
-    /* Fixup value for the generic function */
-    x += cos_off_tbl[quadrant];
-
-    /* Calculate the negative of the square of x */
-    x2 = - (x * x);
-
-    /* This is an unrolled taylor series using <PRECISION> iterations
-     * Example with 4 iterations:
-     * result = 1 - x^2/2! + x^4/4! - x^6/6! + x^8/8!
-     * To save multiplications and to keep the precision high, it's performed
-     * like this:
-     * result = 1 - x^2 * (1/2! - x^2 * (1/4! - x^2 * (1/6! - x^2 * (1/8!))))
-     */
-
-    /* Start with 0, compiler will optimize this away */
-    result = 0;
-
-#if (PRECISION >= 10)
-    result += 1./(1.*2*3*4*5*6*7*8*9*10*11*12*13*14*15*16*17*18*19*20);
-    result *= x2;
-#endif
-#if (PRECISION >= 9)
-    result += 1./(1.*2*3*4*5*6*7*8*9*10*11*12*13*14*15*16*17*18);
-    result *= x2;
-#endif
-#if (PRECISION >= 8)
-    result += 1./(1.*2*3*4*5*6*7*8*9*10*11*12*13*14*15*16);
-    result *= x2;
-#endif
-#if (PRECISION >= 7)
-    result += 1./(1.*2*3*4*5*6*7*8*9*10*11*12*13*14);
-    result *= x2;
-#endif
-#if (PRECISION >= 6)
-    result += 1./(1.*2*3*4*5*6*7*8*9*10*11*12);
-    result *= x2;
-#endif
-#if (PRECISION >= 5)
-    result += 1./(1.*2*3*4*5*6*7*8*9*10);
-    result *= x2;
-#endif
-    result += 1./(1.*2*3*4*5*6*7*8);
-    result *= x2;
-
-    result += 1./(1.*2*3*4*5*6);
-    result *= x2;
-
-    result += 1./(1.*2*3*4);
-    result *= x2;
-
-    result += 1./(1.*2);
-    result *= x2;
-
-    result += 1;
-
-    /* Apply correct sign */
-    result *= cos_sign_tbl[quadrant];
-
-    return result;
+	/* argument reduction */
+	n = __rem_pio2(x, y);
+	switch (n&3) {
+	case 0: return  __cos(y[0], y[1]);
+	case 1: return -__sin(y[0], y[1], 1);
+	case 2: return -__cos(y[0], y[1]);
+	default:
+		return  __sin(y[0], y[1], 1);
+	}
 }
