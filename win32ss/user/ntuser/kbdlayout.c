@@ -434,13 +434,22 @@ KbdIsRangeInData(_In_ const KBDIMAGE_INFO *pInfo, _In_ ULONG off, _In_ SIZE_T cb
 }
 
 /**
- * Adjusts the pointers inside the layout tables. In the file, they are virtual addresses based
- * on ImageBase, so the RVA of the target is (VA - ImageBase), and the adjusted pointer is the
- * RVA applied to our image buffer. The tables are modified in place (in our own copy).
- * Each target must lie in the .data section, where it has room for at least one element.
- * Returns FALSE if any of the targets is not valid.
- * NOTE: Walking up to the terminator of a table is not validated.
- */
+ * @brief
+ * Adjusts the pointers inside the layout tables.
+ *
+ * In the file, these pointers are virtual addresses relative to ImageBase,
+ * so the RVA of the target is (VA - ImageBase), and the adjusted pointer
+ * is the RVA applied to our image buffer. The tables are modified in place
+ * (in our own copy).
+ * Each target must lie within the .data section, where it has room for
+ * at least one element.
+ *
+ * @return
+ * Returns TRUE if all the targets are valid, or FALSE if any is invalid.
+ *
+ * @note
+ * Walking up to the terminator of a table is not validated.
+ **/
 static BOOL
 KbdRebaseTables(
     _In_ PBYTE pbImage,
