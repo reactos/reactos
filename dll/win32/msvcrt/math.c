@@ -991,7 +991,11 @@ static void _setfp( unsigned int *cw, unsigned int cw_mask,
 
     if (sw)
     {
+#ifdef _MSC_VER
+        fpsr = _ReadStatusReg(ARM64_FPSR);
+#else
         __asm__ __volatile__( "mrs %0, fpsr" : "=r" (fpsr) );
+#endif
         old_fpsr = fpsr;
 
         flags = 0;
@@ -1016,7 +1020,11 @@ static void _setfp( unsigned int *cw, unsigned int cw_mask,
 
     if (cw)
     {
+#ifdef _MSC_VER
+        fpcr = _ReadStatusReg(ARM64_FPCR);
+#else
         __asm__ __volatile__( "mrs %0, fpcr" : "=r" (fpcr) );
+#endif
         old_fpcr = fpcr;
 
         flags = 0;
@@ -1054,13 +1062,24 @@ static void _setfp( unsigned int *cw, unsigned int cw_mask,
     if (old_fpcr != fpcr && ~(old_fpcr >> 8) & fpsr & 0x9f != fpsr & 0x9f)
     {
         ULONG_PTR mask = fpcr & ~0x9f00;
+#ifdef _MSC_VER
+        _WriteStatusReg(ARM64_FPCR, mask);
+#else
         __asm__ __volatile__( "msr fpcr, %0" :: "r" (mask) );
+#endif
     }
 
+#ifdef _MSC_VER
+    if (old_fpsr != fpsr)
+        _WriteStatusReg(ARM64_FPSR, fpsr);
+    if (old_fpcr != fpcr)
+        _WriteStatusReg(ARM64_FPCR, fpcr);
+#else
     if (old_fpsr != fpsr)
         __asm__ __volatile__( "msr fpsr, %0" :: "r" (fpsr) );
     if (old_fpcr != fpcr)
         __asm__ __volatile__( "msr fpcr, %0" :: "r" (fpcr) );
+#endif
 #elif defined(__arm__)
     DWORD old_fpscr, fpscr;
     unsigned int flags;
