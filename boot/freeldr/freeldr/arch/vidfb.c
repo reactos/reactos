@@ -318,15 +318,27 @@ VidFbScrollUp(
     _In_ UINT32 Color,
     _In_ ULONG Scroll)
 {
-    PUINT32 Dst = (PUINT32)((PUCHAR)framebufInfo.BaseAddress + TOP_BOTTOM_LINES * framebufInfo.Delta);
-    PUINT32 Src = (PUINT32)((PUCHAR)framebufInfo.BaseAddress + (TOP_BOTTOM_LINES + Scroll) * framebufInfo.Delta);
-    ULONG PixelCount = framebufInfo.ScreenWidth * ((framebufInfo.ScreenHeight - 2 * TOP_BOTTOM_LINES) - Scroll);
+    PUCHAR Area = (PUCHAR)framebufInfo.BaseAddress + TOP_BOTTOM_LINES * framebufInfo.Delta;
+    ULONG Lines = framebufInfo.ScreenHeight - 2 * TOP_BOTTOM_LINES;
+    PUINT32 Dst, Src;
+    ULONG Line, Col;
 
-    while (PixelCount--)
-        *Dst++ = *Src++;
-
-    for (PixelCount = 0; PixelCount < framebufInfo.ScreenWidth * Scroll; PixelCount++)
-        *Dst++ = Color;
+    /* A scanline can be longer than the visible width, so each one moves on its own */
+    for (Line = 0; Line < Lines; Line++)
+    {
+        Dst = (PUINT32)(Area + Line * framebufInfo.Delta);
+        if (Line + Scroll < Lines)
+        {
+            Src = (PUINT32)(Area + (Line + Scroll) * framebufInfo.Delta);
+            for (Col = 0; Col < framebufInfo.ScreenWidth; Col++)
+                Dst[Col] = Src[Col];
+        }
+        else
+        {
+            for (Col = 0; Col < framebufInfo.ScreenWidth; Col++)
+                Dst[Col] = Color;
+        }
+    }
 }
 
 #if 0
