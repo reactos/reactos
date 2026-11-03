@@ -17,6 +17,11 @@ extern "C" {
 #define MM_ALLOCATION_GRANULARITY_SHIFT   16L
 #define MM_PAGE_FRAME_NUMBER_SIZE         20
 
+//
+// User space range limit
+//
+#define MI_HIGHEST_USER_ADDRESS           (PVOID)0x00007FFFFFFEFFFFULL
+
 /* Following structs are based on WoA symbols */
 typedef struct _HARDWARE_PTE
 {
