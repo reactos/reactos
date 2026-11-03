@@ -220,9 +220,18 @@ HalGetInterruptVector(
         return 0;
     }
 
-    *Irql = (KIRQL)(DISPATCH_LEVEL + 1 + (BusInterruptVector % (CLOCK_LEVEL - DISPATCH_LEVEL - 1)));
+    *Irql = HalConvertDeviceIdtToIrql(BusInterruptVector);
     *Affinity = 1;
     return BusInterruptVector;
+}
+
+/* Device vectors are the GIC interrupt IDs, spread over the device IRQLs */
+KIRQL
+NTAPI
+HalConvertDeviceIdtToIrql(
+    _In_ ULONG IdtEntry)
+{
+    return (KIRQL)(DISPATCH_LEVEL + 1 + (IdtEntry % (CLOCK_LEVEL - DISPATCH_LEVEL - 1)));
 }
 
 BOOLEAN
