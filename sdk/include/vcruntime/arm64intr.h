@@ -47,6 +47,7 @@ void __cdecl __prefetch2(const void *_Address, unsigned char _PrfOp);
 
 #define ARM64_FPCR ARM64_SYSREG(3, 3, 4, 4, 0)
 #define ARM64_FPSR ARM64_SYSREG(3, 3, 4, 4, 1)
+#define ARM64_CNTVCT ARM64_SYSREG(3, 3, 14, 0, 2)
 
 __int64 _ReadStatusReg(int _Register);
 void _WriteStatusReg(int _Register, __int64 _Value);
