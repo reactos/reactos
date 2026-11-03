@@ -104,6 +104,12 @@ typedef struct _UDFS_RECOVERY_PROBE {
     uint16_t FailureObjectRef;
     /* recovery_core.c line of the first failed namespace check, 0 if none. */
     uint32_t FailureLine;
+    /* First directory entry that failed its header check: offset in the
+     * directory, directory size, and the first 16 bytes found there. */
+    uint32_t FailureFidOffset;
+    uint32_t FailureDirBytes;
+    uint8_t FailureFidHead[16];
+    uint8_t FailureFidRecorded;
     /* One bounded empty-directory pre-FID deletion transaction. */
     uint32_t DirectoryLinkFixParentLbn;
     uint32_t DirectoryLinkFixChildLbn;

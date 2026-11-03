@@ -1356,8 +1356,16 @@ GraphScanFids(RECOVERY_GRAPH *graph,
             (Read16(fid + 2) != 2 && Read16(fid + 2) != 3) ||
             Read16(fid + 16) != 1 || (attributes & ~0x1fU) ||
             crcLength < rawLength - 16 ||
-            crcLength > recordLength - 16)
+            crcLength > recordLength - 16) {
+            if (!graph->Result->FailureFidRecorded) {
+                graph->Result->FailureFidRecorded = 1;
+                graph->Result->FailureFidOffset = offset;
+                graph->Result->FailureDirBytes = length;
+                memcpy(graph->Result->FailureFidHead, fid,
+                       length - offset < 16 ? length - offset : 16);
+            }
             return GRAPH_FAIL(UdfsRecoveryProbeCorrupt);
+        }
         for (i = 0; i < 16; ++i)
             if (i != 4) checksum += fid[i];
         if ((uint8_t)checksum != fid[4] ||

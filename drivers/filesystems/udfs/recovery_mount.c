@@ -248,6 +248,14 @@ UDFRecoverDirtyVolumeBeforeLoad(PIRP_CONTEXT IrpContext, PVCB Vcb)
               (ULONG)before.FilesVisited, (ULONG)before.DirectoriesVisited,
               (ULONG)before.PartitionBlocks, (ULONG)before.FailureObjectRef,
               (ULONG)before.FailureObjectLbn, (ULONG)before.FailureLine));
+    if (before.FailureFidRecorded)
+        UDFPrint(("UDFS recovery: bad entry at %lx of %lx: "
+                  "%02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x\n",
+                  (ULONG)before.FailureFidOffset, (ULONG)before.FailureDirBytes,
+                  before.FailureFidHead[0], before.FailureFidHead[1], before.FailureFidHead[2], before.FailureFidHead[3],
+                  before.FailureFidHead[4], before.FailureFidHead[5], before.FailureFidHead[6], before.FailureFidHead[7],
+                  before.FailureFidHead[8], before.FailureFidHead[9], before.FailureFidHead[10], before.FailureFidHead[11],
+                  before.FailureFidHead[12], before.FailureFidHead[13], before.FailureFidHead[14], before.FailureFidHead[15]));
     if (status == UdfsRecoveryProbeGraphMismatch)
         UDFPrint(("UDFS recovery: in use but unreferenced %lu/%lu, referenced but free %lu/%lu, "
                   "shared %lu, dir fixes %lu/%lu/%lu (physical/metadata)\n",
