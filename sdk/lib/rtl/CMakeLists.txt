@@ -157,7 +157,11 @@ target_link_libraries(rtl PRIVATE pseh)
 add_pch(rtl rtl.h SOURCE)
 add_dependencies(rtl psdk asm)
 
-add_asm_files(rtl_vista_asm ntuserdisp.s)
+if(ARCH STREQUAL "arm64")
+    add_asm_files(rtl_vista_asm arm64/ntuserdisp.s)
+else()
+    add_asm_files(rtl_vista_asm ntuserdisp.s)
+endif()
 list(APPEND SOURCE_VISTA
     ${rtl_vista_asm}
     ${RTL_WINE_SOURCE_VISTA}
