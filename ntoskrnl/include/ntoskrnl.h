@@ -20,6 +20,8 @@
 #ifdef _WIN64
 #define IoAllocateAdapterChannel _IoAllocateAdapterChannel
 #define KeGetCurrentThread _KeGetCurrentThread
+#endif
+#ifdef _M_AMD64
 #define RtlFillMemoryUlong _RtlFillMemoryUlong
 #endif
 
