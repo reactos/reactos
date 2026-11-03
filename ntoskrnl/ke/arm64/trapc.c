@@ -30,8 +30,9 @@
 
 #define MAX_SYSCALL_ARGUMENTS   16
 
+/* Services return pointer sized values too, so all of x0 is the result */
 typedef
-NTSTATUS
+ULONG_PTR
 (NTAPI *PKI_SYSTEM_SERVICE)(
     ULONG_PTR, ULONG_PTR, ULONG_PTR, ULONG_PTR,
     ULONG_PTR, ULONG_PTR, ULONG_PTR, ULONG_PTR,
@@ -300,7 +301,7 @@ KiArm64SystemService(
     ULONG ServiceNumber, TableIndex, Count, i;
     PULONG_PTR StackArguments;
     PKTHREAD Thread;
-    NTSTATUS Status;
+    ULONG_PTR Result;
 
     Thread = KeGetCurrentThread();
     KeGetCurrentPrcb()->KeSystemCalls++;
@@ -342,7 +343,7 @@ KiArm64SystemService(
     DescriptorTable = &((PKSERVICE_TABLE_DESCRIPTOR)Thread->ServiceTable)[TableIndex];
     if (ServiceNumber >= DescriptorTable->Limit)
     {
-        Status = STATUS_INVALID_SYSTEM_SERVICE;
+        Result = (ULONG_PTR)(LONG_PTR)STATUS_INVALID_SYSTEM_SERVICE;
         goto Exit;
     }
 
@@ -369,20 +370,20 @@ KiArm64SystemService(
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            Status = _SEH2_GetExceptionCode();
+            Result = (ULONG_PTR)(LONG_PTR)_SEH2_GetExceptionCode();
             _SEH2_YIELD(goto Exit);
         }
         _SEH2_END;
     }
 
-    Status = ((PKI_SYSTEM_SERVICE)DescriptorTable->Base[ServiceNumber])(
+    Result = ((PKI_SYSTEM_SERVICE)DescriptorTable->Base[ServiceNumber])(
         Arguments[0], Arguments[1], Arguments[2], Arguments[3],
         Arguments[4], Arguments[5], Arguments[6], Arguments[7],
         Arguments[8], Arguments[9], Arguments[10], Arguments[11],
         Arguments[12], Arguments[13], Arguments[14], Arguments[15]);
 
 Exit:
-    TrapFrame->X0 = (ULONG_PTR)(LONG_PTR)Status;
+    TrapFrame->X0 = Result;
     Thread->TrapFrame = KiGetLinkedTrapFrame(TrapFrame);
     Thread->PreviousMode = OldMode;
     return TrapFrame;
