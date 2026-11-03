@@ -876,6 +876,8 @@ IntPrepareLayoutModule(
     _Inout_ PUINT puFlags,
     _Inout_opt_ PKBDTABLE_MULTI_EX pMulti)
 {
+    PFN_KbdLayerDescriptor pfnMain = NULL;
+
     _SEH2_TRY
     {
         if (_wcsicmp(*ppszFile, L"kbdus.dll") != 0) /* Not English US? */
