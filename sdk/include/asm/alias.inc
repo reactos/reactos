@@ -53,6 +53,45 @@ ENDM
     CREATE_ALIAS1 $alias, $target
     CREATE_ALIAS2 $alias, $target
     MEND
+#elif defined(_M_ARM64)
+
+#include <kxarm64.h>
+
+#ifdef _MSC_VER
+
+    MACRO
+    CREATE_ALIAS1   $alias, $target
+    IMPORT  $alias, WEAK $target
+    MEND
+
+    MACRO
+    CREATE_ALIAS2   $alias, $target
+    IMPORT  __imp_$alias, WEAK __imp_$target
+    MEND
+
+    MACRO
+    CREATE_ALIAS   $alias, $target
+    CREATE_ALIAS1 $alias, $target
+    CREATE_ALIAS2 $alias, $target
+    MEND
+
+#else
+
+.macro CREATE_ALIAS1 alias, target
+    IMPORT \alias, WEAK, \target
+.endm
+
+.macro CREATE_ALIAS2 alias, target
+    IMPORT __imp_\alias, WEAK, __imp_\target
+.endm
+
+.macro CREATE_ALIAS alias, target
+    CREATE_ALIAS1 \alias, \target
+    CREATE_ALIAS2 \alias, \target
+.endm
+
+#endif
+
 #else
 #error "Unsupported platform."
 #endif
