@@ -77,7 +77,12 @@ set_target_properties(ntvdm
     ENABLE_EXPORTS TRUE
     DEFINE_SYMBOL "")
 
-set_module_type(ntvdm win32cui UNICODE IMAGEBASE 0x0F000000)
+if(ARCH STREQUAL "arm64")
+    # ARM64 images load above 4 GB, which keeps the DOS memory free as well
+    set_module_type(ntvdm win32cui UNICODE)
+else()
+    set_module_type(ntvdm win32cui UNICODE IMAGEBASE 0x0F000000)
+endif()
 target_link_libraries(ntvdm fast486 ${PSEH_LIB})
 add_importlibs(ntvdm user32 gdi32 advapi32 comdlg32 msvcrt kernel32 ntdll)
 add_cd_file(TARGET ntvdm DESTINATION reactos/system32 FOR all)
