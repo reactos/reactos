@@ -8,14 +8,14 @@
 #pragma once
 
 #include "tcpserver.hpp"
+#include "session.hpp"
 
-#include <string>
-
-class TelnetSessionHandler: public TCPServerSessionHandler
+class TelnetSessionHandler: public TCPServerSessionHandler, public ITelnetSessionHandler
 {
     static constexpr size_t MAX_TEXT_LINE_LENGTH = 8000;
     static constexpr size_t MAX_CREDENTIAL_LENGTH = 256;
     static constexpr size_t MAX_SUBNEGO_PAYLOAD_LENGTH = 255;
+    static constexpr uint32_t MAX_FAILED_LOGIN_ATTEMPTS = 3;
 
     enum class ECommand: uint8_t
     {
@@ -77,7 +77,7 @@ class TelnetSessionHandler: public TCPServerSessionHandler
         INVALID,
         WAITING_FOR_USERNAME,
         WAITING_FOR_PASSWORD,
-        TERMINAL,
+        ACTIVE_SESSION,
     };
 
 private:
@@ -87,12 +87,8 @@ private:
     void handle_option_command(ECommand verb, EOption option);
     void handle_subnegotiation(uint8_t option, const uint8_t* params, uint8_t length);
 
-    void send_text(const uint8_t* data, int length);
-
     void erase_line();
     void erase_char();
-
-    HANDLE authenticate(const std::string& username, const std::string& password);
 
 private:
     inline bool should_echo();
@@ -102,7 +98,7 @@ private:
 
     inline void set_state_to_waiting_for_username();
     inline void set_state_to_waiting_for_password();
-    inline void set_state_to_terminal();
+    inline void set_state_to_active_session();
 
 public:
     TelnetSessionHandler();
@@ -113,6 +109,9 @@ public:
     void on_disconnect() override;
 
     void on_data(const uint8_t* data, int length) override;
+
+public:
+    void send_text(const uint8_t* data, int length) override;
 
 private:
     uint8_t m_parser_state_data{};
@@ -133,6 +132,8 @@ private:
 
     std::string m_username{};
     uint32_t m_failed_login_attempt_count{};
+
+    TelnetSession* m_active_session{};
 };
 
 void TelnetSessionHandler::flush_echo_buffer()
@@ -171,8 +172,8 @@ void TelnetSessionHandler::set_state_to_waiting_for_password()
     send_string("password: ");
 }
 
-void TelnetSessionHandler::set_state_to_terminal()
+void TelnetSessionHandler::set_state_to_active_session()
 {
-    m_state = EState::TERMINAL;
+    m_state = EState::ACTIVE_SESSION;
     send_string("C:\\ >");
 }

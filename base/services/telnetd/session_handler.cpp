@@ -5,7 +5,7 @@
  * COPYRIGHT:   Copyright 2026 Aravinda Samarathunga (I-A-S)
  */
 
-#include "telnet_session.hpp"
+#include "session_handler.hpp"
 
 #include <cassert>
 
@@ -29,6 +29,7 @@ TelnetSessionHandler::TelnetSessionHandler()
 
 TelnetSessionHandler::~TelnetSessionHandler()
 {
+    delete m_active_session;
     DeleteCriticalSection(&m_out_text_cs);
 }
 
@@ -47,7 +48,8 @@ void TelnetSessionHandler::on_connect()
 
 void TelnetSessionHandler::on_disconnect()
 {
-    
+    delete m_active_session;
+    m_active_session = nullptr;
 }
 
 void TelnetSessionHandler::on_data(const uint8_t* data, int length)
@@ -213,6 +215,13 @@ void TelnetSessionHandler::handle_text(const uint8_t* data, int length)
 
 void TelnetSessionHandler::handle_text_line(const std::string& line)
 {
+    const auto authenticate = [](const std::string& username, const std::string& password) -> HANDLE
+    {
+        HANDLE token{};
+        // [IATODO]: Add widechar support later
+        return LogonUserA((char*)username.c_str(), (char*)".", (char*)password.c_str(), LOGON32_LOGON_INTERACTIVE, LOGON32_PROVIDER_DEFAULT, &token) ? token : NULL;
+    };
+
     switch (m_state)
     {
         case EState::WAITING_FOR_USERNAME:
@@ -231,12 +240,16 @@ void TelnetSessionHandler::handle_text_line(const std::string& line)
                 if (m_echo_state == EEchoState::AGREED_TO) {
                     send_string("\r\n");
                 }
-                set_state_to_terminal();
+
+                m_active_session = new TelnetSession(this, m_username, token);
+
+                set_state_to_active_session();
             } else {
                 m_failed_login_attempt_count++;
-                if (m_failed_login_attempt_count >= 3) {
+                if (m_failed_login_attempt_count >= MAX_FAILED_LOGIN_ATTEMPTS) {
                     m_state = EState::INVALID;
                     disconnect();
+                    return;
                 }
                 if (m_echo_state == EEchoState::AGREED_TO) {
                     send_string("\r\n");
@@ -247,7 +260,14 @@ void TelnetSessionHandler::handle_text_line(const std::string& line)
         }
         break;
 
-        case EState::TERMINAL:
+        case EState::ACTIVE_SESSION:
+            if (!m_active_session) {
+                m_state = EState::INVALID;
+                disconnect();
+                return;
+            }
+
+            m_active_session->on_text_line(line);
             break;
         
         default:
@@ -446,12 +466,4 @@ void TelnetSessionHandler::erase_line()
     m_text_line_buffer.clear();
 
     m_text_last_byte_was_cr = false;
-}
-
-HANDLE TelnetSessionHandler::authenticate(const std::string& username, const std::string& password)
-{
-    HANDLE token{};
-    
-    // [IATODO]: Add widechar support later
-    return LogonUserA((char*)username.c_str(), (char*)".", (char*)password.c_str(), LOGON32_LOGON_INTERACTIVE, LOGON32_PROVIDER_DEFAULT, &token) ? token : NULL;
 }

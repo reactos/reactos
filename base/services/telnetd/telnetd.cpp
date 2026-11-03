@@ -6,7 +6,7 @@
  */
 
 #include "telnetd.hpp"
-#include "telnet_session.hpp"
+#include "session_handler.hpp"
 
 #include <winbase.h>
 

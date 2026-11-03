@@ -1,6 +1,7 @@
 set(SOURCE_FILES
     telnetd.cpp
-    telnet_session.cpp
+    session.cpp
+    session_handler.cpp
     tcpserver.cpp
     serviceentry.c
 )
