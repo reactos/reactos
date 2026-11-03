@@ -1240,8 +1240,8 @@ IntLoadKeyboardLayout(
         if (wcscmp(szKLID, L"00000409") != 0) /* Not English? Then retry with English */
         {
             StringCbCopyW(szKLID, sizeof(szKLID), L"00000409");
-            hFile = IntLoadKeyboardLayoutFile(szKLID, _countof(szKLID), wLangID, &Flags,
-                                              &offTable, &dwNewKL, NULL);
+            hFile = IntLoadKeyboardLayoutFile(szKLID, _countof(szKLID), wLangID,
+                                              &Flags, &offTable, &dwNewKL, NULL);
         }
     }
 
