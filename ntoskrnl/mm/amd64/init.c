@@ -445,7 +445,12 @@ MiSetupPfnForPageTable(
         Pfn->u1.WsIndex = 0;
         Pfn->u2.ShareCount++;
         Pfn->PteAddress = PointerPte;
+#ifdef _M_ARM64
+        /* The access flag of a valid PTE sits where the software prototype bit is */
+        MI_MAKE_SOFTWARE_PTE(&Pfn->OriginalPte, MM_READWRITE);
+#else
         Pfn->OriginalPte = *PointerPte;
+#endif
         Pfn->u3.e1.PageLocation = ActiveAndValid;
         Pfn->u3.e1.CacheAttribute = MiNonCached;
         Pfn->u3.e2.ReferenceCount = 1;
