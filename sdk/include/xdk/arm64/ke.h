@@ -175,7 +175,7 @@ typedef union NEON128 {
 } NEON128, *PNEON128;
 typedef NEON128 NEON128, *PNEON128;
 
-typedef struct _CONTEXT {
+typedef struct DECLSPEC_ALIGN(16) _CONTEXT {
 
     //
     // Control flags.
