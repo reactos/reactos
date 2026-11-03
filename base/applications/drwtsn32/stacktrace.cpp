@@ -64,7 +64,7 @@ void PrintStackBacktrace(FILE* output, DumpData& data, ThreadData& thread)
     MachineType = IMAGE_FILE_MACHINE_ARM64;
     StackFrame.AddrPC.Offset = thread.Context.Pc;
     StackFrame.AddrStack.Offset = thread.Context.Sp;
-    StackFrame.AddrFrame.Offset = thread.Context.u.s.Fp;
+    StackFrame.AddrFrame.Offset = thread.Context.Fp;
 #else
 #error "Unknown architecture"
 #endif
