@@ -114,6 +114,10 @@
 #    include <mmintrin.h>   /* https://learn.microsoft.com/fr-fr/previous-versions/visualstudio/visual-studio-2008/84szxsww(v=vs.90) */
 #    define PREFETCH_L1(ptr)  _mm_prefetch((const char*)(ptr), _MM_HINT_T0)
 #    define PREFETCH_L2(ptr)  _mm_prefetch((const char*)(ptr), _MM_HINT_T1)
+#  elif defined(_MSC_VER) && defined(_M_ARM64)
+#    include <intrin.h>
+#    define PREFETCH_L1(ptr)  __prefetch((const void*)(ptr))
+#    define PREFETCH_L2(ptr)  __prefetch2((const void*)(ptr), 2 /* pldl2keep */)
 #    elif defined(__aarch64__)
 #     define PREFETCH_L1(ptr)  __asm__ __volatile__("prfm pldl1keep, %0" ::"Q"(*(ptr)))
 #     define PREFETCH_L2(ptr)  __asm__ __volatile__("prfm pldl2keep, %0" ::"Q"(*(ptr)))
