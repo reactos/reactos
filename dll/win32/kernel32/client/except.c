@@ -84,6 +84,17 @@ _dump_context(PCONTEXT pc)
     DbgPrint("R4:  %08lx   R5:  %08lx   R6:  %08lx   R7:  %08lx\n", pc->R4, pc->R5, pc->R6, pc->R7);
     DbgPrint("R8:  %08lx   R9:  %08lx   R10: %08lx   R11: %08lx\n", pc->R8, pc->R9, pc->R10, pc->R11);
     DbgPrint("R12: %08lx   CPSR: %08lx  FPSCR: %08lx\n", pc->R12, pc->Cpsr, pc->Fpscr);
+#elif defined(_M_ARM64)
+    ULONG i;
+
+    DbgPrint("PC:  %016I64x   LR:  %016I64x   SP:  %016I64x\n", pc->Pc, pc->Lr, pc->Sp);
+    for (i = 0; i < 28; i += 4)
+    {
+        DbgPrint("X%-2lu: %016I64x   X%-2lu: %016I64x   X%-2lu: %016I64x   X%-2lu: %016I64x\n",
+                 i, pc->X[i], i + 1, pc->X[i + 1], i + 2, pc->X[i + 2], i + 3, pc->X[i + 3]);
+    }
+    DbgPrint("X28: %016I64x   FP:  %016I64x\n", pc->X28, pc->Fp);
+    DbgPrint("CPSR: %08lx   FPCR: %08lx   FPSR: %08lx\n", pc->Cpsr, pc->Fpcr, pc->Fpsr);
 #else
     #error "Unknown architecture"
 #endif

@@ -672,6 +672,32 @@ BaseInitializeContext(IN PCONTEXT Context,
 
     /* Give it some room for the Parameter */
     Context->Sp -= sizeof(PVOID);
+#elif defined(_M_ARM64)
+    DPRINT("BaseInitializeContext: %p\n", Context);
+    ASSERT(((ULONG_PTR)StackAddress & 15) == 0);
+
+    RtlZeroMemory(Context, sizeof(*Context));
+
+    /* Setup the Initial Win32 Thread Context */
+    Context->X0 = (ULONG_PTR)StartAddress;
+    Context->X1 = (ULONG_PTR)Parameter;
+    Context->Sp = (ULONG_PTR)StackAddress;
+
+    if (ContextType == 1)      /* For Threads */
+    {
+        Context->Pc = (ULONG_PTR)BaseThreadStartup;
+    }
+    else if (ContextType == 2) /* For Fibers */
+    {
+        Context->Pc = (ULONG_PTR)BaseFiberStartup;
+    }
+    else                       /* For first thread in a Process */
+    {
+        Context->Pc = (ULONG_PTR)BaseProcessStartup;
+    }
+
+    /* Set the Context Flags */
+    Context->ContextFlags = CONTEXT_FULL;
 #else
 #warning Unknown architecture
     UNIMPLEMENTED;
