@@ -170,7 +170,7 @@ static unsigned arm64_map_dwarf_register(unsigned regno, const struct module* mo
 static void *arm64_fetch_context_reg(union ctx *pctx, unsigned regno, unsigned *size)
 {
 #ifdef __aarch64__
-    CONTEXT *ctx = pctx;
+    CONTEXT *ctx = &pctx->ctx;
 
     switch (regno)
     {
