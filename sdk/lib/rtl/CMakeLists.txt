@@ -135,10 +135,13 @@ elseif(ARCH STREQUAL "arm64")
     # The ARM64 S-List routines are all asm
     list(REMOVE_ITEM SOURCE slist.c)
     list(APPEND SOURCE
+        bitmap64.c
+        byteswap.c
         amd64/dynfntbl.c
         arm64/except.c
         arm64/thread.c
-        arm64/unwind.c)
+        arm64/unwind.c
+        mem.c)
 elseif(ARCH STREQUAL "arm")
     list(APPEND ASM_SOURCE arm/debug_asm.S)
     list(APPEND SOURCE
