@@ -897,7 +897,7 @@ IntPrepareLayoutModule(
     }
     _SEH2_END;
 
-    return NULL;
+    return pfnMain;
 }
 
 /**
