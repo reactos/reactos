@@ -46,6 +46,58 @@ $NtFuncEndName
 $ZwFuncEndName
     MEND
 
+#elif defined(_M_ARM64)
+
+#include <kxarm64.h>
+
+/* The system call number travels in the svc immediate */
+#ifdef _MSC_VER
+
+    GBLA SyscallId
+SyscallId SETA 0
+
+    MACRO
+    STUB_U $Name
+    LCLS NtFuncName
+    LCLS ZwFuncName
+NtFuncName SETS "Nt$Name"
+ZwFuncName SETS "Zw$Name"
+    ALIGN 4
+    EXPORT $NtFuncName
+    EXPORT $ZwFuncName
+$NtFuncName
+$ZwFuncName
+    svc #SyscallId
+    ret
+SyscallId SETA SyscallId + 1
+    MEND
+
+    MACRO
+    SKIP_STUB $Name
+SyscallId SETA SyscallId + 1
+    MEND
+
+#else
+
+.set SyscallId, 0
+
+.macro STUB_U Name
+    .global Nt\Name
+    .global Zw\Name
+    .p2align 2
+Nt\Name:
+Zw\Name:
+    svc #SyscallId
+    ret
+    .set SyscallId, SyscallId + 1
+.endm
+
+.macro SKIP_STUB Name
+    .set SyscallId, SyscallId + 1
+.endm
+
+#endif
+
 #else
 
 #include <asm.inc>
