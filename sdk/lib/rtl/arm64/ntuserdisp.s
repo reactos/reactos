@@ -1,0 +1,185 @@
+/*
+ * PROJECT:     ReactOS Runtime Library (RTL)
+ * LICENSE:     MIT (https://spdx.org/licenses/MIT)
+ * PURPOSE:     NtUserPfn dispatch code for ARM64
+ * COPYRIGHT:   Copyright 2026 Justin Miller <justin.miller@reactos.org>
+ */
+
+#include <ksarm64.h>
+
+/* Windows 10 adds one ANSI and one Unicode window procedure */
+#if (NTDDI_VERSION >= NTDDI_WIN10)
+#define NTUSER_EXTRA_PFNS 1
+#else
+#define NTUSER_EXTRA_PFNS 0
+#endif
+
+    IMPORT RtlpNtUserPfns
+
+//
+// Every thunk tail jumps through its slot of RtlpNtUserPfns.
+//
+#ifdef _MSC_VER
+    MACRO
+    NTUSER_PFN_THUNK $Index
+    LEAF_ENTRY RtlpNtUserPfnDispatch$Index
+    ldr     x16, =RtlpNtUserPfns
+    ldr     x16, [x16, #($Index * 8)]
+    br      x16
+    LEAF_END RtlpNtUserPfnDispatch$Index
+    MEND
+
+    MACRO
+    NTUSER_PFN_REF $Index
+    dcq     RtlpNtUserPfnDispatch$Index
+    MEND
+#else
+.macro NTUSER_PFN_THUNK Index
+    LEAF_ENTRY RtlpNtUserPfnDispatch\Index
+    ldr     x16, =RtlpNtUserPfns
+    ldr     x16, [x16, #(\Index * 8)]
+    br      x16
+    LEAF_END RtlpNtUserPfnDispatch\Index
+.endm
+
+.macro NTUSER_PFN_REF Index
+    dcq     RtlpNtUserPfnDispatch\Index
+.endm
+#endif
+
+    TEXTAREA
+
+    NTUSER_PFN_THUNK 0
+    NTUSER_PFN_THUNK 1
+    NTUSER_PFN_THUNK 2
+    NTUSER_PFN_THUNK 3
+    NTUSER_PFN_THUNK 4
+    NTUSER_PFN_THUNK 5
+    NTUSER_PFN_THUNK 6
+    NTUSER_PFN_THUNK 7
+    NTUSER_PFN_THUNK 8
+    NTUSER_PFN_THUNK 9
+    NTUSER_PFN_THUNK 10
+    NTUSER_PFN_THUNK 11
+    NTUSER_PFN_THUNK 12
+    NTUSER_PFN_THUNK 13
+    NTUSER_PFN_THUNK 14
+    NTUSER_PFN_THUNK 15
+    NTUSER_PFN_THUNK 16
+    NTUSER_PFN_THUNK 17
+    NTUSER_PFN_THUNK 18
+    NTUSER_PFN_THUNK 19
+    NTUSER_PFN_THUNK 20
+    NTUSER_PFN_THUNK 21
+    NTUSER_PFN_THUNK 22
+    NTUSER_PFN_THUNK 23
+    NTUSER_PFN_THUNK 24
+    NTUSER_PFN_THUNK 25
+    NTUSER_PFN_THUNK 26
+    NTUSER_PFN_THUNK 27
+    NTUSER_PFN_THUNK 28
+    NTUSER_PFN_THUNK 29
+    NTUSER_PFN_THUNK 30
+    NTUSER_PFN_THUNK 31
+    NTUSER_PFN_THUNK 32
+    NTUSER_PFN_THUNK 33
+    NTUSER_PFN_THUNK 34
+    NTUSER_PFN_THUNK 35
+    NTUSER_PFN_THUNK 36
+    NTUSER_PFN_THUNK 37
+    NTUSER_PFN_THUNK 38
+    NTUSER_PFN_THUNK 39
+    NTUSER_PFN_THUNK 40
+    NTUSER_PFN_THUNK 41
+    NTUSER_PFN_THUNK 42
+    NTUSER_PFN_THUNK 43
+    NTUSER_PFN_THUNK 44
+    NTUSER_PFN_THUNK 45
+    NTUSER_PFN_THUNK 46
+    NTUSER_PFN_THUNK 47
+    NTUSER_PFN_THUNK 48
+    NTUSER_PFN_THUNK 49
+    NTUSER_PFN_THUNK 50
+    NTUSER_PFN_THUNK 51
+    NTUSER_PFN_THUNK 52
+    NTUSER_PFN_THUNK 53
+    NTUSER_PFN_THUNK 54
+    NTUSER_PFN_THUNK 55
+    NTUSER_PFN_THUNK 56
+#if NTUSER_EXTRA_PFNS
+    NTUSER_PFN_THUNK 57
+    NTUSER_PFN_THUNK 58
+#endif
+
+//
+// NtDllUserStubs, the A procedures, the W procedures, then the workers.
+// The thunks only ever run through this table, so their order is the
+// order of RtlpNtUserPfns.
+//
+    RODATAAREA
+    ALIGN 8
+    EXPORT NtDllUserStubs
+LABEL(NtDllUserStubs)
+    NTUSER_PFN_REF 0
+    NTUSER_PFN_REF 1
+    NTUSER_PFN_REF 2
+    NTUSER_PFN_REF 3
+    NTUSER_PFN_REF 4
+    NTUSER_PFN_REF 5
+    NTUSER_PFN_REF 6
+    NTUSER_PFN_REF 7
+    NTUSER_PFN_REF 8
+    NTUSER_PFN_REF 9
+    NTUSER_PFN_REF 10
+    NTUSER_PFN_REF 11
+    NTUSER_PFN_REF 12
+    NTUSER_PFN_REF 13
+    NTUSER_PFN_REF 14
+    NTUSER_PFN_REF 15
+    NTUSER_PFN_REF 16
+    NTUSER_PFN_REF 17
+    NTUSER_PFN_REF 18
+    NTUSER_PFN_REF 19
+    NTUSER_PFN_REF 20
+    NTUSER_PFN_REF 21
+    NTUSER_PFN_REF 22
+    NTUSER_PFN_REF 23
+    NTUSER_PFN_REF 24
+    NTUSER_PFN_REF 25
+    NTUSER_PFN_REF 26
+    NTUSER_PFN_REF 27
+    NTUSER_PFN_REF 28
+    NTUSER_PFN_REF 29
+    NTUSER_PFN_REF 30
+    NTUSER_PFN_REF 31
+    NTUSER_PFN_REF 32
+    NTUSER_PFN_REF 33
+    NTUSER_PFN_REF 34
+    NTUSER_PFN_REF 35
+    NTUSER_PFN_REF 36
+    NTUSER_PFN_REF 37
+    NTUSER_PFN_REF 38
+    NTUSER_PFN_REF 39
+    NTUSER_PFN_REF 40
+    NTUSER_PFN_REF 41
+    NTUSER_PFN_REF 42
+    NTUSER_PFN_REF 43
+    NTUSER_PFN_REF 44
+    NTUSER_PFN_REF 45
+    NTUSER_PFN_REF 46
+    NTUSER_PFN_REF 47
+    NTUSER_PFN_REF 48
+    NTUSER_PFN_REF 49
+    NTUSER_PFN_REF 50
+    NTUSER_PFN_REF 51
+    NTUSER_PFN_REF 52
+    NTUSER_PFN_REF 53
+    NTUSER_PFN_REF 54
+    NTUSER_PFN_REF 55
+    NTUSER_PFN_REF 56
+#if NTUSER_EXTRA_PFNS
+    NTUSER_PFN_REF 57
+    NTUSER_PFN_REF 58
+#endif
+
+    END
