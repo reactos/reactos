@@ -317,7 +317,7 @@ KbdBuildImage(
 
         /* The part beyond SizeOfRawData (if any) is zero-filled, as the loader does */
         cbVirt = pData->Misc.VirtualSize ? pData->Misc.VirtualSize : pData->SizeOfRawData;
-        cbCopy = (pData->SizeOfRawData < cbVirt) ? pData->SizeOfRawData : cbVirt;
+        cbCopy = min(pData->SizeOfRawData, cbVirt);
         if (!cbVirt || pData->VirtualAddress > cbImage ||
             cbVirt > cbImage - pData->VirtualAddress || pData->PointerToRawData > cbRaw ||
             cbCopy > cbRaw - pData->PointerToRawData)
