@@ -1192,8 +1192,8 @@ IntLoadKeyboardLayoutFile(
     if (pMulti)
         ZeroMemory(pMulti, sizeof(*pMulti));
 
-    if (!IntGetKeyboardDllName(szDllName, _countof(szDllName), pszKLID, cchKLID, wLangID,
-                               pFlags, pdwNewKL))
+    if (!IntGetKeyboardDllName(szDllName, _countof(szDllName), pszKLID,
+                               cchKLID, wLangID, pFlags, pdwNewKL))
     {
         ERR("Failed in IntGetKeyboardDllName\n");
         return NULL;
