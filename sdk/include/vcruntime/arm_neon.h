@@ -8,6 +8,8 @@
 #pragma once
 
 #if defined(_MSC_VER) && !defined(__clang__)
+/* Users of the NEON types expect the fixed width integer types too */
+#include <stdint.h>
 #include <arm64_neon.h>
 #else
 /* GCC and Clang ship their own */

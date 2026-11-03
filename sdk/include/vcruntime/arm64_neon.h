@@ -11,8 +11,6 @@
 #error This header is for ARM64 only
 #endif
 
-#include <stdint.h>
-
 #ifndef DUMMYNEONSTRUCT
 #define DUMMYNEONSTRUCT s
 #endif
