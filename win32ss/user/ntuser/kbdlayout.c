@@ -394,8 +394,8 @@ KbdLoadImage(
 
     /* Load the file content */
     Offset.QuadPart = 0;
-    Status = ZwReadFile(hKernelFile, NULL, NULL, NULL, &IoStatusBlock, pvRaw, cbRaw, &Offset,
-                        NULL);
+    Status = ZwReadFile(hKernelFile, NULL, NULL, NULL, &IoStatusBlock,
+                        pvRaw, cbRaw, &Offset, NULL);
     if (!NT_SUCCESS(Status) || IoStatusBlock.Information != cbRaw)
     {
         ERR("ZwReadFile failed: 0x%08X (read %Iu of %lu)\n", Status, IoStatusBlock.Information,
