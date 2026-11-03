@@ -42,6 +42,7 @@ typedef struct _ACPI_BIOS_MULTI_NODE
 #define WDRT_SIGNATURE 'TRDW'
 #define BGRT_SIGNATURE  0x54524742              // "BGRT"
 #define MCFG_SIGNATURE 'GFCM'
+#define DBG2_SIGNATURE '2GBD'
 
 //
 // FADT Flags
@@ -284,6 +285,39 @@ typedef struct _MCFG_TABLE
     ULONGLONG Reserved;
     MCFG_ALLOCATION Allocation[ANYSIZE_ARRAY];
 } MCFG_TABLE, *PMCFG_TABLE;
+
+/* Debug Port Table 2, the device information structures follow at DeviceInfoOffset */
+typedef struct _DBG2_TABLE
+{
+    DESCRIPTION_HEADER Header;
+    ULONG DeviceInfoOffset;
+    ULONG DeviceInfoCount;
+} DBG2_TABLE, *PDBG2_TABLE;
+
+/* The offsets are from the start of this structure */
+typedef struct _DBG2_DEVICE_INFO
+{
+    UCHAR Revision;
+    USHORT Length;
+    UCHAR RegisterCount;
+    USHORT NamespaceStringLength;
+    USHORT NamespaceStringOffset;
+    USHORT OemDataLength;
+    USHORT OemDataOffset;
+    USHORT PortType;
+    USHORT PortSubtype;
+    USHORT Reserved;
+    USHORT BaseAddressOffset;
+    USHORT AddressSizeOffset;
+} DBG2_DEVICE_INFO, *PDBG2_DEVICE_INFO;
 #include <poppack.h>
+
+#define DBG2_PORT_TYPE_SERIAL           0x8000
+
+#define DBG2_SERIAL_16550               0x0000
+#define DBG2_SERIAL_16550_SUBSET        0x0001
+#define DBG2_SERIAL_PL011               0x0003
+#define DBG2_SERIAL_SBSA_32BIT          0x000D
+#define DBG2_SERIAL_SBSA                0x000E
 
 /* EOF */
