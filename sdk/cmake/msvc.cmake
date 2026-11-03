@@ -512,6 +512,7 @@ macro(add_asm_files _target)
     get_defines(_directory_defines)
     get_includes(_directory_includes)
     get_directory_property(_defines COMPILE_DEFINITIONS)
+    get_property(_asm_include_files GLOBAL PROPERTY ASM_INCLUDE_FILES)
     foreach(_source_file ${ARGN})
         get_filename_component(_extension ${_source_file} EXT)
         if (("${_extension}" STREQUAL ".asm") OR ("${_extension}" STREQUAL ".inc"))
@@ -530,7 +531,7 @@ macro(add_asm_files _target)
             add_custom_command(
                 OUTPUT ${_preprocessed_asm_file}
                 COMMAND cl /nologo /X /I${REACTOS_SOURCE_DIR}/sdk/include/asm /I${REACTOS_BINARY_DIR}/sdk/include/asm ${_directory_includes} ${_source_file_defines} ${_directory_defines} /D__ASM__ /D_USE_ML /EP /c ${_source_file_full_path} > ${_preprocessed_asm_file}
-                DEPENDS ${_source_file_full_path})
+                DEPENDS ${_source_file_full_path} ${_asm_include_files})
             list(APPEND ${_target} ${_preprocessed_asm_file})
         endif()
     endforeach()
