@@ -238,6 +238,7 @@ NtUserCallOneParam(
             psmwp->bHandle = TRUE;
             psmwp->ccvr = 0;          // actualCount
             psmwp->ccvrAlloc = count; // suggestedCount
+            psmwp->hwndParent = NULL;
             Result = (DWORD_PTR)hDwp;
             break;
         }
