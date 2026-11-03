@@ -21,7 +21,6 @@
 #define GICD_IPRIORITYR     0x0400
 #define GICD_ICFGR          0x0C00
 #define GICD_IROUTER        0x6000
-#define GICD_SIZE           0x10000
 
 #define GICD_CTLR_RWP       0x80000000
 #define GICD_CTLR_ENABLE    0x13
@@ -144,7 +143,7 @@ HalpGicInitializeDistributor(VOID)
         KeBugCheckEx(HAL_INITIALIZATION_FAILED, 0x6C1C, 0, 0, 0);
     }
 
-    HalpGicd = HalpMapPhysicalMemory(HalpPlatform.GicdBase, GICD_SIZE / PAGE_SIZE, TRUE);
+    HalpGicd = HalpMapPhysicalMemory(HalpPlatform.GicdBase, HALP_GICD_SIZE / PAGE_SIZE, TRUE);
     if (!HalpGicd)
         KeBugCheckEx(HAL_INITIALIZATION_FAILED, 0x6C1C, 1, 0, 0);
 

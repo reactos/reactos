@@ -118,17 +118,56 @@ NTAPI
 HalReportResourceUsage(VOID)
 {
     UNICODE_STRING HalName = RTL_CONSTANT_STRING(L"ARM64 HAL");
-    CM_RESOURCE_LIST Empty;
+    PCM_PARTIAL_RESOURCE_DESCRIPTOR Descriptor;
+    PCM_RESOURCE_LIST List;
+    ULONG Size;
 
     /* Keep the PCI configuration windows away from the arbiters */
     HalpPublishMmConfigRanges();
 
-    /* Nothing is claimed by the HAL itself */
-    RtlZeroMemory(&Empty, sizeof(Empty));
-    IoReportHalResourceUsage(&HalName,
-                             &Empty,
-                             &Empty,
-                             FIELD_OFFSET(CM_RESOURCE_LIST, List));
+    /* The interrupt controller registers belong to the HAL */
+    Size = FIELD_OFFSET(CM_RESOURCE_LIST, List[0].PartialResourceList.PartialDescriptors[2]);
+    List = ExAllocatePoolZero(PagedPool, Size, TAG_HAL);
+    if (!List)
+        return;
+
+    List->Count = 1;
+    List->List[0].InterfaceType = Internal;
+    List->List[0].BusNumber = 0;
+    List->List[0].PartialResourceList.Version = 1;
+    List->List[0].PartialResourceList.Revision = 1;
+
+    Descriptor = List->List[0].PartialResourceList.PartialDescriptors;
+    if (HalpPlatform.GicdBase.QuadPart)
+    {
+        Descriptor->Type = CmResourceTypeMemory;
+        Descriptor->ShareDisposition = CmResourceShareDeviceExclusive;
+        Descriptor->Flags = CM_RESOURCE_MEMORY_READ_WRITE;
+        Descriptor->u.Memory.Start = HalpPlatform.GicdBase;
+        Descriptor->u.Memory.Length = HALP_GICD_SIZE;
+        Descriptor++;
+    }
+
+    /* Without a discovery range every processor has one frame pair */
+    if (HalpPlatform.GicrBase.QuadPart)
+    {
+        Descriptor->Type = CmResourceTypeMemory;
+        Descriptor->ShareDisposition = CmResourceShareDeviceExclusive;
+        Descriptor->Flags = CM_RESOURCE_MEMORY_READ_WRITE;
+        Descriptor->u.Memory.Start = HalpPlatform.GicrBase;
+        Descriptor->u.Memory.Length = HalpPlatform.GicrLength ?
+                                      HalpPlatform.GicrLength :
+                                      KeNumberProcessors * HALP_GICR_FRAME_SIZE;
+        Descriptor++;
+    }
+
+    List->List[0].PartialResourceList.Count =
+        (ULONG)(Descriptor - List->List[0].PartialResourceList.PartialDescriptors);
+    Size = (ULONG)((PUCHAR)Descriptor - (PUCHAR)List);
+
+    /* Physical and bus addresses are the same, so both lists match */
+    IoReportHalResourceUsage(&HalName, List, List, Size);
+    ExFreePoolWithTag(List, TAG_HAL);
 }
 
 VOID
