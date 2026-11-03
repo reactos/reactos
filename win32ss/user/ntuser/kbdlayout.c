@@ -398,8 +398,8 @@ KbdLoadImage(
                         pvRaw, cbRaw, &Offset, NULL);
     if (!NT_SUCCESS(Status) || IoStatusBlock.Information != cbRaw)
     {
-        ERR("ZwReadFile failed: 0x%08X (read %Iu of %lu)\n", Status, IoStatusBlock.Information,
-            cbRaw);
+        ERR("ZwReadFile failed: 0x%08X (read %Iu of %lu)\n",
+            Status, IoStatusBlock.Information, cbRaw);
         ExFreePoolWithTag(pvRaw, KBDIMG_TAG);
         return NULL;
     }
