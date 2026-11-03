@@ -29,6 +29,8 @@
 #include <internal/arm/mm.h>
 #elif defined(_M_AMD64)
 #include <internal/amd64/mm.h>
+#elif defined(_M_ARM64)
+#include <internal/arm64/mm.h>
 #else
 #error "Unknown processor"
 #endif
