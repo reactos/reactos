@@ -100,7 +100,7 @@ MiArchCreateProcessAddressSpace(
     /* Map the hyperspace PDPT to the system PTE */
     PdePte.u.Hard.PageFrameNumber = HyperPfn;
     *SystemPte = PdePte;
-    __invlpg(PageTablePointer);
+    KeInvalidateTlbEntry(PageTablePointer);
 
     /* Write the hyperspace entry for the first PD */
     TempPte.u.Hard.PageFrameNumber = HyperPdPfn;
@@ -109,7 +109,7 @@ MiArchCreateProcessAddressSpace(
     /* Map the hyperspace PD to the system PTE */
     PdePte.u.Hard.PageFrameNumber = HyperPdPfn;
     *SystemPte = PdePte;
-    __invlpg(PageTablePointer);
+    KeInvalidateTlbEntry(PageTablePointer);
 
     /* Write the hyperspace entry for the first PT */
     TempPte.u.Hard.PageFrameNumber = HyperPtPfn;
@@ -118,7 +118,7 @@ MiArchCreateProcessAddressSpace(
     /* Map the hyperspace PT to the system PTE */
     PdePte.u.Hard.PageFrameNumber = HyperPtPfn;
     *SystemPte = PdePte;
-    __invlpg(PageTablePointer);
+    KeInvalidateTlbEntry(PageTablePointer);
 
     /* Write the hyperspace PTE for the working set list index */
     TempPte.u.Hard.PageFrameNumber = Process->WorkingSetPage;
