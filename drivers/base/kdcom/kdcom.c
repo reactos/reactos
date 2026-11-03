@@ -14,12 +14,33 @@
 
 #include <cportlib/cportlib.h>
 #include <cportlib/uartinfo.h>
+#ifdef _M_ARM64
+#include <drivers/acpi/acpi.h>
+#endif
 
 /* GLOBALS ********************************************************************/
 
 CPPORT KdComPort;
 #ifdef KDDEBUG
 CPPORT KdDebugComPort;
+#endif
+
+#ifdef _M_ARM64
+/* PL011 registers, the SBSA UART is the subset without the control register */
+#define KDCOM_PL011_DATA            0x00
+#define KDCOM_PL011_FLAGS           0x18
+#define KDCOM_PL011_CONTROL         0x30
+
+#define KDCOM_PL011_DATA_ERRORS     0xF00
+#define KDCOM_PL011_FLAGS_RX_EMPTY  0x10
+#define KDCOM_PL011_FLAGS_TX_FULL   0x20
+#define KDCOM_PL011_CONTROL_RUN     0x301
+
+/* Same spin count cportlib uses for a waiting read */
+#define KDCOM_PL011_WAIT_COUNT      (1024 * 200)
+
+/* The port is a PL011 or SBSA UART, not a 16550 */
+static BOOLEAN KdComPl011;
 #endif
 
 /* DEBUGGING ******************************************************************/
@@ -108,6 +129,177 @@ KdpPortInitialize(
     return STATUS_SUCCESS;
 }
 
+#ifdef _M_ARM64
+/**
+ * @brief Finds the first DBG2 serial port this driver can run.
+ *
+ * A 16550 is only taken with byte wide registers, which is what cportlib
+ * expects.
+ */
+static
+BOOLEAN
+KdpFindDbg2Port(
+    _In_opt_ PLOADER_PARAMETER_BLOCK LoaderBlock,
+    _Out_ PPHYSICAL_ADDRESS PhysicalAddress,
+    _Out_ PUSHORT Subtype)
+{
+    PDBG2_TABLE Table;
+    PDBG2_DEVICE_INFO Entry;
+    PGEN_ADDR BaseRegister;
+    ULONG Offset, Remaining;
+    BOOLEAN Usable, Found = FALSE;
+
+    Table = KdGetAcpiTablePhase0(LoaderBlock, DBG2_SIGNATURE);
+    if (!Table)
+        return FALSE;
+
+    Offset = Table->DeviceInfoOffset;
+    for (Remaining = Table->DeviceInfoCount; Remaining != 0; Remaining--)
+    {
+        if ((Table->Header.Length < sizeof(*Table)) ||
+            (Offset > Table->Header.Length - sizeof(*Entry)))
+        {
+            break;
+        }
+
+        Entry = (PDBG2_DEVICE_INFO)((PUCHAR)Table + Offset);
+        if ((Entry->Length < sizeof(*Entry)) ||
+            (Entry->Length > Table->Header.Length - Offset))
+        {
+            break;
+        }
+        Offset += Entry->Length;
+
+        if ((Entry->PortType != DBG2_PORT_TYPE_SERIAL) ||
+            (Entry->RegisterCount == 0) ||
+            (Entry->BaseAddressOffset > Entry->Length - sizeof(*BaseRegister)))
+        {
+            continue;
+        }
+
+        /* Only memory mapped ports */
+        BaseRegister = (PGEN_ADDR)((PUCHAR)Entry + Entry->BaseAddressOffset);
+        if ((BaseRegister->AddressSpaceID != 0) || (BaseRegister->Address.QuadPart == 0))
+            continue;
+
+        switch (Entry->PortSubtype)
+        {
+            case DBG2_SERIAL_16550:
+            case DBG2_SERIAL_16550_SUBSET:
+                Usable = (BaseRegister->BitWidth == 8);
+                break;
+
+            case DBG2_SERIAL_PL011:
+            case DBG2_SERIAL_SBSA_32BIT:
+            case DBG2_SERIAL_SBSA:
+                Usable = TRUE;
+                break;
+
+            default:
+                Usable = FALSE;
+                break;
+        }
+
+        if (Usable)
+        {
+            *PhysicalAddress = BaseRegister->Address;
+            *Subtype = Entry->PortSubtype;
+            Found = TRUE;
+            break;
+        }
+    }
+
+    KdUnmapVirtualAddress(Table, BYTES_TO_PAGES(Table->Header.Length));
+    return Found;
+}
+
+/**
+ * @brief Maps and starts the debug port.
+ *
+ * There are no fixed ports on ARM64. Without an address on the command line
+ * or a usable DBG2 entry, no device memory is touched.
+ */
+static
+NTSTATUS
+KdpFirmwarePortInitialize(
+    _In_opt_ PLOADER_PARAMETER_BLOCK LoaderBlock,
+    _In_opt_ PUCHAR PortAddress,
+    _In_ ULONG BaudRate)
+{
+    PHYSICAL_ADDRESS PhysicalAddress;
+    USHORT Subtype = DBG2_SERIAL_16550;
+    PUCHAR Base;
+    NTSTATUS Status;
+
+    /* A port given on the command line is a 16550 */
+    if (PortAddress)
+        PhysicalAddress.QuadPart = (ULONG_PTR)PortAddress;
+    else if (!KdpFindDbg2Port(LoaderBlock, &PhysicalAddress, &Subtype))
+        return STATUS_NOT_FOUND;
+
+    Base = KdMapPhysicalMemory64(PhysicalAddress, 1);
+    if (!Base)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
+    if ((Subtype == DBG2_SERIAL_16550) || (Subtype == DBG2_SERIAL_16550_SUBSET))
+    {
+        Status = KdpPortInitialize(Base, BaudRate);
+        if (!NT_SUCCESS(Status))
+            KdUnmapVirtualAddress(Base, 1);
+        return Status;
+    }
+
+    /* The firmware already set the line up, only make sure it runs */
+    if (Subtype == DBG2_SERIAL_PL011)
+    {
+        WRITE_REGISTER_ULONG((PULONG)(Base + KDCOM_PL011_CONTROL),
+                             READ_REGISTER_ULONG((PULONG)(Base + KDCOM_PL011_CONTROL)) |
+                             KDCOM_PL011_CONTROL_RUN);
+    }
+
+    KdComPort.Address = Base;
+    KdComPort.BaudRate = BaudRate;
+    KdComPort.Flags = 0;
+    KdComPl011 = TRUE;
+    KdComPortInUse = Base;
+    return STATUS_SUCCESS;
+}
+
+/**
+ * @brief Reads a byte from the PL011, same results as CpGetByte.
+ */
+static
+USHORT
+KdpPl011GetByte(
+    _Out_ PUCHAR OutByte,
+    _In_ BOOLEAN Wait)
+{
+    ULONG Tries = Wait ? KDCOM_PL011_WAIT_COUNT : 1;
+    ULONG Data;
+
+    while (Tries--)
+    {
+        if (READ_REGISTER_ULONG((PULONG)(KdComPort.Address + KDCOM_PL011_FLAGS)) &
+            KDCOM_PL011_FLAGS_RX_EMPTY)
+        {
+            continue;
+        }
+
+        Data = READ_REGISTER_ULONG((PULONG)(KdComPort.Address + KDCOM_PL011_DATA));
+        if (Data & KDCOM_PL011_DATA_ERRORS)
+        {
+            *OutByte = 0;
+            return CP_GET_ERROR;
+        }
+
+        *OutByte = (UCHAR)Data;
+        return CP_GET_SUCCESS;
+    }
+
+    return CP_GET_NODATA;
+}
+#endif
+
 /******************************************************************************
  * \name KdDebuggerInitialize0
  * \brief Phase 0 initialization.
@@ -193,6 +385,10 @@ KdDebuggerInitialize0(IN PLOADER_PARAMETER_BLOCK LoaderBlock OPTIONAL)
         }
     }
 
+#ifdef _M_ARM64
+    UNREFERENCED_PARAMETER(ComPortNumber);
+    return KdpFirmwarePortInitialize(LoaderBlock, ComPortAddress, ComPortBaudRate);
+#else
     if (!ComPortAddress)
         ComPortAddress = UlongToPtr(BaseArray[ComPortNumber]);
 
@@ -223,6 +419,7 @@ KdDebuggerInitialize0(IN PLOADER_PARAMETER_BLOCK LoaderBlock OPTIONAL)
 
     /* Initialize the port */
     return KdpPortInitialize(ComPortAddress, ComPortBaudRate);
+#endif
 }
 
 /******************************************************************************
@@ -243,6 +440,20 @@ VOID
 NTAPI
 KdpSendByte(IN UCHAR Byte)
 {
+#ifdef _M_ARM64
+    if (KdComPl011)
+    {
+        while (READ_REGISTER_ULONG((PULONG)(KdComPort.Address + KDCOM_PL011_FLAGS)) &
+               KDCOM_PL011_FLAGS_TX_FULL)
+        {
+            YieldProcessor();
+        }
+
+        WRITE_REGISTER_ULONG((PULONG)(KdComPort.Address + KDCOM_PL011_DATA), Byte);
+        return;
+    }
+#endif
+
     /* Send the byte */
     CpPutByte(&KdComPort, Byte);
 }
@@ -254,6 +465,11 @@ KdpPollByte(OUT PUCHAR OutByte)
     USHORT Status;
 
     /* Poll the byte */
+#ifdef _M_ARM64
+    if (KdComPl011)
+        Status = KdpPl011GetByte(OutByte, FALSE);
+    else
+#endif
     Status = CpGetByte(&KdComPort, OutByte, FALSE, FALSE);
     switch (Status)
     {
@@ -276,6 +492,11 @@ KdpReceiveByte(OUT PUCHAR OutByte)
     USHORT Status;
 
     /* Get the byte */
+#ifdef _M_ARM64
+    if (KdComPl011)
+        Status = KdpPl011GetByte(OutByte, TRUE);
+    else
+#endif
     Status = CpGetByte(&KdComPort, OutByte, TRUE, FALSE);
     switch (Status)
     {
