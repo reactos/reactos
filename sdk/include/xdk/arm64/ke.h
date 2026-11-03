@@ -20,6 +20,7 @@ $if (_WDMDDK_)
 #define PAGE_SIZE               0x1000
 #define PAGE_SHIFT              12L
 
+#define YieldProcessor __yield
 #define PAUSE_PROCESSOR YieldProcessor();
 
 /* Verified against modern NT/arm64 */
