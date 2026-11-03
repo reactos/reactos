@@ -8,7 +8,7 @@
 /* INCLUDES ******************************************************************/
 
 #include <ntoskrnl.h>
-#include <cportlib/uartinfo.h>
+#include <drivers/acpi/acpi.h>
 #define NDEBUG
 #include <debug.h>
 
@@ -27,6 +27,74 @@
 /* FUNCTIONS *****************************************************************/
 
 /**
+ * @brief Finds the PL011 or SBSA UART the firmware lists in DBG2.
+ *
+ * @param[out] HasControl
+ * FALSE for the SBSA subset, it has no control register.
+ */
+static
+BOOLEAN
+KdpFindDbg2Uart(
+    _Out_ PULONG64 PhysicalAddress,
+    _Out_ PBOOLEAN HasControl)
+{
+    PDBG2_TABLE Table;
+    PDBG2_DEVICE_INFO Entry;
+    PGEN_ADDR BaseRegister;
+    ULONG Offset, Remaining;
+    BOOLEAN Found = FALSE;
+
+    Table = KdGetAcpiTablePhase0(KeLoaderBlock, DBG2_SIGNATURE);
+    if (!Table)
+        return FALSE;
+
+    Offset = Table->DeviceInfoOffset;
+    for (Remaining = Table->DeviceInfoCount; Remaining != 0; Remaining--)
+    {
+        if ((Table->Header.Length < sizeof(*Table)) ||
+            (Offset > Table->Header.Length - sizeof(*Entry)))
+        {
+            break;
+        }
+
+        Entry = (PDBG2_DEVICE_INFO)((PUCHAR)Table + Offset);
+        if ((Entry->Length < sizeof(*Entry)) ||
+            (Entry->Length > Table->Header.Length - Offset))
+        {
+            break;
+        }
+        Offset += Entry->Length;
+
+        if ((Entry->PortType != DBG2_PORT_TYPE_SERIAL) ||
+            (Entry->RegisterCount == 0) ||
+            (Entry->BaseAddressOffset > Entry->Length - sizeof(*BaseRegister)))
+        {
+            continue;
+        }
+
+        if ((Entry->PortSubtype != DBG2_SERIAL_PL011) &&
+            (Entry->PortSubtype != DBG2_SERIAL_SBSA_32BIT) &&
+            (Entry->PortSubtype != DBG2_SERIAL_SBSA))
+        {
+            continue;
+        }
+
+        /* Only memory mapped ports */
+        BaseRegister = (PGEN_ADDR)((PUCHAR)Entry + Entry->BaseAddressOffset);
+        if ((BaseRegister->AddressSpaceID != 0) || (BaseRegister->Address.QuadPart == 0))
+            continue;
+
+        *PhysicalAddress = BaseRegister->Address.QuadPart;
+        *HasControl = (Entry->PortSubtype == DBG2_SERIAL_PL011);
+        Found = TRUE;
+        break;
+    }
+
+    KdUnmapVirtualAddress(Table, BYTES_TO_PAGES(Table->Header.Length));
+    return Found;
+}
+
+/**
  * @brief Maps the UART at the top of the HAL range.
  *
  * The loader only maps the port in the user half, which goes away with the
@@ -36,7 +104,7 @@
 static
 PUCHAR
 KdpMapUart(
-    _In_ ULONG_PTR PhysicalAddress)
+    _In_ ULONG64 PhysicalAddress)
 {
     PMMPTE PointerPte;
     MMPTE TempPte;
@@ -75,28 +143,29 @@ KdPortInitializeEx(
     _In_ PCPPORT PortInformation,
     _In_ ULONG ComPortNumber)
 {
-    ULONG_PTR PhysicalAddress;
+    ULONG64 PhysicalAddress;
+    BOOLEAN HasControl = TRUE;
     PUCHAR Base;
 
+    UNREFERENCED_PARAMETER(ComPortNumber);
+
+    /* There is no fixed port on ARM64, without one from DBG2 nothing gets touched */
     if (PortInformation->Address)
-    {
         PhysicalAddress = (ULONG_PTR)PortInformation->Address;
-    }
-    else
-    {
-        if ((ComPortNumber == 0) || (ComPortNumber >= RTL_NUMBER_OF(BaseArray)))
-            ComPortNumber = 1;
-        PhysicalAddress = BaseArray[ComPortNumber];
-    }
+    else if (!KdpFindDbg2Uart(&PhysicalAddress, &HasControl))
+        return FALSE;
 
     Base = KdpMapUart(PhysicalAddress);
     if (!Base)
         return FALSE;
 
     /* The firmware already set the line up, only make sure it runs */
-    WRITE_REGISTER_ULONG((PULONG)(Base + UART_CR),
-                         READ_REGISTER_ULONG((PULONG)(Base + UART_CR)) |
-                         UART_CR_UARTEN | UART_CR_TXE | UART_CR_RXE);
+    if (HasControl)
+    {
+        WRITE_REGISTER_ULONG((PULONG)(Base + UART_CR),
+                             READ_REGISTER_ULONG((PULONG)(Base + UART_CR)) |
+                             UART_CR_UARTEN | UART_CR_TXE | UART_CR_RXE);
+    }
 
     PortInformation->Address = Base;
     return TRUE;
