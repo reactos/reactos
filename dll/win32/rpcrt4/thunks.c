@@ -324,8 +324,14 @@ const struct delegating_vtbl delegating_vtbl =
 
 
 #if defined(__aarch64__) || defined(__arm__)
+#if defined(__REACTOS__) && defined(_MSC_VER)
+/* Called from arm64/msvc.s */
+void args_stack_to_regs( void **args, void **regs, void **stack,
+                         const NDR_PROC_PARTIAL_OIF_HEADER *header )
+#else
 static void __attribute__((used)) args_stack_to_regs( void **args, void **regs, void **stack,
                                                       const NDR_PROC_PARTIAL_OIF_HEADER *header )
+#endif
 {
     const NDR_PROC_HEADER_EXTS *ext = (const NDR_PROC_HEADER_EXTS *)(header + 1);
     unsigned int i, size, count, pos;
