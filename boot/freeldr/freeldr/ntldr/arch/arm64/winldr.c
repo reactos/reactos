@@ -10,6 +10,7 @@
 #include <freeldr.h>
 #include <cportlib/uartinfo.h>
 #include "../../winldr.h"
+#include "../../ntldropts.h"
 
 #include <debug.h>
 DBG_DEFAULT_CHANNEL(WINDOWS);
@@ -53,6 +54,17 @@ DBG_DEFAULT_CHANNEL(WINDOWS);
 ULONG64 Arm64GetPhysicalAddressRange(VOID);
 ULONG Arm64GetCurrentEl(VOID);
 ULONG64 Arm64GetHypervisorConfig(VOID);
+ULONG64 Arm64GetSystemControl(VOID);
+
+/* The UEFI framebuffer, see uefivid.c */
+extern ULONG_PTR VramAddress;
+extern ULONG VramSize;
+
+/* Set with DEBUGPORT=SCREEN, the hand off and the early kernel print on the loader console */
+static BOOLEAN WinLdrpScreenTrace = FALSE;
+
+#define WinLdrpTrace(...) \
+    do { if (WinLdrpScreenTrace) WinLdrpEarlyPrint(__VA_ARGS__); } while (0)
 VOID Arm64SwitchTranslation(_In_ ULONG64 Mair, _In_ ULONG64 Tcr, _In_ ULONG64 Ttbr);
 
 extern PUCHAR ComPortAddress;
@@ -255,6 +267,59 @@ MempUnmapPage(
     UNREFERENCED_PARAMETER(Page);
 }
 
+/**
+ * @brief Prints on the loader console and the debug port.
+ *
+ * The kernel calls this through the loader block until its own debugger is
+ * up, it runs from the identity mapping of the loader.
+ */
+static
+ULONG
+WinLdrpEarlyPrint(
+    _In_ PCSTR Format,
+    ...)
+{
+    CHAR Buffer[256];
+    va_list Args;
+    PCHAR Current;
+
+    va_start(Args, Format);
+    _vsnprintf(Buffer, sizeof(Buffer) - 1, Format, Args);
+    va_end(Args);
+    Buffer[sizeof(Buffer) - 1] = ANSI_NULL;
+
+    /* Straight to the devices, DbgPrint would show it twice with a screen debug port */
+    for (Current = Buffer; *Current != ANSI_NULL; Current++)
+    {
+        MachConsPutChar(*Current);
+#if DBG
+        if (*Current == '\n')
+            Rs232PortPutByte('\r');
+        Rs232PortPutByte(*Current);
+#endif
+    }
+
+    return (ULONG)(Current - Buffer);
+}
+
+/* The loader console keeps drawing after the switch while the kernel prints through it */
+static
+VOID
+WinLdrpMapFrameBuffer(VOID)
+{
+    ULONG_PTR Address, End;
+
+    if (!VramAddress || !VramSize)
+        return;
+
+    End = ALIGN_UP_BY(VramAddress + VramSize, PAGE_SIZE);
+    for (Address = ALIGN_DOWN_BY(VramAddress, PAGE_SIZE); Address < End; Address += PAGE_SIZE)
+    {
+        if (!MempIsPageMapped((PVOID)Address))
+            MempMapSinglePage(Address, Address, ATTR_NORMAL_NONCACHED);
+    }
+}
+
 /* The debug port stays reachable at its physical address */
 static
 VOID
@@ -289,6 +354,7 @@ WinLdrMapSpecialPages(VOID)
     }
 
     WinLdrpMapDebugPorts();
+    WinLdrpMapFrameBuffer();
 
     /* Page tables for the 4 MB HAL address space */
     PpeBase = MempGetOrCreatePageDir(PxeBase, VAtoPXI(MM_HAL_VA_START));
@@ -319,7 +385,10 @@ WinLdrSetProcessorContext(
           TCR_T1SZ(16) | TCR_IRGN1_WBWA | TCR_ORGN1_WBWA | TCR_SH1_INNER | TCR_TG1_4K |
           TCR_IPS(PaRange);
 
+    WinLdrpTrace("freeldr: switching to the kernel tables at %p, TCR %p, firmware SCTLR %p\n",
+                 PxeBase, (PVOID)Tcr, (PVOID)Arm64GetSystemControl());
     Arm64SwitchTranslation(MAIR_VALUE, Tcr, (ULONG64)PxeBase);
+    WinLdrpTrace("freeldr: on the kernel tables at EL%lu\n", Arm64GetCurrentEl());
 
     TRACE("leave WinLdrSetProcessorContext\n");
 }
@@ -331,8 +400,12 @@ WinLdrSetupMachineDependent(
     PVOID SharedUserDataAddress;
     ULONG El;
 
-    LoaderBlock->u.I386.CommonDataArea = NULL;
     LoaderBlock->u.I386.MachineType = 0;
+
+    /* The load options are already a kernel address, the loader still runs on its own tables */
+    WinLdrpScreenTrace = (NtLdrGetOption(VaToPa(LoaderBlock->LoadOptions), "DEBUGPORT=SCREEN") != NULL);
+    LoaderBlock->u.I386.CommonDataArea = WinLdrpScreenTrace ? (PVOID)WinLdrpEarlyPrint : NULL;
+    WinLdrpTrace("freeldr: boot services left, running at EL%lu\n", Arm64GetCurrentEl());
 
     /* The kernel runs at EL1, from EL2 the switch to the kernel tables drops there.
      * A host running with E2H has its EL1 register names redirected to EL2. */
@@ -364,6 +437,7 @@ WinLdrSetupMachineDependent(
     }
 
     WinLdrMapSpecialPages();
+    WinLdrpTrace("freeldr: page tables at %p, framebuffer %p mapped\n", PxeBase, (PVOID)VramAddress);
 }
 
 VOID

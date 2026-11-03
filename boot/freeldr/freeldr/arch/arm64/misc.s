@@ -34,6 +34,17 @@
 
 //
 // ULONG64
+// Arm64GetSystemControl(VOID);
+//
+// Returns SCTLR_EL1.
+//
+    LEAF_ENTRY Arm64GetSystemControl
+    mrs     x0, sctlr_el1
+    ret
+    LEAF_END Arm64GetSystemControl
+
+//
+// ULONG64
 // Arm64GetHypervisorConfig(VOID);
 //
 // Returns HCR_EL2, only valid at EL2.
