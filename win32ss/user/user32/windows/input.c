@@ -987,8 +987,8 @@ IntLoadKeyboardLayoutTablesAndFile(
             return NULL;
         }
 
-        pfnMain = IntPrepareLayoutModule(&hModule, &pszCurrentFile, szRealFile, pszKLID,
-                                         puFlags, pMulti);
+        pfnMain = IntPrepareLayoutModule(&hModule, &pszCurrentFile, szRealFile,
+                                         pszKLID, puFlags, pMulti);
         if (pfnMain)
             break; /* Success */
 
