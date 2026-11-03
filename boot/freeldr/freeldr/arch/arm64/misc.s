@@ -59,6 +59,12 @@
     cmp     x3, #(2 << 2)
     b.eq    Arm64SwitchFromEl2
 
+    /* The loader maps its code writable, with WXN from the firmware it could not run */
+    mrs     x3, sctlr_el1
+    bic     x3, x3, #(1 << 19)
+    msr     sctlr_el1, x3
+    isb
+
     dsb     ish
     msr     mair_el1, x0
     msr     tcr_el1, x1
