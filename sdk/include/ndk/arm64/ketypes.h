@@ -166,7 +166,25 @@ typedef struct _TRAPFRAME_LOG_ENTRY
 //
 typedef struct _KPRCB
 {
-    ULONG dummy;
+    UCHAR LegacyNumber;
+    UCHAR ReservedMustBeZero;
+    UCHAR IdleHalt;
+    struct _KTHREAD *CurrentThread;
+    struct _KTHREAD *NextThread;
+    struct _KTHREAD *IdleThread;
+    UCHAR NestingLevel;
+    UCHAR ClockOwner;
+    union
+    {
+        UCHAR PendingTickFlags;
+        struct
+        {
+            UCHAR PendingTick:1;
+            UCHAR PendingBackupTick:1;
+        };
+    };
+    UCHAR IdleState;
+    ULONG Number;
 } KPRCB, *PKPRCB;
 
 //
@@ -177,12 +195,13 @@ typedef struct _KIPCR
 {
     union
     {
+        NT_TIB NtTib;
         struct
         {
-            ULONG TibPad0[2];
+            PVOID TibPad0[2];
             PVOID Spare1;
             struct _KPCR *Self;
-            PVOID  PcrReserved0;
+            PVOID PcrReserved0;
             struct _KSPIN_LOCK_QUEUE* LockArray;
             PVOID Used_Self;
         };
@@ -194,25 +213,52 @@ typedef struct _KIPCR
     USHORT MinorVersion;
     ULONG StallScaleFactor;
     ULONG SecondLevelCacheSize;
-    struct
+    union
     {
-        UCHAR ApcInterrupt;
-        UCHAR DispatchInterrupt;
+        USHORT SoftwareInterruptPending;
+        struct
+        {
+            UCHAR ApcInterrupt;
+            UCHAR DispatchInterrupt;
+        };
     };
     USHORT InterruptPad;
-    UCHAR BtiMitigation;
-    struct
+    union
     {
-        UCHAR SsbMitigationFirmware:1;
-        UCHAR SsbMitigationDynamic:1;
-        UCHAR SsbMitigationKernel:1;
-        UCHAR SsbMitigationUser:1;
-        UCHAR SsbMitigationReserved:4;
+        UCHAR BtiMitigation;
+        struct
+        {
+            UCHAR KvaVbar:1;
+            UCHAR BtiVbar:3;
+            UCHAR BtiCswapHvc:1;
+            UCHAR BtiCswapSmc:1;
+        };
     };
-    UCHAR Pad2[2];
+    union
+    {
+        UCHAR SsbMitigationFlags;
+        struct
+        {
+            UCHAR SsbMitigationFirmware:1;
+            UCHAR SsbMitigationDynamic:1;
+            UCHAR SsbMitigationKernel:1;
+            UCHAR SsbMitigationUser:1;
+            UCHAR SsbMitigationReserved:4;
+        };
+    };
+    UCHAR BhbMitigation;
+    union
+    {
+        UCHAR CachePrefetcherMitigationFlags;
+        struct
+        {
+            UCHAR CachePrefetcherMitigation:1;
+            UCHAR Pad2:7;
+        };
+    };
     ULONG64 PanicStorage[6];
     PVOID KdVersionBlock;
-    PVOID HalReserved[134];
+    PVOID HalReserved[14];
     PVOID KvaUserModeTtbr1;
 
     /* Private members, not in ntddk.h */
@@ -280,8 +326,7 @@ FORCEINLINE
 struct _KPRCB *
 KeGetCurrentPrcb(VOID)
 {
-    //UNIMPLEMENTED;
-    return 0;
+    return &((PKIPCR)KeGetPcr())->Prcb;
 }
 
 //
