@@ -65,8 +65,8 @@
 #define MI_ALLOCATION_FRAGMENT                  (64 * _1KB)
 #define MI_MAX_ALLOCATION_FRAGMENT              (2  * _1MB)
 
-/* Misc constants */
-#define MM_PTE_SOFTWARE_PROTECTION_BITS         5
+/* Misc constants, the software protection sits right above the valid bit */
+#define MM_PTE_SOFTWARE_PROTECTION_BITS         1
 #define MI_MIN_SECONDARY_COLORS                 8
 #define MI_SECONDARY_COLORS                     64
 #define MI_MAX_SECONDARY_COLORS                 1024
