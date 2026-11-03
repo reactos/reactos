@@ -73,6 +73,70 @@ PUBLIC call_double_method
 call_double_method:
     jmp call_method
 
+#elif defined(_M_ARM64)
+
+#include <kxarm64.h>
+
+    TEXTAREA
+
+//
+// DWORD_PTR
+// call_method(
+//     void *func,
+//     int nb_stk_args,
+//     const DWORD_PTR *stk_args,
+//     const DWORD_PTR *reg_args);
+//
+// reg_args holds d0-d7, then x0-x7 and x8. The caller keeps nb_stk_args
+// even, so sp stays 16 byte aligned.
+//
+    NESTED_ENTRY call_method
+    stp     x29, x30, [sp, #-16]!
+    mov     x29, sp
+    sxtw    x1, w1
+    sub     sp, sp, x1, uxtx #3
+    cbz     x1, call_method_args_done
+LABEL(call_method_copy)
+    sub     x1, x1, #1
+    ldr     x4, [x2, x1, lsl #3]
+    str     x4, [sp, x1, lsl #3]
+    cbnz    x1, call_method_copy
+LABEL(call_method_args_done)
+    mov     x16, x0
+    mov     x9, x3
+    ldp     d0, d1, [x9]
+    ldp     d2, d3, [x9, #0x10]
+    ldp     d4, d5, [x9, #0x20]
+    ldp     d6, d7, [x9, #0x30]
+    ldp     x0, x1, [x9, #0x40]
+    ldp     x2, x3, [x9, #0x50]
+    ldp     x4, x5, [x9, #0x60]
+    ldp     x6, x7, [x9, #0x70]
+    ldr     x8, [x9, #0x80]
+    blr     x16
+    mov     sp, x29
+    ldp     x29, x30, [sp], #16
+    ret
+LABEL(call_method_end)
+    NESTED_END call_method
+
+    LEAF_ENTRY call_float_method
+    b       call_method
+    LEAF_END call_float_method
+
+    LEAF_ENTRY call_double_method
+    b       call_method
+    LEAF_END call_double_method
+
+    XDATAAREA
+LABEL(call_method_xdata)
+    dcd     ((call_method_end - call_method) / 4) + 0x08000000
+    dcb     0xE1, 0x81, 0xE4, 0xE3      // set_fp, save_fplr_x 16, end, nop
+
+    PDATAAREA
+    DCRVA   call_method
+    DCRVA   call_method_xdata
+
 #else
 
 #include <asm.inc>
