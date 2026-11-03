@@ -27,3 +27,7 @@ add_custom_command(
 
 add_custom_target(asm
     DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/${_filename})
+
+# The asm headers every preprocessed asm source depends on, see add_asm_files
+file(GLOB _asm_headers ${CMAKE_CURRENT_SOURCE_DIR}/*.h ${CMAKE_CURRENT_SOURCE_DIR}/*.inc)
+set_property(GLOBAL PROPERTY ASM_INCLUDE_FILES ${_asm_headers} ${CMAKE_CURRENT_BINARY_DIR}/${_filename})
