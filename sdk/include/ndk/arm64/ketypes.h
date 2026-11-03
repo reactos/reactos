@@ -21,6 +21,15 @@ extern "C" {
 #define HIGH_LEVEL              15
 
 //
+// Synchronization-level IRQL
+//
+#ifndef CONFIG_SMP
+#define SYNCH_LEVEL             DISPATCH_LEVEL
+#else
+#define SYNCH_LEVEL             (IPI_LEVEL - 2)
+#endif
+
+//
 // IPI Types
 //
 #define IPI_APC                 1
