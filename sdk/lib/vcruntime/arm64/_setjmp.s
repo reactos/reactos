@@ -5,7 +5,7 @@
  * COPYRIGHT:   Copyright Timo Kreuzer <timo.kreuzer@reactos.org>
  */
 
-//#include <kxarm64.h>
+#include <kxarm64.h>
 
     TEXTAREA
 
