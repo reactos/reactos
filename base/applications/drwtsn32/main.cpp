@@ -71,6 +71,9 @@ static void PrintThread(FILE* output, DumpData& data, DWORD tid, ThreadData& thr
                  ctx.R0, ctx.R1, ctx.R2, ctx.R3, ctx.R4, ctx.R5, ctx.R6);
         xfprintf(output, "r7:%p r8:%p r9:%p r10:%p r11:%p r12:%p" NEWLINE,
                  ctx.R7, ctx.R8, ctx.R9, ctx.R10, ctx.R11, ctx.R12);
+#elif defined(_M_ARM64)
+        for (ULONG i = 0; i < 29; i++)
+            xfprintf(output, "x%u:%p%s", i, ctx.X[i], ((i % 4) == 3 || i == 28) ? NEWLINE : " ");
 #else
 #error Unknown architecture
 #endif
@@ -87,6 +90,9 @@ static void PrintThread(FILE* output, DumpData& data, DWORD tid, ThreadData& thr
 #elif defined(_M_ARM)
         xfprintf(output, "sp:%p lr:%p pc:%p cpsr:%p" NEWLINE,
                  ctx.Sp, ctx.Lr, ctx.Pc, ctx.Cpsr);
+#elif defined(_M_ARM64)
+        xfprintf(output, "fp:%p lr:%p sp:%p pc:%p cpsr:%08x" NEWLINE,
+                 ctx.Fp, ctx.Lr, ctx.Sp, ctx.Pc, ctx.Cpsr);
 #else
 #error Unknown architecture
 #endif
@@ -107,6 +113,16 @@ static void PrintThread(FILE* output, DumpData& data, DWORD tid, ThreadData& thr
             xfprintf(output, "Wvr%d:%p%s", n, ctx.Wvr[n], ((n + 1) == ARM_MAX_WATCHPOINTS) ? NEWLINE : " ");
         for (int n = 0; n < ARM_MAX_WATCHPOINTS; ++n)
             xfprintf(output, "Wcr%d:%p%s", n, ctx.Wcr[n], ((n + 1) == ARM_MAX_WATCHPOINTS) ? NEWLINE : " ");
+#elif defined(_M_ARM64)
+        for (int n = 0; n < ARM64_MAX_BREAKPOINTS; ++n)
+            xfprintf(output, "Bvr%d:%p%s", n, ctx.Bvr[n], ((n + 1) == ARM64_MAX_BREAKPOINTS) ? NEWLINE : " ");
+        for (int n = 0; n < ARM64_MAX_BREAKPOINTS; ++n)
+            xfprintf(output, "Bcr%d:%08x%s", n, ctx.Bcr[n], ((n + 1) == ARM64_MAX_BREAKPOINTS) ? NEWLINE : " ");
+
+        for (int n = 0; n < ARM64_MAX_WATCHPOINTS; ++n)
+            xfprintf(output, "Wvr%d:%p%s", n, ctx.Wvr[n], ((n + 1) == ARM64_MAX_WATCHPOINTS) ? NEWLINE : " ");
+        for (int n = 0; n < ARM64_MAX_WATCHPOINTS; ++n)
+            xfprintf(output, "Wcr%d:%08x%s", n, ctx.Wcr[n], ((n + 1) == ARM64_MAX_WATCHPOINTS) ? NEWLINE : " ");
 #else
 #error Unknown architecture
 #endif
