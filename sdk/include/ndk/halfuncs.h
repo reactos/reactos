@@ -314,7 +314,7 @@ HalEndSystemInterrupt(
 );
 #endif
 
-#ifdef _ARM_ // FIXME: ndk/arm? armddk.h?
+#if defined(_ARM_) || defined(_ARM64_) // FIXME: ndk/arm? armddk.h?
 NTHALAPI
 ULONG
 HalGetInterruptSource(
