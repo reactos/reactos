@@ -1941,7 +1941,7 @@
 @ cdecl _searchenv_s(str str ptr long)
 @ cdecl _seh_filter_dll(long ptr) # __CppXcptFilter
 @ cdecl _seh_filter_exe(long ptr) # _XcptFilter
-@ cdecl -arch=win64 _set_FMA3_enable(long)
+@ cdecl -arch=x86_64 _set_FMA3_enable(long)
 @ stdcall -arch=i386 _seh_longjmp_unwind4(ptr)
 @ stdcall -arch=i386 _seh_longjmp_unwind(ptr)
 @ cdecl -stub -arch=i386 _set_SSE2_enable(long)
