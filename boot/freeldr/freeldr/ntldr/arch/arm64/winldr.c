@@ -47,8 +47,12 @@ DBG_DEFAULT_CHANNEL(WINDOWS);
 /* PARange 5 is 48 bits, more is not reachable with 4 levels of 4 KB tables */
 #define MAX_PA_RANGE            5
 
+/* Host mode of the virtualization host extensions */
+#define HCR_EL2_E2H             (1ULL << 34)
+
 ULONG64 Arm64GetPhysicalAddressRange(VOID);
 ULONG Arm64GetCurrentEl(VOID);
+ULONG64 Arm64GetHypervisorConfig(VOID);
 VOID Arm64SwitchTranslation(_In_ ULONG64 Mair, _In_ ULONG64 Tcr, _In_ ULONG64 Ttbr);
 
 extern PUCHAR ComPortAddress;
@@ -325,18 +329,21 @@ WinLdrSetupMachineDependent(
     _In_ PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
     PVOID SharedUserDataAddress;
+    ULONG El;
 
     LoaderBlock->u.I386.CommonDataArea = NULL;
     LoaderBlock->u.I386.MachineType = 0;
 
-    /* The kernel runs at EL1, the translation registers used here are the EL1 ones */
-    if (Arm64GetCurrentEl() != 1)
+    /* The kernel runs at EL1, from EL2 the switch to the kernel tables drops there.
+     * A host running with E2H has its EL1 register names redirected to EL2. */
+    El = Arm64GetCurrentEl();
+    if ((El != 1) && ((El != 2) || (Arm64GetHypervisorConfig() & HCR_EL2_E2H)))
     {
         FrLdrBugCheckWithMessage(MISSING_HARDWARE_REQUIREMENTS,
                                  __FILE__,
                                  __LINE__,
-                                 "The loader must run at EL1, it runs at EL%lu.",
-                                 Arm64GetCurrentEl());
+                                 "The loader must run at EL1 or at EL2 without E2H, it runs at EL%lu.",
+                                 El);
     }
 
     SharedUserDataAddress = MmAllocateMemoryWithType(MM_PAGE_SIZE, LoaderStartupPcrPage);
