@@ -15,26 +15,15 @@
 
 static
 NTSTATUS
-CmpCreateProcessorKey(
-    _In_ PCWSTR Class,
-    _In_ ULONG Number,
+CmpCreateVolatileKey(
+    _In_ PCWSTR Path,
     _Out_ PHANDLE KeyHandle)
 {
     OBJECT_ATTRIBUTES ObjectAttributes;
     UNICODE_STRING KeyName;
-    WCHAR Buffer[96];
     ULONG Disposition;
-    NTSTATUS Status;
 
-    Status = RtlStringCbPrintfW(Buffer,
-                                sizeof(Buffer),
-                                L"\\Registry\\Machine\\Hardware\\Description\\System\\%s\\%lu",
-                                Class,
-                                Number);
-    if (!NT_SUCCESS(Status))
-        return Status;
-
-    RtlInitUnicodeString(&KeyName, Buffer);
+    RtlInitUnicodeString(&KeyName, Path);
     InitializeObjectAttributes(&ObjectAttributes,
                                &KeyName,
                                OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
@@ -48,6 +37,41 @@ CmpCreateProcessorKey(
                        NULL,
                        REG_OPTION_VOLATILE,
                        &Disposition);
+}
+
+static
+NTSTATUS
+CmpCreateProcessorKey(
+    _In_ PCWSTR Class,
+    _In_ ULONG Number,
+    _Out_ PHANDLE KeyHandle)
+{
+    WCHAR Buffer[96];
+    HANDLE ClassHandle;
+    NTSTATUS Status;
+
+    /* The loader does not describe the processors, so the class key may be missing */
+    Status = RtlStringCbPrintfW(Buffer,
+                                sizeof(Buffer),
+                                L"\\Registry\\Machine\\Hardware\\Description\\System\\%s",
+                                Class);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    Status = CmpCreateVolatileKey(Buffer, &ClassHandle);
+    if (!NT_SUCCESS(Status))
+        return Status;
+    ZwClose(ClassHandle);
+
+    Status = RtlStringCbPrintfW(Buffer,
+                                sizeof(Buffer),
+                                L"\\Registry\\Machine\\Hardware\\Description\\System\\%s\\%lu",
+                                Class,
+                                Number);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    return CmpCreateVolatileKey(Buffer, KeyHandle);
 }
 
 static
