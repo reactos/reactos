@@ -1255,7 +1255,7 @@ IntLoadKeyboardLayout(
     for (iTable = 0; iTable < multi.Multi.nTables && iTable < KBDTABLE_MULTI_MAX; ++iTable)
     {
         HANDLE hAuxFile = multi.AuxEntries[iTable].hFile;
-        if (hAuxFile && hAuxFile != INVALID_HANDLE_VALUE)
+        if (hAuxFile)
             CloseHandle(hAuxFile);
     }
 
