@@ -69,6 +69,10 @@ HalInitSystem(
 #endif
 
         HalpInitializeClock();
+
+        /* The ACPI driver enumerates the platform below the HAL device */
+        HalInitPnpDriver = HaliInitPnpDriver;
+        HalInitPowerManagement = HaliInitPowerManagement;
     }
     else if (BootPhase == 1)
     {
@@ -115,6 +119,9 @@ HalReportResourceUsage(VOID)
 {
     UNICODE_STRING HalName = RTL_CONSTANT_STRING(L"ARM64 HAL");
     CM_RESOURCE_LIST Empty;
+
+    /* Keep the PCI configuration windows away from the arbiters */
+    HalpPublishMmConfigRanges();
 
     /* Nothing is claimed by the HAL itself */
     RtlZeroMemory(&Empty, sizeof(Empty));

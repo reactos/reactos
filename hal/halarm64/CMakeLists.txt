@@ -14,11 +14,14 @@ list(APPEND SOURCE
     generic/acpi.c
     generic/gic.c
     generic/halinit.c
+    generic/halpnp.c
     generic/irql.c
     generic/memory.c
     generic/misc.c
     generic/pci.c
     generic/timer.c
+    ${REACTOS_SOURCE_DIR}/hal/halx86/acpi/halpnpdd.c
+    ${REACTOS_SOURCE_DIR}/hal/halx86/acpi/mmconfig.c
     ${REACTOS_SOURCE_DIR}/hal/halx86/generic/dma.c)
 
 list(APPEND ASM_SOURCE
