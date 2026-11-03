@@ -175,7 +175,9 @@ elseif(ARCH STREQUAL "arm")
         math/fabsf.c
         math/floorf.c
         math/sin.c
+        math/__math_invalid.c
         math/sqrt.c
+        math/sqrt_data.c
         math/sqrtf.c
         math/arm/__rt_sdiv.c
         math/arm/__rt_sdiv64_worker.c
