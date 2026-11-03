@@ -1079,3 +1079,442 @@ RtlVirtualUnwind(
 
     return NULL;
 }
+
+static
+BOOLEAN
+RtlpIsStackPointerValid(
+    _In_ ULONG64 StackPointer,
+    _In_ ULONG64 LowLimit,
+    _In_ ULONG64 HighLimit)
+{
+    return StackPointer >= LowLimit && StackPointer < HighLimit && !(StackPointer & 15);
+}
+
+/* Keeps the nonvolatile registers a language handler sees for the frame it runs in */
+static
+VOID
+RtlpSaveNonVolatileRegisters(
+    _Out_ DISPATCHER_CONTEXT_NONVOLREG_ARM64 *NonVolatiles,
+    _In_ PCONTEXT Context)
+{
+    ULONG i;
+
+    for (i = 0; i < NONVOL_INT_NUMREG_ARM64; i++)
+        NonVolatiles->GpNvRegs[i] = Context->X[19 + i];
+    for (i = 0; i < NONVOL_FP_NUMREG_ARM64; i++)
+        NonVolatiles->FpNvRegs[i] = Context->V[8 + i].D[0];
+}
+
+/* Unwinds one frame, after a call the lookup uses the call instruction itself */
+static
+PEXCEPTION_ROUTINE
+RtlpUnwindFrame(
+    _In_ ULONG HandlerType,
+    _Inout_ PDISPATCHER_CONTEXT DispatcherContext,
+    _Inout_ PCONTEXT Context,
+    _Out_ PULONG64 EstablisherFrame)
+{
+    ULONG64 ControlPc = Context->Pc;
+
+    DispatcherContext->ControlPc = ControlPc;
+    DispatcherContext->ControlPcIsUnwound = (Context->ContextFlags & CONTEXT_ARM64_UNWOUND_TO_CALL) != 0;
+    if (DispatcherContext->ControlPcIsUnwound)
+        ControlPc -= 4;
+
+    DispatcherContext->FunctionEntry = RtlLookupFunctionEntry(ControlPc,
+                                                              &DispatcherContext->ImageBase,
+                                                              NULL);
+
+    return RtlVirtualUnwind(HandlerType,
+                            DispatcherContext->ImageBase,
+                            ControlPc,
+                            DispatcherContext->FunctionEntry,
+                            Context,
+                            &DispatcherContext->HandlerData,
+                            EstablisherFrame,
+                            NULL);
+}
+
+/*! RtlpExecuteHandlerForUnwindHandler
+ * \brief Exception routine of RtlpExecuteHandlerForUnwind.
+ */
+EXCEPTION_DISPOSITION
+NTAPI
+RtlpExecuteHandlerForUnwindHandler(
+    _Inout_ PEXCEPTION_RECORD ExceptionRecord,
+    _In_ PVOID EstablisherFrame,
+    _Inout_ PCONTEXT ContextRecord,
+    _In_ PDISPATCHER_CONTEXT DispatcherContext)
+{
+    /* RtlpExecuteHandlerForUnwind keeps these right below its caller's sp */
+    PULONG64 Saved = (PULONG64)EstablisherFrame - 2;
+    ULONG ExceptionFlags = (ULONG)Saved[0];
+    PDISPATCHER_CONTEXT PreviousDispatcherContext = (PDISPATCHER_CONTEXT)Saved[1];
+
+    UNREFERENCED_PARAMETER(ContextRecord);
+
+    /*
+     * An unwind reached the termination handler another unwind is running.
+     * Hand back the dispatcher context of that unwind so it carries on past
+     * the handler instead of running it twice.
+     */
+    if (IS_UNWINDING(ExceptionFlags) && IS_UNWINDING(ExceptionRecord->ExceptionFlags))
+    {
+        *DispatcherContext = *PreviousDispatcherContext;
+        return ExceptionCollidedUnwind;
+    }
+
+    // TODO: properly handle nested exceptions
+
+    return ExceptionContinueSearch;
+}
+
+/*! RtlpUnwindInternal
+ * \brief Walks the frames calling their language handlers, for exception
+ *        dispatch (UNW_FLAG_EHANDLER) or for an unwind (UNW_FLAG_UHANDLER).
+ */
+BOOLEAN
+NTAPI
+RtlpUnwindInternal(
+    _In_opt_ PVOID TargetFrame,
+    _In_opt_ PVOID TargetIp,
+    _In_ PEXCEPTION_RECORD ExceptionRecord,
+    _In_ PVOID ReturnValue,
+    _In_ PCONTEXT ContextRecord,
+    _In_opt_ struct _UNWIND_HISTORY_TABLE *HistoryTable,
+    _In_ ULONG HandlerType)
+{
+    DISPATCHER_CONTEXT DispatcherContext;
+    DISPATCHER_CONTEXT_NONVOLREG_ARM64 NonVolatiles;
+    PEXCEPTION_ROUTINE ExceptionRoutine;
+    EXCEPTION_DISPOSITION Disposition;
+    ULONG_PTR StackLow, StackHigh;
+    ULONG64 EstablisherFrame;
+    CONTEXT UnwindContext;
+
+    RtlpGetStackLimits(&StackLow, &StackHigh);
+
+    /* Nothing above the target frame gets unwound */
+    if (TargetFrame != NULL)
+        StackHigh = (ULONG64)TargetFrame + 1;
+
+    UnwindContext = *ContextRecord;
+
+    DispatcherContext.ContextRecord =
+        (HandlerType == UNW_FLAG_UHANDLER) ? ContextRecord : &UnwindContext;
+    DispatcherContext.HistoryTable = HistoryTable;
+    DispatcherContext.TargetPc = (ULONG64)TargetIp;
+    DispatcherContext.NonVolatileRegisters = NonVolatiles.Buffer;
+
+    while (TRUE)
+    {
+        if (!RtlpIsStackPointerValid(UnwindContext.Sp, StackLow, StackHigh))
+            return FALSE;
+
+        RtlpSaveNonVolatileRegisters(&NonVolatiles, &UnwindContext);
+
+        ExceptionRoutine = RtlpUnwindFrame(HandlerType,
+                                           &DispatcherContext,
+                                           &UnwindContext,
+                                           &EstablisherFrame);
+
+        /* Broken unwind data or a frame outside of the stack */
+        if (UnwindContext.Pc == 0 ||
+            EstablisherFrame < StackLow ||
+            EstablisherFrame >= StackHigh ||
+            (EstablisherFrame & 15))
+        {
+            // TODO: Handle the DPC stack
+
+            if (HandlerType == UNW_FLAG_EHANDLER)
+            {
+                ExceptionRecord->ExceptionFlags |= EXCEPTION_STACK_INVALID;
+                return FALSE;
+            }
+
+            RtlRaiseStatus(STATUS_BAD_STACK);
+        }
+
+        if (ExceptionRoutine != NULL)
+        {
+            /* Let the language handler know it owns the target frame */
+            if (EstablisherFrame == (ULONG64)TargetFrame)
+                ExceptionRecord->ExceptionFlags |= EXCEPTION_TARGET_UNWIND;
+
+            RtlpCheckLogException(ExceptionRecord,
+                                  &UnwindContext,
+                                  &DispatcherContext,
+                                  sizeof(DispatcherContext));
+
+            DispatcherContext.LanguageHandler = ExceptionRoutine;
+            DispatcherContext.EstablisherFrame = EstablisherFrame;
+            DispatcherContext.ScopeIndex = 0;
+
+            UnwindContext.X0 = (ULONG64)ReturnValue;
+
+            do
+            {
+                Disposition = RtlpExecuteHandlerForUnwind(ExceptionRecord,
+                                                          (PVOID)EstablisherFrame,
+                                                          ContextRecord,
+                                                          &DispatcherContext);
+
+                ExceptionRecord->ExceptionFlags &= ~(EXCEPTION_TARGET_UNWIND |
+                                                     EXCEPTION_COLLIDED_UNWIND);
+
+                if (HandlerType == UNW_FLAG_EHANDLER)
+                {
+                    if (Disposition == ExceptionContinueExecution)
+                    {
+                        if (ExceptionRecord->ExceptionFlags & EXCEPTION_NONCONTINUABLE)
+                            RtlRaiseStatus(EXCEPTION_NONCONTINUABLE_EXCEPTION);
+
+                        return TRUE;
+                    }
+
+                    if (Disposition == ExceptionNestedException)
+                    {
+                        // TODO: Handle nested exceptions
+                        __debugbreak();
+                    }
+                }
+
+                if (Disposition == ExceptionCollidedUnwind)
+                {
+                    /*
+                     * The handler copied in the dispatcher context of the
+                     * unwind it collided with. Pick up that unwind's context
+                     * and unwind its frame again to continue from there.
+                     */
+                    UnwindContext = *ContextRecord = *DispatcherContext.ContextRecord;
+                    RtlpSaveNonVolatileRegisters(&NonVolatiles, &UnwindContext);
+                    RtlpUnwindFrame(HandlerType,
+                                    &DispatcherContext,
+                                    &UnwindContext,
+                                    &EstablisherFrame);
+
+                    DispatcherContext.ContextRecord = &UnwindContext;
+                    DispatcherContext.NonVolatileRegisters = NonVolatiles.Buffer;
+                    EstablisherFrame = DispatcherContext.EstablisherFrame;
+
+                    ExceptionRecord->ExceptionFlags |= EXCEPTION_COLLIDED_UNWIND;
+                    continue;
+                }
+
+                if (Disposition != ExceptionContinueSearch)
+                    RtlRaiseStatus(STATUS_INVALID_DISPOSITION);
+
+            } while (ExceptionRecord->ExceptionFlags & EXCEPTION_COLLIDED_UNWIND);
+        }
+
+        if (EstablisherFrame == (ULONG64)TargetFrame)
+            break;
+
+        /* The frame is done, the caller's context carries on */
+        if (HandlerType == UNW_FLAG_UHANDLER)
+            *ContextRecord = UnwindContext;
+    }
+
+    if (ExceptionRecord->ExceptionCode != STATUS_UNWIND_CONSOLIDATE)
+        ContextRecord->Pc = (ULONG64)TargetIp;
+
+    ContextRecord->X0 = (ULONG64)ReturnValue;
+
+    RtlRestoreContext(ContextRecord, ExceptionRecord);
+
+    /* Never returns */
+    ASSERT(FALSE);
+    return FALSE;
+}
+
+/*! RtlUnwindEx
+ * \brief Unwinds the stack up to TargetFrame and continues at TargetIp.
+ */
+VOID
+NTAPI
+RtlUnwindEx(
+    _In_opt_ PVOID TargetFrame,
+    _In_opt_ PVOID TargetIp,
+    _In_opt_ PEXCEPTION_RECORD ExceptionRecord,
+    _In_ PVOID ReturnValue,
+    _In_ PCONTEXT ContextRecord,
+    _In_opt_ struct _UNWIND_HISTORY_TABLE *HistoryTable)
+{
+    EXCEPTION_RECORD LocalExceptionRecord;
+
+    RtlCaptureContext(ContextRecord);
+
+    if (ExceptionRecord == NULL)
+    {
+        LocalExceptionRecord.ExceptionCode = STATUS_UNWIND;
+        LocalExceptionRecord.ExceptionAddress = (PVOID)ContextRecord->Pc;
+        LocalExceptionRecord.ExceptionRecord = NULL;
+        LocalExceptionRecord.NumberParameters = 0;
+        ExceptionRecord = &LocalExceptionRecord;
+    }
+
+    ExceptionRecord->ExceptionFlags = EXCEPTION_UNWINDING;
+    if (TargetFrame == NULL)
+        ExceptionRecord->ExceptionFlags |= EXCEPTION_EXIT_UNWIND;
+
+    RtlpUnwindInternal(TargetFrame,
+                       TargetIp,
+                       ExceptionRecord,
+                       ReturnValue,
+                       ContextRecord,
+                       HistoryTable,
+                       UNW_FLAG_UHANDLER);
+}
+
+VOID
+NTAPI
+RtlUnwind(
+    _In_opt_ PVOID TargetFrame,
+    _In_opt_ PVOID TargetIp,
+    _In_opt_ PEXCEPTION_RECORD ExceptionRecord,
+    _In_ PVOID ReturnValue)
+{
+    CONTEXT Context;
+
+    RtlUnwindEx(TargetFrame,
+                TargetIp,
+                ExceptionRecord,
+                ReturnValue,
+                &Context,
+                NULL);
+}
+
+/*! RtlWalkFrameChain
+ * \brief Collects the return addresses of the callers of the current function.
+ */
+ULONG
+NTAPI
+RtlWalkFrameChain(
+    _Out_writes_to_(Count, return) PVOID *Callers,
+    _In_ ULONG Count,
+    _In_ ULONG Flags)
+{
+    DISPATCHER_CONTEXT DispatcherContext;
+    CONTEXT Context;
+    ULONG_PTR StackLow, StackHigh;
+    ULONG64 EstablisherFrame;
+    ULONG i, FramesToSkip;
+    MODE CurrentMode = RtlpGetMode();
+
+    /* The upper bits of Flags tell how many frames to skip */
+    FramesToSkip = Flags >> RTL_STACK_WALKING_MODE_FRAMES_TO_SKIP_SHIFT;
+
+    RtlCaptureContext(&Context);
+    RtlpGetStackLimits(&StackLow, &StackHigh);
+
+    _SEH2_TRY
+    {
+        for (i = 0; i < FramesToSkip + Count; i++)
+        {
+            RtlpUnwindFrame(UNW_FLAG_NHANDLER, &DispatcherContext, &Context, &EstablisherFrame);
+
+            if (CurrentMode == KernelMode && Context.Pc < KSEG0_BASE)
+            {
+                /* Only continue into user mode when asked to */
+                if (!(Flags & 1))
+                    break;
+
+                CurrentMode = UserMode;
+                StackLow = (ULONG_PTR)NtCurrentTeb()->NtTib.StackLimit;
+                StackHigh = (ULONG_PTR)NtCurrentTeb()->NtTib.StackBase;
+            }
+
+            if (CurrentMode == UserMode &&
+                (Context.Pc < 0x10000 || Context.Pc > 0x00007FFFFFFEFFFFULL))
+            {
+                break;
+            }
+
+            if (Context.Sp <= StackLow || Context.Sp >= StackHigh)
+                break;
+
+            if (i >= FramesToSkip)
+                Callers[i - FramesToSkip] = (PVOID)Context.Pc;
+        }
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        DPRINT1("Exception while getting callers!\n");
+        i = 0;
+    }
+    _SEH2_END;
+
+    return (i > FramesToSkip) ? i - FramesToSkip : 0;
+}
+
+/*! RtlGetCallersAddress
+ * \ref http://undocumented.ntinternals.net/UserMode/Undocumented%20Functions/Debug/RtlGetCallersAddress.html
+ */
+#undef RtlGetCallersAddress
+VOID
+NTAPI
+RtlGetCallersAddress(
+    _Out_ PVOID *CallersAddress,
+    _Out_ PVOID *CallersCaller)
+{
+    PVOID Callers[4];
+    ULONG Number;
+
+    /* RtlWalkFrameChain -> RtlGetCallersAddress -> x -> y */
+    Number = RtlWalkFrameChain(Callers, 4, 0);
+
+    *CallersAddress = (Number >= 3) ? Callers[2] : NULL;
+    *CallersCaller = (Number == 4) ? Callers[3] : NULL;
+}
+
+VOID
+NTAPI
+RtlpRestoreContextInternal(
+    _In_ PCONTEXT ContextRecord);
+
+/*! RtlRestoreContext
+ * \brief Continues execution with ContextRecord, after a consolidation
+ *        callback or with a longjmp target when ExceptionRecord asks for it.
+ */
+VOID
+NTAPI
+RtlRestoreContext(
+    _In_ PCONTEXT ContextRecord,
+    _In_opt_ PEXCEPTION_RECORD ExceptionRecord)
+{
+    ULONG i;
+
+    if (ExceptionRecord != NULL)
+    {
+        if (ExceptionRecord->ExceptionCode == STATUS_UNWIND_CONSOLIDATE &&
+            ExceptionRecord->NumberParameters >= 1)
+        {
+            PVOID (*Consolidate)(PEXCEPTION_RECORD) = (PVOID)ExceptionRecord->ExceptionInformation[0];
+
+            // FIXME: This should be called through an asm wrapper to allow handling recursive unwinding
+            ContextRecord->Pc = (ULONG64)Consolidate(ExceptionRecord);
+        }
+        else if (ExceptionRecord->ExceptionCode == STATUS_LONGJUMP)
+        {
+            _JUMP_BUFFER *JumpBuffer = (_JUMP_BUFFER *)ExceptionRecord->ExceptionInformation[0];
+
+            for (i = 0; i < 10; i++)
+                ContextRecord->X[19 + i] = (&JumpBuffer->X19)[i];
+
+            ContextRecord->Fp = JumpBuffer->Fp;
+            ContextRecord->Sp = JumpBuffer->Sp;
+            ContextRecord->Pc = JumpBuffer->Lr;
+            ContextRecord->Fpcr = JumpBuffer->Fpcr;
+            ContextRecord->Fpsr = JumpBuffer->Fpsr;
+
+            /* setjmp only keeps the low halves of v8-v15 */
+            for (i = 0; i < 8; i++)
+            {
+                ContextRecord->V[8 + i].D[0] = JumpBuffer->D[i];
+                ContextRecord->V[8 + i].D[1] = 0;
+            }
+        }
+    }
+
+    RtlpRestoreContextInternal(ContextRecord);
+}
