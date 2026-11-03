@@ -161,6 +161,22 @@ typedef struct _TRAPFRAME_LOG_ENTRY
     ULONG Reserved1;
 } TRAPFRAME_LOG_ENTRY, *PTRAPFRAME_LOG_ENTRY;
 
+typedef struct _DISPATCHER_CONTEXT
+{
+    ULONG64 ControlPc;
+    ULONG64 ImageBase;
+    struct _RUNTIME_FUNCTION *FunctionEntry;
+    ULONG64 EstablisherFrame;
+    ULONG64 TargetPc;
+    PCONTEXT ContextRecord;
+    PEXCEPTION_ROUTINE LanguageHandler;
+    PVOID HandlerData;
+    struct _UNWIND_HISTORY_TABLE *HistoryTable;
+    ULONG ScopeIndex;
+    BOOLEAN ControlPcIsUnwound;
+    PUCHAR NonVolatileRegisters;
+} DISPATCHER_CONTEXT, *PDISPATCHER_CONTEXT;
+
 //
 // Processor Region Control Block
 // Based on WoA
