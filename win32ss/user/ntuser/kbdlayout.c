@@ -382,7 +382,7 @@ KbdLoadImage(
     }
     if (FileInfo.EndOfFile.QuadPart <= 0 || FileInfo.EndOfFile.QuadPart > KBDIMG_MAXSIZE)
     {
-        ERR("Invalid file size\n");
+        ERR("Invalid file size (%I64u bytes)\n", FileInfo.EndOfFile.QuadPart);
         return NULL;
     }
     cbRaw = FileInfo.EndOfFile.LowPart;
