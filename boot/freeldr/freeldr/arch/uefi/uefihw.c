@@ -147,6 +147,57 @@ UefiFindAcpiTable(
     return NULL;
 }
 
+/**
+ * @brief Finds the first memory mapped serial port the firmware lists in DBG2.
+ */
+BOOLEAN
+UefiGetDebugSerialPort(
+    _Out_ PUSHORT Subtype,
+    _Out_ PULONG64 Address)
+{
+    PDBG2_DEVICE_INFO Device;
+    PDBG2_TABLE Dbg2;
+    PGEN_ADDR Register;
+    PUCHAR Current, End;
+    ULONG Index;
+
+    Dbg2 = (PDBG2_TABLE)UefiFindAcpiTable(DBG2_SIGNATURE);
+    if ((Dbg2 == NULL) || (Dbg2->Header.Length < sizeof(*Dbg2)))
+        return FALSE;
+
+    End = (PUCHAR)Dbg2 + Dbg2->Header.Length;
+    Current = (PUCHAR)Dbg2 + Dbg2->DeviceInfoOffset;
+
+    for (Index = 0; Index < Dbg2->DeviceInfoCount; Index++)
+    {
+        Device = (PDBG2_DEVICE_INFO)Current;
+        if ((Current + sizeof(*Device) > End) ||
+            (Device->Length < sizeof(*Device)) ||
+            (Current + Device->Length > End))
+        {
+            break;
+        }
+
+        if ((Device->PortType == DBG2_PORT_TYPE_SERIAL) &&
+            (Device->RegisterCount != 0) &&
+            (Device->BaseAddressOffset + sizeof(*Register) <= Device->Length))
+        {
+            /* Address space 0 is system memory */
+            Register = (PGEN_ADDR)(Current + Device->BaseAddressOffset);
+            if ((Register->AddressSpaceID == 0) && (Register->Address.QuadPart != 0))
+            {
+                *Subtype = Device->PortSubtype;
+                *Address = Register->Address.QuadPart;
+                return TRUE;
+            }
+        }
+
+        Current += Device->Length;
+    }
+
+    return FALSE;
+}
+
 VOID
 DetectAcpiBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
 {
