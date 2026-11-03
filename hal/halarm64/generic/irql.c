@@ -237,3 +237,66 @@ HalSystemVectorDispatchEntry(
     UNREFERENCED_PARAMETER(NoConnection);
     return FALSE;
 }
+
+/* Line interrupts reach the GIC as their GSIV, which is also the vector */
+static
+PINTERRUPT_VECTOR_DATA
+HalpGetLineVector(
+    _In_ PINTERRUPT_CONNECTION_DATA ConnectionData)
+{
+    PINTERRUPT_VECTOR_DATA VectorData;
+
+    if ((ConnectionData == NULL) || (ConnectionData->Count != 1))
+        return NULL;
+
+    VectorData = &ConnectionData->Vectors[0];
+    if ((VectorData->Type != InterruptTypeControllerInput) ||
+        (VectorData->Vector != VectorData->ControllerInput.Gsiv))
+    {
+        return NULL;
+    }
+
+    return VectorData;
+}
+
+NTSTATUS
+NTAPI
+HalEnableInterrupt(
+    _In_ PINTERRUPT_CONNECTION_DATA ConnectionData)
+{
+    PINTERRUPT_VECTOR_DATA VectorData = HalpGetLineVector(ConnectionData);
+
+    if (!VectorData)
+        return STATUS_INVALID_PARAMETER;
+
+    if (!HalEnableSystemInterrupt(VectorData->Vector, VectorData->Irql, VectorData->Mode))
+        return STATUS_UNSUCCESSFUL;
+
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+NTAPI
+HalDisableInterrupt(
+    _In_ PINTERRUPT_CONNECTION_DATA ConnectionData)
+{
+    PINTERRUPT_VECTOR_DATA VectorData = HalpGetLineVector(ConnectionData);
+
+    if (!VectorData)
+        return STATUS_INVALID_PARAMETER;
+
+    HalDisableSystemInterrupt(VectorData->Vector, VectorData->Irql);
+    return STATUS_SUCCESS;
+}
+
+/* Message signaled interrupts need the GIC ITS */
+NTSTATUS
+NTAPI
+HalGetMessageRoutingInfo(
+    _In_ PHAL_MESSAGE_SIGNAL_TARGET_REQUEST Request,
+    _Out_ PINTERRUPT_CONNECTION_DATA ConnectionData)
+{
+    UNREFERENCED_PARAMETER(Request);
+    UNREFERENCED_PARAMETER(ConnectionData);
+    return STATUS_NOT_SUPPORTED;
+}
