@@ -1,5 +1,5 @@
 
-file(GLOB xdk_headers "*.h")
+file(GLOB_RECURSE xdk_headers "*.h")
 
 function(add_xdk_header _template _out)
     get_filename_component(_out_filename ${_out} NAME)
