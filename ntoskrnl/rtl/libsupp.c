@@ -314,7 +314,7 @@ RtlpHandleDpcStackException(IN PEXCEPTION_REGISTRATION_RECORD RegistrationFrame,
     return FALSE;
 }
 
-#if !defined(_ARM_) && !defined(_AMD64_)
+#if !defined(_ARM_) && !defined(_AMD64_) && !defined(_ARM64_)
 
 BOOLEAN
 NTAPI
@@ -826,7 +826,7 @@ RtlCallVectoredContinueHandlers(_In_ PEXCEPTION_RECORD ExceptionRecord,
     return;
 }
 
-#ifdef _M_AMD64
+#if defined(_M_AMD64) || defined(_M_ARM64)
 
 PRUNTIME_FUNCTION
 NTAPI
