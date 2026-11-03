@@ -1,4 +1,8 @@
 
+RAW(""),
+RAW("#include <kxarm64.h>"),
+RAW(""),
+
 #define CONTEXT_ARM64   0x00400000L
 #define CONTEXT_CONTROL (CONTEXT_ARM64 | 0x1L)
 #define CONTEXT_INTEGER (CONTEXT_ARM64 | 0x2L)
