@@ -24,13 +24,20 @@ extern PMMPTE MmDebugPte;
 
 /* GLOBALS *****************************************************************/
 
+#ifdef _M_ARM64
+/* Nothing sets the dirty state for us, kernel pages start out writable */
+#define MI_KERNEL_PTE_BITS ((PTE_VALID|PTE_EXECUTE_READWRITE|PTE_ACCESSED) & ~PTE_NOT_DIRTY)
+#else
+#define MI_KERNEL_PTE_BITS (PTE_VALID|PTE_EXECUTE_READWRITE|PTE_DIRTY|PTE_ACCESSED)
+#endif
+
 /* Template PTE and PDE for a kernel page */
-MMPTE ValidKernelPde = {{PTE_VALID|PTE_EXECUTE_READWRITE|PTE_DIRTY|PTE_ACCESSED}};
-MMPTE ValidKernelPte = {{PTE_VALID|PTE_EXECUTE_READWRITE|PTE_DIRTY|PTE_ACCESSED}};
+MMPTE ValidKernelPde = {{MI_KERNEL_PTE_BITS}};
+MMPTE ValidKernelPte = {{MI_KERNEL_PTE_BITS}};
 
 /* The same, but for local pages */
-MMPTE ValidKernelPdeLocal = {{PTE_VALID|PTE_EXECUTE_READWRITE|PTE_DIRTY|PTE_ACCESSED}};
-MMPTE ValidKernelPteLocal = {{PTE_VALID|PTE_EXECUTE_READWRITE|PTE_DIRTY|PTE_ACCESSED}};
+MMPTE ValidKernelPdeLocal = {{MI_KERNEL_PTE_BITS}};
+MMPTE ValidKernelPteLocal = {{MI_KERNEL_PTE_BITS}};
 
 /* Template PDE for a demand-zero page */
 MMPDE DemandZeroPde  = {{MM_EXECUTE_READWRITE << MM_PTE_SOFTWARE_PROTECTION_BITS}};
@@ -206,14 +213,21 @@ MiInitializePageTable(VOID)
     /* Get current directory base */
     PxePfn = ((PMMPTE)PXE_SELFMAP)->u.Hard.PageFrameNumber;
     PxePhysicalAddress = PxePfn << PAGE_SHIFT;
+#ifdef _M_ARM64
+    /* Both halves translate through the same root table */
+    ASSERT(PxePhysicalAddress == (KeArm64ReadRegister(ARM64_TTBR1_EL1) & 0x0000FFFFFFFFF000ULL));
+#else
     ASSERT(PxePhysicalAddress == __readcr3());
+#endif
 
     /* Set directory base for the system process */
     PsGetCurrentProcess()->Pcb.DirectoryTableBase[0] = PxePhysicalAddress;
 
+#ifndef _M_ARM64
     /* Enable global pages */
     __writecr4(__readcr4() | CR4_PGE);
     ASSERT(__readcr4() & CR4_PGE);
+#endif
 
     /* Loop the user mode PXEs */
     for (PointerPxe = MiAddressToPxe(0);
@@ -228,9 +242,13 @@ MiInitializePageTable(VOID)
     KeFlushCurrentTb();
 
     /* Set up a template PTE */
+#ifdef _M_ARM64
+    TmplPte = ValidKernelPte;
+#else
     TmplPte.u.Long = 0;
     TmplPte.u.Flush.Valid = 1;
     TmplPte.u.Flush.Write = 1;
+#endif
     HyperTemplatePte = TmplPte;
 
     /* Create PDPTs (72 KB) for shared system address space,
