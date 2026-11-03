@@ -1196,7 +1196,46 @@ SkipCheck:
         return STATUS_INVALID_IMAGE_FORMAT;
     }
 
-    // FIXME: .NET support is missing
+    /* Detect and validate .NET (CLR) images early */
+    {
+        ULONG CorSectionSize = 0;
+        PVOID CorDir = RtlImageDirectoryEntryToData(ViewBase,
+                                                    TRUE,
+                                                    IMAGE_DIRECTORY_ENTRY_COM_DESCRIPTOR,
+                                                    &CorSectionSize);
+        if (CorDir)
+        {
+            NTSTATUS CorStatus;
+
+            CorStatus = LdrpCorValidateImage(ViewBase, CorDir, CorSectionSize);
+            if (!NT_SUCCESS(CorStatus))
+            {
+                DPRINT1("LDR: %wZ has an invalid COR header (0x%08lx)\n", &FullDllName, CorStatus);
+                NtUnmapViewOfSection(NtCurrentProcess(), ViewBase);
+                NtClose(SectionHandle);
+                return CorStatus;
+            }
+
+            /* If this is a pure IL image and we have no real CLR entrypoint, fail the load */
+            if (LdrpIsILOnlyImage(ViewBase))
+            {
+                PVOID CorDllMain = LdrpCorGetCorDllMain();
+                if (!CorDllMain)
+                {
+                    if (NT_SUCCESS(LdrpCorEnsureMscoreeLoaded()))
+                        CorDllMain = LdrpCorGetCorDllMain();
+                }
+                if (!CorDllMain)
+                {
+                    DPRINT1("LDR: %wZ is an IL-only image, but mscoree's _CorDllMain is missing\n",
+                            &FullDllName);
+                    NtUnmapViewOfSection(NtCurrentProcess(), ViewBase);
+                    NtClose(SectionHandle);
+                    return STATUS_INVALID_IMAGE_FORMAT;
+                }
+            }
+        }
+    }
 
     /* Allocate an entry */
     if (!(LdrEntry = LdrpAllocateDataTableEntry(ViewBase)))
@@ -1214,6 +1253,25 @@ SkipCheck:
     LdrEntry->FullDllName = FullDllName;
     LdrEntry->BaseDllName = BaseDllName;
     LdrEntry->EntryPoint = LdrpFetchAddressOfEntryPoint(LdrEntry->DllBase);
+
+    /*
+     * IL-only images have no native code and no native imports, so they get the CLR's entry point
+     * instead of their own, and LdrpLoadDll may skip the import walk for them (LDRP_COR_IMAGE).
+     * The check above made sure that mscoree exports that entry point.
+     *
+     * Anything else is a mixed-mode image: a native DLL that also carries CLR data.
+     * It is loaded like any other DLL. Its native imports are resolved, its own entry
+     * point runs (the CRT startup and DllMain of a C++/CLI module, which reaches the
+     * CLR through its mscoree!_CorDllMain import, and mscoree's _CorDllMain in turn
+     * calls on to a native entry point that the COR header names), and the loader
+     * unmaps it on unload. Substituting mscoree's entry point here would skip the
+     * module's own native initialization, and nothing else would unmap the image.
+     */
+    if (LdrpIsILOnlyImage(LdrEntry->DllBase))
+    {
+        LdrEntry->Flags |= LDRP_COR_IMAGE;
+        LdrEntry->EntryPoint = (PDLL_INIT_ROUTINE)LdrpCorGetCorDllMain();
+    }
 
     /* Show debug message */
     if (ShowSnaps)
@@ -1506,7 +1564,7 @@ NoRelocNeeded:
         }
     }
 
-    // FIXME: LdrpCheckCorImage() is missing
+    /* Images with a COM descriptor were validated above, before their entry was allocated */
 
     /* Check if this is an SMP Machine and a DLL */
     if ((LdrpNumberOfProcessors > 1) &&
@@ -1516,7 +1574,7 @@ NoRelocNeeded:
         LdrpValidateImageForMp(LdrEntry);
     }
 
-    // FIXME: LdrpCorUnloadImage() is missing
+    /* The CLR is not told about an image when it is mapped, so there is nothing to undo here */
 
     /* Close section and return status */
     NtClose(SectionHandle);
