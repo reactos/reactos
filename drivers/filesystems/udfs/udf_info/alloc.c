@@ -874,8 +874,8 @@ UDFAllocMetadataExtent(
     OUT PEXTENT_INFO ExtInfo
     )
 {
-    uint32 blocks, bit, i, phys, pass, first, seenBlocks;
-    BOOLEAN growthAttempted = FALSE;
+    uint32 blocks, bit, i, phys, pass, first, seenBlocks, limit;
+    BOOLEAN growthAttempted = FALSE, widenAttempted = FALSE, limited;
     EXTENT_AD extent;
 
     ExtInfo->Mapping = NULL;
@@ -891,10 +891,13 @@ UDFAllocMetadataExtent(
     blocks = (uint32)((Length + Vcb->SectorSize - 1) >> Vcb->SectorShift);
 retry_after_growth:
     UDFAcquireResourceExclusive(&(Vcb->BitMapResource1), TRUE);
-    first = Vcb->MetadataHint < Vcb->MetadataBitCount ? Vcb->MetadataHint : 0;
-    for (pass = 0; pass < 2 && blocks <= Vcb->MetadataBitCount; pass++) {
+    /* Copy-on-write covers only the start of the metadata area. */
+    limit = min(UDFCowMetadataLimit(Vcb), Vcb->MetadataBitCount);
+    limited = limit < Vcb->MetadataBitCount;
+    first = Vcb->MetadataHint < limit ? Vcb->MetadataHint : 0;
+    for (pass = 0; pass < 2 && blocks <= limit; pass++) {
       for (bit = pass ? 0 : first;
-           bit <= Vcb->MetadataBitCount - blocks && (pass == 0 || bit < first);
+           bit <= limit - blocks && (pass == 0 || bit < first);
            bit++) {
         phys = UDFMetadataLbaToPhys(Vcb, bit, NULL);
         if (phys == LBA_OUT_OF_EXTENT)
@@ -936,6 +939,20 @@ retry_after_growth:
 
     seenBlocks = Vcb->MetadataBitCount;
     UDFReleaseResource(&(Vcb->BitMapResource1));
+    if (limited && !widenAttempted) {
+        NTSTATUS status;
+        /* Free space past the copy-on-write limit: cover more of it. */
+        widenAttempted = TRUE;
+        if (!UDFAcquireResourceExclusive(&(Vcb->MetadataGrowResource),
+                !ExIsResourceAcquiredExclusiveLite(&(Vcb->BitMapResource1))))
+            return STATUS_DISK_FULL;
+        status = UDFCowMetadataLimit(Vcb) == limit ?
+            UDFCowWiden(IrpContext, Vcb, blocks) : STATUS_SUCCESS;
+        UDFReleaseResource(&(Vcb->MetadataGrowResource));
+        if (!NT_SUCCESS(status))
+            return STATUS_DISK_FULL;
+        goto retry_after_growth;
+    }
     if (!growthAttempted) {
         NTSTATUS status;
         /* Two creates can run out of metadata space at once. Growth swaps
@@ -965,6 +982,7 @@ retry_after_growth:
         UDFReleaseResource(&(Vcb->MetadataGrowResource));
         if (NT_SUCCESS(status)) {
             growthAttempted = TRUE;
+            widenAttempted = FALSE;
             goto retry_after_growth;
         }
         return status;

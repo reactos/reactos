@@ -1296,6 +1296,12 @@ UDFUnlockVolume(
     // succeed on a locked volume.
     Status = UDFUnlockVolumeInternal(Vcb, IrpSp->FileObject);
 
+    /* The lock's volume flush turned copy-on-write off; the volume is in
+     * normal use again. */
+    if (NT_SUCCESS(Status) && !Vcb->Cow && Vcb->VcbCondition == VcbMounted &&
+        !FlagOn(Vcb->VcbState, VCB_STATE_VOLUME_READ_ONLY | UDF_VCB_FLAGS_DEAD))
+        (VOID)UDFCowStart(IrpContext, Vcb);
+
     // Release all of our resources
     UDFReleaseVcb(IrpContext, Vcb);
 

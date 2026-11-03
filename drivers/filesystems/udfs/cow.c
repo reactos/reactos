@@ -540,6 +540,31 @@ UDFCowCheckpoint(
     return status;
 }
 
+/*
+ * Take the volume resource exclusive so no create, delete, rename or
+ * cleanup is half done when the checkpoint records the metadata. Every
+ * such operation holds that resource while it writes. Never blocks: a
+ * blocked waiter would deadlock with UDFCowStop called by an owner, so it
+ * polls, and after about three seconds of constant activity it gives up
+ * and checkpoints anyway (the old behaviour) rather than never committing.
+ */
+static BOOLEAN
+CowQuiesce(PVCB Vcb, PUDF_COW Cow)
+{
+    LARGE_INTEGER delay;
+    ULONG i;
+
+    delay.QuadPart = -10LL * 1000 * 20;
+    for (i = 0; i < UDF_COW_QUIESCE_TRIES; i++) {
+        if (ExAcquireResourceExclusiveLite(&Vcb->VcbResource, FALSE))
+            return TRUE;
+        if (Cow && Cow->Stop)
+            return FALSE;
+        KeDelayExecutionThread(KernelMode, FALSE, &delay);
+    }
+    return FALSE;
+}
+
 static VOID NTAPI
 CowThread(PVOID Context)
 {
@@ -547,6 +572,7 @@ CowThread(PVOID Context)
     PUDF_COW cow = Vcb->Cow;
     LARGE_INTEGER timeout;
     struct IRP_CONTEXT irpContext;
+    BOOLEAN held;
 
     timeout.QuadPart = -10LL * 1000 * 1000 * UDF_COW_INTERVAL_SEC;
     for (;;) {
@@ -554,7 +580,8 @@ CowThread(PVOID Context)
         if (cow->Stop)
             break;
         if (Vcb->VcbCondition != VcbMounted ||
-            FlagOn(Vcb->VcbState, VCB_STATE_VOLUME_READ_ONLY | UDF_VCB_FLAGS_DEAD))
+            FlagOn(Vcb->VcbState, VCB_STATE_VOLUME_READ_ONLY | UDF_VCB_FLAGS_DEAD) ||
+            (!cow->DirtyUnits && !cow->Pending && !cow->Waiting))
             continue;
         RtlZeroMemory(&irpContext, sizeof(irpContext));
         irpContext.NodeIdentifier.NodeTypeCode = UDF_NODE_TYPE_IRP_CONTEXT;
@@ -564,10 +591,42 @@ CowThread(PVOID Context)
         irpContext.RealDevice = Vcb->Vpb->RealDevice;
         irpContext.Flags = IRP_CONTEXT_FLAG_ON_STACK | IRP_CONTEXT_FLAG_WAIT;
         KeEnterCriticalRegion();
-        (VOID)UDFCowCheckpoint(&irpContext, Vcb, FALSE);
+        held = CowQuiesce(Vcb, cow);
+        if (!cow->Stop)
+            (VOID)UDFCowCheckpoint(&irpContext, Vcb, FALSE);
+        if (held)
+            ExReleaseResourceLite(&Vcb->VcbResource);
         KeLeaveCriticalRegion();
     }
     PsTerminateSystemThread(STATUS_SUCCESS);
+}
+
+/*
+ * Make everything written so far durable, for a flush request. Call it
+ * without holding the volume resource when possible, so the checkpoint
+ * waits for other operations to finish their writes.
+ */
+NTSTATUS
+UDFCowSync(
+    IN PIRP_CONTEXT IrpContext,
+    IN PVCB Vcb
+    )
+{
+    NTSTATUS status;
+    BOOLEAN held = FALSE;
+
+    if (!Vcb->Cow)
+        return STATUS_SUCCESS;
+    KeEnterCriticalRegion();
+    if (!ExIsResourceAcquiredSharedLite(&Vcb->VcbResource)) {
+        ExAcquireResourceExclusiveLite(&Vcb->VcbResource, TRUE);
+        held = TRUE;
+    }
+    status = UDFCowCheckpoint(IrpContext, Vcb, FALSE);
+    if (held)
+        ExReleaseResourceLite(&Vcb->VcbResource);
+    KeLeaveCriticalRegion();
+    return status;
 }
 
 static VOID
@@ -662,15 +721,77 @@ CowMarkOnDisk(PIRP_CONTEXT IrpContext, PVCB Vcb, uint32 Lba, uint32 Blocks, int8
     return status;
 }
 
-NTSTATUS
-UDFCowStart(
+/* Split the run containing Limit so every run lies wholly below or above
+ * it; runs above it keep a single (home) location. */
+static BOOLEAN
+CowSplitRuns(PUDF_COW_RUN Runs, uint32* Count, uint32 Limit)
+{
+    uint32 i;
+
+    for (i = 0; i < *Count; i++) {
+        PUDF_COW_RUN r = &Runs[i];
+        if (Limit > r->Lbn && Limit - r->Lbn < r->Blocks) {
+            uint32 head = Limit - r->Lbn;
+            if (*Count == UDF_COW_MAX_RUNS)
+                return FALSE;
+            RtlMoveMemory(&Runs[i + 2], &Runs[i + 1], (*Count - i - 1) * sizeof(UDF_COW_RUN));
+            Runs[i + 1].Lbn = Limit;
+            Runs[i + 1].Blocks = r->Blocks - head;
+            Runs[i + 1].Lba[0] = r->Lba[0] + head;
+            r->Blocks = head;
+            (*Count)++;
+            break;
+        }
+    }
+    for (i = 0; i < *Count; i++)
+        if (Runs[i].Lbn >= Limit)
+            Runs[i].Lba[1] = Runs[i].Lba[0];
+    return TRUE;
+}
+
+/* First metadata block past the last one in use. */
+static uint32
+CowUsedEnd(PVCB Vcb, uint32 Blocks)
+{
+    uint32 b = Blocks;
+
+    while (b) {
+        if (!(b & 7) && b >= 8 && Vcb->MetadataBitmap[(b >> 3) - 1] == 0xFF) {
+            b -= 8;
+            continue;
+        }
+        if (!(Vcb->MetadataBitmap[(b - 1) >> 3] & (1 << ((b - 1) & 7))))
+            break;
+        b--;
+    }
+    return b;
+}
+
+static uint32
+CowPickLimit(PVCB Vcb, PUDF_COW Cow, uint32 MinLimit)
+{
+    uint32 used, limit, headroom;
+
+    used = CowUsedEnd(Vcb, Cow->MetadataBlocks);
+    limit = max(used, MinLimit);
+    headroom = max((uint32)UDF_COW_HEADROOM, limit / 4);
+    if (limit > Cow->MetadataBlocks - min(headroom, Cow->MetadataBlocks))
+        return Cow->MetadataBlocks;
+    limit += headroom;
+    limit = (limit + Cow->UnitBlocks - 1) / Cow->UnitBlocks * Cow->UnitBlocks;
+    return min(limit, Cow->MetadataBlocks);
+}
+
+static NTSTATUS
+CowStartEx(
     IN PIRP_CONTEXT IrpContext,
-    IN PVCB Vcb
+    IN PVCB Vcb,
+    IN uint32 MinLimit
     )
 {
     PUDF_COW cow;
     NTSTATUS status = STATUS_NOT_SUPPORTED;
-    uint32 i, u, ref, align;
+    uint32 i, u, ref, align, adSize;
     int8* sector = NULL;
     HANDLE thread;
     BOOLEAN bitmapUsable;
@@ -701,6 +822,20 @@ UDFCowStart(
         goto fail;
     cow->UnitBlocks = UDF_COW_UNIT_BLOCKS;
     cow->UnitBytes = UDF_COW_UNIT_BLOCKS << Vcb->SectorShift;
+
+    /* Cover the blocks in use plus headroom, not the whole area. */
+    UDFAcquireResourceExclusive(&(Vcb->BitMapResource1), TRUE);
+    cow->Limit = CowPickLimit(Vcb, cow, MinLimit);
+    UDFReleaseResource(&(Vcb->BitMapResource1));
+    if (!CowSplitRuns(cow->Main, &cow->MainRuns, cow->Limit) ||
+        (cow->Duplicated && !CowSplitRuns(cow->Mirror, &cow->MirrorRuns, cow->Limit)))
+        goto fail;
+    adSize = (((PFILE_ENTRY)Vcb->MetadataFileInfo->Dloc->FileEntry)->icbTag.flags &
+              ICB_FLAG_ALLOC_MASK) == ICB_FLAG_AD_SHORT ? sizeof(SHORT_AD) : sizeof(LONG_AD);
+    if (Vcb->MetadataFileInfo->Dloc->FileEntryLen + cow->MainRuns * adSize > Vcb->SectorSize ||
+        Vcb->MetadataMirrorFileInfo->Dloc->FileEntryLen +
+            (cow->Duplicated ? cow->MirrorRuns : cow->MainRuns) * sizeof(LONG_AD) > Vcb->SectorSize)
+        goto fail;
     cow->Units = (cow->MetadataBlocks + cow->UnitBlocks - 1) / cow->UnitBlocks;
     cow->Buffer = (int8**)MyAllocatePool__(NonPagedPool, cow->Units * sizeof(int8*));
     cow->Stale = (uint8*)MyAllocatePool__(NonPagedPool, (cow->Units + 7) / 8);
@@ -712,10 +847,19 @@ UDFCowStart(
     RtlZeroMemory(cow->Buffer, cow->Units * sizeof(int8*));
     RtlZeroMemory(cow->Stale, (cow->Units + 7) / 8);
 
+    /* The second region is marked in use on disk below; open the integrity
+     * record first so a crash makes the next mount check the volume and
+     * give that space back. */
+    status = UDFOpenIntegrityForWrite(IrpContext, Vcb, FALSE);
+    if (!NT_SUCCESS(status))
+        goto fail;
+
     /* Second region: one aligned run per extent, the same size. */
     align = Vcb->MetadataAlignUnit ? Vcb->MetadataAlignUnit : 1;
     for (i = 0; i < cow->MainRuns + (cow->Duplicated ? cow->MirrorRuns : 0); i++) {
         PUDF_COW_RUN run = i < cow->MainRuns ? &cow->Main[i] : &cow->Mirror[i - cow->MainRuns];
+        if (run->Lbn >= cow->Limit)
+            continue;
         status = UDFAllocAlignedRun(IrpContext, Vcb, run->Blocks, align,
                                     &run->Lba[1], &cow->AltMaps[cow->AltMapCount]);
         if (!NT_SUCCESS(status))
@@ -731,22 +875,26 @@ UDFCowStart(
     if (!NT_SUCCESS(status))
         goto fail;
 
-    /* The second region holds nothing yet: every unit with a block in use
-     * must be copied by the first checkpoint. */
+    /* The second region holds nothing yet: the first checkpoint copies
+     * every unit up to the last block in use. Free blocks below it are
+     * copied too, since a damaged bitmap can show a block in use as free. */
     UDFAcquireResourceExclusive(&(Vcb->BitMapResource1), TRUE);
-    for (u = 0; u < cow->Units; u++) {
-        uint32 b, first = u * cow->UnitBlocks, count = CowUnitCount(cow, u);
-        for (b = first; b < first + count; b++) {
-            if (!(Vcb->MetadataBitmap[b >> 3] & (1 << (b & 7)))) {
-                cow->Stale[u >> 3] |= (uint8)(1 << (u & 7));
-                break;
-            }
-        }
+    {
+        uint32 usedUnits = (CowUsedEnd(Vcb, cow->MetadataBlocks) + cow->UnitBlocks - 1) /
+                           cow->UnitBlocks;
+        for (u = 0; u < usedUnits && u < cow->Units; u++)
+            cow->Stale[u >> 3] |= (uint8)(1 << (u & 7));
     }
     UDFReleaseResource(&(Vcb->BitMapResource1));
 
     KeInitializeEvent(&cow->Wake, SynchronizationEvent, FALSE);
     UDFAcquireResourceExclusive(&(Vcb->BitMapResource1), TRUE);
+    /* Something may have been allocated past Limit before COW was on. */
+    if (CowUsedEnd(Vcb, cow->MetadataBlocks) > cow->Limit) {
+        UDFReleaseResource(&(Vcb->BitMapResource1));
+        status = STATUS_RETRY;
+        goto fail;
+    }
     CowLock(Vcb, TRUE);
     Vcb->Cow = cow;
     CowUnlock(Vcb);
@@ -764,8 +912,9 @@ UDFCowStart(
         status = STATUS_SUCCESS;
     }
     MyFreePool__(sector);
-    UDFPrint(("UDF COW: on, %lu metadata blocks in %lu+%lu extents\n",
-              cow->MetadataBlocks, cow->MainRuns, cow->MirrorRuns));
+    UDFPrint(("UDF COW: on, %lu of %lu metadata blocks in %lu+%lu extents\n",
+              (ULONG)cow->Limit, (ULONG)cow->MetadataBlocks,
+              (ULONG)cow->MainRuns, (ULONG)cow->MirrorRuns));
     return STATUS_SUCCESS;
 
 fail:
@@ -776,6 +925,62 @@ fail:
     UDFPrint(("UDF COW: not used for this volume (%lx)\n", status));
     CowFree(cow);
     return status;
+}
+
+NTSTATUS
+UDFCowStart(
+    IN PIRP_CONTEXT IrpContext,
+    IN PVCB Vcb
+    )
+{
+    NTSTATUS status;
+    int tries;
+
+    for (tries = 0; tries < 3; tries++) {
+        status = CowStartEx(IrpContext, Vcb, 0);
+        if (status != STATUS_RETRY)
+            break;
+    }
+    return status;
+}
+
+/* Metadata allocations must stay below this while copy-on-write is on.
+ * Called with BitMapResource1 held. */
+uint32
+UDFCowMetadataLimit(
+    IN PVCB Vcb
+    )
+{
+    PUDF_COW cow = Vcb->Cow;
+    return cow ? cow->Limit : Vcb->MetadataBitCount;
+}
+
+/* Rebuild the second region so at least Blocks more metadata blocks fit. */
+NTSTATUS
+UDFCowWiden(
+    IN PIRP_CONTEXT IrpContext,
+    IN PVCB Vcb,
+    IN uint32 Blocks
+    )
+{
+    PUDF_COW cow = Vcb->Cow;
+    uint32 want;
+    NTSTATUS status;
+    int tries;
+
+    if (!cow)
+        return STATUS_SUCCESS;
+    want = cow->Limit + Blocks;
+    status = UDFCowStop(IrpContext, Vcb);
+    if (!NT_SUCCESS(status))
+        return status;
+    for (tries = 0; tries < 3; tries++) {
+        status = CowStartEx(IrpContext, Vcb, want);
+        if (status != STATUS_RETRY)
+            break;
+    }
+    /* Without copy-on-write the allocation proceeds over the whole area. */
+    return STATUS_SUCCESS;
 }
 
 /*
@@ -838,7 +1043,7 @@ UDFCowStop(
     CowApplyFrees(Vcb, NULL, all);
     for (i = 0; i < cow->AltMapCount; i++)
         UDFMarkSpaceAsXXX(Vcb, 0, cow->AltMaps[i], AS_DISCARDED);
-    UDFPrint(("UDF COW: off after %lu checkpoints\n", cow->Checkpoints));
+    UDFPrint(("UDF COW: off after %lu checkpoints\n", (ULONG)cow->Checkpoints));
     CowFree(cow);
     return status;
 }

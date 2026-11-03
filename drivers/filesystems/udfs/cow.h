@@ -19,12 +19,22 @@
  * mirror follows the same way. A power loss therefore always leaves the
  * metadata as of the last checkpoint. Blocks freed in between stay
  * allocated until a checkpoint no longer refers to them.
+ *
+ * Only the start of the metadata area, up to Limit, gets a second region:
+ * the blocks in use plus some headroom. Metadata allocations stay below
+ * Limit while copy-on-write is on; when that space runs out the second
+ * region is rebuilt larger (UDFCowWiden).
+ *
+ * The background checkpoint waits for the volume resource, so it never
+ * records a create, delete or rename half done.
  */
 
 #define UDF_COW_UNIT_BLOCKS     8       // 4 KB units with 512-byte blocks
 #define UDF_COW_INTERVAL_SEC    5       // checkpoint period
 #define UDF_COW_DIRTY_KICK      2560    // ~10 MB changed: checkpoint early
 #define UDF_COW_MAX_RUNS        64      // Metadata File extents handled
+#define UDF_COW_HEADROOM        131072  // 64 MB of free metadata blocks covered
+#define UDF_COW_QUIESCE_TRIES   150     // x 20 ms waiting for the volume resource
 
 typedef struct _UDF_COW_RUN {
     uint32 Lbn;         // first metadata block of the extent
@@ -42,6 +52,7 @@ typedef struct _UDF_COW {
     uint32 UnitBytes;
     uint32 Units;
     uint32 MetadataBlocks;
+    uint32 Limit;           // metadata blocks [0, Limit) have a second region
     uint32 MainRuns;
     uint32 MirrorRuns;
     UDF_COW_RUN Main[UDF_COW_MAX_RUNS];
@@ -68,6 +79,24 @@ typedef struct _UDF_COW {
 
 NTSTATUS
 UDFCowStart(
+    IN PIRP_CONTEXT IrpContext,
+    IN PVCB Vcb
+    );
+
+NTSTATUS
+UDFCowWiden(
+    IN PIRP_CONTEXT IrpContext,
+    IN PVCB Vcb,
+    IN uint32 Blocks
+    );
+
+uint32
+UDFCowMetadataLimit(
+    IN PVCB Vcb
+    );
+
+NTSTATUS
+UDFCowSync(
     IN PIRP_CONTEXT IrpContext,
     IN PVCB Vcb
     );

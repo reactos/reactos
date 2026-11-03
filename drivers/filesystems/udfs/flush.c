@@ -257,14 +257,6 @@ UDFCommonFlush(
 
 try_exit:   NOTHING;
 
-        /* With copy-on-write, a flush is only durable once the buffered
-         * metadata is committed. */
-        if (NT_SUCCESS(Status) && Vcb && Vcb->Cow) {
-            NTSTATUS cowStatus = UDFCowCheckpoint(IrpContext, Vcb, FALSE);
-            if (!NT_SUCCESS(cowStatus))
-                Status = cowStatus;
-        }
-
     } _SEH2_FINALLY {
 
         // Release in reverse order of acquisition (parent first, then child)
@@ -286,6 +278,15 @@ try_exit:   NOTHING;
         if (!_SEH2_AbnormalTermination()) {
 
             NTSTATUS DriverStatus;
+
+            /* With copy-on-write, a flush is only durable once the buffered
+             * metadata is committed. Done after the locks above are released
+             * so the checkpoint can wait for other operations to finish. */
+            if (NT_SUCCESS(Status) && Vcb && Vcb->Cow) {
+                NTSTATUS cowStatus = UDFCowSync(IrpContext, Vcb);
+                if (!NT_SUCCESS(cowStatus))
+                    Status = cowStatus;
+            }
 
             // Get the next stack location, and copy over the stack location
 
