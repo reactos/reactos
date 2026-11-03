@@ -162,6 +162,7 @@ PciPdoIrpStartDevice(IN PIRP Irp,
     NTSTATUS Status;
     BOOLEAN Changed, DoReset;
     POWER_STATE PowerState;
+    ULONG i;
     PAGED_CODE();
 
     UNREFERENCED_PARAMETER(Irp);
@@ -206,6 +207,26 @@ PciPdoIrpStartDevice(IN PIRP Irp,
     {
         /* All good */
         DPRINT("PCIX - START not changing resource settings.\n");
+    }
+
+    /* Firmware may leave a device off, every space it was given has to decode */
+    if (DeviceExtension->Resources)
+    {
+        for (i = 0; i < RTL_NUMBER_OF(DeviceExtension->Resources->Current); i++)
+        {
+            switch (DeviceExtension->Resources->Current[i].Type)
+            {
+                case CmResourceTypePort:
+                    if (!DeviceExtension->IoSpaceUnderNativeIdeControl)
+                        DeviceExtension->CommandEnables |= PCI_ENABLE_IO_SPACE;
+                    break;
+
+                case CmResourceTypeMemory:
+                case CmResourceTypeMemoryLarge:
+                    DeviceExtension->CommandEnables |= PCI_ENABLE_MEMORY_SPACE;
+                    break;
+            }
+        }
     }
 
     /* Check if the device was sleeping */
