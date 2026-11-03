@@ -822,8 +822,8 @@ static VOID
 IntFollowRealDll(
     _Inout_ HMODULE *phModule,
     _Inout_ PCWSTR *ppszFile,
-    _Out_writes_(MAX_LAYOUT_FILENAME) PWSTR pszRealFile,
-    _In_opt_z_ PCWSTR pszKLID)
+    _Out_writes_z_(MAX_LAYOUT_FILENAME) PWSTR pszRealFile,
+    _In_opt_ PCWSTR pszKLID)
 {
     PFN_KbdLayerRealDllFile pfnReal;
     PFN_KbdLayerRealDllFileNT4 pfnRealNT4;
