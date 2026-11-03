@@ -16,6 +16,9 @@ if(ARCH STREQUAL "i386")
 elseif(ARCH STREQUAL "amd64")
     list(APPEND NTKRNLMP_SOURCE
         ${REACTOS_SOURCE_DIR}/ntoskrnl/ke/amd64/mproc.c)
+elseif(ARCH STREQUAL "arm64")
+    list(APPEND NTKRNLMP_SOURCE
+        ${REACTOS_SOURCE_DIR}/ntoskrnl/ke/arm64/mproc.c)
 elseif(ARCH STREQUAL "arm")
     #TBD
 endif()
