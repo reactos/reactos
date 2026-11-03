@@ -136,7 +136,7 @@ if(ARCH STREQUAL "amd64")
 endif()
 
 if(MSVC)
-if(NOT ARCH STREQUAL "arm")
+if(NOT ARCH STREQUAL "arm" AND NOT ARCH STREQUAL "arm64")
     target_link_options(uefildr PRIVATE /DYNAMICBASE:NO)
 endif()
     target_link_options(uefildr PRIVATE /NXCOMPAT:NO /ignore:4078 /ignore:4254 /DRIVER)
