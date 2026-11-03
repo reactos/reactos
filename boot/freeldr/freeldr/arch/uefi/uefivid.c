@@ -51,8 +51,6 @@ static UEFI_BGRT_LOGO UefiBgrtLogo = {0};
 #define BGRT_ORIENTATION_180          2
 #define BGRT_ORIENTATION_270          3
 
-#define LOWEST_SUPPORTED_RES 1
-
 #include <pshpack1.h>
 typedef struct _BMP_FILE_HEADER
 {
@@ -496,8 +494,7 @@ UefiInitializeGop(VOID)
         return Status;
     }
 
-    /* We don't need high resolutions for freeldr */
-    gop->SetMode(gop, LOWEST_SUPPORTED_RES);
+    /* Keep the mode the firmware set, some only change the reported mode and keep scanning out the old one */
 
     /* Physical format of the pixel */
     PixelFormat = gop->Mode->Info->PixelFormat;
