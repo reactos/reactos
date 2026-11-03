@@ -114,6 +114,10 @@ typedef struct _HALP_GTDT
 } HALP_GTDT, *PHALP_GTDT;
 #include <poppack.h>
 
+/* Distributor registers, and one redistributor frame pair without virtual LPIs */
+#define HALP_GICD_SIZE          0x10000
+#define HALP_GICR_FRAME_SIZE    0x20000
+
 /* What the ACPI tables told us about the platform */
 typedef struct _HALP_PLATFORM
 {
@@ -122,6 +126,10 @@ typedef struct _HALP_PLATFORM
     ULONG GicrLength;
     ULONG TimerIntId;
     USHORT ArmBootFlags;
+    PHYSICAL_ADDRESS RootTable;
+    PHYSICAL_ADDRESS EcamBase;
+    UCHAR EcamStartBus;
+    UCHAR EcamEndBus;
 } HALP_PLATFORM, *PHALP_PLATFORM;
 
 extern HALP_PLATFORM HalpPlatform;
@@ -134,6 +142,75 @@ VOID
 NTAPI
 HalpAcpiInitialize(
     _In_ PLOADER_PARAMETER_BLOCK LoaderBlock);
+
+PVOID
+NTAPI
+HalAcpiGetTable(
+    _In_opt_ PLOADER_PARAMETER_BLOCK LoaderBlock,
+    _In_ ULONG Signature);
+
+/* halpnp.c */
+#define HALP_INTERRUPT_CONTROLLER_PIC   0
+#define HALP_INTERRUPT_CONTROLLER_APIC  1
+extern ULONG HalpInterruptControllerType;
+extern PWCHAR HalHardwareIdString;
+
+NTSTATUS
+NTAPI
+HaliInitPowerManagement(
+    _In_ PPM_DISPATCH_TABLE PmDriverDispatchTable,
+    _Out_ PPM_DISPATCH_TABLE *PmHalDispatchTable);
+
+NTSTATUS
+NTAPI
+HalpQueryAcpiResourceRequirements(
+    _Out_ PIO_RESOURCE_REQUIREMENTS_LIST *Requirements);
+
+NTSTATUS
+NTAPI
+HalpQueryPicLineTranslator(
+    _Out_writes_bytes_(Size) PVOID Interface,
+    _In_ ULONG Size,
+    _Out_ PULONG Length);
+
+/* halpnpdd.c */
+NTSTATUS
+NTAPI
+HaliInitPnpDriver(VOID);
+
+/* mmconfig.c */
+NTSTATUS
+NTAPI
+HalpPublishMmConfigRanges(VOID);
+
+/* pci.c */
+ULONG
+NTAPI
+HalpPciRawConfig(
+    _In_ ULONG Bus,
+    _In_ PCI_SLOT_NUMBER Slot,
+    _Inout_updates_bytes_(Length) PVOID Buffer,
+    _In_ ULONG Offset,
+    _In_ ULONG Length,
+    _In_ BOOLEAN Write);
+
+ULONG
+NTAPI
+HalpPciReadConfig(
+    _In_ ULONG Bus,
+    _In_ PCI_SLOT_NUMBER Slot,
+    _Out_writes_bytes_(Length) PVOID Buffer,
+    _In_ ULONG Offset,
+    _In_ ULONG Length);
+
+ULONG
+NTAPI
+HalpPciWriteConfig(
+    _In_ ULONG Bus,
+    _In_ PCI_SLOT_NUMBER Slot,
+    _In_reads_bytes_(Length) PVOID Buffer,
+    _In_ ULONG Offset,
+    _In_ ULONG Length);
 
 /* gic.c */
 VOID
