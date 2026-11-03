@@ -130,7 +130,10 @@ elseif(ARCH STREQUAL "arm64")
     list(APPEND ASM_SOURCE
         arm64/debug_asm.s
         arm64/except_asm.s
+        arm64/slist.s
         arm64/unwind-asm.s)
+    # The ARM64 S-List routines are all asm
+    list(REMOVE_ITEM SOURCE slist.c)
     list(APPEND SOURCE
         amd64/dynfntbl.c
         arm64/except.c
@@ -168,6 +171,10 @@ list(APPEND SOURCE_VISTA
     utf8.c
     waitaddress.c
     wow64.c)
+
+if(ARCH STREQUAL "arm64")
+    list(REMOVE_ITEM SOURCE_VISTA slist.c)
+endif()
 
 add_library(rtl_vista ${SOURCE_VISTA})
 target_compile_definitions(rtl_vista PRIVATE _WIN32_WINNT=0x600)
