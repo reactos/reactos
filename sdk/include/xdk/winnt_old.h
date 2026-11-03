@@ -4888,6 +4888,7 @@ DbgRaiseAssertionFailure(VOID)
 #define YieldProcessor __yield
 #elif defined(_M_ARM64)
 #define YieldProcessor __yield
+#define DbgRaiseAssertionFailure() __break(0xf001)
 #else
 #error Unknown architecture
 #endif
