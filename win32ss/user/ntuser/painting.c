@@ -1250,6 +1250,7 @@ IntGetPaintMessage(
       }
       Window = Window->spwndParent;
    }
+
    /* Make sure cached DCs are updated */
    DceResetActiveDCEs(PaintWnd);
    Message->wParam = Message->lParam = 0;
