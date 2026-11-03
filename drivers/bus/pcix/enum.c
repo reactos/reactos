@@ -867,7 +867,56 @@ PciAddBarRequirements(
 
 /**
  * @brief
+ * Asks the HAL which lines the interrupt pin can be routed to. A legacy HAL
+ * narrows this to the line the pin is wired to, other HALs leave every line open.
+ */
+static
+VOID
+NTAPI
+PciGetInterruptAssignment(
+    _In_ PPCI_PDO_EXTENSION PdoExtension,
+    _Out_ PULONG Minimum,
+    _Out_ PULONG Maximum)
+{
+    PIO_RESOURCE_REQUIREMENTS_LIST RequirementsList;
+    PIO_RESOURCE_DESCRIPTOR Descriptor;
+
+    *Minimum = 0;
+    *Maximum = MAXULONG;
+
+    RequirementsList = PciAllocateIoRequirementsList(1,
+                                                     PdoExtension->ParentFdoExtension->BaseBus,
+                                                     PdoExtension->Slot.u.AsULONG);
+    if (!RequirementsList)
+        return;
+
+    Descriptor = &RequirementsList->List[0].Descriptors[0];
+    Descriptor->Type = CmResourceTypeInterrupt;
+    Descriptor->ShareDisposition = CmResourceShareShared;
+    Descriptor->Flags = CM_RESOURCE_INTERRUPT_LEVEL_SENSITIVE;
+    Descriptor->u.Interrupt.MinimumVector = *Minimum;
+    Descriptor->u.Interrupt.MaximumVector = *Maximum;
+
+    /* The HAL may hand back a different list */
+    if (NT_SUCCESS(HalAdjustResourceList(&RequirementsList)))
+    {
+        Descriptor = &RequirementsList->List[0].Descriptors[0];
+        if (Descriptor->u.Interrupt.MinimumVector <= Descriptor->u.Interrupt.MaximumVector)
+        {
+            *Minimum = Descriptor->u.Interrupt.MinimumVector;
+            *Maximum = Descriptor->u.Interrupt.MaximumVector;
+        }
+    }
+
+    ExFreePoolWithTag(RequirementsList, 0);
+}
+
+/**
+ * @brief
  * Writes the interrupt requirements, or only counts them when Descriptor is NULL.
+ *
+ * @param[in] PdoExtension
+ * The function the requirements are for.
  *
  * @param[out] Descriptor
  * The first descriptor to write, NULL to count.
@@ -889,6 +938,7 @@ static
 ULONG
 NTAPI
 PciAddInterruptRequirements(
+    _In_ PPCI_PDO_EXTENSION PdoExtension,
     _Out_opt_ PIO_RESOURCE_DESCRIPTOR Descriptor,
     _In_ ULONG Messages,
     _In_ BOOLEAN PerMessage,
@@ -936,8 +986,9 @@ PciAddInterruptRequirements(
             Descriptor[Count].Flags = CM_RESOURCE_INTERRUPT_LEVEL_SENSITIVE;
             if (Messages)
                 Descriptor[Count].Option = IO_RESOURCE_ALTERNATIVE;
-            Descriptor[Count].u.Interrupt.MinimumVector = 0;
-            Descriptor[Count].u.Interrupt.MaximumVector = MAXULONG;
+            PciGetInterruptAssignment(PdoExtension,
+                                      &Descriptor[Count].u.Interrupt.MinimumVector,
+                                      &Descriptor[Count].u.Interrupt.MaximumVector);
         }
         Count++;
     }
@@ -960,7 +1011,7 @@ PciFillRequirementList(
     PCI_CONFIGURATOR_CONTEXT Context;
 
     Descriptor += PciAddBarRequirements(PdoExtension, PciData, Descriptor);
-    Descriptor += PciAddInterruptRequirements(Descriptor, Messages, PerMessage, HaveInterrupt);
+    Descriptor += PciAddInterruptRequirements(PdoExtension, Descriptor, Messages, PerMessage, HaveInterrupt);
 
     /* And finally any extra ranges this kind of function decodes on the side */
     if (PdoExtension->AdditionalResourceCount)
@@ -997,7 +1048,7 @@ PciBuildRequirementsList(IN PPCI_PDO_EXTENSION PdoExtension,
     /* The BARs, the interrupts and any legacy decodes a bridge has to lock down */
     Bars = PciAddBarRequirements(PdoExtension, PciData, NULL);
     Count = Bars +
-            PciAddInterruptRequirements(NULL, Messages, PerMessage, HaveInterrupt) +
+            PciAddInterruptRequirements(PdoExtension, NULL, Messages, PerMessage, HaveInterrupt) +
             PdoExtension->AdditionalResourceCount;
 
     /* Check if the function turned out to need nothing after all */
@@ -1023,7 +1074,7 @@ PciBuildRequirementsList(IN PPCI_PDO_EXTENSION PdoExtension,
     if (PerMessage)
     {
         SecondCount = Bars +
-                      PciAddInterruptRequirements(NULL, 1, FALSE, HaveInterrupt) +
+                      PciAddInterruptRequirements(PdoExtension, NULL, 1, FALSE, HaveInterrupt) +
                       PdoExtension->AdditionalResourceCount;
 
         RequirementsList =
