@@ -108,6 +108,7 @@ if(MSVC)
         list(APPEND SHARED_ASM_SOURCE
             arm64/cpp_alias.s
             arm64/cpp_vtables.s
+            arm64/except_arm64.s
         )
     endif()
 endif()
