@@ -338,28 +338,12 @@ KiArm64SystemService(
             KeGdiFlushUserBatch();
     }
 
+    /* KiArm64HandleSynchronous already made the thread a GUI thread when it had to */
     DescriptorTable = &((PKSERVICE_TABLE_DESCRIPTOR)Thread->ServiceTable)[TableIndex];
     if (ServiceNumber >= DescriptorTable->Limit)
     {
-        if ((TableIndex != WIN32K_SERVICE_INDEX) ||
-            (Thread->ServiceTable != KeServiceDescriptorTable))
-        {
-            Status = STATUS_INVALID_SYSTEM_SERVICE;
-            goto Exit;
-        }
-
-        /* The thread moves to a large stack, everything on the old one is gone */
-        Status = PsConvertToGuiThread();
-        TrapFrame = Thread->TrapFrame;
-        if (!NT_SUCCESS(Status))
-            goto Exit;
-
-        DescriptorTable = &((PKSERVICE_TABLE_DESCRIPTOR)Thread->ServiceTable)[TableIndex];
-        if (ServiceNumber >= DescriptorTable->Limit)
-        {
-            Status = STATUS_INVALID_SYSTEM_SERVICE;
-            goto Exit;
-        }
+        Status = STATUS_INVALID_SYSTEM_SERVICE;
+        goto Exit;
     }
 
     /* The first eight arguments come in registers, the rest from the caller's stack */
@@ -404,29 +388,89 @@ Exit:
     return TrapFrame;
 }
 
+/**
+ * @brief Tells whether a system service needs the thread converted to a GUI thread first.
+ *
+ * The conversion moves the kernel stack, which only a caller without pointers
+ * into the old stack in its registers survives. KiArm64SystemService uses
+ * SEH, so its locals are addressed through a register the move does not fix.
+ */
 static
-VOID
-KiArm64HandleSynchronous(
-    _Inout_ PKTRAP_FRAME *TrapFramePointer,
-    _Inout_ PKEXCEPTION_FRAME *ExceptionFramePointer)
+BOOLEAN
+KiArm64ServiceNeedsGuiThread(
+    _In_ PKTRAP_FRAME TrapFrame)
 {
-    PKTRAP_FRAME TrapFrame = *TrapFramePointer;
-    PKEXCEPTION_FRAME ExceptionFrame = *ExceptionFramePointer;
+    PKTHREAD Thread = KeGetCurrentThread();
+    ULONG ServiceNumber, TableIndex;
+
+    ServiceNumber = TrapFrame->Esr & 0xFFFF;
+    TableIndex = (ServiceNumber >> TABLE_OFFSET_BITS) & ((1 << TABLE_NUMBER_BITS) - 1);
+    ServiceNumber &= SERVICE_NUMBER_MASK;
+
+    return (TableIndex == WIN32K_SERVICE_INDEX) &&
+           (Thread->ServiceTable == KeServiceDescriptorTable) &&
+           (ServiceNumber >= KeServiceDescriptorTable[TableIndex].Limit);
+}
+
+/**
+ * @brief Handles a synchronous exception and returns the trap frame to exit with.
+ *
+ * A system service can move the thread to a large stack, so the caller must
+ * not keep any pointer into the stack across this call.
+ */
+static
+PKTRAP_FRAME
+KiArm64HandleSynchronous(
+    _Inout_ PKTRAP_FRAME TrapFrame,
+    _Inout_ PKEXCEPTION_FRAME ExceptionFrame)
+{
     ULONG ExceptionClass = TrapFrame->Esr >> ESR_EC_SHIFT;
+    PKTHREAD Thread = KeGetCurrentThread();
+    PKTRAP_FRAME OldTrapFrame;
+    KPROCESSOR_MODE OldMode;
+    ULONG_PTR OldBase, OldLimit;
+    NTSTATUS Status;
 
     if (ExceptionClass == ESR_EC_SVC64)
     {
-        TrapFrame = KiArm64SystemService(TrapFrame);
-        *TrapFramePointer = TrapFrame;
-        *ExceptionFramePointer = KiArm64TrapExceptionFrame(TrapFrame);
-        return;
+        if (KiArm64ServiceNeedsGuiThread(TrapFrame))
+        {
+            /* The conversion calls back into user mode, so the frame is linked like for a service */
+            OldTrapFrame = Thread->TrapFrame;
+            OldMode = Thread->PreviousMode;
+            Thread->TrapFrame = TrapFrame;
+            Thread->PreviousMode = KiGetPreviousMode(TrapFrame);
+
+            if (!(TrapFrame->Spsr & ARM64_PSR_I))
+                _enable();
+
+            OldBase = (ULONG_PTR)Thread->StackBase;
+            OldLimit = Thread->StackLimit;
+            Status = PsConvertToGuiThread();
+
+            /* Everything on the old stack moved along, the stack switch fixed the current frame */
+            TrapFrame = Thread->TrapFrame;
+            if (((ULONG_PTR)OldTrapFrame >= OldLimit) && ((ULONG_PTR)OldTrapFrame < OldBase))
+                OldTrapFrame = (PKTRAP_FRAME)((ULONG_PTR)OldTrapFrame + ((ULONG_PTR)Thread->StackBase - OldBase));
+
+            Thread->TrapFrame = OldTrapFrame;
+            Thread->PreviousMode = OldMode;
+
+            if (!NT_SUCCESS(Status))
+            {
+                TrapFrame->X0 = (ULONG_PTR)(LONG_PTR)Status;
+                return TrapFrame;
+            }
+        }
+
+        return KiArm64SystemService(TrapFrame);
     }
 
     if ((ExceptionClass == ESR_EC_DABT_LOWER) || (ExceptionClass == ESR_EC_DABT_CURRENT) ||
         (ExceptionClass == ESR_EC_IABT_LOWER) || (ExceptionClass == ESR_EC_IABT_CURRENT))
     {
         KiArm64HandleAbort(TrapFrame, ExceptionFrame, ExceptionClass);
-        return;
+        return TrapFrame;
     }
 
     /* Everything else runs with the interrupt state of the faulting code */
@@ -460,6 +504,8 @@ KiArm64HandleSynchronous(
             KiArm64DispatchTrapException(TrapFrame, ExceptionFrame, STATUS_ILLEGAL_INSTRUCTION, 0, 0, 0, 0);
             break;
     }
+
+    return TrapFrame;
 }
 
 static
@@ -632,7 +678,8 @@ KiArm64TrapDispatch(
     switch (TrapType)
     {
         case KI_TRAP_SYNCHRONOUS:
-            KiArm64HandleSynchronous(&TrapFrame, &ExceptionFrame);
+            TrapFrame = KiArm64HandleSynchronous(TrapFrame, ExceptionFrame);
+            ExceptionFrame = KiArm64TrapExceptionFrame(TrapFrame);
             break;
 
         case KI_TRAP_IRQ:
