@@ -1226,7 +1226,7 @@ IntLoadKeyboardLayout(
     /* Load keyboard layout file(s) */
     hFile = IntLoadKeyboardLayoutFile(szKLID, _countof(szKLID), wLangID,
                                       &Flags, &offTable, &dwNewKL, &multi);
-    if (!hFile || hFile == INVALID_HANDLE_VALUE)
+    if (!hFile)
     {
         if (!bForce && !(Flags & KLF_FORCE))
         {
