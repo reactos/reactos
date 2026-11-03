@@ -592,7 +592,7 @@ UserLoadKbdFile(
 cleanup:
     if (pkf)
         UserDereferenceObject(pkf); // we dont need ptr anymore
-    if (!pRet && pkf) /* We have failed? - then destroy created object */
+    if (!pRet && pkf) /* If we have failed, destroy the created object */
         UserDeleteObject(UserHMGetHandle(pkf), TYPE_KBDFILE);
     return pRet;
 }
