@@ -1551,7 +1551,7 @@ NtUserLoadKeyboardLayoutEx(
     }
 
     /* Verify file handles. The handles passed in belong to user32, which closes them itself.
-       We only work with (and close) our own kernel handles made by the verification. */
+     * We only work with (and close) our own kernel handles made by the verification. */
     hKernelFile = IntVerifyKeyboardFileHandle(hFile);
     if (!hKernelFile)
         goto Quit;
