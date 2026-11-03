@@ -2386,6 +2386,116 @@ typedef struct _KNONVOLATILE_CONTEXT_POINTERS_ARM64 {
     PDWORD64 D15;
 } KNONVOLATILE_CONTEXT_POINTERS_ARM64, *PKNONVOLATILE_CONTEXT_POINTERS_ARM64;
 typedef KNONVOLATILE_CONTEXT_POINTERS_ARM64 KNONVOLATILE_CONTEXT_POINTERS, *PKNONVOLATILE_CONTEXT_POINTERS;
+
+#define UNW_FLAG_NHANDLER 0x0
+#define UNW_FLAG_EHANDLER 0x1
+#define UNW_FLAG_UHANDLER 0x2
+
+#ifndef _APISETRTLSUPPORT_
+#define _APISETRTLSUPPORT_
+
+#define UNWIND_HISTORY_TABLE_SIZE 12
+
+typedef struct _UNWIND_HISTORY_TABLE_ENTRY
+{
+    DWORD64 ImageBase;
+    PRUNTIME_FUNCTION FunctionEntry;
+} UNWIND_HISTORY_TABLE_ENTRY, *PUNWIND_HISTORY_TABLE_ENTRY;
+
+typedef struct _UNWIND_HISTORY_TABLE
+{
+    DWORD Count;
+    BYTE  LocalHint;
+    BYTE  GlobalHint;
+    BYTE  Search;
+    BYTE  Once;
+    ULONG64 LowAddress;
+    ULONG64 HighAddress;
+    UNWIND_HISTORY_TABLE_ENTRY Entry[UNWIND_HISTORY_TABLE_SIZE];
+} UNWIND_HISTORY_TABLE, *PUNWIND_HISTORY_TABLE;
+
+#endif /* _APISETRTLSUPPORT_ */
+
+typedef
+_Function_class_(GET_RUNTIME_FUNCTION_CALLBACK)
+PRUNTIME_FUNCTION
+GET_RUNTIME_FUNCTION_CALLBACK(
+    _In_ DWORD64 ControlPc,
+    _In_opt_ PVOID Context);
+typedef GET_RUNTIME_FUNCTION_CALLBACK *PGET_RUNTIME_FUNCTION_CALLBACK;
+
+typedef
+_Function_class_(OUT_OF_PROCESS_FUNCTION_TABLE_CALLBACK)
+DWORD
+OUT_OF_PROCESS_FUNCTION_TABLE_CALLBACK(
+    _In_ HANDLE Process,
+    _In_ PVOID TableAddress,
+    _Out_ PDWORD Entries,
+    _Out_ PRUNTIME_FUNCTION* Functions);
+typedef OUT_OF_PROCESS_FUNCTION_TABLE_CALLBACK *POUT_OF_PROCESS_FUNCTION_TABLE_CALLBACK;
+
+#define OUT_OF_PROCESS_FUNCTION_TABLE_CALLBACK_EXPORT_NAME "OutOfProcessFunctionTableCallback"
+
+NTSYSAPI
+VOID
+__cdecl
+RtlRestoreContext(struct _CONTEXT *ContextRecord,
+                  struct _EXCEPTION_RECORD *ExceptionRecord);
+
+NTSYSAPI
+BOOLEAN
+__cdecl
+RtlAddFunctionTable(PRUNTIME_FUNCTION FunctionTable,
+                    DWORD EntryCount,
+                    DWORD64 BaseAddress);
+
+NTSYSAPI
+BOOLEAN
+__cdecl
+RtlInstallFunctionTableCallback(DWORD64 TableIdentifier,
+                                DWORD64 BaseAddress,
+                                DWORD Length,
+                                PGET_RUNTIME_FUNCTION_CALLBACK Callback,
+                                PVOID Context,
+                                PCWSTR OutOfProcessCallbackDll);
+
+NTSYSAPI
+BOOLEAN
+__cdecl
+RtlDeleteFunctionTable(PRUNTIME_FUNCTION FunctionTable);
+
+NTSYSAPI
+PRUNTIME_FUNCTION
+NTAPI
+RtlLookupFunctionEntry(
+    _In_ DWORD64 ControlPc,
+    _Out_ PDWORD64 ImageBase,
+    _Inout_opt_ PUNWIND_HISTORY_TABLE HistoryTable);
+
+NTSYSAPI
+PEXCEPTION_ROUTINE
+NTAPI
+RtlVirtualUnwind(
+    _In_ DWORD HandlerType,
+    _In_ DWORD64 ImageBase,
+    _In_ DWORD64 ControlPc,
+    _In_ PRUNTIME_FUNCTION FunctionEntry,
+    _Inout_ struct _CONTEXT *ContextRecord,
+    _Out_ PVOID *HandlerData,
+    _Out_ PDWORD64 EstablisherFrame,
+    _Inout_opt_ PKNONVOLATILE_CONTEXT_POINTERS ContextPointers);
+
+NTSYSAPI
+VOID
+NTAPI
+RtlUnwindEx(
+    _In_opt_ PVOID TargetFrame,
+    _In_opt_ PVOID TargetIp,
+    _In_opt_ struct _EXCEPTION_RECORD *ExceptionRecord,
+    _In_ PVOID ReturnValue,
+    _In_ struct _CONTEXT *ContextRecord,
+    _In_opt_ PUNWIND_HISTORY_TABLE HistoryTable);
+
 #else
 #error "undefined processor type"
 #endif
