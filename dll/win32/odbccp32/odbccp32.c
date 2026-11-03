@@ -22,6 +22,7 @@
 
 #include <assert.h>
 #include <stdarg.h>
+#include <stdlib.h>
 
 #define COBJMACROS
 
