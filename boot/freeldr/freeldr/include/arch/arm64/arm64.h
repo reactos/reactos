@@ -17,3 +17,11 @@ VOID StallExecutionProcessor(ULONG Microseconds);
 
 extern UCHAR FrldrBootDrive;
 extern ULONG FrldrBootPartition;
+
+#define PtrToPfn(p) \
+    ((((ULONGLONG)(p)) >> PAGE_SHIFT) & 0xFFFFFFFFFULL)
+
+#define VAtoPXI(va) ((((ULONG64)(va)) >> PXI_SHIFT) & 0x1FF)
+#define VAtoPPI(va) ((((ULONG64)(va)) >> PPI_SHIFT) & 0x1FF)
+#define VAtoPDI(va) ((((ULONG64)(va)) >> PDI_SHIFT) & 0x1FF)
+#define VAtoPTI(va) ((((ULONG64)(va)) >> PTI_SHIFT) & 0x1FF)
