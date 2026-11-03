@@ -288,6 +288,10 @@ KiArm64InitializeTraps(VOID);
 VOID
 KiSetProcessorType(VOID);
 
+VOID
+NTAPI
+KiGetCacheInformation(VOID);
+
 ULONG64
 KiGetFeatureBits(VOID);
 
@@ -325,6 +329,11 @@ KiUserCallbackExit(
 DECLSPEC_NORETURN
 VOID
 KiExceptionExit(
+    _In_ PKTRAP_FRAME TrapFrame,
+    _In_ PKEXCEPTION_FRAME ExceptionFrame);
+
+BOOLEAN
+KiProcessorFreezeHandler(
     _In_ PKTRAP_FRAME TrapFrame,
     _In_ PKEXCEPTION_FRAME ExceptionFrame);
 

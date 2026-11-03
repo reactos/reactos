@@ -79,3 +79,8 @@ KeArm64SweepDcacheRange(
 VOID
 NTAPI
 KeArm64WaitForInterrupt(VOID);
+
+VOID
+NTAPI
+KeArm64SetTranslationBase(
+    _In_ ULONG64 RootTable);
