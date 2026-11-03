@@ -39,9 +39,20 @@ extern "C" {
 #define IPI_SYNCH_REQUEST       16
 
 //
+// Flags for KPRCB::IpiFrozen
+//
+#define IPI_FROZEN_STATE_RUNNING 0
+#define IPI_FROZEN_STATE_FROZEN 2
+#define IPI_FROZEN_STATE_THAW 3
+#define IPI_FROZEN_STATE_OWNER 4
+#define IPI_FROZEN_STATE_TARGET_FREEZE 5
+#define IPI_FROZEN_FLAG_ACTIVE 0x20
+
+//
 // PRCB Flags
 //
 #define PRCB_MAJOR_VERSION      1
+#define PRCB_MINOR_VERSION      1
 #define PRCB_BUILD_DEBUG        1
 #define PRCB_BUILD_UNIPROCESSOR 2
 
