@@ -14,6 +14,7 @@
 class TelnetSessionHandler: public TCPServerSessionHandler
 {
     static constexpr size_t MAX_TEXT_LINE_LENGTH = 8000;
+    static constexpr size_t MAX_CREDENTIAL_LENGTH = 256;
     static constexpr size_t MAX_SUBNEGO_PAYLOAD_LENGTH = 255;
 
     enum class ECommand: uint8_t
@@ -91,11 +92,17 @@ private:
     void erase_line();
     void erase_char();
 
+    HANDLE authenticate(const std::string& username, const std::string& password);
+
 private:
     inline bool should_echo();
     inline void flush_echo_buffer();
     inline void send_string(const char* str);
     inline void send_option_command(ECommand verb, EOption option);
+
+    inline void set_state_to_waiting_for_username();
+    inline void set_state_to_waiting_for_password();
+    inline void set_state_to_terminal();
 
 public:
     TelnetSessionHandler();
@@ -123,6 +130,9 @@ private:
     std::string m_text_line_buffer{};
 
     std::vector<uint8_t> m_echo_buffer{};
+
+    std::string m_username{};
+    uint32_t m_failed_login_attempt_count{};
 };
 
 void TelnetSessionHandler::flush_echo_buffer()
@@ -147,4 +157,22 @@ void TelnetSessionHandler::send_option_command(ECommand verb, EOption option)
 bool TelnetSessionHandler::should_echo()
 {
     return (m_echo_state == EEchoState::AGREED_TO) && (m_state != EState::WAITING_FOR_PASSWORD);
+}
+
+void TelnetSessionHandler::set_state_to_waiting_for_username()
+{
+    m_state = EState::WAITING_FOR_USERNAME;
+    send_string("server login: ");
+}
+
+void TelnetSessionHandler::set_state_to_waiting_for_password()
+{
+    m_state = EState::WAITING_FOR_PASSWORD;
+    send_string("password: ");
+}
+
+void TelnetSessionHandler::set_state_to_terminal()
+{
+    m_state = EState::TERMINAL;
+    send_string("C:\\ >");
 }

@@ -23,6 +23,7 @@ TelnetSessionHandler::TelnetSessionHandler()
 {
     m_echo_buffer.reserve(1024);
     m_sb_buffer.reserve(MAX_SUBNEGO_PAYLOAD_LENGTH);
+    m_text_line_buffer.reserve(MAX_TEXT_LINE_LENGTH);
     InitializeCriticalSection(&m_out_text_cs);
 }
 
@@ -39,12 +40,14 @@ void TelnetSessionHandler::on_connect()
     send_option_command(ECommand::WILL, EOption::SGA);
     send_option_command(ECommand::DO, EOption::SGA);
 
-    send_string("ReactOS Telnet\r\nserver login: ");
-    m_state = EState::WAITING_FOR_USERNAME;
+    send_string("ReactOS Telnet\r\n");
+
+    set_state_to_waiting_for_username();
 }
 
 void TelnetSessionHandler::on_disconnect()
 {
+    
 }
 
 void TelnetSessionHandler::on_data(const uint8_t* data, int length)
@@ -188,6 +191,7 @@ void TelnetSessionHandler::handle_text(const uint8_t* data, int length)
             flush_echo_buffer();
 
             handle_text_line(m_text_line_buffer);
+            SecureZeroMemory(&m_text_line_buffer[0], m_text_line_buffer.size());
             m_text_line_buffer.clear();
         } else if ((c >= 32) && (c <= 126)) { // [IATODO]: Only accept ASCII for now
             if (m_text_line_buffer.size() < MAX_TEXT_LINE_LENGTH) {
@@ -212,20 +216,41 @@ void TelnetSessionHandler::handle_text_line(const std::string& line)
     switch (m_state)
     {
         case EState::WAITING_FOR_USERNAME:
-            m_state = EState::WAITING_FOR_PASSWORD;
-            send_string("password: ");
+            m_username = line;
+            set_state_to_waiting_for_password();
             break;
 
         case EState::WAITING_FOR_PASSWORD:
-            m_state = EState::TERMINAL;
-            send_string("\r\nC:\\ >");
-            break;
+        {
+            HANDLE token{};
+            if (
+                (m_username.size() <= MAX_CREDENTIAL_LENGTH) && 
+                (line.size() <= MAX_CREDENTIAL_LENGTH) && 
+                ((token = authenticate(m_username, line)) != NULL)
+            ) {
+                if (m_echo_state == EEchoState::AGREED_TO) {
+                    send_string("\r\n");
+                }
+                set_state_to_terminal();
+            } else {
+                m_failed_login_attempt_count++;
+                if (m_failed_login_attempt_count >= 3) {
+                    m_state = EState::INVALID;
+                    disconnect();
+                }
+                if (m_echo_state == EEchoState::AGREED_TO) {
+                    send_string("\r\n");
+                }
+                send_string("Login incorrect\r\n");
+                set_state_to_waiting_for_username();
+            }
+        }
+        break;
 
         case EState::TERMINAL:
             break;
         
         default:
-            assert(false);
             break;
     }
 }
@@ -417,7 +442,16 @@ void TelnetSessionHandler::erase_line()
         }
     }
 
+    SecureZeroMemory(&m_text_line_buffer[0], m_text_line_buffer.size());
     m_text_line_buffer.clear();
 
     m_text_last_byte_was_cr = false;
+}
+
+HANDLE TelnetSessionHandler::authenticate(const std::string& username, const std::string& password)
+{
+    HANDLE token{};
+    
+    // [IATODO]: Add widechar support later
+    return LogonUserA((char*)username.c_str(), (char*)".", (char*)password.c_str(), LOGON32_LOGON_INTERACTIVE, LOGON32_PROVIDER_DEFAULT, &token) ? token : NULL;
 }
