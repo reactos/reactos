@@ -943,7 +943,12 @@ UacpiNtIrqLibResolveVector(
         return STATUS_SUCCESS;
     }
 
+#ifdef _M_ARM64
+    /* GIC interrupt IDs are the vectors, so the HAL answers like it does under PIC */
+    if (FALSE)
+#else
     if (GlobalAcpiInterruptModel == ACPI_NT_APIC)
+#endif
     {
         /* Under APIC this driver owns the allocation */
         ExAcquireFastMutex(&UacpiNtIrqLibLock);
