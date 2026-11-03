@@ -63,10 +63,11 @@ KiInitializeContextThread(
         ASSERT((Context->ContextFlags & CONTEXT_CONTROL) == CONTEXT_CONTROL);
         TrapFrame->VfpState = &InitFrame->VfpState;
         TrapFrame->PreviousMode = UserMode;
+        /* Masking the debug flag also clears the architecture bit the others need */
         KeContextToTrapFrame(Context,
                              ExceptionFrame,
                              TrapFrame,
-                             Context->ContextFlags & ~CONTEXT_DEBUG_REGISTERS,
+                             (Context->ContextFlags & ~CONTEXT_DEBUG_REGISTERS) | CONTEXT_ARM64,
                              UserMode);
 
         StartFrame->UserThread = TRUE;
