@@ -12,6 +12,20 @@ _FuncName SETS "_wrapper_func_":CC:"$n"
         NESTED_END $_FuncName
     MEND
 
+#elif defined(_M_ARM64)
+#include <kxarm64.h>
+    TEXTAREA
+
+    /* The wrapped object follows the vtable pointer */
+    MACRO
+    DEFINE_WRAPPER_FUNC $n, $off, $x
+    LEAF_ENTRY wrapper_func_$n
+    ldr     x0, [x0, #8]
+    ldr     x16, [x0]
+    ldr     x16, [x16, #$x]
+    br      x16
+    LEAF_END wrapper_func_$n
+    MEND
 #else
 
 #include <asm.inc>

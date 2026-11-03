@@ -95,6 +95,16 @@ static HRESULT WINAPI wrapper_Release(IUnknown *iface)
         "movq 0(%rcx), %rax\n\t"                \
         "jmp *" #off "(%rax)\n\t")
 
+#elif defined(__aarch64__)
+
+#define DEFINE_WRAPPER_FUNC(n, x, off)          \
+    HRESULT WINAPI wrapper_func_##n(IUnknown*); \
+    __ASM_GLOBAL_FUNC(wrapper_func_##n,         \
+        "ldr x0, [x0, #8]\n\t"                  \
+        "ldr x16, [x0]\n\t"                     \
+        "ldr x16, [x16, #" #off "]\n\t"         \
+        "br x16\n\t")
+
 #else
 
 #define DEFINE_WRAPPER_FUNC(n, x, off)                           \
