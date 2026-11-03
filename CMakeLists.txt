@@ -270,6 +270,10 @@ Enable this if the module uses typeid or dynamic_cast. You will probably need to
             add_definitions(-D_ZOOM2_)
         endif()
     elseif(ARCH STREQUAL "arm64")
+        # clang-cl defines this one for itself
+        if (NOT (MSVC AND CMAKE_C_COMPILER_ID STREQUAL "Clang"))
+            add_compile_definitions(_M_ARM64)
+        endif()
         # GNU tools refer to arm64 as aarch64
         add_definitions(-D_ARM64_ -D__arm64__ -D__aarch64__ -D_WIN64)
     endif()
