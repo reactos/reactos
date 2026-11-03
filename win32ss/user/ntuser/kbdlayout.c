@@ -1240,7 +1240,7 @@ HANDLE FASTCALL IntVerifyKeyboardFileHandle(HANDLE hFile)
     HANDLE hDir, hKernelFile = NULL;
     NTSTATUS Status;
 
-    if (!hFile || hFile == INVALID_HANDLE_VALUE)
+    if (!hFile)
         return NULL;
 
     /* Resolve the user handle exactly once and pin the file object */
