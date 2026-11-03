@@ -124,10 +124,13 @@ KeRaiseIrqlToSynchLevel(VOID)
 #endif
 }
 
-NTSYSAPI
-PKTHREAD
-NTAPI
-KeGetCurrentThread(VOID);
+/* KPRCB::CurrentThread */
+FORCEINLINE
+struct _KTHREAD *
+KeGetCurrentThread(VOID)
+{
+    return (struct _KTHREAD *)__readx18qword(0x988);
+}
 
 #if (NTDDI_VERSION >= NTDDI_WIN7)
 /* KPRCB::Number, the PRCB starts at PCR offset 0x980 */
