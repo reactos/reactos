@@ -231,7 +231,7 @@ RtlpCaptureStackLimits(IN ULONG_PTR Ebp,
     return TRUE;
 }
 
-#ifndef _M_AMD64
+#if !defined(_M_AMD64) && !defined(_M_ARM64)
 /*
  * @implemented
  */
