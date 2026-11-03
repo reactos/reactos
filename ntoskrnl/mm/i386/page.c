@@ -301,7 +301,7 @@ MmDeleteVirtualMappingEx(
             ASSERT(OldPte.u.Hard.Valid || !FlagOn(OldPte.u.Long, 0x800));
             if (WasDirty != NULL)
             {
-                *WasDirty = !!OldPte.u.Hard.Dirty;
+                *WasDirty = !!MI_IS_PAGE_DIRTY(&OldPte);
             }
             if (Page != NULL)
             {
@@ -805,6 +805,20 @@ MmGetPageProtect(PEPROCESS Process, PVOID Address)
     }
     else
     {
+#ifdef _M_ARM64
+        if (MI_IS_PAGE_COPY_ON_WRITE(PointerPte))
+            Protect = PAGE_WRITECOPY;
+        else if (MI_IS_PAGE_WRITEABLE(PointerPte))
+            Protect = PAGE_READWRITE;
+        else
+            Protect = PAGE_READONLY;
+        if (MI_IS_PAGE_EXECUTABLE(PointerPte))
+            Protect <<= 4;
+        if (PointerPte->u.Hard.CacheType == MI_CACHE_TYPE_DEVICE)
+            Protect |= PAGE_NOCACHE;
+        else if (PointerPte->u.Hard.CacheType == MI_CACHE_TYPE_WRITE_COMBINED)
+            Protect |= PAGE_WRITECOMBINE;
+#else
         if (PointerPte->u.Flush.CopyOnWrite)
             Protect = PAGE_WRITECOPY;
         else if (PointerPte->u.Flush.Write)
@@ -820,6 +834,7 @@ MmGetPageProtect(PEPROCESS Process, PVOID Address)
             Protect |= PAGE_NOCACHE;
         if (PointerPte->u.Flush.WriteThrough)
             Protect |= PAGE_WRITETHROUGH;
+#endif
     }
 
     if (Address < MmSystemRangeStart)
@@ -868,7 +883,8 @@ MmSetPageProtect(PEPROCESS Process, PVOID Address, ULONG flProtect)
 
     /* Keep dirty & accessed bits */
     TempPte.u.Hard.Accessed = PointerPte->u.Hard.Accessed;
-    TempPte.u.Hard.Dirty = PointerPte->u.Hard.Dirty;
+    if (MI_IS_PAGE_DIRTY(PointerPte))
+        MI_MAKE_DIRTY_PAGE(&TempPte);
 
     OldPte.u.Long = InterlockedExchangePte(PointerPte, TempPte.u.Long);
 
@@ -911,7 +927,10 @@ MmSetDirtyBit(PEPROCESS Process, PVOID Address, BOOLEAN Bit)
         KeBugCheck(MEMORY_MANAGEMENT);
     }
 
-    PointerPte->u.Hard.Dirty = !!Bit;
+    if (Bit)
+        MI_MAKE_DIRTY_PAGE(PointerPte);
+    else
+        MI_MAKE_CLEAN_PAGE(PointerPte);
 
     if (!Bit)
         KeInvalidateTlbEntry(Address);
