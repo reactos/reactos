@@ -123,11 +123,11 @@
 @ stdcall -stub -version=0x502 EtwpGetTraceBuffer(long long long long)
 @ stdcall -stub -version=0x600+ EtwpNotificationThread() ; doesn't exist in win11
 @ stdcall -stub -version=0x502 EtwpSetHWConfigFunction(ptr long)
-@ stdcall -arch=x86_64 ExpInterlockedPopEntrySListEnd()
+@ stdcall -arch=x86_64,arm64 ExpInterlockedPopEntrySListEnd()
 @ stub -version=0x600+ -arch=x86_64 ExpInterlockedPopEntrySListEnd8
-@ stdcall -arch=x86_64 ExpInterlockedPopEntrySListFault()
+@ stdcall -arch=x86_64,arm64 ExpInterlockedPopEntrySListFault()
 @ stub -version=0x600+ -arch=x86_64 ExpInterlockedPopEntrySListFault8
-@ stdcall -arch=x86_64 ExpInterlockedPopEntrySListResume()
+@ stdcall -arch=x86_64,arm64 ExpInterlockedPopEntrySListResume()
 @ stub -version=0x600+ -arch=x86_64 ExpInterlockedPopEntrySListResume8
 @ stdcall -arch=i386 KiFastSystemCall()
 @ stdcall -arch=i386 KiFastSystemCallRet()
@@ -974,7 +974,7 @@
 @ stdcall RtlInterlockedFlushSList(ptr)
 @ stdcall RtlInterlockedPopEntrySList(ptr)
 @ stdcall RtlInterlockedPushEntrySList(ptr ptr)
-@ stdcall -arch=x86_64 RtlInterlockedPushListSList(ptr ptr ptr long)
+@ stdcall -arch=x86_64,arm64 RtlInterlockedPushListSList(ptr ptr ptr long)
 @ stdcall -version=0x602+ -arch=i386 RtlInterlockedPushListSListEx(ptr ptr ptr long)
 @ stdcall -version=0x602+ -arch=!i386 RtlInterlockedPushListSListEx(ptr ptr ptr long) RtlInterlockedPushListSList
 @ stdcall -ret64 -version=0x600+ RtlIoDecodeMemIoResource(ptr ptr ptr ptr)
