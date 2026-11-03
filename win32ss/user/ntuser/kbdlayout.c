@@ -303,7 +303,7 @@ KbdBuildImage(
         /* Find the .data section. Any other section is ignored. */
         for (i = 0; i < pNt->FileHeader.NumberOfSections; ++i)
         {
-            if (RtlEqualMemory(pSec[i].Name, s_DataName, IMAGE_SIZEOF_SHORT_NAME))
+            if (RtlEqualMemory(pSec[i].Name, s_DataName, sizeof(s_DataName)))
             {
                 pData = &pSec[i];
                 break;
