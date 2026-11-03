@@ -392,7 +392,7 @@ typedef struct _USBPORT_DEVICE_EXTENSION {
   KSPIN_LOCK TtSpinLock;
 
   /* Miniport extension should be aligned on 0x100 */
-#if !defined(_M_X64)
+#ifndef _WIN64
   ULONG Padded[64];
 #else
   ULONG Padded[30];
@@ -400,7 +400,7 @@ typedef struct _USBPORT_DEVICE_EXTENSION {
 
 } USBPORT_DEVICE_EXTENSION, *PUSBPORT_DEVICE_EXTENSION;
 
-#if !defined(_M_X64)
+#ifndef _WIN64
 C_ASSERT(sizeof(USBPORT_DEVICE_EXTENSION) == 0x500);
 #else
 C_ASSERT(sizeof(USBPORT_DEVICE_EXTENSION) == 0x700);

@@ -50,7 +50,7 @@ typedef struct _UHCI_HCD_TD {
   struct _UHCI_HCD_TD * NextHcdTD;
   _ANONYMOUS_UNION union {
     PUHCI_TRANSFER UhciTransfer;
-#if !defined(_M_X64)
+#ifndef _WIN64
     ULONG Frame; // for SOF_HcdTDs only
 #else
     struct {
@@ -60,14 +60,14 @@ typedef struct _UHCI_HCD_TD {
 #endif
   } DUMMYUNIONNAME;
   LIST_ENTRY TdLink;
-#if !defined(_M_X64)
+#ifndef _WIN64
   ULONG Padded[4];
 #else
   ULONG Padded[15];
 #endif
 } UHCI_HCD_TD, *PUHCI_HCD_TD;
 
-#if !defined(_M_X64)
+#ifndef _WIN64
 C_ASSERT(sizeof(UHCI_HCD_TD) == 0x40);
 #else
 C_ASSERT(sizeof(UHCI_HCD_TD) == 0x80);
@@ -84,15 +84,15 @@ typedef struct _UHCI_HCD_QH {
   ULONG PhysicalAddress;
   ULONG QhFlags;
   struct _UHCI_HCD_QH * NextHcdQH;
-#if !defined(_M_X64)
+#ifndef _WIN64
   ULONG Pad1;
 #endif
   struct _UHCI_HCD_QH * PrevHcdQH;
-#if !defined(_M_X64)
+#ifndef _WIN64
   ULONG Pad2;
 #endif
   PUHCI_ENDPOINT UhciEndpoint;
-#if !defined(_M_X64)
+#ifndef _WIN64
   ULONG Pad3;
 #endif
   ULONG Padded[6];
