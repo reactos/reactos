@@ -37,6 +37,9 @@ static const ULONG BaseArray[] = {0, 0x80006000, 0x80007000};
 #elif defined(_M_ARM)
 static const ULONG BaseArray[] = {0, 0xF1012000};
 // #define QEMUUART ((ULONG)0x09000000)
+#elif defined(_M_ARM64)
+/* PL011 of the QEMU virt board */
+static const ULONG BaseArray[] = {0, 0x09000000};
 #else
 #error Unknown architecture
 #endif
