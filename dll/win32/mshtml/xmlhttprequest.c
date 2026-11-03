@@ -76,13 +76,21 @@ static HRESULT return_nscstr(nsresult nsres, nsACString *nscstr, BSTR *p)
 
 typedef struct XMLHttpReqEventListener XMLHttpReqEventListener;
 
+#ifdef __REACTOS__
+struct HTMLXMLHttpRequest {
+#else
 typedef struct {
+#endif
     EventTarget event_target;
     IHTMLXMLHttpRequest IHTMLXMLHttpRequest_iface;
     LONG ref;
     nsIXMLHttpRequest *nsxhr;
     XMLHttpReqEventListener *event_listener;
+#ifdef __REACTOS__
+};
+#else
 } HTMLXMLHttpRequest;
+#endif
 
 struct XMLHttpReqEventListener {
     nsIDOMEventListener nsIDOMEventListener_iface;

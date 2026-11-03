@@ -18,13 +18,21 @@
 
 #include "mshtml_private.h"
 
+#ifdef __REACTOS__
+struct HTMLAreaElement {
+#else
 typedef struct {
+#endif
     HTMLElement element;
 
     IHTMLAreaElement IHTMLAreaElement_iface;
 
     nsIDOMHTMLAreaElement *nsarea;
+#ifdef __REACTOS__
+};
+#else
 } HTMLAreaElement;
+#endif
 
 static inline HTMLAreaElement *impl_from_IHTMLAreaElement(IHTMLAreaElement *iface)
 {

@@ -18,11 +18,19 @@
 
 #include "mshtml_private.h"
 
+#ifdef __REACTOS__
+struct HTMLMetaElement {
+#else
 typedef struct {
+#endif
     HTMLElement element;
 
     IHTMLMetaElement IHTMLMetaElement_iface;
+#ifdef __REACTOS__
+};
+#else
 } HTMLMetaElement;
+#endif
 
 static inline HTMLMetaElement *impl_from_IHTMLMetaElement(IHTMLMetaElement *iface)
 {

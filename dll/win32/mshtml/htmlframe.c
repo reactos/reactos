@@ -18,10 +18,18 @@
 
 #include "mshtml_private.h"
 
+#ifdef __REACTOS__
+struct HTMLFrameElement {
+#else
 typedef struct {
+#endif
     HTMLFrameBase framebase;
     IHTMLFrameElement3 IHTMLFrameElement3_iface;
+#ifdef __REACTOS__
+};
+#else
 } HTMLFrameElement;
+#endif
 
 static inline HTMLFrameElement *impl_from_IHTMLFrameElement3(IHTMLFrameElement3 *iface)
 {
