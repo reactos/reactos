@@ -226,7 +226,7 @@ typedef struct _KPCR
         NT_TIB NtTib;
         _ANONYMOUS_STRUCT struct
         {
-            ULONG TibPad0[2];
+            PVOID TibPad0[2];
             PVOID Spare1;
             struct _KPCR *Self;
             PVOID PcrReserved0;
@@ -251,19 +251,42 @@ typedef struct _KPCR
         };
     };
     USHORT InterruptPad;
-    UCHAR BtiMitigation;
-    _ANONYMOUS_STRUCT struct
+    _ANONYMOUS_UNION union
     {
-        UCHAR SsbMitigationFirmware:1;
-        UCHAR SsbMitigationDynamic:1;
-        UCHAR SsbMitigationKernel:1;
-        UCHAR SsbMitigationUser:1;
-        UCHAR SsbMitigationReserved:4;
+        UCHAR BtiMitigation;
+        _ANONYMOUS_STRUCT struct
+        {
+            UCHAR KvaVbar:1;
+            UCHAR BtiVbar:3;
+            UCHAR BtiCswapHvc:1;
+            UCHAR BtiCswapSmc:1;
+        };
     };
-    UCHAR Pad2[2];
+    _ANONYMOUS_UNION union
+    {
+        UCHAR SsbMitigationFlags;
+        _ANONYMOUS_STRUCT struct
+        {
+            UCHAR SsbMitigationFirmware:1;
+            UCHAR SsbMitigationDynamic:1;
+            UCHAR SsbMitigationKernel:1;
+            UCHAR SsbMitigationUser:1;
+            UCHAR SsbMitigationReserved:4;
+        };
+    };
+    UCHAR BhbMitigation;
+    _ANONYMOUS_UNION union
+    {
+        UCHAR CachePrefetcherMitigationFlags;
+        _ANONYMOUS_STRUCT struct
+        {
+            UCHAR CachePrefetcherMitigation:1;
+            UCHAR Pad2:7;
+        };
+    };
     ULONG64 PanicStorage[6];
     PVOID KdVersionBlock;
-    PVOID HalReserved[134];
+    PVOID HalReserved[14];
     PVOID KvaUserModeTtbr1;
 } KPCR, *PKPCR;
 
