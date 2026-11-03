@@ -433,7 +433,7 @@ KbdIsRangeInData(_In_ const KBDIMAGE_INFO *pInfo, _In_ ULONG off, _In_ SIZE_T cb
            ((off - pInfo->offData) <= (pInfo->cbData - cb));
 }
 
-/*
+/**
  * Adjusts the pointers inside the layout tables. In the file, they are virtual addresses based
  * on ImageBase, so the RVA of the target is (VA - ImageBase), and the adjusted pointer is the
  * RVA applied to our image buffer. The tables are modified in place (in our own copy).
