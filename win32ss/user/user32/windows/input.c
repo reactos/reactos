@@ -1207,11 +1207,11 @@ IntLoadKeyboardLayoutFile(
  */
 HKL APIENTRY
 IntLoadKeyboardLayout(
-    _In_opt_ HKL    hklUnload,
-    _In_z_   PCWSTR pwszKLID,
-    _In_     LANGID wLangID,
-    _In_     UINT   Flags,
-    _In_     BOOL   bForce)
+    _In_opt_ HKL hklUnload,
+    _In_ PCWSTR pwszKLID,
+    _In_ LANGID wLangID,
+    _In_ UINT Flags,
+    _In_ BOOL bForce)
 {
     HANDLE hFile;
     WCHAR szKLID[KL_NAMELENGTH];
