@@ -24,7 +24,7 @@ extern char __ImageBase;
 /* .text/.data/.rdata, .edata and .bss */
 #define FREELDR_SECTION_COUNT 3
 #else
-#ifdef _M_AMD64
+#if defined(_M_AMD64) || defined(_M_ARM64)
 /* .text, .rdata/.edata, .pdata and .data/.bss */
 #define FREELDR_SECTION_COUNT 4
 #else
@@ -67,6 +67,19 @@ typedef struct _FREELDR_MEMORY_DESCRIPTOR
 //#define MM_MAX_PAGE        0xFFFFFFFFF /* 36 bits for the PFN */
 #define MM_MAX_PAGE        0x1FFFFF
 #define MM_MAX_PAGE_LOADER 0x3FFFF /* on x64 freeldr only maps 1 GB */
+
+#define MM_SIZE_TO_PAGES(a)  \
+    ( ((a) >> MM_PAGE_SHIFT) + ((a) & MM_PAGE_MASK ? 1 : 0) )
+
+#endif
+
+#if defined(_ARM64_)
+
+#define MM_PAGE_SIZE    4096
+#define MM_PAGE_MASK    0xFFF
+#define MM_PAGE_SHIFT    12
+#define MM_MAX_PAGE        0xFFFFFFFFF /* 36 bits for the PFN */
+#define MM_MAX_PAGE_LOADER MM_MAX_PAGE /* UEFI maps all of RAM 1:1 */
 
 #define MM_SIZE_TO_PAGES(a)  \
     ( ((a) >> MM_PAGE_SHIFT) + ((a) & MM_PAGE_MASK ? 1 : 0) )
