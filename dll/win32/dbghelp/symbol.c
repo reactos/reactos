@@ -69,7 +69,7 @@ int __cdecl symt_cmp_addr(const void* p1, const void* p2)
 
 DWORD             symt_ptr2index(struct module* module, const struct symt* sym)
 {
-#ifdef __x86_64__
+#if defined(__x86_64__) || defined(__arm64__)
     const struct symt** c;
     int len = vector_length(&module->vsymt);
     struct hash_table_iter hti;
