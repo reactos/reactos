@@ -332,11 +332,9 @@ KbdBuildImage(
 
         /* The buffer ends where .data ends (so that RVAs stay valid as offsets) */
         cbAlloc = pData->VirtualAddress + cbVirt; /* No overflow: checked above */
-        pbImage = ExAllocatePoolWithTag(PagedPool, cbAlloc, KBDIMG_TAG);
+        pbImage = ExAllocatePoolZero(PagedPool, cbAlloc, KBDIMG_TAG);
         if (!pbImage)
             _SEH2_YIELD(return NULL);
-
-        RtlZeroMemory(pbImage, cbAlloc);
         RtlCopyMemory(pbImage + pData->VirtualAddress, pbRaw + pData->PointerToRawData, cbCopy);
 
         pInfo->ImageBase = (ULONG_PTR)pNt->OptionalHeader.ImageBase;
