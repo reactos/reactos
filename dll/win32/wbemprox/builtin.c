@@ -3612,7 +3612,7 @@ done:
 }
 
 extern void do_cpuid( unsigned int ax, unsigned int *p );
-#if defined(_MSC_VER)
+#if defined(_MSC_VER) && (defined(_M_IX86) || defined(_M_AMD64))
 void do_cpuid( unsigned int ax, unsigned int *p )
 {
     __cpuid( p, ax );
