@@ -205,10 +205,7 @@ HubTtClearComplete(
     if (!NT_SUCCESS(Params->IoStatus.Status))
     {
         DPRINT1("Hub %p TT clear for endpoint %p failed 0x%lx, URB status 0x%lx\n",
-                Hub,
-                Clear->Endpoint,
-                Params->IoStatus.Status,
-                Clear->Control.Urb.Hdr.Status);
+                Hub, Clear->Endpoint, Params->IoStatus.Status, Clear->Control.Urb.Hdr.Status);
     }
 
     Hub->m_Stack.ClearTtBufferComplete(Hub->m_Stack.Hub, Clear->Endpoint);
@@ -245,14 +242,13 @@ HubClearTtBuffer(
     if (!NT_SUCCESS(Status))
         goto Done;
 
-    Clear = (HubTtClear*)ExAllocatePoolWithTag(NonPagedPool, sizeof(*Clear), HUB_TAG_HUB);
+    Clear = (HubTtClear*)ExAllocatePoolZero(NonPagedPool, sizeof(*Clear), HUB_TAG_HUB);
     if (Clear == NULL)
     {
         DPRINT1("Hub %p no memory for a TT clear\n", Hub);
         goto Done;
     }
 
-    RtlZeroMemory(Clear, sizeof(*Clear));
     Clear->Hub = Hub;
     Clear->Endpoint = Endpoint;
 
@@ -315,10 +311,7 @@ HubControlComplete(
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Hub %p control request 0x%x failed 0x%lx, URB status 0x%lx\n",
-                Hub,
-                Hub->m_Control.Urb.SetupPacket[1],
-                Status,
-                Hub->m_Control.Urb.Hdr.Status);
+                Hub, Hub->m_Control.Urb.SetupPacket[1], Status, Hub->m_Control.Urb.Hdr.Status);
         Hub->m_FailureMessageId = HUB_MSG_CONTROL_TRANSFER_FAILED;
         Hub->Post(HubEvent::TransferFailed);
         return;
@@ -443,7 +436,7 @@ HubMachine::GetConfigDescriptor(
 
     m_Hub->m_ConfigDescriptor = NULL;
 
-    Buffer = (PUSB_CONFIGURATION_DESCRIPTOR)ExAllocatePoolWithTag(NonPagedPool, Length, HUB_TAG_HUB);
+    Buffer = (PUSB_CONFIGURATION_DESCRIPTOR)ExAllocatePoolZero(NonPagedPool, Length, HUB_TAG_HUB);
     if (Buffer == NULL)
     {
         DPRINT1("Hub %p no memory for a %lu byte configuration descriptor\n", m_Hub, Length);
@@ -452,7 +445,6 @@ HubMachine::GetConfigDescriptor(
     else
     {
         DPRINT("Hub %p reading %lu bytes of configuration descriptor\n", m_Hub, Length);
-        RtlZeroMemory(Buffer, Length);
         m_Hub->m_ConfigDescriptor = Buffer;
 
         m_Hub->m_Control.SetSetup(0x80, USB_REQUEST_GET_DESCRIPTOR, USB_CONFIGURATION_DESCRIPTOR_TYPE << 8, 0, (USHORT)Length);
@@ -504,9 +496,7 @@ HubMachine::CacheConfigDescriptor()
     if (m_Hub->m_Control.Urb.TransferBufferLength < sizeof(*Held) || TotalLength < sizeof(*Held))
     {
         DPRINT1("Hub %p configuration descriptor too short, %lu bytes, wTotalLength %u\n",
-                m_Hub,
-                m_Hub->m_Control.Urb.TransferBufferLength,
-                TotalLength);
+                m_Hub, m_Hub->m_Control.Urb.TransferBufferLength, TotalLength);
         goto Exit;
     }
 
@@ -696,9 +686,7 @@ HubInterruptComplete(
         else
         {
             DPRINT1("Hub %p status change read failed 0x%lx, URB status 0x%lx\n",
-                    Hub,
-                    Status,
-                    Interrupt->Urb.Hdr.Status);
+                    Hub, Status, Interrupt->Urb.Hdr.Status);
             Hub->m_FailureMessageId = HUB_MSG_INTERRUPT_FAILED;
         }
 
@@ -878,10 +866,7 @@ HubMachine::ReplyPortStatus()
             if (!NT_SUCCESS(Result))
             {
                 DPRINT1("Hub %p port %u status 0x%x change 0x%x reported as no device\n",
-                        m_Hub,
-                        Port->Number(),
-                        Status,
-                        Change);
+                        m_Hub, Port->Number(), Status, Change);
             }
 
             WdfRequestComplete(Request, Result);
@@ -889,8 +874,7 @@ HubMachine::ReplyPortStatus()
 
         default:
             DPRINT1("Hub %p port status request with IOCTL 0x%lx\n",
-                    m_Hub,
-                    Params.Parameters.DeviceIoControl.IoControlCode);
+                    m_Hub, Params.Parameters.DeviceIoControl.IoControlCode);
             WdfRequestComplete(Request, STATUS_ADAPTER_HARDWARE_ERROR);
             return;
     }
@@ -907,9 +891,7 @@ HubMachine::FailPortStatus(
         *(PULONG)Params.Parameters.Others.Arg1 = 0;
 
     DPRINT1("Hub %p port %u status request failed, hardware error %u\n",
-            m_Hub,
-            m_Hub->m_PortStatusTarget->Number(),
-            HardwareError);
+            m_Hub, m_Hub->m_PortStatusTarget->Number(), HardwareError);
 
     WdfRequestComplete(Request, HardwareError ? STATUS_ADAPTER_HARDWARE_ERROR : STATUS_NO_SUCH_DEVICE);
 }

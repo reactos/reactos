@@ -44,7 +44,7 @@ enum : ULONG
 };
 
 /* Hardware verifier conditions */
-enum : ULONG
+_Enum_is_bitflag_ enum : ULONG
 {
     XhciDeviceCheckSlotInUse = 0x00020000,
     XhciDeviceCheckAddressDefault = 0x00040000,
@@ -104,25 +104,24 @@ XhciEvaluateDsmValue(
     PAGED_CODE();
 
     Size = FIELD_OFFSET(ACPI_EVAL_INPUT_BUFFER_COMPLEX, Argument) +
-           ACPI_METHOD_ARGUMENT_LENGTH(sizeof(GUID)) +
+           ACPI_METHOD_ARGUMENT_LENGTH(sizeof(*Uuid)) +
            2 * ACPI_METHOD_ARGUMENT_LENGTH(sizeof(ULONG)) +
            ACPI_METHOD_ARGUMENT_LENGTH(ArgumentLength);
 
-    Input = (PACPI_EVAL_INPUT_BUFFER_COMPLEX)ExAllocatePoolWithTag(PagedPool, Size, XHCI_TAG_CONTROLLER);
+    Input = (PACPI_EVAL_INPUT_BUFFER_COMPLEX)ExAllocatePoolZero(PagedPool, Size, XHCI_TAG_CONTROLLER);
     if (Input == NULL)
     {
         DPRINT1("No memory for _DSM function %lu\n", Function);
         return 0;
     }
 
-    RtlZeroMemory(Input, Size);
     Input->Signature = ACPI_EVAL_INPUT_BUFFER_COMPLEX_SIGNATURE;
     Input->MethodNameAsUlong = 'MSD_';
     Input->Size = Size;
     Input->ArgumentCount = 4;
 
     Next = &Input->Argument[0];
-    ACPI_METHOD_SET_ARGUMENT_BUFFER(Next, Uuid, sizeof(GUID));
+    ACPI_METHOD_SET_ARGUMENT_BUFFER(Next, Uuid, sizeof(*Uuid));
     Next = ACPI_METHOD_NEXT_ARGUMENT(Next);
     ACPI_METHOD_SET_ARGUMENT_INTEGER(Next, Revision);
     Next = ACPI_METHOD_NEXT_ARGUMENT(Next);
@@ -535,7 +534,7 @@ XhciUsbDevice::SetPending(
 WDFREQUEST
 XhciUsbDevice::TakePending()
 {
-    return (WDFREQUEST)InterlockedExchangePointer((PVOID volatile*)&m_PendingRequest, NULL);
+    return (WDFREQUEST)InterlockedExchangePointer((PVOID*)&m_PendingRequest, NULL);
 }
 
 VOID

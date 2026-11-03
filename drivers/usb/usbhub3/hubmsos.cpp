@@ -484,7 +484,7 @@ DeviceMachine::ExtPropertiesValid()
         return FALSE;
     }
 
-    if (RtlCompareMemory(Buffer, Header, sizeof(*Header)) != sizeof(*Header))
+    if (!RtlEqualMemory(Buffer, Header, sizeof(*Header)))
     {
         DPRINT1("Device %p extended properties header changed between reads\n", Child);
         return FALSE;

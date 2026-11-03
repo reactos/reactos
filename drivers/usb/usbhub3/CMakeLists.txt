@@ -2,16 +2,15 @@
 remove_definitions(-D_WIN32_WINNT=0x502)
 
 list(APPEND SOURCE
+    bootdev.cpp
+    childpdo.cpp
     desccheck.cpp
     devconfig.cpp
     devdesc.cpp
+    devhcd.cpp
     devlpm.cpp
     devmisc.cpp
-    devhcd.cpp
     devreq.cpp
-    entry.cpp
-    hubutil.cpp
-    errreport.cpp
     devsm.cpp
     devsm_boot.cpp
     devsm_config.cpp
@@ -25,34 +24,35 @@ list(APPEND SOURCE
     devsm_report.cpp
     devsm_stopped.cpp
     devsm_zero.cpp
-    hubsm.cpp
-    guid.cpp
-    hubdrom.cpp
-    portacpi.cpp
-    bootdev.cpp
-    hubchild.cpp
-    portconn.cpp
-    hubdescval.cpp
-    fdo.cpp
-    hubid.cpp
-    suspend.cpp
-    hubioctl.cpp
+    entry.cpp
+    errreport.cpp
     fanout.cpp
-    upstream.cpp
-    childpdo.cpp
+    fdo.cpp
+    guid.cpp
+    hubchild.cpp
+    hubdescval.cpp
+    hubdrom.cpp
+    hubid.cpp
+    hubioctl.cpp
     hubmsos.cpp
     hubport.cpp
     hubregistry.cpp
-    hubsha1.cpp
-    hubtunnel.cpp
-    ucxlink.cpp
-    hubwmi.cpp
     hubreq.cpp
-    portxfer.cpp
+    hubsha1.cpp
+    hubsm.cpp
+    hubtunnel.cpp
+    hubutil.cpp
+    hubwmi.cpp
     idlesm.cpp
+    portacpi.cpp
+    portconn.cpp
     portsm.cpp
     portsm_frames.cpp
     portsm_port.cpp
+    portxfer.cpp
+    suspend.cpp
+    ucxlink.cpp
+    upstream.cpp
     usbhub3.h)
 
 spec2def(usbhub3.sys usbhub3.spec)
@@ -73,3 +73,4 @@ target_include_directories(usbhub3 PRIVATE ${REACTOS_SOURCE_DIR}/sdk/include/ucx
 target_link_libraries(usbhub3 usbdex ntoskrnl_vista libcntpr ${PSEH_LIB})
 add_importlibs(usbhub3 wdfldr usbd ntoskrnl hal)
 add_cd_file(TARGET usbhub3 DESTINATION reactos/system32/drivers NO_CAB FOR all)
+add_registry_inf(usbhub3_reg.inf)

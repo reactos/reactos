@@ -8,7 +8,7 @@
 #pragma once
 
 /* Global policy bits, from the registry and the kernel shim engine */
-enum class HubGlobal : ULONG
+_Enum_is_bitflag_ enum class HubGlobal : ULONG
 {
     DisableSelectiveSuspendUI          = 0x00000002,
     EnableDiagnosticMode               = 0x00000008,

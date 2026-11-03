@@ -88,20 +88,14 @@ PortControlComplete(
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Hub %p port %u control request 0x%x failed 0x%lx, URB status 0x%lx\n",
-                Port->m_Hub,
-                Port->Number(),
-                RequestCode,
-                Status,
-                Port->m_Control.Urb.Hdr.Status);
+                Port->m_Hub, Port->Number(), RequestCode, Status, Port->m_Control.Urb.Hdr.Status);
         Port->m_Hub->m_FailureMessageId = HUB_MSG_CONTROL_TRANSFER_FAILED;
     }
     else if (RequestCode == HUB_REQUEST_GET_STATUS)
     {
         DPRINT("Hub %p port %u status 0x%x change 0x%x\n",
-               Port->m_Hub,
-               Port->Number(),
-               Port->m_Current.StatusChange.PortStatus.AsUshort16,
-               Port->m_Current.StatusChange.PortChange.AsUshort16);
+               Port->m_Hub, Port->Number(),
+               Port->m_Current.StatusChange.PortStatus.AsUshort16, Port->m_Current.StatusChange.PortChange.AsUshort16);
         PortTrackPendingOperation(Port, Port->m_Control.Urb.Hdr.Status);
     }
     else if (RequestCode == HUB_REQUEST_SET_FEATURE)
@@ -554,12 +548,7 @@ PortReportChange(
     }
 
     DPRINT1("Hub %p port %u %s: status 0x%x previous 0x%x change 0x%x\n",
-            Port->m_Hub,
-            Port->Number(),
-            What,
-            Status,
-            Previous,
-            Change);
+            Port->m_Hub, Port->Number(), What, Status, Previous, Change);
 }
 
 PortEvent
@@ -654,10 +643,7 @@ PortMachine::ErrorResponseDuringReset()
     USHORT Change = m_Port->m_ChangeAccumulator;
 
     DPRINT1("Hub %p port %u bad status during reset: status 0x%x change 0x%x\n",
-            m_Port->m_Hub,
-            m_Port->Number(),
-            Status,
-            Change);
+            m_Port->m_Hub, m_Port->Number(), Status, Change);
 
     if (Change & PC_CONNECT)
         return (Status & PS_CONNECTED) ? PortEvent::ErrorIgnore : PortEvent::ErrorCycle;

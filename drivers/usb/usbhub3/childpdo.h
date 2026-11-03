@@ -8,7 +8,7 @@
 #pragma once
 
 /* Child PDO state flags */
-enum class PdoFlag : ULONG
+_Enum_is_bitflag_ enum class PdoFlag : ULONG
 {
     ReportPortDisabled       = 0x00000001,
     ProgrammingLostOnReset   = 0x00000002,
@@ -22,7 +22,7 @@ enum class PdoFlag : ULONG
     WakeArmRequested         = 0x00000020,
     WaitWakePending          = 0x00000040,
     ClientDoesFunctionSuspend = 0x00000080,
-    WasResetAtResume        = 0x00000100,
+    WasResetAtResume         = 0x00000100,
     PowerLostOnReset         = 0x00000200,
     DeviceGone               = 0x00000400,
     QueryStopped             = 0x00000800,

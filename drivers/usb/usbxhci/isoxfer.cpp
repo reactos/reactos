@@ -518,15 +518,18 @@ VOID
 XhciIsochRing::Cleanup(
     _In_ XhciTransferRing* Ring)
 {
+    BOOLEAN Owned;
     KIRQL OldIrql;
 
     KeAcquireSpinLock(&Ring->m_Lock, &OldIrql);
-    if (OwnsRequests(Ring))
+    Owned = OwnsRequests(Ring);
+    KeReleaseSpinLock(&Ring->m_Lock, OldIrql);
+
+    if (Owned)
     {
         DPRINT1("Isoch DCI %lu cleaned up with requests still owned\n", Ring->m_Endpoint->Dci());
         NT_ASSERT(FALSE);
     }
-    KeReleaseSpinLock(&Ring->m_Lock, OldIrql);
 }
 
 VOID
@@ -739,7 +742,7 @@ XhciIsochRing::RecoverTransfers(
     XhciIsochMoveList(&Self->m_Completion, &Self->m_Pending);
     KeReleaseSpinLock(&Ring->m_Lock, OldIrql);
 
-    /* Only the DPC can tell that nothing is owned any more */
+    /* Only the DPC can tell that nothing is owned anymore */
     WdfDpcEnqueue(Ring->m_CompletionDpc);
 }
 
@@ -2261,7 +2264,7 @@ XhciIsochRing::RetireExpiredStages(
     }
 }
 
-/** Returns the lists and frees every stage of a transfer nobody else can reach any more. */
+/** Returns the lists and frees every stage of a transfer nobody else can reach anymore. */
 ULONG
 XhciIsochRing::ReleaseAllStages(
     _In_ XhciTransferRing* Ring,
@@ -2940,10 +2943,8 @@ XhciIsochRing::OnRingStarved(
 
     if (Abort)
     {
-        /*
-         * The controller ran past TDs without a word. Their events may still sit on a
-         * secondary event ring, so the endpoint stops and reclaims instead.
-         */
+        /* The controller ran past TDs without a word. Their events may still sit
+         * on a secondary event ring, so the endpoint stops and reclaims instead. */
         DPRINT1("Isoch DCI %lu: ring empty with stages unreported, reclaiming\n", Ring->m_Endpoint->Dci());
         Ring->m_Endpoint->OnTransferCanceled();
         return;

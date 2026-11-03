@@ -28,8 +28,8 @@ struct XhciCommand
     LIST_ENTRY Link;            /**< Owned by the ring while the command is pending */
 
     /*
-     * Status values: STATUS_SUCCESS (code Success), STATUS_UNSUCCESSFUL (any other
-     * code), STATUS_IO_TIMEOUT (aborted), STATUS_NO_SUCH_DEVICE (controller gone or reset).
+     * Status values: STATUS_SUCCESS (code Success), STATUS_UNSUCCESSFUL (any other code),
+     * STATUS_IO_TIMEOUT (aborted), STATUS_NO_SUCH_DEVICE (controller gone or reset).
      */
     ULONG RingIndex;            /**< TRB slot while on the ring */
     LONG Countdown;             /**< Timer ticks left before the next abort */

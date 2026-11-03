@@ -346,9 +346,7 @@ HubChildInitPipes(
         if (Walk >= End)
         {
             DPRINT1("Device %p interface %u has fewer than %lu endpoint descriptors\n",
-                    Child,
-                    Info->InterfaceNumber,
-                    Info->NumberOfPipes);
+                    Child, Info->InterfaceNumber, Info->NumberOfPipes);
             return STATUS_UNSUCCESSFUL;
         }
 
@@ -373,9 +371,7 @@ HubChildInitPipes(
             if (!HubTypeFits(Walk, End))
             {
                 DPRINT1("Device %p interface %u has fewer than %lu endpoint descriptors\n",
-                        Child,
-                        Info->InterfaceNumber,
-                        Info->NumberOfPipes);
+                        Child, Info->InterfaceNumber, Info->NumberOfPipes);
                 return STATUS_UNSUCCESSFUL;
             }
         }
@@ -383,8 +379,7 @@ HubChildInitPipes(
         if (Walk + sizeof(USB_ENDPOINT_DESCRIPTOR) > End)
         {
             DPRINT1("Device %p interface %u endpoint descriptor runs past the configuration\n",
-                    Child,
-                    Info->InterfaceNumber);
+                    Child, Info->InterfaceNumber);
             return STATUS_UNSUCCESSFUL;
         }
 
@@ -517,8 +512,7 @@ HubInterfacesShareEndpoints(
 {
     PUSB_ENDPOINT_DESCRIPTOR A;
     PUSB_ENDPOINT_DESCRIPTOR B;
-    ULONG I;
-    ULONG J;
+    ULONG I, J;
 
     for (I = 0; I < First->PipeCount; I++)
     {
@@ -534,10 +528,8 @@ HubInterfacesShareEndpoints(
             {
                 DPRINT1("Endpoint 0x%x shared by interface %u alternate %u and interface %u alternate %u\n",
                         A->bEndpointAddress,
-                        First->Descriptor->bInterfaceNumber,
-                        First->Descriptor->bAlternateSetting,
-                        Second->Descriptor->bInterfaceNumber,
-                        Second->Descriptor->bAlternateSetting);
+                        First->Descriptor->bInterfaceNumber, First->Descriptor->bAlternateSetting,
+                        Second->Descriptor->bInterfaceNumber, Second->Descriptor->bAlternateSetting);
                 return STATUS_INVALID_PARAMETER;
             }
         }
@@ -613,9 +605,7 @@ DeviceMachine::PrepareConfigLists()
         if (Descriptor == NULL || Info->Length == 0)
         {
             DPRINT1("Device %p SELECT_CONFIGURATION names missing interface %u alternate %u\n",
-                    Child,
-                    Info->InterfaceNumber,
-                    Info->AlternateSetting);
+                    Child, Info->InterfaceNumber, Info->AlternateSetting);
             Child->m_LastUsbdStatus = USBD_STATUS_INVALID_CONFIGURATION_DESCRIPTOR;
             Status = STATUS_UNSUCCESSFUL;
             goto Failed;
@@ -624,9 +614,7 @@ DeviceMachine::PrepareConfigLists()
         if (HubChildSettingFiltered(Child, Info->InterfaceNumber, Info->AlternateSetting))
         {
             DPRINT("Device %p interface %u alternate %u is filtered\n",
-                   Child,
-                   Info->InterfaceNumber,
-                   Info->AlternateSetting);
+                   Child, Info->InterfaceNumber, Info->AlternateSetting);
             Child->SetState(ChildState::AltSettingFiltered);
         }
 
@@ -756,9 +744,7 @@ DeviceMachine::PrepareInterfaceLists()
     if (Descriptor == NULL)
     {
         DPRINT1("Device %p SELECT_INTERFACE names missing interface %u alternate %u\n",
-                Child,
-                Info->InterfaceNumber,
-                Info->AlternateSetting);
+                Child, Info->InterfaceNumber, Info->AlternateSetting);
         Child->m_LastUsbdStatus = USBD_STATUS_INTERFACE_NOT_FOUND;
         Status = STATUS_UNSUCCESSFUL;
         goto Failed;
@@ -767,9 +753,7 @@ DeviceMachine::PrepareInterfaceLists()
     if (HubChildSettingFiltered(Child, Info->InterfaceNumber, Info->AlternateSetting))
     {
         DPRINT("Device %p interface %u alternate %u is filtered\n",
-               Child,
-               Info->InterfaceNumber,
-               Info->AlternateSetting);
+               Child, Info->InterfaceNumber, Info->AlternateSetting);
         Child->SetState(ChildState::AltSettingFiltered);
     }
 
@@ -811,7 +795,7 @@ DeviceMachine::PrepareInterfaceLists()
         goto Failed;
     }
 
-    /* The interface being replaced is only marked old once nothing can fail any more */
+    /* The interface being replaced is only marked old once nothing can fail anymore */
     Child->m_OldInterface = NULL;
 
     for (Entry = Config->Interfaces.Flink; Entry != &Config->Interfaces; Entry = Entry->Flink)
@@ -1011,5 +995,4 @@ DeviceMachine::SetInterfaceInfoInRequest()
     }
 
     DPRINT1("Device %p selected interface %u is not in the configuration\n", Child, Info->InterfaceNumber);
-    ASSERT(FALSE);
 }

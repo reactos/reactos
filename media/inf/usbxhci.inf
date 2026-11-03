@@ -9,7 +9,7 @@ DriverVer=02/15/2026,1.0
 
 [SourceDisksFiles]
 usbxhci.sys  = 3426
-ucx01000.sys      = 3426
+ucx01000.sys = 3426
 
 [ControlFlags]
 BasicDriverOk = *

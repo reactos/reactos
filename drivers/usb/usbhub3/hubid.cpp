@@ -135,14 +135,13 @@ HubIdListAppend(
     ULONG Total = Kept + Id->Length + 2 * sizeof(WCHAR);
     PWCHAR Buffer;
 
-    Buffer = (PWCHAR)ExAllocatePoolWithTag(NonPagedPool, Total, HUB_TAG_DEVICE);
+    Buffer = (PWCHAR)ExAllocatePoolZero(NonPagedPool, Total, HUB_TAG_DEVICE);
     if (Buffer == NULL)
     {
         DPRINT1("Id list of %lu bytes could not be allocated\n", Total);
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-    RtlZeroMemory(Buffer, Total);
     if (Kept != 0)
         RtlCopyMemory(Buffer, List->Buffer, Kept);
     RtlCopyMemory((PUCHAR)Buffer + Kept, Id->Buffer, Id->Length);
@@ -261,7 +260,7 @@ NTSTATUS
 NTAPI
 HubIdEmitCounted(
     _In_ const HubIdSink* Sink,
-    _In_ PCWSTR Id,
+    _In_reads_bytes_(IdBytes) PCWSTR Id,
     _In_ USHORT IdBytes)
 {
     UNICODE_STRING String;
@@ -791,7 +790,7 @@ HubIdLoadVmReservedId(
     HubQueryUxdDeviceValue(Child, String);
     WdfStringGetUnicodeString(String, &Value);
 
-    Buffer = (PWCHAR)ExAllocatePoolWithTag(NonPagedPool, Value.Length + sizeof(WCHAR), HUB_TAG_DEVICE);
+    Buffer = (PWCHAR)ExAllocatePoolZero(NonPagedPool, Value.Length + sizeof(WCHAR), HUB_TAG_DEVICE);
     if (Buffer == NULL)
     {
         DPRINT1("VM reserved id for device %p could not be allocated\n", Child);
@@ -799,7 +798,6 @@ HubIdLoadVmReservedId(
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-    RtlZeroMemory(Buffer, Value.Length + sizeof(WCHAR));
     RtlCopyMemory(Buffer, Value.Buffer, Value.Length);
 
     Child->m_VmReservedId.Buffer = Buffer;
@@ -856,9 +854,7 @@ HubIdAssignInstanceId(
         Number = Port->m_InstancePortNumber;
     }
 
-    Id.Buffer = Digits;
-    Id.Length = 0;
-    Id.MaximumLength = sizeof(Digits);
+    RtlInitEmptyUnicodeString(&Id, Digits, sizeof(Digits));
 
     Status = RtlIntegerToUnicodeString(Number, 10, &Id);
     if (NT_SUCCESS(Status))
@@ -1094,7 +1090,7 @@ HubIdBytesReturned(
     return min(Child->m_Control.Urb.TransferBufferLength, (ULONG)sizeof(Child->m_ScratchBuffer));
 }
 
-/* Keeps the two halves of a USB 3 hub, and UAS against BOT, on separate instance ids */
+/* Serial number prefix for the instance id, so the two halves of a USB 3 hub, and UAS and BOT, never share one */
 static
 PCWSTR
 NTAPI
@@ -1179,14 +1175,13 @@ DeviceMachine::SerialNumberValid()
     Prefix = HubIdSerialPrefix(Child);
     PrefixBytes = (Prefix != NULL) ? HUB_SERIAL_PREFIX_BYTES : 0;
 
-    Buffer = (PWCHAR)ExAllocatePoolWithTag(NonPagedPool, Returned + PrefixBytes, HUB_TAG_DEVICE);
+    Buffer = (PWCHAR)ExAllocatePoolZero(NonPagedPool, Returned + PrefixBytes, HUB_TAG_DEVICE);
     if (Buffer == NULL)
     {
         DPRINT1("Device %p serial number could not be allocated\n", Child);
         return FALSE;
     }
 
-    RtlZeroMemory(Buffer, Returned + PrefixBytes);
     if (Prefix != NULL)
         RtlCopyMemory(Buffer, Prefix, PrefixBytes);
 
@@ -1232,7 +1227,7 @@ DeviceMachine::SameSerialNumber()
         return FALSE;
 
     if (StoredLength == Returned - 2 &&
-        RtlCompareMemory(Descriptor->bString, Stored, StoredLength) == StoredLength)
+        RtlEqualMemory(Descriptor->bString, Stored, StoredLength))
     {
         return TRUE;
     }

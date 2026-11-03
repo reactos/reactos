@@ -334,6 +334,10 @@ private:
     static VOID
     StreamStopOrHalt(
         _In_ XhciTransferRing* Ring);
+    static VOID
+    StreamStopOrHaltOnce(
+        _In_ XhciTransferRing* Ring,
+        _In_ ULONG Flag);
 
     /* Guarded by the ring lock unless noted */
     BOOLEAN m_ImmediateData;            /**< Set at initialization and forward progress */
@@ -343,8 +347,8 @@ private:
     ULONG m_PendingStages;
     ULONG m_OutstandingEvents;
     ULONG m_SegmentWaits;               /**< Mapping context only */
-    volatile LONG m_FillAgain;    /**< Interlocked DMA callback handoff */
-    volatile LONG m_FillWanted;     /**< Interlocked */
+    volatile LONG m_FillAgain;          /**< Interlocked DMA callback handoff */
+    volatile LONG m_FillWanted;         /**< Interlocked */
     volatile LONG m_SegmentWait;        /**< Interlocked segment callback handoff */
     volatile LONG m_ForwardProgressBusy;
     LIST_ENTRY m_Pending;

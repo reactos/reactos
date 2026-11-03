@@ -275,8 +275,8 @@ DeviceMachine::RemovalHubStopped()
 }
 
 /*
- * PDO still to be removed. m_Unregistered and m_ChildForgotten say how much
- * of leaving the hub is already done.
+ * PDO still to be removed. m_Unregistered and m_ChildForgotten say
+ * how much of leaving the hub is already done.
  */
 SM_RESULT
 DeviceMachine::OnAwaitingRemove(

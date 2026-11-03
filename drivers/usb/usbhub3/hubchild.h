@@ -11,7 +11,7 @@
 #include "desccheck.h"
 
 /* Mux bookkeeping per device, under the hub mux lock */
-enum class ChildMuxFlag : ULONG
+_Enum_is_bitflag_ enum class ChildMuxFlag : ULONG
 {
     Stopped                  = 0x00000001,
     PowerReference           = 0x00000002,
@@ -19,7 +19,7 @@ enum class ChildMuxFlag : ULONG
 };
 
 /* Device errata from usbflags and the shim engine; bit positions are fixed */
-enum class ChildHack : ULONG
+_Enum_is_bitflag_ enum class ChildHack : ULONG
 {
     DisableSerialNumber              = 0x00000001,
     AlwaysQueryMsOs                  = 0x00000002,
@@ -54,7 +54,7 @@ enum class ChildHack : ULONG
 #define HUB_TUNNEL_STATE_UNKNOWN        UCXHUB_TUNNEL_STATE_UNKNOWN
 
 /* What the device is, learned during enumeration */
-enum class ChildProperty : ULONG
+_Enum_is_bitflag_ enum class ChildProperty : ULONG
 {
     NotRemovable                     = 0x00000001,
     IsHub                            = 0x00000002,
@@ -84,7 +84,7 @@ enum class ChildProperty : ULONG
 };
 
 /* Device state changed by several machines, always interlocked */
-enum class ChildState : ULONG
+_Enum_is_bitflag_ enum class ChildState : ULONG
 {
     ReprogrammingPending             = 0x00000001,
     DifferentDeviceOnBootPort        = 0x00000002,
@@ -117,7 +117,7 @@ enum class ChildState : ULONG
 /* registry */
 
 /* Telemetry bits of the Ceip DeviceInformation value; layout fixed by its readers */
-enum class ChildSqm : ULONG
+_Enum_is_bitflag_ enum class ChildSqm : ULONG
 {
     Virtualized                      = 0x00000004,
     IsOnXhci                         = 0x00000008,

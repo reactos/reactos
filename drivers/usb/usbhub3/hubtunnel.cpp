@@ -193,7 +193,7 @@ HubUsb4EscapeName(
 
     for (Index = 0; Index < Text.Length / sizeof(WCHAR); Index++)
     {
-        if (Text.Buffer[Index] == L'\\' || Text.Buffer[Index] == L'/' || Text.Buffer[Index] == L'^')
+        if (Text.Buffer[Index] == L'\\' || Text.Buffer[Index] == L'/' || Text.Buffer[Index] == HUB_USB4_FIELD_SEPARATOR)
             Text.Buffer[Index] = L'#';
     }
 }
@@ -545,7 +545,7 @@ Done:
 
 /* POWER COUPLING ************************************************************/
 
-/* Without PoFx component relations the coupling to the host router's power PDO is only reported */
+/* FIXME: PoFx component relations are not implemented, so these only log the coupling to the host router's power PDO */
 static
 VOID
 NTAPI
@@ -554,8 +554,7 @@ HubUsb4AddPowerRelation(
     _In_ HubUsb4Host* Host)
 {
     DPRINT("Hub %p would depend on USB4 host router PDO %p; PoFx component relations are not available\n",
-           Hub,
-           Host->PowerPdo);
+           Hub, Host->PowerPdo);
 }
 
 static
@@ -616,7 +615,7 @@ HubUsb4AcquireHostPower(
 
     HubWaitLockGuard Guard(Host->Lock);
 
-    Host->PowerReferences += 1;
+    Host->PowerReferences++;
     if (Host->PowerReferences == 1 && Host->PowerPdo != NULL)
         HubUsb4AddPowerRelation(Hub, Host);
 }
@@ -629,6 +628,7 @@ HubUsb4ReleaseHostPower(
 {
     HubFdo* Hub = Port->m_Hub;
     HubUsb4Host* Host;
+    BOOLEAN Invalidate = FALSE;
 
     PAGED_CODE();
 
@@ -639,14 +639,19 @@ HubUsb4ReleaseHostPower(
     if (Host == NULL)
         return;
 
-    HubWaitLockGuard Guard(Host->Lock);
-
-    Host->PowerReferences -= 1;
-    if (Host->PowerReferences == 0 && Host->RelationAdded)
     {
-        HubUsb4RemovePowerRelation(Hub, Host);
-        HubUsb4InvalidatePowerRelations(Hub);
+        HubWaitLockGuard Guard(Host->Lock);
+
+        Host->PowerReferences--;
+        if (Host->PowerReferences == 0 && Host->RelationAdded)
+        {
+            HubUsb4RemovePowerRelation(Hub, Host);
+            Invalidate = TRUE;
+        }
     }
+
+    if (Invalidate)
+        HubUsb4InvalidatePowerRelations(Hub);
 }
 
 /* A reference taken while the target was closed is applied once it opens */

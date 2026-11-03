@@ -16,7 +16,7 @@ const SM_EVENT_INFO IdleMachine::EventInfo[] =
 {
     { "Start",              SmEventCompletion, FALSE },
     { "RequestSubmitted",   SmEventCompletion, FALSE },
-    { "RequestCanceled",   SmEventCompletion, FALSE },
+    { "RequestCanceled",    SmEventCompletion, FALSE },
     { "WorkItemRan",        SmEventCompletion, FALSE },
     { "ClientCallbackFinished",   SmEventCompletion, FALSE },
     { "PoweredUp",          SmEventCompletion, FALSE },

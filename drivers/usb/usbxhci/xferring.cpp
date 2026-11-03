@@ -217,8 +217,8 @@ XhciTransferRing::Create(
         WDF_WORKITEM_CONFIG WorkConfig;
 
         Status = WdfIoQueueReadyNotify(Queue,
-                                       NewRing->IsIsoch() ? XhciIsochRing::ReadyNotification :
-                                                            XhciBulkRing::ReadyNotification,
+                                       NewRing->IsIsoch() ? XhciIsochRing::ReadyNotification
+                                                          : XhciBulkRing::ReadyNotification,
                                        NewRing);
         if (!NT_SUCCESS(Status))
         {
@@ -267,8 +267,7 @@ XhciTransferRing::Create(
         else
         {
             NewRing->m_Segment = CONTAINING_RECORD(RemoveHeadList(&NewRing->m_FreeSegments),
-                                                   XhciDmaBuffer,
-                                                   Link);
+                                                   XhciDmaBuffer, Link);
             XhciClearListEntry(&NewRing->m_Segment->Link);
             NewRing->m_Trbs = (PXHCI_TRB)NewRing->m_Segment->VirtualAddress;
         }
@@ -411,7 +410,7 @@ XhciTransferRing::RetireLive()
         m_Live = FALSE;
     }
 
-    /* Nobody can find the ring any more; let an event handler already inside it finish */
+    /* Nobody can find the ring anymore; let an event handler already inside it finish */
     while (InterlockedCompareExchange(&m_EventUsers, 0, 0) != 0)
         YieldProcessor();
 }
@@ -519,14 +518,12 @@ XhciTransferRing::WaitForMappingIdle()
         if (Passive)
         {
             LARGE_INTEGER Interval = XhciRelativeMs(1);
-
             KeDelayExecutionThread(KernelMode, FALSE, &Interval);
         }
         else
         {
             KeStallExecutionProcessor(1);
         }
-
     }
 }
 
@@ -1003,7 +1000,6 @@ XhciTransferRing::ReturnSegments(
         for (Entry = List->Flink; Entry != List; Entry = Entry->Flink)
         {
             XhciDmaBuffer* Segment = CONTAINING_RECORD(Entry, XhciDmaBuffer, Link);
-
             RtlZeroMemory(Segment->VirtualAddress, Segment->Size);
         }
     }
@@ -1144,7 +1140,7 @@ XhciTransferRing::TdSize(
         return 0;
 
     Remaining = PacketCount - Sent;
-    return (Remaining > 31) ? 31 : Remaining;
+    return min(Remaining, 31);
 }
 
 VOID

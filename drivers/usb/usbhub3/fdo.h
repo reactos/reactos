@@ -8,7 +8,7 @@
 #pragma once
 
 /* Per hub flags; bit positions are fixed */
-enum class HubFlag : ULONG
+_Enum_is_bitflag_ enum class HubFlag : ULONG
 {
     TtHub                          = 0x00000001,
     MultiTtHub                     = 0x00000002,

@@ -83,15 +83,13 @@ XhciSlotTable::Prepare()
 
     /* Index 0 is never a slot id; keeping it makes the slot id the index */
     MapBytes = (m_SlotCount + 1) * sizeof(*m_SlotMap);
-    m_SlotMap = (PVOID*)ExAllocatePoolWithTag(NonPagedPool, MapBytes, XHCI_TAG_SLOT);
+    m_SlotMap = (PVOID*)ExAllocatePoolZero(NonPagedPool, MapBytes, XHCI_TAG_SLOT);
     if (m_SlotMap == NULL)
     {
         DPRINT1("No pool for the map of %lu slots\n", m_SlotCount);
         Status = STATUS_INSUFFICIENT_RESOURCES;
         goto Fail;
     }
-
-    RtlZeroMemory(m_SlotMap, MapBytes);
 
     DPRINT("Slot table: %lu slots, %lu scratchpads, DCBAA at 0x%I64x\n",
            m_SlotCount, m_ScratchpadCount, m_Dcbaa->LogicalAddress.QuadPart);
@@ -327,8 +325,7 @@ XhciSlotTable::OnTransferEvent(
     if ((Event->Dword[0] & XHCI_EVENT_DATA_TYPE_MASK) != USB_ENDPOINT_TYPE_ISOCHRONOUS)
     {
         DPRINT1("Transfer event for slot %lu endpoint %lu code %lu has no device, dropped\n",
-                XhciTrbSlotId(Event),
-                (Event->Dword[3] & XHCI_TRB_ENDPOINT_MASK) >> XHCI_TRB_ENDPOINT_SHIFT,
+                XhciTrbSlotId(Event), (Event->Dword[3] & XHCI_TRB_ENDPOINT_MASK) >> XHCI_TRB_ENDPOINT_SHIFT,
                 XhciTrbCompletionCode(Event));
     }
 }

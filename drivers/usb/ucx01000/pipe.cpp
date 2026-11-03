@@ -277,9 +277,7 @@ UcxEndpoint::Create(
     }
 
     DPRINT("Endpoint %p address 0x%x created on UsbDevice %p\n",
-           Context->m_Handle,
-           Context->m_Descriptor.bEndpointAddress,
-           UsbDevice);
+           Context->m_Handle, Context->m_Descriptor.bEndpointAddress, UsbDevice);
 
     *Endpoint = Context->m_Handle;
     Init->Created = Context->m_Handle;
@@ -602,10 +600,7 @@ UcxStaticStreams::SetStreamInfo(
     if (Index >= m_StreamCount || StreamInfo->StreamId != Index + 1 || StreamInfo->WdfQueue == NULL)
     {
         DPRINT1("Streams %p bad stream info at call %lu, stream ID %lu, queue %p\n",
-                m_Handle,
-                Index,
-                StreamInfo->StreamId,
-                StreamInfo->WdfQueue);
+                m_Handle, Index, StreamInfo->StreamId, StreamInfo->WdfQueue);
         Init->Failed = TRUE;
         UcxVerifierBreak(Verifying);
         return;

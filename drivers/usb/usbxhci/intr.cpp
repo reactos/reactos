@@ -420,8 +420,7 @@ XhciRouteTransferEvent(
         if (!Isoch)
         {
             DPRINT1("Transfer event for slot %lu endpoint %lu has no device, dropped\n",
-                    XhciTrbSlotId(Event),
-                    (Event->Dword[3] & XHCI_TRB_ENDPOINT_MASK) >> XHCI_TRB_ENDPOINT_SHIFT);
+                    XhciTrbSlotId(Event), (Event->Dword[3] & XHCI_TRB_ENDPOINT_MASK) >> XHCI_TRB_ENDPOINT_SHIFT);
         }
         return;
     }
@@ -992,7 +991,7 @@ XhciInterrupters::AffinitizeResourceRequirements(
         /* The primary gets an empty processor set */
         if (!Primary)
         {
-            for (Step = 0; Step < PerInterrupter && NextProcessor < sizeof(KAFFINITY) * 8; Step++)
+            for (Step = 0; Step < PerInterrupter && NextProcessor < RTL_BITS_OF(KAFFINITY); Step++)
             {
                 Pinned.u.Interrupt.TargetedProcessors |= (KAFFINITY)1 << NextProcessor;
                 NextProcessor++;
@@ -1141,16 +1140,15 @@ XhciInterrupters::Prepare(
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-    m_Table = (Interrupter*)ExAllocatePoolWithTag(NonPagedPool,
-                                                  Assigned * sizeof(*m_Table),
-                                                  XHCI_TAG_INTERRUPTER);
+    m_Table = (Interrupter*)ExAllocatePoolZero(NonPagedPool,
+                                               Assigned * sizeof(*m_Table),
+                                               XHCI_TAG_INTERRUPTER);
     if (m_Table == NULL)
     {
         DPRINT1("Interrupter table allocation for %lu entries failed\n", Assigned);
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-    RtlZeroMemory(m_Table, Assigned * sizeof(*m_Table));
     m_Capacity = Assigned;
 
     Status = PrepareOne(&m_Table[0], m_PrimaryInterrupt, 0, m_Mechanism != Mechanism::Line);
@@ -1236,23 +1234,22 @@ XhciInterrupters::BuildLookup()
     ULONG Index;
 
     Size = XhciActiveProcessors(ALL_PROCESSOR_GROUPS);
-    m_Lookup = (PUSHORT)ExAllocatePoolWithTag(NonPagedPool,
-                                              max(Size, 1UL) * sizeof(*m_Lookup),
-                                              XHCI_TAG_INTERRUPTER);
+    m_Lookup = (PUSHORT)ExAllocatePoolZero(NonPagedPool,
+                                           max(Size, 1UL) * sizeof(*m_Lookup),
+                                           XHCI_TAG_INTERRUPTER);
     if (m_Lookup == NULL)
     {
         DPRINT1("Processor lookup table allocation for %lu processors failed\n", Size);
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-    RtlZeroMemory(m_Lookup, max(Size, 1UL) * sizeof(*m_Lookup));
     m_LookupSize = Size;
 
     /* Zero entries mean the primary; group 0 masks only */
     for (Target = 1; Target < m_Count; Target++)
     {
         Entry = &m_Table[Target];
-        for (Number = 0; Number < sizeof(KAFFINITY) * 8; Number++)
+        for (Number = 0; Number < RTL_BITS_OF(KAFFINITY); Number++)
         {
             if ((Entry->Affinity & ((KAFFINITY)1 << Number)) == 0)
                 continue;

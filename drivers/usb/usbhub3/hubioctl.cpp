@@ -833,7 +833,10 @@ HubIoGetDescriptor(
             break;
     }
 
-    /* QUIRK: wLength is sent as given, even when it exceeds the buffer */
+    /* Never ask the device for more than the caller's buffer holds */
+    if (Descriptor->SetupPacket.wLength > DataLength)
+        Descriptor->SetupPacket.wLength = (USHORT)DataLength;
+
     Urb = &HubGetQueueContext(Queue)->Urb;
     RtlZeroMemory(Urb, sizeof(*Urb));
     RtlCopyMemory(Urb->SetupPacket, &Descriptor->SetupPacket, sizeof(Urb->SetupPacket));
@@ -890,7 +893,7 @@ HubIoGetHubCapabilities(
         }
         else
         {
-            /* QUIRK: HubIsBusPowered is never reported */
+            Caps->HubIsBusPowered = (Hub->m_MaxPortPower == HUB_BUS_POWERED_PORT_POWER);
             Caps->HubIsHighSpeedCapable = HighSpeedCapable;
             Caps->HubIsHighSpeed = Hub->IsRootHub() || Hub->m_Parent.HubSpeed == UsbHighSpeed;
             Caps->HubIsMultiTtCapable = Hub->HasFlag(HubFlag::MultiTtHub);

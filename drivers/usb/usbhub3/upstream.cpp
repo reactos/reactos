@@ -152,9 +152,7 @@ HubMachine::SelectHubConfiguration()
     }
 
     DPRINT("Hub %p selecting interface %u protocol %u\n",
-           m_Hub,
-           Interface->bInterfaceNumber,
-           Interface->bInterfaceProtocol);
+           m_Hub, Interface->bInterfaceNumber, Interface->bInterfaceProtocol);
 
     if (!NT_SUCCESS(HubCreateParentRequest(m_Hub, &Request)))
         goto Failed;
@@ -210,9 +208,7 @@ HubConfigurationComplete(
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Hub %p set configuration failed 0x%lx, URB status 0x%lx\n",
-                Hub,
-                Status,
-                Urb->UrbHeader.Status);
+                Hub, Status, Urb->UrbHeader.Status);
     }
 
     WdfObjectDelete(Request);
@@ -240,9 +236,7 @@ HubPipeResetComplete(
     if (!NT_SUCCESS(Params->IoStatus.Status))
     {
         DPRINT1("Hub %p status change pipe reset failed 0x%lx, URB status 0x%lx\n",
-                Hub,
-                Params->IoStatus.Status,
-                Hub->m_PipeUrb.Hdr.Status);
+                Hub, Params->IoStatus.Status, Hub->m_PipeUrb.Hdr.Status);
     }
 
     Hub->m_Control.Reuse();
@@ -362,9 +356,7 @@ HubParentInfoComplete(
         if (!NT_SUCCESS(Status))
         {
             DPRINT1("Hub %p root hub target open on %p failed 0x%lx\n",
-                    Hub,
-                    Hub->m_ParentInfo.RootHubPdo,
-                    Status);
+                    Hub, Hub->m_ParentInfo.RootHubPdo, Status);
             WdfObjectDelete(RootTarget);
         }
         else

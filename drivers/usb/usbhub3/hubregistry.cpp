@@ -30,7 +30,7 @@ static const WCHAR HubUsbFnDefaultPath[] =
 static const WCHAR HubUsbFnConfigPath[] =
     L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Control\\USBFN\\Configurations\\";
 
-/* Function drivers opt in to D3cold under this subkey of the hardware key */
+/* Function drivers opt in to D3cold under this subkey of the Hardware key */
 static const WCHAR HubD3ColdSubkey[] = L"e5b3b5ac-9725-4f78-963f-03dfb1d828c7";
 
 /* Port D3cold reconnect wait unless the hardware key says otherwise, in ms */
@@ -440,13 +440,11 @@ HubReadAlternateSettingFilter(
     if (Size == 0 || (Size & 1) || Type != REG_BINARY)
         return;
 
-    Filter = (HubAltSettingFilter*)ExAllocatePoolWithTag(NonPagedPool,
-                                                         FIELD_OFFSET(HubAltSettingFilter, Entries) + Size,
-                                                         HUB_TAG_DEVICE);
+    Filter = (HubAltSettingFilter*)ExAllocatePoolZero(NonPagedPool,
+                                                      FIELD_OFFSET(HubAltSettingFilter, Entries) + Size,
+                                                      HUB_TAG_DEVICE);
     if (Filter == NULL)
         return;
-
-    RtlZeroMemory(Filter, FIELD_OFFSET(HubAltSettingFilter, Entries) + Size);
 
     if (Child->m_AlternateSettingFilter != NULL)
         ExFreePoolWithTag(Child->m_AlternateSettingFilter, HUB_TAG_DEVICE);
@@ -762,8 +760,8 @@ HubApplyHubErrata(
 }
 
 /*
- * A read error other than a missing value ends the query at once, skipping
- * the DisableOnSoftRemove default and the report.
+ * A read error other than a missing value ends the query at once,
+ * skipping the DisableOnSoftRemove default and the report.
  */
 _IRQL_requires_(PASSIVE_LEVEL)
 static
@@ -791,7 +789,7 @@ HubQueryHubErrata(
     /* Either bit turns LPM off for the whole subtree below this hub */
     if (HubKseBit(Kse, KSE_LPM_OFF_DOWNSTREAM))
     {
-        InterlockedOr((volatile LONG*)&Hub->m_ParentInfo.Flags, HUB_PARENT_DISABLE_LPM);
+        InterlockedOr((PLONG)&Hub->m_ParentInfo.Flags, HUB_PARENT_DISABLE_LPM);
         Hub->SetFlag(HubFlag::DisableLpm);
     }
 
@@ -964,7 +962,7 @@ HubEvtOverCurrentWorkItem(
 
     Value = Hub->HasFlag(HubFlag::OverCurrentDetected) ? 1 : 0;
 
-    Status = HubOpenHubKey(Hub, KEY_WRITE, &Key);
+    Status = HubOpenHubKey(Hub, KEY_SET_VALUE, &Key);
     if (NT_SUCCESS(Status))
     {
         Status = WdfRegistryAssignValue(Key, &Name, REG_DWORD, sizeof(Value), &Value);
@@ -1030,7 +1028,7 @@ HubWriteUsbflagsValue(
 
     HubFormatIdStrings(&Child->m_DeviceDescriptor, &Ids);
 
-    Status = HubOpenUsbflagsKeys(&Ids, KEY_WRITE, &Root, &Key);
+    Status = HubOpenUsbflagsKeys(&Ids, KEY_SET_VALUE | KEY_CREATE_SUB_KEY, &Root, &Key);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Device %p usbflags value %S: key not opened 0x%lx\n", Child, Name, Status);
@@ -1497,7 +1495,7 @@ HubSaveUxdState(
     Child->m_Uxd = Current;
 
     if (UpdateRequired != NULL &&
-        RtlCompareMemory(&Current, &Previous, sizeof(Current)) != sizeof(Current) &&
+        !RtlEqualMemory(&Current, &Previous, sizeof(Current)) &&
         !Child->HasProperty(ChildProperty::IsHub))
     {
         *UpdateRequired = TRUE;

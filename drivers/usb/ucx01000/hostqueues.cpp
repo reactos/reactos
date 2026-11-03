@@ -201,9 +201,7 @@ UcxQueryUsbCapability(
     if ((Query->OutputBufferLength != 0) != (OutputBuffer != NULL))
     {
         DPRINT1("Capability query %p length %lu does not match buffer %p\n",
-                Query,
-                Query->OutputBufferLength,
-                OutputBuffer);
+                Query, Query->OutputBufferLength, OutputBuffer);
         return STATUS_INVALID_PARAMETER;
     }
 

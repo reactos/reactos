@@ -78,7 +78,7 @@ HubSetPortProperty(
     _In_ HubPort* Port,
     _In_ PortProperty Property)
 {
-    InterlockedOr((volatile LONG*)&Port->m_Info.Properties, (LONG)Property);
+    InterlockedOr((PLONG)&Port->m_Info.Properties, (LONG)Property);
 }
 
 FORCEINLINE
@@ -88,7 +88,7 @@ HubClearPortProperty(
     _In_ HubPort* Port,
     _In_ PortProperty Property)
 {
-    InterlockedAnd((volatile LONG*)&Port->m_Info.Properties, ~(LONG)Property);
+    InterlockedAnd((PLONG)&Port->m_Info.Properties, ~(LONG)Property);
 }
 
 /* Connector map, portconn.cpp */

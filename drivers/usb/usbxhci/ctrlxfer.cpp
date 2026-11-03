@@ -1520,7 +1520,7 @@ XhciControlRing::LocateTrb(
         Length = Trb->Dword[2] & XHCI_TRB_LENGTH_MASK;
         Match = (Base + static_cast<ULONG64>(Index) * sizeof(*Trb) == Pointer);
 
-        /* A link written in mid segment jumps to the start, skipping the stale slots after it */
+        /* A link written in mid-segment jumps to the start, skipping the stale slots after it */
         if (Type == static_cast<ULONG>(XhciTrbType::Link) && !Match && Index != Transfer->EndIndex)
         {
             Index = 0;

@@ -266,9 +266,7 @@ HubChildConfigureDone(
         if (Configure->FailureFlags.MaxExitLatencyTooLarge)
         {
             DPRINT1("Device %p exit latency delta %lu rejected, effective latency %u\n",
-                    Child,
-                    Configure->ExitLatencyDelta,
-                    Child->m_EffectiveExitLatency);
+                    Child, Configure->ExitLatencyDelta, Child->m_EffectiveExitLatency);
             Child->m_MaxExitLatencyFromEld = 0;
         }
         else if (NT_SUCCESS(*Status))
@@ -296,8 +294,7 @@ HubChildConfigureDone(
         if (Child->m_EffectiveExitLatency != 0)
         {
             DPRINT1("Device %p endpoint configure failed at exit latency %u, retrying without U1 and U2\n",
-                    Child,
-                    Child->m_EffectiveExitLatency);
+                    Child, Child->m_EffectiveExitLatency);
             HubChildKeepUnchanged(Child, Child->m_EndpointsToDisable, Child->m_DisableCount);
             Child->m_DisableCount = 0;
 
@@ -438,9 +435,7 @@ HubChildUcxIoctlComplete(
             else if (Child->m_UcxPayload->Update.FailureFlags.MaxExitLatencyTooLarge)
             {
                 DPRINT1("Device %p exit latency %u too large for the controller 0x%lx\n",
-                        Child,
-                        Child->m_TargetExitLatency,
-                        Status);
+                        Child, Child->m_TargetExitLatency, Status);
                 Child->Post(DsmEvent::ControllerExitLatencyTooLarge);
                 return;
             }
@@ -823,9 +818,7 @@ DeviceMachine::UpdateExitLatency()
         Child->m_TargetExitLatency > Child->m_MaxExitLatencyFromEld)
     {
         DPRINT1("Device %p exit latency %u is above the controller limit %lu\n",
-                Child,
-                Child->m_TargetExitLatency,
-                Child->m_MaxExitLatencyFromEld);
+                Child, Child->m_TargetExitLatency, Child->m_MaxExitLatencyFromEld);
         Child->Post(DsmEvent::ControllerExitLatencyTooLarge);
         return;
     }
@@ -1179,9 +1172,7 @@ DeviceMachine::CreateEndpoints()
             if (!NT_SUCCESS(Status))
             {
                 DPRINT1("Device %p endpoint 0x%x create failed 0x%lx\n",
-                        Child,
-                        Pipe->Descriptor->bEndpointAddress,
-                        Status);
+                        Child, Pipe->Descriptor->bEndpointAddress, Status);
                 Pipe->State = PipeState::NotCreated;
                 break;
             }

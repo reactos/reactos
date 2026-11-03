@@ -467,7 +467,7 @@ HubAcpiFindUsb4Host(
         if ((Index & 1) != 0 ||
             Argument->Type != ACPI_METHOD_ARGUMENT_BUFFER ||
             Argument->DataLength != sizeof(GUID) ||
-            !RtlEqualMemory(Argument->Data, &HubDsdPropertiesGuid, sizeof(GUID)))
+            !IsEqualGUID(*(const GUID*)Argument->Data, HubDsdPropertiesGuid))
         {
             continue;
         }

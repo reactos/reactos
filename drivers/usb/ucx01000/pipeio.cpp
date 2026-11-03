@@ -156,9 +156,7 @@ UcxCreateStaticStreams(
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Endpoint %p HCD did not set every stream, %lu set calls for %lu streams\n",
-                Endpoint->m_Handle,
-                Init.SetInfoCalls,
-                Count);
+                Endpoint->m_Handle, Init.SetInfoCalls, Count);
         UcxVerifierBreak(Verifying);
         WdfObjectDelete(Init.Created);
         return Status;
@@ -211,9 +209,7 @@ UcxEndpoint::OpenStaticStreams(
     if (Count == 0 || Count > Client->m_GrantedStreams)
     {
         DPRINT1("Endpoint %p streams open for %lu streams, %lu granted\n",
-                m_Handle,
-                Count,
-                Client->m_GrantedStreams);
+                m_Handle, Count, Client->m_GrantedStreams);
         if (Client->m_VerifierEnabled)
         {
             KeBugCheckEx(UCX_BUGCHECK_USB3,

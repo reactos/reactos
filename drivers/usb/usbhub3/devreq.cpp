@@ -969,7 +969,7 @@ VOID
 DeviceMachine::SetPdChargingPolicy()
 {
     USHORT Policy = (m_Device->m_Hub->m_MaxPortPower == XFER_LOW_POWER_PORT) ? USB_CHARGING_POLICY_ICCLPF
-                                                                              : USB_CHARGING_POLICY_ICCHPF;
+                                                                             : USB_CHARGING_POLICY_ICCHPF;
 
     HubDeviceRequest(m_Device,
                      XFER_STD_TO_DEVICE,
@@ -1006,7 +1006,7 @@ HubSelPathLatency(
     return *Link;
 }
 
-/* QUIRK: U1 PEL and SEL are 8 bit and wrap; at depth 0 the link delays (ns) are added as microseconds */
+/* U1 PEL wraps at 8 bits and the depth 0 delay is not converted to us */
 VOID
 DeviceMachine::SetSel()
 {

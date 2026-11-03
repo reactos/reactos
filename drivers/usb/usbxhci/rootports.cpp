@@ -170,12 +170,7 @@ XhciTraceBadRequest(
     PUSB_DEFAULT_PIPE_SETUP_PACKET Setup = XhciSetupOf(Urb);
 
     DPRINT1("Root hub %s: rejecting setup %02x %02x %04x %04x %04x\n",
-            Callback,
-            Setup->bmRequestType.B,
-            Setup->bRequest,
-            Setup->wValue.W,
-            Setup->wIndex.W,
-            Setup->wLength);
+            Callback, Setup->bmRequestType.B, Setup->bRequest, Setup->wValue.W, Setup->wIndex.W, Setup->wLength);
 }
 
 /* Lifetime *******************************************************************/
@@ -349,14 +344,13 @@ XhciRootHub::Prepare()
         return STATUS_INVALID_PARAMETER;
     }
 
-    m_Ports = (Port*)ExAllocatePoolWithTag(NonPagedPool, m_PortCount * sizeof(*m_Ports), XHCI_TAG_ROOTHUB);
+    m_Ports = (Port*)ExAllocatePoolZero(NonPagedPool, m_PortCount * sizeof(*m_Ports), XHCI_TAG_ROOTHUB);
     if (m_Ports == NULL)
     {
         DPRINT1("No memory for %lu root hub ports\n", m_PortCount);
         m_PortCount = 0;
         return STATUS_INSUFFICIENT_RESOURCES;
     }
-    RtlZeroMemory(m_Ports, m_PortCount * sizeof(*m_Ports));
 
     for (Capability = Registers->FindExtendedCapability(XHCI_EXTCAP_SUPPORTED_PROTOCOL, 0);
          Capability != 0;
@@ -2220,8 +2214,7 @@ XhciRootHub::EvtGet20PortInfo(
         Info->PortInfoSize < sizeof(ROOTHUB_20PORT_INFO))
     {
         DPRINT1("Get20PortInfo: bad request, %u ports of %u bytes\n",
-                Info ? Info->NumberOfPorts : 0,
-                Info ? Info->PortInfoSize : 0);
+                Info ? Info->NumberOfPorts : 0, Info ? Info->PortInfoSize : 0);
         WdfRequestComplete(Request, STATUS_INVALID_PARAMETER);
         return;
     }
@@ -2268,8 +2261,7 @@ XhciRootHub::EvtGet30PortInfo(
         Info->PortInfoSize < sizeof(ROOTHUB_30PORT_INFO))
     {
         DPRINT1("Get30PortInfo: bad request, %u ports of %u bytes\n",
-                Info ? Info->NumberOfPorts : 0,
-                Info ? Info->PortInfoSize : 0);
+                Info ? Info->NumberOfPorts : 0, Info ? Info->PortInfoSize : 0);
         WdfRequestComplete(Request, STATUS_INVALID_PARAMETER);
         return;
     }

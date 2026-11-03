@@ -71,8 +71,8 @@ struct XhciStreamEntry
 };
 
 /**
- * Streams of an endpoint, stream id s at Entry[s - 1]. The client record lives in the
- * UCXSSTREAMS context, the default one (one stream, the main ring) in pool.
+ * Streams of an endpoint, stream id s at Entry[s - 1]. The client record lives
+ * in the UCXSSTREAMS context, the default one (one stream, the main ring) in pool.
  */
 struct XhciStreams
 {
@@ -204,13 +204,12 @@ XhciNewDefaultStreams(
 {
     XhciStreams* Streams;
 
-    Streams = static_cast<XhciStreams*>(ExAllocatePoolWithTag(NonPagedPool,
-                                                              XhciStreamsSize(1),
-                                                              XHCI_TAG_ENDPOINT));
+    Streams = static_cast<XhciStreams*>(ExAllocatePoolZero(NonPagedPool,
+                                                           XhciStreamsSize(1),
+                                                           XHCI_TAG_ENDPOINT));
     if (Streams == NULL)
         return NULL;
 
-    RtlZeroMemory(Streams, XhciStreamsSize(1));
     Streams->Endpoint = Endpoint;
     Streams->Count = 1;
     Streams->MaxPrimary = 1;
@@ -431,13 +430,11 @@ XhciEndpoint::CreateClearStall()
     WDF_OBJECT_ATTRIBUTES Attributes;
     NTSTATUS Status;
 
-    m_ClearStall = static_cast<HaltClearBlock*>(ExAllocatePoolWithTag(NonPagedPool,
-                                                                         sizeof(*m_ClearStall),
-                                                                         XHCI_TAG_ENDPOINT));
+    m_ClearStall = static_cast<HaltClearBlock*>(ExAllocatePoolZero(NonPagedPool,
+                                                                   sizeof(*m_ClearStall),
+                                                                   XHCI_TAG_ENDPOINT));
     if (m_ClearStall == NULL)
         return STATUS_INSUFFICIENT_RESOURCES;
-
-    RtlZeroMemory(m_ClearStall, sizeof(*m_ClearStall));
 
     m_ClearStall->Irp = IoAllocateIrp(XHCI_CLEAR_STALL_STACK_SIZE, FALSE);
     if (m_ClearStall->Irp == NULL)
@@ -833,7 +830,7 @@ XhciEndpoint::BuildContext(
         if (Periodic)
         {
             /* QUIRK: bInterval 6 and up is clamped to 32 microframes */
-            Interval = (Period <= 1) ? 0 : ((Period <= 5) ? (Period - 1) : 5);
+            Interval = min(max(Period, 1), 6) - 1;
             Burst = (m_Descriptor.wMaxPacketSize >> 11) & 3;
             Esit = Packet * (Burst + 1);
         }
@@ -846,7 +843,7 @@ XhciEndpoint::BuildContext(
 
         if (Periodic)
         {
-            Interval = (Period <= 1) ? 0 : ((Period <= 5) ? (Period - 1) : 5);
+            Interval = min(max(Period, 1), 6) - 1;
 
             if (m_Companion.bmAttributes.Isochronous.SspCompanion)
             {
@@ -1264,7 +1261,7 @@ XhciEndpoint::ControllerResetDone()
     KeClearEvent(&m_ResetAck);
     PostEvent(XepEvent::ControllerResetDone);
 
-    /* Whoever toggles second finishes the handshake; wait only if the machine has not acked */
+    /* Whoever toggles second finishes the handshake; wait only if the machine has not acknowledged */
     if (!(InterlockedXor(&m_Flags, XHCI_EP_RESET_ACK_HANDSHAKE) & XHCI_EP_RESET_ACK_HANDSHAKE))
         KeWaitForSingleObject(&m_ResetAck, Executive, KernelMode, FALSE, NULL);
 }
@@ -1506,8 +1503,7 @@ XhciEndpoint::EvtDefaultUpdate(
     Data->Command.Trb.Dword[0] = static_cast<ULONG>(InputAddress);
     Data->Command.Trb.Dword[1] = static_cast<ULONG>(InputAddress >> 32);
     Data->Command.Trb.Dword[3] = XhciEndpointCommandControl(XhciTrbType::EvaluateContext,
-                                                            0,
-                                                            Self->m_Device->SlotId());
+                                                            0, Self->m_Device->SlotId());
     Data->Command.Done = DefaultUpdateDone;
     Data->Command.Context = Request;
 
@@ -1872,8 +1868,7 @@ XhciEndpoint::BuildSetDequeue(
     Command->Trb.Dword[1] = static_cast<ULONG>(DequeuePointer >> 32);
     Command->Trb.Dword[2] = StreamId << XHCI_CMD_STREAM_ID_SHIFT;
     Command->Trb.Dword[3] = XhciEndpointCommandControl(XhciTrbType::SetTrDequeuePointer,
-                                                       m_Dci,
-                                                       m_Device->SlotId());
+                                                       m_Dci, m_Device->SlotId());
     Command->Done = Done;
     Command->Context = this;
 }
@@ -1924,8 +1919,7 @@ XhciEndpoint::BuildEndpointConfigure(
     Command->Trb.Dword[0] = static_cast<ULONG>(InputAddress);
     Command->Trb.Dword[1] = static_cast<ULONG>(InputAddress >> 32);
     Command->Trb.Dword[3] = XhciEndpointCommandControl(XhciTrbType::ConfigureEndpoint,
-                                                       0,
-                                                       m_Device->SlotId());
+                                                       0, m_Device->SlotId());
     Command->Done = Done;
     Command->Context = this;
 }
@@ -2459,6 +2453,7 @@ XhciEndpointMachine::StartTimer(
     WdfTimerStart(m_Endpoint->m_Timer, WDF_REL_TIMEOUT_IN_MS(Milliseconds));
 }
 
+/* FIXME: these are ETW events; without ETW support they only go to the debug log */
 VOID
 XhciEndpointMachine::ReportTimeout(
     _In_ XEP_TIMEOUT Timeout)
@@ -2483,7 +2478,6 @@ XhciEndpointMachine::ReportTimeout(
             DPRINT1("Endpoint %p DCI %lu expected events still missing after the halt\n", Ep, Ep->m_Dci);
             break;
     }
-
 }
 
 VOID
@@ -2582,8 +2576,7 @@ XhciEndpointMachine::SendStopCommand()
 
     RtlZeroMemory(Command, sizeof(*Command));
     Command->Trb.Dword[3] = XhciEndpointCommandControl(XhciTrbType::StopEndpoint,
-                                                       Ep->m_Dci,
-                                                       Ep->m_Device->SlotId());
+                                                       Ep->m_Dci, Ep->m_Device->SlotId());
     Command->Done = XhciEndpoint::StopDone;
     Command->Context = Ep;
 
@@ -2744,8 +2737,7 @@ XhciEndpointMachine::ResetDefaultPipe()
 
     RtlZeroMemory(Command, sizeof(*Command));
     Command->Trb.Dword[3] = XhciEndpointCommandControl(XhciTrbType::ResetEndpoint,
-                                                       Ep->m_Dci,
-                                                       Ep->m_Device->SlotId());
+                                                       Ep->m_Dci, Ep->m_Device->SlotId());
     Command->Done = XhciEndpoint::ControlResetDone;
     Command->Context = Ep;
 
@@ -2760,8 +2752,7 @@ XhciEndpointMachine::ResetEndpoint()
 
     RtlZeroMemory(Command, sizeof(*Command));
     Command->Trb.Dword[3] = XhciEndpointCommandControl(XhciTrbType::ResetEndpoint,
-                                                       Ep->m_Dci,
-                                                       Ep->m_Device->SlotId());
+                                                       Ep->m_Dci, Ep->m_Device->SlotId());
     if (Ep->ResetPayload()->Flags & FlagEndpointResetPreserveTransferState)
         Command->Trb.Dword[3] |= XHCI_CMD_TRANSFER_STATE_PRESERVE;
 

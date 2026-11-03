@@ -403,7 +403,6 @@ XhciCommonBuffer::Grab(
     for (Entry = Taken->Flink; Entry != Taken; Entry = Entry->Flink)
     {
         XhciDmaBuffer* Segment = CONTAINING_RECORD(Entry, XhciDmaBuffer, Link);
-
         RtlZeroMemory(Segment->VirtualAddress, Segment->Size);
     }
 

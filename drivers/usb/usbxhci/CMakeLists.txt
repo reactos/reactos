@@ -4,20 +4,20 @@ remove_definitions(-D_WIN32_WINNT=0x502)
 list(APPEND SOURCE
     bulkio.cpp
     cmdring.cpp
-    dmapool.cpp
     ctrlxfer.cpp
-    hc.cpp
-    slots.cpp
-    xhcientry.cpp
+    dmapool.cpp
     epctx.cpp
     epstate.cpp
+    hc.cpp
     intr.cpp
     isoxfer.cpp
     mmio.cpp
     rootports.cpp
-    xferring.cpp
     slotdev.cpp
-    xhcidrv.h)
+    slots.cpp
+    xferring.cpp
+    xhcidrv.h
+    xhcientry.cpp)
 
 add_library(usbxhci MODULE ${SOURCE} usbxhci.rc)
 set_module_type(usbxhci kmdfdriver)
@@ -33,3 +33,4 @@ target_compile_definitions(usbxhci PRIVATE
 target_link_libraries(usbxhci ucxstub ntoskrnl_vista libcntpr ${PSEH_LIB})
 add_importlibs(usbxhci wdfldr ntoskrnl hal)
 add_cd_file(TARGET usbxhci DESTINATION reactos/system32/drivers NO_CAB FOR all)
+add_registry_inf(usbxhci_reg.inf)
