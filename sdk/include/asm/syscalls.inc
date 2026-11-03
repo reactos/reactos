@@ -77,6 +77,24 @@ SyscallId SETA SyscallId + 1
 SyscallId SETA SyscallId + 1
     MEND
 
+    /* Kernel mode callers enter the dispatcher with the number in x16 */
+    MACRO
+    STUB_K $Name
+    LCLS ZwFuncName
+ZwFuncName SETS "Zw$Name"
+    ALIGN 4
+    EXPORT $ZwFuncName
+$ZwFuncName
+    mov x16, #SyscallId
+    b KiZwSystemService
+SyscallId SETA SyscallId + 1
+    MEND
+
+    MACRO
+    SYSCALL_BASE $Base
+SyscallId SETA $Base
+    MEND
+
 #else
 
 .set SyscallId, 0
@@ -94,6 +112,19 @@ Zw\Name:
 
 .macro SKIP_STUB Name
     .set SyscallId, SyscallId + 1
+.endm
+
+.macro STUB_K Name
+    .global Zw\Name
+    .p2align 2
+Zw\Name:
+    mov x16, #SyscallId
+    b KiZwSystemService
+    .set SyscallId, SyscallId + 1
+.endm
+
+.macro SYSCALL_BASE Base
+    .set SyscallId, \Base
 .endm
 
 #endif

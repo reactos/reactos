@@ -1,9 +1,13 @@
 
 #include <syscalls.inc>
 
-#ifdef _M_ARM
+#if defined(_M_ARM) || defined(_M_ARM64)
 
     TEXTAREA
+
+#ifdef _M_ARM64
+    IMPORT KiZwSystemService
+#endif
 
 #define SVC_(name, argcount) STUB_K name
 
