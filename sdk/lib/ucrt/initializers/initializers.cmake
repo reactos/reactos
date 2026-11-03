@@ -17,7 +17,7 @@ if(${ARCH} STREQUAL "i386")
     )
 endif()
 
-if(${ARCH} STREQUAL "amd64" OR ${ARCH} STREQUAL "arm64")
+if(${ARCH} STREQUAL "amd64")
     list(APPEND UCRT_INITIALIZERS_SOURCES
         initializers/fma3_initializer.cpp
     )
