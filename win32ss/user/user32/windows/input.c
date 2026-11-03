@@ -888,9 +888,8 @@ IntPrepareLayoutModule(
             IntFollowRealDll(phModule, ppszFile, pszRealFile, pszKLID);
         }
 
-        /* Get KbdLayerDescriptor procedure */
-        _SEH2_YIELD(return (PFN_KbdLayerDescriptor)GetProcAddress(*phModule,
-                                                                  IFN_KbdLayerDescriptor));
+        /* Retrieve the KbdLayerDescriptor procedure */
+        pfnMain = (PFN_KbdLayerDescriptor)GetProcAddress(*phModule, IFN_KbdLayerDescriptor);
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
