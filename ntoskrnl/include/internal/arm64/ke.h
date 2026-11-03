@@ -167,6 +167,7 @@ KxQueryProcessorCycleTime(VOID)
 
 #define KeGetExceptionFrame(Thread) \
     (PKEXCEPTION_FRAME)((ULONG_PTR)KeGetTrapFrame(Thread) - \
+                        sizeof(KARM64_VFP_STATE) - \
                         sizeof(KEXCEPTION_FRAME))
 
 //
