@@ -270,7 +270,7 @@ KbdBuildImage(
     PIMAGE_NT_HEADERS pNt;
     PIMAGE_SECTION_HEADER pSec, pData = NULL;
     PBYTE pbRaw = pvRaw;
-    PBYTE volatile pbImage = NULL; /* Read in the SEH handler and at Failure */
+    _SEH2_VOLATILE PBYTE pbImage = NULL;
     ULONG cbImage, cbVirt, cbCopy, cbAlloc, i;
 
     *pcbImage = 0;
