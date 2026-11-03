@@ -73,5 +73,8 @@ if((ARCH STREQUAL "i386") OR (ARCH STREQUAL "amd64"))
     add_bootvid(bootvid i386/pc/vgabvid.cmake NAME_ON_CD ${VGABVID_NAME_ON_CD})
 elseif(ARCH STREQUAL "arm")
     add_bootvid(bootvid arm/armbvid.cmake)
+elseif(ARCH STREQUAL "arm64")
+    # Only firmware framebuffers exist, the loader picks lfbbvid but the kernel imports bootvid
+    add_bootvid(bootvid framebuf/lfbbvid.cmake)
 endif()
 add_bootvid(lfbbvid framebuf/lfbbvid.cmake)
