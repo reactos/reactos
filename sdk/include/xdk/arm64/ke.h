@@ -45,6 +45,36 @@ KeMemoryBarrier(
 
 #define KeMemoryBarrierWithoutFence() _ReadWriteBarrier()
 
+/* The kernel keeps the FP and SIMD state of every thread, nothing to save */
+typedef struct _KFLOATING_SAVE
+{
+    ULONG Dummy;
+} KFLOATING_SAVE, *PKFLOATING_SAVE;
+
+_IRQL_requires_max_(DISPATCH_LEVEL)
+_Kernel_float_saved_
+_At_(*FloatSave, _Kernel_requires_resource_not_held_(FloatState) _Kernel_acquires_resource_(FloatState))
+FORCEINLINE
+NTSTATUS
+KeSaveFloatingPointState(
+    _Out_ PKFLOATING_SAVE FloatSave)
+{
+    UNREFERENCED_PARAMETER(FloatSave);
+    return STATUS_SUCCESS;
+}
+
+_Success_(1)
+_Kernel_float_restored_
+_At_(*FloatSave, _Kernel_requires_resource_held_(FloatState) _Kernel_releases_resource_(FloatState))
+FORCEINLINE
+NTSTATUS
+KeRestoreFloatingPointState(
+    _In_ PKFLOATING_SAVE FloatSave)
+{
+    UNREFERENCED_PARAMETER(FloatSave);
+    return STATUS_SUCCESS;
+}
+
 _IRQL_requires_max_(HIGH_LEVEL)
 _IRQL_saves_
 NTHALAPI
