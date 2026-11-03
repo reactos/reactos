@@ -28,6 +28,17 @@ BOOLEAN HalpProcessorsStarted;
 
 /* FUNCTIONS *****************************************************************/
 
+/* Debug ports are device memory */
+static
+PVOID
+NTAPI
+HalpKdMapPhysicalMemory(
+    _In_ PHYSICAL_ADDRESS PhysicalAddress,
+    _In_ ULONG NumberPages)
+{
+    return HalpMapPhysicalMemory(PhysicalAddress, NumberPages, TRUE);
+}
+
 VOID
 NTAPI
 HalInitializeProcessor(
@@ -39,6 +50,11 @@ HalInitializeProcessor(
     {
         HalpAcpiInitialize(LoaderBlock);
         HalpGicInitializeDistributor();
+
+        /* The debugger looks for its port right after this */
+        KdGetAcpiTablePhase0 = HalAcpiGetTable;
+        KdMapPhysicalMemory64 = HalpKdMapPhysicalMemory;
+        KdUnmapVirtualAddress = HalpUnmapVirtualAddress;
     }
 
     HalpGicInitializeCpu(ProcessorNumber);
