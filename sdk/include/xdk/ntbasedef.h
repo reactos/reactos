@@ -775,7 +775,7 @@ $endif(_WINNT_)
  #define UInt32x32To64(a,b) ((unsigned __int64)(unsigned int)(a)*(unsigned __int64)(unsigned int)(b))
 #endif
 
-#if defined(MIDL_PASS)|| defined(RC_INVOKED) || defined(_M_CEE_PURE) || defined(_M_ARM)
+#if defined(MIDL_PASS)|| defined(RC_INVOKED) || defined(_M_CEE_PURE) || defined(_M_ARM) || defined(_M_ARM64)
 /* Use native math */
  #define Int64ShllMod32(a,b) ((unsigned __int64)(a)<<(b))
  #define Int64ShraMod32(a,b) (((__int64)(a))>>(b))
