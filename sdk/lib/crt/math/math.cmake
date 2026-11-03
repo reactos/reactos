@@ -236,6 +236,7 @@ elseif(ARCH STREQUAL "arm")
     )
 elseif(ARCH STREQUAL "arm64")
     list(APPEND LIBCNTPR_MATH_SOURCE
+        math/__cos.c
         math/__math_divzero.c
         math/__math_invalid.c
         math/__math_oflow.c
@@ -243,10 +244,12 @@ elseif(ARCH STREQUAL "arm64")
         math/__math_xflow.c
         math/__rem_pio2.c
         math/__rem_pio2_large.c
+        math/__sin.c
         math/__tan.c
         math/atan.c
         math/ceil.c
         math/ceilf.c
+        math/cos.c
         math/exp.c
         math/exp_data.c
         math/fabs.c
@@ -260,6 +263,7 @@ elseif(ARCH STREQUAL "arm64")
         math/log10.c
         math/pow.c
         math/pow_data.c
+        math/sin.c
         math/sqrt.c
         math/sqrt_data.c
         math/sqrtf.c
