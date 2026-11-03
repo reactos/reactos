@@ -251,13 +251,17 @@ typedef struct _KBDIMAGE_INFO
     ULONG cbData;           /* Size of the .data section in the image */
 } KBDIMAGE_INFO, *PKBDIMAGE_INFO;
 
-/* We have to build the image of the keyboard layout file without executing the file,
-   due to security reason.
-
-   For a valid keyboard layout file, the tables (and any data they point to) are all stored in
-   the .data section, so that is the only section we take. The headers and any other sections
-   are not considered, and neither is the base-relocation data: the pointers inside the tables
-   are adjusted later by KbdRebaseTables, using the RVA macro. */
+/**
+ * @brief
+ * Build the image of the keyboard layout file without executing it,
+ * due to security reasons.
+ *
+ * For a valid keyboard layout file, the tables (and any data they point to)
+ * are all stored in the .data section, so this is the only section we take.
+ * The headers and any other sections are not considered, and neither is the
+ * base-relocation data: the pointers inside the tables are adjusted later
+ * by KbdRebaseTables(), using the RVA macro.
+ **/
 static PVOID
 KbdBuildImage(
     _In_ PVOID pvRaw,
