@@ -119,10 +119,19 @@ MempSetupPagingForRegion(
             Status = MempSetupPaging(BasePage, PageCount, FALSE);
             break;
 
+#ifdef _M_ARM64
+        /* The UEFI runtime regions and every page the firmware did not describe, device
+         * memory included. A normal memory mapping must not cover device memory here. */
+        case LoaderFirmwarePermanent:
+            break;
+#endif
+
         /* Pages used by the kernel */
         case LoaderExceptionBlock:
         case LoaderSystemBlock:
+#ifndef _M_ARM64
         case LoaderFirmwarePermanent:
+#endif
         case LoaderSystemCode:
         case LoaderHalCode:
         case LoaderBootDriver:
