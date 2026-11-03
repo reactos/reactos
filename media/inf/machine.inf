@@ -43,6 +43,7 @@ HKR, , Icon,           0, "-27"
 %*PNP0C01.DeviceDesc% = NO_DRV,*PNP0C01
 %*PNP0C02.DeviceDesc% = NO_DRV,*PNP0C02
 %*PNP0C04.DeviceDesc% = NO_DRV,*PNP0C04
+%*PNP0C08.DeviceDesc% = ACPI_Inst,*PNP0C08
 %*PNP0C0B.DeviceDesc% = NO_DRV,*PNP0C0B
 %*PNP0C0C.DeviceDesc% = NO_DRV,*PNP0C0C
 %*PNP0C0D.DeviceDesc% = NO_DRV,*PNP0C0D
@@ -160,6 +161,24 @@ ErrorControl  = 3
 ServiceBinary = %12%\pci.sys
 LoadOrderGroup = Boot Bus Extender
 
+;------------------------------ ACPI DRIVER -----------------------------
+
+[ACPI_Inst.NT]
+CopyFiles = ACPI_CopyFiles.NT
+
+[ACPI_CopyFiles.NT]
+acpi.sys
+
+[ACPI_Inst.NT.Services]
+AddService = acpi, 0x00000002, acpi_Service_Inst
+
+[acpi_Service_Inst]
+ServiceType   = 1
+StartType     = 0
+ErrorControl  = 3
+ServiceBinary = %12%\acpi.sys
+LoadOrderGroup = Boot Bus Extender
+
 ;-------------------------------- STRINGS -------------------------------
 
 [Strings]
@@ -189,6 +208,7 @@ GenericMfg = "(Generic system devices)"
 *PNP0C01.DeviceDesc = "System board"
 *PNP0C02.DeviceDesc = "Motherboard resources"
 *PNP0C04.DeviceDesc = "Math coprocessor"
+*PNP0C08.DeviceDesc = "ACPI-compliant system"
 *PNP0C0B.DeviceDesc = "ACPI fan"
 *PNP0C0C.DeviceDesc = "ACPI power button device"
 *PNP0C0D.DeviceDesc = "ACPI lid"
