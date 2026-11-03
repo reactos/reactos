@@ -14,7 +14,7 @@ else()
 endif()
 add_subdirectory(kdstub)
 
-if(NOT ARCH STREQUAL "arm")
+if(ARCH STREQUAL "i386" OR ARCH STREQUAL "amd64")
 add_subdirectory(nmidebug)
 endif()
 add_subdirectory(null)
