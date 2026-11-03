@@ -50,6 +50,12 @@ KSPIN_LOCK KiFreezeExecutionLock;
 static LDR_DATA_TABLE_ENTRY LdrCoreEntries[3];
 ULONG64 KeFeatureBits;
 
+/* The loader's console print with DEBUGPORT=SCREEN, valid while its identity mapping is */
+ULONG (*FrLdrDbgPrint)(const char *Format, ...);
+
+#define KiEarlyTrace(...) \
+    do { if (FrLdrDbgPrint) FrLdrDbgPrint(__VA_ARGS__); } while (0)
+
 /* FUNCTIONS *****************************************************************/
 
 CODE_SEG("INIT")
@@ -222,6 +228,10 @@ KiInitializeKernel(
 
     KiInitializeHandBuiltThread(InitThread, InitProcess, IdleStack);
 
+    /* Phase 0 of the memory manager drops the identity mapping the loader runs on */
+    KiEarlyTrace("KiInitializeKernel: executive phase 0 next, loader console ends here\n");
+    FrLdrDbgPrint = NULL;
+
     ExpInitializeExecutive(0, LoaderBlock);
 
     KiTimeIncrementReciprocal = KiComputeReciprocal(KeMaximumIncrement,
@@ -264,6 +274,7 @@ KiSystemStartupBootStack(VOID)
     ExInitPoolLookasidePointers();
 
     KeLowerIrql(APC_LEVEL);
+    KiEarlyTrace("KiSystemStartupBootStack: on the boot stack\n");
 
     if (Prcb->Number == 0)
         KiInitializeKernel(Process, Thread, KernelStack, Prcb, LoaderBlock);
@@ -303,6 +314,9 @@ KiSystemStartup(
     PKIPCR Pcr;
     CCHAR Cpu;
 
+    FrLdrDbgPrint = LoaderBlock->u.I386.CommonDataArea;
+    KiEarlyTrace("KiSystemStartup: loader block %p\n", LoaderBlock);
+
     Cpu = KeNumberProcessors++;
 
     if (Cpu == 0)
@@ -319,29 +333,35 @@ KiSystemStartup(
     InitialThread = (PKTHREAD)LoaderBlock->Thread;
     KiInitializePcr(Pcr, Cpu, InitialThread);
     KiArm64SetPcr(Pcr);
+    KiEarlyTrace("KiSystemStartup: PCR %p\n", Pcr);
 
     KiProcessorBlock[Cpu] = &Pcr->Prcb;
     InitialThread->ApcState.Process = (PVOID)LoaderBlock->Process;
 
     KiInitializeCpu(Pcr);
+    KiEarlyTrace("KiSystemStartup: processor %d set up\n", Cpu);
 
     if (Cpu == 0)
     {
         KeFeatureBits = Pcr->Prcb.FeatureBits;
         KiInitModuleList(LoaderBlock);
         KeInitExceptions();
+        KiEarlyTrace("KiSystemStartup: exception vectors set\n");
     }
 
     HalInitializeProcessor(Cpu, KeLoaderBlock);
     KeActiveProcessors |= AFFINITY_MASK(Cpu);
+    KiEarlyTrace("KiSystemStartup: HAL processor init done\n");
 
     if (Cpu == 0)
     {
         KdInitSystem(0, KeLoaderBlock);
+        KiEarlyTrace("KiSystemStartup: debugger initialized\n");
         if (KdPollBreakIn())
             DbgBreakPointWithStatus(DBG_STATUS_CONTROL_C);
     }
 
     KfRaiseIrql(HIGH_LEVEL);
+    KiEarlyTrace("KiSystemStartup: switching to the boot stack %p\n", (PVOID)LoaderBlock->KernelStack);
     KiSwitchToBootStack(LoaderBlock->KernelStack);
 }
