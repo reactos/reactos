@@ -1070,7 +1070,6 @@ IntGetKeyboardDllName(
         GetPrivateProfileStringW(L"Substitutes", pszKLID, pszKLID,
                                  szSubstitute, (DWORD)_countof(szSubstitute),
                                  L"keyboardlayout.ini");
-        WritePrivateProfileStringW(NULL, NULL, NULL, NULL); /* Flush! */
         szSubstitute[_countof(szSubstitute) - 1] = UNICODE_NULL; /* Avoid buffer overrun */
         if (!IsValidKLID(szSubstitute))
             return FALSE;
