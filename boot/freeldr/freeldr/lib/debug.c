@@ -133,13 +133,15 @@ DebugInit(
             PortString += CONST_STR_LEN("COM");
             DebugPort |= RS232;
 
-            /* Set the port to use */
+            /* Set the port to use, a number picks an entry of a base table that has no 16550 on ARM64 */
             if (*PortString != ':')
             {
+#ifndef _M_ARM64
                 /* Read the port and set its address */
                 Value = (ULONG)atol(PortString);
                 if (Value > 0 && Value <= MAX_COM_PORTS)
                     ComPortAddress = UlongToPtr(BaseArray[Value]);
+#endif
             }
             else
             {
