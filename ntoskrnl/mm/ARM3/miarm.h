@@ -831,6 +831,11 @@ MI_MAKE_HARDWARE_PTE_KERNEL(IN PMMPTE NewPte,
     NewPte->u.Hard.PageFrameNumber = PageFrameNumber;
     NewPte->u.Long |= MmProtectToPteMask[ProtectionMask];
 
+#ifdef _M_ARM64
+    /* Kernel stacks are written by the trap entry itself, a clean one would fault forever */
+    MI_MAKE_DIRTY_PAGE(NewPte);
+#endif
+
     /* Make this valid & global */
 #ifdef _GLOBAL_PAGES_ARE_AWESOME_
     if (KeFeatureBits & KF_GLOBAL_PAGE)
@@ -882,7 +887,7 @@ MI_MAKE_HARDWARE_PTE_USER(IN PMMPTE NewPte,
     ASSERT(ProtectionMask != MM_OUTSWAPPED_KSTACK && ((ProtectionMask & ~MM_OUTSWAPPED_KSTACK) == 0));
 
     NewPte->u.Hard.Valid = TRUE;
-    NewPte->u.Hard.Owner = TRUE;
+    MI_MAKE_OWNER_PAGE(NewPte);
     NewPte->u.Hard.PageFrameNumber = PageFrameNumber;
     NewPte->u.Long |= MmProtectToPteMask[ProtectionMask];
 }
@@ -1009,6 +1014,11 @@ MI_WRITE_VALID_PTE(IN PMMPTE PointerPte,
            (TempPte.u.Hard.NoExecute == 0));
 #endif
     *PointerPte = TempPte;
+#ifdef _M_ARM64
+    /* The table walker only sees the new entry after a barrier */
+    __dsb(_ARM64_BARRIER_ISHST);
+    __isb(_ARM64_BARRIER_SY);
+#endif
 }
 
 //
@@ -1066,6 +1076,10 @@ MI_WRITE_VALID_PDE(IN PMMPDE PointerPde,
 #endif
     ASSERT(TempPde.u.Hard.Valid == 1);
     *PointerPde = TempPde;
+#ifdef _M_ARM64
+    __dsb(_ARM64_BARRIER_ISHST);
+    __isb(_ARM64_BARRIER_SY);
+#endif
 }
 
 //
