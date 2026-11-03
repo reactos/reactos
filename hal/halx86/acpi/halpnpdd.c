@@ -440,11 +440,17 @@ HalpQueryResources(IN PDEVICE_OBJECT DeviceObject,
             ResourceList->List[0].PartialResourceList.Count++;
         }
 
-        /* Return resources and success */
-        *Resources = ResourceList;
-
         ExFreePoolWithTag(RequirementsList, TAG_HAL);
 
+        /* Without a SCI or device vectors there is no boot configuration to reserve */
+        if (!ResourceList->List[0].PartialResourceList.Count)
+        {
+            ExFreePoolWithTag(ResourceList, TAG_HAL);
+            ResourceList = NULL;
+        }
+
+        /* Return resources and success */
+        *Resources = ResourceList;
         return STATUS_SUCCESS;
     }
     else if (DeviceExtension->PdoType == WdPdo)
