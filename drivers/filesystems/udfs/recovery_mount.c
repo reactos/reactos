@@ -1,6 +1,19 @@
 #include "udffs.h"
 #include "udf_info/recovery_core.h"
 
+NTKERNELAPI BOOLEAN NTAPI InbvCheckDisplayOwnership(VOID);
+NTKERNELAPI VOID NTAPI InbvDisplayString(PCSTR String);
+
+/* Show a recovery step on the boot screen as well as in the debug log.
+ * It appears when the boot display is in text mode (for example /SOS);
+ * once the boot display is handed over it is skipped. */
+static VOID
+UdfsRecoveryBootMessage(PCSTR Message)
+{
+    if (KeGetCurrentIrql() == PASSIVE_LEVEL && InbvCheckDisplayOwnership())
+        InbvDisplayString(Message);
+}
+
 typedef struct _UDFS_RECOVERY_MOUNT_IO {
     PDEVICE_OBJECT Target;
 #if defined(UDF_DBG) && defined(USE_KD_PRINT)
@@ -224,6 +237,7 @@ UDFRecoverDirtyVolumeBeforeLoad(PIRP_CONTEXT IrpContext, PVCB Vcb)
         UDFPrint(("UDFS recovery: skipped, device is write protected\n"));
         return STATUS_SUCCESS;
     }
+    UdfsRecoveryBootMessage("UDF: volume was not shut down cleanly, checking it...\r\n");
     UdfsRecoveryPhaseBegin(&io, &phase);
     status = UdfsRecoveryProbeLayout(&reader, &before);
     UdfsRecoveryPhaseEnd(&io, &phase, "probe", status);
@@ -258,6 +272,10 @@ UDFRecoverDirtyVolumeBeforeLoad(PIRP_CONTEXT IrpContext, PVCB Vcb)
          status != UdfsRecoveryProbeLvidMismatch)) {
         UDFPrint(("UDFS recovery: unsupported/corrupt state %u, existing mount policy\n",
                   (ULONG)status));
+        if (status == UdfsRecoveryProbeValidLayout)
+            UdfsRecoveryBootMessage("UDF: no problems found.\r\n");
+        else
+            UdfsRecoveryBootMessage("UDF: the volume could not be checked; it is mounted as before.\r\n");
         return STATUS_SUCCESS;
     }
 
@@ -276,12 +294,14 @@ UDFRecoverDirtyVolumeBeforeLoad(PIRP_CONTEXT IrpContext, PVCB Vcb)
     UdfsRecoveryPhaseEnd(&io, &phase, "plan", status);
     if (status == UdfsRecoveryProbeUnsupported) {
         UDFPrint(("UDFS recovery: ownership class not repairable; read-only policy\n"));
+        UdfsRecoveryBootMessage("UDF: problems found that cannot be repaired; the volume is read-only.\r\n");
         UdfsRecoveryMountFree(&io, plan);
         return STATUS_SUCCESS;
     }
     if (status != UdfsRecoveryProbeValidLayout) {
         UDFPrint(("UDFS recovery: no complete plan %u; read-only policy\n",
                   (ULONG)status));
+        UdfsRecoveryBootMessage("UDF: problems found that cannot be repaired; the volume is read-only.\r\n");
         UdfsRecoveryMountFree(&io, plan);
         return STATUS_SUCCESS;
     }
@@ -295,15 +315,18 @@ UDFRecoverDirtyVolumeBeforeLoad(PIRP_CONTEXT IrpContext, PVCB Vcb)
     } else {
         UDFPrint(("UDFS recovery: metadata-only repair; unflushed file contents are not recovered\n"));
     }
+    UdfsRecoveryBootMessage("UDF: repairing the volume...\r\n");
     UdfsRecoveryPhaseBegin(&io, &phase);
     status = UdfsRecoveryApplyRepair(&reader, plan, &after);
     UdfsRecoveryPhaseEnd(&io, &phase, "apply/reprobe", status);
     UdfsRecoveryMountFree(&io, plan);
     if (status != UdfsRecoveryProbeValidLayout) {
         UDFPrint(("UDFS recovery: apply/reprobe failed %u\n", (ULONG)status));
+        UdfsRecoveryBootMessage("UDF: the repair failed.\r\n");
         return status == UdfsRecoveryProbeNoMemory ?
                STATUS_INSUFFICIENT_RESOURCES : STATUS_IO_DEVICE_ERROR;
     }
     UDFPrint(("UDFS recovery: checked bitmap/LVID commit complete\n"));
+    UdfsRecoveryBootMessage("UDF: the volume was repaired.\r\n");
     return STATUS_SUCCESS;
 }
