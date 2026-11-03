@@ -401,7 +401,8 @@ elseif(ARCH STREQUAL "arm64")
         ${REACTOS_SOURCE_DIR}/ntoskrnl/ke/arm64/boot.s
         ${REACTOS_SOURCE_DIR}/ntoskrnl/ke/arm64/cpu.s
         ${REACTOS_SOURCE_DIR}/ntoskrnl/ke/arm64/ctxswitch.s
-        ${REACTOS_SOURCE_DIR}/ntoskrnl/ke/arm64/trap.s)
+        ${REACTOS_SOURCE_DIR}/ntoskrnl/ke/arm64/trap.s
+        ${REACTOS_SOURCE_DIR}/ntoskrnl/ke/arm64/usercall.s)
     list(APPEND SOURCE
         ${REACTOS_SOURCE_DIR}/ntoskrnl/config/arm64/cmhardwr.c
         ${REACTOS_SOURCE_DIR}/ntoskrnl/kd64/arm64/kdarm64.c
