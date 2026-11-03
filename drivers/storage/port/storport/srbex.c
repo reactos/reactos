@@ -12,9 +12,6 @@
 #include <debug.h>
 
 
-/* The extended request trails the request reference in the same allocation */
-C_ASSERT((sizeof(QUEUED_REQUEST_REFERENCE) % TYPE_ALIGNMENT(EXTENDED_REQUEST)) == 0);
-
 /* A miniport walks to the address and the command block by offset */
 C_ASSERT(FIELD_OFFSET(EXTENDED_REQUEST, Address) >= sizeof(STORAGE_REQUEST_BLOCK));
 C_ASSERT(FIELD_OFFSET(EXTENDED_REQUEST, Cdb) >=

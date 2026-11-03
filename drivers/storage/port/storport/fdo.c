@@ -172,7 +172,7 @@ PortAllocateRequestReserve(
 
     FdoExtension->ReservedRequestReference =
         ExAllocatePoolWithTag(NonPagedPool,
-                              REQUEST_REFERENCE_ALLOCATION_SIZE,
+                              sizeof(*FdoExtension->ReservedRequestReference),
                               TAG_QUEUED_REQUEST);
     if (FdoExtension->ReservedRequestReference == NULL)
     {
@@ -259,7 +259,6 @@ PortFdoMessageInterruptRoutine(
  */
 static
 NTSTATUS
-NTAPI
 PortFdoConnectMessageInterrupt(
     _In_ PFDO_DEVICE_EXTENSION DeviceExtension)
 {
@@ -382,7 +381,6 @@ PortFdoConnectInterrupt(
 
 static
 VOID
-NTAPI
 PortFdoDisconnectInterrupt(
     _In_ PFDO_DEVICE_EXTENSION DeviceExtension)
 {
@@ -416,6 +414,7 @@ PortFdoStartMiniport(
 {
     PHW_INITIALIZATION_DATA InitData;
     INTERFACE_TYPE InterfaceType;
+    ULONG RequestSize;
     NTSTATUS Status;
 
     DPRINT1("PortFdoStartMiniport(%p)\n", DeviceExtension);
@@ -457,6 +456,24 @@ PortFdoStartMiniport(
     {
         DPRINT1("MiniportFindAdapter() failed (Status 0x%08lx)\n", Status);
         return Status;
+    }
+
+    /* The SRB format is only known after HwFindAdapter */
+    if (!DeviceExtension->RequestReferenceLookasideInitialized)
+    {
+        if (DeviceExtension->Miniport.PortConfig.SrbType == SRB_TYPE_STORAGE_REQUEST_BLOCK)
+            RequestSize = sizeof(QUEUED_REQUEST_REFERENCE);
+        else
+            RequestSize = FIELD_OFFSET(QUEUED_REQUEST_REFERENCE, Ex);
+
+        ExInitializeNPagedLookasideList(&DeviceExtension->RequestReferenceLookaside,
+                                        NULL,
+                                        NULL,
+                                        0,
+                                        RequestSize,
+                                        TAG_QUEUED_REQUEST,
+                                        0);
+        DeviceExtension->RequestReferenceLookasideInitialized = TRUE;
     }
 
     /* Find out which adapter control requests the miniport takes */
@@ -1090,8 +1107,8 @@ PortFdoScanBus(
     NTSTATUS Status;
     ULONG LunCount = 0;
 
-    /* A unit named by one byte is all the flat addressing method carries */
-    UCHAR LunList[256];
+    /* The most units a single target can carry */
+    UCHAR LunList[SCSI_MAXIMUM_LUNS_PER_TARGET];
 
     DPRINT("PortFdoScanBus(%p)\n", DeviceExtension);
 
@@ -1140,6 +1157,10 @@ PortFdoScanBus(
 
                 /* Unit zero was done above, and the report may not name it */
                 if (Lun == 0)
+                    continue;
+
+                /* The miniport cannot address units past the limit it gave */
+                if (Lun >= DeviceExtension->Miniport.PortConfig.MaximumNumberOfLogicalUnits)
                     continue;
 
                 DPRINT("    Scanning logical unit %ld:%ld:%ld\n", Bus, Target, Lun);
@@ -1255,7 +1276,6 @@ PortFdoFilterRequirements(
  */
 static
 PPDO_DEVICE_EXTENSION
-NTAPI
 FdoScanPdoList(
     _In_ PFDO_DEVICE_EXTENSION FdoExtension,
     _In_ ULONG Bus,
@@ -1307,7 +1327,6 @@ FdoFindLun(
  */
 static
 KIRQL
-NTAPI
 PortFdoAcquireInterruptLocks(
     _In_ PFDO_DEVICE_EXTENSION FdoExtension)
 {
@@ -1339,7 +1358,6 @@ PortFdoAcquireInterruptLocks(
 
 static
 VOID
-NTAPI
 PortFdoReleaseInterruptLocks(
     _In_ PFDO_DEVICE_EXTENSION FdoExtension,
     _In_ KIRQL OldIrql)
@@ -1368,7 +1386,6 @@ PortFdoReleaseInterruptLocks(
  */
 static
 VOID
-NTAPI
 PortFdoStopAdapter(
     _In_ PFDO_DEVICE_EXTENSION FdoExtension)
 {
@@ -1539,7 +1556,11 @@ PortFdoPnp(
             MiniportFreeAdapterResources(&DeviceExtension->Miniport);
             PortFlushStarvedRequests(DeviceExtension);
             PortFreeRequestReserve(DeviceExtension);
-            ExDeleteNPagedLookasideList(&DeviceExtension->RequestReferenceLookaside);
+            if (DeviceExtension->RequestReferenceLookasideInitialized)
+            {
+                ExDeleteNPagedLookasideList(&DeviceExtension->RequestReferenceLookaside);
+                DeviceExtension->RequestReferenceLookasideInitialized = FALSE;
+            }
             DeviceExtension->PnpState = dsRemoved;
             break;
 

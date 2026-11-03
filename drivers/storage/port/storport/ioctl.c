@@ -126,7 +126,7 @@ FdoDeviceControlQueryProperty(
         AdapterDescriptor->BusType = BusTypeSata; /* FIXME: ＲＥＡＤ　ＦＲＯＭ　ＲＥＧＩＳＴＲＹ */
         AdapterDescriptor->BusMajorVersion = 2;
         AdapterDescriptor->BusMinorVersion = 0;
-        /* We translate for the miniport, so the class layer keeps sending legacy blocks */
+        /* TODO: Report PortConfig SrbType and AddressType once PortPdoScsi accepts extended SRBs */
         AdapterDescriptor->SrbType = SRB_TYPE_SCSI_REQUEST_BLOCK;
         AdapterDescriptor->AddressType = STORAGE_ADDRESS_TYPE_BTL8;
 

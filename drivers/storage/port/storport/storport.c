@@ -273,15 +273,6 @@ PortAddDevice(
     /* Initialize completion list header */
     InitializeSListHead(&DeviceExtension->CompletionList);
 
-    /* Initialize the request reference lookaside list */
-    ExInitializeNPagedLookasideList(&DeviceExtension->RequestReferenceLookaside,
-                                    NULL,
-                                    NULL,
-                                    0,
-                                    REQUEST_REFERENCE_ALLOCATION_SIZE,
-                                    TAG_QUEUED_REQUEST,
-                                    0);
-
     /* Initialize the queue for requests waiting on memory */
     PortInitializeStarvedRequestQueue(&DeviceExtension->StarvedRequests);
 

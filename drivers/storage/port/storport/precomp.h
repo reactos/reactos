@@ -100,8 +100,8 @@ typedef struct _MINIPORT
     PMINIPORT_DEVICE_EXTENSION MiniportExtension;
 
     /* Answers to the supported control type queries, unclaimed types are never sent */
-    BOOLEAN AdapterControlSupported[ScsiAdapterControlMax];
-    BOOLEAN UnitControlSupported[ScsiUnitControlMax];
+    ULONG AdapterControlSupportedBitmap;
+    ULONG UnitControlSupportedBitmap;
 
     /* No resources, interrupt or DMA adapter, it gets its own stack's device objects instead */
     BOOLEAN IsVirtual;
@@ -300,6 +300,7 @@ typedef struct _FDO_DEVICE_EXTENSION
 
     /* Backing store for the per request QUEUED_REQUEST_REFERENCE packets */
     NPAGED_LOOKASIDE_LIST RequestReferenceLookaside;
+    BOOLEAN RequestReferenceLookasideInitialized;
 
     /* Memory for one request, reserved at adapter start, for when pool runs out */
     struct _QUEUED_REQUEST_REFERENCE *ReservedRequestReference;
@@ -373,7 +374,7 @@ typedef struct _QUEUED_REQUEST_REFERENCE
     LIST_ENTRY PdoEntry;
     PPDO_DEVICE_EXTENSION PdoExtension;
     PSCSI_REQUEST_BLOCK Srb;
-    /* Trails this packet, set only when the miniport takes extended SRBs */
+    /* Points at Ex, set only when the miniport takes extended SRBs */
     PEXTENDED_REQUEST ExtendedRequest;
     PIRP Irp;
     PSTOR_SCATTER_GATHER_LIST ScatterGatherList;
@@ -396,11 +397,10 @@ typedef struct _QUEUED_REQUEST_REFERENCE
     /* FIXME: This is solely for debugging and should be removed */
     BOOLEAN DumpSpecialRequest;
     LONG SpecialRequestId;
-} QUEUED_REQUEST_REFERENCE, *PQUEUED_REQUEST_REFERENCE;
 
-/* The SRB format is only known after HwFindAdapter, so every packet has room for both */
-#define REQUEST_REFERENCE_ALLOCATION_SIZE \
-    (sizeof(QUEUED_REQUEST_REFERENCE) + sizeof(EXTENDED_REQUEST))
+    /* Must be the last member, packets for SCSI SRB miniports end before it */
+    EXTENDED_REQUEST Ex;
+} QUEUED_REQUEST_REFERENCE, *PQUEUED_REQUEST_REFERENCE;
 
 /* This and next one are for REPORT_LUNS command return structure, seems to be found nowhere else */
 typedef struct _LUN_DESCRIPTOR

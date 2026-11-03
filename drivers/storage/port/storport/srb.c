@@ -29,7 +29,7 @@ StorpSrbInitRequestReference(
     _In_ PPDO_DEVICE_EXTENSION PdoExtension)
 {
     /* Both the lookaside entries and the reserve are recycled, so they need zeroing */
-    RtlZeroMemory(RequestReference, sizeof(*RequestReference));
+    RtlZeroMemory(RequestReference, FIELD_OFFSET(QUEUED_REQUEST_REFERENCE, Ex));
 
     Srb->OriginalRequest = (PVOID)RequestReference;
     RequestReference->Irp = Irp;
@@ -40,7 +40,7 @@ StorpSrbInitRequestReference(
 
     if (PdoExtension->FdoExtension->Miniport.PortConfig.SrbType == SRB_TYPE_STORAGE_REQUEST_BLOCK)
     {
-        RequestReference->ExtendedRequest = (PEXTENDED_REQUEST)(RequestReference + 1);
+        RequestReference->ExtendedRequest = &RequestReference->Ex;
         RtlZeroMemory(RequestReference->ExtendedRequest, sizeof(*RequestReference->ExtendedRequest));
     }
 }

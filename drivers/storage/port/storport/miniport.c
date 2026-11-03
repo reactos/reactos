@@ -461,8 +461,7 @@ MiniportQueryAdapterControl(
     ULONG Length;
     ULONG Type;
 
-    RtlZeroMemory(Miniport->AdapterControlSupported,
-                  sizeof(Miniport->AdapterControlSupported));
+    Miniport->AdapterControlSupportedBitmap = 0;
 
     if (Miniport->InitData->HwAdapterControl == NULL)
         return;
@@ -470,11 +469,10 @@ MiniportQueryAdapterControl(
     Length = sizeof(*List) +
              (ScsiAdapterControlMax * sizeof(List->SupportedTypeList[0]));
 
-    List = ExAllocatePoolWithTag(NonPagedPool, Length, TAG_MINIPORT_DATA);
+    List = ExAllocatePoolZero(NonPagedPool, Length, TAG_MINIPORT_DATA);
     if (List == NULL)
         return;
 
-    RtlZeroMemory(List, Length);
     List->MaxControlType = ScsiAdapterControlMax;
 
     Result = Miniport->InitData->HwAdapterControl(&Miniport->MiniportExtension->HwDeviceExtension,
@@ -482,14 +480,15 @@ MiniportQueryAdapterControl(
                                                   List);
     if (Result == ScsiAdapterControlSuccess)
     {
-        RtlCopyMemory(Miniport->AdapterControlSupported,
-                      List->SupportedTypeList,
-                      sizeof(Miniport->AdapterControlSupported));
-
         for (Type = 0; Type < ScsiAdapterControlMax; Type++)
         {
-            if (Miniport->AdapterControlSupported[Type])
+            C_ASSERT(ScsiAdapterControlMax <= RTL_BITS_OF(Miniport->AdapterControlSupportedBitmap));
+
+            if (List->SupportedTypeList[Type])
+            {
                 DPRINT1("Adapter control %lu supported\n", Type);
+                Miniport->AdapterControlSupportedBitmap |= 1 << Type;
+            }
         }
     }
 
@@ -510,8 +509,8 @@ MiniportAdapterControl(
     DPRINT("MiniportAdapterControl(%p %u %p)\n",
             Miniport, ControlType, Parameters);
 
-    if (ControlType >= ScsiAdapterControlMax ||
-        !Miniport->AdapterControlSupported[ControlType])
+    ASSERT(ControlType < ScsiAdapterControlMax);
+    if (!(Miniport->AdapterControlSupportedBitmap & (1 << ControlType)))
     {
         return ScsiAdapterControlUnsuccessful;
     }
@@ -533,9 +532,9 @@ MiniportQueryUnitControl(
     PSCSI_SUPPORTED_CONTROL_TYPE_LIST List;
     SCSI_UNIT_CONTROL_STATUS Result;
     ULONG Length;
+    ULONG Type;
 
-    RtlZeroMemory(Miniport->UnitControlSupported,
-                  sizeof(Miniport->UnitControlSupported));
+    Miniport->UnitControlSupportedBitmap = 0;
 
     if (Miniport->InitData->HwInitializationDataSize <
         RTL_SIZEOF_THROUGH_FIELD(HW_INITIALIZATION_DATA, HwUnitControl) ||
@@ -547,11 +546,10 @@ MiniportQueryUnitControl(
     Length = sizeof(*List) +
              (ScsiUnitControlMax * sizeof(List->SupportedTypeList[0]));
 
-    List = ExAllocatePoolWithTag(NonPagedPool, Length, TAG_MINIPORT_DATA);
+    List = ExAllocatePoolZero(NonPagedPool, Length, TAG_MINIPORT_DATA);
     if (List == NULL)
         return;
 
-    RtlZeroMemory(List, Length);
     List->MaxControlType = ScsiUnitControlMax;
 
     Result = Miniport->InitData->HwUnitControl(&Miniport->MiniportExtension->HwDeviceExtension,
@@ -559,9 +557,16 @@ MiniportQueryUnitControl(
                                                List);
     if (Result == ScsiUnitControlSuccess)
     {
-        RtlCopyMemory(Miniport->UnitControlSupported,
-                      List->SupportedTypeList,
-                      sizeof(Miniport->UnitControlSupported));
+        for (Type = 0; Type < ScsiUnitControlMax; Type++)
+        {
+            C_ASSERT(ScsiUnitControlMax <= RTL_BITS_OF(Miniport->UnitControlSupportedBitmap));
+
+            if (List->SupportedTypeList[Type])
+            {
+                DPRINT1("Unit control %lu supported\n", Type);
+                Miniport->UnitControlSupportedBitmap |= 1 << Type;
+            }
+        }
     }
 
     ExFreePoolWithTag(List, TAG_MINIPORT_DATA);
@@ -581,8 +586,8 @@ MiniportUnitControl(
     DPRINT("MiniportUnitControl(%p %u %p)\n",
             Miniport, ControlType, Parameters);
 
-    if (ControlType >= ScsiUnitControlMax ||
-        !Miniport->UnitControlSupported[ControlType])
+    ASSERT(ControlType < ScsiUnitControlMax);
+    if (!(Miniport->UnitControlSupportedBitmap & (1 << ControlType)))
     {
         return ScsiUnitControlNotSupported;
     }
