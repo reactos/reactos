@@ -1246,8 +1246,8 @@ IntLoadKeyboardLayout(
     }
 
     RtlInitUnicodeString(&ustrKLID, szKLID);
-    hNewKL = NtUserLoadKeyboardLayoutEx(hFile, offTable, &multi, hklUnload, &ustrKLID, dwNewKL,
-                                        Flags);
+    hNewKL = NtUserLoadKeyboardLayoutEx(hFile, offTable, &multi, hklUnload,
+                                        &ustrKLID, dwNewKL, Flags);
 
     /* Close file handles, we own them: win32k duplicated them for its own purposes */
     if (hFile && hFile != INVALID_HANDLE_VALUE)
