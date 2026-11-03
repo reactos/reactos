@@ -129,7 +129,8 @@ elseif(ARCH STREQUAL "amd64")
 elseif(ARCH STREQUAL "arm64")
     list(APPEND ASM_SOURCE
         arm64/debug_asm.s
-        arm64/except_asm.s)
+        arm64/except_asm.s
+        arm64/unwind-asm.s)
     list(APPEND SOURCE
         amd64/dynfntbl.c
         arm64/unwind.c)
