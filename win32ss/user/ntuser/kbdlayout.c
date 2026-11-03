@@ -564,7 +564,7 @@ static PKBDFILE
 UserLoadKbdFile(
     _In_ HANDLE hKernelFile,
     _In_ ULONG offTable,
-    _In_ const UNICODE_STRING* pwszKLID)
+    _In_ PCUNICODE_STRING pwszKLID)
 {
     PKBDFILE pkf, pRet = NULL;
 
