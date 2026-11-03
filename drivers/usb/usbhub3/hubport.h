@@ -8,7 +8,7 @@
 #pragma once
 
 /* Port properties fixed at creation */
-enum class PortProperty : ULONG
+_Enum_is_bitflag_ enum class PortProperty : ULONG
 {
     Removable                = 0x00000001,
     AcpiUpcValid             = 0x00000002,
@@ -23,7 +23,7 @@ enum class PortProperty : ULONG
 };
 
 /* Port state flags, changed at run time */
-enum class PortFlag : ULONG
+_Enum_is_bitflag_ enum class PortFlag : ULONG
 {
     DeviceConnected          = 0x00000001,
     SupportsReattach         = 0x00000002,
@@ -40,7 +40,7 @@ enum class PortFlag : ULONG
 };
 
 /* Mux bookkeeping per port */
-enum class PortMuxFlag : ULONG
+_Enum_is_bitflag_ enum class PortMuxFlag : ULONG
 {
     PortChangePending        = 0x00000001,
     InterruptReference       = 0x00000002,

@@ -143,7 +143,7 @@ HubChildU2ForEnumerated(
     }
 
     Child->m_U2Timeout = HubChildHasPolicy(Child, HUB_LPM_POLICY_U2_INITIATE) ? U2_TIMEOUT_LONGEST
-                                                                             : TIMEOUT_ACCEPT_ONLY;
+                                                                              : TIMEOUT_ACCEPT_ONLY;
     return TRUE;
 }
 

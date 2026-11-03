@@ -20,8 +20,8 @@ struct HubReportWork
 WDF_DECLARE_CONTEXT_TYPE_WITH_NAME(HubReportWork, HubGetReportWork);
 
 /*
- * The throttle lives in a volatile subkey of the device's hardware key, so
- * it resets every boot. Any failure reads as "not throttled".
+ * The throttle lives in a volatile subkey of the device's hardware key,
+ * so it resets every boot. Any failure reads as "not throttled".
  */
 _IRQL_requires_(PASSIVE_LEVEL)
 static
@@ -39,7 +39,7 @@ HubOpenThrottleKey(
 
     Status = WdfDeviceOpenRegistryKey(Device,
                                       PLUGPLAY_REGKEY_DEVICE,
-                                      KEY_READ | KEY_WRITE,
+                                      KEY_CREATE_SUB_KEY,
                                       WDF_NO_OBJECT_ATTRIBUTES,
                                       &HardwareKey);
     if (!NT_SUCCESS(Status))

@@ -163,6 +163,7 @@ static const HubPolicyValue HubGlobalPolicy[] =
 /* A missing value is skipped; any other read error ends the walk */
 _IRQL_requires_(PASSIVE_LEVEL)
 static
+CODE_SEG("INIT")
 VOID
 NTAPI
 HubReadGlobalPolicy(VOID)
@@ -175,8 +176,7 @@ HubReadGlobalPolicy(VOID)
     HubDriver.SetFlag(HubGlobal::DisableOnSoftRemove);
 
     if (!NT_SUCCESS(HubOpenRegistryKey(L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\USBHUB\\hubg",
-                                       KEY_READ,
-                                       &Key)))
+                                       KEY_QUERY_VALUE, &Key)))
     {
         return;
     }
@@ -202,6 +202,7 @@ HubReadGlobalPolicy(VOID)
 /* On by default with an L1 timeout of 2; read errors are ignored */
 _IRQL_requires_(PASSIVE_LEVEL)
 static
+CODE_SEG("INIT")
 VOID
 NTAPI
 HubReadUsb20LpmPolicy(VOID)
@@ -213,8 +214,7 @@ HubReadUsb20LpmPolicy(VOID)
     HubDriver.Usb20LpmTimeout = 2;
 
     if (!NT_SUCCESS(HubOpenRegistryKey(L"\\Registry\\Machine\\System\\CurrentControlSet\\Control\\usb\\Usb20HardwareLpm",
-                                       KEY_READ,
-                                       &Key)))
+                                       KEY_QUERY_VALUE, &Key)))
     {
         return;
     }
@@ -235,6 +235,7 @@ HubReadUsb20LpmPolicy(VOID)
 
 _IRQL_requires_(PASSIVE_LEVEL)
 static
+CODE_SEG("INIT")
 VOID
 NTAPI
 HubReadLtmPolicy(VOID)
@@ -245,8 +246,7 @@ HubReadLtmPolicy(VOID)
     HubDriver.ClearFlag(HubGlobal::EnableUsbLtm);
 
     if (!NT_SUCCESS(HubOpenRegistryKey(L"\\Registry\\Machine\\System\\CurrentControlSet\\Control\\usb\\UsbLtm",
-                                       KEY_READ,
-                                       &Key)))
+                                       KEY_QUERY_VALUE, &Key)))
     {
         return;
     }
@@ -265,6 +265,7 @@ HubReadLtmPolicy(VOID)
 /* The kernel export is optional; without it no global flags apply */
 _IRQL_requires_(PASSIVE_LEVEL)
 static
+CODE_SEG("INIT")
 VOID
 NTAPI
 HubReadKseGlobalFlags(VOID)
@@ -306,8 +307,7 @@ HubReadUxdPolicy(VOID)
         HubDriver.ClearFlag(UxdValues[Index].Flag);
 
     Status = HubOpenRegistryKey(L"\\registry\\machine\\system\\currentcontrolset\\services\\usbhub\\uxd_control\\policy",
-                                KEY_READ,
-                                &Key);
+                                KEY_QUERY_VALUE, &Key);
     if (!NT_SUCCESS(Status))
         return Status;
 
@@ -369,6 +369,7 @@ HubEvtDriverCleanup(
 }
 
 extern "C"
+CODE_SEG("INIT")
 NTSTATUS
 NTAPI
 DriverEntry(

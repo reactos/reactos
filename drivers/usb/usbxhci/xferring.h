@@ -44,6 +44,7 @@ public:
 
     _IRQL_requires_max_(DISPATCH_LEVEL)
     NTSTATUS Enable();
+
     _IRQL_requires_max_(DISPATCH_LEVEL)
     VOID
     Disable(

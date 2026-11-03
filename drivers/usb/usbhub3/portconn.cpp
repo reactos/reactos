@@ -56,7 +56,7 @@ HubConnectorIdsEqual(
     if (First->Type != Second->Type ||
         First->Depth != Second->Depth ||
         First->TypeCConnectorId != Second->TypeCConnectorId ||
-        RtlCompareMemory(First->Location, Second->Location, sizeof(First->Location)) != sizeof(First->Location))
+        !RtlEqualMemory(First->Location, Second->Location, sizeof(First->Location)))
     {
         return FALSE;
     }
@@ -201,14 +201,13 @@ HubConnectorRegisterPort(
     Node = HubConnectorFindById(&Port->m_ConnectorId);
     if (Node == NULL)
     {
-        Node = (HubConnectorNode*)ExAllocatePoolWithTag(NonPagedPool, sizeof(*Node), HUB_TAG_PORT);
+        Node = (HubConnectorNode*)ExAllocatePoolZero(NonPagedPool, sizeof(*Node), HUB_TAG_PORT);
         if (Node == NULL)
         {
             DPRINT1("Port %u: connector node could not be allocated\n", Port->Number());
             return STATUS_INSUFFICIENT_RESOURCES;
         }
 
-        RtlZeroMemory(Node, sizeof(*Node));
         Node->Id = Port->m_ConnectorId;
         InsertTailList(&HubDriver.ConnectorMap, &Node->Link);
     }

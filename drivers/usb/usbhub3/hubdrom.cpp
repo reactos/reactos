@@ -59,10 +59,7 @@ HubMailboxComplete(
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Hub %p mailbox register %u access failed 0x%lx, URB status 0x%lx\n",
-                Hub,
-                Hub->m_Control.Urb.SetupPacket[4],
-                Status,
-                Hub->m_Control.Urb.Hdr.Status);
+                Hub, Hub->m_Control.Urb.SetupPacket[4], Status, Hub->m_Control.Urb.Hdr.Status);
 
         if (Hub->m_VerifierFlags & HUB_VERIFIER_CONTROL_FAILURE)
         {
@@ -170,14 +167,13 @@ HubMachine::AllocateDromBuffer(
     ULONG Bytes = ALIGN_UP_BY(Length, sizeof(ULONG));
     PULONG Buffer;
 
-    Buffer = (PULONG)ExAllocatePoolWithTag(NonPagedPool, Bytes, HUB_TAG_HUB);
+    Buffer = (PULONG)ExAllocatePoolZero(NonPagedPool, Bytes, HUB_TAG_HUB);
     if (Buffer == NULL)
     {
         DPRINT1("Hub %p no memory for a %lu byte router DROM\n", m_Hub, Length);
         return FALSE;
     }
 
-    RtlZeroMemory(Buffer, Bytes);
     m_Hub->m_DromPool = Buffer;
     m_Hub->m_DromBuffer = Buffer;
     m_Hub->m_DromLength = Length;
@@ -252,11 +248,7 @@ HubMachine::ParseDromIdentity()
         Identity->Known = TRUE;
 
         DPRINT("Hub %p router VID %04X PID %04X BCD %04X REV %04X\n",
-               m_Hub,
-               Identity->VendorId,
-               Identity->ProductId,
-               Identity->BcdDevice,
-               Identity->Revision);
+               m_Hub, Identity->VendorId, Identity->ProductId, Identity->BcdDevice, Identity->Revision);
         return;
     }
 
@@ -279,9 +271,5 @@ HubDromReportFirmwareUpdateDevice(
         return;
 
     DPRINT1("Hub %p firmware update device USB\\VID_%04X&PID_%04X&BCD_%04X&REV_%04X&GFU is not supported\n",
-            Hub,
-            Identity->VendorId,
-            Identity->ProductId,
-            Identity->BcdDevice,
-            Identity->Revision);
+            Hub, Identity->VendorId, Identity->ProductId, Identity->BcdDevice, Identity->Revision);
 }

@@ -373,14 +373,13 @@ HubKeepBillboardData(
 
     HubFreeBillboardInfo(Child);
 
-    Billboard = (HubBillboardInfo*)ExAllocatePoolWithTag(NonPagedPool, sizeof(*Billboard), HUB_TAG_HUB);
+    Billboard = (HubBillboardInfo*)ExAllocatePoolZero(NonPagedPool, sizeof(*Billboard), HUB_TAG_HUB);
     if (Billboard == NULL)
     {
         DPRINT1("Device %p no memory for the billboard record\n", Child);
         return;
     }
 
-    RtlZeroMemory(Billboard, sizeof(*Billboard));
     Billboard->CurrentMode = HUB_BILLBOARD_NO_MODE;
 
     /* Readers walk every mode the descriptor claims, which may run past bLength */
@@ -388,9 +387,9 @@ HubKeepBillboardData(
            Caps->bNumberOfAlternateModes * sizeof(Caps->AlternateMode[0]);
     Size = max(Size, (ULONG)Caps->bLength);
 
-    Billboard->Descriptor = (PUSB_DEVICE_CAPABILITY_BILLBOARD_DESCRIPTOR)ExAllocatePoolWithTag(NonPagedPool,
-                                                                                               Size,
-                                                                                               HUB_TAG_HUB);
+    Billboard->Descriptor = (PUSB_DEVICE_CAPABILITY_BILLBOARD_DESCRIPTOR)ExAllocatePoolZero(NonPagedPool,
+                                                                                            Size,
+                                                                                            HUB_TAG_HUB);
     if (Billboard->Descriptor == NULL)
     {
         DPRINT1("Device %p no memory for a %lu byte billboard copy\n", Child, Size);
@@ -398,7 +397,6 @@ HubKeepBillboardData(
         return;
     }
 
-    RtlZeroMemory(Billboard->Descriptor, Size);
     RtlCopyMemory(Billboard->Descriptor, Caps, Caps->bLength);
     Child->m_Billboard = Billboard;
 }
@@ -783,14 +781,13 @@ HubCacheString(
         return FALSE;
     }
 
-    Copy = (PUSB_STRING_DESCRIPTOR)ExAllocatePoolWithTag(NonPagedPool, String->bLength, HUB_TAG_DEVICE);
+    Copy = (PUSB_STRING_DESCRIPTOR)ExAllocatePoolZero(NonPagedPool, String->bLength, HUB_TAG_DEVICE);
     if (Copy == NULL)
     {
         DPRINT1("Device %p no memory for a %u byte string\n", Child, String->bLength);
         return FALSE;
     }
 
-    RtlZeroMemory(Copy, String->bLength);
     RtlCopyMemory(Copy, String, min((ULONG)String->bLength, Bytes));
     *Cache = Copy;
     return TRUE;

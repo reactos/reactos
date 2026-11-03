@@ -55,10 +55,12 @@ public:
     XhciEndpoint*
     EndpointAt(
         _In_ ULONG Dci) const;
+
     _IRQL_requires_max_(DISPATCH_LEVEL)
     VOID
     AddEndpoint(
         _In_ XhciEndpoint* Endpoint);
+
     _IRQL_requires_max_(DISPATCH_LEVEL)
     VOID
     RemoveEndpoint(
@@ -83,8 +85,10 @@ public:
     OnDeviceNotificationEvent(
         _In_ const XHCI_TRB* Event);
     VOID ControllerResetStarting();
+
     _IRQL_requires_(PASSIVE_LEVEL)
     VOID ControllerResetDone();
+
     VOID OnHostLost();
 
     /** The slot was lost without a Disable Slot: drop it and finish any pending request. */
@@ -239,10 +243,12 @@ private:
     BOOLEAN
     QueueTunnelStateDsm(
         _Inout_ PUSBDEVICE_UPDATE Payload);
+
     _IRQL_requires_(PASSIVE_LEVEL)
     VOID
     RunTunnelStateDsm(
         _Inout_ PUSBDEVICE_UPDATE Payload);
+
     VOID DisableDefaultEndpoint();
     VOID
     DisableConfiguredEndpoints(

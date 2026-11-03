@@ -73,10 +73,7 @@ HubAddPort(
     }
 
     DPRINT("Hub %p created port %u (%p), protocol 0x%x\n",
-           Hub->m_Device,
-           Info->PortNumber,
-           Port,
-           Info->Protocol);
+           Hub->m_Device, Info->PortNumber, Port, Info->Protocol);
 
     InsertTailList(&Hub->m_Mux.Ports, &Port->m_HubLink);
     Hub->m_Mux.PortCount++;
@@ -166,7 +163,7 @@ HubFdo::CreateChildPorts()
 
         HubTrackPortRange(Info.PortNumber, &m_First20Port, &m_Last20Port);
         if (!HubAddPort(this, &Info))
-            goto Cleanup;
+            goto Failed;
     }
 
     m_First30Port = 0xFFFF;
@@ -211,7 +208,7 @@ HubFdo::CreateChildPorts()
 
         HubTrackPortRange(Info.PortNumber, &m_First30Port, &m_Last30Port);
         if (!HubAddPort(this, &Info))
-            goto Cleanup;
+            goto Failed;
     }
 
     m_PortCount = max(m_Last20Port, m_Last30Port);
@@ -235,7 +232,7 @@ HubFdo::CreateChildPorts()
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Hub %p change bitmap allocation failed 0x%lx\n", m_Device, Status);
-        goto Cleanup;
+        goto Failed;
     }
 
     m_Interrupt.BitmapBuffer = (PUCHAR)Buffer;
@@ -246,7 +243,7 @@ HubFdo::CreateChildPorts()
     SetFlag(HubFlag::Configured);
     return TRUE;
 
-Cleanup:
+Failed:
     while (!IsListEmpty(&m_Mux.Ports))
     {
         Entry = RemoveHeadList(&m_Mux.Ports);
@@ -725,8 +722,10 @@ HubFdo::QueuePowerDownToDevices(
     }
 
     if (!Any || Counted == 0)
+    {
         Post(FanOut == HubDeviceFanOut::StopWhileSuspended ? HubEvent::DevicesStoppedAfterSuspend
-                                                         : HubEvent::DevicesReleased);
+                                                           : HubEvent::DevicesReleased);
+    }
 }
 
 /* Devices that registered while the hub was down are not stopped and are skipped */

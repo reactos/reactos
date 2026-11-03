@@ -50,7 +50,6 @@ HubSendUcxIoctl(
     Stack.Parameters.Others.Argument1 = Payload;
     WdfRequestWdmFormatUsingStackLocation(Request, &Stack);
 
-
     WdfRequestSetCompletionRoutine(Request, Completion, Hub);
 
     if (WdfRequestSend(Request, Target, WDF_NO_SEND_OPTIONS))
@@ -175,9 +174,7 @@ HubRootHubInfoComplete(
         Hub->m_ParentInfo.U1ExitLatency = Hub->m_RootHubInfo.Info.MaxU1ExitLatency;
         Hub->m_ParentInfo.U2ExitLatency = Hub->m_RootHubInfo.Info.MaxU2ExitLatency;
         DPRINT("Hub %p root hub has %u 2.0 and %u 3.0 ports\n",
-               Hub,
-               Hub->m_RootHubInfo.Info.NumberOf20Ports,
-               Hub->m_RootHubInfo.Info.NumberOf30Ports);
+               Hub, Hub->m_RootHubInfo.Info.NumberOf20Ports, Hub->m_RootHubInfo.Info.NumberOf30Ports);
     }
     else
     {

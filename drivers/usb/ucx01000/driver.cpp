@@ -15,12 +15,13 @@
 extern "C" DRIVER_INITIALIZE DriverEntry;
 static EVT_WDF_DRIVER_UNLOAD UcxEvtDriverUnload;
 
-/* SDDL_DEVOBJ_KERNEL_ONLY; wdmsec.h is not available here */
+/* SDDL_DEVOBJ_KERNEL_ONLY: an empty DACL, so no user mode caller can open it. wdmsec.h is not available here */
 DECLARE_CONST_UNICODE_STRING(UcxKernelOnlySddl, L"D:P");
 
 /* The loader needs a named device; another instance may own the first name */
 _IRQL_requires_(PASSIVE_LEVEL)
 static
+CODE_SEG("INIT")
 NTSTATUS
 NTAPI
 UcxCreateControlDevice(
@@ -71,6 +72,7 @@ UcxCreateControlDevice(
 /* Only a value of exactly 1 turns it on; anything missing leaves it off */
 _IRQL_requires_(PASSIVE_LEVEL)
 static
+CODE_SEG("INIT")
 VOID
 NTAPI
 UcxReadUsbFlags(VOID)
@@ -118,6 +120,7 @@ UcxEvtDriverUnload(
 }
 
 extern "C"
+CODE_SEG("INIT")
 NTSTATUS
 NTAPI
 DriverEntry(

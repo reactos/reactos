@@ -391,8 +391,7 @@ PortMachine::ReattachOrCreate(
     {
         /* The previous table retried here until creation worked */
         while (!CreateDevice())
-        {
-        }
+            NOTHING;
     }
     else if (!CreateDevice())
     {

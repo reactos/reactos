@@ -29,10 +29,7 @@ HubWaitForPnpEvent(
     {
         Minutes++;
         DbgPrint("USBHUB3 Watchdog: Thread 0x%p has waited %lu minutes for %s to complete for WDF object 0x%p\n",
-                 KeGetCurrentThread(),
-                 Minutes,
-                 What,
-                 Object);
+                 KeGetCurrentThread(), Minutes, What, Object);
     }
 }
 

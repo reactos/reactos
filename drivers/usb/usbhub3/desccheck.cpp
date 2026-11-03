@@ -1352,10 +1352,8 @@ HubDescCheckConfiguration(
     if (Walk.InterfacesFound != Descriptor->bNumInterfaces && GateApplies(Context, Gate::Legacy))
     {
         DPRINT1("%s %p configuration has %lu interfaces, bNumInterfaces %u\n",
-                Context->ForHub ? "Hub" : "Device",
-                Context->LogContext,
-                Walk.InterfacesFound,
-                Descriptor->bNumInterfaces);
+                Context->ForHub ? "Hub" : "Device", Context->LogContext,
+                Walk.InterfacesFound, Descriptor->bNumInterfaces);
         Valid = FALSE;
     }
 
@@ -1863,8 +1861,7 @@ CheckMsOs20Platform(
     HubMsOs20SetInfo* Sets = (HubMsOs20SetInfo*)((PUCHAR)Cap + Fixed);
     ULONG Count;
     ULONG Best = 0;
-    ULONG i;
-    ULONG j;
+    ULONG i, j;
 
     if (Walk->Info->MsOs20SetInfo != NULL)
     {
@@ -1979,9 +1976,9 @@ CheckPlatformCap(
     }
 
     /* Other platform UUIDs are accepted as they are */
-    if (RtlCompareMemory(Uuid, &HubMsOs20PlatformUuid, sizeof(GUID)) == sizeof(GUID))
+    if (IsEqualGUID(*(const GUID*)Uuid, HubMsOs20PlatformUuid))
         CheckMsOs20Platform(Walk, Cap, Result);
-    else if (RtlCompareMemory(Uuid, &HubPlatformFeaturesUuid, sizeof(GUID)) == sizeof(GUID))
+    else if (IsEqualGUID(*(const GUID*)Uuid, HubPlatformFeaturesUuid))
         CheckPlatformFeatures(Walk, (HubPlatformFeatures*)Cap, Result);
 }
 
@@ -2496,7 +2493,7 @@ HubDescCheckMsOsString(
 {
     static const WCHAR Expected[7] = { 'M', 'S', 'F', 'T', '1', '0', '0' };
 
-    if (RtlCompareMemory(Descriptor->Signature, Expected, sizeof(Expected)) == sizeof(Expected))
+    if (RtlEqualMemory(Descriptor->Signature, Expected, sizeof(Expected)))
         return TRUE;
 
     DPRINT1("Device %p MS OS string has the wrong signature\n", Context->LogContext);
@@ -2795,7 +2792,7 @@ CheckMsOs20Subset(
     RtlZeroMemory(&Private, sizeof(Private));
 
     Cursor = (HubMsOs20Common*)((PUCHAR)Subset + sizeof(*Subset));
-    do
+    while (Cursor != NULL)
     {
         ULONG Type = Cursor->wDescriptorType;
 
@@ -2827,7 +2824,7 @@ CheckMsOs20Subset(
             HubDescLog(Ctx, StepCode, FALSE);
             return FALSE;
         }
-    } while (Cursor != NULL);
+    }
 
     if (Valid)
         Info->Flags |= Function ? HUB_MSOS20_FUNCTION_SUBSET : HUB_MSOS20_CONFIG_SUBSET;
@@ -3147,7 +3144,7 @@ WalkMsOs20Set(
     /* The walk starts at the set header itself */
     End = (PUCHAR)Header + Header->wTotalLength;
     Cursor = (HubMsOs20Common*)Header;
-    do
+    while (Cursor != NULL)
     {
         ULONG Type = Cursor->wDescriptorType;
 
@@ -3171,7 +3168,7 @@ WalkMsOs20Set(
             HubDescLog(Ctx, HubDescCode::MsOs20PastEnd, FALSE);
             return FALSE;
         }
-    } while (Cursor != NULL);
+    }
 
     return Valid;
 }

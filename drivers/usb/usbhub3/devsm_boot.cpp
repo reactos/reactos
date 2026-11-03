@@ -248,7 +248,7 @@ DeviceMachine::OnBootDeviceDetached(
 
         case DsmEvent::ClientStreams:
             return ForwardStreams(m_ContextGone ? &BootDeviceDetachedContextGone :
-                                                   &BootDeviceDetached);
+                                                  &BootDeviceDetached);
 
         default:
             return SmUnhandled();

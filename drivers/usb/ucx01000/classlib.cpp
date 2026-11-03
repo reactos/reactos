@@ -85,13 +85,10 @@ UcxOnClientBind(
     *ClientGlobals = NULL;
 
     Minor = ClassBindInfo->Version.Minor;
-    if (ClassBindInfo->Version.Major != UCX_CLASS_MAJOR_VERSION || Minor == 0 || Minor > UCX_CLASS_MINOR_VERSION)
+    if (ClassBindInfo->Version.Major != UCX_CLASS_MAJOR_VERSION || Minor > UCX_CLASS_MINOR_VERSION)
     {
         DPRINT1("Client wants UCX %lu.%lu, have %u.%u\n",
-                ClassBindInfo->Version.Major,
-                Minor,
-                UCX_CLASS_MAJOR_VERSION,
-                UCX_CLASS_MINOR_VERSION);
+                ClassBindInfo->Version.Major, Minor, UCX_CLASS_MAJOR_VERSION, UCX_CLASS_MINOR_VERSION);
         return STATUS_INVALID_PARAMETER;
     }
 

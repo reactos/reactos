@@ -45,3 +45,4 @@ target_include_directories(ucx01000 PRIVATE
 target_link_libraries(ucx01000 ntoskrnl_vista libcntpr ${PSEH_LIB})
 add_importlibs(ucx01000 wdfldr ntoskrnl hal)
 add_cd_file(TARGET ucx01000 DESTINATION reactos/system32/drivers NO_CAB FOR all)
+add_registry_inf(ucx01000_reg.inf)

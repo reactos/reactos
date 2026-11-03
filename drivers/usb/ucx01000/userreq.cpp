@@ -714,7 +714,7 @@ UcxHandleLegacyName(
 
     for (Attempt = 0; Attempt < UCX_LEGACY_NAME_ATTEMPTS; Attempt++)
     {
-        Block = (PUSBUSER_REQUEST_HEADER)ExAllocatePoolWithTag(PagedPool, Size, UCX_POOL_TAG);
+        Block = (PUSBUSER_REQUEST_HEADER)ExAllocatePoolZero(PagedPool, Size, UCX_POOL_TAG);
         if (Block == NULL)
         {
             DPRINT1("Name IOCTL 0x%lx could not allocate %lu bytes\n", IoControlCode, Size);
@@ -722,7 +722,6 @@ UcxHandleLegacyName(
             return;
         }
 
-        RtlZeroMemory(Block, Size);
         Block->RequestBufferLength = Size;
 
         UcxUserRequest User(Block, Size);

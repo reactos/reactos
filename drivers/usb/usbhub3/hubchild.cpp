@@ -145,7 +145,7 @@ HubChild::Create(
 
     Child->m_LanguageId = DEVICE_DEFAULT_LANGUAGE;
     Child->m_Kind = 0;
-    Child->m_ValidationBitmap.SizeOfBitMap = sizeof(Child->m_ValidationBits) * 8;
+    Child->m_ValidationBitmap.SizeOfBitMap = RTL_BITS_OF(Child->m_ValidationBits);
     Child->m_ValidationBitmap.Buffer = Child->m_ValidationBits;
 
     Child->m_Timer.Initialize(TimerFired, Child);

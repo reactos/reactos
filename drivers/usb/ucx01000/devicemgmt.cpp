@@ -61,8 +61,7 @@ UcxEvtDeviceMgmtIoInternalDeviceControl(
         if (IoControlCode != IOCTL_UCXHUB_DEVICE_ENABLE)
         {
             DPRINT("UsbDevice %p IOCTL 0x%lx after a controller reset deprogrammed it\n",
-                   Device->m_Handle,
-                   IoControlCode);
+                   Device->m_Handle, IoControlCode);
             Device->FailManagement(Request, IoControlCode);
             Controller->UnblockReset();
             return;

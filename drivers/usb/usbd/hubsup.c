@@ -67,10 +67,9 @@ DllInitialize(
 
     /* Without the bitmap every hub simply gets number 0 */
     BitmapSize = sizeof(*Bitmap) + USBD_HUB_NUMBER_COUNT / 8;
-    Bitmap = ExAllocatePoolWithTag(PagedPool, BitmapSize, USBD_POOL_TAG);
+    Bitmap = ExAllocatePoolZero(PagedPool, BitmapSize, USBD_POOL_TAG);
     if (Bitmap)
     {
-        RtlZeroMemory(Bitmap, BitmapSize);
         RtlInitializeBitMap(Bitmap, (PULONG)(Bitmap + 1), USBD_HUB_NUMBER_COUNT);
         RtlSetBits(Bitmap, USBD_HUB_NUMBER_NONE, 1);
         UsbdHubNumbers = Bitmap;
@@ -233,7 +232,10 @@ USBD_AddDeviceToGlobalList(
     if (Result != USBD_GLOBAL_LIST_ADDED)
         goto Exit;
 
-    NewRecord = ExAllocatePoolWithTag(UsbdNonPagedPoolType, sizeof(*NewRecord), USBD_POOL_TAG);
+    /* The serial is stored right after the record */
+    NewRecord = ExAllocatePoolWithTag(UsbdNonPagedPoolType,
+                                      sizeof(*NewRecord) + SerialNumber->LengthInBytes,
+                                      USBD_POOL_TAG);
     if (!NewRecord)
     {
         Result = USBD_GLOBAL_LIST_NO_MEMORY;
@@ -244,16 +246,7 @@ USBD_AddDeviceToGlobalList(
 
     if (SerialNumber->LengthInBytes != 0)
     {
-        NewRecord->Serial = ExAllocatePoolWithTag(UsbdNonPagedPoolType,
-                                                  SerialNumber->LengthInBytes,
-                                                  USBD_POOL_TAG);
-        if (!NewRecord->Serial)
-        {
-            ExFreePoolWithTag(NewRecord, USBD_POOL_TAG);
-            Result = USBD_GLOBAL_LIST_NO_MEMORY;
-            goto Exit;
-        }
-
+        NewRecord->Serial = (PWCHAR)(NewRecord + 1);
         RtlCopyMemory(NewRecord->Serial, SerialNumber->Buffer, SerialNumber->LengthInBytes);
     }
 
@@ -304,11 +297,6 @@ USBD_RemoveDeviceFromGlobalList(
 
     KeReleaseSpinLock(&UsbdSerialListLock, OldIrql);
 
-    if (!Record)
-        return;
-
-    if (Record->Serial)
-        ExFreePoolWithTag(Record->Serial, USBD_POOL_TAG);
-
-    ExFreePoolWithTag(Record, USBD_POOL_TAG);
+    if (Record)
+        ExFreePoolWithTag(Record, USBD_POOL_TAG);
 }

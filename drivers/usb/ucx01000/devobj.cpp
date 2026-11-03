@@ -574,9 +574,7 @@ UcxUsbDevice::EnableForwardProgress(
             Pipe->ReservedIoActive)
         {
             DPRINT1("UsbDevice %p pipe %lu bad forward progress size %lu or already enabled\n",
-                    m_Handle,
-                    Index,
-                    Info->Pipes[Index].ReservedTransferLimit);
+                    m_Handle, Index, Info->Pipes[Index].ReservedTransferLimit);
             return STATUS_INVALID_PARAMETER;
         }
     }

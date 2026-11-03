@@ -352,7 +352,7 @@ XhciCommandRing::DrainAllLocked(
 {
     XhciCommand* Command;
 
-    /* QUIRK: Code is left as it was */
+    /* QUIRK: Code keeps whatever it last held, so handlers must check Status first */
     while (!IsListEmpty(&m_Pending))
     {
         Command = XhciCmdFromLink(RemoveHeadList(&m_Pending));
@@ -495,8 +495,7 @@ XhciCommandRing::OnCompletionEvent(
     if (!Retired && !m_OutOfOrderSeen)
     {
         DPRINT1("Command completion out of order: TRB 0x%I64x code %lu\n",
-                Pointer,
-                static_cast<ULONG>(Code));
+                Pointer, static_cast<ULONG>(Code));
         m_OutOfOrderSeen = TRUE;
         OutOfOrder = TRUE;
     }
@@ -588,8 +587,7 @@ XhciCommandRing::HandleRingStopped(
     if (Reported != Expected && !(Reported == m_LinkAddress && m_Dequeue == 0))
     {
         DPRINT1("Command ring stopped at 0x%I64x, expected 0x%I64x; asking for a reset\n",
-                Reported,
-                Expected);
+                Reported, Expected);
         m_Reset = ResetPhase::Requested;
         KeReleaseSpinLock(&m_Lock, OldIrql);
 
@@ -724,8 +722,10 @@ XhciCommandRing::OnTimer()
     XhciCmdCompleteList(&Finished);
 
     if (WantReset)
+    {
         m_Controller->RaiseControllerFault(WantInternal ? XhciRecovery::InternalReset : XhciRecovery::ResetHost,
-                                       XhciCmdReasonAbortFailed);
+                                           XhciCmdReasonAbortFailed);
+    }
 }
 
 VOID

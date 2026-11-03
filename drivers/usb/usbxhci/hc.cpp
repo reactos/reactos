@@ -37,12 +37,26 @@ static const GUID XhciGuidDsm =
     { 0xac340cb7, 0xe901, 0x45bf, { 0xb7, 0xe6, 0x2b, 0x34, 0xec, 0x93, 0x1e, 0x23 } };
 
 /* Recovery action bits */
+#define XHCI_RECOVER_NONE               0x00
 #define XHCI_RECOVER_INTERNAL_RESET     0x01
 #define XHCI_RECOVER_RESET              0x02
 #define XHCI_RECOVER_NO_RESTART         0x04
 #define XHCI_RECOVER_GONE               0x08
 #define XHCI_RECOVER_GONE_PNP           0x10
 #define XHCI_RECOVER_REPORT_FAILED      0x20
+
+/* Recovery reasons reported with a controller reset */
+#define XHCI_REASON_NO_LIVE_DUMP            0x0000
+#define XHCI_REASON_HOST_SYSTEM_ERROR       0x1001
+#define XHCI_REASON_HOST_CONTROLLER_ERROR   0x1002
+#define XHCI_REASON_RESET_FAILED            0x1007
+#define XHCI_REASON_RESTART_FAILED          0x1008
+#define XHCI_REASON_STOP_FAILED             0x100B
+#define XHCI_REASON_NOT_SUPPORTED           0x100C
+#define XHCI_REASON_REMOVED                 0x100D
+#define XHCI_REASON_OLD_FIRMWARE            0x100F
+#define XHCI_REASON_START_FAILED            0x101C
+#define XHCI_REASON_TEST_RESET              0x103F
 
 /* Hardware verifier conditions raised here */
 #define XHCI_VERIFY_FIRMWARE_OUTDATED   0x00000001
@@ -322,14 +336,13 @@ XhciQueryAcpiIdentity(
         return STATUS_ACPI_INVALID_DATA;
     }
 
-    Info = (PXHCI_ACPI_DEVICE_INFO)ExAllocatePoolWithTag(NonPagedPool, Size, XHCI_TAG_CONTROLLER);
+    Info = (PXHCI_ACPI_DEVICE_INFO)ExAllocatePoolZero(NonPagedPool, Size, XHCI_TAG_CONTROLLER);
     if (Info == NULL)
     {
         DPRINT1("No memory for %lu bytes of ACPI device information\n", Size);
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-    RtlZeroMemory(Info, Size);
     WDF_MEMORY_DESCRIPTOR_INIT_BUFFER(&Output, Info, Size);
     Status = WdfIoTargetSendIoctlSynchronously(Target, NULL, XHCI_ACPI_GET_DEVICE_INFORMATION,
                                                NULL, &Output, NULL, &Returned);
@@ -397,6 +410,7 @@ XhciQueryIdentity(
     else if (_wcsicmp(Enumerator, L"URS") == 0)
     {
         /* ReactOS has no USB role switch enumerator */
+        UNIMPLEMENTED;
         DPRINT1("Controllers below the role switch enumerator are not supported\n");
         return STATUS_NOT_SUPPORTED;
     }
@@ -456,16 +470,16 @@ XhciController::QueryErrataDatabase(
 
     if (m_Identity.FirmwareVersion != XHCI_FIRMWARE_UNKNOWN)
     {
-        RtlStringCchPrintfW(Keys[KeyCount], RTL_NUMBER_OF(Keys[0]), L"%s&%I64X",
+        RtlStringCchPrintfW(Keys[KeyCount], RTL_NUMBER_OF(Keys[KeyCount]), L"%s&%I64X",
                             Keys[3], m_Identity.FirmwareVersion);
         KeyCount++;
     }
 
     if (Pci)
     {
-        RtlStringCchPrintfW(Keys[KeyCount], RTL_NUMBER_OF(Keys[0]), L"%s&SUBSYS_%04X%04X",
+        RtlStringCchPrintfW(Keys[KeyCount], RTL_NUMBER_OF(Keys[KeyCount]), L"%s&SUBSYS_%04X%04X",
                             Keys[2], m_Identity.PciSubsystemId, m_Identity.PciSubsystemVendorId);
-        RtlStringCchPrintfW(Keys[KeyCount + 1], RTL_NUMBER_OF(Keys[0]), L"%s&REV_%02X",
+        RtlStringCchPrintfW(Keys[KeyCount + 1], RTL_NUMBER_OF(Keys[KeyCount + 1]), L"%s&REV_%02X",
                             Keys[KeyCount], m_Identity.PciRevisionId);
         KeyCount += 2;
     }
@@ -494,13 +508,13 @@ XhciController::QueryErrataDatabase(
     {
         /* Skip recovery at AddDevice; that device is about to be deleted */
         if (!AtAddDevice)
-            QueueRecovery(XHCI_RECOVER_NO_RESTART, 0x100C);
+            QueueRecovery(XHCI_RECOVER_NO_RESTART, XHCI_REASON_NOT_SUPPORTED);
     }
     else if (HasErrata(XhciErrata::HostStaleFirmware))
     {
         DPRINT1("Controller firmware 0x%I64x is outdated\n", m_Identity.FirmwareVersion);
         VerifierCheck(XHCI_VERIFY_FIRMWARE_OUTDATED);
-        QueueRecovery(0, 0x100F);
+        QueueRecovery(XHCI_RECOVER_NONE, XHCI_REASON_OLD_FIRMWARE);
     }
 }
 
@@ -683,14 +697,13 @@ XhciController::EvaluateDsm(
     Size = sizeof(ACPI_EVAL_INPUT_BUFFER_COMPLEX) + sizeof(GUID) - sizeof(ULONG) +
            3 * sizeof(ACPI_METHOD_ARGUMENT);
 
-    Input = (PACPI_EVAL_INPUT_BUFFER_COMPLEX)ExAllocatePoolWithTag(NonPagedPool, Size, XHCI_TAG_CONTROLLER);
+    Input = (PACPI_EVAL_INPUT_BUFFER_COMPLEX)ExAllocatePoolZero(NonPagedPool, Size, XHCI_TAG_CONTROLLER);
     if (Input == NULL)
     {
         DPRINT1("No memory for the _DSM(%lu) call\n", Function);
         return;
     }
 
-    RtlZeroMemory(Input, Size);
     Input->Signature = ACPI_EVAL_INPUT_BUFFER_COMPLEX_SIGNATURE;
     Input->MethodNameAsUlong = 'MSD_';
     Input->Size = Size;
@@ -1009,6 +1022,8 @@ XhciCreateFdo(
     _In_ PWDF_OBJECT_ATTRIBUTES Attributes,
     _Out_ WDFDEVICE* Device)
 {
+    /* SDDL_DEVOBJ_SYS_ALL_ADM_RWX_WORLD_RW_RES_R: SYSTEM all, Administrators read/write/execute,
+     * Everyone read/write, restricted code read only */
     DECLARE_CONST_UNICODE_STRING(Sddl, L"D:P(A;;GA;;;SY)(A;;GRGWGX;;;BA)(A;;GRGW;;;WD)(A;;GR;;;RC)");
     WCHAR Buffer[32];
     UNICODE_STRING Name;
@@ -1016,7 +1031,6 @@ XhciCreateFdo(
     ULONG Instance;
     NTSTATUS Status;
 
-    /* QUIRK: the name search has no upper bound */
     for (Instance = 0;; Instance++)
     {
         RtlStringCchPrintfW(Buffer, RTL_NUMBER_OF(Buffer), L"\\Device\\USBFDO-%lu", Instance);
@@ -1293,7 +1307,7 @@ XhciController::PrepareHardware(
 Fail:
     /* Keeps PnP from restarting a controller that cannot start */
     DPRINT1("Controller %p failed to prepare hardware 0x%lx\n", this, Status);
-    QueueRecovery(XHCI_RECOVER_REPORT_FAILED, 0x101C);
+    QueueRecovery(XHCI_RECOVER_REPORT_FAILED, XHCI_REASON_START_FAILED);
     return Status;
 }
 
@@ -1461,7 +1475,7 @@ Exit:
     }
     else
     {
-        QueueRecovery(0, 0x101C);
+        QueueRecovery(XHCI_RECOVER_NONE, XHCI_REASON_START_FAILED);
         SetGone(FALSE);
     }
 
@@ -1854,7 +1868,7 @@ XhciController::WatchdogTick()
     {
         DPRINT1("Host System Error, USBSTS 0x%08lx\n", Usbsts);
         VerifierCheck(XHCI_VERIFY_HSE);
-        QueueRecovery(XHCI_RECOVER_RESET, 0x1001);
+        QueueRecovery(XHCI_RECOVER_RESET, XHCI_REASON_HOST_SYSTEM_ERROR);
         return;
     }
 
@@ -1862,7 +1876,7 @@ XhciController::WatchdogTick()
     {
         DPRINT1("Host Controller Error, USBSTS 0x%08lx\n", Usbsts);
         VerifierCheck(XHCI_VERIFY_HCE);
-        QueueRecovery(XHCI_RECOVER_RESET, 0x1002);
+        QueueRecovery(XHCI_RECOVER_RESET, XHCI_REASON_HOST_CONTROLLER_ERROR);
         return;
     }
 
@@ -1928,9 +1942,9 @@ XhciController::SetGone(
     m_Gone = TRUE;
 
     if (ReportToPnp)
-        QueueRecovery(XHCI_RECOVER_GONE_PNP, 0);
+        QueueRecovery(XHCI_RECOVER_GONE_PNP, XHCI_REASON_NO_LIVE_DUMP);
     else
-        QueueRecovery(XHCI_RECOVER_GONE, 0x100D);
+        QueueRecovery(XHCI_RECOVER_GONE, XHCI_REASON_REMOVED);
 }
 
 VOID
@@ -2138,7 +2152,7 @@ XhciController::InternalReset()
     if (!NT_SUCCESS(StopStatus))
     {
         VerifierCheck(XHCI_VERIFY_STOP_TIMEOUT);
-        QueueRecovery(XHCI_RECOVER_NO_RESTART, 0x100B);
+        QueueRecovery(XHCI_RECOVER_NO_RESTART, XHCI_REASON_STOP_FAILED);
         Status = StopStatus;
     }
     else
@@ -2149,7 +2163,7 @@ XhciController::InternalReset()
         {
             DPRINT1("Internal reset failed 0x%lx\n", ResetStatus);
             VerifierCheck(XHCI_VERIFY_RESET_TIMEOUT);
-            QueueRecovery(XHCI_RECOVER_NO_RESTART, 0x1007);
+            QueueRecovery(XHCI_RECOVER_NO_RESTART, XHCI_REASON_RESET_FAILED);
             Status = ResetStatus;
         }
         else
@@ -2159,7 +2173,7 @@ XhciController::InternalReset()
             {
                 DPRINT1("Start after internal reset failed 0x%lx\n", Status);
                 VerifierCheck(XHCI_VERIFY_START_TIMEOUT);
-                QueueRecovery(XHCI_RECOVER_NO_RESTART, 0x1008);
+                QueueRecovery(XHCI_RECOVER_NO_RESTART, XHCI_REASON_RESTART_FAILED);
             }
         }
     }
@@ -2487,7 +2501,7 @@ XhciEvtPreprocessInternalIoctl(
 
     if (Controller != NULL && Stack->Parameters.DeviceIoControl.IoControlCode == XHCI_TEST_RESET_IOCTL)
     {
-        Controller->RaiseControllerFault(XhciRecovery::ResetHost, 0x103F);
+        Controller->RaiseControllerFault(XhciRecovery::ResetHost, XHCI_REASON_TEST_RESET);
         Irp->IoStatus.Status = STATUS_SUCCESS;
         IoCompleteRequest(Irp, IO_NO_INCREMENT);
         return STATUS_SUCCESS;

@@ -49,6 +49,9 @@ enum class XhciBulkStep : ULONG
 
 C_ASSERT((sizeof(XhciBulkStage) % 8) == 0);
 
+/* XhciBulkEventData keeps the endpoint type in the low bits of a stage address */
+C_ASSERT(alignof(XhciBulkStage) > XHCI_EVENT_DATA_TYPE_MASK);
+
 /* Small helpers that only use public state *********************************/
 
 static
@@ -499,16 +502,19 @@ VOID
 XhciBulkRing::Cleanup(
     _In_ XhciTransferRing* Ring)
 {
+    BOOLEAN Owned;
     KIRQL OldIrql;
 
     KeAcquireSpinLock(&Ring->m_Lock, &OldIrql);
-    if (OwnsRequests(Ring))
+    Owned = OwnsRequests(Ring);
+    KeReleaseSpinLock(&Ring->m_Lock, OldIrql);
+
+    if (Owned)
     {
         DPRINT1("Bulk DCI %lu stream %lu cleaned up with requests still owned\n",
                 Ring->m_Endpoint->Dci(), Ring->m_StreamId);
         NT_ASSERT(FALSE);
     }
-    KeReleaseSpinLock(&Ring->m_Lock, OldIrql);
 }
 
 VOID
@@ -572,7 +578,7 @@ XhciBulkRing::EvtCompletionDpc(
     }
     Bulk->m_DpcRunning = TRUE;
 
-    do
+    while (!IsListEmpty(&Bulk->m_Completion))
     {
         InitializeListHead(&Batch);
         XhciBulkMoveList(&Batch, &Bulk->m_Completion);
@@ -581,7 +587,7 @@ XhciBulkRing::EvtCompletionDpc(
         CompleteBatch(Ring, &Batch);
 
         KeAcquireSpinLock(&Ring->m_Lock, &OldIrql);
-    } while (!IsListEmpty(&Bulk->m_Completion));
+    }
 
     if ((Bulk->m_Flags & XhciBulkReclaimAck) && !OwnsRequests(Ring))
     {
@@ -635,9 +641,11 @@ XhciBulkRing::SuspendRingFill(
         Ring->ChangeMapState(FALSE, XhciMapState::Halting, XhciMapState::Halted);
 }
 
+/* Runs the stream stop or halt handling once per Flag (XhciBulkHalted or XhciBulkStoppedSeen) */
 VOID
-XhciBulkRing::OnPipeHalted(
-    _In_ XhciTransferRing* Ring)
+XhciBulkRing::StreamStopOrHaltOnce(
+    _In_ XhciTransferRing* Ring,
+    _In_ ULONG Flag)
 {
     XhciBulkRing* Bulk = &Ring->m_Type.Bulk;
     KIRQL OldIrql;
@@ -646,31 +654,26 @@ XhciBulkRing::OnPipeHalted(
         return;
 
     KeAcquireSpinLock(&Ring->m_Lock, &OldIrql);
-    if (!(Bulk->m_Flags & XhciBulkHalted))
+    if (!(Bulk->m_Flags & Flag))
     {
         StreamStopOrHalt(Ring);
-        Bulk->m_Flags |= XhciBulkHalted;
+        Bulk->m_Flags |= Flag;
     }
     KeReleaseSpinLock(&Ring->m_Lock, OldIrql);
+}
+
+VOID
+XhciBulkRing::OnPipeHalted(
+    _In_ XhciTransferRing* Ring)
+{
+    StreamStopOrHaltOnce(Ring, XhciBulkHalted);
 }
 
 VOID
 XhciBulkRing::StoppedEventReceived(
     _In_ XhciTransferRing* Ring)
 {
-    XhciBulkRing* Bulk = &Ring->m_Type.Bulk;
-    KIRQL OldIrql;
-
-    if (Ring->m_StreamId == 0)
-        return;
-
-    KeAcquireSpinLock(&Ring->m_Lock, &OldIrql);
-    if (!(Bulk->m_Flags & XhciBulkStoppedSeen))
-    {
-        StreamStopOrHalt(Ring);
-        Bulk->m_Flags |= XhciBulkStoppedSeen;
-    }
-    KeReleaseSpinLock(&Ring->m_Lock, OldIrql);
+    StreamStopOrHaltOnce(Ring, XhciBulkStoppedSeen);
 }
 
 VOID
@@ -729,7 +732,7 @@ XhciBulkRing::RecoverTransfers(
     Bulk->m_Flags |= XhciBulkReclaimAck;
     KeReleaseSpinLock(&Ring->m_Lock, OldIrql);
 
-    /* Only the DPC can tell that nothing is owned any more */
+    /* Only the DPC can tell that nothing is owned anymore */
     QueueCompletionDpc(Ring);
 }
 
@@ -1141,7 +1144,7 @@ XhciBulkRing::InitTransfer(
     WDF_REQUEST_PARAMETERS Parameters;
     struct _URB_BULK_OR_INTERRUPT_TRANSFER* Urb;
 
-    /* A requeued request keeps where it got to */
+    /* A requeued request is already set up; keep its progress instead of starting over */
     if (Transfer->Initialized == XhciBulkTransferTag)
     {
         NT_ASSERT(Transfer->CancelState == XhciBulkCancel::Idle);
@@ -1726,8 +1729,8 @@ XhciBulkRing::DmaCallback(
 /* TD building ***************************************************************/
 
 /**
- * Writes the TD of a stage and hands it to the controller. On failure the ring is put
- * back as it was and the caller fails the stage.
+ * Writes the TD of a stage and hands it to the controller. On failure
+ * the ring is put back as it was and the caller fails the stage.
  */
 BOOLEAN
 XhciBulkRing::BuildTd(

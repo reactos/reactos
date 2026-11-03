@@ -667,7 +667,7 @@ HubFdoApplyTunnelLpmRule(
         return;
 
     DPRINT("Hub %p turns link power management off below it\n", Hub);
-    InterlockedOr((volatile LONG*)&Hub->m_ParentInfo.Flags, HUB_PARENT_DISABLE_LPM);
+    InterlockedOr((PLONG)&Hub->m_ParentInfo.Flags, HUB_PARENT_DISABLE_LPM);
 }
 
 /* A failed prepare still puts the hub on the list; release hardware takes it off */
@@ -823,6 +823,7 @@ HubFdo::EvtD0Entry(
     _In_ WDF_POWER_DEVICE_STATE PreviousState)
 {
     HubFdo* Hub = FromDevice(Device);
+    POWER_ACTION Action = WdfDeviceGetSystemPowerAction(Device);
 
     UNREFERENCED_PARAMETER(PreviousState);
 
@@ -844,11 +845,9 @@ HubFdo::EvtD0Entry(
     }
 
     DPRINT("Hub %p D0 entry from state %d, action %d\n",
-           Device,
-           (int)PreviousState,
-           (int)WdfDeviceGetSystemPowerAction(Device));
+           Device, (int)PreviousState, (int)Action);
 
-    switch (WdfDeviceGetSystemPowerAction(Device))
+    switch (Action)
     {
         case PowerActionSleep:
         case PowerActionHibernate:
@@ -861,9 +860,7 @@ HubFdo::EvtD0Entry(
             return Hub->PostAndWait(HubEvent::D0Entry, "D0Entry");
 
         default:
-            DPRINT1("Hub %p D0 entry with unexpected power action %d\n",
-                    Device,
-                    (int)WdfDeviceGetSystemPowerAction(Device));
+            DPRINT1("Hub %p D0 entry with unexpected power action %d\n", Device, (int)Action);
             NT_ASSERT(FALSE);
             return STATUS_SUCCESS;
     }
@@ -876,16 +873,15 @@ HubFdo::EvtD0Exit(
     _In_ WDF_POWER_DEVICE_STATE TargetState)
 {
     HubFdo* Hub = FromDevice(Device);
+    POWER_ACTION Action = WdfDeviceGetSystemPowerAction(Device);
 
     Hub->m_PowerState = TargetState;
     Hub->ClearFlag(HubFlag::PowerReferenceAllowed);
 
     DPRINT("Hub %p D0 exit to state %d, action %d\n",
-           Device,
-           (int)TargetState,
-           (int)WdfDeviceGetSystemPowerAction(Device));
+           Device, (int)TargetState, (int)Action);
 
-    switch (WdfDeviceGetSystemPowerAction(Device))
+    switch (Action)
     {
         case PowerActionSleep:
         case PowerActionHibernate:
@@ -900,9 +896,7 @@ HubFdo::EvtD0Exit(
             return Hub->PostAndWait(HubEvent::D0Exit, "D0Exit");
 
         default:
-            DPRINT1("Hub %p D0 exit with unexpected power action %d\n",
-                    Device,
-                    (int)WdfDeviceGetSystemPowerAction(Device));
+            DPRINT1("Hub %p D0 exit with unexpected power action %d\n", Device, (int)Action);
             return STATUS_SUCCESS;
     }
 }
@@ -1237,9 +1231,7 @@ VOID
 HubMachine::SignalPnpFailure()
 {
     DPRINT1("Hub %p start failed in state %s, depth %lu\n",
-            m_Hub->m_Device,
-            SmCurrent()->Name,
-            SmDepth());
+            m_Hub->m_Device, SmCurrent()->Name, SmDepth());
 
     m_Hub->m_PnpStatus = STATUS_UNSUCCESSFUL;
     KeSetEvent(&m_Hub->m_PnpEvent, IO_NO_INCREMENT, FALSE);
@@ -1249,9 +1241,7 @@ VOID
 HubMachine::ReportFailureToPnp()
 {
     DPRINT1("Hub %p failed in state %s, message 0x%lx\n",
-            m_Hub->m_Device,
-            SmCurrent()->Name,
-            m_Hub->m_FailureMessageId);
+            m_Hub->m_Device, SmCurrent()->Name, m_Hub->m_FailureMessageId);
 
     if (m_Hub->m_FailureMessageId != 0)
         HubReportPnpProblem(m_Hub->m_Device, m_Hub->m_FailureMessageId);
@@ -1282,13 +1272,11 @@ HubMachine::LogResetRecovery()
     m_Hub->m_LifetimeRecoveryCount++;
 
     DPRINT1("Hub %p reset recovery %lu, last port status 0x%lx\n",
-            m_Hub->m_Device,
-            m_Hub->m_LifetimeRecoveryCount,
-            (ULONG)m_Hub->m_LastResetPortStatus);
+            m_Hub->m_Device, m_Hub->m_LifetimeRecoveryCount, (ULONG)m_Hub->m_LastResetPortStatus);
 
     if (!NT_SUCCESS(WdfDeviceOpenRegistryKey(m_Hub->m_Device,
                                              PLUGPLAY_REGKEY_DEVICE,
-                                             KEY_WRITE,
+                                             KEY_SET_VALUE,
                                              WDF_NO_OBJECT_ATTRIBUTES,
                                              &Key)))
     {

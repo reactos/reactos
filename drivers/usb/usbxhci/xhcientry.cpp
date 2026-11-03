@@ -5,12 +5,13 @@
  * COPYRIGHT:   Copyright 2026 Justin Miller <justin.miller@reactos.org>
  */
 
+#include <ntifs.h>
+#include <ndk/exfuncs.h>
 #include "xhcidrv.h"
 
 #define NDEBUG
 #include <debug.h>
 
-#define XHCI_CODE_INTEGRITY_CLASS       103
 #define XHCI_CODE_INTEGRITY_TESTSIGN    0x00000002
 
 typedef struct _XHCI_CODE_INTEGRITY
@@ -19,19 +20,10 @@ typedef struct _XHCI_CODE_INTEGRITY
     ULONG CodeIntegrityOptions;
 } XHCI_CODE_INTEGRITY;
 
-extern "C"
-NTSYSAPI
-NTSTATUS
-NTAPI
-ZwQuerySystemInformation(
-    _In_ ULONG SystemInformationClass,
-    _Out_writes_bytes_opt_(Length) PVOID SystemInformation,
-    _In_ ULONG Length,
-    _Out_opt_ PULONG ReturnLength);
-
 XhciDriverData XhciDriver;
 
 static
+CODE_SEG("INIT")
 BOOLEAN
 NTAPI
 XhciIsTestSigningOn(VOID)
@@ -42,7 +34,7 @@ XhciIsTestSigningOn(VOID)
     Info.Length = sizeof(Info);
     Info.CodeIntegrityOptions = 0;
 
-    Status = ZwQuerySystemInformation(XHCI_CODE_INTEGRITY_CLASS, &Info, sizeof(Info), NULL);
+    Status = ZwQuerySystemInformation(SystemCodeIntegrityInformation, &Info, sizeof(Info), NULL);
     if (!NT_SUCCESS(Status))
         return FALSE;
 
@@ -50,6 +42,7 @@ XhciIsTestSigningOn(VOID)
 }
 
 extern "C"
+CODE_SEG("INIT")
 NTSTATUS
 NTAPI
 DriverEntry(

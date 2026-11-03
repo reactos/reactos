@@ -420,6 +420,7 @@ DeviceMachine::AddChildToHub()
 {
     HubChild* Child = m_Device;
     USB_ID_STRING Serial;
+    ULONG Result;
 
     if (Child->m_SerialNumber == NULL)
         return DsmAddChildDone;
@@ -429,13 +430,15 @@ DeviceMachine::AddChildToHub()
     Serial.LengthInBytes = Child->m_SerialNumberLength;
     Serial.Buffer = Child->m_SerialNumber;
 
-    switch (USBD_AddDeviceToGlobalList(Child,
-                                       Child->m_Hub,
-                                       Child->m_Port->Number(),
-                                       HubConnectorNodeForPort(Child->m_Port),
-                                       Child->m_DeviceDescriptor.idVendor,
-                                       Child->m_DeviceDescriptor.idProduct,
-                                       &Serial))
+    Result = USBD_AddDeviceToGlobalList(Child,
+                                        Child->m_Hub,
+                                        Child->m_Port->Number(),
+                                        HubConnectorNodeForPort(Child->m_Port),
+                                        Child->m_DeviceDescriptor.idVendor,
+                                        Child->m_DeviceDescriptor.idProduct,
+                                        &Serial);
+
+    switch (Result)
     {
         case USBD_GLOBAL_LIST_ADDED:
             return DsmAddChildDone;

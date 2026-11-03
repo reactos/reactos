@@ -100,7 +100,7 @@ public:
     XhciIdentity m_Identity;
 
     /** Internal fixes keyed by PCI id, bits of m_InternalFlags. */
-    enum : ULONG64
+    _Enum_is_bitflag_ enum : ULONG64
     {
         FixFrescoShadow = 0x01,
         FixFrescoControl = 0x02,

@@ -924,7 +924,7 @@ PortMachine::OnResumeSettling(
 
 /**
  * @brief
- * An over current seen now, or one that came and went while suspended, is reported.
+ * An over-current seen now, or one that came and went while suspended, is reported.
  */
 SM_RESULT
 PortMachine::OnResumeReading(
@@ -947,8 +947,8 @@ PortMachine::OnResumeReading(
     if (bits.OverCurrent || bits.OverCurrentChanged)
     {
         MarkOverCurrentCause();
-        return ReturnFromFrame(bits.OverCurrent ? PortEvent::ChangeOverCurrent :
-                                                  PortEvent::ChangeOverCurrentCleared);
+        return ReturnFromFrame(bits.OverCurrent ? PortEvent::ChangeOverCurrent
+                                                : PortEvent::ChangeOverCurrentCleared);
     }
 
     if (DeviceConnected())

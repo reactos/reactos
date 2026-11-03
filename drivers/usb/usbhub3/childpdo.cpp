@@ -41,7 +41,7 @@ static const char HubTagPdo[] = "hub child pdo";
 #define HUB_IOCTL_STOP_TIME_SYNC                    HUB_USB_BUFFERED_IOCTL(USB_STOP_TRACKING_FOR_TIME_SYNC)
 #define HUB_IOCTL_GET_DEVICE_CHARACTERISTICS        HUB_USB_BUFFERED_IOCTL(USB_GET_DEVICE_CHARACTERISTICS)
 
-/* Payload sizes of the two stamped IOCTLs; both are pack 1 with the handle at offset 4 */
+/* Payload sizes of the two stamped IOCTLs; both are 1-byte packed with the handle at offset 4 */
 #define HUB_TRANSPORT_REGISTRATION_SIZE (sizeof(ULONG) + sizeof(PVOID) + 24)
 #define HUB_DEVICE_CHARACTERISTICS_SIZE 0x18
 #define HUB_STAMPED_HANDLE_OFFSET       4
@@ -389,14 +389,13 @@ HubPdoPublishBillboard(
 
     PAGED_CODE();
 
-    Header = (HubBillboardHeader*)ExAllocatePoolWithTag(PagedPool, Size, HUB_TAG_DEVICE);
+    Header = (HubBillboardHeader*)ExAllocatePoolZero(PagedPool, Size, HUB_TAG_DEVICE);
     if (Header == NULL)
     {
         DPRINT1("No memory for the billboard property\n");
         return;
     }
 
-    RtlZeroMemory(Header, Size);
     Header->NumberOfAlternateModes = (UCHAR)Count;
     Header->PreferredModeEntry = Descriptor->bPreferredAlternateMode;
 
@@ -730,9 +729,7 @@ HubPdoAnswerD3Cold(
         Stack->Parameters.QueryInterface.Version != 1)
     {
         DPRINT("D3cold query on port %u with size %u version %u left alone\n",
-               Pdo->m_PortNumber,
-               Stack->Parameters.QueryInterface.Size,
-               Stack->Parameters.QueryInterface.Version);
+               Pdo->m_PortNumber, Stack->Parameters.QueryInterface.Size, Stack->Parameters.QueryInterface.Version);
         return HubPdoCompleteAsIs(Irp);
     }
 
@@ -742,9 +739,7 @@ HubPdoAnswerD3Cold(
         if (Interface->Size != sizeof(*Interface) || Interface->Version != 1)
         {
             DPRINT1("ACPI D3cold interface on port %u has size %u version %u\n",
-                    Pdo->m_PortNumber,
-                    Interface->Size,
-                    Interface->Version);
+                    Pdo->m_PortNumber, Interface->Size, Interface->Version);
             return HubPdoCompleteIrp(Irp, STATUS_NOT_SUPPORTED);
         }
 
@@ -788,14 +783,14 @@ HubPdoQueryInterface(
         return HubPdoCompleteAsIs(Irp);
     }
 
-    if (RtlEqualMemory(Type, &USB_BUS_INTERFACE_USBDI_GUID, sizeof(GUID)))
+    if (IsEqualGUID(*Type, USB_BUS_INTERFACE_USBDI_GUID))
     {
         Stack->Parameters.QueryInterface.InterfaceSpecificData = Child->m_UsbDevice;
         return HubPdoToController(Pdo, Irp);
     }
 
     /* The contract is recorded for every 602 or later client, not only exact matches */
-    if (RtlEqualMemory(Type, &GUID_USBD_CLIENT_INTERFACE, sizeof(GUID)))
+    if (IsEqualGUID(*Type, GUID_USBD_CLIENT_INTERFACE))
     {
         Stack->Parameters.QueryInterface.InterfaceSpecificData = Child->m_UsbDevice;
         Client = (PUSBD_CLIENT_INTERFACE)Stack->Parameters.QueryInterface.Interface;
@@ -809,10 +804,10 @@ HubPdoQueryInterface(
         return HubPdoToController(Pdo, Irp);
     }
 
-    if (RtlEqualMemory(Type, &GUID_UCXHUB_STACK_INTERFACE, sizeof(GUID)))
+    if (IsEqualGUID(*Type, GUID_UCXHUB_STACK_INTERFACE))
         return HubPdoToController(Pdo, Irp);
 
-    if (RtlEqualMemory(Type, &GUID_D3COLD_SUPPORT_INTERFACE, sizeof(GUID)))
+    if (IsEqualGUID(*Type, GUID_D3COLD_SUPPORT_INTERFACE))
         return HubPdoAnswerD3Cold(Pdo, Irp);
 
     return HubPdoPassDown(Pdo->m_Device, Irp);
@@ -1128,9 +1123,7 @@ HubPdoPowerIrpComplete(
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Port %u power IRP %p completes inline, work item failed 0x%lx\n",
-                Pdo->m_PortNumber,
-                Irp,
-                Status);
+                Pdo->m_PortNumber, Irp, Status);
         return STATUS_CONTINUE_COMPLETION;
     }
 
@@ -1216,7 +1209,7 @@ HubPdoEvtPrepareHardware(
         if (Hub->m_TunneledDevicesSkipU2)
         {
             DPRINT("Port %u keeps U2 off for its tunneled device\n", Pdo->m_PortNumber);
-            InterlockedOr((volatile LONG*)&Child->m_Hacks, (LONG)ChildHack::DisableLpm);
+            InterlockedOr((PLONG)&Child->m_Hacks, (LONG)ChildHack::DisableLpm);
         }
 
         HubUsb4AcquireHostPower(Child->m_Port);
@@ -1316,7 +1309,7 @@ HubPdoEvtReleaseHardware(
     if (Child->HasProperty(ChildProperty::DualRole))
         Child->ClearProperty(ChildProperty::DualRole);
 
-    /* QUIRK: a rebalance returned above, so its next prepare takes a second reference */
+    /* A rebalance stop returns early above and skips this release, so the restart takes another reference */
     if (HubUsb4NeedsHostPower(Child))
         HubUsb4ReleaseHostPower(Child->m_Port);
 
@@ -1545,10 +1538,7 @@ HubPdoEvtD0Exit(
     Action = WdfDeviceGetSystemPowerAction(Device);
 
     DPRINT("Child PDO %p on port %u D0 exit to %d, action %d\n",
-           Device,
-           Pdo->m_PortNumber,
-           (int)TargetState,
-           (int)Action);
+           Device, Pdo->m_PortNumber, (int)TargetState, (int)Action);
 
     if (TargetState != WdfPowerDeviceD3Final && Action == PowerActionNone)
         HubRecordSelectiveSuspend(Child);
@@ -1764,8 +1754,8 @@ HubPdoLpmSettingChanged(
 
     for (Slot = 0; Slot < HUB_PDO_LPM_SETTINGS; Slot++)
     {
-        if (RtlEqualMemory(SettingGuid, &HubLpmDeviceSettings[Slot], sizeof(GUID)) ||
-            RtlEqualMemory(SettingGuid, &HubLpmHubSettings[Slot], sizeof(GUID)))
+        if (IsEqualGUID(*SettingGuid, HubLpmDeviceSettings[Slot]) ||
+            IsEqualGUID(*SettingGuid, HubLpmHubSettings[Slot]))
         {
             break;
         }
@@ -1890,14 +1880,13 @@ HubPdoSyncComplete(
 {
     PIO_STACK_LOCATION Stack = IoGetCurrentIrpStackLocation(Irp);
     NTSTATUS Status = Irp->IoStatus.Status;
-    PURB Urb;
 
     UNREFERENCED_PARAMETER(DeviceObject);
 
     if (!NT_SUCCESS(Status) &&
         Stack->Parameters.DeviceIoControl.IoControlCode == IOCTL_INTERNAL_USB_SUBMIT_URB)
     {
-        Urb = (PURB)Stack->Parameters.Others.Argument1;
+        PURB Urb = (PURB)Stack->Parameters.Others.Argument1;
         if (Urb->UrbHeader.Status == USBD_STATUS_SUCCESS)
             Urb->UrbHeader.Status = HubNtStatusToUsbd(Status);
     }
@@ -1983,9 +1972,7 @@ HubPdoValidateUrb(
         Urb->UrbHeader.Length != sizeof(struct _URB_PIPE_REQUEST))
     {
         DPRINT1("Pipe URB %p length %u, expected %lu\n",
-                Urb,
-                Urb->UrbHeader.Length,
-                (ULONG)sizeof(struct _URB_PIPE_REQUEST));
+                Urb, Urb->UrbHeader.Length, (ULONG)sizeof(struct _URB_PIPE_REQUEST));
         Urb->UrbHeader.Status = USBD_STATUS_INVALID_URB_FUNCTION;
         return STATUS_INVALID_PARAMETER;
     }
@@ -2301,9 +2288,7 @@ HubPdoRecordFailure(
     if (Pdo->m_StartFailData != NULL || Data == NULL)
     {
         DPRINT1("Port %u start failure not recorded, data %p, already %p\n",
-                Pdo->m_PortNumber,
-                Data,
-                Pdo->m_StartFailData);
+                Pdo->m_PortNumber, Data, Pdo->m_StartFailData);
         return STATUS_INVALID_PARAMETER;
     }
 
@@ -2352,9 +2337,7 @@ HubPdoDeviceConfigInfo(
     if (Info->Length != sizeof(*Info))
     {
         DPRINT1("Port %u config info length %lu, expected %lu\n",
-                Pdo->m_PortNumber,
-                Info->Length,
-                (ULONG)sizeof(*Info));
+                Pdo->m_PortNumber, Info->Length, (ULONG)sizeof(*Info));
         return STATUS_BUFFER_TOO_SMALL;
     }
 
@@ -2507,10 +2490,10 @@ HubPdoQueryCapability(
 
     DPRINT("Port %u capability query {%08lx-...}\n", Pdo->m_PortNumber, Type->Data1);
 
-    if (RtlEqualMemory(Type, &GUID_USB_CAPABILITY_FUNCTION_SUSPEND, sizeof(GUID)))
+    if (IsEqualGUID(*Type, GUID_USB_CAPABILITY_FUNCTION_SUSPEND))
         return HubPdoCompleteIrp(Irp, (Kind & DSM_KIND_PORT20) ? STATUS_NOT_SUPPORTED : STATUS_SUCCESS);
 
-    if (RtlEqualMemory(Type, &GUID_USB_CAPABILITY_STATIC_STREAMS, sizeof(GUID)))
+    if (IsEqualGUID(*Type, GUID_USB_CAPABILITY_STATIC_STREAMS))
     {
         if (Kind & DSM_KIND_PORT20)
             return HubPdoCompleteIrp(Irp, STATUS_NOT_SUPPORTED);
@@ -2519,16 +2502,16 @@ HubPdoQueryCapability(
     }
 
     /* Answered here, without output */
-    if (RtlEqualMemory(Type, &GUID_USB_CAPABILITY_SSP_ISOCH_PIPE_FLAGS, sizeof(GUID)))
+    if (IsEqualGUID(*Type, GUID_USB_CAPABILITY_SSP_ISOCH_PIPE_FLAGS))
         return HubPdoCompleteIrp(Irp, STATUS_SUCCESS);
 
-    if (RtlEqualMemory(Type, &GUID_USB_CAPABILITY_DEVICE_CONNECTION_SUPER_SPEED_COMPATIBLE, sizeof(GUID)))
+    if (IsEqualGUID(*Type, GUID_USB_CAPABILITY_DEVICE_CONNECTION_SUPER_SPEED_COMPATIBLE))
         Supported = (Kind & DSM_KIND_SUPER_SPEED) != 0;
-    else if (RtlEqualMemory(Type, &GUID_USB_CAPABILITY_DEVICE_CONNECTION_HIGH_SPEED_COMPATIBLE, sizeof(GUID)))
+    else if (IsEqualGUID(*Type, GUID_USB_CAPABILITY_DEVICE_CONNECTION_HIGH_SPEED_COMPATIBLE))
         Supported = (Kind & (DSM_KIND_SUPER_SPEED | DSM_KIND_HIGH_SPEED)) != 0;
-    else if (RtlEqualMemory(Type, &HubCapFullSpeedCompatible, sizeof(GUID)))
+    else if (IsEqualGUID(*Type, HubCapFullSpeedCompatible))
         Supported = (Kind & (DSM_KIND_SUPER_SPEED | DSM_KIND_HIGH_SPEED | DSM_KIND_FULL_SPEED)) != 0;
-    else if (RtlEqualMemory(Type, &HubCapLowSpeedCompatible, sizeof(GUID)))
+    else if (IsEqualGUID(*Type, HubCapLowSpeedCompatible))
         Supported = TRUE;
     else
         return HubPdoToController(Pdo, Irp);
@@ -2747,7 +2730,7 @@ HubPdoPreprocessInternalIoctl(
             break;
     }
 
-    /* XP compat: a failed URB carries an invalid parameter status */
+    /* A failed URB carries an invalid parameter status, like the USB 2.0 hub */
     if (Pdo->m_FailRequests && !Exempt)
     {
         DPRINT1("Port %u IRP %p IOCTL 0x%lx failed, the device is not present\n", Pdo->m_PortNumber, Irp, Code);
@@ -2782,11 +2765,9 @@ HubPdoStampAndForward(
         Buffer == NULL)
     {
         DPRINT1("Port %u IOCTL 0x%lx buffers %lu/%lu, expected %lu\n",
-                Pdo->m_PortNumber,
-                Stack->Parameters.DeviceIoControl.IoControlCode,
+                Pdo->m_PortNumber, Stack->Parameters.DeviceIoControl.IoControlCode,
                 Stack->Parameters.DeviceIoControl.InputBufferLength,
-                Stack->Parameters.DeviceIoControl.OutputBufferLength,
-                Size);
+                Stack->Parameters.DeviceIoControl.OutputBufferLength, Size);
         return HubPdoCompleteIrp(Irp, STATUS_INVALID_PARAMETER);
     }
 
@@ -3082,6 +3063,8 @@ HubPdoCreateNamed(
     _Inout_ PWDFDEVICE_INIT* Init,
     _Out_ WDFDEVICE* Device)
 {
+    /* SDDL_DEVOBJ_SYS_ALL_ADM_RWX_WORLD_RW_RES_R: SYSTEM all, Administrators read/write/execute,
+     * Everyone read/write, restricted code read only */
     DECLARE_CONST_UNICODE_STRING(Sddl, L"D:P(A;;GA;;;SY)(A;;GRGWGX;;;BA)(A;;GRGW;;;WD)(A;;GR;;;RC)");
     WDF_OBJECT_ATTRIBUTES Attributes;
     WCHAR Buffer[32];
@@ -3404,10 +3387,7 @@ HubPdoCreate(
     HubPdoRegisterLpmSettings(Pdo);
 
     DPRINT1("Child PDO %p for port %u, VID %04x PID %04x\n",
-            Device,
-            Pdo->m_PortNumber,
-            Child->m_DeviceDescriptor.idVendor,
-            Child->m_DeviceDescriptor.idProduct);
+            Device, Pdo->m_PortNumber, Child->m_DeviceDescriptor.idVendor, Child->m_DeviceDescriptor.idProduct);
     return TRUE;
 
 Failed:
@@ -3562,14 +3542,13 @@ DeviceMachine::CompleteClientRequestLastStatus()
     Child->m_LastNtStatus = STATUS_SUCCESS;
     Child->m_LastUsbdStatus = USBD_STATUS_SUCCESS;
 
+    /* Only reached on failure, so a recorded success must not complete the request as one */
     if (NT_SUCCESS(Status))
         Status = STATUS_UNSUCCESSFUL;
 
     DPRINT1("Port %u client request %p IOCTL 0x%lx failed 0x%lx, URB status 0x%lx\n",
             Child->m_Port->Number(),
-            Request,
-            Code,
-            Status,
+            Request, Code, Status,
             Urb != NULL ? Urb->UrbHeader.Status : USBD_STATUS_SUCCESS);
     WdfRequestComplete(Request, Status);
 }
@@ -3665,9 +3644,7 @@ DeviceMachine::SelectConfigValid()
     if (!Hub->IsRootHub() && Pdo->m_ConfigPowerDraw > Hub->m_MaxPortPower)
     {
         DPRINT1("Port %u configuration needs %lu mA, the port has %lu mA\n",
-                Pdo->m_PortNumber,
-                Pdo->m_ConfigPowerDraw,
-                Hub->m_MaxPortPower);
+                Pdo->m_PortNumber, Pdo->m_ConfigPowerDraw, Hub->m_MaxPortPower);
         Child->m_LastNtStatus = STATUS_INSUFFICIENT_RESOURCES;
         Child->m_LastUsbdStatus = USBD_STATUS_INSUFFICIENT_RESOURCES;
         Child->m_Port->m_ConnectionStatus = DeviceNotEnoughPower;
@@ -3692,9 +3669,7 @@ DeviceMachine::SelectConfigValid()
             Entry + Interface->Length > End)
         {
             DPRINT1("Port %u select config interface %lu has bad length %u\n",
-                    Pdo->m_PortNumber,
-                    Count,
-                    Interface->Length);
+                    Pdo->m_PortNumber, Count, Interface->Length);
             Child->m_LastNtStatus = STATUS_UNSUCCESSFUL;
             Child->m_LastUsbdStatus = USBD_STATUS_INVALID_CONFIGURATION_DESCRIPTOR;
             return FALSE;
@@ -3853,7 +3828,7 @@ DeviceMachine::SelectInterfaceValid()
     USHORT Expected;
     USBD_STATUS UsbdStatus;
 
-    /* Old style clients (a KMDF usbser filter bug) send no handle */
+    /* Clients that never declared a USBD contract (pre Windows 8 style), like a buggy KMDF usbser filter, send no handle */
     if (Handle == NULL && Pdo->m_ClientContractVersion == HUB_PDO_CONTRACT_UNKNOWN && Current != NULL)
     {
         DPRINT1("Select interface without a configuration handle\n");

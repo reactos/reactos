@@ -62,7 +62,6 @@ public:
 
     WDFDMAENABLER DmaEnabler() const;
 
-
     /** ReadFromDevice adapter, used for both directions. */
     PDMA_ADAPTER DmaAdapter() const;
     ULONG MaxDmaSize() const;
@@ -71,8 +70,10 @@ public:
     /* Work item and cleanup bodies, called only from dmapool.cpp */
     _IRQL_requires_(PASSIVE_LEVEL)
     VOID GrowthWork();
+
     _IRQL_requires_(PASSIVE_LEVEL)
     VOID ReclaimWork();
+
     VOID EnablerCleanup();
 
 private:
