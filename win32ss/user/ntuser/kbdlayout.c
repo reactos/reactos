@@ -243,12 +243,13 @@ DumpKbdLayout(
     #define RVA(m, b) ((PVOID)((ULONG_PTR)(b) + (ULONG_PTR)(m)))
 #endif
 
-/* Describes the .data section inside the image built by KbdBuildImage */
+/* Describes the .data section taken by KbdBuildImage. The buffer holds the .data section
+   only, so the byte at offset 0 of the buffer is the byte at RVA offData of the file. */
 typedef struct _KBDIMAGE_INFO
 {
     ULONG_PTR ImageBase;    /* The base address the pointers in the layout tables are based on */
-    ULONG offData;          /* RVA of the .data section in the image */
-    ULONG cbData;           /* Size of the .data section in the image */
+    ULONG offData;          /* RVA of the .data section in the file (not an offset in the buffer) */
+    ULONG cbData;           /* Size of the .data section (= size of the buffer) */
 } KBDIMAGE_INFO, *PKBDIMAGE_INFO;
 
 /**
@@ -258,9 +259,13 @@ typedef struct _KBDIMAGE_INFO
  *
  * For a valid keyboard layout file, the tables (and any data they point to)
  * are all stored in the .data section, so this is the only section we take.
- * The headers and any other sections are not considered, and neither is the
- * base-relocation data: the pointers inside the tables are adjusted later
- * by KbdRebaseTables(), using the RVA macro.
+ * The headers and any other sections are neither considered nor retained
+ * (the returned buffer is exactly the size of the .data section), and neither
+ * is the base-relocation data: the pointers inside the tables are adjusted
+ * later by KbdRebaseTables(), using the RVA macro.
+ *
+ * @note
+ * Offset 0 of the returned buffer corresponds to RVA pInfo->offData.
  **/
 static PVOID
 KbdBuildImage(
@@ -275,7 +280,7 @@ KbdBuildImage(
     PIMAGE_SECTION_HEADER pSec, pData = NULL;
     PBYTE pbRaw = pvRaw;
     _SEH2_VOLATILE PBYTE pbImage = NULL;
-    ULONG cbImage, cbVirt, cbCopy, cbAlloc, i;
+    ULONG cbImage, cbVirt, cbCopy, i;
 
     *pcbImage = 0;
     RtlZeroMemory(pInfo, sizeof(*pInfo));
@@ -330,17 +335,17 @@ KbdBuildImage(
             _SEH2_YIELD(return NULL);
         }
 
-        /* The buffer ends where .data ends (so that RVAs stay valid as offsets) */
-        cbAlloc = pData->VirtualAddress + cbVirt; /* No overflow: checked above */
-        pbImage = ExAllocatePoolZero(PagedPool, cbAlloc, KBDIMG_TAG);
+        /* Retain the .data section only. The buffer starts at the beginning of .data,
+           so an RVA must be converted to an offset by subtracting offData. */
+        pbImage = ExAllocatePoolZero(PagedPool, cbVirt, KBDIMG_TAG);
         if (!pbImage)
             _SEH2_YIELD(return NULL);
-        RtlCopyMemory(pbImage + pData->VirtualAddress, pbRaw + pData->PointerToRawData, cbCopy);
+        RtlCopyMemory(pbImage, pbRaw + pData->PointerToRawData, cbCopy);
 
         pInfo->ImageBase = (ULONG_PTR)pNt->OptionalHeader.ImageBase;
         pInfo->offData = pData->VirtualAddress;
         pInfo->cbData = cbVirt;
-        *pcbImage = cbAlloc;
+        *pcbImage = cbVirt;
         _SEH2_YIELD(return pbImage);
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
@@ -423,7 +428,7 @@ KbdUnloadImage(
         ExFreePoolWithTag(pvImageBase, KBDIMG_TAG);
 }
 
-/* Tells whether [off, off + cb) lies within the .data section (without overflowing) */
+/* Tells whether the RVA range [off, off + cb) lies within the .data section (without overflowing) */
 static __inline BOOL
 KbdIsRangeInData(_In_ const KBDIMAGE_INFO *pInfo, _In_ ULONG off, _In_ SIZE_T cb)
 {
@@ -437,8 +442,8 @@ KbdIsRangeInData(_In_ const KBDIMAGE_INFO *pInfo, _In_ ULONG off, _In_ SIZE_T cb
  *
  * In the file, these pointers are virtual addresses relative to ImageBase,
  * so the RVA of the target is (VA - ImageBase), and the adjusted pointer
- * is the RVA applied to our image buffer. The tables are modified in place
- * (in our own copy).
+ * is the offset (RVA - offData) applied to our buffer, which holds the .data
+ * section only. The tables are modified in place (in our own copy).
  * Each target must lie within the .data section, where it has room for
  * at least one element.
  *
@@ -463,7 +468,7 @@ KbdRebaseTables(
             ERR("Invalid %s: 0x%p\n", #p, (PVOID)va_); \
             return FALSE; \
         } \
-        (p) = RVA(rva_, pbImage); \
+        (p) = RVA(rva_ - pInfo->offData, pbImage); \
     } \
 } while (0)
     VSC_LPWSTR **keyNames[2] = { &pTbl->pKeyNames, &pTbl->pKeyNamesExt };
@@ -543,9 +548,10 @@ UserLoadKbdDll(
         return FALSE;
     }
 
+    /* The buffer holds the .data section only: convert the RVAs to the offsets in the buffer */
     pbImage = (PBYTE)*phModule;
-    *ppKbdTables = (PKBDTABLES)(pbImage + wMainOffset);
-    *ppKbdNlsTables = wNlsOffset ? (PKBDNLSTABLES)(pbImage + wNlsOffset) : NULL;
+    *ppKbdTables = (PKBDTABLES)(pbImage + (wMainOffset - info.offData));
+    *ppKbdNlsTables = wNlsOffset ? (PKBDNLSTABLES)(pbImage + (wNlsOffset - info.offData)) : NULL;
 
     _SEH2_TRY
     {
