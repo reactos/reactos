@@ -8,6 +8,7 @@
 #pragma once
 
 #include <windef.h>
+#include <winbase.h>
 
 #include <string>
 
@@ -47,9 +48,9 @@ private:
     std::wstring m_userdir;
     HANDLE m_user_profile_handle{};
 
-    HANDLE m_cmd_process_handle{};
-    HANDLE m_pipe_stdin{};
-    HANDLE m_pipe_std_out_err{};
+    HANDLE m_cmd_process_handle{INVALID_HANDLE_VALUE};
+    HANDLE m_pipe_stdin{INVALID_HANDLE_VALUE};
+    HANDLE m_pipe_std_out_err{INVALID_HANDLE_VALUE};
 
     ITelnetSessionHandler* m_handler{};
 };

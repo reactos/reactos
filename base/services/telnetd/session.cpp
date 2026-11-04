@@ -7,7 +7,6 @@
 
 #include "session.hpp"
 
-#include <winbase.h>
 #include <winnls.h>
 #include <userenv.h>
 
@@ -31,8 +30,14 @@ TelnetSession::~TelnetSession()
         CloseHandle(m_pipe_std_out_err);
     }
 
+    if (m_cmd_process_handle != INVALID_HANDLE_VALUE) {
+        TerminateProcess(m_cmd_process_handle, -1);
+        WaitForSingleObject(m_cmd_process_handle, INFINITE);
+        CloseHandle(m_cmd_process_handle);
+    }
+
     if (m_token) {
-        if (m_user_profile_handle) {
+        if (m_user_profile_handle != INVALID_HANDLE_VALUE) {
             UnloadUserProfile(m_token, m_user_profile_handle);
         }
 
@@ -84,22 +89,25 @@ bool TelnetSession::connect(const std::string& username, HANDLE token)
 
     HANDLE child_pipe_stdin{};
     if (!CreatePipe(&child_pipe_stdin, &m_pipe_stdin, &sec_attr, PIPE_BUFFER_SIZE)) {
+        const auto ec = GetLastError();
         CloseHandle(child_pipe_std_out_err);
-        ERR("CreatePipe failed: %lu\n", GetLastError());
+        ERR("CreatePipe failed: %lu\n", ec);
         return false;
     }
     if (!SetHandleInformation(m_pipe_stdin, HANDLE_FLAG_INHERIT, 0)) {
+        const auto ec = GetLastError();
         CloseHandle(child_pipe_stdin);
         CloseHandle(child_pipe_std_out_err);
-        ERR("SetHandleInformation failed: %lu\n", GetLastError());
+        ERR("SetHandleInformation failed: %lu\n", ec);
         return false;
     }
 
     LPVOID env_block{};
     if (!CreateEnvironmentBlock(&env_block, m_token, false)) {
+        const auto ec = GetLastError();
         CloseHandle(child_pipe_stdin);
         CloseHandle(child_pipe_std_out_err);
-        ERR("CreateEnvironmentBlock failed: %lu\n", GetLastError());
+        ERR("CreateEnvironmentBlock failed: %lu\n", ec);
         return false;
     }
 
@@ -112,7 +120,7 @@ bool TelnetSession::connect(const std::string& username, HANDLE token)
 
     PROCESS_INFORMATION process_info{};
 
-    WCHAR cmd[32] = L"C:\\ReactOS\\system32\\cmd.exe";
+    WCHAR cmd[32] = L"C:\\ReactOS\\system32\\cmd.exe"; // [IATODO]: Probably should use GetSystemDirectoryW later
     if (!CreateProcessAsUserW(
         m_token, 
         nullptr, 
@@ -125,13 +133,16 @@ bool TelnetSession::connect(const std::string& username, HANDLE token)
         &startup_info, 
         &process_info
     )) {
+        const auto ec = GetLastError();
+        DestroyEnvironmentBlock(env_block);
         CloseHandle(child_pipe_stdin);
         CloseHandle(child_pipe_std_out_err);
-        ERR("CreateProcessAsUserW failed: %lu\n", GetLastError());
+        ERR("CreateProcessAsUserW failed: %lu\n", ec);
         return false;
     }
     
     m_cmd_process_handle = process_info.hProcess;
+    DestroyEnvironmentBlock(env_block);
     CloseHandle(process_info.hThread);
     CloseHandle(child_pipe_stdin);
     CloseHandle(child_pipe_std_out_err);
@@ -189,6 +200,10 @@ bool TelnetSession::load_user_data(const std::string& username)
     {
         DWORD len{};
         GetUserProfileDirectoryW(m_token, nullptr, &len);
+        if (!len) {
+            ERR("GetUserProfileDirectoryW failed: %lu\n", GetLastError());
+            return false;
+        }
         m_userdir.resize(len - 1, L'\0');
         if (!GetUserProfileDirectoryW(m_token, &m_userdir[0], &len)) {
             ERR("GetUserProfileDirectoryW failed: %lu\n", GetLastError());
