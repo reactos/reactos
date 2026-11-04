@@ -177,6 +177,17 @@ HalReportResourceUsage(VOID)
         Descriptor++;
     }
 
+    /* GICv2 has no redistributors, the CPU interface frame takes their place */
+    if (!HalpPlatform.GicrBase.QuadPart && HalpPlatform.GiccBase.QuadPart)
+    {
+        Descriptor->Type = CmResourceTypeMemory;
+        Descriptor->ShareDisposition = CmResourceShareDeviceExclusive;
+        Descriptor->Flags = CM_RESOURCE_MEMORY_READ_WRITE;
+        Descriptor->u.Memory.Start = HalpPlatform.GiccBase;
+        Descriptor->u.Memory.Length = HALP_GICC_SIZE;
+        Descriptor++;
+    }
+
     List->List[0].PartialResourceList.Count =
         (ULONG)(Descriptor - List->List[0].PartialResourceList.PartialDescriptors);
     Size = (ULONG)((PUCHAR)Descriptor - (PUCHAR)List);

@@ -25,9 +25,7 @@ NTAPI
 HalpSetPriorityMask(
     _In_ KIRQL Irql)
 {
-    KeArm64WriteRegister(ARM64_ICC_PMR_EL1, HalpIrqlToPriority(Irql));
-    __dsb(_ARM64_BARRIER_SY);
-    __isb(_ARM64_BARRIER_SY);
+    HalpGicSetPriorityMask(HalpIrqlToPriority(Irql));
 }
 
 /* Updates the PCR and the mask together so an interrupt never sees them disagree */
@@ -112,7 +110,7 @@ ULONG
 FASTCALL
 HalGetInterruptSource(VOID)
 {
-    return (ULONG)KeArm64ReadRegister(ARM64_ICC_IAR1_EL1) & 0xFFFFFF;
+    return HalpGicAcknowledge();
 }
 
 /**
@@ -139,8 +137,7 @@ HalBeginSystemInterrupt(
         HalpSetPriorityMask(Irql);
     }
 
-    KeArm64WriteRegister(ARM64_ICC_EOIR1_EL1, Vector);
-    __isb(_ARM64_BARRIER_SY);
+    HalpGicEndOfInterrupt(Vector);
 
     if (Irql > CurrentIrql)
         return TRUE;
