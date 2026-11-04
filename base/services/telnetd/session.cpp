@@ -14,7 +14,7 @@
 #include <wine/debug.h>
 WINE_DEFAULT_DEBUG_CHANNEL(telnetd);
 
-static DWORD __internal_telnet_session_counter = 0;
+static DWORD s_session_counter = 0;
 
 TelnetSession::TelnetSession(ITelnetSessionHandler* handler): 
     m_handler(handler)
@@ -23,6 +23,14 @@ TelnetSession::TelnetSession(ITelnetSessionHandler* handler):
 
 TelnetSession::~TelnetSession()
 {
+    if (m_pipe_stdin != INVALID_HANDLE_VALUE) {
+        CloseHandle(m_pipe_stdin);
+    }
+
+    if (m_pipe_std_out_err != INVALID_HANDLE_VALUE) {
+        CloseHandle(m_pipe_std_out_err);
+    }
+
     if (m_token) {
         if (m_user_profile_handle) {
             UnloadUserProfile(m_token, m_user_profile_handle);
@@ -39,10 +47,10 @@ bool TelnetSession::connect(const std::string& username, HANDLE token)
     if (!load_user_data(username))
         return false;
 
-    WCHAR pipe_name[36];
-    _snwprintf(pipe_name, sizeof(pipe_name)/sizeof(WCHAR), L"\\\\.\\pipe\\telnetd-%08x-%08x", GetCurrentProcessId(), __internal_telnet_session_counter++);
+    WCHAR pipe_name[64];
+    _snwprintf(pipe_name, sizeof(pipe_name)/sizeof(WCHAR), L"\\\\.\\pipe\\telnetd-%08x-%08x", GetCurrentProcessId(), s_session_counter++);
 
-    const auto parent_pipe_std_out_err = CreateNamedPipeW(
+    m_pipe_std_out_err = CreateNamedPipeW(
         pipe_name, 
         PIPE_ACCESS_INBOUND | FILE_FLAG_OVERLAPPED | FILE_FLAG_FIRST_PIPE_INSTANCE, 
         PIPE_TYPE_BYTE | PIPE_WAIT,
@@ -52,7 +60,7 @@ bool TelnetSession::connect(const std::string& username, HANDLE token)
         0,
         nullptr
     );
-    if (parent_pipe_std_out_err == INVALID_HANDLE_VALUE) {
+    if (m_pipe_std_out_err == INVALID_HANDLE_VALUE) {
         ERR("CreateNamedPipeW(%ls) failed: %lu\n", pipe_name, GetLastError());
         return false;
     }
@@ -74,14 +82,23 @@ bool TelnetSession::connect(const std::string& username, HANDLE token)
         return false;
     }
 
-    HANDLE parent_pipe_stdin{}, child_pipe_stdin{};
-    if (!CreatePipe(&child_pipe_stdin, &parent_pipe_stdin, &sec_attr, PIPE_BUFFER_SIZE)) {
+    HANDLE child_pipe_stdin{};
+    if (!CreatePipe(&child_pipe_stdin, &m_pipe_stdin, &sec_attr, PIPE_BUFFER_SIZE)) {
+        CloseHandle(child_pipe_std_out_err);
         ERR("CreatePipe failed: %lu\n", GetLastError());
+        return false;
+    }
+    if (!SetHandleInformation(m_pipe_stdin, HANDLE_FLAG_INHERIT, 0)) {
+        CloseHandle(child_pipe_stdin);
+        CloseHandle(child_pipe_std_out_err);
+        ERR("SetHandleInformation failed: %lu\n", GetLastError());
         return false;
     }
 
     LPVOID env_block{};
     if (!CreateEnvironmentBlock(&env_block, m_token, false)) {
+        CloseHandle(child_pipe_stdin);
+        CloseHandle(child_pipe_std_out_err);
         ERR("CreateEnvironmentBlock failed: %lu\n", GetLastError());
         return false;
     }
@@ -94,7 +111,8 @@ bool TelnetSession::connect(const std::string& username, HANDLE token)
     startup_info.hStdInput = child_pipe_stdin;
 
     PROCESS_INFORMATION process_info{};
-    WCHAR cmd[256] = L"C:\\ReactOS\\system32\\cmd.exe";
+
+    WCHAR cmd[32] = L"C:\\ReactOS\\system32\\cmd.exe";
     if (!CreateProcessAsUserW(
         m_token, 
         nullptr, 
@@ -107,15 +125,22 @@ bool TelnetSession::connect(const std::string& username, HANDLE token)
         &startup_info, 
         &process_info
     )) {
+        CloseHandle(child_pipe_stdin);
+        CloseHandle(child_pipe_std_out_err);
         ERR("CreateProcessAsUserW failed: %lu\n", GetLastError());
         return false;
     }
+    
+    m_cmd_process_handle = process_info.hProcess;
+    CloseHandle(process_info.hThread);
+    CloseHandle(child_pipe_stdin);
+    CloseHandle(child_pipe_std_out_err);
 
     m_handler->send_string("Created Process\r\n");
 
     CHAR data[256];
     DWORD size_read{};
-    ReadFile(parent_pipe_std_out_err, data, sizeof(data), &size_read, nullptr);
+    ReadFile(m_pipe_std_out_err, data, sizeof(data), &size_read, nullptr);
 
     m_handler->send_text((const uint8_t*)data, size_read);
 

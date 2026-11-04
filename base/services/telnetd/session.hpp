@@ -43,9 +43,13 @@ private:
 
 private:
     HANDLE m_token{};
-    ITelnetSessionHandler* m_handler{};
-
     std::wstring m_username;
     std::wstring m_userdir;
     HANDLE m_user_profile_handle{};
+
+    HANDLE m_cmd_process_handle{};
+    HANDLE m_pipe_stdin{};
+    HANDLE m_pipe_std_out_err{};
+
+    ITelnetSessionHandler* m_handler{};
 };
