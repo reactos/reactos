@@ -1319,9 +1319,10 @@ IntEqualDir(
  **/
 HANDLE FASTCALL IntVerifyKeyboardFileHandle(HANDLE hFile)
 {
-    static const UNICODE_STRING ustrDir1 = RTL_CONSTANT_STRING(L"\\SystemRoot\\system32");
-#ifdef _WIN64
-    static const UNICODE_STRING ustrDir2 = RTL_CONSTANT_STRING(L"\\SystemRoot\\SysWOW64");
+#ifdef BUILD_WOW6432
+    static const UNICODE_STRING ustrDir = RTL_CONSTANT_STRING(L"\\SystemRoot\\SysWOW64");
+#else
+    static const UNICODE_STRING ustrDir = RTL_CONSTANT_STRING(L"\\SystemRoot\\system32");
 #endif
     KBDFILE_NAME Name;
     UNICODE_STRING ustrParent;
@@ -1376,15 +1377,13 @@ HANDLE FASTCALL IntVerifyKeyboardFileHandle(HANDLE hFile)
             break;
     }
 
-    if (IntEqualDir(&ustrParent, &ustrDir1))
-        return hKernelFile; /* Success */
+    if (!IntEqualDir(&ustrParent, &ustrDir))
+    {
+        ERR("Not in system32/SysWOW64: %wZ\n", &Name.Info.Name);
+        goto Failure;
+    }
 
-#ifdef _WIN64
-    if (IntEqualDir(&ustrParent, &ustrDir2))
-        return hKernelFile; /* Success */
-#endif
-
-    ERR("Not in system32/SysWOW64: %wZ\n", &Name.Info.Name);
+    return hKernelFile; /* Success */
 
 Failure:
     ZwClose(hKernelFile);
