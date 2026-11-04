@@ -587,7 +587,7 @@ static PKBDFILE
 UserLoadKbdFile(
     _In_ HANDLE hKernelFile,
     _In_ ULONG offTable,
-    _In_ PCUNICODE_STRING pwszKLID)
+    _In_ PCUNICODE_STRING pustrKLID)
 {
     PKBDFILE pkf, pRet = NULL;
 
@@ -599,7 +599,7 @@ UserLoadKbdFile(
         return NULL;
     }
 
-    _swprintf(pkf->awchKF, L"%wZ", pwszKLID); /* Set keyboard layout name */
+    _swprintf(pkf->awchKF, L"%wZ", pustrKLID); /* Set keyboard layout name */
 
     /* Load keyboard file now */
     if (!UserLoadKbdDll(hKernelFile, offTable, &pkf->hBase, &pkf->Size,
