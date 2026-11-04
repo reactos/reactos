@@ -281,6 +281,7 @@ KbdBuildImage(
     PBYTE pbRaw = pvRaw;
     _SEH2_VOLATILE PBYTE pbImage = NULL;
     ULONG cbImage, cbVirt, cbCopy, i;
+    ULONG_PTR imageBase;
 
     *pcbImage = 0;
     RtlZeroMemory(pInfo, sizeof(*pInfo));
@@ -295,8 +296,23 @@ KbdBuildImage(
         }
 
         pNt = (PIMAGE_NT_HEADERS)(pbRaw + pDos->e_lfanew);
-        if (pNt->Signature != IMAGE_NT_SIGNATURE ||
-            pNt->OptionalHeader.Magic != IMAGE_NT_OPTIONAL_HDR_MAGIC)
+        if (pNt->Signature != IMAGE_NT_SIGNATURE)
+            _SEH2_YIELD(return NULL);
+
+        if (pNt->OptionalHeader.Magic == IMAGE_NT_OPTIONAL_HDR32_MAGIC &&
+            pNt->FileHeader.Machine == IMAGE_FILE_MACHINE_I386)
+        {
+            /* i386 kernel: native layout. 64-bit kernel: WOW64 layout (64-bit pointer slots) */
+            imageBase = ((PIMAGE_NT_HEADERS32)pNt)->OptionalHeader.ImageBase;
+        }
+#ifdef _M_AMD64
+        else if (pNt->OptionalHeader.Magic == IMAGE_NT_OPTIONAL_HDR64_MAGIC &&
+                 pNt->FileHeader.Machine == IMAGE_FILE_MACHINE_AMD64)
+        {
+            imageBase = (ULONG_PTR)((PIMAGE_NT_HEADERS64)pNt)->OptionalHeader.ImageBase;
+        }
+#endif
+        else
         {
             _SEH2_YIELD(return NULL);
         }
@@ -342,7 +358,7 @@ KbdBuildImage(
             _SEH2_YIELD(return NULL);
         RtlCopyMemory(pbImage, pbRaw + pData->PointerToRawData, cbCopy);
 
-        pInfo->ImageBase = (ULONG_PTR)pNt->OptionalHeader.ImageBase;
+        pInfo->ImageBase = imageBase;
         pInfo->offData = pData->VirtualAddress;
         pInfo->cbData = cbVirt;
         *pcbImage = cbVirt;
