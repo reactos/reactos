@@ -430,7 +430,7 @@ KbdUnloadImage(
 
 /* Tells whether the RVA range [off, off + cb) lies within the .data section (without overflowing) */
 static __inline BOOL
-KbdIsRangeInData(_In_ const KBDIMAGE_INFO *pInfo, _In_ ULONG off, _In_ SIZE_T cb)
+KbdIsRangeInData(_In_ const KBDIMAGE_INFO *pInfo, _In_ ULONG_PTR off, _In_ SIZE_T cb)
 {
     return (off >= pInfo->offData) && (cb <= pInfo->cbData) &&
            ((off - pInfo->offData) <= (pInfo->cbData - cb));
