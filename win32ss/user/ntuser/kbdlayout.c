@@ -547,17 +547,30 @@ UserLoadKbdDll(
     *ppKbdTables = (PKBDTABLES)(pbImage + wMainOffset);
     *ppKbdNlsTables = wNlsOffset ? (PKBDNLSTABLES)(pbImage + wNlsOffset) : NULL;
 
-    /* Adjust the pointers inside the tables using RVA (instead of the base relocations),
-       and validate their targets */
-    if (!KbdRebaseTables(pbImage, &info, *ppKbdTables, *ppKbdNlsTables))
+    _SEH2_TRY
     {
-        ERR("Invalid pointer in the layout tables\n");
+        /* Adjust the pointers inside the tables using RVA (instead of the base relocations),
+           and validate their targets */
+        if (!KbdRebaseTables(pbImage, &info, *ppKbdTables, *ppKbdNlsTables))
+        {
+            ERR("Invalid pointer in the layout tables\n");
+            KbdUnloadImage(*phModule);
+            *phModule = NULL;
+            *ppKbdTables = NULL;
+            *ppKbdNlsTables = NULL;
+            _SEH2_YIELD(return FALSE);
+        }
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        ERR("Exception in UserLoadKbdDll! Status: 0x%lx\n", _SEH2_GetExceptionCode());
         KbdUnloadImage(*phModule);
         *phModule = NULL;
         *ppKbdTables = NULL;
         *ppKbdNlsTables = NULL;
-        return FALSE;
+        _SEH2_YIELD(return FALSE);
     }
+    _SEH2_END;
 
     *pcbImage = cbImage;
 
