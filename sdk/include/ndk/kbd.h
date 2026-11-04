@@ -1,3 +1,12 @@
+/*
+ * PROJECT:     ReactOS SDK
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     Keyboard layout definitions
+ * COPYRIGHT:   Copyright 2003 James Tabor
+ *              Copyright 2011 Rafal Harabien
+ *              Copyright 2026 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
+ */
+
 #ifndef __KBD_H
 #define __KBD_H
 #pragma once
