@@ -182,7 +182,6 @@ Return Value:
     ULONG status;
     ULONG initializationStatus = (ULONG) -1;
 
-__debugbreak();
     //
     // Zero out structure.
     //
