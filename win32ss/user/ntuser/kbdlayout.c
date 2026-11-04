@@ -1244,13 +1244,55 @@ static NTSTATUS IntQueryHandleName(HANDLE hObject, PKBDFILE_NAME pName)
     return ZwQueryObject(hObject, ObjectNameInformation, pName, sizeof(*pName), &cbReturned);
 }
 
+static BOOL FASTCALL
+IntEqualDir(
+    _In_ PCUNICODE_STRING pustrParent,
+    _In_ PCUNICODE_STRING pustrDir)
+{
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    IO_STATUS_BLOCK IoStatusBlock;
+    NTSTATUS Status;
+    HANDLE hDir;
+    KBDFILE_NAME Name;
+
+    /* Get the canonical name of the directory */
+    InitializeObjectAttributes(&ObjectAttributes, (PUNICODE_STRING)pustrDir,
+                               OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE, NULL, NULL);
+    Status = ZwOpenFile(&hDir, FILE_LIST_DIRECTORY | SYNCHRONIZE, &ObjectAttributes,
+                        &IoStatusBlock, FILE_SHARE_READ | FILE_SHARE_WRITE,
+                        FILE_DIRECTORY_FILE | FILE_SYNCHRONOUS_IO_NONALERT);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("ZwOpenFile(%wZ) failed, Status 0x%08lx\n", pustrDir, Status);
+        return FALSE;
+    }
+
+    Status = IntQueryHandleName(hDir, &Name);
+    ZwClose(hDir);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("IntQueryHandleName(%p) failed, Status 0x%08lx\n", hDir, Status);
+        return FALSE;
+    }
+
+    if (!RtlEqualUnicodeString(pustrParent, &Name.Info.Name, TRUE))
+    {
+        ERR("Not in %wZ: %wZ\n", pustrDir, &Name.Info.Name);
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
 /**
  * @brief
- * Validates that the given user-mode handle corresponds to an opened file in SystemRoot\system32.
+ * Validates that the given user-mode handle corresponds to an opened file in
+ * SystemRoot\system32 or SystemRoot\SysWOW64.
+ *
  * If so, duplicates it into a kernel-mode handle.
  *
  * @param[in]   hFile
- * User-mode handle to a file. Accept it only if the file is in system32.
+ * User-mode handle to a file. Accept it only if the file is in system32/SysWOW64.
  *
  * @return
  * On success, returns a NEW kernel handle (OBJ_KERNEL_HANDLE) to the same file object.
@@ -1264,13 +1306,12 @@ static NTSTATUS IntQueryHandleName(HANDLE hObject, PKBDFILE_NAME pName)
  **/
 HANDLE FASTCALL IntVerifyKeyboardFileHandle(HANDLE hFile)
 {
-    static const UNICODE_STRING ustrDir = RTL_CONSTANT_STRING(L"\\SystemRoot\\system32");
-    OBJECT_ATTRIBUTES ObjectAttributes;
-    IO_STATUS_BLOCK IoStatusBlock;
-    KBDFILE_NAME Names[2]; /* [0]: system32 directory, [1]: the file */
+    static const UNICODE_STRING ustrDir1 = RTL_CONSTANT_STRING(L"\\SystemRoot\\system32");
+    static const UNICODE_STRING ustrDir2 = RTL_CONSTANT_STRING(L"\\SystemRoot\\SysWOW64");
+    KBDFILE_NAME Name;
     UNICODE_STRING ustrParent;
     PFILE_OBJECT pFileObject = NULL;
-    HANDLE hDir, hKernelFile = NULL;
+    HANDLE hKernelFile = NULL;
     NTSTATUS Status;
 
     if (!hFile)
@@ -1304,35 +1345,15 @@ HANDLE FASTCALL IntVerifyKeyboardFileHandle(HANDLE hFile)
     }
 
     /* Get the canonical name of the file */
-    Status = IntQueryHandleName(hKernelFile, &Names[1]);
+    Status = IntQueryHandleName(hKernelFile, &Name);
     if (!NT_SUCCESS(Status))
     {
         ERR("IntQueryHandleName(%p) failed, Status 0x%08lx\n", hFile, Status);
         goto Failure;
     }
 
-    /* Get the canonical name of the system32 directory */
-    InitializeObjectAttributes(&ObjectAttributes, (PUNICODE_STRING)&ustrDir,
-                               OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE, NULL, NULL);
-    Status = ZwOpenFile(&hDir, FILE_LIST_DIRECTORY | SYNCHRONIZE, &ObjectAttributes,
-                        &IoStatusBlock, FILE_SHARE_READ | FILE_SHARE_WRITE,
-                        FILE_DIRECTORY_FILE | FILE_SYNCHRONOUS_IO_NONALERT);
-    if (!NT_SUCCESS(Status))
-    {
-        ERR("ZwOpenFile(%wZ) failed, Status 0x%08lx\n", &ustrDir, Status);
-        goto Failure;
-    }
-
-    Status = IntQueryHandleName(hDir, &Names[0]);
-    ZwClose(hDir);
-    if (!NT_SUCCESS(Status))
-    {
-        ERR("IntQueryHandleName(%p) failed, Status 0x%08lx\n", hDir, Status);
-        goto Failure;
-    }
-
     /* Strip the filename of the file */
-    ustrParent = Names[1].Info.Name;
+    ustrParent = Name.Info.Name;
     while (ustrParent.Length > 0)
     {
         ustrParent.Length -= sizeof(WCHAR);
@@ -1340,11 +1361,8 @@ HANDLE FASTCALL IntVerifyKeyboardFileHandle(HANDLE hFile)
             break;
     }
 
-    if (!RtlEqualUnicodeString(&ustrParent, &Names[0].Info.Name, TRUE))
-    {
-        ERR("Not in system32: %wZ\n", &Names[1].Info.Name);
+    if (!IntEqualDir(&ustrParent, &ustrDir1) && !IntEqualDir(&ustrParent, &ustrDir2))
         goto Failure;
-    }
 
     return hKernelFile; /* Success */
 
