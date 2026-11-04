@@ -237,7 +237,7 @@ DumpKbdLayout(
 #endif // DBG
 
 #define KBDIMG_TAG 'ibKU'
-#define KBDIMG_MAXSIZE (16 * 1024 * 1024)
+#define KBDIMG_MAXSIZE (1 * 1024 * 1024)
 
 #ifndef RVA
     #define RVA(m, b) ((PVOID)((ULONG_PTR)(b) + (ULONG_PTR)(m)))
