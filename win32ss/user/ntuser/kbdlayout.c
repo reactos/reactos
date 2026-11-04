@@ -1620,8 +1620,7 @@ NtUserLoadKeyboardLayoutEx(
     UserEnterExclusive();
 
     /* Validate data */
-    if (!hFile || !offTable ||
-        multi.Multi.nTables >= KBDTABLE_MULTI_MAX)
+    if (!hFile || !offTable || multi.Multi.nTables >= KBDTABLE_MULTI_MAX)
     {
         ERR("hFile:%p, nTables:%u, offTable:0x%08X\n", hFile, multi.Multi.nTables, offTable);
         EngSetLastError(ERROR_INVALID_PARAMETER);
