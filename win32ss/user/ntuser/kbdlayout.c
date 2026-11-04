@@ -466,7 +466,7 @@ KbdRebaseTables(
         (p) = RVA(rva_, pbImage); \
     } \
 } while (0)
-    VSC_LPWSTR **appNames[2] = { &pTbl->pKeyNames, &pTbl->pKeyNamesExt };
+    VSC_LPWSTR **keyNames[2] = { &pTbl->pKeyNames, &pTbl->pKeyNamesExt };
     PVK_TO_WCHAR_TABLE pWchTbl;
     VSC_LPWSTR *pName;
     PWSTR *ppwsz;
@@ -482,10 +482,10 @@ KbdRebaseTables(
         REBASE(pWchTbl->pVkToWchars);
 
     /* Key names. This table ends with an entry that has vsc == 0. */
-    for (i = 0; i < RTL_NUMBER_OF(appNames); ++i)
+    for (i = 0; i < RTL_NUMBER_OF(keyNames); ++i)
     {
-        REBASE(*appNames[i]);
-        for (pName = *appNames[i]; pName && pName->vsc; ++pName)
+        REBASE(*keyNames[i]);
+        for (pName = *keyNames[i]; pName && pName->vsc; ++pName)
             REBASE(pName->pwsz);
     }
 
