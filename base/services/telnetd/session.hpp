@@ -44,6 +44,7 @@ public:
 private:
     bool load_user_data(const std::string& username);
     bool spawn_cmd_process();
+    bool start_reader_thread();
 
 private:
     HANDLE m_token{};

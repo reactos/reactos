@@ -55,6 +55,9 @@ bool TelnetSession::connect(const std::string& username, HANDLE token)
     if (!spawn_cmd_process())
         return false;
 
+    if (!start_reader_thread())
+        return false;
+
     return true;
 }
 
@@ -75,7 +78,8 @@ void TelnetSession::on_interrupt_process()
 
 void TelnetSession::on_text_line(const std::string& line)
 {
-
+    const auto t = line + "\r\n";
+    WriteFile(m_pipe_stdin, t.c_str(), t.size(), nullptr, nullptr);
 }
 
 void TelnetSession::discard_output()
@@ -210,6 +214,13 @@ bool TelnetSession::spawn_cmd_process()
     CloseHandle(process_info.hThread);
     CloseHandle(child_pipe_stdin);
     CloseHandle(child_pipe_std_out_err);
+
+    return true;
+}
+
+bool TelnetSession::start_reader_thread()
+{
+
 
     return true;
 }
