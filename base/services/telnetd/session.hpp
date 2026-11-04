@@ -11,6 +11,7 @@
 #include <winbase.h>
 
 #include <string>
+#include <vector>
 
 class ITelnetSessionHandler
 {
@@ -47,6 +48,11 @@ private:
     bool start_reader_thread();
 
 private:
+    DWORD read_loop();
+
+    static inline DWORD WINAPI reader_thread_func(LPVOID self);
+
+private:
     HANDLE m_token{};
     std::wstring m_username;
     std::wstring m_userdir;
@@ -57,8 +63,14 @@ private:
     HANDLE m_pipe_std_out_err{INVALID_HANDLE_VALUE};
 
     HANDLE m_reader_thread_handle{INVALID_HANDLE_VALUE};
-    HANDLE m_reader_stop_eventP{INVALID_HANDLE_VALUE};
+    HANDLE m_reader_stop_event{INVALID_HANDLE_VALUE};
     OVERLAPPED m_reader_overlapped{};
+    std::vector<CHAR> m_reader_buffer{};
 
     ITelnetSessionHandler* m_handler{};
 };
+
+DWORD WINAPI TelnetSession::reader_thread_func(LPVOID self)
+{
+    return ((TelnetSession*)self)->read_loop();
+}

@@ -220,7 +220,49 @@ bool TelnetSession::spawn_cmd_process()
 
 bool TelnetSession::start_reader_thread()
 {
+    m_reader_stop_event = CreateEvent(nullptr, false, false, nullptr);
+    if (!m_reader_stop_event) {
+        ERR("reader stop event create failed with: %d\n", GetLastError());
+        return false;
+    }
 
+    m_reader_buffer.resize(PIPE_BUFFER_SIZE);
+
+    DWORD thread_id{};
+    m_reader_thread_handle = CreateThread(
+        nullptr,
+        0,
+        reader_thread_func,
+        this,
+        0,
+        &thread_id
+    );
+    if (!m_reader_thread_handle) {
+        ERR("reader thread create failed with: %d\n", GetLastError());
+        return false;
+    }
 
     return true;
+}
+
+DWORD TelnetSession::read_loop()
+{
+    HANDLE wait_objects[2] = {m_reader_overlapped.hEvent, m_reader_stop_event};
+
+    while (true) {
+        DWORD read_size{};
+        if (!ReadFile(m_pipe_std_out_err, m_reader_buffer.data(), m_reader_buffer.size(), &read_size, &m_reader_overlapped)) {
+            const auto ec = GetLastError();
+            if (ec == ERROR_IO_PENDING) {
+                continue;
+            }
+            return ec;
+        }
+
+        WaitForMultipleObjects(2, wait_objects, false, INFINITE);
+
+        
+    }
+
+    return 0;
 }
