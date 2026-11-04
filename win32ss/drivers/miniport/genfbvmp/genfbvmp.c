@@ -767,8 +767,6 @@ GenFbVmpFindAdapter(
     if (ConfigInfo->Length < sizeof(*ConfigInfo))
         return ERROR_INVALID_PARAMETER;
 
-__debugbreak();
-
     //
     // TODO: Detect whether this is the detection for the boot-time console
     // that has been searched for during initialization. If we are in PnP mode
@@ -1298,7 +1296,6 @@ GenFbVmpStartIO(
         case IOCTL_VIDEO_RESET_DEVICE:
         {
             /* Zero the frame buffer */
-__debugbreak();
             VideoPortZeroDeviceMemory(DeviceExtension->DisplayInfo.FrameAddress,
                                       DeviceExtension->DisplayInfo.FrameBufferSize);
             /* Nothing more to be done here */
@@ -1438,7 +1435,6 @@ GenFbVmpSetPowerState(
 
     /* Unused */
     DPRINT1("GenFbVmpSetPowerState(%p)\n", HwDeviceExtension);
-    __debugbreak();
     return NO_ERROR;
 }
 
@@ -1456,7 +1452,6 @@ GenFbVmpGetPowerState(
 
     /* Unused */
     DPRINT1("GenFbVmpGetPowerState(%p)\n", HwDeviceExtension);
-    __debugbreak();
     return ERROR_DEVICE_REINITIALIZATION_NEEDED; // NO_ERROR;
 }
 
@@ -1479,7 +1474,6 @@ GenFbVmpGetVideoChildDescriptor(
 
     /* Unused */
     DPRINT1("GenFbVmpGetVideoChildDescriptor(%p)\n", HwDeviceExtension);
-    __debugbreak();
 
     if (ChildEnumInfo->Size < sizeof(*ChildEnumInfo))
         return ERROR_INVALID_PARAMETER; // VIDEO_ENUM_NO_MORE_DEVICES; // VIDEO_ENUM_INVALID_DEVICE;
@@ -1524,8 +1518,6 @@ DriverEntry(
     VIDEO_HW_INITIALIZATION_DATA VideoInitData;
     ULONG OsMajorVersion = 0, OsMinorVersion = 0, OsBuildNumber = 0;
     NTSTATUS Status;
-
-    __debugbreak();
 
     /* Get operating system version.
      * NOTE: The PsGetVersion function was not available in NT 3.x. */
