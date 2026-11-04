@@ -62,8 +62,8 @@ private:
     HANDLE m_pipe_stdin{INVALID_HANDLE_VALUE};
     HANDLE m_pipe_std_out_err{INVALID_HANDLE_VALUE};
 
-    HANDLE m_reader_thread_handle{INVALID_HANDLE_VALUE};
-    HANDLE m_reader_stop_event{INVALID_HANDLE_VALUE};
+    HANDLE m_reader_thread_handle{};
+    HANDLE m_reader_stop_event{};
     OVERLAPPED m_reader_overlapped{};
     std::vector<CHAR> m_reader_buffer{};
 

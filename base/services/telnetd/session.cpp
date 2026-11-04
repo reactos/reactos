@@ -18,10 +18,28 @@ static DWORD s_session_counter = 0;
 TelnetSession::TelnetSession(ITelnetSessionHandler* handler): 
     m_handler(handler)
 {
+    m_reader_overlapped.hEvent = INVALID_HANDLE_VALUE;
 }
 
 TelnetSession::~TelnetSession()
 {
+    if (m_reader_thread_handle) {
+        SetEvent(m_reader_stop_event);
+        WaitForSingleObject(m_reader_thread_handle, INFINITE);
+        CloseHandle(m_reader_thread_handle);
+        CloseHandle(m_reader_stop_event);
+    }
+
+    if (m_reader_overlapped.hEvent) {
+        CloseHandle(m_reader_overlapped.hEvent);
+    }
+
+    if (m_cmd_process_handle != INVALID_HANDLE_VALUE) {
+        TerminateProcess(m_cmd_process_handle, -1);
+        WaitForSingleObject(m_cmd_process_handle, INFINITE);
+        CloseHandle(m_cmd_process_handle);
+    }
+
     if (m_pipe_stdin != INVALID_HANDLE_VALUE) {
         CloseHandle(m_pipe_stdin);
     }
@@ -30,11 +48,6 @@ TelnetSession::~TelnetSession()
         CloseHandle(m_pipe_std_out_err);
     }
 
-    if (m_cmd_process_handle != INVALID_HANDLE_VALUE) {
-        TerminateProcess(m_cmd_process_handle, -1);
-        WaitForSingleObject(m_cmd_process_handle, INFINITE);
-        CloseHandle(m_cmd_process_handle);
-    }
 
     if (m_token) {
         if (m_user_profile_handle != INVALID_HANDLE_VALUE) {
@@ -78,8 +91,12 @@ void TelnetSession::on_interrupt_process()
 
 void TelnetSession::on_text_line(const std::string& line)
 {
+    DWORD bytes_written{};
+
     const auto t = line + "\r\n";
-    WriteFile(m_pipe_stdin, t.c_str(), t.size(), nullptr, nullptr);
+    if (!WriteFile(m_pipe_stdin, t.c_str(), t.size(), &bytes_written, nullptr)) {
+        ERR("WriteFile failed with: %lu\n", GetLastError());
+    }
 }
 
 void TelnetSession::discard_output()
@@ -96,7 +113,7 @@ bool TelnetSession::load_user_data(const std::string& username)
     profile_info.lpUserName = &m_username[0];
     profile_info.dwSize = sizeof(profile_info);
     if (!LoadUserProfileW(m_token, &profile_info)) {
-        ERR("LoadUserProfileW failed: %lu\n", GetLastError());
+        ERR("LoadUserProfileW failed with: %lu\n", GetLastError());
         return false;
     }
     m_user_profile_handle = profile_info.hProfile;
@@ -105,12 +122,12 @@ bool TelnetSession::load_user_data(const std::string& username)
         DWORD len{};
         GetUserProfileDirectoryW(m_token, nullptr, &len);
         if (!len) {
-            ERR("GetUserProfileDirectoryW failed: %lu\n", GetLastError());
+            ERR("GetUserProfileDirectoryW failed with: %lu\n", GetLastError());
             return false;
         }
         m_userdir.resize(len - 1, L'\0');
         if (!GetUserProfileDirectoryW(m_token, &m_userdir[0], &len)) {
-            ERR("GetUserProfileDirectoryW failed: %lu\n", GetLastError());
+            ERR("GetUserProfileDirectoryW failed with: %lu\n", GetLastError());
             return false;
         }
     }
@@ -134,7 +151,7 @@ bool TelnetSession::spawn_cmd_process()
         nullptr
     );
     if (m_pipe_std_out_err == INVALID_HANDLE_VALUE) {
-        ERR("CreateNamedPipeW(%ls) failed: %lu\n", pipe_name, GetLastError());
+        ERR("CreateNamedPipeW(%ls) failed with: %lu\n", pipe_name, GetLastError());
         return false;
     }
 
@@ -151,7 +168,7 @@ bool TelnetSession::spawn_cmd_process()
         nullptr
     );
     if (child_pipe_std_out_err == INVALID_HANDLE_VALUE) {
-        ERR("CreateFileW(%ls) failed: %lu\n", pipe_name, GetLastError());
+        ERR("CreateFileW(%ls) failed with: %lu\n", pipe_name, GetLastError());
         return false;
     }
 
@@ -159,14 +176,14 @@ bool TelnetSession::spawn_cmd_process()
     if (!CreatePipe(&child_pipe_stdin, &m_pipe_stdin, &sec_attr, PIPE_BUFFER_SIZE)) {
         const auto ec = GetLastError();
         CloseHandle(child_pipe_std_out_err);
-        ERR("CreatePipe failed: %lu\n", ec);
+        ERR("CreatePipe failed with: %lu\n", ec);
         return false;
     }
     if (!SetHandleInformation(m_pipe_stdin, HANDLE_FLAG_INHERIT, 0)) {
         const auto ec = GetLastError();
         CloseHandle(child_pipe_stdin);
         CloseHandle(child_pipe_std_out_err);
-        ERR("SetHandleInformation failed: %lu\n", ec);
+        ERR("SetHandleInformation failed with: %lu\n", ec);
         return false;
     }
 
@@ -175,7 +192,7 @@ bool TelnetSession::spawn_cmd_process()
         const auto ec = GetLastError();
         CloseHandle(child_pipe_stdin);
         CloseHandle(child_pipe_std_out_err);
-        ERR("CreateEnvironmentBlock failed: %lu\n", ec);
+        ERR("CreateEnvironmentBlock failed with: %lu\n", ec);
         return false;
     }
 
@@ -205,7 +222,7 @@ bool TelnetSession::spawn_cmd_process()
         DestroyEnvironmentBlock(env_block);
         CloseHandle(child_pipe_stdin);
         CloseHandle(child_pipe_std_out_err);
-        ERR("CreateProcessAsUserW failed: %lu\n", ec);
+        ERR("CreateProcessAsUserW failed with: %lu\n", ec);
         return false;
     }
     
@@ -222,7 +239,13 @@ bool TelnetSession::start_reader_thread()
 {
     m_reader_stop_event = CreateEvent(nullptr, false, false, nullptr);
     if (!m_reader_stop_event) {
-        ERR("reader stop event create failed with: %d\n", GetLastError());
+        ERR("reader stop event create failed with: %lu\n", GetLastError());
+        return false;
+    }
+
+    m_reader_overlapped.hEvent = CreateEvent(nullptr, TRUE, FALSE, nullptr);
+    if (!m_reader_overlapped.hEvent) {
+        ERR("reader overlapped event create failed with: %lu\n", GetLastError());
         return false;
     }
 
@@ -238,7 +261,7 @@ bool TelnetSession::start_reader_thread()
         &thread_id
     );
     if (!m_reader_thread_handle) {
-        ERR("reader thread create failed with: %d\n", GetLastError());
+        ERR("reader thread create failed with: %lu\n", GetLastError());
         return false;
     }
 
@@ -247,21 +270,46 @@ bool TelnetSession::start_reader_thread()
 
 DWORD TelnetSession::read_loop()
 {
-    HANDLE wait_objects[2] = {m_reader_overlapped.hEvent, m_reader_stop_event};
+    HANDLE wait_objects[2] = {m_reader_stop_event, m_reader_overlapped.hEvent};
 
     while (true) {
         DWORD read_size{};
         if (!ReadFile(m_pipe_std_out_err, m_reader_buffer.data(), m_reader_buffer.size(), &read_size, &m_reader_overlapped)) {
             const auto ec = GetLastError();
-            if (ec == ERROR_IO_PENDING) {
-                continue;
+            if (ec == ERROR_BROKEN_PIPE) {
+                ERR("Broken Pipe\n");
+                m_handler->close_session();
+                return ec;
+            } else if (ec != ERROR_IO_PENDING) {
+                ERR("ReadFile failed with: %lu\n", ec);
+                return ec;
             }
-            return ec;
         }
 
-        WaitForMultipleObjects(2, wait_objects, false, INFINITE);
+        auto idx = WaitForMultipleObjects(2, wait_objects, false, INFINITE);
+        if (idx == WAIT_FAILED) {
+            const auto ec = GetLastError();
+            ERR("WaitForMultipleObjects failed with: %lu\n", ec);
+            return ec;
+        }
+        idx -= WAIT_OBJECT_0;
 
-        
+        DWORD bytes_transferred{};
+        if (!idx) { // stop event
+            CancelIo(m_pipe_std_out_err);
+            GetOverlappedResult(m_pipe_std_out_err, &m_reader_overlapped, &bytes_transferred, true);
+            break;
+        } else if (idx == 1) {
+            if (!GetOverlappedResult(m_pipe_std_out_err, &m_reader_overlapped, &bytes_transferred, true)) {
+                const auto ec = GetLastError();
+                if (ec == ERROR_BROKEN_PIPE) {
+                    m_handler->close_session();
+                }
+                ERR("GetOverlappedResult failed with: %lu\n", ec);
+                return ec;
+            }
+            m_handler->send_text((const uint8_t*)m_reader_buffer.data(), bytes_transferred);
+        }
     }
 
     return 0;
