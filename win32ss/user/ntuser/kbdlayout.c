@@ -1276,10 +1276,7 @@ IntEqualDir(
     }
 
     if (!RtlEqualUnicodeString(pustrParent, &Name.Info.Name, TRUE))
-    {
-        ERR("Not in %wZ: %wZ\n", pustrDir, &Name.Info.Name);
         return FALSE;
-    }
 
     return TRUE;
 }
@@ -1307,7 +1304,9 @@ IntEqualDir(
 HANDLE FASTCALL IntVerifyKeyboardFileHandle(HANDLE hFile)
 {
     static const UNICODE_STRING ustrDir1 = RTL_CONSTANT_STRING(L"\\SystemRoot\\system32");
+#ifdef _WIN64
     static const UNICODE_STRING ustrDir2 = RTL_CONSTANT_STRING(L"\\SystemRoot\\SysWOW64");
+#endif
     KBDFILE_NAME Name;
     UNICODE_STRING ustrParent;
     PFILE_OBJECT pFileObject = NULL;
@@ -1361,10 +1360,15 @@ HANDLE FASTCALL IntVerifyKeyboardFileHandle(HANDLE hFile)
             break;
     }
 
-    if (!IntEqualDir(&ustrParent, &ustrDir1) && !IntEqualDir(&ustrParent, &ustrDir2))
-        goto Failure;
+    if (IntEqualDir(&ustrParent, &ustrDir1))
+        return hKernelFile; /* Success */
 
-    return hKernelFile; /* Success */
+#ifdef _WIN64
+    if (IntEqualDir(&ustrParent, &ustrDir2))
+        return hKernelFile; /* Success */
+#endif
+
+    ERR("Not in system32/SysWOW64: %wZ\n", &Name.Info.Name);
 
 Failure:
     ZwClose(hKernelFile);
