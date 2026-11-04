@@ -138,6 +138,7 @@ TCPServer::EStatus TCPServer::initialize(uint16_t port, const char* interface_ad
         terminate();
         return EStatus::SOCKET_CREATE_ERROR;
     }
+    SetHandleInformation((HANDLE)listen_socket, HANDLE_FLAG_INHERIT, 0);
     m_session_data.events[1] = listen_event;
     m_session_data.sockets[1] = listen_socket;
     m_session_data.current_index = 2;
@@ -256,6 +257,7 @@ TCPServer::EStatus TCPServer::run()
                         ERR("client socket accept failed with: %d\n", WSAGetLastError());
                         continue;
                     }
+                    SetHandleInformation((HANDLE)client_socket, HANDLE_FLAG_INHERIT, 0);
 
                     if(m_session_data.current_index >= SessionData::NUM_MAX_ENTRY_COUNT) {
                         ERR("cannot accept anymore connections.. dropping the latest :((\n");
