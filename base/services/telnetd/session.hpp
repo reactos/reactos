@@ -15,6 +15,8 @@
 class ITelnetSessionHandler
 {
 public:
+    virtual void close_session() = 0;
+
     virtual void send_string(const char* str) = 0;
     virtual void send_text(const uint8_t* data, int length) = 0;
 };
@@ -41,16 +43,21 @@ public:
 
 private:
     bool load_user_data(const std::string& username);
+    bool spawn_cmd_process();
 
 private:
     HANDLE m_token{};
     std::wstring m_username;
     std::wstring m_userdir;
-    HANDLE m_user_profile_handle{};
+    HANDLE m_user_profile_handle{INVALID_HANDLE_VALUE};
 
     HANDLE m_cmd_process_handle{INVALID_HANDLE_VALUE};
     HANDLE m_pipe_stdin{INVALID_HANDLE_VALUE};
     HANDLE m_pipe_std_out_err{INVALID_HANDLE_VALUE};
+
+    HANDLE m_reader_thread_handle{INVALID_HANDLE_VALUE};
+    HANDLE m_reader_stop_eventP{INVALID_HANDLE_VALUE};
+    OVERLAPPED m_reader_overlapped{};
 
     ITelnetSessionHandler* m_handler{};
 };

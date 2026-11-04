@@ -52,6 +52,70 @@ bool TelnetSession::connect(const std::string& username, HANDLE token)
     if (!load_user_data(username))
         return false;
 
+    if (!spawn_cmd_process())
+        return false;
+
+    return true;
+}
+
+void TelnetSession::on_break()
+{
+
+}
+
+void TelnetSession::on_sigint()
+{
+
+}
+
+void TelnetSession::on_interrupt_process()
+{
+
+}
+
+void TelnetSession::on_text_line(const std::string& line)
+{
+
+}
+
+void TelnetSession::discard_output()
+{
+
+}
+
+bool TelnetSession::load_user_data(const std::string& username)
+{
+    m_username.resize(MultiByteToWideChar(CP_UTF8, 0, username.c_str(), -1, nullptr, 0) - 1, L'\0');
+    MultiByteToWideChar(CP_UTF8, 0, username.c_str(), -1, &m_username[0], m_username.size() + 1);
+
+    PROFILEINFOW profile_info{};
+    profile_info.lpUserName = &m_username[0];
+    profile_info.dwSize = sizeof(profile_info);
+    if (!LoadUserProfileW(m_token, &profile_info)) {
+        ERR("LoadUserProfileW failed: %lu\n", GetLastError());
+        return false;
+    }
+    m_user_profile_handle = profile_info.hProfile;
+
+    {
+        DWORD len{};
+        GetUserProfileDirectoryW(m_token, nullptr, &len);
+        if (!len) {
+            ERR("GetUserProfileDirectoryW failed: %lu\n", GetLastError());
+            return false;
+        }
+        m_userdir.resize(len - 1, L'\0');
+        if (!GetUserProfileDirectoryW(m_token, &m_userdir[0], &len)) {
+            ERR("GetUserProfileDirectoryW failed: %lu\n", GetLastError());
+            return false;
+        }
+    }
+
+    return true;
+}
+
+bool TelnetSession::spawn_cmd_process()
+{
     WCHAR pipe_name[64];
     _snwprintf(pipe_name, sizeof(pipe_name)/sizeof(WCHAR), L"\\\\.\\pipe\\telnetd-%08x-%08x", GetCurrentProcessId(), s_session_counter++);
 
@@ -146,70 +210,6 @@ bool TelnetSession::connect(const std::string& username, HANDLE token)
     CloseHandle(process_info.hThread);
     CloseHandle(child_pipe_stdin);
     CloseHandle(child_pipe_std_out_err);
-
-    m_handler->send_string("Created Process\r\n");
-
-    CHAR data[256];
-    DWORD size_read{};
-    ReadFile(m_pipe_std_out_err, data, sizeof(data), &size_read, nullptr);
-
-    m_handler->send_text((const uint8_t*)data, size_read);
-
-    return true;
-}
-
-void TelnetSession::on_break()
-{
-
-}
-
-void TelnetSession::on_sigint()
-{
-
-}
-
-void TelnetSession::on_interrupt_process()
-{
-
-}
-
-void TelnetSession::on_text_line(const std::string& line)
-{
-
-}
-
-void TelnetSession::discard_output()
-{
-
-}
-
-bool TelnetSession::load_user_data(const std::string& username)
-{
-    m_username.resize(MultiByteToWideChar(CP_UTF8, 0, username.c_str(), -1, nullptr, 0) - 1, L'\0');
-    MultiByteToWideChar(CP_UTF8, 0, username.c_str(), -1, &m_username[0], m_username.size() + 1);
-
-    PROFILEINFOW profile_info{};
-    profile_info.lpUserName = &m_username[0];
-    profile_info.dwSize = sizeof(profile_info);
-    if (!LoadUserProfileW(m_token, &profile_info)) {
-        ERR("LoadUserProfileW failed: %lu\n", GetLastError());
-        return false;
-    }
-    m_user_profile_handle = profile_info.hProfile;
-
-    {
-        DWORD len{};
-        GetUserProfileDirectoryW(m_token, nullptr, &len);
-        if (!len) {
-            ERR("GetUserProfileDirectoryW failed: %lu\n", GetLastError());
-            return false;
-        }
-        m_userdir.resize(len - 1, L'\0');
-        if (!GetUserProfileDirectoryW(m_token, &m_userdir[0], &len)) {
-            ERR("GetUserProfileDirectoryW failed: %lu\n", GetLastError());
-            return false;
-        }
-    }
 
     return true;
 }

@@ -109,6 +109,8 @@ public:
     void on_data(const uint8_t* data, int length) override;
 
 public:
+    inline void close_session() override;
+
     inline void send_string(const char* str) override;
     void send_text(const uint8_t* data, int length) override;
 
@@ -174,4 +176,9 @@ void TelnetSessionHandler::set_state_to_waiting_for_password()
 void TelnetSessionHandler::set_state_to_active_session()
 {
     m_state = EState::ACTIVE_SESSION;
+}
+
+void TelnetSessionHandler::close_session()
+{
+    disconnect();
 }
