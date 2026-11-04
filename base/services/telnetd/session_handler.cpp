@@ -12,6 +12,7 @@
 using cursor_type = const uint8_t*;
 
 constexpr uint8_t CHAR_NULL = 0;
+constexpr uint8_t CHAR_ETX = 3;
 constexpr uint8_t CHAR_BELL = 7;
 constexpr uint8_t CHAR_BS = 8;
 constexpr uint8_t CHAR_NAK = 21;
@@ -207,6 +208,9 @@ void TelnetSessionHandler::handle_text(const uint8_t* data, int length)
             erase_char();
         } else if (c == CHAR_NAK) {
             erase_line();
+        } else if (c == CHAR_ETX) {
+            if (m_active_session)
+                m_active_session->on_sigint();
         }
     }
 
@@ -233,15 +237,22 @@ void TelnetSessionHandler::handle_text_line(const std::string& line)
         {
             HANDLE token{};
             if (
-                (m_username.size() <= MAX_CREDENTIAL_LENGTH) && 
-                (line.size() <= MAX_CREDENTIAL_LENGTH) && 
+                (m_username.size() <= TelnetSession::MAX_CREDENTIAL_LENGTH) && 
+                (line.size() <= TelnetSession::MAX_CREDENTIAL_LENGTH) && 
                 ((token = authenticate(m_username, line)) != NULL)
             ) {
                 if (m_echo_state == EEchoState::AGREED_TO) {
                     send_string("\r\n");
                 }
 
-                m_active_session = new TelnetSession(this, m_username, token);
+                m_active_session = new TelnetSession(this);
+
+                if (!m_active_session->connect(m_username, token)) {
+                    m_state = EState::INVALID;
+                    send_string("server error\r\n");
+                    disconnect();
+                    return;
+                }
 
                 set_state_to_active_session();
             } else {
@@ -287,14 +298,22 @@ void TelnetSessionHandler::handle_command(ECommand cmd)
 
         case ECommand::AO:
         {
+            if (m_active_session)
+                m_active_session->discard_output();
+
             uint8_t data[2] = { (uint8_t)ECommand::IAC, (uint8_t)ECommand::DM };
             send_data(data, sizeof(data));
         }
         break;
 
         case ECommand::IP:
+            if (m_active_session)
+                m_active_session->on_interrupt_process();
             break;
+
         case ECommand::BRK:
+            if (m_active_session)
+                m_active_session->on_break();
             break;
 
         case ECommand::EC:

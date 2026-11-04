@@ -13,7 +13,6 @@
 class TelnetSessionHandler: public TCPServerSessionHandler, public ITelnetSessionHandler
 {
     static constexpr size_t MAX_TEXT_LINE_LENGTH = 8000;
-    static constexpr size_t MAX_CREDENTIAL_LENGTH = 256;
     static constexpr size_t MAX_SUBNEGO_PAYLOAD_LENGTH = 255;
     static constexpr uint32_t MAX_FAILED_LOGIN_ATTEMPTS = 3;
 
@@ -93,7 +92,6 @@ private:
 private:
     inline bool should_echo();
     inline void flush_echo_buffer();
-    inline void send_string(const char* str);
     inline void send_option_command(ECommand verb, EOption option);
 
     inline void set_state_to_waiting_for_username();
@@ -111,6 +109,7 @@ public:
     void on_data(const uint8_t* data, int length) override;
 
 public:
+    inline void send_string(const char* str) override;
     void send_text(const uint8_t* data, int length) override;
 
 private:
@@ -175,5 +174,4 @@ void TelnetSessionHandler::set_state_to_waiting_for_password()
 void TelnetSessionHandler::set_state_to_active_session()
 {
     m_state = EState::ACTIVE_SESSION;
-    send_string("C:\\ >");
 }
