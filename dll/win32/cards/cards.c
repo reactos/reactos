@@ -22,11 +22,17 @@
 #include <windef.h>
 #include <wingdi.h>
 #include <winuser.h>
+#include <winreg.h>
+#include <winerror.h>
+#include <cardgames.h>
+#include <cardshape.h>
 
 #include "cards.h"
 
 HBITMAP g_CardBitmaps[MAX_CARD_BITMAPS];
 HINSTANCE g_hModule = 0;
+static INT g_CardWidth, g_CardHeight;
+static UINT g_InitCount;
 
 /*
  * Redundant function from 16-bit Windows time
@@ -42,30 +48,88 @@ BOOL WINAPI WEP(DWORD Unknown)
  */
 BOOL WINAPI cdtInit(INT *Width, INT *Height)
 {
-    DWORD dwIndex;
+    DWORD dwIndex, style = 0, type, size = sizeof(style);
+    UINT offset = 0;
+    HKEY key;
+    BITMAP bitmap;
+    HDC dc;
+    HGDIOBJ old;
 
-    /* Report card width and height to user */
-    *Width = CARD_WIDTH;
-    *Height = CARD_HEIGHT;
+    if (!Width || !Height)
+        return FALSE;
 
-    /* Load images */
-    for (dwIndex = 0; dwIndex < MAX_CARD_BITMAPS; ++dwIndex)
-        g_CardBitmaps[dwIndex] =
-            (HBITMAP)LoadBitmapA(g_hModule, MAKEINTRESOURCEA(dwIndex + 1));
+    /* Keep the deck and its dimensions stable for existing callers. */
+    if (!g_InitCount)
+    {
+        if (RegOpenKeyExW(HKEY_CURRENT_USER, CARDGAMES_REGKEY, 0, KEY_QUERY_VALUE, &key) == ERROR_SUCCESS)
+        {
+            if (RegQueryValueExW(key, CARDGAMES_STYLE_VALUE, NULL, &type,
+                                (BYTE *)&style, &size) == ERROR_SUCCESS &&
+                type == REG_DWORD && size == sizeof(style) && style == CARDGAMES_BAVARIAN)
+                offset = BAVARIAN_RESOURCE_OFFSET;
+            RegCloseKey(key);
+        }
 
+        for (dwIndex = 0; dwIndex < MAX_CARD_BITMAPS; ++dwIndex)
+        {
+            g_CardBitmaps[dwIndex] = LoadBitmapW(g_hModule, MAKEINTRESOURCEW(offset + dwIndex + 1));
+            if (!g_CardBitmaps[dwIndex] ||
+                !GetObjectW(g_CardBitmaps[dwIndex], sizeof(bitmap), &bitmap))
+                goto failed;
+            if (!dwIndex)
+            {
+                g_CardWidth = bitmap.bmWidth;
+                g_CardHeight = bitmap.bmHeight;
+            }
+            else if (bitmap.bmWidth != g_CardWidth || bitmap.bmHeight != g_CardHeight)
+                goto failed;
+        }
+    }
+
+    if (!g_InitCount)
+    {
+        dc = CreateCompatibleDC(NULL);
+        if (!dc)
+            goto failed;
+        for (dwIndex = 0; dwIndex < MAX_CARD_BITMAPS; ++dwIndex)
+        {
+            if (dwIndex == 52 || dwIndex >= 66)
+                continue; /* Empty-slot and status symbols are not card faces. */
+            old = SelectObject(dc, g_CardBitmaps[dwIndex]);
+            FrameCardShape(dc, 0, 0, g_CardWidth, g_CardHeight,
+                           CardCornerRadius(g_CardWidth, g_CardHeight), RGB(0, 0, 0));
+            SelectObject(dc, old);
+        }
+        DeleteDC(dc);
+    }
+
+    ++g_InitCount;
+    *Width = g_CardWidth;
+    *Height = g_CardHeight;
     return TRUE;
+
+failed:
+    for (dwIndex = 0; dwIndex < MAX_CARD_BITMAPS; ++dwIndex)
+    {
+        DeleteObject(g_CardBitmaps[dwIndex]);
+        g_CardBitmaps[dwIndex] = NULL;
+    }
+    return FALSE;
 }
 
-/*
- * Terminate card library
- */
+/* Terminate one client's use of the card library. */
 VOID WINAPI cdtTerm(VOID)
 {
     DWORD dwIndex;
 
-    /* Unload images */
-    for (dwIndex = 0; dwIndex < MAX_CARD_BITMAPS; dwIndex++)
+    if (!g_InitCount || --g_InitCount)
+        return;
+
+    for (dwIndex = 0; dwIndex < MAX_CARD_BITMAPS; ++dwIndex)
+    {
         DeleteObject(g_CardBitmaps[dwIndex]);
+        g_CardBitmaps[dwIndex] = NULL;
+    }
 }
 
 /*
@@ -73,7 +137,7 @@ VOID WINAPI cdtTerm(VOID)
  */
 BOOL WINAPI cdtDraw(HDC hdc, INT x, INT y, INT card, INT type, COLORREF color)
 {
-    return cdtDrawExt(hdc, x, y, CARD_WIDTH, CARD_HEIGHT, card, type, color);
+    return cdtDrawExt(hdc, x, y, g_CardWidth, g_CardHeight, card, type, color);
 }
 
 /*
@@ -83,7 +147,7 @@ static __inline VOID BltCard(HDC hdc, INT x, INT y, INT dx, INT dy, HDC hdcCard,
 {
     if (bStretch)
     {
-        StretchBlt(hdc, x, y, dx, dy, hdcCard, 0, 0, CARD_WIDTH, CARD_HEIGHT, dwRasterOp);
+        StretchBlt(hdc, x, y, dx, dy, hdcCard, 0, 0, g_CardWidth, g_CardHeight, dwRasterOp);
     }
     else
     {
@@ -126,6 +190,10 @@ BOOL WINAPI cdtDrawExt(HDC hdc, INT x, INT y, INT dx, INT dy, INT card, INT type
     DWORD dwRasterOp = SRCCOPY;
     BOOL bSaveEdges = TRUE;
     BOOL bStretch = FALSE;
+    INT saved = 0;
+
+    if (!g_InitCount || dx <= 0 || dy <= 0)
+        return FALSE;
 
     if (type & ectSAVEEDGESMASK)
     {
@@ -133,10 +201,9 @@ BOOL WINAPI cdtDrawExt(HDC hdc, INT x, INT y, INT dx, INT dy, INT card, INT type
         bSaveEdges = FALSE;
     }
 
-    if (dx != CARD_WIDTH || dy != CARD_HEIGHT)
+    if (dx != g_CardWidth || dy != g_CardHeight)
     {
         bStretch = TRUE;
-        bSaveEdges = FALSE;
     }
 
     switch (type)
@@ -144,6 +211,8 @@ BOOL WINAPI cdtDrawExt(HDC hdc, INT x, INT y, INT dx, INT dy, INT card, INT type
         case ectINVERTED:
             dwRasterOp = NOTSRCCOPY;
         case ectFACES:
+            if (card < 0 || card >= 52)
+                return FALSE;
             card = (card % 4) * 13 + (card / 4);
             break;
         case ectBACKS:
@@ -163,6 +232,18 @@ BOOL WINAPI cdtDrawExt(HDC hdc, INT x, INT y, INT dx, INT dy, INT card, INT type
             card = 67;
             break;
         default:
+            return FALSE;
+    }
+
+    if (type != ectERASE && (card < 0 || card >= MAX_CARD_BITMAPS))
+        return FALSE;
+
+    /* The high-bit flag requests a rectangular copy (e.g. a bitmap atlas).
+     * Normal and stretched drawing both preserve the background at corners. */
+    if (bSaveEdges && type != ectERASE)
+    {
+        saved = ClipCardShape(hdc, x, y, dx, dy, CardCornerRadius(dx, dy));
+        if (!saved)
             return FALSE;
     }
 
@@ -187,44 +268,13 @@ BOOL WINAPI cdtDrawExt(HDC hdc, INT x, INT y, INT dx, INT dy, INT card, INT type
         hdcCard = CreateCompatibleDC(hdc);
         SelectObject(hdcCard, g_CardBitmaps[card]);
         OldBkColor = SetBkColor(hdc, (type == ectFACES) ? 0xFFFFFF : color);
-        if (bSaveEdges)
-        {
-            COLORREF SavedPixels[12];
-            SavedPixels[0]  = GetPixel(hdc, x, y);
-            SavedPixels[1]  = GetPixel(hdc, x + 1, y);
-            SavedPixels[2]  = GetPixel(hdc, x, y + 1);
-            SavedPixels[3]  = GetPixel(hdc, x + dx - 1, y);
-            SavedPixels[4]  = GetPixel(hdc, x + dx - 2, y);
-            SavedPixels[5]  = GetPixel(hdc, x + dx - 1, y + 1);
-            SavedPixels[6]  = GetPixel(hdc, x, y + dy - 1);
-            SavedPixels[7]  = GetPixel(hdc, x + 1, y + dy - 1);
-            SavedPixels[8]  = GetPixel(hdc, x, y + dy - 2);
-            SavedPixels[9]  = GetPixel(hdc, x + dx - 1, y + dy - 1);
-            SavedPixels[10] = GetPixel(hdc, x + dx - 2, y + dy - 1);
-            SavedPixels[11] = GetPixel(hdc, x + dx - 1, y + dy - 2);
-
-            BltCard(hdc, x, y, dx, dy, hdcCard, dwRasterOp, bStretch);
-
-            SetPixel(hdc, x, y, SavedPixels[0]);
-            SetPixel(hdc, x + 1, y, SavedPixels[1]);
-            SetPixel(hdc, x, y + 1, SavedPixels[2]);
-            SetPixel(hdc, x + dx - 1, y, SavedPixels[3]);
-            SetPixel(hdc, x + dx - 2, y, SavedPixels[4]);
-            SetPixel(hdc, x + dx - 1, y + 1, SavedPixels[5]);
-            SetPixel(hdc, x, y + dy - 1, SavedPixels[6]);
-            SetPixel(hdc, x + 1, y + dy - 1, SavedPixels[7]);
-            SetPixel(hdc, x, y + dy - 2, SavedPixels[8]);
-            SetPixel(hdc, x + dx - 1, y + dy - 1, SavedPixels[9]);
-            SetPixel(hdc, x + dx - 2, y + dy - 1, SavedPixels[10]);
-            SetPixel(hdc, x + dx - 1, y + dy - 2, SavedPixels[11]);
-        }
-        else
-        {
-            BltCard(hdc, x, y, dx, dy, hdcCard, dwRasterOp, bStretch);
-        }
+        BltCard(hdc, x, y, dx, dy, hdcCard, dwRasterOp, bStretch);
         SetBkColor(hdc, OldBkColor);
         DeleteDC(hdcCard);
     }
+
+    if (saved)
+        RestoreDC(hdc, saved);
 
     return TRUE;
 }

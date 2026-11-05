@@ -31,6 +31,13 @@ extern HWND hwndMain;
 extern UINT_PTR PlayTimer;
 
 #define IDT_PLAYTIMER 1000
+#define WM_SOL_WINSTART (WM_APP + 1)
+#define WM_SOL_WINFINISH (WM_APP + 2)
+
+void QueueWinAnimation(void);
+void StartWinAnimation(void);
+void StopWinAnimation(bool prompt);
+void FinishWinAnimation(void);
 
 void CreateSol(void);
 void NewGame(void);

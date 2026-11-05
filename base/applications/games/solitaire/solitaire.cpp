@@ -57,7 +57,7 @@ VOID LoadSettings(VOID)
 {
     DWORD dwDisposition;
     DWORD dwSize;
-    DWORD dwBack;
+    DWORD dwBack = SolWnd.GetBackCardIdx();
     HKEY hKey;
 
     if (RegCreateKeyEx(HKEY_CURRENT_USER,
@@ -86,7 +86,8 @@ VOID LoadSettings(VOID)
                     NULL,
                     (LPBYTE)&dwBack,
                     &dwSize);
-    SolWnd.SetBackCardIdx(dwBack);
+    if (dwBack >= CARDBACK_RES_START && dwBack < CARDBACK_RES_START + NUM_CARDBACKS)
+        SolWnd.SetBackCardIdx(dwBack);
 
     RegCloseKey(hKey);
 }
@@ -485,17 +486,23 @@ CardImageWndProc(HWND hwnd,
                   rc.right,
                   rc.bottom);
 
-        StretchBlt(hdc,
-                   2,
-                   2,
-                   CARDBACK_OPTIONS_WIDTH,
-                   CARDBACK_OPTIONS_HEIGHT,
-                   __hdcCardBitmaps,
-                   pCardBack->hdcNum * __cardwidth,
-                   0,
-                   __cardwidth,
-                   __cardheight,
-                   SRCCOPY);
+        int saved = ClipCardShape(hdc, 2, 2, CARDBACK_OPTIONS_WIDTH, CARDBACK_OPTIONS_HEIGHT,
+                                  CardCornerRadius(CARDBACK_OPTIONS_WIDTH, CARDBACK_OPTIONS_HEIGHT));
+        if (saved)
+        {
+            StretchBlt(hdc,
+                       2,
+                       2,
+                       CARDBACK_OPTIONS_WIDTH,
+                       CARDBACK_OPTIONS_HEIGHT,
+                       __hdcCardBitmaps,
+                       pCardBack->hdcNum * __cardwidth,
+                       0,
+                       __cardwidth,
+                       __cardheight,
+                       SRCCOPY);
+            RestoreDC(hdc, saved);
+        }
 
         SelectObject(hdc, hOldPen);
         SelectObject(hdc, hOldBrush);
@@ -657,10 +664,21 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
         }
 
         case WM_DESTROY:
+            StopWinAnimation(false);
             PostQuitMessage(0);
             return 0;
 
+        case WM_SOL_WINSTART:
+            StartWinAnimation();
+            return 0;
+
+        case WM_SOL_WINFINISH:
+            FinishWinAnimation();
+            return 0;
+
         case WM_TIMER:
+            if (wParam != IDT_PLAYTIMER)
+                return 0;
             if (!fGameStarted)
             {
                 KillTimer(hwndMain, IDT_PLAYTIMER);
@@ -680,6 +698,7 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
             return 0;
 
         case WM_SIZE:
+            StopWinAnimation(false);
             nWidth  = LOWORD(lParam);
             nHeight = HIWORD(lParam);
 
@@ -701,20 +720,21 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
             MINMAXINFO *mmi;
 
             mmi = (MINMAXINFO *)lParam;
-            mmi->ptMinTrackSize.x = X_BORDER + NUM_ROW_STACKS * (__cardwidth + X_ROWSTACK_BORDER) + X_BORDER;
+            // Preserve the standard deck's window size and scale each axis
+            // independently with the dimensions reported by cards.dll.
+            mmi->ptMinTrackSize.x = MulDiv(X_BORDER + NUM_ROW_STACKS * (72 + X_ROWSTACK_BORDER) + X_BORDER,
+                                          __cardwidth, 72);
             mmi->ptMinTrackSize.y = GetSystemMetrics(SM_CYCAPTION) +
                                     GetSystemMetrics(SM_CYMENU) +
-                                    Y_BORDER +
-                                    __cardheight +
-                                    Y_ROWSTACK_BORDER +
-                                    6 * yRowStackCardOffset +
-                                    __cardheight +
-                                    Y_BORDER +
+                                    MulDiv(Y_BORDER + 112 + Y_ROWSTACK_BORDER +
+                                           6 * (int)(112 / 6.7) + 112 + Y_BORDER,
+                                           __cardheight, 112) +
                                     (dwOptions & OPTION_SHOW_STATUS ? nStatusHeight : 0);
             return 0;
         }
 
         case WM_COMMAND:
+            StopWinAnimation(false);
             switch(LOWORD(wParam))
             {
             case IDM_GAME_NEW:

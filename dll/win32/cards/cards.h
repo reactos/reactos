@@ -40,15 +40,7 @@
 #define ectGREENO           7
 #define ectSAVEEDGESMASK    0x80000000
 
-#if defined(CARDSTYLE_DEFAULT)
-#   define CARD_WIDTH       72  // The original Microsoft cards are 71px wide, but ours are taken from http://united3dartists.com
-#   define CARD_HEIGHT      112
-#elif defined(CARDSTYLE_BAVARIAN)
-#   define CARD_WIDTH       110
-#   define CARD_HEIGHT      198
-#else
-#   error No or unsupported cardstyle defined
-#endif
+#define BAVARIAN_RESOURCE_OFFSET 100
 
 #define ISREDCARD(x)    (x >= 13 && x <= 39)
 

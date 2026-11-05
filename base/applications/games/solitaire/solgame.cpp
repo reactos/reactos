@@ -18,6 +18,7 @@ bool bAutoroute = false;
 void NewGame(void)
 {
     TRACE("ENTER NewGame()\n");
+    StopWinAnimation(false);
     int i, j;
 
     if (GetScoreMode() == SCORE_VEGAS)
@@ -365,7 +366,7 @@ void CARDLIBPROC SuitStackAddProc(CardRegion &stackobj, const CardStack &added)
         KillTimer(hwndMain, IDT_PLAYTIMER);
         PlayTimer = 0;
 
-        if ((dwOptions & OPTION_SHOW_TIME) && (GetScoreMode() == SCORE_STD))
+        if ((dwOptions & OPTION_SHOW_TIME) && (GetScoreMode() == SCORE_STD) && dwTime)
         {
             lScore = lScore + (700000 / dwTime);
         }
@@ -373,23 +374,8 @@ void CARDLIBPROC SuitStackAddProc(CardRegion &stackobj, const CardStack &added)
         UpdateStatusBar();
         ClearUndo();
 
-        MessageBox(SolWnd, MsgWin, szAppName, MB_OK | MB_ICONINFORMATION);
-
-        for(int i = 0; i < 4; i++)
-        {
-            pSuitStack[i]->Flash(11, 100);
-        }
-
-        if( IDYES == MessageBox(SolWnd, MsgDeal, szAppName, MB_YESNO | MB_ICONQUESTION) )
-        {
-            NewGame();
-        }
-        else
-        {
-            SolWnd.EmptyStacks();
-
-            fGameStarted = false;
-        }
+        fGameStarted = false;
+        QueueWinAnimation();
     }
 
     TRACE("EXIT SuitStackAddProc()\n");
