@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS Notepad
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Portuguese (Brazil) resource file
- * TRANSLATORS: Copyright 2026 Felipe Cordeiro de Souza <felipecsouza0503@gmail.com>
+ * TRANSLATOR:  Copyright 2026 Felipe Cordeiro de Souza <felipecsouza0503@gmail.com>
  */
 
 LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE_BRAZILIAN
