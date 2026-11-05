@@ -11,7 +11,6 @@
 
 using cursor_type = const uint8_t*;
 
-constexpr uint8_t CHAR_NULL = 0;
 constexpr uint8_t CHAR_ETX = 3;
 constexpr uint8_t CHAR_BELL = 7;
 constexpr uint8_t CHAR_BS = 8;

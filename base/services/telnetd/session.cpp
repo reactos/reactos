@@ -18,13 +18,15 @@ static DWORD s_session_counter = 0;
 TelnetSession::TelnetSession(ITelnetSessionHandler* handler): 
     m_handler(handler)
 {
-    m_reader_overlapped.hEvent = INVALID_HANDLE_VALUE;
 }
 
 TelnetSession::~TelnetSession()
 {
-    if (m_reader_thread_handle) {
+    if (m_reader_stop_event) {
         SetEvent(m_reader_stop_event);
+    }
+    
+    if (m_reader_thread_handle) {
         WaitForSingleObject(m_reader_thread_handle, INFINITE);
         CloseHandle(m_reader_thread_handle);
         CloseHandle(m_reader_stop_event);
@@ -277,7 +279,6 @@ DWORD TelnetSession::read_loop()
         if (!ReadFile(m_pipe_std_out_err, m_reader_buffer.data(), m_reader_buffer.size(), &read_size, &m_reader_overlapped)) {
             const auto ec = GetLastError();
             if (ec == ERROR_BROKEN_PIPE) {
-                ERR("Broken Pipe\n");
                 m_handler->close_session();
                 return ec;
             } else if (ec != ERROR_IO_PENDING) {

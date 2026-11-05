@@ -13,6 +13,8 @@ add_executable(telnetd
 
 target_link_libraries(telnetd wine cppstl)
 
+set_target_cpp_properties(telnetd WITH_EXCEPTIONS)
+
 set_module_type(telnetd win32cui)
 
 add_importlibs(telnetd advapi32 ws2_32 msvcrt kernel32 ntdll userenv)
