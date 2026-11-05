@@ -831,6 +831,9 @@ XhciRegisters::ResetController(
 
     WriteOperational32(XHCI_OP_USBCMD, XHCI_USBCMD_HCRST);
 
+    /* QUIRK: Intel controllers can hang the system if a register is read within 1 ms of HCRST */
+    KeStallExecutionProcessor(1000);
+
     for (Waits = 0; ReadOperational32(XHCI_OP_USBCMD) & XHCI_USBCMD_HCRST; Waits++)
     {
         if (Waits == XHCI_RESET_WAITS)
