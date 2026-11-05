@@ -460,22 +460,479 @@ KbdIsRangeInData(_In_ const KBDIMAGE_INFO *pInfo, _In_ ULONG_PTR off, _In_ SIZE_
            ((off - pInfo->offData) <= (pInfo->cbData - cb));
 }
 
+/* Limits on the number of elements walked in each table. Tables and strings of a crafted layout
+ * may overlap each other, so these bound the work it can cause. They are far beyond what any
+ * real layout needs. */
+#define KBD_MAX_VKTOBIT         0x100
+#define KBD_MAX_WCHTABLES       0x20
+#define KBD_MAX_VKTOWCH         0x200
+#define KBD_MAX_KEYNAMES        0x200
+#define KBD_MAX_DEADNAMES       0x400
+#define KBD_MAX_DEADKEYS        0x10000
+#define KBD_MAX_VSCVK           0x100
+#define KBD_MAX_LIGATURES       0x10000
+#define KBD_MAX_NLS_ENTRIES     0x100
+#define KBD_MAX_NAME_CCH        128     /* including the terminating NUL */
+#define KBD_MAX_MOD_COLUMNS     10      /* the widest VK_TO_WCHARS<n> */
+#define KBD_MAX_LIGATURE_CCH    5       /* the widest LIGATURE<n> */
+
+/* The state of the validation. All the checks are done on the copy in our buffer. */
+typedef struct _KBDVALIDATE
+{
+    PBYTE     pbImage;      /* The buffer (the .data section only) */
+    ULONG     cbData;       /* Size of the buffer */
+    ULONG_PTR ImageBase;    /* The base address the pointers in the layout tables are based on */
+    ULONG     offData;      /* RVA of the .data section in the file */
+    PBYTE     pbSlots;      /* 1 bit per pointer-sized slot of the buffer that is already rebased */
+} KBDVALIDATE, *PKBDVALIDATE;
+
+/* Tells whether [p, p + cb) lies within the buffer (without overflowing) and p is aligned */
+static BOOL
+KbdIsBufRange(
+    _In_ const KBDVALIDATE *pv,
+    _In_ const VOID *p,
+    _In_ SIZE_T cb,
+    _In_ SIZE_T cbAlign)
+{
+    ULONG_PTR off;
+
+    if ((ULONG_PTR)p < (ULONG_PTR)pv->pbImage)
+        return FALSE;
+
+    off = (ULONG_PTR)p - (ULONG_PTR)pv->pbImage;
+    if ((off & (cbAlign - 1)) || cb > pv->cbData || off > pv->cbData - cb)
+        return FALSE;
+
+    return TRUE;
+}
+
 /**
  * @brief
- * Adjusts the pointers inside the layout tables.
+ * Converts a pointer slot of the layout tables from a virtual address (relative to ImageBase)
+ * to a pointer into our buffer, and verifies that the target has room for cbMin bytes.
+ *
+ * Every slot can be converted only once: if the tables overlap, the slot would hold an
+ * already-converted pointer (a kernel address), which must never be treated as a virtual
+ * address again.
+ *
+ * @param[in] ppSlot    The slot. It must lie within the buffer.
+ * @param[in] cbMin     The number of bytes that must be available at the target.
+ * @param[in] cbAlign   The alignment of the target.
+ * @param[in] bRequired Whether a NULL pointer is rejected (otherwise, it is left as NULL).
+ **/
+static BOOL
+KbdRebaseSlot(
+    _In_ PKBDVALIDATE pv,
+    _Inout_ PVOID *ppSlot,
+    _In_ SIZE_T cbMin,
+    _In_ SIZE_T cbAlign,
+    _In_ BOOL bRequired,
+    _In_ PCSTR pszName)
+{
+    ULONG_PTR va, rva, idx;
+
+    if (!KbdIsBufRange(pv, ppSlot, sizeof(PVOID), sizeof(PVOID)))
+    {
+        ERR("Invalid slot of %s: 0x%p\n", pszName, ppSlot);
+        return FALSE;
+    }
+
+    idx = ((ULONG_PTR)ppSlot - (ULONG_PTR)pv->pbImage) / sizeof(PVOID);
+    if (pv->pbSlots[idx >> 3] & (1 << (idx & 7)))
+    {
+        ERR("%s overlaps another pointer\n", pszName);
+        return FALSE;
+    }
+    pv->pbSlots[idx >> 3] |= (1 << (idx & 7));
+
+    va = (ULONG_PTR)*ppSlot;
+    if (!va)
+    {
+        if (bRequired)
+        {
+            ERR("%s is NULL\n", pszName);
+            return FALSE;
+        }
+        return TRUE;
+    }
+
+    rva = va - pv->ImageBase;
+    if (va < pv->ImageBase || rva < pv->offData || (rva - pv->offData) >= pv->cbData)
+    {
+        ERR("Invalid %s: 0x%p\n", pszName, (PVOID)va);
+        return FALSE;
+    }
+
+    *ppSlot = pv->pbImage + (rva - pv->offData);
+    if (!KbdIsBufRange(pv, *ppSlot, cbMin, cbAlign))
+    {
+        ERR("%s: No room for %Iu bytes at 0x%p\n", pszName, cbMin, (PVOID)va);
+        *ppSlot = NULL;
+        return FALSE;
+    }
+    return TRUE;
+}
+
+#define KBD_REBASE(pv, field, cbMin, cbAlign, bRequired) \
+    KbdRebaseSlot((pv), (PVOID*)&(field), (cbMin), (cbAlign), (bRequired), #field)
+
+/**
+ * @brief
+ * Measures a table that ends with a terminating element, verifying every element
+ * (the terminator included) in full, that is, with the stride of the element.
+ * The terminator is an element whose first cbKey bytes are all zero.
+ **/
+static BOOL
+KbdMeasureTable(
+    _In_ const KBDVALIDATE *pv,
+    _In_ const VOID *pTable,
+    _In_ SIZE_T cbElem,
+    _In_ SIZE_T cbKey,
+    _In_ SIZE_T cbAlign,
+    _In_ ULONG cMax,
+    _Out_ PULONG pcElems,
+    _In_ PCSTR pszName)
+{
+    const BYTE *pb;
+    SIZE_T k;
+    ULONG i;
+
+    *pcElems = 0;
+
+    for (i = 0; i < cMax; ++i)
+    {
+        pb = (const BYTE *)pTable + i * cbElem;
+        if (!KbdIsBufRange(pv, pb, cbElem, cbAlign))
+        {
+            ERR("%s: Element %lu is out of range\n", pszName, i);
+            return FALSE;
+        }
+
+        for (k = 0; k < cbKey; ++k)
+        {
+            if (pb[k])
+                break;
+        }
+        if (k == cbKey) /* The terminator */
+        {
+            *pcElems = i;
+            return TRUE;
+        }
+    }
+
+    ERR("%s: No terminator within %lu elements\n", pszName, cMax);
+    return FALSE;
+}
+
+/* Verifies that the string is terminated within the buffer (and is not unreasonably long) */
+static BOOL
+KbdCheckWideString(_In_ const KBDVALIDATE *pv, _In_ const WCHAR *pwsz)
+{
+    SIZE_T i, cchMax;
+
+    if (!KbdIsBufRange(pv, pwsz, sizeof(WCHAR), TYPE_ALIGNMENT(WCHAR)))
+        return FALSE;
+
+    cchMax = (pv->pbImage + pv->cbData - (const BYTE *)pwsz) / sizeof(WCHAR);
+    cchMax = min(cchMax, KBD_MAX_NAME_CCH);
+    for (i = 0; i < cchMax; ++i)
+    {
+        if (!pwsz[i])
+            return TRUE;
+    }
+
+    ERR("Unterminated string at 0x%p\n", pwsz);
+    return FALSE;
+}
+
+static BOOL
+KbdCheckModifiers(_In_ PKBDVALIDATE pv, _Inout_ PKBDTABLES pTbl)
+{
+    PMODIFIERS pMod;
+    ULONG i, cVkToBit;
+    SIZE_T cbMod;
+
+    if (!KBD_REBASE(pv, pTbl->pCharModifiers, sizeof(MODIFIERS), TYPE_ALIGNMENT(MODIFIERS), TRUE))
+        return FALSE;
+    pMod = pTbl->pCharModifiers;
+
+    /* ModNumber[] is indexed by the modifier bits, up to wMaxModBits (inclusive) */
+    cbMod = FIELD_OFFSET(MODIFIERS, ModNumber) + ((SIZE_T)pMod->wMaxModBits + 1) * sizeof(BYTE);
+    if (pMod->wMaxModBits > 0xFF || !KbdIsBufRange(pv, pMod, cbMod, TYPE_ALIGNMENT(MODIFIERS)))
+    {
+        ERR("Invalid wMaxModBits: 0x%X\n", pMod->wMaxModBits);
+        return FALSE;
+    }
+    for (i = 0; i <= pMod->wMaxModBits; ++i)
+    {
+        /* A column number must not exceed the widest VK_TO_WCHARS<n> */
+        if (pMod->ModNumber[i] != SHFT_INVALID && pMod->ModNumber[i] >= KBD_MAX_MOD_COLUMNS)
+        {
+            ERR("Invalid ModNumber[%lu]: 0x%X\n", i, pMod->ModNumber[i]);
+            return FALSE;
+        }
+    }
+
+    if (!KBD_REBASE(pv, pMod->pVkToBit, sizeof(VK_TO_BIT), TYPE_ALIGNMENT(VK_TO_BIT), TRUE) ||
+        !KbdMeasureTable(pv, pMod->pVkToBit, sizeof(VK_TO_BIT), sizeof(BYTE),
+                         TYPE_ALIGNMENT(VK_TO_BIT), KBD_MAX_VKTOBIT, &cVkToBit, "pVkToBit"))
+    {
+        return FALSE;
+    }
+    return TRUE;
+}
+
+static BOOL
+KbdCheckVkToWchars(
+    _In_ PKBDVALIDATE pv,
+    _Inout_ PKBDTABLES pTbl,
+    _Out_ PBOOL pbLigature,
+    _Out_ PBOOL pbDead)
+{
+    PVK_TO_WCHAR_TABLE pWchTbl;
+    const WCHAR *pwch;
+    SIZE_T cbEntry;
+    ULONG iTbl, cTbls, iVk, cVks, iMod;
+
+    *pbLigature = *pbDead = FALSE;
+
+    /* This table ends with an entry that has NULL pVkToWchars */
+    if (!KBD_REBASE(pv, pTbl->pVkToWcharTable, sizeof(VK_TO_WCHAR_TABLE),
+                    TYPE_ALIGNMENT(VK_TO_WCHAR_TABLE), TRUE) ||
+        !KbdMeasureTable(pv, pTbl->pVkToWcharTable, sizeof(VK_TO_WCHAR_TABLE), sizeof(PVOID),
+                         TYPE_ALIGNMENT(VK_TO_WCHAR_TABLE), KBD_MAX_WCHTABLES, &cTbls,
+                         "pVkToWcharTable"))
+    {
+        return FALSE;
+    }
+    if (cTbls == 0)
+    {
+        ERR("pVkToWcharTable is empty\n");
+        return FALSE;
+    }
+
+    for (iTbl = 0; iTbl < cTbls; ++iTbl)
+    {
+        pWchTbl = &pTbl->pVkToWcharTable[iTbl];
+
+        /* The stride must match the number of columns, or we would walk (and later
+         * index) the entries wrongly */
+        cbEntry = FIELD_OFFSET(VK_TO_WCHARS1, wch) + pWchTbl->nModifications * sizeof(WCHAR);
+        if (pWchTbl->nModifications < 1 || pWchTbl->nModifications > KBD_MAX_MOD_COLUMNS ||
+            pWchTbl->cbSize != cbEntry)
+        {
+            ERR("Invalid table: nModifications %u, cbSize %u\n",
+                pWchTbl->nModifications, pWchTbl->cbSize);
+            return FALSE;
+        }
+
+        /* The entries end with an entry that has VirtualKey == 0 */
+        if (!KBD_REBASE(pv, pWchTbl->pVkToWchars, cbEntry, TYPE_ALIGNMENT(VK_TO_WCHARS1), TRUE) ||
+            !KbdMeasureTable(pv, pWchTbl->pVkToWchars, cbEntry, sizeof(BYTE),
+                             TYPE_ALIGNMENT(VK_TO_WCHARS1), KBD_MAX_VKTOWCH, &cVks,
+                             "pVkToWchars"))
+        {
+            return FALSE;
+        }
+
+        for (iVk = 0; iVk < cVks; ++iVk)
+        {
+            pwch = (const WCHAR *)((PBYTE)pWchTbl->pVkToWchars + iVk * cbEntry +
+                                   FIELD_OFFSET(VK_TO_WCHARS1, wch));
+            for (iMod = 0; iMod < pWchTbl->nModifications; ++iMod)
+            {
+                if (pwch[iMod] == WCH_LGTR)
+                    *pbLigature = TRUE;
+                else if (pwch[iMod] == WCH_DEAD)
+                    *pbDead = TRUE;
+            }
+        }
+    }
+    return TRUE;
+}
+
+/* Key names. This table ends with an entry that has vsc == 0. */
+static BOOL
+KbdCheckKeyNames(
+    _In_ PKBDVALIDATE pv,
+    _Inout_ VSC_LPWSTR **ppNames,
+    _In_ PCSTR pszName)
+{
+    VSC_LPWSTR *pNames;
+    ULONG i, cNames;
+
+    if (!KbdRebaseSlot(pv, (PVOID*)ppNames, sizeof(VSC_LPWSTR), TYPE_ALIGNMENT(VSC_LPWSTR),
+                       TRUE, pszName) ||
+        !KbdMeasureTable(pv, *ppNames, sizeof(VSC_LPWSTR), sizeof(BYTE),
+                         TYPE_ALIGNMENT(VSC_LPWSTR), KBD_MAX_KEYNAMES, &cNames, pszName))
+    {
+        return FALSE;
+    }
+
+    pNames = *ppNames;
+    for (i = 0; i < cNames; ++i)
+    {
+        if (!KbdRebaseSlot(pv, (PVOID*)&pNames[i].pwsz, sizeof(WCHAR), TYPE_ALIGNMENT(WCHAR),
+                           TRUE, pszName) ||
+            !KbdCheckWideString(pv, pNames[i].pwsz))
+        {
+            ERR("%s[%lu]: Invalid name\n", pszName, i);
+            return FALSE;
+        }
+    }
+    return TRUE;
+}
+
+/* Dead key names (optional). This array of strings ends with NULL. */
+static BOOL
+KbdCheckDeadKeyNames(_In_ PKBDVALIDATE pv, _Inout_ PKBDTABLES pTbl)
+{
+    LPWSTR *ppwsz;
+    ULONG i, cNames;
+
+    if (!KBD_REBASE(pv, pTbl->pKeyNamesDead, sizeof(LPWSTR), TYPE_ALIGNMENT(LPWSTR), FALSE))
+        return FALSE;
+    if (!pTbl->pKeyNamesDead)
+        return TRUE;
+
+    if (!KbdMeasureTable(pv, pTbl->pKeyNamesDead, sizeof(LPWSTR), sizeof(LPWSTR),
+                         TYPE_ALIGNMENT(LPWSTR), KBD_MAX_DEADNAMES, &cNames, "pKeyNamesDead"))
+    {
+        return FALSE;
+    }
+
+    ppwsz = pTbl->pKeyNamesDead;
+    for (i = 0; i < cNames; ++i)
+    {
+        if (!KbdRebaseSlot(pv, (PVOID*)&ppwsz[i], sizeof(WCHAR), TYPE_ALIGNMENT(WCHAR),
+                           TRUE, "pKeyNamesDead[]") ||
+            !KbdCheckWideString(pv, ppwsz[i]))
+        {
+            ERR("pKeyNamesDead[%lu]: Invalid name\n", i);
+            return FALSE;
+        }
+    }
+    return TRUE;
+}
+
+/* The VSC -> VK tables for the E0/E1 prefixes. They end with an entry that has Vsc == 0. */
+static BOOL
+KbdCheckVscToVk(
+    _In_ PKBDVALIDATE pv,
+    _Inout_ PVSC_VK *ppVscVk,
+    _In_ PCSTR pszName)
+{
+    ULONG cEntries;
+
+    return KbdRebaseSlot(pv, (PVOID*)ppVscVk, sizeof(VSC_VK), TYPE_ALIGNMENT(VSC_VK), TRUE,
+                         pszName) &&
+           KbdMeasureTable(pv, *ppVscVk, sizeof(VSC_VK), sizeof(BYTE), TYPE_ALIGNMENT(VSC_VK),
+                           KBD_MAX_VSCVK, &cEntries, pszName);
+}
+
+/* Dead keys (optional). This table ends with an entry that has dwBoth == 0. */
+static BOOL
+KbdCheckDeadKeys(_In_ PKBDVALIDATE pv, _Inout_ PKBDTABLES pTbl)
+{
+    ULONG cEntries;
+
+    if (!KBD_REBASE(pv, pTbl->pDeadKey, sizeof(DEADKEY), TYPE_ALIGNMENT(DEADKEY), FALSE))
+        return FALSE;
+    if (!pTbl->pDeadKey)
+        return TRUE;
+
+    return KbdMeasureTable(pv, pTbl->pDeadKey, sizeof(DEADKEY), sizeof(DWORD),
+                           TYPE_ALIGNMENT(DEADKEY), KBD_MAX_DEADKEYS, &cEntries, "pDeadKey");
+}
+
+/* Ligatures (optional). This table ends with an entry that has VirtualKey == 0. */
+static BOOL
+KbdCheckLigatures(_In_ PKBDVALIDATE pv, _Inout_ PKBDTABLES pTbl)
+{
+    ULONG cEntries;
+    SIZE_T cbEntry;
+
+    if (!pTbl->pLigature) /* Not yet rebased, but we only test it for NULL here */
+        return KBD_REBASE(pv, pTbl->pLigature, 0, 1, FALSE);
+
+    cbEntry = FIELD_OFFSET(LIGATURE1, wch) + pTbl->nLgMaxd * sizeof(WCHAR);
+    if (pTbl->nLgMaxd < 1 || pTbl->nLgMaxd > KBD_MAX_LIGATURE_CCH || pTbl->cbLgEntry != cbEntry)
+    {
+        ERR("Invalid ligature stride: nLgMaxd %u, cbLgEntry %u\n",
+            pTbl->nLgMaxd, pTbl->cbLgEntry);
+        return FALSE;
+    }
+
+    return KBD_REBASE(pv, pTbl->pLigature, cbEntry, TYPE_ALIGNMENT(LIGATURE1), TRUE) &&
+           KbdMeasureTable(pv, pTbl->pLigature, cbEntry, sizeof(BYTE), TYPE_ALIGNMENT(LIGATURE1),
+                           KBD_MAX_LIGATURES, &cEntries, "pLigature");
+}
+
+/* The NLS tables of the Far-East layouts. These tables are counted, not terminated. */
+static BOOL
+KbdCheckNls(_In_ PKBDVALIDATE pv, _Inout_ PKBDNLSTABLES pNls)
+{
+    PVK_F pVkToF;
+    ULONG i, j;
+
+    if (pNls->NumOfVkToF > KBD_MAX_NLS_ENTRIES ||
+        pNls->NumOfMouseVKey < 0 || pNls->NumOfMouseVKey > KBD_MAX_NLS_ENTRIES)
+    {
+        ERR("Invalid NLS counts: %lu, %d\n", pNls->NumOfVkToF, pNls->NumOfMouseVKey);
+        return FALSE;
+    }
+
+    /* A pointer is required only if its count is not zero */
+    if (!KBD_REBASE(pv, pNls->pVkToF, pNls->NumOfVkToF * sizeof(VK_F), TYPE_ALIGNMENT(VK_F),
+                    pNls->NumOfVkToF != 0) ||
+        !KBD_REBASE(pv, pNls->pusMouseVKey, pNls->NumOfMouseVKey * sizeof(USHORT),
+                    TYPE_ALIGNMENT(USHORT), pNls->NumOfMouseVKey != 0))
+    {
+        return FALSE;
+    }
+
+    /* The indexes in these entries select the functions and the arrays of 8 elements */
+    pVkToF = pNls->pVkToF;
+    for (i = 0; i < pNls->NumOfVkToF; ++i)
+    {
+        if (pVkToF[i].NLSFEProcType > KBDNLS_TYPE_TOGGLE ||
+            pVkToF[i].NLSFEProcCurrent >= RTL_NUMBER_OF(pVkToF[i].NLSFEProc))
+        {
+            ERR("Invalid VK_F[%lu]\n", i);
+            return FALSE;
+        }
+        for (j = 0; j < RTL_NUMBER_OF(pVkToF[i].NLSFEProc); ++j)
+        {
+            if (pVkToF[i].NLSFEProc[j].NLSFEProcIndex > KBDNLS_CONV_OR_NONCONV ||
+                pVkToF[i].NLSFEProcAlt[j].NLSFEProcIndex > KBDNLS_CONV_OR_NONCONV)
+            {
+                ERR("Invalid VK_F[%lu] procedure\n", i);
+                return FALSE;
+            }
+        }
+    }
+    return TRUE;
+}
+
+/**
+ * @brief
+ * Adjusts the pointers inside the layout tables, and validates the whole layout.
  *
  * In the file, these pointers are virtual addresses relative to ImageBase,
  * so the RVA of the target is (VA - ImageBase), and the adjusted pointer
  * is the offset (RVA - offData) applied to our buffer, which holds the .data
  * section only. The tables are modified in place (in our own copy).
- * Each target must lie within the .data section, where it has room for
- * at least one element.
+ *
+ * The layout comes from user mode, so nothing in it is trusted:
+ *  - The pointers that the keyboard code uses unconditionally must not be NULL.
+ *  - Every counted table, and every table that ends with a terminator, must lie in
+ *    the .data section in full: each element with its stride (including the terminator
+ *    element), and the string with its terminating NUL.
+ *  - No pointer slot can be taken as a virtual address twice (overlapping tables).
  *
  * @return
- * Returns TRUE if all the targets are valid, or FALSE if any is invalid.
- *
- * @note
- * Walking up to the terminator of a table is not validated.
+ * Returns TRUE if the layout is valid, or FALSE if anything is invalid. The layout must
+ * not be used (or installed) unless this returns TRUE.
  **/
 static BOOL
 KbdRebaseTables(
@@ -484,59 +941,62 @@ KbdRebaseTables(
     _Inout_ PKBDTABLES pTbl,
     _Inout_opt_ PKBDNLSTABLES pNls)
 {
-#define REBASE(p) do { \
-    if (p) { \
-        ULONG_PTR va_ = (ULONG_PTR)(p), rva_ = va_ - pInfo->ImageBase; \
-        if (va_ < pInfo->ImageBase || !KbdIsRangeInData(pInfo, rva_, sizeof(*(p)))) \
-        { \
-            ERR("Invalid %s: 0x%p\n", #p, (PVOID)va_); \
-            return FALSE; \
-        } \
-        (p) = RVA(rva_ - pInfo->offData, pbImage); \
-    } \
-} while (0)
-    VSC_LPWSTR **keyNames[2] = { &pTbl->pKeyNames, &pTbl->pKeyNamesExt };
-    PVK_TO_WCHAR_TABLE pWchTbl;
-    VSC_LPWSTR *pName;
-    PWSTR *ppwsz;
-    ULONG i;
+    KBDVALIDATE v;
+    BOOL bLigature, bDead, ret = FALSE;
 
-    REBASE(pTbl->pCharModifiers);
-    if (pTbl->pCharModifiers)
-        REBASE(pTbl->pCharModifiers->pVkToBit);
+    v.pbImage = pbImage;
+    v.cbData = pInfo->cbData;
+    v.ImageBase = pInfo->ImageBase;
+    v.offData = pInfo->offData;
+    v.pbSlots = ExAllocatePoolZero(PagedPool, v.cbData / (sizeof(PVOID) * 8) + 1, KBDIMG_TAG);
+    if (!v.pbSlots)
+        return FALSE;
 
-    /* VK -> WCHARs tables. This table ends with an entry that has NULL pVkToWchars. */
-    REBASE(pTbl->pVkToWcharTable);
-    for (pWchTbl = pTbl->pVkToWcharTable; pWchTbl && pWchTbl->pVkToWchars; ++pWchTbl)
-        REBASE(pWchTbl->pVkToWchars);
-
-    /* Key names. This table ends with an entry that has vsc == 0. */
-    for (i = 0; i < RTL_NUMBER_OF(keyNames); ++i)
+    /* The root tables themselves */
+    if (!KbdIsBufRange(&v, pTbl, sizeof(*pTbl), TYPE_ALIGNMENT(KBDTABLES)) ||
+        (pNls && !KbdIsBufRange(&v, pNls, sizeof(*pNls), TYPE_ALIGNMENT(KBDNLSTABLES))))
     {
-        REBASE(*keyNames[i]);
-        for (pName = *keyNames[i]; pName && pName->vsc; ++pName)
-            REBASE(pName->pwsz);
+        ERR("Misplaced root tables\n");
+        goto Quit;
     }
 
-    /* Dead key names. This array of strings ends with NULL. */
-    REBASE(pTbl->pKeyNamesDead);
-    for (ppwsz = pTbl->pKeyNamesDead; ppwsz && *ppwsz; ++ppwsz)
-        REBASE(*ppwsz);
-
-    /* The tables that have no pointers inside */
-    REBASE(pTbl->pDeadKey);
-    REBASE(pTbl->pusVSCtoVK);
-    REBASE(pTbl->pVSCtoVK_E0);
-    REBASE(pTbl->pVSCtoVK_E1);
-    REBASE(pTbl->pLigature);
-
-    if (pNls)
+    /* pusVSCtoVK is counted by bMaxVSCtoVK */
+    if (pTbl->bMaxVSCtoVK == 0)
     {
-        REBASE(pNls->pVkToF);
-        REBASE(pNls->pusMouseVKey);
+        ERR("bMaxVSCtoVK is zero\n");
+        goto Quit;
     }
-#undef REBASE
-    return TRUE;
+
+    if (!KbdCheckModifiers(&v, pTbl) ||
+        !KbdCheckVkToWchars(&v, pTbl, &bLigature, &bDead) ||
+        !KbdCheckKeyNames(&v, &pTbl->pKeyNames, "pKeyNames") ||
+        !KbdCheckKeyNames(&v, &pTbl->pKeyNamesExt, "pKeyNamesExt") ||
+        !KbdCheckDeadKeyNames(&v, pTbl) ||
+        !KbdCheckDeadKeys(&v, pTbl) ||
+        !KBD_REBASE(&v, pTbl->pusVSCtoVK, pTbl->bMaxVSCtoVK * sizeof(USHORT),
+                    TYPE_ALIGNMENT(USHORT), TRUE) ||
+        !KbdCheckVscToVk(&v, &pTbl->pVSCtoVK_E0, "pVSCtoVK_E0") ||
+        !KbdCheckVscToVk(&v, &pTbl->pVSCtoVK_E1, "pVSCtoVK_E1") ||
+        !KbdCheckLigatures(&v, pTbl))
+    {
+        goto Quit;
+    }
+
+    /* WCH_LGTR and WCH_DEAD refer to these tables */
+    if ((bLigature && !pTbl->pLigature) || (bDead && !pTbl->pDeadKey))
+    {
+        ERR("The layout uses WCH_LGTR/WCH_DEAD without the table\n");
+        goto Quit;
+    }
+
+    if (pNls && !KbdCheckNls(&v, pNls))
+        goto Quit;
+
+    ret = TRUE;
+
+Quit:
+    ExFreePoolWithTag(v.pbSlots, KBDIMG_TAG);
+    return ret;
 }
 
 /* Loads keyboard layout DLL and gets address to KbdTables */
