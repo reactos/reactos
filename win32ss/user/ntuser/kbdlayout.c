@@ -244,7 +244,7 @@ DumpKbdLayout(
 #endif
 
 /* Describes the .data section taken by KbdBuildImage. The buffer holds the .data section
-   only, so the byte at offset 0 of the buffer is the byte at RVA offData of the file. */
+ * only, so the byte at offset 0 of the buffer is the byte at RVA offData of the file. */
 typedef struct _KBDIMAGE_INFO
 {
     ULONG_PTR ImageBase;    /* The base address the pointers in the layout tables are based on */
