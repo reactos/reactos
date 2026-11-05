@@ -118,7 +118,7 @@ ROSDATA VSC_VK extcode1_to_vk[] = {
 };
 
 /* ------------------------------------------------------------------ */
-/* Modifiers: Shift / Ctrl / Alt.  No AltGr -> max 3 states used       */
+/* Modifiers: Shift / Ctrl / Alt.  No AltGr -> max 3 states used      */
 /* ------------------------------------------------------------------ */
 ROSDATA VK_TO_BIT modifier_keys[] = {
   { VK_SHIFT,   KBDSHIFT },
@@ -139,7 +139,7 @@ ROSDATA MODIFIERS modifier_bits = {
 };
 
 /* ------------------------------------------------------------------ */
-/* VK -> WCHAR tables.  No key uses CAPLOK (Persian has no case).      */
+/* VK -> WCHAR tables.  No key uses CAPLOK (Persian has no case).     */
 /* ------------------------------------------------------------------ */
 
 /* Normal, Shift */
@@ -250,7 +250,7 @@ ROSDATA LIGATURE4 ligatures[] = {
 };
 
 /* ------------------------------------------------------------------ */
-/* Key names                                                           */
+/* Key names                                                          */
 /* ------------------------------------------------------------------ */
 ROSDATA VSC_LPWSTR key_names[] = {
   { 0x01, L"Esc" },        { 0x0e, L"Backspace" },  { 0x0f, L"Tab" },
@@ -286,7 +286,7 @@ ROSDATA VSC_LPWSTR extended_key_names[] = {
 };
 
 /* ------------------------------------------------------------------ */
-/* Master table                                                        */
+/* Master table                                                       */
 /* ------------------------------------------------------------------ */
 ROSDATA KBDTABLES keyboard_layout_table = {
   &modifier_bits,

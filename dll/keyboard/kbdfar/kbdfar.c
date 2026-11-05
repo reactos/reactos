@@ -118,7 +118,7 @@ ROSDATA VSC_VK extcode1_to_vk[] = {
 };
 
 /* ------------------------------------------------------------------ */
-/* Modifiers: Shift / Ctrl / Alt.  No AltGr -> max 3 states used       */
+/* Modifiers: Shift / Ctrl / Alt.  No AltGr -> max 3 states used      */
 /* ------------------------------------------------------------------ */
 ROSDATA VK_TO_BIT modifier_keys[] = {
   { VK_SHIFT,   KBDSHIFT },
@@ -139,7 +139,7 @@ ROSDATA MODIFIERS modifier_bits = {
 };
 
 /* ------------------------------------------------------------------ */
-/* VK -> WCHAR tables.  No key uses CAPLOK (Persian has no case).      */
+/* VK -> WCHAR tables.  No key uses CAPLOK (Persian has no case).     */
 /* ------------------------------------------------------------------ */
 
 /* Normal, Shift */

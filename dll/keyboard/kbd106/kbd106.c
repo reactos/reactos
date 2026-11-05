@@ -213,7 +213,7 @@ ROSDATA MODIFIERS modifier_bits = {
 };
 
 /* ------------------------------------------------------------------ */
-/* VK -> WCHAR tables                                                  */
+/* VK -> WCHAR tables                                                 */
 
 ROSDATA VK_TO_WCHARS6 key_to_chars_6mod[] = {
   { VK_BACK,    0,        {0x08, 0x08, 0x08, 0x08, 0x7f, 0x7f} },
@@ -318,7 +318,7 @@ ROSDATA VK_TO_WCHAR_TABLE vk_to_wchar_master_table[] = {
 };
 
 /* ------------------------------------------------------------------ */
-/* Key names                                                           */
+/* Key names                                                          */
 
 ROSDATA VSC_LPWSTR key_names[] = {
   { 0x01, L"Esc" },
@@ -393,7 +393,7 @@ ROSDATA VSC_LPWSTR extended_key_names[] = {
 };
 
 /* ------------------------------------------------------------------ */
-/* The master table                                                    */
+/* The master table                                                   */
 
 ROSDATA KBDTABLES_FE keyboard_layout_table = {
   {
@@ -431,7 +431,7 @@ ROSDATA KBDTABLES_FE keyboard_layout_table = {
 };
 
 /* ------------------------------------------------------------------ */
-/* Far-East (NLS) tables                                               */
+/* Far-East (NLS) tables                                              */
 
 #define NLS_NONE             { KBDNLS_NULL, 0 }
 
