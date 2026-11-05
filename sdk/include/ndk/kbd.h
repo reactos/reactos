@@ -49,6 +49,12 @@
 # define KBD_PTR(T) T
 #endif
 
+#ifdef KBD_PTR_IS_UNION
+# define KBD_P(x) ((x).p)
+#else
+# define KBD_P(x) (x)
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
