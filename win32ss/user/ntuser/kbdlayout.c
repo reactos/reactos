@@ -574,8 +574,8 @@ UserLoadKbdDll(
 
     /* The buffer holds the .data section only: convert the RVAs to the offsets in the buffer */
     pbImage = (PBYTE)*phModule;
-    *ppKbdTables = (PKBDTABLES)(pbImage + (wMainOffset - info.offData));
-    *ppKbdNlsTables = wNlsOffset ? (PKBDNLSTABLES)(pbImage + (wNlsOffset - info.offData)) : NULL;
+    *ppKbdTables = (PKBDTABLES)RVA(wMainOffset - info.offData, pbImage);
+    *ppKbdNlsTables = wNlsOffset ? (PKBDNLSTABLES)RVA(wNlsOffset - info.offData, pbImage) : NULL;
 
     _SEH2_TRY
     {
