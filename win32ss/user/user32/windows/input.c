@@ -1071,11 +1071,32 @@ IntGetKeyboardDllName(
     /* Substitute pszKLID */
     if (*puFlags & KLF_SUBSTITUTE_OK)
     {
-        /* FIXME: Prepare keyboardlayout.ini */
+#if 1
+        if (RegOpenKeyExW(HKEY_CURRENT_USER, L"Keyboard Layout\\Substitutes", 0,
+                          KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS)
+        {
+            ZeroMemory(szSubstitute, sizeof(szSubstitute));
+            cbData = sizeof(szSubstitute);
+            error = RegQueryValueExW(hKey, pszKLID, NULL, &dwType,
+                                     (PBYTE)szSubstitute, &cbData);
+            RegCloseKey(hKey);
+            if (error == ERROR_SUCCESS && dwType == REG_SZ)
+            {
+                szSubstitute[_countof(szSubstitute) - 1] = UNICODE_NULL; /* Avoid buffer overrun */
+                if (!IsValidKLID(szSubstitute) ||
+                    FAILED(StringCchCopyW(pszKLID, cchKLID, szSubstitute)))
+                {
+                    return FALSE;
+                }
+            }
+        }
+#else
+        /* FIXME: Prepare keyboardlayout.ini and redirection */
         GetPrivateProfileStringW(L"Substitutes", pszKLID, pszKLID,
                                  szSubstitute, (DWORD)_countof(szSubstitute),
                                  L"keyboardlayout.ini");
         szSubstitute[_countof(szSubstitute) - 1] = UNICODE_NULL; /* Avoid buffer overrun */
+#endif
         if (!IsValidKLID(szSubstitute))
             return FALSE;
         StringCchCopyW(pszKLID, cchKLID, szSubstitute);
