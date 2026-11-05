@@ -1,9 +1,9 @@
 /*
- * PROJECT:      ReactOS Version Program
- * LICENSE:      MIT (https://spdx.org/licenses/MIT)
- * PURPOSE:      Korean (South Korea) resource file
- * TRANSLATOR:   Copyright 2026 Jiho Kim
-*/
+ * PROJECT:     ReactOS Version Program
+ * LICENSE:     MIT (https://spdx.org/licenses/MIT)
+ * PURPOSE:     Korean (South Korea) resource file
+ * TRANSLATOR:  Copyright 2026 Jiho Kim <hagiajimjim@gmail.com>
+ */
 
 LANGUAGE LANG_KOREAN, SUBLANG_DEFAULT
 

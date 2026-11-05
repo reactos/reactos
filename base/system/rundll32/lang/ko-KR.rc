@@ -1,8 +1,8 @@
 /*
- * PROJECT:      ReactOS rundll32
- * LICENSE:      GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
- * PURPOSE:      Korean (South Korea) resource file
- * TRANSLATOR:   Copyright 2026 Jiho Kim
+ * PROJECT:     ReactOS rundll32
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Korean (South Korea) resource file
+ * TRANSLATOR:  Copyright 2026 Jiho Kim <hagiajimjim@gmail.com>
  */
 
 LANGUAGE LANG_KOREAN, SUBLANG_DEFAULT
