@@ -119,6 +119,10 @@ HalpParseMadt(
 
                 HalpProcessorMpidr[Cpu++] = Gicc->Mpidr;
 
+                /* GICv2 has one CPU interface address, banked per processor */
+                if (!HalpPlatform.GiccBase.QuadPart)
+                    HalpPlatform.GiccBase.QuadPart = Gicc->PhysicalBaseAddress;
+
                 /* Without a GICR entry every GICC carries its own redistributor */
                 if (!HalpPlatform.GicrLength && Gicc->GicrBaseAddress)
                     HalpPlatform.GicrBase.QuadPart = Gicc->GicrBaseAddress;
@@ -126,6 +130,7 @@ HalpParseMadt(
 
             case MADT_TYPE_GICD:
                 HalpPlatform.GicdBase.QuadPart = ((PHALP_MADT_GICD)Entry)->PhysicalBaseAddress;
+                HalpPlatform.GicVersion = ((PHALP_MADT_GICD)Entry)->GicVersion;
                 break;
 
             case MADT_TYPE_GICR:

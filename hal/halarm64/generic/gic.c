@@ -1,7 +1,7 @@
 /*
  * PROJECT:     ReactOS ARM64 HAL
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
- * PURPOSE:     GICv3 interrupt controller
+ * PURPOSE:     GICv2 and GICv3 interrupt controllers
  * COPYRIGHT:   Copyright 2026 Justin Miller <justin.miller@reactos.org>
  */
 
@@ -21,9 +21,23 @@
 #define GICD_IPRIORITYR     0x0400
 #define GICD_ICFGR          0x0C00
 #define GICD_IROUTER        0x6000
+#define GICD_PIDR2          0xFFE8
+
+/* GICv2 only distributor registers */
+#define GICD_ITARGETSR      0x0800
+#define GICD_SGIR           0x0F00
+
+#define GICD_SGIR_SELF      (2 << 24)
 
 #define GICD_CTLR_RWP       0x80000000
 #define GICD_CTLR_ENABLE    0x13
+
+/* GICv2 enables both groups, with the security extensions bit 0 is group 1 */
+#define GICV2_CTLR_ENABLE   0x03
+
+/* Without the security extensions GICC_IAR only takes group 0, the
+ * non-secure side of a GIC that has them cannot write the groups at all */
+#define GICV2_GROUP         0
 
 /* Redistributor registers, the SGI frame follows the control frame */
 #define GICR_TYPER          0x0008
@@ -40,6 +54,16 @@
 #define GICR_WAKER_SLEEP    0x02
 #define GICR_WAKER_ASLEEP   0x04
 
+/* GICv2 CPU interface registers */
+#define GICC_CTLR           0x0000
+#define GICC_PMR            0x0004
+#define GICC_BPR            0x0008
+#define GICC_IAR            0x000C
+#define GICC_EOIR           0x0010
+
+/* GICv2 IAR keeps the sending processor of an SGI above the INTID */
+#define GICC_IAR_INTID      0x3FF
+
 /* GLOBALS *******************************************************************/
 
 static PUCHAR HalpGicd;
@@ -47,6 +71,15 @@ static PUCHAR HalpGicrControl[MAXIMUM_PROCESSORS];
 static PUCHAR HalpGicrSgi[MAXIMUM_PROCESSORS];
 static ULONG HalpGicLineCount;
 static KSPIN_LOCK HalpGicLock;
+
+/* Nothing touches the CPU interface before the version is known */
+static BOOLEAN HalpGicReady;
+
+/* GICv2 state, the CPU interface is one banked frame */
+static BOOLEAN HalpGicV2;
+static PUCHAR HalpGicc;
+static UCHAR HalpGicCpuMask[MAXIMUM_PROCESSORS];
+static ULONG HalpGicLastIar[MAXIMUM_PROCESSORS];
 
 /* FUNCTIONS *****************************************************************/
 
@@ -147,6 +180,21 @@ HalpGicInitializeDistributor(VOID)
     if (!HalpGicd)
         KeBugCheckEx(HAL_INITIALIZATION_FAILED, 0x6C1C, 1, 0, 0);
 
+    /* The MADT may leave the version at 0, ArchRev in PIDR2 has it then */
+    if (!HalpPlatform.GicVersion)
+        HalpPlatform.GicVersion = (UCHAR)((HalpGicRead(HalpGicd, GICD_PIDR2) >> 4) & 0xF);
+    HalpGicV2 = (HalpPlatform.GicVersion <= 2);
+
+    if (HalpGicV2)
+    {
+        if (!HalpPlatform.GiccBase.QuadPart)
+            KeBugCheckEx(HAL_INITIALIZATION_FAILED, 0x6C1C, 3, 0, 0);
+
+        HalpGicc = HalpMapPhysicalMemory(HalpPlatform.GiccBase, HALP_GICC_SIZE / PAGE_SIZE, TRUE);
+        if (!HalpGicc)
+            KeBugCheckEx(HAL_INITIALIZATION_FAILED, 0x6C1C, 4, 0, 0);
+    }
+
     HalpGicWrite(HalpGicd, GICD_CTLR, 0);
     HalpGicWaitForDistributor();
 
@@ -160,7 +208,7 @@ HalpGicInitializeDistributor(VOID)
     {
         HalpGicWrite(HalpGicd, GICD_ICENABLER + i / 8, 0xFFFFFFFF);
         HalpGicWrite(HalpGicd, GICD_ICPENDR + i / 8, 0xFFFFFFFF);
-        HalpGicWrite(HalpGicd, GICD_IGROUPR + i / 8, 0xFFFFFFFF);
+        HalpGicWrite(HalpGicd, GICD_IGROUPR + i / 8, HalpGicV2 ? GICV2_GROUP : 0xFFFFFFFF);
     }
 
     for (i = GIC_SPI_FIRST; i < HalpGicLineCount; i += 16)
@@ -170,8 +218,9 @@ HalpGicInitializeDistributor(VOID)
         HalpGicWrite(HalpGicd, GICD_IPRIORITYR + i, 0xF0F0F0F0);
 
     HalpGicWaitForDistributor();
-    HalpGicWrite(HalpGicd, GICD_CTLR, GICD_CTLR_ENABLE);
+    HalpGicWrite(HalpGicd, GICD_CTLR, HalpGicV2 ? GICV2_CTLR_ENABLE : GICD_CTLR_ENABLE);
     HalpGicWaitForDistributor();
+    HalpGicReady = TRUE;
 }
 
 VOID
@@ -185,6 +234,28 @@ HalpGicInitializeCpu(
 
     Mpidr = KeArm64ReadRegister(ARM64_MPIDR_EL1) & 0xFF00FFFFFFULL;
     HalpProcessorMpidr[ProcessorNumber] = Mpidr;
+
+    if (HalpGicV2)
+    {
+        /* The banked first ITARGETSR names this processor, it reads 0 on a uniprocessor GIC */
+        HalpGicCpuMask[ProcessorNumber] = READ_REGISTER_UCHAR(HalpGicd + GICD_ITARGETSR);
+
+        /* SGIs and PPIs live in the banked distributor registers, PPIs level sensitive */
+        HalpGicWrite(HalpGicd, GICD_ICENABLER, 0xFFFFFFFF);
+        HalpGicWrite(HalpGicd, GICD_IGROUPR, GICV2_GROUP);
+        HalpGicWrite(HalpGicd, GICD_ICFGR + 4, 0);
+
+        for (i = 0; i < GIC_SPI_FIRST; i++)
+            WRITE_REGISTER_UCHAR(HalpGicd + GICD_IPRIORITYR + i, HalpIrqlToPriority(i < GIC_SGI_COUNT ? (i & 0xF) : PASSIVE_LEVEL));
+
+        /* No priority grouping, group 0 signalled as IRQ since FIQEn stays clear */
+        HalpGicWrite(HalpGicc, GICC_PMR, HalpIrqlToPriority(HIGH_LEVEL));
+        HalpGicWrite(HalpGicc, GICC_BPR, 0);
+        HalpGicWrite(HalpGicc, GICC_CTLR, GICV2_CTLR_ENABLE);
+
+        HalpGicWrite(HalpGicd, GICD_ISENABLER, (1 << APC_LEVEL) | (1 << DISPATCH_LEVEL) | (1 << IPI_LEVEL));
+        return;
+    }
 
     if (!HalpGicFindRedistributor(ProcessorNumber, Mpidr))
         KeBugCheckEx(HAL_INITIALIZATION_FAILED, 0x6C1C, 2, ProcessorNumber, (ULONG_PTR)Mpidr);
@@ -227,7 +298,8 @@ HalpGicSetPriority(
 {
     ULONG Cpu;
 
-    if (IntId < GIC_SPI_FIRST)
+    /* GICv2 banks the private lines in the distributor, the write only reaches this processor */
+    if ((IntId < GIC_SPI_FIRST) && !HalpGicV2)
     {
         for (Cpu = 0; Cpu < MAXIMUM_PROCESSORS; Cpu++)
         {
@@ -253,6 +325,12 @@ HalpGicEnableInterrupt(
     if (IntId >= HalpGicLineCount)
         return FALSE;
 
+    if ((IntId < GIC_SPI_FIRST) && HalpGicV2)
+    {
+        HalpGicWrite(HalpGicd, GICD_ISENABLER, 1 << IntId);
+        return TRUE;
+    }
+
     if (IntId < GIC_SPI_FIRST)
     {
         for (Cpu = 0; Cpu < MAXIMUM_PROCESSORS; Cpu++)
@@ -275,7 +353,10 @@ HalpGicEnableInterrupt(
     HalpGicWrite(HalpGicd, GICD_ICFGR + (IntId / 16) * 4, Config);
 
     /* Route to the boot processor */
-    WRITE_REGISTER_ULONG64((PULONG64)(HalpGicd + GICD_IROUTER + IntId * 8), HalpProcessorMpidr[0]);
+    if (HalpGicV2)
+        WRITE_REGISTER_UCHAR(HalpGicd + GICD_ITARGETSR + IntId, HalpGicCpuMask[0] ? HalpGicCpuMask[0] : 1);
+    else
+        WRITE_REGISTER_ULONG64((PULONG64)(HalpGicd + GICD_IROUTER + IntId * 8), HalpProcessorMpidr[0]);
 
     HalpGicWrite(HalpGicd, GICD_ISENABLER + (IntId / 32) * 4, 1 << (IntId % 32));
 
@@ -292,6 +373,12 @@ HalpGicDisableInterrupt(
 
     if (IntId >= HalpGicLineCount)
         return;
+
+    if ((IntId < GIC_SPI_FIRST) && HalpGicV2)
+    {
+        HalpGicWrite(HalpGicd, GICD_ICENABLER, 1 << IntId);
+        return;
+    }
 
     if (IntId < GIC_SPI_FIRST)
     {
@@ -319,7 +406,27 @@ HalpGicSendSgi(
     _In_ KAFFINITY TargetSet)
 {
     ULONG64 Mpidr, Value;
-    ULONG Cpu;
+    ULONG Cpu, Targets;
+
+    if (HalpGicV2)
+    {
+        /* Sending to ourselves needs no CPU interface number */
+        if (TargetSet == AFFINITY_MASK(KeGetCurrentProcessorNumber()))
+        {
+            HalpGicWrite(HalpGicd, GICD_SGIR, GICD_SGIR_SELF | (IntId & 0xF));
+            return;
+        }
+
+        for (Targets = 0, Cpu = 0; TargetSet; Cpu++, TargetSet >>= 1)
+        {
+            if (TargetSet & 1)
+                Targets |= HalpGicCpuMask[Cpu];
+        }
+
+        if (Targets)
+            HalpGicWrite(HalpGicd, GICD_SGIR, (Targets << 16) | (IntId & 0xF));
+        return;
+    }
 
     for (Cpu = 0; TargetSet; Cpu++, TargetSet >>= 1)
     {
@@ -335,5 +442,65 @@ HalpGicSendSgi(
         KeArm64WriteRegister(ARM64_ICC_SGI1R_EL1, Value);
     }
 
+    __isb(_ARM64_BARRIER_SY);
+}
+
+/**
+ * @brief Acknowledges the highest priority pending interrupt.
+ *
+ * GICv2 wants the whole IAR value back at end of interrupt, the kernel ends
+ * the interrupt before it enables them again so one value per processor does.
+ */
+ULONG
+NTAPI
+HalpGicAcknowledge(VOID)
+{
+    ULONG Iar;
+
+    if (HalpGicV2)
+    {
+        Iar = HalpGicRead(HalpGicc, GICC_IAR);
+        HalpGicLastIar[KeGetCurrentProcessorNumber()] = Iar;
+        return Iar & GICC_IAR_INTID;
+    }
+
+    return (ULONG)KeArm64ReadRegister(ARM64_ICC_IAR1_EL1) & 0xFFFFFF;
+}
+
+VOID
+NTAPI
+HalpGicEndOfInterrupt(
+    _In_ ULONG IntId)
+{
+    ULONG Iar;
+
+    if (HalpGicV2)
+    {
+        Iar = HalpGicLastIar[KeGetCurrentProcessorNumber()];
+        if ((Iar & GICC_IAR_INTID) != IntId)
+            Iar = IntId;
+        HalpGicWrite(HalpGicc, GICC_EOIR, Iar);
+        return;
+    }
+
+    KeArm64WriteRegister(ARM64_ICC_EOIR1_EL1, IntId);
+    __isb(_ARM64_BARRIER_SY);
+}
+
+VOID
+NTAPI
+HalpGicSetPriorityMask(
+    _In_ UCHAR Priority)
+{
+    /* The GICv3 registers fault on a GICv2, so wait for the distributor to pick */
+    if (!HalpGicReady)
+        return;
+
+    if (HalpGicV2)
+        HalpGicWrite(HalpGicc, GICC_PMR, Priority);
+    else
+        KeArm64WriteRegister(ARM64_ICC_PMR_EL1, Priority);
+
+    __dsb(_ARM64_BARRIER_SY);
     __isb(_ARM64_BARRIER_SY);
 }
