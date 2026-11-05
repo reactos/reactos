@@ -841,8 +841,8 @@ IntFollowRealDll(
     szReturned[0] = UNICODE_NULL;
 
     /* FIXME: Specify PCLIENTKEYBOARDTYPE parameter for pfnReal */
-    if (!((pfnReal    && pfnReal(ulKLID, szReturned, NULL, NULL)) ||
-          (pfnRealNT4 && pfnRealNT4(szReturned))))
+    if ((!(pfnReal    && pfnReal(ulKLID, szReturned, NULL, NULL)) &&
+         !(pfnRealNT4 && pfnRealNT4(szReturned))))
     {
         return;
     }
