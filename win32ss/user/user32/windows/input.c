@@ -821,7 +821,7 @@ IntLoadMultiTables(
 static VOID
 IntFollowRealDll(
     _Inout_ HMODULE *phModule,
-    _Inout_ PCWSTR *ppszFile,
+    _Outptr_ PCWSTR *ppszFile,
     _Out_writes_z_(MAX_LAYOUT_FILENAME) PWSTR pszRealFile,
     _In_opt_ PCWSTR pszKLID)
 {
