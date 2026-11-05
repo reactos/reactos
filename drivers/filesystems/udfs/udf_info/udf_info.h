@@ -836,7 +836,7 @@ VOID UDFRememberMetadataWritebackError(PIRP_CONTEXT IrpContext, PVCB Vcb,
 /*
     This routine reads data from file described by FileInfo
  */
-__inline
+static __inline
 NTSTATUS
 UDFReadFile__(
     IN PIRP_CONTEXT IrpContext,
