@@ -9,10 +9,12 @@
 /* Enumerations */
 
 #if defined(__midl) || defined(__WIDL__)
-typedef [v1_enum] enum _DOT11_PHY_TYPE {
+#define V1_ENUM [v1_enum]
 #else
-typedef enum _DOT11_PHY_TYPE {
+#define V1_ENUM
 #endif
+
+typedef V1_ENUM enum _DOT11_PHY_TYPE {
     dot11_phy_type_unknown,
     dot11_phy_type_any,
     dot11_phy_type_fhss,
@@ -24,9 +26,9 @@ typedef enum _DOT11_PHY_TYPE {
     dot11_phy_type_ht,
     dot11_phy_type_IHV_start,
     dot11_phy_type_IHV_end
-} DOT11_PHY_TYPE;
+} DOT11_PHY_TYPE /* HACK: WIDL is broken, *PDOT11_PHY_TYPE */;
 
-typedef enum _DOT11_AUTH_ALGORITHM {
+typedef V1_ENUM enum _DOT11_AUTH_ALGORITHM {
     DOT11_AUTH_ALGO_80211_OPEN         = 1,
     DOT11_AUTH_ALGO_80211_SHARED_KEY,
     DOT11_AUTH_ALGO_WPA,
@@ -47,9 +49,9 @@ typedef enum _DOT11_AUTH_ALGORITHM {
 #endif
     DOT11_AUTH_ALGO_IHV_START          = 0x80000000,
     DOT11_AUTH_ALGO_IHV_END            = 0xffffffff
-} DOT11_AUTH_ALGORITHM;
+} DOT11_AUTH_ALGORITHM /* HACK: WIDL is broken, *PDOT11_AUTH_ALGORITHM */;
 
-typedef enum _DOT11_CIPHER_ALGORITHM {
+typedef V1_ENUM enum _DOT11_CIPHER_ALGORITHM {
     DOT11_CIPHER_ALGO_NONE            = 0x00,
     DOT11_CIPHER_ALGO_WEP40           = 0x01,
     DOT11_CIPHER_ALGO_TKIP            = 0x02,
@@ -60,7 +62,7 @@ typedef enum _DOT11_CIPHER_ALGORITHM {
     DOT11_CIPHER_ALGO_WEP             = 0x101,
     DOT11_CIPHER_ALGO_IHV_START       = 0x80000000,
     DOT11_CIPHER_ALGO_IHV_END         = 0xffffffff
-} DOT11_CIPHER_ALGORITHM;
+} DOT11_CIPHER_ALGORITHM /* HACK: WIDL is broken, *PDOT11_CIPHER_ALGORITHM */;
 
 /* Types */
 

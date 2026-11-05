@@ -45,7 +45,7 @@ const UCHAR PixelMask[8] =
     (1 << 1),
     (1 << 0),
 };
-static const ULONG lookup[16] =
+static const ULONG ReverseAndUnpackMonochromePixels[16] =
 {
     0x0000,
     0x0100,
@@ -65,6 +65,7 @@ static const ULONG lookup[16] =
     0x1111,
 };
 
+VGA_GRAPHICS_CONTROLLER_STATE VgaGCState = VGA_GC_STATE_UNINITIALIZED;
 ULONG_PTR VgaRegisterBase = 0;
 ULONG_PTR VgaBase = 0;
 
@@ -86,6 +87,10 @@ ReadWriteMode(
 static VOID
 PrepareForCopyArea(VOID)
 {
+    if (VgaGCState == VGA_GC_STATE_COPY_PIXELS)
+        return;
+    VgaGCState = VGA_GC_STATE_COPY_PIXELS;
+
     /* Enable all memory planes */
     __outpw(VGA_BASE_IO_PORT + SEQ_ADDRESS_PORT, (0x0F << 8) | IND_MAP_MASK);
 
@@ -96,9 +101,24 @@ PrepareForCopyArea(VOID)
     ReadWriteMode(1);
 }
 
+static VOID
+PrepareForReadPixels(VOID)
+{
+    if (VgaGCState == VGA_GC_STATE_READ_PIXELS)
+        return;
+    VgaGCState = VGA_GC_STATE_READ_PIXELS;
+
+    /* Select read mode 0 */
+    ReadWriteMode(0);
+}
+
 VOID
 PrepareForSetPixel(VOID)
 {
+    if (VgaGCState == VGA_GC_STATE_WRITE_PIXELS)
+        return;
+    VgaGCState = VGA_GC_STATE_WRITE_PIXELS;
+
     /* Select read mode 1 and write mode 2 */
     ReadWriteMode(0xA);
 
@@ -128,9 +148,9 @@ DisplayCharacter(
     _In_ ULONG BackColor)
 {
     const UCHAR* FontChar;
-    PUCHAR PixelPtr;
+    PUCHAR PixelPosition, PixelPtr;
     ULONG Height;
-    UCHAR Shift;
+    ULONG Shift;
 
     PrepareForSetPixel();
 
@@ -139,7 +159,8 @@ DisplayCharacter(
 
     /* Get the font and pixel pointer */
     FontChar = GetFontPtr(Character);
-    PixelPtr = (PUCHAR)(VgaBase + (Left >> 3) + (Top * (SCREEN_WIDTH / 8)));
+    PixelPosition = (PUCHAR)(VgaBase + (Left / 8) + (Top * (SCREEN_WIDTH / 8)));
+    PixelPtr = PixelPosition;
 
     /* Loop all pixel rows */
     for (Height = BOOTCHAR_HEIGHT; Height > 0; --Height)
@@ -157,7 +178,7 @@ DisplayCharacter(
 
         /* Get the font and pixel pointer (2nd byte) */
         FontChar = GetFontPtr(Character);
-        PixelPtr = (PUCHAR)(VgaBase + (Left >> 3) + (Top * (SCREEN_WIDTH / 8)) + 1);
+        PixelPtr = PixelPosition + 1;
 
         /* Loop all pixel rows */
         for (Height = BOOTCHAR_HEIGHT; Height > 0; --Height)
@@ -180,12 +201,12 @@ DisplayCharacter(
 
     /* Get the font and pixel pointer */
     FontChar = GetFontPtr(Character);
-    PixelPtr = (PUCHAR)(VgaBase + (Left >> 3) + (Top * (SCREEN_WIDTH / 8)));
+    PixelPtr = PixelPosition;
 
     /* Loop all pixel rows */
     for (Height = BOOTCHAR_HEIGHT; Height > 0; --Height)
     {
-        SET_PIXELS(PixelPtr, ~*FontChar >> Shift, BackColor);
+        SET_PIXELS(PixelPtr, (UCHAR)~*FontChar >> Shift, BackColor);
         PixelPtr += (SCREEN_WIDTH / 8);
         FontChar += FONT_PTR_DELTA;
     }
@@ -198,12 +219,12 @@ DisplayCharacter(
 
         /* Get the font and pixel pointer (2nd byte) */
         FontChar = GetFontPtr(Character);
-        PixelPtr = (PUCHAR)(VgaBase + (Left >> 3) + (Top * (SCREEN_WIDTH / 8)) + 1);
+        PixelPtr = PixelPosition + 1;
 
         /* Loop all pixel rows */
         for (Height = BOOTCHAR_HEIGHT; Height > 0; --Height)
         {
-            SET_PIXELS(PixelPtr, ~*FontChar << Shift, BackColor);
+            SET_PIXELS(PixelPtr, (UCHAR)~*FontChar << Shift, BackColor);
             PixelPtr += (SCREEN_WIDTH / 8);
             FontChar += FONT_PTR_DELTA;
         }
@@ -309,6 +330,8 @@ VOID
 NTAPI
 VidCleanUp(VOID)
 {
+    VgaGCState = VGA_GC_STATE_UNINITIALIZED;
+
     /* Restore the bit mask to its original state */
     __outpb(VGA_BASE_IO_PORT + GRAPH_ADDRESS_PORT, IND_BIT_MASK);
     __outpb(VGA_BASE_IO_PORT + GRAPH_DATA_PORT, BIT_MASK_DEFAULT);
@@ -324,89 +347,76 @@ VidScreenToBufferBlt(
     _In_ ULONG Height,
     _In_ ULONG Stride)
 {
-    ULONG Plane;
-    ULONG XDistance;
-    ULONG LeftDelta, RightDelta;
-    ULONG PixelOffset;
-    PUCHAR PixelPosition;
-    PUCHAR k, i;
-    PULONG m;
-    UCHAR Value, Value2;
-    UCHAR a;
-    ULONG b;
-    ULONG x, y;
+    ULONG LineStart, LineEnd, LineWidth;
+    ULONG LeftShift, RightShift;
+    PUCHAR PixelPtr;
+    ULONG Plane, X, Y;
+
+    if (Height == 0)
+        return;
 
     /* Clear the destination buffer */
     RtlZeroMemory(Buffer, Height * Stride);
 
-    /* Calculate total distance to copy on X */
-    XDistance = Left + Width - 1;
+    /* Calculate the start/final and number of horizontal 8-pixel blocks to copy.
+     * The VGA bootvid only copies whole 8-pixel blocks by design. */
+    LineStart = Left / 8;
+    LineEnd = (Left + Width - 1) / 8;
+    if (LineStart > LineEnd)
+        return;
+    LineWidth = (LineEnd - LineStart) + 1;
 
-    /* Calculate the 8-byte left and right deltas */
-    LeftDelta = Left & 7;
-    RightDelta = 8 - LeftDelta;
+    /* This check helps the compiler to compile the inner loop as a do-while loop */
+    if (LineWidth == 0)
+        return;
 
-    /* Calculate the pixel offset and convert the X distance into byte form */
-    PixelOffset = Top * (SCREEN_WIDTH / 8) + (Left >> 3);
-    XDistance >>= 3;
+    /* Calculate the 8-bit left and right shifts */
+    LeftShift = Left & 7;
+    RightShift = 8 - LeftShift;
 
-    /* Loop the 4 planes */
+    /* Calculate the starting pixel block pointer */
+    PixelPtr = (PUCHAR)(VgaBase + Top * (SCREEN_WIDTH / 8) + (Left / 8));
+
+    PrepareForReadPixels();
+
+    /* Loop through the pixels for each plane */
     for (Plane = 0; Plane < 4; ++Plane)
     {
-        /* Set the current pixel position and reset buffer loop variable */
-        PixelPosition = (PUCHAR)(VgaBase + PixelOffset);
-        i = Buffer;
+        PUCHAR PixelPosition = PixelPtr;
+        PUCHAR OutputBuffer = Buffer;
 
-        /* Set Mode 0 */
-        ReadWriteMode(0);
-
-        /* Set the current plane */
+        /* Select the current plane to read the pixels */
         __outpw(VGA_BASE_IO_PORT + GRAPH_ADDRESS_PORT, (Plane << 8) | IND_READ_MAP);
 
-        /* Start the outer Y height loop */
-        for (y = Height; y > 0; --y)
+        for (Y = 0; Y < Height; ++Y)
         {
-            /* Read the current value */
-            m = (PULONG)i;
-            Value = READ_REGISTER_UCHAR(PixelPosition);
+            PULONG Destination = (PULONG)OutputBuffer;
+            PUCHAR NextPosition;
+            UCHAR CurrPixels;
 
-            /* Set Pixel Position loop variable */
-            k = PixelPosition + 1;
+            CurrPixels = READ_REGISTER_UCHAR(PixelPosition);
+            NextPosition = PixelPosition;
 
-            /* Check if we're still within bounds */
-            if (Left <= XDistance)
+            for (X = 0; X < LineWidth; ++X)
             {
-                /* Start the X inner loop */
-                for (x = (XDistance - Left) + 1; x > 0; --x)
-                {
-                    /* Read the current value */
-                    Value2 = READ_REGISTER_UCHAR(k);
+                UCHAR NextPixels, Px;
+                ULONG Result;
 
-                    /* Increase pixel position */
-                    k++;
+                NextPixels = READ_REGISTER_UCHAR(++NextPosition);
 
-                    /* Do the blt */
-                    a = Value2 >> (UCHAR)RightDelta;
-                    a |= Value << (UCHAR)LeftDelta;
-                    b = lookup[a & 0xF];
-                    a >>= 4;
-                    b <<= 16;
-                    b |= lookup[a];
+                /* Store 8 pixels at once */
+                Px = CurrPixels << LeftShift;
+                Px |= NextPixels >> RightShift;
+                Result = ReverseAndUnpackMonochromePixels[Px >> 4];
+                Result |= ReverseAndUnpackMonochromePixels[Px & 0x0F] << 16;
 
-                    /* Save new value to buffer */
-                    *m |= (b << Plane);
+                *Destination++ |= Result << Plane;
 
-                    /* Move to next destination location */
-                    m++;
-
-                    /* Write new value */
-                    Value = Value2;
-                }
+                CurrPixels = NextPixels;
             }
 
-            /* Update pixel position */
             PixelPosition += (SCREEN_WIDTH / 8);
-            i += Stride;
+            OutputBuffer += Stride;
         }
     }
 }

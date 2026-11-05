@@ -805,7 +805,10 @@ CDownloadManager::RealDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 
             ShowWindow(hDlg, IsSilentDialog() ? SW_HIDE : SW_SHOW);
             StartWorkerThread();
-            return TRUE;
+            // A silent dialog is never shown, so it must not take the keyboard focus.
+            // Otherwise the focus goes to the hidden Cancel button and keys typed into
+            // another window (e.g. a space in the console) cancel the download (CORE-20816).
+            return !IsSilentDialog();
         }
 
         case WM_COMMAND:

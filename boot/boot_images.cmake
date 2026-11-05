@@ -18,11 +18,17 @@ endif()
 
 ## efisys.bin
 if(DEFINED EFI_PLATFORM_ID)
+    # The FAT boot sector is only built for x86/x64
+    if(ARCH STREQUAL "i386" OR ARCH STREQUAL "amd64")
+        set(EFISYS_BOOT_SECTOR -boot ${CMAKE_CURRENT_BINARY_DIR}/freeldr/bootsect/fat.bin)
+        set(EFISYS_BOOT_SECTOR_DEPENDS fat)
+    endif()
+
     add_custom_target(efisys
         COMMAND native-fatten ${CMAKE_CURRENT_BINARY_DIR}/efisys.bin -format 2880 EFIBOOT
-            -boot ${CMAKE_CURRENT_BINARY_DIR}/freeldr/bootsect/fat.bin
+            ${EFISYS_BOOT_SECTOR}
             -mkdir EFI -mkdir EFI/BOOT -add $<TARGET_FILE:uefildr> EFI/BOOT/boot${EFI_PLATFORM_ID}.efi
-        DEPENDS native-fatten fat uefildr
+        DEPENDS native-fatten ${EFISYS_BOOT_SECTOR_DEPENDS} uefildr
         VERBATIM)
 endif()
 
@@ -82,12 +88,18 @@ set(ISO_BOOT_FILES_OPTIONS
 ## "El Torito" ISO boot options
 # ISO_BOOT_OPTIONS; ISO_BOOT_OPTIONS_REGTEST (only for BootCDRegTest)
 
-# BIOS-based PC boot entry (x86/x64 only)
+# BIOS-based PC boot entry and hybrid MBR (x86/x64 only)
 if(ARCH STREQUAL "i386" OR ARCH STREQUAL "amd64")
     set(ISO_BOOT_OPTIONS
         -eltorito-platform x86 -eltorito-boot loader/isoboot.bin -no-emul-boot -boot-load-size 4)
     set(ISO_BOOT_OPTIONS_REGTEST
         -eltorito-platform x86 -eltorito-boot loader/isobtrt.bin -no-emul-boot -boot-load-size 4)
+
+    set(ISO_HYBRID_DEPENDS isombr native-isohybrid)
+    set(ISO_HYBRID_BOOTCD
+        COMMAND native-isohybrid -b ${_isombr_file} -t 0x96 ${REACTOS_BINARY_DIR}/bootcd.iso)
+    set(ISO_HYBRID_BOOTCDREGTEST
+        COMMAND native-isohybrid -b ${_isombr_file} -t 0x96 ${REACTOS_BINARY_DIR}/bootcdregtest.iso)
 endif()
 
 # EFI boot entry
@@ -143,8 +155,8 @@ add_custom_target(bootcd
     COMMAND native-mkisofs -quiet -o ${REACTOS_BINARY_DIR}/bootcd.iso
         ${ISO_COMMON_OPTIONS} ${ISO_BOOT_OPTIONS} ${ISO_BOOT_FILES_OPTIONS} ${ISO_LAYOUT_OPTIONS}
         -path-list ${CMAKE_CURRENT_BINARY_DIR}/bootcd.$<CONFIG>.lst
-    COMMAND native-isohybrid -b ${_isombr_file} -t 0x96 ${REACTOS_BINARY_DIR}/bootcd.iso
-    DEPENDS isombr native-isohybrid native-mkisofs livecd
+    ${ISO_HYBRID_BOOTCD}
+    DEPENDS ${ISO_HYBRID_DEPENDS} native-mkisofs livecd
     VERBATIM)
 
 ## BootCDRegTest
@@ -155,8 +167,8 @@ add_custom_target(bootcdregtest
     COMMAND native-mkisofs -quiet -o ${REACTOS_BINARY_DIR}/bootcdregtest.iso
         ${ISO_COMMON_OPTIONS} ${ISO_BOOT_OPTIONS_REGTEST} ${ISO_BOOT_FILES_OPTIONS} ${ISO_LAYOUT_OPTIONS}
         -path-list ${CMAKE_CURRENT_BINARY_DIR}/bootcdregtest.$<CONFIG>.lst
-    COMMAND native-isohybrid -b ${_isombr_file} -t 0x96 ${REACTOS_BINARY_DIR}/bootcdregtest.iso
-    DEPENDS isombr native-isohybrid native-mkisofs
+    ${ISO_HYBRID_BOOTCDREGTEST}
+    DEPENDS ${ISO_HYBRID_DEPENDS} native-mkisofs
     VERBATIM)
 
 ## LiveImage -- Constitutes a small RAMDISK ISO, and is also merged with the BootCD

@@ -48,28 +48,25 @@ extern "C" {
 #define WLAN_EXECUTE_ACCESS (STANDARD_RIGHTS_EXECUTE | FILE_EXECUTE | WLAN_READ_ACCESS)
 #define WLAN_WRITE_ACCESS   (STANDARD_RIGHTS_WRITE | FILE_WRITE_DATA | DELETE | WRITE_DAC | WLAN_READ_ACCESS | WLAN_EXECUTE_ACCESS)
 
-/* Enumerations */
-
 #if defined(__midl) || defined(__WIDL__)
-typedef [v1_enum] enum _DOT11_RADIO_STATE {
+#define V1_ENUM [v1_enum]
 #else
-typedef enum _DOT11_RADIO_STATE {
+#define V1_ENUM
 #endif
+
+/* Enumerations */
+typedef V1_ENUM enum _DOT11_RADIO_STATE {
     dot11_radio_state_unknown = 0,
     dot11_radio_state_on,
     dot11_radio_state_off
-} DOT11_RADIO_STATE; /* HACK: WIDL is broken, *PDOT11_RADIO_STATE; */
+} DOT11_RADIO_STATE /* HACK: WIDL is broken, *PDOT11_RADIO_STATE */;
 
-#if defined(__midl) || defined(__WIDL__)
-typedef [v1_enum] enum _WLAN_OPCODE_VALUE_TYPE {
-#else
-typedef enum _WLAN_OPCODE_VALUE_TYPE {
-#endif
+typedef V1_ENUM enum _WLAN_OPCODE_VALUE_TYPE {
     wlan_opcode_value_type_query_only = 0,
     wlan_opcode_value_type_set_by_group_policy,
     wlan_opcode_value_type_set_by_user,
     wlan_opcode_value_type_invalid
-} WLAN_OPCODE_VALUE_TYPE; /* HACK: WIDL is broken    , *PWLAN_OPCODE_VALUE_TYPE; */
+} WLAN_OPCODE_VALUE_TYPE /* HACK: WIDL is broken, *PWLAN_OPCODE_VALUE_TYPE */;
 
 typedef enum _WLAN_SECURABLE_OBJECT {
     wlan_secure_permit_list = 0,
@@ -97,20 +94,12 @@ typedef enum _WLAN_CONNECTION_MODE {
     wlan_connection_mode_invalid
 } WLAN_CONNECTION_MODE, *PWLAN_CONNECTION_MODE;
 
-#if defined(__midl) || defined(__WIDL__)
-typedef [v1_enum] enum _WLAN_IHV_CONTROL_TYPE {
-#else
-typedef enum _WLAN_IHV_CONTROL_TYPE {
-#endif
+typedef V1_ENUM enum _WLAN_IHV_CONTROL_TYPE {
     wlan_ihv_control_type_service,
     wlan_ihv_control_type_driver
-} WLAN_IHV_CONTROL_TYPE;  /* HACK , *PWLAN_IHV_CONTROL_TYPE; */
+} WLAN_IHV_CONTROL_TYPE /* HACK: WIDL is broken, *PWLAN_IHV_CONTROL_TYPE */;
 
-#if defined(__midl) || defined(__WIDL__)
-typedef [v1_enum] enum _WLAN_INTF_OPCODE {
-#else
-typedef enum _WLAN_INTF_OPCODE {
-#endif
+typedef V1_ENUM enum _WLAN_INTF_OPCODE {
     wlan_intf_opcode_autoconf_start                              = 0x000000000,
     wlan_intf_opcode_autoconf_enabled,
     wlan_intf_opcode_background_scan_enabled,
@@ -137,13 +126,9 @@ typedef enum _WLAN_INTF_OPCODE {
     wlan_intf_opcode_security_end                                = 0x2fffffff,
     wlan_intf_opcode_ihv_start                                   = 0x30000000,
     wlan_intf_opcode_ihv_end                                     = 0x3fffffff
-} WLAN_INTF_OPCODE; /* HACK: WIDL is broken    , *PWLAN_INTF_OPCODE; */
+} WLAN_INTF_OPCODE /* HACK: WIDL is broken, *PWLAN_INTF_OPCODE */;
 
-#if defined(__midl) || defined(__WIDL__)
-typedef [v1_enum] enum _WLAN_INTERFACE_STATE {
-#else
-typedef enum _WLAN_INTERFACE_STATE {
-#endif
+typedef V1_ENUM enum _WLAN_INTERFACE_STATE {
     wlan_interface_state_not_ready = 0,
     wlan_interface_state_connected,
     wlan_interface_state_ad_hoc_network_formed,
@@ -160,11 +145,7 @@ typedef enum _WLAN_INTERFACE_TYPE {
     wlan_interface_type_invalid
 } WLAN_INTERFACE_TYPE, *PWLAN_INTERFACE_TYPE;
 
-#if defined(__midl) || defined(__WIDL__)
-typedef [v1_enum] enum _WLAN_NOTIFICATION_ACM {
-#else
-typedef enum _WLAN_NOTIFICATION_ACM {
-#endif
+typedef V1_ENUM enum _WLAN_NOTIFICATION_ACM {
     wlan_notification_acm_start,
     wlan_notification_acm_autoconf_enabled,
     wlan_notification_acm_autoconf_disabled,
@@ -197,11 +178,7 @@ typedef enum _WLAN_NOTIFICATION_ACM {
 } WLAN_NOTIFICATION_ACM /* HACK: WIDL is broken, *PWLAN_NOTIFICATION_ACM */;
 
 #if (NTDDI_VERSION >= NTDDI_VISTA)
-#if defined(__midl) || defined(__WIDL__)
-typedef [v1_enum] enum _WLAN_NOTIFICATION_MSM {
-#else
-typedef enum _WLAN_NOTIFICATION_MSM {
-#endif
+typedef V1_ENUM enum _WLAN_NOTIFICATION_MSM {
     wlan_notification_msm_start,
     wlan_notification_msm_associating,
     wlan_notification_msm_associated,
@@ -224,11 +201,7 @@ typedef enum _WLAN_NOTIFICATION_MSM {
 #endif
 
 #if (NTDDI_VERSION >= NTDDI_WIN7)
-#if defined(__midl) || defined(__WIDL__)
-typedef [v1_enum] enum _WLAN_HOSTED_NETWORK_NOTIFICATION_CODE {
-#else
-typedef enum _WLAN_HOSTED_NETWORK_NOTIFICATION_CODE {
-#endif
+typedef V1_ENUM enum _WLAN_HOSTED_NETWORK_NOTIFICATION_CODE {
     wlan_hosted_network_state_change = 0x1000,
     wlan_hosted_network_peer_state_change,
     wlan_hosted_network_radio_state_change

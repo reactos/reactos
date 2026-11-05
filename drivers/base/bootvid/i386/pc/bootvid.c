@@ -447,6 +447,8 @@ VidInitialize(
     /* Set the VGA Memory Base */
     VgaBase = Base;
 
+    VgaGCState = VGA_GC_STATE_UNINITIALIZED;
+
     /* Check whether we have to set the video mode */
     if (SetMode)
     {
@@ -474,6 +476,8 @@ VOID
 ResetDisplay(
     _In_ BOOLEAN SetMode)
 {
+    VgaGCState = VGA_GC_STATE_UNINITIALIZED;
+
     /* Reset the video mode with HAL if requested */
     if (SetMode && !HalResetDisplay())
     {

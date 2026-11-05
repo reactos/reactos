@@ -9,6 +9,15 @@
 
 #include "vga.h"
 
+typedef enum
+{
+    VGA_GC_STATE_UNINITIALIZED,
+    VGA_GC_STATE_READ_PIXELS,
+    VGA_GC_STATE_WRITE_PIXELS,
+    VGA_GC_STATE_COPY_PIXELS
+} VGA_GRAPHICS_CONTROLLER_STATE;
+
+extern VGA_GRAPHICS_CONTROLLER_STATE VgaGCState;
 extern ULONG_PTR VgaRegisterBase;
 extern ULONG_PTR VgaBase;
 extern const USHORT AT_Initialization[];

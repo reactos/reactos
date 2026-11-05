@@ -10,7 +10,7 @@
 
 #include <debug.h>
 
-static NDIS_OID SupportedOidList[] =
+static const NDIS_OID SupportedOidList[] =
 {
     OID_GEN_SUPPORTED_LIST,
     OID_GEN_CURRENT_PACKET_FILTER,
@@ -81,7 +81,7 @@ MiniportQueryInformation(
 {
     PE1000_ADAPTER Adapter = (PE1000_ADAPTER)MiniportAdapterContext;
     ULONG copyLength;
-    PVOID copySource;
+    const VOID* copySource;
     NDIS_STATUS status;
     union _GENERIC_INFORMATION
     {
@@ -99,7 +99,7 @@ MiniportQueryInformation(
     switch (Oid)
     {
     case OID_GEN_SUPPORTED_LIST:
-        copySource = (PVOID)&SupportedOidList;
+        copySource = SupportedOidList;
         copyLength = sizeof(SupportedOidList);
         break;
 
@@ -159,7 +159,7 @@ MiniportQueryInformation(
 
     case OID_GEN_VENDOR_DESCRIPTION:
     {
-        static UCHAR vendorDesc[] = "ReactOS Team";
+        static const CHAR vendorDesc[] = "Intel PRO/1000 Ethernet Adapter";
         copySource = vendorDesc;
         copyLength = sizeof(vendorDesc);
         break;

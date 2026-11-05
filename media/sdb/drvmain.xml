@@ -14,10 +14,20 @@
             <FIX_ID>{8d0ed225-0892-4efc-9e72-508912427453}</FIX_ID>
         </KSHIM>
 
+        <KSHIM NAME="KmWin2k3VersionLie">
+            <MODULE>NT kernel component</MODULE>
+            <FIX_ID>{b120afe6-7bdd-4672-a990-00b13d507805}</FIX_ID>
+        </KSHIM>
+
         <!-- Frees pool with the wrong tag (CORE-14623) -->
         <KDRIVER NAME="vmx_svga.sys" APP_NAME="VMware SVGA 3D" VENDOR="VMware, Inc.">
             <MATCHING_FILE NAME="*" LINK_DATE="0x546ab93b" />
             <KSHIM_REF NAME="IgnoreFreePoolTag" />
+        </KDRIVER>
+
+        <!-- DriverEntry fails when the major version is above 5 -->
+        <KDRIVER NAME="nv4_mini.sys" APP_NAME="NVIDIA Windows XP / Server 2003 display driver" VENDOR="NVIDIA Corporation">
+            <KSHIM_REF NAME="KmWin2k3VersionLie" />
         </KDRIVER>
     </DATABASE>
 </SDB>

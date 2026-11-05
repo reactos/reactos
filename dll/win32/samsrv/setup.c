@@ -772,7 +772,7 @@ SampSetupCreateDomain(IN HANDLE hServerKey,
         goto done;
 
     /* Set SecDesc attribute*/
-    Status = SampRegSetValue(hServerKey,
+    Status = SampRegSetValue(hDomainKey,
                              L"SecDesc",
                              REG_BINARY,
                              Sd,

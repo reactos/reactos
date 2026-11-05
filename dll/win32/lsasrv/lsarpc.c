@@ -1285,7 +1285,7 @@ LsarLookupSids(
                             MappedCount,
                             0,
                             0);
-    if (!NT_SUCCESS(Status))
+    if (!NT_SUCCESS(Status) && Status != STATUS_NONE_MAPPED)
         return Status;
 
     TranslatedNames->Entries = SidEnumBuffer->Entries;

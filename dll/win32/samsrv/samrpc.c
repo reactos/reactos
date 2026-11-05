@@ -853,13 +853,16 @@ SamrOpenDomain(IN SAMPR_HANDLE ServerHandle,
                                   SAM_SERVER_LOOKUP_DOMAIN,
                                   &ServerObject);
     if (!NT_SUCCESS(Status))
-        return Status;
+        goto done;
 
     /* Validate the Domain SID */
     if ((DomainId->Revision != SID_REVISION) ||
         (DomainId->SubAuthorityCount > SID_MAX_SUB_AUTHORITIES) ||
         (memcmp(&DomainId->IdentifierAuthority, &NtSidAuthority, sizeof(SID_IDENTIFIER_AUTHORITY)) != 0))
-        return STATUS_INVALID_PARAMETER;
+    {
+        Status = STATUS_INVALID_PARAMETER;
+        goto done;
+    }
 
     /* Open the domain object */
     if ((DomainId->SubAuthorityCount == 1) &&
@@ -901,6 +904,7 @@ SamrOpenDomain(IN SAMPR_HANDLE ServerHandle,
     if (NT_SUCCESS(Status))
         *DomainHandle = (SAMPR_HANDLE)DomainObject;
 
+done:
     RtlReleaseResource(&SampResource);
 
     TRACE("SamrOpenDomain done (Status 0x%08lx)\n", Status);

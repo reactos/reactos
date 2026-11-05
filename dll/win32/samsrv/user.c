@@ -387,11 +387,202 @@ done:
 }
 
 
+static
 NTSTATUS
-SampRemoveUserFromAllAliases(IN PSAM_DB_OBJECT UserObject)
+SampRemoveUserFromDomainAliases(
+    _In_ HANDLE DomainKeyHandle,
+    _In_ PSAM_DB_OBJECT UserObject,
+    _In_ PWSTR UserSidString)
 {
-    FIXME("(%p)\n", UserObject);
-    return STATUS_SUCCESS;
+    WCHAR UserIdBuffer[64];
+    ULONG Index, NameLength;
+    HANDLE AliasesKeyHandle = NULL, AliasesMembersKeyHandle = NULL;
+    HANDLE UserSidKeyHandle = NULL, UserIdKeyHandle, UserIdMembersKeyHandle;
+    NTSTATUS Status;
+
+    TRACE("SampRemoveUserFromDomainAliases(%p %p)\n", DomainKeyHandle, UserObject);
+
+    Status = SampRegOpenKey(DomainKeyHandle,
+                            L"Aliases",
+                            KEY_READ,
+                            &AliasesKeyHandle);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("Failed to open the Aliases key (Status %08lX)\n", Status);
+        goto done;
+    }
+
+    Status = SampRegOpenKey(AliasesKeyHandle,
+                            L"Members",
+                            KEY_READ | KEY_WRITE,
+                            &AliasesMembersKeyHandle);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("Failed to open the Members key (Status %08lX)\n", Status);
+        goto done;
+    }
+
+    Status = SampRegOpenKey(AliasesMembersKeyHandle,
+                            UserSidString,
+                            KEY_READ,
+                            &UserSidKeyHandle);
+    if (NT_SUCCESS(Status))
+    {
+        TRACE("Opend the key for the users SID (%S)!\n", UserSidString);
+        Index = 0;
+        for (;;)
+        {
+            NameLength = sizeof(UserIdBuffer);
+            Status = SampRegEnumerateValue(UserSidKeyHandle,
+                                        Index,
+                                        UserIdBuffer,
+                                        &NameLength,
+                                        NULL,
+                                        NULL,
+                                        NULL);
+            if (!NT_SUCCESS(Status))
+            {
+                if (Status == STATUS_NO_MORE_ENTRIES)
+                    Status = STATUS_SUCCESS;
+                break;
+            }
+
+            TRACE("User ID: %S\n", UserIdBuffer);
+
+            Status = SampRegOpenKey(AliasesKeyHandle,
+                                    UserIdBuffer,
+                                    KEY_READ,
+                                    &UserIdKeyHandle);
+            if (NT_SUCCESS(Status))
+            {
+                Status = SampRegOpenKey(UserIdKeyHandle,
+                                        L"Members",
+                                        KEY_READ | KEY_WRITE,
+                                        &UserIdMembersKeyHandle);
+                if (NT_SUCCESS(Status))
+                {
+                    Status = SampRegDeleteValue(UserIdMembersKeyHandle,
+                                                UserSidString);
+                    SampRegCloseKey(&UserIdMembersKeyHandle);
+
+                    if (!NT_SUCCESS(Status))
+                        break;
+                }
+
+                SampRegCloseKey(&UserIdKeyHandle);
+            }
+
+            Index++;
+        }
+
+        SampRegCloseKey(&UserSidKeyHandle);
+    }
+    else
+    {
+        TRACE("No key for the user SID (%S) here!\n", UserSidString);
+        Status = STATUS_SUCCESS;
+        goto done;
+    }
+
+    Status = SampRegDeleteKey(AliasesMembersKeyHandle,
+                              UserSidString);
+
+done:
+    SampRegCloseKey(&AliasesMembersKeyHandle);
+    SampRegCloseKey(&AliasesKeyHandle);
+
+    return Status;
+}
+
+
+NTSTATUS
+SampRemoveUserFromAllAliases(
+    _In_ PSAM_DB_OBJECT UserObject)
+{
+    PSAM_DB_OBJECT DomainObject;
+    PSID UserSid = NULL;
+    LPWSTR UserSidString = NULL;
+    WCHAR DomainKeyName[64];
+    HANDLE DomainsKeyHandle = NULL, DomainKeyHandle = NULL;
+    ULONG DomainEnumIndex;
+    NTSTATUS Status;
+
+    TRACE("SampRemoveUserFromAllAliases(%p)\n", UserObject);
+
+    DomainObject = UserObject->ParentObject;
+    if (DomainObject == NULL || DomainObject->ObjectType != SamDbDomainObject)
+    {
+        ERR("Invalid domain object!\n");
+        return STATUS_UNSUCCESSFUL;
+    }
+
+    Status = SampCreateAccountSid(DomainObject,
+                                  UserObject->RelativeId,
+                                  &UserSid);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("SampCreateAccountSid() failed (Status 0x%08lx)\n", Status);
+        return Status;
+    }
+
+    ConvertSidToStringSidW(UserSid, &UserSidString);
+    TRACE("User SID: %S\n", UserSidString);
+
+    Status = SampRegOpenKey(NULL, //SamKeyHandle,
+                            L"\\Registry\\Machine\\SAM\\SAM\\Domains", //L"SAM\\Domains",
+                            KEY_READ | KEY_ENUMERATE_SUB_KEYS,
+                            &DomainsKeyHandle);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("SampRegOpenKey() failed (Status 0x%08lx)\n", Status);
+        goto done;
+    }
+
+    DomainEnumIndex = 0;
+    while (TRUE)
+    {
+        Status = SampRegEnumerateSubKey(DomainsKeyHandle,
+                                        DomainEnumIndex,
+                                        64 * sizeof(WCHAR),
+                                        DomainKeyName);
+        if (!NT_SUCCESS(Status))
+        {
+            Status = STATUS_SUCCESS;
+            break;
+        }
+
+        TRACE("DomainEnumIndex: %lu\n", DomainEnumIndex);
+        TRACE("Domain key name: %S\n", DomainKeyName);
+
+        Status = SampRegOpenKey(DomainsKeyHandle,
+                                DomainKeyName,
+                                KEY_READ,
+                                &DomainKeyHandle);
+        if (NT_SUCCESS(Status))
+        {
+            Status = SampRemoveUserFromDomainAliases(DomainKeyHandle,
+                                                     UserObject,
+                                                     UserSidString);
+            SampRegCloseKey(&DomainKeyHandle);
+
+            if (!NT_SUCCESS(Status))
+                break;
+        }
+
+        DomainEnumIndex++;
+    }
+
+done:
+    if (DomainsKeyHandle != NULL)
+        SampRegCloseKey(&DomainsKeyHandle);
+
+    if (UserSidString != NULL)
+        LocalFree(UserSidString);
+
+    if (UserSid != NULL)
+        RtlFreeHeap(RtlGetProcessHeap(), 0, UserSid);
+
+    return Status;
 }
 
 

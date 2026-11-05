@@ -91,7 +91,9 @@ extern const RGBQUAD VidpDefaultPalette[BV_MAX_COLORS];
 #define GetGValue(quad)     ((UCHAR)(((quad)>>8) & 0xFF))
 #define GetBValue(quad)     ((UCHAR)((quad) & 0xFF))
 
-#define InitializePalette() InitPaletteWithTable((PULONG)VidpDefaultPalette, BV_MAX_COLORS)
+#ifndef InitializePalette
+#define InitializePalette() InitPaletteWithTable(VidpDefaultPalette, BV_MAX_COLORS)
+#endif
 
 #ifdef CHAR_GEN_UPSIDE_DOWN
 # define GetFontPtr(_Char)  (&VidpFontData[(_Char) * BOOTCHAR_HEIGHT] + BOOTCHAR_HEIGHT - 1)

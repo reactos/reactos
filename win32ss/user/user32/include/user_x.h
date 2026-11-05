@@ -110,3 +110,37 @@ static __inline void LoadUserApiHook()
 #define HOOKID_TO_FLAG(HookId) (1 << ((HookId) + 1))
 #define ISITHOOKED(HookId) (GetWin32ClientInfo()->fsHooks & HOOKID_TO_FLAG(HookId) ||\
                            (GetWin32ClientInfo()->pDeskInfo && GetWin32ClientInfo()->pDeskInfo->fsHooks & HOOKID_TO_FLAG(HookId)))
+
+/* FIXME: WINE's winnt.h should already contain this macro */
+#ifndef ARRAY_SIZE
+#define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
+#endif
+
+/* NtUserx to NtUser map */
+#define NtUserReleaseDC(HWND, HDC) NtUserxReleaseDC((HDC))
+#define NtUserReleaseCapture() NtUserxReleaseCapture()
+#define NtUserKillSystemTimer(HWND, ID) NtUserxKillSystemTimer((HWND), (ID))
+#define NtUserSetSystemTimer(HWND, ID, TIMEOUT) NtUserSetSystemTimer((HWND), (ID), (TIMEOUT), NULL)
+#define NtUserEnableWindow(HWND, ENABLE) NtUserxEnableWindow((HWND), (ENABLE))
+#define NtUserArrangeIconicWindows(HWND) NtUserxArrangeIconicWindows((HWND))
+#define NtUserDrawMenuBar(HWND) NtUserxDrawMenuBar((HWND))
+
+#define NtUserGetWindowSysSubMenu(HWND) GetSubMenu(GetMenu((HWND)), 0)
+
+/* GetWindowLongPtr wrappers */
+#define NtUserGetPrivateData(HWND, OFFSET, SIZE) GetWindowLongPtrW((HWND), (OFFSET))
+#define NtUserSetPrivateData(HWND, OFFSET, SIZE, VALUE) SetWindowLongPtrW((HWND), (OFFSET), (VALUE))
+#define NtUserGetMDIClientInfo(HWND) (MDICLIENTINFO *)GetWindowLongPtr((HWND), GWLP_MDIWND)
+#define NtUserSetMDIClientInfo(HWND, INFO) SetWindowLongPtr((HWND), GWLP_MDIWND, (LONG_PTR)(INFO))
+
+/* MAKE_FNID */
+#define NTUSER_WNDPROC_BUTTON       FNID_BUTTON
+#define NTUSER_WNDPROC_LISTBOX      FNID_LISTBOX
+#define NTUSER_WNDPROC_STATIC       FNID_STATIC
+#define NTUSER_WNDPROC_EDIT         FNID_EDIT
+#define NTUSER_WNDPROC_MDICLIENT    FNID_MDICLIENT
+
+#define MAKE_FNID(index) (index)
+
+/* Imported from dlls/user32/user_private.h */
+DWORD FASTCALL get_input_codepage( void );
