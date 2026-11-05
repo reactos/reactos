@@ -118,12 +118,17 @@ typedef struct _HALP_GTDT
 #define HALP_GICD_SIZE          0x10000
 #define HALP_GICR_FRAME_SIZE    0x20000
 
+/* GICv2 memory mapped CPU interface, GICC_DIR sits in the second page */
+#define HALP_GICC_SIZE          0x2000
+
 /* What the ACPI tables told us about the platform */
 typedef struct _HALP_PLATFORM
 {
     PHYSICAL_ADDRESS GicdBase;
     PHYSICAL_ADDRESS GicrBase;
     ULONG GicrLength;
+    PHYSICAL_ADDRESS GiccBase;
+    UCHAR GicVersion;
     ULONG TimerIntId;
     USHORT ArmBootFlags;
     PHYSICAL_ADDRESS RootTable;
@@ -244,6 +249,20 @@ NTAPI
 HalpGicSendSgi(
     _In_ ULONG IntId,
     _In_ KAFFINITY TargetSet);
+
+ULONG
+NTAPI
+HalpGicAcknowledge(VOID);
+
+VOID
+NTAPI
+HalpGicEndOfInterrupt(
+    _In_ ULONG IntId);
+
+VOID
+NTAPI
+HalpGicSetPriorityMask(
+    _In_ UCHAR Priority);
 
 /* irql.c */
 VOID
