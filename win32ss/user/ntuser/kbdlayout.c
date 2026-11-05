@@ -1327,7 +1327,7 @@ IntEqualDir(
  **/
 HANDLE FASTCALL IntVerifyKeyboardFileHandle(HANDLE hFile)
 {
-#ifdef BUILD_WOW6432
+#if defined(BUILD_WOW6432) && !defined(_WIN64)
     static const UNICODE_STRING ustrDir = RTL_CONSTANT_STRING(L"\\SystemRoot\\SysWOW64");
 #else
     static const UNICODE_STRING ustrDir = RTL_CONSTANT_STRING(L"\\SystemRoot\\system32");
