@@ -411,7 +411,7 @@ KbdLoadImage(
         ERR("ZwQueryInformationFile failed: 0x%08X\n", Status);
         return NULL;
     }
-    if (FileInfo.EndOfFile.QuadPart <= 0 || FileInfo.EndOfFile.QuadPart > KBDIMG_MAXSIZE)
+    if (FileInfo.EndOfFile.HighPart != 0 || FileInfo.EndOfFile.LowPart > KBDIMG_MAXSIZE)
     {
         ERR("Invalid file size (%I64u bytes)\n", FileInfo.EndOfFile.QuadPart);
         return NULL;
