@@ -46,9 +46,12 @@ ErrorBox(HWND hOwner, UINT Error = GetLastError());
 VOID
 CopyTextToClipboard(LPCWSTR lpszText);
 VOID
-ShowPopupMenuEx(HWND hwnd, HWND hwndOwner, UINT MenuID, UINT DefaultItem, POINT *Point = NULL);
-VOID
 EmulateDialogReposition(HWND hwnd);
+VOID
+ShowPopupMenuEx(HWND hwnd, HWND hwndOwner, UINT MenuID, UINT DefaultItem, POINT *Point = NULL);
+typedef BOOL (CALLBACK*TVWALKCALLBACK)(HWND hTree, HTREEITEM hItem, PVOID Context);
+HTREEITEM
+TreeView_Walk(HWND hTree, TVWALKCALLBACK Callback, PVOID Context = 0, BOOL Children = TRUE, HTREEITEM hRoot = NULL);
 UINT
 ClassifyFile(PCWSTR Path);
 BOOL
@@ -104,7 +107,14 @@ void
 UnixTimeToFileTime(DWORD dwUnixTime, LPFILETIME pFileTime);
 
 BOOL
+LoadString(HINSTANCE hInst, UINT ResId, WORD LangId, LPWSTR Buf, SIZE_T cch);
+BOOL
 SearchPatternMatch(LPCWSTR szHaystack, LPCWSTR szNeedle);
+
+template<size_t N, class T> T IsStrPrefixI(T Str, const WCHAR (&Prefix)[N])
+{
+    return StrCmpNIW(const_cast<LPWSTR>(Str), Prefix, N - 1) ? NULL : Str + N - 1;
+}
 
 BOOL
 IsSameRegKey(HKEY hRoot, LPCWSTR Path1, REGSAM Sam1, LPCWSTR Path2, REGSAM Sam2);
