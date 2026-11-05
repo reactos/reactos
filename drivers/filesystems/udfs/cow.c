@@ -955,7 +955,89 @@ UDFCowMetadataLimit(
     return cow ? cow->Limit : Vcb->MetadataBitCount;
 }
 
-/* Rebuild the second region so at least Blocks more metadata blocks fit. */
+/*
+ * Cover more of the metadata area without stopping: give the next part a
+ * second region too. That part holds only free blocks (allocations stay
+ * below Limit), so nothing has to be copied; the next commit records the
+ * new extents. FALSE when the layout has no room for more extents.
+ */
+static BOOLEAN
+CowWidenInPlace(PIRP_CONTEXT IrpContext, PVCB Vcb, PUDF_COW Cow, uint32 Want)
+{
+    UDF_COW_RUN main[UDF_COW_MAX_RUNS], mirror[UDF_COW_MAX_RUNS];
+    PEXTENT_MAP maps[2 * UDF_COW_MAX_RUNS];
+    uint32 mainRuns, mirrorRuns, limit, i, mapCount = 0, adSize;
+    int8* sector;
+    BOOLEAN ok = FALSE;
+    NTSTATUS status;
+
+    UDFAcquireResourceExclusive(&(Vcb->BitMapResource1), TRUE);
+    limit = CowPickLimit(Vcb, Cow, Want);
+    UDFReleaseResource(&(Vcb->BitMapResource1));
+    if (limit <= Cow->Limit)
+        return FALSE;
+
+    CowLock(Vcb, FALSE);
+    RtlCopyMemory(main, Cow->Main, sizeof(main));
+    RtlCopyMemory(mirror, Cow->Mirror, sizeof(mirror));
+    mainRuns = Cow->MainRuns;
+    mirrorRuns = Cow->MirrorRuns;
+    CowUnlock(Vcb);
+
+    if (!CowSplitRuns(main, &mainRuns, limit) ||
+        (Cow->Duplicated && !CowSplitRuns(mirror, &mirrorRuns, limit)) ||
+        Cow->AltMapCount + mainRuns + mirrorRuns > 2 * UDF_COW_MAX_RUNS)
+        return FALSE;
+    adSize = (((PFILE_ENTRY)Vcb->MetadataFileInfo->Dloc->FileEntry)->icbTag.flags &
+              ICB_FLAG_ALLOC_MASK) == ICB_FLAG_AD_SHORT ? sizeof(SHORT_AD) : sizeof(LONG_AD);
+    if (Vcb->MetadataFileInfo->Dloc->FileEntryLen + mainRuns * adSize > Vcb->SectorSize ||
+        Vcb->MetadataMirrorFileInfo->Dloc->FileEntryLen +
+            (Cow->Duplicated ? mirrorRuns : mainRuns) * sizeof(LONG_AD) > Vcb->SectorSize)
+        return FALSE;
+    sector = (int8*)MyAllocatePool__(NonPagedPool, Vcb->SectorSize);
+    if (!sector)
+        return FALSE;
+
+    for (i = 0; i < mainRuns + (Cow->Duplicated ? mirrorRuns : 0); i++) {
+        PUDF_COW_RUN run = i < mainRuns ? &main[i] : &mirror[i - mainRuns];
+        uint32 align = Vcb->MetadataAlignUnit ? Vcb->MetadataAlignUnit : 1;
+        if (run->Lbn < Cow->Limit || run->Lbn >= limit)
+            continue;
+        status = UDFAllocAlignedRun(IrpContext, Vcb, run->Blocks, align,
+                                    &run->Lba[1], &maps[mapCount]);
+        if (!NT_SUCCESS(status))
+            goto done;
+        mapCount++;
+        if (Vcb->Partitions[Vcb->MetadataPhysRef].UspaceBitmap != 0xFFFFFFFF &&
+            !NT_SUCCESS(CowMarkOnDisk(IrpContext, Vcb, run->Lba[1], run->Blocks, sector)))
+            goto done;
+    }
+
+    UDFAcquireResourceExclusive(&(Vcb->BitMapResource1), TRUE);
+    CowLock(Vcb, TRUE);
+    RtlCopyMemory(Cow->Main, main, sizeof(main));
+    RtlCopyMemory(Cow->Mirror, mirror, sizeof(mirror));
+    Cow->MainRuns = mainRuns;
+    Cow->MirrorRuns = mirrorRuns;
+    for (i = 0; i < mapCount; i++)
+        Cow->AltMaps[Cow->AltMapCount++] = maps[i];
+    mapCount = 0;
+    Cow->Limit = limit;
+    CowUnlock(Vcb);
+    UDFReleaseResource(&(Vcb->BitMapResource1));
+    UDFPrint(("UDF COW: now covering %lu metadata blocks\n", (ULONG)limit));
+    ok = TRUE;
+done:
+    for (i = 0; i < mapCount; i++) {
+        UDFMarkSpaceAsXXX(Vcb, 0, maps[i], AS_DISCARDED);
+        MyFreePool__(maps[i]);
+    }
+    MyFreePool__(sector);
+    return ok;
+}
+
+/* Cover at least Blocks more metadata blocks: in place when possible,
+ * otherwise by rebuilding the second region. */
 NTSTATUS
 UDFCowWiden(
     IN PIRP_CONTEXT IrpContext,
@@ -971,6 +1053,8 @@ UDFCowWiden(
     if (!cow)
         return STATUS_SUCCESS;
     want = cow->Limit + Blocks;
+    if (CowWidenInPlace(IrpContext, Vcb, cow, want))
+        return STATUS_SUCCESS;
     status = UDFCowStop(IrpContext, Vcb);
     if (!NT_SUCCESS(status))
         return status;

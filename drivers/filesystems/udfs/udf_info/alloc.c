@@ -899,6 +899,13 @@ retry_after_growth:
       for (bit = pass ? 0 : first;
            bit <= limit - blocks && (pass == 0 || bit < first);
            bit++) {
+        /* Skip whole bytes of blocks in use without mapping each one. */
+        if (!(bit & 7) && !Vcb->MetadataBitmap[bit >> 3]) {
+            bit += 7;
+            continue;
+        }
+        if (!(Vcb->MetadataBitmap[bit >> 3] & (1 << (bit & 7))))
+            continue;
         phys = UDFMetadataLbaToPhys(Vcb, bit, NULL);
         if (phys == LBA_OUT_OF_EXTENT)
             continue;
