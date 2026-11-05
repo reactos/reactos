@@ -1118,6 +1118,7 @@ UDFInitializeVCB(
         ExInitializeResourceLite(&Vcb->BitMapResource1);
         ExInitializeResourceLite(&Vcb->MetadataGrowResource);
         ExInitializeResourceLite(&Vcb->CowResource);
+        KeInitializeSpinLock(&Vcb->CowDataLock);
 
         ExInitializeResourceLite(&Vcb->DlocResource);
         ExInitializeResourceLite(&Vcb->DlocResource2);

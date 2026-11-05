@@ -335,6 +335,15 @@ typedef struct _UDF_DATALOC_INFO {
     StreamDirectory this field must bu NULL.
 */
     struct _UDF_FILE_INFO* SDirInfo;
+/**
+    File data copy-on-write (cow.c): blocks replaced by relocated data,
+    released once a file entry built from the new mapping is written.
+    CowDataGen counts mapping changes; CowDataGenBuilt is the generation
+    the cached file entry's allocation descriptors were built from.
+*/
+    struct _UDF_COW_FREE* CowDataFrees;
+    volatile LONG CowDataGen;
+    LONG CowDataGenBuilt;
 } UDF_DATALOC_INFO;
 
 typedef UDF_DATALOC_INFO* PUDF_DATALOC_INFO;

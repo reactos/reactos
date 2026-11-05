@@ -1043,7 +1043,8 @@ UDFCowStop(
     CowApplyFrees(Vcb, NULL, all);
     for (i = 0; i < cow->AltMapCount; i++)
         UDFMarkSpaceAsXXX(Vcb, 0, cow->AltMaps[i], AS_DISCARDED);
-    UDFPrint(("UDF COW: off after %lu checkpoints\n", (ULONG)cow->Checkpoints));
+    UDFPrint(("UDF COW: off after %lu checkpoints, %lu file data blocks moved\n",
+              (ULONG)cow->Checkpoints, (ULONG)cow->DataBlocksMoved));
     CowFree(cow);
     return status;
 }
@@ -1061,4 +1062,256 @@ UDFCowTeardown(
     CowStopThread(cow);
     Vcb->Cow = NULL;
     CowFree(cow);
+}
+
+/*
+ * File data copy-on-write.
+ */
+
+/* Rebuild Old so the recorded blocks of [First, First + Count) come from
+ * New, in order. Freed receives the old blocks that were replaced. Both
+ * outputs are terminated mappings allocated here. Pure, so it can be
+ * tested on the host. */
+static NTSTATUS
+CowBuildRelocatedMap(PEXTENT_MAP Old, uint32 First, uint32 Count, PEXTENT_MAP New,
+                     uint32 BSh, PEXTENT_MAP* Result, PEXTENT_MAP* Freed)
+{
+    uint32 oldCount, newCount, i, out = 0, freed = 0, nr = 0, nrUsed = 0;
+    uint32 pos = 0, end = First + Count;
+    PEXTENT_MAP res, fr;
+
+    for (oldCount = 0; Old[oldCount].extLength & UDF_EXTENT_LENGTH_MASK; oldCount++)
+        ;
+    for (newCount = 0; New[newCount].extLength & UDF_EXTENT_LENGTH_MASK; newCount++)
+        ;
+    res = (PEXTENT_MAP)MyAllocatePool__(NonPagedPool,
+              (3 * oldCount + newCount + 4) * sizeof(EXTENT_MAP));
+    fr = (PEXTENT_MAP)MyAllocatePool__(NonPagedPool, (oldCount + 1) * sizeof(EXTENT_MAP));
+    if (!res || !fr) {
+        if (res) MyFreePool__(res);
+        if (fr) MyFreePool__(fr);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    for (i = 0; i < oldCount; i++) {
+        uint32 bytes = Old[i].extLength & UDF_EXTENT_LENGTH_MASK;
+        uint32 flags = Old[i].extLength & ~UDF_EXTENT_LENGTH_MASK;
+        uint32 blocks = (bytes + (1 << BSh) - 1) >> BSh;
+        uint32 s = pos, e = pos + blocks, a, b, left;
+
+        pos = e;
+        if (e <= First || s >= end || flags != (EXTENT_RECORDED_ALLOCATED << 30)) {
+            res[out++] = Old[i];
+            continue;
+        }
+        a = max(s, First);
+        b = min(e, end);
+        if (a > s) {
+            res[out].extLocation = Old[i].extLocation;
+            res[out++].extLength = ((a - s) << BSh) | flags;
+        }
+        fr[freed].extLocation = Old[i].extLocation + (a - s);
+        fr[freed++].extLength = (b - a) << BSh;
+        /* bytes of this extent inside the range (a short tail stays short) */
+        left = min(bytes, (b - s) << BSh) - ((a - s) << BSh);
+        while (left) {
+            uint32 have = ((New[nr].extLength & UDF_EXTENT_LENGTH_MASK) >> BSh) - nrUsed;
+            uint32 take = min(have << BSh, left);
+            uint32 used = (take + (1 << BSh) - 1) >> BSh;
+            res[out].extLocation = New[nr].extLocation + nrUsed;
+            res[out++].extLength = take;    // recorded
+            nrUsed += used;
+            left -= take;
+            if (nrUsed == ((New[nr].extLength & UDF_EXTENT_LENGTH_MASK) >> BSh)) {
+                nr++;
+                nrUsed = 0;
+            }
+        }
+        if (b < e) {
+            res[out].extLocation = Old[i].extLocation + (b - s);
+            res[out++].extLength = (bytes - ((b - s) << BSh)) | flags;
+        }
+    }
+    /* keep whatever follows the terminator (location of the last entry) */
+    res[out] = Old[oldCount];
+    fr[freed].extLocation = 0;
+    fr[freed].extLength = 0;
+    *Result = res;
+    *Freed = fr;
+    return STATUS_SUCCESS;
+}
+
+static BOOLEAN
+CowDataEligible(PVCB Vcb, PFCB Fcb)
+{
+    PUDF_FILE_INFO fi = Fcb->FileInfo;
+    PUDF_DATALOC_INFO dloc;
+
+    if (!Vcb->Cow || !fi || !(dloc = fi->Dloc) || !dloc->DataLoc.Mapping ||
+        dloc->DataLoc.Offset || !dloc->FileEntry || Fcb == Vcb->VolumeDasdFcb ||
+        FlagOn(Fcb->FcbState, UDF_FCB_DIRECTORY | UDF_FCB_EMBEDDED_DATA | UDF_FCB_PAGING_FILE) ||
+        /* a new file has no committed old contents to keep */
+        FlagOn(dloc->FE_Flags, UDF_FE_FLAG_NEW_UNPUBLISHED) ||
+        (((PFILE_ENTRY)dloc->FileEntry)->icbTag.flags & ICB_FLAG_ALLOC_MASK) == ICB_FLAG_AD_IN_ICB)
+        return FALSE;
+    return TRUE;
+}
+
+/*
+ * Called with the paging resource held exclusive, before a non-cached
+ * write of [Offset, Offset + Length). Moves the recorded part of that range
+ * to new blocks so the write does not overwrite data the last checkpoint
+ * still points to. Returns the replaced blocks, to be handed to
+ * UDFCowRelocateDone after the write, or NULL when nothing moved (the
+ * write then goes in place as before).
+ */
+PUDF_COW_FREE
+UDFCowRelocateData(
+    IN PIRP_CONTEXT IrpContext,
+    IN PVCB Vcb,
+    IN PFCB Fcb,
+    IN LONGLONG Offset,
+    IN ULONG Length
+    )
+{
+    PUDF_DATALOC_INFO dloc;
+    PEXTENT_MAP map, newMap = NULL, freed = NULL;
+    EXTENT_INFO alloc;
+    PUDF_COW_FREE node;
+    uint32 first, count, need = 0, pos = 0, i, n, ref, BSh = Vcb->SectorShift;
+    NTSTATUS status;
+
+    if (!Length || (Offset & (Vcb->SectorSize - 1)) || !CowDataEligible(Vcb, Fcb))
+        return NULL;
+    dloc = Fcb->FileInfo->Dloc;
+    map = dloc->DataLoc.Mapping;
+    first = (uint32)(Offset >> BSh);
+    count = (Length + Vcb->SectorSize - 1) >> BSh;
+
+    /* How much recorded data the range covers; data kept inside the
+     * metadata area (old layouts) is left alone. */
+    for (i = 0; map[i].extLength & UDF_EXTENT_LENGTH_MASK; i++) {
+        uint32 bytes = map[i].extLength & UDF_EXTENT_LENGTH_MASK;
+        uint32 blocks = (bytes + Vcb->SectorSize - 1) >> BSh;
+        uint32 s = pos, e = pos + blocks;
+        pos = e;
+        if (e <= first || s >= first + count ||
+            (map[i].extLength >> 30) != EXTENT_RECORDED_ALLOCATED)
+            continue;
+        if (!map[i].extLocation || CowInRuns(Vcb->Cow, map[i].extLocation) ||
+            CowInRuns(Vcb->Cow, map[i].extLocation + blocks - 1))
+            return NULL;
+        need += min(e, first + count) - max(s, first);
+    }
+    if (!need)
+        return NULL;
+
+    ref = Vcb->MetadataPhysRef;
+    status = UDFAllocFreeExtent(IrpContext, Vcb, ((int64)need) << BSh,
+                                UDFPartStart(Vcb, ref), UDFPartEnd(Vcb, ref),
+                                &alloc, dloc->DataLoc.Flags);
+    if (!NT_SUCCESS(status) || !alloc.Mapping)
+        return NULL;    // no room for a copy: write in place
+    status = CowBuildRelocatedMap(map, first, count, alloc.Mapping, BSh, &newMap, &freed);
+    if (!NT_SUCCESS(status)) {
+        UDFMarkSpaceAsXXX(Vcb, 0, alloc.Mapping, AS_DISCARDED);
+        MyFreePool__(alloc.Mapping);
+        return NULL;
+    }
+    for (n = 0; freed[n].extLength; n++)
+        ;
+    node = (PUDF_COW_FREE)MyAllocatePool__(NonPagedPool,
+               sizeof(UDF_COW_FREE) + n * sizeof(EXTENT_MAP));
+    if (!node) {
+        UDFMarkSpaceAsXXX(Vcb, 0, alloc.Mapping, AS_DISCARDED);
+        MyFreePool__(alloc.Mapping);
+        MyFreePool__(newMap);
+        MyFreePool__(freed);
+        return NULL;
+    }
+    RtlCopyMemory(node->Map, freed, (n + 1) * sizeof(EXTENT_MAP));
+    node->Next = NULL;
+    MyFreePool__(freed);
+    MyFreePool__(alloc.Mapping);
+
+    /* Switch the mapping; the new generation makes the next file entry
+     * flush rebuild its allocation descriptors. */
+    dloc->DataLoc.Mapping = newMap;
+    MyFreePool__(map);
+    UDFPackMapping(Vcb, &dloc->DataLoc);
+    node->Gen = InterlockedIncrement((PLONG)&dloc->CowDataGen);
+    dloc->DataLoc.Modified = TRUE;
+    dloc->AllocLoc.Modified = TRUE;
+    if (Vcb->Cow)
+        Vcb->Cow->DataBlocksMoved += need;
+    return node;
+}
+
+/* Queue the blocks a relocation replaced on the file until its entry is
+ * written with the new mapping. */
+VOID
+UDFCowRelocateDone(
+    IN PVCB Vcb,
+    IN PUDF_DATALOC_INFO Dloc,
+    IN PUDF_COW_FREE Old
+    )
+{
+    KIRQL irql;
+
+    if (!Old)
+        return;
+    KeAcquireSpinLock(&Vcb->CowDataLock, &irql);
+    Old->Next = Dloc->CowDataFrees;
+    Dloc->CowDataFrees = Old;
+    KeReleaseSpinLock(&Vcb->CowDataLock, irql);
+}
+
+static VOID
+CowReleaseDataFrees(PVCB Vcb, PUDF_DATALOC_INFO Dloc, BOOLEAN All)
+{
+    PUDF_COW_FREE ready = NULL, keep = NULL, node, next;
+    KIRQL irql;
+
+    if (!Dloc->CowDataFrees)
+        return;
+    KeAcquireSpinLock(&Vcb->CowDataLock, &irql);
+    for (node = Dloc->CowDataFrees; node; node = next) {
+        next = node->Next;
+        if (All || node->Gen - Dloc->CowDataGenBuilt <= 0) {
+            node->Next = ready;
+            ready = node;
+        } else {
+            node->Next = keep;
+            keep = node;
+        }
+    }
+    Dloc->CowDataFrees = keep;
+    KeReleaseSpinLock(&Vcb->CowDataLock, irql);
+    /* With copy-on-write on these wait two checkpoints in cow.c. */
+    for (node = ready; node; node = next) {
+        next = node->Next;
+        UDFMarkSpaceAsXXX(Vcb, 0, node->Map, AS_DISCARDED);
+        MyFreePool__(node);
+    }
+}
+
+/* The file entry was written; release what its mapping no longer uses. */
+VOID
+UDFCowDataFeWritten(
+    IN PVCB Vcb,
+    IN PUDF_DATALOC_INFO Dloc
+    )
+{
+    CowReleaseDataFrees(Vcb, Dloc, FALSE);
+}
+
+/* The in-memory file is going away. A modified entry has been written by
+ * now (or the file was deleted), so nothing points to these blocks. */
+VOID
+UDFCowDataDlocGone(
+    IN PVCB Vcb,
+    IN PUDF_DATALOC_INFO Dloc
+    )
+{
+    CowReleaseDataFrees(Vcb, Dloc, TRUE);
 }

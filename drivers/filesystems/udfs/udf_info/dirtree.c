@@ -1486,6 +1486,8 @@ UDFFreeDloc(
     if (!UDFReleaseDirectoryAppend(Vcb, Dloc))
         return;
     UDFAbandonDeletePrefreeDloc(Vcb, Dloc);
+    if (Dloc->CowDataFrees)
+        UDFCowDataDlocGone(Vcb, Dloc);
     UDFAcquireResourceExclusive(&(Vcb->DlocResource),TRUE);
 
     if ((i = UDFFindDlocInMem(Vcb, Dloc)) != (-1)) {

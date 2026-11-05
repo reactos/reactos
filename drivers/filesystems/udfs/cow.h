@@ -27,6 +27,13 @@
  *
  * The background checkpoint waits for the volume resource, so it never
  * records a create, delete or rename half done.
+ *
+ * File data: an overwrite of recorded file data is written to newly
+ * allocated blocks and the file's mapping is switched to them, so a crash
+ * leaves the old data in place until the file entry that points to the new
+ * blocks is committed. The old blocks are released only after a file entry
+ * built from the new mapping has been written, and then wait two
+ * checkpoints like any other free.
  */
 
 #define UDF_COW_UNIT_BLOCKS     8       // 4 KB units with 512-byte blocks
@@ -44,6 +51,7 @@ typedef struct _UDF_COW_RUN {
 
 typedef struct _UDF_COW_FREE {
     struct _UDF_COW_FREE* Next;
+    LONG Gen;           // file data: mapping generation that dropped them
     EXTENT_MAP Map[1];  // terminated copy of a released mapping
 } UDF_COW_FREE, *PUDF_COW_FREE;
 
@@ -75,6 +83,7 @@ typedef struct _UDF_COW {
     volatile LONG Stop;
     PVOID Thread;
     ULONG Checkpoints;
+    ULONG DataBlocksMoved;  // file data written to new blocks
 } UDF_COW, *PUDF_COW;
 
 NTSTATUS
@@ -134,6 +143,34 @@ BOOLEAN
 UDFCowDeferFree(
     IN PVCB Vcb,
     IN PEXTENT_MAP Map
+    );
+
+PUDF_COW_FREE
+UDFCowRelocateData(
+    IN PIRP_CONTEXT IrpContext,
+    IN PVCB Vcb,
+    IN struct FCB* Fcb,
+    IN LONGLONG Offset,
+    IN ULONG Length
+    );
+
+VOID
+UDFCowRelocateDone(
+    IN PVCB Vcb,
+    IN PUDF_DATALOC_INFO Dloc,
+    IN PUDF_COW_FREE Old
+    );
+
+VOID
+UDFCowDataFeWritten(
+    IN PVCB Vcb,
+    IN PUDF_DATALOC_INFO Dloc
+    );
+
+VOID
+UDFCowDataDlocGone(
+    IN PVCB Vcb,
+    IN PUDF_DATALOC_INFO Dloc
     );
 
 #endif // _UDF_COW_H_

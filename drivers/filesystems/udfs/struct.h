@@ -648,6 +648,8 @@ struct VCB {
     // copy-on-write of the metadata partition (cow.c)
     ERESOURCE                           CowResource;
     struct _UDF_COW*                    Cow;
+    // guards UDF_DATALOC_INFO::CowDataFrees lists
+    KSPIN_LOCK                          CowDataLock;
 
     ERESOURCE                           DlocResource;
     ERESOURCE                           DlocResource2;

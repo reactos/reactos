@@ -716,7 +716,35 @@ UDFCommonWrite(
                                   NotificationEvent,
                                   FALSE);
 
-                Status = UDFNonCachedIo(IrpContext, Fcb, StartingOffset, TruncatedLength);
+                /* File data copy-on-write: put recorded data being
+                 * overwritten in new blocks (cow.c). */
+                {
+                    PUDF_COW_FREE Replaced = Vcb->Cow ?
+                        UDFCowRelocateData(IrpContext, Vcb, Fcb, StartingOffset, TruncatedLength) :
+                        NULL;
+                    Status = UDFNonCachedIo(IrpContext, Fcb, StartingOffset, TruncatedLength);
+                    UDFCowRelocateDone(Vcb, Fcb->FileInfo->Dloc, Replaced);
+                    /* Record the new mapping now so the next checkpoint
+                     * carries it, rather than when the file is closed
+                     * (a file can stay open for the whole session). Only
+                     * when the main resource is ours or free: taking it
+                     * after the paging resource must not block. */
+                    if (Replaced && NT_SUCCESS(Status)) {
+                        PERESOURCE Main = &Fcb->FcbNonpaged->FcbResource;
+                        BOOLEAN Owned, Taken;
+                        KeEnterCriticalRegion();
+                        Owned = ExIsResourceAcquiredSharedLite(Main);
+                        Taken = !Owned && ExAcquireResourceExclusiveLite(Main, FALSE);
+                        if (Owned || Taken) {
+                            (VOID)UDFFlushFE(IrpContext, Vcb, Fcb->FileInfo,
+                                UDFGetRefPartNumByPhysLba(Vcb,
+                                    Fcb->FileInfo->Dloc->FELoc.Mapping[0].extLocation));
+                            if (Taken)
+                                ExReleaseResourceLite(Main);
+                        }
+                        KeLeaveCriticalRegion();
+                    }
+                }
                 IrpContext->IoContext = NULL;
                 NumberBytesWritten = (ULONG)Irp->IoStatus.Information;
             }

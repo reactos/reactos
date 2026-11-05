@@ -5735,6 +5735,9 @@ UDFWriteFEBlock(PIRP_CONTEXT IrpContext, PVCB Vcb,
     if (NT_SUCCESS(status) && WrittenBytes != WriteLen)
         status = STATUS_IO_DEVICE_ERROR;
     if (NT_SUCCESS(status)) {
+        /* File data copy-on-write: blocks the written mapping dropped. */
+        if (Dloc->CowDataFrees)
+            UDFCowDataFeWritten(Vcb, Dloc);
         Dloc->DirectoryCommittedLength = Dloc->DataLoc.Length;
         Dloc->DirectoryCommitKnown = TRUE;
         UDFDirectoryAppendFECommitted(FileInfo);
@@ -5873,6 +5876,9 @@ retry_flush_FE:
     }
     if (FileInfo->Dloc->DataLoc.Modified ||
        FileInfo->Dloc->AllocLoc.Modified) {
+        /* Mapping generation these descriptors are built from (file data
+         * copy-on-write releases replaced blocks against it). */
+        LONG cowGen = FileInfo->Dloc->CowDataGen;
         ASSERT(PartNum != (uint32)(-1));
         // prepare new AllocDescs for flushing...
         if (!NT_SUCCESS(status = UDFBuildAllocDescs(IrpContext, Vcb, PartNum, FileInfo, &NewAllocDescs))) {
@@ -5929,6 +5935,11 @@ retry_flush_FE:
         }
         FileInfo->Dloc->DataLoc.Modified = FALSE;
         FileInfo->Dloc->AllocLoc.Modified = FALSE;
+        /* A relocation that raced with this rebuild keeps the entry dirty. */
+        KeMemoryBarrier();
+        if (FileInfo->Dloc->CowDataGen != cowGen)
+            FileInfo->Dloc->DataLoc.Modified = TRUE;
+        FileInfo->Dloc->CowDataGenBuilt = cowGen;
     } else {
 #if defined(UDF_DBG) && !defined(UDF_CHECK_UTIL)
         if (FileInfo->Dloc->DataLoc.Mapping[0].extLength == (uint32)(EXTENT_NOT_RECORDED_NOT_ALLOCATED << 30) &&
