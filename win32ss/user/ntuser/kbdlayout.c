@@ -1771,12 +1771,12 @@ IntEqualDir(
 /**
  * @brief
  * Validates that the given user-mode handle corresponds to an opened file in
- * SystemRoot\system32 or SystemRoot\SysWOW64.
+ * SystemRoot\system32.
  *
  * If so, duplicates it into a kernel-mode handle.
  *
  * @param[in]   hFile
- * User-mode handle to a file. Accept it only if the file is in system32/SysWOW64.
+ * User-mode handle to a file. Accept it only if the file is in system32.
  *
  * @return
  * On success, returns a NEW kernel handle (OBJ_KERNEL_HANDLE) to the same file object.
@@ -1790,11 +1790,7 @@ IntEqualDir(
  **/
 HANDLE FASTCALL IntVerifyKeyboardFileHandle(HANDLE hFile)
 {
-#if defined(BUILD_WOW6432) && !defined(_WIN64)
-    static const UNICODE_STRING ustrDir = RTL_CONSTANT_STRING(L"\\SystemRoot\\SysWOW64");
-#else
     static const UNICODE_STRING ustrDir = RTL_CONSTANT_STRING(L"\\SystemRoot\\system32");
-#endif
     KBDFILE_NAME Name;
     UNICODE_STRING ustrParent;
     PFILE_OBJECT pFileObject = NULL;
@@ -1850,7 +1846,7 @@ HANDLE FASTCALL IntVerifyKeyboardFileHandle(HANDLE hFile)
 
     if (!IntEqualDir(&ustrParent, &ustrDir))
     {
-        ERR("Not in system32/SysWOW64: %wZ\n", &Name.Info.Name);
+        ERR("Not in system32: %wZ\n", &Name.Info.Name);
         goto Failure;
     }
 
