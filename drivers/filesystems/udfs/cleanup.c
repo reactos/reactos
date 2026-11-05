@@ -476,8 +476,20 @@ delete_attempt_done:
             // On an ordinary final cleanup, avoid flushing clean cache state.
             // Preserve writeback for modified or pending data, VDL gaps, and
             // cached/non-cached coherence; the cache map is still uninitialized below.
+            /* With copy-on-write the metadata written below only becomes
+             * durable at the next checkpoint, so waiting here for the data
+             * buys nothing: the lazy writer writes it, and the file entry
+             * written now records unwritten ranges as such. This removes a
+             * synchronous write per file when many small files are
+             * written, as when an archive is extracted. A valid data gap
+             * is still zeroed and flushed below. */
+            BOOLEAN LeaveToLazyWriter =
+                Vcb->Cow && !ForcedCleanUp &&
+                !FlagOn(FileObject->Flags, FO_WRITE_THROUGH) &&
+                Fcb->Header.ValidDataLength.QuadPart >= Fcb->Header.FileSize.QuadPart;
             if (LastNonCached ||
-                (!Fcb->FcbCleanup &&
+                (!LeaveToLazyWriter &&
+                 !Fcb->FcbCleanup &&
                  !ForcedCleanUp &&
                  !UDFCanDeferNewFileDataCleanup(IrpContext, Vcb, NextFileInfo) &&
                  ((FileObject->Flags & FO_FILE_MODIFIED) ||
