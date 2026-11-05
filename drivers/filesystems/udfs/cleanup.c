@@ -473,11 +473,20 @@ delete_attempt_done:
             // handles later.  We ignore any I/O errors from the flush.
             // We shall not flush deleted files
             RC = STATUS_SUCCESS;
-            if (  LastNonCached
-                      ||
+            // On an ordinary final cleanup, avoid flushing clean cache state.
+            // Preserve writeback for modified or pending data, VDL gaps, and
+            // cached/non-cached coherence; the cache map is still uninitialized below.
+            if (LastNonCached ||
                 (!Fcb->FcbCleanup &&
                  !ForcedCleanUp &&
-                 !UDFCanDeferNewFileDataCleanup(IrpContext, Vcb, NextFileInfo)) ) {
+                 !UDFCanDeferNewFileDataCleanup(IrpContext, Vcb, NextFileInfo) &&
+                 ((FileObject->Flags & FO_FILE_MODIFIED) ||
+                  (Fcb->NtReqFCBFlags & UDF_NTREQ_FCB_MODIFIED) ||
+                  (Fcb->Header.ValidDataLength.QuadPart <
+                   Fcb->Header.FileSize.QuadPart) ||
+                  (NextFileInfo && NextFileInfo->Dloc &&
+                   (NextFileInfo->Dloc->FE_Flags &
+                    UDF_FE_FLAG_CACHED_DATA_PENDING)))) ) {
 
                 LONGLONG OldFileSize, NewFileSize;
 
