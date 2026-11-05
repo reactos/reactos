@@ -541,9 +541,9 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000406","Layout File",
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000406","Layout Text",0x00000000,%DANISH%
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000406","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5007"
 
-HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000406","Layout File",0x00000000,"kbdfa.dll"
-HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000406","Layout Text",0x00000000,%PERSIAN%
-HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000406","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5124"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000429","Layout File",0x00000000,"kbdfa.dll"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000429","Layout Text",0x00000000,%PERSIAN%
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000429","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5124"
 
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00060407","Layout File",0x00000000,"kbdgerg.dll"
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00060407","Layout Text",0x00000000,%GERMAN_ERGO%
