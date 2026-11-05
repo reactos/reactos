@@ -215,6 +215,7 @@ BEGIN
     IDS_MONGOLIAN_CYRILLIC_LAYOUT "Cyrillic Mongolia"
     IDS_NORWEGIAN_LAYOUT "Norwegia"
     IDS_ORIYA_LAYOUT "Oriya"
+    IDS_PERSIAN_STANRDARD_LAYOUT "Persian (Standard)"
     IDS_POLISH_214_LAYOUT "Polandia (214)"
     IDS_POLISH_LAYOUT "Polandia (Programmer)"
     IDS_PORTUGUESE_LAYOUT "Portugis"
