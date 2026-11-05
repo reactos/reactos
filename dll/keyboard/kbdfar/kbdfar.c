@@ -286,7 +286,7 @@ ROSDATA VSC_LPWSTR extended_key_names[] = {
 };
 
 /* ------------------------------------------------------------------ */
-/* Master table                                                        */
+/* Master table                                                       */
 /* ------------------------------------------------------------------ */
 ROSDATA KBDTABLES keyboard_layout_table = {
   &modifier_bits,
