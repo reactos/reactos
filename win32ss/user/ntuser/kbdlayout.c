@@ -360,7 +360,7 @@ KbdBuildImage(
         }
 
         /* Retain the .data section only. The buffer starts at the beginning of .data,
-           so an RVA must be converted to an offset by subtracting offData. */
+         * so an RVA must be converted to an offset by subtracting offData. */
         pbImage = ExAllocatePoolZero(PagedPool, cbVirt, KBDIMG_TAG);
         if (!pbImage)
             _SEH2_YIELD(return NULL);
