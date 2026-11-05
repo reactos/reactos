@@ -1204,7 +1204,7 @@ IntLoadKeyboardLayoutFile(
 /*
  * @implemented
  */
-HKL APIENTRY
+static HKL
 IntLoadKeyboardLayout(
     _In_opt_ HKL hklUnload,
     _In_ PCWSTR pwszKLID,
