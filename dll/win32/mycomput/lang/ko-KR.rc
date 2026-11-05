@@ -1,0 +1,13 @@
+/* 
+ * PROJECT:     ReactOS Computer Management DLL
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Korean (South Korea) resource file
+ * TRANSLATOR:  Copyright 2026 Jiho Kim <hagiajimjim@gmail.com>
+ */
+
+LANGUAGE LANG_KOREAN, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    IDS_MANAGE "관리"
+END
