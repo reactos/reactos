@@ -4,7 +4,7 @@
  * PURPOSE:     Chinese (Simplified) resource file
  * TRANSLATORS: Copyright 2008 Zhang Bing <e_zb@21cn.com> <ezb@mail.gywb.cn>
  *              Copyright 2009 Jingjing Fu <jingjingf@188.com>
- *              Copyright 2018 Luo Yufan <njlyf2011@hotmail.com>
+ *              Copyright 2018-2026 Luo Yufan <njlyf2011@hotmail.com>
  *              Copyright 2021 Wu Haotian <rigoligo03@gmail.com>
  */
 
@@ -177,7 +177,7 @@ FONT 9, "宋体"
 BEGIN
     GROUPBOX "ReactOS 声音", 10243, 7, 5, 213, 192
     ICON 4393, 10241, 26, 26, 20, 20
-    LTEXT "因为 ReactOS 声音服务无效，所以这台计算机目前无法播放声音", 10245, 60, 25, 150, 40
+    LTEXT "由于尚未启用 ReactOS 音频服务，此计算机无法播放声音。", 10245, 60, 25, 150, 40
     AUTOCHECKBOX "启用 ReactOS 声音(&E)", 10253, 60, 68, 150, 9
     LTEXT "注意", 10246, 58, 87, 150, 11
     LTEXT "1. 您必须是管理员才能启用此服务。如果您没有以管理员身份登录，您将提示输入管理员名称和密码。", 10247, 60, 100, 150, 40
@@ -233,9 +233,9 @@ FONT 9, "宋体"
 BEGIN
     GROUPBOX "ReactOS 声音", 10259, 7, 5, 213, 192
     ICON 4394, 10257, 25, 25, 20, 20
-    LTEXT "驱动程序设置已经更改。必须退出 ReactOS 后重新启动，新的设置才会生效。", 10261, 60, 25, 150, 50
+    LTEXT "ReactOS 音频服务现已启用。但是，在重新启动 ReactOS 之前，音频可能无法正常工作。如果要立即重新启动，请先保存工作并关闭所有程序。", 10261, 60, 25, 150, 50
     LTEXT "点击这里重新启动 ReactOS", 10262, 60, 75, 150, 20
-    LTEXT "如果取消，则下次启动ReactOS 后新的设置才会生效。", 10263, 60, 100, 150, 40
+    LTEXT "如果取消，您仍需稍后重新启动计算机，ReactOS 音频才能正常工作。", 10263, 60, 100, 150, 40
 END
 
 STRINGTABLE

@@ -191,7 +191,7 @@ BEGIN
     IDS_NETWORKCOMPONENTTITLE "网络组件"
     IDS_NETWORKCOMPONENTSUBTITLE "确定计算机上使用的网络组件。若要添加新组件，请单击“安装”。"
     IDS_NETWORKDOMAINTITLE "工作组或计算机域"
-    IDS_NETWORKDOMAINSUBTITLE "域是由网络管理员定义的一组计算机。工作组是共享相同工作组名称的计算机组。"
+    IDS_NETWORKDOMAINSUBTITLE "指定此计算机作为工作组的一部分还是网络域的一部分使用。"
     IDS_REACTOS_SETUP "ReactOS 安装程序"
     IDS_WZD_DOMAIN_NAME "在输入域或工作组的名称之前，安装程序无法继续。"
 END

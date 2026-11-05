@@ -3,7 +3,7 @@
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Chinese (Simplified) resource file
  * TRANSLATORS: Copyright 2012 yinwh <yinwh79@163.com>
- *              Copyright 2018 Luo Yufan <njlyf2011@hotmail.com>
+ *              Copyright 2018-2026 Luo Yufan <njlyf2011@hotmail.com>
  *              Copyright 2021 Wu Haotian <rigoligo03@gmail.com>
  */
 
@@ -64,5 +64,5 @@ BEGIN
     IDS_INETTIMESYNCING "请稍候，ReactOS 正在同步 %s"
     IDS_INETTIMEERROR "在 ReactOS 同步时发生了一个错误。%s"
     IDS_INETTIMESUCFILL "请输入一个 NTP 服务器的名称来同步时间"
-    IDS_INETTIMEWELCOME "从列表中选择一个 NTP 服务器的名称来同步该计算机的时间"
+    IDS_INETTIMEWELCOME "从列表中选择或输入 NTP 服务器名称，以同步计算机时间"
 END
