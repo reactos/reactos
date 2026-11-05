@@ -871,8 +871,8 @@ static PFN_KbdLayerDescriptor
 IntPrepareLayoutModule(
     _Inout_ HMODULE *phModule,
     _Inout_ PCWSTR *ppszFile,
-    _Out_writes_(MAX_LAYOUT_FILENAME) PWSTR pszRealFile,
-    _In_opt_z_ PCWSTR pszKLID,
+    _Out_writes_z_(MAX_LAYOUT_FILENAME) PWSTR pszRealFile,
+    _In_opt_ PCWSTR pszKLID,
     _Inout_ PUINT puFlags,
     _Inout_opt_ PKBDTABLE_MULTI_EX pMulti)
 {
