@@ -829,6 +829,7 @@ IntFollowRealDll(
     PFN_KbdLayerRealDllFileNT4 pfnRealNT4;
     HMODULE hRealModule;
     ULONG ulKLID;
+    WCHAR szReturned[MAX_PATH];
 
     pfnReal    = (PFN_KbdLayerRealDllFile)GetProcAddress(*phModule, IFN_KbdLayerRealDllFile);
     pfnRealNT4 = (PFN_KbdLayerRealDllFileNT4)GetProcAddress(*phModule, IFN_KbdLayerRealDllFileNT4);
@@ -837,17 +838,21 @@ IntFollowRealDll(
 
     ulKLID = pszKLID ? wcstoul(pszKLID, NULL, 16) : 0;
     pszRealFile[0] = UNICODE_NULL;
+    szReturned[0] = UNICODE_NULL;
 
     /* FIXME: Specify PCLIENTKEYBOARDTYPE parameter for pfnReal */
-    if (!((pfnReal    && pfnReal(ulKLID, pszRealFile, NULL, NULL)) ||
-          (pfnRealNT4 && pfnRealNT4(pszRealFile))))
+    if (!((pfnReal    && pfnReal(ulKLID, szReturned, NULL, NULL)) ||
+          (pfnRealNT4 && pfnRealNT4(szReturned))))
     {
         return;
     }
 
-    pszRealFile[MAX_LAYOUT_FILENAME - 1] = UNICODE_NULL;
-    if (!IntIsValidLayoutFileName(pszRealFile))
+    szReturned[MAX_PATH - 1] = UNICODE_NULL;
+    if (!IntIsValidLayoutFileName(pszRealFile) ||
+        FAILED(StringCchCopyW(pszRealFile, MAX_LAYOUT_FILENAME, szReturned)))
+    {
         return;
+    }
 
     hRealModule = LoadSysLibraryW(pszRealFile);
     if (!hRealModule)
