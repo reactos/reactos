@@ -149,7 +149,8 @@ static NTSTATUS SatisfySuperAccept(PAFD_FCB FCB, PIRP Irp, PAFD_TDI_OBJECT_QELT 
     LONG LocalAddressLength = min(AcceptInfo->LocalAddressLength, Buffer->Address.Address->AddressLength);
     BufferPtr += AcceptInfo->ReceiveDataLength;
     RtlCopyMemory(BufferPtr, &Buffer->Address.Address->AddressType, LocalAddressLength);
-    *(USHORT *)(BufferPtr + AcceptInfo->LocalAddressLength - sizeof(USHORT)) = LocalAddressLength;
+    if (AcceptInfo->LocalAddressLength >= sizeof(USHORT))
+        *(USHORT *)(BufferPtr + AcceptInfo->LocalAddressLength - sizeof(USHORT)) = LocalAddressLength;
     ExFreePool(Buffer);
 
     /* Write the remote address*/

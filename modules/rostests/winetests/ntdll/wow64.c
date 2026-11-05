@@ -32,7 +32,6 @@
 #include "wine/test.h"
 
 #ifdef __REACTOS__
-#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) >= 0)
 #define wcsicmp _wcsicmp
 #if defined(_MSC_VER) && defined(_M_AMD64)
 USHORT __readsegfs(void);
