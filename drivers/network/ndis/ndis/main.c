@@ -22,6 +22,46 @@ ULONG DebugTraceLevel = MIN_TRACE;
 
 LONG CancelId;
 
+ULONG NdisEnableTxRxFlowControl;
+
+static
+CODE_SEG("INIT")
+VOID
+NdisReadRegistryEntries(VOID)
+{
+    RTL_QUERY_REGISTRY_TABLE QueryTable[2];
+    ULONG AllowFlowControlUnderDebugger;
+
+    /* Set defaults */
+    NdisEnableTxRxFlowControl = TRUE;
+    AllowFlowControlUnderDebugger = FALSE;
+
+    RtlZeroMemory(QueryTable, sizeof(QueryTable));
+
+    QueryTable[0].Flags = RTL_QUERY_REGISTRY_DIRECT | RTL_QUERY_REGISTRY_TYPECHECK;
+    QueryTable[0].Name = L"AllowFlowControlUnderDebugger";
+    QueryTable[0].EntryContext = &AllowFlowControlUnderDebugger;
+    QueryTable[0].DefaultType = (REG_DWORD << RTL_QUERY_REGISTRY_TYPECHECK_SHIFT) | REG_DWORD;
+    QueryTable[0].DefaultData = &AllowFlowControlUnderDebugger;
+    QueryTable[0].DefaultLength = sizeof(ULONG);
+
+    RtlQueryRegistryValues(RTL_REGISTRY_SERVICES,
+                           L"NDIS\\Parameters",
+                           QueryTable,
+                           NULL,
+                           NULL);
+
+    /*
+     * Disable flow control when a Kernel Debugger is attached.
+     *
+     * When the debugger stops at a breakpoint the NIC keeps frame reception,
+     * which could eventually cause the receiver to run out of buffers.
+     * At this point, the NIC may start spamming pause frames.
+     * This is undesirable for some use cases.
+     */
+    if (KD_DEBUGGER_ENABLED)
+        NdisEnableTxRxFlowControl = AllowFlowControlUnderDebugger;
+}
 
 VOID NTAPI MainUnload(
     PDRIVER_OBJECT DriverObject)
@@ -34,7 +74,7 @@ VOID NTAPI MainUnload(
   NDIS_DbgPrint(MAX_TRACE, ("Leaving.\n"));
 }
 
-
+CODE_SEG("INIT")
 NTSTATUS
 NTAPI
 DriverEntry(
@@ -63,6 +103,8 @@ DriverEntry(
   DriverObject->DriverUnload = MainUnload;
 
   CancelId = 0;
+
+  NdisReadRegistryEntries();
 
   return STATUS_SUCCESS;
 }
