@@ -793,7 +793,7 @@ IntLoadMultiTables(
     if (!pfnMulti || !pfnMulti(&pMulti->Multi))
         return;
 
-    if (pMulti->Multi.nTables >= KBDTABLE_MULTI_MAX)
+    if (pMulti->Multi.nTables > KBDTABLE_MULTI_MAX)
         pMulti->Multi.nTables = 0;
 
     for (iTable = 0; iTable < pMulti->Multi.nTables; iTable++)
