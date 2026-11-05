@@ -552,13 +552,20 @@ UserLoadKbdDll(
     PBYTE pbImage;
     ULONG cbImage, wMainOffset = LOWORD(offTable), wNlsOffset = HIWORD(offTable);
     KBDIMAGE_INFO info;
+    HANDLE hModule;
+    PKBDTABLES pKbdTables;
+    PKBDNLSTABLES pKbdNlsTables;
+
+    *phModule = NULL;
+    *ppKbdTables = NULL;
+    *ppKbdNlsTables = NULL;
 
     if (!wMainOffset)
         return FALSE;
 
     /* Load keyboard layout DLL */
-    *phModule = KbdLoadImage(hKernelFile, &cbImage, &info);
-    if (!(*phModule))
+    hModule = KbdLoadImage(hKernelFile, &cbImage, &info);
+    if (!hModule)
         return FALSE;
 
     /* offTable comes from user mode: the tables must lie entirely within the .data section */
@@ -567,42 +574,38 @@ UserLoadKbdDll(
     {
         ERR("Table offset out of range: offTable 0x%08X, .data 0x%08lX+0x%08lX\n",
             offTable, info.offData, info.cbData);
-        KbdUnloadImage(*phModule);
-        *phModule = NULL;
+        KbdUnloadImage(hModule);
         return FALSE;
     }
 
     /* The buffer holds the .data section only: convert the RVAs to the offsets in the buffer */
-    pbImage = (PBYTE)*phModule;
-    *ppKbdTables = (PKBDTABLES)RVA(wMainOffset - info.offData, pbImage);
-    *ppKbdNlsTables = wNlsOffset ? (PKBDNLSTABLES)RVA(wNlsOffset - info.offData, pbImage) : NULL;
+    pbImage = (PBYTE)hModule;
+    pKbdTables = (PKBDTABLES)RVA(wMainOffset - info.offData, pbImage);
+    pKbdNlsTables = wNlsOffset ? (PKBDNLSTABLES)RVA(wNlsOffset - info.offData, pbImage) : NULL;
 
     _SEH2_TRY
     {
         /* Adjust the pointers inside the tables using RVA (instead of the base relocations),
            and validate their targets */
-        if (!KbdRebaseTables(pbImage, &info, *ppKbdTables, *ppKbdNlsTables))
+        if (!KbdRebaseTables(pbImage, &info, pKbdTables, pKbdNlsTables))
         {
             ERR("Invalid pointer in the layout tables\n");
-            KbdUnloadImage(*phModule);
-            *phModule = NULL;
-            *ppKbdTables = NULL;
-            *ppKbdNlsTables = NULL;
+            KbdUnloadImage(hModule);
             _SEH2_YIELD(return FALSE);
         }
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         ERR("Exception in UserLoadKbdDll! Status: 0x%lx\n", _SEH2_GetExceptionCode());
-        KbdUnloadImage(*phModule);
-        *phModule = NULL;
-        *ppKbdTables = NULL;
-        *ppKbdNlsTables = NULL;
+        KbdUnloadImage(hModule);
         _SEH2_YIELD(return FALSE);
     }
     _SEH2_END;
 
+    *phModule = hModule;
     *pcbImage = cbImage;
+    *ppKbdTables = pKbdTables;
+    *ppKbdNlsTables = pKbdNlsTables;
 
 #if 0 && DBG
     /* Dump keyboard layout */
