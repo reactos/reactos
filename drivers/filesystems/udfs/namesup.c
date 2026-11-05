@@ -631,8 +631,13 @@ UDFShortNameInUse(
     return FALSE;
 }
 
+#define UDF_SHORT_NAME_BATCH 16
+
 /* Generate the Windows-style alias for LongName in DirInfo. ShortName must
- * provide 12 WCHARs. Length 0 means LongName needs no alias. */
+ * provide 12 WCHARs. Length 0 means LongName needs no alias.
+ * The first candidates are checked against the directory in one pass, so
+ * a name that collides with many others (~1, ~2, ... then checksum names)
+ * costs one directory scan instead of one per candidate. */
 NTSTATUS
 UDFGenerateUniqueShortName(
     IN PVCB Vcb,
@@ -642,15 +647,90 @@ UDFGenerateUniqueShortName(
     )
 {
     GENERATE_NAME_CONTEXT Context;
-    ULONG Attempt;
+    WCHAR Names[UDF_SHORT_NAME_BATCH][12];
+    USHORT Lengths[UDF_SHORT_NAME_BATCH];
+    uint32 Hashes[UDF_SHORT_NAME_BATCH];
+    BOOLEAN Used[UDF_SHORT_NAME_BATCH];
+    UDF_DIR_SCAN_CONTEXT ScanContext;
+    PDIR_INDEX_ITEM DirNdx;
+    UNICODE_STRING Candidate, Upcased, Existing;
+    WCHAR UpcasedBuffer[12], ExistingBuffer[13];
+    ULONG Attempt, Count = 0, i, From, To;
 
     ShortName->Length = 0;
     if (!UDFNeedsShortName(LongName))
         return STATUS_SUCCESS;
 
     RtlZeroMemory(&Context, sizeof(Context));
-    /* RtlGenerate8dot3Name moves from ~1..~4 to checksum-based names, so a
-     * free alias is found long before this bound in any real directory. */
+    for (i = 0; i < UDF_SHORT_NAME_BATCH; i++) {
+        Candidate.Buffer = Names[i];
+        Candidate.Length = 0;
+        Candidate.MaximumLength = sizeof(Names[i]);
+        RtlGenerate8dot3Name(LongName, FALSE, &Context, &Candidate);
+        if (!Candidate.Length)
+            break;
+        Lengths[i] = Candidate.Length;
+        Upcased.Buffer = UpcasedBuffer;
+        Upcased.Length = 0;
+        Upcased.MaximumLength = sizeof(UpcasedBuffer);
+        RtlUpcaseUnicodeString(&Upcased, &Candidate, FALSE);
+        Hashes[i] = crc32((uint8*)Upcased.Buffer, Upcased.Length);
+        Used[i] = FALSE;
+        Count++;
+    }
+
+    /* The first candidate is free in almost every directory: check it
+     * alone, then the rest together. */
+    for (From = 0, To = min(Count, 1); From < Count; From = To, To = Count) {
+        if (UDFDirIndexInitScan(DirInfo, &ScanContext, 2)) {
+            while ((DirNdx = UDFDirIndexScan(&ScanContext, NULL))) {
+                BOOLEAN AliasRead = FALSE;
+                if (!DirNdx->FName.Buffer || UDFIsDeleted(DirNdx))
+                    continue;
+                for (i = From; i < To; i++) {
+                    if (Used[i] ||
+                        (DirNdx->hashes.hLfn != Hashes[i] && DirNdx->hashes.hDos != Hashes[i]))
+                        continue;
+                    Candidate.Buffer = Names[i];
+                    Candidate.Length = Candidate.MaximumLength = Lengths[i];
+                    if (DirNdx->hashes.hLfn == Hashes[i] &&
+                        RtlEqualUnicodeString(&DirNdx->FName, &Candidate, TRUE)) {
+                        Used[i] = TRUE;
+                        continue;
+                    }
+                    if ((DirNdx->FI_Flags & UDF_FI_FLAG_DOS) || DirNdx->hashes.hDos != Hashes[i])
+                        continue;
+                    if (!AliasRead) {
+                        Existing.Buffer = ExistingBuffer;
+                        Existing.Length = 0;
+                        Existing.MaximumLength = sizeof(ExistingBuffer);
+                        UDFGetDirNdxShortName(Vcb, DirNdx, FALSE, &Existing);
+                        AliasRead = TRUE;
+                    }
+                    if (RtlEqualUnicodeString(&Existing, &Candidate, TRUE))
+                        Used[i] = TRUE;
+                }
+            }
+        }
+        for (i = From; i < To; i++)
+            if (!Used[i])
+                break;
+        if (i < To)
+            break;
+    }
+    for (i = 0; i < Count; i++) {
+        if (!Used[i]) {
+            RtlCopyMemory(ShortName->Buffer, Names[i], Lengths[i]);
+            ShortName->Length = Lengths[i];
+            return STATUS_SUCCESS;
+        }
+    }
+    if (Count < UDF_SHORT_NAME_BATCH) {
+        ShortName->Length = 0;
+        return Count ? STATUS_OBJECT_NAME_COLLISION : STATUS_SUCCESS;
+    }
+
+    /* Every early candidate is taken: continue one at a time. */
     for (Attempt = 0; Attempt < 100000; ++Attempt) {
         ShortName->Length = 0;
         RtlGenerate8dot3Name(LongName, FALSE, &Context, ShortName);
