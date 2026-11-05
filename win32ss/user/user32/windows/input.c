@@ -870,7 +870,7 @@ IntFollowRealDll(
 static PFN_KbdLayerDescriptor
 IntPrepareLayoutModule(
     _Inout_ HMODULE *phModule,
-    _Inout_ PCWSTR *ppszFile,
+    _In_ _Outptr_ PCWSTR *ppszFile,
     _Out_writes_z_(MAX_LAYOUT_FILENAME) PWSTR pszRealFile,
     _In_opt_ PCWSTR pszKLID,
     _Inout_ PUINT puFlags,
