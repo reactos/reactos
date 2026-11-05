@@ -149,9 +149,9 @@ UsbdSerialRecordMatches(
     if (Record->SerialLength == 0)
         return TRUE;
 
-    return RtlCompareMemory(Record->Serial,
-                            SerialNumber->Buffer,
-                            Record->SerialLength) == Record->SerialLength;
+    return RtlEqualMemory(Record->Serial,
+                          SerialNumber->Buffer,
+                          Record->SerialLength);
 }
 
 /* Decides whether a device colliding with an existing record may still be added */

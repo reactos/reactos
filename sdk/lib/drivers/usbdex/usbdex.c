@@ -553,8 +553,7 @@ UsbdexLegacyCapability(
     _In_ const GUID *CapabilityType,
     _In_opt_ PUCHAR OutputBuffer)
 {
-    if (RtlCompareMemory(CapabilityType, &GUID_USB_CAPABILITY_DEVICE_CONNECTION_HIGH_SPEED_COMPATIBLE,
-                         sizeof(GUID)) == sizeof(GUID))
+    if (IsEqualGUID(CapabilityType, &GUID_USB_CAPABILITY_DEVICE_CONNECTION_HIGH_SPEED_COMPATIBLE))
     {
         if (OutputBuffer)
             return STATUS_INVALID_PARAMETER;
@@ -562,10 +561,8 @@ UsbdexLegacyCapability(
         return Handle->HighSpeed ? STATUS_SUCCESS : STATUS_NOT_SUPPORTED;
     }
 
-    if (RtlCompareMemory(CapabilityType, &GUID_USB_CAPABILITY_SELECTIVE_SUSPEND, sizeof(GUID)) == sizeof(GUID))
-    {
+    if (IsEqualGUID(CapabilityType, &GUID_USB_CAPABILITY_SELECTIVE_SUSPEND))
         return OutputBuffer ? STATUS_INVALID_PARAMETER : STATUS_SUCCESS;
-    }
 
     return STATUS_NOT_IMPLEMENTED;
 }

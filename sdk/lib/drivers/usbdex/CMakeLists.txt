@@ -8,6 +8,7 @@ list(APPEND SOURCE
 
 add_library(usbdex ${SOURCE})
 add_dependencies(usbdex xdk)
+target_link_libraries(usbdex memcmp)
 
 target_compile_definitions(usbdex PRIVATE
     WDF_DEVICE_NO_WDMSEC_H _WIN32_WINNT=0x603 NTDDI_VERSION=0x06030000)

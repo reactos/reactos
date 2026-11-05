@@ -3186,7 +3186,7 @@ HubPdoSetPnpCapabilities(
     Caps.UniqueID = (Child->m_SerialNumber != NULL) ? WdfTrue : WdfFalse;
     Caps.SurpriseRemovalOK = WdfFalse;
     Caps.Address = Pdo->m_PortNumber;
-    Caps.UINumber = 0xFFFFFFFF;
+    Caps.UINumber = MAXULONG;
     WdfDeviceSetPnpCapabilities(Pdo->m_Device, &Caps);
 }
 

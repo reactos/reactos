@@ -18,12 +18,10 @@ HubWaitForPnpEvent(
     _In_ PCSTR What,
     _In_ WDFOBJECT Object)
 {
-    LARGE_INTEGER Timeout;
+    LARGE_INTEGER Timeout = RTL_CONSTANT_LARGE_INTEGER(-60LL * 1000 * 1000 * 10);
     ULONG Minutes = 0;
 
     PAGED_CODE();
-
-    Timeout.QuadPart = -60LL * 1000 * 1000 * 10;
 
     while (KeWaitForSingleObject(Event, Executive, KernelMode, FALSE, &Timeout) == STATUS_TIMEOUT)
     {

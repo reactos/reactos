@@ -267,7 +267,7 @@ UcxEvtPendDuringResetIoInternalDeviceControl(
 
         case IOCTL_UCXHUB_ENDPOINTS_CONFIGURE:
             Status = (((PENDPOINTS_CONFIGURE)Arg1)->EndpointsToEnableCount != 0) ? STATUS_NO_SUCH_DEVICE
-                                                                                  : STATUS_SUCCESS;
+                                                                                 : STATUS_SUCCESS;
             break;
 
         case IOCTL_INTERNAL_USB_SUBMIT_URB:

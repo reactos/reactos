@@ -61,12 +61,6 @@ HubMailboxComplete(
         DPRINT1("Hub %p mailbox register %u access failed 0x%lx, URB status 0x%lx\n",
                 Hub, Hub->m_Control.Urb.SetupPacket[4], Status, Hub->m_Control.Urb.Hdr.Status);
 
-        if (Hub->m_VerifierFlags & HUB_VERIFIER_CONTROL_FAILURE)
-        {
-            DPRINT1("USB hardware verifier break: hub control transfer failed\n");
-            DbgBreakPoint();
-        }
-
         Hub->Post(HubEvent::TransferFailed);
         return;
     }

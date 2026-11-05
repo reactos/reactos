@@ -653,9 +653,6 @@ XhciController::VerifierCheck(
     _In_ ULONG Flag)
 {
     DPRINT1("Controller %p hardware verifier condition 0x%lx\n", this, Flag);
-
-    if ((m_VerifierFlags & Flag) && !KdRefreshDebuggerNotPresent())
-        DbgBreakPoint();
 }
 
 /* ACPI methods ***************************************************************/

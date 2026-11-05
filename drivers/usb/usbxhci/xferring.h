@@ -28,7 +28,7 @@ enum class XhciMapState : LONG
 class XhciTransferRing
 {
 public:
-    /** PASSIVE_LEVEL. */
+    /** PASSIVE_LEVEL */
     static NTSTATUS
     Create(
         _In_ XhciEndpoint* Endpoint,

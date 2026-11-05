@@ -25,6 +25,10 @@ extern "C" {
 #include <drivers/usb3/usbdclient.h>
 #include <drivers/usb3/usbdhub.h>
 
+#ifndef RTL_CONSTANT_LARGE_INTEGER
+#define RTL_CONSTANT_LARGE_INTEGER(quad_part) { { (ULONG)(quad_part), (LONG)((quad_part) >> 32) } }
+#endif
+
 #include "hubguid.h"
 #include "hubutil.h"
 #include "hubdriver.h"

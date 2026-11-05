@@ -107,9 +107,9 @@ HubChildSizeEndpointArrays(
 
     for (Index = 0; Index < RTL_NUMBER_OF(Fresh); Index++)
     {
-        Fresh[Index] = (UCXENDPOINT*)ExAllocatePoolWithTag(NonPagedPool,
-                                                           Count * sizeof(UCXENDPOINT),
-                                                           HUB_TAG_DEVICE);
+        Fresh[Index] = (UCXENDPOINT*)ExAllocatePoolZero(NonPagedPool,
+                                                        Count * sizeof(UCXENDPOINT),
+                                                        HUB_TAG_DEVICE);
         if (Fresh[Index] == NULL)
         {
             DPRINT1("Device %p no memory for %lu endpoint handles\n", Child, Count);

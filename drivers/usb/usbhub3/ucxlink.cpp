@@ -498,7 +498,7 @@ HubRequestReservedIo(
     Info.NumberOfPipes = 1;
     Info.Pipes[0].PipeHandle = Hub->m_Interrupt.Pipe;
     Info.Pipes[0].ReservedTransferLimit = Hub->IsRootHub() ? Hub->m_Interrupt.BitmapMaxBytes
-                                                                    : Hub->m_InterruptMaxPacket;
+                                                           : Hub->m_InterruptMaxPacket;
 
     WDF_MEMORY_DESCRIPTOR_INIT_BUFFER(&Argument, &Info, sizeof(Info));
 
