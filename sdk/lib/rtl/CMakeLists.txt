@@ -146,6 +146,8 @@ list(APPEND SOURCE_VISTA
     ${rtl_vista_asm}
     ${RTL_WINE_SOURCE_VISTA}
     condvar.c
+    context.c
+    contextex.c
     locale.c
     name.c
     ntuserpfn.c

@@ -284,4 +284,34 @@ RtlpDebugBufferCommit(_Inout_ PRTL_DEBUG_INFORMATION Buffer,
 
 #endif /* !_BLDR_ */
 
+/* context.c*/
+
+VOID
+NTAPI
+RtlpCopyContextI386Internal(
+    _Inout_ PI386_CONTEXT DstContext,
+    _In_ ULONG CopyFlags,
+    _In_ const I386_CONTEXT* SrcContext);
+
+VOID
+NTAPI
+RtlpCopyContextAmd64Internal(
+    _Inout_ PAMD64_CONTEXT DstContext,
+    _In_ ULONG CopyFlags,
+    _In_ const AMD64_CONTEXT* SrcContext);
+
+VOID
+NTAPI
+RtlpCopyContextArm32Internal(
+    _Inout_ PARM32_CONTEXT DstContext,
+    _In_ ULONG CopyFlags,
+    _In_ const ARM32_CONTEXT* SrcContext);
+
+VOID
+NTAPI
+RtlpCopyContextArm64Internal(
+    _Inout_ PARM64_CONTEXT DstContext,
+    _In_ ULONG CopyFlags,
+    _In_ const ARM64_CONTEXT* SrcContext);
+
 /* EOF */
