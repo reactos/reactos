@@ -10,8 +10,6 @@
 #define COM_NO_WINDOWS_H
 
 #define COBJMACROS
-#define NONAMELESSUNION
-#define NONAMELESSSTRUCT
 #define OEMRESOURCE
 
 #include "comctl32.h"

@@ -23,22 +23,28 @@
 #include <stdio.h>
 
 #include "wine/test.h"
+#include "v6util.h"
 #include "msg.h"
 
-#define DEFAULT_MIN_TAB_WIDTH 54
 #define TAB_PADDING_X 6
 #define EXTRA_ICON_PADDING 3
 #define MAX_TABLEN 32
+#define MIN_CHAR_LENGTH 6
 
 #define NUM_MSG_SEQUENCES  2
 #define PARENT_SEQ_INDEX   0
 #define TAB_SEQ_INDEX      1
 
-#define expect(expected, got) ok ( expected == got, "Expected %d, got %d\n", expected, got)
+#define expect(expected,got) expect_(__LINE__, expected, got)
+static inline void expect_(unsigned line, DWORD expected, DWORD got)
+{
+    ok_(__FILE__, line)(expected == got, "Expected %ld, got %ld\n", expected, got);
+}
+
 #define expect_str(expected, got)\
  ok ( strcmp(expected, got) == 0, "Expected '%s', got '%s'\n", expected, got)
 
-#define TabWidthPadded(padd_x, num) (DEFAULT_MIN_TAB_WIDTH - (TAB_PADDING_X - (padd_x)) * num)
+#define TabWidthPadded(default_min_tab_width, padd_x, num) ((default_min_tab_width) - (TAB_PADDING_X - (padd_x)) * num)
 
 static HIMAGELIST (WINAPI *pImageList_Create)(INT,INT,UINT,INT,INT);
 static BOOL (WINAPI *pImageList_Destroy)(HIMAGELIST);
@@ -51,14 +57,14 @@ static void CheckSize(HWND hwnd, INT width, INT height, const char *msg, int lin
 
     SendMessageA(hwnd, TCM_GETITEMRECT, 0, (LPARAM)&r);
     if (width >= 0 && height < 0)
-        ok_(__FILE__,line) (width == r.right - r.left, "%s: Expected width [%d] got [%d]\n",
+        ok_(__FILE__,line) (width == r.right - r.left, "%s: Expected width [%d] got [%ld]\n",
             msg, width, r.right - r.left);
     else if (height >= 0 && width < 0)
-        ok_(__FILE__,line) (height == r.bottom - r.top,  "%s: Expected height [%d] got [%d]\n",
+        ok_(__FILE__,line) (height == r.bottom - r.top,  "%s: Expected height [%d] got [%ld]\n",
             msg, height, r.bottom - r.top);
     else
         ok_(__FILE__,line) ((width  == r.right  - r.left) && (height == r.bottom - r.top ),
-	    "%s: Expected [%d,%d] got [%d,%d]\n", msg, width, height,
+	    "%s: Expected [%d,%d] got [%ld,%ld]\n", msg, width, height,
             r.right - r.left, r.bottom - r.top);
 }
 
@@ -80,8 +86,53 @@ static HFONT hFont;
 static DRAWITEMSTRUCT g_drawitem;
 static HWND parent_wnd;
 static LRESULT tcn_selchanging_result;
+static DWORD winevent_hook_thread_id;
 
 static struct msg_sequence *sequences[NUM_MSG_SEQUENCES];
+
+static void CALLBACK msg_winevent_proc(HWINEVENTHOOK hevent,
+				    DWORD event,
+				    HWND hwnd,
+				    LONG object_id,
+				    LONG child_id,
+				    DWORD thread_id,
+				    DWORD event_time)
+{
+    struct message msg = {0};
+    char class_name[256];
+
+    ok(thread_id == winevent_hook_thread_id, "we didn't ask for events from other threads\n");
+
+    /* ignore window and other system events */
+    if (object_id != OBJID_CLIENT) return;
+
+    /* ignore events not from a tab control */
+    if (!GetClassNameA(hwnd, class_name, ARRAY_SIZE(class_name)) ||
+        strcmp(class_name, WC_TABCONTROLA) != 0)
+        return;
+
+    msg.message = event;
+    msg.flags = winevent_hook|wparam|lparam;
+    msg.wParam = object_id;
+    msg.lParam = child_id;
+    add_message(sequences, TAB_SEQ_INDEX, &msg);
+}
+
+static void init_winevent_hook(void) {
+    hwineventhook = SetWinEventHook(EVENT_MIN, EVENT_MAX, GetModuleHandleA(0), msg_winevent_proc,
+        0, GetCurrentThreadId(), WINEVENT_INCONTEXT);
+    winevent_hook_thread_id = GetCurrentThreadId();
+    if (!hwineventhook)
+        win_skip( "no win event hook support\n" );
+}
+
+static void uninit_winevent_hook(void) {
+    if (!hwineventhook)
+        return;
+
+    UnhookWinEvent(hwineventhook);
+    hwineventhook = 0;
+}
 
 static const struct message empty_sequence[] = {
     { 0 }
@@ -94,10 +145,28 @@ static const struct message get_row_count_seq[] = {
 
 static const struct message getset_cur_focus_seq[] = {
     { TCM_SETCURFOCUS, sent|lparam, 0 },
+    { EVENT_OBJECT_SELECTION, winevent_hook|wparam|lparam, OBJID_CLIENT, 5 },
+    { TCM_GETCURFOCUS, sent|wparam|lparam, 0, 0 },
+    { TCM_SETCURFOCUS, sent|lparam, 0 },
+    { EVENT_OBJECT_SELECTION, winevent_hook|wparam|lparam, OBJID_CLIENT, 0 },
+    { TCM_GETCURFOCUS, sent|wparam|lparam, 0, 0 },
+    { TCM_SETCURSEL, sent|lparam, 0 },
+    { EVENT_OBJECT_SELECTION, winevent_hook|wparam|lparam, OBJID_CLIENT, 2 },
+    { TCM_SETCURFOCUS, sent|lparam, 0 },
+    { TCM_GETCURFOCUS, sent|wparam|lparam, 0, 0 },
+    { 0 }
+};
+
+static const struct message getset_cur_focus_buttons_seq[] = {
+    { TCM_SETCURFOCUS, sent|lparam, 0 },
+    { TCM_GETITEMCOUNT, sent|defwinproc|optional },
+    { TCM_GETITEMCOUNT, sent|defwinproc|optional },
+    { EVENT_OBJECT_FOCUS, winevent_hook|wparam|lparam, OBJID_CLIENT, 5 },
     { TCM_GETCURFOCUS, sent|wparam|lparam, 0, 0 },
     { TCM_SETCURFOCUS, sent|lparam, 0 },
     { TCM_GETCURFOCUS, sent|wparam|lparam, 0, 0 },
     { TCM_SETCURSEL, sent|lparam, 0 },
+    { EVENT_OBJECT_SELECTION, winevent_hook|wparam|lparam, OBJID_CLIENT, 2 },
     { TCM_SETCURFOCUS, sent|lparam, 0 },
     { TCM_GETCURFOCUS, sent|wparam|lparam, 0, 0 },
     { 0 }
@@ -105,11 +174,14 @@ static const struct message getset_cur_focus_seq[] = {
 
 static const struct message getset_cur_sel_seq[] = {
     { TCM_SETCURSEL, sent|lparam, 0 },
+    { EVENT_OBJECT_SELECTION, winevent_hook|wparam|lparam, OBJID_CLIENT, 5 },
     { TCM_GETCURSEL, sent|wparam|lparam, 0, 0 },
     { TCM_GETCURFOCUS, sent|wparam|lparam, 0, 0 },
     { TCM_SETCURSEL, sent|lparam, 0 },
+    { EVENT_OBJECT_SELECTION, winevent_hook|wparam|lparam, OBJID_CLIENT, 0 },
     { TCM_GETCURSEL, sent|wparam|lparam, 0, 0 },
     { TCM_SETCURSEL, sent|lparam, 0 },
+    { EVENT_OBJECT_SELECTION, winevent_hook|wparam|lparam, OBJID_CLIENT, 2 },
     { TCM_SETCURSEL, sent|lparam, 0 },
     { TCM_GETCURFOCUS, sent|wparam|lparam, 0, 0 },
     { 0 }
@@ -161,6 +233,7 @@ static const struct message insert_focus_seq[] = {
     { TCM_GETITEMCOUNT, sent|wparam|lparam, 0, 0 },
     { TCM_GETCURFOCUS, sent|wparam|lparam, 0, 0 },
     { TCM_INSERTITEMA, sent|wparam, 1 },
+    { EVENT_OBJECT_CREATE, winevent_hook|wparam|lparam, OBJID_CLIENT, 1 },
     { WM_NOTIFYFORMAT, sent|defwinproc|optional },
     { WM_QUERYUISTATE, sent|defwinproc|optional },
     { WM_PARENTNOTIFY, sent|defwinproc|optional },
@@ -170,11 +243,15 @@ static const struct message insert_focus_seq[] = {
     { WM_NOTIFYFORMAT, sent|defwinproc|optional },
     { WM_QUERYUISTATE, sent|defwinproc|optional, },
     { WM_PARENTNOTIFY, sent|defwinproc|optional },
+    { EVENT_OBJECT_CREATE, winevent_hook|wparam|lparam, OBJID_CLIENT, 2 },
     { TCM_GETITEMCOUNT, sent|wparam|lparam, 0, 0 },
     { TCM_GETCURFOCUS, sent|wparam|lparam, 0, 0 },
     { TCM_SETCURFOCUS, sent|wparam|lparam, -1, 0 },
+    { EVENT_OBJECT_SELECTION, winevent_hook|wparam|lparam, OBJID_CLIENT, 0 },
     { TCM_GETCURFOCUS, sent|wparam|lparam, 0, 0 },
     { TCM_INSERTITEMA, sent|wparam, 3 },
+    { EVENT_OBJECT_CREATE, winevent_hook|wparam|lparam, OBJID_CLIENT, 3 },
+    { EVENT_OBJECT_SELECTION, winevent_hook|wparam|lparam|optional, OBJID_CLIENT, 3 }, /* sent on Wine */
     { TCM_GETCURFOCUS, sent|wparam|lparam, 0, 0 },
     { 0 }
 };
@@ -183,11 +260,14 @@ static const struct message delete_focus_seq[] = {
     { TCM_GETITEMCOUNT, sent|wparam|lparam, 0, 0 },
     { TCM_GETCURFOCUS, sent|wparam|lparam, 0, 0 },
     { TCM_DELETEITEM, sent|wparam|lparam, 1, 0 },
+    { EVENT_OBJECT_DESTROY, winevent_hook|wparam|lparam, OBJID_CLIENT, 2 },
     { TCM_GETITEMCOUNT, sent|wparam|lparam, 0, 0 },
     { TCM_GETCURFOCUS, sent|wparam|lparam, 0, 0 },
     { TCM_SETCURFOCUS, sent|wparam|lparam, -1, 0 },
+    { EVENT_OBJECT_SELECTION, winevent_hook|wparam|lparam, OBJID_CLIENT, 0 },
     { TCM_GETCURFOCUS, sent|wparam|lparam, 0, 0 },
     { TCM_DELETEITEM, sent|wparam|lparam, 0, 0 },
+    { EVENT_OBJECT_DESTROY, winevent_hook|wparam|lparam, OBJID_CLIENT, 1 },
     { TCM_GETITEMCOUNT, sent|wparam|lparam, 0, 0 },
     { TCM_GETCURFOCUS, sent|wparam|lparam, 0, 0 },
     { 0 }
@@ -235,7 +315,7 @@ create_tabcontrol (DWORD style, DWORD mask)
     ok(handle != NULL, "failed to create tab wnd\n");
 
     SetWindowLongA(handle, GWL_STYLE, WS_CLIPSIBLINGS | WS_CLIPCHILDREN | TCS_FOCUSNEVER | style);
-    SendMessageA(handle, WM_SETFONT, 0, (LPARAM)hFont);
+    SendMessageA(handle, WM_SETFONT, (WPARAM)hFont, (LPARAM)0);
 
     tcNewTab.mask = mask;
     tcNewTab.pszText = text1;
@@ -285,7 +365,12 @@ static LRESULT WINAPI parent_wnd_proc(HWND hwnd, UINT message, WPARAM wParam, LP
 
     /* dump sent structure data */
     if (message == WM_DRAWITEM)
+    {
+        HBRUSH brush = CreateSolidBrush(RGB(255, 0, 0));
         g_drawitem = *(DRAWITEMSTRUCT*)lParam;
+        FillRect(g_drawitem.hDC, &g_drawitem.rcItem, brush);
+        DeleteObject(brush);
+    }
 
     if (message == WM_NOTIFY)
     {
@@ -320,8 +405,7 @@ static BOOL registerParentWindowClass(void)
 
 static HWND createParentWindow(void)
 {
-    if (!registerParentWindowClass())
-        return NULL;
+    registerParentWindowClass();
 
     return CreateWindowExA(0, "Tab test parent class", "Tab test parent window",
             WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_VISIBLE, 0, 0, 100, 100,
@@ -342,7 +426,8 @@ static LRESULT WINAPI tab_subclass_proc(HWND hwnd, UINT message, WPARAM wParam, 
         message != WM_NCHITTEST &&
         message != WM_GETTEXT &&
         message != WM_GETICON &&
-        message != WM_DEVICECHANGE)
+        message != WM_DEVICECHANGE &&
+        message != WM_GETOBJECT)
     {
         msg.message = message;
         msg.flags = sent|wparam|lparam;
@@ -445,29 +530,29 @@ static void test_tab(INT nMinTabWidth)
     HDC hdc;
     HFONT hOldFont;
     INT i, dpi, exp;
+    INT default_min_tab_width;
+    TEXTMETRICW text_metrics;
 
     hwTab = create_tabcontrol(TCS_FIXEDWIDTH, TCIF_TEXT|TCIF_IMAGE);
     SendMessageA(hwTab, TCM_SETMINTABWIDTH, 0, nMinTabWidth);
-    /* Get System default MinTabWidth */
-    if (nMinTabWidth < 0)
-        nMinTabWidth = SendMessageA(hwTab, TCM_SETMINTABWIDTH, 0, nMinTabWidth);
 
     hdc = GetDC(hwTab);
     dpi = GetDeviceCaps(hdc, LOGPIXELSX);
     hOldFont = SelectObject(hdc, (HFONT)SendMessageA(hwTab, WM_GETFONT, 0, 0));
     GetTextExtentPoint32A(hdc, "Tab 1", strlen("Tab 1"), &size);
-    trace("Tab1 text size: size.cx=%d size.cy=%d\n", size.cx, size.cy);
+    GetTextMetricsW(hdc, &text_metrics);
+    default_min_tab_width = text_metrics.tmAveCharWidth * MIN_CHAR_LENGTH + TAB_PADDING_X * 2;
     SelectObject(hdc, hOldFont);
     ReleaseDC(hwTab, hdc);
 
-    trace ("  TCS_FIXEDWIDTH tabs no icon...\n");
+    /* TCS_FIXEDWIDTH, no icon */
     CHECKSIZE(hwTab, dpi, -1, "default width");
     TABCHECKSETSIZE(hwTab, 50, 20, 50, 20, "set size");
     TABCHECKSETSIZE(hwTab, 0, 1, 0, 1, "min size");
 
     SendMessageA(hwTab, TCM_SETIMAGELIST, 0, (LPARAM)himl);
 
-    trace ("  TCS_FIXEDWIDTH tabs with icon...\n");
+    /* TCS_FIXEDWIDTH, with icon */
     TABCHECKSETSIZE(hwTab, 50, 30, 50, 30, "set size > icon");
     TABCHECKSETSIZE(hwTab, 20, 20, 25, 20, "set size < icon");
     TABCHECKSETSIZE(hwTab, 0, 1, 25, 1, "min size");
@@ -480,7 +565,7 @@ static void test_tab(INT nMinTabWidth)
     hdc = GetDC(hwTab);
     dpi = GetDeviceCaps(hdc, LOGPIXELSX);
     ReleaseDC(hwTab, hdc);
-    trace ("  TCS_FIXEDWIDTH buttons no icon...\n");
+    /* TCS_FIXEDWIDTH buttons, no icon */
     CHECKSIZE(hwTab, dpi, -1, "default width");
     TABCHECKSETSIZE(hwTab, 20, 20, 20, 20, "set size 1");
     TABCHECKSETSIZE(hwTab, 10, 50, 10, 50, "set size 2");
@@ -488,7 +573,7 @@ static void test_tab(INT nMinTabWidth)
 
     SendMessageA(hwTab, TCM_SETIMAGELIST, 0, (LPARAM)himl);
 
-    trace ("  TCS_FIXEDWIDTH buttons with icon...\n");
+    /* TCS_FIXEDWIDTH buttons, with icon */
     TABCHECKSETSIZE(hwTab, 50, 30, 50, 30, "set size > icon");
     TABCHECKSETSIZE(hwTab, 20, 20, 25, 20, "set size < icon");
     TABCHECKSETSIZE(hwTab, 0, 1, 25, 1, "min size");
@@ -503,7 +588,7 @@ static void test_tab(INT nMinTabWidth)
     hdc = GetDC(hwTab);
     dpi = GetDeviceCaps(hdc, LOGPIXELSX);
     ReleaseDC(hwTab, hdc);
-    trace ("  TCS_FIXEDWIDTH | TCS_BOTTOM tabs...\n");
+    /* TCS_FIXEDWIDTH | TCS_BOTTOM */
     CHECKSIZE(hwTab, dpi, -1, "no icon, default width");
 
     TABCHECKSETSIZE(hwTab, 20, 20, 20, 20, "no icon, set size 1");
@@ -523,15 +608,16 @@ static void test_tab(INT nMinTabWidth)
     hwTab = create_tabcontrol(0, TCIF_TEXT|TCIF_IMAGE);
     SendMessageA(hwTab, TCM_SETMINTABWIDTH, 0, nMinTabWidth);
 
-    trace ("  non fixed width, with text...\n");
-    exp = max(size.cx +TAB_PADDING_X*2, (nMinTabWidth < 0) ? DEFAULT_MIN_TAB_WIDTH : nMinTabWidth);
+    /* Without TCS_FIXEDWIDTH, with text */
+    exp = max(size.cx +TAB_PADDING_X*2, (nMinTabWidth < 0) ? default_min_tab_width : nMinTabWidth);
     SendMessageA( hwTab, TCM_GETITEMRECT, 0, (LPARAM)&rTab );
-    ok( rTab.right  - rTab.left == exp || broken(rTab.right  - rTab.left == DEFAULT_MIN_TAB_WIDTH),
-        "no icon, default width: Expected width [%d] got [%d]\n", exp, rTab.right - rTab.left );
+    ok( rTab.right  - rTab.left == exp || broken(rTab.right  - rTab.left == default_min_tab_width),
+        "no icon, default width: Expected width [%d] got [%ld]\n", exp, rTab.right - rTab.left );
 
+    CHECKSIZE(hwTab, max(size.cx + TAB_PADDING_X*2, nMinTabWidth < 0 ? default_min_tab_width : nMinTabWidth), size.cy + 5, "Initial values");
     for (i=0; i<8; i++)
     {
-        INT nTabWidth = (nMinTabWidth < 0) ? TabWidthPadded(i, 2) : nMinTabWidth;
+        INT nTabWidth = (nMinTabWidth < 0) ? TabWidthPadded(default_min_tab_width, i, 2) : nMinTabWidth;
 
         SendMessageA(hwTab, TCM_SETIMAGELIST, 0, 0);
         SendMessageA(hwTab, TCM_SETPADDING, 0, MAKELPARAM(i, i));
@@ -540,26 +626,32 @@ static void test_tab(INT nMinTabWidth)
         TABCHECKSETSIZE(hwTab, 0, 1, max(size.cx + i*2, nTabWidth), 1, "no icon, min size");
 
         SendMessageA(hwTab, TCM_SETIMAGELIST, 0, (LPARAM)himl);
-        nTabWidth = (nMinTabWidth < 0) ? TabWidthPadded(i, 3) : nMinTabWidth;
+        nTabWidth = (nMinTabWidth < 0) ? TabWidthPadded(default_min_tab_width, i, 3) : nMinTabWidth;
 
         TABCHECKSETSIZE(hwTab, 50, 30, max(size.cx + 21 + i*3, nTabWidth), 30, "with icon, set size > icon");
         TABCHECKSETSIZE(hwTab, 20, 20, max(size.cx + 21 + i*3, nTabWidth), 20, "with icon, set size < icon");
         TABCHECKSETSIZE(hwTab, 0, 1, max(size.cx + 21 + i*3, nTabWidth), 1, "with icon, min size");
+
+        /* tests that a change to padding only doesn't impact reported size */
+        SendMessageA(hwTab, TCM_SETPADDING, 0, MAKELPARAM(i + 1, i + 1));
+        CHECKSIZE(hwTab, max(size.cx + 21 + i*3, nTabWidth), 1, "with icon, min size, padding only change");
+        TABCHECKSETSIZE(hwTab, 0, 1, max(size.cx + 21 + i*3, nTabWidth), 1, "with icon, min size, same size");
     }
     DestroyWindow (hwTab);
 
     hwTab = create_tabcontrol(0, TCIF_IMAGE);
     SendMessageA(hwTab, TCM_SETMINTABWIDTH, 0, nMinTabWidth);
 
-    trace ("  non fixed width, no text...\n");
-    exp = (nMinTabWidth < 0) ? DEFAULT_MIN_TAB_WIDTH : nMinTabWidth;
+    /* Without TCS_FIXEDWIDTH, no text */
+    exp = (nMinTabWidth < 0) ? default_min_tab_width : nMinTabWidth;
     SendMessageA( hwTab, TCM_GETITEMRECT, 0, (LPARAM)&rTab );
-    ok( rTab.right  - rTab.left == exp || broken(rTab.right  - rTab.left == DEFAULT_MIN_TAB_WIDTH),
-        "no icon, default width: Expected width [%d] got [%d]\n", exp, rTab.right - rTab.left );
+    ok( rTab.right  - rTab.left == exp || broken(rTab.right  - rTab.left == default_min_tab_width),
+        "no icon, default width: Expected width [%d] got [%ld]\n", exp, rTab.right - rTab.left );
 
+    CHECKSIZE(hwTab, nMinTabWidth < 0 ? default_min_tab_width : nMinTabWidth, size.cy + 5, "Initial values");
     for (i=0; i<8; i++)
     {
-        INT nTabWidth = (nMinTabWidth < 0) ? TabWidthPadded(i, 2) : nMinTabWidth;
+        INT nTabWidth = (nMinTabWidth < 0) ? TabWidthPadded(default_min_tab_width, i, 2) : nMinTabWidth;
 
         SendMessageA(hwTab, TCM_SETIMAGELIST, 0, 0);
         SendMessageA(hwTab, TCM_SETPADDING, 0, MAKELPARAM(i, i));
@@ -568,12 +660,17 @@ static void test_tab(INT nMinTabWidth)
         TABCHECKSETSIZE(hwTab, 0, 1, nTabWidth, 1, "no icon, min size");
 
         SendMessageA(hwTab, TCM_SETIMAGELIST, 0, (LPARAM)himl);
-        if (i > 1 && nMinTabWidth > 0 && nMinTabWidth < DEFAULT_MIN_TAB_WIDTH)
+        if (i > 1 && nMinTabWidth > 0 && nMinTabWidth < default_min_tab_width)
             nTabWidth += EXTRA_ICON_PADDING *(i-1);
 
         TABCHECKSETSIZE(hwTab, 50, 30, nTabWidth, 30, "with icon, set size > icon");
         TABCHECKSETSIZE(hwTab, 20, 20, nTabWidth, 20, "with icon, set size < icon");
         TABCHECKSETSIZE(hwTab, 0, 1, nTabWidth, 1, "with icon, min size");
+
+        /* tests that a change to padding only doesn't impact reported size */
+        SendMessageA(hwTab, TCM_SETPADDING, 0, MAKELPARAM(i + 1, i + 1));
+        CHECKSIZE(hwTab, nTabWidth, 1, "with icon, min size, padding only change");
+        TABCHECKSETSIZE(hwTab, 0, 1, nTabWidth, 1, "with icon, min size, same size");
     }
 
     DestroyWindow (hwTab);
@@ -583,21 +680,63 @@ static void test_tab(INT nMinTabWidth)
 
 static void test_width(void)
 {
-    trace ("Testing with default MinWidth\n");
-    test_tab(-1);
-    trace ("Testing with MinWidth set to -3\n");
-    test_tab(-3);
-    trace ("Testing with MinWidth set to 24\n");
-    test_tab(24);
-    trace ("Testing with MinWidth set to 54\n");
-    test_tab(54);
-    trace ("Testing with MinWidth set to 94\n");
-    test_tab(94);
+    HFONT oldFont = hFont;
+    const char *fonts[] = {
+        "System",
+        "Arial",
+        "Tahoma",
+        "Courier New",
+        "MS Shell Dlg",
+    };
+
+    LOGFONTA logfont = {
+        .lfHeight = -12,
+        .lfWeight = FW_NORMAL,
+        .lfCharSet = ANSI_CHARSET
+    };
+
+    for(int i = 0; i < sizeof(fonts)/sizeof(fonts[0]); i++) {
+        lstrcpyA(logfont.lfFaceName, fonts[i]);
+        hFont = CreateFontIndirectA(&logfont);
+
+        test_tab(-1);
+        test_tab(-3);
+        test_tab(24);
+        test_tab(54);
+        test_tab(94);
+    }
+
+    hFont = oldFont;
+}
+
+static void test_setitemsize(void)
+{
+    HWND hwTab;
+    LRESULT result;
+    HDC hdc;
+    INT dpi;
+
+    hwTab = create_tabcontrol(0, TCIF_TEXT);
+    SendMessageA(hwTab, TCM_SETMINTABWIDTH, 0, -1);
+
+    hdc = GetDC(hwTab);
+    dpi = GetDeviceCaps(hdc, LOGPIXELSX);
+    ReleaseDC(hwTab, hdc);
+
+    result = SendMessageA(hwTab, TCM_SETITEMSIZE, 0, MAKELPARAM(50, 20));
+    ok (LOWORD(result) == dpi, "Excepted width to be %d, got %d\n", dpi, LOWORD(result));
+
+    result = SendMessageA(hwTab, TCM_SETITEMSIZE, 0, MAKELPARAM(0, 1));
+    ok (LOWORD(result) == 50, "Excepted width to be 50, got %d\n", LOWORD(result));
+    ok (HIWORD(result) == 20, "Excepted height to be 20, got %d\n", HIWORD(result));
+
+    DestroyWindow (hwTab);
 }
 
 static void test_curfocus(void)
 {
     const INT nTabs = 5;
+    TCITEMA item;
     INT ret;
     HWND hTab;
 
@@ -630,6 +769,63 @@ static void test_curfocus(void)
     ok_sequence(sequences, TAB_SEQ_INDEX, getset_cur_focus_seq, "Set focused tab sequence", FALSE);
     ok_sequence(sequences, PARENT_SEQ_INDEX, empty_sequence, "Set focused tab parent sequence", TRUE);
 
+    /* Item state changes on focus change. */
+    ret = SendMessageA(hTab, TCM_SETCURFOCUS, -1, 0);
+    ok(!ret, "Unexpected ret value %d.\n", ret);
+
+    memset(&item, 0, sizeof(item));
+    item.mask = TCIF_STATE;
+    item.dwStateMask = TCIS_BUTTONPRESSED;
+    ret = SendMessageA(hTab, TCM_GETITEMA, 0, (LPARAM)&item);
+    ok(ret == 1, "Unexpected ret value %d.\n", ret);
+    ok(!(item.dwState & TCIS_BUTTONPRESSED), "Unexpected state %#x.\n", item.dwState);
+    ret = SendMessageA(hTab, TCM_SETCURFOCUS, 0, 0);
+    ok(!ret, "Unexpected ret value %d.\n", ret);
+    memset(&item, 0, sizeof(item));
+    item.mask = TCIF_STATE;
+    item.dwStateMask = TCIS_BUTTONPRESSED;
+    ret = SendMessageA(hTab, TCM_GETITEMA, 0, (LPARAM)&item);
+    ok(ret == 1, "Unexpected ret value %d.\n", ret);
+    ok(item.dwState & TCIS_BUTTONPRESSED, "Unexpected state %#x.\n", item.dwState);
+    ret = SendMessageA(hTab, TCM_SETCURFOCUS, 1, 0);
+    ok(!ret, "Unexpected ret value %d.\n", ret);
+    memset(&item, 0, sizeof(item));
+    item.mask = TCIF_STATE;
+    item.dwStateMask = TCIS_BUTTONPRESSED;
+    ret = SendMessageA(hTab, TCM_GETITEMA, 0, (LPARAM)&item);
+    ok(ret == 1, "Unexpected ret value %d.\n", ret);
+    ok(!(item.dwState & TCIS_BUTTONPRESSED), "Unexpected state %#x.\n", item.dwState);
+    memset(&item, 0, sizeof(item));
+    item.mask = TCIF_STATE;
+    item.dwStateMask = TCIS_BUTTONPRESSED;
+    ret = SendMessageA(hTab, TCM_GETITEMA, 1, (LPARAM)&item);
+    ok(ret == 1, "Unexpected ret value %d.\n", ret);
+    ok(item.dwState & TCIS_BUTTONPRESSED, "Unexpected state %#x.\n", item.dwState);
+
+    ret = SendMessageA(hTab, TCM_SETCURFOCUS, -1, 0);
+    ok(!ret, "Unexpected ret value %d.\n", ret);
+    memset(&item, 0, sizeof(item));
+    item.mask = TCIF_STATE;
+    item.dwStateMask = TCIS_BUTTONPRESSED;
+    ret = SendMessageA(hTab, TCM_GETITEMA, 1, (LPARAM)&item);
+    ok(ret == 1, "Unexpected ret value %d.\n", ret);
+    todo_wine
+    ok(!(item.dwState & TCIS_BUTTONPRESSED), "Unexpected state %#x.\n", item.dwState);
+
+    /* Set focus to -1, then to valid item index */
+    ret = SendMessageA(hTab, TCM_SETCURFOCUS, -1, 0);
+    ok(!ret, "Unexpected ret value %d.\n", ret);
+    ret = SendMessageA(hTab, TCM_GETCURSEL, 0, 0);
+    ok(ret == -1, "Unexpected index %d.\n", ret);
+    ret = SendMessageA(hTab, TCM_GETCURFOCUS, 0, 0);
+    ok(ret == -1, "Unexpected index %d.\n", ret);
+    ret = SendMessageA(hTab, TCM_SETCURFOCUS, 0, 0);
+    ok(!ret, "Unexpected ret value %d.\n", ret);
+    ret = SendMessageA(hTab, TCM_GETCURSEL, 0, 0);
+    ok(!ret, "Unexpected index %d.\n", ret);
+    ret = SendMessageA(hTab, TCM_GETCURFOCUS, 0, 0);
+    ok(!ret, "Unexpected index %d.\n", ret);
+
     DestroyWindow(hTab);
 
     /* TCS_BUTTONS */
@@ -648,22 +844,63 @@ static void test_curfocus(void)
     ret = SendMessageA(hTab, TCM_SETCURFOCUS, -10, 0);
     ok(ret == 0, "Unexpected ret value %d.\n", ret);
     ret = SendMessageA(hTab, TCM_GETCURFOCUS, 0, 0);
-todo_wine
     ok(ret == nTabs - 1, "Unexpected focus index %d.\n", ret);
 
     /* Testing CurFocus with value larger than number of tabs */
     ret = SendMessageA(hTab, TCM_SETCURSEL, 1, 0);
-todo_wine
     ok(ret == 0, "Unexpected focus index %d.\n", ret);
 
     ret = SendMessageA(hTab, TCM_SETCURFOCUS, nTabs + 1, 0);
     ok(ret == 0, "Unexpected ret value %d.\n", ret);
     ret = SendMessageA(hTab, TCM_GETCURFOCUS, 0, 0);
-todo_wine
+    todo_wine
     ok(ret == nTabs - 1, "Unexpected focus index %d.\n", ret);
 
-    ok_sequence(sequences, TAB_SEQ_INDEX, getset_cur_focus_seq, "TCS_BUTTONS: set focused tab sequence", FALSE);
-    ok_sequence(sequences, PARENT_SEQ_INDEX, setfocus_parent_seq, "TCS_BUTTONS: set focused tab parent sequence", TRUE);
+    ok_sequence(sequences, TAB_SEQ_INDEX, getset_cur_focus_buttons_seq, "TCS_BUTTONS: set focused tab sequence", FALSE);
+    ok_sequence(sequences, PARENT_SEQ_INDEX, setfocus_parent_seq, "TCS_BUTTONS: set focused tab parent sequence", FALSE);
+
+    /* TCS_BUTTONS: item state changes on focus change. */
+    ret = SendMessageA(hTab, TCM_SETCURFOCUS, -1, 0);
+    ok(!ret, "Unexpected ret value %d.\n", ret);
+
+    memset(&item, 0, sizeof(item));
+    item.mask = TCIF_STATE;
+    item.dwStateMask = TCIS_BUTTONPRESSED;
+    ret = SendMessageA(hTab, TCM_GETITEMA, 0, (LPARAM)&item);
+    ok(ret == 1, "Unexpected ret value %d.\n", ret);
+    ok(!(item.dwState & TCIS_BUTTONPRESSED), "Unexpected state %#x.\n", item.dwState);
+    ret = SendMessageA(hTab, TCM_SETCURFOCUS, 0, 0);
+    ok(!ret, "Unexpected ret value %d.\n", ret);
+    memset(&item, 0, sizeof(item));
+    item.mask = TCIF_STATE;
+    item.dwStateMask = TCIS_BUTTONPRESSED;
+    ret = SendMessageA(hTab, TCM_GETITEMA, 0, (LPARAM)&item);
+    ok(ret == 1, "Unexpected ret value %d.\n", ret);
+    todo_wine
+    ok(item.dwState & TCIS_BUTTONPRESSED, "Unexpected state %#x.\n", item.dwState);
+    ret = SendMessageA(hTab, TCM_SETCURFOCUS, 1, 0);
+    ok(!ret, "Unexpected ret value %d.\n", ret);
+    memset(&item, 0, sizeof(item));
+    item.mask = TCIF_STATE;
+    item.dwStateMask = TCIS_BUTTONPRESSED;
+    ret = SendMessageA(hTab, TCM_GETITEMA, 0, (LPARAM)&item);
+    ok(ret == 1, "Unexpected ret value %d.\n", ret);
+    ok(!(item.dwState & TCIS_BUTTONPRESSED), "Unexpected state %#x.\n", item.dwState);
+    memset(&item, 0, sizeof(item));
+    item.mask = TCIF_STATE;
+    item.dwStateMask = TCIS_BUTTONPRESSED;
+    ret = SendMessageA(hTab, TCM_GETITEMA, 1, (LPARAM)&item);
+    ok(ret == 1, "Unexpected ret value %d.\n", ret);
+    ok(item.dwState & TCIS_BUTTONPRESSED, "Unexpected state %#x.\n", item.dwState);
+
+    ret = SendMessageA(hTab, TCM_SETCURFOCUS, -1, 0);
+    ok(!ret, "Unexpected ret value %d.\n", ret);
+    memset(&item, 0, sizeof(item));
+    item.mask = TCIF_STATE;
+    item.dwStateMask = TCIS_BUTTONPRESSED;
+    ret = SendMessageA(hTab, TCM_GETITEMA, 1, (LPARAM)&item);
+    ok(ret == 1, "Unexpected ret value %d.\n", ret);
+    ok(item.dwState & TCIS_BUTTONPRESSED, "Unexpected state %#x.\n", item.dwState);
 
     DestroyWindow(hTab);
 }
@@ -825,14 +1062,14 @@ static void test_getset_item(void)
     ok(GetParent(hTab) == NULL, "got %p, expected null parent\n", GetParent(hTab));
 
     ret = SendMessageA(hTab, TCM_SETITEMEXTRA, sizeof(LPARAM)-1, 0);
-    ok(ret == TRUE, "got %d\n", ret);
+    ok(ret == TRUE, "got %ld\n", ret);
 
     /* set some item data */
     tcItem.lParam = ~0;
     tcItem.mask = TCIF_PARAM;
 
     ret = SendMessageA(hTab, TCM_INSERTITEMA, 0, (LPARAM)&tcItem);
-    ok(ret == 0, "got %d\n", ret);
+    ok(ret == 0, "got %ld\n", ret);
 
     /* all sizeof(LPARAM) returned anyway when using sizeof(LPARAM)-1 size */
     memset(&lparam, 0xaa, sizeof(lparam));
@@ -842,7 +1079,7 @@ static void test_getset_item(void)
     expect(TRUE, ret);
     /* everything higher specified size is preserved */
     memset(&lparam, 0xff, sizeof(lparam)-1);
-    ok(tcItem.lParam == lparam, "Expected 0x%lx, got 0x%lx\n", lparam, tcItem.lParam);
+    ok(tcItem.lParam == lparam, "Expected 0x%Ix, got 0x%Ix\n", lparam, tcItem.lParam);
 
     DestroyWindow(hTab);
 
@@ -857,7 +1094,7 @@ static void test_getset_item(void)
     tcItem.mask = TCIF_PARAM;
     ret = SendMessageA(hTab, TCM_GETITEMA, 5, (LPARAM)&tcItem);
     expect(FALSE, ret);
-    ok(tcItem.lParam == 0, "Expected zero lParam, got %lu\n", tcItem.lParam);
+    ok(tcItem.lParam == 0, "Expected zero lParam, got %Iu\n", tcItem.lParam);
 
     memset(&tcItem, 0xcc, sizeof(tcItem));
     tcItem.mask = TCIF_IMAGE;
@@ -894,13 +1131,13 @@ static void test_getset_item(void)
     tcItem.mask = TCIF_PARAM;
     ret = SendMessageA(hTab, TCM_GETITEMA, -1, (LPARAM)&tcItem);
     expect(FALSE, ret);
-    ok(tcItem.lParam == 0, "Expected zero lParam, got %lu\n", tcItem.lParam);
+    ok(tcItem.lParam == 0, "Expected zero lParam, got %Iu\n", tcItem.lParam);
 
     memset(&tcItem, 0xcc, sizeof(tcItem));
     tcItem.mask = TCIF_PARAM;
     ret = SendMessageA(hTab, TCM_GETITEMA, -2, (LPARAM)&tcItem);
     expect(FALSE, ret);
-    ok(tcItem.lParam == 0, "Expected zero lParam, got %lu\n", tcItem.lParam);
+    ok(tcItem.lParam == 0, "Expected zero lParam, got %Iu\n", tcItem.lParam);
 
     flush_sequences(sequences, NUM_MSG_SEQUENCES);
 
@@ -1222,10 +1459,10 @@ static void test_TCM_SETITEMEXTRA(void)
     }
 
     ret = SendMessageA(hTab, TCM_SETITEMEXTRA, -1, 0);
-    ok(ret == FALSE, "got %d\n", ret);
+    ok(ret == FALSE, "got %ld\n", ret);
 
     ret = SendMessageA(hTab, TCM_SETITEMEXTRA, 2, 0);
-    ok(ret == TRUE, "got %d\n", ret);
+    ok(ret == TRUE, "got %ld\n", ret);
     DestroyWindow(hTab);
 
     /* it's not possible to change extra data size for control with tabs */
@@ -1233,28 +1470,30 @@ static void test_TCM_SETITEMEXTRA(void)
     ok(hTab != NULL, "Failed to create tab control\n");
 
     ret = SendMessageA(hTab, TCM_SETITEMEXTRA, 2, 0);
-    ok(ret == FALSE, "got %d\n", ret);
+    ok(ret == FALSE, "got %ld\n", ret);
     DestroyWindow(hTab);
 }
 
 static void test_TCS_OWNERDRAWFIXED(void)
 {
-    LPARAM lparam;
-    ULONG_PTR itemdata, itemdata2;
-    TCITEMA item;
+    struct
+    {
+        TCITEMHEADERA h;
+        BYTE lparam[sizeof(LPARAM)+1];
+    } item;
+    ULONG_PTR itemdata;
+    COLORREF color;
     HWND hTab;
     BOOL ret;
+    HDC hdc;
 
     hTab = createFilledTabControl(parent_wnd, TCS_FIXEDWIDTH|TCS_OWNERDRAWFIXED, TCIF_TEXT|TCIF_IMAGE, 4);
     ok(hTab != NULL, "Failed to create tab control\n");
 
     ok(GetParent(hTab) == NULL, "got %p, expected null parent\n", GetParent(hTab));
 
-    /* set some item data */
-    memset(&lparam, 0xde, sizeof(LPARAM));
-
-    item.mask = TCIF_PARAM;
-    item.lParam = lparam;
+    item.h.mask = TCIF_PARAM;
+    memset(item.lparam, 0xde, sizeof(LPARAM));
     ret = SendMessageA(hTab, TCM_SETITEMA, 0, (LPARAM)&item);
     ok(ret == TRUE, "got %d\n", ret);
 
@@ -1265,7 +1504,7 @@ static void test_TCS_OWNERDRAWFIXED(void)
 
     itemdata = 0;
     memset(&itemdata, 0xde, 4);
-    ok(g_drawitem.itemData == itemdata, "got 0x%lx, expected 0x%lx\n", g_drawitem.itemData, itemdata);
+    ok(g_drawitem.itemData == itemdata, "got 0x%Ix, expected 0x%Ix\n", g_drawitem.itemData, itemdata);
 
     DestroyWindow(hTab);
 
@@ -1283,9 +1522,8 @@ static void test_TCS_OWNERDRAWFIXED(void)
     ok(ret == TRUE, "got %d\n", ret);
 
     /* set some item data */
-    memset(&lparam, 0xde, sizeof(LPARAM));
-    item.mask = TCIF_PARAM;
-    item.lParam = lparam;
+    item.h.mask = TCIF_PARAM;
+    memset(item.lparam, 0xde, sizeof(item.lparam));
 
     ret = SendMessageA(hTab, TCM_INSERTITEMA, 0, (LPARAM)&item);
     ok(ret == 0, "got %d\n", ret);
@@ -1296,7 +1534,7 @@ static void test_TCS_OWNERDRAWFIXED(void)
     RedrawWindow(hTab, NULL, 0, RDW_UPDATENOW);
 
     memset(&itemdata, 0xde, sizeof(ULONG_PTR));
-    ok(*(ULONG_PTR*)g_drawitem.itemData == itemdata, "got 0x%lx, expected 0x%lx\n", g_drawitem.itemData, itemdata);
+    ok(*(ULONG_PTR*)g_drawitem.itemData == itemdata, "got 0x%Ix, expected 0x%Ix\n", g_drawitem.itemData, itemdata);
 
     DestroyWindow(hTab);
 
@@ -1313,9 +1551,8 @@ static void test_TCS_OWNERDRAWFIXED(void)
     ret = SendMessageA(hTab, TCM_SETITEMEXTRA, sizeof(LPARAM)-1, 0);
     ok(ret == TRUE, "got %d\n", ret);
 
-    memset(&lparam, 0xde, sizeof(lparam));
-    item.mask = TCIF_PARAM;
-    item.lParam = lparam;
+    item.h.mask = TCIF_PARAM;
+    memset(item.lparam, 0xde, sizeof(LPARAM));
 
     ret = SendMessageA(hTab, TCM_INSERTITEMA, 0, (LPARAM)&item);
     ok(ret == 0, "got %d\n", ret);
@@ -1325,11 +1562,33 @@ static void test_TCS_OWNERDRAWFIXED(void)
     ShowWindow(hTab, SW_SHOW);
     RedrawWindow(hTab, NULL, 0, RDW_UPDATENOW);
 
-    itemdata = itemdata2 = 0;
-    memset(&itemdata, 0xde, 4);
-    memset(&itemdata2, 0xde, sizeof(LPARAM)-1);
-    ok(g_drawitem.itemData == itemdata || broken(g_drawitem.itemData == itemdata2) /* win98 */,
-        "got 0x%lx, expected 0x%lx\n", g_drawitem.itemData, itemdata);
+    itemdata = 0;
+    memset(&itemdata, 0xde, min(4, sizeof(LPARAM)-1));
+    todo_wine_if(sizeof(void *) == 4)
+    ok(g_drawitem.itemData == itemdata ||
+       broken(sizeof(void *) == 4 && g_drawitem.itemData == 0xdededede), /* Win7-32-bit */
+       "got 0x%Ix, expected 0x%Ix\n", g_drawitem.itemData, itemdata);
+
+    DestroyWindow(hTab);
+
+    /* Test that drawing the text of a TCS_OWNERDRAWFIXED tab shouldn't be able to overwrite the tab item background */
+    hTab = createFilledTabControl(parent_wnd, TCS_FIXEDWIDTH | TCS_OWNERDRAWFIXED | WS_VISIBLE, TCIF_TEXT | TCIF_IMAGE, 1);
+    ok(hTab != NULL, "Failed to create tab control.\n");
+
+    memset(&g_drawitem, 0, sizeof(g_drawitem));
+    RedrawWindow(hTab, NULL, 0, RDW_UPDATENOW);
+
+    /* Check the draw rect from WM_DRAWITEM */
+    ok(g_drawitem.rcItem.top == 0 && g_drawitem.rcItem.left == 0 && g_drawitem.rcItem.right > 0 &&
+       g_drawitem.rcItem.bottom > 0, "Got unexpected rect %s.\n", wine_dbgstr_rect(&g_drawitem.rcItem));
+    /* Check that tab item background is not overwritten */
+    hdc = GetDC(hTab);
+    color = GetPixel(hdc, 1, 1);
+    ok(color != RGB(255, 0, 0), "Got unexpected color %#lx.\n", color);
+    /* Check that text was drawn */
+    color = GetPixel(hdc, 2, 2);
+    ok(color == RGB(255, 0, 0), "Got unexpected color %#lx.\n", color);
+    ReleaseDC(hTab, hdc);
 
     DestroyWindow(hTab);
 }
@@ -1373,7 +1632,7 @@ static void test_create(void)
         hTab = CreateWindowA(WC_TABCONTROLA, "TestTab", ptr->style,
             10, 10, 300, 100, parent_wnd, NULL, NULL, 0);
         style = GetWindowLongA(hTab, GWL_STYLE);
-        ok(style == ptr->act_style, "expected style 0x%08x, got style 0x%08x\n", ptr->act_style, style);
+        ok(style == ptr->act_style, "expected style 0x%08lx, got style 0x%08lx\n", ptr->act_style, style);
 
         DestroyWindow(hTab);
         ptr++;
@@ -1437,10 +1696,10 @@ static void test_TCN_SELCHANGING(void)
     ok_sequence(sequences, PARENT_SEQ_INDEX, selchanging_parent_seq, "Focus change disallowed sequence", FALSE);
 
     ret = SendMessageA(hTab, TCM_GETCURFOCUS, 0, 0);
-todo_wine
+    todo_wine
     ok(ret == nTabs - 1, "Unexpected focused tab %d.\n", ret);
     ret = SendMessageA(hTab, TCM_GETCURSEL, 0, 0);
-todo_wine
+    todo_wine
     ok(ret == nTabs - 1, "Unexpected selected tab %d.\n", ret);
 
     /* Removing focus sends only TCN_SELCHANGE */
@@ -1483,6 +1742,8 @@ static void test_TCM_GETROWCOUNT(void)
 
 START_TEST(tab)
 {
+    ULONG_PTR ctx_cookie;
+    HANDLE hCtx;
     LOGFONTA logfont;
 
     lstrcpyA(logfont.lfFaceName, "Arial");
@@ -1496,10 +1757,13 @@ START_TEST(tab)
 
     init_msg_sequences(sequences, NUM_MSG_SEQUENCES);
 
+    init_winevent_hook();
+
     parent_wnd = createParentWindow();
     ok(parent_wnd != NULL, "Failed to create parent window!\n");
 
     test_width();
+    test_setitemsize();
     test_curfocus();
     test_cursel();
     test_extendedstyle();
@@ -1517,6 +1781,20 @@ START_TEST(tab)
     test_create();
     test_TCN_SELCHANGING();
     test_TCM_GETROWCOUNT();
+
+    uninit_winevent_hook();
+
+    DestroyWindow(parent_wnd);
+
+    if (!load_v6_module(&ctx_cookie, &hCtx))
+        return;
+
+    parent_wnd = createParentWindow();
+    ok(!!parent_wnd, "Failed to create parent window!\n");
+
+    test_curfocus();
+
+    unload_v6_module(ctx_cookie, hCtx);
 
     DestroyWindow(parent_wnd);
 }

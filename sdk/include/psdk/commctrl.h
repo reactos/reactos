@@ -251,7 +251,9 @@ extern "C" {
 #define BCSIF_STYLE 0x00000004
 #define BCSIF_SIZE  0x00000008
 
+#define BCSS_NOSPLIT 0x00000001
 #define BCSS_STRETCH 0x00000002
+#define BCSS_ALIGNLEFT 0x00000004
 #define BCSS_IMAGE   0x00000008
 
 #define BCN_FIRST (0U-1250U)
@@ -3022,6 +3024,7 @@ typedef struct tagNMBCDROPDOWN {
 #define ListView_MapIDToIndex(hwnd,id) (UINT)SNDMSG((hwnd),LVM_MAPIDTOINDEX,(WPARAM)id,(LPARAM)0)
 #define LVM_ISITEMVISIBLE (LVM_FIRST+182)
 #define ListView_IsItemVisible(hwnd,index) (UINT)SNDMSG((hwnd),LVM_ISITEMVISIBLE,(WPARAM)(index),(LPARAM)0)
+#define LVM_GETNEXTITEMINDEX (LVM_FIRST+211)
 
 #define LVBKIMAGE __MINGW_NAME_AW(LVBKIMAGE)
 #define LPLVBKIMAGE __MINGW_NAME_AW(LPLVBKIMAGE)
@@ -3237,6 +3240,16 @@ typedef struct tagNMBCDROPDOWN {
     int dy;
   } NMLVSCROLL,*LPNMLVSCROLL;
 
+  typedef struct tagLVITEMINDEX
+  {
+      int iItem;
+    int iGroup;
+  } LVITEMINDEX, *PLVITEMINDEX;
+
+#define LVGGR_GROUP      0
+#define LVGGR_HEADER     1
+#define LVGGR_LABEL      2
+#define LVGGR_SUBSETLINK 3
 #define LVN_BEGINSCROLL (LVN_FIRST-80)
 #define LVN_ENDSCROLL (LVN_FIRST-81)
 
@@ -3719,6 +3732,11 @@ typedef struct tagTVDISPINFOEXW {
 #define TVN_GETINFOTIPA (TVN_FIRST-13)
 #define TVN_GETINFOTIPW (TVN_FIRST-14)
 #define TVN_SINGLEEXPAND (TVN_FIRST-15)
+#define TVN_ITEMCHANGINGA (TVN_FIRST-16)
+#define TVN_ITEMCHANGINGW (TVN_FIRST-17)
+#define TVN_ITEMCHANGEDA (TVN_FIRST-18)
+#define TVN_ITEMCHANGEDW (TVN_FIRST-19)
+#define TVN_ASYNCDRAW (TVN_FIRST-20)
 
 #define TVNRET_DEFAULT 0
 #define TVNRET_SKIPOLD 1
@@ -3772,6 +3790,16 @@ typedef struct tagTVDISPINFOEXW {
     HTREEITEM hItem;
     LPARAM lParam;
   } NMTVGETINFOTIPW,*LPNMTVGETINFOTIPW;
+
+  typedef struct tagTVITEMCHANGE
+  {
+    NMHDR hdr;
+    UINT uChanged;
+    HTREEITEM hItem;
+    UINT uStateNew;
+    UINT uStateOld;
+    LPARAM lParam;
+  } NMTVITEMCHANGE;
 
 #define TVN_GETINFOTIP __MINGW_NAME_AW(TVN_GETINFOTIP)
 #define NMTVGETINFOTIP __MINGW_NAME_AW(NMTVGETINFOTIP)
@@ -4671,6 +4699,7 @@ typedef struct {
   } NMBCHOTITEM,*LPNMBCHOTITEM;
 
 #define BST_HOT 0x200
+#define BST_DROPDOWNPUSHED      0x0400
 
 #define BS_SPLITBUTTON    0x0000000C
 #define BS_DEFSPLITBUTTON 0x0000000D
@@ -4833,6 +4862,7 @@ typedef struct {
 
   typedef struct _DPA *HDPA;
 
+  WINCOMMCTRLAPI HDPA WINAPI DPA_Clone(_In_ const HDPA hdpa, _Inout_opt_ HDPA hdpaNew);
   WINCOMMCTRLAPI HDPA WINAPI DPA_Create(int cItemGrow);
   WINCOMMCTRLAPI BOOL WINAPI DPA_Destroy(_Inout_opt_ HDPA hdpa);
   WINCOMMCTRLAPI PVOID WINAPI DPA_DeletePtr(_Inout_ HDPA hdpa, _In_ int i);
