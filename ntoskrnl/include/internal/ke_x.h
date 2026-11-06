@@ -1717,7 +1717,6 @@ KiReadThreadCycleTime(
 #endif
 }
 
-
 FORCEINLINE
 VOID
 KiWriteThreadCycleTime(
@@ -1738,6 +1737,13 @@ KiWriteThreadCycleTime(
     CycleTimePtr->LowPart = NewCycleTimeAsULI.LowPart;
     CycleTimePtr->HighPart = NewCycleTimeAsULI.HighPart;
 #endif
+}
+
+FORCEINLINE
+ULONG64
+KiClockTicksTo100ns(IN ULONG ClockTicks)
+{
+    return ((ULONG64)ClockTicks * KeMaximumIncrement);
 }
 
 #ifdef __cplusplus
