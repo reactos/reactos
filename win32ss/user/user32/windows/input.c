@@ -1086,6 +1086,7 @@ IntGetKeyboardDllName(
                 if (!IsValidKLID(szSubstitute) ||
                     FAILED(StringCchCopyW(pszKLID, cchKLID, szSubstitute)))
                 {
+                    ERR("IsValidKLID(%s) failed\n", debugstr_w(szSubstitute));
                     return FALSE;
                 }
             }
@@ -1096,10 +1097,9 @@ IntGetKeyboardDllName(
                                  szSubstitute, (DWORD)_countof(szSubstitute),
                                  L"keyboardlayout.ini");
         szSubstitute[_countof(szSubstitute) - 1] = UNICODE_NULL; /* Avoid buffer overrun */
-#endif
-        if (!IsValidKLID(szSubstitute))
+        if (!IsValidKLID(szSubstitute) || FAILED(StringCchCopyW(pszKLID, cchKLID, szSubstitute)))
             return FALSE;
-        StringCchCopyW(pszKLID, cchKLID, szSubstitute);
+#endif
     }
 
     /* Open 'Keyboard Layouts' registry key */
