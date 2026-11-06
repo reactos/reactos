@@ -233,7 +233,7 @@ UsbdexBuildParametersPath(
     if (DriverName->Length <= PrefixBytes)
         return NULL;
 
-    if (RtlCompareMemory(DriverName->Buffer, DriverPrefix, PrefixBytes) != PrefixBytes)
+    if (!RtlEqualMemory(DriverName->Buffer, DriverPrefix, PrefixBytes))
         return NULL;
 
     ServiceBytes = DriverName->Length - PrefixBytes;
