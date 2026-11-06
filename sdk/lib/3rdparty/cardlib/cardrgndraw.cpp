@@ -76,18 +76,22 @@ void CardRegion::Render(HDC hdc)
 
     if(fVisible == 0) return;
 
-    cardnum = cardstack.NumCards() - numtodraw;
-    int counter;
+    // Draw only the final visible pixels of each card. Painting complete
+    // cards from bottom to top briefly exposes covered faces on the window DC.
+    int saved = SaveDC(hdc);
+    if (!saved)
+        return;
 
-    for(counter = 0; counter < numtodraw; counter++)
+    for (int counter = numtodraw - 1; counter >= 0; --counter)
     {
         int cardval;
 
         int x = xoffset * counter + xpos;
         int y = yoffset * counter + ypos;
 
-        //if about to draw last card, then actually draw the top card
-        if(counter == numtodraw - 1) cardnum = cardstack.NumCards() - 1;
+        cardnum = cardstack.NumCards() - numtodraw + counter;
+        if (counter == numtodraw - 1)
+            cardnum = cardstack.NumCards() - 1;
 
         Card card = cardstack.cardlist[cardnum];
         cardval = card.Idx();
@@ -95,15 +99,14 @@ void CardRegion::Render(HDC hdc)
         if(card.FaceDown())
             cardval = nBackCardIdx;    //card-back
 
-        // Paint from bottom to top. The old strip optimisation assumed fixed
-        // two-pixel corners and left holes when cards overlap rounded corners.
         CardBlt(hdc, x, y, cardval);
+        ExcludeCardShape(hdc, x, y, __cardwidth, __cardheight,
+                         CardCornerRadius(__cardwidth, __cardheight));
+    }
 
-        cardnum ++;
+    RestoreDC(hdc, saved);
 
-    } //end of index
-
-    if(counter == 0)    //if the cardstack is empty, then draw it that way
+    if (numtodraw == 0)
     {
         int x = xpos;
         int y = ypos;
