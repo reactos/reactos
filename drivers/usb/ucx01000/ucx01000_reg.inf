@@ -1,0 +1,10 @@
+; USB host controller extension
+[AddReg]
+HKLM,"SYSTEM\CurrentControlSet\Services\ucx01000","ErrorControl",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\ucx01000","Group",0x00000000,"Boot Bus Extender"
+HKLM,"SYSTEM\CurrentControlSet\Services\ucx01000","ImagePath",0x00020000,"system32\drivers\ucx01000.sys"
+HKLM,"SYSTEM\CurrentControlSet\Services\ucx01000","Start",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\ucx01000","Type",0x00010001,0x00000001
+
+; KMDF class extension registration
+HKLM,"System\CurrentControlSet\Control\Wdf\Kmdf\Ucx\Versions\1\1","Service",0x00000000,"ucx01000"

@@ -49,6 +49,10 @@ HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\PCI#CC_0C0310","Cl
 HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\PCI#CC_0C0320","Service",0x00000000,"usbehci"
 HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\PCI#CC_0C0320","ClassGUID",0x00000000,"{36FC9E60-C465-11CF-8056-444553540000}"
 
+HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\PCI#CC_0C0330","Service",0x00000000,"usbxhci"
+HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\PCI#CC_0C0330","ClassGUID",0x00000000,"{36FC9E60-C465-11CF-8056-444553540000}"
+HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\PCI#CC_0C0330\Device Parameters\Interrupt Management\MessageSignaledInterruptProperties","MSISupported",0x00010001,0x00000001
+
 HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\USB#Class_08&SubClass_06&Prot_50","Service",0x00000000,"usbstor"
 HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\USB#Class_08&SubClass_06&Prot_50","ClassGUID",0x00000000,"{36FC9E60-C465-11CF-8056-444553540000}"
 
@@ -87,6 +91,15 @@ HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\PCI#VEN_1103&DEV_0
 
 HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\*PNP0600","Service",0x00000000,"atapi"
 HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\*PNP0600","ClassGUID",0x00000000,"{4D36E96A-E325-11CE-BFC1-08002BE10318}"
+
+HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\USB#ROOT_HUB30","Service",0x00000000,"usbhub3"
+HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\USB#ROOT_HUB30","ClassGUID",0x00000000,"{36FC9E60-C465-11CF-8056-444553540000}"
+
+HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\USB#USB20_HUB","Service",0x00000000,"usbhub3"
+HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\USB#USB20_HUB","ClassGUID",0x00000000,"{36FC9E60-C465-11CF-8056-444553540000}"
+
+HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\USB#USB30_HUB","Service",0x00000000,"usbhub3"
+HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\USB#USB30_HUB","ClassGUID",0x00000000,"{36FC9E60-C465-11CF-8056-444553540000}"
 
 HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\GenCdRom","Service",0x00000000,"cdrom"
 HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\GenCdRom","ClassGUID",0x00000000,"{4D36E965-E325-11CE-BFC1-08002BE10318}"
