@@ -20,7 +20,7 @@ add_subdirectory(cryptlib)
 add_subdirectory(cpprt)
 
 if(MSVC)
-    add_subdirectory(RunTmChk)
+    add_subdirectory(runtmchk)
 else()
     add_subdirectory(gcc-compat)
 endif()

@@ -1,0 +1,7 @@
+; USB 3.0 hub driver
+[AddReg]
+HKLM,"SYSTEM\CurrentControlSet\Services\usbhub3","ErrorControl",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\usbhub3","Group",0x00000000,"System Bus Extender"
+HKLM,"SYSTEM\CurrentControlSet\Services\usbhub3","ImagePath",0x00020000,"system32\drivers\usbhub3.sys"
+HKLM,"SYSTEM\CurrentControlSet\Services\usbhub3","Start",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\usbhub3","Type",0x00010001,0x00000001

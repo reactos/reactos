@@ -37,7 +37,8 @@
 
 /**** DATA stored inside the stack ****/
 #define CmdLine BaseStack   // Command line for the program to be started
-#define PgmName [CmdLine + (1 + DOS_CMDLINE_LENGTH)]
+/* No outer brackets or parentheses, the LLVM assembler only takes offset before a bare expression */
+#define PgmName CmdLine + (1 + DOS_CMDLINE_LENGTH)
 
 
 // WARNING! Using the VAL(x) macro doesn't work with GCC/GAS (because it inserts

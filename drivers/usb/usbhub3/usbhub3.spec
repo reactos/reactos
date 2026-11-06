@@ -1,0 +1,1 @@
+@ extern Microsoft_USBD_Compat_Version

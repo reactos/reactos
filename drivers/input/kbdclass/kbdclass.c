@@ -163,29 +163,38 @@ ClassDeviceControl(
         case IOCTL_KEYBOARD_SET_INDICATORS:
         case IOCTL_KEYBOARD_SET_TYPEMATIC: /* not in MSDN, would seem logical */
         {
-            /* Send it to all associated Port devices */
-            PLIST_ENTRY Head = &((PCLASS_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->ListHead;
-            PLIST_ENTRY Entry = Head->Flink;
-            Status = STATUS_SUCCESS;
-            while (Entry != Head)
+            if (((PCOMMON_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->IsClassDO)
             {
-                PPORT_DEVICE_EXTENSION DevExt = CONTAINING_RECORD(Entry, PORT_DEVICE_EXTENSION, ListEntry);
-
-                IoGetCurrentIrpStackLocation(Irp)->MajorFunction = IRP_MJ_INTERNAL_DEVICE_CONTROL;
-
-                if (IoForwardIrpSynchronously(DevExt->LowerDevice, Irp))
+                /* Send it to all associated Port devices */
+                PLIST_ENTRY Head = &((PCLASS_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->ListHead;
+                PLIST_ENTRY Entry = Head->Flink;
+                Status = STATUS_SUCCESS;
+                while (Entry != Head)
                 {
-                    if (!NT_SUCCESS(Irp->IoStatus.Status))
+                    PPORT_DEVICE_EXTENSION DevExt = CONTAINING_RECORD(Entry, PORT_DEVICE_EXTENSION, ListEntry);
+
+                    IoGetCurrentIrpStackLocation(Irp)->MajorFunction = IRP_MJ_INTERNAL_DEVICE_CONTROL;
+
+                    if (IoForwardIrpSynchronously(DevExt->LowerDevice, Irp))
                     {
-                        Status = Irp->IoStatus.Status;
+                        if (!NT_SUCCESS(Irp->IoStatus.Status))
+                        {
+                            Status = Irp->IoStatus.Status;
+                        }
                     }
-                }
-                else
-                {
-                    Status = STATUS_UNSUCCESSFUL;
-                }
+                    else
+                    {
+                        Status = STATUS_UNSUCCESSFUL;
+                    }
 
-                Entry = Entry->Flink;
+                    Entry = Entry->Flink;
+                }
+            }
+            else
+            {
+                PPORT_DEVICE_EXTENSION DeviceExtension = DeviceObject->DeviceExtension;
+                IoSkipCurrentIrpStackLocation(Irp);
+                return IoCallDriver(DeviceExtension->LowerDevice, Irp);
             }
             break;
         }
@@ -273,7 +282,6 @@ ReadRegistryEntries(
     RTL_QUERY_REGISTRY_TABLE Parameters[4];
     NTSTATUS Status;
 
-    /* HACK: We don't support multiple devices with this disabled */
     ULONG DefaultConnectMultiplePorts = 1;
     ULONG DefaultDataQueueSize = 0x64;
     PCWSTR DefaultDeviceBaseName = L"KeyboardClass";

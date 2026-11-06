@@ -24,7 +24,7 @@
 #define NDEBUG
 #include <debug.h>
 
-static ULONG SupportedOidList[] =
+static const NDIS_OID SupportedOidList[] =
 {
     OID_GEN_SUPPORTED_LIST,
     OID_GEN_HARDWARE_STATUS,
@@ -79,7 +79,7 @@ MiniportQueryInformation (
     PRTL_ADAPTER adapter = (PRTL_ADAPTER)MiniportAdapterContext;
     ULONG genericUlong;
     ULONG copyLength;
-    PVOID copySource;
+    const VOID* copySource;
     NDIS_STATUS status;
 
     status = NDIS_STATUS_SUCCESS;
@@ -91,7 +91,7 @@ MiniportQueryInformation (
     switch (Oid)
     {
         case OID_GEN_SUPPORTED_LIST:
-            copySource = (PVOID)&SupportedOidList;
+            copySource = SupportedOidList;
             copyLength = sizeof(SupportedOidList);
             break;
 
@@ -144,7 +144,7 @@ MiniportQueryInformation (
 
         case OID_GEN_VENDOR_DESCRIPTION:
         {
-            static UCHAR vendorDesc[] = "ReactOS Team";
+            static const CHAR vendorDesc[] = "Realtek RTL8139 Ethernet Adapter";
             copySource = vendorDesc;
             copyLength = sizeof(vendorDesc);
             break;

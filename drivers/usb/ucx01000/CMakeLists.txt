@@ -3,8 +3,27 @@ remove_definitions(-D_WIN32_WINNT=0x502)
 
 list(APPEND SOURCE
     classlib.cpp
+    clientif.cpp
+    clientxrb.cpp
+    crsm.cpp
+    devicemgmt.cpp
+    devobj.cpp
     driver.cpp
+    epsm.cpp
     exports.cpp
+    guid.cpp
+    hostctl.cpp
+    hostqueues.cpp
+    hostreset.cpp
+    hubinterface.cpp
+    pipe.cpp
+    pipeio.cpp
+    rhub.cpp
+    rhubpdo.cpp
+    ucxutil.cpp
+    urbroute.cpp
+    userreq.cpp
+    workitem.cpp
     ucx01000.h)
 
 add_library(ucx01000 MODULE ${SOURCE} ucx01000.rc)
@@ -26,3 +45,4 @@ target_include_directories(ucx01000 PRIVATE
 target_link_libraries(ucx01000 ntoskrnl_vista libcntpr ${PSEH_LIB})
 add_importlibs(ucx01000 wdfldr ntoskrnl hal)
 add_cd_file(TARGET ucx01000 DESTINATION reactos/system32/drivers NO_CAB FOR all)
+add_registry_inf(ucx01000_reg.inf)

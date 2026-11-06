@@ -92,14 +92,14 @@ BEGIN
     IDS_DEV_FAILED_DRIVER_ENTRY "ReactOS 无法初始化这个硬件的设备驱动程序。"
     IDS_DEV_DRIVER_FAILED_PRIOR_UNLOAD "由于设备驱动程序的前一个实例仍在内存中，ReactOS 无法加载这个硬件的设备驱动程序。"
     IDS_DEV_DRIVER_FAILED_LOAD "ReactOS 无法加载这个硬件的设备驱动程序。驱动程序可能已损坏或丢失。"
-    IDS_DEV_DRIVER_SERVICE_KEY_INVALID "ReactOS 无法访问这个硬件，因为它在注册表中的服务密钥信息已丢失或记录不正确。"
+    IDS_DEV_DRIVER_SERVICE_KEY_INVALID "ReactOS 无法访问这个硬件，因为它在注册表中的服务项信息已丢失或记录不正确。"
     IDS_DEV_LEGACY_SERVICE_NO_DEVICES "ReactOS 成功地加载了这个硬件的设备驱动程序，但找不到硬件设备。"
     IDS_DEV_DUPLICATE_DEVICE "ReactOS 无法加载这个硬件的设备驱动程序，因为已有一个重复的设备在系统上运行。"
     IDS_DEV_FAILED_POST_START "因为此设备报告了问题，ReactOS 已将其停止。"
     IDS_DEV_HALTED "应用程序或服务已关闭这个硬件设备。"
     IDS_DEV_PHANTOM "此硬件设备没有连接到计算机。"
     IDS_DEV_SYSTEM_SHUTDOWN "因为操作系统正在关闭，ReactOS 无法访问这个硬件设备。"
-    IDS_DEV_HELD_FOR_EJECT "ReactOS 不能使用这个硬件设备，因为它已被安全删除，但没有从计算机移除。"
+    IDS_DEV_HELD_FOR_EJECT "ReactOS 不能使用这个硬件设备，因为它已准备好安全移除，但尚未从计算机移除。"
     IDS_DEV_DRIVER_BLOCKED "此设备的软件已经被阻止启动，因为它已知在 ReactOS 上有问题。请与硬件供应商联系新的驱动程序。"
     IDS_DEV_REGISTRY_TOO_LARGE "ReactOS 不能启动新的硬件设备，因为系统配置单元过大（超过了注册表大小限制）。"
     IDS_DEV_SETPROPERTIES_FAILED "ReactOS 不能更改此设备的设置。"
@@ -325,10 +325,10 @@ END
 
 STRINGTABLE
 BEGIN
-  IDS_TYPE_MEMORY           "Memory"
-  IDS_TYPE_PORT             "Input/output (IO)"
-  IDS_TYPE_DMA              "Direct Memory Access (DMA)"
-  IDS_TYPE_IRQ              "Interrupt request (IRQ)"
+  IDS_TYPE_MEMORY           "内存"
+  IDS_TYPE_PORT             "输入/输出 (IO)"
+  IDS_TYPE_DMA              "直接内存访问 (DMA)"
+  IDS_TYPE_IRQ              "中断请求 (IRQ)"
 END
 
 /* Hints */

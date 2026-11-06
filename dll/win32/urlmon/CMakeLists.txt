@@ -59,6 +59,8 @@ set_wine_module_FIXME(urlmon) # CORE-5743: No ARRAY_SIZE macro
 # Hack for CMake not being able to properly escape command line GUID definition on some Unix hosts.
 if (CMAKE_HOST_WIN32)
     add_compile_definitions(PROXY_CLSID_IS={0x79EAC9F1,0xBAF9,0x11CE,{0x8C,0x82,0x00,0xAA,0x00,0x4B,0xA9,0x0B}})
+elseif(MSVC AND CMAKE_C_COMPILER_ID STREQUAL "Clang")
+    target_compile_options(urlmon PRIVATE /FI${CMAKE_SOURCE_DIR}/dll/win32/urlmon/clsid.h)
 else()
     target_compile_options(urlmon PRIVATE -include ${CMAKE_SOURCE_DIR}/dll/win32/urlmon/clsid.h)
 endif()
