@@ -846,11 +846,12 @@ IntFollowRealDll(
     {
         return;
     }
+    szReturned[MAX_PATH - 1] = UNICODE_NULL; /* Avoid buffer overrun */
 
-    szReturned[MAX_PATH - 1] = UNICODE_NULL;
-    if (!IntIsValidLayoutFileName(pszRealFile) ||
+    if (!IntIsValidLayoutFileName(szReturned) ||
         FAILED(StringCchCopyW(pszRealFile, MAX_LAYOUT_FILENAME, szReturned)))
     {
+        WARN("Invalid real DLL name: %s\n", debugstr_w(szReturned));
         return;
     }
 
