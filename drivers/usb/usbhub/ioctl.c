@@ -774,6 +774,64 @@ USBH_IoctlGetHubCapabilities(IN PUSBHUB_FDO_EXTENSION HubExtension,
     return STATUS_SUCCESS;
 }
 
+/*
+ * IOCTL_USB_GET_HUB_INFORMATION_EX
+ *
+ * The buffer is sized as the descriptor union plus a 2.0 hub descriptor.
+ * Windows uses that size, and it is smaller than sizeof() because the USB 3
+ * structures in usbioctl.h are not packed.
+ */
+NTSTATUS
+NTAPI
+USBH_IoctlGetHubInformationEx(IN PUSBHUB_FDO_EXTENSION HubExtension,
+                              IN PIRP Irp)
+{
+    PUSB_HUB_INFORMATION_EX HubInfo;
+    PIO_STACK_LOCATION IoStack;
+    ULONG BufferLength;
+    ULONG RequiredLength;
+    NTSTATUS Status;
+
+    DPRINT("USBH_IoctlGetHubInformationEx ... \n");
+
+    RequiredLength = FIELD_OFFSET(USB_HUB_INFORMATION_EX, u) +
+                     sizeof(USB_HUB_DESCRIPTOR);
+
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+    BufferLength = IoStack->Parameters.DeviceIoControl.OutputBufferLength;
+
+    if (BufferLength < RequiredLength)
+    {
+        Status = STATUS_BUFFER_TOO_SMALL;
+        USBH_CompleteIrp(Irp, Status);
+        return Status;
+    }
+
+    HubInfo = Irp->AssociatedIrp.SystemBuffer;
+    RtlZeroMemory(HubInfo, BufferLength);
+
+    HubInfo->HighestPortNumber = HubExtension->HubDescriptor->bNumberOfPorts;
+
+    if (HubExtension->LowerPDO == HubExtension->RootHubPdo)
+    {
+        HubInfo->HubType = UsbRootHub;
+    }
+    else
+    {
+        HubInfo->HubType = Usb20Hub;
+
+        RtlCopyMemory(&HubInfo->u.UsbHubDescriptor,
+                      HubExtension->HubDescriptor,
+                      sizeof(USB_HUB_DESCRIPTOR));
+    }
+
+    Irp->IoStatus.Information = RequiredLength;
+
+    USBH_CompleteIrp(Irp, STATUS_SUCCESS);
+
+    return STATUS_SUCCESS;
+}
+
 NTSTATUS
 NTAPI
 USBH_IoctlGetNodeConnectionAttributes(IN PUSBHUB_FDO_EXTENSION HubExtension,
@@ -935,6 +993,75 @@ USBH_IoctlGetNodeConnectionInformation(IN PUSBHUB_FDO_EXTENSION HubExtension,
 
     Irp->IoStatus.Information = FIELD_OFFSET(USB_NODE_CONNECTION_INFORMATION_EX,
                                              PipeList);
+    Status = STATUS_SUCCESS;
+
+Exit:
+    USBH_CompleteIrp(Irp, Status);
+    return Status;
+}
+
+/*
+ * IOCTL_USB_GET_NODE_CONNECTION_INFORMATION_EX_V2
+ *
+ * A caller names the protocols it understands and must include USB 3.0, as
+ * Windows requires. This driver handles USB 2.0 hubs, so a port supports 1.1
+ * and 2.0 signalling and is never SuperSpeed capable.
+ */
+NTSTATUS
+NTAPI
+USBH_IoctlGetNodeConnectionInformationExV2(IN PUSBHUB_FDO_EXTENSION HubExtension,
+                                           IN PIRP Irp)
+{
+    PUSB_NODE_CONNECTION_INFORMATION_EX_V2 Info;
+    PIO_STACK_LOCATION IoStack;
+    ULONG BufferLength;
+    ULONG ConnectionIndex;
+    ULONG NumPorts;
+    NTSTATUS Status;
+
+    DPRINT("USBH_IoctlGetNodeConnectionInformationExV2 ... \n");
+
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+    BufferLength = IoStack->Parameters.DeviceIoControl.OutputBufferLength;
+
+    if (BufferLength < sizeof(USB_NODE_CONNECTION_INFORMATION_EX_V2))
+    {
+        Status = STATUS_BUFFER_TOO_SMALL;
+        goto Exit;
+    }
+
+    Info = Irp->AssociatedIrp.SystemBuffer;
+    ConnectionIndex = Info->ConnectionIndex;
+
+    if (Info->Length < sizeof(USB_NODE_CONNECTION_INFORMATION_EX_V2) ||
+        !Info->SupportedUsbProtocols.Usb300)
+    {
+        Status = STATUS_INVALID_PARAMETER;
+        goto Exit;
+    }
+
+    Status = STATUS_INVALID_PARAMETER;
+
+    NumPorts = HubExtension->HubDescriptor->bNumberOfPorts;
+
+    if (NumPorts == 0 ||
+        ConnectionIndex == 0 ||
+        ConnectionIndex > NumPorts)
+    {
+        goto Exit;
+    }
+
+    RtlZeroMemory(Info, BufferLength);
+
+    Info->ConnectionIndex = ConnectionIndex;
+    Info->Length = sizeof(USB_NODE_CONNECTION_INFORMATION_EX_V2);
+
+    Info->SupportedUsbProtocols.Usb110 = 1;
+    Info->SupportedUsbProtocols.Usb200 = 1;
+
+    Info->Flags.ul = 0;
+
+    Irp->IoStatus.Information = sizeof(USB_NODE_CONNECTION_INFORMATION_EX_V2);
     Status = STATUS_SUCCESS;
 
 Exit:
@@ -1249,6 +1376,28 @@ USBH_DeviceControl(IN PUSBHUB_FDO_EXTENSION HubExtension,
             if (!(HubExtension->HubFlags & USBHUB_FDO_FLAG_DEVICE_STOPPED))
             {
                 Status = USBH_IoctlGetDescriptor(HubExtension, Irp);
+                break;
+            }
+
+            USBH_CompleteIrp(Irp, Status);
+            break;
+
+        case IOCTL_USB_GET_HUB_INFORMATION_EX:
+            DPRINT("USBH_DeviceControl: IOCTL_USB_GET_HUB_INFORMATION_EX\n");
+            if (!(HubExtension->HubFlags & USBHUB_FDO_FLAG_DEVICE_STOPPED))
+            {
+                Status = USBH_IoctlGetHubInformationEx(HubExtension, Irp);
+                break;
+            }
+
+            USBH_CompleteIrp(Irp, Status);
+            break;
+
+        case IOCTL_USB_GET_NODE_CONNECTION_INFORMATION_EX_V2:
+            DPRINT("USBH_DeviceControl: IOCTL_USB_GET_NODE_CONNECTION_INFORMATION_EX_V2\n");
+            if (!(HubExtension->HubFlags & USBHUB_FDO_FLAG_DEVICE_STOPPED))
+            {
+                Status = USBH_IoctlGetNodeConnectionInformationExV2(HubExtension, Irp);
                 break;
             }
 
