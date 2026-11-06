@@ -621,6 +621,7 @@ EngGetFileChangeTime(
     _In_ HANDLE h,
     _Out_ LARGE_INTEGER *pChangeTime)
 {
+    // https://web.archive.org/web/20040327053007/http://www.osr.com/ddk/graphics/gdifncs_1i1z.htm
     PFILEVIEW pFileView = (PFILEVIEW)h;
 
     if (!pFileView || !pChangeTime)
@@ -636,6 +637,7 @@ EngGetFilePath(
     _In_ HANDLE h,
     _Out_ WCHAR (*pDest)[MAX_PATH + 1])
 {
+    // https://web.archive.org/web/20040818011546/http://www.osr.com/ddk/graphics/gdifncs_5g2v.htm
     PFONTFILEVIEW pffv = (PFONTFILEVIEW)h;
 
     if (!pffv || !pDest || !pffv->pwszPath)
