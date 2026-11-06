@@ -1022,17 +1022,17 @@ USBPORT_IsrDpcHandler(IN PDEVICE_OBJECT FdoDevice,
             
             KeReleaseSpinLockFromDpcLevel(&FdoExtension->EpStateChangeSpinLock);
 
-            if (IsDpcHandler)
+            if (Endpoint->StateLast == USBPORT_ENDPOINT_PAUSED || !IsDpcHandler)
             {
                 USBPORT_InvalidateEndpointHandler(FdoDevice,
                                                   Endpoint,
-                                                  INVALIDATE_ENDPOINT_ONLY);
+                                                  INVALIDATE_ENDPOINT_WORKER_THREAD);
             }
             else
             {
                 USBPORT_InvalidateEndpointHandler(FdoDevice,
                                                   Endpoint,
-                                                  INVALIDATE_ENDPOINT_WORKER_THREAD);
+                                                  INVALIDATE_ENDPOINT_ONLY);
             }
 
             KeAcquireSpinLockAtDpcLevel(&FdoExtension->EpStateChangeSpinLock);

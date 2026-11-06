@@ -26,6 +26,7 @@ DeviceIoControl(
 	PIRP Irp;
 	IO_STATUS_BLOCK IoStatus;
 	NTSTATUS Status;
+	LARGE_INTEGER Timeout;
 
 	KeInitializeEvent (&Event, NotificationEvent, FALSE);
 
@@ -49,8 +50,18 @@ DeviceIoControl(
 	if (Status == STATUS_PENDING)
 	{
 		INFO_(SERENUM, "Operation pending\n");
-		KeWaitForSingleObject(&Event, Suspended, KernelMode, FALSE, NULL);
-		Status = IoStatus.Status;
+		Timeout.QuadPart = -20000000LL;
+		Status = KeWaitForSingleObject(&Event, Suspended, KernelMode, FALSE, &Timeout);
+		if (Status == STATUS_TIMEOUT)
+		{
+			IoCancelIrp(Irp);
+			KeWaitForSingleObject(&Event, Suspended, KernelMode, FALSE, NULL);
+			Status = STATUS_IO_TIMEOUT;
+		}
+		else
+		{
+			Status = IoStatus.Status;
+		}
 	}
 
 	if (OutputBufferSize)
@@ -72,6 +83,7 @@ ReadBytes(
 	IO_STATUS_BLOCK ioStatus;
 	KEVENT event;
 	LARGE_INTEGER zero;
+	LARGE_INTEGER timeout;
 	NTSTATUS Status;
 
 	KeInitializeEvent(&event, NotificationEvent, FALSE);
@@ -84,13 +96,23 @@ ReadBytes(
 		&event,
 		&ioStatus);
 	if (!Irp)
-		return FALSE;
+		return STATUS_INSUFFICIENT_RESOURCES;
 
 	Status = IoCallDriver(LowerDevice, Irp);
 	if (Status == STATUS_PENDING)
 	{
-		KeWaitForSingleObject(&event, Suspended, KernelMode, FALSE, NULL);
-		Status = ioStatus.Status;
+		timeout.QuadPart = -20000000LL;
+		Status = KeWaitForSingleObject(&event, Suspended, KernelMode, FALSE, &timeout);
+		if (Status == STATUS_TIMEOUT)
+		{
+			IoCancelIrp(Irp);
+			KeWaitForSingleObject(&event, Suspended, KernelMode, FALSE, NULL);
+			Status = STATUS_IO_TIMEOUT;
+		}
+		else
+		{
+			Status = ioStatus.Status;
+		}
 	}
 	INFO_(SERENUM, "Bytes received: %lu/%lu\n",
 		ioStatus.Information, BufferSize);
@@ -237,6 +259,11 @@ SerenumDetectPnpDevice(
 	SERIAL_TIMEOUTS Timeouts;
 	SERIALPERF_STATS PerfStats;
 	NTSTATUS Status;
+	SERIAL_BAUD_RATE OrigBaudRate;
+	SERIAL_LINE_CONTROL OrigLCR;
+	SERIAL_TIMEOUTS OrigTimeouts;
+	ULONG_PTR OutSize;
+	BOOLEAN HaveOrigSettings = FALSE;
 
 	/* Open port */
 	Status = ObOpenObjectByPointer(
@@ -247,7 +274,23 @@ SerenumDetectPnpDevice(
 		NULL,
 		KernelMode,
 		&Handle);
-	if (!NT_SUCCESS(Status)) goto ByeBye;
+	if (!NT_SUCCESS(Status)) return Status;
+
+	/* Save original settings before probing */
+	OutSize = sizeof(OrigBaudRate);
+	if (NT_SUCCESS(DeviceIoControl(LowerDevice, IOCTL_SERIAL_GET_BAUD_RATE,
+		NULL, 0, &OrigBaudRate, &OutSize)))
+	{
+		OutSize = sizeof(OrigLCR);
+		if (NT_SUCCESS(DeviceIoControl(LowerDevice, IOCTL_SERIAL_GET_LINE_CONTROL,
+			NULL, 0, &OrigLCR, &OutSize)))
+		{
+			OutSize = sizeof(OrigTimeouts);
+			if (NT_SUCCESS(DeviceIoControl(LowerDevice, IOCTL_SERIAL_GET_TIMEOUTS,
+				NULL, 0, &OrigTimeouts, &OutSize)))
+				HaveOrigSettings = TRUE;
+		}
+	}
 
 	/* 1. COM port initialization, check for device enumerate */
 	TRACE_(SERENUM, "COM port initialization, check for device enumerate\n");
@@ -434,6 +477,21 @@ DisconnectIdle:
 	Status = STATUS_DEVICE_NOT_CONNECTED;
 
 ByeBye:
+	/* Restore original settings if nothing claimed the port */
+	if (HaveOrigSettings && Status == STATUS_DEVICE_NOT_CONNECTED)
+	{
+		DeviceIoControl(LowerDevice, IOCTL_SERIAL_SET_BAUD_RATE,
+			&OrigBaudRate.BaudRate, sizeof(OrigBaudRate.BaudRate), NULL, NULL);
+		DeviceIoControl(LowerDevice, IOCTL_SERIAL_SET_LINE_CONTROL,
+			&OrigLCR, sizeof(OrigLCR), NULL, NULL);
+		DeviceIoControl(LowerDevice, IOCTL_SERIAL_SET_TIMEOUTS,
+			&OrigTimeouts, sizeof(OrigTimeouts), NULL, NULL);
+	}
+
+	/* Assert DTR and RTS */
+	DeviceIoControl(LowerDevice, IOCTL_SERIAL_SET_DTR, NULL, 0, NULL, NULL);
+	DeviceIoControl(LowerDevice, IOCTL_SERIAL_SET_RTS, NULL, 0, NULL, NULL);
+
 	/* Close port */
 	if (Handle)
 		ZwClose(Handle);
@@ -459,6 +517,11 @@ SerenumDetectLegacyDevice(
 	UNICODE_STRING HardwareIds;
 	UNICODE_STRING CompatibleIds;
 	NTSTATUS Status;
+	SERIAL_BAUD_RATE OrigBaudRate;
+	SERIAL_LINE_CONTROL OrigLCR;
+	SERIAL_TIMEOUTS OrigTimeouts;
+	ULONG_PTR OutSize;
+	BOOLEAN HaveOrigSettings = FALSE;
 
 	TRACE_(SERENUM, "SerenumDetectLegacyDevice(DeviceObject %p, LowerDevice %p)\n",
 		DeviceObject,
@@ -476,6 +539,22 @@ SerenumDetectLegacyDevice(
 		KernelMode,
 		&Handle);
 	if (!NT_SUCCESS(Status)) return Status;
+
+	/* Save original settings before probing */
+	OutSize = sizeof(OrigBaudRate);
+	if (NT_SUCCESS(DeviceIoControl(LowerDevice, IOCTL_SERIAL_GET_BAUD_RATE,
+		NULL, 0, &OrigBaudRate, &OutSize)))
+	{
+		OutSize = sizeof(OrigLCR);
+		if (NT_SUCCESS(DeviceIoControl(LowerDevice, IOCTL_SERIAL_GET_LINE_CONTROL,
+			NULL, 0, &OrigLCR, &OutSize)))
+		{
+			OutSize = sizeof(OrigTimeouts);
+			if (NT_SUCCESS(DeviceIoControl(LowerDevice, IOCTL_SERIAL_GET_TIMEOUTS,
+				NULL, 0, &OrigTimeouts, &OutSize)))
+				HaveOrigSettings = TRUE;
+		}
+	}
 
 	/* Reset UART */
 	TRACE_(SERENUM, "Reset UART\n");
@@ -507,7 +586,7 @@ SerenumDetectLegacyDevice(
 	/* Flush receive buffer */
 	TRACE_(SERENUM, "Flush receive buffer\n");
 	Command = SERIAL_PURGE_RXCLEAR;
-	Status = DeviceIoControl(LowerDevice, IOCTL_SERIAL_SET_MODEM_CONTROL,
+	Status = DeviceIoControl(LowerDevice, IOCTL_SERIAL_PURGE,
 		&Command, sizeof(Command), NULL, NULL);
 	if (!NT_SUCCESS(Status)) goto ByeBye;
 	/* Wait 100 ms */
@@ -595,6 +674,26 @@ SerenumDetectLegacyDevice(
 	Status = STATUS_DEVICE_NOT_CONNECTED;
 
 ByeBye:
+	/* Restore original settings if nothing claimed the port */
+	if (HaveOrigSettings && Status == STATUS_DEVICE_NOT_CONNECTED)
+	{
+		DeviceIoControl(LowerDevice, IOCTL_SERIAL_SET_BAUD_RATE,
+			&OrigBaudRate.BaudRate, sizeof(OrigBaudRate.BaudRate), NULL, NULL);
+		DeviceIoControl(LowerDevice, IOCTL_SERIAL_SET_LINE_CONTROL,
+			&OrigLCR, sizeof(OrigLCR), NULL, NULL);
+		DeviceIoControl(LowerDevice, IOCTL_SERIAL_SET_TIMEOUTS,
+			&OrigTimeouts, sizeof(OrigTimeouts), NULL, NULL);
+	}
+
+	/* Assert DTR and RTS */
+	DeviceIoControl(LowerDevice, IOCTL_SERIAL_SET_DTR, NULL, 0, NULL, NULL);
+	DeviceIoControl(LowerDevice, IOCTL_SERIAL_SET_RTS, NULL, 0, NULL, NULL);
+
+	/* Re-enable FIFO */
+	Fcr = SERIAL_IOC_FCR_FIFO_ENABLE;
+	DeviceIoControl(LowerDevice, IOCTL_SERIAL_SET_FIFO_CONTROL,
+		&Fcr, sizeof(Fcr), NULL, NULL);
+
 	/* Close port */
 	if (Handle)
 		ZwClose(Handle);
