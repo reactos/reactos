@@ -41,6 +41,7 @@ extern void func_NtGdiSetBitmapBits(void);
 extern void func_NtGdiSetDIBitsToDeviceInternal(void);
 extern void func_NtGdiSetPixel(void);
 extern void func_NtGdiTransformPoints(void);
+extern void func_NtUserBuildHwndList(void);
 //extern void func_NtUserCallHwnd(void);
 //extern void func_NtUserCallHwndLock(void);
 //extern void func_NtUserCallHwndOpt(void);
@@ -116,6 +117,7 @@ const struct test winetest_testlist[] =
     { "NtGdiTransformPoints", func_NtGdiTransformPoints },
 
     /* ntuser */
+    { "NtUserBuildHwndList", func_NtUserBuildHwndList },
     //{ "NtUserCallHwnd", func_NtUserCallHwnd },
     //{ "NtUserCallHwndLock", func_NtUserCallHwndLock },
     //{ "NtUserCallHwndOpt", func_NtUserCallHwndOpt },
