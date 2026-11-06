@@ -123,34 +123,6 @@ EngFindResource(
 }
 
 /*
- * @unimplemented
- */
-BOOL
-APIENTRY
-EngGetFileChangeTime(
-    IN  HANDLE h,
-    OUT LARGE_INTEGER *pChangeTime)
-{
-    // www.osr.com/ddk/graphics/gdifncs_1i1z.htm
-    UNIMPLEMENTED;
-    return FALSE;
-}
-
-/*
- * @unimplemented
- */
-BOOL
-APIENTRY
-EngGetFilePath(
-    IN  HANDLE h,
-    OUT WCHAR (*pDest)[MAX_PATH + 1])
-{
-    // www.osr.com/ddk/graphics/gdifncs_5g2v.htm
-    UNIMPLEMENTED;
-    return FALSE;
-}
-
-/*
  * @implemented
  */
 BOOL
@@ -503,18 +475,6 @@ BRUSHOBJ_hGetColorTransform(
 }
 
 /*
- * @unimplemented
- */
-BOOL
-APIENTRY
-EngDeleteFile(
-    IN LPWSTR FileName)
-{
-    UNIMPLEMENTED;
-    return FALSE;
-}
-
-/*
  * @implemented
  */
 BOOL
@@ -575,19 +535,6 @@ EngPlgBlt(
 {
     UNIMPLEMENTED;
     return FALSE;
-}
-
-/*
- * @unimplemented
- */
-LARGE_INTEGER
-APIENTRY
-EngQueryFileTimeStamp(IN LPWSTR FileName)
-{
-    LARGE_INTEGER FileTime;
-    FileTime.QuadPart = 0;
-    UNIMPLEMENTED;
-    return FileTime;
 }
 
 /*
