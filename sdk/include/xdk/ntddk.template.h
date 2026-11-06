@@ -123,6 +123,7 @@ $include(arm/ke.h)
 $include(arm/mm.h)
 #elif defined(_M_ARM64)
 $include(arm64/ke.h)
+$include(arm64/mm.h)
 #else
 #error Unknown Architecture
 #endif
