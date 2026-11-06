@@ -136,19 +136,11 @@ if(NOT CMAKE_CROSSCOMPILING)
     set(TOOLS_FOLDER ${CMAKE_CURRENT_BINARY_DIR})
     add_definitions(-DTARGET_${ARCH})
 
+    # Note: do not define any target architecture macro here (_X86_, __i386__, ...).
+    # These tools are compiled for the host, and such a macro contradicting the host
+    # compiler makes the Windows SDK headers pick the wrong architecture.
     if(MSVC)
-        if(ARCH STREQUAL "i386")
-            add_definitions(/D_X86_ /D__i386__ /DWIN32 /D_WINDOWS)
-        elseif(ARCH STREQUAL "amd64")
-            add_definitions(-D_AMD64_ -D__x86_64__ /DWIN32 -D_WINDOWS)
-        elseif(ARCH STREQUAL "arm")
-            add_definitions(-D__arm__)
-        elseif(ARCH STREQUAL "arm64")
-            add_definitions(-D__aarch64__)
-        endif()
-        if(MSVC_VERSION GREATER 1699)
-            add_definitions(/D_ALLOW_KEYWORD_MACROS)
-        endif()
+        add_definitions(/D_ALLOW_KEYWORD_MACROS)
     endif()
     add_subdirectory(sdk/include/host)
 

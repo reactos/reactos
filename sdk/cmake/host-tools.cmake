@@ -32,51 +32,79 @@ function(setup_host_tools)
         set(HOST_MODULE_SUFFIX ".so")
     endif()
 
-    # Normalize to the same format as our own ARCH, and add one for the VC shell
-    string(TOLOWER "${CMAKE_HOST_SYSTEM_PROCESSOR}" lowercase_CMAKE_HOST_SYSTEM_PROCESSOR)
-    if(lowercase_CMAKE_HOST_SYSTEM_PROCESSOR STREQUAL x86 OR lowercase_CMAKE_HOST_SYSTEM_PROCESSOR MATCHES "^i[3456]86$")
-        set(HOST_ARCH i386)
-        set(VCVARSALL_ARCH x86)
-    elseif(lowercase_CMAKE_HOST_SYSTEM_PROCESSOR STREQUAL x86_64 OR lowercase_CMAKE_HOST_SYSTEM_PROCESSOR STREQUAL amd64)
-        set(HOST_ARCH amd64)
-        set(VCVARSALL_ARCH amd64_x86) # x64 host-tools are not happy compiling for x86...
-    elseif(lowercase_CMAKE_HOST_SYSTEM_PROCESSOR STREQUAL arm)
-        set(HOST_ARCH arm)
-        set(VCVARSALL_ARCH arm)
-    # 'aarch64' is used in GNU tools instead of 'arm64'
-    elseif(lowercase_CMAKE_HOST_SYSTEM_PROCESSOR STREQUAL arm64 OR lowercase_CMAKE_HOST_SYSTEM_PROCESSOR STREQUAL aarch64)
-        set(HOST_ARCH arm64)
-        set(VCVARSALL_ARCH arm64)
-    else()
-        message(FATAL_ERROR "Unknown host architecture: ${lowercase_CMAKE_HOST_SYSTEM_PROCESSOR}")
-    endif()
-
-    if(ARCH STREQUAL HOST_ARCH)
-        set(HOST_TOOLS_CMAKE_COMMAND "${CMAKE_COMMAND}")
-        message("Not cross-compiling, no special host-tools cmake command")
-    elseif(MSVC)
-        message("Compiling on ${HOST_ARCH} for ${ARCH} (MSVC)")
-        set(HOST_TOOLS_CMAKE_COMMAND "${REACTOS_BINARY_DIR}/host-tools/cmake_shim.cmd")
-        if(MSVC_VERSION EQUAL 1900)
-            file(WRITE ${HOST_TOOLS_CMAKE_COMMAND}
-                "set VSCMD_SKIP_SENDTELEMETRY=1\n"
-                "@call \"$ENV{VCINSTALLDIR}\\vcvarsall.bat\" ${VCVARSALL_ARCH}\n"
-                "\"${CMAKE_COMMAND}\" %*"
-            )
-        elseif(MSVC_VERSION GREATER_EQUAL 1910)
-            # 2017 and 2019 use the same folder structure
-            file(WRITE ${HOST_TOOLS_CMAKE_COMMAND}
-                "@set VSCMD_ARG_no_logo=1\n"
-                "@call \"$ENV{VCINSTALLDIR}\\Auxiliary\\Build\\vcvarsall.bat\" /clean_env\n"
-                "@call \"$ENV{VCINSTALLDIR}\\Auxiliary\\Build\\vcvarsall.bat\" ${VCVARSALL_ARCH}\n"
-                "\"${CMAKE_COMMAND}\" %*"
-            )
+    # Host tools have to run on this machine. The compiler in our environment targets
+    # ARCH, which is fine whenever the host can execute ARCH binaries: an x86 or amd64
+    # host runs i386 tools, an arm64 host runs all of them. Only ARM targets built on
+    # an x86/amd64 host need a compiler pointed back at the host architecture.
+    string(TOLOWER "${CMAKE_HOST_SYSTEM_PROCESSOR}" HOST_CPU)
+    if(MSVC AND (ARCH MATCHES "^arm") AND NOT (HOST_CPU MATCHES "^(arm|arm64|aarch64)$"))
+        if(HOST_CPU MATCHES "^(amd64|x86_64)$")
+            set(VCVARSALL_ARCH amd64)
         else()
-            message(FATAL "Unable to figure out vcvarsall path")
+            set(VCVARSALL_ARCH x86)
         endif()
+
+        # Probe the known locations, instead of mapping each compiler version to a path.
+        # VCINSTALLDIR ends with a path separator, so normalize it first.
+        file(TO_CMAKE_PATH "$ENV{VCINSTALLDIR}" VCDIR)
+        string(REGEX REPLACE "/+$" "" VCDIR "${VCDIR}")
+        set(VCVARSALL "")
+        foreach(CANDIDATE
+                "${VCDIR}/Auxiliary/Build/vcvarsall.bat"  # VS 2017 and later
+                "${VCDIR}/vcvarsall.bat")                 # VS 2015
+            if(EXISTS "${CANDIDATE}")
+                set(VCVARSALL "${CANDIDATE}")
+                break()
+            endif()
+        endforeach()
+        if(NOT VCVARSALL)
+            message(FATAL_ERROR "Could not find vcvarsall.bat, which is needed to build the host tools "
+                                "for ${ARCH}. Please configure from a Visual Studio command prompt.")
+        endif()
+
+        # Reuse the Windows SDK and toolset of this build, instead of whatever happens to
+        # be the newest installed one. WindowsSDKVersion has a trailing backslash.
+        string(REGEX REPLACE "\\\\$" "" WINDOWS_SDK_VERSION "$ENV{WindowsSDKVersion}")
+        set(VCVARSALL_ARGS "${VCVARSALL_ARCH} ${WINDOWS_SDK_VERSION}")
+        if(DEFINED ENV{VCToolsVersion})
+            # Only VS 2017 and later can pin the toolset
+            string(APPEND VCVARSALL_ARGS " -vcvars_ver=$ENV{VCToolsVersion}")
+        endif()
+
+        message("Compiling on ${HOST_CPU} for ${ARCH}, host tools use: vcvarsall ${VCVARSALL_ARGS}")
+
+        # vcvarsall takes over a second and the shim runs on every build, so run it once
+        # here and bake the variables the compiler and linker need into the shim.
+        file(TO_NATIVE_PATH "${VCVARSALL}" VCVARSALL)
+        set(VCVARS_CAPTURE "${REACTOS_BINARY_DIR}/host-tools/vcvars_capture.cmd")
+        file(WRITE ${VCVARS_CAPTURE}
+            "@set VSCMD_ARG_no_logo=1\n"
+            "@set VSCMD_SKIP_SENDTELEMETRY=1\n"
+            "@call \"${VCVARSALL}\" /clean_env\n"
+            "@call \"${VCVARSALL}\" ${VCVARSALL_ARGS} || exit /b 1\n"
+            "@set\n"
+        )
+        file(TO_NATIVE_PATH "${VCVARS_CAPTURE}" VCVARS_CAPTURE)
+        execute_process(COMMAND cmd /c ${VCVARS_CAPTURE}
+            OUTPUT_VARIABLE VCVARS_ENV
+            RESULT_VARIABLE VCVARS_RESULT)
+        if(NOT VCVARS_RESULT EQUAL 0)
+            message(FATAL_ERROR "vcvarsall ${VCVARSALL_ARGS} failed:\n${VCVARS_ENV}")
+        endif()
+
+        set(SHIM_ENV "")
+        foreach(VAR INCLUDE LIB LIBPATH "Path|PATH")
+            if(NOT "\n${VCVARS_ENV}" MATCHES "\n(${VAR})=([^\r\n]*)")
+                message(FATAL_ERROR "vcvarsall ${VCVARSALL_ARGS} did not set ${VAR}")
+            endif()
+            string(REPLACE "%" "%%" VALUE "${CMAKE_MATCH_2}")
+            string(APPEND SHIM_ENV "@set \"${CMAKE_MATCH_1}=${VALUE}\"\n")
+        endforeach()
+
+        set(HOST_TOOLS_CMAKE_COMMAND "${REACTOS_BINARY_DIR}/host-tools/cmake_shim.cmd")
+        file(WRITE ${HOST_TOOLS_CMAKE_COMMAND} "${SHIM_ENV}" "\"${CMAKE_COMMAND}\" %*\n")
     else()
         set(HOST_TOOLS_CMAKE_COMMAND "${CMAKE_COMMAND}")
-        message("Cross-compiling on non-msvc, no special host-tools cmake command")
     endif()
 
     # CMake might choose clang if it finds it in the PATH. Always prefer cl for host tools
@@ -109,7 +137,6 @@ function(setup_host_tools)
             -DCMAKE_INSTALL_PREFIX=${REACTOS_BINARY_DIR}/host-tools
             -DTOOLS_FOLDER=${REACTOS_BINARY_DIR}/host-tools/bin
             -DTARGET_COMPILER_ID=${CMAKE_C_COMPILER_ID}
-            -DTARGET_BUILD_TYPE=${CMAKE_BUILD_TYPE}
             -DCMAKE_BUILD_TYPE=${HOST_BUILD_TYPE}
             ${CMAKE_HOST_TOOLS_EXTRA_ARGS}
         BUILD_ALWAYS TRUE
