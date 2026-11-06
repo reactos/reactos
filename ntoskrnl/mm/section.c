@@ -2217,6 +2217,11 @@ MmpDeleteSection(PVOID ObjectBody)
 
         KIRQL OldIrql = MiAcquirePfnLock();
         Segment->SectionCount--;
+        if (Section->u.Flags.UserReference)
+        {
+            ASSERT(Segment->UserSectionCount > 0);
+            Segment->UserSectionCount--;
+        }
 
         /* MmDereferenceSegmentWithLock releases PFN lock */
         MmDereferenceSegmentWithLock(Segment, OldIrql);
@@ -2407,6 +2412,10 @@ MmCreateDataFileSection(PSECTION *SectionObject,
     if (AllocationAttributes & SEC_NO_CHANGE)
         Section->u.Flags.NoChange = 1;
 
+    /* Sections created from a file object only are owned by Cc */
+    if (GotFileHandle)
+        Section->u.Flags.UserReference = 1;
+
     if (!GotFileHandle)
     {
         ASSERT(UMaximumSize != NULL);
@@ -2444,6 +2453,13 @@ MmCreateDataFileSection(PSECTION *SectionObject,
 
         if (MaximumSize.QuadPart > FileSize.QuadPart)
         {
+            /* Only writable sections are allowed to extend the file */
+            if (!(SectionPageProtection & (PAGE_READWRITE | PAGE_EXECUTE_READWRITE)))
+            {
+                ObDereferenceObject(Section);
+                return STATUS_SECTION_TOO_BIG;
+            }
+
             Status = IoSetInformation(FileObject,
                                       FileEndOfFileInformation,
                                       sizeof(LARGE_INTEGER),
@@ -2507,6 +2523,7 @@ grab_segment:
         RtlZeroMemory(Segment, sizeof(*Segment));
         Segment->SegFlags = MM_DATAFILE_SEGMENT | MM_SEGMENT_INCREATE;
         Segment->RefCount = 1;
+        Segment->UserSectionCount = Section->u.Flags.UserReference;
 
         /* Acquire lock again */
         OldIrql = MiAcquirePfnLock();
@@ -2563,6 +2580,8 @@ grab_segment:
         Section->Segment = (PSEGMENT)Segment;
         InterlockedIncrement64(&Segment->RefCount);
         InterlockedIncrementUL(&Segment->SectionCount);
+        if (Section->u.Flags.UserReference)
+            Segment->UserSectionCount++;
 
         MiReleasePfnLock(OldIrql);
 
@@ -3408,7 +3427,8 @@ MmMapViewOfSegment(
     SIZE_T ViewSize,
     ULONG Protect,
     LONGLONG ViewOffset,
-    ULONG AllocationType)
+    ULONG AllocationType,
+    BOOLEAN UserReference)
 {
     PMEMORY_AREA MArea;
     NTSTATUS Status;
@@ -3466,6 +3486,12 @@ MmMapViewOfSegment(
 
     MArea->SectionData.Segment = Segment;
     MArea->SectionData.ViewOffset = ViewOffset;
+    if (UserReference)
+    {
+        /* Keeps the file from being deleted or truncated, see MmFlushImageSection and MmCanFileBeTruncated */
+        MArea->SectionData.UserReference = TRUE;
+        InterlockedIncrement(&Segment->UserMapCount);
+    }
     if (AsImage)
     {
         MArea->VadNode.u.VadFlags.VadType = VadImageMap;
@@ -3596,6 +3622,12 @@ MmUnmapViewOfSegment(PMMSUPPORT AddressSpace,
     MemoryArea->DeleteInProgress = TRUE;
 
     MmLockSectionSegment(Segment);
+
+    if (MemoryArea->SectionData.UserReference)
+    {
+        ASSERT(Segment->UserMapCount > 0);
+        InterlockedDecrement(&Segment->UserMapCount);
+    }
 
     RegionListHead = &MemoryArea->SectionData.RegionListHead;
     while (!IsListEmpty(RegionListHead))
@@ -4164,7 +4196,8 @@ MmMapViewOfSection(
                                         SectionSegments[i].Length.QuadPart,
                                         SectionSegments[i].Protection,
                                         0,
-                                        0);
+                                        0,
+                                        FALSE);
             MmUnlockSectionSegment(&SectionSegments[i]);
             if (!NT_SUCCESS(Status))
             {
@@ -4279,7 +4312,8 @@ MmMapViewOfSection(
                                     *ViewSize,
                                     Protect,
                                     ViewOffset,
-                                    AllocationType & (MEM_TOP_DOWN|SEC_NO_CHANGE));
+                                    AllocationType & (MEM_TOP_DOWN|SEC_NO_CHANGE),
+                                    Section->u.Flags.UserReference);
         MmUnlockSectionSegment(Segment);
         if (!NT_SUCCESS(Status))
         {
@@ -4331,8 +4365,9 @@ MmCanFileBeTruncated(
     }
 
     MmLockSectionSegment(Segment);
-    if ((Segment->SectionCount == 0) ||
-        ((Segment->SectionCount == 1) && (SectionObjectPointer->SharedCacheMap != NULL)))
+    if ((Segment->UserSectionCount == 0) && (Segment->UserMapCount == 0) &&
+        ((Segment->SectionCount == 0) ||
+         ((Segment->SectionCount == 1) && (SectionObjectPointer->SharedCacheMap != NULL))))
     {
         /* If the cache is the only one holding a reference to the segment, then it's fine to resize */
         Ret = TRUE;
@@ -4417,6 +4452,19 @@ MmFlushImageSection (IN PSECTION_OBJECT_POINTERS SectionObjectPointer,
     {
         case MmFlushForDelete:
         {
+            KIRQL OldIrql = MiAcquirePfnLock();
+            PMM_SECTION_SEGMENT Segment = SectionObjectPointer->DataSectionObject;
+
+            /* Data sections and views not owned by Cc keep the file alive */
+            if (Segment && (Segment->UserSectionCount || Segment->UserMapCount))
+            {
+                MiReleasePfnLock(OldIrql);
+                DPRINT("Denying. There are data sections or mappings open\n");
+                return FALSE;
+            }
+
+            MiReleasePfnLock(OldIrql);
+
             /*
              * FIXME: Check for outstanding write probes on Data section.
              * How do we do that ?
@@ -4600,7 +4648,8 @@ MmMapViewInSystemSpaceEx (
                                 *ViewSize,
                                 PAGE_READWRITE,
                                 SectionOffset->QuadPart,
-                                SEC_RESERVE);
+                                SEC_RESERVE,
+                                Section->u.Flags.UserReference);
 
     MmUnlockSectionSegment(Segment);
     MmUnlockAddressSpace(AddressSpace);
@@ -4744,7 +4793,7 @@ MmCreateSection (OUT PVOID  * Section,
         {
             /* Reference the file handle to get the object */
             Status = ObReferenceObjectByHandle(FileHandle,
-                                               MmMakeFileAccess[Protection],
+                                               MmMakeFileAccess[Protection & MM_PROTECT_ACCESS],
                                                IoFileObjectType,
                                                ExGetPreviousMode(),
                                                (PVOID*)&FileObject,
