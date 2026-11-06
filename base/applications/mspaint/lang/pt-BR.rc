@@ -39,7 +39,7 @@ BEGIN
     POPUP "&Editar"
     BEGIN
         MENUITEM "Desfa&zer\tCtrl+Z", IDM_EDITUNDO
-        MENUITEM "R&epetir\tCtrl+Y", IDM_EDITREDO
+        MENUITEM "R&efazer\tCtrl+Y", IDM_EDITREDO
         MENUITEM SEPARATOR
         MENUITEM "&Recortar\tCtrl+X", IDM_EDITCUT
         MENUITEM "&Copiar\tCtrl+C", IDM_EDITCOPY
