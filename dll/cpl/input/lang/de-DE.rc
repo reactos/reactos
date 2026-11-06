@@ -226,6 +226,7 @@ BEGIN
     IDS_MONGOLIAN_CYRILLIC_LAYOUT "Mongolisches Kyrillisch"
     IDS_NORWEGIAN_LAYOUT "Norwegisch"
     IDS_ORIYA_LAYOUT "Oriya"
+    IDS_PERSIAN_STANRDARD_LAYOUT "Persian (Standard)"
     IDS_POLISH_214_LAYOUT "Polnisch (214)"
     IDS_POLISH_LAYOUT "Polnisch (Programmierer)"
     IDS_PORTUGUESE_LAYOUT "Portugiesisch"

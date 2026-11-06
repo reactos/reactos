@@ -273,30 +273,30 @@ FORCEINLINE
 VOID
 READ_REGISTER_BUFFER_UCHAR(
   IN PUCHAR Register,
-  IN PUCHAR Buffer,
+  _Out_writes_all_(Count) PUCHAR Buffer,
   IN ULONG Count)
 {
-  __movsb(Register, Buffer, Count);
+  __movsb(Buffer, Register, Count);
 }
 
 FORCEINLINE
 VOID
 READ_REGISTER_BUFFER_ULONG(
   IN PULONG Register,
-  IN PULONG Buffer,
+  _Out_writes_all_(Count) PULONG Buffer,
   IN ULONG Count)
 {
-  __movsd(Register, Buffer, Count);
+  __movsd(Buffer, Register, Count);
 }
 
 FORCEINLINE
 VOID
 READ_REGISTER_BUFFER_USHORT(
   IN PUSHORT Register,
-  IN PUSHORT Buffer,
+  _Out_writes_all_(Count) PUSHORT Buffer,
   IN ULONG Count)
 {
-  __movsw(Register, Buffer, Count);
+  __movsw(Buffer, Register, Count);
 }
 
 FORCEINLINE
@@ -311,6 +311,14 @@ FORCEINLINE
 ULONG
 READ_REGISTER_ULONG(
   IN volatile ULONG *Register)
+{
+  return *Register;
+}
+
+FORCEINLINE
+ULONG64
+READ_REGISTER_ULONG64(
+  IN volatile ULONG64 *Register)
 {
   return *Register;
 }
@@ -432,6 +440,17 @@ VOID
 WRITE_REGISTER_ULONG(
   IN volatile ULONG *Register,
   IN ULONG Value)
+{
+  LONG Synch;
+  *Register = Value;
+  InterlockedOr(&Synch, 1);
+}
+
+FORCEINLINE
+VOID
+WRITE_REGISTER_ULONG64(
+  IN volatile ULONG64 *Register,
+  IN ULONG64 Value)
 {
   LONG Synch;
   *Register = Value;

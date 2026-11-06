@@ -220,6 +220,7 @@ BEGIN
     IDS_MONGOLIAN_CYRILLIC_LAYOUT "Mongolian Cyrillic"
     IDS_NORWEGIAN_LAYOUT "Nórske"
     IDS_ORIYA_LAYOUT "Oriya"
+    IDS_PERSIAN_STANRDARD_LAYOUT "Persian (Standard)"
     IDS_POLISH_214_LAYOUT "Poľské (214)"
     IDS_POLISH_LAYOUT "Poľské (programátorské)"
     IDS_PORTUGUESE_LAYOUT "Portugalské"
