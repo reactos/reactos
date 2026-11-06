@@ -154,8 +154,9 @@ static UINT64 get_arg( int nr, struct format_message_args *args_data, BOOL is64 
                                                      : va_arg( *args_data->list, ULONG_PTR );
     return args_data->arglist[nr - 1];
 }
+
 #ifdef __REACTOS__
-static int __cdecl _snwprintf_s(
+int __cdecl _snwprintf_s(
     WCHAR *buffer, size_t size, size_t count,
     const WCHAR *format, ...)
 {
