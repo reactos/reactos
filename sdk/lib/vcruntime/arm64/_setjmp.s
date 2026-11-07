@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS vcruntime library
  * LICENSE:     MIT (https://spdx.org/licenses/MIT)
  * PURPOSE:     Implementation of _setjmp for ARM64
- * COPYRIGHT:   Copyright Timo Kreuzer <timo.kreuzer@reactos.org>
+ * COPYRIGHT:   Copyright 2025 Timo Kreuzer <timo.kreuzer@reactos.org>
  *              Copyright 2026 Justin Miller <justin.miller@reactos.org>
  */
 
