@@ -8,6 +8,6 @@
 #include <kxarm64.h>
 
     /* These are the same */
-    IMPORT |__CxxFrameHandler3|, WEAK |__CxxFrameHandler|
+    IMPORT __CxxFrameHandler3, WEAK __CxxFrameHandler
 
     END
