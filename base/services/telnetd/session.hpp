@@ -72,6 +72,8 @@ private:
     std::vector<CHAR> m_reader_buffer{};
 
     ITelnetSessionHandler* m_handler{};
+
+    static CRITICAL_SECTION s_cs_console;
 };
 
 DWORD WINAPI TelnetSession::reader_thread_func(LPVOID self)

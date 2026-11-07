@@ -7,6 +7,7 @@
 
 #include "session.hpp"
 
+#include <wincon.h>
 #include <winnls.h>
 #include <userenv.h>
 
@@ -15,13 +16,18 @@ WINE_DEFAULT_DEBUG_CHANNEL(telnetd);
 
 static DWORD s_session_counter = 0;
 
+CRITICAL_SECTION TelnetSession::s_cs_console{};
+
 TelnetSession::TelnetSession(ITelnetSessionHandler* handler): 
     m_handler(handler)
 {
+    InitializeCriticalSection(&s_cs_console);
 }
 
 TelnetSession::~TelnetSession()
 {
+    DeleteCriticalSection(&s_cs_console);
+
     if (m_reader_stop_event) {
         SetEvent(m_reader_stop_event);
     }
@@ -78,17 +84,35 @@ bool TelnetSession::connect(const std::string& username, HANDLE token)
 
 void TelnetSession::on_break()
 {
-
+    // ReactOS CTRL_BREAK_EVENT seems to kill cmd too.
+    // So same as CTRL_C_EVENT it is.
+    on_sigint();
 }
 
 void TelnetSession::on_sigint()
 {
+    EnterCriticalSection(&s_cs_console);
 
+    if (!AttachConsole(GetProcessId(m_cmd_process_handle))) {
+        ERR("AttachConsole failed with: %lu", GetLastError());
+        LeaveCriticalSection(&s_cs_console);
+        return;
+    }
+
+    if (!GenerateConsoleCtrlEvent(CTRL_C_EVENT, 0)) {
+        ERR("GenerateConsoleCtrlEvent(CTRL_C_EVENT) failed with: %lu", GetLastError());
+    }
+
+    if (!FreeConsole()) {
+        ERR("FreeConsole failed with: %lu", GetLastError());
+    }
+
+    LeaveCriticalSection(&s_cs_console);
 }
 
 void TelnetSession::on_interrupt_process()
 {
-
+    on_sigint();
 }
 
 void TelnetSession::on_ttype(const char* ttype)
