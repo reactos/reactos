@@ -17,6 +17,7 @@ list(APPEND UEFILDR_ARC_SOURCE
     arch/uefi/uefidisk.c
     arch/uefi/uefihw.c
     arch/uefi/uefimem.c
+    arch/uefi/uefiquirks.c
     arch/uefi/uefisetup.c
     arch/uefi/uefiutil.c
     arch/uefi/uefivid.c
