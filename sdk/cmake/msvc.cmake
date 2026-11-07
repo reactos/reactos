@@ -95,6 +95,11 @@ if(ARCH STREQUAL "arm64" AND MSVC_VERSION GREATER_EQUAL 1944)
     add_compile_options("/forceInterlockedFunctions-")
 endif()
 
+# Off Windows there is no armasm64, ARM64 asm goes through the GAS side of kxarm64.h
+if(ARCH STREQUAL "arm64" AND NOT CMAKE_HOST_WIN32)
+    set(MSVC_ARM64_GAS TRUE)
+endif()
+
 # Generate Warnings Level 3
 add_compile_options(/W3)
 
