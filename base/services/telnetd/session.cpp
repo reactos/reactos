@@ -16,6 +16,11 @@ WINE_DEFAULT_DEBUG_CHANNEL(telnetd);
 
 static DWORD s_session_counter = 0;
 
+static BOOL WINAPI ctrl_handler(DWORD type)
+{
+    return ((type == CTRL_C_EVENT) || (type == CTRL_BREAK_EVENT)) ? TRUE : FALSE;
+}
+
 CRITICAL_SECTION TelnetSession::s_cs_console{};
 
 TelnetSession::TelnetSession(ITelnetSessionHandler* handler): 
@@ -56,7 +61,6 @@ TelnetSession::~TelnetSession()
         CloseHandle(m_pipe_std_out_err);
     }
 
-
     if (m_token) {
         if (m_user_profile_handle != INVALID_HANDLE_VALUE) {
             UnloadUserProfile(m_token, m_user_profile_handle);
@@ -90,6 +94,10 @@ void TelnetSession::on_sigint()
         ERR("AttachConsole failed with: %lu", GetLastError());
         LeaveCriticalSection(&s_cs_console);
         return;
+    }
+
+    if (!SetConsoleCtrlHandler(ctrl_handler, TRUE)) {
+        ERR("SetConsoleCtrlHandler failed with: %lu", GetLastError());
     }
 
     if (!GenerateConsoleCtrlEvent(CTRL_C_EVENT, 0)) {
