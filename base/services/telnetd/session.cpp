@@ -95,15 +95,14 @@ void TelnetSession::on_ttype(const char* ttype)
 {
     // [IATODO]: Need ConPTY
 
-    (void)ttype;
+    TRACE("TTYPE %s\n", ttype);
 }
 
 void TelnetSession::on_window_size(uint16_t w, uint16_t h)
 {
     // [IATODO]: Need ConPTY
 
-    (void)w;
-    (void)h;
+    TRACE("NAWS %u,%u\n", w, h);
 }
 
 void TelnetSession::on_text_line(const std::string& line)
@@ -111,7 +110,7 @@ void TelnetSession::on_text_line(const std::string& line)
     DWORD bytes_written{};
 
     const auto t = line + "\r\n";
-    if (!WriteFile(m_pipe_stdin, t.c_str(), t.size(), &bytes_written, nullptr)) {
+    if (!WriteFile(m_pipe_stdin, t.c_str(), (DWORD)t.size(), &bytes_written, nullptr)) {
         ERR("WriteFile failed with: %lu\n", GetLastError());
     }
 }
@@ -124,7 +123,7 @@ void TelnetSession::discard_output()
 bool TelnetSession::load_user_data(const std::string& username)
 {
     m_username.resize(MultiByteToWideChar(CP_UTF8, 0, username.c_str(), -1, nullptr, 0) - 1, L'\0');
-    MultiByteToWideChar(CP_UTF8, 0, username.c_str(), -1, &m_username[0], m_username.size() + 1);
+    MultiByteToWideChar(CP_UTF8, 0, username.c_str(), -1, &m_username[0], (int)(m_username.size() + 1));
 
     PROFILEINFOW profile_info{};
     profile_info.lpUserName = &m_username[0];
@@ -291,7 +290,7 @@ DWORD TelnetSession::read_loop()
 
     while (true) {
         DWORD read_size{};
-        if (!ReadFile(m_pipe_std_out_err, m_reader_buffer.data(), m_reader_buffer.size(), &read_size, &m_reader_overlapped)) {
+        if (!ReadFile(m_pipe_std_out_err, m_reader_buffer.data(), (DWORD)m_reader_buffer.size(), &read_size, &m_reader_overlapped)) {
             const auto ec = GetLastError();
             if (ec == ERROR_BROKEN_PIPE) {
                 m_handler->close_session();

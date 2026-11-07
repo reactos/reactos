@@ -157,13 +157,13 @@ void TelnetSessionHandler::flush_echo_buffer()
 {
     if (m_echo_buffer.empty())
         return;
-    send_text(m_echo_buffer.data(), m_echo_buffer.size());
+    send_text(m_echo_buffer.data(), (int)m_echo_buffer.size());
     m_echo_buffer.clear();
 }
 
 void TelnetSessionHandler::send_string(const char* str)
 {
-    send_text((const uint8_t*)str, strlen(str));
+    send_text((const uint8_t*)str, (int)strlen(str));
 }
 
 void TelnetSessionHandler::send_option_command(ECommand verb, EOption option)
