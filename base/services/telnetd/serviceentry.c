@@ -19,8 +19,8 @@
 
 #include "telnetd.hpp"
 
-#include <stdarg.h>
 #include <winbase.h>
+#include <wincon.h>
 #include <winsvc.h>
 #include <wine/debug.h>
 
@@ -62,6 +62,11 @@ static DWORD WINAPI service_handler( DWORD ctrl, DWORD event_type, LPVOID event_
     }
 }
 
+static BOOL WINAPI ctrl_handler(DWORD type)
+{
+    return ((type == CTRL_C_EVENT) || (type == CTRL_BREAK_EVENT)) ? TRUE : FALSE;
+}
+
 static void WINAPI serv_main(DWORD argc, LPWSTR *argv)
 {
     SERVICE_STATUS status;
@@ -74,6 +79,8 @@ static void WINAPI serv_main(DWORD argc, LPWSTR *argv)
     (void)argv;
 
     WINE_TRACE( "starting service\n" );
+
+    SetConsoleCtrlHandler(ctrl_handler, TRUE);
 
     stop_event = CreateEventW( NULL, TRUE, FALSE, NULL );
     if (!stop_event) {
