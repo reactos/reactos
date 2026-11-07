@@ -426,6 +426,19 @@ EngLoadModuleEx(
     pFileView->pvViewFD = NULL;
     pFileView->cjView = 0;
 
+    /* Store the path for font files */
+    if (fl & FVF_FONTFILE)
+    {
+        PFONTFILEVIEW pffv = (PFONTFILEVIEW)pFileView;
+        SIZE_T cbPath = (wcslen(pwsz) + 1) * sizeof(WCHAR);
+
+        pffv->pwszPath = EngAllocMem(0, cbPath, 'htaP');
+        if (pffv->pwszPath)
+        {
+            RtlCopyMemory(pffv->pwszPath, pwsz, cbPath);
+        }
+    }
+
     return pFileView;
 }
 
@@ -483,18 +496,29 @@ EngFreeModule(
     _In_ _Post_invalid_ HANDLE h)
 {
     PFILEVIEW pFileView = (PFILEVIEW)h;
+    PFONTFILEVIEW pffv;
     NTSTATUS Status;
 
     /* FIXME: Use system space because ARM3 doesn't support executable sections yet */
-    Status = MmUnmapViewInSystemSpace(pFileView->pvKView);
-    if (!NT_SUCCESS(Status))
+    if (pFileView->pvKView)
     {
-        DPRINT1("MmUnmapViewInSessionSpace failed: 0x%lx\n", Status);
-        ASSERT(FALSE);
+        Status = MmUnmapViewInSystemSpace(pFileView->pvKView);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("MmUnmapViewInSessionSpace failed: 0x%lx\n", Status);
+            ASSERT(FALSE);
+        }
     }
 
     /* Dereference the section */
     ObDereferenceObject(pFileView->pSection);
+
+    /* Free path string if this is a FONTFILEVIEW */
+    pffv = (PFONTFILEVIEW)pFileView;
+    if (pffv->pwszPath)
+    {
+        EngFreeMem(pffv->pwszPath);
+    }
 
     /* Free the file view memory */
     EngFreeMem(pFileView);
@@ -589,4 +613,110 @@ EngUnmapFontFile(
 {
     // www.osr.com/ddk/graphics/gdifncs_09wn.htm
     EngUnmapFontFileFD(iFile);
+}
+
+BOOL
+APIENTRY
+EngGetFileChangeTime(
+    _In_ HANDLE h,
+    _Out_ LARGE_INTEGER *pChangeTime)
+{
+    // https://web.archive.org/web/20040327053007/http://www.osr.com/ddk/graphics/gdifncs_1i1z.htm
+    PFILEVIEW pFileView = (PFILEVIEW)h;
+
+    if (!pFileView || !pChangeTime)
+        return FALSE;
+
+    *pChangeTime = pFileView->LastWriteTime;
+    return TRUE;
+}
+
+BOOL
+APIENTRY
+EngGetFilePath(
+    _In_ HANDLE h,
+    _Out_ WCHAR (*pDest)[MAX_PATH + 1])
+{
+    // https://web.archive.org/web/20040818011546/http://www.osr.com/ddk/graphics/gdifncs_5g2v.htm
+    PFONTFILEVIEW pffv = (PFONTFILEVIEW)h;
+
+    if (!pffv || !pDest || !pffv->pwszPath)
+        return FALSE;
+
+    wcsncpy(*pDest, pffv->pwszPath, MAX_PATH);
+    (*pDest)[MAX_PATH] = L'\0';
+    return TRUE;
+}
+
+LARGE_INTEGER
+APIENTRY
+EngQueryFileTimeStamp(
+    _In_ LPWSTR pwsz)
+{
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    UNICODE_STRING ustrFileName;
+    IO_STATUS_BLOCK IoStatusBlock;
+    FILE_BASIC_INFORMATION FileInformation;
+    HANDLE hFile;
+    NTSTATUS Status;
+    LARGE_INTEGER ZeroTime = {{0}};
+
+    if (!pwsz)
+        return ZeroTime;
+
+    RtlInitUnicodeString(&ustrFileName, pwsz);
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &ustrFileName,
+                               OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
+                               NULL,
+                               NULL);
+
+    Status = ZwCreateFile(&hFile,
+                          FILE_READ_ATTRIBUTES | SYNCHRONIZE,
+                          &ObjectAttributes,
+                          &IoStatusBlock,
+                          NULL,
+                          FILE_ATTRIBUTE_NORMAL,
+                          FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+                          FILE_OPEN,
+                          FILE_NON_DIRECTORY_FILE | FILE_SYNCHRONOUS_IO_NONALERT,
+                          NULL,
+                          0);
+    if (!NT_SUCCESS(Status))
+        return ZeroTime;
+
+    Status = ZwQueryInformationFile(hFile,
+                                    &IoStatusBlock,
+                                    &FileInformation,
+                                    sizeof(FileInformation),
+                                    FileBasicInformation);
+    ZwClose(hFile);
+
+    if (!NT_SUCCESS(Status))
+        return ZeroTime;
+
+    return FileInformation.LastWriteTime;
+}
+
+BOOL
+APIENTRY
+EngDeleteFile(
+    _In_ LPWSTR pwszFileName)
+{
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    UNICODE_STRING ustrFileName;
+    NTSTATUS Status;
+
+    if (!pwszFileName)
+        return FALSE;
+
+    RtlInitUnicodeString(&ustrFileName, pwszFileName);
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &ustrFileName,
+                               OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
+                               NULL,
+                               NULL);
+
+    Status = ZwDeleteFile(&ObjectAttributes);
+    return NT_SUCCESS(Status);
 }
