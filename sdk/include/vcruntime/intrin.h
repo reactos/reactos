@@ -28,6 +28,8 @@
 #include <arm64intr.h>
 #if defined(_MSC_VER) && !defined(__clang__)
 #include <arm64_neon.h>
+#elif defined(_MSC_VER) /* clang-cl */
+#include <arm_neon.h>   /* MSVC code expects the NEON types from intrin.h */
 #endif
 #endif /* _M_ARM64 */
 
