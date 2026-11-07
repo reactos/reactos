@@ -30,14 +30,36 @@ typedef enum _tag_ARM64INTR_BARRIER_TYPE
 void __dmb(unsigned int _Type);
 void __dsb(unsigned int _Type);
 void __isb(unsigned int _Type);
+void __wfe(void);
+void __wfi(void);
+void __sev(void);
+void __sevl(void);
+void __yield(void);
 void __cdecl __prefetch(const void *_Address);
+#if !defined(__clang__)
 void __cdecl __prefetch2(const void *_Address, unsigned char _PrfOp);
+#endif
 
 #pragma intrinsic(__dmb)
 #pragma intrinsic(__dsb)
 #pragma intrinsic(__isb)
+#pragma intrinsic(__wfe)
+#pragma intrinsic(__wfi)
+#pragma intrinsic(__sev)
+#pragma intrinsic(__sevl)
+#pragma intrinsic(__yield)
 #pragma intrinsic(__prefetch)
+#if !defined(__clang__)
 #pragma intrinsic(__prefetch2)
+#endif
+
+#if defined(__clang__)
+/* clang has no _disable or _enable builtin for ARM64, the later prototypes in intrin.h keep this linkage */
+static __inline void _disable(void) { __asm__ __volatile__("msr daifset, #2" : : : "memory"); }
+static __inline void _enable(void) { __asm__ __volatile__("msr daifclr, #2" : : : "memory"); }
+/* nor __prefetch2, the prfm operation is only a hint so a read prefetch stands in */
+#define __prefetch2(_Address, _PrfOp) __builtin_prefetch((_Address), 0, 3)
+#endif
 
 #if defined(_MSC_VER)
 
