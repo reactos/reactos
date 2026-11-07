@@ -16,6 +16,9 @@
     /* armasm64 labels start in the first column and take no colon */
     #define LABEL(Name) Name
 
+    /* C++ decorated names, armasm64 quotes symbols with bars */
+    #define MANGLED(Name) |Name|
+
     GBLA __ComdatAlignment
 __ComdatAlignment SETA 2
 
@@ -107,6 +110,9 @@ $Name
     #define LABEL(Name) Name:
     #define EQU =
 
+    /* C++ decorated names, GAS needs them in quotes */
+    #define MANGLED(Name) #Name
+
 .macro TEXTAREA
     .section .text, "xr"
     .p2align 2
@@ -136,14 +142,15 @@ $Name
 
 /* The armasm [FUNC] attribute has no GAS counterpart */
 .macro EXPORT Name, Attribute
-    .global \Name
+    .global "\Name"
 .endm
 
-/* Only weak aliases need anything, plain imports resolve at link time */
+/* Only weak aliases need anything, plain imports resolve at link time
+ * macro arguments lose their quotes, put them back for decorated names */
 .macro IMPORT Name, Kind, Target
     .ifc \Kind,WEAK
-        .weak \Name
-        .set \Name, \Target
+        .weak "\Name"
+        .set "\Name", "\Target"
     .endif
 .endm
 
