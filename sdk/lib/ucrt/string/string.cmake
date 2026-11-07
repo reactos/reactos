@@ -57,8 +57,9 @@ list(APPEND UCRT_STRING_SOURCES
     string/wmemmove_s.cpp
 )
 
-# Special handling for GCC and Clang
-if(CMAKE_C_COMPILER_ID STREQUAL "GNU" OR CMAKE_C_COMPILER_ID STREQUAL "Clang")
+# Special handling for GCC and Clang, the vector strnlen variants are x86 only
+if((CMAKE_C_COMPILER_ID STREQUAL "GNU" OR CMAKE_C_COMPILER_ID STREQUAL "Clang") AND
+   (ARCH STREQUAL "i386" OR ARCH STREQUAL "amd64"))
     list(APPEND UCRT_STRING_SOURCES
         string/strnlen-avx2.cpp
         string/strnlen-sse2.cpp
@@ -106,7 +107,7 @@ elseif(${ARCH} STREQUAL "amd64")
     )
 else()
     # The Microsoft ARM64 sources are armasm64 only, GCC and Clang use the C versions
-    if(${ARCH} STREQUAL "arm64" AND MSVC)
+    if(${ARCH} STREQUAL "arm64" AND MSVC AND NOT MSVC_ARM64_GAS)
         list(APPEND UCRT_STRING_ASM_SOURCES
             string/arm64/strlen.s
             string/arm64/wcslen.s
@@ -115,6 +116,10 @@ else()
         list(APPEND UCRT_STRING_SOURCES
             string/arm/strlen.c
         )
+        if(MSVC_ARM64_GAS)
+            # The armasm64 strlen.s and wcslen.s also carry strnlen, wcsnlen and wcslen
+            set_source_files_properties(string/strnlen.cpp PROPERTIES COMPILE_DEFINITIONS _UCRT_C_STRNLEN)
+        endif()
     endif()
     list(APPEND UCRT_STRING_SOURCES
         string/memccpy.c
