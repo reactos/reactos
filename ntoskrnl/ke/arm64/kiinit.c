@@ -48,7 +48,6 @@ PVOID KiP0BootStack = &KiP0BootStackData[KERNEL_STACK_SIZE];
 
 KSPIN_LOCK KiFreezeExecutionLock;
 static LDR_DATA_TABLE_ENTRY LdrCoreEntries[3];
-ULONG64 KeFeatureBits;
 
 /* The loader's console print with DEBUGPORT=SCREEN, valid while its identity mapping is */
 ULONG (*FrLdrDbgPrint)(const char *Format, ...);
