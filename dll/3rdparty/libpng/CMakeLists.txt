@@ -5,6 +5,11 @@ add_definitions(
     -D_WINDOWS
     -DPNG_BUILD_DLL)
 
+# the NEON sources are not built, clang turns the optimizations on by itself
+if(ARCH STREQUAL "arm64")
+    add_definitions(-DPNG_ARM_NEON_OPT=0)
+endif()
+
 spec2def(libpng.dll libpng.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
