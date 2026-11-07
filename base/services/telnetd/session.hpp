@@ -35,9 +35,7 @@ public:
 
     bool connect(const std::string& username, HANDLE token);
 
-    void on_break();
     void on_sigint();
-    void on_interrupt_process();
 
     void on_ttype(const char* ttype);
     void on_window_size(uint16_t w, uint16_t h);

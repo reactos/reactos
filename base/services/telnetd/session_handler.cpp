@@ -313,14 +313,17 @@ void TelnetSessionHandler::handle_command(ECommand cmd)
         break;
 
         case ECommand::IP:
-            if (m_active_session)
-                m_active_session->on_interrupt_process();
-            break;
-
         case ECommand::BRK:
-            if (m_active_session)
-                m_active_session->on_break();
-            break;
+        {
+            send_string("^C\r\n");
+            m_text_line_buffer.clear();
+            if (m_active_session) {
+                // ReactOS CTRL_BREAK_EVENT seems to kill cmd too.
+                // So that gets same as CTRL_C_EVENT.
+                m_active_session->on_sigint();
+            }
+        }
+        break;
 
         case ECommand::EC:
             erase_char();

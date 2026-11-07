@@ -82,13 +82,6 @@ bool TelnetSession::connect(const std::string& username, HANDLE token)
     return true;
 }
 
-void TelnetSession::on_break()
-{
-    // ReactOS CTRL_BREAK_EVENT seems to kill cmd too.
-    // So same as CTRL_C_EVENT it is.
-    on_sigint();
-}
-
 void TelnetSession::on_sigint()
 {
     EnterCriticalSection(&s_cs_console);
@@ -108,11 +101,6 @@ void TelnetSession::on_sigint()
     }
 
     LeaveCriticalSection(&s_cs_console);
-}
-
-void TelnetSession::on_interrupt_process()
-{
-    on_sigint();
 }
 
 void TelnetSession::on_ttype(const char* ttype)
