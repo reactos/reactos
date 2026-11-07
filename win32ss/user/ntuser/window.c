@@ -723,6 +723,12 @@ LRESULT co_UserFreeWindow(PWND Window,
       Window->SystemMenu = (HMENU)0;
    }
 
+   if (Window->ExStyle & WS_EX_LAYERED)
+   {
+      /* Free layered window */
+      IntLayeredFreeWindow(Window);
+   }
+
    DceFreeWindowDCE(Window);    /* Always do this to catch orphaned DCs */
 
    IntUnlinkWindow(Window);
@@ -3909,9 +3915,28 @@ co_IntSetWindowLongPtr(HWND hWnd, DWORD Index, LONG_PTR NewValue, BOOL Ansi, ULO
             else
                Style.styleNew &= ~WS_EX_WINDOWEDGE;
 
-            if (!(Window->ExStyle & WS_EX_LAYERED))
+            BOOL bWas = (Window->ExStyle & WS_EX_LAYERED);
+            BOOL bIs  = (Style.styleNew & WS_EX_LAYERED);
+
+            if (bWas && !bIs)
             {
-               SetLayeredStatus(Window, 0);
+               /* Is the window currently composited? */
+               BOOL bComp = IntIsLayeredWindow(Window);
+
+               /* Destroy layered window */
+               IntLayeredFreeWindow(Window);
+
+               if (bComp)
+               {
+                  /* Redraw underlying region of the desktop */
+                  co_UserRedrawWindow(NULL, &Window->rcWindow, NULL,
+                     RDW_INVALIDATE | RDW_ERASENOW | RDW_UPDATENOW | RDW_ALLCHILDREN);
+               }
+            }
+            else if (!bWas)
+            {
+               /* Reset layered state */
+               IntLayeredSetState(Window, FALSE);
             }
 
             Window->ExStyle = (DWORD)Style.styleNew;

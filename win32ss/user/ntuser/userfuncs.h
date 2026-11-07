@@ -162,11 +162,6 @@ BOOL UserDrawSysMenuButton(PWND pWnd, HDC hDC, LPRECT Rect, BOOL Down);
 BOOL UserPaintCaption(PWND pWnd, INT Flags);
 PWND FASTCALL DWP_GetEnabledPopup(PWND pWnd);
 
-/************** LAYERED **************/
-
-BOOL FASTCALL SetLayeredStatus(PWND pWnd, BYTE set);
-BOOL FASTCALL GetLayeredStatus(PWND pWnd);
-
 /************** INPUT CONTEXT **************/
 
 PIMC FASTCALL UserCreateInputContext(_In_ ULONG_PTR dwClientImcData);
