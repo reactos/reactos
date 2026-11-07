@@ -14,7 +14,6 @@
     TEXTAREA
 
     LEAF_ENTRY __chkstk
-    ALTERNATE_ENTRY __alloca_probe
 
     // x17 = page the allocation ends in, page 0 if the size wraps
     mov     x16, sp
