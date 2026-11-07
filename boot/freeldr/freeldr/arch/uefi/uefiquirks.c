@@ -22,6 +22,21 @@ typedef struct _UEFI_MACHINE_QUIRKS
 
 static const UEFI_MACHINE_QUIRKS UefiMachineQuirks[] =
 {
+    /* Surface RT v3.5.500 */
+    { "OemkS EFI Sep 10 2012 23:23:31",     UEFI_QUIRK_SKIP_FIRST_GOP },
+    /* Surface RT v3.12.500 */
+    { "OemkS EFI Dec 5 2012 17:20:58",      UEFI_QUIRK_SKIP_FIRST_GOP },
+    /* Surface RT v3.30.500 */
+    { "OemkS EFI Aug 16 2013 14:55:40",     UEFI_QUIRK_SKIP_FIRST_GOP },
+    /* Surface RT v3.31.500 */
+    { "OemkS EFI Jan 24 2014 18:00:42",     UEFI_QUIRK_SKIP_FIRST_GOP },
+    /* Lenovo Ideapad Yoga 11 v??? */
+    { "Venus EFI Dec  5 2012 23:09:45",     UEFI_QUIRK_SKIP_FIRST_GOP },
+    { "Venus EFI Dec 5 2012 23:09:45",      UEFI_QUIRK_SKIP_FIRST_GOP },
+    /* Asus VivoTab v??? */
+    { "ASUS UEFI Jul 24 2013 18:23:22",     UEFI_QUIRK_SKIP_FIRST_GOP },
+    /* Surface 2 v2.6.500 */
+    { "Covington EFI Aug 26 2013 19:20:25", UEFI_QUIRK_SKIP_FIRST_GOP },
 };
 
 static
