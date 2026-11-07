@@ -17,6 +17,7 @@ _FuncName SETS "_wrapper_func_":CC:"$n"
     TEXTAREA
 
     /* The wrapped object follows the vtable pointer */
+#ifdef _MSC_VER
     MACRO
     DEFINE_WRAPPER_FUNC $n, $off, $x
     LEAF_ENTRY wrapper_func_$n
@@ -26,6 +27,16 @@ _FuncName SETS "_wrapper_func_":CC:"$n"
     br      x16
     LEAF_END wrapper_func_$n
     MEND
+#else
+.macro DEFINE_WRAPPER_FUNC n, off, x
+    LEAF_ENTRY wrapper_func_\n
+    ldr     x0, [x0, #8]
+    ldr     x16, [x0]
+    ldr     x16, [x16, #\x]
+    br      x16
+    LEAF_END wrapper_func_\n
+.endm
+#endif
 #else
 
 #include <asm.inc>
