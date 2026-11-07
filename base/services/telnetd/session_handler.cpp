@@ -411,9 +411,9 @@ bool TelnetSessionHandler::handle_neogitable_option(bool handled_by_us, ECommand
     }
 
     if (handled_by_us && (verb == ECommand::WILL)) {
-        send_option_command(ECommand::DONT, EOption::ECHO);
+        send_option_command(ECommand::DONT, option);
     } else if (!handled_by_us && (verb == ECommand::DO)) {
-        send_option_command(ECommand::WONT, EOption::ECHO);
+        send_option_command(ECommand::WONT, option);
     }
 
     return false;
