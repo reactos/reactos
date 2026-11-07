@@ -26,41 +26,41 @@
     RODATAAREA
 
     ALIGN 8
-    DCQ type_info_rtti
+    dcq type_info_rtti
     EXPORT type_info_vtable
-type_info_vtable
-    DCQ type_info_vector_dtor
+LABEL(type_info_vtable)
+    dcq type_info_vector_dtor
 
-    DCQ exception_rtti
+    dcq exception_rtti
     EXPORT exception_vtable
-    EXPORT |??_7exception@@6B@|
-exception_vtable
-|??_7exception@@6B@|
-    DCQ exception_vector_dtor
-    DCQ exception_what
+LABEL(exception_vtable)
+    EXPORT MANGLED(??_7exception@@6B@)
+LABEL(MANGLED(??_7exception@@6B@))
+    dcq exception_vector_dtor
+    dcq exception_what
 
-    DCQ bad_typeid_rtti
+    dcq bad_typeid_rtti
     EXPORT bad_typeid_vtable
-    EXPORT |??_7bad_typeid@@6B@|
-bad_typeid_vtable
-|??_7bad_typeid@@6B@|
-    DCQ bad_typeid_vector_dtor
-    DCQ exception_what
+LABEL(bad_typeid_vtable)
+    EXPORT MANGLED(??_7bad_typeid@@6B@)
+LABEL(MANGLED(??_7bad_typeid@@6B@))
+    dcq bad_typeid_vector_dtor
+    dcq exception_what
 
-    DCQ bad_cast_rtti
+    dcq bad_cast_rtti
     EXPORT bad_cast_vtable
-    EXPORT |??_7bad_cast@@6B@|
-bad_cast_vtable
-|??_7bad_cast@@6B@|
-    DCQ bad_cast_vector_dtor
-    DCQ exception_what
+LABEL(bad_cast_vtable)
+    EXPORT MANGLED(??_7bad_cast@@6B@)
+LABEL(MANGLED(??_7bad_cast@@6B@))
+    dcq bad_cast_vector_dtor
+    dcq exception_what
 
-    DCQ __non_rtti_object_rtti
+    dcq __non_rtti_object_rtti
     EXPORT __non_rtti_object_vtable
-    EXPORT |??_7__non_rtti_object@@6B@|
-__non_rtti_object_vtable
-|??_7__non_rtti_object@@6B@|
-    DCQ __non_rtti_object_vector_dtor
-    DCQ exception_what
+LABEL(__non_rtti_object_vtable)
+    EXPORT MANGLED(??_7__non_rtti_object@@6B@)
+LABEL(MANGLED(??_7__non_rtti_object@@6B@))
+    dcq __non_rtti_object_vector_dtor
+    dcq exception_what
 
     END
