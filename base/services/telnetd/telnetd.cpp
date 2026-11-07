@@ -17,8 +17,12 @@ static constexpr uint16_t TELNET_PORT = 23;
 
 static Telnetd g_telnetd{};
 
+CRITICAL_SECTION g_cs_console;
+
 extern "C" TELNETD_STATUS kickoff_telnetd(HANDLE* out_worker_thread)
 {
+    InitializeCriticalSection(&g_cs_console);
+
     TELNETD_STATUS status = g_telnetd.initialize();
     if(status != TELNETD_STATUS_OK)
         return status;
@@ -29,6 +33,8 @@ extern "C" TELNETD_STATUS kickoff_telnetd(HANDLE* out_worker_thread)
 extern "C" void shutdown_telnetd(void)
 {
     g_telnetd.terminate();
+
+    DeleteCriticalSection(&g_cs_console);
 }
 
 static TELNETD_STATUS tcp_server_status_to_telnetd(TCPServer::EStatus status)

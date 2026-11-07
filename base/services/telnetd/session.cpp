@@ -14,6 +14,8 @@
 #include <wine/debug.h>
 WINE_DEFAULT_DEBUG_CHANNEL(telnetd);
 
+extern CRITICAL_SECTION g_cs_console;
+
 static DWORD s_session_counter = 0;
 
 static BOOL WINAPI ctrl_handler(DWORD type)
@@ -21,18 +23,13 @@ static BOOL WINAPI ctrl_handler(DWORD type)
     return ((type == CTRL_C_EVENT) || (type == CTRL_BREAK_EVENT)) ? TRUE : FALSE;
 }
 
-CRITICAL_SECTION TelnetSession::s_cs_console{};
-
 TelnetSession::TelnetSession(ITelnetSessionHandler* handler): 
     m_handler(handler)
 {
-    InitializeCriticalSection(&s_cs_console);
 }
 
 TelnetSession::~TelnetSession()
 {
-    DeleteCriticalSection(&s_cs_console);
-
     if (m_reader_stop_event) {
         SetEvent(m_reader_stop_event);
     }
@@ -88,27 +85,30 @@ bool TelnetSession::connect(const std::string& username, HANDLE token)
 
 void TelnetSession::on_sigint()
 {
-    EnterCriticalSection(&s_cs_console);
+    m_handler->send_string("^C\r\n");
+    m_handler->clear_text_line_buffer();
+
+    EnterCriticalSection(&g_cs_console);
 
     if (!AttachConsole(GetProcessId(m_cmd_process_handle))) {
-        ERR("AttachConsole failed with: %lu", GetLastError());
-        LeaveCriticalSection(&s_cs_console);
+        ERR("AttachConsole failed with: %lu\n", GetLastError());
+        LeaveCriticalSection(&g_cs_console);
         return;
     }
 
     if (!SetConsoleCtrlHandler(ctrl_handler, TRUE)) {
-        ERR("SetConsoleCtrlHandler failed with: %lu", GetLastError());
+        ERR("SetConsoleCtrlHandler failed with: %lu\n", GetLastError());
     }
 
     if (!GenerateConsoleCtrlEvent(CTRL_C_EVENT, 0)) {
-        ERR("GenerateConsoleCtrlEvent(CTRL_C_EVENT) failed with: %lu", GetLastError());
+        ERR("GenerateConsoleCtrlEvent(CTRL_C_EVENT) failed with: %lu\n", GetLastError());
     }
 
     if (!FreeConsole()) {
-        ERR("FreeConsole failed with: %lu", GetLastError());
+        ERR("FreeConsole failed with: %lu\n", GetLastError());
     }
 
-    LeaveCriticalSection(&s_cs_console);
+    LeaveCriticalSection(&g_cs_console);
 }
 
 void TelnetSession::on_ttype(const char* ttype)

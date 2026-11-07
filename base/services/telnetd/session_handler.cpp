@@ -197,8 +197,7 @@ void TelnetSessionHandler::handle_text(const uint8_t* data, int length)
             flush_echo_buffer();
 
             handle_text_line(m_text_line_buffer);
-            SecureZeroMemory(&m_text_line_buffer[0], m_text_line_buffer.size());
-            m_text_line_buffer.clear();
+            clear_text_line_buffer();
         } else if ((c >= 32) && (c <= 126)) { // [IATODO]: Only accept ASCII for now
             if (m_text_line_buffer.size() < MAX_TEXT_LINE_LENGTH) {
                 m_text_line_buffer.push_back(c);
@@ -315,8 +314,6 @@ void TelnetSessionHandler::handle_command(ECommand cmd)
         case ECommand::IP:
         case ECommand::BRK:
         {
-            send_string("^C\r\n");
-            m_text_line_buffer.clear();
             if (m_active_session) {
                 // ReactOS CTRL_BREAK_EVENT seems to kill cmd too.
                 // So that gets same as CTRL_C_EVENT.
@@ -560,4 +557,10 @@ void TelnetSessionHandler::erase_line()
     m_text_line_buffer.clear();
 
     m_text_last_byte_was_cr = false;
+}
+
+void TelnetSessionHandler::clear_text_line_buffer()
+{
+    SecureZeroMemory(&m_text_line_buffer[0], m_text_line_buffer.size());
+    m_text_line_buffer.clear();
 }

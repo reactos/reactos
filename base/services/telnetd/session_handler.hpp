@@ -121,6 +121,8 @@ public:
     inline void send_string(const char* str) override;
     void send_text(const uint8_t* data, int length) override;
 
+    void clear_text_line_buffer() override;
+
 private:
     uint8_t m_parser_state_data{};
     std::vector<uint8_t> m_sb_buffer{};

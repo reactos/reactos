@@ -21,6 +21,8 @@ public:
 
     virtual void send_string(const char* str) = 0;
     virtual void send_text(const uint8_t* data, int length) = 0;
+
+    virtual void clear_text_line_buffer() = 0;
 };
 
 class TelnetSession
@@ -70,8 +72,6 @@ private:
     std::vector<CHAR> m_reader_buffer{};
 
     ITelnetSessionHandler* m_handler{};
-
-    static CRITICAL_SECTION s_cs_console;
 };
 
 DWORD WINAPI TelnetSession::reader_thread_func(LPVOID self)
