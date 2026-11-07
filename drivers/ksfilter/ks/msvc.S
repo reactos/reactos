@@ -1,6 +1,7 @@
 
-#if defined(_M_ARM) || defined(_M_ARM64)
-
+#if defined(_M_ARM)
+#elif defined(_M_ARM64)
+#include <kxarm64.h>
 #else
 
 #include <asm.inc>
