@@ -5,6 +5,7 @@
  * COPYRIGHT:   Copyright 2019 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 #define JAPANESE_MAX_TWODIGITYEAR 99
+#define IS_LCID_JAPANESE(lcid) PRIMARYLANGID(LANGIDFROMLCID(lcid)) == LANG_JAPANESE
 
 typedef struct JAPANESE_ERA
 {
