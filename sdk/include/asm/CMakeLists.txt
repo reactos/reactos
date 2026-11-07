@@ -4,7 +4,7 @@ add_library(genincdata MODULE genincdata.c)
 set_entrypoint(genincdata 0)
 add_dependencies(genincdata bugcodes psdk xdk)
 
-if(MSVC)
+if(MSVC AND NOT MSVC_ARM64_GAS)
     set(OPT_MS "-ms")
 else()
     set(OPT_MS "")
