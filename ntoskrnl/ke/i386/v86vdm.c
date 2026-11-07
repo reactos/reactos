@@ -633,7 +633,7 @@ Ke386CallBios(IN ULONG Int,
     PVDM_TIB VdmTib = (PVDM_TIB)TRAMPOLINE_TIB;
     ULONG ContextSize = FIELD_OFFSET(CONTEXT, ExtendedRegisters);
     PKTHREAD Thread = KeGetCurrentThread();
-    PKTSS Tss = KeGetPcr()->TSS;
+    PKTSS Tss;
     PKPROCESS Process = Thread->ApcState.Process;
     PVDM_PROCESS_OBJECTS VdmProcessObjects;
     USHORT OldOffset, OldBase;
@@ -679,6 +679,9 @@ Ke386CallBios(IN ULONG Int,
 
     /* Set the system affinity for the current thread */
     KeSetSystemAffinityThread(1);
+
+    /* The TSS of the processor the call now runs on */
+    Tss = KeGetPcr()->TSS;
 
     /* Make sure there's space for two IOPMs, then copy & clear the current */
     ASSERT(((PKIPCR)KeGetPcr())->GDT[KGDT_TSS / 8].LimitLow >=
