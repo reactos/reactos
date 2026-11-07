@@ -140,6 +140,7 @@ LABEL(Ndr64AsyncClientCall_end)
 // Thunks for the methods past IUnknown. Every stubless client thunk has the
 // same size, cproxy.c derives the table layout from the first two.
 //
+#ifdef _MSC_VER
     MACRO
     STUBLESS_THUNK $num
     LEAF_ENTRY ObjectStublessClient$num
@@ -157,6 +158,23 @@ LABEL(Ndr64AsyncClientCall_end)
     br      x16
     LEAF_END NdrProxyForwardingFunction$num
     MEND
+#else
+.macro STUBLESS_THUNK num
+    LEAF_ENTRY ObjectStublessClient\num
+    mov     w16, #\num
+    b       call_stubless_func
+    LEAF_END ObjectStublessClient\num
+.endm
+
+.macro FORWARDING_THUNK num
+    LEAF_ENTRY NdrProxyForwardingFunction\num
+    ldr     x0, [x0, #0x20]
+    ldr     x16, [x0]
+    ldr     x16, [x16, #(\num * 8)]
+    br      x16
+    LEAF_END NdrProxyForwardingFunction\num
+.endm
+#endif
 
     ALIGN 8
     EXPORT stubless_thunks
