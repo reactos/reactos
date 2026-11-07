@@ -1289,7 +1289,10 @@ IoDeleteDevice(IN PDEVICE_OBJECT DeviceObject)
     IoGetDevObjExtension(DeviceObject)->ExtensionFlags |= DOE_DELETE_PENDING;
 
     /* Unlink with the power manager */
-    if (DeviceObject->Vpb) PoRemoveVolumeDevice(DeviceObject);
+    if (DeviceObject->Vpb)
+    {
+        PoRundownDeviceObject(DeviceObject);
+    }
 
     /* Check if the device object can be unloaded */
     if (!DeviceObject->ReferenceCount) IopUnloadDevice(DeviceObject);
