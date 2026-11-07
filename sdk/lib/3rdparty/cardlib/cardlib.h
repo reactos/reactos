@@ -9,6 +9,7 @@
 #include <winbase.h>
 #include <wingdi.h>
 #include <winuser.h>
+#include <cardshape.h>
 
 #define CARDLIBPROC __stdcall
 
