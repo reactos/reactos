@@ -1,9 +1,16 @@
 /*
- * PROJECT:     ReactOS CRT library
- * LICENSE:     MIT (https://spdx.org/licenses/MIT)
- * PURPOSE:     Implementation of atan2 for ARM64
- * COPYRIGHT:   Copyright 2026 Justin Miller <justin.miller@reactos.org>
- *              Polynomial and reduction constants from fdlibm (SPDX: SunPro)
+ * Adapted from fdlibm
+ */
+
+/*
+ * ====================================================
+ * Copyright (C) 1993 by Sun Microsystems, Inc. All rights reserved.
+ *
+ * Developed at SunSoft, a Sun Microsystems, Inc. business.
+ * Permission to use, copy, modify, and distribute this
+ * software is freely granted, provided that this notice
+ * is preserved.
+ * ====================================================
  */
 
 /* INCLUDES ******************************************************************/
