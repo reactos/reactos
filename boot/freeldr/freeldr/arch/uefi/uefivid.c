@@ -6,6 +6,7 @@
  */
 
 #include <uefildr.h>
+#include <uefiquirks.h>
 #include "../vidfb.h"
 
 #include <debug.h>
@@ -482,17 +483,43 @@ UefiInitializeGop(VOID)
 {
     EFI_STATUS Status;
     EFI_GRAPHICS_OUTPUT_PROTOCOL* gop = NULL;
+    EFI_HANDLE* pHandles = NULL;
+    UINTN NumHandles = 0;
+    UINTN StartHandle = 0;
+    ULONG QuirkFlags;
 
     EFI_GRAPHICS_PIXEL_FORMAT PixelFormat;
     EFI_PIXEL_BITMASK* pPixelBitmask;
     ULONG BitsPerPixel;
 
-    Status = GlobalSystemTable->BootServices->LocateProtocol(&EfiGraphicsOutputProtocol, 0, (void**)&gop);
+    Status = GlobalSystemTable->BootServices->LocateHandleBuffer(ByProtocol, &EfiGraphicsOutputProtocol, 0, &NumHandles, &pHandles);
     if (Status != EFI_SUCCESS)
     {
         TRACE("Failed to find GOP with status %d\n", Status);
         return Status;
     }
+
+    QuirkFlags = UefiGetMachineQuirks();
+    if (QuirkFlags & UEFI_QUIRK_SKIP_FIRST_GOP)
+        ++StartHandle;
+
+    if ((NumHandles == 0) || (StartHandle >= NumHandles))
+    {
+        GlobalSystemTable->BootServices->FreePool(pHandles);
+        ERR("No usable GOP handle\n");
+        return EFI_NOT_FOUND;
+    }
+
+    Status = GlobalSystemTable->BootServices->HandleProtocol(pHandles[StartHandle], &EfiGraphicsOutputProtocol, (VOID**)&gop);
+
+    GlobalSystemTable->BootServices->FreePool(pHandles);
+
+    if ((Status != EFI_SUCCESS) || (gop == NULL) || (gop->Mode == NULL) || (gop->Mode->Info == NULL))
+    {
+        ERR("GOP handle %lu is unusable, status %d\n", StartHandle, Status);
+        return EFI_NOT_FOUND;
+    }
+    TRACE("Using GOP handle %lu\n", StartHandle);
 
     /* Keep the mode the firmware set, some only change the reported mode and keep scanning out the old one */
 
