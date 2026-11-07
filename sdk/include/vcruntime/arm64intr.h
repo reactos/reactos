@@ -33,7 +33,6 @@ void __isb(unsigned int _Type);
 void __wfe(void);
 void __wfi(void);
 void __sev(void);
-void __sevl(void);
 void __yield(void);
 void __cdecl __prefetch(const void *_Address);
 #if !defined(__clang__)
@@ -46,7 +45,6 @@ void __cdecl __prefetch2(const void *_Address, unsigned char _PrfOp);
 #pragma intrinsic(__wfe)
 #pragma intrinsic(__wfi)
 #pragma intrinsic(__sev)
-#pragma intrinsic(__sevl)
 #pragma intrinsic(__yield)
 #pragma intrinsic(__prefetch)
 #if !defined(__clang__)
