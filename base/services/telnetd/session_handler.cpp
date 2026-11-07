@@ -36,13 +36,17 @@ TelnetSessionHandler::~TelnetSessionHandler()
 void TelnetSessionHandler::on_connect()
 {
     send_option_command(ECommand::WILL, EOption::ECHO);
-    m_echo_state = EEchoState::WE_OFFERED_TO;
+    m_nopt_echo = ENegotiableOption::WANTYES;
 
     send_option_command(ECommand::WILL, EOption::SGA);
     send_option_command(ECommand::DO, EOption::SGA);
 
-    send_string("ReactOS Telnet\r\n");
+    send_option_command(ECommand::DO, EOption::NAWS);
+    m_nopt_naws = ENegotiableOption::WANTYES;
+    send_option_command(ECommand::DO, EOption::TTYPE);
+    m_nopt_ttype = ENegotiableOption::WANTYES;
 
+    send_string("ReactOS Telnet\r\n");
     set_state_to_waiting_for_username();
 }
 
@@ -134,7 +138,7 @@ void TelnetSessionHandler::on_data(const uint8_t* data, int length)
                     m_parser_state = EParserState::SUBNEGO_PAYLOAD;
                 } else if (c == ECommand::SE) {
                     assert(m_sb_buffer.size() <= MAX_SUBNEGO_PAYLOAD_LENGTH);
-                    handle_subnegotiation(m_parser_state_data, m_sb_buffer.data(), (uint8_t)m_sb_buffer.size());
+                    handle_subnegotiation((EOption)m_parser_state_data, m_sb_buffer.data(), (uint8_t)m_sb_buffer.size());
                     text_cur = scan_cur;
                     m_parser_state = EParserState::TEXT;
                 } else {
@@ -240,7 +244,7 @@ void TelnetSessionHandler::handle_text_line(const std::string& line)
                 (line.size() <= TelnetSession::MAX_CREDENTIAL_LENGTH) && 
                 ((token = authenticate(m_username, line)) != NULL)
             ) {
-                if (m_echo_state == EEchoState::AGREED_TO) {
+                if (m_nopt_echo == ENegotiableOption::YES) {
                     send_string("\r\n");
                 }
 
@@ -261,7 +265,7 @@ void TelnetSessionHandler::handle_text_line(const std::string& line)
                     disconnect();
                     return;
                 }
-                if (m_echo_state == EEchoState::AGREED_TO) {
+                if (m_nopt_echo == ENegotiableOption::YES) {
                     send_string("\r\n");
                 }
                 send_string("Login incorrect\r\n");
@@ -341,23 +345,15 @@ void TelnetSessionHandler::handle_option_command(ECommand verb, EOption option)
 {
     switch (option) {
         case EOption::ECHO:
-        {
-            if (m_echo_state == EEchoState::WE_OFFERED_TO) {
-                if (verb == ECommand::DO)
-                    m_echo_state = EEchoState::AGREED_TO;
-                else if (verb == ECommand::DONT)
-                    m_echo_state = EEchoState::AGREED_NOT_TO;
-            } else if ((m_echo_state == EEchoState::AGREED_TO) && (verb == ECommand::DONT)) {
-                m_echo_state = EEchoState::AGREED_NOT_TO;
-                send_option_command(ECommand::WONT, EOption::ECHO);
-            } else if ((m_echo_state == EEchoState::AGREED_NOT_TO) && (verb == ECommand::DO)) {
-                m_echo_state = EEchoState::AGREED_TO;
-                send_option_command(ECommand::WILL, EOption::ECHO);
-            }
+            handle_neogitable_option(true, verb, m_nopt_echo, option);
+        break;
 
-            if (verb == ECommand::WILL)
-                send_option_command(ECommand::DONT, EOption::ECHO);
-        }
+        case EOption::NAWS:
+            handle_neogitable_option(false, verb, m_nopt_naws, option);
+        break;
+        
+        case EOption::TTYPE:
+            handle_neogitable_option(false, verb, m_nopt_ttype, option);
         break;
 
         case EOption::SGA:
@@ -377,16 +373,6 @@ void TelnetSessionHandler::handle_option_command(ECommand verb, EOption option)
         }
         break;
 
-        case EOption::NAWS:
-        case EOption::TTYPE:
-        {
-            if (verb == ECommand::DO)
-                send_option_command(ECommand::WONT, option);
-            else if (verb == ECommand::WILL)
-                send_option_command(ECommand::DO, option);
-        }
-        break;
-
         default:
         {
             if (verb == ECommand::DO)
@@ -398,7 +384,42 @@ void TelnetSessionHandler::handle_option_command(ECommand verb, EOption option)
     }
 }
 
-void TelnetSessionHandler::handle_subnegotiation(uint8_t option, const uint8_t* params, uint8_t length)
+bool TelnetSessionHandler::handle_neogitable_option(bool handled_by_us, ECommand verb, ENegotiableOption& state, EOption option)
+{
+    const ECommand a = handled_by_us ? ECommand::DO : ECommand::WILL;
+    const ECommand b = handled_by_us ? ECommand::DONT : ECommand::WONT;
+    const ECommand c = handled_by_us ? ECommand::WILL : ECommand::DO;
+    const ECommand d = handled_by_us ? ECommand::WONT : ECommand::DONT;
+
+    if (state == ENegotiableOption::WANTYES) {                                              
+        if (verb == a) {                                                  
+            state = ENegotiableOption::YES;
+            return true;
+        }                                                                           
+        else if (verb == b) {                                             
+            state = ENegotiableOption::NO;
+            return true;
+        }                                                                           
+    } else if ((state == ENegotiableOption::YES) && (verb == b)) {    
+        state = ENegotiableOption::NO;                                     
+        send_option_command(d, option);
+        return true;
+    } else if ((state == ENegotiableOption::NO) && (verb == a)) {
+        state = ENegotiableOption::YES;                                    
+        send_option_command(c, option);
+        return true;
+    }
+
+    if (handled_by_us && (verb == ECommand::WILL)) {
+        send_option_command(ECommand::DONT, EOption::ECHO);
+    } else if (!handled_by_us && (verb == ECommand::DO)) {
+        send_option_command(ECommand::WONT, EOption::ECHO);
+    }
+
+    return false;
+}
+
+void TelnetSessionHandler::handle_subnegotiation(EOption option, const uint8_t* params, uint8_t length)
 {
 
 }
