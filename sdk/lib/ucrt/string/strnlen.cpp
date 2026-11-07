@@ -201,7 +201,8 @@ static __forceinline size_t __cdecl common_strnlen(
     return common_strnlen_c<Mode>(string, maximum_count);
 }
 
-#if !defined(_M_ARM64) && !defined(_M_ARM64EC)
+// ARM64 MSVC builds take these from the armasm64 sources
+#if (!defined(_M_ARM64) && !defined(_M_ARM64EC)) || !defined(_MSC_VER)
 
 extern "C" size_t __cdecl strnlen(
     char const* const string,
