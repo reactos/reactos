@@ -84,7 +84,7 @@ private:
     void handle_text_line(const std::string& line);
     void handle_command(ECommand cmd);
     void handle_option_command(ECommand verb, EOption option);
-    bool handle_neogitable_option(bool handled_by_us, ECommand verb, ENegotiableOption& state, EOption option);
+    bool handle_negotiable_option(bool handled_by_us, ECommand verb, ENegotiableOption& state, EOption option);
     void handle_subnegotiation(EOption option, const uint8_t* params, uint8_t length);
 
     void erase_line();

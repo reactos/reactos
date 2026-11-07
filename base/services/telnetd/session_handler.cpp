@@ -345,15 +345,15 @@ void TelnetSessionHandler::handle_option_command(ECommand verb, EOption option)
 {
     switch (option) {
         case EOption::ECHO:
-            handle_neogitable_option(true, verb, m_nopt_echo, option);
+            handle_negotiable_option(true, verb, m_nopt_echo, option);
         break;
 
         case EOption::NAWS:
-            handle_neogitable_option(false, verb, m_nopt_naws, option);
+            handle_negotiable_option(false, verb, m_nopt_naws, option);
         break;
         
         case EOption::TTYPE:
-            handle_neogitable_option(false, verb, m_nopt_ttype, option);
+            handle_negotiable_option(false, verb, m_nopt_ttype, option);
         break;
 
         case EOption::SGA:
@@ -384,29 +384,28 @@ void TelnetSessionHandler::handle_option_command(ECommand verb, EOption option)
     }
 }
 
-bool TelnetSessionHandler::handle_neogitable_option(bool handled_by_us, ECommand verb, ENegotiableOption& state, EOption option)
+bool TelnetSessionHandler::handle_negotiable_option(bool handled_by_us, ECommand verb, ENegotiableOption& state, EOption option)
 {
-    const ECommand a = handled_by_us ? ECommand::DO : ECommand::WILL;
-    const ECommand b = handled_by_us ? ECommand::DONT : ECommand::WONT;
-    const ECommand c = handled_by_us ? ECommand::WILL : ECommand::DO;
-    const ECommand d = handled_by_us ? ECommand::WONT : ECommand::DONT;
+    const ECommand verb_agree = handled_by_us ? ECommand::DO : ECommand::WILL;
+    const ECommand verb_refuse = handled_by_us ? ECommand::DONT : ECommand::WONT;
+    const ECommand verb_ack = handled_by_us ? ECommand::WILL : ECommand::DO;
+    const ECommand verb_nack = handled_by_us ? ECommand::WONT : ECommand::DONT;
 
-    if (state == ENegotiableOption::WANTYES) {                                              
-        if (verb == a) {                                                  
+    if (state == ENegotiableOption::WANTYES) {
+        if (verb == verb_agree) {
             state = ENegotiableOption::YES;
             return true;
-        }                                                                           
-        else if (verb == b) {                                             
+        } else if (verb == verb_refuse) {
             state = ENegotiableOption::NO;
             return true;
-        }                                                                           
-    } else if ((state == ENegotiableOption::YES) && (verb == b)) {    
-        state = ENegotiableOption::NO;                                     
-        send_option_command(d, option);
+        }
+    } else if ((state == ENegotiableOption::YES) && (verb == verb_refuse)) {
+        state = ENegotiableOption::NO;
+        send_option_command(verb_nack, option);
         return true;
-    } else if ((state == ENegotiableOption::NO) && (verb == a)) {
-        state = ENegotiableOption::YES;                                    
-        send_option_command(c, option);
+    } else if ((state == ENegotiableOption::NO) && (verb == verb_agree)) {
+        state = ENegotiableOption::YES;
+        send_option_command(verb_ack, option);
         return true;
     }
 
