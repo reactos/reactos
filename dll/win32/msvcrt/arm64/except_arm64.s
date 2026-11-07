@@ -47,24 +47,22 @@
 
     NESTED_END call_exc_handler
 
-    AREA |.xdata|,ALIGN=2,READONLY
-call_exc_handler_xdata
+    XDATAAREA
+LABEL(call_exc_handler_xdata)
     // 22 instructions, one epilog starting at code 0, 4 code words
-    DCD     0x20200016
-    DCB     0x01                // alloc_s 16
-    DCB     0xCA, 0x0A          // save_regp x27, 80
-    DCB     0xC9, 0x88          // save_regp x25, 64
-    DCB     0xC9, 0x06          // save_regp x23, 48
-    DCB     0xC8, 0x84          // save_regp x21, 32
-    DCB     0xC8, 0x02          // save_regp x19, 16
-    DCB     0x8B                // save_fplr_x 96
-    DCB     0xE4                // end
-    DCB     0xE3, 0xE3, 0xE3    // nop padding
+    dcd     0x20200016
+    dcb     0x01                // alloc_s 16
+    dcb     0xCA, 0x0A          // save_regp x27, 80
+    dcb     0xC9, 0x88          // save_regp x25, 64
+    dcb     0xC9, 0x06          // save_regp x23, 48
+    dcb     0xC8, 0x84          // save_regp x21, 32
+    dcb     0xC8, 0x02          // save_regp x19, 16
+    dcb     0x8B                // save_fplr_x 96
+    dcb     0xE4                // end
+    dcb     0xE3, 0xE3, 0xE3    // nop padding
 
-    AREA |.pdata|,ALIGN=2,READONLY
-    DCD     call_exc_handler
-    RELOC   2                   // IMAGE_REL_ARM64_ADDR32NB
-    DCD     call_exc_handler_xdata
-    RELOC   2
+    PDATAAREA
+    DCRVA   call_exc_handler
+    DCRVA   call_exc_handler_xdata
 
     END
