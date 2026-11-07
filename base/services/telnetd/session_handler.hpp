@@ -138,6 +138,9 @@ private:
     std::string m_username{};
     uint32_t m_failed_login_attempt_count{};
 
+    uint16_t m_window_width{80};
+    uint16_t m_window_height{24};
+
     TelnetSession* m_active_session{};
 };
 

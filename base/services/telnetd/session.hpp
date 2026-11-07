@@ -39,6 +39,8 @@ public:
     void on_sigint();
     void on_interrupt_process();
 
+    void on_window_size(uint16_t w, uint16_t h);
+
     void on_text_line(const std::string& line);
 
     void discard_output();

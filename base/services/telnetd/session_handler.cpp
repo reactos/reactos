@@ -257,6 +257,8 @@ void TelnetSessionHandler::handle_text_line(const std::string& line)
                     return;
                 }
 
+                m_active_session->on_window_size(m_window_width, m_window_height);
+
                 set_state_to_active_session();
             } else {
                 m_failed_login_attempt_count++;
@@ -420,7 +422,22 @@ bool TelnetSessionHandler::handle_negotiable_option(bool handled_by_us, ECommand
 
 void TelnetSessionHandler::handle_subnegotiation(EOption option, const uint8_t* params, uint8_t length)
 {
+    if ((option == EOption::NAWS) && (length == 4)) {
+        const auto w = (((uint16_t)params[0]) << 8) | (params[1]);
+        const auto h = (((uint16_t)params[2]) << 8) | (params[3]);
 
+        const auto new_w = (w == 0) ? m_window_width : w;
+        const auto new_h = (h == 0) ? m_window_height : h;
+
+        if ((new_w != m_window_width) || (new_h != m_window_height)) {
+            m_window_width = new_w;
+            m_window_height = new_h;
+
+            if (m_active_session) {
+                m_active_session->on_window_size(m_window_width, m_window_height);
+            }
+        }
+    }
 }
 
 void TelnetSessionHandler::send_text(const uint8_t* data, int length)
