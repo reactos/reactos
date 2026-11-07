@@ -257,6 +257,7 @@ void TelnetSessionHandler::handle_text_line(const std::string& line)
                     return;
                 }
 
+                m_active_session->on_ttype(m_ttype);
                 m_active_session->on_window_size(m_window_width, m_window_height);
 
                 set_state_to_active_session();
@@ -355,7 +356,21 @@ void TelnetSessionHandler::handle_option_command(ECommand verb, EOption option)
         break;
         
         case EOption::TTYPE:
-            handle_negotiable_option(false, verb, m_nopt_ttype, option);
+        {
+            if(handle_negotiable_option(false, verb, m_nopt_ttype, option)) {
+                if (m_nopt_ttype == ENegotiableOption::YES) {
+                    static constexpr uint8_t SUBNEGO[] = {
+                        (uint8_t)ECommand::IAC, (uint8_t)ECommand::SB,
+                        (uint8_t)EOption::TTYPE, (uint8_t)ETTypeOption::SEND,
+                        (uint8_t)ECommand::IAC, (uint8_t)ECommand::SE,
+                    };
+                    send_data(SUBNEGO, sizeof(SUBNEGO));
+                    m_accepting_new_ttype = true;
+                } else {
+                    m_accepting_new_ttype = false;
+                }
+            }
+        }
         break;
 
         case EOption::SGA:
@@ -422,12 +437,12 @@ bool TelnetSessionHandler::handle_negotiable_option(bool handled_by_us, ECommand
 
 void TelnetSessionHandler::handle_subnegotiation(EOption option, const uint8_t* params, uint8_t length)
 {
-    if ((option == EOption::NAWS) && (length == 4)) {
-        const auto w = (((uint16_t)params[0]) << 8) | (params[1]);
-        const auto h = (((uint16_t)params[2]) << 8) | (params[3]);
+    if ((m_nopt_naws == ENegotiableOption::YES) && (option == EOption::NAWS) && (length == 4)) {
+        const uint16_t w = (((uint16_t)params[0]) << 8) | (params[1]);
+        const uint16_t h = (((uint16_t)params[2]) << 8) | (params[3]);
 
-        const auto new_w = (w == 0) ? m_window_width : w;
-        const auto new_h = (h == 0) ? m_window_height : h;
+        const uint16_t new_w = (w == 0) ? m_window_width : w;
+        const uint16_t new_h = (h == 0) ? m_window_height : h;
 
         if ((new_w != m_window_width) || (new_h != m_window_height)) {
             m_window_width = new_w;
@@ -436,6 +451,27 @@ void TelnetSessionHandler::handle_subnegotiation(EOption option, const uint8_t* 
             if (m_active_session) {
                 m_active_session->on_window_size(m_window_width, m_window_height);
             }
+        }
+    } else if (
+        (m_nopt_ttype == ENegotiableOption::YES) && m_accepting_new_ttype &&
+        (option == EOption::TTYPE) && (length >= 1) &&
+        (params[0] == (uint8_t)ETTypeOption::IS)
+    ) {
+        m_accepting_new_ttype = false;
+
+        uint8_t ttype_len = 0;
+        for (uint8_t i = 1; i < length; i++) {
+            const auto c = params[i];
+            if ((c < 32) || (c > 126))
+                continue;
+            m_ttype[ttype_len++] = c;
+            if (ttype_len >= 40)
+                break;
+        }
+        m_ttype[ttype_len] = '\0';
+
+        if (m_active_session) {
+            m_active_session->on_ttype(m_ttype);
         }
     }
 }

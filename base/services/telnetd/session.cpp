@@ -91,6 +91,13 @@ void TelnetSession::on_interrupt_process()
 
 }
 
+void TelnetSession::on_ttype(const char* ttype)
+{
+    // [IATODO]: Need ConPTY
+
+    (void)ttype;
+}
+
 void TelnetSession::on_window_size(uint16_t w, uint16_t h)
 {
     // [IATODO]: Need ConPTY

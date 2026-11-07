@@ -79,6 +79,12 @@ class TelnetSessionHandler: public TCPServerSessionHandler, public ITelnetSessio
         ACTIVE_SESSION,
     };
 
+    enum class ETTypeOption: uint8_t
+    {
+        IS = 0,
+        SEND = 1,
+    };
+
 private:
     void handle_text(const uint8_t* data, int length);
     void handle_text_line(const std::string& line);
@@ -140,6 +146,9 @@ private:
 
     uint16_t m_window_width{80};
     uint16_t m_window_height{24};
+
+    char m_ttype[41]{""};
+    bool m_accepting_new_ttype{};
 
     TelnetSession* m_active_session{};
 };
