@@ -444,10 +444,10 @@ PcInitializeBootDevices(VOID)
     DiskCount = EnumerateHarddisks(&BootDriveReported);
 
     /* Initialize FrLdrBootPath, the path FreeLoader starts from.
-     * Do not probe for PXE when the boot sector told us we were started
-     * from a CD (BootPartition 0xFF, see isoboot.S): a boot manager that
-     * emulates the CD (e.g. Ventoy) may leave a working !PXE API in memory. */
-    DiskGetBootPath((FrldrBootPartition != 0xFF) && PxeInit(), &DriveType);
+     * Keep the CD as boot path when the boot sector told us we were started
+     * from it (BootPartition 0xFF, see isoboot.S), even if a PXE stack is
+     * present (e.g. the one Ventoy uses to emulate the CD). */
+    DiskGetBootPath(PxeInit() && (FrldrBootPartition != 0xFF), &DriveType);
 
     /* Add it, if it's a floppy or CD-ROM */
     if ((FrldrBootDrive >= FIRST_BIOS_DISK && !BootDriveReported) ||
