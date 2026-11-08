@@ -212,7 +212,9 @@ ROSDATA KBDTABLES_FE keyboard_layout_table = {
   4                             /* dwSubType : 101 Type B */
 };
 
-PKBDTABLES WINAPI KbdLayerDescriptor(VOID) { return &keyboard_layout_table.Base; }
+PKBDTABLES WINAPI KbdLayerDescriptor(VOID) {
+  return &keyboard_layout_table.Base;
+}
 
 /* ---- NLS (Far-East) Table: KbdNlsLayerDescriptor ------------------ */
 ROSDATA VK_F nls_vk_to_f[] = {
