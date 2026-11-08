@@ -96,6 +96,8 @@ private:
     void erase_line();
     void erase_char();
 
+    size_t count_chars_in_text_line_buffer();
+
 private:
     inline bool should_echo();
     inline void flush_echo_buffer();
