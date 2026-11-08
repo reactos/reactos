@@ -258,6 +258,28 @@ bool TelnetSession::spawn_cmd_process()
         return false;
     }
 
+    std::wstring cmd_path{}, cmd_path_quoted{};
+    {
+        const auto len = GetSystemDirectoryW(nullptr, 0);
+        if (!len) {
+            const auto ec = GetLastError();
+            CloseHandle(child_pipe_stdin);
+            CloseHandle(child_pipe_std_out_err);
+            ERR("GetSystemDirectoryW failed with: %lu\n", ec);
+            return false;
+        }
+        cmd_path.resize(len - 1);
+        if (GetSystemDirectoryW(&cmd_path[0], len) != (len - 1)) {
+            const auto ec = GetLastError();
+            CloseHandle(child_pipe_stdin);
+            CloseHandle(child_pipe_std_out_err);
+            ERR("GetSystemDirectoryW failed with: %lu\n", ec);
+            return false;
+        }
+        cmd_path += L"\\cmd.exe";
+        cmd_path_quoted = L"\"" + cmd_path + L"\"";
+    }
+
     LPVOID env_block{};
     if (!CreateEnvironmentBlock(&env_block, m_token, false)) {
         const auto ec = GetLastError();
@@ -276,11 +298,10 @@ bool TelnetSession::spawn_cmd_process()
 
     PROCESS_INFORMATION process_info{};
 
-    WCHAR cmd[32] = L"C:\\ReactOS\\system32\\cmd.exe"; // [IATODO]: Probably should use GetSystemDirectoryW later
     if (!CreateProcessAsUserW(
         m_token, 
-        nullptr, 
-        cmd, 
+        cmd_path.c_str(), 
+        &cmd_path_quoted[0], 
         nullptr, nullptr, 
         true, 
         CREATE_UNICODE_ENVIRONMENT | CREATE_SUSPENDED, 
