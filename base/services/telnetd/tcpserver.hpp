@@ -48,6 +48,8 @@ protected:
 
     void clear_pending_send_queue();
 
+    void clear_pending_queue_then_send(const void* data, int length);
+
 private:
     CRITICAL_SECTION m_send_queue_cs{};
     std::vector<uint8_t> m_send_queue{};

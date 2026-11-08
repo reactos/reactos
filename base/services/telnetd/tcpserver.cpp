@@ -64,6 +64,25 @@ void TCPServerSessionHandler::clear_pending_send_queue()
     LeaveCriticalSection(&m_send_queue_cs);
 }
 
+void TCPServerSessionHandler::clear_pending_queue_then_send(const void* data, int length)
+{
+    EnterCriticalSection(&m_send_queue_cs);
+    
+    m_send_queue.clear();
+    m_send_queue_cursor = 0;
+
+    if (length > 0) {
+        if((size_t)length > m_send_queue.size())
+            m_send_queue.resize(length);
+        RtlCopyMemory(&m_send_queue[0], data, length);
+        m_send_queue_cursor = length;
+
+        _internal_flush_send_queue(false);
+    }
+
+    LeaveCriticalSection(&m_send_queue_cs);
+}
+
 bool TCPServerSessionHandler::_internal_flush_send_queue(bool lock)
 {
     if (lock) EnterCriticalSection(&m_send_queue_cs);
