@@ -281,6 +281,7 @@ KbdBuildImage(
     PBYTE pbRaw = pvRaw;
     _SEH2_VOLATILE PBYTE pbImage = NULL;
     ULONG cbImage, cbVirt, cbCopy, i;
+    SIZE_T offSec;
     ULONG_PTR imageBase;
 
     *pcbImage = 0;
@@ -290,7 +291,7 @@ KbdBuildImage(
     {
         if (cbRaw < sizeof(IMAGE_DOS_HEADER) || pDos->e_magic != IMAGE_DOS_SIGNATURE ||
             pDos->e_lfanew <= 0 || cbRaw < sizeof(IMAGE_NT_HEADERS) ||
-            (SIZE_T)pDos->e_lfanew > cbRaw - sizeof(IMAGE_NT_HEADERS))
+            (SIZE_T)pDos->e_lfanew > cbRaw - sizeof(IMAGE_NT_HEADERS) || (pDos->e_lfanew & 3))
         {
             _SEH2_YIELD(return NULL);
         }
@@ -335,9 +336,17 @@ KbdBuildImage(
         if (!cbImage || cbImage > KBDIMG_MAXSIZE)
             _SEH2_YIELD(return NULL);
 
-        pSec = IMAGE_FIRST_SECTION(pNt);
-        if ((PBYTE)(pSec + pNt->FileHeader.NumberOfSections) > pbRaw + cbRaw)
+        /* The section headers must be aligned and lie within the file */
+        if (pNt->FileHeader.SizeOfOptionalHeader & 3)
             _SEH2_YIELD(return NULL);
+
+        pSec = IMAGE_FIRST_SECTION(pNt);
+        offSec = (SIZE_T)((PBYTE)pSec - pbRaw);
+        if (offSec > cbRaw ||
+            (cbRaw - offSec) / sizeof(IMAGE_SECTION_HEADER) < pNt->FileHeader.NumberOfSections)
+        {
+            _SEH2_YIELD(return NULL);
+        }
 
         /* Find the .data section. Any other section is ignored. */
         for (i = 0; i < pNt->FileHeader.NumberOfSections; ++i)
@@ -423,6 +432,11 @@ KbdLoadImage(
         return NULL;
     }
     cbRaw = FileInfo.EndOfFile.LowPart;
+    if (cbRaw < sizeof(IMAGE_DOS_HEADER)) /* Too small to be a PE file? */
+    {
+        ERR("Invalid file size (%lu bytes)\n", cbRaw);
+        return NULL;
+    }
 
     /* Allocate raw image buffer */
     pvRaw = ExAllocatePoolWithTag(PagedPool, cbRaw, KBDIMG_TAG);
