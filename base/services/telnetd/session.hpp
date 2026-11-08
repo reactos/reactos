@@ -27,16 +27,14 @@ public:
 
 class TelnetSession
 {
-public:
     static constexpr DWORD PIPE_BUFFER_SIZE = 64 * 1024;
     static constexpr size_t MAX_LINE_TAIL_LENGTH = 1024;
-    static constexpr size_t MAX_CREDENTIAL_LENGTH = 256;
 
 public:
     TelnetSession(ITelnetSessionHandler* handler);
     ~TelnetSession();
 
-    bool connect(const std::string& username, HANDLE token);
+    bool connect(const std::wstring& username, HANDLE token);
 
     void on_sigint();
 
@@ -48,7 +46,7 @@ public:
     void discard_output();
 
 private:
-    bool load_user_data(const std::string& username);
+    bool load_user_data();
     bool spawn_cmd_process();
     bool start_reader_thread();
 

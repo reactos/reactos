@@ -7,6 +7,7 @@
 
 #include "session_handler.hpp"
 
+#include <winnls.h>
 #include <cassert>
 
 using cursor_type = const uint8_t*;
@@ -19,6 +20,23 @@ constexpr uint8_t CHAR_DEL = 127;
 constexpr uint8_t CHAR_SP = ' ';
 constexpr uint8_t CHAR_CR = '\r';
 constexpr uint8_t CHAR_LF = '\n';
+
+static std::wstring string_to_wstring(const std::string& str) 
+{
+    std::wstring result{};
+
+    const auto result_size = MultiByteToWideChar(CP_UTF8, 0, str.c_str(), -1, nullptr, 0);
+    if (!result_size) {
+        return L"";
+    }
+
+    result.resize(result_size - 1, L'\0');
+    if (!MultiByteToWideChar(CP_UTF8, 0, str.c_str(), -1, &result[0], (int)(result.size() + 1))) {
+        return L"";
+    }
+
+    return result;
+}
 
 TelnetSessionHandler::TelnetSessionHandler()
 {
@@ -223,11 +241,20 @@ void TelnetSessionHandler::handle_text(const uint8_t* data, int length)
 
 void TelnetSessionHandler::handle_text_line(const std::string& line)
 {
-    const auto authenticate = [](const std::string& username, const std::string& password) -> HANDLE
+    const auto authenticate = [](const std::wstring& username, const std::string& password) -> HANDLE
     {
+        std::wstring wpassword = string_to_wstring(password);
+
+        if (wpassword.empty()) {
+            return NULL;
+        }
+        
         HANDLE token{};
-        // [IATODO]: Add widechar support later
-        return LogonUserA((char*)username.c_str(), (char*)".", (char*)password.c_str(), LOGON32_LOGON_INTERACTIVE, LOGON32_PROVIDER_DEFAULT, &token) ? token : NULL;
+        const auto success = LogonUserW((WCHAR*)&username[0], (WCHAR*)L".", (WCHAR*)&wpassword[0], LOGON32_LOGON_INTERACTIVE, LOGON32_PROVIDER_DEFAULT, &token);
+
+        SecureZeroMemory(&wpassword[0], wpassword.size() * sizeof(WCHAR));
+
+        return success ? token : NULL;
     };
 
     switch (m_state)
@@ -239,11 +266,14 @@ void TelnetSessionHandler::handle_text_line(const std::string& line)
 
         case EState::WAITING_FOR_PASSWORD:
         {
+            const auto wusername = string_to_wstring(m_username);
+
             HANDLE token{};
             if (
-                (m_username.size() <= TelnetSession::MAX_CREDENTIAL_LENGTH) && 
-                (line.size() <= TelnetSession::MAX_CREDENTIAL_LENGTH) && 
-                ((token = authenticate(m_username, line)) != NULL)
+                line.size() &&
+                (m_username.size() <= MAX_CREDENTIAL_LENGTH) && 
+                (line.size() <= MAX_CREDENTIAL_LENGTH) && 
+                ((token = authenticate(wusername, line)) != NULL)
             ) {
                 if (m_nopt_echo == ENegotiableOption::YES) {
                     send_string("\r\n");
@@ -251,7 +281,7 @@ void TelnetSessionHandler::handle_text_line(const std::string& line)
 
                 m_active_session = new TelnetSession(this);
 
-                if (!m_active_session->connect(m_username, token)) {
+                if (!m_active_session->connect(wusername, token)) {
                     m_state = EState::INVALID;
                     send_string("server error\r\n");
                     disconnect();

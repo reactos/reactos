@@ -82,11 +82,12 @@ TelnetSession::~TelnetSession()
     }
 }
 
-bool TelnetSession::connect(const std::string& username, HANDLE token)
+bool TelnetSession::connect(const std::wstring& username, HANDLE token)
 {
     m_token = token;
+    m_username = username;
     
-    if (!load_user_data(username))
+    if (!load_user_data())
         return false;
 
     if (!spawn_cmd_process())
@@ -156,11 +157,8 @@ void TelnetSession::discard_output()
     SetEvent(m_reader_discard_event);
 }
 
-bool TelnetSession::load_user_data(const std::string& username)
+bool TelnetSession::load_user_data()
 {
-    m_username.resize(MultiByteToWideChar(CP_UTF8, 0, username.c_str(), -1, nullptr, 0) - 1, L'\0');
-    MultiByteToWideChar(CP_UTF8, 0, username.c_str(), -1, &m_username[0], (int)(m_username.size() + 1));
-
     PROFILEINFOW profile_info{};
     profile_info.lpUserName = &m_username[0];
     profile_info.dwSize = sizeof(profile_info);
