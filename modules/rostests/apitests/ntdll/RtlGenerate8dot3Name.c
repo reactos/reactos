@@ -173,4 +173,26 @@ START_TEST(RtlGenerate8dot3Name)
             ok(RtlEqualUnicodeString(&Expected, &ShortName, FALSE), "%u:: Generated: %.*S. Expected: %.*S\n", i, ShortName.Length / sizeof(WCHAR), ShortName.Buffer, Expected.Length / sizeof(WCHAR), Expected.Buffer);
         }
     }
+
+    {
+        WCHAR Buffer[12];
+        GENERATE_NAME_CONTEXT Context = {0};
+        UNICODE_STRING LongName, ShortName;
+        ULONG i, BaseLength;
+
+        RtlInitUnicodeString(&LongName, L"Long file name.txt");
+        ShortName.Buffer = Buffer;
+        ShortName.MaximumLength = sizeof(Buffer);
+        for (i = 0; i < 32; ++i)
+        {
+            RtlGenerate8dot3Name(&LongName, FALSE, &Context, &ShortName);
+            BaseLength = 0;
+            while (BaseLength < ShortName.Length / sizeof(WCHAR) &&
+                   ShortName.Buffer[BaseLength] != L'.')
+                ++BaseLength;
+            ok(BaseLength <= 8 && ShortName.Length <= sizeof(Buffer),
+               "Alias exceeds 8.3 bounds: %.*S\n",
+               ShortName.Length / sizeof(WCHAR), ShortName.Buffer);
+        }
+    }
 }

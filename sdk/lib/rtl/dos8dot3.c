@@ -87,6 +87,7 @@ RtlGenerate8dot3Name(IN PUNICODE_STRING Name,
     ULONG IndexLength;
     ULONG Index;
     ULONG DotPos;
+    ULONG NameLength;
     WCHAR IndexBuffer[8];
     WCHAR Char;
     USHORT Checksum;
@@ -204,14 +205,17 @@ RtlGenerate8dot3Name(IN PUNICODE_STRING Name,
 
     IndexBuffer[8 - IndexLength] = L'~';
 
+    NameLength = Context->NameLength < 8 - IndexLength ?
+                 Context->NameLength : 8 - IndexLength;
+
     /* Reset name length */
     Name8dot3->Length = 0;
 
     /* If name present */
-    if (Context->NameLength)
+    if (NameLength)
     {
         /* Copy name buffer */
-        Length = Context->NameLength * sizeof(WCHAR);
+        Length = NameLength * sizeof(WCHAR);
         RtlCopyMemory(Name8dot3->Buffer, Context->NameBuffer, Length);
         Name8dot3->Length = Length;
     }
