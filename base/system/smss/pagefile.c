@@ -871,6 +871,7 @@ SmpCreateVolumeDescriptors(VOID)
     NTSTATUS Status;
     UNICODE_STRING VolumePath;
     BOOLEAN BootVolumeFound = FALSE;
+    BOOLEAN IsBootVolume;
     WCHAR StartChar, Drive, DriveDiff;
     HANDLE VolumeHandle;
     OBJECT_ATTRIBUTES ObjectAttributes;
@@ -948,6 +949,14 @@ SmpCreateVolumeDescriptors(VOID)
             continue;
         }
 
+        IsBootVolume = (RtlUpcaseUnicodeChar(Drive) ==
+                        RtlUpcaseUnicodeChar(SharedUserData->NtSystemRoot[0]));
+        if (IsBootVolume)
+        {
+            ASSERT(BootVolumeFound == FALSE);
+            BootVolumeFound = TRUE;
+        }
+
         /* Check if this is a fixed disk */
         if (DeviceInfo.Characteristics & (FILE_FLOPPY_DISKETTE |
                                           FILE_READ_ONLY_DEVICE |
@@ -980,13 +989,10 @@ SmpCreateVolumeDescriptors(VOID)
         Volume->DeviceInfo = DeviceInfo;
 
         /* Check if this is the boot volume */
-        if (RtlUpcaseUnicodeChar(Drive) ==
-            RtlUpcaseUnicodeChar(SharedUserData->NtSystemRoot[0]))
+        if (IsBootVolume)
         {
             /* Save it */
-            ASSERT(BootVolumeFound == FALSE);
             Volume->Flags |= SMP_VOLUME_IS_BOOT;
-            BootVolumeFound = TRUE;
         }
 
         /* Now get size information on the volume */
@@ -1037,11 +1043,13 @@ SmpCreateVolumeDescriptors(VOID)
 
     /* We must've found at least the boot volume */
     ASSERT(BootVolumeFound == TRUE);
-    ASSERT(!IsListEmpty(&SmpVolumeDescriptorList));
-    if (!IsListEmpty(&SmpVolumeDescriptorList)) return STATUS_SUCCESS;
+    if (IsListEmpty(&SmpVolumeDescriptorList))
+    {
+        DPRINT1("SMSS:PFILE: No paging-file-capable volumes found\n");
+        return STATUS_SUCCESS;
+    }
 
-    /* Something is really messed up if we found no disks at all */
-    return STATUS_UNEXPECTED_IO_ERROR;
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS
@@ -1071,6 +1079,11 @@ SmpCreatePagingFiles(VOID)
         DPRINT1("SMSS:PFILE: Failed to create volume descriptors (status %X)\n",
                 Status);
         return Status;
+    }
+
+    if (IsListEmpty(&SmpVolumeDescriptorList))
+    {
+        return STATUS_SUCCESS;
     }
 
     /* If we fail creating pagefiles, try to reduce by this much each time */
