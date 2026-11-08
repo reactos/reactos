@@ -48,18 +48,9 @@ void TCPServerSessionHandler::send_data(const void* data, int length)
         m_send_queue.resize(m_send_queue_cursor + length);
     RtlCopyMemory(&m_send_queue[m_send_queue_cursor], data, length);
     m_send_queue_cursor += length;
+    m_units.push_back({length, false});
 
     _internal_flush_send_queue(false);
-
-    LeaveCriticalSection(&m_send_queue_cs);
-}
-
-void TCPServerSessionHandler::clear_pending_send_queue()
-{
-    EnterCriticalSection(&m_send_queue_cs);
-
-    m_send_queue.clear();
-    m_send_queue_cursor = 0;
 
     LeaveCriticalSection(&m_send_queue_cs);
 }
@@ -68,14 +59,21 @@ void TCPServerSessionHandler::clear_pending_queue_then_send(const void* data, in
 {
     EnterCriticalSection(&m_send_queue_cs);
     
-    m_send_queue.clear();
-    m_send_queue_cursor = 0;
+    if (m_units.size() && m_units.front().started) {
+        m_send_queue.resize(m_send_queue_cursor = m_units.front().remaining);
+        m_units.resize(1);
+    } else {
+        m_units.clear();
+        m_send_queue.clear();
+        m_send_queue_cursor = 0;
+    }
 
     if (length > 0) {
-        if((size_t)length > m_send_queue.size())
-            m_send_queue.resize(length);
-        RtlCopyMemory(&m_send_queue[0], data, length);
-        m_send_queue_cursor = length;
+        if(m_send_queue_cursor + length > m_send_queue.size())
+            m_send_queue.resize(m_send_queue_cursor + length);
+        RtlCopyMemory(&m_send_queue[m_send_queue_cursor], data, length);
+        m_send_queue_cursor += length;
+        m_units.push_back({length, false});
 
         _internal_flush_send_queue(false);
     }
@@ -89,6 +87,7 @@ bool TCPServerSessionHandler::_internal_flush_send_queue(bool lock)
 
     if (m_socket == INVALID_SOCKET) {
         m_send_queue_cursor = 0;
+        m_units.clear();
         if (lock) LeaveCriticalSection(&m_send_queue_cs);
         return false;
     }
@@ -115,6 +114,18 @@ bool TCPServerSessionHandler::_internal_flush_send_queue(bool lock)
         buffer += result;
         sent += result;
         m_send_queue_cursor -= result;
+
+        auto left = result;
+        while (left > 0) {
+            auto& unit = m_units.front();
+            unit.started = true;
+            const auto t = (std::min)(left, unit.remaining);
+            unit.remaining -= t;
+            left -= t;
+            if (!unit.remaining) {
+                m_units.pop_front();
+            }
+        }
     }
 
     if (lock) LeaveCriticalSection(&m_send_queue_cs);

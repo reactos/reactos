@@ -20,12 +20,19 @@
 #define _INC_WINDOWS
 #include <winsock2.h>
 
+#include <deque>
 #include <vector>
 
 class TCPServer;
 
 class TCPServerSessionHandler
 {
+    struct Unit
+    {
+        int remaining;
+        bool started;
+    };
+
 public:
     TCPServerSessionHandler();
     virtual ~TCPServerSessionHandler();
@@ -44,11 +51,15 @@ protected:
 
     void disconnect();
 
+    // Each call to this function constitutes a unit that will be sent as a whole,
+    // even when `clear_pending_*` functions are called.
     void send_data(const void* data, int length);
 
-    void clear_pending_send_queue();
-
+    // Clears pending whole units.
     void clear_pending_queue_then_send(const void* data, int length);
+
+    // Clears pending whole units.
+    void clear_pending_send_queue() { clear_pending_queue_then_send(nullptr, 0); }
 
 private:
     CRITICAL_SECTION m_send_queue_cs{};
@@ -56,6 +67,7 @@ private:
     size_t m_send_queue_cursor{};
     WSAEVENT m_event{WSA_INVALID_EVENT};
     volatile LONG m_disconnect_requested{0};
+    std::deque<Unit> m_units;
 
     void _internal_on_connect(TCPServer* server, SOCKET s, WSAEVENT e);
     
