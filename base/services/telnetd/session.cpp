@@ -141,14 +141,35 @@ void TelnetSession::on_window_size(uint16_t w, uint16_t h)
     TRACE("NAWS %u,%u\n", w, h);
 }
 
-void TelnetSession::on_text_line(const std::string& line)
+void TelnetSession::on_text_line(const std::wstring& line)
 {
     DWORD bytes_written{};
+    
+    if (line.empty()) {
+        if (!WriteFile(m_pipe_stdin, "\r\n", 2, &bytes_written, nullptr)) {
+            ERR("WriteFile failed with: %lu\n", GetLastError());
+        }
+        return;
+    }
 
-    const auto t = line + "\r\n";
-    if (!WriteFile(m_pipe_stdin, t.c_str(), (DWORD)t.size(), &bytes_written, nullptr)) {
+    const auto len = WideCharToMultiByte(CP_OEMCP, WC_NO_BEST_FIT_CHARS, line.c_str(), (int)line.size(), nullptr, 0, NULL, NULL);
+    if (!len) {
+        ERR("WideCharToMultiByte failed with: %lu\n", GetLastError());
+        return;   
+    }    
+    std::string mbline{};
+    mbline.resize(len);
+    if (!WideCharToMultiByte(CP_OEMCP, WC_NO_BEST_FIT_CHARS, line.c_str(), (int)line.size(), &mbline[0], len, NULL, NULL)) {
+        ERR("WideCharToMultiByte failed with: %lu\n", GetLastError());
+        return;
+    }
+    mbline += "\r\n";
+
+    if (!WriteFile(m_pipe_stdin, mbline.c_str(), (DWORD)mbline.size(), &bytes_written, nullptr)) {
         ERR("WriteFile failed with: %lu\n", GetLastError());
     }
+
+    SecureZeroMemory(&mbline[0], mbline.size());
 }
 
 void TelnetSession::discard_output()

@@ -315,7 +315,7 @@ void TelnetSessionHandler::handle_text_line(const std::string& line)
                 return;
             }
 
-            m_active_session->on_text_line(line);
+            m_active_session->on_text_line(string_to_wstring(line));
             break;
         
         default:
