@@ -510,6 +510,9 @@ udf_do_newfs_prefix(void)
 		return EINVAL;
 	}
 	wrtrack_skew = ti.track_start % blockingnr;
+	if (udf_physical_alignment > 1)
+		wrtrack_skew = (udf_physical_alignment -
+			udf_physical_offset) % udf_physical_alignment;
 
 	if (mmc_discinfo.mmc_class == MMC_CLASS_CD) {
 		/* not too much for CD-RW, still 20MiB */

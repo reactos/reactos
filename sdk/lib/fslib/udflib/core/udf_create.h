@@ -214,6 +214,8 @@ struct udf_create_context {
 
 extern struct udf_create_context context;
 extern struct udf_disclayout     layout;
+extern uint32_t udf_physical_alignment;
+extern uint32_t udf_physical_offset;
 
 /* prototypes */
 void udf_init_create_context(void);

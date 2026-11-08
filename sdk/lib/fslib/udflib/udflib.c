@@ -25,6 +25,8 @@ static NTSTATUS IoError;
 static ULONGLONG LastSector;
 static const char *FormatStage;
 struct mmc_discinfo mmc_discinfo;
+uint32_t udf_physical_alignment = 1;
+uint32_t udf_physical_offset;
 int fd, format_flags, media_accesstype, check_surface, wrtrack_skew;
 int meta_perc = 5;
 float meta_fract = 0.05f;
@@ -175,6 +177,55 @@ int udf_write_sector(void *Data, uint64_t Sector)
     if (IoStatus.Information != 512) { IoError = STATUS_DEVICE_DATA_ERROR; return EIO; }
     return 0;
 }
+
+static void UdfQueryPhysicalAlignment(HANDLE Partition, ULONG LogicalSectorSize)
+{
+    IO_STATUS_BLOCK IoStatus;
+    STORAGE_DEVICE_NUMBER DeviceNumber;
+    STORAGE_PROPERTY_QUERY Query = { StorageAccessAlignmentProperty, PropertyStandardQuery, {0} };
+    STORAGE_ACCESS_ALIGNMENT_DESCRIPTOR Alignment = {0};
+    PARTITION_INFORMATION_EX PartitionInfo;
+    ULONG AlignmentSectors, PartitionOffset;
+    NTSTATUS Status;
+
+    udf_physical_alignment = 1;
+    udf_physical_offset = 0;
+
+    if (!NT_SUCCESS(NtDeviceIoControlFile(Partition, NULL, NULL, NULL, &IoStatus,
+                                          IOCTL_STORAGE_GET_DEVICE_NUMBER, NULL, 0,
+                                          &DeviceNumber, sizeof(DeviceNumber))) ||
+        DeviceNumber.DeviceType != FILE_DEVICE_DISK)
+        return;
+
+    Status = NtDeviceIoControlFile(Partition, NULL, NULL, NULL, &IoStatus,
+                                   IOCTL_STORAGE_QUERY_PROPERTY, &Query, sizeof(Query),
+                                   &Alignment, sizeof(Alignment));
+    if (!NT_SUCCESS(Status) || IoStatus.Information < sizeof(Alignment) ||
+        Alignment.Size < sizeof(Alignment) ||
+        Alignment.BytesPerLogicalSector != LogicalSectorSize ||
+        Alignment.BytesPerPhysicalSector < LogicalSectorSize ||
+        Alignment.BytesPerPhysicalSector % LogicalSectorSize ||
+        Alignment.BytesOffsetForSectorAlignment >= Alignment.BytesPerPhysicalSector ||
+        Alignment.BytesOffsetForSectorAlignment % LogicalSectorSize)
+        return;
+
+    AlignmentSectors = Alignment.BytesPerPhysicalSector / LogicalSectorSize;
+    Status = NtDeviceIoControlFile(Partition, NULL, NULL, NULL, &IoStatus,
+                                   IOCTL_DISK_GET_PARTITION_INFO_EX, NULL, 0,
+                                   &PartitionInfo, sizeof(PartitionInfo));
+    if (!AlignmentSectors || !NT_SUCCESS(Status) ||
+        IoStatus.Information < sizeof(PartitionInfo) ||
+        PartitionInfo.StartingOffset.QuadPart < 0 ||
+        PartitionInfo.StartingOffset.QuadPart % LogicalSectorSize)
+        return;
+
+    PartitionOffset = (ULONG)((PartitionInfo.StartingOffset.QuadPart / LogicalSectorSize) %
+                              AlignmentSectors);
+    udf_physical_alignment = AlignmentSectors;
+    udf_physical_offset = (ULONG)(((ULONGLONG)PartitionOffset +
+        Alignment.BytesOffsetForSectorAlignment / LogicalSectorSize) % AlignmentSectors);
+}
+
 static void Progress(PFMIFSCALLBACK Callback, ULONG Percent)
 {
     if (Callback && !Callback(PROGRESS, 0, &Percent)) RtlRaiseStatus(STATUS_CANCELLED);
@@ -198,6 +249,8 @@ BOOLEAN NTAPI UdfFormat(PUNICODE_STRING DriveRoot, PFMIFSCALLBACK Callback,
     if (ClusterSize && ClusterSize != 512) return FALSE;
     if (MediaType != FixedMedia && MediaType != RemovableMedia) return FALSE;
     if (InterlockedCompareExchange(&Busy, 1, 0)) return FALSE;
+    udf_physical_alignment = 1;
+    udf_physical_offset = 0;
     FormatStage = "open";
     IoError = STATUS_SUCCESS;
     LastSector = 0;
@@ -218,6 +271,7 @@ BOOLEAN NTAPI UdfFormat(PUNICODE_STRING DriveRoot, PFMIFSCALLBACK Callback,
         Length.Length.QuadPart % 512 || (ULONGLONG)Length.Length.QuadPart / 512 > MAXULONG)
     { Status = STATUS_NOT_SUPPORTED; goto Done; }
     VolumeSectors = Length.Length.QuadPart / 512;
+    UdfQueryPhysicalAlignment(Volume, Geometry.BytesPerSector);
     Status = NtFsControlFile(Volume, NULL, NULL, NULL, &IoStatus,
                              FSCTL_LOCK_VOLUME, NULL, 0, NULL, 0);
     if (!NT_SUCCESS(Status)) goto Done;
