@@ -29,6 +29,7 @@ class TelnetSession
 {
 public:
     static constexpr DWORD PIPE_BUFFER_SIZE = 64 * 1024;
+    static constexpr size_t MAX_LINE_TAIL_LENGTH = 1024;
     static constexpr size_t MAX_CREDENTIAL_LENGTH = 256;
 
 public:
@@ -74,6 +75,7 @@ private:
 
     bool m_is_read_pending{};
     volatile LONG m_is_discarding{};
+    std::string m_line_tail{};
 
     ITelnetSessionHandler* m_handler{};
 };

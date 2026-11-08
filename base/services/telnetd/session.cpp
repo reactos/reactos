@@ -11,6 +11,8 @@
 #include <winnls.h>
 #include <userenv.h>
 
+#include <algorithm>
+
 #include <wine/debug.h>
 WINE_DEFAULT_DEBUG_CHANNEL(telnetd);
 
@@ -350,6 +352,8 @@ DWORD TelnetSession::read_loop()
             return ec;
         } else if ((idx == WAIT_TIMEOUT) && m_is_discarding) {
             InterlockedExchange(&m_is_discarding, 0);
+            m_handler->send_string("\r\n");
+            m_handler->send_text((const uint8_t*)m_line_tail.data(), (int)m_line_tail.size());
             continue;
         }
         idx -= WAIT_OBJECT_0;
@@ -369,9 +373,21 @@ DWORD TelnetSession::read_loop()
                 ERR("GetOverlappedResult failed with: %lu\n", ec);
                 return ec;
             }
+            
             m_is_read_pending = false;
             if (!m_is_discarding) {
                 m_handler->send_text((const uint8_t*)m_reader_buffer.data(), bytes_transferred);
+            }
+
+            const auto it = std::find(m_reader_buffer.rbegin() + (m_reader_buffer.size() - bytes_transferred), m_reader_buffer.rend(), '\n');
+            if (it == m_reader_buffer.rend()) {
+                m_line_tail += std::string(m_reader_buffer.begin(), m_reader_buffer.begin() + bytes_transferred);
+            } else {
+                m_line_tail = std::string(it.base(), m_reader_buffer.begin() + bytes_transferred);
+            }
+
+            if (m_line_tail.size() > MAX_LINE_TAIL_LENGTH) {
+                m_line_tail.erase(0, m_line_tail.size() - MAX_LINE_TAIL_LENGTH);
             }
         } else if (idx == 2) {
             continue;
