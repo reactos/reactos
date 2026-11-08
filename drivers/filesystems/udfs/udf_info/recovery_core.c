@@ -1927,14 +1927,13 @@ GraphCheckFreeMetadataFes(RECOVERY_GRAPH *graph,
     uint32_t lbn, copy;
     UDFS_RECOVERY_PROBE *result = graph->Result;
     UDFS_RECOVERY_PROBE_STATUS status;
-    if (!result->MetadataDuplicated)
-        return UdfsRecoveryProbeUnsupported;
     for (lbn = 0; lbn < result->MetadataBlocks; ++lbn) {
         int freeBit;
         status = GraphMetadataBitIsFree(graph, lbn, &freeBit);
         if (status != UdfsRecoveryProbeValidLayout) return status;
         if (!freeBit) continue;
-        for (copy = 0; copy < 2; ++copy) {
+        /* Without a mirror only the main copy exists. */
+        for (copy = 0; copy < (result->MetadataDuplicated ? 2U : 1U); ++copy) {
             uint32_t lba, tag, adOffset;
             const RECOVERY_EXTENT_LIST *file =
                 copy ? mirrorFile : graph->Metadata;
@@ -2836,7 +2835,7 @@ UdfsRecoveryPeekIntegrity(const UDFS_RECOVERY_READER *reader,
         lvd[446] != 2 || lvd[447] != 64 ||
         RecoveryDifference(lvd + 451,
                            "*UDF Metadata Partition", 23) != 0 ||
-        lvd[504] != 1) {
+        (lvd[504] & ~1U)) {
         status = UdfsRecoveryProbeUnsupported;
         goto done;
     }
@@ -3179,7 +3178,7 @@ static int
 GraphCanRollbackPhysicalOrphans(const UDFS_RECOVERY_PROBE *probe)
 {
     return probe->Status == UdfsRecoveryProbeGraphMismatch &&
-        probe->LvidIntegrityType == 0 && probe->MetadataDuplicated &&
+        probe->LvidIntegrityType == 0 &&
         probe->BitmapContentsScanned && probe->OwnershipGraphScanned &&
         probe->FreeMetadataFeScanComplete &&
         probe->UnownedPhysicalBlocks && !probe->UnownedMetadataBlocks &&
@@ -3210,7 +3209,12 @@ GraphCanRollbackPhysicalOrphans(const UDFS_RECOVERY_PROBE *probe)
 static int
 GraphCanRecover(const UDFS_RECOVERY_PROBE *probe)
 {
-    return probe->LvidIntegrityType == 0 && probe->MetadataDuplicated &&
+    /* Without a metadata mirror there is no second copy to settle a split
+     * against, so only a volume that needs no split repair is recovered. */
+    return probe->LvidIntegrityType == 0 &&
+        (probe->MetadataDuplicated ||
+         (!probe->FidSplitCount && !probe->MirrorDirectorySplitCount &&
+          !probe->DirectoryLinkFixCount)) &&
         probe->BitmapContentsScanned && probe->OwnershipGraphScanned &&
         (!probe->FidSplitCount ||
          (probe->FidSplitCount == 1 &&
