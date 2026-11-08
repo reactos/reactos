@@ -247,9 +247,9 @@ DumpKbdLayout(
  * only, so the byte at offset 0 of the buffer is the byte at RVA offData of the file. */
 typedef struct _KBDIMAGE_INFO
 {
-    ULONG_PTR ImageBase;    /* The base address the pointers in the layout tables are based on */
-    ULONG offData;          /* RVA of the .data section in the file (not an offset in the buffer) */
-    ULONG cbData;           /* Size of the .data section (= size of the buffer) */
+    ULONG_PTR ImageBase; /* The base address the pointers in the layout tables are based on */
+    ULONG offData;       /* RVA of the .data section in the file (not an offset in the buffer) */
+    ULONG cbData;        /* Size of the .data section (= size of the buffer) */
 } KBDIMAGE_INFO, *PKBDIMAGE_INFO;
 
 /**
@@ -336,10 +336,11 @@ KbdBuildImage(
         if (!cbImage || cbImage > KBDIMG_MAXSIZE)
             _SEH2_YIELD(return NULL);
 
-        /* The section headers must be aligned and lie within the file */
+        /* Keep pSec aligned: IMAGE_FIRST_SECTION depends on SizeOfOptionalHeader */
         if (pNt->FileHeader.SizeOfOptionalHeader & 3)
             _SEH2_YIELD(return NULL);
 
+        /* The section headers must lie within the file (compare offsets, not pointers) */
         pSec = IMAGE_FIRST_SECTION(pNt);
         offSec = (SIZE_T)((PBYTE)pSec - pbRaw);
         if (offSec > cbRaw ||
@@ -472,7 +473,8 @@ KbdUnloadImage(
         ExFreePoolWithTag(pvImageBase, KBDIMG_TAG);
 }
 
-/* Tells whether the RVA range [off, off + cb) lies within the .data section (without overflowing) */
+/* Tells whether the RVA range [off, off + cb) lies within the .data section
+ * (without overflowing) */
 static __inline BOOL
 KbdIsRangeInData(_In_ const KBDIMAGE_INFO *pInfo, _In_ ULONG_PTR off, _In_ SIZE_T cb)
 {
@@ -499,11 +501,11 @@ KbdIsRangeInData(_In_ const KBDIMAGE_INFO *pInfo, _In_ ULONG_PTR off, _In_ SIZE_
 /* The state of the validation. All the checks are done on the copy in our buffer. */
 typedef struct _KBDVALIDATE
 {
-    PBYTE     pbImage;      /* The buffer (the .data section only) */
-    ULONG     cbData;       /* Size of the buffer */
-    ULONG_PTR ImageBase;    /* The base address the pointers in the layout tables are based on */
-    ULONG     offData;      /* RVA of the .data section in the file */
-    PBYTE     pbSlots;      /* 1 bit per pointer-sized slot of the buffer that is already rebased */
+    PBYTE     pbImage;   /* The buffer (the .data section only) */
+    ULONG     cbData;    /* Size of the buffer */
+    ULONG_PTR ImageBase; /* The base address the pointers in the layout tables are based on */
+    ULONG     offData;   /* RVA of the .data section in the file */
+    PBYTE     pbSlots;   /* 1 bit per pointer-sized slot of the buffer that is already rebased */
 } KBDVALIDATE, *PKBDVALIDATE;
 
 /* Tells whether [p, p + cb) lies within the buffer (without overflowing) and p is aligned */
