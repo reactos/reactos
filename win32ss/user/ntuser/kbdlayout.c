@@ -311,6 +311,12 @@ KbdBuildImage(
         {
             imageBase = (ULONG_PTR)((PIMAGE_NT_HEADERS64)pNt)->OptionalHeader.ImageBase;
         }
+#elif defined(_M_ARM)
+        if (pNt->OptionalHeader.Magic == IMAGE_NT_OPTIONAL_HDR32_MAGIC &&
+            pNt->FileHeader.Machine == IMAGE_FILE_MACHINE_ARMNT)
+        {
+            imageBase = ((PIMAGE_NT_HEADERS32)pNt)->OptionalHeader.ImageBase;
+        }
 #elif defined(_M_IX86)
         if (pNt->OptionalHeader.Magic == IMAGE_NT_OPTIONAL_HDR32_MAGIC &&
             pNt->FileHeader.Machine == IMAGE_FILE_MACHINE_I386)
