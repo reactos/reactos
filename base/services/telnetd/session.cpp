@@ -37,7 +37,14 @@ TelnetSession::~TelnetSession()
     if (m_reader_thread_handle) {
         WaitForSingleObject(m_reader_thread_handle, INFINITE);
         CloseHandle(m_reader_thread_handle);
+    }
+
+    if (m_reader_stop_event) {
         CloseHandle(m_reader_stop_event);
+    }
+
+    if (m_reader_discard_event) {
+        CloseHandle(m_reader_discard_event);
     }
 
     if (m_reader_overlapped.hEvent) {
@@ -137,7 +144,8 @@ void TelnetSession::on_text_line(const std::string& line)
 
 void TelnetSession::discard_output()
 {
-
+    InterlockedExchange(&m_is_discarding, 1);
+    SetEvent(m_reader_discard_event);
 }
 
 bool TelnetSession::load_user_data(const std::string& username)
@@ -279,6 +287,12 @@ bool TelnetSession::start_reader_thread()
         return false;
     }
 
+    m_reader_discard_event = CreateEvent(nullptr, false, false, nullptr);
+    if (!m_reader_discard_event) {
+        ERR("reader discard event create failed with: %lu\n", GetLastError());
+        return false;
+    }
+
     m_reader_overlapped.hEvent = CreateEvent(nullptr, TRUE, FALSE, nullptr);
     if (!m_reader_overlapped.hEvent) {
         ERR("reader overlapped event create failed with: %lu\n", GetLastError());
@@ -306,26 +320,37 @@ bool TelnetSession::start_reader_thread()
 
 DWORD TelnetSession::read_loop()
 {
-    HANDLE wait_objects[2] = {m_reader_stop_event, m_reader_overlapped.hEvent};
+    HANDLE wait_objects[3] = {m_reader_stop_event, m_reader_overlapped.hEvent, m_reader_discard_event};
 
     while (true) {
         DWORD read_size{};
-        if (!ReadFile(m_pipe_std_out_err, m_reader_buffer.data(), (DWORD)m_reader_buffer.size(), &read_size, &m_reader_overlapped)) {
+
+        if (!m_is_read_pending && !ReadFile(m_pipe_std_out_err, m_reader_buffer.data(), (DWORD)m_reader_buffer.size(), &read_size, &m_reader_overlapped)) {
             const auto ec = GetLastError();
             if (ec == ERROR_BROKEN_PIPE) {
                 m_handler->close_session();
                 return ec;
-            } else if (ec != ERROR_IO_PENDING) {
+            } else if (ec == ERROR_IO_PENDING) {
+                m_is_read_pending = true;
+            } else {
                 ERR("ReadFile failed with: %lu\n", ec);
                 return ec;
             }
         }
 
-        auto idx = WaitForMultipleObjects(2, wait_objects, false, INFINITE);
+        auto idx = WaitForMultipleObjects(
+            sizeof(wait_objects)/sizeof(wait_objects[0]), 
+            wait_objects,
+            false,
+            m_is_discarding ? 200 : INFINITE
+        );
         if (idx == WAIT_FAILED) {
             const auto ec = GetLastError();
             ERR("WaitForMultipleObjects failed with: %lu\n", ec);
             return ec;
+        } else if ((idx == WAIT_TIMEOUT) && m_is_discarding) {
+            InterlockedExchange(&m_is_discarding, 0);
+            continue;
         }
         idx -= WAIT_OBJECT_0;
 
@@ -333,6 +358,7 @@ DWORD TelnetSession::read_loop()
         if (!idx) { // stop event
             CancelIo(m_pipe_std_out_err);
             GetOverlappedResult(m_pipe_std_out_err, &m_reader_overlapped, &bytes_transferred, true);
+            m_is_read_pending = false;
             break;
         } else if (idx == 1) {
             if (!GetOverlappedResult(m_pipe_std_out_err, &m_reader_overlapped, &bytes_transferred, true)) {
@@ -343,7 +369,12 @@ DWORD TelnetSession::read_loop()
                 ERR("GetOverlappedResult failed with: %lu\n", ec);
                 return ec;
             }
-            m_handler->send_text((const uint8_t*)m_reader_buffer.data(), bytes_transferred);
+            m_is_read_pending = false;
+            if (!m_is_discarding) {
+                m_handler->send_text((const uint8_t*)m_reader_buffer.data(), bytes_transferred);
+            }
+        } else if (idx == 2) {
+            continue;
         }
     }
 

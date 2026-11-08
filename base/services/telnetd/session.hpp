@@ -68,8 +68,12 @@ private:
 
     HANDLE m_reader_thread_handle{};
     HANDLE m_reader_stop_event{};
+    HANDLE m_reader_discard_event{};
     OVERLAPPED m_reader_overlapped{};
     std::vector<CHAR> m_reader_buffer{};
+
+    bool m_is_read_pending{};
+    volatile LONG m_is_discarding{};
 
     ITelnetSessionHandler* m_handler{};
 };
