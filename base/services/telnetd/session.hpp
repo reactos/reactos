@@ -63,9 +63,11 @@ private:
     std::wstring m_userdir;
     HANDLE m_user_profile_handle{INVALID_HANDLE_VALUE};
 
+    HANDLE m_job_handle{};
     HANDLE m_cmd_process_handle{INVALID_HANDLE_VALUE};
     HANDLE m_pipe_stdin{INVALID_HANDLE_VALUE};
     HANDLE m_pipe_std_out_err{INVALID_HANDLE_VALUE};
+    bool m_cmd_exited{};
 
     HANDLE m_reader_thread_handle{};
     HANDLE m_reader_stop_event{};

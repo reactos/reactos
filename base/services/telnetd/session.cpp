@@ -54,9 +54,15 @@ TelnetSession::~TelnetSession()
     }
 
     if (m_cmd_process_handle != INVALID_HANDLE_VALUE) {
-        TerminateProcess(m_cmd_process_handle, -1);
+        if (m_job_handle) {
+            TerminateJobObject(m_job_handle, (DWORD)-1);
+        }
         WaitForSingleObject(m_cmd_process_handle, INFINITE);
         CloseHandle(m_cmd_process_handle);
+    }
+
+    if (m_job_handle) { 
+        CloseHandle(m_job_handle);
     }
 
     if (m_pipe_stdin != INVALID_HANDLE_VALUE) {
@@ -233,6 +239,25 @@ bool TelnetSession::spawn_cmd_process()
         return false;
     }
 
+    m_job_handle = CreateJobObjectW(nullptr, nullptr);
+    if (!m_job_handle) {
+        const auto ec = GetLastError();
+        CloseHandle(child_pipe_stdin);
+        CloseHandle(child_pipe_std_out_err);
+        ERR("CreateJobObjectW failed with: %lu\n", ec);
+        return false;
+    }
+
+    JOBOBJECT_EXTENDED_LIMIT_INFORMATION job_limit_info{};
+    job_limit_info.BasicLimitInformation.LimitFlags = JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE;
+    if (!SetInformationJobObject(m_job_handle, JobObjectExtendedLimitInformation, &job_limit_info, sizeof(job_limit_info))) {
+        const auto ec = GetLastError();
+        CloseHandle(child_pipe_stdin);
+        CloseHandle(child_pipe_std_out_err);
+        ERR("SetInformationJobObject failed with: %lu\n", ec);
+        return false;
+    }
+
     LPVOID env_block{};
     if (!CreateEnvironmentBlock(&env_block, m_token, false)) {
         const auto ec = GetLastError();
@@ -258,7 +283,7 @@ bool TelnetSession::spawn_cmd_process()
         cmd, 
         nullptr, nullptr, 
         true, 
-        CREATE_UNICODE_ENVIRONMENT, 
+        CREATE_UNICODE_ENVIRONMENT | CREATE_SUSPENDED, 
         env_block, 
         m_userdir.c_str(), 
         &startup_info, 
@@ -271,10 +296,35 @@ bool TelnetSession::spawn_cmd_process()
         ERR("CreateProcessAsUserW failed with: %lu\n", ec);
         return false;
     }
+
+    if (!AssignProcessToJobObject(m_job_handle, process_info.hProcess)) {
+        const auto ec = GetLastError();
+        TerminateProcess(process_info.hProcess, ec);
+        DestroyEnvironmentBlock(env_block);
+        CloseHandle(process_info.hProcess);
+        CloseHandle(process_info.hThread);
+        CloseHandle(child_pipe_stdin);
+        CloseHandle(child_pipe_std_out_err);
+        ERR("AssignProcessToJobObject failed with: %lu\n", ec);
+        return false;
+    }
+
+    if (ResumeThread(process_info.hThread) == (DWORD)-1) {
+        const auto ec = GetLastError();
+        TerminateProcess(process_info.hProcess, ec);
+        DestroyEnvironmentBlock(env_block);
+        CloseHandle(process_info.hProcess);
+        CloseHandle(process_info.hThread);
+        CloseHandle(child_pipe_stdin);
+        CloseHandle(child_pipe_std_out_err);
+        ERR("ResumeThread failed with: %lu\n", ec);
+        return false;
+    }
+
+    CloseHandle(process_info.hThread);
     
     m_cmd_process_handle = process_info.hProcess;
     DestroyEnvironmentBlock(env_block);
-    CloseHandle(process_info.hThread);
     CloseHandle(child_pipe_stdin);
     CloseHandle(child_pipe_std_out_err);
 
@@ -322,7 +372,7 @@ bool TelnetSession::start_reader_thread()
 
 DWORD TelnetSession::read_loop()
 {
-    HANDLE wait_objects[3] = {m_reader_stop_event, m_reader_overlapped.hEvent, m_reader_discard_event};
+    HANDLE wait_objects[4] = {m_reader_stop_event, m_reader_overlapped.hEvent, m_reader_discard_event, m_cmd_process_handle};
 
     while (true) {
         DWORD read_size{};
@@ -341,7 +391,7 @@ DWORD TelnetSession::read_loop()
         }
 
         auto idx = WaitForMultipleObjects(
-            sizeof(wait_objects)/sizeof(wait_objects[0]), 
+            m_cmd_exited ? 3 : 4, 
             wait_objects,
             false,
             m_is_discarding ? 200 : INFINITE
@@ -391,6 +441,9 @@ DWORD TelnetSession::read_loop()
             }
         } else if (idx == 2) {
             continue;
+        } else if (idx == 3) {
+            TerminateJobObject(m_job_handle, 0);
+            m_cmd_exited = true;
         }
     }
 
