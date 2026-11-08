@@ -130,6 +130,7 @@ private:
     uint8_t m_parser_state_data{};
     std::vector<uint8_t> m_sb_buffer{};
     EParserState m_parser_state{EParserState::TEXT};
+    bool m_dropping_utf8_remain{};
 
     CRITICAL_SECTION m_out_text_cs{};
     bool m_last_out_was_cr{};

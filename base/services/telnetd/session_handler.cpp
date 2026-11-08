@@ -38,6 +38,21 @@ static std::wstring string_to_wstring(const std::string& str)
     return result;
 }
 
+static uint8_t get_utf8_sequence_length(uint8_t c)
+{
+    if (c < 0x80) {
+        return 1;
+    } else if ((c & 0xE0) == 0xC0) {
+        return 2;
+    } else if ((c & 0xF0) == 0xE0) {
+        return 3;
+    } else if ((c & 0xF8) == 0xF0) {
+        return 4;
+    }
+
+    return 1;
+}
+
 TelnetSessionHandler::TelnetSessionHandler()
 {
     m_echo_buffer.reserve(1024);
@@ -202,6 +217,10 @@ void TelnetSessionHandler::handle_text(const uint8_t* data, int length)
     {
         const auto c = *cur;
 
+        if ((c & 0xC0) != 0x80) {
+            m_dropping_utf8_remain = false;
+        }
+
         if (m_text_last_byte_was_cr && (!c || (c == CHAR_LF))) {
             m_text_last_byte_was_cr = false;
             continue;
@@ -225,14 +244,29 @@ void TelnetSessionHandler::handle_text(const uint8_t* data, int length)
             if (m_active_session)
                 m_active_session->on_sigint();
         } else if (c >= 32) {
-            if (m_text_line_buffer.size() < MAX_TEXT_LINE_LENGTH) {
-                // [IATODO] lead byte handling
-                m_text_line_buffer.push_back(c);
+            if ((c & 0xC0) == 0x80) {
+                if (!m_dropping_utf8_remain) {
+                    if (m_text_line_buffer.size() < MAX_TEXT_LINE_LENGTH) {
+                        m_text_line_buffer.push_back(c);
 
-                if (should_echo())
-                    m_echo_buffer.push_back(c);
-            } else
-                m_echo_buffer.push_back(CHAR_BELL);
+                        if (should_echo())
+                            m_echo_buffer.push_back(c);
+                    } else {
+                        m_echo_buffer.push_back(CHAR_BELL);
+                    }
+                }
+            } else {
+                const auto len = get_utf8_sequence_length(c);
+                if (m_text_line_buffer.size() + len <= MAX_TEXT_LINE_LENGTH) {
+                    m_text_line_buffer.push_back(c);
+
+                    if (should_echo())
+                        m_echo_buffer.push_back(c);
+                } else {
+                    m_echo_buffer.push_back(CHAR_BELL);
+                    m_dropping_utf8_remain = len > 1;
+                }
+            }
         }
     }
 
