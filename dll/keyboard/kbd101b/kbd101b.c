@@ -1,7 +1,7 @@
 /*
  * PROJECT:     ReactOS Keyboard Layouts
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
- * PURPOSE:     Korean 101 Type B Keyboard Layout
+ * PURPOSE:     Korean Hangeul 101 Type B Keyboard Layout
  * COPYRIGHT:   Copyright 2026 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 /* See also: https://kbdlayout.info/kbd101b */
