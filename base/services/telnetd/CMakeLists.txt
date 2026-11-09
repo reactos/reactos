@@ -3,6 +3,7 @@ set(SOURCE_FILES
     session.cpp
     session_handler.cpp
     tcpserver.cpp
+    string_utils.cpp
     serviceentry.c
 )
 
