@@ -49,12 +49,14 @@ public:
 private:
     bool load_user_data();
     bool spawn_cmd_process();
-    bool start_reader_thread();
+    bool start_io_thread();
+    
+    void start_write();
 
 private:
-    DWORD read_loop();
+    DWORD io_loop();
 
-    static inline DWORD WINAPI reader_thread_func(LPVOID self);
+    static inline DWORD WINAPI io_thread_func(LPVOID self);
 
 private:
     HANDLE m_token{};
@@ -88,7 +90,7 @@ private:
     ITelnetSessionHandler* m_handler{};
 };
 
-DWORD WINAPI TelnetSession::reader_thread_func(LPVOID self)
+DWORD WINAPI TelnetSession::io_thread_func(LPVOID self)
 {
-    return ((TelnetSession*)self)->read_loop();
+    return ((TelnetSession*)self)->io_loop();
 }

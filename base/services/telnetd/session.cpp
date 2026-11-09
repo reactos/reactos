@@ -44,6 +44,14 @@ TelnetSession::~TelnetSession()
         CloseHandle(m_reader_thread_handle);
     }
 
+    if (m_write_request_event) {
+        CloseHandle(m_write_request_event);
+    }
+
+    if (m_writer_overlapped.hEvent) {
+        CloseHandle(m_writer_overlapped.hEvent);
+    }
+
     if (m_reader_stop_event) {
         CloseHandle(m_reader_stop_event);
     }
@@ -96,7 +104,7 @@ bool TelnetSession::connect(const std::wstring& username, HANDLE token)
     if (!spawn_cmd_process())
         return false;
 
-    if (!start_reader_thread())
+    if (!start_io_thread())
         return false;
 
     return true;
@@ -394,7 +402,7 @@ bool TelnetSession::spawn_cmd_process()
     return true;
 }
 
-bool TelnetSession::start_reader_thread()
+bool TelnetSession::start_io_thread()
 {
     m_reader_stop_event = CreateEvent(nullptr, false, false, nullptr);
     if (!m_reader_stop_event) {
@@ -414,13 +422,26 @@ bool TelnetSession::start_reader_thread()
         return false;
     }
 
+    m_write_request_event = CreateEvent(nullptr, false, false, nullptr);
+    if (!m_write_request_event) {
+        ERR("write request event create failed with: %lu\n", GetLastError());
+        return false;
+    }
+
+    m_writer_overlapped.hEvent = CreateEvent(nullptr, TRUE, FALSE, nullptr);
+    if (!m_writer_overlapped.hEvent) {
+        ERR("writer overlapped event create failed with: %lu\n", GetLastError());
+        return false;
+    }
+
+    m_write_buffer.reserve(PIPE_BUFFER_SIZE);
     m_reader_buffer.resize(PIPE_BUFFER_SIZE);
 
     DWORD thread_id{};
     m_reader_thread_handle = CreateThread(
         nullptr,
         0,
-        reader_thread_func,
+        io_thread_func,
         this,
         0,
         &thread_id
@@ -433,9 +454,9 @@ bool TelnetSession::start_reader_thread()
     return true;
 }
 
-DWORD TelnetSession::read_loop()
+DWORD TelnetSession::io_loop()
 {
-    HANDLE wait_objects[4] = {m_reader_stop_event, m_reader_overlapped.hEvent, m_reader_discard_event, m_cmd_process_handle};
+    HANDLE wait_objects[6] = {m_reader_stop_event, m_reader_overlapped.hEvent, m_reader_discard_event, m_write_request_event, m_writer_overlapped.hEvent, m_cmd_process_handle};
 
     while (true) {
         DWORD read_size{};
@@ -473,9 +494,16 @@ DWORD TelnetSession::read_loop()
 
         DWORD bytes_transferred{};
         if (!idx) { // stop event
+            CancelIo(m_pipe_stdin);
             CancelIo(m_pipe_std_out_err);
-            GetOverlappedResult(m_pipe_std_out_err, &m_reader_overlapped, &bytes_transferred, true);
-            m_is_read_pending = false;
+
+            if (m_is_write_pending) {
+                GetOverlappedResult(m_pipe_stdin, &m_writer_overlapped, &bytes_transferred, true);
+            }
+            if (m_is_read_pending) {
+                GetOverlappedResult(m_pipe_std_out_err, &m_reader_overlapped, &bytes_transferred, true);
+            }
+            
             break;
         } else if (idx == 1) {
             if (!GetOverlappedResult(m_pipe_std_out_err, &m_reader_overlapped, &bytes_transferred, true)) {
@@ -505,10 +533,44 @@ DWORD TelnetSession::read_loop()
         } else if (idx == 2) {
             continue;
         } else if (idx == 3) {
+            start_write();
+        } else if (idx == 4) {
+            
+        } else if (idx == 5) {
             TerminateJobObject(m_job_handle, 0);
             m_cmd_exited = true;
         }
     }
 
     return 0;
+}
+
+void TelnetSession::start_write()
+{
+    if (m_is_write_pending) {
+        return;
+    }
+
+    EnterCriticalSection(&m_write_cs);
+    const auto size_to_write = (std::min)(m_write_queue.size(), (size_t)PIPE_BUFFER_SIZE);
+    if (!size_to_write) {
+        LeaveCriticalSection(&m_write_cs);
+        return;
+    }
+    m_write_buffer = m_write_queue.substr(0, size_to_write);
+    m_write_queue.erase(m_write_queue.begin(), m_write_queue.begin() + size_to_write);
+    LeaveCriticalSection(&m_write_cs);
+
+    const auto success = WriteFile(m_pipe_stdin, m_write_buffer.data(), size_to_write, nullptr, &m_writer_overlapped);
+    const auto ec = GetLastError();
+    if (success || (ec == ERROR_IO_PENDING)) {
+        m_is_write_pending = true;
+        return;
+    }
+
+    ERR("WriteFile failed with: %lu\n", ec);
+    RtlSecureZeroMemory(&m_write_queue[0], m_write_queue.size());
+    RtlSecureZeroMemory(&m_write_buffer[0], m_write_buffer.size());
+    m_write_queue.clear();
+    m_write_buffer.clear();
 }
