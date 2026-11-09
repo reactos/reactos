@@ -587,6 +587,7 @@ Default = "XT-, AT- or extended keyboard (83-105 keys)"
 00020402 = kbdbgt.dll
 00030402 = kbdbga.dll
 00040402 = kbdbu.dll
+00001009 = kbdca.dll
 00000405 = kbdcz.dll
 00010405 = kbdcz1.dll
 00000406 = kbdda.dll
