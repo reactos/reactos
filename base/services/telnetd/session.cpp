@@ -28,10 +28,13 @@ static BOOL WINAPI ctrl_handler(DWORD type)
 TelnetSession::TelnetSession(ITelnetSessionHandler* handler): 
     m_handler(handler)
 {
+    InitializeCriticalSection(&m_write_cs); 
 }
 
 TelnetSession::~TelnetSession()
 {
+    DeleteCriticalSection(&m_write_cs);
+
     if (m_reader_stop_event) {
         SetEvent(m_reader_stop_event);
     }
@@ -143,33 +146,35 @@ void TelnetSession::on_window_size(uint16_t w, uint16_t h)
 
 void TelnetSession::on_text_line(const std::wstring& line)
 {
-    DWORD bytes_written{};
-    
-    if (line.empty()) {
-        if (!WriteFile(m_pipe_stdin, "\r\n", 2, &bytes_written, nullptr)) {
-            ERR("WriteFile failed with: %lu\n", GetLastError());
-        }
-        return;
-    }
-
-    const auto len = WideCharToMultiByte(CP_OEMCP, WC_NO_BEST_FIT_CHARS, line.c_str(), (int)line.size(), nullptr, 0, NULL, NULL);
-    if (!len) {
-        ERR("WideCharToMultiByte failed with: %lu\n", GetLastError());
-        return;   
-    }    
     std::string mbline{};
-    mbline.resize(len);
-    if (!WideCharToMultiByte(CP_OEMCP, WC_NO_BEST_FIT_CHARS, line.c_str(), (int)line.size(), &mbline[0], len, NULL, NULL)) {
-        ERR("WideCharToMultiByte failed with: %lu\n", GetLastError());
-        return;
+    if (!line.empty()) {
+        const auto len = WideCharToMultiByte(CP_OEMCP, WC_NO_BEST_FIT_CHARS, line.c_str(), (int)line.size(), nullptr, 0, NULL, NULL);
+        if (!len) {
+            ERR("WideCharToMultiByte failed with: %lu\n", GetLastError());
+            return;   
+        }    
+        mbline.resize(len);
+        if (!WideCharToMultiByte(CP_OEMCP, WC_NO_BEST_FIT_CHARS, line.c_str(), (int)line.size(), &mbline[0], len, NULL, NULL)) {
+            ERR("WideCharToMultiByte failed with: %lu\n", GetLastError());
+            return;
+        }
     }
     mbline += "\r\n";
 
-    if (!WriteFile(m_pipe_stdin, mbline.c_str(), (DWORD)mbline.size(), &bytes_written, nullptr)) {
-        ERR("WriteFile failed with: %lu\n", GetLastError());
+    EnterCriticalSection(&m_write_cs);
+    const auto curr_queue_size = m_write_queue.size();
+    if (curr_queue_size + mbline.size() > MAX_WRITE_QUEUE_LENGTH) {
+        m_handler->send_string("\a");
+    } else {
+        m_write_queue += mbline;
     }
+    LeaveCriticalSection(&m_write_cs);
 
     SecureZeroMemory(&mbline[0], mbline.size());
+
+    if (m_write_queue.size() != curr_queue_size) {
+        SetEvent(m_write_request_event);
+    }
 }
 
 void TelnetSession::discard_output()
@@ -209,8 +214,44 @@ bool TelnetSession::load_user_data()
 bool TelnetSession::spawn_cmd_process()
 {
     WCHAR pipe_name[64];
-    _snwprintf(pipe_name, sizeof(pipe_name)/sizeof(WCHAR), L"\\\\.\\pipe\\telnetd-%08x-%08x", GetCurrentProcessId(), s_session_counter++);
 
+    SECURITY_ATTRIBUTES sec_attr{};
+    sec_attr.bInheritHandle = true;
+    sec_attr.nLength = sizeof(SECURITY_ATTRIBUTES);
+    
+    _snwprintf(pipe_name, sizeof(pipe_name)/sizeof(WCHAR), L"\\\\.\\pipe\\telnetd-stdin-%08x-%08x", GetCurrentProcessId(), s_session_counter++);
+    
+    m_pipe_stdin = CreateNamedPipeW(
+        pipe_name, 
+        PIPE_ACCESS_OUTBOUND | FILE_FLAG_OVERLAPPED | FILE_FLAG_FIRST_PIPE_INSTANCE, 
+        PIPE_TYPE_BYTE | PIPE_WAIT,
+        1,
+        PIPE_BUFFER_SIZE,
+        PIPE_BUFFER_SIZE,
+        0,
+        nullptr
+    );
+    if (m_pipe_stdin == INVALID_HANDLE_VALUE) {
+        ERR("CreateNamedPipeW(%ls) failed with: %lu\n", pipe_name, GetLastError());
+        return false;
+    }
+
+    const auto child_pipe_stdin =CreateFileW(
+        pipe_name,
+        GENERIC_READ,
+        0,
+        &sec_attr,
+        OPEN_EXISTING,
+        0,
+        nullptr
+    );
+    if (child_pipe_stdin == INVALID_HANDLE_VALUE) {
+        ERR("CreateFileW(%ls) failed with: %lu\n", pipe_name, GetLastError());
+        return false;
+    }
+
+    _snwprintf(pipe_name, sizeof(pipe_name)/sizeof(WCHAR), L"\\\\.\\pipe\\telnetd-stdout-%08x-%08x", GetCurrentProcessId(), s_session_counter++);
+    
     m_pipe_std_out_err = CreateNamedPipeW(
         pipe_name, 
         PIPE_ACCESS_INBOUND | FILE_FLAG_OVERLAPPED | FILE_FLAG_FIRST_PIPE_INSTANCE, 
@@ -226,9 +267,6 @@ bool TelnetSession::spawn_cmd_process()
         return false;
     }
 
-    SECURITY_ATTRIBUTES sec_attr{};
-    sec_attr.bInheritHandle = true;
-    sec_attr.nLength = sizeof(SECURITY_ATTRIBUTES);
     const auto child_pipe_std_out_err =CreateFileW(
         pipe_name,
         GENERIC_WRITE,
@@ -240,21 +278,6 @@ bool TelnetSession::spawn_cmd_process()
     );
     if (child_pipe_std_out_err == INVALID_HANDLE_VALUE) {
         ERR("CreateFileW(%ls) failed with: %lu\n", pipe_name, GetLastError());
-        return false;
-    }
-
-    HANDLE child_pipe_stdin{};
-    if (!CreatePipe(&child_pipe_stdin, &m_pipe_stdin, &sec_attr, PIPE_BUFFER_SIZE)) {
-        const auto ec = GetLastError();
-        CloseHandle(child_pipe_std_out_err);
-        ERR("CreatePipe failed with: %lu\n", ec);
-        return false;
-    }
-    if (!SetHandleInformation(m_pipe_stdin, HANDLE_FLAG_INHERIT, 0)) {
-        const auto ec = GetLastError();
-        CloseHandle(child_pipe_stdin);
-        CloseHandle(child_pipe_std_out_err);
-        ERR("SetHandleInformation failed with: %lu\n", ec);
         return false;
     }
 

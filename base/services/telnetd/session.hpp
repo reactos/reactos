@@ -29,6 +29,7 @@ class TelnetSession
 {
     static constexpr DWORD PIPE_BUFFER_SIZE = 64 * 1024;
     static constexpr size_t MAX_LINE_TAIL_LENGTH = 1024;
+    static constexpr size_t MAX_WRITE_QUEUE_LENGTH = PIPE_BUFFER_SIZE;
 
 public:
     TelnetSession(ITelnetSessionHandler* handler);
@@ -76,6 +77,13 @@ private:
     bool m_is_read_pending{};
     volatile LONG m_is_discarding{};
     std::string m_line_tail{};
+
+    CRITICAL_SECTION m_write_cs{};
+    std::string m_write_queue{};
+    std::string m_write_buffer{};
+    HANDLE m_write_request_event{};
+    OVERLAPPED m_writer_overlapped{};
+    bool m_is_write_pending{};
 
     ITelnetSessionHandler* m_handler{};
 };
