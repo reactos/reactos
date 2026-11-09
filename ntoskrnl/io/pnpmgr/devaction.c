@@ -1188,6 +1188,22 @@ PiSetDevNodeText(
     }
 }
 
+static volatile LONG PiDuplicateInstancePending;
+
+static
+VOID
+PiRetryDuplicateInstances(VOID)
+{
+    KeMemoryBarrier();
+    if (InterlockedExchange(&PiDuplicateInstancePending, 0))
+    {
+        PiQueueDeviceAction(IopRootDeviceNode->PhysicalDeviceObject,
+                            PiActionEnumDeviceTree,
+                            NULL,
+                            NULL);
+    }
+}
+
 static
 NTSTATUS
 PiInitializeDevNode(
@@ -1223,15 +1239,52 @@ PiInitializeDevNode(
     {
         PDEVICE_NODE OldDeviceNode = IopGetDeviceNode(OldDeviceObject);
 
-        DPRINT1("Duplicate device instance '%wZ'\n", &InstancePathU);
-        DPRINT1("Current instance parent: '%wZ'\n", &DeviceNode->Parent->InstancePath);
-        DPRINT1("Old instance parent: '%wZ'\n", &OldDeviceNode->Parent->InstancePath);
+        if (OldDeviceNode == DeviceNode)
+        {
+            /* Same node being initialized again; keep its existing path */
+            ObDereferenceObject(OldDeviceObject);
+            RtlFreeUnicodeString(&InstancePathU);
+            InstancePathU = DeviceNode->InstancePath;
+        }
+        else if (OldDeviceNode->State == DeviceNodeRemoved ||
+                 OldDeviceNode->State == DeviceNodeDeleted)
+        {
+            /* The stale node is finished; the new instance takes the path back */
+            OldDeviceNode->InstancePath.Length = 0;
+            ObDereferenceObject(OldDeviceObject);
+        }
+        else if (OldDeviceNode->Parent != NULL)
+        {
+            /*
+             * A stale devnode still owns the instance path while its removal
+             * is in flight. Drive the stale instance out through its parent
+             * and retry enumeration once the removal completes, instead of
+             * bugchecking.
+             */
+            DPRINT1("Device instance '%wZ' already registered, deferring until removal\n",
+                    &InstancePathU);
+            InterlockedExchange(&PiDuplicateInstancePending, 1);
+            KeMemoryBarrier();
+            PiQueueDeviceAction(OldDeviceNode->Parent->PhysicalDeviceObject,
+                                PiActionEnumDeviceTree,
+                                NULL,
+                                NULL);
+            ObDereferenceObject(OldDeviceObject);
+            RtlFreeUnicodeString(&InstancePathU);
+            return STATUS_DEVICE_BUSY;
+        }
+        else
+        {
+            DPRINT1("Duplicate device instance '%wZ'\n", &InstancePathU);
+            DPRINT1("Current instance parent: '%wZ'\n", &DeviceNode->Parent->InstancePath);
+            DPRINT1("Old instance parent: '%wZ'\n", &OldDeviceNode->Parent->InstancePath);
 
-        KeBugCheckEx(PNP_DETECTED_FATAL_ERROR,
-                     0x01,
-                     (ULONG_PTR)DeviceNode->PhysicalDeviceObject,
-                     (ULONG_PTR)OldDeviceObject,
-                     0);
+            KeBugCheckEx(PNP_DETECTED_FATAL_ERROR,
+                         0x01,
+                         (ULONG_PTR)DeviceNode->PhysicalDeviceObject,
+                         (ULONG_PTR)OldDeviceObject,
+                         0);
+        }
     }
 
     DeviceNode->InstancePath = InstancePathU;
@@ -1738,6 +1791,7 @@ IopSendRemoveDevice(IN PDEVICE_OBJECT DeviceObject)
     /* End of HACK */
 
     PiSetDevNodeState(DeviceNode, DeviceNodeRemoved);
+    PiRetryDuplicateInstances();
     PiNotifyTargetDeviceChange(&GUID_TARGET_DEVICE_REMOVE_COMPLETE, DeviceObject, NULL);
     LONG_PTR refCount = ObDereferenceObject(DeviceObject);
     if (refCount != 0)
