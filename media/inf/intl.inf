@@ -355,6 +355,7 @@ DriverVer = 05/29/2008,0.1
 ;00050408 = 0019
 00050409 = 000b
 ;00060408 = 001f
+0002083b = 002e
 
 [LanguageGroups]
 1  = %LG_WESTERN_EUROPE%,
