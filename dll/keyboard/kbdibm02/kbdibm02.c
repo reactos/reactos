@@ -133,65 +133,65 @@ ROSDATA VK_TO_WCHARS6 key_to_chars_6mod[] = {
   { VK_BACK, 0, { 0x08, 0x08, 0x08, 0x08, 0x7f, 0x7f } },
   { VK_CANCEL, 0, { 0x03, 0x03, 0x03, 0x03, 0x03, 0x03 } },
   { VK_ESCAPE, 0, { 0x1b, 0x1b, 0x1b, 0x1b, 0x1b, 0x1b } },
-  { VK_OEM_4, KANALOK, { '[', '{', 0xff9f, 0xff62, 0x1b, 0x1b } },  /* [2] semi-voiced sound mark, [3] halfwidth left corner bracket */
-  { VK_OEM_5, KANALOK, { '\\', '|', 0xff70, 0xff70, 0x1c, 0x1c } },  /* [2] halfwidth katakana-hiragana prolonged sound mark, [3] halfwidth katakana-hiragana prolonged sound mark */
-  { VK_OEM_102, KANALOK, { '\\', '_', 0xff9b, 0xff9b, 0x1c, 0x1c } },  /* [2] ro, [3] ro */
-  { VK_OEM_6, KANALOK, { ']', '}', 0xff91, 0xff63, 0x1d, 0x1d } },  /* [2] mu, [3] halfwidth right corner bracket */
+  { VK_OEM_4, KANALOK, { '[', '{', 0xff9f, 0xff62, 0x1b, 0x1b } },
+  { VK_OEM_5, KANALOK, { '\\', '|', 0xff70, 0xff70, 0x1c, 0x1c } },
+  { VK_OEM_102, KANALOK, { '\\', '_', 0xff9b, 0xff9b, 0x1c, 0x1c } },
+  { VK_OEM_6, KANALOK, { ']', '}', 0xff91, 0xff63, 0x1d, 0x1d } },
   { VK_RETURN, 0, { '\r', '\r', '\r', '\r', '\n', '\n' } },
   { VK_SPACE, 0, { ' ', ' ', ' ', ' ', ' ', ' ' } },
   { 0, 0 }
 };
 
 ROSDATA VK_TO_WCHARS8 key_to_chars_8mod[] = {
-  { '2', KANALOK, { '2', '"', 0xff8c, 0xff8c, WCH_NONE, WCH_NONE, 0x00, 0x00 } },  /* [2] hu, [3] hu */
-  { '6', KANALOK, { '6', '&', 0xff75, 0xff6b, WCH_NONE, WCH_NONE, 0x1e, 0x1e } },  /* [2] o, [3] small o */
-  { VK_OEM_MINUS, KANALOK, { '-', '=', 0xff8e, 0xff8e, WCH_NONE, WCH_NONE, 0x1f, 0x1f } },  /* [2] ho, [3] ho */
+  { '2', KANALOK, { '2', '"', 0xff8c, 0xff8c, WCH_NONE, WCH_NONE, 0x00, 0x00 } },
+  { '6', KANALOK, { '6', '&', 0xff75, 0xff6b, WCH_NONE, WCH_NONE, 0x1e, 0x1e } },
+  { VK_OEM_MINUS, KANALOK, { '-', '=', 0xff8e, 0xff8e, WCH_NONE, WCH_NONE, 0x1f, 0x1f } },
   { 0, 0 }
 };
 
 ROSDATA VK_TO_WCHARS4 key_to_chars_4mod[] = {
-  { '0', KANALOK, { '0', WCH_NONE, 0xff9c, 0xff66 } },  /* [2] wa, [3] wo */
-  { '1', KANALOK, { '1', '!', 0xff87, 0xff87 } },  /* [2] nu, [3] nu */
-  { '3', KANALOK, { '3', '#', 0xff71, 0xff67 } },  /* [2] a, [3] small a */
-  { '4', KANALOK, { '4', '$', 0xff73, 0xff69 } },  /* [2] u, [3] small u */
-  { '5', KANALOK, { '5', '%', 0xff74, 0xff6a } },  /* [2] e, [3] small e */
-  { '7', KANALOK, { '7', '\'', 0xff94, 0xff6c } },  /* [2] ya, [3] small ya */
-  { '8', KANALOK, { '8', '(', 0xff95, 0xff6d } },  /* [2] yu, [3] small yu */
-  { '9', KANALOK, { '9', ')', 0xff96, 0xff6e } },  /* [2] yo, [3] small yo */
-  { 'A', CAPLOK|KANALOK, { 'a', 'A', 0xff81, 0xff81 } },  /* [2] ti, [3] ti */
-  { 'B', CAPLOK|KANALOK, { 'b', 'B', 0xff7a, 0xff7a } },  /* [2] ko, [3] ko */
-  { 'C', CAPLOK|KANALOK, { 'c', 'C', 0xff7f, 0xff7f } },  /* [2] so, [3] so */
-  { 'D', CAPLOK|KANALOK, { 'd', 'D', 0xff7c, 0xff7c } },  /* [2] si, [3] si */
-  { 'E', CAPLOK|KANALOK, { 'e', 'E', 0xff72, 0xff68 } },  /* [2] i, [3] small i */
-  { 'F', CAPLOK|KANALOK, { 'f', 'F', 0xff8a, 0xff8a } },  /* [2] ha, [3] ha */
-  { 'G', CAPLOK|KANALOK, { 'g', 'G', 0xff77, 0xff77 } },  /* [2] ki, [3] ki */
-  { 'H', CAPLOK|KANALOK, { 'h', 'H', 0xff78, 0xff78 } },  /* [2] ku, [3] ku */
-  { 'I', CAPLOK|KANALOK, { 'i', 'I', 0xff86, 0xff86 } },  /* [2] ni, [3] ni */
-  { 'J', CAPLOK|KANALOK, { 'j', 'J', 0xff8f, 0xff8f } },  /* [2] ma, [3] ma */
-  { 'K', CAPLOK|KANALOK, { 'k', 'K', 0xff89, 0xff89 } },  /* [2] no, [3] no */
-  { 'L', CAPLOK|KANALOK, { 'l', 'L', 0xff98, 0xff98 } },  /* [2] ri, [3] ri */
-  { 'M', CAPLOK|KANALOK, { 'm', 'M', 0xff93, 0xff93 } },  /* [2] mo, [3] mo */
-  { 'N', CAPLOK|KANALOK, { 'n', 'N', 0xff90, 0xff90 } },  /* [2] mi, [3] mi */
-  { 'O', CAPLOK|KANALOK, { 'o', 'O', 0xff97, 0xff97 } },  /* [2] ra, [3] ra */
-  { 'P', CAPLOK|KANALOK, { 'p', 'P', 0xff7e, 0xff7e } },  /* [2] se, [3] se */
-  { 'Q', CAPLOK|KANALOK, { 'q', 'Q', 0xff80, 0xff80 } },  /* [2] ta, [3] ta */
-  { 'R', CAPLOK|KANALOK, { 'r', 'R', 0xff7d, 0xff7d } },  /* [2] su, [3] su */
-  { 'S', CAPLOK|KANALOK, { 's', 'S', 0xff84, 0xff84 } },  /* [2] to, [3] to */
-  { 'T', CAPLOK|KANALOK, { 't', 'T', 0xff76, 0xff76 } },  /* [2] ka, [3] ka */
-  { 'U', CAPLOK|KANALOK, { 'u', 'U', 0xff85, 0xff85 } },  /* [2] na, [3] na */
-  { 'V', CAPLOK|KANALOK, { 'v', 'V', 0xff8b, 0xff8b } },  /* [2] hi, [3] hi */
-  { 'W', CAPLOK|KANALOK, { 'w', 'W', 0xff83, 0xff83 } },  /* [2] te, [3] te */
-  { 'X', CAPLOK|KANALOK, { 'x', 'X', 0xff7b, 0xff7b } },  /* [2] sa, [3] sa */
-  { 'Y', CAPLOK|KANALOK, { 'y', 'Y', 0xff9d, 0xff9d } },  /* [2] n, [3] n */
-  { 'Z', CAPLOK|KANALOK, { 'z', 'Z', 0xff82, 0xff6f } },  /* [2] tu, [3] small tu */
-  { VK_OEM_1, KANALOK, { ':', '*', 0xff79, 0xff79 } },  /* [2] ke, [3] ke */
-  { VK_OEM_2, KANALOK, { '/', '?', 0xff92, 0xff65 } },  /* [2] me, [3] middle dot */
-  { VK_OEM_3, KANALOK, { '@', '`', 0xff9e, 0xff9e } },  /* [2] voiced sound mark, [3] voiced sound mark */
-  { VK_OEM_7, KANALOK, { '^', '~', 0xff8d, 0xff8d } },  /* [2] he, [3] he */
+  { '0', KANALOK, { '0', WCH_NONE, 0xff9c, 0xff66 } },
+  { '1', KANALOK, { '1', '!', 0xff87, 0xff87 } },
+  { '3', KANALOK, { '3', '#', 0xff71, 0xff67 } },
+  { '4', KANALOK, { '4', '$', 0xff73, 0xff69 } },
+  { '5', KANALOK, { '5', '%', 0xff74, 0xff6a } },
+  { '7', KANALOK, { '7', '\'', 0xff94, 0xff6c } },
+  { '8', KANALOK, { '8', '(', 0xff95, 0xff6d } },
+  { '9', KANALOK, { '9', ')', 0xff96, 0xff6e } },
+  { 'A', CAPLOK|KANALOK, { 'a', 'A', 0xff81, 0xff81 } },
+  { 'B', CAPLOK|KANALOK, { 'b', 'B', 0xff7a, 0xff7a } },
+  { 'C', CAPLOK|KANALOK, { 'c', 'C', 0xff7f, 0xff7f } },
+  { 'D', CAPLOK|KANALOK, { 'd', 'D', 0xff7c, 0xff7c } },
+  { 'E', CAPLOK|KANALOK, { 'e', 'E', 0xff72, 0xff68 } },
+  { 'F', CAPLOK|KANALOK, { 'f', 'F', 0xff8a, 0xff8a } },
+  { 'G', CAPLOK|KANALOK, { 'g', 'G', 0xff77, 0xff77 } },
+  { 'H', CAPLOK|KANALOK, { 'h', 'H', 0xff78, 0xff78 } },
+  { 'I', CAPLOK|KANALOK, { 'i', 'I', 0xff86, 0xff86 } },
+  { 'J', CAPLOK|KANALOK, { 'j', 'J', 0xff8f, 0xff8f } },
+  { 'K', CAPLOK|KANALOK, { 'k', 'K', 0xff89, 0xff89 } },
+  { 'L', CAPLOK|KANALOK, { 'l', 'L', 0xff98, 0xff98 } },
+  { 'M', CAPLOK|KANALOK, { 'm', 'M', 0xff93, 0xff93 } },
+  { 'N', CAPLOK|KANALOK, { 'n', 'N', 0xff90, 0xff90 } },
+  { 'O', CAPLOK|KANALOK, { 'o', 'O', 0xff97, 0xff97 } },
+  { 'P', CAPLOK|KANALOK, { 'p', 'P', 0xff7e, 0xff7e } },
+  { 'Q', CAPLOK|KANALOK, { 'q', 'Q', 0xff80, 0xff80 } },
+  { 'R', CAPLOK|KANALOK, { 'r', 'R', 0xff7d, 0xff7d } },
+  { 'S', CAPLOK|KANALOK, { 's', 'S', 0xff84, 0xff84 } },
+  { 'T', CAPLOK|KANALOK, { 't', 'T', 0xff76, 0xff76 } },
+  { 'U', CAPLOK|KANALOK, { 'u', 'U', 0xff85, 0xff85 } },
+  { 'V', CAPLOK|KANALOK, { 'v', 'V', 0xff8b, 0xff8b } },
+  { 'W', CAPLOK|KANALOK, { 'w', 'W', 0xff83, 0xff83 } },
+  { 'X', CAPLOK|KANALOK, { 'x', 'X', 0xff7b, 0xff7b } },
+  { 'Y', CAPLOK|KANALOK, { 'y', 'Y', 0xff9d, 0xff9d } },
+  { 'Z', CAPLOK|KANALOK, { 'z', 'Z', 0xff82, 0xff6f } },
+  { VK_OEM_1, KANALOK, { ':', '*', 0xff79, 0xff79 } },
+  { VK_OEM_2, KANALOK, { '/', '?', 0xff92, 0xff65 } },
+  { VK_OEM_3, KANALOK, { '@', '`', 0xff9e, 0xff9e } },
+  { VK_OEM_7, KANALOK, { '^', '~', 0xff8d, 0xff8d } },
   { VK_OEM_8, 0, { ',', ',', ',', ',' } },
-  { VK_OEM_COMMA, KANALOK, { ',', '<', 0xff88, 0xff64 } },  /* [2] ne, [3] halfwidth ideographic comma */
-  { VK_OEM_PERIOD, KANALOK, { '.', '>', 0xff99, 0xff61 } },  /* [2] ru, [3] halfwidth ideographic full stop */
-  { VK_OEM_PLUS, KANALOK, { ';', '+', 0xff9a, 0xff9a } },  /* [2] re, [3] re */
+  { VK_OEM_COMMA, KANALOK, { ',', '<', 0xff88, 0xff64 } },
+  { VK_OEM_PERIOD, KANALOK, { '.', '>', 0xff99, 0xff61 } },
+  { VK_OEM_PLUS, KANALOK, { ';', '+', 0xff9a, 0xff9a } },
   { VK_TAB, 0, { '\t', '\t', '\t', '\t' } },
   { VK_ADD, 0, { '+', '+', '+', '+' } },
   { VK_DECIMAL, 0, { '.', '.', '.', '.' } },
@@ -327,46 +327,62 @@ ROSDATA VK_F nls_vk_to_f[] = {
   { VK_OEM_FINISH,
     KBDNLS_TYPE_TOGGLE, KBDNLS_INDEX_NORMAL, 0x04,
     { /* NLSFEProc: modifier state 0..7 (bit0=Shift, bit1=Ctrl, bit2=Alt) */
-      { KBDNLS_KATAKANA, 0 }, { KBDNLS_SEND_PARAM_VK, VK_KANJI }, { KBDNLS_SEND_PARAM_VK, VK_KANA }, { KBDNLS_NOEVENT, 0 },
-      { KBDNLS_CODEINPUT, 0 }, { KBDNLS_CODEINPUT, 0 }, { KBDNLS_CODEINPUT, 0 }, { KBDNLS_CODEINPUT, 0 }
+      { KBDNLS_KATAKANA, 0 }, { KBDNLS_SEND_PARAM_VK, VK_KANJI },
+      { KBDNLS_SEND_PARAM_VK, VK_KANA }, { KBDNLS_NOEVENT, 0 },
+      { KBDNLS_CODEINPUT, 0 }, { KBDNLS_CODEINPUT, 0 },
+      { KBDNLS_CODEINPUT, 0 }, { KBDNLS_CODEINPUT, 0 }
     },
     { /* NLSFEProcAlt */
-      { KBDNLS_SEND_PARAM_VK, VK_KANA }, { KBDNLS_NOEVENT, 0 }, { KBDNLS_SEND_PARAM_VK, VK_KANA }, { KBDNLS_NOEVENT, 0 },
-      { KBDNLS_NOEVENT, 0 }, { KBDNLS_NOEVENT, 0 }, { KBDNLS_NOEVENT, 0 }, { KBDNLS_NOEVENT, 0 }
+      { KBDNLS_SEND_PARAM_VK, VK_KANA }, { KBDNLS_NOEVENT, 0 },
+      { KBDNLS_SEND_PARAM_VK, VK_KANA }, { KBDNLS_NOEVENT, 0 },
+      { KBDNLS_NOEVENT, 0 }, { KBDNLS_NOEVENT, 0 },
+      { KBDNLS_NOEVENT, 0 }, { KBDNLS_NOEVENT, 0 }
     }
   },
   { VK_OEM_ATTN,
     KBDNLS_TYPE_TOGGLE, KBDNLS_INDEX_NORMAL, 0xfe,
     { /* NLSFEProc: modifier state 0..7 (bit0=Shift, bit1=Ctrl, bit2=Alt) */
-      { KBDNLS_ALPHANUM, 0 }, { KBDNLS_SEND_PARAM_VK, VK_CAPITAL }, { KBDNLS_SEND_PARAM_VK, VK_CAPITAL }, { KBDNLS_SEND_PARAM_VK, VK_CAPITAL },
-      { KBDNLS_SEND_PARAM_VK, VK_CAPITAL }, { KBDNLS_SEND_PARAM_VK, VK_CAPITAL }, { KBDNLS_SEND_PARAM_VK, VK_CAPITAL }, { KBDNLS_SEND_PARAM_VK, VK_CAPITAL }
+      { KBDNLS_ALPHANUM, 0 }, { KBDNLS_SEND_PARAM_VK, VK_CAPITAL },
+      { KBDNLS_SEND_PARAM_VK, VK_CAPITAL }, { KBDNLS_SEND_PARAM_VK, VK_CAPITAL },
+      { KBDNLS_SEND_PARAM_VK, VK_CAPITAL }, { KBDNLS_SEND_PARAM_VK, VK_CAPITAL },
+      { KBDNLS_SEND_PARAM_VK, VK_CAPITAL }, { KBDNLS_SEND_PARAM_VK, VK_CAPITAL }
     },
     { /* NLSFEProcAlt */
-      { KBDNLS_SEND_PARAM_VK, VK_CAPITAL }, { KBDNLS_SEND_PARAM_VK, VK_CAPITAL }, { KBDNLS_SEND_PARAM_VK, VK_CAPITAL }, { KBDNLS_SEND_PARAM_VK, VK_CAPITAL },
-      { KBDNLS_SEND_PARAM_VK, VK_CAPITAL }, { KBDNLS_SEND_PARAM_VK, VK_CAPITAL }, { KBDNLS_SEND_PARAM_VK, VK_CAPITAL }, { KBDNLS_SEND_PARAM_VK, VK_CAPITAL }
+      { KBDNLS_SEND_PARAM_VK, VK_CAPITAL }, { KBDNLS_SEND_PARAM_VK, VK_CAPITAL },
+      { KBDNLS_SEND_PARAM_VK, VK_CAPITAL }, { KBDNLS_SEND_PARAM_VK, VK_CAPITAL },
+      { KBDNLS_SEND_PARAM_VK, VK_CAPITAL }, { KBDNLS_SEND_PARAM_VK, VK_CAPITAL },
+      { KBDNLS_SEND_PARAM_VK, VK_CAPITAL }, { KBDNLS_SEND_PARAM_VK, VK_CAPITAL }
     }
   },
   { VK_OEM_COPY,
     KBDNLS_TYPE_NORMAL, KBDNLS_INDEX_NORMAL, 0x00,
     { /* NLSFEProc: modifier state 0..7 (bit0=Shift, bit1=Ctrl, bit2=Alt) */
-      { KBDNLS_HIRAGANA, 0 }, { KBDNLS_HIRAGANA, 0 }, { KBDNLS_HIRAGANA, 0 }, { KBDNLS_HIRAGANA, 0 },
-      { KBDNLS_ROMAN, 0 }, { KBDNLS_ROMAN, 0 }, { KBDNLS_ROMAN, 0 }, { KBDNLS_ROMAN, 0 }
+      { KBDNLS_HIRAGANA, 0 }, { KBDNLS_HIRAGANA, 0 },
+      { KBDNLS_HIRAGANA, 0 }, { KBDNLS_HIRAGANA, 0 },
+      { KBDNLS_ROMAN, 0 }, { KBDNLS_ROMAN, 0 },
+      { KBDNLS_ROMAN, 0 }, { KBDNLS_ROMAN, 0 }
     },
     { { 0 } }
   },
   { VK_OEM_AUTO,
     KBDNLS_TYPE_NORMAL, KBDNLS_INDEX_NORMAL, 0x00,
     { /* NLSFEProc: modifier state 0..7 (bit0=Shift, bit1=Ctrl, bit2=Alt) */
-      { KBDNLS_SBCSDBCS, 0 }, { KBDNLS_SBCSDBCS, 0 }, { KBDNLS_SBCSDBCS, 0 }, { KBDNLS_SBCSDBCS, 0 },
-      { KBDNLS_NOEVENT, 0 }, { KBDNLS_NOEVENT, 0 }, { KBDNLS_SEND_PARAM_VK, VK_DBE_ENTERIMECONFIGMODE }, { KBDNLS_SEND_PARAM_VK, VK_DBE_ENTERIMECONFIGMODE }
+      { KBDNLS_SBCSDBCS, 0 }, { KBDNLS_SBCSDBCS, 0 },
+      { KBDNLS_SBCSDBCS, 0 }, { KBDNLS_SBCSDBCS, 0 },
+      { KBDNLS_NOEVENT, 0 }, { KBDNLS_NOEVENT, 0 },
+      { KBDNLS_SEND_PARAM_VK, VK_DBE_ENTERIMECONFIGMODE },
+      { KBDNLS_SEND_PARAM_VK, VK_DBE_ENTERIMECONFIGMODE }
     },
     { { 0 } }
   },
   { VK_NONCONVERT,
     KBDNLS_TYPE_NORMAL, KBDNLS_INDEX_NORMAL, 0x00,
     { /* NLSFEProc: modifier state 0..7 (bit0=Shift, bit1=Ctrl, bit2=Alt) */
-      { KBDNLS_SEND_BASE_VK, 0 }, { KBDNLS_NOEVENT, 0 }, { KBDNLS_NOEVENT, 0 }, { KBDNLS_NOEVENT, 0 },
-      { KBDNLS_NOEVENT, 0 }, { KBDNLS_NOEVENT, 0 }, { KBDNLS_SEND_PARAM_VK, VK_DBE_ENTERWORDREGISTERMODE }, { KBDNLS_SEND_PARAM_VK, VK_DBE_ENTERWORDREGISTERMODE }
+      { KBDNLS_SEND_BASE_VK, 0 }, { KBDNLS_NOEVENT, 0 },
+      { KBDNLS_NOEVENT, 0 }, { KBDNLS_NOEVENT, 0 },
+      { KBDNLS_NOEVENT, 0 }, { KBDNLS_NOEVENT, 0 },
+      { KBDNLS_SEND_PARAM_VK, VK_DBE_ENTERWORDREGISTERMODE },
+      { KBDNLS_SEND_PARAM_VK, VK_DBE_ENTERWORDREGISTERMODE }
     },
     { { 0 } }
   }
