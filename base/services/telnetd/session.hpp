@@ -70,8 +70,8 @@ private:
     HANDLE m_pipe_std_out_err{INVALID_HANDLE_VALUE};
     bool m_cmd_exited{};
 
-    HANDLE m_reader_thread_handle{};
-    HANDLE m_reader_stop_event{};
+    HANDLE m_io_thread_handle{};
+    HANDLE m_io_stop_event{};
     HANDLE m_reader_discard_event{};
     OVERLAPPED m_reader_overlapped{};
     std::vector<CHAR> m_reader_buffer{};

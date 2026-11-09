@@ -33,16 +33,22 @@ TelnetSession::TelnetSession(ITelnetSessionHandler* handler):
 
 TelnetSession::~TelnetSession()
 {
-    DeleteCriticalSection(&m_write_cs);
-
-    if (m_reader_stop_event) {
-        SetEvent(m_reader_stop_event);
+    if (m_io_stop_event) {
+        SetEvent(m_io_stop_event);
     }
     
-    if (m_reader_thread_handle) {
-        WaitForSingleObject(m_reader_thread_handle, INFINITE);
-        CloseHandle(m_reader_thread_handle);
+    if (m_io_thread_handle) {
+        WaitForSingleObject(m_io_thread_handle, INFINITE);
+        CloseHandle(m_io_thread_handle);
     }
+
+    DeleteCriticalSection(&m_write_cs);
+
+    RtlSecureZeroMemory(&m_write_queue[0], m_write_queue.size());
+    m_write_queue.clear();
+
+    RtlSecureZeroMemory(&m_write_buffer[0], m_write_buffer.size());
+    m_write_buffer.clear();
 
     if (m_write_request_event) {
         CloseHandle(m_write_request_event);
@@ -52,8 +58,8 @@ TelnetSession::~TelnetSession()
         CloseHandle(m_writer_overlapped.hEvent);
     }
 
-    if (m_reader_stop_event) {
-        CloseHandle(m_reader_stop_event);
+    if (m_io_stop_event) {
+        CloseHandle(m_io_stop_event);
     }
 
     if (m_reader_discard_event) {
@@ -169,19 +175,20 @@ void TelnetSession::on_text_line(const std::wstring& line)
     }
     mbline += "\r\n";
 
+    bool queued = false;
     EnterCriticalSection(&m_write_cs);
-    const auto curr_queue_size = m_write_queue.size();
-    if (curr_queue_size + mbline.size() > MAX_WRITE_QUEUE_LENGTH) {
-        m_handler->send_string("\a");
-    } else {
+    if (m_write_queue.size() + mbline.size() <= MAX_WRITE_QUEUE_LENGTH) {
         m_write_queue += mbline;
+        queued = true;
     }
     LeaveCriticalSection(&m_write_cs);
 
     SecureZeroMemory(&mbline[0], mbline.size());
 
-    if (m_write_queue.size() != curr_queue_size) {
+    if (queued) {
         SetEvent(m_write_request_event);
+    } else {
+        m_handler->send_string("\a");
     }
 }
 
@@ -272,6 +279,7 @@ bool TelnetSession::spawn_cmd_process()
     );
     if (m_pipe_std_out_err == INVALID_HANDLE_VALUE) {
         ERR("CreateNamedPipeW(%ls) failed with: %lu\n", pipe_name, GetLastError());
+        CloseHandle(child_pipe_stdin);
         return false;
     }
 
@@ -286,6 +294,7 @@ bool TelnetSession::spawn_cmd_process()
     );
     if (child_pipe_std_out_err == INVALID_HANDLE_VALUE) {
         ERR("CreateFileW(%ls) failed with: %lu\n", pipe_name, GetLastError());
+        CloseHandle(child_pipe_stdin);
         return false;
     }
 
@@ -404,8 +413,8 @@ bool TelnetSession::spawn_cmd_process()
 
 bool TelnetSession::start_io_thread()
 {
-    m_reader_stop_event = CreateEvent(nullptr, false, false, nullptr);
-    if (!m_reader_stop_event) {
+    m_io_stop_event = CreateEvent(nullptr, false, false, nullptr);
+    if (!m_io_stop_event) {
         ERR("reader stop event create failed with: %lu\n", GetLastError());
         return false;
     }
@@ -438,7 +447,7 @@ bool TelnetSession::start_io_thread()
     m_reader_buffer.resize(PIPE_BUFFER_SIZE);
 
     DWORD thread_id{};
-    m_reader_thread_handle = CreateThread(
+    m_io_thread_handle = CreateThread(
         nullptr,
         0,
         io_thread_func,
@@ -446,7 +455,7 @@ bool TelnetSession::start_io_thread()
         0,
         &thread_id
     );
-    if (!m_reader_thread_handle) {
+    if (!m_io_thread_handle) {
         ERR("reader thread create failed with: %lu\n", GetLastError());
         return false;
     }
@@ -456,7 +465,7 @@ bool TelnetSession::start_io_thread()
 
 DWORD TelnetSession::io_loop()
 {
-    HANDLE wait_objects[6] = {m_reader_stop_event, m_reader_overlapped.hEvent, m_reader_discard_event, m_write_request_event, m_writer_overlapped.hEvent, m_cmd_process_handle};
+    HANDLE wait_objects[6] = {m_io_stop_event, m_reader_overlapped.hEvent, m_reader_discard_event, m_write_request_event, m_writer_overlapped.hEvent, m_cmd_process_handle};
 
     while (true) {
         DWORD read_size{};
@@ -475,7 +484,7 @@ DWORD TelnetSession::io_loop()
         }
 
         auto idx = WaitForMultipleObjects(
-            m_cmd_exited ? 3 : 4, 
+            m_cmd_exited ? 5 : 6, 
             wait_objects,
             false,
             m_is_discarding ? 200 : INFINITE
@@ -535,7 +544,17 @@ DWORD TelnetSession::io_loop()
         } else if (idx == 3) {
             start_write();
         } else if (idx == 4) {
-            
+            if (!GetOverlappedResult(m_pipe_stdin, &m_writer_overlapped, &bytes_transferred, FALSE)) {
+                ERR("GetOverlappedResult failed with: %lu\n", GetLastError());
+            }
+
+            m_is_write_pending = false;
+
+            RtlSecureZeroMemory(&m_write_buffer[0], m_write_buffer.size());
+            m_write_buffer.clear();
+
+            ResetEvent(m_writer_overlapped.hEvent);
+            start_write();
         } else if (idx == 5) {
             TerminateJobObject(m_job_handle, 0);
             m_cmd_exited = true;
@@ -557,7 +576,7 @@ void TelnetSession::start_write()
         LeaveCriticalSection(&m_write_cs);
         return;
     }
-    m_write_buffer = m_write_queue.substr(0, size_to_write);
+    m_write_buffer.assign(m_write_queue, 0, size_to_write);
     m_write_queue.erase(m_write_queue.begin(), m_write_queue.begin() + size_to_write);
     LeaveCriticalSection(&m_write_cs);
 
@@ -569,8 +588,12 @@ void TelnetSession::start_write()
     }
 
     ERR("WriteFile failed with: %lu\n", ec);
-    RtlSecureZeroMemory(&m_write_queue[0], m_write_queue.size());
+
     RtlSecureZeroMemory(&m_write_buffer[0], m_write_buffer.size());
-    m_write_queue.clear();
     m_write_buffer.clear();
+
+    EnterCriticalSection(&m_write_cs);
+    RtlSecureZeroMemory(&m_write_queue[0], m_write_queue.size());
+    m_write_queue.clear();
+    LeaveCriticalSection(&m_write_cs);
 }
