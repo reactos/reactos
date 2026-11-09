@@ -295,6 +295,13 @@ TCPServer::EStatus TCPServer::run()
                         continue;
                     }
 
+                    {
+                        BOOL val = TRUE;
+                        if (setsockopt(client_socket, SOL_SOCKET, SO_OOBINLINE, (const char*)&val, sizeof(val)) == SOCKET_ERROR) {
+                            ERR("setsockopt(SO_OOBINLINE) failed with: %d\n", WSAGetLastError());
+                        }
+                    }
+
                     const auto client_event = WSACreateEvent();
                     if(client_event == WSA_INVALID_EVENT) {
                         ERR("client event create with: %d\n", WSAGetLastError());
