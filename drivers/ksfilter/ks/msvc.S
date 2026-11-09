@@ -1,5 +1,7 @@
 
-#ifdef _M_ARM
+#if defined(_M_ARM)
+
+#elif defined(_M_ARM64)
 
 #else
 

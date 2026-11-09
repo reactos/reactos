@@ -1,6 +1,59 @@
+/*
+ * PROJECT:     ReactOS SDK
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     Keyboard layout definitions
+ * COPYRIGHT:   Copyright 2003 James Tabor
+ *              Copyright 2011 Rafal Harabien
+ *              Copyright 2026 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
+ */
+
 #ifndef __KBD_H
 #define __KBD_H
 #pragma once
+
+/* ------------------------------------------------------------------ */
+/* Pointer slots inside the layout tables                             */
+/*                                                                    */
+/* Native layout   : slots are ordinary pointers.                     */
+/* WOW64 layout    : (BUILD_WOW6432, 32-bit image) every pointer slot */
+/*                   is 64 bits wide, as in the Windows DDK kbd.h.    */
+/*                                                                    */
+/* KBD_PTR(T) declares a table pointer slot of type T.                */
+/*   MSVC / clang-cl : T __ptr64                                      */
+/*   GCC / clang     : __ptr64 does not exist, so the slot is a       */
+/*                     8-byte aligned union whose first member is the */
+/*                     pointer. Because the first member of a union   */
+/*                     takes the initializer (C99 6.7.8p20) and the   */
+/*                     remaining bytes of a static object are zero,   */
+/*                     table sources such as                          */
+/*                         { aVkToBits, 7, {...} }                    */
+/*                     compile unchanged and the upper 32 bits of the */
+/*                     slot are 0. This relies on little endian (x86).*/
+/*                     Code that *reads* a table built this way must  */
+/*                     use ->p; only layout DLLs are built like this. */
+#if defined(BUILD_WOW6432) && !defined(_WIN64)
+# if defined(_MSC_VER)
+#  define KBD_LONG_POINTER __ptr64
+#  define KBD_PTR(T) T KBD_LONG_POINTER
+# else
+#  if defined(__BYTE_ORDER__) && (__BYTE_ORDER__ != __ORDER_LITTLE_ENDIAN__)
+#   error "WOW64 keyboard tables without __ptr64 require a little-endian target"
+#  endif
+#  define KBD_LONG_POINTER
+#  define KBD_PTR(T) union { T p; ULONG64 u64; } __attribute__((aligned(8)))
+#  define KBD_PTR_IS_UNION 1
+#  pragma GCC diagnostic ignored "-Wmissing-braces" /* brace elision is intended */
+# endif
+#else
+# define KBD_LONG_POINTER
+# define KBD_PTR(T) T
+#endif
+
+#ifdef KBD_PTR_IS_UNION
+# define KBD_P(x) ((x).p)
+#else
+# define KBD_P(x) (x)
+#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -26,7 +79,7 @@ extern "C" {
   } VK_TO_BIT, *PVK_TO_BIT;
 
   typedef struct _MODIFIERS {
-    PVK_TO_BIT pVkToBit;
+    KBD_PTR(PVK_TO_BIT) pVkToBit;
     WORD wMaxModBits;
     BYTE ModNumber[];
   } MODIFIERS, *PMODIFIERS;
@@ -50,7 +103,7 @@ extern "C" {
   TYPEDEF_VK_TO_WCHARS(10)
 
   typedef struct _VK_TO_WCHAR_TABLE {
-    PVK_TO_WCHARS1 pVkToWchars;
+    KBD_PTR(PVK_TO_WCHARS1) pVkToWchars;
     BYTE nModifications;
     BYTE cbSize;
   } VK_TO_WCHAR_TABLE, *PVK_TO_WCHAR_TABLE;
@@ -61,13 +114,14 @@ extern "C" {
     USHORT uFlags;
   } DEADKEY, *PDEADKEY;
 
-  typedef WCHAR *DEADKEY_LPWSTR;
+  /* One slot of the dead-key name array (pKeyNamesDead points at these) */
+  typedef KBD_PTR(LPWSTR) DEADKEY_LPWSTR;
 
 #define DKF_DEAD 1
 
   typedef struct _VSC_LPWSTR {
     BYTE vsc;
-    LPWSTR pwsz;
+    KBD_PTR(LPWSTR) pwsz;
   } VSC_LPWSTR, *PVSC_LPWSTR;
 
   typedef struct _VSC_VK {
@@ -95,20 +149,20 @@ typedef struct _LIGATURE ## i { \
 #define KLLF_LRM_RLM   0x4
 
   typedef struct _KBDTABLES {
-    PMODIFIERS pCharModifiers;
-    PVK_TO_WCHAR_TABLE pVkToWcharTable;
-    PDEADKEY pDeadKey;
-    VSC_LPWSTR *pKeyNames;
-    VSC_LPWSTR *pKeyNamesExt;
-    LPWSTR *pKeyNamesDead;
-    USHORT *pusVSCtoVK;
+    KBD_PTR(PMODIFIERS) pCharModifiers;
+    KBD_PTR(PVK_TO_WCHAR_TABLE) pVkToWcharTable;
+    KBD_PTR(PDEADKEY) pDeadKey;
+    KBD_PTR(VSC_LPWSTR *) pKeyNames;
+    KBD_PTR(VSC_LPWSTR *) pKeyNamesExt;
+    KBD_PTR(DEADKEY_LPWSTR *) pKeyNamesDead;
+    KBD_PTR(USHORT *) pusVSCtoVK;
     BYTE bMaxVSCtoVK;
-    PVSC_VK pVSCtoVK_E0;
-    PVSC_VK pVSCtoVK_E1;
+    KBD_PTR(PVSC_VK) pVSCtoVK_E0;
+    KBD_PTR(PVSC_VK) pVSCtoVK_E1;
     DWORD fLocaleFlags;
     BYTE nLgMaxd;
     BYTE cbLgEntry;
-    PLIGATURE1 pLigature;
+    KBD_PTR(PLIGATURE1) pLigature;
   } KBDTABLES, *PKBDTABLES;
 
 /* Constants that help table decoding */
@@ -199,9 +253,9 @@ typedef struct tagKbdNlsLayer
     USHORT OEMIdentifier;
     USHORT LayoutInformation;
     ULONG  NumOfVkToF;
-    PVK_F  pVkToF;
+    KBD_PTR(PVK_F) pVkToF;
     INT    NumOfMouseVKey;
-    PUSHORT pusMouseVKey;
+    KBD_PTR(PUSHORT) pusMouseVKey;
 } KBDNLSTABLES, *PKBDNLSTABLES;
 
 /* KBDTABLES as used by the FE layouts: dwType/dwSubType follow pLigature */
@@ -211,6 +265,17 @@ typedef struct tagKBDTABLES_FE
     DWORD     dwType;
     DWORD     dwSubType;
 } KBDTABLES_FE, *PKBDTABLES_FE;
+
+/* ------------------------------------------------------------------ */
+/* Layout self-checks: the WOW64 layout must equal the x64 layout.    */
+#if defined(BUILD_WOW6432) && defined(C_ASSERT)
+C_ASSERT(sizeof(MODIFIERS)         == 16);
+C_ASSERT(sizeof(VK_TO_WCHAR_TABLE) == 16);
+C_ASSERT(sizeof(VSC_LPWSTR)        == 16);
+C_ASSERT(sizeof(DEADKEY_LPWSTR)    == 8);
+C_ASSERT(sizeof(KBDTABLES)         == 96);
+C_ASSERT(sizeof(KBDNLSTABLES)      == 32);
+#endif
 
 #if (NTDDI_VERSION >= NTDDI_WINXP)
 #define VK_DBE_ALPHANUMERIC           0xF0

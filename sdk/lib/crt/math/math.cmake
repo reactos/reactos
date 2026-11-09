@@ -175,7 +175,9 @@ elseif(ARCH STREQUAL "arm")
         math/fabsf.c
         math/floorf.c
         math/sin.c
+        math/__math_invalid.c
         math/sqrt.c
+        math/sqrt_data.c
         math/sqrtf.c
         math/arm/__rt_sdiv.c
         math/arm/__rt_sdiv64_worker.c
@@ -227,6 +229,59 @@ elseif(ARCH STREQUAL "arm")
     )
     list(APPEND CRT_MATH_ASM_SOURCE
         math/arm/_logb.s
+    )
+elseif(ARCH STREQUAL "arm64")
+    list(APPEND LIBCNTPR_MATH_SOURCE
+        math/__math_divzero.c
+        math/__math_invalid.c
+        math/__math_oflow.c
+        math/__math_uflow.c
+        math/__math_xflow.c
+        math/__rem_pio2.c
+        math/__rem_pio2_large.c
+        math/__tan.c
+        math/atan.c
+        math/ceil.c
+        math/ceilf.c
+        math/exp.c
+        math/exp_data.c
+        math/fabs.c
+        math/fabsf.c
+        math/floor.c
+        math/floorf.c
+        math/fmod.c
+        math/ldexp.c
+        math/log.c
+        math/log_data.c
+        math/log10.c
+        math/pow.c
+        math/pow_data.c
+        math/sqrt.c
+        math/sqrt_data.c
+        math/sqrtf.c
+        math/tan.c
+    )
+    list(APPEND LIBCNTPR_MATH_ASM_SOURCE
+        math/arm64/atan2.s
+    )
+    list(APPEND CRT_MATH_SOURCE
+        math/_hypotf.c
+        math/_logb.c
+        math/_logbf.c
+        math/acosf.c
+        math/asinf.c
+        math/atan2f.c
+        math/atanf.c
+        math/coshf.c
+        math/expf.c
+        math/fmodf.c
+        math/ilogb.c
+        math/logb.c
+        math/modff.c
+        math/sinf.c
+        math/sinhf.c
+        math/tanf.c
+        math/tanhf.c
     )
 endif()
 

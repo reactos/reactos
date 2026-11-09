@@ -24,7 +24,7 @@ LsapDeregisterLogonProcess(PLSA_API_MSG RequestMsg,
 {
     TRACE("LsapDeregisterLogonProcess(%p %p)\n", RequestMsg, LogonContext);
 
-    RemoveHeadList(&LogonContext->Entry);
+    RemoveEntryList(&LogonContext->Entry);
 
     NtClose(LogonContext->ClientProcessHandle);
     NtClose(LogonContext->ConnectionHandle);

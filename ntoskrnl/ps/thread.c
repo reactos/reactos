@@ -573,7 +573,7 @@ PspCreateThread(OUT PHANDLE ThreadHandle,
         ObReleaseObjectSecurity(SecurityDescriptor, SdAllocated);
 
         /* Remove access if it failed */
-        if (!Result) Process->GrantedAccess = 0;
+        if (!Result) Thread->GrantedAccess = 0;
 
         /* Set at least some minimum access */
         Thread->GrantedAccess |= (THREAD_TERMINATE |

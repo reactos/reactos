@@ -887,7 +887,9 @@ typedef enum _NDIS_PROCESSOR_TYPE {
   NdisProcessorAlpha,
   NdisProcessorPpc,
   NdisProcessorAmd64,
-  NdisProcessorIA64
+  NdisProcessorIA64,
+  NdisProcessorArm,
+  NdisProcessorArm64
 } NDIS_PROCESSOR_TYPE, *PNDIS_PROCESSOR_TYPE;
 
 typedef enum _NDIS_ENVIRONMENT_TYPE {

@@ -26,7 +26,9 @@
 
 #if defined(_M_ARM64)
 #include <arm64intr.h>
-//#include <arm64_neon.h>
+#if defined(_MSC_VER) && !defined(__clang__)
+#include <arm64_neon.h>
+#endif
 #endif /* _M_ARM64 */
 
 #if defined(__cplusplus)

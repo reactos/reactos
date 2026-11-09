@@ -2607,10 +2607,10 @@ LdrpInit(PCONTEXT Context,
         NtCurrentTeb()->RealClientId.UniqueProcess,
         NtCurrentTeb()->RealClientId.UniqueThread);
 
-#ifdef _WIN64
+#ifdef _M_AMD64
     /* Set the SList header usage */
     RtlpUse16ByteSLists = SharedUserData->ProcessorFeatures[PF_COMPARE_EXCHANGE128];
-#endif /* _WIN64 */
+#endif /* _M_AMD64 */
 
     /* Check if we have a deallocation stack */
     if (!Teb->DeallocationStack)
