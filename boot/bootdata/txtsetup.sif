@@ -603,6 +603,7 @@ Default = "XT-, AT- or extended keyboard (83-105 keys)"
 00010408 = kbdhe.dll
 00000409 = kbdus.dll
 00000809 = kbduk.dll
+00000452 = kbdukx.dll
 00001809 = kbdir.dll
 00010409 = kbddv.dll
 00011009 = kbdcan.dll

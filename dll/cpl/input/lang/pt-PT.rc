@@ -257,6 +257,7 @@ BEGIN
     IDS_UKRAINIAN_LAYOUT "Ucraniano"
     IDS_UKRAINIAN_STUDENT_LAYOUT "Ucraniano (estudante)"
     IDS_UNITED_KINGDOM_LAYOUT "Reino Unido"
+    IDS_UNITED_KINGDOM_EXTENDED_LAYOUT "United Kingdom Extended"
     IDS_UNITED_STATES_DVORAK_LAYOUT "Estados Unidos (Dvorak)"
     IDS_UNITED_STATES_DVORAK_FOR_LEFT_HAND_LAYOUT "Estados Unidos (Dvorak para a mão esquerda)"
     IDS_UNITED_STATES_DVORAK_FOR_RIGHT_HAND_LAYOUT "Estados Unidos (Dvorak para a mão direita)"
