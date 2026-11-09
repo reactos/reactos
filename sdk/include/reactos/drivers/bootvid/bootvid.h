@@ -12,10 +12,25 @@
 
 #include "display.h"
 
+#ifndef BOOTVID_EXPORTS_VERSION
+#define BOOTVID_EXPORTS_VERSION DLL_EXPORT_VERSION // (NTDDI_VERSION >> 16)
+#endif
+
 BOOLEAN
 NTAPI
+#if (BOOTVID_EXPORTS_VERSION >= _WIN32_WINNT_WIN7)
+VidInitialize(
+    _In_ INT Phase,
+    _In_ BOOLEAN SetMode,
+    _In_opt_ PLOADER_PARAMETER_BLOCK LoaderBlock);
+#elif (BOOTVID_EXPORTS_VERSION == _WIN32_WINNT_WIN6)
+VidInitialize(
+    _In_ INT Phase,
+    _In_ BOOLEAN SetMode);
+#else // if (BOOTVID_EXPORTS_VERSION < _WIN32_WINNT_WIN6)
 VidInitialize(
     _In_ BOOLEAN SetMode);
+#endif
 
 VOID
 NTAPI
