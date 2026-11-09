@@ -108,6 +108,7 @@
 #include "dialogs/filedefext.h"
 #include "dialogs/drvdefext.h"
 #include "CQueryAssociations.h"
+#include "CQueryAssociationsVista.h"
 #include "shellmenu/CMenuBand.h"
 #include "shellmenu/CMenuDeskBar.h"
 #include "shellmenu/CMenuSite.h"
@@ -358,5 +359,7 @@ typedef HRESULT (CALLBACK *FILEOPCALLBACK)(FILEOPCALLBACKEVENT Event, LPCWSTR So
                                            UINT Attributes, HRESULT hr, void *CallerData);
 int SHELL32_FileOperation(LPSHFILEOPSTRUCTW lpFileOp, FILEOPCALLBACK Callback, void *CallerData);
 HRESULT SHELL_SingleFileOperation(HWND hWnd, UINT Op, PCWSTR Src, PCWSTR Dest, UINT Flags, PWSTR *ppNewName);
+
+ULONG GetProcessOsVersion(void);
 
 #endif /* _PRECOMP_H__ */
