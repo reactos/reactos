@@ -223,6 +223,7 @@ BEGIN
     IDS_MARATHI_LAYOUT "Marathi Dili"
     IDS_MONGOLIAN_CYRILLIC_LAYOUT "Moğolca (Kiril)"
     IDS_NORWEGIAN_LAYOUT "Norveççe"
+    IDS_NORWEGIAN_WITH_SAMI_LAYOUT "Norwegian with Sami"
     IDS_ORIYA_LAYOUT "Oriya Dili"
     IDS_PERSIAN_STANRDARD_LAYOUT "Persian (Standard)"
     IDS_POLISH_214_LAYOUT "Polonyaca (214)"
