@@ -6,6 +6,7 @@
  */
 
 #include "session.hpp"
+#include "string_utils.hpp"
 
 #include <wincon.h>
 #include <winnls.h>
@@ -188,7 +189,7 @@ void TelnetSession::on_text_line(const std::wstring& line)
     if (queued) {
         SetEvent(m_write_request_event);
     } else {
-        m_handler->send_string("\a");
+        m_handler->send_text(&string_utils::CHAR_BELL, 1);
     }
 }
 
@@ -336,7 +337,7 @@ bool TelnetSession::spawn_cmd_process()
             return false;
         }
         cmd_path += L"\\cmd.exe";
-        cmd_path_quoted = L"\"" + cmd_path + L"\"";
+        cmd_path_quoted = L"\"" + cmd_path + L"\" /A";
     }
 
     LPVOID env_block{};
@@ -413,6 +414,14 @@ bool TelnetSession::spawn_cmd_process()
 
 bool TelnetSession::start_io_thread()
 {
+    CPINFO cp_info{};
+    if (GetCPInfo(CP_OEMCP, &cp_info)) {
+        m_oem_max_char_size = cp_info.MaxCharSize;
+    } else {
+        ERR("GetCPInfo failed with: %lu\n", GetLastError());
+        m_oem_max_char_size = 1;
+    }
+
     m_io_stop_event = CreateEvent(nullptr, false, false, nullptr);
     if (!m_io_stop_event) {
         ERR("reader stop event create failed with: %lu\n", GetLastError());
@@ -525,19 +534,28 @@ DWORD TelnetSession::io_loop()
             }
             
             m_is_read_pending = false;
-            if (!m_is_discarding) {
-                m_handler->send_text((const uint8_t*)m_reader_buffer.data(), bytes_transferred);
+
+            if (!convert_output(m_reader_buffer.data(), bytes_transferred)) {
+                continue;
             }
 
-            const auto it = std::find(m_reader_buffer.rbegin() + (m_reader_buffer.size() - bytes_transferred), m_reader_buffer.rend(), '\n');
-            if (it == m_reader_buffer.rend()) {
-                m_line_tail += std::string(m_reader_buffer.begin(), m_reader_buffer.begin() + bytes_transferred);
+            if (!m_is_discarding && m_convbuf_utf8.size()) {
+                m_handler->send_text((const uint8_t*)m_convbuf_utf8.data(), m_convbuf_utf8.size());
+            }
+
+            const auto it = m_convbuf_utf8.rfind('\n');
+            if (it == std::string::npos) {
+                m_line_tail += m_convbuf_utf8;
             } else {
-                m_line_tail = std::string(it.base(), m_reader_buffer.begin() + bytes_transferred);
+                m_line_tail.assign(m_convbuf_utf8, it + 1);
             }
 
             if (m_line_tail.size() > MAX_LINE_TAIL_LENGTH) {
                 m_line_tail.erase(0, m_line_tail.size() - MAX_LINE_TAIL_LENGTH);
+            }
+
+            while (m_line_tail.size() && ((m_line_tail[0] & 0xC0) == 0x80)) {
+                m_line_tail.erase(0, 1);
             }
         } else if (idx == 2) {
             continue;
@@ -596,4 +614,47 @@ void TelnetSession::start_write()
     RtlSecureZeroMemory(&m_write_queue[0], m_write_queue.size());
     m_write_queue.clear();
     LeaveCriticalSection(&m_write_cs);
+}
+
+bool TelnetSession::convert_output(const char* data, size_t size)
+{
+    std::string _input;
+    if (m_oem_carry.size()) {
+        _input = m_oem_carry + std::string(data, size);
+        data = _input.data();
+        size = _input.size();
+    }
+    m_oem_carry.clear();
+
+    size_t cut_point = size;
+    if (m_oem_max_char_size > 1) {
+        for (size_t i = 0; i < size; i++) {
+            if (IsDBCSLeadByteEx(CP_OEMCP, (BYTE)data[i])) {
+                if (i+1 == size) {
+                    cut_point = i;
+                    break;
+                }
+                i++;
+            }
+        }
+    }
+    m_oem_carry.assign(data + cut_point, size - cut_point);
+    if (!cut_point) {
+        m_convbuf_utf8.clear();
+        return true;        
+    }
+
+    auto error = string_utils::convert_multibyte_to_widechar(CP_OEMCP, data, cut_point, m_convbuf_wide);
+    if (error != ERROR_SUCCESS) {
+        ERR("convert_multibyte_to_widechar failed with: %lu\n", error);
+        return false;
+    }
+
+    error = string_utils::convert_widechar_to_multibyte(CP_UTF8, m_convbuf_wide, m_convbuf_utf8);
+    if (error != ERROR_SUCCESS) {
+        ERR("convert_widechar_to_multibyte failed with: %lu\n", error);
+        return false;
+    }
+
+    return true;
 }

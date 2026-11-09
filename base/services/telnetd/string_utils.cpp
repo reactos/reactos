@@ -24,29 +24,27 @@ namespace string_utils
         return 1;
     }
 
-    uint32_t convert_multibyte_to_widechar(uint32_t code_page, const std::string& in, std::wstring& out, int32_t n)
+    uint32_t convert_multibyte_to_widechar(uint32_t code_page, const char* in, int32_t n, std::wstring& out)
     {
-        n = (n == INT32_MAX) ? (int32_t)in.size() : n;
-        const auto len = MultiByteToWideChar(code_page, 0, in.data(), n, nullptr, 0);
+        const auto len = MultiByteToWideChar(code_page, 0, in, n, nullptr, 0);
         if (!len) {
             return GetLastError();
         }
         out.resize(len, '\0');
-        if (!MultiByteToWideChar(code_page, 0, in.data(), n, &out[0], len)) {
+        if (!MultiByteToWideChar(code_page, 0, in, n, &out[0], len)) {
             return GetLastError();
         }
         return ERROR_SUCCESS;
     }
 
-    uint32_t convert_widechar_to_multibyte(uint32_t code_page, const std::wstring& in, std::string& out, int32_t n)
+    uint32_t convert_widechar_to_multibyte(uint32_t code_page, const wchar_t* in, int32_t n, std::string& out)
     {
-        n = (n == INT32_MAX) ? (int32_t)in.size() : n;
-        const auto len = WideCharToMultiByte(code_page, 0, in.data(), n, nullptr, 0, nullptr, nullptr);
+        const auto len = WideCharToMultiByte(code_page, 0, in, n, nullptr, 0, nullptr, nullptr);
         if (!len) {
             return GetLastError();
         }
         out.resize(len, '\0');
-        if (!WideCharToMultiByte(code_page, 0, in.data(), n, &out[0], len, nullptr, nullptr)) {
+        if (!WideCharToMultiByte(code_page, 0, in, n, &out[0], len, nullptr, nullptr)) {
             return GetLastError();
         }
         return ERROR_SUCCESS;

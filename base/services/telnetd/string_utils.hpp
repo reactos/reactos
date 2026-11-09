@@ -26,7 +26,19 @@ namespace string_utils
     constexpr uint8_t CHAR_LF = '\n';
 
     uint8_t get_utf8_sequence_length(uint8_t c);
+
+    uint32_t convert_multibyte_to_widechar(uint32_t code_page, const char* in, int32_t n, std::wstring& out);
+    uint32_t convert_widechar_to_multibyte(uint32_t code_page, const wchar_t* in, int32_t n, std::string& out);
     
-    uint32_t convert_multibyte_to_widechar(uint32_t code_page, const std::string& in, std::wstring& out, int32_t n = INT32_MAX);
-    uint32_t convert_widechar_to_multibyte(uint32_t code_page, const std::wstring& in, std::string& out, int32_t n = INT32_MAX);
+    inline uint32_t convert_multibyte_to_widechar(uint32_t code_page, const std::string& in, std::wstring& out, int32_t n = INT32_MAX)
+    {
+        n = (n == INT32_MAX) ? (int32_t)in.size() : n;
+        return convert_multibyte_to_widechar(code_page, in.data(), n, out);
+    }
+
+    inline uint32_t convert_widechar_to_multibyte(uint32_t code_page, const std::wstring& in, std::string& out, int32_t n = INT32_MAX)
+    {
+        n = (n == INT32_MAX) ? (int32_t)in.size() : n;
+        return convert_widechar_to_multibyte(code_page, in.data(), n, out);
+    }
 }

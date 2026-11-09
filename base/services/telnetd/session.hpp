@@ -53,6 +53,8 @@ private:
     
     void start_write();
 
+    bool convert_output(const char* data, size_t size);
+
 private:
     DWORD io_loop();
 
@@ -86,6 +88,10 @@ private:
     HANDLE m_write_request_event{};
     OVERLAPPED m_writer_overlapped{};
     bool m_is_write_pending{};
+    std::string m_oem_carry{};
+    uint32_t m_oem_max_char_size{1};
+    std::string m_convbuf_utf8{};
+    std::wstring m_convbuf_wide{};
 
     ITelnetSessionHandler* m_handler{};
 };
