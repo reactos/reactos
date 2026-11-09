@@ -58,6 +58,7 @@ list(APPEND _keyboard_layouts
     kbdkaz
     kbdkor
     kbdla
+    kbdlk41j
     kbdlt1
     kbdlv
     kbdmac
