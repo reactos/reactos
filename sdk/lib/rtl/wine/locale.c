@@ -437,7 +437,8 @@ void locale_init(void)
         NtCurrentPeb()->OemCodePageData = oem_ptr;
     }
     RtlInitNlsTables( ansi_ptr, oem_ptr, case_ptr, &nls_info );
-    /* TODO: Is any Wow64 handling needed? */
+    RtlResetRtlTranslations(&nls_info);
+    /* TODO: wow64 handling */
 #else
     NtCurrentTeb()->Peb->UnicodeCaseTableData = case_ptr;
     if (peb64) peb64->UnicodeCaseTableData = PtrToUlong( case_ptr );
@@ -454,10 +455,10 @@ void locale_init(void)
         if (peb64) peb64->OemCodePageData = PtrToUlong( oem_ptr );
     }
     RtlInitNlsTables( ansi_ptr, oem_ptr, case_ptr, &nls_info );
-#endif
     NlsAnsiCodePage     = nls_info.AnsiTableInfo.CodePage;
     NlsMbCodePageTag    = nls_info.AnsiTableInfo.DBCSCodePage;
     NlsMbOemCodePageTag = nls_info.OemTableInfo.DBCSCodePage;
+#endif
 }
 
 
@@ -973,8 +974,14 @@ DWORD WINAPI RtlUnicodeStringToOemSize( const UNICODE_STRING *str )
 {
     unsigned int ret;
 
+#ifdef __REACTOS__
+    /* Needed for ntdll_apitest:RtlxUnicodeStringToOemSize to pass */
+    if (nls_info.AnsiTableInfo.CodePage != CP_UTF8)
+        ret = cp_wcstombs_size( &nls_info.AnsiTableInfo, str->Buffer, str->Length / sizeof(WCHAR) );
+#else
     if (nls_info.OemTableInfo.CodePage != CP_UTF8)
         ret = cp_wcstombs_size( &nls_info.OemTableInfo, str->Buffer, str->Length / sizeof(WCHAR) );
+#endif
     else
         utf8_wcstombs_size( str->Buffer, str->Length / sizeof(WCHAR), &ret );
 
@@ -1018,6 +1025,7 @@ NTSTATUS WINAPI RtlUnicodeToMultiByteSize( DWORD *size, const WCHAR *str, DWORD 
 }
 
 
+#ifndef __REACTOS__
 /**************************************************************************
  *	RtlUnicodeToOemN   (NTDLL.@)
  */
@@ -1034,6 +1042,7 @@ NTSTATUS WINAPI RtlUnicodeToOemN( char *dst, DWORD dstlen, DWORD *reslen,
     if (reslen) *reslen = ret;
     return STATUS_SUCCESS;
 }
+#endif
 
 
 /**************************************************************************
