@@ -6,52 +6,11 @@
  */
 
 #include "session_handler.hpp"
+#include "string_utils.hpp"
 
-#include <winnls.h>
 #include <cassert>
 
 using cursor_type = const uint8_t*;
-
-constexpr uint8_t CHAR_ETX = 3;
-constexpr uint8_t CHAR_BELL = 7;
-constexpr uint8_t CHAR_BS = 8;
-constexpr uint8_t CHAR_NAK = 21;
-constexpr uint8_t CHAR_DEL = 127;
-constexpr uint8_t CHAR_SP = ' ';
-constexpr uint8_t CHAR_CR = '\r';
-constexpr uint8_t CHAR_LF = '\n';
-
-static std::wstring string_to_wstring(const std::string& str) 
-{
-    std::wstring result{};
-
-    const auto result_size = MultiByteToWideChar(CP_UTF8, 0, str.c_str(), -1, nullptr, 0);
-    if (!result_size) {
-        return L"";
-    }
-
-    result.resize(result_size - 1, L'\0');
-    if (!MultiByteToWideChar(CP_UTF8, 0, str.c_str(), -1, &result[0], (int)(result.size() + 1))) {
-        return L"";
-    }
-
-    return result;
-}
-
-static uint8_t get_utf8_sequence_length(uint8_t c)
-{
-    if (c < 0x80) {
-        return 1;
-    } else if ((c & 0xE0) == 0xC0) {
-        return 2;
-    } else if ((c & 0xF0) == 0xE0) {
-        return 3;
-    } else if ((c & 0xF8) == 0xF0) {
-        return 4;
-    }
-
-    return 1;
-}
 
 TelnetSessionHandler::TelnetSessionHandler()
 {
@@ -211,6 +170,8 @@ void TelnetSessionHandler::on_data(const uint8_t* data, int length)
 
 void TelnetSessionHandler::handle_text(const uint8_t* data, int length)
 {
+    using namespace string_utils;
+
     const cursor_type end_cur = data + length;
 
     for(cursor_type cur = data; cur != end_cur; cur++)
@@ -277,9 +238,8 @@ void TelnetSessionHandler::handle_text_line(const std::string& line)
 {
     const auto authenticate = [](const std::wstring& username, const std::string& password) -> HANDLE
     {
-        std::wstring wpassword = string_to_wstring(password);
-
-        if (wpassword.empty()) {
+        std::wstring wpassword{};
+        if (string_utils::convert_multibyte_to_widechar(CP_UTF8, password, wpassword) != ERROR_SUCCESS) {
             return NULL;
         }
         
@@ -300,13 +260,14 @@ void TelnetSessionHandler::handle_text_line(const std::string& line)
 
         case EState::WAITING_FOR_PASSWORD:
         {
-            const auto wusername = string_to_wstring(m_username);
-
             HANDLE token{};
+            std::wstring wusername{};
+
             if (
                 line.size() &&
                 (m_username.size() <= MAX_CREDENTIAL_LENGTH) && 
                 (line.size() <= MAX_CREDENTIAL_LENGTH) && 
+                (string_utils::convert_multibyte_to_widechar(CP_UTF8, m_username, wusername) == ERROR_SUCCESS) &&
                 ((token = authenticate(wusername, line)) != NULL)
             ) {
                 if (m_nopt_echo == ENegotiableOption::YES) {
@@ -343,14 +304,21 @@ void TelnetSessionHandler::handle_text_line(const std::string& line)
         break;
 
         case EState::ACTIVE_SESSION:
+        {
             if (!m_active_session) {
                 m_state = EState::INVALID;
                 disconnect();
                 return;
             }
 
-            m_active_session->on_text_line(string_to_wstring(line));
-            break;
+            std::wstring wline{};
+            if (string_utils::convert_multibyte_to_widechar(CP_UTF8, line, wline) == ERROR_SUCCESS) {
+                m_active_session->on_text_line(wline);
+            } else {
+                m_active_session->on_text_line(L"");
+            }
+        }
+        break;
         
         default:
             break;
@@ -613,9 +581,9 @@ void TelnetSessionHandler::erase_char()
 
 echo:
     if (should_echo()) {
-        m_echo_buffer.push_back(CHAR_BS);
-        m_echo_buffer.push_back(CHAR_SP);
-        m_echo_buffer.push_back(CHAR_BS);
+        m_echo_buffer.push_back(string_utils::CHAR_BS);
+        m_echo_buffer.push_back(string_utils::CHAR_SP);
+        m_echo_buffer.push_back(string_utils::CHAR_BS);
     }
 }
 
@@ -629,8 +597,8 @@ void TelnetSessionHandler::erase_line()
 
         for (size_t i = 0; i < char_count; i++) {
             const auto idx= current_echo_len + (i * 3);
-            m_echo_buffer[idx + 1] = CHAR_SP;
-            m_echo_buffer[idx + 0] = m_echo_buffer[idx + 2] = CHAR_BS;
+            m_echo_buffer[idx + 1] = string_utils::CHAR_SP;
+            m_echo_buffer[idx + 0] = m_echo_buffer[idx + 2] = string_utils::CHAR_BS;
         }
     }
 
