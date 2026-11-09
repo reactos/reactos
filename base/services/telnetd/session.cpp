@@ -540,14 +540,14 @@ DWORD TelnetSession::io_loop()
             }
 
             if (!m_is_discarding && m_convbuf_utf8.size()) {
-                m_handler->send_text((const uint8_t*)m_convbuf_utf8.data(), m_convbuf_utf8.size());
+                m_handler->send_text((const uint8_t*)m_convbuf_utf8.data(), (int)m_convbuf_utf8.size());
             }
 
             const auto it = m_convbuf_utf8.rfind('\n');
             if (it == std::string::npos) {
                 m_line_tail += m_convbuf_utf8;
             } else {
-                m_line_tail.assign(m_convbuf_utf8, it + 1);
+                m_line_tail.assign(m_convbuf_utf8.data(), it + 1);
             }
 
             if (m_line_tail.size() > MAX_LINE_TAIL_LENGTH) {
@@ -589,7 +589,7 @@ void TelnetSession::start_write()
     }
 
     EnterCriticalSection(&m_write_cs);
-    const auto size_to_write = (std::min)(m_write_queue.size(), (size_t)PIPE_BUFFER_SIZE);
+    const int size_to_write = (int)((std::min)(m_write_queue.size(), (size_t)PIPE_BUFFER_SIZE));
     if (!size_to_write) {
         LeaveCriticalSection(&m_write_cs);
         return;
@@ -644,7 +644,7 @@ bool TelnetSession::convert_output(const char* data, size_t size)
         return true;        
     }
 
-    auto error = string_utils::convert_multibyte_to_widechar(CP_OEMCP, data, cut_point, m_convbuf_wide);
+    auto error = string_utils::convert_multibyte_to_widechar(CP_OEMCP, data, (int)cut_point, m_convbuf_wide);
     if (error != ERROR_SUCCESS) {
         ERR("convert_multibyte_to_widechar failed with: %lu\n", error);
         return false;

@@ -26,6 +26,10 @@ namespace string_utils
 
     uint32_t convert_multibyte_to_widechar(uint32_t code_page, const char* in, int32_t n, std::wstring& out)
     {
+        if (!n) {
+            out.clear();
+            return ERROR_SUCCESS; 
+        }
         const auto len = MultiByteToWideChar(code_page, 0, in, n, nullptr, 0);
         if (!len) {
             return GetLastError();
@@ -39,6 +43,10 @@ namespace string_utils
 
     uint32_t convert_widechar_to_multibyte(uint32_t code_page, const wchar_t* in, int32_t n, std::string& out)
     {
+        if (!n) {
+            out.clear();
+            return ERROR_SUCCESS; 
+        }
         const auto len = WideCharToMultiByte(code_page, 0, in, n, nullptr, 0, nullptr, nullptr);
         if (!len) {
             return GetLastError();

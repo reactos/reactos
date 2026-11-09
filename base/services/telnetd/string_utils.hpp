@@ -11,7 +11,7 @@
 #include <winbase.h>
 #include <winnls.h> // including this here (instead of in the cpp) so users of this header gets CP_*
 
-#include <cstdint>
+#include <stdint.h>
 #include <string>
 
 namespace string_utils

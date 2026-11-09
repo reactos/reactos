@@ -314,8 +314,6 @@ void TelnetSessionHandler::handle_text_line(const std::string& line)
             std::wstring wline{};
             if (string_utils::convert_multibyte_to_widechar(CP_UTF8, line, wline) == ERROR_SUCCESS) {
                 m_active_session->on_text_line(wline);
-            } else {
-                m_active_session->on_text_line(L"");
             }
         }
         break;
