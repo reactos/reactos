@@ -1,16 +1,16 @@
 /*
-
  * PROJECT:     ReactOS Keyboard Layouts
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     DEC LK411-AJ Keyboard Layout (Japanese)
  * COPYRIGHT:   Copyright 2026 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
-/* See also: https://kbdlayout.info/kbdlk41a */
 
 #define WIN32_NO_STATUS
 #include <windef.h>
 #include <winuser.h>
 #include <ndk/kbd.h>
+
+/* See also: https://kbdlayout.info/kbdlk41a */
 
 #ifdef _M_IA64
   #define ROSDATA static __declspec(allocate(".data"))
@@ -162,32 +162,32 @@ ROSDATA VK_TO_WCHARS4 key_to_chars_4mod[] = {
   { '7', KANALOK, { '7', '&', 0xff94, 0xff6c } },
   { '8', KANALOK, { '8', '*', 0xff95, 0xff6d } },
   { '9', KANALOK, { '9', '(', 0xff96, 0xff6e } },
-  { 'A', CAPLOK|KANALOK, { 'a', 'A', 0xff81, 0xff81 } },
-  { 'B', CAPLOK|KANALOK, { 'b', 'B', 0xff7a, 0xff7a } },
-  { 'C', CAPLOK|KANALOK, { 'c', 'C', 0xff7f, 0xff7f } },
-  { 'D', CAPLOK|KANALOK, { 'd', 'D', 0xff7c, 0xff7c } },
-  { 'E', CAPLOK|KANALOK, { 'e', 'E', 0xff72, 0xff68 } },
-  { 'F', CAPLOK|KANALOK, { 'f', 'F', 0xff8a, 0xff8a } },
-  { 'G', CAPLOK|KANALOK, { 'g', 'G', 0xff77, 0xff77 } },
-  { 'H', CAPLOK|KANALOK, { 'h', 'H', 0xff78, 0xff78 } },
-  { 'I', CAPLOK|KANALOK, { 'i', 'I', 0xff86, 0xff86 } },
-  { 'J', CAPLOK|KANALOK, { 'j', 'J', 0xff8f, 0xff8f } },
-  { 'K', CAPLOK|KANALOK, { 'k', 'K', 0xff89, 0xff89 } },
-  { 'L', CAPLOK|KANALOK, { 'l', 'L', 0xff98, 0xff98 } },
-  { 'M', CAPLOK|KANALOK, { 'm', 'M', 0xff93, 0xff93 } },
-  { 'N', CAPLOK|KANALOK, { 'n', 'N', 0xff90, 0xff90 } },
-  { 'O', CAPLOK|KANALOK, { 'o', 'O', 0xff97, 0xff97 } },
-  { 'P', CAPLOK|KANALOK, { 'p', 'P', 0xff7e, 0xff7e } },
-  { 'Q', CAPLOK|KANALOK, { 'q', 'Q', 0xff80, 0xff80 } },
-  { 'R', CAPLOK|KANALOK, { 'r', 'R', 0xff7d, 0xff7d } },
-  { 'S', CAPLOK|KANALOK, { 's', 'S', 0xff84, 0xff84 } },
-  { 'T', CAPLOK|KANALOK, { 't', 'T', 0xff76, 0xff76 } },
-  { 'U', CAPLOK|KANALOK, { 'u', 'U', 0xff85, 0xff85 } },
-  { 'V', CAPLOK|KANALOK, { 'v', 'V', 0xff8b, 0xff8b } },
-  { 'W', CAPLOK|KANALOK, { 'w', 'W', 0xff83, 0xff83 } },
-  { 'X', CAPLOK|KANALOK, { 'x', 'X', 0xff7b, 0xff7b } },
-  { 'Y', CAPLOK|KANALOK, { 'y', 'Y', 0xff9d, 0xff9d } },
-  { 'Z', CAPLOK|KANALOK, { 'z', 'Z', 0xff82, 0xff6f } },
+  { 'A', CAPLOK | KANALOK, { 'a', 'A', 0xff81, 0xff81 } },
+  { 'B', CAPLOK | KANALOK, { 'b', 'B', 0xff7a, 0xff7a } },
+  { 'C', CAPLOK | KANALOK, { 'c', 'C', 0xff7f, 0xff7f } },
+  { 'D', CAPLOK | KANALOK, { 'd', 'D', 0xff7c, 0xff7c } },
+  { 'E', CAPLOK | KANALOK, { 'e', 'E', 0xff72, 0xff68 } },
+  { 'F', CAPLOK | KANALOK, { 'f', 'F', 0xff8a, 0xff8a } },
+  { 'G', CAPLOK | KANALOK, { 'g', 'G', 0xff77, 0xff77 } },
+  { 'H', CAPLOK | KANALOK, { 'h', 'H', 0xff78, 0xff78 } },
+  { 'I', CAPLOK | KANALOK, { 'i', 'I', 0xff86, 0xff86 } },
+  { 'J', CAPLOK | KANALOK, { 'j', 'J', 0xff8f, 0xff8f } },
+  { 'K', CAPLOK | KANALOK, { 'k', 'K', 0xff89, 0xff89 } },
+  { 'L', CAPLOK | KANALOK, { 'l', 'L', 0xff98, 0xff98 } },
+  { 'M', CAPLOK | KANALOK, { 'm', 'M', 0xff93, 0xff93 } },
+  { 'N', CAPLOK | KANALOK, { 'n', 'N', 0xff90, 0xff90 } },
+  { 'O', CAPLOK | KANALOK, { 'o', 'O', 0xff97, 0xff97 } },
+  { 'P', CAPLOK | KANALOK, { 'p', 'P', 0xff7e, 0xff7e } },
+  { 'Q', CAPLOK | KANALOK, { 'q', 'Q', 0xff80, 0xff80 } },
+  { 'R', CAPLOK | KANALOK, { 'r', 'R', 0xff7d, 0xff7d } },
+  { 'S', CAPLOK | KANALOK, { 's', 'S', 0xff84, 0xff84 } },
+  { 'T', CAPLOK | KANALOK, { 't', 'T', 0xff76, 0xff76 } },
+  { 'U', CAPLOK | KANALOK, { 'u', 'U', 0xff85, 0xff85 } },
+  { 'V', CAPLOK | KANALOK, { 'v', 'V', 0xff8b, 0xff8b } },
+  { 'W', CAPLOK | KANALOK, { 'w', 'W', 0xff83, 0xff83 } },
+  { 'X', CAPLOK | KANALOK, { 'x', 'X', 0xff7b, 0xff7b } },
+  { 'Y', CAPLOK | KANALOK, { 'y', 'Y', 0xff9d, 0xff9d } },
+  { 'Z', CAPLOK | KANALOK, { 'z', 'Z', 0xff82, 0xff6f } },
   { VK_OEM_1, KANALOK, { ';', ':', 0xff9a, 0xff9a } },
   { VK_OEM_2, KANALOK, { '/', '?', 0xff92, 0xff65 } },
   { VK_OEM_7, KANALOK, { '\'', '"', 0xff79, 0xff79 } },
