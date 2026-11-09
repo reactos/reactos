@@ -5186,8 +5186,9 @@ RegLoadMUIStringW(
 
     if (pszDirectory && *pszDirectory)
     {
-        FIXME("BaseDir parameter not yet supported!\n");
-        return ERROR_INVALID_PARAMETER;
+        static BOOL fixme_once;
+        if (!fixme_once++)
+            FIXME("BaseDir parameter not yet supported!\n");
     }
 
     /* Check for value existence and correctness of it's type, allocate a buffer and load it. */
