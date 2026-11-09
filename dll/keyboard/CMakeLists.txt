@@ -12,6 +12,7 @@ list(APPEND _keyboard_layouts
     kbdal
     kbdarme
     kbdarmw
+    kbdax2
     kbdaze
     kbdazel
     kbdbe
