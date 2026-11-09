@@ -243,6 +243,7 @@ BEGIN
     IDS_SPANISH_LAYOUT "Іспанська"
     IDS_SPANISH_VARIANTION_LAYOUT "Іспанська 2"
     IDS_SWEDISH_LAYOUT "Шведська"
+    IDS_SWEDISH_WITH_SAMI "Swedish with Sami"
     IDS_SWISS_FRENCH_LAYOUT "Французька (Швейцарія)"
     IDS_SWISS_GERMAN_LAYOUT "Німецька (Швейцарія)"
     IDS_SYRIAC_LAYOUT "Сирійська"

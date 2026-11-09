@@ -243,6 +243,7 @@ BEGIN
     IDS_SPANISH_LAYOUT "İspanyolca"
     IDS_SPANISH_VARIANTION_LAYOUT "İspanyolca Çeşitli"
     IDS_SWEDISH_LAYOUT "İsveççe"
+    IDS_SWEDISH_WITH_SAMI "Swedish with Sami"
     IDS_SWISS_FRENCH_LAYOUT "İsviçre Fransızcası"
     IDS_SWISS_GERMAN_LAYOUT "İsviçre Almancası"
     IDS_SYRIAC_LAYOUT "Süryanice"
