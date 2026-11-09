@@ -900,7 +900,7 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Terminal Server\KeyboardType Mapping\JPN"
 HKLM,"SYSTEM\CurrentControlSet\Control\Terminal Server\KeyboardType Mapping\JPN","00010002",0x00000000,"kbd106n.dll"
 HKLM,"SYSTEM\CurrentControlSet\Control\Terminal Server\KeyboardType Mapping\JPN","00010D01",0x00000000,"kbdnec95.dll"
 HKLM,"SYSTEM\CurrentControlSet\Control\Terminal Server\KeyboardType Mapping\JPN","00010D04",0x00000000,"kbdnec95.dll"
-HKLM,"SYSTEM\CurrentControlSet\Control\Terminal Server\KeyboardType Mapping\JPN","00020002",0x00000000,"f3ahvoas.dll"
+;HKLM,"SYSTEM\CurrentControlSet\Control\Terminal Server\KeyboardType Mapping\JPN","00020002",0x00000000,"f3ahvoas.dll" ; Nobody uses it
 HKLM,"SYSTEM\CurrentControlSet\Control\Terminal Server\KeyboardType Mapping\JPN","00020D01",0x00000000,"kbdnecat.dll"
 HKLM,"SYSTEM\CurrentControlSet\Control\Terminal Server\KeyboardType Mapping\JPN","00020D04",0x00000000,"kbdnecat.dll"
 HKLM,"SYSTEM\CurrentControlSet\Control\Terminal Server\KeyboardType Mapping\KOR","00000003",0x00000000,"kbd101a.dll"
