@@ -4,12 +4,13 @@
  * PURPOSE:     Latvia-QWERTY Keyboard Layout
  * COPYRIGHT:   Copyright 2026 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
-/* See also: https://kbdlayout.info/kbdlv1 */
 
 #define WIN32_NO_STATUS
 #include <windef.h>
 #include <winuser.h>
 #include <ndk/kbd.h>
+
+/* See also: https://kbdlayout.info/kbdlv1 */
 
 #ifdef _M_IA64
   #define ROSDATA static __declspec(allocate(".data"))
@@ -140,34 +141,34 @@ ROSDATA MODIFIERS modifier_bits = {
 
 /* ---- VK -> WCHAR ---------------------------------------------------- */
 ROSDATA VK_TO_WCHARS3 key_to_chars_3mod[] = {
-  { VK_OEM_3, 0, { '`', WCH_DEAD, 0xad } },  /* [2] soft hyphen */
+  { VK_OEM_3, 0, { '`', WCH_DEAD, 0xad } },
   { VK_EMPTY, 0, { WCH_NONE, '~', WCH_NONE } },
-  { '1', 0, { '1', '!', 0xa0 } },  /* [2] no-break space */
-  { '2', 0, { '2', '@', 0xab } },  /* [2] left-pointing double angle quotation mark */
-  { '3', 0, { '3', '#', 0xbb } },  /* [2] right-pointing double angle quotation mark */
+  { '1', 0, { '1', '!', 0xa0 } },
+  { '2', 0, { '2', '@', 0xab } },
+  { '3', 0, { '3', '#', 0xbb } },
   { 0, 0 }
 };
 
 ROSDATA VK_TO_WCHARS4 key_to_chars_4mod[] = {
-  { '4', 0, { '4', '$', 0x20ac, 0xa7 } },  /* [2] euro sign, [3] section sign */
-  { '5', 0, { '5', '%', WCH_NONE, 0xb0 } },  /* [3] degree sign */
-  { '7', 0, { '7', '&', WCH_NONE, 0xb1 } },  /* [3] plus-minus sign */
-  { '8', 0, { '8', '*', WCH_NONE, 0xd7 } },  /* [3] multiplication sign */
-  { 'E', CAPLOK, { 'e', 'E', 0x0113, 0x0112 } },  /* [2] latin small letter e with macron, [3] latin capital letter e with macron */
-  { 'R', CAPLOK, { 'r', 'R', 0x0157, 0x0156 } },  /* [2] latin small letter r with cedilla, [3] latin capital letter r with cedilla */
-  { 'U', CAPLOK, { 'u', 'U', 0x016b, 0x016a } },  /* [2] latin small letter u with macron, [3] latin capital letter u with macron */
-  { 'I', CAPLOK, { 'i', 'I', 0x012b, 0x012a } },  /* [2] latin small letter i with macron, [3] latin capital letter i with macron */
-  { 'O', CAPLOK, { 'o', 'O', 0xf5, 0xd5 } },  /* [2] latin small letter o with tilde, [3] latin capital letter o with tilde */
-  { 'A', CAPLOK, { 'a', 'A', 0x0101, 0x0100 } },  /* [2] latin small letter a with macron, [3] latin capital letter a with macron */
-  { 'S', CAPLOK, { 's', 'S', 0x0161, 0x0160 } },  /* [2] latin small letter s with caron, [3] latin capital letter s with caron */
-  { 'G', CAPLOK, { 'g', 'G', 0x0123, 0x0122 } },  /* [2] latin small letter g with cedilla, [3] latin capital letter g with cedilla */
-  { 'K', CAPLOK, { 'k', 'K', 0x0137, 0x0136 } },  /* [2] latin small letter k with cedilla, [3] latin capital letter k with cedilla */
-  { 'L', CAPLOK, { 'l', 'L', 0x013c, 0x013b } },  /* [2] latin small letter l with cedilla, [3] latin capital letter l with cedilla */
+  { '4', 0, { '4', '$', 0x20ac, 0xa7 } },
+  { '5', 0, { '5', '%', WCH_NONE, 0xb0 } },
+  { '7', 0, { '7', '&', WCH_NONE, 0xb1 } },
+  { '8', 0, { '8', '*', WCH_NONE, 0xd7 } },
+  { 'E', CAPLOK, { 'e', 'E', 0x0113, 0x0112 } },
+  { 'R', CAPLOK, { 'r', 'R', 0x0157, 0x0156 } },
+  { 'U', CAPLOK, { 'u', 'U', 0x016b, 0x016a } },
+  { 'I', CAPLOK, { 'i', 'I', 0x012b, 0x012a } },
+  { 'O', CAPLOK, { 'o', 'O', 0xf5, 0xd5 } },
+  { 'A', CAPLOK, { 'a', 'A', 0x0101, 0x0100 } },
+  { 'S', CAPLOK, { 's', 'S', 0x0161, 0x0160 } },
+  { 'G', CAPLOK, { 'g', 'G', 0x0123, 0x0122 } },
+  { 'K', CAPLOK, { 'k', 'K', 0x0137, 0x0136 } },
+  { 'L', CAPLOK, { 'l', 'L', 0x013c, 0x013b } },
   { VK_OEM_7, 0, { '\'', '"', WCH_DEAD, WCH_DEAD } },
-  { VK_EMPTY, 0, { WCH_NONE, WCH_NONE, 0xb4, 0xa8 } },  /* [2] acute accent, [3] diaeresis */
-  { 'Z', CAPLOK, { 'z', 'Z', 0x017e, 0x017d } },  /* [2] latin small letter z with caron, [3] latin capital letter z with caron */
-  { 'C', CAPLOK, { 'c', 'C', 0x010d, 0x010c } },  /* [2] latin small letter c with caron, [3] latin capital letter c with caron */
-  { 'N', CAPLOK, { 'n', 'N', 0x0146, 0x0145 } },  /* [2] latin small letter n with cedilla, [3] latin capital letter n with cedilla */
+  { VK_EMPTY, 0, { WCH_NONE, WCH_NONE, 0xb4, 0xa8 } },
+  { 'Z', CAPLOK, { 'z', 'Z', 0x017e, 0x017d } },
+  { 'C', CAPLOK, { 'c', 'C', 0x010d, 0x010c } },
+  { 'N', CAPLOK, { 'n', 'N', 0x0146, 0x0145 } },
   { 0, 0 }
 };
 
@@ -175,7 +176,7 @@ ROSDATA VK_TO_WCHARS5 key_to_chars_5mod[] = {
   { VK_OEM_4, 0, { '[', '{', WCH_NONE, WCH_NONE, 0x1b } },
   { VK_OEM_6, 0, { ']', '}', WCH_NONE, WCH_NONE, 0x1d } },
   { VK_OEM_5, 0, { WCH_DEAD, '|', WCH_NONE, WCH_NONE, 0x1c } },
-  { VK_EMPTY, 0, { 0xb0, WCH_NONE, WCH_NONE, WCH_NONE, WCH_NONE } },  /* [0] degree sign */
+  { VK_EMPTY, 0, { 0xb0, WCH_NONE, WCH_NONE, WCH_NONE, WCH_NONE } },
   { VK_OEM_102, 0, { '\\', '|', WCH_NONE, WCH_NONE, 0x1c } },
   { VK_BACK, 0, { 0x08, 0x08, WCH_NONE, WCH_NONE, 0x7f } },
   { VK_ESCAPE, 0, { 0x1b, 0x1b, WCH_NONE, WCH_NONE, 0x1b } },
@@ -186,8 +187,8 @@ ROSDATA VK_TO_WCHARS5 key_to_chars_5mod[] = {
 };
 
 ROSDATA VK_TO_WCHARS6 key_to_chars_6mod[] = {
-  { '6', 0, { '6', '^', 0x2019, WCH_NONE, WCH_NONE, 0x1e } },  /* [2] right single quotation mark */
-  { VK_OEM_MINUS, 0, { '-', '_', 0x2013, 0x2014, WCH_NONE, 0x1f } },  /* [2] en dash, [3] em dash */
+  { '6', 0, { '6', '^', 0x2019, WCH_NONE, WCH_NONE, 0x1e } },
+  { VK_OEM_MINUS, 0, { '-', '_', 0x2013, 0x2014, WCH_NONE, 0x1f } },
   { 0, 0 }
 };
 
@@ -248,37 +249,37 @@ ROSDATA VK_TO_WCHAR_TABLE vk_to_wchar_master_table[] = {
 
 /* ---- Dead keys ------------------------------------------------------ */
 ROSDATA DEADKEY dead_keys[] = {
-  DEADTRANS(0x0144, 'n', 0xb4, 0),  /* latin small letter n with acute */
-  DEADTRANS(0x0107, 'c', 0xb4, 0),  /* latin small letter c with acute */
-  DEADTRANS(0xf3, 'o', 0xb4, 0),  /* latin small letter o with acute */
-  DEADTRANS(0xe9, 'e', 0xb4, 0),  /* latin small letter e with acute */
-  DEADTRANS(0x015b, 's', 0xb4, 0),  /* latin small letter s with acute */
-  DEADTRANS(0x017a, 'z', 0xb4, 0),  /* latin small letter z with acute */
-  DEADTRANS(0x0143, 'N', 0xb4, 0),  /* latin capital letter n with acute */
-  DEADTRANS(0x0106, 'C', 0xb4, 0),  /* latin capital letter c with acute */
-  DEADTRANS(0xd3, 'O', 0xb4, 0),  /* latin capital letter o with acute */
-  DEADTRANS(0xc9, 'E', 0xb4, 0),  /* latin capital letter e with acute */
-  DEADTRANS(0x015a, 'S', 0xb4, 0),  /* latin capital letter s with acute */
-  DEADTRANS(0x0179, 'Z', 0xb4, 0),  /* latin capital letter z with acute */
-  DEADTRANS(0xb4, ' ', 0xb4, 0),  /* acute accent */
-  DEADTRANS(0xe4, 'a', 0xa8, 0),  /* latin small letter a with diaeresis */
-  DEADTRANS(0xfc, 'u', 0xa8, 0),  /* latin small letter u with diaeresis */
-  DEADTRANS(0xf6, 'o', 0xa8, 0),  /* latin small letter o with diaeresis */
-  DEADTRANS(0xc4, 'A', 0xa8, 0),  /* latin capital letter a with diaeresis */
-  DEADTRANS(0xdc, 'U', 0xa8, 0),  /* latin capital letter u with diaeresis */
-  DEADTRANS(0xd6, 'O', 0xa8, 0),  /* latin capital letter o with diaeresis */
-  DEADTRANS(0xa8, ' ', 0xa8, 0),  /* diaeresis */
-  DEADTRANS(0xe5, 'a', 0xb0, 0),  /* latin small letter a with ring above */
-  DEADTRANS(0xc5, 'A', 0xb0, 0),  /* latin capital letter a with ring above */
-  DEADTRANS(0x0117, 'e', 0xb0, 0),  /* latin small letter e with dot above */
-  DEADTRANS(0x0116, 'E', 0xb0, 0),  /* latin capital letter e with dot above */
-  DEADTRANS(0x017c, 'z', 0xb0, 0),  /* latin small letter z with dot above */
-  DEADTRANS(0x017b, 'Z', 0xb0, 0),  /* latin capital letter z with dot above */
-  DEADTRANS(0x0121, 'g', 0xb0, 0),  /* latin small letter g with dot above */
-  DEADTRANS(0xb0, ' ', 0xb0, 0),  /* degree sign */
-  DEADTRANS(0xf5, 'o', '~', 0),  /* latin small letter o with tilde */
-  DEADTRANS(0xd5, 'O', '~', 0),  /* latin capital letter o with tilde */
-  DEADTRANS('~', ' ', '~', 0),  /*  */
+  DEADTRANS(0x0144, 'n', 0xb4, 0),
+  DEADTRANS(0x0107, 'c', 0xb4, 0),
+  DEADTRANS(0xf3, 'o', 0xb4, 0),
+  DEADTRANS(0xe9, 'e', 0xb4, 0),
+  DEADTRANS(0x015b, 's', 0xb4, 0),
+  DEADTRANS(0x017a, 'z', 0xb4, 0),
+  DEADTRANS(0x0143, 'N', 0xb4, 0),
+  DEADTRANS(0x0106, 'C', 0xb4, 0),
+  DEADTRANS(0xd3, 'O', 0xb4, 0),
+  DEADTRANS(0xc9, 'E', 0xb4, 0),
+  DEADTRANS(0x015a, 'S', 0xb4, 0),
+  DEADTRANS(0x0179, 'Z', 0xb4, 0),
+  DEADTRANS(0xb4, ' ', 0xb4, 0),
+  DEADTRANS(0xe4, 'a', 0xa8, 0),
+  DEADTRANS(0xfc, 'u', 0xa8, 0),
+  DEADTRANS(0xf6, 'o', 0xa8, 0),
+  DEADTRANS(0xc4, 'A', 0xa8, 0),
+  DEADTRANS(0xdc, 'U', 0xa8, 0),
+  DEADTRANS(0xd6, 'O', 0xa8, 0),
+  DEADTRANS(0xa8, ' ', 0xa8, 0),
+  DEADTRANS(0xe5, 'a', 0xb0, 0),
+  DEADTRANS(0xc5, 'A', 0xb0, 0),
+  DEADTRANS(0x0117, 'e', 0xb0, 0),
+  DEADTRANS(0x0116, 'E', 0xb0, 0),
+  DEADTRANS(0x017c, 'z', 0xb0, 0),
+  DEADTRANS(0x017b, 'Z', 0xb0, 0),
+  DEADTRANS(0x0121, 'g', 0xb0, 0),
+  DEADTRANS(0xb0, ' ', 0xb0, 0),
+  DEADTRANS(0xf5, 'o', '~', 0),
+  DEADTRANS(0xd5, 'O', '~', 0),
+  DEADTRANS('~', ' ', '~', 0),
   { 0, 0, 0 }
 };
 
