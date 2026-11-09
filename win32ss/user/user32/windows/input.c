@@ -841,6 +841,7 @@ IntFollowRealDll(
     szReturned[0] = UNICODE_NULL;
 
     /* FIXME: Specify PCLIENTKEYBOARDTYPE parameter for pfnReal */
+    /* FIXME: Implement ntuser's UserInitKeyboard and use GetKeyboardType */
     if ((!(pfnReal    && pfnReal(ulKLID, szReturned, NULL, NULL)) &&
          !(pfnRealNT4 && pfnRealNT4(szReturned))))
     {
