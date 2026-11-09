@@ -41,7 +41,8 @@ extern "C" int __cdecl _rmtmp()
             if (!stream.valid())
                 continue;
 
-            _lock_file(stream.public_stream());
+            FILE* volatile const public_stream = stream.public_stream();
+            _lock_file(public_stream);
             __try
             {
                 if (!stream.is_in_use())
@@ -56,7 +57,7 @@ extern "C" int __cdecl _rmtmp()
             }
             __finally
             {
-                _unlock_file(stream.public_stream());
+                _unlock_file(public_stream);
             }
             __endtry
         }
