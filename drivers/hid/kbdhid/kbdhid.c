@@ -104,6 +104,26 @@ KbdHid_InsertScanCodes(
 }
 
 
+static
+ULONG
+KbdHid_GetUsageCount(
+    IN PUSAGE_AND_PAGE UsageList,
+    IN ULONG MaxCount)
+{
+    ULONG Index;
+
+    /* count entries up to the first empty usage list slot */
+    for (Index = 0; Index < MaxCount; Index++)
+    {
+        if (UsageList[Index].Usage == 0 && UsageList[Index].UsagePage == 0)
+            break;
+    }
+
+    /* return the number of valid entries */
+    return Index;
+}
+
+
 NTSTATUS
 NTAPI
 KbdHid_ReadCompletion(
@@ -114,6 +134,8 @@ KbdHid_ReadCompletion(
     PKBDHID_DEVICE_EXTENSION DeviceExtension;
     NTSTATUS Status;
     ULONG ButtonLength;
+    ULONG BreakCount;
+    ULONG MakeCount;
     ULONG Index;
 
     /* get device extension */
@@ -169,6 +191,12 @@ KbdHid_ReadCompletion(
                                              DeviceExtension->UsageListLength);
     ASSERT(Status == HIDP_STATUS_SUCCESS);
 
+    /* get the actual number of entries in both lists */
+    BreakCount = KbdHid_GetUsageCount(DeviceExtension->BreakUsageList,
+                                      DeviceExtension->UsageListLength);
+    MakeCount = KbdHid_GetUsageCount(DeviceExtension->MakeUsageList,
+                                     DeviceExtension->UsageListLength);
+
     /* replace previous usage list with current list */
     RtlMoveMemory(DeviceExtension->PreviousUsageList,
                   DeviceExtension->CurrentUsageList,
@@ -176,7 +204,7 @@ KbdHid_ReadCompletion(
 
     /* translate break usage list */
     Status = HidP_TranslateUsageAndPagesToI8042ScanCodes(DeviceExtension->BreakUsageList,
-                                                         DeviceExtension->UsageListLength,
+                                                         BreakCount,
                                                          HidP_Keyboard_Break,
                                                          &DeviceExtension->ModifierState,
                                                          KbdHid_InsertScanCodes,
@@ -188,7 +216,7 @@ KbdHid_ReadCompletion(
 
     /* translate new usage list */
     Status = HidP_TranslateUsageAndPagesToI8042ScanCodes(DeviceExtension->MakeUsageList,
-                                                         DeviceExtension->UsageListLength,
+                                                         MakeCount,
                                                          HidP_Keyboard_Make,
                                                          &DeviceExtension->ModifierState,
                                                          KbdHid_InsertScanCodes,
