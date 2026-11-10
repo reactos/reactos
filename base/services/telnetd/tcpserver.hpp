@@ -27,6 +27,10 @@ class TCPServer;
 
 class TCPServerSessionHandler
 {
+    static constexpr size_t SEND_QUEUE_MARK_LOW   = 16 * 1024;
+    static constexpr size_t SEND_QUEUE_MARK_HIGH  = 64 * 1024;
+    static constexpr size_t SEND_QUEUE_MARK_LIMIT = 1024 * 1024;
+
     struct Unit
     {
         int remaining;
@@ -45,6 +49,10 @@ public:
     virtual void on_disconnect() = 0;
 
     virtual void on_data(const uint8_t* data, int length) = 0;
+
+    inline bool has_available_send_space();
+
+    inline HANDLE get_send_space_available_event() const;
 
 protected:
     TCPServer* m_server{};
@@ -70,10 +78,15 @@ private:
     volatile LONG m_disconnect_requested{0};
     std::deque<Unit> m_units;
     size_t m_urgent_units{0};
+    bool m_is_send_queue_full{false};
+    HANDLE m_send_space_available_event{nullptr};
 
     void _internal_on_connect(TCPServer* server, SOCKET s, WSAEVENT e);
     
     bool _internal_flush_send_queue(bool lock = true);
+
+    inline void on_send_queue_grow();
+    inline void on_send_queue_shrink();
 
     friend class TCPServer;
 };
@@ -160,4 +173,32 @@ template<typename session_handler_type>
 TCPServer::EStatus TCPServer::initialize(uint16_t port, const char* interface_addr)
 {
     return initialize(port, interface_addr, []() -> TCPServerSessionHandler* { return new session_handler_type(); });
+}
+
+bool TCPServerSessionHandler::has_available_send_space()
+{
+    EnterCriticalSection(&m_send_queue_cs);
+    const auto result = !m_is_send_queue_full;
+    LeaveCriticalSection(&m_send_queue_cs);
+    return result;
+}
+
+HANDLE TCPServerSessionHandler::get_send_space_available_event() const
+{
+    return m_send_space_available_event;
+}
+
+void TCPServerSessionHandler::on_send_queue_grow()
+{
+    if (m_send_queue_cursor >= SEND_QUEUE_MARK_HIGH) {
+        m_is_send_queue_full = true;
+    }
+}
+
+void TCPServerSessionHandler::on_send_queue_shrink()
+{
+    if (m_is_send_queue_full && (m_send_queue_cursor <= SEND_QUEUE_MARK_LOW)) {
+        m_is_send_queue_full = false;
+        SetEvent(m_send_space_available_event);
+    }
 }

@@ -422,6 +422,11 @@ bool TelnetSession::start_io_thread()
         m_oem_max_char_size = 1;
     }
 
+    if (!m_handler->get_send_space_available_event()) {
+        ERR("send space available event is NULL\n");
+        return false;
+    }
+
     m_io_stop_event = CreateEvent(nullptr, false, false, nullptr);
     if (!m_io_stop_event) {
         ERR("reader stop event create failed with: %lu\n", GetLastError());
@@ -474,12 +479,12 @@ bool TelnetSession::start_io_thread()
 
 DWORD TelnetSession::io_loop()
 {
-    HANDLE wait_objects[6] = {m_io_stop_event, m_reader_overlapped.hEvent, m_reader_discard_event, m_write_request_event, m_writer_overlapped.hEvent, m_cmd_process_handle};
+    HANDLE wait_objects[7] = {m_io_stop_event, m_reader_overlapped.hEvent, m_reader_discard_event, m_write_request_event, m_writer_overlapped.hEvent, m_handler->get_send_space_available_event(), m_cmd_process_handle};
 
     while (true) {
         DWORD read_size{};
 
-        if (!m_is_read_pending && !ReadFile(m_pipe_std_out_err, m_reader_buffer.data(), (DWORD)m_reader_buffer.size(), &read_size, &m_reader_overlapped)) {
+        if (!m_is_read_pending && !m_is_send_paused && !ReadFile(m_pipe_std_out_err, m_reader_buffer.data(), (DWORD)m_reader_buffer.size(), &read_size, &m_reader_overlapped)) {
             const auto ec = GetLastError();
             if (ec == ERROR_BROKEN_PIPE) {
                 m_handler->close_session();
@@ -493,7 +498,7 @@ DWORD TelnetSession::io_loop()
         }
 
         auto idx = WaitForMultipleObjects(
-            m_cmd_exited ? 5 : 6, 
+            m_cmd_exited ? 6 : 7, 
             wait_objects,
             false,
             m_is_discarding ? 200 : INFINITE
@@ -541,6 +546,7 @@ DWORD TelnetSession::io_loop()
 
             if (!m_is_discarding && m_convbuf_utf8.size()) {
                 m_handler->send_text((const uint8_t*)m_convbuf_utf8.data(), (int)m_convbuf_utf8.size());
+                m_is_send_paused = !m_handler->has_available_send_space();
             }
 
             const auto it = m_convbuf_utf8.rfind('\n');
@@ -574,6 +580,8 @@ DWORD TelnetSession::io_loop()
             ResetEvent(m_writer_overlapped.hEvent);
             start_write();
         } else if (idx == 5) {
+            m_is_send_paused = !m_handler->has_available_send_space();
+        } else if (idx == 6) {
             TerminateJobObject(m_job_handle, 0);
             m_cmd_exited = true;
         }

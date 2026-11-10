@@ -125,6 +125,10 @@ public:
     void send_text(const uint8_t* data, int length) override;
 
     void clear_text_line_buffer() override;
+    
+    inline bool has_available_send_space() override;
+
+    inline HANDLE get_send_space_available_event() const override;
 
 private:
     uint8_t m_parser_state_data{};
@@ -203,4 +207,14 @@ void TelnetSessionHandler::set_state_to_active_session()
 void TelnetSessionHandler::close_session()
 {
     disconnect();
+}
+
+bool TelnetSessionHandler::has_available_send_space()
+{
+    return TCPServerSessionHandler::has_available_send_space();
+}
+
+HANDLE TelnetSessionHandler::get_send_space_available_event() const
+{
+    return TCPServerSessionHandler::get_send_space_available_event();
 }

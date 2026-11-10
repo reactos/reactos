@@ -6,6 +6,7 @@
  */
 
 #include "tcpserver.hpp"
+#include "winbase.h"
 
 #include <wine/debug.h>
 WINE_DEFAULT_DEBUG_CHANNEL(TCPServer);
@@ -14,12 +15,19 @@ static constexpr size_t SEND_QUEUE_PREALLOCATED_SIZE = 1024;
 
 TCPServerSessionHandler::TCPServerSessionHandler()
 {
-    m_send_queue.reserve(SEND_QUEUE_PREALLOCATED_SIZE);
     InitializeCriticalSection(&m_send_queue_cs);
+
+    m_send_queue.reserve(SEND_QUEUE_PREALLOCATED_SIZE);
+
+    m_send_space_available_event = CreateEvent(nullptr, FALSE, FALSE, nullptr);
 }
 
 TCPServerSessionHandler::~TCPServerSessionHandler()
 {
+    if (m_send_space_available_event) {
+        CloseHandle(m_send_space_available_event);
+    }
+
     DeleteCriticalSection(&m_send_queue_cs);
 }
 
@@ -44,13 +52,24 @@ void TCPServerSessionHandler::send_data(const void* data, int length)
 
     EnterCriticalSection(&m_send_queue_cs);
 
-    if(m_send_queue_cursor + length > m_send_queue.size())
-        m_send_queue.resize(m_send_queue_cursor + length);
+    const auto new_cursor = m_send_queue_cursor + length;
+    if (new_cursor > SEND_QUEUE_MARK_LIMIT) {
+        ERR("exceeding SEND_QUEUE_MARK_LIMIT\n");
+        LeaveCriticalSection(&m_send_queue_cs);
+        disconnect();
+        return;
+    }
+
+    if (new_cursor > m_send_queue.size()) {
+        m_send_queue.resize(new_cursor);
+    }
     RtlCopyMemory(&m_send_queue[m_send_queue_cursor], data, length);
-    m_send_queue_cursor += length;
+    m_send_queue_cursor = new_cursor;
     m_units.push_back({length, false, false});
 
     _internal_flush_send_queue(false);
+
+    on_send_queue_grow();
 
     LeaveCriticalSection(&m_send_queue_cs);
 }
@@ -70,11 +89,22 @@ void TCPServerSessionHandler::clear_pending_queue_then_send(const void* data, in
         m_send_queue_cursor = 0;
     }
 
+    on_send_queue_shrink();
+
     if (length > 0) {
-        if(m_send_queue_cursor + length > m_send_queue.size())
-            m_send_queue.resize(m_send_queue_cursor + length);
+        const auto new_cursor = m_send_queue_cursor + length;
+        if (new_cursor > SEND_QUEUE_MARK_LIMIT) {
+            ERR("exceeding SEND_QUEUE_MARK_LIMIT\n");
+            LeaveCriticalSection(&m_send_queue_cs);
+            disconnect();
+            return;
+        }
+
+        if(new_cursor > m_send_queue.size()) {
+            m_send_queue.resize(new_cursor);
+        }
         RtlCopyMemory(&m_send_queue[m_send_queue_cursor], data, length);
-        m_send_queue_cursor += length;
+        m_send_queue_cursor = new_cursor;
         m_units.push_back({length, false, urgent});
         if (urgent) {
             m_urgent_units++;
@@ -94,6 +124,7 @@ bool TCPServerSessionHandler::_internal_flush_send_queue(bool lock)
         m_send_queue_cursor = 0;
         m_urgent_units = 0;
         m_units.clear();
+        on_send_queue_shrink();
         if (lock) LeaveCriticalSection(&m_send_queue_cs);
         return false;
     }
@@ -127,10 +158,12 @@ bool TCPServerSessionHandler::_internal_flush_send_queue(bool lock)
             m_send_queue.erase(m_send_queue.begin(), m_send_queue.begin() + sent);
             const auto error = WSAGetLastError();
             if(error == WSAEWOULDBLOCK) {
+                on_send_queue_shrink();
                 if (lock) LeaveCriticalSection(&m_send_queue_cs);
                 return true;
             }
             ERR("socket send failed with: %d\n", error);
+            on_send_queue_shrink();
             if (lock) LeaveCriticalSection(&m_send_queue_cs);
             return false;
         }
@@ -155,6 +188,7 @@ bool TCPServerSessionHandler::_internal_flush_send_queue(bool lock)
         }
     }
 
+    on_send_queue_shrink();
     if (lock) LeaveCriticalSection(&m_send_queue_cs);
 
     return true;

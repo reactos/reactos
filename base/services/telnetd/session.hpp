@@ -23,6 +23,10 @@ public:
     virtual void send_text(const uint8_t* data, int length) = 0;
 
     virtual void clear_text_line_buffer() = 0;
+
+    virtual bool has_available_send_space() = 0;
+
+    virtual HANDLE get_send_space_available_event() const = 0;
 };
 
 class TelnetSession
@@ -77,6 +81,7 @@ private:
     HANDLE m_reader_discard_event{};
     OVERLAPPED m_reader_overlapped{};
     std::vector<CHAR> m_reader_buffer{};
+    bool m_is_send_paused{false};
 
     bool m_is_read_pending{};
     volatile LONG m_is_discarding{};
