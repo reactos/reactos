@@ -110,6 +110,12 @@ typedef struct _UDFS_RECOVERY_PROBE {
     uint32_t FailureDirBytes;
     uint8_t FailureFidHead[16];
     uint8_t FailureFidRecorded;
+    /* For a file entry whose descriptor lengths do not fit: its CRC length,
+     * where its allocation descriptors start and their length. */
+    uint32_t FailureFeCrcLength;
+    uint32_t FailureFeAdStart;
+    uint32_t FailureFeAdLength;
+    uint8_t FailureFeRecorded;
     /* One bounded empty-directory pre-FID deletion transaction. */
     uint32_t DirectoryLinkFixParentLbn;
     uint32_t DirectoryLinkFixChildLbn;

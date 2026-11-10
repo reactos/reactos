@@ -1,5 +1,6 @@
 #include "udffs.h"
 #include "udf_info/recovery_core.h"
+#include <ntstrsafe.h>
 
 NTKERNELAPI BOOLEAN NTAPI InbvCheckDisplayOwnership(VOID);
 NTKERNELAPI VOID NTAPI InbvDisplayString(PCSTR String);
@@ -12,6 +13,72 @@ UdfsRecoveryBootMessage(PCSTR Message)
 {
     if (KeGetCurrentIrql() == PASSIVE_LEVEL && InbvCheckDisplayOwnership())
         InbvDisplayString(Message);
+}
+
+static const char*
+UdfsRecoveryStatusText(UDFS_RECOVERY_PROBE_STATUS Status)
+{
+    switch (Status) {
+    case UdfsRecoveryProbeValidLayout:  return "valid";
+    case UdfsRecoveryProbeInvalidInput: return "invalid input";
+    case UdfsRecoveryProbeIoError:      return "read error";
+    case UdfsRecoveryProbeNoMemory:     return "out of memory";
+    case UdfsRecoveryProbeCorrupt:      return "damaged structure";
+    case UdfsRecoveryProbeGraphMismatch:return "space bitmap does not match the files";
+    case UdfsRecoveryProbeLvidMismatch: return "integrity counters do not match";
+    case UdfsRecoveryProbeUnsupported:  return "layout not supported by recovery";
+    default:                            return "unknown";
+    }
+}
+
+/* Why recovery stopped, on the boot screen, then a pause so it can be read.
+ * Nothing can be read from the keyboard this early in boot, so instead of
+ * waiting for a key the message stays up for a few seconds. */
+static VOID
+UdfsRecoveryBootDetails(const UDFS_RECOVERY_PROBE* Probe,
+                        UDFS_RECOVERY_PROBE_STATUS Status, PCSTR Phase)
+{
+    CHAR line[200];
+    LARGE_INTEGER delay;
+
+    if (KeGetCurrentIrql() != PASSIVE_LEVEL || !InbvCheckDisplayOwnership())
+        return;
+    RtlStringCbPrintfA(line, sizeof(line),
+        "UDF: %s stopped: %s (status %u, check line %lu)\r\n",
+        Phase, UdfsRecoveryStatusText(Status), (ULONG)Status,
+        (ULONG)Probe->FailureLine);
+    InbvDisplayString(line);
+    RtlStringCbPrintfA(line, sizeof(line),
+        "UDF: object %u:%lx, %lu files and %lu folders checked\r\n",
+        (ULONG)Probe->FailureObjectRef, (ULONG)Probe->FailureObjectLbn,
+        (ULONG)Probe->FilesVisited, (ULONG)Probe->DirectoriesVisited);
+    InbvDisplayString(line);
+    if (Probe->FailureFeRecorded) {
+        RtlStringCbPrintfA(line, sizeof(line),
+            "UDF: file entry CRC length %lu, descriptors at %lu, length %lu\r\n",
+            (ULONG)Probe->FailureFeCrcLength, (ULONG)Probe->FailureFeAdStart,
+            (ULONG)Probe->FailureFeAdLength);
+        InbvDisplayString(line);
+    }
+    if (Probe->FailureFidRecorded) {
+        const UCHAR* h = Probe->FailureFidHead;
+        RtlStringCbPrintfA(line, sizeof(line),
+            "UDF: bad folder entry at %lx of %lx: %02x %02x %02x %02x %02x %02x %02x %02x\r\n",
+            (ULONG)Probe->FailureFidOffset, (ULONG)Probe->FailureDirBytes,
+            h[0], h[1], h[2], h[3], h[4], h[5], h[6], h[7]);
+        InbvDisplayString(line);
+    }
+    if (Status == UdfsRecoveryProbeGraphMismatch) {
+        RtlStringCbPrintfA(line, sizeof(line),
+            "UDF: unreferenced %lu/%lu, referenced but free %lu/%lu, shared %lu\r\n",
+            (ULONG)Probe->UnownedPhysicalBlocks, (ULONG)Probe->UnownedMetadataBlocks,
+            (ULONG)Probe->ReferencedFreePhysicalBlocks,
+            (ULONG)Probe->ReferencedFreeMetadataBlocks, (ULONG)Probe->OverlapBlocks);
+        InbvDisplayString(line);
+    }
+    InbvDisplayString("UDF: continuing in 15 seconds...\r\n");
+    delay.QuadPart = -15LL * 10 * 1000 * 1000;
+    KeDelayExecutionThread(KernelMode, FALSE, &delay);
 }
 
 typedef struct _UDFS_RECOVERY_MOUNT_IO {
@@ -280,10 +347,12 @@ UDFRecoverDirtyVolumeBeforeLoad(PIRP_CONTEXT IrpContext, PVCB Vcb)
          status != UdfsRecoveryProbeLvidMismatch)) {
         UDFPrint(("UDFS recovery: unsupported/corrupt state %u, existing mount policy\n",
                   (ULONG)status));
-        if (status == UdfsRecoveryProbeValidLayout)
+        if (status == UdfsRecoveryProbeValidLayout) {
             UdfsRecoveryBootMessage("UDF: no problems found.\r\n");
-        else
+        } else {
             UdfsRecoveryBootMessage("UDF: the volume could not be checked; it is mounted as before.\r\n");
+            UdfsRecoveryBootDetails(&before, status, "the check");
+        }
         return STATUS_SUCCESS;
     }
 
@@ -303,6 +372,7 @@ UDFRecoverDirtyVolumeBeforeLoad(PIRP_CONTEXT IrpContext, PVCB Vcb)
     if (status == UdfsRecoveryProbeUnsupported) {
         UDFPrint(("UDFS recovery: ownership class not repairable; read-only policy\n"));
         UdfsRecoveryBootMessage("UDF: problems found that cannot be repaired; the volume is read-only.\r\n");
+        UdfsRecoveryBootDetails(&before, status, "the repair plan");
         UdfsRecoveryMountFree(&io, plan);
         return STATUS_SUCCESS;
     }
@@ -310,6 +380,7 @@ UDFRecoverDirtyVolumeBeforeLoad(PIRP_CONTEXT IrpContext, PVCB Vcb)
         UDFPrint(("UDFS recovery: no complete plan %u; read-only policy\n",
                   (ULONG)status));
         UdfsRecoveryBootMessage("UDF: problems found that cannot be repaired; the volume is read-only.\r\n");
+        UdfsRecoveryBootDetails(&before, status, "the repair plan");
         UdfsRecoveryMountFree(&io, plan);
         return STATUS_SUCCESS;
     }
@@ -331,6 +402,7 @@ UDFRecoverDirtyVolumeBeforeLoad(PIRP_CONTEXT IrpContext, PVCB Vcb)
     if (status != UdfsRecoveryProbeValidLayout) {
         UDFPrint(("UDFS recovery: apply/reprobe failed %u\n", (ULONG)status));
         UdfsRecoveryBootMessage("UDF: the repair failed.\r\n");
+        UdfsRecoveryBootDetails(&after, status, "the repair");
         return status == UdfsRecoveryProbeNoMemory ?
                STATUS_INSUFFICIENT_RESOURCES : STATUS_IO_DEVICE_ERROR;
     }

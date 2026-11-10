@@ -1182,8 +1182,15 @@ GraphParseFileAds(RECOVERY_GRAPH *graph, const RECOVERY_GRAPH_ENTRY *file,
     length = Read32(fe + adOffset);
     if (start > UDFS_RECOVERY_SECTOR_SIZE ||
         length > UDFS_RECOVERY_SECTOR_SIZE - start ||
-        Read16(fe + 10) < start + length - 16)
+        Read16(fe + 10) < start + length - 16) {
+        if (!graph->Result->FailureFeRecorded) {
+            graph->Result->FailureFeRecorded = 1;
+            graph->Result->FailureFeCrcLength = Read16(fe + 10);
+            graph->Result->FailureFeAdStart = start;
+            graph->Result->FailureFeAdLength = length;
+        }
         return GRAPH_FAIL(UdfsRecoveryProbeCorrupt);
+    }
     *modeOut = mode;
     *inlineStart = start;
     *inlineLength = length;
