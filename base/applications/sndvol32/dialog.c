@@ -797,9 +797,7 @@ SetHorizontalScrollBarEnabled(
     return TRUE;
 }
 
-/*
- * Updates the range and the position of the horizontal scrollbar.
- */
+/* Updates the range and the position of the horizontal scrollbar. */
 static VOID
 UpdateHorizontalScrollBar(
     _In_ PMIXER_WINDOW MixerWindow,

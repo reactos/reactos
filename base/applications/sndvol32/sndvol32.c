@@ -925,10 +925,7 @@ ScrollMixerWindowHorizontally(
     NewPos = max(0, min(MaxPos, NewPos));
 
     if (NewPos == MixerWindow->ScrollPos)
-    {
-        /* Nothing to do */
         return;
-    }
 
     Delta = NewPos - MixerWindow->ScrollPos;
 
@@ -936,7 +933,6 @@ ScrollMixerWindowHorizontally(
     MixerWindow->ScrollPos = NewPos;
     SetScrollPos(MixerWindow->hWnd, SB_HORZ, NewPos, TRUE);
 
-    /* Move the mixer controls */
     MoveMixerControls(MixerWindow, -Delta);
 
     /*
@@ -1261,11 +1257,9 @@ MainWindowProc(HWND hwnd,
         case WM_DISPLAYCHANGE:
         case WM_SETTINGCHANGE:
         {
-            /*
-             * The screen resolution or the work area of the monitor might
+            /* The screen resolution or the work area of the monitor might
              * have changed, so the window has to be resized and the
-             * horizontal scroll bar has to be updated.
-             */
+             * horizontal scroll bar has to be updated. */
             MixerWindow = GetWindowData(hwnd, MIXER_WINDOW);
             if (MixerWindow != NULL)
             {

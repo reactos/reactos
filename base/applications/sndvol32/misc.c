@@ -415,14 +415,10 @@ RepaintChildControlProc(
     _In_ HWND hwndChild,
     _In_ LPARAM lParam)
 {
+    /* If visible, repaint the control without erasing its background first.
+     * The background of the control is painted by the control itself. */
     if (IsWindowVisible(hwndChild))
-    {
-        /*
-         * Repaint the control without erasing its background first. The
-         * background of the control is painted by the control itself.
-         */
         InvalidateRect(hwndChild, NULL, FALSE);
-    }
 
     return TRUE;
 }
