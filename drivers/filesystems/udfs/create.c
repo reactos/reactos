@@ -212,6 +212,7 @@ UDFOpenExistingFcb(
     IN PFILE_OBJECT FileObject,
     IN PUDF_FILE_INFO NewFileInfo,
     IN OUT PFCB *PtrNewFcb,
+    IN ULONG CreateDisposition,
     IN BOOLEAN IgnoreCase,
     IN PFILE_OBJECT RelatedFileObject OPTIONAL,
     IN PFCB RelatedFcb OPTIONAL
@@ -224,7 +225,6 @@ UDFOpenExistingFcb(
     USHORT TmpFileAttributes;
 
     ULONG Options = IrpSp->Parameters.Create.Options;
-    ULONG CreateDisposition = (Options >> 24) & 0x000000FF;
     USHORT FileAttributes = (USHORT)(IrpSp->Parameters.Create.FileAttributes & ~FILE_ATTRIBUTE_NORMAL);
     LONGLONG AllocationSize = IrpContext->Irp->Overlay.AllocationSize.QuadPart;
     ACCESS_MASK DesiredAccess = IrpSp->Parameters.Create.SecurityContext->DesiredAccess;
@@ -642,7 +642,8 @@ UDFOpenObjectFromDirContext(
     if (PerformUserOpen) {
         Status = UDFOpenExistingFcb(IrpContext, IrpSp, Vcb,
                                     IrpSp->FileObject, NewFileInfo, &PtrNewFcb,
-                                    IgnoreCase, RelatedFileObject, RelatedFcb);
+                                    CreateDisposition, IgnoreCase,
+                                    RelatedFileObject, RelatedFcb);
         if (!NT_SUCCESS(Status)) {
             *OutFileInfo = NewFileInfo;
             *OutFcb = PtrNewFcb;
@@ -1649,7 +1650,7 @@ UDFCommonCreate(
 
             try_return(Status = UDFOpenExistingFcb(IrpContext, IrpSp, Vcb,
                                                     FileObject, NewFileInfo,
-                                                    &PtrNewFcb, IgnoreCase,
+                                                    &PtrNewFcb, CreateDisposition, IgnoreCase,
                                                     RelatedFileObject, NextFcb));
         }
 
@@ -1802,7 +1803,7 @@ UDFCommonCreate(
                     // Skip the search loop - open directly
                     try_return(Status = UDFOpenExistingFcb(IrpContext, IrpSp, Vcb,
                                                             FileObject, NewFileInfo,
-                                                            &PtrNewFcb, IgnoreCase,
+                                                            &PtrNewFcb, CreateDisposition, IgnoreCase,
                                                             RelatedFileObject, NextFcb));
 
                     } // end if OpenTargetDirectory
@@ -2476,6 +2477,9 @@ UDFCommonCreate(
             // Open the created object through unified path (FCB + CCB + lock)
             {
                 PUDF_FILE_INFO CreatedFileInfo = NewFileInfo;
+                // The requested disposition applied to lookup; creation
+                // succeeded, so report and initialize the object as new.
+                CreateDisposition = FILE_CREATE;
                 Status = UDFOpenObjectFromDirContext(
                     IrpContext, IrpSp, Vcb,
                     NULL, RelatedFileInfo,
@@ -2532,7 +2536,7 @@ UDFCommonCreate(
 
             try_return(Status = UDFOpenExistingFcb(IrpContext, IrpSp, Vcb,
                                                     FileObject, NewFileInfo,
-                                                    &PtrNewFcb, IgnoreCase,
+                                                    &PtrNewFcb, CreateDisposition, IgnoreCase,
                                                     RelatedFileObject, NextFcb));
         }
 
