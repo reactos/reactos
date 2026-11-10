@@ -168,7 +168,7 @@ typedef struct _FIBER                                    /* Field offsets:    */
 //
 // Number of dispatch codes supported by KINTERRUPT
 //
-#ifdef _M_AMD64
+#ifdef _WIN64
 #define DISPATCH_LENGTH                 4
 #elif (NTDDI_VERSION >= NTDDI_LONGHORN)
 #define DISPATCH_LENGTH                 135
@@ -1105,7 +1105,7 @@ typedef struct _KINTERRUPT
 #if (NTDDI_VERSION >= NTDDI_LONGHORN)
     ULONGLONG Rsvd1;
 #endif
-#ifdef _M_AMD64
+#ifdef _WIN64
     PKTRAP_FRAME TrapFrame;
     PVOID Reserved;
 #endif
