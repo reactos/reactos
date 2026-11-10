@@ -7,6 +7,7 @@
 
 #include "tcpserver.hpp"
 #include "winbase.h"
+#include "winsock2.h"
 
 #include <wine/debug.h>
 WINE_DEFAULT_DEBUG_CHANNEL(TCPServer);
@@ -267,27 +268,30 @@ TCPServer::EStatus TCPServer::initialize(uint16_t port, const char* interface_ad
 
 void TCPServer::terminate()
 {
-    while (m_session_data.current_index > 2)
-        remove_session(m_session_data.current_index - 1, false);
+    while (m_session_data.current_index > 2) {
+        const DWORD i = m_session_data.current_index - 1;
+        if (m_session_data.handlers[i]->m_is_closing || !begin_close(i)) {
+            finish_close(i);
+        }
+    }
 
-    for(DWORD i = 0; i < m_session_data.current_index; i++)
-    {
-        if(m_session_data.sockets[i] != INVALID_SOCKET)
+    for(DWORD i = 0; i < m_session_data.current_index; i++) {
+        if(m_session_data.sockets[i] != INVALID_SOCKET) {
             closesocket(m_session_data.sockets[i]);
+        }
         
-        if(m_session_data.events[i] != WSA_INVALID_EVENT)
+        if(m_session_data.events[i] != WSA_INVALID_EVENT) {
             WSACloseEvent(m_session_data.events[i]);
+        }
 
-        if(m_session_data.handlers[i])
-        {
+        if(m_session_data.handlers[i]) {
             m_session_data.handlers[i]->on_disconnect();
             delete m_session_data.handlers[i];
         }
     }
     m_session_data = {};
 
-    if(m_wsa_initialized) 
-    {
+    if(m_wsa_initialized) {
         WSACleanup();
         m_wsa_initialized = false;
     }
@@ -313,18 +317,29 @@ TCPServer::EStatus TCPServer::run()
 
     while(true)
     {
-        auto idx = WSAWaitForMultipleEvents(m_session_data.current_index, m_session_data.events, FALSE, WSA_INFINITE, FALSE);
+        DWORD timeout = WSA_INFINITE;
+        for(DWORD i = 2; i < m_session_data.current_index; i++) {
+            const auto handler = m_session_data.handlers[i];
+            if (!handler->m_is_closing) {
+                continue;
+            }
+            const DWORD elapsed = GetTickCount() - handler->m_close_start_time;
+            timeout = (std::min)(timeout, (DWORD)((elapsed >= TCPServerSessionHandler::CLOSE_DRAIN_TIMEOUT_MS) ? 0 : TCPServerSessionHandler::CLOSE_DRAIN_TIMEOUT_MS - elapsed));
+        }
+
+        auto idx = WSAWaitForMultipleEvents(m_session_data.current_index, m_session_data.events, FALSE, timeout, FALSE);
         if(idx == WSA_WAIT_FAILED) {
             ERR("wsa multi wait failed with: %d\n", WSAGetLastError());
             return EStatus::EVENT_WAIT_ERROR;
+        } else if (idx == WSA_WAIT_TIMEOUT) {
+            goto sweep;
         }
         idx -= WSA_WAIT_EVENT_0;
 
         // This is stop event
         if(idx == 0) break;
         
-        for(DWORD i = idx; i < m_session_data.current_index; i++)
-        {
+        for(DWORD i = idx; i < m_session_data.current_index; i++) {
             const auto wait_result = WSAWaitForMultipleEvents(1, &m_session_data.events[i], TRUE, 0, FALSE);
             if (
                 (wait_result == WSA_WAIT_FAILED) || 
@@ -395,11 +410,12 @@ TCPServer::EStatus TCPServer::run()
                 if (net_events.iErrorCode[FD_READ_BIT] != 0) {
                     ERR("network read event failed with: %d\n", net_events.iErrorCode[FD_READ_BIT]);
                 } else {
+                    const auto handler = m_session_data.handlers[i];
                     const auto read_count = recv(m_session_data.sockets[i], read_buffer, 
                             sizeof(read_buffer) - 1, 0);
-                    if(read_count > 0) {
+                    if(!handler->m_is_closing && (read_count > 0)) {
                         read_buffer[read_count] = '\0';
-                        m_session_data.handlers[i]->on_data((uint8_t*)read_buffer, read_count);
+                        handler->on_data((uint8_t*)read_buffer, read_count);
                     }
                 }
             }
@@ -413,28 +429,60 @@ TCPServer::EStatus TCPServer::run()
                 }
             }
 
-            const auto closed_by_peer = (net_events.lNetworkEvents & FD_CLOSE) != 0;       
+            const auto handler = m_session_data.handlers[i];
+            const auto closed_by_peer = (net_events.lNetworkEvents & FD_CLOSE) != 0;  
+            
+            if (closed_by_peer) {
+                if (net_events.iErrorCode[FD_CLOSE_BIT] != 0) {
+                    ERR("network close event failed with: %d\n", net_events.iErrorCode[FD_CLOSE_BIT]);
+                }
 
-            if (closed_by_peer || m_session_data.handlers[i]->m_disconnect_requested) {
-
-                if (closed_by_peer) {
-                    if (net_events.iErrorCode[FD_CLOSE_BIT] != 0) {
-                        ERR("network close event failed with: %d\n", net_events.iErrorCode[FD_CLOSE_BIT]);
+                while (true) {
+                    const auto read_count = recv(m_session_data.sockets[i], read_buffer, 
+                            sizeof(read_buffer) - 1, 0);
+                    if (read_count <= 0) {
+                        break;
                     }
-
-                    while (true) {
-                        const auto read_count = recv(m_session_data.sockets[i], read_buffer, 
-                                sizeof(read_buffer) - 1, 0);
-                        if(read_count <= 0) break;
+                    if(!handler->m_is_closing) {
                         read_buffer[read_count] = '\0';
-                        m_session_data.handlers[i]->on_data((uint8_t*)read_buffer, read_count);
+                        handler->on_data((uint8_t*)read_buffer, read_count);
                     }
                 }
 
-                remove_session(i, closed_by_peer);
-                i--;
+                if (!handler->m_is_closing) {
+                    handler->on_disconnect();
+                }
 
+                finish_close(i);
+
+                i--;
                 continue;
+            }
+
+            if (handler->m_is_closing) {
+                if (!handler->m_send_queue_cursor) {
+                    finish_close(i);
+
+                    i--;
+                    continue;
+                }
+            } else if (handler->m_disconnect_requested) {
+                if (begin_close(i)) {
+                    i--;
+                    continue;
+                }
+            }
+        }
+
+    sweep:
+        for(DWORD i = m_session_data.current_index; i-- > 2;) {
+            const auto handler = m_session_data.handlers[i];
+
+            if (handler->m_is_closing) {
+                const DWORD elapsed = GetTickCount() - handler->m_close_start_time;
+                if (elapsed >= TCPServerSessionHandler::CLOSE_DRAIN_TIMEOUT_MS) {
+                    finish_close(i);
+                }
             }
         }
     }
@@ -442,20 +490,40 @@ TCPServer::EStatus TCPServer::run()
     return EStatus::OK;
 }
 
-void TCPServer::remove_session(DWORD i, bool closed_by_peer)
+bool TCPServer::begin_close(DWORD i)
+{
+    const auto handler = m_session_data.handlers[i];
+    
+    handler->m_is_closing = true;
+    handler->m_close_start_time = GetTickCount();
+
+    handler->on_disconnect();
+
+    EnterCriticalSection(&handler->m_send_queue_cs);
+    handler->_internal_flush_send_queue(false);
+    const auto send_queue_is_empty = handler->m_send_queue_cursor == 0;
+    LeaveCriticalSection(&handler->m_send_queue_cs);
+
+    if (send_queue_is_empty) {
+        finish_close(i);
+        return true;
+    }
+
+    return false;
+}
+
+void TCPServer::finish_close(DWORD i)
 {
     const auto handler = m_session_data.handlers[i];
 
     EnterCriticalSection(&handler->m_send_queue_cs);
-
-    if (!closed_by_peer)
-        handler->_internal_flush_send_queue(false);
-
     handler->m_socket = INVALID_SOCKET;
-
+    const auto send_queue_cursor = handler->m_send_queue_cursor;
     LeaveCriticalSection(&handler->m_send_queue_cs);
 
-    handler->on_disconnect();
+    if (send_queue_cursor) {
+        WARN("Send queue is not empty. Dropping %lu bytes\n", (DWORD)send_queue_cursor);
+    }
 
     closesocket(m_session_data.sockets[i]);
     WSACloseEvent(m_session_data.events[i]);

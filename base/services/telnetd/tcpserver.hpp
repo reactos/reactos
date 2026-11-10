@@ -27,6 +27,7 @@ class TCPServer;
 
 class TCPServerSessionHandler
 {
+    static constexpr DWORD CLOSE_DRAIN_TIMEOUT_MS = 5000;
     static constexpr size_t SEND_QUEUE_MARK_LOW   = 16 * 1024;
     static constexpr size_t SEND_QUEUE_MARK_HIGH  = 64 * 1024;
     static constexpr size_t SEND_QUEUE_MARK_LIMIT = 1024 * 1024;
@@ -80,6 +81,8 @@ private:
     size_t m_urgent_units{0};
     bool m_is_send_queue_full{false};
     HANDLE m_send_space_available_event{nullptr};
+    bool  m_is_closing{false};
+    DWORD m_close_start_time{0};
 
     void _internal_on_connect(TCPServer* server, SOCKET s, WSAEVENT e);
     
@@ -166,7 +169,8 @@ private:
 
     EStatus initialize(uint16_t port, const char* interface_addr, HandlerFactoryFuncT handler_factory);
 
-    void remove_session(DWORD i, bool closed_by_peer);
+    bool begin_close(DWORD i);
+    void finish_close(DWORD i);
 };
 
 template<typename session_handler_type>
