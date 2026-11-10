@@ -823,6 +823,7 @@ reduce_growth:
     Vcb->MetadataHint = oldBlocks;
     Vcb->Partitions[Vcb->MetadataRef].PartitionLen = newBlocks;
     Vcb->MetadataBitmapModified = TRUE;
+    Vcb->BitmapModified = TRUE;
     UDFSetModified(Vcb);
     UDFReleaseResource(&(Vcb->BitMapResource1));
     status = UDFFlushMetadataBitmap(IrpContext, Vcb);
@@ -937,6 +938,7 @@ retry_after_growth:
         if (Vcb->MetadataHint >= Vcb->MetadataBitCount)
             Vcb->MetadataHint = 0;
         Vcb->MetadataBitmapModified = TRUE;
+        Vcb->BitmapModified = TRUE;
         UDFSetModified(Vcb);
         ExtInfo->Length = Length;
         UDFReleaseResource(&(Vcb->BitMapResource1));
@@ -1664,6 +1666,7 @@ UDFMarkSpaceAsXXXNoProtect_(
                             Vcb->MetadataPendingAlloc[bit >> 3] &= ~mask;
                     }
                     Vcb->MetadataBitmapModified = TRUE;
+                    Vcb->BitmapModified = TRUE;
                     UDFSetModified(Vcb);
                     if (!asUsed) {
                         Map[i].extLength = (len << BSh) |
@@ -2045,11 +2048,24 @@ UDFGetFreeSpace(
 
    if (!Vcb->CDR_Mode) {
         for(i=0; i<Vcb->PartitionMaps;i++) {
-            if (Vcb->Partitions[i].PartitionType == UDF_METADATA_MAP25)
+            if (Vcb->Partitions[i].PartitionType == UDF_METADATA_MAP25) {
+                /* The metadata area and its mirror are allocated whole in
+                 * the physical partition. Report their unused blocks as
+                 * free (both copies), so used space matches what is
+                 * stored rather than including the reserved area. */
+                if (Vcb->MetadataFileInfo && i == Vcb->MetadataRef) {
+                    int64 metaFree = UDFGetPartFreeSpace(Vcb, i);
+                    s += metaFree;
+                    if (Vcb->MetadataFlags & UDF_METADATA_DUPLICATED)
+                        s += metaFree;
+                }
                 continue;
+            }
             
             s += UDFGetPartFreeSpace(Vcb, i);
         }
+        /* The copy-on-write region only holds a second copy of metadata. */
+        s += UDFCowReservedBlocks(Vcb);
     } else {
         ASSERT(Vcb->FSBM_BitCount >= max(Vcb->NWA, Vcb->SessionEndLba));
         s = Vcb->FSBM_BitCount - max(Vcb->NWA, Vcb->SessionEndLba);

@@ -271,7 +271,7 @@ UDFQueryFsSizeInfo(
 
     UDFPrint(("  UDFQueryFsSizeInfo: \n"));
     //  Fill in the output buffer.
-    if (Vcb->BitmapModified && !Vcb->BitmapFcb) {
+    if (Vcb->BitmapModified) {
         Vcb->TotalAllocUnits =
         Buffer->TotalAllocationUnits.QuadPart = UDFGetTotalSpace(Vcb);
         Vcb->FreeAllocUnits =
@@ -319,7 +319,7 @@ UDFQueryFsFullSizeInfo(
 
     UDFPrint(("  UDFQueryFsFullSizeInfo: \n"));
     //  Fill in the output buffer.
-    if (Vcb->BitmapModified && !Vcb->BitmapFcb) {
+    if (Vcb->BitmapModified) {
         Vcb->TotalAllocUnits =
         Buffer->TotalAllocationUnits.QuadPart = UDFGetTotalSpace(Vcb);
         Vcb->FreeAllocUnits =
