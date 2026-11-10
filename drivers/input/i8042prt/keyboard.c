@@ -282,6 +282,10 @@ HandlePowerKeys(
 	PKEYBOARD_INPUT_DATA InputData;
 	ULONG KeyPress;
 
+	/* The DPC is also queued for packet completions, when the buffer is empty */
+	if (DeviceExtension->KeysInBuffer == 0)
+		return FALSE;
+
 	InputData = DeviceExtension->KeyboardBuffer + DeviceExtension->KeysInBuffer - 1;
 	if (!(InputData->Flags & KEY_E0))
 		return FALSE;
@@ -913,6 +917,13 @@ i8042KbdInterruptService(
 	}
 
 	/* Update InputData */
+	if (DeviceExtension->KeysInBuffer >= PortDeviceExtension->Settings.KeyboardDataQueueSize)
+	{
+		/* No room for this scan code, drop it instead of overflowing the buffer */
+		WARN_(I8042PRT, "Keyboard buffer full, dropping scan code 0x%02x\n", Output);
+		DeviceExtension->KeyboardScanState = Normal;
+		return TRUE;
+	}
 	InputData->Flags = 0;
 	switch (DeviceExtension->KeyboardScanState)
 	{
