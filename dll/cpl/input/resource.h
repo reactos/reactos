@@ -206,3 +206,4 @@
 #define IDS_COLEMAK_LAYOUT                             5145
 #define IDS_ROMANIAN_STANDARD_LAYOUT                   5175
 #define IDS_PERSIAN_STANRDARD_LAYOUT                   5213
+#define IDS_BOSNIAN_CYRILLIC_LAYOUT                    5155

@@ -502,6 +502,7 @@ Default = "XT-, AT- or extended keyboard (83-105 keys)"
 0000042C = "Azeri Latin"
 00000423 = "Belarusian"
 00000445 = "Bengali"
+0000201A = "Bosnian (Cyrillic)"
 00000402 = "Bulgarian BDS 5237-1978"
 00020402 = "Bulgarian phonetic classic"
 00030402 = "Bulgarian phonetic BDS 5237-2006"
@@ -670,6 +671,7 @@ Default = "XT-, AT- or extended keyboard (83-105 keys)"
 0000044D = kbdinasa.dll
 00000455 = kbdbur.dll
 0000048F = kbdeo.dll
+0000201A = kbdbhc.dll
 
 [HiveInfs.Install]
 ; Called "HiveInfs.Fresh" on Windows
