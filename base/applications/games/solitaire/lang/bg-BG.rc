@@ -10,23 +10,54 @@ LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
 
 /* Dialogs */
 
-IDD_OPTIONS DIALOGEX 0, 0, 186, 118
+IDD_OPTIONS DIALOGEX 0, 0, 300, 160
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | DS_SHELLFONT
 CAPTION "Настройки"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Карти", -1, 7, 7, 90, 40
-    AUTORADIOBUTTON "Изтегли &една", IDC_OPT_DRAWONE, 14, 19, 70, 10, WS_GROUP | WS_TABSTOP
-    AUTORADIOBUTTON "Изтегли &три", IDC_OPT_DRAWTHREE, 14, 32, 70, 10
-    GROUPBOX "Scoring", -1, 100, 7, 75, 53
-    AUTORADIOBUTTON "&Standard", IDC_OPT_STANDARD, 107, 19, 60, 10, WS_GROUP | WS_TABSTOP
-    AUTORADIOBUTTON "&Vegas", IDC_OPT_VEGAS, 107, 32, 60, 10
-    AUTORADIOBUTTON "&None", IDC_OPT_NOSCORE, 107, 45, 60, 10
-    AUTOCHECKBOX "&Показване на времето", IDC_OPT_SHOWTIME, 7 ,51 ,100 ,10, WS_TABSTOP
-    AUTOCHECKBOX "Лента &състояние", IDC_OPT_STATUSBAR, 7, 66, 100, 10, WS_TABSTOP
-    AUTOCHECKBOX "&Keep Score", IDC_OPT_KEEPSCORE, 100, 66, 65, 10, WS_TABSTOP
-    DEFPUSHBUTTON "Добре", IDOK, 35, 97, 50, 14
-    PUSHBUTTON "Отказ", IDCANCEL, 101, 97, 50, 14
+    GROUPBOX "Карти", -1, 7, 7, 135, 40
+    AUTORADIOBUTTON "Изтегли &една", IDC_OPT_DRAWONE, 14, 19, 120, 10, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "Изтегли &три", IDC_OPT_DRAWTHREE, 14, 32, 120, 10
+    // TRANSLATORS: Machine translation of previously English text; please review.
+    GROUPBOX "Точкуване", -1, 150, 7, 143, 53
+    // TRANSLATORS: Machine translation of previously English text; please review.
+    AUTORADIOBUTTON "&Стандартно", IDC_OPT_STANDARD, 157, 19, 126, 10, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "&Vegas", IDC_OPT_VEGAS, 157, 32, 126, 10
+    // TRANSLATORS: Machine translation of previously English text; please review.
+    AUTORADIOBUTTON "&Без точки", IDC_OPT_NOSCORE, 157, 45, 126, 10
+    AUTOCHECKBOX "&Показване на времето", IDC_OPT_SHOWTIME, 7, 51, 135,10, WS_TABSTOP
+    AUTOCHECKBOX "Лента &състояние", IDC_OPT_STATUSBAR, 7, 66, 135, 10, WS_TABSTOP
+    // TRANSLATORS: Machine translation of previously English text; please review.
+    AUTOCHECKBOX "&Запазване на точките", IDC_OPT_KEEPSCORE, 150, 66, 143, 10, WS_TABSTOP
+    // TRANSLATORS: Machine translation; please review this new text.
+    LTEXT "Отмяна на ходове (0 = изкл.):", -1, 7, 83, 225, 24
+    EDITTEXT IDC_OPT_UNDO_LIMIT, 250, 84, 37, 14, ES_NUMBER | ES_RIGHT | WS_TABSTOP
+    CONTROL "", IDC_OPT_UNDO_SPIN, "msctls_updown32", UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_SETBUDDYINT | UDS_ARROWKEYS, 274, 84, 13, 14
+    // TRANSLATORS: Machine translation; please review this new text.
+    PUSHBUTTON "Анимация при победа...", IDC_OPT_ANIMATION, 7, 110, 286, 18, WS_TABSTOP
+    DEFPUSHBUTTON "Добре", IDOK, 82, 139, 60, 14
+    PUSHBUTTON "Отказ", IDCANCEL, 158, 139, 60, 14
+END
+
+// TRANSLATORS: The following dialog is machine-translated; please review all new text.
+IDD_ANIMATION DIALOGEX 0, 0, 260, 202
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | DS_SHELLFONT
+CAPTION "Анимация при победа"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    AUTORADIOBUTTON "В прозореца (класическа)", IDC_ANIM_WINDOW, 10, 10, 240, 12, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "На този монитор", IDC_ANIM_MONITOR, 10, 27, 240, 12
+    AUTORADIOBUTTON "На всички монитори", IDC_ANIM_DESKTOP, 10, 44, 240, 12
+    GROUPBOX "Скорост", -1, 7, 64, 246, 82
+    CONTROL "", IDC_ANIM_SPEED, "msctls_trackbar32", WS_TABSTOP | TBS_HORZ, 14, 78, 232, 24
+    LTEXT "50 %", -1, 16, 103, 35, 10
+    CTEXT "100 %", IDC_ANIM_VALUE, 103, 103, 54, 10
+    RTEXT "200 %", -1, 209, 103, 35, 10
+    PUSHBUTTON "По подразбиране: 100 %", IDC_ANIM_DEFAULT, 55, 119, 150, 18
+    // TRANSLATORS: Machine translation; please review this new text.
+    PUSHBUTTON "Преглед (5 секунди)", IDC_ANIM_PREVIEW, 55, 153, 150, 18
+    DEFPUSHBUTTON "Добре", IDOK, 72, 181, 54, 14
+    PUSHBUTTON "Отказ", IDCANCEL, 134, 181, 54, 14
 END
 
 IDD_CARDBACK DIALOGEX 6, 6, 345, 185
@@ -55,12 +86,17 @@ END
 STRINGTABLE
 BEGIN
     IDS_SOL_NAME "Пасианс"
-    IDS_SOL_ABOUT "Solitaire by J Brown\nCardLib version 1.0"
+    // TRANSLATORS: Machine translation of previously English text; please review.
+    IDS_SOL_ABOUT "Пасианс от J Brown\nCardLib версия 1.0"
     IDS_SOL_QUIT "Да прекратя ли играта?"
     IDS_SOL_WIN "Поздравления, победихте!!"
     IDS_SOL_DEAL "Ново раздаване?"
-    IDS_SOL_SCORE "Score: %d"
-    IDS_SOL_TIME "Time: %d"
+    // TRANSLATORS: Machine translation of previously English text; please review.
+    IDS_SOL_SCORE "Точки: %d"
+    // TRANSLATORS: Machine translation of previously English text; please review.
+    IDS_SOL_TIME "Време: %d"
+    // TRANSLATORS: Machine translation; please review this new text.
+    IDS_SOL_NO_HINT "Не е намерен директен ход."
 END
 
 /* Menus */
@@ -71,12 +107,17 @@ BEGIN
     BEGIN
         MENUITEM "&Раздаване\tF2", IDM_GAME_NEW
         MENUITEM SEPARATOR
-        MENUITEM "&Undo", IDM_GAME_UNDO, GRAYED
+        // TRANSLATORS: Machine translation of previously English text; please review.
+        MENUITEM "&Отмяна\tCtrl+Z", IDM_GAME_UNDO, GRAYED
+    // TRANSLATORS: Machine translation; please review this new text.
+        MENUITEM "Подсказка\tF3", IDM_GAME_HINT
         MENUITEM "&Тесте...", IDM_GAME_DECK
         MENUITEM "&Настройки...", IDM_GAME_OPTIONS
         MENUITEM SEPARATOR
         MENUITEM "Из&ход", IDM_GAME_EXIT
     END
+    // TRANSLATORS: Machine translation; please review this new text.
+    MENUITEM "Прибиране", IDM_GAME_FINISH, GRAYED
     POPUP "Помо&щ"
     BEGIN
         MENUITEM "&Съдържание\tF1", IDM_HELP_CONTENTS
@@ -90,4 +131,6 @@ IDR_ACCELERATOR1 ACCELERATORS
 BEGIN
     VK_F1, IDM_HELP_CONTENTS, VIRTKEY, NOINVERT
     VK_F2, IDM_GAME_NEW, VIRTKEY, NOINVERT
+    "Z", IDM_GAME_UNDO, VIRTKEY, CONTROL, NOINVERT
+    VK_F3, IDM_GAME_HINT, VIRTKEY, NOINVERT
 END
