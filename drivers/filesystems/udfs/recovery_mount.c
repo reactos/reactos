@@ -76,8 +76,8 @@ UdfsRecoveryBootDetails(const UDFS_RECOVERY_PROBE* Probe,
             (ULONG)Probe->ReferencedFreeMetadataBlocks, (ULONG)Probe->OverlapBlocks);
         InbvDisplayString(line);
     }
-    InbvDisplayString("UDF: continuing in 15 seconds...\r\n");
-    delay.QuadPart = -15LL * 10 * 1000 * 1000;
+    InbvDisplayString("UDF: continuing in 5 seconds...\r\n");
+    delay.QuadPart = -5LL * 10 * 1000 * 1000;
     KeDelayExecutionThread(KernelMode, FALSE, &delay);
 }
 
