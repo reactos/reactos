@@ -114,6 +114,7 @@ KbdHid_ReadCompletion(
     PKBDHID_DEVICE_EXTENSION DeviceExtension;
     NTSTATUS Status;
     ULONG ButtonLength;
+    ULONG Index;
 
     /* get device extension */
     DeviceExtension = Context;
@@ -140,10 +141,11 @@ KbdHid_ReadCompletion(
     //
     // print out raw report
     //
-    ASSERT(DeviceExtension->ReportLength >= 9);
-    DPRINT("[KBDHID] ReadCompletion %02x %02x %02x %02x %02x %02x %02x %02x %02x\n", DeviceExtension->Report[0], DeviceExtension->Report[1], DeviceExtension->Report[2],
-        DeviceExtension->Report[3], DeviceExtension->Report[4], DeviceExtension->Report[5],
-        DeviceExtension->Report[6], DeviceExtension->Report[7], DeviceExtension->Report[8]);
+    ASSERT(DeviceExtension->ReportLength != 0);
+    DPRINT("[KBDHID] ReadCompletion");
+    for (Index = 0; Index < DeviceExtension->ReportLength && Index < 9; Index++)
+        DPRINT(" %02x", DeviceExtension->Report[Index]);
+    DPRINT("\n");
 
 
     /* get current usages */
@@ -173,22 +175,28 @@ KbdHid_ReadCompletion(
                   sizeof(USAGE_AND_PAGE) * DeviceExtension->UsageListLength);
 
     /* translate break usage list */
-    HidP_TranslateUsageAndPagesToI8042ScanCodes(DeviceExtension->BreakUsageList,
-                                                DeviceExtension->UsageListLength,
-                                                HidP_Keyboard_Break,
-                                                &DeviceExtension->ModifierState,
-                                                KbdHid_InsertScanCodes,
-                                                DeviceExtension);
-    ASSERT(Status == HIDP_STATUS_SUCCESS);
+    Status = HidP_TranslateUsageAndPagesToI8042ScanCodes(DeviceExtension->BreakUsageList,
+                                                         DeviceExtension->UsageListLength,
+                                                         HidP_Keyboard_Break,
+                                                         &DeviceExtension->ModifierState,
+                                                         KbdHid_InsertScanCodes,
+                                                         DeviceExtension);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("[KBDHID] Failed to translate break usage list with %x\n", Status);
+    }
 
     /* translate new usage list */
-    HidP_TranslateUsageAndPagesToI8042ScanCodes(DeviceExtension->MakeUsageList,
-                                                DeviceExtension->UsageListLength,
-                                                HidP_Keyboard_Make,
-                                                &DeviceExtension->ModifierState,
-                                                KbdHid_InsertScanCodes,
-                                                DeviceExtension);
-    ASSERT(Status == HIDP_STATUS_SUCCESS);
+    Status = HidP_TranslateUsageAndPagesToI8042ScanCodes(DeviceExtension->MakeUsageList,
+                                                         DeviceExtension->UsageListLength,
+                                                         HidP_Keyboard_Make,
+                                                         &DeviceExtension->ModifierState,
+                                                         KbdHid_InsertScanCodes,
+                                                         DeviceExtension);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("[KBDHID] Failed to translate make usage list with %x\n", Status);
+    }
 
     /* re-init read */
     KbdHid_InitiateRead(DeviceExtension);
@@ -471,7 +479,7 @@ KbdHid_InternalDeviceControl(
             Irp->IoStatus.Status = STATUS_SUCCESS;
             Irp->IoStatus.Information = sizeof(KEYBOARD_INDICATOR_PARAMETERS);
             IoCompleteRequest(Irp, IO_NO_INCREMENT);
-            return STATUS_NOT_IMPLEMENTED;
+            return STATUS_SUCCESS;
 
         case IOCTL_KEYBOARD_QUERY_TYPEMATIC:
             if (IoStack->Parameters.DeviceIoControl.OutputBufferLength < sizeof(KEYBOARD_TYPEMATIC_PARAMETERS))
