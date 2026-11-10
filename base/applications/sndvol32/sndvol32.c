@@ -929,12 +929,10 @@ ScrollMixerWindowHorizontally(
 
     MoveMixerControls(MixerWindow, -Delta);
 
-    /*
-     * The mixer controls have been moved, so they have to be repainted.
+    /* The mixer controls have been moved, so they have to be repainted.
      * Otherwise the parts of the controls that have been covered by another
      * control would remain visible. The area the mixer controls have covered
-     * before is repainted as well.
-     */
+     * before is repainted as well. */
     GetClientRect(MixerWindow->hWnd, &ClientRect);
     ClientRect.bottom = min(ClientRect.bottom, MixerWindow->rect.bottom - MixerWindow->rect.top);
     RedrawWindow(MixerWindow->hWnd,

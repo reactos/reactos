@@ -427,12 +427,10 @@ VOID
 RepaintChildControls(
     _In_ HWND hWnd)
 {
-    /*
-     * A window paints its background over the area occupied by its child
+    /* A window paints its background over the area occupied by its child
      * controls. The child controls are not repainted automatically, so their
      * content would be lost. Repaint them, so that e.g. the text of a combo
-     * box stays readable.
-     */
+     * box stays readable. */
     EnumChildWindows(hWnd,
                      RepaintChildControlProc,
                      0);
