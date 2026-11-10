@@ -891,33 +891,27 @@ ScrollMixerWindowHorizontally(
     switch (ScrollCode)
     {
         case SB_LINELEFT:
-            /* The left arrow button has been clicked */
             NewPos = MixerWindow->ScrollPos - MIXER_HSCROLL_LINE_SIZE;
             break;
 
         case SB_LINERIGHT:
-            /* The right arrow button has been clicked */
             NewPos = MixerWindow->ScrollPos + MIXER_HSCROLL_LINE_SIZE;
             break;
 
         case SB_PAGELEFT:
-            /* The track has been clicked, left of the thumb */
             NewPos = MixerWindow->ScrollPos - MixerWindow->ClientWidth;
             break;
 
         case SB_PAGERIGHT:
-            /* The track has been clicked, right of the thumb */
             NewPos = MixerWindow->ScrollPos + MixerWindow->ClientWidth;
             break;
 
         case SB_THUMBPOSITION:
         case SB_THUMBTRACK:
-            /* The thumb has been moved */
             NewPos = TrackPos;
             break;
 
         default:
-            /* Ignore all other notifications */
             return;
     }
 
