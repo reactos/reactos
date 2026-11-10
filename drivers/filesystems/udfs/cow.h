@@ -78,6 +78,9 @@ typedef struct _UDF_COW {
     PUDF_COW_FREE Waiting;
     PETHREAD ApplyThread;
     BOOLEAN TrimUnsupported;
+    BOOLEAN BitmapUsable;   // the partition has an on-disk space bitmap
+    BOOLEAN AltOnDisk;      // the second region is marked in use on disk
+    uint32 AltBlocks;       // blocks held by the second region
     // checkpoint thread
     KEVENT Wake;
     volatile LONG Stop;
@@ -101,6 +104,11 @@ UDFCowWiden(
 
 uint32
 UDFCowMetadataLimit(
+    IN PVCB Vcb
+    );
+
+uint32
+UDFCowReservedBlocks(
     IN PVCB Vcb
     );
 

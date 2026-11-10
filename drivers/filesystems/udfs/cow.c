@@ -454,6 +454,9 @@ CowJoin(PUDF_COW_FREE A, PUDF_COW_FREE B)
     return A;
 }
 
+static NTSTATUS
+CowPrepareAlt(PIRP_CONTEXT IrpContext, PVCB Vcb, PUDF_COW Cow);
+
 /* Write all changed units to the other region and switch to it. */
 static NTSTATUS
 CowCheckpointLocked(PIRP_CONTEXT IrpContext, PVCB Vcb, PUDF_COW Cow)
@@ -467,6 +470,11 @@ CowCheckpointLocked(PIRP_CONTEXT IrpContext, PVCB Vcb, PUDF_COW Cow)
         return STATUS_SUCCESS;
     if (FlagOn(Vcb->VcbState, VCB_STATE_VOLUME_READ_ONLY | UDF_VCB_FLAGS_DEAD))
         return STATUS_MEDIA_WRITE_PROTECTED;
+    if (!Cow->AltOnDisk) {
+        status = CowPrepareAlt(IrpContext, Vcb, Cow);
+        if (!NT_SUCCESS(status))
+            return status;
+    }
     scratch = (int8*)MyAllocatePool__(NonPagedPool, Cow->UnitBytes);
     if (!scratch)
         return STATUS_INSUFFICIENT_RESOURCES;
@@ -721,6 +729,53 @@ CowMarkOnDisk(PIRP_CONTEXT IrpContext, PVCB Vcb, uint32 Lba, uint32 Blocks, int8
     return status;
 }
 
+/*
+ * Before the first commit that points into the second region: open the
+ * integrity record (so a crash makes the next mount check the volume and
+ * give the unused region back) and mark the second region in use in the
+ * on-disk space bitmap.
+ */
+static NTSTATUS
+CowPrepareAlt(PIRP_CONTEXT IrpContext, PVCB Vcb, PUDF_COW Cow)
+{
+    NTSTATUS status;
+    int8* sector;
+    uint32 i;
+
+    status = UDFOpenIntegrityForWrite(IrpContext, Vcb, FALSE);
+    if (!NT_SUCCESS(status))
+        return status;
+    if (Cow->BitmapUsable) {
+        sector = (int8*)MyAllocatePool__(NonPagedPool, Vcb->SectorSize);
+        if (!sector)
+            return STATUS_INSUFFICIENT_RESOURCES;
+        for (i = 0; i < Cow->MainRuns + (Cow->Duplicated ? Cow->MirrorRuns : 0) &&
+                    NT_SUCCESS(status); i++) {
+            PUDF_COW_RUN run = i < Cow->MainRuns ? &Cow->Main[i] : &Cow->Mirror[i - Cow->MainRuns];
+            if (run->Lbn < Cow->Limit && run->Lba[1] != run->Lba[0])
+                status = CowMarkOnDisk(IrpContext, Vcb, run->Lba[1], run->Blocks, sector);
+        }
+        MyFreePool__(sector);
+        if (!NT_SUCCESS(status))
+            return status;
+    }
+    status = UDFBarrierFlushDevice(Vcb->TargetDeviceObject);
+    if (NT_SUCCESS(status))
+        Cow->AltOnDisk = TRUE;
+    return status;
+}
+
+/* Blocks the second region takes from the free space (reported as free,
+ * since the region only holds a copy of the metadata). */
+uint32
+UDFCowReservedBlocks(
+    IN PVCB Vcb
+    )
+{
+    PUDF_COW cow = Vcb->Cow;
+    return cow ? cow->AltBlocks : 0;
+}
+
 /* Split the run containing Limit so every run lies wholly below or above
  * it; runs above it keep a single (home) location. */
 static BOOLEAN
@@ -847,12 +902,10 @@ CowStartEx(
     RtlZeroMemory(cow->Buffer, cow->Units * sizeof(int8*));
     RtlZeroMemory(cow->Stale, (cow->Units + 7) / 8);
 
-    /* The second region is marked in use on disk below; open the integrity
-     * record first so a crash makes the next mount check the volume and
-     * give that space back. */
-    status = UDFOpenIntegrityForWrite(IrpContext, Vcb, FALSE);
-    if (!NT_SUCCESS(status))
-        goto fail;
+    /* The second region is marked in use on disk only when the first
+     * checkpoint is about to use it (CowPrepareAlt), so mounting and
+     * closing a volume without changes leaves its bitmap untouched. */
+    cow->BitmapUsable = bitmapUsable;
 
     /* Second region: one aligned run per extent, the same size. */
     align = Vcb->MetadataAlignUnit ? Vcb->MetadataAlignUnit : 1;
@@ -865,15 +918,8 @@ CowStartEx(
         if (!NT_SUCCESS(status))
             goto fail;
         cow->AltMapCount++;
-        if (bitmapUsable) {
-            status = CowMarkOnDisk(IrpContext, Vcb, run->Lba[1], run->Blocks, sector);
-            if (!NT_SUCCESS(status))
-                goto fail;
-        }
+        cow->AltBlocks += run->Blocks;
     }
-    status = UDFBarrierFlushDevice(Vcb->TargetDeviceObject);
-    if (!NT_SUCCESS(status))
-        goto fail;
 
     /* The second region holds nothing yet: the first checkpoint copies
      * every unit up to the last block in use. Free blocks below it are
@@ -966,7 +1012,7 @@ CowWidenInPlace(PIRP_CONTEXT IrpContext, PVCB Vcb, PUDF_COW Cow, uint32 Want)
 {
     UDF_COW_RUN main[UDF_COW_MAX_RUNS], mirror[UDF_COW_MAX_RUNS];
     PEXTENT_MAP maps[2 * UDF_COW_MAX_RUNS];
-    uint32 mainRuns, mirrorRuns, limit, i, mapCount = 0, adSize;
+    uint32 mainRuns, mirrorRuns, limit, i, mapCount = 0, adSize, added = 0;
     int8* sector;
     BOOLEAN ok = FALSE;
     NTSTATUS status;
@@ -1008,7 +1054,8 @@ CowWidenInPlace(PIRP_CONTEXT IrpContext, PVCB Vcb, PUDF_COW Cow, uint32 Want)
         if (!NT_SUCCESS(status))
             goto done;
         mapCount++;
-        if (Vcb->Partitions[Vcb->MetadataPhysRef].UspaceBitmap != 0xFFFFFFFF &&
+        added += run->Blocks;
+        if (Cow->AltOnDisk && Cow->BitmapUsable &&
             !NT_SUCCESS(CowMarkOnDisk(IrpContext, Vcb, run->Lba[1], run->Blocks, sector)))
             goto done;
     }
@@ -1021,6 +1068,7 @@ CowWidenInPlace(PIRP_CONTEXT IrpContext, PVCB Vcb, PUDF_COW Cow, uint32 Want)
     Cow->MirrorRuns = mirrorRuns;
     for (i = 0; i < mapCount; i++)
         Cow->AltMaps[Cow->AltMapCount++] = maps[i];
+    Cow->AltBlocks += added;
     mapCount = 0;
     Cow->Limit = limit;
     CowUnlock(Vcb);
