@@ -547,7 +547,7 @@ DWORD TelnetSession::io_loop()
             if (it == std::string::npos) {
                 m_line_tail += m_convbuf_utf8;
             } else {
-                m_line_tail.assign(m_convbuf_utf8.data(), it + 1);
+                m_line_tail.assign(m_convbuf_utf8, it + 1, std::string::npos);
             }
 
             if (m_line_tail.size() > MAX_LINE_TAIL_LENGTH) {
