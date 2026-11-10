@@ -1,0 +1,5 @@
+#define REACTOS_VERSION_DLL
+#define REACTOS_STR_FILE_DESCRIPTION  "ReactOS Czech Programmer's Keyboard Layout"
+#define REACTOS_STR_INTERNAL_NAME     "kbdcz2"
+#define REACTOS_STR_ORIGINAL_FILENAME "kbdcz2.dll"
+#include <reactos/version.rc>
