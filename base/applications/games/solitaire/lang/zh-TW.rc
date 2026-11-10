@@ -79,6 +79,39 @@ END
 
 /* Strings */
 
+// TRANSLATORS: Machine translation; please review this new high-score dialog and its strings.
+IDD_HIGHSCORES DIALOGEX 0, 0, 420, 291
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | DS_SHELLFONT
+CAPTION "最高分"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "記分", -1, 7, 10, 54, 12
+    COMBOBOX IDC_HOF_MODE, 64, 7, 145, 70, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    AUTOCHECKBOX "計時遊戲", IDC_HOF_TIMED, 218, 10, 195, 12, WS_TABSTOP
+    LTEXT "發牌", -1, 7, 32, 54, 12
+    COMBOBOX IDC_HOF_DRAW, 64, 29, 145, 70, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    CONTROL "", IDC_HOF_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 7, 54, 406, 168
+    LTEXT "標準：獲勝的遊戲。Vegas：已結束的回合，分數與累計餘額分開計算。每個類別顯示前十名。", -1, 7, 230, 406, 32
+    DEFPUSHBUTTON "確定", IDOK, 180, 270, 60, 14
+END
+
+// TRANSLATORS: Machine translation; please review this new high-score dialog and its strings.
+STRINGTABLE
+BEGIN
+    IDS_HOF_STANDARD "標準"
+    IDS_HOF_VEGAS "維加斯"
+    IDS_HOF_ONE "發一張牌"
+    IDS_HOF_THREE "發三張牌"
+    IDS_HOF_RANK "#"
+    IDS_HOF_SCORE "分數"
+    IDS_HOF_TIME "時間"
+    IDS_HOF_DATE "日期"
+    IDS_HOF_RESULT "結果"
+    IDS_HOF_WON "獲勝"
+    IDS_HOF_ENDED "已結束"
+    IDS_HOF_SAVE_ERROR "無法儲存分數。"
+END
+
 STRINGTABLE
 BEGIN
     IDS_SOL_NAME "接龍"
@@ -105,6 +138,8 @@ BEGIN
         MENUITEM "提示\tF3", IDM_GAME_HINT
         MENUITEM "背面圖案(&C)...", IDM_GAME_DECK
         MENUITEM "選項(&O)...", IDM_GAME_OPTIONS
+        // TRANSLATORS: Machine translation; please review.
+        MENUITEM "最高分...", IDM_GAME_HIGHSCORES
         MENUITEM SEPARATOR
         MENUITEM "結束(&X)", IDM_GAME_EXIT
     END

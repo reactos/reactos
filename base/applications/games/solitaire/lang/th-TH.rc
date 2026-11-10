@@ -91,6 +91,39 @@ END
 
 /* Strings */
 
+// TRANSLATORS: Machine translation; please review this new high-score dialog and its strings.
+IDD_HIGHSCORES DIALOGEX 0, 0, 420, 291
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | DS_SHELLFONT
+CAPTION "คะแนนสูงสุด"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "การนับคะแนน", -1, 7, 10, 54, 12
+    COMBOBOX IDC_HOF_MODE, 64, 7, 145, 70, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    AUTOCHECKBOX "เกมที่จับเวลา", IDC_HOF_TIMED, 218, 10, 195, 12, WS_TABSTOP
+    LTEXT "ไพ่", -1, 7, 32, 54, 12
+    COMBOBOX IDC_HOF_DRAW, 64, 29, 145, 70, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    CONTROL "", IDC_HOF_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 7, 54, 406, 168
+    LTEXT "มาตรฐาน: เกมที่ชนะ Vegas: รอบที่จบแล้ว คิดคะแนนแยกจากยอดสะสม แสดงสิบอันดับแรกในแต่ละประเภท", -1, 7, 230, 406, 32
+    DEFPUSHBUTTON "ตกลง", IDOK, 180, 270, 60, 14
+END
+
+// TRANSLATORS: Machine translation; please review this new high-score dialog and its strings.
+STRINGTABLE
+BEGIN
+    IDS_HOF_STANDARD "มาตรฐาน"
+    IDS_HOF_VEGAS "Vegas"
+    IDS_HOF_ONE "จั่วหนึ่งใบ"
+    IDS_HOF_THREE "จั่วสามใบ"
+    IDS_HOF_RANK "#"
+    IDS_HOF_SCORE "คะแนน"
+    IDS_HOF_TIME "เวลา"
+    IDS_HOF_DATE "วันที่"
+    IDS_HOF_RESULT "ผลลัพธ์"
+    IDS_HOF_WON "ชนะ"
+    IDS_HOF_ENDED "จบแล้ว"
+    IDS_HOF_SAVE_ERROR "ไม่สามารถบันทึกคะแนนได้"
+END
+
 STRINGTABLE
 BEGIN
     IDS_SOL_NAME "Solitaire"
@@ -124,6 +157,8 @@ BEGIN
         MENUITEM "คำใบ้\tF3", IDM_GAME_HINT
         MENUITEM "แ&ต่งไพ่...", IDM_GAME_DECK
         MENUITEM "&ตัวเลือก...", IDM_GAME_OPTIONS
+        // TRANSLATORS: Machine translation; please review.
+        MENUITEM "คะแนนสูงสุด...", IDM_GAME_HIGHSCORES
         MENUITEM SEPARATOR
         MENUITEM "&ออก", IDM_GAME_EXIT
     END

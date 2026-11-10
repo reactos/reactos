@@ -80,6 +80,39 @@ BEGIN
     PUSHBUTTON "Annulla", IDCANCEL, 176, 165, 54, 14
 END
 
+// TRANSLATORS: Machine translation; please review this new high-score dialog and its strings.
+IDD_HIGHSCORES DIALOGEX 0, 0, 420, 291
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | DS_SHELLFONT
+CAPTION "Punteggi migliori"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Punteggio", -1, 7, 10, 54, 12
+    COMBOBOX IDC_HOF_MODE, 64, 7, 145, 70, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    AUTOCHECKBOX "Partite a tempo", IDC_HOF_TIMED, 218, 10, 195, 12, WS_TABSTOP
+    LTEXT "Carte", -1, 7, 32, 54, 12
+    COMBOBOX IDC_HOF_DRAW, 64, 29, 145, 70, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    CONTROL "", IDC_HOF_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 7, 54, 406, 168
+    LTEXT "Normale: partite vinte. Vegas: turni conclusi, valutati separatamente dal saldo cumulativo. Dieci migliori risultati per categoria.", -1, 7, 230, 406, 32
+    DEFPUSHBUTTON "OK", IDOK, 180, 270, 60, 14
+END
+
+// TRANSLATORS: Machine translation; please review this new high-score dialog and its strings.
+STRINGTABLE
+BEGIN
+    IDS_HOF_STANDARD "Normale"
+    IDS_HOF_VEGAS "Vegas"
+    IDS_HOF_ONE "Girane Una"
+    IDS_HOF_THREE "Girane Tre"
+    IDS_HOF_RANK "#"
+    IDS_HOF_SCORE "Punteggio"
+    IDS_HOF_TIME "Tempo"
+    IDS_HOF_DATE "Data"
+    IDS_HOF_RESULT "Risultato"
+    IDS_HOF_WON "Vinta"
+    IDS_HOF_ENDED "Terminata"
+    IDS_HOF_SAVE_ERROR "Impossibile salvare il punteggio."
+END
+
 /* Strings */
 
 STRINGTABLE
@@ -110,6 +143,8 @@ BEGIN
         MENUITEM "Suggerimento\tF3", IDM_GAME_HINT
         MENUITEM "Maz&zo...", IDM_GAME_DECK
         MENUITEM "O&pzioni...", IDM_GAME_OPTIONS
+        // TRANSLATORS: Machine translation; please review.
+        MENUITEM "Punteggi migliori...", IDM_GAME_HIGHSCORES
         MENUITEM SEPARATOR
         MENUITEM "&Esci", IDM_GAME_EXIT
     END

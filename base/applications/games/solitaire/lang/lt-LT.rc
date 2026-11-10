@@ -81,6 +81,39 @@ BEGIN
     PUSHBUTTON "Atsisakyti", IDCANCEL, 176, 165, 54, 14
 END
 
+// TRANSLATORS: Machine translation; please review this new high-score dialog and its strings.
+IDD_HIGHSCORES DIALOGEX 0, 0, 420, 291
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | DS_SHELLFONT
+CAPTION "Geriausi rezultatai"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Taškai", -1, 7, 10, 54, 12
+    COMBOBOX IDC_HOF_MODE, 64, 7, 145, 70, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    AUTOCHECKBOX "Žaidimai su laiko apskaita", IDC_HOF_TIMED, 218, 10, 195, 12, WS_TABSTOP
+    LTEXT "Kortos", -1, 7, 32, 54, 12
+    COMBOBOX IDC_HOF_DRAW, 64, 29, 145, 70, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    CONTROL "", IDC_HOF_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 7, 54, 406, 168
+    LTEXT "Standartinis: laimėti žaidimai. Vegas: baigti raundai, vertinami atskirai nuo bendro balanso. Dešimt geriausių rezultatų kiekvienoje kategorijoje.", -1, 7, 230, 406, 32
+    DEFPUSHBUTTON "Gerai", IDOK, 180, 270, 60, 14
+END
+
+// TRANSLATORS: Machine translation; please review this new high-score dialog and its strings.
+STRINGTABLE
+BEGIN
+    IDS_HOF_STANDARD "Standartinis"
+    IDS_HOF_VEGAS "Vegas"
+    IDS_HOF_ONE "Dalinti po vieną"
+    IDS_HOF_THREE "Dalinti po tris"
+    IDS_HOF_RANK "#"
+    IDS_HOF_SCORE "Taškai"
+    IDS_HOF_TIME "Laikas"
+    IDS_HOF_DATE "Data"
+    IDS_HOF_RESULT "Rezultatas"
+    IDS_HOF_WON "Laimėta"
+    IDS_HOF_ENDED "Baigta"
+    IDS_HOF_SAVE_ERROR "Nepavyko išsaugoti taškų."
+END
+
 /* Strings */
 
 STRINGTABLE
@@ -113,6 +146,8 @@ BEGIN
         MENUITEM "Patarimas\tF3", IDM_GAME_HINT
         MENUITEM "&Malka...", IDM_GAME_DECK
         MENUITEM "&Nuostatos...", IDM_GAME_OPTIONS
+        // TRANSLATORS: Machine translation; please review.
+        MENUITEM "Geriausi rezultatai...", IDM_GAME_HIGHSCORES
         MENUITEM SEPARATOR
         MENUITEM "&Baigti", IDM_GAME_EXIT
     END

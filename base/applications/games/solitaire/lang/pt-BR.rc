@@ -72,6 +72,39 @@ BEGIN
     PUSHBUTTON "Cancelar", IDCANCEL, 176, 165, 54, 14
 END
 
+// TRANSLATORS: Machine translation; please review this new high-score dialog and its strings.
+IDD_HIGHSCORES DIALOGEX 0, 0, 420, 291
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | DS_SHELLFONT
+CAPTION "Melhores pontuações"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Pontuação", -1, 7, 10, 54, 12
+    COMBOBOX IDC_HOF_MODE, 64, 7, 145, 70, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    AUTOCHECKBOX "Partidas com tempo", IDC_HOF_TIMED, 218, 10, 195, 12, WS_TABSTOP
+    LTEXT "Cartas", -1, 7, 32, 54, 12
+    COMBOBOX IDC_HOF_DRAW, 64, 29, 145, 70, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    CONTROL "", IDC_HOF_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 7, 54, 406, 168
+    LTEXT "Padrão: partidas vencidas. Vegas: rodadas encerradas, pontuadas separadamente do saldo acumulado. Dez melhores resultados por categoria.", -1, 7, 230, 406, 32
+    DEFPUSHBUTTON "OK", IDOK, 180, 270, 60, 14
+END
+
+// TRANSLATORS: Machine translation; please review this new high-score dialog and its strings.
+STRINGTABLE
+BEGIN
+    IDS_HOF_STANDARD "Padrão"
+    IDS_HOF_VEGAS "Vegas"
+    IDS_HOF_ONE "Uma Carta"
+    IDS_HOF_THREE "Três Cartas"
+    IDS_HOF_RANK "#"
+    IDS_HOF_SCORE "Pontuação"
+    IDS_HOF_TIME "Tempo"
+    IDS_HOF_DATE "Data"
+    IDS_HOF_RESULT "Resultado"
+    IDS_HOF_WON "Vitória"
+    IDS_HOF_ENDED "Encerrada"
+    IDS_HOF_SAVE_ERROR "Não foi possível salvar a pontuação."
+END
+
 /* Strings */
 
 STRINGTABLE
@@ -101,6 +134,8 @@ BEGIN
         MENUITEM "Dica\tF3", IDM_GAME_HINT
         MENUITEM "Baralho...", IDM_GAME_DECK
         MENUITEM "&Opções...", IDM_GAME_OPTIONS
+        // TRANSLATORS: Machine translation; please review.
+        MENUITEM "Melhores pontuações...", IDM_GAME_HIGHSCORES
         MENUITEM SEPARATOR
         MENUITEM "&Sair", IDM_GAME_EXIT
     END

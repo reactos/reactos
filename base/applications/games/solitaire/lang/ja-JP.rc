@@ -76,6 +76,39 @@ BEGIN
     PUSHBUTTON "キャンセル", IDCANCEL, 176, 165, 54, 14
 END
 
+// TRANSLATORS: Machine translation; please review this new high-score dialog and its strings.
+IDD_HIGHSCORES DIALOGEX 0, 0, 420, 291
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | DS_SHELLFONT
+CAPTION "ハイスコア"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "得点方法", -1, 7, 10, 54, 12
+    COMBOBOX IDC_HOF_MODE, 64, 7, 145, 70, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    AUTOCHECKBOX "時間を計測したゲーム", IDC_HOF_TIMED, 218, 10, 195, 12, WS_TABSTOP
+    LTEXT "カード", -1, 7, 32, 54, 12
+    COMBOBOX IDC_HOF_DRAW, 64, 29, 145, 70, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    CONTROL "", IDC_HOF_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 7, 54, 406, 168
+    LTEXT "標準：勝利したゲーム。Vegas：終了したラウンドを累積残高とは別に採点します。各部門の上位10件を表示します。", -1, 7, 230, 406, 32
+    DEFPUSHBUTTON "OK", IDOK, 180, 270, 60, 14
+END
+
+// TRANSLATORS: Machine translation; please review this new high-score dialog and its strings.
+STRINGTABLE
+BEGIN
+    IDS_HOF_STANDARD "標準"
+    IDS_HOF_VEGAS "ベガス"
+    IDS_HOF_ONE "1 枚ずつ取る"
+    IDS_HOF_THREE "3 枚ずつ取る"
+    IDS_HOF_RANK "#"
+    IDS_HOF_SCORE "得点"
+    IDS_HOF_TIME "時間"
+    IDS_HOF_DATE "日付"
+    IDS_HOF_RESULT "結果"
+    IDS_HOF_WON "勝利"
+    IDS_HOF_ENDED "終了"
+    IDS_HOF_SAVE_ERROR "得点を保存できませんでした。"
+END
+
 /* Strings */
 
 STRINGTABLE
@@ -104,6 +137,8 @@ BEGIN
         MENUITEM "ヒント\tF3", IDM_GAME_HINT
         MENUITEM "カードの装飾(&C)...", IDM_GAME_DECK
         MENUITEM "オプション(&O)...", IDM_GAME_OPTIONS
+        // TRANSLATORS: Machine translation; please review.
+        MENUITEM "ハイスコア...", IDM_GAME_HIGHSCORES
         MENUITEM SEPARATOR
         MENUITEM "終了(&E)", IDM_GAME_EXIT
     END

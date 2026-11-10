@@ -73,6 +73,37 @@ BEGIN
     PUSHBUTTON "Cancel", IDCANCEL, 176, 165, 54, 14
 END
 
+IDD_HIGHSCORES DIALOGEX 0, 0, 420, 291
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | DS_SHELLFONT
+CAPTION "High scores"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Scoring", -1, 7, 10, 54, 12
+    COMBOBOX IDC_HOF_MODE, 64, 7, 145, 70, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    AUTOCHECKBOX "Timed games", IDC_HOF_TIMED, 218, 10, 195, 12, WS_TABSTOP
+    LTEXT "Cards", -1, 7, 32, 54, 12
+    COMBOBOX IDC_HOF_DRAW, 64, 29, 145, 70, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    CONTROL "", IDC_HOF_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 7, 54, 406, 168
+    LTEXT "Standard: won games. Vegas: finished rounds, scored separately from the running balance. Ten best results per category.", -1, 7, 230, 406, 32
+    DEFPUSHBUTTON "OK", IDOK, 180, 270, 60, 14
+END
+
+STRINGTABLE
+BEGIN
+    IDS_HOF_STANDARD "Standard"
+    IDS_HOF_VEGAS "Vegas"
+    IDS_HOF_ONE "Draw One"
+    IDS_HOF_THREE "Draw Three"
+    IDS_HOF_RANK "#"
+    IDS_HOF_SCORE "Score"
+    IDS_HOF_TIME "Time"
+    IDS_HOF_DATE "Date"
+    IDS_HOF_RESULT "Result"
+    IDS_HOF_WON "Won"
+    IDS_HOF_ENDED "Ended"
+    IDS_HOF_SAVE_ERROR "The score could not be saved."
+END
+
 /* Strings */
 
 STRINGTABLE
@@ -99,6 +130,7 @@ BEGIN
         MENUITEM "Hint\tF3", IDM_GAME_HINT
         MENUITEM "De&ck...", IDM_GAME_DECK
         MENUITEM "&Options...", IDM_GAME_OPTIONS
+        MENUITEM "High scores...", IDM_GAME_HIGHSCORES
         MENUITEM SEPARATOR
         MENUITEM "E&xit", IDM_GAME_EXIT
     END

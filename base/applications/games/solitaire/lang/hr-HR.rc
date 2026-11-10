@@ -76,6 +76,39 @@ BEGIN
     PUSHBUTTON "Odustani", IDCANCEL, 176, 165, 54, 14
 END
 
+// TRANSLATORS: Machine translation; please review this new high-score dialog and its strings.
+IDD_HIGHSCORES DIALOGEX 0, 0, 420, 291
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | DS_SHELLFONT
+CAPTION "Najbolji rezultati"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Rezultat", -1, 7, 10, 54, 12
+    COMBOBOX IDC_HOF_MODE, 64, 7, 145, 70, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    AUTOCHECKBOX "Igre s mjerenjem vremena", IDC_HOF_TIMED, 218, 10, 195, 12, WS_TABSTOP
+    LTEXT "Kartice", -1, 7, 32, 54, 12
+    COMBOBOX IDC_HOF_DRAW, 64, 29, 145, 70, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    CONTROL "", IDC_HOF_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 7, 54, 406, 168
+    LTEXT "Standardno: dobivene igre. Vegas: završene runde, bodovane odvojeno od ukupnog stanja. Deset najboljih rezultata po kategoriji.", -1, 7, 230, 406, 32
+    DEFPUSHBUTTON "U redu", IDOK, 180, 270, 60, 14
+END
+
+// TRANSLATORS: Machine translation; please review this new high-score dialog and its strings.
+STRINGTABLE
+BEGIN
+    IDS_HOF_STANDARD "Standardno"
+    IDS_HOF_VEGAS "Vegas"
+    IDS_HOF_ONE "Nacrtaj jednu"
+    IDS_HOF_THREE "Nacrtaj tri"
+    IDS_HOF_RANK "#"
+    IDS_HOF_SCORE "Rezultat"
+    IDS_HOF_TIME "Vrijeme"
+    IDS_HOF_DATE "Datum"
+    IDS_HOF_RESULT "Rezultat"
+    IDS_HOF_WON "Pobjeda"
+    IDS_HOF_ENDED "Završeno"
+    IDS_HOF_SAVE_ERROR "Rezultat nije moguće spremiti."
+END
+
 /* Strings */
 
 STRINGTABLE
@@ -104,6 +137,8 @@ BEGIN
         MENUITEM "Savjet\tF3", IDM_GAME_HINT
         MENUITEM "Špi&l...", IDM_GAME_DECK
         MENUITEM "&Opcije...", IDM_GAME_OPTIONS
+        // TRANSLATORS: Machine translation; please review.
+        MENUITEM "Najbolji rezultati...", IDM_GAME_HIGHSCORES
         MENUITEM SEPARATOR
         MENUITEM "&Izađi", IDM_GAME_EXIT
     END
