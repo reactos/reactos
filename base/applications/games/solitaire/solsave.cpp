@@ -3,8 +3,8 @@
 #include <winreg.h>
 
 static const WCHAR settingsKey[] = L"Software\\ReactOS\\Solitaire";
-static const DWORD savedVersion = 1;
-static const DWORD ruleMask = OPTION_THREE_CARDS | OPTION_SCORE_STD | OPTION_SCORE_VEGAS | OPTION_KEEP_SCORE;
+static const DWORD savedVersion = 2;
+static const DWORD ruleMask = OPTION_THREE_CARDS | OPTION_SCORE_STD | OPTION_SCORE_VEGAS | OPTION_KEEP_SCORE | OPTION_SHOW_TIME;
 struct SavedGame
 {
     DWORD version, rules, time, wasteCount, visible, started;
@@ -12,6 +12,8 @@ struct SavedGame
     DWORD count[13]; // Stock, seven columns, four foundations, complete waste.
     DWORD card[13][52]; // Card index plus bit 8 for face-up.
     DWORD faceDown[NUM_ROW_STACKS];
+    LONG roundBase;
+    FILETIME roundId;
 };
 
 static CardRegion *SavedRegion(int i)
@@ -36,6 +38,7 @@ void SaveGame(void)
     state.visible = VisiblePileCards;
     state.started = fGameStarted;
     state.score = lScore;
+    GetScoreRound(&state.roundBase, &state.roundId);
     int total = 0, foundations = 0;
     for (int i = 0; i < 13; ++i)
     {
@@ -59,22 +62,25 @@ void SaveGame(void)
     // During an in-progress drag the source temporarily lacks its cards.
     // Preserve the last complete record instead of saving/deleting partial state.
     RegCloseKey(key);
+    SaveScoreBalance();
 }
 
 bool LoadGame(void)
 {
-    SavedGame state;
+    SavedGame state = {};
     HKEY key;
     if (RegOpenKeyExW(HKEY_CURRENT_USER, settingsKey, 0, KEY_QUERY_VALUE, &key) != ERROR_SUCCESS)
         return false;
     DWORD type, size = sizeof(state);
     LONG result = RegQueryValueExW(key, L"SavedGame", NULL, &type, (BYTE *)&state, &size);
     RegCloseKey(key);
-    if (result != ERROR_SUCCESS || type != REG_BINARY || size != sizeof(state) ||
-        state.version != savedVersion || (state.rules & ~ruleMask) || state.started > 1 ||
+    bool legacy = state.version == 1 && size == FIELD_OFFSET(SavedGame, roundBase);
+    if (result != ERROR_SUCCESS || type != REG_BINARY ||
+        (!legacy && (size != sizeof(state) || state.version != savedVersion)) ||
+        (state.rules & ~ruleMask) || state.started > 1 ||
         state.visible > 3 || state.visible > state.count[12] ||
         (state.count[12] && !state.visible) || state.time > 31536000 ||
-        state.score < -52 || state.score > 100000000)
+        state.score < -100000000 || state.score > 100000000)
         return false;
 
     bool seen[52] = {};
@@ -101,6 +107,21 @@ bool LoadGame(void)
         }
     }
     if (total != 52 || foundations == 52) return false;
+    DWORD mode = state.rules & (OPTION_SCORE_STD | OPTION_SCORE_VEGAS);
+    if (legacy)
+    {
+        state.rules |= dwOptions & OPTION_SHOW_TIME;
+        state.roundBase = mode == OPTION_SCORE_VEGAS ? state.score + 52 - 5 * foundations : 0;
+        GetSystemTimeAsFileTime(&state.roundId);
+    }
+    if ((!state.roundId.dwLowDateTime && !state.roundId.dwHighDateTime) ||
+        state.roundBase < -100000000 || state.roundBase > 100000000) return false;
+    if (mode == OPTION_SCORE_VEGAS)
+    {
+        LONGLONG roundScore = (LONGLONG)state.score - state.roundBase;
+        if (roundScore < -52 || roundScore > 208) return false;
+    }
+    else if (state.score < 0 || state.roundBase != 0) return false;
     for (int i = 0; i < NUM_ROW_STACKS; ++i)
     {
         if (state.faceDown[i] > state.count[i + 1]) return false;
@@ -135,6 +156,7 @@ bool LoadGame(void)
     VisiblePileCards = state.visible;
     lScore = state.score;
     fGameStarted = state.started != 0;
+    RestoreScoreRound(state.roundBase, state.roundId);
     dwPrevMode = GetScoreMode();
     dwWasteTreshold = GetScoreMode() == SCORE_VEGAS ? ((dwOptions & OPTION_THREE_CARDS) ? 2 : 0)
                                                    : ((dwOptions & OPTION_THREE_CARDS) ? 3 : 0);

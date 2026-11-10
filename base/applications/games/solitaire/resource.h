@@ -66,3 +66,24 @@
 #define IDM_GAME_HINT         1009
 #define IDC_ANIM_PREVIEW      1410
 #define IDS_SOL_NO_HINT       1307
+
+/* High scores */
+#define IDM_GAME_HIGHSCORES 1010
+#define IDM_GAME_BOSS       1011
+#define IDD_HIGHSCORES      1500
+#define IDC_HOF_MODE        1501
+#define IDC_HOF_DRAW        1502
+#define IDC_HOF_TIMED       1503
+#define IDC_HOF_LIST        1504
+#define IDS_HOF_STANDARD   1510
+#define IDS_HOF_VEGAS      1511
+#define IDS_HOF_ONE        1512
+#define IDS_HOF_THREE      1513
+#define IDS_HOF_RANK       1514
+#define IDS_HOF_SCORE      1515
+#define IDS_HOF_TIME       1516
+#define IDS_HOF_DATE       1517
+#define IDS_HOF_RESULT     1518
+#define IDS_HOF_WON        1519
+#define IDS_HOF_ENDED      1520
+#define IDS_HOF_SAVE_ERROR 1521

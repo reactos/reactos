@@ -223,6 +223,30 @@ void SetUndoMenuState(bool enable)
     }
 }
 
+// A thread hook also handles the boss key inside modal dialogs. It never
+// intercepts input belonging to another application.
+static LRESULT CALLBACK BossKeyProc(int code, WPARAM wParam, LPARAM lParam)
+{
+    if (code == HC_ACTION && wParam == PM_REMOVE)
+    {
+        MSG *message = reinterpret_cast<MSG *>(lParam);
+        if (message->message == WM_KEYDOWN && message->wParam == 'B' &&
+            !(GetKeyState(VK_CONTROL) & 0x8000) &&
+            !(GetKeyState(VK_MENU) & 0x8000))
+        {
+            PostMessage(hwndMain, WM_COMMAND, IDM_GAME_BOSS, 0);
+            message->message = WM_NULL;
+        }
+    }
+    return CallNextHookEx(NULL, code, wParam, lParam);
+}
+
+static BOOL CALLBACK HideGameWindow(HWND hwnd, LPARAM)
+{
+    ShowWindow(hwnd, SW_HIDE);
+    return TRUE;
+}
+
 //
 //    Main entry point
 //
@@ -262,7 +286,7 @@ int WINAPI _tWinMain(HINSTANCE hInst, HINSTANCE hPrev, LPTSTR szCmdLine, int iCm
     RegisterClass(&wndclass);
 
     ice.dwSize = sizeof(ice);
-    ice.dwICC = ICC_BAR_CLASSES | ICC_UPDOWN_CLASS;
+    ice.dwICC = ICC_BAR_CLASSES | ICC_UPDOWN_CLASS | ICC_LISTVIEW_CLASSES;
     InitCommonControlsEx(&ice);
 
     srand((unsigned)GetTickCount());//timeGetTime());
@@ -302,6 +326,8 @@ int WINAPI _tWinMain(HINSTANCE hInst, HINSTANCE hPrev, LPTSTR szCmdLine, int iCm
 
     hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDR_ACCELERATOR1));
 
+    HHOOK bossHook = SetWindowsHookEx(WH_GETMESSAGE, BossKeyProc, NULL, GetCurrentThreadId());
+
     while(GetMessage(&msg, NULL,0,0))
     {
         if (IsAutoFinishActive() &&
@@ -328,6 +354,7 @@ int WINAPI _tWinMain(HINSTANCE hInst, HINSTANCE hPrev, LPTSTR szCmdLine, int iCm
         }
     }
 
+    if (bossHook) UnhookWindowsHookEx(bossHook);
     SaveSettings();
 
     return msg.wParam;
@@ -400,9 +427,20 @@ static INT_PTR CALLBACK AnimationDlgProc(HWND dlg, UINT msg, WPARAM wp, LPARAM l
     return FALSE;
 }
 
+static void UpdateStatusOptions(HWND dlg)
+{
+    BOOL visible = IsDlgButtonChecked(dlg, IDC_OPT_STATUSBAR) == BST_CHECKED;
+    // Keep the selected game rules when their status display is hidden.
+    EnableWindow(GetDlgItem(dlg, IDC_OPT_SHOWTIME), visible);
+    EnableWindow(GetDlgItem(dlg, IDC_OPT_STANDARD), visible);
+    EnableWindow(GetDlgItem(dlg, IDC_OPT_VEGAS), visible);
+    EnableWindow(GetDlgItem(dlg, IDC_OPT_NOSCORE), visible);
+    EnableWindow(GetDlgItem(dlg, IDC_OPT_KEEPSCORE),
+                 visible && IsDlgButtonChecked(dlg, IDC_OPT_VEGAS) == BST_CHECKED);
+}
+
 INT_PTR CALLBACK OptionsDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-    HWND hCtrl;
     AnimationSettings *animation = (AnimationSettings *)GetWindowLongPtr(hDlg, DWLP_USER);
 
     switch (uMsg)
@@ -430,28 +468,28 @@ INT_PTR CALLBACK OptionsDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
                        IDC_OPT_KEEPSCORE,
                        (dwOptions & OPTION_KEEP_SCORE) ? BST_CHECKED : BST_UNCHECKED);
 
-        hCtrl = GetDlgItem(hDlg, IDC_OPT_KEEPSCORE);
-
         if (GetScoreMode() == SCORE_NONE)
         {
             CheckRadioButton(hDlg, IDC_OPT_STANDARD, IDC_OPT_NOSCORE, IDC_OPT_NOSCORE);
-            EnableWindow(hCtrl, FALSE);
         }
         else if (GetScoreMode() == SCORE_STD)
         {
             CheckRadioButton(hDlg, IDC_OPT_STANDARD, IDC_OPT_NOSCORE, IDC_OPT_STANDARD);
-            EnableWindow(hCtrl, FALSE);
         }
         else if (GetScoreMode() == SCORE_VEGAS)
         {
             CheckRadioButton(hDlg, IDC_OPT_STANDARD, IDC_OPT_NOSCORE, IDC_OPT_VEGAS);
-            EnableWindow(hCtrl, TRUE);
         }
+        UpdateStatusOptions(hDlg);
         return TRUE;
 
     case WM_COMMAND:
         switch(LOWORD(wParam))
         {
+        case IDC_OPT_STATUSBAR:
+            UpdateStatusOptions(hDlg);
+            return TRUE;
+
         case IDC_OPT_ANIMATION:
             DialogBoxParam(hInstance, MAKEINTRESOURCE(IDD_ANIMATION), hDlg,
                            AnimationDlgProc, (LPARAM)animation);
@@ -460,11 +498,7 @@ INT_PTR CALLBACK OptionsDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
         case IDC_OPT_NOSCORE:
         case IDC_OPT_STANDARD:
         case IDC_OPT_VEGAS:
-            hCtrl = GetDlgItem(hDlg, IDC_OPT_KEEPSCORE);
-            if (wParam == IDC_OPT_VEGAS)
-                EnableWindow(hCtrl, TRUE);
-            else
-                EnableWindow(hCtrl, FALSE);
+            UpdateStatusOptions(hDlg);
             return TRUE;
 
         case IDOK:
@@ -899,10 +933,23 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
         }
 
         case WM_COMMAND:
+            if (LOWORD(wParam) == IDM_GAME_BOSS)
+            {
+                EnumThreadWindows(GetCurrentThreadId(), HideGameWindow, 0);
+                StopAutoFinish();
+                SaveGame();
+                SaveSettings();
+                DestroyWindow(hwnd);
+                return 0;
+            }
             StopAutoFinish();
             StopWinAnimation(false);
             switch(LOWORD(wParam))
             {
+            case IDM_GAME_HIGHSCORES:
+                ShowHighScores(hwnd);
+                return 0;
+
             case IDM_GAME_HINT:
                 ShowHint();
                 return 0;

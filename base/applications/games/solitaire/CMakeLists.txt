@@ -1,6 +1,7 @@
 
 list(APPEND SOURCE
     solcreate.cpp
+    solscores.cpp
     solsave.cpp
     solhint.cpp
     solfinish.cpp

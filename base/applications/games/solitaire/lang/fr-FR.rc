@@ -77,6 +77,39 @@ BEGIN
     PUSHBUTTON "Annuler", IDCANCEL, 176, 165, 54, 14
 END
 
+// TRANSLATORS: Machine translation; please review this new high-score dialog and its strings.
+IDD_HIGHSCORES DIALOGEX 0, 0, 420, 291
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | DS_SHELLFONT
+CAPTION "Meilleurs scores"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Score", -1, 7, 10, 54, 12
+    COMBOBOX IDC_HOF_MODE, 64, 7, 145, 70, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    AUTOCHECKBOX "Parties chronométrées", IDC_HOF_TIMED, 218, 10, 195, 12, WS_TABSTOP
+    LTEXT "Cartes", -1, 7, 32, 54, 12
+    COMBOBOX IDC_HOF_DRAW, 64, 29, 145, 70, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    CONTROL "", IDC_HOF_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 7, 54, 406, 168
+    LTEXT "Standard : parties gagnées. Vegas : manches terminées, notées séparément du solde cumulé. Les dix meilleurs résultats par catégorie.", -1, 7, 230, 406, 32
+    DEFPUSHBUTTON "OK", IDOK, 180, 270, 60, 14
+END
+
+// TRANSLATORS: Machine translation; please review this new high-score dialog and its strings.
+STRINGTABLE
+BEGIN
+    IDS_HOF_STANDARD "Standard"
+    IDS_HOF_VEGAS "Vegas"
+    IDS_HOF_ONE "En tirer une"
+    IDS_HOF_THREE "En tirer trois"
+    IDS_HOF_RANK "#"
+    IDS_HOF_SCORE "Score"
+    IDS_HOF_TIME "Temps"
+    IDS_HOF_DATE "Date"
+    IDS_HOF_RESULT "Résultat"
+    IDS_HOF_WON "Gagnée"
+    IDS_HOF_ENDED "Terminée"
+    IDS_HOF_SAVE_ERROR "Impossible d'enregistrer le score."
+END
+
 /* Strings */
 
 STRINGTABLE
@@ -106,6 +139,8 @@ BEGIN
         MENUITEM "Indice\tF3", IDM_GAME_HINT
         MENUITEM "&Jeux...", IDM_GAME_DECK
         MENUITEM "&Options...", IDM_GAME_OPTIONS
+        // TRANSLATORS: Machine translation; please review.
+        MENUITEM "Meilleurs scores...", IDM_GAME_HIGHSCORES
         MENUITEM SEPARATOR
         MENUITEM "&Quitter", IDM_GAME_EXIT
     END

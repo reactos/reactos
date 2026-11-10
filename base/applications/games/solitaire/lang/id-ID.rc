@@ -77,6 +77,39 @@ BEGIN
     PUSHBUTTON "Batal", IDCANCEL, 176, 165, 54, 14
 END
 
+// TRANSLATORS: Machine translation; please review this new high-score dialog and its strings.
+IDD_HIGHSCORES DIALOGEX 0, 0, 420, 291
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | DS_SHELLFONT
+CAPTION "Skor tertinggi"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Penilaian", -1, 7, 10, 54, 12
+    COMBOBOX IDC_HOF_MODE, 64, 7, 145, 70, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    AUTOCHECKBOX "Permainan dengan waktu", IDC_HOF_TIMED, 218, 10, 195, 12, WS_TABSTOP
+    LTEXT "Kartu", -1, 7, 32, 54, 12
+    COMBOBOX IDC_HOF_DRAW, 64, 29, 145, 70, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    CONTROL "", IDC_HOF_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 7, 54, 406, 168
+    LTEXT "Standar: permainan yang dimenangkan. Vegas: putaran selesai, dinilai terpisah dari saldo keseluruhan. Sepuluh hasil terbaik per kategori.", -1, 7, 230, 406, 32
+    DEFPUSHBUTTON "OK", IDOK, 180, 270, 60, 14
+END
+
+// TRANSLATORS: Machine translation; please review this new high-score dialog and its strings.
+STRINGTABLE
+BEGIN
+    IDS_HOF_STANDARD "Standar"
+    IDS_HOF_VEGAS "Vegas"
+    IDS_HOF_ONE "Ambil Satu"
+    IDS_HOF_THREE "Ambil Tiga"
+    IDS_HOF_RANK "#"
+    IDS_HOF_SCORE "Nilai"
+    IDS_HOF_TIME "Waktu"
+    IDS_HOF_DATE "Tanggal"
+    IDS_HOF_RESULT "Hasil"
+    IDS_HOF_WON "Menang"
+    IDS_HOF_ENDED "Selesai"
+    IDS_HOF_SAVE_ERROR "Skor tidak dapat disimpan."
+END
+
 /* Strings */
 
 STRINGTABLE
@@ -107,6 +140,8 @@ BEGIN
         MENUITEM "Petunjuk\tF3", IDM_GAME_HINT
         MENUITEM "&Dek...", IDM_GAME_DECK
         MENUITEM "&Pilihan...", IDM_GAME_OPTIONS
+        // TRANSLATORS: Machine translation; please review.
+        MENUITEM "Skor tertinggi...", IDM_GAME_HIGHSCORES
         MENUITEM SEPARATOR
         MENUITEM "&Keluar", IDM_GAME_EXIT
     END

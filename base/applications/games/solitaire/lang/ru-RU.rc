@@ -74,6 +74,39 @@ END
 
 /* Строки */
 
+// TRANSLATORS: Machine translation; please review this new high-score dialog and its strings.
+IDD_HIGHSCORES DIALOGEX 0, 0, 420, 291
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | DS_SHELLFONT
+CAPTION "Лучшие результаты"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Счёт", -1, 7, 10, 54, 12
+    COMBOBOX IDC_HOF_MODE, 64, 7, 145, 70, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    AUTOCHECKBOX "Игры с учётом времени", IDC_HOF_TIMED, 218, 10, 195, 12, WS_TABSTOP
+    LTEXT "Карты", -1, 7, 32, 54, 12
+    COMBOBOX IDC_HOF_DRAW, 64, 29, 145, 70, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    CONTROL "", IDC_HOF_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 7, 54, 406, 168
+    LTEXT "Стандарт: выигранные игры. Vegas: завершённые раунды с оценкой отдельно от общего баланса. Десять лучших результатов в каждой категории.", -1, 7, 230, 406, 32
+    DEFPUSHBUTTON "OK", IDOK, 180, 270, 60, 14
+END
+
+// TRANSLATORS: Machine translation; please review this new high-score dialog and its strings.
+STRINGTABLE
+BEGIN
+    IDS_HOF_STANDARD "на очки"
+    IDS_HOF_VEGAS "на деньги"
+    IDS_HOF_ONE "По одной"
+    IDS_HOF_THREE "По три"
+    IDS_HOF_RANK "#"
+    IDS_HOF_SCORE "Счёт"
+    IDS_HOF_TIME "Время"
+    IDS_HOF_DATE "Дата"
+    IDS_HOF_RESULT "Результат"
+    IDS_HOF_WON "Победа"
+    IDS_HOF_ENDED "Завершено"
+    IDS_HOF_SAVE_ERROR "Не удалось сохранить счёт."
+END
+
 STRINGTABLE
 BEGIN
     IDS_SOL_NAME "Пасьянс"
@@ -101,6 +134,8 @@ BEGIN
         MENUITEM "Подсказка\tF3", IDM_GAME_HINT
         MENUITEM "&Обложки...", IDM_GAME_DECK
         MENUITEM "&Настройки...", IDM_GAME_OPTIONS
+        // TRANSLATORS: Machine translation; please review.
+        MENUITEM "Лучшие результаты...", IDM_GAME_HIGHSCORES
         MENUITEM SEPARATOR
         MENUITEM "&Выход", IDM_GAME_EXIT
     END
