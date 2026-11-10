@@ -64,6 +64,8 @@ void RestoreScoreRound(LONG base, const FILETIME &id);
 void SaveScoreBalance(void);
 bool ReadVegasBalance(DWORD options, LONG *balance);
 void ShowHighScores(HWND owner);
+bool IsScoreNameInput(void);
+int PromptScoreName(void);
 bool LoadGame(void);
 bool FindHint(CardRegion **source, CardRegion **destination);
 void ShowHint(void);

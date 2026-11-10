@@ -87,3 +87,9 @@
 #define IDS_HOF_WON        1519
 #define IDS_HOF_ENDED      1520
 #define IDS_HOF_SAVE_ERROR 1521
+
+#define IDD_SCORENAME       1530
+#define IDC_HOF_NAME        1531
+#define IDC_HOF_PLACEMENT   1532
+#define IDS_HOF_NAME        1533
+#define IDS_HOF_PLACEMENT   1534

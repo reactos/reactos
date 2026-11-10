@@ -231,6 +231,7 @@ static LRESULT CALLBACK BossKeyProc(int code, WPARAM wParam, LPARAM lParam)
     {
         MSG *message = reinterpret_cast<MSG *>(lParam);
         if (message->message == WM_KEYDOWN && message->wParam == 'B' &&
+            !IsScoreNameInput() &&
             !(GetKeyState(VK_CONTROL) & 0x8000) &&
             !(GetKeyState(VK_MENU) & 0x8000))
         {

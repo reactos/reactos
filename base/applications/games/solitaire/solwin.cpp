@@ -363,6 +363,9 @@ void FinishWinAnimation(void)
     if (!finishPending)
         return;
     finishPending = false;
+    int choice = PromptScoreName();
+    if (choice == IDOK) NewGame();
+    if (choice != IDIGNORE) return;
     extern TCHAR MsgDeal[128];
     if (MessageBox(hwndMain, MsgDeal, szAppName, MB_YESNO | MB_ICONQUESTION) == IDYES)
         NewGame();
