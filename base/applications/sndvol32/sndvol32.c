@@ -556,10 +556,6 @@ DlgPreferencesProc(HWND hwndDlg,
 
         case WM_PAINT:
         {
-            /*
-             * The dialog paints its background over the child controls, so
-             * they have to be repainted afterwards.
-             */
             LRESULT lResult = DefWindowProc(hwndDlg, uMsg, wParam, lParam);
             RepaintChildControls(hwndDlg);
             return lResult;
@@ -891,20 +887,11 @@ GetHorizontalScrollDirection(
     GetCursorPos(&Point);
     ScreenToClient(MixerWindow->hWnd, &Point);
 
+    /* One of the arrow buttons has been clicked. The left button is at
+     * the left and the right button at the right of the client area. */
     if (!bTrackClick)
-    {
-        /*
-         * One of the arrow buttons has been clicked. The left button is at
-         * the left and the right button at the right of the client area.
-         */
         return (Point.x < ClientWidth / 2) ? -1 : 1;
-    }
 
-    /*
-     * The track of the scroll bar has been clicked. The content is scrolled
-     * into the direction of the thumb, which has to be calculated from the
-     * current scroll position.
-     */
     ArrowWidth = GetSystemMetrics(SM_CYHSCROLL);
     TrackWidth = ClientWidth - 2 * ArrowWidth;
     if (TrackWidth <= 0)

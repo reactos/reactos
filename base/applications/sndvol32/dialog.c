@@ -850,13 +850,6 @@ MoveMixerControls(
     }
 }
 
-/*
- * Checks if the horizontal scrollbar is still needed and updates its range.
- * The scrollbar is only shown if the mixer controls do not fit into the
- * client area of the window.
- *
- * Returns TRUE if the scrollbar has been enabled or disabled.
- */
 BOOL
 UpdateMixerWindowScrollBar(
     _In_ PMIXER_WINDOW MixerWindow)
@@ -878,10 +871,6 @@ UpdateMixerWindowScrollBar(
     return bChanged;
 }
 
-/*
- * Adjusts the size of the mixer window to the size of the mixer controls,
- * moves the status bar and updates the horizontal scrollbar.
- */
 VOID
 UpdateMixerWindowLayout(
     _In_ PPREFERENCES_CONTEXT PrefContext)
@@ -906,10 +895,8 @@ UpdateMixerWindowLayout(
         StatusHeight = StatusRect.bottom - StatusRect.top;
     }
 
-    /* The window is limited to the width of the work area of the monitor */
     ClientWidth = min(ContentWidth, GetAvailableClientWidth(MixerWindow->hWnd));
 
-    /* Store the sizes of the mixer controls */
     MixerWindow->ContentWidth = ContentWidth;
     MixerWindow->ClientWidth = ClientWidth;
 

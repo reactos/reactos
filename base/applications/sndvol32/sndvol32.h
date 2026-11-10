@@ -33,11 +33,8 @@
 
 #define HOTKEY_CTRL_S 1
 
-/*
- * Minimum width of the mixer window. If the mixer controls are wider than
- * the work area of the monitor, a horizontal scrollbar is shown and the
- * window is limited to this width.
- */
+/* If the mixer controls are wider than the work area of the monitor,
+ * a horizontal scrollbar is shown and the window is limited to this width. */
 #define MIXER_WINDOW_MIN_WIDTH 200
 
 /* Number of pixels the mixer controls are scrolled by the scrollbar arrows */
@@ -70,10 +67,10 @@ typedef struct _MIXER_WINDOW
     INT WndPosX;
     INT WndPosY;
     /* Horizontal scrolling support */
-    INT ScrollPos;     /* Current horizontal scroll position */
-    INT ContentWidth;  /* Total width of the mixer controls */
-    INT ClientWidth;   /* Width of the visible mixer controls */
-    BOOL bUpdatingLayout; /* TRUE while the layout of the window is updated */
+    INT ScrollPos;
+    INT ContentWidth;
+    INT ClientWidth;
+    BOOL bUpdatingLayout;
 } MIXER_WINDOW, *PMIXER_WINDOW;
 
 extern HINSTANCE hAppInstance;
