@@ -11,23 +11,52 @@ LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
 
 /* Dialogs */
 
-IDD_OPTIONS DIALOGEX 0, 0, 186, 118
+IDD_OPTIONS DIALOGEX 0, 0, 300, 160
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | DS_SHELLFONT
 CAPTION "Opzioni"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Carte", -1, 7, 7, 90, 40
-    AUTORADIOBUTTON "Girane &Una", IDC_OPT_DRAWONE, 14, 19, 70, 10, WS_GROUP | WS_TABSTOP
-    AUTORADIOBUTTON "Girane &Tre", IDC_OPT_DRAWTHREE, 14, 32, 70, 10
-    GROUPBOX "Punteggio", -1, 100, 7, 75, 53
-    AUTORADIOBUTTON "&Standard", IDC_OPT_STANDARD, 107, 19, 60, 10, WS_GROUP | WS_TABSTOP
-    AUTORADIOBUTTON "&Vegas", IDC_OPT_VEGAS, 107, 32, 60, 10
-    AUTORADIOBUTTON "&None", IDC_OPT_NOSCORE, 107, 45, 60, 10
-    AUTOCHECKBOX "&Visualizza il tempo", IDC_OPT_SHOWTIME, 7 ,51 ,65 ,10, WS_TABSTOP
-    AUTOCHECKBOX "&Barra di stato", IDC_OPT_STATUSBAR, 7, 66, 64, 10, WS_TABSTOP
-    AUTOCHECKBOX "&Mantieni il punteggio", IDC_OPT_KEEPSCORE, 100, 66, 65, 10, WS_TABSTOP
-    DEFPUSHBUTTON "OK", IDOK, 35, 97, 50, 14
-    PUSHBUTTON "Annulla", IDCANCEL, 101, 97, 50, 14
+    GROUPBOX "Carte", -1, 7, 7, 135, 40
+    AUTORADIOBUTTON "Girane &Una", IDC_OPT_DRAWONE, 14, 19, 120, 10, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "Girane &Tre", IDC_OPT_DRAWTHREE, 14, 32, 120, 10
+    GROUPBOX "Punteggio", -1, 150, 7, 143, 53
+    // TRANSLATORS: Machine translation of previously English text; please review.
+    AUTORADIOBUTTON "&Normale", IDC_OPT_STANDARD, 157, 19, 126, 10, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "&Vegas", IDC_OPT_VEGAS, 157, 32, 126, 10
+    // TRANSLATORS: Machine translation of previously English text; please review.
+    AUTORADIOBUTTON "&Nessuno", IDC_OPT_NOSCORE, 157, 45, 126, 10
+    AUTOCHECKBOX "&Visualizza il tempo", IDC_OPT_SHOWTIME, 7, 51, 135,10, WS_TABSTOP
+    AUTOCHECKBOX "&Barra di stato", IDC_OPT_STATUSBAR, 7, 66, 135, 10, WS_TABSTOP
+    AUTOCHECKBOX "&Mantieni il punteggio", IDC_OPT_KEEPSCORE, 150, 66, 143, 10, WS_TABSTOP
+    // TRANSLATORS: Machine translation; please review this new text.
+    LTEXT "Mosse annullabili (0 = nessuna):", -1, 7, 83, 225, 24
+    EDITTEXT IDC_OPT_UNDO_LIMIT, 250, 84, 37, 14, ES_NUMBER | ES_RIGHT | WS_TABSTOP
+    CONTROL "", IDC_OPT_UNDO_SPIN, "msctls_updown32", UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_SETBUDDYINT | UDS_ARROWKEYS, 274, 84, 13, 14
+    // TRANSLATORS: Machine translation; please review this new text.
+    PUSHBUTTON "Animazione di vittoria...", IDC_OPT_ANIMATION, 7, 110, 286, 18, WS_TABSTOP
+    DEFPUSHBUTTON "OK", IDOK, 82, 139, 60, 14
+    PUSHBUTTON "Annulla", IDCANCEL, 158, 139, 60, 14
+END
+
+// TRANSLATORS: The following dialog is machine-translated; please review all new text.
+IDD_ANIMATION DIALOGEX 0, 0, 260, 202
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | DS_SHELLFONT
+CAPTION "Animazione di vittoria"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    AUTORADIOBUTTON "Nella finestra (classica)", IDC_ANIM_WINDOW, 10, 10, 240, 12, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "Su questo monitor", IDC_ANIM_MONITOR, 10, 27, 240, 12
+    AUTORADIOBUTTON "Su tutti i monitor", IDC_ANIM_DESKTOP, 10, 44, 240, 12
+    GROUPBOX "Velocità", -1, 7, 64, 246, 82
+    CONTROL "", IDC_ANIM_SPEED, "msctls_trackbar32", WS_TABSTOP | TBS_HORZ, 14, 78, 232, 24
+    LTEXT "50 %", -1, 16, 103, 35, 10
+    CTEXT "100 %", IDC_ANIM_VALUE, 103, 103, 54, 10
+    RTEXT "200 %", -1, 209, 103, 35, 10
+    PUSHBUTTON "Predefinita: 100 %", IDC_ANIM_DEFAULT, 55, 119, 150, 18
+    // TRANSLATORS: Machine translation; please review this new text.
+    PUSHBUTTON "Anteprima (5 secondi)", IDC_ANIM_PREVIEW, 55, 153, 150, 18
+    DEFPUSHBUTTON "OK", IDOK, 72, 181, 54, 14
+    PUSHBUTTON "Annulla", IDCANCEL, 134, 181, 54, 14
 END
 
 IDD_CARDBACK DIALOGEX 6, 6, 345, 185
@@ -56,12 +85,15 @@ END
 STRINGTABLE
 BEGIN
     IDS_SOL_NAME "Solitario"
-    IDS_SOL_ABOUT "Solitario by J Brown\nCardLib versione 1.0"
+    // TRANSLATORS: Machine translation of previously English text; please review.
+    IDS_SOL_ABOUT "Solitario di J Brown\nCardLib versione 1.0"
     IDS_SOL_QUIT "Chiudere la partita in corso?"
     IDS_SOL_WIN "Congratulazioni, hai vinto!!"
     IDS_SOL_DEAL "Nuova partita?"
     IDS_SOL_SCORE "Punteggio: %d"
     IDS_SOL_TIME "Tempo: %d"
+    // TRANSLATORS: Machine translation; please review this new text.
+    IDS_SOL_NO_HINT "Nessuna mossa diretta trovata."
 END
 
 /* Menus */
@@ -72,12 +104,17 @@ BEGIN
     BEGIN
         MENUITEM "&Dai carte\tF2", IDM_GAME_NEW
         MENUITEM SEPARATOR
-        MENUITEM "&Undo", IDM_GAME_UNDO, GRAYED
+        // TRANSLATORS: Machine translation of previously English text; please review.
+        MENUITEM "&Annulla\tCtrl+Z", IDM_GAME_UNDO, GRAYED
+    // TRANSLATORS: Machine translation; please review this new text.
+        MENUITEM "Suggerimento\tF3", IDM_GAME_HINT
         MENUITEM "Maz&zo...", IDM_GAME_DECK
         MENUITEM "O&pzioni...", IDM_GAME_OPTIONS
         MENUITEM SEPARATOR
         MENUITEM "&Esci", IDM_GAME_EXIT
     END
+    // TRANSLATORS: Machine translation; please review this new text.
+    MENUITEM "Raccogli carte", IDM_GAME_FINISH, GRAYED
     POPUP "&?"
     BEGIN
         MENUITEM "&Guida in linea\tF1", IDM_HELP_CONTENTS
@@ -91,4 +128,6 @@ IDR_ACCELERATOR1 ACCELERATORS
 BEGIN
     VK_F1, IDM_HELP_CONTENTS, VIRTKEY, NOINVERT
     VK_F2, IDM_GAME_NEW, VIRTKEY, NOINVERT
+    "Z", IDM_GAME_UNDO, VIRTKEY, CONTROL, NOINVERT
+    VK_F3, IDM_GAME_HINT, VIRTKEY, NOINVERT
 END

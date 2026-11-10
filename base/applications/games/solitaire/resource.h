@@ -47,3 +47,22 @@
 #define IDS_SOL_DEAL  1304
 #define IDS_SOL_SCORE 1305
 #define IDS_SOL_TIME  1306
+
+/* Victory animation settings */
+#define IDD_ANIMATION          1400
+#define IDC_OPT_ANIMATION      1401
+#define IDC_ANIM_WINDOW        1402
+#define IDC_ANIM_MONITOR       1403
+#define IDC_ANIM_DESKTOP       1404
+#define IDC_ANIM_SPEED         1405
+#define IDC_ANIM_VALUE         1406
+#define IDC_ANIM_DEFAULT       1407
+
+#define IDM_GAME_FINISH        1008
+
+#define IDC_OPT_UNDO_LIMIT     1408
+#define IDC_OPT_UNDO_SPIN      1409
+
+#define IDM_GAME_HINT         1009
+#define IDC_ANIM_PREVIEW      1410
+#define IDS_SOL_NO_HINT       1307

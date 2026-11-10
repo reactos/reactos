@@ -4,23 +4,54 @@ LANGUAGE LANG_KOREAN, SUBLANG_DEFAULT
 
 /* Dialogs */
 
-IDD_OPTIONS DIALOGEX 0, 0, 186, 118
+IDD_OPTIONS DIALOGEX 0, 0, 300, 160
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | DS_SHELLFONT
 CAPTION "옵션"
 FONT 9, "굴림"
 BEGIN
-    GROUPBOX "카드", -1, 7, 7, 90, 40
-    AUTORADIOBUTTON "한 장씩(&O)", IDC_OPT_DRAWONE, 14, 19, 70, 10, WS_GROUP | WS_TABSTOP
-    AUTORADIOBUTTON "세 장씩(&T)", IDC_OPT_DRAWTHREE, 14, 32, 70, 10
-    GROUPBOX "Scoring", -1, 100, 7, 75, 53
-    AUTORADIOBUTTON "&Standard", IDC_OPT_STANDARD, 107, 19, 60, 10, WS_GROUP | WS_TABSTOP
-    AUTORADIOBUTTON "&Vegas", IDC_OPT_VEGAS, 107, 32, 60, 10
-    AUTORADIOBUTTON "&None", IDC_OPT_NOSCORE, 107, 45, 60, 10
-    AUTOCHECKBOX "시간 보이기(&S)", IDC_OPT_SHOWTIME, 7 ,51 ,65 ,10, WS_TABSTOP
-    AUTOCHECKBOX "상태 표시줄(&T)", IDC_OPT_STATUSBAR, 7, 66, 64, 10, WS_TABSTOP
-    AUTOCHECKBOX "&Keep Score", IDC_OPT_KEEPSCORE, 100, 66, 65, 10, WS_TABSTOP
-    DEFPUSHBUTTON "확인", IDOK, 35, 97, 50, 14
-    PUSHBUTTON "취소", IDCANCEL, 101, 97, 50, 14
+    GROUPBOX "카드", -1, 7, 7, 135, 40
+    AUTORADIOBUTTON "한 장씩(&O)", IDC_OPT_DRAWONE, 14, 19, 120, 10, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "세 장씩(&T)", IDC_OPT_DRAWTHREE, 14, 32, 120, 10
+    // TRANSLATORS: Machine translation of previously English text; please review.
+    GROUPBOX "점수 계산", -1, 150, 7, 143, 53
+    // TRANSLATORS: Machine translation of previously English text; please review.
+    AUTORADIOBUTTON "표준(&S)", IDC_OPT_STANDARD, 157, 19, 126, 10, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "&Vegas", IDC_OPT_VEGAS, 157, 32, 126, 10
+    // TRANSLATORS: Machine translation of previously English text; please review.
+    AUTORADIOBUTTON "없음(&N)", IDC_OPT_NOSCORE, 157, 45, 126, 10
+    AUTOCHECKBOX "시간 보이기(&S)", IDC_OPT_SHOWTIME, 7, 51, 135,10, WS_TABSTOP
+    AUTOCHECKBOX "상태 표시줄(&T)", IDC_OPT_STATUSBAR, 7, 66, 135, 10, WS_TABSTOP
+    // TRANSLATORS: Machine translation of previously English text; please review.
+    AUTOCHECKBOX "점수 유지(&K)", IDC_OPT_KEEPSCORE, 150, 66, 143, 10, WS_TABSTOP
+    // TRANSLATORS: Machine translation; please review this new text.
+    LTEXT "실행 취소 횟수 (0 = 사용 안 함):", -1, 7, 83, 225, 24
+    EDITTEXT IDC_OPT_UNDO_LIMIT, 250, 84, 37, 14, ES_NUMBER | ES_RIGHT | WS_TABSTOP
+    CONTROL "", IDC_OPT_UNDO_SPIN, "msctls_updown32", UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_SETBUDDYINT | UDS_ARROWKEYS, 274, 84, 13, 14
+    // TRANSLATORS: Machine translation; please review this new text.
+    PUSHBUTTON "승리 애니메이션...", IDC_OPT_ANIMATION, 7, 110, 286, 18, WS_TABSTOP
+    DEFPUSHBUTTON "확인", IDOK, 82, 139, 60, 14
+    PUSHBUTTON "취소", IDCANCEL, 158, 139, 60, 14
+END
+
+// TRANSLATORS: The following dialog is machine-translated; please review all new text.
+IDD_ANIMATION DIALOGEX 0, 0, 260, 202
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | DS_SHELLFONT
+CAPTION "승리 애니메이션"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    AUTORADIOBUTTON "창 안에서 (기존 방식)", IDC_ANIM_WINDOW, 10, 10, 240, 12, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "이 모니터에서", IDC_ANIM_MONITOR, 10, 27, 240, 12
+    AUTORADIOBUTTON "모든 모니터에서", IDC_ANIM_DESKTOP, 10, 44, 240, 12
+    GROUPBOX "속도", -1, 7, 64, 246, 82
+    CONTROL "", IDC_ANIM_SPEED, "msctls_trackbar32", WS_TABSTOP | TBS_HORZ, 14, 78, 232, 24
+    LTEXT "50 %", -1, 16, 103, 35, 10
+    CTEXT "100 %", IDC_ANIM_VALUE, 103, 103, 54, 10
+    RTEXT "200 %", -1, 209, 103, 35, 10
+    PUSHBUTTON "기본값: 100 %", IDC_ANIM_DEFAULT, 55, 119, 150, 18
+    // TRANSLATORS: Machine translation; please review this new text.
+    PUSHBUTTON "미리 보기 (5초)", IDC_ANIM_PREVIEW, 55, 153, 150, 18
+    DEFPUSHBUTTON "확인", IDOK, 72, 181, 54, 14
+    PUSHBUTTON "취소", IDCANCEL, 134, 181, 54, 14
 END
 
 IDD_CARDBACK DIALOGEX 6, 6, 345, 185
@@ -49,12 +80,18 @@ END
 STRINGTABLE
 BEGIN
     IDS_SOL_NAME "카드놀이"
-    IDS_SOL_ABOUT "Solitaire by J Brown\nCardLib version 1.0"
+    // TRANSLATORS: Machine translation of previously English text; please review.
+    IDS_SOL_ABOUT "J Brown의 솔리테어\nCardLib 버전 1.0"
     IDS_SOL_QUIT "현재 게임을 끝낼가요?"
     IDS_SOL_WIN "축하합니다!!"
-    IDS_SOL_DEAL "Deal again?"
-    IDS_SOL_SCORE "Score: %d"
-    IDS_SOL_TIME "Time: %d"
+    // TRANSLATORS: Machine translation of previously English text; please review.
+    IDS_SOL_DEAL "다시 패를 돌리시겠습니까?"
+    // TRANSLATORS: Machine translation of previously English text; please review.
+    IDS_SOL_SCORE "점수: %d"
+    // TRANSLATORS: Machine translation of previously English text; please review.
+    IDS_SOL_TIME "시간: %d"
+    // TRANSLATORS: Machine translation; please review this new text.
+    IDS_SOL_NO_HINT "바로 이동할 수 있는 수를 찾지 못했습니다."
 END
 
 /* Menus */
@@ -65,12 +102,17 @@ BEGIN
     BEGIN
         MENUITEM "새 게임(&D)\tF2", IDM_GAME_NEW
         MENUITEM SEPARATOR
-        MENUITEM "&Undo", IDM_GAME_UNDO, GRAYED
+        // TRANSLATORS: Machine translation of previously English text; please review.
+        MENUITEM "실행 취소(&U)\tCtrl+Z", IDM_GAME_UNDO, GRAYED
+    // TRANSLATORS: Machine translation; please review this new text.
+        MENUITEM "힌트\tF3", IDM_GAME_HINT
         MENUITEM "덱(&C)...", IDM_GAME_DECK /* FIXME: is 덱 correct? */
         MENUITEM "옵션(&O)...", IDM_GAME_OPTIONS
         MENUITEM SEPARATOR
         MENUITEM "종료(&E)", IDM_GAME_EXIT
     END
+    // TRANSLATORS: Machine translation; please review this new text.
+    MENUITEM "카드 모으기", IDM_GAME_FINISH, GRAYED
     POPUP "도움말(&H)"
     BEGIN
         MENUITEM "목차(&C)\tF1", IDM_HELP_CONTENTS
@@ -84,4 +126,6 @@ IDR_ACCELERATOR1 ACCELERATORS
 BEGIN
     VK_F1, IDM_HELP_CONTENTS, VIRTKEY, NOINVERT
     VK_F2, IDM_GAME_NEW, VIRTKEY, NOINVERT
+    "Z", IDM_GAME_UNDO, VIRTKEY, CONTROL, NOINVERT
+    VK_F3, IDM_GAME_HINT, VIRTKEY, NOINVERT
 END

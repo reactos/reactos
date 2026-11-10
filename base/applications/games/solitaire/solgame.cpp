@@ -18,6 +18,7 @@ bool bAutoroute = false;
 void NewGame(void)
 {
     TRACE("ENTER NewGame()\n");
+    StopAutoFinish();
     StopWinAnimation(false);
     int i, j;
 
@@ -297,9 +298,10 @@ void CARDLIBPROC RowStackClickProc(CardRegion &stackobj, int iNumClicked)
     stackobj.GetFaceDirection(&numfacedown);
 
     //if all face-down, then make top card face-up
-    if(stackobj.NumCards() == numfacedown)
+    if(numfacedown > 0 && stackobj.NumCards() == numfacedown)
     {
-        if(numfacedown > 0) numfacedown--;
+        SetFlipUndo(stackobj.Id(), numfacedown);
+        numfacedown--;
         stackobj.SetFaceDirection(CS_FACE_DOWNUP, numfacedown);
         stackobj.Redraw();
 
@@ -308,7 +310,6 @@ void CARDLIBPROC RowStackClickProc(CardRegion &stackobj, int iNumClicked)
             lScore = lScore + 5;
             UpdateStatusBar();
         }
-        ClearUndo();
     }
 
     LastId = stackobj.Id();
@@ -363,6 +364,7 @@ void CARDLIBPROC SuitStackAddProc(CardRegion &stackobj, const CardStack &added)
 
     if(fGameOver)
     {
+        StopAutoFinish();
         KillTimer(hwndMain, IDT_PLAYTIMER);
         PlayTimer = 0;
 
@@ -490,6 +492,12 @@ void CARDLIBPROC PileRemoveProc(CardRegion &stackobj, int iItems)
 void CARDLIBPROC DeckClickProc(CardRegion &stackobj, int iNumClicked)
 {
     TRACE("ENTER DeckClickProc()\n");
+
+    // An exhausted or unavailable stock is not a move.
+    if (!stackobj.NumCards() &&
+        (!activepile.NumCards() ||
+         (GetScoreMode() == SCORE_VEGAS && dwWasteCount >= dwWasteTreshold)))
+        return;
 
     SetPlayTimer();
 

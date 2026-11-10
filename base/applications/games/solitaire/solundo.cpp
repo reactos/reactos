@@ -8,50 +8,87 @@
 
 #include "solitaire.h"
 
-// source_id and destination_id store the source and destination of the cards
-// that were moved. These ids are defined in solitaire.h and can be DECK_ID, PILE_ID,
-// [SUIT_ID..SUIT_ID + 3], [ROW_ID..ROW_ID + NUM_ROW_STACKS - 1].
-// -1 means that there is no action stored in the undo module.
-static int source_id = -1;
-static int destination_id = -1;
-
-// Number of cards that were moved.
-static int number_of_cards = 0;
-
-// The score before the action was taken.
-static int prev_score = 0;
-
-// The number of visible pile cards before the action was taken.
-static int prev_visible_pile_cards = 0;
-
-void SetUndo(
-    int set_source_id,
-    int set_destination_id,
-    int set_number_of_cards,
-    int set_prev_score,
-    int set_prev_visible_pile_cards)
+// A bounded history of moves, draws, stock recycling and exposed-card flips.
+struct UndoEntry
 {
-    if ((set_source_id == set_destination_id) || (set_number_of_cards == 0))
-        return;
+    int source_id, destination_id, number_of_cards;
+    int prev_score, prev_visible_pile_cards;
+    DWORD prev_waste_count;
+    int face_down; // -1 for a move; otherwise the old number of face-down cards.
+    int penalty;
+};
+DWORD dwUndoLimit = UNDO_LIMIT_DEFAULT;
+static UndoEntry history[UNDO_LIMIT_MAX];
+static int historyCount;
 
-    source_id = set_source_id;
-    destination_id = set_destination_id;
-    number_of_cards = set_number_of_cards;
-    prev_score = set_prev_score;
-    prev_visible_pile_cards = set_prev_visible_pile_cards;
+static UndoEntry &PushUndo(void)
+{
+    if (historyCount == (int)dwUndoLimit)
+    {
+        for (int i = 1; i < historyCount; ++i)
+            history[i - 1] = history[i];
+        --historyCount;
+    }
+    UndoEntry &entry = history[historyCount++];
+    entry.prev_waste_count = dwWasteCount;
+    entry.face_down = -1;
+    entry.penalty = 0;
     SetUndoMenuState(true);
+    return entry;
+}
+
+void SetUndo(int source, int destination, int count, int score, int visible)
+{
+    if (!dwUndoLimit || source == destination || count == 0)
+        return;
+    UndoEntry &entry = PushUndo();
+    entry.source_id = source;
+    entry.destination_id = destination;
+    entry.number_of_cards = count;
+    entry.prev_score = score;
+    entry.prev_visible_pile_cards = visible;
+}
+
+void SetFlipUndo(int row, int faceDown)
+{
+    if (!dwUndoLimit)
+        return;
+    UndoEntry &entry = PushUndo();
+    entry.source_id = entry.destination_id = row;
+    entry.number_of_cards = 0;
+    entry.prev_score = lScore;
+    entry.prev_visible_pile_cards = VisiblePileCards;
+    entry.face_down = faceDown;
+}
+
+void SetUndoLimit(DWORD limit)
+{
+    dwUndoLimit = min(limit, UNDO_LIMIT_MAX);
+    if (historyCount > (int)dwUndoLimit)
+    {
+        int discard = historyCount - dwUndoLimit;
+        for (int i = discard; i < historyCount; ++i)
+            history[i - discard] = history[i];
+        historyCount = dwUndoLimit;
+    }
+    SetUndoMenuState(historyCount != 0);
 }
 
 void ClearUndo(void)
 {
-    source_id = -1;
-    destination_id = -1;
-    number_of_cards = 0;
+    historyCount = 0;
     SetUndoMenuState(false);
 }
 
 void Undo(void)
 {
+    if (!historyCount)
+        return;
+    UndoEntry entry = history[--historyCount];
+    int source_id = entry.source_id;
+    int destination_id = entry.destination_id;
+    int number_of_cards = entry.number_of_cards;
+    int prev_visible_pile_cards = entry.prev_visible_pile_cards;
     CardRegion *source = NULL;
     CardRegion *destination = NULL;
 
@@ -59,7 +96,7 @@ void Undo(void)
         (source_id > (ROW_ID + NUM_ROW_STACKS - 1))      ||
         (destination_id < 1)                             ||
         (destination_id > (ROW_ID + NUM_ROW_STACKS - 1)) ||
-        (number_of_cards < 1))
+        (number_of_cards < 1 && entry.face_down < 0))
     {
         ClearUndo();
         return;
@@ -90,7 +127,11 @@ void Undo(void)
     }
 
     // If the player clicked on the deck.
-    if (destination == pPile && source == pDeck)
+    if (entry.face_down >= 0)
+    {
+        source->SetFaceDirection(CS_FACE_DOWNUP, entry.face_down);
+    }
+    else if (destination == pPile && source == pDeck)
     {
         // Put back the cards on the deck in reversed order.
         CardStack tmp = activepile.Pop(number_of_cards);
@@ -140,6 +181,7 @@ void Undo(void)
         activepile.Push(tmp);
         if (prev_visible_pile_cards <= 1)
         {
+            source->SetOffsets(0, 0);
             source->Push(tmp);
         }
         else
@@ -158,14 +200,20 @@ void Undo(void)
         destination->MoveCard(source, number_of_cards, false);
     }
 
-    lScore = prev_score;
+    dwWasteCount = entry.prev_waste_count;
+    lScore = entry.prev_score;
 
     // -2 points for the undo in standard score mode.
     if (GetScoreMode() == SCORE_STD)
-        lScore = lScore >= 2 ? lScore - 2 : 0;
+    {
+        lScore = max(0, lScore - 2 - entry.penalty);
+        // Older snapshots must not refund penalties from later undo operations.
+        for (int i = 0; i < historyCount; ++i)
+            history[i].penalty += 2;
+    }
 
     UpdateStatusBar();
 
     SolWnd.Redraw();
-    ClearUndo();
+    SetUndoMenuState(historyCount != 0);
 }

@@ -4,23 +4,51 @@ LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
 /* Диалоги */
 
-IDD_OPTIONS DIALOGEX 0, 0, 186, 118
+IDD_OPTIONS DIALOGEX 0, 0, 300, 160
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | DS_SHELLFONT
 CAPTION "Настройки"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Карты", -1, 7, 7, 90, 40
-    AUTORADIOBUTTON "По &одной", IDC_OPT_DRAWONE, 14, 19, 70, 10, WS_GROUP | WS_TABSTOP
-    AUTORADIOBUTTON "По &три", IDC_OPT_DRAWTHREE, 14, 32, 70, 10
-    GROUPBOX "Счёт", -1, 100, 7, 75, 53
-    AUTORADIOBUTTON "на &очки", IDC_OPT_STANDARD, 107, 19, 60, 10, WS_GROUP | WS_TABSTOP
-    AUTORADIOBUTTON "&на деньги", IDC_OPT_VEGAS, 107, 32, 60, 10
-    AUTORADIOBUTTON "не &ведётся", IDC_OPT_NOSCORE, 107, 45, 60, 10
-    AUTOCHECKBOX "&Показывать время", IDC_OPT_SHOWTIME, 7 ,51 ,75 ,10, WS_TABSTOP
-    AUTOCHECKBOX "&Строка состояния", IDC_OPT_STATUSBAR, 7, 66, 75, 10, WS_TABSTOP
-    AUTOCHECKBOX "П&еретаскивание контура", IDC_OPT_KEEPSCORE, 100, 66, 65, 10, WS_TABSTOP
-    DEFPUSHBUTTON "OK", IDOK, 35, 97, 50, 14
-    PUSHBUTTON "Отмена", IDCANCEL, 101, 97, 50, 14
+    GROUPBOX "Карты", -1, 7, 7, 135, 40
+    AUTORADIOBUTTON "По &одной", IDC_OPT_DRAWONE, 14, 19, 120, 10, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "По &три", IDC_OPT_DRAWTHREE, 14, 32, 120, 10
+    GROUPBOX "Счёт", -1, 150, 7, 143, 53
+    AUTORADIOBUTTON "на &очки", IDC_OPT_STANDARD, 157, 19, 126, 10, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "&на деньги", IDC_OPT_VEGAS, 157, 32, 126, 10
+    AUTORADIOBUTTON "не &ведётся", IDC_OPT_NOSCORE, 157, 45, 126, 10
+    AUTOCHECKBOX "&Показывать время", IDC_OPT_SHOWTIME, 7, 51, 135,10, WS_TABSTOP
+    AUTOCHECKBOX "&Строка состояния", IDC_OPT_STATUSBAR, 7, 66, 135, 10, WS_TABSTOP
+    // TRANSLATORS: Corrected obsolete outline-dragging label; machine translation, please review.
+    AUTOCHECKBOX "&Сохранять счёт", IDC_OPT_KEEPSCORE, 150, 66, 143, 10, WS_TABSTOP
+    // TRANSLATORS: Machine translation; please review this new text.
+    LTEXT "Отменяемые ходы (0 = выкл.):", -1, 7, 83, 225, 24
+    EDITTEXT IDC_OPT_UNDO_LIMIT, 250, 84, 37, 14, ES_NUMBER | ES_RIGHT | WS_TABSTOP
+    CONTROL "", IDC_OPT_UNDO_SPIN, "msctls_updown32", UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_SETBUDDYINT | UDS_ARROWKEYS, 274, 84, 13, 14
+    // TRANSLATORS: Machine translation; please review this new text.
+    PUSHBUTTON "Анимация победы...", IDC_OPT_ANIMATION, 7, 110, 286, 18, WS_TABSTOP
+    DEFPUSHBUTTON "OK", IDOK, 82, 139, 60, 14
+    PUSHBUTTON "Отмена", IDCANCEL, 158, 139, 60, 14
+END
+
+// TRANSLATORS: The following dialog is machine-translated; please review all new text.
+IDD_ANIMATION DIALOGEX 0, 0, 260, 202
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | DS_SHELLFONT
+CAPTION "Анимация победы"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    AUTORADIOBUTTON "В окне (классическая)", IDC_ANIM_WINDOW, 10, 10, 240, 12, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "На этом мониторе", IDC_ANIM_MONITOR, 10, 27, 240, 12
+    AUTORADIOBUTTON "На всех мониторах", IDC_ANIM_DESKTOP, 10, 44, 240, 12
+    GROUPBOX "Скорость", -1, 7, 64, 246, 82
+    CONTROL "", IDC_ANIM_SPEED, "msctls_trackbar32", WS_TABSTOP | TBS_HORZ, 14, 78, 232, 24
+    LTEXT "50 %", -1, 16, 103, 35, 10
+    CTEXT "100 %", IDC_ANIM_VALUE, 103, 103, 54, 10
+    RTEXT "200 %", -1, 209, 103, 35, 10
+    PUSHBUTTON "По умолчанию: 100 %", IDC_ANIM_DEFAULT, 55, 119, 150, 18
+    // TRANSLATORS: Machine translation; please review this new text.
+    PUSHBUTTON "Просмотр (5 секунд)", IDC_ANIM_PREVIEW, 55, 153, 150, 18
+    DEFPUSHBUTTON "OK", IDOK, 72, 181, 54, 14
+    PUSHBUTTON "Отмена", IDCANCEL, 134, 181, 54, 14
 END
 
 IDD_CARDBACK DIALOGEX 6, 6, 345, 185
@@ -55,6 +83,8 @@ BEGIN
     IDS_SOL_DEAL "Раздать ещё раз?"
     IDS_SOL_SCORE "Счёт: %d"
     IDS_SOL_TIME "Время: %d"
+    // TRANSLATORS: Machine translation; please review this new text.
+    IDS_SOL_NO_HINT "Прямой ход не найден."
 END
 
 /* Меню */
@@ -65,12 +95,17 @@ BEGIN
     BEGIN
         MENUITEM "Н&овая игра\tF2", IDM_GAME_NEW
         MENUITEM SEPARATOR
-        MENUITEM "&Undo", IDM_GAME_UNDO, GRAYED
+        // TRANSLATORS: Machine translation of previously English text; please review.
+        MENUITEM "&Отменить ход\tCtrl+Z", IDM_GAME_UNDO, GRAYED
+    // TRANSLATORS: Machine translation; please review this new text.
+        MENUITEM "Подсказка\tF3", IDM_GAME_HINT
         MENUITEM "&Обложки...", IDM_GAME_DECK
         MENUITEM "&Настройки...", IDM_GAME_OPTIONS
         MENUITEM SEPARATOR
         MENUITEM "&Выход", IDM_GAME_EXIT
     END
+    // TRANSLATORS: Machine translation; please review this new text.
+    MENUITEM "Собрать карты", IDM_GAME_FINISH, GRAYED
     POPUP "&Помощь"
     BEGIN
         MENUITEM "&Справка\tF1", IDM_HELP_CONTENTS
@@ -84,4 +119,6 @@ IDR_ACCELERATOR1 ACCELERATORS
 BEGIN
     VK_F1, IDM_HELP_CONTENTS, VIRTKEY, NOINVERT
     VK_F2, IDM_GAME_NEW, VIRTKEY, NOINVERT
+    "Z", IDM_GAME_UNDO, VIRTKEY, CONTROL, NOINVERT
+    VK_F3, IDM_GAME_HINT, VIRTKEY, NOINVERT
 END

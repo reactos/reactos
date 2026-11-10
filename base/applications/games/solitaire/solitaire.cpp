@@ -23,6 +23,8 @@ TCHAR MsgAbout[128];
 TCHAR MsgWin[128];
 TCHAR MsgDeal[128];
 DWORD dwOptions = OPTION_THREE_CARDS;
+DWORD dwWinAnimationMode = WIN_ANIMATION_WINDOW;
+DWORD dwWinAnimationSpeed = WIN_SPEED_DEFAULT;
 
 DWORD dwTime;
 DWORD dwWasteCount;
@@ -89,6 +91,25 @@ VOID LoadSettings(VOID)
     if (dwBack >= CARDBACK_RES_START && dwBack < CARDBACK_RES_START + NUM_CARDBACKS)
         SolWnd.SetBackCardIdx(dwBack);
 
+    DWORD type, value;
+    dwSize = sizeof(value);
+    if (RegQueryValueEx(hKey, _T("WinAnimationMode"), NULL, &type,
+                        (LPBYTE)&value, &dwSize) == ERROR_SUCCESS &&
+        type == REG_DWORD && dwSize == sizeof(value) && value <= WIN_ANIMATION_DESKTOP)
+        dwWinAnimationMode = value;
+    dwSize = sizeof(value);
+    if (RegQueryValueEx(hKey, _T("WinAnimationSpeed"), NULL, &type,
+                        (LPBYTE)&value, &dwSize) == ERROR_SUCCESS &&
+        type == REG_DWORD && dwSize == sizeof(value) &&
+        value >= WIN_SPEED_MIN && value <= WIN_SPEED_MAX)
+        dwWinAnimationSpeed = value;
+
+    dwSize = sizeof(value);
+    if (RegQueryValueEx(hKey, _T("UndoLimit"), NULL, &type,
+                        (LPBYTE)&value, &dwSize) == ERROR_SUCCESS &&
+        type == REG_DWORD && dwSize == sizeof(value) && value <= UNDO_LIMIT_MAX)
+        dwUndoLimit = value;
+
     RegCloseKey(hKey);
 }
 
@@ -123,6 +144,14 @@ VOID SaveSettings(VOID)
                   REG_DWORD,
                   (CONST BYTE *)&dwBack,
                   sizeof(DWORD));
+
+    RegSetValueEx(hKey, _T("WinAnimationMode"), 0, REG_DWORD,
+                  (const BYTE *)&dwWinAnimationMode, sizeof(dwWinAnimationMode));
+    RegSetValueEx(hKey, _T("WinAnimationSpeed"), 0, REG_DWORD,
+                  (const BYTE *)&dwWinAnimationSpeed, sizeof(dwWinAnimationSpeed));
+
+    RegSetValueEx(hKey, _T("UndoLimit"), 0, REG_DWORD,
+                  (const BYTE *)&dwUndoLimit, sizeof(dwUndoLimit));
 
     RegCloseKey(hKey);
 }
@@ -183,6 +212,7 @@ void SetPlayTimer(void)
 
 void SetUndoMenuState(bool enable)
 {
+    PostMessage(hwndMain, WM_SOL_STATECHANGED, 0, 0);
     if (enable)
     {
         EnableMenuItem(hGameMenu, IDM_GAME_UNDO, MF_BYCOMMAND | MF_ENABLED);
@@ -232,7 +262,7 @@ int WINAPI _tWinMain(HINSTANCE hInst, HINSTANCE hPrev, LPTSTR szCmdLine, int iCm
     RegisterClass(&wndclass);
 
     ice.dwSize = sizeof(ice);
-    ice.dwICC = ICC_BAR_CLASSES;
+    ice.dwICC = ICC_BAR_CLASSES | ICC_UPDOWN_CLASS;
     InitCommonControlsEx(&ice);
 
     srand((unsigned)GetTickCount());//timeGetTime());
@@ -274,6 +304,23 @@ int WINAPI _tWinMain(HINSTANCE hInst, HINSTANCE hPrev, LPTSTR szCmdLine, int iCm
 
     while(GetMessage(&msg, NULL,0,0))
     {
+        if (IsAutoFinishActive() &&
+            (msg.message == WM_KEYDOWN || msg.message == WM_SYSKEYDOWN ||
+             msg.message == WM_LBUTTONDOWN || msg.message == WM_RBUTTONDOWN ||
+             msg.message == WM_MBUTTONDOWN || msg.message == WM_NCLBUTTONDOWN))
+        {
+            StopAutoFinish();
+            if (msg.message == WM_KEYDOWN && msg.wParam == VK_ESCAPE)
+                continue;
+        }
+        if (IsDesktopWinAnimation() &&
+            (msg.message == WM_KEYDOWN || msg.message == WM_SYSKEYDOWN ||
+             msg.message == WM_LBUTTONDOWN || msg.message == WM_RBUTTONDOWN ||
+             msg.message == WM_MBUTTONDOWN))
+        {
+            StopWinAnimation(true);
+            continue;
+        }
         if(!TranslateAccelerator(hwnd, hAccelTable, &msg))
         {
             TranslateMessage(&msg);
@@ -287,13 +334,84 @@ int WINAPI _tWinMain(HINSTANCE hInst, HINSTANCE hPrev, LPTSTR szCmdLine, int iCm
 }
 
 
+struct AnimationSettings
+{
+    DWORD mode, speed;
+};
+
+static void UpdateSpeedLabel(HWND dlg)
+{
+    TCHAR text[16];
+    wsprintf(text, TEXT("%u %%"), (UINT)SendDlgItemMessage(dlg, IDC_ANIM_SPEED, TBM_GETPOS, 0, 0));
+    SetDlgItemText(dlg, IDC_ANIM_VALUE, text);
+}
+
+static INT_PTR CALLBACK AnimationDlgProc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp)
+{
+    AnimationSettings *settings = (AnimationSettings *)GetWindowLongPtr(dlg, DWLP_USER);
+    switch (msg)
+    {
+        case WM_INITDIALOG:
+            settings = (AnimationSettings *)lp;
+            SetWindowLongPtr(dlg, DWLP_USER, lp);
+            CheckRadioButton(dlg, IDC_ANIM_WINDOW, IDC_ANIM_DESKTOP,
+                             IDC_ANIM_WINDOW + settings->mode);
+            SendDlgItemMessage(dlg, IDC_ANIM_SPEED, TBM_SETRANGE, TRUE,
+                               MAKELPARAM(WIN_SPEED_MIN, WIN_SPEED_MAX));
+            SendDlgItemMessage(dlg, IDC_ANIM_SPEED, TBM_SETLINESIZE, 0, 10);
+            SendDlgItemMessage(dlg, IDC_ANIM_SPEED, TBM_SETPAGESIZE, 0, 25);
+            SendDlgItemMessage(dlg, IDC_ANIM_SPEED, TBM_SETTIC, 0, WIN_SPEED_DEFAULT);
+            SendDlgItemMessage(dlg, IDC_ANIM_SPEED, TBM_SETPOS, TRUE, settings->speed);
+            UpdateSpeedLabel(dlg);
+            return TRUE;
+        case WM_HSCROLL:
+            StopWinAnimation(false);
+            UpdateSpeedLabel(dlg);
+            return TRUE;
+        case WM_COMMAND:
+            StopWinAnimation(false);
+            switch (LOWORD(wp))
+            {
+                case IDC_ANIM_PREVIEW:
+                {
+                    DWORD mode = WIN_ANIMATION_WINDOW;
+                    for (DWORD i = WIN_ANIMATION_WINDOW; i <= WIN_ANIMATION_DESKTOP; ++i)
+                        if (IsDlgButtonChecked(dlg, IDC_ANIM_WINDOW + i) == BST_CHECKED) mode = i;
+                    PreviewWinAnimation(mode, SendDlgItemMessage(dlg, IDC_ANIM_SPEED, TBM_GETPOS, 0, 0), dlg);
+                    return TRUE;
+                }
+                case IDC_ANIM_DEFAULT:
+                    SendDlgItemMessage(dlg, IDC_ANIM_SPEED, TBM_SETPOS, TRUE, WIN_SPEED_DEFAULT);
+                    UpdateSpeedLabel(dlg);
+                    return TRUE;
+                case IDOK:
+                    for (DWORD mode = WIN_ANIMATION_WINDOW; mode <= WIN_ANIMATION_DESKTOP; ++mode)
+                        if (IsDlgButtonChecked(dlg, IDC_ANIM_WINDOW + mode) == BST_CHECKED)
+                            settings->mode = mode;
+                    settings->speed = SendDlgItemMessage(dlg, IDC_ANIM_SPEED, TBM_GETPOS, 0, 0);
+                    EndDialog(dlg, TRUE);
+                    return TRUE;
+                case IDCANCEL:
+                    EndDialog(dlg, FALSE);
+                    return TRUE;
+            }
+            break;
+    }
+    return FALSE;
+}
+
 INT_PTR CALLBACK OptionsDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     HWND hCtrl;
+    AnimationSettings *animation = (AnimationSettings *)GetWindowLongPtr(hDlg, DWLP_USER);
 
     switch (uMsg)
     {
     case WM_INITDIALOG:
+        SetWindowLongPtr(hDlg, DWLP_USER, lParam);
+        SendDlgItemMessage(hDlg, IDC_OPT_UNDO_SPIN, UDM_SETRANGE32, 0, UNDO_LIMIT_MAX);
+        SendDlgItemMessage(hDlg, IDC_OPT_UNDO_SPIN, UDM_SETPOS32, 0, dwUndoLimit);
+        SendDlgItemMessage(hDlg, IDC_OPT_UNDO_LIMIT, EM_SETLIMITTEXT, 1, 0);
          // For now, the Help dialog item is disabled because of lacking of HTML Help support
         EnableMenuItem(GetMenu(hDlg), IDM_HELP_CONTENTS, MF_BYCOMMAND | MF_GRAYED);
 
@@ -334,6 +452,11 @@ INT_PTR CALLBACK OptionsDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
     case WM_COMMAND:
         switch(LOWORD(wParam))
         {
+        case IDC_OPT_ANIMATION:
+            DialogBoxParam(hInstance, MAKEINTRESOURCE(IDD_ANIMATION), hDlg,
+                           AnimationDlgProc, (LPARAM)animation);
+            return TRUE;
+
         case IDC_OPT_NOSCORE:
         case IDC_OPT_STANDARD:
         case IDC_OPT_VEGAS:
@@ -345,6 +468,17 @@ INT_PTR CALLBACK OptionsDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
             return TRUE;
 
         case IDOK:
+        {
+            BOOL valid;
+            UINT undoLimit = GetDlgItemInt(hDlg, IDC_OPT_UNDO_LIMIT, &valid, FALSE);
+            if (!valid || undoLimit > UNDO_LIMIT_MAX)
+            {
+                SetFocus(GetDlgItem(hDlg, IDC_OPT_UNDO_LIMIT));
+                return TRUE;
+            }
+            SetUndoLimit(undoLimit);
+            dwWinAnimationMode = animation->mode;
+            dwWinAnimationSpeed = animation->speed;
             dwOptions &= ~OPTION_THREE_CARDS;
             if (IsDlgButtonChecked(hDlg, IDC_OPT_DRAWTHREE) == BST_CHECKED)
                 dwOptions |= OPTION_THREE_CARDS;
@@ -384,6 +518,7 @@ INT_PTR CALLBACK OptionsDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 
             EndDialog(hDlg, TRUE);
             return TRUE;
+        }
 
         case IDCANCEL:
             EndDialog(hDlg, FALSE);
@@ -401,7 +536,9 @@ VOID ShowGameOptionsDlg(HWND hwnd)
 
     int iOldScoreMode = GetScoreMode();
 
-    if (DialogBox(hInstance, MAKEINTRESOURCE(IDD_OPTIONS), hwnd, OptionsDlgProc))
+    AnimationSettings animation = {dwWinAnimationMode, dwWinAnimationSpeed};
+    if (DialogBoxParam(hInstance, MAKEINTRESOURCE(IDD_OPTIONS), hwnd, OptionsDlgProc,
+                       (LPARAM)&animation) == TRUE)
     {
         if (((dwOldOptions & OPTION_THREE_CARDS) != (dwOptions & OPTION_THREE_CARDS)) ||
             ((dwOldOptions & OPTION_SHOW_TIME) != (dwOptions & OPTION_SHOW_TIME)) ||
@@ -626,6 +763,8 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
     {
         case WM_CREATE:
         {
+            hwndMain = hwnd;
+            hGameMenu = GetSubMenu(GetMenu(hwnd), 0);
             int parts[] = { 150, -1 };
             RECT rcStatus;
 
@@ -656,7 +795,7 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
 
             SetWindowPos(hwnd, NULL, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOZORDER);
 
-            NewGame();
+            if (!LoadGame()) NewGame();
 
             dwAppStartTime = GetTickCount();
 
@@ -664,8 +803,28 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
         }
 
         case WM_DESTROY:
+            StopAutoFinish();
             StopWinAnimation(false);
             PostQuitMessage(0);
+            return 0;
+
+        case WM_DISPLAYCHANGE:
+            StopAutoFinish();
+            StopWinAnimation(false);
+            break;
+
+        case WM_ACTIVATEAPP:
+            if (!wParam)
+            {
+                StopAutoFinish();
+                if (IsDesktopWinAnimation())
+                    StopWinAnimation(false);
+            }
+            break;
+
+        case WM_SOL_STATECHANGED:
+            UpdateAutoFinishMenu();
+            SaveGame();
             return 0;
 
         case WM_SOL_WINSTART:
@@ -677,6 +836,11 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
             return 0;
 
         case WM_TIMER:
+            if (wParam == IDT_AUTOFINISH)
+            {
+                AutoFinishStep();
+                return 0;
+            }
             if (wParam != IDT_PLAYTIMER)
                 return 0;
             if (!fGameStarted)
@@ -698,6 +862,7 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
             return 0;
 
         case WM_SIZE:
+            StopAutoFinish();
             StopWinAnimation(false);
             nWidth  = LOWORD(lParam);
             nHeight = HIWORD(lParam);
@@ -734,9 +899,18 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
         }
 
         case WM_COMMAND:
+            StopAutoFinish();
             StopWinAnimation(false);
             switch(LOWORD(wParam))
             {
+            case IDM_GAME_HINT:
+                ShowHint();
+                return 0;
+
+            case IDM_GAME_FINISH:
+                StartAutoFinish();
+                return 0;
+
             case IDM_GAME_NEW:
                 //simulate a button click on the new button..
                 NewGame();
@@ -770,9 +944,21 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
 
             return 0;
 
+        case WM_QUERYENDSESSION:
+            return TRUE;
+
+        case WM_ENDSESSION:
+            if (wParam)
+            {
+                SaveGame();
+                SaveSettings();
+            }
+            return 0;
+
         case WM_CLOSE:
             if (fGameStarted == false)
             {
+                SaveGame();
                 DestroyWindow(hwnd);
                 return 0;
             }
@@ -784,6 +970,7 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
                 if (ret == IDYES)
                 {
                     WinHelp(hwnd, szHelpPath, HELP_QUIT, 0);
+                    SaveGame();
                     DestroyWindow(hwnd);
                 }
             }

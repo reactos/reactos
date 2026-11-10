@@ -2,23 +2,54 @@ LANGUAGE LANG_SWEDISH, SUBLANG_NEUTRAL
 
 /* Dialogs */
 
-IDD_OPTIONS DIALOGEX 0, 0, 186, 118
+IDD_OPTIONS DIALOGEX 0, 0, 300, 160
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | DS_SHELLFONT
-CAPTION "Options"
+// TRANSLATORS: Machine translation of previously English text; please review.
+CAPTION "Alternativ"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Kort", -1, 7, 7, 90, 40
-    AUTORADIOBUTTON "Dra &En", IDC_OPT_DRAWONE, 14, 19, 70, 10, WS_GROUP | WS_TABSTOP
-    AUTORADIOBUTTON "Dra &Tre", IDC_OPT_DRAWTHREE, 14, 32, 70, 10
-    GROUPBOX "Scoring", -1, 100, 7, 75, 53
-    AUTORADIOBUTTON "&Standard", IDC_OPT_STANDARD, 107, 19, 60, 10, WS_GROUP | WS_TABSTOP
-    AUTORADIOBUTTON "&Vegas", IDC_OPT_VEGAS, 107, 32, 60, 10
-    AUTORADIOBUTTON "&None", IDC_OPT_NOSCORE, 107, 45, 60, 10
-    AUTOCHECKBOX "&Visa Tid", IDC_OPT_SHOWTIME, 7 ,51 ,65 ,10, WS_TABSTOP
-    AUTOCHECKBOX "&Statusfält", IDC_OPT_STATUSBAR, 7, 66, 64, 10, WS_TABSTOP
-    AUTOCHECKBOX "&Keep Score", IDC_OPT_KEEPSCORE, 100, 66, 65, 10, WS_TABSTOP
-    DEFPUSHBUTTON "OK", IDOK, 35, 97, 50, 14
-    PUSHBUTTON "Avbryt", IDCANCEL, 101, 97, 50, 14
+    GROUPBOX "Kort", -1, 7, 7, 135, 40
+    AUTORADIOBUTTON "Dra &En", IDC_OPT_DRAWONE, 14, 19, 120, 10, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "Dra &Tre", IDC_OPT_DRAWTHREE, 14, 32, 120, 10
+    // TRANSLATORS: Machine translation of previously English text; please review.
+    GROUPBOX "Poängräkning", -1, 150, 7, 143, 53
+    AUTORADIOBUTTON "&Standard", IDC_OPT_STANDARD, 157, 19, 126, 10, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "&Vegas", IDC_OPT_VEGAS, 157, 32, 126, 10
+    // TRANSLATORS: Machine translation of previously English text; please review.
+    AUTORADIOBUTTON "&Ingen", IDC_OPT_NOSCORE, 157, 45, 126, 10
+    AUTOCHECKBOX "&Visa Tid", IDC_OPT_SHOWTIME, 7, 51, 135,10, WS_TABSTOP
+    AUTOCHECKBOX "&Statusfält", IDC_OPT_STATUSBAR, 7, 66, 135, 10, WS_TABSTOP
+    // TRANSLATORS: Machine translation of previously English text; please review.
+    AUTOCHECKBOX "&Behåll poäng", IDC_OPT_KEEPSCORE, 150, 66, 143, 10, WS_TABSTOP
+    // TRANSLATORS: Machine translation; please review this new text.
+    LTEXT "Ångra steg (0 = av):", -1, 7, 83, 225, 24
+    EDITTEXT IDC_OPT_UNDO_LIMIT, 250, 84, 37, 14, ES_NUMBER | ES_RIGHT | WS_TABSTOP
+    CONTROL "", IDC_OPT_UNDO_SPIN, "msctls_updown32", UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_SETBUDDYINT | UDS_ARROWKEYS, 274, 84, 13, 14
+    // TRANSLATORS: Machine translation; please review this new text.
+    PUSHBUTTON "Vinstanimation...", IDC_OPT_ANIMATION, 7, 110, 286, 18, WS_TABSTOP
+    DEFPUSHBUTTON "OK", IDOK, 82, 139, 60, 14
+    PUSHBUTTON "Avbryt", IDCANCEL, 158, 139, 60, 14
+END
+
+// TRANSLATORS: The following dialog is machine-translated; please review all new text.
+IDD_ANIMATION DIALOGEX 0, 0, 260, 202
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | DS_SHELLFONT
+CAPTION "Vinstanimation"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    AUTORADIOBUTTON "I fönstret (klassisk)", IDC_ANIM_WINDOW, 10, 10, 240, 12, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "På den här skärmen", IDC_ANIM_MONITOR, 10, 27, 240, 12
+    AUTORADIOBUTTON "På alla skärmar", IDC_ANIM_DESKTOP, 10, 44, 240, 12
+    GROUPBOX "Hastighet", -1, 7, 64, 246, 82
+    CONTROL "", IDC_ANIM_SPEED, "msctls_trackbar32", WS_TABSTOP | TBS_HORZ, 14, 78, 232, 24
+    LTEXT "50 %", -1, 16, 103, 35, 10
+    CTEXT "100 %", IDC_ANIM_VALUE, 103, 103, 54, 10
+    RTEXT "200 %", -1, 209, 103, 35, 10
+    PUSHBUTTON "Standard: 100 %", IDC_ANIM_DEFAULT, 55, 119, 150, 18
+    // TRANSLATORS: Machine translation; please review this new text.
+    PUSHBUTTON "Förhandsvisning (5 sekunder)", IDC_ANIM_PREVIEW, 55, 153, 150, 18
+    DEFPUSHBUTTON "OK", IDOK, 72, 181, 54, 14
+    PUSHBUTTON "Avbryt", IDCANCEL, 134, 181, 54, 14
 END
 
 IDD_CARDBACK DIALOGEX 6, 6, 345, 185
@@ -51,8 +82,12 @@ BEGIN
     IDS_SOL_QUIT "Avsluta nuvarande spel?"
     IDS_SOL_WIN "Grattis, du vann!"
     IDS_SOL_DEAL "Ge igen?"
-    IDS_SOL_SCORE "Score: %d"
-    IDS_SOL_TIME "Time: %d"
+    // TRANSLATORS: Machine translation of previously English text; please review.
+    IDS_SOL_SCORE "Poäng: %d"
+    // TRANSLATORS: Machine translation of previously English text; please review.
+    IDS_SOL_TIME "Tid: %d"
+    // TRANSLATORS: Machine translation; please review this new text.
+    IDS_SOL_NO_HINT "Inget direkt drag hittades."
 END
 
 /* Menus */
@@ -63,12 +98,17 @@ BEGIN
     BEGIN
         MENUITEM "&Ge\tF2", IDM_GAME_NEW
         MENUITEM SEPARATOR
-        MENUITEM "&Undo", IDM_GAME_UNDO, GRAYED
+        // TRANSLATORS: Machine translation of previously English text; please review.
+        MENUITEM "&Ångra\tCtrl+Z", IDM_GAME_UNDO, GRAYED
+    // TRANSLATORS: Machine translation; please review this new text.
+        MENUITEM "Tips\tF3", IDM_GAME_HINT
         MENUITEM "&Kortlek...", IDM_GAME_DECK
         MENUITEM "&Alternativ...", IDM_GAME_OPTIONS
         MENUITEM SEPARATOR
         MENUITEM "&Avsluta", IDM_GAME_EXIT
     END
+    // TRANSLATORS: Machine translation; please review this new text.
+    MENUITEM "Samla kort", IDM_GAME_FINISH, GRAYED
     POPUP "&Hjälp"
     BEGIN
         MENUITEM "&Innehåll\tF1", IDM_HELP_CONTENTS
@@ -82,4 +122,6 @@ IDR_ACCELERATOR1 ACCELERATORS
 BEGIN
     VK_F1, IDM_HELP_CONTENTS, VIRTKEY, NOINVERT
     VK_F2, IDM_GAME_NEW, VIRTKEY, NOINVERT
+    "Z", IDM_GAME_UNDO, VIRTKEY, CONTROL, NOINVERT
+    VK_F3, IDM_GAME_HINT, VIRTKEY, NOINVERT
 END
