@@ -22,6 +22,7 @@ void NewGame(void)
     FinishScoreRound(false);
     StopAutoFinish();
     StopWinAnimation(false);
+    if (PromptScoreName() == IDCANCEL || !IsWindow(hwndMain)) return;
     int i, j;
     LONG base = 0;
 

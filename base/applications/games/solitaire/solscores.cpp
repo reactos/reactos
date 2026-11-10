@@ -13,6 +13,7 @@ struct ScoreEntry
     LONG score;
     DWORD seconds, won;
     FILETIME round, finished;
+    WCHAR name[32];
 };
 struct ScoreBoards
 {
@@ -22,7 +23,14 @@ struct ScoreBoards
 static DWORD roundOptions;
 static LONG roundBase;
 static FILETIME roundId;
-static bool roundReady, roundRecorded;
+static bool roundReady, roundRecorded, namePending;
+static FILETIME nameRound;
+static HWND nameEdit;
+
+bool IsScoreNameInput(void)
+{
+    return nameEdit != NULL && GetFocus() == nameEdit;
+}
 
 static int ScoreMode(DWORD options)
 {
@@ -49,14 +57,32 @@ static bool Better(const ScoreEntry &a, const ScoreEntry &b, bool timed)
 static void ReadBoards(ScoreBoards &boards)
 {
     ZeroMemory(&boards, sizeof(boards));
-    boards.version = 1;
+    boards.version = 2;
     HKEY key;
     if (RegOpenKeyExW(HKEY_CURRENT_USER, scoreKey, 0, KEY_QUERY_VALUE, &key) != ERROR_SUCCESS) return;
-    ScoreBoards stored;
+    struct OldEntry { LONG score; DWORD seconds, won; FILETIME round, finished; };
+    struct OldBoards { DWORD version, count[boardCount]; OldEntry entries[boardCount][entryCount]; };
+    ScoreBoards stored = {};
     DWORD type, size = sizeof(stored);
     LONG result = RegQueryValueExW(key, L"HighScores", NULL, &type, (BYTE *)&stored, &size);
+    if (result == ERROR_SUCCESS && type == REG_BINARY &&
+        stored.version == 1 && size == sizeof(OldBoards))
+    {
+        OldBoards old = {};
+        size = sizeof(old);
+        result = RegQueryValueExW(key, L"HighScores", NULL, &type, (BYTE *)&old, &size);
+        ZeroMemory(&stored, sizeof(stored));
+        stored.version = 2;
+        for (int b = 0; b < boardCount; ++b)
+        {
+            stored.count[b] = old.count[b];
+            for (int i = 0; i < entryCount; ++i)
+                CopyMemory(&stored.entries[b][i], &old.entries[b][i], sizeof(OldEntry));
+        }
+        size = sizeof(stored);
+    }
     RegCloseKey(key);
-    if (result != ERROR_SUCCESS || type != REG_BINARY || size != sizeof(stored) || stored.version != 1) return;
+    if (result != ERROR_SUCCESS || type != REG_BINARY || size != sizeof(stored) || stored.version != 2) return;
     for (int board = 0; board < boardCount; ++board)
     {
         if (stored.count[board] > entryCount) return;
@@ -64,7 +90,8 @@ static void ReadBoards(ScoreBoards &boards)
         {
             const ScoreEntry &entry = stored.entries[board][i];
             SYSTEMTIME date;
-            if (entry.score < (board < 4 ? 0 : -52) || entry.score > (board < 4 ? scoreBound : 208) ||
+            if (entry.name[ARRAYSIZE(entry.name) - 1] != 0 ||
+                entry.score < (board < 4 ? 0 : -52) || entry.score > (board < 4 ? scoreBound : 208) ||
                 entry.seconds > 31536000 || entry.won > 1 || (board < 4 && !entry.won) ||
                 (!entry.round.dwLowDateTime && !entry.round.dwHighDateTime) ||
                 !FileTimeToSystemTime(&entry.finished, &date)) return;
@@ -115,6 +142,7 @@ void SaveScoreBalance(void)
 
 void StartScoreRound(LONG base)
 {
+    namePending = false;
     roundOptions = dwOptions;
     roundBase = base;
     FILETIME now;
@@ -189,7 +217,106 @@ void FinishScoreRound(bool won)
         result = RegSetValueExW(key, L"HighScores", 0, REG_BINARY, (const BYTE *)&boards, sizeof(boards));
         RegCloseKey(key);
     }
+    if (result == ERROR_SUCCESS)
+    {
+        namePending = true;
+        nameRound = entry.round;
+    }
     if (result != ERROR_SUCCESS || !balanceSaved) ReportScoreError();
+}
+
+struct NameDialog
+{
+    WCHAR name[32];
+    LONG score;
+    DWORD rank;
+};
+
+static INT_PTR CALLBACK NameDlgProc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp)
+{
+    NameDialog *data = (NameDialog *)GetWindowLongPtr(dlg, DWLP_USER);
+    switch (msg)
+    {
+        case WM_INITDIALOG:
+        {
+            data = (NameDialog *)lp;
+            SetWindowLongPtr(dlg, DWLP_USER, lp);
+            WCHAR format[128], text[256];
+            LoadStringW(GetModuleHandle(NULL), IDS_HOF_PLACEMENT, format, ARRAYSIZE(format));
+            wsprintfW(text, format, data->rank, data->score);
+            SetDlgItemTextW(dlg, IDC_HOF_PLACEMENT, text);
+            nameEdit = GetDlgItem(dlg, IDC_HOF_NAME);
+            SendMessage(nameEdit, EM_SETLIMITTEXT, ARRAYSIZE(data->name) - 1, 0);
+            SetWindowTextW(nameEdit, data->name);
+            SetFocus(nameEdit);
+            SendMessage(nameEdit, EM_SETSEL, 0, -1);
+            return FALSE;
+        }
+        case WM_CLOSE:
+            SendMessage(dlg, WM_COMMAND, IDCANCEL, 0);
+            return TRUE;
+        case WM_COMMAND:
+            if (LOWORD(wp) == IDOK || LOWORD(wp) == IDCANCEL)
+            {
+                GetDlgItemTextW(dlg, IDC_HOF_NAME, data->name, ARRAYSIZE(data->name));
+                EndDialog(dlg, LOWORD(wp));
+                return TRUE;
+            }
+            break;
+        case WM_DESTROY:
+            nameEdit = NULL;
+            break;
+    }
+    return FALSE;
+}
+
+// IDIGNORE means no qualifying result; otherwise the dialog replaces the deal prompt.
+int PromptScoreName(void)
+{
+    if (!namePending) return IDIGNORE;
+    namePending = false;
+    ScoreBoards boards;
+    ReadBoards(boards);
+    ScoreEntry *entry = NULL;
+    NameDialog data = {};
+    for (int b = 0; b < boardCount; ++b)
+        for (DWORD i = 0; i < boards.count[b]; ++i)
+            if (SameRound(boards.entries[b][i].round, nameRound))
+            {
+                entry = &boards.entries[b][i];
+                data.rank = i + 1;
+                data.score = entry->score;
+            }
+    if (!entry) return IDIGNORE;
+    HKEY key;
+    if (RegOpenKeyExW(HKEY_CURRENT_USER, scoreKey, 0, KEY_QUERY_VALUE, &key) == ERROR_SUCCESS)
+    {
+        DWORD type, size = sizeof(data.name);
+        if (RegQueryValueExW(key, L"LastPlayerName", NULL, &type, (BYTE *)data.name, &size) != ERROR_SUCCESS ||
+            type != REG_SZ || size < sizeof(WCHAR) || size % sizeof(WCHAR)) data.name[0] = 0;
+        data.name[ARRAYSIZE(data.name) - 1] = 0;
+        RegCloseKey(key);
+    }
+    fGameStarted = false;
+    INT_PTR choice = DialogBoxParamW(GetModuleHandle(NULL), MAKEINTRESOURCEW(IDD_SCORENAME),
+                                    hwndMain, NameDlgProc, (LPARAM)&data);
+    if (!IsWindow(hwndMain)) return IDCANCEL;
+    if (choice != IDOK && choice != IDCANCEL) return IDIGNORE;
+    lstrcpynW(entry->name, data.name, ARRAYSIZE(entry->name));
+    LONG result = RegCreateKeyExW(HKEY_CURRENT_USER, scoreKey, 0, NULL, 0, KEY_SET_VALUE, NULL, &key, NULL);
+    if (result == ERROR_SUCCESS)
+    {
+        result = RegSetValueExW(key, L"HighScores", 0, REG_BINARY, (BYTE *)&boards, sizeof(boards));
+        if (result == ERROR_SUCCESS)
+            result = RegSetValueExW(key, L"LastPlayerName", 0, REG_SZ, (BYTE *)data.name,
+                                   (lstrlenW(data.name) + 1) * sizeof(WCHAR));
+        // This round is finished, even when its Vegas board is not cleared yet.
+        if (choice == IDCANCEL) RegDeleteValueW(key, L"SavedGame");
+        RegCloseKey(key);
+    }
+    if (result != ERROR_SUCCESS) ReportScoreError();
+    if (choice == IDCANCEL) DestroyWindow(hwndMain);
+    return (int)choice;
 }
 
 static void FillScores(HWND dlg)
@@ -223,6 +350,7 @@ static void FillScores(HWND dlg)
         ListView_SetItemText(list, i, 3, text);
         LoadStringW(GetModuleHandle(NULL), entry.won ? IDS_HOF_WON : IDS_HOF_ENDED, text, ARRAYSIZE(text));
         ListView_SetItemText(list, i, 4, text);
+        ListView_SetItemText(list, i, 5, const_cast<LPWSTR>(entry.name[0] ? entry.name : L"—"));
     }
 }
 
@@ -242,11 +370,11 @@ static INT_PTR CALLBACK ScoresDlgProc(HWND dlg, UINT msg, WPARAM wp, LPARAM)
             SendDlgItemMessage(dlg, IDC_HOF_MODE, CB_SETCURSEL, GetScoreMode() == SCORE_VEGAS ? 1 : 0, 0);
             SendDlgItemMessage(dlg, IDC_HOF_DRAW, CB_SETCURSEL, (dwOptions & OPTION_THREE_CARDS) ? 1 : 0, 0);
             CheckDlgButton(dlg, IDC_HOF_TIMED, (dwOptions & OPTION_SHOW_TIME) ? BST_CHECKED : BST_UNCHECKED);
-            const int headers[] = {IDS_HOF_RANK, IDS_HOF_SCORE, IDS_HOF_TIME, IDS_HOF_DATE, IDS_HOF_RESULT};
-            const int widths[] = {35, 65, 65, 100, 125};
+            const int headers[] = {IDS_HOF_RANK, IDS_HOF_SCORE, IDS_HOF_TIME, IDS_HOF_DATE, IDS_HOF_RESULT, IDS_HOF_NAME};
+            const int widths[] = {25, 50, 45, 65, 65, 140};
             HWND list = GetDlgItem(dlg, IDC_HOF_LIST);
             ListView_SetExtendedListViewStyle(list, LVS_EX_FULLROWSELECT | LVS_EX_GRIDLINES);
-            for (int i = 0; i < 5; ++i)
+            for (int i = 0; i < 6; ++i)
             {
                 LoadStringW(GetModuleHandle(NULL), headers[i], text, ARRAYSIZE(text));
                 RECT units = {0, 0, widths[i], 0};
