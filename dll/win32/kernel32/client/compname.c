@@ -701,28 +701,45 @@ DnsHostnameToComputerNameA(LPCSTR Hostname,
                            LPSTR ComputerName,
                            LPDWORD nSize)
 {
-    DWORD len;
+    UNICODE_STRING HostnameU;
+    WCHAR ComputerNameW[MAX_COMPUTERNAME_LENGTH + 1];
+    DWORD SizeW = ARRAYSIZE(ComputerNameW);
+    BOOL Ret;
 
     DPRINT("(%s, %p, %p)\n", Hostname, ComputerName, nSize);
 
-    if (!Hostname || !nSize)
+    if (!nSize)
         return FALSE;
 
-    len = lstrlenA(Hostname);
-
-    if (len > MAX_COMPUTERNAME_LENGTH)
-        len = MAX_COMPUTERNAME_LENGTH;
-
-    if (*nSize < len)
+    if (!Hostname)
     {
-        *nSize = len;
+        SetLastError(ERROR_INVALID_COMPUTERNAME);
         return FALSE;
     }
 
-    if (!ComputerName) return FALSE;
+    if (!RtlCreateUnicodeStringFromAsciiz(&HostnameU, Hostname))
+    {
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        return FALSE;
+    }
 
-    memcpy(ComputerName, Hostname, len);
-    ComputerName[len + 1] = 0;
+    Ret = DnsHostnameToComputerNameW(HostnameU.Buffer, ComputerNameW, &SizeW);
+    RtlFreeUnicodeString(&HostnameU);
+    if (!Ret)
+        return FALSE;
+
+    if (*nSize < SizeW + 1)
+    {
+        *nSize = SizeW;
+        SetLastError(ERROR_MORE_DATA);
+        return FALSE;
+    }
+
+    if (!ComputerName)
+        return FALSE;
+
+    WideCharToMultiByte(CP_ACP, 0, ComputerNameW, SizeW + 1, ComputerName, *nSize, NULL, NULL);
+    *nSize = SizeW;
     return TRUE;
 }
 
@@ -736,25 +753,39 @@ DnsHostnameToComputerNameW(LPCWSTR hostname,
                            LPWSTR computername,
                            LPDWORD size)
 {
-    DWORD len;
+    DWORD len, i;
 
-    DPRINT("(%s, %p, %p): stub\n", hostname, computername, size);
+    DPRINT("(%S, %p, %p)\n", hostname, computername, size);
 
-    if (!hostname || !size) return FALSE;
-    len = lstrlenW(hostname);
+    if (!size)
+        return FALSE;
+
+    if (!hostname || !*hostname)
+    {
+        SetLastError(ERROR_INVALID_COMPUTERNAME);
+        return FALSE;
+    }
+
+    /* The computer name is the leftmost label of the DNS name */
+    for (len = 0; hostname[len] && hostname[len] != L'.'; len++);
 
     if (len > MAX_COMPUTERNAME_LENGTH)
         len = MAX_COMPUTERNAME_LENGTH;
 
-    if (*size < len)
+    if (*size < len + 1)
     {
         *size = len;
+        SetLastError(ERROR_MORE_DATA);
         return FALSE;
     }
-    if (!computername) return FALSE;
 
-    memcpy(computername, hostname, len * sizeof(WCHAR));
-    computername[len + 1] = 0;
+    if (!computername)
+        return FALSE;
+
+    for (i = 0; i < len; i++)
+        computername[i] = RtlUpcaseUnicodeChar(hostname[i]);
+    computername[len] = UNICODE_NULL;
+    *size = len;
     return TRUE;
 }
 
