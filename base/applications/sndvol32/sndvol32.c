@@ -864,56 +864,6 @@ done:
 }
 
 /*
- * Returns the direction the mixer controls have to be scrolled to.
- * It returns -1 to scroll to the left and 1 to scroll to the right.
- *
- * The notification codes of horizontal scroll bars are not compatible between
- * Windows and ReactOS, therefore the position of the mouse pointer is used to
- * determine the direction of the request.
- */
-static INT
-GetHorizontalScrollDirection(
-    _In_ PMIXER_WINDOW MixerWindow,
-    _In_ BOOL bTrackClick)
-{
-    RECT ClientRect;
-    POINT Point;
-    INT ClientWidth, ArrowWidth, TrackWidth, ThumbWidth, ThumbPos, ScrollRange;
-
-    GetClientRect(MixerWindow->hWnd, &ClientRect);
-    ClientWidth = ClientRect.right - ClientRect.left;
-
-    /* Get the position of the mouse pointer */
-    GetCursorPos(&Point);
-    ScreenToClient(MixerWindow->hWnd, &Point);
-
-    /* One of the arrow buttons has been clicked. The left button is at
-     * the left and the right button at the right of the client area. */
-    if (!bTrackClick)
-        return (Point.x < ClientWidth / 2) ? -1 : 1;
-
-    ArrowWidth = GetSystemMetrics(SM_CYHSCROLL);
-    TrackWidth = ClientWidth - 2 * ArrowWidth;
-    if (TrackWidth <= 0)
-    {
-        return (Point.x < ClientWidth / 2) ? -1 : 1;
-    }
-
-    /* Get the size and the position of the thumb */
-    ScrollRange = MixerWindow->ContentWidth - MixerWindow->ClientWidth;
-    ThumbWidth = TrackWidth * MixerWindow->ClientWidth / MixerWindow->ContentWidth;
-    ThumbWidth = max(ThumbWidth, GetSystemMetrics(SM_CXHTHUMB));
-    if (ThumbWidth > TrackWidth)
-        ThumbWidth = TrackWidth;
-
-    ThumbPos = ArrowWidth;
-    if (ScrollRange > 0)
-        ThumbPos += (TrackWidth - ThumbWidth) * MixerWindow->ScrollPos / ScrollRange;
-
-    return (Point.x < ThumbPos + ThumbWidth / 2) ? -1 : 1;
-}
-
-/*
  * Scrolls the mixer controls horizontally.
  *
  * ScrollCode is the scroll bar notification code and TrackPos is the new
@@ -941,23 +891,33 @@ ScrollMixerWindowHorizontally(
     switch (ScrollCode)
     {
         case SB_LINELEFT:
+            /* The left arrow button has been clicked */
+            NewPos = MixerWindow->ScrollPos - MIXER_HSCROLL_LINE_SIZE;
+            break;
+
         case SB_LINERIGHT:
-            NewPos = MixerWindow->ScrollPos +
-                     GetHorizontalScrollDirection(MixerWindow, FALSE) * MIXER_HSCROLL_LINE_SIZE;
+            /* The right arrow button has been clicked */
+            NewPos = MixerWindow->ScrollPos + MIXER_HSCROLL_LINE_SIZE;
             break;
 
         case SB_PAGELEFT:
+            /* The track has been clicked, left of the thumb */
+            NewPos = MixerWindow->ScrollPos - MixerWindow->ClientWidth;
+            break;
+
         case SB_PAGERIGHT:
-            NewPos = MixerWindow->ScrollPos +
-                     GetHorizontalScrollDirection(MixerWindow, TRUE) * MixerWindow->ClientWidth;
+            /* The track has been clicked, right of the thumb */
+            NewPos = MixerWindow->ScrollPos + MixerWindow->ClientWidth;
             break;
 
         case SB_THUMBPOSITION:
         case SB_THUMBTRACK:
+            /* The thumb has been moved */
             NewPos = TrackPos;
             break;
 
         default:
+            /* Ignore all other notifications */
             return;
     }
 
