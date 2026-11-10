@@ -36,6 +36,7 @@ list(APPEND _keyboard_layouts
     kbdfi
     kbdfo
     kbdfr
+    kbdgae
     kbdgeo
     kbdgerg
     kbdgneo
