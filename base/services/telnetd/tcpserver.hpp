@@ -31,6 +31,7 @@ class TCPServerSessionHandler
     {
         int remaining;
         bool started;
+        bool urgent;
     };
 
 public:
@@ -56,7 +57,7 @@ protected:
     void send_data(const void* data, int length);
 
     // Clears pending whole units.
-    void clear_pending_queue_then_send(const void* data, int length);
+    void clear_pending_queue_then_send(const void* data, int length, bool urgent = false);
 
     // Clears pending whole units.
     void clear_pending_send_queue() { clear_pending_queue_then_send(nullptr, 0); }
@@ -68,6 +69,7 @@ private:
     WSAEVENT m_event{WSA_INVALID_EVENT};
     volatile LONG m_disconnect_requested{0};
     std::deque<Unit> m_units;
+    size_t m_urgent_units{0};
 
     void _internal_on_connect(TCPServer* server, SOCKET s, WSAEVENT e);
     

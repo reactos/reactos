@@ -48,22 +48,24 @@ void TCPServerSessionHandler::send_data(const void* data, int length)
         m_send_queue.resize(m_send_queue_cursor + length);
     RtlCopyMemory(&m_send_queue[m_send_queue_cursor], data, length);
     m_send_queue_cursor += length;
-    m_units.push_back({length, false});
+    m_units.push_back({length, false, false});
 
     _internal_flush_send_queue(false);
 
     LeaveCriticalSection(&m_send_queue_cs);
 }
 
-void TCPServerSessionHandler::clear_pending_queue_then_send(const void* data, int length)
+void TCPServerSessionHandler::clear_pending_queue_then_send(const void* data, int length, bool urgent)
 {
     EnterCriticalSection(&m_send_queue_cs);
     
     if (m_units.size() && m_units.front().started) {
+        m_urgent_units = m_units.front().urgent ? 1 : 0;
         m_send_queue.resize(m_send_queue_cursor = m_units.front().remaining);
         m_units.resize(1);
     } else {
         m_units.clear();
+        m_urgent_units = 0;
         m_send_queue.clear();
         m_send_queue_cursor = 0;
     }
@@ -73,7 +75,10 @@ void TCPServerSessionHandler::clear_pending_queue_then_send(const void* data, in
             m_send_queue.resize(m_send_queue_cursor + length);
         RtlCopyMemory(&m_send_queue[m_send_queue_cursor], data, length);
         m_send_queue_cursor += length;
-        m_units.push_back({length, false});
+        m_units.push_back({length, false, urgent});
+        if (urgent) {
+            m_urgent_units++;
+        }
 
         _internal_flush_send_queue(false);
     }
@@ -87,6 +92,7 @@ bool TCPServerSessionHandler::_internal_flush_send_queue(bool lock)
 
     if (m_socket == INVALID_SOCKET) {
         m_send_queue_cursor = 0;
+        m_urgent_units = 0;
         m_units.clear();
         if (lock) LeaveCriticalSection(&m_send_queue_cs);
         return false;
@@ -97,7 +103,25 @@ bool TCPServerSessionHandler::_internal_flush_send_queue(bool lock)
     DWORD sent{0};
     while(m_send_queue_cursor > 0)
     {
-        const auto result = send(m_socket, buffer, (int)m_send_queue_cursor, 0);
+        auto& front= m_units.front();
+
+        int len = (int)m_send_queue_cursor;
+        int flags = 0;
+
+        if (front.urgent) {
+            len = front.remaining;
+            flags = MSG_OOB;
+        } else if (m_urgent_units != 0) {
+            len = 0;
+            for (size_t i = 0; i < m_units.size(); i++) {
+                if (m_units[i].urgent) {
+                    break;
+                }
+                len += m_units[i].remaining;
+            }
+        }
+
+        const auto result = send(m_socket, buffer, len, flags);
 
         if(result == SOCKET_ERROR) {
             m_send_queue.erase(m_send_queue.begin(), m_send_queue.begin() + sent);
@@ -123,6 +147,9 @@ bool TCPServerSessionHandler::_internal_flush_send_queue(bool lock)
             unit.remaining -= t;
             left -= t;
             if (!unit.remaining) {
+                if (unit.urgent) {
+                    m_urgent_units--;
+                }
                 m_units.pop_front();
             }
         }

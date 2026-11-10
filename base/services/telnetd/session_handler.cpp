@@ -339,7 +339,7 @@ void TelnetSessionHandler::handle_command(ECommand cmd)
                 m_active_session->discard_output();
 
             static const uint8_t data[2] = { (uint8_t)ECommand::IAC, (uint8_t)ECommand::DM };
-            clear_pending_queue_then_send(data, sizeof(data));
+            clear_pending_queue_then_send(data, sizeof(data), true);
         }
         break;
 
