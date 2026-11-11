@@ -137,6 +137,7 @@ BEGIN
     IDS_BELGIAN_FRENCH_LAYOUT "Belgiană franceză"
     IDS_BELGIAN_LAYOUT "Belgiană (punct)"
     IDS_BENGALI_LAYOUT "Bengali"
+    IDS_BOSNIAN_CYRILLIC_LAYOUT "Bosnian (Cyrillic)"
     IDS_BULGARIAN_LAYOUT "Bulgară"
     IDS_BULGARIAN_BDS_LAYOUT "Bulgară BDS 5237-1978"
     IDS_BULGARIAN_LATIN_LAYOUT "Bulgară (grafie latină)"
