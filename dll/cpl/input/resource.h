@@ -207,3 +207,4 @@
 #define IDS_MAORI_LAYOUT                               5146
 #define IDS_ROMANIAN_STANDARD_LAYOUT                   5175
 #define IDS_PERSIAN_STANRDARD_LAYOUT                   5213
+#define IDS_NEPALI_LAYOUT                              5169
