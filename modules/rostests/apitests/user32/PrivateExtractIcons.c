@@ -10,6 +10,20 @@
 #include <stdio.h>
 #include <versionhelpers.h>
 
+static int MyAbs(int v)
+{
+    return v < 0 ? -v : v;
+}
+
+static void SafeDestroyIcon(HICON *ph)
+{
+    if (ph && *ph)
+    {
+        DestroyIcon(*ph);
+        *ph = NULL;
+    }
+}
+
 BOOL IsValidIcon(HICON hIco)
 {
     ICONINFO info = { 0 };
@@ -21,6 +35,33 @@ BOOL IsValidIcon(HICON hIco)
     if (info.hbmColor)
         DeleteObject(info.hbmColor);
     return TRUE;
+}
+
+static void* GetDiBitsAlloc(HBITMAP hBM, UINT Width, UINT Height, UINT BitsPerPixel)
+{
+    SIZE_T size = Width * MyAbs(Height) * 4;
+    void *pData = LocalAlloc(LMEM_FIXED, size);
+    BITMAPINFO bmi = { { sizeof(bmi.bmiHeader), Width, Height, 1, BitsPerPixel } };
+    HDC hdc = GetDC(0);
+    if (pData)
+        GetDIBits(hdc, hBM, 0, MyAbs(Height), pData, &bmi, DIB_RGB_COLORS);
+    ReleaseDC(NULL, hdc);
+    return pData;
+}
+
+static DWORD* GetIconMaskData32(HICON hIco)
+{
+    void *pData = NULL;
+    ICONINFO info = { 0 };
+    BITMAP bm;
+    if (!hIco || !GetIconInfo(hIco, &info))
+        return NULL;
+    if (GetObjectW(info.hbmMask, sizeof(bm), &bm))
+        pData = GetDiBitsAlloc(info.hbmMask, bm.bmWidth, bm.bmHeight, 32);
+    DeleteObject(info.hbmMask);
+    if (info.hbmColor)
+        DeleteObject(info.hbmColor);
+    return (DWORD*)pData;
 }
 
 BOOL FileExists(PCWSTR FileName)
@@ -125,6 +166,7 @@ static struct
 };
 
 void TestPairExtraction(void);
+void TestBigSmallPairExtraction(void);
 
 START_TEST(PrivateExtractIcons)
 {
@@ -143,6 +185,7 @@ START_TEST(PrivateExtractIcons)
     }
 
     TestPairExtraction();
+    TestBigSmallPairExtraction();
 
     for (i = 0; i < _countof(IconTests); ++i)
     {
@@ -249,4 +292,47 @@ void TestPairExtraction(void)
         ok(RetVal == ExpectedRet, "Test %u: RetVal must be %d but got %d\n", i, ExpectedRet, RetVal);
         ok(Count == ExpectedCount, "Test %u: Count must be %u but got %u\n", i, ExpectedCount, Count);
     }
+}
+
+void TestBigSmallPairExtraction()
+{
+    HICON hIcons[4] = { NULL };
+    int RetVal;
+    DWORD *pData;
+    WCHAR path[MAX_PATH];
+    
+    GetModuleFileNameW(NULL, path, _countof(path));
+    RetVal = PrivateExtractIconsW(path, -IDI_3216, MAKELONG(32, 16), MAKELONG(32, 16), hIcons, NULL, 2, 0);
+    ok(RetVal == 2, "Extract two icon images\n");
+    ok(IsValidIcon(hIcons[0]), "32\n");
+    ok(IsValidIcon(hIcons[1]), "16\n");
+    ok(!hIcons[2] && !hIcons[3], "Not requested\n");
+    RetVal = (pData = GetIconMaskData32(hIcons[0])) != NULL && pData[0] == 0; // The 32px source icon has an opaque 1px frame border
+    LocalFree(pData);
+    ok(RetVal, "Correct 32px icon image\n");
+    RetVal = (pData = GetIconMaskData32(hIcons[1])) != NULL && pData[0] != 0; // The 16px source icon has no frame (transparent)
+    LocalFree(pData);
+    ok(RetVal, "Correct 16px icon image\n"); // [CORE-20060] The 2nd icon should not just be a resized version of the first
+    SafeDestroyIcon(&hIcons[0]);
+    SafeDestroyIcon(&hIcons[1]);
+
+    ExpandEnvironmentStringsW(L"%temp%\\ROS_USER32.ico", path, _countof(path));
+    if (!ResourceToFile(IDR_ICONS_3216, path))
+    {
+        skip("ResourceToFile failed\n");
+        return;
+    }
+    RetVal = PrivateExtractIconsW(path, 0, MAKELONG(32, 16), MAKELONG(32, 16), hIcons, NULL, 2, 0);
+    DeleteFileW(path);
+    ok(RetVal == 1, "Extract two icon images but a .ico only has one icon\n"); // Strange but true
+    ok(IsValidIcon(hIcons[0]), "32\n");
+    ok(IsValidIcon(hIcons[1]), "16\n");
+    RetVal = (pData = GetIconMaskData32(hIcons[0])) != NULL && pData[0] == 0; // The 32px source icon has an opaque 1px frame border
+    LocalFree(pData);
+    ok(RetVal, "Correct 32px icon image\n");
+    RetVal = (pData = GetIconMaskData32(hIcons[1])) != NULL && pData[0] != 0; // The 16px source icon has no frame (transparent)
+    LocalFree(pData);
+    ok(RetVal, "Correct 16px icon image\n"); // [CORE-20060] The 2nd icon should not just be a resized version of the first
+    SafeDestroyIcon(&hIcons[0]);
+    SafeDestroyIcon(&hIcons[1]);
 }
