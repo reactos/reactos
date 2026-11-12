@@ -66,9 +66,93 @@ CShellItemArray::GetPropertyDescriptionList(_In_ REFPROPERTYKEY keyType, _In_ RE
 STDMETHODIMP
 CShellItemArray::GetAttributes(_In_ SIATTRIBFLAGS dwAttribFlags, _In_ SFGAOF sfgaoMask, _Out_ SFGAOF *psfgaoAttribs)
 {
-    UNIMPLEMENTED;
+    HRESULT hr;
+    SFGAOF attr;
+    UINT cidl = ItemCount();
+    UINT Mode = dwAttribFlags & SIATTRIBFLAGS_MASK;
+    BOOL bAllItems = (dwAttribFlags & SIATTRIBFLAGS_ALLITEMS) != 0;
+
+    if (!psfgaoAttribs)
+        return E_POINTER;
+
     *psfgaoAttribs = 0;
-    return E_NOTIMPL;
+
+    if (dwAttribFlags & ~(SIATTRIBFLAGS_MASK | SIATTRIBFLAGS_ALLITEMS))
+        FIXME("%08x contains unsupported attribution flags\n", dwAttribFlags);
+
+    if (Mode == SIATTRIBFLAGS_APPCOMPAT)
+    {
+        CComHeapPtr<PCUITEMID_CHILD> apidl;
+        BOOL bAllSingle = TRUE;
+
+        if (!m_pHIDA)
+            return E_UNEXPECTED;
+
+        if (!apidl.Allocate(cidl))
+            return E_OUTOFMEMORY;
+
+        for (UINT i = 0; i < cidl; ++i)
+        {
+            apidl[i] = (PCUITEMID_CHILD)HIDA_GetPIDLItem(*m_pHIDA, i);
+            if (!ILIsSingle(apidl[i]))
+            {
+                bAllSingle = FALSE;
+                break;
+            }
+        }
+
+        if (bAllSingle)
+        {
+            CComPtr<IShellFolder> psf;
+
+            hr = SHBindToObject(NULL, HIDA_GetPIDLFolder(*m_pHIDA), NULL, IID_PPV_ARG(IShellFolder, &psf));
+            if (FAILED_UNEXPECTEDLY(hr))
+                return hr;
+
+            *psfgaoAttribs = sfgaoMask;
+            hr = psf->GetAttributesOf(cidl, apidl, psfgaoAttribs);
+            *psfgaoAttribs &= sfgaoMask;
+            if (FAILED_UNEXPECTEDLY(hr))
+                return hr;
+
+            return (*psfgaoAttribs == sfgaoMask) ? S_OK : S_FALSE;
+        }
+
+        // Not child PIDLs, combine the per-item results instead
+        Mode = SIATTRIBFLAGS_AND;
+    }
+
+    // TODO: cache the attributes already determined per item
+    for (UINT i = 0; i < cidl; ++i)
+    {
+        CComPtr<IShellItem> psi;
+        SFGAOF mask = sfgaoMask;
+
+        if (!bAllItems && i > 0)
+        {
+            // Only ask for the bits that aren't decided yet
+            mask = (Mode == SIATTRIBFLAGS_AND) ? *psfgaoAttribs : (sfgaoMask & ~*psfgaoAttribs);
+            if (!mask)
+                break;
+        }
+
+        hr = GetItemAt(i, &psi);
+        if (FAILED_UNEXPECTEDLY(hr))
+            return hr;
+
+        hr = psi->GetAttributes(mask, &attr);
+        if (FAILED_UNEXPECTEDLY(hr))
+            return hr;
+
+        if (i == 0)
+            *psfgaoAttribs = attr;
+        else if (Mode == SIATTRIBFLAGS_AND)
+            *psfgaoAttribs &= attr;
+        else
+            *psfgaoAttribs |= attr;
+    }
+
+    return (*psfgaoAttribs == sfgaoMask) ? S_OK : S_FALSE;
 }
 
 STDMETHODIMP
