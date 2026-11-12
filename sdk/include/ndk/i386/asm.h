@@ -33,12 +33,6 @@ Author:
 #endif
 
 //
-// CPU Modes
-//
-#define KernelMode                              0x0
-#define UserMode                                0x1
-
-//
 // Selector Names
 //
 #ifdef __ASM__

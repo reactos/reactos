@@ -1001,10 +1001,6 @@ typedef struct _KIPCR
     ULONG PcrAlign1[24];
     ULONG Fill2[2]; // 0x178
     KPRCB Prcb; // 0x180
-
-    // hack:
-    ULONG ContextSwitches;
-
 } KIPCR, *PKIPCR;
 
 //
