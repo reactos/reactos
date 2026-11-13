@@ -30,7 +30,8 @@ START_TEST(CreateIconFromResourceEx)
     ok(lpResource != NULL, "\n");
 
     /* MSDN states that LR_SHARED permits to not load twice the same cursor again.
-     * But CreateIconFromResourceEx still returns two different handles */
+     * But CreateIconFromResourceEx still returns two different handles.
+     * This is most likely because it has no HINSTANCE nor module path to look up. */
     hcur2 = CreateIconFromResourceEx(lpResource, SizeofResource(hMod, hResource), FALSE, 0x00030000, 0, 0, LR_SHARED);
     ok(hcur2 != NULL, "\n");
     ok(hcur2 != hcur1, "\n");
