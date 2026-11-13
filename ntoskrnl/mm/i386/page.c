@@ -637,6 +637,7 @@ MmCreateVirtualMappingUnsafeEx(
     PMMPTE PointerPte;
     MMPTE TempPte;
     ULONG_PTR Pte;
+    NTSTATUS Status;
 
     DPRINT("MmCreateVirtualMappingUnsafe(%p, %p, %lu, %x)\n",
            Process, Address, flProtect, Page);
@@ -665,6 +666,17 @@ MmCreateVirtualMappingUnsafeEx(
         if (!MiSynchronizeSystemPde(MiAddressToPde(Address)))
             MiFillSystemPageDirectory(Address, PAGE_SIZE);
 #endif
+
+        /* Lock the system cache WS */
+        MiLockWorkingSet(PsGetCurrentThread(), &MmSystemCacheWs);
+
+        /* Make the page table valid */
+        Status = MiMakeKernelPageTableValid(Address);
+        if (!NT_SUCCESS(Status))
+        {
+            MiUnlockWorkingSet(PsGetCurrentThread(), &MmSystemCacheWs);
+            return Status;
+        }
     }
     else
     {
@@ -714,6 +726,10 @@ MmCreateVirtualMappingUnsafeEx(
         /* Add PDE reference */
         MiIncrementPageTableReferences(Address);
         MiUnlockProcessWorkingSetUnsafe(Process, PsGetCurrentThread());
+    }
+    else
+    {
+        MiUnlockWorkingSet(PsGetCurrentThread(), &MmSystemCacheWs);
     }
 
     return(STATUS_SUCCESS);
