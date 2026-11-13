@@ -97,6 +97,11 @@ Write64(uint8_t *p, uint64_t value)
     Write32(p + 4, (uint32_t)(value >> 32));
 }
 
+/* CRC length of the tag at the start of a sector buffer, never past it. */
+#define TagLength(sector) \
+    (Read16((sector) + 10) < UDFS_RECOVERY_SECTOR_SIZE - 16 ? \
+     (uint32_t)Read16((sector) + 10) : (uint32_t)(UDFS_RECOVERY_SECTOR_SIZE - 16))
+
 static uint16_t
 TagCrc(const uint8_t *p, uint32_t length)
 {
@@ -125,7 +130,8 @@ RetagLvid(uint8_t sector[UDFS_RECOVERY_SECTOR_SIZE], uint32_t lba)
     uint32_t checksum = 0, i;
     uint16_t crc;
     Write32(sector + 12, lba);
-    crc = TagCrc(sector + 16, Read16(sector + 10));
+    /* The CRC length is from disk; never run past the sector. */
+    crc = TagCrc(sector + 16, TagLength(sector));
     Write16(sector + 8, crc);
     sector[4] = 0;
     for (i = 0; i < 16; ++i)
@@ -227,7 +233,7 @@ NormalizeOpenLvidTag(uint8_t sector[UDFS_RECOVERY_SECTOR_SIZE],
         return status;
     oldCrcLow = sector[8];
     oldCrcHigh = sector[9];
-    crc = TagCrc(sector + 16, Read16(sector + 10));
+    crc = TagCrc(sector + 16, TagLength(sector));
     sector[8] = (uint8_t)crc;
     sector[9] = (uint8_t)(crc >> 8);
     checksum = 0;
@@ -579,7 +585,7 @@ ReadFileExtents(const UDFS_RECOVERY_READER *reader,
         return UdfsRecoveryProbeValidLayout;
     }
 
-    for (offset = 0; offset < adLength; offset += 8) {
+    for (offset = 0; offset + 8 <= adLength; offset += 8) {
         uint32_t encoded = Read32(sector + start + offset);
         uint32_t bytes = encoded & 0x3fffffff;
         uint32_t blockLbn = Read32(sector + start + offset + 4);
@@ -1224,7 +1230,9 @@ GraphParseFileAds(RECOVERY_GRAPH *graph, const RECOVERY_GRAPH_ENTRY *file,
                     return GRAPH_FAIL(UdfsRecoveryProbeCorrupt);
             sourceLength -= tail;
         }
-        for (offset = sourceStart; offset < sourceStart + sourceLength;
+        for (offset = sourceStart;
+             offset + step <= sourceStart + sourceLength &&
+             offset + step <= UDFS_RECOVERY_SECTOR_SIZE;
              offset += step) {
             uint32_t encoded = Read32(source + offset);
             uint32_t bytes = encoded & 0x3fffffff;
