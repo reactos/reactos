@@ -26,6 +26,7 @@ HKR, , Icon,           0, "-27"
 %IntelMfg% = IntelMfg
 %NecMfg% = NecMfg
 %nVidiaMfg% = nVidiaMfg
+%QemuMfg% = QemuMfg
 
 [GenericMfg]
 %*PNP0000.DeviceDesc% = NO_DRV,*PNP0000
@@ -52,6 +53,7 @@ HKR, , Icon,           0, "-27"
 
 %SWENUM.DeviceDesc%   = SWENUM_Inst, ROOT\SWENUM
 %ACPI\FixedButton.DeviceDesc% = NO_DRV,ACPI\FixedButton
+%ACPI\ACPI0010.DeviceDesc% = NO_DRV,ACPI\ACPI0010
 %ISAPNP\ReadDataPort.DeviceDesc% = NO_DRV,ISAPNP\ReadDataPort
 %PCI\CC_0500.DeviceDesc% = NO_DRV,PCI\CC_0500
 %PCI\CC_0600.DeviceDesc% = NO_DRV,PCI\CC_0600
@@ -86,6 +88,12 @@ HKR, , Icon,           0, "-27"
 %PCI\VEN_10DE&DEV_01B8.DeviceDesc% = NO_DRV,PCI\VEN_10DE&DEV_01B8
 %PCI\VEN_10DE&DEV_02A5.DeviceDesc% = NO_DRV,PCI\VEN_10DE&DEV_02A5
 %PCI\VEN_10DE&DEV_02A6.DeviceDesc% = NO_DRV,PCI\VEN_10DE&DEV_02A6
+
+[QemuMfg]
+%ACPI\QEMU0002.DeviceDesc% = NO_DRV,ACPI\QEMU0002
+%PCI\VEN_1AF4&DEV_1003.DeviceDesc% = NO_DRV,PCI\VEN_1AF4&DEV_1003
+%PCI\VEN_1AF4&DEV_1005.DeviceDesc% = NO_DRV,PCI\VEN_1AF4&DEV_1005
+%PCI\VEN_1AF4&DEV_0022.DeviceDesc% = NO_DRV,PCI\VEN_1AF4&DEV_0022
 
 ;---------------------------- NO DRIVER REQ -----------------------------
 
@@ -169,6 +177,7 @@ ReactOS = "ReactOS Project"
 IntelMfg = "Intel"
 NecMfg = "NEC"
 nVidiaMfg = "nVidia"
+QemuMfg = "QEMU"
 
 ; Localizable
 SystemClassName = "System devices"
@@ -198,6 +207,7 @@ GenericMfg = "(Generic system devices)"
 
 SWENUM.DeviceDesc  = "Plug & Play Software Bus Enumerator"
 ACPI\FixedButton.DeviceDesc = "ACPI fixed feature button"
+ACPI\ACPI0010.DeviceDesc = "Processor container"
 ISAPNP\ReadDataPort.DeviceDesc = "ISAPNP read data port"
 PCI\CC_0500.DeviceDesc = "Standard PCI RAM controller"
 PCI\CC_0600.DeviceDesc = "Standard CPU to PCI bridge"
@@ -225,6 +235,11 @@ PCI\VEN_10DE&DEV_01B7.DeviceDesc = "nVidia nForce AGP to PCI Bridge"
 PCI\VEN_10DE&DEV_01B8.DeviceDesc = "nVidia nForce PCI to PCI Bridge"
 PCI\VEN_10DE&DEV_02A5.DeviceDesc = "nVidia MCPX CPU to PCI Bridge"
 PCI\VEN_10DE&DEV_02A6.DeviceDesc = "nVidia MCPX PCI RAM Controller"
+
+ACPI\QEMU0002.DeviceDesc = "QEMU firmware configuration"
+PCI\VEN_1AF4&DEV_1003.DeviceDesc = "QEMU legacy console device"
+PCI\VEN_1AF4&DEV_1005.DeviceDesc = "QEMU legacy entropy generator device"
+PCI\VEN_1AF4&DEV_0022.DeviceDesc = "QEMU HD audio controller"
 
 [Strings.0404]
 GenericMfg = "(標準系統裝置)"
