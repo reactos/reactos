@@ -15,37 +15,86 @@
 
 /* GLOBALS ********************************************************************/
 
-static ULONG KsecRandomSeed = 0x62b409a1;
+static AES_KEY KsecRngAesKey;
+static ULONG64 KsecRngCounter;
 
 
 /* FUNCTIONS ******************************************************************/
 
+/* New key = SHA1(1 || E || OldKey) || SHA1(2 || E || OldKey), truncated to 32 bytes */
+static
+VOID
+KsecRngDeriveKey(
+    _Out_writes_bytes_(32) PUCHAR KeyData)
+{
+    KSEC_ENTROPY_DATA EntropyData;
+    SHA_CTX ShaContext;
+    ULONG Digest[2][5];
+    UCHAR Label;
+
+    /* Partial data on failure is still usable entropy */
+    KsecGatherEntropyData(&EntropyData);
+
+    for (Label = 1; Label <= 2; Label++)
+    {
+        A_SHAInit(&ShaContext);
+        A_SHAUpdate(&ShaContext, &Label, sizeof(Label));
+        A_SHAUpdate(&ShaContext, (PUCHAR)&EntropyData, sizeof(EntropyData));
+        A_SHAUpdate(&ShaContext, (PUCHAR)&KsecRngAesKey, sizeof(KsecRngAesKey));
+        A_SHAFinal(&ShaContext, Digest[Label - 1]);
+    }
+
+    RtlCopyMemory(KeyData, Digest, 32);
+
+    RtlSecureZeroMemory(&EntropyData, sizeof(EntropyData));
+    RtlSecureZeroMemory(&ShaContext, sizeof(ShaContext));
+    RtlSecureZeroMemory(Digest, sizeof(Digest));
+}
+
+/*
+ * AES-256-CTR. Counter block = { ThreadId, KsecRngCounter }.
+ * The key is re-derived on every request. Buffer must be non-paged.
+ */
 NTSTATUS
 NTAPI
 KsecGenRandom(
     PVOID Buffer,
     SIZE_T Length)
 {
-    LARGE_INTEGER TickCount;
-    ULONG i, RandomValue;
-    PULONG P;
+    UCHAR KeyData[32];
+    ULONG64 CounterBlock[2];
+    UCHAR KeyStream[16];
+    PUCHAR Output = Buffer;
+    SIZE_T Chunk;
+    KIRQL OldIrql;
 
-    /* Try to generate a more random seed */
-    KeQueryTickCount(&TickCount);
-    KsecRandomSeed ^= _rotl(TickCount.LowPart, (KsecRandomSeed % 23));
+    if (Length == 0)
+        return STATUS_SUCCESS;
 
-    P = Buffer;
-    for (i = 0; i < Length / sizeof(ULONG); i++)
+    /* Entropy gathering needs PASSIVE_LEVEL */
+    KsecRngDeriveKey(KeyData);
+
+    /* No preemption while the global key and counter are in use */
+    KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
+
+    aes_setup(KeyData, sizeof(KeyData), 0, &KsecRngAesKey);
+    CounterBlock[0] = HandleToUlong(PsGetCurrentThreadId());
+
+    while (Length > 0)
     {
-        P[i] = RtlRandomEx(&KsecRandomSeed);
+        CounterBlock[1] = KsecRngCounter++;
+        aes_ecb_encrypt((PUCHAR)CounterBlock, KeyStream, &KsecRngAesKey);
+
+        Chunk = min(Length, sizeof(KeyStream));
+        RtlCopyMemory(Output, KeyStream, Chunk);
+        Output += Chunk;
+        Length -= Chunk;
     }
 
-    Length &= (sizeof(ULONG) - 1);
-    if (Length > 0)
-    {
-        RandomValue = RtlRandomEx(&KsecRandomSeed);
-        RtlCopyMemory(&P[i], &RandomValue, Length);
-    }
+    KeLowerIrql(OldIrql);
+
+    RtlSecureZeroMemory(KeyData, sizeof(KeyData));
+    RtlSecureZeroMemory(KeyStream, sizeof(KeyStream));
 
     return STATUS_SUCCESS;
 }
@@ -144,6 +193,7 @@ KsecGatherEntropyData(
         /* Finalize and copy the MD4 hash */
         MD4Final(&Md4Context);
         RtlCopyMemory(&EntropyData->EnvironmentHash, Md4Context.digest, 16);
+        RtlSecureZeroMemory(&Md4Context, sizeof(Md4Context));
     }
 
     /* Read some machine specific hardware counters */
