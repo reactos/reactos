@@ -1943,6 +1943,8 @@ DECLARE_INTERFACE_(IMiniportWaveRTStreamNotification, IMiniportWaveRTStream)
     )   PURE;
 };
 
+typedef IMiniportWaveRTStreamNotification *PMINIPORTWAVERTSTREAMNOTIFICATION;
+
 /* ===============================================================
     IMiniportWaveRT Interface
 */
