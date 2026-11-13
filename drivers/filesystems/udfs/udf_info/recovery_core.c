@@ -3747,6 +3747,7 @@ UdfsRecoveryApplyRepair(const UDFS_RECOVERY_READER *reader,
     UDFS_RECOVERY_PROBE_STATUS status;
     uint32_t i, j;
     uint8_t repaired;
+    int keptMetadataOrphans;
 
     if (!reader || !reader->ReadSector || !reader->WriteSector ||
         !reader->Flush || !reader->Allocate || !reader->Free ||
@@ -4105,9 +4106,21 @@ UdfsRecoveryApplyRepair(const UDFS_RECOVERY_READER *reader,
      * new OPEN probe, including file/directory counts and the ID high-water
      * mark. Interrupted bitmap batches remain OPEN and can be replanned. */
     status = UdfsRecoveryProbeLayout(reader, after);
+    /* The plan leaves metadata blocks that nothing refers to allocated
+     * (GraphCanRecover), so the new probe still reports them as the only
+     * mismatch. That is the planned result, not a failed repair. */
+    keptMetadataOrphans =
+        status == UdfsRecoveryProbeGraphMismatch &&
+        after->OwnershipGraphScanned && after->UnownedMetadataBlocks &&
+        !after->UnownedPhysicalBlocks && !after->OverlapBlocks &&
+        !after->ReferencedFreePhysicalBlocks &&
+        !after->ReferencedFreeMetadataBlocks &&
+        !after->FidSplitCount && !after->MirrorDirectorySplitCount &&
+        !after->DirectoryLinkFixCount;
     if ((status != UdfsRecoveryProbeValidLayout &&
-         status != UdfsRecoveryProbeLvidMismatch) ||
-        !GraphCanRecover(after) || !after->CompleteOwnershipGraph ||
+         status != UdfsRecoveryProbeLvidMismatch && !keptMetadataOrphans) ||
+        !GraphCanRecover(after) ||
+        (!after->CompleteOwnershipGraph && !keptMetadataOrphans) ||
         after->PrevailingLvidLba != plan->LvidEdit.Lba ||
         after->PhysicalFreeBlocks != Read32(plan->LvidEdit.After + 80) ||
         after->MetadataFreeBlocks != Read32(plan->LvidEdit.After + 84) ||
@@ -4117,7 +4130,8 @@ UdfsRecoveryApplyRepair(const UDFS_RECOVERY_READER *reader,
         after->DirectoriesVisited != Read32(plan->LvidEdit.After + 132) ||
         after->MaxUniqueId >= Read64(plan->LvidEdit.After + 40))
         return status == UdfsRecoveryProbeValidLayout ||
-               status == UdfsRecoveryProbeLvidMismatch ?
+               status == UdfsRecoveryProbeLvidMismatch ||
+               keptMetadataOrphans ?
                UdfsRecoveryProbeCorrupt : status;
 
     if (plan->LegacyJournalBootstrap) {
@@ -4221,10 +4235,17 @@ UdfsRecoveryApplyRepair(const UDFS_RECOVERY_READER *reader,
         return UdfsRecoveryProbeIoError;
 
     status = UdfsRecoveryProbeLayout(reader, after);
-    if (status != UdfsRecoveryProbeValidLayout ||
-        !after->CompleteOwnershipGraph || !after->LvidCountersMatch ||
+    keptMetadataOrphans = keptMetadataOrphans &&
+        status == UdfsRecoveryProbeGraphMismatch &&
+        after->OwnershipGraphScanned && after->UnownedMetadataBlocks &&
+        !after->UnownedPhysicalBlocks && !after->OverlapBlocks &&
+        !after->ReferencedFreePhysicalBlocks &&
+        !after->ReferencedFreeMetadataBlocks;
+    if ((status != UdfsRecoveryProbeValidLayout && !keptMetadataOrphans) ||
+        (!after->CompleteOwnershipGraph && !keptMetadataOrphans) ||
+        !after->LvidCountersMatch ||
         after->LvidIntegrityType != 1 || after->WritableMountAuthorized)
-        return status == UdfsRecoveryProbeValidLayout ?
+        return status == UdfsRecoveryProbeValidLayout || keptMetadataOrphans ?
                UdfsRecoveryProbeCorrupt : status;
     return UdfsRecoveryProbeValidLayout;
 }

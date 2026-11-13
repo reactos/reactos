@@ -401,10 +401,12 @@ UDFRecoverDirtyVolumeBeforeLoad(PIRP_CONTEXT IrpContext, PVCB Vcb)
     UdfsRecoveryMountFree(&io, plan);
     if (status != UdfsRecoveryProbeValidLayout) {
         UDFPrint(("UDFS recovery: apply/reprobe failed %u\n", (ULONG)status));
-        UdfsRecoveryBootMessage("UDF: the repair failed.\r\n");
+        /* Failing the mount here made the boot volume inaccessible (0x7B).
+         * The integrity record is still OPEN, so the next mount checks the
+         * volume again; meanwhile it is mounted as before. */
+        UdfsRecoveryBootMessage("UDF: the repair failed; the volume is mounted as before.\r\n");
         UdfsRecoveryBootDetails(&after, status, "the repair");
-        return status == UdfsRecoveryProbeNoMemory ?
-               STATUS_INSUFFICIENT_RESOURCES : STATUS_IO_DEVICE_ERROR;
+        return STATUS_SUCCESS;
     }
     UDFPrint(("UDFS recovery: checked bitmap/LVID commit complete\n"));
     UdfsRecoveryBootMessage("UDF: the volume was repaired.\r\n");
