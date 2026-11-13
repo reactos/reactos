@@ -222,6 +222,8 @@ IopCreateDeviceInstancePath(
     UNICODE_STRING ParentIdPrefix = { 0, 0, NULL };
     DEVICE_CAPABILITIES DeviceCapabilities;
     BOOLEAN IsValidID;
+    UNICODE_STRING DefaultInstanceId = RTL_CONSTANT_STRING(L"0000");
+    PUNICODE_STRING TargetId;
 
     DPRINT("Sending IRP_MN_QUERY_ID.BusQueryDeviceID to device stack\n");
 
@@ -306,10 +308,14 @@ IopCreateDeviceInstancePath(
     RtlInitUnicodeString(&InstanceId,
                          (PWSTR)IoStatusBlock.Information);
 
+    /* Only fallback to 0000 if both ParentIdPrefix and InstanceId are empty */
+    TargetId = (ParentIdPrefix.Length == 0 && InstanceId.Length == 0) ?
+               &DefaultInstanceId : &InstanceId;
+
     InstancePath->Length = 0;
     InstancePath->MaximumLength = DeviceId.Length + sizeof(WCHAR) +
                                   ParentIdPrefix.Length +
-                                  InstanceId.Length +
+                                  TargetId->Length +
                                   sizeof(UNICODE_NULL);
     if (ParentIdPrefix.Length && InstanceId.Length)
     {
@@ -338,8 +344,8 @@ IopCreateDeviceInstancePath(
         RtlAppendUnicodeToString(InstancePath, L"&");
     }
 
-    /* Finally, add the id returned by the driver stack */
-    RtlAppendUnicodeStringToString(InstancePath, &InstanceId);
+    /* Finally, add the id returned by the driver stack or the fallback */
+    RtlAppendUnicodeStringToString(InstancePath, TargetId);
 
     /*
      * FIXME: Check for valid characters, if there is invalid characters
