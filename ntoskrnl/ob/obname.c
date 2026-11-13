@@ -470,7 +470,9 @@ ObpLookupObjectName(IN HANDLE RootHandle OPTIONAL,
     ULONG MaxReparse = 30;
     PDEVICE_MAP DeviceMap = NULL;
     UNICODE_STRING LocalName;
+
     PAGED_CODE();
+
     OBTRACE(OB_NAMESPACE_DEBUG,
             "%s - Finding Object: %wZ. Expecting: %p\n",
             __FUNCTION__,
@@ -483,11 +485,15 @@ ObpLookupObjectName(IN HANDLE RootHandle OPTIONAL,
     Status = STATUS_SUCCESS;
     Object = NULL;
 
-    /* Check if case-insensitivity is checked */
+    /* Check whether the Object Manager is case-insensitive */
     if (ObpCaseInsensitive)
+#if (NTDDI_VERSION >= NTDDI_WIN10_RS1) || defined(__REACTOS__)
+    /* And check whether per-thread case sensitivity is disabled */
+    if (PsGetCurrentThread()->ExplicitCaseSensitivity == FALSE)
+#endif
     {
         /* Check if the object type requests this */
-        if (!(ObjectType) || (ObjectType->TypeInfo.CaseInsensitive))
+        if (!ObjectType || ObjectType->TypeInfo.CaseInsensitive)
         {
             /* Add the flag to disable case sensitivity */
             Attributes |= OBJ_CASE_INSENSITIVE;
