@@ -14,79 +14,77 @@ DWORD WINAPI W32TimeSyncNow(LPCWSTR cmdline, UINT blocking, UINT flags);
 SYNC_STATUS SyncStatus;
 
 static VOID
-CreateNTPServerList(HWND hwnd)
+CreateNTPServerList(HWND hWnd)
 {
     HWND hList;
-    WCHAR szValName[MAX_VALUE_NAME];
-    WCHAR szData[256];
-    DWORD dwIndex = 0;
-    DWORD dwValSize;
-    DWORD dwNameSize;
-    DWORD dwDefault = 1;
-    LONG lRet;
     HKEY hKey;
+    WCHAR szValueName[MAX_VALUE_NAME] = { 0 };
+    WCHAR szData[256] = { 0 };
+    DWORD dwIndex = 0;
+    DWORD dwValueSize = sizeof(szData);
+    DWORD dwValueType;
+    DWORD dwNameSize = sizeof(szValueName);
+    DWORD dwServerIndex;
+    DWORD dwSelection = 1;
+    LONG lResult;
 
-    hList = GetDlgItem(hwnd,
-                       IDC_SERVERLIST);
-
-    lRet = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
-                        L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\DateTime\\Servers",
-                        0,
-                        KEY_QUERY_VALUE,
-                        &hKey);
-    if (lRet != ERROR_SUCCESS)
+    hList = GetDlgItem(hWnd, IDC_SERVERLIST);
+    lResult = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                            L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\DateTime\\Servers",
+                            0,
+                            KEY_QUERY_VALUE,
+                            &hKey);
+    if (lResult != ERROR_SUCCESS)
         return;
 
-    while (TRUE)
+    while ((lResult = RegEnumValueW(hKey,
+                                   dwIndex,
+                                   szValueName,
+                                   &dwValueSize,
+                                   NULL,
+                                   &dwValueType,
+                                   (LPBYTE)szData,
+                                   &dwNameSize)) != ERROR_NO_MORE_ITEMS)
     {
-        dwValSize = MAX_VALUE_NAME * sizeof(WCHAR);
-        szValName[0] = L'\0';
-        lRet = RegEnumValueW(hKey,
-                             dwIndex,
-                             szValName,
-                             &dwValSize,
-                             NULL,
-                             NULL,
-                             (LPBYTE)szData,
-                             &dwNameSize);
-        if (lRet == ERROR_SUCCESS)
+        /* Skip any non-string values or errors */
+        if (lResult != ERROR_SUCCESS || dwValueType != REG_SZ)
         {
-            /* Get date from default reg value */
-            if (wcscmp(szValName, L"") == 0) // if (Index == 0)
+            dwIndex++;
+            dwValueSize = sizeof(szData);
+            dwNameSize = sizeof(szValueName);
+            continue;
+        }
+        /* The (Default) entry keeps current selection */
+        if (wcscmp(szValueName, L"") == 0)
+        {
+            dwSelection = _wtoi(szData);
+        }
+        else
+        {
+            dwServerIndex = _wtoi(szValueName);
+            if (dwServerIndex == 0)
             {
-                dwDefault = _wtoi(szData);
-                dwIndex++;
+                /* A custom server */
+                SendMessageW(hList, CB_SETCURSEL, -1, 0);
+                SetWindowTextW(hList, szData);
             }
             else
             {
-                SendMessageW(hList,
-                             CB_ADDSTRING,
-                             0,
-                             (LPARAM)szData);
-                dwIndex++;
+                /* Insert the server at the given index */
+                SendMessageW(hList, CB_INSERTSTRING, (WPARAM)(dwServerIndex - 1), (LPARAM)szData);
             }
         }
-        else if (lRet != ERROR_MORE_DATA)
-        {
-            break;
-        }
+
+        dwIndex++;
+        dwValueSize = sizeof(szData);
+        dwNameSize = sizeof(szValueName);
     }
 
-    if (dwDefault < 1 || dwDefault > dwIndex)
-        dwDefault = 1;
-
-    /* Server reg entries count from 1,
-     * Combo boxes count from 0 */
-    dwDefault--;
-
-    SendMessageW(hList,
-                 CB_SETCURSEL,
-                 dwDefault,
-                 0);
+    if (dwSelection > 0 && dwSelection <= dwIndex)
+        SendMessageW(hList, CB_SETCURSEL, (WPARAM)(dwSelection - 1), 0);
 
     RegCloseKey(hKey);
 }
-
 
 /* Set the selected server in the registry */
 static VOID
