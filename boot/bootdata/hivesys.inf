@@ -1770,6 +1770,19 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\AppCompatCache","AppCompa
 ; Unsecure objects names
 HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\kernel","ObUnsecureGlobalNames",0x00010000,"netfxcustomerfcounters.1.0","SharedPerfIPCBlock","Cor_Private_IPCBlock","Cor_Public_IPCBlock_"
 
+; Time zone
+HKLM,"SYSTEM\CurrentControlSet\Control\TimeZoneInformation","Bias",0x00010001,0x1e0
+HKLM,"SYSTEM\CurrentControlSet\Control\TimeZoneInformation","DaylightBias",0x00010001,0xffffffc4
+HKLM,"SYSTEM\CurrentControlSet\Control\TimeZoneInformation","DaylightName",0x00000000,"Pacific Daylight Time"
+HKLM,"SYSTEM\CurrentControlSet\Control\TimeZoneInformation","DaylightStart",0x00000001, \
+0x00,0x00,0x03,0x00,0x02,0x00,0x02,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00
+HKLM,"SYSTEM\CurrentControlSet\Control\TimeZoneInformation","DynamicDaylightTimeDisabled",0x00010001,0
+HKLM,"SYSTEM\CurrentControlSet\Control\TimeZoneInformation","StandardBias",0x00010001,0
+HKLM,"SYSTEM\CurrentControlSet\Control\TimeZoneInformation","StandardName",0x00000000,"Pacific Standard Time"
+HKLM,"SYSTEM\CurrentControlSet\Control\TimeZoneInformation","StandardStart",0x00000001, \
+0x00,0x00,0x0b,0x00,0x01,0x00,0x02,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00
+HKLM,"SYSTEM\CurrentControlSet\Control\TimeZoneInformation","TimeZoneKeyName",0x00000000,"Pacific Standard Time"
+
 ; WOW Support
 HKLM,"SYSTEM\CurrentControlSet\Control\WOW",,0x00000012
 

@@ -301,4 +301,6 @@
     SVC_(GetCurrentProcessorNumberEx, 1)
     SVC_(GetNextProcess, 5)
     SVC_(GetNextThread, 6)
+    SVC_(InitializeNlsFiles, 4)
+    SVC_(GetNlsSectionPtr, 5)
 #endif

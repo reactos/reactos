@@ -27,6 +27,8 @@ WINE_DEFAULT_DEBUG_CHANNEL(reg);
 #define MAX_DEFAULT_HANDLES   6
 #define REG_MAX_NAME_SIZE     256
 #define REG_MAX_DATA_SIZE     2048
+#define HeapAlloc RtlAllocateHeap
+#define HeapFree RtlFreeHeap
 
 /* GLOBALS ******************************************************************/
 
@@ -5184,8 +5186,9 @@ RegLoadMUIStringW(
 
     if (pszDirectory && *pszDirectory)
     {
-        FIXME("BaseDir parameter not yet supported!\n");
-        return ERROR_INVALID_PARAMETER;
+        static BOOL fixme_once;
+        if (!fixme_once++)
+            FIXME("BaseDir parameter not yet supported!\n");
     }
 
     /* Check for value existence and correctness of it's type, allocate a buffer and load it. */
