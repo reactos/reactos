@@ -380,7 +380,7 @@ ROSDATA KBDTABLES keyboard_layout_table = {
   0x7f,                                   /* bMaxVSCtoVK */
   extcode0_to_vk,
   extcode1_to_vk,
-  MAKELONG(KLLF_ALTGR, KBD_VERSION),      /* fLocaleFlags = 0x00010001 */
+  MAKELONG(KLLF_ALTGR, KBD_VERSION),
   0, 0, NULL                              /* No ligatures */
 };
 
