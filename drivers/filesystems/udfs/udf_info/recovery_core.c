@@ -1245,11 +1245,10 @@ GraphParseFileAds(RECOVERY_GRAPH *graph, const RECOVERY_GRAPH_ENTRY *file,
                     (keepExtents &&
                      dataExtents->Count == dataExtents->Capacity))
                     return GRAPH_FAIL(UdfsRecoveryProbeUnsupported);
-                /* An allocated but unrecorded AD owns its blocks.  It is
-                 * valid in an ordinary file, but cannot supply FID bytes. */
-                if (kind == 1 &&
-                    (file->Directory || file->StreamRole == 1 ||
-                     (bytes & (UDFS_RECOVERY_SECTOR_SIZE - 1))))
+                /* An allocated but unrecorded AD owns its blocks. It can
+                 * have a partial final block in a regular file, but cannot
+                 * supply FID bytes. */
+                if (kind == 1 && (file->Directory || file->StreamRole == 1))
                     return GRAPH_FAIL(UdfsRecoveryProbeUnsupported);
                 status = GraphOwn(graph, ref, lbn, bytes);
                 if (status != UdfsRecoveryProbeValidLayout) return GRAPH_FAIL(status);
