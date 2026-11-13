@@ -709,10 +709,6 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000414","Layout File",
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000414","Layout Text",0x00000000,%NORWEGIAN%
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000414","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5018"
 
-HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000440","Layout File",0x00000000,"kbdkyr.dll"
-HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000440","Layout Text",0x00000000,%KYRGYZ_CYRILLIC%
-HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000440","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5128"
-
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000415","Layout File",0x00000000,"kbdpl1.dll"
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000415","Layout Text",0x00000000,%POLISH_PROGRAMMERS%
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000415","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5035"
@@ -876,6 +872,10 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000439","Layout Displa
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000043f","Layout File",0x00000000,"kbdkaz.dll"
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000043f","Layout Text",0x00000000,%KAZAKH%
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000043f","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5113"
+
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000440","Layout File",0x00000000,"kbdkyr.dll"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000440","Layout Text",0x00000000,%KYRGYZ_CYRILLIC%
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000440","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5128"
 
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000843","Layout File",0x00000000,"kbduzb.dll"
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000843","Layout Text",0x00000000,%UZBEK_CYRILLIC%
