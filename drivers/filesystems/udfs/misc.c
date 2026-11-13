@@ -28,7 +28,7 @@
                             sizeof(UDF_IO_CONTEXT),  \
                             TAG_IO_CONTEXT)
 
-#define UDFFreeIoContext(IO)     ExFreePool( (IO) )
+#define UDFFreeIoContext(IO)     ExFreePoolWithTag((IO), 0)
 
 /*************************************************************************
 *

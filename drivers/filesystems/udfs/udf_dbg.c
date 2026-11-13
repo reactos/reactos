@@ -122,7 +122,7 @@ VOID DebugFreePool(PVOID addr) {
     }
 not_bug:
 //    UDFPrint(("SysAllocated: %x\n",AllocCount));
-    ExFreePool(addr);
+    ExFreePoolWithTag(addr, 0);
 }
 
 #endif // UDF_DBG

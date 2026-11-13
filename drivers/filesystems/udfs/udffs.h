@@ -137,7 +137,7 @@ extern UDFData              UdfData;
 
 //  Encapsulate safe pool freeing
 
-inline
+FORCEINLINE
 VOID
 UDFFreePool(
     _Inout_ _At_(*Pool, __drv_freesMem(Mem) _Post_null_) PVOID *Pool
@@ -145,7 +145,7 @@ UDFFreePool(
 {
     if (*Pool != NULL) {
 
-        ExFreePool(*Pool);
+        ExFreePoolWithTag(*Pool, 0);
         *Pool = NULL;
     }
 }

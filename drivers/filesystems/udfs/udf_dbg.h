@@ -142,7 +142,7 @@ VOID DebugFreePool(PVOID addr);
 
 #define DbgAllocatePoolWithTag(a,b,c) ExAllocatePoolWithTag(a,b,c)
 #define DbgAllocatePool(x,y) ExAllocatePoolWithTag(x,y,'Fnwd')
-#define DbgFreePool(x) ExFreePool(x)
+#define DbgFreePool(x) ExFreePoolWithTag(x, 0)
 
 #endif //TRACK_SYS_ALLOCS
 
@@ -172,7 +172,7 @@ VOID DebugFreePool(PVOID addr);
 #else // UDF_DBG
 
 #define DbgAllocatePool(x,y) ExAllocatePoolWithTag(x,y,'Fnwd')
-#define DbgFreePool(x) ExFreePool(x)
+#define DbgFreePool(x) ExFreePoolWithTag(x, 0)
 #define DbgAllocatePoolWithTag(a,b,c) ExAllocatePoolWithTag(a,b,c)
 
 #define DbgMoveMemory(d, s, l)     RtlMoveMemory(d, s, l)

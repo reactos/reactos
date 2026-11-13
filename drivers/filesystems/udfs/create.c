@@ -3206,10 +3206,10 @@ UDFCompleteFcbOpen(
                         MyFreePool__(FileName.Buffer);
                     }
                     if (CaseFileName.Buffer) {
-                        ExFreePool(CaseFileName.Buffer);
+                        ExFreePoolWithTag(CaseFileName.Buffer, 0);
                     }
                     if (ShortName.Buffer) {
-                        ExFreePool(ShortName.Buffer);
+                        ExFreePoolWithTag(ShortName.Buffer, 0);
                     }
                 } else {
                     Ccb->Lcb = UDFAcquirePrefix(IrpContext,

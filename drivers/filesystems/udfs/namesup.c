@@ -502,7 +502,7 @@ UDFGenerateShortName(
     // If generation failed, Length will be 0
     if (ShortName->Length == 0) {
         // Failed to generate short name
-        ExFreePool(Buffer);
+        ExFreePoolWithTag(Buffer, 0);
         ShortName->Buffer = NULL;
         ShortName->MaximumLength = 0;
         return STATUS_OBJECT_NAME_INVALID;

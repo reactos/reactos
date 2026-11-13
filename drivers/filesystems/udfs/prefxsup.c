@@ -449,7 +449,7 @@ UDFRemovePrefix(
     //
     if (FlagOn(Lcb->Flags, UDF_LCB_FLAG_HAS_NAME_BUFFER)) {
         if (Lcb->NameBuffer != NULL) {
-            ExFreePool(Lcb->NameBuffer);
+            ExFreePoolWithTag(Lcb->NameBuffer, 0);
             Lcb->NameBuffer = NULL;
         }
     }
@@ -471,7 +471,7 @@ UDFRemovePrefix(
     // Free Name.Buffer if present (ANSI name)
     //
     if (Lcb->Name.Buffer != NULL) {
-        ExFreePool(Lcb->Name.Buffer);
+        ExFreePoolWithTag(Lcb->Name.Buffer, 0);
         Lcb->Name.Buffer = NULL;
     }
 
@@ -480,7 +480,7 @@ UDFRemovePrefix(
     //
     if (FlagOn(Lcb->Flags, UDF_LCB_FLAG_POOL_ALLOCATED)) {
 
-        ExFreePool(Lcb);
+        ExFreePoolWithTag(Lcb, 0);
 
     } else {
 
@@ -863,7 +863,7 @@ UDFBuildFullPathFromLcb(
         }
 
         if (!NT_SUCCESS(Status) && Buffer) {
-            ExFreePool(Buffer);
+            ExFreePoolWithTag(Buffer, 0);
             FullPath->Buffer = NULL;
             FullPath->Length = 0;
             FullPath->MaximumLength = 0;
@@ -1269,7 +1269,7 @@ UDFRenameMovePrefix(
         BOOLEAN IgnoreCaseEmbedded = ((PUCHAR)Lcb->IgnoreCaseLinkName.Buffer >= (PUCHAR)Lcb &&
                                       (PUCHAR)Lcb->IgnoreCaseLinkName.Buffer < (PUCHAR)Lcb + Lcb->NodeIdentifier.NodeByteSize);
         if (!IgnoreCaseEmbedded) {
-            ExFreePool(Lcb->IgnoreCaseLinkName.Buffer);
+            ExFreePoolWithTag(Lcb->IgnoreCaseLinkName.Buffer, 0);
         }
     }
 
@@ -1302,7 +1302,7 @@ UDFRenameMovePrefix(
         BOOLEAN ShortNameEmbedded = ((PUCHAR)Lcb->ShortName.Buffer >= (PUCHAR)Lcb &&
                                      (PUCHAR)Lcb->ShortName.Buffer < (PUCHAR)Lcb + Lcb->NodeIdentifier.NodeByteSize);
         if (!ShortNameEmbedded) {
-            ExFreePool(Lcb->ShortName.Buffer);
+            ExFreePoolWithTag(Lcb->ShortName.Buffer, 0);
         }
         Lcb->ShortName.Buffer = NULL;
         Lcb->ShortName.Length = 0;

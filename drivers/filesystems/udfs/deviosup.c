@@ -929,7 +929,7 @@ UDFFinishBuffers(
                 }
 
                 if (ThisIoRun->TransferBuffer != NULL) {
-                    ExFreePool(ThisIoRun->TransferBuffer);
+                    ExFreePoolWithTag(ThisIoRun->TransferBuffer, 0);
                 }
             }
         }
@@ -1283,7 +1283,7 @@ UDFSingleAsyncCompletionRoutine(
     //
 
     if (IoContext->AllocatedContext) {
-        ExFreePool(IoContext);
+        ExFreePoolWithTag(IoContext, 0);
     }
 
     return STATUS_SUCCESS;
