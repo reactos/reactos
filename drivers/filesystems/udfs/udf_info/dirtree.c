@@ -1243,17 +1243,26 @@ UDFFindDloc(
     IN uint32 Lba
     )
 {
-    PUDF_DATALOC_INDEX DlocList;
-    uint32 l;
+    ULONG Low = 0;
+    ULONG High = Vcb->DlocLbaCount;
 
-    if (!(DlocList = Vcb->DlocList) || !Lba) return (-1);
-    // scan FE location cache
-    l = Vcb->DlocCount;
-    for(uint32 i=0; i<l; i++, DlocList++) {
-        if (DlocList->Lba == Lba)
-            return i;
+    if (!Vcb->DlocList || !Vcb->DlocLbaIndex || !Lba)
+        return -1;
+
+    while (Low < High) {
+        ULONG Mid = Low + (High - Low) / 2;
+        ULONG Index = Vcb->DlocLbaIndex[Mid];
+
+        if (Vcb->DlocList[Index].Lba < Lba)
+            Low = Mid + 1;
+        else
+            High = Mid;
     }
-    return (-1);
+
+    if (Low < Vcb->DlocLbaCount &&
+        Vcb->DlocList[Vcb->DlocLbaIndex[Low]].Lba == Lba)
+        return Vcb->DlocLbaIndex[Low];
+    return -1;
 } // end UDFFindDloc()
 
 /*
@@ -1265,18 +1274,72 @@ UDFFindDlocInMem(
     IN PUDF_DATALOC_INFO Dloc
     )
 {
-    PUDF_DATALOC_INDEX DlocList;
-    uint32 l;
+    ULONG Index;
 
-    if (!(DlocList = Vcb->DlocList) || !Dloc) return (-1);
-    // scan FE location cache
-    l = Vcb->DlocCount;
-    for(uint32 i=0; i<l; i++, DlocList++) {
-        if (DlocList->Dloc == Dloc)
-            return i;
-    }
-    return (-1);
+    if (!Vcb->DlocList || !Dloc || !Dloc->CacheIndex)
+        return -1;
+
+    Index = Dloc->CacheIndex - 1;
+    if (Index >= Vcb->DlocCount || Vcb->DlocList[Index].Dloc != Dloc)
+        return -1;
+    return (LONG)Index;
 } // end UDFFindDlocInMem()
+
+static VOID
+UDFInsertDlocLbaIndex(
+    IN PVCB Vcb,
+    IN ULONG Index
+    )
+{
+    ULONG Low = 0;
+    ULONG High = Vcb->DlocLbaCount;
+
+    while (Low < High) {
+        ULONG Mid = Low + (High - Low) / 2;
+        ULONG Current = Vcb->DlocLbaIndex[Mid];
+
+        if (Vcb->DlocList[Current].Lba < Vcb->DlocList[Index].Lba ||
+            (Vcb->DlocList[Current].Lba == Vcb->DlocList[Index].Lba &&
+             Current < Index))
+            Low = Mid + 1;
+        else
+            High = Mid;
+    }
+
+    for (ULONG i = Vcb->DlocLbaCount; i > Low; i--)
+        Vcb->DlocLbaIndex[i] = Vcb->DlocLbaIndex[i - 1];
+    Vcb->DlocLbaIndex[Low] = Index;
+    Vcb->DlocLbaCount++;
+}
+
+static VOID
+UDFRemoveDlocLbaIndex(
+    IN PVCB Vcb,
+    IN ULONG Index
+    )
+{
+    ULONG Low = 0;
+    ULONG High = Vcb->DlocLbaCount;
+
+    while (Low < High) {
+        ULONG Mid = Low + (High - Low) / 2;
+        ULONG Current = Vcb->DlocLbaIndex[Mid];
+
+        if (Vcb->DlocList[Current].Lba < Vcb->DlocList[Index].Lba ||
+            (Vcb->DlocList[Current].Lba == Vcb->DlocList[Index].Lba &&
+             Current < Index))
+            Low = Mid + 1;
+        else
+            High = Mid;
+    }
+
+    if (Low == Vcb->DlocLbaCount || Vcb->DlocLbaIndex[Low] != Index)
+        return;
+
+    for (ULONG i = Low; i + 1 < Vcb->DlocLbaCount; i++)
+        Vcb->DlocLbaIndex[i] = Vcb->DlocLbaIndex[i + 1];
+    Vcb->DlocLbaCount--;
+}
 
 /*
     Find free cache entry
@@ -1288,13 +1351,27 @@ UDFFindFreeDloc(
     )
 {
     PUDF_DATALOC_INDEX DlocList;
+    PULONG LbaIndex;
+    ULONG NewCount;
     uint32 l;
 
     if (!Vcb->DlocList) {
+        DlocList = (PUDF_DATALOC_INDEX)MyAllocatePoolTag__(
+            NonPagedPool, sizeof(UDF_DATALOC_INDEX) * DLOC_LIST_GRANULARITY, MEM_DLOC_NDX_TAG);
+        if (!DlocList)
+            return -1;
+        LbaIndex = (PULONG)MyAllocatePoolTag__(
+            NonPagedPool, sizeof(ULONG) * DLOC_LIST_GRANULARITY, MEM_DLOC_NDX_TAG);
+        if (!LbaIndex) {
+            MyFreePool__(DlocList);
+            return -1;
+        }
+
         // init FE location cache
-        if (!(Vcb->DlocList = (PUDF_DATALOC_INDEX)MyAllocatePoolTag__(NonPagedPool, sizeof(UDF_DATALOC_INDEX)*DLOC_LIST_GRANULARITY, MEM_DLOC_NDX_TAG)))
-            return (-1);
-        RtlZeroMemory(Vcb->DlocList, DLOC_LIST_GRANULARITY*sizeof(UDF_DATALOC_INDEX));
+        RtlZeroMemory(DlocList, DLOC_LIST_GRANULARITY * sizeof(UDF_DATALOC_INDEX));
+        Vcb->DlocList = DlocList;
+        Vcb->DlocLbaIndex = LbaIndex;
+        Vcb->DlocLbaCount = 0;
         Vcb->DlocCount = DLOC_LIST_GRANULARITY;
         Vcb->DlocFreeHint = 0;
     }
@@ -1310,13 +1387,22 @@ UDFFindFreeDloc(
             return i;
     }
     // alloc some free entries
+    NewCount = Vcb->DlocCount + DLOC_LIST_GRANULARITY;
+    LbaIndex = (PULONG)MyAllocatePoolTag__(
+        NonPagedPool, sizeof(ULONG) * NewCount, MEM_DLOC_NDX_TAG);
+    if (!LbaIndex)
+        return -1;
+    RtlCopyMemory(LbaIndex, Vcb->DlocLbaIndex, Vcb->DlocLbaCount * sizeof(ULONG));
     if (!MyReallocPool__((int8*)(Vcb->DlocList), Vcb->DlocCount*sizeof(UDF_DATALOC_INDEX),
-                     (int8**)&(Vcb->DlocList), (Vcb->DlocCount+DLOC_LIST_GRANULARITY)*sizeof(UDF_DATALOC_INDEX))) {
-        return (-1);
+                     (int8**)&(Vcb->DlocList), NewCount*sizeof(UDF_DATALOC_INDEX))) {
+        MyFreePool__(LbaIndex);
+        return -1;
     }
     RtlZeroMemory(&(Vcb->DlocList[Vcb->DlocCount]), DLOC_LIST_GRANULARITY*sizeof(UDF_DATALOC_INDEX));
-    Vcb->DlocCount += DLOC_LIST_GRANULARITY;
-    return (Vcb->DlocCount - DLOC_LIST_GRANULARITY);
+    MyFreePool__(Vcb->DlocLbaIndex);
+    Vcb->DlocLbaIndex = LbaIndex;
+    Vcb->DlocCount = NewCount;
+    return (NewCount - DLOC_LIST_GRANULARITY);
 } // end UDFFindFreeDloc()
 
 /*
@@ -1403,6 +1489,8 @@ UDFStoreDloc(
     Vcb->DlocList[i].Lba = Lba;
     Vcb->DlocList[i].Dloc = Dloc;
     RtlZeroMemory(Dloc, sizeof(UDF_DATALOC_INFO));
+    Dloc->CacheIndex = (ULONG)i + 1;
+    UDFInsertDlocLbaIndex(Vcb, i);
     Vcb->DlocFreeHint = (ULONG)i + 1;
     Dloc->LinkedFileInfo = fi;
     UDFAcquireDloc(Vcb, Dloc);
@@ -1435,6 +1523,8 @@ UDFRemoveDloc(
     }
     // remove from cache
     ASSERT(Vcb->DlocList);
+    UDFRemoveDlocLbaIndex(Vcb, i);
+    Dloc->CacheIndex = 0;
     RtlZeroMemory(&(Vcb->DlocList[i]), sizeof(UDF_DATALOC_INDEX));
     Vcb->DlocFreeHint = min(Vcb->DlocFreeHint, (ULONG)i);
     UDFReleaseResource(&(Vcb->DlocResource));
@@ -1465,6 +1555,8 @@ UDFUnlinkDloc(
     }
     // remove from cache
     ASSERT(Vcb->DlocList);
+    UDFRemoveDlocLbaIndex(Vcb, i);
+    Dloc->CacheIndex = 0;
     RtlZeroMemory(&(Vcb->DlocList[i]), sizeof(UDF_DATALOC_INDEX));
     Vcb->DlocFreeHint = min(Vcb->DlocFreeHint, (ULONG)i);
     UDFReleaseResource(&(Vcb->DlocResource));
@@ -1492,6 +1584,8 @@ UDFFreeDloc(
 
     if ((i = UDFFindDlocInMem(Vcb, Dloc)) != (-1)) {
         ASSERT(Vcb->DlocList);
+        UDFRemoveDlocLbaIndex(Vcb, i);
+        Dloc->CacheIndex = 0;
         RtlZeroMemory(&(Vcb->DlocList[i]), sizeof(UDF_DATALOC_INDEX));
         Vcb->DlocFreeHint = min(Vcb->DlocFreeHint, (ULONG)i);
     }
@@ -1516,7 +1610,9 @@ UDFRelocateDloc(
 
     if ((i = UDFFindDlocInMem(Vcb, Dloc)) != (-1)) {
         ASSERT(Vcb->DlocList);
+        UDFRemoveDlocLbaIndex(Vcb, i);
         Vcb->DlocList[i].Lba = NewLba;
+        UDFInsertDlocLbaIndex(Vcb, i);
     }
     UDFReleaseResource(&(Vcb->DlocResource));
 
@@ -1538,10 +1634,13 @@ UDFReleaseDlocList(
             MyFreePool__(Vcb->DlocList[i].Dloc);
         }
     }
+    MyFreePool__(Vcb->DlocLbaIndex);
     MyFreePool__(Vcb->DlocList);
     Vcb->DlocList = NULL;
+    Vcb->DlocLbaIndex = NULL;
     Vcb->DlocCount = 0;
     Vcb->DlocFreeHint = 0;
+    Vcb->DlocLbaCount = 0;
     UDFReleaseResource(&(Vcb->DlocResource));
 } // end UDFReleaseDlocList()
 
@@ -1614,4 +1713,3 @@ UDFInsertLinkedFile(
     fi->PrevLinkedFile->NextLinkedFile = fi;
     return;
 } // end UDFInsertLinkedFile()
-

@@ -311,6 +311,7 @@ typedef struct _UDF_DATALOC_INFO {
 */
     uint32      FE_Flags;              // FileEntry flags
     PUDF_DELETE_PREFREE DeletePrefree; // held until deferred allocation release
+    ULONG       CacheIndex;
 /**
     Counter of currently opened directory tree instances  (files)
     pointing to given data. It is introduced because UDF supports

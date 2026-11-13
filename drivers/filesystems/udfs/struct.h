@@ -870,6 +870,8 @@ struct VCB {
     PUDF_DATALOC_INDEX DlocList;
     ULONG           DlocCount;
     ULONG           DlocFreeHint; // all earlier slots are occupied
+    PULONG          DlocLbaIndex;
+    ULONG           DlocLbaCount;
     // FS compatibility
     BOOLEAN         LowFreeSpace;
     enum UDFFSD_MEDIA_TYPE MediaTypeEx;
@@ -1246,4 +1248,3 @@ typedef struct _CDROM_TOC_LARGE {
 } CDROM_TOC_LARGE;
 
 #endif /* _UDF_STRUCTURES_H_ */ // has this file been included?
-
