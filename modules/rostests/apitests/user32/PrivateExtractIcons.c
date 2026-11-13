@@ -316,6 +316,22 @@ void TestBigSmallPairExtraction()
     SafeDestroyIcon(&hIcons[0]);
     SafeDestroyIcon(&hIcons[1]);
 
+    // Extract 4 icon images from the first two icons (this assumes IDI_3216 is the 2nd icon in the PE)
+    RetVal = PrivateExtractIconsW(path, 0, MAKELONG(32, 16), MAKELONG(32, 16), hIcons, NULL, 4, 0);
+    ok(RetVal == 4, "Extract four icon images\n");
+    ok(IsValidIcon(hIcons[0]), "32\n");
+    ok(IsValidIcon(hIcons[1]), "16\n");
+    RetVal = (pData = GetIconMaskData32(hIcons[2])) != NULL && pData[0] == 0; // The 32px source icon has an opaque 1px frame border
+    LocalFree(pData);
+    ok(RetVal, "Correct 32px icon image\n");
+    RetVal = (pData = GetIconMaskData32(hIcons[3])) != NULL && pData[0] != 0; // The 16px source icon has no frame (transparent)
+    LocalFree(pData);
+    ok(RetVal, "Correct 16px icon image\n"); // [CORE-20060] The 2nd icon should not just be a resized version of the first
+    SafeDestroyIcon(&hIcons[0]);
+    SafeDestroyIcon(&hIcons[1]);
+    SafeDestroyIcon(&hIcons[2]);
+    SafeDestroyIcon(&hIcons[3]);
+
     ExpandEnvironmentStringsW(L"%temp%\\ROS_USER32.ico", path, _countof(path));
     if (!ResourceToFile(IDR_ICONS_3216, path))
     {
