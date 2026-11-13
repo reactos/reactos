@@ -339,6 +339,32 @@ SetClipboardData(UINT uFormat, HANDLE hMem)
         {
             if (pMem)
             {
+                /* Text is NULL-terminated */
+                if (uFormat == CF_UNICODETEXT)
+                {
+                    if (dwSize < sizeof(WCHAR))
+                    {
+                        ERR("SetClipboardData CF_UNICODETEXT with invalid size % lu\n", dwSize);
+                        GlobalUnlock(hMem);
+                        return NULL;
+                    }
+
+                    PWCHAR pwchEnd = (PWCHAR)((PCHAR)pMem + dwSize);
+                    pwchEnd[-1] = UNICODE_NULL;
+                }
+                else if (uFormat == CF_TEXT)
+                {
+                    if (dwSize < sizeof(CHAR))
+                    {
+                        ERR("SetClipboardData CF_TEXT with invalid size % lu\n", dwSize);
+                        GlobalUnlock(hMem);
+                        return NULL;
+                    }
+
+                    PCHAR pchEnd = (PCHAR)pMem + dwSize;
+                    pchEnd[-1] = ANSI_NULL;
+                }
+
                 /* This is a local memory. Make global memory object */
                 hGlobal = NtUserConvertMemHandle(pMem, dwSize);
 
