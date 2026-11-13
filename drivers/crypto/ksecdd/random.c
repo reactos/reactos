@@ -9,6 +9,10 @@
 
 #include "ksecdd.h"
 
+#if defined(_M_IX86) || defined(_M_AMD64)
+#include <immintrin.h>
+#endif
+
 #define NDEBUG
 #include <debug.h>
 
@@ -51,32 +55,19 @@ KsecRngDeriveKey(
     RtlSecureZeroMemory(Digest, sizeof(Digest));
 }
 
-/*
- * AES-256-CTR. Counter block = { ThreadId, KsecRngCounter }.
- * The key is re-derived on every request. Buffer must be non-paged.
- */
-NTSTATUS
-NTAPI
-KsecGenRandom(
-    PVOID Buffer,
-    SIZE_T Length)
+/* AES-256-CTR. Counter block = { ThreadId, KsecRngCounter }, key re-derived per call */
+static
+VOID
+KsecRngAesCtrFill(
+    _Out_writes_bytes_(Length) PUCHAR Output,
+    _In_ SIZE_T Length)
 {
     UCHAR KeyData[32];
     ULONG64 CounterBlock[2];
     UCHAR KeyStream[16];
-    PUCHAR Output = Buffer;
     SIZE_T Chunk;
-    KIRQL OldIrql;
 
-    if (Length == 0)
-        return STATUS_SUCCESS;
-
-    /* Entropy gathering needs PASSIVE_LEVEL */
     KsecRngDeriveKey(KeyData);
-
-    /* No preemption while the global key and counter are in use */
-    KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
-
     aes_setup(KeyData, sizeof(KeyData), 0, &KsecRngAesKey);
     CounterBlock[0] = HandleToUlong(PsGetCurrentThreadId());
 
@@ -91,10 +82,65 @@ KsecGenRandom(
         Length -= Chunk;
     }
 
-    KeLowerIrql(OldIrql);
-
     RtlSecureZeroMemory(KeyData, sizeof(KeyData));
     RtlSecureZeroMemory(KeyStream, sizeof(KeyStream));
+}
+
+#if defined(_M_IX86) || defined(_M_AMD64)
+/* Returns the number of bytes filled. Gives up after three failures. */
+static
+SIZE_T
+KsecRngRdRandFill(
+    _Out_writes_bytes_(Length) PUCHAR Output,
+    _In_ SIZE_T Length)
+{
+    unsigned int Value;
+    ULONG Failures = 0;
+    SIZE_T Done = 0;
+    SIZE_T Chunk;
+
+    if (!ExIsProcessorFeaturePresent(PF_RDRAND_INSTRUCTION_AVAILABLE))
+        return 0;
+
+    while (Done < Length)
+    {
+        /* Some AMD CPUs return all ones with CF set; count it as a failure */
+        if (!_rdrand32_step(&Value) || (Value == 0xFFFFFFFF))
+        {
+            if (++Failures == 3)
+                break;
+            continue;
+        }
+
+        Chunk = min(Length - Done, sizeof(Value));
+        RtlCopyMemory(Output + Done, &Value, Chunk);
+        Done += Chunk;
+    }
+
+    RtlSecureZeroMemory(&Value, sizeof(Value));
+    return Done;
+}
+#endif
+
+/* RDRAND if available, otherwise (or after three RDRAND failures) AES-256-CTR */
+NTSTATUS
+NTAPI
+KsecGenRandom(
+    PVOID Buffer,
+    SIZE_T Length)
+{
+    PUCHAR Output = Buffer;
+    SIZE_T Done = 0;
+
+    if (Length == 0)
+        return STATUS_SUCCESS;
+
+#if defined(_M_IX86) || defined(_M_AMD64)
+    Done = KsecRngRdRandFill(Output, Length);
+#endif
+
+    if (Done < Length)
+        KsecRngAesCtrFill(Output + Done, Length - Done);
 
     return STATUS_SUCCESS;
 }
