@@ -698,7 +698,8 @@ UDFPublishNewVolumeIdentifiers(UDF_FE_WRITEBACK* Batch)
                                 window->Item[end].Length <= UDF_FID_WINDOW_BYTES - length) {
                             length += window->Item[end++].Length;
                         }
-                        if (end == i + 1) {
+                        if (end == i + 1 ||
+                            window->Item[i].Length > UDF_FID_WINDOW_BYTES) {
                             i = end;
                             continue;
                         }
@@ -717,6 +718,11 @@ UDFPublishNewVolumeIdentifiers(UDF_FE_WRITEBACK* Batch)
                             UDF_FE_OWNER* owner = &Batch->Owner[item->Owner];
                             PFILE_IDENT_DESC fid = (PFILE_IDENT_DESC)(window->Bytes + length);
                             uint32 lba;
+                            if (item->Length < sizeof(FILE_IDENT_DESC) ||
+                                item->Length > UDF_FID_WINDOW_BYTES - length) {
+                                status = STATUS_FILE_CORRUPT_ERROR;
+                                break;
+                            }
                             if (UDFNewFidReady(vcb,owner,directory) != item->Index) {
                                 status = STATUS_FILE_CORRUPT_ERROR;
                                 break;
@@ -995,7 +1001,7 @@ UDFWritebackNewFileBatchInternal(PIRP_CONTEXT IrpContext, PVCB Vcb,
         }
         /* Drop every cohort resource before any per-owner last-reference
          * release can walk its parent directory or call the cache manager. */
-        for (i = batch->Count; i; i--) {
+        for (i = min(batch->Count, UDF_FE_BATCH_CAPACITY); i; i--) {
             UDF_FE_OWNER* owner = &batch->Owner[i-1];
             if (owner->PagingHeld) {
                 UDFReleasePagingIo(IrpContext,owner->Fcb);

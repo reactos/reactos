@@ -130,6 +130,9 @@ UDFDirIndexGrow(
         if (!MyReallocPool__((int8*)hDirNdx, sizeof(DIR_INDEX_HDR) + k*sizeof(PDIR_INDEX_ITEM),
                        (int8**)(&hDirNdx), sizeof(DIR_INDEX_HDR) + (k+1)*sizeof(PDIR_INDEX_ITEM) ) )
             return STATUS_INSUFFICIENT_RESOURCES;
+        /* The header moved: hand it back now, so a failure below does not
+         * leave the caller with the freed one. */
+        (*_hDirNdx) = hDirNdx;
         FrameList = (PDIR_INDEX_ITEM*)(hDirNdx+1);
         // Grow last frame
         if (!MyReallocPool__((int8*)(FrameList[k-1]), AlignDirIndex(hDirNdx->LastFrameCount)*sizeof(DIR_INDEX_ITEM),

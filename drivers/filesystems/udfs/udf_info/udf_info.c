@@ -3413,6 +3413,8 @@ UDFReserveInitialFid(PIRP_CONTEXT IrpContext, PVCB Vcb,
         parent->Dloc->FELoc.Mapping[0].extLocation);
     if (parentPart >= Vcb->PartitionMaps)
         return STATUS_FILE_CORRUPT_ERROR;
+    if (FileInfo->FileIdentLen < sizeof(FILE_IDENT_DESC))
+        return STATUS_SUCCESS; // not a complete FID: immediate FE fallback
     tombstone = MyAllocatePool__(NonPagedPool, FileInfo->FileIdentLen);
     if (!tombstone)
         return STATUS_SUCCESS; // No new state accepted; immediate FE fallback.
@@ -4107,7 +4109,7 @@ UDFUpdateParentFID(
     SIZE_T WrittenBytes = 0;
 
     DirNdx = UDFDirIndex(DirInfo->Dloc->DirIndex, 1);
-    if (!DirNdx)
+    if (!DirNdx || DirNdx->Length < sizeof(FILE_IDENT_DESC))
         return STATUS_FILE_CORRUPT_ERROR;
 
     Buf = (int8*)MyAllocatePool__(NonPagedPool, DirNdx->Length);
@@ -5040,15 +5042,26 @@ err_vat_15:
             status = STATUS_FILE_CORRUPT_ERROR;
             goto err_vat_15;
         }
+        if (len < sizeof(struct VirtualAllocationTable20)) {
+            status = STATUS_FILE_CORRUPT_ERROR;
+            goto err_vat_15;
+        }
         Buf = (struct VirtualAllocationTable20*)MyAllocatePool__(NonPagedPool, sizeof(struct VirtualAllocationTable20));
         if (!Buf) goto err_vat_15_2;
+        /* Read the header before using it (it used to be read from an
+         * uninitialized buffer, after freeing it). */
+        status = UDFReadFile__(IrpContext, Vcb, VatFileInfo, 0,
+                               sizeof(struct VirtualAllocationTable20), FALSE, (int8*)Buf);
+        if (!NT_SUCCESS(status) || Buf->lengthHeader < sizeof(struct VirtualAllocationTable20) ||
+            Buf->lengthHeader > len) {
+            MyFreePool__(Buf);
+            if (NT_SUCCESS(status))
+                status = STATUS_FILE_CORRUPT_ERROR;
+            goto err_vat_15;
+        }
         Offset = Buf->lengthHeader;
         to_read = len - Offset;
         hdrOffset = 0;
-        MyFreePool__(Buf);
-
-        //TODO: Read VirtualAllocationTable20
-        //TODO: fix Use-After-Free
 
         Vcb->minUDFReadRev  = Buf->minReadRevision;
         Vcb->minUDFWriteRev = Buf->minWriteRevision;
@@ -5056,6 +5069,7 @@ err_vat_15:
 
         Vcb->numFiles = Buf->numFIDSFiles;
         Vcb->numDirs  = Buf->numFIDSDirectories;
+        MyFreePool__(Buf);
 
     } else {
         // unknown (or wrong) VAT format
@@ -6061,6 +6075,8 @@ relocate_FE:
                     UDFPrint(("  retry flush...\n"));
                     goto retry_flush_FE;
                 }
+                if (_FEExtInfo.Mapping)
+                    MyFreePool__(_FEExtInfo.Mapping);
             }
             BrutePoint();
             return status;
@@ -6951,10 +6967,38 @@ UDFOpenStreamDir__(
 /*
     This routine records VAT & VAT Icb at the end of session
  */
+static NTSTATUS
+UDFRecordVATInternal(
+    IN PIRP_CONTEXT IrpContext,
+    IN PVCB Vcb,
+    OUT int8** OldOut,
+    OUT int8** NewOut
+    );
+
+/* Old and New, the previous and the new VAT image, used to leak on every
+ * path; the internal routine hands them back to be freed here. */
 NTSTATUS
 UDFRecordVAT(
     IN PIRP_CONTEXT IrpContext,
     IN PVCB Vcb
+    )
+{
+    int8* Old = NULL;
+    int8* New = NULL;
+    NTSTATUS status = UDFRecordVATInternal(IrpContext, Vcb, &Old, &New);
+    if (Old)
+        DbgFreePool(Old);
+    if (New)
+        DbgFreePool(New);
+    return status;
+}
+
+static NTSTATUS
+UDFRecordVATInternal(
+    IN PIRP_CONTEXT IrpContext,
+    IN PVCB Vcb,
+    OUT int8** OldOut,
+    OUT int8** NewOut
     )
 {
     uint32 Offset;
@@ -7010,11 +7054,11 @@ UDFRecordVAT(
         DbgFreePool(Vat);
         return STATUS_INSUFFICIENT_RESOURCES;
     }
+    *OldOut = Old;
     // read old one
     status = UDFReadFile__(IrpContext, Vcb, VatFileInfo, 0, OldLen, FALSE, Old);
     if (!NT_SUCCESS(status)) {
         DbgFreePool(Vat);
-        DbgFreePool(Old);
         return status;
     }
     // prepare some pointers
@@ -7030,10 +7074,12 @@ UDFRecordVAT(
             DbgFreePool(Vat);
             return STATUS_INSUFFICIENT_RESOURCES;
         }
+        *NewOut = New;
         RtlCopyMemory(New+hdrOffsetNew, Old+hdrOffset, hdrLen);
-        ((struct VirtualAllocationTable15*)(New + hdrOffset))->previousVATICB =
+        /* The header was copied to its new place at hdrOffsetNew. */
+        ((struct VirtualAllocationTable15*)(New + hdrOffsetNew))->previousVATICB =
             VatFileInfo->Dloc->FELoc.Mapping[0].extLocation - root;
-        eID = &(((struct VirtualAllocationTable15*)(New + hdrOffset))->ident);
+        eID = &(((struct VirtualAllocationTable15*)(New + hdrOffsetNew))->ident);
 
         UDFSetEntityID_imp(eID, UDF_ID_ALLOC);
 
@@ -7054,6 +7100,7 @@ UDFRecordVAT(
             DbgFreePool(Vat);
             return STATUS_INSUFFICIENT_RESOURCES;
         }
+        *NewOut = New;
         RtlCopyMemory(New+hdrOffsetNew, Old+hdrOffset, hdrLen);
         ((struct VirtualAllocationTable20*)New)->previousVatICBLoc =
             VatFileInfo->Dloc->FELoc.Mapping[0].extLocation - root;

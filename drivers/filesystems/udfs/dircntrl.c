@@ -917,6 +917,11 @@ UDFNotifyReportChange(
 
         // Fallback to root
         if (!FullPath.Buffer || FullPath.Length == 0) {
+            /* A built but empty path is still allocated. */
+            if (PathAllocated && FullPath.Buffer) {
+                ExFreePoolWithTag(FullPath.Buffer, 0);
+            }
+            PathAllocated = FALSE;
             RootChar = L'\\';
             FullPath.Buffer = &RootChar;
             FullPath.Length = sizeof(WCHAR);
@@ -948,6 +953,6 @@ UDFNotifyReportChange(
     UDFReleaseFcb(IrpContext, Fcb);
 
     if (PathAllocated && FullPath.Buffer) {
-        ExFreePool(FullPath.Buffer);
+        ExFreePoolWithTag(FullPath.Buffer, 0);
     }
 }

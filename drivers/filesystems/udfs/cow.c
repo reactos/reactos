@@ -1308,7 +1308,7 @@ UDFCowRelocateData(
 {
     PUDF_DATALOC_INFO dloc;
     PEXTENT_MAP map, newMap = NULL, freed = NULL;
-    EXTENT_INFO alloc;
+    EXTENT_INFO alloc = {0};
     PUDF_COW_FREE node;
     uint32 first, count, need = 0, pos = 0, i, n, ref, BSh = Vcb->SectorShift;
     NTSTATUS status;
@@ -1342,8 +1342,11 @@ UDFCowRelocateData(
     status = UDFAllocFreeExtent(IrpContext, Vcb, ((int64)need) << BSh,
                                 UDFPartStart(Vcb, ref), UDFPartEnd(Vcb, ref),
                                 &alloc, dloc->DataLoc.Flags);
-    if (!NT_SUCCESS(status) || !alloc.Mapping)
+    if (!NT_SUCCESS(status) || !alloc.Mapping) {
+        if (alloc.Mapping)
+            MyFreePool__(alloc.Mapping);
         return NULL;    // no room for a copy: write in place
+    }
     status = CowBuildRelocatedMap(map, first, count, alloc.Mapping, BSh, &newMap, &freed);
     if (!NT_SUCCESS(status)) {
         UDFMarkSpaceAsXXX(Vcb, 0, alloc.Mapping, AS_DISCARDED);

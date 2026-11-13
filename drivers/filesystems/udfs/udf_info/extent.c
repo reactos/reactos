@@ -1861,7 +1861,7 @@ UDFMarkNotAllocatedAsAllocated(
 //    uint32 BS = Vcb->BlockSize;
     uint32 BSh = Vcb->SectorShift;
     NTSTATUS status;
-    EXTENT_INFO TmpExtInf;
+    EXTENT_INFO TmpExtInf = {0};
     SIZE_T aLen, sLen;
     SIZE_T LBS = Vcb->SectorSize;
     // I don't know what else comment can be added here.
@@ -1903,6 +1903,8 @@ try_alloc_anywhere:
     // check for successfull allocation
     if (!NT_SUCCESS(status)) {
         AdPrint(("Not->Alloc  no free\n"));
+        if (TmpExtInf.Mapping)
+            MyFreePool__(TmpExtInf.Mapping);
         return status;
     }
     // get number of frags in allocated block

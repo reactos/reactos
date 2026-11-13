@@ -87,6 +87,13 @@ UDFPrepareXSpaceBitmap(
     *XSl = sizeof(SPACE_BITMAP_DESC) + ((plen+7)>>3);
     _XSBM = (int8*)DbgAllocatePool(NonPagedPool, (*XSl + BS - 1) & ~(BS-1) );
     *XSBM = _XSBM;
+    if (!_XSBM) {
+        *XSl = 0;
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+    TmpExt.extLength = 0;
+    TmpExt.extLocation = 0;
+    locAddr.logicalBlockNum = 0;
 
     switch (XSpaceBitmap->extLength >> 30) {
     case EXTENT_RECORDED_ALLOCATED: {
@@ -108,8 +115,12 @@ UDFPrepareXSpaceBitmap(
     case EXTENT_NOT_RECORDED_NOT_ALLOCATED: {
         // allocate space for bitmap
         if (!NT_SUCCESS(status = UDFAllocFreeExtent(IrpContext, Vcb, *XSl,
-               UDFPartStart(Vcb, RefPartNum), UDFPartEnd(Vcb, RefPartNum), XSBMExtInfo, EXTENT_FLAG_ALLOC_SEQUENTIAL) ))
+               UDFPartStart(Vcb, RefPartNum), UDFPartEnd(Vcb, RefPartNum), XSBMExtInfo, EXTENT_FLAG_ALLOC_SEQUENTIAL) )) {
+            DbgFreePool(_XSBM);
+            *XSBM = NULL;
+            *XSl = 0;
             return status;
+        }
         if (XSBMExtInfo->Mapping[1].extLength) {
             UDFPrint(("Can't allocate space for Freed Space bitmap\n"));
             *XSl = 0;
@@ -2385,6 +2396,7 @@ UDFVerifyFreeSpaceBitmap(
     PEXTENT_MAP Extent;
     lb_addr locAddr;
 
+    status = STATUS_SUCCESS;
     UDFPrint(("UDFVerifyFreeSpaceBitmap:\n"));
     // read info for partition header (if any)
     if (phd) {
@@ -2408,7 +2420,7 @@ UDFVerifyFreeSpaceBitmap(
         if (!NT_SUCCESS(status = UDFReadTagged(IrpContext, Vcb, AllocDesc, Lba, Lba, &Ident)) ||
            !(Extent = (PEXTENT_MAP)MyAllocatePool__(NonPagedPool, l = (((PUNALLOC_SPACE_DESC)AllocDesc)->numAllocDescs+1) * sizeof(EXTENT_AD) ))) {
             MyFreePool__(AllocDesc);
-            return status;
+            return NT_SUCCESS(status) ? STATUS_INSUFFICIENT_RESOURCES : status;
         }
 
         RtlCopyMemory((int8*)Extent, AllocDesc+sizeof(UNALLOC_SPACE_DESC), (((PUNALLOC_SPACE_DESC)AllocDesc)->numAllocDescs+1) * sizeof(EXTENT_AD) );
@@ -2420,6 +2432,7 @@ UDFVerifyFreeSpaceBitmap(
             Extent[i].extLocation = UDFPartLbaToPhys(Vcb, &locAddr);
             if (Extent[i].extLocation == LBA_OUT_OF_EXTENT) {
                 BrutePoint();
+                MyFreePool__(Extent);
                 MyFreePool__(AllocDesc);
                 return STATUS_DISK_CORRUPT_ERROR;
             }
@@ -2431,8 +2444,10 @@ UDFVerifyFreeSpaceBitmap(
             if ((Extent[i].extLocation >> 30) == EXTENT_NEXT_EXTENT_ALLOCDESC) {
                 // load continuation
                 Lba = Extent[i].extLocation & UDF_EXTENT_LENGTH_MASK;
-                if (!NT_SUCCESS(status = UDFReadTagged(IrpContext, Vcb, AllocDesc, Lba, Lba, &Ident)) ||
-                   !(Extent = (PEXTENT_MAP)MyAllocatePool__(NonPagedPool, (((PUNALLOC_SPACE_DESC)AllocDesc)->numAllocDescs+1) * sizeof(EXTENT_AD) ))) {
+                /* The continuation is merged into Extent below; allocating a
+                 * new Extent here lost the one being built. */
+                if (!NT_SUCCESS(status = UDFReadTagged(IrpContext, Vcb, AllocDesc, Lba, Lba, &Ident))) {
+                    MyFreePool__(Extent);
                     MyFreePool__(AllocDesc);
                     return status;
                 }
@@ -2528,7 +2543,7 @@ UDFBuildFreeSpaceBitmap(
         if (!NT_SUCCESS(status = UDFReadTagged(IrpContext, Vcb, AllocDesc, Lba, Lba, &Ident)) ||
            !(Extent = (PEXTENT_MAP)MyAllocatePool__(NonPagedPool, l = (((PUNALLOC_SPACE_DESC)AllocDesc)->numAllocDescs+1) * sizeof(EXTENT_AD) ))) {
             MyFreePool__(AllocDesc);
-            return status;
+            return NT_SUCCESS(status) ? STATUS_INSUFFICIENT_RESOURCES : status;
         }
 
         RtlCopyMemory((int8*)Extent, AllocDesc+sizeof(UNALLOC_SPACE_DESC), (((PUNALLOC_SPACE_DESC)AllocDesc)->numAllocDescs+1) * sizeof(EXTENT_AD) );
@@ -2540,6 +2555,7 @@ UDFBuildFreeSpaceBitmap(
             Extent[i].extLocation = UDFPartLbaToPhys(Vcb, &locAddr);
             if (Extent[i].extLocation == LBA_OUT_OF_EXTENT) {
                 BrutePoint();
+                MyFreePool__(Extent);
                 MyFreePool__(AllocDesc);
                 return STATUS_DISK_CORRUPT_ERROR;
             }
@@ -2551,8 +2567,10 @@ UDFBuildFreeSpaceBitmap(
             if ((Extent[i].extLocation >> 30) == EXTENT_NEXT_EXTENT_ALLOCDESC) {
                 // load continuation
                 Lba = Extent[i].extLocation & UDF_EXTENT_LENGTH_MASK;
-                if (!NT_SUCCESS(status = UDFReadTagged(IrpContext, Vcb, AllocDesc, Lba, Lba, &Ident)) ||
-                   !(Extent = (PEXTENT_MAP)MyAllocatePool__(NonPagedPool, (((PUNALLOC_SPACE_DESC)AllocDesc)->numAllocDescs+1) * sizeof(EXTENT_AD) ))) {
+                /* The continuation is merged into Extent below; allocating a
+                 * new Extent here lost the one being built. */
+                if (!NT_SUCCESS(status = UDFReadTagged(IrpContext, Vcb, AllocDesc, Lba, Lba, &Ident))) {
+                    MyFreePool__(Extent);
                     MyFreePool__(AllocDesc);
                     return status;
                 }
@@ -3390,7 +3408,7 @@ UDFFindLastFileSet(
     uint16 Ident;
     uint32 relPrevExt, prevExt;
 
-    relPrevExt, prevExt = 0;
+    relPrevExt = prevExt = 0;
     FileSetDesc->nextExt.extLength = 1;  // ;)
     // walk through FileSet chain
     // we've just pre-init'd extent length to read 1st FileSet
