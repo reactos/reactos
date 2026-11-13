@@ -54,7 +54,7 @@ i8042MouQueuePacket(
 
 	DeviceExtension->MouseComplete = TRUE;
 	DeviceExtension->MouseInBuffer++;
-	if (DeviceExtension->MouseInBuffer >= DeviceExtension->Common.PortDeviceExtension->Settings.MouseDataQueueSize)
+	if (DeviceExtension->MouseInBuffer > DeviceExtension->Common.PortDeviceExtension->Settings.MouseDataQueueSize)
 	{
 		WARN_(I8042PRT, "Mouse buffer overflow\n");
 		DeviceExtension->MouseInBuffer--;
@@ -77,6 +77,14 @@ i8042MouHandle(
 	switch (DeviceExtension->MouseState)
 	{
 		case MouseIdle:
+			/* Drop the packet if there is no room for it in the buffer */
+			if (DeviceExtension->MouseInBuffer >=
+			    DeviceExtension->Common.PortDeviceExtension->Settings.MouseDataQueueSize)
+			{
+				WARN_(I8042PRT, "Mouse buffer full, dropping packet\n");
+				return;
+			}
+
 			/* This bit should be 1, if not drop the packet, we
 			 * might be lucky and get in sync again
 			 */
