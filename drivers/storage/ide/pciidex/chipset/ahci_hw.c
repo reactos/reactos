@@ -491,7 +491,7 @@ AtaAhciWaitForDeviceReady(
     _In_ PCHANNEL_DATA_AHCI ChanData,
     _In_ ULONG TimeOut)
 {
-    ULONG i, TaskFileData;
+    ULONG i, TaskFileData, DeviceDisconnected = 0, DeviceConnected = 0;
 
     /* Do a quick check first (100 us) */
     for (i = 0; i < 10; ++i)
@@ -510,6 +510,12 @@ AtaAhciWaitForDeviceReady(
         if (!(TaskFileData & (IDE_STATUS_BUSY | IDE_STATUS_DRQ)))
             return TRUE;
 
+        if ((TaskFileData & AHCI_PXTFD_STATUS_MASK) != 0xFF)
+        {
+            DeviceDisconnected = 0;
+            DeviceConnected++;
+        }
+
         /* Keep clearing the port errors after every 1 second interval */
         if (((i % AHCI_DELAY_1_SECOND) == 0) && (i != 0))
         {
@@ -520,6 +526,15 @@ AtaAhciWaitForDeviceReady(
                  ChanData->Channel,
                  TaskFileData,
                  i);
+
+            if (++DeviceDisconnected >= AHCI_READY_DRIVE_RETRY_COUNT)
+            {
+                WARN("CH %lu: Nothing connected %lu? %08lx\n",
+                     ChanData->Channel,
+                     DeviceConnected,
+                     AHCI_PORT_READ(ChanData->IoBase, PxSataStatus));
+                return FALSE;
+            }
 
             AHCI_PORT_WRITE(ChanData->IoBase, PxSataError, 0xFFFFFFFF);
         }
@@ -819,9 +834,10 @@ AtaAhciPmpDetect(
     /* BSY and DRQ must be cleared prior to issuing the software reset */
     if (!AtaAhciWaitForDeviceReady(ChanData, AHCI_DELAY_PMP_READY_DRIVE))
     {
-        WARN("CH %lu: Wait for ready failed %08lx\n",
+        WARN("CH %lu: Wait for ready failed %08lx %08lx\n",
              ChanData->Channel,
-             AHCI_PORT_READ(ChanData->IoBase, PxTaskFileData));
+             AHCI_PORT_READ(ChanData->IoBase, PxTaskFileData),
+             AHCI_PORT_READ(ChanData->IoBase, PxSataStatus));
 
         /* Transmit a COMRESET to recover */
         AtaAhciSendComReset(ChanData);
@@ -947,9 +963,10 @@ AtaAhciPhyCheckConnection(
 
         if (!AtaAhciWaitForDeviceReady(ChanData, AHCI_DELAY_READY_DRIVE))
         {
-            WARN("CH %lu: Wait for ready failed %08lx\n",
+            WARN("CH %lu: Wait for ready failed %08lx %08lx\n",
                  ChanData->Channel,
-                 AHCI_PORT_READ(ChanData->IoBase, PxTaskFileData));
+                 AHCI_PORT_READ(ChanData->IoBase, PxTaskFileData),
+                 AHCI_PORT_READ(ChanData->IoBase, PxSataStatus));
 
             ConnectionStatus = CONN_STATUS_FAILURE;
             continue;

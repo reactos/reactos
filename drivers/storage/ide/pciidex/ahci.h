@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS ATA Bus Driver
  * LICENSE:     MIT (https://spdx.org/licenses/MIT)
  * PURPOSE:     AHCI header file
- * COPYRIGHT:   Copyright 2026 <di.sean@protonmail.com>
+ * COPYRIGHT:   Copyright 2026 Dmitry Borisov <di.sean@protonmail.com>
  */
 
 #pragma once
@@ -35,6 +35,8 @@
 #define AHCI_DELAY_PMP_DET_STABLE     (300 / PORT_TIMER_TICK_MS)
 #define AHCI_DELAY_CLO_CLEAR          (10 / PORT_TIMER_TICK_MS)
 #define AHCI_DELAY_INTERFACE_CHANGE   (10 / PORT_TIMER_TICK_MS)
+
+#define AHCI_READY_DRIVE_RETRY_COUNT  3
 
 #define AHCI_FIS_REGISTER_HOST_TO_DEVICE           0x27
 #define AHCI_FIS_REGISTER_DEVICE_TO_HOST           0x34

@@ -40,8 +40,6 @@ AtaCopyIdStringSafe(
 {
     PCHAR Dest = Destination;
 
-    PAGED_CODE();
-
     while (MaxLength != 0)
     {
         const UCHAR Char = *Source;

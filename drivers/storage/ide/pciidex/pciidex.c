@@ -357,7 +357,7 @@ PciIdeXAddDeviceEx(
     ULONG DeviceExtensionSize;
     PDEVICE_OBJECT Fdo;
     UNICODE_STRING DeviceName;
-    WCHAR DeviceNameBuffer[sizeof("\\Device\\Ide\\PciIde99999")];
+    WCHAR DeviceNameBuffer[sizeof("\\Device\\Ide\\PciIde4294967295")];
     NTSTATUS Status;
 
     PAGED_CODE();

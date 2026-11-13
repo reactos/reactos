@@ -24,7 +24,7 @@ AtaFdoCreateSymLinks(
 {
     UNICODE_STRING ChannelName;
     ULONG ScsiAdapter, ScsiPortCount;
-    WCHAR ChannelNameBuffer[sizeof("\\Device\\Ide\\IdePort99999")];
+    WCHAR ChannelNameBuffer[sizeof("\\Device\\Ide\\IdePort4294967295")];
     NTSTATUS Status;
     DECLARE_PAGED_WSTRING(FdoFormat, L"\\Device\\Ide\\IdePort%lu");
 
@@ -45,7 +45,7 @@ AtaFdoCreateSymLinks(
     /* Search for a free SCSI port adapter in the system */
     for (ScsiAdapter = 0; ScsiAdapter <= ScsiPortCount; ++ScsiAdapter)
     {
-        WCHAR SymLinkNameBuffer[sizeof("\\DosDevices\\Scsi99999:")];
+        WCHAR SymLinkNameBuffer[sizeof("\\DosDevices\\Scsi4294967295:")];
         UNICODE_STRING SymLinkName;
 
         Status = RtlStringCbPrintfW(SymLinkNameBuffer,
@@ -195,7 +195,7 @@ AtaFdoRemoveSymLinks(
 {
     NTSTATUS Status;
     UNICODE_STRING SymLinkName;
-    WCHAR SymLinkNameBuffer[sizeof("\\DosDevices\\Scsi99999:")];
+    WCHAR SymLinkNameBuffer[sizeof("\\DosDevices\\Scsi4294967295:")];
 
     PAGED_CODE();
 
@@ -724,7 +724,7 @@ AtaFdoDeviceListInsert(
         }
         else
         {
-            if (CurrentDevExt->Device.AtaScsiAddress.AsULONG == Address)
+            if (CurrentDevExt == DevExt)
                 break;
         }
 
