@@ -201,12 +201,6 @@ MACRO(ExitTrap, Flags)
         mov fs, [rbp + KTRAP_FRAME_SegFs]
     endif
 
-    if (Flags AND TF_IRQL)
-        /* Restore previous irql */
-        movzx rax, byte ptr [rbp + KTRAP_FRAME_PreviousIrql]
-        mov cr8, rax
-    endif
-
     /* Check if we came from user mode */
     test byte ptr [rbp + KTRAP_FRAME_SegCs], 1
     jz kernel_mode_return
