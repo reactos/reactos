@@ -32,7 +32,6 @@
 #include "wine/test.h"
 
 #ifdef __REACTOS__
-#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) >= 0)
 #define AlwaysOn DEPPolicyAlwaysOn
 #endif
 
