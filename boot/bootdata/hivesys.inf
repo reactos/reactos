@@ -2320,7 +2320,7 @@ HKLM,"SYSTEM\CurrentControlSet\Services\telnetd","Group",0x00000000,"Network"
 HKLM,"SYSTEM\CurrentControlSet\Services\telnetd","ImagePath",0x00020000,"%SystemRoot%\system32\telnetd.exe"
 HKLM,"SYSTEM\CurrentControlSet\Services\telnetd","ObjectName",0x00000000,"LocalSystem"
 HKLM,"SYSTEM\CurrentControlSet\Services\telnetd","Start",0x00010001,0x00000003
-HKLM,"SYSTEM\CurrentControlSet\Services\telnetd","Type",0x00010001,0x00000020
+HKLM,"SYSTEM\CurrentControlSet\Services\telnetd","Type",0x00010001,0x00000010
 
 ; Themes service
 HKLM,"SYSTEM\CurrentControlSet\Services\Themes","DisplayName",0x00000000,%THEMES_SERVICE%
