@@ -822,14 +822,14 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000426","Layout File",
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000426","Layout Text",0x00000000,%LATVIAN%
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000426","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5043"
 
-HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000427","Layout File",0x00000000,"kbdlt.dll"
-HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000427","Layout Text",0x00000000,%LITHUANIAN_IBM%
-HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000427","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5045"
-
 ; HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00010426","Layout File",0x00000000,"kbdlv1.dll"
 ; HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00010426","Layout Text",0x00000000,%LATVIAN_QWERTY%
 ; HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00010426","Layout Id",0x00000000,"0015"
 ; HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00010426","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5044"
+
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000427","Layout File",0x00000000,"kbdlt.dll"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000427","Layout Text",0x00000000,%LITHUANIAN_IBM%
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000427","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5045"
 
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00010427","Layout File",0x00000000,"kbdlt1.dll"
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00010427","Layout Id",  0x00000000,"0027"
