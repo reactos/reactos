@@ -78,7 +78,6 @@ KdPortInitializeEx(
                                                           : PortInformation->BaudRate));
     if (!NT_SUCCESS(Status))
     {
-        HalDisplayString("\r\nKernel Debugger: Serial port not available\r\n\r\n");
         return FALSE;
     }
     else
