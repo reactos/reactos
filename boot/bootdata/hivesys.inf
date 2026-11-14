@@ -924,7 +924,7 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000445","Layout Text",
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000445","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5135"
 
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00020445","Layout File",0x00000000,"kbdinbe2.dll"
-HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00020445","Layout Id",  0x00000000,"00a9"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00020445","Layout Id",0x00000000,"00a9"
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00020445","Layout Text",0x00000000,%BENGALI_INSCRIPT%
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00020445","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5178"
 
