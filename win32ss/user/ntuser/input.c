@@ -8,6 +8,7 @@
  */
 
 #include <win32k.h>
+#include <wdmguid.h>
 DBG_DEFAULT_CHANNEL(UserInput);
 
 /* LastRITEventTickCount update cycle has been adjusted from 60s to 1s since NT6 */
@@ -37,6 +38,7 @@ PERESOURCE gpDeviceInfoListMutex = NULL;
 
 static DWORD gNumberOfKeyboards = 0;
 static DWORD LastInputTick = 0;
+static PDRIVER_OBJECT gpRITDriverObject;
 static PKEVENT gDeviceListChangedEvent;
 
 /* FUNCTIONS *****************************************************************/
@@ -257,6 +259,54 @@ StartReadInputDevice(
         BufferSize,
         &ByteOffset,
         NULL);
+}
+
+/*
+ * RawInputDriverEntry
+ *
+ * Very simple driver, only to get a pointer to a PDRIVER_OBJECT
+ */
+static
+NTSTATUS NTAPI
+RawInputDriverEntry(
+    _In_ PDRIVER_OBJECT DriverObject,
+    _In_ PUNICODE_STRING RegistryPath)
+{
+    gpRITDriverObject = DriverObject;
+    return STATUS_SUCCESS;
+}
+
+static
+NTSTATUS NTAPI
+RITDeviceInterfaceNotify(
+    _In_ PVOID NotificationStructure,
+    _Inout_opt_ PVOID Context)
+{
+    PDEVICE_INTERFACE_CHANGE_NOTIFICATION Notification = NotificationStructure;
+    UCHAR DeviceType = PtrToUlong(Context);
+
+    if (IsEqualGUID(&Notification->Event, &GUID_DEVICE_INTERFACE_ARRIVAL))
+    {
+        TRACE("Arrival of %wZ (type %d)\n", Notification->SymbolicLinkName, DeviceType);
+        CreateInputDevice(DeviceType, Notification->SymbolicLinkName);
+    }
+    else if (IsEqualGUID(&Notification->Event, &GUID_DEVICE_INTERFACE_REMOVAL))
+    {
+        PINPUT_DEVICE_INFO DeviceInfo;
+        TRACE("Removal of %wZ\n", Notification->SymbolicLinkName);
+        AcquireDeviceInfoListMutex();
+        for (DeviceInfo = gpInputDeviceInfo; DeviceInfo; DeviceInfo = DeviceInfo->pNextDeviceInfo)
+        {
+            if (RtlCompareUnicodeString(&DeviceInfo->DeviceName, Notification->SymbolicLinkName, FALSE) == 0)
+            {
+                DeviceInfo->PendingDeletion = TRUE;
+                KeSetEvent(gDeviceListChangedEvent, EVENT_INCREMENT, FALSE);
+                break;
+            }
+        }
+        ReleaseDeviceInfoListMutex();
+    }
+    return STATUS_SUCCESS;
 }
 
 static
@@ -497,6 +547,60 @@ ProcessKeyboardUpdates(
     ReleaseDeviceInfoListMutex();
 }
 
+static
+BOOLEAN
+IsMultiplePortsEnabled(
+    _In_ PCWSTR Path,
+    _In_ PCWSTR DeviceName)
+{
+    RTL_QUERY_REGISTRY_TABLE QueryTable1[2], QueryTable2[3];
+    UNICODE_STRING ServiceRegistryKey;
+    ULONG dwConnectMultiplePorts = 1;
+    NTSTATUS Status;
+
+    RtlZeroMemory(&ServiceRegistryKey, sizeof(ServiceRegistryKey));
+    RtlZeroMemory(&QueryTable1, sizeof(QueryTable1));
+    QueryTable1[0].Flags = RTL_QUERY_REGISTRY_DIRECT | RTL_QUERY_REGISTRY_REQUIRED | RTL_QUERY_REGISTRY_TYPECHECK;
+    QueryTable1[0].Name = DeviceName;
+    QueryTable1[0].EntryContext = &ServiceRegistryKey;
+    QueryTable1[0].DefaultType = (REG_SZ << RTL_QUERY_REGISTRY_TYPECHECK_SHIFT) | REG_NONE;
+    Status = RtlQueryRegistryValues(
+        RTL_REGISTRY_DEVICEMAP,
+        Path,
+        QueryTable1,
+        NULL,
+        NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("RtlQueryRegistryValues() failed with status 0x%08x\n", Status);
+        return FALSE;
+    }
+
+    RtlZeroMemory(&QueryTable2, sizeof(QueryTable2));
+    QueryTable2[0].Flags = RTL_QUERY_REGISTRY_SUBKEY;
+    QueryTable2[0].Name = L"Parameters";
+    QueryTable2[1].Flags = RTL_QUERY_REGISTRY_DIRECT | RTL_QUERY_REGISTRY_TYPECHECK;
+    QueryTable2[1].Name = L"ConnectMultiplePorts";
+    QueryTable2[1].EntryContext = &dwConnectMultiplePorts;
+    QueryTable2[1].DefaultType = (REG_DWORD << RTL_QUERY_REGISTRY_TYPECHECK_SHIFT) | REG_DWORD;
+    QueryTable2[1].DefaultData = &dwConnectMultiplePorts;
+    QueryTable2[1].DefaultLength = sizeof(dwConnectMultiplePorts);
+    Status = RtlQueryRegistryValues(
+        RTL_REGISTRY_ABSOLUTE | RTL_REGISTRY_OPTIONAL,
+        ServiceRegistryKey.Buffer,
+        QueryTable2,
+        NULL,
+        NULL);
+    ExFreePool(ServiceRegistryKey.Buffer);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("RtlQueryRegistryValues() failed with status 0x%08x\n", Status);
+        return FALSE;
+    }
+
+    return dwConnectMultiplePorts == 0;
+}
+
 /*
  * RawInputThreadMain
  *
@@ -512,10 +616,10 @@ RawInputThreadMain(VOID)
     KWAIT_BLOCK WaitBlockArray[RTL_NUMBER_OF(WaitObjects)];
     PVOID ShutdownEvent;
     HWINSTA hWinSta;
-    PINPUT_DEVICE_INFO Mouse;
-    PINPUT_DEVICE_INFO Keyboard;
     UNICODE_STRING LegacyMouseName = RTL_CONSTANT_STRING(L"\\Device\\PointerClass0");
     UNICODE_STRING LegacyKeyboardName = RTL_CONSTANT_STRING(L"\\Device\\KeyboardClass0");
+    UNICODE_STRING ustrDriverName = RTL_CONSTANT_STRING(L"\\Driver\\Win32k");
+    PVOID Notification;
 
     gDeviceListChangedEvent = ExAllocatePoolWithTag(NonPagedPool, sizeof(*gDeviceListChangedEvent), USERTAG_PNP);
     ASSERT(gDeviceListChangedEvent);
@@ -558,10 +662,44 @@ RawInputThreadMain(VOID)
     Status = ExInitializeResourceLite(gpDeviceInfoListMutex);
     ASSERT(NT_SUCCESS(Status));
 
-    Mouse = CreateInputDevice(RIM_TYPEMOUSE, &LegacyMouseName);
-    ASSERT(Mouse);
-    Keyboard = CreateInputDevice(RIM_TYPEKEYBOARD, &LegacyKeyboardName);
-    ASSERT(Keyboard);
+    Status = IoCreateDriver(&ustrDriverName, RawInputDriverEntry);
+    ASSERT(NT_SUCCESS(Status));
+
+    Status = IsMultiplePortsEnabled(L"PointerClass", LegacyMouseName.Buffer) ? STATUS_SUCCESS : STATUS_ACCESS_DENIED;
+    if (NT_SUCCESS(Status))
+    {
+        Status = IoRegisterPlugPlayNotification(
+            EventCategoryDeviceInterfaceChange,
+            PNPNOTIFY_DEVICE_INTERFACE_INCLUDE_EXISTING_INTERFACES,
+            (PVOID)&GUID_DEVINTERFACE_MOUSE,
+            gpRITDriverObject,
+            RITDeviceInterfaceNotify,
+            ULongToPtr(RIM_TYPEMOUSE),
+            &Notification);
+    }
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("Using legacy mouse class %wZ\n", &LegacyMouseName);
+        CreateInputDevice(RIM_TYPEMOUSE, &LegacyMouseName);
+    }
+
+    Status = IsMultiplePortsEnabled(L"KeyboardClass", LegacyKeyboardName.Buffer) ? STATUS_SUCCESS : STATUS_ACCESS_DENIED;
+    if (NT_SUCCESS(Status))
+    {
+        Status = IoRegisterPlugPlayNotification(
+            EventCategoryDeviceInterfaceChange,
+            PNPNOTIFY_DEVICE_INTERFACE_INCLUDE_EXISTING_INTERFACES,
+            (PVOID)&GUID_DEVINTERFACE_KEYBOARD,
+            gpRITDriverObject,
+            RITDeviceInterfaceNotify,
+            ULongToPtr(RIM_TYPEKEYBOARD),
+            &Notification);
+    }
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("Using legacy keyboard class %wZ\n", &LegacyKeyboardName);
+        CreateInputDevice(RIM_TYPEKEYBOARD, &LegacyKeyboardName);
+    }
 
     UserEnterExclusive();
     StartTheTimers();
