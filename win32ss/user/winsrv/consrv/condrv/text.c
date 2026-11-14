@@ -798,9 +798,9 @@ ConDrvWriteConsole(IN PCONSOLE Console,
         if (Buffer)
         {
             Length = MultiByteToWideChar(Console->OutputCodePage, 0,
-                                (PCHAR)StringBuffer,
-                                NumCharsToWrite,
-                                (PWCHAR)Buffer, Length);
+                                	 (PCHAR)StringBuffer,
+                                	 NumCharsToWrite,
+                                	 (PWCHAR)Buffer, Length);
         }
         else
         {
