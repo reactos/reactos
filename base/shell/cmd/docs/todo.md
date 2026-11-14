@@ -3,9 +3,6 @@
 - [ ] Implement Set `/P`
 This is pretty straightforward. When doing this, make sure to take into account the way MS handles `set /A /P foo=5` compared to `set /P /A foo=5`.
 
-- [ ] Compile as unicode
-Not sure what is wrong with it, but probably more than just one thing blocking this. For sure pipes break when it is compiled as unicode.
-
 - [ ] Move.c code clean up
 It works, but it needs to be cleaned up, the code is long and overly complex for what it needs to do. Also, we can remove the hack to cover for `MoveFileEx` bug as it isn't a bug anymore.
 
