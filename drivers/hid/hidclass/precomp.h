@@ -97,6 +97,11 @@ typedef struct
     ULONG CollectionNumber;
 
     //
+    // instance id (0-based)
+    //
+    ULONG InstanceID;
+
+    //
     // device interface
     //
     UNICODE_STRING DeviceInterface;
