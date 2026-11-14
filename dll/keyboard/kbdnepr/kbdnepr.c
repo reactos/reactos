@@ -334,7 +334,7 @@ ROSDATA KBDTABLES keyboard_layout_table = {
   RTL_NUMBER_OF(scancode_to_vk),     /* 0x7f */
   extcode0_to_vk,
   extcode1_to_vk,
-  MAKELONG(KLLF_ALTGR, KBD_VERSION), /* fLocaleFlags = 0x00010001 (AltGr) */
+  MAKELONG(KLLF_ALTGR, KBD_VERSION),
   3,                                 /* nLgMax: up to 3 WCHARs per ligature */
   sizeof(LIGATURE3),                 /* cbLgEntry = 10 */
   (PLIGATURE1)ligatures
