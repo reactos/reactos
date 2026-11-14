@@ -396,6 +396,7 @@ HidClassFDO_StartDevice(
 {
     NTSTATUS Status;
     PHIDCLASS_FDO_EXTENSION FDODeviceExtension;
+    ULONG Index;
 
     //
     // get device extension
@@ -450,6 +451,22 @@ HidClassFDO_StartDevice(
         Irp->IoStatus.Status = Status;
         IoCompleteRequest(Irp, IO_NO_INCREMENT);
         return Status;
+    }
+
+    //
+    // get maximum size of input report descriptor
+    //
+    FDODeviceExtension->MaxReportLength = 0;
+    for (Index = 0; Index < FDODeviceExtension->Common.DeviceDescription.CollectionDescLength; Index++)
+    {
+        ULONG ReportLength = FDODeviceExtension->Common.DeviceDescription.CollectionDesc[Index].InputLength;
+        if (ReportLength > FDODeviceExtension->MaxReportLength)
+            FDODeviceExtension->MaxReportLength = ReportLength;
+    }
+    if (FDODeviceExtension->Common.DeviceDescription.ReportIDs[0].ReportID == 0)
+    {
+        // device with only one report id. Ignore report id at the start of report
+        FDODeviceExtension->MaxReportLength--;
     }
 
     //

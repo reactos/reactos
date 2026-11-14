@@ -73,6 +73,11 @@ typedef struct
     PUCHAR ReportDescriptor;
 
     //
+    // maximum report length (in any collection)
+    //
+    ULONG MaxReportLength;
+
+    //
     // device relations
     //
     PDEVICE_RELATIONS DeviceRelations;
@@ -174,6 +179,11 @@ typedef struct
     // original request
     //
     PIRP OriginalIrp;
+
+    //
+    // does report already contains report id?
+    //
+    BOOLEAN HasReportID;
 
     //
     // file op

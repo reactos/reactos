@@ -431,7 +431,7 @@ HidClass_ReadCompleteIrp(
             //
             // reports may have a report id prepended
             //
-            Offset = 0;
+            Offset = IrpContext->HasReportID ? 1 : 0;
 
             //
             // get collection description
@@ -453,13 +453,13 @@ HidClass_ReadCompleteIrp(
                 // calculate offset
                 //
                 ASSERT(CollectionDescription->InputLength >= ReportDescription->InputLength);
-                Offset = CollectionDescription->InputLength - ReportDescription->InputLength;
+                Offset += CollectionDescription->InputLength - ReportDescription->InputLength;
             }
 
             //
             // copy result
             //
-            RtlCopyMemory(&Address[Offset], IrpContext->InputReportBuffer, IrpContext->InputReportBufferLength);
+            RtlCopyMemory(&Address[Offset], IrpContext->InputReportBuffer, ReportDescription->InputLength);
         }
     }
 
@@ -643,6 +643,7 @@ HidClass_BuildIrp(
     RtlZeroMemory(IrpContext, sizeof(HIDCLASS_IRP_CONTEXT));
     IrpContext->OriginalIrp = RequestIrp;
     IrpContext->FileOp = Context;
+    IrpContext->HasReportID = PDODeviceExtension->FDODeviceExtension->Common.DeviceDescription.ReportIDs[0].ReportID != 0;
 
     //
     // get collection description
@@ -676,9 +677,9 @@ HidClass_BuildIrp(
     }
 
     //
-    // store report length
+    // get maximum report length for this device
     //
-    IrpContext->InputReportBufferLength = ReportDescription->InputLength;
+    IrpContext->InputReportBufferLength = PDODeviceExtension->FDODeviceExtension->MaxReportLength;
 
     //
     // allocate buffer
