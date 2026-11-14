@@ -58,6 +58,7 @@ list(APPEND _keyboard_layouts
     kbdinmal
     kbdir
     kbdit
+    kbdit142
     kbdjpn
     kbdkaz
     kbdkor
