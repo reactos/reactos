@@ -97,6 +97,11 @@ typedef struct
     ULONG CollectionNumber;
 
     //
+    // instance id (0-based)
+    //
+    ULONG InstanceID;
+
+    //
     // is it keyboard/mouse, or a more 'exotic' device?
     //
     BOOLEAN IsKeyboardOrMouse;

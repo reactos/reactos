@@ -93,15 +93,63 @@ HidClassPDO_GetReportDescriptionByReportID(
     return NULL;
 }
 
+static
+PCWSTR
+HidClassPDO_AppendInterfaceNumber(
+    _In_ PWSTR HardwareIds,
+    _In_ ULONG InterfaceNumber,
+    _In_ BOOLEAN MultiString)
+{
+    ULONG Size = 0;
+    PWSTR p, p2, Buffer;
+
+    for (p = HardwareIds; *p; p += wcslen(p) + 1)
+    {
+        Size += wcslen(p) + 9;
+        if (!MultiString)
+            break;
+    }
+
+    Buffer = p2 = ExAllocatePoolWithTag(NonPagedPool, Size * sizeof(WCHAR), HIDCLASS_TAG);
+    if (!Buffer)
+        return NULL;
+
+    for (p = HardwareIds; *p; )
+    {
+        RtlCopyMemory(p2, L"HID", 6);
+        p2 += 3;
+        while (*p != L'\\')
+            ++p;
+        for (; *p != UNICODE_NULL; ++p, ++p2)
+            *p2 = *p;
+        if (InterfaceNumber > 0)
+            p2 += _swprintf(p2, L"&Col%02x", InterfaceNumber);
+        if (!MultiString)
+            break;
+        *p2 = UNICODE_NULL;
+        ++p2;
+        ++p;
+    }
+    *p2 = UNICODE_NULL;
+    ++p2;
+
+    ExFreePool(HardwareIds);
+    return Buffer;
+}
+
 NTSTATUS
 HidClassPDO_HandleQueryDeviceId(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp)
 {
+    PHIDCLASS_PDO_DEVICE_EXTENSION PDODeviceExtension;
     NTSTATUS Status;
-    LPWSTR Buffer;
-    LPWSTR NewBuffer, Ptr;
-    ULONG Length;
+
+    //
+    // get device extension
+    //
+    PDODeviceExtension = DeviceObject->DeviceExtension;
+    ASSERT(PDODeviceExtension->Common.IsFDO == FALSE);
 
     //
     // copy current stack location
@@ -123,48 +171,11 @@ HidClassPDO_HandleQueryDeviceId(
     //
     // get buffer
     //
-    Buffer = (LPWSTR)Irp->IoStatus.Information;
-    Length = wcslen(Buffer);
-
-    //
-    // allocate new buffer
-    //
-    NewBuffer = ExAllocatePoolWithTag(NonPagedPool, (Length + 1) * sizeof(WCHAR), HIDCLASS_TAG);
-    if (!NewBuffer)
-    {
-        //
-        // failed to allocate buffer
-        //
-        return STATUS_INSUFFICIENT_RESOURCES;
-    }
-
-    //
-    // replace bus
-    //
-    wcscpy(NewBuffer, L"HID\\");
-
-    //
-    // get offset to first '\\'
-    //
-    Ptr = wcschr(Buffer, L'\\');
-    if (Ptr)
-    {
-        //
-        // append result
-        //
-        wcscat(NewBuffer, Ptr + 1);
-    }
-
-    //
-    // free old buffer
-    //
-    ExFreePoolWithTag(Buffer, 0);
+    Irp->IoStatus.Information = (ULONG_PTR)HidClassPDO_AppendInterfaceNumber((PWSTR)Irp->IoStatus.Information, PDODeviceExtension->CollectionNumber, FALSE);
 
     //
     // store result
     //
-    DPRINT("NewBuffer %S\n", NewBuffer);
-    Irp->IoStatus.Information = (ULONG_PTR)NewBuffer;
     return STATUS_SUCCESS;
 }
 
@@ -203,22 +214,14 @@ HidClassPDO_HandleQueryHardwareId(
         return Status;
     }
 
-    if (PDODeviceExtension->Common.DeviceDescription.CollectionDescLength > 1)
-    {
-        //
-        // multi-tlc device
-        //
-        Offset = _swprintf(&Buffer[Offset], L"HID\\Vid_%04x&Pid_%04x&Rev_%04x&Col%02x", PDODeviceExtension->Common.Attributes.VendorID, PDODeviceExtension->Common.Attributes.ProductID, PDODeviceExtension->Common.Attributes.VersionNumber, PDODeviceExtension->CollectionNumber) + 1;
-        Offset += _swprintf(&Buffer[Offset], L"HID\\Vid_%04x&Pid_%04x&Col%02x", PDODeviceExtension->Common.Attributes.VendorID, PDODeviceExtension->Common.Attributes.ProductID, PDODeviceExtension->CollectionNumber) + 1;
-    }
-    else
-    {
-        //
-        // single tlc device
-        //
-        Offset = _swprintf(&Buffer[Offset], L"HID\\Vid_%04x&Pid_%04x&Rev_%04x", PDODeviceExtension->Common.Attributes.VendorID, PDODeviceExtension->Common.Attributes.ProductID, PDODeviceExtension->Common.Attributes.VersionNumber) + 1;
-        Offset += _swprintf(&Buffer[Offset], L"HID\\Vid_%04x&Pid_%04x", PDODeviceExtension->Common.Attributes.VendorID, PDODeviceExtension->Common.Attributes.ProductID) + 1;
-    }
+    //
+    // append collection number (if required)
+    //
+    Irp->IoStatus.Information = (ULONG_PTR)HidClassPDO_AppendInterfaceNumber((PWSTR)Irp->IoStatus.Information, PDODeviceExtension->CollectionNumber, TRUE);
+    for (Ptr = (PWSTR)Irp->IoStatus.Information; *Ptr; Ptr += wcslen(Ptr) + 1)
+        ;
+    Offset = Ptr - (PCWSTR)Irp->IoStatus.Information;
+    RtlCopyMemory(Buffer, (PCWSTR)Irp->IoStatus.Information, Offset * sizeof(WCHAR));
 
     //
     // get collection description
@@ -270,7 +273,7 @@ HidClassPDO_HandleQueryHardwareId(
     //
     // add HID_DEVICE_UP:0001_U:0002'
     //
-    Offset += _swprintf(&Buffer[Offset], L"HID_DEVICE_UP:%04x_U:%04x", CollectionDescription->UsagePage, CollectionDescription->Usage) + 1;
+    Offset += _swprintf(&Buffer[Offset], L"HID_DEVICE_UP:%04X_U:%04X", CollectionDescription->UsagePage, CollectionDescription->Usage) + 1;
 
     //
     // add HID
@@ -337,7 +340,7 @@ HidClassPDO_HandleQueryInstanceId(
     //
     // write device id
     //
-    _swprintf(Buffer, L"%04x", PDODeviceExtension->CollectionNumber);
+    _swprintf(Buffer, L"%04x", PDODeviceExtension->InstanceID);
     Irp->IoStatus.Information = (ULONG_PTR)Buffer;
 
     //
@@ -777,6 +780,7 @@ HidClassPDO_CreatePDO(
         PDODeviceExtension->FDODeviceObject = DeviceObject;
         PDODeviceExtension->Common.DriverExtension = FDODeviceExtension->Common.DriverExtension;
         PDODeviceExtension->CollectionNumber = CollectionDescription->CollectionNumber;
+        PDODeviceExtension->InstanceID = Index;
 
         //
         // copy device data
