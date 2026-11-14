@@ -97,6 +97,11 @@ typedef struct
     ULONG CollectionNumber;
 
     //
+    // is it keyboard/mouse, or a more 'exotic' device?
+    //
+    BOOLEAN IsKeyboardOrMouse;
+
+    //
     // device interface
     //
     UNICODE_STRING DeviceInterface;

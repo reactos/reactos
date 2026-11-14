@@ -467,6 +467,7 @@ HidClassPDO_PnP(
             IoStack->Parameters.DeviceCapabilities.Capabilities->Removable = FALSE;
             IoStack->Parameters.DeviceCapabilities.Capabilities->SilentInstall = TRUE;
             IoStack->Parameters.DeviceCapabilities.Capabilities->SurpriseRemovalOK = TRUE;
+            IoStack->Parameters.DeviceCapabilities.Capabilities->RawDeviceOK = !PDODeviceExtension->IsKeyboardOrMouse;
 
             Status = STATUS_SUCCESS;
             break;
@@ -548,21 +549,24 @@ HidClassPDO_PnP(
             //
             ASSERT(PDODeviceExtension->Common.DriverExtension->DevicesArePolled == FALSE);
 
-            //
-            // now register the device interface
-            //
-            Status = IoRegisterDeviceInterface(PDODeviceExtension->Common.HidDeviceExtension.PhysicalDeviceObject,
-                                               &GUID_DEVINTERFACE_HID,
-                                               NULL,
-                                               &PDODeviceExtension->DeviceInterface);
-            DPRINT("[HIDCLASS] IoRegisterDeviceInterfaceState Status %x\n", Status);
-            if (NT_SUCCESS(Status))
+            if (!PDODeviceExtension->IsKeyboardOrMouse)
             {
                 //
-                // enable device interface
+                // now register the device interface
                 //
-                Status = IoSetDeviceInterfaceState(&PDODeviceExtension->DeviceInterface, TRUE);
-                DPRINT("[HIDCLASS] IoSetDeviceInterFaceState %x\n", Status);
+                Status = IoRegisterDeviceInterface(PDODeviceExtension->Common.HidDeviceExtension.PhysicalDeviceObject,
+                                                   &GUID_DEVINTERFACE_HID,
+                                                   NULL,
+                                                   &PDODeviceExtension->DeviceInterface);
+                DPRINT("[HIDCLASS] IoRegisterDeviceInterfaceState Status %x\n", Status);
+                if (NT_SUCCESS(Status))
+                {
+                    //
+                    // enable device interface
+                    //
+                    Status = IoSetDeviceInterfaceState(&PDODeviceExtension->DeviceInterface, TRUE);
+                    DPRINT("[HIDCLASS] IoSetDeviceInterFaceState %x\n", Status);
+                }
             }
 
             //
@@ -697,6 +701,7 @@ HidClassPDO_CreatePDO(
     NTSTATUS Status = STATUS_SUCCESS;
     PDEVICE_OBJECT PDODeviceObject;
     PHIDCLASS_PDO_DEVICE_EXTENSION PDODeviceExtension;
+    PHIDP_COLLECTION_DESC CollectionDescription;
     ULONG Index;
     PDEVICE_RELATIONS DeviceRelations;
     ULONG Length;
@@ -763,6 +768,7 @@ HidClassPDO_CreatePDO(
         //
         // init device extension
         //
+        CollectionDescription = &FDODeviceExtension->Common.DeviceDescription.CollectionDesc[Index];
         PDODeviceExtension->Common.HidDeviceExtension.MiniDeviceExtension = FDODeviceExtension->Common.HidDeviceExtension.MiniDeviceExtension;
         PDODeviceExtension->Common.HidDeviceExtension.NextDeviceObject = FDODeviceExtension->Common.HidDeviceExtension.NextDeviceObject;
         PDODeviceExtension->Common.HidDeviceExtension.PhysicalDeviceObject = PDODeviceObject;
@@ -770,7 +776,7 @@ HidClassPDO_CreatePDO(
         PDODeviceExtension->FDODeviceExtension = FDODeviceExtension;
         PDODeviceExtension->FDODeviceObject = DeviceObject;
         PDODeviceExtension->Common.DriverExtension = FDODeviceExtension->Common.DriverExtension;
-        PDODeviceExtension->CollectionNumber = FDODeviceExtension->Common.DeviceDescription.CollectionDesc[Index].CollectionNumber;
+        PDODeviceExtension->CollectionNumber = CollectionDescription->CollectionNumber;
 
         //
         // copy device data
@@ -778,6 +784,15 @@ HidClassPDO_CreatePDO(
         RtlCopyMemory(&PDODeviceExtension->Common.Attributes, &FDODeviceExtension->Common.Attributes, sizeof(HID_DEVICE_ATTRIBUTES));
         RtlCopyMemory(&PDODeviceExtension->Common.DeviceDescription, &FDODeviceExtension->Common.DeviceDescription, sizeof(HIDP_DEVICE_DESC));
         RtlCopyMemory(&PDODeviceExtension->Capabilities, &FDODeviceExtension->Capabilities, sizeof(DEVICE_CAPABILITIES));
+
+        //
+        // is it a keyboard or mouse (we'll need it for multiple things)
+        //
+        PDODeviceExtension->IsKeyboardOrMouse = CollectionDescription->UsagePage == HID_USAGE_PAGE_GENERIC &&
+                                                (CollectionDescription->Usage == HID_USAGE_GENERIC_POINTER ||
+                                                 CollectionDescription->Usage == HID_USAGE_GENERIC_MOUSE ||
+                                                 CollectionDescription->Usage == HID_USAGE_GENERIC_KEYBOARD ||
+                                                 CollectionDescription->Usage == HID_USAGE_GENERIC_KEYPAD);
 
         //
         // set device flags
