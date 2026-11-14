@@ -240,6 +240,7 @@ BEGIN
     IDS_SPANISH_LAYOUT "Španielske"
     IDS_SPANISH_VARIANTION_LAYOUT "Španielske Variation"
     IDS_SWEDISH_LAYOUT "Švédske"
+    IDS_SWEDISH_WITH_SAMI "Swedish with Sami"
     IDS_SWISS_FRENCH_LAYOUT "Švajčiarsko-Francúzske"
     IDS_SWISS_GERMAN_LAYOUT "Švajčiarsko-Nemecké"
     IDS_SYRIAC_LAYOUT "Syriac"

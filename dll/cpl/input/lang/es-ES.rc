@@ -244,6 +244,7 @@ BEGIN
     IDS_SPANISH_LAYOUT "Español"
     IDS_SPANISH_VARIANTION_LAYOUT "Variación del español"
     IDS_SWEDISH_LAYOUT "Sueco"
+    IDS_SWEDISH_WITH_SAMI "Swedish with Sami"
     IDS_SWISS_FRENCH_LAYOUT "Francés suizo"
     IDS_SWISS_GERMAN_LAYOUT "Alemán suizo"
     IDS_SYRIAC_LAYOUT "Siríaco"

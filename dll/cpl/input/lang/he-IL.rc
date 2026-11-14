@@ -237,6 +237,7 @@ BEGIN
     IDS_SPANISH_LAYOUT "ספרדית"
     IDS_SPANISH_VARIANTION_LAYOUT "Spanish Variation"
     IDS_SWEDISH_LAYOUT "שוודית"
+    IDS_SWEDISH_WITH_SAMI "Swedish with Sami"
     IDS_SWISS_FRENCH_LAYOUT "צרפתית שווצרית"
     IDS_SWISS_GERMAN_LAYOUT "גרמנית שווצרית"
     IDS_SYRIAC_LAYOUT "סורית"

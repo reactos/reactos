@@ -235,6 +235,7 @@ BEGIN
     IDS_SPANISH_LAYOUT "Испанская"
     IDS_SPANISH_VARIANTION_LAYOUT "Испанская 2"
     IDS_SWEDISH_LAYOUT "Шведская"
+    IDS_SWEDISH_WITH_SAMI "Swedish with Sami"
     IDS_SWISS_FRENCH_LAYOUT "Швейцарская французская"
     IDS_SWISS_GERMAN_LAYOUT "Швейцарская немецкая"
     IDS_SYRIAC_LAYOUT "Сирийская"
