@@ -140,7 +140,7 @@ KbdHid_ReadCompletion(
     //
     // print out raw report
     //
-    ASSERT(DeviceExtension->ReportLength >= 9);
+    ASSERT(DeviceExtension->Capabilities.InputReportByteLength >= 9);
     DPRINT("[KBDHID] ReadCompletion %02x %02x %02x %02x %02x %02x %02x %02x %02x\n", DeviceExtension->Report[0], DeviceExtension->Report[1], DeviceExtension->Report[2],
         DeviceExtension->Report[3], DeviceExtension->Report[4], DeviceExtension->Report[5],
         DeviceExtension->Report[6], DeviceExtension->Report[7], DeviceExtension->Report[8]);
@@ -154,7 +154,7 @@ KbdHid_ReadCompletion(
                               &ButtonLength,
                               DeviceExtension->PreparsedData,
                               DeviceExtension->Report,
-                              DeviceExtension->ReportLength);
+                              DeviceExtension->Capabilities.InputReportByteLength);
     ASSERT(Status == HIDP_STATUS_SUCCESS);
 
     /* FIXME check if needs mapping */
@@ -214,7 +214,7 @@ KbdHid_InitiateRead(
     IoStack = IoGetNextIrpStackLocation(DeviceExtension->Irp);
 
     /* init stack location */
-    IoStack->Parameters.Read.Length = DeviceExtension->ReportLength;
+    IoStack->Parameters.Read.Length = DeviceExtension->Capabilities.InputReportByteLength;
     IoStack->Parameters.Read.Key = 0;
     IoStack->Parameters.Read.ByteOffset.QuadPart = 0LL;
     IoStack->MajorFunction = IRP_MJ_READ;
@@ -666,7 +666,6 @@ KbdHid_StartDevice(
     ULONG Buttons;
     HID_COLLECTION_INFORMATION Information;
     PHIDP_PREPARSED_DATA PreparsedData;
-    HIDP_CAPS Capabilities;
     PKBDHID_DEVICE_EXTENSION DeviceExtension;
     PUSAGE_AND_PAGE Buffer;
 
@@ -712,7 +711,7 @@ KbdHid_StartDevice(
     }
 
     /* lets get the caps */
-    Status = HidP_GetCaps(PreparsedData, &Capabilities);
+    Status = HidP_GetCaps(PreparsedData, &DeviceExtension->Capabilities);
     if (Status != HIDP_STATUS_SUCCESS)
     {
         /* failed to get capabilities */
@@ -721,18 +720,20 @@ KbdHid_StartDevice(
         return Status;
     }
 
-    DPRINT("[KBDHID] Usage %x UsagePage %x InputReportLength %lu\n", Capabilities.Usage, Capabilities.UsagePage, Capabilities.InputReportByteLength);
+    DPRINT("[KBDHID] Usage %x UsagePage %x InputReportLength %lu\n",
+           DeviceExtension->Capabilities.Usage,
+           DeviceExtension->Capabilities.UsagePage,
+           DeviceExtension->Capabilities.InputReportByteLength);
 
     /* init input report */
-    DeviceExtension->ReportLength = Capabilities.InputReportByteLength;
-    ASSERT(DeviceExtension->ReportLength);
-    DeviceExtension->Report = ExAllocatePoolWithTag(NonPagedPool, DeviceExtension->ReportLength, KBDHID_TAG);
+    ASSERT(DeviceExtension->Capabilities.InputReportByteLength);
+    DeviceExtension->Report = ExAllocatePoolWithTag(NonPagedPool, DeviceExtension->Capabilities.InputReportByteLength, KBDHID_TAG);
     ASSERT(DeviceExtension->Report);
-    RtlZeroMemory(DeviceExtension->Report, DeviceExtension->ReportLength);
+    RtlZeroMemory(DeviceExtension->Report, DeviceExtension->Capabilities.InputReportByteLength);
 
     /* build mdl */
     DeviceExtension->ReportMDL = IoAllocateMdl(DeviceExtension->Report,
-                                               DeviceExtension->ReportLength,
+                                               DeviceExtension->Capabilities.InputReportByteLength,
                                                FALSE,
                                                FALSE,
                                                NULL);

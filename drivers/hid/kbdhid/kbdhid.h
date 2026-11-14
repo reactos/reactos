@@ -86,9 +86,9 @@ typedef struct
     PCHAR Report;
 
     //
-    // input report length
+    // capabilities
     //
-    ULONG ReportLength;
+    HIDP_CAPS Capabilities;
 
     //
     // file object the device is reading reports from
