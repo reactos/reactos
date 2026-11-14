@@ -358,6 +358,123 @@ KbdHid_Close(
     return IoCallDriver(DeviceExtension->NextDeviceObject, Irp);
 }
 
+static
+NTSTATUS
+NTAPI
+KbdHid_SetIndicatorsCompletion(
+    _In_ PDEVICE_OBJECT DeviceObject,
+    _In_ PIRP Irp,
+    _In_ PVOID Context)
+{
+    PIO_STACK_LOCATION IoStack;
+
+    DPRINT("KbdHid_SetIndicatorsCompletion()\n");
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+    if (Irp->PendingReturned)
+        IoMarkIrpPending(Irp);
+
+    IoFreeMdl(Irp->MdlAddress);
+    Irp->MdlAddress = IoStack->Parameters.Others.Argument4;
+    ExFreePoolWithTag(Context, KBDHID_TAG);
+    return STATUS_SUCCESS;
+}
+
+static
+NTSTATUS
+KbdHid_SetIndicators(
+    _In_ PKBDHID_DEVICE_EXTENSION DeviceExtension,
+    _In_ PKEYBOARD_INDICATOR_PARAMETERS Indicators,
+    _In_ PIRP Irp)
+{
+    PCHAR Report;
+    USAGE Usage[4];
+    ULONG UsageLength = 0;
+    PIO_STACK_LOCATION IoStack;
+    PMDL ReportMDL;
+    NTSTATUS Status;
+
+    DPRINT("KbdHid_SetIndicators()\n");
+    RtlCopyMemory(&DeviceExtension->KeyboardIndicator,
+                  Indicators,
+                  sizeof(*Indicators));
+
+    if (DeviceExtension->Capabilities.OutputReportByteLength == 0)
+    {
+        /* do nothing, as keyboard has no indicators */
+        Irp->IoStatus.Status = STATUS_SUCCESS;
+        Irp->IoStatus.Information = 0;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        return STATUS_SUCCESS;
+    }
+
+    /* allocate report and MDL */
+    Report = ExAllocatePoolWithTag(NonPagedPool, DeviceExtension->Capabilities.OutputReportByteLength, KBDHID_TAG);
+    if (!Report)
+    {
+        Irp->IoStatus.Status = STATUS_INSUFFICIENT_RESOURCES;
+        Irp->IoStatus.Information = 0;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+    ReportMDL = IoAllocateMdl(Report,
+                              DeviceExtension->Capabilities.OutputReportByteLength,
+                              FALSE,
+                              FALSE,
+                              NULL);
+    if (!ReportMDL)
+    {
+        ExFreePoolWithTag(Report, KBDHID_TAG);
+        Irp->IoStatus.Status = STATUS_INSUFFICIENT_RESOURCES;
+        Irp->IoStatus.Information = 0;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+    MmBuildMdlForNonPagedPool(ReportMDL);
+
+    /* fill report */
+    RtlZeroMemory(Report, DeviceExtension->Capabilities.OutputReportByteLength);
+    if (Indicators->LedFlags & KEYBOARD_SCROLL_LOCK_ON)
+        Usage[UsageLength++] = HID_USAGE_LED_SCROLL_LOCK;
+    if (Indicators->LedFlags & KEYBOARD_NUM_LOCK_ON)
+        Usage[UsageLength++] = HID_USAGE_LED_NUM_LOCK;
+    if (Indicators->LedFlags & KEYBOARD_CAPS_LOCK_ON)
+        Usage[UsageLength++] = HID_USAGE_LED_CAPS_LOCK;
+    if (Indicators->LedFlags & KEYBOARD_KANA_LOCK_ON)
+        Usage[UsageLength++] = HID_USAGE_LED_KANA;
+
+    HidP_SetUsages(HidP_Output,
+                   HID_USAGE_PAGE_LED,
+                   0,
+                   Usage,
+                   &UsageLength,
+                   DeviceExtension->PreparsedData,
+                   Report,
+                   DeviceExtension->Capabilities.OutputReportByteLength);
+
+    /* get current stack location */
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+    IoStack->Parameters.Others.Argument4 = Irp->MdlAddress;
+    Irp->MdlAddress = ReportMDL;
+    IoCopyCurrentIrpStackLocationToNext(Irp);
+
+    /* get next stack location */
+    IoStack = IoGetNextIrpStackLocation(Irp);
+
+    /* init stack location */
+    IoStack->Parameters.Write.Length = DeviceExtension->Capabilities.OutputReportByteLength;
+    IoStack->Parameters.Write.Key = 0;
+    IoStack->Parameters.Write.ByteOffset.QuadPart = 0LL;
+    IoStack->MajorFunction = IRP_MJ_WRITE;
+
+    /* set completion routine */
+    IoSetCompletionRoutine(Irp, KbdHid_SetIndicatorsCompletion, Report, TRUE, TRUE, TRUE);
+
+    /* start the read */
+    Status = IoCallDriver(DeviceExtension->NextDeviceObject, Irp);
+
+    return Status;
+}
+
 NTSTATUS
 NTAPI
 KbdHid_InternalDeviceControl(
@@ -502,16 +619,9 @@ KbdHid_InternalDeviceControl(
                 return STATUS_INVALID_PARAMETER;
             }
 
-            /* copy indicators */
-            RtlCopyMemory(&DeviceExtension->KeyboardIndicator,
-                          Irp->AssociatedIrp.SystemBuffer,
-                          sizeof(KEYBOARD_INDICATOR_PARAMETERS));
-
-            /* done */
-            Irp->IoStatus.Status = STATUS_SUCCESS;
-            Irp->IoStatus.Information = 0;
-            IoCompleteRequest(Irp, IO_NO_INCREMENT);
-            return STATUS_SUCCESS;
+            return KbdHid_SetIndicators(DeviceExtension,
+                                        (PKEYBOARD_INDICATOR_PARAMETERS)Irp->AssociatedIrp.SystemBuffer,
+                                        Irp);
 
         case IOCTL_KEYBOARD_SET_TYPEMATIC:
             if (IoStack->Parameters.DeviceIoControl.InputBufferLength < sizeof(KEYBOARD_TYPEMATIC_PARAMETERS))
