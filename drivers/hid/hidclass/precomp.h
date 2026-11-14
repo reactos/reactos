@@ -116,6 +116,11 @@ typedef struct
     //
     PHIDCLASS_FDO_EXTENSION FDODeviceExtension;
 
+    //
+    // opening counters
+    //
+    ULONG OpenCount, OpenReadCount, OpenWriteCount;
+    ULONG BlockOpenCount, BlockReadCount, BlockWriteCount;
 } HIDCLASS_PDO_DEVICE_EXTENSION, *PHIDCLASS_PDO_DEVICE_EXTENSION;
 
 typedef struct __HIDCLASS_FILEOP_CONTEXT__
@@ -149,6 +154,12 @@ typedef struct __HIDCLASS_FILEOP_CONTEXT__
     // read complete event
     //
     KEVENT IrpReadComplete;
+
+    //
+    // open access rights
+    //
+    ULONG DesiredAccess;
+    ULONG ShareAccess;
 
 } HIDCLASS_FILEOP_CONTEXT, *PHIDCLASS_FILEOP_CONTEXT;
 
