@@ -637,11 +637,22 @@ HidClassFDO_DeviceRelations(
     Irp->IoStatus.Status = Status;
     Irp->IoStatus.Information = (ULONG_PTR)DeviceRelations;
 
-    //
-    // complete request
-    //
-    IoCompleteRequest(Irp, IO_NO_INCREMENT);
-    return Status;
+    if (NT_SUCCESS(Status))
+    {
+        //
+        // let lower drivers also add some PDOs
+        //
+        IoCopyCurrentIrpStackLocationToNext(Irp);
+        return HidClassFDO_DispatchRequest(DeviceObject, Irp);
+    }
+    else
+    {
+        //
+        // complete request
+        //
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        return Status;
+    }
 }
 
 NTSTATUS
