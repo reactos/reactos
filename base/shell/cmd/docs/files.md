@@ -3,8 +3,8 @@ Archive Contents
 | File | Description |
 | --- | --- |
 |license.txt    |     GNU license - applies to all files named here |
+|history.txt|     History of revisions.  Not to date.  see svn.reactos.com for more info.|
 |docs/files.md  |      This file list|
-|docs/history.txt|     History of revisions.  Not to date.  see svn.reactos.com for more info.|
 |docs/readme.md |     General and Technical shell info|
 |docs/ren.md |     Info on how `ren` is implemented|
 |docs/todo.md   |        Things that need to be implemented or fixed(including bugs)|
