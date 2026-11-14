@@ -29,6 +29,7 @@ list(APPEND _keyboard_layouts
     kbdda
     kbddv
     kbdeo
+    kbdes
     kbdest
     kbdfa
     kbdfar
