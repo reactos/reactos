@@ -169,9 +169,24 @@ HidClass_Create(
     //
     IoStack = IoGetCurrentIrpStackLocation(Irp);
 
+    //
+    // check access rights
+    //
     DPRINT("ShareAccess %x\n", IoStack->Parameters.Create.ShareAccess);
     DPRINT("Options %x\n", IoStack->Parameters.Create.Options);
     DPRINT("DesiredAccess %x\n", IoStack->Parameters.Create.SecurityContext->DesiredAccess);
+    if (PDODeviceExtension->BlockOpenCount ||
+        (PDODeviceExtension->OpenCount && (IoStack->Parameters.Create.ShareAccess == 0)) ||
+        (PDODeviceExtension->BlockReadCount && (IoStack->Parameters.Create.ShareAccess & FILE_READ_DATA)) ||
+        (PDODeviceExtension->BlockWriteCount && (IoStack->Parameters.Create.ShareAccess & FILE_WRITE_DATA)) ||
+        (PDODeviceExtension->OpenReadCount && !(IoStack->Parameters.Create.ShareAccess & FILE_SHARE_READ)) ||
+        (PDODeviceExtension->OpenWriteCount && !(IoStack->Parameters.Create.ShareAccess & FILE_SHARE_WRITE)))
+    {
+        DPRINT("[HIDCLASS] Failing opening due to sharing violation\n");
+        Irp->IoStatus.Status = STATUS_SHARING_VIOLATION;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        return STATUS_SHARING_VIOLATION;
+    }
 
     //
     // allocate context
@@ -196,6 +211,19 @@ HidClass_Create(
     InitializeListHead(&Context->ReadPendingIrpListHead);
     InitializeListHead(&Context->IrpCompletedListHead);
     KeInitializeEvent(&Context->IrpReadComplete, NotificationEvent, FALSE);
+    Context->DesiredAccess = IoStack->Parameters.Create.SecurityContext->DesiredAccess;
+    Context->ShareAccess = IoStack->Parameters.Create.ShareAccess;
+    Context->DeviceExtension->OpenCount++;
+    if (Context->ShareAccess == 0)
+        PDODeviceExtension->BlockOpenCount++;
+    if (!(Context->ShareAccess & FILE_SHARE_READ))
+        PDODeviceExtension->BlockReadCount++;
+    if (!(Context->ShareAccess & FILE_SHARE_WRITE))
+        PDODeviceExtension->BlockWriteCount++;
+    if (Context->DesiredAccess & FILE_READ_DATA)
+        PDODeviceExtension->OpenReadCount++;
+    if (Context->DesiredAccess & FILE_WRITE_DATA)
+        PDODeviceExtension->OpenWriteCount++;
 
     //
     // store context
@@ -277,6 +305,21 @@ HidClass_Close(
     // signal stop
     //
     IrpContext->StopInProgress = TRUE;
+
+    //
+    // decrease open counts
+    //
+    IrpContext->DeviceExtension->OpenCount--;
+    if (IrpContext->ShareAccess == 0)
+        IrpContext->DeviceExtension->BlockOpenCount--;
+    if (!(IrpContext->ShareAccess & FILE_SHARE_READ))
+        IrpContext->DeviceExtension->BlockReadCount--;
+    if (!(IrpContext->ShareAccess & FILE_SHARE_WRITE))
+        IrpContext->DeviceExtension->BlockWriteCount--;
+    if (IrpContext->DesiredAccess & FILE_READ_DATA)
+        IrpContext->DeviceExtension->OpenReadCount--;
+    if (IrpContext->DesiredAccess & FILE_WRITE_DATA)
+        IrpContext->DeviceExtension->OpenWriteCount--;
 
     //
     // release lock
