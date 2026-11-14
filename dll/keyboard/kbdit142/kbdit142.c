@@ -299,7 +299,7 @@ ROSDATA KBDTABLES keyboard_layout_table = {
   (VSC_LPWSTR *)extended_key_names,
   NULL,                              /* no dead key names */
   scancode_to_vk,
-  RTL_NUMBER_OF(scancode_to_vk),     /* 0x7f */
+  RTL_NUMBER_OF(scancode_to_vk),
   extcode0_to_vk,
   extcode1_to_vk,
   MAKELONG(KLLF_ALTGR, KBD_VERSION),
