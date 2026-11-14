@@ -459,7 +459,7 @@ HidClass_ReadCompleteIrp(
             //
             // copy result
             //
-            RtlCopyMemory(&Address[Offset], IrpContext->InputReportBuffer, IrpContext->InputReportBufferLength);
+            RtlCopyMemory(&Address[Offset], IrpContext->InputReportBuffer, ReportDescription->InputLength);
         }
     }
 
@@ -676,9 +676,9 @@ HidClass_BuildIrp(
     }
 
     //
-    // store report length
+    // get maximum report length for this device
     //
-    IrpContext->InputReportBufferLength = ReportDescription->InputLength;
+    IrpContext->InputReportBufferLength = PDODeviceExtension->FDODeviceExtension->MaxReportLength;
 
     //
     // allocate buffer
