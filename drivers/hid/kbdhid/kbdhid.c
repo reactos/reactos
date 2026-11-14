@@ -471,7 +471,7 @@ KbdHid_InternalDeviceControl(
             Irp->IoStatus.Status = STATUS_SUCCESS;
             Irp->IoStatus.Information = sizeof(KEYBOARD_INDICATOR_PARAMETERS);
             IoCompleteRequest(Irp, IO_NO_INCREMENT);
-            return STATUS_NOT_IMPLEMENTED;
+            return STATUS_SUCCESS;
 
         case IOCTL_KEYBOARD_QUERY_TYPEMATIC:
             if (IoStack->Parameters.DeviceIoControl.OutputBufferLength < sizeof(KEYBOARD_TYPEMATIC_PARAMETERS))
