@@ -1,0 +1,20 @@
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+STRINGTABLE
+BEGIN
+    IDS_NAME "Playing Cards"
+    IDS_DESCRIPTION "Choose the card style for all card games."
+    IDS_SAVE_ERROR "The card settings could not be saved."
+END
+IDD_CARDS DIALOGEX 0, 0, 240, 130
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Playing Cards"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX "Card style", -1, 7, 7, 226, 57
+    AUTORADIOBUTTON "&Standard", IDC_DEFAULT, 16, 22, 205, 12, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "&Bavarian", IDC_BAVARIAN, 16, 41, 205, 12
+    LTEXT "Applies to all card games using cards.dll for the active user account. Restart open card games to use the selected style.", -1, 7, 72, 226, 30
+    DEFPUSHBUTTON "OK", IDOK, 127, 109, 50, 14
+    PUSHBUTTON "Cancel", IDCANCEL, 183, 109, 50, 14
+END
+

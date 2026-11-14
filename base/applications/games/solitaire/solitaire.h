@@ -31,9 +31,45 @@ extern HWND hwndMain;
 extern UINT_PTR PlayTimer;
 
 #define IDT_PLAYTIMER 1000
+#define WM_SOL_WINSTART (WM_APP + 1)
+#define WM_SOL_WINFINISH (WM_APP + 2)
+#define WM_SOL_STATECHANGED (WM_APP + 3)
+#define IDT_AUTOFINISH 1001
+bool IsAutoFinishActive(void);
+void UpdateAutoFinishMenu(void);
+void StartAutoFinish(void);
+void StopAutoFinish(void);
+void AutoFinishStep(void);
+
+enum WinAnimationMode { WIN_ANIMATION_WINDOW, WIN_ANIMATION_MONITOR, WIN_ANIMATION_DESKTOP };
+#define WIN_SPEED_MIN 50
+#define WIN_SPEED_DEFAULT 100
+#define WIN_SPEED_MAX 200
+extern DWORD dwWinAnimationMode;
+extern DWORD dwWinAnimationSpeed;
+bool IsDesktopWinAnimation(void);
+void QueueWinAnimation(void);
+void StartWinAnimation(void);
+void StopWinAnimation(bool prompt);
+void FinishWinAnimation(void);
 
 void CreateSol(void);
 void NewGame(void);
+void SaveGame(void);
+void StartScoreRound(LONG base);
+void FinishScoreRound(bool won);
+DWORD ScoreRoundOptions(void);
+void GetScoreRound(LONG *base, FILETIME *id);
+void RestoreScoreRound(LONG base, const FILETIME &id);
+void SaveScoreBalance(void);
+bool ReadVegasBalance(DWORD options, LONG *balance);
+void ShowHighScores(HWND owner);
+bool IsScoreNameInput(void);
+int PromptScoreName(void);
+bool LoadGame(void);
+bool FindHint(CardRegion **source, CardRegion **destination);
+void ShowHint(void);
+void PreviewWinAnimation(DWORD mode, DWORD speed, HWND owner);
 
 #define NUM_ROW_STACKS     7
 #define DECK_ID            1
@@ -84,6 +120,11 @@ void CARDLIBPROC PileClickProc(CardRegion &stackobj, int iNumClicked);
 void CARDLIBPROC PileRemoveProc(CardRegion &stackobj, int iRemoved);
 
 void SetUndo(int set_source_id, int set_destination_id, int set_number_of_cards, int set_prev_score, int set_prev_visible_pile_cards);
+#define UNDO_LIMIT_DEFAULT 3
+#define UNDO_LIMIT_MAX 9
+extern DWORD dwUndoLimit;
+void SetUndoLimit(DWORD limit);
+void SetFlipUndo(int row, int faceDown);
 void ClearUndo(void);
 void Undo(void);
 

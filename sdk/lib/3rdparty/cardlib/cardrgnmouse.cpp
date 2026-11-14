@@ -17,7 +17,6 @@
 
 double __CARDZOOMSPEED = 32;
 
-int ClipCard(HDC hdc, int x, int y, int width, int height);
 void DrawCard(HDC hdc, int x, int y, HDC hdcSource, int width, int height);
 
 #ifdef _DEBUG
@@ -427,7 +426,7 @@ void CardRegion::MoveDragCardTo(HDC hdc, int x, int y)
 
     //mask off the new position of the drag-card, so
     //that it will not be painted over
-    ClipCard(hdc, x, y, nDragCardWidth, nDragCardHeight);
+    DrawDragShape(hdc, x, y, true);
 
     //restore the area covered by the card at its previous position
     BitBlt(hdc, oldx, oldy, nDragCardWidth, nDragCardHeight, hdcBackGnd, 0, 0, SRCCOPY);
@@ -481,7 +480,7 @@ void CardRegion::MoveDragCardTo(HDC hdc, int x, int y)
     }
 
     //finally draw the card to the screen
-    DrawCard(hdc, x, y, hdcDragCard, nDragCardWidth, nDragCardHeight);
+    DrawDragShape(hdc, x, y, false);
 }
 
 

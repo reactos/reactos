@@ -11,23 +11,51 @@ LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
 /* Dialogs */
 
-IDD_OPTIONS DIALOGEX 0, 0, 186, 118
+IDD_OPTIONS DIALOGEX 0, 0, 300, 160
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | DS_SHELLFONT
 CAPTION "Opțiuni"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Tra&gere", -1, 7, 7, 90, 40
-    AUTORADIOBUTTON "O ca&rte", IDC_OPT_DRAWONE, 14, 19, 70, 10, WS_GROUP | WS_TABSTOP
-    AUTORADIOBUTTON "Trei &cărţi", IDC_OPT_DRAWTHREE, 14, 32, 70, 10
-    GROUPBOX "Scor", -1, 100, 7, 75, 53
-    AUTORADIOBUTTON "St&andard", IDC_OPT_STANDARD, 107, 19, 60, 10, WS_GROUP | WS_TABSTOP
-    AUTORADIOBUTTON "&Vegas", IDC_OPT_VEGAS, 107, 32, 60, 10
-    AUTORADIOBUTTON "&Fără", IDC_OPT_NOSCORE, 107, 45, 60, 10
-    AUTOCHECKBOX "Joc crono&metrat", IDC_OPT_SHOWTIME, 7 ,51 ,65 ,10, WS_TABSTOP
-    AUTOCHECKBOX "Bară de s&tare", IDC_OPT_STATUSBAR, 7, 66, 64, 10, WS_TABSTOP
-    AUTOCHECKBOX "Deplasare cont&ur", IDC_OPT_KEEPSCORE, 100, 66, 65, 10, WS_TABSTOP
-    DEFPUSHBUTTON "OK", IDOK, 35, 97, 50, 14
-    PUSHBUTTON "Revocare", IDCANCEL, 101, 97, 50, 14
+    GROUPBOX "Tra&gere", -1, 7, 7, 135, 40
+    AUTORADIOBUTTON "O ca&rte", IDC_OPT_DRAWONE, 14, 19, 120, 10, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "Trei &cărţi", IDC_OPT_DRAWTHREE, 14, 32, 120, 10
+    GROUPBOX "Scor", -1, 150, 7, 143, 53
+    AUTORADIOBUTTON "St&andard", IDC_OPT_STANDARD, 157, 19, 126, 10, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "&Vegas", IDC_OPT_VEGAS, 157, 32, 126, 10
+    AUTORADIOBUTTON "&Fără", IDC_OPT_NOSCORE, 157, 45, 126, 10
+    AUTOCHECKBOX "Joc crono&metrat", IDC_OPT_SHOWTIME, 7, 51, 135,10, WS_TABSTOP
+    AUTOCHECKBOX "Bară de s&tare", IDC_OPT_STATUSBAR, 7, 66, 135, 10, WS_TABSTOP
+    // TRANSLATORS: Corrected obsolete outline-dragging label; machine translation, please review.
+    AUTOCHECKBOX "&Păstrează scorul", IDC_OPT_KEEPSCORE, 150, 66, 143, 10, WS_TABSTOP
+    // TRANSLATORS: Machine translation; please review this new text.
+    LTEXT "Mutări de anulat (0 = dezactivat):", -1, 7, 83, 225, 24
+    EDITTEXT IDC_OPT_UNDO_LIMIT, 250, 84, 37, 14, ES_NUMBER | ES_RIGHT | WS_TABSTOP
+    CONTROL "", IDC_OPT_UNDO_SPIN, "msctls_updown32", UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_SETBUDDYINT | UDS_ARROWKEYS, 274, 84, 13, 14
+    // TRANSLATORS: Machine translation; please review this new text.
+    PUSHBUTTON "Animație de victorie...", IDC_OPT_ANIMATION, 7, 110, 286, 18, WS_TABSTOP
+    DEFPUSHBUTTON "OK", IDOK, 82, 139, 60, 14
+    PUSHBUTTON "Revocare", IDCANCEL, 158, 139, 60, 14
+END
+
+// TRANSLATORS: The following dialog is machine-translated; please review all new text.
+IDD_ANIMATION DIALOGEX 0, 0, 260, 202
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | DS_SHELLFONT
+CAPTION "Animație de victorie"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    AUTORADIOBUTTON "În fereastră (clasică)", IDC_ANIM_WINDOW, 10, 10, 240, 12, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "Pe acest monitor", IDC_ANIM_MONITOR, 10, 27, 240, 12
+    AUTORADIOBUTTON "Pe toate monitoarele", IDC_ANIM_DESKTOP, 10, 44, 240, 12
+    GROUPBOX "Viteză", -1, 7, 64, 246, 82
+    CONTROL "", IDC_ANIM_SPEED, "msctls_trackbar32", WS_TABSTOP | TBS_HORZ, 14, 78, 232, 24
+    LTEXT "50 %", -1, 16, 103, 35, 10
+    CTEXT "100 %", IDC_ANIM_VALUE, 103, 103, 54, 10
+    RTEXT "200 %", -1, 209, 103, 35, 10
+    PUSHBUTTON "Implicit: 100 %", IDC_ANIM_DEFAULT, 55, 119, 150, 18
+    // TRANSLATORS: Machine translation; please review this new text.
+    PUSHBUTTON "Previzualizare (5 secunde)", IDC_ANIM_PREVIEW, 55, 153, 150, 18
+    DEFPUSHBUTTON "OK", IDOK, 72, 181, 54, 14
+    PUSHBUTTON "Revocare", IDCANCEL, 134, 181, 54, 14
 END
 
 IDD_CARDBACK DIALOGEX 6, 6, 345, 185
@@ -51,6 +79,39 @@ BEGIN
     PUSHBUTTON "Revocare", IDCANCEL, 176, 165, 54, 14
 END
 
+// TRANSLATORS: Machine translation; please review this new high-score dialog and its strings.
+IDD_HIGHSCORES DIALOGEX 0, 0, 420, 291
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | DS_SHELLFONT
+CAPTION "Cele mai bune scoruri"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Scor", -1, 7, 10, 54, 12
+    COMBOBOX IDC_HOF_MODE, 64, 7, 145, 70, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    AUTOCHECKBOX "Jocuri cronometrate", IDC_HOF_TIMED, 218, 10, 195, 12, WS_TABSTOP
+    LTEXT "Tra&gere", -1, 7, 32, 54, 12
+    COMBOBOX IDC_HOF_DRAW, 64, 29, 145, 70, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    CONTROL "", IDC_HOF_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 7, 54, 406, 168
+    LTEXT "Standard: jocuri câștigate. Vegas: runde încheiate, punctate separat de soldul cumulat. Cele mai bune zece rezultate pe categorie.", -1, 7, 230, 406, 32
+    DEFPUSHBUTTON "OK", IDOK, 180, 270, 60, 14
+END
+
+// TRANSLATORS: Machine translation; please review this new high-score dialog and its strings.
+STRINGTABLE
+BEGIN
+    IDS_HOF_STANDARD "Standard"
+    IDS_HOF_VEGAS "Vegas"
+    IDS_HOF_ONE "O carte"
+    IDS_HOF_THREE "Trei cărţi"
+    IDS_HOF_RANK "#"
+    IDS_HOF_SCORE "Scor"
+    IDS_HOF_TIME "Timp"
+    IDS_HOF_DATE "Data"
+    IDS_HOF_RESULT "Rezultat"
+    IDS_HOF_WON "Câștigat"
+    IDS_HOF_ENDED "Încheiat"
+    IDS_HOF_SAVE_ERROR "Scorul nu a putut fi salvat."
+END
+
 /* Strings */
 
 STRINGTABLE
@@ -62,6 +123,8 @@ BEGIN
     IDS_SOL_DEAL "Joc nou?"
     IDS_SOL_SCORE "Scor: %d"
     IDS_SOL_TIME "Timp: %d"
+    // TRANSLATORS: Machine translation; please review this new text.
+    IDS_SOL_NO_HINT "Nu s-a găsit nicio mutare directă."
 END
 
 /* Menus */
@@ -72,12 +135,18 @@ BEGIN
     BEGIN
         MENUITEM "&Start\tF2", IDM_GAME_NEW
         MENUITEM SEPARATOR
-        MENUITEM "&Anulare", IDM_GAME_UNDO, GRAYED
+        MENUITEM "&Anulare\tCtrl+Z", IDM_GAME_UNDO, GRAYED
+    // TRANSLATORS: Machine translation; please review this new text.
+        MENUITEM "Indiciu\tF3", IDM_GAME_HINT
         MENUITEM "&Pachet cărţi…", IDM_GAME_DECK
         MENUITEM "&Opţiuni…", IDM_GAME_OPTIONS
+        // TRANSLATORS: Machine translation; please review.
+        MENUITEM "Cele mai bune scoruri...", IDM_GAME_HIGHSCORES
         MENUITEM SEPARATOR
         MENUITEM "I&eşire", IDM_GAME_EXIT
     END
+    // TRANSLATORS: Machine translation; please review this new text.
+    MENUITEM "Adună cărțile", IDM_GAME_FINISH, GRAYED
     POPUP "Aj&utor"
     BEGIN
         MENUITEM "&Cuprins\tF1", IDM_HELP_CONTENTS
@@ -91,4 +160,25 @@ IDR_ACCELERATOR1 ACCELERATORS
 BEGIN
     VK_F1, IDM_HELP_CONTENTS, VIRTKEY, NOINVERT
     VK_F2, IDM_GAME_NEW, VIRTKEY, NOINVERT
+    "Z", IDM_GAME_UNDO, VIRTKEY, CONTROL, NOINVERT
+    VK_F3, IDM_GAME_HINT, VIRTKEY, NOINVERT
+END
+
+// TRANSLATORS: Please review the player-name dialog and strings.
+IDD_SCORENAME DIALOGEX 0, 0, 350, 104
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | DS_SHELLFONT
+CAPTION "Cele mai bune scoruri"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "", IDC_HOF_PLACEMENT, 10, 10, 330, 14
+    LTEXT "Nume:", -1, 10, 33, 60, 12
+    EDITTEXT IDC_HOF_NAME, 75, 30, 265, 14, ES_AUTOHSCROLL | WS_TABSTOP
+    DEFPUSHBUTTON "Salvare și împărțire din nou", IDOK, 10, 65, 160, 28
+    PUSHBUTTON "Salvare și ieșire", IDCANCEL, 180, 65, 160, 28
+END
+
+STRINGTABLE
+BEGIN
+    IDS_HOF_NAME "Nume"
+    IDS_HOF_PLACEMENT "#%lu — %ld Scor"
 END
