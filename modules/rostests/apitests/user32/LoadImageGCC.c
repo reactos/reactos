@@ -141,6 +141,10 @@ START_TEST(LoadImageGCC)
     GlobalFree(hMem);
 
     DeleteDC(hdcMem);
+    DeleteObject(hBmp);
+
+    /* The mapped file cannot be deleted */
+    FreeLibrary(handle);
 
 Cleanup:
     for (i = 0; i < _countof(DataFiles); ++i)
