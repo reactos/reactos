@@ -795,6 +795,27 @@ HidClass_Read(
     return STATUS_PENDING;
 }
 
+static
+NTSTATUS
+NTAPI
+HidClass_WriteCompletion(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PIRP Irp,
+    IN PVOID Context)
+{
+    NTSTATUS Status = Irp->IoStatus.Status;
+
+    DPRINT("[HIDCLASS] HidClass_WriteCompletion(Irp %p)\n", Irp);
+
+    ASSERT(Irp->UserBuffer);
+    ExFreePoolWithTag(Irp->UserBuffer, HIDCLASS_TAG);
+    Irp->UserBuffer = NULL; // not strictly required
+
+    if (Irp->PendingReturned)
+        IoMarkIrpPending(Irp);
+    return Status;
+}
+
 NTSTATUS
 NTAPI
 HidClass_Write(
@@ -802,14 +823,17 @@ HidClass_Write(
     IN PIRP Irp)
 {
     PIO_STACK_LOCATION IoStack;
-    PHIDCLASS_COMMON_DEVICE_EXTENSION CommonDeviceExtension;
-    PIRP SubIrp;
-    KEVENT Event;
-    IO_STATUS_BLOCK IoStatusBlock;
-    HID_XFER_PACKET XferPacket;
-    NTSTATUS Status;
+    PHIDCLASS_FILEOP_CONTEXT Context;
+    PHIDCLASS_PDO_DEVICE_EXTENSION DeviceExtension;
+    PHID_XFER_PACKET XferPacket;
+    PUCHAR Buffer;
     ULONG Length;
 
+    DPRINT("[HIDCLASS] HidClass_Write(Irp %p)\n", Irp);
+
+    //
+    // get current stack location
+    //
     IoStack = IoGetCurrentIrpStackLocation(Irp);
     Length = IoStack->Parameters.Write.Length;
     if (Length < 1)
@@ -818,38 +842,77 @@ HidClass_Write(
         IoCompleteRequest(Irp, IO_NO_INCREMENT);
         return STATUS_INVALID_PARAMETER;
     }
+    Buffer = MmGetSystemAddressForMdlSafe(Irp->MdlAddress, NormalPagePriority);
 
-    RtlZeroMemory(&XferPacket, sizeof(XferPacket));
-    XferPacket.reportBufferLen = Length;
-    XferPacket.reportBuffer = Irp->UserBuffer;
-    XferPacket.reportId = XferPacket.reportBuffer[0];
-
-    CommonDeviceExtension = DeviceObject->DeviceExtension;
-    SubIrp = IoBuildDeviceIoControlRequest(
-        IOCTL_HID_WRITE_REPORT,
-        CommonDeviceExtension->HidDeviceExtension.NextDeviceObject,
-        NULL, 0,
-        NULL, 0,
-        TRUE,
-        &Event,
-        &IoStatusBlock);
-    if (!SubIrp)
+    //
+    // allocate request
+    //
+    XferPacket = ExAllocatePoolWithTag(NonPagedPool, sizeof(*XferPacket), HIDCLASS_TAG);
+    if (!XferPacket)
     {
-        Irp->IoStatus.Status = STATUS_NO_MEMORY;
+        Irp->IoStatus.Status = STATUS_INSUFFICIENT_RESOURCES;
         IoCompleteRequest(Irp, IO_NO_INCREMENT);
-        return STATUS_NOT_IMPLEMENTED;
+        return STATUS_INSUFFICIENT_RESOURCES;
     }
-    SubIrp->UserBuffer = &XferPacket;
-    KeInitializeEvent(&Event, SynchronizationEvent, FALSE);
-    Status = IoCallDriver(CommonDeviceExtension->HidDeviceExtension.NextDeviceObject, SubIrp);
-    if (Status == STATUS_PENDING)
+
+    RtlZeroMemory(XferPacket, sizeof(*XferPacket));
+    XferPacket->reportBufferLen = Length - 1;
+    XferPacket->reportBuffer = Buffer + 1;
+    XferPacket->reportId = Buffer[0];
+
+    IoStack = IoGetNextIrpStackLocation(Irp);
+    IoStack->MajorFunction = IRP_MJ_INTERNAL_DEVICE_CONTROL;
+    IoStack->Parameters.DeviceIoControl.IoControlCode = IOCTL_HID_WRITE_REPORT;
+    IoStack->Parameters.DeviceIoControl.InputBufferLength = sizeof(*XferPacket);
+    Irp->UserBuffer = XferPacket;
+
+    //
+    // set completion routine
+    //
+    IoSetCompletionRoutine(Irp,
+                           HidClass_WriteCompletion,
+                           NULL,
+                           TRUE,
+                           TRUE,
+                           TRUE);
+
+    //
+    // make next location current
+    //
+    IoSetNextIrpStackLocation(Irp);
+
+    //
+    // mark irp pending
+    //
+    IoMarkIrpPending(Irp);
+
+    //
+    // get device extension
+    //
+    if (IoStack->FileObject && IoStack->FileObject->FsContext)
     {
-        KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
-        Status = IoStatusBlock.Status;
+        //
+        // get context
+        //
+        Context = IoStack->FileObject->FsContext;
+        ASSERT(Context);
+        DeviceExtension = Context->DeviceExtension;
     }
-    Irp->IoStatus.Status = Status;
-    IoCompleteRequest(Irp, IO_NO_INCREMENT);
-    return Status;
+    else
+    {
+        DeviceExtension = DeviceObject->DeviceExtension;
+    }
+    ASSERT(DeviceExtension->Common.IsFDO == FALSE);
+
+    //
+    // let's dispatch the request
+    //
+    DeviceExtension->Common.DriverExtension->MajorFunction[IRP_MJ_INTERNAL_DEVICE_CONTROL](DeviceExtension->FDODeviceObject, Irp);
+
+    //
+    // complete
+    //
+    return STATUS_PENDING;
 }
 
 NTSTATUS
