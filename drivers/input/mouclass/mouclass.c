@@ -863,8 +863,6 @@ ClassPnp(
 {
     PPORT_DEVICE_EXTENSION DeviceExtension = DeviceObject->DeviceExtension;
     PIO_STACK_LOCATION IrpSp = IoGetCurrentIrpStackLocation(Irp);
-    OBJECT_ATTRIBUTES ObjectAttributes;
-    IO_STATUS_BLOCK Iosb;
     NTSTATUS Status;
 
     switch (IrpSp->MinorFunction)
@@ -879,25 +877,6 @@ ClassPnp(
                 Status = STATUS_UNSUCCESSFUL;
             }
 
-            if (NT_SUCCESS(Status))
-            {
-                InitializeObjectAttributes(&ObjectAttributes,
-                                           &DeviceExtension->InterfaceName,
-                                           OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
-                                           NULL,
-                                           NULL);
-
-                Status = ZwOpenFile(&DeviceExtension->FileHandle,
-                                    FILE_READ_DATA,
-                                    &ObjectAttributes,
-                                    &Iosb,
-                                    0,
-                                    0);
-                if (!NT_SUCCESS(Status))
-                    DeviceExtension->FileHandle = NULL;
-            }
-            else
-                DeviceExtension->FileHandle = NULL;
             if (DeviceExtension->InterfaceName.Length != 0)
                 IoSetDeviceInterfaceState(&DeviceExtension->InterfaceName, TRUE);
             Irp->IoStatus.Status = Status;
@@ -905,22 +884,12 @@ ClassPnp(
             return Status;
 
         case IRP_MN_STOP_DEVICE:
-            if (DeviceExtension->FileHandle)
-            {
-                ZwClose(DeviceExtension->FileHandle);
-                DeviceExtension->FileHandle = NULL;
-            }
             Status = STATUS_SUCCESS;
             break;
 
         case IRP_MN_REMOVE_DEVICE:
             if (DeviceExtension->InterfaceName.Length != 0)
                 IoSetDeviceInterfaceState(&DeviceExtension->InterfaceName, FALSE);
-            if (DeviceExtension->FileHandle)
-            {
-                ZwClose(DeviceExtension->FileHandle);
-                DeviceExtension->FileHandle = NULL;
-            }
             IoSkipCurrentIrpStackLocation(Irp);
             Status = IoCallDriver(DeviceExtension->LowerDevice, Irp);
             DestroyPortDriver(DeviceObject);
