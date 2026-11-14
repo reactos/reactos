@@ -414,7 +414,7 @@ HidP_SetUsages(
     IN ULONG  ReportLength)
 {
     UNIMPLEMENTED;
-    ASSERT(FALSE);
+    //ASSERT(FALSE);
     return STATUS_NOT_IMPLEMENTED;
 }
 
