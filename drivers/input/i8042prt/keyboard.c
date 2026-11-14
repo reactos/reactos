@@ -18,6 +18,13 @@
 
 #include <debug.h>
 
+/* Typematic limits of the PS/2 keyboard controller, in characters per second
+ * and milliseconds. kbdhid reports the same four values. */
+#define KEYBOARD_TYPEMATIC_RATE_MINIMUM  2
+#define KEYBOARD_TYPEMATIC_RATE_MAXIMUM  30
+#define KEYBOARD_TYPEMATIC_DELAY_MINIMUM 250
+#define KEYBOARD_TYPEMATIC_DELAY_MAXIMUM 1000
+
 /* GLOBALS *******************************************************************/
 
 static IO_WORKITEM_ROUTINE i8042PowerWorkItem;
@@ -499,11 +506,11 @@ i8042InitializeKeyboardAttributes(
     KeyboardAttributes->NumberOfKeysTotal = 101;
     KeyboardAttributes->InputDataQueueLength = Settings->KeyboardDataQueueSize;
     KeyboardAttributes->KeyRepeatMinimum.UnitId = 0;
-    KeyboardAttributes->KeyRepeatMinimum.Rate = (USHORT)Settings->SampleRate;
-    KeyboardAttributes->KeyRepeatMinimum.Delay = 0;
-    KeyboardAttributes->KeyRepeatMinimum.UnitId = 0;
-    KeyboardAttributes->KeyRepeatMinimum.Rate = (USHORT)Settings->SampleRate;
-    KeyboardAttributes->KeyRepeatMinimum.Delay = 0;
+    KeyboardAttributes->KeyRepeatMinimum.Rate = KEYBOARD_TYPEMATIC_RATE_MINIMUM;
+    KeyboardAttributes->KeyRepeatMinimum.Delay = KEYBOARD_TYPEMATIC_DELAY_MINIMUM;
+    KeyboardAttributes->KeyRepeatMaximum.UnitId = 0;
+    KeyboardAttributes->KeyRepeatMaximum.Rate = KEYBOARD_TYPEMATIC_RATE_MAXIMUM;
+    KeyboardAttributes->KeyRepeatMaximum.Delay = KEYBOARD_TYPEMATIC_DELAY_MAXIMUM;
 }
 
 /*
