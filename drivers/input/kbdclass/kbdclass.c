@@ -193,7 +193,8 @@ ClassDeviceControl(
             else
             {
                 PPORT_DEVICE_EXTENSION DeviceExtension = DeviceObject->DeviceExtension;
-                IoSkipCurrentIrpStackLocation(Irp);
+                IoCopyCurrentIrpStackLocationToNext(Irp);
+                IoGetNextIrpStackLocation(Irp)->MajorFunction = IRP_MJ_INTERNAL_DEVICE_CONTROL;
                 return IoCallDriver(DeviceExtension->LowerDevice, Irp);
             }
             break;
