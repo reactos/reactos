@@ -217,7 +217,8 @@ VOID
 CloseInputDevice(
     _In_ PINPUT_DEVICE_INFO DeviceInfo)
 {
-    ASSERT(DeviceInfo->Handle);
+    if (!DeviceInfo->Handle)
+        return;
     (void)ZwCancelIoFile(DeviceInfo->Handle, &DeviceInfo->Iosb);
     ObCloseHandle(DeviceInfo->Handle, KernelMode);
 }
@@ -305,6 +306,7 @@ VOID
 ProcessDeviceChanges(
     VOID)
 {
+    PINPUT_DEVICE_INFO PrevDeviceInfo = NULL;
     PINPUT_DEVICE_INFO DeviceInfo;
     NTSTATUS Status;
     DWORD PreviousNumberOfKeyboards = gNumberOfKeyboards;
@@ -318,8 +320,20 @@ ProcessDeviceChanges(
     DWORD MaxFunctionKeys = 0;
 
     AcquireDeviceInfoListMutex();
-    for (DeviceInfo = gpInputDeviceInfo; DeviceInfo; DeviceInfo = DeviceInfo->pNextDeviceInfo)
+    for (DeviceInfo = gpInputDeviceInfo; DeviceInfo; )
     {
+        if (DeviceInfo->PendingDeletion)
+        {
+            PINPUT_DEVICE_INFO NextDeviceInfo = DeviceInfo->pNextDeviceInfo;
+            CloseInputDevice(DeviceInfo);
+            if (PrevDeviceInfo)
+                PrevDeviceInfo->pNextDeviceInfo = NextDeviceInfo;
+            else
+                gpInputDeviceInfo = NextDeviceInfo;
+            ExFreePoolWithTag(DeviceInfo, USERTAG_PNP);
+            DeviceInfo = NextDeviceInfo;
+            continue;
+        }
         if (!DeviceInfo->Handle)
         {
             Status = OpenInputDevice(DeviceInfo);
@@ -367,6 +381,8 @@ ProcessDeviceChanges(
             HasHorizontalMouseWheel |= DeviceInfo->Mouse.Attributes.MouseIdentifier & HORIZONTAL_WHEEL_PRESENT;
 #endif
         }
+        PrevDeviceInfo = DeviceInfo;
+        DeviceInfo = DeviceInfo->pNextDeviceInfo;
     }
     ReleaseDeviceInfoListMutex();
 

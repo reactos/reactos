@@ -76,6 +76,7 @@ typedef struct _INPUT_DEVICE_INFO
     IO_STATUS_BLOCK Iosb;
     NTSTATUS Status;
     ULONG DeviceType;
+    BOOLEAN PendingDeletion;
     union
     {
         MOUSE_DEVICE_INFO Mouse;
