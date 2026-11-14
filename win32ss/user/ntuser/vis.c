@@ -72,7 +72,8 @@ VIS_ComputeVisibleRegion(
                  CurrentSibling != PreviousWindow )
          {
             if ((CurrentSibling->style & WS_VISIBLE) &&
-                !(CurrentSibling->ExStyle & WS_EX_TRANSPARENT))
+                !(CurrentSibling->ExStyle & WS_EX_TRANSPARENT) &&
+                !IntIsLayeredWindow(CurrentSibling))
             {
                ClipRgn = IntSysCreateRectpRgnIndirect(&CurrentSibling->rcWindow);
                /* Combine it with the window region if available */
@@ -104,7 +105,8 @@ VIS_ComputeVisibleRegion(
       while (CurrentWindow)
       {
          if ((CurrentWindow->style & WS_VISIBLE) &&
-             !(CurrentWindow->ExStyle & WS_EX_TRANSPARENT))
+             !(CurrentWindow->ExStyle & WS_EX_TRANSPARENT) &&
+             !IntIsLayeredWindow(CurrentWindow))
          {
             ClipRgn = IntSysCreateRectpRgnIndirect(&CurrentWindow->rcWindow);
             /* Combine it with the window region if available */

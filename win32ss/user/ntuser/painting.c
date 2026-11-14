@@ -136,6 +136,12 @@ IntSendSyncPaint(PWND Wnd, ULONG Flags)
    PLIST_ENTRY Entry;
    BOOL bSend = TRUE;
 
+   /* Never give the layered window itself WM_PAINT/WM_ERASEBKGND/WM_NCPAINT/WM_SYNCPAINT */
+   if (Wnd->ExStyle & WS_EX_LAYERED)
+   {
+      return;
+   }
+
    ptiWnd = Wnd->head.pti;
    ptiCur = PsGetCurrentThreadWin32Thread();
    /*
@@ -349,6 +355,12 @@ IntGetNCUpdateRgn(PWND Window, BOOL Validate)
 VOID FASTCALL
 IntSendNCPaint(PWND pWnd, HRGN hRgn)
 {
+   /* Never give the layered window itself WM_PAINT/WM_ERASEBKGND/WM_NCPAINT/WM_SYNCPAINT */
+   if (pWnd->ExStyle & WS_EX_LAYERED)
+   {
+      return;
+   }
+
    pWnd->state &= ~WNDS_SENDNCPAINT;
 
    if ( pWnd == GetW32ThreadInfo()->MessageQueue->spwndActive &&
@@ -407,6 +419,12 @@ co_IntPaintWindows(PWND Wnd, ULONG Flags, BOOL Recurse)
    HDC hDC;
    HWND hWnd = UserHMGetHandle(Wnd);
    HRGN TempRegion = NULL;
+
+   /* Never give the layered window itself WM_PAINT/WM_ERASEBKGND/WM_NCPAINT/WM_SYNCPAINT */
+   if (Wnd->ExStyle & WS_EX_LAYERED)
+   {
+      return;
+   }
 
    Wnd->state &= ~WNDS_PAINTNOTPROCESSED;
 
@@ -523,6 +541,12 @@ co_IntUpdateWindows(PWND Wnd, ULONG Flags, BOOL Recurse)
    HWND hWnd = UserHMGetHandle(Wnd);
    USER_REFERENCE_ENTRY Ref;
 
+   /* Never give the layered window itself WM_PAINT/WM_ERASEBKGND/WM_NCPAINT/WM_SYNCPAINT */
+   if (Wnd->ExStyle & WS_EX_LAYERED)
+   {
+      return;
+   }
+
    if ( Wnd->hrgnUpdate != NULL || Wnd->state & WNDS_INTERNALPAINT )
    {
       if (Wnd->hrgnUpdate)
@@ -572,7 +596,7 @@ co_IntUpdateWindows(PWND Wnd, ULONG Flags, BOOL Recurse)
       for (Child = Wnd->spwndChild; Child; Child = Child->spwndNext)
       {
          /* transparent window, check for non-transparent sibling to paint first, then skip it */
-         if ( Child->ExStyle & WS_EX_TRANSPARENT &&
+         if ( (Child->ExStyle & WS_EX_TRANSPARENT) &&
              ( Child->hrgnUpdate != NULL || Child->state & WNDS_INTERNALPAINT ) )
          {
             PWND Next = Child->spwndNext;
@@ -771,14 +795,12 @@ IntInvalidateWindows(PWND Wnd, PREGION Rgn, ULONG Flags)
          }
 
          Flags |= RDW_ERASE|RDW_FRAME; // For children.
-
       }
 
       if (!HadPaintMessage && IntIsWindowDirty(Wnd))
       {
          MsqIncPaintCountQueue(Wnd->head.pti);
       }
-
    }    // The following flags are used to validate the window.
    else if (Flags & (RDW_VALIDATE|RDW_NOINTERNALPAINT|RDW_NOERASE|RDW_NOFRAME))
    {
