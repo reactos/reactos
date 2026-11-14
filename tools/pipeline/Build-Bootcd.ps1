@@ -232,8 +232,36 @@ function Install-UpdaterClient {
     if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 }
 
+function Export-OsImage {
+    param([string]$List, [string]$Image)
+    if (-not (Test-Path $List)) { Write-Error "The boot CD file list is missing at $List." }
+    if (Test-Path $Image) { Remove-Item $Image -Recurse -Force }
+    New-Item -ItemType Directory -Force -Path $Image | Out-Null
+    $copied = 0
+    foreach ($line in Get-Content $List) {
+        if ($line -notlike "VerOS/*=*") { continue }
+        $split = $line.IndexOf("=")
+        if ($split -lt 7) { continue }
+        $rel = $line.Substring(6, $split - 6) -replace "/", "\"
+        $src = $line.Substring($split + 1)
+        if (-not (Test-Path -LiteralPath $src)) { throw "Image file is missing: $src" }
+        $item = Get-Item -LiteralPath $src
+        $dest = Join-Path $Image $rel
+        if ($item.PSIsContainer) {
+            New-Item -ItemType Directory -Force -Path $dest | Out-Null
+            continue
+        }
+        $parent = Split-Path $dest -Parent
+        if ($parent -and -not (Test-Path -LiteralPath $parent)) { New-Item -ItemType Directory -Force -Path $parent | Out-Null }
+        New-Item -ItemType HardLink -Path $dest -Target $src | Out-Null
+        $copied++
+    }
+    if ($copied -lt 100) { throw "The image layout only had $copied files." }
+    return $copied
+}
+
 function Publish-OsTree {
-    param([string]$Checkout, [string]$Reactos, [string]$Track, [string]$PublishUrl)
+    param([string]$Checkout, [string]$BuildDir, [string]$ClientRoot, [string]$Track, [string]$PublishUrl)
     $env:UPDATE_PUBLISH_URL = $PublishUrl
     $bin = Join-Path $Checkout "update-server\target\release\veros-publish.exe"
     if (-not (Test-Path $bin)) {
@@ -247,7 +275,11 @@ function Publish-OsTree {
         if ($LASTEXITCODE -ne 0) { $revision = "" }
     }
     $env:VEROS_REVISION = "$revision".Trim()
-    $id = & $bin $Reactos $Track $cache
+    $image = Join-Path $BuildDir "image"
+    $copied = Export-OsImage -List (Join-Path $BuildDir "boot\bootcd.Debug.lst") -Image $image
+    Write-Host "Image layout has $copied files"
+    $dist = Join-Path $ClientRoot "dist"
+    $id = & $bin $image $Track $cache $dist
     if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
     return ($id | Select-Object -Last 1)
 }
@@ -296,12 +328,13 @@ if (-not $RepackOnly) {
     Copy-Item (Join-Path $BuildDir "boot\bootdata\software") (Join-Path $hiveDir "SOFTWARE") -Force
     Sync-UpdaterClient -ClientRoot $ClientRoot -Track $Track -PublishUrl $UpdateServer.PublishUrl
     Install-UpdaterClient -ClientRoot $ClientRoot -Reactos $Reactos
-    if ($Publish) {
-        $published = Publish-OsTree -Checkout $Checkout -Reactos $Reactos -Track $Track -PublishUrl $UpdateServer.PublishUrl
-        Set-Content -Path (Join-Path $Reactos "veros.build") -Value $published -Encoding ascii
-    }
 }
 Repack-Bootcd -BuildDir $BuildDir -Reactos $Reactos
+if ($Publish) {
+    $published = Publish-OsTree -Checkout $Checkout -BuildDir $BuildDir -ClientRoot $ClientRoot -Track $Track -PublishUrl $UpdateServer.PublishUrl
+    Set-Content -Path (Join-Path $Reactos "veros.build") -Value $published -Encoding ascii
+    Repack-Bootcd -BuildDir $BuildDir -Reactos $Reactos
+}
 
 $iso = Join-Path $BuildDir "bootcd.iso"
 if (-not (Test-Path $iso)) {
