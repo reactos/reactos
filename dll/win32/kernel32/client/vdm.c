@@ -1053,278 +1053,168 @@ BaseDestroyVDMEnvironment(IN PANSI_STRING AnsiEnv,
     return TRUE;
 }
 
-
-/* Check whether a file is an OS/2 or a very old Windows executable
- * by testing on import of KERNEL.
- *
- * FIXME: is reading the module imports the only way of discerning
- *        old Windows binaries from OS/2 ones ? At least it seems so...
- */
-static DWORD WINAPI
-InternalIsOS2OrOldWin(HANDLE hFile, IMAGE_DOS_HEADER *mz, IMAGE_OS2_HEADER *ne)
-{
-  DWORD CurPos;
-  LPWORD modtab = NULL;
-  LPSTR nametab = NULL;
-  DWORD Read, Ret;
-  int i;
-
-  Ret = BINARY_OS216;
-  CurPos = SetFilePointer(hFile, 0, NULL, FILE_CURRENT);
-
-  /* read modref table */
-  if((SetFilePointer(hFile, mz->e_lfanew + ne->ne_modtab, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) ||
-     (!(modtab = HeapAlloc(GetProcessHeap(), 0, ne->ne_cmod * sizeof(WORD)))) ||
-     (!(ReadFile(hFile, modtab, ne->ne_cmod * sizeof(WORD), &Read, NULL))) ||
-     (Read != (DWORD)ne->ne_cmod * sizeof(WORD)))
-  {
-    goto broken;
-  }
-
-  /* read imported names table */
-  if((SetFilePointer(hFile, mz->e_lfanew + ne->ne_imptab, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) ||
-     (!(nametab = HeapAlloc(GetProcessHeap(), 0, ne->ne_enttab - ne->ne_imptab))) ||
-     (!(ReadFile(hFile, nametab, ne->ne_enttab - ne->ne_imptab, &Read, NULL))) ||
-     (Read != (DWORD)ne->ne_enttab - ne->ne_imptab))
-  {
-    goto broken;
-  }
-
-  for(i = 0; i < ne->ne_cmod; i++)
-  {
-    LPSTR module;
-    module = &nametab[modtab[i]];
-    if(!strncmp(&module[1], "KERNEL", module[0]))
-    {
-      /* very old windows file */
-      Ret = BINARY_WIN16;
-      goto done;
-    }
-  }
-
-  broken:
-  DPRINT1("InternalIsOS2OrOldWin(): Binary file seems to be broken\n");
-
-  done:
-  HeapFree(GetProcessHeap(), 0, modtab);
-  HeapFree(GetProcessHeap(), 0, nametab);
-  SetFilePointer(hFile, CurPos, NULL, FILE_BEGIN);
-  return Ret;
-}
-
-static DWORD WINAPI
-InternalGetBinaryType(HANDLE hFile)
-{
-  union
-  {
-    struct
-    {
-      unsigned char magic[4];
-      unsigned char ignored[12];
-      unsigned short type;
-    } elf;
-    struct
-    {
-      unsigned long magic;
-      unsigned long cputype;
-      unsigned long cpusubtype;
-      unsigned long filetype;
-    } macho;
-    IMAGE_DOS_HEADER mz;
-  } Header;
-  char magic[4];
-  DWORD Read;
-
-  if((SetFilePointer(hFile, 0, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) ||
-     (!ReadFile(hFile, &Header, sizeof(Header), &Read, NULL) ||
-      (Read != sizeof(Header))))
-  {
-    return BINARY_UNKNOWN;
-  }
-
-  if(!memcmp(Header.elf.magic, "\177ELF", sizeof(Header.elf.magic)))
-  {
-    /* FIXME: we don't bother to check byte order, architecture, etc. */
-    switch(Header.elf.type)
-    {
-      case 2:
-        return BINARY_UNIX_EXE;
-      case 3:
-        return BINARY_UNIX_LIB;
-    }
-    return BINARY_UNKNOWN;
-  }
-
-  /* Mach-o File with Endian set to Big Endian or Little Endian*/
-  if(Header.macho.magic == 0xFEEDFACE ||
-     Header.macho.magic == 0xCEFAEDFE)
-  {
-    switch(Header.macho.filetype)
-    {
-      case 0x8:
-        /* MH_BUNDLE */
-        return BINARY_UNIX_LIB;
-    }
-    return BINARY_UNKNOWN;
-  }
-
-  /* Not ELF, try DOS */
-  if(Header.mz.e_magic == IMAGE_DOS_SIGNATURE)
-  {
-    /* We do have a DOS image so we will now try to seek into
-     * the file by the amount indicated by the field
-     * "Offset to extended header" and read in the
-     * "magic" field information at that location.
-     * This will tell us if there is more header information
-     * to read or not.
-     */
-    if((SetFilePointer(hFile, Header.mz.e_lfanew, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) ||
-       (!ReadFile(hFile, magic, sizeof(magic), &Read, NULL) ||
-        (Read != sizeof(magic))))
-    {
-      return BINARY_DOS;
-    }
-
-    /* Reading the magic field succeeded so
-     * we will try to determine what type it is.
-     */
-    if(!memcmp(magic, "PE\0\0", sizeof(magic)))
-    {
-      IMAGE_FILE_HEADER FileHeader;
-      if(!ReadFile(hFile, &FileHeader, sizeof(IMAGE_FILE_HEADER), &Read, NULL) ||
-         (Read != sizeof(IMAGE_FILE_HEADER)))
-      {
-        return BINARY_DOS;
-      }
-
-      /* FIXME - detect 32/64 bit */
-
-      if(FileHeader.Characteristics & IMAGE_FILE_DLL)
-        return BINARY_PE_DLL32;
-      return BINARY_PE_EXE32;
-    }
-
-    if(!memcmp(magic, "NE", 2))
-    {
-      /* This is a Windows executable (NE) header.  This can
-       * mean either a 16-bit OS/2 or a 16-bit Windows or even a
-       * DOS program (running under a DOS extender).  To decide
-       * which, we'll have to read the NE header.
-       */
-      IMAGE_OS2_HEADER ne;
-      if((SetFilePointer(hFile, Header.mz.e_lfanew, NULL, FILE_BEGIN) == 1) ||
-         !ReadFile(hFile, &ne, sizeof(IMAGE_OS2_HEADER), &Read, NULL) ||
-         (Read != sizeof(IMAGE_OS2_HEADER)))
-      {
-        /* Couldn't read header, so abort. */
-        return BINARY_DOS;
-      }
-
-      switch(ne.ne_exetyp)
-      {
-        case 2:
-          return BINARY_WIN16;
-        case 5:
-          return BINARY_DOS;
-        default:
-          return InternalIsOS2OrOldWin(hFile, &Header.mz, &ne);
-      }
-    }
-    return BINARY_DOS;
-  }
-  return BINARY_UNKNOWN;
-}
+#ifdef _WIN64
+    #define SCS_NATIVE_BINARY SCS_64BIT_BINARY
+#else
+    #define SCS_NATIVE_BINARY SCS_32BIT_BINARY
+#endif
 
 /*
  * @implemented
  */
 BOOL
 WINAPI
-GetBinaryTypeW (
-    LPCWSTR lpApplicationName,
-    LPDWORD lpBinaryType
-    )
+GetBinaryTypeW(
+    _In_ LPCWSTR lpApplicationName,
+    _Out_ LPDWORD lpBinaryType)
 {
-  HANDLE hFile;
-  DWORD BinType;
+    NTSTATUS status;
+    BOOL ret = FALSE;
+    DWORD binaryType;
+    UNICODE_STRING ntPathName;
+    RTL_RELATIVE_NAME_U relativeName;
+    OBJECT_ATTRIBUTES objectAttributes;
+    IO_STATUS_BLOCK ioStatusBlock;
+    SECTION_IMAGE_INFORMATION imageInfo;
+    PIMAGE_NT_HEADERS ntHeader;
+    HANDLE hFile, hSection;
 
-  if(!lpApplicationName || !lpBinaryType)
-  {
-    SetLastError(ERROR_INVALID_PARAMETER);
-    return FALSE;
-  }
+    binaryType = SCS_NATIVE_BINARY;
+    hFile = hSection = NULL;
 
-  hFile = CreateFileW(lpApplicationName, GENERIC_READ, FILE_SHARE_READ, NULL,
-                      OPEN_EXISTING, 0, 0);
-  if(hFile == INVALID_HANDLE_VALUE)
-  {
-    return FALSE;
-  }
-
-  BinType = InternalGetBinaryType(hFile);
-  CloseHandle(hFile);
-
-  switch(BinType)
-  {
-    case BINARY_UNKNOWN:
+    if (!RtlDosPathNameToRelativeNtPathName_U(lpApplicationName, &ntPathName, NULL, &relativeName))
     {
-      WCHAR *dot;
-
-      /*
-       * guess from filename
-       */
-      if(!(dot = wcsrchr(lpApplicationName, L'.')))
-      {
+        BaseSetLastNTError(STATUS_OBJECT_PATH_INVALID);
         return FALSE;
-      }
-      if(!lstrcmpiW(dot, L".COM"))
-      {
-        *lpBinaryType = SCS_DOS_BINARY;
-        return TRUE;
-      }
-      if(!lstrcmpiW(dot, L".PIF"))
-      {
-        *lpBinaryType = SCS_PIF_BINARY;
-        return TRUE;
-      }
-      return FALSE;
     }
-    case BINARY_PE_EXE32:
-    case BINARY_PE_DLL32:
-    {
-      *lpBinaryType = SCS_32BIT_BINARY;
-      return TRUE;
-    }
-    case BINARY_PE_EXE64:
-    case BINARY_PE_DLL64:
-    {
-      *lpBinaryType = SCS_64BIT_BINARY;
-      return TRUE;
-    }
-    case BINARY_WIN16:
-    {
-      *lpBinaryType = SCS_WOW_BINARY;
-      return TRUE;
-    }
-    case BINARY_OS216:
-    {
-      *lpBinaryType = SCS_OS216_BINARY;
-      return TRUE;
-    }
-    case BINARY_DOS:
-    {
-      *lpBinaryType = SCS_DOS_BINARY;
-      return TRUE;
-    }
-    case BINARY_UNIX_EXE:
-    case BINARY_UNIX_LIB:
-    {
-      return FALSE;
-    }
-  }
 
-  DPRINT1("Invalid binary type %lu returned!\n", BinType);
-  return FALSE;
+    if (relativeName.RelativeName.Length)
+    {
+        ntPathName = relativeName.RelativeName;
+        objectAttributes.RootDirectory = relativeName.ContainingDirectory;
+    }
+    else
+    {
+        objectAttributes.RootDirectory = NULL;
+    }
+
+    InitializeObjectAttributes(&objectAttributes, &ntPathName, OBJ_CASE_INSENSITIVE,
+                               objectAttributes.RootDirectory, NULL);
+
+    status = NtOpenFile(&hFile, SYNCHRONIZE | FILE_READ_DATA | FILE_EXECUTE,
+                        &objectAttributes, &ioStatusBlock,
+                        FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+                        FILE_NON_DIRECTORY_FILE | FILE_SYNCHRONOUS_IO_NONALERT);
+
+    RtlReleaseRelativeName(&relativeName);
+
+    if (!NT_SUCCESS(status))
+    {
+        BaseSetLastNTError(status);
+        goto Cleanup;
+    }
+
+    status = NtCreateSection(&hSection,
+                             SECTION_QUERY | SECTION_MAP_READ,
+                             NULL, NULL,
+                             PAGE_READONLY,
+                             SEC_IMAGE,
+                             hFile);
+
+    NtClose(hFile);
+    hFile = NULL;
+
+    if (NT_SUCCESS(status)) /* PE image? */
+    {
+        status = NtQuerySection(hSection, SectionImageInformation,
+                                &imageInfo, sizeof(imageInfo), NULL);
+        if (!NT_SUCCESS(status))
+        {
+            BaseSetLastNTError(status);
+            goto Cleanup;
+        }
+
+        if (imageInfo.ImageCharacteristics & IMAGE_FILE_DLL)
+        {
+            SetLastError(ERROR_BAD_EXE_FORMAT); /* DLL is not an EXE */
+            goto Cleanup;
+        }
+
+        ntHeader = RtlImageNtHeader(NtCurrentPeb()->ImageBaseAddress);
+        if (imageInfo.Machine == ntHeader->FileHeader.Machine) /* Native? */
+        {
+            binaryType = (imageInfo.SubSystemType == IMAGE_SUBSYSTEM_POSIX_CUI)
+                         ? SCS_POSIX_BINARY
+                         : SCS_NATIVE_BINARY;
+        }
+        else if (imageInfo.Machine == IMAGE_FILE_MACHINE_I386)
+        {
+            binaryType = (imageInfo.SubSystemType == IMAGE_SUBSYSTEM_POSIX_CUI)
+                         ? SCS_POSIX_BINARY
+                         : SCS_32BIT_BINARY;
+        }
+        else
+        {
+            SetLastError(ERROR_BAD_EXE_FORMAT);
+            goto Cleanup;
+        }
+
+        ret = TRUE;
+    }
+    else /* Not PE image? */
+    {
+        switch (status)
+        {
+            case STATUS_INVALID_IMAGE_NOT_MZ: /* No MZ header */
+            {
+                INT dosType = BaseIsDosApplication(&ntPathName, status);
+                if (!dosType)
+                {
+                    BaseSetLastNTError(STATUS_INVALID_IMAGE_NOT_MZ);
+                    goto Cleanup;
+                }
+                if (dosType != SCS_PIF_BINARY)
+                    binaryType = SCS_DOS_BINARY;
+                ret = TRUE;
+                break;
+            }
+
+            case STATUS_INVALID_IMAGE_WIN_16:
+            case STATUS_INVALID_IMAGE_NE_FORMAT:
+                binaryType = SCS_WOW_BINARY;
+                ret = TRUE;
+                break;
+
+            case STATUS_INVALID_IMAGE_PROTECT:
+                binaryType = SCS_DOS_BINARY;
+                ret = TRUE;
+                break;
+
+            case STATUS_INVALID_IMAGE_WIN_32:
+                binaryType = SCS_32BIT_BINARY;
+                ret = TRUE;
+                break;
+
+            case STATUS_INVALID_IMAGE_WIN_64:
+                binaryType = SCS_64BIT_BINARY;
+                ret = TRUE;
+                break;
+
+            default:
+                BaseSetLastNTError(status);
+                goto Cleanup;
+        }
+    }
+
+    if (ret)
+        *lpBinaryType = binaryType;
+
+Cleanup:
+    if (hSection)
+        NtClose(hSection);
+    if (ntPathName.Buffer)
+        RtlFreeHeap(RtlGetProcessHeap(), 0, ntPathName.Buffer);
+    return ret;
 }
 
 /*
