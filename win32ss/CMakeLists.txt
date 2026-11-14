@@ -206,6 +206,8 @@ list(APPEND SOURCE
     gdi/eng/stubs.c
     gdi/eng/umpdstubs.c
     pch.h)
+list(APPEND PCH_SKIP_SOURCE
+    user/ntuser/guid.c)
 
 if(USE_DIBLIB)
     add_definitions(-D_USE_DIBLIB_)
@@ -241,6 +243,7 @@ add_asm_files(win32k_asm ${ASM_SOURCE})
 
 add_library(win32k MODULE
     ${SOURCE}
+    ${PCH_SKIP_SOURCE}
     gdi/ntgdi/brush.cpp
     ${win32k_asm}
     win32k.rc
@@ -248,7 +251,7 @@ add_library(win32k MODULE
 add_pch(win32k pch.h SOURCE)
 
 set_module_type(win32k kernelmodedriver)
-target_link_libraries(win32k ${PSEH_LIB} dxguid libcntpr)
+target_link_libraries(win32k ${PSEH_LIB} wdmguid dxguid libcntpr)
 
 if(USE_DIBLIB)
     target_link_libraries(win32k diblib)
