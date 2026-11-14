@@ -786,6 +786,7 @@ ConDrvWriteConsole(IN PCONSOLE Console,
     if (Unicode)
     {
         Buffer = StringBuffer;
+        Length = NumCharsToWrite;
     }
     else
     {
@@ -796,7 +797,7 @@ ConDrvWriteConsole(IN PCONSOLE Console,
         Buffer = ConsoleAllocHeap(0, Length * sizeof(WCHAR));
         if (Buffer)
         {
-            MultiByteToWideChar(Console->OutputCodePage, 0,
+            Length = MultiByteToWideChar(Console->OutputCodePage, 0,
                                 (PCHAR)StringBuffer,
                                 NumCharsToWrite,
                                 (PWCHAR)Buffer, Length);
@@ -815,7 +816,7 @@ ConDrvWriteConsole(IN PCONSOLE Console,
             Status = TermWriteStream(Console,
                                      ScreenBuffer,
                                      Buffer,
-                                     NumCharsToWrite,
+                                     Length,
                                      TRUE);
             if (NT_SUCCESS(Status))
             {
