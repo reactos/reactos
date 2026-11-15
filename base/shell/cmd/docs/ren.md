@@ -8,7 +8,7 @@ Before detailing the Rem code just 3 things:
 
 1) Ren can be used in 3 different ways:
 
-    - WAY #1: Full Path Way: `ren c:\ie\hello.txt c:\ie\hi.txt` rename command will change the name of hello.txt->hi.txt. We have to be sure that both paths(c:\ie\ ) be the same.Since rename cant move files within Directories (MSDN).
+    - WAY #1: Full Path Way: `ren c:\ie\hello.txt c:\ie\hi.txt` rename command will change the name of hello.txt->hi.txt. We have to be sure that both paths (`c:\ie\`) are the same.Since rename cant move files within Directories (MSDN).
 
     - WAY #2: Semi Path Way: `ren c:\ie\hello.txt hi.txt` This is a special feature,since this does the same as Way #1 but without telling the Destiny path.So this feature must be implemented also.
 
