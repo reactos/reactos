@@ -295,8 +295,22 @@ static void _fnet_tcp_input(fnet_netif_t *netif, struct fnet_sockaddr *src_addr,
 
         nb->next_chain = 0;
 
+#if FNET_CFG_SOCKET_EVENT_CALLBACK /* ReactOS */
+        {
+            fnet_socket_event_snapshot_t sk_event, head_event;
+
+            _fnet_socket_event_capture(sk, &sk_event);
+            _fnet_socket_event_capture(sk->head_con, &head_event); /* Accept readiness.*/
+
+            drop_flag = _fnet_tcp_inputsk(sk, nb, src_addr, dest_addr);
+
+            _fnet_socket_event_fire(&sk_event);
+            _fnet_socket_event_fire(&head_event);
+        }
+#else
         /* Process  the segment.*/
         drop_flag = _fnet_tcp_inputsk(sk, nb, src_addr, dest_addr);
+#endif
 
         /* Wake-up user application.*/
 #if FNET_CFG_SOCKET_CALLBACK_ON_RX
@@ -2753,7 +2767,25 @@ static void _fnet_tcp_slowtimo(FNET_UINTPTR_T cookie) /* ReactOS */
 
         /* Processg the main socket.*/
         nextsk = sk->next;
+#if FNET_CFG_SOCKET_EVENT_CALLBACK /* ReactOS */
+        {
+            /* Only state or error changes are news here: connect timeout, retransmission or keepalive abort */
+            fnet_socket_event_snapshot_t sk_event;
+            fnet_socket_state_t old_state = sk->state;
+            fnet_error_t old_error = sk->options.error;
+            fnet_error_t old_local_error = sk->options.local_error;
+
+            /* A socket with a callback belongs to the application, so the stack does not free it here */
+            _fnet_socket_event_capture(sk, &sk_event);
+            _fnet_tcp_slowtimosk(sk);
+            if((sk_event.callback) && ((sk->state != old_state) || (sk->options.error != old_error) || (sk->options.local_error != old_local_error)))
+            {
+                _fnet_socket_event_fire(&sk_event);
+            }
+        }
+#else
         _fnet_tcp_slowtimosk(sk);
+#endif
         sk = nextsk;
     }
 

@@ -96,6 +96,55 @@ void fnet_socket_set_callback_on_rx( void(*callback)(void))
 
 #endif /* FNET_CFG_SOCKET_CALLBACK_ON_RX */
 
+#if FNET_CFG_SOCKET_EVENT_CALLBACK /* ReactOS */
+/* Sets the per socket event callback */
+fnet_return_t fnet_socket_set_event_callback(fnet_socket_t s, fnet_socket_event_callback_t callback, void *cookie)
+{
+    fnet_socket_if_t    *sock;
+    fnet_return_t       result = FNET_ERR;
+
+    _fnet_stack_mutex_lock();
+
+    if((sock = _fnet_socket_desc_find(s)) != 0)
+    {
+        fnet_isr_lock();
+        sock->event_callback = callback;
+        sock->event_cookie = cookie;
+        fnet_isr_unlock();
+        result = FNET_OK;
+    }
+    else
+    {
+        fnet_error_set(FNET_ERR_BAD_DESC);
+    }
+
+    _fnet_stack_mutex_unlock();
+    return result;
+}
+
+void _fnet_socket_event_capture(fnet_socket_if_t *sock, fnet_socket_event_snapshot_t *event)
+{
+    if(sock && sock->event_callback && sock->descriptor)
+    {
+        event->callback = sock->event_callback;
+        event->cookie = sock->event_cookie;
+        event->descriptor = sock->descriptor;
+    }
+    else
+    {
+        event->callback = 0;
+    }
+}
+
+void _fnet_socket_event_fire(const fnet_socket_event_snapshot_t *event)
+{
+    if(event->callback)
+    {
+        event->callback(event->descriptor, event->cookie);
+    }
+}
+#endif /* FNET_CFG_SOCKET_EVENT_CALLBACK */
+
 /************************************************************************
 * DESCRIPTION: This function sets socket error.
 *************************************************************************/
@@ -393,6 +442,10 @@ fnet_socket_if_t *_fnet_socket_copy( fnet_socket_if_t *sock )
         sock_cp->prev = 0;
         sock_cp->descriptor = FNET_NULL;
         sock_cp->state = SS_CLOSED;
+#if FNET_CFG_SOCKET_EVENT_CALLBACK /* ReactOS */
+        sock_cp->event_callback = 0;
+        sock_cp->event_cookie = 0;
+#endif
         sock_cp->protocol_control = 0;
         sock_cp->head_con = 0;
         sock_cp->partial_con = 0;

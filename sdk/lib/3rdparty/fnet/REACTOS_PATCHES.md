@@ -71,6 +71,27 @@ buffer.
 
 Upstream candidate: probably, as a config option.
 
+### 3. Per socket event callback
+
+FNET only had a global argumentless RX callback and `fnet_socket_poll`. tcpip.sys needs to know when a
+particular connection can read, write, accept, finished connecting, or was reset.
+
+* `stack/fnet_stack_config.h`: `FNET_CFG_SOCKET_EVENT_CALLBACK`, default 0 (no change for upstream users).
+* `stack/fnet_socket.h`: `fnet_socket_event_callback_t` and `fnet_socket_set_event_callback(s, callback, cookie)`.
+  The callback means "state or buffers may have changed"; the application reads IN/OUT/ERR with the existing
+  `fnet_socket_poll` on that socket. That covers receive ready, accept ready, FIN, send space, connect done and
+  reset without a new event vocabulary.
+* `stack/fnet_socket_prv.h`: callback and cookie fields on `fnet_socket_if_t`, plus a small snapshot struct.
+* `stack/fnet_socket.c`: the setter; snapshot capture and fire helpers; `_fnet_socket_copy` clears the callback
+  so connections in a listener's queue do not inherit the listener's callback.
+* `stack/fnet_tcp.c`: in `_fnet_tcp_input`, the callbacks of the socket and of its listener are captured before
+  `_fnet_tcp_inputsk` and fired after it. Capturing first means the stack can free the socket meanwhile
+  without the callback touching freed memory. Around `_fnet_tcp_slowtimosk` the callback fires only when the
+  socket's state or error changed (connect timeout, retransmission or keepalive abort); firing on every 500 ms
+  tick woke the glue for every socket for nothing.
+
+Upstream candidate: yes.
+
 ## Not needed
 
 ### 32 bit millisecond clock wrap

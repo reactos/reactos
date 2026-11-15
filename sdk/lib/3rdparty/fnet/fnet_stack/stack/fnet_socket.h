@@ -1444,6 +1444,12 @@ fnet_size_t fnet_socket_poll(fnet_socket_poll_t *socket_poll, fnet_size_t socket
 void fnet_socket_set_callback_on_rx( void(*callback)(void));
 #endif
 
+#if FNET_CFG_SOCKET_EVENT_CALLBACK /* ReactOS */
+/* Fired when state or buffers may have changed; read events with fnet_socket_poll(), do not call the socket API from it. */
+typedef void (*fnet_socket_event_callback_t)(fnet_socket_t s, void *cookie);
+fnet_return_t fnet_socket_set_event_callback(fnet_socket_t s, fnet_socket_event_callback_t callback, void *cookie);
+#endif
+
 /*  BSD Socket API names */
 #if FNET_CFG_SOCKET_BSD_NAMES
 #define socket              fnet_socket

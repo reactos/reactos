@@ -130,6 +130,10 @@ typedef struct _fnet_socket_if_t
     struct fnet_sockaddr        foreign_addr;           /**< Foreign socket address.*/
     struct fnet_sockaddr        local_addr;             /**< Lockal socket address.*/
     fnet_socket_option_t        options;                /**< Collection of socket options.*/
+#if FNET_CFG_SOCKET_EVENT_CALLBACK /* ReactOS */
+    fnet_socket_event_callback_t event_callback;
+    void                        *event_cookie;
+#endif
 
 #if FNET_CFG_MULTICAST
     /* Multicast params.*/
@@ -142,6 +146,19 @@ typedef struct _fnet_socket_if_t
 #endif /* FNET_CFG_MULTICAST */
 
 } fnet_socket_if_t;
+
+#if FNET_CFG_SOCKET_EVENT_CALLBACK /* ReactOS */
+/* Copied out first so the event can fire even if the stack frees the socket meanwhile */
+typedef struct
+{
+    fnet_socket_event_callback_t    callback;
+    void                            *cookie;
+    fnet_socket_t                   descriptor;
+} fnet_socket_event_snapshot_t;
+
+void _fnet_socket_event_capture(fnet_socket_if_t *sock, fnet_socket_event_snapshot_t *event);
+void _fnet_socket_event_fire(const fnet_socket_event_snapshot_t *event);
+#endif
 
 /**************************************************************************/ /*!
  * @internal

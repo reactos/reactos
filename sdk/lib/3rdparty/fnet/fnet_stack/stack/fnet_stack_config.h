@@ -512,6 +512,11 @@
     #define FNET_CFG_SOCKET_CALLBACK_ON_RX         (0U)
 #endif
 
+/* ReactOS: per socket event callback, see fnet_socket_set_event_callback() */
+#ifndef FNET_CFG_SOCKET_EVENT_CALLBACK
+    #define FNET_CFG_SOCKET_EVENT_CALLBACK         (0U)
+#endif
+
 /**************************************************************************/ /*!
  * @def      FNET_CFG_SOCKET_TCP_MSS
  * @brief    The default value of the @ref TCP_MSS option
