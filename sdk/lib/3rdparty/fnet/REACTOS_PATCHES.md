@@ -34,6 +34,32 @@ targets) and the ReactOS config sets it to a pointer sized type.
 
 Upstream candidate: yes.
 
+### 1b. Heap unit size vs block header (x64 layout)
+
+Fixing the casts was not enough. `fnet_mempool_unit_header_t` (`size` plus a `next` pointer, packed) is
+8 bytes on 32 bit targets and 12 on x64, but `_fnet_heap_init` used an 8 byte unit, and the allocator assumes
+the header fits in one unit (user data starts one unit after it). On x64 a split that leaves a one unit free
+block makes that block's `ptr` overwrite the first 4 bytes (`size`) of the next block's header.
+
+* `stack/fnet_netbuf.c`: unit size comes from `FNET_CFG_HEAP_ALIGN`, default `FNET_MEMPOOL_ALIGN_8`
+  (unchanged for upstream targets). The ReactOS config uses 16 on x64 and 8 on x86.
+* `stack/fnet_mempool.c`: `_fnet_mempool_init` fails if the unit is smaller than the header, so this cannot
+  come back silently.
+
+Other packed structs with pointers, audited and not patched:
+
+* `fnet_ip4_frag_header_t` and `fnet_ip4_frag_list_t` (`stack/fnet_ip4_prv.h`) overlay received IP headers and
+  hold three pointers, which does not fit on x64. Only compiled with `FNET_CFG_IP4_FRAGMENTATION`, which
+  ReactOS keeps off (ReactOS reassembles before TCP). The port config has an `#error` if it is turned on for
+  x64.
+* `_fnet_mempool_init` aligns `struct fnet_mempool` (which holds a pointer) to 4 bytes. Harmless here because
+  the heap base comes from pool allocation and is already 8 or 16 byte aligned.
+* `fnet_netbuf` data starts 4 bytes into its allocation (a `fnet_uint32_t` reference count precedes it), so
+  packet data is 4 byte aligned. Fine on x86 and x64, and protocol headers are read through byte or packed
+  accessors.
+
+Upstream candidate: yes.
+
 ## Not needed
 
 ### 32 bit millisecond clock wrap

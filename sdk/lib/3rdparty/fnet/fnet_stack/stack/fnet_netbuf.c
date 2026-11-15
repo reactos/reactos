@@ -28,6 +28,11 @@
 #include "fnet_stack_prv.h"
 
 
+/* ReactOS: the unit must hold a fnet_mempool_unit_header_t, which is 12 bytes on x64 */
+#ifndef FNET_CFG_HEAP_ALIGN
+    #define FNET_CFG_HEAP_ALIGN FNET_MEMPOOL_ALIGN_8
+#endif
+
 #define FNET_HEAP_SPLIT     (0) /* If 1 the main heap will be splitted to two parts.
                                  * (have issue so to be tested later).*/
 
@@ -813,7 +818,7 @@ fnet_return_t _fnet_heap_init( void *heap_ptr, fnet_size_t heap_size )
                                FNET_NETBUF_MEMPOOL_SIZE(heap_size), FNET_MEMPOOL_ALIGN_8 )) != 0) )
 
 #else
-    if((fnet_mempool_main = _fnet_mempool_init( heap_ptr, heap_size, FNET_MEMPOOL_ALIGN_8 )) != 0)
+    if((fnet_mempool_main = _fnet_mempool_init( heap_ptr, heap_size, FNET_CFG_HEAP_ALIGN )) != 0) /* ReactOS */
 #endif
     {
         result = FNET_OK;

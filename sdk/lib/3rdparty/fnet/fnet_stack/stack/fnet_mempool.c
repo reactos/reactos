@@ -61,7 +61,8 @@ fnet_mempool_desc_t _fnet_mempool_init( void *pool_ptr, fnet_size_t pool_size, f
         alignment = FNET_MEMPOOL_ALIGN_8; /* Set default alignment. */
     }
 
-    if(pool_ptr && (pool_size > (((fnet_size_t)alignment - 1) + (sizeof(struct fnet_mempool) + sizeof(fnet_uint32_t)))))
+    if(pool_ptr && ((fnet_size_t)alignment >= sizeof(fnet_mempool_unit_header_t)) /* ReactOS */
+       && (pool_size > (((fnet_size_t)alignment - 1) + (sizeof(struct fnet_mempool) + sizeof(fnet_uint32_t)))))
     {
         fnet_mempool_unit_header_t  *p;
         fnet_uint8_t                *heap_ptr;
