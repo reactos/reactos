@@ -21,6 +21,7 @@
 
 mod check;
 mod filter;
+mod ndis5;
 mod pool;
 mod protocol;
 mod register;
