@@ -111,6 +111,8 @@ if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
     option(STACK_PROTECTOR "Whether to enable the GCC stack checker while compiling" OFF)
 endif()
 
+option(TCPIP_USE_FNET "Whether tcpip.sys uses FNET instead of lwIP for TCP." OFF)
+
 set(USE_DUMMY_PSEH FALSE CACHE BOOL
 "Whether to disable PSEH support.")
 

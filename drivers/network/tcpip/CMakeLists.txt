@@ -6,6 +6,9 @@ set(LWIP_INCLUDE_DIRS
 )
 include(${LWIP_DIR}/src/Filelists.cmake)
 add_dependencies(lwipcore xdk)
+if(TCPIP_USE_FNET)
+    add_subdirectory(fnet_port)
+endif()
 add_subdirectory(ip)
 
 add_definitions(
