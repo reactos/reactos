@@ -93,7 +93,9 @@
 
 #include <stdarg.h>
 #include <string.h>
+#ifdef __REACTOS__
 #include <stdlib.h>
+#endif
 
 #include "windef.h"
 #include "winbase.h"
@@ -106,7 +108,7 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(tooltips);
 
-static HICON hTooltipIcons[TTI_ERROR+1];
+static HICON hTooltipIcons[TTI_ERROR_LARGE+1];
 
 typedef struct
 {
@@ -132,6 +134,7 @@ typedef struct
     COLORREF   clrBk;
     COLORREF   clrText;
     HFONT    hFont;
+    HFONT    hStatusFont;
     HFONT    hTitleFont;
     INT      xTrackPos;
     INT      yTrackPos;
@@ -146,6 +149,8 @@ typedef struct
     BOOL     bToolBelow;
     LPWSTR   pszTitle;
     HICON    hTitleIcon;
+    int      iconWidth;
+    int      iconHeight;
 
     TTTOOL_INFO *tools;
 } TOOLTIPS_INFO;
@@ -176,8 +181,6 @@ typedef struct
 
 #define BALLOON_ICON_TITLE_SPACING 8 /* horizontal spacing between icon and title */
 #define BALLOON_TITLE_TEXT_SPACING 8 /* vertical spacing between icon/title and main text */
-#define ICON_HEIGHT 16
-#define ICON_WIDTH  16
 
 #define MAX_TEXT_SIZE_A 80 /* maximum retrieving text size by ANSI message */
 
@@ -202,14 +205,16 @@ TOOLTIPS_InitSystemSettings (TOOLTIPS_INFO *infoPtr)
     infoPtr->clrBk   = comctl32_color.clrInfoBk;
     infoPtr->clrText = comctl32_color.clrInfoText;
 
-    DeleteObject (infoPtr->hFont);
+    DeleteObject (infoPtr->hStatusFont);
     nclm.cbSize = sizeof(nclm);
     SystemParametersInfoW (SPI_GETNONCLIENTMETRICS, sizeof(nclm), &nclm, 0);
-    infoPtr->hFont = CreateFontIndirectW (&nclm.lfStatusFont);
+    infoPtr->hStatusFont = CreateFontIndirectW (&nclm.lfStatusFont);
 
     DeleteObject (infoPtr->hTitleFont);
     nclm.lfStatusFont.lfWeight = FW_BOLD;
     infoPtr->hTitleFont = CreateFontIndirectW (&nclm.lfStatusFont);
+
+    infoPtr->hFont = infoPtr->hStatusFont;
 }
 
 /* Custom draw routines */
@@ -236,7 +241,7 @@ TOOLTIPS_notify_customdraw (DWORD dwDrawStage, NMTTCUSTOMDRAW *lpnmttcd)
     LRESULT result;
     lpnmttcd->nmcd.dwDrawStage = dwDrawStage;
 
-    TRACE("Notifying stage %d, flags %x, id %x\n", lpnmttcd->nmcd.dwDrawStage,
+    TRACE("Notifying stage %ld, flags %x, id %x\n", lpnmttcd->nmcd.dwDrawStage,
           lpnmttcd->uDrawFlags, lpnmttcd->nmcd.hdr.code);
 
     result = SendMessageW(GetParent(lpnmttcd->nmcd.hdr.hwndFrom), WM_NOTIFY,
@@ -317,11 +322,11 @@ TOOLTIPS_Refresh (const TOOLTIPS_INFO *infoPtr, HDC hdc)
             /* draw icon */
             icon_present = infoPtr->hTitleIcon && 
                 DrawIconEx(hdc, rc.left, rc.top, infoPtr->hTitleIcon,
-                           ICON_WIDTH, ICON_HEIGHT, 0, NULL, DI_NORMAL);
+                           infoPtr->iconWidth, infoPtr->iconHeight, 0, NULL, DI_NORMAL);
             if (icon_present)
-                rcTitle.left += ICON_WIDTH + BALLOON_ICON_TITLE_SPACING;
+                rcTitle.left += infoPtr->iconWidth + BALLOON_ICON_TITLE_SPACING;
 
-            rcTitle.bottom = rc.top + ICON_HEIGHT;
+            rcTitle.bottom = rc.top + infoPtr->iconHeight;
 
             /* draw title text */
             prevFont = SelectObject (hdc, infoPtr->hTitleFont);
@@ -381,7 +386,7 @@ static void TOOLTIPS_GetDispInfoA(const TOOLTIPS_INFO *infoPtr, TTTOOL_INFO *too
     ttnmdi.uFlags = toolPtr->uFlags;
     ttnmdi.lParam = toolPtr->lParam;
 
-    TRACE("hdr.idFrom = %lx\n", ttnmdi.hdr.idFrom);
+    TRACE("hdr.idFrom = %Ix\n", ttnmdi.hdr.idFrom);
     SendMessageW(toolPtr->hwnd, WM_NOTIFY, toolPtr->uId, (LPARAM)&ttnmdi);
 
     if (IS_INTRESOURCE(ttnmdi.lpszText)) {
@@ -439,7 +444,7 @@ static void TOOLTIPS_GetDispInfoW(const TOOLTIPS_INFO *infoPtr, TTTOOL_INFO *too
     ttnmdi.uFlags = toolPtr->uFlags;
     ttnmdi.lParam = toolPtr->lParam;
 
-    TRACE("hdr.idFrom = %lx\n", ttnmdi.hdr.idFrom);
+    TRACE("hdr.idFrom = %Ix\n", ttnmdi.hdr.idFrom);
     SendMessageW(toolPtr->hwnd, WM_NOTIFY, toolPtr->uId, (LPARAM)&ttnmdi);
 
     if (IS_INTRESOURCE(ttnmdi.lpszText)) {
@@ -549,8 +554,8 @@ TOOLTIPS_CalcTipSize (const TOOLTIPS_INFO *infoPtr, LPSIZE lpSize)
         TRACE("title %s\n", debugstr_w(infoPtr->pszTitle));
         if (infoPtr->hTitleIcon)
         {
-            title.cx = ICON_WIDTH;
-            title.cy = ICON_HEIGHT;
+            title.cx = infoPtr->iconWidth;
+            title.cy = infoPtr->iconHeight;
         }
         if (title.cx != 0) title.cx += BALLOON_ICON_TITLE_SPACING;
         hOldFont = SelectObject (hdc, infoPtr->hTitleFont);
@@ -634,7 +639,7 @@ TOOLTIPS_Show (TOOLTIPS_INFO *infoPtr, BOOL track_activate)
     toolPtr = &infoPtr->tools[nTool];
     TOOLTIPS_CalcTipSize (infoPtr, &size);
 
-    TRACE("Show tooltip %d, %s, size %d x %d\n", nTool, debugstr_w(infoPtr->szTipText),
+    TRACE("Show tooltip %d, %s, size %ld x %ld\n", nTool, debugstr_w(infoPtr->szTipText),
         size.cx, size.cy);
 
     if (track_activate && (toolPtr->uFlags & TTF_TRACK))
@@ -738,7 +743,7 @@ TOOLTIPS_Show (TOOLTIPS_INFO *infoPtr, BOOL track_activate)
         }
     }
 
-    TRACE("pos %d - %d\n", rect.left, rect.top);
+    TRACE("pos %ld - %ld\n", rect.left, rect.top);
 
     rect.right = rect.left + size.cx;
     rect.bottom = rect.top + size.cy;
@@ -1110,7 +1115,7 @@ TOOLTIPS_AddToolT (TOOLTIPS_INFO *infoPtr, const TTTOOLINFOW *ti, BOOL isW)
 
     if (!ti) return FALSE;
 
-    TRACE("add tool (%p) %p %ld%s\n", infoPtr->hwndSelf, ti->hwnd, ti->uId,
+    TRACE("add tool (%p) %p %Id%s\n", infoPtr->hwndSelf, ti->hwnd, ti->uId,
         (ti->uFlags & TTF_IDISHWND) ? " TTF_IDISHWND" : "");
 
     if (ti->cbSize > TTTOOLINFOW_V3_SIZE && isW)
@@ -1350,7 +1355,7 @@ TOOLTIPS_GetBubbleSize (const TOOLTIPS_INFO *infoPtr, const TTTOOLINFOW *lpToolI
     TRACE("tool %d\n", nTool);
 
     TOOLTIPS_CalcTipSize (infoPtr, &size);
-    TRACE("size %d x %d\n", size.cx, size.cy);
+    TRACE("size %ld x %ld\n", size.cx, size.cy);
 
     return MAKELRESULT(size.cx, size.cy);
 }
@@ -1385,7 +1390,7 @@ TOOLTIPS_GetDelayTime (const TOOLTIPS_INFO *infoPtr, DWORD duration)
         return infoPtr->nInitialTime;
 
     default:
-        WARN("Invalid duration flag %x\n", duration);
+        WARN("Invalid duration flag %lx\n", duration);
 	break;
     }
 
@@ -1642,7 +1647,7 @@ TOOLTIPS_SetDelayTime (TOOLTIPS_INFO *infoPtr, DWORD duration, INT nTime)
 	    break;
 
     default:
-        WARN("Invalid duration flag %x\n", duration);
+        WARN("Invalid duration flag %lx\n", duration);
 	break;
     }
 
@@ -1722,7 +1727,18 @@ TOOLTIPS_SetTitleT (TOOLTIPS_INFO *infoPtr, UINT_PTR uTitleIcon, LPCWSTR pszTitl
     else
         infoPtr->pszTitle = NULL;
 
-    if (uTitleIcon <= TTI_ERROR)
+    if (uTitleIcon >= TTI_INFO_LARGE && uTitleIcon <= TTI_ERROR_LARGE)
+    {
+        infoPtr->iconWidth = GetSystemMetrics(SM_CXICON);
+        infoPtr->iconHeight = GetSystemMetrics(SM_CYICON);
+    }
+    else
+    {
+        infoPtr->iconWidth = GetSystemMetrics(SM_CXSMICON);
+        infoPtr->iconHeight = GetSystemMetrics(SM_CYSMICON);
+    }
+
+    if (uTitleIcon <= TTI_ERROR_LARGE)
         infoPtr->hTitleIcon = hTooltipIcons[uTitleIcon];
     else
         infoPtr->hTitleIcon = CopyIcon((HICON)uTitleIcon);
@@ -1919,7 +1935,7 @@ TOOLTIPS_Destroy (TOOLTIPS_INFO *infoPtr)
         DeleteObject(infoPtr->hTitleIcon);
 
     /* delete fonts */
-    DeleteObject (infoPtr->hFont);
+    DeleteObject (infoPtr->hStatusFont);
     DeleteObject (infoPtr->hTitleFont);
 
     /* free tool tips info data */
@@ -2017,7 +2033,7 @@ TOOLTIPS_NotifyFormat (TOOLTIPS_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
         return nResult;
     }
 #else
-    FIXME ("hwnd=%p wParam=%lx lParam=%lx\n", infoPtr->hwndSelf, wParam, lParam);
+    FIXME("hwnd %p, wParam %Ix, lParam %Ix\n", infoPtr->hwndSelf, wParam, lParam);
 #endif
 
     return 0;
@@ -2046,8 +2062,7 @@ TOOLTIPS_SetFont (TOOLTIPS_INFO *infoPtr, HFONT hFont, BOOL redraw)
     if(!GetObjectW(hFont, sizeof(lf), &lf))
         return 0;
 
-    DeleteObject (infoPtr->hFont);
-    infoPtr->hFont = CreateFontIndirectW(&lf);
+    infoPtr->hFont = hFont;
 
     DeleteObject (infoPtr->hTitleFont);
     lf.lfWeight = FW_BOLD;
@@ -2196,7 +2211,8 @@ TOOLTIPS_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     TOOLTIPS_INFO *infoPtr = TOOLTIPS_GetInfoPtr (hwnd);
 
-    TRACE("hwnd=%p msg=%x wparam=%lx lParam=%lx\n", hwnd, uMsg, wParam, lParam);
+    TRACE("hwnd %p, msg %x, wparam %Ix, lParam %Ix\n", hwnd, uMsg, wParam, lParam);
+
     if (!infoPtr && (uMsg != WM_CREATE) && (uMsg != WM_NCCREATE))
         return DefWindowProcW (hwnd, uMsg, wParam, lParam);
     switch (uMsg)
@@ -2321,6 +2337,11 @@ TOOLTIPS_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	case WM_GETFONT:
 	    return TOOLTIPS_GetFont (infoPtr);
 
+        case WM_GETOBJECT:
+            if ((LONG)lParam == OBJID_QUERYCLASSNAMEIDX)
+                return 0x10018;
+	    return DefWindowProcW (hwnd, uMsg, wParam, lParam);
+
 	case WM_GETTEXT:
 	    return TOOLTIPS_OnWMGetText (infoPtr, wParam, (LPWSTR)lParam);
 
@@ -2364,8 +2385,7 @@ TOOLTIPS_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 	default:
 	    if ((uMsg >= WM_USER) && (uMsg < WM_APP) && !COMCTL32_IsReflectedMessage(uMsg))
-		ERR("unknown msg %04x wp=%08lx lp=%08lx\n",
-		     uMsg, wParam, lParam);
+		ERR("unknown msg %04x, wp %Ix, lp %Ix\n", uMsg, wParam, lParam);
 	    return DefWindowProcW (hwnd, uMsg, wParam, lParam);
     }
 }
@@ -2389,19 +2409,15 @@ TOOLTIPS_Register (void)
 
     hTooltipIcons[TTI_NONE] = NULL;
     hTooltipIcons[TTI_INFO] = LoadImageW(COMCTL32_hModule,
-        (LPCWSTR)MAKEINTRESOURCE(IDI_TT_INFO_SM), IMAGE_ICON, 0, 0, 0);
+        (LPCWSTR)MAKEINTRESOURCE(IDI_TT_INFO_SM), IMAGE_ICON, 0, 0, LR_SHARED);
     hTooltipIcons[TTI_WARNING] = LoadImageW(COMCTL32_hModule,
-        (LPCWSTR)MAKEINTRESOURCE(IDI_TT_WARN_SM), IMAGE_ICON, 0, 0, 0);
+        (LPCWSTR)MAKEINTRESOURCE(IDI_TT_WARN_SM), IMAGE_ICON, 0, 0, LR_SHARED);
     hTooltipIcons[TTI_ERROR] = LoadImageW(COMCTL32_hModule,
-        (LPCWSTR)MAKEINTRESOURCE(IDI_TT_ERROR_SM), IMAGE_ICON, 0, 0, 0);
-}
-
-
-VOID
-TOOLTIPS_Unregister (void)
-{
-    int i;
-    for (i = TTI_INFO; i <= TTI_ERROR; i++)
-        DestroyIcon(hTooltipIcons[i]);
-    UnregisterClassW (TOOLTIPS_CLASSW, NULL);
+        (LPCWSTR)MAKEINTRESOURCE(IDI_TT_ERROR_SM), IMAGE_ICON, 0, 0, LR_SHARED);
+    hTooltipIcons[TTI_INFO_LARGE] = LoadImageW(COMCTL32_hModule,
+        (LPCWSTR)MAKEINTRESOURCE(IDI_TT_INFO_MD), IMAGE_ICON, 0, 0, LR_SHARED);
+    hTooltipIcons[TTI_WARNING_LARGE] = LoadImageW(COMCTL32_hModule,
+        (LPCWSTR)MAKEINTRESOURCE(IDI_TT_WARN_MD), IMAGE_ICON, 0, 0, LR_SHARED);
+    hTooltipIcons[TTI_ERROR_LARGE] = LoadImageW(COMCTL32_hModule,
+        (LPCWSTR)MAKEINTRESOURCE(IDI_TT_ERROR_MD), IMAGE_ICON, 0, 0, LR_SHARED);
 }
