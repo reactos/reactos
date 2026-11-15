@@ -21,6 +21,7 @@
 
 mod filter;
 mod pool;
+mod protocol;
 mod register;
 
 use core::panic::PanicInfo;
@@ -67,6 +68,7 @@ pub unsafe extern "system" fn NdisGetRoutineAddress(name: *const u8) -> *const (
         .chain(POOLS.iter())
         .chain(MINIPORT.iter())
         .chain(FILTER.iter())
+        .chain(PROTOCOL.iter())
         .chain(STUBS.iter())
     {
         if same(text, routine.name) {
@@ -128,6 +130,13 @@ static FILTER: &[Routine] = &[
     Routine { name: "NdisFIndicateStatus", address: filter::NdisFIndicateStatus as *const () },
 ];
 
+static PROTOCOL: &[Routine] = &[
+    Routine { name: "NdisRegisterProtocolDriver", address: protocol::NdisRegisterProtocolDriver as *const () },
+    Routine { name: "NdisDeregisterProtocolDriver", address: protocol::NdisDeregisterProtocolDriver as *const () },
+    Routine { name: "NdisSendNetBufferLists", address: protocol::NdisSendNetBufferLists as *const () },
+    Routine { name: "NdisReturnNetBufferLists", address: protocol::NdisReturnNetBufferLists as *const () },
+];
+
 static REAL: &[Routine] = &[
     Routine {
         name: "NdisGetVersion",
@@ -161,13 +170,9 @@ macro_rules! stubs {
 }
 
 stubs!(
-    NdisRegisterProtocolDriver,
-    NdisDeregisterProtocolDriver,
     NdisAllocateNetBufferList,
     NdisMAllocateNetBufferSGList,
     NdisMFreeNetBufferSGList,
-    NdisSendNetBufferLists,
-    NdisReturnNetBufferLists,
     NdisAllocateMdl,
     NdisFreeMdl,
     NdisGetDataBuffer,
