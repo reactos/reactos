@@ -60,6 +60,17 @@ Other packed structs with pointers, audited and not patched:
 
 Upstream candidate: yes.
 
+### 2. Unscaled receive window cap
+
+* `stack/fnet_tcp.h`: `FNET_TCP_MAXWIN` raised from 12 KiB to 0xffff.
+
+FNET clamps the receive buffer to `FNET_TCP_MAXWIN` when the peer does not send a window scale option, and
+caps the window in the SYN to it. With 12 KiB, a peer without scaling would get a smaller window than lwIP
+gives today. The scale factor is also computed from this value, so the shift becomes smaller for the same
+buffer.
+
+Upstream candidate: probably, as a config option.
+
 ## Not needed
 
 ### 32 bit millisecond clock wrap
