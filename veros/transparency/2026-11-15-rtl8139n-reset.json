@@ -1,0 +1,16 @@
+{
+  "spdx": "GPL-2.0-or-later",
+  "question": "Why does the RTL8139 miniport write the power and reset registers after it reads the MAC?",
+  "allowedInputs": [
+    "output/rtl8139n-20261115T183403Z.log RTL8139 CHECK cmd 01, RTL8139 CHECK reset ok",
+    "drivers/network/dd/rtl8139/hardware.c NICPowerOn writes 0 to R_CFG1, NICSoftReset writes B_CMD_RST to R_CMD and reads until that bit clears",
+    "drivers/network/dd/rtl8139/rtlhw.h R_CMD 0x37, B_CMD_RST 0x10, R_CFG1 0x52, R_CMD_RXEMPTY 0x01",
+    "drivers/network/dd/rtl8139/nic.h MAX_RESET_ATTEMPTS 25"
+  ],
+  "harness": {
+    "guest": "VerOS live CD",
+    "name": "rtl8139n",
+    "traceOrReplayId": "output/rtl8139n-20261115T183403Z.log",
+    "logSha256": "b9676aa2651b78a3da556bdd2368005fcc8db85b9c41ca8a5b31543b47cc7c62"
+  }
+}

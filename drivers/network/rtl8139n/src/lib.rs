@@ -21,9 +21,14 @@
  * PCI_COMMON_HDR_LENGTH, PCI_INVALID_VENDORID, PCI_ADDRESS_IO_SPACE, and
  * PCI_ADDRESS_IO_ADDRESS_MASK. type0.BaseAddresses starts at byte 0x10 of
  * PCI_COMMON_HEADER. sdk/include/xdk/halfuncs.h declares HalGetBusData.
- * drivers/network/dd/rtl8139/rtlhw.h defines R_MAC as 0x00.
+ * drivers/network/dd/rtl8139/rtlhw.h defines R_MAC as 0x00, R_CMD as 0x37,
+ * B_CMD_RST as 0x10, and R_CFG1 as 0x52. drivers/network/dd/rtl8139/hardware.c
+ * writes 0 to R_CFG1, then writes B_CMD_RST to R_CMD and reads R_CMD until
+ * that bit clears. drivers/network/dd/rtl8139/nic.h sets
+ * MAX_RESET_ATTEMPTS to 25.
  * output/rtl8139n-20261115T182029Z.log printed RTL8139 CHECK bar 0000c001
- * and mac bytes 52 54 00 12 34 56.
+ * and mac bytes 52 54 00 12 34 56. output/rtl8139n-20261115T183403Z.log
+ * printed RTL8139 CHECK cmd 01 and RTL8139 CHECK reset ok.
  * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismregisterminiportdriver
  * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismsetminiportattributes
  */
@@ -40,6 +45,12 @@ const PCI_HEADER: u32 = 64;
 const PCI_VENDOR: u16 = 0x10EC;
 const PCI_DEVICE: u16 = 0x8139;
 const R_MAC: u16 = 0;
+/* drivers/network/dd/rtl8139/rtlhw.h */
+const R_CMD: u16 = 0x37;
+const B_CMD_RST: u8 = 0x10;
+const R_CFG1: u16 = 0x52;
+/* drivers/network/dd/rtl8139/nic.h */
+const MAX_RESET_ATTEMPTS: u32 = 25;
 
 #[panic_handler]
 fn panic(_info: &PanicInfo) -> ! {
@@ -91,6 +102,17 @@ fn put_u16(buf: &mut [u8], at: usize, value: u16) {
 fn put_ptr(buf: &mut [u8], at: usize, value: usize) {
     let bytes = value.to_le_bytes();
     buf[at..at + bytes.len()].copy_from_slice(&bytes);
+}
+
+fn write_port(port: u16, value: u8) {
+    unsafe {
+        core::arch::asm!(
+            "out dx, al",
+            in("dx") port,
+            in("al") value,
+            options(nostack, nomem, preserves_flags)
+        );
+    }
 }
 
 fn read_port(port: u16) -> u8 {
@@ -153,6 +175,22 @@ fn find_io_base() -> Option<u16> {
     None
 }
 
+fn power_and_reset(base: u16) -> u8 {
+    /* hardware.c NICPowerOn, then NICSoftReset. */
+    write_port(base + R_CFG1, 0);
+    write_port(base + R_CMD, B_CMD_RST);
+    let mut command = B_CMD_RST;
+    let mut attempt = 0;
+    while attempt < MAX_RESET_ATTEMPTS {
+        command = read_port(base + R_CMD);
+        if command & B_CMD_RST == 0 {
+            break;
+        }
+        attempt += 1;
+    }
+    command
+}
+
 #[no_mangle]
 pub unsafe extern "system" fn DriverEntry(driver: *mut u8, registry: *mut u8) -> i32 {
     let mut chars = [0u8; MP_CHARS];
@@ -198,6 +236,13 @@ pub unsafe extern "system" fn DriverEntry(driver: *mut u8, registry: *mut u8) ->
             line_status(b"RTL8139 CHECK mac3 %02x\n\0", mac[3] as u32);
             line_status(b"RTL8139 CHECK mac4 %02x\n\0", mac[4] as u32);
             line_status(b"RTL8139 CHECK mac5 %02x\n\0", mac[5] as u32);
+            let command = power_and_reset(base);
+            line_status(b"RTL8139 CHECK cmd %02x\n\0", command as u32);
+            if command & B_CMD_RST == 0 {
+                line(b"RTL8139 CHECK reset ok\n\0");
+            } else {
+                line(b"RTL8139 CHECK reset busy\n\0");
+            }
         }
         None => line(b"RTL8139 CHECK pci none\n\0"),
     }
