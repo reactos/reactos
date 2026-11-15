@@ -11,7 +11,7 @@
  * The C driver in drivers/network/dd/rtl8139 stays in place. This file
  * calls the NDIS exports the live CD already implements. The receive
  * buffer comes from MmAllocateContiguousMemory and MmGetPhysicalAddress
- * in sdk/include/xdk/mmfuncs.h.
+ * in sdk/include/xdk/mmfuncs.h. The same header declares MmMapIoSpace.
  * output/ndis-discovery/windows.log (DIFF END OK) accepts a miniport of
  * type 0x8A, revision 3, size 0x120, with bytes 6 and 84 at offset 4,
  * and calls the pointer at offset 0x10. Capture 2026-11-15T143730Z
@@ -22,7 +22,8 @@
  * sdk/include/xdk/iotypes.h defines PCI_SLOT_NUMBER, PCIConfiguration,
  * PCI_COMMON_HDR_LENGTH, PCI_INVALID_VENDORID, PCI_ADDRESS_IO_SPACE, and
  * PCI_ADDRESS_IO_ADDRESS_MASK. type0.BaseAddresses starts at byte 0x10 of
- * PCI_COMMON_HEADER. sdk/include/xdk/halfuncs.h declares HalGetBusData.
+ * PCI_COMMON_HEADER. sdk/include/xdk/halfuncs.h declares HalGetBusData and
+ * HalSetBusDataByOffset. iotypes.h defines PCI_ENABLE_BUS_MASTER as 0x0004.
  * drivers/network/dd/rtl8139/rtlhw.h defines R_MAC as 0x00, R_CMD as 0x37,
  * B_CMD_RST as 0x10, R_CFG1 as 0x52, R_MS as 0x58, R_MS_LINKDWN as 0x04,
  * and R_MS_SPEED_10 as 0x08. rtlhw.h also defines R_RXSA as 0x30, R_TC as
@@ -32,15 +33,34 @@
  * R_MS, NICRegisterReceiveBuffer writes the low 32 bits of the buffer
  * address to R_RXSA, and NICEnableTxRx writes B_CMD_TXE | B_CMD_RXE
  * before RC_VAL and TC_VAL. NICTransmitPacket writes the physical
- * address to R_TXSAD0 and the length to R_TXSTS0. drivers/network/dd/rtl8139/ndis.c
+ * address to R_TXSAD0 and the length to R_TXSTS0. drivers/network/dd/rtl8139/interrupt.c
+ * reads R_CMD, and when R_CMD_RXEMPTY is clear it reads PACKET_HEADER at the
+ * receive offset, then writes the aligned offset minus 0x10 to R_CAPR.
+ * At offset 0 that write is 0xFFF0. R_IS is 0x3E. R_MPC is 0x4C.
+ * The port writes clobber memory so the frame stores finish first.
+ * sdk/include/xdk/kefuncs.h declares KeDelayExecutionThread. The receive
+ * check waits 200 milliseconds, counted in 100 ns units, so a reply can arrive.
+ * rtlhw.h PACKET_HEADER is a USHORT status, then a USHORT length.
+ * RSR_ROK is 0x0001. NICApplyPacketFilter ORs B_RC_APM and B_RC_AB onto
+ * RC_VAL. B_RC_APM is 0x02 and B_RC_AB is 0x08. R_CAPR is 0x38.
+ * R_CMD_RXEMPTY is 0x01. The frame is an ARP request.
+ * drivers/network/tcpip/lwip/src/include/lwip/prot/etharp.h defines
+ * etharp_hdr and ARP_REQUEST 1. SIZEOF_ETHARP_HDR is 28.
+ * drivers/network/tcpip/lwip/src/include/lwip/prot/ieee.h defines
+ * ETHTYPE_ARP 0x0806 and ETHTYPE_IP 0x0800.
+ * drivers/network/tcpip/lwip/src/include/lwip/prot/iana.h defines
+ * LWIP_IANA_HWTYPE_ETHERNET as 1.
+ * https://www.qemu.org/docs/master/system/devices/net.html gives the user
+ * network guest 10.0.2.15 and the virtual host 10.0.2.2.
+ * drivers/network/dd/rtl8139/ndis.c
  * sends a buffer whose high half is 0, whose address is 4-byte aligned, and
  * whose length is from MINIMUM_FRAME_SIZE 60 through MAXIMUM_FRAME_SIZE 1514.
  * rtlhw.h defines R_TXSTS0 as 0x10, R_TXSAD0 as 0x20, and R_TXS_STATOK as
  * 0x00008000. drivers/network/dd/rtl8139/nic.h sets
  * MAX_RESET_ATTEMPTS to 25, FULL_RECEIVE_BUFFER_SIZE to 32768 + 16 + 2048,
  * RC_VAL to 0x800B780, TC_VAL to 0x700, MINIMUM_FRAME_SIZE to 60, and
- * MAXIMUM_FRAME_SIZE to 1514. CHECK_TX_READS is this driver's status
- * read count, not a register field.
+ * MAXIMUM_FRAME_SIZE to 1514. CHECK_TX_READS and CHECK_RX_READS are this
+ * driver's status read counts, not register fields.
  * output/rtl8139n-20261115T182029Z.log printed RTL8139 CHECK bar 0000c001
  * and mac bytes 52 54 00 12 34 56. output/rtl8139n-20261115T183403Z.log
  * printed RTL8139 CHECK cmd 01 and RTL8139 CHECK reset ok.
@@ -50,6 +70,9 @@
  * RTL8139 CHECK txrx 0d, and RTL8139 CHECK txrx ok.
  * output/rtl8139n-20261115T185912Z.log printed RTL8139 CHECK txst 0000a03c
  * and RTL8139 CHECK tx ok.
+ * output/rtl8139n-20261115T201701Z.log printed RTL8139 CHECK cmdreg 0107,
+ * RTL8139 CHECK isr 0005, RTL8139 CHECK rxst 4001, RTL8139 CHECK rxlen 0044,
+ * and RTL8139 CHECK rx ok.
  * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismregisterminiportdriver
  * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismsetminiportattributes
  */
@@ -65,6 +88,8 @@ const PCI_CONFIGURATION: u32 = 4;
 const PCI_HEADER: u32 = 64;
 const PCI_VENDOR: u16 = 0x10EC;
 const PCI_DEVICE: u16 = 0x8139;
+/* sdk/include/xdk/iotypes.h */
+const PCI_ENABLE_BUS_MASTER: u16 = 0x0004;
 const R_MAC: u16 = 0;
 /* drivers/network/dd/rtl8139/rtlhw.h */
 const R_CMD: u16 = 0x37;
@@ -78,6 +103,24 @@ const R_TC: u16 = 0x40;
 const R_RC: u16 = 0x44;
 const B_CMD_TXE: u8 = 0x04;
 const B_CMD_RXE: u8 = 0x08;
+const R_CMD_RXEMPTY: u8 = 0x01;
+const R_CAPR: u16 = 0x38;
+const R_IS: u16 = 0x3E;
+const R_MPC: u16 = 0x4C;
+const B_RC_APM: u32 = 0x02;
+const B_RC_AB: u32 = 0x08;
+const RSR_ROK: u16 = 0x0001;
+/* drivers/network/tcpip/lwip/src/include/lwip/prot/etharp.h */
+const ARP_REQUEST: u16 = 1;
+const SIZEOF_ETHARP_HDR: usize = 28;
+/* drivers/network/tcpip/lwip/src/include/lwip/prot/ieee.h */
+const ETHTYPE_ARP: u16 = 0x0806;
+const ETHTYPE_IP: u16 = 0x0800;
+/* drivers/network/tcpip/lwip/src/include/lwip/prot/iana.h */
+const HWTYPE_ETHERNET: u16 = 1;
+/* https://www.qemu.org/docs/master/system/devices/net.html */
+const GUEST_IP: [u8; 4] = [10, 0, 2, 15];
+const HOST_IP: [u8; 4] = [10, 0, 2, 2];
 /* drivers/network/dd/rtl8139/nic.h */
 const MAX_RESET_ATTEMPTS: u32 = 25;
 const FULL_RECEIVE_BUFFER_SIZE: usize = 32768 + 16 + 2048;
@@ -90,6 +133,7 @@ const R_TXSAD0: u16 = 0x20;
 const R_TXS_STATOK: u32 = 0x0000_8000;
 /* This driver's status read count, not a register field. */
 const CHECK_TX_READS: u32 = 100_000;
+const CHECK_RX_READS: u32 = 100_000;
 /* drivers/network/dd/rtl8139/ndis.c rejects a physical address whose HighPart is not 0. */
 const HIGHEST_PA: u64 = 0xFFFF_FFFF;
 
@@ -115,8 +159,18 @@ unsafe extern "system" {
         buffer: *mut u8,
         length: u32,
     ) -> u32;
+    fn HalSetBusDataByOffset(
+        bus_type: u32,
+        bus: u32,
+        slot: u32,
+        buffer: *const u8,
+        offset: u32,
+        length: u32,
+    ) -> u32;
     fn MmAllocateContiguousMemory(bytes: usize, highest: u64) -> *mut u8;
     fn MmGetPhysicalAddress(base: *mut u8) -> u64;
+    fn MmMapIoSpace(physical: u64, bytes: usize, cache: u32) -> *mut u8;
+    fn KeDelayExecutionThread(wait_mode: i32, alertable: u8, interval: *const i64) -> i32;
 }
 
 fn line(text: &[u8]) {
@@ -153,7 +207,18 @@ fn write_port(port: u16, value: u8) {
             "out dx, al",
             in("dx") port,
             in("al") value,
-            options(nostack, nomem, preserves_flags)
+            options(nostack, preserves_flags)
+        );
+    }
+}
+
+fn write_port_u16(port: u16, value: u16) {
+    unsafe {
+        core::arch::asm!(
+            "out dx, ax",
+            in("dx") port,
+            in("ax") value,
+            options(nostack, preserves_flags)
         );
     }
 }
@@ -164,9 +229,22 @@ fn write_port_u32(port: u16, value: u32) {
             "out dx, eax",
             in("dx") port,
             in("eax") value,
-            options(nostack, nomem, preserves_flags)
+            options(nostack, preserves_flags)
         );
     }
+}
+
+fn read_port_u16(port: u16) -> u16 {
+    let value: u16;
+    unsafe {
+        core::arch::asm!(
+            "in ax, dx",
+            in("dx") port,
+            out("ax") value,
+            options(nostack, preserves_flags)
+        );
+    }
+    value
 }
 
 fn read_port_u32(port: u16) -> u32 {
@@ -235,6 +313,21 @@ fn find_io_base() -> Option<u16> {
                 if bar & 1 == 0 {
                     return None;
                 }
+                let mut command = u16::from_le_bytes([header[4], header[5]]);
+                command |= PCI_ENABLE_BUS_MASTER;
+                let command_bytes = command.to_le_bytes();
+                let slot = pci_slot(device, function);
+                unsafe {
+                    HalSetBusDataByOffset(
+                        PCI_CONFIGURATION,
+                        bus,
+                        slot,
+                        command_bytes.as_ptr(),
+                        4,
+                        2,
+                    );
+                }
+                line_status(b"RTL8139 CHECK cmdreg %04x\n\0", command as u32);
                 return Some((bar & 0xFFFF_FFFC) as u16);
             }
         }
@@ -258,32 +351,44 @@ fn power_and_reset(base: u16) -> u8 {
     command
 }
 
-fn arm_receive(base: u16) -> bool {
+fn arm_receive(base: u16) -> *mut u8 {
     let buffer = unsafe { MmAllocateContiguousMemory(FULL_RECEIVE_BUFFER_SIZE, HIGHEST_PA) };
     if buffer.is_null() {
         line(b"RTL8139 CHECK rx none\n\0");
-        return false;
+        return ptr::null_mut();
     }
     let physical = unsafe { MmGetPhysicalAddress(buffer) };
     line_status(b"RTL8139 CHECK rxpa %08x\n\0", physical as u32);
     if physical > HIGHEST_PA {
         line(b"RTL8139 CHECK rx high\n\0");
-        return false;
+        return ptr::null_mut();
     }
     unsafe { ptr::write_bytes(buffer, 0, FULL_RECEIVE_BUFFER_SIZE); }
     /* hardware.c NICRegisterReceiveBuffer, then NICEnableTxRx. */
     write_port_u32(base + R_RXSA, physical as u32);
     write_port(base + R_CMD, B_CMD_TXE | B_CMD_RXE);
-    write_port_u32(base + R_RC, RC_VAL);
+    /* NICApplyPacketFilter for directed and broadcast. */
+    write_port_u32(base + R_RC, RC_VAL | B_RC_APM | B_RC_AB);
     write_port_u32(base + R_TC, TC_VAL);
+    line_status(b"RTL8139 CHECK tc %08x\n\0", read_port_u32(base + R_TC));
+    /* interrupt.c writes ReceiveOffset - 0x10. Offset 0 is 0xFFF0. */
+    write_port_u16(base + R_CAPR, 0u16.wrapping_sub(0x10));
     let command = read_port(base + R_CMD);
     line_status(b"RTL8139 CHECK txrx %02x\n\0", command as u32);
     if (command & (B_CMD_TXE | B_CMD_RXE)) == (B_CMD_TXE | B_CMD_RXE) {
         line(b"RTL8139 CHECK txrx ok\n\0");
-        true
+        buffer
     } else {
         line(b"RTL8139 CHECK txrx fail\n\0");
-        false
+        ptr::null_mut()
+    }
+}
+
+fn put_be16(buffer: *mut u8, at: usize, value: u16) {
+    let bytes = value.to_be_bytes();
+    unsafe {
+        *buffer.add(at) = bytes[0];
+        *buffer.add(at + 1) = bytes[1];
     }
 }
 
@@ -302,12 +407,47 @@ fn send_one(base: u16, mac: &[u8; 6]) {
     let mut index = 0;
     while index < mac.len() {
         unsafe {
-            *buffer.add(index) = mac[index];
+            /* Broadcast destination, accepted by B_RC_AB. */
+            *buffer.add(index) = 0xFF;
             *buffer.add(6 + index) = mac[index];
+            *buffer.add(22 + index) = mac[index];
         }
         index += 1;
     }
+    put_be16(buffer, 12, ETHTYPE_ARP);
+    put_be16(buffer, 14, HWTYPE_ETHERNET);
+    put_be16(buffer, 16, ETHTYPE_IP);
+    unsafe {
+        *buffer.add(18) = 6;
+        *buffer.add(19) = 4;
+    }
+    put_be16(buffer, 20, ARP_REQUEST);
+    index = 0;
+    while index < 4 {
+        unsafe {
+            *buffer.add(28 + index) = GUEST_IP[index];
+            *buffer.add(38 + index) = HOST_IP[index];
+        }
+        index += 1;
+    }
+    let frame_len = 14 + SIZEOF_ETHARP_HDR;
+    if frame_len > MINIMUM_FRAME_SIZE {
+        line(b"RTL8139 CHECK tx none\n\0");
+        return;
+    }
+    let ethertype = u16::from_be_bytes([unsafe { *buffer.add(12) }, unsafe { *buffer.add(13) }]);
+    line_status(b"RTL8139 CHECK txpa %08x\n\0", physical as u32);
+    line_status(b"RTL8139 CHECK txtype %04x\n\0", ethertype as u32);
+    let mapped = unsafe { MmMapIoSpace(physical, MINIMUM_FRAME_SIZE, 0) };
+    if mapped.is_null() {
+        line(b"RTL8139 CHECK io none\n\0");
+    } else {
+        let mapped_type = u16::from_be_bytes([unsafe { *mapped.add(12) }, unsafe { *mapped.add(13) }]);
+        line_status(b"RTL8139 CHECK iotype %04x\n\0", mapped_type as u32);
+    }
     /* hardware.c NICTransmitPacket, descriptor 0. */
+    write_port_u32(base + R_TXSAD0, physical as u32);
+    line_status(b"RTL8139 CHECK txrd %08x\n\0", read_port_u32(base + R_TXSAD0));
     write_port_u32(base + R_TXSAD0, physical as u32);
     write_port_u32(base + R_TXSTS0, MINIMUM_FRAME_SIZE as u32);
     let mut status = 0u32;
@@ -325,6 +465,44 @@ fn send_one(base: u16, mac: &[u8; 6]) {
     } else {
         line(b"RTL8139 CHECK tx wait\n\0");
     }
+}
+
+fn take_receive(base: u16, buffer: *mut u8) {
+    /* kefuncs.h: a negative interval is relative. 200 ms is 2_000_000 units of 100 ns. */
+    let interval: i64 = -2_000_000;
+    unsafe { KeDelayExecutionThread(0, 0, &interval); }
+    let mut command = R_CMD_RXEMPTY;
+    let mut read = 0u32;
+    while read < CHECK_RX_READS {
+        command = read_port(base + R_CMD);
+        if (command & R_CMD_RXEMPTY) == 0 {
+            break;
+        }
+        read += 1;
+    }
+    line_status(b"RTL8139 CHECK rxcmd %02x\n\0", command as u32);
+    line_status(b"RTL8139 CHECK isr %04x\n\0", read_port_u16(base + R_IS) as u32);
+    line_status(b"RTL8139 CHECK mpc %08x\n\0", read_port_u32(base + R_MPC));
+    let status = u16::from_le_bytes([unsafe { *buffer }, unsafe { *buffer.add(1) }]);
+    let length = u16::from_le_bytes([unsafe { *buffer.add(2) }, unsafe { *buffer.add(3) }]);
+    line_status(b"RTL8139 CHECK rxst %04x\n\0", status as u32);
+    line_status(b"RTL8139 CHECK rxlen %04x\n\0", length as u32);
+    if (command & R_CMD_RXEMPTY) != 0 {
+        line(b"RTL8139 CHECK rx empty\n\0");
+        return;
+    }
+    if (status & RSR_ROK) == 0 {
+        line(b"RTL8139 CHECK rx fail\n\0");
+        return;
+    }
+    line(b"RTL8139 CHECK rx ok\n\0");
+    if (length as usize) > FULL_RECEIVE_BUFFER_SIZE {
+        return;
+    }
+    /* interrupt.c advances CAPR from the header length. */
+    let mut offset = (length as u32) + 4;
+    offset = (offset + 3) & !3;
+    write_port_u16(base + R_CAPR, (offset as u16).wrapping_sub(0x10));
 }
 
 #[no_mangle]
@@ -391,8 +569,12 @@ pub unsafe extern "system" fn DriverEntry(driver: *mut u8, registry: *mut u8) ->
             } else {
                 line(b"RTL8139 CHECK speed 10\n\0");
             }
-            if command & B_CMD_RST == 0 && arm_receive(base) {
-                send_one(base, &mac);
+            if command & B_CMD_RST == 0 {
+                let receive = arm_receive(base);
+                if !receive.is_null() {
+                    send_one(base, &mac);
+                    take_receive(base, receive);
+                }
             }
         }
         None => line(b"RTL8139 CHECK pci none\n\0"),

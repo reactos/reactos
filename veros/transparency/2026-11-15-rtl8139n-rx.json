@@ -1,0 +1,25 @@
+{
+  "spdx": "GPL-2.0-or-later",
+  "question": "Why does the RTL8139 miniport receive the ARP reply after it transmits?",
+  "allowedInputs": [
+    "output/rtl8139n-20261115T201701Z.log RTL8139 CHECK cmdreg 0107, isr 0005, rxst 4001, rxlen 0044, rx ok",
+    "sdk/include/xdk/iotypes.h PCI_ENABLE_BUS_MASTER 0x0004",
+    "sdk/include/xdk/halfuncs.h HalSetBusDataByOffset",
+    "sdk/include/xdk/mmfuncs.h MmAllocateContiguousMemory, MmGetPhysicalAddress, MmMapIoSpace",
+    "sdk/include/xdk/kefuncs.h KeDelayExecutionThread",
+    "drivers/network/dd/rtl8139/hardware.c NICTransmitPacket, NICApplyPacketFilter, NICRegisterReceiveBuffer, NICEnableTxRx",
+    "drivers/network/dd/rtl8139/interrupt.c reads PACKET_HEADER when R_CMD_RXEMPTY is clear and writes CAPR",
+    "drivers/network/dd/rtl8139/rtlhw.h R_TXSAD0, R_TXSTS0, R_TXS_STATOK, RSR_ROK 0x0001, RSR_PAM 0x4000, R_I_RXOK, R_I_TXOK",
+    "drivers/network/dd/rtl8139/nic.h MINIMUM_FRAME_SIZE 60, RC_VAL, TC_VAL, B_RC_APM, B_RC_AB",
+    "drivers/network/tcpip/lwip/src/include/lwip/prot/etharp.h etharp_hdr, ARP_REQUEST 1, SIZEOF_ETHARP_HDR 28",
+    "drivers/network/tcpip/lwip/src/include/lwip/prot/ieee.h ETHTYPE_ARP 0x0806, ETHTYPE_IP 0x0800",
+    "drivers/network/tcpip/lwip/src/include/lwip/prot/iana.h LWIP_IANA_HWTYPE_ETHERNET 1",
+    "QEMU user network addresses, https://www.qemu.org/docs/master/system/devices/net.html"
+  ],
+  "harness": {
+    "guest": "VerOS live CD",
+    "name": "rtl8139n",
+    "traceOrReplayId": "output/rtl8139n-20261115T201701Z.log",
+    "logSha256": "bd9546f5c50026d7fcd4a0de671091b41ca56bfbd6eb4ed1f9d895011769afdb"
+  }
+}
