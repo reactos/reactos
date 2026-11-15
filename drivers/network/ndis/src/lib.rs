@@ -19,6 +19,7 @@
 
 #![no_std]
 
+mod filter;
 mod pool;
 mod register;
 
@@ -65,6 +66,7 @@ pub unsafe extern "system" fn NdisGetRoutineAddress(name: *const u8) -> *const (
         .iter()
         .chain(POOLS.iter())
         .chain(MINIPORT.iter())
+        .chain(FILTER.iter())
         .chain(STUBS.iter())
     {
         if same(text, routine.name) {
@@ -113,6 +115,19 @@ static MINIPORT: &[Routine] = &[
     Routine { name: "NdisMPauseComplete", address: register::NdisMPauseComplete as *const () },
 ];
 
+static FILTER: &[Routine] = &[
+    Routine { name: "NdisFRegisterFilterDriver", address: filter::NdisFRegisterFilterDriver as *const () },
+    Routine { name: "NdisFDeregisterFilterDriver", address: filter::NdisFDeregisterFilterDriver as *const () },
+    Routine { name: "NdisFSetAttributes", address: filter::NdisFSetAttributes as *const () },
+    Routine { name: "NdisFIndicateReceiveNetBufferLists", address: filter::NdisFIndicateReceiveNetBufferLists as *const () },
+    Routine { name: "NdisFSendNetBufferLists", address: filter::NdisFSendNetBufferLists as *const () },
+    Routine { name: "NdisFSendNetBufferListsComplete", address: filter::NdisFSendNetBufferListsComplete as *const () },
+    Routine { name: "NdisFOidRequestComplete", address: filter::NdisFOidRequestComplete as *const () },
+    Routine { name: "NdisFPauseComplete", address: filter::NdisFPauseComplete as *const () },
+    Routine { name: "NdisFRestartComplete", address: filter::NdisFRestartComplete as *const () },
+    Routine { name: "NdisFIndicateStatus", address: filter::NdisFIndicateStatus as *const () },
+];
+
 static REAL: &[Routine] = &[
     Routine {
         name: "NdisGetVersion",
@@ -146,23 +161,13 @@ macro_rules! stubs {
 }
 
 stubs!(
-    NdisFRegisterFilterDriver,
-    NdisFDeregisterFilterDriver,
-    NdisFSetAttributes,
     NdisRegisterProtocolDriver,
     NdisDeregisterProtocolDriver,
     NdisAllocateNetBufferList,
     NdisMAllocateNetBufferSGList,
     NdisMFreeNetBufferSGList,
-    NdisFIndicateReceiveNetBufferLists,
-    NdisFSendNetBufferListsComplete,
-    NdisFSendNetBufferLists,
     NdisSendNetBufferLists,
     NdisReturnNetBufferLists,
-    NdisFIndicateStatus,
-    NdisFOidRequestComplete,
-    NdisFPauseComplete,
-    NdisFRestartComplete,
     NdisAllocateMdl,
     NdisFreeMdl,
     NdisGetDataBuffer,
