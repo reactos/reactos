@@ -1,0 +1,16 @@
+{
+  "spdx": "GPL-2.0-or-later",
+  "question": "Why do the net buffer pools accept a 4-byte header and store DataLength at 0x18 and 0x198?",
+  "allowedInputs": [
+    "output/ndis-discovery/windows.log DIFF END OK: pool allocators ACCEPTED type 0x80 revision 1 size 4, combined allocate ACCEPTED byte 5 value 1, NET_BUFFER DataLength 0x18, NET_BUFFER_LIST DataLength 0x198, DataOffset and Mdl AMBIGUOUS",
+    "sdk/include/psdk/ntddndis.h NDIS_OBJECT_HEADER Type, Revision, Size",
+    "NonPagedPool is 0, https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/wdm/ne-wdm-_pool_type",
+    "differential-tests/ndis-discovery/probe.c report_u32 read lengths, 256 bytes for a NET_BUFFER and 512 bytes for a NET_BUFFER_LIST, probe method, not a Windows field"
+  ],
+  "harness": {
+    "guest": "Windows 10 22H2",
+    "name": "ndis-discovery",
+    "traceOrReplayId": "output/ndis-discovery/windows.log",
+    "logSha256": "115a12628716215066e6485f619d57b402f087d392949ec949bf49788c0fcb29"
+  }
+}

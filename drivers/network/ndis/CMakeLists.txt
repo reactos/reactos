@@ -7,8 +7,7 @@ set(NDIS_GCC "${VEROS_CHECKOUT}/tools/rosbe/amd64/bin/x86_64-w64-mingw32-gcc.exe
 set(NDIS_GXX "${VEROS_CHECKOUT}/tools/rosbe/amd64/bin/x86_64-w64-mingw32-g++.exe")
 set(NDIS_RUST_LINKER "${VEROS_CHECKOUT}/tools/rust/rustup/toolchains/1.99.1-x86_64-pc-windows-gnu/lib/rustlib/x86_64-pc-windows-gnu/bin/self-contained/x86_64-w64-mingw32-gcc.exe")
 
-add_custom_command(
-    OUTPUT "${NDIS_RUST_LIB}"
+add_custom_target(ndis_rust
     COMMAND ${CMAKE_COMMAND} -E env
         RUSTUP_HOME=${VEROS_CHECKOUT}/tools/rust/rustup
         CARGO_HOME=${VEROS_CHECKOUT}/tools/rust/cargo
@@ -23,6 +22,8 @@ add_custom_command(
     DEPENDS
         ${CMAKE_CURRENT_SOURCE_DIR}/Cargo.toml
         ${CMAKE_CURRENT_SOURCE_DIR}/src/lib.rs
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/pool.rs
+    BYPRODUCTS "${NDIS_RUST_LIB}"
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
     VERBATIM)
 
@@ -30,6 +31,7 @@ add_library(ndis MODULE
     ndis.rc
     ${CMAKE_CURRENT_BINARY_DIR}/ndis.def)
 target_link_libraries(ndis "${NDIS_RUST_LIB}")
+add_dependencies(ndis ndis_rust)
 set_module_type(ndis kernelmodedriver)
 add_importlibs(ndis ntoskrnl hal)
 add_cd_file(TARGET ndis DESTINATION VerOS/system32/drivers FOR all)

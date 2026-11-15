@@ -19,6 +19,8 @@
 
 #![no_std]
 
+mod pool;
+
 use core::panic::PanicInfo;
 
 #[repr(C)]
@@ -58,7 +60,7 @@ pub unsafe extern "system" fn NdisGetRoutineAddress(name: *const u8) -> *const (
         return core::ptr::null();
     }
     let text = &*(name as *const UnicodeString);
-    for routine in REAL.iter().chain(STUBS.iter()) {
+    for routine in REAL.iter().chain(POOLS.iter()).chain(STUBS.iter()) {
         if same(text, routine.name) {
             return routine.address;
         }
@@ -81,6 +83,17 @@ fn same(text: &UnicodeString, name: &str) -> bool {
     }
     true
 }
+
+static POOLS: &[Routine] = &[
+    Routine { name: "NdisAllocateNetBufferPool", address: pool::NdisAllocateNetBufferPool as *const () },
+    Routine { name: "NdisFreeNetBufferPool", address: pool::NdisFreeNetBufferPool as *const () },
+    Routine { name: "NdisAllocateNetBuffer", address: pool::NdisAllocateNetBuffer as *const () },
+    Routine { name: "NdisFreeNetBuffer", address: pool::NdisFreeNetBuffer as *const () },
+    Routine { name: "NdisAllocateNetBufferListPool", address: pool::NdisAllocateNetBufferListPool as *const () },
+    Routine { name: "NdisFreeNetBufferListPool", address: pool::NdisFreeNetBufferListPool as *const () },
+    Routine { name: "NdisAllocateNetBufferAndNetBufferList", address: pool::NdisAllocateNetBufferAndNetBufferList as *const () },
+    Routine { name: "NdisFreeNetBufferList", address: pool::NdisFreeNetBufferList as *const () },
+];
 
 static REAL: &[Routine] = &[
     Routine {
@@ -123,15 +136,7 @@ stubs!(
     NdisFSetAttributes,
     NdisRegisterProtocolDriver,
     NdisDeregisterProtocolDriver,
-    NdisAllocateNetBufferListPool,
-    NdisFreeNetBufferListPool,
     NdisAllocateNetBufferList,
-    NdisFreeNetBufferList,
-    NdisAllocateNetBufferPool,
-    NdisFreeNetBufferPool,
-    NdisAllocateNetBuffer,
-    NdisFreeNetBuffer,
-    NdisAllocateNetBufferAndNetBufferList,
     NdisMAllocateNetBufferSGList,
     NdisMFreeNetBufferSGList,
     NdisMIndicateReceiveNetBufferLists,
