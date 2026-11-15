@@ -39,6 +39,7 @@ DriverEntry(IN PVOID Context1,
 {
   VIDEO_HW_INITIALIZATION_DATA  InitData;
 
+__debugbreak();
   VideoPortZeroMemory(&InitData, sizeof InitData);
 
   InitData.HwInitDataSize = sizeof(InitData);
