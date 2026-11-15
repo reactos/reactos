@@ -31,9 +31,16 @@
  * B_CMD_RST to R_CMD until that bit clears, NICUpdateLinkStatus reads
  * R_MS, NICRegisterReceiveBuffer writes the low 32 bits of the buffer
  * address to R_RXSA, and NICEnableTxRx writes B_CMD_TXE | B_CMD_RXE
- * before RC_VAL and TC_VAL. drivers/network/dd/rtl8139/nic.h sets
+ * before RC_VAL and TC_VAL. NICTransmitPacket writes the physical
+ * address to R_TXSAD0 and the length to R_TXSTS0. drivers/network/dd/rtl8139/ndis.c
+ * sends a buffer whose high half is 0, whose address is 4-byte aligned, and
+ * whose length is from MINIMUM_FRAME_SIZE 60 through MAXIMUM_FRAME_SIZE 1514.
+ * rtlhw.h defines R_TXSTS0 as 0x10, R_TXSAD0 as 0x20, and R_TXS_STATOK as
+ * 0x00008000. drivers/network/dd/rtl8139/nic.h sets
  * MAX_RESET_ATTEMPTS to 25, FULL_RECEIVE_BUFFER_SIZE to 32768 + 16 + 2048,
- * RC_VAL to 0x800B780, and TC_VAL to 0x700.
+ * RC_VAL to 0x800B780, TC_VAL to 0x700, MINIMUM_FRAME_SIZE to 60, and
+ * MAXIMUM_FRAME_SIZE to 1514. CHECK_TX_READS is this driver's status
+ * read count, not a register field.
  * output/rtl8139n-20261115T182029Z.log printed RTL8139 CHECK bar 0000c001
  * and mac bytes 52 54 00 12 34 56. output/rtl8139n-20261115T183403Z.log
  * printed RTL8139 CHECK cmd 01 and RTL8139 CHECK reset ok.
@@ -41,6 +48,8 @@
  * RTL8139 CHECK link up, and RTL8139 CHECK speed 100.
  * output/rtl8139n-20261115T185118Z.log printed RTL8139 CHECK rxpa 00208000,
  * RTL8139 CHECK txrx 0d, and RTL8139 CHECK txrx ok.
+ * output/rtl8139n-20261115T185912Z.log printed RTL8139 CHECK txst 0000a03c
+ * and RTL8139 CHECK tx ok.
  * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismregisterminiportdriver
  * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismsetminiportattributes
  */
@@ -74,6 +83,13 @@ const MAX_RESET_ATTEMPTS: u32 = 25;
 const FULL_RECEIVE_BUFFER_SIZE: usize = 32768 + 16 + 2048;
 const RC_VAL: u32 = 0x800B780;
 const TC_VAL: u32 = 0x700;
+const MINIMUM_FRAME_SIZE: usize = 60;
+const MAXIMUM_FRAME_SIZE: usize = 1514;
+const R_TXSTS0: u16 = 0x10;
+const R_TXSAD0: u16 = 0x20;
+const R_TXS_STATOK: u32 = 0x0000_8000;
+/* This driver's status read count, not a register field. */
+const CHECK_TX_READS: u32 = 100_000;
 /* drivers/network/dd/rtl8139/ndis.c rejects a physical address whose HighPart is not 0. */
 const HIGHEST_PA: u64 = 0xFFFF_FFFF;
 
@@ -153,6 +169,19 @@ fn write_port_u32(port: u16, value: u32) {
     }
 }
 
+fn read_port_u32(port: u16) -> u32 {
+    let value: u32;
+    unsafe {
+        core::arch::asm!(
+            "in eax, dx",
+            in("dx") port,
+            out("eax") value,
+            options(nostack, nomem, preserves_flags)
+        );
+    }
+    value
+}
+
 fn read_port(port: u16) -> u8 {
     let value: u8;
     unsafe {
@@ -229,17 +258,17 @@ fn power_and_reset(base: u16) -> u8 {
     command
 }
 
-fn arm_receive(base: u16) {
+fn arm_receive(base: u16) -> bool {
     let buffer = unsafe { MmAllocateContiguousMemory(FULL_RECEIVE_BUFFER_SIZE, HIGHEST_PA) };
     if buffer.is_null() {
         line(b"RTL8139 CHECK rx none\n\0");
-        return;
+        return false;
     }
     let physical = unsafe { MmGetPhysicalAddress(buffer) };
     line_status(b"RTL8139 CHECK rxpa %08x\n\0", physical as u32);
     if physical > HIGHEST_PA {
         line(b"RTL8139 CHECK rx high\n\0");
-        return;
+        return false;
     }
     unsafe { ptr::write_bytes(buffer, 0, FULL_RECEIVE_BUFFER_SIZE); }
     /* hardware.c NICRegisterReceiveBuffer, then NICEnableTxRx. */
@@ -251,8 +280,50 @@ fn arm_receive(base: u16) {
     line_status(b"RTL8139 CHECK txrx %02x\n\0", command as u32);
     if (command & (B_CMD_TXE | B_CMD_RXE)) == (B_CMD_TXE | B_CMD_RXE) {
         line(b"RTL8139 CHECK txrx ok\n\0");
+        true
     } else {
         line(b"RTL8139 CHECK txrx fail\n\0");
+        false
+    }
+}
+
+fn send_one(base: u16, mac: &[u8; 6]) {
+    let buffer = unsafe { MmAllocateContiguousMemory(MAXIMUM_FRAME_SIZE, HIGHEST_PA) };
+    if buffer.is_null() {
+        line(b"RTL8139 CHECK tx none\n\0");
+        return;
+    }
+    let physical = unsafe { MmGetPhysicalAddress(buffer) };
+    if physical > HIGHEST_PA || (physical & 3) != 0 {
+        line(b"RTL8139 CHECK tx align\n\0");
+        return;
+    }
+    unsafe { ptr::write_bytes(buffer, 0, MINIMUM_FRAME_SIZE); }
+    let mut index = 0;
+    while index < mac.len() {
+        unsafe {
+            *buffer.add(index) = mac[index];
+            *buffer.add(6 + index) = mac[index];
+        }
+        index += 1;
+    }
+    /* hardware.c NICTransmitPacket, descriptor 0. */
+    write_port_u32(base + R_TXSAD0, physical as u32);
+    write_port_u32(base + R_TXSTS0, MINIMUM_FRAME_SIZE as u32);
+    let mut status = 0u32;
+    let mut read = 0u32;
+    while read < CHECK_TX_READS {
+        status = read_port_u32(base + R_TXSTS0);
+        if (status & R_TXS_STATOK) != 0 {
+            break;
+        }
+        read += 1;
+    }
+    line_status(b"RTL8139 CHECK txst %08x\n\0", status);
+    if (status & R_TXS_STATOK) != 0 {
+        line(b"RTL8139 CHECK tx ok\n\0");
+    } else {
+        line(b"RTL8139 CHECK tx wait\n\0");
     }
 }
 
@@ -320,8 +391,8 @@ pub unsafe extern "system" fn DriverEntry(driver: *mut u8, registry: *mut u8) ->
             } else {
                 line(b"RTL8139 CHECK speed 10\n\0");
             }
-            if command & B_CMD_RST == 0 {
-                arm_receive(base);
+            if command & B_CMD_RST == 0 && arm_receive(base) {
+                send_one(base, &mac);
             }
         }
         None => line(b"RTL8139 CHECK pci none\n\0"),

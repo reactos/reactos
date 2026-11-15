@@ -1,0 +1,17 @@
+{
+  "spdx": "GPL-2.0-or-later",
+  "question": "Why does the RTL8139 miniport report a completed transmit?",
+  "allowedInputs": [
+    "output/rtl8139n-20261115T185912Z.log RTL8139 CHECK txst 0000a03c, RTL8139 CHECK tx ok",
+    "drivers/network/dd/rtl8139/hardware.c NICTransmitPacket writes the physical address to R_TXSAD0 and the length to R_TXSTS0",
+    "drivers/network/dd/rtl8139/ndis.c sends one aligned buffer below 4GB whose length is at least MINIMUM_FRAME_SIZE",
+    "drivers/network/dd/rtl8139/nic.h MINIMUM_FRAME_SIZE 60, MAXIMUM_FRAME_SIZE 1514",
+    "drivers/network/dd/rtl8139/rtlhw.h R_TXSTS0 0x10, R_TXSAD0 0x20, R_TXS_STATOK 0x00008000, R_TXS_HOSTOWNS 0x00002000"
+  ],
+  "harness": {
+    "guest": "VerOS live CD",
+    "name": "rtl8139n",
+    "traceOrReplayId": "output/rtl8139n-20261115T185912Z.log",
+    "logSha256": "0b2cce8fc9edbc7756d74a1fc299115d6c11e2f609a3b9b7621855866d4ad9fa"
+  }
+}
