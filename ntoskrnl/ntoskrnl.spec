@@ -911,6 +911,7 @@
 @ stdcall ObDereferenceSecurityDescriptor(ptr long)
 @ stdcall ObFindHandleForObject(ptr ptr ptr ptr ptr)
 @ stdcall ObGetObjectSecurity(ptr ptr ptr)
+@ fastcall -version=0x601+ ObGetObjectType(ptr)
 @ stdcall ObInsertObject(ptr ptr long long ptr ptr)
 @ stdcall ObLogSecurityDescriptor(ptr ptr long)
 @ stdcall ObMakeTemporaryObject(ptr)
