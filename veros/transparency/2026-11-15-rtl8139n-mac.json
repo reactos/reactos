@@ -1,0 +1,17 @@
+{
+  "spdx": "GPL-2.0-or-later",
+  "question": "Why does the RTL8139 miniport read six MAC bytes from the PCI I/O BAR?",
+  "allowedInputs": [
+    "output/rtl8139n-20261115T182029Z.log RTL8139 CHECK bar 0000c001, mac bytes 52 54 00 12 34 56",
+    "drivers/network/dd/rtl8139/netrtl.inf PCI\\VEN_10EC&DEV_8139",
+    "sdk/include/xdk/iotypes.h PCI_SLOT_NUMBER, PCIConfiguration, PCI_COMMON_HDR_LENGTH, PCI_INVALID_VENDORID, PCI_ADDRESS_IO_SPACE, PCI_ADDRESS_IO_ADDRESS_MASK, type0.BaseAddresses",
+    "sdk/include/xdk/halfuncs.h HalGetBusData",
+    "drivers/network/dd/rtl8139/rtlhw.h R_MAC 0x00"
+  ],
+  "harness": {
+    "guest": "VerOS live CD",
+    "name": "rtl8139n",
+    "traceOrReplayId": "output/rtl8139n-20261115T182029Z.log",
+    "logSha256": "ef3e96db96f6ca56e0e96765e1ff01fee680997ca48f3d9621a1b396c1140c5a"
+  }
+}
