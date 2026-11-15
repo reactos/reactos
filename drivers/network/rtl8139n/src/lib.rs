@@ -22,13 +22,16 @@
  * PCI_ADDRESS_IO_ADDRESS_MASK. type0.BaseAddresses starts at byte 0x10 of
  * PCI_COMMON_HEADER. sdk/include/xdk/halfuncs.h declares HalGetBusData.
  * drivers/network/dd/rtl8139/rtlhw.h defines R_MAC as 0x00, R_CMD as 0x37,
- * B_CMD_RST as 0x10, and R_CFG1 as 0x52. drivers/network/dd/rtl8139/hardware.c
- * writes 0 to R_CFG1, then writes B_CMD_RST to R_CMD and reads R_CMD until
- * that bit clears. drivers/network/dd/rtl8139/nic.h sets
+ * B_CMD_RST as 0x10, R_CFG1 as 0x52, R_MS as 0x58, R_MS_LINKDWN as 0x04,
+ * and R_MS_SPEED_10 as 0x08. drivers/network/dd/rtl8139/hardware.c
+ * writes 0 to R_CFG1, writes B_CMD_RST to R_CMD until that bit clears, and
+ * NICUpdateLinkStatus reads R_MS. drivers/network/dd/rtl8139/nic.h sets
  * MAX_RESET_ATTEMPTS to 25.
  * output/rtl8139n-20261115T182029Z.log printed RTL8139 CHECK bar 0000c001
  * and mac bytes 52 54 00 12 34 56. output/rtl8139n-20261115T183403Z.log
  * printed RTL8139 CHECK cmd 01 and RTL8139 CHECK reset ok.
+ * output/rtl8139n-20261115T184127Z.log printed RTL8139 CHECK media d0,
+ * RTL8139 CHECK link up, and RTL8139 CHECK speed 100.
  * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismregisterminiportdriver
  * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismsetminiportattributes
  */
@@ -49,6 +52,9 @@ const R_MAC: u16 = 0;
 const R_CMD: u16 = 0x37;
 const B_CMD_RST: u8 = 0x10;
 const R_CFG1: u16 = 0x52;
+const R_MS: u16 = 0x58;
+const R_MS_LINKDWN: u8 = 0x04;
+const R_MS_SPEED_10: u8 = 0x08;
 /* drivers/network/dd/rtl8139/nic.h */
 const MAX_RESET_ATTEMPTS: u32 = 25;
 
@@ -242,6 +248,18 @@ pub unsafe extern "system" fn DriverEntry(driver: *mut u8, registry: *mut u8) ->
                 line(b"RTL8139 CHECK reset ok\n\0");
             } else {
                 line(b"RTL8139 CHECK reset busy\n\0");
+            }
+            let media = read_port(base + R_MS);
+            line_status(b"RTL8139 CHECK media %02x\n\0", media as u32);
+            if media & R_MS_LINKDWN == 0 {
+                line(b"RTL8139 CHECK link up\n\0");
+            } else {
+                line(b"RTL8139 CHECK link down\n\0");
+            }
+            if media & R_MS_SPEED_10 == 0 {
+                line(b"RTL8139 CHECK speed 100\n\0");
+            } else {
+                line(b"RTL8139 CHECK speed 10\n\0");
             }
         }
         None => line(b"RTL8139 CHECK pci none\n\0"),
