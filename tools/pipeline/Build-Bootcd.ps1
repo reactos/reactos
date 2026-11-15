@@ -99,13 +99,15 @@ if (-not $clang) {
 $clangBin = Split-Path $clang -Parent
 $toolchain = Join-Path $SourceRoot "toolchain-clang.cmake"
 $cmakeArgs = "-S `"$SourceRoot`" -B `"$BuildDir`" -G Ninja -DCMAKE_TOOLCHAIN_FILE:FILEPATH=`"$toolchain`" -DARCH:STRING=amd64 -DCMAKE_BUILD_TYPE=Debug -DENABLE_CCACHE:BOOL=0"
+$envCmd = Join-Path (Split-Path $SourceRoot -Parent) "env.cmd"
+if (-not (Test-Path $envCmd)) {
+    Write-Error "The build environment was not found at $envCmd. Run Setup-BuildEnvironment.ps1."
+}
 $lines = @(
     "@echo off",
-    "set ROS_ARCH=amd64",
-    "set _ROSBE_ROSSCRIPTDIR=$RosBERoot",
-    "set BISON_PKGDATADIR=$RosBERoot\share\bison",
-    "set M4=$RosBERoot\bin\m4.exe",
-    "set PATH=$clangBin;$RosBERoot\amd64\bin;$RosBERoot\bin;%PATH%",
+    "call `"$envCmd`"",
+    "if errorlevel 1 exit /b %errorlevel%",
+    "set PATH=$clangBin;%PATH%",
     "set VEROS_BOOTSTRAP_URL=$($UpdateServer.BootstrapUrl)",
     "set VEROS_UPDATE_URL=$($UpdateServer.UpdateUrl)",
     "set VEROS_PUBLISH_URL=$($UpdateServer.PublishUrl)",
