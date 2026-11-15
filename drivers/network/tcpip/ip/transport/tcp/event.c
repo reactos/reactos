@@ -8,6 +8,9 @@
 
 #include "precomp.h"
 
+#ifdef TCPIP_USE_FNET
+#include <fnet_glue/fnet_glue.h>
+#else
 #include "lwip/err.h"
 #include "lwip/sys.h"
 #include "lwip/pbuf.h"
@@ -15,6 +18,7 @@
 #include "lwip/api.h"
 
 #include <lwip_glue/lwip_glue.h>
+#endif
 
 extern NPAGED_LOOKASIDE_LIST TdiBucketLookasideList;
 
@@ -263,8 +267,10 @@ TCPAcceptEventHandler(void *arg, PTCP_PCB newpcb)
         {
             LockObject(Bucket->AssociatedEndpoint);
 
+#ifndef TCPIP_USE_FNET
             /* sanity assert...this should never be in anything else but a CLOSED state */
             ASSERT( ((PTCP_PCB)Bucket->AssociatedEndpoint->SocketContext)->state == CLOSED );
+#endif
 
             /*  free socket context created in FileOpenConnection, as we're using a new one */
             LibTCPClose(Bucket->AssociatedEndpoint, TRUE, FALSE);

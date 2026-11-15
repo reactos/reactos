@@ -46,6 +46,11 @@ target_include_directories(tcpip BEFORE
     PRIVATE include)
 
 target_link_libraries(tcpip ip ${PSEH_LIB})
+if(TCPIP_USE_FNET)
+    target_link_libraries(tcpip fnetport)
+    # Shares CONNECTION_ENDPOINT with the ip library, which has FNET only fields
+    target_compile_definitions(tcpip PRIVATE TCPIP_USE_FNET)
+endif()
 set_module_type(tcpip kernelmodedriver)
 add_importlibs(tcpip ndis ntoskrnl hal)
 add_pch(tcpip include/lwip/precomp.h SOURCE)

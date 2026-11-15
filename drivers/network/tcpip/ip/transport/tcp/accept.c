@@ -10,7 +10,11 @@
 
 #include "precomp.h"
 
+#ifdef TCPIP_USE_FNET
+#include <fnet_glue/fnet_glue.h>
+#else
 #include <lwip_glue/lwip_glue.h>
+#endif
 
 extern NPAGED_LOOKASIDE_LIST TdiBucketLookasideList;
 
@@ -163,6 +167,12 @@ NTSTATUS TCPAccept ( PTDI_REQUEST Request,
         Status = STATUS_NO_MEMORY;
 
     UnlockObject(Listener);
+
+#ifdef TCPIP_USE_FNET
+    /* FNET keeps early connections in its backlog; offer them to this new listen IRP */
+    if (Status == STATUS_PENDING)
+        LibTCPAcceptQueued(Listener);
+#endif
 
     return Status;
 }

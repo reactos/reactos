@@ -815,6 +815,9 @@ NTSTATUS DispTdiReceive(
   PIO_STACK_LOCATION IrpSp;
   PTDI_REQUEST_KERNEL_RECEIVE ReceiveInfo;
   PTRANSPORT_CONTEXT TranContext;
+#ifdef TCPIP_USE_FNET
+  PCONNECTION_ENDPOINT Connection;
+#endif
   NTSTATUS Status;
   ULONG BytesReceived = 0;
 
@@ -849,6 +852,14 @@ NTSTATUS DispTdiReceive(
   TI_DbgPrint(MID_TRACE,("TCPIP<<< Got an MDL: %x\n", Irp->MdlAddress));
   if (NT_SUCCESS(Status))
     {
+#ifdef TCPIP_USE_FNET
+      /* Once the IRP completes AFD may close the connection, so hold it until the nesting count is dropped */
+      Connection = TranContext->Handle.ConnectionContext;
+      ReferenceObject(Connection);
+
+      /* AFD reposts from its completion routine, so inline completions nest; TCPReceiveData pends past a few levels */
+      InterlockedIncrement(&Connection->ReceiveNesting);
+#endif
       Status = TCPReceiveData(
 	  TranContext->Handle.ConnectionContext,
 	  (PNDIS_BUFFER)Irp->MdlAddress,
@@ -857,6 +868,13 @@ NTSTATUS DispTdiReceive(
 	  ReceiveInfo->ReceiveFlags,
 	  DispDataRequestComplete,
 	  Irp);
+#ifdef TCPIP_USE_FNET
+      if (Status != STATUS_PENDING)
+          DispDataRequestComplete(Irp, Status, BytesReceived);
+      InterlockedDecrement(&Connection->ReceiveNesting);
+      DereferenceObject(Connection);
+      return STATUS_PENDING;
+#endif
     }
 
 done:
