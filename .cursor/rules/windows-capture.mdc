@@ -12,7 +12,7 @@ Two captures exist. Both stay under `output/`, which is gitignored. After the ru
 - `tools/windows-trace` records numeric syscall lines: number, status, and `a1`–`a4`. No names and no ordinal map.
 - `differential-tests/syscall-diff` in the parent checkout runs one GPL amd64 `probe.exe` on Windows 10 22H2 x64 and on the amd64 VerOS NT boot. It calls the names in `compat/reference/win10-22h2-syscalls.txt` through `GetProcAddress` and prints `DIFF <name> <status>`, `MISSING`, `CRASH`, or `STARTED`, then `DIFF END OK`. COM1 is `-serial file:` with forward slashes. A FAT sink copy is only a backup.
 
-A Windows differential result is evidence only when that guest log contains `DIFF END OK`. A host run of the probe is not a Windows 10 22H2 result. A serial log or abi plugin JSONL verifies a new symbol or struct layout only under [clean-room.mdc](clean-room.mdc).
+A Windows differential result is evidence only when that guest log contains `DIFF END OK`. A host run of the probe is not a Windows 10 22H2 result. A serial log or abi plugin JSONL verifies a new symbol or struct layout only under [clean-room.mdc](clean-room.mdc). The parent checkout's probe source may explain a scan width or a nonce the log does not print. That citation does not add a symbol or a struct layout.
 
 `differential-tests/syscall-diff`, `differential-tests/graphics-diff`, `differential-tests/kernel-abi`, and `differential-tests/ndis-abi` reuse `output/<tool>/windows.log` when `differential-tests/probe-stamp/Test-WindowsProbe.ps1` prints `REUSE` for that tool. The stamp is `output/<tool>/windows.probe`. It records the probe source hash and the log hash. A change to that probe's sources requires a new Windows 10 boot. Each runner's `-CheckWindows` reports the same decision.
 
