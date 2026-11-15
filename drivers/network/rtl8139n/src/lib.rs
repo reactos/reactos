@@ -52,6 +52,9 @@
  * LWIP_IANA_HWTYPE_ETHERNET as 1.
  * https://www.qemu.org/docs/master/system/devices/net.html gives the user
  * network guest 10.0.2.15 and the virtual host 10.0.2.2.
+ * ip.h, ip4.h, and icmp.h name the IPv4 and ICMP echo headers.
+ * opt.h sets IP_DEFAULT_TTL to 255. The checksum is the ones' complement
+ * sum in RFC 1071, https://www.rfc-editor.org/rfc/rfc1071.
  * drivers/network/dd/rtl8139/ndis.c
  * sends a buffer whose high half is 0, whose address is 4-byte aligned, and
  * whose length is from MINIMUM_FRAME_SIZE 60 through MAXIMUM_FRAME_SIZE 1514.
@@ -73,6 +76,8 @@
  * output/rtl8139n-20261115T201701Z.log printed RTL8139 CHECK cmdreg 0107,
  * RTL8139 CHECK isr 0005, RTL8139 CHECK rxst 4001, RTL8139 CHECK rxlen 0044,
  * and RTL8139 CHECK rx ok.
+ * output/rtl8139n-20261115T203413Z.log printed RTL8139 CHECK peer 0a000202,
+ * RTL8139 CHECK rxtype 0800, RTL8139 CHECK icmp 00, and RTL8139 CHECK ping ok.
  * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismregisterminiportdriver
  * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismsetminiportattributes
  */
@@ -112,12 +117,25 @@ const B_RC_AB: u32 = 0x08;
 const RSR_ROK: u16 = 0x0001;
 /* drivers/network/tcpip/lwip/src/include/lwip/prot/etharp.h */
 const ARP_REQUEST: u16 = 1;
+const ARP_REPLY: u16 = 2;
 const SIZEOF_ETHARP_HDR: usize = 28;
 /* drivers/network/tcpip/lwip/src/include/lwip/prot/ieee.h */
 const ETHTYPE_ARP: u16 = 0x0806;
 const ETHTYPE_IP: u16 = 0x0800;
 /* drivers/network/tcpip/lwip/src/include/lwip/prot/iana.h */
 const HWTYPE_ETHERNET: u16 = 1;
+/* drivers/network/tcpip/lwip/src/include/lwip/prot/ip.h */
+const IP_PROTO_ICMP: u8 = 1;
+/* drivers/network/tcpip/lwip/src/include/lwip/prot/ip4.h */
+const IP_HLEN: usize = 20;
+/* drivers/network/tcpip/lwip/src/include/lwip/opt.h */
+const IP_DEFAULT_TTL: u8 = 255;
+/* drivers/network/tcpip/lwip/src/include/lwip/prot/icmp.h */
+const ICMP_ER: u8 = 0;
+const ICMP_ECHO: u8 = 8;
+const ICMP_HLEN: usize = 8;
+/* drivers/network/dd/rtl8139/nic.h */
+const RECEIVE_BUFFER_SIZE: usize = 32768;
 /* https://www.qemu.org/docs/master/system/devices/net.html */
 const GUEST_IP: [u8; 4] = [10, 0, 2, 15];
 const HOST_IP: [u8; 4] = [10, 0, 2, 2];
@@ -467,7 +485,102 @@ fn send_one(base: u16, mac: &[u8; 6]) {
     }
 }
 
-fn take_receive(base: u16, buffer: *mut u8) {
+fn checksum(data: *const u8, len: usize) -> u16 {
+    /* RFC 1071 ones' complement sum. */
+    let mut sum = 0u32;
+    let mut index = 0;
+    while index + 1 < len {
+        let word = u16::from_be_bytes([
+            unsafe { *data.add(index) },
+            unsafe { *data.add(index + 1) },
+        ]);
+        sum += word as u32;
+        index += 2;
+    }
+    if index < len {
+        sum += (unsafe { *data.add(index) } as u32) << 8;
+    }
+    while (sum >> 16) != 0 {
+        sum = (sum & 0xFFFF) + (sum >> 16);
+    }
+    !(sum as u16)
+}
+
+fn transmit(base: u16, physical: u64, desc: u16) {
+    /* ndis.c advances CurrentTxDesc after NICTransmitPacket. */
+    write_port_u32(base + R_TXSAD0 + (desc * 4), physical as u32);
+    write_port_u32(base + R_TXSTS0 + (desc * 4), MINIMUM_FRAME_SIZE as u32);
+    let mut status = 0u32;
+    let mut read = 0u32;
+    while read < CHECK_TX_READS {
+        status = read_port_u32(base + R_TXSTS0);
+        if (status & R_TXS_STATOK) != 0 {
+            break;
+        }
+        read += 1;
+    }
+    line_status(b"RTL8139 CHECK txst %08x\n\0", status);
+    if (status & R_TXS_STATOK) != 0 {
+        line(b"RTL8139 CHECK tx ok\n\0");
+    } else {
+        line(b"RTL8139 CHECK tx wait\n\0");
+    }
+}
+
+fn send_echo(base: u16, mac: &[u8; 6], peer_mac: &[u8; 6], peer_ip: &[u8; 4]) {
+    let buffer = unsafe { MmAllocateContiguousMemory(MAXIMUM_FRAME_SIZE, HIGHEST_PA) };
+    if buffer.is_null() {
+        line(b"RTL8139 CHECK echo none\n\0");
+        return;
+    }
+    let physical = unsafe { MmGetPhysicalAddress(buffer) };
+    if physical > HIGHEST_PA || (physical & 3) != 0 {
+        line(b"RTL8139 CHECK echo align\n\0");
+        return;
+    }
+    unsafe { ptr::write_bytes(buffer, 0, MINIMUM_FRAME_SIZE); }
+    let mut index = 0;
+    while index < 6 {
+        unsafe {
+            *buffer.add(index) = peer_mac[index];
+            *buffer.add(6 + index) = mac[index];
+        }
+        index += 1;
+    }
+    put_be16(buffer, 12, ETHTYPE_IP);
+    unsafe {
+        *buffer.add(14) = 0x45;
+        *buffer.add(15) = 0;
+    }
+    put_be16(buffer, 16, (IP_HLEN + ICMP_HLEN) as u16);
+    put_be16(buffer, 18, 1);
+    put_be16(buffer, 20, 0);
+    unsafe {
+        *buffer.add(22) = IP_DEFAULT_TTL;
+        *buffer.add(23) = IP_PROTO_ICMP;
+    }
+    index = 0;
+    while index < 4 {
+        unsafe {
+            *buffer.add(26 + index) = GUEST_IP[index];
+            *buffer.add(30 + index) = peer_ip[index];
+        }
+        index += 1;
+    }
+    let ip_sum = checksum(unsafe { buffer.add(14) }, IP_HLEN);
+    put_be16(buffer, 24, ip_sum);
+    unsafe {
+        *buffer.add(34) = ICMP_ECHO;
+        *buffer.add(35) = 0;
+    }
+    put_be16(buffer, 38, 1);
+    put_be16(buffer, 40, 1);
+    let icmp_sum = checksum(unsafe { buffer.add(34) }, ICMP_HLEN);
+    put_be16(buffer, 36, icmp_sum);
+    transmit(base, physical, 1);
+}
+
+fn take_receive(base: u16, buffer: *mut u8, offset: usize) -> (usize, Option<([u8; 6], [u8; 4])>) {
     /* kefuncs.h: a negative interval is relative. 200 ms is 2_000_000 units of 100 ns. */
     let interval: i64 = -2_000_000;
     unsafe { KeDelayExecutionThread(0, 0, &interval); }
@@ -483,26 +596,62 @@ fn take_receive(base: u16, buffer: *mut u8) {
     line_status(b"RTL8139 CHECK rxcmd %02x\n\0", command as u32);
     line_status(b"RTL8139 CHECK isr %04x\n\0", read_port_u16(base + R_IS) as u32);
     line_status(b"RTL8139 CHECK mpc %08x\n\0", read_port_u32(base + R_MPC));
-    let status = u16::from_le_bytes([unsafe { *buffer }, unsafe { *buffer.add(1) }]);
-    let length = u16::from_le_bytes([unsafe { *buffer.add(2) }, unsafe { *buffer.add(3) }]);
+    let header = unsafe { buffer.add(offset) };
+    let status = u16::from_le_bytes([unsafe { *header }, unsafe { *header.add(1) }]);
+    let length = u16::from_le_bytes([unsafe { *header.add(2) }, unsafe { *header.add(3) }]);
     line_status(b"RTL8139 CHECK rxst %04x\n\0", status as u32);
     line_status(b"RTL8139 CHECK rxlen %04x\n\0", length as u32);
     if (command & R_CMD_RXEMPTY) != 0 {
         line(b"RTL8139 CHECK rx empty\n\0");
-        return;
+        return (offset, None);
     }
     if (status & RSR_ROK) == 0 {
         line(b"RTL8139 CHECK rx fail\n\0");
-        return;
+        return (offset, None);
     }
     line(b"RTL8139 CHECK rx ok\n\0");
     if (length as usize) > FULL_RECEIVE_BUFFER_SIZE {
-        return;
+        return (offset, None);
+    }
+    let mut peer = None;
+    let ethertype = u16::from_be_bytes([unsafe { *header.add(16) }, unsafe { *header.add(17) }]);
+    line_status(b"RTL8139 CHECK rxtype %04x\n\0", ethertype as u32);
+    if ethertype == ETHTYPE_ARP {
+        let opcode = u16::from_be_bytes([unsafe { *header.add(24) }, unsafe { *header.add(25) }]);
+        line_status(b"RTL8139 CHECK arp %04x\n\0", opcode as u32);
+        if opcode == ARP_REPLY {
+            let mut peer_mac = [0u8; 6];
+            let mut peer_ip = [0u8; 4];
+            let mut index = 0;
+            while index < 6 {
+                peer_mac[index] = unsafe { *header.add(26 + index) };
+                index += 1;
+            }
+            index = 0;
+            while index < 4 {
+                peer_ip[index] = unsafe { *header.add(32 + index) };
+                index += 1;
+            }
+            line_status(
+                b"RTL8139 CHECK peer %08x\n\0",
+                u32::from_be_bytes(peer_ip),
+            );
+            peer = Some((peer_mac, peer_ip));
+        }
+    }
+    if ethertype == ETHTYPE_IP {
+        let icmp_type = unsafe { *header.add(38) };
+        line_status(b"RTL8139 CHECK icmp %02x\n\0", icmp_type as u32);
+        if icmp_type == ICMP_ER {
+            line(b"RTL8139 CHECK ping ok\n\0");
+        }
     }
     /* interrupt.c advances CAPR from the header length. */
-    let mut offset = (length as u32) + 4;
-    offset = (offset + 3) & !3;
-    write_port_u16(base + R_CAPR, (offset as u16).wrapping_sub(0x10));
+    let mut next = (length as usize) + 4;
+    next = (next + 3) & !3;
+    next = (offset + next) % RECEIVE_BUFFER_SIZE;
+    write_port_u16(base + R_CAPR, (next as u16).wrapping_sub(0x10));
+    (next, peer)
 }
 
 #[no_mangle]
@@ -573,7 +722,11 @@ pub unsafe extern "system" fn DriverEntry(driver: *mut u8, registry: *mut u8) ->
                 let receive = arm_receive(base);
                 if !receive.is_null() {
                     send_one(base, &mac);
-                    take_receive(base, receive);
+                    let (next, peer) = take_receive(base, receive, 0);
+                    if let Some((peer_mac, peer_ip)) = peer {
+                        send_echo(base, &mac, &peer_mac, &peer_ip);
+                        take_receive(base, receive, next);
+                    }
                 }
             }
         }

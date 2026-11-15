@@ -1,0 +1,22 @@
+{
+  "spdx": "GPL-2.0-or-later",
+  "question": "Why does the RTL8139 miniport report that the ICMP echo was answered?",
+  "allowedInputs": [
+    "output/rtl8139n-20261115T203413Z.log RTL8139 CHECK peer 0a000202, rxtype 0800, icmp 00, ping ok",
+    "drivers/network/tcpip/lwip/src/include/lwip/prot/etharp.h ARP_REPLY 2",
+    "drivers/network/tcpip/lwip/src/include/lwip/prot/ip.h IP_PROTO_ICMP 1",
+    "drivers/network/tcpip/lwip/src/include/lwip/prot/ip4.h struct ip_hdr, IP_HLEN 20",
+    "drivers/network/tcpip/lwip/src/include/lwip/prot/icmp.h ICMP_ECHO 8, ICMP_ER 0, struct icmp_hdr",
+    "drivers/network/tcpip/lwip/src/include/lwip/opt.h IP_DEFAULT_TTL 255",
+    "Computing the Internet checksum, https://www.rfc-editor.org/rfc/rfc1071",
+    "drivers/network/dd/rtl8139/ndis.c advances CurrentTxDesc after NICTransmitPacket",
+    "drivers/network/dd/rtl8139/rtlhw.h R_TXSAD0, R_TXSTS0",
+    "QEMU user network addresses, https://www.qemu.org/docs/master/system/devices/net.html"
+  ],
+  "harness": {
+    "guest": "VerOS live CD",
+    "name": "rtl8139n",
+    "traceOrReplayId": "output/rtl8139n-20261115T203413Z.log",
+    "logSha256": "166c1689355469564a9ac25c69d3a2e77f987754b1062b826e997da0ad38d8af"
+  }
+}
