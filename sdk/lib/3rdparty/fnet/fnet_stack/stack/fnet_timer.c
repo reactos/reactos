@@ -39,8 +39,8 @@ struct fnet_net_timer
     struct fnet_net_timer *next;            /* Next timer in list.*/
     fnet_time_t timer_start_ms;             /* Timer start time. */
     fnet_time_t timer_timeout_ms;           /* Timer timeout. */
-    void (*handler)(fnet_uint32_t cookie);  /* Timer handler. */
-    fnet_uint32_t cookie;                   /* Handler Cookie. */
+    void (*handler)(FNET_UINTPTR_T cookie);  /* Timer handler. ReactOS */
+    FNET_UINTPTR_T cookie;                  /* Handler Cookie. ReactOS */
 };
 
 #if FNET_CFG_TIME
@@ -198,7 +198,7 @@ void _fnet_timer_poll(void)
 /************************************************************************
 * DESCRIPTION: Creates new software timer with the period
 *************************************************************************/
-fnet_timer_desc_t _fnet_timer_new( fnet_time_t period_ms, void (*handler)(fnet_uint32_t cookie), fnet_uint32_t cookie )
+fnet_timer_desc_t _fnet_timer_new( fnet_time_t period_ms, void (*handler)(FNET_UINTPTR_T cookie), FNET_UINTPTR_T cookie ) /* ReactOS */
 {
     struct fnet_net_timer *timer = FNET_NULL;
 

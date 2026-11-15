@@ -41,7 +41,7 @@ extern "C" {
 fnet_return_t _fnet_timer_init( fnet_time_t period_ms );
 void fnet_cpu_timer_release( void );
 void _fnet_timer_release( void );
-fnet_timer_desc_t _fnet_timer_new( fnet_time_t period_ms, void (*handler)( fnet_uint32_t cookie ), fnet_uint32_t cookie );
+fnet_timer_desc_t _fnet_timer_new( fnet_time_t period_ms, void (*handler)( FNET_UINTPTR_T cookie ), FNET_UINTPTR_T cookie ); /* ReactOS */
 void _fnet_timer_free( fnet_timer_desc_t timer );
 void _fnet_timer_poll(void);
 #if !FNET_CFG_TIMER_ALT /* Use bare-metal timer */

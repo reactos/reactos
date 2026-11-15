@@ -93,7 +93,12 @@ typedef enum
 } fnet_return_t;
 
 
-#define FNET_ALIGN_DIV(x, div)     ((fnet_uint32_t)((volatile fnet_uint8_t *)(x) + ((div)-1U)) & (~((div)-1U)))
+/* ReactOS: pointer sized integer for address arithmetic, needed on x64 */
+#ifndef FNET_UINTPTR_T
+    #define FNET_UINTPTR_T fnet_uint32_t
+#endif
+
+#define FNET_ALIGN_DIV(x, div)     ((FNET_UINTPTR_T)((volatile fnet_uint8_t *)(x) + ((div)-1U)) & (~((FNET_UINTPTR_T)(div)-1U)))
 
 #if defined(__cplusplus)
 extern "C" {

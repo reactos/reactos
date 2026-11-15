@@ -54,8 +54,8 @@ struct fnet_tcp_segment
 /************************************************************************
 *     Function Prototypes
 *************************************************************************/
-static void _fnet_tcp_slowtimo( fnet_uint32_t cookie );
-static void _fnet_tcp_fasttimo( fnet_uint32_t cookie );
+static void _fnet_tcp_slowtimo( FNET_UINTPTR_T cookie ); /* ReactOS */
+static void _fnet_tcp_fasttimo( FNET_UINTPTR_T cookie ); /* ReactOS */
 static void _fnet_tcp_slowtimosk( fnet_socket_if_t *sk );
 static void _fnet_tcp_fasttimosk( fnet_socket_if_t *sk );
 static fnet_bool_t _fnet_tcp_inputsk( fnet_socket_if_t *sk, fnet_netbuf_t *insegment, struct fnet_sockaddr *src_addr,  struct fnet_sockaddr *dest_addr);
@@ -2718,7 +2718,7 @@ static fnet_uint32_t _fnet_tcp_get_rcvwnd( fnet_socket_if_t *sk )
 * DESCRIPTION: This function processes the timeouts.
 *              (it is performed every 500 ms).
 *************************************************************************/
-static void _fnet_tcp_slowtimo(fnet_uint32_t cookie)
+static void _fnet_tcp_slowtimo(FNET_UINTPTR_T cookie) /* ReactOS */
 {
     fnet_socket_if_t *sk;
     fnet_socket_if_t *addedsk;
@@ -2766,7 +2766,7 @@ static void _fnet_tcp_slowtimo(fnet_uint32_t cookie)
 * DESCRIPTION: This function processes the timeouts
 *              (it is performed every FNET_TCP_FAST_TIMER_PERIOD_MS).
 *************************************************************************/
-static void _fnet_tcp_fasttimo( fnet_uint32_t cookie )
+static void _fnet_tcp_fasttimo( FNET_UINTPTR_T cookie ) /* ReactOS */
 {
     fnet_socket_if_t *sk;
     fnet_socket_if_t *addedsk;

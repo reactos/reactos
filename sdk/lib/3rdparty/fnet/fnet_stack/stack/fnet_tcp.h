@@ -153,9 +153,9 @@ extern struct fnet_prot_if fnet_tcp_prot_if;
 *    Receiving of a byte, word and double word
 *************************************************************************/
 
-#define FNET_TCP_GETUCHAR(addr, offset)    (*(fnet_uint8_t*)((fnet_uint32_t)(addr)+(offset)))
-#define FNET_TCP_GETUSHORT(addr, offset)   (*(fnet_uint16_t*)((fnet_uint32_t)(addr)+(offset)))
-#define FNET_TCP_GETULONG(addr, offset)    (*(fnet_uint32_t*)((fnet_uint32_t)(addr)+(offset)))
+#define FNET_TCP_GETUCHAR(addr, offset)    (*(fnet_uint8_t*)((FNET_UINTPTR_T)(addr)+(offset))) /* ReactOS */
+#define FNET_TCP_GETUSHORT(addr, offset)   (*(fnet_uint16_t*)((FNET_UINTPTR_T)(addr)+(offset))) /* ReactOS */
+#define FNET_TCP_GETULONG(addr, offset)    (*(fnet_uint32_t*)((FNET_UINTPTR_T)(addr)+(offset))) /* ReactOS */
 
 /************************************************************************
 *    Comparison of sequence numbers

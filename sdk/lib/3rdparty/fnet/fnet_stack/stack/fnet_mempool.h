@@ -31,7 +31,7 @@
  * @brief Memory pool descriptor.
  * @see _fnet_mempool_init()
  ******************************************************************************/
-typedef fnet_int32_t fnet_mempool_desc_t;
+typedef FNET_UINTPTR_T fnet_mempool_desc_t; /* ReactOS */
 
 /* Memory pool unit header.*/
 FNET_COMP_PACKED_BEGIN

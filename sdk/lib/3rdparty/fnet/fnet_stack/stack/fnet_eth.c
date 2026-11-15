@@ -194,7 +194,7 @@ static const fnet_eth_prot_if_t fnet_eth_prot_if_list[] =
 *     Function Prototypes
 *******************************************************************************/
 #if 0  /* Done by _fnet_netif_is_connected()*/
-    static void _fnet_eth_timer(fnet_uint32_t cookie );
+    static void _fnet_eth_timer(FNET_UINTPTR_T cookie ); /* ReactOS */
 #endif
 
 /************************************************************************
@@ -372,7 +372,7 @@ fnet_return_t _fnet_eth_init( fnet_netif_t *netif)
             }
 #endif /* FNET_CFG_IP6 */
 #if 0  /* Done by _fnet_netif_is_connected()*/
-            eth_if->eth_timer = _fnet_timer_new(FNET_ETH_TIMER_PERIOD_MS, _fnet_eth_timer, (fnet_uint32_t)netif);
+            eth_if->eth_timer = _fnet_timer_new(FNET_ETH_TIMER_PERIOD_MS, _fnet_eth_timer, (FNET_UINTPTR_T)netif); /* ReactOS */
 #endif
 
             fnet_eth_number++;
@@ -457,7 +457,7 @@ void _fnet_eth_change_addr_notify(fnet_netif_t *netif)
 * DESCRIPTION:
 *************************************************************************/
 #if 0  /* Done by _fnet_netif_is_connected()*/
-static void _fnet_eth_timer(fnet_uint32_t cookie )
+static void _fnet_eth_timer(FNET_UINTPTR_T cookie ) /* ReactOS */
 {
     fnet_netif_t    *netif = (fnet_netif_t *) cookie;
 

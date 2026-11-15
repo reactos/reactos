@@ -69,8 +69,8 @@ fnet_mempool_desc_t _fnet_mempool_init( void *pool_ptr, fnet_size_t pool_size, f
 
         mempool = (struct fnet_mempool *) FNET_ALIGN_DIV(pool_ptr, sizeof(fnet_uint32_t));
 
-        heap_ptr = (fnet_uint8_t *)FNET_ALIGN_DIV((fnet_uint32_t)(mempool) + sizeof(struct fnet_mempool), (fnet_size_t)(alignment));
-        heap_size = pool_size - ((fnet_uint32_t)heap_ptr - (fnet_uint32_t)pool_ptr);
+        heap_ptr = (fnet_uint8_t *)FNET_ALIGN_DIV((FNET_UINTPTR_T)(mempool) + sizeof(struct fnet_mempool), (fnet_size_t)(alignment)); /* ReactOS */
+        heap_size = pool_size - (fnet_size_t)((FNET_UINTPTR_T)heap_ptr - (FNET_UINTPTR_T)pool_ptr); /* ReactOS */
 
         mempool->unit_size = (fnet_size_t)alignment;
 
@@ -108,7 +108,7 @@ void _fnet_mempool_free( fnet_mempool_desc_t mpool, void *ap )
         fnet_isr_lock();
 
         /* Block pointer = allocated memory block addr - allocation unit size.*/
-        bp = (fnet_mempool_unit_header_t *)((fnet_uint32_t)ap - mempool->unit_size); /* Point to block header. */
+        bp = (fnet_mempool_unit_header_t *)((FNET_UINTPTR_T)ap - mempool->unit_size); /* Point to block header. */ /* ReactOS */
 
 #if FNET_DEBUG_MEMPOOL_CHECK
         {
@@ -144,7 +144,7 @@ void _fnet_mempool_free( fnet_mempool_desc_t mpool, void *ap )
         {
 
 #if FNET_DEBUG_MEMPOOL_CHECK /* Debug Check. */
-            if( (p <= bp) && ((fnet_uint32_t)bp <= ((fnet_uint32_t)p + p->size)) )/* The block is already free */
+            if( (p <= bp) && ((FNET_UINTPTR_T)bp <= ((FNET_UINTPTR_T)p + p->size)) )/* The block is already free */ /* ReactOS */
             {
                 fnet_println("Already Free UPS");
                 fnet_isr_unlock();
@@ -158,7 +158,7 @@ void _fnet_mempool_free( fnet_mempool_desc_t mpool, void *ap )
         }
 
 
-        if((fnet_mempool_unit_header_t *)((fnet_uint32_t)bp + bp->size * mempool->unit_size) == p->ptr)
+        if((fnet_mempool_unit_header_t *)((FNET_UINTPTR_T)bp + bp->size * mempool->unit_size) == p->ptr) /* ReactOS */
         {
             /* Join blocks.*/
             bp->size += p->ptr->size;
@@ -174,7 +174,7 @@ void _fnet_mempool_free( fnet_mempool_desc_t mpool, void *ap )
             bp->ptr = p->ptr;
         }
 
-        if((fnet_mempool_unit_header_t *)((fnet_uint32_t)p + p->size * mempool->unit_size) == bp)
+        if((fnet_mempool_unit_header_t *)((FNET_UINTPTR_T)p + p->size * mempool->unit_size) == bp) /* ReactOS */
         {
             /* Join blocks.*/
             p->size += bp->size;
@@ -242,12 +242,12 @@ void *_fnet_mempool_malloc(fnet_mempool_desc_t mpool, fnet_size_t nbytes )
         else
         {
             best_p->size -= nunits; /* Put to the top. */
-            best_p = (fnet_mempool_unit_header_t *)((fnet_uint32_t)best_p + best_p->size * mempool->unit_size);
+            best_p = (fnet_mempool_unit_header_t *)((FNET_UINTPTR_T)best_p + best_p->size * mempool->unit_size); /* ReactOS */
             best_p->size = nunits;
         }
 
         mempool->free_ptr = best_p_prev;
-        res = (void *)((fnet_uint32_t)best_p + mempool->unit_size);
+        res = (void *)((FNET_UINTPTR_T)best_p + mempool->unit_size); /* ReactOS */
 #if 0 /* Clear mem.*/
         fnet_memset_zero( res, (nunits - 1)* mempool->unit_size );
 #endif
@@ -310,14 +310,14 @@ void *_fnet_mempool_malloc(fnet_mempool_desc_t mpool, fnet_size_t nbytes )
             else
             {
                 p->size -= nunits; /* Put to the top. */
-                p = (fnet_mempool_unit_header_t *)((fnet_uint32_t)p + p->size * mempool->unit_size);
+                p = (fnet_mempool_unit_header_t *)((FNET_UINTPTR_T)p + p->size * mempool->unit_size); /* ReactOS */
                 p->size = nunits;
             }
 
             mempool->free_ptr = prevp;
 
             fnet_isr_unlock();
-            return (void *)((fnet_uint32_t)p + mempool->unit_size);
+            return (void *)((FNET_UINTPTR_T)p + mempool->unit_size); /* ReactOS */
         }
 
         if(p == mempool->free_ptr)

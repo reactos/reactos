@@ -44,7 +44,7 @@
 *     Function Prototypes
 *************************************************************************/
 #if FNET_CFG_ARP_EXPIRE_TIMEOUT
-    static void _fnet_arp_timer(fnet_uint32_t cookie);
+    static void _fnet_arp_timer(FNET_UINTPTR_T cookie); /* ReactOS */
 #endif
 
 static fnet_arp_entry_t *_fnet_arp_add_entry(fnet_netif_t *netif, fnet_ip4_addr_t ipaddr, const fnet_mac_addr_t ethaddr);
@@ -78,7 +78,7 @@ fnet_return_t _fnet_arp_init(fnet_netif_t *netif, fnet_arp_if_t *arpif)
         }
 
 #if FNET_CFG_ARP_EXPIRE_TIMEOUT
-        arpif->arp_tmr = _fnet_timer_new(FNET_ARP_TIMER_PERIOD_MS, _fnet_arp_timer, (fnet_uint32_t)arpif);
+        arpif->arp_tmr = _fnet_timer_new(FNET_ARP_TIMER_PERIOD_MS, _fnet_arp_timer, (FNET_UINTPTR_T)arpif); /* ReactOS */
 #endif
 
         if (arpif->arp_tmr)
@@ -114,7 +114,7 @@ void _fnet_arp_release(fnet_netif_t *netif)
 * DESCRIPTION: ARP aging timer.
 *************************************************************************/
 #if FNET_CFG_ARP_EXPIRE_TIMEOUT
-static void _fnet_arp_timer(fnet_uint32_t cookie)
+static void _fnet_arp_timer(FNET_UINTPTR_T cookie) /* ReactOS */
 {
     fnet_arp_if_t *arpif = (fnet_arp_if_t *)cookie;
     fnet_index_t i;

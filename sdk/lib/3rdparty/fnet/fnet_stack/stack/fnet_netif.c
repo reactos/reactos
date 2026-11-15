@@ -55,7 +55,7 @@ fnet_netif_t *fnet_netif_default;       /* Default net_if. */
 *************************************************************************/
 static void _fnet_netif_assign_scope_id( fnet_netif_t *netif );
 #if FNET_CFG_IP6 && FNET_CFG_IP6_PMTU_DISCOVERY
-    static void _fnet_netif_pmtu_timer( fnet_uint32_t cookie);
+    static void _fnet_netif_pmtu_timer( FNET_UINTPTR_T cookie); /* ReactOS */
 #endif
 
 /************************************************************************
@@ -253,7 +253,7 @@ void _fnet_netif_set_pmtu(fnet_netif_t *netif, fnet_size_t pmtu)
 /************************************************************************
 * DESCRIPTION: Timer routine used to detect increase of PMTU
 *************************************************************************/
-static void _fnet_netif_pmtu_timer( fnet_uint32_t cookie )
+static void _fnet_netif_pmtu_timer( FNET_UINTPTR_T cookie ) /* ReactOS */
 {
     fnet_netif_t    *netif = (fnet_netif_t *)cookie;
 
@@ -272,7 +272,7 @@ void _fnet_netif_pmtu_init(fnet_netif_t *netif)
     _fnet_netif_set_pmtu(netif, netif->netif_mtu);
 
     /* Register timer, to detect increase of PMTU.*/
-    netif->pmtu_timer = _fnet_timer_new(FNET_NETIF_PMTU_PERIOD_MS, _fnet_netif_pmtu_timer, (fnet_uint32_t)netif);
+    netif->pmtu_timer = _fnet_timer_new(FNET_NETIF_PMTU_PERIOD_MS, _fnet_netif_pmtu_timer, (FNET_UINTPTR_T)netif); /* ReactOS */
 }
 
 /************************************************************************

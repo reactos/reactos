@@ -70,7 +70,7 @@ static fnet_bool_t _fnet_ip4_addr_is_onlink(fnet_netif_t *netif, fnet_ip4_addr_t
     static void _fnet_ip4_frag_add( fnet_ip4_frag_header_t *FNET_COMP_PACKED_VAR *head, fnet_ip4_frag_header_t *frag, fnet_ip4_frag_header_t *frag_prev );
     static void _fnet_ip4_frag_del( fnet_ip4_frag_header_t *FNET_COMP_PACKED_VAR *head, fnet_ip4_frag_header_t *frag );
     static void _fnet_ip4_frag_list_free( fnet_ip4_frag_list_t *list );
-    static void _fnet_ip4_timer(fnet_uint32_t cookie );
+    static void _fnet_ip4_timer(FNET_UINTPTR_T cookie ); /* ReactOS */
 #endif
 
 #if FNET_CFG_DEBUG_TRACE_IP4 && FNET_CFG_DEBUG_TRACE
@@ -849,7 +849,7 @@ EXIT:
 *************************************************************************/
 #if FNET_CFG_IP4_FRAGMENTATION
 
-static void _fnet_ip4_timer(fnet_uint32_t cookie)
+static void _fnet_ip4_timer(FNET_UINTPTR_T cookie) /* ReactOS */
 {
     fnet_ip4_frag_list_t *frag_list_ptr;
     fnet_ip4_frag_list_t *tmp_frag_list_ptr;

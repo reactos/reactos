@@ -16,6 +16,24 @@ Every changed line carries a `/* ReactOS */` comment. Regenerate the diff with:
 
 ## Applied
 
+### 1. Pointer sized integers for address arithmetic (x64)
+
+FNET stores pointers in `fnet_uint32_t` and `fnet_int32_t` in several places. On x64 kernel addresses do not
+fit, so these truncate. A new macro `FNET_UINTPTR_T` defaults to `fnet_uint32_t` (no change for upstream
+targets) and the ReactOS config sets it to a pointer sized type.
+
+* `stack/fnet_stdlib.h`: define `FNET_UINTPTR_T`; `FNET_ALIGN_DIV` uses it.
+* `stack/fnet_tcp.h`: `FNET_TCP_GETUCHAR`, `FNET_TCP_GETUSHORT`, `FNET_TCP_GETULONG` use it. These read TCP
+  header and option fields and are used about 130 times.
+* `stack/fnet_mempool.h`: `fnet_mempool_desc_t` is `FNET_UINTPTR_T` (it holds a `struct fnet_mempool *`).
+* `stack/fnet_mempool.c`: 10 lines of block header arithmetic.
+* `stack/fnet_timer_prv.h`, `stack/fnet_timer.c`: timer handler cookie is `FNET_UINTPTR_T` (callers pass
+  `fnet_netif_t *` and `fnet_arp_if_t *`).
+* `stack/fnet_arp.c`, `stack/fnet_eth.c`, `stack/fnet_netif.c`, `stack/fnet_ip4.c`, `stack/fnet_tcp.c`: timer
+  handler signatures and the cookie casts at the call sites.
+
+Upstream candidate: yes.
+
 ## Not needed
 
 ### 32 bit millisecond clock wrap
