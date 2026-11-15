@@ -56,5 +56,7 @@
 @ stdcall NdisRequest(ptr ptr ptr)
 @ stdcall NdisReturnPackets(ptr long)
 @ stdcall NdisSend(ptr ptr ptr)
+@ stdcall VerosNoteTransmit(ptr)
+@ stdcall VerosIndicateFrame(ptr long)
 @ stdcall NdisTransferData(ptr ptr ptr long long ptr ptr)
 @ stdcall NdisUnchainBufferAtFront(ptr ptr)

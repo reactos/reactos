@@ -1,0 +1,23 @@
+{
+  "spdx": "GPL-2.0-or-later",
+  "question": "Why do ping 10.0.2.2 and ping example.com receive an echo reply?",
+  "allowedInputs": [
+    "output/ndis-disk-20261115T220700Z.log RTL8139 CHECK stack 0800 and 0806",
+    "output/ndis-disk-20261115T221120Z.log bugcheck 0x50",
+    "output/ndis-disk-20261115T221629Z.log DISPATCH_LEVEL assert in lan.c",
+    "output/ndis-disk-20261115T223901Z.log TCPIP CHECK set 0f02000a",
+    "output/ndis-disk-20261115T224553Z.log PING CHECK ok 0202000a and PING CHECK dns 9a171468",
+    "sdk/include/ddk/ndis.h NDIS40_PROTOCOL_CHARACTERISTICS and RECEIVE_HANDLER",
+    "sdk/include/xdk/mmfuncs.h MmBuildMdlForNonPagedPool and MmGetSystemAddressForMdlSafe",
+    "sdk/include/xdk/amd64/ke.h IRQL from cr8 and DISPATCH_LEVEL",
+    "drivers/network/dd/rtl8139/hardware.c NICTransmitPacket",
+    "drivers/network/dd/rtl8139/interrupt.c NdisMEthIndicateReceive",
+    "drivers/network/tcpip/datalink/lan.c ProtocolReceive"
+  ],
+  "harness": {
+    "guest": "VerOS installed disk",
+    "name": "ndis-disk",
+    "traceOrReplayId": "output/ndis-disk-20261115T224553Z.log",
+    "logSha256": "80fe43d3cbe2ca3b0b91bf98f8db70b9e9fb4f4e77b894424e5e6a9053b04ac5"
+  }
+}

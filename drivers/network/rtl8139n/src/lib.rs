@@ -83,6 +83,14 @@
  * sdk/include/xdk/psfuncs.h declares PsCreateSystemThread. pstypes.h defines
  * THREAD_ALL_ACCESS from STANDARD_RIGHTS_REQUIRED and SYNCHRONIZE in
  * sdk/include/xdk/setypes.h, which is 0x001F0FFF. ntoskrnl.spec exports ZwClose.
+ * VerosNoteTransmit is the ndis.sys hook NdisSend calls. The self-test
+ * already used transmit descriptors 0 and 1, so a later frame starts at 2.
+ * rtlhw.h TX_DESC_COUNT is 4. hardware.c NICTransmitPacket writes the
+ * physical address and the length. Capture 2026-11-15T220043Z printed
+ * NDIS5 CHECK send with no frame on the wire. Capture
+ * 2026-11-15T220700Z printed RTL8139 CHECK stack 0806 and 0800.
+ * interrupt.c indicates the bytes after PACKET_HEADER, without the
+ * 4-byte CRC, then writes the aligned offset to R_CAPR.
  * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismregisterminiportdriver
  * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismsetminiportattributes
  */
@@ -155,6 +163,7 @@ const MAXIMUM_FRAME_SIZE: usize = 1514;
 const R_TXSTS0: u16 = 0x10;
 const R_TXSAD0: u16 = 0x20;
 const R_TXS_STATOK: u32 = 0x0000_8000;
+const TX_DESC_COUNT: u32 = 4;
 /* This driver's status read count, not a register field. */
 const CHECK_TX_READS: u32 = 100_000;
 const CHECK_RX_READS: u32 = 100_000;
@@ -176,6 +185,8 @@ unsafe extern "system" {
         out_handle: *mut *mut u8,
     ) -> u32;
     fn NdisMSetMiniportAttributes(handle: *mut u8, attributes: *const u8) -> u32;
+    fn VerosNoteTransmit(transmit: unsafe extern "system" fn(*const u8, u32) -> u32);
+    fn VerosIndicateFrame(frame: *const u8, length: u32);
     fn HalGetBusData(
         bus_type: u32,
         bus: u32,
@@ -222,6 +233,19 @@ static mut LIVE: Live = Live {
     receive: ptr::null_mut(),
 };
 static GO: AtomicU32 = AtomicU32::new(0);
+static NEXT_TX: AtomicU32 = AtomicU32::new(2);
+
+struct TxBuf {
+    data: *mut u8,
+    physical: u64,
+}
+
+static mut TX_BUF: [TxBuf; 4] = [
+    TxBuf { data: ptr::null_mut(), physical: 0 },
+    TxBuf { data: ptr::null_mut(), physical: 0 },
+    TxBuf { data: ptr::null_mut(), physical: 0 },
+    TxBuf { data: ptr::null_mut(), physical: 0 },
+];
 
 fn line(text: &[u8]) {
     unsafe { DbgPrint(text.as_ptr()); }
@@ -545,7 +569,7 @@ fn transmit(base: u16, physical: u64, desc: u16) {
     let mut status = 0u32;
     let mut read = 0u32;
     while read < CHECK_TX_READS {
-        status = read_port_u32(base + R_TXSTS0);
+        status = read_port_u32(base + R_TXSTS0 + (desc * 4));
         if (status & R_TXS_STATOK) != 0 {
             break;
         }
@@ -556,6 +580,75 @@ fn transmit(base: u16, physical: u64, desc: u16) {
         line(b"RTL8139 CHECK tx ok\n\0");
     } else {
         line(b"RTL8139 CHECK tx wait\n\0");
+    }
+}
+
+fn prepare_tx() -> bool {
+    let mut index = 0u32;
+    while index < TX_DESC_COUNT {
+        let buffer = unsafe { MmAllocateContiguousMemory(MAXIMUM_FRAME_SIZE, HIGHEST_PA) };
+        if buffer.is_null() {
+            return false;
+        }
+        let physical = unsafe { MmGetPhysicalAddress(buffer) };
+        if physical > HIGHEST_PA || (physical & 3) != 0 {
+            return false;
+        }
+        unsafe {
+            TX_BUF[index as usize].data = buffer;
+            TX_BUF[index as usize].physical = physical;
+        }
+        index += 1;
+    }
+    true
+}
+
+unsafe extern "system" fn stack_send(frame: *const u8, length: u32) -> u32 {
+    if frame.is_null() || length == 0 || length as usize > MAXIMUM_FRAME_SIZE {
+        return 0xC000_0001;
+    }
+    let live = unsafe { &*ptr::addr_of!(LIVE) };
+    if live.base == 0 {
+        return 0xC000_0001;
+    }
+    let desc = NEXT_TX.fetch_add(1, Ordering::Relaxed) % TX_DESC_COUNT;
+    let slot = unsafe { &TX_BUF[desc as usize] };
+    if slot.data.is_null() {
+        return 0xC000_0001;
+    }
+    let wire = if (length as usize) < MINIMUM_FRAME_SIZE {
+        MINIMUM_FRAME_SIZE
+    } else {
+        length as usize
+    };
+    unsafe {
+        ptr::write_bytes(slot.data, 0, wire);
+        ptr::copy_nonoverlapping(frame, slot.data, length as usize);
+    }
+    let kind = if length >= 14 {
+        u16::from_be_bytes([unsafe { *frame.add(12) }, unsafe { *frame.add(13) }])
+    } else {
+        0
+    };
+    line_status(b"RTL8139 CHECK stack %04x\n\0", kind as u32);
+    let status_port = live.base + R_TXSTS0 + (desc as u16 * 4);
+    let before = read_port_u32(status_port);
+    write_port_u32(live.base + R_TXSAD0 + (desc as u16 * 4), slot.physical as u32);
+    write_port_u32(status_port, wire as u32);
+    let mut status = before;
+    let mut read = 0u32;
+    while read < CHECK_TX_READS {
+        status = read_port_u32(status_port);
+        if status != before && (status & R_TXS_STATOK) != 0 {
+            break;
+        }
+        read += 1;
+    }
+    line_status(b"RTL8139 CHECK stackst %08x\n\0", status);
+    if (status & R_TXS_STATOK) != 0 {
+        0
+    } else {
+        0xC000_0001
     }
 }
 
@@ -686,13 +779,42 @@ fn take_receive(base: u16, buffer: *mut u8, offset: usize) -> (usize, Option<([u
     (next, peer)
 }
 
-fn exchange(base: u16, mac: &[u8; 6], receive: *mut u8) {
+fn exchange(base: u16, mac: &[u8; 6], receive: *mut u8) -> usize {
     send_one(base, mac);
     let (next, peer) = take_receive(base, receive, 0);
     if let Some((peer_mac, peer_ip)) = peer {
         send_echo(base, mac, &peer_mac, &peer_ip);
-        take_receive(base, receive, next);
+        let (after, _) = take_receive(base, receive, next);
+        return after;
     }
+    next
+}
+
+fn copy_ring(buffer: *const u8, offset: usize, len: usize, out: &mut [u8]) {
+    let mut index = 0;
+    while index < len {
+        let at = (offset + index) % RECEIVE_BUFFER_SIZE;
+        out[index] = unsafe { *buffer.add(at) };
+        index += 1;
+    }
+}
+
+fn indicate_one(base: u16, buffer: *mut u8, offset: usize) -> usize {
+    let header = unsafe { buffer.add(offset) };
+    let status = u16::from_le_bytes([unsafe { *header }, unsafe { *header.add(1) }]);
+    let length = u16::from_le_bytes([unsafe { *header.add(2) }, unsafe { *header.add(3) }]);
+    if (status & RSR_ROK) != 0 && (length as usize) >= 18 && (length as usize) <= MAXIMUM_FRAME_SIZE + 4
+    {
+        let frame_len = (length as usize) - 4;
+        let mut frame = [0u8; MAXIMUM_FRAME_SIZE];
+        copy_ring(buffer, offset + 4, frame_len, &mut frame);
+        unsafe { VerosIndicateFrame(frame.as_ptr(), frame_len as u32); }
+    }
+    let mut next = (length as usize) + 4;
+    next = (next + 3) & !3;
+    next = (offset + next) % RECEIVE_BUFFER_SIZE;
+    write_port_u16(base + R_CAPR, (next as u16).wrapping_sub(0x10));
+    next
 }
 
 unsafe extern "system" fn service(_context: *mut u8) {
@@ -702,11 +824,22 @@ unsafe extern "system" fn service(_context: *mut u8) {
     }
     line(b"RTL8139 CHECK running\n\0");
     let live = unsafe { &mut *ptr::addr_of_mut!(LIVE) };
-    exchange(live.base, &live.mac, live.receive);
+    let offset = exchange(live.base, &live.mac, live.receive);
+    if prepare_tx() {
+        VerosNoteTransmit(stack_send);
+    } else {
+        line(b"RTL8139 CHECK stack none\n\0");
+    }
     line(b"RTL8139 CHECK serving\n\0");
+    let mut cursor = offset;
     loop {
-        let interval: i64 = -2_000_000;
-        KeDelayExecutionThread(0, 0, &interval);
+        let command = read_port(live.base + R_CMD);
+        if (command & R_CMD_RXEMPTY) != 0 {
+            let interval: i64 = -500_000;
+            KeDelayExecutionThread(0, 0, &interval);
+            continue;
+        }
+        cursor = indicate_one(live.base, live.receive, cursor);
     }
 }
 

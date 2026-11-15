@@ -13,10 +13,24 @@
  * the characteristics block is NDIS40_PROTOCOL_CHARACTERISTICS.
  * BindAdapterHandler follows the NDIS_STRING name in that struct.
  * sdk/include/xdk/mmtypes.h is the MDL. sdk/include/xdk/mmfuncs.h is
- * ADDRESS_AND_SIZE_TO_SPAN_PAGES. A zero-length buffer returns 1.
+ * ADDRESS_AND_SIZE_TO_SPAN_PAGES and MmBuildMdlForNonPagedPool.
+ * MmGetSystemAddressForMdlSafe maps a buffer that lacks
+ * MDL_SOURCE_IS_NONPAGED_POOL. Capture 2026-11-15T215311Z stopped in
+ * MmMapLockedPagesSpecifyCache on that path. A zero-length buffer returns 1.
  * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndis_buffer_to_span_pages
  * OID values are in sdk/include/psdk/ntddndis.h. The station address is
  * the RTL8139 address printed by the disk boot.
+ * VerosNoteTransmit is the miniport hook for NdisSend. It is not a
+ * Windows export. Capture 2026-11-15T220043Z printed NDIS5 CHECK send
+ * and the frame stayed in this driver. Capture 2026-11-15T220700Z
+ * printed RTL8139 CHECK stack 0806 and 0800, so the frames left the
+ * NIC. VerosIndicateFrame calls ReceiveHandler in
+ * NDIS40_PROTOCOL_CHARACTERISTICS. That pointer follows the five
+ * completion handlers and RequestCompleteHandler. The characteristics
+ * block is the caller's stack, so the handler address is copied
+ * during NdisRegisterProtocol. Capture 2026-11-15T221120Z bugchecked
+ * 0x50 when the indication read that block later. Capture
+ * 2026-11-15T221629Z then asserted DISPATCH_LEVEL in lan.c.
  */
 
 use core::ptr;
@@ -30,6 +44,8 @@ const POOL_TAG: u32 = u32::from_le_bytes(*b"5sdN");
 const POOL_KIND: u32 = u32::from_le_bytes(*b"PKso");
 /* NDIS40_PROTOCOL_CHARACTERISTICS: header, ten handlers, NDIS_STRING, ReceivePacketHandler. */
 const BIND_AT: usize = 112;
+const RECEIVE_AT: usize = 56;
+const RECEIVE_COMPLETE_AT: usize = 64;
 const OID_GEN_LINK_SPEED: u32 = 0x0001_0107;
 const OID_GEN_MEDIA_CONNECT_STATUS: u32 = 0x0001_0114;
 const OID_GEN_MEDIA_SUPPORTED: u32 = 0x0001_0103;
@@ -70,7 +86,15 @@ struct Pool {
 
 static mut LAST_OID: u32 = 0xFFFF_FFFF;
 static mut PROTOCOL: *mut u8 = ptr::null_mut();
+static mut TCPIP_CONTEXT: *mut u8 = ptr::null_mut();
+static mut RECEIVE: Option<
+    unsafe extern "system" fn(*mut u8, *mut u8, *const u8, u32, *const u8, u32, u32) -> u32,
+> = None;
+static mut RECEIVE_DONE: Option<unsafe extern "system" fn(*mut u8)> = None;
 static mut BINDING: u8 = 0;
+static mut TRANSMIT: Option<unsafe extern "system" fn(*const u8, u32) -> u32> = None;
+
+const FAILURE: u32 = 0xC000_0001;
 
 unsafe extern "system" {
     fn DbgPrint(format: *const u8, ...) -> i32;
@@ -83,8 +107,22 @@ unsafe extern "system" {
         charge: u8,
         irp: *mut u8,
     ) -> *mut u8;
+    fn MmBuildMdlForNonPagedPool(mdl: *mut u8);
 }
 
+fn write_irql(irql: u64) {
+    unsafe {
+        core::arch::asm!("mov cr8, {}", in(reg) irql, options(nostack, preserves_flags));
+    }
+}
+
+fn current_irql() -> u64 {
+    let irql: u64;
+    unsafe {
+        core::arch::asm!("mov {}, cr8", out(reg) irql, options(nostack, preserves_flags));
+    }
+    irql
+}
 fn line(text: &[u8]) {
     unsafe { DbgPrint(text.as_ptr()); }
 }
@@ -182,6 +220,9 @@ pub unsafe extern "system" fn NdisAllocateBuffer(
     if mdl.is_null() {
         write_status(status, RESOURCES);
         return;
+    }
+    if length != 0 {
+        MmBuildMdlForNonPagedPool(mdl);
     }
     if !buffer.is_null() {
         *buffer = mdl;
@@ -320,6 +361,16 @@ pub unsafe extern "system" fn NdisRegisterProtocol(
         return;
     }
     PROTOCOL = chars;
+    if RECEIVE.is_none() {
+        let receive = ptr::read_unaligned(chars.add(RECEIVE_AT) as *const *mut u8);
+        let complete = ptr::read_unaligned(chars.add(RECEIVE_COMPLETE_AT) as *const *mut u8);
+        if !receive.is_null() {
+            RECEIVE = Some(core::mem::transmute(receive));
+            if !complete.is_null() {
+                RECEIVE_DONE = Some(core::mem::transmute(complete));
+            }
+        }
+    }
     line_status(b"NDIS5 CHECK protocol %08x\n\0", PROTOCOL as usize as u32);
     if !handle.is_null() {
         *handle = chars;
@@ -383,7 +434,7 @@ pub unsafe extern "system" fn NdisOpenAdapter(
     _media: *mut u32,
     _count: u32,
     _protocol: *mut u8,
-    _context: *mut u8,
+    context: *mut u8,
     _name: *mut Unicode,
     _options: u32,
     _addressing: *mut u8,
@@ -396,6 +447,9 @@ pub unsafe extern "system" fn NdisOpenAdapter(
     }
     if !medium.is_null() {
         *medium = 0;
+    }
+    if TCPIP_CONTEXT.is_null() {
+        TCPIP_CONTEXT = context;
     }
 }
 
@@ -424,9 +478,96 @@ pub unsafe extern "system" fn NdisRequest(
 }
 
 #[no_mangle]
-pub unsafe extern "system" fn NdisSend(status: *mut u32, _binding: *mut u8, _packet: *mut u8) {
-    line(b"NDIS5 CHECK send\n\0");
-    write_status(status, SUCCESS);
+fn copy_packet(packet: *mut u8, frame: &mut [u8]) -> Option<usize> {
+    if packet.is_null() {
+        return None;
+    }
+    let mut mdl = unsafe { ptr::read_unaligned(packet.add(8) as *const *const Mdl) };
+    let mut filled = 0usize;
+    while !mdl.is_null() {
+        let count = unsafe { (*mdl).byte_count } as usize;
+        let source = unsafe { (*mdl).mapped };
+        if source.is_null() || filled + count > frame.len() {
+            return None;
+        }
+        unsafe { ptr::copy_nonoverlapping(source, frame.as_mut_ptr().add(filled), count); }
+        filled += count;
+        mdl = unsafe { (*mdl).next };
+    }
+    if filled == 0 {
+        None
+    } else {
+        Some(filled)
+    }
+}
+
+#[no_mangle]
+pub unsafe extern "system" fn VerosIndicateFrame(frame: *const u8, length: u32) {
+    if frame.is_null() || length < 14 || TCPIP_CONTEXT.is_null() {
+        line(b"NDIS5 CHECK recv none\n\0");
+        return;
+    }
+    let Some(indicate) = RECEIVE else {
+        line(b"NDIS5 CHECK recv none\n\0");
+        return;
+    };
+    let kind = u16::from_be_bytes([*frame.add(12), *frame.add(13)]);
+    let payload = length - 14;
+    /* sdk/include/xdk/amd64/ke.h reads IRQL from cr8. DISPATCH_LEVEL is 2.
+     * lan.c ProtocolTransferDataComplete asserts that level. */
+    let old_irql = current_irql();
+    write_irql(2);
+    let status = indicate(
+        TCPIP_CONTEXT,
+        ptr::null_mut(),
+        frame,
+        14,
+        frame.add(14),
+        payload,
+        payload,
+    );
+    if let Some(done) = RECEIVE_DONE {
+        done(TCPIP_CONTEXT);
+    }
+    write_irql(old_irql);
+    line_status(b"NDIS5 CHECK recv %04x\n\0", kind as u32);
+    line_status(b"NDIS5 CHECK recvst %08x\n\0", status);
+    if kind == 0x0800 && length >= 34 {
+        let proto = *frame.add(23);
+        line_status(b"NDIS5 CHECK proto %02x\n\0", proto as u32);
+        if proto == 17 && length >= 42 {
+            let source = u16::from_be_bytes([*frame.add(34), *frame.add(35)]);
+            let dest = u16::from_be_bytes([*frame.add(36), *frame.add(37)]);
+            line_status(b"NDIS5 CHECK sport %04x\n\0", source as u32);
+            line_status(b"NDIS5 CHECK dport %04x\n\0", dest as u32);
+        }
+    }
+}
+
+#[no_mangle]
+pub unsafe extern "system" fn VerosNoteTransmit(
+    transmit: Option<unsafe extern "system" fn(*const u8, u32) -> u32>,
+) {
+    TRANSMIT = transmit;
+}
+
+#[no_mangle]
+pub unsafe extern "system" fn NdisSend(status: *mut u32, _binding: *mut u8, packet: *mut u8) {
+    let mut frame = [0u8; 1514];
+    let Some(length) = copy_packet(packet, &mut frame) else {
+        line(b"NDIS5 CHECK send none\n\0");
+        write_status(status, FAILURE);
+        return;
+    };
+    let kind = u16::from_be_bytes([frame[12], frame[13]]);
+    line_status(b"NDIS5 CHECK send %04x\n\0", kind as u32);
+    let transmit = TRANSMIT;
+    let Some(transmit) = transmit else {
+        write_status(status, FAILURE);
+        return;
+    };
+    let result = transmit(frame.as_ptr(), length as u32);
+    write_status(status, result);
 }
 
 #[no_mangle]
