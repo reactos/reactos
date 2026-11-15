@@ -78,6 +78,11 @@
  * and RTL8139 CHECK rx ok.
  * output/rtl8139n-20261115T203413Z.log printed RTL8139 CHECK peer 0a000202,
  * RTL8139 CHECK rxtype 0800, RTL8139 CHECK icmp 00, and RTL8139 CHECK ping ok.
+ * output/rtl8139n-20261115T204612Z.log printed RTL8139 CHECK returned, then
+ * RTL8139 CHECK running, RTL8139 CHECK ping ok, and RTL8139 CHECK serving.
+ * sdk/include/xdk/psfuncs.h declares PsCreateSystemThread. pstypes.h defines
+ * THREAD_ALL_ACCESS from STANDARD_RIGHTS_REQUIRED and SYNCHRONIZE in
+ * sdk/include/xdk/setypes.h, which is 0x001F0FFF. ntoskrnl.spec exports ZwClose.
  * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismregisterminiportdriver
  * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismsetminiportattributes
  */
@@ -86,6 +91,7 @@
 
 use core::panic::PanicInfo;
 use core::ptr;
+use core::sync::atomic::{AtomicU32, Ordering};
 
 const MP_CHARS: usize = 0x120;
 /* sdk/include/xdk/iotypes.h: PCIConfiguration is the fifth enumerator. */
@@ -189,7 +195,33 @@ unsafe extern "system" {
     fn MmGetPhysicalAddress(base: *mut u8) -> u64;
     fn MmMapIoSpace(physical: u64, bytes: usize, cache: u32) -> *mut u8;
     fn KeDelayExecutionThread(wait_mode: i32, alertable: u8, interval: *const i64) -> i32;
+    fn PsCreateSystemThread(
+        handle: *mut *mut u8,
+        access: u32,
+        object: *mut u8,
+        process: *mut u8,
+        client: *mut u8,
+        start: unsafe extern "system" fn(*mut u8),
+        context: *mut u8,
+    ) -> i32;
+    fn ZwClose(handle: *mut u8) -> i32;
 }
+
+/* sdk/include/xdk/pstypes.h and setypes.h. */
+const THREAD_ALL_ACCESS: u32 = 0x001F_0FFF;
+
+struct Live {
+    base: u16,
+    mac: [u8; 6],
+    receive: *mut u8,
+}
+
+static mut LIVE: Live = Live {
+    base: 0,
+    mac: [0; 6],
+    receive: ptr::null_mut(),
+};
+static GO: AtomicU32 = AtomicU32::new(0);
 
 fn line(text: &[u8]) {
     unsafe { DbgPrint(text.as_ptr()); }
@@ -654,6 +686,30 @@ fn take_receive(base: u16, buffer: *mut u8, offset: usize) -> (usize, Option<([u
     (next, peer)
 }
 
+fn exchange(base: u16, mac: &[u8; 6], receive: *mut u8) {
+    send_one(base, mac);
+    let (next, peer) = take_receive(base, receive, 0);
+    if let Some((peer_mac, peer_ip)) = peer {
+        send_echo(base, mac, &peer_mac, &peer_ip);
+        take_receive(base, receive, next);
+    }
+}
+
+unsafe extern "system" fn service(_context: *mut u8) {
+    while GO.load(Ordering::Acquire) == 0 {
+        let interval: i64 = -10_000;
+        KeDelayExecutionThread(0, 0, &interval);
+    }
+    line(b"RTL8139 CHECK running\n\0");
+    let live = unsafe { &mut *ptr::addr_of_mut!(LIVE) };
+    exchange(live.base, &live.mac, live.receive);
+    line(b"RTL8139 CHECK serving\n\0");
+    loop {
+        let interval: i64 = -2_000_000;
+        KeDelayExecutionThread(0, 0, &interval);
+    }
+}
+
 #[no_mangle]
 pub unsafe extern "system" fn DriverEntry(driver: *mut u8, registry: *mut u8) -> i32 {
     let mut chars = [0u8; MP_CHARS];
@@ -721,11 +777,27 @@ pub unsafe extern "system" fn DriverEntry(driver: *mut u8, registry: *mut u8) ->
             if command & B_CMD_RST == 0 {
                 let receive = arm_receive(base);
                 if !receive.is_null() {
-                    send_one(base, &mac);
-                    let (next, peer) = take_receive(base, receive, 0);
-                    if let Some((peer_mac, peer_ip)) = peer {
-                        send_echo(base, &mac, &peer_mac, &peer_ip);
-                        take_receive(base, receive, next);
+                    let live = unsafe { &mut *ptr::addr_of_mut!(LIVE) };
+                    live.base = base;
+                    live.mac = mac;
+                    live.receive = receive;
+                    let mut handle: *mut u8 = ptr::null_mut();
+                    let started = PsCreateSystemThread(
+                        &mut handle,
+                        THREAD_ALL_ACCESS,
+                        ptr::null_mut(),
+                        ptr::null_mut(),
+                        ptr::null_mut(),
+                        service,
+                        ptr::null_mut(),
+                    );
+                    line_status(b"RTL8139 CHECK thread %08x\n\0", started as u32);
+                    if started == 0 {
+                        ZwClose(handle);
+                        line(b"RTL8139 CHECK returned\n\0");
+                        GO.store(1, Ordering::Release);
+                    } else {
+                        exchange(base, &mac, receive);
                     }
                 }
             }
