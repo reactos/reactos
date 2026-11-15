@@ -945,7 +945,7 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000044d","Layout Displa
 
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000455","Layout File",0x00000000,"kbdbur.dll"
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000455","Layout Text",0x00000000,%BURMESE%
-HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000455","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5995"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000455","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5202"
 
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000481","Layout File",0x00000000,"kbdmaori.dll"
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000481","Layout Text",0x00000000,%MAORI%
