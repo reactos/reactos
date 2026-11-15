@@ -1,45 +1,35 @@
-
-include_directories(BEFORE include)
 spec2def(ndis.sys ndis.spec ADD_IMPORTLIB)
 
-add_definitions(
-    -DNDIS_WRAPPER
-    -DNDIS51
-    -DNDIS51_MINIPORT
-    -DNDIS_MINIPORT_DRIVER
-    -DNDIS_LEGACY_DRIVER=1
-    -DNDIS_LEGACY_MINIPORT=1
-    -DNDIS_LEGACY_PROTOCOL=1)
+get_filename_component(VEROS_CHECKOUT "${REACTOS_SOURCE_DIR}" DIRECTORY)
+set(NDIS_RUST_LIB "${CMAKE_CURRENT_BINARY_DIR}/rust/x86_64-pc-windows-gnu/release/libndis.a")
+set(NDIS_CARGO "${VEROS_CHECKOUT}/tools/rust/cargo/bin/cargo.exe")
+set(NDIS_GCC "${VEROS_CHECKOUT}/tools/rosbe/amd64/bin/x86_64-w64-mingw32-gcc.exe")
+set(NDIS_GXX "${VEROS_CHECKOUT}/tools/rosbe/amd64/bin/x86_64-w64-mingw32-g++.exe")
+set(NDIS_RUST_LINKER "${VEROS_CHECKOUT}/tools/rust/rustup/toolchains/1.99.1-x86_64-pc-windows-gnu/lib/rustlib/x86_64-pc-windows-gnu/bin/self-contained/x86_64-w64-mingw32-gcc.exe")
 
-list(APPEND SOURCE
-    ndis/30stubs.c
-    ndis/40stubs.c
-    ndis/50stubs.c
-    ndis/buffer.c
-    ndis/cl.c
-    ndis/cm.c
-    ndis/co.c
-    ndis/config.c
-    ndis/control.c
-    ndis/efilter.c
-    ndis/guid.c
-    ndis/hardware.c
-    ndis/io.c
-    ndis/main.c
-    ndis/memory.c
-    ndis/miniport.c
-    ndis/misc.c
-    ndis/protocol.c
-    ndis/string.c
-    ndis/time.c
-    include/ndissys.h)
+add_custom_command(
+    OUTPUT "${NDIS_RUST_LIB}"
+    COMMAND ${CMAKE_COMMAND} -E env
+        RUSTUP_HOME=${VEROS_CHECKOUT}/tools/rust/rustup
+        CARGO_HOME=${VEROS_CHECKOUT}/tools/rust/cargo
+        RUSTUP_TOOLCHAIN=1.99.1-x86_64-pc-windows-gnu
+        CC=${NDIS_GCC}
+        CXX=${NDIS_GXX}
+        CARGO_TARGET_X86_64_PC_WINDOWS_GNU_LINKER=${NDIS_RUST_LINKER}
+        RUSTFLAGS=-C\ link-self-contained=yes
+        ${NDIS_CARGO} build --release --target x86_64-pc-windows-gnu
+            --manifest-path ${CMAKE_CURRENT_SOURCE_DIR}/Cargo.toml
+            --target-dir ${CMAKE_CURRENT_BINARY_DIR}/rust
+    DEPENDS
+        ${CMAKE_CURRENT_SOURCE_DIR}/Cargo.toml
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/lib.rs
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    VERBATIM)
 
 add_library(ndis MODULE
-    ${SOURCE}
     ndis.rc
     ${CMAKE_CURRENT_BINARY_DIR}/ndis.def)
-
+target_link_libraries(ndis "${NDIS_RUST_LIB}")
 set_module_type(ndis kernelmodedriver)
 add_importlibs(ndis ntoskrnl hal)
-add_pch(ndis include/ndissys.h SOURCE)
 add_cd_file(TARGET ndis DESTINATION VerOS/system32/drivers FOR all)

@@ -1,0 +1,14 @@
+{
+  "spdx": "GPL-2.0-or-later",
+  "question": "Why were the C NDIS sources removed from drivers/network/ndis?",
+  "allowedInputs": [
+    "drivers/network/ndis held the C NDIS library that this module replaces",
+    "output/ndis-discovery/windows.log DIFF END OK is the measurement the replacement is built from"
+  ],
+  "harness": {
+    "guest": "Windows 10 22H2",
+    "name": "ndis-discovery",
+    "traceOrReplayId": "output/ndis-discovery/windows.log",
+    "logSha256": "115a12628716215066e6485f619d57b402f087d392949ec949bf49788c0fcb29"
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "spdx": "GPL-2.0-or-later",
+  "question": "Why does ndis.sys return 0x00060054 and resolve the NDIS 6.84 names the probe marked PRESENT?",
+  "allowedInputs": [
+    "output/ndis-discovery/windows.log DIFF END OK records DIFF NdisGetVersion 0x00060054 and DIFF <name> PRESENT for each name now exported",
+    "sdk/include/ddk/ndis.h declares NdisGetVersion and NdisGetRoutineAddress",
+    "sdk/include/xdk/ntdef.template.h UNICODE_STRING Length, MaximumLength, and Buffer",
+    "sdk/include/psdk/ntstatus.h STATUS_SUCCESS 0x00000000 and STATUS_NOT_IMPLEMENTED 0xC0000002",
+    "NdisGetVersion, https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndisgetversion, high half major and low half minor"
+  ],
+  "harness": {
+    "guest": "Windows 10 22H2",
+    "name": "ndis-discovery",
+    "traceOrReplayId": "output/ndis-discovery/windows.log",
+    "logSha256": "115a12628716215066e6485f619d57b402f087d392949ec949bf49788c0fcb29"
+  }
+}
