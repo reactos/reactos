@@ -4,7 +4,7 @@
  * FILE:        drivers/network/ndis/src/lib.rs
  * PURPOSE:     NDIS 6.84 version and routine lookup
  * COPYRIGHT:   Copyright 2026 Ryan Wilson <ryan@verosnt.com>
- * PROGRAMMERS: Ryan Wilson
+ * PROGRAMMERS: Ryan Wilson <ryan@verosnt.com>
  */
 
 /*

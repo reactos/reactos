@@ -7,7 +7,7 @@
  *              Copyright 2026 Ryan Wilson <ryan@verosnt.com>
  * PROGRAMMERS: Alex Ionescu (alex@relsoft.net)
  *              Gunnar Dalsnes
- *              Ryan Wilson
+ *              Ryan Wilson <ryan@verosnt.com>
  */
 
 /* INCLUDES *****************************************************************/

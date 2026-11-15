@@ -6,7 +6,7 @@
  * COPYRIGHT:   Copyright 2017-2018 Hermes Belusca-Maito
  *              Copyright 2026 Ryan Wilson <ryan@verosnt.com>
  * PROGRAMMERS: Hermes Belusca-Maito
- *              Ryan Wilson
+ *              Ryan Wilson <ryan@verosnt.com>
  *
  * You may need to fix the included headers before being able to
  * compile this file (this file has only been compiled under VS).

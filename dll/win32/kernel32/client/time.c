@@ -7,7 +7,7 @@
  *              Copyright 2026 Ryan Wilson <ryan@verosnt.com>
  * PROGRAMMERS: Ariadne
  *              DOSDATE and DOSTIME structures from Onno Hovers
- *              Ryan Wilson
+ *              Ryan Wilson <ryan@verosnt.com>
  */
 
 /*

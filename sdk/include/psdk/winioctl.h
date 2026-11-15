@@ -11,7 +11,7 @@
  *   Amine Khaldi <amine.khaldi@reactos.org>
  *   Pierre Schweitzer <pierre@reactos.org>
  *   Hermès Bélusca-Maïto <hermes.belusca-maito@reactos.org>
- *   Ryan Wilson
+ *   Ryan Wilson <ryan@verosnt.com>
  *
  * THIS SOFTWARE IS NOT COPYRIGHTED
  *

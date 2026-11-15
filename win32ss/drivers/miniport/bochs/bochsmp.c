@@ -5,7 +5,7 @@
  * PURPOSE:     Bochs graphics card driver
  * COPYRIGHT:   Copyright 2022 Hervé Poussineau <hpoussin@reactos.org>
  *              Copyright 2026 Ryan Wilson <ryan@verosnt.com>
- * PROGRAMMERS: Ryan Wilson
+ * PROGRAMMERS: Ryan Wilson <ryan@verosnt.com>
  */
 
 #include "bochsmp.h"

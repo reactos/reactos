@@ -5,7 +5,7 @@
  * PURPOSE:     ReactOS VBE EDID management
  * COPYRIGHT:   Copyright (C) 2006 Hervé Poussineau
  *              Copyright 2026 Ryan Wilson <ryan@verosnt.com>
- * PROGRAMMERS: Ryan Wilson
+ * PROGRAMMERS: Ryan Wilson <ryan@verosnt.com>
  */
 
 /* INCLUDES *******************************************************************/

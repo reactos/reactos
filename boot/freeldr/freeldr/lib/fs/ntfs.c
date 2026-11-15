@@ -6,7 +6,7 @@
  * COPYRIGHT:   Copyright (C) 2004 Filip Navara <xnavara@volny.cz>
  *              Copyright (C) 2009-2010 Hervé Poussineau
  *              Copyright 2026 Ryan Wilson <ryan@verosnt.com>
- * PROGRAMMERS: Ryan Wilson
+ * PROGRAMMERS: Ryan Wilson <ryan@verosnt.com>
  */
 
 /*

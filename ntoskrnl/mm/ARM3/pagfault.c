@@ -5,7 +5,7 @@
  * PURPOSE:     ARM Memory Manager Page Fault Handling
  * COPYRIGHT:   Copyright 2026 Ryan Wilson <ryan@verosnt.com>
  * PROGRAMMERS: ReactOS Portable Systems Group
- *              Ryan Wilson
+ *              Ryan Wilson <ryan@verosnt.com>
  */
 
 /* INCLUDES *******************************************************************/

@@ -8,7 +8,7 @@
  * PROGRAMMERS: Eric Kohl
  *              Pierre Schweitzer (pierre@reactos.org)
  *              Hervé Poussineau (hpoussin@reactos.org)
- *              Ryan Wilson
+ *              Ryan Wilson <ryan@verosnt.com>
  */
 
 /* INCLUDES *****************************************************************/

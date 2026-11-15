@@ -3,7 +3,7 @@
 # FILE:        tools/compat/Merge-DashboardAbi.ps1
 # PURPOSE:     Merge plugin ABI scores into the dashboard snapshot
 # COPYRIGHT:   Copyright 2026 Ryan Wilson <ryan@verosnt.com>
-# PROGRAMMERS: Ryan Wilson
+# PROGRAMMERS: Ryan Wilson <ryan@verosnt.com>
 
 param(
     [string]$SourceRoot = (Resolve-Path (Join-Path $PSScriptRoot "..\..")).Path,

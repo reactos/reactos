@@ -7,7 +7,7 @@
  * PROGRAMMERS:     Casper S. Hornstrup (chorns@users.sourceforge.net)
  *                  Hermes Belusca-Maito (hermes.belusca@sfr.fr)
  *                  Whindmar Saksit <whindsaks@proton.me>
- *                  Ryan Wilson
+ *                  Ryan Wilson <ryan@verosnt.com>
  */
 
 /* INCLUDES *****************************************************************/

@@ -4,7 +4,7 @@
  * FILE:        boot/freeldr/freeldr/ntldr/updatestage.c
  * PURPOSE:     Apply a signed file manifest before the kernel loads
  * COPYRIGHT:   Copyright 2026 Ryan Wilson <ryan@verosnt.com>
- * PROGRAMMERS: Ryan Wilson
+ * PROGRAMMERS: Ryan Wilson <ryan@verosnt.com>
  */
 
 #include <freeldr.h>

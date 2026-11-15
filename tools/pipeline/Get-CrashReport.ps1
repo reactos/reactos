@@ -3,7 +3,7 @@
 # FILE:        tools/pipeline/Get-CrashReport.ps1
 # PURPOSE:     Write a crash report from a serial log
 # COPYRIGHT:   Copyright 2026 Ryan Wilson <ryan@verosnt.com>
-# PROGRAMMERS: Ryan Wilson
+# PROGRAMMERS: Ryan Wilson <ryan@verosnt.com>
 
 param(
     [string]$SerialLog = "",

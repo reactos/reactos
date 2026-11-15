@@ -6,7 +6,7 @@
  * COPYRIGHT:   See COPYING in the top level directory
  *              Copyright 2026 Ryan Wilson <ryan@verosnt.com>
  * PROGRAMMERS: Casper S. Hornstrup (chorns@users.sourceforge.net)
- *              Ryan Wilson
+ *              Ryan Wilson <ryan@verosnt.com>
  *
  * REVISIONS:
  *   CSH 01/09-2000 Created

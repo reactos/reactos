@@ -5,7 +5,7 @@
  * PURPOSE:     ReactOS Generic Framebuffer display driver
  * COPYRIGHT:   Copyright (C) 2004 Filip Navara
  *              Copyright 2026 Ryan Wilson <ryan@verosnt.com>
- * PROGRAMMERS: Ryan Wilson
+ * PROGRAMMERS: Ryan Wilson <ryan@verosnt.com>
  */
 
 #include "framebuf.h"

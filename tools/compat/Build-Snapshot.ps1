@@ -3,7 +3,7 @@
 # FILE:        tools/compat/Build-Snapshot.ps1
 # PURPOSE:     Build a compatibility snapshot from probe logs
 # COPYRIGHT:   Copyright 2026 Ryan Wilson <ryan@verosnt.com>
-# PROGRAMMERS: Ryan Wilson
+# PROGRAMMERS: Ryan Wilson <ryan@verosnt.com>
 
 param(
     [string]$SourceRoot = (Resolve-Path (Join-Path $PSScriptRoot "..\..")).Path,

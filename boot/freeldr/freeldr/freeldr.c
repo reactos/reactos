@@ -6,7 +6,7 @@
  * COPYRIGHT:   Copyright 1998-2003 Brian Palmer <brianp@sginet.com>
  *              Copyright 2026 Ryan Wilson <ryan@verosnt.com>
  * PROGRAMMERS: Brian Palmer
- *              Ryan Wilson
+ *              Ryan Wilson <ryan@verosnt.com>
  */
 
 /* INCLUDES *******************************************************************/

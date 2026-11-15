@@ -3,7 +3,7 @@
 # FILE:        tools/windows-trace/Collect-Traces.ps1
 # PURPOSE:     Record numeric syscall lines from the Windows guest
 # COPYRIGHT:   Copyright 2026 Ryan Wilson <ryan@verosnt.com>
-# PROGRAMMERS: Ryan Wilson
+# PROGRAMMERS: Ryan Wilson <ryan@verosnt.com>
 
 param(
     [string]$SourceRoot = (Resolve-Path (Join-Path $PSScriptRoot "..\..")).Path,

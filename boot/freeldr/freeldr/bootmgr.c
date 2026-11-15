@@ -3,7 +3,7 @@
  *  Copyright (C) 1998-2003  Brian Palmer  <brianp@sginet.com>
  *  Copyright 2026 Ryan Wilson <ryan@verosnt.com>
  *  PROGRAMMERS: Brian Palmer
- *               Ryan Wilson
+ *               Ryan Wilson <ryan@verosnt.com>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by

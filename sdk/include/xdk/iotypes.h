@@ -4,7 +4,7 @@
  * FILE:        sdk/include/xdk/iotypes.h
  * PURPOSE:     I/O manager types
  * COPYRIGHT:   Copyright 2026 Ryan Wilson <ryan@verosnt.com>
- * PROGRAMMERS: Ryan Wilson
+ * PROGRAMMERS: Ryan Wilson <ryan@verosnt.com>
  */
 
 $if (_WDMDDK_ || _NTDDK_)

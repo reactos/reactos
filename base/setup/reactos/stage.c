@@ -4,7 +4,7 @@
  * FILE:        base/setup/reactos/stage.c
  * PURPOSE:     Stage an in-place upgrade from the welcome menu
  * COPYRIGHT:   Copyright 2026 Ryan Wilson <ryan@verosnt.com>
- * PROGRAMMERS: Ryan Wilson
+ * PROGRAMMERS: Ryan Wilson <ryan@verosnt.com>
  */
 
 /*

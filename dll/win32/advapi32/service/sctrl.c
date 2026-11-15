@@ -8,7 +8,7 @@
  *              Copyright 2007 Ged Murphy <gedmurphy@reactos.org>
  *              Gregor Brunmar <gregor.brunmar@home.se>
  *              Copyright 2026 Ryan Wilson <ryan@verosnt.com>
- * PROGRAMMERS: Ryan Wilson
+ * PROGRAMMERS: Ryan Wilson <ryan@verosnt.com>
  */
 
 /* INCLUDES ******************************************************************/

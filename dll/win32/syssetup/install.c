@@ -7,7 +7,7 @@
  *              Copyright 2026 Ryan Wilson <ryan@verosnt.com>
  * PROGRAMMERS: Eric Kohl
  *              Whindmar Saksit <whindsaks@proton.me>
- *              Ryan Wilson
+ *              Ryan Wilson <ryan@verosnt.com>
  */
 
 /* INCLUDES *****************************************************************/

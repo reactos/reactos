@@ -3,7 +3,7 @@
 # FILE:        tools/dashboard/Publish-TabProbes.ps1
 # PURPOSE:     Publish dashboard tab probes
 # COPYRIGHT:   Copyright 2026 Ryan Wilson <ryan@verosnt.com>
-# PROGRAMMERS: Ryan Wilson
+# PROGRAMMERS: Ryan Wilson <ryan@verosnt.com>
 
 param(
     [string]$SourceRoot = "",

@@ -7,7 +7,7 @@
  *              See COPYING in the top level directory
  *              Copyright 2026 Ryan Wilson <ryan@verosnt.com>
  * PROGRAMMERS: Pierre Schweitzer (pierre@reactos.org)
- *              Ryan Wilson
+ *              Ryan Wilson <ryan@verosnt.com>
  */
 
 /* INCLUDES *****************************************************************/

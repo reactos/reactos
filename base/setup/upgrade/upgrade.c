@@ -4,7 +4,7 @@
  * FILE:        base/setup/upgrade/upgrade.c
  * PURPOSE:     Copy a staged upgrade into the installed system
  * COPYRIGHT:   Copyright 2026 Ryan Wilson <ryan@verosnt.com>
- * PROGRAMMERS: Ryan Wilson
+ * PROGRAMMERS: Ryan Wilson <ryan@verosnt.com>
  */
 
 /*

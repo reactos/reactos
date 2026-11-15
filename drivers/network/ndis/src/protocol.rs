@@ -4,7 +4,7 @@
  * FILE:        drivers/network/ndis/src/protocol.rs
  * PURPOSE:     Protocol registration, send, and return
  * COPYRIGHT:   Copyright 2026 Ryan Wilson <ryan@verosnt.com>
- * PROGRAMMERS: Ryan Wilson
+ * PROGRAMMERS: Ryan Wilson <ryan@verosnt.com>
  */
 
 /*

@@ -4,7 +4,7 @@
  * PROJECT:         ReactOS runonce.exe
  * FILE:            base/system/runonce/runonce.c
  * PROGRAMMERS:     Dmitry Chapyshev (dmitry@reactos.org)
- *                  Ryan Wilson
+ *                  Ryan Wilson <ryan@verosnt.com>
  */
 
 #include "runonce.h"

@@ -3,7 +3,7 @@
 # FILE:        tools/pipeline/Test-Boot.ps1
 # PURPOSE:     Boot the bootcd and wait for the desktop
 # COPYRIGHT:   Copyright 2026 Ryan Wilson <ryan@verosnt.com>
-# PROGRAMMERS: Ryan Wilson
+# PROGRAMMERS: Ryan Wilson <ryan@verosnt.com>
 
 param(
     [string]$Iso = "",

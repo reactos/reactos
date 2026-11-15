@@ -4,7 +4,7 @@
  * FILE:        drivers/network/ndis/src/register.rs
  * PURPOSE:     Miniport registration and completion calls
  * COPYRIGHT:   Copyright 2026 Ryan Wilson <ryan@verosnt.com>
- * PROGRAMMERS: Ryan Wilson
+ * PROGRAMMERS: Ryan Wilson <ryan@verosnt.com>
  */
 
 /*

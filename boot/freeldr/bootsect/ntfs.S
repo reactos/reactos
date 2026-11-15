@@ -6,7 +6,7 @@
  * COPYRIGHT:       Copyright 2020 Sylvain Deverre <deverre.sylv@gmail.com>
  *                  Copyright 2026 Ryan Wilson <ryan@verosnt.com>
  * PROGRAMMERS:     Sylvain Deverre
- *                  Ryan Wilson
+ *                  Ryan Wilson <ryan@verosnt.com>
  */
 
 /* INCLUDES ******************************************************************/

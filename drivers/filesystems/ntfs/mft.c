@@ -11,7 +11,7 @@
  *              Pierre Schweitzer (pierre@reactos.org)
  *              Hervé Poussineau (hpoussin@reactos.org)
  *              Trevor Thompson
- *              Ryan Wilson
+ *              Ryan Wilson <ryan@verosnt.com>
  */
 
 /* INCLUDES *****************************************************************/

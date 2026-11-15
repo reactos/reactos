@@ -4,7 +4,7 @@
  * FILE:        drivers/network/ndis/src/pool.rs
  * PURPOSE:     Net buffer pools at the offsets the probe measured
  * COPYRIGHT:   Copyright 2026 Ryan Wilson <ryan@verosnt.com>
- * PROGRAMMERS: Ryan Wilson
+ * PROGRAMMERS: Ryan Wilson <ryan@verosnt.com>
  */
 
 /*

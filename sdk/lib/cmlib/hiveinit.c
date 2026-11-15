@@ -12,7 +12,7 @@
  *              Filip Navara
  *              Max Korostil
  *              George Bișoc
- *              Ryan Wilson
+ *              Ryan Wilson <ryan@verosnt.com>
  */
 
 #include "cmlib.h"

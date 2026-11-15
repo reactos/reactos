@@ -4,7 +4,7 @@
  * FILE:        tools/qemu-harness/abi.c
  * PURPOSE:     Log NT syscalls and ntoskrnl/hal/wdf calls from a QEMU guest
  * COPYRIGHT:   Copyright 2026 Ryan Wilson <ryan@verosnt.com>
- * PROGRAMMERS: Ryan Wilson
+ * PROGRAMMERS: Ryan Wilson <ryan@verosnt.com>
  */
 
 #include <stdio.h>

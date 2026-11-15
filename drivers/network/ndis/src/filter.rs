@@ -4,7 +4,7 @@
  * FILE:        drivers/network/ndis/src/filter.rs
  * PURPOSE:     Filter registration and completion calls
  * COPYRIGHT:   Copyright 2026 Ryan Wilson <ryan@verosnt.com>
- * PROGRAMMERS: Ryan Wilson
+ * PROGRAMMERS: Ryan Wilson <ryan@verosnt.com>
  */
 
 /*

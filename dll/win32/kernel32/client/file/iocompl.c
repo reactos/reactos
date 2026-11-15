@@ -5,7 +5,7 @@
  * PURPOSE:         Io Completion functions
  * PROGRAMMERS:     Ariadne (ariadne@xs4all.nl)
  *                  Oleg Dubinskiy (oleg.dubinskij30@gmail.com)
- *                  Ryan Wilson
+ *                  Ryan Wilson <ryan@verosnt.com>
  * UPDATE HISTORY:
  *                  Created 01/11/98
  */

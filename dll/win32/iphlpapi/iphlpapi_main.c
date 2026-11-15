@@ -5,7 +5,7 @@
  * PURPOSE:     iphlpapi dll implementation
  * COPYRIGHT:   Copyright (C) 2003 Juan Lang
  *              Copyright 2026 Ryan Wilson <ryan@verosnt.com>
- * PROGRAMMERS: Ryan Wilson
+ * PROGRAMMERS: Ryan Wilson <ryan@verosnt.com>
  */
 /*
  * 2018 Pierre Schweitzer
