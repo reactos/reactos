@@ -2088,7 +2088,8 @@ fnet_size_t fnet_socket_poll(fnet_socket_poll_t *socket_poll, fnet_size_t socket
                             /* The protocol is connection oriented (TCP).*/
                             if(sock->protocol_interface->socket_api->con_req)
                             {
-                                if(sock->state == SS_CONNECTED) /* Socket is connected.*/
+                                /* ReactOS: SS_CLOSING with sending still open is CLOSE_WAIT, where sending is allowed */
+                                if((sock->state == SS_CONNECTED) || ((sock->state == SS_CLOSING) && (sock->send_buffer.is_shutdown == FNET_FALSE)))
                                 {
                                     socket_poll->events_occurred |= FNET_SOCKET_EVENT_OUT;
                                 }

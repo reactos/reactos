@@ -92,6 +92,21 @@ particular connection can read, write, accept, finished connecting, or was reset
 
 Upstream candidate: yes.
 
+### 4. Sending in CLOSE_WAIT (half close)
+
+After the peer's FIN, FNET puts the socket in `SS_CLOSING`. Three places then treated it as closed: sends
+failed with `FNET_ERR_NOTCONN`, `fnet_socket_poll` never reported send space, and `_fnet_tcp_close` sent RST
+instead of FIN, which can drop a response the peer has not acknowledged yet. FNET's output engine already
+handles CLOSE_WAIT to LAST_ACK; only these gates were missing.
+
+* `stack/fnet_tcp.c`: `_fnet_tcp_snd` and its transmit loop allow `FNET_TCP_CS_CLOSE_WAIT`; `_fnet_tcp_close`
+  takes the graceful path in CLOSE_WAIT.
+* `stack/fnet_socket.c`: `fnet_socket_poll` reports OUT for `SS_CLOSING` while the send side is not shut down
+  (the socket layer cannot see TCP state; every FIN we send sets `send_buffer.is_shutdown` first, so this is
+  exactly CLOSE_WAIT).
+
+Upstream candidate: yes.
+
 ## Not needed
 
 ### 32 bit millisecond clock wrap

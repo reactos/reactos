@@ -498,7 +498,7 @@ static fnet_return_t _fnet_tcp_close( fnet_socket_if_t *sk )
 
     fnet_isr_lock();
 
-    if(sk->state != SS_CONNECTED)
+    if((sk->state != SS_CONNECTED) && (cb->tcpcb_connection_state != FNET_TCP_CS_CLOSE_WAIT)) /* ReactOS: send FIN, not RST, after the peer closed */
     {
         cb->tcpcb_flags |= FNET_TCP_CBF_CLOSE;
         _fnet_tcp_abort_socket(sk);
@@ -828,7 +828,7 @@ static fnet_ssize_t _fnet_tcp_snd( fnet_socket_if_t *sk, const fnet_uint8_t *buf
     }
 
     /* If the socket is not connected, return*/
-    if(sk->state != SS_CONNECTED)
+    if((sk->state != SS_CONNECTED) && (cb->tcpcb_connection_state != FNET_TCP_CS_CLOSE_WAIT)) /* ReactOS: the peer's FIN does not stop our sending */
     {
         error_code = FNET_ERR_NOTCONN;
         goto ERROR;
@@ -947,7 +947,7 @@ static fnet_ssize_t _fnet_tcp_snd( fnet_socket_if_t *sk, const fnet_uint8_t *buf
                         while(sendanydata)
                         {
                             /* If the connection is not established, delete the data. Otherwise try to send the data*/
-                            if(sk->state == SS_CONNECTED)
+                            if((sk->state == SS_CONNECTED) || (cb->tcpcb_connection_state == FNET_TCP_CS_CLOSE_WAIT)) /* ReactOS */
                             {
                                 if(!_fnet_tcp_send_anydata(sk, FNET_TRUE))
                                 {
