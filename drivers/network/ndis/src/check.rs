@@ -33,7 +33,9 @@
  * Capture 2026-11-15T232142Z: NET_BUFFER DataLength 0x18, Mdl 0x20,
  * DataOffset 0x28. NET_BUFFER_LIST DataLength 0x198, Mdl 0x1A0,
  * DataOffset 0x1A8. The length and offset values below are this
- * check's markers, not Windows fields.
+ * check's markers, not Windows fields. The same list is then passed
+ * to the indicate calls. Captures 2026-11-15T161901Z and
+ * 2026-11-15T160339Z delivered that pointer as argument 1.
  */
 
 use core::ptr;
@@ -176,8 +178,9 @@ fn miniport() -> bool {
     } else {
         line(b"NDIS CHECK mp-indicate fail\n\0");
     }
+    let carried = indicate_miniport_list(handle);
     unsafe { register::NdisMDeregisterMiniportDriver(handle) };
-    bad == INVALID_PARAMETER && good == 0 && indicated
+    bad == INVALID_PARAMETER && good == 0 && indicated && carried
 }
 
 fn filter_block(receive: bool) -> bool {
@@ -235,8 +238,9 @@ fn filter_block(receive: bool) -> bool {
     } else {
         line(b"NDIS CHECK fi-return fail\n\0");
     }
+    let carried = indicate_filter_list(handle, receive);
     unsafe { filter::NdisFDeregisterFilterDriver(handle) };
-    indicated
+    indicated && carried
 }
 
 fn protocol_block() -> bool {
@@ -297,6 +301,87 @@ fn read_u64(object: *const u8, at: usize) -> u64 {
             *object.add(at + 7),
         ])
     }
+}
+
+fn alloc_marked_list() -> (*mut u8, *mut u8) {
+    let mut params = [0u8; 8];
+    params[0] = 0x80;
+    params[1] = 1;
+    params[2] = 4;
+    params[5] = 1;
+    let mdl = &MDL_MARK as *const u8 as *mut u8;
+    let pool = unsafe { pool::NdisAllocateNetBufferListPool(ptr::null_mut(), params.as_ptr()) };
+    if pool.is_null() {
+        return (ptr::null_mut(), ptr::null_mut());
+    }
+    let list = unsafe {
+        pool::NdisAllocateNetBufferAndNetBufferList(pool, 0, 0, mdl, 0x1111_2222, 0x3333)
+    };
+    (pool, list)
+}
+
+fn free_marked_list(pool: *mut u8, list: *mut u8) {
+    if !list.is_null() {
+        unsafe { pool::NdisFreeNetBufferList(list, 0) };
+    }
+    if !pool.is_null() {
+        unsafe { pool::NdisFreeNetBufferListPool(pool) };
+    }
+}
+
+fn indicate_miniport_list(handle: *mut u8) -> bool {
+    let (pool, list) = alloc_marked_list();
+    MP_LIST.store(ptr::null_mut(), Ordering::Relaxed);
+    if !list.is_null() {
+        unsafe { register::NdisMIndicateReceiveNetBufferLists(handle, list, 0, 1, 0) };
+    }
+    let carried = !list.is_null()
+        && MP_FIRST_NULL.load(Ordering::Relaxed) == 1
+        && MP_LIST.load(Ordering::Relaxed) == list
+        && fields_match(list, 0x198, 0x1A0, 0x1A8);
+    free_marked_list(pool, list);
+    if carried {
+        line(b"NDIS CHECK mp-list ok\n\0");
+    } else {
+        line(b"NDIS CHECK mp-list fail\n\0");
+    }
+    carried
+}
+
+fn indicate_filter_list(handle: *mut u8, receive: bool) -> bool {
+    let (pool, list) = alloc_marked_list();
+    if receive {
+        FI_LIST.store(ptr::null_mut(), Ordering::Relaxed);
+    } else {
+        BACK_LIST.store(ptr::null_mut(), Ordering::Relaxed);
+    }
+    if !list.is_null() {
+        unsafe { filter::NdisFIndicateReceiveNetBufferLists(handle, list, 0, 1, 0) };
+    }
+    let carried = if receive {
+        !list.is_null()
+            && FI_FIRST_NULL.load(Ordering::Relaxed) == 1
+            && FI_LIST.load(Ordering::Relaxed) == list
+            && FI_PORT.load(Ordering::Relaxed) == 0
+            && FI_COUNT.load(Ordering::Relaxed) == 1
+            && fields_match(list, 0x198, 0x1A0, 0x1A8)
+    } else {
+        !list.is_null()
+            && BACK_FIRST_NULL.load(Ordering::Relaxed) == 1
+            && BACK_LIST.load(Ordering::Relaxed) == list
+            && fields_match(list, 0x198, 0x1A0, 0x1A8)
+    };
+    free_marked_list(pool, list);
+    if receive && carried {
+        line(b"NDIS CHECK fi-list ok\n\0");
+    } else if receive {
+        line(b"NDIS CHECK fi-list fail\n\0");
+    } else if carried {
+        line(b"NDIS CHECK fi-return-list ok\n\0");
+    } else {
+        line(b"NDIS CHECK fi-return-list fail\n\0");
+    }
+    carried
 }
 
 fn fields_match(object: *const u8, length_at: usize, mdl_at: usize, offset_at: usize) -> bool {
