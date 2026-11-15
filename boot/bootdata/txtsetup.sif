@@ -556,6 +556,7 @@ Default = "XT-, AT- or extended keyboard (83-105 keys)"
 00010427 = "Lithuanian"
 0000042F = "Macedonian (FYRO)"
 0000044C = "Malayalam"
+00000461 = "Nepali"
 00000414 = "Norwegian"
 00000415 = "Polish (programmer's)"
 00010415 = "Polish (214)"
@@ -685,6 +686,7 @@ Default = "XT-, AT- or extended keyboard (83-105 keys)"
 0000044C = kbdinmal.dll
 0000044D = kbdinasa.dll
 00000455 = kbdbur.dll
+00000461 = kbdnepr.dll
 0000048F = kbdeo.dll
 
 [HiveInfs.Install]
