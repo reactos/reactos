@@ -16,7 +16,7 @@ New kernel, driver, boot, and other non-DLL files use `GNU General Public Licens
 
 Leave a public-domain file on its own terms and add `Ryan Wilson` under its contributors. Leave a Wine LGPL header in place and add the copyright line under the existing notice. Do not reformat files listed in `media/doc/WINESYNC.txt` beyond that copyright line.
 
-New PowerShell uses the same six fields as `#` comments. JSON, logs, fixtures, images, `.rc`, and `.inf` do not get this block.
+New PowerShell and Rust use the same six fields. Rust uses a block comment. JSON, logs, fixtures, images, `.rc`, and `.inf` do not get this block. The comment under the header lists the sources named in [clean-room.mdc](clean-room.mdc) when the file uses one.
 
 ```c
 /*
