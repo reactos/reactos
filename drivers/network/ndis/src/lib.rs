@@ -19,6 +19,7 @@
 
 #![no_std]
 
+mod check;
 mod filter;
 mod pool;
 mod protocol;
@@ -47,7 +48,9 @@ fn panic(_info: &PanicInfo) -> ! {
 
 #[no_mangle]
 pub extern "system" fn DriverEntry(_driver: *mut u8, _registry: *mut u8) -> i32 {
-    /* STATUS_SUCCESS from sdk/include/psdk/ntstatus.h. */
+    /* STATUS_SUCCESS from sdk/include/psdk/ntstatus.h.
+     * check.rs prints NDIS CHECK OK when the measured paths match. */
+    check::run();
     0
 }
 

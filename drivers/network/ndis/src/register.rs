@@ -29,6 +29,11 @@
  * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismrestartcomplete
  * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismindicatestatusex
  * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismpausecomplete
+ * Capture 2026-11-15T143730Z reached DIFF END OK: type 0x9E, size 4,
+ * returns 0 on the initialize handle. Other types at size 4 returned
+ * 0xC000000D. Capture 2026-11-15T161901Z reached DIFF END OK: indicate
+ * delivers the list to offset 0x50, argument 1. Argument 0 and
+ * argument 2 were null.
  */
 
 use core::ptr;
@@ -47,6 +52,11 @@ const CALLED_SLOT: usize = 0x10;
 /* NDIS_STATUS_BAD_VERSION and NDIS_STATUS_BAD_CHARACTERISTICS in sdk/include/ddk/ndis.h. */
 const BAD_VERSION: u32 = 0xC001_0004;
 const BAD_CHARACTERISTICS: u32 = 0xC001_0005;
+/* Capture 2026-11-15T143730Z: type 0x9E. Other types at size 4 returned this. */
+const ATTR_TYPE: u8 = 0x9E;
+const INVALID_PARAMETER: u32 = 0xC000_000D;
+/* Capture 2026-11-15T161901Z: the list arrived at this miniport offset. */
+const INDICATE_SLOT: usize = 0x50;
 /* NDIS_STATUS_FAILURE and NDIS_STATUS_RESOURCES in sdk/include/ddk/ndis.h. */
 const FAILURE: u32 = 0xC000_0001;
 const RESOURCES: u32 = 0xC000_009A;
@@ -135,22 +145,54 @@ pub unsafe extern "system" fn NdisMDeregisterMiniportDriver(handle: *mut u8) {
     ExFreePoolWithTag(handle, POOL_TAG);
 }
 
-#[no_mangle]
-pub extern "system" fn NdisMSetMiniportAttributes(_handle: *mut u8, _attributes: *const u8) -> u32 {
-    /* Slot 0x10 returned 0xC000000D for a 4-byte header, and no header
-     * was accepted. That slot is not an adapter handle. The public page
-     * returns bad version for an unsupported revision. */
-    BAD_VERSION
+fn slot_at(chars: &[u8], offset: usize) -> *mut u8 {
+    if offset + size_of::<*mut u8>() > chars.len() {
+        return ptr::null_mut();
+    }
+    unsafe { ptr::read_unaligned(chars.as_ptr().add(offset) as *const *mut u8) }
 }
 
 #[no_mangle]
-pub extern "system" fn NdisMIndicateReceiveNetBufferLists(
-    _adapter: *mut u8,
-    _lists: *mut u8,
+pub unsafe extern "system" fn NdisMSetMiniportAttributes(
+    handle: *mut u8,
+    attributes: *const u8,
+) -> u32 {
+    /* Capture 2026-11-15T143730Z returned 0 for type 0x9E, size 4.
+     * Capture 2026-11-15T150727Z returned 0 for the same type at the
+     * probe's larger size. Other types at size 4 returned 0xC000000D. */
+    if handle.is_null() || attributes.is_null() {
+        return INVALID_PARAMETER;
+    }
+    if *attributes == ATTR_TYPE {
+        return 0;
+    }
+    INVALID_PARAMETER
+}
+
+#[no_mangle]
+pub unsafe extern "system" fn NdisMIndicateReceiveNetBufferLists(
+    adapter: *mut u8,
+    lists: *mut u8,
     _port: u32,
     _count: u32,
-    _flags: u32,
+    flags: u32,
 ) {
+    /* Capture 2026-11-15T161901Z: argument 0 and argument 2 were null,
+     * and argument 1 was the list. */
+    if adapter.is_null() {
+        return;
+    }
+    let driver = adapter as *mut MpDriver;
+    if (*driver).kind != KIND_MP {
+        return;
+    }
+    let slot = slot_at(&(*driver).chars, INDICATE_SLOT);
+    if slot.is_null() {
+        return;
+    }
+    let function: unsafe extern "system" fn(*mut u8, *mut u8, u32) =
+        unsafe { core::mem::transmute(slot) };
+    unsafe { function(ptr::null_mut(), lists, flags) }
 }
 
 #[no_mangle]

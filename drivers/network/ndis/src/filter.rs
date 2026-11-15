@@ -10,9 +10,10 @@
 /*
  * The characteristics header is NDIS_OBJECT_HEADER in
  * sdk/include/psdk/ntddndis.h. output/ndis-discovery/windows.log
- * (DIFF END OK) accepts a filter of type 0x8B, revision 3, size 0xF0,
- * and calls offsets 0x40, 0x48, 0x50, 0x58, 0x60, 0x68, 0x98, 0xB8,
- * and 0xC0. NdisGetVersion in that log is 0x00060054. The bytes 6 and
+ * (DIFF END OK) accepts a filter of type 0x8B, revision 3, size 0xF0.
+ * Capture 2026-11-15T163753Z reached DIFF END OK and called offsets
+ * 0x40, 0x48, 0x50, 0x60, 0x70, 0x98, and 0xC0. It did not call 0x58
+ * or 0x68. NdisGetVersion in the discovery log is 0x00060054. The bytes 6 and
  * 84 at offset 4 are recorded in differential-tests/ndis-discovery/METHOD.md
  * from capture 2026-11-14T184820Z. That file also records that offset 8
  * stays zero, and that a pointer there returns 0xC000000D. That code is
@@ -34,6 +35,12 @@
  * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndisfpausecomplete
  * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndisfrestartcomplete
  * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndisfindicatestatus
+ * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nc-ndis-filter_receive_net_buffer_lists
+ * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nc-ndis-filter_return_net_buffer_lists
+ * Capture 2026-11-15T160339Z reached DIFF END OK: indicate delivers the
+ * list to offset 0x88, argument 1. Argument 0 and argument 2 were null.
+ * Capture 2026-11-15T161622Z reached DIFF END OK: with that slot empty,
+ * the list arrives at offset 0x90, argument 1.
  */
 
 use core::ptr;
@@ -49,8 +56,8 @@ const VERSION_MAJOR: u8 = 6;
 const VERSION_MINOR: u8 = 84;
 /* METHOD.md: offset 8 stays zero. A pointer there returns 0xC000000D. */
 const FLAGS_AT: usize = 8;
-/* Same log, in the order DIFF CALL printed them. */
-const CALLED_SLOTS: [usize; 9] = [0x40, 0x48, 0x50, 0x58, 0x60, 0x68, 0x98, 0xB8, 0xC0];
+/* Capture 2026-11-15T163753Z. Registration called these and not 0x58 or 0x68. */
+const CALLED_SLOTS: [usize; 7] = [0x40, 0x48, 0x50, 0x60, 0x70, 0x98, 0xC0];
 /* NDIS_STATUS_BAD_VERSION, NDIS_STATUS_BAD_CHARACTERISTICS, NDIS_STATUS_INVALID_PARAMETER. */
 const BAD_VERSION: u32 = 0xC001_0004;
 const BAD_CHARACTERISTICS: u32 = 0xC001_0005;
@@ -59,6 +66,9 @@ const INVALID_PARAMETER: u32 = 0xC000_000D;
 const FAILURE: u32 = 0xC000_0001;
 const RESOURCES: u32 = 0xC000_009A;
 const KIND_FI: u32 = u32::from_le_bytes(*b"FIso");
+/* Capture 2026-11-15T160339Z and capture 2026-11-15T161622Z. */
+const RECEIVE_SLOT: usize = 0x88;
+const RETURN_SLOT: usize = 0x90;
 
 struct FiDriver {
     kind: u32,
@@ -168,14 +178,44 @@ pub unsafe extern "system" fn NdisFSetAttributes(
     0
 }
 
+fn slot_at(chars: &[u8], offset: usize) -> *mut u8 {
+    if offset + size_of::<*mut u8>() > chars.len() {
+        return ptr::null_mut();
+    }
+    unsafe { ptr::read_unaligned(chars.as_ptr().add(offset) as *const *mut u8) }
+}
+
 #[no_mangle]
-pub extern "system" fn NdisFIndicateReceiveNetBufferLists(
-    _filter: *mut u8,
-    _lists: *mut u8,
-    _port: u32,
-    _count: u32,
-    _flags: u32,
+pub unsafe extern "system" fn NdisFIndicateReceiveNetBufferLists(
+    filter: *mut u8,
+    lists: *mut u8,
+    port: u32,
+    count: u32,
+    flags: u32,
 ) {
+    if filter.is_null() {
+        return;
+    }
+    let driver = filter as *mut FiDriver;
+    if (*driver).kind != KIND_FI {
+        return;
+    }
+    let receive = slot_at(&(*driver).chars, RECEIVE_SLOT);
+    if !receive.is_null() {
+        /* Argument 0 was null. Argument 1 was the list. Argument 2 was
+         * null when the port was 0. The fourth captured value was the count. */
+        let function: unsafe extern "system" fn(*mut u8, *mut u8, u32, u32, u32) =
+            unsafe { core::mem::transmute(receive) };
+        unsafe { function(ptr::null_mut(), lists, port, count, flags) }
+        return;
+    }
+    let give_back = slot_at(&(*driver).chars, RETURN_SLOT);
+    if give_back.is_null() {
+        return;
+    }
+    let function: unsafe extern "system" fn(*mut u8, *mut u8, u32) =
+        unsafe { core::mem::transmute(give_back) };
+    unsafe { function(ptr::null_mut(), lists, flags) }
 }
 
 #[no_mangle]
