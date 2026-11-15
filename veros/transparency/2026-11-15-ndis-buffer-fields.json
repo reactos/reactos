@@ -1,0 +1,16 @@
+{
+  "spdx": "GPL-2.0-or-later",
+  "question": "Why do net buffer allocate calls store Mdl and DataOffset at 0x20 and 0x28, and the list at 0x1A0 and 0x1A8?",
+  "allowedInputs": [
+    "output/ndis-discovery/windows.log DIFF END OK: NET_BUFFER DataLength 0x18, DataOffset 0x28, Mdl 0x20, NET_BUFFER_LIST DataLength 0x198, DataOffset 0x1A8, Mdl 0x1A0, each value one hit",
+    "output/ndis-disk-20261115T232711Z.log NDIS CHECK nb-fields ok and NDIS CHECK OK",
+    "sdk/include/psdk/ntddndis.h NDIS_OBJECT_HEADER Type, Revision, Size",
+    "differential-tests/ndis-discovery/probe.c report_u32 and report_ptr read lengths, 256 bytes for a NET_BUFFER and 512 bytes for a NET_BUFFER_LIST, probe method, not a Windows field"
+  ],
+  "harness": {
+    "guest": "VerOS",
+    "name": "VerOS NDIS disk",
+    "traceOrReplayId": "output/ndis-disk-20261115T232711Z.log",
+    "logSha256": "cf41d06828edd8c6218b25cb7119ee4be207710a877fb5aee0238d66ace80be2"
+  }
+}

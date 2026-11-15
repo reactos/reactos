@@ -30,12 +30,17 @@
  * output/rtl8139n-20261115T210425Z.log printed NDIS CHECK pr-version
  * c0010004, NDIS CHECK pr-flags c000000d, NDIS CHECK pr-register
  * 00000000, NDIS CHECK pr-calls 00000002, and NDIS CHECK OK.
+ * Capture 2026-11-15T232142Z: NET_BUFFER DataLength 0x18, Mdl 0x20,
+ * DataOffset 0x28. NET_BUFFER_LIST DataLength 0x198, Mdl 0x1A0,
+ * DataOffset 0x1A8. The length and offset values below are this
+ * check's markers, not Windows fields.
  */
 
 use core::ptr;
 use core::sync::atomic::{AtomicPtr, AtomicU32, AtomicU8, Ordering};
 
 use crate::filter;
+use crate::pool;
 use crate::protocol;
 use crate::register;
 
@@ -50,6 +55,7 @@ const INVALID_PARAMETER: u32 = 0xC000_000D;
 const BAD_VERSION: u32 = 0xC001_0004;
 
 static LIST: u8 = 0x5A;
+static MDL_MARK: u8 = 0x3C;
 static MP_FIRST_NULL: AtomicU8 = AtomicU8::new(0);
 static MP_LIST: AtomicPtr<u8> = AtomicPtr::new(ptr::null_mut());
 static MP_FLAGS: AtomicU32 = AtomicU32::new(0xFFFF_FFFF);
@@ -267,12 +273,98 @@ fn protocol_block() -> bool {
     bad_version == BAD_VERSION && bad_flags == INVALID_PARAMETER && status == 0 && called == 2
 }
 
+fn read_u32(object: *const u8, at: usize) -> u32 {
+    unsafe {
+        u32::from_le_bytes([
+            *object.add(at),
+            *object.add(at + 1),
+            *object.add(at + 2),
+            *object.add(at + 3),
+        ])
+    }
+}
+
+fn read_u64(object: *const u8, at: usize) -> u64 {
+    unsafe {
+        u64::from_le_bytes([
+            *object.add(at),
+            *object.add(at + 1),
+            *object.add(at + 2),
+            *object.add(at + 3),
+            *object.add(at + 4),
+            *object.add(at + 5),
+            *object.add(at + 6),
+            *object.add(at + 7),
+        ])
+    }
+}
+
+fn fields_match(object: *const u8, length_at: usize, mdl_at: usize, offset_at: usize) -> bool {
+    /* These three numbers are the check's markers. */
+    const LENGTH: u64 = 0x3333;
+    const OFFSET: u32 = 0x1111_2222;
+    read_u64(object, length_at) == LENGTH
+        && read_u64(object, mdl_at) == (&MDL_MARK as *const u8 as u64)
+        && read_u32(object, offset_at) == OFFSET
+}
+
+fn buffers() -> bool {
+    let mut params = [0u8; 8];
+    params[0] = 0x80;
+    params[1] = 1;
+    params[2] = 4;
+    let mdl = &MDL_MARK as *const u8 as *mut u8;
+    let pool = unsafe { pool::NdisAllocateNetBufferPool(ptr::null_mut(), params.as_ptr()) };
+    let buffer = if pool.is_null() {
+        ptr::null_mut()
+    } else {
+        unsafe { pool::NdisAllocateNetBuffer(pool, mdl, 0x1111_2222, 0x3333) }
+    };
+    let buffer_ok = !buffer.is_null() && fields_match(buffer, 0x18, 0x20, 0x28);
+    if !buffer.is_null() {
+        unsafe { pool::NdisFreeNetBuffer(buffer) };
+    }
+    if !pool.is_null() {
+        unsafe { pool::NdisFreeNetBufferPool(pool) };
+    }
+    params[5] = 1;
+    let list_pool = unsafe { pool::NdisAllocateNetBufferListPool(ptr::null_mut(), params.as_ptr()) };
+    let list = if list_pool.is_null() {
+        ptr::null_mut()
+    } else {
+        unsafe {
+            pool::NdisAllocateNetBufferAndNetBufferList(
+                list_pool,
+                0,
+                0,
+                mdl,
+                0x1111_2222,
+                0x3333,
+            )
+        }
+    };
+    let list_ok = !list.is_null() && fields_match(list, 0x198, 0x1A0, 0x1A8);
+    if !list.is_null() {
+        unsafe { pool::NdisFreeNetBufferList(list, 0) };
+    }
+    if !list_pool.is_null() {
+        unsafe { pool::NdisFreeNetBufferListPool(list_pool) };
+    }
+    if buffer_ok && list_ok {
+        line(b"NDIS CHECK nb-fields ok\n\0");
+    } else {
+        line(b"NDIS CHECK nb-fields fail\n\0");
+    }
+    buffer_ok && list_ok
+}
+
 pub fn run() {
     let miniport_ok = miniport();
     let receive_ok = filter_block(true);
     let return_ok = filter_block(false);
     let protocol_ok = protocol_block();
-    if miniport_ok && receive_ok && return_ok && protocol_ok {
+    let buffers_ok = buffers();
+    if miniport_ok && receive_ok && return_ok && protocol_ok && buffers_ok {
         line(b"NDIS CHECK OK\n\0");
     } else {
         line(b"NDIS CHECK FAIL\n\0");
