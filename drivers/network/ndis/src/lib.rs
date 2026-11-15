@@ -20,6 +20,7 @@
 #![no_std]
 
 mod pool;
+mod register;
 
 use core::panic::PanicInfo;
 
@@ -60,7 +61,12 @@ pub unsafe extern "system" fn NdisGetRoutineAddress(name: *const u8) -> *const (
         return core::ptr::null();
     }
     let text = &*(name as *const UnicodeString);
-    for routine in REAL.iter().chain(POOLS.iter()).chain(STUBS.iter()) {
+    for routine in REAL
+        .iter()
+        .chain(POOLS.iter())
+        .chain(MINIPORT.iter())
+        .chain(STUBS.iter())
+    {
         if same(text, routine.name) {
             return routine.address;
         }
@@ -93,6 +99,18 @@ static POOLS: &[Routine] = &[
     Routine { name: "NdisFreeNetBufferListPool", address: pool::NdisFreeNetBufferListPool as *const () },
     Routine { name: "NdisAllocateNetBufferAndNetBufferList", address: pool::NdisAllocateNetBufferAndNetBufferList as *const () },
     Routine { name: "NdisFreeNetBufferList", address: pool::NdisFreeNetBufferList as *const () },
+];
+
+static MINIPORT: &[Routine] = &[
+    Routine { name: "NdisMRegisterMiniportDriver", address: register::NdisMRegisterMiniportDriver as *const () },
+    Routine { name: "NdisMDeregisterMiniportDriver", address: register::NdisMDeregisterMiniportDriver as *const () },
+    Routine { name: "NdisMSetMiniportAttributes", address: register::NdisMSetMiniportAttributes as *const () },
+    Routine { name: "NdisMIndicateReceiveNetBufferLists", address: register::NdisMIndicateReceiveNetBufferLists as *const () },
+    Routine { name: "NdisMSendNetBufferListsComplete", address: register::NdisMSendNetBufferListsComplete as *const () },
+    Routine { name: "NdisMOidRequestComplete", address: register::NdisMOidRequestComplete as *const () },
+    Routine { name: "NdisMRestartComplete", address: register::NdisMRestartComplete as *const () },
+    Routine { name: "NdisMIndicateStatusEx", address: register::NdisMIndicateStatusEx as *const () },
+    Routine { name: "NdisMPauseComplete", address: register::NdisMPauseComplete as *const () },
 ];
 
 static REAL: &[Routine] = &[
@@ -128,9 +146,6 @@ macro_rules! stubs {
 }
 
 stubs!(
-    NdisMRegisterMiniportDriver,
-    NdisMDeregisterMiniportDriver,
-    NdisMSetMiniportAttributes,
     NdisFRegisterFilterDriver,
     NdisFDeregisterFilterDriver,
     NdisFSetAttributes,
@@ -139,21 +154,15 @@ stubs!(
     NdisAllocateNetBufferList,
     NdisMAllocateNetBufferSGList,
     NdisMFreeNetBufferSGList,
-    NdisMIndicateReceiveNetBufferLists,
     NdisFIndicateReceiveNetBufferLists,
-    NdisMSendNetBufferListsComplete,
     NdisFSendNetBufferListsComplete,
     NdisFSendNetBufferLists,
     NdisSendNetBufferLists,
     NdisReturnNetBufferLists,
-    NdisMIndicateStatusEx,
     NdisFIndicateStatus,
-    NdisMOidRequestComplete,
     NdisFOidRequestComplete,
     NdisFPauseComplete,
     NdisFRestartComplete,
-    NdisMRestartComplete,
-    NdisMPauseComplete,
     NdisAllocateMdl,
     NdisFreeMdl,
     NdisGetDataBuffer,

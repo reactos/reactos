@@ -23,6 +23,7 @@ add_custom_target(ndis_rust
         ${CMAKE_CURRENT_SOURCE_DIR}/Cargo.toml
         ${CMAKE_CURRENT_SOURCE_DIR}/src/lib.rs
         ${CMAKE_CURRENT_SOURCE_DIR}/src/pool.rs
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/register.rs
     BYPRODUCTS "${NDIS_RUST_LIB}"
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
     VERBATIM)
