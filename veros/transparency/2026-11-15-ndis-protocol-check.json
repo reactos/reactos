@@ -1,0 +1,16 @@
+{
+  "spdx": "GPL-2.0-or-later",
+  "question": "Why does the NDIS check accept protocol registration and reject the other two headers?",
+  "allowedInputs": [
+    "output/rtl8139n-20261115T210425Z.log NDIS CHECK pr-version c0010004, pr-flags c000000d, pr-register 00000000, pr-calls 00000002, NDIS CHECK OK",
+    "output/ndis-discovery/windows.log DIFF END OK for type 0x95, revision 2, size 0x80, slots 0x20 and 0x48",
+    "differential-tests/ndis-discovery/METHOD.md bytes 6 and 84 at offset 4, and a pointer at offset 8 returns 0xC000000D",
+    "sdk/include/ddk/ndis.h NDIS_STATUS_BAD_VERSION 0xC0010004 and NDIS_STATUS_INVALID_PARAMETER 0xC000000D"
+  ],
+  "harness": {
+    "guest": "VerOS live CD",
+    "name": "ndis",
+    "traceOrReplayId": "output/rtl8139n-20261115T210425Z.log",
+    "logSha256": "ebf4bafce1565b1bd769c0148813a434b35e086d047bb4e2766edb02086437a1"
+  }
+}

@@ -23,12 +23,20 @@
  * at offset 0x90. Argument 0 was null.
  * differential-tests/ndis-discovery/METHOD.md records the registration
  * headers and that this check is the VerOS result for those paths.
+ * output/ndis-discovery/windows.log (DIFF END OK) accepts a protocol of
+ * type 0x95, revision 2, size 0x80, and calls offsets 0x20 and 0x48.
+ * A version other than bytes 6 and 84 returns 0xC0010004. A non-zero
+ * value at offset 8 returns 0xC000000D.
+ * output/rtl8139n-20261115T210425Z.log printed NDIS CHECK pr-version
+ * c0010004, NDIS CHECK pr-flags c000000d, NDIS CHECK pr-register
+ * 00000000, NDIS CHECK pr-calls 00000002, and NDIS CHECK OK.
  */
 
 use core::ptr;
 use core::sync::atomic::{AtomicPtr, AtomicU32, AtomicU8, Ordering};
 
 use crate::filter;
+use crate::protocol;
 use crate::register;
 
 unsafe extern "system" {
@@ -37,7 +45,9 @@ unsafe extern "system" {
 
 const MP_CHARS: usize = 0x120;
 const FI_CHARS: usize = 0xF0;
+const PR_CHARS: usize = 0x80;
 const INVALID_PARAMETER: u32 = 0xC000_000D;
+const BAD_VERSION: u32 = 0xC001_0004;
 
 static LIST: u8 = 0x5A;
 static MP_FIRST_NULL: AtomicU8 = AtomicU8::new(0);
@@ -51,6 +61,7 @@ static FI_FLAGS: AtomicU32 = AtomicU32::new(0xFFFF_FFFF);
 static BACK_FIRST_NULL: AtomicU8 = AtomicU8::new(0);
 static BACK_LIST: AtomicPtr<u8> = AtomicPtr::new(ptr::null_mut());
 static BACK_FLAGS: AtomicU32 = AtomicU32::new(0xFFFF_FFFF);
+static PR_CALLS: AtomicU32 = AtomicU32::new(0);
 
 fn line(text: &[u8]) {
     unsafe { DbgPrint(text.as_ptr()); }
@@ -98,6 +109,16 @@ unsafe extern "system" fn fi_receive(
     FI_PORT.store(port, Ordering::Relaxed);
     FI_COUNT.store(count, Ordering::Relaxed);
     FI_FLAGS.store(flags, Ordering::Relaxed);
+}
+
+unsafe extern "system" fn pr_slot(
+    _handle: *mut u8,
+    _context: *mut u8,
+    _third: *mut u8,
+    _fourth: *mut u8,
+) -> u32 {
+    PR_CALLS.fetch_add(1, Ordering::Relaxed);
+    0
 }
 
 unsafe extern "system" fn fi_return(first: *mut u8, list: *mut u8, flags: u32) {
@@ -212,11 +233,46 @@ fn filter_block(receive: bool) -> bool {
     indicated
 }
 
+fn protocol_block() -> bool {
+    let mut chars = [0u8; PR_CHARS];
+    chars[0] = 0x95;
+    chars[1] = 2;
+    put_u16(&mut chars, 2, PR_CHARS as u16);
+    chars[4] = 5;
+    chars[5] = 84;
+    let mut handle: *mut u8 = ptr::null_mut();
+    let bad_version = unsafe {
+        protocol::NdisRegisterProtocolDriver(ptr::null_mut(), chars.as_ptr(), &mut handle)
+    };
+    line_status(b"NDIS CHECK pr-version %08x\n\0", bad_version);
+    chars[4] = 6;
+    chars[8] = 1;
+    let bad_flags = unsafe {
+        protocol::NdisRegisterProtocolDriver(ptr::null_mut(), chars.as_ptr(), &mut handle)
+    };
+    line_status(b"NDIS CHECK pr-flags %08x\n\0", bad_flags);
+    chars[8] = 0;
+    put_ptr(&mut chars, 0x20, pr_slot as *const () as usize);
+    put_ptr(&mut chars, 0x48, pr_slot as *const () as usize);
+    PR_CALLS.store(0, Ordering::Relaxed);
+    let status = unsafe {
+        protocol::NdisRegisterProtocolDriver(ptr::null_mut(), chars.as_ptr(), &mut handle)
+    };
+    line_status(b"NDIS CHECK pr-register %08x\n\0", status);
+    let called = PR_CALLS.load(Ordering::Relaxed);
+    line_status(b"NDIS CHECK pr-calls %08x\n\0", called);
+    if status == 0 && !handle.is_null() {
+        unsafe { protocol::NdisDeregisterProtocolDriver(handle) };
+    }
+    bad_version == BAD_VERSION && bad_flags == INVALID_PARAMETER && status == 0 && called == 2
+}
+
 pub fn run() {
     let miniport_ok = miniport();
     let receive_ok = filter_block(true);
     let return_ok = filter_block(false);
-    if miniport_ok && receive_ok && return_ok {
+    let protocol_ok = protocol_block();
+    if miniport_ok && receive_ok && return_ok && protocol_ok {
         line(b"NDIS CHECK OK\n\0");
     } else {
         line(b"NDIS CHECK FAIL\n\0");
