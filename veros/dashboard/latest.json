@@ -2,7 +2,7 @@
   "spdx": "GPL-2.0-or-later",
   "schemaVersion": 1,
   "sample": false,
-  "capturedAt": "2026-11-11T14:16:26Z",
+  "capturedAt": "2026-11-15T00:09:59Z",
   "target": "Win10 22H2",
   "overall": 87.1,
   "syscallOverall": 87.1,
@@ -9190,6 +9190,13 @@
       "syscall": 87.1,
       "kernelAbi": 95.2,
       "sdkLevel": 3.5
+    },
+    {
+      "at": "2026-11-15T00:09:59Z",
+      "kernelAbi": null,
+      "graphics": null,
+      "sdkLevel": null,
+      "syscall": 87.1
     }
   ]
 }

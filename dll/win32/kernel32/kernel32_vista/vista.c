@@ -13,8 +13,8 @@
 
 #include <k32_vista.h>
 
-#if _WIN32_WINNT != _WIN32_WINNT_VISTA
-#error "This file must be compiled with _WIN32_WINNT == _WIN32_WINNT_VISTA"
+#if _WIN32_WINNT < _WIN32_WINNT_VISTA
+#error "This file must be compiled with _WIN32_WINNT >= _WIN32_WINNT_VISTA"
 #endif
 
 // This is defined only in ntifs.h

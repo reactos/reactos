@@ -5,8 +5,12 @@
  * COPYRIGHT:   Copyright 2023-2024 Ratin Gao <ratin@knsoft.org>
  */
 
-/* We need NT6+ Ex definitions */
+/* We need NT6+ Ex definitions. Match the Win32 version so sdkddkver.h accepts the pin. */
 #undef NTDDI_VERSION
+#undef _WIN32_WINNT
+#undef WINVER
+#define _WIN32_WINNT 0x0600
+#define WINVER 0x0600
 #define NTDDI_VERSION NTDDI_VISTA
 #include <ndk/exfuncs.h>
 
