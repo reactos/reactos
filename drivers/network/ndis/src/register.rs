@@ -137,7 +137,9 @@ pub unsafe extern "system" fn NdisMDeregisterMiniportDriver(handle: *mut u8) {
 
 #[no_mangle]
 pub extern "system" fn NdisMSetMiniportAttributes(_handle: *mut u8, _attributes: *const u8) -> u32 {
-    /* The discovery log records no accepted attributes revision. */
+    /* Slot 0x10 returned 0xC000000D for a 4-byte header, and no header
+     * was accepted. That slot is not an adapter handle. The public page
+     * returns bad version for an unsupported revision. */
     BAD_VERSION
 }
 

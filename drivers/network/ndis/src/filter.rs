@@ -18,7 +18,11 @@
  * stays zero, and that a pointer there returns 0xC000000D. That code is
  * NDIS_STATUS_INVALID_PARAMETER in sdk/include/ddk/ndis.h. The public
  * register page calls FilterSetOptions from inside this function and
- * copies the characteristics. Each slot the probe planted takes four
+ * copies the characteristics. output/ndis-discovery/windows.log
+ * (DIFF END OK) returned 0 from NdisFSetAttributes for a 4-byte header
+ * and for a type 0xFF revision 4 size 0x120 header, both on the handle
+ * from slot 0x50. The header bytes are not the check. Each slot the
+ * probe planted takes four
  * pointers, in differential-tests/ndis-discovery/probe.c. That count is
  * the probe method, not a Windows field.
  * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndisfregisterfilterdriver
@@ -59,6 +63,7 @@ const KIND_FI: u32 = u32::from_le_bytes(*b"FIso");
 struct FiDriver {
     kind: u32,
     context: *mut u8,
+    module_context: *mut u8,
     chars: [u8; FI_CHARS],
 }
 
@@ -121,6 +126,7 @@ pub unsafe extern "system" fn NdisFRegisterFilterDriver(
     }
     (*driver).kind = KIND_FI;
     (*driver).context = context;
+    (*driver).module_context = ptr::null_mut();
     ptr::write_bytes((*driver).chars.as_mut_ptr(), 0, FI_CHARS);
     ptr::copy_nonoverlapping(chars, (*driver).chars.as_mut_ptr(), FI_CHARS);
     let status = call_slots(chars, driver as *mut u8, context);
@@ -146,13 +152,20 @@ pub unsafe extern "system" fn NdisFDeregisterFilterDriver(handle: *mut u8) {
 }
 
 #[no_mangle]
-pub extern "system" fn NdisFSetAttributes(
-    _filter: *mut u8,
-    _module_context: *mut u8,
-    _attributes: *const u8,
+pub unsafe extern "system" fn NdisFSetAttributes(
+    filter: *mut u8,
+    module_context: *mut u8,
+    attributes: *const u8,
 ) -> u32 {
-    /* The discovery log records no attributes block. The public page's default is failure. */
-    FAILURE
+    if filter.is_null() || attributes.is_null() {
+        return FAILURE;
+    }
+    let driver = filter as *mut FiDriver;
+    if (*driver).kind != KIND_FI {
+        return FAILURE;
+    }
+    (*driver).module_context = module_context;
+    0
 }
 
 #[no_mangle]
