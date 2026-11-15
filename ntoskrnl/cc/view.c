@@ -211,7 +211,7 @@ quit:
          * another thread have concurrently re-marked the VACB dirty.
          */
         if (WasMarked)
-            CcRosMarkDirtyVacb(Vacb);
+            CcRosMarkDirtyVacb(Vacb, 0, VACB_MAPPING_GRANULARITY);
     }
     else
     {
@@ -628,10 +628,10 @@ retry:
 
 NTSTATUS
 CcRosReleaseVacb (
-    PROS_SHARED_CACHE_MAP SharedCacheMap,
-    PROS_VACB Vacb,
-    BOOLEAN Dirty,
-    BOOLEAN Mapped)
+    _In_ PROS_SHARED_CACHE_MAP SharedCacheMap,
+    _In_ PROS_VACB Vacb,
+    _In_ BOOLEAN Dirty,
+    _In_ BOOLEAN Mapped)
 {
     ASSERT(SharedCacheMap);
 
@@ -652,7 +652,7 @@ CcRosReleaseVacb (
      */
     if (Dirty && !Vacb->Dirty)
     {
-        CcRosMarkDirtyVacb(Vacb);
+        CcRosMarkDirtyVacb(Vacb, 0, VACB_MAPPING_GRANULARITY);
     }
 
     if (Mapped)
@@ -720,35 +720,84 @@ CcRosLookupVacb (
     return NULL;
 }
 
+static
+ULONG
+CcpPopCount64(
+    _In_ ULONG64 Value)
+{
+    ULONG Count = 0;
+
+    while (Value != 0)
+    {
+        Value &= Value - 1;
+        Count++;
+    }
+
+    return Count;
+}
+
+static
+ULONG64
+CcpVacbDirtyMask(
+    _In_ ULONG VacbOffset,
+    _In_ ULONG Length)
+{
+    ULONG FirstPage, PageCount;
+
+    ASSERT(Length != 0);
+    ASSERT(((ULONG64)VacbOffset + Length) <= VACB_MAPPING_GRANULARITY);
+
+    FirstPage = VacbOffset / PAGE_SIZE;
+    PageCount = ((VacbOffset + Length - 1) / PAGE_SIZE) - FirstPage + 1;
+
+    if (PageCount >= 64)
+        return ~(ULONG64)0;
+
+    return (((ULONG64)1 << PageCount) - 1) << FirstPage;
+}
+
+
 VOID
 CcRosMarkDirtyVacb (
-    PROS_VACB Vacb)
+    _In_ PROS_VACB Vacb,
+    _In_ ULONG VacbOffset,
+    _In_ ULONG Length)
 {
     KIRQL oldIrql;
     PROS_SHARED_CACHE_MAP SharedCacheMap;
+    ULONG64 NewBits;
+    ULONG NewPages;
+
+    if (Length == 0)
+        return;
 
     SharedCacheMap = Vacb->SharedCacheMap;
 
     oldIrql = KeAcquireQueuedSpinLock(LockQueueMasterLock);
     KeAcquireSpinLockAtDpcLevel(&SharedCacheMap->CacheMapLock);
 
+    NewBits = CcpVacbDirtyMask(VacbOffset, Length) & ~Vacb->DirtyPageMap;
+    NewPages = CcpPopCount64(NewBits);
+
     if (Vacb->Dirty)
     {
-        /*
-         * The VACB was already re-marked dirty by another thread between
-         * CcRosUnmarkDirtyVacb and this call (e.g. a concurrent writer via
-         * CcRosReleaseVacb) and the VACB has already been inserted into
-         * the dirty list.
-         */
+        /* Already on the dirty list, only account for the new pages */
+        if (!IsListEmpty(&Vacb->DirtyVacbListEntry))
+        {
+            Vacb->DirtyPageMap |= NewBits;
+            CcTotalDirtyPages += NewPages;
+            SharedCacheMap->DirtyPages += NewPages;
+        }
+
         KeReleaseSpinLockFromDpcLevel(&SharedCacheMap->CacheMapLock);
         KeReleaseQueuedSpinLock(LockQueueMasterLock, oldIrql);
         return;
     }
 
     InsertTailList(&DirtyVacbListHead, &Vacb->DirtyVacbListEntry);
-    /* FIXME: There is no reason to account for the whole VACB. */
-    CcTotalDirtyPages += VACB_MAPPING_GRANULARITY / PAGE_SIZE;
-    Vacb->SharedCacheMap->DirtyPages += VACB_MAPPING_GRANULARITY / PAGE_SIZE;
+    Vacb->DirtyPageMap |= NewBits;
+    CcTotalDirtyPages += NewPages;
+    SharedCacheMap->DirtyPages += NewPages;
     CcRosVacbIncRefCount(Vacb);
 
     /* Move to the tail of the LRU list */
@@ -769,11 +818,12 @@ CcRosMarkDirtyVacb (
 
 BOOLEAN
 CcRosUnmarkDirtyVacb (
-    PROS_VACB Vacb,
-    BOOLEAN LockViews)
+    _In_ PROS_VACB Vacb,
+    _In_ BOOLEAN LockViews)
 {
     KIRQL oldIrql;
     PROS_SHARED_CACHE_MAP SharedCacheMap;
+    ULONG DirtyCount;
 
     SharedCacheMap = Vacb->SharedCacheMap;
 
@@ -803,8 +853,13 @@ CcRosUnmarkDirtyVacb (
     RemoveEntryList(&Vacb->DirtyVacbListEntry);
     InitializeListHead(&Vacb->DirtyVacbListEntry);
 
-    CcTotalDirtyPages -= VACB_MAPPING_GRANULARITY / PAGE_SIZE;
-    Vacb->SharedCacheMap->DirtyPages -= VACB_MAPPING_GRANULARITY / PAGE_SIZE;
+    DirtyCount = CcpPopCount64(Vacb->DirtyPageMap);
+    Vacb->DirtyPageMap = 0;
+
+    ASSERT(CcTotalDirtyPages >= DirtyCount);
+    ASSERT(SharedCacheMap->DirtyPages >= DirtyCount);
+    CcTotalDirtyPages -= DirtyCount;
+    SharedCacheMap->DirtyPages -= DirtyCount;
 
     CcRosVacbDecRefCount(Vacb);
 
@@ -879,9 +934,9 @@ CcRosFreeOneUnusedVacb(
 static
 NTSTATUS
 CcRosCreateVacb (
-    PROS_SHARED_CACHE_MAP SharedCacheMap,
-    LONGLONG FileOffset,
-    PROS_VACB *Vacb)
+    _In_ PROS_SHARED_CACHE_MAP SharedCacheMap,
+    _In_ LONGLONG FileOffset,
+    _Out_ PROS_VACB *Vacb)
 {
     PROS_VACB current;
     PROS_VACB previous;
@@ -906,6 +961,7 @@ CcRosCreateVacb (
     current->FileOffset.QuadPart = ROUND_DOWN(FileOffset, VACB_MAPPING_GRANULARITY);
     current->SharedCacheMap = SharedCacheMap;
     current->MappedCount = 0;
+    current->DirtyPageMap = 0;
     current->ReferenceCount = 0;
     InitializeListHead(&current->CacheMapVacbListEntry);
     InitializeListHead(&current->DirtyVacbListEntry);

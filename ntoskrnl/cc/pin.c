@@ -547,11 +547,12 @@ CcPreparePinWrite (
  */
 VOID NTAPI
 CcSetDirtyPinnedData (
-    IN PVOID Bcb,
-    IN PLARGE_INTEGER Lsn)
+    _In_ PVOID Bcb,
+    _In_opt_ PLARGE_INTEGER Lsn)
 {
     PINTERNAL_BCB iBcb = CONTAINING_RECORD(Bcb, INTERNAL_BCB, PFCB);
     PROS_VACB Vacb = iBcb->Vacb;
+    ULONG VacbOffset;
 
     CCTRACE(CC_API_DEBUG, "Bcb=%p Lsn=%p\n", Bcb, Lsn);
 
@@ -560,10 +561,11 @@ CcSetDirtyPinnedData (
                        iBcb->PFCB.MappedFileOffset.QuadPart,
                        iBcb->PFCB.MappedLength);
 
-    if (!Vacb->Dirty)
-    {
-        CcRosMarkDirtyVacb(Vacb);
-    }
+    /* Tell Cc */
+    VacbOffset = (ULONG)(iBcb->PFCB.MappedFileOffset.QuadPart - Vacb->FileOffset.QuadPart);
+    CcRosMarkDirtyVacb(Vacb,
+                       VacbOffset,
+                       min(iBcb->PFCB.MappedLength, VACB_MAPPING_GRANULARITY - VacbOffset));
 }
 
 
