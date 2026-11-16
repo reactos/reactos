@@ -156,10 +156,11 @@ const ATTR_ADD_SIZE: u16 = 0x14;
  * file returned INVALID_PARAMETER for every attributes type other than
  * the measured 0x9E and 0xA4 headers. That status matched. The type,
  * revision, and size are the bytes NetKVM passed on that VerOS boot,
- * not a Windows accept. METHOD.md still requires one Windows call with
- * those bytes. Capture 2026-11-16T064151Z dumped the 0xE0 body. An
- * earlier Windows try of type 0x9F revision 0 size 4 did not return;
- * do not scan. */
+ * not a Windows accept. Capture 2026-11-16T064151Z dumped the 0xE0 body.
+ * An earlier Windows try of type 0x9F revision 0 size 4 did not return.
+ * A later Windows try of type 0x9F revision 2 size 0xE0 after an
+ * accepted 0x9E size 0x1C also did not return. Do not call either
+ * 0x9F shape again. */
 const ATTR_GENERAL_TYPE: u8 = 0x9F;
 const ATTR_GENERAL_REVISION: u8 = 2;
 const ATTR_GENERAL_SIZE: u16 = 0xE0;
@@ -912,8 +913,12 @@ pub unsafe extern "system" fn NdisMSetMiniportAttributes(
      * from MiniportAddDevice. Capture 2026-11-16T055625Z returned 0 for
      * that header. output/netkvm-20261116T063334Z.log printed
      * NDIS HDR 9f 02 00e0 then NDIS INIT c000000d. Accepting that VerOS
-     * triple let InitializeEx continue; one Windows call with those
-     * bytes is still required before the header is measured.
+     * triple let InitializeEx continue. A Windows call with that 0x9F
+     * buffer after an accepted 0x9E size 0x1C did not return; do not
+     * call it again. Capture 2026-11-16T082709Z reached DIFF END OK:
+     * type 0x9E revision 1 size 0x1C with AttributeFlags 0x165 from
+     * output/netkvm-20261116T081944Z.log was ACCEPTED, then
+     * NdisMRegisterScatterGatherDma returned 0xC000009A.
      * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismsetminiportattributes
      * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nc-ndis-miniport_add_device
      * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/ns-ndis-_ndis_miniport_adapter_general_attributes */
@@ -922,6 +927,10 @@ pub unsafe extern "system" fn NdisMSetMiniportAttributes(
     }
     let (kind, revision, size) = header(attributes);
     log_bytes(b"NDIS HDR %02x %02x %04x\n\0", kind, revision, size);
+    /* Capture 2026-11-16T064151Z dumped the 0x9F body. Dump every
+     * attributes block so the 0x9E size 0x1C AttributeFlags are on the
+     * serial log for the Windows SG probe. */
+    log_body(attributes, size);
     if kind == ATTR_TYPE {
         return 0;
     }

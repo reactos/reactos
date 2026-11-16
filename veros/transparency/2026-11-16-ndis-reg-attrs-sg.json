@@ -1,0 +1,19 @@
+{
+  "spdx": "GPL-2.0-or-later",
+  "question": "Which NdisMSetMiniportAttributes registration bytes does Windows accept for bus-master, and does NdisMRegisterScatterGatherDma write ScatterGatherListSize on that path?",
+  "allowedInputs": [
+    "output/netkvm-20261116T081944Z.log printed NDIS HDR 9e 01 001c and NDIS BODY with AttributeFlags 0x00000165 at offset 0x10, CheckForHangTimeInSeconds 4 at 0x14, InterfaceType 5 at 0x18",
+    "output/ndis-discovery/windows.log DIFF END OK; ACCEPTED type 0x9E revision 1 size 0x1C with fourth field 0x165; NdisMRegisterScatterGatherDma STATUS 0xC000009A; SGA0020 unchanged",
+    "https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/ns-ndis-_ndis_miniport_adapter_registration_attributes AttributeFlags includes bus-master",
+    "https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismregisterscattergatherdma ScatterGatherListSize is OUT; NOT_SUPPORTED when bus-master was not set",
+    "sdk/include/ddk/ndis.h NDIS_STATUS_RESOURCES is 0xC000009A",
+    "sdk/include/psdk/ntddndis.h NDIS_OBJECT_HEADER is 4 bytes",
+    "Reported: a Windows call with type 0x9F revision 2 size 0xE0 after that 0x9E accept did not return; do not call that buffer again"
+  ],
+  "harness": {
+    "guest": "Windows 10 22H2",
+    "name": "ndis-discovery",
+    "traceOrReplayId": "output/ndis-discovery/windows.log DIFF END OK ACCEPTED 0x9E 0x1C SG STATUS 0xC000009A",
+    "logSha256": "f2499c57457f5f5e4d0c9c9b5caac7da30710798f28c636276ccca88a6915190"
+  }
+}
