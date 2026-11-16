@@ -349,11 +349,12 @@
 @ stdcall GetNextDlgTabItem(long long long)
 @ stdcall GetOpenClipboardWindow() NtUserGetOpenClipboardWindow
 @ stdcall GetParent(long)
-@ stdcall -version=0x602+ GetPointerInfo(long ptr)
+@ stdcall GetPointerInfo(long ptr)
+@ stdcall GetPointerPenInfo(long ptr)
 @ stdcall -version=0x602+ GetPointerTouchInfo(long ptr)
 @ stdcall -version=0x602+ GetPointerTouchInfoHistory(long ptr ptr)
 @ stdcall -version=0x601+ GetPointerDevices(ptr ptr)
-@ stdcall -version=0x602+ GetPointerType(long ptr)
+@ stdcall GetPointerType(long ptr)
 @ stdcall GetPriorityClipboardFormat(ptr long) NtUserGetPriorityClipboardFormat
 @ stdcall GetProcessDefaultLayout(ptr)
 @ stdcall -version=0xA00+ GetProcessDpiAwarenessInternal(long ptr)
