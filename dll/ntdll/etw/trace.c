@@ -1,16 +1,33 @@
 /*
- * ntdll.dll Event Tracing Functions
+ * PROJECT:     VerOS NT System Libraries
+ * LICENSE:     GNU Lesser General Public License, version 2.1 or later (LGPL-2.1-or-later)
+ * FILE:        dll/ntdll/etw/trace.c
+ * PURPOSE:     ntdll Event Tracing stubs and helpers
+ * COPYRIGHT:   Copyright 2026 Ryan Wilson <ryan@verosnt.com>
+ * PROGRAMMERS: Ryan Wilson
+ *
+ * EtwEventRegister writes a non-zero REGHANDLE because the generated
+ * -stub returned ERROR_SUCCESS without filling *RegHandle. Guest serial
+ * output/ntdll-apps/serial-App-20261116T054003Z.log shows
+ * EtwEventSetInformation(0x0, ...) after that stub, then a user AV in
+ * firefox.exe. Public docs: EventRegister out-parameter RegHandle
+ * (learn.microsoft.com evntprov EventRegister). Sentinel value matches
+ * EtwStartTraceW in this file (0xcafe4242).
  */
 
 #include <ntdll.h>
 
 #include <wmistr.h>
 #include <evntrace.h>
+#include <evntprov.h>
 
 #define NDEBUG
 #include <debug.h>
 
 #define FIXME DPRINT1
+
+/* Same sentinel EtwStartTraceW already writes for a session handle. */
+#define ETW_EVENT_REG_SENTINEL ((REGHANDLE)0xcafe4242ULL)
 
 /*
  * @unimplemented
@@ -272,6 +289,100 @@ ULONG WINAPI EtwUpdateTraceA( TRACEHANDLE hSession, LPCSTR SessionName, PEVENT_T
 ULONG WINAPI EtwUpdateTraceW( TRACEHANDLE hSession, LPCWSTR SessionName, PEVENT_TRACE_PROPERTIES Properties )
 {
     return EtwControlTraceW( hSession, SessionName, Properties, EVENT_TRACE_CONTROL_UPDATE );
+}
+
+/*
+ * EtwEventRegister / related provider APIs.
+ * No-op registration: fill *RegHandle so callers do not keep a null handle
+ * after ERROR_SUCCESS (see file header).
+ */
+ULONG
+NTAPI
+EtwEventRegister(
+    LPCGUID ProviderId,
+    PENABLECALLBACK EnableCallback,
+    PVOID CallbackContext,
+    PREGHANDLE RegHandle)
+{
+    UNREFERENCED_PARAMETER(EnableCallback);
+    UNREFERENCED_PARAMETER(CallbackContext);
+
+    if (!ProviderId || !RegHandle)
+    {
+        return ERROR_INVALID_PARAMETER;
+    }
+
+    *RegHandle = ETW_EVENT_REG_SENTINEL;
+    return ERROR_SUCCESS;
+}
+
+ULONG
+NTAPI
+EtwEventUnregister(
+    REGHANDLE RegHandle)
+{
+    UNREFERENCED_PARAMETER(RegHandle);
+    return ERROR_SUCCESS;
+}
+
+ULONG
+NTAPI
+EtwEventSetInformation(
+    REGHANDLE RegHandle,
+    ULONG InformationClass,
+    PVOID EventInformation,
+    ULONG InformationLength)
+{
+    UNREFERENCED_PARAMETER(RegHandle);
+    UNREFERENCED_PARAMETER(InformationClass);
+    UNREFERENCED_PARAMETER(EventInformation);
+    UNREFERENCED_PARAMETER(InformationLength);
+    return ERROR_SUCCESS;
+}
+
+ULONG
+NTAPI
+EtwEventWrite(
+    REGHANDLE RegHandle,
+    PCEVENT_DESCRIPTOR EventDescriptor,
+    ULONG UserDataCount,
+    PEVENT_DATA_DESCRIPTOR UserData)
+{
+    UNREFERENCED_PARAMETER(RegHandle);
+    UNREFERENCED_PARAMETER(EventDescriptor);
+    UNREFERENCED_PARAMETER(UserDataCount);
+    UNREFERENCED_PARAMETER(UserData);
+    return ERROR_SUCCESS;
+}
+
+ULONG
+NTAPI
+EtwEventWriteTransfer(
+    REGHANDLE RegHandle,
+    PCEVENT_DESCRIPTOR EventDescriptor,
+    LPCGUID ActivityId,
+    LPCGUID RelatedActivityId,
+    ULONG UserDataCount,
+    PEVENT_DATA_DESCRIPTOR UserData)
+{
+    UNREFERENCED_PARAMETER(RegHandle);
+    UNREFERENCED_PARAMETER(EventDescriptor);
+    UNREFERENCED_PARAMETER(ActivityId);
+    UNREFERENCED_PARAMETER(RelatedActivityId);
+    UNREFERENCED_PARAMETER(UserDataCount);
+    UNREFERENCED_PARAMETER(UserData);
+    return ERROR_SUCCESS;
+}
+
+ULONG
+NTAPI
+EtwEventActivityIdControl(
+    ULONG ControlCode,
+    LPGUID ActivityId)
+{
+    UNREFERENCED_PARAMETER(ControlCode);
+    UNREFERENCED_PARAMETER(ActivityId);
+    return ERROR_SUCCESS;
 }
 
 /* EOF */
