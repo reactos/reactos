@@ -543,7 +543,7 @@
 @ stdcall SHGetFolderPathAndSubDirW(long long long long wstr ptr) # 2k3:306, Vista:367
 @ stdcall -version=0x600+ SHGetFolderPathEx(ptr long ptr ptr long) # Vista:368
 @ stdcall SHGetFolderPathW(long long long long ptr) # 2k3:307, Vista:369
-@ stdcall -version=0x600+ SHGetIDListFromObject(ptr ptr) # Vista:370
+@ stdcall SHGetIDListFromObject(ptr ptr) # Vista:370
 @ stdcall SHGetIconOverlayIndexA(str long) # 2k3:308, Vista:371
 @ stdcall SHGetIconOverlayIndexW(wstr long) # 2k3:309, Vista:372
 @ stdcall SHGetInstanceExplorer(long) shcore.GetProcessReference # 2k3:310, Vista:373

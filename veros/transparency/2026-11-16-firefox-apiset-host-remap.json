@@ -1,0 +1,17 @@
+{
+  "spdx": "GPL-2.0-or-later",
+  "question": "Which host DLL should resolve Firefox security/registry/sddl/namespace apisets when the mapped host lacks those exports?",
+  "allowedInputs": [
+    "sdk/lib/apisets/apisets.table.c already in this tree, which mapped security-base and registry-l1 to kernel32.dll and sddl to sechost.dll",
+    "dll/win32/advapi32/advapi32.spec already in this tree, which exports AddAccessAllowedAce, the other security-base symbols, Reg*, ConvertStringSecurityDescriptorToSecurityDescriptorW, and OpenProcessToken",
+    "dll/win32/shell32/shell32.spec already in this tree, which exports SHGetIDListFromObject",
+    "sdk/lib/apisets/apisets.table.c already in this tree, api-ms-win-security-base-ansi-l1-1-0 and security-sddl-ansi already hosted on advapi32.dll",
+    "Reported: Entry Point Not Found AddAccessAllowedAce in api-ms-win-security-base-l1-1-0.dll",
+    "Reported: import scan showed those Firefox symbols missing on kernel32/sechost/windows.storage but present in advapi32.spec or shell32.spec"
+  ],
+  "harness": {
+    "guest": "amd64 installed veros-ntfs after Win10 apiset schema batch, TCG, App mode",
+    "name": "ntdll-apps-firefox",
+    "traceOrReplayId": "Reported: Entry Point Not Found AddAccessAllowedAce in api-ms-win-security-base-l1-1-0.dll"
+  }
+}
