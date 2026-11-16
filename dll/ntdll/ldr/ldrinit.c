@@ -66,7 +66,9 @@ RTL_BITMAP TlsExpansionBitMap;
 RTL_BITMAP FlsBitMap;
 BOOLEAN LdrpImageHasTls;
 LIST_ENTRY LdrpTlsList;
+LIST_ENTRY LdrpTlsThreadList;
 ULONG LdrpNumberOfTlsEntries;
+ULONG LdrpTlsPointerLength;
 ULONG LdrpNumberOfProcessors;
 PVOID NtDllBase;
 extern LARGE_INTEGER RtlpTimeout;
@@ -1299,6 +1301,8 @@ LdrpInitializeTls(VOID)
 
     /* Initialize the TLS List */
     InitializeListHead(&LdrpTlsList);
+    InitializeListHead(&LdrpTlsThreadList);
+    LdrpTlsPointerLength = 0;
 
     /* Loop all the modules */
     ListHead = &NtCurrentPeb()->Ldr->InLoadOrderModuleList;
@@ -1350,6 +1354,18 @@ LdrpInitializeTls(VOID)
     return LdrpAllocateTls();
 }
 
+static VOID
+LdrpLinkThreadTls(VOID)
+{
+    PTEB Teb = NtCurrentTeb();
+
+    /* TEB.TlsLinks starts NULL; Wine links each thread the same way. */
+    if (Teb->TlsLinks.Flink == NULL)
+    {
+        InsertHeadList(&LdrpTlsThreadList, &Teb->TlsLinks);
+    }
+}
+
 NTSTATUS
 NTAPI
 LdrpAllocateTls(VOID)
@@ -1361,6 +1377,8 @@ LdrpAllocateTls(VOID)
     PVOID *TlsVector;
     PVOID TlsBlock;
 
+    LdrpLinkThreadTls();
+
     /* Check if we have any entries */
     if (!LdrpNumberOfTlsEntries)
         return STATUS_SUCCESS;
@@ -1371,6 +1389,7 @@ LdrpAllocateTls(VOID)
                                 LdrpNumberOfTlsEntries * sizeof(PVOID));
     if (!TlsVector) return STATUS_NO_MEMORY;
     Teb->ThreadLocalStoragePointer = TlsVector;
+    LdrpTlsPointerLength = LdrpNumberOfTlsEntries;
 
     /* Loop the TLS Array */
     ListHead = &LdrpTlsList;
@@ -1426,9 +1445,9 @@ LdrpAllocateTls(VOID)
 
 /*
  * Allocate a static-TLS slot for a module loaded after LdrpInitializeTls.
- * Wine alloc_tls_slot walks every TEB via tls_links; this tree does not keep
- * that list, so only the current thread's vector is grown. Threads created
- * later pick up the new LdrpTlsList entry through LdrpAllocateTls.
+ * Pattern from Wine dlls/ntdll/loader.c alloc_tls_slot: grow every thread's
+ * ThreadLocalStoragePointer, give each a private template copy, write
+ * AddressOfIndex. Do not free the old pointer block (Wine leaves it).
  */
 NTSTATUS
 NTAPI
@@ -1436,12 +1455,14 @@ LdrpHandleTlsData(IN PLDR_DATA_TABLE_ENTRY LdrEntry)
 {
     PIMAGE_TLS_DIRECTORY TlsDirectory;
     PLDRP_TLS_DATA TlsData;
+    PLIST_ENTRY Entry;
     PTEB Teb;
     PVOID *OldVector;
     PVOID *NewVector;
     PVOID TlsBlock;
     ULONG Size;
     ULONG Index;
+    ULONG OldLength;
     SIZE_T TlsDataSize;
     SIZE_T ZeroFill;
 
@@ -1469,50 +1490,57 @@ LdrpHandleTlsData(IN PLDR_DATA_TABLE_ENTRY LdrEntry)
     if (!TlsData)
         return STATUS_NO_MEMORY;
 
+    LdrpLinkThreadTls();
+
     Index = LdrpNumberOfTlsEntries;
-    Teb = NtCurrentTeb();
-    OldVector = Teb->ThreadLocalStoragePointer;
-    NewVector = RtlAllocateHeap(RtlGetProcessHeap(),
-                                HEAP_ZERO_MEMORY,
-                                (Index + 1) * sizeof(PVOID));
-    if (!NewVector)
-    {
-        RtlFreeHeap(RtlGetProcessHeap(), 0, TlsData);
-        return STATUS_NO_MEMORY;
-    }
+    OldLength = LdrpTlsPointerLength;
 
-    if (OldVector && Index)
+    for (Entry = LdrpTlsThreadList.Flink;
+         Entry != &LdrpTlsThreadList;
+         Entry = Entry->Flink)
     {
-        RtlCopyMemory(NewVector, OldVector, Index * sizeof(PVOID));
-    }
+        Teb = CONTAINING_RECORD(Entry, TEB, TlsLinks);
+        OldVector = Teb->ThreadLocalStoragePointer;
+        NewVector = RtlAllocateHeap(RtlGetProcessHeap(),
+                                    HEAP_ZERO_MEMORY,
+                                    (Index + 1) * sizeof(PVOID));
+        if (!NewVector)
+        {
+            RtlFreeHeap(RtlGetProcessHeap(), 0, TlsData);
+            return STATUS_NO_MEMORY;
+        }
 
-    TlsBlock = RtlAllocateHeap(RtlGetProcessHeap(),
-                               0,
-                               TlsDataSize + ZeroFill);
-    if (!TlsBlock)
-    {
-        RtlFreeHeap(RtlGetProcessHeap(), 0, NewVector);
-        RtlFreeHeap(RtlGetProcessHeap(), 0, TlsData);
-        return STATUS_NO_MEMORY;
-    }
+        if (OldVector && OldLength)
+        {
+            RtlCopyMemory(NewVector,
+                          OldVector,
+                          OldLength * sizeof(PVOID));
+        }
 
-    if (TlsDataSize)
-    {
-        RtlCopyMemory(TlsBlock,
-                      (PVOID)(ULONG_PTR)TlsDirectory->StartAddressOfRawData,
-                      TlsDataSize);
-    }
-    if (ZeroFill)
-    {
-        RtlZeroMemory((PUCHAR)TlsBlock + TlsDataSize, ZeroFill);
-    }
+        TlsBlock = RtlAllocateHeap(RtlGetProcessHeap(),
+                                   0,
+                                   TlsDataSize + ZeroFill);
+        if (!TlsBlock)
+        {
+            RtlFreeHeap(RtlGetProcessHeap(), 0, NewVector);
+            RtlFreeHeap(RtlGetProcessHeap(), 0, TlsData);
+            return STATUS_NO_MEMORY;
+        }
 
-    NewVector[Index] = TlsBlock;
-    Teb->ThreadLocalStoragePointer = NewVector;
-    if (OldVector)
-    {
-        /* Only this TEB held OldVector; safe to free after the swap. */
-        RtlFreeHeap(RtlGetProcessHeap(), 0, OldVector);
+        if (TlsDataSize)
+        {
+            RtlCopyMemory(TlsBlock,
+                          (PVOID)(ULONG_PTR)TlsDirectory->StartAddressOfRawData,
+                          TlsDataSize);
+        }
+        if (ZeroFill)
+        {
+            RtlZeroMemory((PUCHAR)TlsBlock + TlsDataSize, ZeroFill);
+        }
+
+        NewVector[Index] = TlsBlock;
+        Teb->ThreadLocalStoragePointer = NewVector;
+        /* Wine: old pointer block freed at thread exit, not here. */
     }
 
     LdrEntry->LoadCount = -1;
@@ -1524,15 +1552,15 @@ LdrpHandleTlsData(IN PLDR_DATA_TABLE_ENTRY LdrEntry)
     *(PULONG)(ULONG_PTR)TlsData->TlsDirectory.AddressOfIndex = Index;
     InsertTailList(&LdrpTlsList, &TlsData->TlsLinks);
     LdrpNumberOfTlsEntries = Index + 1;
+    LdrpTlsPointerLength = Index + 1;
 
     if (ShowSnaps)
     {
-        DPRINT1("LDR: late TLS %wZ index %lu size %Iu+%Iu -> %p\n",
+        DPRINT1("LDR: late TLS %wZ index %lu size %Iu+%Iu\n",
                 &LdrEntry->BaseDllName,
                 Index,
                 TlsDataSize,
-                ZeroFill,
-                TlsBlock);
+                ZeroFill);
     }
 
     return STATUS_SUCCESS;
@@ -1546,6 +1574,13 @@ LdrpFreeTls(VOID)
     PLDRP_TLS_DATA TlsData;
     PVOID *TlsVector;
     PTEB Teb = NtCurrentTeb();
+
+    if (Teb->TlsLinks.Flink != NULL)
+    {
+        RemoveEntryList(&Teb->TlsLinks);
+        Teb->TlsLinks.Flink = NULL;
+        Teb->TlsLinks.Blink = NULL;
+    }
 
     /* Get a pointer to the vector array */
     TlsVector = Teb->ThreadLocalStoragePointer;
@@ -1572,6 +1607,7 @@ LdrpFreeTls(VOID)
     RtlFreeHeap(RtlGetProcessHeap(),
                 0,
                 TlsVector);
+    Teb->ThreadLocalStoragePointer = NULL;
 }
 
 NTSTATUS
