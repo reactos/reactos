@@ -5,6 +5,7 @@
  * PURPOSE:     User-Mode Process/Thread Startup
  * COPYRIGHT:   See COPYING in the top level directory
  *              Copyright 2026 Ryan Wilson <ryan@verosnt.com>
+ *              Copyright Wine authors (LGPL) for late-load TLS slot growth
  * PROGRAMMERS: Alex Ionescu (alex@relsoft.net)
  *              Aleksey Bragin (aleksey@reactos.org)
  *              Ryan Wilson <ryan@verosnt.com>
@@ -12,6 +13,12 @@
  * ReactOS_ShimData (compat GUID blob) is not a shim-engine DLL path.
  * Guest serial output/ntdll-apps/serial-App-20261116T065630Z.log maps
  * empty LoadDll ret to LdrpLoadShimEngine(OldShimData, ...) for firefox.exe.
+ *
+ * LdrpHandleTlsData follows Wine dlls/ntdll/loader.c alloc_tls_slot
+ * (https://gitlab.winehq.org/wine/wine/-/blob/wine-9.0/dlls/ntdll/loader.c):
+ * grow ThreadLocalStoragePointer, copy the PE TLS template, write
+ * AddressOfIndex. Wired for post-init LoadLibrary of modules with
+ * IMAGE_DIRECTORY_ENTRY_TLS (firefox xul.dll; serial-App-20261116T100204Z).
  */
 
 /* INCLUDES *****************************************************************/
@@ -1350,8 +1357,9 @@ LdrpAllocateTls(VOID)
     PTEB Teb = NtCurrentTeb();
     PLIST_ENTRY NextEntry, ListHead;
     PLDRP_TLS_DATA TlsData;
-    SIZE_T TlsDataSize;
+    SIZE_T TlsDataSize, ZeroFill;
     PVOID *TlsVector;
+    PVOID TlsBlock;
 
     /* Check if we have any entries */
     if (!LdrpNumberOfTlsEntries)
@@ -1359,8 +1367,8 @@ LdrpAllocateTls(VOID)
 
     /* Allocate the vector array */
     TlsVector = RtlAllocateHeap(RtlGetProcessHeap(),
-                                    0,
-                                    LdrpNumberOfTlsEntries * sizeof(PVOID));
+                                HEAP_ZERO_MEMORY,
+                                LdrpNumberOfTlsEntries * sizeof(PVOID));
     if (!TlsVector) return STATUS_NO_MEMORY;
     Teb->ThreadLocalStoragePointer = TlsVector;
 
@@ -1373,17 +1381,20 @@ LdrpAllocateTls(VOID)
         TlsData = CONTAINING_RECORD(NextEntry, LDRP_TLS_DATA, TlsLinks);
         NextEntry = NextEntry->Flink;
 
-        /* Allocate this vector */
+        /* Allocate this vector (raw template + SizeOfZeroFill) */
         TlsDataSize = TlsData->TlsDirectory.EndAddressOfRawData -
                       TlsData->TlsDirectory.StartAddressOfRawData;
-        TlsVector[TlsData->TlsDirectory.Characteristics] = RtlAllocateHeap(RtlGetProcessHeap(),
-                                                                           0,
-                                                                           TlsDataSize);
-        if (!TlsVector[TlsData->TlsDirectory.Characteristics])
+        ZeroFill = TlsData->TlsDirectory.SizeOfZeroFill;
+        TlsBlock = RtlAllocateHeap(RtlGetProcessHeap(),
+                                   0,
+                                   TlsDataSize + ZeroFill);
+        if (!TlsBlock)
         {
             /* Out of memory */
             return STATUS_NO_MEMORY;
         }
+
+        TlsVector[TlsData->TlsDirectory.Characteristics] = TlsBlock;
 
         /* Show debug message */
         if (ShowSnaps)
@@ -1393,16 +1404,137 @@ LdrpAllocateTls(VOID)
                     TlsData->TlsDirectory.Characteristics,
                     &TlsVector[TlsData->TlsDirectory.Characteristics],
                     TlsData->TlsDirectory.StartAddressOfRawData,
-                    TlsVector[TlsData->TlsDirectory.Characteristics]);
+                    TlsBlock);
         }
 
-        /* Copy the data */
-        RtlCopyMemory(TlsVector[TlsData->TlsDirectory.Characteristics],
-                      (PVOID)TlsData->TlsDirectory.StartAddressOfRawData,
-                      TlsDataSize);
+        /* Copy the data and clear the zero-fill tail */
+        if (TlsDataSize)
+        {
+            RtlCopyMemory(TlsBlock,
+                          (PVOID)(ULONG_PTR)TlsData->TlsDirectory.StartAddressOfRawData,
+                          TlsDataSize);
+        }
+        if (ZeroFill)
+        {
+            RtlZeroMemory((PUCHAR)TlsBlock + TlsDataSize, ZeroFill);
+        }
     }
 
     /* Done */
+    return STATUS_SUCCESS;
+}
+
+/*
+ * Allocate a static-TLS slot for a module loaded after LdrpInitializeTls.
+ * Wine alloc_tls_slot walks every TEB via tls_links; this tree does not keep
+ * that list, so only the current thread's vector is grown. Threads created
+ * later pick up the new LdrpTlsList entry through LdrpAllocateTls.
+ */
+NTSTATUS
+NTAPI
+LdrpHandleTlsData(IN PLDR_DATA_TABLE_ENTRY LdrEntry)
+{
+    PIMAGE_TLS_DIRECTORY TlsDirectory;
+    PLDRP_TLS_DATA TlsData;
+    PTEB Teb;
+    PVOID *OldVector;
+    PVOID *NewVector;
+    PVOID TlsBlock;
+    ULONG Size;
+    ULONG Index;
+    SIZE_T TlsDataSize;
+    SIZE_T ZeroFill;
+
+    if (!LdrEntry)
+        return STATUS_INVALID_PARAMETER;
+
+    /* Already registered at process init (TlsIndex set to -1). */
+    if (LdrEntry->TlsIndex)
+        return STATUS_SUCCESS;
+
+    TlsDirectory = RtlImageDirectoryEntryToData(LdrEntry->DllBase,
+                                                TRUE,
+                                                IMAGE_DIRECTORY_ENTRY_TLS,
+                                                &Size);
+    if (!TlsDirectory)
+        return STATUS_SUCCESS;
+
+    TlsDataSize = TlsDirectory->EndAddressOfRawData -
+                  TlsDirectory->StartAddressOfRawData;
+    ZeroFill = TlsDirectory->SizeOfZeroFill;
+    if (!TlsDataSize && !ZeroFill && !TlsDirectory->AddressOfCallBacks)
+        return STATUS_SUCCESS;
+
+    TlsData = RtlAllocateHeap(RtlGetProcessHeap(), 0, sizeof(LDRP_TLS_DATA));
+    if (!TlsData)
+        return STATUS_NO_MEMORY;
+
+    Index = LdrpNumberOfTlsEntries;
+    Teb = NtCurrentTeb();
+    OldVector = Teb->ThreadLocalStoragePointer;
+    NewVector = RtlAllocateHeap(RtlGetProcessHeap(),
+                                HEAP_ZERO_MEMORY,
+                                (Index + 1) * sizeof(PVOID));
+    if (!NewVector)
+    {
+        RtlFreeHeap(RtlGetProcessHeap(), 0, TlsData);
+        return STATUS_NO_MEMORY;
+    }
+
+    if (OldVector && Index)
+    {
+        RtlCopyMemory(NewVector, OldVector, Index * sizeof(PVOID));
+    }
+
+    TlsBlock = RtlAllocateHeap(RtlGetProcessHeap(),
+                               0,
+                               TlsDataSize + ZeroFill);
+    if (!TlsBlock)
+    {
+        RtlFreeHeap(RtlGetProcessHeap(), 0, NewVector);
+        RtlFreeHeap(RtlGetProcessHeap(), 0, TlsData);
+        return STATUS_NO_MEMORY;
+    }
+
+    if (TlsDataSize)
+    {
+        RtlCopyMemory(TlsBlock,
+                      (PVOID)(ULONG_PTR)TlsDirectory->StartAddressOfRawData,
+                      TlsDataSize);
+    }
+    if (ZeroFill)
+    {
+        RtlZeroMemory((PUCHAR)TlsBlock + TlsDataSize, ZeroFill);
+    }
+
+    NewVector[Index] = TlsBlock;
+    Teb->ThreadLocalStoragePointer = NewVector;
+    if (OldVector)
+    {
+        /* Only this TEB held OldVector; safe to free after the swap. */
+        RtlFreeHeap(RtlGetProcessHeap(), 0, OldVector);
+    }
+
+    LdrEntry->LoadCount = -1;
+    LdrEntry->TlsIndex = -1;
+    LdrpImageHasTls = TRUE;
+
+    TlsData->TlsDirectory = *TlsDirectory;
+    TlsData->TlsDirectory.Characteristics = Index;
+    *(PULONG)(ULONG_PTR)TlsData->TlsDirectory.AddressOfIndex = Index;
+    InsertTailList(&LdrpTlsList, &TlsData->TlsLinks);
+    LdrpNumberOfTlsEntries = Index + 1;
+
+    if (ShowSnaps)
+    {
+        DPRINT1("LDR: late TLS %wZ index %lu size %Iu+%Iu -> %p\n",
+                &LdrEntry->BaseDllName,
+                Index,
+                TlsDataSize,
+                ZeroFill,
+                TlsBlock);
+    }
+
     return STATUS_SUCCESS;
 }
 

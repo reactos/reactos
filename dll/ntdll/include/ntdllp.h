@@ -72,6 +72,7 @@ NTSTATUS NTAPI LdrpRunInitializeRoutines(IN PCONTEXT Context OPTIONAL);
 VOID NTAPI LdrpInitializeThread(IN PCONTEXT Context);
 NTSTATUS NTAPI LdrpInitializeTls(VOID);
 NTSTATUS NTAPI LdrpAllocateTls(VOID);
+NTSTATUS NTAPI LdrpHandleTlsData(IN PLDR_DATA_TABLE_ENTRY LdrEntry);
 VOID NTAPI LdrpFreeTls(VOID);
 VOID NTAPI LdrpCallTlsInitializers(IN PLDR_DATA_TABLE_ENTRY LdrEntry, IN ULONG Reason);
 BOOLEAN NTAPI LdrpCallInitRoutine(IN PDLL_INIT_ROUTINE EntryPoint, IN PVOID BaseAddress, IN ULONG Reason, IN PVOID Context);

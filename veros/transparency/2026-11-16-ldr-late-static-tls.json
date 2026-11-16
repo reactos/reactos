@@ -1,0 +1,15 @@
+{
+  "spdx": "GPL-2.0-or-later",
+  "question": "How should ntdll assign static TLS for a DLL LoadLibrary'd after LdrpInitializeTls, such as firefox xul.dll?",
+  "allowedInputs": [
+    "Wine dlls/ntdll/loader.c alloc_tls_slot at https://gitlab.winehq.org/wine/wine/-/blob/wine-9.0/dlls/ntdll/loader.c",
+    "dll/ntdll/ldr/ldrinit.c already in this tree, LdrpInitializeTls and LdrpAllocateTls",
+    "sdk/include/ddk/ntimage.h already in this tree, IMAGE_TLS_DIRECTORY64",
+    "output/ntdll-apps/serial-App-20261116T100204Z.log marker: User AV rip module xul.dll +0x19dde7",
+    "output/ntdll-apps/serial-App-20261116T100204Z.log marker: User AV rsi non-canonical 59FE1DB100010001",
+    "output/ntdll-apps/firefox-silent-fail32-plain-dom-worker.txt",
+    "Reported: xul.dll IMAGE_TLS template size 6432 with +0x4a0 zero; _tls_index stays 0 when loaded after init",
+    "Reported: firefox.exe TLS size 41; xul RegisterThread reads gs:[0x58] slot then [tls+0x4a0]",
+    "Reported: Nested ThreadRegistration::RegisterThread string at crash site lea"
+  ]
+}

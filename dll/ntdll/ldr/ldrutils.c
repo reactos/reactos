@@ -11,6 +11,8 @@
  *
  * Empty LdrpLoadDll names are rejected. LdrpLoadShimEngine also refuses an
  * empty engine path (serial-App-20261116T065630Z.log, ret in LdrpLoadShimEngine).
+ * Post-init LoadLibrary calls LdrpHandleTlsData for IMAGE_TLS modules
+ * (serial-App-20261116T100204Z xul.dll ThreadRegistration AV).
  */
 
 /* INCLUDES *****************************************************************/
@@ -2563,6 +2565,18 @@ LdrpLoadDll(IN BOOLEAN Redirected,
                                 &LdrEntry);
             if (!NT_SUCCESS(Status))
                 _SEH2_LEAVE;
+
+            /*
+             * Process-init TLS is done in LdrpInitializeTls. A later
+             * LoadLibrary of a DLL with IMAGE_TLS (firefox xul.dll) still
+             * needs a slot and AddressOfIndex write before its code runs.
+             */
+            if (!LdrpInLdrInit)
+            {
+                Status = LdrpHandleTlsData(LdrEntry);
+                if (!NT_SUCCESS(Status))
+                    _SEH2_LEAVE;
+            }
 
             /* FIXME: Need to mark the DLL range for the stack DB */
             //RtlpStkMarkDllRange(LdrEntry);
