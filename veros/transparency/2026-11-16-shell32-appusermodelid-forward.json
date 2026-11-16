@@ -1,0 +1,17 @@
+{
+  "spdx": "GPL-2.0-or-later",
+  "question": "Why did Firefox GetProcAddress fail for GetCurrentProcessExplicitAppUserModelID on shell32?",
+  "allowedInputs": [
+    "dll/win32/shell32/shell32.spec GetCurrentProcessExplicitAppUserModelID -version=0x601+ entry already in tree",
+    "dll/win32/shcore/main.c GetCurrentProcessExplicitAppUserModelID and SetCurrentProcessExplicitAppUserModelID already in tree",
+    "Wine dlls/shell32/shell32.spec forward to shcore https://gitlab.winehq.org/wine/wine/-/blob/wine-9.0/dlls/shell32/shell32.spec",
+    "output/ntdll-apps/serial-App-20261116T112122Z.log marker LDR: missing export shell32.DLL!GetCurrentProcessExplicitAppUserModelID",
+    "output/ntdll-apps/serial-App-20261116T112627Z.log marker fixme:(dll\\win32\\shcore\\main.c:262)"
+  ],
+  "harness": {
+    "guest": "veros-ntfs App",
+    "name": "firefox-plain-appusermodelid",
+    "traceOrReplayId": "serial-App-20261116T112627Z"
+  },
+  "harness.logSha256": "f27d0a65de1936d990a61301ba3dd004c2ab0f58911ab82aceb1efded694faec"
+}

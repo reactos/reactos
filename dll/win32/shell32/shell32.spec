@@ -660,5 +660,5 @@
 @ stdcall -version=0x601+ SHGetItemFromObject(ptr long ptr)
 @ stdcall -version=0x600+ SHGetItemFromDataObject(ptr long ptr ptr)
 
-@ stdcall -version=0x601+ GetCurrentProcessExplicitAppUserModelID(wstr)
-@ stdcall -version=0x601+ SetCurrentProcessExplicitAppUserModelID(wstr)
+@ stdcall GetCurrentProcessExplicitAppUserModelID(ptr) shcore.GetCurrentProcessExplicitAppUserModelID
+@ stdcall SetCurrentProcessExplicitAppUserModelID(wstr) shcore.SetCurrentProcessExplicitAppUserModelID
