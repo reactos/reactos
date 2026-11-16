@@ -1932,6 +1932,39 @@ IsWow64Process(IN HANDLE hProcess,
 
 /*
  * @implemented
+ *
+ * https://learn.microsoft.com/en-us/windows/win32/api/wow64apiset/nf-wow64apiset-iswow64process2
+ * Firefox delay-load: KERNEL32.dll!IsWow64Process2.
+ */
+BOOL
+WINAPI
+IsWow64Process2(IN HANDLE hProcess,
+                OUT USHORT *pProcessMachine,
+                OUT OPTIONAL USHORT *pNativeMachine)
+{
+    BOOL Wow64 = FALSE;
+
+    if (!pProcessMachine)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    if (!IsWow64Process(hProcess, &Wow64))
+    {
+        return FALSE;
+    }
+
+    *pProcessMachine = Wow64 ? IMAGE_FILE_MACHINE_I386 : IMAGE_FILE_MACHINE_UNKNOWN;
+    if (pNativeMachine)
+    {
+        *pNativeMachine = IMAGE_FILE_MACHINE_NATIVE;
+    }
+    return TRUE;
+}
+
+/*
+ * @implemented
  */
 LPSTR
 WINAPI

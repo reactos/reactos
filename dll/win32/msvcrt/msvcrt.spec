@@ -1522,7 +1522,7 @@
 @ cdecl wcsstr(wstr wstr)
 @ cdecl wcstod(wstr ptr)
 @ cdecl wcstok(wstr wstr)
-@ cdecl -version=0x600+ wcstok_s(ptr wstr ptr)
+@ cdecl wcstok_s(ptr wstr ptr)
 @ cdecl wcstol(wstr ptr long)
 @ cdecl wcstombs(ptr ptr long)
 @ cdecl -version=0x600+ wcstombs_s(ptr ptr long wstr long)

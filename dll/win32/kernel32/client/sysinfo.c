@@ -16,6 +16,7 @@
 /* INCLUDES *******************************************************************/
 
 #include <k32.h>
+#include <appmodel.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -595,6 +596,27 @@ SetSystemFileCacheSize(IN SIZE_T MinimumFileCacheSize,
 {
     STUB;
     return FALSE;
+}
+
+/*
+ * @implemented
+ *
+ * Desktop processes are not packaged. Public docs:
+ * https://learn.microsoft.com/en-us/windows/win32/api/appmodel/nf-appmodel-apppolicygetthreadinitializationtype
+ * Firefox delay-load: KERNEL32.dll!AppPolicyGetThreadInitializationType.
+ */
+LONG
+WINAPI
+AppPolicyGetThreadInitializationType(HANDLE processToken,
+                                     AppPolicyThreadInitializationType *policy)
+{
+    UNREFERENCED_PARAMETER(processToken);
+    if (!policy)
+    {
+        return ERROR_INVALID_PARAMETER;
+    }
+    *policy = AppPolicyThreadInitializationType_None;
+    return ERROR_SUCCESS;
 }
 
 /*
