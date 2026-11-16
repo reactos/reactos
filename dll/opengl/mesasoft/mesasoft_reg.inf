@@ -1,0 +1,10 @@
+; Mesa softpipe OpenGL ICD registration for VerOS / ReactOS opengl32.
+; Framebuf does not report OPENGL_GETINFO, so HKCU Software\ReactOS\OpenGL
+; forces the ICD name. Failed LoadLibrary still falls back to Mesa 2.6 in opengl32.
+
+[AddReg]
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\OpenGLDrivers\MESASOFT","Dll",0x00000000,"mesasoft.dll"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\OpenGLDrivers\MESASOFT","Version",0x00010001,0x00000002
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\OpenGLDrivers\MESASOFT","DriverVersion",0x00010001,0x00000001
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\OpenGLDrivers\MESASOFT","Flags",0x00010001,0x00000001
+HKCU,"SOFTWARE\ReactOS\OpenGL","",0x00000000,"MESASOFT"
