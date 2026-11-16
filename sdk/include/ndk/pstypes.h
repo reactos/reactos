@@ -1533,7 +1533,7 @@ typedef struct _EPROCESS
     PVOID LockedPagesList;
     LIST_ENTRY ThreadListHead;
     PVOID SecurityPort;
-#ifdef _M_AMD64
+#ifdef _WIN64
     struct _WOW64_PROCESS *Wow64Process;
 #else
     PVOID PaeTop;
