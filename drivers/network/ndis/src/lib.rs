@@ -47,9 +47,13 @@
  * NetKVM ParaNdis_FinishSpecificInitialization calls that register
  * after the pool allocate. output/netkvm-20261116T071822Z.log printed
  * NDIS IRQ 84 01 0060 and NDIS IRQOK. NDIS_STATUS_SUCCESS is 0 in
- * sdk/include/ddk/ndis.h. Deregister returns no status. InterruptType
- * and MessageInfoTable are not written until a probe measures those
- * OUT fields.
+ * sdk/include/ddk/ndis.h. Deregister returns no status. Capture
+ * 2026-11-16T080419Z reached DIFF END OK: after NdisMRegisterInterruptEx
+ * the dword at characteristics offset 0x50 became 1 and the pointer at
+ * 0x58 stayed null (DIFF IRQA0050). Those OUT offsets are the probe's
+ * count from the public characteristics page, confirmed by that dump.
+ * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/ns-ndis-_ndis_miniport_interrupt_characteristics
+ * ScatterGatherListSize was unchanged on that same Windows call.
  * output/netkvm-20261116T005259Z.log names NdisAcquireRWLockWrite.
  * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndisacquirerwlockwrite
  * output/netkvm-20261116T005640Z.log names NdisMRemoveMiniport.
@@ -1488,7 +1492,8 @@ pub unsafe extern "system" fn NdisMRegisterInterruptEx(
      * NDIS_STATUS_SUCCESS and NDIS_STATUS_RESOURCES are 0 and 0xC000009A
      * in sdk/include/ddk/ndis.h. The 0x40-byte interrupt object is this
      * file's buffer so the handle is non-null; it is not a Windows size.
-     * InterruptType and MessageInfoTable are not written here. */
+     * Capture 2026-11-16T080419Z DIFF IRQA0050: InterruptType dword at
+     * offset 0x50 became 1; MessageInfoTable at 0x58 stayed null. */
     if interrupt_handle.is_null() {
         return 0xC000_000D;
     }
@@ -1503,6 +1508,15 @@ pub unsafe extern "system" fn NdisMRegisterInterruptEx(
                 revision as u32,
                 size as u32,
             );
+            if size as usize >= 0x60 {
+                let interrupt_type = 1u32.to_le_bytes();
+                core::ptr::copy_nonoverlapping(
+                    interrupt_type.as_ptr(),
+                    characteristics.add(0x50),
+                    4,
+                );
+                core::ptr::write_bytes(characteristics.add(0x58), 0, 8);
+            }
         }
         let block = ExAllocatePoolWithTag(0, 0x40, POOL_TAG);
         if block.is_null() {

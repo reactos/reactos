@@ -28,8 +28,8 @@
  * calls NdisAllocateNetBufferListPool before NdisMRegisterInterruptEx,
  * and returns NDIS_STATUS_RESOURCES (0xC000009A in sdk/include/ddk/ndis.h)
  * when that pool handle is null. Size 4 is the measured Windows accept.
- * A Size greater than 4 with the same type and revision is VerOS-only
- * until one Windows call checks those bytes. Do not scan.
+ * Size 0x10 with the same type and revision is also measured. Capture
+ * 2026-11-16T074503Z reached DIFF END OK with ACCEPTED for that header.
  */
 
 use core::ptr;
@@ -77,9 +77,9 @@ fn header_ok(params: *const u8) -> bool {
         );
         /* Capture 2026-11-15T232142Z: type 0x80, revision 1, size 4.
          * output/netkvm-20261116T071255Z.log printed NDIS POOL 80 01 0010
-         * from NetKVM before NdisMRegisterInterruptEx. Size 0x10 with
-         * that type and revision is VerOS-only until one Windows call
-         * checks those bytes. Do not scan. */
+         * from NetKVM before NdisMRegisterInterruptEx. Capture
+         * 2026-11-16T074503Z reached DIFF END OK with ACCEPTED for type
+         * 0x80, revision 1, size 0x10. */
         kind == 0x80 && revision == 1 && (size == 4 || size == 0x10)
     }
 }

@@ -1,0 +1,22 @@
+{
+  "spdx": "GPL-2.0-or-later",
+  "question": "Where does NdisMRegisterInterruptEx write InterruptType and MessageInfoTable, and which pool Size values does NdisAllocateNetBufferListPool accept?",
+  "allowedInputs": [
+    "Reported: Capture 2026-11-16T074503Z reached DIFF END OK with ACCEPTED for NdisAllocateNetBufferListPool type 0x80 revision 1 size 0x10",
+    "output/ndis-discovery/windows.log DIFF END OK; DIFF IRQA0050 shows dword 1 at characteristics offset 0x50 and null at 0x58 after NdisMRegisterInterruptEx",
+    "https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismregisterinterruptex",
+    "https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/ns-ndis-_ndis_miniport_interrupt_characteristics InterruptType and MessageInfoTable are OUT",
+    "https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndisallocatenetbufferlistpool",
+    "sdk/include/psdk/ntddndis.h NDIS_OBJECT_HEADER is 4 bytes",
+    "sdk/include/ddk/ndis.h NDIS_STATUS_SUCCESS is 0",
+    "differential-tests/ndis-discovery/probe.c, the characteristics member count that places InterruptType at 0x50 and MessageInfoTable at 0x58 for size 0x60, probe method, not a Windows field",
+    "output/netkvm-20261116T071255Z.log printed NDIS POOL 80 01 0010",
+    "output/netkvm-20261116T071822Z.log printed NDIS IRQ 84 01 0060 and NDIS IRQOK"
+  ],
+  "harness": {
+    "guest": "Windows 10 22H2",
+    "name": "ndis-discovery",
+    "traceOrReplayId": "output/ndis-discovery/windows.log DIFF END OK DIFF IRQA0050",
+    "logSha256": "2bb14861725d664d9286b7b8492a562212dfa82b43d16e1735ada6b6810470cb"
+  }
+}
