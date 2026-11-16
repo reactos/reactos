@@ -1,0 +1,16 @@
+{
+  "spdx": "GPL-2.0-or-later",
+  "question": "How does firefox.exe resolve ReleaseSRWLockShared through api-ms-win-core-synch-l1-1-0 when DLL_EXPORT_VERSION is 0x502?",
+  "allowedInputs": [
+    "https://learn.microsoft.com/en-us/windows/win32/api/synchapi/nf-synchapi-releasesrwlockshared ReleaseSRWLockShared in Kernel32.dll / KernelBase.dll",
+    "dll/win32/kernel32/kernel32.spec already in this tree, where ReleaseSRWLockShared was gated -version=0x600+ and forwards to ntdll.RtlReleaseSRWLockShared",
+    "dll/win32/kernel32/kernel32.spec already in this tree, where ReleaseSRWLockExclusive has no version gate and AcquireSRWLockShared was just ungated the same way",
+    "sdk/cmake/config.cmake already in this tree, DLL_EXPORT_VERSION 0x502",
+    "Reported: Entry Point Not Found ReleaseSRWLockShared in api-ms-win-core-synch-l1-1-0.dll"
+  ],
+  "harness": {
+    "guest": "amd64 installed veros-ntfs disk after AcquireSRWLockShared export fix, TCG, App mode",
+    "name": "ntdll-apps-firefox",
+    "traceOrReplayId": "Reported: Entry Point Not Found ReleaseSRWLockShared in api-ms-win-core-synch-l1-1-0.dll"
+  }
+}

@@ -986,7 +986,7 @@
 @ stdcall ReleaseMutex(long)
 @ stub -version=0x600+ ReleaseMutexWhenCallbackReturns
 @ stdcall ReleaseSRWLockExclusive(ptr) ntdll.RtlReleaseSRWLockExclusive
-@ stdcall -version=0x600+ ReleaseSRWLockShared(ptr) ntdll.RtlReleaseSRWLockShared
+@ stdcall ReleaseSRWLockShared(ptr) ntdll.RtlReleaseSRWLockShared
 @ stdcall ReleaseSemaphore(long long ptr)
 @ stub -version=0x600+ ReleaseSemaphoreWhenCallbackReturns
 @ stdcall RemoveDirectoryA(str)
