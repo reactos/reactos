@@ -10,9 +10,9 @@
  *              Ryan Wilson <ryan@verosnt.com>
  *
  * User AV lines name the loaded module+RVA and trap registers.
- * Guest serial output/ntdll-apps/serial-App-20261116T072618Z.log:
- * xul.dll +0x18f2c22 fault -1; rbx/rsi/rdi are real user pointers — map
- * those regs to modules and probe one qword at rsi and rbx.
+ * Guest serial output/ntdll-apps/serial-App-20261116T073253Z.log:
+ * xul.dll +0x18f2c22 fault -1; [rsi]+0=rbx and [rbx]+0=2 — probe
+ * rbx/rsi +0..+0x18 and nearby stack slots for the -1 load.
  */
 
 /* INCLUDES ******************************************************************/
@@ -318,10 +318,9 @@ KiPrintUserModuleForAddress(
 }
 
 /*
- * silent-fail15: fault is -1 while rbx/rsi hold real user pointers.
- * Print one qword at Address so the next dump can see if -1/NULL was
- * loaded from that object. Same SEH+ProbeForRead shape as the GP
- * fault decoder below; Clang may not catch a bad probe.
+ * silent-fail15/16: print one qword at Address (stack slots) or four
+ * qwords at Base+0..+0x18 (heap objects). Same SEH+ProbeForRead shape
+ * as the GP fault decoder below; Clang may not catch a bad probe.
  */
 static
 VOID
@@ -355,6 +354,58 @@ KiPrintUserQwordAt(
         DPRINT1("User AV %s [%p] qword probe failed 0x%08lx\n",
                 Tag,
                 Address,
+                _SEH2_GetExceptionCode());
+    }
+    _SEH2_END;
+
+    _disable();
+}
+
+/*
+ * silent-fail16: [rsi]+0 was rbx and [rbx]+0 was 2 — neither -1.
+ * Dump the next three qwords on each object
+ * (serial-App-20261116T073253Z.log).
+ */
+static
+VOID
+KiPrintUserQwordFields(
+    _In_ PVOID Base,
+    _In_ PCSTR Tag)
+{
+    ULONG_PTR Values[4];
+    ULONG i;
+
+    if (!Base ||
+        (ULONG_PTR)Base == (ULONG_PTR)-1 ||
+        (ULONG_PTR)Base > ((ULONG_PTR)MmUserProbeAddress - 0x1F))
+    {
+        DPRINT1("User AV %s [%p] skip field probe\n", Tag, Base);
+        return;
+    }
+
+    _enable();
+
+    _SEH2_TRY
+    {
+        ProbeForRead(Base, 0x20, 1);
+        for (i = 0; i < 4; i++)
+        {
+            Values[i] = ((volatile ULONG_PTR *)Base)[i];
+        }
+        for (i = 0; i < 4; i++)
+        {
+            DPRINT1("User AV %s+0x%x [%p] qword %p\n",
+                    Tag,
+                    i * 8,
+                    (PVOID)((ULONG_PTR)Base + (i * 8)),
+                    (PVOID)Values[i]);
+        }
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        DPRINT1("User AV %s [%p] field probe failed 0x%08lx\n",
+                Tag,
+                Base,
                 _SEH2_GetExceptionCode());
     }
     _SEH2_END;
@@ -538,14 +589,22 @@ KiDispatchException(IN PEXCEPTION_RECORD ExceptionRecord,
                     "fault");
             }
             /*
-             * silent-fail15: rbx/rsi/rdi were valid user pointers while
-             * the fault address stayed -1 (serial-App-20261116T072618Z).
+             * silent-fail15/16: rbx/rsi/rdi are heap; [rsi]+0=rbx and
+             * [rbx]+0=2 while fault stays -1
+             * (serial-App-20261116T073253Z.log).
              */
             KiPrintUserModuleForAddress((PVOID)Context.Rbx, "rbx");
             KiPrintUserModuleForAddress((PVOID)Context.Rsi, "rsi");
             KiPrintUserModuleForAddress((PVOID)Context.Rdi, "rdi");
-            KiPrintUserQwordAt((PVOID)Context.Rsi, "rsi");
-            KiPrintUserQwordAt((PVOID)Context.Rbx, "rbx");
+            KiPrintUserQwordFields((PVOID)Context.Rbx, "rbx");
+            KiPrintUserQwordFields((PVOID)Context.Rsi, "rsi");
+            KiPrintUserQwordAt((PVOID)Context.Rsp, "rsp");
+            KiPrintUserQwordAt((PVOID)Context.R9, "r9");
+            KiPrintUserQwordAt((PVOID)(Context.Rbp - 0x20), "rbp-0x20");
+            KiPrintUserQwordAt((PVOID)(Context.Rbp - 0x18), "rbp-0x18");
+            KiPrintUserQwordAt((PVOID)(Context.Rbp - 0x10), "rbp-0x10");
+            KiPrintUserQwordAt((PVOID)(Context.Rbp - 0x08), "rbp-0x08");
+            KiPrintUserQwordAt((PVOID)Context.Rbp, "rbp");
         }
 
         /* User mode exception, was it first-chance? */
