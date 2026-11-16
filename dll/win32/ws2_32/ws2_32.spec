@@ -135,7 +135,7 @@
 @ stdcall WSCEnumProtocols(ptr ptr ptr ptr)
 @ stdcall -stub -arch=win64 WSCEnumProtocols32(ptr ptr ptr ptr)
 @ stdcall -stub -version=0x600+ WSCGetApplicationCategory(wstr long wstr long ptr ptr)
-@ stdcall -stub -version=0x600+ WSCGetProviderInfo(ptr long ptr ptr long ptr)
+@ stdcall -stub WSCGetProviderInfo(ptr long ptr ptr long ptr)
 @ stdcall -stub -version=0x600+ -arch=win64 WSCGetProviderInfo32(ptr long ptr ptr long ptr)
 @ stdcall WSCGetProviderPath(ptr ptr ptr ptr)
 @ stdcall -stub -arch=win64 WSCGetProviderPath32(ptr ptr ptr ptr)

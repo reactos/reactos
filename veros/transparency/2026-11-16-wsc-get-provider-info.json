@@ -1,0 +1,15 @@
+{
+  "spdx": "GPL-2.0-or-later",
+  "question": "How should WSCGetProviderInfo be exported from WS2_32 so Firefox xul.dll can load when DLL_EXPORT_VERSION is 0x502?",
+  "allowedInputs": [
+    "https://learn.microsoft.com/en-us/windows/win32/api/ws2spi/nf-ws2spi-wscgetproviderinfo WSCGetProviderInfo, Ws2_32.dll, six parameters",
+    "dll/win32/ws2_32/ws2_32.spec already in this tree, WSCGetProviderInfo stub gated -version=0x600+, WSCEnumProtocols and WSCGetProviderPath ungated",
+    "Reported: Entry Point Not Found WSCGetProviderInfo in ws2_32.dll for firefox.exe",
+    "Reported: xul.dll PE import of WSCGetProviderInfo from ws2_32.dll"
+  ],
+  "harness": {
+    "guest": "amd64 installed veros-ntfs after RegDeleteKeyValueW ungate, TCG, App mode",
+    "name": "ntdll-apps-firefox",
+    "traceOrReplayId": "Reported: Entry Point Not Found WSCGetProviderInfo in ws2_32.dll"
+  }
+}
