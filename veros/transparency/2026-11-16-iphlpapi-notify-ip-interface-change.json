@@ -1,0 +1,17 @@
+{
+  "spdx": "GPL-2.0-or-later",
+  "question": "Why did Firefox exit after late TLS with LDR missing export NotifyIpInterfaceChange, and how should iphlpapi answer that GetProcAddress?",
+  "allowedInputs": [
+    "Wine dlls/iphlpapi/iphlpapi_main.c NotifyIpInterfaceChange and CancelMibChangeNotify2 (wine-9.0) https://gitlab.winehq.org/wine/wine/-/blob/wine-9.0/dlls/iphlpapi/iphlpapi_main.c",
+    "Wine dlls/iphlpapi/iphlpapi.spec NotifyIpInterfaceChange / CancelMibChangeNotify2 https://gitlab.winehq.org/wine/wine/-/blob/wine-9.0/dlls/iphlpapi/iphlpapi.spec",
+    "output/ntdll-apps/serial-App-20261116T105326Z.log marker LDR: missing export iphlpapi.dll!NotifyIpInterfaceChange",
+    "output/ntdll-apps/serial-App-20261116T111101Z.log marker fixme:(dll\\win32\\iphlpapi\\iphlpapi_main.c:2799) (family 2",
+    "dll/win32/iphlpapi/iphlpapi.spec existing NotifyAddrChange / CancelIPChangeNotify entries"
+  ],
+  "harness": {
+    "guest": "veros-ntfs App",
+    "name": "firefox-plain-notifyip",
+    "traceOrReplayId": "serial-App-20261116T111101Z"
+  },
+  "harness.logSha256": "efd96323a35442cf80bec55c65cb0653255e958686c506c4c6bd009e4b236af9"
+}

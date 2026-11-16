@@ -9,6 +9,12 @@
  */
 /*
  * 2018 Pierre Schweitzer
+ *
+ * NotifyIpInterfaceChange and CancelMibChangeNotify2 follow Wine
+ * dlls/iphlpapi/iphlpapi_main.c (wine-9.0):
+ * https://gitlab.winehq.org/wine/wine/-/blob/wine-9.0/dlls/iphlpapi/iphlpapi_main.c
+ * Exported without -version= so they appear under DLL_EXPORT_VERSION=0x502
+ * (serial-App-20261116T105326Z.log: LDR missing export NotifyIpInterfaceChange).
  */
 
 #define DEBUG
@@ -2775,6 +2781,36 @@ DWORD WINAPI NotifyAddrChange(PHANDLE Handle, LPOVERLAPPED overlapped)
   if (Handle) *Handle = INVALID_HANDLE_VALUE;
   if (overlapped) ((IO_STATUS_BLOCK *) overlapped)->Status = STATUS_PENDING;
   return ERROR_IO_PENDING;
+}
+
+
+/******************************************************************
+ *    NotifyIpInterfaceChange (IPHLPAPI.@)
+ *
+ * Wine dlls/iphlpapi/iphlpapi_main.c NotifyIpInterfaceChange (wine-9.0).
+ */
+DWORD WINAPI NotifyIpInterfaceChange(ADDRESS_FAMILY Family,
+                                     PVOID Callback,
+                                     PVOID Context,
+                                     BOOLEAN InitialNotification,
+                                     PHANDLE NotificationHandle)
+{
+  FIXME("(family %d, callback %p, context %p, init_notify %d, handle %p): stub\n",
+        Family, Callback, Context, InitialNotification, NotificationHandle);
+  if (NotificationHandle) *NotificationHandle = NULL;
+  return NO_ERROR;
+}
+
+
+/******************************************************************
+ *    CancelMibChangeNotify2 (IPHLPAPI.@)
+ *
+ * Wine dlls/iphlpapi/iphlpapi_main.c CancelMibChangeNotify2 (wine-9.0).
+ */
+DWORD WINAPI CancelMibChangeNotify2(HANDLE NotificationHandle)
+{
+  FIXME("(handle %p): stub\n", NotificationHandle);
+  return NO_ERROR;
 }
 
 
