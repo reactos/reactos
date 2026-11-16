@@ -1,0 +1,16 @@
+{
+  "spdx": "GPL-2.0-or-later",
+  "question": "At D3D feature level 9.x, should CreateVertexShader accept SM4 level_9 DXBC (SHDR) when Wine's d3dcompiler does not embed Aon9?",
+  "allowedInputs": [
+    "dll/directx/wine/wined3d/shader_sm4.c TAG_SHDR skipped when max_version less than 4; TAG_AON9 used below 4",
+    "dll/directx/wine/wined3d/shader.c shader_max_version_from_feature_level",
+    "output/mesasoft-livecd-20261116T135227Z.log D3D11SMOKE FAIL vs hr=0x80070057 at level=0x9300 before host-embedded Aon9 smoke",
+    "Reported: host d3dcompiler_47 level_9_3 DXBC contains Aon9 and SHDR; Wine d3dcompiler blobs used in guest did not satisfy the Aon9-only FL9 path"
+  ],
+  "harness": {
+    "guest": "VerOS",
+    "name": "live CD d3d11 FL9 shader create",
+    "traceOrReplayId": "output/mesasoft-livecd-20261116T135227Z.log D3D11SMOKE FAIL vs hr=0x80070057",
+    "logSha256": "a1c97abf89741fbbbc24e5a51a1081c8da6888627af336d9ecefa7dab29edb21"
+  }
+}

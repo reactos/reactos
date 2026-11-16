@@ -2087,11 +2087,11 @@ static unsigned int shader_max_version_from_feature_level(enum wined3d_feature_l
         case WINED3D_FEATURE_LEVEL_10_1:
         case WINED3D_FEATURE_LEVEL_10:
             return 4;
+        /* D3D11 FL9 uses SM4 level_9 DXBC (SHDR). Guest: D3D11SMOKE FAIL vs hr=0x80070057 at level=0x9300. */
         case WINED3D_FEATURE_LEVEL_9_3:
-            return 3;
         case WINED3D_FEATURE_LEVEL_9_2:
         case WINED3D_FEATURE_LEVEL_9_1:
-            return 2;
+            return 4;
         default:
             return 1;
     }
