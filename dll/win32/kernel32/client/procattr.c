@@ -111,8 +111,16 @@ validate_proc_thread_attribute(DWORD_PTR attr, SIZE_T size)
         if (size != sizeof(USHORT)) return ERROR_BAD_LENGTH;
         break;
     default:
-        DPRINT1("Unhandled ProcThreadAttribute %Iu\n", attr & PROC_THREAD_ATTRIBUTE_NUMBER);
-        return ERROR_NOT_SUPPORTED;
+        /*
+         * CreateProcessInternalW does not apply the list yet (flag stripped).
+         * Still accept unknown attributes so Firefox socket/rdd SpawnTarget
+         * can call CreateProcess. Guest:
+         * output/ntdll-apps/firefox-procattr-guest-log/firefox-stderr.txt
+         * still named socket SpawnTarget 0x80070057 after content children
+         * started.
+         */
+        DPRINT1("Ignoring ProcThreadAttribute %Iu\n", attr & PROC_THREAD_ATTRIBUTE_NUMBER);
+        return 0;
     }
     return 0;
 }
