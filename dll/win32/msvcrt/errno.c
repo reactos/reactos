@@ -481,27 +481,12 @@ void __cdecl _invalid_parameter(const wchar_t *expr, const wchar_t *func,
     }
 }
 
-#if _MSVCR_VER >= 80
-
-/*********************************************************************
- * _invalid_parameter_noinfo (MSVCR80.@)
- */
-void CDECL _invalid_parameter_noinfo(void)
-{
-    _invalid_parameter( NULL, NULL, NULL, 0, 0 );
-}
-
-/*********************************************************************
- * _invalid_parameter_noinfo_noreturn (MSVCR80.@)
- */
-void CDECL _invalid_parameter_noinfo_noreturn(void)
-{
-    _invalid_parameter( NULL, NULL, NULL, 0, 0 );
-    _exit( STATUS_INVALID_CRUNTIME_PARAMETER );
-}
-
 /*********************************************************************
  * _get_invalid_parameter_handler (MSVCR80.@)
+ *
+ * Always exported from msvcrt.dll: guest serial-App-20261116T075751Z.log
+ * logged LDR missing export msvcrt.dll!_set_invalid_parameter_handler
+ * while _MSVCR_VER=0 hid these behind MSVCR80 guards.
  */
 _invalid_parameter_handler CDECL _get_invalid_parameter_handler(void)
 {
@@ -521,6 +506,25 @@ _invalid_parameter_handler CDECL _set_invalid_parameter_handler(
 
     invalid_parameter_handler = handler;
     return old;
+}
+
+#if _MSVCR_VER >= 80
+
+/*********************************************************************
+ * _invalid_parameter_noinfo (MSVCR80.@)
+ */
+void CDECL _invalid_parameter_noinfo(void)
+{
+    _invalid_parameter( NULL, NULL, NULL, 0, 0 );
+}
+
+/*********************************************************************
+ * _invalid_parameter_noinfo_noreturn (MSVCR80.@)
+ */
+void CDECL _invalid_parameter_noinfo_noreturn(void)
+{
+    _invalid_parameter( NULL, NULL, NULL, 0, 0 );
+    _exit( STATUS_INVALID_CRUNTIME_PARAMETER );
 }
 
 #endif /* _MSVCR_VER >= 80 */

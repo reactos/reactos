@@ -1,0 +1,17 @@
+{
+  "spdx": "GPL-2.0-or-later",
+  "question": "Why does LDR report msvcrt.dll!_set_invalid_parameter_handler missing on the firefox guest?",
+  "allowedInputs": [
+    "dll/win32/msvcrt/errno.c already in this tree, _set_invalid_parameter_handler behind _MSVCR_VER >= 80",
+    "dll/win32/msvcrt/CMakeLists.txt already in this tree, msvcrt _MSVCR_VER=0",
+    "dll/win32/ucrtbase/ucrtbase.spec already in this tree, _set_invalid_parameter_handler export",
+    "output/ntdll-apps/serial-App-20261116T075751Z.log marker: LDR: missing export msvcrt.dll!_set_invalid_parameter_handler",
+    "output/ntdll-apps/firefox-silent-fail21-fastfail7-gaps.txt"
+  ],
+  "harness": {
+    "guest": "amd64 installed veros-ntfs after INT29 fastfail handler, TCG, App mode",
+    "name": "ntdll-apps-firefox",
+    "traceOrReplayId": "serial-App-20261116T075751Z missing _set_invalid_parameter_handler",
+    "logSha256": "0022378e0b23e2ad81ac631935301541bc896a98007983528327c3a851e87ceb"
+  }
+}

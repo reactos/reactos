@@ -564,6 +564,8 @@
 @ cdecl -arch=i386 _inpd(long)
 @ cdecl -arch=i386 _inpw(long)
 @ cdecl -version=0x600+ _invalid_parameter(wstr wstr wstr long long)
+@ cdecl _get_invalid_parameter_handler()
+@ cdecl _set_invalid_parameter_handler(ptr)
 @ extern _iob MSVCRT__iob
 @ cdecl -version=0x600+ _isalnum_l(long ptr)
 @ cdecl -version=0x600+ _isalpha_l(long ptr)
