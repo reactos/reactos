@@ -3212,6 +3212,13 @@ NtUserGetThreadDesktop(DWORD dwThreadId, HDESK hConsoleDesktop)
     }
     else
     {
+        /*
+         * firefox silent-fail18: CSR gave no console desktop and this
+         * TID is not a Win32 thread yet
+         * (serial-App-20261116T074132Z.log).
+         */
+        ERR("NtUserGetThreadDesktop(%lu) no pti and no console desktop\n",
+            dwThreadId);
         EngSetLastError(ERROR_INVALID_PARAMETER);
         hDesk = NULL;
         goto Quit;

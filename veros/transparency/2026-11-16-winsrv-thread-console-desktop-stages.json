@@ -1,0 +1,17 @@
+{
+  "spdx": "GPL-2.0-or-later",
+  "question": "Is GetThreadConsoleDesktop 0xc0000008 a CSR lock miss or the GUI no-console path before NtUserGetThreadDesktop?",
+  "allowedInputs": [
+    "win32ss/user/winsrv/consrv/frontendctl.c already in this tree, GetThreadConsoleDesktop and ConSrvGetConsole",
+    "win32ss/user/ntuser/desktop.c already in this tree, NtUserGetThreadDesktop",
+    "output/ntdll-apps/serial-App-20261116T074132Z.log marker: GetThreadConsoleDesktop(784) failed with Status 0xc0000008",
+    "output/ntdll-apps/firefox-silent-fail18-av-follow-neg2-gaps.txt",
+    "Reported: do both — dig into GetThreadConsoleDesktop 0xc0000008"
+  ],
+  "harness": {
+    "guest": "amd64 installed veros-ntfs after rsi follow+stack sentinels, TCG, App mode",
+    "name": "ntdll-apps-firefox",
+    "traceOrReplayId": "serial-App-20261116T074132Z GetThreadConsoleDesktop 0xc0000008",
+    "logSha256": "e94616a416d0bbb379c407809c2d0c8346a00258e81164b155bd956fcd0a4339"
+  }
+}
