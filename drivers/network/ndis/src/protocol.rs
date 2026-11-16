@@ -30,9 +30,14 @@
  * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndisregisterprotocoldriver
  * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndissendnetbufferlists
  * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndisreturnnetbufferlists
+ * After MiniportRestart, NDIS calls BindAdapterHandlerEx at offset 0x28
+ * (capture 2026-11-15T162555Z / METHOD.md). notify_adapter_ready walks
+ * registered protocol drivers and calls that slot.
  */
 
 use core::ptr;
+
+use crate::prot6;
 
 const POOL_TAG: u32 = u32::from_le_bytes(*b"NsoV");
 /* output/ndis-discovery/windows.log: type 0x95, revision 2, size 0x80. */
@@ -51,6 +56,7 @@ const FLAGS_AT: usize = 8;
 const CALLED_SLOTS: [usize; 2] = [0x20, 0x48];
 /* Public register page: ProtocolSetOptions at this offset. */
 const SET_OPTIONS_SLOT: usize = 0x20;
+const BIND_SLOT: usize = 0x28;
 /* NDIS_STATUS_BAD_VERSION and NDIS_STATUS_BAD_CHARACTERISTICS in sdk/include/ddk/ndis.h. */
 const BAD_VERSION: u32 = 0xC001_0004;
 const BAD_CHARACTERISTICS: u32 = 0xC001_0005;
@@ -60,6 +66,7 @@ const INVALID_PARAMETER: u32 = 0xC000_000D;
 const FAILURE: u32 = 0xC000_0001;
 const RESOURCES: u32 = 0xC000_009A;
 const KIND_PR: u32 = u32::from_le_bytes(*b"PRso");
+const MAX_PROTOCOLS: usize = 8;
 
 struct PrDriver {
     kind: u32,
@@ -67,10 +74,86 @@ struct PrDriver {
     chars: [u8; PR_CHARS],
 }
 
+static mut PROTOCOLS: [*mut PrDriver; MAX_PROTOCOLS] = [ptr::null_mut(); MAX_PROTOCOLS];
+
 unsafe extern "system" {
     fn ExAllocatePoolWithTag(kind: u32, bytes: usize, tag: u32) -> *mut u8;
     fn ExFreePoolWithTag(address: *mut u8, tag: u32);
     fn DbgPrint(format: *const u8, ...) -> i32;
+}
+
+pub fn dbg(msg: &[u8]) {
+    unsafe { DbgPrint(msg.as_ptr()) };
+}
+
+pub fn dbg_status(fmt: &[u8], status: u32) {
+    unsafe { DbgPrint(fmt.as_ptr(), status) };
+}
+
+pub fn dbg_status_ptr(fmt: &[u8], status: u32, ptr_val: *mut u8) {
+    unsafe { DbgPrint(fmt.as_ptr(), status, ptr_val) };
+}
+
+pub fn dbg_hdr(fmt: &[u8], kind: u8, revision: u8, size: u16) {
+    unsafe { DbgPrint(fmt.as_ptr(), kind as u32, revision as u32, size as u32) };
+}
+
+pub fn alloc_bytes(bytes: usize) -> *mut u8 {
+    unsafe { ExAllocatePoolWithTag(0, bytes, POOL_TAG) }
+}
+
+pub fn free_bytes(address: *mut u8) {
+    if !address.is_null() {
+        unsafe { ExFreePoolWithTag(address, POOL_TAG) };
+    }
+}
+
+fn track(driver: *mut PrDriver) {
+    unsafe {
+        for slot in PROTOCOLS.iter_mut() {
+            if slot.is_null() {
+                *slot = driver;
+                return;
+            }
+        }
+    }
+}
+
+fn untrack(driver: *mut PrDriver) {
+    unsafe {
+        for slot in PROTOCOLS.iter_mut() {
+            if *slot == driver {
+                *slot = ptr::null_mut();
+                return;
+            }
+        }
+    }
+}
+
+pub fn notify_adapter_ready(adapter: *mut u8) {
+    /* Call BindAdapterEx on each registered protocol that has a slot. */
+    if adapter.is_null() {
+        return;
+    }
+    unsafe { DbgPrint(b"NDIS BINDALL\n\0".as_ptr()) };
+    let params = prot6::make_bind_parameters();
+    for index in 0..MAX_PROTOCOLS {
+        let driver = unsafe { PROTOCOLS[index] };
+        if driver.is_null() {
+            continue;
+        }
+        let chars = unsafe { (*driver).chars.as_ptr() };
+        let slot = unsafe { ptr::read_unaligned(chars.add(BIND_SLOT) as *const *mut u8) };
+        if slot.is_null() {
+            continue;
+        }
+        let context = unsafe { (*driver).context };
+        let function: unsafe extern "system" fn(*mut u8, *mut u8, *mut u8) -> u32 =
+            unsafe { core::mem::transmute(slot) };
+        let status = unsafe { function(context, adapter, params) };
+        unsafe { DbgPrint(b"NDIS BINDALL %08x\n\0".as_ptr(), status) };
+    }
+    prot6::free_bind_parameters(params);
 }
 
 fn push_hex(line: &mut [u8], at: &mut usize, value: u8) {
@@ -209,6 +292,7 @@ pub unsafe extern "system" fn NdisRegisterProtocolDriver(
         ExFreePoolWithTag(driver as *mut u8, POOL_TAG);
         return status;
     }
+    track(driver);
     *out_handle = driver as *mut u8;
     0
 }
@@ -222,18 +306,50 @@ pub unsafe extern "system" fn NdisDeregisterProtocolDriver(handle: *mut u8) {
     if (*driver).kind != KIND_PR {
         return;
     }
+    untrack(driver);
     (*driver).kind = 0;
     ExFreePoolWithTag(handle, POOL_TAG);
 }
 
 #[no_mangle]
-pub extern "system" fn NdisSendNetBufferLists(
-    _binding: *mut u8,
-    _lists: *mut u8,
-    _port: u32,
-    _flags: u32,
+pub unsafe extern "system" fn NdisSendNetBufferLists(
+    binding: *mut u8,
+    lists: *mut u8,
+    port: u32,
+    flags: u32,
 ) {
+    /* https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndissendnetbufferlists
+     * Binding kind and adapter offset match NdisOpenAdapterEx in lib.rs
+     * (BINDING_KIND / BINDING_ADAPTER_AT). */
+    const BINDING_KIND: u32 = u32::from_le_bytes(*b"BNso");
+    const BINDING_ADAPTER_AT: usize = 8;
+    if binding.is_null() || lists.is_null() {
+        return;
+    }
+    if core::ptr::read_unaligned(binding as *const u32) != BINDING_KIND {
+        return;
+    }
+    let adapter = core::ptr::read_unaligned(binding.add(BINDING_ADAPTER_AT) as *const *mut u8);
+    crate::register::call_send_net_buffer_lists(adapter, lists, port, flags);
 }
 
 #[no_mangle]
-pub extern "system" fn NdisReturnNetBufferLists(_binding: *mut u8, _lists: *mut u8, _flags: u32) {}
+pub unsafe extern "system" fn NdisReturnNetBufferLists(
+    binding: *mut u8,
+    lists: *mut u8,
+    flags: u32,
+) {
+    /* https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndisreturnnetbufferlists
+     * Miniport ReturnNetBufferListsHandler is at characteristics 0x50
+     * (capture 2026-11-15T161901Z INDICATE_SLOT). */
+    const BINDING_KIND: u32 = u32::from_le_bytes(*b"BNso");
+    const BINDING_ADAPTER_AT: usize = 8;
+    if binding.is_null() || lists.is_null() {
+        return;
+    }
+    if core::ptr::read_unaligned(binding as *const u32) != BINDING_KIND {
+        return;
+    }
+    let adapter = core::ptr::read_unaligned(binding.add(BINDING_ADAPTER_AT) as *const *mut u8);
+    crate::register::call_return_net_buffer_lists(adapter, lists, flags);
+}

@@ -182,12 +182,24 @@ const ATTR_GENERAL_TYPE: u8 = 0x9F;
 const ATTR_GENERAL_REVISION: u8 = 2;
 const ATTR_GENERAL_SIZE: u16 = 0xE0;
 const INVALID_PARAMETER: u32 = 0xC000_000D;
-/* Capture 2026-11-15T161901Z: the list arrived at this miniport offset. */
-const INDICATE_SLOT: usize = 0x50;
+/* Capture 2026-11-15T161901Z: ReturnNetBufferListsHandler / indicate
+ * delivery offset on the miniport characteristics. */
+const RETURN_SLOT: usize = 0x50;
 /* METHOD.md capture 2026-11-15T143730Z: initialize is slot 0x18. */
 const INIT_SLOT: usize = 0x18;
 /* SetOptions at 0x10; Restart is four pointers later: 0x38. */
 const RESTART_SLOT: usize = 0x38;
+/* OidRequestHandler is the next pointer after Restart on
+ * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/ns-ndis-_ndis_miniport_driver_characteristics
+ * Eight-byte pointers from 0x10: Init 0x18, Halt 0x20, Unload 0x28,
+ * Pause 0x30, Restart 0x38, OidRequest 0x40. Restart at 0x38 is measured
+ * (output/netkvm-20261116T085039Z.log). OidRequest at 0x40 is that
+ * public member order from Restart, not a Windows dump of the slot. */
+const OID_SLOT: usize = 0x40;
+/* SendNetBufferListsHandler is the next pointer after OidRequest on the
+ * same public characteristics page. Eight-byte pointers: Oid 0x40, Send
+ * 0x48. */
+const SEND_SLOT: usize = 0x48;
 /* This file's buffer for the third initialize parameter, not a Windows size. */
 const INIT_BYTES: usize = 256;
 /* This file's buffer for MiniportRestart parameters, not a Windows size. */
@@ -222,6 +234,9 @@ const HANDLE_FDO_AT: usize = 0x160;
 const HANDLE_NEXT_AT: usize = 0x168;
 /* After the measured 06 00 at 0x172, before dword 1 at 0x190. */
 const HANDLE_RES_AT: usize = 0x178;
+/* Free pointer slot between resources and the measured dword at 0x190:
+ * soft-registered interrupt block from NdisMRegisterInterruptEx. */
+const HANDLE_IRQ_AT: usize = 0x180;
 /* Zero run after dword 1 at 0x190: MiniportAdapterContext from 0x9E. */
 const HANDLE_ADAPTER_CTX_AT: usize = 0x198;
 /* IO_STACK_LOCATION.Parameters starts after the 4 UCHAR header fields on
@@ -466,6 +481,32 @@ pub fn miniport_devices(handle: *mut u8) -> (*mut u8, *mut u8, *mut u8) {
         read_ptr(handle, HANDLE_FDO_AT),
         read_ptr(handle, HANDLE_NEXT_AT),
     )
+}
+
+pub fn miniport_resources(handle: *mut u8) -> *mut u8 {
+    /* CM_PARTIAL_RESOURCE_LIST pointer stored in store_start_resources. */
+    if !is_mp_handle(handle) {
+        return ptr::null_mut();
+    }
+    read_ptr(handle, HANDLE_RES_AT)
+}
+
+pub fn store_interrupt(handle: *mut u8, interrupt: *mut u8) {
+    if !is_mp_handle(handle) {
+        return;
+    }
+    write_ptr(handle, HANDLE_IRQ_AT, interrupt);
+}
+
+pub fn miniport_interrupt(handle: *mut u8) -> *mut u8 {
+    if !is_mp_handle(handle) {
+        return ptr::null_mut();
+    }
+    read_ptr(handle, HANDLE_IRQ_AT)
+}
+
+pub fn clear_interrupt(handle: *mut u8) {
+    store_interrupt(handle, ptr::null_mut());
 }
 
 fn log_rows(prefix: &[u8; 10], base: *const u8, total: usize, changed: &mut bool, expect: &mut dyn FnMut(usize) -> u8) {
@@ -926,6 +967,14 @@ fn call_restart(handle: *mut u8) {
     let status = unsafe { function(adapter_ctx, params) };
     unsafe { DbgPrint(b"NDIS RESTART %08x\n\0".as_ptr(), status) };
     unsafe { ExFreePoolWithTag(params, POOL_TAG) };
+    if status == 0 {
+        /* Connect the soft-registered interrupt before bind. Connecting
+         * during InitializeEx ran the miniport DPC mid-init and asserted
+         * KeGetCurrentIrql() <= APC_LEVEL (output/netkvm-20261116T103245Z.log,
+         * output/netkvm-20261116T103516Z.log). */
+        unsafe { crate::connect_interrupt(handle) };
+        crate::protocol::notify_adapter_ready(handle);
+    }
 }
 
 #[no_mangle]
@@ -1024,34 +1073,158 @@ pub unsafe extern "system" fn NdisMSetMiniportAttributes(
 pub unsafe extern "system" fn NdisMIndicateReceiveNetBufferLists(
     adapter: *mut u8,
     lists: *mut u8,
-    _port: u32,
-    _count: u32,
+    port: u32,
+    count: u32,
     flags: u32,
 ) {
-    /* Capture 2026-11-15T161901Z: argument 0 and argument 2 were null,
-     * and argument 1 was the list. */
+    /* Deliver to the NDIS 6 protocol binding first. Capture
+     * 2026-11-15T161901Z measured miniport return at 0x50 for a probe
+     * indicate; live traffic uses the protocol receive path instead. */
     if !is_mp_handle(adapter) {
         return;
     }
-    let slot = slot_at(chars_ptr(adapter), MP_CHARS, INDICATE_SLOT);
+    unsafe { DbgPrint(b"NDIS RECVIND\n\0".as_ptr()) };
+    crate::prot6::indicate_receive(adapter, lists, port, count, flags);
+}
+
+pub fn call_return_net_buffer_lists(adapter: *mut u8, lists: *mut u8, flags: u32) {
+    if !is_mp_handle(adapter) || lists.is_null() {
+        return;
+    }
+    let chars_len = chars_len(adapter);
+    let slot = unsafe { slot_at(chars_ptr(adapter), chars_len, RETURN_SLOT) };
     if slot.is_null() {
         return;
     }
+    let adapter_ctx = read_ptr(adapter, HANDLE_ADAPTER_CTX_AT);
     let function: unsafe extern "system" fn(*mut u8, *mut u8, u32) =
         unsafe { core::mem::transmute(slot) };
-    unsafe { function(ptr::null_mut(), lists, flags) }
+    unsafe { function(adapter_ctx, lists, flags) };
+}
+
+pub fn call_send_net_buffer_lists(
+    adapter: *mut u8,
+    lists: *mut u8,
+    port: u32,
+    flags: u32,
+) {
+    /* https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nc-ndis-miniport_send_net_buffer_lists */
+    if !is_mp_handle(adapter) || lists.is_null() {
+        return;
+    }
+    let chars_len = chars_len(adapter);
+    let slot = unsafe { slot_at(chars_ptr(adapter), chars_len, SEND_SLOT) };
+    if slot.is_null() {
+        unsafe { DbgPrint(b"NDIS SEND null\n\0".as_ptr()) };
+        return;
+    }
+    let adapter_ctx = read_ptr(adapter, HANDLE_ADAPTER_CTX_AT);
+    if adapter_ctx.is_null() {
+        unsafe { DbgPrint(b"NDIS SEND ctx\n\0".as_ptr()) };
+        return;
+    }
+    unsafe { DbgPrint(b"NDIS SEND\n\0".as_ptr()) };
+    let function: unsafe extern "system" fn(*mut u8, *mut u8, u32, u32) =
+        unsafe { core::mem::transmute(slot) };
+    unsafe { function(adapter_ctx, lists, port, flags) };
 }
 
 #[no_mangle]
 pub extern "system" fn NdisMSendNetBufferListsComplete(
-    _adapter: *mut u8,
-    _lists: *mut u8,
-    _flags: u32,
+    adapter: *mut u8,
+    lists: *mut u8,
+    flags: u32,
 ) {
+    /* https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismsendnetbufferlistscomplete */
+    unsafe {
+        DbgPrint(
+            b"NDIS SENDDONE %p %p %08x\n\0".as_ptr(),
+            adapter,
+            lists,
+            flags,
+        )
+    };
+    crate::prot6::complete_send(adapter, lists, flags);
+}
+
+pub fn call_oid_request(adapter: *mut u8, request: *mut u8) -> u32 {
+    /* Forward to MiniportOidRequest. The request buffer stays opaque
+     * until a guest dump names its body offsets.
+     * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nc-ndis-miniport_oid_request
+     * output/netkvm-20261116T091655Z.log printed NDIS STUB NdisOidRequest
+     * three times after NDIS OPENEXOK on the NetKVM bind path. */
+    if !is_mp_handle(adapter) || request.is_null() {
+        return INVALID_PARAMETER;
+    }
+    let chars_len = chars_len(adapter);
+    let slot = unsafe { slot_at(chars_ptr(adapter), chars_len, OID_SLOT) };
+    if slot.is_null() {
+        unsafe { DbgPrint(b"NDIS OID null\n\0".as_ptr()) };
+        return 0xC000_00BB; /* STATUS_NOT_SUPPORTED in sdk/include/psdk/ntstatus.h */
+    }
+    let adapter_ctx = read_ptr(adapter, HANDLE_ADAPTER_CTX_AT);
+    if adapter_ctx.is_null() {
+        unsafe { DbgPrint(b"NDIS OID ctx\n\0".as_ptr()) };
+        return INVALID_PARAMETER;
+    }
+    let kind = unsafe { *request };
+    let revision = unsafe { *request.add(1) };
+    let size = u16::from_le_bytes(unsafe { [*request.add(2), *request.add(3)] });
+    /* output/netkvm-20261116T092548Z.log NDIS OIDBODY: RequestType dword
+     * at offset 4 (0 = NdisRequestQueryInformation, 1 =
+     * NdisRequestSetInformation in sdk/include/ddk/ndis.h); Oid dword at
+     * offset 0x20 (0x0001010E = OID_GEN_CURRENT_PACKET_FILTER in
+     * sdk/include/psdk/ntddndis.h). */
+    let request_type = if (size as usize) >= 8 {
+        u32::from_le_bytes(unsafe {
+            [
+                *request.add(4),
+                *request.add(5),
+                *request.add(6),
+                *request.add(7),
+            ]
+        })
+    } else {
+        0xffff_ffff
+    };
+    let oid = if (size as usize) >= 0x24 {
+        u32::from_le_bytes(unsafe {
+            [
+                *request.add(0x20),
+                *request.add(0x21),
+                *request.add(0x22),
+                *request.add(0x23),
+            ]
+        })
+    } else {
+        0
+    };
+    unsafe {
+        DbgPrint(
+            b"NDIS OID %02x %02x %04x t%u %08x\n\0".as_ptr(),
+            kind as u32,
+            revision as u32,
+            size as u32,
+            request_type,
+            oid,
+        )
+    };
+    let function: unsafe extern "system" fn(*mut u8, *mut u8) -> u32 =
+        unsafe { core::mem::transmute(slot) };
+    let status = unsafe { function(adapter_ctx, request) };
+    unsafe { DbgPrint(b"NDIS OID %08x\n\0".as_ptr(), status) };
+    status
 }
 
 #[no_mangle]
-pub extern "system" fn NdisMOidRequestComplete(_adapter: *mut u8, _request: *mut u8, _status: u32) {
+pub extern "system" fn NdisMOidRequestComplete(
+    adapter: *mut u8,
+    request: *mut u8,
+    status: u32,
+) {
+    /* https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismoidrequestcomplete */
+    unsafe { DbgPrint(b"NDIS OIDDONE %08x\n\0".as_ptr(), status) };
+    crate::prot6::complete_oid(adapter, request, status);
 }
 
 #[no_mangle]

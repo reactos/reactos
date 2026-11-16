@@ -32,11 +32,24 @@
  * output/netkvm-20261116T071822Z.log printed NDIS IRQ 84 01 0060, NDIS
  * IRQOK, then NDIS STUB NdisMRegisterScatterGatherDma and NDIS INIT
  * c0000002. NDIS_STATUS_SUCCESS is 0 in sdk/include/ddk/ndis.h. The
- * deregister page returns no status. ScatterGatherListSize is not
- * written until a probe measures that OUT field.
+ * deregister page returns no status. ScatterGatherListSize OUT is the
+ * one-element SCATTER_GATHER_LIST size from sdk/include/xdk/iotypes.h.
+ * ProcessSGListHandler is at description offset 0x10 on that register
+ * page; size 0x24 matches output/netkvm-20261116T072305Z.log.
+ * output/netkvm-20261116T101041Z.log printed NDIS STUB
+ * NdisMAllocateNetBufferSGList on every send.
+ * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismallocatenetbuffersglist
+ * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismfreenetbuffersglist
+ * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nc-ndis-miniport_process_sg_list
+ * NET_BUFFER Mdl/DataLength/DataOffset are capture 2026-11-15T232142Z.
+ * MDL.MappedSystemVa is sdk/include/xdk/mmtypes.h.
  * output/netkvm-20261116T004517Z.log names NdisMSynchronizeWithInterruptEx.
  * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismsynchronizewithinterruptex
- * It returns false, which that page returns when the callback does not run.
+ * KeSynchronizeExecution is
+ * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/wdm/nf-wdm-kesynchronizeexecution
+ * and sdk/include/xdk/kefuncs.h. Soft-only (no IoConnectInterrupt yet)
+ * runs the sync routine directly; a connected object uses
+ * KeSynchronizeExecution.
  * output/netkvm-20261116T004752Z.log names NdisMDeregisterInterruptEx.
  * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismderegisterinterruptex
  * output/netkvm-20261116T005020Z.log names NdisMRegisterInterruptEx.
@@ -53,6 +66,13 @@
  * 0x58 stayed null (DIFF IRQA0050). Those OUT offsets are the probe's
  * count from the public characteristics page, confirmed by that dump.
  * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/ns-ndis-_ndis_miniport_interrupt_characteristics
+ * Soft register stores handlers and parses CM resources without
+ * IoConnectInterrupt during InitializeEx. Connect runs after Restart
+ * (output/netkvm-20261116T103245Z.log and
+ * output/netkvm-20261116T103516Z.log connected mid-init, printed
+ * NDIS IRQDPC, then asserted KeGetCurrentIrql() <= APC_LEVEL in
+ * ntoskrnl\mm\ARM3\miarm.h). Soft-only boot
+ * output/netkvm-20261116T103750Z.log printed NDIS IRQ soft.
  * ScatterGatherListSize was unchanged on that same Windows call.
  * output/netkvm-20261116T005259Z.log names NdisAcquireRWLockWrite.
  * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndisacquirerwlockwrite
@@ -254,6 +274,7 @@ mod check;
 mod filter;
 mod ndis5;
 mod pool;
+mod prot6;
 mod protocol;
 mod register;
 
@@ -346,6 +367,27 @@ unsafe extern "system" {
     ) -> *mut u8;
     fn IoFreeMdl(mdl: *mut u8);
     fn MmBuildMdlForNonPagedPool(mdl: *mut u8);
+    fn IoConnectInterrupt(
+        interrupt_object: *mut *mut u8,
+        service_routine: *const (),
+        service_context: *mut u8,
+        spin_lock: *mut u8,
+        vector: u32,
+        irql: u8,
+        synchronize_irql: u8,
+        mode: u32,
+        share_vector: u8,
+        affinity: u64,
+        floating_save: u8,
+    ) -> i32;
+    fn IoDisconnectInterrupt(interrupt_object: *mut u8);
+    fn KeSynchronizeExecution(
+        interrupt_object: *mut u8,
+        synchronize_routine: *const (),
+        synchronize_context: *mut u8,
+    ) -> u8;
+    fn KeInitializeDpc(dpc: *mut u8, routine: *const (), context: *mut u8);
+    fn KeInsertQueueDpc(dpc: *mut u8, arg1: *mut u8, arg2: *mut u8) -> u8;
 }
 
 #[panic_handler]
@@ -421,6 +463,7 @@ static POOLS: &[Routine] = &[
     Routine { name: "NdisAllocateNetBuffer", address: pool::NdisAllocateNetBuffer as *const () },
     Routine { name: "NdisFreeNetBuffer", address: pool::NdisFreeNetBuffer as *const () },
     Routine { name: "NdisAllocateNetBufferListPool", address: pool::NdisAllocateNetBufferListPool as *const () },
+    Routine { name: "NdisAllocateNetBufferList", address: pool::NdisAllocateNetBufferList as *const () },
     Routine { name: "NdisFreeNetBufferListPool", address: pool::NdisFreeNetBufferListPool as *const () },
     Routine { name: "NdisAllocateNetBufferAndNetBufferList", address: pool::NdisAllocateNetBufferAndNetBufferList as *const () },
     Routine { name: "NdisFreeNetBufferList", address: pool::NdisFreeNetBufferList as *const () },
@@ -1083,27 +1126,97 @@ pub unsafe extern "system" fn NdisGetDeviceReservedExtension(device: *mut u8) ->
     extension
 }
 
+const BINDING_BYTES: usize = 0x40;
+const BINDING_KIND: u32 = u32::from_le_bytes(*b"BNso");
+const BINDING_ADAPTER_AT: usize = 8;
+const BINDING_CONTEXT_AT: usize = 16;
+const BINDING_PROTOCOL_AT: usize = 24;
+
 #[no_mangle]
 pub unsafe extern "system" fn NdisOpenAdapterEx(
-    _protocol: *mut u8,
-    _context: *mut u8,
-    _parameters: *mut u8,
-    _bind: *mut u8,
+    protocol: *mut u8,
+    context: *mut u8,
+    parameters: *mut u8,
+    bind: *mut u8,
     binding: *mut *mut u8,
 ) -> u32 {
-    /* NDIS_STATUS_FAILURE from sdk/include/ddk/ndis.h. */
-    unsafe { DbgPrint(b"NDIS STUB NdisOpenAdapterEx\n\0".as_ptr()) };
-    if !binding.is_null() {
-        *binding = core::ptr::null_mut();
+    /* https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndisopenadapterex
+     * BindContext from BindAdapterEx is the miniport adapter handle on
+     * this path (notify_adapter_ready). Open-parameters Header type is
+     * not measured; dump Size from offset 2. SelectedMediumIndex at
+     * derived offset 32 gets NdisMedium802_3 index 0. */
+    unsafe { DbgPrint(b"NDIS OPENEX\n\0".as_ptr()) };
+    if !parameters.is_null() {
+        let kind = *parameters;
+        let revision = *parameters.add(1);
+        let size = u16::from_le_bytes([*parameters.add(2), *parameters.add(3)]);
+        unsafe {
+            DbgPrint(
+                b"NDIS OPENHDR %02x %02x %04x\n\0".as_ptr(),
+                kind as u32,
+                revision as u32,
+                size as u32,
+            )
+        };
+        let selected = core::ptr::read_unaligned(parameters.add(32) as *const *mut u32);
+        if !selected.is_null() {
+            *selected = 0;
+        }
     }
-    0xC000_0001
+    if binding.is_null() {
+        return 0xC000_000D;
+    }
+    let block = ExAllocatePoolWithTag(0, BINDING_BYTES, u32::from_le_bytes(*b"NsoV"));
+    if block.is_null() {
+        *binding = core::ptr::null_mut();
+        return 0xC000_009A;
+    }
+    core::ptr::write_bytes(block, 0, BINDING_BYTES);
+    core::ptr::write_unaligned(block as *mut u32, BINDING_KIND);
+    let adapter = if !bind.is_null() {
+        bind
+    } else {
+        core::ptr::null_mut()
+    };
+    core::ptr::write_unaligned(block.add(BINDING_ADAPTER_AT) as *mut *mut u8, adapter);
+    core::ptr::write_unaligned(block.add(BINDING_CONTEXT_AT) as *mut *mut u8, context);
+    core::ptr::write_unaligned(block.add(BINDING_PROTOCOL_AT) as *mut *mut u8, protocol);
+    *binding = block;
+    unsafe { DbgPrint(b"NDIS OPENEXOK %p\n\0".as_ptr(), block) };
+    0
 }
 
 #[no_mangle]
-pub extern "system" fn NdisCloseAdapterEx(_binding: *mut u8) -> u32 {
-    /* NDIS_STATUS_FAILURE from sdk/include/ddk/ndis.h. */
-    unsafe { DbgPrint(b"NDIS STUB NdisCloseAdapterEx\n\0".as_ptr()) };
-    0xC000_0001
+pub unsafe extern "system" fn NdisOidRequest(binding: *mut u8, request: *mut u8) -> u32 {
+    /* https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndisoidrequest
+     * Binding stores the miniport adapter handle at BINDING_ADAPTER_AT.
+     * output/netkvm-20261116T091655Z.log printed NDIS STUB NdisOidRequest
+     * after NDIS OPENEXOK on the second BindAdapterEx (OPENHDR 87 01 0034). */
+    if binding.is_null() || request.is_null() {
+        return 0xC000_000D;
+    }
+    if core::ptr::read_unaligned(binding as *const u32) != BINDING_KIND {
+        return 0xC000_0001;
+    }
+    let adapter = core::ptr::read_unaligned(binding.add(BINDING_ADAPTER_AT) as *const *mut u8);
+    register::call_oid_request(adapter, request)
+}
+
+#[no_mangle]
+pub extern "system" fn NdisCloseAdapterEx(binding: *mut u8) -> u32 {
+    /* https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndiscloseadapterex */
+    if binding.is_null() {
+        return 0xC000_000D;
+    }
+    unsafe {
+        if core::ptr::read_unaligned(binding as *const u32) != BINDING_KIND {
+            return 0xC000_0001;
+        }
+        DbgPrint(b"NDIS CLOSEEX\n\0".as_ptr());
+        core::ptr::write_unaligned(binding as *mut u32, 0);
+        ExFreePoolWithTag(binding, u32::from_le_bytes(*b"NsoV"));
+    }
+    0
 }
 
 #[no_mangle]
@@ -1450,9 +1563,39 @@ pub unsafe extern "system" fn NdisFreeMemoryWithTagPriority(
     }
 }
 
+/* DMA object kind and field offsets. The 0x40-byte block is this file's
+ * buffer, not a Windows object size. ProcessSGListHandler is at
+ * description offset 0x10 on the public NDIS_SG_DMA_DESCRIPTION page
+ * (size 0x24 matches output/netkvm-20261116T072305Z.log NDIS SG 83 01 0024).
+ * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismregisterscattergatherdma
+ * FDO is HANDLE_FDO_AT from register.rs (AddDevice). */
+const DMA_KIND: u32 = u32::from_le_bytes(*b"DMso");
+const DMA_BYTES: usize = 0x40;
+const DMA_PROCESS_AT: usize = 8;
+const DMA_FDO_AT: usize = 16;
+const SG_DESC_PROCESS_AT: usize = 0x10;
+const SG_DESC_SIZE_AT: usize = 0x20;
+/* One-element SCATTER_GATHER_LIST from sdk/include/xdk/iotypes.h on x64:
+ * NumberOfElements + Reserved (0x10) plus one SCATTER_GATHER_ELEMENT (0x18). */
+const SG_LIST_BYTES: usize = 0x28;
+const SG_OWNED: u32 = u32::from_le_bytes(*b"SGow");
+const SG_OWN_HEADER: usize = 16;
+/* NET_BUFFER DataLength / Mdl / DataOffset: capture 2026-11-15T232142Z.
+ * CurrentMdl / CurrentMdlOffset precede DataLength in the public
+ * NET_BUFFER member order. */
+const NB_CURRENT_MDL_AT: usize = 0x08;
+const NB_CURRENT_MDL_OFFSET_AT: usize = 0x10;
+const NB_LENGTH_AT: usize = 0x18;
+const NB_MDL_AT: usize = 0x20;
+const NB_OFFSET_AT: usize = 0x28;
+/* MDL.MappedSystemVa in sdk/include/xdk/mmtypes.h on x64. */
+const MDL_MAPPED_VA_AT: usize = 0x18;
+
+type ProcessSgFn = unsafe extern "system" fn(*mut u8, *mut u8, *mut u8, *mut u8);
+
 #[no_mangle]
 pub unsafe extern "system" fn NdisMRegisterScatterGatherDma(
-    _adapter: *mut u8,
+    adapter: *mut u8,
     description: *mut u8,
     dma_handle: *mut *mut u8,
 ) -> u32 {
@@ -1460,13 +1603,13 @@ pub unsafe extern "system" fn NdisMRegisterScatterGatherDma(
      * INIT c0000002.
      * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismregisterscattergatherdma
      * NDIS_STATUS_SUCCESS and NDIS_STATUS_RESOURCES are 0 and 0xC000009A
-     * in sdk/include/ddk/ndis.h. The 0x40-byte DMA object is this file's
-     * buffer so the handle is non-null; it is not a Windows size.
-     * ScatterGatherListSize is not written here. */
+     * in sdk/include/ddk/ndis.h. ScatterGatherListSize OUT is the
+     * one-element list size from sdk/include/xdk/iotypes.h. */
     if dma_handle.is_null() {
         return 0xC000_000D;
     }
     unsafe {
+        let mut process: *mut u8 = core::ptr::null_mut();
         if !description.is_null() {
             let kind = *description;
             let revision = *description.add(1);
@@ -1477,13 +1620,30 @@ pub unsafe extern "system" fn NdisMRegisterScatterGatherDma(
                 revision as u32,
                 size as u32,
             );
+            if (size as usize) >= SG_DESC_PROCESS_AT + 8 {
+                process = core::ptr::read_unaligned(
+                    description.add(SG_DESC_PROCESS_AT) as *const *mut u8,
+                );
+            }
+            if (size as usize) >= SG_DESC_SIZE_AT + 4 {
+                let bytes = (SG_LIST_BYTES as u32).to_le_bytes();
+                core::ptr::copy_nonoverlapping(
+                    bytes.as_ptr(),
+                    description.add(SG_DESC_SIZE_AT),
+                    4,
+                );
+            }
         }
-        let block = ExAllocatePoolWithTag(0, 0x40, POOL_TAG);
+        let block = ExAllocatePoolWithTag(0, DMA_BYTES, POOL_TAG);
         if block.is_null() {
             *dma_handle = core::ptr::null_mut();
             return 0xC000_009A;
         }
-        core::ptr::write_bytes(block, 0, 0x40);
+        core::ptr::write_bytes(block, 0, DMA_BYTES);
+        core::ptr::write_unaligned(block as *mut u32, DMA_KIND);
+        core::ptr::write_unaligned(block.add(DMA_PROCESS_AT) as *mut *mut u8, process);
+        let (_pdo, fdo, _next) = register::miniport_devices(adapter);
+        core::ptr::write_unaligned(block.add(DMA_FDO_AT) as *mut *mut u8, fdo);
         *dma_handle = block;
         DbgPrint(b"NDIS SGOK\n\0".as_ptr());
     }
@@ -1503,8 +1663,251 @@ pub unsafe extern "system" fn NdisMDeregisterScatterGatherDma(dma: *mut u8) {
 }
 
 #[no_mangle]
+pub unsafe extern "system" fn NdisMAllocateNetBufferSGList(
+    dma: *mut u8,
+    net_buffer: *mut u8,
+    context: *mut u8,
+    _flags: u32,
+    scatter_buffer: *mut u8,
+    scatter_bytes: u32,
+) -> u32 {
+    /* output/netkvm-20261116T101041Z.log printed NDIS STUB
+     * NdisMAllocateNetBufferSGList on every NDIS SEND, then SENDDONE
+     * with no wire traffic (PING CHECK fail 000004cf for 10.0.2.2).
+     * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismallocatenetbuffersglist
+     * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nc-ndis-miniport_process_sg_list
+     * SCATTER_GATHER_LIST is sdk/include/xdk/iotypes.h. NET_BUFFER
+     * Mdl/DataLength/DataOffset are capture 2026-11-15T232142Z.
+     * MDL.MappedSystemVa is sdk/include/xdk/mmtypes.h. */
+    if dma.is_null()
+        || net_buffer.is_null()
+        || core::ptr::read_unaligned(dma as *const u32) != DMA_KIND
+    {
+        return 0xC000_000D;
+    }
+    let process_ptr =
+        core::ptr::read_unaligned(dma.add(DMA_PROCESS_AT) as *const *mut u8);
+    if process_ptr.is_null() {
+        unsafe { DbgPrint(b"NDIS SGALLOC null\n\0".as_ptr()) };
+        return 0xC000_009A;
+    }
+    /* Public allocate page builds the list from CurrentMdl /
+     * CurrentMdlOffset; fall back to MdlChain / DataOffset. */
+    let mut mdl =
+        core::ptr::read_unaligned(net_buffer.add(NB_CURRENT_MDL_AT) as *const *mut u8);
+    let mut mdl_offset =
+        core::ptr::read_unaligned(net_buffer.add(NB_CURRENT_MDL_OFFSET_AT) as *const u32);
+    if mdl.is_null() {
+        mdl = core::ptr::read_unaligned(net_buffer.add(NB_MDL_AT) as *const *mut u8);
+        mdl_offset = core::ptr::read_unaligned(net_buffer.add(NB_OFFSET_AT) as *const u32);
+    }
+    if mdl.is_null() {
+        unsafe { DbgPrint(b"NDIS SGALLOC mdl\n\0".as_ptr()) };
+        return 0xC000_009A;
+    }
+    let data_length = core::ptr::read_unaligned(net_buffer.add(NB_LENGTH_AT) as *const u64);
+    let mapped =
+        core::ptr::read_unaligned(mdl.add(MDL_MAPPED_VA_AT) as *const *mut u8);
+    if mapped.is_null() || data_length == 0 || data_length > u32::MAX as u64 {
+        unsafe { DbgPrint(b"NDIS SGALLOC va\n\0".as_ptr()) };
+        return 0xC000_009A;
+    }
+    /* List covers the MDL from its start; CurrentMdlOffset is applied by
+     * the miniport (public allocate page). */
+    let physical = MmGetPhysicalAddress(mapped);
+    let element_length = (mdl_offset as u64).saturating_add(data_length);
+    if element_length > u32::MAX as u64 {
+        unsafe { DbgPrint(b"NDIS SGALLOC len\n\0".as_ptr()) };
+        return 0xC000_009A;
+    }
+    /* Always allocate. The public allocate page says NDIS may allocate
+     * even when ScatterGatherListBuffer is set; Free then owns the list. */
+    let _ = (scatter_buffer, scatter_bytes);
+    let block = ExAllocatePoolWithTag(0, SG_OWN_HEADER + SG_LIST_BYTES, POOL_TAG);
+    if block.is_null() {
+        unsafe { DbgPrint(b"NDIS SGALLOC nomem\n\0".as_ptr()) };
+        return 0xC000_009A;
+    }
+    core::ptr::write_bytes(block, 0, SG_OWN_HEADER + SG_LIST_BYTES);
+    core::ptr::write_unaligned(block as *mut u32, SG_OWNED);
+    let list = block.add(SG_OWN_HEADER);
+    core::ptr::write_bytes(list, 0, SG_LIST_BYTES);
+    /* NumberOfElements at 0; Elements[0].Address at 0x10; Length at 0x18. */
+    core::ptr::write_unaligned(list as *mut u32, 1);
+    core::ptr::write_unaligned(list.add(0x10) as *mut u64, physical);
+    core::ptr::write_unaligned(list.add(0x18) as *mut u32, element_length as u32);
+
+    let fdo = core::ptr::read_unaligned(dma.add(DMA_FDO_AT) as *const *mut u8);
+    let process: ProcessSgFn = core::mem::transmute(process_ptr);
+    unsafe {
+        DbgPrint(
+            b"NDIS SGALLOC %p len %u pa %p\n\0".as_ptr(),
+            list,
+            element_length as u32,
+            physical as *mut u8,
+        );
+        process(fdo, core::ptr::null_mut(), list, context);
+    }
+    0
+}
+
+#[no_mangle]
+pub unsafe extern "system" fn NdisMFreeNetBufferSGList(
+    _dma: *mut u8,
+    scatter_list: *mut u8,
+    _net_buffer: *mut u8,
+) {
+    /* https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismfreenetbuffersglist */
+    if scatter_list.is_null() {
+        return;
+    }
+    let header = scatter_list.sub(SG_OWN_HEADER);
+    if core::ptr::read_unaligned(header as *const u32) == SG_OWNED {
+        unsafe {
+            DbgPrint(b"NDIS SGLISTFREE\n\0".as_ptr());
+            ExFreePoolWithTag(header, POOL_TAG);
+        }
+    }
+}
+
+/* Interrupt object layout is this file's, not a Windows size. Handler
+ * offsets match the public NDIS_MINIPORT_INTERRUPT_CHARACTERISTICS page
+ * with InterruptType at 0x50 / MessageInfoTable at 0x58 from capture
+ * 2026-11-16T080419Z DIFF IRQA0050. Size 0x60 is output/netkvm-20261116T071822Z.log.
+ * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/ns-ndis-_ndis_miniport_interrupt_characteristics
+ * CM_PARTIAL_RESOURCE_LIST / CmResourceTypeInterrupt are
+ * sdk/include/xdk/cmtypes.h. IoConnectInterrupt is
+ * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/wdm/nf-wdm-ioconnectinterrupt
+ * output/netkvm-20261116T102602Z.log printed SGALLOC/SENDDONE with no
+ * RECVLAN: RegisterInterruptEx never connected an ISR. Soft register
+ * during InitializeEx; connect_interrupt after Restart. */
+const IRQ_KIND: u32 = u32::from_le_bytes(*b"IRso");
+const IRQ_BYTES: usize = 0x100;
+const IRQ_CONTEXT_AT: usize = 8;
+const IRQ_ISR_AT: usize = 0x10;
+const IRQ_DPC_HANDLER_AT: usize = 0x18;
+const IRQ_OBJECT_AT: usize = 0x20;
+const IRQ_ADAPTER_AT: usize = 0x28;
+const IRQ_DPC_AT: usize = 0x40;
+type SyncRoutineFn = unsafe extern "system" fn(*mut u8) -> u8;
+const IRQ_CHARS_ISR_AT: usize = 0x08;
+const IRQ_CHARS_DPC_AT: usize = 0x10;
+const IRQ_CHARS_TYPE_AT: usize = 0x50;
+const IRQ_CHARS_MSG_AT: usize = 0x58;
+const CM_RES_COUNT_AT: usize = 4;
+const CM_RES_DESC_AT: usize = 8;
+const CM_DESC_BYTES: usize = 0x14;
+const CM_DESC_TYPE_AT: usize = 0;
+const CM_DESC_SHARE_AT: usize = 1;
+const CM_DESC_FLAGS_AT: usize = 2;
+const CM_DESC_LEVEL_AT: usize = 4;
+const CM_DESC_VECTOR_AT: usize = 8;
+const CM_DESC_AFFINITY_AT: usize = 12;
+const CM_TYPE_INTERRUPT: u8 = 2;
+const CM_INTERRUPT_LATCHED: u16 = 1;
+const LEVEL_SENSITIVE: u32 = 0;
+const LATCHED: u32 = 1;
+
+type MiniportIsrFn =
+    unsafe extern "system" fn(*mut u8, *mut u8, *mut u32) -> u8;
+type MiniportDpcFn =
+    unsafe extern "system" fn(*mut u8, *mut u8, *mut u8, *mut u8);
+
+unsafe extern "system" fn ndis_interrupt_service(
+    _interrupt: *mut u8,
+    context: *mut u8,
+) -> u8 {
+    if context.is_null() || core::ptr::read_unaligned(context as *const u32) != IRQ_KIND {
+        return 0;
+    }
+    let isr_ptr =
+        core::ptr::read_unaligned(context.add(IRQ_ISR_AT) as *const *mut u8);
+    let miniport_ctx =
+        core::ptr::read_unaligned(context.add(IRQ_CONTEXT_AT) as *const *mut u8);
+    if isr_ptr.is_null() {
+        return 0;
+    }
+    let mut queue_dpc: u8 = 0;
+    let mut targets: u32 = 0;
+    let isr: MiniportIsrFn = core::mem::transmute(isr_ptr);
+    let claimed = isr(miniport_ctx, &mut queue_dpc, &mut targets);
+    /* Only schedule when the miniport claimed the interrupt and asked
+     * for a DPC. output/netkvm-20261116T103245Z.log printed NDIS IRQDPC
+     * during InitializeEx then asserted KeGetCurrentIrql() <= APC_LEVEL
+     * in ntoskrnl\mm\ARM3\miarm.h. Do not DbgPrint from this path. */
+    if claimed != 0 && (queue_dpc != 0 || targets != 0) {
+        KeInsertQueueDpc(context.add(IRQ_DPC_AT), core::ptr::null_mut(), core::ptr::null_mut());
+    }
+    claimed
+}
+
+unsafe extern "system" fn ndis_interrupt_dpc(
+    _dpc: *mut u8,
+    context: *mut u8,
+    _arg1: *mut u8,
+    _arg2: *mut u8,
+) {
+    if context.is_null() || core::ptr::read_unaligned(context as *const u32) != IRQ_KIND {
+        return;
+    }
+    let dpc_ptr = core::ptr::read_unaligned(
+        context.add(IRQ_DPC_HANDLER_AT) as *const *mut u8,
+    );
+    let miniport_ctx =
+        core::ptr::read_unaligned(context.add(IRQ_CONTEXT_AT) as *const *mut u8);
+    if dpc_ptr.is_null() {
+        return;
+    }
+    let dpc: MiniportDpcFn = core::mem::transmute(dpc_ptr);
+    dpc(
+        miniport_ctx,
+        core::ptr::null_mut(),
+        core::ptr::null_mut(),
+        core::ptr::null_mut(),
+    );
+}
+
+fn find_interrupt_resource(partial: *mut u8) -> Option<(u32, u8, u64, u16, u8)> {
+    /* Returns Vector, Irql, Affinity, Flags, ShareDisposition. */
+    if partial.is_null() {
+        return None;
+    }
+    unsafe {
+        let count = core::ptr::read_unaligned(partial.add(CM_RES_COUNT_AT) as *const u32);
+        DbgPrint(b"NDIS IRQRES count %u\n\0".as_ptr(), count);
+        let mut index = 0u32;
+        while index < count && index < 16 {
+            let desc = partial.add(CM_RES_DESC_AT + (index as usize) * CM_DESC_BYTES);
+            let kind = *desc.add(CM_DESC_TYPE_AT);
+            if kind == CM_TYPE_INTERRUPT {
+                let share = *desc.add(CM_DESC_SHARE_AT);
+                let flags =
+                    core::ptr::read_unaligned(desc.add(CM_DESC_FLAGS_AT) as *const u16);
+                let level =
+                    core::ptr::read_unaligned(desc.add(CM_DESC_LEVEL_AT) as *const u32);
+                let vector =
+                    core::ptr::read_unaligned(desc.add(CM_DESC_VECTOR_AT) as *const u32);
+                let affinity = core::ptr::read_unaligned(
+                    desc.add(CM_DESC_AFFINITY_AT) as *const u64,
+                );
+                DbgPrint(
+                    b"NDIS IRQRES v%u l%u a%p f%u\n\0".as_ptr(),
+                    vector,
+                    level,
+                    affinity as *mut u8,
+                    flags as u32,
+                );
+                return Some((vector, level as u8, affinity, flags, share));
+            }
+            index += 1;
+        }
+    }
+    None
+}
+
+#[no_mangle]
 pub unsafe extern "system" fn NdisMRegisterInterruptEx(
-    _adapter: *mut u8,
+    adapter: *mut u8,
     context: *mut u8,
     characteristics: *mut u8,
     interrupt_handle: *mut *mut u8,
@@ -1513,14 +1916,15 @@ pub unsafe extern "system" fn NdisMRegisterInterruptEx(
      * INIT c0000002.
      * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismregisterinterruptex
      * NDIS_STATUS_SUCCESS and NDIS_STATUS_RESOURCES are 0 and 0xC000009A
-     * in sdk/include/ddk/ndis.h. The 0x40-byte interrupt object is this
-     * file's buffer so the handle is non-null; it is not a Windows size.
-     * Capture 2026-11-16T080419Z DIFF IRQA0050: InterruptType dword at
-     * offset 0x50 became 1; MessageInfoTable at 0x58 stayed null. */
+     * in sdk/include/ddk/ndis.h. Capture 2026-11-16T080419Z DIFF IRQA0050:
+     * InterruptType dword at offset 0x50 became 1; MessageInfoTable at
+     * 0x58 stayed null. */
     if interrupt_handle.is_null() {
         return 0xC000_000D;
     }
     unsafe {
+        let mut isr: *mut u8 = core::ptr::null_mut();
+        let mut dpc_handler: *mut u8 = core::ptr::null_mut();
         if !characteristics.is_null() {
             let kind = *characteristics;
             let revision = *characteristics.add(1);
@@ -1531,31 +1935,111 @@ pub unsafe extern "system" fn NdisMRegisterInterruptEx(
                 revision as u32,
                 size as u32,
             );
+            if (size as usize) >= IRQ_CHARS_DPC_AT + 8 {
+                isr = core::ptr::read_unaligned(
+                    characteristics.add(IRQ_CHARS_ISR_AT) as *const *mut u8,
+                );
+                dpc_handler = core::ptr::read_unaligned(
+                    characteristics.add(IRQ_CHARS_DPC_AT) as *const *mut u8,
+                );
+            }
             if size as usize >= 0x60 {
                 let interrupt_type = 1u32.to_le_bytes();
                 core::ptr::copy_nonoverlapping(
                     interrupt_type.as_ptr(),
-                    characteristics.add(0x50),
+                    characteristics.add(IRQ_CHARS_TYPE_AT),
                     4,
                 );
-                core::ptr::write_bytes(characteristics.add(0x58), 0, 8);
+                core::ptr::write_bytes(characteristics.add(IRQ_CHARS_MSG_AT), 0, 8);
             }
         }
-        let block = ExAllocatePoolWithTag(0, 0x40, POOL_TAG);
+        let block = ExAllocatePoolWithTag(0, IRQ_BYTES, POOL_TAG);
         if block.is_null() {
             *interrupt_handle = core::ptr::null_mut();
             return 0xC000_009A;
         }
-        core::ptr::write_bytes(block, 0, 0x40);
-        core::ptr::copy_nonoverlapping(
-            (context as usize).to_le_bytes().as_ptr(),
-            block,
-            core::mem::size_of::<usize>(),
+        core::ptr::write_bytes(block, 0, IRQ_BYTES);
+        core::ptr::write_unaligned(block as *mut u32, IRQ_KIND);
+        core::ptr::write_unaligned(block.add(IRQ_CONTEXT_AT) as *mut *mut u8, context);
+        core::ptr::write_unaligned(block.add(IRQ_ISR_AT) as *mut *mut u8, isr);
+        core::ptr::write_unaligned(
+            block.add(IRQ_DPC_HANDLER_AT) as *mut *mut u8,
+            dpc_handler,
         );
+        KeInitializeDpc(
+            block.add(IRQ_DPC_AT),
+            ndis_interrupt_dpc as *const (),
+            block,
+        );
+
+        core::ptr::write_unaligned(block.add(IRQ_ADAPTER_AT) as *mut *mut u8, adapter);
+        core::ptr::write_unaligned(block.add(IRQ_OBJECT_AT) as *mut *mut u8, core::ptr::null_mut());
+        let partial = register::miniport_resources(adapter);
+        /* Parse and log the interrupt resource. Do not IoConnectInterrupt
+         * during InitializeEx yet: output/netkvm-20261116T103245Z.log and
+         * output/netkvm-20261116T103516Z.log connected, ran the miniport
+         * DPC mid-init, then asserted KeGetCurrentIrql() <= APC_LEVEL in
+         * ntoskrnl\mm\ARM3\miarm.h. Handlers stay on the block for
+         * connect_interrupt after Restart. */
+        if find_interrupt_resource(partial).is_none() {
+            DbgPrint(b"NDIS IRQRES none\n\0".as_ptr());
+        }
+        register::store_interrupt(adapter, block);
+        DbgPrint(b"NDIS IRQ soft\n\0".as_ptr());
         *interrupt_handle = block;
         DbgPrint(b"NDIS IRQOK\n\0".as_ptr());
     }
     0
+}
+
+pub(crate) unsafe fn connect_interrupt(adapter: *mut u8) {
+    /* Called after MiniportRestart succeeds. Soft register already stored
+     * the block on the adapter; this is the deferred IoConnectInterrupt. */
+    let block = register::miniport_interrupt(adapter);
+    if block.is_null() {
+        return;
+    }
+    unsafe {
+        if core::ptr::read_unaligned(block as *const u32) != IRQ_KIND {
+            return;
+        }
+        let existing = core::ptr::read_unaligned(block.add(IRQ_OBJECT_AT) as *const *mut u8);
+        if !existing.is_null() {
+            return;
+        }
+        let partial = register::miniport_resources(adapter);
+        let Some((vector, irql, affinity, flags, share)) = find_interrupt_resource(partial) else {
+            DbgPrint(b"NDIS IRQRES none\n\0".as_ptr());
+            return;
+        };
+        let mode = if (flags & CM_INTERRUPT_LATCHED) != 0 {
+            LATCHED
+        } else {
+            LEVEL_SENSITIVE
+        };
+        let mut object: *mut u8 = core::ptr::null_mut();
+        let status = IoConnectInterrupt(
+            &mut object,
+            ndis_interrupt_service as *const (),
+            block,
+            core::ptr::null_mut(),
+            vector,
+            irql,
+            irql,
+            mode,
+            share,
+            affinity,
+            0,
+        );
+        DbgPrint(
+            b"NDIS IRQCONN %08x %p\n\0".as_ptr(),
+            status as u32,
+            object,
+        );
+        if status >= 0 && !object.is_null() {
+            core::ptr::write_unaligned(block.add(IRQ_OBJECT_AT) as *mut *mut u8, object);
+        }
+    }
 }
 
 #[no_mangle]
@@ -1565,20 +2049,50 @@ pub unsafe extern "system" fn NdisMDeregisterInterruptEx(interrupt: *mut u8) {
         return;
     }
     unsafe {
+        if core::ptr::read_unaligned(interrupt as *const u32) == IRQ_KIND {
+            let object = core::ptr::read_unaligned(
+                interrupt.add(IRQ_OBJECT_AT) as *const *mut u8,
+            );
+            if !object.is_null() {
+                IoDisconnectInterrupt(object);
+            }
+            let adapter = core::ptr::read_unaligned(
+                interrupt.add(IRQ_ADAPTER_AT) as *const *mut u8,
+            );
+            if !adapter.is_null() && register::miniport_interrupt(adapter) == interrupt {
+                register::clear_interrupt(adapter);
+            }
+        }
         DbgPrint(b"NDIS IRQFREE\n\0".as_ptr());
         ExFreePoolWithTag(interrupt, POOL_TAG);
     }
 }
 
 #[no_mangle]
-pub extern "system" fn NdisMSynchronizeWithInterruptEx(
-    _interrupt: *mut u8,
+pub unsafe extern "system" fn NdisMSynchronizeWithInterruptEx(
+    interrupt: *mut u8,
     _message: u32,
-    _routine: *mut u8,
-    _context: *mut u8,
+    routine: *mut u8,
+    context: *mut u8,
 ) -> u8 {
-    unsafe { DbgPrint(b"NDIS STUB NdisMSynchronizeWithInterruptEx\n\0".as_ptr()) };
-    0
+    /* https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismsynchronizewithinterruptex
+     * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/wdm/nf-wdm-kesynchronizeexecution */
+    if interrupt.is_null() || routine.is_null() {
+        return 0;
+    }
+    unsafe {
+        if core::ptr::read_unaligned(interrupt as *const u32) != IRQ_KIND {
+            return 0;
+        }
+        let object = core::ptr::read_unaligned(
+            interrupt.add(IRQ_OBJECT_AT) as *const *mut u8,
+        );
+        if !object.is_null() {
+            return KeSynchronizeExecution(object, routine as *const (), context);
+        }
+        let sync: SyncRoutineFn = core::mem::transmute(routine);
+        sync(context)
+    }
 }
 
 static MINIPORT: &[Routine] = &[
@@ -1604,6 +2118,7 @@ static MINIPORT: &[Routine] = &[
     Routine { name: "NdisGetDeviceReservedExtension", address: NdisGetDeviceReservedExtension as *const () },
     Routine { name: "NdisOpenAdapterEx", address: NdisOpenAdapterEx as *const () },
     Routine { name: "NdisCloseAdapterEx", address: NdisCloseAdapterEx as *const () },
+    Routine { name: "NdisOidRequest", address: NdisOidRequest as *const () },
     Routine { name: "NdisMGetDeviceProperty", address: NdisMGetDeviceProperty as *const () },
     Routine { name: "NdisAllocateRWLock", address: NdisAllocateRWLock as *const () },
     Routine { name: "NdisFreeRWLock", address: NdisFreeRWLock as *const () },
@@ -1624,6 +2139,8 @@ static MINIPORT: &[Routine] = &[
     Routine { name: "NdisMDeregisterInterruptEx", address: NdisMDeregisterInterruptEx as *const () },
     Routine { name: "NdisMRegisterScatterGatherDma", address: NdisMRegisterScatterGatherDma as *const () },
     Routine { name: "NdisMDeregisterScatterGatherDma", address: NdisMDeregisterScatterGatherDma as *const () },
+    Routine { name: "NdisMAllocateNetBufferSGList", address: NdisMAllocateNetBufferSGList as *const () },
+    Routine { name: "NdisMFreeNetBufferSGList", address: NdisMFreeNetBufferSGList as *const () },
     Routine { name: "NdisSetOptionalHandlers", address: register::NdisSetOptionalHandlers as *const () },
     Routine { name: "NdisMRegisterMiniportDriver", address: register::NdisMRegisterMiniportDriver as *const () },
     Routine { name: "NdisMDeregisterMiniportDriver", address: register::NdisMDeregisterMiniportDriver as *const () },
@@ -1690,11 +2207,7 @@ macro_rules! stubs {
 }
 
 stubs!(
-    NdisAllocateNetBufferList,
-    NdisMAllocateNetBufferSGList,
-    NdisMFreeNetBufferSGList,
     NdisGetDataBuffer,
-    NdisOidRequest,
     NdisFOidRequest,
     NdisFreeIoWorkItem,
     NdisQueueIoWorkItem,
