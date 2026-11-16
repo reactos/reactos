@@ -7,7 +7,7 @@
 @ stub DllGetActivationFactory
 @ stub -private DllGetClassObject
 @ stdcall GetCurrentProcessExplicitAppUserModelID(ptr)
-@ stdcall -stub GetDpiForMonitor(long long ptr ptr)
+@ stdcall GetDpiForMonitor(long long ptr ptr)
 @ stub GetDpiForShellUIComponent
 @ stdcall GetFeatureEnabledState(long long)
 # @ stub GetFeatureVariant

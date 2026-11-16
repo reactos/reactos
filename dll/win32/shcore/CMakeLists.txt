@@ -18,7 +18,7 @@ if(MSVC)
     target_compile_options(shcore PRIVATE /wd4267) # warning C4267: '=': conversion from 'size_t' to 'ULONG', possible loss of data
 endif()
 target_link_libraries(shcore crtheap wine wine_dll_canunload)
-add_importlibs(shcore combase advapi32 advapi32_vista kernel32 ntdll)
+add_importlibs(shcore combase advapi32 advapi32_vista user32 gdi32 kernel32 ntdll)
 add_dependencies(shcore psdk)
 add_cd_file(TARGET shcore DESTINATION VerOS/system32 FOR all)
 set_wine_module(shcore)
