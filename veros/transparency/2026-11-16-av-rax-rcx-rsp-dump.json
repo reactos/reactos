@@ -1,0 +1,17 @@
+{
+    "spdx":  "GPL-2.0-or-later",
+    "question":  "After the App guest stopped freezing, what else should User AV logging print for the stable xul.dll +0x19dde7 crash with rsi=3?",
+    "allowedInputs":  [
+                          "ntoskrnl/ke/amd64/except.c already in this tree, KiPrintUserStackSentinels and fastfail rsp slot walk",
+                          "output/ntdll-apps/serial-App-20261116T094615Z.log marker: User AV rip module xul.dll +0x19dde7",
+                          "output/ntdll-apps/serial-App-20261116T094615Z.log marker: User AV stack sentinel walk skipped",
+                          "output/ntdll-apps/serial-App-20261116T094615Z.log marker: User AV regs rax=0000000000834F80 rcx=0000000000837330",
+                          "output/ntdll-apps/firefox-fail28-guest-log/firefox-stdout.txt marker: firefox-exit=128"
+                      ],
+    "harness":  {
+                    "guest":  "amd64 installed veros-ntfs, TCG, App mode, Desktop run-firefox-log.cmd",
+                    "name":  "ntdll-apps-firefox",
+                    "traceOrReplayId":  "serial-App-20261116T094615Z xul AV no freeze",
+                    "logSha256":  "958006cdb88e9d0053de720d6a2e8096408887da00b7897f45de76d60163384c"
+                }
+}

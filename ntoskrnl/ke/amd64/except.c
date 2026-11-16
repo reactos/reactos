@@ -15,6 +15,8 @@
  * 0x29 to KiRaiseSecurityCheckFailure instead of unexpected→AV(-1).
  * serial-App-20261116T094020Z.log: KiPrintUserQwordFields(rbx=4) took
  * KMODE_EXCEPTION_NOT_HANDLED; reject user pointers below 64K before probe.
+ * serial-App-20261116T094615Z.log: same xul+0x19dde7 AV with rsi=3; probe
+ * rax/rcx/rbp and rsp slots when rbp is not a frame pointer.
  */
 
 /* INCLUDES ******************************************************************/
@@ -560,6 +562,9 @@ KiPrintUserInsnBytes(
 /*
  * silent-fail17: [rbp-0x08] was -2 every AV; exact -1 was missing.
  * Walk rsp..rbp+0x20 and print only -1 / -2 slots.
+ * silent-fail29: rbp matched r12/r14 heap (0xA203310) with rsp far
+ * below it, so the old span check skipped the walk entirely
+ * (serial-App-20261116T094615Z.log). Fall back to rsp..rsp+0x200.
  */
 static
 VOID
@@ -581,10 +586,18 @@ KiPrintUserStackSentinels(
         End < Start ||
         (End - Start) > 0x400)
     {
-        DPRINT1("User AV stack sentinel walk skipped rsp=%p rbp=%p\n",
+        DPRINT1("User AV stack sentinel rbp junk rsp=%p rbp=%p; use rsp window\n",
                 (PVOID)Rsp,
                 (PVOID)Rbp);
-        return;
+        End = Start + 0x200;
+        if (End > (ULONG_PTR)MmUserProbeAddress)
+        {
+            End = (ULONG_PTR)MmUserProbeAddress & ~(ULONG_PTR)7;
+        }
+        if (End <= Start)
+        {
+            return;
+        }
     }
 
     _enable();
@@ -948,16 +961,69 @@ KiDispatchException(IN PEXCEPTION_RECORD ExceptionRecord,
             /*
              * silent-fail15/19: follow rsi10; scan frame; insn at RIP
              * (serial-App-20261116T074754Z.log).
+             * silent-fail29: rsi/rbx were 3/4; rax/rcx sit near rsp and
+             * rbp aliases the heap object in r12/r14
+             * (serial-App-20261116T094615Z.log).
              */
             KiPrintUserModuleForAddress((PVOID)Context.Rbx, "rbx");
             KiPrintUserModuleForAddress((PVOID)Context.Rsi, "rsi");
             KiPrintUserModuleForAddress((PVOID)Context.Rdi, "rdi");
+            KiPrintUserModuleForAddress((PVOID)Context.Rax, "rax");
+            KiPrintUserModuleForAddress((PVOID)Context.Rcx, "rcx");
+            KiPrintUserModuleForAddress((PVOID)Context.Rbp, "rbp");
             KiPrintUserQwordFields((PVOID)Context.Rbx, "rbx");
             KiPrintUserQwordFields((PVOID)Context.Rsi, "rsi");
+            KiPrintUserQwordFields((PVOID)Context.Rax, "rax");
+            KiPrintUserQwordFields((PVOID)Context.Rcx, "rcx");
+            KiPrintUserQwordFields((PVOID)Context.Rbp, "rbp");
             KiPrintUserFollowedObject((PVOID)Context.Rsi, 0x8, "rsi8");
             KiPrintUserFollowedObject((PVOID)Context.Rsi, 0x10, "rsi10");
             KiPrintUserFollowedObject2((PVOID)Context.Rsi, 0x10, 0x0, "rsi10_0");
             KiPrintUserFollowedObject2((PVOID)Context.Rsi, 0x10, 0x18, "rsi10_18");
+            KiPrintUserFollowedObject((PVOID)Context.Rbp, 0x0, "rbp0");
+            KiPrintUserFollowedObject((PVOID)Context.Rbp, 0x8, "rbp8");
+            KiPrintUserFollowedObject((PVOID)Context.Rbp, 0xa8, "rbpA8");
+            {
+                ULONG Slot;
+                static const char *StackTags[16] =
+                {
+                    "rsp+0", "rsp+8", "rsp+10", "rsp+18",
+                    "rsp+20", "rsp+28", "rsp+30", "rsp+38",
+                    "rsp+40", "rsp+48", "rsp+50", "rsp+58",
+                    "rsp+60", "rsp+68", "rsp+70", "rsp+78"
+                };
+
+                for (Slot = 0; Slot < 16; Slot++)
+                {
+                    ULONG_PTR SlotAddr = Context.Rsp + (ULONG_PTR)Slot * 8;
+                    ULONG_PTR Value;
+
+                    if (SlotAddr >= (ULONG_PTR)MmUserProbeAddress)
+                    {
+                        break;
+                    }
+
+                    _enable();
+                    _SEH2_TRY
+                    {
+                        ProbeForRead((PVOID)SlotAddr, sizeof(Value), 1);
+                        Value = *(volatile ULONG_PTR *)SlotAddr;
+                    }
+                    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+                    {
+                        Value = 0;
+                    }
+                    _SEH2_END;
+                    _disable();
+
+                    if (!Value || Value < 0x10000ULL || Value == (ULONG_PTR)-1)
+                    {
+                        continue;
+                    }
+
+                    KiPrintUserModuleForAddress((PVOID)Value, StackTags[Slot]);
+                }
+            }
             KiPrintUserStackSentinels(Context.Rsp, Context.Rbp);
         }
 
