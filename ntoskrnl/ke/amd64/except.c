@@ -10,9 +10,9 @@
  *              Ryan Wilson <ryan@verosnt.com>
  *
  * User AV lines name the loaded module+RVA and trap registers.
- * Guest serial output/ntdll-apps/serial-App-20261116T074132Z.log:
- * xul.dll +0x18f2c22 fault -1; only stack -2; rsi10 holds more heap —
- * follow rsi10+0/+0x18, log r10-r15, keep the frame sentinel scan.
+ * Guest serial output/ntdll-apps/serial-App-20261116T074754Z.log:
+ * xul.dll +0x18f2c22 fault -1; rsi10 children are xul code pointers —
+ * probe 16 insn bytes at RIP to name the load that used -1.
  */
 
 /* INCLUDES ******************************************************************/
@@ -498,6 +498,50 @@ KiPrintUserFollowedObject2(
 }
 
 /*
+ * silent-fail19: -1 never sat in probed GPRs/stack/objects; print the
+ * faulting xul instruction bytes (firefox, not a Microsoft binary)
+ * (serial-App-20261116T074754Z.log).
+ */
+static
+VOID
+KiPrintUserInsnBytes(
+    _In_ PVOID Address)
+{
+    UCHAR Bytes[16];
+
+    if (!Address ||
+        (ULONG_PTR)Address == (ULONG_PTR)-1 ||
+        (ULONG_PTR)Address > ((ULONG_PTR)MmUserProbeAddress - 16))
+    {
+        DPRINT1("User AV insn [%p] skip\n", Address);
+        return;
+    }
+
+    _enable();
+
+    _SEH2_TRY
+    {
+        ProbeForRead(Address, sizeof(Bytes), 1);
+        RtlCopyMemory(Bytes, Address, sizeof(Bytes));
+        DPRINT1("User AV insn %02x %02x %02x %02x %02x %02x %02x %02x "
+                "%02x %02x %02x %02x %02x %02x %02x %02x\n",
+                Bytes[0], Bytes[1], Bytes[2], Bytes[3],
+                Bytes[4], Bytes[5], Bytes[6], Bytes[7],
+                Bytes[8], Bytes[9], Bytes[10], Bytes[11],
+                Bytes[12], Bytes[13], Bytes[14], Bytes[15]);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        DPRINT1("User AV insn [%p] probe failed 0x%08lx\n",
+                Address,
+                _SEH2_GetExceptionCode());
+    }
+    _SEH2_END;
+
+    _disable();
+}
+
+/*
  * silent-fail17: [rbp-0x08] was -2 every AV; exact -1 was missing.
  * Walk rsp..rbp+0x20 and print only -1 / -2 slots.
  */
@@ -738,6 +782,7 @@ KiDispatchException(IN PEXCEPTION_RECORD ExceptionRecord,
                     (PVOID)Context.R15);
             KiPrintUserModuleForAddress(ExceptionRecord->ExceptionAddress,
                                         "rip");
+            KiPrintUserInsnBytes(ExceptionRecord->ExceptionAddress);
             if (ExceptionRecord->NumberParameters > 1)
             {
                 KiPrintUserModuleForAddress(
@@ -745,8 +790,8 @@ KiDispatchException(IN PEXCEPTION_RECORD ExceptionRecord,
                     "fault");
             }
             /*
-             * silent-fail15/18: follow rsi10 children; scan frame for
-             * -1/-2 (serial-App-20261116T074132Z.log).
+             * silent-fail15/19: follow rsi10; scan frame; insn at RIP
+             * (serial-App-20261116T074754Z.log).
              */
             KiPrintUserModuleForAddress((PVOID)Context.Rbx, "rbx");
             KiPrintUserModuleForAddress((PVOID)Context.Rsi, "rsi");
