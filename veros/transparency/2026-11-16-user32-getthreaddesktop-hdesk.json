@@ -1,0 +1,16 @@
+{
+  "spdx": "GPL-2.0-or-later",
+  "question": "After GetThreadConsoleDesktop no-console, what HDESK does GetThreadDesktop return to the caller?",
+  "allowedInputs": [
+    "win32ss/user/user32/misc/desktop.c already in this tree, GetThreadDesktop and NtUserGetThreadDesktop",
+    "output/ntdll-apps/serial-App-20261116T074754Z.log marker: GetThreadConsoleDesktop(788) no console 0xc0000008",
+    "output/ntdll-apps/firefox-silent-fail19-av-xul-codeptrs-gaps.txt",
+    "Reported: on go, optionally log the HDESK GetThreadDesktop returns"
+  ],
+  "harness": {
+    "guest": "amd64 installed veros-ntfs after rsi10/r10-r15 and desktop stage logs, TCG, App mode",
+    "name": "ntdll-apps-firefox",
+    "traceOrReplayId": "serial-App-20261116T074754Z GetThreadConsoleDesktop no console",
+    "logSha256": "32674b54bd7c50df025ac67f6df78168502b2a732a9c7c32689697649f6c6c9b"
+  }
+}
