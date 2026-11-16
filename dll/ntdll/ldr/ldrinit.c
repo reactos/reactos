@@ -1495,52 +1495,75 @@ LdrpHandleTlsData(IN PLDR_DATA_TABLE_ENTRY LdrEntry)
     Index = LdrpNumberOfTlsEntries;
     OldLength = LdrpTlsPointerLength;
 
-    for (Entry = LdrpTlsThreadList.Flink;
-         Entry != &LdrpTlsThreadList;
-         Entry = Entry->Flink)
+    DPRINT1("LDR: late TLS begin %wZ index %lu oldLen %lu size %Iu+%Iu\n",
+            &LdrEntry->BaseDllName,
+            Index,
+            OldLength,
+            TlsDataSize,
+            ZeroFill);
+
     {
-        Teb = CONTAINING_RECORD(Entry, TEB, TlsLinks);
-        OldVector = Teb->ThreadLocalStoragePointer;
-        NewVector = RtlAllocateHeap(RtlGetProcessHeap(),
-                                    HEAP_ZERO_MEMORY,
-                                    (Index + 1) * sizeof(PVOID));
-        if (!NewVector)
+        ULONG Walked = 0;
+
+        for (Entry = LdrpTlsThreadList.Flink;
+             Entry != &LdrpTlsThreadList;
+             Entry = Entry->Flink)
         {
-            RtlFreeHeap(RtlGetProcessHeap(), 0, TlsData);
-            return STATUS_NO_MEMORY;
+            if (++Walked > 4096)
+            {
+                DPRINT1("LDR: late TLS abort: thread list walk > 4096 (%wZ)\n",
+                        &LdrEntry->BaseDllName);
+                RtlFreeHeap(RtlGetProcessHeap(), 0, TlsData);
+                return STATUS_UNSUCCESSFUL;
+            }
+
+            Teb = CONTAINING_RECORD(Entry, TEB, TlsLinks);
+            OldVector = Teb->ThreadLocalStoragePointer;
+            NewVector = RtlAllocateHeap(RtlGetProcessHeap(),
+                                        HEAP_ZERO_MEMORY,
+                                        (Index + 1) * sizeof(PVOID));
+            if (!NewVector)
+            {
+                RtlFreeHeap(RtlGetProcessHeap(), 0, TlsData);
+                return STATUS_NO_MEMORY;
+            }
+
+            if (OldVector && OldLength)
+            {
+                RtlCopyMemory(NewVector,
+                              OldVector,
+                              OldLength * sizeof(PVOID));
+            }
+
+            TlsBlock = RtlAllocateHeap(RtlGetProcessHeap(),
+                                       0,
+                                       TlsDataSize + ZeroFill);
+            if (!TlsBlock)
+            {
+                RtlFreeHeap(RtlGetProcessHeap(), 0, NewVector);
+                RtlFreeHeap(RtlGetProcessHeap(), 0, TlsData);
+                return STATUS_NO_MEMORY;
+            }
+
+            if (TlsDataSize)
+            {
+                RtlCopyMemory(TlsBlock,
+                              (PVOID)(ULONG_PTR)TlsDirectory->StartAddressOfRawData,
+                              TlsDataSize);
+            }
+            if (ZeroFill)
+            {
+                RtlZeroMemory((PUCHAR)TlsBlock + TlsDataSize, ZeroFill);
+            }
+
+            NewVector[Index] = TlsBlock;
+            Teb->ThreadLocalStoragePointer = NewVector;
+            /* Wine: old pointer block freed at thread exit, not here. */
         }
 
-        if (OldVector && OldLength)
-        {
-            RtlCopyMemory(NewVector,
-                          OldVector,
-                          OldLength * sizeof(PVOID));
-        }
-
-        TlsBlock = RtlAllocateHeap(RtlGetProcessHeap(),
-                                   0,
-                                   TlsDataSize + ZeroFill);
-        if (!TlsBlock)
-        {
-            RtlFreeHeap(RtlGetProcessHeap(), 0, NewVector);
-            RtlFreeHeap(RtlGetProcessHeap(), 0, TlsData);
-            return STATUS_NO_MEMORY;
-        }
-
-        if (TlsDataSize)
-        {
-            RtlCopyMemory(TlsBlock,
-                          (PVOID)(ULONG_PTR)TlsDirectory->StartAddressOfRawData,
-                          TlsDataSize);
-        }
-        if (ZeroFill)
-        {
-            RtlZeroMemory((PUCHAR)TlsBlock + TlsDataSize, ZeroFill);
-        }
-
-        NewVector[Index] = TlsBlock;
-        Teb->ThreadLocalStoragePointer = NewVector;
-        /* Wine: old pointer block freed at thread exit, not here. */
+        DPRINT1("LDR: late TLS end %wZ threads %lu\n",
+                &LdrEntry->BaseDllName,
+                Walked);
     }
 
     LdrEntry->LoadCount = -1;
