@@ -2281,9 +2281,9 @@
 @ stub catanhf
 @ stub catanhl
 @ stub catanl
-@ cdecl -stub cbrt(double)
-@ cdecl -stub cbrtf(float)
-@ cdecl -stub cbrtl(double) cbrt
+@ cdecl cbrt(double)
+@ cdecl cbrtf(float)
+@ cdecl cbrtl(double) cbrt
 @ stub ccos
 @ stub ccosf
 @ stub ccosh
@@ -2483,8 +2483,8 @@
 @ cdecl lrint(double)
 @ cdecl lrintf(float)
 @ cdecl lrintl(double) lrint
-@ cdecl -stub lround(double)
-@ cdecl -stub lroundf(float)
+@ cdecl lround(double)
+@ cdecl lroundf(float)
 @ cdecl lroundl(double) lround
 @ cdecl malloc(long)
 @ cdecl mblen(ptr long)
