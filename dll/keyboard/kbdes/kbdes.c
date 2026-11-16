@@ -355,7 +355,7 @@ ROSDATA VSC_LPWSTR key_names[] = {
   { 0x47, L"NUMERO 7" },
   { 0x48, L"NUMERO 8" },
   { 0x49, L"NUMERO 9" },
-  { 0x4a, L"TECLA DE SUSTRACCION" },
+  { 0x4a, L"Num -" },
   { 0x4b, L"NUMERO 4" },
   { 0x4c, L"NUMERO 5" },
   { 0x4d, L"NUMERO 6" },
