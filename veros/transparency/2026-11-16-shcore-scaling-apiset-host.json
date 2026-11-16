@@ -1,0 +1,15 @@
+{
+  "spdx": "GPL-2.0-or-later",
+  "question": "Which host DLL should resolve Firefox shcore-scaling apisets when shell32 lacks GetDpiForMonitor?",
+  "allowedInputs": [
+    "sdk/lib/apisets/apisets.table.c already in this tree, api-ms-win-shcore-scaling-l1-1-0/1/2 hosted on shell32.dll with shcore.dll comments",
+    "dll/win32/shcore/shcore.spec already in this tree, GetDpiForMonitor stub stdcall",
+    "Reported: Entry Point Not Found GetDpiForMonitor in api-ms-win-shcore-scaling-l1-1-1.dll",
+    "Reported: import scan showed GetDpiForMonitor present in shcore.spec and absent from shell32"
+  ],
+  "harness": {
+    "guest": "amd64 installed veros-ntfs after BaseThreadInitThunk/ktmw32, TCG, App mode",
+    "name": "ntdll-apps-firefox",
+    "traceOrReplayId": "Reported: Entry Point Not Found GetDpiForMonitor in api-ms-win-shcore-scaling-l1-1-1.dll"
+  }
+}
