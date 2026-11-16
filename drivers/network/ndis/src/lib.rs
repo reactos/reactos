@@ -705,14 +705,33 @@ pub unsafe extern "system" fn NdisOpenConfigurationKeyByName(
 }
 
 #[no_mangle]
+pub unsafe extern "system" fn NdisCloseConfiguration(handle: *mut u8) {
+    /* https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndiscloseconfiguration
+     * That page returns no status. NdisOpenConfigurationEx and
+     * NdisOpenConfigurationKeyByName allocate the 0x80-byte handle with
+     * tag NsoV; free that block here. output/netkvm-20261116T081944Z.log
+     * printed NDIS STUB NdisCloseConfiguration after those opens. */
+    if handle.is_null() {
+        return;
+    }
+    unsafe {
+        DbgPrint(b"NDIS CLOSE\n\0".as_ptr());
+        ExFreePoolWithTag(handle, u32::from_le_bytes(*b"NsoV"));
+    }
+}
+
+#[no_mangle]
 pub unsafe extern "system" fn NdisReadNetworkAddress(
     status: *mut u32,
     address: *mut *mut u8,
     length: *mut u32,
     _handle: *mut u8,
 ) {
-    /* NDIS_STATUS_FAILURE from sdk/include/ddk/ndis.h. */
-    unsafe { DbgPrint(b"NDIS STUB NdisReadNetworkAddress\n\0".as_ptr()) };
+    /* https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndisreadnetworkaddress
+     * NDIS_STATUS_FAILURE from sdk/include/ddk/ndis.h when NetworkAddress
+     * is not in the registry. output/netkvm-20261116T081944Z.log printed
+     * the stub before this return. */
+    unsafe { DbgPrint(b"NDIS NETADDR\n\0".as_ptr()) };
     if !status.is_null() {
         *status = 0xC000_0001;
     }
@@ -1173,10 +1192,11 @@ pub extern "system" fn NdisReleaseRWLock(_lock: *mut u8, _state: *mut u8) {
 
 #[no_mangle]
 pub extern "system" fn NdisGroupActiveProcessorCount(group: u16) -> u32 {
-    unsafe {
-        DbgPrint(b"NDIS STUB NdisGroupActiveProcessorCount\n\0".as_ptr());
-        KeQueryActiveProcessorCountEx(group)
-    }
+    /* https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndisgroupactiveprocessorcount
+     * KeQueryActiveProcessorCountEx in ntoskrnl/ke/processor.c. */
+    let count = unsafe { KeQueryActiveProcessorCountEx(group) };
+    unsafe { DbgPrint(b"NDIS GROUP %04x %08x\n\0".as_ptr(), group as u32, count) };
+    count
 }
 
 #[no_mangle]
@@ -1575,6 +1595,7 @@ static MINIPORT: &[Routine] = &[
     Routine { name: "NdisFreeMemory", address: NdisFreeMemory as *const () },
     Routine { name: "NdisFreeMemoryWithTagPriority", address: NdisFreeMemoryWithTagPriority as *const () },
     Routine { name: "NdisOpenConfigurationEx", address: NdisOpenConfigurationEx as *const () },
+    Routine { name: "NdisCloseConfiguration", address: NdisCloseConfiguration as *const () },
     Routine { name: "NdisInitializeString", address: NdisInitializeString as *const () },
     Routine { name: "NdisOpenConfigurationKeyByName", address: NdisOpenConfigurationKeyByName as *const () },
     Routine { name: "NdisDeregisterDeviceEx", address: NdisDeregisterDeviceEx as *const () },
@@ -1679,7 +1700,6 @@ stubs!(
     NdisQueueIoWorkItem,
     NdisMRemoveMiniport,
     NdisFreeCloneNetBufferList,
-    NdisCloseConfiguration,
     NdisMSleep,
     NdisMDeregisterIoPortRange
 );

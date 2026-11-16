@@ -1,0 +1,20 @@
+{
+  "spdx": "GPL-2.0-or-later",
+  "question": "What does NdisCloseConfiguration do with the handle from NdisOpenConfigurationEx, and what do NdisReadNetworkAddress and NdisGroupActiveProcessorCount return when NetKVM calls them during InitializeEx?",
+  "allowedInputs": [
+    "output/netkvm-20261116T081944Z.log printed NDIS STUB NdisCloseConfiguration, NDIS STUB NdisReadNetworkAddress, NDIS STUB NdisGroupActiveProcessorCount, then NDIS INIT 00000000",
+    "output/netkvm-20261116T083539Z.log printed NDIS CLOSE, NDIS NETADDR, NDIS GROUP ffff 00000001, and NDIS INIT 00000000 with those stubs gone",
+    "https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndiscloseconfiguration returns no status",
+    "https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndisreadnetworkaddress",
+    "https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndisgroupactiveprocessorcount",
+    "sdk/include/ddk/ndis.h NDIS_STATUS_FAILURE is 0xC0000001",
+    "drivers/network/ndis/src/lib.rs NdisOpenConfigurationEx and NdisOpenConfigurationKeyByName allocate the 0x80-byte handle with tag NsoV",
+    "ntoskrnl/ke/processor.c KeQueryActiveProcessorCountEx"
+  ],
+  "harness": {
+    "guest": "VerOS",
+    "name": "VerOS NetKVM disk snapshot",
+    "traceOrReplayId": "output/netkvm-20261116T083539Z.log NDIS CLOSE and NDIS INIT 00000000",
+    "logSha256": "3d74168a06ca02b9b4e787c85435e7f1a81f1bb687a22b44342a8e5d06ea4609"
+  }
+}
