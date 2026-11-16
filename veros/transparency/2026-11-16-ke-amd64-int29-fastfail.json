@@ -1,0 +1,20 @@
+{
+  "spdx": "GPL-2.0-or-later",
+  "question": "How should amd64 deliver user INT 0x29 __fastfail instead of an access violation at address -1?",
+  "allowedInputs": [
+    "ntoskrnl/ke/i386/traphdlr.c already in this tree, KiRaiseSecurityCheckFailureHandler",
+    "ntoskrnl/ke/i386/trap.s already in this tree, idt KiRaiseSecurityCheckFailure INT 29",
+    "ntoskrnl/ke/amd64/trap.S already in this tree, KiRaiseAssertion INT 2C shape",
+    "sdk/include/xdk/rtlfuncs.h already in this tree, FAST_FAIL_FATAL_APP_EXIT 7",
+    "sdk/include/psdk/ntstatus.h already in this tree, STATUS_STACK_BUFFER_OVERRUN",
+    "https://learn.microsoft.com/en-us/cpp/intrinsics/fastfail",
+    "output/ntdll-apps/serial-App-20261116T075237Z.log marker: User AV insn cd 29 0f 0b",
+    "output/ntdll-apps/firefox-silent-fail20-av-was-fastfail-gaps.txt"
+  ],
+  "harness": {
+    "guest": "amd64 installed veros-ntfs after RIP insn byte probe, TCG, App mode",
+    "name": "ntdll-apps-firefox",
+    "traceOrReplayId": "serial-App-20261116T075237Z cd 29 0f 0b rcx=7",
+    "logSha256": "013977887d83d360ce7f1bbf8bbc84a36ead2dbbbde1e387db6010d24fe07b12"
+  }
+}

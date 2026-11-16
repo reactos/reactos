@@ -10,9 +10,9 @@
  *              Ryan Wilson <ryan@verosnt.com>
  *
  * User AV lines name the loaded module+RVA and trap registers.
- * Guest serial output/ntdll-apps/serial-App-20261116T074754Z.log:
- * xul.dll +0x18f2c22 fault -1; rsi10 children are xul code pointers —
- * probe 16 insn bytes at RIP to name the load that used -1.
+ * Guest serial output/ntdll-apps/serial-App-20261116T075237Z.log:
+ * xul.dll +0x18f2c22 bytes were int 29 / ud2 (__fastfail) — wire IDT
+ * 0x29 to KiRaiseSecurityCheckFailure instead of unexpected→AV(-1).
  */
 
 /* INCLUDES ******************************************************************/
@@ -48,6 +48,11 @@ KIDT_INIT KiInterruptInitTable[] =
     {0x12, 0x00, 0x02, KiMcheckAbort},
     {0x13, 0x00, 0x00, KiXmmException},
     {0x1F, 0x00, 0x00, KiApcInterrupt},
+    /*
+     * INT 29: __fastfail (serial-App-20261116T075237Z.log: cd 29 0f 0b).
+     * Same IDT slot as i386 ke/i386/trap.s KiRaiseSecurityCheckFailure.
+     */
+    {0x29, 0x03, 0x00, KiRaiseSecurityCheckFailure},
     {0x2C, 0x03, 0x00, KiRaiseAssertion},
     {0x2D, 0x03, 0x00, KiDebugServiceTrap},
     {0x2F, 0x00, 0x00, KiDpcInterrupt},
@@ -739,6 +744,20 @@ KiDispatchException(IN PEXCEPTION_RECORD ExceptionRecord,
     }
     else
     {
+        /*
+         * silent-fail20: INT 29 was misdelivered as AV fault -1; log the
+         * failfast code (rcx) when STATUS_STACK_BUFFER_OVERRUN is raised
+         * (serial-App-20261116T075237Z.log; FAST_FAIL_FATAL_APP_EXIT=7).
+         */
+        if (ExceptionRecord->ExceptionCode == STATUS_STACK_BUFFER_OVERRUN)
+        {
+            DPRINT1("User fastfail in %.16s code %Ix at %p\n",
+                    PsGetCurrentProcess()->ImageFileName,
+                    ExceptionRecord->NumberParameters > 0 ?
+                        ExceptionRecord->ExceptionInformation[0] : 0,
+                    ExceptionRecord->ExceptionAddress);
+        }
+
         if (ExceptionRecord->ExceptionCode == STATUS_ACCESS_VIOLATION)
         {
             DPRINT1("User AV in %.16s at %p fault %p write %Ix\n",
