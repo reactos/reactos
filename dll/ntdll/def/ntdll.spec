@@ -1103,6 +1103,7 @@
 @ stdcall RtlQuerySecurityObject(ptr long ptr long ptr)
 @ stdcall RtlQueryTagHeap(ptr long long long ptr)
 @ stdcall RtlQueryTimeZoneInformation(ptr)
+@ stdcall RtlQueryUnbiasedInterruptTime(ptr)
 @ stdcall -arch=i386,x86_64 RtlQueueApcWow64Thread(ptr ptr ptr ptr ptr)
 @ stdcall RtlQueueWorkItem(ptr ptr long)
 @ stdcall -register RtlRaiseException(ptr)

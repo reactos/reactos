@@ -826,6 +826,8 @@
 @ stdcall LoadLibraryW(wstr)
 @ stdcall LoadModule(str ptr)
 @ stdcall LoadResource(long long)
+@ stdcall LoadStringA(long long ptr long) user32.LoadStringA
+@ stdcall LoadStringW(long long ptr long) user32.LoadStringW
 @ stub -version=0x600+ LoadStringBaseExW
 @ stub -version=0x600+ LoadStringBaseW
 @ stdcall LocalAlloc(long long)
@@ -949,6 +951,8 @@
 @ stdcall QueryMemoryResourceNotification(ptr ptr)
 @ stdcall QueryPerformanceCounter(ptr)
 @ stdcall QueryPerformanceFrequency(ptr)
+@ stdcall QueryUnbiasedInterruptTime(ptr) ntdll.RtlQueryUnbiasedInterruptTime
+@ stdcall QueryUnbiasedInterruptTimePrecise(ptr)
 @ stub -version=0x600+ QueryProcessAffinityUpdateMode
 @ stub -version=0x600+ QueryProcessCycleTime
 @ stub -version=0x600+ QueryThreadCycleTime
