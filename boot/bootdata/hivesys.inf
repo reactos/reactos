@@ -818,7 +818,6 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0001040a","Layout File",
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0001040a","Layout Id",0x00000000,"0086"
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0001040a","Layout Text",0x00000000,%SPANISH_VARIATION%
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0001040a","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5021"
-HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0001040a","Layout Id",0x00000000,"0086"
 
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000425","Layout File",0x00000000,"kbdest.dll"
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000425","Layout Text",0x00000000,%ESTONIAN%
