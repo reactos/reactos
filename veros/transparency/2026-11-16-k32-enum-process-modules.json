@@ -1,0 +1,17 @@
+{
+  "spdx": "GPL-2.0-or-later",
+  "question": "How does firefox.exe resolve K32EnumProcessModules through api-ms-win-core-psapi-l1-1-0 when DLL_EXPORT_VERSION is 0x502?",
+  "allowedInputs": [
+    "https://learn.microsoft.com/en-us/windows/win32/api/psapi/nf-psapi-enumprocessmodules EnumProcessModules / K32EnumProcessModules in Kernel32.dll",
+    "dll/win32/kernel32/kernel32.spec already in this tree, where K32EnumProcessModules was gated -version=0x601+",
+    "dll/win32/psapi/psapi.spec already in this tree, which exports EnumProcessModules",
+    "sdk/cmake/config.cmake already in this tree, DLL_EXPORT_VERSION 0x502",
+    "Reported: Entry Point Not Found K32EnumProcessModules in api-ms-win-core-psapi-l1-1-0.dll",
+    "Reported: serial Failed to snap api-ms-win-core-psapi-l1-1-0.dll!K32EnumProcessModules for mozglue.dll"
+  ],
+  "harness": {
+    "guest": "amd64 installed veros-ntfs disk after version apiset fix, TCG, App mode",
+    "name": "ntdll-apps-firefox",
+    "traceOrReplayId": "Reported: Failed to snap api-ms-win-core-psapi-l1-1-0.dll!K32EnumProcessModules for mozglue.dll"
+  }
+}
