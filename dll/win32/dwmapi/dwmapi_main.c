@@ -21,9 +21,13 @@
  * ReactOS/VerOS DwmIsCompositionEnabled stays FALSE: guest
  * output/ntdll-apps/serial-App-20261116T205323Z.log reports
  * VERPORT PsGetVersion 10.0.19045, so RtlGetVersion made composition
- * look enabled while DwmExtendFrameIntoClientArea is a no-op S_OK stub.
+ * look enabled while DwmExtendFrameIntoClientArea was a no-op S_OK stub.
  * Public: https://learn.microsoft.com/en-us/windows/win32/api/dwmapi/nf-dwmapi-dwmiscompositionenabled
+ * ExtendFrame: https://learn.microsoft.com/en-us/windows/win32/api/dwmapi/nf-dwmapi-dwmextendframeintoclientarea
  * In-tree DwmGetTransportAttributes already returns DWM_E_COMPOSITIONDISABLED.
+ * Guest after composition-off: serial-App-20261116T210232Z.log still
+ * FIXME DwmExtendFrameIntoClientArea; Ryan could not scroll, minimize,
+ * or click Start through the Firefox window.
  */
 
 #include <stdarg.h>
@@ -91,12 +95,18 @@ HRESULT WINAPI DwmEnableComposition(UINT uCompositionAction)
 
 /**********************************************************************
  *           DwmExtendFrameIntoClientArea    (DWMAPI.@)
+ *
+ * Guest: output/ntdll-apps/serial-App-20261116T210232Z.log still
+ * FIXME-stubbed this after DwmIsCompositionEnabled stayed FALSE.
+ * Returning S_OK let Firefox keep glass margins with no DWM, so
+ * clicks missed Start/desktop and about:support would not scroll.
+ * MSDN: composition disabled -> DWM_E_COMPOSITIONDISABLED.
  */
 HRESULT WINAPI DwmExtendFrameIntoClientArea(HWND hwnd, const MARGINS* margins)
 {
-    FIXME("(%p, %p) stub\n", hwnd, margins);
+    TRACE("(%p, %p)\n", hwnd, margins);
 
-    return S_OK;
+    return DWM_E_COMPOSITIONDISABLED;
 }
 
 /**********************************************************************
