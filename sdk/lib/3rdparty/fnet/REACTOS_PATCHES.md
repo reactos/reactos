@@ -107,6 +107,20 @@ handles CLOSE_WAIT to LAST_ACK; only these gates were missing.
 
 Upstream candidate: yes.
 
+### 5. Close after a half close
+
+`_fnet_tcp_close` aborted with RST whenever the socket was not `SS_CONNECTED`, apart from CLOSE_WAIT (patch 4).
+After `shutdown(SD_SEND)` and the peer's FIN, or our FIN in CLOSE_WAIT, the connection is in LAST_ACK, CLOSING
+or TIME_WAIT, so a `closesocket` that came before the peer acknowledged our FIN sent RST. The peer then dropped
+whatever it had not read yet. Echo style servers that shut down and close at once hit this on every connection
+where the close wins the race against the final ACK.
+
+* `stack/fnet_tcp.c`: `_fnet_tcp_close` takes the graceful path in LAST_ACK, CLOSING and TIME_WAIT as well. The
+  existing code there already handles them: no new FIN is sent, the socket is marked for deletion and freed
+  when the final ACK arrives or TIME_WAIT ends.
+
+Upstream candidate: yes.
+
 ## Not needed
 
 ### 32 bit millisecond clock wrap

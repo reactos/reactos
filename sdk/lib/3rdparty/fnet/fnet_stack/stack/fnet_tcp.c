@@ -498,7 +498,9 @@ static fnet_return_t _fnet_tcp_close( fnet_socket_if_t *sk )
 
     fnet_isr_lock();
 
-    if((sk->state != SS_CONNECTED) && (cb->tcpcb_connection_state != FNET_TCP_CS_CLOSE_WAIT)) /* ReactOS: send FIN, not RST, after the peer closed */
+    if((sk->state != SS_CONNECTED) && (cb->tcpcb_connection_state != FNET_TCP_CS_CLOSE_WAIT) /* ReactOS: send FIN, not RST, after the peer closed */
+       && (cb->tcpcb_connection_state != FNET_TCP_CS_LAST_ACK) && (cb->tcpcb_connection_state != FNET_TCP_CS_CLOSING) /* ReactOS */
+       && (cb->tcpcb_connection_state != FNET_TCP_CS_TIME_WAIT)) /* ReactOS: our FIN is already out, finish without RST */
     {
         cb->tcpcb_flags |= FNET_TCP_CBF_CLOSE;
         _fnet_tcp_abort_socket(sk);
