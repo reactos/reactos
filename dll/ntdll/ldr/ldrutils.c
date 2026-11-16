@@ -8,6 +8,12 @@
  * PROGRAMMERS: Alex Ionescu (alex@relsoft.net)
  *              Aleksey Bragin (aleksey@reactos.org)
  *              Ryan Wilson
+ *
+ * Empty LdrpLoadDll names are rejected. Guest serial
+ * output/ntdll-apps/serial-App-20261116T063648Z.log still shows
+ * LDR: missing dll .DLL after the LdrpLoadImportModule empty-import
+ * guard (fb5b200502d) — so the name arrives via LoadLibrary/LdrLoadDll
+ * with Length 0 and the default L".DLL" extension.
  */
 
 /* INCLUDES *****************************************************************/
@@ -2446,6 +2452,30 @@ LdrpLoadDll(IN BOOLEAN Redirected,
     UNICODE_STRING RawDllName;
     PLDR_DATA_TABLE_ENTRY LdrEntry;
     BOOLEAN InInit = LdrpInLdrInit;
+
+    /*
+     * An empty UNICODE name becomes ".DLL" after the default extension is
+     * appended below. Refuse it and name the top/init DLL so the guest
+     * serial identifies the LoadLibrary caller (firefox silent-fail9).
+     */
+    if (!DllName || !DllName->Buffer || DllName->Length == 0)
+    {
+        if (LdrpTopLevelDllBeingLoaded)
+        {
+            DbgPrint("LDR: empty LoadDll name; top-level %wZ\n",
+                     LdrpTopLevelDllBeingLoaded);
+        }
+        else if (LdrpCurrentDllInitializer)
+        {
+            DbgPrint("LDR: empty LoadDll name; initializer %wZ\n",
+                     &LdrpCurrentDllInitializer->BaseDllName);
+        }
+        else
+        {
+            DbgPrint("LDR: empty LoadDll name; no top-level or initializer\n");
+        }
+        return STATUS_OBJECT_NAME_INVALID;
+    }
 
     /* Save the Raw DLL Name */
     if (DllName->Length >= sizeof(NameBuffer)) return STATUS_NAME_TOO_LONG;

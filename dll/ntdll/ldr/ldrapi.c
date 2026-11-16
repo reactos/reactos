@@ -1,10 +1,17 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
+ *                  Copyright 2026 Ryan Wilson <ryan@verosnt.com>
  * PROJECT:         ReactOS NT User Mode Library
  * FILE:            dll/ntdll/ldr/ldrapi.c
  * PURPOSE:         PE Loader Public APIs
  * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
  *                  Aleksey Bragin (aleksey@reactos.org)
+ *                  Ryan Wilson <ryan@verosnt.com>
+ *
+ * Empty LdrLoadDll names are rejected. Guest serial
+ * output/ntdll-apps/serial-App-20261116T063648Z.log shows
+ * LDR: missing dll .DLL after winrt→combase with no empty-import
+ * log — LoadLibrary of Length 0 reaches LdrpLoadDll and gains L".DLL".
  */
 
 /* INCLUDES *****************************************************************/
@@ -322,6 +329,25 @@ LdrLoadDll(
     ULONG_PTR Cookie;
     PUNICODE_STRING OldTldDll;
     PTEB Teb = NtCurrentTeb();
+
+    /*
+     * LoadLibraryW("") becomes ".DLL" in LdrpLoadDll. Refuse here so the
+     * serial names the initializer before TopLevel is overwritten with the
+     * empty name (firefox silent-fail9).
+     */
+    if (!DllName || !DllName->Buffer || DllName->Length == 0)
+    {
+        if (LdrpCurrentDllInitializer)
+        {
+            DbgPrint("LDR: empty LdrLoadDll; initializer %wZ\n",
+                     &LdrpCurrentDllInitializer->BaseDllName);
+        }
+        else
+        {
+            DbgPrint("LDR: empty LdrLoadDll; no initializer\n");
+        }
+        return STATUS_OBJECT_NAME_INVALID;
+    }
 
     /* Initialize the strings */
     RtlInitEmptyUnicodeString(&StaticString, StringBuffer, sizeof(StringBuffer));
