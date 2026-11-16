@@ -334,7 +334,7 @@ ROSDATA VSC_LPWSTR key_names[] = {
   { 0x0f, L"Tab" },
   { 0x1c, L"Intro" },
   { 0x1d, L"Ctrl" },
-  { 0x2a, L"MAYUSCULAS" },
+  { 0x2a, L"Mayús" },
   { 0x36, L"MAYUSCULAS DERECHA" },
   { 0x37, L"TECLA DE MULTIPLICACION" },
   { 0x38, L"ALT" },
