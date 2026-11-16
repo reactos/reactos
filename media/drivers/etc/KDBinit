@@ -7,7 +7,11 @@ set syntax intel
 # Change the condition to enter KDB on INT3 to "always" (default is "kmode")
 #set condition INT3 first always
 
+# firefox App serial-App-20261116T091406Z.log: last-chance user AV entered
+# KDB and waited on "Press q to abort" with no keyboard on -serial file,
+# so the guest looked hung. Keep last-chance breaks for kmode only.
+set condition * last kmode
+
 # This is a special command available only in the KDBinit file - it breaks into
 # KDB when it is interpreting the init file at startup.
 #break
-
