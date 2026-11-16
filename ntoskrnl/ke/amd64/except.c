@@ -10,8 +10,9 @@
  *              Ryan Wilson <ryan@verosnt.com>
  *
  * User AV lines name the loaded module+RVA and trap registers.
- * Guest serial output/ntdll-apps/serial-App-20261116T072238Z.log:
- * xul.dll +0x18f2c22; rcx/rdx/r8 were small ints — also log rbx/rsi/rdi.
+ * Guest serial output/ntdll-apps/serial-App-20261116T072618Z.log:
+ * xul.dll +0x18f2c22 fault -1; rbx/rsi/rdi are real user pointers — map
+ * those regs to modules and probe one qword at rsi and rbx.
  */
 
 /* INCLUDES ******************************************************************/
@@ -253,16 +254,25 @@ KiPrepareUserDebugData(void)
 /*
  * Name the user module that contains Address (firefox silent-fail12).
  * Same PEB LDR walk shape as KiPrepareUserDebugData above.
+ * Tag names which register or fault site the address came from
+ * (silent-fail15: map rbx/rsi/rdi).
  */
 static
 VOID
-KiPrintUserModuleForAddress(PVOID Address)
+KiPrintUserModuleForAddress(
+    _In_ PVOID Address,
+    _In_ PCSTR Tag)
 {
     PTEB Teb;
     PPEB_LDR_DATA PebLdr;
     PLIST_ENTRY ListEntry;
     PLDR_DATA_TABLE_ENTRY LdrEntry;
     ULONG_PTR Addr = (ULONG_PTR)Address;
+
+    if (!Address || Addr == (ULONG_PTR)-1)
+    {
+        return;
+    }
 
     Teb = KeGetCurrentThread()->Teb;
     if (!Teb) return;
@@ -285,7 +295,8 @@ KiPrintUserModuleForAddress(PVOID Address)
             if (Addr >= (ULONG_PTR)LdrEntry->DllBase &&
                 Addr < ((ULONG_PTR)LdrEntry->DllBase + LdrEntry->SizeOfImage))
             {
-                DPRINT1("User AV module %wZ +0x%Ix (base %p)\n",
+                DPRINT1("User AV %s module %wZ +0x%Ix (base %p)\n",
+                        Tag,
                         &LdrEntry->BaseDllName,
                         Addr - (ULONG_PTR)LdrEntry->DllBase,
                         LdrEntry->DllBase);
@@ -293,11 +304,58 @@ KiPrintUserModuleForAddress(PVOID Address)
             }
         }
 
-        DPRINT1("User AV address %p not in any loaded module\n", Address);
+        DPRINT1("User AV %s address %p not in any loaded module\n",
+                Tag,
+                Address);
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        DPRINT1("User AV module walk failed\n");
+        DPRINT1("User AV %s module walk failed\n", Tag);
+    }
+    _SEH2_END;
+
+    _disable();
+}
+
+/*
+ * silent-fail15: fault is -1 while rbx/rsi hold real user pointers.
+ * Print one qword at Address so the next dump can see if -1/NULL was
+ * loaded from that object. Same SEH+ProbeForRead shape as the GP
+ * fault decoder below; Clang may not catch a bad probe.
+ */
+static
+VOID
+KiPrintUserQwordAt(
+    _In_ PVOID Address,
+    _In_ PCSTR Tag)
+{
+    ULONG_PTR Value;
+
+    if (!Address ||
+        (ULONG_PTR)Address == (ULONG_PTR)-1 ||
+        (ULONG_PTR)Address > (ULONG_PTR)MmUserProbeAddress)
+    {
+        DPRINT1("User AV %s [%p] skip qword probe\n", Tag, Address);
+        return;
+    }
+
+    _enable();
+
+    _SEH2_TRY
+    {
+        ProbeForRead(Address, sizeof(ULONG_PTR), 1);
+        Value = *(volatile ULONG_PTR *)Address;
+        DPRINT1("User AV %s [%p] qword %p\n",
+                Tag,
+                Address,
+                (PVOID)Value);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        DPRINT1("User AV %s [%p] qword probe failed 0x%08lx\n",
+                Tag,
+                Address,
+                _SEH2_GetExceptionCode());
     }
     _SEH2_END;
 
@@ -471,14 +529,23 @@ KiDispatchException(IN PEXCEPTION_RECORD ExceptionRecord,
                     (PVOID)Context.Rdi,
                     (PVOID)Context.Rbp,
                     (PVOID)Context.R9);
-            KiPrintUserModuleForAddress(ExceptionRecord->ExceptionAddress);
-            if (ExceptionRecord->NumberParameters > 1 &&
-                ExceptionRecord->ExceptionInformation[1] != 0 &&
-                ExceptionRecord->ExceptionInformation[1] != (ULONG_PTR)-1)
+            KiPrintUserModuleForAddress(ExceptionRecord->ExceptionAddress,
+                                        "rip");
+            if (ExceptionRecord->NumberParameters > 1)
             {
                 KiPrintUserModuleForAddress(
-                    (PVOID)ExceptionRecord->ExceptionInformation[1]);
+                    (PVOID)ExceptionRecord->ExceptionInformation[1],
+                    "fault");
             }
+            /*
+             * silent-fail15: rbx/rsi/rdi were valid user pointers while
+             * the fault address stayed -1 (serial-App-20261116T072618Z).
+             */
+            KiPrintUserModuleForAddress((PVOID)Context.Rbx, "rbx");
+            KiPrintUserModuleForAddress((PVOID)Context.Rsi, "rsi");
+            KiPrintUserModuleForAddress((PVOID)Context.Rdi, "rdi");
+            KiPrintUserQwordAt((PVOID)Context.Rsi, "rsi");
+            KiPrintUserQwordAt((PVOID)Context.Rbx, "rbx");
         }
 
         /* User mode exception, was it first-chance? */
