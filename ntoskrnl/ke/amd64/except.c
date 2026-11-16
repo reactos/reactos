@@ -17,6 +17,7 @@
  * KMODE_EXCEPTION_NOT_HANDLED; reject user pointers below 64K before probe.
  * serial-App-20261116T094615Z.log: same xul+0x19dde7 AV with rsi=3; probe
  * rax/rcx/rbp and rsp slots when rbp is not a frame pointer.
+ * serial-App-20261116T095120Z.log: rbp argv strings; also follow rbp+0x10/0x18 and rdx.
  */
 
 /* INCLUDES ******************************************************************/
@@ -982,7 +983,10 @@ KiDispatchException(IN PEXCEPTION_RECORD ExceptionRecord,
             KiPrintUserFollowedObject2((PVOID)Context.Rsi, 0x10, 0x18, "rsi10_18");
             KiPrintUserFollowedObject((PVOID)Context.Rbp, 0x0, "rbp0");
             KiPrintUserFollowedObject((PVOID)Context.Rbp, 0x8, "rbp8");
+            KiPrintUserFollowedObject((PVOID)Context.Rbp, 0x10, "rbp10");
+            KiPrintUserFollowedObject((PVOID)Context.Rbp, 0x18, "rbp18");
             KiPrintUserFollowedObject((PVOID)Context.Rbp, 0xa8, "rbpA8");
+            KiPrintUserFollowedObject((PVOID)Context.Rdx, 0x0, "rdx0");
             {
                 ULONG Slot;
                 static const char *StackTags[16] =

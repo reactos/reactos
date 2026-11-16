@@ -1,0 +1,17 @@
+{
+    "spdx":  "GPL-2.0-or-later",
+    "question":  "What did the richer User AV dump show for the stable xul.dll +0x19dde7 crash, and what else should it print?",
+    "allowedInputs":  [
+                          "output/ntdll-apps/serial-App-20261116T095120Z.log marker: User AV rbp0+0x0",
+                          "output/ntdll-apps/serial-App-20261116T095120Z.log marker: qword 66657269465C3A43",
+                          "output/ntdll-apps/serial-App-20261116T095120Z.log marker: User AV rsp+18 module mozglue.dll +0x282d2",
+                          "Reported: little-endian qwords decode to C:\\Firefox-win64\\firefox.exe and -no-remote",
+                          "ntoskrnl/ke/amd64/except.c already in this tree, KiPrintUserFollowedObject"
+                      ],
+    "harness":  {
+                    "guest":  "amd64 installed veros-ntfs, TCG, App mode, Desktop run-firefox-log.cmd",
+                    "name":  "ntdll-apps-firefox",
+                    "traceOrReplayId":  "serial-App-20261116T095120Z argv rbp decode",
+                    "logSha256":  "60065eeb31aa98d289829ac707b0f9d690a4385998c9d854149d7cc0c9efa6a1"
+                }
+}
