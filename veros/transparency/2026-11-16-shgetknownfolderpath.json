@@ -1,0 +1,16 @@
+{
+  "spdx": "GPL-2.0-or-later",
+  "question": "How should SHGetKnownFolderPath be exported for Firefox when DLL_EXPORT_VERSION is 0x502?",
+  "allowedInputs": [
+    "https://learn.microsoft.com/en-us/windows/win32/api/shlobj_core/nf-shlobj_core-shgetknownfolderpath SHGetKnownFolderPath, Shell32.dll, HRESULT, KNOWNFOLDERID",
+    "dll/win32/shell32/shell32.spec already in this tree, SHGetKnownFolderPath gated -version=0x600+",
+    "dll/win32/shell32/wine/shellpath.c already in this tree, SHGetKnownFolderPath implementation",
+    "Reported: LDR missing export SHELL32.dll!SHGetKnownFolderPath on three silent firefox.exe launches",
+    "Reported: firefox.exe and xul.dll PE-import SHGetKnownFolderPath from SHELL32.dll"
+  ],
+  "harness": {
+    "guest": "amd64 installed veros-ntfs after GetCurrentPackageFullName export, TCG, App mode",
+    "name": "ntdll-apps-firefox",
+    "traceOrReplayId": "Reported: LDR missing export SHELL32.dll!SHGetKnownFolderPath"
+  }
+}
