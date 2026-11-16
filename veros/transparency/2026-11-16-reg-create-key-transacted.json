@@ -1,0 +1,15 @@
+{
+  "spdx": "GPL-2.0-or-later",
+  "question": "How should RegCreateKeyTransactedW be exported from ADVAPI32 so Firefox xul.dll can load when DLL_EXPORT_VERSION is 0x502?",
+  "allowedInputs": [
+    "https://learn.microsoft.com/en-us/windows/win32/api/winreg/nf-winreg-regcreatekeytransactedw RegCreateKeyTransactedW, Advapi32.dll, eleven parameters",
+    "dll/win32/advapi32/advapi32.spec already in this tree, RegCreateKeyExW present, RegCreateKeyTransactedW absent",
+    "Reported: Entry Point Not Found RegCreateKeyTransactedW in advapi32.dll for firefox.exe",
+    "Reported: xul.dll PE import of RegCreateKeyTransactedW from advapi32.dll"
+  ],
+  "harness": {
+    "guest": "amd64 installed veros-ntfs after EventRegister ETW forwards, TCG, App mode",
+    "name": "ntdll-apps-firefox",
+    "traceOrReplayId": "Reported: Entry Point Not Found RegCreateKeyTransactedW in advapi32.dll"
+  }
+}
