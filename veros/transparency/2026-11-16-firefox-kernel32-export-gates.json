@@ -1,0 +1,19 @@
+{
+  "spdx": "GPL-2.0-or-later",
+  "question": "Which kernel32 exports gated above DLL_EXPORT_VERSION 0x502 does this Firefox tree import through api-ms-win-* apisets?",
+  "allowedInputs": [
+    "sdk/cmake/config.cmake already in this tree, DLL_EXPORT_VERSION 0x502",
+    "dll/win32/kernel32/kernel32.spec already in this tree, with -version gates on the listed symbols",
+    "dll/win32/kernel32/client/synch.c already in this tree, CreateEventW / CreateMutexW / CreateSemaphoreExW",
+    "dll/win32/psapi/psapi.spec already in this tree, GetModuleFileNameExW",
+    "sdk/include/psdk/winbase.h already in this tree, CREATE_EVENT_MANUAL_RESET / CREATE_EVENT_INITIAL_SET / CREATE_MUTEX_INITIAL_OWNER",
+    "https://learn.microsoft.com/en-us/windows/win32/api/synchapi/nf-synchapi-createeventexw CreateEventExW flags",
+    "https://learn.microsoft.com/en-us/windows/win32/api/synchapi/nf-synchapi-createmutexexw CreateMutexExW flags",
+    "Reported: llvm-readobj --coff-imports over downloads/apps-firefox-share/_import-scan listed 16 apiset imports still gated out of kernel32 at 0x502"
+  ],
+  "harness": {
+    "guest": "host PE import scan of Firefox-win64.7z extract; prior guest Entry Point Not Found dialogs for SRW Shared APIs",
+    "name": "ntdll-apps-firefox-import-scan",
+    "traceOrReplayId": "Reported: 16 gated kernel32 symbols from Firefox apiset imports at DLL_EXPORT_VERSION 0x502"
+  }
+}
