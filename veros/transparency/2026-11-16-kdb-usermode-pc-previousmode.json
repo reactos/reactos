@@ -1,0 +1,19 @@
+{
+    "spdx":  "GPL-2.0-or-later",
+    "question":  "Why did set condition * last kmode still enter KDB on a firefox user AV and freeze the App guest on Press q?",
+    "allowedInputs":  [
+                          "ntoskrnl/kdbg/kdb.c already in this tree, KdbEnterConditions page fault last KdbEnterFromKmode",
+                          "ntoskrnl/kdbg/kdbg.c already in this tree, PreviousMode = SegCs & 1",
+                          "ntoskrnl/kd/kdserial.c already in this tree, KdbpTryGetCharSerial(0) waits forever",
+                          "sdk/include/ndk/amd64/ketypes.h already in this tree, MODE_MASK",
+                          "output/ntdll-apps/serial-App-20261116T092124Z.log marker: Entered debugger on last-chance exception",
+                          "output/ntdll-apps/serial-App-20261116T092124Z.log marker: Press q to abort, any other key to continue",
+                          "output/ntdll-apps/serial-App-20261116T092124Z.log marker: User AV rip module xul.dll +0x19dde7"
+                      ],
+    "harness":  {
+                    "guest":  "amd64 installed veros-ntfs, TCG, App mode, Desktop run-firefox-log.cmd",
+                    "name":  "ntdll-apps-firefox",
+                    "traceOrReplayId":  "serial-App-20261116T092124Z last-chance KDB wait after last kmode",
+                    "logSha256":  "1ffb39e0a5ba5645d92bec2befb49a91bd27529c354ffdde94e53b3e69c2d0e9"
+                }
+}

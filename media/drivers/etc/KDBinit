@@ -7,10 +7,13 @@ set syntax intel
 # Change the condition to enter KDB on INT3 to "always" (default is "kmode")
 #set condition INT3 first always
 
-# firefox App serial-App-20261116T091406Z.log: last-chance user AV entered
-# KDB and waited on "Press q to abort" with no keyboard on -serial file,
-# so the guest looked hung. Keep last-chance breaks for kmode only.
-set condition * last kmode
+# firefox App serial-App-20261116T091406Z.log and
+# serial-App-20261116T092124Z.log: last-chance user AV entered KDB and
+# waited on "Press q to abort" with no keyboard on -serial file.
+# Page-fault last was already kmode; SegCs RPL still looked like kernel,
+# so kmode was not enough. Never break on last-chance for App serial-file
+# boots (kernel last-chance still bugchecks).
+set condition * last never
 
 # This is a special command available only in the KDBinit file - it breaks into
 # KDB when it is interpreting the init file at startup.
