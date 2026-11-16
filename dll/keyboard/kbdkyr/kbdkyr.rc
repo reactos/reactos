@@ -1,0 +1,5 @@
+#define REACTOS_VERSION_DLL
+#define REACTOS_STR_FILE_DESCRIPTION  "ReactOS Kyrgyz (Cyrillic) Keyboard Layout"
+#define REACTOS_STR_INTERNAL_NAME     "kbdkyr"
+#define REACTOS_STR_ORIGINAL_FILENAME "kbdkyr.dll"
+#include <reactos/version.rc>
