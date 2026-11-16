@@ -7,7 +7,12 @@
  *              Copyright 2026 Ryan Wilson <ryan@verosnt.com>
  * PROGRAMMERS: Timo Kreuzer (timo.kreuzer@reactos.org)
  *              Alex Ionescu (alex.ionescu@reactos.org)
- *              Ryan Wilson
+ *              Ryan Wilson <ryan@verosnt.com>
+ *
+ * User AV lines also name the loaded module and RVA. Guest serial
+ * output/ntdll-apps/serial-App-20261116T070345Z.log shows a stable
+ * firefox User AV at 0xCBD2C22 reading FFFFFFFFFFFFFFFF after the
+ * empty-LoadDll path was cleared.
  */
 
 /* INCLUDES ******************************************************************/
@@ -247,6 +252,60 @@ KiPrepareUserDebugData(void)
 }
 
 /*
+ * Name the user module that contains Address (firefox silent-fail12).
+ * Same PEB LDR walk shape as KiPrepareUserDebugData above.
+ */
+static
+VOID
+KiPrintUserModuleForAddress(PVOID Address)
+{
+    PTEB Teb;
+    PPEB_LDR_DATA PebLdr;
+    PLIST_ENTRY ListEntry;
+    PLDR_DATA_TABLE_ENTRY LdrEntry;
+    ULONG_PTR Addr = (ULONG_PTR)Address;
+
+    Teb = KeGetCurrentThread()->Teb;
+    if (!Teb) return;
+
+    _enable();
+
+    _SEH2_TRY
+    {
+        if (!Teb->ProcessEnvironmentBlock) _SEH2_LEAVE;
+        PebLdr = Teb->ProcessEnvironmentBlock->Ldr;
+        if (!PebLdr) _SEH2_LEAVE;
+
+        for (ListEntry = PebLdr->InLoadOrderModuleList.Flink;
+             ListEntry != &PebLdr->InLoadOrderModuleList;
+             ListEntry = ListEntry->Flink)
+        {
+            LdrEntry = CONTAINING_RECORD(ListEntry,
+                                         LDR_DATA_TABLE_ENTRY,
+                                         InLoadOrderLinks);
+            if (Addr >= (ULONG_PTR)LdrEntry->DllBase &&
+                Addr < ((ULONG_PTR)LdrEntry->DllBase + LdrEntry->SizeOfImage))
+            {
+                DPRINT1("User AV module %wZ +0x%Ix (base %p)\n",
+                        &LdrEntry->BaseDllName,
+                        Addr - (ULONG_PTR)LdrEntry->DllBase,
+                        LdrEntry->DllBase);
+                _SEH2_LEAVE;
+            }
+        }
+
+        DPRINT1("User AV address %p not in any loaded module\n", Address);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        DPRINT1("User AV module walk failed\n");
+    }
+    _SEH2_END;
+
+    _disable();
+}
+
+/*
  * Clang amd64 has no SEH frames, so _SEH2_EXCEPT does not catch a probe
  * of a bad user pointer. The debugger would then stop the machine.
  * The syscall returns the access violation instead.
@@ -392,6 +451,14 @@ KiDispatchException(IN PEXCEPTION_RECORD ExceptionRecord,
                         (PVOID)ExceptionRecord->ExceptionInformation[1] : NULL,
                     ExceptionRecord->NumberParameters > 0 ?
                         ExceptionRecord->ExceptionInformation[0] : 0);
+            KiPrintUserModuleForAddress(ExceptionRecord->ExceptionAddress);
+            if (ExceptionRecord->NumberParameters > 1 &&
+                ExceptionRecord->ExceptionInformation[1] != 0 &&
+                ExceptionRecord->ExceptionInformation[1] != (ULONG_PTR)-1)
+            {
+                KiPrintUserModuleForAddress(
+                    (PVOID)ExceptionRecord->ExceptionInformation[1]);
+            }
         }
 
         /* User mode exception, was it first-chance? */

@@ -1,0 +1,16 @@
+{
+  "spdx": "GPL-2.0-or-later",
+  "question": "How should a user-mode access-violation log identify which loaded module contains the faulting instruction address?",
+  "allowedInputs": [
+    "ntoskrnl/ke/amd64/except.c already in this tree, User AV DPRINT1 and KiPrepareUserDebugData PEB LDR walk",
+    "output/ntdll-apps/serial-App-20261116T070345Z.log marker: User AV in firefox.exe at 000000000CBD2C22 fault FFFFFFFFFFFFFFFF write 0",
+    "output/ntdll-apps/firefox-silent-fail12-user-av-gaps.txt",
+    "Reported: empty LoadDll cleared; AV RIP stable since fail2; map module+RVA next"
+  ],
+  "harness": {
+    "guest": "amd64 installed veros-ntfs after ReactOS_ShimData shim skip, TCG, App mode",
+    "name": "ntdll-apps-firefox",
+    "traceOrReplayId": "serial-App-20261116T070345Z User AV 0xCBD2C22",
+    "logSha256": "c0c276abca937d9a09bacde47d7d1bba016531001eed9cd650bbadd8505f933d"
+  }
+}
