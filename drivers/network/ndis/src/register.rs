@@ -118,6 +118,23 @@
  * sdk/include/ddk/ndis.h. The StartDevice IRP carries CM_RESOURCE_LIST;
  * PartialResourceList sits after Count, InterfaceType, and BusNumber in
  * sdk/include/xdk/cmtypes.h.
+ * After MiniportInitializeEx returns success the adapter is paused.
+ * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nc-ndis-miniport_restart
+ * NDIS then calls MiniportRestart. output/netkvm-20261116T083539Z.log
+ * printed NDIS INIT 00000000 and no Restart. The Restart handler is
+ * four pointer slots after SetOptionsHandler at 0x10 in
+ * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/ns-ndis-_ndis_miniport_driver_characteristics
+ * so the slot is 0x38. output/netkvm-20261116T083539Z.log printed that
+ * pointer in NDIS BODY 0030. MiniportRestart takes
+ * MiniportAdapterContext from
+ * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/ns-ndis-_ndis_miniport_adapter_registration_attributes
+ * which is the pointer at offset 8 of the type 0x9E size 0x1C block in
+ * that same log. The restart-parameters page lists Header, then
+ * RestartAttributes, then Flags
+ * (https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/ns-ndis-_ndis_miniport_restart_parameters).
+ * On x64 RestartAttributes is at offset 8. A null RestartAttributes is
+ * the case that page says the miniport must not modify. The 0x20-byte
+ * zeroed block is this file's buffer, not a Windows size.
  * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndissetoptionalhandlers
  * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/ns-ndis-_ndis_miniport_pnp_characteristics
  * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nc-ndis-miniport_add_device
@@ -169,8 +186,15 @@ const INVALID_PARAMETER: u32 = 0xC000_000D;
 const INDICATE_SLOT: usize = 0x50;
 /* METHOD.md capture 2026-11-15T143730Z: initialize is slot 0x18. */
 const INIT_SLOT: usize = 0x18;
+/* SetOptions at 0x10; Restart is four pointers later: 0x38. */
+const RESTART_SLOT: usize = 0x38;
 /* This file's buffer for the third initialize parameter, not a Windows size. */
 const INIT_BYTES: usize = 256;
+/* This file's buffer for MiniportRestart parameters, not a Windows size. */
+const RESTART_BYTES: usize = 0x20;
+/* Type 0x9E size 0x1C: MiniportAdapterContext pointer at offset 8. */
+const ATTR_CONTEXT_AT: usize = 8;
+const ATTR_REG_SIZE: u16 = 0x1C;
 /* NDIS_STATUS_FAILURE and NDIS_STATUS_RESOURCES in sdk/include/ddk/ndis.h. */
 const FAILURE: u32 = 0xC000_0001;
 const RESOURCES: u32 = 0xC000_009A;
@@ -198,6 +222,8 @@ const HANDLE_FDO_AT: usize = 0x160;
 const HANDLE_NEXT_AT: usize = 0x168;
 /* After the measured 06 00 at 0x172, before dword 1 at 0x190. */
 const HANDLE_RES_AT: usize = 0x178;
+/* Zero run after dword 1 at 0x190: MiniportAdapterContext from 0x9E. */
+const HANDLE_ADAPTER_CTX_AT: usize = 0x198;
 /* IO_STACK_LOCATION.Parameters starts after the 4 UCHAR header fields on
  * x64 with pointer alignment, in sdk/include/xdk/iotypes.h. StartDevice
  * stores AllocatedResources then AllocatedResourcesTranslated. */
@@ -839,7 +865,8 @@ fn store_start_resources(adapter: *mut u8, irp: *mut u8) {
 }
 
 fn call_initialize(handle: *mut u8) {
-    let slot = unsafe { slot_at(chars_ptr(handle), MP_CHARS, INIT_SLOT) };
+    let chars_len = chars_len(handle);
+    let slot = unsafe { slot_at(chars_ptr(handle), chars_len, INIT_SLOT) };
     if slot.is_null() {
         return;
     }
@@ -856,6 +883,48 @@ fn call_initialize(handle: *mut u8) {
     unsafe { DbgPrint(b"NDIS INIT\n\0".as_ptr()) };
     let status = unsafe { function(handle, context, params) };
     unsafe { DbgPrint(b"NDIS INIT %08x\n\0".as_ptr(), status) };
+    unsafe { ExFreePoolWithTag(params, POOL_TAG) };
+    if status == 0 {
+        call_restart(handle);
+    }
+}
+
+fn chars_len(handle: *mut u8) -> usize {
+    let chars = chars_ptr(handle);
+    if chars.is_null() {
+        return MP_CHARS;
+    }
+    let size = u16::from_le_bytes(unsafe { [*chars.add(2), *chars.add(3)] }) as usize;
+    if size >= RESTART_SLOT + size_of::<*mut u8>() && size <= MP_CHARS {
+        size
+    } else {
+        MP_CHARS
+    }
+}
+
+fn call_restart(handle: *mut u8) {
+    let chars_len = chars_len(handle);
+    let slot = unsafe { slot_at(chars_ptr(handle), chars_len, RESTART_SLOT) };
+    if slot.is_null() {
+        unsafe { DbgPrint(b"NDIS RESTART null\n\0".as_ptr()) };
+        return;
+    }
+    let adapter_ctx = read_ptr(handle, HANDLE_ADAPTER_CTX_AT);
+    if adapter_ctx.is_null() {
+        unsafe { DbgPrint(b"NDIS RESTART ctx\n\0".as_ptr()) };
+        return;
+    }
+    let params = unsafe { ExAllocatePoolWithTag(0, RESTART_BYTES, POOL_TAG) };
+    if params.is_null() {
+        return;
+    }
+    /* RestartAttributes at offset 8 stays null. */
+    unsafe { ptr::write_bytes(params, 0, RESTART_BYTES) };
+    let function: unsafe extern "system" fn(*mut u8, *mut u8) -> u32 =
+        unsafe { core::mem::transmute(slot) };
+    unsafe { DbgPrint(b"NDIS RESTART\n\0".as_ptr()) };
+    let status = unsafe { function(adapter_ctx, params) };
+    unsafe { DbgPrint(b"NDIS RESTART %08x\n\0".as_ptr(), status) };
     unsafe { ExFreePoolWithTag(params, POOL_TAG) };
 }
 
@@ -932,6 +1001,14 @@ pub unsafe extern "system" fn NdisMSetMiniportAttributes(
      * serial log for the Windows SG probe. */
     log_body(attributes, size);
     if kind == ATTR_TYPE {
+        /* Size 4 was the probe accept; size 0x1C carries the context. */
+        if size >= ATTR_REG_SIZE && is_mp_handle(handle) {
+            let adapter_ctx = read_ptr(attributes as *mut u8, ATTR_CONTEXT_AT);
+            write_ptr(handle, HANDLE_ADAPTER_CTX_AT, adapter_ctx);
+            unsafe {
+                DbgPrint(b"NDIS CTX %p\n\0".as_ptr(), adapter_ctx);
+            };
+        }
         return 0;
     }
     if kind == ATTR_ADD_TYPE && revision == ATTR_ADD_REVISION && size == ATTR_ADD_SIZE {
@@ -981,7 +1058,25 @@ pub extern "system" fn NdisMOidRequestComplete(_adapter: *mut u8, _request: *mut
 pub extern "system" fn NdisMRestartComplete(_adapter: *mut u8, _status: u32) {}
 
 #[no_mangle]
-pub extern "system" fn NdisMIndicateStatusEx(_adapter: *mut u8, _indication: *const u8) {}
+pub extern "system" fn NdisMIndicateStatusEx(_adapter: *mut u8, indication: *const u8) {
+    /* https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismindicatestatusex
+     * Log the indication header so the next Windows call has the bytes. */
+    if indication.is_null() {
+        unsafe { DbgPrint(b"NDIS STAT null\n\0".as_ptr()) };
+        return;
+    }
+    let kind = unsafe { *indication };
+    let revision = unsafe { *indication.add(1) };
+    let size = u16::from_le_bytes(unsafe { [*indication.add(2), *indication.add(3)] });
+    unsafe {
+        DbgPrint(
+            b"NDIS STAT %02x %02x %04x\n\0".as_ptr(),
+            kind as u32,
+            revision as u32,
+            size as u32,
+        )
+    };
+}
 
 #[no_mangle]
 pub extern "system" fn NdisMPauseComplete(_adapter: *mut u8) {}
