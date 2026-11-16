@@ -35,6 +35,7 @@ list(APPEND SOURCE
     client/perfcnt.c
     client/power.c
     client/proc.c
+    client/procattr.c
     client/procansi.c
     client/resntfy.c
     client/session.c

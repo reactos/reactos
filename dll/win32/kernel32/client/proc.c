@@ -2389,6 +2389,19 @@ CreateProcessInternalW(IN HANDLE hUserToken,
     NoWindow = dwCreationFlags & CREATE_NO_WINDOW;
     dwCreationFlags &= ~CREATE_NO_WINDOW;
 
+    /*
+     * Attribute lists are filled by Initialize/UpdateProcThreadAttribute
+     * (client/procattr.c). CSRSS CreateProcess does not consume them yet, so
+     * drop EXTENDED_STARTUPINFO_PRESENT (0x80000, Vista+) after Firefox and
+     * other callers have already built the list. Guest:
+     * output/ntdll-apps/firefox-mesa-retest-guest-log/firefox-stderr.txt
+     * SB::LA::SpawnTarget Error 0x80070057.
+     */
+#ifndef EXTENDED_STARTUPINFO_PRESENT
+#define EXTENDED_STARTUPINFO_PRESENT 0x00080000
+#endif
+    dwCreationFlags &= ~EXTENDED_STARTUPINFO_PRESENT;
+
 #if _SXS_SUPPORT_ENABLED_
     /* Setup the SxS static string arrays and buffers */
     SxsStaticBuffers[0] = &SxsWin32ManifestPath;
