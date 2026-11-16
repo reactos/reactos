@@ -16,8 +16,16 @@
  * 2026-11-15T232142Z reached DIFF END OK. NET_BUFFER DataLength is at
  * 0x18, Mdl at 0x20, and DataOffset at 0x28. NET_BUFFER_LIST DataLength
  * is at 0x198, Mdl at 0x1A0, and DataOffset at 0x1A8. Each value hit
- * once. The 256-byte and 512-byte lengths are that probe's reads in
- * differential-tests/ndis-discovery/probe.c, not a Windows object size.
+ * once. CurrentMdl at 0x08 and CurrentMdlOffset at 0x10 sit before the
+ * measured DataLength in the public NET_BUFFER member order
+ * (https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/nbl/ns-nbl-net_buffer).
+ * Public NetKVM CNB::Copy reads NET_BUFFER_CURRENT_MDL /
+ * NET_BUFFER_CURRENT_MDL_OFFSET
+ * (https://github.com/virtio-win/kvm-guest-drivers-windows/blob/master/NetKVM/Common/ParaNdis_TX.cpp).
+ * output/netkvm-20261116T102019Z.log printed NDIS SGALLOC then
+ * SGLISTFREE with no RECVLAN. The 256-byte and 512-byte lengths are
+ * that probe's reads in differential-tests/ndis-discovery/probe.c, not
+ * a Windows object size.
  * Pool type 0 is NonPagedPool on
  * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/wdm/ne-wdm-_pool_type
  *
@@ -41,7 +49,10 @@ const NB_SCAN: usize = 256;
 const NBL_SCAN: usize = 512;
 const KIND_NB: u32 = 1;
 const KIND_NBL: u32 = 2;
-/* Capture 2026-11-15T232142Z: one hit for each field. */
+/* Capture 2026-11-15T232142Z: one hit for each field. CurrentMdl and
+ * CurrentMdlOffset precede DataLength in the public NET_BUFFER order. */
+const NB_CURRENT_MDL_AT: usize = 0x08;
+const NB_CURRENT_MDL_OFFSET_AT: usize = 0x10;
 const NB_LENGTH_AT: usize = 0x18;
 const NB_MDL_AT: usize = 0x20;
 const NB_OFFSET_AT: usize = 0x28;
@@ -118,6 +129,7 @@ fn alloc_object(
     length_at: usize,
     mdl_at: usize,
     offset_at: usize,
+    set_current: bool,
 ) -> *mut u8 {
     unsafe {
         let object = ExAllocatePoolWithTag(0, bytes, POOL_TAG);
@@ -128,6 +140,10 @@ fn alloc_object(
         store_u64(object, length_at, data_length);
         store_u64(object, mdl_at, mdl as u64);
         store_u32(object, offset_at, data_offset);
+        if set_current {
+            store_u64(object, NB_CURRENT_MDL_AT, mdl as u64);
+            store_u32(object, NB_CURRENT_MDL_OFFSET_AT, data_offset);
+        }
         object
     }
 }
@@ -168,6 +184,7 @@ pub unsafe extern "system" fn NdisAllocateNetBuffer(
         NB_LENGTH_AT,
         NB_MDL_AT,
         NB_OFFSET_AT,
+        true,
     )
 }
 
@@ -199,6 +216,28 @@ pub unsafe extern "system" fn NdisFreeNetBufferListPool(pool: *mut u8) {
 }
 
 #[no_mangle]
+pub unsafe extern "system" fn NdisAllocateNetBufferList(
+    pool: *mut u8,
+    _context: u16,
+    _backfill: u16,
+) -> *mut u8 {
+    /* Empty NET_BUFFER_LIST. FirstNetBuffer stays null until the caller
+     * writes it. https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/nblapi/nf-nblapi-ndisallocatenetbufferlist */
+    if pool.is_null() {
+        return ptr::null_mut();
+    }
+    let header = &*(pool as *mut Pool);
+    if header.kind != KIND_NBL {
+        return ptr::null_mut();
+    }
+    let object = ExAllocatePoolWithTag(0, NBL_SCAN, POOL_TAG);
+    if !object.is_null() {
+        ptr::write_bytes(object, 0, NBL_SCAN);
+    }
+    object
+}
+
+#[no_mangle]
 pub unsafe extern "system" fn NdisAllocateNetBufferAndNetBufferList(
     pool: *mut u8,
     _context: u16,
@@ -222,6 +261,7 @@ pub unsafe extern "system" fn NdisAllocateNetBufferAndNetBufferList(
         NBL_LENGTH_AT,
         NBL_MDL_AT,
         NBL_OFFSET_AT,
+        false,
     )
 }
 

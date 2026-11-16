@@ -154,6 +154,9 @@ pub fn notify_adapter_ready(adapter: *mut u8) {
         unsafe { DbgPrint(b"NDIS BINDALL %08x\n\0".as_ptr(), status) };
     }
     prot6::free_bind_parameters(params);
+    /* After bind and packet-filter OIDs, queue the interrupt DPC once so
+     * receive path runs even when the line IRQ is quiet. */
+    unsafe { crate::kick_interrupt_dpc(adapter) };
 }
 
 fn push_hex(line: &mut [u8], at: &mut usize, value: u8) {

@@ -304,18 +304,17 @@ unsafe extern "system" fn receive_nbls(
 }
 
 pub fn indicate_receive(adapter: *mut u8, lists: *mut u8, port: u32, count: u32, flags: u32) {
-    /* Always return the lists to the miniport when no protocol binding is
-     * ready. output/netkvm-20261116T094739Z.log printed NDIS RECVIND
-     * before NDIS6 LAN; LanReceiveNbl6 saw a null context and returned
-     * without NdisReturnNetBufferLists, which starved later indicates.
-     * Only call ReturnNetBufferLists when this adapter is in BINDING_MAP
-     * (a live NetKVM bind). The NDIS CHECK indicate uses a throwaway
-     * handle; returning through that slot hung/faulted guests. */
+    /* Return lists to the miniport when no protocol binding is ready.
+     * output/netkvm-20261116T094739Z.log printed NDIS RECVIND before
+     * NDIS6 LAN; LanReceiveNbl6 saw a null context and returned without
+     * NdisReturnNetBufferLists, which starved later indicates.
+     * call_return_net_buffer_lists no-ops when the return slot is null
+     * (NDIS CHECK throwaway handles). */
     let binding = binding_for_adapter(adapter);
     let context = binding_context(binding);
     if context.is_null() || lists.is_null() {
         unsafe { protocol::dbg(b"NDIS6 RECV drop\n\0") };
-        if !binding.is_null() {
+        if !lists.is_null() {
             crate::register::call_return_net_buffer_lists(adapter, lists, flags);
         }
         return;

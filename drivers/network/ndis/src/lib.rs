@@ -838,14 +838,30 @@ pub unsafe extern "system" fn NdisOpenConfigurationEx(
 }
 
 #[no_mangle]
-pub extern "system" fn NdisMQueueDpcEx(
-    _interrupt: *mut u8,
+pub unsafe extern "system" fn NdisMQueueDpcEx(
+    interrupt: *mut u8,
     _message: u32,
     _processors: *mut u8,
-    _importance: u32,
-) -> u32 {
-    unsafe { DbgPrint(b"NDIS STUB NdisMQueueDpcEx\n\0".as_ptr()) };
-    0
+    dpc_context: *mut u8,
+) -> usize {
+    /* https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismqueuedpcex
+     * Returns a KAFFINITY bitmap of scheduled CPUs. Line interrupts use
+     * MessageId 0. Store MiniportDpcContext for the next DPC. */
+    if interrupt.is_null()
+        || core::ptr::read_unaligned(interrupt as *const u32) != IRQ_KIND
+    {
+        return 0;
+    }
+    core::ptr::write_unaligned(
+        interrupt.add(IRQ_DPC_CONTEXT_AT) as *mut *mut u8,
+        dpc_context,
+    );
+    KeInsertQueueDpc(
+        interrupt.add(IRQ_DPC_AT),
+        core::ptr::null_mut(),
+        core::ptr::null_mut(),
+    );
+    1
 }
 
 /* FILE_DEVICE_NETWORK in sdk/include/xdk/iotypes.h. */
@@ -1774,24 +1790,59 @@ pub unsafe extern "system" fn NdisMFreeNetBufferSGList(
  * offsets match the public NDIS_MINIPORT_INTERRUPT_CHARACTERISTICS page
  * with InterruptType at 0x50 / MessageInfoTable at 0x58 from capture
  * 2026-11-16T080419Z DIFF IRQA0050. Size 0x60 is output/netkvm-20261116T071822Z.log.
+ * DisableInterruptHandler / EnableInterruptHandler follow InterruptDpc
+ * on that same public member list (offsets 0x18 / 0x20).
  * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/ns-ndis-_ndis_miniport_interrupt_characteristics
- * CM_PARTIAL_RESOURCE_LIST / CmResourceTypeInterrupt are
- * sdk/include/xdk/cmtypes.h. IoConnectInterrupt is
+ * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nc-ndis-miniport_enable_interrupt
+ * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nc-ndis-miniport_disable_interrupt
+ * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nc-ndis-miniport_isr
+ * CM_PARTIAL_RESOURCE_LIST / CmResourceTypeInterrupt /
+ * CmResourceShareShared are sdk/include/xdk/cmtypes.h.
+ * IoConnectInterrupt is
  * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/wdm/nf-wdm-ioconnectinterrupt
+ * ShareVector matches drivers/network/dd/rtl8139/ndis.c
+ * (ShareDisposition == CmResourceShareShared).
  * output/netkvm-20261116T102602Z.log printed SGALLOC/SENDDONE with no
- * RECVLAN: RegisterInterruptEx never connected an ISR. Soft register
- * during InitializeEx; connect_interrupt after Restart. */
+ * RECVLAN: RegisterInterruptEx never connected an ISR.
+ * output/netkvm-20261116T103245Z.log connected mid-init, printed
+ * NDIS IRQDPC, then asserted KeGetCurrentIrql() <= APC_LEVEL.
+ * output/netkvm-20261116T105034Z.log and output/netkvm-20261116T111136Z.log
+ * deferred IoConnectInterrupt until after Restart: IRQCONN and
+ * IRQENABLE printed, then SENDDONE with no IRQDPC and PING CHECK fail
+ * 000004cf. Connect during RegisterInterruptEx again; hold delivery
+ * until after Restart (IRQ_ARMED). Armed DPC with a null
+ * ReceiveThrottleParameters faulted in netkvm.sys
+ * (output/netkvm-20261116T112400Z.log) and at DISPATCH asserted
+ * APC_LEVEL (output/netkvm-20261116T113013Z.log). Public NetKVM
+ * MiniportInterruptDPC reads MaxNblsToIndicate from that pointer
+ * (https://github.com/virtio-win/kvm-guest-drivers-windows/blob/6340662c/NetKVM/wlh/ParaNdis6_Impl.cpp).
+ * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nc-ndis-miniport_interrupt_dpc
+ * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/ns-ndis-_ndis_receive_throttle_parameters */
 const IRQ_KIND: u32 = u32::from_le_bytes(*b"IRso");
 const IRQ_BYTES: usize = 0x100;
+const IRQ_ARMED_AT: usize = 4;
 const IRQ_CONTEXT_AT: usize = 8;
 const IRQ_ISR_AT: usize = 0x10;
 const IRQ_DPC_HANDLER_AT: usize = 0x18;
 const IRQ_OBJECT_AT: usize = 0x20;
 const IRQ_ADAPTER_AT: usize = 0x28;
+const IRQ_DISABLE_AT: usize = 0x30;
+const IRQ_ENABLE_AT: usize = 0x38;
 const IRQ_DPC_AT: usize = 0x40;
+/* NDIS_RECEIVE_THROTTLE_PARAMETERS: MaxNblsToIndicate ULONG then
+ * MoreNblsPending bit. This file's 8-byte buffer, not a Windows size.
+ * Past the KDPC at IRQ_DPC_AT (sdk/include/xdk/ketypes.h KDPC). */
+const IRQ_THROTTLE_AT: usize = 0x90;
+const IRQ_THROTTLE_MAX_AT: usize = IRQ_THROTTLE_AT;
+const IRQ_THROTTLE_MORE_AT: usize = IRQ_THROTTLE_AT + 4;
+const IRQ_DPC_CONTEXT_AT: usize = 0x98;
+/* NDIS_INDICATE_ALL_NBLS on the public throttle page. */
+const INDICATE_ALL_NBLS: u32 = 0xFFFF_FFFF;
 type SyncRoutineFn = unsafe extern "system" fn(*mut u8) -> u8;
 const IRQ_CHARS_ISR_AT: usize = 0x08;
 const IRQ_CHARS_DPC_AT: usize = 0x10;
+const IRQ_CHARS_DISABLE_AT: usize = 0x18;
+const IRQ_CHARS_ENABLE_AT: usize = 0x20;
 const IRQ_CHARS_TYPE_AT: usize = 0x50;
 const IRQ_CHARS_MSG_AT: usize = 0x58;
 const CM_RES_COUNT_AT: usize = 4;
@@ -1804,6 +1855,7 @@ const CM_DESC_LEVEL_AT: usize = 4;
 const CM_DESC_VECTOR_AT: usize = 8;
 const CM_DESC_AFFINITY_AT: usize = 12;
 const CM_TYPE_INTERRUPT: u8 = 2;
+const CM_SHARE_SHARED: u8 = 3;
 const CM_INTERRUPT_LATCHED: u16 = 1;
 const LEVEL_SENSITIVE: u32 = 0;
 const LATCHED: u32 = 1;
@@ -1812,6 +1864,19 @@ type MiniportIsrFn =
     unsafe extern "system" fn(*mut u8, *mut u8, *mut u32) -> u8;
 type MiniportDpcFn =
     unsafe extern "system" fn(*mut u8, *mut u8, *mut u8, *mut u8);
+type MiniportLineIrqFn = unsafe extern "system" fn(*mut u8);
+
+unsafe fn call_line_irq_handler(block: *mut u8, slot: usize) {
+    let handler =
+        core::ptr::read_unaligned(block.add(slot) as *const *mut u8);
+    let miniport_ctx =
+        core::ptr::read_unaligned(block.add(IRQ_CONTEXT_AT) as *const *mut u8);
+    if handler.is_null() {
+        return;
+    }
+    let function: MiniportLineIrqFn = core::mem::transmute(handler);
+    function(miniport_ctx);
+}
 
 unsafe extern "system" fn ndis_interrupt_service(
     _interrupt: *mut u8,
@@ -1831,11 +1896,10 @@ unsafe extern "system" fn ndis_interrupt_service(
     let mut targets: u32 = 0;
     let isr: MiniportIsrFn = core::mem::transmute(isr_ptr);
     let claimed = isr(miniport_ctx, &mut queue_dpc, &mut targets);
-    /* Only schedule when the miniport claimed the interrupt and asked
-     * for a DPC. output/netkvm-20261116T103245Z.log printed NDIS IRQDPC
-     * during InitializeEx then asserted KeGetCurrentIrql() <= APC_LEVEL
-     * in ntoskrnl\mm\ARM3\miarm.h. Do not DbgPrint from this path. */
-    if claimed != 0 && (queue_dpc != 0 || targets != 0) {
+    /* Public MiniportInterrupt page: queue from QueueDefaultInterruptDpc
+     * / TargetProcessors regardless of the BOOLEAN return. Do not
+     * DbgPrint here (output/netkvm-20261116T103245Z.log). */
+    if queue_dpc != 0 || targets != 0 {
         KeInsertQueueDpc(context.add(IRQ_DPC_AT), core::ptr::null_mut(), core::ptr::null_mut());
     }
     claimed
@@ -1850,6 +1914,11 @@ unsafe extern "system" fn ndis_interrupt_dpc(
     if context.is_null() || core::ptr::read_unaligned(context as *const u32) != IRQ_KIND {
         return;
     }
+    /* Before Restart, skip the miniport DPC.
+     * output/netkvm-20261116T103245Z.log asserted APC_LEVEL mid-init. */
+    if *context.add(IRQ_ARMED_AT) == 0 {
+        return;
+    }
     let dpc_ptr = core::ptr::read_unaligned(
         context.add(IRQ_DPC_HANDLER_AT) as *const *mut u8,
     );
@@ -1858,13 +1927,24 @@ unsafe extern "system" fn ndis_interrupt_dpc(
     if dpc_ptr.is_null() {
         return;
     }
-    let dpc: MiniportDpcFn = core::mem::transmute(dpc_ptr);
-    dpc(
-        miniport_ctx,
-        core::ptr::null_mut(),
-        core::ptr::null_mut(),
-        core::ptr::null_mut(),
+    /* Fresh throttle block each DPC. MaxNblsToIndicate =
+     * NDIS_INDICATE_ALL_NBLS; MoreNblsPending cleared. */
+    core::ptr::write_unaligned(
+        context.add(IRQ_THROTTLE_MAX_AT) as *mut u32,
+        INDICATE_ALL_NBLS,
     );
+    core::ptr::write_unaligned(context.add(IRQ_THROTTLE_MORE_AT) as *mut u32, 0);
+    let throttle = context.add(IRQ_THROTTLE_AT);
+    let dpc_context = core::ptr::read_unaligned(
+        context.add(IRQ_DPC_CONTEXT_AT) as *const *mut u8,
+    );
+    DbgPrint(b"NDIS IRQDPC\n\0".as_ptr());
+    let dpc: MiniportDpcFn = core::mem::transmute(dpc_ptr);
+    dpc(miniport_ctx, dpc_context, throttle, core::ptr::null_mut());
+    let more = core::ptr::read_unaligned(context.add(IRQ_THROTTLE_MORE_AT) as *const u32);
+    if (more & 1) != 0 {
+        KeInsertQueueDpc(context.add(IRQ_DPC_AT), core::ptr::null_mut(), core::ptr::null_mut());
+    }
 }
 
 fn find_interrupt_resource(partial: *mut u8) -> Option<(u32, u8, u64, u16, u8)> {
@@ -1891,11 +1971,12 @@ fn find_interrupt_resource(partial: *mut u8) -> Option<(u32, u8, u64, u16, u8)> 
                     desc.add(CM_DESC_AFFINITY_AT) as *const u64,
                 );
                 DbgPrint(
-                    b"NDIS IRQRES v%u l%u a%p f%u\n\0".as_ptr(),
+                    b"NDIS IRQRES v%u l%u a%p f%u s%u\n\0".as_ptr(),
                     vector,
                     level,
                     affinity as *mut u8,
                     flags as u32,
+                    share as u32,
                 );
                 return Some((vector, level as u8, affinity, flags, share));
             }
@@ -1925,6 +2006,8 @@ pub unsafe extern "system" fn NdisMRegisterInterruptEx(
     unsafe {
         let mut isr: *mut u8 = core::ptr::null_mut();
         let mut dpc_handler: *mut u8 = core::ptr::null_mut();
+        let mut disable: *mut u8 = core::ptr::null_mut();
+        let mut enable: *mut u8 = core::ptr::null_mut();
         if !characteristics.is_null() {
             let kind = *characteristics;
             let revision = *characteristics.add(1);
@@ -1941,6 +2024,14 @@ pub unsafe extern "system" fn NdisMRegisterInterruptEx(
                 );
                 dpc_handler = core::ptr::read_unaligned(
                     characteristics.add(IRQ_CHARS_DPC_AT) as *const *mut u8,
+                );
+            }
+            if (size as usize) >= IRQ_CHARS_ENABLE_AT + 8 {
+                disable = core::ptr::read_unaligned(
+                    characteristics.add(IRQ_CHARS_DISABLE_AT) as *const *mut u8,
+                );
+                enable = core::ptr::read_unaligned(
+                    characteristics.add(IRQ_CHARS_ENABLE_AT) as *const *mut u8,
                 );
             }
             if size as usize >= 0x60 {
@@ -1966,6 +2057,13 @@ pub unsafe extern "system" fn NdisMRegisterInterruptEx(
             block.add(IRQ_DPC_HANDLER_AT) as *mut *mut u8,
             dpc_handler,
         );
+        core::ptr::write_unaligned(block.add(IRQ_DISABLE_AT) as *mut *mut u8, disable);
+        core::ptr::write_unaligned(block.add(IRQ_ENABLE_AT) as *mut *mut u8, enable);
+        DbgPrint(
+            b"NDIS IRQEN %p %p\n\0".as_ptr(),
+            enable,
+            disable,
+        );
         KeInitializeDpc(
             block.add(IRQ_DPC_AT),
             ndis_interrupt_dpc as *const (),
@@ -1974,14 +2072,12 @@ pub unsafe extern "system" fn NdisMRegisterInterruptEx(
 
         core::ptr::write_unaligned(block.add(IRQ_ADAPTER_AT) as *mut *mut u8, adapter);
         core::ptr::write_unaligned(block.add(IRQ_OBJECT_AT) as *mut *mut u8, core::ptr::null_mut());
-        let partial = register::miniport_resources(adapter);
-        /* Parse and log the interrupt resource. Do not IoConnectInterrupt
-         * during InitializeEx yet: output/netkvm-20261116T103245Z.log and
-         * output/netkvm-20261116T103516Z.log connected, ran the miniport
-         * DPC mid-init, then asserted KeGetCurrentIrql() <= APC_LEVEL in
-         * ntoskrnl\mm\ARM3\miarm.h. Handlers stay on the block for
-         * connect_interrupt after Restart. */
-        if find_interrupt_resource(partial).is_none() {
+        /* Soft register during InitializeEx. Early connect+arm reached
+         * IRQDPC (output/netkvm-20261116T115118Z.log) then faulted in
+         * netkvm.sys after a second OpenAdapterEx. Defer connect to
+         * after Restart; pass a real throttle block on every DPC. */
+        *block.add(IRQ_ARMED_AT) = 0;
+        if find_interrupt_resource(register::miniport_resources(adapter)).is_none() {
             DbgPrint(b"NDIS IRQRES none\n\0".as_ptr());
         }
         register::store_interrupt(adapter, block);
@@ -1992,9 +2088,75 @@ pub unsafe extern "system" fn NdisMRegisterInterruptEx(
     0
 }
 
+unsafe fn connect_interrupt_block(block: *mut u8, partial: *mut u8) {
+    if block.is_null() {
+        return;
+    }
+    let existing = core::ptr::read_unaligned(block.add(IRQ_OBJECT_AT) as *const *mut u8);
+    if !existing.is_null() {
+        return;
+    }
+    let Some((vector, irql, affinity, flags, share)) = find_interrupt_resource(partial) else {
+        DbgPrint(b"NDIS IRQRES none\n\0".as_ptr());
+        return;
+    };
+    let mode = if (flags & CM_INTERRUPT_LATCHED) != 0 {
+        LATCHED
+    } else {
+        LEVEL_SENSITIVE
+    };
+    /* BOOLEAN ShareVector, not the raw ShareDisposition enum.
+     * drivers/network/dd/rtl8139/ndis.c and
+     * win32ss/drivers/videoprt/resource.c. */
+    let share_vector: u8 = if share == CM_SHARE_SHARED { 1 } else { 0 };
+    let mut object: *mut u8 = core::ptr::null_mut();
+    let status = IoConnectInterrupt(
+        &mut object,
+        ndis_interrupt_service as *const (),
+        block,
+        core::ptr::null_mut(),
+        vector,
+        irql,
+        irql,
+        mode,
+        share_vector,
+        affinity,
+        0,
+    );
+    DbgPrint(
+        b"NDIS IRQCONN %08x %p\n\0".as_ptr(),
+        status as u32,
+        object,
+    );
+    if status >= 0 && !object.is_null() {
+        core::ptr::write_unaligned(block.add(IRQ_OBJECT_AT) as *mut *mut u8, object);
+        call_line_irq_handler(block, IRQ_ENABLE_AT);
+        DbgPrint(b"NDIS IRQENABLE\n\0".as_ptr());
+    }
+}
+
+pub(crate) unsafe fn kick_interrupt_dpc(adapter: *mut u8) {
+    let block = register::miniport_interrupt(adapter);
+    if block.is_null() {
+        return;
+    }
+    if core::ptr::read_unaligned(block as *const u32) != IRQ_KIND {
+        return;
+    }
+    if *block.add(IRQ_ARMED_AT) == 0 {
+        return;
+    }
+    KeInsertQueueDpc(
+        block.add(IRQ_DPC_AT),
+        core::ptr::null_mut(),
+        core::ptr::null_mut(),
+    );
+}
+
 pub(crate) unsafe fn connect_interrupt(adapter: *mut u8) {
-    /* Called after MiniportRestart succeeds. Soft register already stored
-     * the block on the adapter; this is the deferred IoConnectInterrupt. */
+    /* After MiniportRestart: arm, connect, enable, then queue one DPC so
+     * KickRX work from Restart is not lost when the ISR was not yet
+     * connected (deferred path, output/netkvm-20261116T114639Z.log). */
     let block = register::miniport_interrupt(adapter);
     if block.is_null() {
         return;
@@ -2003,42 +2165,11 @@ pub(crate) unsafe fn connect_interrupt(adapter: *mut u8) {
         if core::ptr::read_unaligned(block as *const u32) != IRQ_KIND {
             return;
         }
-        let existing = core::ptr::read_unaligned(block.add(IRQ_OBJECT_AT) as *const *mut u8);
-        if !existing.is_null() {
-            return;
-        }
-        let partial = register::miniport_resources(adapter);
-        let Some((vector, irql, affinity, flags, share)) = find_interrupt_resource(partial) else {
-            DbgPrint(b"NDIS IRQRES none\n\0".as_ptr());
-            return;
-        };
-        let mode = if (flags & CM_INTERRUPT_LATCHED) != 0 {
-            LATCHED
-        } else {
-            LEVEL_SENSITIVE
-        };
-        let mut object: *mut u8 = core::ptr::null_mut();
-        let status = IoConnectInterrupt(
-            &mut object,
-            ndis_interrupt_service as *const (),
-            block,
-            core::ptr::null_mut(),
-            vector,
-            irql,
-            irql,
-            mode,
-            share,
-            affinity,
-            0,
-        );
-        DbgPrint(
-            b"NDIS IRQCONN %08x %p\n\0".as_ptr(),
-            status as u32,
-            object,
-        );
-        if status >= 0 && !object.is_null() {
-            core::ptr::write_unaligned(block.add(IRQ_OBJECT_AT) as *mut *mut u8, object);
-        }
+        *block.add(IRQ_ARMED_AT) = 1;
+        connect_interrupt_block(block, register::miniport_resources(adapter));
+        call_line_irq_handler(block, IRQ_ENABLE_AT);
+        kick_interrupt_dpc(adapter);
+        DbgPrint(b"NDIS IRQARM\n\0".as_ptr());
     }
 }
 
