@@ -4550,4 +4550,42 @@ CreateProcessW(LPCWSTR lpApplicationName,
                                   NULL);
 }
 
+/*
+ * @implemented
+ *
+ * GetProcessMitigationPolicy / SetProcessMitigationPolicy: accept the call for
+ * desktop Firefox. Public docs:
+ * https://learn.microsoft.com/en-us/windows/win32/api/processthreadsapi/nf-processthreadsapi-getprocessmitigationpolicy
+ * https://learn.microsoft.com/en-us/windows/win32/api/processthreadsapi/nf-processthreadsapi-setprocessmitigationpolicy
+ * Firefox PE imports: KERNEL32.dll.
+ */
+BOOL
+WINAPI
+GetProcessMitigationPolicy(IN HANDLE hProcess,
+                           IN DWORD MitigationPolicy,
+                           OUT PVOID lpBuffer,
+                           IN SIZE_T dwLength)
+{
+    UNREFERENCED_PARAMETER(hProcess);
+    UNREFERENCED_PARAMETER(MitigationPolicy);
+    UNREFERENCED_PARAMETER(lpBuffer);
+    UNREFERENCED_PARAMETER(dwLength);
+    return TRUE;
+}
+
+/*
+ * @implemented
+ */
+BOOL
+WINAPI
+SetProcessMitigationPolicy(IN DWORD MitigationPolicy,
+                           IN PVOID lpBuffer,
+                           IN SIZE_T dwLength)
+{
+    UNREFERENCED_PARAMETER(MitigationPolicy);
+    UNREFERENCED_PARAMETER(lpBuffer);
+    UNREFERENCED_PARAMETER(dwLength);
+    return TRUE;
+}
+
 /* EOF */

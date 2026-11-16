@@ -9,6 +9,8 @@
  *                  Stanislav Motylkov (x86corez@gmail.com)
  *                  Mark Jansen (mark.jansen@reactos.org)
  *                  Copyright 2023 Ratin Gao <ratin@knsoft.org>
+ *                  Copyright 2026 Ryan Wilson <ryan@verosnt.com>
+ * PROGRAMMERS:     Ryan Wilson <ryan@verosnt.com>
  */
 
 /* INCLUDES *******************************************************************/
@@ -596,13 +598,128 @@ SetSystemFileCacheSize(IN SIZE_T MinimumFileCacheSize,
 }
 
 /*
- * @unimplemented
+ * @implemented
+ *
+ * Desktop processes have no package identity. APPMODEL_ERROR_NO_PACKAGE is
+ * sdk/include/psdk/winerror.h. Public docs:
+ * https://learn.microsoft.com/en-us/windows/win32/api/appmodel/nf-appmodel-getcurrentpackagefullname
+ * Firefox PE import: KERNEL32.dll!GetCurrentPackageFullName.
+ */
+LONG
+WINAPI
+GetCurrentPackageFullName(UINT32 *packageFullNameLength,
+                          PWSTR packageFullName)
+{
+    UNREFERENCED_PARAMETER(packageFullNameLength);
+    UNREFERENCED_PARAMETER(packageFullName);
+    return APPMODEL_ERROR_NO_PACKAGE;
+}
+
+/*
+ * @implemented
+ *
+ * https://learn.microsoft.com/en-us/windows/win32/api/appmodel/nf-appmodel-getcurrentpackagefamilyname
+ */
+LONG
+WINAPI
+GetCurrentPackageFamilyName(UINT32 *packageFamilyNameLength,
+                            PWSTR packageFamilyName)
+{
+    UNREFERENCED_PARAMETER(packageFamilyNameLength);
+    UNREFERENCED_PARAMETER(packageFamilyName);
+    return APPMODEL_ERROR_NO_PACKAGE;
+}
+
+/*
+ * @implemented
  */
 LONG
 WINAPI
 GetCurrentPackageId(UINT32 *BufferLength,
                     BYTE *Buffer)
 {
-    STUB;
+    UNREFERENCED_PARAMETER(BufferLength);
+    UNREFERENCED_PARAMETER(Buffer);
     return APPMODEL_ERROR_NO_PACKAGE;
+}
+
+/*
+ * @implemented
+ */
+LONG
+WINAPI
+GetCurrentPackageInfo(UINT32 flags,
+                      UINT32 *bufferLength,
+                      BYTE *buffer,
+                      UINT32 *count)
+{
+    UNREFERENCED_PARAMETER(flags);
+    UNREFERENCED_PARAMETER(bufferLength);
+    UNREFERENCED_PARAMETER(buffer);
+    UNREFERENCED_PARAMETER(count);
+    return APPMODEL_ERROR_NO_PACKAGE;
+}
+
+/*
+ * @implemented
+ */
+LONG
+WINAPI
+GetCurrentPackagePath(UINT32 *packagePathLength,
+                      PWSTR packagePath)
+{
+    UNREFERENCED_PARAMETER(packagePathLength);
+    UNREFERENCED_PARAMETER(packagePath);
+    return APPMODEL_ERROR_NO_PACKAGE;
+}
+
+/*
+ * @implemented
+ *
+ * https://learn.microsoft.com/en-us/windows/win32/api/appmodel/nf-appmodel-getcurrentapplicationusermodelid
+ * APPMODEL_ERROR_NO_APPLICATION: sdk/include/psdk/winerror.h
+ */
+LONG
+WINAPI
+GetCurrentApplicationUserModelId(UINT32 *applicationUserModelIdLength,
+                                 PWSTR applicationUserModelId)
+{
+    UNREFERENCED_PARAMETER(applicationUserModelIdLength);
+    UNREFERENCED_PARAMETER(applicationUserModelId);
+    return APPMODEL_ERROR_NO_APPLICATION;
+}
+
+/*
+ * @implemented
+ *
+ * https://learn.microsoft.com/en-us/windows/win32/api/appmodel/nf-appmodel-getpackagepathbyfullname
+ */
+LONG
+WINAPI
+GetPackagePathByFullName(PCWSTR packageFullName,
+                         UINT32 *pathLength,
+                         PWSTR path)
+{
+    if (pathLength == NULL || packageFullName == NULL)
+    {
+        return ERROR_INVALID_PARAMETER;
+    }
+
+    UNREFERENCED_PARAMETER(path);
+    return APPMODEL_ERROR_NO_PACKAGE;
+}
+
+/*
+ * @implemented
+ */
+LONG
+WINAPI
+PackageFamilyNameFromFullName(PCWSTR packageFullName,
+                              UINT32 *packageFamilyNameLength,
+                              PWSTR packageFamilyName)
+{
+    UNREFERENCED_PARAMETER(packageFullName);
+    UNREFERENCED_PARAMETER(packageFamilyNameLength);
+    UNREFERENCED_PARAMETER(packageFamilyName);
+    return ERROR_INVALID_PARAMETER;
 }

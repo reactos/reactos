@@ -1448,4 +1448,46 @@ SetThreadErrorMode(IN DWORD dwNewMode,
     return TRUE;
 }
 
+/*
+ * @implemented
+ *
+ * SetThreadInformation: sdk/include/psdk/processthreadsapi.h THREAD_INFORMATION_CLASS.
+ * Public docs:
+ * https://learn.microsoft.com/en-us/windows/win32/api/processthreadsapi/nf-processthreadsapi-setthreadinformation
+ * Firefox PE import: KERNEL32.dll!SetThreadInformation.
+ */
+BOOL
+WINAPI
+SetThreadInformation(IN HANDLE hThread,
+                     IN THREAD_INFORMATION_CLASS ThreadInformationClass,
+                     IN LPVOID ThreadInformation,
+                     IN DWORD ThreadInformationSize)
+{
+    NTSTATUS Status;
+
+    switch (ThreadInformationClass)
+    {
+        case ThreadMemoryPriority:
+            Status = NtSetInformationThread(hThread,
+                                            ThreadPagePriority,
+                                            ThreadInformation,
+                                            ThreadInformationSize);
+            break;
+
+        default:
+            /* Accept unknown classes so desktop Firefox keeps running. */
+            UNREFERENCED_PARAMETER(ThreadInformation);
+            UNREFERENCED_PARAMETER(ThreadInformationSize);
+            return TRUE;
+    }
+
+    if (!NT_SUCCESS(Status))
+    {
+        BaseSetLastNTError(Status);
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
 /* EOF */
