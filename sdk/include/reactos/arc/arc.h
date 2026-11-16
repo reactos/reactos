@@ -322,12 +322,28 @@ typedef enum _TYPE_OF_MEMORY
     LoaderMaximum
 } TYPE_OF_MEMORY;
 
+//
+// Memory Allocation Descriptor
+//
+// See https://www.geoffchappell.com/studies/windows/km/ntoskrnl/inc/api/arc/memory_allocation_descriptor.htm
+// for more details.
+//
+// Note: This structure is part of the loader-to-kernel ABI. Its layout must
+// match the target kernel version. On x64, BasePage and PageCount are 32-bit
+// before NT 6.1 and pointer-sized starting with NT 6.1 (Windows 7 / Windows
+// Server 2008 R2). On x86, both fields remain 32-bit.
+//
 typedef struct _MEMORY_ALLOCATION_DESCRIPTOR
 {
     LIST_ENTRY ListEntry;
     TYPE_OF_MEMORY MemoryType;
-    PFN_NUMBER BasePage;
-    PFN_NUMBER PageCount;
+#if (NTDDI_VERSION < NTDDI_WIN7)
+    ULONG BasePage;
+    ULONG PageCount;
+#else
+    ULONG_PTR BasePage;
+    ULONG_PTR PageCount;
+#endif
 } MEMORY_ALLOCATION_DESCRIPTOR, *PMEMORY_ALLOCATION_DESCRIPTOR;
 
 typedef struct _BOOT_DRIVER_LIST_ENTRY
