@@ -1027,6 +1027,7 @@
 @ stdcall RequestWakeupLatency(long)
 @ stdcall ResetEvent(long)
 @ stdcall ResetWriteWatch(ptr long)
+@ stdcall -stub ResolveLocaleName(wstr wstr long)
 @ stdcall RestoreLastError(long) ntdll.RtlRestoreLastWin32Error
 @ stdcall ResumeThread(long)
 @ stdcall -arch=x86_64 RtlAddFunctionTable(ptr long long) ntdll.RtlAddFunctionTable
