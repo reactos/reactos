@@ -6,7 +6,7 @@
  * COPYRIGHT:   See COPYING in the top level directory
  *              Copyright 2026 Ryan Wilson <ryan@verosnt.com>
  * PROGRAMMERS: Ariadne (ariadne@xs4all.nl)
- *              Ryan Wilson
+ *              Ryan Wilson <ryan@verosnt.com>
  */
 
 /*
@@ -1391,6 +1391,21 @@ FlushInstructionCache(IN HANDLE hProcess,
 
     /* All good */
     return TRUE;
+}
+
+/*
+ * @implemented
+ *
+ * FlushProcessWriteBuffers: make prior stores by this thread visible to other
+ * processors. MemoryBarrier is sdk/include/xdk/memaccess.h. Export already in
+ * dll/win32/kernel32/kernel32.spec. Public docs:
+ * https://learn.microsoft.com/en-us/windows/win32/api/processthreadsapi/nf-processthreadsapi-flushprocesswritebuffers
+ */
+VOID
+WINAPI
+FlushProcessWriteBuffers(VOID)
+{
+    MemoryBarrier();
 }
 
 /*

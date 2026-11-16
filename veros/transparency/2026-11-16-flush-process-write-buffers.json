@@ -1,0 +1,20 @@
+{
+  "spdx": "GPL-2.0-or-later",
+  "question": "How should FlushProcessWriteBuffers and other Firefox KERNEL32 PE imports be exported when DLL_EXPORT_VERSION is 0x502?",
+  "allowedInputs": [
+    "https://learn.microsoft.com/en-us/windows/win32/api/processthreadsapi/nf-processthreadsapi-flushprocesswritebuffers FlushProcessWriteBuffers, Kernel32.dll, no parameters, no return, flushes write buffers of processors running threads of the current process",
+    "https://learn.microsoft.com/en-us/windows/win32/api/winnls/nf-winnls-getcurrencyformatex GetCurrencyFormatEx",
+    "https://learn.microsoft.com/en-us/windows/win32/api/winnls/nf-winnls-getnumberformatex GetNumberFormatEx",
+    "sdk/include/xdk/memaccess.h already in this tree, MemoryBarrier",
+    "sdk/include/psdk/processthreadsapi.h already in this tree, FlushProcessWriteBuffers declaration",
+    "dll/win32/kernel32/kernel32.spec already in this tree, FlushProcessWriteBuffers was a 0x600+ stub; GetCurrencyFormatEx and GetNumberFormatEx were 0x600+ gated",
+    "dll/win32/kernel32/winnls/string/lcformat.c already in this tree, GetCurrencyFormatEx and GetNumberFormatEx bodies behind _WIN32_WINNT >= 0x600",
+    "dll/win32/psapi/psapi.spec already in this tree, QueryWorkingSetEx and GetModuleBaseNameW",
+    "Reported: Failed to snap KERNEL32.dll!FlushProcessWriteBuffers for MSVCP140.dll; Entry Point Not Found FlushProcessWriteBuffers in KERNEL32.dll"
+  ],
+  "harness": {
+    "guest": "amd64 installed veros-ntfs after QueryUnbiasedInterruptTime export, TCG, App mode",
+    "name": "ntdll-apps-firefox",
+    "traceOrReplayId": "Reported: Failed to snap KERNEL32.dll!FlushProcessWriteBuffers for MSVCP140.dll"
+  }
+}

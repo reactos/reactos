@@ -1351,9 +1351,11 @@ error:
   return 0;
 }
 
-#if _WIN32_WINNT >= 0x600
 /**************************************************************************
  *              GetNumberFormatEx	(KERNEL32.@)
+ *
+ * Compiled for DLL_EXPORT_VERSION 0x502 so Firefox PE imports resolve.
+ * LocaleNameToLCID / GetNumberFormatW already in this tree.
  */
 INT WINAPI GetNumberFormatEx(LPCWSTR name, DWORD flags,
                              LPCWSTR value, const NUMBERFMTW *format,
@@ -1370,7 +1372,6 @@ INT WINAPI GetNumberFormatEx(LPCWSTR name, DWORD flags,
 
   return GetNumberFormatW(lcid, flags, value, format, number, numout);
 }
-#endif /* _WIN32_WINNT >= 0x600 */
 
 /* Formatting states for Currencies. We use flags to avoid code duplication. */
 #define CF_PARENS       0x1  /* Parentheses      */
@@ -1672,9 +1673,11 @@ error:
   return 0;
 }
 
-#if _WIN32_WINNT >= 0x600
 /***********************************************************************
  *            GetCurrencyFormatEx (KERNEL32.@)
+ *
+ * Compiled for DLL_EXPORT_VERSION 0x502 so Firefox PE imports resolve.
+ * LocaleNameToLCID / GetCurrencyFormatW already in this tree.
  */
 int WINAPI GetCurrencyFormatEx(LPCWSTR localename, DWORD flags, LPCWSTR value,
                                 const CURRENCYFMTW *format, LPWSTR str, int len)
@@ -1684,7 +1687,6 @@ int WINAPI GetCurrencyFormatEx(LPCWSTR localename, DWORD flags, LPCWSTR value,
 
     return GetCurrencyFormatW( LocaleNameToLCID(localename, 0), flags, value, format, str, len);
 }
-#endif
 
 
 /* FIXME: Everything below here needs to move somewhere else along with the
