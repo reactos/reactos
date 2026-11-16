@@ -217,6 +217,9 @@ BOOLEAN UiInitialize(BOOLEAN ShowUi)
     /* Draw the backdrop and fade it in if special effects are enabled */
     UiFadeInBackdrop();
 
+    /* Set text color */
+    UiTextColor("White");
+
     TRACE("UiInitialize() returning TRUE.\n");
     return TRUE;
 }
