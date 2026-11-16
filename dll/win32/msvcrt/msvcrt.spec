@@ -1406,7 +1406,7 @@
 @ cdecl putwc(long ptr) fputwc
 @ cdecl putwchar(long) _fputwchar
 @ cdecl qsort(ptr long long ptr)
-@ cdecl -version=0x600+ qsort_s(ptr long long ptr ptr)
+@ cdecl qsort_s(ptr long long ptr ptr)
 @ cdecl raise(long)
 @ cdecl rand()
 @ cdecl -version=0x600+ rand_s(ptr)

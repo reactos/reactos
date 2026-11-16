@@ -337,3 +337,9 @@ Path: sdk/include/ddk/d3dkmthk.h
 Used Version: git commit 045831e
 License: MIT (https://spdx.org/licenses/MIT.html)
 URL: https://github.com/microsoft/libdxg
+
+Title: Mesa3D softpipe WGL ICD
+Path: dll/opengl/mesasoft/bin (built from downloads/mesa/mesa-src via Build-MesaSoft.ps1)
+Used Version: 24.0.9
+License: MIT (https://spdx.org/licenses/MIT.html)
+URL: https://gitlab.freedesktop.org/mesa/mesa.git

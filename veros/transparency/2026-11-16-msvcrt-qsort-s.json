@@ -1,0 +1,8 @@
+{
+  "spdx": "GPL-2.0-or-later",
+  "question": "Does Mesa softpipe's CRT need qsort_s exported from msvcrt below Vista?",
+  "allowedInputs": [
+    "dll/win32/msvcrt/msvcrt.spec qsort_s entry",
+    "Reported: guest LoadLibrary mesasoft.dll failed until qsort_s was exported without the 0x600 version gate"
+  ]
+}

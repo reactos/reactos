@@ -1,0 +1,18 @@
+{
+  "spdx": "GPL-2.0-or-later",
+  "question": "How does VerOS register Mesa softpipe as the OpenGL ICD while keeping framebuf as the display driver?",
+  "allowedInputs": [
+    "https://gitlab.freedesktop.org/mesa/mesa.git Mesa 24.0.9 MIT softpipe WGL",
+    "dll/opengl/opengl32/icdload.c OpenGLDrivers and ReactOS\\\\OpenGL override",
+    "dll/opengl/mesasoft/mesasoft_reg.inf",
+    "media/doc/3rd Party Files.txt third-party listing pattern",
+    "output/mesasoft-livecd-20261116T135227Z.log Overriding the default OGL ICD with MESASOFT",
+    "Reported: guest MESASMOKE OK clear and triangle through opengl32 on live CD"
+  ],
+  "harness": {
+    "guest": "VerOS",
+    "name": "live CD Mesa softpipe ICD",
+    "traceOrReplayId": "output/mesasoft-livecd-20261116T135227Z.log MESASOFT",
+    "logSha256": "a1c97abf89741fbbbc24e5a51a1081c8da6888627af336d9ecefa7dab29edb21"
+  }
+}

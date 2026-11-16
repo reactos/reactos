@@ -1,0 +1,16 @@
+{
+  "spdx": "GPL-2.0-or-later",
+  "question": "Should d3d11.dll ship when DLL_EXPORT_VERSION is 0x502 so WineD3D can draw on Mesa softpipe?",
+  "allowedInputs": [
+    "dll/directx/wine/CMakeLists.txt dxgi already added at 0x502",
+    "dll/directx/wine/d3d11/CMakeLists.txt local _WIN32_WINNT 0x0600",
+    "output/mesasoft-livecd-20261116T135227Z.log D3D11SMOKE OK",
+    "Reported: guest D3D11SMOKE FAIL load d3d11.dll before enabling the subdirectory at 0x502"
+  ],
+  "harness": {
+    "guest": "VerOS",
+    "name": "live CD d3d11 triangle smoke",
+    "traceOrReplayId": "output/mesasoft-livecd-20261116T135227Z.log D3D11SMOKE OK",
+    "logSha256": "a1c97abf89741fbbbc24e5a51a1081c8da6888627af336d9ecefa7dab29edb21"
+  }
+}

@@ -83,13 +83,16 @@ add_subdirectory(dwrite)
 # (serial-App-20261116T113115Z.log: LDR missing dll dxgi.dll).
 # Its own CMakeLists raises _WIN32_WINNT to 0x0600 locally.
 add_subdirectory(dxgi)
+# d3d11 is needed at DLL_EXPORT_VERSION 0x502 for Milestone 26
+# (WineD3D OpenGL path on Mesa softpipe). Its own CMakeLists raises
+# _WIN32_WINNT to 0x0600 locally.
+add_subdirectory(d3d11)
 
 if(DLL_EXPORT_VERSION GREATER_EQUAL 0x600)
     add_subdirectory(d2d1)
     add_subdirectory(d3d10)
     add_subdirectory(d3d10_1)
     add_subdirectory(d3d10core)
-    add_subdirectory(d3d11)
     add_subdirectory(d3dx10_33)
     add_subdirectory(d3dx10_34)
     add_subdirectory(d3dx10_35)
