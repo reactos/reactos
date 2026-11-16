@@ -288,7 +288,7 @@
 @ stdcall GetDesktopWindow()
 @ stdcall GetDialogBaseUnits()
 @ stdcall -version=0x602+ GetDisplayAutoRotationPreferences(ptr)
-@ stdcall -version=0x600+ GetDisplayConfigBufferSizes(long ptr ptr)
+@ stdcall GetDisplayConfigBufferSizes(long ptr ptr)
 @ stdcall GetDlgCtrlID(long)
 @ stdcall GetDlgItem(long long)
 @ stdcall GetDlgItemInt(long long ptr long)

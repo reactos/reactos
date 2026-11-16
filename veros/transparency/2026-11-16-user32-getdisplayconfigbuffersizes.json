@@ -1,0 +1,16 @@
+{
+  "spdx": "GPL-2.0-or-later",
+  "question": "Why did Firefox GetProcAddress fail for GetDisplayConfigBufferSizes after NotifyIpInterfaceChange succeeded?",
+  "allowedInputs": [
+    "win32ss/user/user32/user32.spec GetDisplayConfigBufferSizes -version=0x600+ entry already in tree",
+    "win32ss/user/user32_vista/wine/sysparams.c GetDisplayConfigBufferSizes implementation already in tree",
+    "output/ntdll-apps/serial-App-20261116T111101Z.log marker LDR: missing export user32.dll!GetDisplayConfigBufferSizes",
+    "output/ntdll-apps/serial-App-20261116T111640Z.log marker WARNING: calling stub GetSystemCpuSetInformation (past DisplayConfig; no missing GetDisplayConfigBufferSizes)"
+  ],
+  "harness": {
+    "guest": "veros-ntfs App",
+    "name": "firefox-plain-displayconfig",
+    "traceOrReplayId": "serial-App-20261116T111640Z"
+  },
+  "harness.logSha256": "cc8b20fb6acaebcbe6bffc522cc57011f33b3892ac14e87e68000b19333d91ee"
+}
