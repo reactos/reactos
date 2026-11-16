@@ -121,6 +121,18 @@ where the close wins the race against the final ACK.
 
 Upstream candidate: yes.
 
+### 6. Dropping a duplicate segment from the out of order queue
+
+When a segment in the out of order queue turns out to be entirely old data (a retransmission that covered it
+arrived in order first), `_fnet_tcp_add_inpbuf` unlinks it and then subtracts the length of the next queued
+segment from `tcpcb_count`. That count is wrong, and when the dropped segment was the last one the next
+pointer is NULL, which faults in the kernel. Needs loss and reordering together, so it does not show in the
+emulated tests.
+
+* `stack/fnet_tcp.c`: subtract the length of the segment that is dropped.
+
+Upstream candidate: yes.
+
 ## Not needed
 
 ### 32 bit millisecond clock wrap

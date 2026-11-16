@@ -2380,7 +2380,7 @@ static fnet_bool_t _fnet_tcp_add_inpbuf( fnet_socket_if_t *sk, fnet_netbuf_t *in
                         cb->tcpcb_rcvchain = cb->tcpcb_rcvchain->next_chain;
 
                         /* Set the new size of the temporary buffer.*/
-                        cb->tcpcb_count -= cb->tcpcb_rcvchain->total_length;
+                        cb->tcpcb_count -= buf->total_length; /* ReactOS: was the next segment, NULL at the end of the chain */
                         _fnet_netbuf_free_chain(buf);
                     }
                 }
