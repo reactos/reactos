@@ -1,0 +1,16 @@
+{
+  "spdx": "GPL-2.0-or-later",
+  "question": "Which host DLL should resolve api-ms-win-core-version so GetFileVersionInfoSizeW is found?",
+  "allowedInputs": [
+    "https://learn.microsoft.com/en-us/windows/win32/api/winver/nf-winver-getfileversioninfosizew GetFileVersionInfoSizeW, DLL Version.dll",
+    "dll/win32/version/version.spec already in this tree, which exports GetFileVersionInfoSizeW",
+    "sdk/lib/apisets/apisets.table.c already in this tree, which mapped api-ms-win-core-version-l1-1-1 to kernel32.dll",
+    "Reported: firefox.exe Entry Point Not Found for GetFileVersionInfoSizeW in api-ms-win-core-version-l1-1-1.dll",
+    "Reported: serial showed Failed to snap api-ms-win-core-version-l1-1-1.dll!GetFileVersionInfoSizeW for mozglue.dll"
+  ],
+  "harness": {
+    "guest": "amd64 installed veros-ntfs disk, TCG, 8192 MB, 4 CPUs, App mode FAT share",
+    "name": "ntdll-apps-firefox",
+    "traceOrReplayId": "Reported: Failed to snap api-ms-win-core-version-l1-1-1.dll!GetFileVersionInfoSizeW for mozglue.dll"
+  }
+}
