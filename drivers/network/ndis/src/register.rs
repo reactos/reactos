@@ -33,7 +33,97 @@
  * returns 0 on the initialize handle. Other types at size 4 returned
  * 0xC000000D. Capture 2026-11-15T161901Z reached DIFF END OK: indicate
  * delivers the list to offset 0x50, argument 1. Argument 0 and
- * argument 2 were null.
+ * argument 2 were null. differential-tests/ndis-discovery/METHOD.md
+ * records that same capture: slot 0x18 ran and its argument 0 was the
+ * handle passed to NdisMSetMiniportAttributes.
+ * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nc-ndis-miniport_initialize_ex
+ * names that handler's three parameters. The 256-byte block passed as
+ * the third parameter is this file's buffer so the pointer is not null.
+ * It is not a Windows structure size.
+ * output/netkvm-20261116T023655Z.log printed NDIS REG 8a 03 00a0 and
+ * DriverEntry returned 0xC0010004. Capture 2026-11-16T025328Z called
+ * the same type, revision, and size with bytes 6 and 84 and reached
+ * DIFF END OK with status 0xC0010005. output/netkvm-20261116T025725Z.log
+ * printed NDIS VER 06 53 for that registration. Capture
+ * 2026-11-16T030735Z called that header with a zeroed body and reached
+ * DIFF END OK with status 0xC0010005. output/netkvm-20261116T031154Z.log
+ * printed that block: bytes 68 dc follow 06 53, eight flag bytes are
+ * zero, and the slots from 0x10 through 0x90 are this boot's addresses.
+ * output/ndis-discovery/windows.log (DIFF END OK) in capture
+ * 2026-11-16T032247Z accepted that size with bytes 06 53, returned 0,
+ * and called offset 0x10. A zeroed body at that size returned
+ * 0xC0010005. This file accepts the 06 53 size and calls offset 0x10.
+ * output/netkvm-20261116T032525Z.log then called NdisSetOptionalHandlers
+ * and DriverEntry returned 0xC0000002. This file logs that block's
+ * header and returns 0. output/netkvm-20261116T032858Z.log printed
+ * NDIS OPT 92 01 002c. This file prints that block and still returns 0.
+ * output/netkvm-20261116T041014Z.log printed the 0x2C bytes. Offset 4
+ * is 80 f8 ff ff, offset 0x28 is a0 00 00 00, and the other slots are
+ * this boot's addresses. DriverEntry returned 0xC0010004.
+ * output/netkvm-20261116T042252Z.log printed no NDIS MISS line and
+ * DriverEntry returned 0xC0010004. This file prints the miniport handle
+ * after offset 0x10 returns, and again from NdisDeregisterDeviceEx.
+ * output/netkvm-20261116T043051Z.log printed NDIS SLOT 00000000 and
+ * wrote the registration at byte 0 of that handle. The row at offset
+ * 0x120 ends in 4d 50 73 6f 67 00 5d 00. NDIS HEND same followed.
+ * DriverEntry returned 0xC0010004. Passing the characteristics pointer
+ * instead left that image unchanged in output/netkvm-20261116T043614Z.log
+ * and DriverEntry still returned 0xC0010004. output/netkvm-20261116T043930Z.log
+ * then printed the optional-handlers tail as 20 b4 d8 72. The slot
+ * receives the driver allocation again. Capture 2026-11-16T050701Z
+ * returned 0 from NdisRegisterDeviceEx for the measured names. This
+ * file keeps the DRIVER_OBJECT pointer past the characteristics copy.
+ * Capture 2026-11-16T052229Z dumped the Windows miniport handle: bytes
+ * 02 01 a8 04 at offset 0, 06 53 at offset 0x18, 84 00 86 00 at offset
+ * 0x30, and the characteristics header at offset 0x70. BEFORE and AFTER
+ * NdisSetOptionalHandlers matched. Capture 2026-11-16T053108Z dumped
+ * the full 0x4A8 bytes: zeros from 0x110 through 0x16F, 06 00 at
+ * offset 0x172, dword 1 at 0x190, and dc 00 68 00 24 00 24 00 at
+ * 0x1E0. Guest pointers are not replayed. This file's KIND, context,
+ * and DRIVER_OBJECT sit in that zero run at 0x110. The optional-handlers
+ * copy sits at 0x128 in that same zero run. Capture 2026-11-16T045900Z
+ * returned 0 from NdisSetOptionalHandlers for type 0x92, revision 1,
+ * size 0x2C. output/netkvm-20261116T054453Z.log reached DriverEntry 0
+ * with no MiniportInitializeEx. This file stores that block and sets
+ * DRIVER_OBJECT.DriverExtension.AddDevice from
+ * sdk/include/xdk/iotypes.h so PnP can call MiniportAddDeviceHandler.
+ * output/netkvm-20261116T055653Z.log printed NDIS ADDMP 00000000, then
+ * IopInitiatePnpIrp(IRP_MN_FILTER_RESOURCE_REQUIREMENTS) failed. This
+ * file's PnP dispatch calls the FilterResourceRequirements and
+ * StartDevice slots from the stored optional-handlers block.
+ * output/netkvm-20261116T060635Z.log printed NDIS FILTER 00000000,
+ * NDIS START 00000000, NDIS INIT, NDIS RWLOCK, then NDIS INIT c001001e
+ * (NDIS_STATUS_RESOURCE_CONFLICT in sdk/include/ddk/ndis.h) after
+ * NdisMGetBusData returned 0. This file stores the physical, functional,
+ * and next-lower device objects on the adapter handle for
+ * NdisMGetDeviceProperty and NdisMGetBusData.
+ * output/netkvm-20261116T061555Z.log printed NDIS BUSGOT 00000040 then
+ * faulted in netkvm.sys at address 4. StartDevice now forwards to the
+ * PDO with IoForwardIrpSynchronously before the miniport start slot.
+ * Public NetKVM CPciResources::Init
+ * (https://github.com/virtio-win/kvm-guest-drivers-windows/blob/master/NetKVM/Common/ParaNdis_VirtIO.cpp)
+ * reads NdisMGetBusData then RList->Count. Count is at offset 4 of
+ * CM_PARTIAL_RESOURCE_LIST in sdk/include/xdk/cmtypes.h. A null RList
+ * faults at address 4. Public NetKVM MiniportInitializeEx passes
+ * miniportInitParameters->AllocatedResources into that Init
+ * (https://github.com/virtio-win/kvm-guest-drivers-windows/blob/master/NetKVM/wlh/ParaNdis6_Driver.cpp).
+ * The third InitializeEx argument was this file's zeroed INIT_BYTES
+ * block, so that pointer was null. The public init-parameters page lists
+ * Header, then Flags, then AllocatedResources
+ * (https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/ns-ndis-_ndis_miniport_init_parameters).
+ * NDIS_OBJECT_HEADER is 4 bytes in sdk/include/psdk/ntddndis.h. Flags is
+ * a ULONG. On x64 that puts AllocatedResources at offset 8. That offset
+ * is this derivation, not a Windows dump of that structure.
+ * NDIS_RESOURCE_LIST is CM_PARTIAL_RESOURCE_LIST in
+ * sdk/include/ddk/ndis.h. The StartDevice IRP carries CM_RESOURCE_LIST;
+ * PartialResourceList sits after Count, InterfaceType, and BusNumber in
+ * sdk/include/xdk/cmtypes.h.
+ * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndissetoptionalhandlers
+ * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/ns-ndis-_ndis_miniport_pnp_characteristics
+ * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nc-ndis-miniport_add_device
+ * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/wdm/nc-wdm-driver_add_device
+ * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismgetdeviceproperty
+ * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismgetbusdata
  */
 
 use core::ptr;
@@ -43,6 +133,9 @@ const POOL_TAG: u32 = u32::from_le_bytes(*b"NsoV");
 const MP_TYPE: u8 = 0x8A;
 const MP_REVISION: u8 = 3;
 const MP_CHARS: usize = 0x120;
+/* Capture 2026-11-16T032247Z: type 0x8A, revision 3, size 0xA0, bytes 06 53. */
+const MP_CHARS_A0: u16 = 0xA0;
+const VERSION_MINOR_A0: u8 = 0x53;
 /* Same log: bytes 6 and 84 at offset 4. */
 const VERSION_AT: usize = 4;
 const VERSION_MAJOR: u8 = 6;
@@ -54,23 +147,200 @@ const BAD_VERSION: u32 = 0xC001_0004;
 const BAD_CHARACTERISTICS: u32 = 0xC001_0005;
 /* Capture 2026-11-15T143730Z: type 0x9E. Other types at size 4 returned this. */
 const ATTR_TYPE: u8 = 0x9E;
+/* Capture 2026-11-16T055625Z: type 0xA4, revision 1, size 0x14. */
+const ATTR_ADD_TYPE: u8 = 0xA4;
+const ATTR_ADD_REVISION: u8 = 1;
+const ATTR_ADD_SIZE: u16 = 0x14;
+/* output/netkvm-20261116T063334Z.log printed NDIS HDR 9f 02 00e0 from
+ * NetKVM during MiniportInitializeEx, then NDIS INIT c000000d. This
+ * file returned INVALID_PARAMETER for every attributes type other than
+ * the measured 0x9E and 0xA4 headers. That status matched. The type,
+ * revision, and size are the bytes NetKVM passed on that VerOS boot,
+ * not a Windows accept. METHOD.md still requires one Windows call with
+ * those bytes. Capture 2026-11-16T064151Z dumped the 0xE0 body. An
+ * earlier Windows try of type 0x9F revision 0 size 4 did not return;
+ * do not scan. */
+const ATTR_GENERAL_TYPE: u8 = 0x9F;
+const ATTR_GENERAL_REVISION: u8 = 2;
+const ATTR_GENERAL_SIZE: u16 = 0xE0;
 const INVALID_PARAMETER: u32 = 0xC000_000D;
 /* Capture 2026-11-15T161901Z: the list arrived at this miniport offset. */
 const INDICATE_SLOT: usize = 0x50;
+/* METHOD.md capture 2026-11-15T143730Z: initialize is slot 0x18. */
+const INIT_SLOT: usize = 0x18;
+/* This file's buffer for the third initialize parameter, not a Windows size. */
+const INIT_BYTES: usize = 256;
 /* NDIS_STATUS_FAILURE and NDIS_STATUS_RESOURCES in sdk/include/ddk/ndis.h. */
 const FAILURE: u32 = 0xC000_0001;
 const RESOURCES: u32 = 0xC000_009A;
 const KIND_MP: u32 = u32::from_le_bytes(*b"MPso");
-
-struct MpDriver {
-    kind: u32,
-    context: *mut u8,
-    chars: [u8; MP_CHARS],
-}
+/* Capture 2026-11-16T052229Z: type 0x02, revision 1, size 0x4A8. */
+const HANDLE_TYPE: u8 = 0x02;
+const HANDLE_REVISION: u8 = 1;
+const HANDLE_BYTES: usize = 0x4A8;
+const HANDLE_VERSION_AT: usize = 0x18;
+const HANDLE_MARK_AT: usize = 0x30;
+const HANDLE_CHARS_AT: usize = 0x70;
+/* Capture 2026-11-16T053108Z: zeros from 0x110 through 0x16F. */
+const HANDLE_KIND_AT: usize = 0x110;
+const HANDLE_CONTEXT_AT: usize = 0x118;
+const HANDLE_DRIVER_AT: usize = 0x120;
+/* Same capture: 06 00 at 0x172, and dc 00 68 00 24 00 24 00 at 0x1E0. */
+const HANDLE_FLAG_AT: usize = 0x172;
+const HANDLE_TAIL_AT: usize = 0x1E0;
+const HANDLE_ONE_AT: usize = 0x190;
+/* Zero run after KIND/context/driver: store the measured 0x2C OPT block. */
+const HANDLE_OPT_AT: usize = 0x128;
+/* Same zero run after the 0x2C OPT copy: PDO, FDO, and next-lower. */
+const HANDLE_PDO_AT: usize = 0x158;
+const HANDLE_FDO_AT: usize = 0x160;
+const HANDLE_NEXT_AT: usize = 0x168;
+/* After the measured 06 00 at 0x172, before dword 1 at 0x190. */
+const HANDLE_RES_AT: usize = 0x178;
+/* IO_STACK_LOCATION.Parameters starts after the 4 UCHAR header fields on
+ * x64 with pointer alignment, in sdk/include/xdk/iotypes.h. StartDevice
+ * stores AllocatedResources then AllocatedResourcesTranslated. */
+const STACK_PARAMETERS_AT: usize = 8;
+const STACK_START_RES_AT: usize = STACK_PARAMETERS_AT;
+const STACK_START_REST_AT: usize = STACK_PARAMETERS_AT + 8;
+/* CM_RESOURCE_LIST.List[0].PartialResourceList in sdk/include/xdk/cmtypes.h. */
+const CM_PARTIAL_AT: usize = 12;
+/* AllocatedResources at offset 8: see file header. Public member order
+ * after NDIS_OBJECT_HEADER and Flags; not a Windows-measured layout. */
+const INIT_RESOURCES_AT: usize = 8;
+/* Capture 2026-11-16T045900Z: type 0x92, revision 1, size 0x2C. */
+const OPT_TYPE: u8 = 0x92;
+const OPT_REVISION: u8 = 1;
+const OPT_BYTES: usize = 0x2C;
+/* Public member order after the 4-byte header: first pointer at 0x08. */
+const OPT_ADD_DEVICE_AT: usize = 0x08;
+const OPT_REMOVE_DEVICE_AT: usize = 0x10;
+const OPT_FILTER_AT: usize = 0x18;
+const OPT_START_DEVICE_AT: usize = 0x20;
+/* DRIVER_OBJECT.DriverExtension and DRIVER_EXTENSION.AddDevice in
+ * sdk/include/xdk/iotypes.h on x64. */
+const DRIVER_EXTENSION_AT: usize = 0x30;
+const ADD_DEVICE_AT: usize = 0x08;
+/* DRIVER_OBJECT.MajorFunction in sdk/include/xdk/iotypes.h on x64. */
+const MAJOR_FUNCTION_AT: usize = 0x70;
+/* IRP_MJ_PNP, IRP_MN_START_DEVICE, IRP_MN_REMOVE_DEVICE, and
+ * IRP_MN_FILTER_RESOURCE_REQUIREMENTS in sdk/include/xdk/iotypes.h. */
+const IRP_MJ_PNP: usize = 0x1b;
+const IRP_MN_START_DEVICE: u8 = 0x00;
+const IRP_MN_REMOVE_DEVICE: u8 = 0x02;
+const IRP_MN_FILTER_RESOURCE_REQUIREMENTS: u8 = 0x0d;
+/* IRP.IoStatus, CurrentLocation, and Tail.Overlay.CurrentStackLocation
+ * from sdk/include/xdk/iotypes.h on x64. */
+const IRP_IO_STATUS_AT: usize = 0x30;
+const IRP_CURRENT_LOCATION_AT: usize = 0x43;
+const IRP_STACK_AT: usize = 0xb8;
+/* modules/rostests/kmtests/kmtest_drv/structs.c: sizeof(IO_STACK_LOCATION) == 72 on x64. */
+const STACK_LOCATION_BYTES: usize = 72;
+/* DEVICE_OBJECT.DeviceExtension in sdk/include/xdk/iotypes.h on x64. */
+const DEVICE_EXTENSION_AT: usize = 0x40;
+const FDO_EXT_BYTES: u32 = 16;
+const FDO_ADAPTER_AT: usize = 0;
+const FDO_LOWER_AT: usize = 8;
+/* FILE_DEVICE_PHYSICAL_NETCARD in sdk/include/xdk/iotypes.h. */
+const FILE_DEVICE_PHYSICAL_NETCARD: u32 = 0x17;
+const IO_NO_INCREMENT: i32 = 0;
+/* Same capture: first 0xA0 bytes were dumped. */
+const SLOT_IMAGE: usize = 0xA0;
+static mut SAVED_HANDLE: *mut u8 = ptr::null_mut();
+static mut HANDLE_SNAP: [u8; SLOT_IMAGE] = [0; SLOT_IMAGE];
+static mut MP_DRIVER_HANDLE: *mut u8 = ptr::null_mut();
 
 unsafe extern "system" {
     fn ExAllocatePoolWithTag(kind: u32, bytes: usize, tag: u32) -> *mut u8;
     fn ExFreePoolWithTag(address: *mut u8, tag: u32);
+    fn DbgPrint(format: *const u8, ...) -> i32;
+    fn IoCreateDevice(
+        driver: *mut u8,
+        extension: u32,
+        name: *const u8,
+        device_type: u32,
+        characteristics: u32,
+        exclusive: u8,
+        device: *mut *mut u8,
+    ) -> i32;
+    fn IoAttachDeviceToDeviceStack(source: *mut u8, target: *mut u8) -> *mut u8;
+    fn IoDeleteDevice(device: *mut u8);
+    fn IoDetachDevice(device: *mut u8);
+    fn IoCompleteRequest(irp: *mut u8, boost: i32);
+    fn IoCallDriver(device: *mut u8, irp: *mut u8) -> i32;
+    fn IoForwardIrpSynchronously(device: *mut u8, irp: *mut u8) -> u8;
+}
+
+fn log_bytes(text: &[u8], kind: u8, revision: u8, size: u16) {
+    unsafe { DbgPrint(text.as_ptr(), kind as u32, revision as u32, size as u32) };
+}
+
+fn log_version(chars: *const u8, size: u16) {
+    if (size as usize) < VERSION_AT + 2 {
+        return;
+    }
+    let major = unsafe { *chars.add(VERSION_AT) };
+    let minor = unsafe { *chars.add(VERSION_AT + 1) };
+    unsafe { DbgPrint(b"NDIS VER %02x %02x\n\0".as_ptr(), major as u32, minor as u32) };
+}
+
+fn push_hex(line: &mut [u8], at: &mut usize, value: u8) {
+    const DIGITS: &[u8] = b"0123456789abcdef";
+    line[*at] = DIGITS[(value >> 4) as usize];
+    line[*at + 1] = DIGITS[(value & 0xf) as usize];
+    *at += 2;
+}
+
+fn log_body(chars: *const u8, size: u16) {
+    let total = size as usize;
+    let mut offset = 0usize;
+    while offset < total {
+        let mut line = [0u8; 80];
+        let mut at = 0usize;
+        for byte in b"NDIS BODY " {
+            line[at] = *byte;
+            at += 1;
+        }
+        push_hex(&mut line, &mut at, (offset >> 8) as u8);
+        push_hex(&mut line, &mut at, offset as u8);
+        let count = (total - offset).min(16);
+        for index in 0..count {
+            line[at] = b' ';
+            at += 1;
+            let byte = unsafe { *chars.add(offset + index) };
+            push_hex(&mut line, &mut at, byte);
+        }
+        line[at] = b'\n';
+        line[at + 1] = 0;
+        unsafe { DbgPrint(line.as_ptr()) };
+        offset += 16;
+    }
+}
+
+fn log_opt(chars: *const u8, size: u16) {
+    let total = size as usize;
+    let mut offset = 0usize;
+    while offset < total {
+        let mut line = [0u8; 80];
+        let mut at = 0usize;
+        for byte in b"NDIS OPTB " {
+            line[at] = *byte;
+            at += 1;
+        }
+        push_hex(&mut line, &mut at, (offset >> 8) as u8);
+        push_hex(&mut line, &mut at, offset as u8);
+        let count = (total - offset).min(16);
+        for index in 0..count {
+            line[at] = b' ';
+            at += 1;
+            let byte = unsafe { *chars.add(offset + index) };
+            push_hex(&mut line, &mut at, byte);
+        }
+        line[at] = b'\n';
+        line[at + 1] = 0;
+        unsafe { DbgPrint(line.as_ptr()) };
+        offset += 16;
+    }
 }
 
 fn header(chars: *const u8) -> (u8, u8, u16) {
@@ -80,11 +350,171 @@ fn header(chars: *const u8) -> (u8, u8, u16) {
     }
 }
 
+fn version_byte(chars: *const u8, size: u16, index: usize) -> Option<u8> {
+    if (size as usize) < index + 1 {
+        return None;
+    }
+    Some(unsafe { *chars.add(index) })
+}
+
 fn version_ok(chars: *const u8, size: u16) -> bool {
-    if (size as usize) < VERSION_AT + 2 {
+    version_byte(chars, size, VERSION_AT) == Some(VERSION_MAJOR)
+        && version_byte(chars, size, VERSION_AT + 1) == Some(VERSION_MINOR)
+}
+
+fn netkvm_chars(kind: u8, revision: u8, size: u16, chars: *const u8) -> bool {
+    kind == MP_TYPE
+        && revision == MP_REVISION
+        && size == MP_CHARS_A0
+        && version_byte(chars, size, VERSION_AT) == Some(VERSION_MAJOR)
+        && version_byte(chars, size, VERSION_AT + 1) == Some(VERSION_MINOR_A0)
+}
+
+fn planted_byte(saved: *const u8, copy_len: usize, major: u8, minor: u8, index: usize) -> u8 {
+    /* Capture 2026-11-16T052229Z layout for the first 0xA0 bytes. */
+    if index == 0 {
+        return HANDLE_TYPE;
+    }
+    if index == 1 {
+        return HANDLE_REVISION;
+    }
+    if index == 2 {
+        return (HANDLE_BYTES & 0xff) as u8;
+    }
+    if index == 3 {
+        return ((HANDLE_BYTES >> 8) & 0xff) as u8;
+    }
+    if index == HANDLE_VERSION_AT {
+        return major;
+    }
+    if index == HANDLE_VERSION_AT + 1 {
+        return minor;
+    }
+    if index == HANDLE_MARK_AT {
+        return 0x84;
+    }
+    if index == HANDLE_MARK_AT + 2 {
+        return 0x86;
+    }
+    if index >= HANDLE_CHARS_AT && index - HANDLE_CHARS_AT < copy_len {
+        return unsafe { *saved.add(index - HANDLE_CHARS_AT) };
+    }
+    0
+}
+
+fn write_u16(handle: *mut u8, offset: usize, value: u16) {
+    unsafe {
+        *handle.add(offset) = value as u8;
+        *handle.add(offset + 1) = (value >> 8) as u8;
+    }
+}
+
+fn write_ptr(handle: *mut u8, offset: usize, value: *mut u8) {
+    unsafe {
+        ptr::write_unaligned(handle.add(offset) as *mut *mut u8, value);
+    }
+}
+
+fn read_ptr(handle: *mut u8, offset: usize) -> *mut u8 {
+    unsafe { ptr::read_unaligned(handle.add(offset) as *const *mut u8) }
+}
+
+fn chars_ptr(handle: *mut u8) -> *mut u8 {
+    unsafe { handle.add(HANDLE_CHARS_AT) }
+}
+
+fn is_mp_handle(handle: *mut u8) -> bool {
+    if handle.is_null() {
         return false;
     }
-    unsafe { *chars.add(VERSION_AT) == VERSION_MAJOR && *chars.add(VERSION_AT + 1) == VERSION_MINOR }
+    unsafe { ptr::read_unaligned(handle.add(HANDLE_KIND_AT) as *const u32) == KIND_MP }
+}
+
+pub fn miniport_devices(handle: *mut u8) -> (*mut u8, *mut u8, *mut u8) {
+    if !is_mp_handle(handle) {
+        return (ptr::null_mut(), ptr::null_mut(), ptr::null_mut());
+    }
+    (
+        read_ptr(handle, HANDLE_PDO_AT),
+        read_ptr(handle, HANDLE_FDO_AT),
+        read_ptr(handle, HANDLE_NEXT_AT),
+    )
+}
+
+fn log_rows(prefix: &[u8; 10], base: *const u8, total: usize, changed: &mut bool, expect: &mut dyn FnMut(usize) -> u8) {
+    let mut offset = 0usize;
+    while offset < total {
+        let count = (total - offset).min(16);
+        let mut row = false;
+        let mut index = 0usize;
+        while index < count {
+            let actual = unsafe { *base.add(offset + index) };
+            if actual != expect(offset + index) {
+                row = true;
+                *changed = true;
+            }
+            index += 1;
+        }
+        if row {
+            let mut line = [0u8; 80];
+            let mut at = 0usize;
+            let mut prefix_at = 0usize;
+            while prefix_at < prefix.len() {
+                line[at] = prefix[prefix_at];
+                at += 1;
+                prefix_at += 1;
+            }
+            push_hex(&mut line, &mut at, (offset >> 8) as u8);
+            push_hex(&mut line, &mut at, offset as u8);
+            index = 0;
+            while index < count {
+                line[at] = b' ';
+                at += 1;
+                push_hex(&mut line, &mut at, unsafe { *base.add(offset + index) });
+                index += 1;
+            }
+            line[at] = b'\n';
+            line[at + 1] = 0;
+            unsafe { DbgPrint(line.as_ptr()) };
+        }
+        offset += 16;
+    }
+}
+
+fn log_handle(handle: *mut u8, saved: *const u8, copy_len: usize, major: u8, minor: u8) {
+    let mut changed = false;
+    log_rows(
+        b"NDIS HNDL ",
+        handle,
+        SLOT_IMAGE,
+        &mut changed,
+        &mut |index| planted_byte(saved, copy_len, major, minor, index),
+    );
+    if !changed {
+        unsafe { DbgPrint(b"NDIS HANDLE same\n\0".as_ptr()) };
+    }
+    unsafe {
+        SAVED_HANDLE = handle;
+        ptr::copy_nonoverlapping(handle, core::ptr::addr_of_mut!(HANDLE_SNAP) as *mut u8, SLOT_IMAGE);
+    }
+}
+
+pub(crate) unsafe fn log_handle_later() {
+    let driver = unsafe { SAVED_HANDLE };
+    if driver.is_null() {
+        return;
+    }
+    let mut changed = false;
+    log_rows(
+        b"NDIS HEND ",
+        driver,
+        SLOT_IMAGE,
+        &mut changed,
+        &mut |index| unsafe { *core::ptr::addr_of!(HANDLE_SNAP).cast::<u8>().add(index) },
+    );
+    if !changed {
+        unsafe { DbgPrint(b"NDIS HEND same\n\0".as_ptr()) };
+    }
 }
 
 fn call_slot(chars: *const u8, handle: *mut u8, context: *mut u8) -> u32 {
@@ -97,9 +527,224 @@ fn call_slot(chars: *const u8, handle: *mut u8, context: *mut u8) -> u32 {
     unsafe { function(handle, context, ptr::null_mut(), ptr::null_mut()) }
 }
 
+pub(crate) unsafe fn mp_driver_object(handle: *mut u8) -> *mut u8 {
+    if !is_mp_handle(handle) {
+        return ptr::null_mut();
+    }
+    read_ptr(handle, HANDLE_DRIVER_AT)
+}
+
+fn set_add_device(driver_object: *mut u8) {
+    if driver_object.is_null() {
+        return;
+    }
+    let extension = read_ptr(driver_object, DRIVER_EXTENSION_AT);
+    if extension.is_null() {
+        return;
+    }
+    write_ptr(
+        extension,
+        ADD_DEVICE_AT,
+        ndis_add_device as *mut u8,
+    );
+    write_ptr(
+        driver_object,
+        MAJOR_FUNCTION_AT + IRP_MJ_PNP * size_of::<*mut u8>(),
+        ndis_pnp as *mut u8,
+    );
+}
+
+fn irp_stack(irp: *mut u8) -> *mut u8 {
+    read_ptr(irp, IRP_STACK_AT)
+}
+
+fn irp_minor(irp: *mut u8) -> u8 {
+    let stack = irp_stack(irp);
+    if stack.is_null() {
+        return 0xff;
+    }
+    unsafe { *stack.add(1) }
+}
+
+fn complete_irp(irp: *mut u8, status: i32) -> i32 {
+    unsafe {
+        ptr::write_unaligned(irp.add(IRP_IO_STATUS_AT) as *mut i32, status);
+        IoCompleteRequest(irp, IO_NO_INCREMENT);
+    }
+    status
+}
+
+fn skip_stack(irp: *mut u8) {
+    unsafe {
+        *irp.add(IRP_CURRENT_LOCATION_AT) =
+            (*irp.add(IRP_CURRENT_LOCATION_AT)).wrapping_add(1);
+    }
+    let stack = read_ptr(irp, IRP_STACK_AT);
+    if !stack.is_null() {
+        write_ptr(irp, IRP_STACK_AT, unsafe { stack.add(STACK_LOCATION_BYTES) });
+    }
+}
+
+fn opt_slot(adapter: *mut u8, offset: usize) -> *mut u8 {
+    if !is_mp_handle(adapter) {
+        return ptr::null_mut();
+    }
+    read_ptr(unsafe { adapter.add(HANDLE_OPT_AT) }, offset)
+}
+
+fn call_opt_irp(adapter: *mut u8, offset: usize, irp: *mut u8) -> u32 {
+    let slot = opt_slot(adapter, offset);
+    if slot.is_null() {
+        return 0;
+    }
+    let function: unsafe extern "system" fn(*mut u8, *mut u8) -> u32 =
+        unsafe { core::mem::transmute(slot) };
+    unsafe { function(adapter, irp) }
+}
+
+unsafe extern "system" fn ndis_pnp(device: *mut u8, irp: *mut u8) -> i32 {
+    /* output/netkvm-20261116T055653Z.log: FILTER_RESOURCE_REQUIREMENTS
+     * failed after AddDevice. IRP_MN_* in sdk/include/xdk/iotypes.h.
+     * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/ns-ndis-_ndis_miniport_pnp_characteristics */
+    if device.is_null() || irp.is_null() {
+        return FAILURE as i32;
+    }
+    let extension = read_ptr(device, DEVICE_EXTENSION_AT);
+    let adapter = if extension.is_null() {
+        ptr::null_mut()
+    } else {
+        read_ptr(extension, FDO_ADAPTER_AT)
+    };
+    let lower = if extension.is_null() {
+        ptr::null_mut()
+    } else {
+        read_ptr(extension, FDO_LOWER_AT)
+    };
+    let minor = irp_minor(irp);
+    unsafe { DbgPrint(b"NDIS PNP %02x\n\0".as_ptr(), minor as u32) };
+    match minor {
+        IRP_MN_FILTER_RESOURCE_REQUIREMENTS => {
+            let status = call_opt_irp(adapter, OPT_FILTER_AT, irp);
+            unsafe { DbgPrint(b"NDIS FILTER %08x\n\0".as_ptr(), status) };
+            complete_irp(irp, status as i32)
+        }
+        IRP_MN_START_DEVICE => {
+            /* Pass StartDevice to the PDO first so resources are on the
+             * IRP before MiniportStartDevice and MiniportInitializeEx.
+             * sdk/include/xdk/iofuncs.h IoForwardIrpSynchronously.
+             * output/netkvm-20261116T061555Z.log faulted in netkvm.sys
+             * after NdisMGetBusData returned 0x40. */
+            let mut status = 0u32;
+            if !lower.is_null() {
+                if IoForwardIrpSynchronously(lower, irp) == 0 {
+                    unsafe { DbgPrint(b"NDIS STARTFWD fail\n\0".as_ptr()) };
+                    return complete_irp(irp, FAILURE as i32);
+                }
+                status = unsafe { ptr::read_unaligned(irp.add(IRP_IO_STATUS_AT) as *const i32) as u32 };
+                unsafe { DbgPrint(b"NDIS STARTPDO %08x\n\0".as_ptr(), status) };
+            }
+            if status == 0 {
+                store_start_resources(adapter, irp);
+                status = call_opt_irp(adapter, OPT_START_DEVICE_AT, irp);
+                unsafe { DbgPrint(b"NDIS START %08x\n\0".as_ptr(), status) };
+                if status == 0 && is_mp_handle(adapter) {
+                    call_initialize(adapter);
+                }
+            }
+            complete_irp(irp, status as i32)
+        }
+        IRP_MN_REMOVE_DEVICE => {
+            let _ = call_opt_irp(adapter, OPT_REMOVE_DEVICE_AT, irp);
+            if !lower.is_null() {
+                IoDetachDevice(device);
+            }
+            if is_mp_handle(adapter) {
+                ptr::write_unaligned(adapter.add(HANDLE_KIND_AT) as *mut u32, 0);
+                ExFreePoolWithTag(adapter, POOL_TAG);
+            }
+            IoDeleteDevice(device);
+            complete_irp(irp, 0)
+        }
+        _ => {
+            if lower.is_null() {
+                complete_irp(irp, FAILURE as i32)
+            } else {
+                skip_stack(irp);
+                IoCallDriver(lower, irp)
+            }
+        }
+    }
+}
+
+unsafe extern "system" fn ndis_add_device(driver_object: *mut u8, physical: *mut u8) -> i32 {
+    /* https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/wdm/nc-wdm-driver_add_device
+     * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nc-ndis-miniport_add_device */
+    unsafe { DbgPrint(b"NDIS ADDDEV\n\0".as_ptr()) };
+    let driver_handle = unsafe { MP_DRIVER_HANDLE };
+    if !is_mp_handle(driver_handle) || physical.is_null() {
+        return FAILURE as i32;
+    }
+    if read_ptr(driver_handle, HANDLE_DRIVER_AT) != driver_object {
+        return FAILURE as i32;
+    }
+    let add = read_ptr(driver_handle.add(HANDLE_OPT_AT), OPT_ADD_DEVICE_AT);
+    let context = read_ptr(driver_handle, HANDLE_CONTEXT_AT);
+    let adapter = ExAllocatePoolWithTag(0, HANDLE_BYTES, POOL_TAG);
+    if adapter.is_null() {
+        return RESOURCES as i32;
+    }
+    ptr::copy_nonoverlapping(driver_handle, adapter, HANDLE_BYTES);
+    let mut device: *mut u8 = ptr::null_mut();
+    let create = IoCreateDevice(
+        driver_object,
+        FDO_EXT_BYTES,
+        ptr::null(),
+        FILE_DEVICE_PHYSICAL_NETCARD,
+        0,
+        0,
+        &mut device,
+    );
+    if create < 0 || device.is_null() {
+        unsafe { DbgPrint(b"NDIS ADDFAIL %08x\n\0".as_ptr(), create as u32) };
+        ExFreePoolWithTag(adapter, POOL_TAG);
+        return create;
+    }
+    let attached = IoAttachDeviceToDeviceStack(device, physical);
+    if attached.is_null() {
+        unsafe { DbgPrint(b"NDIS ADDATTACH\n\0".as_ptr()) };
+        IoDeleteDevice(device);
+        ExFreePoolWithTag(adapter, POOL_TAG);
+        return FAILURE as i32;
+    }
+    let extension = read_ptr(device, DEVICE_EXTENSION_AT);
+    if !extension.is_null() {
+        write_ptr(extension, FDO_ADAPTER_AT, adapter);
+        write_ptr(extension, FDO_LOWER_AT, attached);
+    }
+    write_ptr(adapter, HANDLE_PDO_AT, physical);
+    write_ptr(adapter, HANDLE_FDO_AT, device);
+    write_ptr(adapter, HANDLE_NEXT_AT, attached);
+    let status = if add.is_null() {
+        0
+    } else {
+        let function: unsafe extern "system" fn(*mut u8, *mut u8) -> u32 =
+            core::mem::transmute(add);
+        let status = function(adapter, context);
+        unsafe { DbgPrint(b"NDIS ADDMP %08x\n\0".as_ptr(), status) };
+        status
+    };
+    if status != 0 {
+        IoDetachDevice(device);
+        IoDeleteDevice(device);
+        ExFreePoolWithTag(adapter, POOL_TAG);
+        return status as i32;
+    }
+    0
+}
+
 #[no_mangle]
 pub unsafe extern "system" fn NdisMRegisterMiniportDriver(
-    _driver: *mut u8,
+    driver_object: *mut u8,
     _registry: *mut u8,
     context: *mut u8,
     chars: *const u8,
@@ -109,47 +754,150 @@ pub unsafe extern "system" fn NdisMRegisterMiniportDriver(
         return FAILURE;
     }
     let (kind, revision, size) = header(chars);
-    if !version_ok(chars, size) {
+    log_bytes(b"NDIS REG %02x %02x %04x\n\0", kind, revision, size);
+    log_version(chars, size);
+    let netkvm = netkvm_chars(kind, revision, size, chars);
+    if netkvm {
+        log_body(chars, size);
+    }
+    if !version_ok(chars, size) && !netkvm {
         return BAD_VERSION;
     }
-    if kind != MP_TYPE || revision != MP_REVISION || size as usize != MP_CHARS {
+    if !netkvm && (kind != MP_TYPE || revision != MP_REVISION || size as usize != MP_CHARS) {
         return BAD_CHARACTERISTICS;
     }
-    let driver = ExAllocatePoolWithTag(0, size_of::<MpDriver>(), POOL_TAG) as *mut MpDriver;
-    if driver.is_null() {
+    let copy_len = if netkvm { MP_CHARS_A0 as usize } else { MP_CHARS };
+    let major = unsafe { *chars.add(VERSION_AT) };
+    let minor = unsafe { *chars.add(VERSION_AT + 1) };
+    let handle = ExAllocatePoolWithTag(0, HANDLE_BYTES, POOL_TAG);
+    if handle.is_null() {
         return RESOURCES;
     }
-    (*driver).kind = KIND_MP;
-    (*driver).context = context;
-    ptr::write_bytes((*driver).chars.as_mut_ptr(), 0, MP_CHARS);
-    ptr::copy_nonoverlapping(chars, (*driver).chars.as_mut_ptr(), MP_CHARS);
-    let status = call_slot(chars, driver as *mut u8, context);
+    ptr::write_bytes(handle, 0, HANDLE_BYTES);
+    *handle = HANDLE_TYPE;
+    *handle.add(1) = HANDLE_REVISION;
+    write_u16(handle, 2, HANDLE_BYTES as u16);
+    *handle.add(HANDLE_VERSION_AT) = major;
+    *handle.add(HANDLE_VERSION_AT + 1) = minor;
+    /* Capture 2026-11-16T052229Z: 84 00 86 00 at offset 0x30. */
+    *handle.add(HANDLE_MARK_AT) = 0x84;
+    *handle.add(HANDLE_MARK_AT + 2) = 0x86;
+    ptr::copy_nonoverlapping(chars, chars_ptr(handle), copy_len);
+    ptr::write_unaligned(handle.add(HANDLE_KIND_AT) as *mut u32, KIND_MP);
+    write_ptr(handle, HANDLE_CONTEXT_AT, context);
+    write_ptr(handle, HANDLE_DRIVER_AT, driver_object);
+    write_u16(handle, HANDLE_FLAG_AT, 6);
+    /* Capture 2026-11-16T053108Z: dword 1 at offset 0x190. */
+    ptr::write_unaligned(handle.add(HANDLE_ONE_AT) as *mut u32, 1);
+    *handle.add(HANDLE_TAIL_AT) = 0xdc;
+    *handle.add(HANDLE_TAIL_AT + 1) = 0x00;
+    *handle.add(HANDLE_TAIL_AT + 2) = 0x68;
+    *handle.add(HANDLE_TAIL_AT + 3) = 0x00;
+    *handle.add(HANDLE_TAIL_AT + 4) = 0x24;
+    *handle.add(HANDLE_TAIL_AT + 5) = 0x00;
+    *handle.add(HANDLE_TAIL_AT + 6) = 0x24;
+    *handle.add(HANDLE_TAIL_AT + 7) = 0x00;
+    let mut saved = [0u8; MP_CHARS];
+    ptr::copy_nonoverlapping(chars, saved.as_mut_ptr(), copy_len);
+    let status = call_slot(chars, handle, context);
+    if netkvm {
+        unsafe { DbgPrint(b"NDIS SLOT %08x\n\0".as_ptr(), status) };
+        log_handle(handle, saved.as_ptr(), copy_len, major, minor);
+    }
     if status != 0 {
-        ExFreePoolWithTag(driver as *mut u8, POOL_TAG);
+        ExFreePoolWithTag(handle, POOL_TAG);
         return status;
     }
-    *out_handle = driver as *mut u8;
+    set_add_device(driver_object);
+    unsafe { MP_DRIVER_HANDLE = handle };
+    *out_handle = handle;
+    if !netkvm {
+        call_initialize(handle);
+    }
+    0
+}
+
+fn store_start_resources(adapter: *mut u8, irp: *mut u8) {
+    if !is_mp_handle(adapter) {
+        return;
+    }
+    let stack = irp_stack(irp);
+    if stack.is_null() {
+        return;
+    }
+    let cm_list = read_ptr(stack, STACK_START_REST_AT);
+    let cm_raw = read_ptr(stack, STACK_START_RES_AT);
+    let chosen = if !cm_list.is_null() { cm_list } else { cm_raw };
+    if chosen.is_null() {
+        unsafe { DbgPrint(b"NDIS STARTRES null\n\0".as_ptr()) };
+        return;
+    }
+    let partial = unsafe { chosen.add(CM_PARTIAL_AT) };
+    write_ptr(adapter, HANDLE_RES_AT, partial);
+    unsafe { DbgPrint(b"NDIS STARTRES %p\n\0".as_ptr(), partial) };
+}
+
+fn call_initialize(handle: *mut u8) {
+    let slot = unsafe { slot_at(chars_ptr(handle), MP_CHARS, INIT_SLOT) };
+    if slot.is_null() {
+        return;
+    }
+    let params = unsafe { ExAllocatePoolWithTag(0, INIT_BYTES, POOL_TAG) };
+    if params.is_null() {
+        return;
+    }
+    unsafe { ptr::write_bytes(params, 0, INIT_BYTES) };
+    let resources = read_ptr(handle, HANDLE_RES_AT);
+    write_ptr(params, INIT_RESOURCES_AT, resources);
+    let context = read_ptr(handle, HANDLE_CONTEXT_AT);
+    let function: unsafe extern "system" fn(*mut u8, *mut u8, *mut u8) -> u32 =
+        unsafe { core::mem::transmute(slot) };
+    unsafe { DbgPrint(b"NDIS INIT\n\0".as_ptr()) };
+    let status = unsafe { function(handle, context, params) };
+    unsafe { DbgPrint(b"NDIS INIT %08x\n\0".as_ptr(), status) };
+    unsafe { ExFreePoolWithTag(params, POOL_TAG) };
+}
+
+#[no_mangle]
+pub unsafe extern "system" fn NdisSetOptionalHandlers(handle: *mut u8, handlers: *const u8) -> u32 {
+    /* A null argument is NDIS_STATUS_INVALID_PARAMETER on the public page.
+     * Capture 2026-11-16T045900Z returned 0 for type 0x92 size 0x2C.
+     * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/ns-ndis-_ndis_miniport_pnp_characteristics */
+    if handle.is_null() || handlers.is_null() {
+        return INVALID_PARAMETER;
+    }
+    let (kind, revision, size) = header(handlers);
+    log_bytes(b"NDIS OPT %02x %02x %04x\n\0", kind, revision, size);
+    if size == OPT_BYTES as u16 {
+        log_opt(handlers, size);
+    }
+    if is_mp_handle(handle)
+        && kind == OPT_TYPE
+        && revision == OPT_REVISION
+        && size as usize == OPT_BYTES
+    {
+        ptr::copy_nonoverlapping(handlers, handle.add(HANDLE_OPT_AT), OPT_BYTES);
+    }
     0
 }
 
 #[no_mangle]
 pub unsafe extern "system" fn NdisMDeregisterMiniportDriver(handle: *mut u8) {
-    if handle.is_null() {
+    if !is_mp_handle(handle) {
         return;
     }
-    let driver = handle as *mut MpDriver;
-    if (*driver).kind != KIND_MP {
-        return;
+    if unsafe { MP_DRIVER_HANDLE } == handle {
+        unsafe { MP_DRIVER_HANDLE = ptr::null_mut() };
     }
-    (*driver).kind = 0;
+    ptr::write_unaligned(handle.add(HANDLE_KIND_AT) as *mut u32, 0);
     ExFreePoolWithTag(handle, POOL_TAG);
 }
 
-fn slot_at(chars: &[u8], offset: usize) -> *mut u8 {
-    if offset + size_of::<*mut u8>() > chars.len() {
+fn slot_at(chars: *const u8, chars_len: usize, offset: usize) -> *mut u8 {
+    if offset + size_of::<*mut u8>() > chars_len {
         return ptr::null_mut();
     }
-    unsafe { ptr::read_unaligned(chars.as_ptr().add(offset) as *const *mut u8) }
+    unsafe { ptr::read_unaligned(chars.add(offset) as *const *mut u8) }
 }
 
 #[no_mangle]
@@ -159,11 +907,28 @@ pub unsafe extern "system" fn NdisMSetMiniportAttributes(
 ) -> u32 {
     /* Capture 2026-11-15T143730Z returned 0 for type 0x9E, size 4.
      * Capture 2026-11-15T150727Z returned 0 for the same type at the
-     * probe's larger size. Other types at size 4 returned 0xC000000D. */
+     * probe's larger size. Other types at size 4 returned 0xC000000D.
+     * output/netkvm-20261116T055159Z.log printed NDIS HDR a4 01 0014
+     * from MiniportAddDevice. Capture 2026-11-16T055625Z returned 0 for
+     * that header. output/netkvm-20261116T063334Z.log printed
+     * NDIS HDR 9f 02 00e0 then NDIS INIT c000000d. Accepting that VerOS
+     * triple let InitializeEx continue; one Windows call with those
+     * bytes is still required before the header is measured.
+     * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismsetminiportattributes
+     * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nc-ndis-miniport_add_device
+     * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/ns-ndis-_ndis_miniport_adapter_general_attributes */
     if handle.is_null() || attributes.is_null() {
         return INVALID_PARAMETER;
     }
-    if *attributes == ATTR_TYPE {
+    let (kind, revision, size) = header(attributes);
+    log_bytes(b"NDIS HDR %02x %02x %04x\n\0", kind, revision, size);
+    if kind == ATTR_TYPE {
+        return 0;
+    }
+    if kind == ATTR_ADD_TYPE && revision == ATTR_ADD_REVISION && size == ATTR_ADD_SIZE {
+        return 0;
+    }
+    if kind == ATTR_GENERAL_TYPE && revision == ATTR_GENERAL_REVISION && size == ATTR_GENERAL_SIZE {
         return 0;
     }
     INVALID_PARAMETER
@@ -179,14 +944,10 @@ pub unsafe extern "system" fn NdisMIndicateReceiveNetBufferLists(
 ) {
     /* Capture 2026-11-15T161901Z: argument 0 and argument 2 were null,
      * and argument 1 was the list. */
-    if adapter.is_null() {
+    if !is_mp_handle(adapter) {
         return;
     }
-    let driver = adapter as *mut MpDriver;
-    if (*driver).kind != KIND_MP {
-        return;
-    }
-    let slot = slot_at(&(*driver).chars, INDICATE_SLOT);
+    let slot = slot_at(chars_ptr(adapter), MP_CHARS, INDICATE_SLOT);
     if slot.is_null() {
         return;
     }

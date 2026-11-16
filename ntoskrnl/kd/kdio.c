@@ -1,10 +1,19 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
+ *                  Copyright 2026 Ryan Wilson <ryan@verosnt.com>
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/kd/kdio.c
  * PURPOSE:         NT Kernel Debugger Input/Output Functions
  *
  * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
+ *                  Ryan Wilson <ryan@verosnt.com>
+ */
+
+/*
+ * output/netkvm-20261116T000707Z.log names _vsnprintf_s.
+ * https://learn.microsoft.com/en-us/cpp/c-runtime-library/reference/vsnprintf-s-vsnprintf-s
+ * _TRUNCATE is sdk/include/vcruntime/crtdefs.h. The write goes through
+ * _vsnprintf, which this file already calls.
  */
 
 /* INCLUDES ******************************************************************/
@@ -794,6 +803,45 @@ KdReceivePacket(
 #endif
 
     return KdPacketReceived;
+}
+
+int
+__cdecl
+_vsnprintf_s(
+    char *Buffer,
+    size_t SizeOfBuffer,
+    size_t Count,
+    const char *Format,
+    va_list ArgPtr)
+{
+    size_t Limit;
+    int Written;
+
+    if (Buffer == NULL || Format == NULL || SizeOfBuffer == 0)
+    {
+        return -1;
+    }
+
+    Limit = SizeOfBuffer - 1;
+    if (Count != _TRUNCATE && Count < Limit)
+    {
+        Limit = Count;
+    }
+
+    Written = _vsnprintf(Buffer, Limit, Format, ArgPtr);
+    if (Written < 0 || (size_t)Written >= Limit)
+    {
+        Buffer[Limit] = ANSI_NULL;
+        if (Count == _TRUNCATE)
+        {
+            return (int)Limit;
+        }
+        Buffer[0] = ANSI_NULL;
+        return -1;
+    }
+
+    Buffer[Written] = ANSI_NULL;
+    return Written;
 }
 
 /* EOF */

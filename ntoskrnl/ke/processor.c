@@ -8,6 +8,27 @@
  * PROGRAMMERS: Ryan Wilson <ryan@verosnt.com>
  */
 
+/*
+ * output/netkvm-20261115T235709Z.log names KeQueryActiveProcessorCountEx.
+ * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ntddk/nf-ntddk-kequeryactiveprocessorcountex
+ * The active count is KeNumberProcessors in this file. Group 0 and
+ * ALL_PROCESSOR_GROUPS from sdk/include/xdk/ntbasedef.h return that count.
+ * Any other group returns 0, as KeQueryMaximumProcessorCountEx does here.
+ * output/netkvm-20261116T001204Z.log names KeGetProcessorNumberFromIndex.
+ * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ntddk/nf-ntddk-kegetprocessornumberfromindex
+ * An index below KeNumberProcessors is group 0 and that index. Any other
+ * index returns STATUS_INVALID_PARAMETER from sdk/include/psdk/ntstatus.h.
+ * output/netkvm-20261116T001444Z.log names KeGetCurrentProcessorNumberEx.
+ * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ntddk/nf-ntddk-kegetcurrentprocessornumberex
+ * The return value is KeGetCurrentProcessorNumber. A non-null output
+ * receives group 0 and that number.
+ * output/netkvm-20261116T002118Z.log names KeGetProcessorIndexFromNumber.
+ * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ntddk/nf-ntddk-kegetprocessorindexfromnumber
+ * Group 0 and a number below KeNumberProcessors return that number.
+ * Any other value returns INVALID_PROCESSOR_INDEX from
+ * sdk/include/xdk/ketypes.h.
+ */
+
 /* INCLUDES ******************************************************************/
 
 #include <ntoskrnl.h>
@@ -72,6 +93,66 @@ KeQueryMaximumProcessorCountEx(
     }
 
     return 0;
+}
+
+ULONG
+NTAPI
+KeQueryActiveProcessorCountEx(
+    _In_ USHORT GroupNumber)
+{
+    if (GroupNumber == ALL_PROCESSOR_GROUPS || GroupNumber == 0)
+    {
+        return (ULONG)KeNumberProcessors;
+    }
+
+    return 0;
+}
+
+NTSTATUS
+NTAPI
+KeGetProcessorNumberFromIndex(
+    _In_ ULONG ProcIndex,
+    _Out_ PPROCESSOR_NUMBER ProcNumber)
+{
+    if (ProcIndex >= (ULONG)KeNumberProcessors)
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    ProcNumber->Group = 0;
+    ProcNumber->Number = (UCHAR)ProcIndex;
+    ProcNumber->Reserved = 0;
+    return STATUS_SUCCESS;
+}
+
+ULONG
+NTAPI
+KeGetCurrentProcessorNumberEx(
+    _Out_opt_ PPROCESSOR_NUMBER ProcNumber)
+{
+    ULONG Number = KeGetCurrentProcessorNumber();
+
+    if (ProcNumber != NULL)
+    {
+        ProcNumber->Group = 0;
+        ProcNumber->Number = (UCHAR)Number;
+        ProcNumber->Reserved = 0;
+    }
+
+    return Number;
+}
+
+ULONG
+NTAPI
+KeGetProcessorIndexFromNumber(
+    _In_ PPROCESSOR_NUMBER ProcNumber)
+{
+    if (ProcNumber->Group != 0 || ProcNumber->Number >= (UCHAR)KeNumberProcessors)
+    {
+        return INVALID_PROCESSOR_INDEX;
+    }
+
+    return ProcNumber->Number;
 }
 
 /**
