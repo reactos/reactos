@@ -20,6 +20,16 @@
  * differential-tests/ndis-discovery/probe.c, not a Windows object size.
  * Pool type 0 is NonPagedPool on
  * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/wdm/ne-wdm-_pool_type
+ *
+ * output/netkvm-20261116T064229Z.log printed NDIS HDR 9f 02 00e0, then
+ * NDIS EVENT reset/set/wait, NDIS UNMAP, and NDIS INIT c000009a with no
+ * NDIS STUB. Public NetKVM ParaNdis_FinishSpecificInitialization in
+ * https://github.com/virtio-win/kvm-guest-drivers-windows/blob/master/NetKVM/wlh/ParaNdis6_Impl.cpp
+ * calls NdisAllocateNetBufferListPool before NdisMRegisterInterruptEx,
+ * and returns NDIS_STATUS_RESOURCES (0xC000009A in sdk/include/ddk/ndis.h)
+ * when that pool handle is null. Size 4 is the measured Windows accept.
+ * A Size greater than 4 with the same type and revision is VerOS-only
+ * until one Windows call checks those bytes. Do not scan.
  */
 
 use core::ptr;
@@ -48,6 +58,7 @@ struct Pool {
 unsafe extern "system" {
     fn ExAllocatePoolWithTag(kind: u32, bytes: usize, tag: u32) -> *mut u8;
     fn ExFreePoolWithTag(address: *mut u8, tag: u32);
+    fn DbgPrint(format: *const u8, ...) -> i32;
 }
 
 fn header_ok(params: *const u8) -> bool {
@@ -58,7 +69,18 @@ fn header_ok(params: *const u8) -> bool {
         let kind = *params;
         let revision = *params.add(1);
         let size = u16::from_le_bytes([*params.add(2), *params.add(3)]);
-        kind == 0x80 && revision == 1 && size == 4
+        DbgPrint(
+            b"NDIS POOL %02x %02x %04x\n\0".as_ptr(),
+            kind as u32,
+            revision as u32,
+            size as u32,
+        );
+        /* Capture 2026-11-15T232142Z: type 0x80, revision 1, size 4.
+         * output/netkvm-20261116T071255Z.log printed NDIS POOL 80 01 0010
+         * from NetKVM before NdisMRegisterInterruptEx. Size 0x10 with
+         * that type and revision is VerOS-only until one Windows call
+         * checks those bytes. Do not scan. */
+        kind == 0x80 && revision == 1 && (size == 4 || size == 0x10)
     }
 }
 

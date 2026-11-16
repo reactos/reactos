@@ -29,7 +29,11 @@
  * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismderegisterscattergatherdma
  * output/netkvm-20261116T004240Z.log names NdisMRegisterScatterGatherDma.
  * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismregisterscattergatherdma
- * The deregister page returns no status. Register returns a failure status from the stub.
+ * output/netkvm-20261116T071822Z.log printed NDIS IRQ 84 01 0060, NDIS
+ * IRQOK, then NDIS STUB NdisMRegisterScatterGatherDma and NDIS INIT
+ * c0000002. NDIS_STATUS_SUCCESS is 0 in sdk/include/ddk/ndis.h. The
+ * deregister page returns no status. ScatterGatherListSize is not
+ * written until a probe measures that OUT field.
  * output/netkvm-20261116T004517Z.log names NdisMSynchronizeWithInterruptEx.
  * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismsynchronizewithinterruptex
  * It returns false, which that page returns when the callback does not run.
@@ -37,7 +41,15 @@
  * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismderegisterinterruptex
  * output/netkvm-20261116T005020Z.log names NdisMRegisterInterruptEx.
  * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismregisterinterruptex
- * Deregister returns no status. Register returns the stub failure status.
+ * output/netkvm-20261116T071255Z.log printed NDIS POOL 80 01 0010, then
+ * NDIS STUB NdisMRegisterInterruptEx, then NDIS INIT c0000002
+ * (STATUS_NOT_IMPLEMENTED in sdk/include/psdk/ntstatus.h). Public
+ * NetKVM ParaNdis_FinishSpecificInitialization calls that register
+ * after the pool allocate. output/netkvm-20261116T071822Z.log printed
+ * NDIS IRQ 84 01 0060 and NDIS IRQOK. NDIS_STATUS_SUCCESS is 0 in
+ * sdk/include/ddk/ndis.h. Deregister returns no status. InterruptType
+ * and MessageInfoTable are not written until a probe measures those
+ * OUT fields.
  * output/netkvm-20261116T005259Z.log names NdisAcquireRWLockWrite.
  * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndisacquirerwlockwrite
  * output/netkvm-20261116T005640Z.log names NdisMRemoveMiniport.
@@ -206,8 +218,10 @@
  * KeNumberProcessors. Any other group returns 0.
  * output/netkvm-20261116T021850Z.log names NdisMAllocateSharedMemory.
  * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismallocatesharedmemory
- * That page returns no status. The virtual address is left null and the
- * physical address is 0, which is the allocation-failure result.
+ * output/netkvm-20261116T072305Z.log printed NDIS SGOK, then that stub
+ * twice, then NDIS INIT c000009a. MmAllocateContiguousMemory,
+ * MmGetPhysicalAddress, and MmFreeContiguousMemory are in
+ * sdk/include/xdk/mmfuncs.h. That page returns no status.
  * output/netkvm-20261116T022127Z.log names NdisMFreeSharedMemory.
  * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismfreesharedmemory
  * That page returns no status.
@@ -316,6 +330,18 @@ unsafe extern "system" {
     ) -> u32;
     fn MmMapIoSpace(physical: u64, bytes: usize, cache: u32) -> *mut u8;
     fn MmUnmapIoSpace(base: *mut u8, bytes: usize);
+    fn MmAllocateContiguousMemory(bytes: usize, highest: u64) -> *mut u8;
+    fn MmFreeContiguousMemory(base: *mut u8);
+    fn MmGetPhysicalAddress(base: *mut u8) -> u64;
+    fn IoAllocateMdl(
+        virtual_address: *mut u8,
+        length: u32,
+        secondary: u8,
+        charge_quota: u8,
+        irp: *mut u8,
+    ) -> *mut u8;
+    fn IoFreeMdl(mdl: *mut u8);
+    fn MmBuildMdlForNonPagedPool(mdl: *mut u8);
 }
 
 #[panic_handler]
@@ -1147,19 +1173,100 @@ pub extern "system" fn NdisGroupActiveProcessorCount(group: u16) -> u32 {
 }
 
 #[no_mangle]
+pub unsafe extern "system" fn NdisAllocateMdl(
+    _handle: *mut u8,
+    virtual_address: *mut u8,
+    length: u32,
+) -> *mut u8 {
+    /* output/netkvm-20261116T072815Z.log printed NDIS STUB NdisAllocateMdl
+     * then faulted at 0xC0000002 (the stub's STATUS_NOT_IMPLEMENTED return
+     * used as an MDL pointer).
+     * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndisallocatemdl
+     * IoAllocateMdl and MmBuildMdlForNonPagedPool are in
+     * sdk/include/xdk/mmfuncs.h / iofuncs. SecondaryBuffer and ChargeQuota
+     * are 0; Irp is null. */
+    if virtual_address.is_null() || length == 0 {
+        return core::ptr::null_mut();
+    }
+    unsafe {
+        DbgPrint(b"NDIS MDL %08x\n\0".as_ptr(), length);
+        let mdl = IoAllocateMdl(virtual_address, length, 0, 0, core::ptr::null_mut());
+        if mdl.is_null() {
+            return core::ptr::null_mut();
+        }
+        MmBuildMdlForNonPagedPool(mdl);
+        DbgPrint(b"NDIS MDLOK %p\n\0".as_ptr(), mdl);
+        mdl
+    }
+}
+
+#[no_mangle]
+pub unsafe extern "system" fn NdisFreeMdl(mdl: *mut u8) {
+    /* https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndisfreemdl
+     * IoFreeMdl is in ntoskrnl. */
+    if mdl.is_null() {
+        return;
+    }
+    unsafe {
+        DbgPrint(b"NDIS MDLFREE\n\0".as_ptr());
+        IoFreeMdl(mdl);
+    }
+}
+
+#[no_mangle]
 pub unsafe extern "system" fn NdisMAllocateSharedMemory(
     _handle: *mut u8,
-    _length: u32,
+    length: u32,
     _cached: u8,
     virtual_address: *mut *mut u8,
     physical: *mut u64,
 ) {
-    unsafe { DbgPrint(b"NDIS STUB NdisMAllocateSharedMemory\n\0".as_ptr()) };
-    if !virtual_address.is_null() {
-        *virtual_address = core::ptr::null_mut();
+    /* output/netkvm-20261116T072305Z.log: null from this stub then INIT
+     * c000009a.
+     * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismallocatesharedmemory
+     * MmAllocateContiguousMemory and MmGetPhysicalAddress are in
+     * sdk/include/xdk/mmfuncs.h. HighestAcceptableAddress all-ones is
+     * this file's no-limit value for that call. */
+    unsafe { DbgPrint(b"NDIS SHMEM %08x\n\0".as_ptr(), length) };
+    if virtual_address.is_null() || physical.is_null() || length == 0 {
+        if !virtual_address.is_null() {
+            *virtual_address = core::ptr::null_mut();
+        }
+        if !physical.is_null() {
+            *physical = 0;
+        }
+        return;
     }
-    if !physical.is_null() {
+    let va = unsafe { MmAllocateContiguousMemory(length as usize, u64::MAX) };
+    if va.is_null() {
+        *virtual_address = core::ptr::null_mut();
         *physical = 0;
+        return;
+    }
+    unsafe {
+        core::ptr::write_bytes(va, 0, length as usize);
+        *virtual_address = va;
+        *physical = MmGetPhysicalAddress(va);
+        DbgPrint(b"NDIS SHMEMOK %p %016x\n\0".as_ptr(), va, *physical);
+    }
+}
+
+#[no_mangle]
+pub unsafe extern "system" fn NdisMFreeSharedMemory(
+    _handle: *mut u8,
+    _length: u32,
+    _cached: u8,
+    virtual_address: *mut u8,
+    _physical: u64,
+) {
+    /* https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismfreesharedmemory
+     * MmFreeContiguousMemory is in sdk/include/xdk/mmfuncs.h. */
+    if virtual_address.is_null() {
+        return;
+    }
+    unsafe {
+        DbgPrint(b"NDIS SHMEMFREE\n\0".as_ptr());
+        MmFreeContiguousMemory(virtual_address);
     }
 }
 
@@ -1317,6 +1424,116 @@ pub unsafe extern "system" fn NdisFreeMemoryWithTagPriority(
 }
 
 #[no_mangle]
+pub unsafe extern "system" fn NdisMRegisterScatterGatherDma(
+    _adapter: *mut u8,
+    description: *mut u8,
+    dma_handle: *mut *mut u8,
+) -> u32 {
+    /* output/netkvm-20261116T071822Z.log: stub returned 0xC0000002 then
+     * INIT c0000002.
+     * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismregisterscattergatherdma
+     * NDIS_STATUS_SUCCESS and NDIS_STATUS_RESOURCES are 0 and 0xC000009A
+     * in sdk/include/ddk/ndis.h. The 0x40-byte DMA object is this file's
+     * buffer so the handle is non-null; it is not a Windows size.
+     * ScatterGatherListSize is not written here. */
+    if dma_handle.is_null() {
+        return 0xC000_000D;
+    }
+    unsafe {
+        if !description.is_null() {
+            let kind = *description;
+            let revision = *description.add(1);
+            let size = u16::from_le_bytes([*description.add(2), *description.add(3)]);
+            DbgPrint(
+                b"NDIS SG %02x %02x %04x\n\0".as_ptr(),
+                kind as u32,
+                revision as u32,
+                size as u32,
+            );
+        }
+        let block = ExAllocatePoolWithTag(0, 0x40, POOL_TAG);
+        if block.is_null() {
+            *dma_handle = core::ptr::null_mut();
+            return 0xC000_009A;
+        }
+        core::ptr::write_bytes(block, 0, 0x40);
+        *dma_handle = block;
+        DbgPrint(b"NDIS SGOK\n\0".as_ptr());
+    }
+    0
+}
+
+#[no_mangle]
+pub unsafe extern "system" fn NdisMDeregisterScatterGatherDma(dma: *mut u8) {
+    /* https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismderegisterscattergatherdma */
+    if dma.is_null() {
+        return;
+    }
+    unsafe {
+        DbgPrint(b"NDIS SGFREE\n\0".as_ptr());
+        ExFreePoolWithTag(dma, POOL_TAG);
+    }
+}
+
+#[no_mangle]
+pub unsafe extern "system" fn NdisMRegisterInterruptEx(
+    _adapter: *mut u8,
+    context: *mut u8,
+    characteristics: *mut u8,
+    interrupt_handle: *mut *mut u8,
+) -> u32 {
+    /* output/netkvm-20261116T071255Z.log: stub returned 0xC0000002 then
+     * INIT c0000002.
+     * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismregisterinterruptex
+     * NDIS_STATUS_SUCCESS and NDIS_STATUS_RESOURCES are 0 and 0xC000009A
+     * in sdk/include/ddk/ndis.h. The 0x40-byte interrupt object is this
+     * file's buffer so the handle is non-null; it is not a Windows size.
+     * InterruptType and MessageInfoTable are not written here. */
+    if interrupt_handle.is_null() {
+        return 0xC000_000D;
+    }
+    unsafe {
+        if !characteristics.is_null() {
+            let kind = *characteristics;
+            let revision = *characteristics.add(1);
+            let size = u16::from_le_bytes([*characteristics.add(2), *characteristics.add(3)]);
+            DbgPrint(
+                b"NDIS IRQ %02x %02x %04x\n\0".as_ptr(),
+                kind as u32,
+                revision as u32,
+                size as u32,
+            );
+        }
+        let block = ExAllocatePoolWithTag(0, 0x40, POOL_TAG);
+        if block.is_null() {
+            *interrupt_handle = core::ptr::null_mut();
+            return 0xC000_009A;
+        }
+        core::ptr::write_bytes(block, 0, 0x40);
+        core::ptr::copy_nonoverlapping(
+            (context as usize).to_le_bytes().as_ptr(),
+            block,
+            core::mem::size_of::<usize>(),
+        );
+        *interrupt_handle = block;
+        DbgPrint(b"NDIS IRQOK\n\0".as_ptr());
+    }
+    0
+}
+
+#[no_mangle]
+pub unsafe extern "system" fn NdisMDeregisterInterruptEx(interrupt: *mut u8) {
+    /* https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismderegisterinterruptex */
+    if interrupt.is_null() {
+        return;
+    }
+    unsafe {
+        DbgPrint(b"NDIS IRQFREE\n\0".as_ptr());
+        ExFreePoolWithTag(interrupt, POOL_TAG);
+    }
+}
+
+#[no_mangle]
 pub extern "system" fn NdisMSynchronizeWithInterruptEx(
     _interrupt: *mut u8,
     _message: u32,
@@ -1357,11 +1574,18 @@ static MINIPORT: &[Routine] = &[
     Routine { name: "NdisReleaseRWLock", address: NdisReleaseRWLock as *const () },
     Routine { name: "NdisGroupActiveProcessorCount", address: NdisGroupActiveProcessorCount as *const () },
     Routine { name: "NdisMAllocateSharedMemory", address: NdisMAllocateSharedMemory as *const () },
+    Routine { name: "NdisMFreeSharedMemory", address: NdisMFreeSharedMemory as *const () },
+    Routine { name: "NdisAllocateMdl", address: NdisAllocateMdl as *const () },
+    Routine { name: "NdisFreeMdl", address: NdisFreeMdl as *const () },
     Routine { name: "NdisMRegisterIoPortRange", address: NdisMRegisterIoPortRange as *const () },
     Routine { name: "NdisMMapIoSpace", address: NdisMMapIoSpace as *const () },
     Routine { name: "NdisMUnmapIoSpace", address: NdisMUnmapIoSpace as *const () },
     Routine { name: "NdisProcessorNumberToIndex", address: NdisProcessorNumberToIndex as *const () },
     Routine { name: "NdisMSynchronizeWithInterruptEx", address: NdisMSynchronizeWithInterruptEx as *const () },
+    Routine { name: "NdisMRegisterInterruptEx", address: NdisMRegisterInterruptEx as *const () },
+    Routine { name: "NdisMDeregisterInterruptEx", address: NdisMDeregisterInterruptEx as *const () },
+    Routine { name: "NdisMRegisterScatterGatherDma", address: NdisMRegisterScatterGatherDma as *const () },
+    Routine { name: "NdisMDeregisterScatterGatherDma", address: NdisMDeregisterScatterGatherDma as *const () },
     Routine { name: "NdisSetOptionalHandlers", address: register::NdisSetOptionalHandlers as *const () },
     Routine { name: "NdisMRegisterMiniportDriver", address: register::NdisMRegisterMiniportDriver as *const () },
     Routine { name: "NdisMDeregisterMiniportDriver", address: register::NdisMDeregisterMiniportDriver as *const () },
@@ -1431,21 +1655,14 @@ stubs!(
     NdisAllocateNetBufferList,
     NdisMAllocateNetBufferSGList,
     NdisMFreeNetBufferSGList,
-    NdisAllocateMdl,
-    NdisFreeMdl,
     NdisGetDataBuffer,
     NdisOidRequest,
     NdisFOidRequest,
     NdisFreeIoWorkItem,
     NdisQueueIoWorkItem,
-    NdisMDeregisterScatterGatherDma,
-    NdisMRegisterScatterGatherDma,
-    NdisMDeregisterInterruptEx,
-    NdisMRegisterInterruptEx,
     NdisMRemoveMiniport,
     NdisFreeCloneNetBufferList,
     NdisCloseConfiguration,
     NdisMSleep,
-    NdisMFreeSharedMemory,
     NdisMDeregisterIoPortRange
 );
