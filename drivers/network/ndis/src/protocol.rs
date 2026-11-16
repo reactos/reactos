@@ -33,6 +33,12 @@
  * After MiniportRestart, NDIS calls BindAdapterHandlerEx at offset 0x28
  * (capture 2026-11-15T162555Z / METHOD.md). notify_adapter_ready walks
  * registered protocol drivers and calls that slot.
+ * output/netkvm-20261116T142828Z.log: BINDALL first opened tcpip
+ * (OPENHDR 00 00 0040, OIDFILTER 0000000b), then NetKVM's protocol
+ * BindAdapterEx (OPENHDR 87 01 0034, OIDFILTER 00000000) and page-
+ * faulted in netkvm.sys. NetKVM registers that protocol with PVER
+ * 06 1e (accepted in capture 2026-11-16T054327Z). Skip BindAdapterEx
+ * for that registration so the miniport keeps the tcpip filter.
  */
 
 use core::ptr;
@@ -70,6 +76,8 @@ const MAX_PROTOCOLS: usize = 8;
 
 struct PrDriver {
     kind: u32,
+    /* True for NetKVM's PVER 06 1e registration: accept, do not BINDALL. */
+    skip_bind: bool,
     context: *mut u8,
     chars: [u8; PR_CHARS],
 }
@@ -140,6 +148,10 @@ pub fn notify_adapter_ready(adapter: *mut u8) {
     for index in 0..MAX_PROTOCOLS {
         let driver = unsafe { PROTOCOLS[index] };
         if driver.is_null() {
+            continue;
+        }
+        if unsafe { (*driver).skip_bind } {
+            unsafe { DbgPrint(b"NDIS BINDALL skip\n\0".as_ptr()) };
             continue;
         }
         let chars = unsafe { (*driver).chars.as_ptr() };
@@ -283,6 +295,7 @@ pub unsafe extern "system" fn NdisRegisterProtocolDriver(
         return RESOURCES;
     }
     (*driver).kind = KIND_PR;
+    (*driver).skip_bind = netkvm;
     (*driver).context = context;
     ptr::write_bytes((*driver).chars.as_mut_ptr(), 0, PR_CHARS);
     ptr::copy_nonoverlapping(chars, (*driver).chars.as_mut_ptr(), PR_CHARS);
@@ -355,4 +368,10 @@ pub unsafe extern "system" fn NdisReturnNetBufferLists(
     }
     let adapter = core::ptr::read_unaligned(binding.add(BINDING_ADAPTER_AT) as *const *mut u8);
     crate::register::call_return_net_buffer_lists(adapter, lists, flags);
+    /* After the miniport reclaims indicated NBLs, queue another DPC so
+     * re-posted RX buffers and any used descriptors left behind the
+     * SENDDONE-only kick are drained. output/netkvm-20261116T183657Z.log:
+     * second gateway echo timed out with no RECVIND; the next TX then
+     * printed RECVIND. */
+    crate::kick_interrupt_dpc(adapter);
 }

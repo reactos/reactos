@@ -141,6 +141,11 @@
  * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/wdm/nc-wdm-driver_add_device
  * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismgetdeviceproperty
  * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismgetbusdata
+ * output/netkvm-20261116T142828Z.log: OIDFILTER 0000000b then
+ * OIDFILTER 00000000, then a page fault in netkvm.sys. NDIS_PACKET_TYPE_*
+ * bits are in sdk/include/ddk/ndis.h. Public ParaNdis_DeviceFiltersUpdateRxMode
+ * (https://github.com/virtio-win/kvm-guest-drivers-windows/blob/master/NetKVM/Common/ParaNdis_Common.cpp)
+ * enables CTRL_RX NOUNI when DIRECTED is clear.
  */
 
 use core::ptr;
@@ -239,6 +244,10 @@ const HANDLE_RES_AT: usize = 0x178;
 const HANDLE_IRQ_AT: usize = 0x180;
 /* Zero run after dword 1 at 0x190: MiniportAdapterContext from 0x9E. */
 const HANDLE_ADAPTER_CTX_AT: usize = 0x198;
+/* Free dword after the adapter context pointer, before the measured
+ * tail at 0x1E0 (capture 2026-11-16T053108Z zero run). Stores the last
+ * non-zero OID_GEN_CURRENT_PACKET_FILTER applied to this adapter. */
+const HANDLE_PACKET_FILTER_AT: usize = 0x1A0;
 /* IO_STACK_LOCATION.Parameters starts after the 4 UCHAR header fields on
  * x64 with pointer alignment, in sdk/include/xdk/iotypes.h. StartDevice
  * stores AllocatedResources then AllocatedResourcesTranslated. */
@@ -1277,6 +1286,59 @@ pub fn call_oid_request(adapter: *mut u8, request: *mut u8) -> u32 {
             oid,
         )
     };
+    /* SET OID_GEN_CURRENT_PACKET_FILTER: InformationBuffer at 0x28 and
+     * length at 0x30 are output/netkvm-20261116T092548Z.log NDIS OIDBODY
+     * (lan.c OID_REQUEST_BUFFER_AT). QMP on output/netkvm-20261116T141444Z
+     * showed RX shadow-avail-idx 256 with used-idx 0 — host has RX
+     * buffers but never fills; CTRL_RX NOUNI drops unicast when
+     * DIRECTED is clear (public ParaNdis_DeviceFiltersUpdateRxMode).
+     * output/netkvm-20261116T142828Z.log: tcpip set 0x0B
+     * (NDIS_PACKET_TYPE_DIRECTED|MULTICAST|BROADCAST in
+     * sdk/include/ddk/ndis.h), then a second open set 0 and netkvm.sys
+     * page-faulted. Keep the live filter when a later SET clears
+     * DIRECTED after it was already applied. */
+    if request_type == 1 && oid == 0x0001_010E && (size as usize) >= 0x34 {
+        let buffer = read_ptr(request, 0x28);
+        let length = u32::from_le_bytes(unsafe {
+            [
+                *request.add(0x30),
+                *request.add(0x31),
+                *request.add(0x32),
+                *request.add(0x33),
+            ]
+        });
+        let filter = if !buffer.is_null() && length >= 4 {
+            u32::from_le_bytes(unsafe {
+                [*buffer, *buffer.add(1), *buffer.add(2), *buffer.add(3)]
+            })
+        } else {
+            0xffff_ffff
+        };
+        unsafe {
+            DbgPrint(
+                b"NDIS OIDFILTER %08x len %08x\n\0".as_ptr(),
+                filter,
+                length,
+            )
+        };
+        /* NDIS_PACKET_TYPE_DIRECTED in sdk/include/ddk/ndis.h. */
+        const DIRECTED: u32 = 0x0000_0001;
+        let prior = unsafe {
+            ptr::read_unaligned(adapter.add(HANDLE_PACKET_FILTER_AT) as *const u32)
+        };
+        if filter == 0 && (prior & DIRECTED) != 0 {
+            unsafe { DbgPrint(b"NDIS OIDFILTER keep\n\0".as_ptr()) };
+            return 0;
+        }
+        if filter != 0xffff_ffff {
+            unsafe {
+                ptr::write_unaligned(
+                    adapter.add(HANDLE_PACKET_FILTER_AT) as *mut u32,
+                    filter,
+                )
+            };
+        }
+    }
     let function: unsafe extern "system" fn(*mut u8, *mut u8) -> u32 =
         unsafe { core::mem::transmute(slot) };
     let status = unsafe { function(adapter_ctx, request) };

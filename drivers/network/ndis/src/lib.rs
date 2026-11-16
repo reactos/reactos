@@ -73,6 +73,11 @@
  * NDIS IRQDPC, then asserted KeGetCurrentIrql() <= APC_LEVEL in
  * ntoskrnl\mm\ARM3\miarm.h). Soft-only boot
  * output/netkvm-20261116T103750Z.log printed NDIS IRQ soft.
+ * output/netkvm-20261116T183657Z.log: BINDALL skip and post-bind
+ * RECVIND work, but the second gateway echo TX timed out with no
+ * RECVIND; the next TX drained a stranded RECVIND. RX poll uses
+ * KeSetTimerEx (sdk/include/xdk/kefuncs.h) while armed so replies that
+ * arrive during IcmpSendEcho2 are drained without a SENDDONE kick.
  * ScatterGatherListSize was unchanged on that same Windows call.
  * output/netkvm-20261116T005259Z.log names NdisAcquireRWLockWrite.
  * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndisacquirerwlockwrite
@@ -251,17 +256,23 @@
  * That page returns no status.
  * output/netkvm-20261116T022528Z.log names NdisMRegisterIoPortRange.
  * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismregisterioportrange
- * The status returned is NDIS_STATUS_FAILURE from sdk/include/ddk/ndis.h.
- * The port pointer is left null.
+ * PortOffset receives InitialPort so NdisRawReadPort / WritePort use that
+ * bus-relative base (drivers/network/dd/e1000/hardware.c,
+ * drivers/network/dd/netkvm/Common/ParaNdis-VirtIO.c).
  * output/netkvm-20261116T022801Z.log names NdisMDeregisterIoPortRange.
  * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismderegisterioportrange
  * That page returns no status.
+ * output/netkvm-20261116T015125Z.log names NdisMSleep.
+ * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismsleep
+ * KeDelayExecutionThread is in sdk/include/xdk/kefuncs.h. A negative
+ * interval is relative 100 ns units (drivers/network/rtl8139n/src/lib.rs).
  * output/netkvm-20261116T023033Z.log names NdisMMapIoSpace.
  * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismmapiospace
  * output/netkvm-20261116T063023Z.log printed that stub then NDIS INIT
  * c0000010 (NDIS_STATUS_INVALID_DEVICE_REQUEST). This file maps with
  * MmMapIoSpace from sdk/include/xdk/mmfuncs.h. MmNonCached is 0 in
- * sdk/include/xdk/mmtypes.h.
+ * sdk/include/xdk/mmtypes.h. MAP logs the length so a short BAR map can
+ * be told from a full one (output/netkvm-20261116T133444Z.log).
  * output/netkvm-20261116T023400Z.log names NdisProcessorNumberToIndex.
  * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndisprocessornumbertoindex
  * The argument is PROCESSOR_NUMBER from sdk/include/xdk/ntbasedef.h.
@@ -358,6 +369,7 @@ unsafe extern "system" {
     fn MmAllocateContiguousMemory(bytes: usize, highest: u64) -> *mut u8;
     fn MmFreeContiguousMemory(base: *mut u8);
     fn MmGetPhysicalAddress(base: *mut u8) -> u64;
+    fn KeDelayExecutionThread(wait_mode: i32, alertable: u8, interval: *const i64) -> i32;
     fn IoAllocateMdl(
         virtual_address: *mut u8,
         length: u32,
@@ -388,6 +400,10 @@ unsafe extern "system" {
     ) -> u8;
     fn KeInitializeDpc(dpc: *mut u8, routine: *const (), context: *mut u8);
     fn KeInsertQueueDpc(dpc: *mut u8, arg1: *mut u8, arg2: *mut u8) -> u8;
+    /* sdk/include/xdk/kefuncs.h / ntoskrnl.spec. */
+    fn KeInitializeTimer(timer: *mut u8);
+    fn KeSetTimerEx(timer: *mut u8, due_time: i64, period: i32, dpc: *mut u8) -> u8;
+    fn KeCancelTimer(timer: *mut u8) -> u8;
 }
 
 #[panic_handler]
@@ -1382,7 +1398,14 @@ pub unsafe extern "system" fn NdisMAllocateSharedMemory(
      * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismallocatesharedmemory
      * MmAllocateContiguousMemory and MmGetPhysicalAddress are in
      * sdk/include/xdk/mmfuncs.h. HighestAcceptableAddress all-ones is
-     * this file's no-limit value for that call. */
+     * this file's no-limit value for that call.
+     * MmAllocateContiguousMemory may satisfy small sizes from
+     * NonPagedPoolCacheAligned (ntoskrnl/mm/ARM3/contmem.c), which is
+     * not page-aligned. output/netkvm-20261116T132341Z.log printed
+     * NDIS SHMEMOK with physical addresses ending in 0x010 for 0x800
+     * NetKVM RX buffers while IOAPIC IRQ11 stayed quiet and RX never
+     * indicated. Round the allocation up to a whole page so the GPA
+     * NetKVM posts on the virtqueue is page-aligned. */
     unsafe { DbgPrint(b"NDIS SHMEM %08x\n\0".as_ptr(), length) };
     if virtual_address.is_null() || physical.is_null() || length == 0 {
         if !virtual_address.is_null() {
@@ -1393,17 +1416,24 @@ pub unsafe extern "system" fn NdisMAllocateSharedMemory(
         }
         return;
     }
-    let va = unsafe { MmAllocateContiguousMemory(length as usize, u64::MAX) };
+    let bytes = ((length as usize) + 0xfff) & !0xfff;
+    let va = unsafe { MmAllocateContiguousMemory(bytes, u64::MAX) };
     if va.is_null() {
         *virtual_address = core::ptr::null_mut();
         *physical = 0;
         return;
     }
     unsafe {
-        core::ptr::write_bytes(va, 0, length as usize);
+        core::ptr::write_bytes(va, 0, bytes);
         *virtual_address = va;
         *physical = MmGetPhysicalAddress(va);
-        DbgPrint(b"NDIS SHMEMOK %p %016x\n\0".as_ptr(), va, *physical);
+        DbgPrint(
+            b"NDIS SHMEMOK %p %08x %08x len %08x\n\0".as_ptr(),
+            va,
+            (*physical >> 32) as u32,
+            *physical as u32,
+            bytes as u32,
+        );
     }
 }
 
@@ -1430,15 +1460,44 @@ pub unsafe extern "system" fn NdisMFreeSharedMemory(
 pub unsafe extern "system" fn NdisMRegisterIoPortRange(
     port: *mut *mut u8,
     _handle: *mut u8,
+    initial: u32,
+    count: u32,
+) -> u32 {
+    /* https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismregisterioportrange
+     * PortOffset is the bus-relative InitialPort for NdisRaw*Port.
+     * drivers/network/dd/netkvm/Common/ParaNdis-VirtIO.c. */
+    unsafe { DbgPrint(b"NDIS IOPORT %08x %08x\n\0".as_ptr(), initial, count) };
+    if port.is_null() || count == 0 {
+        return 0xC000_000D;
+    }
+    *port = initial as usize as *mut u8;
+    0
+}
+
+#[no_mangle]
+pub unsafe extern "system" fn NdisMDeregisterIoPortRange(
+    _handle: *mut u8,
     _initial: u32,
     _count: u32,
-) -> u32 {
-    /* NDIS_STATUS_FAILURE from sdk/include/ddk/ndis.h. */
-    unsafe { DbgPrint(b"NDIS STUB NdisMRegisterIoPortRange\n\0".as_ptr()) };
-    if !port.is_null() {
-        *port = core::ptr::null_mut();
+    _port: *mut u8,
+) {
+    /* https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismderegisterioportrange */
+    unsafe { DbgPrint(b"NDIS IOPORTFREE\n\0".as_ptr()) };
+}
+
+#[no_mangle]
+pub unsafe extern "system" fn NdisMSleep(microseconds: u32) {
+    /* https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismsleep
+     * KeDelayExecutionThread in sdk/include/xdk/kefuncs.h. Negative
+     * interval is relative 100 ns (drivers/network/rtl8139n/src/lib.rs). */
+    if microseconds == 0 {
+        return;
     }
-    0xC000_0001
+    let interval: i64 = -((microseconds as i64) * 10);
+    unsafe {
+        DbgPrint(b"NDIS SLEEP %08x\n\0".as_ptr(), microseconds);
+        KeDelayExecutionThread(0, 0, &interval);
+    }
 }
 
 #[no_mangle]
@@ -1450,7 +1509,14 @@ pub unsafe extern "system" fn NdisMMapIoSpace(
 ) -> u32 {
     /* output/netkvm-20261116T063023Z.log: stub then INIT c0000010.
      * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismmapiospace */
-    unsafe { DbgPrint(b"NDIS MAP %08x %08x\n\0".as_ptr(), (physical >> 32) as u32, physical as u32) };
+    unsafe {
+        DbgPrint(
+            b"NDIS MAP %08x %08x len %08x\n\0".as_ptr(),
+            (physical >> 32) as u32,
+            physical as u32,
+            length,
+        )
+    };
     if virtual_address.is_null() || length == 0 {
         return 0xC000_000D;
     }
@@ -1819,7 +1885,11 @@ pub unsafe extern "system" fn NdisMFreeNetBufferSGList(
  * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nc-ndis-miniport_interrupt_dpc
  * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/ns-ndis-_ndis_receive_throttle_parameters */
 const IRQ_KIND: u32 = u32::from_le_bytes(*b"IRso");
-const IRQ_BYTES: usize = 0x100;
+/* This file's interrupt block: KDPC at 0x40 (sdk/include/xdk/ketypes.h
+ * KDPC is 0x40 on x64), throttle at 0x90, then a second KDPC + KTIMER
+ * for RX poll. KTIMER is sdk/include/xdk/ketypes.h; size uses
+ * KTIMER_ACTUAL_LENGTH there (Period + sizeof LONG). */
+const IRQ_BYTES: usize = 0x180;
 const IRQ_ARMED_AT: usize = 4;
 const IRQ_CONTEXT_AT: usize = 8;
 const IRQ_ISR_AT: usize = 0x10;
@@ -1836,8 +1906,24 @@ const IRQ_THROTTLE_AT: usize = 0x90;
 const IRQ_THROTTLE_MAX_AT: usize = IRQ_THROTTLE_AT;
 const IRQ_THROTTLE_MORE_AT: usize = IRQ_THROTTLE_AT + 4;
 const IRQ_DPC_CONTEXT_AT: usize = 0x98;
+/* Set by kick_interrupt_dpc / RX timer; cleared in the DPC. This file. */
+const IRQ_SYN_AT: usize = 0x9c;
+const IRQ_SYN_SEND: u8 = 1;
+const IRQ_SYN_TIMER: u8 = 2;
+/* Second KDPC + KTIMER past the first DPC block (this file's layout). */
+const IRQ_RX_TIMER_DPC_AT: usize = 0xa0;
+const IRQ_RX_TIMER_AT: usize = 0xe0;
+/* Relative 50 ms in 100 ns units; period ms for KeSetTimerEx
+ * (sdk/include/xdk/kefuncs.h). output/netkvm-20261116T183657Z.log:
+ * second gateway TX then PING CHECK timeout with no RECVIND; next TX
+ * drained a stranded RECVIND. IRQISR stayed unused; SENDDONE kick
+ * alone misses replies that arrive while IcmpSendEcho2 blocks. */
+const RX_POLL_DUE_100NS: i64 = -500_000;
+const RX_POLL_PERIOD_MS: i32 = 50;
 /* NDIS_INDICATE_ALL_NBLS on the public throttle page. */
 const INDICATE_ALL_NBLS: u32 = 0xFFFF_FFFF;
+static mut ISR_HITS: u32 = 0;
+static mut RX_POLL_LOGS: u32 = 0;
 type SyncRoutineFn = unsafe extern "system" fn(*mut u8) -> u8;
 const IRQ_CHARS_ISR_AT: usize = 0x08;
 const IRQ_CHARS_DPC_AT: usize = 0x10;
@@ -1897,8 +1983,15 @@ unsafe extern "system" fn ndis_interrupt_service(
     let isr: MiniportIsrFn = core::mem::transmute(isr_ptr);
     let claimed = isr(miniport_ctx, &mut queue_dpc, &mut targets);
     /* Public MiniportInterrupt page: queue from QueueDefaultInterruptDpc
-     * / TargetProcessors regardless of the BOOLEAN return. Do not
-     * DbgPrint here (output/netkvm-20261116T103245Z.log). */
+     * / TargetProcessors regardless of the BOOLEAN return.
+     * Rate-limited IRQISR separates real line interrupts from synthetic
+     * post-send DPC kicks (empty-RX fork after host ARP replies in
+     * output/netkvm-20261116T124245Z.pcap). */
+    let hits = ISR_HITS.wrapping_add(1);
+    ISR_HITS = hits;
+    if hits <= 4 || (hits & 0x3f) == 0 {
+        DbgPrint(b"NDIS IRQISR %u\n\0".as_ptr(), hits);
+    }
     if queue_dpc != 0 || targets != 0 {
         KeInsertQueueDpc(context.add(IRQ_DPC_AT), core::ptr::null_mut(), core::ptr::null_mut());
     }
@@ -1938,9 +2031,27 @@ unsafe extern "system" fn ndis_interrupt_dpc(
     let dpc_context = core::ptr::read_unaligned(
         context.add(IRQ_DPC_CONTEXT_AT) as *const *mut u8,
     );
-    DbgPrint(b"NDIS IRQDPC\n\0".as_ptr());
+    let syn = *context.add(IRQ_SYN_AT);
+    *context.add(IRQ_SYN_AT) = 0;
+    if syn == IRQ_SYN_SEND {
+        DbgPrint(b"NDIS IRQDPC syn\n\0".as_ptr());
+    } else if syn == IRQ_SYN_TIMER {
+        let hits = RX_POLL_LOGS.wrapping_add(1);
+        RX_POLL_LOGS = hits;
+        if hits <= 4 || (hits & 0x3f) == 0 {
+            DbgPrint(b"NDIS IRQDPC poll %u\n\0".as_ptr(), hits);
+        }
+    } else {
+        DbgPrint(b"NDIS IRQDPC hw\n\0".as_ptr());
+    }
     let dpc: MiniportDpcFn = core::mem::transmute(dpc_ptr);
     dpc(miniport_ctx, dpc_context, throttle, core::ptr::null_mut());
+    /* Public NetKVM MiniportInterrupt disables the virtqueues; NDIS must
+     * call EnableInterruptEx after the DPC returns
+     * (https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nc-ndis-miniport_interrupt_dpc
+     * https://github.com/virtio-win/kvm-guest-drivers-windows/blob/master/NetKVM/wlh/ParaNdis6_Impl.cpp).
+     * output/netkvm-20261116T131159Z.log printed 0 IRQISR / 266 IRQDPC syn. */
+    call_line_irq_handler(context, IRQ_ENABLE_AT);
     let more = core::ptr::read_unaligned(context.add(IRQ_THROTTLE_MORE_AT) as *const u32);
     if (more & 1) != 0 {
         KeInsertQueueDpc(context.add(IRQ_DPC_AT), core::ptr::null_mut(), core::ptr::null_mut());
@@ -2069,6 +2180,12 @@ pub unsafe extern "system" fn NdisMRegisterInterruptEx(
             ndis_interrupt_dpc as *const (),
             block,
         );
+        KeInitializeDpc(
+            block.add(IRQ_RX_TIMER_DPC_AT),
+            ndis_rx_poll_timer_dpc as *const (),
+            block,
+        );
+        KeInitializeTimer(block.add(IRQ_RX_TIMER_AT));
 
         core::ptr::write_unaligned(block.add(IRQ_ADAPTER_AT) as *mut *mut u8, adapter);
         core::ptr::write_unaligned(block.add(IRQ_OBJECT_AT) as *mut *mut u8, core::ptr::null_mut());
@@ -2135,6 +2252,49 @@ unsafe fn connect_interrupt_block(block: *mut u8, partial: *mut u8) {
     }
 }
 
+unsafe extern "system" fn ndis_rx_poll_timer_dpc(
+    _dpc: *mut u8,
+    context: *mut u8,
+    _arg1: *mut u8,
+    _arg2: *mut u8,
+) {
+    /* output/netkvm-20261116T183657Z.log: ICMP replies on the wire and
+     * a RECVIND only after the next TX. Poll queues the same miniport
+     * DPC the SENDDONE kick uses. */
+    if context.is_null() || core::ptr::read_unaligned(context as *const u32) != IRQ_KIND {
+        return;
+    }
+    if *context.add(IRQ_ARMED_AT) == 0 {
+        return;
+    }
+    *context.add(IRQ_SYN_AT) = IRQ_SYN_TIMER;
+    KeInsertQueueDpc(
+        context.add(IRQ_DPC_AT),
+        core::ptr::null_mut(),
+        core::ptr::null_mut(),
+    );
+}
+
+unsafe fn start_rx_poll_timer(block: *mut u8) {
+    if block.is_null() || core::ptr::read_unaligned(block as *const u32) != IRQ_KIND {
+        return;
+    }
+    KeSetTimerEx(
+        block.add(IRQ_RX_TIMER_AT),
+        RX_POLL_DUE_100NS,
+        RX_POLL_PERIOD_MS,
+        block.add(IRQ_RX_TIMER_DPC_AT),
+    );
+    DbgPrint(b"NDIS RXPOLL on\n\0".as_ptr());
+}
+
+unsafe fn stop_rx_poll_timer(block: *mut u8) {
+    if block.is_null() || core::ptr::read_unaligned(block as *const u32) != IRQ_KIND {
+        return;
+    }
+    KeCancelTimer(block.add(IRQ_RX_TIMER_AT));
+}
+
 pub(crate) unsafe fn kick_interrupt_dpc(adapter: *mut u8) {
     let block = register::miniport_interrupt(adapter);
     if block.is_null() {
@@ -2146,6 +2306,7 @@ pub(crate) unsafe fn kick_interrupt_dpc(adapter: *mut u8) {
     if *block.add(IRQ_ARMED_AT) == 0 {
         return;
     }
+    *block.add(IRQ_SYN_AT) = IRQ_SYN_SEND;
     KeInsertQueueDpc(
         block.add(IRQ_DPC_AT),
         core::ptr::null_mut(),
@@ -2169,6 +2330,7 @@ pub(crate) unsafe fn connect_interrupt(adapter: *mut u8) {
         connect_interrupt_block(block, register::miniport_resources(adapter));
         call_line_irq_handler(block, IRQ_ENABLE_AT);
         kick_interrupt_dpc(adapter);
+        start_rx_poll_timer(block);
         DbgPrint(b"NDIS IRQARM\n\0".as_ptr());
     }
 }
@@ -2181,6 +2343,8 @@ pub unsafe extern "system" fn NdisMDeregisterInterruptEx(interrupt: *mut u8) {
     }
     unsafe {
         if core::ptr::read_unaligned(interrupt as *const u32) == IRQ_KIND {
+            *interrupt.add(IRQ_ARMED_AT) = 0;
+            stop_rx_poll_timer(interrupt);
             let object = core::ptr::read_unaligned(
                 interrupt.add(IRQ_OBJECT_AT) as *const *mut u8,
             );
@@ -2262,6 +2426,8 @@ static MINIPORT: &[Routine] = &[
     Routine { name: "NdisAllocateMdl", address: NdisAllocateMdl as *const () },
     Routine { name: "NdisFreeMdl", address: NdisFreeMdl as *const () },
     Routine { name: "NdisMRegisterIoPortRange", address: NdisMRegisterIoPortRange as *const () },
+    Routine { name: "NdisMDeregisterIoPortRange", address: NdisMDeregisterIoPortRange as *const () },
+    Routine { name: "NdisMSleep", address: NdisMSleep as *const () },
     Routine { name: "NdisMMapIoSpace", address: NdisMMapIoSpace as *const () },
     Routine { name: "NdisMUnmapIoSpace", address: NdisMUnmapIoSpace as *const () },
     Routine { name: "NdisProcessorNumberToIndex", address: NdisProcessorNumberToIndex as *const () },
@@ -2344,6 +2510,4 @@ stubs!(
     NdisQueueIoWorkItem,
     NdisMRemoveMiniport,
     NdisFreeCloneNetBufferList,
-    NdisMSleep,
-    NdisMDeregisterIoPortRange
 );

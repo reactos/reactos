@@ -1,0 +1,22 @@
+{
+  "spdx": "GPL-2.0-or-later",
+  "question": "Why does NetKVM PingCheck accept the first gateway echo then timeout on the second and on the DNS echo while the host pcap still shows ICMP replies?",
+  "allowedInputs": [
+    "sdk/include/xdk/kefuncs.h KeInitializeTimer KeSetTimerEx KeCancelTimer",
+    "sdk/include/xdk/ketypes.h KDPC KTIMER KTIMER_ACTUAL_LENGTH",
+    "sdk/include/ddk/ndis.h NDIS_PACKET_TYPE_DIRECTED OID_GEN_CURRENT_PACKET_FILTER",
+    "https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndisreturnnetbufferlists",
+    "https://github.com/virtio-win/kvm-guest-drivers-windows/blob/master/NetKVM/Common/ParaNdis_Common.cpp ParaNdis_DeviceFiltersUpdateRxMode",
+    "differential-tests/ndis-discovery/METHOD.md NET_BUFFER_LIST DataLength 0x198 Mdl 0x1A0 DataOffset 0x1A8 capture 2026-11-15T232142Z",
+    "output/netkvm-20261116T142828Z.log NDIS OIDFILTER 0000000b then OIDFILTER 00000000 then page fault",
+    "output/netkvm-20261116T150843Z.log PING CHECK done 2 1 and done 1 0 with post-bind RECVIND",
+    "output/netkvm-20261116T183657Z.log second gateway TX then timeout with no RECVIND then stranded RECVIND after next TX",
+    "output/netkvm-20261116T184355Z.log NDIS RXPOLL on BINDALL skip PING CHECK done 2 2 and done 1 1"
+  ],
+  "harness": {
+    "guest": "VerOS",
+    "name": "VerOS NetKVM disk snapshot vectors=0 RX poll",
+    "traceOrReplayId": "output/netkvm-20261116T184355Z.log PING CHECK done 2 2",
+    "logSha256": "d594b4dccdb1421494600d3ad9f1048e4d9657477327ebe4c7c3d5c0548045b4"
+  }
+}

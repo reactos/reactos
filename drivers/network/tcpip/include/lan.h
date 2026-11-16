@@ -45,6 +45,9 @@ typedef struct LAN_ADAPTER {
     PVOID Context;                          /* Upper layer context information */
     NDIS_HANDLE NdisHandle;                 /* NDIS binding handle */
     NDIS_STATUS NdisStatus;                 /* NDIS status of last request */
+    BOOLEAN Ndis6;                          /* TRUE when NdisHandle is NdisOpenAdapterEx */
+    NDIS_HANDLE NblPool;                    /* NDIS 6 NET_BUFFER_LIST pool */
+    NDIS_HANDLE NbPool;                     /* NDIS 6 NET_BUFFER pool */
     NDIS_MEDIUM Media;                      /* Media type */
     UCHAR HWAddress[IEEE_802_ADDR_LENGTH];  /* Local HW address */
     UINT HWAddressLength;                   /* Length of HW address */
@@ -91,6 +94,25 @@ NDIS_STATUS LANUnregisterAdapter(
 
 NTSTATUS LANRegisterProtocol(
     PNDIS_STRING Name);
+
+/* NDIS 6.84 protocol registration in ndis.sys (prot6.rs). */
+NTSTATUS NTAPI LanRegisterProtocol6(PUNICODE_STRING Name);
+VOID NTAPI LanDeregisterProtocol6(VOID);
+VOID NTAPI LanSetBindAdapter6(PVOID Handler);
+VOID NTAPI LanSetSendComplete6(PVOID Handler);
+VOID NTAPI LanSetOidComplete6(PVOID Handler);
+VOID NTAPI LanSetBindingContext6(NDIS_HANDLE Binding, PVOID Context);
+VOID NTAPI LanSetReceiveNbl6(PVOID Handler);
+
+NDIS_STATUS NTAPI LanBindAdapter6(NDIS_HANDLE Binding, PUNICODE_STRING AdapterName);
+VOID NTAPI LanSendComplete6(PVOID BindingContext, PVOID NetBufferLists, ULONG Flags);
+VOID NTAPI LanOidComplete6(PVOID BindingContext, NDIS_STATUS Status);
+VOID NTAPI LanReceiveNbl6(
+    PVOID BindingContext,
+    PVOID NetBufferLists,
+    ULONG PortNumber,
+    ULONG NumberOfNetBufferLists,
+    ULONG ReceiveFlags);
 
 VOID NTAPI
 LANUnregisterProtocol(VOID);
