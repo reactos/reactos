@@ -1,0 +1,22 @@
+{
+  "spdx": "GPL-2.0-or-later",
+  "question": "How should KernelBase export QueryInterruptTime and VirtualAlloc2 so Firefox GetProcAddress on those names succeeds?",
+  "allowedInputs": [
+    "https://learn.microsoft.com/en-us/windows/win32/api/realtimeapiset/nf-realtimeapiset-queryinterrupttime QueryInterruptTime, KernelBase.dll, PULONGLONG out, 100ns units",
+    "https://learn.microsoft.com/en-us/windows/win32/api/memoryapi/nf-memoryapi-virtualalloc2 VirtualAlloc2, KernelBase.dll, Process BaseAddress Size AllocationType PageProtection ExtendedParameters ParameterCount",
+    "https://learn.microsoft.com/en-us/windows/win32/sysinfo/interrupt-time interrupt-time count in SharedUserData",
+    "sdk/include/xdk/ketypes.h already in this tree, KUSER_SHARED_DATA.InterruptTime",
+    "sdk/include/ndk/kefuncs.h already in this tree, KiReadSystemTime",
+    "dll/win32/kernel32/client/time.c already in this tree, KiReadSystemTime on SharedUserData fields",
+    "dll/win32/kernel32/client/virtmem.c already in this tree, VirtualAllocEx",
+    "dll/win32/kernelbase/kernelbase_ros.spec already in this tree, QueryInterruptTime and VirtualAlloc2 commented out",
+    "output/ntdll-apps/serial-App-20261116T055814Z.log marker: LDR: missing export KernelBase.dll!QueryInterruptTime",
+    "output/ntdll-apps/serial-App-20261116T055814Z.log marker: LDR: missing export kernelbase.dll!VirtualAlloc2",
+    "output/ntdll-apps/firefox-silent-fail5-kernelbase-exports-gaps.txt"
+  ],
+  "harness": {
+    "guest": "amd64 installed veros-ntfs after cryptbase and kernelbase.dll copy, TCG, App mode",
+    "name": "ntdll-apps-firefox",
+    "traceOrReplayId": "serial-App-20261116T055814Z QueryInterruptTime VirtualAlloc2"
+  }
+}
