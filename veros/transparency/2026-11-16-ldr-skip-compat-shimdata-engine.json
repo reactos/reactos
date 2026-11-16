@@ -1,0 +1,18 @@
+{
+  "spdx": "GPL-2.0-or-later",
+  "question": "Should LdrpInitializeProcess call LdrpLoadShimEngine with ReactOS_ShimData (manifest compat GUID blob) as the shim-engine DLL path?",
+  "allowedInputs": [
+    "dll/ntdll/ldr/ldrinit.c already in this tree, LdrpInitializeProcessCompat allocates ReactOS_ShimData and LdrpInitializeProcess LdrpLoadShimEngine(OldShimData)",
+    "dll/ntdll/ldr/ldrutils.c already in this tree, LdrpLoadShimEngine RtlInitUnicodeString(ImageName) then LdrpLoadDll",
+    "sdk/include/reactos/compat_undoc.h already in this tree, ReactOS_ShimData and REACTOS_SHIMDATA_MAGIC",
+    "output/ntdll-apps/serial-App-20261116T065630Z.log marker: LDR: empty LoadDll name; inInit=1 ret=000007FFB700D1FB",
+    "output/ntdll-apps/firefox-silent-fail11-shimengine-empty-name-gaps.txt",
+    "build-amd64/dll/ntdll/ntdll.dll nm: LdrpLoadShimEngine @ 7ffb700d1c0, ret inside that function"
+  ],
+  "harness": {
+    "guest": "amd64 installed veros-ntfs after forwarder empty-LoadDll logging, TCG, App mode",
+    "name": "ntdll-apps-firefox",
+    "traceOrReplayId": "serial-App-20261116T065630Z empty LoadDll ret LdrpLoadShimEngine",
+    "logSha256": "7b180855ce07237c69a34dc1ad5e88f621bd85f7047c78829361297b3f8e7bf0"
+  }
+}

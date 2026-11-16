@@ -7,7 +7,11 @@
  *              Copyright 2026 Ryan Wilson <ryan@verosnt.com>
  * PROGRAMMERS: Alex Ionescu (alex@relsoft.net)
  *              Aleksey Bragin (aleksey@reactos.org)
- *              Ryan Wilson
+ *              Ryan Wilson <ryan@verosnt.com>
+ *
+ * ReactOS_ShimData (compat GUID blob) is not a shim-engine DLL path.
+ * Guest serial output/ntdll-apps/serial-App-20261116T065630Z.log maps
+ * empty LoadDll ret to LdrpLoadShimEngine(OldShimData, ...) for firefox.exe.
  */
 
 /* INCLUDES *****************************************************************/
@@ -2608,9 +2612,26 @@ LdrpInitializeProcess(IN PCONTEXT Context,
     /* Check if we had Shim Data */
     if (OldShimData)
     {
-        /* Load the Shim Engine */
-        Peb->AppCompatInfo = NULL;
-        LdrpLoadShimEngine(OldShimData, &ImagePathName, OldShimData);
+        ReactOS_ShimData *RosShim = (ReactOS_ShimData *)OldShimData;
+
+        /*
+         * LdrpInitializeProcessCompat stores a ReactOS_ShimData blob in
+         * pShimData for the manifest compat GUID (GetVersion lie). That blob
+         * is not an apphelp engine path; passing it to LdrpLoadShimEngine
+         * makes RtlInitUnicodeString see a leading null (HEAP_ZERO_MEMORY)
+         * and LoadDll of Length 0 (firefox silent-fail11).
+         */
+        if (RosShim->dwMagic == REACTOS_SHIMDATA_MAGIC &&
+            RosShim->dwSize == sizeof(ReactOS_ShimData))
+        {
+            DPRINT("LDR: ReactOS_ShimData compat blob only; skip shim engine\n");
+        }
+        else
+        {
+            /* Real shim-engine path string from the host */
+            Peb->AppCompatInfo = NULL;
+            LdrpLoadShimEngine(OldShimData, &ImagePathName, OldShimData);
+        }
     }
     else
     {

@@ -7,12 +7,10 @@
  *              Copyright 2026 Ryan Wilson <ryan@verosnt.com>
  * PROGRAMMERS: Alex Ionescu (alex@relsoft.net)
  *              Aleksey Bragin (aleksey@reactos.org)
- *              Ryan Wilson
+ *              Ryan Wilson <ryan@verosnt.com>
  *
- * Empty LdrpLoadDll names are rejected. Guest serial
- * output/ntdll-apps/serial-App-20261116T064248Z.log shows
- * LDR: empty LoadDll name; no top-level or initializer after winrt→combase
- * (direct LdrpLoadDll, not LdrLoadDll).
+ * Empty LdrpLoadDll names are rejected. LdrpLoadShimEngine also refuses an
+ * empty engine path (serial-App-20261116T065630Z.log, ret in LdrpLoadShimEngine).
  */
 
 /* INCLUDES *****************************************************************/
@@ -2817,6 +2815,18 @@ LdrpLoadShimEngine(IN PWSTR ImageName, IN PUNICODE_STRING ProcessImage, IN PVOID
     UNICODE_STRING ShimLibraryName;
     PVOID ShimLibrary;
     NTSTATUS Status;
+
+    /*
+     * ImageName must be a DLL path (e.g. apphelp). A null/empty name was
+     * LoadDll Length 0 when ReactOS_ShimData was passed as the path
+     * (serial-App-20261116T065630Z.log, ret inside LdrpLoadShimEngine).
+     */
+    if (!ImageName || ImageName[0] == UNICODE_NULL)
+    {
+        DbgPrint("LDR: LdrpLoadShimEngine skipped; empty engine name\n");
+        return;
+    }
+
     RtlInitUnicodeString(&ShimLibraryName, ImageName);
     /* We should NOT pass CallInit = TRUE!
        If we do this, other init routines will be called before we get a chance to shim stuff.. */
