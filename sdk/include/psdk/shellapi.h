@@ -215,6 +215,42 @@ typedef struct _SHCREATEPROCESSINFOW
 typedef WORD FILEOP_FLAGS;
 typedef WORD PRINTEROP_FLAGS;
 
+#if (NTDDI_VERSION >= NTDDI_WIN2K)
+#define PRINTACTION_OPEN             0 // lpBuf1: printer name
+#define PRINTACTION_PROPERTIES       1 // lpBuf1: printer name, lpBuf2: optional page
+#define PRINTACTION_NETINSTALL       2 // lpBuf1: network printer name
+#define PRINTACTION_NETINSTALLLINK   3 // lpBuf1: network printer name, lpBuf2: link folder
+#define PRINTACTION_TESTPAGE         4 // lpBuf1: printer name
+#define PRINTACTION_OPENNETPRN       5 // lpBuf1: network printer name
+#define PRINTACTION_DOCUMENTDEFAULTS 6 // lpBuf1: printer name
+#define PRINTACTION_SERVERPROPERTIES 7 // lpBuf1: server or network printer name
+
+// Deprecated
+BOOL
+WINAPI
+SHInvokePrinterCommandA(
+    _In_opt_ HWND hwnd,
+    _In_ UINT uAction,
+    _In_ LPCSTR lpBuf1,
+    _In_opt_ LPCSTR lpBuf2,
+    _In_ BOOL fModal);
+
+BOOL
+WINAPI
+SHInvokePrinterCommandW(
+    _In_opt_ HWND hwnd,
+    _In_ UINT uAction,
+    _In_ LPCWSTR lpBuf1,
+    _In_opt_ LPCWSTR lpBuf2,
+    _In_ BOOL fModal);
+
+#ifdef UNICODE
+#define SHInvokePrinterCommand SHInvokePrinterCommandW
+#else
+#define SHInvokePrinterCommand SHInvokePrinterCommandA
+#endif // UNICODE
+#endif // (NTDDI_VERSION >= NTDDI_WIN2K)
+
 typedef struct _AppBarData {
 	DWORD	cbSize;
 	HWND	hWnd;
