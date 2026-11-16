@@ -1,0 +1,18 @@
+{
+  "spdx": "GPL-2.0-or-later",
+  "question": "What called xul.dll+0x18f2c22 __fastfail(7) on C:\\Firefox-win64, and which CreateFile/LdrLoadDll failure preceded it?",
+  "allowedInputs": [
+    "ntoskrnl/ke/amd64/except.c already in this tree, User fastfail and KiPrintUserModuleForAddress",
+    "dll/ntdll/ldr/ldrapi.c already in this tree, LdrLoadDll status filter",
+    "dll/win32/kernel32/client/file/create.c already in this tree, CreateFileW NtCreateFile failure path",
+    "dll/win32/kernel32/client/sysinfo.c already in this tree, AppPolicyGetThreadInitializationType",
+    "output/ntdll-apps/serial-App-20261116T083050Z.log marker: User AV fastfail module xul.dll +0x18f2c22",
+    "output/ntdll-apps/firefox-silent-fail24-xul-direct-fastfail7.txt"
+  ],
+  "harness": {
+    "guest": "amd64 installed veros-ntfs, TCG, App mode, firefox from C:\\Firefox-win64",
+    "name": "ntdll-apps-firefox",
+    "traceOrReplayId": "serial-App-20261116T083050Z xul.dll +0x18f2c22 direct __fastfail",
+    "logSha256": "f83b64ee926b96d6b9969b030b38d6e1c21451a9d63dc85d42c13af264f31fb7"
+  }
+}

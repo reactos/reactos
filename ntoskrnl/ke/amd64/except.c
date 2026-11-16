@@ -750,9 +750,13 @@ KiDispatchException(IN PEXCEPTION_RECORD ExceptionRecord,
          * (serial-App-20261116T075237Z.log; FAST_FAIL_FATAL_APP_EXIT=7).
          * silent-fail23: also name module+RVA so a direct __fastfail (no
          * ucrt abort line) is not just a bare RIP (serial-App-20261116T082430Z.log).
+         * silent-fail24: dump regs + stack return modules so the caller of
+         * xul.dll+0x18f2c22 is named (serial-App-20261116T083050Z.log).
          */
         if (ExceptionRecord->ExceptionCode == STATUS_STACK_BUFFER_OVERRUN)
         {
+            ULONG Slot;
+
             DPRINT1("User fastfail in %.16s code %Ix at %p\n",
                     PsGetCurrentProcess()->ImageFileName,
                     ExceptionRecord->NumberParameters > 0 ?
@@ -760,6 +764,64 @@ KiDispatchException(IN PEXCEPTION_RECORD ExceptionRecord,
                     ExceptionRecord->ExceptionAddress);
             KiPrintUserModuleForAddress(ExceptionRecord->ExceptionAddress,
                                         "fastfail");
+            DPRINT1("User fastfail regs rax=%p rcx=%p rdx=%p r8=%p rsp=%p rip=%p\n",
+                    (PVOID)Context.Rax,
+                    (PVOID)Context.Rcx,
+                    (PVOID)Context.Rdx,
+                    (PVOID)Context.R8,
+                    (PVOID)Context.Rsp,
+                    (PVOID)Context.Rip);
+            DPRINT1("User fastfail regs rbx=%p rsi=%p rdi=%p rbp=%p r9=%p\n",
+                    (PVOID)Context.Rbx,
+                    (PVOID)Context.Rsi,
+                    (PVOID)Context.Rdi,
+                    (PVOID)Context.Rbp,
+                    (PVOID)Context.R9);
+            KiPrintUserInsnBytes(ExceptionRecord->ExceptionAddress);
+            /*
+             * Walk the first stack slots for return addresses into other
+             * modules (same PEB LDR walk as KiPrintUserModuleForAddress).
+             */
+            {
+                static const char *StackTags[16] =
+                {
+                    "rsp+0", "rsp+8", "rsp+10", "rsp+18",
+                    "rsp+20", "rsp+28", "rsp+30", "rsp+38",
+                    "rsp+40", "rsp+48", "rsp+50", "rsp+58",
+                    "rsp+60", "rsp+68", "rsp+70", "rsp+78"
+                };
+
+                for (Slot = 0; Slot < 16; Slot++)
+                {
+                    ULONG_PTR SlotAddr = Context.Rsp + (ULONG_PTR)Slot * 8;
+                    ULONG_PTR Value;
+
+                    if (SlotAddr >= (ULONG_PTR)MmUserProbeAddress)
+                    {
+                        break;
+                    }
+
+                    _enable();
+                    _SEH2_TRY
+                    {
+                        ProbeForRead((PVOID)SlotAddr, sizeof(Value), 1);
+                        Value = *(volatile ULONG_PTR *)SlotAddr;
+                    }
+                    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+                    {
+                        Value = 0;
+                    }
+                    _SEH2_END;
+                    _disable();
+
+                    if (!Value || Value == (ULONG_PTR)-1)
+                    {
+                        continue;
+                    }
+
+                    KiPrintUserModuleForAddress((PVOID)Value, StackTags[Slot]);
+                }
+            }
         }
 
         if (ExceptionRecord->ExceptionCode == STATUS_ACCESS_VIOLATION)

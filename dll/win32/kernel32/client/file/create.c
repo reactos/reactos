@@ -321,6 +321,34 @@ HANDLE WINAPI CreateFileW (LPCWSTR			lpFileName,
    /* error */
    if (!NT_SUCCESS(Status))
    {
+      /*
+       * firefox silent-fail24: name CreateFile failures in firefox.exe so
+       * the last failed path before xul __fastfail is on the App serial
+       * (serial-App-20261116T083050Z.log).
+       */
+      if (NtCurrentPeb() && NtCurrentPeb()->ProcessParameters)
+      {
+         UNICODE_STRING ImagePath = NtCurrentPeb()->ProcessParameters->ImagePathName;
+         UNICODE_STRING FirefoxSuffix = RTL_CONSTANT_STRING(L"firefox.exe");
+
+         if (ImagePath.Buffer &&
+             ImagePath.Length >= FirefoxSuffix.Length)
+         {
+            UNICODE_STRING Tail;
+
+            Tail.Buffer = ImagePath.Buffer +
+                          (ImagePath.Length - FirefoxSuffix.Length) / sizeof(WCHAR);
+            Tail.Length = FirefoxSuffix.Length;
+            Tail.MaximumLength = FirefoxSuffix.Length;
+            if (RtlEqualUnicodeString(&Tail, &FirefoxSuffix, TRUE))
+            {
+               DPRINT1("CreateFileW(%S) status 0x%08lx\n",
+                       lpFileName ? lpFileName : L"(null)",
+                       Status);
+            }
+         }
+      }
+
       /* In the case file creation was rejected due to CREATE_NEW flag
        * was specified and file with that name already exists, correct
        * last error is ERROR_FILE_EXISTS and not ERROR_ALREADY_EXISTS.

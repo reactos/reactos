@@ -412,17 +412,41 @@ LdrLoadDll(
         {
             Status = STATUS_SUCCESS;
         }
-        else if ((Status != STATUS_NO_SUCH_FILE) &&
+        else
+        {
+            BOOLEAN FirefoxProcess = FALSE;
+            PPEB_LDR_DATA PebLdr;
+            PLDR_DATA_TABLE_ENTRY ExeEntry;
+            UNICODE_STRING FirefoxName = RTL_CONSTANT_STRING(L"firefox.exe");
+
+            /*
+             * firefox silent-fail24: also log DLL_NOT_FOUND / DLL_INIT_FAILED
+             * for firefox.exe — those were filtered out and hid the last
+             * failed load before xul __fastfail
+             * (serial-App-20261116T083050Z.log).
+             */
+            PebLdr = NtCurrentPeb() ? NtCurrentPeb()->Ldr : NULL;
+            if (PebLdr && !IsListEmpty(&PebLdr->InLoadOrderModuleList))
+            {
+                ExeEntry = CONTAINING_RECORD(PebLdr->InLoadOrderModuleList.Flink,
+                                             LDR_DATA_TABLE_ENTRY,
+                                             InLoadOrderLinks);
+                FirefoxProcess = RtlEqualUnicodeString(&ExeEntry->BaseDllName,
+                                                       &FirefoxName,
+                                                       TRUE);
+            }
+
+            if (FirefoxProcess ||
+                ((Status != STATUS_NO_SUCH_FILE) &&
                  (Status != STATUS_DLL_NOT_FOUND) &&
                  (Status != STATUS_OBJECT_NAME_NOT_FOUND) &&
-                 (Status != STATUS_DLL_INIT_FAILED))
-        {
-            DbgPrintEx(DPFLTR_LDR_ID,
-                       DPFLTR_WARNING_LEVEL,
-                       "LDR: %s - failing because LdrpLoadDll(%wZ) returned status %x\n",
-                       __FUNCTION__,
-                       DllName,
-                       Status);
+                 (Status != STATUS_DLL_INIT_FAILED)))
+            {
+                DPRINT1("LDR: LdrLoadDll(%wZ) status 0x%08lx%s\n",
+                        DllName,
+                        Status,
+                        FirefoxProcess ? " [firefox]" : "");
+            }
         }
     }
     _SEH2_FINALLY

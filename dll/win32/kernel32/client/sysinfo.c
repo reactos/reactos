@@ -638,13 +638,19 @@ AppPolicyGetThreadInitializationType(HANDLE processToken,
                                      AppPolicyThreadInitializationType *policy)
 {
     UNREFERENCED_PARAMETER(processToken);
-    DPRINT1("AppPolicyGetThreadInitializationType(%p, %p)\n",
-            processToken, policy);
     if (!policy)
     {
+        DPRINT1("AppPolicyGetThreadInitializationType(%p, NULL)\n",
+                processToken);
         return ERROR_INVALID_PARAMETER;
     }
     *policy = AppPolicyThreadInitializationType_None;
+    /*
+     * firefox silent-fail24: log the desktop policy value written before
+     * xul.dll+0x18f2c22 __fastfail (serial-App-20261116T083050Z.log).
+     */
+    DPRINT1("AppPolicyGetThreadInitializationType(%p) -> None (%ld)\n",
+            processToken, (LONG)*policy);
     return ERROR_SUCCESS;
 }
 
