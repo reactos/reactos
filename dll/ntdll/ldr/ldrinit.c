@@ -1577,15 +1577,6 @@ LdrpHandleTlsData(IN PLDR_DATA_TABLE_ENTRY LdrEntry)
     LdrpNumberOfTlsEntries = Index + 1;
     LdrpTlsPointerLength = Index + 1;
 
-    if (ShowSnaps)
-    {
-        DPRINT1("LDR: late TLS %wZ index %lu size %Iu+%Iu\n",
-                &LdrEntry->BaseDllName,
-                Index,
-                TlsDataSize,
-                ZeroFill);
-    }
-
     return STATUS_SUCCESS;
 }
 
