@@ -626,12 +626,16 @@ AppPolicyGetThreadInitializationType(HANDLE processToken,
  * sdk/include/psdk/winerror.h. Public docs:
  * https://learn.microsoft.com/en-us/windows/win32/api/appmodel/nf-appmodel-getcurrentpackagefullname
  * Firefox PE import: KERNEL32.dll!GetCurrentPackageFullName.
+ * Guest serial output/ntdll-apps/serial-App-20261116T071818Z.log:
+ * xul.dll AV after appmodel-runtime → kernel32; log stub hits.
  */
 LONG
 WINAPI
 GetCurrentPackageFullName(UINT32 *packageFullNameLength,
                           PWSTR packageFullName)
 {
+    DPRINT1("GetCurrentPackageFullName(%p, %p) -> NO_PACKAGE\n",
+            packageFullNameLength, packageFullName);
     UNREFERENCED_PARAMETER(packageFullNameLength);
     UNREFERENCED_PARAMETER(packageFullName);
     return APPMODEL_ERROR_NO_PACKAGE;
@@ -647,6 +651,8 @@ WINAPI
 GetCurrentPackageFamilyName(UINT32 *packageFamilyNameLength,
                             PWSTR packageFamilyName)
 {
+    DPRINT1("GetCurrentPackageFamilyName(%p, %p) -> NO_PACKAGE\n",
+            packageFamilyNameLength, packageFamilyName);
     UNREFERENCED_PARAMETER(packageFamilyNameLength);
     UNREFERENCED_PARAMETER(packageFamilyName);
     return APPMODEL_ERROR_NO_PACKAGE;
@@ -660,6 +666,8 @@ WINAPI
 GetCurrentPackageId(UINT32 *BufferLength,
                     BYTE *Buffer)
 {
+    DPRINT1("GetCurrentPackageId(%p, %p) -> NO_PACKAGE\n",
+            BufferLength, Buffer);
     UNREFERENCED_PARAMETER(BufferLength);
     UNREFERENCED_PARAMETER(Buffer);
     return APPMODEL_ERROR_NO_PACKAGE;
@@ -675,6 +683,8 @@ GetCurrentPackageInfo(UINT32 flags,
                       BYTE *buffer,
                       UINT32 *count)
 {
+    DPRINT1("GetCurrentPackageInfo(0x%x, %p, %p, %p) -> NO_PACKAGE\n",
+            flags, bufferLength, buffer, count);
     UNREFERENCED_PARAMETER(flags);
     UNREFERENCED_PARAMETER(bufferLength);
     UNREFERENCED_PARAMETER(buffer);
@@ -690,6 +700,8 @@ WINAPI
 GetCurrentPackagePath(UINT32 *packagePathLength,
                       PWSTR packagePath)
 {
+    DPRINT1("GetCurrentPackagePath(%p, %p) -> NO_PACKAGE\n",
+            packagePathLength, packagePath);
     UNREFERENCED_PARAMETER(packagePathLength);
     UNREFERENCED_PARAMETER(packagePath);
     return APPMODEL_ERROR_NO_PACKAGE;
@@ -706,6 +718,8 @@ WINAPI
 GetCurrentApplicationUserModelId(UINT32 *applicationUserModelIdLength,
                                  PWSTR applicationUserModelId)
 {
+    DPRINT1("GetCurrentApplicationUserModelId(%p, %p) -> NO_APPLICATION\n",
+            applicationUserModelIdLength, applicationUserModelId);
     UNREFERENCED_PARAMETER(applicationUserModelIdLength);
     UNREFERENCED_PARAMETER(applicationUserModelId);
     return APPMODEL_ERROR_NO_APPLICATION;

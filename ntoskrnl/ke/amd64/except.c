@@ -9,10 +9,9 @@
  *              Alex Ionescu (alex.ionescu@reactos.org)
  *              Ryan Wilson <ryan@verosnt.com>
  *
- * User AV lines also name the loaded module and RVA. Guest serial
- * output/ntdll-apps/serial-App-20261116T070345Z.log shows a stable
- * firefox User AV at 0xCBD2C22 reading FFFFFFFFFFFFFFFF after the
- * empty-LoadDll path was cleared.
+ * User AV lines name the loaded module+RVA and trap registers.
+ * Guest serial output/ntdll-apps/serial-App-20261116T071818Z.log:
+ * User AV module xul.dll +0x18f2c22 reading FFFFFFFFFFFFFFFF.
  */
 
 /* INCLUDES ******************************************************************/
@@ -451,6 +450,17 @@ KiDispatchException(IN PEXCEPTION_RECORD ExceptionRecord,
                         (PVOID)ExceptionRecord->ExceptionInformation[1] : NULL,
                     ExceptionRecord->NumberParameters > 0 ?
                         ExceptionRecord->ExceptionInformation[0] : 0);
+            /*
+             * silent-fail13: xul.dll reads -1; regs show what held the
+             * bad pointer (serial-App-20261116T071818Z.log).
+             */
+            DPRINT1("User AV regs rax=%p rcx=%p rdx=%p r8=%p rsp=%p rip=%p\n",
+                    (PVOID)Context.Rax,
+                    (PVOID)Context.Rcx,
+                    (PVOID)Context.Rdx,
+                    (PVOID)Context.R8,
+                    (PVOID)Context.Rsp,
+                    (PVOID)Context.Rip);
             KiPrintUserModuleForAddress(ExceptionRecord->ExceptionAddress);
             if (ExceptionRecord->NumberParameters > 1 &&
                 ExceptionRecord->ExceptionInformation[1] != 0 &&

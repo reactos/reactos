@@ -1,0 +1,17 @@
+{
+  "spdx": "GPL-2.0-or-later",
+  "question": "What registers and AppModel stub calls precede the firefox xul.dll read of address -1?",
+  "allowedInputs": [
+    "ntoskrnl/ke/amd64/except.c already in this tree, User AV dispatch and Context from KeTrapFrameToContext",
+    "dll/win32/kernel32/client/sysinfo.c already in this tree, GetCurrentPackage* APPMODEL_ERROR_NO_PACKAGE stubs",
+    "https://learn.microsoft.com/en-us/windows/win32/api/appmodel/nf-appmodel-getcurrentpackagefullname",
+    "output/ntdll-apps/serial-App-20261116T071818Z.log marker: User AV module xul.dll +0x18f2c22",
+    "output/ntdll-apps/firefox-silent-fail13-xul-av-gaps.txt"
+  ],
+  "harness": {
+    "guest": "amd64 installed veros-ntfs after User AV module+RVA logging, TCG, App mode",
+    "name": "ntdll-apps-firefox",
+    "traceOrReplayId": "serial-App-20261116T071818Z xul.dll +0x18f2c22",
+    "logSha256": "0b5082eaff49814fcf01117aa441bd61fe4871d633a4aee404167e7f5022d9fc"
+  }
+}
