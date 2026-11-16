@@ -9,9 +9,9 @@
  *              Ryan Wilson
  *
  * Empty import / forwarder DLL names are rejected. Guest serial
- * output/ntdll-apps/serial-App-20261116T062033Z.log shows
- * LDR: missing dll .DLL after winrt apisets redirect to combase
- * (empty ImportName plus the default L".DLL" extension).
+ * output/ntdll-apps/serial-App-20261116T064248Z.log shows
+ * LDR: empty LoadDll name with no top/init after winrt→combase —
+ * forwarder LdrpLoadDll is the remaining Length-0 path.
  */
 
 /* INCLUDES *****************************************************************/
@@ -1210,6 +1210,21 @@ FailurePath:
                 else
                 {
                     RedirectedImportName = &TempUString;
+                }
+
+                /*
+                 * silent-fail10: empty LoadDll with no top/init is this path.
+                 * Name the exporting module and full forwarder string when the
+                 * redirected name is empty (serial-App-20261116T064248Z.log).
+                 */
+                if (!RedirectedImportName ||
+                    !RedirectedImportName->Buffer ||
+                    RedirectedImportName->Length == 0)
+                {
+                    DbgPrint("LDR: empty forwarder LoadDll from %s forwarder='%s' redirected=%d\n",
+                             DllName ? DllName : "(unknown)",
+                             ImportName ? ImportName : "(null)",
+                             (int)Redirected);
                 }
 
                 /* Load the forwarder */

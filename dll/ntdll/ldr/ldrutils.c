@@ -10,10 +10,9 @@
  *              Ryan Wilson
  *
  * Empty LdrpLoadDll names are rejected. Guest serial
- * output/ntdll-apps/serial-App-20261116T063648Z.log still shows
- * LDR: missing dll .DLL after the LdrpLoadImportModule empty-import
- * guard (fb5b200502d) — so the name arrives via LoadLibrary/LdrLoadDll
- * with Length 0 and the default L".DLL" extension.
+ * output/ntdll-apps/serial-App-20261116T064248Z.log shows
+ * LDR: empty LoadDll name; no top-level or initializer after winrt→combase
+ * (direct LdrpLoadDll, not LdrLoadDll).
  */
 
 /* INCLUDES *****************************************************************/
@@ -2460,19 +2459,29 @@ LdrpLoadDll(IN BOOLEAN Redirected,
      */
     if (!DllName || !DllName->Buffer || DllName->Length == 0)
     {
+        PPEB EmptyPeb = NtCurrentPeb();
+        /*
+         * silent-fail10: direct LdrpLoadDll (forwarder/shim) had no top/init.
+         * Name the image, init flag, and return address so the serial pins
+         * the call site (output/ntdll-apps/serial-App-20261116T064248Z.log).
+         */
+        DbgPrint("LDR: empty LoadDll name; inInit=%d ret=%p\n",
+                 (int)LdrpInLdrInit,
+                 _ReturnAddress());
+        if (EmptyPeb && EmptyPeb->ProcessParameters)
+        {
+            DbgPrint("LDR: empty LoadDll name; image %wZ\n",
+                     &EmptyPeb->ProcessParameters->ImagePathName);
+        }
         if (LdrpTopLevelDllBeingLoaded)
         {
             DbgPrint("LDR: empty LoadDll name; top-level %wZ\n",
                      LdrpTopLevelDllBeingLoaded);
         }
-        else if (LdrpCurrentDllInitializer)
+        if (LdrpCurrentDllInitializer)
         {
             DbgPrint("LDR: empty LoadDll name; initializer %wZ\n",
                      &LdrpCurrentDllInitializer->BaseDllName);
-        }
-        else
-        {
-            DbgPrint("LDR: empty LoadDll name; no top-level or initializer\n");
         }
         return STATUS_OBJECT_NAME_INVALID;
     }
