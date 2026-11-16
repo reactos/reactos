@@ -3,6 +3,7 @@
  * LICENSE:     MIT (https://spdx.org/licenses/MIT)
  * PURPOSE:     Dynamic function table support routines
  * COPYRIGHT:   Copyright 2022-2025 Timo Kreuzer (timo.kreuzer@reactos.org)
+ *              Copyright 2026 Ryan Wilson <ryan@verosnt.com>
  */
 
 #include <rtl.h>
@@ -231,6 +232,105 @@ RtlInstallFunctionTableCallback(
     RtlpInsertDynamicFunctionTable(dynamicTable);
 
     return TRUE;
+}
+
+/*
+ * @implemented
+ *
+ * RtlAddGrowableFunctionTable: sdk/include/psdk/rtlsupportapi.h.
+ * Registers a dynamic unwind table with a caller-owned handle for later grow/
+ * delete. Uses the same DYNAMIC_FUNCTION_TABLE list as RtlAddFunctionTable.
+ * Firefox PE import: ntdll!RtlAddGrowableFunctionTable (xul.dll).
+ */
+NTSTATUS
+NTAPI
+RtlAddGrowableFunctionTable(
+    _Out_ PVOID *DynamicTable,
+    _In_ PRUNTIME_FUNCTION FunctionTable,
+    _In_ ULONG EntryCount,
+    _In_ ULONG MaximumEntryCount,
+    _In_ ULONG_PTR RangeBase,
+    _In_ ULONG_PTR RangeEnd)
+{
+    PDYNAMIC_FUNCTION_TABLE dynamicTable;
+
+    UNREFERENCED_PARAMETER(MaximumEntryCount);
+
+    if (DynamicTable == NULL || FunctionTable == NULL)
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    dynamicTable = RtlpAllocateMemory(sizeof(*dynamicTable), TAG_RTLDYNFNTBL);
+    if (dynamicTable == NULL)
+    {
+        return STATUS_NO_MEMORY;
+    }
+
+    dynamicTable->FunctionTable = FunctionTable;
+    dynamicTable->EntryCount = EntryCount;
+    dynamicTable->BaseAddress = RangeBase;
+    dynamicTable->Callback = NULL;
+    dynamicTable->Context = NULL;
+    dynamicTable->Type = RF_UNSORTED;
+    dynamicTable->MinimumAddress = RangeBase;
+    dynamicTable->MaximumAddress = RangeEnd;
+    dynamicTable->OutOfProcessCallbackDll = NULL;
+
+    RtlpInsertDynamicFunctionTable(dynamicTable);
+    *DynamicTable = dynamicTable;
+    return STATUS_SUCCESS;
+}
+
+/*
+ * @implemented
+ */
+VOID
+NTAPI
+RtlDeleteGrowableFunctionTable(
+    _In_ PVOID DynamicTable)
+{
+    PDYNAMIC_FUNCTION_TABLE dynamicTable = DynamicTable;
+    BOOL removed = FALSE;
+
+    if (dynamicTable == NULL)
+    {
+        return;
+    }
+
+    AcquireDynamicFunctionTableLockExclusive();
+    if (dynamicTable->ListEntry.Flink != NULL)
+    {
+        RemoveEntryList(&dynamicTable->ListEntry);
+        removed = TRUE;
+    }
+    ReleaseDynamicFunctionTableLockExclusive();
+
+    if (removed)
+    {
+        RtlpFreeMemory(dynamicTable, TAG_RTLDYNFNTBL);
+    }
+}
+
+/*
+ * @implemented
+ */
+VOID
+NTAPI
+RtlGrowFunctionTable(
+    _In_ PVOID DynamicTable,
+    _In_ ULONG NewEntryCount)
+{
+    PDYNAMIC_FUNCTION_TABLE dynamicTable = DynamicTable;
+
+    if (dynamicTable == NULL)
+    {
+        return;
+    }
+
+    AcquireDynamicFunctionTableLockExclusive();
+    dynamicTable->EntryCount = NewEntryCount;
+    ReleaseDynamicFunctionTableLockExclusive();
 }
 
 BOOLEAN

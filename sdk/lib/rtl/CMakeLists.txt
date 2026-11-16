@@ -155,6 +155,7 @@ list(APPEND SOURCE_VISTA
     srw.c
     threadpool.c
     unbiasedtime.c
+    qpc.c
     unicode_vista.c
     utf8.c
     waitaddress.c

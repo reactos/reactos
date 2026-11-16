@@ -633,6 +633,9 @@
 @ stdcall RtlAddAuditAccessObjectAce(ptr long long long ptr ptr ptr long long)
 @ stdcall -stub RtlAddCompoundAce(ptr long long long ptr ptr)
 @ stdcall -arch=x86_64 RtlAddFunctionTable(ptr long long)
+@ stdcall -arch=x86_64 RtlAddGrowableFunctionTable(ptr ptr long long long long)
+@ stdcall -arch=x86_64 RtlDeleteGrowableFunctionTable(ptr)
+@ stdcall -arch=x86_64 RtlGrowFunctionTable(ptr long)
 @ stdcall -stub -version=0x600+ RtlAddMandatoryAce(ptr long long long long ptr) ; not present in Win11
 @ stdcall RtlAddRefActivationContext(ptr)
 @ stdcall RtlAddRefMemoryStream(ptr)
@@ -1099,6 +1102,8 @@
 @ stdcall RtlQueryProcessDebugInformation(long long ptr)
 @ stdcall RtlQueryProcessHeapInformation(ptr)
 @ stdcall -stub RtlQueryProcessLockInformation(ptr)
+@ stdcall RtlQueryPerformanceCounter(ptr)
+@ stdcall RtlQueryPerformanceFrequency(ptr)
 @ stdcall RtlQueryRegistryValues(long ptr ptr ptr ptr)
 @ stdcall RtlQuerySecurityObject(ptr long ptr long ptr)
 @ stdcall RtlQueryTagHeap(ptr long long long ptr)
