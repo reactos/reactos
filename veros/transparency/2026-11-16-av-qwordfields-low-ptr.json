@@ -1,0 +1,16 @@
+{
+    "spdx":  "GPL-2.0-or-later",
+    "question":  "Why did a firefox user AV still freeze the App guest after last-chance KDB was skipped?",
+    "allowedInputs":  [
+                          "ntoskrnl/ke/amd64/except.c already in this tree, KiPrintUserQwordFields ProbeForRead",
+                          "output/ntdll-apps/serial-App-20261116T094020Z.log marker: Fatal System Error: 0x0000001e",
+                          "output/ntdll-apps/serial-App-20261116T094020Z.log marker: User AV regs rbx=0000000000000004 rsi=0000000000000003",
+                          "Reported: llvm-symbolizer mapped ntoskrnl RVA 0x147a70 to KiPrintUserQwordFields"
+                      ],
+    "harness":  {
+                    "guest":  "amd64 installed veros-ntfs, TCG, App mode, Desktop run-firefox-log.cmd",
+                    "name":  "ntdll-apps-firefox",
+                    "traceOrReplayId":  "serial-App-20261116T094020Z KiPrintUserQwordFields bugcheck",
+                    "logSha256":  "2a515815af4f7e06f1a91e7ef3805d565e996e04f940e46c170148baaaa4139f"
+                }
+}

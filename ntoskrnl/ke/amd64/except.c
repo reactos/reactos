@@ -13,6 +13,8 @@
  * Guest serial output/ntdll-apps/serial-App-20261116T075237Z.log:
  * xul.dll +0x18f2c22 bytes were int 29 / ud2 (__fastfail) — wire IDT
  * 0x29 to KiRaiseSecurityCheckFailure instead of unexpected→AV(-1).
+ * serial-App-20261116T094020Z.log: KiPrintUserQwordFields(rbx=4) took
+ * KMODE_EXCEPTION_NOT_HANDLED; reject user pointers below 64K before probe.
  */
 
 /* INCLUDES ******************************************************************/
@@ -336,7 +338,14 @@ KiPrintUserQwordFields(
     ULONG_PTR Values[4];
     ULONG i;
 
+    /*
+     * serial-App-20261116T094020Z.log: rbx=4 / rsi=3 passed the old
+     * null/-1 check; ProbeForRead then faulted and Clang SEH did not
+     * catch it (KMODE_EXCEPTION_NOT_HANDLED at KiPrintUserQwordFields).
+     * Reject the low 64K the same way KiPrintUserFollowedObject does.
+     */
     if (!Base ||
+        (ULONG_PTR)Base < 0x10000ULL ||
         (ULONG_PTR)Base == (ULONG_PTR)-1 ||
         (ULONG_PTR)Base > ((ULONG_PTR)MmUserProbeAddress - 0x1F))
     {
@@ -390,6 +399,7 @@ KiPrintUserFollowedObject(
     PVOID Field;
 
     if (!Parent ||
+        (ULONG_PTR)Parent < 0x10000ULL ||
         (ULONG_PTR)Parent == (ULONG_PTR)-1 ||
         (ULONG_PTR)Parent > ((ULONG_PTR)MmUserProbeAddress - Offset - 8))
     {
@@ -457,6 +467,7 @@ KiPrintUserFollowedObject2(
     PVOID Field;
 
     if (!Parent ||
+        (ULONG_PTR)Parent < 0x10000ULL ||
         (ULONG_PTR)Parent == (ULONG_PTR)-1 ||
         (ULONG_PTR)Parent > ((ULONG_PTR)MmUserProbeAddress - Off1 - 8))
     {
