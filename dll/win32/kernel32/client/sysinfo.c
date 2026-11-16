@@ -636,7 +636,16 @@ GetCurrentPackageFullName(UINT32 *packageFullNameLength,
 {
     DPRINT1("GetCurrentPackageFullName(%p, %p) -> NO_PACKAGE\n",
             packageFullNameLength, packageFullName);
-    UNREFERENCED_PARAMETER(packageFullNameLength);
+    /*
+     * Unpackaged desktop (firefox silent-fail14): size probes pass a
+     * length pointer with a NULL buffer. Clear the length so callers do
+     * not keep an uninitialized size.
+     * https://learn.microsoft.com/en-us/windows/win32/api/appmodel/nf-appmodel-getcurrentpackagefullname
+     */
+    if (packageFullNameLength)
+    {
+        *packageFullNameLength = 0;
+    }
     UNREFERENCED_PARAMETER(packageFullName);
     return APPMODEL_ERROR_NO_PACKAGE;
 }
@@ -653,7 +662,10 @@ GetCurrentPackageFamilyName(UINT32 *packageFamilyNameLength,
 {
     DPRINT1("GetCurrentPackageFamilyName(%p, %p) -> NO_PACKAGE\n",
             packageFamilyNameLength, packageFamilyName);
-    UNREFERENCED_PARAMETER(packageFamilyNameLength);
+    if (packageFamilyNameLength)
+    {
+        *packageFamilyNameLength = 0;
+    }
     UNREFERENCED_PARAMETER(packageFamilyName);
     return APPMODEL_ERROR_NO_PACKAGE;
 }
@@ -668,7 +680,11 @@ GetCurrentPackageId(UINT32 *BufferLength,
 {
     DPRINT1("GetCurrentPackageId(%p, %p) -> NO_PACKAGE\n",
             BufferLength, Buffer);
-    UNREFERENCED_PARAMETER(BufferLength);
+    /* serial-App-20261116T072238Z.log: firefox size probe (len*, NULL). */
+    if (BufferLength)
+    {
+        *BufferLength = 0;
+    }
     UNREFERENCED_PARAMETER(Buffer);
     return APPMODEL_ERROR_NO_PACKAGE;
 }
@@ -686,9 +702,15 @@ GetCurrentPackageInfo(UINT32 flags,
     DPRINT1("GetCurrentPackageInfo(0x%x, %p, %p, %p) -> NO_PACKAGE\n",
             flags, bufferLength, buffer, count);
     UNREFERENCED_PARAMETER(flags);
-    UNREFERENCED_PARAMETER(bufferLength);
+    if (bufferLength)
+    {
+        *bufferLength = 0;
+    }
+    if (count)
+    {
+        *count = 0;
+    }
     UNREFERENCED_PARAMETER(buffer);
-    UNREFERENCED_PARAMETER(count);
     return APPMODEL_ERROR_NO_PACKAGE;
 }
 
@@ -702,7 +724,10 @@ GetCurrentPackagePath(UINT32 *packagePathLength,
 {
     DPRINT1("GetCurrentPackagePath(%p, %p) -> NO_PACKAGE\n",
             packagePathLength, packagePath);
-    UNREFERENCED_PARAMETER(packagePathLength);
+    if (packagePathLength)
+    {
+        *packagePathLength = 0;
+    }
     UNREFERENCED_PARAMETER(packagePath);
     return APPMODEL_ERROR_NO_PACKAGE;
 }
@@ -720,7 +745,10 @@ GetCurrentApplicationUserModelId(UINT32 *applicationUserModelIdLength,
 {
     DPRINT1("GetCurrentApplicationUserModelId(%p, %p) -> NO_APPLICATION\n",
             applicationUserModelIdLength, applicationUserModelId);
-    UNREFERENCED_PARAMETER(applicationUserModelIdLength);
+    if (applicationUserModelIdLength)
+    {
+        *applicationUserModelIdLength = 0;
+    }
     UNREFERENCED_PARAMETER(applicationUserModelId);
     return APPMODEL_ERROR_NO_APPLICATION;
 }

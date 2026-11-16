@@ -10,8 +10,8 @@
  *              Ryan Wilson <ryan@verosnt.com>
  *
  * User AV lines name the loaded module+RVA and trap registers.
- * Guest serial output/ntdll-apps/serial-App-20261116T071818Z.log:
- * User AV module xul.dll +0x18f2c22 reading FFFFFFFFFFFFFFFF.
+ * Guest serial output/ntdll-apps/serial-App-20261116T072238Z.log:
+ * xul.dll +0x18f2c22; rcx/rdx/r8 were small ints — also log rbx/rsi/rdi.
  */
 
 /* INCLUDES ******************************************************************/
@@ -461,6 +461,16 @@ KiDispatchException(IN PEXCEPTION_RECORD ExceptionRecord,
                     (PVOID)Context.R8,
                     (PVOID)Context.Rsp,
                     (PVOID)Context.Rip);
+            /*
+             * silent-fail14: rcx/rdx/r8 were small ints; -1 may be in
+             * rbx/rsi/rdi (serial-App-20261116T072238Z.log).
+             */
+            DPRINT1("User AV regs rbx=%p rsi=%p rdi=%p rbp=%p r9=%p\n",
+                    (PVOID)Context.Rbx,
+                    (PVOID)Context.Rsi,
+                    (PVOID)Context.Rdi,
+                    (PVOID)Context.Rbp,
+                    (PVOID)Context.R9);
             KiPrintUserModuleForAddress(ExceptionRecord->ExceptionAddress);
             if (ExceptionRecord->NumberParameters > 1 &&
                 ExceptionRecord->ExceptionInformation[1] != 0 &&
