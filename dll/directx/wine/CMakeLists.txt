@@ -79,6 +79,10 @@ add_subdirectory(wined3d)
 # dwrite is needed at DLL_EXPORT_VERSION 0x502 for Firefox (DirectWrite load).
 # Its own CMakeLists raises _WIN32_WINNT to 0x600 locally.
 add_subdirectory(dwrite)
+# dxgi is needed at DLL_EXPORT_VERSION 0x502 for Firefox
+# (serial-App-20261116T113115Z.log: LDR missing dll dxgi.dll).
+# Its own CMakeLists raises _WIN32_WINNT to 0x0600 locally.
+add_subdirectory(dxgi)
 
 if(DLL_EXPORT_VERSION GREATER_EQUAL 0x600)
     add_subdirectory(d2d1)
@@ -99,7 +103,6 @@ if(DLL_EXPORT_VERSION GREATER_EQUAL 0x600)
     add_subdirectory(d3dx10_43)
     add_subdirectory(d3dx11_42)
     add_subdirectory(d3dx11_43)
-    add_subdirectory(dxgi)
     add_subdirectory(dxva2)
 endif()
 

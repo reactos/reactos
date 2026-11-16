@@ -1,0 +1,19 @@
+{
+  "spdx": "GPL-2.0-or-later",
+  "question": "Why did Firefox fail after SHGetPropertyStoreForWindow with missing dxgi.dll and RegisterTouchWindow, and how should VerOS expose those under DLL_EXPORT_VERSION=0x502?",
+  "allowedInputs": [
+    "dll/directx/wine/CMakeLists.txt dwrite 0x502 pattern and dxgi subdirectory gated at 0x600+",
+    "dll/directx/wine/dxgi/CMakeLists.txt already raises _WIN32_WINNT to 0x0600 locally",
+    "win32ss/user/user32/user32.spec RegisterTouchWindow -version=0x601+ entry already in tree",
+    "win32ss/user/user32_vista/wine/input.c RegisterTouchWindow implementation already in tree",
+    "output/ntdll-apps/serial-App-20261116T113115Z.log marker LDR: missing dll dxgi.dll",
+    "output/ntdll-apps/serial-App-20261116T113115Z.log marker LDR: missing export user32.dll!RegisterTouchWindow",
+    "output/ntdll-apps/serial-App-20261116T114037Z.log marker Failed to initialise output DISPLAY1 (dxgi/wined3d path past missing dll)"
+  ],
+  "harness": {
+    "guest": "veros-ntfs App",
+    "name": "firefox-plain-dxgi-touch",
+    "traceOrReplayId": "serial-App-20261116T114037Z"
+  },
+  "harness.logSha256": ""
+}

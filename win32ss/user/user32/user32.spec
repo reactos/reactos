@@ -602,7 +602,7 @@
 @ stdcall RegisterSystemThread(long long)
 @ stdcall RegisterTasklist(long) NtUserRegisterTasklist
 @ stdcall -version=0x602+ RegisterTouchHitTestingWindow(long long)
-@ stdcall -version=0x601+ RegisterTouchWindow(long long)
+@ stdcall RegisterTouchWindow(long long)
 @ stdcall RegisterUserApiHook(ptr)
 @ stdcall RegisterWindowMessageA(str)
 @ stdcall RegisterWindowMessageW(wstr)
