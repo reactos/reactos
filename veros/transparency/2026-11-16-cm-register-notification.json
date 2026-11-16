@@ -1,0 +1,17 @@
+{
+  "spdx": "GPL-2.0-or-later",
+  "question": "How should CM_Register_Notification and CM_Unregister_Notification be exported from cfgmgr32 so Firefox xul.dll can load when DLL_EXPORT_VERSION is 0x502?",
+  "allowedInputs": [
+    "https://learn.microsoft.com/en-us/windows/win32/api/cfgmgr32/nf-cfgmgr32-cm_register_notification CM_Register_Notification, CfgMgr32.dll, four parameters",
+    "https://learn.microsoft.com/en-us/windows/win32/api/cfgmgr32/nf-cfgmgr32-cm_unregister_notification CM_Unregister_Notification, CfgMgr32.dll",
+    "dll/win32/cfgmgr32/cfgmgr32.spec already in this tree, CM_* forwards to setupapi, no CM_Register_Notification export",
+    "dll/win32/setupapi/setupapi.spec already in this tree, no CM_Register_Notification export",
+    "Reported: Entry Point Not Found CM_Register_Notification in cfgmgr32.dll for firefox.exe",
+    "Reported: xul.dll PE imports CM_Register_Notification and CM_Unregister_Notification from cfgmgr32.dll"
+  ],
+  "harness": {
+    "guest": "amd64 installed veros-ntfs after inet_ntop ungate, TCG, App mode",
+    "name": "ntdll-apps-firefox",
+    "traceOrReplayId": "Reported: Entry Point Not Found CM_Register_Notification in cfgmgr32.dll"
+  }
+}

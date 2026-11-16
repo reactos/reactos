@@ -165,6 +165,7 @@
 @ stdcall CM_Register_Device_InterfaceW(long ptr wstr wstr ptr long) setupapi.CM_Register_Device_InterfaceW
 @ stdcall CM_Register_Device_Interface_ExA(long ptr str str ptr long long) setupapi.CM_Register_Device_Interface_ExA
 @ stdcall CM_Register_Device_Interface_ExW(long ptr wstr wstr ptr long long) setupapi.CM_Register_Device_Interface_ExW
+@ stdcall -stub CM_Register_Notification(ptr ptr ptr ptr)
 @ stdcall CM_Remove_SubTree(long long) setupapi.CM_Remove_SubTree
 @ stdcall CM_Remove_SubTree_Ex(long long long) setupapi.CM_Remove_SubTree_Ex
 @ stdcall CM_Request_Eject_PC() setupapi.CM_Request_Eject_PC
@@ -194,6 +195,7 @@
 @ stdcall CM_Unregister_Device_InterfaceW(wstr long) setupapi.CM_Unregister_Device_InterfaceW
 @ stdcall CM_Unregister_Device_Interface_ExA(str long long) setupapi.CM_Unregister_Device_Interface_ExA
 @ stdcall CM_Unregister_Device_Interface_ExW(wstr long long) setupapi.CM_Unregister_Device_Interface_ExW
+@ stdcall -stub CM_Unregister_Notification(ptr)
 
 # Deprecated functions, they are not present in Win2003 SP1
 @ stub CM_Remove_Unmarked_Children # setupapi.CM_Remove_Unmarked_Children
