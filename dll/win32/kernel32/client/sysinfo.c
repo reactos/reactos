@@ -599,11 +599,38 @@ SetSystemFileCacheSize(IN SIZE_T MinimumFileCacheSize,
 }
 
 /*
+ * Desktop AppPolicy stubs for api-ms-win-appmodel-runtime-l1-1-2 →
+ * kernel32 (sdk/lib/apisets/apisets.table.c). UCRT winapi_thunks and
+ * firefox resolve that apiset here. Public docs + in-tree enums:
+ * https://learn.microsoft.com/en-us/windows/win32/api/appmodel/
+ * sdk/include/psdk/appmodel.h
+ * Guest serial-App-20261116T075751Z.log: apiset redirect then
+ * __fastfail(7); only ThreadInitializationType was exported before.
+ */
+
+/*
+ * @implemented
+ */
+LONG
+WINAPI
+AppPolicyGetProcessTerminationMethod(HANDLE processToken,
+                                     AppPolicyProcessTerminationMethod *policy)
+{
+    UNREFERENCED_PARAMETER(processToken);
+    DPRINT1("AppPolicyGetProcessTerminationMethod(%p, %p)\n",
+            processToken, policy);
+    if (!policy)
+    {
+        return ERROR_INVALID_PARAMETER;
+    }
+    *policy = AppPolicyProcessTerminationMethod_ExitProcess;
+    return ERROR_SUCCESS;
+}
+
+/*
  * @implemented
  *
- * Desktop processes are not packaged. Public docs:
  * https://learn.microsoft.com/en-us/windows/win32/api/appmodel/nf-appmodel-apppolicygetthreadinitializationtype
- * Firefox delay-load: KERNEL32.dll!AppPolicyGetThreadInitializationType.
  */
 LONG
 WINAPI
@@ -611,11 +638,70 @@ AppPolicyGetThreadInitializationType(HANDLE processToken,
                                      AppPolicyThreadInitializationType *policy)
 {
     UNREFERENCED_PARAMETER(processToken);
+    DPRINT1("AppPolicyGetThreadInitializationType(%p, %p)\n",
+            processToken, policy);
     if (!policy)
     {
         return ERROR_INVALID_PARAMETER;
     }
     *policy = AppPolicyThreadInitializationType_None;
+    return ERROR_SUCCESS;
+}
+
+/*
+ * @implemented
+ */
+LONG
+WINAPI
+AppPolicyGetShowDeveloperDiagnostic(HANDLE processToken,
+                                    AppPolicyShowDeveloperDiagnostic *policy)
+{
+    UNREFERENCED_PARAMETER(processToken);
+    DPRINT1("AppPolicyGetShowDeveloperDiagnostic(%p, %p)\n",
+            processToken, policy);
+    if (!policy)
+    {
+        return ERROR_INVALID_PARAMETER;
+    }
+    *policy = AppPolicyShowDeveloperDiagnostic_ShowUI;
+    return ERROR_SUCCESS;
+}
+
+/*
+ * @implemented
+ */
+LONG
+WINAPI
+AppPolicyGetWindowingModel(HANDLE processToken,
+                           AppPolicyWindowingModel *policy)
+{
+    UNREFERENCED_PARAMETER(processToken);
+    DPRINT1("AppPolicyGetWindowingModel(%p, %p)\n",
+            processToken, policy);
+    if (!policy)
+    {
+        return ERROR_INVALID_PARAMETER;
+    }
+    *policy = AppPolicyWindowingModel_ClassicDesktop;
+    return ERROR_SUCCESS;
+}
+
+/*
+ * @implemented
+ */
+LONG
+WINAPI
+AppPolicyGetMediaFoundationCodecLoading(HANDLE processToken,
+                                        AppPolicyMediaFoundationCodecLoading *policy)
+{
+    UNREFERENCED_PARAMETER(processToken);
+    DPRINT1("AppPolicyGetMediaFoundationCodecLoading(%p, %p)\n",
+            processToken, policy);
+    if (!policy)
+    {
+        return ERROR_INVALID_PARAMETER;
+    }
+    *policy = AppPolicyMediaFoundationCodecLoading_All;
     return ERROR_SUCCESS;
 }
 
