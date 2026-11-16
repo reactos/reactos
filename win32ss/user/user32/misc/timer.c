@@ -6,7 +6,7 @@
  * COPYRIGHT:   Copyright (C) 1998, 1999, 2000, 2001 ReactOS Team
  *              Copyright 2026 Ryan Wilson <ryan@verosnt.com>
  * PROGRAMMERS: Casper S. Hornstrup (chorns@users.sourceforge.net)
- *              Ryan Wilson
+ *              Ryan Wilson <ryan@verosnt.com>
  */
 
 /*

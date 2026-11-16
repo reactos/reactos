@@ -7,7 +7,7 @@
  *              Copyright 1998,2000 Eric Kohl
  *              Copyright 2014-2015 Michael Müller
  *              Copyright 2026 Ryan Wilson <ryan@verosnt.com>
- * PROGRAMMERS: Ryan Wilson
+ * PROGRAMMERS: Ryan Wilson <ryan@verosnt.com>
  */
 /*
  * NOTES

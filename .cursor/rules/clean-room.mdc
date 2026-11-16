@@ -16,7 +16,9 @@ A QEMU trace is either of these:
 
 Do not paste header text or reconstruct a function body.
 
-A size, offset, device id, or magic value in boot, the kernel, the HAL, a driver, or NTFS names its public document, in-tree file, or guest log in the comment beside the value. The transparency note lists that same source. An offset that belongs to a new struct layout names the QEMU trace, or the ReactOS header that already has the layout. The comment does not say what Windows does and leave the source unnamed.
+A size, offset, device id, or magic value in boot, the kernel, the HAL, a driver, or NTFS names its public document, in-tree file, or guest log in the comment beside the value. The same sources are listed again in the comment under the file header: an in-tree path, a guest log and its marker, or a public document's title and URL. A probe-method number names the probe path and says it is the probe's read. Update that block when an edit uses a source the block does not already name. A file that uses none of those sources does not get an empty block. The transparency note lists that same source. An offset that belongs to a new struct layout names the QEMU trace, or the ReactOS header that already has the layout. The comment does not say what Windows does and leave the source unnamed.
+
+A scan width, a nonce, or another number that describes how the probe read, and that the guest log does not record, names the probe file in the parent checkout. The comment beside that number says it is the probe's read, not a Windows field. The log remains the only source for an offset, a size Windows accepted, or a field name.
 
 These inputs stop the task. Do not implement that component in the session:
 

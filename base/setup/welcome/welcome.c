@@ -24,7 +24,7 @@
  * PROGRAMMERS: Eric Kohl
  *              Casper S. Hornstrup (chorns@users.sourceforge.net)
  *              Hermes Belusca-Maito
- *              Ryan Wilson
+ *              Ryan Wilson <ryan@verosnt.com>
  *
  * NOTE:
  *   This utility can be customized by using localized INI configuration files.

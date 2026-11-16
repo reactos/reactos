@@ -1,0 +1,25 @@
+{
+  "spdx": "GPL-2.0-or-later",
+  "question": "Why does the loaded NDIS driver accept miniport attribute type 0x9E and deliver an indicate to the measured handler slot?",
+  "allowedInputs": [
+    "output/ndis-check-20261115T173431Z.log NDIS CHECK OK, DriverEntry returned 0x00000000",
+    "output/ndis-check-20261115T172803Z.log NDIS CHECK OK, DriverEntry returned 0x00000000",
+    "Reported: capture 2026-11-15T143730Z, type 0x9E size 4 returns 0 and other types at size 4 return 0xC000000D",
+    "Reported: capture 2026-11-15T161901Z, miniport indicate delivers the list to offset 0x50 and argument 0 is null",
+    "Reported: capture 2026-11-15T160339Z, filter indicate delivers the list to offset 0x88 and argument 0 is null",
+    "Reported: capture 2026-11-15T161622Z, an empty offset 0x88 delivers the list to offset 0x90 and argument 0 is null",
+    "Reported: capture 2026-11-15T163753Z, filter registration calls 0x40, 0x48, 0x50, 0x60, 0x70, 0x98, and 0xC0",
+    "sdk/include/ddk/ndis.h NDIS_STATUS_INVALID_PARAMETER",
+    "NdisMSetMiniportAttributes, https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismsetminiportattributes",
+    "NdisMIndicateReceiveNetBufferLists, https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismindicatereceivenetbufferlists",
+    "Filter receive handler, https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nc-ndis-filter_receive_net_buffer_lists",
+    "Filter return handler, https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nc-ndis-filter_return_net_buffer_lists",
+    "drivers/network/ndis/src/check.rs list byte 0x5A, the check's marker, not a Windows object"
+  ],
+  "harness": {
+    "guest": "VerOS live CD",
+    "name": "ndis-check",
+    "traceOrReplayId": "output/ndis-check-20261115T173431Z.log",
+    "logSha256": "cab3041da3ad44d27e4eb1d691e08209cc37bb56c58d065df8ffa258a5c7ad81"
+  }
+}

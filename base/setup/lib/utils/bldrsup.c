@@ -6,7 +6,7 @@
  * COPYRIGHT:   Copyright 2017-2018 Hermes Belusca-Maito
  *              Copyright 2026 Ryan Wilson <ryan@verosnt.com>
  * PROGRAMMERS: Hermes Belusca-Maito
- *              Ryan Wilson
+ *              Ryan Wilson <ryan@verosnt.com>
  */
 
 // TODO: Add support for NT 6.x family! (detection + BCD manipulation).

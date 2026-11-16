@@ -1,0 +1,16 @@
+{
+  "spdx": "GPL-2.0-or-later",
+  "question": "Why does NdisFSetAttributes return success without reading the attributes header?",
+  "allowedInputs": [
+    "output/ndis-discovery/windows.log DIFF END OK: NdisFSetAttributes ACCEPTED type 0 revision 0 size 4 mark 0x50, STATUS 0 for type 0xFF revision 4 size 0x120, NdisMSetMiniportAttributes STATUS 0xC000000D on slot 0x10 then NONE",
+    "sdk/include/ddk/ndis.h NDIS_STATUS_FAILURE",
+    "NdisFSetAttributes, https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndisfsetattributes",
+    "NdisMSetMiniportAttributes, https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismsetminiportattributes"
+  ],
+  "harness": {
+    "guest": "Windows 10 22H2",
+    "name": "ndis-discovery",
+    "traceOrReplayId": "output/ndis-discovery/windows.log",
+    "logSha256": "9bc7d8946a647c16f03c475f50391e658561189d70137885f52fe4d042c3d8cd"
+  }
+}

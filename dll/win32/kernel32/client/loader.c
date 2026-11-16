@@ -6,7 +6,7 @@
  * COPYRIGHT:   See COPYING in the top level directory
  *              Copyright 2026 Ryan Wilson <ryan@verosnt.com>
  * PROGRAMMERS: Aleksey Bragin <aleksey@reactos.org>
- *              Ryan Wilson
+ *              Ryan Wilson <ryan@verosnt.com>
  */
 
 #include <k32.h>

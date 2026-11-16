@@ -6,7 +6,7 @@
  * PURPOSE:         Installation functions
  * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.org)
  *                  Hermes Belusca-Maito (hermes.belusca@sfr.fr)
- *                  Ryan Wilson
+ *                  Ryan Wilson <ryan@verosnt.com>
  */
 
 /* INCLUDES *****************************************************************/

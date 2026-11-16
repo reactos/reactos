@@ -1,0 +1,23 @@
+{
+  "spdx": "GPL-2.0-or-later",
+  "question": "When can NdisMRegisterInterruptEx safely call IoConnectInterrupt for NetKVM without asserting during InitializeEx?",
+  "allowedInputs": [
+    "output/netkvm-20261116T103245Z.log printed NDIS IRQCONN then NDIS IRQDPC then Assertion failed: KeGetCurrentIrql() <= APC_LEVEL",
+    "output/netkvm-20261116T103516Z.log printed NDIS IRQCONN then the same APC_LEVEL assert",
+    "output/netkvm-20261116T103750Z.log printed NDIS IRQ soft, NDIS INIT 00000000, and NDIS RESTART 00000000 without connecting",
+    "output/netkvm-20261116T105034Z.log printed NDIS IRQ soft, NDIS RESTART 00000000, then NDIS IRQCONN 00000000 with no APC_LEVEL assert",
+    "https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismregisterinterruptex",
+    "https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismsynchronizewithinterruptex",
+    "https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/wdm/nf-wdm-ioconnectinterrupt",
+    "https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/wdm/nf-wdm-kesynchronizeexecution",
+    "sdk/include/xdk/cmtypes.h CmResourceTypeInterrupt and CM_PARTIAL_RESOURCE_LIST",
+    "sdk/include/xdk/kefuncs.h KeSynchronizeExecution",
+    "capture 2026-11-16T080419Z DIFF IRQA0050 InterruptType at characteristics offset 0x50 and MessageInfoTable at 0x58"
+  ],
+  "harness": {
+    "guest": "VerOS",
+    "name": "VerOS NetKVM disk snapshot",
+    "traceOrReplayId": "output/netkvm-20261116T105034Z.log NDIS IRQCONN 00000000",
+    "logSha256": "ae43678a60319ff8dfd80cbec0b784bc536fb1d7c3ccfa0aeccb74f9577fdfb5"
+  }
+}

@@ -8,7 +8,7 @@
  * PROGRAMMERS: Alex Ionescu (alex.ionescu@reactos.org)
  *              Filip Navara (navaraf@reactos.org)
  *              Hervé Poussineau (hpoussin@reactos.org)
- *              Ryan Wilson
+ *              Ryan Wilson <ryan@verosnt.com>
  */
 
 /* INCLUDES *******************************************************************/

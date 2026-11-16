@@ -7,7 +7,7 @@ Copyright 2026 Ryan Wilson <ryan@verosnt.com>
 
 Programmers:
 
-    Ryan Wilson
+    Ryan Wilson <ryan@verosnt.com>
 
 Module Name:
 

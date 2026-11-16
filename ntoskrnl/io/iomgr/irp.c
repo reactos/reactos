@@ -8,7 +8,7 @@
  *                  Gunnar Dalsnes
  *                  Filip Navara (navaraf@reactos.org)
  *                  Pierre Schweitzer (pierre@reactos.org)
- *                  Ryan Wilson
+ *                  Ryan Wilson <ryan@verosnt.com>
  */
 
 /* INCLUDES ****************************************************************/

@@ -4,7 +4,7 @@
  * FILE:        win32ss/user/ntuser/sysparams.h
  * PURPOSE:     System parameter values
  * COPYRIGHT:   Copyright 2026 Ryan Wilson <ryan@verosnt.com>
- * PROGRAMMERS: Ryan Wilson
+ * PROGRAMMERS: Ryan Wilson <ryan@verosnt.com>
  */
 
 #pragma once

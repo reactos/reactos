@@ -3,7 +3,7 @@
 # FILE:        tools/pipeline/Invoke-Pipeline.ps1
 # PURPOSE:     Build the bootcd and boot it
 # COPYRIGHT:   Copyright 2026 Ryan Wilson <ryan@verosnt.com>
-# PROGRAMMERS: Ryan Wilson
+# PROGRAMMERS: Ryan Wilson <ryan@verosnt.com>
 
 param(
     [string]$SourceRoot = (Resolve-Path (Join-Path $PSScriptRoot "..\..")).Path,

@@ -4,7 +4,7 @@
  * FILE:        drivers/filesystems/ntfs/ntfs3x.c
  * PURPOSE:     NTFS 3.1 log, security, $Extend, compression, and EFS
  * COPYRIGHT:   Copyright 2026 Ryan Wilson <ryan@verosnt.com>
- * PROGRAMMERS: Ryan Wilson
+ * PROGRAMMERS: Ryan Wilson <ryan@verosnt.com>
  */
 
 /*

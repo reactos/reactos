@@ -618,6 +618,7 @@
 @ stdcall KeInitializeQueue(ptr long)
 @ stdcall KeInitializeSemaphore(ptr long long)
 @ stdcall -arch=i386,arm KeInitializeSpinLock(ptr) _KeInitializeSpinLock
+@ stdcall -arch=x86_64 KeInitializeSpinLock(ptr) _KeInitializeSpinLock
 @ stdcall KeInitializeThreadedDpc(ptr ptr ptr)
 @ stdcall KeInitializeTimer(ptr)
 @ stdcall KeInitializeTimerEx(ptr long)
@@ -642,6 +643,10 @@
 @ stdcall KeProfileInterruptWithSource(ptr long)
 @ stdcall KePulseEvent(ptr long long)
 @ stdcall KeQueryActiveProcessors()
+@ stdcall KeQueryActiveProcessorCountEx(long)
+@ stdcall KeGetProcessorNumberFromIndex(long ptr)
+@ stdcall KeGetCurrentProcessorNumberEx(ptr)
+@ stdcall KeGetProcessorIndexFromNumber(ptr)
 @ stdcall KeQueryMaximumProcessorCount()
 @ stdcall KeQueryMaximumProcessorCountEx(long)
 @ stdcall -arch=i386,arm KeQueryInterruptTime()
@@ -1598,6 +1603,7 @@
 @ cdecl -version=0x400-0x502 -impsym _swprintf() swprintf # Compatibility with pre NT6
 @ cdecl -version=0x600+ _swprintf()
 @ cdecl _vsnprintf()
+@ cdecl _vsnprintf_s()
 @ cdecl _vsnwprintf()
 @ cdecl _wcsicmp()
 @ cdecl _wcslwr()

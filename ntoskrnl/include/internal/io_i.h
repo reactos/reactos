@@ -4,7 +4,7 @@
  * FILE:            ntoskrnl/include/internal/io_i.h
  * PURPOSE:         Info Classes for the I/O Manager
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
- *                  Ryan Wilson
+ *                  Ryan Wilson <ryan@verosnt.com>
  */
 
 //

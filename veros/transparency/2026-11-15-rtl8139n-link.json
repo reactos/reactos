@@ -1,0 +1,15 @@
+{
+  "spdx": "GPL-2.0-or-later",
+  "question": "Why does the RTL8139 miniport report the link as up at 100 Mbps?",
+  "allowedInputs": [
+    "output/rtl8139n-20261115T184127Z.log RTL8139 CHECK media d0, RTL8139 CHECK link up, RTL8139 CHECK speed 100",
+    "drivers/network/dd/rtl8139/hardware.c NICUpdateLinkStatus reads R_MS and tests R_MS_LINKDWN and R_MS_SPEED_10",
+    "drivers/network/dd/rtl8139/rtlhw.h R_MS 0x58, R_MS_LINKDWN 0x04, R_MS_SPEED_10 0x08"
+  ],
+  "harness": {
+    "guest": "VerOS live CD",
+    "name": "rtl8139n",
+    "traceOrReplayId": "output/rtl8139n-20261115T184127Z.log",
+    "logSha256": "cdef0abb3690549cf867ae5d139a57974eb6c9788b33477288a97663151ea241"
+  }
+}

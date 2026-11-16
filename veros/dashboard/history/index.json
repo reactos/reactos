@@ -26,5 +26,12 @@
     "syscall": 87.1,
     "kernelAbi": 95.2,
     "sdkLevel": 3.5
+  },
+  {
+    "at": "2026-11-15T00:09:59Z",
+    "kernelAbi": null,
+    "graphics": null,
+    "sdkLevel": null,
+    "syscall": 87.1
   }
 ]

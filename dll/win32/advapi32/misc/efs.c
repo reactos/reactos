@@ -6,7 +6,7 @@
  * COPYRIGHT:   See COPYING in the top level directory
  *              Copyright 2026 Ryan Wilson <ryan@verosnt.com>
  * PROGRAMMERS: Christoph_vW
- *              Ryan Wilson
+ *              Ryan Wilson <ryan@verosnt.com>
  */
 
 #include <advapi32.h>

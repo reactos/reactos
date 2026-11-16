@@ -1,0 +1,26 @@
+{
+  "spdx": "GPL-2.0-or-later",
+  "question": "Which defined SDK constant compiles kernel32_vista at the Windows 10 22H2 header level?",
+  "allowedInputs": [
+    "sdk/include/psdk/sdkddkver.h NTDDI_WIN10_CO is 0x0A00000B and _WIN32_WINNT_WIN10 is 0x0A00",
+    "dll/win32/kernel32/kernel32_vista/CMakeLists.txt previously set _WIN32_WINNT and WINVER to 0x600",
+    "dll/win32/kernel32/kernel32_vista/k32_vista.h redefines NTDDI_VERSION to NTDDI_WS03SP1 after winbase.h",
+    "dll/win32/kernel32/kernel32_vista/firmware.c already pinned NTDDI_VERSION to NTDDI_VISTA before the NDK include",
+    "dll/win32/kernel32/kernel32_vista/kernel32_vista.spec already exports GetThreadDescription and SetThreadDescription",
+    "https://learn.microsoft.com/en-us/windows/win32/winprog/using-the-windows-headers NTDDI_WIN10_CO (0x0A00000B) is Windows 10, version 21H2",
+    "Reported: the milestone names _WIN32_WINNT=0x0A00 and NTDDI_VERSION=0x0A00000B for one module, and leaves the root at 0x502",
+    "output/syscall-diff/windows.log and output/syscall-diff/reactos.log, both containing DIFF END OK",
+    "output/syscall-diff/reactos-boot.log contains Parent is Desktop"
+  ],
+  "harness": {
+    "guest": "amd64 live CD, 8192 MB, 4 CPUs, TCG, compared with the saved Windows 10 22H2 log",
+    "name": "syscall-diff",
+    "traceOrReplayId": "output/syscall-diff/reactos.log DIFF END OK compared with output/syscall-diff/windows.log DIFF END OK",
+    "logSha256": "90e8d12e1239ff881721baad80cc2cf8167e042573120d6e65f00bf050babddf"
+  },
+  "measuredEffect": {
+    "metric": "dashboard exact-match percent after kernel32_vista compiled at NTDDI_WIN10_CO",
+    "before": 87.1,
+    "after": 87.1
+  }
+}

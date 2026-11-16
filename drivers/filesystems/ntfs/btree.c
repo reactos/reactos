@@ -6,7 +6,7 @@
  * COPYRIGHT:   Copyright (C) 2002, 2017 ReactOS Team
  *              Copyright 2026 Ryan Wilson <ryan@verosnt.com>
  * PROGRAMMERS: Trevor Thompson
- *              Ryan Wilson
+ *              Ryan Wilson <ryan@verosnt.com>
  */
 
 /* INCLUDES *****************************************************************/

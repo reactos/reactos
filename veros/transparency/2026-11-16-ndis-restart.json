@@ -1,0 +1,20 @@
+{
+  "spdx": "GPL-2.0-or-later",
+  "question": "After MiniportInitializeEx returns success, which miniport slot does NDIS call next and with which adapter context?",
+  "allowedInputs": [
+    "output/netkvm-20261116T083539Z.log printed NDIS INIT 00000000 and no Restart",
+    "output/netkvm-20261116T085039Z.log printed NDIS CTX, NDIS RESTART, and NDIS RESTART 00000000",
+    "output/netkvm-20261116T085039Z.log NDIS BODY 0030 holds the Restart handler pointer and NDIS BODY for type 0x9E size 0x1C holds MiniportAdapterContext at offset 8",
+    "https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nc-ndis-miniport_restart",
+    "https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/ns-ndis-_ndis_miniport_driver_characteristics RestartHandler four pointers after SetOptionsHandler at 0x10 lands on 0x38",
+    "https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/ns-ndis-_ndis_miniport_adapter_registration_attributes MiniportAdapterContext after Header",
+    "https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/ns-ndis-_ndis_miniport_restart_parameters Header then RestartAttributes then Flags; null RestartAttributes means do not modify",
+    "sdk/include/psdk/ntddndis.h NDIS_OBJECT_HEADER is 4 bytes"
+  ],
+  "harness": {
+    "guest": "VerOS",
+    "name": "VerOS NetKVM disk snapshot",
+    "traceOrReplayId": "output/netkvm-20261116T085039Z.log NDIS RESTART 00000000",
+    "logSha256": "689245baffc12311806905a38996ebd7de44aa9436ce82cdfa91540dcbb7efe6"
+  }
+}

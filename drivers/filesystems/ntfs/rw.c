@@ -9,7 +9,7 @@
  * PROGRAMMERS: Art Yerkes
  *              Pierre Schweitzer (pierre@reactos.org)
  *              Trevor Thompson
- *              Ryan Wilson
+ *              Ryan Wilson <ryan@verosnt.com>
  */
 
 /* INCLUDES *****************************************************************/

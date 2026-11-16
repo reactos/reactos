@@ -3,7 +3,7 @@
 # FILE:        .cursor/hooks/update-dashboard.ps1
 # PURPOSE:     Refresh the dashboard after a source change
 # COPYRIGHT:   Copyright 2026 Ryan Wilson <ryan@verosnt.com>
-# PROGRAMMERS: Ryan Wilson
+# PROGRAMMERS: Ryan Wilson <ryan@verosnt.com>
 
 $ErrorActionPreference = "Continue"
 try { $null = [Console]::In.ReadToEnd() } catch { }

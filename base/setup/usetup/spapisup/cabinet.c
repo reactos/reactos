@@ -5,7 +5,7 @@
  * FILE:        base/setup/usetup/cabinet.c
  * PURPOSE:     Cabinet routines
  * PROGRAMMERS: Casper S. Hornstrup (chorns@users.sourceforge.net)
- *              Ryan Wilson
+ *              Ryan Wilson <ryan@verosnt.com>
  * REVISIONS:
  *   CSH 15/08-2003 Created
  */

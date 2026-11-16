@@ -3,7 +3,7 @@
 # FILE:        tools/qemu-harness/New-ExportMap.ps1
 # PURPOSE:     Write the ntoskrnl, hal, and wdf export map
 # COPYRIGHT:   Copyright 2026 Ryan Wilson <ryan@verosnt.com>
-# PROGRAMMERS: Ryan Wilson
+# PROGRAMMERS: Ryan Wilson <ryan@verosnt.com>
 
 param(
     [string]$SourceRoot = (Resolve-Path (Join-Path $PSScriptRoot "..\..")).Path,

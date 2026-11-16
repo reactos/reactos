@@ -6,7 +6,7 @@
  * COPYRIGHT:   Copyright (C) 2004 Filip Navara
  *              Copyright (C) 2004 Magnus Olsen
  *              Copyright 2026 Ryan Wilson <ryan@verosnt.com>
- * PROGRAMMERS: Ryan Wilson
+ * PROGRAMMERS: Ryan Wilson <ryan@verosnt.com>
  */
 /*
  * Power Management and VBE 1.2 support

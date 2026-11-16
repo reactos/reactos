@@ -1,0 +1,15 @@
+{
+  "spdx": "GPL-2.0-or-later",
+  "question": "Why does indicate pass an allocated net buffer list and expect the handler to see Mdl and DataOffset in that list?",
+  "allowedInputs": [
+    "output/ndis-discovery/windows.log DIFF END OK: NET_BUFFER_LIST DataLength 0x198, Mdl 0x1A0, DataOffset 0x1A8",
+    "output/ndis-disk-20261115T233408Z.log NDIS CHECK mp-list ok, NDIS CHECK fi-list ok, NDIS CHECK fi-return-list ok, and NDIS CHECK OK",
+    "differential-tests/ndis-discovery/METHOD.md captures 2026-11-15T161901Z and 2026-11-15T160339Z: indicate delivers the list as argument 1 of miniport offset 0x50 and filter offset 0x88, and with 0x88 empty the list arrives at filter offset 0x90"
+  ],
+  "harness": {
+    "guest": "VerOS",
+    "name": "VerOS NDIS disk",
+    "traceOrReplayId": "output/ndis-disk-20261115T233408Z.log",
+    "logSha256": "7ace6440afd9e2115ece231718ce2288077604b8f9f7f30d6769069e6b49d335"
+  }
+}

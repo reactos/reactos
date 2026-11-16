@@ -1,0 +1,22 @@
+{
+  "spdx": "GPL-2.0-or-later",
+  "question": "Why does tcpip.sys load and report that the adapter bind returned success?",
+  "allowedInputs": [
+    "output/ndis-disk-20261115T214208Z.log missing API NDIS_BUFFER_TO_SPAN_PAGES",
+    "output/ndis-disk-20261115T215311Z.log NDIS5 CHECK bind 00000000 and Tcpip DriverEntry returned 0",
+    "drivers/network/tcpip/tcpip.sys import names from objdump",
+    "sdk/include/ddk/ndis.h NDIS40_PROTOCOL_CHARACTERISTICS and the NDIS 4 prototypes",
+    "drivers/network/tcpip/CMakeLists.txt -DNDIS40",
+    "drivers/network/tcpip/datalink/lan.c LANRegisterProtocol and BindAdapter",
+    "sdk/include/xdk/mmtypes.h struct _MDL",
+    "sdk/include/xdk/mmfuncs.h ADDRESS_AND_SIZE_TO_SPAN_PAGES",
+    "sdk/include/psdk/ntddndis.h OID_802_3_CURRENT_ADDRESS and OID_GEN_MEDIA_CONNECT_STATUS",
+    "https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndis_buffer_to_span_pages"
+  ],
+  "harness": {
+    "guest": "VerOS installed disk",
+    "name": "ndis-disk",
+    "traceOrReplayId": "output/ndis-disk-20261115T215311Z.log",
+    "logSha256": "5c250d93d0a048efa343f150dafb6e2bbf3a520bb95604a6c701cddfe543a7c5"
+  }
+}

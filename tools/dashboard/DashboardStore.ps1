@@ -3,7 +3,7 @@
 # FILE:        tools/dashboard/DashboardStore.ps1
 # PURPOSE:     Store each dashboard probe in its own file
 # COPYRIGHT:   Copyright 2026 Ryan Wilson <ryan@verosnt.com>
-# PROGRAMMERS: Ryan Wilson
+# PROGRAMMERS: Ryan Wilson <ryan@verosnt.com>
 
 param(
     [string]$SourceRoot = "",

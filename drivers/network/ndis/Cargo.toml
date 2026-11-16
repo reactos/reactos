@@ -1,0 +1,14 @@
+[package]
+name = "ndis"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[lib]
+path = "src/lib.rs"
+crate-type = ["staticlib"]
+
+[profile.release]
+panic = "abort"
+lto = false
+codegen-units = 1

@@ -46,6 +46,8 @@
 #define NDEBUG
 #include <debug.h>
 
+ULONG DbgPrint(const char *Format, ...);
+
 #define SIZEOF_ICMP_ERROR 8
 #define SIZEOF_IO_STATUS_BLOCK 8
 #define DEFAULT_TIMEOUT 1000
@@ -129,6 +131,7 @@ wmain(int argc, WCHAR *argv[])
 
     if (hIcmpFile == INVALID_HANDLE_VALUE)
     {
+        DbgPrint("PING CHECK icmp %08lx\n", GetLastError());
         DPRINT("IcmpCreateFile failed: %lu\n", GetLastError());
         FreeAddrInfoW(Target);
         WSACleanup();
@@ -391,6 +394,7 @@ ResolveTarget(PCWSTR target)
         Status = GetAddrInfoW(target, NULL, &hints, &Target);
         if (Status != 0)
         {
+            DbgPrint("PING CHECK dns fail\n");
             ConResPrintf(StdOut, IDS_UNKNOWN_HOST, target);
             return FALSE;
         }
@@ -410,6 +414,11 @@ ResolveTarget(PCWSTR target)
     }
 
     Family = Target->ai_family;
+    if (Family == AF_INET)
+    {
+        DbgPrint("PING CHECK dns %08x\n",
+                 ((PSOCKADDR_IN)Target->ai_addr)->sin_addr.s_addr);
+    }
 
     return TRUE;
 }
@@ -496,10 +505,12 @@ Ping(void)
         switch (Status)
         {
         case IP_REQ_TIMED_OUT:
+            DbgPrint("PING CHECK timeout\n");
             ConResPrintf(StdOut, IDS_REQUEST_TIMED_OUT);
             break;
 
         default:
+            DbgPrint("PING CHECK fail %08lx\n", Status);
             ConResPrintf(StdOut, IDS_TRANSMIT_FAILED, Status);
             break;
         }
@@ -616,6 +627,7 @@ Ping(void)
             case IP_SUCCESS:
             {
                 EchosSuccessful++;
+                DbgPrint("PING CHECK ok %08x\n", *IP4Addr);
 
                 ConResPrintf(StdOut, IDS_REPLY_BYTES, pEchoReply->DataSize);
 
@@ -649,6 +661,7 @@ Ping(void)
                 break;
 
             default:
+                DbgPrint("PING CHECK status %08lx\n", pEchoReply->Status);
                 ConResPrintf(StdOut, IDS_REPLY_STATUS, pEchoReply->Status);
                 break;
             }
@@ -666,6 +679,7 @@ PrintStats(void)
     ULONG PercentLost = (ULONG)((EchosLost / (double)EchosSent) * 100.0);
 
     ConResPrintf(StdOut, IDS_STATISTICS, Address, EchosSent, EchosReceived, EchosLost, PercentLost);
+    DbgPrint("PING CHECK done %lu %lu\n", EchosSent, EchosReceived);
 
     if (EchosSuccessful > 0)
     {

@@ -5,7 +5,7 @@
  * PURPOSE:     ReactOS VBE miniport video driver
  * COPYRIGHT:   Copyright (C) 2004 Filip Navara
  *              Copyright 2026 Ryan Wilson <ryan@verosnt.com>
- * PROGRAMMERS: Ryan Wilson
+ * PROGRAMMERS: Ryan Wilson <ryan@verosnt.com>
  */
 
 #ifndef _VBEMP_PCH_

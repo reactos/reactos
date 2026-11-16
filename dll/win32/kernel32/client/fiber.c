@@ -7,7 +7,7 @@
  *              Copyright 2003-2008 KJK::Hyperion (noog@libero.it)
  *              Copyright 2018 Mark Jansen (mark.jansen@reactos.org)
  *              Copyright 2026 Ryan Wilson <ryan@verosnt.com>
- * PROGRAMMERS: Ryan Wilson
+ * PROGRAMMERS: Ryan Wilson <ryan@verosnt.com>
  */
 
 #include <k32.h>

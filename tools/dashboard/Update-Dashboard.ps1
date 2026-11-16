@@ -3,7 +3,7 @@
 # FILE:        tools/dashboard/Update-Dashboard.ps1
 # PURPOSE:     Update the dashboard from the latest probes
 # COPYRIGHT:   Copyright 2026 Ryan Wilson <ryan@verosnt.com>
-# PROGRAMMERS: Ryan Wilson
+# PROGRAMMERS: Ryan Wilson <ryan@verosnt.com>
 
 param(
     [string]$SourceRoot = "",

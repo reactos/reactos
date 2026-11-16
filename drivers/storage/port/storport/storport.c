@@ -5,7 +5,7 @@
  * PURPOSE:     Storport driver main file
  * COPYRIGHT:   Copyright 2017 Eric Kohl (eric.kohl@reactos.org)
  *              Copyright 2026 Ryan Wilson <ryan@verosnt.com>
- * PROGRAMMERS: Ryan Wilson
+ * PROGRAMMERS: Ryan Wilson <ryan@verosnt.com>
  */
 
 /* INCLUDES *******************************************************************/

@@ -4,7 +4,7 @@
  * FILE:        drivers/filesystems/ntfs/ntfs.h
  * PURPOSE:     NTFS filesystem driver
  * COPYRIGHT:   Copyright 2026 Ryan Wilson <ryan@verosnt.com>
- * PROGRAMMERS: Ryan Wilson
+ * PROGRAMMERS: Ryan Wilson <ryan@verosnt.com>
  */
 
 #ifndef NTFS_H

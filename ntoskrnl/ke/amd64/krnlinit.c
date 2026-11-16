@@ -6,7 +6,7 @@
  * COPYRIGHT:       Copyright 2026 Ryan Wilson <ryan@verosnt.com>
  * PROGRAMMERS:     Timo Kreuzer (timo.kreuzer@reactos.org)
  *                  Alex Ionescu (alex.ionescu@reactos.org)
- *                  Ryan Wilson
+ *                  Ryan Wilson <ryan@verosnt.com>
  */
 
 /* INCLUDES ******************************************************************/

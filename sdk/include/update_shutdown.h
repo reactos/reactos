@@ -4,7 +4,7 @@
  * FILE:        sdk/include/update_shutdown.h
  * PURPOSE:     Shutdown dialog hook for a registered update client
  * COPYRIGHT:   Copyright 2026 Ryan Wilson <ryan@verosnt.com>
- * PROGRAMMERS: Ryan Wilson
+ * PROGRAMMERS: Ryan Wilson <ryan@verosnt.com>
  */
 
 #pragma once

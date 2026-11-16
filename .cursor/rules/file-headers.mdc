@@ -6,17 +6,17 @@ alwaysApply: true
 
 # File headers
 
-Give every new or edited C, C++, or assembly file this block. Keep each original copyright line and each original programmer name. Add `Copyright 2026 Ryan Wilson <ryan@verosnt.com>` under the last copyright line. Add `Ryan Wilson` under `PROGRAMMERS` when the change alters logic.
+Give every new or edited C, C++, or assembly file this block. Keep each original copyright line and each original programmer name. Add `Copyright 2026 Ryan Wilson <ryan@verosnt.com>` under the last copyright line. Add `Ryan Wilson <ryan@verosnt.com>` under `PROGRAMMERS` when the change alters logic.
 
-A file that is entirely new names only Ryan Wilson, with `PROJECT` `VerOS NT Kernel` for `ntoskrnl/`, `hal/`, `boot/`, and `drivers/`; `VerOS NT Subsystem` for `win32ss/`; `VerOS NT System Libraries` for `dll/`; and `VerOS NT` elsewhere. `FILE` is the path from the source root. `PURPOSE` stays one line. A longer note that says what the file does stays in a comment under the header. Keep an `UPDATE HISTORY` block when it records an event. Drop an empty one.
+A file that is entirely new names only Ryan Wilson <ryan@verosnt.com>, with `PROJECT` `VerOS NT Kernel` for `ntoskrnl/`, `hal/`, `boot/`, and `drivers/`; `VerOS NT Subsystem` for `win32ss/`; `VerOS NT System Libraries` for `dll/`; and `VerOS NT` elsewhere. `FILE` is the path from the source root. `PURPOSE` stays one line. A longer note that says what the file does stays in a comment under the header. Keep an `UPDATE HISTORY` block when it records an event. Drop an empty one.
 
 The `LICENSE` line carries the SPDX identifier, so do not add a second `SPDX-License-Identifier` line.
 
 New kernel, driver, boot, and other non-DLL files use `GNU General Public License, version 2 or later (GPL-2.0-or-later)`. New userland DLLs (`dll/` and `win32ss/user/user32*`) use `GNU Lesser General Public License, version 2.1 or later (LGPL-2.1-or-later)`. On an existing file, keep its license family and fold the notice into that one `LICENSE` line. Do not invent a ReactOS Team copyright the file does not already state.
 
-Leave a public-domain file on its own terms and add `Ryan Wilson` under its contributors. Leave a Wine LGPL header in place and add the copyright line under the existing notice. Do not reformat files listed in `media/doc/WINESYNC.txt` beyond that copyright line.
+Leave a public-domain file on its own terms and add `Ryan Wilson <ryan@verosnt.com>` under its contributors. Leave a Wine LGPL header in place and add the copyright line under the existing notice. Do not reformat files listed in `media/doc/WINESYNC.txt` beyond that copyright line.
 
-New PowerShell uses the same six fields as `#` comments. JSON, logs, fixtures, images, `.rc`, and `.inf` do not get this block.
+New PowerShell and Rust use the same six fields. Rust uses a block comment. JSON, logs, fixtures, images, `.rc`, and `.inf` do not get this block. The comment under the header lists the sources named in [clean-room.mdc](clean-room.mdc) when the file uses one.
 
 ```c
 /*
@@ -25,7 +25,7 @@ New PowerShell uses the same six fields as `#` comments. JSON, logs, fixtures, i
  * FILE:        ntoskrnl/ps/wrkfactory.c
  * PURPOSE:     NT 10.0 Worker Factory Subsystem
  * COPYRIGHT:   Copyright 2026 Ryan Wilson <ryan@verosnt.com>
- * PROGRAMMERS: Ryan Wilson
+ * PROGRAMMERS: Ryan Wilson <ryan@verosnt.com>
  */
 ```
 
@@ -38,6 +38,6 @@ New PowerShell uses the same six fields as `#` comments. JSON, logs, fixtures, i
  * COPYRIGHT:   Copyright 1998-2020 ReactOS Team
  *              Copyright 2026 Ryan Wilson <ryan@verosnt.com>
  * PROGRAMMERS: Alex Ionescu
- *              Ryan Wilson
+ *              Ryan Wilson <ryan@verosnt.com>
  */
 ```

@@ -1,0 +1,31 @@
+{
+  "spdx": "GPL-2.0-or-later",
+  "question": "How does VerOS carry NetKVM from DriverEntry through PnP StartDevice into MiniportInitializeEx, including AllocatedResources and the general-attributes header?",
+  "allowedInputs": [
+    "Reported: VerOS NetKVM serial logs from 2026-11-16 printed NDIS REG, OPT 92 01 002c, ADDMP, FILTER, START, BUSGOT, MAPOK, HDR 9f 02 00e0, and INIT statuses through c000009a after MapIoSpace",
+    "Reported: Windows discovery captures on 2026-11-16 reached DIFF END OK for miniport size 0xA0 bytes 06 53 with a called offset 0x10, optional-handlers type 0x92 revision 1 size 0x2C, RegisterDeviceEx named buffers, OpenConfigurationEx type 0xA9, the 0x4A8 handle dump, protocol type 0x95 revision 2 size 0x80 bytes 06 1e, and attributes type 0xA4 revision 1 size 0x14",
+    "differential-tests/ndis-discovery/METHOD.md records those same NetKVM and Windows captures, including AllocatedResources at init-parameters offset 8 from public member order and the VerOS-only 9f/2/e0 accept",
+    "https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/ns-ndis-_ndis_miniport_init_parameters lists Header, then Flags, then AllocatedResources",
+    "sdk/include/psdk/ntddndis.h NDIS_OBJECT_HEADER is 4 bytes; Flags is a ULONG, so AllocatedResources is at offset 8 on x64",
+    "sdk/include/xdk/cmtypes.h CM_PARTIAL_RESOURCE_LIST Count at offset 4 and PartialResourceList after Count, InterfaceType, and BusNumber",
+    "sdk/include/ddk/ndis.h NDIS_RESOURCE_LIST is CM_PARTIAL_RESOURCE_LIST; NDIS_STATUS_RESOURCE_CONFLICT is 0xC001001E",
+    "sdk/include/xdk/iotypes.h DRIVER_OBJECT.DriverExtension, AddDevice, MajorFunction, and StartDevice AllocatedResources on the stack",
+    "https://github.com/virtio-win/kvm-guest-drivers-windows/blob/master/NetKVM/Common/ParaNdis_VirtIO.cpp CPciResources::Init reads RList->Count after NdisMGetBusData",
+    "https://github.com/virtio-win/kvm-guest-drivers-windows/blob/master/NetKVM/wlh/ParaNdis6_Driver.cpp MiniportInitializeEx passes AllocatedResources into that Init",
+    "https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismsetminiportattributes names the second attributes structure without giving its type byte",
+    "https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ntddk/nf-ntddk-kequeryactiveprocessorcountex",
+    "https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ntddk/nf-ntddk-kegetprocessornumberfromindex",
+    "https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ntddk/nf-ntddk-kegetcurrentprocessornumberex",
+    "https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ntddk/nf-ntddk-kegetprocessorindexfromnumber",
+    "https://learn.microsoft.com/en-us/cpp/c-runtime-library/reference/vsnprintf-s-vsnprintf-s",
+    "sdk/include/vcruntime/crtdefs.h _TRUNCATE",
+    "sdk/include/xdk/ntbasedef.h ALL_PROCESSOR_GROUPS",
+    "sdk/include/xdk/ketypes.h INVALID_PROCESSOR_INDEX",
+    "ntoskrnl/ke/processor.c KeNumberProcessors and KeQueryMaximumProcessorCountEx group behavior already in this file"
+  ],
+  "harness": {
+    "guest": "VerOS",
+    "name": "VerOS NetKVM disk snapshot",
+    "traceOrReplayId": "Reported: netkvm serial logs through 2026-11-16T064229Z"
+  }
+}

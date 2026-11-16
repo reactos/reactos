@@ -3,7 +3,7 @@
 # FILE:        tools/windows-trace/Test-TraceCorpus.ps1
 # PURPOSE:     Check that a Windows trace corpus is large enough
 # COPYRIGHT:   Copyright 2026 Ryan Wilson <ryan@verosnt.com>
-# PROGRAMMERS: Ryan Wilson
+# PROGRAMMERS: Ryan Wilson <ryan@verosnt.com>
 
 param(
     [string]$SourceRoot = (Resolve-Path (Join-Path $PSScriptRoot "..\..")).Path,

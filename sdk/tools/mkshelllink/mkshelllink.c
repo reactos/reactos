@@ -9,7 +9,7 @@
  * PROGRAMMERS:     Rafal Harabien
  *                  Whindmar Saksit
  *                  Hermès Bélusca-Maïto
- *                  Ryan Wilson
+ *                  Ryan Wilson <ryan@verosnt.com>
  */
 
 /* INCLUDES ******************************************************************/

@@ -5,7 +5,7 @@
  * PURPOSE:     SCSI I/O queue and requests handling
  * COPYRIGHT:   Copyright 2026 Dmitry Borisov <di.sean@protonmail.com>
  *              Copyright 2026 Ryan Wilson <ryan@verosnt.com>
- * PROGRAMMERS: Ryan Wilson
+ * PROGRAMMERS: Ryan Wilson <ryan@verosnt.com>
  */
 
 /* INCLUDES *******************************************************************/

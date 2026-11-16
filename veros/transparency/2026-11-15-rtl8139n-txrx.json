@@ -1,0 +1,18 @@
+{
+  "spdx": "GPL-2.0-or-later",
+  "question": "Why does the RTL8139 miniport program a receive buffer and enable transmit and receive?",
+  "allowedInputs": [
+    "output/rtl8139n-20261115T185118Z.log RTL8139 CHECK rxpa 00208000, RTL8139 CHECK txrx 0d, RTL8139 CHECK txrx ok",
+    "sdk/include/xdk/mmfuncs.h MmAllocateContiguousMemory, MmGetPhysicalAddress",
+    "drivers/network/dd/rtl8139/nic.h FULL_RECEIVE_BUFFER_SIZE 32768 + 16 + 2048, RC_VAL 0x800B780, TC_VAL 0x700",
+    "drivers/network/dd/rtl8139/rtlhw.h R_RXSA 0x30, R_TC 0x40, R_RC 0x44, B_CMD_TXE 0x04, B_CMD_RXE 0x08",
+    "drivers/network/dd/rtl8139/hardware.c NICRegisterReceiveBuffer writes the low 32 bits to R_RXSA, NICEnableTxRx writes B_CMD_TXE | B_CMD_RXE before RC_VAL and TC_VAL",
+    "drivers/network/dd/rtl8139/ndis.c rejects a physical address whose HighPart is not 0"
+  ],
+  "harness": {
+    "guest": "VerOS live CD",
+    "name": "rtl8139n",
+    "traceOrReplayId": "output/rtl8139n-20261115T185118Z.log",
+    "logSha256": "c8764e66d3b7f36011d01d47df0246d2b5bb2da7d51175078c926e87f6ef8aff"
+  }
+}

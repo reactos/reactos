@@ -1,0 +1,19 @@
+{
+  "spdx": "GPL-2.0-or-later",
+  "question": "Why does the RTL8139 miniport register and accept attribute type 0x9E on the live CD?",
+  "allowedInputs": [
+    "output/rtl8139n-20261115T180239Z.log RTL8139 CHECK OK, DriverEntry returned 0x00000000",
+    "output/ndis-check-20261115T173431Z.log NDIS CHECK OK",
+    "Reported: capture 2026-11-15T143730Z, type 0x9E size 4 returns 0",
+    "drivers/network/ndis/src/register.rs miniport type 0x8A, revision 3, size 0x120, version bytes 6 and 84 at offset 4, slot 0x10",
+    "NdisMRegisterMiniportDriver, https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismregisterminiportdriver",
+    "NdisMSetMiniportAttributes, https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismsetminiportattributes",
+    "SERVICE_DISABLED is 4, https://learn.microsoft.com/en-us/windows/win32/api/winsvc/nf-winsvc-changeserviceconfiga"
+  ],
+  "harness": {
+    "guest": "VerOS live CD",
+    "name": "rtl8139n",
+    "traceOrReplayId": "output/rtl8139n-20261115T180239Z.log",
+    "logSha256": "7c46172ebf6af682e30672a9869f33fdf63dead8d040b72b5cb6a856a749bcc2"
+  }
+}

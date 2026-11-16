@@ -4,7 +4,7 @@
  * FILE:        sdk/include/reactos/runtimever.h
  * PURPOSE:     Runtime NT version reported to an application
  * COPYRIGHT:   Copyright 2026 Ryan Wilson <ryan@verosnt.com>
- * PROGRAMMERS: Ryan Wilson
+ * PROGRAMMERS: Ryan Wilson <ryan@verosnt.com>
  */
 
 #ifndef _RUNTIMEVER_H

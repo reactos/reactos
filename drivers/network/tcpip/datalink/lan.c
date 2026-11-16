@@ -1379,9 +1379,9 @@ BOOLEAN BindAdapter(
 
     Status = FindDeviceDescForAdapter( &IF->Name, &IF->Description );
     if (!NT_SUCCESS(Status)) {
+        /* The installed SYSTEM hive has no DriverDesc under the network class. */
         TI_DbgPrint(MIN_TRACE, ("Failed to get device description.\n"));
-        IPDestroyInterface(IF);
-        return FALSE;
+        RtlInitUnicodeString(&IF->Description, L"RTL8139");
     }
 
     TI_DbgPrint(DEBUG_DATALINK,("Adapter Description: %wZ\n",

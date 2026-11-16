@@ -10,7 +10,7 @@
  *              Valentin Verkhovsky
  *              Hervé Poussineau (hpoussin@reactos.org)
  *              Pierre Schweitzer (pierre@reactos.org)
- *              Ryan Wilson
+ *              Ryan Wilson <ryan@verosnt.com>
  */
 
 /* INCLUDES *****************************************************************/

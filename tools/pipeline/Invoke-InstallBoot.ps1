@@ -3,7 +3,7 @@
 # FILE:        tools/pipeline/Invoke-InstallBoot.ps1
 # PURPOSE:     Boot a live, installed, or application image
 # COPYRIGHT:   Copyright 2026 Ryan Wilson <ryan@verosnt.com>
-# PROGRAMMERS: Ryan Wilson
+# PROGRAMMERS: Ryan Wilson <ryan@verosnt.com>
 
 param(
     [Parameter(Mandatory = $true)]

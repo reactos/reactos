@@ -1,0 +1,20 @@
+{
+  "spdx": "GPL-2.0-or-later",
+  "question": "Why does protocol registration accept type 0x95 revision 2 size 0x80 and call offsets 0x20 and 0x48?",
+  "allowedInputs": [
+    "output/ndis-discovery/windows.log DIFF END OK: protocol ACCEPTED type 0x95 revision 2 size 0x80, DIFF CALL offsets 0x20 and 0x48, NdisGetVersion 0x00060054",
+    "Reported: capture 2026-11-14T184820Z, recorded in differential-tests/ndis-discovery/METHOD.md, version bytes 6 and 84 at offset 4. METHOD.md also records that offset 8 stays zero and a pointer there returns 0xC000000D",
+    "sdk/include/psdk/ntddndis.h NDIS_OBJECT_HEADER Type, Revision, Size",
+    "sdk/include/ddk/ndis.h NDIS_STATUS_BAD_VERSION, NDIS_STATUS_BAD_CHARACTERISTICS, NDIS_STATUS_INVALID_PARAMETER, NDIS_STATUS_FAILURE, NDIS_STATUS_RESOURCES",
+    "NdisRegisterProtocolDriver, https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndisregisterprotocoldriver",
+    "NdisSendNetBufferLists, https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndissendnetbufferlists",
+    "NdisReturnNetBufferLists, https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndisreturnnetbufferlists",
+    "differential-tests/ndis-discovery/probe.c SLOT_FN four-pointer slot, probe method, not a Windows field"
+  ],
+  "harness": {
+    "guest": "Windows 10 22H2",
+    "name": "ndis-discovery",
+    "traceOrReplayId": "output/ndis-discovery/windows.log",
+    "logSha256": "115a12628716215066e6485f619d57b402f087d392949ec949bf49788c0fcb29"
+  }
+}

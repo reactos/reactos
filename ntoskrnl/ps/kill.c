@@ -8,7 +8,7 @@
  * PROGRAMMERS: Alex Ionescu (alex.ionescu@reactos.org)
  *              Filip Navara (xnavara@reactos.org)
  *              Thomas Weidenmueller (w3seek@reactos.org
- *              Ryan Wilson
+ *              Ryan Wilson <ryan@verosnt.com>
  */
 
 /* INCLUDES *****************************************************************/

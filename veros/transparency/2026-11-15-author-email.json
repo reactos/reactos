@@ -1,0 +1,7 @@
+{
+  "spdx": "GPL-2.0-or-later",
+  "question": "How should a programmer, author, or contributor credit for Ryan Wilson be written?",
+  "allowedInputs": [
+    "Reported: Ryan Wilson said a credit that names him as a programmer, author, or similar includes Ryan Wilson <ryan@verosnt.com>."
+  ]
+}

@@ -6,7 +6,7 @@
  * COPYRIGHT:   GPL, see COPYING in the top level directory
  *              Copyright 2026 Ryan Wilson <ryan@verosnt.com>
  * PROGRAMMERS: Timo Kreuzer (timo.kreuzer@reactos.org)
- *              Ryan Wilson
+ *              Ryan Wilson <ryan@verosnt.com>
  */
 
 // TODO:

@@ -11,7 +11,7 @@
  *              Copyright 2011 Timo Kreuzer (timo.kreuzer@reactos.org)
  *              Copyright 2017 Colin Finck (colin@reactos.org)
  *              Copyright 2026 Ryan Wilson <ryan@verosnt.com>
- * PROGRAMMERS: Ryan Wilson
+ * PROGRAMMERS: Ryan Wilson <ryan@verosnt.com>
  */
 
 /* INCLUDES ******************************************************************/

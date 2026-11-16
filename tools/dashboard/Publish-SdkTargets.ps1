@@ -3,7 +3,7 @@
 # FILE:        tools/dashboard/Publish-SdkTargets.ps1
 # PURPOSE:     Publish each module's effective SDK header target
 # COPYRIGHT:   Copyright 2026 Ryan Wilson <ryan@verosnt.com>
-# PROGRAMMERS: Ryan Wilson
+# PROGRAMMERS: Ryan Wilson <ryan@verosnt.com>
 
 param(
     [string]$SourceRoot = "",

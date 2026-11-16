@@ -1,0 +1,26 @@
+{
+  "spdx": "GPL-2.0-or-later",
+  "question": "Why does miniport registration accept type 0x8A revision 3 size 0x120 and call offset 0x10?",
+  "allowedInputs": [
+    "output/ndis-discovery/windows.log DIFF END OK: miniport ACCEPTED type 0x8A revision 3 size 0x120, DIFF CALL offset 0x10, zeroed BASELINE 0xC0010004, NdisGetVersion 0x00060054",
+    "Reported: capture 2026-11-14T184820Z, recorded in differential-tests/ndis-discovery/METHOD.md, version bytes 6 and 84 at offset 4 move a zeroed block from 0xC0010004 to 0xC0010005",
+    "sdk/include/psdk/ntddndis.h NDIS_OBJECT_HEADER Type, Revision, Size",
+    "sdk/include/ddk/ndis.h NDIS_STATUS_BAD_VERSION 0xC0010004, NDIS_STATUS_BAD_CHARACTERISTICS 0xC0010005, NDIS_STATUS_FAILURE, NDIS_STATUS_RESOURCES",
+    "sdk/include/psdk/ntstatus.h STATUS_SUCCESS, STATUS_UNSUCCESSFUL, STATUS_INSUFFICIENT_RESOURCES",
+    "NdisMRegisterMiniportDriver, https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismregisterminiportdriver",
+    "NdisMSetMiniportAttributes, https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismsetminiportattributes",
+    "NdisMIndicateReceiveNetBufferLists, https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismindicatereceivenetbufferlists",
+    "NdisMSendNetBufferListsComplete, https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismsendnetbufferlistscomplete",
+    "NdisMOidRequestComplete, https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismoidrequestcomplete",
+    "NdisMRestartComplete, https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismrestartcomplete",
+    "NdisMIndicateStatusEx, https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismindicatestatusex",
+    "NdisMPauseComplete, https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismpausecomplete",
+    "differential-tests/ndis-discovery/probe.c SLOT_FN four-pointer slot, probe method, not a Windows field"
+  ],
+  "harness": {
+    "guest": "Windows 10 22H2",
+    "name": "ndis-discovery",
+    "traceOrReplayId": "output/ndis-discovery/windows.log",
+    "logSha256": "115a12628716215066e6485f619d57b402f087d392949ec949bf49788c0fcb29"
+  }
+}

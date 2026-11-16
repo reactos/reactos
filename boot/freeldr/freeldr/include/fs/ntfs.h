@@ -6,7 +6,7 @@
  * COPYRIGHT:   Copyright (C) 2004 Filip Navara <xnavara@volny.cz>
  *              Copyright (C) 2011 Pierre Schweitzer <pierre.schweitzer@reactos.org>
  *              Copyright 2026 Ryan Wilson <ryan@verosnt.com>
- * PROGRAMMERS: Ryan Wilson
+ * PROGRAMMERS: Ryan Wilson <ryan@verosnt.com>
  */
 
 #pragma once

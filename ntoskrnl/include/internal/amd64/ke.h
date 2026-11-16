@@ -4,7 +4,7 @@
  * FILE:        ntoskrnl/include/internal/amd64/ke.h
  * PURPOSE:     amd64 kernel internal declarations
  * COPYRIGHT:   Copyright 2026 Ryan Wilson <ryan@verosnt.com>
- * PROGRAMMERS: Ryan Wilson
+ * PROGRAMMERS: Ryan Wilson <ryan@verosnt.com>
  */
 
 #ifndef __NTOSKRNL_INCLUDE_INTERNAL_AMD64_KE_H

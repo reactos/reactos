@@ -6,7 +6,7 @@
  * PURPOSE:         I/O Manager Initialization and Misc Utility Functions
  *
  * PROGRAMMERS:     David Welch (welch@mcmail.com)
- *                  Ryan Wilson
+ *                  Ryan Wilson <ryan@verosnt.com>
  */
 
 /* INCLUDES ****************************************************************/

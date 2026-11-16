@@ -1,0 +1,18 @@
+{
+  "spdx": "GPL-2.0-or-later",
+  "question": "Why does the RTL8139 miniport finish its ICMP echo after DriverEntry returns?",
+  "allowedInputs": [
+    "output/rtl8139n-20261115T204612Z.log RTL8139 CHECK thread 00000000, returned, running, ping ok, serving",
+    "sdk/include/xdk/psfuncs.h PsCreateSystemThread",
+    "sdk/include/xdk/pstypes.h THREAD_ALL_ACCESS",
+    "sdk/include/xdk/setypes.h STANDARD_RIGHTS_REQUIRED 0x000F0000 and SYNCHRONIZE 0x00100000",
+    "ntoskrnl/ntoskrnl.spec PsCreateSystemThread and ZwClose",
+    "ntoskrnl/ps/psmgr.c calls PsCreateSystemThread with THREAD_ALL_ACCESS"
+  ],
+  "harness": {
+    "guest": "VerOS live CD",
+    "name": "rtl8139n",
+    "traceOrReplayId": "output/rtl8139n-20261115T204612Z.log",
+    "logSha256": "f672960513cab398a9b8b2437a86277d9798c553904466c08b93794de7b43311"
+  }
+}
