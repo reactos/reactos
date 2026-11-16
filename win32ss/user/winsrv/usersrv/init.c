@@ -1,10 +1,12 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
+ *                  Copyright 2026 Ryan Wilson <ryan@verosnt.com>
  * PROJECT:         ReactOS User API Server DLL
  * FILE:            win32ss/user/winsrv/usersrv/init.c
  * PURPOSE:         Initialization
  * PROGRAMMERS:     Dmitry Philippov (shedon@mail.ru)
  *                  Hermes Belusca-Maito (hermes.belusca@sfr.fr)
+ *                  Ryan Wilson <ryan@verosnt.com>
  */
 
 /* INCLUDES *******************************************************************/
@@ -146,11 +148,8 @@ CSR_API(SrvGetThreadConsoleDesktop)
 
     Status = GetThreadConsoleDesktop(GetThreadConsoleDesktopRequest->ThreadId,
                                      &GetThreadConsoleDesktopRequest->ConsoleDesktop);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("GetThreadConsoleDesktop(%lu) failed with Status 0x%08x\n",
-                GetThreadConsoleDesktopRequest->ThreadId, Status);
-    }
+    /* Stage detail is logged inside GetThreadConsoleDesktop (lock vs no console). */
+    (VOID)Status;
 
     /* Windows-compatibility: Always return success since User32 relies on this! */
     return STATUS_SUCCESS;

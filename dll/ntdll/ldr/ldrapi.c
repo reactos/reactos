@@ -1,10 +1,17 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
+ *                  Copyright 2026 Ryan Wilson <ryan@verosnt.com>
  * PROJECT:         ReactOS NT User Mode Library
  * FILE:            dll/ntdll/ldr/ldrapi.c
  * PURPOSE:         PE Loader Public APIs
  * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
  *                  Aleksey Bragin (aleksey@reactos.org)
+ *                  Ryan Wilson <ryan@verosnt.com>
+ *
+ * Empty LdrLoadDll names are rejected. Guest serial
+ * output/ntdll-apps/serial-App-20261116T063648Z.log shows
+ * LDR: missing dll .DLL after winrt→combase with no empty-import
+ * log — LoadLibrary of Length 0 reaches LdrpLoadDll and gains L".DLL".
  */
 
 /* INCLUDES *****************************************************************/
@@ -323,6 +330,25 @@ LdrLoadDll(
     PUNICODE_STRING OldTldDll;
     PTEB Teb = NtCurrentTeb();
 
+    /*
+     * LoadLibraryW("") becomes ".DLL" in LdrpLoadDll. Refuse here so the
+     * serial names the initializer before TopLevel is overwritten with the
+     * empty name (firefox silent-fail9).
+     */
+    if (!DllName || !DllName->Buffer || DllName->Length == 0)
+    {
+        if (LdrpCurrentDllInitializer)
+        {
+            DbgPrint("LDR: empty LdrLoadDll; initializer %wZ\n",
+                     &LdrpCurrentDllInitializer->BaseDllName);
+        }
+        else
+        {
+            DbgPrint("LDR: empty LdrLoadDll; no initializer\n");
+        }
+        return STATUS_OBJECT_NAME_INVALID;
+    }
+
     /* Initialize the strings */
     RtlInitEmptyUnicodeString(&StaticString, StringBuffer, sizeof(StringBuffer));
     RtlInitEmptyUnicodeString(&DynamicString, NULL, 0);
@@ -386,17 +412,41 @@ LdrLoadDll(
         {
             Status = STATUS_SUCCESS;
         }
-        else if ((Status != STATUS_NO_SUCH_FILE) &&
+        else
+        {
+            BOOLEAN FirefoxProcess = FALSE;
+            PPEB_LDR_DATA PebLdr;
+            PLDR_DATA_TABLE_ENTRY ExeEntry;
+            UNICODE_STRING FirefoxName = RTL_CONSTANT_STRING(L"firefox.exe");
+
+            /*
+             * firefox silent-fail24: also log DLL_NOT_FOUND / DLL_INIT_FAILED
+             * for firefox.exe — those were filtered out and hid the last
+             * failed load before xul __fastfail
+             * (serial-App-20261116T083050Z.log).
+             */
+            PebLdr = NtCurrentPeb() ? NtCurrentPeb()->Ldr : NULL;
+            if (PebLdr && !IsListEmpty(&PebLdr->InLoadOrderModuleList))
+            {
+                ExeEntry = CONTAINING_RECORD(PebLdr->InLoadOrderModuleList.Flink,
+                                             LDR_DATA_TABLE_ENTRY,
+                                             InLoadOrderLinks);
+                FirefoxProcess = RtlEqualUnicodeString(&ExeEntry->BaseDllName,
+                                                       &FirefoxName,
+                                                       TRUE);
+            }
+
+            if (FirefoxProcess ||
+                ((Status != STATUS_NO_SUCH_FILE) &&
                  (Status != STATUS_DLL_NOT_FOUND) &&
                  (Status != STATUS_OBJECT_NAME_NOT_FOUND) &&
-                 (Status != STATUS_DLL_INIT_FAILED))
-        {
-            DbgPrintEx(DPFLTR_LDR_ID,
-                       DPFLTR_WARNING_LEVEL,
-                       "LDR: %s - failing because LdrpLoadDll(%wZ) returned status %x\n",
-                       __FUNCTION__,
-                       DllName,
-                       Status);
+                 (Status != STATUS_DLL_INIT_FAILED)))
+            {
+                DPRINT1("LDR: LdrLoadDll(%wZ) status 0x%08lx%s\n",
+                        DllName,
+                        Status,
+                        FirefoxProcess ? " [firefox]" : "");
+            }
         }
     }
     _SEH2_FINALLY

@@ -1,0 +1,16 @@
+{
+    "spdx":  "GPL-2.0-or-later",
+    "question":  "Why did the App guest appear hung after firefox crashed, and how can last-chance user faults stop waiting on a serial with no keyboard?",
+    "allowedInputs":  [
+                          "media/drivers/etc/KDBinit already in this tree",
+                          "ntoskrnl/kdbg/kdb_cli.c already in this tree, set condition first|last never|always|umode|kmode",
+                          "ntoskrnl/kdbg/kdb.c already in this tree, Entered debugger on last-chance exception",
+                          "output/ntdll-apps/serial-App-20261116T091406Z.log marker: Press q to abort, any other key to continue"
+                      ],
+    "harness":  {
+                    "guest":  "amd64 installed veros-ntfs, TCG, App mode, Startup run-firefox-log.cmd",
+                    "name":  "ntdll-apps-firefox",
+                    "traceOrReplayId":  "serial-App-20261116T091406Z last-chance KDB wait",
+                    "logSha256":  "3157edff3f5133b4eca7a2067a1e289480a986fd5eab60e83191b59c3d2b7e74"
+                }
+}

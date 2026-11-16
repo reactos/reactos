@@ -19,15 +19,19 @@ Write the description back with `gh api --method PATCH`. Read it back. Stop if a
 
 ## Issues
 
-A fault found while carrying the milestone out is an issue in that milestone. Open it when the fault shows up, before editing code for it. Close it when that fault is resolved.
+Do not open a GitHub issue unless Ryan asks for one. A fault found while
+carrying the milestone out is recorded in Progress and fixed in the same
+loop; it is not filed automatically.
+
+When Ryan asks to open an issue, or an issue already exists for the fault:
 
 - Search the milestone's open issues first. Comment on the existing issue when it is the same fault.
-- A new fault is a new issue. Title is `[MODULE] Imperative summary`. The body is the symptom, the check that showed it, and the task it blocks. Add the `bug` label for a defect. Set `--milestone` to the milestone title.
-- Close the issue when the same check no longer shows the fault. The close comment names that check. The milestone progress bar is the count of closed issues in the milestone.
+- A new issue title is `[MODULE] Imperative summary`. The body is the symptom, the check that showed it, and the task it blocks. Add the `bug` label for a defect. Set `--milestone` to the milestone title.
+- Close the issue when Ryan asks, or when the same check no longer shows the fault and the close is part of finishing that slice. The close comment names that check.
 - Leave the issue open when the fix is not verified yet. One issue is one fault. Do not file an issue that restates the milestone.
 
 ```text
-Wrong: a milestone fix with no issue, or a closed issue whose check was not rerun.
-Right: gh issue create --repo rjwil1086/verosng --milestone "Milestone 16: The next application" --label bug --title "[KERNEL32] Return the missing import"
+Wrong: gh issue create during a silent-fail fix loop without Ryan asking
+Right: fix the fault; update Progress; open an issue only when Ryan says to
 Right: gh issue close 42 --repo rjwil1086/verosng --comment "The import resolves. The installer reaches the desktop."
 ```

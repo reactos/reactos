@@ -51,6 +51,7 @@ list(APPEND SOURCE
     client/version.c
     client/versionansi.c
     client/virtmem.c
+    client/wer.c
     client/console/alias.c
     client/console/console.c
     client/console/history.c

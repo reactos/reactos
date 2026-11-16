@@ -1,0 +1,19 @@
+{
+  "spdx": "GPL-2.0-or-later",
+  "question": "When GetCurrentPackageId returns APPMODEL_ERROR_NO_PACKAGE for an unpackaged process, should a non-NULL BufferLength out-param be set to zero?",
+  "allowedInputs": [
+    "dll/win32/kernel32/client/sysinfo.c already in this tree, GetCurrentPackage* stubs returning APPMODEL_ERROR_NO_PACKAGE",
+    "https://learn.microsoft.com/en-us/windows/win32/api/appmodel/nf-appmodel-getcurrentpackageid",
+    "https://learn.microsoft.com/en-us/windows/win32/api/appmodel/nf-appmodel-getcurrentpackagefullname",
+    "sdk/include/psdk/winerror.h already in this tree, APPMODEL_ERROR_NO_PACKAGE",
+    "output/ntdll-apps/serial-App-20261116T072238Z.log marker: GetCurrentPackageId(..., NULL) -> NO_PACKAGE",
+    "output/ntdll-apps/firefox-silent-fail14-packageid-av-gaps.txt",
+    "ntoskrnl/ke/amd64/except.c already in this tree, User AV register dump"
+  ],
+  "harness": {
+    "guest": "amd64 installed veros-ntfs after AV regs and AppModel stub logs, TCG, App mode",
+    "name": "ntdll-apps-firefox",
+    "traceOrReplayId": "serial-App-20261116T072238Z GetCurrentPackageId NO_PACKAGE",
+    "logSha256": "7a0395a935af005cbc15d52cd8d8905ec73cdb4aaff64542bc73940a6ac8512f"
+  }
+}

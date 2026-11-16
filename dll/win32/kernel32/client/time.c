@@ -22,6 +22,12 @@
 #define NDEBUG
 #include <debug.h>
 
+NTSYSAPI
+BOOLEAN
+NTAPI
+RtlQueryUnbiasedInterruptTime(
+    _Out_ ULONGLONG *UnbiasedTime);
+
 /* FUNCTIONS ******************************************************************/
 
 /*
@@ -435,6 +441,20 @@ GetTickCount(VOID)
 
     /* Convert to milliseconds */
     return (DWORD)KiTickCountToMs(TickCount);
+}
+
+/*
+ * @implemented
+ *
+ * https://learn.microsoft.com/en-us/windows/win32/api/realtimeapiset/nf-realtimeapiset-queryunbiasedinterrupttimeprecise
+ * Wine kernelbase sync.c calls RtlQueryUnbiasedInterruptTime for the precise
+ * entry as a semi-stub. Same Rtl export QueryUnbiasedInterruptTime forwards to.
+ */
+VOID
+WINAPI
+QueryUnbiasedInterruptTimePrecise(OUT PULONGLONG UnbiasedTime)
+{
+    RtlQueryUnbiasedInterruptTime(UnbiasedTime);
 }
 
 /*

@@ -288,7 +288,7 @@
 @ stdcall GetDesktopWindow()
 @ stdcall GetDialogBaseUnits()
 @ stdcall -version=0x602+ GetDisplayAutoRotationPreferences(ptr)
-@ stdcall -version=0x600+ GetDisplayConfigBufferSizes(long ptr ptr)
+@ stdcall GetDisplayConfigBufferSizes(long ptr ptr)
 @ stdcall GetDlgCtrlID(long)
 @ stdcall GetDlgItem(long long)
 @ stdcall GetDlgItemInt(long long ptr long)
@@ -349,11 +349,12 @@
 @ stdcall GetNextDlgTabItem(long long long)
 @ stdcall GetOpenClipboardWindow() NtUserGetOpenClipboardWindow
 @ stdcall GetParent(long)
-@ stdcall -version=0x602+ GetPointerInfo(long ptr)
+@ stdcall GetPointerInfo(long ptr)
+@ stdcall GetPointerPenInfo(long ptr)
 @ stdcall -version=0x602+ GetPointerTouchInfo(long ptr)
 @ stdcall -version=0x602+ GetPointerTouchInfoHistory(long ptr ptr)
 @ stdcall -version=0x601+ GetPointerDevices(ptr ptr)
-@ stdcall -version=0x602+ GetPointerType(long ptr)
+@ stdcall GetPointerType(long ptr)
 @ stdcall GetPriorityClipboardFormat(ptr long) NtUserGetPriorityClipboardFormat
 @ stdcall GetProcessDefaultLayout(ptr)
 @ stdcall -version=0xA00+ GetProcessDpiAwarenessInternal(long ptr)
@@ -385,6 +386,7 @@
 @ stdcall GetTabbedTextExtentW(long wstr long long ptr)
 @ stdcall GetTaskmanWindow ()
 @ stdcall GetThreadDesktop(long)
+@ stdcall GetThreadDpiAwarenessContext()
 @ stdcall GetTitleBarInfo(long ptr) NtUserGetTitleBarInfo
 @ stdcall GetTopWindow(long)
 @ stdcall -version=0x601+ GetTouchInputInfo(long long ptr long)
@@ -600,7 +602,7 @@
 @ stdcall RegisterSystemThread(long long)
 @ stdcall RegisterTasklist(long) NtUserRegisterTasklist
 @ stdcall -version=0x602+ RegisterTouchHitTestingWindow(long long)
-@ stdcall -version=0x601+ RegisterTouchWindow(long long)
+@ stdcall RegisterTouchWindow(long long)
 @ stdcall RegisterUserApiHook(ptr)
 @ stdcall RegisterWindowMessageA(str)
 @ stdcall RegisterWindowMessageW(wstr)
@@ -676,7 +678,7 @@
 @ stdcall SetParent(long long) NtUserSetParent
 @ stdcall -version=0x600+ SetProcessDPIAware()
 @ stdcall SetProcessDefaultLayout(long)
-@ stdcall -version=0xA00+ SetProcessDpiAwarenessContext(long)
+@ stdcall SetProcessDpiAwarenessContext(long)
 @ stdcall -version=0xA00+ SetProcessDpiAwarenessInternal(long)
 @ stdcall SetProcessWindowStation(long) NtUserSetProcessWindowStation
 @ stdcall SetProgmanWindow (long)

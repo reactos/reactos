@@ -578,6 +578,28 @@ CreateMutexW(IN LPSECURITY_ATTRIBUTES lpMutexAttributes  OPTIONAL,
 
 /*
  * @implemented
+ *
+ * CREATE_MUTEX_INITIAL_OWNER is 0x1 in sdk/include/psdk/winbase.h (Vista+
+ * guard). Flag meaning from
+ * https://learn.microsoft.com/en-us/windows/win32/api/synchapi/nf-synchapi-createmutexexw
+ * Same Nt create path as CreateMutexW / CreateSemaphoreExW in this file.
+ */
+HANDLE
+WINAPI
+DECLSPEC_HOTPATCH
+CreateMutexExW(IN LPSECURITY_ATTRIBUTES lpMutexAttributes  OPTIONAL,
+               IN LPCWSTR lpName  OPTIONAL,
+               IN DWORD dwFlags OPTIONAL,
+               IN DWORD dwDesiredAccess OPTIONAL)
+{
+    CreateNtObjectFromWin32Api(Mutex, Mutant, dwDesiredAccess,
+                               lpMutexAttributes,
+                               lpName,
+                               (dwFlags & 0x1) != 0); /* CREATE_MUTEX_INITIAL_OWNER */
+}
+
+/*
+ * @implemented
  */
 HANDLE
 WINAPI
@@ -638,6 +660,29 @@ CreateEventW(IN LPSECURITY_ATTRIBUTES lpEventAttributes  OPTIONAL,
                                lpName,
                                bManualReset ? NotificationEvent : SynchronizationEvent,
                                bInitialState);
+}
+
+/*
+ * @implemented
+ *
+ * CREATE_EVENT_MANUAL_RESET is 0x1 and CREATE_EVENT_INITIAL_SET is 0x2 in
+ * sdk/include/psdk/winbase.h (Vista+ guard). Flag meaning from
+ * https://learn.microsoft.com/en-us/windows/win32/api/synchapi/nf-synchapi-createeventexw
+ * Same Nt create path as CreateEventW / CreateSemaphoreExW in this file.
+ */
+HANDLE
+WINAPI
+DECLSPEC_HOTPATCH
+CreateEventExW(IN LPSECURITY_ATTRIBUTES lpEventAttributes  OPTIONAL,
+               IN LPCWSTR lpName  OPTIONAL,
+               IN DWORD dwFlags OPTIONAL,
+               IN DWORD dwDesiredAccess OPTIONAL)
+{
+    CreateNtObjectFromWin32Api(Event, Event, dwDesiredAccess,
+                               lpEventAttributes,
+                               lpName,
+                               (dwFlags & 0x1) ? NotificationEvent : SynchronizationEvent, /* CREATE_EVENT_MANUAL_RESET */
+                               (dwFlags & 0x2) != 0); /* CREATE_EVENT_INITIAL_SET */
 }
 
 /*

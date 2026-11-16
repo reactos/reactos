@@ -1,0 +1,17 @@
+{
+  "spdx": "GPL-2.0-or-later",
+  "question": "Why did Firefox GetProcAddress fail for GetPointerType/Info/PenInfo after DisplayConfig was exported?",
+  "allowedInputs": [
+    "win32ss/user/user32/user32.spec GetPointerType and GetPointerInfo -version=0x602+ entries already in tree",
+    "win32ss/user/user32_vista/wine/misc.c GetPointerType and GetPointerInfo stubs already in tree",
+    "Wine master dlls/user32/user32.spec GetPointerPenInfo https://gitlab.winehq.org/wine/wine/-/blob/master/dlls/user32/user32.spec",
+    "output/ntdll-apps/serial-App-20261116T111640Z.log marker LDR: missing export user32.dll!GetPointerType",
+    "output/ntdll-apps/serial-App-20261116T112122Z.log marker LDR: missing export shell32.DLL!GetCurrentProcessExplicitAppUserModelID (past GetPointer; no missing GetPointer*)"
+  ],
+  "harness": {
+    "guest": "veros-ntfs App",
+    "name": "firefox-plain-getpointer",
+    "traceOrReplayId": "serial-App-20261116T112122Z"
+  },
+  "harness.logSha256": "41d9c46e29f949327ece8958e3eaae1040c9f244ca85863a35f3cd4cbb592324"
+}

@@ -1,0 +1,17 @@
+{
+  "spdx": "GPL-2.0-or-later",
+  "question": "How should the loader identify which PE forwarder or call site passed a Length-0 DLL name into LdrpLoadDll?",
+  "allowedInputs": [
+    "dll/ntdll/ldr/ldrpe.c already in this tree, LdrpSnapThunk forwarder LdrpLoadDll call",
+    "dll/ntdll/ldr/ldrutils.c already in this tree, LdrpLoadDll empty-name reject",
+    "output/ntdll-apps/serial-App-20261116T064248Z.log marker: LDR: empty LoadDll name; no top-level or initializer",
+    "output/ntdll-apps/firefox-silent-fail10-empty-loaddll-noparent-gaps.txt",
+    "Reported: empty LdrLoadDll never logged; direct LdrpLoadDll callers are forwarder snap and shim"
+  ],
+  "harness": {
+    "guest": "amd64 installed veros-ntfs after empty LoadDll reject, TCG, App mode",
+    "name": "ntdll-apps-firefox",
+    "traceOrReplayId": "serial-App-20261116T064248Z empty LoadDll no top/init",
+    "logSha256": "6c5ad06bcd04c218f521f2470db7716d51e0038fcb73b21c6bd9114486896113"
+  }
+}

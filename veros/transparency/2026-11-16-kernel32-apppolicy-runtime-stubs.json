@@ -1,0 +1,19 @@
+{
+  "spdx": "GPL-2.0-or-later",
+  "question": "Which api-ms-win-appmodel-runtime-l1-1-2 AppPolicy exports must kernel32 provide so UCRT/firefox do not abort after the apiset redirect?",
+  "allowedInputs": [
+    "sdk/lib/apisets/apisets.table.c already in this tree, api-ms-win-appmodel-runtime-l1-1-2 → kernel32.dll",
+    "sdk/include/psdk/appmodel.h already in this tree, AppPolicy* enums and prototypes",
+    "dll/win32/kernelbase/wine/main.c already in this tree, AppPolicyGet* desktop defaults",
+    "sdk/lib/ucrt/internal/winapi_thunks.cpp already in this tree, try_get_AppPolicyGet*",
+    "https://learn.microsoft.com/en-us/windows/win32/api/appmodel/nf-appmodel-apppolicygetprocessterminationmethod",
+    "output/ntdll-apps/serial-App-20261116T075751Z.log marker: api-ms-win-appmodel-runtime-l1-1-2 to kernel32.dll",
+    "output/ntdll-apps/firefox-silent-fail21-fastfail7-gaps.txt"
+  ],
+  "harness": {
+    "guest": "amd64 installed veros-ntfs after INT29 fastfail handler, TCG, App mode",
+    "name": "ntdll-apps-firefox",
+    "traceOrReplayId": "serial-App-20261116T075751Z User fastfail code 7",
+    "logSha256": "0022378e0b23e2ad81ac631935301541bc896a98007983528327c3a851e87ceb"
+  }
+}

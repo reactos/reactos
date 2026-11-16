@@ -1,0 +1,18 @@
+{
+  "spdx": "GPL-2.0-or-later",
+  "question": "How can the App serial tell ucrt abort() from a direct __fastfail, and name the module+RVA of User fastfail code 7 on C:\\Firefox-win64?",
+  "allowedInputs": [
+    "sdk/lib/ucrt/startup/abort.cpp already in this tree, abort() __fastfail path",
+    "ntoskrnl/ke/amd64/except.c already in this tree, User fastfail DPRINT1 and KiPrintUserModuleForAddress",
+    "dll/win32/kernel32/client/proc.c already in this tree, ExitProcess DPRINT1 reaches App serial",
+    "https://learn.microsoft.com/en-us/cpp/c-runtime-library/reference/abort-crt",
+    "output/ntdll-apps/serial-App-20261116T082430Z.log marker: User fastfail in firefox.exe code 7",
+    "output/ntdll-apps/firefox-silent-fail23-fastfail7-no-abort-log.txt"
+  ],
+  "harness": {
+    "guest": "amd64 installed veros-ntfs, TCG, App mode, firefox from C:\\Firefox-win64",
+    "name": "ntdll-apps-firefox",
+    "traceOrReplayId": "serial-App-20261116T082430Z User fastfail code 7 no ucrt abort line",
+    "logSha256": "7a425a130ccdc4b65a9553d781c6deabe8e7158ed43ecfb63a1b12aa2c08f07c"
+  }
+}

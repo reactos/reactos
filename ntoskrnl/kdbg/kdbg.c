@@ -5,6 +5,18 @@
  * COPYRIGHT:   Copyright 2020-2021 Hervé Poussineau <hpoussin@reactos.org>
  *              Copyright 2021 Jérôme Gardou <jerome.gardou@reactos.org>
  *              Copyright 2023 Hermès Bélusca-Maïto <hermes.belusca-maito@reactos.org>
+ *              Copyright 2026 Ryan Wilson <ryan@verosnt.com>
+ * PROGRAMMERS: Hervé Poussineau <hpoussin@reactos.org>
+ *              Jérôme Gardou <jerome.gardou@reactos.org>
+ *              Hermès Bélusca-Maïto <hermes.belusca-maito@reactos.org>
+ *              Ryan Wilson <ryan@verosnt.com>
+ *
+ * PreviousMode for KDB enter conditions used SegCs & 1. App serial
+ * output/ntdll-apps/serial-App-20261116T092124Z.log: user AV in
+ * firefox/xul.dll entered KDB as last-chance and waited on Press q
+ * with -serial file (no keyboard). Page-fault last is already kmode,
+ * so SegCs RPL looked like kernel; when the faulting PC is still below
+ * MmHighestUserAddress, treat PreviousMode as UserMode.
  */
 
 /* INCLUDES ******************************************************************/
@@ -117,10 +129,28 @@ KdSendPacket(
                 KeSetContextPc(&KdbgContext, KeGetContextPc(&KdbgContext) + 2);
             }
 
-            Result = KdbEnterDebuggerException(&KdbgExceptionRecord,
-                                               KdbgContext.SegCs & 1,
-                                               &KdbgContext,
-                                               KdbgFirstChanceException);
+            {
+                KPROCESSOR_MODE PreviousMode;
+
+                /*
+                 * SegCs & MODE_MASK is the usual PreviousMode guess. When that
+                 * bit is clear but the faulting PC is still a user address
+                 * (serial-App-20261116T092124Z.log User AV in xul.dll), keep
+                 * PreviousMode as UserMode so last-chance kmode does not enter
+                 * KDB and block on Press q with -serial file.
+                 */
+                PreviousMode = (KdbgContext.SegCs & MODE_MASK) ? UserMode : KernelMode;
+                if (PreviousMode == KernelMode &&
+                    (ULONG_PTR)KeGetContextPc(&KdbgContext) <= (ULONG_PTR)MmHighestUserAddress)
+                {
+                    PreviousMode = UserMode;
+                }
+
+                Result = KdbEnterDebuggerException(&KdbgExceptionRecord,
+                                                   PreviousMode,
+                                                   &KdbgContext,
+                                                   KdbgFirstChanceException);
+            }
 #if 0
             /* Manually dump the stack for the user */
             KeRosDumpStackFrames(NULL, 0);

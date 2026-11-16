@@ -9,11 +9,14 @@
  *                  Stanislav Motylkov (x86corez@gmail.com)
  *                  Mark Jansen (mark.jansen@reactos.org)
  *                  Copyright 2023 Ratin Gao <ratin@knsoft.org>
+ *                  Copyright 2026 Ryan Wilson <ryan@verosnt.com>
+ * PROGRAMMERS:     Ryan Wilson <ryan@verosnt.com>
  */
 
 /* INCLUDES *******************************************************************/
 
 #include <k32.h>
+#include <appmodel.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -596,13 +599,286 @@ SetSystemFileCacheSize(IN SIZE_T MinimumFileCacheSize,
 }
 
 /*
- * @unimplemented
+ * Desktop AppPolicy stubs for api-ms-win-appmodel-runtime-l1-1-2 →
+ * kernel32 (sdk/lib/apisets/apisets.table.c). UCRT winapi_thunks and
+ * firefox resolve that apiset here. Public docs + in-tree enums:
+ * https://learn.microsoft.com/en-us/windows/win32/api/appmodel/
+ * sdk/include/psdk/appmodel.h
+ * Guest serial-App-20261116T075751Z.log: apiset redirect then
+ * __fastfail(7); only ThreadInitializationType was exported before.
+ */
+
+/*
+ * @implemented
+ */
+LONG
+WINAPI
+AppPolicyGetProcessTerminationMethod(HANDLE processToken,
+                                     AppPolicyProcessTerminationMethod *policy)
+{
+    UNREFERENCED_PARAMETER(processToken);
+    DPRINT1("AppPolicyGetProcessTerminationMethod(%p, %p)\n",
+            processToken, policy);
+    if (!policy)
+    {
+        return ERROR_INVALID_PARAMETER;
+    }
+    *policy = AppPolicyProcessTerminationMethod_ExitProcess;
+    return ERROR_SUCCESS;
+}
+
+/*
+ * @implemented
+ *
+ * https://learn.microsoft.com/en-us/windows/win32/api/appmodel/nf-appmodel-apppolicygetthreadinitializationtype
+ */
+LONG
+WINAPI
+AppPolicyGetThreadInitializationType(HANDLE processToken,
+                                     AppPolicyThreadInitializationType *policy)
+{
+    UNREFERENCED_PARAMETER(processToken);
+    if (!policy)
+    {
+        DPRINT1("AppPolicyGetThreadInitializationType(%p, NULL)\n",
+                processToken);
+        return ERROR_INVALID_PARAMETER;
+    }
+    *policy = AppPolicyThreadInitializationType_None;
+    /*
+     * firefox silent-fail24/25: log desktop policy + tid so the App serial
+     * can match this call to the fastfail thread
+     * (serial-App-20261116T083849Z.log).
+     */
+    DPRINT1("AppPolicyGetThreadInitializationType(%p) tid %p -> None (%ld)\n",
+            processToken,
+            NtCurrentTeb()->ClientId.UniqueThread,
+            (LONG)*policy);
+    return ERROR_SUCCESS;
+}
+
+/*
+ * @implemented
+ */
+LONG
+WINAPI
+AppPolicyGetShowDeveloperDiagnostic(HANDLE processToken,
+                                    AppPolicyShowDeveloperDiagnostic *policy)
+{
+    UNREFERENCED_PARAMETER(processToken);
+    DPRINT1("AppPolicyGetShowDeveloperDiagnostic(%p, %p)\n",
+            processToken, policy);
+    if (!policy)
+    {
+        return ERROR_INVALID_PARAMETER;
+    }
+    *policy = AppPolicyShowDeveloperDiagnostic_ShowUI;
+    return ERROR_SUCCESS;
+}
+
+/*
+ * @implemented
+ */
+LONG
+WINAPI
+AppPolicyGetWindowingModel(HANDLE processToken,
+                           AppPolicyWindowingModel *policy)
+{
+    UNREFERENCED_PARAMETER(processToken);
+    DPRINT1("AppPolicyGetWindowingModel(%p, %p)\n",
+            processToken, policy);
+    if (!policy)
+    {
+        return ERROR_INVALID_PARAMETER;
+    }
+    *policy = AppPolicyWindowingModel_ClassicDesktop;
+    return ERROR_SUCCESS;
+}
+
+/*
+ * @implemented
+ */
+LONG
+WINAPI
+AppPolicyGetMediaFoundationCodecLoading(HANDLE processToken,
+                                        AppPolicyMediaFoundationCodecLoading *policy)
+{
+    UNREFERENCED_PARAMETER(processToken);
+    DPRINT1("AppPolicyGetMediaFoundationCodecLoading(%p, %p)\n",
+            processToken, policy);
+    if (!policy)
+    {
+        return ERROR_INVALID_PARAMETER;
+    }
+    *policy = AppPolicyMediaFoundationCodecLoading_All;
+    return ERROR_SUCCESS;
+}
+
+/*
+ * @implemented
+ *
+ * Desktop processes have no package identity. APPMODEL_ERROR_NO_PACKAGE is
+ * sdk/include/psdk/winerror.h. Public docs:
+ * https://learn.microsoft.com/en-us/windows/win32/api/appmodel/nf-appmodel-getcurrentpackagefullname
+ * Firefox PE import: KERNEL32.dll!GetCurrentPackageFullName.
+ * Guest serial output/ntdll-apps/serial-App-20261116T071818Z.log:
+ * xul.dll AV after appmodel-runtime → kernel32; log stub hits.
+ */
+LONG
+WINAPI
+GetCurrentPackageFullName(UINT32 *packageFullNameLength,
+                          PWSTR packageFullName)
+{
+    DPRINT1("GetCurrentPackageFullName(%p, %p) -> NO_PACKAGE\n",
+            packageFullNameLength, packageFullName);
+    /*
+     * Unpackaged desktop (firefox silent-fail14): size probes pass a
+     * length pointer with a NULL buffer. Clear the length so callers do
+     * not keep an uninitialized size.
+     * https://learn.microsoft.com/en-us/windows/win32/api/appmodel/nf-appmodel-getcurrentpackagefullname
+     */
+    if (packageFullNameLength)
+    {
+        *packageFullNameLength = 0;
+    }
+    UNREFERENCED_PARAMETER(packageFullName);
+    return APPMODEL_ERROR_NO_PACKAGE;
+}
+
+/*
+ * @implemented
+ *
+ * https://learn.microsoft.com/en-us/windows/win32/api/appmodel/nf-appmodel-getcurrentpackagefamilyname
+ */
+LONG
+WINAPI
+GetCurrentPackageFamilyName(UINT32 *packageFamilyNameLength,
+                            PWSTR packageFamilyName)
+{
+    DPRINT1("GetCurrentPackageFamilyName(%p, %p) -> NO_PACKAGE\n",
+            packageFamilyNameLength, packageFamilyName);
+    if (packageFamilyNameLength)
+    {
+        *packageFamilyNameLength = 0;
+    }
+    UNREFERENCED_PARAMETER(packageFamilyName);
+    return APPMODEL_ERROR_NO_PACKAGE;
+}
+
+/*
+ * @implemented
  */
 LONG
 WINAPI
 GetCurrentPackageId(UINT32 *BufferLength,
                     BYTE *Buffer)
 {
-    STUB;
+    DPRINT1("GetCurrentPackageId(%p, %p) -> NO_PACKAGE\n",
+            BufferLength, Buffer);
+    /* serial-App-20261116T072238Z.log: firefox size probe (len*, NULL). */
+    if (BufferLength)
+    {
+        *BufferLength = 0;
+    }
+    UNREFERENCED_PARAMETER(Buffer);
     return APPMODEL_ERROR_NO_PACKAGE;
+}
+
+/*
+ * @implemented
+ */
+LONG
+WINAPI
+GetCurrentPackageInfo(UINT32 flags,
+                      UINT32 *bufferLength,
+                      BYTE *buffer,
+                      UINT32 *count)
+{
+    DPRINT1("GetCurrentPackageInfo(0x%x, %p, %p, %p) -> NO_PACKAGE\n",
+            flags, bufferLength, buffer, count);
+    UNREFERENCED_PARAMETER(flags);
+    if (bufferLength)
+    {
+        *bufferLength = 0;
+    }
+    if (count)
+    {
+        *count = 0;
+    }
+    UNREFERENCED_PARAMETER(buffer);
+    return APPMODEL_ERROR_NO_PACKAGE;
+}
+
+/*
+ * @implemented
+ */
+LONG
+WINAPI
+GetCurrentPackagePath(UINT32 *packagePathLength,
+                      PWSTR packagePath)
+{
+    DPRINT1("GetCurrentPackagePath(%p, %p) -> NO_PACKAGE\n",
+            packagePathLength, packagePath);
+    if (packagePathLength)
+    {
+        *packagePathLength = 0;
+    }
+    UNREFERENCED_PARAMETER(packagePath);
+    return APPMODEL_ERROR_NO_PACKAGE;
+}
+
+/*
+ * @implemented
+ *
+ * https://learn.microsoft.com/en-us/windows/win32/api/appmodel/nf-appmodel-getcurrentapplicationusermodelid
+ * APPMODEL_ERROR_NO_APPLICATION: sdk/include/psdk/winerror.h
+ */
+LONG
+WINAPI
+GetCurrentApplicationUserModelId(UINT32 *applicationUserModelIdLength,
+                                 PWSTR applicationUserModelId)
+{
+    DPRINT1("GetCurrentApplicationUserModelId(%p, %p) -> NO_APPLICATION\n",
+            applicationUserModelIdLength, applicationUserModelId);
+    if (applicationUserModelIdLength)
+    {
+        *applicationUserModelIdLength = 0;
+    }
+    UNREFERENCED_PARAMETER(applicationUserModelId);
+    return APPMODEL_ERROR_NO_APPLICATION;
+}
+
+/*
+ * @implemented
+ *
+ * https://learn.microsoft.com/en-us/windows/win32/api/appmodel/nf-appmodel-getpackagepathbyfullname
+ */
+LONG
+WINAPI
+GetPackagePathByFullName(PCWSTR packageFullName,
+                         UINT32 *pathLength,
+                         PWSTR path)
+{
+    if (pathLength == NULL || packageFullName == NULL)
+    {
+        return ERROR_INVALID_PARAMETER;
+    }
+
+    UNREFERENCED_PARAMETER(path);
+    return APPMODEL_ERROR_NO_PACKAGE;
+}
+
+/*
+ * @implemented
+ */
+LONG
+WINAPI
+PackageFamilyNameFromFullName(PCWSTR packageFullName,
+                              UINT32 *packageFamilyNameLength,
+                              PWSTR packageFamilyName)
+{
+    UNREFERENCED_PARAMETER(packageFullName);
+    UNREFERENCED_PARAMETER(packageFamilyNameLength);
+    UNREFERENCED_PARAMETER(packageFamilyName);
+    return ERROR_INVALID_PARAMETER;
 }

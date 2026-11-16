@@ -1,0 +1,20 @@
+{
+  "spdx": "GPL-2.0-or-later",
+  "question": "How can the App serial name whether firefox ends in ucrt abort(), ExitProcess, or RaiseFailFastException before User fastfail code 7?",
+  "allowedInputs": [
+    "sdk/lib/ucrt/startup/abort.cpp already in this tree, abort() __fastfail(FAST_FAIL_FATAL_APP_EXIT) path",
+    "sdk/lib/ucrt/inc/corecrt_internal.h already in this tree, __acrt_OutputDebugStringA",
+    "dll/win32/kernel32/client/proc.c already in this tree, ExitProcess",
+    "dll/win32/kernel32/client/except.c already in this tree, RaiseFailFastException",
+    "https://learn.microsoft.com/en-us/cpp/c-runtime-library/reference/abort-crt",
+    "https://learn.microsoft.com/en-us/windows/win32/api/errhandlingapi/nf-errhandlingapi-raisefailfastexception",
+    "output/ntdll-apps/serial-App-20261116T080441Z.log marker: User fastfail code 7",
+    "output/ntdll-apps/firefox-silent-fail22-fastfail7-after-apppolicy-gaps.txt"
+  ],
+  "harness": {
+    "guest": "amd64 installed veros-ntfs after AppPolicy stubs and msvcrt handler export, TCG, App mode",
+    "name": "ntdll-apps-firefox",
+    "traceOrReplayId": "serial-App-20261116T080441Z User fastfail code 7",
+    "logSha256": "adb08a988620c957f2019669e32db3e2bdbb1ab25455c20d8a2f9d45c80cd594"
+  }
+}

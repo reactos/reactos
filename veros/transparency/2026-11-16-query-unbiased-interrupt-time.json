@@ -1,0 +1,19 @@
+{
+  "spdx": "GPL-2.0-or-later",
+  "question": "How should QueryUnbiasedInterruptTime / Precise be exported for Firefox when DLL_EXPORT_VERSION is 0x502?",
+  "allowedInputs": [
+    "https://learn.microsoft.com/en-us/windows/win32/api/realtimeapiset/nf-realtimeapiset-queryunbiasedinterrupttime QueryUnbiasedInterruptTime, Kernel32.dll, null fails, 100ns units, excludes sleep",
+    "https://learn.microsoft.com/en-us/windows/win32/api/realtimeapiset/nf-realtimeapiset-queryunbiasedinterrupttimeprecise QueryUnbiasedInterruptTimePrecise",
+    "sdk/include/ndk/ketypes.h already in this tree, KUSER_SHARED_DATA InterruptTime and InterruptTimeBias",
+    "sdk/include/ndk/kefuncs.h already in this tree, KiReadSystemTime",
+    "sdk/include/wine/winternl.h already in this tree, RtlQueryUnbiasedInterruptTime declaration",
+    "dll/win32/kernelbase/wine/kernelbase.spec already in this tree, QueryUnbiasedInterruptTime forwards to ntdll.RtlQueryUnbiasedInterruptTime",
+    "dll/win32/kernelbase/wine/sync.c already in this tree, Precise semi-stub calls RtlQueryUnbiasedInterruptTime",
+    "Reported: Entry Point Not Found QueryUnbiasedInterruptTime in api-ms-win-core-realtime-l1-1-0.dll"
+  ],
+  "harness": {
+    "guest": "amd64 installed veros-ntfs after security/registry apiset remaps, TCG, App mode",
+    "name": "ntdll-apps-firefox",
+    "traceOrReplayId": "Reported: Entry Point Not Found QueryUnbiasedInterruptTime in api-ms-win-core-realtime-l1-1-0.dll"
+  }
+}

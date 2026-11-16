@@ -1,0 +1,18 @@
+{
+  "spdx": "GPL-2.0-or-later",
+  "question": "After the late-TLS all-threads fix, what happened when the Desktop Firefox launcher was clicked?",
+  "allowedInputs": [
+    "output/ntdll-apps/serial-App-20261116T103126Z.log marker: InitFile",
+    "output/ntdll-apps/serial-App-20261116T103126Z.log marker: Retrying with: cmd /c",
+    "output/ntdll-apps/serial-App-20261116T103126Z.log marker: EX: Work Queue Deadlock detected: 1",
+    "output/ntdll-apps/serial-App-20261116T100204Z.log marker: LdrpInitializeProcessCompat: Found guid for winver",
+    "Reported: guest froze when the desktop icon was clicked",
+    "dll/ntdll/ldr/ldrinit.c already in this tree, LdrpHandleTlsData"
+  ],
+  "harness": {
+    "guest": "amd64 installed veros-ntfs after 8eeb9c3, TCG, App mode",
+    "name": "ntdll-apps-firefox",
+    "traceOrReplayId": "serial-App-20261116T103126Z click deadlock",
+    "logSha256": "eb3dd3d3972bd50aa4d2faa45862488a4614d874ff4f229241a7d086e5acb9b3"
+  }
+}

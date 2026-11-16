@@ -1,0 +1,23 @@
+{
+  "spdx": "GPL-2.0-or-later",
+  "question": "What missing kernel32 exports and DLLs cause Firefox to exit with a User AV after PE snap succeeds?",
+  "allowedInputs": [
+    "https://learn.microsoft.com/en-us/windows/win32/api/wow64apiset/nf-wow64apiset-iswow64process2 IsWow64Process2, Kernel32.dll",
+    "https://learn.microsoft.com/en-us/windows/win32/api/appmodel/nf-appmodel-apppolicygetthreadinitializationtype AppPolicyGetThreadInitializationType, Kernel32.dll",
+    "sdk/include/psdk/appmodel.h already in this tree, AppPolicyThreadInitializationType_None",
+    "dll/win32/kernel32/client/proc.c already in this tree, IsWow64Process",
+    "dll/directx/wine/dwrite already in this tree, add_cd_file dwrite to VerOS/system32",
+    "dll/directx/wine/CMakeLists.txt already in this tree, dwrite gated behind DLL_EXPORT_VERSION GREATER_EQUAL 0x600",
+    "dll/win32/msvcrt/msvcrt.spec already in this tree, wcstok_s gated -version=0x600+",
+    "dll/win32/msvcrt/wcs.c already in this tree, wcstok_s implementation",
+    "output/ntdll-apps/serial-App-20261116T052604Z.log LDR: missing export kernel32.dll!IsWow64Process2",
+    "output/ntdll-apps/serial-App-20261116T052604Z.log LDR: missing export kernel32.dll!AppPolicyGetThreadInitializationType",
+    "output/ntdll-apps/serial-App-20261116T052604Z.log LDR: missing dll dwrite.dll",
+    "output/ntdll-apps/serial-App-20261116T052604Z.log User AV in firefox.exe"
+  ],
+  "harness": {
+    "guest": "amd64 installed veros-ntfs after CM_Register_Notification stubs, TCG, App mode",
+    "name": "ntdll-apps-firefox",
+    "traceOrReplayId": "output/ntdll-apps/serial-App-20261116T052604Z.log User AV in firefox.exe"
+  }
+}

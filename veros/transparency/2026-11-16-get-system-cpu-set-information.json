@@ -1,0 +1,17 @@
+{
+  "spdx": "GPL-2.0-or-later",
+  "question": "How should GetSystemCpuSetInformation be exported from KERNEL32 so Firefox xul.dll can load when DLL_EXPORT_VERSION is 0x502?",
+  "allowedInputs": [
+    "https://learn.microsoft.com/en-us/windows/win32/api/processthreadsapi/nf-processthreadsapi-getsystemcpusetinformation GetSystemCpuSetInformation, Kernel32.dll, five parameters",
+    "sdk/include/xdk/ketypes.h already in this tree, SYSTEM_CPU_SET_INFORMATION",
+    "sdk/include/ndk/extypes.h already in this tree, SystemCpuSetInformation = 175",
+    "dll/win32/kernel32/kernel32.spec already in this tree, no GetSystemCpuSetInformation export",
+    "Reported: Entry Point Not Found GetSystemCpuSetInformation in KERNEL32.dll for firefox.exe",
+    "Reported: xul.dll PE import of GetSystemCpuSetInformation from kernel32.dll"
+  ],
+  "harness": {
+    "guest": "amd64 installed veros-ntfs after shcore-scaling apiset remap, TCG, App mode",
+    "name": "ntdll-apps-firefox",
+    "traceOrReplayId": "Reported: Entry Point Not Found GetSystemCpuSetInformation in KERNEL32.dll"
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "spdx": "GPL-2.0-or-later",
+  "question": "How should WerRegisterRuntimeExceptionModule and related mozglue KERNEL32 imports be exported when DLL_EXPORT_VERSION is 0x502?",
+  "allowedInputs": [
+    "https://learn.microsoft.com/en-us/windows/win32/api/werapi/nf-werapi-werregisterruntimeexceptionmodule WerRegisterRuntimeExceptionModule, Kernel32.dll, HRESULT, S_OK",
+    "https://learn.microsoft.com/en-us/windows/win32/api/werapi/nf-werapi-werunregisterruntimeexceptionmodule WerUnregisterRuntimeExceptionModule",
+    "https://learn.microsoft.com/en-us/windows/win32/api/errhandlingapi/nf-errhandlingapi-raisefailfastexception RaiseFailFastException",
+    "https://learn.microsoft.com/en-us/windows/win32/api/errhandlingapi/nf-errhandlingapi-setthreaderrormode SetThreadErrorMode, SEM flags",
+    "sdk/include/psdk/ntstatus.h already in this tree, STATUS_FAIL_FAST_EXCEPTION",
+    "sdk/include/ndk/rtlfuncs.h already in this tree, RtlSetThreadErrorMode",
+    "dll/win32/kernel32/client/synch.c already in this tree, CreateWaitableTimerExW",
+    "dll/win32/kernelbase/wine/debug.c already in this tree, WerRegisterRuntimeExceptionModule returns S_OK",
+    "Reported: Entry Point Not Found WerRegisterRuntimeExceptionModule in KERNEL32.dll for firefox.exe"
+  ],
+  "harness": {
+    "guest": "amd64 installed veros-ntfs after CreateFile2 export, TCG, App mode",
+    "name": "ntdll-apps-firefox",
+    "traceOrReplayId": "Reported: Entry Point Not Found WerRegisterRuntimeExceptionModule in KERNEL32.dll"
+  }
+}

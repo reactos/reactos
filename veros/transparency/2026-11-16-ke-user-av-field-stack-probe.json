@@ -1,0 +1,16 @@
+{
+  "spdx": "GPL-2.0-or-later",
+  "question": "Which qword at rbx/rsi +0..+0x18 or on the User AV stack holds -1 when the fault address is -1?",
+  "allowedInputs": [
+    "ntoskrnl/ke/amd64/except.c already in this tree, KiPrintUserQwordAt and ProbeForRead",
+    "output/ntdll-apps/serial-App-20261116T073253Z.log marker: User AV rsi [0000000016820180] qword 0000000000865C20",
+    "output/ntdll-apps/firefox-silent-fail16-av-object-qword-gaps.txt",
+    "Reported: on go, probe rbx/rsi +0/+8/+0x10/+0x18 and rsp/r9/rbp-0x20..0"
+  ],
+  "harness": {
+    "guest": "amd64 installed veros-ntfs after AV reg qword probe, TCG, App mode",
+    "name": "ntdll-apps-firefox",
+    "traceOrReplayId": "serial-App-20261116T073253Z xul.dll +0x18f2c22",
+    "logSha256": "98e5fe7f89c5d3dec2f34d9e9a8d742effbd1e6b2531d152c015e5531f243661"
+  }
+}

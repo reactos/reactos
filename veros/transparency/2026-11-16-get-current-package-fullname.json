@@ -1,0 +1,23 @@
+{
+  "spdx": "GPL-2.0-or-later",
+  "question": "How should GetCurrentPackageFullName and related appmodel exports behave for desktop Firefox under DLL_EXPORT_VERSION 0x502?",
+  "allowedInputs": [
+    "https://learn.microsoft.com/en-us/windows/win32/api/appmodel/nf-appmodel-getcurrentpackagefullname GetCurrentPackageFullName, Kernel32.dll, APPMODEL_ERROR_NO_PACKAGE when no package identity",
+    "https://learn.microsoft.com/en-us/windows/win32/api/appmodel/nf-appmodel-getcurrentpackagefamilyname GetCurrentPackageFamilyName",
+    "https://learn.microsoft.com/en-us/windows/win32/api/appmodel/nf-appmodel-getcurrentapplicationusermodelid GetCurrentApplicationUserModelId, APPMODEL_ERROR_NO_APPLICATION",
+    "https://learn.microsoft.com/en-us/windows/win32/api/processthreadsapi/nf-processthreadsapi-getprocessmitigationpolicy GetProcessMitigationPolicy",
+    "https://learn.microsoft.com/en-us/windows/win32/api/processthreadsapi/nf-processthreadsapi-setprocessmitigationpolicy SetProcessMitigationPolicy",
+    "https://learn.microsoft.com/en-us/windows/win32/api/processthreadsapi/nf-processthreadsapi-setthreadinformation SetThreadInformation",
+    "sdk/include/psdk/winerror.h already in this tree, APPMODEL_ERROR_NO_PACKAGE and APPMODEL_ERROR_NO_APPLICATION",
+    "sdk/include/psdk/processthreadsapi.h already in this tree, THREAD_INFORMATION_CLASS",
+    "sdk/include/ndk/pstypes.h already in this tree, ThreadPagePriority",
+    "dll/win32/kernel32/client/sysinfo.c already in this tree, GetCurrentPackageId returned APPMODEL_ERROR_NO_PACKAGE",
+    "dll/win32/kernelbase/wine/version.c already in this tree, GetCurrentPackageFullName returns APPMODEL_ERROR_NO_PACKAGE",
+    "Reported: Entry Point Not Found GetCurrentPackageFullName in KERNEL32.dll for firefox.exe"
+  ],
+  "harness": {
+    "guest": "amd64 installed veros-ntfs after WinRT combase apiset remap, TCG, App mode",
+    "name": "ntdll-apps-firefox",
+    "traceOrReplayId": "Reported: Entry Point Not Found GetCurrentPackageFullName in KERNEL32.dll"
+  }
+}

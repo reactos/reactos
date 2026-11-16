@@ -1,0 +1,18 @@
+{
+  "spdx": "GPL-2.0-or-later",
+  "question": "How should PowerCreateRequest, PowerSetRequest, and PowerClearRequest be exported from KERNEL32 so Firefox xul.dll can load when DLL_EXPORT_VERSION is 0x502?",
+  "allowedInputs": [
+    "https://learn.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-powercreaterequest PowerCreateRequest, Kernel32.dll, PREASON_CONTEXT",
+    "https://learn.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-powersetrequest PowerSetRequest, Kernel32.dll, POWER_REQUEST_TYPE",
+    "https://learn.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-powerclearrequest PowerClearRequest, Kernel32.dll, POWER_REQUEST_TYPE",
+    "sdk/include/psdk/minwinbase.h already in this tree, REASON_CONTEXT",
+    "dll/win32/kernel32/kernel32.spec already in this tree, no Power*Request exports",
+    "Reported: Entry Point Not Found PowerClearRequest in KERNEL32.dll for firefox.exe",
+    "Reported: xul.dll PE imports PowerClearRequest, PowerCreateRequest, PowerSetRequest from kernel32.dll"
+  ],
+  "harness": {
+    "guest": "amd64 installed veros-ntfs after GetSystemCpuSetInformation stub, TCG, App mode",
+    "name": "ntdll-apps-firefox",
+    "traceOrReplayId": "Reported: Entry Point Not Found PowerClearRequest in KERNEL32.dll"
+  }
+}

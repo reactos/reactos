@@ -1,0 +1,18 @@
+{
+  "spdx": "GPL-2.0-or-later",
+  "question": "What must EtwEventRegister write to *RegHandle when it returns ERROR_SUCCESS so Firefox does not call EtwEventSetInformation with a null handle?",
+  "allowedInputs": [
+    "https://learn.microsoft.com/en-us/windows/win32/api/evntprov/nf-evntprov-eventregister EventRegister, RegHandle out-parameter, ERROR_SUCCESS",
+    "https://learn.microsoft.com/en-us/windows/win32/api/evntprov/nf-evntprov-eventsetinformation EventSetInformation, RegHandle from EventRegister",
+    "sdk/include/psdk/evntprov.h already in this tree, EventRegister, REGHANDLE, PENABLECALLBACK",
+    "dll/ntdll/etw/trace.c already in this tree, EtwStartTraceW writes 0xcafe4242 to *pSessionHandle",
+    "dll/ntdll/def/ntdll.spec already in this tree, EtwEventRegister -stub",
+    "output/ntdll-apps/serial-App-20261116T054003Z.log marker: WARNING: calling stub EtwEventSetInformation(0x0,",
+    "output/ntdll-apps/firefox-silent-fail3-etw-gaps.txt"
+  ],
+  "harness": {
+    "guest": "amd64 installed veros-ntfs after DPI awareness exports, TCG, App mode",
+    "name": "ntdll-apps-firefox",
+    "traceOrReplayId": "serial-App-20261116T054003Z EtwEventSetInformation(0x0"
+  }
+}

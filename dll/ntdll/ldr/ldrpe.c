@@ -6,7 +6,12 @@
  * COPYRIGHT:   See COPYING in the top level directory
  *              Copyright 2026 Ryan Wilson <ryan@verosnt.com>
  * PROGRAMMERS: Alex Ionescu (alex@relsoft.net)
- *              Ryan Wilson <ryan@verosnt.com>
+ *              Ryan Wilson
+ *
+ * Empty import / forwarder DLL names are rejected. Guest serial
+ * output/ntdll-apps/serial-App-20261116T064248Z.log shows
+ * LDR: empty LoadDll name with no top/init after winrt→combase —
+ * forwarder LdrpLoadDll is the remaining Length-0 path.
  */
 
 /* INCLUDES *****************************************************************/
@@ -289,6 +294,7 @@ LdrpHandleOneNewFormatImportDescriptor(IN LPWSTR DllPath OPTIONAL,
     /* Load the module for this entry */
     Status = LdrpLoadImportModule(DllPath,
                                   BoundImportName,
+                                  &LdrEntry->BaseDllName,
                                   &DllLdrEntry,
                                   &AlreadyLoaded);
     if (!NT_SUCCESS(Status))
@@ -362,6 +368,7 @@ LdrpHandleOneNewFormatImportDescriptor(IN LPWSTR DllPath OPTIONAL,
         /* Load the module */
         Status = LdrpLoadImportModule(DllPath,
                                       ForwarderName,
+                                      &LdrEntry->BaseDllName,
                                       &ForwarderLdrEntry,
                                       &AlreadyLoaded);
         if (NT_SUCCESS(Status))
@@ -548,6 +555,7 @@ LdrpHandleOneOldFormatImportDescriptor(IN LPWSTR DllPath OPTIONAL,
     /* Load the module associated to it */
     Status = LdrpLoadImportModule(DllPath,
                                   ImportName,
+                                  &LdrEntry->BaseDllName,
                                   &DllLdrEntry,
                                   &AlreadyLoaded);
     if (!NT_SUCCESS(Status))
@@ -810,6 +818,7 @@ NTSTATUS
 NTAPI
 LdrpLoadImportModule(IN PWSTR DllPath OPTIONAL,
                      IN LPSTR ImportName,
+                     IN PCUNICODE_STRING ParentDllName OPTIONAL,
                      OUT PLDR_DATA_TABLE_ENTRY *DataTableEntry,
                      OUT PBOOLEAN Existing)
 {
@@ -825,6 +834,24 @@ LdrpLoadImportModule(IN PWSTR DllPath OPTIONAL,
     BOOLEAN RedirectedDll;
 
     DPRINT("LdrpLoadImportModule('%S' '%s' %p %p)\n", DllPath, ImportName, DataTableEntry, Existing);
+
+    /*
+     * Empty import names become ".DLL" after the default extension is
+     * appended below. Refuse them and name the parent so the guest serial
+     * identifies the offender (firefox silent-fail8).
+     */
+    if (!ImportName || ImportName[0] == '\0')
+    {
+        if (ParentDllName)
+        {
+            DbgPrint("LDR: empty import DLL name from %wZ\n", ParentDllName);
+        }
+        else
+        {
+            DbgPrint("LDR: empty import DLL name from (unknown)\n");
+        }
+        return STATUS_OBJECT_NAME_INVALID;
+    }
 
     RedirectedDll = FALSE;
     RtlInitEmptyUnicodeString(&RedirectedImpDescName, NULL, 0);
@@ -1146,6 +1173,18 @@ FailurePath:
             ForwarderName.Buffer = ImportName;
             ForwarderName.Length = (USHORT)(DotPosition - ImportName);
             ForwarderName.MaximumLength = ForwarderName.Length;
+            /*
+             * A forwarder that starts with '.' has an empty DLL part. The
+             * default extension then turns it into ".DLL" (same silent-fail
+             * path as an empty import name).
+             */
+            if (ForwarderName.Length == 0)
+            {
+                DbgPrint("LDR: empty forwarder DLL name in '%s' from %s\n",
+                         ImportName,
+                         DllName ? DllName : "(unknown)");
+                goto FailurePath;
+            }
             Status = RtlAnsiStringToUnicodeString(&TempUString,
                                                   &ForwarderName,
                                                   TRUE);
@@ -1171,6 +1210,21 @@ FailurePath:
                 else
                 {
                     RedirectedImportName = &TempUString;
+                }
+
+                /*
+                 * silent-fail10: empty LoadDll with no top/init is this path.
+                 * Name the exporting module and full forwarder string when the
+                 * redirected name is empty (serial-App-20261116T064248Z.log).
+                 */
+                if (!RedirectedImportName ||
+                    !RedirectedImportName->Buffer ||
+                    RedirectedImportName->Length == 0)
+                {
+                    DbgPrint("LDR: empty forwarder LoadDll from %s forwarder='%s' redirected=%d\n",
+                             DllName ? DllName : "(unknown)",
+                             ImportName ? ImportName : "(null)",
+                             (int)Redirected);
                 }
 
                 /* Load the forwarder */

@@ -8,6 +8,11 @@
  * PROGRAMMERS: Alex Ionescu (alex@relsoft.net)
  *              Aleksey Bragin (aleksey@reactos.org)
  *              Ryan Wilson <ryan@verosnt.com>
+ *
+ * Empty LdrpLoadDll names are rejected. LdrpLoadShimEngine also refuses an
+ * empty engine path (serial-App-20261116T065630Z.log, ret in LdrpLoadShimEngine).
+ * Post-init LoadLibrary calls LdrpHandleTlsData for IMAGE_TLS modules
+ * (serial-App-20261116T100204Z xul.dll ThreadRegistration AV).
  */
 
 /* INCLUDES *****************************************************************/
@@ -2447,6 +2452,40 @@ LdrpLoadDll(IN BOOLEAN Redirected,
     PLDR_DATA_TABLE_ENTRY LdrEntry;
     BOOLEAN InInit = LdrpInLdrInit;
 
+    /*
+     * An empty UNICODE name becomes ".DLL" after the default extension is
+     * appended below. Refuse it and name the top/init DLL so the guest
+     * serial identifies the LoadLibrary caller (firefox silent-fail9).
+     */
+    if (!DllName || !DllName->Buffer || DllName->Length == 0)
+    {
+        PPEB EmptyPeb = NtCurrentPeb();
+        /*
+         * silent-fail10: direct LdrpLoadDll (forwarder/shim) had no top/init.
+         * Name the image, init flag, and return address so the serial pins
+         * the call site (output/ntdll-apps/serial-App-20261116T064248Z.log).
+         */
+        DbgPrint("LDR: empty LoadDll name; inInit=%d ret=%p\n",
+                 (int)LdrpInLdrInit,
+                 _ReturnAddress());
+        if (EmptyPeb && EmptyPeb->ProcessParameters)
+        {
+            DbgPrint("LDR: empty LoadDll name; image %wZ\n",
+                     &EmptyPeb->ProcessParameters->ImagePathName);
+        }
+        if (LdrpTopLevelDllBeingLoaded)
+        {
+            DbgPrint("LDR: empty LoadDll name; top-level %wZ\n",
+                     LdrpTopLevelDllBeingLoaded);
+        }
+        if (LdrpCurrentDllInitializer)
+        {
+            DbgPrint("LDR: empty LoadDll name; initializer %wZ\n",
+                     &LdrpCurrentDllInitializer->BaseDllName);
+        }
+        return STATUS_OBJECT_NAME_INVALID;
+    }
+
     /* Save the Raw DLL Name */
     if (DllName->Length >= sizeof(NameBuffer)) return STATUS_NAME_TOO_LONG;
     RtlInitEmptyUnicodeString(&RawDllName, NameBuffer, sizeof(NameBuffer));
@@ -2526,6 +2565,18 @@ LdrpLoadDll(IN BOOLEAN Redirected,
                                 &LdrEntry);
             if (!NT_SUCCESS(Status))
                 _SEH2_LEAVE;
+
+            /*
+             * Process-init TLS is done in LdrpInitializeTls. A later
+             * LoadLibrary of a DLL with IMAGE_TLS (firefox xul.dll) still
+             * needs a slot and AddressOfIndex write before its code runs.
+             */
+            if (!LdrpInLdrInit)
+            {
+                Status = LdrpHandleTlsData(LdrEntry);
+                if (!NT_SUCCESS(Status))
+                    _SEH2_LEAVE;
+            }
 
             /* FIXME: Need to mark the DLL range for the stack DB */
             //RtlpStkMarkDllRange(LdrEntry);
@@ -2778,6 +2829,18 @@ LdrpLoadShimEngine(IN PWSTR ImageName, IN PUNICODE_STRING ProcessImage, IN PVOID
     UNICODE_STRING ShimLibraryName;
     PVOID ShimLibrary;
     NTSTATUS Status;
+
+    /*
+     * ImageName must be a DLL path (e.g. apphelp). A null/empty name was
+     * LoadDll Length 0 when ReactOS_ShimData was passed as the path
+     * (serial-App-20261116T065630Z.log, ret inside LdrpLoadShimEngine).
+     */
+    if (!ImageName || ImageName[0] == UNICODE_NULL)
+    {
+        DbgPrint("LDR: LdrpLoadShimEngine skipped; empty engine name\n");
+        return;
+    }
+
     RtlInitUnicodeString(&ShimLibraryName, ImageName);
     /* We should NOT pass CallInit = TRUE!
        If we do this, other init routines will be called before we get a chance to shim stuff.. */

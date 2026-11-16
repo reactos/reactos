@@ -1,10 +1,12 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
+ *                  Copyright 2026 Ryan Wilson <ryan@verosnt.com>
  * PROJECT:         ReactOS system libraries
  * FILE:            dll/win32/kernel32/client/except.c
  * PURPOSE:         Exception functions
  * PROGRAMMER:      Ariadne (ariadne@xs4all.nl)
  *                  Modified from WINE [ Onno Hovers, (onno@stack.urc.tue.nl) ]
+ *                  Ryan Wilson <ryan@verosnt.com>
  * UPDATE HISTORY:
  *                  Created 01/11/98
  */
@@ -1043,6 +1045,30 @@ GetLastError(VOID)
 {
     /* Return the current value */
     return NtCurrentTeb()->LastErrorValue;
+}
+
+/*
+ * @implemented
+ *
+ * RaiseFailFastException ends the process. STATUS_FAIL_FAST_EXCEPTION is
+ * sdk/include/psdk/ntstatus.h. Public docs:
+ * https://learn.microsoft.com/en-us/windows/win32/api/errhandlingapi/nf-errhandlingapi-raisefailfastexception
+ */
+VOID
+WINAPI
+RaiseFailFastException(IN PEXCEPTION_RECORD pExceptionRecord OPTIONAL,
+                       IN PCONTEXT pContextRecord OPTIONAL,
+                       IN DWORD dwFlags)
+{
+    UNREFERENCED_PARAMETER(pContextRecord);
+    /*
+     * firefox silent-fail22: log before TerminateProcess so abort vs
+     * RaiseFailFastException is visible (serial-App-20261116T080441Z.log).
+     */
+    DPRINT1("RaiseFailFastException code 0x%08lx flags 0x%lx\n",
+            pExceptionRecord ? pExceptionRecord->ExceptionCode : 0,
+            dwFlags);
+    TerminateProcess(GetCurrentProcess(), STATUS_FAIL_FAST_EXCEPTION);
 }
 
 /* EOF */

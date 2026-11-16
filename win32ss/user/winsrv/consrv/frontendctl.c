@@ -1,9 +1,11 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
+ *                  Copyright 2026 Ryan Wilson <ryan@verosnt.com>
  * PROJECT:         ReactOS Console Server DLL
  * FILE:            win32ss/user/winsrv/consrv/frontendctl.c
  * PURPOSE:         Terminal Front-Ends Control
  * PROGRAMMERS:     Hermes Belusca-Maito (hermes.belusca@sfr.fr)
+ *                  Ryan Wilson <ryan@verosnt.com>
  */
 
 /* INCLUDES *******************************************************************/
@@ -276,7 +278,17 @@ GetThreadConsoleDesktop(
     /* Retrieve and lock the thread */
     Status = CsrLockThreadByClientId(ULongToHandle(ThreadId), &CsrThread);
     if (!NT_SUCCESS(Status))
+    {
+        /*
+         * firefox silent-fail18: distinguish lock miss from the common
+         * GUI "no console" INVALID_HANDLE below
+         * (serial-App-20261116T074132Z.log).
+         */
+        DPRINT1("GetThreadConsoleDesktop(%Iu) lock failed 0x%08lx\n",
+                ThreadId,
+                Status);
         return Status;
+    }
 
     ASSERT(CsrThread->Process);
 
@@ -286,7 +298,17 @@ GetThreadConsoleDesktop(
     CsrUnlockThread(CsrThread);
 
     if (!NT_SUCCESS(Status))
+    {
+        /*
+         * GUI processes (firefox) have no console; ConSrvGetConsole
+         * returns STATUS_INVALID_HANDLE. SrvGetThreadConsoleDesktop
+         * still reports success to user32 with a NULL desktop.
+         */
+        DPRINT1("GetThreadConsoleDesktop(%Iu) no console 0x%08lx\n",
+                ThreadId,
+                Status);
         return Status;
+    }
 
     /* Retrieve the console desktop handle, and release the console */
     *ConsoleDesktop = TermGetThreadConsoleDesktop(Console);

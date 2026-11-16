@@ -1,0 +1,17 @@
+{
+  "spdx": "GPL-2.0-or-later",
+  "question": "Which ntdll exports gated above DLL_EXPORT_VERSION 0x502 does Firefox still need through kernel32 forwards?",
+  "allowedInputs": [
+    "sdk/cmake/config.cmake already in this tree, DLL_EXPORT_VERSION 0x502",
+    "dll/ntdll/def/ntdll.spec already in this tree, with -version gates on RtlTryAcquireSRWLockShared and the Tp* / RtlRunOnceInitialize symbols",
+    "dll/win32/kernel32/kernel32.spec already in this tree, which forwards TryAcquireSRWLockShared and the threadpool/InitOnce helpers to those ntdll exports",
+    "sdk/lib/rtl/srw.c already in this tree, which implements RtlTryAcquireSRWLockShared",
+    "Reported: Entry Point Not Found ntdll.RtlTryAcquireSRWLockShared in api-ms-win-core-synch-l1-1-0.dll",
+    "Reported: import scan following kernel32 forwards found 8 ntdll symbols still gated above 0x502"
+  ],
+  "harness": {
+    "guest": "amd64 installed veros-ntfs after kernel32 Firefox export batch, TCG, App mode",
+    "name": "ntdll-apps-firefox",
+    "traceOrReplayId": "Reported: Entry Point Not Found ntdll.RtlTryAcquireSRWLockShared in api-ms-win-core-synch-l1-1-0.dll"
+  }
+}

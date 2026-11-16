@@ -1,0 +1,16 @@
+{
+  "spdx": "GPL-2.0-or-later",
+  "question": "Does following rsi+0x8/rsi+0x10 or scanning the User AV frame for -1/-2 locate the pointer that faults as -1?",
+  "allowedInputs": [
+    "ntoskrnl/ke/amd64/except.c already in this tree, KiPrintUserQwordFields and ProbeForRead",
+    "output/ntdll-apps/serial-App-20261116T073710Z.log marker: User AV rbp-0x08 [000000001733FF68] qword FFFFFFFFFFFFFFFE",
+    "output/ntdll-apps/firefox-silent-fail17-av-stack-neg2-gaps.txt",
+    "Reported: on go, follow rsi+0x8/rsi+0x10 and scan rsp..rbp+0x20 for -1/-2"
+  ],
+  "harness": {
+    "guest": "amd64 installed veros-ntfs after AV field+stack probes, TCG, App mode",
+    "name": "ntdll-apps-firefox",
+    "traceOrReplayId": "serial-App-20261116T073710Z xul.dll +0x18f2c22",
+    "logSha256": "3b5bc8075030fa1bf97e3cda3f3472fea83180f98d52b790db4c2cc5427600fd"
+  }
+}

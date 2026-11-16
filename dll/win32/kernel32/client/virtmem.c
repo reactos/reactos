@@ -4,6 +4,8 @@
  * FILE:            dll/win32/kernel32/client/virtmem.c
  * PURPOSE:         Handles virtual memory APIs
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
+ *                  Ryan Wilson <ryan@verosnt.com>
+ * COPYRIGHT:       Copyright 2026 Ryan Wilson <ryan@verosnt.com>
  */
 
 /* INCLUDES *******************************************************************/
@@ -200,6 +202,27 @@ VirtualLock(IN LPVOID lpAddress,
     }
 
     /* Return success */
+    return TRUE;
+}
+
+/*
+ * @implemented
+ *
+ * PrefetchVirtualMemory: accept the call (no VmPrefetch path yet).
+ * https://learn.microsoft.com/en-us/windows/win32/api/memoryapi/nf-memoryapi-prefetchvirtualmemory
+ * Firefox soft-imports KERNEL32.dll!PrefetchVirtualMemory.
+ */
+BOOL
+WINAPI
+PrefetchVirtualMemory(IN HANDLE hProcess,
+                      IN ULONG_PTR NumberOfEntries,
+                      IN PVOID VirtualAddresses,
+                      IN ULONG Flags)
+{
+    UNREFERENCED_PARAMETER(hProcess);
+    UNREFERENCED_PARAMETER(NumberOfEntries);
+    UNREFERENCED_PARAMETER(VirtualAddresses);
+    UNREFERENCED_PARAMETER(Flags);
     return TRUE;
 }
 

@@ -1,0 +1,17 @@
+{
+  "spdx": "GPL-2.0-or-later",
+  "question": "What should the loader do when an import descriptor or PE forwarder DLL name is empty before the default .DLL extension is appended?",
+  "allowedInputs": [
+    "dll/ntdll/ldr/ldrpe.c already in this tree, LdrpLoadImportModule default extension append and LdrpSnapThunk forwarder DotPosition split",
+    "dll/ntdll/include/ntdllp.h already in this tree, LdrpLoadImportModule prototype",
+    "output/ntdll-apps/serial-App-20261116T062033Z.log marker: LDR: missing dll .DLL",
+    "output/ntdll-apps/firefox-silent-fail8-empty-import-gaps.txt",
+    "Reported: empty ImportName plus L\".DLL\" produces the missing dll .DLL path; RoGet empty-DllPath was not hit"
+  ],
+  "harness": {
+    "guest": "amd64 installed veros-ntfs after combase empty DllPath reject, TCG, App mode",
+    "name": "ntdll-apps-firefox",
+    "traceOrReplayId": "serial-App-20261116T062033Z missing dll .DLL",
+    "logSha256": "e0f907cdbe68697860e657f65cc73e201044ed475d8e9e19897b0e044ace986f"
+  }
+}

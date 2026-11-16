@@ -5,6 +5,7 @@
  * Copyright 1997 Marcus Meissner
  * Copyright 1998 Turchanov Sergey
  * Copyright 2019 Micah N Gorrell for CodeWeavers
+ * Copyright 2026 Ryan Wilson <ryan@verosnt.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -620,6 +621,22 @@ BOOL WINAPI GetPointerType(UINT32 id, POINTER_INPUT_TYPE *type)
 }
 
 BOOL WINAPI GetPointerInfo(UINT32 id, POINTER_INFO *info)
+{
+    FIXME("(%d %p): stub\n", id, info);
+
+    SetLastError(ERROR_INVALID_PARAMETER);
+    return FALSE;
+}
+
+/*
+ * GetPointerPenInfo [USER32.@]
+ *
+ * Same failure shape as GetPointerInfo above. Name from
+ * serial-App-20261116T111640Z.log (LDR missing export GetPointerPenInfo).
+ * Wine master dlls/user32/user32.spec lists GetPointerPenInfo(long ptr):
+ * https://gitlab.winehq.org/wine/wine/-/blob/master/dlls/user32/user32.spec
+ */
+BOOL WINAPI GetPointerPenInfo(UINT32 id, PVOID info)
 {
     FIXME("(%d %p): stub\n", id, info);
 

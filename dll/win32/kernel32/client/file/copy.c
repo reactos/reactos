@@ -1,9 +1,11 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
+ *                  Copyright 2026 Ryan Wilson <ryan@verosnt.com>
  * PROJECT:         ReactOS system libraries
  * FILE:            dll/win32/kernel32/client/file/copy.c
  * PURPOSE:         Copying files
  * PROGRAMMER:      Ariadne (ariadne@xs4all.nl)
+ *                  Ryan Wilson <ryan@verosnt.com>
  * UPDATE HISTORY:
  *                  01/11/98 Created
  *                  07/02/99 Moved to separate file
@@ -374,6 +376,55 @@ CopyFileW(IN LPCWSTR lpExistingFileName,
                        NULL,
                        NULL,
                        (bFailIfExists ? COPY_FILE_FAIL_IF_EXISTS : 0));
+}
+
+#if (_WIN32_WINNT < 0x0601)
+/* Layout matches sdk/include/psdk/winbase.h COPYFILE2_EXTENDED_PARAMETERS
+ * (gated there behind _WIN32_WINNT >= 0x0601). */
+typedef struct _KERNEL32_COPYFILE2_EXTENDED_PARAMETERS {
+    DWORD dwSize;
+    DWORD dwCopyFlags;
+    BOOL *pfCancel;
+    PVOID pProgressRoutine;
+    PVOID pvCallbackContext;
+} KERNEL32_COPYFILE2_EXTENDED_PARAMETERS;
+#define COPYFILE2_EXTENDED_PARAMETERS KERNEL32_COPYFILE2_EXTENDED_PARAMETERS
+#endif
+
+/*
+ * @implemented
+ *
+ * CopyFile2 returns HRESULT; flags/cancel come from COPYFILE2_EXTENDED_PARAMETERS.
+ * Layout: sdk/include/psdk/winbase.h. Public docs:
+ * https://learn.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-copyfile2
+ * Firefox PE import: KERNEL32.dll!CopyFile2 (msvcp140.dll).
+ */
+HRESULT
+WINAPI
+CopyFile2(IN PCWSTR pwszExistingFileName,
+          IN PCWSTR pwszNewFileName,
+          IN COPYFILE2_EXTENDED_PARAMETERS *pExtendedParameters OPTIONAL)
+{
+    DWORD CopyFlags = 0;
+    LPBOOL Cancel = NULL;
+
+    if (pExtendedParameters)
+    {
+        CopyFlags = pExtendedParameters->dwCopyFlags;
+        Cancel = pExtendedParameters->pfCancel;
+    }
+
+    if (!CopyFileExW(pwszExistingFileName,
+                     pwszNewFileName,
+                     NULL,
+                     NULL,
+                     Cancel,
+                     CopyFlags))
+    {
+        return HRESULT_FROM_WIN32(GetLastError());
+    }
+
+    return S_OK;
 }
 
 

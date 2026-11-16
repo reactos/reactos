@@ -1,0 +1,18 @@
+{
+  "spdx": "GPL-2.0-or-later",
+  "question": "Why did clicking run-firefox-plain.cmd kill csrss after the all-threads late TLS change?",
+  "allowedInputs": [
+    "output/ntdll-apps/serial-App-20261116T103810Z.log marker: LDR: late TLS abort: thread list walk > 4096 (WINSPOOL.DRV)",
+    "output/ntdll-apps/serial-App-20261116T103810Z.log marker: LoadLibraryExW(shell32.dll) failing with status c0000001",
+    "output/ntdll-apps/serial-App-20261116T103810Z.log marker: Kill csrss.exe, ExceptionCode: c06d007e",
+    "Wine dlls/ntdll/loader.c alloc_tls_slot at https://gitlab.winehq.org/wine/wine/-/blob/wine-9.0/dlls/ntdll/loader.c",
+    "dll/ntdll/ldr/ldrinit.c already in this tree, LdrpHandleTlsData",
+    "Reported: waited; guest still froze after plain launcher click"
+  ],
+  "harness": {
+    "guest": "amd64 installed veros-ntfs after ae8b692 TLS walk logs, TCG, App mode",
+    "name": "ntdll-apps-firefox",
+    "traceOrReplayId": "serial-App-20261116T103810Z TlsLinks walk abort",
+    "logSha256": "d9326b96e3fed45c9e2df0a1caf0cfb7596024f029bb44c3196e9ab0a85906aa"
+  }
+}

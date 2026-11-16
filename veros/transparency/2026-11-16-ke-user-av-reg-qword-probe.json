@@ -1,0 +1,16 @@
+{
+  "spdx": "GPL-2.0-or-later",
+  "question": "Which modules own the User AV rbx/rsi/rdi pointers, and what qword sits at rsi and rbx when the fault address is -1?",
+  "allowedInputs": [
+    "ntoskrnl/ke/amd64/except.c already in this tree, KiPrintUserModuleForAddress and ProbeForRead",
+    "output/ntdll-apps/serial-App-20261116T072618Z.log marker: User AV module xul.dll +0x18f2c22",
+    "output/ntdll-apps/firefox-silent-fail15-av-ptr-regs-gaps.txt",
+    "Reported: on go, map rbx/rsi/rdi to modules and probe one qword at rsi and rbx"
+  ],
+  "harness": {
+    "guest": "amd64 installed veros-ntfs after PackageId length=0 and AV rbx/rsi/rdi logs, TCG, App mode",
+    "name": "ntdll-apps-firefox",
+    "traceOrReplayId": "serial-App-20261116T072618Z xul.dll +0x18f2c22",
+    "logSha256": "43cd1c28aff65e3aadd976fbd8a8a86e640bbd3b6630f4d936f75d1eaee2e60a"
+  }
+}

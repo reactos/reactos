@@ -1237,7 +1237,7 @@
 #@ stdcall QueryIoRingCapabilities(ptr)
 #@ stdcall QueryIdleProcessorCycleTime(ptr ptr)
 #@ stdcall QueryIdleProcessorCycleTimeEx(long ptr ptr)
-#@ stdcall QueryInterruptTime(ptr)
+@ stdcall QueryInterruptTime(ptr)
 #@ stdcall QueryInterruptTimePrecise(ptr)
 #@ stdcall QueryMemoryResourceNotification(ptr ptr)
 # #@ stub QueryOptionalDelayLoadedAPI
@@ -1712,7 +1712,7 @@
 # #@ stub VerifyPackageId
 # #@ stub VerifyPackageRelativeApplicationId
 # #@ stub VerifyScripts
-#@ stdcall VirtualAlloc2(long ptr long long long ptr long)
+@ stdcall VirtualAlloc2(long ptr long long long ptr long)
 #@ stdcall VirtualAlloc2FromApp(long ptr long long long ptr long)
 #@ stdcall VirtualAlloc(ptr long long long)
 #@ stdcall VirtualAllocEx(long ptr long long long)

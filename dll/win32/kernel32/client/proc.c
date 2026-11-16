@@ -1395,6 +1395,21 @@ FlushInstructionCache(IN HANDLE hProcess,
 
 /*
  * @implemented
+ *
+ * FlushProcessWriteBuffers: make prior stores by this thread visible to other
+ * processors. MemoryBarrier is sdk/include/xdk/memaccess.h. Export already in
+ * dll/win32/kernel32/kernel32.spec. Public docs:
+ * https://learn.microsoft.com/en-us/windows/win32/api/processthreadsapi/nf-processthreadsapi-flushprocesswritebuffers
+ */
+VOID
+WINAPI
+FlushProcessWriteBuffers(VOID)
+{
+    MemoryBarrier();
+}
+
+/*
+ * @implemented
  */
 VOID
 WINAPI
@@ -1404,6 +1419,12 @@ ExitProcess(IN UINT uExitCode)
     PBASE_EXIT_PROCESS ExitProcessRequest = &ApiMessage.Data.ExitProcessRequest;
 
     ASSERT(!BaseRunningInServerProcess);
+
+    /*
+     * firefox silent-fail22: distinguish ExitProcess from ucrt abort/__fastfail
+     * (serial-App-20261116T080441Z.log).
+     */
+    DPRINT1("ExitProcess(%u)\n", uExitCode);
 
     _SEH2_TRY
     {
@@ -1912,6 +1933,39 @@ IsWow64Process(IN HANDLE hProcess,
 
     /* Enforce this is a BOOL, and return success */
     *Wow64Process = (pbi != 0);
+    return TRUE;
+}
+
+/*
+ * @implemented
+ *
+ * https://learn.microsoft.com/en-us/windows/win32/api/wow64apiset/nf-wow64apiset-iswow64process2
+ * Firefox delay-load: KERNEL32.dll!IsWow64Process2.
+ */
+BOOL
+WINAPI
+IsWow64Process2(IN HANDLE hProcess,
+                OUT USHORT *pProcessMachine,
+                OUT OPTIONAL USHORT *pNativeMachine)
+{
+    BOOL Wow64 = FALSE;
+
+    if (!pProcessMachine)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    if (!IsWow64Process(hProcess, &Wow64))
+    {
+        return FALSE;
+    }
+
+    *pProcessMachine = Wow64 ? IMAGE_FILE_MACHINE_I386 : IMAGE_FILE_MACHINE_UNKNOWN;
+    if (pNativeMachine)
+    {
+        *pNativeMachine = IMAGE_FILE_MACHINE_NATIVE;
+    }
     return TRUE;
 }
 
@@ -4533,6 +4587,44 @@ CreateProcessW(LPCWSTR lpApplicationName,
                                   lpStartupInfo,
                                   lpProcessInformation,
                                   NULL);
+}
+
+/*
+ * @implemented
+ *
+ * GetProcessMitigationPolicy / SetProcessMitigationPolicy: accept the call for
+ * desktop Firefox. Public docs:
+ * https://learn.microsoft.com/en-us/windows/win32/api/processthreadsapi/nf-processthreadsapi-getprocessmitigationpolicy
+ * https://learn.microsoft.com/en-us/windows/win32/api/processthreadsapi/nf-processthreadsapi-setprocessmitigationpolicy
+ * Firefox PE imports: KERNEL32.dll.
+ */
+BOOL
+WINAPI
+GetProcessMitigationPolicy(IN HANDLE hProcess,
+                           IN DWORD MitigationPolicy,
+                           OUT PVOID lpBuffer,
+                           IN SIZE_T dwLength)
+{
+    UNREFERENCED_PARAMETER(hProcess);
+    UNREFERENCED_PARAMETER(MitigationPolicy);
+    UNREFERENCED_PARAMETER(lpBuffer);
+    UNREFERENCED_PARAMETER(dwLength);
+    return TRUE;
+}
+
+/*
+ * @implemented
+ */
+BOOL
+WINAPI
+SetProcessMitigationPolicy(IN DWORD MitigationPolicy,
+                           IN PVOID lpBuffer,
+                           IN SIZE_T dwLength)
+{
+    UNREFERENCED_PARAMETER(MitigationPolicy);
+    UNREFERENCED_PARAMETER(lpBuffer);
+    UNREFERENCED_PARAMETER(dwLength);
+    return TRUE;
 }
 
 /* EOF */

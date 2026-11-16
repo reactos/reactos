@@ -1,0 +1,18 @@
+{
+  "spdx": "GPL-2.0-or-later",
+  "question": "How should SetProcessDpiAwarenessContext and GetThreadDpiAwarenessContext be exported from USER32 so Firefox can get past its post-dwrite User AV path?",
+  "allowedInputs": [
+    "https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-setprocessdpiawarenesscontext SetProcessDpiAwarenessContext, User32.dll",
+    "https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getthreaddpiawarenesscontext GetThreadDpiAwarenessContext, User32.dll",
+    "win32ss/user/user32/user32.spec already in this tree, SetProcessDpiAwarenessContext gated -version=0xA00+, GetThreadDpiAwarenessContext absent, SetThreadDpiAwarenessContext present",
+    "win32ss/user/user32_vista/dpi.c already in this tree, ThreadDpiContext and SetThreadDpiAwarenessContext",
+    "output/ntdll-apps/serial-App-20261116T053437Z.log LDR: missing export user32.dll!SetProcessDpiAwarenessContext",
+    "output/ntdll-apps/serial-App-20261116T053437Z.log LDR: missing export user32.dll!GetThreadDpiAwarenessContext",
+    "output/ntdll-apps/serial-App-20261116T053437Z.log User AV in firefox.exe"
+  ],
+  "harness": {
+    "guest": "amd64 installed veros-ntfs after dwrite ship, TCG, App mode",
+    "name": "ntdll-apps-firefox",
+    "traceOrReplayId": "output/ntdll-apps/serial-App-20261116T053437Z.log User AV in firefox.exe"
+  }
+}

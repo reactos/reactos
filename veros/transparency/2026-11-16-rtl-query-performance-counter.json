@@ -1,0 +1,20 @@
+{
+  "spdx": "GPL-2.0-or-later",
+  "question": "How should RtlQueryPerformanceCounter be exported from ntdll for Firefox?",
+  "allowedInputs": [
+    "https://learn.microsoft.com/en-us/windows/win32/devnotes/ntqueryperformancecounter NtQueryPerformanceCounter, PerformanceCounter, optional PerformanceFrequency, STATUS_SUCCESS",
+    "https://learn.microsoft.com/en-us/windows/win32/api/profileapi/nf-profileapi-queryperformancecounter QueryPerformanceCounter, BOOL, LARGE_INTEGER counts",
+    "sdk/include/wine/winternl.h already in this tree, RtlQueryPerformanceCounter and RtlQueryPerformanceFrequency BOOL prototypes",
+    "sdk/include/ndk/kefuncs.h already in this tree, NtQueryPerformanceCounter",
+    "sdk/include/psdk/rtlsupportapi.h already in this tree, RtlAddGrowableFunctionTable",
+    "sdk/lib/rtl/amd64/dynfntbl.c already in this tree, RtlAddFunctionTable DYNAMIC_FUNCTION_TABLE list",
+    "dll/win32/kernel32/client/perfcnt.c already in this tree, QueryPerformanceCounter via NtQueryPerformanceCounter",
+    "dll/win32/kernelbase/wine/kernelbase.spec already in this tree, QueryPerformanceCounter forwards to ntdll.RtlQueryPerformanceCounter",
+    "Reported: Entry Point Not Found RtlQueryPerformanceCounter in ntdll.dll for firefox.exe"
+  ],
+  "harness": {
+    "guest": "amd64 installed veros-ntfs after WerRegisterRuntimeExceptionModule export, TCG, App mode",
+    "name": "ntdll-apps-firefox",
+    "traceOrReplayId": "Reported: Entry Point Not Found RtlQueryPerformanceCounter in ntdll.dll"
+  }
+}

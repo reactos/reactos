@@ -1,0 +1,16 @@
+{
+  "spdx": "GPL-2.0-or-later",
+  "question": "Which xul.dll instruction bytes at the User AV RIP load from address -1?",
+  "allowedInputs": [
+    "ntoskrnl/ke/amd64/except.c already in this tree, ProbeForRead and User AV dispatch",
+    "output/ntdll-apps/serial-App-20261116T074754Z.log marker: User AV rip module xul.dll +0x18f2c22",
+    "output/ntdll-apps/firefox-silent-fail19-av-xul-codeptrs-gaps.txt",
+    "Reported: on go, probe 16 bytes at RIP (firefox xul, not a Microsoft binary)"
+  ],
+  "harness": {
+    "guest": "amd64 installed veros-ntfs after rsi10/r10-r15 and desktop stage logs, TCG, App mode",
+    "name": "ntdll-apps-firefox",
+    "traceOrReplayId": "serial-App-20261116T074754Z xul.dll +0x18f2c22",
+    "logSha256": "32674b54bd7c50df025ac67f6df78168502b2a732a9c7c32689697649f6c6c9b"
+  }
+}

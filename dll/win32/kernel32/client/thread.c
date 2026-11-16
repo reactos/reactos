@@ -92,6 +92,28 @@ BaseThreadStartup(
     _SEH2_END;
 }
 
+/*
+ * @implemented
+ *
+ * BaseThreadInitThunk: user-mode thread start wrapper. When LdrReserved is 0,
+ * run StartAddress(Parameter) then ExitThread. Same path as BaseThreadStartup
+ * above. Export was a 0x600+ stub; mozglue GetProcAddress's it.
+ * Firefox PE: KERNEL32.dll!BaseThreadInitThunk (mozglue.dll).
+ */
+VOID
+WINAPI
+BaseThreadInitThunk(IN DWORD LdrReserved,
+                    IN LPTHREAD_START_ROUTINE StartAddress,
+                    IN PVOID Parameter)
+{
+    if (LdrReserved != 0)
+    {
+        return;
+    }
+
+    BaseThreadStartup(StartAddress, Parameter);
+}
+
 VOID
 NTAPI
 BaseDispatchApc(IN PAPCFUNC ApcRoutine,
@@ -1414,6 +1436,79 @@ TlsSetValue(IN DWORD Index,
     Teb->TlsExpansionSlots[TlsIndex] = Value;
 
     /* Success */
+    return TRUE;
+}
+
+/*
+ * @implemented
+ *
+ * SetThreadErrorMode: sdk/include/ndk/rtlfuncs.h RtlSetThreadErrorMode.
+ * Public docs:
+ * https://learn.microsoft.com/en-us/windows/win32/api/errhandlingapi/nf-errhandlingapi-setthreaderrormode
+ * Firefox PE import: KERNEL32.dll!SetThreadErrorMode (crashreporter.exe, xul.dll).
+ */
+BOOL
+WINAPI
+SetThreadErrorMode(IN DWORD dwNewMode,
+                   OUT LPDWORD lpOldMode OPTIONAL)
+{
+    NTSTATUS Status;
+    ULONG OldMode;
+
+    Status = RtlSetThreadErrorMode(dwNewMode, &OldMode);
+    if (!NT_SUCCESS(Status))
+    {
+        BaseSetLastNTError(Status);
+        return FALSE;
+    }
+
+    if (lpOldMode)
+    {
+        *lpOldMode = OldMode;
+    }
+
+    return TRUE;
+}
+
+/*
+ * @implemented
+ *
+ * SetThreadInformation: sdk/include/psdk/processthreadsapi.h THREAD_INFORMATION_CLASS.
+ * Public docs:
+ * https://learn.microsoft.com/en-us/windows/win32/api/processthreadsapi/nf-processthreadsapi-setthreadinformation
+ * Firefox PE import: KERNEL32.dll!SetThreadInformation.
+ */
+BOOL
+WINAPI
+SetThreadInformation(IN HANDLE hThread,
+                     IN THREAD_INFORMATION_CLASS ThreadInformationClass,
+                     IN LPVOID ThreadInformation,
+                     IN DWORD ThreadInformationSize)
+{
+    NTSTATUS Status;
+
+    switch (ThreadInformationClass)
+    {
+        case ThreadMemoryPriority:
+            Status = NtSetInformationThread(hThread,
+                                            ThreadPagePriority,
+                                            ThreadInformation,
+                                            ThreadInformationSize);
+            break;
+
+        default:
+            /* Accept unknown classes so desktop Firefox keeps running. */
+            UNREFERENCED_PARAMETER(ThreadInformation);
+            UNREFERENCED_PARAMETER(ThreadInformationSize);
+            return TRUE;
+    }
+
+    if (!NT_SUCCESS(Status))
+    {
+        BaseSetLastNTError(Status);
+        return FALSE;
+    }
+
     return TRUE;
 }
 

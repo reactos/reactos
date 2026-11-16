@@ -1,9 +1,11 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
+ *                  Copyright 2026 Ryan Wilson <ryan@verosnt.com>
  * PROJECT:         ReactOS system libraries
  * FILE:            dll/win32/kernel32/client/file/create.c
  * PURPOSE:         Directory functions
  * PROGRAMMER:      Ariadne ( ariadne@xs4all.nl)
+ *                  Ryan Wilson <ryan@verosnt.com>
  * UPDATE HISTORY:
  *                  Created 01/11/98
  *                  Removed use of SearchPath (not used by Windows)
@@ -14,6 +16,7 @@
 /* INCLUDES *****************************************************************/
 
 #include <k32.h>
+#include <fileapi.h>
 #define NDEBUG
 #include <debug.h>
 
@@ -318,6 +321,34 @@ HANDLE WINAPI CreateFileW (LPCWSTR			lpFileName,
    /* error */
    if (!NT_SUCCESS(Status))
    {
+      /*
+       * firefox silent-fail24: name CreateFile failures in firefox.exe so
+       * the last failed path before xul __fastfail is on the App serial
+       * (serial-App-20261116T083050Z.log).
+       */
+      if (NtCurrentPeb() && NtCurrentPeb()->ProcessParameters)
+      {
+         UNICODE_STRING ImagePath = NtCurrentPeb()->ProcessParameters->ImagePathName;
+         UNICODE_STRING FirefoxSuffix = RTL_CONSTANT_STRING(L"firefox.exe");
+
+         if (ImagePath.Buffer &&
+             ImagePath.Length >= FirefoxSuffix.Length)
+         {
+            UNICODE_STRING Tail;
+
+            Tail.Buffer = ImagePath.Buffer +
+                          (ImagePath.Length - FirefoxSuffix.Length) / sizeof(WCHAR);
+            Tail.Length = FirefoxSuffix.Length;
+            Tail.MaximumLength = FirefoxSuffix.Length;
+            if (RtlEqualUnicodeString(&Tail, &FirefoxSuffix, TRUE))
+            {
+               DPRINT1("CreateFileW(%S) status 0x%08lx\n",
+                       lpFileName ? lpFileName : L"(null)",
+                       Status);
+            }
+         }
+      }
+
       /* In the case file creation was rejected due to CREATE_NEW flag
        * was specified and file with that name already exists, correct
        * last error is ERROR_FILE_EXISTS and not ERROR_ALREADY_EXISTS.
@@ -568,6 +599,54 @@ ReOpenFile(IN HANDLE hOriginalFile,
 {
    STUB;
    return INVALID_HANDLE_VALUE;
+}
+
+/*
+ * @implemented
+ *
+ * CreateFile2 wraps CreateFileW with optional CREATEFILE2_EXTENDED_PARAMETERS.
+ * Struct and prototype: sdk/include/psdk/fileapi.h. Public docs:
+ * https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-createfile2
+ * Firefox PE import: KERNEL32.dll!CreateFile2 (msvcp140.dll).
+ */
+HANDLE
+WINAPI
+CreateFile2(IN LPCWSTR lpFileName,
+            IN DWORD dwDesiredAccess,
+            IN DWORD dwShareMode,
+            IN DWORD dwCreationDisposition,
+            IN LPCREATEFILE2_EXTENDED_PARAMETERS pCreateExParams OPTIONAL)
+{
+    DWORD FlagsAndAttributes = 0;
+    LPSECURITY_ATTRIBUTES SecurityAttributes = NULL;
+    HANDLE TemplateFile = NULL;
+
+    if (pCreateExParams)
+    {
+        FlagsAndAttributes = pCreateExParams->dwFileFlags |
+                             pCreateExParams->dwFileAttributes;
+        if (pCreateExParams->dwSecurityQosFlags)
+        {
+            FlagsAndAttributes |= SECURITY_SQOS_PRESENT |
+                                  (pCreateExParams->dwSecurityQosFlags &
+                                   (SECURITY_ANONYMOUS |
+                                    SECURITY_IDENTIFICATION |
+                                    SECURITY_IMPERSONATION |
+                                    SECURITY_DELEGATION |
+                                    SECURITY_CONTEXT_TRACKING |
+                                    SECURITY_EFFECTIVE_ONLY));
+        }
+        SecurityAttributes = pCreateExParams->lpSecurityAttributes;
+        TemplateFile = pCreateExParams->hTemplateFile;
+    }
+
+    return CreateFileW(lpFileName,
+                       dwDesiredAccess,
+                       dwShareMode,
+                       SecurityAttributes,
+                       dwCreationDisposition,
+                       FlagsAndAttributes,
+                       TemplateFile);
 }
 
 /* EOF */

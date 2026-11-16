@@ -1,9 +1,11 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
+ *                  Copyright 2026 Ryan Wilson <ryan@verosnt.com>
  * PROJECT:         ReactOS user32.dll
  * FILE:            win32ss/user/user32/misc/desktop.c
  * PURPOSE:         Desktops
  * PROGRAMMER:      Casper S. Hornstrup (chorns@users.sourceforge.net)
+ *                  Ryan Wilson <ryan@verosnt.com>
  * UPDATE HISTORY:
  *      06-06-2001  CSH  Created
  */
@@ -549,6 +551,7 @@ GetThreadDesktop(
 {
     USER_API_MESSAGE ApiMessage;
     PUSER_GET_THREAD_CONSOLE_DESKTOP GetThreadConsoleDesktopRequest = &ApiMessage.Data.GetThreadConsoleDesktopRequest;
+    HDESK hDesk;
 
     GetThreadConsoleDesktopRequest->ThreadId = dwThreadId;
 
@@ -562,8 +565,18 @@ GetThreadDesktop(
         return NULL;
     }
 
-    return NtUserGetThreadDesktop(dwThreadId,
-                                  GetThreadConsoleDesktopRequest->ConsoleDesktop);
+    hDesk = NtUserGetThreadDesktop(dwThreadId,
+                                   GetThreadConsoleDesktopRequest->ConsoleDesktop);
+    /*
+     * firefox silent-fail19: CSR no-console leaves ConsoleDesktop NULL;
+     * log whether NtUser returns NULL or a real HDESK (not -1)
+     * (serial-App-20261116T074754Z.log).
+     */
+    ERR("GetThreadDesktop(%lu) console=%p hdesk=%p\n",
+        dwThreadId,
+        GetThreadConsoleDesktopRequest->ConsoleDesktop,
+        hDesk);
+    return hDesk;
 }
 
 

@@ -37,6 +37,18 @@ EXTERN KeReleaseSpinLockFromDpcLevel:PROC
 MACRO(DispatchException, Status, Number, P1, P2, P3)
     mov eax, Status
     mov edx, Number
+    xor r8d, r8d
+    mov r9, P1
+    mov r10, P2
+    mov r11, P3
+    call InternalDispatchException
+ENDM
+
+/* Status, Flags, Number, P1, P2, P3 — for NONCONTINUABLE failfast (INT 29). */
+MACRO(DispatchExceptionEx, Status, Flags, Number, P1, P2, P3)
+    mov eax, Status
+    mov edx, Number
+    mov r8d, Flags
     mov r9, P1
     mov r10, P2
     mov r11, P3
@@ -87,7 +99,7 @@ KiInterruptDispatchTemplate:
     call qword ptr KiInterruptDispatchTemplate[rip - KINTERRUPT_DispatchCode + KINTERRUPT_DispatchAddress]
 
 
-// rbp = TrapFrame, eax = ExceptionCode, edx = NumParams, r9,r10,r11 = params
+/* rbp=TrapFrame, eax=ExceptionCode, edx=NumParams, r8d=Flags, r9/r10/r11=params */
 FUNC InternalDispatchException
 
     /* Allocate stack space for EXCEPTION_RECORD and KEXCEPTION_FRAME */
@@ -98,8 +110,8 @@ FUNC InternalDispatchException
     /* Set up EXCEPTION_RECORD */
     lea rcx, [rsp + KEXCEPTION_FRAME_LENGTH]
     mov [rcx + EXCEPTION_RECORD_ExceptionCode], eax
+    mov [rcx + EXCEPTION_RECORD_ExceptionFlags], r8d
     xor rax, rax
-    mov [rcx + EXCEPTION_RECORD_ExceptionFlags], eax
     mov [rcx + EXCEPTION_RECORD_ExceptionRecord], rax
     mov rax, [rbp + KTRAP_FRAME_Rip]
     mov [rcx + EXCEPTION_RECORD_ExceptionAddress], rax
@@ -487,6 +499,7 @@ InPageException:
     mov r11d, eax // Param3 = Status
     mov eax, STATUS_IN_PAGE_ERROR // ExceptionCode
     mov edx, 3    // ParamCount
+    xor r8d, r8d  // ExceptionFlags
     call InternalDispatchException
     jmp PageFaultReturn
 
@@ -497,6 +510,7 @@ AccessViolation:
 SpecialCode:
     /* Setup a normal page fault exception */
     mov edx, 2   // ParamCount
+    xor r8d, r8d // ExceptionFlags
     call InternalDispatchException
 
 PageFaultReturn:
@@ -582,6 +596,29 @@ FUNC KiRaiseAssertion
     DispatchException STATUS_ASSERTION_FAILURE, 0, 0, 0, 0
 
     /* Return */
+    ExitTrap TF_SAVE_ALL
+ENDFUNC
+
+
+/*
+ * INT 29: __fastfail / KiRaiseSecurityCheckFailure (same shape as i386
+ * ntoskrnl/ke/i386/traphdlr.c and amd64 KiRaiseAssertion).
+ * Guest serial-App-20261116T075237Z.log: xul int 29 / ud2 with rcx=7
+ * (FAST_FAIL_FATAL_APP_EXIT in sdk/include/xdk/rtlfuncs.h).
+ */
+PUBLIC KiRaiseSecurityCheckFailure
+FUNC KiRaiseSecurityCheckFailure
+    EnterTrap (TF_SAVE_ALL)
+
+    /* INT 29 is two bytes; point RIP at the int instruction */
+    sub qword ptr [rbp + KTRAP_FRAME_Rip], 2
+
+    /*
+     * STATUS_STACK_BUFFER_OVERRUN, NONCONTINUABLE, one parameter = failfast
+     * code in rcx (i386 KiRaiseSecurityCheckFailureHandler).
+     */
+    DispatchExceptionEx STATUS_STACK_BUFFER_OVERRUN, EXCEPTION_NONCONTINUABLE, 1, [rbp+KTRAP_FRAME_Rcx], 0, 0
+
     ExitTrap TF_SAVE_ALL
 ENDFUNC
 

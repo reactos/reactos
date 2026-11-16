@@ -1,0 +1,17 @@
+{
+  "spdx": "GPL-2.0-or-later",
+  "question": "How should inet_ntop and inet_pton be exported from WS2_32 so Firefox xul.dll can load when DLL_EXPORT_VERSION is 0x502?",
+  "allowedInputs": [
+    "https://learn.microsoft.com/en-us/windows/win32/api/ws2tcpip/nf-ws2tcpip-inet_ntop inet_ntop, Ws2_32.dll, four parameters",
+    "https://learn.microsoft.com/en-us/windows/win32/api/ws2tcpip/nf-ws2tcpip-inet_pton inet_pton, Ws2_32.dll, three parameters",
+    "dll/win32/ws2_32/ws2_32.spec already in this tree, inet_ntop/inet_pton/InetNtopW/InetPtonW gated -version=0x600+",
+    "dll/win32/ws2_32/src/addrconv.c already in this tree, inet_ntop, InetNtopW, inet_pton, InetPtonW implementations",
+    "Reported: Entry Point Not Found inet_ntop in ws2_32.dll for firefox.exe",
+    "Reported: xul.dll PE imports inet_ntop and inet_pton from ws2_32.dll"
+  ],
+  "harness": {
+    "guest": "amd64 installed veros-ntfs after WSCGetProviderInfo ungate, TCG, App mode",
+    "name": "ntdll-apps-firefox",
+    "traceOrReplayId": "Reported: Entry Point Not Found inet_ntop in ws2_32.dll"
+  }
+}

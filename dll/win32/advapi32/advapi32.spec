@@ -224,6 +224,12 @@
 @ stdcall EqualDomainSid(ptr ptr ptr)
 @ stdcall EqualPrefixSid(ptr ptr)
 @ stdcall EqualSid(ptr ptr)
+@ stdcall EventActivityIdControl(long ptr) ntdll.EtwEventActivityIdControl
+@ stdcall EventRegister(ptr ptr ptr ptr) ntdll.EtwEventRegister
+@ stdcall EventSetInformation(int64 long ptr long) ntdll.EtwEventSetInformation
+@ stdcall EventUnregister(int64) ntdll.EtwEventUnregister
+@ stdcall EventWrite(int64 ptr long ptr) ntdll.EtwEventWrite
+@ stdcall EventWriteTransfer(int64 ptr ptr ptr long ptr) ntdll.EtwEventWriteTransfer
 @ stdcall FileEncryptionStatusA(str ptr)
 @ stdcall FileEncryptionStatusW(wstr ptr)
 @ stdcall FindFirstFreeAce(ptr ptr)
@@ -488,15 +494,16 @@
 @ stdcall RegCreateKeyA(long str ptr)
 @ stdcall RegCreateKeyExA(long str long ptr long long ptr ptr ptr)
 @ stdcall RegCreateKeyExW(long wstr long ptr long long ptr ptr ptr)
+@ stdcall -stub RegCreateKeyTransactedW(long wstr long ptr long long ptr ptr ptr ptr ptr)
 @ stdcall RegCreateKeyW(long wstr ptr)
 @ stdcall RegDeleteKeyA(long str)
 @ stdcall RegDeleteKeyExA(long str long long)
 @ stdcall RegDeleteKeyExW(long wstr long long)
 @ stdcall RegDeleteKeyW(long wstr)
-@ stdcall -version=0x600+ RegDeleteTreeA(long str)
-@ stdcall -version=0x600+ RegDeleteTreeW(long wstr)
-@ stdcall -version=0x600+ RegDeleteKeyValueA(long wstr wstr)
-@ stdcall -version=0x600+ RegDeleteKeyValueW(long wstr wstr)
+@ stdcall RegDeleteTreeA(long str)
+@ stdcall RegDeleteTreeW(long wstr)
+@ stdcall RegDeleteKeyValueA(long wstr wstr)
+@ stdcall RegDeleteKeyValueW(long wstr wstr)
 @ stdcall RegDeleteValueA(long str)
 @ stdcall RegDeleteValueW(long wstr)
 @ stdcall RegDisablePredefinedCache()
@@ -533,7 +540,7 @@
 @ stdcall RegQueryValueExA(long str ptr ptr ptr ptr)
 @ stdcall RegQueryValueExW(long wstr ptr ptr ptr ptr)
 @ stdcall RegQueryValueW(long wstr ptr ptr)
-@ stdcall -stub -version=0x600+ RegRenameKey(long wstr wstr)
+@ stdcall -stub RegRenameKey(long wstr wstr)
 @ stdcall RegReplaceKeyA(long str str str)
 @ stdcall RegReplaceKeyW(long wstr wstr wstr)
 @ stdcall RegRestoreKeyA(long str long)
@@ -543,8 +550,8 @@
 @ stdcall RegSaveKeyExW(long str ptr long)
 @ stdcall RegSaveKeyW(long ptr ptr)
 @ stdcall RegSetKeySecurity(long long ptr)
-@ stdcall -version=0x600+ RegSetKeyValueA(long str str long ptr long)
-@ stdcall -version=0x600+ RegSetKeyValueW(long wstr wstr long ptr long)
+@ stdcall RegSetKeyValueA(long str str long ptr long)
+@ stdcall RegSetKeyValueW(long wstr wstr long ptr long)
 @ stdcall RegSetValueA(long str long ptr long)
 @ stdcall RegSetValueExA(long str long long ptr long)
 @ stdcall RegSetValueExW(long wstr long long ptr long)

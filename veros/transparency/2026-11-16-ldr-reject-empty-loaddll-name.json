@@ -1,0 +1,17 @@
+{
+  "spdx": "GPL-2.0-or-later",
+  "question": "What should LdrpLoadDll do when the UNICODE DLL name has Length 0 before the default .DLL extension is appended?",
+  "allowedInputs": [
+    "dll/ntdll/ldr/ldrutils.c already in this tree, LdrpLoadDll default extension append and LdrpMapDll missing dll print",
+    "dll/ntdll/ldr/ldrpe.c already in this tree, LdrpLoadImportModule empty ImportName reject that did not fire",
+    "output/ntdll-apps/serial-App-20261116T063648Z.log marker: LDR: missing dll .DLL",
+    "output/ntdll-apps/firefox-silent-fail9-empty-loaddll-gaps.txt",
+    "Reported: empty ImportName guard never logged; guest ntdll size matched the build"
+  ],
+  "harness": {
+    "guest": "amd64 installed veros-ntfs after LdrpLoadImportModule empty-import reject, TCG, App mode",
+    "name": "ntdll-apps-firefox",
+    "traceOrReplayId": "serial-App-20261116T063648Z missing dll .DLL",
+    "logSha256": "d007b46b0d72b9bc3d2af4a1295e55d598d919542a178c739e328f8a99c4fc84"
+  }
+}
