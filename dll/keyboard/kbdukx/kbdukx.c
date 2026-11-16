@@ -430,10 +430,10 @@ ROSDATA KBDTABLES keyboard_layout_table = {
   extended_key_names,
   dead_key_names,
   scancode_to_vk,
-  0x7f,                                   /* bMaxVSCtoVK */
+  RTL_NUMBER_OF(scancode_to_vk),
   extcode0_to_vk,
   extcode1_to_vk,
-  MAKELONG(KLLF_ALTGR, KBD_VERSION),      /* fLocaleFlags = 0x00010001 */
+  MAKELONG(KLLF_ALTGR, KBD_VERSION),
   0, 0, NULL                              /* No ligatures */
 };
 
