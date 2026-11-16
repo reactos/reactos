@@ -1668,7 +1668,7 @@ BOOL ModifyValue(HWND hwnd, HKEY hKey, LPCWSTR valueName, BOOL EditBin)
                     }
                     src += linechars + (nl != NULL ? c_nl : 0);
                 }
-                lines[++dest] = L'\0';
+                lines[dest] = UNICODE_NULL;
 
                 if(EmptyLines)
                 {
