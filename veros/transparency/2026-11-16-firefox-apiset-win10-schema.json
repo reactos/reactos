@@ -1,0 +1,15 @@
+{
+  "spdx": "GPL-2.0-or-later",
+  "question": "Which Firefox-imported api-ms-win-* names lack APISET_WIN10 in apisets.table.c so the Win10 schema reports the DLL missing?",
+  "allowedInputs": [
+    "sdk/lib/apisets/apisets.table.c already in this tree, including Win8/8.1-only rows and neighboring Win10 hosts",
+    "dll/ntdll/rtl/libsupp.c already in this tree, LdrpApisetVersion selects APISET_WIN10",
+    "Reported: firefox.exe Unable To Locate Component api-ms-win-core-version-l1-1-0.dll was not found",
+    "Reported: import scan listed 36 Firefox apiset DLLs with a table row but no APISET_WIN10, and 8 with no table row"
+  ],
+  "harness": {
+    "guest": "amd64 installed veros-ntfs after ntdll forward ungates, TCG, App mode",
+    "name": "ntdll-apps-firefox",
+    "traceOrReplayId": "Reported: Unable To Locate Component api-ms-win-core-version-l1-1-0.dll was not found"
+  }
+}
