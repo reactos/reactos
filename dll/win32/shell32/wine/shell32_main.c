@@ -4,6 +4,7 @@
  * Copyright 1998 Marcus Meissner
  * Copyright 1998 Juergen Schmied (jsch)  *  <juergen.schmied@metronet.de>
  * Copyright 2017 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
+ * Copyright 2026 Ryan Wilson <ryan@verosnt.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -31,6 +32,7 @@
 #include <shellapi.h>
 #include <shlobj.h>
 #include <shlwapi.h>
+#include <propsys.h>
 #include <strsafe.h>
 #include <winnls.h>
 
@@ -1376,4 +1378,138 @@ HRESULT WINAPI SHLoadNonloadedIconOverlayIdentifiers( VOID )
 {
     FIXME("stub\n");
     return S_OK;
+}
+
+/*
+ * Window IPropertyStore stub for SHGetPropertyStoreForWindow.
+ * Follows Wine dlls/shell32/shell32_main.c (wine-9.0):
+ * https://gitlab.winehq.org/wine/wine/-/blob/wine-9.0/dlls/shell32/shell32_main.c
+ * Name from serial-App-20261116T112627Z.log
+ * (LDR missing export shell32.DLL!SHGetPropertyStoreForWindow).
+ */
+struct window_prop_store
+{
+    IPropertyStore IPropertyStore_iface;
+    LONG ref;
+};
+
+static inline struct window_prop_store *
+impl_from_IPropertyStore(IPropertyStore *iface)
+{
+    return CONTAINING_RECORD(iface, struct window_prop_store, IPropertyStore_iface);
+}
+
+static ULONG WINAPI
+window_prop_store_AddRef(IPropertyStore *iface)
+{
+    struct window_prop_store *store = impl_from_IPropertyStore(iface);
+    return InterlockedIncrement(&store->ref);
+}
+
+static ULONG WINAPI
+window_prop_store_Release(IPropertyStore *iface)
+{
+    struct window_prop_store *store = impl_from_IPropertyStore(iface);
+    LONG ref = InterlockedDecrement(&store->ref);
+    if (!ref)
+        HeapFree(GetProcessHeap(), 0, store);
+    return ref;
+}
+
+static HRESULT WINAPI
+window_prop_store_QueryInterface(IPropertyStore *iface, REFIID iid, void **obj)
+{
+    struct window_prop_store *store = impl_from_IPropertyStore(iface);
+
+    if (!obj)
+        return E_POINTER;
+    if (IsEqualIID(iid, &IID_IUnknown) || IsEqualIID(iid, &IID_IPropertyStore))
+    {
+        *obj = &store->IPropertyStore_iface;
+        IPropertyStore_AddRef(iface);
+        return S_OK;
+    }
+
+    *obj = NULL;
+    return E_NOINTERFACE;
+}
+
+static HRESULT WINAPI
+window_prop_store_GetCount(IPropertyStore *iface, DWORD *count)
+{
+    FIXME("%p, %p\n", iface, count);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI
+window_prop_store_GetAt(IPropertyStore *iface, DWORD prop, PROPERTYKEY *key)
+{
+    FIXME("%p, %lu, %p\n", iface, prop, key);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI
+window_prop_store_GetValue(IPropertyStore *iface, REFPROPERTYKEY key, PROPVARIANT *var)
+{
+    FIXME("%p, %p, %p\n", iface, key, var);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI
+window_prop_store_SetValue(IPropertyStore *iface, REFPROPERTYKEY key, REFPROPVARIANT var)
+{
+    FIXME("%p, %p, %p\n", iface, key, var);
+    return S_OK;
+}
+
+static HRESULT WINAPI
+window_prop_store_Commit(IPropertyStore *iface)
+{
+    FIXME("%p\n", iface);
+    return S_OK;
+}
+
+static const IPropertyStoreVtbl window_prop_store_vtbl =
+{
+    window_prop_store_QueryInterface,
+    window_prop_store_AddRef,
+    window_prop_store_Release,
+    window_prop_store_GetCount,
+    window_prop_store_GetAt,
+    window_prop_store_GetValue,
+    window_prop_store_SetValue,
+    window_prop_store_Commit
+};
+
+static HRESULT
+create_window_prop_store(IPropertyStore **obj)
+{
+    struct window_prop_store *store;
+
+    store = HeapAlloc(GetProcessHeap(), 0, sizeof(*store));
+    if (!store)
+        return E_OUTOFMEMORY;
+    store->IPropertyStore_iface.lpVtbl = &window_prop_store_vtbl;
+    store->ref = 1;
+    *obj = &store->IPropertyStore_iface;
+    return S_OK;
+}
+
+/*************************************************************************
+ * SHGetPropertyStoreForWindow [SHELL32.@]
+ */
+HRESULT WINAPI
+SHGetPropertyStoreForWindow(HWND hwnd, REFIID riid, void **ppv)
+{
+    IPropertyStore *store;
+    HRESULT hr;
+
+    FIXME("(%p %p %p) stub!\n", hwnd, riid, ppv);
+
+    hr = create_window_prop_store(&store);
+    if (FAILED(hr))
+        return hr;
+    hr = IPropertyStore_QueryInterface(store, riid, ppv);
+    IPropertyStore_Release(store);
+    return hr;
 }
