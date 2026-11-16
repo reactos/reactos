@@ -748,6 +748,8 @@ KiDispatchException(IN PEXCEPTION_RECORD ExceptionRecord,
          * silent-fail20: INT 29 was misdelivered as AV fault -1; log the
          * failfast code (rcx) when STATUS_STACK_BUFFER_OVERRUN is raised
          * (serial-App-20261116T075237Z.log; FAST_FAIL_FATAL_APP_EXIT=7).
+         * silent-fail23: also name module+RVA so a direct __fastfail (no
+         * ucrt abort line) is not just a bare RIP (serial-App-20261116T082430Z.log).
          */
         if (ExceptionRecord->ExceptionCode == STATUS_STACK_BUFFER_OVERRUN)
         {
@@ -756,6 +758,8 @@ KiDispatchException(IN PEXCEPTION_RECORD ExceptionRecord,
                     ExceptionRecord->NumberParameters > 0 ?
                         ExceptionRecord->ExceptionInformation[0] : 0,
                     ExceptionRecord->ExceptionAddress);
+            KiPrintUserModuleForAddress(ExceptionRecord->ExceptionAddress,
+                                        "fastfail");
         }
 
         if (ExceptionRecord->ExceptionCode == STATUS_ACCESS_VIOLATION)

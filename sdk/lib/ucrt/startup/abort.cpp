@@ -12,6 +12,13 @@
 #include <signal.h>
 #include <stdlib.h>
 
+/*
+ * firefox silent-fail23: __acrt_OutputDebugStringA did not reach the App
+ * serial (serial-App-20261116T082430Z.log). DbgPrint matches ExitProcess
+ * DPRINT1 and shows on the same port.
+ */
+extern "C" ULONG __cdecl DbgPrint(const char *Format, ...);
+
 #ifdef _DEBUG
     #define _INIT_ABORT_BEHAVIOR _WRITE_ABORT_MSG
 #else
@@ -71,11 +78,11 @@ extern "C" void __cdecl abort()
     if (__abort_behavior & _CALL_REPORTFAULT)
     {
         /*
-         * firefox silent-fail22: User fastfail code 7 is FAST_FAIL_FATAL_APP_EXIT
-         * from this path (serial-App-20261116T080441Z.log). Name abort() on
-         * the serial before INT 29 so the dump is not just the failfast stub.
+         * firefox silent-fail22/23: User fastfail code 7 is FAST_FAIL_FATAL_APP_EXIT
+         * (serial-App-20261116T080441Z.log / T082430Z.log). Name abort() with
+         * DbgPrint before INT 29 so the App serial sees the CRT path.
          */
-        __acrt_OutputDebugStringA("ucrt abort() -> __fastfail(FAST_FAIL_FATAL_APP_EXIT)\n");
+        DbgPrint("ucrt abort() -> __fastfail(FAST_FAIL_FATAL_APP_EXIT)\n");
         #if defined _M_ARM || defined _M_ARM64 || defined _M_ARM64EC || defined _UCRT_ENCLAVE_BUILD
         __fastfail(FAST_FAIL_FATAL_APP_EXIT);
         #else
