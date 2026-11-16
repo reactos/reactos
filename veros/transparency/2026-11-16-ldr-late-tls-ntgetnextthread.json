@@ -1,0 +1,19 @@
+{
+  "spdx": "GPL-2.0-or-later",
+  "question": "After loader-thread-only late TLS, why did svchost AV before the desktop?",
+  "allowedInputs": [
+    "output/ntdll-apps/serial-App-20261116T104701Z.log marker: User AV in svchost.exe",
+    "output/ntdll-apps/serial-App-20261116T104701Z.log marker: User AV rip module ntdll.dll +0x5de60",
+    "output/ntdll-apps/serial-App-20261116T104701Z.log marker: Fatal System Error: 0x0000001e",
+    "Wine dlls/ntdll/loader.c alloc_tls_slot at https://gitlab.winehq.org/wine/wine/-/blob/wine-9.0/dlls/ntdll/loader.c",
+    "sdk/include/ndk/psfuncs.h already in this tree, NtGetNextThread",
+    "sdk/include/ndk/pstypes.h already in this tree, THREAD_BASIC_INFORMATION.TebBaseAddress",
+    "Reported: froze before the desktop came up"
+  ],
+  "harness": {
+    "guest": "amd64 installed veros-ntfs after 4c8ba23 current-thread TLS, TCG, App mode",
+    "name": "ntdll-apps-firefox",
+    "traceOrReplayId": "serial-App-20261116T104701Z svchost short TLS",
+    "logSha256": "ac7de7bbf0bf368c646c70de4c6f0eb0f9fedcb355da9a6a9eb12b70af3d1941"
+  }
+}

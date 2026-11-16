@@ -15,11 +15,11 @@
  * empty LoadDll ret to LdrpLoadShimEngine(OldShimData, ...) for firefox.exe.
  *
  * LdrpHandleTlsData follows Wine dlls/ntdll/loader.c alloc_tls_slot
- * (https://gitlab.winehq.org/wine/wine/-/blob/wine-9.0/dlls/ntdll/loader.c)
- * for the loading thread only: grow ThreadLocalStoragePointer, copy the
- * PE TLS template, write AddressOfIndex, do not free the old vector.
- * Walking TEB.TlsLinks faulted (serial-App-20261116T103810Z walk > 4096
- * on WINSPOOL, then shell32 LoadLibrary failed and csrss died).
+ * (https://gitlab.winehq.org/wine/wine/-/blob/wine-9.0/dlls/ntdll/loader.c):
+ * grow ThreadLocalStoragePointer on every live thread, copy the PE TLS
+ * template, write AddressOfIndex, do not free old vectors. Live threads
+ * come from NtGetNextThread (TEB.TlsLinks walks corrupted; current-thread
+ * only left svchost workers with short vectors — serial-App-20261116T104701Z).
  */
 
 /* INCLUDES *****************************************************************/
@@ -1428,10 +1428,60 @@ LdrpAllocateTls(VOID)
     return STATUS_SUCCESS;
 }
 
+static NTSTATUS
+LdrpExpandThreadTls(IN PTEB Teb,
+                    IN ULONG Index,
+                    IN ULONG OldLength,
+                    IN PVOID TemplateBase,
+                    IN SIZE_T TlsDataSize,
+                    IN SIZE_T ZeroFill)
+{
+    PVOID *OldVector;
+    PVOID *NewVector;
+    PVOID TlsBlock;
+
+    if (!Teb)
+        return STATUS_SUCCESS;
+
+    OldVector = Teb->ThreadLocalStoragePointer;
+    NewVector = RtlAllocateHeap(RtlGetProcessHeap(),
+                                HEAP_ZERO_MEMORY,
+                                (Index + 1) * sizeof(PVOID));
+    if (!NewVector)
+        return STATUS_NO_MEMORY;
+
+    if (OldVector && OldLength)
+    {
+        RtlCopyMemory(NewVector, OldVector, OldLength * sizeof(PVOID));
+    }
+
+    TlsBlock = RtlAllocateHeap(RtlGetProcessHeap(),
+                               0,
+                               TlsDataSize + ZeroFill);
+    if (!TlsBlock)
+    {
+        RtlFreeHeap(RtlGetProcessHeap(), 0, NewVector);
+        return STATUS_NO_MEMORY;
+    }
+
+    if (TlsDataSize)
+    {
+        RtlCopyMemory(TlsBlock, TemplateBase, TlsDataSize);
+    }
+    if (ZeroFill)
+    {
+        RtlZeroMemory((PUCHAR)TlsBlock + TlsDataSize, ZeroFill);
+    }
+
+    NewVector[Index] = TlsBlock;
+    Teb->ThreadLocalStoragePointer = NewVector;
+    /* Wine: old pointer block freed at thread exit, not here. */
+    return STATUS_SUCCESS;
+}
+
 /*
  * Allocate a static-TLS slot for a module loaded after LdrpInitializeTls.
- * Update only the current thread (loader lock holder). New threads pick up
- * the expanded LdrpTlsList via LdrpAllocateTls. Do not free the old vector.
+ * Expand every live thread via NtGetNextThread (not TEB.TlsLinks).
  */
 NTSTATUS
 NTAPI
@@ -1439,15 +1489,18 @@ LdrpHandleTlsData(IN PLDR_DATA_TABLE_ENTRY LdrEntry)
 {
     PIMAGE_TLS_DIRECTORY TlsDirectory;
     PLDRP_TLS_DATA TlsData;
-    PTEB Teb;
-    PVOID *OldVector;
-    PVOID *NewVector;
-    PVOID TlsBlock;
+    THREAD_BASIC_INFORMATION ThreadInfo;
+    HANDLE PrevThread = NULL;
+    HANDLE ThreadHandle = NULL;
+    PVOID TemplateBase;
     ULONG Size;
     ULONG Index;
     ULONG OldLength;
+    ULONG ThreadCount = 0;
     SIZE_T TlsDataSize;
     SIZE_T ZeroFill;
+    NTSTATUS Status;
+    BOOLEAN CurrentDone = FALSE;
 
     if (!LdrEntry)
         return STATUS_INVALID_PARAMETER;
@@ -1475,47 +1528,72 @@ LdrpHandleTlsData(IN PLDR_DATA_TABLE_ENTRY LdrEntry)
 
     Index = LdrpNumberOfTlsEntries;
     OldLength = LdrpTlsPointerLength;
-    Teb = NtCurrentTeb();
-    OldVector = Teb->ThreadLocalStoragePointer;
+    TemplateBase = (PVOID)(ULONG_PTR)TlsDirectory->StartAddressOfRawData;
 
-    NewVector = RtlAllocateHeap(RtlGetProcessHeap(),
-                                HEAP_ZERO_MEMORY,
-                                (Index + 1) * sizeof(PVOID));
-    if (!NewVector)
+    for (;;)
     {
-        RtlFreeHeap(RtlGetProcessHeap(), 0, TlsData);
-        return STATUS_NO_MEMORY;
+        Status = NtGetNextThread(NtCurrentProcess(),
+                                 PrevThread,
+                                 THREAD_QUERY_INFORMATION,
+                                 0,
+                                 0,
+                                 &ThreadHandle);
+        if (PrevThread)
+        {
+            NtClose(PrevThread);
+            PrevThread = NULL;
+        }
+        if (!NT_SUCCESS(Status))
+            break;
+
+        PrevThread = ThreadHandle;
+        ThreadHandle = NULL;
+
+        Status = NtQueryInformationThread(PrevThread,
+                                          ThreadBasicInformation,
+                                          &ThreadInfo,
+                                          sizeof(ThreadInfo),
+                                          NULL);
+        if (!NT_SUCCESS(Status) || !ThreadInfo.TebBaseAddress)
+            continue;
+
+        Status = LdrpExpandThreadTls(ThreadInfo.TebBaseAddress,
+                                     Index,
+                                     OldLength,
+                                     TemplateBase,
+                                     TlsDataSize,
+                                     ZeroFill);
+        if (!NT_SUCCESS(Status))
+        {
+            if (PrevThread)
+                NtClose(PrevThread);
+            RtlFreeHeap(RtlGetProcessHeap(), 0, TlsData);
+            return Status;
+        }
+
+        ThreadCount++;
+        if (ThreadInfo.TebBaseAddress == NtCurrentTeb())
+            CurrentDone = TRUE;
     }
 
-    if (OldVector && OldLength)
-    {
-        RtlCopyMemory(NewVector, OldVector, OldLength * sizeof(PVOID));
-    }
+    if (PrevThread)
+        NtClose(PrevThread);
 
-    TlsBlock = RtlAllocateHeap(RtlGetProcessHeap(),
-                               0,
-                               TlsDataSize + ZeroFill);
-    if (!TlsBlock)
+    if (!CurrentDone)
     {
-        RtlFreeHeap(RtlGetProcessHeap(), 0, NewVector);
-        RtlFreeHeap(RtlGetProcessHeap(), 0, TlsData);
-        return STATUS_NO_MEMORY;
+        Status = LdrpExpandThreadTls(NtCurrentTeb(),
+                                     Index,
+                                     OldLength,
+                                     TemplateBase,
+                                     TlsDataSize,
+                                     ZeroFill);
+        if (!NT_SUCCESS(Status))
+        {
+            RtlFreeHeap(RtlGetProcessHeap(), 0, TlsData);
+            return Status;
+        }
+        ThreadCount++;
     }
-
-    if (TlsDataSize)
-    {
-        RtlCopyMemory(TlsBlock,
-                      (PVOID)(ULONG_PTR)TlsDirectory->StartAddressOfRawData,
-                      TlsDataSize);
-    }
-    if (ZeroFill)
-    {
-        RtlZeroMemory((PUCHAR)TlsBlock + TlsDataSize, ZeroFill);
-    }
-
-    NewVector[Index] = TlsBlock;
-    Teb->ThreadLocalStoragePointer = NewVector;
-    /* Wine: old pointer block freed at thread exit, not here. */
 
     LdrEntry->LoadCount = -1;
     LdrEntry->TlsIndex = -1;
@@ -1528,12 +1606,13 @@ LdrpHandleTlsData(IN PLDR_DATA_TABLE_ENTRY LdrEntry)
     LdrpNumberOfTlsEntries = Index + 1;
     LdrpTlsPointerLength = Index + 1;
 
-    DPRINT1("LDR: late TLS %wZ index %lu oldLen %lu size %Iu+%Iu\n",
+    DPRINT1("LDR: late TLS %wZ index %lu oldLen %lu size %Iu+%Iu threads %lu\n",
             &LdrEntry->BaseDllName,
             Index,
             OldLength,
             TlsDataSize,
-            ZeroFill);
+            ZeroFill,
+            ThreadCount);
 
     return STATUS_SUCCESS;
 }
