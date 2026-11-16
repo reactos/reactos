@@ -222,6 +222,7 @@ NTSTATUS
 NTAPI
 LdrpLoadImportModule(IN PWSTR DllPath OPTIONAL,
                      IN LPSTR ImportName,
+                     IN PCUNICODE_STRING ParentDllName OPTIONAL,
                      OUT PLDR_DATA_TABLE_ENTRY *DataTableEntry,
                      OUT PBOOLEAN Existing);
 
