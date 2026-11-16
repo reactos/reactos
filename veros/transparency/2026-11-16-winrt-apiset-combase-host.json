@@ -1,0 +1,16 @@
+{
+  "spdx": "GPL-2.0-or-later",
+  "question": "Which host DLL should resolve Firefox WinRT string/error/activation apisets when ole32 lacks those exports?",
+  "allowedInputs": [
+    "sdk/lib/apisets/apisets.table.c already in this tree, api-ms-win-core-winrt-string-l1-1-0 and related winrt apisets hosted on ole32.dll with combase.dll comments",
+    "dll/win32/combase/combase.spec already in this tree, WindowsCreateStringReference, WindowsCreateString, RoGetActivationFactory, RoInitialize, GetRestrictedErrorInfo",
+    "dll/win32/combase/CMakeLists.txt already in this tree, add_cd_file combase to VerOS/system32",
+    "Reported: Entry Point Not Found WindowsCreateStringReference in api-ms-win-core-winrt-string-l1-1-0.dll",
+    "Reported: import scan showed those Firefox symbols present in combase.spec and absent from ole32.spec"
+  ],
+  "harness": {
+    "guest": "amd64 installed veros-ntfs after RtlQueryPerformanceCounter export, TCG, App mode",
+    "name": "ntdll-apps-firefox",
+    "traceOrReplayId": "Reported: Entry Point Not Found WindowsCreateStringReference in api-ms-win-core-winrt-string-l1-1-0.dll"
+  }
+}
