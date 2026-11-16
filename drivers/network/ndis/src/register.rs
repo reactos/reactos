@@ -1080,10 +1080,13 @@ pub unsafe extern "system" fn NdisMIndicateReceiveNetBufferLists(
     /* Deliver to the NDIS 6 protocol binding first. Capture
      * 2026-11-15T161901Z measured miniport return at 0x50 for a probe
      * indicate; live traffic uses the protocol receive path instead. */
+    unsafe {
+        DbgPrint(b"NDIS RECVIND %p %u\n\0".as_ptr(), adapter, count);
+    }
     if !is_mp_handle(adapter) {
+        unsafe { DbgPrint(b"NDIS RECVIND bad\n\0".as_ptr()) };
         return;
     }
-    unsafe { DbgPrint(b"NDIS RECVIND\n\0".as_ptr()) };
     crate::prot6::indicate_receive(adapter, lists, port, count, flags);
 }
 
@@ -1135,16 +1138,81 @@ pub extern "system" fn NdisMSendNetBufferListsComplete(
     lists: *mut u8,
     flags: u32,
 ) {
-    /* https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismsendnetbufferlistscomplete */
+    /* https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismsendnetbufferlistscomplete
+     * names a Status member on each NET_BUFFER_LIST. That offset is not
+     * measured yet. Scan the first NBL for known completion codes from
+     * sdk/include/ddk/ndis.h / sdk/include/psdk/ntstatus.h so a NetKVM
+     * media-disconnect complete
+     * (https://github.com/virtio-win/kvm-guest-drivers-windows/blob/master/NetKVM/wlh/ParaNdis6_Impl.cpp
+     * ParaNdis_ExactSendFailureStatus) can be told apart from success
+     * without inventing a Status offset. The 256-byte window matches the
+     * NET_BUFFER probe read in differential-tests/ndis-discovery/probe.c;
+     * it is not a Windows object size. Print each distinct hit once. */
     unsafe {
         DbgPrint(
             b"NDIS SENDDONE %p %p %08x\n\0".as_ptr(),
             adapter,
             lists,
             flags,
-        )
+        );
+        scan_send_complete_status(lists);
     };
     crate::prot6::complete_send(adapter, lists, flags);
+    /* Deferred IoConnectInterrupt accepts but the line stays quiet for
+     * RX (output/netkvm-20261116T115651Z.log: two synthetic IRQDPC then
+     * many SENDDONE with no further IRQDPC). Kick the miniport DPC after
+     * each send complete so ARP/ICMP replies can be indicated. */
+    unsafe { crate::kick_interrupt_dpc(adapter) };
+}
+
+/* STATUS_NDIS_MEDIA_DISCONNECTED in sdk/include/psdk/ntstatus.h;
+ * NDIS_STATUS_MEDIA_DISCONNECTED in sdk/include/ddk/ndis.h. */
+const SEND_STAT_MEDIA_DISC: u32 = 0xC023_001F;
+/* STATUS_UNSUCCESSFUL / NDIS_STATUS_FAILURE in sdk/include/ddk/ndis.h. */
+const SEND_STAT_FAILURE: u32 = 0xC000_0001;
+/* NDIS_STATUS_RESOURCES in sdk/include/ddk/ndis.h. */
+const SEND_STAT_RESOURCES: u32 = 0xC000_009A;
+/* STATUS_NDIS_PAUSED in sdk/include/psdk/ntstatus.h. */
+const SEND_STAT_PAUSED: u32 = 0xC023_002A;
+const SEND_STAT_SCAN: usize = 256;
+
+static mut SEND_STAT_SEEN: u32 = 0;
+
+unsafe fn scan_send_complete_status(lists: *mut u8) {
+    if lists.is_null() {
+        return;
+    }
+    let codes: [u32; 4] = [
+        SEND_STAT_MEDIA_DISC,
+        SEND_STAT_FAILURE,
+        SEND_STAT_RESOURCES,
+        SEND_STAT_PAUSED,
+    ];
+    let mut off = 0usize;
+    while off + 4 <= SEND_STAT_SCAN {
+        let value = core::ptr::read_unaligned(lists.add(off) as *const u32);
+        let mut i = 0usize;
+        while i < codes.len() {
+            if value == codes[i] {
+                let bit = 1u32 << (i as u32);
+                if (SEND_STAT_SEEN & bit) == 0 {
+                    SEND_STAT_SEEN |= bit;
+                    DbgPrint(
+                        b"NDIS SENDSTAT %08x @%02x\n\0".as_ptr(),
+                        value,
+                        off as u32,
+                    );
+                }
+                return;
+            }
+            i += 1;
+        }
+        off += 4;
+    }
+    if (SEND_STAT_SEEN & 0x8000_0000) == 0 {
+        SEND_STAT_SEEN |= 0x8000_0000;
+        DbgPrint(b"NDIS SENDSTAT none\n\0".as_ptr());
+    }
 }
 
 pub fn call_oid_request(adapter: *mut u8, request: *mut u8) -> u32 {
