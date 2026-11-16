@@ -1420,6 +1420,12 @@ ExitProcess(IN UINT uExitCode)
 
     ASSERT(!BaseRunningInServerProcess);
 
+    /*
+     * firefox silent-fail22: distinguish ExitProcess from ucrt abort/__fastfail
+     * (serial-App-20261116T080441Z.log).
+     */
+    DPRINT1("ExitProcess(%u)\n", uExitCode);
+
     _SEH2_TRY
     {
         /* Acquire the PEB lock */

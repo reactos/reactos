@@ -1060,9 +1060,14 @@ RaiseFailFastException(IN PEXCEPTION_RECORD pExceptionRecord OPTIONAL,
                        IN PCONTEXT pContextRecord OPTIONAL,
                        IN DWORD dwFlags)
 {
-    UNREFERENCED_PARAMETER(pExceptionRecord);
     UNREFERENCED_PARAMETER(pContextRecord);
-    UNREFERENCED_PARAMETER(dwFlags);
+    /*
+     * firefox silent-fail22: log before TerminateProcess so abort vs
+     * RaiseFailFastException is visible (serial-App-20261116T080441Z.log).
+     */
+    DPRINT1("RaiseFailFastException code 0x%08lx flags 0x%lx\n",
+            pExceptionRecord ? pExceptionRecord->ExceptionCode : 0,
+            dwFlags);
     TerminateProcess(GetCurrentProcess(), STATUS_FAIL_FAST_EXCEPTION);
 }
 
