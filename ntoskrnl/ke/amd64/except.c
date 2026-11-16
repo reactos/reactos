@@ -752,13 +752,19 @@ KiDispatchException(IN PEXCEPTION_RECORD ExceptionRecord,
          * ucrt abort line) is not just a bare RIP (serial-App-20261116T082430Z.log).
          * silent-fail24: dump regs + stack return modules so the caller of
          * xul.dll+0x18f2c22 is named (serial-App-20261116T083050Z.log).
+         * silent-fail25: rsp walk found no code returns; walk [rbp]/[rbp+8]
+         * and print tid so AppPolicy vs fastfail share a thread
+         * (serial-App-20261116T083849Z.log).
          */
         if (ExceptionRecord->ExceptionCode == STATUS_STACK_BUFFER_OVERRUN)
         {
             ULONG Slot;
+            ULONG Frame;
+            ULONG_PTR FrameBp;
 
-            DPRINT1("User fastfail in %.16s code %Ix at %p\n",
+            DPRINT1("User fastfail in %.16s tid %p code %Ix at %p\n",
                     PsGetCurrentProcess()->ImageFileName,
+                    PsGetCurrentThreadId(),
                     ExceptionRecord->NumberParameters > 0 ?
                         ExceptionRecord->ExceptionInformation[0] : 0,
                     ExceptionRecord->ExceptionAddress);
@@ -821,6 +827,60 @@ KiDispatchException(IN PEXCEPTION_RECORD ExceptionRecord,
 
                     KiPrintUserModuleForAddress((PVOID)Value, StackTags[Slot]);
                 }
+            }
+
+            /*
+             * Frame chain: [rbp] saved rbp, [rbp+8] return. silent-fail25
+             * rsp slots were heap; the frame return should name the caller.
+             */
+            FrameBp = Context.Rbp;
+            for (Frame = 0; Frame < 8; Frame++)
+            {
+                ULONG_PTR SavedBp = 0;
+                ULONG_PTR RetAddr = 0;
+                static const char *RetTags[8] =
+                {
+                    "frame0ret", "frame1ret", "frame2ret", "frame3ret",
+                    "frame4ret", "frame5ret", "frame6ret", "frame7ret"
+                };
+
+                if (!FrameBp ||
+                    FrameBp >= (ULONG_PTR)MmUserProbeAddress ||
+                    (FrameBp & 7))
+                {
+                    break;
+                }
+
+                _enable();
+                _SEH2_TRY
+                {
+                    ProbeForRead((PVOID)FrameBp, 16, 1);
+                    SavedBp = *(volatile ULONG_PTR *)FrameBp;
+                    RetAddr = *(volatile ULONG_PTR *)(FrameBp + 8);
+                }
+                _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+                {
+                    SavedBp = 0;
+                    RetAddr = 0;
+                }
+                _SEH2_END;
+                _disable();
+
+                DPRINT1("User fastfail frame%lu rbp=%p saved=%p ret=%p\n",
+                        Frame,
+                        (PVOID)FrameBp,
+                        (PVOID)SavedBp,
+                        (PVOID)RetAddr);
+                if (RetAddr && RetAddr != (ULONG_PTR)-1)
+                {
+                    KiPrintUserModuleForAddress((PVOID)RetAddr, RetTags[Frame]);
+                }
+
+                if (!SavedBp || SavedBp <= FrameBp)
+                {
+                    break;
+                }
+                FrameBp = SavedBp;
             }
         }
 

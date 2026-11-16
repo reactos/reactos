@@ -1,0 +1,16 @@
+{
+  "spdx": "GPL-2.0-or-later",
+  "question": "Which frame return calls xul.dll+0x18f2c22 __fastfail(7), and is AppPolicyGetThreadInitializationType on that same thread?",
+  "allowedInputs": [
+    "ntoskrnl/ke/amd64/except.c already in this tree, User fastfail rsp walk",
+    "dll/win32/kernel32/client/sysinfo.c already in this tree, AppPolicyGetThreadInitializationType",
+    "output/ntdll-apps/serial-App-20261116T083849Z.log marker: User fastfail regs rbp=000000001733FF70",
+    "output/ntdll-apps/firefox-silent-fail25-no-io-fail-before-xul-fastfail.txt"
+  ],
+  "harness": {
+    "guest": "amd64 installed veros-ntfs, TCG, App mode, firefox from C:\\Firefox-win64",
+    "name": "ntdll-apps-firefox",
+    "traceOrReplayId": "serial-App-20261116T083849Z AppPolicy None then xul __fastfail no I/O miss",
+    "logSha256": "26ad6b67641fef6076b3a7abccb0f90aef918a3f989736d992b8667fe9744da7"
+  }
+}

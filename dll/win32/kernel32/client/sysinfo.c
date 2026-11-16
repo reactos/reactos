@@ -646,11 +646,14 @@ AppPolicyGetThreadInitializationType(HANDLE processToken,
     }
     *policy = AppPolicyThreadInitializationType_None;
     /*
-     * firefox silent-fail24: log the desktop policy value written before
-     * xul.dll+0x18f2c22 __fastfail (serial-App-20261116T083050Z.log).
+     * firefox silent-fail24/25: log desktop policy + tid so the App serial
+     * can match this call to the fastfail thread
+     * (serial-App-20261116T083849Z.log).
      */
-    DPRINT1("AppPolicyGetThreadInitializationType(%p) -> None (%ld)\n",
-            processToken, (LONG)*policy);
+    DPRINT1("AppPolicyGetThreadInitializationType(%p) tid %p -> None (%ld)\n",
+            processToken,
+            NtCurrentTeb()->ClientId.UniqueThread,
+            (LONG)*policy);
     return ERROR_SUCCESS;
 }
 
