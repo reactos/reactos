@@ -1,0 +1,14 @@
+{
+  "spdx": "GPL-2.0-or-later",
+  "question": "Should api-ms-win-core-synch-l1-1-0 still resolve to kernel32 under the Win10 apiset schema?",
+  "allowedInputs": [
+    "sdk/lib/apisets/apisets.table.c already in this tree, which mapped api-MS-Win-Core-Synch-L1-1-0 to kernel32.dll for Win7 through Win8.1 only",
+    "dll/ntdll/rtl/libsupp.c already in this tree, LdrpApisetVersion selects APISET_WIN10 for Vista and Win10 compat",
+    "Reported: firefox.exe Unable To Locate Component because api-ms-win-core-synch-l1-1-0.dll was not found"
+  ],
+  "harness": {
+    "guest": "amd64 installed veros-ntfs disk after K32EnumProcessModules fix, TCG, App mode",
+    "name": "ntdll-apps-firefox",
+    "traceOrReplayId": "Reported: firefox.exe Unable To Locate Component api-ms-win-core-synch-l1-1-0.dll was not found"
+  }
+}
