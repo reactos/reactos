@@ -1,0 +1,17 @@
+{
+    "spdx":  "GPL-2.0-or-later",
+    "question":  "What new clues did the no-profile firefox User AV dump add for xul.dll +0x19dde7?",
+    "allowedInputs":  [
+                          "output/ntdll-apps/serial-App-20261116T095605Z.log marker: User AV rdx0",
+                          "output/ntdll-apps/serial-App-20261116T095605Z.log marker: qword E5E5E5E5E5E5E5E5",
+                          "output/ntdll-apps/serial-App-20261116T095605Z.log marker: rsi=59FE1DB100010001",
+                          "Reported: rdx qwords decode to ASCII DOM Work",
+                          "Reported: amd64 canonical addresses sign-extend bit 47 into bits 63:48"
+                      ],
+    "harness":  {
+                    "guest":  "amd64 installed veros-ntfs, TCG, App mode, run-firefox-log without -profile",
+                    "name":  "ntdll-apps-firefox",
+                    "traceOrReplayId":  "serial-App-20261116T095605Z DOM Work E5E5",
+                    "logSha256":  "79a1ab2654b4846b23af0103d00b8cec3f8df2941e9993f59606b1c39caa3ba1"
+                }
+}

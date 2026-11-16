@@ -18,6 +18,7 @@
  * serial-App-20261116T094615Z.log: same xul+0x19dde7 AV with rsi=3; probe
  * rax/rcx/rbp and rsp slots when rbp is not a frame pointer.
  * serial-App-20261116T095120Z.log: rbp argv strings; also follow rbp+0x10/0x18 and rdx.
+ * serial-App-20261116T095605Z.log: rdx ascii DOM Work; rsi non-canonical; E5E5 at rbpA8.
  */
 
 /* INCLUDES ******************************************************************/
@@ -986,7 +987,68 @@ KiDispatchException(IN PEXCEPTION_RECORD ExceptionRecord,
             KiPrintUserFollowedObject((PVOID)Context.Rbp, 0x10, "rbp10");
             KiPrintUserFollowedObject((PVOID)Context.Rbp, 0x18, "rbp18");
             KiPrintUserFollowedObject((PVOID)Context.Rbp, 0xa8, "rbpA8");
-            KiPrintUserFollowedObject((PVOID)Context.Rdx, 0x0, "rdx0");
+            {
+                ULONG_PTR Child = 0;
+                PVOID Field = (PVOID)((ULONG_PTR)Context.Rbp + 0xa8);
+
+                if ((ULONG_PTR)Context.Rbp >= 0x10000ULL &&
+                    (ULONG_PTR)Context.Rbp < ((ULONG_PTR)MmUserProbeAddress - 0xb0))
+                {
+                    _enable();
+                    _SEH2_TRY
+                    {
+                        ProbeForRead(Field, sizeof(ULONG_PTR), 1);
+                        Child = *(volatile ULONG_PTR *)Field;
+                    }
+                    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+                    {
+                        Child = 0;
+                    }
+                    _SEH2_END;
+                    _disable();
+                }
+
+                if (Child >= 0x10000ULL && Child < (ULONG_PTR)MmUserProbeAddress)
+                {
+                    KiPrintUserFollowedObject((PVOID)Child, 0x0, "rbpA8_0");
+                    KiPrintUserFollowedObject((PVOID)Child, 0x8, "rbpA8_8");
+                    KiPrintUserQwordFields((PVOID)Child, "rbpA8obj");
+                }
+            }
+            {
+                CHAR Ascii[17];
+                ULONG i;
+
+                RtlZeroMemory(Ascii, sizeof(Ascii));
+                if ((ULONG_PTR)Context.Rdx >= 0x10000ULL &&
+                    (ULONG_PTR)Context.Rdx < ((ULONG_PTR)MmUserProbeAddress - 16))
+                {
+                    _enable();
+                    _SEH2_TRY
+                    {
+                        ProbeForRead((PVOID)Context.Rdx, 16, 1);
+                        for (i = 0; i < 16; i++)
+                        {
+                            UCHAR c = ((volatile UCHAR *)Context.Rdx)[i];
+                            Ascii[i] = (c >= 32 && c < 127) ? (CHAR)c : '.';
+                        }
+                    }
+                    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+                    {
+                        Ascii[0] = 0;
+                    }
+                    _SEH2_END;
+                    _disable();
+                }
+                DPRINT1("User AV rdx ascii [%p] '%.16s'\n",
+                        (PVOID)Context.Rdx,
+                        Ascii);
+            }
+            if (((ULONG_PTR)Context.Rsi >> 48) != 0 &&
+                ((ULONG_PTR)Context.Rsi >> 48) != 0xFFFFULL)
+            {
+                DPRINT1("User AV rsi non-canonical %p\n", (PVOID)Context.Rsi);
+            }
             {
                 ULONG Slot;
                 static const char *StackTags[16] =
