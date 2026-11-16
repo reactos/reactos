@@ -1,0 +1,19 @@
+{
+  "spdx": "GPL-2.0-or-later",
+  "question": "Why does firefox.exe exit silently after SHGetKnownFolderPath, and which KERNEL32/ktmw32 exports unblock it?",
+  "allowedInputs": [
+    "dll/win32/kernel32/client/thread.c already in this tree, BaseThreadStartup",
+    "dll/win32/kernel32/kernel32.spec already in this tree, BaseThreadInitThunk was a 0x600+ stub",
+    "https://learn.microsoft.com/en-us/windows/win32/api/ktmw32/nf-ktmw32-createtransaction CreateTransaction, KtmW32.dll",
+    "https://learn.microsoft.com/en-us/windows/win32/api/ktmw32/nf-ktmw32-committransaction CommitTransaction",
+    "https://learn.microsoft.com/en-us/windows/win32/api/memoryapi/nf-memoryapi-prefetchvirtualmemory PrefetchVirtualMemory",
+    "Reported: LDR missing export kernel32.dll!BaseThreadInitThunk and PrefetchVirtualMemory on three firefox launches",
+    "Reported: MessageBox This application has failed to start because ktmw32.dll was not found",
+    "Reported: xul.dll PE-imports CreateTransaction and CommitTransaction from ktmw32.dll; mozglue GetProcAddress BaseThreadInitThunk"
+  ],
+  "harness": {
+    "guest": "amd64 installed veros-ntfs after SHGetKnownFolderPath export, TCG, App mode",
+    "name": "ntdll-apps-firefox",
+    "traceOrReplayId": "Reported: missing export BaseThreadInitThunk; ktmw32.dll was not found MessageBox"
+  }
+}

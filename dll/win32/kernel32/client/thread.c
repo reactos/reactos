@@ -92,6 +92,28 @@ BaseThreadStartup(
     _SEH2_END;
 }
 
+/*
+ * @implemented
+ *
+ * BaseThreadInitThunk: user-mode thread start wrapper. When LdrReserved is 0,
+ * run StartAddress(Parameter) then ExitThread. Same path as BaseThreadStartup
+ * above. Export was a 0x600+ stub; mozglue GetProcAddress's it.
+ * Firefox PE: KERNEL32.dll!BaseThreadInitThunk (mozglue.dll).
+ */
+VOID
+WINAPI
+BaseThreadInitThunk(IN DWORD LdrReserved,
+                    IN LPTHREAD_START_ROUTINE StartAddress,
+                    IN PVOID Parameter)
+{
+    if (LdrReserved != 0)
+    {
+        return;
+    }
+
+    BaseThreadStartup(StartAddress, Parameter);
+}
+
 VOID
 NTAPI
 BaseDispatchApc(IN PAPCFUNC ApcRoutine,

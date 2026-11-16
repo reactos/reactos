@@ -37,7 +37,7 @@
 @ stdcall -version=0x600+ BaseProcessInitPostImport() # HACK: This export is dynamicaly imported by ntdll
 ;@ stdcall -version=0x502 -arch=x86_64 BaseProcessStart()
 @ stdcall BaseQueryModuleData(str str ptr ptr ptr) ;check
-@ stub -version=0x600+ BaseThreadInitThunk
+@ stdcall BaseThreadInitThunk(long ptr ptr)
 ;@ stdcall -version=0x502 -arch=x86_64 BaseThreadStart()
 @ stdcall BaseUpdateAppcompatCache(long long long)
 @ stdcall BasepCheckBadapp(long ptr long long long long long long long)
@@ -921,6 +921,7 @@
 @ stdcall Process32FirstW(ptr ptr)
 @ stdcall Process32Next(ptr ptr)
 @ stdcall Process32NextW(ptr ptr)
+@ stdcall PrefetchVirtualMemory(ptr long ptr long)
 @ stdcall ProcessIdToSessionId(long ptr)
 @ stdcall -stub PssCaptureSnapshot(long long long ptr)
 @ stdcall -stub PssFreeSnapshot(long ptr)
