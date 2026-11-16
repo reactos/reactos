@@ -1,0 +1,17 @@
+{
+  "spdx": "GPL-2.0-or-later",
+  "question": "How should EventRegister and related ETW provider APIs be exported from ADVAPI32 so Firefox xul.dll can load when DLL_EXPORT_VERSION is 0x502?",
+  "allowedInputs": [
+    "https://learn.microsoft.com/en-us/windows/win32/api/evntprov/nf-evntprov-eventregister EventRegister, Advapi32.dll, four parameters",
+    "dll/ntdll/def/ntdll.spec already in this tree, EtwEventRegister and related EtwEvent* stubs gated -version=0x600+",
+    "dll/win32/advapi32/advapi32.spec already in this tree, RegisterTraceGuids forwards to ntdll.EtwRegisterTraceGuids, no EventRegister export",
+    "dll/win32/kernelbase/kernelbase_ros.spec already in this tree, commented EventRegister forward to ntdll.EtwEventRegister",
+    "Reported: Entry Point Not Found EventRegister in advapi32.dll for firefox.exe",
+    "Reported: xul.dll PE imports EventRegister, EventSetInformation, EventUnregister, EventWrite, EventWriteTransfer from advapi32.dll"
+  ],
+  "harness": {
+    "guest": "amd64 installed veros-ntfs after ResolveLocaleName stub, TCG, App mode",
+    "name": "ntdll-apps-firefox",
+    "traceOrReplayId": "Reported: Entry Point Not Found EventRegister in advapi32.dll"
+  }
+}
