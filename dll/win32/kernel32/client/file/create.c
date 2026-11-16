@@ -1,9 +1,11 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
+ *                  Copyright 2026 Ryan Wilson <ryan@verosnt.com>
  * PROJECT:         ReactOS system libraries
  * FILE:            dll/win32/kernel32/client/file/create.c
  * PURPOSE:         Directory functions
  * PROGRAMMER:      Ariadne ( ariadne@xs4all.nl)
+ *                  Ryan Wilson <ryan@verosnt.com>
  * UPDATE HISTORY:
  *                  Created 01/11/98
  *                  Removed use of SearchPath (not used by Windows)
@@ -14,6 +16,7 @@
 /* INCLUDES *****************************************************************/
 
 #include <k32.h>
+#include <fileapi.h>
 #define NDEBUG
 #include <debug.h>
 
@@ -568,6 +571,54 @@ ReOpenFile(IN HANDLE hOriginalFile,
 {
    STUB;
    return INVALID_HANDLE_VALUE;
+}
+
+/*
+ * @implemented
+ *
+ * CreateFile2 wraps CreateFileW with optional CREATEFILE2_EXTENDED_PARAMETERS.
+ * Struct and prototype: sdk/include/psdk/fileapi.h. Public docs:
+ * https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-createfile2
+ * Firefox PE import: KERNEL32.dll!CreateFile2 (msvcp140.dll).
+ */
+HANDLE
+WINAPI
+CreateFile2(IN LPCWSTR lpFileName,
+            IN DWORD dwDesiredAccess,
+            IN DWORD dwShareMode,
+            IN DWORD dwCreationDisposition,
+            IN LPCREATEFILE2_EXTENDED_PARAMETERS pCreateExParams OPTIONAL)
+{
+    DWORD FlagsAndAttributes = 0;
+    LPSECURITY_ATTRIBUTES SecurityAttributes = NULL;
+    HANDLE TemplateFile = NULL;
+
+    if (pCreateExParams)
+    {
+        FlagsAndAttributes = pCreateExParams->dwFileFlags |
+                             pCreateExParams->dwFileAttributes;
+        if (pCreateExParams->dwSecurityQosFlags)
+        {
+            FlagsAndAttributes |= SECURITY_SQOS_PRESENT |
+                                  (pCreateExParams->dwSecurityQosFlags &
+                                   (SECURITY_ANONYMOUS |
+                                    SECURITY_IDENTIFICATION |
+                                    SECURITY_IMPERSONATION |
+                                    SECURITY_DELEGATION |
+                                    SECURITY_CONTEXT_TRACKING |
+                                    SECURITY_EFFECTIVE_ONLY));
+        }
+        SecurityAttributes = pCreateExParams->lpSecurityAttributes;
+        TemplateFile = pCreateExParams->hTemplateFile;
+    }
+
+    return CreateFileW(lpFileName,
+                       dwDesiredAccess,
+                       dwShareMode,
+                       SecurityAttributes,
+                       dwCreationDisposition,
+                       FlagsAndAttributes,
+                       TemplateFile);
 }
 
 /* EOF */

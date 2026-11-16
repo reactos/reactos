@@ -3,9 +3,10 @@
  * PROJECT:         ReactOS system libraries
  * FILE:            dll/win32/kernel32/client/file/iocompl.c
  * PURPOSE:         Io Completion functions
+ *                  Copyright 2026 Ryan Wilson <ryan@verosnt.com>
  * PROGRAMMERS:     Ariadne (ariadne@xs4all.nl)
  *                  Oleg Dubinskiy (oleg.dubinskij30@gmail.com)
- *                  Ryan Wilson
+ *                  Ryan Wilson <ryan@verosnt.com>
  * UPDATE HISTORY:
  *                  Created 01/11/98
  */
@@ -267,6 +268,58 @@ GetOverlappedResult(IN HANDLE hFile,
     }
 
     /* All done */
+    return TRUE;
+}
+
+/*
+ * @implemented
+ *
+ * GetOverlappedResultEx: timeout and alertable wait around the same IOSB read
+ * as GetOverlappedResult above. Prototype: sdk/include/psdk/ioapiset.h.
+ * Public docs:
+ * https://learn.microsoft.com/en-us/windows/win32/api/ioapiset/nf-ioapiset-getoverlappedresultex
+ * Firefox PE import: KERNEL32.dll!GetOverlappedResultEx (xul.dll).
+ */
+BOOL
+WINAPI
+GetOverlappedResultEx(IN HANDLE hFile,
+                      IN LPOVERLAPPED lpOverlapped,
+                      OUT LPDWORD lpNumberOfBytesTransferred,
+                      IN DWORD dwMilliseconds,
+                      IN BOOL bAlertable)
+{
+    DWORD WaitStatus;
+    HANDLE hObject;
+
+    if (lpOverlapped->Internal == STATUS_PENDING)
+    {
+        if (dwMilliseconds == 0)
+        {
+            SetLastError(ERROR_IO_INCOMPLETE);
+            return FALSE;
+        }
+
+        hObject = lpOverlapped->hEvent ? lpOverlapped->hEvent : hFile;
+        WaitStatus = WaitForSingleObjectEx(hObject, dwMilliseconds, bAlertable);
+        if (WaitStatus == WAIT_FAILED)
+        {
+            return FALSE;
+        }
+        if (WaitStatus != WAIT_OBJECT_0)
+        {
+            SetLastError(WaitStatus);
+            return FALSE;
+        }
+    }
+
+    *lpNumberOfBytesTransferred = (DWORD)lpOverlapped->InternalHigh;
+
+    if (!NT_SUCCESS(lpOverlapped->Internal))
+    {
+        BaseSetLastNTError(lpOverlapped->Internal);
+        return FALSE;
+    }
+
     return TRUE;
 }
 

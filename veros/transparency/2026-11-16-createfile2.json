@@ -1,0 +1,21 @@
+{
+  "spdx": "GPL-2.0-or-later",
+  "question": "How should CreateFile2, CopyFile2, and GetOverlappedResultEx be exported from KERNEL32 for Firefox when DLL_EXPORT_VERSION is 0x502?",
+  "allowedInputs": [
+    "https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-createfile2 CreateFile2, Kernel32.dll, CREATEFILE2_EXTENDED_PARAMETERS optional",
+    "https://learn.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-copyfile2 CopyFile2, HRESULT, COPYFILE2_EXTENDED_PARAMETERS",
+    "https://learn.microsoft.com/en-us/windows/win32/api/ioapiset/nf-ioapiset-getoverlappedresultex GetOverlappedResultEx, timeout, alertable",
+    "sdk/include/psdk/fileapi.h already in this tree, CREATEFILE2_EXTENDED_PARAMETERS and CreateFile2 prototype",
+    "sdk/include/psdk/winbase.h already in this tree, COPYFILE2_EXTENDED_PARAMETERS layout",
+    "sdk/include/psdk/ioapiset.h already in this tree, GetOverlappedResultEx prototype",
+    "dll/win32/kernel32/client/file/create.c already in this tree, CreateFileW",
+    "dll/win32/kernel32/client/file/copy.c already in this tree, CopyFileExW",
+    "dll/win32/kernel32/client/file/iocompl.c already in this tree, GetOverlappedResult",
+    "Reported: Entry Point Not Found CreateFile2 in KERNEL32.dll for firefox.exe"
+  ],
+  "harness": {
+    "guest": "amd64 installed veros-ntfs after FlushProcessWriteBuffers export, TCG, App mode",
+    "name": "ntdll-apps-firefox",
+    "traceOrReplayId": "Reported: Entry Point Not Found CreateFile2 in KERNEL32.dll"
+  }
+}
