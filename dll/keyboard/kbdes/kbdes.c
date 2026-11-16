@@ -329,7 +329,7 @@ ROSDATA DEADKEY_LPWSTR dead_key_names[] = {
 
 /* ---- Key names --------------------------------------------------------- */
 ROSDATA VSC_LPWSTR key_names[] = {
-  { 0x01, L"ESC" },
+  { 0x01, L"Esc" },
   { 0x0e, L"RETROCESO" },
   { 0x0f, L"TABULACION" },
   { 0x1c, L"ENTRAR" },
