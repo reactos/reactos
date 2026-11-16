@@ -218,7 +218,7 @@ BOOLEAN UiInitialize(BOOLEAN ShowUi)
     UiFadeInBackdrop();
 
     /* Set text color */
-    UiTextColor("White");
+    UiTextColor = COLOR_WHITE;
 
     TRACE("UiInitialize() returning TRUE.\n");
     return TRUE;
