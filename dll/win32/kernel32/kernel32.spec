@@ -472,7 +472,7 @@
 @ stdcall GetDriveTypeW(wstr)
 @ stub -version=0x600+ GetDurationFormat
 @ stub -version=0x600+ GetDurationFormatEx
-@ stdcall -stub GetDynamicTimeZoneInformation(ptr)
+@ stdcall GetDynamicTimeZoneInformation(ptr)
 @ stdcall GetEnvironmentStrings()
 @ stdcall GetEnvironmentStringsA() GetEnvironmentStrings
 @ stdcall GetEnvironmentStringsW()

@@ -1,12 +1,18 @@
 /*
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS system libraries
- * FILE:            dll/win32/kernel32/wine/timezone.c
- * PURPOSE:         Time conversion functions
- * PROGRAMMER:      Ariadne
- *                  DOSDATE and DOSTIME structures from Onno Hovers
- * UPDATE HISTORY:
- *                  Created 19/01/99
+ * PROJECT:     VerOS NT System Libraries
+ * LICENSE:     GNU Lesser General Public License, version 2.1 or later (LGPL-2.1-or-later)
+ * FILE:        dll/win32/kernel32/wine/timezone.c
+ * PURPOSE:     Time conversion functions
+ * COPYRIGHT:   Copyright ReactOS / Wine contributors
+ *              Copyright 2026 Ryan Wilson <ryan@verosnt.com>
+ * PROGRAMMERS: Ariadne
+ *              Ryan Wilson <ryan@verosnt.com>
+ *
+ * GetDynamicTimeZoneInformation: guest
+ * output/ntdll-apps/serial-App-20261116T220556Z.log
+ * marker WARNING: calling stub GetDynamicTimeZoneInformation (8 hits).
+ * Public: https://learn.microsoft.com/en-us/windows/win32/api/timezoneapi/nf-timezoneapi-getdynamictimezoneinformation
+ * Builds on GetTimeZoneInformation in this file.
  */
 
 /* INCLUDES ******************************************************************/
@@ -305,6 +311,47 @@ GetTimeZoneInformation(LPTIME_ZONE_INFORMATION lpTimeZoneInformation)
     lpTimeZoneInformation->DaylightBias = TimeZoneInformation.DaylightBias;
 
     return TIME_ZoneID(lpTimeZoneInformation);
+}
+
+
+/*
+ * @implemented
+ *
+ * Guest: output/ntdll-apps/serial-App-20261116T220556Z.log
+ * WARNING: calling stub GetDynamicTimeZoneInformation. With Basic
+ * compositing, Firefox about:support left Name/Version blank and
+ * ignored wheel/Ctrl+A while this stub returned failure.
+ */
+DWORD
+WINAPI
+GetDynamicTimeZoneInformation(PDYNAMIC_TIME_ZONE_INFORMATION pTimeZoneInformation)
+{
+    TIME_ZONE_INFORMATION tzi;
+    DWORD id;
+
+    if (!pTimeZoneInformation)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return TIME_ZONE_ID_INVALID;
+    }
+
+    id = GetTimeZoneInformation(&tzi);
+    if (id == TIME_ZONE_ID_INVALID)
+        return TIME_ZONE_ID_INVALID;
+
+    ZeroMemory(pTimeZoneInformation, sizeof(*pTimeZoneInformation));
+    pTimeZoneInformation->Bias = tzi.Bias;
+    CopyMemory(pTimeZoneInformation->StandardName, tzi.StandardName,
+               sizeof(tzi.StandardName));
+    pTimeZoneInformation->StandardDate = tzi.StandardDate;
+    pTimeZoneInformation->StandardBias = tzi.StandardBias;
+    CopyMemory(pTimeZoneInformation->DaylightName, tzi.DaylightName,
+               sizeof(tzi.DaylightName));
+    pTimeZoneInformation->DaylightDate = tzi.DaylightDate;
+    pTimeZoneInformation->DaylightBias = tzi.DaylightBias;
+    pTimeZoneInformation->TimeZoneKeyName[0] = L'\0';
+    pTimeZoneInformation->DynamicDaylightTimeDisabled = FALSE;
+    return id;
 }
 
 
