@@ -144,6 +144,19 @@ SetThreadDpiAwarenessContext(DPI_AWARENESS_CONTEXT context)
 
 /*
  * @implemented
+ *
+ * https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getthreaddpiawarenesscontext
+ * Firefox delay-load: user32.dll!GetThreadDpiAwarenessContext.
+ */
+DPI_AWARENESS_CONTEXT
+WINAPI
+GetThreadDpiAwarenessContext(VOID)
+{
+    return ThreadDpiContext;
+}
+
+/*
+ * @implemented
  */
 DPI_AWARENESS_CONTEXT
 WINAPI
@@ -195,15 +208,26 @@ SetProcessDPIAware(VOID)
 }
 
 /*
- * @stub
+ * @implemented
+ *
+ * https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-setprocessdpiawarenesscontext
+ * Firefox delay-load: user32.dll!SetProcessDpiAwarenessContext.
+ * Sets the process-default context used by GetThreadDpiAwarenessContext
+ * until a thread overrides it with SetThreadDpiAwarenessContext.
  */
 BOOL
 WINAPI
 SetProcessDpiAwarenessContext(
     _In_ DPI_AWARENESS_CONTEXT context)
 {
-    UNIMPLEMENTED;
-    return FALSE;
+    if (!IsKnownDpiContext(context))
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    ThreadDpiContext = context;
+    return TRUE;
 }
 
 /*
