@@ -7,7 +7,7 @@
  *              Copyright 2026 Ryan Wilson <ryan@verosnt.com>
  * PROGRAMMERS: Alex Ionescu (alex.ionescu@reactos.org)
  *              Ariadne (ariadne@xs4all.nl)
- *              Ryan Wilson
+ *              Ryan Wilson <ryan@verosnt.com>
  */
 
 /* INCLUDES *******************************************************************/
@@ -1414,6 +1414,37 @@ TlsSetValue(IN DWORD Index,
     Teb->TlsExpansionSlots[TlsIndex] = Value;
 
     /* Success */
+    return TRUE;
+}
+
+/*
+ * @implemented
+ *
+ * SetThreadErrorMode: sdk/include/ndk/rtlfuncs.h RtlSetThreadErrorMode.
+ * Public docs:
+ * https://learn.microsoft.com/en-us/windows/win32/api/errhandlingapi/nf-errhandlingapi-setthreaderrormode
+ * Firefox PE import: KERNEL32.dll!SetThreadErrorMode (crashreporter.exe, xul.dll).
+ */
+BOOL
+WINAPI
+SetThreadErrorMode(IN DWORD dwNewMode,
+                   OUT LPDWORD lpOldMode OPTIONAL)
+{
+    NTSTATUS Status;
+    ULONG OldMode;
+
+    Status = RtlSetThreadErrorMode(dwNewMode, &OldMode);
+    if (!NT_SUCCESS(Status))
+    {
+        BaseSetLastNTError(Status);
+        return FALSE;
+    }
+
+    if (lpOldMode)
+    {
+        *lpOldMode = OldMode;
+    }
+
     return TRUE;
 }
 
