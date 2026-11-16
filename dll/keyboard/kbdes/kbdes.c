@@ -3,6 +3,7 @@
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Spanish Variation Keyboard Layout
  * COPYRIGHT:   Copyright 2026 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
+ *              Copyright 2026 Ismael Ferreras Morezuelas <swyterzone+ros@gmail.com>
  */
 
 #define WIN32_NO_STATUS
