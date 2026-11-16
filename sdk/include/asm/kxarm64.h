@@ -35,6 +35,23 @@ __ComdatAlignment SETA 2
     MEND
 
     MACRO
+    XDATAAREA
+        AREA |.xdata|,ALIGN=2,READONLY
+    MEND
+
+    MACRO
+    PDATAAREA
+        AREA |.pdata|,ALIGN=2,READONLY
+    MEND
+
+    /* Image relative address, IMAGE_REL_ARM64_ADDR32NB */
+    MACRO
+    DCRVA $Symbol
+        DCD $Symbol
+        RELOC 2
+    MEND
+
+    MACRO
     SET_COMDAT_ALIGNMENT $Alignment
 __ComdatAlignment SETA $Alignment
     MEND
@@ -101,6 +118,20 @@ $Name
 
 .macro RODATAAREA
     .section .rdata, "dr"
+.endm
+
+.macro XDATAAREA
+    .section .xdata, "dr"
+    .p2align 2
+.endm
+
+.macro PDATAAREA
+    .section .pdata, "dr"
+    .p2align 2
+.endm
+
+.macro DCRVA Symbol
+    .rva \Symbol
 .endm
 
 /* The armasm [FUNC] attribute has no GAS counterpart */
