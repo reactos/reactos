@@ -2,6 +2,7 @@
  * Dwmapi
  *
  * Copyright 2007 Andras Kovacs
+ * Copyright 2026 Ryan Wilson <ryan@verosnt.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -17,6 +18,12 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  *
+ * ReactOS/VerOS DwmIsCompositionEnabled stays FALSE: guest
+ * output/ntdll-apps/serial-App-20261116T205323Z.log reports
+ * VERPORT PsGetVersion 10.0.19045, so RtlGetVersion made composition
+ * look enabled while DwmExtendFrameIntoClientArea is a no-op S_OK stub.
+ * Public: https://learn.microsoft.com/en-us/windows/win32/api/dwmapi/nf-dwmapi-dwmiscompositionenabled
+ * In-tree DwmGetTransportAttributes already returns DWM_E_COMPOSITIONDISABLED.
  */
 
 #include <stdarg.h>
@@ -40,13 +47,15 @@ WINE_DEFAULT_DEBUG_CHANNEL(dwmapi);
 
 /**********************************************************************
  *           DwmIsCompositionEnabled         (DWMAPI.@)
+ *
+ * Guest: output/ntdll-apps/serial-App-20261116T205323Z.log VERPORT
+ * PsGetVersion 10.0.19045. With composition reported TRUE, Firefox
+ * extends into a glass frame that VerOS does not composite, so the
+ * title bar shows the desktop and the content client stays solid grey.
  */
 HRESULT WINAPI DwmIsCompositionEnabled(BOOL *enabled)
 {
-
-#ifdef __REACTOS__
-    RTL_OSVERSIONINFOW version;
-#else
+#ifndef __REACTOS__
     RTL_OSVERSIONINFOEXW version;
 #endif
 
@@ -56,9 +65,16 @@ HRESULT WINAPI DwmIsCompositionEnabled(BOOL *enabled)
         return E_INVALIDARG;
 
     *enabled = FALSE;
+#ifndef __REACTOS__
+    /*
+     * Wine may advertise composition from the host OS version. VerOS has
+     * no DWM compositor (DwmExtendFrameIntoClientArea is a stub; transport
+     * attributes already return DWM_E_COMPOSITIONDISABLED), so leave FALSE.
+     */
     version.dwOSVersionInfoSize = sizeof(version);
     if (!RtlGetVersion(&version))
         *enabled = (version.dwMajorVersion > 6 || (version.dwMajorVersion == 6 && version.dwMinorVersion >= 3));
+#endif
 
     return S_OK;
 }
