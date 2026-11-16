@@ -363,7 +363,7 @@ ROSDATA VSC_LPWSTR key_names[] = {
   { 0x4f, L"NUMERO 1" },
   { 0x50, L"NUMERO 2" },
   { 0x51, L"NUMERO 3" },
-  { 0x52, L"NUMERO 0" },
+  { 0x52, L"Num 0" },
   { 0x53, L"Num ." },
   { 0x57, L"F11" },
   { 0x58, L"F12" },
