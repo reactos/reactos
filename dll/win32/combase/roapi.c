@@ -1,6 +1,7 @@
 /*
  * Copyright 2014 Martin Storsjo
  * Copyright 2016 Michael Müller
+ * Copyright 2026 Ryan Wilson <ryan@verosnt.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -15,6 +16,11 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ *
+ * Empty DllPath / actctx module names are rejected. Guest serial
+ * output/ntdll-apps/serial-App-20261116T061147Z.log shows
+ * LDR: missing dll .DLL after winrt apisets redirect to combase
+ * (LoadLibrary of an empty basename).
  */
 #define COBJMACROS
 #include "objbase.h"
@@ -56,7 +62,15 @@ static HRESULT get_library_for_classid(const WCHAR *classid, WCHAR **out)
     {
         struct activatable_class_data *activatable_class = (struct activatable_class_data *)data.lpData;
         void *ptr = (BYTE *)data.lpSectionBase + activatable_class->module_offset;
-        *out = wcsdup(ptr);
+        WCHAR *module = wcsdup(ptr);
+
+        if (!module || !module[0])
+        {
+            ERR("ActCtx WinRT class %s has empty module path\n", debugstr_w(classid));
+            free(module);
+            return REGDB_E_CLASSNOTREG;
+        }
+        *out = module;
         return S_OK;
     }
 
@@ -107,6 +121,13 @@ static HRESULT get_library_for_classid(const WCHAR *classid, WCHAR **out)
         buf = expanded;
     }
 
+    if (!buf[0])
+    {
+        ERR("Registry DllPath empty for WinRT class %s\n", debugstr_w(classid));
+        hr = REGDB_E_CLASSNOTREG;
+        goto done;
+    }
+
     *out = buf;
     return S_OK;
 
@@ -151,7 +172,9 @@ HRESULT WINAPI DECLSPEC_HOTPATCH RoGetActivationFactory(HSTRING classid, REFIID 
     HMODULE module;
     HRESULT hr;
 
-    FIXME("(%s, %s, %p): semi-stub\n", debugstr_hstring(classid), debugstr_guid(iid), class_factory);
+    /* ERR so the classid reaches the guest serial (Wine FIXME may be quiet). */
+    ERR("RoGetActivationFactory(%s, %s, %p)\n",
+        debugstr_hstring(classid), debugstr_guid(iid), class_factory);
 
     if (!iid || !class_factory)
         return E_INVALIDARG;
@@ -166,9 +189,17 @@ HRESULT WINAPI DECLSPEC_HOTPATCH RoGetActivationFactory(HSTRING classid, REFIID 
         return hr;
     }
 
+    if (!library || !library[0])
+    {
+        ERR("Empty library path for WinRT class %s\n", debugstr_hstring(classid));
+        free(library);
+        return REGDB_E_CLASSNOTREG;
+    }
+
     if (!(module = LoadLibraryW(library)))
     {
-        ERR("Failed to load module %s\n", debugstr_w(library));
+        ERR("Failed to load module %s for class %s\n",
+            debugstr_w(library), debugstr_hstring(classid));
         hr = HRESULT_FROM_WIN32(GetLastError());
         goto done;
     }

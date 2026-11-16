@@ -1,0 +1,16 @@
+{
+  "spdx": "GPL-2.0-or-later",
+  "question": "What should RoGetActivationFactory / get_library_for_classid do when the WinRT actctx or registry DllPath is an empty string?",
+  "allowedInputs": [
+    "dll/win32/combase/roapi.c already in this tree, get_library_for_classid wcsdup of actctx module path, RoGetActivationFactory LoadLibraryW(library)",
+    "output/ntdll-apps/serial-App-20261116T061147Z.log marker: LDR: missing dll .DLL",
+    "output/ntdll-apps/serial-App-20261116T061147Z.log marker: ApiSetResolveToHost redirected api-ms-win-core-winrt-l1-1-0.dll to C:\\VerOS\\System32\\combase.dll",
+    "output/ntdll-apps/firefox-silent-fail7-empty-dll-gaps.txt",
+    "Reported: LoadLibrary of an empty basename becomes LDR missing dll .DLL"
+  ],
+  "harness": {
+    "guest": "amd64 installed veros-ntfs after Mozilla AppData precreate, TCG, App mode",
+    "name": "ntdll-apps-firefox",
+    "traceOrReplayId": "serial-App-20261116T061147Z missing dll .DLL after winrt"
+  }
+}
