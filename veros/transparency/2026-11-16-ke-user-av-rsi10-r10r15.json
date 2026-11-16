@@ -1,0 +1,16 @@
+{
+  "spdx": "GPL-2.0-or-later",
+  "question": "Do r10-r15 or the objects behind rsi10+0/rsi10+0x18 hold the User AV fault pointer -1?",
+  "allowedInputs": [
+    "ntoskrnl/ke/amd64/except.c already in this tree, KiPrintUserFollowedObject and Context GPRs",
+    "output/ntdll-apps/serial-App-20261116T074132Z.log marker: User AV rsi10+0x0 [00000000139A1410] qword 0000000011D77180",
+    "output/ntdll-apps/firefox-silent-fail18-av-follow-neg2-gaps.txt",
+    "Reported: do both — follow rsi10 children and log r10-r15"
+  ],
+  "harness": {
+    "guest": "amd64 installed veros-ntfs after rsi follow+stack sentinels, TCG, App mode",
+    "name": "ntdll-apps-firefox",
+    "traceOrReplayId": "serial-App-20261116T074132Z xul.dll +0x18f2c22",
+    "logSha256": "e94616a416d0bbb379c407809c2d0c8346a00258e81164b155bd956fcd0a4339"
+  }
+}

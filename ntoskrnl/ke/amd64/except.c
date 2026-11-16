@@ -10,9 +10,9 @@
  *              Ryan Wilson <ryan@verosnt.com>
  *
  * User AV lines name the loaded module+RVA and trap registers.
- * Guest serial output/ntdll-apps/serial-App-20261116T073710Z.log:
- * xul.dll +0x18f2c22 fault -1; frame holds -2 not -1 — follow
- * [rsi+0x8]/[rsi+0x10] and scan rsp..rbp+0x20 for -1/-2.
+ * Guest serial output/ntdll-apps/serial-App-20261116T074132Z.log:
+ * xul.dll +0x18f2c22 fault -1; only stack -2; rsi10 holds more heap —
+ * follow rsi10+0/+0x18, log r10-r15, keep the frame sentinel scan.
  */
 
 /* INCLUDES ******************************************************************/
@@ -432,7 +432,69 @@ KiPrintUserFollowedObject(
         return;
     }
 
+    KiPrintUserModuleForAddress((PVOID)Child, Tag);
     KiPrintUserQwordFields((PVOID)Child, Tag);
+}
+
+/*
+ * silent-fail18: rsi10+0 / +0x18 pointed at further heap objects
+ * (serial-App-20261116T074132Z.log). Walk Parent[Off1][Off2].
+ */
+static
+VOID
+KiPrintUserFollowedObject2(
+    _In_ PVOID Parent,
+    _In_ ULONG Off1,
+    _In_ ULONG Off2,
+    _In_ PCSTR Tag)
+{
+    ULONG_PTR Mid = 0;
+    PVOID Field;
+
+    if (!Parent ||
+        (ULONG_PTR)Parent == (ULONG_PTR)-1 ||
+        (ULONG_PTR)Parent > ((ULONG_PTR)MmUserProbeAddress - Off1 - 8))
+    {
+        DPRINT1("User AV %s [%p+0x%lx] skip follow2\n",
+                Tag,
+                Parent,
+                Off1);
+        return;
+    }
+
+    Field = (PVOID)((ULONG_PTR)Parent + Off1);
+
+    _enable();
+
+    _SEH2_TRY
+    {
+        ProbeForRead(Field, sizeof(ULONG_PTR), 1);
+        Mid = *(volatile ULONG_PTR *)Field;
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        DPRINT1("User AV %s [%p+0x%lx] follow2 read failed 0x%08lx\n",
+                Tag,
+                Parent,
+                Off1,
+                _SEH2_GetExceptionCode());
+        Mid = 0;
+    }
+    _SEH2_END;
+
+    _disable();
+
+    if (!Mid ||
+        Mid == (ULONG_PTR)-1 ||
+        Mid == (ULONG_PTR)-2 ||
+        Mid < 0x10000ULL ||
+        Mid > (ULONG_PTR)MmUserProbeAddress)
+    {
+        DPRINT1("User AV %s mid %p skip\n", Tag, (PVOID)Mid);
+        return;
+    }
+
+    KiPrintUserFollowedObject((PVOID)Mid, Off2, Tag);
 }
 
 /*
@@ -663,6 +725,17 @@ KiDispatchException(IN PEXCEPTION_RECORD ExceptionRecord,
                     (PVOID)Context.Rdi,
                     (PVOID)Context.Rbp,
                     (PVOID)Context.R9);
+            /*
+             * silent-fail18: -1 never appeared in probed memory or the
+             * logged GPRs (serial-App-20261116T074132Z.log).
+             */
+            DPRINT1("User AV regs r10=%p r11=%p r12=%p r13=%p r14=%p r15=%p\n",
+                    (PVOID)Context.R10,
+                    (PVOID)Context.R11,
+                    (PVOID)Context.R12,
+                    (PVOID)Context.R13,
+                    (PVOID)Context.R14,
+                    (PVOID)Context.R15);
             KiPrintUserModuleForAddress(ExceptionRecord->ExceptionAddress,
                                         "rip");
             if (ExceptionRecord->NumberParameters > 1)
@@ -672,9 +745,8 @@ KiDispatchException(IN PEXCEPTION_RECORD ExceptionRecord,
                     "fault");
             }
             /*
-             * silent-fail15/17: heap objects lack -1; frame holds -2;
-             * follow rsi children and scan the frame for -1/-2
-             * (serial-App-20261116T073710Z.log).
+             * silent-fail15/18: follow rsi10 children; scan frame for
+             * -1/-2 (serial-App-20261116T074132Z.log).
              */
             KiPrintUserModuleForAddress((PVOID)Context.Rbx, "rbx");
             KiPrintUserModuleForAddress((PVOID)Context.Rsi, "rsi");
@@ -683,6 +755,8 @@ KiDispatchException(IN PEXCEPTION_RECORD ExceptionRecord,
             KiPrintUserQwordFields((PVOID)Context.Rsi, "rsi");
             KiPrintUserFollowedObject((PVOID)Context.Rsi, 0x8, "rsi8");
             KiPrintUserFollowedObject((PVOID)Context.Rsi, 0x10, "rsi10");
+            KiPrintUserFollowedObject2((PVOID)Context.Rsi, 0x10, 0x0, "rsi10_0");
+            KiPrintUserFollowedObject2((PVOID)Context.Rsi, 0x10, 0x18, "rsi10_18");
             KiPrintUserStackSentinels(Context.Rsp, Context.Rbp);
         }
 
