@@ -146,6 +146,10 @@
  * bits are in sdk/include/ddk/ndis.h. Public ParaNdis_DeviceFiltersUpdateRxMode
  * (https://github.com/virtio-win/kvm-guest-drivers-windows/blob/master/NetKVM/Common/ParaNdis_Common.cpp)
  * enables CTRL_RX NOUNI when DIRECTED is clear.
+ * A null pointer at HANDLE_LEGACY_AT keeps the NDIS 6 initialize, send,
+ * OID, and return paths. NdisMRegisterMiniport stores legacy state there.
+ * sdk/include/ddk/ndis.h declares that entry point. The zero run it sits
+ * in is capture 2026-11-16T053108Z.
  */
 
 use core::ptr;
@@ -248,6 +252,11 @@ const HANDLE_ADAPTER_CTX_AT: usize = 0x198;
  * tail at 0x1E0 (capture 2026-11-16T053108Z zero run). Stores the last
  * non-zero OID_GEN_CURRENT_PACKET_FILTER applied to this adapter. */
 const HANDLE_PACKET_FILTER_AT: usize = 0x1A0;
+/* Capture 2026-11-16T053108Z zero run ends at the tail dword 0x1E0.
+ * NDIS 6 leaves this pointer null. NdisMRegisterMiniport stores the
+ * legacy state here; call_initialize, send, OID, and return leave the
+ * NDIS 6 body alone when it is null. */
+const HANDLE_LEGACY_AT: usize = 0x1A8;
 /* IO_STACK_LOCATION.Parameters starts after the 4 UCHAR header fields on
  * x64 with pointer alignment, in sdk/include/xdk/iotypes.h. StartDevice
  * stores AllocatedResources then AllocatedResourcesTranslated. */
@@ -512,6 +521,33 @@ pub fn miniport_interrupt(handle: *mut u8) -> *mut u8 {
         return ptr::null_mut();
     }
     read_ptr(handle, HANDLE_IRQ_AT)
+}
+
+pub fn legacy_state(handle: *mut u8) -> *mut u8 {
+    if !is_mp_handle(handle) {
+        return ptr::null_mut();
+    }
+    read_ptr(handle, HANDLE_LEGACY_AT)
+}
+
+pub unsafe fn register_legacy_driver(driver_object: *mut u8, state: *mut u8) -> *mut u8 {
+    /* Same miniport handle shape NdisMRegisterMiniportDriver allocates.
+     * No NDIS 6 characteristics and no MiniportInitializeEx. AddDevice
+     * copies this block, including the legacy pointer. */
+    let handle = ExAllocatePoolWithTag(0, HANDLE_BYTES, POOL_TAG);
+    if handle.is_null() {
+        return ptr::null_mut();
+    }
+    ptr::write_bytes(handle, 0, HANDLE_BYTES);
+    *handle = HANDLE_TYPE;
+    *handle.add(1) = HANDLE_REVISION;
+    write_u16(handle, 2, HANDLE_BYTES as u16);
+    ptr::write_unaligned(handle.add(HANDLE_KIND_AT) as *mut u32, KIND_MP);
+    write_ptr(handle, HANDLE_DRIVER_AT, driver_object);
+    write_ptr(handle, HANDLE_LEGACY_AT, state);
+    set_add_device(driver_object);
+    unsafe { MP_DRIVER_HANDLE = handle };
+    handle
 }
 
 pub fn clear_interrupt(handle: *mut u8) {
@@ -912,9 +948,18 @@ fn store_start_resources(adapter: *mut u8, irp: *mut u8) {
     let partial = unsafe { chosen.add(CM_PARTIAL_AT) };
     write_ptr(adapter, HANDLE_RES_AT, partial);
     unsafe { DbgPrint(b"NDIS STARTRES %p\n\0".as_ptr(), partial) };
+    /* RegisterInterruptEx runs from the early initialize, before this
+     * StartDevice list exists. Connect now that the list is stored.
+     * output/ndis-disk-20261117T022457Z.log: NDIS IRQRES none, then
+     * NDIS STARTRES, and no NDIS IRQISR. */
+    unsafe { crate::connect_stored_interrupt(adapter) };
 }
 
 fn call_initialize(handle: *mut u8) {
+    if !legacy_state(handle).is_null() {
+        unsafe { crate::ndis5::start_legacy(handle) };
+        return;
+    }
     let chars_len = chars_len(handle);
     let slot = unsafe { slot_at(chars_ptr(handle), chars_len, INIT_SLOT) };
     if slot.is_null() {
@@ -1103,6 +1148,10 @@ pub fn call_return_net_buffer_lists(adapter: *mut u8, lists: *mut u8, flags: u32
     if !is_mp_handle(adapter) || lists.is_null() {
         return;
     }
+    if !legacy_state(adapter).is_null() {
+        unsafe { crate::ndis5::return_legacy(lists) };
+        return;
+    }
     let chars_len = chars_len(adapter);
     let slot = unsafe { slot_at(chars_ptr(adapter), chars_len, RETURN_SLOT) };
     if slot.is_null() {
@@ -1122,6 +1171,10 @@ pub fn call_send_net_buffer_lists(
 ) {
     /* https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nc-ndis-miniport_send_net_buffer_lists */
     if !is_mp_handle(adapter) || lists.is_null() {
+        return;
+    }
+    if !legacy_state(adapter).is_null() {
+        unsafe { crate::ndis5::send_legacy(adapter, lists) };
         return;
     }
     let chars_len = chars_len(adapter);
@@ -1232,6 +1285,9 @@ pub fn call_oid_request(adapter: *mut u8, request: *mut u8) -> u32 {
      * three times after NDIS OPENEXOK on the NetKVM bind path. */
     if !is_mp_handle(adapter) || request.is_null() {
         return INVALID_PARAMETER;
+    }
+    if !legacy_state(adapter).is_null() {
+        return unsafe { crate::ndis5::oid_legacy(adapter, request) };
     }
     let chars_len = chars_len(adapter);
     let slot = unsafe { slot_at(chars_ptr(adapter), chars_len, OID_SLOT) };

@@ -79,6 +79,18 @@
  * KeSetTimerEx (sdk/include/xdk/kefuncs.h) while armed so replies that
  * arrive during IcmpSendEcho2 are drained without a SENDDONE kick.
  * ScatterGatherListSize was unchanged on that same Windows call.
+ * QEMU 11.1.0 latches a level pin only in ioapic_set_irq. A line that
+ * is already high when the redirection entry becomes level is not
+ * delivered, and a later packet does not raise the line again.
+ * https://github.com/qemu/qemu/blob/v11.1.0/hw/intc/ioapic.c
+ * Reading the legacy virtio ISR status field deasserts that line
+ * (Virtual I/O Device (VIRTIO) Version 1.2, Legacy Interface: A Note
+ * on PCI Device Layout).
+ * https://docs.oasis-open.org/virtio/virtio/v1.2/cs01/virtio-v1.2-cs01.html
+ * output/netkvm-20261117T134954Z.log printed NDIS IRQCONN and no NDIS
+ * IRQISR through ping. NDIS IRQISR 1 and NDIS IRQDPC hw appeared after
+ * the link changed. After Restart, one synchronized service call lets
+ * the miniport read the device status so the next assert is a new edge.
  * output/netkvm-20261116T005259Z.log names NdisAcquireRWLockWrite.
  * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndisacquirerwlockwrite
  * output/netkvm-20261116T005640Z.log names NdisMRemoveMiniport.
@@ -179,6 +191,10 @@
  * NDIS KEY with no characters after the stub. This file copies the
  * source into the UNICODE_STRING. output/netkvm-20261116T035548Z.log
  * printed NDIS STR Parameters, NDIS STR DisableMSI, and NDIS KEY DisableMSI.
+ * output/netkvm-20261117T023507Z.log connected that line and never
+ * printed NDIS IRQISR. NdisReadConfiguration returns DisableMSI 1 so
+ * the miniport stays on IoConnectInterrupt. Message connect in
+ * ntoskrnl/io/iomgr/irq.c does not install a handler.
  * output/netkvm-20261116T014406Z.log names NdisAllocateMemoryWithTagPriority.
  * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndisallocatememorywithtagpriority
  * output/netkvm-20261116T032858Z.log called it and then faulted at
@@ -594,18 +610,30 @@ pub unsafe extern "system" fn NdisReadConfiguration(
      * NDIS_STATUS_RESOURCES is 0xC000009A. */
     /* sdk/include/xdk/ntdef.template.h UNICODE_STRING: Length is the
      * first USHORT and Buffer follows it. output/netkvm-20261116T035548Z.log
-     * printed NDIS KEY DisableMSI. That name is not in the registry
-     * image, so this read writes NDIS_STATUS_FAILURE and a null
-     * parameter. output/netkvm-20261116T040328Z.log did that and
-     * DriverEntry still returned 0xC0010004. */
+     * printed NDIS KEY DisableMSI. ntoskrnl/io/iomgr/irq.c
+     * CONNECT_MESSAGE_BASED does not connect a handler.
+     * output/netkvm-20261117T023507Z.log: NDIS IRQCONN and no NDIS IRQISR.
+     * DisableMSI is the NetKVM Parameters value (virtio-win NetKVM
+     * Parameters, https://github.com/virtio-win/kvm-guest-drivers-windows/blob/master/NetKVM/NetKVM-base.inf).
+     * Integer 1 keeps the miniport on the line interrupt this file connects. */
     unsafe { DbgPrint(b"NDIS READ %08x\n\0".as_ptr(), _kind) };
     log_keyword(b"NDIS KEY ", _keyword);
     if status.is_null() || parameter.is_null() {
         return;
     }
     if keyword_is(_keyword, b"DisableMSI") {
-        *parameter = core::ptr::null_mut();
-        *status = 0xC000_0001;
+        let block = ExAllocatePoolWithTag(0, 24, u32::from_le_bytes(*b"NsoV"));
+        if block.is_null() {
+            *status = 0xC000_009A;
+            *parameter = core::ptr::null_mut();
+            return;
+        }
+        core::ptr::write_bytes(block, 0, 24);
+        /* NdisParameterInteger is 0. IntegerData is the union at offset 8. */
+        core::ptr::write(block as *mut u32, 0);
+        core::ptr::write_unaligned(block.add(8) as *mut u32, 1);
+        *parameter = block;
+        *status = 0;
         return;
     }
     let block = ExAllocatePoolWithTag(0, 24, u32::from_le_bytes(*b"NsoV"));
@@ -1214,6 +1242,9 @@ pub unsafe extern "system" fn NdisOpenAdapterEx(
     core::ptr::write_unaligned(block.add(BINDING_CONTEXT_AT) as *mut *mut u8, context);
     core::ptr::write_unaligned(block.add(BINDING_PROTOCOL_AT) as *mut *mut u8, protocol);
     *binding = block;
+    if !adapter.is_null() && !protocol.is_null() {
+        protocol::track_open(adapter, block, protocol);
+    }
     unsafe { DbgPrint(b"NDIS OPENEXOK %p\n\0".as_ptr(), block) };
     0
 }
@@ -1417,7 +1448,9 @@ pub unsafe extern "system" fn NdisMAllocateSharedMemory(
         return;
     }
     let bytes = ((length as usize) + 0xfff) & !0xfff;
-    let va = unsafe { MmAllocateContiguousMemory(bytes, u64::MAX) };
+    /* ndis5::legacy_dma_limit stays at u64::MAX for an NDIS 6 handle. */
+    let highest = crate::ndis5::legacy_dma_limit(_handle);
+    let va = unsafe { MmAllocateContiguousMemory(bytes, highest) };
     if va.is_null() {
         *virtual_address = core::ptr::null_mut();
         *physical = 0;
@@ -2314,6 +2347,83 @@ pub(crate) unsafe fn kick_interrupt_dpc(adapter: *mut u8) {
     );
 }
 
+pub(crate) unsafe fn connect_stored_interrupt(adapter: *mut u8) {
+    /* StartDevice stored the translated resource list after the soft
+     * register. Connect the line if IoConnectInterrupt has not run. */
+    let block = register::miniport_interrupt(adapter);
+    if block.is_null() {
+        return;
+    }
+    unsafe {
+        if core::ptr::read_unaligned(block as *const u32) != IRQ_KIND {
+            return;
+        }
+        connect_interrupt_block(block, register::miniport_resources(adapter));
+    }
+}
+
+unsafe extern "system" fn acknowledge_pending_line(context: *mut u8) -> u8 {
+    /* IoConnectInterrupt's service routine. KeSynchronizeExecution
+     * already holds the interrupt, which is the DIRQL the miniport
+     * ISR runs at on a real line. */
+    ndis_interrupt_service(core::ptr::null_mut(), context);
+    0
+}
+
+unsafe fn service_pending_line(block: *mut u8) {
+    /* output/netkvm-20261117T134954Z.log: the virtio line was already
+     * pending at connect, so QEMU never delivered vector 193 and
+     * NDIS IRQISR stayed absent until the link changed.
+     * https://github.com/qemu/qemu/blob/v11.1.0/hw/intc/ioapic.c
+     * https://docs.oasis-open.org/virtio/virtio/v1.2/cs01/virtio-v1.2-cs01.html */
+    if block.is_null() || core::ptr::read_unaligned(block as *const u32) != IRQ_KIND {
+        return;
+    }
+    let object = core::ptr::read_unaligned(block.add(IRQ_OBJECT_AT) as *const *mut u8);
+    if object.is_null() {
+        return;
+    }
+    DbgPrint(b"NDIS IRQACK\n\0".as_ptr());
+    KeSynchronizeExecution(
+        object,
+        acknowledge_pending_line as *const (),
+        block,
+    );
+}
+
+pub(crate) fn line_interrupt_object(adapter: *mut u8) -> *mut u8 {
+    let block = register::miniport_interrupt(adapter);
+    if block.is_null() {
+        return core::ptr::null_mut();
+    }
+    unsafe {
+        if core::ptr::read_unaligned(block as *const u32) != IRQ_KIND {
+            return core::ptr::null_mut();
+        }
+        core::ptr::read_unaligned(block.add(IRQ_OBJECT_AT) as *const *mut u8)
+    }
+}
+
+pub(crate) unsafe fn connect_line_only(adapter: *mut u8) {
+    /* NDIS 5 NdisMRegisterInterrupt connects the line before it
+     * returns. The NDIS 6 path still uses connect_interrupt, which
+     * also queues a DPC for Restart.
+     * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismregisterinterrupt */
+    let block = register::miniport_interrupt(adapter);
+    if block.is_null() {
+        return;
+    }
+    unsafe {
+        if core::ptr::read_unaligned(block as *const u32) != IRQ_KIND {
+            return;
+        }
+        *block.add(IRQ_ARMED_AT) = 1;
+        connect_interrupt_block(block, register::miniport_resources(adapter));
+        service_pending_line(block);
+        DbgPrint(b"NDIS5 IRQARM\n\0".as_ptr());
+    }
+}
+
 pub(crate) unsafe fn connect_interrupt(adapter: *mut u8) {
     /* After MiniportRestart: arm, connect, enable, then queue one DPC so
      * KickRX work from Restart is not lost when the ISR was not yet
@@ -2329,8 +2439,11 @@ pub(crate) unsafe fn connect_interrupt(adapter: *mut u8) {
         *block.add(IRQ_ARMED_AT) = 1;
         connect_interrupt_block(block, register::miniport_resources(adapter));
         call_line_irq_handler(block, IRQ_ENABLE_AT);
+        service_pending_line(block);
         kick_interrupt_dpc(adapter);
-        start_rx_poll_timer(block);
+        /* Line ISR is connected from StartDevice. The 50 ms poll is
+         * not started. output/ndis-disk-20261117T022958Z.log showed
+         * NDIS IRQISR then RTL8139 RXET and NDIS6 RECV. */
         DbgPrint(b"NDIS IRQARM\n\0".as_ptr());
     }
 }

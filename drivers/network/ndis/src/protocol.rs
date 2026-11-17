@@ -39,6 +39,10 @@
  * faulted in netkvm.sys. NetKVM registers that protocol with PVER
  * 06 1e (accepted in capture 2026-11-16T054327Z). Skip BindAdapterEx
  * for that registration so the miniport keeps the tcpip filter.
+ * Non-PnP miniports (rtl8139n) Restart and BINDALL before tcpip
+ * registers. Track each ready adapter and run BINDALL again when a
+ * non-skip protocol registers (output/ndis-disk-20261116T195631Z.log:
+ * BINDALL then later NDIS6 REG with no NDIS6 BIND).
  */
 
 use core::ptr;
@@ -63,6 +67,8 @@ const CALLED_SLOTS: [usize; 2] = [0x20, 0x48];
 /* Public register page: ProtocolSetOptions at this offset. */
 const SET_OPTIONS_SLOT: usize = 0x20;
 const BIND_SLOT: usize = 0x28;
+/* ReceiveNetBufferListsHandlerEx at 0x68 (prot6.rs RECEIVE_AT). */
+const RECEIVE_SLOT: usize = 0x68;
 /* NDIS_STATUS_BAD_VERSION and NDIS_STATUS_BAD_CHARACTERISTICS in sdk/include/ddk/ndis.h. */
 const BAD_VERSION: u32 = 0xC001_0004;
 const BAD_CHARACTERISTICS: u32 = 0xC001_0005;
@@ -73,16 +79,90 @@ const FAILURE: u32 = 0xC000_0001;
 const RESOURCES: u32 = 0xC000_009A;
 const KIND_PR: u32 = u32::from_le_bytes(*b"PRso");
 const MAX_PROTOCOLS: usize = 8;
+const MAX_READY: usize = 8;
 
 struct PrDriver {
     kind: u32,
     /* True for NetKVM's PVER 06 1e registration: accept, do not BINDALL. */
     skip_bind: bool,
+    /* Set after the first BINDREADY walk so a later protocol (lldp.sys)
+     * calling VerosBindReadyProtocols does not re-bind tcpip and create a
+     * second NDIS6 LAN (output/ndis-disk-20261116T214347Z.log). */
+    bound: bool,
     context: *mut u8,
     chars: [u8; PR_CHARS],
 }
 
 static mut PROTOCOLS: [*mut PrDriver; MAX_PROTOCOLS] = [ptr::null_mut(); MAX_PROTOCOLS];
+static mut READY_ADAPTERS: [*mut u8; MAX_READY] = [ptr::null_mut(); MAX_READY];
+/* Open bindings so indicate can fan out to LLDP and other protocols
+ * while prot6 still delivers the primary tcpip ReceiveNetBufferLists.
+ * output/ndis-disk-20261116T214838Z.log: LLDP OPEN then LLDP TX, but no
+ * LLDP RX because NdisMIndicateReceiveNetBufferLists only called prot6. */
+const MAX_OPENS: usize = 16;
+static mut OPENS: [(*mut u8, *mut u8, *mut u8); MAX_OPENS] =
+    [(ptr::null_mut(), ptr::null_mut(), ptr::null_mut()); MAX_OPENS];
+
+fn track_ready(adapter: *mut u8) {
+    if adapter.is_null() {
+        return;
+    }
+    unsafe {
+        for slot in READY_ADAPTERS.iter_mut() {
+            if *slot == adapter {
+                return;
+            }
+        }
+        for slot in READY_ADAPTERS.iter_mut() {
+            if slot.is_null() {
+                *slot = adapter;
+                return;
+            }
+        }
+    }
+}
+
+fn bind_one_protocol(driver: *mut PrDriver, adapter: *mut u8, params: *mut u8) {
+    if driver.is_null() || adapter.is_null() {
+        return;
+    }
+    if unsafe { (*driver).skip_bind } {
+        unsafe { DbgPrint(b"NDIS BINDALL skip\n\0".as_ptr()) };
+        return;
+    }
+    let chars = unsafe { (*driver).chars.as_ptr() };
+    let slot = unsafe { ptr::read_unaligned(chars.add(BIND_SLOT) as *const *mut u8) };
+    if slot.is_null() {
+        return;
+    }
+    let context = unsafe { (*driver).context };
+    let function: unsafe extern "system" fn(*mut u8, *mut u8, *mut u8) -> u32 =
+        unsafe { core::mem::transmute(slot) };
+    let status = unsafe { function(context, adapter, params) };
+    unsafe { DbgPrint(b"NDIS BINDALL %08x\n\0".as_ptr(), status) };
+}
+
+fn bind_protocol_to_ready(driver: *mut PrDriver) {
+    if driver.is_null() || unsafe { (*driver).skip_bind } {
+        return;
+    }
+    if unsafe { (*driver).bound } {
+        unsafe { DbgPrint(b"NDIS BINDREADY skip\n\0".as_ptr()) };
+        return;
+    }
+    unsafe { DbgPrint(b"NDIS BINDREADY\n\0".as_ptr()) };
+    let params = prot6::make_bind_parameters();
+    for index in 0..MAX_READY {
+        let adapter = unsafe { READY_ADAPTERS[index] };
+        if adapter.is_null() {
+            continue;
+        }
+        bind_one_protocol(driver, adapter, params);
+        unsafe { crate::kick_interrupt_dpc(adapter) };
+    }
+    prot6::free_bind_parameters(params);
+    unsafe { (*driver).bound = true };
+}
 
 unsafe extern "system" {
     fn ExAllocatePoolWithTag(kind: u32, bytes: usize, tag: u32) -> *mut u8;
@@ -127,6 +207,69 @@ fn track(driver: *mut PrDriver) {
     }
 }
 
+pub fn track_open(adapter: *mut u8, binding: *mut u8, protocol: *mut u8) {
+    if adapter.is_null() || binding.is_null() || protocol.is_null() {
+        unsafe { DbgPrint(b"NDIS OPEN track skip\n\0".as_ptr()) };
+        return;
+    }
+    unsafe {
+        for slot in OPENS.iter_mut() {
+            if slot.1 == binding {
+                *slot = (adapter, binding, protocol);
+                DbgPrint(b"NDIS OPEN track upd\n\0".as_ptr());
+                return;
+            }
+        }
+        for slot in OPENS.iter_mut() {
+            if slot.1.is_null() {
+                *slot = (adapter, binding, protocol);
+                DbgPrint(b"NDIS OPEN track add\n\0".as_ptr());
+                return;
+            }
+        }
+        DbgPrint(b"NDIS OPEN track full\n\0".as_ptr());
+    }
+}
+
+pub fn indicate_secondary(
+    _adapter: *mut u8,
+    lists: *mut u8,
+    port: u32,
+    count: u32,
+    flags: u32,
+    skip_protocol: *mut u8,
+) {
+    /* Call ReceiveNetBufferLists on every registered protocol except the
+     * prot6/tcpip handle. Walk PROTOCOLS (not OPENS) so LLDP still sees
+     * frames when BindAdapterEx open tracking misses the miniport
+     * adapter (output/ndis-disk-20261116T223521Z.log: RXET 88cc, no
+     * LLDP RX). Secondary handlers copy then leave Return to tcpip. */
+    if lists.is_null() {
+        return;
+    }
+    type RecvFn = unsafe extern "system" fn(*mut u8, *mut u8, u32, u32, u32);
+    unsafe {
+        for index in 0..MAX_PROTOCOLS {
+            let driver = PROTOCOLS[index];
+            if driver.is_null() || driver as *mut u8 == skip_protocol {
+                continue;
+            }
+            if (*driver).skip_bind || (*driver).kind != KIND_PR {
+                continue;
+            }
+            let recv = ptr::read_unaligned(
+                (*driver).chars.as_ptr().add(RECEIVE_SLOT) as *const *const (),
+            );
+            if recv.is_null() {
+                continue;
+            }
+            let function: RecvFn = core::mem::transmute(recv);
+            DbgPrint(b"NDIS RECVSEC\n\0".as_ptr());
+            function((*driver).context, lists, port, count, flags);
+        }
+    }
+}
+
 fn untrack(driver: *mut PrDriver) {
     unsafe {
         for slot in PROTOCOLS.iter_mut() {
@@ -143,6 +286,7 @@ pub fn notify_adapter_ready(adapter: *mut u8) {
     if adapter.is_null() {
         return;
     }
+    track_ready(adapter);
     unsafe { DbgPrint(b"NDIS BINDALL\n\0".as_ptr()) };
     let params = prot6::make_bind_parameters();
     for index in 0..MAX_PROTOCOLS {
@@ -150,20 +294,7 @@ pub fn notify_adapter_ready(adapter: *mut u8) {
         if driver.is_null() {
             continue;
         }
-        if unsafe { (*driver).skip_bind } {
-            unsafe { DbgPrint(b"NDIS BINDALL skip\n\0".as_ptr()) };
-            continue;
-        }
-        let chars = unsafe { (*driver).chars.as_ptr() };
-        let slot = unsafe { ptr::read_unaligned(chars.add(BIND_SLOT) as *const *mut u8) };
-        if slot.is_null() {
-            continue;
-        }
-        let context = unsafe { (*driver).context };
-        let function: unsafe extern "system" fn(*mut u8, *mut u8, *mut u8) -> u32 =
-            unsafe { core::mem::transmute(slot) };
-        let status = unsafe { function(context, adapter, params) };
-        unsafe { DbgPrint(b"NDIS BINDALL %08x\n\0".as_ptr(), status) };
+        bind_one_protocol(driver, adapter, params);
     }
     prot6::free_bind_parameters(params);
     /* After bind and packet-filter OIDs, queue the interrupt DPC once so
@@ -296,6 +427,7 @@ pub unsafe extern "system" fn NdisRegisterProtocolDriver(
     }
     (*driver).kind = KIND_PR;
     (*driver).skip_bind = netkvm;
+    (*driver).bound = false;
     (*driver).context = context;
     ptr::write_bytes((*driver).chars.as_mut_ptr(), 0, PR_CHARS);
     ptr::copy_nonoverlapping(chars, (*driver).chars.as_mut_ptr(), PR_CHARS);
@@ -310,7 +442,23 @@ pub unsafe extern "system" fn NdisRegisterProtocolDriver(
     }
     track(driver);
     *out_handle = driver as *mut u8;
+    /* Do not BINDREADY here: LanRegisterProtocol6 stores PROTOCOL_HANDLE
+     * after this return. output/ndis-disk-20261116T200123Z.log printed
+     * NDIS6 BIND / BINDALL c0000001 before NDIS6 REG 00000000. */
     0
+}
+
+pub fn bind_ready_protocols() {
+    /* Call after PROTOCOL_HANDLE is stored so BindAdapterEx can open. */
+    unsafe {
+        for index in 0..MAX_PROTOCOLS {
+            let driver = PROTOCOLS[index];
+            if driver.is_null() {
+                continue;
+            }
+            bind_protocol_to_ready(driver);
+        }
+    }
 }
 
 #[no_mangle]

@@ -2,37 +2,73 @@
  * PROJECT:     VerOS NT Kernel
  * LICENSE:     GNU General Public License, version 2 or later (GPL-2.0-or-later)
  * FILE:        drivers/network/ndis/src/ndis5.rs
- * PURPOSE:     NDIS 4 exports that tcpip.sys imports
+ * PURPOSE:     Legacy NDIS packet pools tcpip still allocates
  * COPYRIGHT:   Copyright 2026 Ryan Wilson <ryan@verosnt.com>
  * PROGRAMMERS: Ryan Wilson <ryan@verosnt.com>
  */
 
 /*
- * drivers/network/tcpip/tcpip.sys imports these names from ndis.sys.
- * sdk/include/ddk/ndis.h declares them. tcpip is built with NDIS40, so
- * the characteristics block is NDIS40_PROTOCOL_CHARACTERISTICS.
- * BindAdapterHandler follows the NDIS_STRING name in that struct.
- * sdk/include/xdk/mmtypes.h is the MDL. sdk/include/xdk/mmfuncs.h is
- * ADDRESS_AND_SIZE_TO_SPAN_PAGES and MmBuildMdlForNonPagedPool.
- * MmGetSystemAddressForMdlSafe maps a buffer that lacks
- * MDL_SOURCE_IS_NONPAGED_POOL. Capture 2026-11-15T215311Z stopped in
- * MmMapLockedPagesSpecifyCache on that path. A zero-length buffer returns 1.
+ * drivers/network/tcpip/tcpip.sys still calls NdisAllocatePacketPoolEx from
+ * main.c and NdisAllocatePacket from buffer.c. sdk/include/ddk/ndis.h
+ * declares these NDIS 4 packet APIs. The NDIS 5 tcpip bind bridge
+ * VerosNoteTransmit / VerosIndicateFrame and tcpip's NDIS 5 bind are gone;
+ * tcpip uses LanRegisterProtocol6 only. Phase C acceptance:
+ * output/ndis-disk-20261116T203348Z.log and output/netkvm-20261116T203635Z.log
+ * (gateway done 2 2, DNS done 1 1). NdisRegisterProtocol still succeeds so
+ * in-tree ndisuio.sys can load for raw NDIS smoke (Phase H); BINDALL for
+ * that legacy path is not restored. sdk/include/xdk/mmtypes.h is the MDL.
  * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndis_buffer_to_span_pages
- * OID values are in sdk/include/psdk/ntddndis.h. The station address is
- * the RTL8139 address printed by the disk boot.
- * VerosNoteTransmit is the miniport hook for NdisSend. It is not a
- * Windows export. Capture 2026-11-15T220043Z printed NDIS5 CHECK send
- * and the frame stayed in this driver. Capture 2026-11-15T220700Z
- * printed RTL8139 CHECK stack 0806 and 0800, so the frames left the
- * NIC. VerosIndicateFrame calls ReceiveHandler in
- * NDIS40_PROTOCOL_CHARACTERISTICS. That pointer follows the five
- * completion handlers and RequestCompleteHandler. The characteristics
- * block is the caller's stack, so the handler address is copied
- * during NdisRegisterProtocol. Capture 2026-11-15T221120Z bugchecked
- * 0x50 when the indication read that block later. Capture
- * 2026-11-15T221629Z then asserted DISPATCH_LEVEL in lan.c.
+ * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndisregisterprotocol
+ * NDIS 5 miniports enter through NdisMRegisterMiniport. Characteristics
+ * slots and struct _NDIS_MINIPORT_BLOCK field order are the x64 layout
+ * in sdk/include/ddk/ndis.h. KTIMER and KDPC are 0x40 bytes in
+ * sdk/include/xdk/ketypes.h, matching the interrupt block in src/lib.rs.
+ * NdisMedium802_3 is the first enumerator in sdk/include/psdk/ntddndis.h.
+ * Indicated NBLs use the DataLength/Mdl offsets lan.c already reads.
+ * NDIS 6 drivers do not call this path.
+ * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismregisterminiport
+ * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismsetattributesex
+ * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismregisterinterrupt
+ * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismsynchronizewithinterrupt
+ * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismindicatestatus
+ * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndisminitializetimer
+ * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndissettimer
+ * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismcanceltimer
+ * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndisopenconfiguration
+ * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismqueryadapterresources
+ * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndisreadpcislotinformation
+ * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndiswritepcislotinformation
+ * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndisallocatememorywithtag
+ * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndisminitializescattergatherdma
+ * Dma64Addresses 0 asks for a 32-bit device. output/ndis-disk-20261117T150052Z.log
+ * printed NDIS5 SGDMA 00000000 then NDIS SHMEMOK with physical high
+ * dword 00000001, and the pcap beside that log carried the miniport's
+ * transmits as zero frames of the right length. The scatter/gather list
+ * is SCATTER_GATHER_LIST in sdk/include/xdk/iotypes.h, reached through
+ * NDIS_PER_PACKET_INFO_FROM_PACKET in sdk/include/ddk/ndis.h.
+ * Attaching that list and a private bounce bugchecked 0x19
+ * (BAD_POOL_HEADER) in output/ndis-disk-20261117T152123Z.log after one
+ * NDIS5 SEND. Shared-memory DMA stays 32-bit; the packet bytes stay in
+ * a pool buffer the miniport already copied on that boot.
+ * SendComplete from the interrupt DPC asserted APC_LEVEL and later
+ * bugchecked 0x19 on tag 5sdN when Sent lived at WrapperReserved 0x40
+ * (output/ndis-disk-20261117T152636Z.log,
+ * output/ndis-disk-20261117T154605Z.log). MiniportReservedEx overwrote
+ * that slot. Sent now trails the packet in the same pool block.
+ * Leak probe: finish_send completes the NBL but does not free the
+ * packet, copy, or MDL (output/ndis-disk-20261117T154925Z.log reached
+ * MDLFREE then 0x19 on tag 5sdN). Copy-only and copy+packet frees
+ * passed; IoFreeMdl alone passed. Freeing all three with
+ * NdisPacketOobOffset left at 0 still risked OOB/extension writes into
+ * the descriptor. build_packet now sets NdisPacketOobOffset to 96
+ * (sdk/include/ddk/ndis.h NDIS_PACKET_PRIVATE) and fPACKET_ALLOCATED_BY_NDIS.
+ * output/ndis-disk-20261117T160927Z.log: NDIS5 FREEA, gateway done 2 2,
+ * loopback done 1 1, no Fatal System Error.
+ * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndismfreemapregisters
+ * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndiswriteerrorlogentry
  */
 
+use core::mem::size_of;
 use core::ptr;
 
 const PAGE_SHIFT: usize = 12;
@@ -41,22 +77,11 @@ const SUCCESS: u32 = 0;
 const NOT_SUPPORTED: u32 = 0xC000_00BB;
 const RESOURCES: u32 = 0xC000_009A;
 const POOL_TAG: u32 = u32::from_le_bytes(*b"5sdN");
+const COPY_TAG: u32 = u32::from_le_bytes(*b"5sdC");
+const PACKET_TAG: u32 = u32::from_le_bytes(*b"5sdP");
 const POOL_KIND: u32 = u32::from_le_bytes(*b"PKso");
-/* NDIS40_PROTOCOL_CHARACTERISTICS: header, ten handlers, NDIS_STRING, ReceivePacketHandler. */
-const BIND_AT: usize = 112;
-const RECEIVE_AT: usize = 56;
-const RECEIVE_COMPLETE_AT: usize = 64;
-const OID_GEN_LINK_SPEED: u32 = 0x0001_0107;
-const OID_GEN_MEDIA_CONNECT_STATUS: u32 = 0x0001_0114;
-const OID_GEN_MEDIA_SUPPORTED: u32 = 0x0001_0103;
-const OID_GEN_MAXIMUM_TOTAL_SIZE: u32 = 0x0001_0111;
-const OID_GEN_PHYSICAL_MEDIUM: u32 = 0x0001_0202;
-const OID_GEN_XMIT_ERROR: u32 = 0x0002_0103;
-const OID_GEN_RCV_ERROR: u32 = 0x0002_0104;
-const OID_GEN_MAXIMUM_FRAME_SIZE: u32 = 0x0001_0106;
-const OID_GEN_MAXIMUM_SEND_PACKETS: u32 = 0x0001_0115;
-const OID_802_3_CURRENT_ADDRESS: u32 = 0x0101_0102;
-const MAC: [u8; 6] = [0x52, 0x54, 0x00, 0x12, 0x34, 0x56];
+/* Private (44) + reserved union (32) + Reserved[2] (16) = 92. */
+const PACKET_OOB_AT: u16 = 96;
 
 #[repr(C)]
 struct Mdl {
@@ -71,33 +96,12 @@ struct Mdl {
     byte_offset: u32,
 }
 
-#[repr(C)]
-struct Unicode {
-    length: u16,
-    maximum: u16,
-    _pad: u32,
-    buffer: *const u16,
-}
-
 struct Pool {
     kind: u32,
     reserved: u32,
 }
 
-static mut LAST_OID: u32 = 0xFFFF_FFFF;
-static mut PROTOCOL: *mut u8 = ptr::null_mut();
-static mut TCPIP_CONTEXT: *mut u8 = ptr::null_mut();
-static mut RECEIVE: Option<
-    unsafe extern "system" fn(*mut u8, *mut u8, *const u8, u32, *const u8, u32, u32) -> u32,
-> = None;
-static mut RECEIVE_DONE: Option<unsafe extern "system" fn(*mut u8)> = None;
-static mut BINDING: u8 = 0;
-static mut TRANSMIT: Option<unsafe extern "system" fn(*const u8, u32) -> u32> = None;
-
-const FAILURE: u32 = 0xC000_0001;
-
 unsafe extern "system" {
-    fn DbgPrint(format: *const u8, ...) -> i32;
     fn ExAllocatePoolWithTag(kind: u32, bytes: usize, tag: u32) -> *mut u8;
     fn ExFreePoolWithTag(address: *mut u8, tag: u32);
     fn IoAllocateMdl(
@@ -108,27 +112,6 @@ unsafe extern "system" {
         irp: *mut u8,
     ) -> *mut u8;
     fn MmBuildMdlForNonPagedPool(mdl: *mut u8);
-}
-
-fn write_irql(irql: u64) {
-    unsafe {
-        core::arch::asm!("mov cr8, {}", in(reg) irql, options(nostack, preserves_flags));
-    }
-}
-
-fn current_irql() -> u64 {
-    let irql: u64;
-    unsafe {
-        core::arch::asm!("mov {}, cr8", out(reg) irql, options(nostack, preserves_flags));
-    }
-    irql
-}
-fn line(text: &[u8]) {
-    unsafe { DbgPrint(text.as_ptr()); }
-}
-
-fn line_status(text: &[u8], status: u32) {
-    unsafe { DbgPrint(text.as_ptr(), status); }
 }
 
 fn span_pages(buffer: *const Mdl) -> u32 {
@@ -147,48 +130,6 @@ fn write_status(status: *mut u32, value: u32) {
     if !status.is_null() {
         unsafe { *status = value; }
     }
-}
-
-fn query_field(request: *mut u8, at: usize) -> u32 {
-    unsafe { ptr::read_unaligned(request.add(at) as *const u32) }
-}
-
-fn query_buffer(request: *mut u8) -> *mut u8 {
-    unsafe { ptr::read_unaligned(request.add(48) as *const *mut u8) }
-}
-
-fn answer_query(request: *mut u8) -> u32 {
-    /* NDIS_REQUEST: MacReserved, RequestType, then the query union. */
-    let oid = query_field(request, 40);
-    let length = query_field(request, 56);
-    let buffer = query_buffer(request);
-    if oid != unsafe { LAST_OID } {
-        line_status(b"NDIS5 CHECK oid %08x\n\0", oid);
-        unsafe { LAST_OID = oid; }
-    }
-    let (bytes, value) = match oid {
-        OID_GEN_MAXIMUM_SEND_PACKETS => (4u32, 1u32),
-        OID_GEN_MAXIMUM_FRAME_SIZE => (4, 1500),
-        OID_GEN_LINK_SPEED => (4, 1_000_000),
-        OID_GEN_MEDIA_CONNECT_STATUS => (4, 0),
-        OID_GEN_MEDIA_SUPPORTED => (4, 0),
-        OID_GEN_MAXIMUM_TOTAL_SIZE => (4, 1514),
-        OID_GEN_PHYSICAL_MEDIUM => (4, 14),
-        OID_GEN_XMIT_ERROR => (4, 0),
-        OID_GEN_RCV_ERROR => (4, 0),
-        OID_802_3_CURRENT_ADDRESS => (6, 0),
-        _ => return NOT_SUPPORTED,
-    };
-    if buffer.is_null() || length < bytes {
-        return NOT_SUPPORTED;
-    }
-    if oid == OID_802_3_CURRENT_ADDRESS {
-        unsafe { ptr::copy_nonoverlapping(MAC.as_ptr(), buffer, 6); }
-    } else {
-        unsafe { ptr::write_unaligned(buffer as *mut u32, value); }
-    }
-    unsafe { ptr::write_unaligned(request.add(60) as *mut u32, bytes); }
-    SUCCESS
 }
 
 #[no_mangle]
@@ -355,73 +296,33 @@ pub unsafe extern "system" fn NdisRegisterProtocol(
     chars: *mut u8,
     length: u32,
 ) {
-    line_status(b"NDIS5 CHECK register %08x\n\0", length);
-    if chars.is_null() || length < (BIND_AT + 8) as u32 {
+    /* Opaque protocol block so ndisuio DriverEntry can finish. The
+     * characteristics buffer is not walked for BINDALL. */
+    if chars.is_null() || length == 0 {
         write_status(status, NOT_SUPPORTED);
+        if !handle.is_null() {
+            *handle = ptr::null_mut();
+        }
         return;
     }
-    PROTOCOL = chars;
-    if RECEIVE.is_none() {
-        let receive = ptr::read_unaligned(chars.add(RECEIVE_AT) as *const *mut u8);
-        let complete = ptr::read_unaligned(chars.add(RECEIVE_COMPLETE_AT) as *const *mut u8);
-        if !receive.is_null() {
-            RECEIVE = Some(core::mem::transmute(receive));
-            if !complete.is_null() {
-                RECEIVE_DONE = Some(core::mem::transmute(complete));
-            }
+    let block = ExAllocatePoolWithTag(0, size_of::<Pool>(), POOL_TAG) as *mut Pool;
+    if block.is_null() {
+        write_status(status, RESOURCES);
+        if !handle.is_null() {
+            *handle = ptr::null_mut();
         }
+        return;
     }
-    line_status(b"NDIS5 CHECK protocol %08x\n\0", PROTOCOL as usize as u32);
+    (*block).kind = u32::from_le_bytes(*b"PRot");
+    (*block).reserved = length;
     if !handle.is_null() {
-        *handle = chars;
+        *handle = block as *mut u8;
     }
     write_status(status, SUCCESS);
-    let slot = ptr::read_unaligned(chars.add(BIND_AT) as *const *mut u8);
-    if slot.is_null() {
-        line(b"NDIS5 CHECK bind none\n\0");
-        return;
-    }
-    let bind: unsafe extern "system" fn(*mut u32, *mut u8, *mut Unicode, *mut u8, *mut u8) =
-        core::mem::transmute(slot);
-    let mut device: [u16; 18] = [
-        '\\' as u16, 'D' as u16, 'e' as u16, 'v' as u16, 'i' as u16, 'c' as u16, 'e' as u16,
-        '\\' as u16, 'R' as u16, 't' as u16, 'l' as u16, '8' as u16, '1' as u16, '3' as u16,
-        '9' as u16, 0, 0, 0,
-    ];
-    let mut registry: [u16; 64] = [0; 64];
-    let path = "\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Services\\Tcpip";
-    let mut index = 0;
-    for unit in path.encode_utf16() {
-        registry[index] = unit;
-        index += 1;
-    }
-    let mut device_name = Unicode {
-        length: 15 * 2,
-        maximum: 16 * 2,
-        _pad: 0,
-        buffer: device.as_ptr(),
-    };
-    let mut registry_name = Unicode {
-        length: (index * 2) as u16,
-        maximum: (index * 2) as u16,
-        _pad: 0,
-        buffer: registry.as_ptr(),
-    };
-    let mut bind_status = NOT_SUPPORTED;
-    bind(
-        &mut bind_status,
-        ptr::null_mut(),
-        &mut device_name,
-        &mut registry_name as *mut Unicode as *mut u8,
-        ptr::null_mut(),
-    );
-    line_status(b"NDIS5 CHECK bind %08x\n\0", bind_status);
-    let _ = device[15];
 }
 
 #[no_mangle]
 pub unsafe extern "system" fn NdisDeregisterProtocol(status: *mut u32, _handle: *mut u8) {
-    PROTOCOL = ptr::null_mut();
     write_status(status, SUCCESS);
 }
 
@@ -429,28 +330,18 @@ pub unsafe extern "system" fn NdisDeregisterProtocol(status: *mut u32, _handle: 
 pub unsafe extern "system" fn NdisOpenAdapter(
     status: *mut u32,
     open_status: *mut u32,
-    handle: *mut *mut u8,
-    medium: *mut u32,
+    _handle: *mut *mut u8,
+    _medium: *mut u32,
     _media: *mut u32,
     _count: u32,
     _protocol: *mut u8,
-    context: *mut u8,
-    _name: *mut Unicode,
+    _context: *mut u8,
+    _name: *mut u8,
     _options: u32,
     _addressing: *mut u8,
 ) {
-    line(b"NDIS5 CHECK open\n\0");
-    write_status(status, SUCCESS);
-    write_status(open_status, SUCCESS);
-    if !handle.is_null() {
-        *handle = ptr::addr_of_mut!(BINDING);
-    }
-    if !medium.is_null() {
-        *medium = 0;
-    }
-    if TCPIP_CONTEXT.is_null() {
-        TCPIP_CONTEXT = context;
-    }
+    write_status(status, NOT_SUPPORTED);
+    write_status(open_status, NOT_SUPPORTED);
 }
 
 #[no_mangle]
@@ -459,115 +350,13 @@ pub unsafe extern "system" fn NdisCloseAdapter(status: *mut u32, _handle: *mut u
 }
 
 #[no_mangle]
-pub unsafe extern "system" fn NdisRequest(
-    status: *mut u32,
-    _binding: *mut u8,
-    request: *mut u8,
-) {
-    if request.is_null() {
-        write_status(status, NOT_SUPPORTED);
-        return;
-    }
-    let kind = query_field(request, 32);
-    let result = if kind == 1 {
-        SUCCESS
-    } else {
-        answer_query(request)
-    };
-    write_status(status, result);
+pub unsafe extern "system" fn NdisRequest(status: *mut u32, _binding: *mut u8, _request: *mut u8) {
+    write_status(status, NOT_SUPPORTED);
 }
 
 #[no_mangle]
-fn copy_packet(packet: *mut u8, frame: &mut [u8]) -> Option<usize> {
-    if packet.is_null() {
-        return None;
-    }
-    let mut mdl = unsafe { ptr::read_unaligned(packet.add(8) as *const *const Mdl) };
-    let mut filled = 0usize;
-    while !mdl.is_null() {
-        let count = unsafe { (*mdl).byte_count } as usize;
-        let source = unsafe { (*mdl).mapped };
-        if source.is_null() || filled + count > frame.len() {
-            return None;
-        }
-        unsafe { ptr::copy_nonoverlapping(source, frame.as_mut_ptr().add(filled), count); }
-        filled += count;
-        mdl = unsafe { (*mdl).next };
-    }
-    if filled == 0 {
-        None
-    } else {
-        Some(filled)
-    }
-}
-
-#[no_mangle]
-pub unsafe extern "system" fn VerosIndicateFrame(frame: *const u8, length: u32) {
-    if frame.is_null() || length < 14 || TCPIP_CONTEXT.is_null() {
-        line(b"NDIS5 CHECK recv none\n\0");
-        return;
-    }
-    let Some(indicate) = RECEIVE else {
-        line(b"NDIS5 CHECK recv none\n\0");
-        return;
-    };
-    let kind = u16::from_be_bytes([*frame.add(12), *frame.add(13)]);
-    let payload = length - 14;
-    /* sdk/include/xdk/amd64/ke.h reads IRQL from cr8. DISPATCH_LEVEL is 2.
-     * lan.c ProtocolTransferDataComplete asserts that level. */
-    let old_irql = current_irql();
-    write_irql(2);
-    let status = indicate(
-        TCPIP_CONTEXT,
-        ptr::null_mut(),
-        frame,
-        14,
-        frame.add(14),
-        payload,
-        payload,
-    );
-    if let Some(done) = RECEIVE_DONE {
-        done(TCPIP_CONTEXT);
-    }
-    write_irql(old_irql);
-    line_status(b"NDIS5 CHECK recv %04x\n\0", kind as u32);
-    line_status(b"NDIS5 CHECK recvst %08x\n\0", status);
-    if kind == 0x0800 && length >= 34 {
-        let proto = *frame.add(23);
-        line_status(b"NDIS5 CHECK proto %02x\n\0", proto as u32);
-        if proto == 17 && length >= 42 {
-            let source = u16::from_be_bytes([*frame.add(34), *frame.add(35)]);
-            let dest = u16::from_be_bytes([*frame.add(36), *frame.add(37)]);
-            line_status(b"NDIS5 CHECK sport %04x\n\0", source as u32);
-            line_status(b"NDIS5 CHECK dport %04x\n\0", dest as u32);
-        }
-    }
-}
-
-#[no_mangle]
-pub unsafe extern "system" fn VerosNoteTransmit(
-    transmit: Option<unsafe extern "system" fn(*const u8, u32) -> u32>,
-) {
-    TRANSMIT = transmit;
-}
-
-#[no_mangle]
-pub unsafe extern "system" fn NdisSend(status: *mut u32, _binding: *mut u8, packet: *mut u8) {
-    let mut frame = [0u8; 1514];
-    let Some(length) = copy_packet(packet, &mut frame) else {
-        line(b"NDIS5 CHECK send none\n\0");
-        write_status(status, FAILURE);
-        return;
-    };
-    let kind = u16::from_be_bytes([frame[12], frame[13]]);
-    line_status(b"NDIS5 CHECK send %04x\n\0", kind as u32);
-    let transmit = TRANSMIT;
-    let Some(transmit) = transmit else {
-        write_status(status, FAILURE);
-        return;
-    };
-    let result = transmit(frame.as_ptr(), length as u32);
-    write_status(status, result);
+pub unsafe extern "system" fn NdisSend(status: *mut u32, _binding: *mut u8, _packet: *mut u8) {
+    write_status(status, NOT_SUPPORTED);
 }
 
 #[no_mangle]
@@ -608,3 +397,1178 @@ pub unsafe extern "system" fn NdisUnchainBufferAtFront(packet: *mut u8, buffer: 
 
 #[no_mangle]
 pub unsafe extern "system" fn NdisReturnPackets(_packets: *mut *mut u8, _count: u32) {}
+
+const LEGACY_KIND: u32 = u32::from_le_bytes(*b"L5so");
+const INVALID_PARAMETER: u32 = 0xC000_000D;
+const BAD_VERSION: u32 = 0xC001_0004;
+const PENDING: u32 = 0x0000_0103;
+const BUFFER_TOO_SHORT: u32 = 0xC001_0016;
+const BLOCK_BYTES: usize = 0x400;
+const CHARS_KEEP: usize = 0x100;
+const NBL_BYTES: usize = 512;
+const FRAME_LIMIT: usize = 2048;
+/* NDIS51_MINIPORT_CHARACTERISTICS in sdk/include/ddk/ndis.h, x64. */
+const CH_DISABLE: usize = 16;
+const CH_ENABLE: usize = 24;
+const CH_HANDLE_IRQ: usize = 40;
+const CH_INIT: usize = 48;
+const CH_ISR: usize = 56;
+const CH_QUERY: usize = 64;
+const CH_SEND: usize = 88;
+const CH_SET: usize = 96;
+const CH_TRANSFER: usize = 104;
+const CH_SEND_PACKETS: usize = 120;
+/* struct _NDIS_MINIPORT_BLOCK in sdk/include/ddk/ndis.h, x64.
+ * KTIMER + KDPC are 0x40 in sdk/include/xdk/ketypes.h. */
+const BL_ETH: usize = 0x190;
+const BL_PACKET: usize = 0x1b0;
+const BL_SEND_DONE: usize = 0x1b8;
+const BL_SEND_RES: usize = 0x1c0;
+const BL_RESET_DONE: usize = 0x1c8;
+const BL_ETH_RX: usize = 0x280;
+const BL_ETH_DONE: usize = 0x298;
+const BL_STATUS: usize = 0x2b0;
+const BL_STATUS_DONE: usize = 0x2b8;
+const BL_TD_DONE: usize = 0x2c0;
+const BL_QUERY_DONE: usize = 0x2c8;
+const BL_SET_DONE: usize = 0x2d0;
+/* NDIS_MINIPORT_INTERRUPT in sdk/include/ddk/ndis.h. */
+const MI_OBJECT: usize = 0;
+const MI_RESERVED: usize = 16;
+const MI_ISR: usize = 24;
+const MI_DPC: usize = 32;
+/* NDIS_MINIPORT_TIMER: KTIMER then KDPC, then the function and context. */
+const TIMER_DPC: usize = 0x40;
+const TIMER_FN: usize = 0x80;
+const TIMER_CTX: usize = 0x88;
+/* NDIS_PACKET wrapper reserved, after NDIS_PACKET_PRIVATE. */
+/* Packet descriptor the miniport may write through MiniportReservedEx.
+ * Sent trails the descriptor in the same pool block so the miniport
+ * cannot overwrite it. output/ndis-disk-20261117T152636Z.log and
+ * output/ndis-disk-20261117T154756Z.log completed with a bad NBL when
+ * Sent lived inside the descriptor. sdk/include/ddk/ndis.h NDIS_PACKET. */
+const PACKET_BYTES: usize = 0x100;
+const DMA32_LIMIT: u64 = 0xFFFF_FFFF;
+/* lan.c NBL_DATA_* / FirstNetBuffer. Bookkeeping at 0x10 and 0x18 is
+ * this file's frame and MDL, not a Windows field. */
+const NBL_NEXT: usize = 0;
+const NBL_FRAME: usize = 0x10;
+const NBL_OWN_MDL: usize = 0x18;
+const NBL_FIRST_NB: usize = 8;
+const NB_LENGTH: usize = 0x18;
+const NB_MDL: usize = 0x20;
+const NB_SKIP: usize = 0x28;
+const NBL_LENGTH: usize = 0x198;
+const NBL_MDL: usize = 0x1A0;
+const NBL_SKIP: usize = 0x1A8;
+const OID_TYPE_AT: usize = 4;
+const OID_OID_AT: usize = 0x20;
+const OID_BUFFER_AT: usize = 0x28;
+const OID_LENGTH_AT: usize = 0x30;
+const IRQ_CHARS: usize = 0x60;
+const IRQ_ISR_AT: usize = 0x08;
+const IRQ_DPC_AT: usize = 0x10;
+const IRQ_DISABLE_AT: usize = 0x18;
+const IRQ_ENABLE_AT: usize = 0x20;
+const CM_COUNT_AT: usize = 4;
+const CM_DESC_AT: usize = 8;
+const CM_DESC_BYTES: usize = 0x14;
+const DEVICE_PROPERTY_BUS_NUMBER: u32 = 0x0e;
+const DEVICE_PROPERTY_ADDRESS: u32 = 0x10;
+const PCI_CONFIGURATION: u32 = 4;
+
+struct Legacy {
+    kind: u32,
+    mp: *mut u8,
+    block: *mut u8,
+    driver_ctx: *mut u8,
+    chars: *mut u8,
+    chars_len: u32,
+    mp_interrupt: *mut u8,
+    pending_oid: *mut u8,
+    shutdown: *const (),
+    shutdown_ctx: *mut u8,
+    dma32: u8,
+}
+
+const SENT_KIND: u32 = u32::from_le_bytes(*b"S5so");
+
+struct Sent {
+    kind: u32,
+    nbl: *mut u8,
+    copy: *mut u8,
+    mdl: *mut u8,
+    mp: *mut u8,
+}
+
+static mut ACTIVE: *mut Legacy = ptr::null_mut();
+
+unsafe extern "system" {
+    fn DbgPrint(format: *const u8, ...) -> i32;
+    fn KeInitializeDpc(dpc: *mut u8, routine: *const (), context: *mut u8);
+    fn KeInitializeTimer(timer: *mut u8);
+    fn KeSetTimerEx(timer: *mut u8, due: i64, period: i32, dpc: *mut u8) -> u8;
+    fn KeCancelTimer(timer: *mut u8) -> u8;
+    fn IoFreeMdl(mdl: *mut u8);
+    fn KeSynchronizeExecution(
+        interrupt_object: *mut u8,
+        synchronize_routine: *const (),
+        synchronize_context: *mut u8,
+    ) -> u8;
+    fn HalSetBusDataByOffset(
+        bus_type: u32,
+        bus: u32,
+        slot: u32,
+        buffer: *mut u8,
+        offset: u32,
+        length: u32,
+    ) -> u32;
+    fn IoGetDeviceProperty(
+        device: *mut u8,
+        property: u32,
+        length: u32,
+        buffer: *mut u8,
+        result: *mut u32,
+    ) -> i32;
+}
+
+fn active() -> *mut Legacy {
+    unsafe { ACTIVE }
+}
+
+fn state_for(handle: *mut u8) -> *mut Legacy {
+    let state = active();
+    if state.is_null() || handle.is_null() {
+        return ptr::null_mut();
+    }
+    unsafe {
+        if (*state).block == handle || (*state).mp == handle {
+            state
+        } else {
+            ptr::null_mut()
+        }
+    }
+}
+
+fn write_fn(block: *mut u8, at: usize, function: *const ()) {
+    unsafe { ptr::write_unaligned(block.add(at) as *mut *const (), function) };
+}
+
+fn read_fn(chars: *const u8, len: u32, at: usize) -> *const () {
+    if chars.is_null() || (at + size_of::<*const ()>()) > len as usize {
+        return ptr::null();
+    }
+    unsafe { ptr::read_unaligned(chars.add(at) as *const *const ()) }
+}
+
+fn read_u32(base: *const u8, at: usize) -> u32 {
+    unsafe {
+        u32::from_le_bytes([
+            *base.add(at),
+            *base.add(at + 1),
+            *base.add(at + 2),
+            *base.add(at + 3),
+        ])
+    }
+}
+
+fn slot_fn(state: *const Legacy, at: usize) -> *const () {
+    unsafe { read_fn((*state).chars, (*state).chars_len, at) }
+}
+
+unsafe extern "system" fn legacy_isr(ctx: *mut u8, queue: *mut u8, targets: *mut u32) -> u8 {
+    let _ = ctx;
+    let state = active();
+    if state.is_null() {
+        return 0;
+    }
+    let isr = slot_fn(state, CH_ISR);
+    if isr.is_null() {
+        return 0;
+    }
+    let mut recognized: u8 = 0;
+    let mut queue_mp: u8 = 0;
+    let function: unsafe extern "system" fn(*mut u8, *mut u8, *mut u8) =
+        core::mem::transmute(isr);
+    let driver_ctx = unsafe { (*state).driver_ctx };
+    function(&mut recognized, &mut queue_mp, driver_ctx);
+    if !queue.is_null() {
+        unsafe { *queue = queue_mp };
+    }
+    if !targets.is_null() {
+        unsafe { *targets = 0 };
+    }
+    recognized
+}
+
+unsafe extern "system" fn legacy_dpc(ctx: *mut u8, _a: *mut u8, _b: *mut u8, _c: *mut u8) {
+    let _ = ctx;
+    let state = active();
+    if state.is_null() {
+        return;
+    }
+    let handler = slot_fn(state, CH_HANDLE_IRQ);
+    if handler.is_null() {
+        return;
+    }
+    let function: unsafe extern "system" fn(*mut u8) = core::mem::transmute(handler);
+    function(unsafe { (*state).driver_ctx });
+}
+
+unsafe extern "system" fn legacy_enable(ctx: *mut u8) {
+    let _ = ctx;
+    let state = active();
+    if state.is_null() {
+        return;
+    }
+    let handler = slot_fn(state, CH_ENABLE);
+    if handler.is_null() {
+        return;
+    }
+    let function: unsafe extern "system" fn(*mut u8) = core::mem::transmute(handler);
+    function(unsafe { (*state).driver_ctx });
+}
+
+unsafe extern "system" fn legacy_disable(ctx: *mut u8) {
+    let _ = ctx;
+    let state = active();
+    if state.is_null() {
+        return;
+    }
+    let handler = slot_fn(state, CH_DISABLE);
+    if handler.is_null() {
+        return;
+    }
+    let function: unsafe extern "system" fn(*mut u8) = core::mem::transmute(handler);
+    function(unsafe { (*state).driver_ctx });
+}
+
+unsafe extern "system" fn timer_dpc(
+    _dpc: *mut u8,
+    context: *mut u8,
+    arg1: *mut u8,
+    arg2: *mut u8,
+) {
+    if context.is_null() {
+        return;
+    }
+    let function = unsafe { ptr::read_unaligned(context.add(TIMER_FN) as *const *const ()) };
+    let timer_ctx = unsafe { ptr::read_unaligned(context.add(TIMER_CTX) as *const *mut u8) };
+    if function.is_null() {
+        return;
+    }
+    let call: unsafe extern "system" fn(*mut u8, *mut u8, *mut u8, *mut u8) =
+        core::mem::transmute(function);
+    call(arg1, timer_ctx, arg2, ptr::null_mut());
+}
+
+unsafe extern "system" fn eth_indicate(
+    filter: *mut u8,
+    _context: *mut u8,
+    _address: *mut u8,
+    header: *mut u8,
+    header_size: u32,
+    lookahead: *mut u8,
+    lookahead_size: u32,
+    packet_size: u32,
+) {
+    let _ = filter;
+    indicate_frame(header, header_size, lookahead, lookahead_size, packet_size);
+}
+
+unsafe extern "system" fn packet_indicate(miniport: *mut u8, packets: *mut *mut u8, count: u32) {
+    let _ = miniport;
+    if packets.is_null() || count == 0 {
+        return;
+    }
+    let mut index = 0u32;
+    while index < count {
+        let packet = unsafe { *packets.add(index as usize) };
+        indicate_packet(packet);
+        index += 1;
+    }
+}
+
+unsafe extern "system" fn send_complete(miniport: *mut u8, packet: *mut u8, status: u32) {
+    let _ = (miniport, status);
+    finish_send(packet);
+}
+
+unsafe extern "system" fn send_resources(_miniport: *mut u8) {}
+
+unsafe extern "system" fn reset_complete(_miniport: *mut u8, _status: u32, _reset: u8) {}
+
+unsafe extern "system" fn eth_complete(_filter: *mut u8) {}
+
+unsafe extern "system" fn td_complete(_miniport: *mut u8, _packet: *mut u8, _status: u32, _bytes: u32) {}
+
+unsafe extern "system" fn query_complete(miniport: *mut u8, status: u32) {
+    finish_oid(miniport, status);
+}
+
+unsafe extern "system" fn set_complete(miniport: *mut u8, status: u32) {
+    finish_oid(miniport, status);
+}
+
+fn finish_oid(miniport: *mut u8, status: u32) {
+    let state = state_for(miniport);
+    if state.is_null() {
+        return;
+    }
+    unsafe {
+        let request = (*state).pending_oid;
+        (*state).pending_oid = ptr::null_mut();
+        if !request.is_null() {
+            crate::prot6::complete_oid((*state).mp, request, status);
+        }
+    }
+}
+
+fn mdl_bytes(mdl: *const Mdl) -> (*mut u8, u32) {
+    if mdl.is_null() {
+        return (ptr::null_mut(), 0);
+    }
+    unsafe {
+        let va = (*mdl).start.add((*mdl).byte_offset as usize);
+        (va, (*mdl).byte_count)
+    }
+}
+
+fn copy_from_mdl(mdl: *const Mdl, skip: u32, dest: *mut u8, need: u32) -> u32 {
+    let mut left_skip = skip;
+    let mut filled = 0u32;
+    let mut current = mdl;
+    while !current.is_null() && filled < need {
+        let (va, count) = mdl_bytes(current);
+        unsafe { current = (*current).next };
+        if count == 0 || va.is_null() {
+            continue;
+        }
+        if left_skip >= count {
+            left_skip -= count;
+            continue;
+        }
+        let take = (count - left_skip).min(need - filled) as usize;
+        unsafe {
+            ptr::copy_nonoverlapping(va.add(left_skip as usize), dest.add(filled as usize), take);
+        }
+        filled += take as u32;
+        left_skip = 0;
+    }
+    filled
+}
+
+fn nbl_view(nbl: *mut u8) -> (*mut Mdl, u32, u32) {
+    if nbl.is_null() {
+        return (ptr::null_mut(), 0, 0);
+    }
+    unsafe {
+        let nb = ptr::read_unaligned(nbl.add(NBL_FIRST_NB) as *const *mut u8);
+        let (length, mdl, skip) = if !nb.is_null() {
+            (
+                ptr::read_unaligned(nb.add(NB_LENGTH) as *const u64) as u32,
+                ptr::read_unaligned(nb.add(NB_MDL) as *const *mut Mdl),
+                ptr::read_unaligned(nb.add(NB_SKIP) as *const u32),
+            )
+        } else {
+            (
+                ptr::read_unaligned(nbl.add(NBL_LENGTH) as *const u64) as u32,
+                ptr::read_unaligned(nbl.add(NBL_MDL) as *const *mut Mdl),
+                ptr::read_unaligned(nbl.add(NBL_SKIP) as *const u32),
+            )
+        };
+        (mdl, skip, length)
+    }
+}
+
+fn sent_of(packet: *mut u8) -> *mut Sent {
+    if packet.is_null() {
+        return ptr::null_mut();
+    }
+    unsafe { packet.add(PACKET_BYTES) as *mut Sent }
+}
+
+fn finish_send(packet: *mut u8) {
+    if packet.is_null() {
+        return;
+    }
+    let sent = sent_of(packet);
+    unsafe {
+        if (*sent).kind != SENT_KIND {
+            DbgPrint(b"NDIS5 SENTBAD %p\n\0".as_ptr(), packet);
+            return;
+        }
+        let nbl = (*sent).nbl;
+        let mp = (*sent).mp;
+        let mdl = (*sent).mdl;
+        let copy = (*sent).copy;
+        (*sent).kind = 0;
+        (*sent).nbl = ptr::null_mut();
+        (*sent).mp = ptr::null_mut();
+        (*sent).mdl = ptr::null_mut();
+        (*sent).copy = ptr::null_mut();
+        ptr::write_unaligned(packet.add(8) as *mut *mut u8, ptr::null_mut());
+        ptr::write_unaligned(packet.add(16) as *mut *mut u8, ptr::null_mut());
+        DbgPrint(
+            b"NDIS5 FREE %p nbl %p mdl %p copy %p\n\0".as_ptr(),
+            packet,
+            nbl,
+            mdl,
+            copy,
+        );
+        if !nbl.is_null() && !mp.is_null() {
+            crate::prot6::complete_send(mp, nbl, 0);
+        }
+        /* Individually IoFreeMdl, copy, and packet each passed. Free all
+         * with OobOffset set and Head unlinked. Tags 5sdC/5sdP name the
+         * 0x19 block if the combination still fails. */
+        if !mdl.is_null() {
+            IoFreeMdl(mdl);
+        }
+        if !copy.is_null() {
+            ExFreePoolWithTag(copy, COPY_TAG);
+        }
+        ExFreePoolWithTag(packet, PACKET_TAG);
+        DbgPrint(b"NDIS5 FREEA\n\0".as_ptr());
+    }
+}
+
+fn indicate_bytes(frame: *mut u8, length: u32) {
+    let state = active();
+    if state.is_null() || frame.is_null() || length == 0 {
+        if !frame.is_null() {
+            unsafe { ExFreePoolWithTag(frame, POOL_TAG) };
+        }
+        return;
+    }
+    let mdl = unsafe { IoAllocateMdl(frame, length, 0, 0, ptr::null_mut()) };
+    if mdl.is_null() {
+        unsafe { ExFreePoolWithTag(frame, POOL_TAG) };
+        return;
+    }
+    unsafe { MmBuildMdlForNonPagedPool(mdl) };
+    let nbl = unsafe { ExAllocatePoolWithTag(0, NBL_BYTES, POOL_TAG) };
+    if nbl.is_null() {
+        unsafe {
+            IoFreeMdl(mdl);
+            ExFreePoolWithTag(frame, POOL_TAG);
+        }
+        return;
+    }
+    unsafe {
+        ptr::write_bytes(nbl, 0, NBL_BYTES);
+        ptr::write_unaligned(nbl.add(NBL_LENGTH) as *mut u64, length as u64);
+        ptr::write_unaligned(nbl.add(NBL_MDL) as *mut *mut u8, mdl);
+        ptr::write_unaligned(nbl.add(NBL_SKIP) as *mut u32, 0);
+        ptr::write_unaligned(nbl.add(NBL_FRAME) as *mut *mut u8, frame);
+        ptr::write_unaligned(nbl.add(NBL_OWN_MDL) as *mut *mut u8, mdl);
+        DbgPrint(b"NDIS5 RECV %u\n\0".as_ptr(), length);
+        crate::prot6::indicate_receive((*state).mp, nbl, 0, 1, 0);
+    }
+}
+
+fn indicate_frame(
+    header: *mut u8,
+    header_size: u32,
+    lookahead: *mut u8,
+    lookahead_size: u32,
+    packet_size: u32,
+) {
+    let total = header_size as usize + packet_size as usize;
+    if total == 0 || total > FRAME_LIMIT || header.is_null() || header_size == 0 {
+        return;
+    }
+    let frame = unsafe { ExAllocatePoolWithTag(0, total, POOL_TAG) };
+    if frame.is_null() {
+        return;
+    }
+    unsafe { ptr::copy_nonoverlapping(header, frame, header_size as usize) };
+    let data_have = lookahead_size.min(packet_size);
+    if data_have != 0 && !lookahead.is_null() {
+        unsafe {
+            ptr::copy_nonoverlapping(
+                lookahead,
+                frame.add(header_size as usize),
+                data_have as usize,
+            );
+        }
+    }
+    if data_have < packet_size {
+        let state = active();
+        let transfer = if state.is_null() {
+            ptr::null()
+        } else {
+            slot_fn(state, CH_TRANSFER)
+        };
+        if transfer.is_null() {
+            unsafe { ExFreePoolWithTag(frame, POOL_TAG) };
+            return;
+        }
+        let rest = packet_size - data_have;
+        let function: unsafe extern "system" fn(
+            *mut u8,
+            *mut u32,
+            *mut u8,
+            *mut u8,
+            u32,
+            u32,
+        ) -> u32 = unsafe { core::mem::transmute(transfer) };
+        let mut moved = 0u32;
+        let status = unsafe {
+            function(
+                ptr::null_mut(),
+                &mut moved,
+                (*state).driver_ctx,
+                ptr::null_mut(),
+                data_have,
+                rest,
+            )
+        };
+        if status != SUCCESS || moved == 0 {
+            unsafe { ExFreePoolWithTag(frame, POOL_TAG) };
+            return;
+        }
+    }
+    indicate_bytes(frame, total as u32);
+}
+
+fn indicate_packet(packet: *mut u8) {
+    if packet.is_null() {
+        return;
+    }
+    let total = unsafe { ptr::read_unaligned(packet.add(4) as *const u32) } as usize;
+    let head = unsafe { ptr::read_unaligned(packet.add(8) as *const *const Mdl) };
+    if total == 0 || total > FRAME_LIMIT || head.is_null() {
+        return;
+    }
+    let frame = unsafe { ExAllocatePoolWithTag(0, total, POOL_TAG) };
+    if frame.is_null() {
+        return;
+    }
+    let got = copy_from_mdl(head, 0, frame, total as u32);
+    if got == 0 {
+        unsafe { ExFreePoolWithTag(frame, POOL_TAG) };
+        return;
+    }
+    indicate_bytes(frame, got);
+}
+
+fn build_packet(mp: *mut u8, nbl: *mut u8) -> *mut u8 {
+    let (mdl, skip, length) = nbl_view(nbl);
+    if mdl.is_null() || length == 0 || length as usize > FRAME_LIMIT {
+        return ptr::null_mut();
+    }
+    let copy = unsafe { ExAllocatePoolWithTag(0, length as usize, COPY_TAG) };
+    let packet =
+        unsafe { ExAllocatePoolWithTag(0, PACKET_BYTES + size_of::<Sent>(), PACKET_TAG) };
+    if copy.is_null() || packet.is_null() {
+        unsafe {
+            if !copy.is_null() {
+                ExFreePoolWithTag(copy, COPY_TAG);
+            }
+            if !packet.is_null() {
+                ExFreePoolWithTag(packet, PACKET_TAG);
+            }
+        }
+        return ptr::null_mut();
+    }
+    let got = copy_from_mdl(mdl, skip, copy, length);
+    if got == 0 {
+        unsafe {
+            ExFreePoolWithTag(copy, COPY_TAG);
+            ExFreePoolWithTag(packet, PACKET_TAG);
+        }
+        return ptr::null_mut();
+    }
+    let owned = unsafe { IoAllocateMdl(copy, got, 0, 0, ptr::null_mut()) };
+    if owned.is_null() {
+        unsafe {
+            ExFreePoolWithTag(copy, COPY_TAG);
+            ExFreePoolWithTag(packet, PACKET_TAG);
+        }
+        return ptr::null_mut();
+    }
+    let sent = sent_of(packet);
+    unsafe {
+        MmBuildMdlForNonPagedPool(owned);
+        ptr::write_bytes(packet, 0, PACKET_BYTES + size_of::<Sent>());
+        ptr::write_unaligned(packet as *mut u32, span_pages(owned as *const Mdl));
+        ptr::write_unaligned(packet.add(4) as *mut u32, got);
+        ptr::write_unaligned(packet.add(8) as *mut *mut u8, owned);
+        ptr::write_unaligned(packet.add(16) as *mut *mut u8, owned);
+        ptr::write_unaligned(packet.add(32) as *mut u32, 1);
+        *packet.add(40) = 1;
+        /* NdisPacketOobOffset — sdk/include/ddk/ndis.h NDIS_PACKET_PRIVATE. */
+        ptr::write_unaligned(packet.add(42) as *mut u16, PACKET_OOB_AT);
+        *packet.add(41) = 0x80;
+        (*sent).kind = SENT_KIND;
+        (*sent).nbl = nbl;
+        (*sent).copy = copy;
+        (*sent).mdl = owned;
+        (*sent).mp = mp;
+    }
+    packet
+}
+
+pub fn legacy_dma_limit(handle: *mut u8) -> u64 {
+    let state = state_for(handle);
+    if state.is_null() || unsafe { (*state).dma32 } == 0 {
+        u64::MAX
+    } else {
+        DMA32_LIMIT
+    }
+}
+
+pub unsafe fn start_legacy(mp: *mut u8) {
+    let state = crate::register::legacy_state(mp) as *mut Legacy;
+    if state.is_null() || unsafe { (*state).kind } != LEGACY_KIND {
+        return;
+    }
+    unsafe {
+        (*state).mp = mp;
+        ACTIVE = state;
+        DbgPrint(b"NDIS5 START\n\0".as_ptr());
+    }
+    let block = unsafe { ExAllocatePoolWithTag(0, BLOCK_BYTES, POOL_TAG) };
+    if block.is_null() {
+        return;
+    }
+    unsafe {
+        ptr::write_bytes(block, 0, BLOCK_BYTES);
+        (*state).block = block;
+        write_fn(block, BL_ETH, block as *const ());
+        write_fn(block, BL_PACKET, packet_indicate as *const ());
+        write_fn(block, BL_SEND_DONE, send_complete as *const ());
+        write_fn(block, BL_SEND_RES, send_resources as *const ());
+        write_fn(block, BL_RESET_DONE, reset_complete as *const ());
+        write_fn(block, BL_ETH_RX, eth_indicate as *const ());
+        write_fn(block, BL_ETH_DONE, eth_complete as *const ());
+        write_fn(block, BL_STATUS, NdisMIndicateStatus as *const ());
+        write_fn(block, BL_STATUS_DONE, NdisMIndicateStatusComplete as *const ());
+        write_fn(block, BL_TD_DONE, td_complete as *const ());
+        write_fn(block, BL_QUERY_DONE, query_complete as *const ());
+        write_fn(block, BL_SET_DONE, set_complete as *const ());
+    }
+    let init = slot_fn(state, CH_INIT);
+    if init.is_null() {
+        unsafe { DbgPrint(b"NDIS5 INIT null\n\0".as_ptr()) };
+        return;
+    }
+    let mut open_error = 0u32;
+    let mut selected = 0u32;
+    let mut medium = 0u32;
+    let function: unsafe extern "system" fn(*mut u32, *mut u32, *mut u32, u32, *mut u8, *mut u8) -> u32 =
+        unsafe { core::mem::transmute(init) };
+    let status = unsafe { function(&mut open_error, &mut selected, &mut medium, 1, block, mp) };
+    unsafe { DbgPrint(b"NDIS5 INIT %08x\n\0".as_ptr(), status) };
+    if status != SUCCESS {
+        return;
+    }
+    unsafe {
+        crate::connect_line_only(mp);
+        if !(*state).mp_interrupt.is_null() {
+            let object = crate::line_interrupt_object(mp);
+            ptr::write_unaligned((*state).mp_interrupt.add(MI_OBJECT) as *mut *mut u8, object);
+        }
+        crate::protocol::notify_adapter_ready(mp);
+    }
+}
+
+pub unsafe fn send_legacy(mp: *mut u8, lists: *mut u8) {
+    let state = crate::register::legacy_state(mp) as *mut Legacy;
+    if state.is_null() {
+        return;
+    }
+    let mut nbl = lists;
+    while !nbl.is_null() {
+        let next = unsafe { ptr::read_unaligned(nbl.add(NBL_NEXT) as *const *mut u8) };
+        let packet = build_packet(mp, nbl);
+        if packet.is_null() {
+            crate::prot6::complete_send(mp, nbl, 0);
+            nbl = next;
+            continue;
+        }
+        let packets_fn = slot_fn(state, CH_SEND_PACKETS);
+        if !packets_fn.is_null() {
+            let call: unsafe extern "system" fn(*mut u8, *mut *mut u8, u32) =
+                unsafe { core::mem::transmute(packets_fn) };
+            let mut packet_slot = packet;
+            unsafe {
+                DbgPrint(b"NDIS5 SEND\n\0".as_ptr());
+                call((*state).driver_ctx, &mut packet_slot, 1);
+            }
+        } else {
+            let send_fn = slot_fn(state, CH_SEND);
+            if send_fn.is_null() {
+                finish_send(packet);
+            } else {
+                let call: unsafe extern "system" fn(*mut u8, *mut u8, u32) -> u32 =
+                    unsafe { core::mem::transmute(send_fn) };
+                let status = unsafe { call((*state).driver_ctx, packet, 0) };
+                unsafe { DbgPrint(b"NDIS5 SEND %08x\n\0".as_ptr(), status) };
+                if status != PENDING {
+                    finish_send(packet);
+                }
+            }
+        }
+        nbl = next;
+    }
+}
+
+pub unsafe fn oid_legacy(mp: *mut u8, request: *mut u8) -> u32 {
+    let state = crate::register::legacy_state(mp) as *mut Legacy;
+    if state.is_null() || unsafe { (*state).driver_ctx.is_null() } {
+        return INVALID_PARAMETER;
+    }
+    let kind = read_u32(request, OID_TYPE_AT);
+    let oid = read_u32(request, OID_OID_AT);
+    let buffer = unsafe { ptr::read_unaligned(request.add(OID_BUFFER_AT) as *const *mut u8) };
+    let length = read_u32(request, OID_LENGTH_AT);
+    let slot = if kind == 1 { CH_SET } else { CH_QUERY };
+    let handler = slot_fn(state, slot);
+    unsafe { DbgPrint(b"NDIS5 OID %08x %08x\n\0".as_ptr(), kind, oid) };
+    if handler.is_null() {
+        return NOT_SUPPORTED;
+    }
+    let mut done = 0u32;
+    let mut needed = 0u32;
+    let status = if kind == 1 {
+        let call: unsafe extern "system" fn(*mut u8, u32, *mut u8, u32, *mut u32, *mut u32) -> u32 =
+            unsafe { core::mem::transmute(handler) };
+        unsafe { call((*state).driver_ctx, oid, buffer, length, &mut done, &mut needed) }
+    } else {
+        let call: unsafe extern "system" fn(*mut u8, u32, *mut u8, u32, *mut u32, *mut u32) -> u32 =
+            unsafe { core::mem::transmute(handler) };
+        unsafe { call((*state).driver_ctx, oid, buffer, length, &mut done, &mut needed) }
+    };
+    unsafe { DbgPrint(b"NDIS5 OIDDONE %08x\n\0".as_ptr(), status) };
+    if status == PENDING {
+        unsafe { (*state).pending_oid = request };
+    }
+    status
+}
+
+pub unsafe fn return_legacy(lists: *mut u8) {
+    let mut nbl = lists;
+    while !nbl.is_null() {
+        let next = unsafe { ptr::read_unaligned(nbl.add(NBL_NEXT) as *const *mut u8) };
+        unsafe {
+            let frame = ptr::read_unaligned(nbl.add(NBL_FRAME) as *const *mut u8);
+            let mdl = ptr::read_unaligned(nbl.add(NBL_OWN_MDL) as *const *mut u8);
+            if !mdl.is_null() {
+                IoFreeMdl(mdl);
+            }
+            if !frame.is_null() {
+                ExFreePoolWithTag(frame, POOL_TAG);
+            }
+            ExFreePoolWithTag(nbl, POOL_TAG);
+        }
+        nbl = next;
+    }
+}
+
+fn pci_slot(address: u32) -> u32 {
+    /* drivers/network/ndis/src/lib.rs pci_slot_from_address. */
+    let device = address >> 16;
+    let function = address & 0xffff;
+    device | (function << 5)
+}
+
+fn pci_location(mp: *mut u8) -> Option<(u32, u32)> {
+    let (pdo, _, _) = crate::register::miniport_devices(mp);
+    if pdo.is_null() {
+        return None;
+    }
+    let mut bus = 0u32;
+    let mut bus_len = 0u32;
+    let mut address = 0u32;
+    let mut address_len = 0u32;
+    let bus_status = unsafe {
+        IoGetDeviceProperty(
+            pdo,
+            DEVICE_PROPERTY_BUS_NUMBER,
+            4,
+            &mut bus as *mut u32 as *mut u8,
+            &mut bus_len,
+        )
+    };
+    let address_status = unsafe {
+        IoGetDeviceProperty(
+            pdo,
+            DEVICE_PROPERTY_ADDRESS,
+            4,
+            &mut address as *mut u32 as *mut u8,
+            &mut address_len,
+        )
+    };
+    if bus_status < 0 || address_status < 0 || bus_len < 4 || address_len < 4 {
+        return None;
+    }
+    Some((bus, pci_slot(address)))
+}
+
+#[no_mangle]
+pub unsafe extern "system" fn NdisInitializeWrapper(
+    wrapper: *mut *mut u8,
+    driver: *mut u8,
+    _registry: *mut u8,
+    _unused: *mut u8,
+) {
+    /* https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ndis/nf-ndis-ndisinitializewrapper */
+    if wrapper.is_null() {
+        return;
+    }
+    unsafe { DbgPrint(b"NDIS5 WRAP\n\0".as_ptr()) };
+    *wrapper = driver;
+}
+
+#[no_mangle]
+pub unsafe extern "system" fn NdisMRegisterMiniport(
+    wrapper: *mut u8,
+    chars: *mut u8,
+    length: u32,
+) -> u32 {
+    unsafe { DbgPrint(b"NDIS5 REG %u\n\0".as_ptr(), length) };
+    if wrapper.is_null() || chars.is_null() || length < (CH_INIT as u32 + 8) {
+        return INVALID_PARAMETER;
+    }
+    if unsafe { *chars } != 5 {
+        return BAD_VERSION;
+    }
+    let keep = (length as usize).min(CHARS_KEEP);
+    let copy = unsafe { ExAllocatePoolWithTag(0, CHARS_KEEP, POOL_TAG) };
+    let state = unsafe { ExAllocatePoolWithTag(0, size_of::<Legacy>(), POOL_TAG) } as *mut Legacy;
+    if copy.is_null() || state.is_null() {
+        unsafe {
+            if !copy.is_null() {
+                ExFreePoolWithTag(copy, POOL_TAG);
+            }
+            if !state.is_null() {
+                ExFreePoolWithTag(state as *mut u8, POOL_TAG);
+            }
+        }
+        return RESOURCES;
+    }
+    unsafe {
+        ptr::write_bytes(copy, 0, CHARS_KEEP);
+        ptr::copy_nonoverlapping(chars, copy, keep);
+        ptr::write_bytes(state as *mut u8, 0, size_of::<Legacy>());
+        (*state).kind = LEGACY_KIND;
+        (*state).chars = copy;
+        (*state).chars_len = keep as u32;
+        let mp = crate::register::register_legacy_driver(wrapper, state as *mut u8);
+        if mp.is_null() {
+            ExFreePoolWithTag(copy, POOL_TAG);
+            ExFreePoolWithTag(state as *mut u8, POOL_TAG);
+            return RESOURCES;
+        }
+        (*state).mp = mp;
+        ACTIVE = state;
+        DbgPrint(b"NDIS5 REGOK\n\0".as_ptr());
+    }
+    SUCCESS
+}
+
+#[no_mangle]
+pub unsafe extern "system" fn NdisMSetAttributesEx(
+    handle: *mut u8,
+    context: *mut u8,
+    _hang_seconds: u32,
+    flags: u32,
+    _adapter_type: u32,
+) {
+    unsafe { DbgPrint(b"NDIS5 ATTR %08x %p\n\0".as_ptr(), flags, context) };
+    let state = state_for(handle);
+    if !state.is_null() {
+        unsafe { (*state).driver_ctx = context };
+    }
+}
+
+#[no_mangle]
+pub unsafe extern "system" fn NdisMRegisterInterrupt(
+    interrupt: *mut u8,
+    handle: *mut u8,
+    vector: u32,
+    level: u32,
+    _request_isr: u32,
+    _shared: u32,
+    mode: u32,
+) -> u32 {
+    unsafe { DbgPrint(b"NDIS5 IRQ %08x %08x %08x\n\0".as_ptr(), vector, level, mode) };
+    let state = state_for(handle);
+    if state.is_null() || interrupt.is_null() {
+        return INVALID_PARAMETER;
+    }
+    let mut chars = [0u8; IRQ_CHARS];
+    chars[2] = IRQ_CHARS as u8;
+    write_fn(chars.as_mut_ptr(), IRQ_ISR_AT, legacy_isr as *const ());
+    write_fn(chars.as_mut_ptr(), IRQ_DPC_AT, legacy_dpc as *const ());
+    write_fn(chars.as_mut_ptr(), IRQ_DISABLE_AT, legacy_disable as *const ());
+    write_fn(chars.as_mut_ptr(), IRQ_ENABLE_AT, legacy_enable as *const ());
+    let mut irq_handle: *mut u8 = ptr::null_mut();
+    let status = unsafe {
+        crate::NdisMRegisterInterruptEx(
+            (*state).mp,
+            (*state).driver_ctx,
+            chars.as_mut_ptr(),
+            &mut irq_handle,
+        )
+    };
+    if status != SUCCESS {
+        return status;
+    }
+    unsafe {
+        (*state).mp_interrupt = interrupt;
+        ptr::write_bytes(interrupt, 0, 64);
+        write_fn(interrupt, MI_ISR, slot_fn(state, CH_ISR));
+        write_fn(interrupt, MI_DPC, slot_fn(state, CH_HANDLE_IRQ));
+        ptr::write_unaligned(interrupt.add(MI_RESERVED) as *mut *mut u8, irq_handle);
+        crate::connect_line_only((*state).mp);
+        let object = crate::line_interrupt_object((*state).mp);
+        ptr::write_unaligned(interrupt.add(MI_OBJECT) as *mut *mut u8, object);
+        DbgPrint(b"NDIS5 IRQOK %p\n\0".as_ptr(), object);
+    }
+    SUCCESS
+}
+
+#[no_mangle]
+pub unsafe extern "system" fn NdisMDeregisterInterrupt(interrupt: *mut u8) {
+    if interrupt.is_null() {
+        return;
+    }
+    let irq = unsafe { ptr::read_unaligned(interrupt.add(MI_RESERVED) as *const *mut u8) };
+    unsafe { crate::NdisMDeregisterInterruptEx(irq) };
+}
+
+#[no_mangle]
+pub unsafe extern "system" fn NdisMSynchronizeWithInterrupt(
+    interrupt: *mut u8,
+    function: *const (),
+    context: *mut u8,
+) -> u8 {
+    if function.is_null() {
+        return 0;
+    }
+    let call: unsafe extern "system" fn(*mut u8) -> u8 = unsafe { core::mem::transmute(function) };
+    let object = if interrupt.is_null() {
+        ptr::null_mut()
+    } else {
+        unsafe { ptr::read_unaligned(interrupt.add(MI_OBJECT) as *const *mut u8) }
+    };
+    if object.is_null() {
+        return unsafe { call(context) };
+    }
+    unsafe { KeSynchronizeExecution(object, function, context) }
+}
+
+#[no_mangle]
+pub unsafe extern "system" fn NdisMIndicateStatus(
+    handle: *mut u8,
+    status: u32,
+    _buffer: *mut u8,
+    _length: u32,
+) {
+    let _ = handle;
+    unsafe { DbgPrint(b"NDIS5 STAT %08x\n\0".as_ptr(), status) };
+}
+
+#[no_mangle]
+pub unsafe extern "system" fn NdisMIndicateStatusComplete(handle: *mut u8) {
+    let _ = handle;
+    unsafe { DbgPrint(b"NDIS5 STATDONE\n\0".as_ptr()) };
+}
+
+#[no_mangle]
+pub unsafe extern "system" fn NdisMInitializeTimer(
+    timer: *mut u8,
+    handle: *mut u8,
+    function: *const (),
+    context: *mut u8,
+) {
+    let _ = handle;
+    if timer.is_null() {
+        return;
+    }
+    unsafe {
+        KeInitializeTimer(timer);
+        KeInitializeDpc(timer.add(TIMER_DPC), timer_dpc as *const (), timer);
+        ptr::write_unaligned(timer.add(TIMER_FN) as *mut *const (), function);
+        ptr::write_unaligned(timer.add(TIMER_CTX) as *mut *mut u8, context);
+    }
+}
+
+#[no_mangle]
+pub unsafe extern "system" fn NdisSetTimer(timer: *mut u8, milliseconds: u32) {
+    if timer.is_null() {
+        return;
+    }
+    let due = if milliseconds == 0 {
+        -1i64
+    } else {
+        -((milliseconds as i64) * 10_000)
+    };
+    unsafe { KeSetTimerEx(timer, due, 0, timer.add(TIMER_DPC)) };
+}
+
+#[no_mangle]
+pub unsafe extern "system" fn NdisMCancelTimer(timer: *mut u8, cancelled: *mut u8) {
+    let was = if timer.is_null() {
+        0
+    } else {
+        unsafe { KeCancelTimer(timer) }
+    };
+    if !cancelled.is_null() {
+        unsafe { *cancelled = was };
+    }
+}
+
+#[no_mangle]
+pub unsafe extern "system" fn NdisOpenConfiguration(
+    status: *mut u32,
+    handle: *mut *mut u8,
+    context: *mut u8,
+) {
+    let state = state_for(context);
+    let config = if state.is_null() {
+        context
+    } else {
+        unsafe { (*state).mp }
+    };
+    if !handle.is_null() {
+        unsafe { *handle = config };
+    }
+    write_status(status, SUCCESS);
+}
+
+#[no_mangle]
+pub unsafe extern "system" fn NdisMInitializeScatterGatherDma(
+    _handle: *mut u8,
+    dma64: u32,
+    mapping: u32,
+) -> u32 {
+    unsafe { DbgPrint(b"NDIS5 SGDMA %08x %08x\n\0".as_ptr(), dma64, mapping) };
+    let state = state_for(_handle);
+    if !state.is_null() && dma64 == 0 {
+        unsafe { (*state).dma32 = 1 };
+    }
+    SUCCESS
+}
+
+#[no_mangle]
+pub unsafe extern "system" fn NdisMFreeMapRegisters(_handle: *mut u8) {
+    unsafe { DbgPrint(b"NDIS5 MAPFREE\n\0".as_ptr()) };
+}
+
+#[no_mangle]
+pub unsafe extern "system" fn NdisMQueryAdapterResources(
+    status: *mut u32,
+    context: *mut u8,
+    list: *mut u8,
+    bytes: *mut u32,
+) {
+    let state = state_for(context);
+    let mp = if state.is_null() { context } else { unsafe { (*state).mp } };
+    let partial = crate::register::miniport_resources(mp);
+    if partial.is_null() || bytes.is_null() {
+        write_status(status, RESOURCES);
+        return;
+    }
+    let count = read_u32(partial, CM_COUNT_AT) as usize;
+    let need = (CM_DESC_AT + count * CM_DESC_BYTES) as u32;
+    let have = unsafe { *bytes };
+    unsafe { *bytes = need };
+    if list.is_null() || have < need {
+        write_status(status, BUFFER_TOO_SHORT);
+        return;
+    }
+    unsafe { ptr::copy_nonoverlapping(partial, list, need as usize) };
+    write_status(status, SUCCESS);
+}
+
+#[no_mangle]
+pub unsafe extern "system" fn NdisReadPciSlotInformation(
+    handle: *mut u8,
+    _slot: u32,
+    offset: u32,
+    buffer: *mut u8,
+    length: u32,
+) -> u32 {
+    let state = state_for(handle);
+    if state.is_null() {
+        return 0;
+    }
+    unsafe { crate::NdisMGetBusData((*state).mp, 0, offset, buffer, length) }
+}
+
+#[no_mangle]
+pub unsafe extern "system" fn NdisWritePciSlotInformation(
+    handle: *mut u8,
+    _slot: u32,
+    offset: u32,
+    buffer: *mut u8,
+    length: u32,
+) -> u32 {
+    let state = state_for(handle);
+    if state.is_null() || buffer.is_null() || length == 0 {
+        return 0;
+    }
+    let Some((bus, slot)) = pci_location(unsafe { (*state).mp }) else {
+        return 0;
+    };
+    unsafe { HalSetBusDataByOffset(PCI_CONFIGURATION, bus, slot, buffer, offset, length) }
+}
+
+#[no_mangle]
+pub unsafe extern "system" fn NdisAllocateMemoryWithTag(
+    address: *mut *mut u8,
+    length: u32,
+    tag: u32,
+) -> u32 {
+    if address.is_null() || length == 0 {
+        return INVALID_PARAMETER;
+    }
+    let block = unsafe { ExAllocatePoolWithTag(0, length as usize, tag) };
+    if block.is_null() {
+        unsafe { *address = ptr::null_mut() };
+        return RESOURCES;
+    }
+    unsafe {
+        ptr::write_bytes(block, 0, length as usize);
+        *address = block;
+    }
+    SUCCESS
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn NdisWriteErrorLogEntry(handle: *mut u8, code: u32, count: u32) {
+    let _ = (handle, count);
+    unsafe { DbgPrint(b"NDIS5 ERR %08x\n\0".as_ptr(), code) };
+}
+
+#[no_mangle]
+pub unsafe extern "system" fn NdisMRegisterAdapterShutdownHandler(
+    handle: *mut u8,
+    context: *mut u8,
+    handler: *const (),
+) {
+    let state = state_for(handle);
+    if state.is_null() {
+        return;
+    }
+    unsafe {
+        (*state).shutdown = handler;
+        (*state).shutdown_ctx = context;
+    }
+}
+
+#[no_mangle]
+pub unsafe extern "system" fn NdisMDeregisterAdapterShutdownHandler(handle: *mut u8) {
+    let state = state_for(handle);
+    if state.is_null() {
+        return;
+    }
+    unsafe {
+        (*state).shutdown = ptr::null();
+        (*state).shutdown_ctx = ptr::null_mut();
+    }
+}
