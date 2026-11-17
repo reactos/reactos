@@ -642,7 +642,11 @@ static void _fnet_ip4_input_low(void *cookie)
                 /* No protocol found.*/
             {
                 _fnet_netbuf_free_chain(nb);
+#if FNET_CFG_ICMP4 /* ReactOS */
                 _fnet_icmp4_error(netif, FNET_ICMP4_UNREACHABLE, FNET_ICMP4_UNREACHABLE_PROTOCOL, ip4_nb);
+#else /* ReactOS */
+                _fnet_netbuf_free_chain(ip4_nb); /* ReactOS */
+#endif /* ReactOS */
             }
         }
         else

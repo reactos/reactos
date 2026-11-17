@@ -41,7 +41,7 @@
 *************************************************************************/
 static fnet_prot_if_t *const fnet_prot_if_list[] =
 {
-#if FNET_CFG_IP4
+#if FNET_CFG_ICMP4 /* ReactOS */
     &fnet_icmp4_prot_if,      /* ICMP */
 #endif
 #if FNET_CFG_IP6

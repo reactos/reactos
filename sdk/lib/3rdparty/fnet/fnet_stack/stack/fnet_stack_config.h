@@ -512,6 +512,16 @@
     #define FNET_CFG_SOCKET_CALLBACK_ON_RX         (0U)
 #endif
 
+/* ReactOS: 0 leaves out Ethernet, Wi-Fi and ARP, for hosts that only use FNET_NETIF_TYPE_OTHER interfaces */
+#ifndef FNET_CFG_ETHERNET
+    #define FNET_CFG_ETHERNET                      (1)
+#endif
+
+/* ReactOS: 0 leaves out ICMPv4, for hosts that only hand TCP to FNET */
+#ifndef FNET_CFG_ICMP4
+    #define FNET_CFG_ICMP4                         (FNET_CFG_IP4)
+#endif
+
 /* ReactOS: per socket event callback, see fnet_socket_set_event_callback() */
 #ifndef FNET_CFG_SOCKET_EVENT_CALLBACK
     #define FNET_CFG_SOCKET_EVENT_CALLBACK         (0U)

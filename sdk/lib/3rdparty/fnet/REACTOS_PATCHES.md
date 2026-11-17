@@ -133,6 +133,22 @@ emulated tests.
 
 Upstream candidate: yes.
 
+### 7. Leaving out Ethernet and ICMPv4
+
+tcpip.sys hands FNET only TCP over interfaces of type `FNET_NETIF_TYPE_OTHER`; ReactOS keeps its own
+Ethernet, ARP and ICMP. Two references still pulled that code into the link.
+
+* `stack/fnet_stack_config.h`: `FNET_CFG_ETHERNET` (default 1) and `FNET_CFG_ICMP4` (default `FNET_CFG_IP4`).
+  No change for upstream users.
+* `stack/fnet_netif.c`: the Ethernet and Wi-Fi case in `_fnet_netif_init` needs `FNET_CFG_ETHERNET`.
+* `stack/fnet_prot.c`: the ICMPv4 protocol table entry needs `FNET_CFG_ICMP4`.
+* `stack/fnet_ip4.c`: without ICMPv4 an unknown protocol frees the IP header buffer instead of answering
+  with an ICMP error.
+
+With both off, `fnet_arp.c`, `fnet_eth.c`, `fnet_wifi.c` and `fnet_icmp4.c` are not needed.
+
+Upstream candidate: yes.
+
 ## Not needed
 
 ### 32 bit millisecond clock wrap

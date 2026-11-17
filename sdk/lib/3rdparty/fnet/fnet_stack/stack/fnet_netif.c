@@ -351,10 +351,12 @@ fnet_return_t _fnet_netif_init(fnet_netif_t *netif, fnet_uint8_t *hw_addr, fnet_
                 /* Interface-Type specific initialisation. */
                 switch(netif->netif_api->netif_type)
                 {
+#if FNET_CFG_ETHERNET /* ReactOS */
                     case (FNET_NETIF_TYPE_WIFI):
                     case (FNET_NETIF_TYPE_ETHERNET):
                         result = _fnet_eth_init(netif);
                         break;
+#endif /* ReactOS */
                     default:
                         break;
                 }
