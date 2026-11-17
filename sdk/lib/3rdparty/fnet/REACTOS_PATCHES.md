@@ -149,6 +149,24 @@ With both off, `fnet_arp.c`, `fnet_eth.c`, `fnet_wifi.c` and `fnet_icmp4.c` are 
 
 Upstream candidate: yes.
 
+### 8. Delayed acknowledgments
+
+FNET acknowledged every incoming segment that had PSH set, and the receive path sent a window update every
+time the application had read two segments. Against a Linux sender that sets PSH on about half the
+segments, that is one ACK per segment, twice what RFC 1122 4.2.3.2 asks for. The delayed ACK timer was also
+restarted by every new segment.
+
+* `stack/fnet_tcp.h`: `tcpcb_unackedsize` counts data received since the last segment we sent.
+* `stack/fnet_tcp.c`: in order data is acknowledged at once when two full sized segments are unacknowledged,
+  otherwise through the 200 ms delayed ACK timer, which later segments no longer push back. PSH forces an
+  ACK only on a segment shorter than the MSS: a sender with one MSS of congestion window and a small
+  request in flight waits for that ACK before it sends again (the ws2_32 IOCP tests time this at 100 ms).
+  FIN still forces an ACK. The window update after a read is sent only when the window last advertised
+  was below four segments or half the buffer has been freed, so it no longer doubles the ACKs of a stream
+  that the application reads as it arrives.
+
+Upstream candidate: yes.
+
 ## Not needed
 
 ### 32 bit millisecond clock wrap

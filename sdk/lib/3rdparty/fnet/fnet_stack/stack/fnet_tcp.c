@@ -758,7 +758,9 @@ static fnet_ssize_t _fnet_tcp_rcv( fnet_socket_if_t *sk, fnet_uint8_t *buf, fnet
         cb->tcpcb_newfreercvsize += len;
 
         /* If the window is opened, send acknowledgment.*/
-        if(( ((cb->tcpcb_newfreercvsize) >= ((fnet_uint32_t)cb->tcpcb_rcvmss << 1))
+        /* ReactOS: while the peer still has two segments of window, ACKs on arrival keep it going */
+        if(( (((cb->tcpcb_newfreercvsize) >= ((fnet_uint32_t)cb->tcpcb_rcvmss << 1))
+              && (cb->tcpcb_rcvwnd < ((fnet_uint32_t)cb->tcpcb_rcvmss << 2))) /* ReactOS */
              || (cb->tcpcb_newfreercvsize >= (cb->tcpcb_rcvcountmax >> 1)) /* More than half of RX buffer.*/
              || ((!cb->tcpcb_rcvwnd) && ( cb->tcpcb_newfreercvsize))) && (sk->state == SS_CONNECTED))
         {
@@ -1936,6 +1938,7 @@ static fnet_bool_t _fnet_tcp_dataprocess( fnet_socket_if_t *sk, fnet_netbuf_t *i
     fnet_uint32_t       seq;
     fnet_uint32_t       tcp_ack = fnet_ntohl(FNET_TCP_ACK(insegment));
     fnet_uint8_t        insegment_flags = FNET_TCP_FLAGS(insegment);
+    fnet_size_t         insegment_data = insegment->total_length - (fnet_size_t)FNET_TCP_LENGTH(insegment); /* ReactOS */
 
     /* Reinitialize the keepalive timer.*/
     if(sk->options.so_keepalive == FNET_TRUE)
@@ -1948,7 +1951,8 @@ static fnet_bool_t _fnet_tcp_dataprocess( fnet_socket_if_t *sk, fnet_netbuf_t *i
     }
 
     /* Reinitialize delayed ACK timer.*/
-    if((*ackparam & FNET_TCP_AP_SEND_WITH_DELAY) != 0u)
+    if(((*ackparam & FNET_TCP_AP_SEND_WITH_DELAY) != 0u)
+       && (cb->tcpcb_timers.delayed_ack == FNET_TCP_TIMER_OFF)) /* ReactOS: later segments do not push the ACK back */
     {
         cb->tcpcb_timers.delayed_ack = (200 / FNET_TCP_FAST_TIMER_PERIOD_MS); /* Delay 200 ms*/
     }
@@ -2119,8 +2123,9 @@ static fnet_bool_t _fnet_tcp_dataprocess( fnet_socket_if_t *sk, fnet_netbuf_t *i
     {}
 
     /* Acknowledgment of the final segment must be send immediatelly.*/
+    /* ReactOS: PSH forces an ACK only on a short segment, a sender may be waiting for it before it sends more */
     if(((*ackparam & FNET_TCP_AP_FIN_ACK) != 0u)
-       || ((insegment_flags & FNET_TCP_SGT_PSH) != 0u))
+       || (((insegment_flags & FNET_TCP_SGT_PSH) != 0u) && (insegment_data < cb->tcpcb_rcvmss))) /* ReactOS */
     {
         _fnet_tcp_send_ack(sk);
     }
@@ -2238,7 +2243,16 @@ static fnet_bool_t _fnet_tcp_add_inpbuf( fnet_socket_if_t *sk, fnet_netbuf_t *in
                                                insegment);
             sk->receive_buffer.count += insegment->total_length;
 
-            *ackparam |= FNET_TCP_AP_SEND_WITH_DELAY;
+            /* ReactOS: ACK every second full sized segment, delay the others (RFC 1122 4.2.3.2) */
+            cb->tcpcb_unackedsize += insegment->total_length; /* ReactOS */
+            if(cb->tcpcb_unackedsize >= ((fnet_size_t)cb->tcpcb_rcvmss << 1)) /* ReactOS */
+            {
+                *ackparam |= FNET_TCP_AP_SEND_IMMEDIATELLY; /* ReactOS */
+            }
+            else
+            {
+                *ackparam |= FNET_TCP_AP_SEND_WITH_DELAY;
+            }
         }
 
         return FNET_TRUE;
@@ -3380,6 +3394,7 @@ static fnet_error_t _fnet_tcp_send_headseg( fnet_socket_if_t *sk, fnet_uint8_t f
     error = _fnet_tcp_send_seg(&segment);
 
     cb->tcpcb_newfreercvsize = 0u;
+    cb->tcpcb_unackedsize = 0u; /* ReactOS */
 
     /* Set the new sequence number.*/
     cb->tcpcb_sndseq = seq;
@@ -3531,6 +3546,7 @@ static fnet_error_t _fnet_tcp_send_dataseg( fnet_socket_if_t *sk, void *options,
     error = _fnet_tcp_send_seg(&segment);
 
     cb->tcpcb_newfreercvsize = 0u;
+    cb->tcpcb_unackedsize = 0u; /* ReactOS */
 
     /* Set the new sequence number.*/
     cb->tcpcb_sndseq = seq + datasize;

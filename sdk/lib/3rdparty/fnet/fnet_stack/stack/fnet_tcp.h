@@ -376,6 +376,7 @@ typedef struct
 
     /* Input buffer variables.*/
     fnet_size_t   tcpcb_newfreercvsize; /* Free size of the input buffer.*/
+    fnet_size_t   tcpcb_unackedsize;    /* ReactOS: data received since the last ACK we sent */
 
     /* Retransmission variables.*/
     fnet_index_t tcpcb_fastretrcounter;         /* Repeated acknowledgment counter (for fast retransmission).*/
