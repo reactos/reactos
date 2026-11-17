@@ -376,6 +376,9 @@ MouHid_ReadCompletion(
         }
     }
 
+    /* Seven bytes is the width of the previous fixed format string, kept so a
+     * long report does not flood the debug output. ReportLength is the bound
+     * that keeps the dump inside the report buffer. */
     DPRINT("[MOUHID] ReportData");
     for (Index = 0; Index < DeviceExtension->ReportLength && Index < 7; Index++)
         DPRINT(" %02x", DeviceExtension->Report[Index] & 0xFF);
