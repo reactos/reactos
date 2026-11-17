@@ -11,6 +11,14 @@
  *                  Copyright 2023 Ratin Gao <ratin@knsoft.org>
  *                  Copyright 2026 Ryan Wilson <ryan@verosnt.com>
  * PROGRAMMERS:     Ryan Wilson <ryan@verosnt.com>
+ *
+ * GetSystemCpuSetInformation: guest
+ * output/ntdll-apps/serial-App-20261116T235322Z.log
+ * marker WARNING: calling stub GetSystemCpuSetInformation.
+ * Layout: sdk/include/xdk/ketypes.h SYSTEM_CPU_SET_INFORMATION.
+ * Public: https://learn.microsoft.com/en-us/windows/win32/api/processthreadsapi/nf-processthreadsapi-getsystemcpusetinformation
+ * Firefox Troubleshoot application awaits Services.sysinfo.processInfo;
+ * hal CreateHeterogeneousCpuInfo calls this export (gecko-dev WindowsHeterogeneousCpuInfo.cpp).
  */
 
 /* INCLUDES *******************************************************************/
@@ -257,6 +265,63 @@ GetLogicalProcessorInformation(OUT PSYSTEM_LOGICAL_PROCESSOR_INFORMATION Buffer,
         return FALSE;
     }
 
+    return TRUE;
+}
+
+/*
+ * @implemented
+ *
+ * Stub left ReturnedLength untouched. Firefox HeterogeneousCpuInfo then
+ * SetLength()'d stack garbage and could stall CollectProcessInfo /
+ * Troubleshoot.snapshot before Application Basics filled.
+ */
+BOOL
+WINAPI
+GetSystemCpuSetInformation(PSYSTEM_CPU_SET_INFORMATION Information,
+                           ULONG BufferLength,
+                           PULONG ReturnedLength,
+                           HANDLE Process,
+                           ULONG Flags)
+{
+    SYSTEM_CPU_SET_INFORMATION One;
+    ULONG Need;
+
+    UNREFERENCED_PARAMETER(Process);
+
+    if (!ReturnedLength)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    if (Flags != 0)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    /* One entry is enough for Firefox's efficiency-class walk. */
+    RtlZeroMemory(&One, sizeof(One));
+    One.Size = sizeof(One);
+    One.Type = CpuSetInformation;
+    One.CpuSet.Id = 1;
+    One.CpuSet.LogicalProcessorIndex = 0;
+    One.CpuSet.CoreIndex = 0;
+    One.CpuSet.LastLevelCacheIndex = 0;
+    One.CpuSet.NumaNodeIndex = 0;
+    One.CpuSet.EfficiencyClass = 0;
+
+    Need = sizeof(One);
+    *ReturnedLength = Need;
+
+    if (!Information || BufferLength < Need)
+    {
+        SetLastError(ERROR_INSUFFICIENT_BUFFER);
+        return FALSE;
+    }
+
+    RtlCopyMemory(Information, &One, Need);
+    *ReturnedLength = Need;
     return TRUE;
 }
 

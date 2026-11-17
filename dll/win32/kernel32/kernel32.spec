@@ -623,7 +623,7 @@
 @ stdcall GetSystemDefaultLangID()
 @ stdcall -version=0x600+ GetSystemDefaultLocaleName(ptr long)
 @ stdcall GetSystemDefaultUILanguage()
-@ stdcall -stub GetSystemCpuSetInformation(ptr long ptr ptr long)
+@ stdcall GetSystemCpuSetInformation(ptr long ptr ptr long)
 @ stdcall GetSystemDirectoryA(ptr long)
 @ stdcall GetSystemDirectoryW(ptr long)
 @ stdcall GetSystemFileCacheSize(ptr ptr ptr)
