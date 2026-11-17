@@ -51,7 +51,6 @@ WINE_DEFAULT_DEBUG_CHANNEL(path);
 #undef SIZE_T
 #define SIZE_T size_t
 
-#if (_WIN32_WINNT < _WIN32_WINNT_VISTA) || (DLL_EXPORT_VERSION < _WIN32_WINNT_VISTA)
 /* wcsnlen is an NT6+ function. To cover all cases, use a private implementation */
 static inline size_t compat_wcsnlen(const wchar_t* str, size_t size)
 {
@@ -59,7 +58,6 @@ static inline size_t compat_wcsnlen(const wchar_t* str, size_t size)
     return size;
 }
 #define wcsnlen compat_wcsnlen
-#endif /* _WIN32_WINNT || DLL_EXPORT_VERSION */
 
 #endif /* __REACTOS__ */
 

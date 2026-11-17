@@ -30,8 +30,10 @@
 #include "winbase.h"
 #include "winnls.h"
 #include "winternl.h"
+#ifndef __REACTOS__
 #include "winerror.h"
 #include "ddk/wdm.h"
+#endif
 
 #include "kernelbase.h"
 #include "wine/exception.h"
@@ -42,6 +44,7 @@ WINE_DECLARE_DEBUG_CHANNEL(virtual);
 WINE_DECLARE_DEBUG_CHANNEL(globalmem);
 
 
+#ifndef __REACTOS__
 
 static CROSS_PROCESS_WORK_LIST *open_cross_process_connection( HANDLE process )
 {
@@ -429,6 +432,7 @@ LPVOID WINAPI DECLSPEC_HOTPATCH VirtualAllocEx( HANDLE process, void *addr, SIZE
     if (!set_ntstatus( NtAllocateVirtualMemory( process, &ret, 0, &size, type, protect ))) return NULL;
     return ret;
 }
+#endif
 
 
 /***********************************************************************
@@ -441,8 +445,12 @@ LPVOID WINAPI DECLSPEC_HOTPATCH VirtualAlloc2( HANDLE process, void *addr, SIZE_
     LPVOID ret = addr;
 
     if (!process) process = GetCurrentProcess();
+#ifdef __REACTOS__
+    if (!set_ntstatus( NtAllocateVirtualMemory( process, &ret, 0, &size, MEM_COMMIT | MEM_RESERVE, protect ))) return NULL;
+#else
     if (!set_ntstatus( NtAllocateVirtualMemoryEx( process, &ret, &size, type, protect, parameters, count )))
         return NULL;
+#endif
     return ret;
 }
 
@@ -452,6 +460,7 @@ static BOOL is_exec_prot( DWORD protect )
             || protect == PAGE_EXECUTE_WRITECOPY;
 }
 
+#ifndef __REACTOS__
 /***********************************************************************
  *             VirtualAlloc2FromApp   (kernelbase.@)
  */
@@ -474,6 +483,7 @@ LPVOID WINAPI DECLSPEC_HOTPATCH VirtualAlloc2FromApp( HANDLE process, void *addr
         return NULL;
     return ret;
 }
+#endif
 
 
 /***********************************************************************
@@ -497,6 +507,7 @@ LPVOID WINAPI DECLSPEC_HOTPATCH VirtualAllocFromApp( void *addr, SIZE_T size,
 }
 
 
+#ifndef __REACTOS__
 /***********************************************************************
  *             PrefetchVirtualMemory   (kernelbase.@)
  */
@@ -507,6 +518,7 @@ BOOL WINAPI DECLSPEC_HOTPATCH PrefetchVirtualMemory( HANDLE process, ULONG_PTR c
                                                         count, (PMEMORY_RANGE_ENTRY)addresses,
                                                         &flags, sizeof(flags) ));
 }
+#endif
 
 
 /***********************************************************************
@@ -597,6 +609,7 @@ BOOL WINAPI DECLSPEC_HOTPATCH VirtualUnlock( void *addr, SIZE_T size )
 }
 
 
+#ifndef __REACTOS__
 /***********************************************************************
  *             WriteProcessMemory    (kernelbase.@)
  */
@@ -667,6 +680,7 @@ BOOL WINAPI DECLSPEC_HOTPATCH WriteProcessMemory( HANDLE process, void *addr, co
     close_cross_process_connection( list );
     return set_ntstatus( status );
 }
+#endif
 
 
 /* IsBadStringPtrA replacement for kernelbase, to catch exception in debug traces. */
@@ -767,6 +781,59 @@ BOOL WINAPI HeapSetInformation( HANDLE heap, HEAP_INFORMATION_CLASS infoclass, P
 {
     return set_ntstatus( RtlSetHeapInformation( heap, infoclass, info, size ));
 }
+
+#ifdef __REACTOS__ /* Added in Wine commit 8de81426e90670cf7fa67ddaa404175f64aa7ce3 */
+/***********************************************************************
+ *           HeapSummary   (kernelbase.@)
+ */
+BOOL WINAPI HeapSummary( HANDLE heap, DWORD flags, LPHEAP_SUMMARY heap_summary )
+{
+    SIZE_T allocated = 0;
+    SIZE_T committed = 0;
+    SIZE_T uncommitted = 0;
+    PROCESS_HEAP_ENTRY entry;
+
+    if (heap_summary->cb != sizeof(*heap_summary))
+    {
+        /* needs to be set to the exact size by the caller */
+        SetLastError( ERROR_INVALID_PARAMETER );
+        return FALSE;
+    }
+
+    memset( &entry, 0, sizeof(entry) );
+
+    if (!HeapLock( heap ))
+        return FALSE;
+
+    while (HeapWalk( heap, &entry ))
+    {
+        if (entry.wFlags & PROCESS_HEAP_ENTRY_BUSY)
+        {
+            allocated += entry.cbData;
+        }
+        else if (entry.wFlags & PROCESS_HEAP_REGION)
+        {
+            committed += entry.Region.dwCommittedSize;
+            uncommitted += entry.Region.dwUnCommittedSize;
+        }
+    }
+
+    if (GetLastError() != ERROR_NO_MORE_ITEMS)
+    {
+        /* HeapWalk unsuccessful */
+        HeapUnlock( heap );
+        return FALSE;
+    }
+
+    HeapUnlock( heap );
+    heap_summary->cbAllocated = allocated;
+    heap_summary->cbCommitted = committed;
+    heap_summary->cbReserved = committed + uncommitted;
+    heap_summary->cbMaxReserve = heap_summary->cbReserved;
+
+    return TRUE;
+}
+#endif
 
 
 /***********************************************************************
@@ -1227,6 +1294,7 @@ BOOL WINAPI DECLSPEC_HOTPATCH LocalUnlock( HLOCAL handle )
 }
 
 
+#ifndef __REACTOS__
 /***********************************************************************
  * Memory resource functions
  ***********************************************************************/
@@ -1411,6 +1479,7 @@ BOOL WINAPI DECLSPEC_HOTPATCH AllocateUserPhysicalPagesNuma( HANDLE process, ULO
     if (node) FIXME( "Ignoring preferred node %lu\n", node );
     return AllocateUserPhysicalPages( process, pages, userarray );
 }
+#endif
 
 
 /***********************************************************************
@@ -1425,6 +1494,7 @@ HANDLE WINAPI DECLSPEC_HOTPATCH CreateFileMappingNumaW( HANDLE file, LPSECURITY_
 }
 
 
+#ifndef __REACTOS__
 /***********************************************************************
  *           GetLogicalProcessorInformation   (kernelbase.@)
  */
@@ -1442,6 +1512,7 @@ BOOL WINAPI DECLSPEC_HOTPATCH GetLogicalProcessorInformation( SYSTEM_LOGICAL_PRO
     if (status == STATUS_INFO_LENGTH_MISMATCH) status = STATUS_BUFFER_TOO_SMALL;
     return set_ntstatus( status );
 }
+#endif
 
 
 /***********************************************************************
@@ -1457,13 +1528,18 @@ BOOL WINAPI DECLSPEC_HOTPATCH GetLogicalProcessorInformationEx( LOGICAL_PROCESSO
         SetLastError( ERROR_INVALID_PARAMETER );
         return FALSE;
     }
+#ifdef __REACTOS__
+    status = NtQuerySystemInformation( SystemLogicalProcessorInformationEx, buffer, *len, len ); //NtQuerySystemInformationEx is required.
+#else
     status = NtQuerySystemInformationEx( SystemLogicalProcessorInformationEx, &relationship,
                                          sizeof(relationship), buffer, *len, len );
+#endif
     if (status == STATUS_INFO_LENGTH_MISMATCH) status = STATUS_BUFFER_TOO_SMALL;
     return set_ntstatus( status );
 }
 
 
+#ifndef __REACTOS__
 /***********************************************************************
  *           GetSystemCpuSetInformation   (kernelbase.@)
  */
@@ -1572,6 +1648,7 @@ BOOL WINAPI DECLSPEC_HOTPATCH QueryVirtualMemoryInformation( HANDLE process, con
             return FALSE;
     }
 }
+#endif
 
 
 /***********************************************************************
@@ -1781,6 +1858,7 @@ BOOL WINAPI GetXStateFeaturesMask( CONTEXT *context, DWORD64 *feature_mask )
 }
 #endif
 
+#ifndef __REACTOS__
 /***********************************************************************
  * Firmware functions
  ***********************************************************************/
@@ -1830,3 +1908,4 @@ UINT WINAPI GetSystemFirmwareTable( DWORD provider, DWORD id, void *buffer, DWOR
 
     return get_firmware_table( provider, SystemFirmwareTable_Get, id, buffer, size );
 }
+#endif

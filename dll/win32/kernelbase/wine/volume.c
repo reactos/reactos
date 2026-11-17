@@ -33,10 +33,14 @@
 #include "winnls.h"
 #include "winternl.h"
 #include "winioctl.h"
+#ifdef __REACTOS__
+#include <mountmgr.h>
+#else
 #include "ntddcdrm.h"
 #define WINE_MOUNTMGR_EXTENSIONS
 #include "ddk/mountmgr.h"
 #include "ddk/wdm.h"
+#endif
 #include "kernelbase.h"
 #include "wine/debug.h"
 
@@ -119,6 +123,7 @@ static BOOL open_device_root( LPCWSTR root, HANDLE *handle )
     return set_ntstatus( status );
 }
 
+#ifndef __REACTOS__
 /* query the type of a drive from the mount manager */
 static DWORD get_mountmgr_drive_type( LPCWSTR root )
 {
@@ -734,6 +739,7 @@ BOOL WINAPI DECLSPEC_HOTPATCH GetDiskFreeSpaceA( LPCSTR root, LPDWORD cluster_se
     if (root && !(rootW = file_name_AtoW( root, FALSE ))) return FALSE;
     return GetDiskFreeSpaceW( rootW, cluster_sectors, sector_bytes, free_clusters, total_clusters );
 }
+#endif // __REACTOS__
 
 
 static BOOL is_dos_path( const UNICODE_STRING *path )
@@ -782,6 +788,7 @@ static BOOL resolve_symlink( UNICODE_STRING *path )
     return !status;
 }
 
+#ifndef __REACTOS__
 /***********************************************************************
  *           GetVolumePathNameW   (kernelbase.@)
  */
@@ -898,6 +905,7 @@ BOOL WINAPI DECLSPEC_HOTPATCH GetVolumePathNameW( const WCHAR *path, WCHAR *volu
     SetLastError( ERROR_FILENAME_EXCED_RANGE );
     return FALSE;
 }
+#endif // __REACTOS__
 
 
 static MOUNTMGR_MOUNT_POINTS *query_mount_points( HANDLE mgr, MOUNTMGR_MOUNT_POINT *input, DWORD insize )
@@ -921,6 +929,7 @@ static MOUNTMGR_MOUNT_POINTS *query_mount_points( HANDLE mgr, MOUNTMGR_MOUNT_POI
     return output;
 }
 
+#ifndef __REACTOS__
 /***********************************************************************
  *           GetVolumePathNamesForVolumeNameW   (kernelbase.@)
  */
@@ -1132,6 +1141,7 @@ BOOL WINAPI /* DECLSPEC_HOTPATCH */ DeleteVolumeMountPointW( LPCWSTR mountpoint 
     FIXME("(%s), stub!\n", debugstr_w(mountpoint));
     return FALSE;
 }
+#endif
 
 
 /***********************************************************************

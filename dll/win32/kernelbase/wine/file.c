@@ -33,9 +33,19 @@
 #include "winioctl.h"
 #include "wincon.h"
 #include "fileapi.h"
+
+#ifdef __REACTOS__
+/* Use local implementations of shlwapi helpers instead of importing them. */
+#define WINSHLWAPI
+#pragma warning(disable:4995)
+typedef LARGE_INTEGER PHYSICAL_ADDRESS;
+#include "ntddser.h"
+#endif
 #include "shlwapi.h"
+#ifndef __REACTOS__
 #include "ddk/ntddk.h"
 #include "ddk/ntddser.h"
+#endif
 #include "ioringapi.h"
 
 #include "kernelbase.h"
@@ -67,7 +77,11 @@ static const UINT max_entry_size = offsetof( FILE_BOTH_DIRECTORY_INFORMATION, Fi
 const WCHAR windows_dir[] = L"C:\\windows";
 const WCHAR system_dir[] = L"C:\\windows\\system32";
 
+#ifdef __REACTOS__
+BOOL oem_file_apis = FALSE;
+#else
 static BOOL oem_file_apis;
+#endif
 
 
 static void WINAPI read_write_apc( void *apc_user, PIO_STATUS_BLOCK io, ULONG reserved )
@@ -477,6 +491,7 @@ static BOOL is_same_file( HANDLE h1, HANDLE h2 )
 }
 
 
+#ifndef __REACTOS__
 /******************************************************************************
  *	AreFileApisANSI   (kernelbase.@)
  */
@@ -484,6 +499,7 @@ BOOL WINAPI DECLSPEC_HOTPATCH AreFileApisANSI(void)
 {
     return !oem_file_apis;
 }
+#endif
 
 /******************************************************************************
  *  copy_file
@@ -603,6 +619,7 @@ HRESULT WINAPI CopyFile2( const WCHAR *source, const WCHAR *dest, COPYFILE2_EXTE
 }
 
 
+#ifndef __REACTOS__
 /***********************************************************************
  *	CopyFileExW   (kernelbase.@)
  */
@@ -690,6 +707,7 @@ BOOL WINAPI DECLSPEC_HOTPATCH CreateDirectoryExW( LPCWSTR template, LPCWSTR path
 {
     return CreateDirectoryW( path, sa );
 }
+#endif //__REACTOS__
 
 
 /*************************************************************************
@@ -734,6 +752,7 @@ HANDLE WINAPI DECLSPEC_HOTPATCH CreateFile2( LPCWSTR name, DWORD access, DWORD s
     return CreateFileW( name, access, sharing, sa, creation, flags | attributes, template );
 }
 
+#ifndef __REACTOS__
 
 /*************************************************************************
  *	CreateFileA   (kernelbase.@)
@@ -1804,6 +1823,7 @@ DWORD WINAPI DECLSPEC_HOTPATCH GetFinalPathNameByHandleA( HANDLE file, LPSTR pat
 }
 
 
+#ifndef __REACTOS__
 /***********************************************************************
  *	GetFinalPathNameByHandleW   (kernelbase.@)
  */
@@ -1941,6 +1961,7 @@ DWORD WINAPI DECLSPEC_HOTPATCH GetFinalPathNameByHandleW( HANDLE file, LPWSTR pa
     }
     return result;
 }
+#endif
 
 
 /***********************************************************************
@@ -2997,6 +3018,7 @@ BOOL WINAPI DECLSPEC_HOTPATCH CancelIo( HANDLE handle )
 
     return set_ntstatus( NtCancelIoFile( handle, &io ) );
 }
+#endif //__REACTOS__
 
 
 /***********************************************************************
@@ -3006,10 +3028,15 @@ BOOL WINAPI DECLSPEC_HOTPATCH CancelIoEx( HANDLE handle, LPOVERLAPPED overlapped
 {
     IO_STATUS_BLOCK io;
 
+#ifdef __REACTOS__
+    return set_ntstatus( NtCancelIoFile( handle, &io ) );
+#else
     return set_ntstatus( NtCancelIoFileEx( handle, (PIO_STATUS_BLOCK)overlapped, &io ) );
+#endif
 }
 
 
+#ifndef __REACTOS__
 /***********************************************************************
  *	CancelSynchronousIo   (kernelbase.@)
  */
@@ -3065,6 +3092,7 @@ BOOL WINAPI DECLSPEC_HOTPATCH GetFileInformationByHandle( HANDLE file, BY_HANDLE
 
     return TRUE;
 }
+#endif
 
 
 /***********************************************************************
@@ -3153,6 +3181,7 @@ BOOL WINAPI DECLSPEC_HOTPATCH GetFileInformationByHandleEx( HANDLE handle, FILE_
     return set_ntstatus( status );
 }
 
+#ifndef __REACTOS__
 
 /***********************************************************************
  *	GetFileSize   (kernelbase.@)
@@ -3662,6 +3691,7 @@ BOOL WINAPI DECLSPEC_HOTPATCH SetEndOfFile( HANDLE file )
     }
     return set_ntstatus( status );
 }
+#endif
 
 
 /***********************************************************************
@@ -3742,6 +3772,7 @@ BOOL WINAPI DECLSPEC_HOTPATCH SetFileInformationByHandle( HANDLE file, FILE_INFO
 }
 
 
+#ifndef __REACTOS__
 /***********************************************************************
  *	SetFilePointer   (kernelbase.@)
  */
@@ -4176,6 +4207,7 @@ BOOL WINAPI DECLSPEC_HOTPATCH SystemTimeToFileTime( const SYSTEMTIME *systime, F
     SetLastError( ERROR_INVALID_PARAMETER );
     return FALSE;
 }
+#endif
 
 
 /***********************************************************************
@@ -4240,6 +4272,7 @@ BOOL WINAPI DECLSPEC_HOTPATCH ClearCommError( HANDLE handle, DWORD *errors, COMS
 }
 
 
+#ifndef __REACTOS__
 /****************************************************************************
  *	DeviceIoControl   (kernelbase.@)
  */
@@ -4275,6 +4308,7 @@ BOOL WINAPI DECLSPEC_HOTPATCH DeviceIoControl( HANDLE handle, DWORD code, void *
     if (status == STATUS_PENDING || !NT_SUCCESS( status )) return set_ntstatus( status );
     return TRUE;
 }
+#endif //__REACTOS__
 
 
 /*****************************************************************************
