@@ -36,13 +36,37 @@ KiVdmUnhandledOpcode(INBimm);
 KiVdmUnhandledOpcode(INWimm);
 KiVdmUnhandledOpcode(OUTBimm);
 KiVdmUnhandledOpcode(OUTWimm);
-KiVdmUnhandledOpcode(INB);
-KiVdmUnhandledOpcode(INW);
-KiVdmUnhandledOpcode(OUTB);
-KiVdmUnhandledOpcode(OUTW);
 KiVdmUnhandledOpcode(HLT);
 KiVdmUnhandledOpcode(INTO);
 KiVdmUnhandledOpcode(INV);
+
+/* HELPER FUNCTIONS **********************************************************/
+
+static
+BOOLEAN
+KiVdmIsPortAccessAllowed(
+    USHORT Port,
+    USHORT Size)   /* 1, 2 or 4 */
+{
+    PKTSS Tss = KeGetPcr()->TSS;
+    PUCHAR IoMap;
+    USHORT i;
+
+    /* If IoMapBase points past the end of the TSS / map, everything is denied */
+    if (Tss->IoMapBase > (IOPM_OFFSET + IOPM_SIZE - Size))
+        return FALSE;
+
+    IoMap = (PUCHAR)Tss + Tss->IoMapBase;
+
+    for (i = 0; i < Size; i++)
+    {
+        USHORT p = Port + i;
+        if (IoMap[p >> 3] & (1 << (p & 7)))
+            return FALSE;   /* bit set = access denied */
+    }
+
+    return TRUE;
+}
 
 /* OPCODE HANDLERS ************************************************************/
 
@@ -383,6 +407,82 @@ KiVdmOpcodeSTI(IN PKTRAP_FRAME TrapFrame,
     TrapFrame->Eip += KiVdmGetInstructionSize(Flags);
 
     /* Done */
+    return TRUE;
+}
+
+BOOLEAN
+FASTCALL
+KiVdmOpcodeINB(
+    IN PKTRAP_FRAME TrapFrame,
+    IN ULONG Flags)
+{
+    USHORT Port = (USHORT)TrapFrame->Edx;
+
+    if (!KiVdmIsPortAccessAllowed(Port, 1))
+        return FALSE;
+
+    TrapFrame->Eax = (TrapFrame->Eax & 0xFFFFFF00) | __inbyte(Port);
+
+    TrapFrame->Eip += KiVdmGetInstructionSize(Flags);
+    return TRUE;
+}
+
+BOOLEAN
+FASTCALL
+KiVdmOpcodeINW(
+    IN PKTRAP_FRAME TrapFrame,
+    IN ULONG Flags)
+{
+    USHORT Port = (USHORT)TrapFrame->Edx;
+    USHORT Size = (KiVdmGetPrefixFlags(Flags) & PFX_FLAG_OPER32) ? 4 : 2;
+
+    if (!KiVdmIsPortAccessAllowed(Port, Size))
+        return FALSE;
+
+    if (Size == 4)
+        TrapFrame->Eax = __indword(Port);
+    else
+        TrapFrame->Eax = (TrapFrame->Eax & 0xFFFF0000) | __inword(Port);
+
+    TrapFrame->Eip += KiVdmGetInstructionSize(Flags);
+    return TRUE;
+}
+
+BOOLEAN
+FASTCALL
+KiVdmOpcodeOUTB(
+    IN PKTRAP_FRAME TrapFrame,
+    IN ULONG Flags)
+{
+    USHORT Port = (USHORT)TrapFrame->Edx;
+
+    if (!KiVdmIsPortAccessAllowed(Port, 1))
+        return FALSE;
+
+    __outbyte(Port, (UCHAR)TrapFrame->Eax);
+
+    TrapFrame->Eip += KiVdmGetInstructionSize(Flags);
+    return TRUE;
+}
+
+BOOLEAN
+FASTCALL
+KiVdmOpcodeOUTW(
+    IN PKTRAP_FRAME TrapFrame,
+    IN ULONG Flags)
+{
+    USHORT Port = (USHORT)TrapFrame->Edx;
+    USHORT Size = (KiVdmGetPrefixFlags(Flags) & PFX_FLAG_OPER32) ? 4 : 2;
+
+    if (!KiVdmIsPortAccessAllowed(Port, Size))
+        return FALSE;
+
+    if (Size == 4)
+        __outdword(Port, TrapFrame->Eax);
+    else
+        __outword(Port, (USHORT)TrapFrame->Eax);
+
+    TrapFrame->Eip += KiVdmGetInstructionSize(Flags);
     return TRUE;
 }
 
