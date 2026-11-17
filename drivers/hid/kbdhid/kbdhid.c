@@ -107,8 +107,8 @@ KbdHid_InsertScanCodes(
 static
 ULONG
 KbdHid_GetUsageCount(
-    IN PUSAGE_AND_PAGE UsageList,
-    IN ULONG MaxCount)
+    _In_ PUSAGE_AND_PAGE UsageList,
+    _In_ ULONG MaxCount)
 {
     ULONG Index;
 
@@ -136,7 +136,9 @@ KbdHid_ReadCompletion(
     ULONG ButtonLength;
     ULONG BreakCount;
     ULONG MakeCount;
+#ifndef NDEBUG
     ULONG Index;
+#endif
 
     /* get device extension */
     DeviceExtension = Context;
@@ -160,14 +162,17 @@ KbdHid_ReadCompletion(
         return STATUS_MORE_PROCESSING_REQUIRED;
     }
 
+    /* the read below uses this length, a zero value makes it invalid */
+    ASSERT(DeviceExtension->ReportLength != 0);
+#ifndef NDEBUG
     //
     // print out raw report
     //
-    ASSERT(DeviceExtension->ReportLength != 0);
     DPRINT("[KBDHID] ReadCompletion");
-    for (Index = 0; Index < DeviceExtension->ReportLength && Index < 9; Index++)
+    for (Index = 0; Index < DeviceExtension->ReportLength; Index++)
         DPRINT(" %02x", DeviceExtension->Report[Index]);
     DPRINT("\n");
+#endif
 
 
     /* get current usages */
