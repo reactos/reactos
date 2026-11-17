@@ -203,6 +203,7 @@ BEGIN
     IDS_HUNGARIAN_LAYOUT "Macarca"
     IDS_HUNGARIAN_101_KEY_LAYOUT "Macarca 101 Tuş"
     IDS_ICELANDIC_LAYOUT "İzlandaca"
+    IDS_INUKTITUT_LATIN_LAYOUT "Inuktitut - Latin"
     IDS_IRISH_LAYOUT "İrlandaca"
     IDS_ITALIAN_LAYOUT "İtalyanca"
     IDS_ITALIAN_142_LAYOUT "İtalyanca (142)"
