@@ -2,7 +2,7 @@
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS system libraries
  * FILE:        lib/dnsapi/dnsapi/memory.c
- * PURPOSE:     DNSAPI functions built on the ADNS library.
+ * PURPOSE:     DNSAPI memory functions.
  * PROGRAMER:   Art Yerkes
  * UPDATE HISTORY:
  *              12/15/03 -- Created

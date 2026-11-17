@@ -5,17 +5,15 @@ include_directories(
 
 add_rpc_files(client ${REACTOS_SOURCE_DIR}/sdk/include/reactos/idl/dnsrslvr.idl)
 
-add_definitions(-DADNS_JGAA_WIN32 -D_CRT_NO_POSIX_ERROR_CODES)
-
 spec2def(dnsapi.dll dnsapi.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
-    adns.c
     context.c
     memory.c
     names.c
     query.c
     record.c
+    resolver.c
     rpc.c
     stubs.c
     precomp.h
@@ -29,6 +27,6 @@ add_library(dnsapi MODULE
 add_pch(dnsapi precomp.h SOURCE)
 
 set_module_type(dnsapi win32dll)
-target_link_libraries(dnsapi adns ${PSEH_LIB})
+target_link_libraries(dnsapi ${PSEH_LIB})
 add_importlibs(dnsapi advapi32 rpcrt4 user32 ws2_32 iphlpapi msvcrt kernel32 ntdll)
 add_cd_file(TARGET dnsapi DESTINATION reactos/system32 FOR all)

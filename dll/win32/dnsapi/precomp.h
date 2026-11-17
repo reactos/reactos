@@ -12,6 +12,7 @@
 /* INCLUDES ******************************************************************/
 
 #include <stdarg.h>
+#include <stdio.h>
 
 /* PSDK/NDK Headers */
 #define WIN32_NO_STATUS
@@ -19,6 +20,7 @@
 #define COM_NO_WINDOWS_H
 #include <windef.h>
 #include <winbase.h>
+#include <winsock2.h>
 #include <winnls.h>
 #include <windns.h>
 #include <reactos/windns_undoc.h>
@@ -27,11 +29,9 @@
 
 #include <dnsrslvr_c.h>
 
-#include <adns.h>
-
 typedef struct
 {
-    adns_state State;
+    DWORD CredentialsFlags;
 } WINDNS_CONTEXT, *PWINDNS_CONTEXT;
 
 static inline LPWSTR dns_strdup_uw( const char *str )
@@ -138,7 +138,16 @@ static inline LPSTR dns_strdup_ua( const char *src )
     return dst;
 }
 
-DNS_STATUS DnsIntTranslateAdnsToDNS_STATUS(int Status);
+DNS_STATUS
+DnsIntResolveA(
+    _In_ PCSTR Name,
+    _In_ BOOL Search,
+    _In_opt_ PCSTR SearchDomain,
+    _In_reads_(ServerCount) const IP4_ADDRESS *Servers,
+    _In_ ULONG ServerCount,
+    _Out_ IP4_ADDRESS *Address,
+    _Out_writes_(CnameSize) PSTR Cname,
+    _In_ ULONG CnameSize);
 void DnsIntFreeRecordList(PDNS_RECORD ToFree);
 
 #endif /* _DNSAPI_H */
