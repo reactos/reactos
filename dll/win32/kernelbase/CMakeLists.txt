@@ -13,6 +13,7 @@ add_subdirectory(wine)
 spec2def(kernelbase_ros.dll kernelbase_ros.spec ADD_IMPORTLIB)
 
 add_library(kernelbase_ros MODULE
+    client/japanese.c
     DllMain.c
     ${CMAKE_CURRENT_BINARY_DIR}/kernelbase_ros_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/kernelbase_ros.def)

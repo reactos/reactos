@@ -36,6 +36,12 @@
 #include "winternl.h"
 #include "winperf.h"
 #include "winuser.h"
+
+#ifdef __REACTOS__
+/* This module implements many SHReg* helpers; avoid importing them. */
+#define WINSHLWAPI
+#pragma warning(disable:4995)
+#endif
 #include "shlwapi.h"
 #include "sddl.h"
 
@@ -529,6 +535,7 @@ static BOOL is_perf_key( HKEY key )
 }
 
 
+#ifndef __REACTOS__
 /******************************************************************************
  * RemapPredefinedHandleInternal   (kernelbase.@)
  */
@@ -3237,6 +3244,7 @@ cleanup:
         RegCloseKey( hsrc );
     return ret;
 }
+#endif
 
 
 /******************************************************************************
@@ -3250,7 +3258,11 @@ LSTATUS WINAPI RegLoadAppKeyA(const char *file, HKEY *result, REGSAM sam, DWORD 
     if (!file || reserved)
         return ERROR_INVALID_PARAMETER;
 
+#ifdef __REACTOS__
+    *result = (HKEY)(UINT_PTR)0xdeadbeef;
+#else
     *result = (HKEY)0xdeadbeef;
+#endif
     return ERROR_SUCCESS;
 }
 
@@ -3265,7 +3277,11 @@ LSTATUS WINAPI RegLoadAppKeyW(const WCHAR *file, HKEY *result, REGSAM sam, DWORD
     if (!file || reserved)
         return ERROR_INVALID_PARAMETER;
 
+#ifdef __REACTOS__
+    *result = (HKEY)(UINT_PTR)0xdeadbeef;
+#else
     *result = (HKEY)0xdeadbeef;
+#endif
     return ERROR_SUCCESS;
 }
 
@@ -3302,6 +3318,7 @@ BOOL WINAPI DECLSPEC_HOTPATCH DnsHostnameToComputerNameExW( const WCHAR *hostnam
 }
 
 
+#ifndef __REACTOS__
 /***********************************************************************
  * GetComputerNameExA   (kernelbase.@)
  */
@@ -3515,6 +3532,7 @@ BOOL WINAPI DECLSPEC_HOTPATCH SetComputerNameExW( COMPUTER_NAME_FORMAT type, con
     if (ret) SetLastError( ret );
     return !ret;
 }
+#endif
 
 struct USKEY
 {

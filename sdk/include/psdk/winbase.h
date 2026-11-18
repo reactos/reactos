@@ -234,6 +234,13 @@ extern "C" {
 #define COPY_FILE_RESTARTABLE                   0x00000002
 #define COPY_FILE_OPEN_SOURCE_FOR_WRITE         0x00000004
 #define COPY_FILE_ALLOW_DECRYPTED_DESTINATION   0x00000008
+#if (_WIN32_WINNT >= _WIN32_WINNT_VISTA) || defined(__REACTOS__)
+#define COPY_FILE_COPY_SYMLINK                  0x00000800
+#define COPY_FILE_NO_BUFFERING                  0x00001000
+#endif
+#if (NTDDI_VERSION >= NTDDI_WIN10_19H1)
+#define COPY_FILE_REQUEST_COMPRESSED_TRAFFIC    0x10000000
+#endif
 
 #define FILE_FLAG_WRITE_THROUGH                 0x80000000
 #define FILE_FLAG_OVERLAPPED                    0x40000000
@@ -339,7 +346,7 @@ extern "C" {
 // #define LOAD_PACKAGED_LIBRARY                       0x00000004 // Internal use only.
 #define LOAD_WITH_ALTERED_SEARCH_PATH               0x00000008
 #define LOAD_IGNORE_CODE_AUTHZ_LEVEL                0x00000010
-#if (_WIN32_WINNT >= _WIN32_WINNT_VISTA)
+#if (_WIN32_WINNT >= _WIN32_WINNT_VISTA) || defined(__REACTOS__)
 #define LOAD_LIBRARY_AS_IMAGE_RESOURCE              0x00000020
 #define LOAD_LIBRARY_AS_DATAFILE_EXCLUSIVE          0x00000040
 #define LOAD_LIBRARY_REQUIRE_SIGNED_TARGET          0x00000080
@@ -1635,10 +1642,22 @@ BOOL WINAPI EndUpdateResourceW(_In_ HANDLE, _In_ BOOL);
 void WINAPI EnterCriticalSection(LPCRITICAL_SECTION);
 BOOL WINAPI EnumResourceLanguagesA(_In_opt_ HMODULE, _In_ LPCSTR, _In_ LPCSTR, _In_ ENUMRESLANGPROCA, _In_ LONG_PTR);
 BOOL WINAPI EnumResourceLanguagesW(_In_opt_ HMODULE, _In_ LPCWSTR, _In_ LPCWSTR, _In_ ENUMRESLANGPROCW, _In_ LONG_PTR);
+#if (_WIN32_WINNT >= 0x0600) || defined(__REACTOS__)
+BOOL WINAPI EnumResourceLanguagesExA(_In_opt_ HMODULE, _In_ LPCSTR, _In_ LPCSTR, _In_ ENUMRESLANGPROCA, _In_ LONG_PTR, _In_ DWORD, _In_ LANGID);
+BOOL WINAPI EnumResourceLanguagesExW(_In_opt_ HMODULE, _In_ LPCWSTR, _In_ LPCWSTR, _In_ ENUMRESLANGPROCW, _In_ LONG_PTR, _In_ DWORD, _In_ LANGID);
+#endif
 BOOL WINAPI EnumResourceNamesA(_In_opt_ HMODULE, _In_ LPCSTR, _In_ ENUMRESNAMEPROCA, _In_ LONG_PTR);
 BOOL WINAPI EnumResourceNamesW(_In_opt_ HMODULE, _In_ LPCWSTR, _In_ ENUMRESNAMEPROCW, _In_ LONG_PTR);
+#if (_WIN32_WINNT >= 0x0600) || defined(__REACTOS__)
+BOOL WINAPI EnumResourceNamesExA(_In_opt_ HMODULE, _In_ LPCSTR, _In_ ENUMRESNAMEPROCA, _In_ LONG_PTR, _In_ DWORD, _In_ LANGID);
+BOOL WINAPI EnumResourceNamesExW(_In_opt_ HMODULE, _In_ LPCWSTR, _In_ ENUMRESNAMEPROCW, _In_ LONG_PTR, _In_ DWORD, _In_ LANGID);
+#endif
 BOOL WINAPI EnumResourceTypesA(_In_opt_ HMODULE, _In_ ENUMRESTYPEPROCA, _In_ LONG_PTR);
 BOOL WINAPI EnumResourceTypesW(_In_opt_ HMODULE, _In_ ENUMRESTYPEPROCW, _In_ LONG_PTR);
+#if (_WIN32_WINNT >= 0x0600) || defined(__REACTOS__)
+BOOL WINAPI EnumResourceTypesExA(_In_opt_ HMODULE, _In_ ENUMRESTYPEPROCA, _In_ LONG_PTR, _In_ DWORD, _In_ LANGID);
+BOOL WINAPI EnumResourceTypesExW(_In_opt_ HMODULE, _In_ ENUMRESTYPEPROCW, _In_ LONG_PTR, _In_ DWORD, _In_ LANGID);
+#endif
 BOOL WINAPI EqualPrefixSid(PSID,PSID);
 BOOL WINAPI EqualSid(PSID,PSID);
 DWORD WINAPI EraseTape(_In_ HANDLE, _In_ DWORD, _In_ BOOL);
@@ -2297,6 +2316,7 @@ BOOL WINAPI GetVolumePathNamesForVolumeNameW(LPCWSTR,LPWSTR,DWORD,PDWORD);
 
 #endif
 
+BOOL WINAPI GetWindowsAccountDomainSid(_In_ PSID, _Out_opt_ PSID, PDWORD size);
 UINT WINAPI GetWindowsDirectoryA(LPSTR,UINT);
 UINT WINAPI GetWindowsDirectoryW(LPWSTR,UINT);
 DWORD WINAPI GetWindowThreadProcessId(HWND hWnd,PDWORD lpdwProcessId);

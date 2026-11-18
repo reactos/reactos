@@ -641,6 +641,7 @@
 #define IMAGE_FILE_UP_SYSTEM_ONLY    16384
 #define IMAGE_FILE_BYTES_REVERSED_HI    32768
 #define IMAGE_FILE_MACHINE_UNKNOWN    0
+#define IMAGE_FILE_MACHINE_TARGET_HOST       0x0001 
 
 #define IMAGE_FILE_MACHINE_AM33       0x1d3
 #define IMAGE_FILE_MACHINE_AMD64      0x8664
@@ -4869,6 +4870,33 @@ typedef struct _TP_CALLBACK_ENVIRON_V1 {
   } u;
 } TP_CALLBACK_ENVIRON_V1, TP_CALLBACK_ENVIRON, *PTP_CALLBACK_ENVIRON;
 #endif /* (_WIN32_WINNT >= _WIN32_WINNT_WIN7) */
+
+#if (_WIN32_WINNT >= _WIN32_WINNT_WIN8) || defined(__REACTOS__)
+typedef enum _PROCESS_MITIGATION_POLICY
+{
+    ProcessDEPPolicy,
+    ProcessASLRPolicy,
+    ProcessDynamicCodePolicy,
+    ProcessStrictHandleCheckPolicy,
+    ProcessSystemCallDisablePolicy,
+    ProcessMitigationOptionsMask,
+    ProcessExtensionPointDisablePolicy,
+    ProcessControlFlowGuardPolicy,
+    ProcessSignaturePolicy,
+    ProcessFontDisablePolicy,
+    ProcessImageLoadPolicy,
+    ProcessSystemCallFilterPolicy,
+    ProcessPayloadRestrictionPolicy,
+    ProcessChildProcessPolicy,
+    ProcessSideChannelIsolationPolicy,
+    ProcessUserShadowStackPolicy,
+    ProcessRedirectionTrustPolicy,
+    ProcessUserPointerAuthPolicy,
+    ProcessSEHOPPolicy,
+    ProcessActivationContextTrustPolicy,
+    MaxProcessMitigationPolicy
+} PROCESS_MITIGATION_POLICY, *PPROCESS_MITIGATION_POLICY;
+#endif /* (_WIN32_WINNT >= _WIN32_WINNT_WIN8) || defined(__REACTOS__) */
 
 #ifdef __WINESRC__
 # define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
