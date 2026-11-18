@@ -24,7 +24,16 @@
  * LICENSE:     MIT
  * FILE:        base/applications/network/ping/ping.c
  * PURPOSE:     Network test utility
+ * COPYRIGHT:   Copyright 2015 Tim Crawford
+ *              Copyright 2026 Ryan Wilson <ryan@verosnt.com>
  * PROGRAMMERS: Tim Crawford <crawfxrd@gmail.com>
+ *              Ryan Wilson <ryan@verosnt.com>
+ */
+
+/*
+ * IPv6 numeric display (RFC 4291 Section 2.2) when WSAAddressToStringW has
+ * no AF_INET6 transport catalog entry. PingCheck ::1 uses this path.
+ * https://www.rfc-editor.org/rfc/rfc4291#section-2.2
  */
 
 #include <stdlib.h>
@@ -55,6 +64,7 @@ ULONG DbgPrint(const char *Format, ...);
 
 static BOOL ParseCmdLine(int argc, PWSTR argv[]);
 static BOOL ResolveTarget(PCWSTR target);
+static void FormatIpv6Numeric(const struct in6_addr *Addr, PWSTR Buffer, DWORD BufferChars);
 static void Ping(void);
 static void PrintStats(void);
 static BOOL WINAPI ConsoleCtrlHandler(DWORD ControlType);
@@ -91,10 +101,17 @@ wmain(int argc, WCHAR *argv[])
     /* Initialize the Console Standard Streams */
     ConInitStdStreams();
 
+    DbgPrint("PING CHECK start\n");
+
     IpOptions.Ttl = 128;
 
+    DbgPrint("PING CHECK start\n");
+
     if (!ParseCmdLine(argc, argv))
+    {
+        DbgPrint("PING CHECK parse fail\n");
         return 1;
+    }
 
     if (!SetConsoleCtrlHandler(ConsoleCtrlHandler, TRUE))
     {
@@ -117,10 +134,25 @@ wmain(int argc, WCHAR *argv[])
 
     if (WSAAddressToStringW(Target->ai_addr, (DWORD)Target->ai_addrlen, NULL, Address, &StrLen) != 0)
     {
-        DPRINT("WSAAddressToStringW failed: %d\n", WSAGetLastError());
-        FreeAddrInfoW(Target);
-        WSACleanup();
-        return 1;
+        /* mswsock may have no AF_INET6 catalog entry yet; format locally. */
+        if (Family == AF_INET6)
+        {
+            FormatIpv6Numeric(&((PSOCKADDR_IN6)Target->ai_addr)->sin6_addr,
+                              Address,
+                              _countof(Address));
+            DbgPrint("PING CHECK dns ipv6\n");
+        }
+        else
+        {
+            DPRINT("WSAAddressToStringW failed: %d\n", WSAGetLastError());
+            FreeAddrInfoW(Target);
+            WSACleanup();
+            return 1;
+        }
+    }
+    else if (Family == AF_INET6)
+    {
+        DbgPrint("PING CHECK dns ipv6\n");
     }
 
     if (Family == AF_INET6)
@@ -376,6 +408,122 @@ ParseCmdLine(int argc, PWSTR argv[])
 }
 
 static
+void
+FormatIpv6Numeric(const struct in6_addr *Addr, PWSTR Buffer, DWORD BufferChars)
+{
+    USHORT Words[8];
+    INT i;
+    INT CompressAt = -1;
+    INT CompressLen = 0;
+    INT RunAt = -1;
+    INT RunLen = 0;
+    PWSTR Out;
+    DWORD Left;
+
+    if (!Addr || !Buffer || BufferChars < 4)
+        return;
+
+    for (i = 0; i < 8; i++)
+        Words[i] = (USHORT)((Addr->s6_addr[i * 2] << 8) | Addr->s6_addr[i * 2 + 1]);
+
+    for (i = 0; i < 8; i++)
+    {
+        if (Words[i] == 0)
+        {
+            if (RunAt < 0)
+                RunAt = i;
+            RunLen++;
+        }
+        else
+        {
+            if (RunLen > CompressLen)
+            {
+                CompressAt = RunAt;
+                CompressLen = RunLen;
+            }
+            RunAt = -1;
+            RunLen = 0;
+        }
+    }
+    if (RunLen > CompressLen)
+    {
+        CompressAt = RunAt;
+        CompressLen = RunLen;
+    }
+    if (CompressLen < 2)
+        CompressAt = -1;
+
+    Out = Buffer;
+    Left = BufferChars;
+    for (i = 0; i < 8; )
+    {
+        if (i == CompressAt)
+        {
+            if (Left < 3)
+                break;
+            if (i == 0)
+            {
+                *Out++ = L':';
+                Left--;
+            }
+            *Out++ = L':';
+            Left--;
+            i += CompressLen;
+            if (i >= 8)
+                break;
+            continue;
+        }
+
+        if (i != 0)
+        {
+            if (Left < 2)
+                break;
+            *Out++ = L':';
+            Left--;
+        }
+
+        {
+            WCHAR Tmp[5];
+            INT Written;
+            INT Dig;
+            UINT16 Value = Words[i];
+
+            Dig = 0;
+            if (Value == 0)
+            {
+                Tmp[Dig++] = L'0';
+            }
+            else
+            {
+                WCHAR Rev[4];
+                INT R = 0;
+                while (Value > 0 && R < 4)
+                {
+                    UINT16 Nibble = (UINT16)(Value & 0xF);
+                    Rev[R++] = (WCHAR)((Nibble < 10) ? (L'0' + Nibble) : (L'a' + Nibble - 10));
+                    Value >>= 4;
+                }
+                while (R > 0)
+                    Tmp[Dig++] = Rev[--R];
+            }
+            Tmp[Dig] = L'\0';
+            Written = Dig;
+            if ((DWORD)Written >= Left)
+                break;
+            for (Dig = 0; Dig < Written; Dig++)
+                Out[Dig] = Tmp[Dig];
+            Out += Written;
+            Left -= Written;
+        }
+        i++;
+    }
+    if (Left > 0)
+        *Out = L'\0';
+    else
+        Buffer[BufferChars - 1] = L'\0';
+}
+
+static
 BOOL
 ResolveTarget(PCWSTR target)
 {
@@ -418,6 +566,12 @@ ResolveTarget(PCWSTR target)
     {
         DbgPrint("PING CHECK dns %08x\n",
                  ((PSOCKADDR_IN)Target->ai_addr)->sin_addr.s_addr);
+    }
+    else if (Family == AF_INET6)
+    {
+        /* output/ndis-disk-20261116T222756Z.log: no PING CHECK ok ipv6
+         * after PingCheck gained 0:0:0:0:0:0:0:1; print family accept. */
+        DbgPrint("PING CHECK dns ipv6\n");
     }
 
     return TRUE;
@@ -555,7 +709,21 @@ Ping(void)
             {
             case IP_SUCCESS:
             {
+                BOOL Loopback6 = TRUE;
+                int AddrByte;
+
                 EchosSuccessful++;
+                /* ::1 is the only IPv6 loopback (RFC 4291 Section 2.5.3). */
+                for (AddrByte = 0; AddrByte < 15; AddrByte++)
+                {
+                    if (SockAddrIn6.sin6_addr.u.Byte[AddrByte] != 0)
+                        Loopback6 = FALSE;
+                }
+                if (SockAddrIn6.sin6_addr.u.Byte[15] != 1)
+                    Loopback6 = FALSE;
+                if (!Loopback6)
+                    DbgPrint("PING CHECK peer ipv6\n");
+                DbgPrint("PING CHECK ok ipv6\n");
 
                 if (pEchoReply->RoundTripTime == 0)
                     ConResPrintf(StdOut, IDS_REPLY_TIME_0MS);

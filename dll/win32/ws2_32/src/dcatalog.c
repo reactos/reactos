@@ -1,9 +1,14 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
+ *              Copyright 2026 Ryan Wilson <ryan@verosnt.com>
  * PROJECT:     ReactOS WinSock 2 API
  * FILE:        dll/win32/ws2_32/src/dcatalog.c
  * PURPOSE:     Transport Catalog Object
  * PROGRAMMER:  Alex Ionescu (alex@relsoft.net)
+ *              Ryan Wilson <ryan@verosnt.com>
+ *
+ * AF_INET6 catalog match uses the AF_INET provider. The packed catalog is
+ * media/inf/nettcpip.inf Protocol_Catalog9, which lists address family 2.
  */
 
 /* INCLUDES ******************************************************************/
@@ -506,6 +511,7 @@ WsTcGetEntryFromTriplet(IN PTCATALOG Catalog,
                         IN PTCATALOG_ENTRY *CatalogEntry)
 {
     INT ErrorCode = WSAEINVAL;
+    INT MatchAf;
     PLIST_ENTRY NextEntry;
     PTCATALOG_ENTRY Entry;
     DPRINT("WsTcGetEntryFromTriplet: %lx, %lx, %lx, %lx\n", af, type, protocol, StartId);
@@ -540,8 +546,13 @@ WsTcGetEntryFromTriplet(IN PTCATALOG Catalog,
         Entry = CONTAINING_RECORD(NextEntry, TCATALOG_ENTRY, CatalogLink);
         NextEntry = NextEntry->Flink;
 
-        /* Check if Address Family Matches or if it's wildcard */
-        if ((Entry->ProtocolInfo.iAddressFamily == af) || (af == AF_UNSPEC))
+        /* Check if Address Family Matches or if it's wildcard.
+         * AF_INET6 uses the AF_INET catalog row (media/inf/nettcpip.inf). */
+        MatchAf = af;
+        if (MatchAf == AF_INET6)
+            MatchAf = AF_INET;
+
+        if ((Entry->ProtocolInfo.iAddressFamily == MatchAf) || (af == AF_UNSPEC))
         {
             /* Check if Socket Type Matches or if it's wildcard */
             if ((Entry->ProtocolInfo.iSocketType == type) || (type == 0))

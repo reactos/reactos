@@ -1,11 +1,13 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
+ *              Copyright 2026 Ryan Wilson <ryan@verosnt.com>
  * PROJECT:     ReactOS Ancillary Function Driver DLL
  * FILE:        dll/win32/msafd/misc/dllmain.c
  * PURPOSE:     DLL entry point
  * PROGRAMMERS: Casper S. Hornstrup (chorns@users.sourceforge.net)
  *              Alex Ionescu (alex@relsoft.net)
  *              Pierre Schweitzer (pierre@reactos.org)
+ *              Ryan Wilson <ryan@verosnt.com>
  * REVISIONS:
  *              CSH 01/09-2000 Created
  *              Alex 16/07/2004 - Complete Rewrite
@@ -882,10 +884,20 @@ WSPBind(SOCKET Handle,
        if (lpErrno) *lpErrno = WSAEINVAL;
        return SOCKET_ERROR;
     }
-    if (!SocketAddress || SocketAddressLength < Socket->SharedData->SizeOfLocalAddress)
     {
-        if (lpErrno) *lpErrno = WSAEINVAL;
-        return SOCKET_ERROR;
+        INT NeedLength = Socket->SharedData->SizeOfLocalAddress;
+
+        /* sockaddr_in6 in sdk/include/psdk/ws2ipdef.h is 28 bytes. */
+        if (SocketAddress && SocketAddress->sa_family == AF_INET6 &&
+            NeedLength < 28)
+        {
+            NeedLength = 28;
+        }
+        if (!SocketAddress || SocketAddressLength < NeedLength)
+        {
+            if (lpErrno) *lpErrno = WSAEINVAL;
+            return SOCKET_ERROR;
+        }
     }
 
     /* Get Address Information */
@@ -2056,6 +2068,12 @@ WSPConnect(SOCKET Handle,
 
         /* Get the Wildcard Address */
         BindAddressLength = Socket->HelperData->MaxWSAddressLength;
+        if (Socket->SharedData->AddressFamily == AF_INET6 &&
+            BindAddressLength < 28)
+        {
+            /* sockaddr_in6 in sdk/include/psdk/ws2ipdef.h. */
+            BindAddressLength = 28;
+        }
         BindAddress = HeapAlloc(GetProcessHeap(), 0, BindAddressLength);
         if (!BindAddress)
         {

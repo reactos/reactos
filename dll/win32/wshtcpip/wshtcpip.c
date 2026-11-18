@@ -124,6 +124,65 @@ WSHGetSockaddrType(
 {
     PSOCKADDR_IN ipv4 = (PSOCKADDR_IN)Sockaddr;
 
+    if (Sockaddr && SockaddrInfo && Sockaddr->sa_family == AF_INET6)
+    {
+        PSOCKADDR_IN6 ipv6 = (PSOCKADDR_IN6)Sockaddr;
+        PUCHAR Bytes;
+        BOOLEAN Unspec = TRUE;
+        BOOLEAN Loop = TRUE;
+        int i;
+
+        if (SockaddrLength < sizeof(SOCKADDR_IN6))
+        {
+            return WSAEINVAL;
+        }
+
+        Bytes = (PUCHAR)&ipv6->sin6_addr;
+        for (i = 0; i < 16; i++)
+        {
+            if (Bytes[i] != 0)
+            {
+                Unspec = FALSE;
+            }
+            if (i < 15 && Bytes[i] != 0)
+            {
+                Loop = FALSE;
+            }
+        }
+        if (Bytes[15] != 1)
+        {
+            Loop = FALSE;
+        }
+
+        if (Unspec)
+        {
+            SockaddrInfo->AddressInfo = SockaddrAddressInfoWildcard;
+        }
+        else if (Loop)
+        {
+            SockaddrInfo->AddressInfo = SockaddrAddressInfoLoopback;
+        }
+        else
+        {
+            SockaddrInfo->AddressInfo = SockaddrAddressInfoNormal;
+        }
+
+        if (ntohs(ipv6->sin6_port) == 0)
+        {
+            SockaddrInfo->EndpointInfo = SockaddrEndpointInfoWildcard;
+        }
+        else if (ntohs(ipv6->sin6_port) < IPPORT_RESERVED)
+        {
+            SockaddrInfo->EndpointInfo = SockaddrEndpointInfoReserved;
+        }
+        else
+        {
+            SockaddrInfo->EndpointInfo = SockaddrEndpointInfoNormal;
+        }
+
+        return NO_ERROR;
+    }
+
     if (!ipv4 || !SockaddrInfo || SockaddrLength < sizeof(SOCKADDR_IN) ||
         ipv4->sin_family != AF_INET)
     {
@@ -258,7 +317,24 @@ WSHGetWildcardSockaddr(
     OUT PSOCKADDR Sockaddr,
     OUT PINT SockaddrLength)
 {
+    PSOCKET_CONTEXT Context = HelperDllSocketContext;
     INT Size = 2 * sizeof(UINT);
+
+    if (Context && Context->AddressFamily == AF_INET6)
+    {
+        PSOCKADDR_IN6 ipv6;
+
+        if (*SockaddrLength < (INT)sizeof(SOCKADDR_IN6))
+        {
+            return WSAEFAULT;
+        }
+
+        RtlZeroMemory(Sockaddr, sizeof(SOCKADDR_IN6));
+        ipv6 = (PSOCKADDR_IN6)Sockaddr;
+        ipv6->sin6_family = AF_INET6;
+        *SockaddrLength = sizeof(SOCKADDR_IN6);
+        return NO_ERROR;
+    }
 
     if (*SockaddrLength < Size)
     {
